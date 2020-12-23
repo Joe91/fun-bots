@@ -152,6 +152,8 @@ Events:Subscribe('Bot:Update', function(bot, dt)
         else
             bot.input:SetLevel(EntryInputActionEnum.EIAStrafe, 1.0)
         end
+    else
+        bot.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0)
     end
 
     if walking then
