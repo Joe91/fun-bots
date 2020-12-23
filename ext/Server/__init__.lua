@@ -10,11 +10,9 @@ local soldierKit = nil
 local k = 0
 
 local moveMode = 5 --standing, centerpoint, pointing
-local speed = 2 -- standing 0, couching 1, walking 2, running 3
+local speed = 3 -- standing 0, proning 1, couching 2, walking 3, running 4
+local spawnMode = 0 -- center 1, line 2, ring 3
 
-
-local walking = false
-local running = false
 local jumping = false
 local pointing = false
 
@@ -22,16 +20,8 @@ local adading = false
 local swaying = false
 local dieing = false
 local exploding = false --yes
-
-local mimicking = false
-local mirroring = false
-
-local spawnCenterpoint = false
-local spawnInLine = false
-local spawnInRing = false
 local respawning = false
 
-local direction = 0
 local activeBotCount = 5
 local centerPointPeriod = 5
 local centerPointElapsedTime = 0
@@ -51,8 +41,6 @@ local botTransforms = {}
 local yaws = {}
 local rowBots = {}
 
-local point1 = LinearTransform()
-local point2 = LinearTransform()
 local wayPoints = {}
 for i = 1, maxWayPoints do
     wayPoints[i] = LinearTransform()
@@ -102,27 +90,20 @@ Events:Subscribe('Bot:Update', function(bot, dt)
     local botIndex = tonumber(bot.name)
 
     --spawning 
-    if spawnCenterpoint and botIndex <= activeBotCount then
-        if respawning and bot.soldier == nil then
+    if respawning and bot.soldier == nil and botIndex <= activeBotCount then
+        if spawnMode == 1 then --spawnCenterpoint
             yaws[bot.name] = MathUtils:GetRandom(0, 2*math.pi)
             bot.input.authoritativeAimingYaw = yaws[bot.name]
             Bots:spawnBot(bot, centerpoint, CharacterPoseType.CharacterPoseType_Stand, soldierBlueprint, soldierKit, {})
-        end
-        
-    elseif spawnInLine and botIndex <= activeBotCount then
-        if respawning and bot.soldier == nil then
+        elseif spawnMode == 2 then  --spawnInLine
             Bots:spawnBot(bot, botTransforms[bot.name], CharacterPoseType.CharacterPoseType_Stand, soldierBlueprint, soldierKit, {})
-        end
-        
-    elseif spawnInRing and botIndex <= activeBotCount then
-        if respawning and bot.soldier == nil then
+        elseif spawnMode == 3 then  --spawnInRing
             local yaw = botIndex * (2 * math.pi / activeBotCount)
             local transform = getYawOffsetTransform(activePlayer.soldier.transform, yaw, ringSpacing)
             Bots:spawnBot(bot, transform, CharacterPoseType.CharacterPoseType_Stand, soldierBlueprint, soldierKit, {})
+        else
+            Bots:spawnBot(bot, botTransforms[botIndex], CharacterPoseType.CharacterPoseType_Stand, soldierBlueprint, soldierKit, {})
         end
-
-    elseif respawning and bot.soldier == nil and botIndex <= activeBotCount then
-        Bots:spawnBot(bot, botTransforms[botIndex], CharacterPoseType.CharacterPoseType_Stand, soldierBlueprint, soldierKit, {})
     end
 
     -- movement-mode of bots
@@ -177,10 +158,10 @@ Events:Subscribe('Bot:Update', function(bot, dt)
             -- get point
             if activeWayPooints > 0 then
                 -- check for reached point
-                local transformation = LinearTransform()
-                transformation = wayPoints[activeWayIndex]
-                local dy = transformation.trans.z - bot.soldier.transform.trans.z
-                local dx = transformation.trans.x - bot.soldier.transform.trans.x
+                local transform = LinearTransform()
+                transform = wayPoints[activeWayIndex]
+                local dy = transform.trans.z - bot.soldier.transform.trans.z
+                local dx = transform.trans.x - bot.soldier.transform.trans.x
                 local distanceFromTarget = math.sqrt(dx ^ 2 + dy ^ 2)
                 if distanceFromTarget > 1 then
                     local yaw = (math.atan(dy, dx) > math.pi / 2) and (math.atan(dy, dx) - math.pi / 2) or (math.atan(dy, dx) + 3 * math.pi / 2)
@@ -290,14 +271,12 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
     elseif parts[1] == '!stop' then
         speed = 0
         moveMode = 0
+        spawnMode = 0
         jumping = false
         adading = false
         swaying = false
         dieing = false
         exploding = false
-        spawnCenterpoint = false
-        spawnInLine = false
-        spawnInRing = false
         respawning = false
     elseif parts[1] == '!adad' then
         adading = true
@@ -306,7 +285,6 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
             rowBots[i].input:SetLevel(EntryInputActionEnum.EIAStrafe, level)
         end
     elseif parts[1] == '!sway' then
-        pointing = true
         swaying = true
         swayMaxDeviation = tonumber(parts[2]) or 1.5
         swayPeriod = tonumber(parts[3]) or 3
@@ -501,13 +479,7 @@ function spawnBotGridOnPlayer(player, rows, columns)
 end
 
 function spawnCenterpointBots(player, amount, duration)
-    mimicking = false
-    mirroring = false
-    pointing = false
-    spawnInLine = false
-    spawnInRing = false
-    spawnCenterpoint = true
-    walking = true
+    spawnMode = 1
 
     activeBotCount = amount
     centerpoint = player.soldier.transform
@@ -522,13 +494,7 @@ function spawnCenterpointBots(player, amount, duration)
 end
 
 function spawnLineBots(player, amount, spacing)
-    mimicking = false
-    mirroring = false
-    spawnCenterpoint = false
-    spawnInRing = false
-    pointing = true
-    spawnInLine = true
-    walking = true
+    spawnMode = 2
 
     activeBotCount = amount
     for i = 1, amount do
@@ -540,13 +506,7 @@ function spawnLineBots(player, amount, spacing)
 end
 
 function spawnRingBots(player, amount, spacing)
-    mimicking = false
-    mirroring = false
-    spawnCenterpoint = false
-    spawnInLine = false
-    pointing = true
-    walking = true
-    spawnInRing = true
+    spawnMode = 3
 
     activeBotCount = amount
     ringSpacing = spacing
