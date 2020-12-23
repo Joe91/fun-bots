@@ -7,7 +7,7 @@ local soldierKit = nil
 
 local k = 0
 
-local mode = 0 --standing, centerpoint, pointing
+local moveMode = 0 --standing, centerpoint, pointing
 local speed = 0 -- standing 0, couching 1, walking 2, running 3
 
 
@@ -97,19 +97,12 @@ Events:Subscribe('Bot:Update', function(bot, dt)
             bot.input.authoritativeAimingYaw = yaws[bot.name]
             Bots:spawnBot(bot, centerpoint, CharacterPoseType.CharacterPoseType_Stand, soldierBlueprint, soldierKit, {})
         end
-
-        -- movement towards and away from point
-        if bot.soldier ~= nil and centerPointElapsedTime <= (centerPointPeriod / 2) then
-            bot.input.authoritativeAimingYaw = yaws[bot.name]
-        elseif bot.soldier ~= nil then
-            bot.input.authoritativeAimingYaw = (yaws[bot.name] < math.pi) and (yaws[bot.name] + math.pi) or (yaws[bot.name] - math.pi)
-        end
-
+        
     elseif spawnInLine and tonumber(bot.name) <= activeBotCount then
         if respawning and bot.soldier == nil then
             Bots:spawnBot(bot, botTransforms[bot.name], CharacterPoseType.CharacterPoseType_Stand, soldierBlueprint, soldierKit, {})
         end
-
+        
     elseif spawnInRing and tonumber(bot.name) <= activeBotCount then
         if respawning and bot.soldier == nil then
             local yaw = tonumber(bot.name) * (2 * math.pi / activeBotCount)
@@ -122,24 +115,15 @@ Events:Subscribe('Bot:Update', function(bot, dt)
     end
 
     -- movement-mode of bots
-    if mimicking then
-        for i = 0, 36 do
-            bot.input:SetLevel(i, activePlayer.input:GetLevel(i))
+            -- movement towards and away from point
+    if moveMode == 1 then -- centerpoint
+        if bot.soldier ~= nil and centerPointElapsedTime <= (centerPointPeriod / 2) then
+            bot.input.authoritativeAimingYaw = yaws[bot.name]
+        elseif bot.soldier ~= nil then
+            bot.input.authoritativeAimingYaw = (yaws[bot.name] < math.pi) and (yaws[bot.name] + math.pi) or (yaws[bot.name] - math.pi)
         end
-
-        bot.input.authoritativeAimingYaw = activePlayer.input.authoritativeAimingYaw
-        bot.input.authoritativeAimingPitch = activePlayer.input.authoritativeAimingPitch
-
-    elseif mirroring then
-        for i = 0, 36 do
-            bot.input:SetLevel(i, activePlayer.input:GetLevel(i))
-        end
-
-        bot.input.authoritativeAimingYaw = activePlayer.input.authoritativeAimingYaw + ((activePlayer.input.authoritativeAimingYaw > math.pi) and -math.pi or math.pi)
-        bot.input.authoritativeAimingPitch = activePlayer.input.authoritativeAimingPitch
-
-    -- movement towards player
-    elseif pointing and activePlayer.soldier and bot.soldier then
+        
+    elseif moveMode == 2 and activePlayer.soldier and bot.soldier then  -- pointing
         local dy = activePlayer.soldier.transform.trans.z - bot.soldier.transform.trans.z
         local dx = activePlayer.soldier.transform.trans.x - bot.soldier.transform.trans.x
         local yaw = (math.atan(dy, dx) > math.pi / 2) and (math.atan(dy, dx) - math.pi / 2) or (math.atan(dy, dx) + 3 * math.pi / 2)
@@ -153,9 +137,23 @@ Events:Subscribe('Bot:Update', function(bot, dt)
             bot.input.authoritativeAimingYaw = yaw
         end
     end
+    
+    elseif moveMode == 3 then  -- mimicking
+        for i = 0, 36 do
+            bot.input:SetLevel(i, activePlayer.input:GetLevel(i))
+        end
+        bot.input.authoritativeAimingYaw = activePlayer.input.authoritativeAimingYaw
+        bot.input.authoritativeAimingPitch = activePlayer.input.authoritativeAimingPitch
 
-    -- movent sidewards
-    if adading then
+    elseif moveMode == 4 then -- mirroring
+        for i = 0, 36 do
+            bot.input:SetLevel(i, activePlayer.input:GetLevel(i))
+        end
+        bot.input.authoritativeAimingYaw = activePlayer.input.authoritativeAimingYaw + ((activePlayer.input.authoritativeAimingYaw > math.pi) and -math.pi or math.pi)
+        bot.input.authoritativeAimingPitch = activePlayer.input.authoritativeAimingPitch
+
+    -- additional movement
+    if adading then  -- movent sidewards
         if adadElapsedTime >= adadPeriod/2 then
             bot.input:SetLevel(EntryInputActionEnum.EIAStrafe, -1.0)
         else
@@ -164,29 +162,34 @@ Events:Subscribe('Bot:Update', function(bot, dt)
     else
         bot.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0)
     end
+    
+    if jumping then
+        local shouldJump = MathUtils:GetRandomInt(0, 1000)
+        if shouldJump <= 15 then
+            bot.input:SetLevel(EntryInputActionEnum.EIAJump, 1.0)
+        else
+            bot.input:SetLevel(EntryInputActionEnum.EIAJump, 0.0)
+        end
+    end
 
     -- movent speed
-    if speed == 1 then --proneing
+    if speed == 1 then --todo: change pose to prone
         if bot.soldier ~= nil then
-            bot.input:SetLevel(EntryInputActionEnum.EIAChangePose, CharacterPoseType.CharacterPoseType_Prone)
             bot.input:SetLevel(EntryInputActionEnum.EIAThrottle, 0.25)
             bot.input:SetLevel(EntryInputActionEnum.EIASprint, 0)
         end
-    elseif speed == 2 then --crouching
+    elseif speed == 2 then --todo: change pose to crouching
         if bot.soldier ~= nil then
-            bot.input:SetLevel(EntryInputActionEnum.EIAChangePose, CharacterPoseType.CharacterPoseType_Crouch)
             bot.input:SetLevel(EntryInputActionEnum.EIAThrottle, 0.5)
             bot.input:SetLevel(EntryInputActionEnum.EIASprint, 0)
         end
     elseif speed == 3 then --walking
         if bot.soldier ~= nil then
-            bot.input:SetLevel(EntryInputActionEnum.EIAChangePose, CharacterPoseType.CharacterPoseType_Stand)
             bot.input:SetLevel(EntryInputActionEnum.EIAThrottle, 1)
             bot.input:SetLevel(EntryInputActionEnum.EIASprint, 0)
         end
     elseif speed == 4 then  --running
         if bot.soldier ~= nil then
-            bot.input:SetLevel(EntryInputActionEnum.EIAChangePose, CharacterPoseType.CharacterPoseType_Stand)
             bot.input:SetLevel(EntryInputActionEnum.EIAThrottle, 1)
             bot.input:SetLevel(EntryInputActionEnum.EIASprint, 1)
         end
@@ -197,15 +200,7 @@ Events:Subscribe('Bot:Update', function(bot, dt)
         end
     end
 
-    if jumping then
-        local shouldJump = MathUtils:GetRandomInt(0, 1000)
-        if shouldJump <= 15 then
-            bot.input:SetLevel(EntryInputActionEnum.EIAJump, 1.0)
-        else
-            bot.input:SetLevel(EntryInputActionEnum.EIAJump, 0.0)
-        end
-    end
-
+    -- dieing
     if dieing and activePlayer.soldier and bot.soldier then
         local dy = activePlayer.soldier.transform.trans.z - bot.soldier.transform.trans.z
         local dx = activePlayer.soldier.transform.trans.x - bot.soldier.transform.trans.x
@@ -220,34 +215,17 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
     local parts = string.lower(message):split(' ')
 
     activePlayer = player
-
+    
     if parts[1] == '!mimic' then
-        pointing = false
-        mimicking = true
-        mirroring = false
-        spawnCenterpoint = false
-        spawnInLine = false
-        spawnInRing = false
+        moveMode = 3
     elseif parts[1] == '!mirror' then
-        pointing = false
-        mimicking = false
-        mirroring = true
-        spawnCenterpoint = false
-        spawnInLine = false
-        spawnInRing = false
+        moveMode = 4
     elseif parts[1] == '!point' then
-        pointing = true
-        mimicking = false
-        mirroring = false
-        spawnCenterpoint = false
-        spawnInLine = false
-        spawnInRing = false
+        moveMode = 2
     elseif parts[1] == '!run' then
-        walking = false
-        running = true
+        speed = 4
     elseif parts[1] == '!walk' then
-        walking = true
-        running = false
+        speed = 3
     elseif parts[1] == '!jump' then
         jumping = true
     elseif parts[1] == '!nice' then
@@ -257,16 +235,13 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
     elseif parts[1] == '!respawn' then
         respawning = true
     elseif parts[1] == '!stop' then
-        walking = false
-        running = false
+        speed = 0
+        moveMode = 0
         jumping = false
-        pointing = false
         adading = false
         swaying = false
         dieing = false
         exploding = false
-        mimicking = false
-        mirroring = false
         spawnCenterpoint = false
         spawnInLine = false
         spawnInRing = false
@@ -304,7 +279,11 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
             return
         end
         speed = tonumber(parts[2])
-
+    elseif parts[1] == '!mode' then
+        if tonumber(parts[2]) == nil then
+            return
+        end
+        moveMode = tonumber(parts[2])
     elseif parts[1] == '!tower' then
         if tonumber(parts[2]) == nil then
             return
