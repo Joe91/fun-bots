@@ -1,7 +1,7 @@
 local Bots = require('bots')
 
-local numberOfBots = 30
-local maxWayPoints = 10
+local maxNumberOfBots = 40
+local maxWayPoints = 20
 local activeWayPooints = 0
 
 local soldierBlueprint = nil
@@ -22,7 +22,8 @@ local dieing = false
 local exploding = false --yes
 local respawning = false
 
-local activeBotCount = 5
+local activeBotCount = 0
+local botsCreatedCount = 0
 local centerPointPeriod = 5
 local centerPointElapsedTime = 0
 
@@ -48,18 +49,16 @@ end
 local currentPoint = {}
 
 Events:Subscribe('Level:Loaded', function()
-
-    Bots:destroyAllBots()
-
-    print("creating bots")
+    Bots:destroyAllBots() --todo: causes crashes. find out why
+    botsCreatedCount = 0
 
     soldierBlueprint = ResourceManager:SearchForInstanceByGuid(Guid('261E43BF-259B-41D2-BF3B-9AE4DDA96AD2'))
     soldierKit = ResourceManager:SearchForInstanceByGuid(Guid('A15EE431-88B8-4B35-B69A-985CEA934855'))
 
-    for i = 1, numberOfBots do
-        rowBots[i] = Bots:createBot(tostring(i), TeamId.Team1, SquadId.Squad1)
-        rowBots[i].input.flags = EntryInputFlags.AuthoritativeAiming
-    end
+    --for i = 1, maxNumberOfBots do
+    --    rowBots[i] = Bots:createBot(tostring(i), TeamId.Team1, SquadId.Squad1)
+    --    rowBots[i].input.flags = EntryInputFlags.AuthoritativeAiming
+    --end
 end)
 
 Events:Subscribe('Player:Killed', function(player)
@@ -345,6 +344,7 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
 
             if string.lower(vehicleName):match(string.lower(vehicleHint)) then
                 k = k + 1
+                createNewBotIfNeeded(k)
                 Bots:spawnBot(rowBots[k], player.soldier.transform, CharacterPoseType.CharacterPoseType_Stand, soldierBlueprint, soldierKit, {})
                 rowBots[k]:EnterVehicle(vehicleEntity, entryId)
             end
@@ -363,6 +363,7 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
             if string.lower(vehicleName):match(string.lower(vehicleHint)) then
                 for i = 0, number do
                     k = k + 1
+                    createNewBotIfNeeded(k)
                     Bots:spawnBot(rowBots[k], player.soldier.transform, CharacterPoseType.CharacterPoseType_Stand, soldierBlueprint, soldierKit, {})
                     rowBots[k]:EnterVehicle(vehicleEntity, i)
                 end
@@ -396,9 +397,11 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
 
     elseif parts[1] == '!kill' then
         k = 0
-        for i = 1, numberOfBots do
-            if rowBots[i].soldier ~= nil then
-                rowBots[i].soldier:Kill()
+        for i = 1, botsCreatedCount do
+            if rowBot[i] ~= nil then
+                if rowBots[i].soldier ~= nil then
+                    rowBots[i].soldier:Kill()
+                end
             end
         end
     end
@@ -434,6 +437,7 @@ function spawnStandingBotOnPlayer(player, spacing)
     k = k + 1
     botTransforms[k] = transform
     activeBotCount = k
+    createNewBotIfNeeded(k)
     Bots:spawnBot(rowBots[k], transform, CharacterPoseType.CharacterPoseType_Stand, soldierBlueprint, soldierKit, {})
 end
 
@@ -443,6 +447,7 @@ function spawnCrouchingBotOnPlayer(player, spacing)
     k = k + 1
     botTransforms[k] = transform
     activeBotCount = k
+    createNewBotIfNeeded(k)
     Bots:spawnBot(rowBots[k], transform, CharacterPoseType.CharacterPoseType_Crouch, soldierBlueprint, soldierKit, {})
 end
 
@@ -450,6 +455,7 @@ function spawnBotRowOnPlayer(player, length, spacing)
     for i = 1, length do
         local yaw = player.input.authoritativeAimingYaw
         local transform = getYawOffsetTransform(player.soldier.transform, yaw, i * spacing)
+        createNewBotIfNeeded(i)
         Bots:spawnBot(rowBots[i], transform, CharacterPoseType.CharacterPoseType_Stand, soldierBlueprint, soldierKit, {})
     end
 end
@@ -461,6 +467,7 @@ function spawnBotTowerOnPlayer(player, height)
         transform.trans.x = player.soldier.transform.trans.x + (math.cos(yaw + (math.pi / 2)))
         transform.trans.y = player.soldier.transform.trans.y + ((i - 1) * 1.8)
         transform.trans.z = player.soldier.transform.trans.z + (math.sin(yaw + (math.pi / 2)))
+        createNewBotIfNeeded(i)
         Bots:spawnBot(rowBots[i], transform, CharacterPoseType.CharacterPoseType_Stand, soldierBlueprint, soldierKit, {})
     end
 end
@@ -473,6 +480,7 @@ function spawnBotGridOnPlayer(player, rows, columns)
             transform.trans.x = player.soldier.transform.trans.x + (i * math.cos(yaw + (math.pi / 2)) * spacing) + ((j - 1) * math.cos(yaw) * spacing)
             transform.trans.y = player.soldier.transform.trans.y
             transform.trans.z = player.soldier.transform.trans.z + (i * math.sin(yaw + (math.pi / 2)) * spacing) + ((j - 1) * math.sin(yaw) * spacing)
+            createNewBotIfNeeded((i - 1) * columns + j)
             Bots:spawnBot(rowBots[(i - 1) * columns + j], transform, CharacterPoseType.CharacterPoseType_Stand, soldierBlueprint, soldierKit, {})
         end
     end
@@ -487,6 +495,7 @@ function spawnCenterpointBots(player, amount, duration)
     centerPointElapsedTime = (duration / 4)
 
     for i = 1, amount do
+        createNewBotIfNeeded(i)
         yaws[rowBots[i].name] = MathUtils:GetRandom(0, 2 * math.pi)
         rowBots[i].input.authoritativeAimingYaw = yaws[rowBots[i].name]
         Bots:spawnBot(rowBots[i], centerpoint, CharacterPoseType.CharacterPoseType_Stand, soldierBlueprint, soldierKit, {})
@@ -500,6 +509,7 @@ function spawnLineBots(player, amount, spacing)
     for i = 1, amount do
         local yaw = player.input.authoritativeAimingYaw
         local transform = getYawOffsetTransform(player.soldier.transform, yaw, i * spacing)
+        createNewBotIfNeeded(i)
         botTransforms[rowBots[i].name] = transform
         Bots:spawnBot(rowBots[i], transform, CharacterPoseType.CharacterPoseType_Stand, soldierBlueprint, soldierKit, {})
     end
@@ -513,16 +523,26 @@ function spawnRingBots(player, amount, spacing)
     for i = 1, amount do
         local yaw = i * (2 * math.pi / amount)
         local transform = getYawOffsetTransform(player.soldier.transform, yaw, spacing)
+        createNewBotIfNeeded(i)
         Bots:spawnBot(rowBots[i], transform, CharacterPoseType.CharacterPoseType_Stand, soldierBlueprint, soldierKit, {})
+    end
+end
+
+function createNewBotIfNeeded(value)
+    if value > botsCreatedCount and value <= maxNumberOfBots then
+        rowBots[value] = Bots:createBot(tostring(value), TeamId.Team1, SquadId.Squad1)
+        rowBots[value].input.flags = EntryInputFlags.AuthoritativeAiming
+        botsCreatedCount = botsCreatedCount + 1
     end
 end
 
 function spawnJohnOnPlayer(player)
     local yaw = player.input.authoritativeAimingYaw
     local transform = getYawOffsetTransform(player.soldier.transform, yaw, -1)
-    Bots:spawnBot(rowBots[numberOfBots], transform, CharacterPoseType.CharacterPoseType_Crouch, soldierBlueprint, soldierKit, {})
-    rowBots[numberOfBots].input.authoritativeAimingYaw = yaw
-    rowBots[numberOfBots].input:SetLevel(EntryInputActionEnum.EIAFire, 1)
+    createNewBotIfNeeded(1)
+    Bots:spawnBot(rowBots[1], transform, CharacterPoseType.CharacterPoseType_Crouch, soldierBlueprint, soldierKit, {})
+    rowBots[1].input.authoritativeAimingYaw = yaw
+    rowBots[1].input:SetLevel(EntryInputActionEnum.EIAFire, 1)
 end
 
 function string:split(sep)
