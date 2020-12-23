@@ -51,8 +51,9 @@ local botTransforms = {}
 local yaws = {}
 local rowBots = {}
 
+local point1 = LinearTransform()
+local point2 = LinearTransform()
 local wayPoints = {}
-
 for i = 1, maxWayPoints do
     wayPoints[i] = LinearTransform()
 end
@@ -125,133 +126,136 @@ Events:Subscribe('Bot:Update', function(bot, dt)
     end
 
     -- movement-mode of bots
-    if moveMode == 1 then -- centerpoint
-        if bot.soldier ~= nil and centerPointElapsedTime <= (centerPointPeriod / 2) then
-            bot.input.authoritativeAimingYaw = yaws[bot.name]
-        elseif bot.soldier ~= nil then
-            bot.input.authoritativeAimingYaw = (yaws[bot.name] < math.pi) and (yaws[bot.name] + math.pi) or (yaws[bot.name] - math.pi)
-        end
-        
-    elseif moveMode == 2 and activePlayer.soldier and bot.soldier then  -- pointing
-        local dy = activePlayer.soldier.transform.trans.z - bot.soldier.transform.trans.z
-        local dx = activePlayer.soldier.transform.trans.x - bot.soldier.transform.trans.x
-        local yaw = (math.atan(dy, dx) > math.pi / 2) and (math.atan(dy, dx) - math.pi / 2) or (math.atan(dy, dx) + 3 * math.pi / 2)
-        if swaying then
-            local swayMod = (swayElapsedTime > swayPeriod / 2) and (((swayPeriod - swayElapsedTime) / swayPeriod - 0.25) * 4) or ((swayElapsedTime / swayPeriod - 0.25) * 4)
-            local swayedYaw = yaw + swayMod * swayMaxDeviation
-            swayedYaw = (swayedYaw > 2 * math.pi) and (swayedYaw - 2 * math.pi) or swayedYaw
-            swayedYaw = (swayedYaw < 0) and (swayedYaw + 2 * math.pi) or swayedYaw
-            bot.input.authoritativeAimingYaw = swayedYaw
-        else
-            bot.input.authoritativeAimingYaw = yaw
-        end
-    
-    elseif moveMode == 3 then  -- mimicking
-        for i = 0, 36 do
-            bot.input:SetLevel(i, activePlayer.input:GetLevel(i))
-        end
-        bot.input.authoritativeAimingYaw = activePlayer.input.authoritativeAimingYaw
-        bot.input.authoritativeAimingPitch = activePlayer.input.authoritativeAimingPitch
-
-    elseif moveMode == 4 then -- mirroring
-        for i = 0, 36 do
-            bot.input:SetLevel(i, activePlayer.input:GetLevel(i))
-        end
-        bot.input.authoritativeAimingYaw = activePlayer.input.authoritativeAimingYaw + ((activePlayer.input.authoritativeAimingYaw > math.pi) and -math.pi or math.pi)
-        bot.input.authoritativeAimingPitch = activePlayer.input.authoritativeAimingPitch
-        
-    elseif moveMode == 5 then -- move along points
-        -- get next point
-        local activeWayIndex = 1
-        if currentPoint[botIndex] == nil then
-            currentPoint[botIndex] = activeWayIndex
-        else
-            activeWayIndex = currentPoint[botIndex]
-            if activeWayPooints < activeWayIndex then
-                activeWayIndex = 1
+    if bot.soldier ~= nil then
+        if moveMode == 1 then -- centerpoint
+            if bot.soldier ~= nil and centerPointElapsedTime <= (centerPointPeriod / 2) then
+                bot.input.authoritativeAimingYaw = yaws[bot.name]
+            elseif bot.soldier ~= nil then
+                bot.input.authoritativeAimingYaw = (yaws[bot.name] < math.pi) and (yaws[bot.name] + math.pi) or (yaws[bot.name] - math.pi)
             end
-        end
-        
-        -- get point
-        if activeWayPooints > 0 then
-            -- check for reached point
-            local transformation = wayPoints[activeWayIndex]
-            local dy = transformation.trans.z - bot.soldier.transform.trans.z
-            local dx = transformation.trans.x - bot.soldier.transform.trans.x
-            local distanceFromTarget = math.sqrt(dx ^ 2 + dy ^ 2)
-            if distanceFromTarget > 1 then
-                local yaw = (math.atan(dy, dx) > math.pi / 2) and (math.atan(dy, dx) - math.pi / 2) or (math.atan(dy, dx) + 3 * math.pi / 2)
-                if swaying then
-                    local swayMod = (swayElapsedTime > swayPeriod / 2) and (((swayPeriod - swayElapsedTime) / swayPeriod - 0.25) * 4) or ((swayElapsedTime / swayPeriod - 0.25) * 4)
-                    local swayedYaw = yaw + swayMod * swayMaxDeviation
-                    swayedYaw = (swayedYaw > 2 * math.pi) and (swayedYaw - 2 * math.pi) or swayedYaw
-                    swayedYaw = (swayedYaw < 0) and (swayedYaw + 2 * math.pi) or swayedYaw
-                    bot.input.authoritativeAimingYaw = swayedYaw
-                else
-                    bot.input.authoritativeAimingYaw = yaw
-                end
-            -- target reached
+            
+        elseif moveMode == 2 and activePlayer.soldier and bot.soldier then  -- pointing
+            local dy = activePlayer.soldier.transform.trans.z - bot.soldier.transform.trans.z
+            local dx = activePlayer.soldier.transform.trans.x - bot.soldier.transform.trans.x
+            local yaw = (math.atan(dy, dx) > math.pi / 2) and (math.atan(dy, dx) - math.pi / 2) or (math.atan(dy, dx) + 3 * math.pi / 2)
+            if swaying then
+                local swayMod = (swayElapsedTime > swayPeriod / 2) and (((swayPeriod - swayElapsedTime) / swayPeriod - 0.25) * 4) or ((swayElapsedTime / swayPeriod - 0.25) * 4)
+                local swayedYaw = yaw + swayMod * swayMaxDeviation
+                swayedYaw = (swayedYaw > 2 * math.pi) and (swayedYaw - 2 * math.pi) or swayedYaw
+                swayedYaw = (swayedYaw < 0) and (swayedYaw + 2 * math.pi) or swayedYaw
+                bot.input.authoritativeAimingYaw = swayedYaw
             else
-                currentPoint[botIndex] = activeWayIndex + 1
+                bot.input.authoritativeAimingYaw = yaw
+            end
+        
+        elseif moveMode == 3 then  -- mimicking
+            for i = 0, 36 do
+                bot.input:SetLevel(i, activePlayer.input:GetLevel(i))
+            end
+            bot.input.authoritativeAimingYaw = activePlayer.input.authoritativeAimingYaw
+            bot.input.authoritativeAimingPitch = activePlayer.input.authoritativeAimingPitch
+
+        elseif moveMode == 4 then -- mirroring
+            for i = 0, 36 do
+                bot.input:SetLevel(i, activePlayer.input:GetLevel(i))
+            end
+            bot.input.authoritativeAimingYaw = activePlayer.input.authoritativeAimingYaw + ((activePlayer.input.authoritativeAimingYaw > math.pi) and -math.pi or math.pi)
+            bot.input.authoritativeAimingPitch = activePlayer.input.authoritativeAimingPitch
+            
+        elseif moveMode == 5 then -- move along points
+            -- get next point
+            local activeWayIndex = 1
+            if currentPoint[botIndex] == nil then
+                currentPoint[botIndex] = activeWayIndex
+            else
+                activeWayIndex = currentPoint[botIndex]
+                if activeWayPooints < activeWayIndex then
+                    activeWayIndex = 1
+                end
+            end
+            
+            -- get point
+            if activeWayPooints > 0 then
+                -- check for reached point
+                local transformation = LinearTransform()
+                transformation = wayPoints[activeWayIndex]
+                local dy = transformation.trans.z - bot.soldier.transform.trans.z
+                local dx = transformation.trans.x - bot.soldier.transform.trans.x
+                local distanceFromTarget = math.sqrt(dx ^ 2 + dy ^ 2)
+                if distanceFromTarget > 1 then
+                    local yaw = (math.atan(dy, dx) > math.pi / 2) and (math.atan(dy, dx) - math.pi / 2) or (math.atan(dy, dx) + 3 * math.pi / 2)
+                    if swaying then
+                        local swayMod = (swayElapsedTime > swayPeriod / 2) and (((swayPeriod - swayElapsedTime) / swayPeriod - 0.25) * 4) or ((swayElapsedTime / swayPeriod - 0.25) * 4)
+                        local swayedYaw = yaw + swayMod * swayMaxDeviation
+                        swayedYaw = (swayedYaw > 2 * math.pi) and (swayedYaw - 2 * math.pi) or swayedYaw
+                        swayedYaw = (swayedYaw < 0) and (swayedYaw + 2 * math.pi) or swayedYaw
+                        bot.input.authoritativeAimingYaw = swayedYaw
+                    else
+                        bot.input.authoritativeAimingYaw = yaw
+                    end
+                -- target reached
+                else
+                    currentPoint[botIndex] = activeWayIndex + 1
+                end
             end
         end
-    end
 
-    -- additional movement
-    if adading then  -- movent sidewards
-        if adadElapsedTime >= adadPeriod/2 then
-            bot.input:SetLevel(EntryInputActionEnum.EIAStrafe, -1.0)
+        -- additional movement
+        if adading then  -- movent sidewards
+            if adadElapsedTime >= adadPeriod/2 then
+                bot.input:SetLevel(EntryInputActionEnum.EIAStrafe, -1.0)
+            else
+                bot.input:SetLevel(EntryInputActionEnum.EIAStrafe, 1.0)
+            end
         else
-            bot.input:SetLevel(EntryInputActionEnum.EIAStrafe, 1.0)
+            bot.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0)
         end
-    else
-        bot.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0)
-    end
-    
-    if jumping then
-        local shouldJump = MathUtils:GetRandomInt(0, 1000)
-        if shouldJump <= 15 then
-            bot.input:SetLevel(EntryInputActionEnum.EIAJump, 1.0)
-        else
-            bot.input:SetLevel(EntryInputActionEnum.EIAJump, 0.0)
+        
+        if jumping then
+            local shouldJump = MathUtils:GetRandomInt(0, 1000)
+            if shouldJump <= 15 then
+                bot.input:SetLevel(EntryInputActionEnum.EIAJump, 1.0)
+            else
+                bot.input:SetLevel(EntryInputActionEnum.EIAJump, 0.0)
+            end
         end
-    end
 
-    -- movent speed
-    if speed == 1 then --todo: change pose to prone
-        if bot.soldier ~= nil then
-            bot.input:SetLevel(EntryInputActionEnum.EIAThrottle, 0.25)
-            bot.input:SetLevel(EntryInputActionEnum.EIASprint, 0)
+        -- movent speed
+        if speed == 1 then --todo: change pose to prone
+            if bot.soldier ~= nil then
+                bot.input:SetLevel(EntryInputActionEnum.EIAThrottle, 0.25)
+                bot.input:SetLevel(EntryInputActionEnum.EIASprint, 0)
+            end
+        elseif speed == 2 then --todo: change pose to crouching
+            if bot.soldier ~= nil then
+                bot.input:SetLevel(EntryInputActionEnum.EIAThrottle, 0.5)
+                bot.input:SetLevel(EntryInputActionEnum.EIASprint, 0)
+            end
+        elseif speed == 3 then --walking
+            if bot.soldier ~= nil then
+                bot.input:SetLevel(EntryInputActionEnum.EIAThrottle, 1)
+                bot.input:SetLevel(EntryInputActionEnum.EIASprint, 0)
+            end
+        elseif speed == 4 then  --running
+            if bot.soldier ~= nil then
+                bot.input:SetLevel(EntryInputActionEnum.EIAThrottle, 1)
+                bot.input:SetLevel(EntryInputActionEnum.EIASprint, 1)
+            end
+        else    --standing
+            if bot.soldier ~= nil then
+                bot.input:SetLevel(EntryInputActionEnum.EIAThrottle, 0)
+                bot.input:SetLevel(EntryInputActionEnum.EIASprint, 0)
+            end
         end
-    elseif speed == 2 then --todo: change pose to crouching
-        if bot.soldier ~= nil then
-            bot.input:SetLevel(EntryInputActionEnum.EIAThrottle, 0.5)
-            bot.input:SetLevel(EntryInputActionEnum.EIASprint, 0)
-        end
-    elseif speed == 3 then --walking
-        if bot.soldier ~= nil then
-            bot.input:SetLevel(EntryInputActionEnum.EIAThrottle, 1)
-            bot.input:SetLevel(EntryInputActionEnum.EIASprint, 0)
-        end
-    elseif speed == 4 then  --running
-        if bot.soldier ~= nil then
-            bot.input:SetLevel(EntryInputActionEnum.EIAThrottle, 1)
-            bot.input:SetLevel(EntryInputActionEnum.EIASprint, 1)
-        end
-    else    --standing
-        if bot.soldier ~= nil then
-            bot.input:SetLevel(EntryInputActionEnum.EIAThrottle, 0)
-            bot.input:SetLevel(EntryInputActionEnum.EIASprint, 0)
-        end
-    end
 
-    -- dieing
-    if dieing and activePlayer.soldier and bot.soldier then
-        local dy = activePlayer.soldier.transform.trans.z - bot.soldier.transform.trans.z
-        local dx = activePlayer.soldier.transform.trans.x - bot.soldier.transform.trans.x
-        local distanceFromPlayer = math.sqrt(dx ^ 2 + dy ^ 2)
-        if distanceFromPlayer < 1 then
-            bot.soldier:Kill()
+        -- dieing
+        if dieing and activePlayer.soldier and bot.soldier then
+            local dy = activePlayer.soldier.transform.trans.z - bot.soldier.transform.trans.z
+            local dx = activePlayer.soldier.transform.trans.x - bot.soldier.transform.trans.x
+            local distanceFromPlayer = math.sqrt(dx ^ 2 + dy ^ 2)
+            if distanceFromPlayer < 1 then
+                bot.soldier:Kill()
+            end
         end
     end
 end)
@@ -280,7 +284,7 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
     elseif parts[1] == '!respawn' then
         respawning = true
     elseif parts[1] == '!setpoint' then
-        setPoint()
+        setPoint(player)
     elseif parts[1] == '!clearpoints' then
         clearPoints()
     elseif parts[1] == '!stop' then
@@ -430,10 +434,15 @@ function getYawOffsetTransform(transform, yaw, spacing)
     return offsetTransform
 end
 
-function setPoint()
+function setPoint(player)
     if activeWayPooints <= maxWayPoints then 
         activeWayPooints = activeWayPooints + 1
         wayPoints[activeWayPooints] = player.soldier.transform
+        if activeWayPooints == 1 then
+            point1 = player.soldier.transform
+        else
+            point2 = player.soldier.transform
+        end
     end
 end
 
