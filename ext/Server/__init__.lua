@@ -7,6 +7,10 @@ local soldierKit = nil
 
 local k = 0
 
+local mode = 0 --standing, centerpoint, pointing
+local speed = 0 -- standing 0, couching 1, walking 2, running 3
+
+
 local walking = false
 local running = false
 local jumping = false
@@ -94,6 +98,7 @@ Events:Subscribe('Bot:Update', function(bot, dt)
             Bots:spawnBot(bot, centerpoint, CharacterPoseType.CharacterPoseType_Stand, soldierBlueprint, soldierKit, {})
         end
 
+        -- movement towards and away from point
         if bot.soldier ~= nil and centerPointElapsedTime <= (centerPointPeriod / 2) then
             bot.input.authoritativeAimingYaw = yaws[bot.name]
         elseif bot.soldier ~= nil then
@@ -116,7 +121,7 @@ Events:Subscribe('Bot:Update', function(bot, dt)
         Bots:spawnBot(bot, botTransforms[tonumber(bot.name)], CharacterPoseType.CharacterPoseType_Stand, soldierBlueprint, soldierKit, {})
     end
 
-    -- mode of bots
+    -- movement-mode of bots
     if mimicking then
         for i = 0, 36 do
             bot.input:SetLevel(i, activePlayer.input:GetLevel(i))
@@ -161,17 +166,31 @@ Events:Subscribe('Bot:Update', function(bot, dt)
     end
 
     -- movent speed
-    if walking then
+    if speed == 1 then --proneing
         if bot.soldier ~= nil then
+            bot.input:SetLevel(EntryInputActionEnum.EIAChangePose, CharacterPoseType.CharacterPoseType_Prone)
+            bot.input:SetLevel(EntryInputActionEnum.EIAThrottle, 0.25)
+            bot.input:SetLevel(EntryInputActionEnum.EIASprint, 0)
+        end
+    elseif speed == 2 then --crouching
+        if bot.soldier ~= nil then
+            bot.input:SetLevel(EntryInputActionEnum.EIAChangePose, CharacterPoseType.CharacterPoseType_Crouch)
+            bot.input:SetLevel(EntryInputActionEnum.EIAThrottle, 0.5)
+            bot.input:SetLevel(EntryInputActionEnum.EIASprint, 0)
+        end
+    elseif speed == 3 then --walking
+        if bot.soldier ~= nil then
+            bot.input:SetLevel(EntryInputActionEnum.EIAChangePose, CharacterPoseType.CharacterPoseType_Stand)
             bot.input:SetLevel(EntryInputActionEnum.EIAThrottle, 1)
             bot.input:SetLevel(EntryInputActionEnum.EIASprint, 0)
         end
-    elseif running then
+    elseif speed == 4 then  --running
         if bot.soldier ~= nil then
+            bot.input:SetLevel(EntryInputActionEnum.EIAChangePose, CharacterPoseType.CharacterPoseType_Stand)
             bot.input:SetLevel(EntryInputActionEnum.EIAThrottle, 1)
             bot.input:SetLevel(EntryInputActionEnum.EIASprint, 1)
         end
-    else
+    else    --standing
         if bot.soldier ~= nil then
             bot.input:SetLevel(EntryInputActionEnum.EIAThrottle, 0)
             bot.input:SetLevel(EntryInputActionEnum.EIASprint, 0)
@@ -279,6 +298,12 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
         local rows = tonumber(parts[2])
         local spacing = tonumber(parts[3]) or 2
         spawnBotRowOnPlayer(player, rows, spacing)
+        
+   elseif parts[1] == '!speed' then
+        if tonumber(parts[2]) == nil then
+            return
+        end
+        speed = tonumber(parts[2])
 
     elseif parts[1] == '!tower' then
         if tonumber(parts[2]) == nil then
