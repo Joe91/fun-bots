@@ -86,7 +86,8 @@ end)
 
 Events:Subscribe('Bot:Update', function(bot, dt)
 
-    if spawnAroundPoint and tonumber(bot.name) <= activeBotCount then
+    --spawning 
+    if spawnCenterpoint and tonumber(bot.name) <= activeBotCount then
         if respawning and bot.soldier == nil then
             yaws[bot.name] = MathUtils:GetRandom(0, 2*math.pi)
             bot.input.authoritativeAimingYaw = yaws[bot.name]
@@ -115,6 +116,7 @@ Events:Subscribe('Bot:Update', function(bot, dt)
         Bots:spawnBot(bot, botTransforms[tonumber(bot.name)], CharacterPoseType.CharacterPoseType_Stand, soldierBlueprint, soldierKit, {})
     end
 
+    -- mode of bots
     if mimicking then
         for i = 0, 36 do
             bot.input:SetLevel(i, activePlayer.input:GetLevel(i))
@@ -131,6 +133,7 @@ Events:Subscribe('Bot:Update', function(bot, dt)
         bot.input.authoritativeAimingYaw = activePlayer.input.authoritativeAimingYaw + ((activePlayer.input.authoritativeAimingYaw > math.pi) and -math.pi or math.pi)
         bot.input.authoritativeAimingPitch = activePlayer.input.authoritativeAimingPitch
 
+    -- movement towards player
     elseif pointing and activePlayer.soldier and bot.soldier then
         local dy = activePlayer.soldier.transform.trans.z - bot.soldier.transform.trans.z
         local dx = activePlayer.soldier.transform.trans.x - bot.soldier.transform.trans.x
@@ -146,6 +149,7 @@ Events:Subscribe('Bot:Update', function(bot, dt)
         end
     end
 
+    -- movent sidewards
     if adading then
         if adadElapsedTime >= adadPeriod/2 then
             bot.input:SetLevel(EntryInputActionEnum.EIAStrafe, -1.0)
@@ -156,6 +160,7 @@ Events:Subscribe('Bot:Update', function(bot, dt)
         bot.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0)
     end
 
+    -- movent speed
     if walking then
         if bot.soldier ~= nil then
             bot.input:SetLevel(EntryInputActionEnum.EIAThrottle, 1)
