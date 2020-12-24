@@ -10,7 +10,7 @@ local soldierKit = nil
 
 local k = 0
 
-local moveMode = 5 --standing, centerpoint, pointing
+local moveMode = 2 --standing, centerpoint, pointing
 local speed = 3 -- standing 0, proning 1, couching 2, walking 3, running 4
 local spawnMode = 0 -- center 1, line 2, ring 3
 
@@ -57,10 +57,6 @@ end
 
 Events:Subscribe('Level:Loaded', function()
     print("level loaded")
-    botsCreatedCount = 0
-    activeBotCount = 0
-    k = 0
-
     soldierBlueprint = ResourceManager:SearchForInstanceByGuid(Guid('261E43BF-259B-41D2-BF3B-9AE4DDA96AD2'))
     soldierKit = ResourceManager:SearchForInstanceByGuid(Guid('A15EE431-88B8-4B35-B69A-985CEA934855'))
 
@@ -101,10 +97,12 @@ Events:Subscribe('Bot:Update', function(bot, dt)
             spawnBot(bot.name, TeamId.Team1, SquadId.Squad1, centerpoint)
         elseif spawnMode == 2 then  --spawnInLine
             spawnBot(bot.name, TeamId.Team1, SquadId.Squad1, botTransforms[bot.name])
-        elseif spawnMode == 3 then  --spawnInRing
-            local yaw = botIndex * (2 * math.pi / activeBotCount)
-            local transform = getYawOffsetTransform(activePlayer.soldier.transform, yaw, ringSpacing)
-            spawnBot(bot.name, TeamId.Team1, SquadId.Squad1, transform)
+        elseif spawnMode == 3 then  --spawnInRing around player
+            if activePlayer ~= nil then
+                local yaw = botIndex * (2 * math.pi / activeBotCount)
+                local transform = getYawOffsetTransform(activePlayer.soldier.transform, yaw, ringSpacing)
+                spawnBot(bot.name, TeamId.Team1, SquadId.Squad1, transform)
+            end
         else
             spawnBot(bot.name, TeamId.Team1, SquadId.Squad1, botTransforms[bot.name])
         end
@@ -119,7 +117,7 @@ Events:Subscribe('Bot:Update', function(bot, dt)
                 bot.input.authoritativeAimingYaw = (yaws[bot.name] < math.pi) and (yaws[bot.name] + math.pi) or (yaws[bot.name] - math.pi)
             end
             
-        elseif moveMode == 2 and activePlayer.soldier then  -- pointing
+        elseif moveMode == 2 and activePlayer and activePlayer.soldier then  -- pointing
             local dy = activePlayer.soldier.transform.trans.z - bot.soldier.transform.trans.z
             local dx = activePlayer.soldier.transform.trans.x - bot.soldier.transform.trans.x
             local yaw = (math.atan(dy, dx) > math.pi / 2) and (math.atan(dy, dx) - math.pi / 2) or (math.atan(dy, dx) + 3 * math.pi / 2)
@@ -133,14 +131,13 @@ Events:Subscribe('Bot:Update', function(bot, dt)
                 bot.input.authoritativeAimingYaw = yaw
             end
         
-        elseif moveMode == 3 then  -- mimicking
+        elseif moveMode == 3 and activePlayer then  -- mimicking
             for i = 0, 36 do
                 bot.input:SetLevel(i, activePlayer.input:GetLevel(i))
             end
             bot.input.authoritativeAimingYaw = activePlayer.input.authoritativeAimingYaw
             bot.input.authoritativeAimingPitch = activePlayer.input.authoritativeAimingPitch
-
-        elseif moveMode == 4 then -- mirroring
+        elseif moveMode == 4 and activePlayer then -- mirroring
             for i = 0, 36 do
                 bot.input:SetLevel(i, activePlayer.input:GetLevel(i))
             end
@@ -178,11 +175,12 @@ Events:Subscribe('Bot:Update', function(bot, dt)
                     else
                         bot.input.authoritativeAimingYaw = yaw
                     end
-                -- target reached
-                else
+                else  -- target reached
                     currentPoint[botIndex] = activeWayIndex + 1
                 end
             end
+        else
+            -- debug
         end
 
         -- additional movement
@@ -335,7 +333,7 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
         local rows = tonumber(parts[2])
         local columns = tonumber(parts[3]) or tonumber(parts[2])
         local spacing = tonumber(parts[4]) or 2
-        spawnBotGridOnPlayer(player, rows, columns)
+        spawnBotGridOnPlayer(player, rows, columns, spacing)
 
     elseif parts[1] == '!john' then
         spawnJohnOnPlayer(player)
@@ -354,7 +352,6 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
                 local name = tostring(k)
                 spawnBot(name, TeamId.Team1, SquadId.Squad1, player.soldier.transform)
                 local bot = PlayerManager:GetPlayerByName(name)
-                createNewBotIfNeeded(k)
                 bot:EnterVehicle(vehicleEntity, entryId)
             end
             vehicleEntity = iterator:Next()
@@ -375,7 +372,6 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
                     local name = tostring(k)
                     spawnBot(name, TeamId.Team1, SquadId.Squad1, player.soldier.transform)
                     local bot = PlayerManager:GetPlayerByName(name)
-                    createNewBotIfNeeded(k)
                     bot:EnterVehicle(vehicleEntity, i)
                 end
             end
@@ -489,7 +485,7 @@ function spawnBotTowerOnPlayer(player, height)
     end
 end
 
-function spawnBotGridOnPlayer(player, rows, columns)
+function spawnBotGridOnPlayer(player, rows, columns, spacing)
     for i = 1, rows do
         for j = 1, columns do
             local name = tostring((i - 1) * columns + j)
@@ -510,11 +506,10 @@ function spawnCenterpointBots(player, amount, duration)
     centerpoint = player.soldier.transform
     centerPointPeriod = duration
     centerPointElapsedTime = (duration / 4)
-
     for i = 1, amount do
         local name = tostring(i)
         yaws[name] = MathUtils:GetRandom(0, 2 * math.pi)
-        spawnBot(name, TeamId.Team1, SquadId.Squad1, transform)
+        spawnBot(name, TeamId.Team1, SquadId.Squad1, centerpoint)
         local bot = PlayerManager:GetPlayerByName(name)
         bot.input.authoritativeAimingYaw = yaws[name]
     end
