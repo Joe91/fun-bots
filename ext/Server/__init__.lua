@@ -394,8 +394,10 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
     elseif parts[1] == '!kill' then
         k = 0
         for i = 1, activeBotCount do
-            if rowBots[i] and rowBots[i].soldier then
-                rowBots[i].soldier:Kill()
+            local name = tostring(i)
+            local bot = PlayerManager:GetPlayerByName(name)
+            if bot and bot.soldier then
+                bot.soldier:Kill()
             end
         end
     end
@@ -486,8 +488,8 @@ function spawnCenterpointBots(player, amount, duration)
         local name = tostring(i)
         yaws[name] = MathUtils:GetRandom(0, 2 * math.pi)
         spawnBot(name, TeamId.Team1, SquadId.Squad1, centerpoint)
-        --local bot = PlayerManager:GetPlayerByName(name)
-        rowBots[name].input.authoritativeAimingYaw = yaws[name]
+        local bot = PlayerManager:GetPlayerByName(name)
+        bot.input.authoritativeAimingYaw = yaws[name]
     end
 end
 
@@ -523,9 +525,9 @@ function spawnJohnOnPlayer(player)
     
     local transform = getYawOffsetTransform(player.soldier.transform, yaw, -1)
     spawnBot(name, TeamId.Team1, SquadId.Squad1, transform)
-    --local bot = PlayerManager:GetPlayerByName(name)
-    rowBots[name].input.authoritativeAimingYaw = yaw
-    rowBots[name].input:SetLevel(EntryInputActionEnum.EIAFire, 1)
+    local bot = PlayerManager:GetPlayerByName(name)
+    bot.input.authoritativeAimingYaw = yaw
+    bot.input:SetLevel(EntryInputActionEnum.EIAFire, 1)
 end
 
 function string:split(sep)
@@ -537,18 +539,18 @@ end
 
 function spawnBot(name, teamId, squadId, trans)
 	local existingPlayer = PlayerManager:GetPlayerByName(name)
-	--local tmpBot = nil
+	local bot = nil
 
 	if existingPlayer ~= nil then
 		-- If a player with this name exists and it's not a bot then error out.
 		if not Bots:isBot(existingPlayer) then
 			return
 		end
-		rowBots[name] = existingPlayer
-		rowBots[name].teamId = teamId
-		rowBots[name].squadId = squadId
+		bot = existingPlayer
+		bot.teamId = teamId
+		bot.squadId = squadId
 	else
-		rowBots[name] = Bots:createBot(name, teamId, squadId)
+		bot = Bots:createBot(name, teamId, squadId)
 	end
 	-- Get the default MpSoldier blueprint and the US assault kit.
 	local soldierBlueprint = ResourceManager:SearchForInstanceByGuid(Guid('261E43BF-259B-41D2-BF3B-9AE4DDA96AD2'))
@@ -559,8 +561,8 @@ function spawnBot(name, teamId, squadId, trans)
     transform = trans
     
 	-- And then spawn the bot. This will create and return a new SoldierEntity object.
-    Bots:spawnBot(rowBots[name], transform, CharacterPoseType.CharacterPoseType_Stand, soldierBlueprint, soldierKit, {})
-    rowBots[name].input.flags = EntryInputFlags.AuthoritativeAiming
+    Bots:spawnBot(bot, transform, CharacterPoseType.CharacterPoseType_Stand, soldierBlueprint, soldierKit, {})
+    bot.input.flags = EntryInputFlags.AuthoritativeAiming
 end
 
 function kickBot(name)
