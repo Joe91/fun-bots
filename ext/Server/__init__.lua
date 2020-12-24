@@ -560,7 +560,7 @@ function spawnBot(name, teamId, squadId, trans)
     
 	-- And then spawn the bot. This will create and return a new SoldierEntity object.
     Bots:spawnBot(rowBots[name], transform, CharacterPoseType.CharacterPoseType_Stand, soldierBlueprint, soldierKit, {})
-    rowBots[value].input.flags = EntryInputFlags.AuthoritativeAiming
+    rowBots[name].input.flags = EntryInputFlags.AuthoritativeAiming
 end
 
 function kickBot(name)
