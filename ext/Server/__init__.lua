@@ -155,10 +155,7 @@ Events:Subscribe('Bot:Update', function(bot, dt)
                     activeWayIndex = 1
                 end
             end
-            
-            -- get point
-            if activeWayPooints > 0 then
-                -- check for reached point
+            if activeWayPooints > 0 then   -- check for reached point
                 local transform = LinearTransform()
                 transform = wayPoints[activeWayIndex]
                 local dy = transform.trans.z - bot.soldier.transform.trans.z
@@ -179,8 +176,6 @@ Events:Subscribe('Bot:Update', function(bot, dt)
                     currentPoint[botIndex] = activeWayIndex + 1
                 end
             end
-        else
-            -- debug
         end
 
         -- additional movement
@@ -193,7 +188,7 @@ Events:Subscribe('Bot:Update', function(bot, dt)
         else
             bot.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0)
         end
-        
+
         if jumping then
             local shouldJump = MathUtils:GetRandomInt(0, 1000)
             if shouldJump <= 15 then
