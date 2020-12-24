@@ -177,11 +177,20 @@ Events:Subscribe('Bot:Update', function(bot, dt)
         end
 
         -- additional movement
+        local speedVal = 0
+        if speed == 1 then
+            speedVal = 0.25
+        elseif speed == 2 then
+            speedVal = 0.5
+        elseif speed >= 3 then
+            speedVal = 1.0
+        end
+
         if adading then  -- movent sidewards
             if adadElapsedTime >= adadPeriod/2 then
-                bot.input:SetLevel(EntryInputActionEnum.EIAStrafe, -1.0)
+                bot.input:SetLevel(EntryInputActionEnum.EIAStrafe, -speedVal)
             else
-                bot.input:SetLevel(EntryInputActionEnum.EIAStrafe, 1.0)
+                bot.input:SetLevel(EntryInputActionEnum.EIAStrafe, speedVal)
             end
         else
             bot.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0)
@@ -197,29 +206,11 @@ Events:Subscribe('Bot:Update', function(bot, dt)
         end
 
         -- movent speed
-        if speed == 1 then --todo: change pose to prone
-            if bot.soldier ~= nil then
-                bot.input:SetLevel(EntryInputActionEnum.EIAThrottle, 0.25)
-                bot.input:SetLevel(EntryInputActionEnum.EIASprint, 0)
-            end
-        elseif speed == 2 then --todo: change pose to crouching
-            if bot.soldier ~= nil then
-                bot.input:SetLevel(EntryInputActionEnum.EIAThrottle, 0.5)
-                bot.input:SetLevel(EntryInputActionEnum.EIASprint, 0)
-            end
-        elseif speed == 3 then --walking
-            if bot.soldier ~= nil then
-                bot.input:SetLevel(EntryInputActionEnum.EIAThrottle, 1)
-                bot.input:SetLevel(EntryInputActionEnum.EIASprint, 0)
-            end
-        elseif speed == 4 then  --running
-            if bot.soldier ~= nil then
-                bot.input:SetLevel(EntryInputActionEnum.EIAThrottle, 1)
+        if bot.soldier ~= nil then
+            bot.input:SetLevel(EntryInputActionEnum.EIAThrottle, speedVal)
+            if speed > 3 then
                 bot.input:SetLevel(EntryInputActionEnum.EIASprint, 1)
-            end
-        else    --standing
-            if bot.soldier ~= nil then
-                bot.input:SetLevel(EntryInputActionEnum.EIAThrottle, 0)
+            else
                 bot.input:SetLevel(EntryInputActionEnum.EIASprint, 0)
             end
         end
@@ -546,18 +537,18 @@ end
 
 function spawnBot(name, teamId, squadId, trans)
 	local existingPlayer = PlayerManager:GetPlayerByName(name)
-	local tmpBot = nil
+	--local tmpBot = nil
 
 	if existingPlayer ~= nil then
 		-- If a player with this name exists and it's not a bot then error out.
 		if not Bots:isBot(existingPlayer) then
 			return
 		end
-		tmpBot = existingPlayer
-		tmpBot.teamId = teamId
-		tmpBot.squadId = squadId
+		rowBots[name] = existingPlayer
+		rowBots[name].teamId = teamId
+		rowBots[name].squadId = squadId
 	else
-		tmpBot = Bots:createBot(name, teamId, squadId)
+		rowBots[name] = Bots:createBot(name, teamId, squadId)
 	end
 	-- Get the default MpSoldier blueprint and the US assault kit.
 	local soldierBlueprint = ResourceManager:SearchForInstanceByGuid(Guid('261E43BF-259B-41D2-BF3B-9AE4DDA96AD2'))
@@ -568,24 +559,16 @@ function spawnBot(name, teamId, squadId, trans)
     transform = trans
     
 	-- And then spawn the bot. This will create and return a new SoldierEntity object.
-    rowBots[name] = tmpBot
-    Bots:spawnBot(tmpBot, transform, CharacterPoseType.CharacterPoseType_Stand, soldierBlueprint, soldierKit, {})
+    Bots:spawnBot(rowBots[name], transform, CharacterPoseType.CharacterPoseType_Stand, soldierBlueprint, soldierKit, {})
 end
 
 function kickBot(name)
-	-- Try to get a player by the specified name.
-	local player = PlayerManager:GetPlayerByName(name)
-
-	-- Check if they exists.
-	if player == nil then
+	local tmpPlayer = PlayerManager:GetPlayerByName(name)
+	if tmpPlayer == nil then
 		return
 	end
-
-	-- And if they do check if they're a bot.
-	if not Bots:isBot(player) then
+	if not Bots:isBot(tmpPlayer) then
 		return
 	end
-
-	-- If they are, destroy them.
-	Bots:destroyBot(player)
+	Bots:destroyBot(tmpPlayer)
 end
