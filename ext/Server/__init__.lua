@@ -432,11 +432,6 @@ function setPoint(player)
     if activeWayPooints <= maxWayPoints then 
         activeWayPooints = activeWayPooints + 1
         wayPoints[activeWayPooints] = player.soldier.transform
-        if activeWayPooints == 1 then
-            point1 = player.soldier.transform
-        else
-            point2 = player.soldier.transform
-        end
     end
 end
 
