@@ -87,7 +87,7 @@ Events:Subscribe('Engine:Update', function(dt)
 end)
 
 Events:Subscribe('Bot:Update', function(bot, dt)
-    -- increase performance with reduced update cycles 
+    -- increase performance with reduced update cycles
     local timeGone = botTimeGones[bot.name] + dt
     if timeGone < 0.1 then --(10 times per second?)
         botTimeGones[bot.name] = timeGone
@@ -100,14 +100,12 @@ Events:Subscribe('Bot:Update', function(bot, dt)
     local speed     = botSpeeds[bot.name]
     local moveMode =  botMoveModes[bot.name]
 
-    
-
     --spawning 
     if respawning and bot.soldier == nil and spawnMode > 0 then
         if spawnMode == 1 then --spawnCenterpoint
             yaws[bot.name] = MathUtils:GetRandom(0, 2*math.pi)
-            bot.input.authoritativeAimingYaw = yaws[bot.name]
             spawnBot(bot.name, team, squad, centerpoint, false)
+            bot.input.authoritativeAimingYaw = yaws[bot.name]
         elseif spawnMode == 2 then  --spawnInLine
             spawnBot(bot.name, team, squad, botTransforms[bot.name], false)
         elseif spawnMode == 3 then  --spawnInRing around player
@@ -130,9 +128,9 @@ Events:Subscribe('Bot:Update', function(bot, dt)
     -- movement-mode of bots
     if bot.soldier ~= nil then
         if moveMode == 1 then -- centerpoint
-            if bot.soldier ~= nil and centerPointElapsedTime <= (centerPointPeriod / 2) then
+            if centerPointElapsedTime <= (centerPointPeriod / 2) then
                 bot.input.authoritativeAimingYaw = yaws[bot.name]
-            elseif bot.soldier ~= nil then
+            else
                 bot.input.authoritativeAimingYaw = (yaws[bot.name] < math.pi) and (yaws[bot.name] + math.pi) or (yaws[bot.name] - math.pi)
             end
 
@@ -271,16 +269,19 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
         dieing = true
     elseif parts[1] == '!respawn' then
         respawning = true
+
+    -- create waypoints
     elseif parts[1] == '!trace' then
         clearPoints()
         traceWay = true
     elseif parts[1] == '!tracedone' then
         traceWay = false
-        -- todo: save file possible?
     elseif parts[1] == '!setpoint' then
         setPoint(player)
     elseif parts[1] == '!clearpoints' then
         clearPoints()
+
+    -- reset everything
     elseif parts[1] == '!stop' then
         speed = 0
         moveMode = 0
@@ -291,14 +292,13 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
         dieing = false
         exploding = false
         respawning = false
+        for i = 1, maxNumberOfBots do
+            local name = tostring(i)
+            botSpeeds[name] = speed
+            botMoveModes[name] = moveMode
+        end
     elseif parts[1] == '!adad' then
         adading = true
-        --todo: for i = 1, ??? do
-         --   local name = tostring(i)
-          --  local level = MathUtils:GetRandomInt(-1, 1)
-          --  local bot = PlayerManager:GetPlayerByName(name)
-          --  bot.input:SetLevel(EntryInputActionEnum.EIAStrafe, level)
-        --end
     elseif parts[1] == '!sway' then
         swaying = true
         swayMaxDeviation = tonumber(parts[2]) or 1.5
@@ -312,25 +312,25 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
         local spacing = tonumber(parts[2]) or 2
         spawnCrouchingBotOnPlayer(player, spacing)
 
-    elseif parts[1] == '!row' then
-        if tonumber(parts[2]) == nil then
-            return
-        end
-        local rows = tonumber(parts[2])
-        local spacing = tonumber(parts[3]) or 2
-        spawnBotRowOnPlayer(player, rows, spacing)
-
-   elseif parts[1] == '!speed' then
+   elseif parts[1] == '!speed' then --overwrite speed for all bots
         if tonumber(parts[2]) == nil then
             return
         end
         speed = tonumber(parts[2])
+        for i = 1, maxNumberOfBots do
+            local name = tostring(i)
+            botSpeeds[name] = speed
+        end
 
-    elseif parts[1] == '!mode' then
+    elseif parts[1] == '!mode' then --overwrite mode for all bots
         if tonumber(parts[2]) == nil then
             return
         end
         moveMode = tonumber(parts[2])
+        for i = 1, maxNumberOfBots do
+            local name = tostring(i)
+            botMoveModes[name] = moveMode
+        end
 
     elseif parts[1] == '!setteam' then
         if tonumber(parts[2]) == nil then
@@ -341,6 +341,16 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
         else
             team = TeamId.Team2
         end
+
+    elseif parts[1] == '!row' then
+        if tonumber(parts[2]) == nil then
+            return
+        end
+        local rows = tonumber(parts[2])
+        local spacing = tonumber(parts[3]) or 2
+        speed = 0
+        moveMode = 0
+        spawnBotRowOnPlayer(player, rows, spacing)
 
     elseif parts[1] == '!tower' then
         if tonumber(parts[2]) == nil then
@@ -449,7 +459,11 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
         spawnWayBots(amount)
 
     elseif parts[1] == '!kick' then
-        Bots:destroyAllBots()
+        if parts[2] ~= nil then
+            kickBot(parts[2])
+        else
+            Bots:destroyAllBots()
+        end
 
     elseif parts[1] == '!kill' then
         for i = 1, maxNumberOfBots do
@@ -552,7 +566,7 @@ function spawnCenterpointBots(player, amount, duration)
         local name = findNextBotName()
         if name ~= nil then
             yaws[name] = MathUtils:GetRandom(0, 2 * math.pi)
-            spawnBot(name, team, squad, centerpoint)
+            spawnBot(name, team, squad, centerpoint, true)
             local bot = PlayerManager:GetPlayerByName(name)
             bot.input.authoritativeAimingYaw = yaws[name]
         end
