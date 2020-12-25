@@ -118,11 +118,12 @@ Events:Subscribe('Bot:Update', function(bot, dt)
                 spawnBot(bot.name, team, squad, transform)
             end
         elseif spawnMode == 4 then --spawn on way
-            local newIndex = MathUtils.GetRandomInt(1, #wayPoints)
-            currentPoint[botIndex] = newIndex
-            local transform = wayPoints[newIndex]
+            local randIdex = 1
+            --local randIdex = MathUtils.GetRandomInt(1, activeWayPooints) --todo: does not work right now. find out why
+            currentPoint[bot.name] = randIdex
+            local transform = LinearTransform()
+            transform = wayPoints[randIdex]
             spawnBot(bot.name, team, squad, transform)
-            --todo:
         else
             spawnBot(bot.name, team, squad, botTransforms[bot.name])
         end
@@ -136,7 +137,7 @@ Events:Subscribe('Bot:Update', function(bot, dt)
             elseif bot.soldier ~= nil then
                 bot.input.authoritativeAimingYaw = (yaws[bot.name] < math.pi) and (yaws[bot.name] + math.pi) or (yaws[bot.name] - math.pi)
             end
-            
+
         elseif moveMode == 2 and activePlayer and activePlayer.soldier then  -- pointing
             local dy = activePlayer.soldier.transform.trans.z - bot.soldier.transform.trans.z
             local dx = activePlayer.soldier.transform.trans.x - bot.soldier.transform.trans.x
@@ -150,7 +151,7 @@ Events:Subscribe('Bot:Update', function(bot, dt)
             else
                 bot.input.authoritativeAimingYaw = yaw
             end
-        
+
         elseif moveMode == 3 and activePlayer then  -- mimicking
             for i = 0, 36 do
                 bot.input:SetLevel(i, activePlayer.input:GetLevel(i))
@@ -163,14 +164,14 @@ Events:Subscribe('Bot:Update', function(bot, dt)
             end
             bot.input.authoritativeAimingYaw = activePlayer.input.authoritativeAimingYaw + ((activePlayer.input.authoritativeAimingYaw > math.pi) and -math.pi or math.pi)
             bot.input.authoritativeAimingPitch = activePlayer.input.authoritativeAimingPitch
-            
+
         elseif moveMode == 5 then -- move along points
             -- get next point
             local activeWayIndex = 1
-            if currentPoint[botIndex] == nil then
-                currentPoint[botIndex] = activeWayIndex
+            if currentPoint[bot.name] == nil then
+                currentPoint[bot.name] = activeWayIndex
             else
-                activeWayIndex = currentPoint[botIndex]
+                activeWayIndex = currentPoint[bot.name]
                 if activeWayPooints < activeWayIndex then
                     activeWayIndex = 1
                 end
@@ -193,7 +194,7 @@ Events:Subscribe('Bot:Update', function(bot, dt)
                         bot.input.authoritativeAimingYaw = yaw
                     end
                 else  -- target reached
-                    currentPoint[botIndex] = activeWayIndex + 1
+                    currentPoint[bot.name] = activeWayIndex + 1
                 end
             end
         end
@@ -273,6 +274,7 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
     elseif parts[1] == '!respawn' then
         respawning = true
     elseif parts[1] == '!trace' then
+        clearPoints()
         traceWay = true
     elseif parts[1] == '!tracedone' then
         traceWay = false
@@ -413,6 +415,7 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
         end
         speed = 3
         moveMode = 1
+        spawnMode = 1
         local amount = tonumber(parts[2])
         local duration = tonumber(parts[3]) or 10
         spawnCenterpointBots(player, amount, duration)
@@ -423,6 +426,7 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
         end
         speed = 3
         moveMode = 2
+        spawnMode = 2
         local amount = tonumber(parts[2])
         local spacing = tonumber(parts[3]) or 2
         spawnLineBots(player, amount, spacing)
@@ -433,18 +437,20 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
         end
         speed = 3
         moveMode = 2
+        spawnMode = 3
         local amount = tonumber(parts[2])
         local spacing = tonumber(parts[3]) or 10
         spawnRingBots(player, amount, spacing)
-    
+
     elseif parts[1] == '!spawnway' then
         if tonumber(parts[2]) == nil then
             return
         end
         speed = 3
         moveMode = 5
+        spawnMode = 4
         local amount = tonumber(parts[2])
-        spawnWayBots(player, amount)
+        spawnWayBots(amount)
 
     elseif parts[1] == '!kick' then
         Bots:destroyAllBots()
@@ -501,12 +507,14 @@ function spawnCrouchingBotOnPlayer(player, spacing)
     spawnBot(name, team, squad, transform)
 end
 
-function spawnWayBots(player, amount)
+function spawnWayBots(amount)
     for i = 1, amount do
         local name = tostring(i)
-        local newIndex = MathUtils.GetRandomInt(1, #wayPoints)
-        currentPoint[i] = newIndex
-        local transform = wayPoints[newIndex]
+        --local randIdex = MathUtils.GetRandomInt(1, activeWayPooints) --todo: crashes. find out why
+        local randIdex = 1
+        currentPoint[name] = randIdex
+        local transform = LinearTransform()
+        transform = wayPoints[randIdex]
         spawnBot(name, team, squad, transform)
     end
 end
@@ -547,8 +555,6 @@ function spawnBotGridOnPlayer(player, rows, columns, spacing)
 end
 
 function spawnCenterpointBots(player, amount, duration)
-    spawnMode = 1
-
     activeBotCount = amount
     centerpoint = player.soldier.transform
     centerPointPeriod = duration
