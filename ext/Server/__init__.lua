@@ -550,7 +550,8 @@ function spawnBot(name, teamId, squadId, trans)
 		bot.teamId = teamId
 		bot.squadId = squadId
 	else
-		bot = Bots:createBot(name, teamId, squadId)
+        bot = Bots:createBot(name, teamId, squadId)
+        bot.input.flags = EntryInputFlags.AuthoritativeAiming
 	end
 	-- Get the default MpSoldier blueprint and the US assault kit.
 	local soldierBlueprint = ResourceManager:SearchForInstanceByGuid(Guid('261E43BF-259B-41D2-BF3B-9AE4DDA96AD2'))
@@ -562,7 +563,7 @@ function spawnBot(name, teamId, squadId, trans)
     
 	-- And then spawn the bot. This will create and return a new SoldierEntity object.
     Bots:spawnBot(bot, transform, CharacterPoseType.CharacterPoseType_Stand, soldierBlueprint, soldierKit, {})
-    bot.input.flags = EntryInputFlags.AuthoritativeAiming
+
 end
 
 function kickBot(name)
