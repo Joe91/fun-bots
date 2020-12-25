@@ -87,10 +87,20 @@ Events:Subscribe('Engine:Update', function(dt)
 end)
 
 Events:Subscribe('Bot:Update', function(bot, dt)
+    -- increase performance with reduced update cycles 
+    local timeGone = botTimeGones[bot.name] + dt
+    if timeGone < 0.1 then --(10 times per second?)
+        botTimeGones[bot.name] = timeGone
+        return
+    end
+    botTimeGones[bot.name] = 0
+
     local botIndex = tonumber(bot.name)
     local spawnMode = botSpawnModes[bot.name]
     local speed     = botSpeeds[bot.name]
     local moveMode =  botMoveModes[bot.name]
+
+    
 
     --spawning 
     if respawning and bot.soldier == nil and spawnMode > 0 then
@@ -652,7 +662,8 @@ function spawnBot(name, teamId, squadId, trans, setvars)
 		bot = existingPlayer
 		bot.teamId = teamId
 		bot.squadId = squadId
-	else
+    else
+        botTimeGones[name] = 0
         bot = Bots:createBot(name, teamId, squadId)
         bot.input.flags = EntryInputFlags.AuthoritativeAiming
 	end
@@ -669,9 +680,9 @@ function spawnBot(name, teamId, squadId, trans, setvars)
 
     -- set vars
     if setvars then
-        botSpawnModes[bot.name] = spawnMode
-        botSpeeds[bot.name] = speed
-        botMoveModes[bot.name] = moveMode
+        botSpawnModes[name] = spawnMode
+        botSpeeds[name] = speed
+        botMoveModes[name] = moveMode
     end
 
 end
