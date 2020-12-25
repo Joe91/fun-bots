@@ -554,7 +554,6 @@ function spawnLineBots(player, amount, spacing)
 
     for i = 1, amount do
         local name = findNextBotName()
-        print(name)
         if name ~= nil then
             local yaw = player.input.authoritativeAimingYaw
             local transform = getYawOffsetTransform(player.soldier.transform, yaw, i * spacing)
@@ -616,10 +615,8 @@ function findNextBotName()
         local name = tostring(i)
         local bot = PlayerManager:GetPlayerByName(name)
         if bot == nil then
-            print("bot = nil")
             return name
         elseif bot.soldier == nil then
-            print("bot.soldier = not alive")
             return name
         end
     end
