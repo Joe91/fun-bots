@@ -1,7 +1,7 @@
+require('__shared/Config')
 local Bots = require('bots')
 
 local maxNumberOfBots = 40
-local minNumberOfBots = 5
 local maxWayPoints = 20
 local activeWayPooints = 0
 
