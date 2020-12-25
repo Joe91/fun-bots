@@ -22,6 +22,11 @@ local moveMode = 5 --standing, centerpoint, pointing
 local speed = 3 -- standing 0, proning 1, couching 2, walking 3, running 4
 local spawnMode = 0 -- center 1, line 2, ring 3
 
+local botSpawnModes = {}
+local botSpeeds = {}
+local botMoveModes = {}
+local botTimeGones = {}
+
 local jumping = false
 
 local adading = false
@@ -33,6 +38,7 @@ local team = TeamId.Team1
 local squad = SquadId.SquadNone
 
 local activeBotCount = 0
+local inactiveBotCount = 0
 local centerPointPeriod = 5
 local centerPointElapsedTime = 0
 
@@ -100,9 +106,12 @@ end)
 
 Events:Subscribe('Bot:Update', function(bot, dt)
     local botIndex = tonumber(bot.name)
+    local spawnMode = botSpawnModes[bot.name]
+    local speed     = botSpeeds[bot.name]
+    local moveMode =  botMoveModes[bot.name]
 
     --spawning 
-    if respawning and bot.soldier == nil and botIndex <= activeBotCount then
+    if respawning and bot.soldier == nil and spawnMode > 0 then
         if spawnMode == 1 then --spawnCenterpoint
             yaws[bot.name] = MathUtils:GetRandom(0, 2*math.pi)
             bot.input.authoritativeAimingYaw = yaws[bot.name]
@@ -565,6 +574,7 @@ function spawnLineBots(player, amount, spacing)
 
     for i = 1, amount do
         local name = findNextBotName()
+        print(name)
         if name ~= nil then
             local yaw = player.input.authoritativeAimingYaw
             local transform = getYawOffsetTransform(player.soldier.transform, yaw, i * spacing)
@@ -625,16 +635,35 @@ function string:split(sep)
 end
 
 function findNextBotName()
-    for i, maxNumberOfBots do
+    for i = 1, maxNumberOfBots do
         local name = tostring(i)
         local bot = PlayerManager:GetPlayerByName(name)
-        if bot ~= nil and not bot.soldier.alive then
+        if bot == nil then
+            print("bot = nil")
             return name
-        elseif bot == nil then
+        elseif bot.soldier == nil then
+            print("bot.soldier = not alive")
             return name
         end
     end
     return nil
+end
+
+--todo
+function freeNumberOfBots(number)
+    local counter = 0
+    for i = 1, maxNumberOfBots do
+        local name = tostring(i)
+        local bot = PlayerManager:GetPlayerByName(name)
+        if bot ~= nil and bot.soldier ~= nil and not bot.soldier.alive then
+            counter = counter + 1
+        elseif bot == nil then
+            counter = counter + 1
+        end
+        if counter >= number then
+            return
+        end
+    end
 end
 
 function spawnBot(name, teamId, squadId, trans)
@@ -663,6 +692,11 @@ function spawnBot(name, teamId, squadId, trans)
 
 	-- And then spawn the bot. This will create and return a new SoldierEntity object.
     Bots:spawnBot(bot, transform, CharacterPoseType.CharacterPoseType_Stand, soldierBlueprint, soldierKit, {})
+
+    -- set vars
+    botSpawnModes[bot.name] = spawnMode
+    botSpeeds[bot.name] = speed
+    botMoveModes[bot.name] = moveMode
 
 end
 
