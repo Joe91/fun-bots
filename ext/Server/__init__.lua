@@ -16,12 +16,12 @@ local botYaws = {}
 local botCurrentWayPoints = {}
 local botWayIndexes = {}
 local botTeams = {}
+local botDieing = {}
+local botRespawning = {}
 
 local botJumping = {}
 local botAdading = {}
 local botSwaying = {}
-local botDieing = {}
-local botRespawning = {}
 
 -- vars for all bots
 local jumping = false
@@ -296,151 +296,14 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
         end
     end
 
-    -- static commands
-    if parts[1] == '!mimic' then
-        moveMode = 3
-        for i = 1, Config.maxNumberOfBots do
-            local name = BotNames[i]
-            if botTargetPlayers[name] == player then
-                if  isStaticBotMode(botMoveModes[name]) then
-                    botMoveModes[name] = moveMode
-                end
-            end
-        end
-    elseif parts[1] == '!mirror' then
-        moveMode = 4
-        for i = 1, Config.maxNumberOfBots do
-            local name = BotNames[i]
-            if botTargetPlayers[name] == player then
-                if  isStaticBotMode(botMoveModes[name]) then
-                    botMoveModes[name] = moveMode
-                end
-            end
-        end
-    elseif parts[1] == '!run' then
-        speed = 4
-    elseif parts[1] == '!walk' then
-        speed = 3
-    elseif parts[1] == '!jump' then
-        jumping = true
-    elseif parts[1] == '!nice' then
-        Config.exploding = true
-    elseif parts[1] == '!die' then
-        dieing = true
-    elseif parts[1] == '!respawn' then
-        respawning = true
-    elseif parts[1] == '!stoprespawn' then
-        respawning = false
-        for i = 1, Config.maxNumberOfBots do
-            local name = BotNames[i]
-            if botTargetPlayers[name] == player then
-                botSpawnModes[name] = 0
-            end
-        end
-
-    -- create waypoints
-    elseif parts[1] == '!trace' then
-        local traceIndex = tonumber(parts[2]) or 1
-        if traceIndex > Config.maxTraceNumber then
-            traceIndex = 1
-        end
-        clearPoints(traceIndex)
-        traceTimesGone[traceIndex] = 0
-        tracePlayers[traceIndex] = player
-
-    elseif parts[1] == '!tracedone' then
-        for i = 1, Config.maxTraceNumber do
-            if tracePlayers[i] == player then
-                tracePlayers[i] = nil
-            end
-        end
-    elseif parts[1] == '!setpoint' then
-        local traceIndex = tonumber(parts[2]) or 1
-        setPoint(traceIndex, player)
-    elseif parts[1] == '!clearpoints' then
-        local traceIndex = tonumber(parts[2]) or 1
-        clearPoints(traceIndex)
-
-    -- reset everything
-    elseif parts[1] == '!stopall' then
-        speed = 0
-        moveMode = 0
-        spawnMode = 0
-        jumping = false
-        adading = false
-        swaying = false
-        dieing = false
-        respawning = false
-        for i = 1, Config.maxNumberOfBots do
-            local name = BotNames[i]
-            botSpeeds[name] = speed
-            botMoveModes[name] = moveMode
-            botSpawnModes[name] = spawnMode
-        end
-    elseif '!stop' then
-        speed = 0
-        moveMode = 0
-        spawnMode = 0
-        jumping = false
-        adading = false
-        swaying = false
-        dieing = false
-        respawning = false
-        for i = 1, Config.maxNumberOfBots do
-            local name = BotNames[i]
-            if botTargetPlayers[name] == player then
-                botSpeeds[name] = speed
-                botMoveModes[name] = moveMode
-                botSpawnModes[name] = spawnMode
-            end
-        end
-
-    elseif parts[1] == '!adad' then
-        adading = true
-    elseif parts[1] == '!sway' then
-        swaying = true
-        swayMaxDeviation = tonumber(parts[2]) or 1.5
-        swayPeriod = tonumber(parts[3]) or 3
-
-    elseif parts[1] == '!stand' then
+    -- static bots spawning
+    if parts[1] == '!stand' then
         local spacing = tonumber(parts[2]) or 2
         spawnStandingBotOnPlayer(player, spacing)
 
     elseif parts[1] == '!crouch' then
         local spacing = tonumber(parts[2]) or 2
         spawnCrouchingBotOnPlayer(player, spacing)
-
-   elseif parts[1] == '!speed' then --overwrite speed for all bots
-        if tonumber(parts[2]) == nil then
-            return
-        end
-        speed = tonumber(parts[2])
-        for i = 1, Config.maxNumberOfBots do
-            local name = BotNames[i]
-            if botTargetPlayers[name] == player then
-                if not isStaticBotMode(botMoveModes[name]) then
-                    botSpeeds[name] = speed
-                end
-            end
-        end
-
-    elseif parts[1] == '!mode' then --overwrite mode for all bots
-        if tonumber(parts[2]) == nil then
-            return
-        end
-        moveMode = tonumber(parts[2])
-        for i = 1, Config.maxNumberOfBots do
-            local name = BotNames[i]
-            if botTargetPlayers[name] == player then
-                botMoveModes[name] = moveMode
-            end
-        end
-
-    -- set spawn team
-    elseif parts[1] == '!spawnsameteam' then
-        Config.spawnInSameTeam = true
-    elseif parts[1] == '!spawnotherteam' then
-        Config.spawnInSameTeam = false
 
     elseif parts[1] == '!row' then
         if tonumber(parts[2]) == nil then
@@ -477,6 +340,265 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
         moveMode = 0
         spawnJohnOnPlayer(player)
 
+    -- static mode commands
+    elseif parts[1] == '!mimic' then
+        moveMode = 3
+        setBotVarForPlayerStatic(player, botMoveModes, moveMode, true)
+
+    elseif parts[1] == '!mirror' then
+        moveMode = 4
+        setBotVarForPlayerStatic(player, botMoveModes, moveMode, true)
+    
+    elseif parts[1] == '!static' then
+        moveMode = 0
+        setBotVarForPlayerStatic(player, botMoveModes, moveMode, true)
+
+    -- moving bots spawning
+    elseif parts[1] == '!spawncenter' then
+        if tonumber(parts[2]) == nil then
+            return
+        end
+        speed = 3
+        moveMode = 1
+
+        local amount = tonumber(parts[2])
+        local duration = tonumber(parts[3]) or 10
+        spawnCenterpointBots(player, amount, duration)
+
+    elseif parts[1] == '!spawnline' then
+        if tonumber(parts[2]) == nil then
+            return
+        end
+        speed = 3
+        moveMode = 2
+
+        local amount = tonumber(parts[2])
+        local spacing = tonumber(parts[3]) or 2
+        spawnLineBots(player, amount, spacing)
+
+    elseif parts[1] == '!spawnring' then
+        if tonumber(parts[2]) == nil then
+            return
+        end
+        speed = 3
+        moveMode = 2
+
+        local amount = tonumber(parts[2])
+        local spacing = tonumber(parts[3]) or 10
+        spawnRingBots(player, amount, spacing)
+
+    elseif parts[1] == '!spawnway' then
+        if tonumber(parts[2]) == nil then
+            return
+        end
+        speed = 3
+        moveMode = 5
+        activeWayIndex = tonumber(parts[3]) or 1
+        if activeWayIndex > Config.maxTraceNumber or activeWayIndex < 1 then
+            activeWayIndex = 1
+        end
+        local amount = tonumber(parts[2])
+        spawnWayBots(player, amount)
+
+    -- moving bots movement settings
+    elseif parts[1] == '!run' then
+        speed = 4
+        setBotVarForPlayerStatic(player, botSpeeds, speed, false)
+
+    elseif parts[1] == '!walk' then
+        speed = 3
+        setBotVarForPlayerStatic(player, botSpeeds, speed, false)
+    
+    elseif parts[1] == '!speed' then --overwrite speed for all moving bots
+        if tonumber(parts[2]) == nil then
+            return
+        end
+        speed = tonumber(parts[2])
+        setBotVarForPlayerStatic(player, botSpeeds, speed, false)
+
+    elseif parts[1] == '!jump' then
+        jumping = true
+        if tonumber(parts[2]) == 0 then
+            jumping = false
+        end
+        setBotVarForPlayerStatic(player, botJumping, jumping, false)
+    
+    elseif parts[1] == '!adad' then
+        adading = true
+        if tonumber(parts[2]) == 0 then
+            adading = false
+        end
+        setBotVarForPlayer(player, botAdading, adading)
+        
+    elseif parts[1] == '!sway' then
+        swaying = true
+        if tonumber(parts[2]) == 0 then
+            swaying = false
+        end
+        setBotVarForPlayer(player, botSwaying, swaying)
+        swayMaxDeviation = tonumber(parts[3]) or 1.5
+        swayPeriod = tonumber(parts[4]) or 3
+
+    -- respawn moving bots
+    elseif parts[1] == '!respawn' then
+        respawning = true
+        if tonumber(parts[2]) == 0 then
+            respawning = false
+        end
+        setBotVarForPlayer(player, botRespawning, respawning)
+
+    -- spawn team settings
+    elseif parts[1] == '!spawnsameteam' then
+        Config.spawnInSameTeam = true
+        if tonumber(parts[2]) == 0 then
+            Config.spawnInSameTeam = false
+        end
+
+    -- extra modes
+    elseif parts[1] == '!nice' then
+        Config.exploding = true
+        if tonumber(parts[2]) == 0 then
+            Config.exploding = false
+        end
+
+    elseif parts[1] == '!die' then
+        dieing = true
+        if tonumber(parts[2]) == 0 then
+            dieing = false
+        end
+        setBotVarForPlayer(player, botRespawning, dieing)
+
+    -- reset everything
+    elseif parts[1] == '!stopall' then
+        speed = 0
+        moveMode = 0
+        spawnMode = 0
+        dieing = false
+        respawning = false
+        local jumping = false
+        local adading = false
+        local swaying = false
+        for i = 1, Config.maxNumberOfBots do
+            local name = BotNames[i]
+            botSpeeds[name] = speed
+            botMoveModes[name] = moveMode
+            botSpawnModes[name] = spawnMode
+            botJumping[name] = jumping
+            botAdading[name] = adading
+            botSwaying[name] = swaying
+            botDieing[name] = dieing
+            botRespawning[name] = respawning
+        end
+
+    elseif '!stop' then
+        speed = 0
+        moveMode = 0
+        spawnMode = 0
+        dieing = false
+        respawning = false
+        local jumping = false
+        local adading = false
+        local swaying = false
+        for i = 1, Config.maxNumberOfBots do
+            local name = BotNames[i]
+            if botTargetPlayers[name] == player then
+                botSpeeds[name] = speed
+                botMoveModes[name] = moveMode
+                botSpawnModes[name] = spawnMode
+                botJumping[name] = jumping
+                botAdading[name] = adading
+                botSwaying[name] = swaying
+                botDieing[name] = dieing
+                botRespawning[name] = respawning
+            end
+        end
+    
+    elseif parts[1] == '!kick' then
+        for i = 1, Config.maxNumberOfBots do
+            local name = BotNames[i]
+            if botTargetPlayers[name] == player then
+                kickBot(name)
+            end
+        end
+    
+    elseif parts[1] == '!kickteam' then
+        local teamToKick = tonumber(parts[2]) or 1
+        if teamToKick < 1 or teamToKick > 2 then
+            return
+        end
+        for i = 1, Config.maxNumberOfBots do
+            local name = BotNames[i]
+            if botTeams[name] == TeamId.Team1 and teamToKick == 1 then
+                kickBot(name)
+            elseif botTeams[name] == TeamId.Team2 and teamToKick == 2 then
+                kickBot(name)
+            end
+        end
+
+    elseif parts[1] == '!kickall' then
+        Bots:destroyAllBots()
+
+    elseif parts[1] == '!kill' then
+        for i = 1, Config.maxNumberOfBots do
+            local name = BotNames[i]
+            if botTargetPlayers[name] == player then
+                botMoveModes[name] = 0
+                botSpeeds[name] = 0
+                botSpawnModes[name] = 0
+                local bot = PlayerManager:GetPlayerByName(name)
+                if bot and bot.soldier then
+                    bot.soldier:Kill()
+                end
+            end
+        end
+
+    elseif parts[1] == '!killall' then
+        for i = 1, Config.maxNumberOfBots do
+            local name = BotNames[i]
+            botMoveModes[name] = 0
+            botSpeeds[name] = 0
+            botSpawnModes[name] = 0
+            local bot = PlayerManager:GetPlayerByName(name)
+            if bot and bot.soldier then
+                bot.soldier:Kill()
+            end
+        end
+
+    -- waypoint stuff
+    elseif parts[1] == '!trace' then
+        local traceIndex = tonumber(parts[2]) or 1
+        if traceIndex > Config.maxTraceNumber then
+            traceIndex = 1
+        end
+        clearPoints(traceIndex)
+        traceTimesGone[traceIndex] = 0
+        tracePlayers[traceIndex] = player
+
+    elseif parts[1] == '!tracedone' then
+        for i = 1, Config.maxTraceNumber do
+            if tracePlayers[i] == player then
+                tracePlayers[i] = nil
+            end
+        end
+
+    elseif parts[1] == '!setpoint' then
+        local traceIndex = tonumber(parts[2]) or 1
+        setPoint(traceIndex, player)
+
+    elseif parts[1] == '!clearpoints' then
+        local traceIndex = tonumber(parts[2]) or 1
+        clearPoints(traceIndex)
+    
+
+    -- only experimental
+    elseif parts[1] == '!mode' then --overwrite mode for all bots
+        if tonumber(parts[2]) == nil then
+            return
+        end
+        moveMode = tonumber(parts[2])
+        setBotVarForPlayer(player, botMoveModes, moveMode)
+
+    -- vehicle stuff -- TODO: not tested jet
     elseif parts[1] == '!enter' then
         local vehicleHint = parts[2] or ""
         local entryId = tonumber(parts[3]) or 1
@@ -518,89 +640,7 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
             end
             vehicleEntity = iterator:Next()
         end
-
-    elseif parts[1] == '!spawncenterpoint' then
-        if tonumber(parts[2]) == nil then
-            return
-        end
-        speed = 3
-        moveMode = 1
-
-        local amount = tonumber(parts[2])
-        local duration = tonumber(parts[3]) or 10
-        spawnCenterpointBots(player, amount, duration)
-
-    elseif parts[1] == '!spawnline' then
-        if tonumber(parts[2]) == nil then
-            return
-        end
-        speed = 3
-        moveMode = 2
-
-        local amount = tonumber(parts[2])
-        local spacing = tonumber(parts[3]) or 2
-        spawnLineBots(player, amount, spacing)
-
-    elseif parts[1] == '!spawnring' then
-        if tonumber(parts[2]) == nil then
-            return
-        end
-        speed = 3
-        moveMode = 2
-
-        local amount = tonumber(parts[2])
-        local spacing = tonumber(parts[3]) or 10
-        spawnRingBots(player, amount, spacing)
-
-    elseif parts[1] == '!spawnway' then
-        if tonumber(parts[2]) == nil then
-            return
-        end
-        speed = 3
-        moveMode = 5
-        activeWayIndex = tonumber(parts[3]) or 1
-
-        local amount = tonumber(parts[2])
-        spawnWayBots(player, amount)
-
-    elseif parts[1] == '!kick' then
-        for i = 1, Config.maxNumberOfBots do
-            local name = BotNames[i]
-            if botTargetPlayers[name] == player then
-                kickBot(name)
-            end
-        end
-
-    elseif parts[1] == '!kickall' then
-        Bots:destroyAllBots()
-
-    elseif parts[1] == '!kill' then
-        for i = 1, Config.maxNumberOfBots do
-            local name = BotNames[i]
-            if botTargetPlayers[name] == player then
-                botMoveModes[name] = 0
-                botSpeeds[name] = 0
-                botSpawnModes[name] = 0
-                local bot = PlayerManager:GetPlayerByName(name)
-                if bot and bot.soldier then
-                    bot.soldier:Kill()
-                end
-            end
-        end
     end
-
-elseif parts[1] == '!killall' then
-    for i = 1, Config.maxNumberOfBots do
-        local name = BotNames[i]
-        botMoveModes[name] = 0
-        botSpeeds[name] = 0
-        botSpawnModes[name] = 0
-        local bot = PlayerManager:GetPlayerByName(name)
-        if bot and bot.soldier then
-            bot.soldier:Kill()
-        end
-    end
-end
 end)
 
 function getYawOffsetTransform(transform, yaw, spacing)
@@ -616,6 +656,34 @@ function isStaticBotMode(mode)
         return true
     else
         return false
+    end
+end
+
+function setBotVarForPlayer(player, botVar, value)
+    for i = 1, Config.maxNumberOfBots do
+        local name = BotNames[i]
+        if botTargetPlayers[name] == player then
+            botVar[name] = value
+        end
+    end
+end
+
+function setBotVarForPlayerStatic(player, botVar, value, static)
+    for i = 1, Config.maxNumberOfBots do
+        local name = BotNames[i]
+        if botTargetPlayers[name] == player then
+            if isStaticBotMode[botMoveModes[name]] == static then
+                botVar[name] = value
+            end
+        end
+    end
+end
+
+function setBotVarForAll(botVar, value)
+    for i = 1, Config.maxNumberOfBots do
+        local name = BotNames[i]
+        botVar[name] = value
+    end
 end
 
 function setPoint(traceIndex, player)
@@ -859,12 +927,13 @@ function spawnBot(name, teamId, squadId, trans, setvars)
         botMoveModes[name] = moveMode
         botTeams[name] = teamId
         botWayIndexes[name] = activeWayIndex
-
-        botJumping[name] = jumping
-        botAdading[name] = adading
-        botSwaying[name] = swaying
         botDieing[name] = dieing
         botRespawning[name] = respawning
+
+        -- extra movement
+        botJumping[name] = jumping  --false
+        botAdading[name] = adading  --false
+        botSwaying[name] = swaying  --false
     end
 
 end
