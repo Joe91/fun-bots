@@ -1,6 +1,7 @@
 Config = {
     maxNumberOfBots = 40,
     spawnInSameTeam = false,
+    exploding = false,
     traceDelta = 0.3,
     maxTraceNumber = 10
 
