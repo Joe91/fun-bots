@@ -1,8 +1,6 @@
 require('__shared/Config')
 local Bots = require('bots')
 
-local maxNumberOfBots = 40
-
 local moveMode = 5 --standing, centerpoint, pointing
 local speed = 3 -- standing 0, proning 1, couching 2, walking 3, running 4
 local spawnMode = 0 -- center 1, line 2, ring 3
@@ -295,8 +293,8 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
         dieing = false
         exploding = false
         respawning = false
-        for i = 1, maxNumberOfBots do
-            local name = tostring(i)
+        for i = 1, Config.maxNumberOfBots do
+            local name = BotNames[i]
             botSpeeds[name] = speed
             botMoveModes[name] = moveMode
         end
@@ -320,8 +318,8 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
             return
         end
         speed = tonumber(parts[2])
-        for i = 1, maxNumberOfBots do
-            local name = tostring(i)
+        for i = 1, Config.maxNumberOfBots do
+            local name = BotNames[i]
             botSpeeds[name] = speed
         end
 
@@ -330,8 +328,8 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
             return
         end
         moveMode = tonumber(parts[2])
-        for i = 1, maxNumberOfBots do
-            local name = tostring(i)
+        for i = 1, Config.maxNumberOfBots do
+            local name = BotNames[i]
             botMoveModes[name] = moveMode
         end
 
@@ -469,8 +467,8 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
         end
 
     elseif parts[1] == '!kill' then
-        for i = 1, maxNumberOfBots do
-            local name = tostring(i)
+        for i = 1, Config.maxNumberOfBots do
+            local name = BotNames[i]
             botMoveModes[name] = 0
             botSpeeds[name] = 0
             botSpawnModes[name] = 0
@@ -650,8 +648,8 @@ function string:split(sep)
 end
 
 function findNextBotName()
-    for i = 1, maxNumberOfBots do
-        local name = tostring(i)
+    for i = 1, Config.maxNumberOfBots do
+        local name = BotNames[i]
         local bot = PlayerManager:GetPlayerByName(name)
         if bot == nil then
             return name
@@ -665,8 +663,8 @@ end
 --todo
 function freeNumberOfBots(number)
     local counter = 0
-    for i = 1, maxNumberOfBots do
-        local name = tostring(i)
+    for i = 1, Config.maxNumberOfBots do
+        local name = BotNames[i]
         local bot = PlayerManager:GetPlayerByName(name)
         if bot ~= nil and bot.soldier ~= nil and not bot.soldier.alive then
             counter = counter + 1

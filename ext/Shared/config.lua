@@ -1,6 +1,8 @@
 Config = {
-    maxBotNumber = 40,
-    dummyVar = 3
+    maxNumberOfBots = 40,
+    ringSpacing = 25,
+    traceDelta = 0.3
+
 }
 
 BotNames = {
