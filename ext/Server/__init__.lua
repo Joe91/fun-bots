@@ -55,7 +55,7 @@ for i = 1, Config.maxTraceNumber do
 end
 
 Events:Subscribe('Level:Loaded', function(levelName, gameMode)
-    print("level "..levelName.."in Gamemode "..gameMode.." loaded")
+    print("level "..levelName.." in Gamemode "..gameMode.." loaded")
 
 end)
 
@@ -490,7 +490,7 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
             botRespawning[name] = respawning
         end
 
-    elseif '!stop' then
+    elseif parts[1] == '!stop' then
         speed = 0
         moveMode = 0
         spawnMode = 0
@@ -512,7 +512,7 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
                 botRespawning[name] = respawning
             end
         end
-    
+
     elseif parts[1] == '!kick' then
         for i = 1, Config.maxNumberOfBots do
             local name = BotNames[i]
@@ -520,7 +520,7 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
                 kickBot(name)
             end
         end
-    
+
     elseif parts[1] == '!kickteam' then
         local teamToKick = tonumber(parts[2]) or 1
         if teamToKick < 1 or teamToKick > 2 then
@@ -672,7 +672,7 @@ function setBotVarForPlayerStatic(player, botVar, value, static)
     for i = 1, Config.maxNumberOfBots do
         local name = BotNames[i]
         if botTargetPlayers[name] == player then
-            if isStaticBotMode[botMoveModes[name]] == static then
+            if isStaticBotMode(botMoveModes[name]) == static then
                 botVar[name] = value
             end
         end
@@ -813,6 +813,9 @@ end
 
 function spawnWayBots(player, amount)
     spawnMode = 4
+    if #wayPoints[activeWayIndex] == 0 then
+        return
+    end
     for i = 1, amount do
         local name = findNextBotName()
         if name ~= nil then
