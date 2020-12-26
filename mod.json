@@ -1,9 +1,9 @@
 {
 	"Name": "BotSpawn",
-	"Authors": ["Janssent"],
+	"Authors": ["Janssent", "DeJoe"],
 	"Description": "weird ways to spawn bots",
 	"URL": "",
-	"Version": "0",
+	"Version": "0.1",
 	"HasWebUI": false,
 	"HasVeniceEXT": true
 }
