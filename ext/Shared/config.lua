@@ -1,6 +1,5 @@
 Config = {
     maxNumberOfBots = 40,
-    ringSpacing = 25,
     traceDelta = 0.3
 
 }

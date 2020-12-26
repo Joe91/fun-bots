@@ -5,14 +5,20 @@ local moveMode = 5 --standing, centerpoint, pointing
 local speed = 3 -- standing 0, proning 1, couching 2, walking 3, running 4
 local spawnMode = 0 -- center 1, line 2, ring 3
 
+-- vars for each bot
 local botSpawnModes = {}
 local botSpeeds = {}
 local botMoveModes = {}
 local botTimeGones = {}
 local botTargetPlayers = {}
+local botTransforms = {}
+local botYaws = {}
+local botCurrentWayPoints = {}
+local botWayIndeses = {}
+local botTeams = {}
 
+-- vars for all bots
 local jumping = false
-
 local adading = false
 local swaying = false
 local dieing = false
@@ -36,19 +42,13 @@ local activePlayer = nil
 local ringSpacing = 25
 local ringNrOfBots = 0
 
-local botTransforms = {}
-local yaws = {}
-local currentPoint = {}
-
 local traceWay = false
-local traceDelta = 0.3
 local traceTimeGone = 0
 local wayPoints = {}
 
 
 Events:Subscribe('Level:Loaded', function(levelName, gameMode)
-    print("level "..levelName.." loaded")
-    --traceFile = io.open(levelName.."_"..gameMode..".lua", "a")
+    print("level "..levelName.."in Gamemode "..gameMode.." loaded")
 
 end)
 
@@ -76,7 +76,7 @@ Events:Subscribe('Engine:Update', function(dt)
     end
     if traceWay and activePlayer and activePlayer.input:GetLevel(EntryInputActionEnum.EIAThrottle) > 0 then
         traceTimeGone = traceTimeGone + dt
-        if traceTimeGone >= traceDelta then
+        if traceTimeGone >= Config.traceDelta then
             traceTimeGone = 0
             local point = LinearTransform()
             point = activePlayer.soldier.transform
@@ -100,13 +100,14 @@ Events:Subscribe('Bot:Update', function(bot, dt)
     local speed     = botSpeeds[bot.name]
     local moveMode =  botMoveModes[bot.name]
     local activePlayer = botTargetPlayers[bot.name]
+    local team = botTeams[bot.name]
 
     --spawning 
     if respawning and bot.soldier == nil and spawnMode > 0 then
         if spawnMode == 1 then --spawnCenterpoint
-            yaws[bot.name] = MathUtils:GetRandom(0, 2*math.pi)
+            botYaws[bot.name] = MathUtils:GetRandom(0, 2*math.pi)
             spawnBot(bot.name, team, squad, centerpoint, false)
-            bot.input.authoritativeAimingYaw = yaws[bot.name]
+            bot.input.authoritativeAimingYaw = botYaws[bot.name]
         elseif spawnMode == 2 then  --spawnInLine
             spawnBot(bot.name, team, squad, botTransforms[bot.name], false)
         elseif spawnMode == 3 then  --spawnInRing around player
@@ -117,7 +118,7 @@ Events:Subscribe('Bot:Update', function(bot, dt)
             end
         elseif spawnMode == 4 then --spawn on way
             local randIdex = MathUtils:GetRandomInt(1, #wayPoints)
-            currentPoint[bot.name] = randIdex
+            botCurrentWayPoints[bot.name] = randIdex
             local transform = LinearTransform()
             transform = wayPoints[randIdex]
             spawnBot(bot.name, team, squad, transform, false)
@@ -130,9 +131,9 @@ Events:Subscribe('Bot:Update', function(bot, dt)
     if bot.soldier ~= nil then
         if moveMode == 1 then -- centerpoint
             if centerPointElapsedTime <= (centerPointPeriod / 2) then
-                bot.input.authoritativeAimingYaw = yaws[bot.name]
+                bot.input.authoritativeAimingYaw = botYaws[bot.name]
             else
-                bot.input.authoritativeAimingYaw = (yaws[bot.name] < math.pi) and (yaws[bot.name] + math.pi) or (yaws[bot.name] - math.pi)
+                bot.input.authoritativeAimingYaw = (botYaws[bot.name] < math.pi) and (botYaws[bot.name] + math.pi) or (botYaws[bot.name] - math.pi)
             end
 
         elseif moveMode == 2 and activePlayer and activePlayer.soldier then  -- pointing
@@ -165,10 +166,10 @@ Events:Subscribe('Bot:Update', function(bot, dt)
         elseif moveMode == 5 then -- move along points
             -- get next point
             local activeWayIndex = 1
-            if currentPoint[bot.name] == nil then
-                currentPoint[bot.name] = activeWayIndex
+            if botCurrentWayPoints[bot.name] == nil then
+                botCurrentWayPoints[bot.name] = activeWayIndex
             else
-                activeWayIndex = currentPoint[bot.name]
+                activeWayIndex = botCurrentWayPoints[bot.name]
                 if #wayPoints < activeWayIndex then
                     activeWayIndex = 1
                 end
@@ -191,22 +192,24 @@ Events:Subscribe('Bot:Update', function(bot, dt)
                         bot.input.authoritativeAimingYaw = yaw
                     end
                 else  -- target reached
-                    currentPoint[bot.name] = activeWayIndex + 1
+                    botCurrentWayPoints[bot.name] = activeWayIndex + 1
                 end
             end
         end
 
         -- additional movement
         local speedVal = 0
-        if speed == 1 then
-            speedVal = 0.25
-        elseif speed == 2 then
-            speedVal = 0.5
-        elseif speed >= 3 then
-            speedVal = 1.0
+        if moveMode > 0 then
+            if speed == 1 then
+                speedVal = 0.25
+            elseif speed == 2 then
+                speedVal = 0.5
+            elseif speed >= 3 then
+                speedVal = 1.0
+            end
         end
 
-        if adading then  -- movent sidewards
+        if adading and moveMode > 0 then  -- movent sidewards
             if adadElapsedTime >= adadPeriod/2 then
                 bot.input:SetLevel(EntryInputActionEnum.EIAStrafe, -speedVal)
             else
@@ -216,7 +219,7 @@ Events:Subscribe('Bot:Update', function(bot, dt)
             bot.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0)
         end
 
-        if jumping then
+        if jumping and moveMode > 0 then
             local shouldJump = MathUtils:GetRandomInt(0, 1000)
             if shouldJump <= 15 then
                 bot.input:SetLevel(EntryInputActionEnum.EIAJump, 1.0)
@@ -389,9 +392,11 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
 
             if string.lower(vehicleName):match(string.lower(vehicleHint)) then
                 local name = findNextBotName()
-                spawnBot(name, team, squad, player.soldier.transform, true)
-                local bot = PlayerManager:GetPlayerByName(name)
-                bot:EnterVehicle(vehicleEntity, entryId)
+                if name ~= nil then
+                    spawnBot(name, team, squad, player.soldier.transform, true)
+                    local bot = PlayerManager:GetPlayerByName(name)
+                    bot:EnterVehicle(vehicleEntity, entryId)
+                end
             end
             vehicleEntity = iterator:Next()
         end
@@ -408,9 +413,11 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
             if string.lower(vehicleName):match(string.lower(vehicleHint)) then
                 for i = 0, number do
                     local name = findNextBotName()
-                    spawnBot(name, team, squad, player.soldier.transform, true)
-                    local bot = PlayerManager:GetPlayerByName(name)
-                    bot:EnterVehicle(vehicleEntity, i)
+                        if name ~= nil then
+                        spawnBot(name, team, squad, player.soldier.transform, true)
+                        local bot = PlayerManager:GetPlayerByName(name)
+                        bot:EnterVehicle(vehicleEntity, i)
+                    end
                 end
             end
             vehicleEntity = iterator:Next()
@@ -571,11 +578,11 @@ function spawnCenterpointBots(player, amount, duration)
     for i = 1, amount do
         local name = findNextBotName()
         if name ~= nil then
-            yaws[name] = MathUtils:GetRandom(0, 2 * math.pi)
+            botYaws[name] = MathUtils:GetRandom(0, 2 * math.pi)
             botTargetPlayers[name] = player
             spawnBot(name, team, squad, centerpoint, true)
             local bot = PlayerManager:GetPlayerByName(name)
-            bot.input.authoritativeAimingYaw = yaws[name]
+            bot.input.authoritativeAimingYaw = botYaws[name]
         end
     end
 end
@@ -617,7 +624,7 @@ function spawnWayBots(player, amount)
         local name = findNextBotName()
         if name ~= nil then
             local randIdex = MathUtils:GetRandomInt(1, #wayPoints)
-            currentPoint[name] = randIdex
+            botCurrentWayPoints[name] = randIdex
             local transform = LinearTransform()
             transform = wayPoints[randIdex]
             botTargetPlayers[name] = player
@@ -660,19 +667,34 @@ function findNextBotName()
     return nil
 end
 
---todo
+-- use this function, if you want to spawn new bots anyway
 function freeNumberOfBots(number)
+    if number > Config.maxNumberOfBots then
+        return
+    end
     local counter = 0
     for i = 1, Config.maxNumberOfBots do
         local name = BotNames[i]
         local bot = PlayerManager:GetPlayerByName(name)
-        if bot ~= nil and bot.soldier ~= nil and not bot.soldier.alive then
+        if bot == nil then
             counter = counter + 1
-        elseif bot == nil then
+        elseif  bot.soldier == nil then
             counter = counter + 1
         end
         if counter >= number then
             return
+        end
+    end
+    -- not enough bots available. Now free some random bots
+    local botsToFree = number - counter
+    while botsToFree > 0 do
+        local name = BotNames[MathUtils:GetRandomInt(1, Config.maxNumberOfBots)]
+        local bot = PlayerManager:GetPlayerByName(name)
+        if bot ~= nil and bot.soldier ~= nil then
+            botSpawnModes[name] = 0
+            botMoveModes[name] = 0
+            bot.soldier:Kill()
+            botsToFree = botsToFree-1
         end
     end
 end
@@ -710,6 +732,7 @@ function spawnBot(name, teamId, squadId, trans, setvars)
         botSpawnModes[name] = spawnMode
         botSpeeds[name] = speed
         botMoveModes[name] = moveMode
+        botTeams[name] = teamId
     end
 
 end
