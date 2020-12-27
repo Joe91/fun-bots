@@ -454,6 +454,12 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
             Config.spawnInSameTeam = false
         end
 
+    elseif parts[1] == '!setbotkit' then
+        local kitNumber = tonumber(parts[2]) or 1
+        if kitNumber <= 4 and kitNumber >= 1 then
+            Config.botKit = kitNumber
+        end
+
     -- extra modes
     elseif parts[1] == '!nice' then
         Config.exploding = true
@@ -922,15 +928,30 @@ function spawnBot(name, teamId, squadId, trans, setvars)
     --Gameplay/Kits/RUSupport/4D0F249B-4464-4F97-A248-A88F57EF5CAA
     --Gameplay/Kits/RURecon/84A4BE20-B110-42E5-9588-365643624525
 
-    --US
     local soldierBlueprint = ResourceManager:SearchForInstanceByGuid(Guid('261E43BF-259B-41D2-BF3B-9AE4DDA96AD2'))
-    local soldierKit = ResourceManager:SearchForInstanceByGuid(Guid('A15EE431-88B8-4B35-B69A-985CEA934855'))
-	
-	--RU
-	if teamId == TeamId.Team2 then
-		soldierBlueprint = ResourceManager:SearchForInstanceByGuid(Guid('261E43BF-259B-41D2-BF3B-9AE4DDA96AD2'))
-		soldierKit = ResourceManager:SearchForInstanceByGuid(Guid('28EC16E7-0BBF-4CB0-9321-473C6EC54125'))
-	end
+    local soldierKit = nil
+    
+    if teamId == TeamId.Team1 then -- US
+        if Config.botKit == 1 then --assault
+            soldierKit = ResourceManager:SearchForInstanceByGuid(Guid('A15EE431-88B8-4B35-B69A-985CEA934855'))
+        elseif Config.botKit == 2 then --engineer
+            soldierKit = ResourceManager:SearchForInstanceByGuid(Guid('0A99EBDB-602C-4080-BC3F-B388AA18ADDD'))
+        elseif Config.botKit == 3 then --assault
+            soldierKit = ResourceManager:SearchForInstanceByGuid(Guid('47949491-F672-4CD6-998A-101B7740F919'))
+        else    --recon
+            soldierKit = ResourceManager:SearchForInstanceByGuid(Guid('BC1C1E63-2730-4E21-8ACD-FAC500D720C3'))
+        end
+    else -- RU
+        if Config.botKit == 1 then --assault
+            soldierKit = ResourceManager:SearchForInstanceByGuid(Guid('28EC16E7-0BBF-4CB0-9321-473C6EC54125'))
+        elseif Config.botKit == 2 then --engineer
+            soldierKit = ResourceManager:SearchForInstanceByGuid(Guid('DB0FCE83-2505-4948-8661-660DD0C64B63'))
+        elseif Config.botKit == 3 then --assault
+            soldierKit = ResourceManager:SearchForInstanceByGuid(Guid('4D0F249B-4464-4F97-A248-A88F57EF5CAA'))
+        else    --recon
+            soldierKit = ResourceManager:SearchForInstanceByGuid(Guid('84A4BE20-B110-42E5-9588-365643624525'))
+        end
+    end
 
 	-- Create the transform of where to spawn the bot at.
 	local transform = LinearTransform()

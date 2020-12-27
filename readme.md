@@ -76,6 +76,7 @@ Here are some more commands. Partly not tested jet
 
 ```html
 !spawnsameteam <opt: 0>
+!setbotkit <value: 1-4>
 !nice
 !die <opt: 0>
 !stop
