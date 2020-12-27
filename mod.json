@@ -1,7 +1,7 @@
 {
-	"Name": "BotSpawn",
+	"Name": "fun-bots",
 	"Authors": ["Janssent", "DeJoe"],
-	"Description": "weird ways to spawn bots",
+	"Description": "different ways to spawn bots",
 	"URL": "",
 	"Version": "0.1",
 	"HasWebUI": false,
