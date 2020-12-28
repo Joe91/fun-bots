@@ -61,7 +61,6 @@ Events:Subscribe('Level:Loaded', function(levelName, gameMode)
     mapName = levelName..gameMode
     loadWayPoints()
     print(tostring(activeTraceIndexes).." paths have been loaded")
-    saveWayPoints()
 
 end)
 
@@ -1167,26 +1166,25 @@ function saveWayPoints()
         print('Failed to execute query: ' .. SQL:Error())
         return
     end
-    query = 'INSERT INTO '..mapName..'_table (pathIndex, pointIndex, transX, transY, transZ) VALUES (?)'
+    query = 'INSERT INTO '..mapName..'_table (pathIndex, pointIndex, transX, transY, transZ) VALUES '
     local pathIndex = 0
-    local sqlValues = {}
     for oldPathIndex = 1, Config.maxTraceNumber do
+        local sqlValuesString = ""
         if wayPoints[oldPathIndex][1] ~= nil then
-            pathIndex = pathIndex +1
+            pathIndex = pathIndex + 1
             for pointIndex = 1, #wayPoints[oldPathIndex] do
                 local transform = LinearTransform()
                 transform = wayPoints[oldPathIndex][pointIndex]
                 local transX = transform.trans.x
                 local transY = transform.trans.y
                 local transZ = transform.trans.z
-                local sqlRow = {pathIndex, pointIndex, transX, transY, transZ} 
-                table.insert(sqlValues, sqlRow)
-                --if not SQL:Query(query, pathIndex, pointIndex, transX, transY, transZ) then
-                --    print('Failed to execute query: ' .. SQL:Error())
-                --    return
-                --end
+                local inerString = "("..pathIndex..","..pointIndex..","..tostring(transX)..","..tostring(transY)..","..tostring(transZ)..")"
+                sqlValuesString = sqlValuesString..inerString
+                if pointIndex < #wayPoints[oldPathIndex] then
+                    sqlValuesString = sqlValuesString..","
+                end
             end
-            if not SQL:Query(query, sqlValues) then
+            if not SQL:Query(query..sqlValuesString) then
                 print('Failed to execute query: ' .. SQL:Error())
                 return
             end
