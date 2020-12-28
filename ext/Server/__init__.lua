@@ -60,6 +60,7 @@ Events:Subscribe('Level:Loaded', function(levelName, gameMode)
     print("level "..levelName.." in Gamemode "..gameMode.." loaded")
     mapName = levelName..gameMode
     loadWayPoints()
+    print(tostring(activeTraceIndexes).." paths have been loaded")
 
 end)
 
@@ -1130,8 +1131,12 @@ function loadWayPoints()
     end
     
     -- Load the fetched rows.
+    local nrOfPaths = 0
     for _, row in pairs(results) do
         local pathIndex = row["pathIndex"]
+        if pathIndex > nrOfPaths then
+            nrOfPaths = pathIndex
+        end
         local pointIndex = row["pointIndex"]
         local transX = row["transX"]
         local transY = row["transY"]
@@ -1142,6 +1147,7 @@ function loadWayPoints()
         transform.trans.z = transZ
         wayPoints[pathIndex][pointIndex] = transform
     end
+    activeTraceIndexes = nrOfPaths
     SQL:Close()
     print("LOAD - The waypoint list has been loaded.")
 end
