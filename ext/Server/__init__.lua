@@ -59,6 +59,7 @@ end
 Events:Subscribe('Level:Loaded', function(levelName, gameMode)
     print("level "..levelName.." in Gamemode "..gameMode.." loaded")
     mapName = levelName..gameMode
+    loadWayPoints()
 
 end)
 
@@ -1094,6 +1095,62 @@ function kickBot(name)
 	Bots:destroyBot(bot)
 end
 
+function loadWayPoints()
+    if not SQL:Open() then
+        return
+    end
+    
+    local query = [[
+        CREATE TABLE IF NOT EXISTS waypoint_table (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        mapname TEXT,
+        pathIndex INTEGER,
+        pointIndex INTEGER,
+        transX FLOAT,
+        transY FLOAT,
+        transZ FLOAT
+        )
+    ]]
+    if not SQL:Query(query) then
+        print('Failed to execute query: ' .. SQL:Error())
+        return
+    end
+    
+    -- Fetch all rows from the table.
+    local results = SQL:Query('SELECT * FROM waypoint_table')
+
+    if not results then
+        print('Failed to execute query: ' .. SQL:Error())
+        return
+    end
+
+    -- clear waypoints
+    wayPoints = {}
+    for i = 1, Config.maxTraceNumber do
+        wayPoints[i] = {}
+    end
+    
+    -- Load the fetched rows.
+    for _, row in pairs(results) do
+        local name = row["mapname"]
+        if mapName == name then
+            local pathIndex = row["pathIndex"]
+            local pointIndex = row["pointIndex"]
+            local transX = row["transX"]
+            local transY = row["transY"]
+            local transZ = row["transZ"]
+            local transform = LinearTransform()
+            transform.trans.x = transX
+            transform.trans.y = transY
+            transform.trans.z = transZ
+            wayPoints[pathIndex][pointIndex] = transform
+        end
+    end
+    SQL:Close()
+    print("LOAD - The waypoint list has been loaded.")
+    return {'OK'}
+end
+
 function saveWayPoints()
     if not SQL:Open() then
         return
@@ -1118,6 +1175,7 @@ function saveWayPoints()
         print('Failed to execute query: ' .. SQL:Error())
         return
     end
+    print("table created")
     query = 'INSERT INTO waypoint_table (mapname, pathIndex, pointIndex, transX, transY, transZ) VALUES (?, ?, ?, ?, ?, ?)'
     local pathIndex = 0
     for oldPathIndex = 1, Config.maxTraceNumber do
