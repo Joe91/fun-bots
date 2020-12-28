@@ -61,7 +61,13 @@ Events:Subscribe('Level:Loaded', function(levelName, gameMode)
     mapName = levelName..gameMode
     loadWayPoints()
     print(tostring(activeTraceIndexes).." paths have been loaded")
-
+    -- create initial bots
+    if activeTraceIndexes > 0 and Config.spawnOnLevelstart then
+        respawning = true
+        for i = 1, Config.initNumberOfBots do
+            createInitialBots(BotNames[i], team, squad)
+        end
+    end
 end)
 
 Events:Subscribe('Player:Killed', function(player)
@@ -977,6 +983,38 @@ function freeNumberOfBots(number)
     end
 end
 
+function createInitialBots(name, teamId, squadId) 
+    local existingPlayer = PlayerManager:GetPlayerByName(name)
+	local bot = nil
+
+	if existingPlayer ~= nil then
+		-- If a player with this name exists and it's not a bot then error out.
+		if not Bots:isBot(existingPlayer) then
+			return
+		end
+		bot = existingPlayer
+		bot.teamId = teamId
+		bot.squadId = squadId
+    else
+        botTimeGones[name] = 0
+        bot = Bots:createBot(name, teamId, squadId)
+        bot.input.flags = EntryInputFlags.AuthoritativeAiming
+    end
+
+    botSpawnModes[name] = spawnMode
+    botSpeeds[name] = speed
+    botMoveModes[name] = moveMode
+    botTeams[name] = teamId
+    botWayIndexes[name] = activeWayIndex
+    botDieing[name] = dieing
+    botRespawning[name] = respawning
+
+    -- extra movement
+    botJumping[name] = false
+    botAdading[name] = false
+    botSwaying[name] = false
+end
+
 function spawnBot(name, teamId, squadId, trans, setvars)
 	local existingPlayer = PlayerManager:GetPlayerByName(name)
 	local bot = nil
@@ -993,7 +1031,7 @@ function spawnBot(name, teamId, squadId, trans, setvars)
         botTimeGones[name] = 0
         bot = Bots:createBot(name, teamId, squadId)
         bot.input.flags = EntryInputFlags.AuthoritativeAiming
-	end
+    end
 
     local soldierBlueprint = ResourceManager:SearchForDataContainer('Characters/Soldiers/MpSoldier')
     local soldierKit = nil
@@ -1056,7 +1094,6 @@ function spawnBot(name, teamId, squadId, trans, setvars)
 	soldierCustomization.weapons:add(meleeWeapon)
 
 	bot.soldier:ApplyCustomization(soldierCustomization)
-
 
     -- set vars
     if setvars then
