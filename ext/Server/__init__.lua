@@ -61,6 +61,7 @@ Events:Subscribe('Level:Loaded', function(levelName, gameMode)
     mapName = levelName..gameMode
     loadWayPoints()
     print(tostring(activeTraceIndexes).." paths have been loaded")
+    saveWayPoints()
 
 end)
 
@@ -1166,8 +1167,9 @@ function saveWayPoints()
         print('Failed to execute query: ' .. SQL:Error())
         return
     end
-    query = 'INSERT INTO '..mapName..'_table (pathIndex, pointIndex, transX, transY, transZ) VALUES (?, ?, ?, ?, ?)'
+    query = 'INSERT INTO '..mapName..'_table (pathIndex, pointIndex, transX, transY, transZ) VALUES (?)'
     local pathIndex = 0
+    local sqlValues = {}
     for oldPathIndex = 1, Config.maxTraceNumber do
         if wayPoints[oldPathIndex][1] ~= nil then
             pathIndex = pathIndex +1
@@ -1177,10 +1179,16 @@ function saveWayPoints()
                 local transX = transform.trans.x
                 local transY = transform.trans.y
                 local transZ = transform.trans.z
-                if not SQL:Query(query, pathIndex, pointIndex, transX, transY, transZ) then
-                    print('Failed to execute query: ' .. SQL:Error())
-                    return
-                end
+                local sqlRow = {pathIndex, pointIndex, transX, transY, transZ} 
+                table.insert(sqlValues, sqlRow)
+                --if not SQL:Query(query, pathIndex, pointIndex, transX, transY, transZ) then
+                --    print('Failed to execute query: ' .. SQL:Error())
+                --    return
+                --end
+            end
+            if not SQL:Query(query, sqlValues) then
+                print('Failed to execute query: ' .. SQL:Error())
+                return
             end
         end
     end
