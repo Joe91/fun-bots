@@ -1101,9 +1101,8 @@ function loadWayPoints()
     end
     
     local query = [[
-        CREATE TABLE IF NOT EXISTS waypoint_table (
+        CREATE TABLE IF NOT EXISTS ]]..mapName..[[_table (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        mapname TEXT,
         pathIndex INTEGER,
         pointIndex INTEGER,
         transX FLOAT,
@@ -1117,7 +1116,7 @@ function loadWayPoints()
     end
     
     -- Fetch all rows from the table.
-    local results = SQL:Query('SELECT * FROM waypoint_table')
+    local results = SQL:Query('SELECT * FROM '..mapName..'_table')
 
     if not results then
         print('Failed to execute query: ' .. SQL:Error())
@@ -1132,38 +1131,33 @@ function loadWayPoints()
     
     -- Load the fetched rows.
     for _, row in pairs(results) do
-        local name = row["mapname"]
-        if mapName == name then
-            local pathIndex = row["pathIndex"]
-            local pointIndex = row["pointIndex"]
-            local transX = row["transX"]
-            local transY = row["transY"]
-            local transZ = row["transZ"]
-            local transform = LinearTransform()
-            transform.trans.x = transX
-            transform.trans.y = transY
-            transform.trans.z = transZ
-            wayPoints[pathIndex][pointIndex] = transform
-        end
+        local pathIndex = row["pathIndex"]
+        local pointIndex = row["pointIndex"]
+        local transX = row["transX"]
+        local transY = row["transY"]
+        local transZ = row["transZ"]
+        local transform = LinearTransform()
+        transform.trans.x = transX
+        transform.trans.y = transY
+        transform.trans.z = transZ
+        wayPoints[pathIndex][pointIndex] = transform
     end
     SQL:Close()
     print("LOAD - The waypoint list has been loaded.")
-    return {'OK'}
 end
 
 function saveWayPoints()
     if not SQL:Open() then
         return
     end
-    local query = [[DROP TABLE IF EXISTS waypoint_table]]
+    local query = [[DROP TABLE IF EXISTS ]]..mapName..[[_table]]
     if not SQL:Query(query) then
         print('Failed to execute query: ' .. SQL:Error())
         return
     end
     query = [[
-        CREATE TABLE IF NOT EXISTS waypoint_table (
+        CREATE TABLE IF NOT EXISTS ]]..mapName..[[_table (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        mapname TEXT,
         pathIndex INTEGER,
         pointIndex INTEGER,
         transX FLOAT,
@@ -1176,7 +1170,7 @@ function saveWayPoints()
         return
     end
     print("table created")
-    query = 'INSERT INTO waypoint_table (mapname, pathIndex, pointIndex, transX, transY, transZ) VALUES (?, ?, ?, ?, ?, ?)'
+    query = 'INSERT INTO ]]..mapName..[[_table (pathIndex, pointIndex, transX, transY, transZ) VALUES (?, ?, ?, ?, ?)'
     local pathIndex = 0
     for oldPathIndex = 1, Config.maxTraceNumber do
         if wayPoints[oldPathIndex][1] ~= nil then
@@ -1187,7 +1181,7 @@ function saveWayPoints()
                 local transX = transform.trans.x
                 local transY = transform.trans.y
                 local transZ = transform.trans.z
-                if not SQL:Query(query, mapName, pathIndex, pointIndex, transX, transY, transZ) then
+                if not SQL:Query(query, pathIndex, pointIndex, transX, transY, transZ) then
                     print('Failed to execute query: ' .. SQL:Error())
                     return
                 end
@@ -1196,7 +1190,7 @@ function saveWayPoints()
     end
 
     -- Fetch all rows from the table.
-    local results = SQL:Query('SELECT * FROM waypoint_table')
+    local results = SQL:Query('SELECT * FROM '..mapName..'_table')
 
     if not results then
         print('Failed to execute query: ' .. SQL:Error())
@@ -1205,5 +1199,4 @@ function saveWayPoints()
 
     SQL:Close()
     print("SAVE - The waypoint list has been saved.")
-    return
 end
