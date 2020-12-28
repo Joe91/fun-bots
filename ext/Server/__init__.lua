@@ -47,6 +47,7 @@ local ringSpacing = 25
 local ringNrOfBots = 0
 
 local activeWayIndex
+local activeTraceIndexes
 local tracePlayers = {}
 local traceTimesGone = {}
 local wayPoints = {}
@@ -126,8 +127,10 @@ Events:Subscribe('Bot:Update', function(bot, dt)
             botYaws[bot.name] = MathUtils:GetRandom(0, 2*math.pi)
             spawnBot(bot.name, team, squad, centerpoint, false)
             bot.input.authoritativeAimingYaw = botYaws[bot.name]
+            
         elseif spawnMode == 2 then  --spawnInLine
             spawnBot(bot.name, team, squad, botTransforms[bot.name], false)
+
         elseif spawnMode == 3 then  --spawnInRing around player
             if activePlayer ~= nil then
                 if activePlayer.soldier  ~= nil then
@@ -136,12 +139,24 @@ Events:Subscribe('Bot:Update', function(bot, dt)
                     spawnBot(bot.name, team, squad, transform, false)
                 end
             end
+
         elseif spawnMode == 4 then --spawn on way
             local randIdex = MathUtils:GetRandomInt(1, #wayPoints[wayIndex])
             botCurrentWayPoints[bot.name] = randIdex
             local transform = LinearTransform()
             transform = wayPoints[wayIndex][randIdex]
             spawnBot(bot.name, team, squad, transform, false)
+
+        elseif spawnMode == 5 then --spawn on random way
+            local randIdex = MathUtils:GetRandomInt(1, #wayPoints[wayIndex])
+            botCurrentWayPoints[bot.name] = randIdex
+            local transform = LinearTransform()
+            local newWayIdex = getNewWayIndex()
+            transform = wayPoints[newWayIdex][randIdex]
+            botWayIndexes[bot.name] = newWayIdex
+            wayIndex = newWayIdex
+            spawnBot(bot.name, team, squad, transform, false)
+
         else
             spawnBot(bot.name, team, squad, botTransforms[bot.name], false)
         end
@@ -360,6 +375,7 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
         end
         speed = 3
         moveMode = 1
+        spawnMode = 1
 
         local amount = tonumber(parts[2])
         local duration = tonumber(parts[3]) or 10
@@ -371,6 +387,7 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
         end
         speed = 3
         moveMode = 2
+        spawnMode = 2
 
         local amount = tonumber(parts[2])
         local spacing = tonumber(parts[3]) or 2
@@ -382,6 +399,7 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
         end
         speed = 3
         moveMode = 2
+        spawnMode = 3
 
         local amount = tonumber(parts[2])
         local spacing = tonumber(parts[3]) or 10
@@ -393,10 +411,22 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
         end
         speed = 3
         moveMode = 5
+        spawnMode = 4
         activeWayIndex = tonumber(parts[3]) or 1
         if activeWayIndex > Config.maxTraceNumber or activeWayIndex < 1 then
             activeWayIndex = 1
         end
+        local amount = tonumber(parts[2])
+        spawnWayBots(player, amount)
+
+    elseif parts[1] == '!spawrandnway' then
+        if tonumber(parts[2]) == nil then
+            return
+        end
+        speed = 3
+        moveMode = 5
+        spawnMode = 5
+        activeWayIndex = getNewWayIndex()
         local amount = tonumber(parts[2])
         spawnWayBots(player, amount)
 
@@ -577,6 +607,7 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
             traceIndex = 1
         end
         clearPoints(traceIndex)
+        activeTraceIndexes = activeTraceIndexes + 1
         traceTimesGone[traceIndex] = 0
         tracePlayers[traceIndex] = player
 
@@ -594,6 +625,12 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
     elseif parts[1] == '!clearpoints' then
         local traceIndex = tonumber(parts[2]) or 1
         clearPoints(traceIndex)
+    
+    elseif parts[1] == '!clearalltraces' then
+        for i = 1, Config.maxTraceNumber do
+            clearPoints(i)
+        end
+        activeTraceIndexes = 0
     
 
     -- only experimental
@@ -699,6 +736,9 @@ function setPoint(traceIndex, player)
 end
 
 function clearPoints(traceIndex)
+    if #wayPoints[traceIndex] > 0 then
+        activeTraceIndexes = activeTraceIndexes - 1
+    end
     wayPoints[traceIndex] = {}
 end
 
@@ -770,7 +810,6 @@ function spawnBotGridOnPlayer(player, rows, columns, spacing)
 end
 
 function spawnCenterpointBots(player, amount, duration)
-    spawnMode = 1
     centerpoint = player.soldier.transform
     centerPointPeriod = duration
     centerPointElapsedTime = (duration / 4)
@@ -787,8 +826,6 @@ function spawnCenterpointBots(player, amount, duration)
 end
 
 function spawnLineBots(player, amount, spacing)
-    spawnMode = 2
-
     for i = 1, amount do
         local name = findNextBotName()
         if name ~= nil then
@@ -802,7 +839,6 @@ function spawnLineBots(player, amount, spacing)
 end
 
 function spawnRingBots(player, amount, spacing)
-    spawnMode = 3
     ringNrOfBots = amount
 
     ringSpacing = spacing
@@ -818,7 +854,6 @@ function spawnRingBots(player, amount, spacing)
 end
 
 function spawnWayBots(player, amount)
-    spawnMode = 4
     if #wayPoints[activeWayIndex] == 0 then
         return
     end
@@ -854,6 +889,22 @@ function string:split(sep)
     local pattern = string.format("([^%s]+)", sep)
     self:gsub(pattern, function(c) fields[#fields + 1] = c end)
     return fields
+end
+
+function getNewWayIndex()
+    local newWayIdex = 1
+    local targetWaypoint = MathUtils:GetRandomInt(1, activeTraceIndexes)
+    local count = 0
+    for i = 1, Config.maxTraceNumber do
+        if #wayPoints[i] > 0 then
+            count = count + 1
+        end
+        if count == targetWaypoint then
+            newWayIdex = count
+            return
+        end
+    end
+    return newWayIdex
 end
 
 function findNextBotName()
