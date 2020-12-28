@@ -993,16 +993,6 @@ function spawnBot(name, teamId, squadId, trans, setvars)
         bot = Bots:createBot(name, teamId, squadId)
         bot.input.flags = EntryInputFlags.AuthoritativeAiming
 	end
-	
-    --Gameplay/Kits/USAssault/A15EE431-88B8-4B35-B69A-985CEA934855
-    --Gameplay/Kits/USEngineer/0A99EBDB-602C-4080-BC3F-B388AA18ADDD
-    --Gameplay/Kits/USSupport/47949491-F672-4CD6-998A-101B7740F919
-    --Gameplay/Kits/USRecon/BC1C1E63-2730-4E21-8ACD-FAC500D720C3
-    --Gameplay/Kits/RUAssault/28EC16E7-0BBF-4CB0-9321-473C6EC54125
-    --Gameplay/Kits/RUEngineer/DB0FCE83-2505-4948-8661-660DD0C64B63
-    --Gameplay/Kits/RUSupport/4D0F249B-4464-4F97-A248-A88F57EF5CAA
-    --Gameplay/Kits/RURecon/84A4BE20-B110-42E5-9588-365643624525
-
 
     local soldierBlueprint = ResourceManager:SearchForDataContainer('Characters/Soldiers/MpSoldier')
     local soldierKit = nil
