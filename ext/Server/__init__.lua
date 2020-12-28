@@ -7,6 +7,7 @@ local spawnMode = 5 -- center 1, line 2, ring 3
 
 -- vars for each bot
 local botSpawnModes = {}
+local botSwapTeam = {}
 local botSpeeds = {}
 local botMoveModes = {}
 local botTimeGones = {}
@@ -52,6 +53,7 @@ local tracePlayers = {}
 local traceTimesGone = {}
 local wayPoints = {}
 local mapName = ""
+
 for i = 1, Config.maxTraceNumber do
     wayPoints[i] = {}
 end
@@ -61,7 +63,14 @@ Events:Subscribe('Level:Loaded', function(levelName, gameMode)
     mapName = levelName..gameMode
     loadWayPoints()
     print(tostring(activeTraceIndexes).." paths have been loaded")
-
+    -- create initial bots
+    swapAllBotTeams()
+    if activeTraceIndexes > 0 and Config.spawnOnLevelstart then
+        respawning = true
+        for i = 1, Config.initNumberOfBots do
+            createInitialBots(BotNames[i], team, squad)
+        end
+    end
 end)
 
 Events:Subscribe('Player:Killed', function(player)
@@ -127,6 +136,14 @@ Events:Subscribe('Bot:Update', function(bot, dt)
 
     --spawning 
     if respawning and bot.soldier == nil and spawnMode > 0 then
+        if botSwapTeam[bot.name] then
+            botSwapTeam[bot.name] = false
+            if team == TeamId.Team1 then
+                botTeams[bot.name] = TeamId.Team2
+            else
+                botTeams[bot.name] = TeamId.Team1
+            end
+        end
         if spawnMode == 1 then --spawnCenterpoint
             botYaws[bot.name] = MathUtils:GetRandom(0, 2*math.pi)
             spawnBot(bot.name, team, squad, centerpoint, false)
@@ -977,6 +994,48 @@ function freeNumberOfBots(number)
     end
 end
 
+function swapAllBotTeams()
+    for i = 1, Config.maxNumberOfBots do
+        local name = BotNames[i]
+        local bot = PlayerManager:GetPlayerByName(name)
+        if bot ~= nil then
+            botSwapTeam[name] = true
+        end
+    end
+end
+
+function createInitialBots(name, teamId, squadId) 
+    local existingPlayer = PlayerManager:GetPlayerByName(name)
+	local bot = nil
+
+	if existingPlayer ~= nil then
+		-- If a player with this name exists and it's not a bot then error out.
+		if not Bots:isBot(existingPlayer) then
+			return
+		end
+		bot = existingPlayer
+        bot.teamId = botTeams[name]
+		bot.squadId = squadId
+    else
+        botTimeGones[name] = 0
+        bot = Bots:createBot(name, teamId, squadId)
+        bot.input.flags = EntryInputFlags.AuthoritativeAiming
+    end
+
+    botSpawnModes[name] = spawnMode
+    botSpeeds[name] = speed
+    botMoveModes[name] = moveMode
+    botTeams[name] = bot.teamId 
+    botWayIndexes[name] = activeWayIndex
+    botDieing[name] = dieing
+    botRespawning[name] = respawning
+
+    -- extra movement
+    botJumping[name] = false
+    botAdading[name] = false
+    botSwaying[name] = false
+end
+
 function spawnBot(name, teamId, squadId, trans, setvars)
 	local existingPlayer = PlayerManager:GetPlayerByName(name)
 	local bot = nil
@@ -993,7 +1052,7 @@ function spawnBot(name, teamId, squadId, trans, setvars)
         botTimeGones[name] = 0
         bot = Bots:createBot(name, teamId, squadId)
         bot.input.flags = EntryInputFlags.AuthoritativeAiming
-	end
+    end
 
     local soldierBlueprint = ResourceManager:SearchForDataContainer('Characters/Soldiers/MpSoldier')
     local soldierKit = nil
@@ -1057,9 +1116,9 @@ function spawnBot(name, teamId, squadId, trans, setvars)
 
 	bot.soldier:ApplyCustomization(soldierCustomization)
 
-
     -- set vars
     if setvars then
+        botSwapTeam[name] = false
         botSpawnModes[name] = spawnMode
         botSpeeds[name] = speed
         botMoveModes[name] = moveMode
@@ -1166,21 +1225,27 @@ function saveWayPoints()
         print('Failed to execute query: ' .. SQL:Error())
         return
     end
-    query = 'INSERT INTO '..mapName..'_table (pathIndex, pointIndex, transX, transY, transZ) VALUES (?, ?, ?, ?, ?)'
+    query = 'INSERT INTO '..mapName..'_table (pathIndex, pointIndex, transX, transY, transZ) VALUES '
     local pathIndex = 0
     for oldPathIndex = 1, Config.maxTraceNumber do
+        local sqlValuesString = ""
         if wayPoints[oldPathIndex][1] ~= nil then
-            pathIndex = pathIndex +1
+            pathIndex = pathIndex + 1
             for pointIndex = 1, #wayPoints[oldPathIndex] do
                 local transform = LinearTransform()
                 transform = wayPoints[oldPathIndex][pointIndex]
                 local transX = transform.trans.x
                 local transY = transform.trans.y
                 local transZ = transform.trans.z
-                if not SQL:Query(query, pathIndex, pointIndex, transX, transY, transZ) then
-                    print('Failed to execute query: ' .. SQL:Error())
-                    return
+                local inerString = "("..pathIndex..","..pointIndex..","..tostring(transX)..","..tostring(transY)..","..tostring(transZ)..")"
+                sqlValuesString = sqlValuesString..inerString
+                if pointIndex < #wayPoints[oldPathIndex] then
+                    sqlValuesString = sqlValuesString..","
                 end
+            end
+            if not SQL:Query(query..sqlValuesString) then
+                print('Failed to execute query: ' .. SQL:Error())
+                return
             end
         end
     end
