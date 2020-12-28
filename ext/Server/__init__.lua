@@ -51,12 +51,16 @@ local activeTraceIndexes = 0
 local tracePlayers = {}
 local traceTimesGone = {}
 local wayPoints = {}
+local mapName = ""
 for i = 1, Config.maxTraceNumber do
     wayPoints[i] = {}
 end
 
 Events:Subscribe('Level:Loaded', function(levelName, gameMode)
     print("level "..levelName.." in Gamemode "..gameMode.." loaded")
+    mapName = levelName..gameMode
+    loadWayPoints()
+    print(tostring(activeTraceIndexes).." paths have been loaded")
 
 end)
 
@@ -490,6 +494,14 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
         if kitNumber <= 4 and kitNumber >= 1 then
             Config.botKit = kitNumber
         end
+
+    elseif parts[1] == '!printtrans' then
+        print(player.soldier.transform)
+        print(player.soldier.transform.trans.x)
+        print(player.soldier.transform.trans.y)
+        print(player.soldier.transform.trans.z)
+    elseif parts[1] == '!savepaths' then
+        saveWayPoints()
 
     -- extra modes
     elseif parts[1] == '!nice' then
@@ -1033,6 +1045,28 @@ function spawnBot(name, teamId, squadId, trans, setvars)
 	-- And then spawn the bot. This will create and return a new SoldierEntity object.
     Bots:spawnBot(bot, transform, CharacterPoseType.CharacterPoseType_Stand, soldierBlueprint, soldierKit, { appearance })
 
+    local m1911 = ResourceManager:SearchForDataContainer('Weapons/M1911/U_M1911_Tactical')
+    local knife = ResourceManager:SearchForDataContainer('Weapons/Knife/U_Knife')
+
+	-- Create the infection customization
+	local soldierCustomization = CustomizeSoldierData()
+	soldierCustomization.activeSlot = WeaponSlot.WeaponSlot_1
+	soldierCustomization.removeAllExistingWeapons = false
+
+	local secondaryWeapon = UnlockWeaponAndSlot()
+	secondaryWeapon.weapon = SoldierWeaponUnlockAsset(m1911)
+	secondaryWeapon.slot = WeaponSlot.WeaponSlot_1
+
+	local meleeWeapon = UnlockWeaponAndSlot()
+	meleeWeapon.weapon = SoldierWeaponUnlockAsset(knife)
+	meleeWeapon.slot = WeaponSlot.WeaponSlot_5
+
+	soldierCustomization.weapons:add(secondaryWeapon)
+	soldierCustomization.weapons:add(meleeWeapon)
+
+	bot.soldier:ApplyCustomization(soldierCustomization)
+
+
     -- set vars
     if setvars then
         botSpawnModes[name] = spawnMode
@@ -1060,4 +1094,114 @@ function kickBot(name)
 		return
 	end
 	Bots:destroyBot(bot)
+end
+
+function loadWayPoints()
+    if not SQL:Open() then
+        return
+    end
+    
+    local query = [[
+        CREATE TABLE IF NOT EXISTS ]]..mapName..[[_table (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        pathIndex INTEGER,
+        pointIndex INTEGER,
+        transX FLOAT,
+        transY FLOAT,
+        transZ FLOAT
+        )
+    ]]
+    if not SQL:Query(query) then
+        print('Failed to execute query: ' .. SQL:Error())
+        return
+    end
+    
+    -- Fetch all rows from the table.
+    local results = SQL:Query('SELECT * FROM '..mapName..'_table')
+
+    if not results then
+        print('Failed to execute query: ' .. SQL:Error())
+        return
+    end
+
+    -- clear waypoints
+    wayPoints = {}
+    for i = 1, Config.maxTraceNumber do
+        wayPoints[i] = {}
+    end
+    
+    -- Load the fetched rows.
+    local nrOfPaths = 0
+    for _, row in pairs(results) do
+        local pathIndex = row["pathIndex"]
+        if pathIndex > nrOfPaths then
+            nrOfPaths = pathIndex
+        end
+        local pointIndex = row["pointIndex"]
+        local transX = row["transX"]
+        local transY = row["transY"]
+        local transZ = row["transZ"]
+        local transform = LinearTransform()
+        transform.trans.x = transX
+        transform.trans.y = transY
+        transform.trans.z = transZ
+        wayPoints[pathIndex][pointIndex] = transform
+    end
+    activeTraceIndexes = nrOfPaths
+    SQL:Close()
+    print("LOAD - The waypoint list has been loaded.")
+end
+
+function saveWayPoints()
+    if not SQL:Open() then
+        return
+    end
+    local query = [[DROP TABLE IF EXISTS ]]..mapName..[[_table]]
+    if not SQL:Query(query) then
+        print('Failed to execute query: ' .. SQL:Error())
+        return
+    end
+    query = [[
+        CREATE TABLE IF NOT EXISTS ]]..mapName..[[_table (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        pathIndex INTEGER,
+        pointIndex INTEGER,
+        transX FLOAT,
+        transY FLOAT,
+        transZ FLOAT
+        )
+    ]]
+    if not SQL:Query(query) then
+        print('Failed to execute query: ' .. SQL:Error())
+        return
+    end
+    query = 'INSERT INTO '..mapName..'_table (pathIndex, pointIndex, transX, transY, transZ) VALUES (?, ?, ?, ?, ?)'
+    local pathIndex = 0
+    for oldPathIndex = 1, Config.maxTraceNumber do
+        if wayPoints[oldPathIndex][1] ~= nil then
+            pathIndex = pathIndex +1
+            for pointIndex = 1, #wayPoints[oldPathIndex] do
+                local transform = LinearTransform()
+                transform = wayPoints[oldPathIndex][pointIndex]
+                local transX = transform.trans.x
+                local transY = transform.trans.y
+                local transZ = transform.trans.z
+                if not SQL:Query(query, pathIndex, pointIndex, transX, transY, transZ) then
+                    print('Failed to execute query: ' .. SQL:Error())
+                    return
+                end
+            end
+        end
+    end
+
+    -- Fetch all rows from the table.
+    local results = SQL:Query('SELECT * FROM '..mapName..'_table')
+
+    if not results then
+        print('Failed to execute query: ' .. SQL:Error())
+        return
+    end
+
+    SQL:Close()
+    print("SAVE - The waypoint list has been saved.")
 end
