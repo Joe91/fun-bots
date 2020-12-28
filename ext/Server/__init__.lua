@@ -3,7 +3,7 @@ local Bots = require('bots')
 
 local moveMode = 5 --standing, centerpoint, pointing
 local speed = 3 -- standing 0, proning 1, couching 2, walking 3, running 4
-local spawnMode = 0 -- center 1, line 2, ring 3
+local spawnMode = 5 -- center 1, line 2, ring 3
 
 -- vars for each bot
 local botSpawnModes = {}
@@ -61,6 +61,10 @@ Events:Subscribe('Level:Loaded', function(levelName, gameMode)
     mapName = levelName..gameMode
     loadWayPoints()
     print(tostring(activeTraceIndexes).." paths have been loaded")
+    if activeTraceIndexes > 0 and Config.spawnOnLevelstart then
+        respawning = true
+        spawnWayBots(nil, Config.initNumberOfBots, true)
+    end
 
 end)
 
@@ -424,7 +428,7 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
         local amount = tonumber(parts[2])
         spawnWayBots(player, amount, false)
 
-    elseif parts[1] == '!spawnrandway' then
+    elseif parts[1] == '!spawnrandway' or parts[1] == "!spawnbots" then
         if tonumber(parts[2]) == nil then
             return
         end
@@ -488,20 +492,18 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
         if tonumber(parts[2]) == 0 then
             Config.spawnInSameTeam = false
         end
+    
+    elseif parts[1] == '!spawnonlevelstart' then
+        Config.spawnOnLevelstart = true
+        if tonumber(parts[2]) == 0 then
+            Config.spawnOnLevelstart = false
+        end
 
     elseif parts[1] == '!setbotkit' then
         local kitNumber = tonumber(parts[2]) or 1
         if kitNumber <= 4 and kitNumber >= 1 then
             Config.botKit = kitNumber
         end
-
-    elseif parts[1] == '!printtrans' then
-        print(player.soldier.transform)
-        print(player.soldier.transform.trans.x)
-        print(player.soldier.transform.trans.y)
-        print(player.soldier.transform.trans.z)
-    elseif parts[1] == '!savepaths' then
-        saveWayPoints()
 
     -- extra modes
     elseif parts[1] == '!nice' then
@@ -644,6 +646,15 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
             clearPoints(i)
         end
         activeTraceIndexes = 0
+
+    elseif parts[1] == '!printtrans' then
+        print(player.soldier.transform)
+        print(player.soldier.transform.trans.x)
+        print(player.soldier.transform.trans.y)
+        print(player.soldier.transform.trans.z)
+        
+    elseif parts[1] == '!savepaths' then
+        saveWayPoints()
 
     -- only experimental
     elseif parts[1] == '!mode' then --overwrite mode for all bots
