@@ -46,8 +46,8 @@ local centerpoint = LinearTransform()
 local ringSpacing = 25
 local ringNrOfBots = 0
 
-local activeWayIndex
-local activeTraceIndexes
+local activeWayIndex = 1
+local activeTraceIndexes = 0
 local tracePlayers = {}
 local traceTimesGone = {}
 local wayPoints = {}
@@ -127,7 +127,7 @@ Events:Subscribe('Bot:Update', function(bot, dt)
             botYaws[bot.name] = MathUtils:GetRandom(0, 2*math.pi)
             spawnBot(bot.name, team, squad, centerpoint, false)
             bot.input.authoritativeAimingYaw = botYaws[bot.name]
-            
+
         elseif spawnMode == 2 then  --spawnInLine
             spawnBot(bot.name, team, squad, botTransforms[bot.name], false)
 
@@ -152,11 +152,12 @@ Events:Subscribe('Bot:Update', function(bot, dt)
             botCurrentWayPoints[bot.name] = randIdex
             local transform = LinearTransform()
             local newWayIdex = getNewWayIndex()
-            transform = wayPoints[newWayIdex][randIdex]
-            botWayIndexes[bot.name] = newWayIdex
-            wayIndex = newWayIdex
-            spawnBot(bot.name, team, squad, transform, false)
-
+            if newWayIdex ~= 0 then
+                transform = wayPoints[newWayIdex][randIdex]
+                botWayIndexes[bot.name] = newWayIdex
+                wayIndex = newWayIdex
+                spawnBot(bot.name, team, squad, transform, false)
+            end
         else
             spawnBot(bot.name, team, squad, botTransforms[bot.name], false)
         end
@@ -213,7 +214,7 @@ Events:Subscribe('Bot:Update', function(bot, dt)
                     activePointIndex = 1
                 end
             end
-            if #wayPoints > 0 then   -- check for reached point
+            if wayPoints[wayIndex][1] ~= nil then   -- check for reached point
                 local transform = LinearTransform()
                 transform = wayPoints[wayIndex][activePointIndex]
                 local dy = transform.trans.z - bot.soldier.transform.trans.z
@@ -417,18 +418,18 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
             activeWayIndex = 1
         end
         local amount = tonumber(parts[2])
-        spawnWayBots(player, amount)
+        spawnWayBots(player, amount, false)
 
-    elseif parts[1] == '!spawrandnway' then
+    elseif parts[1] == '!spawnrandway' then
         if tonumber(parts[2]) == nil then
             return
         end
         speed = 3
         moveMode = 5
         spawnMode = 5
-        activeWayIndex = getNewWayIndex()
         local amount = tonumber(parts[2])
-        spawnWayBots(player, amount)
+        activeWayIndex = 1
+        spawnWayBots(player, amount, true)
 
     -- moving bots movement settings
     elseif parts[1] == '!run' then
@@ -607,11 +608,11 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
             traceIndex = 1
         end
         clearPoints(traceIndex)
-        activeTraceIndexes = activeTraceIndexes + 1
         traceTimesGone[traceIndex] = 0
         tracePlayers[traceIndex] = player
 
     elseif parts[1] == '!tracedone' then
+        activeTraceIndexes = activeTraceIndexes + 1
         for i = 1, Config.maxTraceNumber do
             if tracePlayers[i] == player then
                 tracePlayers[i] = nil
@@ -631,7 +632,6 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
             clearPoints(i)
         end
         activeTraceIndexes = 0
-    
 
     -- only experimental
     elseif parts[1] == '!mode' then --overwrite mode for all bots
@@ -736,7 +736,10 @@ function setPoint(traceIndex, player)
 end
 
 function clearPoints(traceIndex)
-    if #wayPoints[traceIndex] > 0 then
+    if traceIndex < 1 or traceIndex > Config.maxTraceNumber then
+        return
+    end
+    if wayPoints[traceIndex][1] ~= nil then
         activeTraceIndexes = activeTraceIndexes - 1
     end
     wayPoints[traceIndex] = {}
@@ -853,13 +856,19 @@ function spawnRingBots(player, amount, spacing)
     end
 end
 
-function spawnWayBots(player, amount)
-    if #wayPoints[activeWayIndex] == 0 then
+function spawnWayBots(player, amount, randomIndex)
+    if wayPoints[activeWayIndex][1] == nil or activeTraceIndexes <= 0 then
         return
     end
     for i = 1, amount do
         local name = findNextBotName()
         if name ~= nil then
+            if randomIndex then
+                activeWayIndex = getNewWayIndex()
+                if activeWayIndex == 0 then
+                    return
+                end
+            end
             local randIdex = MathUtils:GetRandomInt(1, #wayPoints[activeWayIndex])
             botCurrentWayPoints[name] = randIdex
             local transform = LinearTransform()
@@ -892,16 +901,19 @@ function string:split(sep)
 end
 
 function getNewWayIndex()
-    local newWayIdex = 1
+    local newWayIdex = 0
+    if activeTraceIndexes <= 0 then
+        return newWayIdex
+    end
     local targetWaypoint = MathUtils:GetRandomInt(1, activeTraceIndexes)
     local count = 0
     for i = 1, Config.maxTraceNumber do
-        if #wayPoints[i] > 0 then
+        if wayPoints[i][1] ~= nil then
             count = count + 1
         end
         if count == targetWaypoint then
-            newWayIdex = count
-            return
+            newWayIdex = i
+            return newWayIdex
         end
     end
     return newWayIdex
@@ -987,7 +999,7 @@ function spawnBot(name, teamId, squadId, trans, setvars)
             soldierKit = ResourceManager:SearchForInstanceByGuid(Guid('A15EE431-88B8-4B35-B69A-985CEA934855'))
         elseif Config.botKit == 2 then --engineer
             soldierKit = ResourceManager:SearchForInstanceByGuid(Guid('0A99EBDB-602C-4080-BC3F-B388AA18ADDD'))
-        elseif Config.botKit == 3 then --assault
+        elseif Config.botKit == 3 then --support
             soldierKit = ResourceManager:SearchForInstanceByGuid(Guid('47949491-F672-4CD6-998A-101B7740F919'))
         else    --recon
             soldierKit = ResourceManager:SearchForInstanceByGuid(Guid('BC1C1E63-2730-4E21-8ACD-FAC500D720C3'))
@@ -997,7 +1009,7 @@ function spawnBot(name, teamId, squadId, trans, setvars)
             soldierKit = ResourceManager:SearchForInstanceByGuid(Guid('28EC16E7-0BBF-4CB0-9321-473C6EC54125'))
         elseif Config.botKit == 2 then --engineer
             soldierKit = ResourceManager:SearchForInstanceByGuid(Guid('DB0FCE83-2505-4948-8661-660DD0C64B63'))
-        elseif Config.botKit == 3 then --assault
+        elseif Config.botKit == 3 then --support
             soldierKit = ResourceManager:SearchForInstanceByGuid(Guid('4D0F249B-4464-4F97-A248-A88F57EF5CAA'))
         else    --recon
             soldierKit = ResourceManager:SearchForInstanceByGuid(Guid('84A4BE20-B110-42E5-9588-365643624525'))

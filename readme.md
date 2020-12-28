@@ -42,6 +42,7 @@ With these commands you can spawn moving bots. To spawn bots on a way, you have 
 !spawnline <number> <opt: spacing>
 !spawnring <number> <opt: spacing>
 !spawnway <number> <opt: trace-index>
+!spawnrandway <number>
 ```
     
 ### Moving bot settings:
@@ -68,6 +69,7 @@ With these commands you can record a path that can be used by bots (spawn way)
 !tracedone
 !setpoint <opt: index>
 !clearpoints <opt: index>
+!clearalltraces
 ```
 
 ### More settings / commands:

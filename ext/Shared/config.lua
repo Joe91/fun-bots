@@ -2,7 +2,7 @@ Config = {
     maxNumberOfBots = 40,
     spawnInSameTeam = false,
     exploding = false,
-    traceDelta = 0.3,
+    traceDelta = 0.2,
     botKit = 1, -- 1 = assault, 2 = engineer, 3 = support, 4 = recon
     maxTraceNumber = 10
 
