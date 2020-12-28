@@ -1169,8 +1169,7 @@ function saveWayPoints()
         print('Failed to execute query: ' .. SQL:Error())
         return
     end
-    print("table created")
-    query = 'INSERT INTO ]]..mapName..[[_table (pathIndex, pointIndex, transX, transY, transZ) VALUES (?, ?, ?, ?, ?)'
+    query = 'INSERT INTO '..mapName..'_table (pathIndex, pointIndex, transX, transY, transZ) VALUES (?, ?, ?, ?, ?)'
     local pathIndex = 0
     for oldPathIndex = 1, Config.maxTraceNumber do
         if wayPoints[oldPathIndex][1] ~= nil then
