@@ -3,8 +3,6 @@ Config = {
     spawnInSameTeam = false,
     exploding = false,
     traceDelta = 0.2,
-    spawnOnLevelstart = false,
-    initNumberOfBots = 5,
     botKit = 4, -- 1 = assault, 2 = engineer, 3 = support, 4 = recon
     maxTraceNumber = 10
 

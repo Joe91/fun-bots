@@ -61,10 +61,6 @@ Events:Subscribe('Level:Loaded', function(levelName, gameMode)
     mapName = levelName..gameMode
     loadWayPoints()
     print(tostring(activeTraceIndexes).." paths have been loaded")
-    if activeTraceIndexes > 0 and Config.spawnOnLevelstart then
-        respawning = true
-        spawnWayBots(nil, Config.initNumberOfBots, true)
-    end
 
 end)
 
@@ -491,12 +487,6 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
         Config.spawnInSameTeam = true
         if tonumber(parts[2]) == 0 then
             Config.spawnInSameTeam = false
-        end
-    
-    elseif parts[1] == '!spawnonlevelstart' then
-        Config.spawnOnLevelstart = true
-        if tonumber(parts[2]) == 0 then
-            Config.spawnOnLevelstart = false
         end
 
     elseif parts[1] == '!setbotkit' then
