@@ -991,28 +991,38 @@ function spawnBot(name, teamId, squadId, trans, setvars)
     --Gameplay/Kits/RUSupport/4D0F249B-4464-4F97-A248-A88F57EF5CAA
     --Gameplay/Kits/RURecon/84A4BE20-B110-42E5-9588-365643624525
 
-    local soldierBlueprint = ResourceManager:SearchForInstanceByGuid(Guid('261E43BF-259B-41D2-BF3B-9AE4DDA96AD2'))
+
+    local soldierBlueprint = ResourceManager:SearchForDataContainer('Characters/Soldiers/MpSoldier')
     local soldierKit = nil
+    local appearance = nil
     
     if teamId == TeamId.Team1 then -- US
         if Config.botKit == 1 then --assault
-            soldierKit = ResourceManager:SearchForInstanceByGuid(Guid('A15EE431-88B8-4B35-B69A-985CEA934855'))
+            appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/Us/MP_US_Assault_Appearance_Navy')
+            soldierKit = ResourceManager:SearchForDataContainer('Gameplay/Kits/USAssault')
         elseif Config.botKit == 2 then --engineer
-            soldierKit = ResourceManager:SearchForInstanceByGuid(Guid('0A99EBDB-602C-4080-BC3F-B388AA18ADDD'))
+            appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/Us/MP_US_Engi_Appearance_Navy')
+            soldierKit = ResourceManager:SearchForDataContainer('Gameplay/Kits/USEngineer')
         elseif Config.botKit == 3 then --support
-            soldierKit = ResourceManager:SearchForInstanceByGuid(Guid('47949491-F672-4CD6-998A-101B7740F919'))
+            appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/Us/MP_US_Support_Appearance_Navy')
+            soldierKit = ResourceManager:SearchForDataContainer('Gameplay/Kits/USSupport')
         else    --recon
-            soldierKit = ResourceManager:SearchForInstanceByGuid(Guid('BC1C1E63-2730-4E21-8ACD-FAC500D720C3'))
+            appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/Us/MP_US_Recon_Appearance_Navy')
+            soldierKit = ResourceManager:SearchForDataContainer('Gameplay/Kits/USRecon')
         end
     else -- RU
         if Config.botKit == 1 then --assault
-            soldierKit = ResourceManager:SearchForInstanceByGuid(Guid('28EC16E7-0BBF-4CB0-9321-473C6EC54125'))
+            appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/RU/MP_RU_Assault_Appearance_Navy')
+            soldierKit = ResourceManager:SearchForDataContainer('Gameplay/Kits/RUAssault')
         elseif Config.botKit == 2 then --engineer
-            soldierKit = ResourceManager:SearchForInstanceByGuid(Guid('DB0FCE83-2505-4948-8661-660DD0C64B63'))
+            appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/RU/MP_RU_Engi_Appearance_Navy')
+            soldierKit = ResourceManager:SearchForDataContainer('Gameplay/Kits/RUEngineer')
         elseif Config.botKit == 3 then --support
-            soldierKit = ResourceManager:SearchForInstanceByGuid(Guid('4D0F249B-4464-4F97-A248-A88F57EF5CAA'))
+            appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/RU/MP_RU_Support_Appearance_Navy')
+            soldierKit = ResourceManager:SearchForDataContainer('Gameplay/Kits/RUSupport')
         else    --recon
-            soldierKit = ResourceManager:SearchForInstanceByGuid(Guid('84A4BE20-B110-42E5-9588-365643624525'))
+            appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/RU/MP_RU_Recon_Appearance_Navy')
+            soldierKit = ResourceManager:SearchForDataContainer('Gameplay/Kits/RURecon')
         end
     end
 
@@ -1021,7 +1031,7 @@ function spawnBot(name, teamId, squadId, trans, setvars)
     transform = trans
 
 	-- And then spawn the bot. This will create and return a new SoldierEntity object.
-    Bots:spawnBot(bot, transform, CharacterPoseType.CharacterPoseType_Stand, soldierBlueprint, soldierKit, {})
+    Bots:spawnBot(bot, transform, CharacterPoseType.CharacterPoseType_Stand, soldierBlueprint, soldierKit, { appearance })
 
     -- set vars
     if setvars then
