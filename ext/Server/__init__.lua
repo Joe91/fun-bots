@@ -7,6 +7,7 @@ local spawnMode = 5 -- center 1, line 2, ring 3
 
 -- vars for each bot
 local botSpawnModes = {}
+local botSwapTeam = {}
 local botSpeeds = {}
 local botMoveModes = {}
 local botTimeGones = {}
@@ -52,6 +53,7 @@ local tracePlayers = {}
 local traceTimesGone = {}
 local wayPoints = {}
 local mapName = ""
+
 for i = 1, Config.maxTraceNumber do
     wayPoints[i] = {}
 end
@@ -62,6 +64,7 @@ Events:Subscribe('Level:Loaded', function(levelName, gameMode)
     loadWayPoints()
     print(tostring(activeTraceIndexes).." paths have been loaded")
     -- create initial bots
+    swapAllBotTeams()
     if activeTraceIndexes > 0 and Config.spawnOnLevelstart then
         respawning = true
         for i = 1, Config.initNumberOfBots do
@@ -133,6 +136,14 @@ Events:Subscribe('Bot:Update', function(bot, dt)
 
     --spawning 
     if respawning and bot.soldier == nil and spawnMode > 0 then
+        if botSwapTeam[bot.name] then
+            botSwapTeam[bot.name] = false
+            if team == TeamId.Team1 then
+                botTeams[bot.name] = TeamId.Team2
+            else
+                botTeams[bot.name] = TeamId.Team1
+            end
+        end
         if spawnMode == 1 then --spawnCenterpoint
             botYaws[bot.name] = MathUtils:GetRandom(0, 2*math.pi)
             spawnBot(bot.name, team, squad, centerpoint, false)
@@ -983,6 +994,16 @@ function freeNumberOfBots(number)
     end
 end
 
+function swapAllBotTeams()
+    for i = 1, Config.maxNumberOfBots do
+        local name = BotNames[i]
+        local bot = PlayerManager:GetPlayerByName(name)
+        if bot ~= nil then
+            botSwapTeam[name] = true
+        end
+    end
+end
+
 function createInitialBots(name, teamId, squadId) 
     local existingPlayer = PlayerManager:GetPlayerByName(name)
 	local bot = nil
@@ -993,7 +1014,7 @@ function createInitialBots(name, teamId, squadId)
 			return
 		end
 		bot = existingPlayer
-		bot.teamId = teamId
+        bot.teamId = botTeams[name]
 		bot.squadId = squadId
     else
         botTimeGones[name] = 0
@@ -1004,7 +1025,7 @@ function createInitialBots(name, teamId, squadId)
     botSpawnModes[name] = spawnMode
     botSpeeds[name] = speed
     botMoveModes[name] = moveMode
-    botTeams[name] = teamId
+    botTeams[name] = bot.teamId 
     botWayIndexes[name] = activeWayIndex
     botDieing[name] = dieing
     botRespawning[name] = respawning
@@ -1097,6 +1118,7 @@ function spawnBot(name, teamId, squadId, trans, setvars)
 
     -- set vars
     if setvars then
+        botSwapTeam[name] = false
         botSpawnModes[name] = spawnMode
         botSpeeds[name] = speed
         botMoveModes[name] = moveMode
