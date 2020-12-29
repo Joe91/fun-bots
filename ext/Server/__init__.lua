@@ -1093,7 +1093,7 @@ function spawnBot(name, teamId, squadId, trans, setvars)
 
     local botColor = Colors[Config.botColor]
     local kitNumber = Config.botKit
-    if setvars then
+    if setvars or Config.botNewLoadoutOnSpawn then
         if Config.botColor == 0 then
             botColor = Colors[MathUtils:GetRandomInt(1, #Colors)]
         end
@@ -1111,7 +1111,6 @@ function spawnBot(name, teamId, squadId, trans, setvars)
     local m1911 = ResourceManager:SearchForDataContainer('Weapons/M1911/U_M1911_Tactical')
     local knife = ResourceManager:SearchForDataContainer('Weapons/Knife/U_Knife')
 
-	
 	local soldierCustomization = CustomizeSoldierData()
 	soldierCustomization.activeSlot = WeaponSlot.WeaponSlot_0
 	soldierCustomization.removeAllExistingWeapons = true
@@ -1120,7 +1119,7 @@ function spawnBot(name, teamId, squadId, trans, setvars)
     primaryWeapon.slot = WeaponSlot.WeaponSlot_0
 
     local gadget01 = UnlockWeaponAndSlot()
-    gadget01.slot = WeaponSlot.WeaponSlot_2
+    gadget01.slot = WeaponSlot.WeaponSlot_3
 
     local gadget02 = UnlockWeaponAndSlot()
     gadget02.slot = WeaponSlot.WeaponSlot_4
