@@ -523,6 +523,14 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
         local kitNumber = tonumber(parts[2]) or 1
         if kitNumber <= 4 and kitNumber >= 0 then
             Config.botKit = kitNumber
+            setBotVarForAll(botKits, kitNumber)
+        end
+
+    elseif parts[1] == '!setbotcolour' then
+        local botColour = tonumber(parts[2]) or 1
+        if botColour <= #Colours and botColour >= 0 then
+            Config.botColour = botColour
+            setBotVarForAll(botColours, Colours[botColour])
         end
 
     -- extra modes

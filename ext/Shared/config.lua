@@ -6,13 +6,21 @@ Config = {
     spawnOnLevelstart = true,
     spawnDelayBots = 2.0,
     botUpdateCycle = 0.1,
-    initNumberOfBots = 5,
+    initNumberOfBots = 10,
     botKit = 0, -- 0 = random, 1 = assault, 2 = engineer, 3 = support, 4 = recon
-    botColour = 4, -- 0 = random, see Coulors
+    botColour = 0, -- 0 = random, see Coulors
     maxTraceNumber = 10
 }
 
 Colours = {
+    "Appearance01",
+    "ExpForce",
+    "Ninja",
+    "DrPepper",
+    "Para",
+    "Ranger",
+    "Specact",
+    "Veteran",
     "Desert02",
     "Green",
     "Jungle",
