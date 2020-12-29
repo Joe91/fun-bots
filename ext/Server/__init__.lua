@@ -75,7 +75,6 @@ Events:Subscribe('Level:Loaded', function(levelName, gameMode)
             createInitialBots(BotNames[i], team, squad)
         end
     end
-    saveWayPoints()
 end)
 
 Events:Subscribe('Player:Killed', function(player)
