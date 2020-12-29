@@ -38,7 +38,7 @@ With these commands you can set the static bots to mimic or mirror your behavior
 With these commands you can spawn moving bots. To spawn bots on a way, you have to trace a path at first
 
 ```html
-!spawnbots  <number>  -- default command. Spawns bots on valid path
+!spawnbots  <number>  -- default command. Spawns bots on valid paths
 !spawncenter <number> <opt: duration>
 !spawnline <number> <opt: spacing>
 !spawnring <number> <opt: spacing>
@@ -81,7 +81,8 @@ Here are some more commands. Partly not tested jet
 
 ```html
 !spawnsameteam <opt: 0>
-!setbotkit <value: 1-4>
+!setbotkit <value: 0-4> -- 0 = random
+!setbotColor <value: 0-14> -- 0 = random
 !nice
 !die <opt: 0>
 !stop
