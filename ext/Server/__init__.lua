@@ -68,10 +68,14 @@ Events:Subscribe('Level:Loaded', function(levelName, gameMode)
     swapAllBotTeams()
     if activeTraceIndexes > 0 and Config.spawnOnLevelstart then
         respawning = true
+        moveMode = 5
+        spawnMode = 5
+        speed = 3
         for i = 1, Config.initNumberOfBots do
             createInitialBots(BotNames[i], team, squad)
         end
     end
+    saveWayPoints()
 end)
 
 Events:Subscribe('Player:Killed', function(player)
@@ -1030,6 +1034,7 @@ function createInitialBots(name, teamId, squadId)
         bot.input.flags = EntryInputFlags.AuthoritativeAiming
     end
 
+    botSpawnDelayTime[name] = 0.0
     botSpawnModes[name] = spawnMode
     botSpeeds[name] = speed
     botMoveModes[name] = moveMode
@@ -1242,24 +1247,35 @@ function saveWayPoints()
     query = 'INSERT INTO '..mapName..'_table (pathIndex, pointIndex, transX, transY, transZ) VALUES '
     local pathIndex = 0
     for oldPathIndex = 1, Config.maxTraceNumber do
-        local sqlValuesString = ""
+        local pointsDone = 0
+        local maxPointsInOneQuery = 1000
+        local errorActive = false
         if wayPoints[oldPathIndex][1] ~= nil then
             pathIndex = pathIndex + 1
-            for pointIndex = 1, #wayPoints[oldPathIndex] do
-                local transform = LinearTransform()
-                transform = wayPoints[oldPathIndex][pointIndex]
-                local transX = transform.trans.x
-                local transY = transform.trans.y
-                local transZ = transform.trans.z
-                local inerString = "("..pathIndex..","..pointIndex..","..tostring(transX)..","..tostring(transY)..","..tostring(transZ)..")"
-                sqlValuesString = sqlValuesString..inerString
-                if pointIndex < #wayPoints[oldPathIndex] then
-                    sqlValuesString = sqlValuesString..","
+            while #wayPoints[oldPathIndex] > pointsDone and not errorActive do
+                local pointsToTo = #wayPoints[oldPathIndex] - pointsDone
+                if pointsToTo > maxPointsInOneQuery then
+                    pointsToTo = maxPointsInOneQuery
                 end
-            end
-            if not SQL:Query(query..sqlValuesString) then
-                print('Failed to execute query: ' .. SQL:Error())
-                return
+
+                local sqlValuesString = ""
+                for pointIndex = 1 + pointsDone, pointsToTo + pointsDone do
+                    local transform = LinearTransform()
+                    transform = wayPoints[oldPathIndex][pointIndex]
+                    local transX = transform.trans.x
+                    local transY = transform.trans.y
+                    local transZ = transform.trans.z
+                    local inerString = "("..pathIndex..","..pointIndex..","..tostring(transX)..","..tostring(transY)..","..tostring(transZ)..")"
+                    sqlValuesString = sqlValuesString..inerString
+                    if pointIndex < pointsToTo + pointsDone then
+                        sqlValuesString = sqlValuesString..","
+                    end
+                end
+                if not SQL:Query(query..sqlValuesString) then
+                    print('Failed to execute query: ' .. SQL:Error())
+                    return
+                end
+                pointsDone = pointsDone + pointsToTo
             end
         end
     end
