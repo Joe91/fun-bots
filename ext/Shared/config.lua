@@ -4,8 +4,10 @@ Config = {
     exploding = false,
     traceDelta = 0.2,
     spawnOnLevelstart = true,
+    spawnDelayBots = 2.0,
+    botUpdateCycle = 0.1,
     initNumberOfBots = 5,
-    botKit = 4, -- 1 = assault, 2 = engineer, 3 = support, 4 = recon
+    botKit = 0, -- 0 = random, 1 = assault, 2 = engineer, 3 = support, 4 = recon
     maxTraceNumber = 10
 
 }

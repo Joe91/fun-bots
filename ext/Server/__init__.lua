@@ -8,6 +8,7 @@ local spawnMode = 5 -- center 1, line 2, ring 3
 -- vars for each bot
 local botSpawnModes = {}
 local botSwapTeam = {}
+local botSpawnDelayTime = {}
 local botSpeeds = {}
 local botMoveModes = {}
 local botTimeGones = {}
@@ -113,7 +114,7 @@ end)
 Events:Subscribe('Bot:Update', function(bot, dt)
     -- increase performance with reduced update cycles
     local timeGone = botTimeGones[bot.name] + dt
-    if timeGone < 0.1 then --(10 times per second?)
+    if timeGone < Config.botUpdateCycle then
         botTimeGones[bot.name] = timeGone
         return
     end
@@ -136,6 +137,12 @@ Events:Subscribe('Bot:Update', function(bot, dt)
 
     --spawning 
     if respawning and bot.soldier == nil and spawnMode > 0 then
+        -- wait for respawn-delay gone
+        if botSpawnDelayTime[bot.name] < Config.spawnDelayBots then
+            botSpawnDelayTime[bot.name] = botSpawnDelayTime[bot.name] + Config.botUpdateCycle
+            return
+        end
+        -- check for swap of team on levelstart
         if botSwapTeam[bot.name] then
             botSwapTeam[bot.name] = false
             if team == TeamId.Team1 then
@@ -144,6 +151,7 @@ Events:Subscribe('Bot:Update', function(bot, dt)
                 botTeams[bot.name] = TeamId.Team1
             end
         end
+
         if spawnMode == 1 then --spawnCenterpoint
             botYaws[bot.name] = MathUtils:GetRandom(0, 2*math.pi)
             spawnBot(bot.name, team, squad, centerpoint, false)
@@ -508,7 +516,7 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
 
     elseif parts[1] == '!setbotkit' then
         local kitNumber = tonumber(parts[2]) or 1
-        if kitNumber <= 4 and kitNumber >= 1 then
+        if kitNumber <= 4 and kitNumber >= 0 then
             Config.botKit = kitNumber
         end
 
@@ -1057,15 +1065,20 @@ function spawnBot(name, teamId, squadId, trans, setvars)
     local soldierBlueprint = ResourceManager:SearchForDataContainer('Characters/Soldiers/MpSoldier')
     local soldierKit = nil
     local appearance = nil
+
+    local kitNumber = Config.botKit
+    if kitNumber == 0 then
+        kitNumber = MathUtils:GetRandomInt(1, 4)
+    end
     
     if teamId == TeamId.Team1 then -- US
-        if Config.botKit == 1 then --assault
+        if kitNumber == 1 then --assault
             appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/Us/MP_US_Assault_Appearance_Navy')
             soldierKit = ResourceManager:SearchForDataContainer('Gameplay/Kits/USAssault')
-        elseif Config.botKit == 2 then --engineer
+        elseif kitNumber == 2 then --engineer
             appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/Us/MP_US_Engi_Appearance_Navy')
             soldierKit = ResourceManager:SearchForDataContainer('Gameplay/Kits/USEngineer')
-        elseif Config.botKit == 3 then --support
+        elseif kitNumber == 3 then --support
             appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/Us/MP_US_Support_Appearance_Navy')
             soldierKit = ResourceManager:SearchForDataContainer('Gameplay/Kits/USSupport')
         else    --recon
@@ -1073,13 +1086,13 @@ function spawnBot(name, teamId, squadId, trans, setvars)
             soldierKit = ResourceManager:SearchForDataContainer('Gameplay/Kits/USRecon')
         end
     else -- RU
-        if Config.botKit == 1 then --assault
+        if kitNumber == 1 then --assault
             appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/RU/MP_RU_Assault_Appearance_Navy')
             soldierKit = ResourceManager:SearchForDataContainer('Gameplay/Kits/RUAssault')
-        elseif Config.botKit == 2 then --engineer
+        elseif kitNumber == 2 then --engineer
             appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/RU/MP_RU_Engi_Appearance_Navy')
             soldierKit = ResourceManager:SearchForDataContainer('Gameplay/Kits/RUEngineer')
-        elseif Config.botKit == 3 then --support
+        elseif kitNumber == 3 then --support
             appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/RU/MP_RU_Support_Appearance_Navy')
             soldierKit = ResourceManager:SearchForDataContainer('Gameplay/Kits/RUSupport')
         else    --recon
@@ -1092,6 +1105,7 @@ function spawnBot(name, teamId, squadId, trans, setvars)
 	local transform = LinearTransform()
     transform = trans
 
+    botSpawnDelayTime[name] = 0.0
 	-- And then spawn the bot. This will create and return a new SoldierEntity object.
     Bots:spawnBot(bot, transform, CharacterPoseType.CharacterPoseType_Stand, soldierBlueprint, soldierKit, { appearance })
 
@@ -1100,8 +1114,8 @@ function spawnBot(name, teamId, squadId, trans, setvars)
 
 	-- Create the infection customization
 	local soldierCustomization = CustomizeSoldierData()
-	soldierCustomization.activeSlot = WeaponSlot.WeaponSlot_1
-	soldierCustomization.removeAllExistingWeapons = false
+	soldierCustomization.activeSlot = WeaponSlot.WeaponSlot_0
+	soldierCustomization.removeAllExistingWeapons = true
 
 	local secondaryWeapon = UnlockWeaponAndSlot()
 	secondaryWeapon.weapon = SoldierWeaponUnlockAsset(m1911)
