@@ -7,7 +7,7 @@ local spawnMode = 5 -- center 1, line 2, ring 3
 
 -- vars for each bot
 local botSpawnModes = {}
-local botSwapTeam = {}
+local botCheckSwapTeam = {}
 local botSpawnDelayTime = {}
 local botSpeeds = {}
 local botMoveModes = {}
@@ -67,7 +67,6 @@ Events:Subscribe('Level:Loaded', function(levelName, gameMode)
     loadWayPoints()
     print(tostring(activeTraceIndexes).." paths have been loaded")
     -- create initial bots
-    swapAllBotTeams()
     if activeTraceIndexes > 0 and Config.spawnOnLevelstart then
         respawning = true
         moveMode = 5
@@ -77,6 +76,7 @@ Events:Subscribe('Level:Loaded', function(levelName, gameMode)
             createInitialBots(BotNames[i], team, squad)
         end
     end
+    checkSwapBotTeams()
 end)
 
 Events:Subscribe('Player:Killed', function(player)
@@ -148,12 +148,11 @@ Events:Subscribe('Bot:Update', function(bot, dt)
             return
         end
         -- check for swap of team on levelstart
-        if botSwapTeam[bot.name] then
-            botSwapTeam[bot.name] = false
-            if team == TeamId.Team1 then
-                botTeams[bot.name] = TeamId.Team2
-            else
-                botTeams[bot.name] = TeamId.Team1
+        if botCheckSwapTeam[bot.name] then
+            botCheckSwapTeam[bot.name] = false
+            if bot.teamId ~= botTeams[bot.name] then
+                botTeams[bot.name] = bot.teamId
+                team = bot.teamId
             end
         end
 
@@ -1018,12 +1017,12 @@ function freeNumberOfBots(number)
     end
 end
 
-function swapAllBotTeams()
+function checkSwapBotTeams()
     for i = 1, Config.maxNumberOfBots do
         local name = BotNames[i]
         local bot = PlayerManager:GetPlayerByName(name)
         if bot ~= nil then
-            botSwapTeam[name] = true
+            botCheckSwapTeam[name] = true
         end
     end
 end
@@ -1032,14 +1031,8 @@ function createInitialBots(name, teamId, squadId)
     local existingPlayer = PlayerManager:GetPlayerByName(name)
 	local bot = nil
 
-	if existingPlayer ~= nil then
-		-- If a player with this name exists and it's not a bot then error out.
-		if not Bots:isBot(existingPlayer) then
-			return
-		end
-		bot = existingPlayer
-        bot.teamId = botTeams[name]
-		bot.squadId = squadId
+    if existingPlayer ~= nil then
+        return
     else
         botTimeGones[name] = 0
         bot = Bots:createBot(name, teamId, squadId)
@@ -1068,7 +1061,7 @@ function createInitialBots(name, teamId, squadId)
     botKits[name] = kitNumber
 
     -- extra movement
-    botJumping[name] = false
+    botJumping[name] = jumping
     botAdading[name] = false
     botSwaying[name] = false
 end
@@ -1224,7 +1217,7 @@ function spawnBot(name, teamId, squadId, trans, setvars)
 
     -- set vars
     if setvars then
-        botSwapTeam[name] = false
+        botCheckSwapTeam[name] = false
         botSpawnModes[name] = spawnMode
         botSpeeds[name] = speed
         botMoveModes[name] = moveMode
