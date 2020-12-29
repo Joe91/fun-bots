@@ -8,7 +8,7 @@ Config = {
     botUpdateCycle = 0.1,
     initNumberOfBots = 10,
     botKit = 0, -- 0 = random, 1 = assault, 2 = engineer, 3 = support, 4 = recon
-    botColour = 0, -- 0 = random, see Coulors
+    botColor = 0, -- 0 = random, see Coulors
     maxTraceNumber = 10
 }
 

@@ -21,7 +21,7 @@ local botTeams = {}
 local botDieing = {}
 local botRespawning = {}
 local botKits = {}
-local botColours = {} 
+local botColors = {} 
 
 local botJumping = {}
 local botAdading = {}
@@ -526,11 +526,11 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
             setBotVarForAll(botKits, kitNumber)
         end
 
-    elseif parts[1] == '!setbotcolour' then
-        local botColour = tonumber(parts[2]) or 1
-        if botColour <= #Colours and botColour >= 0 then
-            Config.botColour = botColour
-            setBotVarForAll(botColours, Colours[botColour])
+    elseif parts[1] == '!setbotColor' then
+        local botColor = tonumber(parts[2]) or 1
+        if botColor <= #Colors and botColor >= 0 then
+            Config.botColor = botColor
+            setBotVarForAll(botColors, Colors[botColor])
         end
 
     -- extra modes
@@ -1056,15 +1056,15 @@ function createInitialBots(name, teamId, squadId)
     botDieing[name] = dieing
     botRespawning[name] = respawning
 
-    local botColour = Colours[Config.botColour]
+    local botColor = Colors[Config.botColor]
     local kitNumber = Config.botKit
-    if Config.botColour == 0 then
-        botColour = Colours[MathUtils:GetRandomInt(1, #Colours)]
+    if Config.botColor == 0 then
+        botColor = Colors[MathUtils:GetRandomInt(1, #Colors)]
     end
     if kitNumber == 0 then
         kitNumber = MathUtils:GetRandomInt(1, 4)
     end
-    botColours[name] = botColour
+    botColors[name] = botColor
     botKits[name] = kitNumber
 
     -- extra movement
@@ -1091,19 +1091,19 @@ function spawnBot(name, teamId, squadId, trans, setvars)
         bot.input.flags = EntryInputFlags.AuthoritativeAiming
     end
 
-    local botColour = Colours[Config.botColour]
+    local botColor = Colors[Config.botColor]
     local kitNumber = Config.botKit
     if setvars then
-        if Config.botColour == 0 then
-            botColour = Colours[MathUtils:GetRandomInt(1, #Colours)]
+        if Config.botColor == 0 then
+            botColor = Colors[MathUtils:GetRandomInt(1, #Colors)]
         end
         if kitNumber == 0 then
             kitNumber = MathUtils:GetRandomInt(1, 4)
         end
-        botColours[name] = botColour
+        botColors[name] = botColor
         botKits[name] = kitNumber
     else
-        botColour = botColours[name]
+        botColor = botColors[name]
         kitNumber = botKits[name]
     end
 
@@ -1180,30 +1180,30 @@ function spawnBot(name, teamId, squadId, trans, setvars)
 
     if teamId == TeamId.Team1 then -- US
         if kitNumber == 1 then --assault
-            appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/Us/MP_US_Assault_Appearance_'..botColour)
+            appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/Us/MP_US_Assault_Appearance_'..botColor)
             soldierKit = ResourceManager:SearchForDataContainer('Gameplay/Kits/USAssault')
         elseif kitNumber == 2 then --engineer
-            appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/Us/MP_US_Engi_Appearance_'..botColour)
+            appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/Us/MP_US_Engi_Appearance_'..botColor)
             soldierKit = ResourceManager:SearchForDataContainer('Gameplay/Kits/USEngineer')
         elseif kitNumber == 3 then --support
-            appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/Us/MP_US_Support_Appearance_'..botColour)
+            appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/Us/MP_US_Support_Appearance_'..botColor)
             soldierKit = ResourceManager:SearchForDataContainer('Gameplay/Kits/USSupport')
         else    --recon
-            appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/Us/MP_US_Recon_Appearance_'..botColour)
+            appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/Us/MP_US_Recon_Appearance_'..botColor)
             soldierKit = ResourceManager:SearchForDataContainer('Gameplay/Kits/USRecon')
         end
     else -- RU
         if kitNumber == 1 then --assault
-            appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/RU/MP_RU_Assault_Appearance_'..botColour)
+            appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/RU/MP_RU_Assault_Appearance_'..botColor)
             soldierKit = ResourceManager:SearchForDataContainer('Gameplay/Kits/RUAssault')
         elseif kitNumber == 2 then --engineer
-            appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/RU/MP_RU_Engi_Appearance_'..botColour)
+            appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/RU/MP_RU_Engi_Appearance_'..botColor)
             soldierKit = ResourceManager:SearchForDataContainer('Gameplay/Kits/RUEngineer')
         elseif kitNumber == 3 then --support
-            appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/RU/MP_RU_Support_Appearance_'..botColour)
+            appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/RU/MP_RU_Support_Appearance_'..botColor)
             soldierKit = ResourceManager:SearchForDataContainer('Gameplay/Kits/RUSupport')
         else    --recon
-            appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/RU/MP_RU_Recon_Appearance_'..botColour)
+            appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/RU/MP_RU_Recon_Appearance_'..botColor)
             soldierKit = ResourceManager:SearchForDataContainer('Gameplay/Kits/RURecon')
         end
     end
