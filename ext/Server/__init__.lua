@@ -672,7 +672,10 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
         print(player.soldier.transform.trans.z)
         
     elseif parts[1] == '!savepaths' then
-        saveWayPoints()
+        local co = coroutine.create(function ()
+            saveWayPoints()
+        end)
+        coroutine.resume(co)
 
     -- only experimental
     elseif parts[1] == '!mode' then --overwrite mode for all bots
