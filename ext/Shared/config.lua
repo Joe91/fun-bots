@@ -8,8 +8,17 @@ Config = {
     botUpdateCycle = 0.1,
     initNumberOfBots = 5,
     botKit = 0, -- 0 = random, 1 = assault, 2 = engineer, 3 = support, 4 = recon
+    botColour = 4, -- 0 = random, see Coulors
     maxTraceNumber = 10
+}
 
+Colours = {
+    "Desert02",
+    "Green",
+    "Jungle",
+    "Navy",
+    "Urban",
+    "Wood01"
 }
 
 BotNames = {

@@ -20,6 +20,8 @@ local botWayIndexes = {}
 local botTeams = {}
 local botDieing = {}
 local botRespawning = {}
+local botKits = {}
+local botColours = {} 
 
 local botJumping = {}
 local botAdading = {}
@@ -1036,6 +1038,7 @@ function createInitialBots(name, teamId, squadId)
         bot.input.flags = EntryInputFlags.AuthoritativeAiming
     end
 
+    --set vars
     botSpawnDelayTime[name] = 0.0
     botSpawnModes[name] = spawnMode
     botSpeeds[name] = speed
@@ -1044,6 +1047,17 @@ function createInitialBots(name, teamId, squadId)
     botWayIndexes[name] = activeWayIndex
     botDieing[name] = dieing
     botRespawning[name] = respawning
+
+    local botColour = Colours[Config.botColour]
+    local kitNumber = Config.botKit
+    if Config.botColour == 0 then
+        botColour = Colours[MathUtils:GetRandomInt(1, #Colours)]
+    end
+    if kitNumber == 0 then
+        kitNumber = MathUtils:GetRandomInt(1, 4)
+    end
+    botColours[name] = botColour
+    botKits[name] = kitNumber
 
     -- extra movement
     botJumping[name] = false
@@ -1069,41 +1083,119 @@ function spawnBot(name, teamId, squadId, trans, setvars)
         bot.input.flags = EntryInputFlags.AuthoritativeAiming
     end
 
+    local botColour = Colours[Config.botColour]
+    local kitNumber = Config.botKit
+    if setvars then
+        if Config.botColour == 0 then
+            botColour = Colours[MathUtils:GetRandomInt(1, #Colours)]
+        end
+        if kitNumber == 0 then
+            kitNumber = MathUtils:GetRandomInt(1, 4)
+        end
+        botColours[name] = botColour
+        botKits[name] = kitNumber
+    else
+        botColour = botColours[name]
+        kitNumber = botKits[name]
+    end
+
+    -- Create the loadouts
+    local m1911 = ResourceManager:SearchForDataContainer('Weapons/M1911/U_M1911_Tactical')
+    local knife = ResourceManager:SearchForDataContainer('Weapons/Knife/U_Knife')
+
+	
+	local soldierCustomization = CustomizeSoldierData()
+	soldierCustomization.activeSlot = WeaponSlot.WeaponSlot_0
+	soldierCustomization.removeAllExistingWeapons = true
+
+    local primaryWeapon = UnlockWeaponAndSlot()
+    primaryWeapon.slot = WeaponSlot.WeaponSlot_0
+
+    local gadget01 = UnlockWeaponAndSlot()
+    gadget01.slot = WeaponSlot.WeaponSlot_2
+
+    local gadget02 = UnlockWeaponAndSlot()
+    gadget02.slot = WeaponSlot.WeaponSlot_4
+
+	local secondaryWeapon = UnlockWeaponAndSlot()
+	secondaryWeapon.weapon = SoldierWeaponUnlockAsset(m1911)
+    secondaryWeapon.slot = WeaponSlot.WeaponSlot_1
+
+	local meleeWeapon = UnlockWeaponAndSlot()
+	meleeWeapon.weapon = SoldierWeaponUnlockAsset(knife)
+    meleeWeapon.slot = WeaponSlot.WeaponSlot_5
+    
+    -- create loadouts
+    local function setAttachments(unlockWeapon, attachments)
+		for _, attachment in pairs(attachments) do
+			local unlockAsset = UnlockAsset(ResourceManager:SearchForDataContainer(attachment))
+			unlockWeapon.unlockAssets:add(unlockAsset)
+		end
+	end
+    if kitNumber == 1 then --assault
+        local m416 = ResourceManager:SearchForDataContainer('Weapons/M416/U_M416')
+        local m416Attachments = { 'Weapons/M416/U_M416_Kobra', 'Weapons/M416/U_M416_Silencer' }
+        primaryWeapon.weapon = SoldierWeaponUnlockAsset(m416)
+        setAttachments(primaryWeapon, m416Attachments)
+        gadget01.weapon = SoldierWeaponUnlockAsset(ResourceManager:SearchForDataContainer('Weapons/Gadgets/Medicbag/U_Medkit'))
+        gadget02.weapon = SoldierWeaponUnlockAsset(ResourceManager:SearchForDataContainer('Weapons/Gadgets/Defibrillator/U_Defib'))
+        
+    elseif kitNumber == 2 then --engineer
+        local asval = ResourceManager:SearchForDataContainer('Weapons/ASVal/U_ASVal')
+        local asvalAttachments = { 'Weapons/ASVal/U_ASVal_Kobra', 'Weapons/ASVal/U_ASVal_ExtendedMag' }
+        primaryWeapon.weapon = SoldierWeaponUnlockAsset(asval)
+        setAttachments(primaryWeapon, asvalAttachments)
+        gadget01.weapon = SoldierWeaponUnlockAsset(ResourceManager:SearchForDataContainer('Weapons/Gadgets/Repairtool/U_Repairtool'))
+        gadget02.weapon = SoldierWeaponUnlockAsset(ResourceManager:SearchForDataContainer('Weapons/SMAW/U_SMAW'))
+
+    elseif kitNumber == 3 then --support
+        local m249 = ResourceManager:SearchForDataContainer('Weapons/M249/U_M249')
+        local m249Attachments = { 'Weapons/M249/U_M249_Eotech', 'Weapons/M249/U_M249_Bipod' }
+        primaryWeapon.weapon = SoldierWeaponUnlockAsset(m249)
+        setAttachments(primaryWeapon, m249Attachments)
+        gadget01.weapon = SoldierWeaponUnlockAsset(ResourceManager:SearchForDataContainer('Weapons/Gadgets/Ammobag/U_Ammobag'))
+        gadget02.weapon = SoldierWeaponUnlockAsset(ResourceManager:SearchForDataContainer('Weapons/Gadgets/Claymore/U_Claymore'))
+        
+    else    --recon
+        local l96 = ResourceManager:SearchForDataContainer('Weapons/XP1_L96/U_L96')
+        local l96Attachments = { 'Weapons/XP1_L96/U_L96_Rifle_6xScope' }
+        primaryWeapon.weapon = SoldierWeaponUnlockAsset(l96)
+        setAttachments(primaryWeapon, l96Attachments)
+        gadget01.weapon = SoldierWeaponUnlockAsset(ResourceManager:SearchForDataContainer('Weapons/Gadgets/RadioBeacon/U_RadioBeacon'))
+        --no second gadget
+    end
+
+    -- create kit and appearance
     local soldierBlueprint = ResourceManager:SearchForDataContainer('Characters/Soldiers/MpSoldier')
     local soldierKit = nil
     local appearance = nil
 
-    local kitNumber = Config.botKit
-    if kitNumber == 0 then
-        kitNumber = MathUtils:GetRandomInt(1, 4)
-    end
-    
     if teamId == TeamId.Team1 then -- US
         if kitNumber == 1 then --assault
-            appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/Us/MP_US_Assault_Appearance_Navy')
+            appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/Us/MP_US_Assault_Appearance_'..botColour)
             soldierKit = ResourceManager:SearchForDataContainer('Gameplay/Kits/USAssault')
         elseif kitNumber == 2 then --engineer
-            appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/Us/MP_US_Engi_Appearance_Navy')
+            appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/Us/MP_US_Engi_Appearance_'..botColour)
             soldierKit = ResourceManager:SearchForDataContainer('Gameplay/Kits/USEngineer')
         elseif kitNumber == 3 then --support
-            appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/Us/MP_US_Support_Appearance_Navy')
+            appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/Us/MP_US_Support_Appearance_'..botColour)
             soldierKit = ResourceManager:SearchForDataContainer('Gameplay/Kits/USSupport')
         else    --recon
-            appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/Us/MP_US_Recon_Appearance_Navy')
+            appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/Us/MP_US_Recon_Appearance_'..botColour)
             soldierKit = ResourceManager:SearchForDataContainer('Gameplay/Kits/USRecon')
         end
     else -- RU
         if kitNumber == 1 then --assault
-            appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/RU/MP_RU_Assault_Appearance_Navy')
+            appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/RU/MP_RU_Assault_Appearance_'..botColour)
             soldierKit = ResourceManager:SearchForDataContainer('Gameplay/Kits/RUAssault')
         elseif kitNumber == 2 then --engineer
-            appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/RU/MP_RU_Engi_Appearance_Navy')
+            appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/RU/MP_RU_Engi_Appearance_'..botColour)
             soldierKit = ResourceManager:SearchForDataContainer('Gameplay/Kits/RUEngineer')
         elseif kitNumber == 3 then --support
-            appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/RU/MP_RU_Support_Appearance_Navy')
+            appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/RU/MP_RU_Support_Appearance_'..botColour)
             soldierKit = ResourceManager:SearchForDataContainer('Gameplay/Kits/RUSupport')
         else    --recon
-            appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/RU/MP_RU_Recon_Appearance_Navy')
+            appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/RU/MP_RU_Recon_Appearance_'..botColour)
             soldierKit = ResourceManager:SearchForDataContainer('Gameplay/Kits/RURecon')
         end
     end
@@ -1116,25 +1208,11 @@ function spawnBot(name, teamId, squadId, trans, setvars)
 	-- And then spawn the bot. This will create and return a new SoldierEntity object.
     Bots:spawnBot(bot, transform, CharacterPoseType.CharacterPoseType_Stand, soldierBlueprint, soldierKit, { appearance })
 
-    local m1911 = ResourceManager:SearchForDataContainer('Weapons/M1911/U_M1911_Tactical')
-    local knife = ResourceManager:SearchForDataContainer('Weapons/Knife/U_Knife')
-
-	-- Create the infection customization
-	local soldierCustomization = CustomizeSoldierData()
-	soldierCustomization.activeSlot = WeaponSlot.WeaponSlot_0
-	soldierCustomization.removeAllExistingWeapons = true
-
-	local secondaryWeapon = UnlockWeaponAndSlot()
-	secondaryWeapon.weapon = SoldierWeaponUnlockAsset(m1911)
-	secondaryWeapon.slot = WeaponSlot.WeaponSlot_1
-
-	local meleeWeapon = UnlockWeaponAndSlot()
-	meleeWeapon.weapon = SoldierWeaponUnlockAsset(knife)
-	meleeWeapon.slot = WeaponSlot.WeaponSlot_5
-
-	soldierCustomization.weapons:add(secondaryWeapon)
+    soldierCustomization.weapons:add(primaryWeapon)
+    soldierCustomization.weapons:add(secondaryWeapon)
+    soldierCustomization.weapons:add(gadget01)
+    soldierCustomization.weapons:add(gadget02)
 	soldierCustomization.weapons:add(meleeWeapon)
-
 	bot.soldier:ApplyCustomization(soldierCustomization)
 
     -- set vars
