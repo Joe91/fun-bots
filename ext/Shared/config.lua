@@ -12,7 +12,7 @@ Config = {
     maxTraceNumber = 10
 }
 
-Colours = {
+Colors = {
     "Appearance01",
     "ExpForce",
     "Ninja",
