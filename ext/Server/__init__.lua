@@ -56,6 +56,7 @@ local tracePlayers = {}
 local traceTimesGone = {}
 local wayPoints = {}
 local mapName = ""
+local lastMapName = ""
 
 for i = 1, Config.maxTraceNumber do
     wayPoints[i] = {}
@@ -77,6 +78,7 @@ Events:Subscribe('Level:Loaded', function(levelName, gameMode)
         end
     end
     checkSwapBotTeams()
+    lastMapName = mapName
 end)
 
 Events:Subscribe('Player:Killed', function(player)
