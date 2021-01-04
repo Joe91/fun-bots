@@ -62,6 +62,38 @@ for i = 1, Config.maxTraceNumber do
     wayPoints[i] = {}
 end
 
+NetEvents:Subscribe('BotShootAtPlayer', function(botname, player)
+    local bot = PlayerManager:GetPlayerByName(botname)
+
+    local oldYaw = bot.input.authoritativeAimingYaw
+    local dy = player.soldier.transform.trans.z - bot.soldier.transform.trans.z
+    local dx = player.soldier.transform.trans.x - bot.soldier.transform.trans.x
+    local yaw = (math.atan(dy, dx) > math.pi / 2) and (math.atan(dy, dx) - math.pi / 2) or (math.atan(dy, dx) + 3 * math.pi / 2)
+
+    local dYaw = oldYaw-yaw
+    if dYaw < 0 then
+        dYaw = -dYaw
+    end
+    if dYaw < math.pi / 2 then
+        print("shoot")
+    else
+        print(yaw)
+    end
+end)
+
+--[[Hooks:Install('BulletEntity:Collision', 1, function(hook, entity, hit, giverInfo)
+    -- Do stuff here.
+    print(entity.typeInfo.name)
+
+    print(hit.rigidBody.typeInfo.name)
+
+    print(hit.material.typeInfo.name)
+    
+    if giverInfo.giver ~= nil then
+        print(giverInfo.giver.name)
+    end
+end)--]]
+
 Events:Subscribe('Level:Loaded', function(levelName, gameMode)
     print("level "..levelName.." in Gamemode "..gameMode.." loaded")
     mapName = levelName..gameMode

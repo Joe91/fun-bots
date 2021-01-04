@@ -1,5 +1,62 @@
-
+require('__shared/Config')
 local explosionEntityData = nil
+local RAYCAST_INTERVAL = 0.5 -- seconds
+local MAX_RAYCAST_DISTANCE = 200 -- meters
+local raycastTimer = 0
+
+Events:Subscribe('UpdateManager:Update', function(p_Delta, p_Pass)
+	if(p_Pass ~= UpdatePass.UpdatePass_PreFrame) then
+		return
+	end
+
+	raycastTimer = raycastTimer + p_Delta
+	if raycastTimer >= RAYCAST_INTERVAL then
+		for i = 1, Config.maxNumberOfBots do
+			local bot = PlayerManager:GetPlayerByName(BotNames[i])
+			local player = PlayerManager:GetLocalPlayer()
+			if bot ~= nil then
+				if bot.soldier ~= nil and player.soldier ~= nil then
+					-- check for clear view
+					local s_Transform = ClientUtils:GetCameraTransform()
+
+					-- find direction of Bot
+					local dx = bot.soldier.transform.trans.x - player.soldier.transform.trans.x
+					local dy = bot.soldier.transform.trans.y - player.soldier.transform.trans.y
+					local dz = bot.soldier.transform.trans.z - player.soldier.transform.trans.z
+					local castPos = Vec3(s_Transform.trans.x + (dx * 2), s_Transform.trans.y + (dy * 2), s_Transform.trans.z + (dz * 2))
+
+					local raycast = RaycastManager:Raycast(s_Transform.trans, castPos, RayCastFlags.IsAsyncRaycast)
+					if raycast == nil or raycast.rigidBody == nil or raycast.rigidBody:Is("CharacterPhysicsEntity") == false then
+						return
+					end
+					-- we found a valid bot in Sight. Signal Server with players
+					local distance = player.transform.trans:Distance(bot.soldier.transform)
+					print(bot.name.." in "..distance)
+					if distance < MAX_RAYCAST_DISTANCE then
+						NetEvents:Send("BotShootAtPlayer", bot.name, player)
+					end
+				end
+			end
+		end
+		raycastTimer = 0
+	end
+end)
+
+Hooks:Install('BulletEntity:Collision', 1, function(hook, entity, hit, shooter)
+
+	-- TODO: Check shooter for bot and team 
+	if hit.rigidBody.typeInfo.name == "CharacterPhysicsEntity" then
+		local player = PlayerManager:GetLocalPlayer()
+		local dx = player.soldier.transform.trans.x - hit.position.x
+		local dy = player.soldier.transform.trans.y - hit.position.y
+		local dz = player.soldier.transform.trans.z - hit.position.z
+		if dx < 1 and dy < 1 and dz < 1 then
+			player:MakeWritable() --todo: only reduce health. does not work right now.
+			player.soldier:MakeWritable()
+			player.soldier.health = player.soldier.health - 25
+		end
+	end
+end)
 
 local function getExplosionEntityData()
 	if explosionEntityData ~= nil then
