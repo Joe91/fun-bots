@@ -71,6 +71,9 @@ NetEvents:Subscribe('BotShootAtPlayer', function(player, botname)
     if bot == nil or bot.soldier == nil or player.soldier == nil then
         return
     end
+    if bot.teamId == player.teamId then
+        return
+    end
     local oldYaw = bot.input.authoritativeAimingYaw
     local dy = player.soldier.transform.trans.z - bot.soldier.transform.trans.z
     local dx = player.soldier.transform.trans.x - bot.soldier.transform.trans.x
