@@ -234,8 +234,9 @@ Events:Subscribe('Bot:Update', function(bot, dt)
         if shootAt ~= nil and shootAt.soldier ~= nil then
             if botShootTimer[bot.name] > 0 then
                 botShootTimer[bot.name] = botShootTimer[bot.name] - Config.botUpdateCycle
-                -- stop moving
-                moveMode = 0
+                -- move slow
+                speed = 1
+                moveMode = 9 -- continue slow in movement
                 --calculate yaw
                 local dz = shootAt.soldier.transform.trans.z - bot.soldier.transform.trans.z
                 local dx = shootAt.soldier.transform.trans.x - bot.soldier.transform.trans.x
@@ -246,15 +247,14 @@ Events:Subscribe('Bot:Update', function(bot, dt)
                 local pitch = math.atan(dy, distance)
                 bot.input.authoritativeAimingPitch = pitch
                 bot.input.authoritativeAimingYaw = yaw
-                if bot.input:GetLevel(EntryInputActionEnum.EIAFire) == 0 then
-                    bot.input:SetLevel(EntryInputActionEnum.EIAFire, 1) --lasts for one cycle
-                else
-                    bot.input:SetLevel(EntryInputActionEnum.EIAFire, 0) --lasts for one cycle
-                end
+                bot.input:SetLevel(EntryInputActionEnum.EIAZoom, 1)
+                bot.input:SetLevel(EntryInputActionEnum.EIAFire, 1)
+            else
+                bot.input:SetLevel(EntryInputActionEnum.EIAFire, 0)
+                botShootPlayer[bot.name] = nil
             end
         else
             bot.input:SetLevel(EntryInputActionEnum.EIAFire, 0)
-            botShootPlayer[bot.name] = nil
         end
     end
 

@@ -1,16 +1,17 @@
 require('__shared/Config')
 local explosionEntityData = nil
-local RAYCAST_INTERVAL = 0.5 -- seconds
+local RAYCAST_INTERVAL = 0.2 -- seconds
 local MAX_RAYCAST_DISTANCE = 200 -- meters
 local raycastTimer = 0
 
 Events:Subscribe('UpdateManager:Update', function(p_Delta, p_Pass)
-	if(p_Pass ~= UpdatePass.UpdatePass_PreFrame) then
-		return
-	end
+	--if(p_Pass ~= UpdatePass.UpdatePass_PreFrame) then
+	--	return
+	--end
 
 	raycastTimer = raycastTimer + p_Delta
 	if raycastTimer >= RAYCAST_INTERVAL then
+		raycastTimer = 0
 		for i = 1, Config.maxNumberOfBots do
 			local bot = PlayerManager:GetPlayerByName(BotNames[i])
 			local player = PlayerManager:GetLocalPlayer()
@@ -37,7 +38,6 @@ Events:Subscribe('UpdateManager:Update', function(p_Delta, p_Pass)
 				end
 			end
 		end
-		raycastTimer = 0
 	end
 end)
 
