@@ -5,9 +5,9 @@ local MAX_RAYCAST_DISTANCE = 200 -- meters
 local raycastTimer = 0
 
 Events:Subscribe('UpdateManager:Update', function(p_Delta, p_Pass)
-	--if(p_Pass ~= UpdatePass.UpdatePass_PreFrame) then
-	--	return
-	--end
+	if(p_Pass ~= UpdatePass.UpdatePass_PreFrame) then
+		return
+	end
 
 	raycastTimer = raycastTimer + p_Delta
 	if raycastTimer >= RAYCAST_INTERVAL then
