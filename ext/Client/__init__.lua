@@ -31,14 +31,12 @@ Events:Subscribe('UpdateManager:Update', function(p_Delta, p_Pass)
 					end
 					-- we found a valid bot in Sight. Signal Server with players
 					local distance = player.soldier.transform.trans:Distance(bot.soldier.transform.trans)
-					print(bot.name.." in "..distance)
 					if distance < MAX_RAYCAST_DISTANCE then
 						NetEvents:SendLocal("BotShootAtPlayer", bot.name)
 					end
 				end
 			end
 		end
-		print("all bots tested")
 		raycastTimer = 0
 	end
 end)
@@ -51,7 +49,7 @@ Hooks:Install('BulletEntity:Collision', 1, function(hook, entity, hit, shooter)
 			local dy = player.soldier.transform.trans.y - hit.position.y
 			local dz = player.soldier.transform.trans.z - hit.position.z
 			if dx < 1 and dy < 1 and dz < 1 then
-				NetEvents:SendLocal("DamagePlayer", 25)
+				NetEvents:SendLocal("DamagePlayer", Config.bulletDamageBot)
 			end
 		end
 	end

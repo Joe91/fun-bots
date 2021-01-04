@@ -22,6 +22,9 @@ local botDieing = {}
 local botRespawning = {}
 local botKits = {}
 local botColors = {} 
+local botShooting = {} 
+local botShootPlayer = {} 
+local botShootTimer = {} 
 
 local botJumping = {}
 local botAdading = {}
@@ -57,6 +60,7 @@ local traceTimesGone = {}
 local wayPoints = {}
 local mapName = ""
 local lastMapName = ""
+local fovHalf = Config.fovForShooting / 360 * math.pi * 2 / 2
 
 for i = 1, Config.maxTraceNumber do
     wayPoints[i] = {}
@@ -64,7 +68,9 @@ end
 
 NetEvents:Subscribe('BotShootAtPlayer', function(player, botname)
     local bot = PlayerManager:GetPlayerByName(botname)
-
+    if bot == nil or bot.soldier == nil or player.soldier == nil then
+        return
+    end
     local oldYaw = bot.input.authoritativeAimingYaw
     local dy = player.soldier.transform.trans.z - bot.soldier.transform.trans.z
     local dx = player.soldier.transform.trans.x - bot.soldier.transform.trans.x
@@ -74,30 +80,15 @@ NetEvents:Subscribe('BotShootAtPlayer', function(player, botname)
     if dYaw < 0 then
         dYaw = -dYaw
     end
-    if dYaw < math.pi / 2 then
-        --TODO: shoot --print("shoot")
-    else
-        --print(yaw)
+    if dYaw < fovHalf then
+        botShootPlayer[botname] = player
+        botShootTimer[botname] = Config.botFireDuration
     end
 end)
 
 NetEvents:Subscribe('DamagePlayer', function(player, damage)
-    print(damage)
     player.soldier.health = player.soldier.health - damage
 end)
-
---[[Hooks:Install('BulletEntity:Collision', 1, function(hook, entity, hit, giverInfo)
-    -- Do stuff here.
-    print(entity.typeInfo.name)
-
-    print(hit.rigidBody.typeInfo.name)
-
-    print(hit.material.typeInfo.name)
-    
-    if giverInfo.giver ~= nil then
-        print(giverInfo.giver.name)
-    end
-end)--]]
 
 Events:Subscribe('Level:Loaded', function(levelName, gameMode)
     print("level "..levelName.." in Gamemode "..gameMode.." loaded")
@@ -178,6 +169,9 @@ Events:Subscribe('Bot:Update', function(bot, dt)
     local swaying = botSwaying[bot.name]
     local dieing = botDieing[bot.name]
     local respawning = botRespawning[bot.name]
+    local shooting = botShooting[bot.name]
+    shooting = true --only for debug
+    local shootAt = botShootPlayer[bot.name]
 
     --spawning 
     if respawning and bot.soldier == nil and spawnMode > 0 then
@@ -232,6 +226,35 @@ Events:Subscribe('Bot:Update', function(bot, dt)
             end
         else
             spawnBot(bot.name, team, squad, botTransforms[bot.name], false)
+        end
+    end
+
+    -- shooting
+    if shooting then
+        if shootAt ~= nil and shootAt.soldier ~= nil then
+            if botShootTimer[bot.name] > 0 then
+                botShootTimer[bot.name] = botShootTimer[bot.name] - Config.botUpdateCycle
+                -- stop moving
+                moveMode = 0
+                --calculate yaw
+                local dz = shootAt.soldier.transform.trans.z - bot.soldier.transform.trans.z
+                local dx = shootAt.soldier.transform.trans.x - bot.soldier.transform.trans.x
+                local dy = shootAt.soldier.transform.trans.y - bot.soldier.transform.trans.y
+                local yaw = (math.atan(dz, dx) > math.pi / 2) and (math.atan(dz, dx) - math.pi / 2) or (math.atan(dz, dx) + 3 * math.pi / 2)
+                --calculate pitch
+                local distance = shootAt.soldier.transform.trans:Distance(bot.soldier.transform.trans)
+                local pitch = math.atan(dy, distance)
+                bot.input.authoritativeAimingPitch = pitch
+                bot.input.authoritativeAimingYaw = yaw
+                if bot.input:GetLevel(EntryInputActionEnum.EIAFire) == 0 then
+                    bot.input:SetLevel(EntryInputActionEnum.EIAFire, 1) --lasts for one cycle
+                else
+                    bot.input:SetLevel(EntryInputActionEnum.EIAFire, 0) --lasts for one cycle
+                end
+            end
+        else
+            bot.input:SetLevel(EntryInputActionEnum.EIAFire, 0)
+            botShootPlayer[bot.name] = nil
         end
     end
 
@@ -427,6 +450,9 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
         speed = 0
         moveMode = 0
         spawnJohnOnPlayer(player)
+
+    elseif parts[1] == '!printpitch' then
+        print(player.input.authoritativeAimingPitch)
 
     -- static mode commands
     elseif parts[1] == '!mimic' then
