@@ -62,7 +62,7 @@ for i = 1, Config.maxTraceNumber do
     wayPoints[i] = {}
 end
 
-NetEvents:Subscribe('BotShootAtPlayer', function(botname, player)
+NetEvents:Subscribe('BotShootAtPlayer', function(player, botname)
     local bot = PlayerManager:GetPlayerByName(botname)
 
     local oldYaw = bot.input.authoritativeAimingYaw
@@ -75,10 +75,15 @@ NetEvents:Subscribe('BotShootAtPlayer', function(botname, player)
         dYaw = -dYaw
     end
     if dYaw < math.pi / 2 then
-        print("shoot")
+        --TODO: shoot --print("shoot")
     else
-        print(yaw)
+        --print(yaw)
     end
+end)
+
+NetEvents:Subscribe('DamagePlayer', function(player, damage)
+    print(damage)
+    player.soldier.health = player.soldier.health - damage
 end)
 
 --[[Hooks:Install('BulletEntity:Collision', 1, function(hook, entity, hit, giverInfo)
