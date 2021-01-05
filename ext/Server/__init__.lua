@@ -180,8 +180,8 @@ Events:Subscribe('Bot:Update', function(bot, dt)
         -- check for swap of team on levelstart
         local setvarsOnRespawn = false
         if botCheckSwapTeam[bot.name] then
-            setvarsOnRespawn = true
             botCheckSwapTeam[bot.name] = false
+            setvarsOnRespawn = true
             if bot.teamId ~= botTeams[bot.name] then
                 botTeams[bot.name] = bot.teamId
                 team = bot.teamId
