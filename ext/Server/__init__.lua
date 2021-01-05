@@ -1295,23 +1295,19 @@ function spawnBot(name, teamId, squadId, trans, setvars, listOfVars)
 	soldierCustomization.weapons:add(meleeWeapon)
     bot.soldier:ApplyCustomization(soldierCustomization)
     
-    bot.soldier.weaponsComponent.currentWeapon.primaryAmmo = 40
-    bot.soldier.weaponsComponent.currentWeapon.weaponFiring.primaryAmmoToFill = 9999
+    bot.soldier.weaponsComponent.currentWeapon.primaryAmmo = 777
+    bot.soldier.weaponsComponent.currentWeapon.secondaryAmmo = 555
     bot.soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway.minDispersionAngle = 0
     bot.soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway.dispersionAngle = 0
-    bot.soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway.currentDispersionDeviation.pitch = 0
-    bot.soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway.currentDispersionDeviation.yaw = 0
-    bot.soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway.currentDispersionDeviation.roll = 0
-    bot.soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway.currentDispersionDeviation.transY = 0
-    bot.soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway.currentRecoilDeviation.pitch = 0
-    bot.soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway.currentRecoilDeviation.yaw = 0
-    bot.soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway.currentRecoilDeviation.roll = 0
-    bot.soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway.currentRecoilDeviation.transY = 0
+    bot.soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway.randomAngle = 0
+    bot.soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway.randomRadius = 0
+    bot.soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway.suppressionMinDispersionAngleFactor = 0
+    bot.soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway.crossHairDispersionFactor = 0
     bot.soldier.weaponsComponent.currentWeapon.weaponFiring.recoilAngleZ = 0
     bot.soldier.weaponsComponent.currentWeapon.weaponFiring.recoilAngleY = 0
     bot.soldier.weaponsComponent.currentWeapon.weaponFiring.recoilAngleX = 0
-    --bot.soldier.weaponsComponent.currentWeapon.weaponFiring.recoilTimer = 0
-    --bot.soldier.weaponsComponent.currentWeapon.weaponFiring.recoilFovAngle = 0
+    bot.soldier.weaponsComponent.currentWeapon.weaponFiring.recoilTimer = 0.0
+    bot.soldier.weaponsComponent.currentWeapon.weaponFiring.recoilFovAngle = 0
 
     -- set vars
     if setvars then
