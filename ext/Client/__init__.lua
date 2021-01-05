@@ -1,8 +1,9 @@
 require('__shared/Config')
 local explosionEntityData = nil
-local RAYCAST_INTERVAL = 0.2 -- seconds
+local RAYCAST_INTERVAL = 0.05 -- seconds
 local MAX_RAYCAST_DISTANCE = 200 -- meters
 local raycastTimer = 0
+local lastIndex = 0
 
 Events:Subscribe('UpdateManager:Update', function(p_Delta, p_Pass)
 	if(p_Pass ~= UpdatePass.UpdatePass_PreFrame) then
@@ -12,8 +13,9 @@ Events:Subscribe('UpdateManager:Update', function(p_Delta, p_Pass)
 	raycastTimer = raycastTimer + p_Delta
 	if raycastTimer >= RAYCAST_INTERVAL then
 		raycastTimer = 0
-		for i = 1, Config.maxNumberOfBots do
-			local bot = PlayerManager:GetPlayerByName(BotNames[i])
+		for i = lastIndex, Config.maxNumberOfBots + lastIndex do
+			local newIndex = i % Config.maxNumberOfBots + 1
+			local bot = PlayerManager:GetPlayerByName(BotNames[newIndex])
 			local player = PlayerManager:GetLocalPlayer()
 			if bot ~= nil then
 				if bot.soldier ~= nil and player.soldier ~= nil then
@@ -26,15 +28,19 @@ Events:Subscribe('UpdateManager:Update', function(p_Delta, p_Pass)
 					local dz = bot.soldier.transform.trans.z - player.soldier.transform.trans.z
 					local castPos = Vec3(s_Transform.trans.x + (dx * 2), s_Transform.trans.y + (dy * 2), s_Transform.trans.z + (dz * 2))
 
-					local raycast = RaycastManager:Raycast(s_Transform.trans, castPos, RayCastFlags.IsAsyncRaycast)
+					local raycast = RaycastManager:Raycast(s_Transform.trans, castPos, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckTerrain | RayCastFlags.DontCheckRagdoll)  --| RayCastFlags.IsAsyncRaycast
+					lastIndex = newIndex
 					if raycast == nil or raycast.rigidBody == nil or raycast.rigidBody:Is("CharacterPhysicsEntity") == false then
+						print("no valid cast to "..bot.name)
 						return
 					end
 					-- we found a valid bot in Sight. Signal Server with players
 					local distance = player.soldier.transform.trans:Distance(bot.soldier.transform.trans)
 					if distance < MAX_RAYCAST_DISTANCE then
+						print("valid cast to "..bot.name)
 						NetEvents:SendLocal("BotShootAtPlayer", bot.name)
 					end
+					return --valid bot found. Return to save computing power
 				end
 			end
 		end

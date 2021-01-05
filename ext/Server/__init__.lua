@@ -25,6 +25,7 @@ local botColors = {}
 local botShooting = {} 
 local botShootPlayer = {} 
 local botShootTimer = {} 
+local botShootModeTimer = {} 
 
 local botJumping = {}
 local botAdading = {}
@@ -84,8 +85,11 @@ NetEvents:Subscribe('BotShootAtPlayer', function(player, botname)
         dYaw = -dYaw
     end
     if dYaw < fovHalf then
-        botShootPlayer[botname] = player
-        botShootTimer[botname] = Config.botFireDuration
+        if botShootModeTimer[botname] == nil or botShootModeTimer[botname] > Config.botFireModeDuration* 0.2 then
+            botShootPlayer[botname] = player
+            botShootModeTimer[botname] = 0
+            botShootTimer[botname] = 0
+        end
     end
 end)
 
@@ -184,7 +188,9 @@ Events:Subscribe('Bot:Update', function(bot, dt)
             return
         end
         -- check for swap of team on levelstart
+        local setvarsOnRespawn = false
         if botCheckSwapTeam[bot.name] then
+            setvarsOnRespawn = true
             botCheckSwapTeam[bot.name] = false
             if bot.teamId ~= botTeams[bot.name] then
                 botTeams[bot.name] = bot.teamId
@@ -194,18 +200,18 @@ Events:Subscribe('Bot:Update', function(bot, dt)
 
         if spawnMode == 1 then --spawnCenterpoint
             botYaws[bot.name] = MathUtils:GetRandom(0, 2*math.pi)
-            spawnBot(bot.name, team, squad, centerpoint, false)
+            spawnBot(bot.name, team, squad, centerpoint, setvarsOnRespawn)
             bot.input.authoritativeAimingYaw = botYaws[bot.name]
 
         elseif spawnMode == 2 then  --spawnInLine
-            spawnBot(bot.name, team, squad, botTransforms[bot.name], false)
+            spawnBot(bot.name, team, squad, botTransforms[bot.name], setvarsOnRespawn)
 
         elseif spawnMode == 3 then  --spawnInRing around player
             if activePlayer ~= nil then
                 if activePlayer.soldier  ~= nil then
                     local yaw = botIndex * (2 * math.pi / ringNrOfBots)
                     local transform = getYawOffsetTransform(activePlayer.soldier.transform, yaw, ringSpacing)
-                    spawnBot(bot.name, team, squad, transform, false)
+                    spawnBot(bot.name, team, squad, transform, setvarsOnRespawn)
                 end
             end
 
@@ -214,7 +220,7 @@ Events:Subscribe('Bot:Update', function(bot, dt)
             botCurrentWayPoints[bot.name] = randIdex
             local transform = LinearTransform()
             transform = wayPoints[wayIndex][randIdex]
-            spawnBot(bot.name, team, squad, transform, false)
+            spawnBot(bot.name, team, squad, transform, setvarsOnRespawn)
 
         elseif spawnMode == 5 then --spawn on random way
             local randIdex = MathUtils:GetRandomInt(1, #wayPoints[wayIndex])
@@ -225,7 +231,7 @@ Events:Subscribe('Bot:Update', function(bot, dt)
                 transform = wayPoints[newWayIdex][randIdex]
                 botWayIndexes[bot.name] = newWayIdex
                 wayIndex = newWayIdex
-                spawnBot(bot.name, team, squad, transform, false)
+                spawnBot(bot.name, team, squad, transform, setvarsOnRespawn)
             end
         else
             spawnBot(bot.name, team, squad, botTransforms[bot.name], false)
@@ -233,12 +239,12 @@ Events:Subscribe('Bot:Update', function(bot, dt)
     end
 
     -- shooting
-    if shooting then
+    if shooting then  --and not isStaticBotMode(moveMode) then
         if shootAt ~= nil and shootAt.soldier ~= nil then
-            if botShootTimer[bot.name] > 0 then
-                botShootTimer[bot.name] = botShootTimer[bot.name] - Config.botUpdateCycle
+            if botShootModeTimer[bot.name] < Config.botFireModeDuration then
+                botShootModeTimer[bot.name] = botShootModeTimer[bot.name] + Config.botUpdateCycle
                 -- move slow
-                speed = 1
+                speed = 2
                 moveMode = 9 -- continue slow in movement
                 --calculate yaw
                 local dz = shootAt.soldier.transform.trans.z - bot.soldier.transform.trans.z
@@ -251,7 +257,17 @@ Events:Subscribe('Bot:Update', function(bot, dt)
                 bot.input.authoritativeAimingPitch = pitch
                 bot.input.authoritativeAimingYaw = yaw
                 bot.input:SetLevel(EntryInputActionEnum.EIAZoom, 1)
-                bot.input:SetLevel(EntryInputActionEnum.EIAFire, 1)
+
+                if botShootTimer[bot.name] >= (Config.botFireDuration + Config.botFirePause) then
+                    botShootTimer[bot.name] = 0
+                end
+                if botShootTimer[bot.name] >= Config.botFireDuration then
+                    bot.input:SetLevel(EntryInputActionEnum.EIAFire, 0)
+                else
+                    bot.input:SetLevel(EntryInputActionEnum.EIAFire, 1)
+                end
+                botShootTimer[bot.name] = botShootTimer[bot.name] + Config.botUpdateCycle
+                
             else
                 bot.input:SetLevel(EntryInputActionEnum.EIAFire, 0)
                 botShootPlayer[bot.name] = nil
@@ -341,10 +357,19 @@ Events:Subscribe('Bot:Update', function(bot, dt)
             if moveMode > 0 then
                 if speed == 1 then
                     speedVal = 0.25
+                    if bot.soldier.pose ~= CharacterPoseType.CharacterPoseType_Prone then
+                        bot.soldier:SetPose(CharacterPoseType.CharacterPoseType_Prone, true, true)
+                    end
                 elseif speed == 2 then
                     speedVal = 0.5
+                    if bot.soldier.pose ~= CharacterPoseType.CharacterPoseType_Crouch then
+                        bot.soldier:SetPose(CharacterPoseType.CharacterPoseType_Crouch, true, true)
+                    end
                 elseif speed >= 3 then
                     speedVal = 1.0
+                    if bot.soldier.pose ~= CharacterPoseType.CharacterPoseType_Stand then
+                        bot.soldier:SetPose(CharacterPoseType.CharacterPoseType_Stand, true, true)
+                    end
                 end
             end
 
@@ -1281,7 +1306,16 @@ function spawnBot(name, teamId, squadId, trans, setvars)
     soldierCustomization.weapons:add(gadget01)
     soldierCustomization.weapons:add(gadget02)
 	soldierCustomization.weapons:add(meleeWeapon)
-	bot.soldier:ApplyCustomization(soldierCustomization)
+    bot.soldier:ApplyCustomization(soldierCustomization)
+    
+    bot.soldier.weaponsComponent.currentWeapon.primaryAmmo = 40
+    bot.soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway.minDispersionAngle = 0
+    bot.soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway.dispersionAngle = 0
+    bot.soldier.weaponsComponent.currentWeapon.weaponFiring.recoilAngleZ = 0
+    bot.soldier.weaponsComponent.currentWeapon.weaponFiring.recoilAngleY = 0
+    bot.soldier.weaponsComponent.currentWeapon.weaponFiring.recoilAngleX = 0
+    bot.soldier.weaponsComponent.currentWeapon.weaponFiring.recoilFovAngle = 0
+    bot.soldier.weaponsComponent.currentWeapon.weaponFiring.primaryAmmoToFill = 9999
 
     -- set vars
     if setvars then

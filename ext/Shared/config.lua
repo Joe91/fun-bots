@@ -7,8 +7,10 @@ Config = {
     spawnDelayBots = 2.0,
     botUpdateCycle = 0.1,
     initNumberOfBots = 10,
-    fovForShooting = 180,
-    botFireDuration = 0.3,
+    fovForShooting = 270,  -- Degrees of FOV of Bot
+    botFireDuration = 0.1,
+    botFirePause = 0.2,
+    botFireModeDuration = 5.0,
     bulletDamageBot = 2,
     botNewLoadoutOnSpawn = true,
     botKit = 0, -- 0 = random, 1 = assault, 2 = engineer, 3 = support, 4 = recon
