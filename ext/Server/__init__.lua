@@ -98,12 +98,15 @@ Events:Subscribe('Level:Loaded', function(levelName, gameMode)
     print(tostring(activeTraceIndexes).." paths have been loaded")
     -- create initial bots
     if activeTraceIndexes > 0 and Config.spawnOnLevelstart then
-        respawning = true
-        moveMode = 5
-        spawnMode = 5
-        speed = 3
+        local listOfVars = {
+            spawnMode = 5,
+            speed = 3,
+            moveMode = 5,
+            activeWayIndex = 0,
+            respawning = true
+        }
         for i = 1, Config.initNumberOfBots do
-            createInitialBots(BotNames[i], team, squad)
+            createInitialBots(BotNames[i], team, squad, listOfVars)
         end
     end
     checkSwapBotTeams()
