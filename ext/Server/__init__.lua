@@ -20,11 +20,11 @@ local botWayIndexes = {}
 local botTeams = {}
 local botRespawning = {}
 local botKits = {}
-local botColors = {} 
-local botShooting = {} 
-local botShootPlayer = {} 
-local botShootTimer = {} 
-local botShootModeTimer = {} 
+local botColors = {}
+local botShooting = {}
+local botShootPlayer = {}
+local botShootTimer = {}
+local botShootModeTimer = {}
 
 -- vars for all bots
 local jumping = false
@@ -279,7 +279,7 @@ Events:Subscribe('Bot:Update', function(bot, dt)
                     bot.input:SetLevel(EntryInputActionEnum.EIAFire, 1)
                 end
                 botShootTimer[bot.name] = botShootTimer[bot.name] + Config.botUpdateCycle
-                
+
             else
                 bot.input:SetLevel(EntryInputActionEnum.EIAFire, 0)
                 botShootPlayer[bot.name] = nil
