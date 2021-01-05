@@ -88,6 +88,19 @@ NetEvents:Subscribe('DamagePlayer', function(player, damage)
     player.soldier.health = player.soldier.health - damage
 end)
 
+Events:Subscribe('Player:Left', function(player)
+    --remove all references
+    for i = 1, Config.maxNumberOfBots do
+        local botname = BotNames[i]
+        if botShootPlayer[botname] == player then
+            botShootPlayer[botname] = nil
+        end
+        if botTargetPlayers[botname] == player then
+            botTargetPlayers[botname] = nil
+        end
+    end
+end)
+
 Events:Subscribe('Level:Loaded', function(levelName, gameMode)
     print("level "..levelName.." in Gamemode "..gameMode.." loaded")
     mapName = levelName..gameMode
@@ -100,7 +113,8 @@ Events:Subscribe('Level:Loaded', function(levelName, gameMode)
             speed = 3,
             moveMode = 5,
             activeWayIndex = 0,
-            respawning = true
+            respawning = true,
+            shooting = true
         }
         for i = 1, Config.initNumberOfBots do
             createInitialBots(BotNames[i], team, squad, listOfVars)
@@ -167,7 +181,6 @@ Events:Subscribe('Bot:Update', function(bot, dt)
 
     local respawning = botRespawning[bot.name]
     local shooting = botShooting[bot.name]
-    shooting = true --only for debug
     local shootAt = botShootPlayer[bot.name]
 
     --spawning 
@@ -192,7 +205,8 @@ Events:Subscribe('Bot:Update', function(bot, dt)
             speed = speed,
             moveMode = moveMode,
             activeWayIndex = wayIndex,
-            respawning = respawning
+            respawning = respawning,
+            shooting = shooting
         }
 
         if spawnMode == 1 then --spawnCenterpoint
@@ -560,6 +574,14 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
         end
         setBotVarForPlayer(player, botRespawning, respawning)
 
+
+    elseif parts[1] == '!shoot' then
+        local shooting = true
+        if tonumber(parts[2]) == 0 then
+            shooting = false
+        end
+        setBotVarForPlayer(player, botShooting, shooting)
+
     -- spawn team settings
     elseif parts[1] == '!spawnsameteam' then
         Config.spawnInSameTeam = true
@@ -601,9 +623,9 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
         spawnMode = 0
         dieing = false
         respawning = false
-        local jumping = false
-        local adading = false
-        local swaying = false
+        jumping = false
+        adading = false
+        swaying = false
         for i = 1, Config.maxNumberOfBots do
             local name = BotNames[i]
             botSpeeds[name] = speed
@@ -618,9 +640,9 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
         spawnMode = 0
         dieing = false
         respawning = false
-        local jumping = false
-        local adading = false
-        local swaying = false
+        jumping = false
+        adading = false
+        swaying = false
         for i = 1, Config.maxNumberOfBots do
             local name = BotNames[i]
             if botTargetPlayers[name] == player then
@@ -844,7 +866,8 @@ function spawnBotRowOnPlayer(player, length, spacing)
         speed = 0,
         moveMode = 0,
         activeWayIndex = 0,
-        respawning = false
+        respawning = false,
+        shooting = false
     }
     for i = 1, length do
         local name = findNextBotName()
@@ -863,7 +886,8 @@ function spawnBotTowerOnPlayer(player, height)
         speed = 0,
         moveMode = 0,
         activeWayIndex = 0,
-        respawning = false
+        respawning = false,
+        shooting = false
     }
     for i = 1, height do
         local name = findNextBotName()
@@ -885,7 +909,8 @@ function spawnBotGridOnPlayer(player, rows, columns, spacing)
         speed = 0,
         moveMode = 0,
         activeWayIndex = 0,
-        respawning = false
+        respawning = false,
+        shooting = false
     }
     for i = 1, rows do
         for j = 1, columns do
@@ -909,7 +934,8 @@ function spawnCenterpointBots(player, amount, duration)
         speed = 3,
         moveMode = 1,
         activeWayIndex = 0,
-        respawning = false
+        respawning = false,
+        shooting = false
     }
     centerpoint = player.soldier.transform
     centerPointPeriod = duration
@@ -932,7 +958,8 @@ function spawnLineBots(player, amount, spacing)
         speed = 3,
         moveMode = 2,
         activeWayIndex = 0,
-        respawning = false
+        respawning = false,
+        shooting = false
     }
     for i = 1, amount do
         local name = findNextBotName()
@@ -952,7 +979,8 @@ function spawnRingBots(player, amount, spacing)
         speed = 3,
         moveMode = 2,
         activeWayIndex = 0,
-        respawning = false
+        respawning = false,
+        shooting = false
     }
     ringNrOfBots = amount
 
@@ -975,7 +1003,8 @@ function spawnWayBots(player, amount, randomIndex, activeWayIndex)
         speed = 3,
         moveMode = moveMode,
         activeWayIndex = activeWayIndex,
-        respawning = false
+        respawning = false,
+        shooting = true
     }
     if wayPoints[activeWayIndex][1] == nil or activeTraceIndexes <= 0 then
         return
@@ -1100,6 +1129,7 @@ function createInitialBots(name, teamId, squadId, listOfVars)
     botTeams[name] = teamId
     botWayIndexes[name] = listOfVars.activeWayIndex
     botRespawning[name] = listOfVars.respawning
+    botShooting[name] = listOfVars.shooting
 
     local botColor = Colors[Config.botColor]
     local kitNumber = Config.botKit
@@ -1288,6 +1318,7 @@ function spawnBot(name, teamId, squadId, trans, setvars, listOfVars)
         botMoveModes[name] = listOfVars.moveMode
         botWayIndexes[name] = listOfVars.activeWayIndex
         botRespawning[name] = listOfVars.respawning
+        botShooting[name] = listOfVars.shooting
     end
 
 end
