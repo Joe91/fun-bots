@@ -106,6 +106,7 @@ Events:Subscribe('Level:Loaded', function(levelName, gameMode)
     mapName = levelName..gameMode
     loadWayPoints()
     print(tostring(activeTraceIndexes).." paths have been loaded")
+    Bots:destroyAllBots()
     -- create initial bots
     if activeTraceIndexes > 0 and Config.spawnOnLevelstart then
         local listOfVars = {
@@ -1114,7 +1115,9 @@ function createInitialBots(name, teamId, squadId, listOfVars)
 	local bot = nil
 
     if existingPlayer ~= nil then
-        return
+        bot = existingPlayer
+		bot.teamId = teamId
+		bot.squadId = squadId
     else
         botTimeGones[name] = 0
         bot = Bots:createBot(name, teamId, squadId)
@@ -1293,6 +1296,7 @@ function spawnBot(name, teamId, squadId, trans, setvars, listOfVars)
     bot.soldier:ApplyCustomization(soldierCustomization)
     
     bot.soldier.weaponsComponent.currentWeapon.primaryAmmo = 40
+    bot.soldier.weaponsComponent.currentWeapon.weaponFiring.primaryAmmoToFill = 9999
     bot.soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway.minDispersionAngle = 0
     bot.soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway.dispersionAngle = 0
     bot.soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway.currentDispersionDeviation.pitch = 0
@@ -1306,8 +1310,8 @@ function spawnBot(name, teamId, squadId, trans, setvars, listOfVars)
     bot.soldier.weaponsComponent.currentWeapon.weaponFiring.recoilAngleZ = 0
     bot.soldier.weaponsComponent.currentWeapon.weaponFiring.recoilAngleY = 0
     bot.soldier.weaponsComponent.currentWeapon.weaponFiring.recoilAngleX = 0
-    bot.soldier.weaponsComponent.currentWeapon.weaponFiring.recoilFovAngle = 0
-    bot.soldier.weaponsComponent.currentWeapon.weaponFiring.primaryAmmoToFill = 9999
+    --bot.soldier.weaponsComponent.currentWeapon.weaponFiring.recoilTimer = 0
+    --bot.soldier.weaponsComponent.currentWeapon.weaponFiring.recoilFovAngle = 0
 
     -- set vars
     if setvars then

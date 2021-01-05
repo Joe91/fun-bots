@@ -1,6 +1,6 @@
 require('__shared/Config')
 local explosionEntityData = nil
-local RAYCAST_INTERVAL = 0.05 -- seconds
+local RAYCAST_INTERVAL = 0.1 -- seconds
 local MAX_RAYCAST_DISTANCE = 200 -- meters
 local raycastTimer = 0
 local lastIndex = 0
@@ -18,7 +18,7 @@ Events:Subscribe('UpdateManager:Update', function(p_Delta, p_Pass)
 			local bot = PlayerManager:GetPlayerByName(BotNames[newIndex])
 			local player = PlayerManager:GetLocalPlayer()
 			if bot ~= nil then
-				if player.TeamId ~= bot.TeamId then
+				if player.teamId ~= bot.teamId then
 					if bot.soldier ~= nil and player.soldier ~= nil then
 						-- check for clear view
 						local s_Transform = ClientUtils:GetCameraTransform()
@@ -29,7 +29,7 @@ Events:Subscribe('UpdateManager:Update', function(p_Delta, p_Pass)
 						local dz = bot.soldier.transform.trans.z - player.soldier.transform.trans.z
 						local castPos = Vec3(s_Transform.trans.x + (dx * 2), s_Transform.trans.y + (dy * 2), s_Transform.trans.z + (dz * 2))
 
-						local raycast = RaycastManager:Raycast(s_Transform.trans, castPos, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckTerrain | RayCastFlags.DontCheckRagdoll)  --| RayCastFlags.IsAsyncRaycast
+						local raycast = RaycastManager:Raycast(s_Transform.trans, castPos, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckTerrain | RayCastFlags.DontCheckRagdoll | RayCastFlags.IsAsyncRaycast)
 						lastIndex = newIndex
 						if raycast == nil or raycast.rigidBody == nil or raycast.rigidBody:Is("CharacterPhysicsEntity") == false then
 							print("no valid cast to "..bot.name)
