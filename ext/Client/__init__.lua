@@ -67,7 +67,7 @@ Hooks:Install('BulletEntity:Collision', 1, function(hook, entity, hit, shooter)
 			local dx = math.abs(player.soldier.transform.trans.x - hit.position.x)
 			local dz = math.abs(player.soldier.transform.trans.z - hit.position.z)
 			local dy = hit.position.y - player.soldier.transform.trans.y --player y is on ground. Hit must be higher to be valid
-			if dx < 0.5 and dz < 0.5 and dy < 1.8 and dy > 0 then --included bodyhight
+			if dx < 1 and dz < 1 and dy < 2 and dy > 0 then --included bodyhight
 				NetEvents:SendLocal("DamagePlayer", Config.bulletDamageBot)
 			end
 		end

@@ -268,7 +268,7 @@ Events:Subscribe('Bot:Update', function(bot, dt)
                 local yaw = (math.atan(dz, dx) > math.pi / 2) and (math.atan(dz, dx) - math.pi / 2) or (math.atan(dz, dx) + 3 * math.pi / 2)
                 --calculate pitch
                 local distance = shootAt.soldier.transform.trans:Distance(bot.soldier.transform.trans)
-                local pitch = math.asin(dy, distance)
+                local pitch = math.asin(dy / distance)
                 bot.input.authoritativeAimingPitch = pitch
                 bot.input.authoritativeAimingYaw = yaw
                 bot.input:SetLevel(EntryInputActionEnum.EIAZoom, 1)
