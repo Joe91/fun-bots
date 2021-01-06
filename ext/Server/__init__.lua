@@ -391,36 +391,30 @@ Events:Subscribe('Bot:Update', function(bot, dt)
                 if (inputVar & 0x000F) > 0 then -- movement
                     botWayWaitTimes[bot.name] = 0
                     speed = inputVar & 0x000F  --speed
+
+                    -- check for needed jump
+                    if botJumIndexes[bot.name] > 4 then
+                        bot.soldier:SetPose(CharacterPoseType.CharacterPoseType_Stand, true, true)
+                        bot.input:SetLevel(EntryInputActionEnum.EIAThrottle, 1)
+                    end
+
                     --jumpsequence to get over obstacles
-                    if ((inputVar & 0x00F0) >> 4) == 1 and botJumIndexes[bot.name] == 0 then -- jump
-                        botJumIndexes[bot.name] = 4
-                        botLastWayIndex[bot.name] = activePointIndex
-                        bot.input:SetLevel(EntryInputActionEnum.EIAJump, 0.0)
-                        bot.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0.0)
-                    elseif botJumIndexes[bot.name] == 4 then
-                        botJumIndexes[bot.name] = 3
+                    if botJumIndexes[bot.name] > 5 then
+                        bot.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1.0)
                         bot.input:SetLevel(EntryInputActionEnum.EIAJump, 1.0)
+                    elseif botJumIndexes[bot.name] > 8 then
+                        botJumIndexes[bot.name] = 0
                         bot.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0.0)
-                    elseif botJumIndexes[bot.name] == 3 then
-                        botJumIndexes[bot.name] = 2
                         bot.input:SetLevel(EntryInputActionEnum.EIAJump, 0.0)
-                        bot.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0.0)
-                    elseif botJumIndexes[bot.name] == 2 then
-                        botJumIndexes[bot.name] = 1
-                        bot.input:SetLevel(EntryInputActionEnum.EIAJump, 0.0)
-                        bot.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1.0)
-                    elseif botJumIndexes[bot.name] == 1 then
-                        if botLastWayIndex[bot.name] == activePointIndex then
-                            botJumIndexes[bot.name] = 4
-                        else
-                            botJumIndexes[bot.name] = 0
-                        end
-                        bot.input:SetLevel(EntryInputActionEnum.EIAJump, 0.0)
-                        bot.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1.0)
+                    elseif ((inputVar & 0x00F0) >> 4) == 1 and botJumIndexes[bot.name] == 0 then -- jump
+                        print("normal jump")
+                        bot.input:SetLevel(EntryInputActionEnum.EIAJump, 1)
                     else
                         bot.input:SetLevel(EntryInputActionEnum.EIAJump, 0.0)
                         bot.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0.0)
                     end
+
+                    botJumIndexes[bot.name] = botJumIndexes[bot.name] + 1
 
                     local trans = Vec3()
                     trans = wayPoints[wayIndex][activePointIndex].trans
@@ -432,6 +426,8 @@ Events:Subscribe('Bot:Update', function(bot, dt)
                         bot.input.authoritativeAimingYaw = yaw
                     else  -- target reached
                         botCurrentWayPoints[bot.name] = activePointIndex + 1
+                        botJumIndexes[bot.name] = 0
+                        print("nextpoint")
                     end
                 else -- wait mode
                     botWayWaitTimes[bot.name] = botWayWaitTimes[bot.name] + Config.botUpdateCycle
