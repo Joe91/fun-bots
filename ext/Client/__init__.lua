@@ -1,7 +1,7 @@
 require('__shared/Config')
 local explosionEntityData = nil
 local RAYCAST_INTERVAL = 0.1 -- seconds
-local MAX_RAYCAST_DISTANCE = 200 -- meters
+local MAX_RAYCAST_DISTANCE = 150.0 -- meters
 local raycastTimer = 0
 local lastIndex = 0
 
@@ -21,26 +21,37 @@ Events:Subscribe('UpdateManager:Update', function(p_Delta, p_Pass)
 				if player.teamId ~= bot.teamId then
 					if bot.soldier ~= nil and player.soldier ~= nil then
 						-- check for clear view
-						local s_Transform = ClientUtils:GetCameraTransform()
+						local playerCameraTrans = ClientUtils:GetCameraTransform()
+
+						local botCamereaHight = 1.6 --bot.soldier.pose == CharacterPoseType.CharacterPoseType_Stand
+						if bot.soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
+							botCamereaHight = 0.3
+						elseif bot.soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
+							botCamereaHight = 1.0
+						end
 
 						-- find direction of Bot
 						local dx = bot.soldier.transform.trans.x - player.soldier.transform.trans.x
-						local dy = bot.soldier.transform.trans.y - player.soldier.transform.trans.y
+						local dy = bot.soldier.transform.trans.y + botCamereaHight - playerCameraTrans.trans.y
 						local dz = bot.soldier.transform.trans.z - player.soldier.transform.trans.z
-						local castPos = Vec3(s_Transform.trans.x + (dx * 2), s_Transform.trans.y + (dy * 2), s_Transform.trans.z + (dz * 2))
+						local direction = Vec3(dx, dy,  dz)
+						
+						local distance = playerCameraTrans.trans:Distance(playerCameraTrans.trans+direction)
+						if distance > MAX_RAYCAST_DISTANCE then
+							print("bot too far away"..bot.name.."  "..distance)
+							return
+						end
+						direction = direction:Normalize() * MAX_RAYCAST_DISTANCE
+						local castPos = Vec3(playerCameraTrans.trans.x + direction.x, playerCameraTrans.trans.y + direction.y, playerCameraTrans.trans.z + direction.z)
 
-						local raycast = RaycastManager:Raycast(s_Transform.trans, castPos, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckTerrain | RayCastFlags.DontCheckRagdoll | RayCastFlags.IsAsyncRaycast)
+						local raycast = RaycastManager:Raycast(playerCameraTrans.trans, castPos, RayCastFlags.DontCheckWater | RayCastFlags.IsAsyncRaycast)
 						lastIndex = newIndex
 						if raycast == nil or raycast.rigidBody == nil or raycast.rigidBody:Is("CharacterPhysicsEntity") == false then
 							print("no valid cast to "..bot.name)
 							return
 						end
 						-- we found a valid bot in Sight. Signal Server with players
-						local distance = player.soldier.transform.trans:Distance(bot.soldier.transform.trans)
-						if distance < MAX_RAYCAST_DISTANCE then
-							print("valid cast to "..bot.name)
-							NetEvents:SendLocal("BotShootAtPlayer", bot.name)
-						end
+						NetEvents:SendLocal("BotShootAtPlayer", bot.name)
 						return --valid bot found. Return to save computing power
 					end
 				end

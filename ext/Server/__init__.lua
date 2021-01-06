@@ -742,6 +742,9 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
         print(player.soldier.transform.trans.x)
         print(player.soldier.transform.trans.y)
         print(player.soldier.transform.trans.z)
+
+    elseif parts[1] == '!printslot' then
+        print(player.soldier.weaponsComponent.currentWeaponSlot)
         
     elseif parts[1] == '!savepaths' then
         local co = coroutine.create(function ()
@@ -1192,10 +1195,10 @@ function spawnBot(name, teamId, squadId, trans, setvars, listOfVars)
     primaryWeapon.slot = WeaponSlot.WeaponSlot_0
 
     local gadget01 = UnlockWeaponAndSlot()
-    gadget01.slot = WeaponSlot.WeaponSlot_3
+    gadget01.slot = WeaponSlot.WeaponSlot_2
 
     local gadget02 = UnlockWeaponAndSlot()
-    gadget02.slot = WeaponSlot.WeaponSlot_4
+    gadget02.slot = WeaponSlot.WeaponSlot_5
 
 	local secondaryWeapon = UnlockWeaponAndSlot()
 	secondaryWeapon.weapon = SoldierWeaponUnlockAsset(m1911)
@@ -1203,7 +1206,7 @@ function spawnBot(name, teamId, squadId, trans, setvars, listOfVars)
 
 	local meleeWeapon = UnlockWeaponAndSlot()
 	meleeWeapon.weapon = SoldierWeaponUnlockAsset(knife)
-    meleeWeapon.slot = WeaponSlot.WeaponSlot_5
+    meleeWeapon.slot = WeaponSlot.WeaponSlot_7
     
     -- create loadouts
     local function setAttachments(unlockWeapon, attachments)
