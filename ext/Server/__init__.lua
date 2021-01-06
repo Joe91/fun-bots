@@ -18,6 +18,8 @@ local botYaws = {}
 local botCurrentWayPoints = {}
 local botWayIndexes = {}
 local botWayWaitTimes = {}
+local botJumIndexes = {}
+local botLastWayIndex = {}
 local botTeams = {}
 local botRespawning = {}
 local botKits = {}
@@ -182,7 +184,6 @@ Events:Subscribe('Engine:Update', function(dt)
 
                         if player.input:GetLevel(EntryInputActionEnum.EIAJump) == 1 then
                             MoveAddon = 1
-                            print("jump detected")
                         end
                         
                         local inputVar = MoveMode + (MoveAddon << 4) + (vlaue << 8)
@@ -195,7 +196,7 @@ Events:Subscribe('Engine:Update', function(dt)
                         traceWaitTime[i] = 0
                         table.insert(wayPoints[i], point)
                     end
-                    traceWaitTime[i] =  traceWaitTime[i] + dt
+                    traceWaitTime[i] =  traceWaitTime[i] + Config.traceDelta
                     local inputVar = 0 + (math.floor(tonumber(traceWaitTime[i])) & 0xFF) << 8
                     wayPoints[i][#wayPoints[i]].inputVar = inputVar
                 end
@@ -390,11 +391,35 @@ Events:Subscribe('Bot:Update', function(bot, dt)
                 if (inputVar & 0x000F) > 0 then -- movement
                     botWayWaitTimes[bot.name] = 0
                     speed = inputVar & 0x000F  --speed
-                    if ((inputVar & 0x00F0) >> 4) == 1 then -- jump
+                    --jumpsequence to get over obstacles
+                    if ((inputVar & 0x00F0) >> 4) == 1 and botJumIndexes[bot.name] == 0 then -- jump
+                        botJumIndexes[bot.name] = 4
+                        botLastWayIndex[bot.name] = activePointIndex
                         bot.input:SetLevel(EntryInputActionEnum.EIAJump, 0.0)
+                        bot.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0.0)
+                    elseif botJumIndexes[bot.name] == 4 then
+                        botJumIndexes[bot.name] = 3
                         bot.input:SetLevel(EntryInputActionEnum.EIAJump, 1.0)
+                        bot.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0.0)
+                    elseif botJumIndexes[bot.name] == 3 then
+                        botJumIndexes[bot.name] = 2
+                        bot.input:SetLevel(EntryInputActionEnum.EIAJump, 0.0)
+                        bot.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0.0)
+                    elseif botJumIndexes[bot.name] == 2 then
+                        botJumIndexes[bot.name] = 1
+                        bot.input:SetLevel(EntryInputActionEnum.EIAJump, 0.0)
+                        bot.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1.0)
+                    elseif botJumIndexes[bot.name] == 1 then
+                        if botLastWayIndex[bot.name] == activePointIndex then
+                            botJumIndexes[bot.name] = 4
+                        else
+                            botJumIndexes[bot.name] = 0
+                        end
+                        bot.input:SetLevel(EntryInputActionEnum.EIAJump, 0.0)
+                        bot.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1.0)
                     else
                         bot.input:SetLevel(EntryInputActionEnum.EIAJump, 0.0)
+                        bot.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0.0)
                     end
 
                     local trans = Vec3()
@@ -410,6 +435,7 @@ Events:Subscribe('Bot:Update', function(bot, dt)
                     end
                 else -- wait mode
                     botWayWaitTimes[bot.name] = botWayWaitTimes[bot.name] + Config.botUpdateCycle
+                    speed = 0
                     if  botWayWaitTimes[bot.name] > (inputVar >> 8) then
                         botCurrentWayPoints[bot.name] = activePointIndex + 1
                         botWayWaitTimes[bot.name] = 0
@@ -1347,6 +1373,8 @@ function spawnBot(name, teamId, squadId, trans, setvars, listOfVars)
     transform = trans
 
     botSpawnDelayTime[name] = 0.0
+    botJumIndexes[bot.name] = 0
+    botShootPlayer[name] = nil
 	-- And then spawn the bot. This will create and return a new SoldierEntity object.
     Bots:spawnBot(bot, transform, CharacterPoseType.CharacterPoseType_Stand, soldierBlueprint, soldierKit, { appearance })
 
@@ -1370,8 +1398,6 @@ function spawnBot(name, teamId, squadId, trans, setvars, listOfVars)
     bot.soldier.weaponsComponent.currentWeapon.weaponFiring.recoilAngleX = 0
     bot.soldier.weaponsComponent.currentWeapon.weaponFiring.recoilTimer = 0.0
     bot.soldier.weaponsComponent.currentWeapon.weaponFiring.recoilFovAngle = 0
-
-    botShootPlayer[name] = nil
 
     -- set vars
     if setvars then

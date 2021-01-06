@@ -38,7 +38,6 @@ Events:Subscribe('UpdateManager:Update', function(p_Delta, p_Pass)
 						
 						local distance = playerCameraTrans.trans:Distance(playerCameraTrans.trans+direction)
 						if distance > MAX_RAYCAST_DISTANCE then
-							print("bot too far away"..bot.name.."  "..distance)
 							return
 						end
 						direction = direction:Normalize() * MAX_RAYCAST_DISTANCE
@@ -47,7 +46,6 @@ Events:Subscribe('UpdateManager:Update', function(p_Delta, p_Pass)
 						local raycast = RaycastManager:Raycast(playerCameraTrans.trans, castPos, RayCastFlags.DontCheckWater | RayCastFlags.IsAsyncRaycast)
 						lastIndex = newIndex
 						if raycast == nil or raycast.rigidBody == nil or raycast.rigidBody:Is("CharacterPhysicsEntity") == false then
-							print("no valid cast to "..bot.name)
 							return
 						end
 						-- we found a valid bot in Sight. Signal Server with players
