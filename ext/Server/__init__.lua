@@ -17,6 +17,7 @@ local botTransforms = {}
 local botYaws = {}
 local botCurrentWayPoints = {}
 local botWayIndexes = {}
+local botWayWaitTimes = {}
 local botTeams = {}
 local botRespawning = {}
 local botKits = {}
@@ -104,7 +105,7 @@ end)
 
 Events:Subscribe('Level:Loaded', function(levelName, gameMode)
     print("level "..levelName.." in Gamemode "..gameMode.." loaded")
-    mapName = levelName..gameMode
+    mapName = levelName.."_"..gameMode
     loadWayPoints()
     print(tostring(activeTraceIndexes).." paths have been loaded")
     Bots:destroyAllBots()
@@ -181,20 +182,21 @@ Events:Subscribe('Engine:Update', function(dt)
 
                         if player.input:GetLevel(EntryInputActionEnum.EIAJump) == 1 then
                             MoveAddon = 1
+                            print("jump detected")
                         end
                         
                         local inputVar = MoveMode + (MoveAddon << 4) + (vlaue << 8)
-                        print(inputVar)
                         point.inputVar = inputVar
                         table.insert(wayPoints[i], point)
                     end
                 -- trace wait time with secondary weapon
                 elseif player.soldier.weaponsComponent.currentWeaponSlot == WeaponSlot.WeaponSlot_1 then
-                    if traceWaitTime[i] == 0 then
+                    if traceWaitTime[i] == 0 or traceWaitTime[i] == nil then
+                        traceWaitTime[i] = 0
                         table.insert(wayPoints[i], point)
                     end
                     traceWaitTime[i] =  traceWaitTime[i] + dt
-                    local inputVar = 0 + tointeger(traceWaitTime[i]) << 8
+                    local inputVar = 0 + (math.floor(tonumber(traceWaitTime[i])) & 0xFF) << 8
                     wayPoints[i][#wayPoints[i]].inputVar = inputVar
                 end
             end
@@ -384,16 +386,34 @@ Events:Subscribe('Bot:Update', function(bot, dt)
                 end
             end
             if wayPoints[wayIndex][1] ~= nil then   -- check for reached point
-                local trans = Vec3()
-                trans = wayPoints[wayIndex][activePointIndex].trans
-                local dy = trans.z - bot.soldier.transform.trans.z
-                local dx = trans.x - bot.soldier.transform.trans.x
-                local distanceFromTarget = math.sqrt(dx ^ 2 + dy ^ 2)
-                if distanceFromTarget > 1 then
-                    local yaw = (math.atan(dy, dx) > math.pi / 2) and (math.atan(dy, dx) - math.pi / 2) or (math.atan(dy, dx) + 3 * math.pi / 2)
-                    bot.input.authoritativeAimingYaw = yaw
-                else  -- target reached
-                    botCurrentWayPoints[bot.name] = activePointIndex + 1
+                local inputVar = wayPoints[wayIndex][activePointIndex].inputVar
+                if (inputVar & 0x000F) > 0 then -- movement
+                    botWayWaitTimes[bot.name] = 0
+                    speed = inputVar & 0x000F  --speed
+                    if ((inputVar & 0x00F0) >> 4) == 1 then -- jump
+                        bot.input:SetLevel(EntryInputActionEnum.EIAJump, 0.0)
+                        bot.input:SetLevel(EntryInputActionEnum.EIAJump, 1.0)
+                    else
+                        bot.input:SetLevel(EntryInputActionEnum.EIAJump, 0.0)
+                    end
+
+                    local trans = Vec3()
+                    trans = wayPoints[wayIndex][activePointIndex].trans
+                    local dy = trans.z - bot.soldier.transform.trans.z
+                    local dx = trans.x - bot.soldier.transform.trans.x
+                    local distanceFromTarget = math.sqrt(dx ^ 2 + dy ^ 2)
+                    if distanceFromTarget > 1 then
+                        local yaw = (math.atan(dy, dx) > math.pi / 2) and (math.atan(dy, dx) - math.pi / 2) or (math.atan(dy, dx) + 3 * math.pi / 2)
+                        bot.input.authoritativeAimingYaw = yaw
+                    else  -- target reached
+                        botCurrentWayPoints[bot.name] = activePointIndex + 1
+                    end
+                else -- wait mode
+                    botWayWaitTimes[bot.name] = botWayWaitTimes[bot.name] + Config.botUpdateCycle
+                    if  botWayWaitTimes[bot.name] > (inputVar >> 8) then
+                        botCurrentWayPoints[bot.name] = activePointIndex + 1
+                        botWayWaitTimes[bot.name] = 0
+                    end
                 end
             end
         end
@@ -403,12 +423,12 @@ Events:Subscribe('Bot:Update', function(bot, dt)
             local speedVal = 0
             if moveMode > 0 then
                 if speed == 1 then
-                    speedVal = 0.25
+                    speedVal = 1.0
                     if bot.soldier.pose ~= CharacterPoseType.CharacterPoseType_Prone then
                         bot.soldier:SetPose(CharacterPoseType.CharacterPoseType_Prone, true, true)
                     end
                 elseif speed == 2 then
-                    speedVal = 0.5
+                    speedVal = 1.0
                     if bot.soldier.pose ~= CharacterPoseType.CharacterPoseType_Crouch then
                         bot.soldier:SetPose(CharacterPoseType.CharacterPoseType_Crouch, true, true)
                     end
@@ -781,10 +801,12 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
         print(player.soldier.weaponsComponent.currentWeaponSlot)
         
     elseif parts[1] == '!savepaths' then
-        local co = coroutine.create(function ()
-            saveWayPoints()
-        end)
-        coroutine.resume(co)
+        print("try to save paths")
+        saveWayPoints()
+        --local co = coroutine.create(function ()
+        --    saveWayPoints()
+        --end)
+        --coroutine.resume(co)
 
     -- only experimental
     elseif parts[1] == '!mode' then --overwrite mode for all bots
@@ -1035,14 +1057,17 @@ function spawnRingBots(player, amount, spacing)
 end
 
 function spawnWayBots(player, amount, randomIndex, activeWayIndex)
-    local moveMode = randomIndex and 5 or 4
+    local spawnMode = 4
+    if randomIndex then
+        spawnMode = 5
+    end
     local listOfVars = {
-        spawnMode = 5,
+        spawnMode = spawnMode,
         speed = 3,
-        moveMode = moveMode,
+        moveMode = 5,
         activeWayIndex = activeWayIndex,
         respawning = false,
-        shooting = true
+        shooting = false
     }
     if wayPoints[activeWayIndex][1] == nil or activeTraceIndexes <= 0 then
         return
@@ -1059,7 +1084,7 @@ function spawnWayBots(player, amount, randomIndex, activeWayIndex)
             local randIdex = MathUtils:GetRandomInt(1, #wayPoints[activeWayIndex])
             botCurrentWayPoints[name] = randIdex
             local transform = LinearTransform()
-            transform = wayPoints[activeWayIndex][randIdex]
+            transform.trans = wayPoints[activeWayIndex][randIdex].trans
             botTargetPlayers[name] = player
             spawnBot(name, team, squad, transform, true, listOfVars)
         end
@@ -1346,6 +1371,8 @@ function spawnBot(name, teamId, squadId, trans, setvars, listOfVars)
     bot.soldier.weaponsComponent.currentWeapon.weaponFiring.recoilTimer = 0.0
     bot.soldier.weaponsComponent.currentWeapon.weaponFiring.recoilFovAngle = 0
 
+    botShootPlayer[name] = nil
+
     -- set vars
     if setvars then
         botCheckSwapTeam[name] = false
@@ -1393,7 +1420,8 @@ function loadWayPoints()
         pointIndex INTEGER,
         transX FLOAT,
         transY FLOAT,
-        transZ FLOAT
+        transZ FLOAT,
+        inputVar INTEGER
         )
     ]]
     if not SQL:Query(query) then
@@ -1426,10 +1454,8 @@ function loadWayPoints()
         local transX = row["transX"]
         local transY = row["transY"]
         local transZ = row["transZ"]
-        local point = {trans = Vec3(), inputVar = 0x0}
-        point.trans.x = transX
-        point.trans.y = transY
-        point.trans.z = transZ
+        local inputVar = row["inputVar"]
+        local point = {trans = Vec3(transX, transY, transZ), inputVar = inputVar}
         wayPoints[pathIndex][pointIndex] = point
     end
     activeTraceIndexes = nrOfPaths
@@ -1439,6 +1465,7 @@ end
 
 function saveWayPoints()
     if not SQL:Open() then
+        print("failed to save")
         return
     end
     local query = [[DROP TABLE IF EXISTS ]]..mapName..[[_table]]
@@ -1453,14 +1480,15 @@ function saveWayPoints()
         pointIndex INTEGER,
         transX FLOAT,
         transY FLOAT,
-        transZ FLOAT
+        transZ FLOAT,
+        inputVar INTEGER
         )
     ]]
     if not SQL:Query(query) then
         print('Failed to execute query: ' .. SQL:Error())
         return
     end
-    query = 'INSERT INTO '..mapName..'_table (pathIndex, pointIndex, transX, transY, transZ) VALUES '
+    query = 'INSERT INTO '..mapName..'_table (pathIndex, pointIndex, transX, transY, transZ, inputVar) VALUES '
     local pathIndex = 0
     for oldPathIndex = 1, Config.maxTraceNumber do
         local pointsDone = 0
@@ -1476,12 +1504,13 @@ function saveWayPoints()
 
                 local sqlValuesString = ""
                 for pointIndex = 1 + pointsDone, pointsToTo + pointsDone do
-                    local transform = LinearTransform()
-                    transform = wayPoints[oldPathIndex][pointIndex]
-                    local transX = transform.trans.x
-                    local transY = transform.trans.y
-                    local transZ = transform.trans.z
-                    local inerString = "("..pathIndex..","..pointIndex..","..tostring(transX)..","..tostring(transY)..","..tostring(transZ)..")"
+                    local trans = Vec3()
+                    trans = wayPoints[oldPathIndex][pointIndex].trans
+                    local transX = trans.x
+                    local transY = trans.y
+                    local transZ = trans.z
+                    local inputVar = wayPoints[oldPathIndex][pointIndex].inputVar
+                    local inerString = "("..pathIndex..","..pointIndex..","..tostring(transX)..","..tostring(transY)..","..tostring(transZ)..","..tostring(inputVar)..")"
                     sqlValuesString = sqlValuesString..inerString
                     if pointIndex < pointsToTo + pointsDone then
                         sqlValuesString = sqlValuesString..","
