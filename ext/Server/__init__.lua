@@ -391,24 +391,19 @@ Events:Subscribe('Bot:Update', function(bot, dt)
                 if (inputVar & 0x000F) > 0 then -- movement
                     botWayWaitTimes[bot.name] = 0
                     speed = inputVar & 0x000F  --speed
-
-                    -- check for needed jump
-                    if botJumIndexes[bot.name] > 4 then
-                        bot.soldier:SetPose(CharacterPoseType.CharacterPoseType_Stand, true, true)
-                        bot.input:SetLevel(EntryInputActionEnum.EIAThrottle, 1)
-                    end
-
+                       
                     --jumpsequence to get over obstacles
-                    if botJumIndexes[bot.name] > 5 then
-                        bot.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1.0)
-                        bot.input:SetLevel(EntryInputActionEnum.EIAJump, 1.0)
-                    elseif botJumIndexes[bot.name] > 8 then
+                    if ((inputVar & 0x00F0) >> 4) == 1 and botJumIndexes[bot.name] == 0 then -- jump
+                        bot.input:SetLevel(EntryInputActionEnum.EIAJump, 1)
+                    elseif botJumIndexes[bot.name] > 6 then
+                        print(bot.name.." end jump")
                         botJumIndexes[bot.name] = 0
                         bot.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0.0)
                         bot.input:SetLevel(EntryInputActionEnum.EIAJump, 0.0)
-                    elseif ((inputVar & 0x00F0) >> 4) == 1 and botJumIndexes[bot.name] == 0 then -- jump
-                        print("normal jump")
-                        bot.input:SetLevel(EntryInputActionEnum.EIAJump, 1)
+                    elseif botJumIndexes[bot.name] > 3 then
+                        print(bot.name.." jump over obstacles")
+                        bot.input:SetLevel(EntryInputActionEnum.EIAJump, 1.0)
+                        bot.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1.0)
                     else
                         bot.input:SetLevel(EntryInputActionEnum.EIAJump, 0.0)
                         bot.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0.0)
