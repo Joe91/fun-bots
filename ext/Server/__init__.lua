@@ -52,6 +52,7 @@ local ringNrOfBots = 0
 local activeTraceIndexes = 0
 local tracePlayers = {}
 local traceTimesGone = {}
+local traceWaitTime = {}
 local wayPoints = {}
 local mapName = ""
 local lastMapName = ""
@@ -150,13 +151,52 @@ Events:Subscribe('Engine:Update', function(dt)
 
     --trace way if wanted
     for i = 1, Config.maxTraceNumber do
-        if tracePlayers[i] ~= nil and tracePlayers[i].input:GetLevel(EntryInputActionEnum.EIAThrottle) > 0 then
+        if tracePlayers[i] ~= nil then
             traceTimesGone[i] = traceTimesGone[i] + dt
             if traceTimesGone[i] >= Config.traceDelta then
                 traceTimesGone[i] = 0
-                local point = LinearTransform()
-                point = tracePlayers[i].soldier.transform
-                table.insert(wayPoints[i], point)
+                local player = tracePlayers[i]
+
+                local MoveMode = 0 -- 0 = wait, 1 = prone ... (4 Bits)
+                local MoveAddon = 0 -- 0 = nothing, 1 = jump ... (4 Bits)
+                local vlaue = 0 -- waittime in 0.5 s (0-255) (8 Bits)
+
+                local point = {trans = Vec3(), inputVar = 0x0}
+                point.trans = player.soldier.transform.trans
+
+                --trace movement with primary weapon
+                if player.soldier.weaponsComponent.currentWeaponSlot == WeaponSlot.WeaponSlot_0 then
+                    traceWaitTime[i] = 0
+                    if player.input:GetLevel(EntryInputActionEnum.EIAThrottle) > 0 then --record only if moving
+                        if tracePlayers[i].soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
+                            MoveMode = 1
+                        elseif tracePlayers[i].soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
+                            MoveMode = 2
+                        else
+                            MoveMode = 3
+                            if player.input:GetLevel(EntryInputActionEnum.EIASprint) == 1 then
+                                MoveMode = 4
+                            end
+                        end
+
+                        if player.input:GetLevel(EntryInputActionEnum.EIAJump) == 1 then
+                            MoveAddon = 1
+                        end
+                        
+                        local inputVar = MoveMode + (MoveAddon << 4) + (vlaue << 8)
+                        print(inputVar)
+                        point.inputVar = inputVar
+                        table.insert(wayPoints[i], point)
+                    end
+                -- trace wait time with secondary weapon
+                elseif player.soldier.weaponsComponent.currentWeaponSlot == WeaponSlot.WeaponSlot_1 then
+                    if traceWaitTime[i] == 0 then
+                        table.insert(wayPoints[i], point)
+                    end
+                    traceWaitTime[i] =  traceWaitTime[i] + dt
+                    local inputVar = 0 + tointeger(traceWaitTime[i]) << 8
+                    wayPoints[i][#wayPoints[i]].inputVar = inputVar
+                end
             end
         end
     end
@@ -231,7 +271,7 @@ Events:Subscribe('Bot:Update', function(bot, dt)
             local randIdex = MathUtils:GetRandomInt(1, #wayPoints[wayIndex])
             botCurrentWayPoints[bot.name] = randIdex
             local transform = LinearTransform()
-            transform = wayPoints[wayIndex][randIdex]
+            transform.trans = wayPoints[wayIndex][randIdex].trans
             spawnBot(bot.name, team, squad, transform, setvarsOnRespawn, listOfVars)
 
         elseif spawnMode == 5 then --spawn on random way
@@ -240,7 +280,7 @@ Events:Subscribe('Bot:Update', function(bot, dt)
                 local randIdex = MathUtils:GetRandomInt(1, #wayPoints[newWayIdex])
                 botCurrentWayPoints[bot.name] = randIdex
                 local transform = LinearTransform()
-                transform = wayPoints[newWayIdex][randIdex]
+                transform.trans = wayPoints[newWayIdex][randIdex].trans
                 botWayIndexes[bot.name] = newWayIdex
                 listOfVars.activeWayIndex = newWayIdex
                 wayIndex = newWayIdex
@@ -344,10 +384,10 @@ Events:Subscribe('Bot:Update', function(bot, dt)
                 end
             end
             if wayPoints[wayIndex][1] ~= nil then   -- check for reached point
-                local transform = LinearTransform()
-                transform = wayPoints[wayIndex][activePointIndex]
-                local dy = transform.trans.z - bot.soldier.transform.trans.z
-                local dx = transform.trans.x - bot.soldier.transform.trans.x
+                local trans = Vec3()
+                trans = wayPoints[wayIndex][activePointIndex].trans
+                local dy = trans.z - bot.soldier.transform.trans.z
+                local dx = trans.x - bot.soldier.transform.trans.x
                 local distanceFromTarget = math.sqrt(dx ^ 2 + dy ^ 2)
                 if distanceFromTarget > 1 then
                     local yaw = (math.atan(dy, dx) > math.pi / 2) and (math.atan(dy, dx) - math.pi / 2) or (math.atan(dy, dx) + 3 * math.pi / 2)
@@ -1386,11 +1426,11 @@ function loadWayPoints()
         local transX = row["transX"]
         local transY = row["transY"]
         local transZ = row["transZ"]
-        local transform = LinearTransform()
-        transform.trans.x = transX
-        transform.trans.y = transY
-        transform.trans.z = transZ
-        wayPoints[pathIndex][pointIndex] = transform
+        local point = {trans = Vec3(), inputVar = 0x0}
+        point.trans.x = transX
+        point.trans.y = transY
+        point.trans.z = transZ
+        wayPoints[pathIndex][pointIndex] = point
     end
     activeTraceIndexes = nrOfPaths
     SQL:Close()
