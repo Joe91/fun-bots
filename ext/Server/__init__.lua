@@ -256,17 +256,19 @@ Events:Subscribe('Bot:Update', function(bot, dt)
         if shootAt ~= nil and shootAt.soldier ~= nil then
             if botShootModeTimer[bot.name] < Config.botFireModeDuration then
                 botShootModeTimer[bot.name] = botShootModeTimer[bot.name] + Config.botUpdateCycle
-                -- move slow
-                speed = 2
-                moveMode = 9 -- continue slow in movement
-                --calculate yaw
+                -- move slower
+                if speed > 0 then
+                    speed = speed - 1
+                end
+                moveMode = 9 -- continue last movement
+                --calculate yaw and pith
                 local dz = shootAt.soldier.transform.trans.z - bot.soldier.transform.trans.z
                 local dx = shootAt.soldier.transform.trans.x - bot.soldier.transform.trans.x
-                local dy = shootAt.soldier.transform.trans.y - bot.soldier.transform.trans.y
+                local dy = shootAt.soldier.transform.trans.y + getCameraHight(shootAt.soldier) - bot.soldier.transform.trans.y - getCameraHight(bot.soldier)
                 local yaw = (math.atan(dz, dx) > math.pi / 2) and (math.atan(dz, dx) - math.pi / 2) or (math.atan(dz, dx) + 3 * math.pi / 2)
                 --calculate pitch
                 local distance = shootAt.soldier.transform.trans:Distance(bot.soldier.transform.trans)
-                local pitch = math.atan(dy, distance)
+                local pitch = math.asin(dy, distance)
                 bot.input.authoritativeAimingPitch = pitch
                 bot.input.authoritativeAimingYaw = yaw
                 bot.input:SetLevel(EntryInputActionEnum.EIAZoom, 1)
@@ -1335,6 +1337,16 @@ function kickBot(name)
 		return
 	end
 	Bots:destroyBot(bot)
+end
+
+function getCameraHight(soldier)
+    local camereaHight = 1.6 --bot.soldier.pose == CharacterPoseType.CharacterPoseType_Stand
+    if soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
+        camereaHight = 0.3
+    elseif soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
+        camereaHight = 1.0
+    end
+    return camereaHight
 end
 
 function loadWayPoints()
