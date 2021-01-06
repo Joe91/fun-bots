@@ -351,15 +351,7 @@ Events:Subscribe('Bot:Update', function(bot, dt)
                 local distanceFromTarget = math.sqrt(dx ^ 2 + dy ^ 2)
                 if distanceFromTarget > 1 then
                     local yaw = (math.atan(dy, dx) > math.pi / 2) and (math.atan(dy, dx) - math.pi / 2) or (math.atan(dy, dx) + 3 * math.pi / 2)
-                    if swaying then
-                        local swayMod = (swayElapsedTime > swayPeriod / 2) and (((swayPeriod - swayElapsedTime) / swayPeriod - 0.25) * 4) or ((swayElapsedTime / swayPeriod - 0.25) * 4)
-                        local swayedYaw = yaw + swayMod * swayMaxDeviation
-                        swayedYaw = (swayedYaw > 2 * math.pi) and (swayedYaw - 2 * math.pi) or swayedYaw
-                        swayedYaw = (swayedYaw < 0) and (swayedYaw + 2 * math.pi) or swayedYaw
-                        bot.input.authoritativeAimingYaw = swayedYaw
-                    else
-                        bot.input.authoritativeAimingYaw = yaw
-                    end
+                    bot.input.authoritativeAimingYaw = yaw
                 else  -- target reached
                     botCurrentWayPoints[bot.name] = activePointIndex + 1
                 end
@@ -1300,8 +1292,8 @@ function spawnBot(name, teamId, squadId, trans, setvars, listOfVars)
 	soldierCustomization.weapons:add(meleeWeapon)
     bot.soldier:ApplyCustomization(soldierCustomization)
     
-    bot.soldier.weaponsComponent.currentWeapon.primaryAmmo = 777
-    bot.soldier.weaponsComponent.currentWeapon.secondaryAmmo = 555
+    --bot.soldier.weaponsComponent.currentWeapon.primaryAmmo = 40 --magasine Size
+    bot.soldier.weaponsComponent.currentWeapon.secondaryAmmo = 9999
     bot.soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway.minDispersionAngle = 0
     bot.soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway.dispersionAngle = 0
     bot.soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway.randomAngle = 0

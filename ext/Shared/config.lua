@@ -1,5 +1,5 @@
 Config = {
-    maxNumberOfBots = 10,
+    maxNumberOfBots = 15,
     spawnInSameTeam = false,
     exploding = false,
     traceDelta = 0.2,
@@ -8,8 +8,8 @@ Config = {
     botUpdateCycle = 0.1,
     initNumberOfBots = 10,
     fovForShooting = 270,  -- Degrees of FOV of Bot
-    botFireDuration = 0.1,
-    botFirePause = 0.2,
+    botFireDuration = 0.2,
+    botFirePause = 0.3,
     botFireModeDuration = 5.0,
     bulletDamageBot = 2,
     botNewLoadoutOnSpawn = true,
