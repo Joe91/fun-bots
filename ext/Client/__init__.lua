@@ -62,7 +62,7 @@ end)
 Hooks:Install('BulletEntity:Collision', 1, function(hook, entity, hit, shooter)
 	if hit.rigidBody.typeInfo.name == "CharacterPhysicsEntity" then
 		local player = PlayerManager:GetLocalPlayer()
-		if shooter.teamId ~= player.teamId then 	-- TODO: Check shooter for bot
+		if shooter.teamId ~= player.teamId and player.soldier ~= nil then 	-- TODO: Check shooter for bot
 			local dx = math.abs(player.soldier.transform.trans.x - hit.position.x)
 			local dz = math.abs(player.soldier.transform.trans.z - hit.position.z)
 			local dy = hit.position.y - player.soldier.transform.trans.y --player y is on ground. Hit must be higher to be valid
