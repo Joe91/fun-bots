@@ -42,7 +42,6 @@ With these commands you can spawn moving bots. To spawn bots on a way, you have 
 
 ```html
 !spawnbots  <number>  -- default command. Spawns bots on valid paths
-!spawncenter <number> <opt: duration>
 !spawnline <number> <opt: spacing>
 !spawnring <number> <opt: spacing>
 !spawnway <number> <opt: trace-index>
@@ -58,10 +57,8 @@ If you use respawn, all Bots will respawn directly after they have been killed
 !run
 !walk
 !speed <value: 0-4>
-!jump <opt: 0>
-!adad <opt: 0>
-!sway <opt: 0/1> <opt: swayMaxDeviation> <opt: swayPeriod>
 !respawn <opt: 0>
+!shoot <opt: 0>
 ```
 
 ### Path recording settings:
@@ -86,8 +83,6 @@ Here are some more commands. Partly not tested jet
 !spawnsameteam <opt: 0>
 !setbotkit <value: 0-4> -- 0 = random
 !setbotColor <value: 0-14> -- 0 = random
-!nice
-!die <opt: 0>
 !stop
 !stopall
 !kick

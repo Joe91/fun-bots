@@ -1,7 +1,4 @@
 require('__shared/Config')
-local explosionEntityData = nil
-local RAYCAST_INTERVAL = 0.1 -- seconds
-local MAX_RAYCAST_DISTANCE = 150.0 -- meters
 local raycastTimer = 0
 local lastIndex = 0
 
@@ -11,7 +8,7 @@ Events:Subscribe('UpdateManager:Update', function(p_Delta, p_Pass)
 	end
 
 	raycastTimer = raycastTimer + p_Delta
-	if raycastTimer >= RAYCAST_INTERVAL then
+	if raycastTimer >= Config.raycastInterval then
 		raycastTimer = 0
 		for i = lastIndex, Config.maxNumberOfBots + lastIndex do
 			local newIndex = i % Config.maxNumberOfBots + 1
@@ -37,17 +34,15 @@ Events:Subscribe('UpdateManager:Update', function(p_Delta, p_Pass)
 								bot.soldier.transform.trans.z - player.soldier.transform.trans.z)
 						
 						local distance = playerCameraTrans.trans:Distance(playerCameraTrans.trans+direction)
-						if distance > MAX_RAYCAST_DISTANCE then
-							print("bot too far away"..bot.name.."  "..distance)
+						if distance > Config.maxRaycastDistance then
 							return
 						end
-						direction = direction:Normalize() * MAX_RAYCAST_DISTANCE
+						direction = direction:Normalize() * Config.maxRaycastDistance
 						local castPos = Vec3(playerCameraTrans.trans.x + direction.x, playerCameraTrans.trans.y + direction.y, playerCameraTrans.trans.z + direction.z)
 
 						local raycast = RaycastManager:Raycast(playerCameraTrans.trans, castPos, RayCastFlags.DontCheckWater | RayCastFlags.IsAsyncRaycast)
 						lastIndex = newIndex
 						if raycast == nil or raycast.rigidBody == nil or raycast.rigidBody:Is("CharacterPhysicsEntity") == false then
-							print("no valid cast to "..bot.name)
 							return
 						end
 						-- we found a valid bot in Sight. Signal Server with players
@@ -68,54 +63,8 @@ Hooks:Install('BulletEntity:Collision', 1, function(hook, entity, hit, shooter)
 			local dz = math.abs(player.soldier.transform.trans.z - hit.position.z)
 			local dy = hit.position.y - player.soldier.transform.trans.y --player y is on ground. Hit must be higher to be valid
 			if dx < 1 and dz < 1 and dy < 2 and dy > 0 then --included bodyhight
-				NetEvents:SendLocal("DamagePlayer", Config.bulletDamageBot)
+				NetEvents:SendLocal("DamagePlayer", Config.bulletDamageBot, shooter.name)
 			end
 		end
 	end
-end)
-
-local function getExplosionEntityData()
-	if explosionEntityData ~= nil then
-		return explosionEntityData
-	end
-
-	local original = ResourceManager:SearchForInstanceByGuid(Guid('D41B0855-6874-4650-8064-DC9F7ED76B0E'))	--5FE6E2AD-072E-4722-984A-5C52BC66D4C1
-
-	if original == nil then
-		print('Could not find explosion template')
-		return nil
-	end
-
-	explosionEntityData = VeniceExplosionEntityData(original:Clone())
-
-	return explosionEntityData
-end
-
-NetEvents:Subscribe('Bot:Killed', function(position)
-
-	local data = getExplosionEntityData()
-
-	if data == nil then
-		print('Could not get explosion data')
-		return
-	end
-
-	-- Create the entity at the provided position.
-	local transform = LinearTransform()
-	transform.trans = position
-
-	local entity = EntityManager:CreateEntity(data, transform)
-
-	if entity == nil then
-		print('Could not create entity.')
-		return
-	end
-
-	entity = ExplosionEntity(entity)
-	--entity:Init(Realm.Realm_ClientAndServer, true)
-	entity:Detonate(transform, Vec3(0, 1, 0), 1.0, nil)
-end)
-
-Events:Subscribe('Level:LoadResources', function()
-	explosionEntityData = nil
 end)
