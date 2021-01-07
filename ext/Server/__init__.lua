@@ -1,9 +1,6 @@
 require('__shared/Config')
 local Bots = require('bots')
 
-local moveMode = 5 --standing, pointing
-local speed = 3 -- standing 0, proning 1, couching 2, walking 3, running 4
-
 -- vars for each bot
 local botSpawnModes = {}
 local botCheckSwapTeam = {}
@@ -519,16 +516,13 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
 
     -- static mode commands
     elseif parts[1] == '!mimic' then
-        moveMode = 3
-        setBotVarForPlayerStatic(player, botMoveModes, moveMode, true)
+        setBotVarForPlayerStatic(player, botMoveModes, 3, true)
 
     elseif parts[1] == '!mirror' then
-        moveMode = 4
-        setBotVarForPlayerStatic(player, botMoveModes, moveMode, true)
+        setBotVarForPlayerStatic(player, botMoveModes, 4, true)
     
     elseif parts[1] == '!static' then
-        moveMode = 0
-        setBotVarForPlayerStatic(player, botMoveModes, moveMode, true)
+        setBotVarForPlayerStatic(player, botMoveModes, 0, true)
 
     -- moving bots spawning
     elseif parts[1] == '!spawnline' then
@@ -567,18 +561,16 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
 
     -- moving bots movement settings
     elseif parts[1] == '!run' then
-        speed = 4
-        setBotVarForPlayerStatic(player, botSpeeds, speed, false)
+        setBotVarForPlayerStatic(player, botSpeeds, 4, false)
 
     elseif parts[1] == '!walk' then
-        speed = 3
-        setBotVarForPlayerStatic(player, botSpeeds, speed, false)
+        setBotVarForPlayerStatic(player, botSpeeds, 3, false)
     
     elseif parts[1] == '!speed' then --overwrite speed for all moving bots
         if tonumber(parts[2]) == nil then
             return
         end
-        speed = tonumber(parts[2])
+        local speed = tonumber(parts[2])
         setBotVarForPlayerStatic(player, botSpeeds, speed, false)
 
 
@@ -757,7 +749,7 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
         if tonumber(parts[2]) == nil then
             return
         end
-        moveMode = tonumber(parts[2])
+        local moveMode = tonumber(parts[2])
         setBotVarForPlayer(player, botMoveModes, moveMode)
 
     -- vehicle stuff -- TODO: not tested jet
