@@ -473,6 +473,11 @@ Events:Subscribe('Bot:Update', function(bot, dt)
 end)
 
 Events:Subscribe('Player:Chat', function(player, recipientMask, message)
+
+    if player == nil then
+        return
+    end
+
     local parts = string.lower(message):split(' ')
 
     --set team for bot-spawn
@@ -1124,6 +1129,33 @@ function createInitialBots(name, teamId, squadId, listOfVars)
     botKits[name] = kitNumber
 end
 
+-- Tries to find first available kit
+-- @param teamName string Values: 'US', 'RU'
+-- @param kitName string Values: 'Assault', 'Engineer', 'Support', 'Recon'
+function findKit(teamName, kitName)
+
+    local gameModeKits = {
+        '', -- Standard
+        '_GM', --Gun Master on XP2 Maps
+        '_GM_XP4', -- Gun Master on XP4 Maps
+        '_XP4', -- Copy of Standard for XP4 Maps
+        '_XP4_SCV' -- Scavenger on XP4 Maps
+    }
+
+    for kitType=1, #gameModeKits do
+        local properKitName = string.lower(kitName)
+        properKitName = properKitName:gsub("%a", string.upper, 1)
+
+        local fullKitName = string.upper(teamName)..properKitName..gameModeKits[kitType]
+        local kit = ResourceManager:SearchForDataContainer('Gameplay/Kits/'..fullKitName)
+        if kit ~= nil then
+            return kit
+        end
+    end
+
+    return
+end
+
 function spawnBot(name, teamId, squadId, trans, setvars, listOfVars)
 	local existingPlayer = PlayerManager:GetPlayerByName(name)
 	local bot = nil
@@ -1231,30 +1263,30 @@ function spawnBot(name, teamId, squadId, trans, setvars, listOfVars)
     if teamId == TeamId.Team1 then -- US
         if kitNumber == 1 then --assault
             appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/Us/MP_US_Assault_Appearance_'..botColor)
-            soldierKit = ResourceManager:SearchForDataContainer('Gameplay/Kits/USAssault')
+            soldierKit = findKit('US', 'Assault')
         elseif kitNumber == 2 then --engineer
             appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/Us/MP_US_Engi_Appearance_'..botColor)
-            soldierKit = ResourceManager:SearchForDataContainer('Gameplay/Kits/USEngineer')
+            soldierKit = findKit('US', 'Engineer')
         elseif kitNumber == 3 then --support
             appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/Us/MP_US_Support_Appearance_'..botColor)
-            soldierKit = ResourceManager:SearchForDataContainer('Gameplay/Kits/USSupport')
+            soldierKit = findKit('US', 'Support')
         else    --recon
             appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/Us/MP_US_Recon_Appearance_'..botColor)
-            soldierKit = ResourceManager:SearchForDataContainer('Gameplay/Kits/USRecon')
+            soldierKit = findKit('US', 'Recon')
         end
     else -- RU
         if kitNumber == 1 then --assault
             appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/RU/MP_RU_Assault_Appearance_'..botColor)
-            soldierKit = ResourceManager:SearchForDataContainer('Gameplay/Kits/RUAssault')
+            soldierKit = findKit('RU', 'Assault')
         elseif kitNumber == 2 then --engineer
             appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/RU/MP_RU_Engi_Appearance_'..botColor)
-            soldierKit = ResourceManager:SearchForDataContainer('Gameplay/Kits/RUEngineer')
+            soldierKit = findKit('RU', 'Engineer')
         elseif kitNumber == 3 then --support
             appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/RU/MP_RU_Support_Appearance_'..botColor)
-            soldierKit = ResourceManager:SearchForDataContainer('Gameplay/Kits/RUSupport')
+            soldierKit = findKit('RU', 'Support')
         else    --recon
             appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/RU/MP_RU_Recon_Appearance_'..botColor)
-            soldierKit = ResourceManager:SearchForDataContainer('Gameplay/Kits/RURecon')
+            soldierKit = findKit('RU', 'Recon')
         end
     end
 
