@@ -1,13 +1,21 @@
 # fun-bots
 
-Simple ways to play around with mods in venice-unleashed.
+Simple bots with some functions:
+* Bots can walk around on paths and shoot at player (Khark and Noshar)
+* You can spwan static bots (tower, line or grid)
+* You can record you own paths
+** while holding your primary weapon, all movement is recorded
+** while holding your secondary weapon, bot will pause in this position
+
+
 This mod is based on the Mod [BotSpawn](https://github.com/J4nssent/VU-Mods/tree/master/BotSpawn "Original Mod by Jassent") by [Jassent](https://github.com/J4nssent "Jassent").
 It provieds lots of ways to play and mess with bots. Also with multible Players at once.
 
 The following Maps are supported right now:
 Noshar TDM, Khark TDM, Firestorm TDM.
 Just type the wanted command in the chat. Still work in progress.
-Your can create your own paths.
+Feel free to contribute or improve ;-)
+If you have any questions just ask them on Discord (Joe_91)
 
 
 ## possible Commands:
