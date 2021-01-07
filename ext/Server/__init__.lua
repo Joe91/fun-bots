@@ -70,10 +70,14 @@ NetEvents:Subscribe('BotShootAtPlayer', function(player, botname)
     end
 
     if dYaw < fovHalf then
-        if botShootModeTimer[botname] == nil or botShootModeTimer[botname] > Config.botFireModeDuration* 0.2 then
-            botShootPlayer[botname] = player
-            botShootModeTimer[botname] = 0
-            botShootTimer[botname] = 0
+        if botShooting[botname] then
+            if botShootModeTimer[botname] == nil or botShootModeTimer[botname] > Config.botFireModeDuration* 0.2 then
+                botShootPlayer[botname] = player
+                botShootModeTimer[botname] = 0
+                botShootTimer[botname] = 0
+            end
+        else
+            botShootModeTimer[botname] = Config.botFireModeDuration
         end
     end
 end)
@@ -117,7 +121,6 @@ Events:Subscribe('Level:Loaded', function(levelName, gameMode)
         end
     end
     checkSwapBotTeams()
-    lastMapName = mapName
 end)
 
 Events:Subscribe('Engine:Update', function(dt)
