@@ -64,10 +64,11 @@ NetEvents:Subscribe('BotShootAtPlayer', function(player, botname)
     local dx = player.soldier.transform.trans.x - bot.soldier.transform.trans.x
     local yaw = (math.atan(dy, dx) > math.pi / 2) and (math.atan(dy, dx) - math.pi / 2) or (math.atan(dy, dx) + 3 * math.pi / 2)
 
-    local dYaw = oldYaw-yaw
-    if dYaw < 0 then
-        dYaw = -dYaw
+    local dYaw = math.abs(oldYaw-yaw)
+    if dYaw > math.pi then
+        dYaw =math.pi * 2 - dYaw
     end
+
     if dYaw < fovHalf then
         if botShootModeTimer[botname] == nil or botShootModeTimer[botname] > Config.botFireModeDuration* 0.2 then
             botShootPlayer[botname] = player
@@ -1282,7 +1283,7 @@ function spawnBot(name, teamId, squadId, trans, setvars, listOfVars)
 	soldierCustomization.weapons:add(meleeWeapon)
     bot.soldier:ApplyCustomization(soldierCustomization)
     
-    --bot.soldier.weaponsComponent.currentWeapon.primaryAmmo = 40 --magasine Size
+    --bot.soldier.weaponsComponent.currentWeapon.primaryAmmo = 9999 --magasine Size
     bot.soldier.weaponsComponent.currentWeapon.secondaryAmmo = 9999
     bot.soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway.minDispersionAngle = 0
     bot.soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway.dispersionAngle = 0
