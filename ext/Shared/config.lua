@@ -6,11 +6,13 @@ Config = {
     spawnOnLevelstart = true,
     spawnDelayBots = 2.0,
     botUpdateCycle = 0.1,
-    initNumberOfBots = 3,
+    initNumberOfBots = 2,
     fovForShooting = 270,  -- Degrees of FOV of Bot
     botFireDuration = 0.2,
     botFirePause = 0.3,
     botFireModeDuration = 5.0,
+    maxRaycastDistance = 100, --meters
+    raycastInterval = 0.1, -- seconds
     bulletDamageBot = 2,
     botNewLoadoutOnSpawn = true,
     botKit = 0, -- 0 = random, 1 = assault, 2 = engineer, 3 = support, 4 = recon

@@ -1,7 +1,7 @@
 require('__shared/Config')
 local Bots = require('bots')
 
-local moveMode = 5 --standing, centerpoint, pointing
+local moveMode = 5 --standing, pointing
 local speed = 3 -- standing 0, proning 1, couching 2, walking 3, running 4
 local spawnMode = 5 -- center 1, line 2, ring 3
 
@@ -14,12 +14,16 @@ local botMoveModes = {}
 local botTimeGones = {}
 local botTargetPlayers = {}
 local botTransforms = {}
-local botYaws = {}
 local botCurrentWayPoints = {}
 local botWayIndexes = {}
 local botWayWaitTimes = {}
-local botJumIndexes = {}
-local botLastWayIndex = {}
+
+local botJumpTargetPoint = {}
+local botJumpTriggerDistance = {}
+local botLastWayDistance = {}
+local botObstacleSequenceTimer = {}
+local botObstacleRetryCounter = {}
+
 local botTeams = {}
 local botRespawning = {}
 local botKits = {}
@@ -30,25 +34,11 @@ local botShootTimer = {}
 local botShootModeTimer = {}
 
 -- vars for all bots
-local jumping = false
-local adading = false
-local swaying = false
 local dieing = false
 local respawning = false
 local team = TeamId.Team1
 local squad = SquadId.SquadNone
 
-local centerPointPeriod = 5
-local centerPointElapsedTime = 0
-
-local swayPeriod = 5
-local swayElapsedTime = 0
-local swayMaxDeviation = 1
-
-local adadPeriod = 1
-local adadElapsedTime = 0
-
-local centerpoint = LinearTransform()
 local ringSpacing = 25
 local ringNrOfBots = 0
 
@@ -88,8 +78,9 @@ NetEvents:Subscribe('BotShootAtPlayer', function(player, botname)
     end
 end)
 
-NetEvents:Subscribe('DamagePlayer', function(player, damage)
+NetEvents:Subscribe('DamagePlayer', function(player, damage, shooterName)
     player.soldier.health = player.soldier.health - damage
+    --TODO: Increase Killcount of Bot, if health <= 0
 end)
 
 Events:Subscribe('Player:Left', function(player)
@@ -129,29 +120,7 @@ Events:Subscribe('Level:Loaded', function(levelName, gameMode)
     lastMapName = mapName
 end)
 
-Events:Subscribe('Player:Killed', function(player)
-    if Config.exploding then
-        NetEvents:BroadcastLocal('Bot:Killed', player.soldier.worldTransform.trans)
-    end
-end)
-
 Events:Subscribe('Engine:Update', function(dt)
-    centerPointElapsedTime = centerPointElapsedTime + dt
-    while centerPointElapsedTime >= centerPointPeriod do
-        centerPointElapsedTime = centerPointElapsedTime - centerPointPeriod
-    end
-
-    swayElapsedTime = swayElapsedTime + dt
-    while swayElapsedTime >= swayPeriod do
-        swayElapsedTime = swayElapsedTime - swayPeriod
-    end
-
-    adadElapsedTime = adadElapsedTime + dt
-    while adadElapsedTime >= adadPeriod do
-        adadElapsedTime = 0
-        adadPeriod = MathUtils:GetRandom(0.5, 2.5)
-    end
-
     --trace way if wanted
     for i = 1, Config.maxTraceNumber do
         if tracePlayers[i] ~= nil then
@@ -253,12 +222,7 @@ Events:Subscribe('Bot:Update', function(bot, dt)
             shooting = shooting
         }
 
-        if spawnMode == 1 then --spawnCenterpoint
-            botYaws[bot.name] = MathUtils:GetRandom(0, 2*math.pi)
-            spawnBot(bot.name, team, squad, centerpoint, setvarsOnRespawn, listOfVars)
-            bot.input.authoritativeAimingYaw = botYaws[bot.name]
-
-        elseif spawnMode == 2 then  --spawnInLine
+        if spawnMode == 2 then  --spawnInLine
             spawnBot(bot.name, team, squad, botTransforms[bot.name], setvarsOnRespawn, listOfVars)
 
         elseif spawnMode == 3 then  --spawnInRing around player
@@ -331,33 +295,19 @@ Events:Subscribe('Bot:Update', function(bot, dt)
                 botShootPlayer[bot.name] = nil
             end
         else
+            bot.input:SetLevel(EntryInputActionEnum.EIAZoom, 0)
             bot.input:SetLevel(EntryInputActionEnum.EIAFire, 0)
         end
     end
 
     -- movement-mode of bots
     if bot.soldier ~= nil then
-        if moveMode == 1 then -- centerpoint
-            if centerPointElapsedTime <= (centerPointPeriod / 2) then
-                bot.input.authoritativeAimingYaw = botYaws[bot.name]
-            else
-                bot.input.authoritativeAimingYaw = (botYaws[bot.name] < math.pi) and (botYaws[bot.name] + math.pi) or (botYaws[bot.name] - math.pi)
-            end
-
-        elseif moveMode == 2 and activePlayer ~= nil then
+        if moveMode == 2 and activePlayer ~= nil then
             if activePlayer.soldier  ~= nil then  -- pointing
                 local dy = activePlayer.soldier.transform.trans.z - bot.soldier.transform.trans.z
                 local dx = activePlayer.soldier.transform.trans.x - bot.soldier.transform.trans.x
                 local yaw = (math.atan(dy, dx) > math.pi / 2) and (math.atan(dy, dx) - math.pi / 2) or (math.atan(dy, dx) + 3 * math.pi / 2)
-                if swaying then
-                    local swayMod = (swayElapsedTime > swayPeriod / 2) and (((swayPeriod - swayElapsedTime) / swayPeriod - 0.25) * 4) or ((swayElapsedTime / swayPeriod - 0.25) * 4)
-                    local swayedYaw = yaw + swayMod * swayMaxDeviation
-                    swayedYaw = (swayedYaw > 2 * math.pi) and (swayedYaw - 2 * math.pi) or swayedYaw
-                    swayedYaw = (swayedYaw < 0) and (swayedYaw + 2 * math.pi) or swayedYaw
-                    bot.input.authoritativeAimingYaw = swayedYaw
-                else
-                    bot.input.authoritativeAimingYaw = yaw
-                end
+                bot.input.authoritativeAimingYaw = yaw
             end
 
         elseif moveMode == 3 and activePlayer ~= nil then  -- mimicking
@@ -391,42 +341,88 @@ Events:Subscribe('Bot:Update', function(bot, dt)
                 if (inputVar & 0x000F) > 0 then -- movement
                     botWayWaitTimes[bot.name] = 0
                     speed = inputVar & 0x000F  --speed
-                       
-                    --jumpsequence to get over obstacles
-                    if ((inputVar & 0x00F0) >> 4) == 1 and botJumIndexes[bot.name] == 0 then -- jump
-                        bot.input:SetLevel(EntryInputActionEnum.EIAJump, 1)
-                    elseif botJumIndexes[bot.name] > 6 then
-                        print(bot.name.." end jump")
-                        botJumIndexes[bot.name] = 0
-                        bot.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0.0)
-                        bot.input:SetLevel(EntryInputActionEnum.EIAJump, 0.0)
-                    elseif botJumIndexes[bot.name] > 3 then
-                        print(bot.name.." jump over obstacles")
-                        bot.input:SetLevel(EntryInputActionEnum.EIAJump, 1.0)
-                        bot.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1.0)
-                    else
-                        bot.input:SetLevel(EntryInputActionEnum.EIAJump, 0.0)
-                        bot.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0.0)
-                    end
-
-                    botJumIndexes[bot.name] = botJumIndexes[bot.name] + 1
-
                     local trans = Vec3()
                     trans = wayPoints[wayIndex][activePointIndex].trans
                     local dy = trans.z - bot.soldier.transform.trans.z
                     local dx = trans.x - bot.soldier.transform.trans.x
                     local distanceFromTarget = math.sqrt(dx ^ 2 + dy ^ 2)
+
+                    --detect obstacle and move over or around TODO: Move before normal jump
+                    local currentWayPontDistance = math.abs(trans.x - bot.soldier.transform.trans.x) + math.abs(trans.z - bot.soldier.transform.trans.z)
+                    if currentWayPontDistance >= botLastWayDistance[bot.name] or botObstacleSequenceTimer[bot.name] ~= 0 then
+                        -- try to get around obstacle
+                        speed = 3 --always stand
+                        if botObstacleSequenceTimer[bot.name] == 0 then  --step 0
+                            print(bot.name.." start Obstacle")
+                            bot.input:SetLevel(EntryInputActionEnum.EIAJump, 0)
+                            bot.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0)
+                        elseif botObstacleSequenceTimer[bot.name] > 0.9 then  --step 4 - repeat afterwards
+                            bot.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0)
+                            botObstacleSequenceTimer[bot.name] = 0.1
+                            botObstacleRetryCounter[bot.name] = botObstacleRetryCounter[bot.name] + 1
+                            print(bot.name.." retry Obstacle")
+                        elseif botObstacleSequenceTimer[bot.name] > 0.6 then  --step 3
+                            print("sidewards movement")
+                            bot.input:SetLevel(EntryInputActionEnum.EIAJump, 0)
+                            bot.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0)
+                            bot.input:SetLevel(EntryInputActionEnum.EIAStrafe, 1.0)
+                        elseif botObstacleSequenceTimer[bot.name] > 0.4 then --step 2
+                            print("stop jump")
+                            bot.input:SetLevel(EntryInputActionEnum.EIAJump, 0)
+                            bot.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0)
+                        elseif botObstacleSequenceTimer[bot.name] > 0.0 then --step 1
+                            print("jump")
+                            bot.input:SetLevel(EntryInputActionEnum.EIAJump, 1)
+                            bot.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1)
+                        end
+                        botObstacleSequenceTimer[bot.name] = botObstacleSequenceTimer[bot.name] + Config.botUpdateCycle
+
+                        if botObstacleRetryCounter[bot.name] >= 2 then --tried twice, try next waypoint
+                            print("skip waypoint")
+                            botObstacleRetryCounter[bot.name] = 0
+                            distanceFromTarget = 0
+                        end
+                    else
+                        botLastWayDistance[bot.name] = currentWayPontDistance
+                        bot.input:SetLevel(EntryInputActionEnum.EIAJump, 0)
+                        bot.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0)
+                        bot.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0)
+                    end
+
+                    -- jup on command
+                    if ((inputVar & 0x00F0) >> 4) == 1 and botJumpTargetPoint[bot.name] == nil then
+                        botJumpTargetPoint[bot.name] = trans
+                        botJumpTriggerDistance[bot.name] = math.abs(trans.x - bot.soldier.transform.trans.x) + math.abs(trans.z - bot.soldier.transform.trans.z)
+                    elseif botJumpTargetPoint[bot.name] ~= nil then
+                        local currentJumpDistance = math.abs(botJumpTargetPoint[bot.name].x - bot.soldier.transform.trans.x) + math.abs(botJumpTargetPoint[bot.name].z - bot.soldier.transform.trans.z)
+                        if currentJumpDistance > botJumpTriggerDistance[bot.name] then
+                            --now we are really close to the Jump-Point --> Jump
+                            print(bot.name.." normal Jump")
+                            bot.input:SetLevel(EntryInputActionEnum.EIAJump, 1)
+                            bot.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1)
+                            botJumpTargetPoint[bot.name] = nil
+                        else
+                            botJumpTriggerDistance[bot.name] = currentJumpDistance
+                        end
+                    else
+                        bot.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0)
+                        bot.input:SetLevel(EntryInputActionEnum.EIAJump, 0)
+                    end
+                    
+                    
                     if distanceFromTarget > 1 then
                         local yaw = (math.atan(dy, dx) > math.pi / 2) and (math.atan(dy, dx) - math.pi / 2) or (math.atan(dy, dx) + 3 * math.pi / 2)
                         bot.input.authoritativeAimingYaw = yaw
                     else  -- target reached
                         botCurrentWayPoints[bot.name] = activePointIndex + 1
-                        botJumIndexes[bot.name] = 0
-                        print("nextpoint")
+                        botObstacleSequenceTimer[bot.name] = 0
+                        botLastWayDistance[bot.name] = 1000
+                        print(bot.name.." nextpoint")
                     end
                 else -- wait mode
                     botWayWaitTimes[bot.name] = botWayWaitTimes[bot.name] + Config.botUpdateCycle
                     speed = 0
+                    -- TODO: Move yaw while waiting?
                     if  botWayWaitTimes[bot.name] > (inputVar >> 8) then
                         botCurrentWayPoints[bot.name] = activePointIndex + 1
                         botWayWaitTimes[bot.name] = 0
@@ -454,25 +450,6 @@ Events:Subscribe('Bot:Update', function(bot, dt)
                     if bot.soldier.pose ~= CharacterPoseType.CharacterPoseType_Stand then
                         bot.soldier:SetPose(CharacterPoseType.CharacterPoseType_Stand, true, true)
                     end
-                end
-            end
-
-            if adading and moveMode > 0 then  -- movent sidewards
-                if adadElapsedTime >= adadPeriod/2 then
-                    bot.input:SetLevel(EntryInputActionEnum.EIAStrafe, -speedVal)
-                else
-                    bot.input:SetLevel(EntryInputActionEnum.EIAStrafe, speedVal)
-                end
-            else
-                bot.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0)
-            end
-
-            if jumping and moveMode > 0 then
-                local shouldJump = MathUtils:GetRandomInt(0, 1000)
-                if shouldJump <= 15 then
-                    bot.input:SetLevel(EntryInputActionEnum.EIAJump, 1.0)
-                else
-                    bot.input:SetLevel(EntryInputActionEnum.EIAJump, 0.0)
                 end
             end
 
@@ -560,14 +537,6 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
         setBotVarForPlayerStatic(player, botMoveModes, moveMode, true)
 
     -- moving bots spawning
-    elseif parts[1] == '!spawncenter' then
-        if tonumber(parts[2]) == nil then
-            return
-        end
-        local amount = tonumber(parts[2])
-        local duration = tonumber(parts[3]) or 10
-        spawnCenterpointBots(player, amount, duration)
-
     elseif parts[1] == '!spawnline' then
         if tonumber(parts[2]) == nil then
             return
@@ -618,25 +587,6 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
         speed = tonumber(parts[2])
         setBotVarForPlayerStatic(player, botSpeeds, speed, false)
 
-    elseif parts[1] == '!jump' then
-        jumping = true
-        if tonumber(parts[2]) == 0 then
-            jumping = false
-        end
-    
-    elseif parts[1] == '!adad' then
-        adading = true
-        if tonumber(parts[2]) == 0 then
-            adading = false
-        end
-        
-    elseif parts[1] == '!sway' then
-        swaying = true
-        if tonumber(parts[2]) == 0 then
-            swaying = false
-        end
-        swayMaxDeviation = tonumber(parts[3]) or 1.5
-        swayPeriod = tonumber(parts[4]) or 3
 
     -- respawn moving bots
     elseif parts[1] == '!respawn' then
@@ -676,12 +626,6 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
         end
 
     -- extra modes
-    elseif parts[1] == '!nice' then
-        Config.exploding = true
-        if tonumber(parts[2]) == 0 then
-            Config.exploding = false
-        end
-
     elseif parts[1] == '!die' then
         dieing = true
         if tonumber(parts[2]) == 0 then
@@ -695,9 +639,6 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
         spawnMode = 0
         dieing = false
         respawning = false
-        jumping = false
-        adading = false
-        swaying = false
         for i = 1, Config.maxNumberOfBots do
             local name = BotNames[i]
             botSpeeds[name] = speed
@@ -712,9 +653,6 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
         spawnMode = 0
         dieing = false
         respawning = false
-        jumping = false
-        adading = false
-        swaying = false
         for i = 1, Config.maxNumberOfBots do
             local name = BotNames[i]
             if botTargetPlayers[name] == player then
@@ -1001,30 +939,6 @@ function spawnBotGridOnPlayer(player, rows, columns, spacing)
                 botTargetPlayers[name] = player
                 spawnBot(name, team, squad, transform, true, listOfVars)
             end
-        end
-    end
-end
-
-function spawnCenterpointBots(player, amount, duration)
-    local listOfVars = {
-        spawnMode = 1,
-        speed = 3,
-        moveMode = 1,
-        activeWayIndex = 0,
-        respawning = false,
-        shooting = false
-    }
-    centerpoint = player.soldier.transform
-    centerPointPeriod = duration
-    centerPointElapsedTime = (duration / 4)
-    for i = 1, amount do
-        local name = findNextBotName()
-        if name ~= nil then
-            botYaws[name] = MathUtils:GetRandom(0, 2 * math.pi)
-            botTargetPlayers[name] = player
-            spawnBot(name, team, squad, centerpoint, true, listOfVars)
-            local bot = PlayerManager:GetPlayerByName(name)
-            bot.input.authoritativeAimingYaw = botYaws[name]
         end
     end
 end
@@ -1364,7 +1278,9 @@ function spawnBot(name, teamId, squadId, trans, setvars, listOfVars)
     transform = trans
 
     botSpawnDelayTime[name] = 0.0
-    botJumIndexes[bot.name] = 0
+    botObstacleSequenceTimer[bot.name] = 0
+    botObstacleRetryCounter[bot.name] = 0
+    botLastWayDistance[bot.name] = 1000
     botShootPlayer[name] = nil
 	-- And then spawn the bot. This will create and return a new SoldierEntity object.
     Bots:spawnBot(bot, transform, CharacterPoseType.CharacterPoseType_Stand, soldierBlueprint, soldierKit, { appearance })
