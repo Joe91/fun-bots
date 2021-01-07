@@ -36,6 +36,10 @@ Events:Subscribe('UpdateManager:Update', function(p_Delta, p_Pass)
 						local distance = playerCameraTrans.trans:Distance(playerCameraTrans.trans+direction)
 						if distance > Config.maxRaycastDistance then
 							return
+						elseif distance < 1.5	then --shoot, because you are near
+							NetEvents:SendLocal("BotShootAtPlayer", bot.name)
+							lastIndex = newIndex
+							return
 						end
 						direction = direction:Normalize() * Config.maxRaycastDistance
 						local castPos = Vec3(playerCameraTrans.trans.x + direction.x, playerCameraTrans.trans.y + direction.y, playerCameraTrans.trans.z + direction.z)

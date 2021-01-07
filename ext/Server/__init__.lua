@@ -71,7 +71,7 @@ NetEvents:Subscribe('BotShootAtPlayer', function(player, botname)
 
     if dYaw < fovHalf then
         if botShooting[botname] then
-            if botShootModeTimer[botname] == nil or botShootModeTimer[botname] > Config.botFireModeDuration* 0.2 then
+            if botShootModeTimer[botname] == nil or botShootModeTimer[botname] > 1 then
                 botShootPlayer[botname] = player
                 botShootModeTimer[botname] = 0
                 botShootTimer[botname] = 0
@@ -404,8 +404,7 @@ Events:Subscribe('Bot:Update', function(bot, dt)
                         bot.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0)
                         bot.input:SetLevel(EntryInputActionEnum.EIAJump, 0)
                     end
-                    
-                    
+                         
                     if distanceFromTarget > 1 then
                         local yaw = (math.atan(dy, dx) > math.pi / 2) and (math.atan(dy, dx) - math.pi / 2) or (math.atan(dy, dx) + 3 * math.pi / 2)
                         bot.input.authoritativeAimingYaw = yaw
@@ -586,7 +585,7 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
         if tonumber(parts[2]) == 0 then
             respawning = false
         end
-        setBotVarForPlayer(player, botRespawning, respawning)
+        setBotVarForAll(botRespawning, respawning)
 
 
     elseif parts[1] == '!shoot' then
@@ -594,7 +593,7 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
         if tonumber(parts[2]) == 0 then
             shooting = false
         end
-        setBotVarForPlayer(player, botShooting, shooting)
+        setBotVarForAll(botShooting, shooting)
 
     -- spawn team settings
     elseif parts[1] == '!spawnsameteam' then
@@ -626,32 +625,24 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
 
     -- reset everything
     elseif parts[1] == '!stopall' then
-        speed = 0
-        moveMode = 0
-        spawnMode = 0
         dieing = false
-        respawning = false
         for i = 1, Config.maxNumberOfBots do
             local name = BotNames[i]
-            botSpeeds[name] = speed
-            botMoveModes[name] = moveMode
-            botSpawnModes[name] = spawnMode
-            botRespawning[name] = respawning
+            botSpeeds[name] = 0
+            botMoveModes[name] = 0
+            botSpawnModes[name] = 0
+            botRespawning[name] = false
         end
 
     elseif parts[1] == '!stop' then
-        speed = 0
-        moveMode = 0
-        spawnMode = 0
         dieing = false
-        respawning = false
         for i = 1, Config.maxNumberOfBots do
             local name = BotNames[i]
             if botTargetPlayers[name] == player then
-                botSpeeds[name] = speed
-                botMoveModes[name] = moveMode
-                botSpawnModes[name] = spawnMode
-                botRespawning[name] = respawning
+                botSpeeds[name] = 0
+                botMoveModes[name] = 0
+                botSpawnModes[name] = 0
+                botRespawning[name] = false
             end
         end
 
@@ -1276,6 +1267,7 @@ function spawnBot(name, teamId, squadId, trans, setvars, listOfVars)
     botObstacleRetryCounter[bot.name] = 0
     botLastWayDistance[bot.name] = 1000
     botShootPlayer[name] = nil
+    botShootModeTimer[name] = nil
 	-- And then spawn the bot. This will create and return a new SoldierEntity object.
     Bots:spawnBot(bot, transform, CharacterPoseType.CharacterPoseType_Stand, soldierBlueprint, soldierKit, { appearance })
 
@@ -1286,7 +1278,7 @@ function spawnBot(name, teamId, squadId, trans, setvars, listOfVars)
 	soldierCustomization.weapons:add(meleeWeapon)
     bot.soldier:ApplyCustomization(soldierCustomization)
     
-    --bot.soldier.weaponsComponent.currentWeapon.primaryAmmo = 9999 --magasine Size
+    --bot.soldier.weaponsComponent.currentWeapon.primaryAmmo = 9999 --magazine Size
     bot.soldier.weaponsComponent.currentWeapon.secondaryAmmo = 9999
     bot.soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway.minDispersionAngle = 0
     bot.soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway.dispersionAngle = 0
