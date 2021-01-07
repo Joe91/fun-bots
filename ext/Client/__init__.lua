@@ -36,8 +36,8 @@ Events:Subscribe('UpdateManager:Update', function(p_Delta, p_Pass)
 						local distance = playerCameraTrans.trans:Distance(playerCameraTrans.trans+direction)
 						if distance > Config.maxRaycastDistance then
 							return
-						elseif distance < 1.5	then --shoot, because you are near
-							NetEvents:SendLocal("BotShootAtPlayer", bot.name)
+						elseif distance < 3	then --shoot, because you are near
+							NetEvents:SendLocal("BotShootAtPlayer", bot.name, true)
 							lastIndex = newIndex
 							return
 						end
@@ -50,7 +50,7 @@ Events:Subscribe('UpdateManager:Update', function(p_Delta, p_Pass)
 							return
 						end
 						-- we found a valid bot in Sight. Signal Server with players
-						NetEvents:SendLocal("BotShootAtPlayer", bot.name)
+						NetEvents:SendLocal("BotShootAtPlayer", bot.name, false)
 						return --valid bot found. Return to save computing power
 					end
 				end

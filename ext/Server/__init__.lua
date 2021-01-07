@@ -3,7 +3,6 @@ local Bots = require('bots')
 
 local moveMode = 5 --standing, pointing
 local speed = 3 -- standing 0, proning 1, couching 2, walking 3, running 4
-local spawnMode = 5 -- center 1, line 2, ring 3
 
 -- vars for each bot
 local botSpawnModes = {}
@@ -54,7 +53,7 @@ for i = 1, Config.maxTraceNumber do
     wayPoints[i] = {}
 end
 
-NetEvents:Subscribe('BotShootAtPlayer', function(player, botname)
+NetEvents:Subscribe('BotShootAtPlayer', function(player, botname, ignoreYaw)
     local bot = PlayerManager:GetPlayerByName(botname)
     if bot == nil or bot.soldier == nil or player.soldier == nil then
         return
@@ -69,11 +68,11 @@ NetEvents:Subscribe('BotShootAtPlayer', function(player, botname)
         dYaw =math.pi * 2 - dYaw
     end
 
-    if dYaw < fovHalf then
+    if dYaw < fovHalf or ignoreYaw then
         if botShooting[botname] then
             if botShootModeTimer[botname] == nil or botShootModeTimer[botname] > 1 then
-                botShootPlayer[botname] = player
                 botShootModeTimer[botname] = 0
+                botShootPlayer[botname] = player
                 botShootTimer[botname] = 0
             end
         else
@@ -83,8 +82,10 @@ NetEvents:Subscribe('BotShootAtPlayer', function(player, botname)
 end)
 
 NetEvents:Subscribe('DamagePlayer', function(player, damage, shooterName)
-    player.soldier.health = player.soldier.health - damage
-    --TODO: Increase Killcount of Bot, if health <= 0
+    if player.soldier ~= nil then
+        player.soldier.health = player.soldier.health - damage
+    end
+    --TODO: Increase Killcount of Bot, if health <= 0 ?
 end)
 
 Events:Subscribe('Player:Left', function(player)
@@ -197,7 +198,6 @@ Events:Subscribe('Bot:Update', function(bot, dt)
 
     local respawning = botRespawning[bot.name]
     local shooting = botShooting[bot.name]
-    local shootAt = botShootPlayer[bot.name]
 
     --spawning 
     if respawning and bot.soldier == nil and spawnMode > 0 then
@@ -263,7 +263,8 @@ Events:Subscribe('Bot:Update', function(bot, dt)
 
     -- shooting
     if shooting and bot.soldier ~= nil then  --and not isStaticBotMode(moveMode) then
-        if shootAt ~= nil and shootAt.soldier ~= nil then
+        if botShootPlayer[bot.name] ~= nil and botShootPlayer[bot.name].soldier ~= nil then
+            local shootAt = botShootPlayer[bot.name]
             if botShootModeTimer[bot.name] < Config.botFireModeDuration then
                 botShootModeTimer[bot.name] = botShootModeTimer[bot.name] + Config.botUpdateCycle
                 -- move slower
@@ -300,6 +301,8 @@ Events:Subscribe('Bot:Update', function(bot, dt)
         else
             bot.input:SetLevel(EntryInputActionEnum.EIAZoom, 0)
             bot.input:SetLevel(EntryInputActionEnum.EIAFire, 0)
+            botShootPlayer[bot.name] = nil
+            botShootModeTimer[bot.name] = nil
         end
     end
 
@@ -670,6 +673,9 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
 
     elseif parts[1] == '!kickall' then
         Bots:destroyAllBots()
+        for i = 1, Config.maxNumberOfBots do
+            botTargetPlayers[name] = nil
+        end
 
     elseif parts[1] == '!kill' then
         for i = 1, Config.maxNumberOfBots do
