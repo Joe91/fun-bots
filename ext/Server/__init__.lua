@@ -48,7 +48,6 @@ local traceTimesGone = {}
 local traceWaitTime = {}
 local wayPoints = {}
 local mapName = ""
-local lastMapName = ""
 local fovHalf = Config.fovForShooting / 360 * math.pi * 2 / 2
 
 for i = 1, Config.maxTraceNumber do
@@ -259,7 +258,7 @@ Events:Subscribe('Bot:Update', function(bot, dt)
     end
 
     -- shooting
-    if shooting then  --and not isStaticBotMode(moveMode) then
+    if shooting and bot.soldier ~= nil then  --and not isStaticBotMode(moveMode) then
         if shootAt ~= nil and shootAt.soldier ~= nil then
             if botShootModeTimer[bot.name] < Config.botFireModeDuration then
                 botShootModeTimer[bot.name] = botShootModeTimer[bot.name] + Config.botUpdateCycle
@@ -353,7 +352,6 @@ Events:Subscribe('Bot:Update', function(bot, dt)
                         -- try to get around obstacle
                         speed = 3 --always stand
                         if botObstacleSequenceTimer[bot.name] == 0 then  --step 0
-                            print(bot.name.." start Obstacle")
                             bot.input:SetLevel(EntryInputActionEnum.EIAJump, 0)
                             bot.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0)
                         elseif botObstacleSequenceTimer[bot.name] > 1.0 then  --step 4 - repeat afterwards
@@ -374,7 +372,6 @@ Events:Subscribe('Bot:Update', function(bot, dt)
                         botObstacleSequenceTimer[bot.name] = botObstacleSequenceTimer[bot.name] + Config.botUpdateCycle
 
                         if botObstacleRetryCounter[bot.name] >= 2 then --tried twice, try next waypoint
-                            print("skip waypoint")
                             botObstacleRetryCounter[bot.name] = 0
                             distanceFromTarget = 0
                         end
@@ -513,9 +510,6 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
         local columns = tonumber(parts[3]) or tonumber(parts[2])
         local spacing = tonumber(parts[4]) or 2
         spawnBotGridOnPlayer(player, rows, columns, spacing)
-
-    elseif parts[1] == '!printpitch' then
-        print(player.input.authoritativeAimingPitch)
 
     -- static mode commands
     elseif parts[1] == '!mimic' then
@@ -983,8 +977,10 @@ end
 
 function spawnWayBots(player, amount, randomIndex, activeWayIndex)
     local spawnMode = 4
+    local shooting = false
     if randomIndex then
         spawnMode = 5
+        shooting = true
     end
     local listOfVars = {
         spawnMode = spawnMode,
@@ -992,7 +988,7 @@ function spawnWayBots(player, amount, randomIndex, activeWayIndex)
         moveMode = 5,
         activeWayIndex = activeWayIndex,
         respawning = false,
-        shooting = false
+        shooting = shooting
     }
     if wayPoints[activeWayIndex][1] == nil or activeTraceIndexes <= 0 then
         return
