@@ -356,22 +356,18 @@ Events:Subscribe('Bot:Update', function(bot, dt)
                             print(bot.name.." start Obstacle")
                             bot.input:SetLevel(EntryInputActionEnum.EIAJump, 0)
                             bot.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0)
-                        elseif botObstacleSequenceTimer[bot.name] > 0.9 then  --step 4 - repeat afterwards
+                        elseif botObstacleSequenceTimer[bot.name] > 1.0 then  --step 4 - repeat afterwards
                             bot.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0)
                             botObstacleSequenceTimer[bot.name] = 0.1
                             botObstacleRetryCounter[bot.name] = botObstacleRetryCounter[bot.name] + 1
-                            print(bot.name.." retry Obstacle")
                         elseif botObstacleSequenceTimer[bot.name] > 0.6 then  --step 3
-                            print("sidewards movement")
                             bot.input:SetLevel(EntryInputActionEnum.EIAJump, 0)
                             bot.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0)
                             bot.input:SetLevel(EntryInputActionEnum.EIAStrafe, 1.0)
                         elseif botObstacleSequenceTimer[bot.name] > 0.4 then --step 2
-                            print("stop jump")
                             bot.input:SetLevel(EntryInputActionEnum.EIAJump, 0)
                             bot.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0)
                         elseif botObstacleSequenceTimer[bot.name] > 0.0 then --step 1
-                            print("jump")
                             bot.input:SetLevel(EntryInputActionEnum.EIAJump, 1)
                             bot.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1)
                         end
@@ -397,7 +393,6 @@ Events:Subscribe('Bot:Update', function(bot, dt)
                         local currentJumpDistance = math.abs(botJumpTargetPoint[bot.name].x - bot.soldier.transform.trans.x) + math.abs(botJumpTargetPoint[bot.name].z - bot.soldier.transform.trans.z)
                         if currentJumpDistance > botJumpTriggerDistance[bot.name] then
                             --now we are really close to the Jump-Point --> Jump
-                            print(bot.name.." normal Jump")
                             bot.input:SetLevel(EntryInputActionEnum.EIAJump, 1)
                             bot.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1)
                             botJumpTargetPoint[bot.name] = nil
@@ -417,7 +412,6 @@ Events:Subscribe('Bot:Update', function(bot, dt)
                         botCurrentWayPoints[bot.name] = activePointIndex + 1
                         botObstacleSequenceTimer[bot.name] = 0
                         botLastWayDistance[bot.name] = 1000
-                        print(bot.name.." nextpoint")
                     end
                 else -- wait mode
                     botWayWaitTimes[bot.name] = botWayWaitTimes[bot.name] + Config.botUpdateCycle
