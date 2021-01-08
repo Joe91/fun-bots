@@ -3,7 +3,7 @@
 	"Authors": ["Janssent", "DeJoe"],
 	"Description": "different ways to spawn bots",
 	"URL": "",
-	"Version": "0.1",
-	"HasWebUI": false,
+	"Version": "0.8.4",
+	"HasWebUI": true,
 	"HasVeniceEXT": true
 }

@@ -50,7 +50,19 @@ for i = 1, Config.maxTraceNumber do
     wayPoints[i] = {}
 end
 
-NetEvents:Subscribe('BotShootAtPlayer', function(player, botname, ignoreYaw)
+--let users know of F1 key -Bictcrusher
+
+Events:Subscribe("Player:TeamChange", function(player, team, squad)
+		if player == nil then
+		print("player has no name")
+		else
+        ChatManager:SendMessage("Welcome " .. player.name .. " press F1 key for some information", player)
+		end
+    end)
+
+--let users know of F1 key -Bictcrusher
+
+NetEvents:Subscribe('BotShootAtPlayer', function(player, botname)
     local bot = PlayerManager:GetPlayerByName(botname)
     if bot == nil or bot.soldier == nil or player.soldier == nil then
         return
@@ -702,6 +714,8 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
 
     -- waypoint stuff
     elseif parts[1] == '!trace' then
+		print("!trace started")
+		ChatManager:Yell("!trace started", 5.5)
         local traceIndex = tonumber(parts[2]) or 1
         if traceIndex > Config.maxTraceNumber then
             traceIndex = 1
@@ -711,6 +725,8 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
         tracePlayers[traceIndex] = player
 
     elseif parts[1] == '!tracedone' then
+		print("!trace done")
+		ChatManager:Yell("!trace done", 5.5)
         activeTraceIndexes = activeTraceIndexes + 1
         for i = 1, Config.maxTraceNumber do
             if tracePlayers[i] == player then
@@ -719,30 +735,45 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
         end
 
     elseif parts[1] == '!setpoint' then
+		print("!setpoint")
+		ChatManager:Yell("!setpoint", 5.5)
         local traceIndex = tonumber(parts[2]) or 1
         setPoint(traceIndex, player)
 
     elseif parts[1] == '!clearpoints' then
+		print("!clearpoints")
+		ChatManager:Yell("!clearpoints", 5.5)
         local traceIndex = tonumber(parts[2]) or 1
         clearPoints(traceIndex)
     
     elseif parts[1] == '!clearalltraces' then
+		print("!clearalltraces")
+		ChatManager:Yell("!clearalltraces", 5.5)
         for i = 1, Config.maxTraceNumber do
             clearPoints(i)
         end
         activeTraceIndexes = 0
 
     elseif parts[1] == '!printtrans' then
+		print("!printtrans")
+		ChatManager:Yell("!printtrans", 5.5)
         print(player.soldier.transform)
         print(player.soldier.transform.trans.x)
         print(player.soldier.transform.trans.y)
         print(player.soldier.transform.trans.z)
+		ChatManager:SendMessage(player.soldier.transform)
+		ChatManager:SendMessage(player.soldier.transform.trans.x)
+		ChatManager:SendMessage(player.soldier.transform.trans.y)
+		ChatManager:SendMessage(player.soldier.transform.trans.z)
 
     elseif parts[1] == '!printslot' then
+		print("!printslot")
+		ChatManager:Yell("!printslot", 5.5)
         print(player.soldier.weaponsComponent.currentWeaponSlot)
         
     elseif parts[1] == '!savepaths' then
         print("try to save paths")
+		ChatManager:Yell("Trying to Save paths check console", 5.5)
         saveWayPoints()
         --local co = coroutine.create(function ()
         --    saveWayPoints()
@@ -801,6 +832,74 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
         end
     end
 end)
+
+--Key pressess instead of commands -Bitcrusher
+NetEvents:Subscribe('keypressF5', function(player, data)
+		print("Bot trace started")
+		ChatManager:Yell("Bot trace started", 2.5)
+		local traceIndex = 1
+		if traceIndex > Config.maxTraceNumber then
+            traceIndex = 1
+        end
+        clearPoints(traceIndex)
+        traceTimesGone[traceIndex] = 0
+        tracePlayers[traceIndex] = player
+end)
+NetEvents:Subscribe('keypressF6', function(player, data)
+		print("Bot trace done")
+		ChatManager:Yell("Bot trace done", 2.5)
+        activeTraceIndexes = activeTraceIndexes + 1
+        for i = 1, Config.maxTraceNumber do
+            if tracePlayers[i] == player then
+                tracePlayers[i] = nil
+            end
+			end
+end)
+NetEvents:Subscribe('keypressF7', function(player, data)
+		print("Point set")
+		ChatManager:Yell("Point set", 2.5)
+        local traceIndex = 1
+        setPoint(traceIndex, player)
+end)
+NetEvents:Subscribe('keypressF8', function(player, data)
+		print("Points Clear")
+		ChatManager:Yell("Points Clear", 2.5)
+        local traceIndex = 1
+        clearPoints(traceIndex)
+end)
+NetEvents:Subscribe('keypressF9', function(player, data)
+		print("clear all traces")
+		ChatManager:Yell("clear all traces", 2.5)
+        for i = 1, Config.maxTraceNumber do
+            clearPoints(i)
+        end
+        activeTraceIndexes = 0
+end)
+NetEvents:Subscribe('keypressF10', function(player, data)
+		print("printtrans")
+		ChatManager:Yell("printtrans", 2.5)
+        print(player.soldier.transform)
+        print(player.soldier.transform.trans.x)
+        print(player.soldier.transform.trans.y)
+        print(player.soldier.transform.trans.z)
+		ChatManager:Yell("Check server console", 2.5)
+end)
+NetEvents:Subscribe('keypressF11', function(player, data)
+		print("printslot")
+		ChatManager:Yell("printslot", 2.5)
+        print(player.soldier.weaponsComponent.currentWeaponSlot)
+end)
+NetEvents:Subscribe('keypressF12', function(player, data)
+        print("Trying to Save paths")
+		ChatManager:Yell("Trying to Save paths", 2.5)
+        saveWayPoints()
+        --local co = coroutine.create(function ()
+        --    saveWayPoints()
+        --end)
+        --coroutine.resume(co)
+end)
+--Key pressess instead of commands -Bitcrusher
+
 
 function getYawOffsetTransform(transform, yaw, spacing)
     local offsetTransform = LinearTransform()
@@ -1479,9 +1578,11 @@ function saveWayPoints()
 
     if not results then
         print('Failed to execute query: ' .. SQL:Error())
+		ChatManager:Yell("Failed to execute query: " .. SQL:Error(), 5.5)
         return
     end
 
     SQL:Close()
     print("SAVE - The waypoint list has been saved.")
+	ChatManager:Yell("The waypoint list has been saved", 5.5)
 end

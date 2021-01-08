@@ -2,6 +2,30 @@ require('__shared/Config')
 local raycastTimer = 0
 local lastIndex = 0
 
+
+--webui openclose funtions -Bictcrusher
+local webui = 0
+
+Events:Subscribe('Extension:Loaded', function()
+  WebUI:Init();
+  WebUI:Hide();
+end)
+
+Events:Subscribe('Client:UpdateInput', function(data)
+	if InputManager:WentKeyDown(InputDeviceKeys.IDK_F1) then
+	if webui == 0 then
+	print("webui = 1")
+    WebUI:Show();
+	webui = 1
+	elseif webui == 1 then
+	print("webui = 0")
+    WebUI:Hide();
+	webui = 0
+	end
+	end
+end)
+--webui openclose funtions -Bictcrusher
+
 Events:Subscribe('UpdateManager:Update', function(p_Delta, p_Pass)
 	if(p_Pass ~= UpdatePass.UpdatePass_PreFrame) then
 		return
@@ -72,3 +96,26 @@ Hooks:Install('BulletEntity:Collision', 1, function(hook, entity, hit, shooter)
 		end
 	end
 end)
+
+
+--key presses instead of commands -Bitcrusher
+Events:Subscribe('Client:UpdateInput', function(data)
+  	if InputManager:WentKeyDown(InputDeviceKeys.IDK_F5) then
+	NetEvents:Send('keypressF5')
+	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_F6) then
+	NetEvents:Send('keypressF6')
+	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_F7) then
+	NetEvents:Send('keypressF7')
+	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_F8) then
+	NetEvents:Send('keypressF8')
+	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_F9) then
+	NetEvents:Send('keypressF9')
+	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_F10) then
+	NetEvents:Send('keypressF10')
+	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_F11) then
+	NetEvents:Send('keypressF11')
+	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_F12) then
+	NetEvents:Send('keypressF12')
+	end
+end)
+--Key pressess instead of commands -Bitcrusher
