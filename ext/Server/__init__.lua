@@ -1,5 +1,5 @@
 require('__shared/Config')
-local Bots = require('bots')
+local BotManager = require('botManager')
 
 -- vars for each bot
 local botSpawnModes = {}
@@ -291,6 +291,7 @@ Events:Subscribe('Bot:Update', function(bot, dt)
                 local pitch = math.asin(dy / distance)
                 bot.input.authoritativeAimingPitch = pitch
                 bot.input.authoritativeAimingYaw = yaw
+                
                 bot.input:SetLevel(EntryInputActionEnum.EIAZoom, 1)
 
                 if botShootTimer[bot.name] >= (Config.botFireDuration + Config.botFirePause) then
@@ -1430,7 +1431,6 @@ function spawnBot(name, teamId, squadId, trans, setvars, listOfVars)
         botRespawning[name] = listOfVars.respawning
         botShooting[name] = listOfVars.shooting
     end
-
 end
 
 function kickBot(name)
@@ -1454,133 +1454,4 @@ function getCameraHight(soldier)
     return camereaHight
 end
 
-function loadWayPoints()
-    if not SQL:Open() then
-        return
-    end
-    
-    local query = [[
-        CREATE TABLE IF NOT EXISTS ]]..mapName..[[_table (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        pathIndex INTEGER,
-        pointIndex INTEGER,
-        transX FLOAT,
-        transY FLOAT,
-        transZ FLOAT,
-        inputVar INTEGER
-        )
-    ]]
-    if not SQL:Query(query) then
-        print('Failed to execute query: ' .. SQL:Error())
-        return
-    end
-    
-    -- Fetch all rows from the table.
-    local results = SQL:Query('SELECT * FROM '..mapName..'_table')
 
-    if not results then
-        print('Failed to execute query: ' .. SQL:Error())
-        return
-    end
-
-    -- clear waypoints
-    wayPoints = {}
-    for i = 1, Config.maxTraceNumber do
-        wayPoints[i] = {}
-    end
-    
-    -- Load the fetched rows.
-    local nrOfPaths = 0
-    for _, row in pairs(results) do
-        local pathIndex = row["pathIndex"]
-        if pathIndex > nrOfPaths then
-            nrOfPaths = pathIndex
-        end
-        local pointIndex = row["pointIndex"]
-        local transX = row["transX"]
-        local transY = row["transY"]
-        local transZ = row["transZ"]
-        local inputVar = row["inputVar"]
-        local point = {trans = Vec3(transX, transY, transZ), inputVar = inputVar}
-        wayPoints[pathIndex][pointIndex] = point
-    end
-    activeTraceIndexes = nrOfPaths
-    SQL:Close()
-    print("LOAD - The waypoint list has been loaded.")
-end
-
-function saveWayPoints()
-    if not SQL:Open() then
-        print("failed to save")
-        return
-    end
-    local query = [[DROP TABLE IF EXISTS ]]..mapName..[[_table]]
-    if not SQL:Query(query) then
-        print('Failed to execute query: ' .. SQL:Error())
-        return
-    end
-    query = [[
-        CREATE TABLE IF NOT EXISTS ]]..mapName..[[_table (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        pathIndex INTEGER,
-        pointIndex INTEGER,
-        transX FLOAT,
-        transY FLOAT,
-        transZ FLOAT,
-        inputVar INTEGER
-        )
-    ]]
-    if not SQL:Query(query) then
-        print('Failed to execute query: ' .. SQL:Error())
-        return
-    end
-    query = 'INSERT INTO '..mapName..'_table (pathIndex, pointIndex, transX, transY, transZ, inputVar) VALUES '
-    local pathIndex = 0
-    for oldPathIndex = 1, Config.maxTraceNumber do
-        local pointsDone = 0
-        local maxPointsInOneQuery = 1000
-        local errorActive = false
-        if wayPoints[oldPathIndex][1] ~= nil then
-            pathIndex = pathIndex + 1
-            while #wayPoints[oldPathIndex] > pointsDone and not errorActive do
-                local pointsToTo = #wayPoints[oldPathIndex] - pointsDone
-                if pointsToTo > maxPointsInOneQuery then
-                    pointsToTo = maxPointsInOneQuery
-                end
-
-                local sqlValuesString = ""
-                for pointIndex = 1 + pointsDone, pointsToTo + pointsDone do
-                    local trans = Vec3()
-                    trans = wayPoints[oldPathIndex][pointIndex].trans
-                    local transX = trans.x
-                    local transY = trans.y
-                    local transZ = trans.z
-                    local inputVar = wayPoints[oldPathIndex][pointIndex].inputVar
-                    local inerString = "("..pathIndex..","..pointIndex..","..tostring(transX)..","..tostring(transY)..","..tostring(transZ)..","..tostring(inputVar)..")"
-                    sqlValuesString = sqlValuesString..inerString
-                    if pointIndex < pointsToTo + pointsDone then
-                        sqlValuesString = sqlValuesString..","
-                    end
-                end
-                if not SQL:Query(query..sqlValuesString) then
-                    print('Failed to execute query: ' .. SQL:Error())
-                    return
-                end
-                pointsDone = pointsDone + pointsToTo
-            end
-        end
-    end
-
-    -- Fetch all rows from the table.
-    local results = SQL:Query('SELECT * FROM '..mapName..'_table')
-
-    if not results then
-        print('Failed to execute query: ' .. SQL:Error())
-		ChatManager:Yell("Failed to execute query: " .. SQL:Error(), 5.5)
-        return
-    end
-
-    SQL:Close()
-    print("SAVE - The waypoint list has been saved.")
-	ChatManager:Yell("The waypoint list has been saved", 5.5)
-end

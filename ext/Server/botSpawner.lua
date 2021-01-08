@@ -3,6 +3,10 @@ class('BotSpawner')
 local BotManager = require('botManager')
 local Globals = require('globals')
 
+function BotSpawner:__init()
+
+end
+
 
 
 

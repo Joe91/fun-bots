@@ -19,7 +19,7 @@ function BotManager:_onUpdate(dt, pass)
 	end
 
     for _, bot in pairs(self._bots) do
-        bot:onUpdate(dt) 
+        bot:onUpdate(dt)
 	end
 end
 

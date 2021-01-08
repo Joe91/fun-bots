@@ -1,6 +1,5 @@
 class('Globals')
 
-
 function Globals:__init()
 	self.wayPoints = {}
 end

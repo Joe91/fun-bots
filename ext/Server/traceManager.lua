@@ -1,5 +1,5 @@
 class('TraceManager')
-
+require('waypoint')
 require('__shared/config')
 local Globals = require('globals')
 
@@ -17,6 +17,9 @@ end
 
 function TraceManager:_onLevelLoaded(levelName, gameMode)
     self._mapName = levelName.."_"..gameMode
+    for i = 1, Config.maxTraceNumber do
+        Globals.wayPoints[i] = {}
+    end
     self:_loadWayPoints()
 end
 
@@ -53,7 +56,7 @@ end
 function TraceManager:setPoint(player, index)
     print("!setpoint")
     ChatManager:Yell("!setpoint", 5.5)
-    local point = {trans = Vec3(), inputVar = 0x0}
+    local point = WayPoint()
     point.trans = player.soldier.transform.trans
     table.insert(Globals.wayPoints[index], point)
 end
@@ -100,7 +103,7 @@ function TraceManager:_onUpdate(dt)
                 local MoveAddon = 0 -- 0 = nothing, 1 = jump ... (4 Bits)
                 local vlaue = 0 -- waittime in 0.5 s (0-255) (8 Bits)
 
-                local point = {trans = Vec3(), inputVar = 0x0}
+                local point = WayPoint()
                 point.trans = player.soldier.transform.trans
 
                 --trace movement with primary weapon
@@ -188,7 +191,8 @@ function TraceManager:_loadWayPoints()
         local transY = row["transY"]
         local transZ = row["transZ"]
         local inputVar = row["inputVar"]
-        local point = {trans = Vec3(transX, transY, transZ), inputVar = inputVar}
+        local point = WayPoint()
+        point:setValues(transX, transY, transZ, inputVar)
         Globals.wayPoints[pathIndex][pointIndex] = point
     end
     self._activeTraceIndexes = nrOfPaths
