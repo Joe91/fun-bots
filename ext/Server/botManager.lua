@@ -1,0 +1,135 @@
+class('BotManager')
+require('bot')
+
+function BotManager:__init()
+    self._bots = {}
+    self._botInputs = {}
+
+	Events:Subscribe('UpdateManager:Update', self, self._onUpdate)
+    Events:Subscribe('Extension:Unloading', self, self._onUnloading)
+    Events:Subscribe('Player:Left', self, self._onPlayerLeft)
+    NetEvents:Subscribe('BotShootAtPlayer', self, self._onShootAt)
+    NetEvents:Subscribe('DamagePlayer', self, self._onDamagePlayer)
+end
+
+
+function BotManager:_onUpdate(dt, pass)
+	if pass ~= UpdatePass.UpdatePass_PostFrame then
+		return
+	end
+
+    for _, bot in pairs(self._bots) do
+        bot:onUpdate(dt) 
+	end
+end
+
+function BotManager:_onPlayerLeft(player)
+    --remove all references of player
+    for _, bot in pairs(self._bots) do
+        bot:clearPlayer(player)
+    end
+end
+
+function BotManager:_onDamagePlayer(player, damage, shooterName)
+    if player.soldier ~= nil then
+        player.soldier.health = player.soldier.health - damage
+    end
+    --TODO: Increase Killcount of Bot, if health <= 0 ?
+    --local killerBot = self:GetBotByName(shooterName)
+end
+
+function BotManager:_onShootAt(player, botname, ignoreYaw)
+    local bot = self:GetPlayerByName(botname)
+    if bot == nil or bot.player.soldier == nil or player.soldier == nil then
+        return
+    end
+    bot:shootAt(player, ignoreYaw)
+end
+
+
+function BotManager:_onUnloading()
+	self:destroyAllBots()
+end
+
+function BotManager:GetBotByName(name)
+    local returnBot = nil
+    for _, bot in pairs(self._bots) do
+        if bot.name == name then
+            returnBot = bot
+            break
+        end
+    end
+    return returnBot
+end
+
+function BotManager:createBot(name, team, squad)
+    -- Create a player for this bot.
+    local botPlayer = PlayerManager:CreatePlayer(name, team, squad)
+
+	-- Create input for this bot.
+	local botInput = EntryInput()
+	botInput.deltaTime = 1.0 / SharedUtils:GetTickrate()
+    botPlayer.input = botInput
+
+    local bot = Bot(botPlayer)
+
+	table.insert(self._bots, bot)
+	self._botInputs[botPlayer.id] = botInput
+
+	return bot
+end
+
+
+function Bots:spawnBot(bot, transform, pose, soldierBp, kit, unlocks)
+	if bot.player.soldier ~= nil then
+		bot.player.soldier:Kill()
+	end
+
+	bot.player:SelectUnlockAssets(kit, unlocks)
+    local botSoldier = bot.player:CreateSoldier(soldierBp, transform)
+
+	bot.player:SpawnSoldierAt(botSoldier, transform, pose)
+	bot.player:AttachSoldier(botSoldier)
+
+	return botSoldier
+end
+
+
+function Bots:destroyBot(botName)
+	-- Find index of this bot.
+    local idx = nil
+
+	for i, bot in pairs(self._bots) do
+        if botName == bot.name then
+			idx = i
+			break
+		end
+    end
+
+	-- Bot was not found.
+	if idx == nil then
+		return
+    end
+
+    local bot = self.GetBotByName(botName)
+	local botId = bot.id
+	bot:destroy()
+	self._botInputs[botId] = nil
+	table.remove(self._bots, idx)
+end
+
+function Bots:destroyAllBots()
+	for _, bot in pairs(self._bots) do
+		bot:destroy()
+	end
+	self._bots = {}
+	self._botInputs = {}
+end
+
+
+-- Singleton.
+if g_BotManager == nil then
+	g_BotManager = BotManager()
+end
+
+return g_BotManager
