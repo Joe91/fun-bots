@@ -74,13 +74,13 @@ If you use respawn, all Bots will respawn directly after they have been killed
 With these commands you can record a path that can be used by bots (spawn way)
 
 ```html
-!trace <opt: index>
-!tracedone
-!setpoint <opt: index>
-!clearpoints <opt: index>
-!savepaths  -- CAUTION: Server does't react anymore on this command. Just wait till done
-!clearalltraces
-!printtrans
+!trace/F5 <opt: index>
+!tracedone/F6
+!setpoint/F7 <opt: index>
+!clearpoints/F8 <opt: index>
+!savepaths/F12  -- CAUTION: Server does't react anymore on this command. Just wait till done
+!clearalltraces/F9
+!printtrans/F10
 ```
 
 ### More settings / commands:
