@@ -714,12 +714,12 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
 
     -- waypoint stuff
     elseif parts[1] == '!trace' then
-		print("!trace started")
-		ChatManager:Yell("!trace started", 5.5)
         local traceIndex = tonumber(parts[2]) or 1
         if traceIndex > Config.maxTraceNumber then
             traceIndex = 1
         end
+        print("!trace started")
+		ChatManager:Yell("!trace "..traceIndex.." started", 5.5)
         clearPoints(traceIndex)
         traceTimesGone[traceIndex] = 0
         tracePlayers[traceIndex] = player
@@ -740,10 +740,10 @@ Events:Subscribe('Player:Chat', function(player, recipientMask, message)
         local traceIndex = tonumber(parts[2]) or 1
         setPoint(traceIndex, player)
 
-    elseif parts[1] == '!clearpoints' then
-		print("!clearpoints")
-		ChatManager:Yell("!clearpoints", 5.5)
+    elseif parts[1] == '!cleartrace' then
         local traceIndex = tonumber(parts[2]) or 1
+        print("!cleartrace")
+		ChatManager:Yell("!cleartrace "..traceIndex, 5.5)
         clearPoints(traceIndex)
     
     elseif parts[1] == '!clearalltraces' then
@@ -835,14 +835,14 @@ end)
 
 --Key pressess instead of commands -Bitcrusher
 NetEvents:Subscribe('keypressF5', function(player, data)
-    print("Bot trace started")
-    ChatManager:Yell("Bot trace started", 2.5)
     local traceIndex = 1
     for i = 1, Config.maxTraceNumber do
         if wayPoints[i][1] == nil then
             traceIndex = i
         end
     end
+    print("Bot trace "..traceIndex.." started")
+    ChatManager:Yell("Bot trace Nr. "..traceIndex.." started", 2.5)
     clearPoints(traceIndex)
     traceTimesGone[traceIndex] = 0
     tracePlayers[traceIndex] = player
