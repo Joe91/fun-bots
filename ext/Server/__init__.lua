@@ -835,68 +835,66 @@ end)
 
 --Key pressess instead of commands -Bitcrusher
 NetEvents:Subscribe('keypressF5', function(player, data)
-		print("Bot trace started")
-		ChatManager:Yell("Bot trace started", 2.5)
-		local traceIndex = 1
-		if traceIndex > Config.maxTraceNumber then
-            traceIndex = 1
+    print("Bot trace started")
+    ChatManager:Yell("Bot trace started", 2.5)
+    local traceIndex = 1
+    for i = 1, Config.maxTraceNumber do
+        if wayPoints[i][1] == nil then
+            traceIndex = i
         end
-        clearPoints(traceIndex)
-        traceTimesGone[traceIndex] = 0
-        tracePlayers[traceIndex] = player
+    end
+    clearPoints(traceIndex)
+    traceTimesGone[traceIndex] = 0
+    tracePlayers[traceIndex] = player
 end)
 NetEvents:Subscribe('keypressF6', function(player, data)
-		print("Bot trace done")
-		ChatManager:Yell("Bot trace done", 2.5)
-        activeTraceIndexes = activeTraceIndexes + 1
-        for i = 1, Config.maxTraceNumber do
-            if tracePlayers[i] == player then
-                tracePlayers[i] = nil
-            end
-			end
+    print("Bot trace done")
+    ChatManager:Yell("Bot trace done", 2.5)
+    activeTraceIndexes = activeTraceIndexes + 1
+    for i = 1, Config.maxTraceNumber do
+        if tracePlayers[i] == player then
+            tracePlayers[i] = nil
+        end
+    end
 end)
 NetEvents:Subscribe('keypressF7', function(player, data)
-		print("Point set")
-		ChatManager:Yell("Point set", 2.5)
-        local traceIndex = 1
-        setPoint(traceIndex, player)
+    print("Point set")
+    ChatManager:Yell("Point set", 2.5)
+    local traceIndex = 1
+    setPoint(traceIndex, player)
 end)
 NetEvents:Subscribe('keypressF8', function(player, data)
-		print("Points Clear")
-		ChatManager:Yell("Points Clear", 2.5)
-        local traceIndex = 1
-        clearPoints(traceIndex)
+    print("Points Clear")
+    ChatManager:Yell("Points Clear", 2.5)
+    local traceIndex = 1
+    clearPoints(traceIndex)
 end)
 NetEvents:Subscribe('keypressF9', function(player, data)
-		print("clear all traces")
-		ChatManager:Yell("clear all traces", 2.5)
-        for i = 1, Config.maxTraceNumber do
-            clearPoints(i)
-        end
-        activeTraceIndexes = 0
+    print("clear all traces")
+    ChatManager:Yell("clear all traces", 2.5)
+    for i = 1, Config.maxTraceNumber do
+        clearPoints(i)
+    end
+    activeTraceIndexes = 0
 end)
 NetEvents:Subscribe('keypressF10', function(player, data)
-		print("printtrans")
-		ChatManager:Yell("printtrans", 2.5)
-        print(player.soldier.transform)
-        print(player.soldier.transform.trans.x)
-        print(player.soldier.transform.trans.y)
-        print(player.soldier.transform.trans.z)
-		ChatManager:Yell("Check server console", 2.5)
+    print("printtrans")
+    ChatManager:Yell("printtrans", 2.5)
+    print(player.soldier.transform)
+    print(player.soldier.transform.trans.x)
+    print(player.soldier.transform.trans.y)
+    print(player.soldier.transform.trans.z)
+    ChatManager:Yell("Check server console", 2.5)
 end)
 NetEvents:Subscribe('keypressF11', function(player, data)
-		print("printslot")
-		ChatManager:Yell("printslot", 2.5)
-        print(player.soldier.weaponsComponent.currentWeaponSlot)
+    print("printslot")
+    ChatManager:Yell("printslot", 2.5)
+    print(player.soldier.weaponsComponent.currentWeaponSlot)
 end)
 NetEvents:Subscribe('keypressF12', function(player, data)
-        print("Trying to Save paths")
-		ChatManager:Yell("Trying to Save paths", 2.5)
-        saveWayPoints()
-        --local co = coroutine.create(function ()
-        --    saveWayPoints()
-        --end)
-        --coroutine.resume(co)
+    print("Trying to Save paths")
+    ChatManager:Yell("Trying to Save paths", 2.5)
+    saveWayPoints()
 end)
 --Key pressess instead of commands -Bitcrusher
 
