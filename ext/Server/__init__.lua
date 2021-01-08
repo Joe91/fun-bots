@@ -53,12 +53,12 @@ end
 --let users know of F1 key -Bictcrusher
 
 Events:Subscribe("Player:TeamChange", function(player, team, squad)
-		if player == nil then
-		print("player has no name")
-		else
+    if player == nil then
+        print("player has no name")
+    else
         ChatManager:SendMessage("Welcome " .. player.name .. " press F1 key for some information", player)
-		end
-    end)
+    end
+end)
 
 --let users know of F1 key -Bictcrusher
 
