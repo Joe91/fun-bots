@@ -2,6 +2,7 @@ class('Globals')
 
 function Globals:__init()
 	self.wayPoints = {}
+	self.botTeam = TeamId.Team2
 end
 
 -- Singleton.

@@ -1,40 +1,33 @@
+class('FunBotClient')
 require('__shared/Config')
-local raycastTimer = 0
-local lastIndex = 0
 
 
---webui openclose funtions -Bictcrusher
-local webui = 0
+function FunBotClient:__init()
+	self._raycastTimer = 0
+	self._lastIndex = 0
+	self._webui = 0
 
-Events:Subscribe('Extension:Loaded', function()
+	Events:Subscribe('Client:UpdateInput', self, self._onUpdateInput)
+	Events:Subscribe('UpdateManager:Update', self, self._onUpdate)
+	Events:Subscribe('Extension:Loaded', self, self._onExtensionLoaded)
+	Hooks:Install('BulletEntity:Collision', 1, self, self._onBulletCollision)
+end
+
+function FunBotClient:_onExtensionLoaded()
   WebUI:Init();
   WebUI:Hide();
-end)
+end
 
-Events:Subscribe('Client:UpdateInput', function(data)
-	if InputManager:WentKeyDown(InputDeviceKeys.IDK_F1) then
-	if webui == 0 then
-	print("webui = 1")
-    WebUI:Show();
-	webui = 1
-	elseif webui == 1 then
-	print("webui = 0")
-    WebUI:Hide();
-	webui = 0
-	end
-	end
-end)
---webui openclose funtions -Bictcrusher
 
-Events:Subscribe('UpdateManager:Update', function(p_Delta, p_Pass)
+function FunBotClient:_onUpdate(p_Delta, p_Pass)
 	if(p_Pass ~= UpdatePass.UpdatePass_PreFrame) then
 		return
 	end
 
-	raycastTimer = raycastTimer + p_Delta
-	if raycastTimer >= Config.raycastInterval then
-		raycastTimer = 0
-		for i = lastIndex, Config.maxNumberOfBots + lastIndex do
+	self._raycastTimer = self._raycastTimer + p_Delta
+	if self._raycastTimer >= Config.raycastInterval then
+		self._raycastTimer = 0
+		for i = self._lastIndex, Config.maxNumberOfBots + self._lastIndex do
 			local newIndex = i % Config.maxNumberOfBots + 1
 			local bot = PlayerManager:GetPlayerByName(BotNames[newIndex])
 			local player = PlayerManager:GetLocalPlayer()
@@ -56,20 +49,20 @@ Events:Subscribe('UpdateManager:Update', function(p_Delta, p_Pass)
 								bot.soldier.transform.trans.x - player.soldier.transform.trans.x,
 								bot.soldier.transform.trans.y + botCamereaHight - playerCameraTrans.trans.y,
 								bot.soldier.transform.trans.z - player.soldier.transform.trans.z)
-						
+
 						local distance = playerCameraTrans.trans:Distance(playerCameraTrans.trans+direction)
 						if distance > Config.maxRaycastDistance then
 							return
 						elseif distance < 3	then --shoot, because you are near
 							NetEvents:SendLocal("BotShootAtPlayer", bot.name, true)
-							lastIndex = newIndex
+							self._lastIndex = newIndex
 							return
 						end
 						direction = direction:Normalize() * Config.maxRaycastDistance
 						local castPos = Vec3(playerCameraTrans.trans.x + direction.x, playerCameraTrans.trans.y + direction.y, playerCameraTrans.trans.z + direction.z)
 
 						local raycast = RaycastManager:Raycast(playerCameraTrans.trans, castPos, RayCastFlags.DontCheckWater | RayCastFlags.IsAsyncRaycast)
-						lastIndex = newIndex
+						self._lastIndex = newIndex
 						if raycast == nil or raycast.rigidBody == nil or raycast.rigidBody:Is("CharacterPhysicsEntity") == false then
 							return
 						end
@@ -83,7 +76,7 @@ Events:Subscribe('UpdateManager:Update', function(p_Delta, p_Pass)
 	end
 end)
 
-Hooks:Install('BulletEntity:Collision', 1, function(hook, entity, hit, shooter)
+function FunBotClient:_onBulletCollision(hook, entity, hit, shooter)
 	if hit.rigidBody.typeInfo.name == "CharacterPhysicsEntity" then
 		local player = PlayerManager:GetLocalPlayer()
 		if shooter.teamId ~= player.teamId and player.soldier ~= nil then 	-- TODO: Check shooter for bot
@@ -95,27 +88,45 @@ Hooks:Install('BulletEntity:Collision', 1, function(hook, entity, hit, shooter)
 			end
 		end
 	end
-end)
+end
 
 
 --key presses instead of commands -Bitcrusher
-Events:Subscribe('Client:UpdateInput', function(data)
-  	if InputManager:WentKeyDown(InputDeviceKeys.IDK_F5) then
-	NetEvents:Send('keypressF5')
-	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_F6) then
-	NetEvents:Send('keypressF6')
-	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_F7) then
-	NetEvents:Send('keypressF7')
-	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_F8) then
-	NetEvents:Send('keypressF8')
-	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_F9) then
-	NetEvents:Send('keypressF9')
-	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_F10) then
-	NetEvents:Send('keypressF10')
-	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_F11) then
-	NetEvents:Send('keypressF11')
-	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_F12) then
-	NetEvents:Send('keypressF12')
+function FunBotClient:_onUpdateInput(data)
+	if InputManager:WentKeyDown(InputDeviceKeys.IDK_F1) then
+		if self._webui == 0 then
+			print("webui = 1")
+			WebUI:Show();
+			self._webui = 1
+		elseif self._webui == 1 then
+			print("webui = 0")
+			WebUI:Hide();
+			self._webui = 0
+		end
 	end
-end)
---Key pressess instead of commands -Bitcrusher
+
+  	if InputManager:WentKeyDown(InputDeviceKeys.IDK_F5) then
+		NetEvents:Send('keypressF5')
+	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_F6) then
+		NetEvents:Send('keypressF6')
+	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_F7) then
+		NetEvents:Send('keypressF7')
+	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_F8) then
+		NetEvents:Send('keypressF8')
+	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_F9) then
+		NetEvents:Send('keypressF9')
+	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_F10) then
+		NetEvents:Send('keypressF10')
+	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_F11) then
+		NetEvents:Send('keypressF11')
+	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_F12) then
+		NetEvents:Send('keypressF12')
+	end
+end
+
+-- Singleton.
+if g_FunBotClient == nil then
+	g_FunBotClient = FunBotClient()
+end
+
+return g_FunBotClient

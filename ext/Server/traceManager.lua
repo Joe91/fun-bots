@@ -4,23 +4,23 @@ require('__shared/config')
 local Globals = require('globals')
 
 function TraceManager:__init()
+    self.activeTraceIndexes = 0
     self._tracePlayer = {}
     self._traceUpdateTimer = {}
     self._traceWaitTimer = {}
-    self._activeTraceIndexes = 0
     self._mapName = ""
 
     Events:Subscribe('Engine:Update', self, self._onUpdate)
     Events:Subscribe('Player:Left', self, self._onPlayerLeft)
-    Events:Subscribe('Level:Loaded', self, self._onLevelLoaded)
 end
 
-function TraceManager:_onLevelLoaded(levelName, gameMode)
+function TraceManager:onLevelLoaded(levelName, gameMode)
     self._mapName = levelName.."_"..gameMode
     for i = 1, Config.maxTraceNumber do
         Globals.wayPoints[i] = {}
     end
     self:_loadWayPoints()
+    print(self.activeTraceIndexes.." paths have been loaded")
 end
 
 function TraceManager:_onPlayerLeft(player)
@@ -45,7 +45,7 @@ end
 function TraceManager:endTrace(player)
     print("!trace done")
     ChatManager:Yell("!trace done", 5.5)
-    self._activeTraceIndexes = self._activeTraceIndexes + 1
+    self.activeTraceIndexes = self.activeTraceIndexes + 1
     for i = 1, Config.maxTraceNumber do
         if self._tracePlayer[i] == player then
             self._tracePlayer[i] = nil
@@ -85,7 +85,7 @@ function TraceManager:_clearTrace(traceIndex)
         return
     end
     if Globals.wayPoints[traceIndex][1] ~= nil then
-        self._activeTraceIndexes = self.activeTraceIndexes - 1
+        self.activeTraceIndexes = self.activeTraceIndexes - 1
     end
     Globals.wayPoints[traceIndex] = {}
 end
@@ -195,7 +195,7 @@ function TraceManager:_loadWayPoints()
         point:setValues(transX, transY, transZ, inputVar)
         Globals.wayPoints[pathIndex][pointIndex] = point
     end
-    self._activeTraceIndexes = nrOfPaths
+    self.activeTraceIndexes = nrOfPaths
     SQL:Close()
     print("LOAD - The waypoint list has been loaded.")
 end

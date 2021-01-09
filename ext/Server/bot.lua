@@ -13,8 +13,8 @@ function Bot:__init(player)
     --common settings
     self._spawnMode = 0
     self._moveMode = 0
-    self._kit = 0
-    self._color = 0
+    self.kit = 0
+    self.color = 0
     self._checkSwapTeam = false
     self._respawning = false
 
@@ -61,6 +61,7 @@ function Bot:onUpdate(dt)
 
         self._setActiveVars()
 
+        self._updateRespwawn()
         self._updateShooting()
         self._updateMovement()  --TODO: move-mode shoot
     end
@@ -92,8 +93,29 @@ function Bot:shootAt(player, ignoreYaw)
     end
 end
 
-function Bot:create()
-    
+function Bot:setVarsDefault()
+    self._spawnMode = 5
+    self._moveMode = 5
+    self._activeWayIndex = 0
+    self._respawning = true
+    self._shoot = true
+end
+
+function Bot:setVarsRow()
+    self._spawnMode = 0
+    self._moveMode = 0
+    self._activeWayIndex = 0
+    self._respawning = false
+    self._shoot = false
+end
+
+function Bot:resetSpawnVars()
+    self._spawnDelayTimer = 0
+    self._obstaceSequenceTimer = 0
+    self._obstacleRetryCounter = 0
+    self._lastWayDistance = 1000
+    self._shootPlayer = nil
+    self._shootModeTimer = nil
 end
 
 function Bot:clearPlayer(player)
@@ -110,10 +132,18 @@ function Bot:destroy()
     PlayerManager:DeletePlayer(self.player)
 end
 
-
-
-
 --private functions
+function Bot:_updateRespwawng()
+    if self._respawning and self.player.soldier == nil and self._spawnMode > 0 then
+        -- wait for respawn-delay gone
+        if self._spawnDelayTimer < Config.spawnDelayBots then
+            self._spawnDelayTimer = self._spawnDelayTimer + Config.botUpdateCycle
+        else
+            Events:Dispatch('Bot:RespawnBot', self.name)
+        end
+    end
+end
+
 function Bot:_updateAiming()
     if self.player.alive and self._shoot then
         if self._shootPlayer ~= nil and self._shootPlayer.soldier ~= nil then

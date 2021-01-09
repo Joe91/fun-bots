@@ -12,6 +12,46 @@ function BotManager:__init()
     NetEvents:Subscribe('DamagePlayer', self, self._onDamagePlayer)
 end
 
+function BotManager:onLevelLoaded(activeTraceIndexes)
+    --find team to spawn bots in
+    local listOfTeams = {}
+    local botTeam = TeamId.Team2
+    for _, bot in pairs(self._bots) do
+        table.insert(listOfTeams, bot.player.teamId)
+    end
+    local countOfBotTeam = 0
+    for i = 1, #listOfTeams do
+        if listOfTeams[i] == botTeam then
+            countOfBotTeam = countOfBotTeam + 1
+        end
+    end
+    if countOfBotTeam < #listOfTeams then
+        botTeam = TeamId.Team1
+    end
+
+    self:destroyAllBots()
+    -- create initial bots
+    if activeTraceIndexes > 0 and Config.spawnOnLevelstart then
+        for i = 1, Config.initNumberOfBots do
+            local bot = self.createBot(BotNames[i], botTeam, SquadId.SquadNone)
+            bot:setVarsDefault()
+        end
+    end
+end
+
+function BotManager:findNextBotName()
+    for i = 1, Config.maxNumberOfBots do
+        local name = BotNames[i]
+        local bot = self:GetBotByName(name)
+        if bot == nil then
+            return name
+        elseif bot.soldier == nil then
+            return name
+        end
+    end
+    return nil
+end
+
 
 function BotManager:_onUpdate(dt, pass)
 	if pass ~= UpdatePass.UpdatePass_PostFrame then
@@ -62,16 +102,21 @@ function BotManager:GetBotByName(name)
     return returnBot
 end
 
-function BotManager:createBot(name, team, squad)
+function BotManager:createBot(name, team)
+    local bot = self.GetBotByName(name)
+    if self.GetBotByName(name) ~= nil then
+        return bot
+    end
+
     -- Create a player for this bot.
-    local botPlayer = PlayerManager:CreatePlayer(name, team, squad)
+    local botPlayer = PlayerManager:CreatePlayer(name, team, SquadId.SquadNone)
 
 	-- Create input for this bot.
 	local botInput = EntryInput()
 	botInput.deltaTime = 1.0 / SharedUtils:GetTickrate()
     botPlayer.input = botInput
 
-    local bot = Bot(botPlayer)
+    bot = Bot(botPlayer)
 
 	table.insert(self._bots, bot)
 	self._botInputs[botPlayer.id] = botInput
@@ -80,7 +125,7 @@ function BotManager:createBot(name, team, squad)
 end
 
 
-function Bots:spawnBot(bot, transform, pose, soldierBp, kit, unlocks)
+function BotManager:spawnBot(bot, transform, pose, soldierBp, kit, unlocks)
 	if bot.player.soldier ~= nil then
 		bot.player.soldier:Kill()
 	end
@@ -95,7 +140,7 @@ function Bots:spawnBot(bot, transform, pose, soldierBp, kit, unlocks)
 end
 
 
-function Bots:destroyBot(botName)
+function BotManager:destroyBot(botName)
 	-- Find index of this bot.
     local idx = nil
 
@@ -118,7 +163,7 @@ function Bots:destroyBot(botName)
 	table.remove(self._bots, idx)
 end
 
-function Bots:destroyAllBots()
+function BotManager:destroyAllBots()
 	for _, bot in pairs(self._bots) do
 		bot:destroy()
 	end
