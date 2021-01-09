@@ -94,7 +94,7 @@ function FunBotServer:_onChat(player, recipientMask, message)
         local amount = tonumber(parts[2])
         BotSpawner:spawnWayBots(player, amount, false, activeWayIndex)
 
-    elseif parts[1] == '!spawnrandway' or parts[1] == "!spawnbots" then
+    elseif parts[1] == "!spawnbots" then
         if tonumber(parts[2]) == nil then
             return
         end

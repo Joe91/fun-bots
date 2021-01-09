@@ -26,13 +26,15 @@ function BotSpawner:_onRespawnBot(botname)
         local randIndex = MathUtils:GetRandomInt(1, #Globals.wayPoints[wayIndex])
         local transform = LinearTransform()
         transform.trans = Globals.wayPoints[wayIndex][randIndex].trans
+        bot:setCurrentWayPoint(randIndex)
         self:spawnBot(bot, transform, true)
 
     elseif spawnMode == 5 then  --random Way
         local wayIndex = self:_getNewWayIndex()
-        bot:setWayIndex(wayIndex)
         local randIndex = MathUtils:GetRandomInt(1, #Globals.wayPoints[wayIndex])
         local transform = LinearTransform()
+        bot:setWayIndex(wayIndex)
+        bot:setCurrentWayPoint(randIndex)
         transform.trans = Globals.wayPoints[wayIndex][randIndex].trans
         self:spawnBot(bot, transform, true)
     end
@@ -55,7 +57,7 @@ function BotSpawner:spawnBotRow(player, length, spacing)
         local name = BotManager:findNextBotName()
         if name ~= nil then
             local transform = LinearTransform()
-            transform.trans = player.soldier.transform.forward * i * spacing
+            transform.trans = player.soldier.transform.trans + (player.soldier.transform.forward * i * spacing)
             local bot = BotManager:createBot(name, self:getBotTeam(player))
             bot:setVarsStatic(player)
             self:spawnBot(bot, transform, true)
@@ -100,10 +102,10 @@ end
 
 function BotSpawner:spawnLineBots(player, amount, spacing)
      for i = 1, amount do
-        local name = findNextBotName()
+        local name = BotManager:findNextBotName()
         if name ~= nil then
             local transform = LinearTransform()
-            transform.trans = player.soldier.transform.forward * i * spacing
+            transform.trans = player.soldier.transform.trans + (player.soldier.transform.forward * i * spacing)
             local bot = BotManager:createBot(name, self:getBotTeam(player))
             bot:setVarsSimpleMovement(player, 2, transform)
             self:spawnBot(bot, transform, true)
@@ -115,7 +117,7 @@ function BotSpawner:spawnRingBots(player, amount, spacing)
     self._ringNrOfBots = amount
     self._ringSpacing = spacing
     for i = 1, amount do
-        local name = findNextBotName()
+        local name = BotManager:findNextBotName()
         if name ~= nil then
             local yaw = i * (2 * math.pi / amount)
             local transform = LinearTransform()
@@ -130,7 +132,7 @@ function BotSpawner:spawnRingBots(player, amount, spacing)
 end
 
 function BotSpawner:spawnWayBots(player, amount, useRandomWay, activeWayIndex)
-    if Globals.wayPoints[activeWayIndex][1] == nil or Globals.activeTraceIndexes <= 0 then
+    if Globals.activeTraceIndexes <= 0 then
         return
     end
     for i = 1, amount do
@@ -142,12 +144,15 @@ function BotSpawner:spawnWayBots(player, amount, useRandomWay, activeWayIndex)
                     return
                 end
             end
+            if Globals.wayPoints[activeWayIndex][1] == nil then
+                return
+            end 
             local randIndex = MathUtils:GetRandomInt(1, #Globals.wayPoints[activeWayIndex])
             local transform = LinearTransform()
             transform.trans = Globals.wayPoints[activeWayIndex][randIndex].trans
 
             local bot = BotManager:createBot(name, Globals.botTeam)
-            bot:setVarsWay(player, useRandomWay, randIndex)
+            bot:setVarsWay(player, useRandomWay, activeWayIndex, randIndex)
             self:spawnBot(bot, transform, true)
         end
     end

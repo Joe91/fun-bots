@@ -96,7 +96,7 @@ end
 function Bot:setVarsDefault()
     self._spawnMode = 5
     self._moveMode = 5
-    self._pathIndex = 0
+    self._pathIndex = 1
     self._respawning = true
     self._shoot = true
 end
@@ -132,7 +132,7 @@ function Bot:setVarsSimpleMovement(player, spawnMode, transform)
     end
 end
 
-function Bot:setVarsWay(player, useRandomWay, randIndex)
+function Bot:setVarsWay(player, useRandomWay, pathIndex, currentWayPoint)
     if useRandomWay then
         self._spawnMode = 5
         self._shoot = true
@@ -142,7 +142,8 @@ function Bot:setVarsWay(player, useRandomWay, randIndex)
     end
 
     self._moveMode = 5
-    self._pathIndex = randIndex
+    self._pathIndex = pathIndex
+    self._currentWayPoint = currentWayPoint
     self._respawning = false
     self._targetPlayer = player
 end
@@ -166,6 +167,9 @@ function Bot:setShoot(shoot)
 end
 function Bot:setWayIndex(wayIndex)
     self._pathIndex = wayIndex
+end
+function Bot:setCurrentWayPoint(wayPoint)
+    self._currentWayPoint = wayPoint
 end
 function Bot:setSpeed(speed)
     self._botSpeed = speed

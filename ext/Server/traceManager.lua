@@ -42,7 +42,6 @@ function TraceManager:startTrace(player, index)
     if index > Config.maxTraceNumber or index < 1 then
         index = 1
     end
-    
     print("!trace started")
     ChatManager:Yell("!trace "..index.." started", 5.5)
     self:_clearTrace(index)
