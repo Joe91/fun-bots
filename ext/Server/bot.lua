@@ -53,7 +53,7 @@ function Bot:onUpdate(dt)
         self.player.soldier:SingleStepEntry(self.player.controlledEntryId)
     end
 
-    self:_updateAiming() --needs to be fast
+    self:_updateAiming() --needs to be fast?
 
     self._updateTimer = self._updateTimer + dt
     if self._updateTimer > Config.botUpdateCycle then
@@ -71,8 +71,8 @@ end
 --public functions
 function Bot:shootAt(player, ignoreYaw)
     local oldYaw = self.player.input.authoritativeAimingYaw
-    local dy = player.soldier.transform.trans.z - self.player.soldier.transform.trans.z
-    local dx = player.soldier.transform.trans.x - self.player.soldier.transform.trans.x
+    local dy = player.soldier.worldTransform.trans.z - self.player.soldier.worldTransform.trans.z
+    local dx = player.soldier.worldTransform.trans.x - self.player.soldier.worldTransform.trans.x
     local yaw = (math.atan(dy, dx) > math.pi / 2) and (math.atan(dy, dx) - math.pi / 2) or (math.atan(dy, dx) + 3 * math.pi / 2)
 
     local dYaw = math.abs(oldYaw-yaw)
@@ -228,9 +228,9 @@ function Bot:_updateAiming()
         if self._shootPlayer ~= nil and self._shootPlayer.soldier ~= nil then
             self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 1)
             --calculate yaw and pith
-            local dz = self._shootPlayer.soldier.transform.trans.z - self.player.soldier.transform.trans.z
-            local dx = self._shootPlayer.soldier.transform.trans.x - self.player.soldier.transform.trans.x
-            local dy = self._shootPlayer.soldier.transform.trans.y + self:_getCameraHight(self._shootPlayer.soldier) - 0.2 -self.player.soldier.transform.trans.y - self:_getCameraHight(self.player.soldier) --0.2 to shoot a litle lower
+            local dz = self._shootPlayer.soldier.worldTransform.trans.z - self.player.soldier.worldTransform.trans.z
+            local dx = self._shootPlayer.soldier.worldTransform.trans.x - self.player.soldier.worldTransform.trans.x
+            local dy = self._shootPlayer.soldier.worldTransform.trans.y + self:_getCameraHight(self._shootPlayer.soldier) - 0.2 -self.player.soldier.worldTransform.trans.y - self:_getCameraHight(self.player.soldier) --0.2 to shoot a litle lower
             local atanDzDx = math.atan(dz, dx)
             local yaw = (atanDzDx > math.pi / 2) and (atanDzDx - math.pi / 2) or (atanDzDx + 3 * math.pi / 2)
             --calculate pitch
@@ -280,8 +280,8 @@ function Bot:_updateMovement()
         -- pointing
         if self.activeMoveMode == 2 and self._targetPlayer ~= nil then
             if self._targetPlayer.soldier  ~= nil then 
-                local dy = self._targetPlayer.soldier.transform.trans.z - self.player.soldier.transform.trans.z
-                local dx = self._targetPlayer.soldier.transform.trans.x - self.player.soldier.transform.trans.x
+                local dy = self._targetPlayer.soldier.worldTransform.trans.z - self.player.soldier.worldTransform.trans.z
+                local dx = self._targetPlayer.soldier.worldTransform.trans.x - self.player.soldier.worldTransform.trans.x
                 local atanDzDx = math.atan(dy, dx)
                 local yaw = (atanDzDx > math.pi / 2) and (atanDzDx - math.pi / 2) or (atanDzDx + 3 * math.pi / 2)
                 self.player.input.authoritativeAimingYaw = yaw
@@ -324,12 +324,12 @@ function Bot:_updateMovement()
                     self.activeSpeedValue = inputVar & 0x000F  --speed
                     local trans = Vec3()
                     trans = Globals.wayPoints[self._pathIndex][activePointIndex].trans
-                    local dy = trans.z - self.player.soldier.transform.trans.z
-                    local dx = trans.x - self.player.soldier.transform.trans.x
+                    local dy = trans.z - self.player.soldier.worldTransform.trans.z
+                    local dx = trans.x - self.player.soldier.worldTransform.trans.x
                     local distanceFromTarget = math.sqrt(dx ^ 2 + dy ^ 2)
 
                     --detect obstacle and move over or around TODO: Move before normal jump
-                    local currentWayPontDistance = math.abs(trans.x - self.player.soldier.transform.trans.x) + math.abs(trans.z - self.player.soldier.transform.trans.z)
+                    local currentWayPontDistance = math.abs(trans.x - self.player.soldier.worldTransform.trans.x) + math.abs(trans.z - self.player.soldier.worldTransform.trans.z)
                     if currentWayPontDistance >= self._lastWayDistance  or self._obstaceSequenceTimer ~= 0 then
                         -- try to get around obstacle
                         self.activeSpeedValue = 3 --always stand
@@ -367,9 +367,9 @@ function Bot:_updateMovement()
                     -- jup on command
                     if ((inputVar & 0x00F0) >> 4) == 1 and self._jumpTargetPoint == nil then
                         self._jumpTargetPoint = trans
-                        self._jumpTriggerDistance = math.abs(trans.x -self.player.soldier.transform.trans.x) + math.abs(trans.z -self.player.soldier.transform.trans.z)
+                        self._jumpTriggerDistance = math.abs(trans.x -self.player.soldier.worldTransform.trans.x) + math.abs(trans.z -self.player.soldier.worldTransform.trans.z)
                     elseif self._jumpTargetPoint ~= nil then
-                        local currentJumpDistance = math.abs(self._jumpTargetPoint.x -self.player.soldier.transform.trans.x) + math.abs(self._jumpTargetPoint.z -self.player.soldier.transform.trans.z)
+                        local currentJumpDistance = math.abs(self._jumpTargetPoint.x -self.player.soldier.worldTransform.trans.x) + math.abs(self._jumpTargetPoint.z -self.player.soldier.worldTransform.trans.z)
                         if currentJumpDistance > self._jumpTriggerDistance then
                             --now we are really close to the Jump-Point --> Jump
                             self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 1)

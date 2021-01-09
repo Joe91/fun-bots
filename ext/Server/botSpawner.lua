@@ -57,7 +57,7 @@ function BotSpawner:spawnBotRow(player, length, spacing)
         local name = BotManager:findNextBotName()
         if name ~= nil then
             local transform = LinearTransform()
-            transform.trans = player.soldier.transform.trans + (player.soldier.transform.forward * i * spacing)
+            transform.trans = player.soldier.worldTransform.trans + (player.soldier.worldTransform.forward * i * spacing)
             local bot = BotManager:createBot(name, self:getBotTeam(player))
             bot:setVarsStatic(player)
             self:spawnBot(bot, transform, true)
@@ -71,9 +71,9 @@ function BotSpawner:spawnBotTower(player, height)
         if name ~= nil then
             local yaw = player.input.authoritativeAimingYaw
             local transform = LinearTransform()
-            transform.trans.x = player.soldier.transform.trans.x + (math.cos(yaw + (math.pi / 2)))
-            transform.trans.y = player.soldier.transform.trans.y + ((i - 1) * 1.8)
-            transform.trans.z = player.soldier.transform.trans.z + (math.sin(yaw + (math.pi / 2)))
+            transform.trans.x = player.soldier.worldTransform.trans.x + (math.cos(yaw + (math.pi / 2)))
+            transform.trans.y = player.soldier.worldTransform.trans.y + ((i - 1) * 1.8)
+            transform.trans.z = player.soldier.worldTransform.trans.z + (math.sin(yaw + (math.pi / 2)))
             local bot = BotManager:createBot(name, self:getBotTeam(player))
             bot:setVarsStatic(player)
             self:spawnBot(bot, transform, true)
@@ -89,9 +89,9 @@ function BotSpawner:spawnBotGrid(player, rows, columns, spacing)
             if name ~= nil then
                 local yaw = player.input.authoritativeAimingYaw
                 local transform = LinearTransform()
-                transform.trans.x = player.soldier.transform.trans.x + (i * math.cos(yaw + (math.pi / 2)) * spacing) + ((j - 1) * math.cos(yaw) * spacing)
-                transform.trans.y = player.soldier.transform.trans.y
-                transform.trans.z = player.soldier.transform.trans.z + (i * math.sin(yaw + (math.pi / 2)) * spacing) + ((j - 1) * math.sin(yaw) * spacing)
+                transform.trans.x = player.soldier.worldTransform.trans.x + (i * math.cos(yaw + (math.pi / 2)) * spacing) + ((j - 1) * math.cos(yaw) * spacing)
+                transform.trans.y = player.soldier.worldTransform.trans.y
+                transform.trans.z = player.soldier.worldTransform.trans.z + (i * math.sin(yaw + (math.pi / 2)) * spacing) + ((j - 1) * math.sin(yaw) * spacing)
                 local bot = BotManager:createBot(name, self:getBotTeam(player))
                 bot:setVarsStatic(player)
                 self:spawnBot(bot, transform, true)
@@ -105,7 +105,7 @@ function BotSpawner:spawnLineBots(player, amount, spacing)
         local name = BotManager:findNextBotName()
         if name ~= nil then
             local transform = LinearTransform()
-            transform.trans = player.soldier.transform.trans + (player.soldier.transform.forward * i * spacing)
+            transform.trans = player.soldier.worldTransform.trans + (player.soldier.worldTransform.forward * i * spacing)
             local bot = BotManager:createBot(name, self:getBotTeam(player))
             bot:setVarsSimpleMovement(player, 2, transform)
             self:spawnBot(bot, transform, true)
@@ -121,9 +121,9 @@ function BotSpawner:spawnRingBots(player, amount, spacing)
         if name ~= nil then
             local yaw = i * (2 * math.pi / amount)
             local transform = LinearTransform()
-            transform.trans.x = player.soldier.transform.trans.x + (math.cos(yaw + (math.pi / 2)) * spacing)
-            transform.trans.y = player.soldier.transform.trans.y
-            transform.trans.z = player.soldier.transform.trans.z + (math.sin(yaw + (math.pi / 2)) * spacing)
+            transform.trans.x = player.soldier.worldTransform.trans.x + (math.cos(yaw + (math.pi / 2)) * spacing)
+            transform.trans.y = player.soldier.worldTransform.trans.y
+            transform.trans.z = player.soldier.worldTransform.trans.z + (math.sin(yaw + (math.pi / 2)) * spacing)
             local bot = BotManager:createBot(name, self:getBotTeam(player))
             bot:setVarsSimpleMovement(player, 3)
             self:spawnBot(bot, transform, true)

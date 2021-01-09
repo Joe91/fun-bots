@@ -46,9 +46,9 @@ function FunBotClient:_onUpdate(p_Delta, p_Pass)
 
 						-- find direction of Bot
 						local direction = Vec3(
-								bot.soldier.transform.trans.x - player.soldier.transform.trans.x,
-								bot.soldier.transform.trans.y + botCamereaHight - playerCameraTrans.trans.y,
-								bot.soldier.transform.trans.z - player.soldier.transform.trans.z)
+								bot.soldier.worldTransform.trans.x - player.soldier.worldTransform.trans.x,
+								bot.soldier.worldTransform.trans.y + botCamereaHight - playerCameraTrans.trans.y,
+								bot.soldier.worldTransform.trans.z - player.soldier.worldTransform.trans.z)
 
 						local distance = playerCameraTrans.trans:Distance(playerCameraTrans.trans+direction)
 						if distance > Config.maxRaycastDistance then
@@ -80,9 +80,9 @@ function FunBotClient:_onBulletCollision(hook, entity, hit, shooter)
 	if hit.rigidBody.typeInfo.name == "CharacterPhysicsEntity" then
 		local player = PlayerManager:GetLocalPlayer()
 		if shooter.teamId ~= player.teamId and player.soldier ~= nil then 	-- TODO: Check shooter for bot
-			local dx = math.abs(player.soldier.transform.trans.x - hit.position.x)
-			local dz = math.abs(player.soldier.transform.trans.z - hit.position.z)
-			local dy = hit.position.y - player.soldier.transform.trans.y --player y is on ground. Hit must be higher to be valid
+			local dx = math.abs(player.soldier.worldTransform.trans.x - hit.position.x)
+			local dz = math.abs(player.soldier.worldTransform.trans.z - hit.position.z)
+			local dy = hit.position.y - player.soldier.worldTransform.trans.y --player y is on ground. Hit must be higher to be valid
 			if dx < 1 and dz < 1 and dy < 2 and dy > 0 then --included bodyhight
 				NetEvents:SendLocal("DamagePlayer", Config.bulletDamageBot, shooter.name)
 			end

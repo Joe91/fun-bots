@@ -64,7 +64,7 @@ function TraceManager:setPoint(player, index)
     print("!setpoint")
     ChatManager:Yell("!setpoint", 5.5)
     local point = WayPoint()
-    point.trans = player.soldier.transform.trans
+    point.trans = player.soldier.worldTransform.trans
     table.insert(Globals.wayPoints[index], point)
 end
 
@@ -117,7 +117,7 @@ function TraceManager:_onUpdate(dt)
                 local vlaue = 0 -- waittime in 0.5 s (0-255) (8 Bits)
 
                 local point = WayPoint()
-                point.trans = player.soldier.transform.trans
+                point.trans = player.soldier.worldTransform.trans
 
                 --trace movement with primary weapon
                 if player.soldier.weaponsComponent.currentWeaponSlot == WeaponSlot.WeaponSlot_0 then
