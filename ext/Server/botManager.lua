@@ -56,7 +56,7 @@ end
 
 function BotManager:setStaticOption(player, option, value)
     for _, bot in pairs(self._bots) do
-        if bot.player == player then
+        if bot:getTargetPlayer() == player then
             if bot:isStaticMovement() then
                 if option == "mode" then
                     bot:setMoveMode(value)
@@ -82,7 +82,7 @@ end
 
 function BotManager:setOptionForPlayer(player, option, value)
     for _, bot in pairs(self._bots) do
-        if bot.player == player then
+        if bot:getTargetPlayer() == player then
             if option == "shoot" then
                 bot:setShoot(value)
             elseif option == "respawn" then
@@ -160,7 +160,8 @@ function BotManager:createBot(name, team)
     bot = Bot(botPlayer)
 
 	table.insert(self._bots, bot)
-	self._botInputs[botPlayer.id] = botInput
+    self._botInputs[botPlayer.id] = botInput
+    bot.player.input.flags = EntryInputFlags.AuthoritativeAiming
 
 	return bot
 end
@@ -181,7 +182,7 @@ end
 
 function BotManager:killPlayerBots(player)
     for _, bot in pairs(self._bots) do
-        if bot.player == player then
+        if bot:getTargetPlayer() == player then
             bot:resetVars()
             bot.player.soldier:Kill()
         end

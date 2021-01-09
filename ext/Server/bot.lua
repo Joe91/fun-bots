@@ -226,7 +226,7 @@ function Bot:_updateAiming()
             --calculate yaw and pith
             local dz = self._shootPlayer.soldier.transform.trans.z - self.player.soldier.transform.trans.z
             local dx = self._shootPlayer.soldier.transform.trans.x - self.player.soldier.transform.trans.x
-            local dy = self._shootPlayer.soldier.transform.trans.y + getCameraHight(self._shootPlayer.soldier) - 0.2 -self.player.soldier.transform.trans.y - getCameraHight(self.player.soldier)
+            local dy = self._shootPlayer.soldier.transform.trans.y + self:_getCameraHight(self._shootPlayer.soldier) - 0.2 -self.player.soldier.transform.trans.y - self:_getCameraHight(self.player.soldier) --0.2 to shoot a litle lower
             local atanDzDx = math.atan(dz, dx)
             local yaw = (atanDzDx > math.pi / 2) and (atanDzDx - math.pi / 2) or (atanDzDx + 3 * math.pi / 2)
             --calculate pitch
@@ -448,7 +448,7 @@ function Bot:_setActiveVars()
     self.activeSpeedValue = 0
 end
 
-function Bot:getCameraHight(soldier)
+function Bot:_getCameraHight(soldier)
     local camereaHight = 1.6 --bot.soldier.pose == CharacterPoseType.CharacterPoseType_Stand
     if soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
         camereaHight = 0.3

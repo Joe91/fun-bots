@@ -54,7 +54,8 @@ function BotSpawner:spawnBotRow(player, length, spacing)
     for i = 1, length do
         local name = BotManager:findNextBotName()
         if name ~= nil then
-            local transform = player.soldier.transform.forward * i * spacing
+            local transform = LinearTransform()
+            transform.trans = player.soldier.transform.forward * i * spacing
             local bot = BotManager:createBot(name, self:getBotTeam(player))
             bot:setVarsStatic(player)
             self:spawnBot(bot, transform, true)
@@ -101,7 +102,8 @@ function BotSpawner:spawnLineBots(player, amount, spacing)
      for i = 1, amount do
         local name = findNextBotName()
         if name ~= nil then
-            local transform = player.soldier.transform.forward * i * spacing
+            local transform = LinearTransform()
+            transform.trans = player.soldier.transform.forward * i * spacing
             local bot = BotManager:createBot(name, self:getBotTeam(player))
             bot:setVarsSimpleMovement(player, 2, transform)
             self:spawnBot(bot, transform, true)
