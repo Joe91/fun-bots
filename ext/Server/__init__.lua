@@ -8,6 +8,15 @@ function FunBotServer:__init()
     Events:Subscribe("Player:TeamChange", self, self._onTeamChange)
     Events:Subscribe('Level:Loaded', self, self._onLevelLoaded)
     Events:Subscribe('Player:Chat', self, self._onChat)
+
+    NetEvents:Subscribe('keypressF5', self, self._onF5)
+    NetEvents:Subscribe('keypressF6', self, self._onF6)
+    NetEvents:Subscribe('keypressF7', self, self._onF7)
+    NetEvents:Subscribe('keypressF8', self, self._onF8)
+    NetEvents:Subscribe('keypressF9', self, self._onF9)
+    NetEvents:Subscribe('keypressF10', self, self._onF10)
+    NetEvents:Subscribe('keypressF11', self, self._onF11)
+    NetEvents:Subscribe('keypressF12', self, self._onF12)
 end
 
 function FunBotServer:_onTeamChange(player, team, squad)
@@ -259,22 +268,22 @@ function FunBotServer:_onChat(player, recipientMask, message)
 end
 
 --Key pressess instead of commands -Bitcrusher
-NetEvents:Subscribe('keypressF5', function(player, data)
+function FunBotServer:_onF5(player, data)
     print("start trace")
-end)
-NetEvents:Subscribe('keypressF6', function(player, data)
+end
+function FunBotServer:_onF6(player, data)
     print("Bot trace done")
-end)
-NetEvents:Subscribe('keypressF7', function(player, data)
+end
+function FunBotServer:_onF7(player, data)
     print("Point set")
-end)
-NetEvents:Subscribe('keypressF8', function(player, data)
+end
+function FunBotServer:_onF8(player, data)
     print("Points Clear")
-end)
-NetEvents:Subscribe('keypressF9', function(player, data)
+end
+function FunBotServer:_onF9(player, data)
     print("clear all traces")
-end)
-NetEvents:Subscribe('keypressF10', function(player, data)
+end
+function FunBotServer:_onF10(player, data)
     print("printtrans")
     ChatManager:Yell("printtrans", 2.5)
     print(player.soldier.worldTransform)
@@ -282,15 +291,15 @@ NetEvents:Subscribe('keypressF10', function(player, data)
     print(player.soldier.worldTransform.trans.y)
     print(player.soldier.worldTransform.trans.z)
     ChatManager:Yell("Check server console", 2.5)
-end)
-NetEvents:Subscribe('keypressF11', function(player, data)
+end
+function FunBotServer:_onF11(player, data)
     print("printslot")
     ChatManager:Yell("printslot", 2.5)
-end)
-NetEvents:Subscribe('keypressF12', function(player, data)
+end
+function FunBotServer:_onF12(player, data)
     print("Trying to Save paths")
     ChatManager:Yell("Trying to Save paths", 2.5)
-end)
+end
 --Key pressess instead of commands -Bitcrusher
 
 
