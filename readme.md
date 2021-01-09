@@ -25,12 +25,9 @@ If you have any questions just ask them on Discord (Joe_91)
 For spawning bots in different Groupings. These bots don't move from their own
 
 ```html
-!stand <opt: spacing>
-!crouch <opt: spacing>
 !row <number> <opt: spacing>
 !tower <number> <opt: spacing>
 !grid <rows> <opt: collums> <opt: spacing>
-!john
 ```
 
     

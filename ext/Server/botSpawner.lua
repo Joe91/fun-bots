@@ -3,9 +3,6 @@ class('BotSpawner')
 local BotManager = require('botManager')
 local Globals = require('globals')
 
-local ringSpacing = 25
-local ringNrOfBots = 0
-
 function BotSpawner:__init()
     self._ringSpacing = 25
     self._ringNrOfBots = 0
@@ -14,7 +11,31 @@ end
 
 
 function BotSpawner:_onRespawnBot(botname)
-    
+    local bot = BotManager:GetBotByName(botname)
+    local spawnMode = bot:getSpawnMode()
+    if spawnMode == 1 then
+
+        self:spawnBot(bot, transform, true)
+    elseif spawnMode == 2 then
+
+        self:spawnBot(bot, transform, true)
+    elseif spawnMode == 3 then
+
+        self:spawnBot(bot, transform, true)
+    elseif spawnMode == 4 then
+        local wayIndex = bot:getWayIndex()
+        local randIndex = MathUtils:GetRandomInt(1, #Globals.wayPoints[wayIndex])
+        local transform = LinearTransform()
+        transform.trans = Globals.wayPoints[wayIndex][randIndex].trans
+        self:spawnBot(bot, transform, true)
+    elseif spawnMode == 5 then
+        local wayIndex = self:_getNewWayIndex()
+        bot:setWayIndex(wayIndex)
+        local randIndex = MathUtils:GetRandomInt(1, #Globals.wayPoints[wayIndex])
+        local transform = LinearTransform()
+        transform.trans = Globals.wayPoints[wayIndex][randIndex].trans
+        self:spawnBot(bot, transform, true)
+    end
 end
 
 function BotSpawner:getBotTeam(player)
@@ -33,13 +54,120 @@ function BotSpawner:spawnBotRow(player, length, spacing)
     for i = 1, length do
         local name = BotManager:findNextBotName()
         if name ~= nil then
-            local yaw = player.input.authoritativeAimingYaw
-            local transform = getYawOffsetTransform(player.soldier.transform, yaw, i * spacing)
+            local transform = player.soldier.transform.forward * i * spacing
             local bot = BotManager:createBot(name, self:getBotTeam(player))
-            bot:setVarsRow(player)
+            bot:setVarsStatic(player)
             self:spawnBot(bot, transform, true)
         end
     end
+end
+
+function BotSpawner:spawnBotTower(player, height)
+    for i = 1, height do
+        local name = BotManager:findNextBotName()
+        if name ~= nil then
+            local yaw = player.input.authoritativeAimingYaw
+            local transform = LinearTransform()
+            transform.trans.x = player.soldier.transform.trans.x + (math.cos(yaw + (math.pi / 2)))
+            transform.trans.y = player.soldier.transform.trans.y + ((i - 1) * 1.8)
+            transform.trans.z = player.soldier.transform.trans.z + (math.sin(yaw + (math.pi / 2)))
+            local bot = BotManager:createBot(name, self:getBotTeam(player))
+            bot:setVarsStatic(player)
+            self:spawnBot(bot, transform, true)
+        end
+    end
+end
+
+
+function BotSpawner:spawnBotGrid(player, rows, columns, spacing)
+    for i = 1, rows do
+        for j = 1, columns do
+            local name = BotManager:findNextBotName()
+            if name ~= nil then
+                local yaw = player.input.authoritativeAimingYaw
+                local transform = LinearTransform()
+                transform.trans.x = player.soldier.transform.trans.x + (i * math.cos(yaw + (math.pi / 2)) * spacing) + ((j - 1) * math.cos(yaw) * spacing)
+                transform.trans.y = player.soldier.transform.trans.y
+                transform.trans.z = player.soldier.transform.trans.z + (i * math.sin(yaw + (math.pi / 2)) * spacing) + ((j - 1) * math.sin(yaw) * spacing)
+                local bot = BotManager:createBot(name, self:getBotTeam(player))
+                bot:setVarsStatic(player)
+                self:spawnBot(bot, transform, true)
+            end
+        end
+    end
+end
+
+function BotSpawner:spawnLineBots(player, amount, spacing)
+     for i = 1, amount do
+        local name = findNextBotName()
+        if name ~= nil then
+            local transform = player.soldier.transform.forward * i * spacing
+            local bot = BotManager:createBot(name, self:getBotTeam(player))
+            bot:setVarsSimpleMovement(player, 2, transform)
+            self:spawnBot(bot, transform, true)
+        end
+    end
+end
+
+function BotSpawner:spawnRingBots(player, amount, spacing)
+    self._ringNrOfBots = amount
+    self._ringSpacing = spacing
+    for i = 1, amount do
+        local name = findNextBotName()
+        if name ~= nil then
+            local yaw = i * (2 * math.pi / amount)
+            local transform = LinearTransform()
+            transform.trans.x = player.soldier.transform.trans.x + (math.cos(yaw + (math.pi / 2)) * spacing)
+            transform.trans.y = player.soldier.transform.trans.y
+            transform.trans.z = player.soldier.transform.trans.z + (math.sin(yaw + (math.pi / 2)) * spacing)
+            local bot = BotManager:createBot(name, self:getBotTeam(player))
+            bot:setVarsSimpleMovement(player, 3)
+            self:spawnBot(bot, transform, true)
+        end
+    end
+end
+
+function BotSpawner:spawnWayBots(player, amount, useRandomWay, activeWayIndex)
+    if Globals.wayPoints[activeWayIndex][1] == nil or Globals.activeTraceIndexes <= 0 then
+        return
+    end
+    for i = 1, amount do
+        local name = BotManager:findNextBotName()
+        if name ~= nil then
+            if useRandomWay then
+                activeWayIndex = self:_getNewWayIndex()
+                if activeWayIndex == 0 then
+                    return
+                end
+            end
+            local randIndex = MathUtils:GetRandomInt(1, #Globals.wayPoints[activeWayIndex])
+            local transform = LinearTransform()
+            transform.trans = Globals.wayPoints[activeWayIndex][randIndex].trans
+
+            local bot = BotManager:createBot(name, Globals.botTeam)
+            bot:setVarsWay(player, useRandomWay, randIndex)
+            self:spawnBot(bot, transform, true)
+        end
+    end
+end
+
+function BotSpawner:_getNewWayIndex()
+    local newWayIdex = 0
+    if Globals.activeTraceIndexes <= 0 then
+        return newWayIdex
+    end
+    local targetWaypoint = MathUtils:GetRandomInt(1, Globals.activeTraceIndexes)
+    local count = 0
+    for i = 1, Config.maxTraceNumber do
+        if Globals.wayPoints[i][1] ~= nil then
+            count = count + 1
+        end
+        if count == targetWaypoint then
+            newWayIdex = i
+            return newWayIdex
+        end
+    end
+    return newWayIdex
 end
 
 -- Tries to find first available kit

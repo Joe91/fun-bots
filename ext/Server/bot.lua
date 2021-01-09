@@ -45,7 +45,7 @@ function Bot:__init(player)
     --simple movement
     self._botSpeed = 0
     self._targetPlayer = nil
-    self._spawnTransform = 0
+    self._spawnTransform = LinearTransform()
 end
 
 function Bot:onUpdate(dt)
@@ -101,12 +101,68 @@ function Bot:setVarsDefault()
     self._shoot = true
 end
 
-function Bot:setVarsRow()
+function Bot:setVarsStatic(player)
     self._spawnMode = 0
     self._moveMode = 0
     self._activeWayIndex = 0
     self._respawning = false
     self._shoot = false
+    self._targetPlayer = player
+end
+
+function Bot:setVarsSimpleMovement(player, spawnMode, transform)
+    self._spawnMode = spawnMode
+    self._moveMode = 2
+    self._botSpeed = 3
+    self._activeWayIndex = 0
+    self._respawning = false
+    self._shoot = false
+    self._targetPlayer = player
+    if transform ~= nil then
+        self._spawnTransform = transform
+    end
+end
+
+function Bot:setVarsWay(player, useRandomWay, randIndex)
+    if useRandomWay then
+        self._spawnMode = 5
+        self._shoot = true
+    else
+        self._spawnMode = 4
+        self._shoot = false
+    end
+
+    self._moveMode = 5
+    self._activeWayIndex = randIndex
+    self._respawning = false
+    self._targetPlayer = player
+end
+
+function Bot:isStaticMovement()
+    if self._moveMode == 0 or self._moveMode == 3 or self._moveMode == 4 then
+        return true
+    else
+        return false
+    end
+end
+
+function Bot:setMoveMode(moveMode)
+    self._moveMode = moveMode
+end
+function Bot:setRespawn(respawn)
+    self._respawning = respawn
+end
+function Bot:setShoot(shoot)
+    self._shoot = shoot
+end
+function Bot:setWayIndex(wayIndex)
+    self._activeWayIndex = wayIndex
+end
+function Bot:getSpawnMode()
+    return self._spawnMode
+end
+function Bot:getWayIndex()
+    return self._activeWayIndex
 end
 
 function Bot:resetSpawnVars()

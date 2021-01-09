@@ -4,7 +4,6 @@ require('__shared/config')
 local Globals = require('globals')
 
 function TraceManager:__init()
-    self.activeTraceIndexes = 0
     self._tracePlayer = {}
     self._traceUpdateTimer = {}
     self._traceWaitTimer = {}
@@ -20,7 +19,7 @@ function TraceManager:onLevelLoaded(levelName, gameMode)
         Globals.wayPoints[i] = {}
     end
     self:_loadWayPoints()
-    print(self.activeTraceIndexes.." paths have been loaded")
+    print(Globals.activeTraceIndexes.." paths have been loaded")
 end
 
 function TraceManager:_onPlayerLeft(player)
@@ -54,7 +53,7 @@ end
 function TraceManager:endTrace(player)
     print("!trace done")
     ChatManager:Yell("!trace done", 5.5)
-    self.activeTraceIndexes = self.activeTraceIndexes + 1
+    Globals.activeTraceIndexes = Globals.activeTraceIndexes + 1
     for i = 1, Config.maxTraceNumber do
         if self._tracePlayer[i] == player then
             self._tracePlayer[i] = nil
@@ -82,11 +81,17 @@ function TraceManager:clearAllTraces()
     for i = 1, Config.maxTraceNumber do
         self:_clearTrace(i)
     end
-    self.activeTraceIndexes = 0
+    Globals.activeTraceIndexes = 0
 end
 
 function TraceManager:savePaths()
+    print("try to save paths")
+    ChatManager:Yell("Trying to Save paths check console", 5.5)
     self:_saveWayPoints()
+    --local co = coroutine.create(function ()
+    --    self:_saveWayPoints()
+    --end)
+    --coroutine.resume(co)
 end
 
 function TraceManager:_clearTrace(traceIndex)
@@ -94,7 +99,7 @@ function TraceManager:_clearTrace(traceIndex)
         return
     end
     if Globals.wayPoints[traceIndex][1] ~= nil then
-        self.activeTraceIndexes = self.activeTraceIndexes - 1
+        Globals.activeTraceIndexes = Globals.activeTraceIndexes - 1
     end
     Globals.wayPoints[traceIndex] = {}
 end
@@ -204,7 +209,7 @@ function TraceManager:_loadWayPoints()
         point:setValues(transX, transY, transZ, inputVar)
         Globals.wayPoints[pathIndex][pointIndex] = point
     end
-    self.activeTraceIndexes = nrOfPaths
+    Globals.activeTraceIndexes = nrOfPaths
     SQL:Close()
     print("LOAD - The waypoint list has been loaded.")
 end

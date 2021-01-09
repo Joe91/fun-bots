@@ -1,5 +1,6 @@
 class('BotManager')
 require('bot')
+local Globals = require('globals')
 
 function BotManager:__init()
     self._bots = {}
@@ -12,7 +13,7 @@ function BotManager:__init()
     NetEvents:Subscribe('DamagePlayer', self, self._onDamagePlayer)
 end
 
-function BotManager:onLevelLoaded(activeTraceIndexes)
+function BotManager:onLevelLoaded()
     --find team to spawn bots in
     local listOfTeams = {}
     local botTeam = TeamId.Team2
@@ -28,10 +29,11 @@ function BotManager:onLevelLoaded(activeTraceIndexes)
     if countOfBotTeam < #listOfTeams then
         botTeam = TeamId.Team1
     end
+    Globals.botTeam = botTeam
 
     self:destroyAllBots()
     -- create initial bots
-    if activeTraceIndexes > 0 and Config.spawnOnLevelstart then
+    if Globals.activeTraceIndexes > 0 and Config.spawnOnLevelstart then
         for i = 1, Config.initNumberOfBots do
             local bot = self:createBot(BotNames[i], botTeam)
             bot:setVarsDefault()
@@ -52,6 +54,41 @@ function BotManager:findNextBotName()
     return nil
 end
 
+function BotManager:setStaticMovement(player, mode)
+    for _, bot in pairs(self._bots) do
+        if bot.player == player then
+            if bot:isStaticMovement() then
+                bot:setMoveMode(mode)
+            end
+        end
+    end
+end
+
+function BotSpawner:setOptionForAll(option, value)
+    for _, bot in pairs(self._bots) do
+        if option == "shoot" then
+            bot:setShoot(value)
+        elseif option == "respawn" then
+            bot:setRespawn(value)
+        elseif option == "moveMode" then
+            bot:setMoveMode(value)
+        end
+    end
+end
+
+function BotSpawner:setOptionForPlayer(player, option, value)
+    for _, bot in pairs(self._bots) do
+        if bot.player == player then
+            if option == "shoot" then
+                bot:setShoot(value)
+            elseif option == "respawn" then
+                bot:setRespawn(value)
+            elseif option == "moveMode" then
+                bot:setMoveMode(value)
+            end
+        end
+    end
+end
 
 function BotManager:_onUpdate(dt, pass)
 	if pass ~= UpdatePass.UpdatePass_PostFrame then
@@ -137,7 +174,6 @@ function BotManager:spawnBot(bot, transform, pose, soldierBp, kit, unlocks)
 
 	return botSoldier
 end
-
 
 function BotManager:destroyBot(botName)
 	-- Find index of this bot.
