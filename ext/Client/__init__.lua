@@ -74,7 +74,7 @@ function FunBotClient:_onUpdate(p_Delta, p_Pass)
 			end
 		end
 	end
-end)
+end
 
 function FunBotClient:_onBulletCollision(hook, entity, hit, shooter)
 	if hit.rigidBody.typeInfo.name == "CharacterPhysicsEntity" then

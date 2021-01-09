@@ -53,17 +53,17 @@ function Bot:onUpdate(dt)
         self.player.soldier:SingleStepEntry(self.player.controlledEntryId)
     end
 
-    self._updateAiming() --needs to be fast
+    self:_updateAiming() --needs to be fast
 
     self._updateTimer = self._updateTimer + dt
     if self._updateTimer > Config.botUpdateCycle then
         self._updateTimer = 0
 
-        self._setActiveVars()
+        self:_setActiveVars()
 
-        self._updateRespwawn()
-        self._updateShooting()
-        self._updateMovement()  --TODO: move-mode shoot
+        self:_updateRespwawn()
+        self:_updateShooting()
+        self:_updateMovement()  --TODO: move-mode shoot
     end
 end
 
@@ -133,7 +133,7 @@ function Bot:destroy()
 end
 
 --private functions
-function Bot:_updateRespwawng()
+function Bot:_updateRespwawn()
     if self._respawning and self.player.soldier == nil and self._spawnMode > 0 then
         -- wait for respawn-delay gone
         if self._spawnDelayTimer < Config.spawnDelayBots then
@@ -234,17 +234,17 @@ function Bot:_updateMovement()
                 self._currentWayPoint = activePointIndex
             else
                 activePointIndex = self._currentWayPoint
-                if #Globals:wayPoints[self._pathIndex] < activePointIndex then
+                if #Globals.wayPoints[self._pathIndex] < activePointIndex then
                     activePointIndex = 1
                 end
             end
-            if Globals:wayPoints[self._pathIndex][1] ~= nil then   -- check for reached point
-                local inputVar = Globals:wayPoints[self._pathIndex][activePointIndex].inputVar
+            if Globals.wayPoints[self._pathIndex][1] ~= nil then   -- check for reached point
+                local inputVar = Globals.wayPoints[self._pathIndex][activePointIndex].inputVar
                 if (inputVar & 0x000F) > 0 then -- movement
                     self._wayWaitTimer = 0
                     self.activeSpeedValue = inputVar & 0x000F  --speed
                     local trans = Vec3()
-                    trans = Globals:wayPoints[self._pathIndex][activePointIndex].trans
+                    trans = Globals.wayPoints[self._pathIndex][activePointIndex].trans
                     local dy = trans.z - self.player.soldier.transform.trans.z
                     local dx = trans.x - self.player.soldier.transform.trans.x
                     local distanceFromTarget = math.sqrt(dx ^ 2 + dy ^ 2)

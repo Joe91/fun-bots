@@ -32,9 +32,18 @@ function TraceManager:_onPlayerLeft(player)
 end
 
 function TraceManager:startTrace(player, index)
-    if index > Config.maxTraceNumber then
+    if index == 0 then
+        for i = 1, Config.maxTraceNumber do
+            if Globals.wayPoints[i][1] == nil then
+                index = i
+                break
+            end
+        end
+    end
+    if index > Config.maxTraceNumber or index < 1 then
         index = 1
     end
+    
     print("!trace started")
     ChatManager:Yell("!trace "..index.." started", 5.5)
     self:_clearTrace(index)

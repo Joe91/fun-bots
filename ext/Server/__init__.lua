@@ -32,21 +32,6 @@ function FunBotServer:_onChat(player, recipientMask, message)
 
     local parts = string.lower(message):split(' ')
 
-    --set team for bot-spawn
-    if player.teamId == TeamId.Team1 then
-        if Config.spawnInSameTeam then
-            team = TeamId.Team1
-        else
-            team = TeamId.Team2
-        end
-    else
-        if Config.spawnInSameTeam then
-            team = TeamId.Team2
-        else
-            team = TeamId.Team1
-        end
-    end
-
     if parts[1] == '!row' then
         if tonumber(parts[2]) == nil then
             return
@@ -254,45 +239,22 @@ function FunBotServer:_onChat(player, recipientMask, message)
 
     -- waypoint stuff
     elseif parts[1] == '!trace' then
-        local traceIndex = tonumber(parts[2]) or 1
-        if traceIndex > Config.maxTraceNumber then
-            traceIndex = 1
-        end
-        print("!trace started")
-		ChatManager:Yell("!trace "..traceIndex.." started", 5.5)
-        clearPoints(traceIndex)
-        traceTimesGone[traceIndex] = 0
-        tracePlayers[traceIndex] = player
+        local traceIndex = tonumber(parts[2]) or 0
+        TraceManager:startTrace(player, traceIndex)
 
     elseif parts[1] == '!tracedone' then
-		print("!trace done")
-		ChatManager:Yell("!trace done", 5.5)
-        activeTraceIndexes = activeTraceIndexes + 1
-        for i = 1, Config.maxTraceNumber do
-            if tracePlayers[i] == player then
-                tracePlayers[i] = nil
-            end
-        end
+        TraceManager:endTrace(player)
 
     elseif parts[1] == '!setpoint' then
-		print("!setpoint")
-		ChatManager:Yell("!setpoint", 5.5)
         local traceIndex = tonumber(parts[2]) or 1
-        setPoint(traceIndex, player)
+        TraceManager:setPoint(player, traceIndex)
 
     elseif parts[1] == '!cleartrace' then
         local traceIndex = tonumber(parts[2]) or 1
-        print("!cleartrace")
-		ChatManager:Yell("!cleartrace "..traceIndex, 5.5)
-        clearPoints(traceIndex)
+        TraceManager:clearTrace(traceIndex)
     
     elseif parts[1] == '!clearalltraces' then
-		print("!clearalltraces")
-		ChatManager:Yell("!clearalltraces", 5.5)
-        for i = 1, Config.maxTraceNumber do
-            clearPoints(i)
-        end
-        activeTraceIndexes = 0
+		TraceManager:clearAllTraces()
 
     elseif parts[1] == '!printtrans' then
 		print("!printtrans")
@@ -371,7 +333,7 @@ function FunBotServer:_onChat(player, recipientMask, message)
             vehicleEntity = iterator:Next()
         end
     end
-end)
+end
 
 --Key pressess instead of commands -Bitcrusher
 NetEvents:Subscribe('keypressF5', function(player, data)

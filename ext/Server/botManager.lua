@@ -33,7 +33,7 @@ function BotManager:onLevelLoaded(activeTraceIndexes)
     -- create initial bots
     if activeTraceIndexes > 0 and Config.spawnOnLevelstart then
         for i = 1, Config.initNumberOfBots do
-            local bot = self.createBot(BotNames[i], botTeam, SquadId.SquadNone)
+            local bot = self:createBot(BotNames[i], botTeam)
             bot:setVarsDefault()
         end
     end
@@ -103,8 +103,8 @@ function BotManager:GetBotByName(name)
 end
 
 function BotManager:createBot(name, team)
-    local bot = self.GetBotByName(name)
-    if self.GetBotByName(name) ~= nil then
+    local bot = self:GetBotByName(name)
+    if bot ~= nil then
         return bot
     end
 
