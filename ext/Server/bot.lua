@@ -96,7 +96,7 @@ end
 function Bot:setVarsDefault()
     self._spawnMode = 5
     self._moveMode = 5
-    self._activeWayIndex = 0
+    self._pathIndex = 0
     self._respawning = true
     self._shoot = true
 end
@@ -104,7 +104,7 @@ end
 function Bot:resetVars()
     self._spawnMode = 0
     self._moveMode = 0
-    self._activeWayIndex = 0
+    self._pathIndex = 0
     self._respawning = false
     self._shoot = false
     self._targetPlayer = nil
@@ -113,7 +113,7 @@ end
 function Bot:setVarsStatic(player)
     self._spawnMode = 0
     self._moveMode = 0
-    self._activeWayIndex = 0
+    self._pathIndex = 0
     self._respawning = false
     self._shoot = false
     self._targetPlayer = player
@@ -123,7 +123,7 @@ function Bot:setVarsSimpleMovement(player, spawnMode, transform)
     self._spawnMode = spawnMode
     self._moveMode = 2
     self._botSpeed = 3
-    self._activeWayIndex = 0
+    self._pathIndex = 0
     self._respawning = false
     self._shoot = false
     self._targetPlayer = player
@@ -142,7 +142,7 @@ function Bot:setVarsWay(player, useRandomWay, randIndex)
     end
 
     self._moveMode = 5
-    self._activeWayIndex = randIndex
+    self._pathIndex = randIndex
     self._respawning = false
     self._targetPlayer = player
 end
@@ -165,7 +165,7 @@ function Bot:setShoot(shoot)
     self._shoot = shoot
 end
 function Bot:setWayIndex(wayIndex)
-    self._activeWayIndex = wayIndex
+    self._pathIndex = wayIndex
 end
 function Bot:setSpeed(speed)
     self._botSpeed = speed
@@ -175,7 +175,7 @@ function Bot:getSpawnMode()
     return self._spawnMode
 end
 function Bot:getWayIndex()
-    return self._activeWayIndex
+    return self._pathIndex
 end
 function Bot:getSpawnTransform()
     return self._spawnTransform

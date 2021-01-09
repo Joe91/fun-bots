@@ -61,14 +61,14 @@ function BotManager:setStaticOption(player, option, value)
                 if option == "mode" then
                     bot:setMoveMode(value)
                 elseif option == "speed" then
-                    bot:setMoveMode(value)
+                    bot:setSpeed(value)
                 end
             end
         end
     end
 end
 
-function BotSpawner:setOptionForAll(option, value)
+function BotManager:setOptionForAll(option, value)
     for _, bot in pairs(self._bots) do
         if option == "shoot" then
             bot:setShoot(value)
@@ -80,7 +80,7 @@ function BotSpawner:setOptionForAll(option, value)
     end
 end
 
-function BotSpawner:setOptionForPlayer(player, option, value)
+function BotManager:setOptionForPlayer(player, option, value)
     for _, bot in pairs(self._bots) do
         if bot.player == player then
             if option == "shoot" then

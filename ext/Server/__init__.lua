@@ -254,8 +254,8 @@ function FunBotServer:_onChat(player, recipientMask, message)
                 end
             end
             vehicleEntity = iterator:Next()
-        end
-    end--]]
+        end--]]
+    end
 end
 
 --Key pressess instead of commands -Bitcrusher
