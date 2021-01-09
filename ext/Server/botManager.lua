@@ -54,11 +54,15 @@ function BotManager:findNextBotName()
     return nil
 end
 
-function BotManager:setStaticMovement(player, mode)
+function BotManager:setStaticOption(player, option, value)
     for _, bot in pairs(self._bots) do
         if bot.player == player then
             if bot:isStaticMovement() then
-                bot:setMoveMode(mode)
+                if option == "mode" then
+                    bot:setMoveMode(value)
+                elseif option == "speed" then
+                    bot:setMoveMode(value)
+                end
             end
         end
     end
@@ -173,6 +177,40 @@ function BotManager:spawnBot(bot, transform, pose, soldierBp, kit, unlocks)
     bot.player:AttachSoldier(botSoldier)
 
 	return botSoldier
+end
+
+function BotManager:killPlayerBots(player)
+    for _, bot in pairs(self._bots) do
+        if bot.player == player then
+            bot:resetVars()
+            bot.player.soldier:Kill()
+        end
+    end
+end
+
+function BotManager:killAll()
+    for _, bot in pairs(self._bots) do
+        bot:resetVars()
+        bot.player.soldier:Kill()
+    end
+end
+
+function BotManager:destroyTeam(teamId)
+    for i = 1, Config.maxNumberOfBots do
+        local bot = self:GetBotByName(BotNames[i])
+        if bot.player.teamId == teamId then
+            self:destroyBot(bot.name)
+        end
+    end
+end
+
+function BotManager:destroyPlayerBots(player)
+    for i = 1, Config.maxNumberOfBots do
+        local bot = self:GetBotByName(BotNames[i])
+        if bot:getTargetPlayer() == player then
+            self:destroyBot(bot.name)
+        end
+    end
 end
 
 function BotManager:destroyBot(botName)

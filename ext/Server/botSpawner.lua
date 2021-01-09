@@ -13,22 +13,22 @@ end
 function BotSpawner:_onRespawnBot(botname)
     local bot = BotManager:GetBotByName(botname)
     local spawnMode = bot:getSpawnMode()
-    if spawnMode == 1 then
 
+    if spawnMode == 2 then --spawnInLine
+        local transform = LinearTransform()
+        transform = bot:getSpawnTransform()
         self:spawnBot(bot, transform, true)
-    elseif spawnMode == 2 then
+        
+    --TODO: spawnMode == 3 --ring around player
 
-        self:spawnBot(bot, transform, true)
-    elseif spawnMode == 3 then
-
-        self:spawnBot(bot, transform, true)
-    elseif spawnMode == 4 then
+    elseif spawnMode == 4 then   --fixed Way
         local wayIndex = bot:getWayIndex()
         local randIndex = MathUtils:GetRandomInt(1, #Globals.wayPoints[wayIndex])
         local transform = LinearTransform()
         transform.trans = Globals.wayPoints[wayIndex][randIndex].trans
         self:spawnBot(bot, transform, true)
-    elseif spawnMode == 5 then
+
+    elseif spawnMode == 5 then  --random Way
         local wayIndex = self:_getNewWayIndex()
         bot:setWayIndex(wayIndex)
         local randIndex = MathUtils:GetRandomInt(1, #Globals.wayPoints[wayIndex])

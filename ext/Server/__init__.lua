@@ -58,13 +58,13 @@ function FunBotServer:_onChat(player, recipientMask, message)
 
     -- static mode commands
     elseif parts[1] == '!mimic' then
-        BotManager:setStaticMovement(player, 3)
+        BotManager:setStaticOption(player, "mode", 3)
 
     elseif parts[1] == '!mirror' then
-        BotManager:setStaticMovement(player, 4)
+        BotManager:setStaticOption(player, "mode", 4)
     
     elseif parts[1] == '!static' then
-        BotManager:setStaticMovement(player, 0)
+        BotManager:setStaticOption(player, "mode", 0)
 
     -- moving bots spawning
     elseif parts[1] == '!spawnline' then
@@ -103,18 +103,16 @@ function FunBotServer:_onChat(player, recipientMask, message)
 
     -- moving bots movement settings
     elseif parts[1] == '!run' then
-        setBotVarForPlayerStatic(player, botSpeeds, 4, false)
+        BotManager:setStaticOption(player, "speed", 4)
 
     elseif parts[1] == '!walk' then
-        setBotVarForPlayerStatic(player, botSpeeds, 3, false)
-    
-    elseif parts[1] == '!speed' then --overwrite speed for all moving bots
-        if tonumber(parts[2]) == nil then
-            return
-        end
-        local speed = tonumber(parts[2])
-        setBotVarForPlayerStatic(player, botSpeeds, speed, false)
+        BotManager:setStaticOption(player, "speed", 3)
 
+    elseif parts[1] == '!crouch' then
+        BotManager:setStaticOption(player, "speed", 2)
+    
+    elseif parts[1] == '!prone' then
+        BotManager:setStaticOption(player, "speed", 1)
 
     -- respawn moving bots
     elseif parts[1] == '!respawn' then
@@ -162,55 +160,24 @@ function FunBotServer:_onChat(player, recipientMask, message)
         BotManager:setOptionForPlayer(player, "moveMode", 0)
  
     elseif parts[1] == '!kick' then
-        for i = 1, Config.maxNumberOfBots do
-            local name = BotNames[i]
-            if botTargetPlayers[name] == player then
-                kickBot(name)
-            end
-        end
+        BotManager:destroyPlayerBots(player)
 
     elseif parts[1] == '!kickteam' then
         local teamToKick = tonumber(parts[2]) or 1
         if teamToKick < 1 or teamToKick > 2 then
             return
         end
-        for i = 1, Config.maxNumberOfBots do
-            local name = BotNames[i]
-            if botTeams[name] == TeamId.Team1 and teamToKick == 1 then
-                kickBot(name)
-            elseif botTeams[name] == TeamId.Team2 and teamToKick == 2 then
-                kickBot(name)
-            end
-        end
+        local teamId = teamToKick == 1 and TeamId.Team1 or TeamId.Team2
+        BotManager:destroyTeam(teamId)
 
     elseif parts[1] == '!kickall' then
         BotManager:destroyAllBots()
 
     elseif parts[1] == '!kill' then
-        for i = 1, Config.maxNumberOfBots do
-            local name = BotNames[i]
-            if botTargetPlayers[name] == player then
-                botMoveModes[name] = 0
-                botSpeeds[name] = 0
-                botSpawnModes[name] = 0
-                local bot = PlayerManager:GetPlayerByName(name)
-                if bot and bot.soldier then
-                    bot.soldier:Kill()
-                end
-            end
-        end
+        BotManager:killPlayerBots(player)
 
     elseif parts[1] == '!killall' then
-        for i = 1, Config.maxNumberOfBots do
-            local name = BotNames[i]
-            botMoveModes[name] = 0
-            botSpeeds[name] = 0
-            botSpawnModes[name] = 0
-            local bot = PlayerManager:GetPlayerByName(name)
-            if bot and bot.soldier then
-                bot.soldier:Kill()
-            end
-        end
+        BotManager:killAll()
 
     -- waypoint stuff
     elseif parts[1] == '!trace' then
@@ -293,47 +260,19 @@ end
 
 --Key pressess instead of commands -Bitcrusher
 NetEvents:Subscribe('keypressF5', function(player, data)
-    local traceIndex = 1
-    for i = 1, Config.maxTraceNumber do
-        if wayPoints[i][1] == nil then
-            traceIndex = i
-        end
-    end
-    print("Bot trace "..traceIndex.." started")
-    ChatManager:Yell("Bot trace Nr. "..traceIndex.." started", 2.5)
-    clearPoints(traceIndex)
-    traceTimesGone[traceIndex] = 0
-    tracePlayers[traceIndex] = player
+    print("start trace")
 end)
 NetEvents:Subscribe('keypressF6', function(player, data)
     print("Bot trace done")
-    ChatManager:Yell("Bot trace done", 2.5)
-    activeTraceIndexes = activeTraceIndexes + 1
-    for i = 1, Config.maxTraceNumber do
-        if tracePlayers[i] == player then
-            tracePlayers[i] = nil
-        end
-    end
 end)
 NetEvents:Subscribe('keypressF7', function(player, data)
     print("Point set")
-    ChatManager:Yell("Point set", 2.5)
-    local traceIndex = 1
-    setPoint(traceIndex, player)
 end)
 NetEvents:Subscribe('keypressF8', function(player, data)
     print("Points Clear")
-    ChatManager:Yell("Points Clear", 2.5)
-    local traceIndex = 1
-    clearPoints(traceIndex)
 end)
 NetEvents:Subscribe('keypressF9', function(player, data)
     print("clear all traces")
-    ChatManager:Yell("clear all traces", 2.5)
-    for i = 1, Config.maxTraceNumber do
-        clearPoints(i)
-    end
-    activeTraceIndexes = 0
 end)
 NetEvents:Subscribe('keypressF10', function(player, data)
     print("printtrans")
@@ -347,12 +286,10 @@ end)
 NetEvents:Subscribe('keypressF11', function(player, data)
     print("printslot")
     ChatManager:Yell("printslot", 2.5)
-    print(player.soldier.weaponsComponent.currentWeaponSlot)
 end)
 NetEvents:Subscribe('keypressF12', function(player, data)
     print("Trying to Save paths")
     ChatManager:Yell("Trying to Save paths", 2.5)
-    saveWayPoints()
 end)
 --Key pressess instead of commands -Bitcrusher
 
@@ -363,62 +300,6 @@ function string:split(sep)
     self:gsub(pattern, function(c) fields[#fields + 1] = c end)
     return fields
 end
-
--- use this function, if you want to spawn new bots anyway
-function freeNumberOfBots(number)
-    if number > Config.maxNumberOfBots then
-        return
-    end
-    local counter = 0
-    for i = 1, Config.maxNumberOfBots do
-        local name = BotNames[i]
-        local bot = PlayerManager:GetPlayerByName(name)
-        if bot == nil then
-            counter = counter + 1
-        elseif  bot.soldier == nil then
-            counter = counter + 1
-        end
-        if counter >= number then
-            return
-        end
-    end
-    -- not enough bots available. Now free some random bots
-    local botsToFree = number - counter
-    while botsToFree > 0 do
-        local name = BotNames[MathUtils:GetRandomInt(1, Config.maxNumberOfBots)]
-        local bot = PlayerManager:GetPlayerByName(name)
-        if bot ~= nil and bot.soldier ~= nil then
-            botSpawnModes[name] = 0
-            botMoveModes[name] = 0
-            bot.soldier:Kill()
-            botsToFree = botsToFree-1
-        end
-    end
-end
-
-function checkSwapBotTeams()
-    for i = 1, Config.maxNumberOfBots do
-        local name = BotNames[i]
-        local bot = PlayerManager:GetPlayerByName(name)
-        if bot ~= nil then
-            botCheckSwapTeam[name] = true
-        end
-    end
-end
-
-
-
-function kickBot(name)
-	local bot = PlayerManager:GetPlayerByName(name)
-	if bot == nil then
-		return
-	end
-	if not Bots:isBot(bot) then
-		return
-	end
-	Bots:destroyBot(bot)
-end
-
 
 
 -- Singleton.
