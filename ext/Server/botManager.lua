@@ -79,7 +79,7 @@ function BotManager:_onDamagePlayer(player, damage, shooterName)
 end
 
 function BotManager:_onShootAt(player, botname, ignoreYaw)
-    local bot = self:GetPlayerByName(botname)
+    local bot = self:GetBotByName(botname)
     if bot == nil or bot.player.soldier == nil or player.soldier == nil then
         return
     end
@@ -156,7 +156,7 @@ function BotManager:destroyBot(botName)
 		return
     end
 
-    local bot = self.GetBotByName(botName)
+    local bot = self:GetBotByName(botName)
 	local botId = bot.id
 	bot:destroy()
 	self._botInputs[botId] = nil
