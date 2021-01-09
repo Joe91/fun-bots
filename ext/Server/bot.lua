@@ -449,7 +449,7 @@ end
 
 function Bot:_setActiveVars()
     self.activeMoveMode = self._moveMode
-    self.activeSpeedValue = 0
+    self.activeSpeedValue = self._botSpeed
 end
 
 function Bot:_getCameraHight(soldier)

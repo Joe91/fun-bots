@@ -151,7 +151,7 @@ function BotSpawner:spawnWayBots(player, amount, useRandomWay, activeWayIndex)
             local transform = LinearTransform()
             transform.trans = Globals.wayPoints[activeWayIndex][randIndex].trans
 
-            local bot = BotManager:createBot(name, Globals.botTeam)
+            local bot = BotManager:createBot(name, self:getBotTeam(player))
             bot:setVarsWay(player, useRandomWay, activeWayIndex, randIndex)
             self:spawnBot(bot, transform, true)
         end
