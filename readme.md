@@ -25,12 +25,9 @@ If you have any questions just ask them on Discord (Joe_91)
 For spawning bots in different Groupings. These bots don't move from their own
 
 ```html
-!stand <opt: spacing>
-!crouch <opt: spacing>
 !row <number> <opt: spacing>
 !tower <number> <opt: spacing>
 !grid <rows> <opt: collums> <opt: spacing>
-!john
 ```
 
     
@@ -39,9 +36,9 @@ For spawning bots in different Groupings. These bots don't move from their own
 With these commands you can set the static bots to mimic or mirror your behavior.
 
 ```html
-!mimic
-!mirror
-!static
+!mimic  --bots copy all your movement
+!mirror --bots mirror you movement
+!static --bots don't move at all
 ```
 
 ### Moving bot spawn:
@@ -53,18 +50,18 @@ With these commands you can spawn moving bots. To spawn bots on a way, you have 
 !spawnline <number> <opt: spacing>
 !spawnring <number> <opt: spacing>
 !spawnway <number> <opt: trace-index>
-!spawnrandway <number>
 ```
     
 ### Moving bot settings:
 
 Some settings for the moving bots.
-If you use respawn, all Bots will respawn directly after they have been killed
+If you use respawn, all Bots will respawn after they have been killed
 
 ```html
-!run
-!walk
-!speed <value: 0-4>
+!run    --only for simple moving bots (line, ring)
+!walk   --only for simple moving bots (line, ring)
+!crouch --only for simple moving bots (line, ring)
+!prone  --only for simple moving bots (line, ring)
 !respawn <opt: 0>
 !shoot <opt: 0>
 ```
@@ -98,6 +95,4 @@ Here are some more commands. Partly not tested jet
 !kickall
 !kill
 !killall
-!enter <opt: entryId>
-!fill <opt: number>
 ```
