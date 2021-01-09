@@ -215,7 +215,7 @@ function BotSpawner:spawnBot(bot, trans, setKit)
 
       -- create kit and appearance
     local soldierBlueprint = ResourceManager:SearchForDataContainer('Characters/Soldiers/MpSoldier')
-    local soldierCustomization = nil
+    local soldierCustomization = CustomizeSoldierData()
     local soldierKit = nil
     local appearance = nil
     soldierKit, appearance, soldierCustomization = self:getKitApperanceCustomization(bot.player.teamId, kitNumber, botColor)
@@ -224,7 +224,7 @@ function BotSpawner:spawnBot(bot, trans, setKit)
 	local transform = LinearTransform()
     transform = trans
 
-	-- And then spawn the bot. This will create and return a new SoldierEntity object.
+    -- And then spawn the bot. This will create and return a new SoldierEntity object.
     BotManager:spawnBot(bot, transform, CharacterPoseType.CharacterPoseType_Stand, soldierBlueprint, soldierKit, { appearance })
     bot.player.soldier:ApplyCustomization(soldierCustomization)
     self:_modifyWeapon(bot.player.soldier)

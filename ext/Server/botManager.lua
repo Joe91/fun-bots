@@ -45,7 +45,7 @@ function BotManager:findNextBotName()
         local bot = self:GetBotByName(name)
         if bot == nil then
             return name
-        elseif bot.soldier == nil then
+        elseif bot.player.soldier == nil then
             return name
         end
     end
@@ -130,11 +130,10 @@ function BotManager:spawnBot(bot, transform, pose, soldierBp, kit, unlocks)
 		bot.player.soldier:Kill()
 	end
 
-	bot.player:SelectUnlockAssets(kit, unlocks)
+    bot.player:SelectUnlockAssets(kit, unlocks)
     local botSoldier = bot.player:CreateSoldier(soldierBp, transform)
-
-	bot.player:SpawnSoldierAt(botSoldier, transform, pose)
-	bot.player:AttachSoldier(botSoldier)
+    bot.player:SpawnSoldierAt(botSoldier, transform, pose)
+    bot.player:AttachSoldier(botSoldier)
 
 	return botSoldier
 end
