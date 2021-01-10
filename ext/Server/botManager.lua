@@ -113,7 +113,7 @@ end
 
 function BotManager:_onDamagePlayer(player, shooterName)
     local bot = self:GetBotByName(shooterName)
-    if not player.alive then
+    if not player.alive or bot == nil then
         return
     end
     local damage = (bot.kit == 4) and Config.bulletDamageBotSniper or Config.bulletDamageBot
