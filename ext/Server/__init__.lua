@@ -5,7 +5,6 @@ local TraceManager = require('traceManager')
 local BotSpawner = require('botSpawner')
 
 function FunBotServer:__init()
-    Events:Subscribe("Player:TeamChange", self, self._onTeamChange)
     Events:Subscribe('Level:Loaded', self, self._onLevelLoaded)
     Events:Subscribe('Player:Chat', self, self._onChat)
 
