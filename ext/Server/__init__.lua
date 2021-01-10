@@ -19,13 +19,28 @@ function FunBotServer:__init()
     NetEvents:Subscribe('keypressF12', self, self._onF12)
 end
 
-function FunBotServer:_onTeamChange(player, team, squad)
-    if player == nil then
-        print("player has no name")
-    else
-        ChatManager:SendMessage("Welcome " .. player.name .. " press F1 key for some information", player)
-    end
-end
+--webui events -Bitcrusher
+
+--spawn bots
+NetEvents:Subscribe('spawnbots', function(player, spawnbots)
+amount = tonumber(spawnbots)
+print(player.name .." spawning ".. spawnbots .." bot/s")
+BotSpawner:spawnWayBots(player, amount, true)
+end)
+
+NetEvents:Subscribe('spawnrandombot', function(player, spawnbots)
+print("spawnrandombot - it worked!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+end)
+
+NetEvents:Subscribe('kickallbots', function(player, spawnbots)
+BotManager:destroyAllBots()
+print("Kicking Bots")
+end)
+
+NetEvents:Subscribe('respawnbots', function(player, spawnbots)
+BotManager:setOptionForAll("respawn", true)
+print("Bots will respawn")
+end)
 
 function FunBotServer:_onLevelLoaded(levelName, gameMode)
     TraceManager:onLevelLoaded(levelName, gameMode)
@@ -209,15 +224,11 @@ function FunBotServer:_onChat(player, recipientMask, message)
 
     elseif parts[1] == '!printtrans' then
 		print("!printtrans")
-		ChatManager:Yell("!printtrans", 5.5)
+		ChatManager:Yell("!printtrans check server console", 2.5)
         print(player.soldier.worldTransform)
         print(player.soldier.worldTransform.trans.x)
         print(player.soldier.worldTransform.trans.y)
         print(player.soldier.worldTransform.trans.z)
-		ChatManager:SendMessage(player.soldier.worldTransform)
-		ChatManager:SendMessage(player.soldier.worldTransform.trans.x)
-		ChatManager:SendMessage(player.soldier.worldTransform.trans.y)
-		ChatManager:SendMessage(player.soldier.worldTransform.trans.z)
 
     elseif parts[1] == '!savepaths' then
         TraceManager:savePaths()
@@ -268,37 +279,39 @@ function FunBotServer:_onChat(player, recipientMask, message)
 end
 
 --Key pressess instead of commands -Bitcrusher
+--Bot waypoint keys
 function FunBotServer:_onF5(player, data)
-    print("start trace")
+	print(player.name .." pressed F5")
+	local traceIndex = tonumber(0)
+	TraceManager:startTrace(player, traceIndex)
 end
 function FunBotServer:_onF6(player, data)
-    print("Bot trace done")
+	print(player.name .." pressed F6")
+	TraceManager:endTrace(player)
 end
 function FunBotServer:_onF7(player, data)
-    print("Point set")
+	print(player.name .." pressed F7")
+	local traceIndex = tonumber(0)
+    TraceManager:clearTrace(traceIndex)
 end
 function FunBotServer:_onF8(player, data)
-    print("Points Clear")
+	print(player.name .." pressed F8")
+	TraceManager:clearAllTraces()
 end
 function FunBotServer:_onF9(player, data)
-    print("clear all traces")
+	print(player.name .." pressed F9")
+	local traceIndex = tonumber(0)
+	TraceManager:setPoint(player, traceIndex)
 end
 function FunBotServer:_onF10(player, data)
-    print("printtrans")
-    ChatManager:Yell("printtrans", 2.5)
-    print(player.soldier.worldTransform)
-    print(player.soldier.worldTransform.trans.x)
-    print(player.soldier.worldTransform.trans.y)
-    print(player.soldier.worldTransform.trans.z)
-    ChatManager:Yell("Check server console", 2.5)
+	print(player.name .." pressed F10")
+	TraceManager:savePaths()
 end
 function FunBotServer:_onF11(player, data)
-    print("printslot")
-    ChatManager:Yell("printslot", 2.5)
+	print(player.name .." pressed F11")
 end
 function FunBotServer:_onF12(player, data)
-    print("Trying to Save paths")
-    ChatManager:Yell("Trying to Save paths", 2.5)
+	print(player.name .." pressed F12")
 end
 --Key pressess instead of commands -Bitcrusher
 

@@ -42,16 +42,16 @@ function TraceManager:startTrace(player, index)
     if index > Config.maxTraceNumber or index < 1 then
         index = 1
     end
-    print("!trace started")
-    ChatManager:Yell("!trace "..index.." started", 5.5)
+    print("Trace "..index.." started")
+    ChatManager:Yell("Trace "..index.." started", 2.5)
     self:_clearTrace(index)
     self._traceUpdateTimer[index] = 0
     self._tracePlayer[index] = player
 end
 
 function TraceManager:endTrace(player)
-    print("!trace done")
-    ChatManager:Yell("!trace done", 5.5)
+    print("Trace done")
+    ChatManager:Yell("Trace done", 2.5)
     Globals.activeTraceIndexes = Globals.activeTraceIndexes + 1
     for i = 1, Config.maxTraceNumber do
         if self._tracePlayer[i] == player then
@@ -61,22 +61,22 @@ function TraceManager:endTrace(player)
 end
 
 function TraceManager:setPoint(player, index)
-    print("!setpoint")
-    ChatManager:Yell("!setpoint", 5.5)
+    print("Point Set")
+    ChatManager:Yell("Point Set", 2.5)
     local point = WayPoint()
     point.trans = player.soldier.worldTransform.trans
     table.insert(Globals.wayPoints[index], point)
 end
 
 function TraceManager:clearTrace(index)
-    print("!cleartrace")
-    ChatManager:Yell("!cleartrace "..index, 5.5)
+    print("clear trace")
+    ChatManager:Yell("Clearing trace "..index, 2.5)
     self:_clearTrace(index)
 end
 
 function TraceManager:clearAllTraces()
-    print("!clearalltraces")
-    ChatManager:Yell("!clearalltraces", 5.5)
+    print("Clearing all traces")
+    ChatManager:Yell("Clearing all traces", 2.5)
     for i = 1, Config.maxTraceNumber do
         self:_clearTrace(i)
     end
@@ -84,8 +84,8 @@ function TraceManager:clearAllTraces()
 end
 
 function TraceManager:savePaths()
-    print("try to save paths")
-    ChatManager:Yell("Trying to Save paths check console", 5.5)
+    print("Trying to Save paths")
+    ChatManager:Yell("Trying to save paths check console...", 2.5)
     self:_saveWayPoints()
     --local co = coroutine.create(function ()
     --    self:_saveWayPoints()

@@ -1,7 +1,6 @@
 class('FunBotClient')
 require('__shared/Config')
 
-
 function FunBotClient:__init()
 	self._raycastTimer = 0
 	self._lastIndex = 0
@@ -12,6 +11,14 @@ function FunBotClient:__init()
 	Events:Subscribe('Extension:Loaded', self, self._onExtensionLoaded)
 	Hooks:Install('BulletEntity:Collision', 1, self, self._onBulletCollision)
 end
+
+Events:Subscribe('exitui', function(player)
+	funBotClient = FunBotClient()
+    if funBotClient._webui == 1 then
+        funBotClient._webui = 0
+		print("self._webui = 0")
+    end
+end)
 
 function FunBotClient:_onExtensionLoaded()
   WebUI:Init();
@@ -95,15 +102,20 @@ end
 function FunBotClient:_onUpdateInput(data)
 	if InputManager:WentKeyDown(InputDeviceKeys.IDK_F1) then
 		if self._webui == 0 then
-			print("webui = 1")
 			WebUI:Show();
+			WebUI:EnableMouse();
+			WebUI:EnableKeyboard();	
 			self._webui = 1
+			print("self._webui = 1")
 		elseif self._webui == 1 then
-			print("webui = 0")
 			WebUI:Hide();
+			WebUI:ResetMouse();
+			WebUI:ResetKeyboard();
 			self._webui = 0
+			print("self._webui = 0")
 		end
 	end
+
 
   	if InputManager:WentKeyDown(InputDeviceKeys.IDK_F5) then
 		NetEvents:Send('keypressF5')
@@ -123,6 +135,29 @@ function FunBotClient:_onUpdateInput(data)
 		NetEvents:Send('keypressF12')
 	end
 end
+
+
+--webui events dispatch -bitcrusher
+--spawnbots
+Events:Subscribe('spawnbotsvalue', function(data)
+  spawnbots = data
+  NetEvents:Send('spawnbots', spawnbots)
+  print("spawning: ".. spawnbots .." bots..")
+end)
+Events:Subscribe('spawnrandombot', function(data)
+  spawnbots = data
+  NetEvents:Send('spawnrandombot', spawnbots)
+  print("spawning: ".. spawnbots .." random bots..")
+end)
+Events:Subscribe('kickallbots', function(data)
+  NetEvents:Send('kickallbots')
+  print("Kicking all bots...")
+end)
+Events:Subscribe('respawnbots', function(data)
+  NetEvents:Send('respawnbots')
+  print("bot respawn enabled")
+end)
+--staticbots
 
 -- Singleton.
 if g_FunBotClient == nil then
