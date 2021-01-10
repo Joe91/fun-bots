@@ -132,7 +132,7 @@ function TraceManager:_onUpdate(dt)
 
                         point.speedMode = MoveMode
                         point.extraMode = MoveAddon
-                        point.value = vlaue
+                        point.optValue = vlaue
                         table.insert(Globals.wayPoints[i], point)
                     end
                 -- trace wait time with secondary weapon
@@ -148,6 +148,16 @@ function TraceManager:_onUpdate(dt)
             end
         end
     end
+end
+
+function TraceManager:_setWaypointWithInputVar(point, inputVar)
+    point.speedMode = inputVar & 0xF
+    point.extraMode = (inputVar >> 4) & 0xF
+    point.optValue = (inputVar >> 8) & 0xFF
+end
+
+function TraceManager:_getInputVar(point)
+    return (point.speedMode & 0xF) + ((point.extraMode & 0xF)<<4) + ((point.optValue & 0xFF) <<8)
 end
 
 function TraceManager:_loadWayPoints()
@@ -198,7 +208,8 @@ function TraceManager:_loadWayPoints()
         local transZ = row["transZ"]
         local inputVar = row["inputVar"]
         local point = WayPoint()
-        point:setWithInputVar(transX, transY, transZ, inputVar)
+        point.trans = Vec3(transX, transY, transZ)
+        self:_setWaypointWithInputVar(point, inputVar)
         Globals.wayPoints[pathIndex][pointIndex] = point
     end
     Globals.activeTraceIndexes = nrOfPaths
@@ -252,7 +263,7 @@ function TraceManager:_saveWayPoints()
                     local transX = trans.x
                     local transY = trans.y
                     local transZ = trans.z
-                    local inputVar = Globals.wayPoints[oldPathIndex][pointIndex]:getInputVar()
+                    local inputVar = self:_getInputVar(Globals.wayPoints[oldPathIndex][pointIndex])
                     local inerString = "("..pathIndex..","..pointIndex..","..tostring(transX)..","..tostring(transY)..","..tostring(transZ)..","..tostring(inputVar)..")"
                     sqlValuesString = sqlValuesString..inerString
                     if pointIndex < pointsToTo + pointsDone then
