@@ -315,7 +315,7 @@ end
 
 function BotSpawner:_modifyWeapon(soldier)
     soldier.weaponsComponent.currentWeapon.secondaryAmmo = 9999
-    soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway.minDispersionAngle = 0
+    --[[soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway.minDispersionAngle = 0
     soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway.dispersionAngle = 0
     soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway.randomAngle = 0
     soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway.randomRadius = 0
@@ -325,7 +325,7 @@ function BotSpawner:_modifyWeapon(soldier)
     soldier.weaponsComponent.currentWeapon.weaponFiring.recoilAngleY = 0
     soldier.weaponsComponent.currentWeapon.weaponFiring.recoilAngleX = 0
     soldier.weaponsComponent.currentWeapon.weaponFiring.recoilTimer = 0.0
-    soldier.weaponsComponent.currentWeapon.weaponFiring.recoilFovAngle = 0
+    soldier.weaponsComponent.currentWeapon.weaponFiring.recoilFovAngle = 0 --]]
 end
 
 function BotSpawner:spawnBot(bot, trans, setKit)

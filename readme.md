@@ -12,7 +12,7 @@ This mod is based on the Mod [BotSpawn](https://github.com/J4nssent/VU-Mods/tree
 It provieds lots of ways to play and mess with bots. Also with multible Players at once.
 
 The following Maps are supported right now:
-Noshar TDM, Khark TDM, Firestorm TDM.
+Noshar TDM, Khark-Island TDM, Firestorm TDM.
 Just type the wanted command in the chat. Still work in progress.
 Feel free to contribute or improve ;-)
 If you have any questions just ask them on Discord (Joe_91)

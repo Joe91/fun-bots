@@ -2,7 +2,6 @@ class('Bot')
 
 require('__shared/config')
 local Globals = require('globals')
-local fovHalf = Config.fovForShooting / 360 * math.pi * 2 / 2
 
 function Bot:__init(player)
     --Player Object
@@ -80,6 +79,7 @@ function Bot:shootAt(player, ignoreYaw)
         dYaw =math.pi * 2 - dYaw
     end
 
+    local fovHalf = Config.fovForShooting / 360 * math.pi
     if dYaw < fovHalf or ignoreYaw then
         if self._shoot then
             if self._shootModeTimer == nil or self._shootModeTimer > 1 then
@@ -223,6 +223,24 @@ function Bot:_updateRespwawn()
     end
 end
 
+function Bot:_getYawCorrection(currentWeapon)
+    local yawCorrection = 0
+    yawCorrection = currentWeapon.weaponFiring.gunSway.currentRecoilDeviation.yaw +
+                        currentWeapon.weaponFiring.gunSway.currentLagDeviation.yaw +
+                        currentWeapon.weaponFiring.gunSway.currentDispersionDeviation.yaw
+    print(yawCorrection)
+    return -yawCorrection * Config.deviationCorrectionFactor
+end
+
+function Bot:_getPitchCorrection(currentWeapon)
+    local pitchCorrection = 0
+    pitchCorrection = currentWeapon.weaponFiring.gunSway.currentRecoilDeviation.pitch +
+                        currentWeapon.weaponFiring.gunSway.currentLagDeviation.pitch +
+                        currentWeapon.weaponFiring.gunSway.currentDispersionDeviation.pitch
+    print(pitchCorrection)
+    return -pitchCorrection * Config.deviationCorrectionFactor
+end
+
 function Bot:_updateAiming()
     if self.player.alive and self._shoot then
         if self._shootPlayer ~= nil and self._shootPlayer.soldier ~= nil then
@@ -236,8 +254,8 @@ function Bot:_updateAiming()
             --calculate pitch
             local distance = math.sqrt(dz^2 + dx^2)
             local pitch =  math.atan(dy, distance)
-            self.player.input.authoritativeAimingPitch = pitch
-            self.player.input.authoritativeAimingYaw = yaw
+            self.player.input.authoritativeAimingPitch = pitch + self._getPithCorrection(self.player.soldier.weaponsComponent.currentWeapon)
+            self.player.input.authoritativeAimingYaw = yaw + self._getYawCorrection(self.player.soldier.weaponsComponent.currentWeapon)
         end
     end
 end
