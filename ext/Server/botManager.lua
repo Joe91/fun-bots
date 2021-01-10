@@ -115,8 +115,11 @@ function BotManager:_onDamagePlayer(player, damage, shooterName)
     if player.soldier ~= nil then
         player.soldier.health = player.soldier.health - damage
     end
-    --TODO: Increase Killcount of Bot, if health <= 0 ?
-    --local killerBot = self:GetBotByName(shooterName)
+    if player.soldier.health <= 0 then
+        --TODO: Increase Killcount of Bot, if health <= 0 ?
+        local killerBot = self:GetBotByName(shooterName)
+        killerBot.Player.kills = killerBot.Player.kills + 1
+    end
 end
 
 function BotManager:_onShootAt(player, botname, ignoreYaw)
