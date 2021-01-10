@@ -300,12 +300,10 @@ function FunBotServer:_onF8(player, data)
 end
 function FunBotServer:_onF9(player, data)
 	print(player.name .." pressed F9")
-	local traceIndex = tonumber(0)
-	TraceManager:setPoint(player, traceIndex)
+	TraceManager:savePaths()
 end
 function FunBotServer:_onF10(player, data)
 	print(player.name .." pressed F10")
-	TraceManager:savePaths()
 end
 function FunBotServer:_onF11(player, data)
 	print(player.name .." pressed F11")
