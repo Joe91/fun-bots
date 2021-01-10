@@ -91,7 +91,7 @@ function FunBotClient:_onBulletCollision(hook, entity, hit, shooter)
 			local dz = math.abs(player.soldier.worldTransform.trans.z - hit.position.z)
 			local dy = hit.position.y - player.soldier.worldTransform.trans.y --player y is on ground. Hit must be higher to be valid
 			if dx < 1 and dz < 1 and dy < 2 and dy > 0 then --included bodyhight
-				NetEvents:SendLocal("DamagePlayer", Config.bulletDamageBot, shooter.name)
+				NetEvents:SendLocal("DamagePlayer", shooter.name)
 			end
 		end
 	end

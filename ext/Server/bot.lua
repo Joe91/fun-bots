@@ -24,7 +24,7 @@ function Bot:__init(player)
     self._obstaceSequenceTimer = 0
     self._shotTimer = 0
     self._shootModeTimer = nil
-    
+
     --shared movement vars
     self.activeMoveMode = 0
     self.activeSpeedValue = 0
@@ -40,6 +40,7 @@ function Bot:__init(player)
     --shooting
     self._shoot = false
     self._shootPlayer = 0
+    self._shootWayPoints = {}
 
     --simple movement
     self._botSpeed = 0
@@ -336,12 +337,12 @@ function Bot:_updateMovement()
                 end
             end
             if Globals.wayPoints[self._pathIndex][1] ~= nil then   -- check for reached point
-                local inputVar = Globals.wayPoints[self._pathIndex][activePointIndex].inputVar
-                if (inputVar & 0x000F) > 0 then -- movement
+                local point = Globals.wayPoints[self._pathIndex][activePointIndex]
+                if (point.moveMode) > 0 then -- movement
                     self._wayWaitTimer = 0
-                    self.activeSpeedValue = inputVar & 0x000F  --speed
+                    self.activeSpeedValue = point.moveMode --speed
                     local trans = Vec3()
-                    trans = Globals.wayPoints[self._pathIndex][activePointIndex].trans
+                    trans = point.trans
                     local dy = trans.z - self.player.soldier.worldTransform.trans.z
                     local dx = trans.x - self.player.soldier.worldTransform.trans.x
                     local distanceFromTarget = math.sqrt(dx ^ 2 + dy ^ 2)
@@ -383,7 +384,7 @@ function Bot:_updateMovement()
                     end
 
                     -- jup on command
-                    if ((inputVar & 0x00F0) >> 4) == 1 and self._jumpTargetPoint == nil then
+                    if (point.extraMode) == 1 and self._jumpTargetPoint == nil then
                         self._jumpTargetPoint = trans
                         self._jumpTriggerDistance = math.abs(trans.x -self.player.soldier.worldTransform.trans.x) + math.abs(trans.z -self.player.soldier.worldTransform.trans.z)
                     elseif self._jumpTargetPoint ~= nil then
@@ -414,7 +415,7 @@ function Bot:_updateMovement()
                     self._wayWaitTimer  = self._wayWaitTimer  + Config.botUpdateCycle
                     self.activeSpeedValue = 0
                     -- TODO: Move yaw while waiting?
-                    if  self._wayWaitTimer  > (inputVar >> 8) then
+                    if  self._wayWaitTimer  > point.optValue then
                         self._wayWaitTimer  = 0
                         self._currentWayPoint = activePointIndex + 1
                     end

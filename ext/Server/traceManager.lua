@@ -60,14 +60,6 @@ function TraceManager:endTrace(player)
     end
 end
 
-function TraceManager:setPoint(player, index)
-    print("Point Set")
-    ChatManager:Yell("Point Set", 2.5)
-    local point = WayPoint()
-    point.trans = player.soldier.worldTransform.trans
-    table.insert(Globals.wayPoints[index], point)
-end
-
 function TraceManager:clearTrace(index)
     print("clear trace")
     ChatManager:Yell("Clearing trace "..index, 2.5)
@@ -138,8 +130,9 @@ function TraceManager:_onUpdate(dt)
                             MoveAddon = 1
                         end
 
-                        local inputVar = MoveMode + (MoveAddon << 4) + (vlaue << 8)
-                        point.inputVar = inputVar
+                        point.speedMode = MoveMode
+                        point.extraMode = MoveAddon
+                        point.value = vlaue
                         table.insert(Globals.wayPoints[i], point)
                     end
                 -- trace wait time with secondary weapon
@@ -149,8 +142,8 @@ function TraceManager:_onUpdate(dt)
                         table.insert(Globals.wayPoints[i], point)
                     end
                     self._traceWaitTimer[i] =  self._traceWaitTimer[i] + Config.traceDelta
-                    local inputVar = 0 + (math.floor(tonumber(self._traceWaitTimer[i])) & 0xFF) << 8
-                    Globals.wayPoints[i][#Globals.wayPoints[i]].inputVar = inputVar
+                    local waitValue = math.floor(tonumber(self._traceWaitTimer[i]))
+                    Globals.wayPoints[i][#Globals.wayPoints[i]].optValue = waitValue
                 end
             end
         end
@@ -205,7 +198,7 @@ function TraceManager:_loadWayPoints()
         local transZ = row["transZ"]
         local inputVar = row["inputVar"]
         local point = WayPoint()
-        point:setValues(transX, transY, transZ, inputVar)
+        point:setWithInputVar(transX, transY, transZ, inputVar)
         Globals.wayPoints[pathIndex][pointIndex] = point
     end
     Globals.activeTraceIndexes = nrOfPaths
@@ -259,7 +252,7 @@ function TraceManager:_saveWayPoints()
                     local transX = trans.x
                     local transY = trans.y
                     local transZ = trans.z
-                    local inputVar = Globals.wayPoints[oldPathIndex][pointIndex].inputVar
+                    local inputVar = Globals.wayPoints[oldPathIndex][pointIndex]:getInputVar()
                     local inerString = "("..pathIndex..","..pointIndex..","..tostring(transX)..","..tostring(transY)..","..tostring(transZ)..","..tostring(inputVar)..")"
                     sqlValuesString = sqlValuesString..inerString
                     if pointIndex < pointsToTo + pointsDone then
