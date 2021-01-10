@@ -10,15 +10,15 @@ function FunBotClient:__init()
 	Events:Subscribe('UpdateManager:Update', self, self._onUpdate)
 	Events:Subscribe('Extension:Loaded', self, self._onExtensionLoaded)
 	Hooks:Install('BulletEntity:Collision', 1, self, self._onBulletCollision)
+	Events:Subscribe('exitui', self, self._onExitUi)
 end
 
-Events:Subscribe('exitui', function(player)
-	funBotClient = FunBotClient()
-    if funBotClient._webui == 1 then
-        funBotClient._webui = 0
+function FunBotClient:_onExitUi(player)
+    if self._webui == 1 then
+        self._webui = 0
 		print("self._webui = 0")
     end
-end)
+end
 
 function FunBotClient:_onExtensionLoaded()
   WebUI:Init();
@@ -91,7 +91,7 @@ function FunBotClient:_onBulletCollision(hook, entity, hit, shooter)
 			local dz = math.abs(player.soldier.worldTransform.trans.z - hit.position.z)
 			local dy = hit.position.y - player.soldier.worldTransform.trans.y --player y is on ground. Hit must be higher to be valid
 			if dx < 1 and dz < 1 and dy < 2 and dy > 0 then --included bodyhight
-				NetEvents:SendLocal("DamagePlayer", Config.bulletDamageBot, shooter.name)
+				NetEvents:SendLocal("DamagePlayer", shooter.name)
 			end
 		end
 	end

@@ -204,6 +204,34 @@ function BotSpawner:_findKit(teamName, kitName)
     return
 end
 
+-- Tries to find first available kit
+-- @param teamName string Values: 'US', 'RU'
+-- @param kitName string Values: 'Assault', 'Engineer', 'Support', 'Recon'
+function BotSpawner:_findAppearance(teamName, kitName, color)
+    --Persistence/Unlocks/Soldiers/Visual/MP/Us/MP_US_Support_Appearance_'
+    local gameModeAppearances = {
+        '', -- Standard
+        '_GM', --Gun Master on XP2 Maps
+        '_GM_XP4', -- Gun Master on XP4 Maps
+        '_XP4', -- Copy of Standard for XP4 Maps
+        '_XP4_SCV' -- Scavenger on XP4 Maps
+    }
+
+    for appearence=1, #gameModeAppearances do
+        
+        local properAppearanceName = color
+        properAppearanceName = properKitName:gsub("%a", string.upper, 1)
+
+        local fullAppearanceName = string.upper(teamName)..properAppearanceName..gameModeAppearances[appearence]
+        local kit = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/'..fullAppearanceName)
+        if kit ~= nil then
+            return kit
+        end
+    end
+
+    return
+end
+
 function BotSpawner:_setAttachments(unlockWeapon, attachments)
     for _, attachment in pairs(attachments) do
         local unlockAsset = UnlockAsset(ResourceManager:SearchForDataContainer(attachment))
@@ -315,7 +343,7 @@ end
 
 function BotSpawner:_modifyWeapon(soldier)
     soldier.weaponsComponent.currentWeapon.secondaryAmmo = 9999
-    soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway.minDispersionAngle = 0
+    --[[soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway.minDispersionAngle = 0
     soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway.dispersionAngle = 0
     soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway.randomAngle = 0
     soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway.randomRadius = 0
@@ -325,7 +353,7 @@ function BotSpawner:_modifyWeapon(soldier)
     soldier.weaponsComponent.currentWeapon.weaponFiring.recoilAngleY = 0
     soldier.weaponsComponent.currentWeapon.weaponFiring.recoilAngleX = 0
     soldier.weaponsComponent.currentWeapon.weaponFiring.recoilTimer = 0.0
-    soldier.weaponsComponent.currentWeapon.weaponFiring.recoilFovAngle = 0
+    soldier.weaponsComponent.currentWeapon.weaponFiring.recoilFovAngle = 0 --]]
 end
 
 function BotSpawner:spawnBot(bot, trans, setKit)
@@ -350,11 +378,11 @@ function BotSpawner:spawnBot(bot, trans, setKit)
 
       -- create kit and appearance
     local soldierBlueprint = ResourceManager:SearchForDataContainer('Characters/Soldiers/MpSoldier')
-    local soldierCustomization = CustomizeSoldierData()
+    local soldierCustomization = nil
     local soldierKit = nil
     local appearance = nil
     soldierKit, appearance, soldierCustomization = self:getKitApperanceCustomization(bot.player.teamId, kitNumber, botColor)
-    
+
 	-- Create the transform of where to spawn the bot at.
 	local transform = LinearTransform()
     transform = trans

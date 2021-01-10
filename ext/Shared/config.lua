@@ -14,6 +14,8 @@ Config = {
     maxRaycastDistance = 125, --meters
     raycastInterval = 0.1, -- seconds
     bulletDamageBot = 7,
+    bulletDamageBotSniper = 18,
+    deviationCorrectionFactor = 1.0,    --use for difficulty: 0 = no correction (easy) 1 = hard
     botNewLoadoutOnSpawn = true,
     botKit = 0, -- 0 = random, 1 = assault, 2 = engineer, 3 = support, 4 = recon
     botColor = 0, -- 0 = random, see Coulors

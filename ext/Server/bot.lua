@@ -1,8 +1,8 @@
 class('Bot')
 
 require('__shared/config')
+require('waypoint')
 local Globals = require('globals')
-local fovHalf = Config.fovForShooting / 360 * math.pi * 2 / 2
 
 function Bot:__init(player)
     --Player Object
@@ -25,7 +25,7 @@ function Bot:__init(player)
     self._obstaceSequenceTimer = 0
     self._shotTimer = 0
     self._shootModeTimer = nil
-    
+
     --shared movement vars
     self.activeMoveMode = 0
     self.activeSpeedValue = 0
@@ -41,6 +41,7 @@ function Bot:__init(player)
     --shooting
     self._shoot = false
     self._shootPlayer = 0
+    self._shootWayPoints = {}
 
     --simple movement
     self._botSpeed = 0
@@ -80,6 +81,7 @@ function Bot:shootAt(player, ignoreYaw)
         dYaw =math.pi * 2 - dYaw
     end
 
+    local fovHalf = Config.fovForShooting / 360 * math.pi
     if dYaw < fovHalf or ignoreYaw then
         if self._shoot then
             if self._shootModeTimer == nil or self._shootModeTimer > 1 then
@@ -96,6 +98,7 @@ end
 function Bot:setVarsDefault()
     self._spawnMode = 5
     self._moveMode = 5
+    self._botSpeed = 3
     self._pathIndex = 1
     self._respawning = true
     self._shoot = true
@@ -140,7 +143,7 @@ function Bot:setVarsWay(player, useRandomWay, pathIndex, currentWayPoint)
         self._spawnMode = 4
         self._shoot = false
     end
-
+    self._botSpeed = 3
     self._moveMode = 5
     self._pathIndex = pathIndex
     self._currentWayPoint = currentWayPoint
@@ -223,6 +226,22 @@ function Bot:_updateRespwawn()
     end
 end
 
+function Bot:_getYawCorrection(currentWeapon)
+    local yawCorrection = 0
+    yawCorrection = currentWeapon.weaponFiring.gunSway.currentRecoilDeviation.yaw +
+                        currentWeapon.weaponFiring.gunSway.currentLagDeviation.yaw +
+                        currentWeapon.weaponFiring.gunSway.currentDispersionDeviation.yaw
+    return  -yawCorrection * Config.deviationCorrectionFactor
+end
+
+function Bot:_getPitchCorrection(currentWeapon)
+    local pitchCorrection = 0
+    pitchCorrection = currentWeapon.weaponFiring.gunSway.currentRecoilDeviation.pitch +
+                        currentWeapon.weaponFiring.gunSway.currentLagDeviation.pitch +
+                        currentWeapon.weaponFiring.gunSway.currentDispersionDeviation.pitch
+    return -pitchCorrection * Config.deviationCorrectionFactor
+end
+
 function Bot:_updateAiming()
     if self.player.alive and self._shoot then
         if self._shootPlayer ~= nil and self._shootPlayer.soldier ~= nil then
@@ -230,7 +249,7 @@ function Bot:_updateAiming()
             --calculate yaw and pith
             local dz = self._shootPlayer.soldier.worldTransform.trans.z - self.player.soldier.worldTransform.trans.z
             local dx = self._shootPlayer.soldier.worldTransform.trans.x - self.player.soldier.worldTransform.trans.x
-            local dy = self._shootPlayer.soldier.worldTransform.trans.y + self:_getCameraHight(self._shootPlayer.soldier) - 0.2 -self.player.soldier.worldTransform.trans.y - self:_getCameraHight(self.player.soldier) --0.2 to shoot a litle lower
+            local dy = self._shootPlayer.soldier.worldTransform.trans.y + self:_getCameraHight(self._shootPlayer.soldier) - 0.1 -self.player.soldier.worldTransform.trans.y - self:_getCameraHight(self.player.soldier) --0.2 to shoot a litle lower
             local atanDzDx = math.atan(dz, dx)
             local yaw = (atanDzDx > math.pi / 2) and (atanDzDx - math.pi / 2) or (atanDzDx + 3 * math.pi / 2)
             --calculate pitch
@@ -252,11 +271,20 @@ function Bot:_updateShooting()
 
                 if self._shotTimer >= (Config.botFireDuration + Config.botFirePause) then
                     self._shotTimer = 0
+                    --create a Trace to find way back
+                    --[[local point = WayPoint()
+                    point.trans = self.player.soldier.worldTransform.trans
+                    if point.trans.x ~= 0 and point.trans.y ~= 0 and point.trans.z ~= 0 then
+                        point.speedMode = 4
+                        table.insert(self._shootWayPoints, point)
+                    end--]]
                 end
                 if self._shotTimer >= Config.botFireDuration then
                     self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0)
                 else
                     self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1)
+                    --self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 1)
+                    --print(self.player.soldier.weaponsComponent.isZooming)
                 end
                 self._shotTimer = self._shotTimer + Config.botUpdateCycle
             else
@@ -318,12 +346,20 @@ function Bot:_updateMovement()
                 end
             end
             if Globals.wayPoints[self._pathIndex][1] ~= nil then   -- check for reached point
-                local inputVar = Globals.wayPoints[self._pathIndex][activePointIndex].inputVar
-                if (inputVar & 0x000F) > 0 then -- movement
+                local point = nil
+                local pointIncrement = 1
+                local useShootWayPoint = false
+                if #self._shootWayPoints > 0 then   --we need to go back to path first
+                    point = table.remove(self._shootWayPoints)
+                    useShootWayPoint = true
+                else
+                    point = Globals.wayPoints[self._pathIndex][activePointIndex]
+                end
+                if (point.speedMode) > 0 then -- movement
                     self._wayWaitTimer = 0
-                    self.activeSpeedValue = inputVar & 0x000F  --speed
+                    self.activeSpeedValue = point.speedMode --speed
                     local trans = Vec3()
-                    trans = Globals.wayPoints[self._pathIndex][activePointIndex].trans
+                    trans = point.trans
                     local dy = trans.z - self.player.soldier.worldTransform.trans.z
                     local dx = trans.x - self.player.soldier.worldTransform.trans.x
                     local distanceFromTarget = math.sqrt(dx ^ 2 + dy ^ 2)
@@ -336,15 +372,19 @@ function Bot:_updateMovement()
                         if self._obstaceSequenceTimer == 0 then  --step 0
                             self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0)
                             self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0)
-                        elseif self._obstaceSequenceTimer > 1.0 then  --step 4 - repeat afterwards
+                        elseif self._obstaceSequenceTimer > 1.8 then  --step 4 - repeat afterwards
                             self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0)
                             self._obstaceSequenceTimer = 0.1
                             self._obstacleRetryCounter = self._obstacleRetryCounter + 1
-                        elseif self._obstaceSequenceTimer > 0.6 then  --step 3
+                        elseif self._obstaceSequenceTimer > 0.8 then  --step 3
                             self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0)
                             self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0)
-                            self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 1.0)
-                        elseif self._obstaceSequenceTimer > 0.4 then --step 2
+                            if self._obstacleRetryCounter == 1 then
+                                self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 1.0)
+                            else
+                                self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, -1.0)
+                            end
+                        elseif self._obstaceSequenceTimer > 0.7 then --step 2
                             self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0)
                             self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0)
                         elseif self._obstaceSequenceTimer > 0.0 then --step 1
@@ -356,6 +396,7 @@ function Bot:_updateMovement()
                         if self._obstacleRetryCounter >= 2 then --tried twice, try next waypoint
                             self._obstacleRetryCounter = 0
                             distanceFromTarget = 0
+                            pointIncrement = 5
                         end
                     else
                         self._lastWayDistance = currentWayPontDistance
@@ -365,7 +406,7 @@ function Bot:_updateMovement()
                     end
 
                     -- jup on command
-                    if ((inputVar & 0x00F0) >> 4) == 1 and self._jumpTargetPoint == nil then
+                    if (point.extraMode) == 1 and self._jumpTargetPoint == nil then
                         self._jumpTargetPoint = trans
                         self._jumpTriggerDistance = math.abs(trans.x -self.player.soldier.worldTransform.trans.x) + math.abs(trans.z -self.player.soldier.worldTransform.trans.z)
                     elseif self._jumpTargetPoint ~= nil then
@@ -383,12 +424,14 @@ function Bot:_updateMovement()
                         self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0)
                     end
                          
-                    if distanceFromTarget > 1 then
+                    if distanceFromTarget > 1 then  --check for reached target
                         local atanDzDx = math.atan(dy, dx)
                         local yaw = (atanDzDx > math.pi / 2) and (atanDzDx - math.pi / 2) or (atanDzDx + 3 * math.pi / 2)
                         self.player.input.authoritativeAimingYaw = yaw
                     else  -- target reached
-                        self._currentWayPoint = activePointIndex + 1
+                        if not useShootWayPoint then
+                            self._currentWayPoint = activePointIndex + pointIncrement
+                        end
                         self._obstaceSequenceTimer = 0
                         self._lastWayDistance = 1000
                     end
@@ -396,7 +439,7 @@ function Bot:_updateMovement()
                     self._wayWaitTimer  = self._wayWaitTimer  + Config.botUpdateCycle
                     self.activeSpeedValue = 0
                     -- TODO: Move yaw while waiting?
-                    if  self._wayWaitTimer  > (inputVar >> 8) then
+                    if  self._wayWaitTimer  > point.optValue then
                         self._wayWaitTimer  = 0
                         self._currentWayPoint = activePointIndex + 1
                     end

@@ -2,14 +2,9 @@ class('WayPoint')
 
 function WayPoint:__init()
     self.trans = Vec3()
-    self.inputVar = 0x0
-end
-
-function WayPoint:setValues(x, y, z, invar)
-    self.trans.x = x
-    self.trans.y = y
-    self.trans.z = z
-    self.inputVar = invar
+    self.speedMode = 0
+    self.extraMode = 0
+    self.optValue = 0
 end
 
 return WayPoint

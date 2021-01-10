@@ -111,12 +111,20 @@ function BotManager:_onPlayerLeft(player)
     end
 end
 
-function BotManager:_onDamagePlayer(player, damage, shooterName)
+function BotManager:_onDamagePlayer(player, shooterName)
+    local bot = self:GetBotByName(shooterName)
+    if not player.alive then
+        return
+    end
+    local damage = (bot.kit == 4) and Config.bulletDamageBotSniper or Config.bulletDamageBot
+
     if player.soldier ~= nil then
         player.soldier.health = player.soldier.health - damage
     end
-    --TODO: Increase Killcount of Bot, if health <= 0 ?
-    --local killerBot = self:GetBotByName(shooterName)
+    --[[if player.soldier == nil then 
+        local killerBot = self:GetBotByName(shooterName)
+        killerBot.player.kills = killerBot.player.kills + 1  --not writable
+    end--]]
 end
 
 function BotManager:_onShootAt(player, botname, ignoreYaw)
