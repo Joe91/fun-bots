@@ -271,6 +271,11 @@ function Bot:_updateShooting()
 
                 if self._shotTimer >= (Config.botFireDuration + Config.botFirePause) then
                     self._shotTimer = 0
+                    --create a Trace to find way back
+                    local point = WayPoint()
+                    point.trans = self.player.worldTransform.trans
+                    point.moveMode = 4
+                    table.insert(self._shootWayPoints, point)
                 end
                 if self._shotTimer >= Config.botFireDuration then
                     self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0)
@@ -337,8 +342,16 @@ function Bot:_updateMovement()
                 end
             end
             if Globals.wayPoints[self._pathIndex][1] ~= nil then   -- check for reached point
-                local point = Globals.wayPoints[self._pathIndex][activePointIndex]
-                if (point.moveMode) > 0 then -- movement
+                local point = nil
+                local pointIncrement = 1
+                local useShootWayPoint = false
+                if #self._shootWayPoints > 0 then   --we need to go back to path first
+                    point = table.remove(self._shootWayPoints)
+                    useShootWayPoint = true
+                else
+                    point = Globals.wayPoints[self._pathIndex][activePointIndex]
+                end
+                if (point.speedMode) > 0 then -- movement
                     self._wayWaitTimer = 0
                     self.activeSpeedValue = point.moveMode --speed
                     local trans = Vec3()
@@ -355,15 +368,19 @@ function Bot:_updateMovement()
                         if self._obstaceSequenceTimer == 0 then  --step 0
                             self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0)
                             self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0)
-                        elseif self._obstaceSequenceTimer > 1.0 then  --step 4 - repeat afterwards
+                        elseif self._obstaceSequenceTimer > 1.8 then  --step 4 - repeat afterwards
                             self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0)
                             self._obstaceSequenceTimer = 0.1
                             self._obstacleRetryCounter = self._obstacleRetryCounter + 1
-                        elseif self._obstaceSequenceTimer > 0.6 then  --step 3
+                        elseif self._obstaceSequenceTimer > 0.8 then  --step 3
                             self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0)
                             self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0)
-                            self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 1.0)
-                        elseif self._obstaceSequenceTimer > 0.4 then --step 2
+                            if self._obstacleRetryCounter == 1 then
+                                self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 1.0)
+                            else
+                                self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, -1.0)
+                            end
+                        elseif self._obstaceSequenceTimer > 0.7 then --step 2
                             self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0)
                             self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0)
                         elseif self._obstaceSequenceTimer > 0.0 then --step 1
@@ -375,6 +392,7 @@ function Bot:_updateMovement()
                         if self._obstacleRetryCounter >= 2 then --tried twice, try next waypoint
                             self._obstacleRetryCounter = 0
                             distanceFromTarget = 0
+                            pointIncrement = 5
                         end
                     else
                         self._lastWayDistance = currentWayPontDistance
@@ -402,12 +420,14 @@ function Bot:_updateMovement()
                         self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0)
                     end
                          
-                    if distanceFromTarget > 1 then
+                    if distanceFromTarget > 1 then  --check for reached target
                         local atanDzDx = math.atan(dy, dx)
                         local yaw = (atanDzDx > math.pi / 2) and (atanDzDx - math.pi / 2) or (atanDzDx + 3 * math.pi / 2)
                         self.player.input.authoritativeAimingYaw = yaw
                     else  -- target reached
-                        self._currentWayPoint = activePointIndex + 1
+                        if not useShootWayPoint then
+                            self._currentWayPoint = activePointIndex + pointIncrement
+                        end
                         self._obstaceSequenceTimer = 0
                         self._lastWayDistance = 1000
                     end

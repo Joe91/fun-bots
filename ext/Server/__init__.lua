@@ -28,23 +28,23 @@ end
 
 --spawn bots
 function FunBotServer:_uispawnbots(player, spawnbots)
-amount = tonumber(spawnbots)
-BotSpawner:spawnWayBots(player, amount, true)
-print(player.name .." spawning ".. spawnbots .." bot/s")
+    local amount = tonumber(spawnbots)
+    BotSpawner:spawnWayBots(player, amount, true)
+    print(player.name .." spawning ".. spawnbots .." bot/s")
 end
 
 function FunBotServer:_uispawnrandombot(player, spawnbots)
-print("spawnrandombot - it worked!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    print("spawnrandombot - it worked!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 end
 
 function FunBotServer:_uikickallbots(player, spawnbots)
-BotManager:destroyAllBots()
-print("Kicking Bots")
+    BotManager:destroyAllBots()
+    print("Kicking Bots")
 end
 
 function FunBotServer:_uibotrespawn(player, spawnbots)
-BotManager:setOptionForAll("respawn", true)
-print("Bots will respawn")
+    BotManager:setOptionForAll("respawn", true)
+    print("Bots will respawn")
 end
 
 function FunBotServer:_onLevelLoaded(levelName, gameMode)
