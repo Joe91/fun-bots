@@ -10,15 +10,15 @@ function FunBotClient:__init()
 	Events:Subscribe('UpdateManager:Update', self, self._onUpdate)
 	Events:Subscribe('Extension:Loaded', self, self._onExtensionLoaded)
 	Hooks:Install('BulletEntity:Collision', 1, self, self._onBulletCollision)
+	Events:Subscribe('exitui', self, self._onExitUi)
 end
 
-Events:Subscribe('exitui', function(player)
-	funBotClient = FunBotClient()
-    if funBotClient._webui == 1 then
-        funBotClient._webui = 0
+function FunBotClient:_onExitUi(player)
+    if self._webui == 1 then
+        self._webui = 0
 		print("self._webui = 0")
     end
-end)
+end
 
 function FunBotClient:_onExtensionLoaded()
   WebUI:Init();
