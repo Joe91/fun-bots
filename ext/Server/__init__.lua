@@ -17,30 +17,35 @@ function FunBotServer:__init()
     NetEvents:Subscribe('keypressF10', self, self._onF10)
     NetEvents:Subscribe('keypressF11', self, self._onF11)
     NetEvents:Subscribe('keypressF12', self, self._onF12)
+	
+	NetEvents:Subscribe('spawnbots', self, self._uispawnbots)
+	NetEvents:Subscribe('spawnrandombot', self, self._uispawnrandombot)
+	NetEvents:Subscribe('kickallbots', self, self._uikickallbots)
+	NetEvents:Subscribe('respawnbots', self, self._uibotrespawn)
 end
 
 --webui events -Bitcrusher
 
 --spawn bots
-NetEvents:Subscribe('spawnbots', function(player, spawnbots)
+function FunBotServer:_uispawnbots(player, spawnbots)
 amount = tonumber(spawnbots)
-print(player.name .." spawning ".. spawnbots .." bot/s")
 BotSpawner:spawnWayBots(player, amount, true)
-end)
+print(player.name .." spawning ".. spawnbots .." bot/s")
+end
 
-NetEvents:Subscribe('spawnrandombot', function(player, spawnbots)
+function FunBotServer:_uispawnrandombot(player, spawnbots)
 print("spawnrandombot - it worked!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-end)
+end
 
-NetEvents:Subscribe('kickallbots', function(player, spawnbots)
+function FunBotServer:_uikickallbots(player, spawnbots)
 BotManager:destroyAllBots()
 print("Kicking Bots")
-end)
+end
 
-NetEvents:Subscribe('respawnbots', function(player, spawnbots)
+function FunBotServer:_uibotrespawn(player, spawnbots)
 BotManager:setOptionForAll("respawn", true)
 print("Bots will respawn")
-end)
+end
 
 function FunBotServer:_onLevelLoaded(levelName, gameMode)
     TraceManager:onLevelLoaded(levelName, gameMode)
