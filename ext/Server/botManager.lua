@@ -113,15 +113,18 @@ end
 
 function BotManager:_onDamagePlayer(player, shooterName)
     local bot = self:GetBotByName(shooterName)
+    if not player.alive then
+        return
+    end
     local damage = (bot.kit == 4) and Config.bulletDamageBotSniper or Config.bulletDamageBot
 
     if player.soldier ~= nil then
         player.soldier.health = player.soldier.health - damage
     end
-    if player.soldier.health <= 0 then
+    --[[if player.soldier == nil then 
         local killerBot = self:GetBotByName(shooterName)
-        killerBot.Player.kills = killerBot.Player.kills + 1
-    end
+        killerBot.player.kills = killerBot.player.kills + 1  --not writable
+    end--]]
 end
 
 function BotManager:_onShootAt(player, botname, ignoreYaw)

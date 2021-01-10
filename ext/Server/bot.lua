@@ -1,6 +1,7 @@
 class('Bot')
 
 require('__shared/config')
+require('waypoint')
 local Globals = require('globals')
 
 function Bot:__init(player)
@@ -97,6 +98,7 @@ end
 function Bot:setVarsDefault()
     self._spawnMode = 5
     self._moveMode = 5
+    self._botSpeed = 3
     self._pathIndex = 1
     self._respawning = true
     self._shoot = true
@@ -141,7 +143,7 @@ function Bot:setVarsWay(player, useRandomWay, pathIndex, currentWayPoint)
         self._spawnMode = 4
         self._shoot = false
     end
-
+    self._botSpeed = 3
     self._moveMode = 5
     self._pathIndex = pathIndex
     self._currentWayPoint = currentWayPoint
@@ -229,8 +231,7 @@ function Bot:_getYawCorrection(currentWeapon)
     yawCorrection = currentWeapon.weaponFiring.gunSway.currentRecoilDeviation.yaw +
                         currentWeapon.weaponFiring.gunSway.currentLagDeviation.yaw +
                         currentWeapon.weaponFiring.gunSway.currentDispersionDeviation.yaw
-    print(yawCorrection)
-    return -yawCorrection * Config.deviationCorrectionFactor
+    return  -yawCorrection * Config.deviationCorrectionFactor
 end
 
 function Bot:_getPitchCorrection(currentWeapon)
@@ -238,7 +239,6 @@ function Bot:_getPitchCorrection(currentWeapon)
     pitchCorrection = currentWeapon.weaponFiring.gunSway.currentRecoilDeviation.pitch +
                         currentWeapon.weaponFiring.gunSway.currentLagDeviation.pitch +
                         currentWeapon.weaponFiring.gunSway.currentDispersionDeviation.pitch
-    print(pitchCorrection)
     return -pitchCorrection * Config.deviationCorrectionFactor
 end
 
@@ -255,8 +255,8 @@ function Bot:_updateAiming()
             --calculate pitch
             local distance = math.sqrt(dz^2 + dx^2)
             local pitch =  math.atan(dy, distance)
-            self.player.input.authoritativeAimingPitch = pitch + self._getPithCorrection(self.player.soldier.weaponsComponent.currentWeapon)
-            self.player.input.authoritativeAimingYaw = yaw + self._getYawCorrection(self.player.soldier.weaponsComponent.currentWeapon)
+            self.player.input.authoritativeAimingPitch = pitch
+            self.player.input.authoritativeAimingYaw = yaw
         end
     end
 end
@@ -272,15 +272,19 @@ function Bot:_updateShooting()
                 if self._shotTimer >= (Config.botFireDuration + Config.botFirePause) then
                     self._shotTimer = 0
                     --create a Trace to find way back
-                    local point = WayPoint()
-                    point.trans = self.player.worldTransform.trans
-                    point.moveMode = 4
-                    table.insert(self._shootWayPoints, point)
+                    --[[local point = WayPoint()
+                    point.trans = self.player.soldier.worldTransform.trans
+                    if point.trans.x ~= 0 and point.trans.y ~= 0 and point.trans.z ~= 0 then
+                        point.speedMode = 4
+                        table.insert(self._shootWayPoints, point)
+                    end--]]
                 end
                 if self._shotTimer >= Config.botFireDuration then
                     self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0)
                 else
                     self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1)
+                    --self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 1)
+                    --print(self.player.soldier.weaponsComponent.isZooming)
                 end
                 self._shotTimer = self._shotTimer + Config.botUpdateCycle
             else
@@ -353,7 +357,7 @@ function Bot:_updateMovement()
                 end
                 if (point.speedMode) > 0 then -- movement
                     self._wayWaitTimer = 0
-                    self.activeSpeedValue = point.moveMode --speed
+                    self.activeSpeedValue = point.speedMode --speed
                     local trans = Vec3()
                     trans = point.trans
                     local dy = trans.z - self.player.soldier.worldTransform.trans.z

@@ -378,7 +378,7 @@ function BotSpawner:spawnBot(bot, trans, setKit)
 
       -- create kit and appearance
     local soldierBlueprint = ResourceManager:SearchForDataContainer('Characters/Soldiers/MpSoldier')
-    local soldierCustomization = CustomizeSoldierData()
+    local soldierCustomization = nil
     local soldierKit = nil
     local appearance = nil
     soldierKit, appearance, soldierCustomization = self:getKitApperanceCustomization(bot.player.teamId, kitNumber, botColor)
