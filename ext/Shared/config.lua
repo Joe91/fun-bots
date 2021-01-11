@@ -1,25 +1,30 @@
 Config = {
     maxNumberOfBots = 30,
-    spawnInSameTeam = false,
-    exploding = false,
     traceDelta = 0.2,
-    spawnOnLevelstart = true,
     spawnDelayBots = 2.0,
+    maxRaycastDistance = 125, --meters
+    raycastInterval = 0.1, -- seconds
     botUpdateCycle = 0.1,
-    initNumberOfBots = 12,
     fovForShooting = 270,  -- Degrees of FOV of Bot
     botFireDuration = 0.2,
     botFirePause = 0.3,
     botFireModeDuration = 5.0,
-    maxRaycastDistance = 125, --meters
-    raycastInterval = 0.1, -- seconds
-    bulletDamageBot = 7,
-    bulletDamageBotSniper = 18,
-    deviationCorrectionFactor = 1.0,    --use for difficulty: 0 = no correction (easy) 1 = hard
+    maxTraceNumber = 10,
+    --values that can be modified ingame:
+    spawnInSameTeam = false,
+    initNumberOfBots = 12,
+    spawnOnLevelstart = true,
+    bulletDamageBot = 4,
+    bulletDamageBotSniper = 12,
+    meleeDamageBot = 25,
+    meleeAttackIfClose = true,
+    meleeAttackCoolDown = 3.0,
+    shootBackIfHit = true,
+    deviationCorrectionFactor = 1.0,    --use for difficulty: 0 = no correction (easy) 1 = hard --> Not working right now
     botNewLoadoutOnSpawn = true,
     botKit = 0, -- 0 = random, 1 = assault, 2 = engineer, 3 = support, 4 = recon
-    botColor = 0, -- 0 = random, see Coulors
-    maxTraceNumber = 10
+    botColor = 0 -- 0 = random, see Coulors
+    
 }
 
 Colors = {

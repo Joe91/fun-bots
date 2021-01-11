@@ -25,6 +25,7 @@ function Bot:__init(player)
     self._obstaceSequenceTimer = 0
     self._shotTimer = 0
     self._shootModeTimer = nil
+    self._meleeCooldownTimer = 0
 
     --shared movement vars
     self.activeMoveMode = 0
@@ -40,7 +41,7 @@ function Bot:__init(player)
 
     --shooting
     self._shoot = false
-    self._shootPlayer = 0
+    self._shootPlayer = nil
     self._shootWayPoints = {}
 
     --simple movement
@@ -198,6 +199,7 @@ function Bot:resetSpawnVars()
     self._lastWayDistance = 1000
     self._shootPlayer = nil
     self._shootModeTimer = nil
+    self._meleeCooldownTimer = 0
 end
 
 function Bot:clearPlayer(player)
@@ -269,15 +271,31 @@ function Bot:_updateShooting()
 
                 self.activeMoveMode = 9 -- movement-mode : shoot
 
+                --check for melee attack
+                if Config.meleeAttackIfClose and self._shootPlayer.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans) < 1 then
+                    if self._meleeCooldownTimer <= 0 then
+                        self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 1)
+                        self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 1)
+                        self._meleeCooldownTimer = Config.meleeAttackCoolDown
+                        Events:DispatchLocal("ServerDamagePlayer", self._shootPlayer.name, self.player.name, true)
+                    else
+                        self._meleeCooldownTimer = self._meleeCooldownTimer - Config.botUpdateCycle
+                        if self._meleeCooldownTimer < 0 then
+                            self._meleeCooldownTimer = 0
+                        end
+                        self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 0)
+                        self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0)
+                    end
+                end
+
+                --shooting sequence
                 if self._shotTimer >= (Config.botFireDuration + Config.botFirePause) then
                     self._shotTimer = 0
                     --create a Trace to find way back
-                    --[[local point = WayPoint()
-                    point.trans = self.player.soldier.worldTransform.trans
-                    if point.trans.x ~= 0 and point.trans.y ~= 0 and point.trans.z ~= 0 then
-                        point.speedMode = 4
-                        table.insert(self._shootWayPoints, point)
-                    end--]]
+                    local point = WayPoint()
+                    point.trans = self.player.soldier.worldTransform.trans:Clone()
+                    point.speedMode = 4
+                    table.insert(self._shootWayPoints, point)
                 end
                 if self._shotTimer >= Config.botFireDuration then
                     self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0)
@@ -294,6 +312,8 @@ function Bot:_updateShooting()
         else
             self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 0)
             self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0)
+            self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 0)
+            self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0)
             self._shootPlayer = nil
             self._shootModeTimer = nil
         end

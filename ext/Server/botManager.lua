@@ -10,7 +10,8 @@ function BotManager:__init()
     Events:Subscribe('Extension:Unloading', self, self._onUnloading)
     Events:Subscribe('Player:Left', self, self._onPlayerLeft)
     NetEvents:Subscribe('BotShootAtPlayer', self, self._onShootAt)
-    NetEvents:Subscribe('DamagePlayer', self, self._onDamagePlayer)
+    Events:Subscribe('ServerDamagePlayer', self, self._onServerDamagePlayer)
+    NetEvents:Subscribe('ClientDamagePlayer', self, self._onDamagePlayer)
 end
 
 function BotManager:onLevelLoaded()
@@ -111,12 +112,24 @@ function BotManager:_onPlayerLeft(player)
     end
 end
 
-function BotManager:_onDamagePlayer(player, shooterName)
+function BotManager:_onServerDamagePlayer(playerName, shooterName, meleeAttack)
+    local player = PlayerManager:GetPlayerByName(playerName)
+    if player ~= nil then
+        self:_onDamagePlayer(player, shooterName, meleeAttack)
+    end
+end
+
+function BotManager:_onDamagePlayer(player, shooterName, meleeAttack)
     local bot = self:GetBotByName(shooterName)
     if not player.alive or bot == nil then
         return
     end
-    local damage = (bot.kit == 4) and Config.bulletDamageBotSniper or Config.bulletDamageBot
+    local damage = 0
+    if not meleeAttack then
+        damage = (bot.kit == 4) and Config.bulletDamageBotSniper or Config.bulletDamageBot
+    else
+        damage = Config.meleeDamageBot
+    end
 
     if player.soldier ~= nil then
         player.soldier.health = player.soldier.health - damage
@@ -159,6 +172,10 @@ function BotManager:createBot(name, team)
 
     -- Create a player for this bot.
     local botPlayer = PlayerManager:CreatePlayer(name, team, SquadId.SquadNone)
+    if botPlayer == nil then
+        print("cant create more players on this team")
+        return
+    end
 
 	-- Create input for this bot.
 	local botInput = EntryInput()
