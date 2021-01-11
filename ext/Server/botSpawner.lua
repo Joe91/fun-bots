@@ -12,6 +12,7 @@ function BotSpawner:__init()
     self._activeWayIndex = 1
     Events:Subscribe('UpdateManager:Update', self, self._onUpdate)
     Events:Subscribe('Bot:RespawnBot', self, self._onRespawnBot)
+    Events:Subscribe('Player:KitPickup', self, self._onKitPickup)
 end
 
 function BotSpawner:_onUpdate(dt, pass)
@@ -341,6 +342,12 @@ function BotSpawner:getKitApperanceCustomization(team, kit, color)
 	soldierCustomization.weapons:add(meleeWeapon)
 
     return soldierKit, appearance, soldierCustomization
+end
+
+function BotSpawner:_onKitPickup(player, newCustomization)
+    if player.soldier ~= nil then
+        player.soldier.weaponsComponent.currentWeapon.secondaryAmmo = 125
+    end
 end
 
 function BotSpawner:_modifyWeapon(soldier)
