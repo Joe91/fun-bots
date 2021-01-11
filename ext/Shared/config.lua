@@ -8,6 +8,7 @@ Config = {
     fovForShooting = 270,  -- Degrees of FOV of Bot
     botFireDuration = 0.2,
     botFirePause = 0.3,
+    botMinTimeShootAtPlayer = 1.0,
     botFireModeDuration = 5.0,
     maxTraceNumber = 10,
     --values that can be modified ingame:

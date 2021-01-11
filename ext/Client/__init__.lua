@@ -140,12 +140,12 @@ end
 --webui events dispatch -bitcrusher
 --spawnbots
 Events:Subscribe('spawnbotsvalue', function(data)
-	spawnbots = data
+	local spawnbots = data
 	NetEvents:Send('spawnbots', spawnbots)
 	print("spawning: ".. spawnbots .." bots..")
 end)
 Events:Subscribe('spawnrandombot', function(data)
-	spawnbots = data
+	local spawnbots = data
 	NetEvents:Send('spawnrandombot', spawnbots)
 	print("spawning: ".. spawnbots .." random bots..")
 end)

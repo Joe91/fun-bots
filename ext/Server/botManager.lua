@@ -56,6 +56,10 @@ function BotManager:findNextBotName()
     return nil
 end
 
+function BotManager:getBotCount()
+    return #self._bots
+end
+
 function BotManager:setStaticOption(player, option, value)
     for _, bot in pairs(self._bots) do
         if bot:getTargetPlayer() == player then
@@ -115,9 +119,11 @@ end
 
 function BotManager:_onSoldierDamage(hook, soldier, info, giverInfo)
     if Config.shootBackIfHit then
-        local bot = self:GetBotByName(soldier.player.name)
-        if soldier ~= nil and bot ~= nil then
-            self:_onShootAt(giverInfo.giver, bot.name, true)
+        if giverInfo.player ~= nil then
+            local bot = self:GetBotByName(soldier.player.name)
+            if soldier ~= nil and bot ~= nil then
+                self:_onShootAt(giverInfo.giver, bot.name, true)
+            end
         end
     end
 end
@@ -240,8 +246,10 @@ end
 function BotManager:destroyTeam(teamId)
     for i = 1, Config.maxNumberOfBots do
         local bot = self:GetBotByName(BotNames[i])
-        if bot.player.teamId == teamId then
-            self:destroyBot(bot.name)
+        if bot ~= nil then
+            if bot.player.teamId == teamId then
+                self:destroyBot(bot.name)
+            end
         end
     end
 end
@@ -249,8 +257,10 @@ end
 function BotManager:destroyPlayerBots(player)
     for i = 1, Config.maxNumberOfBots do
         local bot = self:GetBotByName(BotNames[i])
-        if bot:getTargetPlayer() == player then
-            self:destroyBot(bot.name)
+        if bot ~= nil then
+            if bot:getTargetPlayer() == player then
+                self:destroyBot(bot.name)
+            end
         end
     end
 end

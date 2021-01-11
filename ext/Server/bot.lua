@@ -72,20 +72,24 @@ end
 
 --public functions
 function Bot:shootAt(player, ignoreYaw)
-    local oldYaw = self.player.input.authoritativeAimingYaw
-    local dy = player.soldier.worldTransform.trans.z - self.player.soldier.worldTransform.trans.z
-    local dx = player.soldier.worldTransform.trans.x - self.player.soldier.worldTransform.trans.x
-    local yaw = (math.atan(dy, dx) > math.pi / 2) and (math.atan(dy, dx) - math.pi / 2) or (math.atan(dy, dx) + 3 * math.pi / 2)
+    local dYaw = 0
+    local fovHalf = 0
+    if not ignoreYaw then
+        local oldYaw = self.player.input.authoritativeAimingYaw
+        local dy = player.soldier.worldTransform.trans.z - self.player.soldier.worldTransform.trans.z
+        local dx = player.soldier.worldTransform.trans.x - self.player.soldier.worldTransform.trans.x
+        local yaw = (math.atan(dy, dx) > math.pi / 2) and (math.atan(dy, dx) - math.pi / 2) or (math.atan(dy, dx) + 3 * math.pi / 2)
 
-    local dYaw = math.abs(oldYaw-yaw)
-    if dYaw > math.pi then
-        dYaw =math.pi * 2 - dYaw
+        dYaw = math.abs(oldYaw-yaw)
+        if dYaw > math.pi then
+            dYaw =math.pi * 2 - dYaw
+        end
+        fovHalf = Config.fovForShooting / 360 * math.pi
     end
 
-    local fovHalf = Config.fovForShooting / 360 * math.pi
     if dYaw < fovHalf or ignoreYaw then
         if self._shoot then
-            if self._shootModeTimer == nil or self._shootModeTimer > 1 then
+            if self._shootModeTimer == nil or self._shootModeTimer > Config.botMinTimeShootAtPlayer then
                 self._shootModeTimer = 0
                 self._shootPlayer = player
                 self._shotTimer = 0
