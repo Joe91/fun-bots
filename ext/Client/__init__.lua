@@ -21,8 +21,8 @@ function FunBotClient:_onExitUi(player)
 end
 
 function FunBotClient:_onExtensionLoaded()
-  WebUI:Init();
-  WebUI:Hide();
+	WebUI:Init();
+	WebUI:Hide();
 end
 
 

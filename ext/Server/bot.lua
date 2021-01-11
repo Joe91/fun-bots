@@ -112,6 +112,7 @@ function Bot:resetVars()
     self._respawning = false
     self._shoot = false
     self._targetPlayer = nil
+    self._shootPlayer = nil
 end
 
 function Bot:setVarsStatic(player)
@@ -223,7 +224,7 @@ function Bot:_updateRespwawn()
         if self._spawnDelayTimer < Config.spawnDelayBots then
             self._spawnDelayTimer = self._spawnDelayTimer + Config.botUpdateCycle
         else
-            Events:Dispatch('Bot:RespawnBot', self.name)
+            Events:DispatchLocal('Bot:RespawnBot', self.name)
         end
     end
 end
@@ -392,11 +393,11 @@ function Bot:_updateMovement()
                         if self._obstaceSequenceTimer == 0 then  --step 0
                             self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0)
                             self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0)
-                        elseif self._obstaceSequenceTimer > 1.8 then  --step 4 - repeat afterwards
+                        elseif self._obstaceSequenceTimer > 1.8 then  --step 3 - repeat afterwards
                             self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0)
-                            self._obstaceSequenceTimer = 0.1
+                            self._obstaceSequenceTimer = 0
                             self._obstacleRetryCounter = self._obstacleRetryCounter + 1
-                        elseif self._obstaceSequenceTimer > 0.8 then  --step 3
+                        elseif self._obstaceSequenceTimer > 0.8 then  --step 2
                             self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0)
                             self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0)
                             if self._obstacleRetryCounter == 1 then
@@ -404,24 +405,21 @@ function Bot:_updateMovement()
                             else
                                 self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, -1.0)
                             end
-                        elseif self._obstaceSequenceTimer > 0.7 then --step 2
-                            self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0)
-                            self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0)
                         elseif self._obstaceSequenceTimer > 0.0 then --step 1
-                            self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 1)
                             self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1)
+                            self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 1)
                         end
                         self._obstaceSequenceTimer = self._obstaceSequenceTimer + Config.botUpdateCycle
 
                         if self._obstacleRetryCounter >= 2 then --tried twice, try next waypoint
                             self._obstacleRetryCounter = 0
                             distanceFromTarget = 0
-                            pointIncrement = 5
+                            pointIncrement = 5 -- go 5 points further
                         end
                     else
                         self._lastWayDistance = currentWayPontDistance
-                        self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0)
                         self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0)
+                        self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0)
                         self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0)
                     end
 
@@ -443,7 +441,7 @@ function Bot:_updateMovement()
                         self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0)
                         self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0)
                     end
-                         
+
                     if distanceFromTarget > 1 then  --check for reached target
                         local atanDzDx = math.atan(dy, dx)
                         local yaw = (atanDzDx > math.pi / 2) and (atanDzDx - math.pi / 2) or (atanDzDx + 3 * math.pi / 2)

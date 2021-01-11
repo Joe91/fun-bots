@@ -12,6 +12,7 @@ function BotManager:__init()
     NetEvents:Subscribe('BotShootAtPlayer', self, self._onShootAt)
     Events:Subscribe('ServerDamagePlayer', self, self._onServerDamagePlayer)
     NetEvents:Subscribe('ClientDamagePlayer', self, self._onDamagePlayer)
+    Hooks:Install('Soldier:Damage', 1, self, self._onSoldierDamage)
 end
 
 function BotManager:onLevelLoaded()
@@ -112,6 +113,16 @@ function BotManager:_onPlayerLeft(player)
     end
 end
 
+function BotManager:_onSoldierDamage(hook, soldier, info, giverInfo)
+    if Config.shootBackIfHit then
+        local bot = self:GetBotByName(soldier.player.name)
+        if soldier ~= nil and bot ~= nil then
+            self:_onShootAt(giverInfo.giver, bot.name, true)
+        end
+    end
+end
+
+
 function BotManager:_onServerDamagePlayer(playerName, shooterName, meleeAttack)
     local player = PlayerManager:GetPlayerByName(playerName)
     if player ~= nil then
@@ -209,7 +220,9 @@ function BotManager:killPlayerBots(player)
     for _, bot in pairs(self._bots) do
         if bot:getTargetPlayer() == player then
             bot:resetVars()
-            bot.player.soldier:Kill()
+            if bot.player.alive then
+                bot.player.soldier:Kill()
+            end
         end
     end
 end
@@ -217,7 +230,9 @@ end
 function BotManager:killAll()
     for _, bot in pairs(self._bots) do
         bot:resetVars()
-        bot.player.soldier:Kill()
+        if bot.player.alive then
+            bot.player.soldier:Kill()
+        end
     end
 end
 
