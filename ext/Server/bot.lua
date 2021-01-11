@@ -105,7 +105,7 @@ function Bot:setVarsDefault()
     self._moveMode = 5
     self._botSpeed = 3
     self._pathIndex = 1
-    self._respawning = true
+    self._respawning = Config.respawnWayBots
     self._shoot = true
 end
 
@@ -155,7 +155,7 @@ function Bot:setVarsWay(player, useRandomWay, pathIndex, currentWayPoint)
     self._moveMode = 5
     self._pathIndex = pathIndex
     self._currentWayPoint = currentWayPoint
-    self._respawning = false
+    self._respawning = Config.respawnWayBots
 end
 
 function Bot:isStaticMovement()

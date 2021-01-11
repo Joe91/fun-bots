@@ -103,14 +103,6 @@ function FunBotServer:_onChat(player, recipientMask, message)
         local spacing = tonumber(parts[3]) or 2
         BotSpawner:spawnLineBots(player, amount, spacing)
 
-    elseif parts[1] == '!spawnring' then
-        if tonumber(parts[2]) == nil then
-            return
-        end
-        local amount = tonumber(parts[2])
-        local spacing = tonumber(parts[3]) or 10
-        BotSpawner:spawnRingBots(player, amount, spacing)
-
     elseif parts[1] == '!spawnway' then
         if tonumber(parts[2]) == nil then
             return

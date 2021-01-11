@@ -15,6 +15,7 @@ Config = {
     spawnInSameTeam = false,
     initNumberOfBots = 12,
     spawnOnLevelstart = true,
+    respawnWayBots = true,
     bulletDamageBot = 4,
     bulletDamageBotSniper = 12,
     meleeDamageBot = 25,
