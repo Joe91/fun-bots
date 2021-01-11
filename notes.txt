@@ -1,1 +1,6 @@
-HELLO! Thanks for letting me help with your mod
+bots sometimes spawn in red zone randomly
+bots sometimes wonder off path into red zone like they are following something or?
+
+4 players in server asked one to spawn 50, 30 arrived due to limit click respawn and server crashes
+
+spawning bots more than once sometimes causes crashes
