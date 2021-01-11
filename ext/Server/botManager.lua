@@ -34,7 +34,7 @@ function BotManager:onLevelLoaded()
     Globals.botTeam = botTeam
 
     self:killAll()
-    local amountToKick = self:getBotCount() - Config.spawnOnLevelstart
+    local amountToKick = self:getBotCount() - Config.initNumberOfBots
     if amountToKick > 0 then
         self:destroyAmount(amountToKick)
     end
