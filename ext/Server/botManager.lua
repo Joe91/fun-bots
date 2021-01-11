@@ -33,7 +33,11 @@ function BotManager:onLevelLoaded()
     end
     Globals.botTeam = botTeam
 
-    self:destroyAllBots()
+    self:killAll()
+    local amountToKick = self:getBotCount() - Config.spawnOnLevelstart
+    if amountToKick > 0 then
+        self:destroyAmount(amountToKick)
+    end
     -- create initial bots
     if Globals.activeTraceIndexes > 0 and Config.spawnOnLevelstart then
         for i = 1, Config.initNumberOfBots do
@@ -239,6 +243,21 @@ function BotManager:killAll()
         bot:resetVars()
         if bot.player.alive then
             bot.player.soldier:Kill()
+        end
+    end
+end
+
+function BotManager:destroyAmount(number)
+    local count = 0
+    for i = 1, Config.maxNumberOfBots do
+        local index = Config.maxNumberOfBots + 1 - i
+        local bot = self:GetBotByName(BotNames[index])
+        if bot ~= nil then
+            self:destroyBot(bot.name)
+            count = count + 1
+        end
+        if count >= number then
+            return
         end
     end
 end

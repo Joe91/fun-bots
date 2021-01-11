@@ -187,8 +187,12 @@ function FunBotServer:_onChat(player, recipientMask, message)
         BotManager:setOptionForPlayer(player, "respawning", false)
         BotManager:setOptionForPlayer(player, "moveMode", 0)
  
-    elseif parts[1] == '!kick' then
+    elseif parts[1] == '!kickplayer' then
         BotManager:destroyPlayerBots(player)
+
+    elseif parts[1] == '!kick' then
+        local amount = tonumber(parts[2]) or 1
+        BotManager:destroyAmount(amount)
 
     elseif parts[1] == '!kickteam' then
         local teamToKick = tonumber(parts[2]) or 1

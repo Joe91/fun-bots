@@ -132,6 +132,9 @@ function BotSpawner:spawnRingBots(player, amount, spacing)
 end
 
 function BotSpawner:spawnWayBots(player, amount, useRandomWay, activeWayIndex)
+    if BotManager:getBotCount() == 0 then
+        amount = 1      --quickfix. No Idea why this is needed...
+    end
     if Globals.activeTraceIndexes <= 0 then
         return
     end
