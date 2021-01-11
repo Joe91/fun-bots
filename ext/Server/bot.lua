@@ -214,7 +214,9 @@ end
 
 function Bot:destroy()
     self.player.input = nil
+    self:resetVars()
     PlayerManager:DeletePlayer(self.player)
+    self.player = nil
 end
 
 --private functions

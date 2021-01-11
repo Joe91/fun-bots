@@ -140,22 +140,22 @@ end
 --webui events dispatch -bitcrusher
 --spawnbots
 Events:Subscribe('spawnbotsvalue', function(data)
-  spawnbots = data
-  NetEvents:Send('spawnbots', spawnbots)
-  print("spawning: ".. spawnbots .." bots..")
+	spawnbots = data
+	NetEvents:Send('spawnbots', spawnbots)
+	print("spawning: ".. spawnbots .." bots..")
 end)
 Events:Subscribe('spawnrandombot', function(data)
-  spawnbots = data
-  NetEvents:Send('spawnrandombot', spawnbots)
-  print("spawning: ".. spawnbots .." random bots..")
+	spawnbots = data
+	NetEvents:Send('spawnrandombot', spawnbots)
+	print("spawning: ".. spawnbots .." random bots..")
 end)
 Events:Subscribe('kickallbots', function(data)
-  NetEvents:Send('kickallbots')
-  print("Kicking all bots...")
+	NetEvents:Send('kickallbots')
+	print("Kicking all bots...")
 end)
 Events:Subscribe('respawnbots', function(data)
-  NetEvents:Send('respawnbots')
-  print("bot respawn enabled")
+	NetEvents:Send('respawnbots')
+	print("bot respawn enabled")
 end)
 --staticbots
 
