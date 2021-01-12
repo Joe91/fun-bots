@@ -48,7 +48,7 @@ end
 
 function FunBotServer:_onLevelLoaded(levelName, gameMode)
     TraceManager:onLevelLoaded(levelName, gameMode)
-    BotManager:onLevelLoaded()
+    BotSpawner:onLevelLoaded()
 end
 
 

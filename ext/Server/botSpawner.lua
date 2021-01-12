@@ -15,13 +15,29 @@ function BotSpawner:__init()
     Events:Subscribe('Player:KitPickup', self, self._onKitPickup)
 end
 
+function BotSpawner:onLevelLoaded()
+    BotManager:detectBotTeam()
+
+    local amountToSpawn = Config.initNumberOfBots
+    if BotManager:getBotCount() > amountToSpawn then
+        amountToSpawn = BotManager:getBotCount()
+    end
+    self:destroyAllBots()
+
+    -- create initial bots
+    if Globals.activeTraceIndexes > 0 and Config.spawnOnLevelstart then
+        --signal bot Spawner to do its stuff
+        self:spawnWayBots(nil, amountToSpawn, true, 1)
+    end
+end
+
 function BotSpawner:_onUpdate(dt, pass)
 	if pass ~= UpdatePass.UpdatePass_PostFrame then
 		return
     end
 
     if self._botsToSpawn > 0 then
-        if self._botSpawnTimer > 0.2 then   --time to wait between spawn
+        if self._botSpawnTimer > 0.1 then   --time to wait between spawn. 0.2 works
             self._botsToSpawn = self._botsToSpawn - 1
             self:_spawnSigleWayBot(self._playerVarOfBot, self._useRandomWay, self._activeWayIndex)
         end
