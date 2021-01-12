@@ -57,10 +57,10 @@ Some settings for the moving bots.
 If you use respawn, all Bots will respawn after they have been killed
 
 ```html
-!run    --only for simple moving bots (line, ring)
-!walk   --only for simple moving bots (line, ring)
-!crouch --only for simple moving bots (line, ring)
-!prone  --only for simple moving bots (line, ring)
+!run    --only for simple moving bots (line)
+!walk   --only for simple moving bots (line)
+!crouch --only for simple moving bots (line)
+!prone  --only for simple moving bots (line)
 !respawn <opt: 0>
 !shoot <opt: 0>
 ```

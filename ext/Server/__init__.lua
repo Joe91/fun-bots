@@ -121,25 +121,13 @@ function FunBotServer:_onChat(player, recipientMask, message)
         local amount = tonumber(parts[2])
         BotSpawner:spawnWayBots(player, amount, true)
 
-    -- moving bots movement settings
-    elseif parts[1] == '!run' then
-        BotManager:setStaticOption(player, "speed", 4)
-
-    elseif parts[1] == '!walk' then
-        BotManager:setStaticOption(player, "speed", 3)
-
-    elseif parts[1] == '!crouch' then
-        BotManager:setStaticOption(player, "speed", 2)
-
-    elseif parts[1] == '!prone' then
-        BotManager:setStaticOption(player, "speed", 1)
-
     -- respawn moving bots
     elseif parts[1] == '!respawn' then
         local respawning = true
         if tonumber(parts[2]) == 0 then
             respawning = false
         end
+        Config.respawnWayBots = respawning
         BotManager:setOptionForAll("respawn", respawning)
 
     elseif parts[1] == '!shoot' then

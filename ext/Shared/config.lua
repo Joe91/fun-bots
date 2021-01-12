@@ -6,12 +6,14 @@ Config = {
     maxRaycastDistance = 125, --meters bots start shooting at player
     spawnDelayBots = 2.0,   --time till bots respawn, if respawn enabled
     botTeam = TeamId.Team2, --default bot team
+    botNewLoadoutOnSpawn = true,
     --shooting
     fovForShooting = 270,  -- Degrees of FOV of Bot
     botFireDuration = 0.2,
     botFirePause = 0.3,
     botMinTimeShootAtPlayer = 1.0,
     botFireModeDuration = 5.0,
+    meleeAttackCoolDown = 3.0,
 
     --values that can be modified ingame. These are the startup settings
     spawnInSameTeam = false,
@@ -20,10 +22,8 @@ Config = {
     bulletDamageBotSniper = 12,
     meleeDamageBot = 25,
     meleeAttackIfClose = true,
-    meleeAttackCoolDown = 3.0,
     shootBackIfHit = true,
     deviationAdditionFactor = 0.0,    --make aim worse: for difficulty: 0 = no offset (hard), 1 or greater = more sway (easy)
-    botNewLoadoutOnSpawn = true,
     botKit = 0, -- 0 = random, 1 = assault, 2 = engineer, 3 = support, 4 = recon
     botColor = 0, -- 0 = random, see Coulors
 

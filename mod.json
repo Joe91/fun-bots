@@ -1,7 +1,7 @@
 {
 	"Name": "fun-bots",
 	"Authors": ["Janssent", "Bictcrusher", "DeJoe"],
-	"Description": "different ways to spawn bots",
+	"Description": "simple AI-Bots and some dumb spawn options",
 	"URL": "",
 	"Version": "0.9.2.0",
 	"HasWebUI": true,

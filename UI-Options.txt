@@ -1,0 +1,31 @@
+Trace Settings (only if "Config.traceUsageAllowed == true")
+* Start Trace (either 0 or fixed index)
+* End Trace
+* Clear Trace (with Index)
+* Clear all traces
+* Save traces
+* (spawnBotsOnWay (with Index)) optional. we can optionaly add this later
+
+Bot-Functions:
+* SpawnBots
+    - same Team or not? --> Config.spawnInSameTeam
+    - Amount of Bots
+* killall
+* kickall
+* kickTeam (1 / 2)
+* kickNumber (with Number)
+* respawn (0/1)
+* shoot (0/1)
+
+Setting-Site:
+    spawnInSameTeam
+    respawnWayBots
+    bulletDamageBot
+    bulletDamageBotSniper
+    meleeDamageBot
+    meleeAttackIfClose
+    shootBackIfHit
+    deviationAdditionFactor  -- for difficulty: 0 = no offset (hard), 1 or greater = more sway (easy)
+    botKit -- 0 = random, 1 = assault, 2 = engineer, 3 = support, 4 = recon
+    botColor -- 0 = random, see Colors
+
