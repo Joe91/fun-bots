@@ -237,14 +237,18 @@ function Bot:_updateRespwawn()
 end
 
 function Bot:_getYawAddition(currentWeapon)
-    local yawOffset = currentWeapon.weaponFiring.gunSway.currentRecoilDeviation.yaw +
-                        currentWeapon.weaponFiring.gunSway.currentDispersionDeviation.yaw
+    local yawOffset = 0
+    if currentWeapon.weaponFiring.gunSway ~= nil then
+        yawOffset = currentWeapon.weaponFiring.gunSway.currentDispersionDeviation.yaw
+    end
     return  yawOffset * Config.deviationAdditionFactor
 end
 
 function Bot:_getPitchAddition(currentWeapon)
-    local pitchOffset = currentWeapon.weaponFiring.gunSway.currentRecoilDeviation.pitch +
-                        currentWeapon.weaponFiring.gunSway.currentDispersionDeviation.pitch
+    local pitchOffset = 0
+    if currentWeapon.weaponFiring.gunSway ~= nil then
+        pitchOffset = currentWeapon.weaponFiring.gunSway.currentDispersionDeviation.pitch
+    end
     return pitchOffset * Config.deviationAdditionFactor
 end
 

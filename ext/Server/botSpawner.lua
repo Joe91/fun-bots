@@ -22,7 +22,11 @@ function BotSpawner:onLevelLoaded()
     if BotManager:getBotCount() > amountToSpawn then
         amountToSpawn = BotManager:getBotCount()
     end
+
     BotManager:destroyAllBots()
+    for i = 1,amountToSpawn do
+        BotManager:createBot(BotNames[i], Config.botTeam)
+    end
 
     -- create initial bots
     if Globals.activeTraceIndexes > 0 and Config.spawnOnLevelstart then

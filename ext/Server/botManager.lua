@@ -177,6 +177,7 @@ function BotManager:createBot(name, team)
     local bot = self:GetBotByName(name)
     if bot ~= nil then
         bot.player.teamId = team
+        bot:resetVars()
         return bot
     end
 

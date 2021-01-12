@@ -23,7 +23,7 @@ Config = {
     meleeDamageBot = 25,
     meleeAttackIfClose = true,
     shootBackIfHit = true,
-    deviationAdditionFactor = 0.0,    --make aim worse: for difficulty: 0 = no offset (hard), 1 or greater = more sway (easy)
+    deviationAdditionFactor = 1.0,    --make aim worse: for difficulty: 0 = no offset (hard), 1 or greater = more sway (easy)
     botKit = 0, -- 0 = random, 1 = assault, 2 = engineer, 3 = support, 4 = recon
     botColor = 0, -- 0 = random, see Coulors
 
