@@ -55,8 +55,6 @@ function Bot:onUpdate(dt)
         self.player.soldier:SingleStepEntry(self.player.controlledEntryId)
     end
 
-    self:_updateAiming() --needs to be fast?
-
     self._updateTimer = self._updateTimer + dt
     if self._updateTimer > Config.botUpdateCycle then
         self._updateTimer = 0
@@ -64,6 +62,7 @@ function Bot:onUpdate(dt)
         self:_setActiveVars()
 
         self:_updateRespwawn()
+        self:_updateAiming() --needs to be faster? TODO: find out how fast...
         self:_updateShooting()
         self:_updateMovement()  --TODO: move-mode shoot
     end
