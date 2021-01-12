@@ -12,10 +12,10 @@ Config = {
     botFireModeDuration = 5.0,
     maxTraceNumber = 10,
     traceUsageAllowed = true,
-    botTeam = TeamId.Team2,
     keepBotTeamsOnLevelStart  = false,
     --values that can be modified ingame:
     spawnInSameTeam = false,
+    botTeam = TeamId.Team2,
     initNumberOfBots = 12,
     spawnOnLevelstart = true,
     respawnWayBots = true,

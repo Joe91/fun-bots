@@ -60,12 +60,16 @@ function BotSpawner:_onRespawnBot(botname)
 end
 
 function BotSpawner:getBotTeam(player)
-    local team = TeamId.Team1
-    if Config.spawnInSameTeam then
-        team = player.teamId
-    else
-        if player.teamId == TeamId.Team1 then
-            team = TeamId.Team2
+    local team = Config.botTeam
+    if player ~= nil then
+        if Config.spawnInSameTeam then
+            team = player.teamId
+        else
+            if player.teamId == TeamId.Team1 then
+                team = TeamId.Team2
+            else
+                team = TeamId.Team1
+            end
         end
     end
     return team

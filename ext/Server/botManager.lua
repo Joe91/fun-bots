@@ -17,31 +17,44 @@ end
 
 function BotManager:onLevelLoaded()
     --find team to spawn bots in
+    local countOfBotTeam = 0
     local listOfTeams = {}
-    local botTeam = TeamId.Team2
+    local botTeam = Config.botTeam
     for _, bot in pairs(self._bots) do
         table.insert(listOfTeams, bot.player.teamId)
-    end
-    local countOfBotTeam = 0
-    for i = 1, #listOfTeams do
-        if listOfTeams[i] == botTeam then
+        if bot.player.teamId == botTeam then
             countOfBotTeam = countOfBotTeam + 1
         end
     end
-    if countOfBotTeam < #listOfTeams then
-        botTeam = TeamId.Team1
-    end
-    Globals.botTeam = botTeam
 
-    self:killAll()
-    local amountToKick = self:getBotCount() - Config.initNumberOfBots
-    if amountToKick > 0 then
-        self:destroyAmount(amountToKick)
+    if countOfBotTeam < #listOfTeams/2 then
+        if Config.botTeam == TeamId.Team1 then
+            botTeam = TeamId.Team2
+        else
+            botTeam = TeamId.Team1
+        end
     end
+    Config.botTeam = botTeam
+
+    local amountToSpawn = Config.initNumberOfBots
+    if self:getBotCount() > amountToSpawn then
+        amountToSpawn = self:getBotCount()
+    end
+    self:destroyAllBots()
+
     -- create initial bots
     if Globals.activeTraceIndexes > 0 and Config.spawnOnLevelstart then
-        for i = 1, Config.initNumberOfBots do
-            local bot = self:createBot(BotNames[i], botTeam)
+        for i = 1, amountToSpawn do
+            local bot = nil
+            if Config.keepBotTeamsOnLevelStart then
+                local oldBotTeam = listOfTeams[i]
+                if oldBotTeam == nil then
+                    oldBotTeam = botTeam
+                end
+                bot = self:createBot(BotNames[i], oldBotTeam)
+            else
+                bot = self:createBot(BotNames[i], botTeam)
+            end
             bot:setVarsDefault()
         end
     end
