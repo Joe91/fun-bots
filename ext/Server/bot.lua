@@ -236,26 +236,22 @@ function Bot:_updateRespwawn()
     end
 end
 
-function Bot:_getYawCorrection(currentWeapon)
-    local yawCorrection = 0
-    yawCorrection = currentWeapon.weaponFiring.gunSway.currentRecoilDeviation.yaw +
-                        currentWeapon.weaponFiring.gunSway.currentLagDeviation.yaw +
+function Bot:_getYawAddition(currentWeapon)
+    local yawOffset = currentWeapon.weaponFiring.gunSway.currentRecoilDeviation.yaw +
                         currentWeapon.weaponFiring.gunSway.currentDispersionDeviation.yaw
-    return  -yawCorrection * Config.deviationCorrectionFactor
+    return  yawOffset * Config.deviationAdditionFactor
 end
 
-function Bot:_getPitchCorrection(currentWeapon)
-    local pitchCorrection = 0
-    pitchCorrection = currentWeapon.weaponFiring.gunSway.currentRecoilDeviation.pitch +
-                        currentWeapon.weaponFiring.gunSway.currentLagDeviation.pitch +
+function Bot:_getPitchAddition(currentWeapon)
+    local pithOffset = currentWeapon.weaponFiring.gunSway.currentRecoilDeviation.pitch +
                         currentWeapon.weaponFiring.gunSway.currentDispersionDeviation.pitch
-    return -pitchCorrection * Config.deviationCorrectionFactor
+    return pithOffset * Config.deviationAdditionFactor
 end
 
 function Bot:_updateAiming()
     if self.player.alive and self._shoot then
         if self._shootPlayer ~= nil and self._shootPlayer.soldier ~= nil then
-            self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 1)
+            self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 1) --does not work.
             --calculate yaw and pith
             local dz = self._shootPlayer.soldier.worldTransform.trans.z - self.player.soldier.worldTransform.trans.z
             local dx = self._shootPlayer.soldier.worldTransform.trans.x - self.player.soldier.worldTransform.trans.x
@@ -265,8 +261,8 @@ function Bot:_updateAiming()
             --calculate pitch
             local distance = math.sqrt(dz^2 + dx^2)
             local pitch =  math.atan(dy, distance)
-            self.player.input.authoritativeAimingPitch = pitch
-            self.player.input.authoritativeAimingYaw = yaw
+            self.player.input.authoritativeAimingPitch = pitch + self:_getPitchAddition()
+            self.player.input.authoritativeAimingYaw = yaw + self:_getYawAddition()
         end
     end
 end
