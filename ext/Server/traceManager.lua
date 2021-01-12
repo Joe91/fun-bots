@@ -31,6 +31,9 @@ function TraceManager:_onPlayerLeft(player)
 end
 
 function TraceManager:startTrace(player, index)
+    if not Config.traceUsageAllowed then
+        return
+    end
     if index == 0 then
         for i = 1, Config.maxTraceNumber do
             if Globals.wayPoints[i][1] == nil then
@@ -50,6 +53,9 @@ function TraceManager:startTrace(player, index)
 end
 
 function TraceManager:endTrace(player)
+    if not Config.traceUsageAllowed then
+        return
+    end
     print("Trace done")
     ChatManager:Yell("Trace done", 2.5)
     Globals.activeTraceIndexes = Globals.activeTraceIndexes + 1
@@ -61,12 +67,18 @@ function TraceManager:endTrace(player)
 end
 
 function TraceManager:clearTrace(index)
+    if not Config.traceUsageAllowed then
+        return
+    end
     print("clear trace")
     ChatManager:Yell("Clearing trace "..index, 2.5)
     self:_clearTrace(index)
 end
 
 function TraceManager:clearAllTraces()
+    if not Config.traceUsageAllowed then
+        return
+    end
     print("Clearing all traces")
     ChatManager:Yell("Clearing all traces", 2.5)
     for i = 1, Config.maxTraceNumber do
@@ -76,6 +88,9 @@ function TraceManager:clearAllTraces()
 end
 
 function TraceManager:savePaths()
+    if not Config.traceUsageAllowed then
+        return
+    end
     print("Trying to Save paths")
     ChatManager:Yell("Trying to save paths check console...", 2.5)
     self:_saveWayPoints()

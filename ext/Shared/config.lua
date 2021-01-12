@@ -11,6 +11,7 @@ Config = {
     botMinTimeShootAtPlayer = 1.0,
     botFireModeDuration = 5.0,
     maxTraceNumber = 10,
+    traceUsageAllowed = true,
     --values that can be modified ingame:
     spawnInSameTeam = false,
     initNumberOfBots = 12,
@@ -26,7 +27,6 @@ Config = {
     botNewLoadoutOnSpawn = true,
     botKit = 0, -- 0 = random, 1 = assault, 2 = engineer, 3 = support, 4 = recon
     botColor = 0 -- 0 = random, see Coulors
-    
 }
 
 Colors = {
