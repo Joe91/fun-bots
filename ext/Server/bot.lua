@@ -265,8 +265,8 @@ function Bot:_updateAiming()
             --calculate pitch
             local distance = math.sqrt(dz^2 + dx^2)
             local pitch =  math.atan(dy, distance)
-            self.player.input.authoritativeAimingPitch = pitch + self:_getPitchAddition(self.player.soldier.weaponsComponent.currentWeapon)
-            self.player.input.authoritativeAimingYaw = yaw + self:_getYawAddition(self.player.soldier.weaponsComponent.currentWeapon)
+            self.player.input.authoritativeAimingPitch = pitch -- + self:_getPitchAddition(self.player.soldier.weaponsComponent.currentWeapon)
+            self.player.input.authoritativeAimingYaw = yaw -- + self:_getYawAddition(self.player.soldier.weaponsComponent.currentWeapon)
         end
     end
 end
@@ -449,7 +449,7 @@ function Bot:_updateMovement()
                         self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0)
                     end
 
-                    if distanceFromTarget > 1 then  --check for reached target
+                    if distanceFromTarget > Config.targetDistanceWayPoint then  --check for reached target
                         local atanDzDx = math.atan(dy, dx)
                         local yaw = (atanDzDx > math.pi / 2) and (atanDzDx - math.pi / 2) or (atanDzDx + 3 * math.pi / 2)
                         self.player.input.authoritativeAimingYaw = yaw

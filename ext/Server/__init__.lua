@@ -151,10 +151,31 @@ function FunBotServer:_onChat(player, recipientMask, message)
             Config.botKit = kitNumber
         end
 
-    elseif parts[1] == '!setbotColor' then
+    elseif parts[1] == '!setbotcolor' then
         local botColor = tonumber(parts[2]) or 1
         if botColor <= #Colors and botColor >= 0 then
             Config.botColor = botColor
+        end
+
+    elseif parts[1] == '!setaim' then
+        Config.deviationAdditionFactor = tonumber(parts[2]) or 1
+    elseif parts[1] == '!bullet' then
+        Config.bulletDamageBot = tonumber(parts[2]) or 1
+    elseif parts[1] == '!sniper' then
+        Config.bulletDamageBotSniper = tonumber(parts[2]) or 1
+    elseif parts[1] == '!melee' then
+        Config.meleeDamageBot = tonumber(parts[2]) or 1
+    elseif parts[1] == '!shootback' then
+        if tonumber(parts[2]) == 0 then
+            Config.shootBackIfHit = false
+        else
+            Config.shootBackIfHit = true
+        end
+    elseif parts[1] == '!attackmelee' then
+        if tonumber(parts[2]) == 0 then
+            Config.meleeAttackIfClose = false
+        else
+            Config.meleeAttackIfClose = true
         end
 
     -- reset everything

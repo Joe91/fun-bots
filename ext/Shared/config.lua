@@ -18,14 +18,14 @@ Config = {
     --values that can be modified ingame. These are the startup settings
     spawnInSameTeam = false,
     respawnWayBots = true,
-    bulletDamageBot = 2,
-    bulletDamageBotSniper = 12,
-    meleeDamageBot = 24,
+    bulletDamageBot = 5,
+    bulletDamageBotSniper = 24,
+    meleeDamageBot = 48,
     meleeAttackIfClose = true,
     shootBackIfHit = true,
     deviationAdditionFactor = 0.0,    --make aim worse: for difficulty: 0 = no offset (hard), 1 or greater = more sway (easy)
     botKit = 0, -- 0 = random, 1 = assault, 2 = engineer, 3 = support, 4 = recon
-    botColor = 0, -- 0 = random, see Coulors
+    botColor = 1, -- 0 = random, see Coulors
 
     --trace
     traceUsageAllowed = true,
@@ -34,24 +34,24 @@ Config = {
     --don't change these values unless you know what you do
     traceDelta = 0.2,
     raycastInterval = 0.1, -- seconds
-    botUpdateCycle = 0.1
+    botUpdateCycle = 0.1,
+    targetDistanceWayPoint = 0.5
 }
 
 Colors = {
-    "Appearance01",
-    "ExpForce",
-    "Ninja",
-    "DrPepper",
-    "Para",
-    "Ranger",
-    "Specact",
-    "Veteran",
-    "Desert02",
-    "Green",
-    "Jungle",
-    "Navy",
-    "Urban",
-    "Wood01"
+    "ExpForce", --2
+    "Ninja", --3
+    "DrPepper", --4
+    "Para", --5
+    "Ranger", --6
+    "Specact", --7
+    "Veteran", --8
+    "Desert02", --9
+    "Green", --10
+    "Jungle", --11
+    "Navy", --12
+    "Urban", --13
+    "Wood01" --14
 }
 
 BotNames = {
