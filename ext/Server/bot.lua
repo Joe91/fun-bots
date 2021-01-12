@@ -396,7 +396,7 @@ function Bot:_updateMovement()
                     local currentWayPontDistance = math.abs(trans.x - self.player.soldier.worldTransform.trans.x) + math.abs(trans.z - self.player.soldier.worldTransform.trans.z)
                     if currentWayPontDistance >= self._lastWayDistance  or self._obstaceSequenceTimer ~= 0 then
                         -- try to get around obstacle
-                        self.activeSpeedValue = 3 --always stand
+                        self.activeSpeedValue = 4 --always try to run stand
                         if self._obstaceSequenceTimer == 0 then  --step 0
                             self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0)
                             self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0)
@@ -431,7 +431,7 @@ function Bot:_updateMovement()
                     end
 
                     -- jup on command
-                    if (point.extraMode) == 1 and self._jumpTargetPoint == nil then
+                    if point.extraMode == 1 and self._jumpTargetPoint == nil then
                         self._jumpTargetPoint = trans
                         self._jumpTriggerDistance = math.abs(trans.x -self.player.soldier.worldTransform.trans.x) + math.abs(trans.z -self.player.soldier.worldTransform.trans.z)
                     elseif self._jumpTargetPoint ~= nil then
@@ -444,7 +444,7 @@ function Bot:_updateMovement()
                         else
                             self._jumpTriggerDistance = currentJumpDistance
                         end
-                    else
+                    elseif self._obstaceSequenceTimer == 0 then --only reset, if no obstacle-sequence active
                         self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0)
                         self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0)
                     end
