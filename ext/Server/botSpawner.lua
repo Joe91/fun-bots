@@ -22,8 +22,8 @@ function BotSpawner:_onUpdate(dt, pass)
 
     if self._botsToSpawn > 0 then
         if self._botSpawnTimer > 0.2 then   --time to wait between spawn
-            self:_spawnSigleWayBot(self._playerVarOfBot, self._useRandomWay, self._activeWayIndex)
             self._botsToSpawn = self._botsToSpawn - 1
+            self:_spawnSigleWayBot(self._playerVarOfBot, self._useRandomWay, self._activeWayIndex)
         end
         self._botSpawnTimer = self._botSpawnTimer + dt
     end
@@ -48,12 +48,14 @@ function BotSpawner:_onRespawnBot(botname)
 
     elseif spawnMode == 5 then  --random Way
         local wayIndex = self:_getNewWayIndex()
-        local randIndex = MathUtils:GetRandomInt(1, #Globals.wayPoints[wayIndex])
-        local transform = LinearTransform()
-        bot:setWayIndex(wayIndex)
-        bot:setCurrentWayPoint(randIndex)
-        transform.trans = Globals.wayPoints[wayIndex][randIndex].trans
-        self:spawnBot(bot, transform, true)
+        if wayIndex ~= 0 then
+            local randIndex = MathUtils:GetRandomInt(1, #Globals.wayPoints[wayIndex])
+            local transform = LinearTransform()
+            bot:setWayIndex(wayIndex)
+            bot:setCurrentWayPoint(randIndex)
+            transform.trans = Globals.wayPoints[wayIndex][randIndex].trans
+            self:spawnBot(bot, transform, true)
+        end
     end
 end
 
@@ -140,14 +142,16 @@ function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex)
         end
         if Globals.wayPoints[activeWayIndex][1] == nil then
             return
-        end 
+        end
         local randIndex = MathUtils:GetRandomInt(1, #Globals.wayPoints[activeWayIndex])
         local transform = LinearTransform()
         transform.trans = Globals.wayPoints[activeWayIndex][randIndex].trans
 
         local bot = BotManager:createBot(name, self:getBotTeam(player))
-        bot:setVarsWay(player, useRandomWay, activeWayIndex, randIndex)
-        self:spawnBot(bot, transform, true)
+        if bot ~= nil then
+            bot:setVarsWay(player, useRandomWay, activeWayIndex, randIndex)
+            self:spawnBot(bot, transform, true)
+        end
     end
 end
 
@@ -221,7 +225,6 @@ function BotSpawner:_findAppearance(teamName, kitName, color)
     }
 
     for appearence=1, #gameModeAppearances do
-        
         local properAppearanceName = color
         properAppearanceName = properKitName:gsub("%a", string.upper, 1)
 
