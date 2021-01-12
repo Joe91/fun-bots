@@ -16,23 +16,31 @@ function BotManager:__init()
 end
 
 function BotManager:detectBotTeam()
-    --find team to spawn bots in
-    local countOfBotTeam = 0
-    local botTeam = Config.botTeam
-    for _, bot in pairs(self._bots) do
-        if bot.player.teamId == botTeam then
-            countOfBotTeam = countOfBotTeam + 1
+    local countPlayerTeam = 0
+    local countPlayers = 0
+    local players = PlayerManager:GetPlayers()
+    for i = 1, PlayerManager:GetPlayerCount() do
+        if self:GetBotByName(players[i].name) == nil then
+            countPlayers = countPlayers + 1
+            if players[i].teamId ~= Config.botTeam then
+                countPlayerTeam = countPlayerTeam + 1
+            end
         end
     end
 
-    if countOfBotTeam < self:getBotCount()/2 then
-        if Config.botTeam == TeamId.Team1 then
-            botTeam = TeamId.Team2
+    if countPlayerTeam >= countPlayers/2 then
+        if Config.botTeam == TeamId.Team1 and not Config.spawnInSameTeam then
+            Config.botTeam = TeamId.Team2
         else
-            botTeam = TeamId.Team1
+            Config.botTeam = TeamId.Team1
+        end
+    else
+        if Config.botTeam == TeamId.Team1 and not Config.spawnInSameTeam then
+            Config.botTeam = TeamId.Team1
+        else
+            Config.botTeam = TeamId.Team2
         end
     end
-    Config.botTeam = botTeam
 end
 
 function BotManager:findNextBotName()

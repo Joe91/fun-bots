@@ -220,49 +220,6 @@ function FunBotServer:_onChat(player, recipientMask, message)
 
     elseif parts[1] == '!savepaths' then
         TraceManager:savePaths()
-
-    --[[-- vehicle stuff -- TODO: not tested jet
-    elseif parts[1] == '!enter' then
-        local vehicleHint = parts[2] or ""
-        local entryId = tonumber(parts[3]) or 1
-
-        local iterator = EntityManager:GetIterator("ServerVehicleEntity")
-        local vehicleEntity = iterator:Next()
-        while vehicleEntity ~= nil do
-            local vehicleName = VehicleEntityData(vehicleEntity.data).controllableType
-
-            if string.lower(vehicleName):match(string.lower(vehicleHint)) then
-                local name = findNextBotName()
-                if name ~= nil then
-                    spawnBot(name, team, squad, player.soldier.worldTransform, true)
-                    local bot = PlayerManager:GetPlayerByName(name)
-                    bot:EnterVehicle(vehicleEntity, entryId)
-                end
-            end
-            vehicleEntity = iterator:Next()
-        end
-
-    elseif parts[1] == '!fill' then
-        local vehicleHint = parts[2] or ""
-        local number = tonumber(parts[3]) or 2
-
-        local iterator = EntityManager:GetIterator("ServerVehicleEntity")
-        local vehicleEntity = iterator:Next()
-        while vehicleEntity ~= nil do
-            local vehicleName = VehicleEntityData(vehicleEntity.data).controllableType
-
-            if string.lower(vehicleName):match(string.lower(vehicleHint)) then
-                for i = 0, number do
-                    local name = findNextBotName()
-                        if name ~= nil then
-                        spawnBot(name, team, squad, player.soldier.worldTransform, true)
-                        local bot = PlayerManager:GetPlayerByName(name)
-                        bot:EnterVehicle(vehicleEntity, i)
-                    end
-                end
-            end
-            vehicleEntity = iterator:Next()
-        end--]]
     end
 end
 
