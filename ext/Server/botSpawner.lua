@@ -27,6 +27,7 @@ function BotSpawner:onLevelLoaded()
     -- create initial bots
     if Globals.activeTraceIndexes > 0 and Config.spawnOnLevelstart then
         --signal bot Spawner to do its stuff
+        self._botSpawnTimer = -2.5
         self:spawnWayBots(nil, amountToSpawn, true, 1)
     end
 end

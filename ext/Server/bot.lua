@@ -243,9 +243,9 @@ function Bot:_getYawAddition(currentWeapon)
 end
 
 function Bot:_getPitchAddition(currentWeapon)
-    local pithOffset = currentWeapon.weaponFiring.gunSway.currentRecoilDeviation.pitch +
+    local pitchOffset = currentWeapon.weaponFiring.gunSway.currentRecoilDeviation.pitch +
                         currentWeapon.weaponFiring.gunSway.currentDispersionDeviation.pitch
-    return pithOffset * Config.deviationAdditionFactor
+    return pitchOffset * Config.deviationAdditionFactor
 end
 
 function Bot:_updateAiming()
@@ -261,8 +261,8 @@ function Bot:_updateAiming()
             --calculate pitch
             local distance = math.sqrt(dz^2 + dx^2)
             local pitch =  math.atan(dy, distance)
-            self.player.input.authoritativeAimingPitch = pitch + self:_getPitchAddition()
-            self.player.input.authoritativeAimingYaw = yaw + self:_getYawAddition()
+            self.player.input.authoritativeAimingPitch = pitch + self:_getPitchAddition(self.player.soldier.weaponsComponent.currentWeapon)
+            self.player.input.authoritativeAimingYaw = yaw + self:_getYawAddition(self.player.soldier.weaponsComponent.currentWeapon)
         end
     end
 end
