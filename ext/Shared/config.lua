@@ -1,7 +1,7 @@
 Config = {
     --general
     maxNumberOfBots = 40,
-    initNumberOfBots = 8,  --bots on levelstart
+    initNumberOfBots = 12,  --bots on levelstart
     spawnOnLevelstart = true,
     maxRaycastDistance = 125, --meters bots start shooting at player
     spawnDelayBots = 2.0,   --time till bots respawn, if respawn enabled
@@ -20,10 +20,10 @@ Config = {
     respawnWayBots = true,
     bulletDamageBot = 2,
     bulletDamageBotSniper = 12,
-    meleeDamageBot = 25,
+    meleeDamageBot = 24,
     meleeAttackIfClose = true,
     shootBackIfHit = true,
-    deviationAdditionFactor = 1.0,    --make aim worse: for difficulty: 0 = no offset (hard), 1 or greater = more sway (easy)
+    deviationAdditionFactor = 0.0,    --make aim worse: for difficulty: 0 = no offset (hard), 1 or greater = more sway (easy)
     botKit = 0, -- 0 = random, 1 = assault, 2 = engineer, 3 = support, 4 = recon
     botColor = 0, -- 0 = random, see Coulors
 

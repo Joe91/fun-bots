@@ -8,6 +8,7 @@ function BotManager:__init()
 
 	Events:Subscribe('UpdateManager:Update', self, self._onUpdate)
     Events:Subscribe('Extension:Unloading', self, self._onUnloading)
+    Events:Subscribe('Level:Destroy', self, self._onLevelDestroy)
     Events:Subscribe('Player:Left', self, self._onPlayerLeft)
     NetEvents:Subscribe('BotShootAtPlayer', self, self._onShootAt)
     Events:Subscribe('ServerDamagePlayer', self, self._onServerDamagePlayer)
@@ -58,6 +59,12 @@ end
 
 function BotManager:getBotCount()
     return #self._bots
+end
+
+function BotManager:resetAllBots()
+    for _, bot in pairs(self._bots) do
+        bot:resetVars()
+    end
 end
 
 function BotManager:setStaticOption(player, option, value)
@@ -168,6 +175,11 @@ end
 
 function BotManager:_onUnloading()
 	self:destroyAllBots()
+end
+
+function BotManager:_onLevelDestroy()
+    print("destroyLevel")
+    self:killAll()
 end
 
 function BotManager:GetBotByName(name)

@@ -47,6 +47,7 @@ function FunBotServer:_uibotrespawn(player, spawnbots)
 end
 
 function FunBotServer:_onLevelLoaded(levelName, gameMode)
+    print("level "..levelName.." loaded...")
     TraceManager:onLevelLoaded(levelName, gameMode)
     BotSpawner:onLevelLoaded()
 end
