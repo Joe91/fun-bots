@@ -47,9 +47,8 @@ With these commands you can spawn moving bots. To spawn bots on a way, you have 
 
 ```html
 !spawnbots  <number>  -- default command. Spawns bots on valid paths
-!spawnline <number> <opt: spacing>
-!spawnring <number> <opt: spacing>
 !spawnway <number> <opt: trace-index>
+!spawnline <number> <opt: spacing>
 ```
     
 ### Moving bot settings:
@@ -90,7 +89,7 @@ Here are some more commands. Partly not tested jet
 !setbotColor <value: 0-14> -- 0 = random
 !stop
 !stopall
-!kick
+!kick <opt: number> --if no arg: 1
 !kickteam <1 / 2>
 !kickall
 !kill

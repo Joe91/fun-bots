@@ -1,20 +1,14 @@
-bots sometimes spawn in red zone randomly
-
-bots sometimes wonder off path into red zone like they are following something or?
-
-4 players in server asked one to spawn 50, 30 arrived due to limit click respawn and server crashes
-
-spawning bots more than once sometimes causes crashes
-
 bots do not have a player.name causing other mods to break
 
 bots are walking past enemy real players
 
 bot spawns need to be a little more random they tend to be bunched up
+--> depends on the amount of bots and amount of paths available. Random = Random ;-)
 
 seems like bots get lost when they wonder off to attack players they cant there way back to path
 
 bot kills dont add to scoreboard
+--> not support by VU jet...
 
 Opinons
 i need a team function please if not already so from ui can pick which team they spawn to.

@@ -3,7 +3,6 @@ class('Globals')
 function Globals:__init()
 	self.wayPoints = {}
 	self.activeTraceIndexes = 0
-	self.botTeam = TeamId.Team2
 end
 
 -- Singleton.

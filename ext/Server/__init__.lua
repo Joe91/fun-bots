@@ -90,7 +90,7 @@ function FunBotServer:_onChat(player, recipientMask, message)
 
     elseif parts[1] == '!mirror' then
         BotManager:setStaticOption(player, "mode", 4)
-    
+
     elseif parts[1] == '!static' then
         BotManager:setStaticOption(player, "mode", 0)
 
@@ -130,7 +130,7 @@ function FunBotServer:_onChat(player, recipientMask, message)
 
     elseif parts[1] == '!crouch' then
         BotManager:setStaticOption(player, "speed", 2)
-    
+
     elseif parts[1] == '!prone' then
         BotManager:setStaticOption(player, "speed", 1)
 
@@ -178,7 +178,7 @@ function FunBotServer:_onChat(player, recipientMask, message)
         BotManager:setOptionForPlayer(player, "shoot", false)
         BotManager:setOptionForPlayer(player, "respawning", false)
         BotManager:setOptionForPlayer(player, "moveMode", 0)
- 
+
     elseif parts[1] == '!kickplayer' then
         BotManager:destroyPlayerBots(player)
 
