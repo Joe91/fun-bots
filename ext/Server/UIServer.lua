@@ -1,50 +1,51 @@
 class('FunBotUIServer')
 
+require('__shared/Utils')
 local TraceManager = require('traceManager');
 
 function FunBotUIServer:__init()
-	self._webui = 0;
-	
-    NetEvents:Subscribe('keypressF5', self, self._onF5)
-    NetEvents:Subscribe('keypressF6', self, self._onF6)
-    NetEvents:Subscribe('keypressF7', self, self._onF7)
-    NetEvents:Subscribe('keypressF8', self, self._onF8)
-    NetEvents:Subscribe('keypressF9', self, self._onF9)
-    NetEvents:Subscribe('keypressF10', self, self._onF10)
-    NetEvents:Subscribe('keypressF11', self, self._onF11)
-    NetEvents:Subscribe('keypressF12', self, self._onF12)
+	self._webui			= 0;
+	self._authenticated	= {};
+
+	NetEvents:Subscribe('UI_Request_Open', self, self._onUIRequestOpen);
 end
 
-function FunBotServer:_onF5(player, data)
-	print(player.name .." pressed F5")
-	local traceIndex = tonumber(0)
-	TraceManager:startTrace(player, traceIndex)
+function FunBotUIServer:_onUIRequestOpen(player, data)
+	print(player.name .. ' requesting open Bot-Editor.');
+
+	if (Config.settingsPassword == nil or self._isAuthenticated(player.accountGuid)) then
+		print('Open Bot-Editor for ' .. player.name .. '.');
+	else
+		if (data == nil) then
+			print('Ask ' .. player.name .. ' for Bot-Editor password.');
+			ChatManager:Yell('Please authenticate with password!', 2.5);
+			NetEvents:SendTo('UI_Request_Password', player, 'true');
+		else
+			local form = json.decode(data);
+			
+			if (form.password ~= nil or form.password ~= '') then
+				print(player.name .. ' has entered following Password: ' .. form.password);
+				
+				if (form.password == Config.settingsPassword) then
+					table.insert(self._authenticated, tostring(player.accountGuid));
+					print('accountGuid: ' .. tostring(player.accountGuid));
+					ChatManager:Yell('Successfully authenticated.', 2.5);
+					NetEvents:SendTo('UI_Request_Password', player, 'false');
+					NetEvents:SendTo('UI_Show_Toolbar', player, 'true');
+				else
+					NetEvents:SendTo('UI_Request_Password_Error', player, 'The password you entered is not correct!');
+					ChatManager:Yell('Bad password.', 2.5);
+				end
+			else
+				NetEvents:SendTo('UI_Request_Password_Error', player, 'The password you entered is not correct!');
+				ChatManager:Yell('Please enter a password!', 2.5);
+			end
+		end
+	end
 end
-function FunBotServer:_onF6(player, data)
-	print(player.name .." pressed F6")
-	TraceManager:endTrace(player)
-end
-function FunBotServer:_onF7(player, data)
-	print(player.name .." pressed F7")
-	local traceIndex = tonumber(0)
-    TraceManager:clearTrace(traceIndex)
-end
-function FunBotServer:_onF8(player, data)
-	print(player.name .." pressed F8")
-	TraceManager:clearAllTraces()
-end
-function FunBotServer:_onF9(player, data)
-	print(player.name .." pressed F9")
-	TraceManager:savePaths()
-end
-function FunBotServer:_onF10(player, data)
-	print(player.name .." pressed F10")
-end
-function FunBotServer:_onF11(player, data)
-	print(player.name .." pressed F11")
-end
-function FunBotServer:_onF12(player, data)
-	print(player.name .." pressed F12")
+
+function FunBotUIServer:_isAuthenticated(guid)
+	return contains(self._authenticated, tostring(guid));
 end
 
 if (g_FunBotUIServer == nil) then

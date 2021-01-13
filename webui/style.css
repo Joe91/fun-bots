@@ -1,0 +1,72 @@
+/* Globals */
+@font-face {
+	font-family:	'Purista';
+	src:			url('Purista-Medium.ttf');
+}
+
+:root {
+	--color_warning_from:	rgba(247,130, 16, 0.9);
+	--color_warning_to:		rgba(247,130, 16, 0.4);
+}
+
+* {
+	box-sizing: border-box;
+	-webkit-font-smoothing: antialiased;
+	font-smoothing: antialiased;
+	padding: 0;
+	margin: 0;
+	font-family: Purista, sans-serif, arial;
+}
+
+*:not([type="input"]) {    
+	user-select: none;
+}
+
+/* Forms */
+
+/* Views */
+ui-view {
+	display:	none;
+	position:	relative;
+}
+
+ui-view[data-show="true"] {
+	display: block;
+}
+
+/* View :: Dialog */
+ui-view[data-type="dialog"] {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+}
+
+ui-view[data-type="dialog"] ui-header {
+	display: block;
+	position: relative;
+	padding: 10px;
+	background: rgb(247,130,16);
+	text-transform: uppercase;
+	background: linear-gradient(180deg, var(--color_warning_from) 0%, var(--color_warning_to) 100%);
+}
+
+ui-view[data-type="dialog"] ui-content {
+	display: block;
+	position: relative;
+	background: rgba(0, 0, 0, 0.8);
+}
+
+ui-view[data-type="dialog"] ui-content p {
+	padding: 15px;
+	color: #eaf7ff;
+	text-shadow: 0 0 6px #bce4ff;
+}
+
+ui-view[data-type="dialog"] ui-buttons {
+	display: block;
+	position: relative;
+	background: rgba(0, 0, 0, 0.8);
+	padding: 10px;
+	text-align: center;
+}

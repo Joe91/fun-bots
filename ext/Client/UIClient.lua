@@ -1,18 +1,76 @@
 class('FunBotUIClient')
 
+local ArrayMap = require('__shared/ArrayMap');
+
 function FunBotUIClient:__init()
 	self._webui = 0;
-	
-	Events:Subscribe('exitui', self, self._onExitUi);
+	self._views = ArrayMap();
+
 	Events:Subscribe('Extension:Loaded', self, self._onExtensionLoaded);
 	Events:Subscribe('Client:UpdateInput', self, self._onUpdateInput);
+
+	-- New Events
+	Events:Subscribe('UI_Close', self, self._onUIClose);
+	NetEvents:Subscribe('UI_Request_Password', self, self._onUIRequestPassword);
+	NetEvents:Subscribe('UI_Request_Password_Error', self, self._onUIRequestPasswordError);
+	NetEvents:Subscribe('UI_Show_Toolbar', self, self._onUIShowToolbar);
+	Events:Subscribe('UI_Send_Password', self, self._onUISendPassword);
 end
 
-function FunBotUIClient:_onExitUi(player)
-    if self._webui == 1 then
-        self._webui = 0;
-		print('Hide UI.');
-    end
+function FunBotUIClient:_onUIShowToolbar(data)
+	print('UIClient: UI_Show_Toolbar (' .. tostring(data) .. ')');
+	
+	if (data == 'true') then
+		self._views:add('toolbar');
+		WebUI:ExecuteJS('BotEditor.show(\'toolbar\');');	
+	else
+		self._views:delete('toolbar');
+		WebUI:ExecuteJS('BotEditor.hide(\'toolbar\');');
+	end
+	
+	if self._views:isEmpty() then
+		self:_hide();
+	else
+		self:_show();
+	end
+end
+
+function FunBotUIClient:_onUIRequestPasswordError(data)
+	print('UIClient: UI_Request_Password_Error');
+	WebUI:ExecuteJS('BotEditor.error(\'password\', \'' .. data .. '\');');
+end
+
+function FunBotUIClient:_onUIRequestPassword(data)
+	print('UIClient: UI_Request_Password (' .. tostring(data) .. ')');
+	
+	if (data == 'true') then
+		self._views:add('password');
+		WebUI:ExecuteJS('BotEditor.show(\'password\');');	
+	else
+		self._views:delete('password');
+		WebUI:ExecuteJS('BotEditor.hide(\'password\');');
+	end
+	
+	if self._views:isEmpty() then
+		self:_hide();
+	else
+		self:_show();
+	end
+end
+
+function FunBotUIClient:_onUISendPassword(data)
+	print('UIClient: UI_Send_Password (' .. data .. ')');
+	NetEvents:Send('UI_Request_Open', data);
+end
+
+function FunBotUIClient:_onUIClose(player)
+	if self:_isVisible() then
+		if self._views:isEmpty() then
+			self:_hide();
+		else
+			self:_show();
+		end
+	end
 end
 
 function FunBotUIClient:_onExtensionLoaded()
@@ -20,39 +78,43 @@ function FunBotUIClient:_onExtensionLoaded()
 	WebUI:Hide();
 end
 
-function FunBotUIClient:_onUpdateInput(data)
-	if InputManager:WentKeyDown(InputDeviceKeys.IDK_F1) then
-		if (self._webui == 0) then
-			WebUI:Show();
-			WebUI:EnableMouse();
-			WebUI:EnableKeyboard();	
-			self._webui = 1;
-			print('Show UI.');
-		elseif (self._webui == 1) then
-			WebUI:Hide();
-			WebUI:ResetMouse();
-			WebUI:ResetKeyboard();
-			self._webui = 0;
-			print('Hide UI.');
+function FunBotUIClient:_show()
+	WebUI:Show();
+	WebUI:EnableMouse();
+	WebUI:EnableKeyboard();
+	self._webui = 1;
+	print('Show UI.');
+end
+
+function FunBotUIClient:_hide()
+	WebUI:Hide();
+	WebUI:ResetMouse();
+	WebUI:ResetKeyboard();
+	self._webui = 0;
+	print('Hide UI.');
+end
+
+function FunBotUIClient:_toggle()
+	if (self:_isVisible()) then
+		self:_hide();
+	else
+		if self._views:isEmpty() then
+			self:_hide();
+		else
+			self:_show();
 		end
 	end
+end
 
-  	if InputManager:WentKeyDown(InputDeviceKeys.IDK_F5) then
-		NetEvents:Send('keypressF5');
-	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_F6) then
-		NetEvents:Send('keypressF6');
-	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_F7) then
-		NetEvents:Send('keypressF7');
-	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_F8) then
-		NetEvents:Send('keypressF8');
-	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_F9) then
-		NetEvents:Send('keypressF9');
-	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_F10) then
-		NetEvents:Send('keypressF10');
-	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_F11) then
-		NetEvents:Send('keypressF11');
-	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_F12) then
-		NetEvents:Send('keypressF12');
+function FunBotUIClient:_isVisible()
+	return (self._webui == 1);
+end
+
+function FunBotUIClient:_onUpdateInput(data)
+	-- Show or Hide the Bot-Editor by requesting permissions
+	if InputManager:WentKeyDown(InputDeviceKeys.IDK_F12) then
+		print('Client send: UI_Request_Open');
+		NetEvents:Send('UI_Request_Open');
 	end
 end
 

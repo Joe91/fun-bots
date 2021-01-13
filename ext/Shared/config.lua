@@ -16,6 +16,7 @@ Config = {
     meleeAttackCoolDown = 3.0,
 
     --values that can be modified ingame. These are the startup settings
+	settingsPassword = "BotAdmin", -- if nil, disable it. Otherwise use a String with your password
     spawnInSameTeam = false,
     respawnWayBots = true,
     bulletDamageBot = 5,
