@@ -1,7 +1,7 @@
 Config = {
     --general
-    maxNumberOfBots = 40,
-    initNumberOfBots = 12,  --bots on levelstart
+    maxNumberOfBots = 32,
+    initNumberOfBots = 16,  --bots on levelstart
     spawnOnLevelstart = true,
     maxRaycastDistance = 125, --meters bots start shooting at player
     spawnDelayBots = 2.0,   --time till bots respawn, if respawn enabled
@@ -35,6 +35,7 @@ Config = {
     traceDelta = 0.2,
     raycastInterval = 0.1, -- seconds
     botUpdateCycle = 0.1,
+    botAimUpdateCycle = 0.05,
     targetDistanceWayPoint = 0.5
 }
 

@@ -19,7 +19,8 @@ function Bot:__init(player)
     self._respawning = false
 
     --timers
-    self._updateTimer = 0  --was timesGone
+    self._updateTimer = 0
+    self._aimUpdateTimer = 0
     self._spawnDelayTimer = 0
     self._wayWaitTimer = 0
     self._obstaceSequenceTimer = 0
@@ -56,13 +57,19 @@ function Bot:onUpdate(dt)
     end
 
     self._updateTimer = self._updateTimer + dt
+    self._aimUpdateTimer = self._aimUpdateTimer + dt
+
+    if self._aimUpdateTimer > Config.botAimUpdateCycle then
+        self._aimUpdateTimer = 0
+        self:_updateAiming() --needs to be faster? TODO: find out how fast...
+    end
+
     if self._updateTimer > Config.botUpdateCycle then
         self._updateTimer = 0
 
         self:_setActiveVars()
 
         self:_updateRespwawn()
-        self:_updateAiming() --needs to be faster? TODO: find out how fast...
         self:_updateShooting()
         self:_updateMovement()  --TODO: move-mode shoot
     end
@@ -116,6 +123,8 @@ function Bot:resetVars()
     self._shoot = false
     self._targetPlayer = nil
     self._shootPlayer = nil
+    self._updateTimer = 0
+    self._aimUpdateTimer = 0 --timer sync
 end
 
 function Bot:setVarsStatic(player)
@@ -264,8 +273,8 @@ function Bot:_updateAiming()
             --calculate pitch
             local distance = math.sqrt(dz^2 + dx^2)
             local pitch =  math.atan(dy, distance)
-            self.player.input.authoritativeAimingPitch = pitch -- + self:_getPitchAddition(self.player.soldier.weaponsComponent.currentWeapon)
-            self.player.input.authoritativeAimingYaw = yaw -- + self:_getYawAddition(self.player.soldier.weaponsComponent.currentWeapon)
+            self.player.input.authoritativeAimingPitch = pitch + self:_getPitchAddition(self.player.soldier.weaponsComponent.currentWeapon)
+            self.player.input.authoritativeAimingYaw = yaw + self:_getYawAddition(self.player.soldier.weaponsComponent.currentWeapon)
         end
     end
 end
