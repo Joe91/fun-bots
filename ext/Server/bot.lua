@@ -394,14 +394,13 @@ function Bot:_updateMovement()
                 if (point.speedMode) > 0 then -- movement
                     self._wayWaitTimer = 0
                     self.activeSpeedValue = point.speedMode --speed
-                    local trans = Vec3()
-                    trans = point.trans
-                    local dy = trans.z - self.player.soldier.worldTransform.trans.z
-                    local dx = trans.x - self.player.soldier.worldTransform.trans.x
+                    local dy = point.trans.z - self.player.soldier.worldTransform.trans.z
+                    local dx = point.trans.x - self.player.soldier.worldTransform.trans.x
                     local distanceFromTarget = math.sqrt(dx ^ 2 + dy ^ 2)
+                    local heightDistance = math.abs(point.trans.y - self.player.soldier.worldTransform.trans.y)
 
                     --detect obstacle and move over or around TODO: Move before normal jump
-                    local currentWayPontDistance = math.abs(trans.x - self.player.soldier.worldTransform.trans.x) + math.abs(trans.z - self.player.soldier.worldTransform.trans.z)
+                    local currentWayPontDistance = self.player.soldier.worldTransform.trans:Distance(point.trans)
                     if currentWayPontDistance >= self._lastWayDistance  or self._obstaceSequenceTimer ~= 0 then
                         -- try to get around obstacle
                         self.activeSpeedValue = 4 --always try to run stand
@@ -411,6 +410,7 @@ function Bot:_updateMovement()
                         elseif self._obstaceSequenceTimer > 1.8 then  --step 3 - repeat afterwards
                             self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0)
                             self._obstaceSequenceTimer = 0
+                            self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 1) --maybe a fence?
                             self._obstacleRetryCounter = self._obstacleRetryCounter + 1
                         elseif self._obstaceSequenceTimer > 0.8 then  --step 2
                             self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0)
@@ -429,6 +429,7 @@ function Bot:_updateMovement()
                         if self._obstacleRetryCounter >= 2 then --tried twice, try next waypoint
                             self._obstacleRetryCounter = 0
                             distanceFromTarget = 0
+                            heightDistance = 0
                             pointIncrement = 5 -- go 5 points further
                         end
                     else
@@ -436,12 +437,13 @@ function Bot:_updateMovement()
                         self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0)
                         self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0)
                         self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0)
+                        self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0)
                     end
 
                     -- jup on command
                     if point.extraMode == 1 and self._jumpTargetPoint == nil then
-                        self._jumpTargetPoint = trans
-                        self._jumpTriggerDistance = math.abs(trans.x -self.player.soldier.worldTransform.trans.x) + math.abs(trans.z -self.player.soldier.worldTransform.trans.z)
+                        self._jumpTargetPoint = point.trans
+                        self._jumpTriggerDistance = math.abs(point.trans.x -self.player.soldier.worldTransform.trans.x) + math.abs(point.trans.z -self.player.soldier.worldTransform.trans.z)
                     elseif self._jumpTargetPoint ~= nil then
                         local currentJumpDistance = math.abs(self._jumpTargetPoint.x -self.player.soldier.worldTransform.trans.x) + math.abs(self._jumpTargetPoint.z -self.player.soldier.worldTransform.trans.z)
                         if currentJumpDistance > self._jumpTriggerDistance then
@@ -457,7 +459,8 @@ function Bot:_updateMovement()
                         self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0)
                     end
 
-                    if distanceFromTarget > Config.targetDistanceWayPoint then  --check for reached target
+                    --check for reached target
+                    if distanceFromTarget > Config.targetDistanceWayPoint or heightDistance > Config.targetHeightDistanceWayPoint then
                         local atanDzDx = math.atan(dy, dx)
                         local yaw = (atanDzDx > math.pi / 2) and (atanDzDx - math.pi / 2) or (atanDzDx + 3 * math.pi / 2)
                         self.player.input.authoritativeAimingYaw = yaw

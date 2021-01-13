@@ -36,7 +36,8 @@ Config = {
     raycastInterval = 0.1, -- seconds
     botUpdateCycle = 0.1,
     botAimUpdateCycle = 0.05,
-    targetDistanceWayPoint = 0.5
+    targetDistanceWayPoint = 0.5,
+    targetHeightDistanceWayPoint = 2
 }
 
 Colors = {
