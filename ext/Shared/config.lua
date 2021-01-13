@@ -25,7 +25,7 @@ Config = {
     shootBackIfHit = true,
     deviationAdditionFactor = 0.0,    --make aim worse: for difficulty: 0 = no offset (hard), 1 or greater = more sway (easy)
     botKit = 0, -- 0 = random, 1 = assault, 2 = engineer, 3 = support, 4 = recon
-    botColor = 1, -- 0 = random, see Coulors
+    botColor = 0, -- 0 = random, see Colors
 
     --trace
     traceUsageAllowed = true,
@@ -41,6 +41,7 @@ Config = {
 }
 
 Colors = {
+    "Urban", --1
     "ExpForce", --2
     "Ninja", --3
     "DrPepper", --4
@@ -52,8 +53,7 @@ Colors = {
     "Green", --10
     "Jungle", --11
     "Navy", --12
-    "Urban", --13
-    "Wood01" --14
+    "Wood01" --13
 }
 
 BotNames = {
