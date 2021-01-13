@@ -244,7 +244,6 @@ function BotSpawner:_findAppearance(teamName, kitName, color)
     --'Persistence/Unlocks/Soldiers/Visual/MP[or:MP_XP4]/Us/MP_US_Assault_Appearance_'..color
     for _, gameMode in pairs(gameModeAppearances) do
         local appearanceString = gameMode..teamName..'/MP_'..string.upper(teamName)..'_'..kitName..'_Appearance_'..color
-        print(appearanceString)
         local appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/'..appearanceString)
         if appearance ~= nil then
             return appearance
