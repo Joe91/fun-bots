@@ -125,6 +125,16 @@ function Bot:resetVars()
     self._shootPlayer = nil
     self._updateTimer = 0
     self._aimUpdateTimer = 0 --timer sync
+    self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 0)
+    self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0)
+    self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 0)
+    self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0)
+    self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0)
+    self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0)
+    self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0)
+    self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0)
+    self.player.input:SetLevel(EntryInputActionEnum.EIAThrottle, 0)
+    self.player.input:SetLevel(EntryInputActionEnum.EIASprint, 0)
 end
 
 function Bot:setVarsStatic(player)
@@ -226,8 +236,8 @@ function Bot:clearPlayer(player)
 end
 
 function Bot:destroy()
-    self.player.input = nil
     self:resetVars()
+    self.player.input = nil
     PlayerManager:DeletePlayer(self.player)
     self.player = nil
 end
@@ -247,17 +257,19 @@ end
 function Bot:_getYawAddition(currentWeapon)
     local yawOffset = 0
     if currentWeapon.weaponFiring.gunSway ~= nil then
-        yawOffset = currentWeapon.weaponFiring.gunSway.currentDispersionDeviation.yaw
+        local yaw =  currentWeapon.weaponFiring.gunSway.currentDispersionDeviation.yaw
+        yawOffset = MathUtils:GetRandom(-yaw, yaw) * Config.deviationAdditionFactor
     end
-    return  yawOffset * Config.deviationAdditionFactor
+    return  yawOffset
 end
 
 function Bot:_getPitchAddition(currentWeapon)
     local pitchOffset = 0
     if currentWeapon.weaponFiring.gunSway ~= nil then
-        pitchOffset = currentWeapon.weaponFiring.gunSway.currentDispersionDeviation.pitch
+        local pitch = currentWeapon.weaponFiring.gunSway.currentDispersionDeviation.pitch
+        pitchOffset = MathUtils:GetRandom(-pitch, pitch) * Config.deviationAdditionFactor
     end
-    return pitchOffset * Config.deviationAdditionFactor
+    return pitchOffset
 end
 
 function Bot:_updateAiming()
