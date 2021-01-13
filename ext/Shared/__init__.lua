@@ -5,8 +5,8 @@ Events:Subscribe('Partition:Loaded', function(partition)
 			-- Make it writable so we can modify its fields.
 			instance:MakeWritable()
 
-			instance.deviationScaleFactorNoZoom = 0.7
-			instance.gameplayDeviationScaleFactorNoZoom = 0.7
+			instance.deviationScaleFactorNoZoom = 0.5
+			instance.gameplayDeviationScaleFactorNoZoom = 0.5
 		end
 	end
 end)
