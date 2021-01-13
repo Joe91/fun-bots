@@ -1,5 +1,5 @@
 class('FunBotServer')
-require('__shared/config')
+require('__shared/Config')
 local BotManager = require('botManager')
 local TraceManager = require('traceManager')
 local BotSpawner = require('botSpawner')
@@ -23,8 +23,9 @@ function FunBotServer:__init()
 	NetEvents:Subscribe('respawnbots', self, self._uibotrespawn)
 end
 
+--webui events -Bitcrusher
 
-
+--spawn bots
 function FunBotServer:_uispawnbots(player, spawnbots)
     local amount = tonumber(spawnbots)
     BotSpawner:spawnWayBots(player, amount, true)
@@ -45,7 +46,7 @@ function FunBotServer:_uibotrespawn(player, spawnbots)
     print("Bots will respawn")
 end
 
-function FunBotServer:_onLevelLoaded(levelName, gameMode, round)
+function FunBotServer:_onLevelLoaded(levelName, gameMode)
     print("level "..levelName.." loaded...")
     TraceManager:onLevelLoaded(levelName, gameMode)
     BotSpawner:onLevelLoaded()
