@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang=en>
+ <head>
+  <title>fun-bots-webui</title>
+<style>
+@font-face {
+ font-family: ATROX;
+  src: url(ATROX.TTF);
+}
+body{
+background: rgba(64, 64, 64, .2);
+}
+h2{
+  font-family: ATROX;
+  font-size: 200%;
+color: rgba(1, 183, 239, 1);
+}
+p{
+color: white;
+}
+li {
+  list-style-type: none;
+}
+.button_styled {
+  font-family: ATROX;
+  font-size: 200%;
+  margin-top:15px;
+  background-color: rgba(1, 183, 239, 1);
+  border: none;
+  color: white;
+  height: 20px;
+  width: 150px;
+  font-size: 15px;
+  border-radius: .5vh;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+}
+.button_styled:hover{
+  opacity: .5;
+}
+.button_styled:active{
+  background-color: blue;
+}
+.button_styled1 {
+  font-family: ATROX;
+  font-size: 200%;
+  margin-top:10px;
+  background-color: rgba(1, 183, 239, 1);
+  border: none;
+  color: white;
+  height: 20px;
+  width: 240px;
+  font-size: 15px;
+  border-radius: .5vh;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+}
+.button_styled1:hover{
+  opacity: .5;
+}
+.button_styled1:active{
+  background-color: blue;
+}
+.textinput_styled {
+  border: none;
+  width: 150px;
+  height: 20px;
+  margin-top:3px;
+  border-radius: .5vh;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+}
+.content{
+margin-top: 19vh;
+margin-left: 0vh;
+height: 400px;
+width: 200px;
+background: rgba(106, 129, 147, .75);
+border-radius: .5vh;
+padding: 20px;
+}
+#wrapper{
+margin: auto;
+}
+#grid{
+margin:auto;
+height: 200px;
+width: 1000px;
+text-align: center;
+background: rgba(1, 183, 239, 1)
+}
+#left{
+vertical-align: top;
+display: inline-block;
+}
+#middle{
+vertical-align: top;
+display: inline-block;
+
+}
+#right{
+vertical-align: top;
+display: inline-block;
+}
+#bottom{
+margin: auto;
+width: 86vh;
+padding-left: 2vh;
+padding-right: 2vh;
+}
+</style>
+</head>
+<body>
+<div id="wrapper">
+<div id="top">
+</div>
+<div id="grid">
+
+
+<div id="left">
+<div class="content">
+
+<SCRIPT>
+function spawnbots() {
+	var x = document.getElementById("spawnbotsvalueid").value;
+    WebUI.Call('DispatchEventLocal', 'spawnbotsvalue', x);
+}
+function spawnranbots() {
+	var x = document.getElementById("spawnbotsranwayid").value;
+    WebUI.Call('DispatchEventLocal', 'spawnrandombot', x);
+}
+function kickallbots() {
+    WebUI.Call('DispatchEventLocal', 'kickallbots', '1');
+}
+function enablebotrespawn() {
+    WebUI.Call('DispatchEventLocal', 'respawnbots', '1');
+}
+</SCRIPT>
+<h2>Spawning Bots</h2>
+<p>Options for spawning bots ingame, please make sure there are valid paths available</p>
+	<input class="button_styled" type="button" value="Spawn bots" onclick="spawnbots()">
+ 	<input class="textinput_styled" type="text" id="spawnbotsvalueid" value="1" name="spawnbots">
+    <input class="button_styled" type="button" value="Spawn Random Way" onclick="spawnranbots()">
+    <input class="textinput_styled" type="text" id="spawnbotsranwayid" value="1" name="spawnbotsranway"> 
+    <input class="button_styled" type="button" value="kick All" onclick="kickallbots()">
+    <input class="button_styled" type="button" value="Respawn" onclick="enablebotrespawn()">
+</div>
+</div>
+
+
+
+
+<div id="middle">
+<div class="content">
+<h2>Bot Settings</h2>
+<p>Some simple bot settings you can apply, for more advanced please read the "readme" file.</p>
+	<input class="button_styled" type="button" value="Run" onclick="msg()">
+	<input class="button_styled" type="button" value="Walk" onclick="msg()">
+    <input class="textinput_styled" type="text" id="fname1" value="0-4" name="fname1">
+    <input class="button_styled" type="button" value="Shoot" onclick="msg()">
+    <input class="textinput_styled"  type="text" id="fname2" value="1" name="fname2">
+    <p>webui not 100% complete</p>
+</div>
+</div>
+
+<SCRIPT>
+function standbot() {
+	var x = document.getElementById("spawnstandbotid").value;
+    WebUI.Call('DispatchEventLocal', 'spawnstandbotvalue', x);
+}
+function crouchingbot() {
+	var x = document.getElementById("spawncrouchingbotid").value;
+    WebUI.Call('DispatchEventLocal', 'spawncrouchingbo', x);
+}
+function rowbot() {
+	var x = document.getElementById("spawnrowbotid").value;
+    WebUI.Call('DispatchEventLocal', 'spawnrowbot', x);
+}
+function towerbot() {
+	var x = document.getElementById("spawntowerbotid").value;
+    WebUI.Call('DispatchEventLocal', 'spawntowerbot', x);
+}
+</SCRIPT>
+<div id="right">
+<div class="content">
+<h2>Static Bots</h2>
+<p>For spawning bots in different Groupings. These bots don't move on there own.</p>
+	<input class="button_styled" type="button" value="Stand" onclick="standbot()">
+    <input class="textinput_styled" type="text" id="spawnstandbotid" value="1" name="spawnstandbot">
+ 	<input class="button_styled" type="button" value="Crouching" onclick="crouchingbot()">
+ 	<input class="textinput_styled" type="text" id="spawncrouchingbotid" value="1" name="crouchingbotvalue">
+  	<input class="button_styled" type="button" value="Row" onclick="rowbot()">
+	<input class="textinput_styled" type="text" id="spawnrowbotid" value="1" name="rowbotvalue">
+  	<input class="button_styled" type="button" value="Tower" onclick="towerbot()">
+    <input class="textinput_styled" type="text" id="spawntowerbotid" value="1" name="towerbotvalue">
+
+</div>
+</div>
+<div id="bottom">
+<div class="contentbottom">
+<input class="button_styled1" type="button" value="Bot Pathing" onclick="window.location.href='botpath.html'; WebUI.Call('ResetKeyboard');"><br>
+<input class="button_styled1" type="button" value="Exit" onclick="WebUI.Call('Hide'); WebUI.Call('ResetKeyboard'); WebUI.Call('ResetMouse'); WebUI.Call('DispatchEventLocal', 'exitui')">
+</div>
+</div>
+
+
+</div>
+</div>
+</body>
+</html>
