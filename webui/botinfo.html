@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang=en>
+ <head>
+  <title>fun-bots-webui</title>
+<style>
+@font-face {
+ font-family: ATROX;
+  src: url(ATROX.TTF);
+}
+body{
+}
+h2{
+color: rgba(1, 183, 239, 1);
+  font-family: ATROX;
+  font-size: 200%;
+}
+h4{
+color:white;
+}
+p{
+color: white;
+}
+li{
+list-style-type: none;
+color:white;
+}
+#content{
+margin-top: 19vh;
+margin-left: 1vh;
+height: 400px;
+width: 200px;
+background: rgba(106, 129, 147, .75);
+border-radius: .5vh;
+padding: 20px;
+}
+#wrapper{
+height: 100%;
+width: 100%;
+}
+.button_styled1 {
+  font-family: ATROX;
+  font-size: 200%;
+  margin-top:10px;
+  margin-left: 1vh;
+  background-color: rgba(1, 183, 239, 1);
+  border: none;
+  color: white;
+  height: 20px;
+  width: 240px;
+  font-size: 15px;
+  border-radius: .5vh;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+}
+.button_styled1:hover{
+  opacity: .8;
+}
+.button_styled1:active{
+  background-color: blue;
+}
+</style>
+</head>
+<body>
+<div id="wrapper">
+<div id="content">
+     <h2 style="text-align:center">FUN BOTS!</h2>
+<p>-To make a bot path use <strong>F5</strong>, this will begin tracing. Start walking/running around map, your path will be recorded. Switch to seccondary weapon to pause bot on your location and switch back to primary to continue trace.<br>
+-To finish bot path use <strong>F6</strong>, to end tracing</p>
+<p>-Use <strong>F7</strong> to clear previous path.</p>
+<p>-Using <strong>F8</strong> will clear all traces<p>
+<p>-To save the pathing you have done click <strong>F9</strong></p>
+<p>
+
+</div>
+<input class="button_styled1" type="button" value="Go Back" onclick="window.location.href='botpath.html'; WebUI.Call('EnableKeyboard'); "><br>
+<input class="button_styled1" type="button" value="Menu" onclick="window.location.href='index.html'; WebUI.Call('EnableKeyboard'); "><br>
+<input class="button_styled1" type="button" value="Exit" onclick="WebUI.Call('Hide'); WebUI.Call('ResetKeyboard'); WebUI.Call('ResetMouse'); WebUI.Call('DispatchEventLocal', 'exitui')">
+</div>
+</body>
+</html>
