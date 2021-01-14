@@ -1,5 +1,4 @@
 class('WeaponModification')
-require('__shared/Config')
 
 function WeaponModification:__init()
 	self.m_alreadyLoaded = false
@@ -9,19 +8,22 @@ function WeaponModification:__init()
 end
 
 function WeaponModification:OnPartitionLoaded(p_Partition)
-	if self.m_alreadyLoaded then
-		self.m_WeaponInstances = nil
-		self.m_WeaponInstances = {}
-		self.m_maxAngles = {}
-		self.m_minAngles = {}
-		self.m_alreadyLoaded = false
-	end
 	local s_Instances = p_Partition.instances
 	for _, s_Instance in pairs(s_Instances) do
 		if s_Instance ~= nil and s_Instance.typeInfo.name == "SoldierWeaponData" then
 			local s_SoldierWeaponData = _G[s_Instance.typeInfo.name](s_Instance)
 			if s_SoldierWeaponData.soldierWeaponBlueprint ~= nil then
-				table.insert(self.m_WeaponInstances, s_SoldierWeaponData)
+				local alreadyInList = false
+				for _, instance in pairs(self.m_WeaponInstances) do
+					--check if already in it
+					if instance == s_SoldierWeaponData then
+						alreadyInList = true
+						break
+					end
+				end
+				if not alreadyInList then
+					table.insert(self.m_WeaponInstances, s_SoldierWeaponData)
+				end
 			end
 		end
 	end
@@ -30,24 +32,23 @@ end
 
 function WeaponModification:OnLevelLoaded(p_Map, p_GameMode, p_Round) --Server
 	self:ModifyAllWeapons()
-	self.m_alreadyLoaded = true
 end
 
 function WeaponModification:OnEngineMessage(p_Message) -- Client
     if p_Message.type == MessageType.ClientLevelFinalizedMessage then
 		self:ModifyAllWeapons()
-		self.m_alreadyLoaded = true
 	end
 end
 
-function WeaponModification:ModifyAllWeapons()
+function WeaponModification:ModifyAllWeapons(botAimWorsening)
 	print(#self.m_WeaponInstances.." weapons to modify")
 	for i, weaponInstance in pairs(self.m_WeaponInstances) do
-		self:_ModifyWeapon(weaponInstance , i)
+		self:_ModifyWeapon(weaponInstance , i, botAimWorsening)
 	end
+	self.m_alreadyLoaded = true
 end
 
-function WeaponModification:_ModifyWeapon(p_SoldierWeaponData, index)
+function WeaponModification:_ModifyWeapon(p_SoldierWeaponData, index, botAimWorsening)
 	local s_SoldierWeaponData = self:_MakeWritable(p_SoldierWeaponData)
 	local s_WeaponFiringData = self:_MakeWritable(s_SoldierWeaponData.weaponFiring)
 	if s_WeaponFiringData.weaponSway == nil then
@@ -64,13 +65,13 @@ function WeaponModification:_ModifyWeapon(p_SoldierWeaponData, index)
 			--Only modify movemode of bots
 			local s_MovingValue = GunSwayDispersionData(s_CrouchNoZoom.moving)
 			if s_MovingValue ~= nil then
-				print("modify crouch "..Config.botAimWorsening.." "..s_MovingValue.minAngle.." "..s_MovingValue.maxAngle)
+				print("modify crouch "..botAimWorsening.." "..s_MovingValue.minAngle.." "..s_MovingValue.maxAngle)
 				if self.m_maxAngles[index] == nil then
 					self.m_minAngles[index] = s_MovingValue.minAngle
 					self.m_maxAngles[index] = s_MovingValue.maxAngle
 				end
-				s_MovingValue.minAngle = self.m_minAngles[index] * Config.botAimWorsening
-				s_MovingValue.maxAngle = self.m_maxAngles[index] * Config.botAimWorsening
+				s_MovingValue.minAngle = self.m_minAngles[index] * botAimWorsening
+				s_MovingValue.maxAngle = self.m_maxAngles[index] * botAimWorsening
 			end
 		end
 	end

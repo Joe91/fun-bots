@@ -3,7 +3,6 @@ local WeaponModification = require('__shared/weaponModification')
 
 function FunBotShared:__init()
 	Events:Subscribe('Partition:Loaded', self, self.OnPartitionLoaded)
-	--Events:Subscribe('Level:Loaded', self, self.OnLevelLoaded)
 	Events:Subscribe('Engine:Message', self, self.OnEngineMessage)
 end
 

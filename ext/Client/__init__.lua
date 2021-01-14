@@ -27,8 +27,9 @@ function FunBotClient:_onExtensionLoaded()
 	WebUI:Hide();
 end
 
-function FunBotClient:_onModifyWeapons()
-	WeaponModification:ModifyAllWeapons()
+function FunBotClient:_onModifyWeapons(botAimWorsening)
+	Config.botAimWorsening = botAimWorsening
+	WeaponModification:ModifyAllWeapons(botAimWorsening)
 end
 
 
