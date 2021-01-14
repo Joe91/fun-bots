@@ -158,7 +158,7 @@ function FunBotServer:_onChat(player, recipientMask, message)
         end
 
     elseif parts[1] == '!setaim' then
-        Config.deviationAdditionFactor = tonumber(parts[2]) or 1
+        Config.deviationAdditionFactor = tonumber(parts[2]) or 1.0
     elseif parts[1] == '!bullet' then
         Config.bulletDamageBot = tonumber(parts[2]) or 1
     elseif parts[1] == '!sniper' then
