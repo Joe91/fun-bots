@@ -16,7 +16,7 @@ const BotEditor = (new function BotEditor() {
 			
 			switch(parent.dataset.action) {
 				case 'close':
-					WebUI.Call('DispatchEventLocal', 'UI_Close');
+					WebUI.Call('DispatchEventLocal', 'UI_Request_Password', 'false');
 				break;
 				case 'submit':
 					let form	= Utils.getClosest(event.target, 'ui-view').querySelector('[data-type="form"]');

@@ -3,7 +3,7 @@ class 'UIViews';
 require('__shared/ArrayMap');
 
 function UIViews:__init()
-	self._webui = false;
+	self._webui = 0;
 	self._views = ArrayMap();
 	
 	Events:Subscribe('Extension:Loaded', self, self._onExtensionLoaded);
@@ -18,48 +18,52 @@ end
 
 function UIViews:_onUIClose(name)
 	-- @ToDo name of closing view
-	if self:_isVisible() then
-		if self._views:isEmpty() then
-			self:_hide();
-		else
-			self:_show();
-		end
+	if self:isVisible() and self._views:isEmpty() then
+		self:close();
 	end
 end
 
-function UIViews:_show()
+-- Open the complete WebUI
+function UIViews:open()
 	WebUI:Show();
-	self._webui = true;
+	self._webui = 1;
 end
 
-function UIViews:_hide()
+-- Close the complete WebUI
+function UIViews:close()
 	WebUI:Hide();
 	self:disable();
-	self._webui = false;
+	self._webui = 0;
 end
 
+-- Enable Mouse/Keyboard actions
 function UIViews:enable()
 	WebUI:EnableMouse();
 	WebUI:EnableKeyboard();
 end
 
+-- Disable Mouse/Keyboard actions
 function UIViews:disable()
 	WebUI:ResetMouse();
 	WebUI:ResetKeyboard();
 end
 
-function UIViews:_isVisible()
-	return (self._webui ~= false);
+-- Check if WebUI is visible
+function UIViews:isVisible()
+	return self._webui ~= 0;
 end
 
 function UIViews:focus()
 	self:enable();
+	-- @ToDo send focus to form-object
 end
 
 function UIViews:blur()
 	self:disable();
+	-- @ToDo remove focus to form-object
 end
 
+-- Show an view
 function UIViews:show(name)
 	if self._views:exists(name) then
 		self._views:delete(name);	
@@ -70,6 +74,7 @@ function UIViews:show(name)
 	self:_handleViewManagement();
 end
 
+-- Hide an view
 function UIViews:hide(name)
 	if self._views:exists(name) then
 		self._views:delete(name);	
@@ -79,15 +84,17 @@ function UIViews:hide(name)
 	self:_handleViewManagement();
 end
 
+-- Send an error to the specified view
 function UIViews:error(name, text)
 	WebUI:ExecuteJS('BotEditor.error(\'' .. name .. '\', \'' .. text .. '\');');
 end
 
+-- Handle WebUI when view-stack is empty
 function UIViews:_handleViewManagement()
 	if self._views:isEmpty() then
-		self:_hide();
+		self:close();
 	else
-		self:_show();
+		self:open();
 	end
 end
 

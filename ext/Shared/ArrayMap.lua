@@ -6,31 +6,13 @@ end
 
 function ArrayMap:add(value)
 	table.insert(self._entries, value);
-	
-	-- DEBUG
-	print('ArrayMap(' .. tostring(self:count()) .. ') - add: ' .. value);
-	print('ArrayMap - Debug');
-	
-	for key, value in pairs(self._entries) do
-		print(key, value);
-	end
 end
 
 function ArrayMap:deleteByIndex(index)
 	table.remove(self._entries, index);
-	
-	-- DEBUG
-	print('ArrayMap(' .. tostring(self:count()) .. ') - remove Index: ' .. index);
-	print('ArrayMap - Debug');
-	
-	for key, value in pairs(self._entries) do
-		print(key, value);
-	end
 end
 
-function ArrayMap:exists(value)
-	print('ArrayMap(' .. tostring(self:count()) .. ') - exists: ' .. value);
-	
+function ArrayMap:exists(value)	
 	local index = {};
 	
 	for key, data in pairs(self._entries) do
@@ -38,19 +20,13 @@ function ArrayMap:exists(value)
 	end
 	
 	if index[value] ~= nil then
-		print('Exists: ' .. value);
 		return true;
 	end
-	
-	
-	print('Not exists: ' .. value);
 	
 	return false;
 end
 
 function ArrayMap:delete(value)
-	print('ArrayMap(' .. tostring(self:count()) .. ') - remove: ' .. value);
-	
 	local index = {};
 	
 	for key, data in pairs(self._entries) do
@@ -59,8 +35,6 @@ function ArrayMap:delete(value)
 	
 	if index[value] ~= nil then
 		self:deleteByIndex(index[value]);
-	else
-		print('Index from ' .. value .. ' is nil.');
 	end
 end
 

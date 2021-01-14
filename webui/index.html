@@ -4,8 +4,18 @@
 		<link rel="stylesheet" href="style.css" />
 	</head>
 	<body>
-		<ui-view data-name="toolbar">
-			Bot-Editor Toolbar
+		<ui-view data-name="toolbar" data-type="toolbar">
+			<ui-logo>
+				Bot-Editor<sub>fun-bots</sub>
+			</ui-logo>
+			<ui-menu>
+				<ul>
+					<li><a>Bots</a></li>
+					<li><a>Waypoints</a></li>
+					<li><a>Settings</a></li>
+					<li><a>Exit</a></li>
+				</ul>
+			</ui-menu>
 		</ui-view>
 		<ui-view data-name="password" data-type="dialog">
 			<ui-header>

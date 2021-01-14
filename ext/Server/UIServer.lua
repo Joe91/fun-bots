@@ -7,12 +7,16 @@ function FunBotUIServer:__init()
 	self._webui			= 0;
 	self._authenticated	= ArrayMap();
 
-	print(self._authenticated:_tostring());
+	Events:Subscribe('Player:Left', self, self._onPlayerLeft);
 	NetEvents:Subscribe('UI_Request_Open', self, self._onUIRequestOpen);
 end
 
+function FunBotUIServer:_onPlayerLeft(player)
+	-- @ToDo current fix for auth-check after rejoin, remove it later!
+	self._authenticated:delete(tostring(player.accountGuid));
+end
+
 function FunBotUIServer:_onUIRequestOpen(player, data)
-	print(self._authenticated:_tostring());
 	print(player.name .. ' requesting open Bot-Editor.');
 
 	if (Config.settingsPassword == nil or self:_isAuthenticated(player.accountGuid)) then

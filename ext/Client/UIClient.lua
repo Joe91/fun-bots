@@ -15,13 +15,15 @@ function FunBotUIClient:__init()
 	Events:Subscribe('UI_Send_Password', self, self._onUISendPassword);
 end
 
+-- Events
 function FunBotUIClient:_onUIToggle()
 	print('UIClient: UI_Toggle');
 	
-	if self._views:_isVisible() then
-		self._views:_hide();
+	if self._views:isVisible() then
+		self._views:close();
 	else
-		self._views:_show();
+		self._views:open();
+		self._views:focus();
 	end
 end
 
@@ -30,6 +32,7 @@ function FunBotUIClient:_onUIShowToolbar(data)
 	
 	if (data == 'true') then
 		self._views:show('toolbar');
+		self._views:focus();
 	else
 		self._views:hide('toolbar');
 		self._views:blur();
@@ -63,6 +66,8 @@ function FunBotUIClient:_onUpdateInput(data)
 	-- Show or Hide the Bot-Editor by requesting permissions
 	if InputManager:WentKeyDown(InputDeviceKeys.IDK_F12) then
 		print('Client send: UI_Request_Open');
+		
+		-- This request can use for UI-Toggle
 		NetEvents:Send('UI_Request_Open');
 	end
 end
