@@ -63,7 +63,7 @@ function Bot:onUpdate(dt)
     self._aimUpdateTimer = self._aimUpdateTimer + dt
 
     if self._aimUpdateTimer > Config.botAimUpdateCycle then
-        self:_updateAiming() --needs to be faster? TODO: find out how fast...
+        self:_updateAiming(dt)
         self._aimUpdateTimer = 0  --reset afterwards, to use it for targetinterpolation
     end
 
@@ -270,7 +270,7 @@ function Bot:_getPitchAddition()
     return MathUtils:GetRandom(-Config.botDefaultDeviation, Config.botDefaultDeviation) * Config.deviationAdditionFactor
 end
 
-function Bot:_updateAiming()
+function Bot:_updateAiming(dt)
     if self.player.alive and self._shoot then
         if self._shootPlayer ~= nil and self._shootPlayer.soldier ~= nil then
             --interpolate player movement
@@ -279,7 +279,7 @@ function Bot:_updateAiming()
                 targetMovement = self._shootPlayer.soldier.worldTransform.trans - self._lastTargetTrans  --movement in one dt
                 --calculate how long the distance is --> time to travel
                 local distanceToPlayer = self._shootPlayer.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans)
-                local timeToTravel = (distanceToPlayer / Config.botBulletSpeed) --TODO: find additional delay and find out why
+                local timeToTravel = (distanceToPlayer / Config.botBulletSpeed) + dt
                 local factorForMovement =  timeToTravel / self._aimUpdateTimer
                 targetMovement = targetMovement * factorForMovement
             end
@@ -288,8 +288,8 @@ function Bot:_updateAiming()
             --calculate yaw and pith
             local dz = self._shootPlayer.soldier.worldTransform.trans.z + targetMovement.z - self.player.soldier.worldTransform.trans.z
             local dx = self._shootPlayer.soldier.worldTransform.trans.x + targetMovement.x - self.player.soldier.worldTransform.trans.x
-            local dy = (self._shootPlayer.soldier.worldTransform.trans.y + targetMovement.y + self:_getCameraHight(self._shootPlayer.soldier)) -
-                                (self.player.soldier.worldTransform.trans.y + self:_getCameraHight(self.player.soldier) + Config.botShootLowerCameraPos)
+            local dy = (self._shootPlayer.soldier.worldTransform.trans.y + targetMovement.y + self:_getCameraHight(self._shootPlayer.soldier, true)) -
+                                (self.player.soldier.worldTransform.trans.y + self:_getCameraHight(self.player.soldier, false))
             local atanDzDx = math.atan(dz, dx)
             local yaw = (atanDzDx > math.pi / 2) and (atanDzDx - math.pi / 2) or (atanDzDx + 3 * math.pi / 2)
             --calculate pitch
@@ -326,6 +326,9 @@ function Bot:_updateShooting()
                         self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 0)
                         self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0)
                     end
+                else
+                    self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 0)
+                    self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0)
                 end
 
                 --shooting sequence
@@ -511,7 +514,10 @@ function Bot:_updateMovement()
         -- shooting MoveMode
         elseif self.activeMoveMode == 9 then
             --crouch moving (only mode with modified gun)
-            self.activeSpeedValue = 2
+            self.activeSpeedValue = 0
+            if self.player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Crouch then
+                self.player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Crouch, true, true)
+            end
         end
 
         -- additional movement
@@ -554,12 +560,22 @@ function Bot:_setActiveVars()
     self.activeSpeedValue = self._botSpeed
 end
 
-function Bot:_getCameraHight(soldier)
-    local camereaHight = 1.6 --bot.soldier.pose == CharacterPoseType.CharacterPoseType_Stand
-    if soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
-        camereaHight = 0.3
-    elseif soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
-        camereaHight = 1.0
+function Bot:_getCameraHight(soldier, isTarget)
+    local camereaHight = 0
+    if not isTarget then
+        camereaHight = 1.6 --bot.soldier.pose == CharacterPoseType.CharacterPoseType_Stand
+        if soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
+            camereaHight = 0.3
+        elseif soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
+            camereaHight = 1.0
+        end
+    else
+        camereaHight = 1.3 --bot.soldier.pose == CharacterPoseType.CharacterPoseType_Stand - reduce by 0.3
+        if soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
+            camereaHight = 0.3      -- don't reduce
+        elseif soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
+            camereaHight = 0.8      -- reduce by 0.2
+        end
     end
     return camereaHight
 end
