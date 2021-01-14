@@ -2,10 +2,20 @@ class('WeaponModification')
 require('__shared/Config')
 
 function WeaponModification:__init()
+	self.m_alreadyLoaded = false
 	self.m_WeaponInstances = {}
+	self.m_maxAngles = {}
+	self.m_minAngles = {}
 end
 
 function WeaponModification:OnPartitionLoaded(p_Partition)
+	if self.m_alreadyLoaded then
+		self.m_WeaponInstances = nil
+		self.m_WeaponInstances = {}
+		self.m_maxAngles = {}
+		self.m_minAngles = {}
+		self.m_alreadyLoaded = false
+	end
 	local s_Instances = p_Partition.instances
 	for _, s_Instance in pairs(s_Instances) do
 		if s_Instance ~= nil and s_Instance.typeInfo.name == "SoldierWeaponData" then
@@ -17,24 +27,27 @@ function WeaponModification:OnPartitionLoaded(p_Partition)
 	end
 end
 
+
 function WeaponModification:OnLevelLoaded(p_Map, p_GameMode, p_Round) --Server
-    self:ModifyAllWeapons()
+	self:ModifyAllWeapons()
+	self.m_alreadyLoaded = true
 end
 
 function WeaponModification:OnEngineMessage(p_Message) -- Client
     if p_Message.type == MessageType.ClientLevelFinalizedMessage then
 		self:ModifyAllWeapons()
+		self.m_alreadyLoaded = true
 	end
 end
 
 function WeaponModification:ModifyAllWeapons()
 	print(#self.m_WeaponInstances.." weapons to modify")
-	for _, weaponInstance in pairs(self.m_WeaponInstances) do
-		self:_ModifyWeapon(weaponInstance)
+	for i, weaponInstance in pairs(self.m_WeaponInstances) do
+		self:_ModifyWeapon(weaponInstance , i)
 	end
 end
 
-function WeaponModification:_ModifyWeapon(p_SoldierWeaponData)
+function WeaponModification:_ModifyWeapon(p_SoldierWeaponData, index)
 	local s_SoldierWeaponData = self:_MakeWritable(p_SoldierWeaponData)
 	local s_WeaponFiringData = self:_MakeWritable(s_SoldierWeaponData.weaponFiring)
 	if s_WeaponFiringData.weaponSway == nil then
@@ -51,8 +64,13 @@ function WeaponModification:_ModifyWeapon(p_SoldierWeaponData)
 			--Only modify movemode of bots
 			local s_MovingValue = GunSwayDispersionData(s_CrouchNoZoom.moving)
 			if s_MovingValue ~= nil then
-				s_MovingValue.minAngle = s_MovingValue.minAngle * Config.botAimWorsening
-				s_MovingValue.maxAngle = s_MovingValue.maxAngle * Config.botAimWorsening
+				print("modify crouch "..Config.botAimWorsening.." "..s_MovingValue.minAngle.." "..s_MovingValue.maxAngle)
+				if self.m_maxAngles[index] == nil then
+					self.m_minAngles[index] = s_MovingValue.minAngle
+					self.m_maxAngles[index] = s_MovingValue.maxAngle
+				end
+				s_MovingValue.minAngle = self.m_minAngles[index] * Config.botAimWorsening
+				s_MovingValue.maxAngle = self.m_maxAngles[index] * Config.botAimWorsening
 			end
 		end
 	end
@@ -88,4 +106,5 @@ if g_WeaponModification == nil then
 	g_WeaponModification = WeaponModification()
 end
 
-return g_WeaponModification
+
+return WeaponModification()

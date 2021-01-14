@@ -1,5 +1,6 @@
 class('FunBotClient')
 require('__shared/Config')
+local WeaponModification = require('__shared/weaponModification')
 
 function FunBotClient:__init()
 	self._raycastTimer = 0
@@ -11,6 +12,7 @@ function FunBotClient:__init()
 	Events:Subscribe('Extension:Loaded', self, self._onExtensionLoaded)
 	Hooks:Install('BulletEntity:Collision', 1, self, self._onBulletCollision)
 	Events:Subscribe('exitui', self, self._onExitUi)
+	NetEvents:Subscribe('ModifyAllWeapons', self, self._onModifyWeapons)
 end
 
 function FunBotClient:_onExitUi(player)
@@ -23,6 +25,10 @@ end
 function FunBotClient:_onExtensionLoaded()
 	WebUI:Init();
 	WebUI:Hide();
+end
+
+function FunBotClient:_onModifyWeapons()
+	WeaponModification:ModifyAllWeapons()
 end
 
 
