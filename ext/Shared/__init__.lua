@@ -1,12 +1,25 @@
-Events:Subscribe('Partition:Loaded', function(partition)
-	for _, instance in pairs(partition.instances) do
-		if instance:Is('GunSwayData') then
-			instance = GunSwayData(instance)
-			-- Make it writable so we can modify its fields.
-			instance:MakeWritable()
+class('FunBotShared')
+local WeaponModification = require('__shared/weaponModification')
 
-			instance.deviationScaleFactorNoZoom = 0.5
-			instance.gameplayDeviationScaleFactorNoZoom = 0.5
-		end
-	end
-end)
+function FunBotShared:__init()
+	Events:Subscribe('Partition:Loaded', self, self.OnPartitionLoaded)
+	Events:Subscribe('Level:Loaded', self, self.OnLevelLoaded)
+	Events:Subscribe('Engine:Message', self, self.OnEngineMessage)
+end
+
+function FunBotShared:OnPartitionLoaded(p_Partition)
+	WeaponModification:OnPartitionLoaded(p_Partition)
+end
+
+function FunBotShared:OnEngineMessage(p_Message)
+	WeaponModification:OnEngineMessage(p_Message)
+end
+
+function FunBotShared:OnLevelLoaded(levelName, gameMode)
+	WeaponModification:OnLevelLoaded(levelName, gameMode)
+end
+
+-- Singleton.
+if g_FunBotShared == nil then
+	g_FunBotShared = FunBotShared()
+end
