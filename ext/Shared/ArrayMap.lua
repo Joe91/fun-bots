@@ -1,4 +1,4 @@
-class('ArrayMap')
+class 'ArrayMap';
 
 function ArrayMap:__init()
 	self._entries = {};
@@ -28,6 +28,26 @@ function ArrayMap:deleteByIndex(index)
 	end
 end
 
+function ArrayMap:exists(value)
+	print('ArrayMap(' .. tostring(self:count()) .. ') - exists: ' .. value);
+	
+	local index = {};
+	
+	for key, data in pairs(self._entries) do
+	   index[data] = key;
+	end
+	
+	if index[value] ~= nil then
+		print('Exists: ' .. value);
+		return true;
+	end
+	
+	
+	print('Not exists: ' .. value);
+	
+	return false;
+end
+
 function ArrayMap:delete(value)
 	print('ArrayMap(' .. tostring(self:count()) .. ') - remove: ' .. value);
 	
@@ -50,6 +70,10 @@ end
 
 function ArrayMap:count()
 	return #self._entries;
+end
+
+function ArrayMap:_tostring()
+	return '[ArrayList Count=' .. self:count() .. ', ' .. json.encode(self._entries) .. ']';
 end
 
 return ArrayMap;

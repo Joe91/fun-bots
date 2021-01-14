@@ -1,20 +1,23 @@
-class('FunBotUIServer')
+class 'FunBotUIServer';
 
-require('__shared/Utils')
-local TraceManager = require('traceManager');
+require('__shared/ArrayMap');
+local TraceManager	= require('traceManager');
 
 function FunBotUIServer:__init()
 	self._webui			= 0;
-	self._authenticated	= {};
+	self._authenticated	= ArrayMap();
 
+	print(self._authenticated:_tostring());
 	NetEvents:Subscribe('UI_Request_Open', self, self._onUIRequestOpen);
 end
 
 function FunBotUIServer:_onUIRequestOpen(player, data)
+	print(self._authenticated:_tostring());
 	print(player.name .. ' requesting open Bot-Editor.');
 
-	if (Config.settingsPassword == nil or self._isAuthenticated(player.accountGuid)) then
+	if (Config.settingsPassword == nil or self:_isAuthenticated(player.accountGuid)) then
 		print('Open Bot-Editor for ' .. player.name .. '.');
+		NetEvents:SendTo('UI_Toggle', player);
 	else
 		if (data == nil) then
 			print('Ask ' .. player.name .. ' for Bot-Editor password.');
@@ -27,16 +30,18 @@ function FunBotUIServer:_onUIRequestOpen(player, data)
 				print(player.name .. ' has entered following Password: ' .. form.password);
 				
 				if (form.password == Config.settingsPassword) then
-					table.insert(self._authenticated, tostring(player.accountGuid));
+					self._authenticated:add(tostring(player.accountGuid));
 					print('accountGuid: ' .. tostring(player.accountGuid));
 					ChatManager:Yell('Successfully authenticated.', 2.5);
 					NetEvents:SendTo('UI_Request_Password', player, 'false');
 					NetEvents:SendTo('UI_Show_Toolbar', player, 'true');
 				else
+					print(player.name .. ' has entered a bad password.');
 					NetEvents:SendTo('UI_Request_Password_Error', player, 'The password you entered is not correct!');
 					ChatManager:Yell('Bad password.', 2.5);
 				end
 			else
+				print(player.name .. ' has entered an empty password.');
 				NetEvents:SendTo('UI_Request_Password_Error', player, 'The password you entered is not correct!');
 				ChatManager:Yell('Please enter a password!', 2.5);
 			end
@@ -45,7 +50,11 @@ function FunBotUIServer:_onUIRequestOpen(player, data)
 end
 
 function FunBotUIServer:_isAuthenticated(guid)
-	return contains(self._authenticated, tostring(guid));
+	if self._authenticated:isEmpty() then
+		return false;
+	end
+	
+	return self._authenticated:exists(tostring(guid));
 end
 
 if (g_FunBotUIServer == nil) then
