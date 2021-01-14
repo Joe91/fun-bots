@@ -46,6 +46,7 @@ function Bot:__init(player)
     self._shootWayPoints = {}
     self._lastTargetTrans = Vec3()
     self._lastShootPlayer = nil
+    self._fireMode = 0
 
     --simple movement
     self._botSpeed = 0
@@ -62,8 +63,8 @@ function Bot:onUpdate(dt)
     self._aimUpdateTimer = self._aimUpdateTimer + dt
 
     if self._aimUpdateTimer > Config.botAimUpdateCycle then
-        self._aimUpdateTimer = 0
         self:_updateAiming() --needs to be faster? TODO: find out how fast...
+        self._aimUpdateTimer = 0  --reset afterwards, to use it for targetinterpolation
     end
 
     if self._updateTimer > Config.botUpdateCycle then
@@ -272,11 +273,15 @@ end
 function Bot:_updateAiming()
     if self.player.alive and self._shoot then
         if self._shootPlayer ~= nil and self._shootPlayer.soldier ~= nil then
-            self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 1) --does not work.
             --interpolate player movement
             local targetMovement = Vec3(0,0,0)
             if self._lastShootPlayer ~= nil and self._lastShootPlayer ==  self._shootPlayer then
-                targetMovement = self._shootPlayer.soldier.worldTransform.trans - self._lastTargetTrans
+                targetMovement = self._shootPlayer.soldier.worldTransform.trans - self._lastTargetTrans  --movement in one dt
+                --calculate how long the distance is --> time to travel
+                local distanceToPlayer = self._shootPlayer.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans)
+                local timeToTravel = (distanceToPlayer / Config.botBulletSpeed) --TODO: find additional delay and find out why
+                local factorForMovement =  timeToTravel / self._aimUpdateTimer
+                targetMovement = targetMovement * factorForMovement
             end
             self._lastShootPlayer = self._shootPlayer
             self._lastTargetTrans = self._shootPlayer.soldier.worldTransform.trans:Clone()
@@ -292,6 +297,7 @@ function Bot:_updateAiming()
             local pitch =  math.atan(dy, distance)
             self.player.input.authoritativeAimingPitch = pitch + self:_getPitchAddition()
             self.player.input.authoritativeAimingYaw = yaw + self:_getYawAddition()
+            self.player.input:SetLevel(EntryInputActionEnum.EIAFire, self._fireMode)
         end
     end
 end
@@ -303,6 +309,7 @@ function Bot:_updateShooting()
                 self._shootModeTimer = self._shootModeTimer + Config.botUpdateCycle
 
                 self.activeMoveMode = 9 -- movement-mode : shoot
+                --self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 1) --does not work.
 
                 --check for melee attack
                 if Config.meleeAttackIfClose and self._shootPlayer.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans) < 1 then
@@ -331,21 +338,21 @@ function Bot:_updateShooting()
                     table.insert(self._shootWayPoints, point)
                 end
                 if self._shotTimer >= Config.botFireDuration then
-                    self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0)
+                    self._fireMode = 0
                 else
-                    self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1)
-                    --self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 1)
-                    --print(self.player.soldier.weaponsComponent.isZooming)
+                    self._fireMode = 1
                 end
                 self._shotTimer = self._shotTimer + Config.botUpdateCycle
             else
                 self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0)
+                self._fireMode = 0
                 self._shootPlayer = nil
                 self._lastShootPlayer = nil
             end
         else
             self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 0)
             self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0)
+            self._fireMode = 0
             self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 0)
             self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0)
             self._shootPlayer = nil
