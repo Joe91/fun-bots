@@ -3,6 +3,7 @@ require('__shared/config')
 local BotManager = require('botManager')
 local TraceManager = require('traceManager')
 local BotSpawner = require('botSpawner')
+local WeaponModification = require('__shared/weaponModification')
 
 function FunBotServer:__init()
     Events:Subscribe('Level:Loaded', self, self._onLevelLoaded)
@@ -158,7 +159,8 @@ function FunBotServer:_onChat(player, recipientMask, message)
         end
 
     elseif parts[1] == '!setaim' then
-        Config.deviationAdditionFactor = tonumber(parts[2]) or 1.0
+        Config.botAimWorsening = tonumber(parts[2]) or 0.5
+        WeaponModification:ModifyAllWeapons()
     elseif parts[1] == '!bullet' then
         Config.bulletDamageBot = tonumber(parts[2]) or 1
     elseif parts[1] == '!sniper' then

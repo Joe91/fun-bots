@@ -23,8 +23,8 @@ Config = {
     meleeDamageBot = 48,
     meleeAttackIfClose = true,
     shootBackIfHit = true,
-    deviationAdditionFactor = 1.0,    --make aim worse: for difficulty: 0 = no offset (hard), 1 or greater = more sway (easy)
-    botKit = 4, -- 0 = random, 1 = assault, 2 = engineer, 3 = support, 4 = recon
+    botAimWorsening = 0.2,    --make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy)
+    botKit = 0, -- 0 = random, 1 = assault, 2 = engineer, 3 = support, 4 = recon
     botColor = 0, -- 0 = random, see Colors
 
     --trace
@@ -36,7 +36,6 @@ Config = {
     raycastInterval = 0.1, -- seconds
     botUpdateCycle = 0.1,
     botAimUpdateCycle = 0.05, -- = 3 frames
-    botDefaultDeviation = 0.0174533, --= 1° -> multiplied by deviationAdditionFactor is the max possible deviation
     botBulletSpeed = 600,       --aproximately
     targetDistanceWayPoint = 0.5,
     targetHeightDistanceWayPoint = 2

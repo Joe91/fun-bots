@@ -262,14 +262,6 @@ function Bot:_updateRespwawn()
     end
 end
 
-function Bot:_getYawAddition()
-    return MathUtils:GetRandom(-Config.botDefaultDeviation, Config.botDefaultDeviation) * Config.deviationAdditionFactor
-end
-
-function Bot:_getPitchAddition()
-    return MathUtils:GetRandom(-Config.botDefaultDeviation, Config.botDefaultDeviation) * Config.deviationAdditionFactor
-end
-
 function Bot:_updateAiming(dt)
     if self.player.alive and self._shoot then
         if self._shootPlayer ~= nil and self._shootPlayer.soldier ~= nil then
@@ -295,8 +287,8 @@ function Bot:_updateAiming(dt)
             --calculate pitch
             local distance = math.sqrt(dz^2 + dx^2)
             local pitch =  math.atan(dy, distance)
-            self.player.input.authoritativeAimingPitch = pitch + self:_getPitchAddition()
-            self.player.input.authoritativeAimingYaw = yaw + self:_getYawAddition()
+            self.player.input.authoritativeAimingPitch = pitch
+            self.player.input.authoritativeAimingYaw = yaw
             self.player.input:SetLevel(EntryInputActionEnum.EIAFire, self._fireMode)
         end
     end
