@@ -1,4 +1,5 @@
 class('WeaponModification')
+require('__shared/Config')
 
 function WeaponModification:__init()
 	self.m_alreadyLoaded = false
@@ -36,7 +37,7 @@ end
 
 function WeaponModification:OnEngineMessage(p_Message) -- Client
     if p_Message.type == MessageType.ClientLevelFinalizedMessage then
-		self:ModifyAllWeapons()
+		self:ModifyAllWeapons(Config.botAimWorsening)
 	end
 end
 
@@ -100,11 +101,6 @@ function WeaponModification:_MakeWritable(p_Instance)
 
 	s_Instance:MakeWritable()
 	return s_Instance
-end
-
--- Singleton.
-if g_WeaponModification == nil then
-	g_WeaponModification = WeaponModification()
 end
 
 
