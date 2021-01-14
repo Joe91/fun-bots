@@ -68,11 +68,11 @@ function WeaponModification:ModifyWeapon(p_SoldierWeaponData)
 				s_MovingValue.minAngle = s_MovingValue.minAngle * 0.0
 				s_MovingValue.maxAngle = s_MovingValue.maxAngle * 0.0
 			end
-			--[[local s_Recoil = GunSwayRecoilData(s_NoZoom.recoil)
+			local s_Recoil = GunSwayRecoilData(s_NoZoom.recoil)
 			if s_Recoil ~= nil then
 				s_Recoil.recoilAmplitudeMax = 0
 				s_Recoil.recoilAmplitudeIncPerShot = 0
-			end--]]
+			end
 		end
 		if s_Zoom ~= nil then
 			-- do nothing, as bots don't zoom
@@ -87,7 +87,7 @@ function WeaponModification:ModifyWeapon(p_SoldierWeaponData)
 		--HipFire 
 		if s_CrouchNoZoom ~= nil then
 			local s_BaseValue = GunSwayDispersionData(s_CrouchNoZoom.baseValue)
-			if s_BaseValue ~= nil then
+			--[[if s_BaseValue ~= nil then
 				print("modify crouching")
 				s_BaseValue.minAngle = s_BaseValue.minAngle * 0.0
 				s_BaseValue.maxAngle = s_BaseValue.maxAngle * 0.0

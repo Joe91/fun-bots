@@ -36,6 +36,7 @@ Config = {
     raycastInterval = 0.1, -- seconds
     botUpdateCycle = 0.1,
     botAimUpdateCycle = 0.05,
+    botDefaultDeviation = 0.034, --= 2° -> multiplied by deviationAdditionFactor is the max possible
     targetDistanceWayPoint = 0.5,
     targetHeightDistanceWayPoint = 2
 }

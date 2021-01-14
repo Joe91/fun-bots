@@ -254,22 +254,12 @@ function Bot:_updateRespwawn()
     end
 end
 
-function Bot:_getYawAddition(currentWeapon)
-    local yawOffset = 0
-    if currentWeapon.weaponFiring.gunSway ~= nil then
-        local yaw =  currentWeapon.weaponFiring.gunSway.currentDispersionDeviation.yaw
-        yawOffset = MathUtils:GetRandom(-yaw, yaw) * Config.deviationAdditionFactor
-    end
-    return  yawOffset
+function Bot:_getYawAddition()
+    return MathUtils:GetRandom(-Config.botDefaultDeviation, Config.botDefaultDeviation) * Config.deviationAdditionFactor
 end
 
-function Bot:_getPitchAddition(currentWeapon)
-    local pitchOffset = 0
-    if currentWeapon.weaponFiring.gunSway ~= nil then
-        local pitch = currentWeapon.weaponFiring.gunSway.currentDispersionDeviation.pitch
-        pitchOffset = MathUtils:GetRandom(-pitch, pitch) * Config.deviationAdditionFactor
-    end
-    return pitchOffset
+function Bot:_getPitchAddition()
+    return MathUtils:GetRandom(-Config.botDefaultDeviation, Config.botDefaultDeviation) * Config.deviationAdditionFactor
 end
 
 function Bot:_updateAiming()
@@ -285,8 +275,8 @@ function Bot:_updateAiming()
             --calculate pitch
             local distance = math.sqrt(dz^2 + dx^2)
             local pitch =  math.atan(dy, distance)
-            self.player.input.authoritativeAimingPitch = pitch + self:_getPitchAddition(self.player.soldier.weaponsComponent.currentWeapon)
-            self.player.input.authoritativeAimingYaw = yaw + self:_getYawAddition(self.player.soldier.weaponsComponent.currentWeapon)
+            self.player.input.authoritativeAimingPitch = pitch + self:_getPitchAddition()
+            self.player.input.authoritativeAimingYaw = yaw + self:_getYawAddition()
         end
     end
 end
@@ -496,11 +486,8 @@ function Bot:_updateMovement()
 
         -- shooting MoveMode
         elseif self.activeMoveMode == 9 then
-            --reduce speed
-            if self.activeSpeedValue > 1 then
-                self.activeSpeedValue = self.activeSpeedValue - 1
-            end
-            -- TODO: trace way back
+            --crouch moving (only mode with modified gun)
+            self.activeSpeedValue = 2
         end
 
         -- additional movement
