@@ -36,7 +36,7 @@ Config = {
     raycastInterval = 0.1, -- seconds
     botUpdateCycle = 0.1,
     botAimUpdateCycle = 0.05,
-    botDefaultDeviation = 0.034, --= 2° -> multiplied by deviationAdditionFactor is the max possible
+    botDefaultDeviation = 0,0174533, --= 1° -> multiplied by deviationAdditionFactor is the max possible deviation
     botShootLowerCameraPos = 0.1,    -- = the height, the bot aims lower than the camara-position of the player. Example:
                                 -- Player heigt = 1.8, camera = 1.6. If value = 0.1, the bot will aim at 1.5 m in pitch
     targetDistanceWayPoint = 0.5,

@@ -2,7 +2,6 @@ class('WeaponModification')
 
 function WeaponModification:__init()
 	self.m_WeaponInstances = {}
-	Events:Subscribe('Partition:Loaded', self, self.OnPartitionLoaded)
 end
 
 function WeaponModification:OnPartitionLoaded(p_Partition)
@@ -17,31 +16,30 @@ function WeaponModification:OnPartitionLoaded(p_Partition)
 	end
 end
 
-function WeaponModification:OnLevelLoaded(p_Map, p_GameMode) --Server
-    self:ModifyAllBotWeapons()
+function WeaponModification:OnLevelLoaded(p_Map, p_GameMode, p_Round) --Server
+    self:_ModifyAllBotWeapons()
 end
+
 function WeaponModification:OnEngineMessage(p_Message) -- Client
     if p_Message.type == MessageType.ClientLevelFinalizedMessage then
-		self:ModifyAllBotWeapons()
+		self:_ModifyAllBotWeapons()
 	end
 end
 
-function WeaponModification:ModifyAllBotWeapons()
-	print(#self.m_WeaponInstances)
+function WeaponModification:_ModifyAllBotWeapons()
+	print(#self.m_WeaponInstances.." weapons to modify")
 	for _, weaponInstance in pairs(self.m_WeaponInstances) do
-		self:ModifyWeapon(weaponInstance)
-		-- check if bot weapons?
-		-- modify only bot weapon
+		self:_ModifyWeapon(weaponInstance)
 	end
 end
 
-function WeaponModification:ModifyWeapon(p_SoldierWeaponData)
-	local s_SoldierWeaponData = self:MakeWritable(p_SoldierWeaponData)
-	local s_WeaponFiringData = self:MakeWritable(s_SoldierWeaponData.weaponFiring)
+function WeaponModification:_ModifyWeapon(p_SoldierWeaponData)
+	local s_SoldierWeaponData = self:_MakeWritable(p_SoldierWeaponData)
+	local s_WeaponFiringData = self:_MakeWritable(s_SoldierWeaponData.weaponFiring)
 	if s_WeaponFiringData.weaponSway == nil then
 		return
 	end
-	local s_GunSwayData = self:MakeWritable(s_WeaponFiringData.weaponSway)
+	local s_GunSwayData = self:_MakeWritable(s_WeaponFiringData.weaponSway)
 	-- From here on, you can modify everything in GunSwayData
 
 	local s_Crouch = GunSwayCrouchProneData(s_GunSwayData.crouch)
@@ -65,7 +63,7 @@ function WeaponModification:ModifyWeapon(p_SoldierWeaponData)
 	end
 end
 
-function WeaponModification:MakeWritable(p_Instance)
+function WeaponModification:_MakeWritable(p_Instance)
 	if p_Instance == nil then
 		return
 	end
