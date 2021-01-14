@@ -42,49 +42,13 @@ function WeaponModification:ModifyWeapon(p_SoldierWeaponData)
 		return
 	end
 	local s_GunSwayData = self:MakeWritable(s_WeaponFiringData.weaponSway)
-	print("modify sway")
 	-- From here on, you can modify everything in GunSwayData
-	--s_GunSwayData.deviationScaleFactorZoom = 7
-	--s_GunSwayData.gameplayDeviationScaleFactorZoom = 7
-	--s_GunSwayData.deviationScaleFactorNoZoom = 0.0
-	--s_GunSwayData.gameplayDeviationScaleFactorNoZoom = 0.0
-	--s_GunSwayData.shootingRecoilDecreaseScale = 0
-	--s_GunSwayData.firstShotRecoilMultiplier = 0
-
-	--[[local s_Stand = GunSwayStandData(s_GunSwayData.stand)
-	if s_Stand ~= nil then
-		print("modify stand")
-		local s_NoZoom = GunSwayBaseMoveJumpData(s_Stand.noZoom)
-		--local s_Zoom = GunSwayBaseMoveJumpData(s_Stand.zoom)
-		--HipFire 
-		if s_NoZoom ~= nil then
-			local s_BaseValue = GunSwayDispersionData(s_NoZoom.baseValue)
-			if s_BaseValue ~= nil then
-				s_BaseValue.minAngle = s_BaseValue.minAngle * 0.0
-				s_BaseValue.maxAngle = s_BaseValue.maxAngle * 0.0
-			end
-			local s_MovingValue = GunSwayDispersionData(s_NoZoom.moving)
-			if s_MovingValue ~= nil then
-				s_MovingValue.minAngle = s_MovingValue.minAngle * 0.0
-				s_MovingValue.maxAngle = s_MovingValue.maxAngle * 0.0
-			end
-			local s_Recoil = GunSwayRecoilData(s_NoZoom.recoil)
-			if s_Recoil ~= nil then
-				s_Recoil.recoilAmplitudeMax = 0
-				s_Recoil.recoilAmplitudeIncPerShot = 0
-			end
-		end
-		if s_Zoom ~= nil then
-			-- do nothing, as bots don't zoom
-		end
-	end--]]
 
 	local s_Crouch = GunSwayCrouchProneData(s_GunSwayData.crouch)
 	if s_Crouch ~= nil then
-		print("modify crouch")
 		local s_CrouchNoZoom = GunSwayBaseMoveData(s_Crouch.noZoom)
 		--local s_CrouchZoom = GunSwayBaseMoveData(s_Crouch.zoom)
-		--HipFire 
+		--HipFire
 		if s_CrouchNoZoom ~= nil then
 			local s_BaseValue = GunSwayDispersionData(s_CrouchNoZoom.baseValue)
 			--[[if s_BaseValue ~= nil then
@@ -97,13 +61,8 @@ function WeaponModification:ModifyWeapon(p_SoldierWeaponData)
 				s_MovingValue.minAngle = s_MovingValue.minAngle * 0.0
 				s_MovingValue.maxAngle = s_MovingValue.maxAngle * 0.0
 			end
-			--[[local s_Recoil = GunSwayRecoilData(s_CrouchNoZoom.recoil)
-			if s_Recoil ~= nil then
-				s_Recoil.recoilAmplitudeMax = 0
-				s_Recoil.recoilAmplitudeIncPerShot = 0
-			end--]]
 		end
-	end--]]
+	end
 end
 
 function WeaponModification:MakeWritable(p_Instance)

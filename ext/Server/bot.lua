@@ -44,6 +44,8 @@ function Bot:__init(player)
     self._shoot = false
     self._shootPlayer = nil
     self._shootWayPoints = {}
+    self._lastTargetTrans = Vec3()
+    self._lastShootPlayer = nil
 
     --simple movement
     self._botSpeed = 0
@@ -123,6 +125,7 @@ function Bot:resetVars()
     self._shoot = false
     self._targetPlayer = nil
     self._shootPlayer = nil
+    self._lastShootPlayer = nil
     self._updateTimer = 0
     self._aimUpdateTimer = 0 --timer sync
     self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 0)
@@ -222,6 +225,7 @@ function Bot:resetSpawnVars()
     self._obstacleRetryCounter = 0
     self._lastWayDistance = 1000
     self._shootPlayer = nil
+    self._lastShootPlayer = nil
     self._shootModeTimer = nil
     self._meleeCooldownTimer = 0
 end
@@ -232,6 +236,9 @@ function Bot:clearPlayer(player)
     end
     if self._targetPlayer == player then
         self._targetPlayer = nil
+    end
+    if self._lastShootPlayer == player then
+        self._lastShootPlayer = nil
     end
 end
 
@@ -266,10 +273,18 @@ function Bot:_updateAiming()
     if self.player.alive and self._shoot then
         if self._shootPlayer ~= nil and self._shootPlayer.soldier ~= nil then
             self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 1) --does not work.
+            --interpolate player movement
+            local targetMovement = Vec3(0,0,0)
+            if self._lastShootPlayer ~= nil and self._lastShootPlayer ==  self._shootPlayer then
+                targetMovement = self._shootPlayer.soldier.worldTransform.trans - self._lastTargetTrans
+            end
+            self._lastShootPlayer = self._shootPlayer
+            self._lastTargetTrans = self._shootPlayer.soldier.worldTransform.trans:Clone()
             --calculate yaw and pith
-            local dz = self._shootPlayer.soldier.worldTransform.trans.z - self.player.soldier.worldTransform.trans.z
-            local dx = self._shootPlayer.soldier.worldTransform.trans.x - self.player.soldier.worldTransform.trans.x
-            local dy = self._shootPlayer.soldier.worldTransform.trans.y + self:_getCameraHight(self._shootPlayer.soldier) - 0.1 -self.player.soldier.worldTransform.trans.y - self:_getCameraHight(self.player.soldier) --0.2 to shoot a litle lower
+            local dz = self._shootPlayer.soldier.worldTransform.trans.z + targetMovement.z - self.player.soldier.worldTransform.trans.z
+            local dx = self._shootPlayer.soldier.worldTransform.trans.x + targetMovement.x - self.player.soldier.worldTransform.trans.x
+            local dy = (self._shootPlayer.soldier.worldTransform.trans.y + targetMovement.y + self:_getCameraHight(self._shootPlayer.soldier)) -
+                                (self.player.soldier.worldTransform.trans.y + self:_getCameraHight(self.player.soldier) + Config.botShootLowerCameraPos)
             local atanDzDx = math.atan(dz, dx)
             local yaw = (atanDzDx > math.pi / 2) and (atanDzDx - math.pi / 2) or (atanDzDx + 3 * math.pi / 2)
             --calculate pitch
@@ -326,6 +341,7 @@ function Bot:_updateShooting()
             else
                 self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0)
                 self._shootPlayer = nil
+                self._lastShootPlayer = nil
             end
         else
             self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 0)
@@ -333,6 +349,7 @@ function Bot:_updateShooting()
             self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 0)
             self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0)
             self._shootPlayer = nil
+            self._lastShootPlayer = nil
             self._shootModeTimer = nil
         end
     end
