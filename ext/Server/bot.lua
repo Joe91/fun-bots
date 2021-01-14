@@ -514,10 +514,7 @@ function Bot:_updateMovement()
         -- shooting MoveMode
         elseif self.activeMoveMode == 9 then
             --crouch moving (only mode with modified gun)
-            self.activeSpeedValue = 0
-            if self.player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Crouch then
-                self.player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Crouch, true, true)
-            end
+            self.activeSpeedValue = 2
         end
 
         -- additional movement
