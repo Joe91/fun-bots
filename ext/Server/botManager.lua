@@ -5,6 +5,7 @@ local Globals = require('globals')
 function BotManager:__init()
     self._bots = {}
     self._botInputs = {}
+    self._shooterBots = {}
 
 	Events:Subscribe('UpdateManager:Update', self, self._onUpdate)
     Events:Subscribe('Extension:Unloading', self, self._onUnloading)
@@ -125,6 +126,7 @@ function BotManager:_onPlayerLeft(player)
 end
 
 function BotManager:_onSoldierDamage(hook, soldier, info, giverInfo)
+    --detect if we need to shoot back
     if Config.shootBackIfHit then
         if giverInfo.giver ~= nil and soldier.player ~= nil then
             local bot = self:GetBotByName(soldier.player.name)
@@ -133,6 +135,32 @@ function BotManager:_onSoldierDamage(hook, soldier, info, giverInfo)
             end
         end
     end
+
+    --find out, if a player was hit by the server:
+    if soldier.player ~= nil then
+        local bot = self:GetBotByName(soldier.player.name)
+        if bot == nil then
+            print("hit by a bot?")
+            if giverInfo.giver == nil then
+                bot = self:GetBotByName(self._shooterBots[soldier.player.name])
+                if bot ~= nil then
+                    if bot.kit == 4 then
+                        info.damage = Config.bulletDamageBotSniper
+                    else
+                        info.damage = Config.bulletDamageBot
+                    end
+                    info.position = soldier.worldTransform.trans
+                    info.direction = soldier.worldTransform.trans - bot.player.soldier.worldTransform.trans
+                    info.origin = bot.player.soldier.worldTransform.trans
+                    info.isBulletDamage = true
+                    giverInfo.giver = bot.player
+                    hook:Pass(soldier, info, giverInfo)
+                end
+
+            end
+        end
+    end--]]
+    --if this works, we can overwrite the giverInfo to the bot
 end
 
 
@@ -154,6 +182,9 @@ function BotManager:_onDamagePlayer(player, shooterName, meleeAttack)
     else
         damage = Config.meleeDamageBot
     end
+    damage = 1
+    --save potential killer bot
+    self._shooterBots[player.name] = shooterName
 
     if player.soldier ~= nil then
         player.soldier.health = player.soldier.health - damage
@@ -163,6 +194,8 @@ function BotManager:_onDamagePlayer(player, shooterName, meleeAttack)
         killerBot.player.kills = killerBot.player.kills + 1  --not writable
     end--]]
 end
+
+
 
 function BotManager:_onShootAt(player, botname, ignoreYaw)
     local bot = self:GetBotByName(botname)
