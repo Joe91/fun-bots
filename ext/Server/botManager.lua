@@ -143,16 +143,22 @@ function BotManager:_onSoldierDamage(hook, soldier, info, giverInfo)
             print("hit by a bot?")
             if giverInfo.giver == nil then
                 bot = self:GetBotByName(self._shooterBots[soldier.player.name])
-                if bot ~= nil then
-                    if bot.kit == 4 then
-                        info.damage = Config.bulletDamageBotSniper
-                    else
-                        info.damage = Config.bulletDamageBot
+                if bot ~= nil and bot.player.soldier ~= nil then
+                    if info.damage == 1 then
+                        info.isBulletDamage = true
+                        if bot.kit == 4 then
+                            info.damage = Config.bulletDamageBotSniper
+                        else
+                            info.damage = Config.bulletDamageBot
+                        end
+                    elseif info.damage == 2 then --melee
+                        info.damage = Config.meleeDamageBot
+                        info.isBulletDamage = false
                     end
+                    info.boneIndex = 0
                     info.position = soldier.worldTransform.trans
                     info.direction = soldier.worldTransform.trans - bot.player.soldier.worldTransform.trans
                     info.origin = bot.player.soldier.worldTransform.trans
-                    info.isBulletDamage = true
                     giverInfo.giver = bot.player
                     hook:Pass(soldier, info, giverInfo)
                 end
@@ -176,23 +182,16 @@ function BotManager:_onDamagePlayer(player, shooterName, meleeAttack)
     if not player.alive or bot == nil then
         return
     end
-    local damage = 0
-    if not meleeAttack then
-        damage = (bot.kit == 4) and Config.bulletDamageBotSniper or Config.bulletDamageBot
-    else
-        damage = Config.meleeDamageBot
+    local damage = 1 --only trigger soldier-damage with this
+    if meleeAttack then
+        damage = 2 --signal melee damage with this value
     end
-    damage = 1
     --save potential killer bot
     self._shooterBots[player.name] = shooterName
 
     if player.soldier ~= nil then
         player.soldier.health = player.soldier.health - damage
     end
-    --[[if player.soldier == nil then 
-        local killerBot = self:GetBotByName(shooterName)
-        killerBot.player.kills = killerBot.player.kills + 1  --not writable
-    end--]]
 end
 
 
