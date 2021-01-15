@@ -5,6 +5,6 @@
 	"URL": "",
 	"Version": "0.9.2.0",
 	"HasWebUI": true,
-	"Tags": ["fun-bots"],
+	"Tags": ["fun-bots", "warning-development-server", "branch-bizzi"],
 	"HasVeniceEXT": true
 }
