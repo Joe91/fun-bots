@@ -131,6 +131,9 @@ function BotManager:_onSoldierDamage(hook, soldier, info, giverInfo)
         if giverInfo.giver ~= nil and soldier.player ~= nil then
             local bot = self:GetBotByName(soldier.player.name)
             if soldier ~= nil and bot ~= nil then
+                print(giverInfo)
+                print(giverInfo.weaponUnlock)
+                print(giverInfo.weaponFiring)
                 self:_onShootAt(giverInfo.giver, bot.name, true)
             end
         end
@@ -140,10 +143,10 @@ function BotManager:_onSoldierDamage(hook, soldier, info, giverInfo)
     if soldier.player ~= nil then
         local bot = self:GetBotByName(soldier.player.name)
         if bot == nil then
-            print("hit by a bot?")
             if giverInfo.giver == nil then
                 bot = self:GetBotByName(self._shooterBots[soldier.player.name])
                 if bot ~= nil and bot.player.soldier ~= nil then
+                    print("damage player")
                     if info.damage == 1 then
                         info.isBulletDamage = true
                         if bot.kit == 4 then
@@ -160,13 +163,17 @@ function BotManager:_onSoldierDamage(hook, soldier, info, giverInfo)
                     info.direction = soldier.worldTransform.trans - bot.player.soldier.worldTransform.trans
                     info.origin = bot.player.soldier.worldTransform.trans
                     giverInfo.giver = bot.player
+                    giverInfo.assistant = nil
+                    giverInfo.weaponUnlock = bot.player.weapons[1]
+                    giverInfo.weaponFiring = nil
+                    giverInfo.giverControllable = bot.player.attachedControllable --attachedControllable --controlledControllable
+                    giverInfo.giverCharacterCustomization = bot.player.customization
+                    giverInfo.damageType = 0
                     hook:Pass(soldier, info, giverInfo)
                 end
-
             end
         end
-    end--]]
-    --if this works, we can overwrite the giverInfo to the bot
+    end
 end
 
 

@@ -41,12 +41,12 @@ function FunBotClient:_onUpdate(p_Delta, p_Pass)
 						end
 
 						-- find direction of Bot
-						local direction = Vec3(
-								bot.soldier.worldTransform.trans.x - player.soldier.worldTransform.trans.x,
-								bot.soldier.worldTransform.trans.y + botCamereaHight - playerCameraTrans.trans.y,
-								bot.soldier.worldTransform.trans.z - player.soldier.worldTransform.trans.z)
+						local target = Vec3(
+								bot.soldier.worldTransform.trans.x,
+								bot.soldier.worldTransform.trans.y + botCamereaHight,
+								bot.soldier.worldTransform.trans.z)
 
-						local distance = playerCameraTrans.trans:Distance(playerCameraTrans.trans+direction)
+						local distance = playerCameraTrans.trans:Distance(bot.soldier.worldTransform.trans)
 						if distance > Config.maxRaycastDistance then
 							return
 						elseif distance < 3	then --shoot, because you are near
@@ -54,17 +54,14 @@ function FunBotClient:_onUpdate(p_Delta, p_Pass)
 							self._lastIndex = newIndex
 							return
 						end
-						direction = direction:Normalize() * Config.maxRaycastDistance
-						local castPos = Vec3(playerCameraTrans.trans.x + direction.x, playerCameraTrans.trans.y + direction.y, playerCameraTrans.trans.z + direction.z)
 
-						local raycast = RaycastManager:Raycast(playerCameraTrans.trans, castPos, RayCastFlags.DontCheckWater | RayCastFlags.IsAsyncRaycast)
+						local raycast = RaycastManager:Raycast(playerCameraTrans.trans, target, RayCastFlags.DontCheckWater)
 						self._lastIndex = newIndex
-						if raycast == nil or raycast.rigidBody == nil or raycast.rigidBody:Is("CharacterPhysicsEntity") == false then
-							return
+						if raycast == nil or (raycast.rigidBody ~= nil and raycast.rigidBody:Is("CharacterPhysicsEntity")) then
+							-- we found a valid bot in Sight (either no hit, or player-hit). Signal Server with players
+							NetEvents:SendLocal("BotShootAtPlayer", bot.name, false)
 						end
-						-- we found a valid bot in Sight. Signal Server with players
-						NetEvents:SendLocal("BotShootAtPlayer", bot.name, false)
-						return --valid bot found. Return to save computing power
+						return
 					end
 				end
 			end
