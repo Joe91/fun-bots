@@ -165,8 +165,8 @@ function FunBotServer:_onChat(player, recipientMask, message)
 
     elseif parts[1] == '!setaim' then
         Config.botAimWorsening = tonumber(parts[2]) or 0.5
-        self:_modifyWeapons(Config.botAimWorsening)
-        print("difficulty set to "..Config.botAimWorsening)
+        --self:_modifyWeapons(Config.botAimWorsening)  --causes lag. Instead restart round
+        print("difficulty set to "..Config.botAimWorsening..". Please restart round or level to take effect")
     elseif parts[1] == '!bullet' then
         Config.bulletDamageBot = tonumber(parts[2]) or 1
     elseif parts[1] == '!sniper' then
