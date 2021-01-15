@@ -14,10 +14,6 @@ function FunBotShared:OnEngineMessage(p_Message)
 	WeaponModification:OnEngineMessage(p_Message)
 end
 
-function FunBotShared:OnLevelLoaded(levelName, gameMode)
-	WeaponModification:OnLevelLoaded(levelName, gameMode)
-end
-
 -- Singleton.
 if g_FunBotShared == nil then
 	g_FunBotShared = FunBotShared()

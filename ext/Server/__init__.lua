@@ -48,13 +48,16 @@ function FunBotServer:_uibotrespawn(player, spawnbots)
 end
 
 function FunBotServer:_onLevelLoaded(levelName, gameMode)
-    NetEvents:BroadcastLocal('ModifyAllWeapons', Config.botAimWorsening)
-    WeaponModification:ModifyAllWeapons(Config.botAimWorsening)
+    self:_modifyWeapons(Config.botAimWorsening)
     print("level "..levelName.." loaded...")
     TraceManager:onLevelLoaded(levelName, gameMode)
     BotSpawner:onLevelLoaded()
 end
 
+function FunBotServer:_modifyWeapons(botAimWorsening)
+    NetEvents:BroadcastLocal('ModifyAllWeapons', botAimWorsening)
+    WeaponModification:ModifyAllWeapons(botAimWorsening)
+end
 
 function FunBotServer:_onChat(player, recipientMask, message)
 
@@ -162,7 +165,8 @@ function FunBotServer:_onChat(player, recipientMask, message)
 
     elseif parts[1] == '!setaim' then
         Config.botAimWorsening = tonumber(parts[2]) or 0.5
-        print("difficulty set to "..Config.botAimWorsening..". Restart needed")
+        self:_modifyWeapons(Config.botAimWorsening)
+        print("difficulty set to "..Config.botAimWorsening)
     elseif parts[1] == '!bullet' then
         Config.bulletDamageBot = tonumber(parts[2]) or 1
     elseif parts[1] == '!sniper' then

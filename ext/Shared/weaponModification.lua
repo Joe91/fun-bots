@@ -26,11 +26,6 @@ function WeaponModification:OnPartitionLoaded(p_Partition)
 	end
 end
 
-
-function WeaponModification:OnLevelLoaded(p_Map, p_GameMode, p_Round) --Server
-	self:ModifyAllWeapons()
-end
-
 function WeaponModification:OnEngineMessage(p_Message) -- Client
     if p_Message.type == MessageType.ClientLevelFinalizedMessage then
 		self:ModifyAllWeapons(Config.botAimWorsening)
