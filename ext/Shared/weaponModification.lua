@@ -14,17 +14,13 @@ function WeaponModification:OnPartitionLoaded(p_Partition)
 		if s_Instance ~= nil and s_Instance.typeInfo.name == "SoldierWeaponData" then
 			local s_SoldierWeaponData = _G[s_Instance.typeInfo.name](s_Instance)
 			if s_SoldierWeaponData.soldierWeaponBlueprint ~= nil then
-				local alreadyInList = false
-				for _, instance in pairs(self.m_WeaponInstances) do
-					--check if already in it
-					if instance == s_SoldierWeaponData then
-						alreadyInList = true
-						break
-					end
+				if self.m_alreadyLoaded then
+					self.m_alreadyLoaded = false
+					self.m_WeaponInstances = {}
+					self.m_maxAngles = {}
+					self.m_minAngles = {}
 				end
-				if not alreadyInList then
-					table.insert(self.m_WeaponInstances, s_SoldierWeaponData)
-				end
+				table.insert(self.m_WeaponInstances, s_SoldierWeaponData)
 			end
 		end
 	end
@@ -66,13 +62,13 @@ function WeaponModification:_ModifyWeapon(p_SoldierWeaponData, index, botAimWors
 			--Only modify movemode of bots
 			local s_MovingValue = GunSwayDispersionData(s_CrouchNoZoom.moving)
 			if s_MovingValue ~= nil then
-				print("modify crouch "..botAimWorsening.." "..s_MovingValue.minAngle.." "..s_MovingValue.maxAngle)
 				if self.m_maxAngles[index] == nil then
 					self.m_minAngles[index] = s_MovingValue.minAngle
 					self.m_maxAngles[index] = s_MovingValue.maxAngle
 				end
 				s_MovingValue.minAngle = self.m_minAngles[index] * botAimWorsening
 				s_MovingValue.maxAngle = self.m_maxAngles[index] * botAimWorsening
+				print("modified crouch "..botAimWorsening.." "..s_MovingValue.minAngle.." "..s_MovingValue.maxAngle)
 			end
 		end
 	end
