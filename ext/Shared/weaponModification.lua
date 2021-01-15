@@ -33,7 +33,7 @@ function WeaponModification:OnEngineMessage(p_Message) -- Client
 end
 
 function WeaponModification:ModifyAllWeapons(botAimWorsening)
-	print(#self.m_WeaponInstances.." weapons to modify")
+	print(#self.m_WeaponInstances.." loaded weapons to modify")
 	for i, weaponInstance in pairs(self.m_WeaponInstances) do
 		self:_ModifyWeapon(weaponInstance , i, botAimWorsening)
 	end
@@ -63,7 +63,6 @@ function WeaponModification:_ModifyWeapon(p_SoldierWeaponData, index, botAimWors
 				end
 				s_MovingValue.minAngle = self.m_minAngles[index] * botAimWorsening
 				s_MovingValue.maxAngle = self.m_maxAngles[index] * botAimWorsening
-				print("modified crouch "..botAimWorsening.." "..s_MovingValue.minAngle.." "..s_MovingValue.maxAngle)
 			end
 		end
 	end
