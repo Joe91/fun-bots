@@ -40,11 +40,16 @@ function FunBotServer:_uibotrespawn(player, spawnbots)
 end
 
 function FunBotServer:_onLevelLoaded(levelName, gameMode)
+    self:_modifyWeapons(Config.botAimWorsening)
     print("level "..levelName.." loaded...")
     TraceManager:onLevelLoaded(levelName, gameMode)
     BotSpawner:onLevelLoaded()
 end
 
+function FunBotServer:_modifyWeapons(botAimWorsening)
+    NetEvents:BroadcastLocal('ModifyAllWeapons', botAimWorsening)
+    WeaponModification:ModifyAllWeapons(botAimWorsening)
+end
 
 function FunBotServer:_onChat(player, recipientMask, message)
 
