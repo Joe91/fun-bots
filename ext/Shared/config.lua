@@ -23,7 +23,7 @@ Config = {
     meleeDamageBot = 48,
     meleeAttackIfClose = true,
     shootBackIfHit = true,
-    deviationAdditionFactor = 0.0,    --make aim worse: for difficulty: 0 = no offset (hard), 1 or greater = more sway (easy)
+    botAimWorsening = 0.5,    --make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy)
     botKit = 0, -- 0 = random, 1 = assault, 2 = engineer, 3 = support, 4 = recon
     botColor = 0, -- 0 = random, see Colors
 
@@ -35,7 +35,8 @@ Config = {
     traceDelta = 0.2,
     raycastInterval = 0.1, -- seconds
     botUpdateCycle = 0.1,
-    botAimUpdateCycle = 0.05,
+    botAimUpdateCycle = 0.05, -- = 3 frames
+    botBulletSpeed = 600,       --aproximately
     targetDistanceWayPoint = 0.5,
     targetHeightDistanceWayPoint = 2
 }
