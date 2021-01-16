@@ -41,30 +41,23 @@ function FunBotClient:_onUpdate(p_Delta, p_Pass)
 						end
 
 						-- find direction of Bot
-						local direction = Vec3(
-								bot.soldier.worldTransform.trans.x - player.soldier.worldTransform.trans.x,
-								bot.soldier.worldTransform.trans.y + botCamereaHight - playerCameraTrans.trans.y,
-								bot.soldier.worldTransform.trans.z - player.soldier.worldTransform.trans.z)
+						local target = Vec3(
+								bot.soldier.worldTransform.trans.x,
+								bot.soldier.worldTransform.trans.y + botCamereaHight,
+								bot.soldier.worldTransform.trans.z)
 
-						local distance = playerCameraTrans.trans:Distance(playerCameraTrans.trans+direction)
-						if distance > Config.maxRaycastDistance then
-							return
-						elseif distance < 3	then --shoot, because you are near
+						local distance = playerCameraTrans.trans:Distance(bot.soldier.worldTransform.trans)
+						if distance < 3	then --shoot, because you are near
 							NetEvents:SendLocal("BotShootAtPlayer", bot.name, true)
+						elseif distance < Config.maxRaycastDistance then
 							self._lastIndex = newIndex
-							return
+							local raycast = RaycastManager:Raycast(playerCameraTrans.trans, target, RayCastFlags.DontCheckWater | RayCastFlags.IsAsyncRaycast)
+							if raycast == nil or (raycast.rigidBody ~= nil and raycast.rigidBody:Is("CharacterPhysicsEntity")) then
+								-- we found a valid bot in Sight (either no hit, or player-hit). Signal Server with players
+								NetEvents:SendLocal("BotShootAtPlayer", bot.name, false)
+							end
+							return  --only one raycast per cycle
 						end
-						direction = direction:Normalize() * Config.maxRaycastDistance
-						local castPos = Vec3(playerCameraTrans.trans.x + direction.x, playerCameraTrans.trans.y + direction.y, playerCameraTrans.trans.z + direction.z)
-
-						local raycast = RaycastManager:Raycast(playerCameraTrans.trans, castPos, RayCastFlags.DontCheckWater | RayCastFlags.IsAsyncRaycast)
-						self._lastIndex = newIndex
-						if raycast == nil or raycast.rigidBody == nil or raycast.rigidBody:Is("CharacterPhysicsEntity") == false then
-							return
-						end
-						-- we found a valid bot in Sight. Signal Server with players
-						NetEvents:SendLocal("BotShootAtPlayer", bot.name, false)
-						return --valid bot found. Return to save computing power
 					end
 				end
 			end
