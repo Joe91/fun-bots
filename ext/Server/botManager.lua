@@ -131,9 +131,6 @@ function BotManager:_onSoldierDamage(hook, soldier, info, giverInfo)
         if giverInfo.giver ~= nil and soldier.player ~= nil then
             local bot = self:GetBotByName(soldier.player.name)
             if soldier ~= nil and bot ~= nil then
-                print(giverInfo)
-                print(giverInfo.weaponUnlock)
-                print(giverInfo.weaponFiring)
                 self:_onShootAt(giverInfo.giver, bot.name, true)
             end
         end
@@ -146,29 +143,21 @@ function BotManager:_onSoldierDamage(hook, soldier, info, giverInfo)
             if giverInfo.giver == nil then
                 bot = self:GetBotByName(self._shooterBots[soldier.player.name])
                 if bot ~= nil and bot.player.soldier ~= nil then
-                    print("damage player")
-                    if info.damage == 1 then
+                    if info.damage > 0.09 and info.damage < 0.11 then
                         info.isBulletDamage = true
                         if bot.kit == 4 then
                             info.damage = Config.bulletDamageBotSniper
                         else
                             info.damage = Config.bulletDamageBot
                         end
-                    elseif info.damage == 2 then --melee
+                    elseif info.damage > 0.19 and info.damage < 0.21 then --melee
                         info.damage = Config.meleeDamageBot
                         info.isBulletDamage = false
                     end
                     info.boneIndex = 0
-                    info.position = soldier.worldTransform.trans
+                    info.position = Vec3(soldier.worldTransform.trans.x, soldier.worldTransform.trans.y + 1, soldier.worldTransform.trans.z)
                     info.direction = soldier.worldTransform.trans - bot.player.soldier.worldTransform.trans
                     info.origin = bot.player.soldier.worldTransform.trans
-                    giverInfo.giver = bot.player
-                    giverInfo.assistant = nil
-                    giverInfo.weaponUnlock = bot.player.weapons[1]
-                    giverInfo.weaponFiring = nil
-                    giverInfo.giverControllable = bot.player.attachedControllable --attachedControllable --controlledControllable
-                    giverInfo.giverCharacterCustomization = bot.player.customization
-                    giverInfo.damageType = 0
                     hook:Pass(soldier, info, giverInfo)
                 end
             end
@@ -189,9 +178,9 @@ function BotManager:_onDamagePlayer(player, shooterName, meleeAttack)
     if not player.alive or bot == nil then
         return
     end
-    local damage = 1 --only trigger soldier-damage with this
+    local damage = 0.1 --only trigger soldier-damage with this
     if meleeAttack then
-        damage = 2 --signal melee damage with this value
+        damage = 0.2 --signal melee damage with this value
     end
     --save potential killer bot
     self._shooterBots[player.name] = shooterName
