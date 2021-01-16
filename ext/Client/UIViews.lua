@@ -68,6 +68,16 @@ function UIViews:blur()
 	-- @ToDo remove focus to form-object
 end
 
+-- Execute
+function UIViews:execute(script)
+	WebUI:ExecuteJS(script);
+end
+
+-- Change language
+function UIViews:setLanguage(name)
+	WebUI:ExecuteJS('BotEditor.loadLanguage(\'' .. name .. '\');');
+end
+
 -- Show an view
 function UIViews:show(name)
 	if self._views:exists(name) then

@@ -14,9 +14,23 @@ function FunBotUIClient:__init()
 	NetEvents:Subscribe('UI_Request_Password_Error', self, self._onUIRequestPasswordError);
 	NetEvents:Subscribe('UI_Show_Toolbar', self, self._onUIShowToolbar);
 	Events:Subscribe('UI_Send_Password', self, self._onUISendPassword);
+	
+	-- Events from BotManager, TraceManager & Other
+	NetEvents:Subscribe('Trace_Started', self, self._onTraceStarted);
+	NetEvents:Subscribe('Trace_Stopped', self, self._onTraceStopped);
+	
+	self._views:setLanguage(Config.language);
 end
 
 -- Events
+function FunBotUIClient:_onTraceStarted(index)
+	self._views:execute('BotEditor.toggleTraceRun(true);');
+end
+
+function FunBotUIClient:_onTraceStopped(index)
+	self._views:execute('BotEditor.toggleTraceRun(false);');
+end
+
 function FunBotUIClient:_onUIToggle()
 	print('UIClient: UI_Toggle');
 	

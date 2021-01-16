@@ -20,10 +20,14 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 			ChatManager:Yell('You are not permitted to change Bots. Please press F12 for authenticate!', 2.5);
 		return;
 	end
+	
+	local request = json.decode(data);
+	
+	ChatManager:Yell(request.action .. ' is currently not implemented. 😒', 2.5);
 end
 
 function FunBotUIServer:_onPlayerLeft(player)
-	-- @ToDo current fix for auth-check after rejoin, remove it later!
+	-- @ToDo current fix for auth-check after rejoin, remove it later or make it as configuration!
 	self._authenticated:delete(tostring(player.accountGuid));
 end
 
