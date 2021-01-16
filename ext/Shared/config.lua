@@ -16,14 +16,15 @@ Config = {
     meleeAttackCoolDown = 3.0,
 
     --values that can be modified ingame. These are the startup settings
+	settingsPassword = "BotAdmin", -- if nil, disable it. Otherwise use a String with your password
     spawnInSameTeam = false,
     respawnWayBots = true,
-    bulletDamageBot = 5,
+    bulletDamageBot = 10,
     bulletDamageBotSniper = 24,
     meleeDamageBot = 48,
     meleeAttackIfClose = true,
     shootBackIfHit = true,
-    botAimWorsening = 0.5,    --make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy)
+    botAimWorsening = 0.0,    --make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy)
     botKit = 0, -- 0 = random, 1 = assault, 2 = engineer, 3 = support, 4 = recon
     botColor = 0, -- 0 = random, see Colors
 
