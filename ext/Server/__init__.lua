@@ -45,6 +45,7 @@ end
 function FunBotServer:_onExtensionUnload()
     BotManager:destroyAllBots()
     TraceManager:onUnload()
+    self._initDone = false
 end
 
 function FunBotServer:_onExtensionLoaded()
@@ -53,7 +54,8 @@ function FunBotServer:_onExtensionLoaded()
         fullLevelPath = fullLevelPath:split('/')
         local level = fullLevelPath[#fullLevelPath]
         local gameMode = SharedUtils:GetCurrentGameMode()
-        if levelName ~= nil and gameMode~= nil then
+        print(level.."_"..gameMode.." reloaded")
+        if level ~= nil and gameMode~= nil then
             self:_onLevelLoaded(level, gameMode)
         end
     end
