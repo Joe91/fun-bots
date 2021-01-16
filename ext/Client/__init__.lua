@@ -7,9 +7,16 @@ function FunBotClient:__init()
 	self._raycastTimer = 0
 	self._lastIndex = 0
 	Events:Subscribe('UpdateManager:Update', self, self._onUpdate)
+	Events:Subscribe('Extension:Unloading', self, self._onExtensionUnload)
 	Hooks:Install('BulletEntity:Collision', 1, self, self._onBulletCollision)
 	NetEvents:Subscribe('ModifyAllWeapons', self, self._onModifyWeapons)
 end
+
+function FunBotClient:_onExtensionUnload()
+	self._raycastTimer = 0
+	self._lastIndex = 0
+end
+
 function FunBotClient:_onModifyWeapons(botAimWorsening)
 	Config.botAimWorsening = botAimWorsening
 	WeaponModification:ModifyAllWeapons(botAimWorsening)

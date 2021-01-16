@@ -8,7 +8,6 @@ function BotManager:__init()
     self._shooterBots = {}
 
 	Events:Subscribe('UpdateManager:Update', self, self._onUpdate)
-    Events:Subscribe('Extension:Unloading', self, self._onUnloading)
     Events:Subscribe('Level:Destroy', self, self._onLevelDestroy)
     Events:Subscribe('Player:Left', self, self._onPlayerLeft)
     NetEvents:Subscribe('BotShootAtPlayer', self, self._onShootAt)
@@ -198,11 +197,6 @@ function BotManager:_onShootAt(player, botname, ignoreYaw)
         return
     end
     bot:shootAt(player, ignoreYaw)
-end
-
-
-function BotManager:_onUnloading()
-	self:destroyAllBots()
 end
 
 function BotManager:_onLevelDestroy()

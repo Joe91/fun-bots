@@ -25,6 +25,13 @@ function TraceManager:onLevelLoaded(levelName, gameMode)
     print(Globals.activeTraceIndexes.." paths have been loaded")
 end
 
+function TraceManager:onUnload()
+    for i = 1, Config.maxTraceNumber do
+        Globals.wayPoints[i] = {}
+    end
+    Globals.activeTraceIndexes = 0
+end
+
 function TraceManager:_onPlayerLeft(player)
     for i = 1, Config.maxTraceNumber do
         if self._tracePlayer[i] == player then

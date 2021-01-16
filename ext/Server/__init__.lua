@@ -7,10 +7,13 @@ local WeaponModification = require('__shared/weaponModification')
 local FunBotUIServer = require('UIServer')
 
 function FunBotServer:__init()
+    self._initDone = false
     Events:Subscribe('Level:Loaded', self, self._onLevelLoaded)
     Events:Subscribe('Player:Chat', self, self._onChat)
-	
-	NetEvents:Subscribe('spawnbots', self, self._uispawnbots)
+    Events:Subscribe('Extension:Unloading', self, self._onExtensionUnload)
+    Events:Subscribe('Extension:Loaded', self, self._onExtensionLoaded)
+
+    NetEvents:Subscribe('spawnbots', self, self._uispawnbots)
 	NetEvents:Subscribe('spawnrandombot', self, self._uispawnrandombot)
 	NetEvents:Subscribe('kickallbots', self, self._uikickallbots)
 	NetEvents:Subscribe('respawnbots', self, self._uibotrespawn)
@@ -39,11 +42,29 @@ function FunBotServer:_uibotrespawn(player, spawnbots)
     print("Bots will respawn")
 end
 
+function FunBotServer:_onExtensionUnload()
+    BotManager:destroyAllBots()
+    TraceManager:onUnload()
+end
+
+function FunBotServer:_onExtensionLoaded()
+    if not self._initDone then
+        local fullLevelPath = SharedUtils:GetLevelName()
+        fullLevelPath = fullLevelPath:split('/')
+        local level = fullLevelPath[#fullLevelPath]
+        local gameMode = SharedUtils:GetCurrentGameMode()
+        if levelName ~= nil and gameMode~= nil then
+            self:_onLevelLoaded(level, gameMode)
+        end
+    end
+end
+
 function FunBotServer:_onLevelLoaded(levelName, gameMode)
     self:_modifyWeapons(Config.botAimWorsening)
     print("level "..levelName.." loaded...")
     TraceManager:onLevelLoaded(levelName, gameMode)
     BotSpawner:onLevelLoaded()
+    self._initDone = true
 end
 
 function FunBotServer:_modifyWeapons(botAimWorsening)
