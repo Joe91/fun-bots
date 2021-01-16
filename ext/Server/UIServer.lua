@@ -23,7 +23,25 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 	
 	local request = json.decode(data);
 	
-	ChatManager:Yell(request.action .. ' is currently not implemented. 😒', 2.5);
+	if request.action == "request_settings" then
+		NetEvents:SendTo('UI_Settings', player, Config);
+		
+	-- Bots
+	-- elseif request.action == "bot_spawn_default" then
+	-- elseif request.action == "bot_spawn_random" then
+	-- elseif request.action == "bot_kick_all" then
+	-- elseif request.action == "bot_respawn" then
+	
+	-- Trace
+	-- elseif request.action == "trace_toggle" then
+	-- elseif request.action == "trace_clear_current" then
+	-- elseif request.action == "trace_reset_all" then
+	-- elseif request.action == "trace_save" then
+	-- elseif request.action == "trace_reload" then
+	
+	else
+		ChatManager:Yell(request.action .. ' is currently not implemented. 😒', 2.5);
+	end
 end
 
 function FunBotUIServer:_onPlayerLeft(player)
@@ -35,8 +53,14 @@ function FunBotUIServer:_onUIRequestOpen(player, data)
 	print(player.name .. ' requesting open Bot-Editor.');
 
 	if (Config.settingsPassword == nil or self:_isAuthenticated(player.accountGuid)) then
+		if (Config.settingsPassword == nil) then
+			ChatManager:Yell('The Bot-Editor is not protected by an password!', 2.5);
+			NetEvents:SendTo('UI_Password_Protection', player, 'true');
+		end
+		
 		print('Open Bot-Editor for ' .. player.name .. '.');
 		NetEvents:SendTo('UI_Toggle', player);
+		NetEvents:SendTo('UI_Show_Toolbar', player, 'true');
 	else
 		if (data == nil) then
 			print('Ask ' .. player.name .. ' for Bot-Editor password.');

@@ -32,7 +32,7 @@ Config = {
     maxTraceNumber = 15,
 
 	-- UI settings & language options
-	settingsPassword = "BotAdmin", -- if nil, disable it. Otherwise use a String with your password
+	settingsPassword = nil, -- if nil, disable it. Otherwise use a String with your password
 	language = "de_DE", -- de_DE as sample (default is english, when language file doesnt exists)
 	
     --don't change these values unless you know what you do
