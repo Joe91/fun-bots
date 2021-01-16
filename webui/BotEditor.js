@@ -1,6 +1,29 @@
 const BotEditor = (new function BotEditor() {
+	const InputDeviceKeys = {
+		IDK_F1: 112,
+		IDK_F2: 113,
+		IDK_F3: 114,
+		IDK_F4: 115,
+		IDK_F5: 116,
+		IDK_F6: 117,
+		IDK_F7: 118,
+		IDK_F8: 119,
+		IDK_F9: 120,
+		IDK_F10: 121,
+		IDK_F11: 122,
+		IDK_F12: 123
+	};
+	
 	this.__constructor = function __constructor() {
 		console.log('Init BotEditor UI.');
+		
+		document.body.addEventListener('keydown', function onMouseDown(event) {
+			switch(event.keyCode || event.which) {
+				case InputDeviceKeys.IDK_F12:
+					WebUI.Call('DispatchEventLocal', 'UI_Toggle');
+				break;
+			}
+		});
 		
 		document.body.addEventListener('mousedown', function onMouseDown(event) {
 			if(!event) {
@@ -11,12 +34,15 @@ const BotEditor = (new function BotEditor() {
 			
 			
 			if(typeof(parent) == 'undefined') {
+				console.warn('Parent is undefined', parent);
 				return;
 			}
 			
+			console.log('CLICK', parent.dataset.action);
+			
 			switch(parent.dataset.action) {
 				case 'close':
-					WebUI.Call('DispatchEventLocal', 'UI_Request_Password', 'false');
+					WebUI.Call('DispatchEventLocal', 'UI_Toggle');
 				break;
 				case 'submit':
 					let form	= Utils.getClosest(event.target, 'ui-view').querySelector('[data-type="form"]');

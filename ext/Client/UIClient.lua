@@ -9,6 +9,7 @@ function FunBotUIClient:__init()
 
 	-- New Events
 	NetEvents:Subscribe('UI_Toggle', self, self._onUIToggle);
+	Events:Subscribe('UI_Toggle', self, self._onUIToggle);
 	NetEvents:Subscribe('UI_Request_Password', self, self._onUIRequestPassword);
 	NetEvents:Subscribe('UI_Request_Password_Error', self, self._onUIRequestPasswordError);
 	NetEvents:Subscribe('UI_Show_Toolbar', self, self._onUIShowToolbar);

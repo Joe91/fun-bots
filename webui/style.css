@@ -86,8 +86,11 @@ ui-view[data-type="dialog"] ui-buttons {
 /* View :: Toolbar */
 ui-view[data-type="toolbar"] {
 	padding: 10px;
-	display: flex;
 	flex-direction: row;
+}
+
+ui-view[data-type="toolbar"][data-show="true"] {
+	display: flex;	
 }
 
 /* View :: Toolbar :: Logo */
