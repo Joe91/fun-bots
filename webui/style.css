@@ -28,6 +28,8 @@
 	padding: 0;
 	margin: 0;
 	font-family: Purista, sans-serif, arial;
+	border-radius: 0;
+	outline: none;
 }
 
 *:not([type="input"]) {    
@@ -35,6 +37,34 @@
 }
 
 /* Forms */
+input[type="text"],
+input[type="password"] {
+	background: var(--color_button_default_from);
+	display: block;
+	border: 1px solid var(--color_white);
+	color: var(--color_white);
+	margin: 0 auto;
+	padding: 5px;
+}
+
+button {
+	padding: 5px 15px;
+	min-width: 100px;
+	margin: 0 1px;
+	border: 1px solid;
+	color: var(--color_text);
+	text-shadow: 0 0 6px var(--color_text_shadow);
+	cursor: pointer;
+	font-weight: 900;
+    font-size: 16px;
+	text-align: center;
+	text-transform: uppercase;
+	background: linear-gradient(180deg, var(--color_button_default_from) 0%, var(--color_button_default_to) 100%);
+}
+
+button:hover {
+	background: linear-gradient(180deg, var(--color_button_hover_from) 0%, var(--color_button_hover_to) 100%);
+}
 
 /* Views */
 ui-view {
@@ -67,6 +97,21 @@ ui-view[data-type="dialog"] ui-content {
 	display: block;
 	position: relative;
 	background: rgba(0, 0, 0, 0.8);
+	padding: 0 0 5px 0;
+}
+
+ui-view[data-type="dialog"] ui-content ui-error {
+	color: rgba(255, 0, 0, 0.8);
+	text-shadow: 0 0 6px rgba(200, 0, 0, 0.8);
+	display: block;
+	position: relative;
+	text-align: center;
+	padding: 5px;
+	margin: -20px 0 5px 0;
+}
+
+ui-view[data-type="dialog"] ui-content ui-error:empty {
+	display: none;
 }
 
 ui-view[data-type="dialog"] ui-content p {
@@ -86,8 +131,11 @@ ui-view[data-type="dialog"] ui-buttons {
 /* View :: Toolbar */
 ui-view[data-type="toolbar"] {
 	padding: 10px;
-	display: flex;
 	flex-direction: row;
+}
+
+ui-view[data-type="toolbar"][data-show="true"] {
+	display: flex;	
 }
 
 /* View :: Toolbar :: Logo */
@@ -116,18 +164,22 @@ ui-view[data-type="toolbar"] ui-menu {
 
 ui-view[data-type="toolbar"] ui-menu ul {
 	list-style: none;
+}
+
+ui-view[data-type="toolbar"] ui-menu ul.main {
 	display: flex;
     justify-content: flex-end;
 }
 
-ui-view[data-type="toolbar"] ui-menu ul li {
+ui-view[data-type="toolbar"] ui-menu ul.main > li {
 	flex: 0 auto;
 }
 
-ui-view[data-type="toolbar"] ui-menu ul li a {
+ui-view[data-type="toolbar"] ui-menu ul.main > li > a {
 	display: block;
+	position: relative;
 	padding: 5px 15px;
-	min-width: 100px;
+	min-width: 120px;
 	margin: 0 1px;
 	color: var(--color_text);
 	text-shadow: 0 0 6px var(--color_text_shadow);
@@ -139,12 +191,67 @@ ui-view[data-type="toolbar"] ui-menu ul li a {
 	background: linear-gradient(180deg, var(--color_button_default_from) 0%, var(--color_button_default_to) 100%);
 }
 
-ui-view[data-type="toolbar"] ui-menu ul li:hover a {
+ui-view[data-type="toolbar"] ui-menu ul.main > li > a[data-key]::before {
+	content: attr(data-key);
+	color: var(--color_text);
+	text-shadow: 0 0 1px var(--color_text_shadow);
+	font-size: 10px;
+	font-weight: 100;
+	position: absolute;
+	bottom: 2px;
+	right: 2px;
+}
+
+ui-view[data-type="toolbar"] ui-menu ul.main > li:hover > a {
 	background: linear-gradient(180deg, var(--color_button_hover_from) 0%, var(--color_button_hover_to) 100%);
 }
 
-ui-view[data-type="toolbar"] ui-menu ul li:active a {
+ui-view[data-type="toolbar"] ui-menu ul.main > li:active > a {
 	color: var(--color_text_hover);
 	text-shadow: 0 0 6px var(--color_text_hover_shadow);
 	background: linear-gradient(180deg, var(--color_button_active_from) 0%, var(--color_button_active_to) 100%);
+}
+
+ui-view[data-type="toolbar"] ui-menu ul.main > li > ul {
+	display: none;
+	margin: 0 0 0 1px;
+	background: rgba(0, 0, 0, 0.8);
+}
+
+ui-view[data-type="toolbar"] ui-menu ul.main > li:hover > ul {
+	display: block;
+	position: absolute;
+}
+
+ui-view[data-type="toolbar"] ui-menu ul.main > li > ul > li > a {
+	display: block;
+	padding: 5px 15px;
+	min-width: 100px;
+	position: relative;
+	color: var(--color_text);
+	text-shadow: 0 0 6px var(--color_text_shadow);
+}
+
+ui-view[data-type="toolbar"] ui-menu ul.main > li > ul > li > a[data-key]::before {
+	content: attr(data-key);
+	color: var(--color_text);
+	text-shadow: 0 0 1px var(--color_text_shadow);
+	font-size: 10px;
+	font-weight: 100;
+	position: absolute;
+	bottom: 2px;
+	right: 2px;
+}
+
+ui-view[data-type="toolbar"] ui-menu ul.main > li:hover > ul > li:hover > a {
+	cursor: pointer;
+	background: linear-gradient(180deg, var(--color_button_hover_from) 0%, var(--color_button_hover_to) 100%);
+}
+
+ui-view[data-type="toolbar"] ui-menu ul.main li a input[type="number"] {
+	background: rgba(255, 255, 255, 0.1);
+	width: 30px;
+	text-align: center;
+	border: 1px solid rgba(255, 255, 255, 0.5);
+	color: rgba(255, 255, 255, 0.5);
 }

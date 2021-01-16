@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 	<head>
+		<meta charset="utf-8" />
 		<link rel="stylesheet" href="style.css" />
 	</head>
 	<body>
@@ -9,26 +10,44 @@
 				Bot-Editor<sub>fun-bots</sub>
 			</ui-logo>
 			<ui-menu>
-				<ul>
-					<li><a>Bots</a></li>
-					<li><a>Waypoints</a></li>
-					<li><a>Settings</a></li>
-					<li><a>Exit</a></li>
+				<ul class="main">
+					<li>
+						<a><span data-lang="Bots">Bots</span></a>
+						<ul>
+							<li data-action="bot_spawn_default"><a data-key="F1"><input type="number" name="bots" value="1" /> <span data-lang="Spawn Bots">Spawn Bots</span></a></li>
+							<li data-action="bot_spawn_random"><a data-key="F2"><input type="number" name="bots" value="1" />  <span data-lang="Spawn random Way">Spawn random Way</span></a></li>
+							<li data-action="bot_kick_all"><a data-key="F3"><span data-lang="Kick All">Kick All</span></a></li>
+							<li data-action="bot_respawn"><a data-key="F4"><span data-lang="Respawn">Respawn</span></a></li>
+						</ul>
+					</li>
+					<li>
+						<a><span data-lang="Waypoints">Waypoints</span></a>
+						<ul>
+							<li data-action="trace_toggle"><a data-key="F5"><span data-lang="Start Trace">Start Trace</span></a></li>
+							<li data-action="trace_clear_current"><a data-key="F7"><span data-lang="Clear current Trace">Clear current Trace</span></a></li>
+							<li data-action="trace_reset_all"><a data-key="F8"><span data-lang="Reset all Traces">Reset all Traces</span></a></li>
+							<li data-action="trace_save"><a data-key="F9"><span data-lang="Save">Save</span></a></li>
+							<li data-action="trace_reload"><a data-key="F11"><span data-lang="Reload">Reload</span></a></li>
+							<li data-action="trace_show"><a><span data-lang="List all Traces">List all Traces</span></a></li>
+						</ul>
+					</li>
+					<li data-action="request_settings"><a data-key="F10"><span data-lang="Settings">Settings</span></a></li>
+					<li data-action="close"><a data-key="F12"><span data-lang="Exit">Exit</span></a></li>
 				</ul>
 			</ui-menu>
 		</ui-view>
 		<ui-view data-name="password" data-type="dialog">
 			<ui-header>
-				Enter password
+				<span data-lang="Enter password">Enter password</span>
 			</ui-header>
 			<ui-content data-type="form" data-action="UI_Send_Password">
-				<p>Please enter the password to open the Bot-Editor.</p>
+				<p><span data-lang="Please enter the password to open the Bot-Editor.">Please enter the password to open the Bot-Editor.</span></p>
 				<ui-error></ui-error>
-				<input type="text" name="password" value="" />
+				<input type="password" name="password" value="" />
 			</ui-content>
 			<ui-buttons>
-				<button data-action="close">Cancel</button>
-				<button data-action="submit">OK</button>
+				<button data-action="close"><span data-lang="Cancel">Cancel</span></button>
+				<button data-action="submit"><span data-lang="OK">OK</span></button>
 			</ui-buttons>
 		</ui-view>
 		

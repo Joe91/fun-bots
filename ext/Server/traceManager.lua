@@ -49,6 +49,7 @@ function TraceManager:startTrace(player, index)
         index = 1
     end
     print("Trace "..index.." started")
+	NetEvents:Broadcast('Trace_Started', index);
     ChatManager:Yell("Trace "..index.." started", 2.5)
     self:_clearTrace(index)
     self._traceUpdateTimer[index] = 0
@@ -61,6 +62,7 @@ function TraceManager:endTrace(player)
     end
     print("Trace done")
     ChatManager:Yell("Trace done", 2.5)
+	NetEvents:Broadcast('Trace_Stopped', Globals.activeTraceIndexes);
     Globals.activeTraceIndexes = Globals.activeTraceIndexes + 1
     for i = 1, Config.maxTraceNumber do
         if self._tracePlayer[i] == player then

@@ -7,13 +7,18 @@ function UIViews:__init()
 	self._views = ArrayMap();
 	
 	Events:Subscribe('Extension:Loaded', self, self._onExtensionLoaded);
+	Events:Subscribe('Extension:Unloading', self, self._onExtensionUnload);
 	Events:Subscribe('UI_Close', self, self._onUIClose);
 end
 
 -- Events
+function UIViews:_onExtensionUnload()
+	self:close();
+end
+
 function UIViews:_onExtensionLoaded()
 	WebUI:Init();
-	WebUI:Hide();
+	self:close();
 end
 
 function UIViews:_onUIClose(name)
@@ -61,6 +66,16 @@ end
 function UIViews:blur()
 	self:disable();
 	-- @ToDo remove focus to form-object
+end
+
+-- Execute
+function UIViews:execute(script)
+	WebUI:ExecuteJS(script);
+end
+
+-- Change language
+function UIViews:setLanguage(name)
+	WebUI:ExecuteJS('BotEditor.loadLanguage(\'' .. name .. '\');');
 end
 
 -- Show an view
