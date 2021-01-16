@@ -18,6 +18,7 @@ end
 
 function UIViews:_onExtensionLoaded()
 	WebUI:Init();
+	self:setLanguage(Config.language);
 	self:close();
 end
 

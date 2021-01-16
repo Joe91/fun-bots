@@ -4,6 +4,7 @@ const BotEditor = (new function BotEditor() {
 	const DEBUG				= true;
 	const VERSION			= '1.0.0-Beta';
 	const InputDeviceKeys	= {
+		IDK_Enter:	13,
 		IDK_F1:		112,
 		IDK_F2:		113,
 		IDK_F3:		114,
@@ -26,7 +27,7 @@ const BotEditor = (new function BotEditor() {
 		this.bindKeyboardEvents();
 	};
 	
-	this.bindKeyboardEvents = function() {
+	this.bindMouseEvents = function bindMouseEvents() {
 		document.body.addEventListener('mousedown', function onMouseDown(event) {
 			if(!event) {
 				event = window.event;
@@ -145,11 +146,25 @@ const BotEditor = (new function BotEditor() {
 		}.bind(this));
 	};
 	
-	this.bindMouseEvents = function() {
+	this.bindKeyboardEvents = function bindKeyboardEvents() {
 		document.body.addEventListener('keydown', function onMouseDown(event) {
 			let count;
 			
 			switch(event.keyCode || event.which) {
+				/* Forms */
+				case InputDeviceKeys.IDK_Enter:
+					let form	= Utils.getClosest(event.target, 'ui-view');
+					let submit	= form.querySelector('[data-action="submit"]');
+					
+					if(typeof(submit) !== 'undefined') {
+						var clickEvent = document.createEvent('MouseEvents');
+						clickEvent.initEvent('mousedown', true, true);
+						submit.dispatchEvent(clickEvent);
+					}
+					
+					// @ToDo get to next input and calculate the submit-end
+				break;
+				
 				/* Bots */
 				case InputDeviceKeys.IDK_F1:
 					count = document.querySelector('[data-action="bot_spawn_default"] input[type="number"]');
@@ -215,6 +230,13 @@ const BotEditor = (new function BotEditor() {
 				/* Exit */
 				case InputDeviceKeys.IDK_F12:
 					WebUI.Call('DispatchEventLocal', 'UI_Toggle');
+				break;
+				
+				/* Debug */
+				default:
+					if(DEBUG) {
+						console.warn('Unknown/Unimplemented KeyCode', event.keyCode || event.which);
+					}
 				break;
 			}
 		});
@@ -299,6 +321,9 @@ const BotEditor = (new function BotEditor() {
 		
 		let view = this.getView(name);
 		
+		view.dataset.show = true;
+		view.setAttribute('data-show', 'true');
+		
 		switch(name) {
 			/* Reset Error-Messages & Password field on opening */
 			case 'password':
@@ -308,9 +333,6 @@ const BotEditor = (new function BotEditor() {
 				password.focus();
 			break;
 		}
-		
-		view.dataset.show = true;
-		view.setAttribute('data-show', 'true');
 	};
 	
 	this.hide = function hide(name) {
