@@ -47,21 +47,17 @@ function FunBotClient:_onUpdate(p_Delta, p_Pass)
 								bot.soldier.worldTransform.trans.z)
 
 						local distance = playerCameraTrans.trans:Distance(bot.soldier.worldTransform.trans)
-						if distance > Config.maxRaycastDistance then
-							self._lastIndex = newIndex
-							return
-						elseif distance < 3	then --shoot, because you are near
+						if distance < 3	then --shoot, because you are near
 							NetEvents:SendLocal("BotShootAtPlayer", bot.name, true)
+						elseif distance < Config.maxRaycastDistance then
 							self._lastIndex = newIndex
-							return
+							local raycast = RaycastManager:Raycast(playerCameraTrans.trans, target, RayCastFlags.DontCheckWater | RayCastFlags.IsAsyncRaycast)
+							if raycast == nil or (raycast.rigidBody ~= nil and raycast.rigidBody:Is("CharacterPhysicsEntity")) then
+								-- we found a valid bot in Sight (either no hit, or player-hit). Signal Server with players
+								NetEvents:SendLocal("BotShootAtPlayer", bot.name, false)
+							end
+							return  --only one raycast per cycle
 						end
-						self._lastIndex = newIndex
-						local raycast = RaycastManager:Raycast(playerCameraTrans.trans, target, RayCastFlags.DontCheckWater | RayCastFlags.IsAsyncRaycast)
-						if raycast == nil or (raycast.rigidBody ~= nil and raycast.rigidBody:Is("CharacterPhysicsEntity")) then
-							-- we found a valid bot in Sight (either no hit, or player-hit). Signal Server with players
-							NetEvents:SendLocal("BotShootAtPlayer", bot.name, false)
-						end
-						return
 					end
 				end
 			end
