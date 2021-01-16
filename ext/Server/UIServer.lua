@@ -9,6 +9,17 @@ function FunBotUIServer:__init()
 
 	Events:Subscribe('Player:Left', self, self._onPlayerLeft);
 	NetEvents:Subscribe('UI_Request_Open', self, self._onUIRequestOpen);
+	NetEvents:Subscribe('BotEditor', self, self._onBotEditorEvent);
+end
+
+function FunBotUIServer:_onBotEditorEvent(player, data)
+	print('UIServer: BotEditor (' .. tostring(data) .. ')');
+	
+	if (Config.settingsPassword ~= nil and self:_isAuthenticated(player.accountGuid) ~= true) then
+			print(player.name .. ' has no permissions for Bot-Editor.');
+			ChatManager:Yell('You are not permitted to change Bots. Please press F12 for authenticate!', 2.5);
+		return;
+	end
 end
 
 function FunBotUIServer:_onPlayerLeft(player)

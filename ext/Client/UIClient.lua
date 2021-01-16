@@ -6,10 +6,10 @@ function FunBotUIClient:__init()
 	self._views = UIViews();
 	
 	Events:Subscribe('Client:UpdateInput', self, self._onUpdateInput);
-
-	-- New Events
 	NetEvents:Subscribe('UI_Toggle', self, self._onUIToggle);
 	Events:Subscribe('UI_Toggle', self, self._onUIToggle);
+	NetEvents:Subscribe('BotEditor', self, self._onBotEditorEvent);
+	Events:Subscribe('BotEditor', self, self._onBotEditorEvent);
 	NetEvents:Subscribe('UI_Request_Password', self, self._onUIRequestPassword);
 	NetEvents:Subscribe('UI_Request_Password_Error', self, self._onUIRequestPasswordError);
 	NetEvents:Subscribe('UI_Show_Toolbar', self, self._onUIShowToolbar);
@@ -26,6 +26,13 @@ function FunBotUIClient:_onUIToggle()
 		self._views:open();
 		self._views:focus();
 	end
+end
+
+function FunBotUIClient:_onBotEditorEvent(data)
+	print('UIClient: BotEditor (' .. data .. ')');
+	
+	-- Redirect to Server
+	NetEvents:Send('BotEditor', data);
 end
 
 function FunBotUIClient:_onUIShowToolbar(data)

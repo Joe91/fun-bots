@@ -1,5 +1,7 @@
 const BotEditor = (new function BotEditor() {
-	const InputDeviceKeys = {
+	const DEBUG				= true;
+	const VERSION			= '1.0.0-Beta';
+	const InputDeviceKeys	= {
 		IDK_F1: 112,
 		IDK_F2: 113,
 		IDK_F3: 114,
@@ -15,10 +17,75 @@ const BotEditor = (new function BotEditor() {
 	};
 	
 	this.__constructor = function __constructor() {
-		console.log('Init BotEditor UI.');
+		console.log('Init BotEditor UI (v' + VERSION + ') by https://github.com/Bizarrus.');
 		
 		document.body.addEventListener('keydown', function onMouseDown(event) {
+			let count;
+			
 			switch(event.keyCode || event.which) {
+				/* Bots */
+				case InputDeviceKeys.IDK_F1:
+					count = document.querySelector('[data-action="bot_spawn_default"] input[type="number"]');
+					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
+						action:	'bot_spawn_default',
+						value:	count.value
+					}));
+					count.value = 1;
+				break;
+				case InputDeviceKeys.IDK_F2:
+					count = document.querySelector('[data-action="bot_spawn_random"] input[type="number"]');
+					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
+						action:	'bot_spawn_random',
+						value:	count.value
+					}));
+					count.value = 1;
+				break;
+				case InputDeviceKeys.IDK_F3:
+					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
+						action:	'bot_kick_all'
+					}));
+				break;
+				case InputDeviceKeys.IDK_F4:
+					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
+						action:	'bot_respawn'
+					}));
+				break;
+				
+				/* Trace */
+				case InputDeviceKeys.IDK_F5:
+					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
+						action:	'trace_toggle'
+					}));
+				break;
+				case InputDeviceKeys.IDK_F7:
+					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
+						action:	'trace_clear_current'
+					}));
+				break;
+				case InputDeviceKeys.IDK_F8:
+					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
+						action:	'trace_reset_all'
+					}));
+				break;
+				case InputDeviceKeys.IDK_F9:
+					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
+						action:	'trace_save'
+					}));
+				break;
+				case InputDeviceKeys.IDK_F11:
+					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
+						action:	'trace_reload'
+					}));
+				break;
+				
+				/* Settings */
+				case InputDeviceKeys.IDK_F10:
+					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
+						action:	'settings'
+					}));
+				break;
+				
+				/* Exit */
 				case InputDeviceKeys.IDK_F12:
 					WebUI.Call('DispatchEventLocal', 'UI_Toggle');
 				break;
@@ -34,11 +101,16 @@ const BotEditor = (new function BotEditor() {
 			
 			
 			if(typeof(parent) == 'undefined') {
-				console.warn('Parent is undefined', parent);
+				if(DEBUG) {
+					console.warn('Parent is undefined', parent);
+				}
+				
 				return;
 			}
 			
-			console.log('CLICK', parent.dataset.action);
+			if(DEBUG) {
+				console.log('CLICK', parent.dataset.action);
+			}
 			
 			switch(parent.dataset.action) {
 				case 'close':
@@ -49,7 +121,7 @@ const BotEditor = (new function BotEditor() {
 					let action	= form.dataset.action;
 					let data	= {};
 					
-					[].map.call(form.querySelectorAll('input'), function onInputEntry(input) {
+					[].map.call(form.querySelectorAll('input[type="text"], input[type="password"]'), function onInputEntry(input) {
 						data[input.name] = input.value;
 					});
 					
@@ -64,15 +136,31 @@ const BotEditor = (new function BotEditor() {
 	};
 	
 	this.show = function show(name) {
-		console.log('Show View: ', name);
+		if(DEBUG) {
+			console.log('Show View: ', name);
+		}
+		
 		let view = this.getView(name);
+		
+		switch(name) {
+			/* Reset Error-Messages & Password field on opening */
+			case 'password':
+				view.querySelector('ui-error').innerHTML				= '';
+				let password		= view.querySelector('input[type="password"]');
+				password.value		= '';
+				password.focus();
+			break;
+		}
 		
 		view.dataset.show = true;
 		view.setAttribute('data-show', 'true');
 	};
 	
 	this.hide = function hide(name) {
-		console.log('Hide View: ', name);
+		if(DEBUG) {
+			console.log('Hide View: ', name);
+		}
+		
 		let view = this.getView(name);
 		
 		view.dataset.show = false;
@@ -80,7 +168,10 @@ const BotEditor = (new function BotEditor() {
 	};
 	
 	this.error = function error(name, text) {
-		console.log('Error View: ', name);
+		if(DEBUG) {
+			console.log('Error View: ', name);
+		}
+		
 		this.getView(name).querySelector('ui-error').innerHTML = text;
 	};
 	
