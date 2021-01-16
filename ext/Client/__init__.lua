@@ -48,6 +48,7 @@ function FunBotClient:_onUpdate(p_Delta, p_Pass)
 
 						local distance = playerCameraTrans.trans:Distance(bot.soldier.worldTransform.trans)
 						if distance > Config.maxRaycastDistance then
+							self._lastIndex = newIndex
 							return
 						elseif distance < 3	then --shoot, because you are near
 							NetEvents:SendLocal("BotShootAtPlayer", bot.name, true)
