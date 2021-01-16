@@ -54,9 +54,8 @@ function FunBotClient:_onUpdate(p_Delta, p_Pass)
 							self._lastIndex = newIndex
 							return
 						end
-
-						local raycast = RaycastManager:Raycast(playerCameraTrans.trans, target, RayCastFlags.DontCheckWater)
 						self._lastIndex = newIndex
+						local raycast = RaycastManager:Raycast(playerCameraTrans.trans, target, RayCastFlags.DontCheckWater | RayCastFlags.IsAsyncRaycast)
 						if raycast == nil or (raycast.rigidBody ~= nil and raycast.rigidBody:Is("CharacterPhysicsEntity")) then
 							-- we found a valid bot in Sight (either no hit, or player-hit). Signal Server with players
 							NetEvents:SendLocal("BotShootAtPlayer", bot.name, false)
