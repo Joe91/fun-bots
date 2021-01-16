@@ -14,6 +14,9 @@ function TraceManager:__init()
 end
 
 function TraceManager:onLevelLoaded(levelName, gameMode)
+    if gameMode == "TeamDeathMatchC0" then
+        gameMode = "TeamDeathMatch0"
+    end
     self._mapName = levelName.."_"..gameMode
     for i = 1, Config.maxTraceNumber do
         Globals.wayPoints[i] = {}
