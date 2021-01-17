@@ -116,14 +116,17 @@ const BotEditor = (new function BotEditor() {
 				
 				/* Trace */
 				case 'trace_toggle':
+					index = document.querySelector('[data-action="trace_toggle"] input[type="number"]');
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
 						action:	'trace_toggle',
-						value: 0 // todo: fill with real value
+						value: index.value
 					}));
 				break;
-				case 'trace_clear_current':
+				case 'trace_clear':
+					index = document.querySelector('[data-action="trace_clear"] input[type="number"]');
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'trace_clear_current'
+						action:	'trace_clear',
+						value: index.value
 					}));
 				break;
 				case 'trace_reset_all':

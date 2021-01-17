@@ -30,20 +30,14 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 		NetEvents:SendTo('UI_Settings', player, Config);
 
 	-- Bots
-	elseif request.action == "bot_spawn_default" then --todo: whats the difference? make a function to spawn bots on a fixed way instead?
+	elseif request.action == "bot_spawn_default" then
+		local amount = tonumber(request.value)
+		BotSpawner:spawnWayBots(player, amount, true)
+
+	elseif request.action == "bot_spawn_random" then--todo: whats the difference? make a function to spawn bots on a fixed way instead?
 		local amount = tonumber(request.value)
 		local index = 0
-		if amount == nil then
-			amount = 0
-		end
 		BotSpawner:spawnWayBots(player, amount, false, index)
-
-	elseif request.action == "bot_spawn_random" then
-		local amount = tonumber(request.value)
-		if amount == nil then
-			amount = 0
-		end
-		BotSpawner:spawnWayBots(player, amount, true)
 
 	elseif request.action == "bot_kick_all" then
 		BotManager:destroyAllBots()
@@ -64,9 +58,6 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 	-- Trace
 	elseif request.action == "trace_toggle" then
 		local index = tonumber(request.value)
-		if index == nil then
-			index = 0
-		end
 		local traceState = TraceManager:getTraceState(player)
 		if traceState == 0 then
 			TraceManager:startTrace(player, index)
@@ -76,9 +67,6 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 
 	elseif request.action == "trace_clear_current" then
 		local index = tonumber(request.value)
-		if index == nil then
-			index = 0
-		end
 		TraceManager:clearTrace(index)
 
 	elseif request.action == "trace_reset_all" then

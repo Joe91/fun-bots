@@ -5,13 +5,13 @@ Language['de_DE'] = {
 	'Spawn random Way':			'zufällig Spawnen',
 	'Kick All':					'Alle kicken',
 	'Kill All':					'Alle killen',
-	'Respawn':					'Neuspawnen',
-	'Attack':					'Attackieren',
+	'Toggle Respawn':			'Neuspawnen umschalten',
+	'Toggle Attack':			'Attackieren umschalten',
 	
 	/* Waypoints */
 	'Waypoints':				'Wegpunkte',
-	'Toggle Trace':				'Aufzeichnung starten oder stoppen',
-	'Clear current Trace':		'Aktuelle Aufzeichnung löschen',
+	'Toggle Trace':				'Aufzeichnung starten / stoppen',
+	'Clear Trace':				'Aufzeichnung löschen',
 	'Reset all Traces':			'Alle Aufzeichnungen löschen',
 	'Save':						'Speichern',
 	'Reload':					'Neuladen',
