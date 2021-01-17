@@ -49,13 +49,13 @@ function FunBotUIClient:_onUISettings(data)
 	settings:add("GLOBAL", "Boolean", "spawnInSameTeam", "Spawn in Same Team", tostring(data.spawnInSameTeam), "false", "If true, Bots spawn in the team of the player");
 	settings:add("GLOBAL", "Number", "fovForShooting", "Bot FOV", tostring(data.fovForShooting), "270", "The Field Of View of the bots, where they can detect a player");
 	settings:add("GLOBAL", "Number", "bulletDamageBot", "Damage Bot Bullet", tostring(data.bulletDamageBot), "9", "The damage a normal Bullet does");
-	settings:add("TRACE", "Number", "bulletDamageBotSniper", "Damage Bot Sniper", tostring(data.bulletDamageBotSniper), "24", "The damage a Sniper-Bullet does");
-	settings:add("TRACE", "Number", "meleeDamageBot", "Damage Bot Melee", tostring(data.meleeDamageBot), "42", "The Damage a melee-attack does");
-	settings:add("TRACE", "Boolean", "meleeAttackIfClose", "Attack with Melee", tostring(data.meleeAttackIfClose), "true", "Bots attack the playe with the knife, if close");
-	settings:add("OTHER", "Boolean", "shootBackIfHit", "Attack if Hit", tostring(data.shootBackIfHit), "true", "Bots imidiatly attack player, if shot by it");
-	settings:add("OTHER", "Number", "botAimWorsening", "Aim Worsening", tostring(data.botAimWorsening * 100),"0.0", "0.0 = hard, 1.0 (or higher) = easy (and all between). Only takes effect on level Start");
-	settings:addList("OTHER", "botKit", "Bot Kit", Kits, tostring(data.botKit), "RANDOM_KIT", "The Kit a bots spawns with. If Random is selected a random color is chosen. See config.lua for Kits");
-	settings:addList("OTHER", "botColor", "Bot Color", Colors, tostring(data.botColor), "RANDOM_COLOR", "The Kit-Color a bots spawns with.  If Random is selected  a random color is chosen. See config.lua for colors");
+	settings:add("GLOBAL", "Number", "bulletDamageBotSniper", "Damage Bot Sniper", tostring(data.bulletDamageBotSniper), "24", "The damage a Sniper-Bullet does");
+	settings:add("GLOBAL", "Number", "meleeDamageBot", "Damage Bot Melee", tostring(data.meleeDamageBot), "42", "The Damage a melee-attack does");
+	settings:add("GLOBAL", "Boolean", "meleeAttackIfClose", "Attack with Melee", tostring(data.meleeAttackIfClose), "true", "Bots attack the playe with the knife, if close");
+	settings:add("GLOBAL", "Boolean", "shootBackIfHit", "Attack if Hit", tostring(data.shootBackIfHit), "true", "Bots imidiatly attack player, if shot by it");
+	settings:add("GLOBAL", "Number", "botAimWorsening", "Aim Worsening", tostring(data.botAimWorsening * 100),"0.0", "0.0 = hard, 1.0 (or higher) = easy (and all between). Only takes effect on level Start");
+	settings:addList("GLOBAL", "botKit", "Bot Kit", Kits, tostring(data.botKit), "RANDOM_KIT", "The Kit a bots spawns with. If Random is selected a random color is chosen. See config.lua for Kits");
+	settings:addList("GLOBAL", "botColor", "Bot Color", Colors, tostring(data.botColor), "RANDOM_COLOR", "The Kit-Color a bots spawns with.  If Random is selected  a random color is chosen. See config.lua for colors");
 	settings:addList("OTHER", "language", "Language", { "de_DE", "en_US" }, tostring(data.language), "en_US", "Select the language of this mod");
 	settings:add("OTHER", "Password", "settingsPassword", "Password", tostring(data.settingsPassword), nil, "Password protection of these Mod");
 	
