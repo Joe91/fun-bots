@@ -174,7 +174,7 @@ const EntryElement = function EntryElement() {
 customElements.define('ui-entry', EntryElement, { extends: 'div' });
 
 const BotEditor = (new function BotEditor() {
-	const DEBUG				= true;
+	const DEBUG				= false;
 	const VERSION			= '1.0.0-Beta';
 	let _language			= 'en_US';
 	const InputDeviceKeys	= {
