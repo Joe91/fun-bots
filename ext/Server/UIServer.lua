@@ -63,7 +63,10 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 		end
 
 	elseif request.action == "trace_clear_current" then
-		local index = 0 --todo: fill with data
+		local index = tonumber(request.value)
+		if index == nil then
+			index = 0
+		end
 		TraceManager:clearTrace(index)
 
 	elseif request.action == "trace_reset_all" then
