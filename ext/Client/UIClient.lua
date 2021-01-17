@@ -55,8 +55,8 @@ function FunBotUIClient:_onUISettings(data)
 	settings:add("OTHER", "Number", "botAimWorsening", "Aim Worsening", tostring(data.botAimWorsening),"<default>", "0.0 = hard, 1.0 (or higher) = easy (and all between). Only takes effect on level Start");
 	settings:add("OTHER", "Number", "botKit", "Bot Kit", tostring(data.botKit), "<default>", "The Kit a bots spawns with. If == 0 a random Kit will be selected");
 	settings:addList("OTHER", "botColor", "Bot Color", Colors, tostring(data.botColor), "<default>", "The Kit-Color a bots spawns with. If == 0 a random color is chosen. See config.lua for colors");
-	
-	self._views:execute('BotEditor.openSettings(\'' .. settings:toJSON() .. '\');');
+		
+	self._views:execute('BotEditor.openSettings(\'' .. settings:getJSON() .. '\');');
 end
 
 function FunBotUIClient:_onBotEditorEvent(data)
