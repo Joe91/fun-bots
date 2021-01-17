@@ -16,32 +16,6 @@ function FunBotUIServer:__init()
 	NetEvents:Subscribe('BotEditor', self, self._onBotEditorEvent);
 end
 
-function FunBotUIServer:_parseConfigData(data)
-	for _, valueToSave in pairs(data) do
-		if valueToSave.name == "spawnInSameTeam" then
-			Config.spawnInSameTeam = valueToSave.value  == "true"  --TODO: is toboolean() supported?
-		elseif valueToSave.name == "fovForShooting" then
-			Config.fovForShooting = tonumber(valueToSave.value)
-		elseif valueToSave.name == "bulletDamageBot" then
-			Config.bulletDamageBot = tonumber(valueToSave.value)
-		elseif valueToSave.name == "bulletDamageBotSniper" then
-			Config.bulletDamageBotSniper = tonumber(valueToSave.value)
-		elseif valueToSave.name == "meleeDamageBot" then
-			Config.meleeDamageBot = tonumber(valueToSave.value)
-		elseif valueToSave.name == "meleeAttackIfClose" then
-			Config.meleeAttackIfClose = valueToSave.value == "true"
-		elseif valueToSave.name == "shootBackIfHit" then
-			Config.shootBackIfHit = valueToSave.value  == "true"
-		elseif valueToSave.name == "botAimWorsening" then
-			Config.botAimWorsening = tonumber(valueToSave.value)
-		elseif valueToSave.name == "botKit" then
-			Config.botKit = valueToSave.value
-		elseif valueToSave.name == "botColor" then
-			Config.botColor = valueToSave.value
-		end
-	end
-end
-
 function FunBotUIServer:_onBotEditorEvent(player, data)
 	print('UIServer: BotEditor (' .. tostring(data) .. ')');
 
@@ -120,20 +94,73 @@ end
 
 function FunBotUIServer:_onUIRequestSaveSettings(player, data)
 	print(player.name .. ' requesting to save settings.');
-	
+
 	if (Config.settingsPassword ~= nil and self:_isAuthenticated(player.accountGuid) ~= true) then
 		print(player.name .. ' has no permissions for Bot-Editor.');
 		ChatManager:Yell('You are not permitted to change Bots. Please press F12 for authenticate!', 2.5);
 		return;
 	end
-	
+
 	local request = json.decode(data);
-	
-	-- Hier parst du nun die request-variable, dies ist das JSON mit folgenden Werten:
-	-- [    { "name": "<configVarName>", "value": "<newValue>" }, { "name": "maxNumberOfBots", "value": "1337" }, [...] ]
-	-- BITTE AN VALIDATION & DATATYPE-CASTING DENKEN!
-	
-	print(data);
+
+	print(request.spawnInSameTeam)
+	if request.spawnInSameTeam ~= nil then
+		Config.spawnInSameTeam = (request.spawnInSameTeam == "true")
+	end
+	if request.fovForShooting ~= nil then
+		local tempValue = tonumber(request.fovForShooting)
+		if tempValue >= 0 and tempValue <= 360 then
+			Config.fovForShooting = tempValue
+		end
+	end
+	if request.bulletDamageBot ~= nil then
+		local tempValue = tonumber(request.bulletDamageBot)
+		if tempValue >= 0 then
+			Config.bulletDamageBot = tempValue
+		end
+	end
+	if request.bulletDamageBotSniper ~= nil then
+		local tempValue = tonumber(request.bulletDamageBotSniper)
+		if tempValue >= 0 then
+			Config.bulletDamageBotSniper = tempValue
+		end
+	end
+	if request.meleeDamageBot ~= nil then
+		local tempValue = tonumber(request.meleeDamageBot)
+		if tempValue >= 0 then
+			Config.meleeDamageBot = tempValue
+		end
+	end
+	if request.meleeAttackIfClose ~= nil then
+		Config.meleeAttackIfClose = (request.meleeAttackIfClose == "true")
+	end
+	if request.shootBackIfHit ~= nil then
+		Config.shootBackIfHit = (request.shootBackIfHit == "true")
+	end
+	if request.botAimWorsening ~= nil then
+		local tempValue = tonumber(request.botAimWorsening) / 100
+		if tempValue >= 0 and temValue < 10 then
+			Config.botAimWorsening = tempValue
+		end
+	end
+	if request.botKit ~= nil then
+		local tempString = request.botKit
+		for _, kit in pairs(Kits) do
+			if tempString == kit then
+				Config.botKit = tempString
+				break
+			end
+		end
+	end
+	if request.botColor ~= nil then
+		local tempString = request.botColor
+		for _, color in pairs(Colors) do
+			if tempString == color then
+				Config.botColor = tempString
+				break
+			end
+		end
+	end
 end
 
 function FunBotUIServer:_onUIRequestOpen(player, data)

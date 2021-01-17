@@ -53,7 +53,7 @@ function FunBotUIClient:_onUISettings(data)
 	settings:add("TRACE", "Number", "meleeDamageBot", "Damage Bot Melee", tostring(data.meleeDamageBot), "42", "The Damage a melee-attack does");
 	settings:add("TRACE", "Boolean", "meleeAttackIfClose", "Attack with Melee", tostring(data.meleeAttackIfClose), "true", "Bots attack the playe with the knife, if close");
 	settings:add("OTHER", "Boolean", "shootBackIfHit", "Attack if Hit", tostring(data.shootBackIfHit), "true", "Bots imidiatly attack player, if shot by it");
-	settings:add("OTHER", "Number", "botAimWorsening", "Aim Worsening", tostring(data.botAimWorsening),"0.0", "0.0 = hard, 1.0 (or higher) = easy (and all between). Only takes effect on level Start");
+	settings:add("OTHER", "Number", "botAimWorsening", "Aim Worsening", tostring(data.botAimWorsening * 100),"0.0", "0.0 = hard, 1.0 (or higher) = easy (and all between). Only takes effect on level Start");
 	settings:addList("OTHER", "botKit", "Bot Kit", Kits, tostring(data.botKit), "RANDOM_KIT", "The Kit a bots spawns with. If Random is selected a random color is chosen. See config.lua for Kits");
 	settings:addList("OTHER", "botColor", "Bot Color", Colors, tostring(data.botColor), "RANDOM_COLOR", "The Kit-Color a bots spawns with.  If Random is selected  a random color is chosen. See config.lua for colors");
 	settings:addList("OTHER", "language", "Language", { "de_DE", "en_US" }, tostring(data.language), "en_US", "Select the language of this mod");
