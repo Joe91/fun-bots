@@ -26,8 +26,8 @@ Config = {
     meleeAttackIfClose = true,      -- bot attacks with melee if close
     shootBackIfHit = true,          -- bot shoots back, if hit
     botAimWorsening = 0.0,          -- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy). Restart of level needed
-    botKit = 0,                     -- 0 = random, 1 = assault, 2 = engineer, 3 = support, 4 = recon
-    botColor = 0,                   -- 0 = random, see Colors
+    botKit = "RANDOM_KIT",          -- see Kits
+    botColor = "RANDOM_COLOR",      -- see Colors
 
     -- UI settings & language options
 	settingsPassword = nil,         -- if nil, disable it. Otherwise use a String with your password
@@ -47,7 +47,16 @@ Config = {
     targetHeightDistanceWayPoint = 2 -- distance the bots have to reach in height to continue with next Waypoint
 }
 
+Kits = {
+    "RANDOM_KIT",
+    "Assault",
+    "Engineer",
+    "Support",
+    "Recon"
+}
+
 Colors = {
+    "RANDOM_COLOR", --0
     "Urban", --1
     "ExpForce", --2
     "Ninja", --3
