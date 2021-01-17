@@ -16,7 +16,7 @@ function FunBotUIClient:__init()
 	NetEvents:Subscribe('UI_Password_Protection', self, self._onUIPasswordProtection);
 	NetEvents:Subscribe('UI_Show_Toolbar', self, self._onUIShowToolbar);
 	NetEvents:Subscribe('UI_Settings', self, self._onUISettings);
-	Events:Subscribe('UI_Settings', self, self._onUISettings);
+	--Events:Subscribe('UI_Settings', self, self._onUISettings);
 	Events:Subscribe('UI_Send_Password', self, self._onUISendPassword);
 	
 	-- Events from BotManager, TraceManager & Other
@@ -37,21 +37,26 @@ function FunBotUIClient:_onUIToggle()
 end
 
 function FunBotUIClient:_onUISettings(data)
-	local 
 	print('UIClient: UI_Settings (' .. json.encode(data) .. ')');
 	
 	local settings = UISettings();
-	settings:add("Spawn in Same Team", "Boolean", tostring(Config.spawnInSameTeam), "If true, Bots spawn in the team of the player");
-	settings:add("Bot FOV", "Number", tostring(Config.fovForShooting), "The Field Of View of the bots, where they can detect a player");
-	settings:add("Damage Bot Bullet", "Number", tostring(Config.bulletDamageBot), "The damage a normal Bullet does");
-	settings:add("Damage Bot Sniper", tostring(Config.bulletDamageBotSniper), "The damage a Sniper-Bullet does");
-	settings:add("Damage Bot Melee", tostring(Config.meleeDamageBot), "The Damage a melee-attack does");
-	settings:add("Attack with Melee", "Boolean", tostring(Config.meleeAttackIfClose), "Bots attack the playe with the knife, if close");
-	settings:add("Attack if Hit", "Boolean", tostring(Config.shootBackIfHit), "Bots imidiatly attack player, if shot by it");
-	settings:add("Aim Worsening", "Number", tostring(Config.botAimWorsening), "0.0 = hard, 1.0 (or higher) = easy (and all between). Only takes effect on level Start");
-	settings:add("Bot Kit", "Number", tostring(Config.botKit), "The Kit a bots spawns with. If == 0 a random Kit will be selected");
-	settings:add("Bot Color", "Number", tostring(Config.botColor), "The Kit-Color a bots spawns with. If == 0 a random color is chosen. See config.lua for colors");
-	self._views:execute('BotEditor.openSettings(\'' .. json.encode(settings:getProperties()) .. '\');');
+	
+	-- Samples
+	-- add(<category>, <types>, <name>, <title>, <value>, <default>, <description>)
+	-- addList(<category>, <name>, <title>, <list>, <value>, <default>, <description>)
+	
+	settings:add("GLOBAL", "Boolean", "spawnInSameTeam", "Spawn in Same Team", tostring(data.spawnInSameTeam), "<default>", "If true, Bots spawn in the team of the player");
+	settings:add("GLOBAL", "Number", "fovForShooting", "Bot FOV", tostring(data.fovForShooting), "<default>", "The Field Of View of the bots, where they can detect a player");
+	settings:add("GLOBAL", "Number", "bulletDamageBot", "Damage Bot Bullet", tostring(data.bulletDamageBot), "<default>", "The damage a normal Bullet does");
+	settings:add("TRACE", "Number", "bulletDamageBotSniper", "Damage Bot Sniper", tostring(data.bulletDamageBotSniper), "<default>", "The damage a Sniper-Bullet does");
+	settings:add("TRACE", "Number", "meleeDamageBot", "Damage Bot Melee", tostring(data.meleeDamageBot), "<default>", "The Damage a melee-attack does");
+	settings:add("TRACE", "Boolean", "meleeAttackIfClose", "Attack with Melee", tostring(data.meleeAttackIfClose), "<default>", "Bots attack the playe with the knife, if close");
+	settings:add("OTHER", "Boolean", "shootBackIfHit", "Attack if Hit", tostring(data.shootBackIfHit), "<default>", "Bots imidiatly attack player, if shot by it");
+	settings:add("OTHER", "Number", "botAimWorsening", "Aim Worsening", tostring(data.botAimWorsening),"<default>", "0.0 = hard, 1.0 (or higher) = easy (and all between). Only takes effect on level Start");
+	settings:add("OTHER", "Number", "botKit", "Bot Kit", tostring(data.botKit), "<default>", "The Kit a bots spawns with. If == 0 a random Kit will be selected");
+	settings:addList("OTHER", "botColor", "Bot Color", Colors, tostring(data.botColor), "<default>", "The Kit-Color a bots spawns with. If == 0 a random color is chosen. See config.lua for colors");
+	
+	self._views:execute('BotEditor.openSettings(\'' .. settings:toJSON() .. '\');');
 end
 
 function FunBotUIClient:_onBotEditorEvent(data)

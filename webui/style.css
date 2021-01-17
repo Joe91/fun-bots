@@ -30,6 +30,7 @@
 	font-family: Purista, sans-serif, arial;
 	border-radius: 0;
 	outline: none;
+	border: none;
 }
 
 *:not([type="input"]) {    
@@ -267,4 +268,144 @@ ui-view[data-type="toolbar"] ui-menu ul.main li a input[type="number"] {
 	text-align: center;
 	border: 1px solid rgba(255, 255, 255, 0.5);
 	color: rgba(255, 255, 255, 0.5);
+}
+
+/* View :: Settings */
+ui-view[data-name="settings"] ui-content {
+	/*background: rgba(0, 0, 0, 0.2);*/
+	min-width: 700px;
+}
+
+ui-view[data-name="settings"] ui-content ui-description {
+	padding: 5px 10px;
+	color: var(--color_text);
+	text-shadow: 0 0 6px var(--color_text_shadow);
+	min-height: 30px;
+	display: block;
+}
+
+ui-view[data-name="settings"] ui-tabs {}
+
+/* View :: Settings :: Menu */
+ui-view[data-name="settings"] ui-tabs nav {}
+
+ui-view[data-name="settings"] ui-tabs nav ul {
+	list-style: none;
+	display: flex;
+    justify-content: center;
+}
+
+ui-view[data-name="settings"] ui-tabs nav ul li {
+	flex: auto;
+}
+
+ui-view[data-name="settings"] ui-tabs nav ul li label {
+	display: block;
+	position: relative;
+	padding: 5px 15px;
+	min-width: 120px;
+	margin: 0 1px;
+	color: var(--color_text);
+	text-shadow: 0 0 6px var(--color_text_shadow);
+	cursor: pointer;
+	font-weight: 900;
+    font-size: 18px;
+	text-align: center;
+	text-transform: uppercase;
+	background: linear-gradient(180deg, var(--color_button_default_from) 0%, var(--color_button_default_to) 100%);
+}
+
+ui-view[data-name="settings"] ui-tabs nav ul li:first-child label {
+	margin: 0 1px 0 0;
+}
+
+ui-view[data-name="settings"] ui-tabs nav ul li:last-child label {
+	margin: 0 0 0 1px;
+}
+
+ui-view[data-name="settings"] ui-tabs nav ul li:hover label {
+	background: linear-gradient(180deg, var(--color_button_hover_from) 0%, var(--color_button_hover_to) 100%);
+}
+
+/* View :: Settings :: Tab Content */
+ui-view[data-name="settings"] ui-tabs figure { 
+	display: block; 
+	clear: both;
+	padding: 5px 10px;
+	display: block;
+}
+
+ui-view[data-name="settings"] ui-tabs > input,
+ui-view[data-name="settings"] ui-tabs figure > ui-tab { display: none; }
+
+ui-view[data-name="settings"] ui-tabs figure > ui-tab {
+	padding: 20px;
+}
+
+#General:checked ~ figure .General,
+#Trace:checked ~ figure .Trace,
+#Other:checked ~ figure .Other {
+	display: block;
+}
+
+#General:checked ~ nav > ul > li label[for="General"],
+#Trace:checked ~ nav > ul > li label[for="Trace"],
+#Other:checked ~ nav > ul > li label[for="Other"] {
+	color: var(--color_text_hover);
+	text-shadow: 0 0 6px var(--color_text_hover_shadow);
+	background: linear-gradient(180deg, var(--color_button_active_from) 0%, var(--color_button_active_to) 100%);
+}
+
+/* View :: Settings :: Tab Content :: Entries */
+ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry {
+	display: flex;
+	color: var(--color_text);
+	text-shadow: 0 0 6px var(--color_text_shadow);
+}
+
+ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-name {
+	flex: 1 auto;	
+    align-self: center;
+}
+
+ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container {
+	flex: 1 auto;
+	display: flex;
+	font-weight: 900;
+	max-width: 200px;
+}
+
+ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container ui-arrow {
+	flex: 0 auto;
+	cursor: pointer;
+    font-size: 30px;
+}
+
+ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container ui-text {
+	flex: 1 auto;
+	flex: 1 auto;
+    text-align: center;
+    vertical-align: middle;
+    align-self: center;
+    font-size: 16px;
+}
+
+ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container ui-text input[type="text"],
+ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container ui-text input[type="password"] {
+	border: none;
+	width:100%;
+	min-width: 1px;
+	max-width: 100%;
+	background: rgba(0, 0, 0, 0);
+	text-align: center;
+	color: var(--color_text);
+	font-weight: 900;
+    font-size: 16px;
+	margin: 1px 0;
+	text-shadow: 0 0 6px var(--color_text_shadow);
+}
+
+ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry[data-type="Text"] ui-container ui-text input[type="text"],
+ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry[data-type="Password"] ui-container ui-text input[type="password"] {
+	border: 1px solid;
 }
