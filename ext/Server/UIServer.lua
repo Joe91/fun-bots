@@ -17,25 +17,32 @@ end
 
 function FunBotUIServer:_onBotEditorEvent(player, data)
 	print('UIServer: BotEditor (' .. tostring(data) .. ')');
-	
+
 	if (Config.settingsPassword ~= nil and self:_isAuthenticated(player.accountGuid) ~= true) then
 			print(player.name .. ' has no permissions for Bot-Editor.');
 			ChatManager:Yell('You are not permitted to change Bots. Please press F12 for authenticate!', 2.5);
 		return;
 	end
-	
+
 	local request = json.decode(data);
-	
+
 	if request.action == "request_settings" then
 		NetEvents:SendTo('UI_Settings', player, Config);
-		
+
 	-- Bots
-	elseif request.action == "bot_spawn_default" then  --not needed? or should we use it for spawn on a defined way?
+	elseif request.action == "bot_spawn_default" then --todo: whats the difference? make a function to spawn bots on a fixed way instead?
 		local amount = tonumber(request.value)
-		BotSpawner:spawnWayBots(player, amount, true)
+		local index = 0
+		if amount == nil then
+			amount = 0
+		end
+		BotSpawner:spawnWayBots(player, amount, false, index)
 
 	elseif request.action == "bot_spawn_random" then
 		local amount = tonumber(request.value)
+		if amount == nil then
+			amount = 0
+		end
 		BotSpawner:spawnWayBots(player, amount, true)
 
 	elseif request.action == "bot_kick_all" then
@@ -44,10 +51,15 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 	elseif request.action == "bot_kill_all" then
 		BotManager:killAll()
 
-	elseif request.action == "bot_respawn" then
-		local respawning = true --todo: fill with data
+	elseif request.action == "bot_respawn" then  --toggle this function
+		local respawning = not Config.respawnWayBots
 		Config.respawnWayBots = respawning
-        BotManager:setOptionForAll("respawn", respawning)
+		BotManager:setOptionForAll("respawn", respawning)
+
+	elseif request.action == "bot_attack" then  --toggle this function
+		local attack = not Config.attackWayBots
+		Config.attackWayBots = attack
+        BotManager:setOptionForAll("shoot", attack)
 
 	-- Trace
 	elseif request.action == "trace_toggle" then

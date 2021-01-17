@@ -19,6 +19,7 @@ Config = {
     --values that can be modified ingame. These are the startup settings
     spawnInSameTeam = false,
     respawnWayBots = true,
+    attackWayBots = true,
     bulletDamageBot = 10,
     bulletDamageBotSniper = 24,
     meleeDamageBot = 48,

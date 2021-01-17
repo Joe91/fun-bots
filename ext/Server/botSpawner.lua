@@ -159,7 +159,7 @@ end
 function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex)
     local name = BotManager:findNextBotName()
     if name ~= nil then
-        if useRandomWay then
+        if useRandomWay or activeWayIndex == nil or activeWayIndex == 0 then
             activeWayIndex = self:_getNewWayIndex()
             if activeWayIndex == 0 then
                 return
