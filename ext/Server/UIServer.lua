@@ -1,7 +1,10 @@
 class 'FunBotUIServer';
 
 require('__shared/ArrayMap');
-local TraceManager	= require('traceManager');
+require('__shared/config')
+local BotManager = require('botManager')
+local TraceManager = require('traceManager')
+local BotSpawner = require('botSpawner')
 
 function FunBotUIServer:__init()
 	self._webui			= 0;
@@ -14,30 +17,65 @@ end
 
 function FunBotUIServer:_onBotEditorEvent(player, data)
 	print('UIServer: BotEditor (' .. tostring(data) .. ')');
-	
+
 	if (Config.settingsPassword ~= nil and self:_isAuthenticated(player.accountGuid) ~= true) then
 			print(player.name .. ' has no permissions for Bot-Editor.');
 			ChatManager:Yell('You are not permitted to change Bots. Please press F12 for authenticate!', 2.5);
 		return;
 	end
-	
+
 	local request = json.decode(data);
-	
+
 	if request.action == "request_settings" then
 		NetEvents:SendTo('UI_Settings', player, Config);
-		
+
 	-- Bots
-	-- elseif request.action == "bot_spawn_default" then
-	-- elseif request.action == "bot_spawn_random" then
-	-- elseif request.action == "bot_kick_all" then
-	-- elseif request.action == "bot_respawn" then
-	
+	elseif request.action == "bot_spawn_default" then
+		local amount = tonumber(request.value)
+		BotSpawner:spawnWayBots(player, amount, true)
+
+	elseif request.action == "bot_spawn_path" then--todo: whats the difference? make a function to spawn bots on a fixed way instead?
+		local amount = 1
+		local indexOnPath = 1
+		local index = tonumber(request.value)
+		BotSpawner:spawnWayBots(player, amount, false, index, indexOnPath)
+
+	elseif request.action == "bot_kick_all" then
+		BotManager:destroyAllBots()
+
+	elseif request.action == "bot_kill_all" then
+		BotManager:killAll()
+
+	elseif request.action == "bot_respawn" then  --toggle this function
+		local respawning = not Config.respawnWayBots
+		Config.respawnWayBots = respawning
+		BotManager:setOptionForAll("respawn", respawning)
+
+	elseif request.action == "bot_attack" then  --toggle this function
+		local attack = not Config.attackWayBots
+		Config.attackWayBots = attack
+        BotManager:setOptionForAll("shoot", attack)
+
 	-- Trace
-	-- elseif request.action == "trace_toggle" then
-	-- elseif request.action == "trace_clear_current" then
-	-- elseif request.action == "trace_reset_all" then
-	-- elseif request.action == "trace_save" then
-	-- elseif request.action == "trace_reload" then
+	elseif request.action == "trace_start" then
+		local index = tonumber(request.value)
+		TraceManager:startTrace(player, index)
+
+	elseif request.action == "trace_end" then
+		TraceManager:endTrace(player)
+
+	elseif request.action == "trace_clear_current" then
+		local index = tonumber(request.value)
+		TraceManager:clearTrace(index)
+
+	elseif request.action == "trace_reset_all" then
+		TraceManager:clearAllTraces()
+
+	elseif request.action == "trace_save" then
+		TraceManager:savePaths()
+
+	elseif request.action == "trace_reload" then
+		TraceManager:loadPaths()
 	
 	else
 		ChatManager:Yell(request.action .. ' is currently not implemented. 😒', 2.5);

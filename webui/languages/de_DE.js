@@ -2,15 +2,17 @@ Language['de_DE'] = {
 	/* Bots */
 	'Bots':						'Bots',
 	'Spawn Bots':				'Bots spawnen',
-	'Spawn random Way':			'zufällig Spawnen',
+	'Spawn Bot on Way':			'Bot auf Weg spawnen',
 	'Kick All':					'Alle kicken',
-	'Respawn':					'Neuspawnen',
+	'Kill All':					'Alle killen',
+	'Toggle Respawn':			'Neuspawnen umschalten',
+	'Toggle Attack':			'Attackieren umschalten',
 	
 	/* Waypoints */
 	'Waypoints':				'Wegpunkte',
 	'Start Trace':				'Aufzeichnung starten',
-	'Stop Trace':				'Aufzeichnung stoppen',
-	'Clear current Trace':		'Aktuelle Aufzeichnung löschen',
+	'End Trace':				'Aufzeichnung stoppen',
+	'Clear Trace':				'Aufzeichnung löschen',
 	'Reset all Traces':			'Alle Aufzeichnungen löschen',
 	'Save':						'Speichern',
 	'Reload':					'Neuladen',

@@ -1,50 +1,54 @@
 Config = {
     --general
-    maxNumberOfBots = 32,
-    initNumberOfBots = 16,  --bots on levelstart
-    spawnOnLevelstart = true,
-    maxRaycastDistance = 125, --meters bots start shooting at player
-    spawnDelayBots = 2.0,   --time till bots respawn, if respawn enabled
-    botTeam = TeamId.Team2, --default bot team
+    maxNumberOfBots = 32,           --maximum bots that can be spawned
+    initNumberOfBots = 16,          --bots on levelstart
+    spawnOnLevelstart = true,       --bots spawn on levelstart (if valid paths are available)
+    maxRaycastDistance = 125,       --meters bots start shooting at player
+    spawnDelayBots = 2.0,           --time till bots respawn, if respawn enabled
+    botTeam = TeamId.Team2,         --default bot team
     botNewLoadoutOnSpawn = true,
+    disableChatCommands = true,     --if true, no chat commands can be used
+    respawnWayBots = true,          --bots on paths respawn if killed
     --shooting
-    fovForShooting = 270,  -- Degrees of FOV of Bot
-    botFireDuration = 0.2,
-    botFirePause = 0.3,
-    botMinTimeShootAtPlayer = 1.0,
-    botFireModeDuration = 5.0,
-    meleeAttackCoolDown = 3.0,
+    botFireDuration = 0.2,          -- the duration a bot fires
+    botFirePause = 0.3,             -- the duration a bot waits after fire
+    botMinTimeShootAtPlayer = 1.0,  -- the minimum time a bot shoots at one player
+    botFireModeDuration = 5.0,      -- the minimum time a bot tries to shoot a player
+    meleeAttackCoolDown = 3.0,      -- the time a bot waits before attacking with melee again
+    attackWayBots = true,           -- bots on paths attack player
 
     --values that can be modified ingame. These are the startup settings
-    spawnInSameTeam = false,
-    respawnWayBots = true,
-    bulletDamageBot = 5,
-    bulletDamageBotSniper = 24,
-    meleeDamageBot = 48,
-    meleeAttackIfClose = true,
-    shootBackIfHit = true,
-    deviationAdditionFactor = 0.0,    --make aim worse: for difficulty: 0 = no offset (hard), 1 or greater = more sway (easy)
-    botKit = 0, -- 0 = random, 1 = assault, 2 = engineer, 3 = support, 4 = recon
-    botColor = 1, -- 0 = random, see Coulors
+    fovForShooting = 270,           -- Degrees of FOV of Bot
+    spawnInSameTeam = false,        -- Team the bots spawn in
+    bulletDamageBot = 10,           -- damage of a bot with normal bullet
+    bulletDamageBotSniper = 24,     -- damage of a bot with sniper bullet
+    meleeDamageBot = 48,            -- damage of a bot with melee attack
+    meleeAttackIfClose = true,      -- bot attacks with melee if close
+    shootBackIfHit = true,          -- bot shoots back, if hit
+    botAimWorsening = 0.0,          -- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy). Restart of level needed
+    botKit = 0,                     -- 0 = random, 1 = assault, 2 = engineer, 3 = support, 4 = recon
+    botColor = 0,                   -- 0 = random, see Colors
+
+    -- UI settings & language options
+	settingsPassword = nil,         -- if nil, disable it. Otherwise use a String with your password
+    language = nil, --"de_DE",      -- de_DE as sample (default is english, when language file doesnt exists)
 
     --trace
-    traceUsageAllowed = true,
-    maxTraceNumber = 15,
+    traceUsageAllowed = true,       -- if false, no traces can be recorded, deleted or saved
+    maxTraceNumber = 15,            -- maximum number of traces in one level
 
-	-- UI settings & language options
-	settingsPassword = nil, -- if nil, disable it. Otherwise use a String with your password
-	language = "de_DE", -- de_DE as sample (default is english, when language file doesnt exists)
-	
     --don't change these values unless you know what you do
-    traceDelta = 0.2,
-    raycastInterval = 0.1, -- seconds
-    botUpdateCycle = 0.1,
-    botAimUpdateCycle = 0.05,
-    targetDistanceWayPoint = 0.5,
-    targetHeightDistanceWayPoint = 2
+    traceDelta = 0.2,               -- update intervall of trace
+    raycastInterval = 0.1,          -- update intervall of client raycasts
+    botUpdateCycle = 0.1,           -- update-intervall of bots
+    botAimUpdateCycle = 0.05,       -- = 3 frames at 60 Hz
+    botBulletSpeed = 600,           -- speed a bullet travels ingame (aproximately)
+    targetDistanceWayPoint = 0.5,   -- distance the bots have to reach to continue with next Waypoint
+    targetHeightDistanceWayPoint = 2 -- distance the bots have to reach in height to continue with next Waypoint
 }
 
 Colors = {
+    "Urban", --1
     "ExpForce", --2
     "Ninja", --3
     "DrPepper", --4
@@ -56,8 +60,7 @@ Colors = {
     "Green", --10
     "Jungle", --11
     "Navy", --12
-    "Urban", --13
-    "Wood01" --14
+    "Wood01" --13
 }
 
 BotNames = {

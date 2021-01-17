@@ -5,6 +5,7 @@ local Globals = require('globals')
 
 function TraceManager:__init()
     self._tracePlayer = {}
+    self._traceStatePlayer = {} --0 inactive, 1 started
     self._traceUpdateTimer = {}
     self._traceWaitTimer = {}
     self._mapName = ""
@@ -14,7 +15,14 @@ function TraceManager:__init()
 end
 
 function TraceManager:onLevelLoaded(levelName, gameMode)
+    if gameMode == "TeamDeathMatchC0" then
+        gameMode = "TeamDeathMatch0"
+    end
     self._mapName = levelName.."_"..gameMode
+    self:loadPaths()
+end
+
+function TraceManager:loadPaths()
     for i = 1, Config.maxTraceNumber do
         Globals.wayPoints[i] = {}
     end
@@ -22,7 +30,27 @@ function TraceManager:onLevelLoaded(levelName, gameMode)
     print(Globals.activeTraceIndexes.." paths have been loaded")
 end
 
+function TraceManager:onUnload()
+    for i = 1, Config.maxTraceNumber do
+        Globals.wayPoints[i] = {}
+    end
+    Globals.activeTraceIndexes = 0
+end
+
+function TraceManager:_checkForValidUsage(player)
+    if player ~= nil then
+        if self._traceStatePlayer[player.name] == nil then
+            self._traceStatePlayer[player.name] = 0
+        end
+    end
+    if not Config.traceUsageAllowed then
+        return false
+    end
+    return true
+end
+
 function TraceManager:_onPlayerLeft(player)
+    self._traceStatePlayer[player.name] = nil
     for i = 1, Config.maxTraceNumber do
         if self._tracePlayer[i] == player then
             self._tracePlayer[i] = nil
@@ -30,9 +58,24 @@ function TraceManager:_onPlayerLeft(player)
     end
 end
 
+function TraceManager:getTraceState(player)
+    if self._traceStatePlayer[player.name] == nil then
+        self._traceStatePlayer[player.name] = 0
+    end
+    return self._traceStatePlayer[player.name]
+end
+
 function TraceManager:startTrace(player, index)
-    if not Config.traceUsageAllowed then
+    if not self:_checkForValidUsage(player) then
         return
+    end
+    if  self._traceStatePlayer[player.name] ~= 0 then  --trace still running
+        for i = 1, Config.maxTraceNumber do
+            if self._tracePlayer[i] == player then
+                self._tracePlayer[i] = nil
+                Globals.wayPoints[i] = {}
+            end
+        end
     end
     if index == 0 then
         for i = 1, Config.maxTraceNumber do
@@ -46,30 +89,33 @@ function TraceManager:startTrace(player, index)
         index = 1
     end
     print("Trace "..index.." started")
-	NetEvents:Broadcast('Trace_Started', index);
     ChatManager:Yell("Trace "..index.." started", 2.5)
     self:_clearTrace(index)
     self._traceUpdateTimer[index] = 0
     self._tracePlayer[index] = player
+    self._traceStatePlayer[player.name] = 1 --trace started
 end
 
 function TraceManager:endTrace(player)
-    if not Config.traceUsageAllowed then
+    if not self:_checkForValidUsage(player) then
+        return
+    end
+    if  self._traceStatePlayer[player.name] == 0 then
         return
     end
     print("Trace done")
     ChatManager:Yell("Trace done", 2.5)
-	NetEvents:Broadcast('Trace_Stopped', Globals.activeTraceIndexes);
     Globals.activeTraceIndexes = Globals.activeTraceIndexes + 1
     for i = 1, Config.maxTraceNumber do
         if self._tracePlayer[i] == player then
             self._tracePlayer[i] = nil
         end
     end
+    self._traceStatePlayer[player.name] = 0
 end
 
 function TraceManager:clearTrace(index)
-    if not Config.traceUsageAllowed then
+    if not self:_checkForValidUsage() then
         return
     end
     print("clear trace")
@@ -78,7 +124,7 @@ function TraceManager:clearTrace(index)
 end
 
 function TraceManager:clearAllTraces()
-    if not Config.traceUsageAllowed then
+    if not self:_checkForValidUsage() then
         return
     end
     print("Clearing all traces")
@@ -90,7 +136,7 @@ function TraceManager:clearAllTraces()
 end
 
 function TraceManager:savePaths()
-    if not Config.traceUsageAllowed then
+    if not self:_checkForValidUsage() then
         return
     end
     print("Trying to Save paths")

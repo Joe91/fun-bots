@@ -4,7 +4,6 @@ require('__shared/ArrayMap');
 
 function UISettings:__init()
 	self._properties = ArrayMap();
-	
 	self._properties:add("Test");
 end
 
