@@ -45,16 +45,16 @@ function FunBotUIClient:_onUISettings(data)
 	-- add(<category>, <types>, <name>, <title>, <value>, <default>, <description>)
 	-- addList(<category>, <name>, <title>, <list>, <value>, <default>, <description>)
 	
-	settings:add("GLOBAL", "Boolean", "spawnInSameTeam", "Spawn in Same Team", tostring(data.spawnInSameTeam), "<default>", "If true, Bots spawn in the team of the player");
-	settings:add("GLOBAL", "Number", "fovForShooting", "Bot FOV", tostring(data.fovForShooting), "<default>", "The Field Of View of the bots, where they can detect a player");
-	settings:add("GLOBAL", "Number", "bulletDamageBot", "Damage Bot Bullet", tostring(data.bulletDamageBot), "<default>", "The damage a normal Bullet does");
-	settings:add("TRACE", "Number", "bulletDamageBotSniper", "Damage Bot Sniper", tostring(data.bulletDamageBotSniper), "<default>", "The damage a Sniper-Bullet does");
-	settings:add("TRACE", "Number", "meleeDamageBot", "Damage Bot Melee", tostring(data.meleeDamageBot), "<default>", "The Damage a melee-attack does");
-	settings:add("TRACE", "Boolean", "meleeAttackIfClose", "Attack with Melee", tostring(data.meleeAttackIfClose), "<default>", "Bots attack the playe with the knife, if close");
-	settings:add("OTHER", "Boolean", "shootBackIfHit", "Attack if Hit", tostring(data.shootBackIfHit), "<default>", "Bots imidiatly attack player, if shot by it");
-	settings:add("OTHER", "Number", "botAimWorsening", "Aim Worsening", tostring(data.botAimWorsening),"<default>", "0.0 = hard, 1.0 (or higher) = easy (and all between). Only takes effect on level Start");
-	settings:addList("OTHER", "botKit", "Bot Kit", Kts, tostring(data.botKit), "<default>", "The Kit a bots spawns with. If Random is selected a random color is chosen. See config.lua for Kits");
-	settings:addList("OTHER", "botColor", "Bot Color", Colors, tostring(data.botColor), "<default>", "The Kit-Color a bots spawns with.  If Random is selected  a random color is chosen. See config.lua for colors");
+	settings:add("GLOBAL", "Boolean", "spawnInSameTeam", "Spawn in Same Team", tostring(data.spawnInSameTeam), "false", "If true, Bots spawn in the team of the player");
+	settings:add("GLOBAL", "Number", "fovForShooting", "Bot FOV", tostring(data.fovForShooting), "270", "The Field Of View of the bots, where they can detect a player");
+	settings:add("GLOBAL", "Number", "bulletDamageBot", "Damage Bot Bullet", tostring(data.bulletDamageBot), "9", "The damage a normal Bullet does");
+	settings:add("TRACE", "Number", "bulletDamageBotSniper", "Damage Bot Sniper", tostring(data.bulletDamageBotSniper), "24", "The damage a Sniper-Bullet does");
+	settings:add("TRACE", "Number", "meleeDamageBot", "Damage Bot Melee", tostring(data.meleeDamageBot), "42", "The Damage a melee-attack does");
+	settings:add("TRACE", "Boolean", "meleeAttackIfClose", "Attack with Melee", tostring(data.meleeAttackIfClose), "true", "Bots attack the playe with the knife, if close");
+	settings:add("OTHER", "Boolean", "shootBackIfHit", "Attack if Hit", tostring(data.shootBackIfHit), "true", "Bots imidiatly attack player, if shot by it");
+	settings:add("OTHER", "Number", "botAimWorsening", "Aim Worsening", tostring(data.botAimWorsening),"0.0", "0.0 = hard, 1.0 (or higher) = easy (and all between). Only takes effect on level Start");
+	settings:addList("OTHER", "botKit", "Bot Kit", Kts, tostring(data.botKit), "RANDOM_KIT", "The Kit a bots spawns with. If Random is selected a random color is chosen. See config.lua for Kits");
+	settings:addList("OTHER", "botColor", "Bot Color", Colors, tostring(data.botColor), "RANDOM_COLOR", "The Kit-Color a bots spawns with.  If Random is selected  a random color is chosen. See config.lua for colors");
 
 	self._views:execute('BotEditor.openSettings(\'' .. settings:getJSON() .. '\');');
 end

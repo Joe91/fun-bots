@@ -269,6 +269,18 @@ const BotEditor = (new function BotEditor() {
 						action:	'request_settings'
 					}));
 				break;
+
+				case 'submit_settings_temp':
+					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
+						action:	'submit_settings_temp'
+					}));
+				break;
+
+				case 'submit_settings':
+					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
+						action:	'submit_settings'
+					}));
+				break;
 			}
 		}.bind(this));
 	};
