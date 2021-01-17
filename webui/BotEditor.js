@@ -1,5 +1,112 @@
 let Language = {};
 
+const EntryElement = function EntryElement() {
+	let _element		= null;
+	let _type			= null;
+	let _name			= null;
+	let _title			= null;
+	let _value			= null;
+	let _default		= null;
+	let _list			= null;
+	let _description	= null;
+	let _container		= null;
+	
+	this.__constructor = function __constructor() {
+		_element	= document.createElement('ui-entry');
+		_container	= document.createElement('ui-container');
+	};
+	
+	this.setType = function setType(type) {
+		_type					= type;
+		_element.dataset.type	= type;
+		
+		let arrow_left			= this._createArrow('❰');
+		let arrow_right			= this._createArrow('❱');
+		
+		switch(_type) {
+			case 'Boolean':
+				_container.appendChild(arrow_left);
+				_container.appendChild(this._createText(_value == null ? (_default == null ? '' : (_default ? 'Yes' : 'No')) : (_value ? 'Yes' : 'No')));
+				_container.appendChild(arrow_right);
+			break;
+			case 'Number':
+				_container.appendChild(arrow_left);
+				_container.appendChild(this._createText(_value == null ? '' : _value));
+				_container.appendChild(arrow_right);
+			break;
+			case 'List':
+				_container.appendChild(arrow_left);
+				_container.appendChild(this._createText(_value == null ? (_default == null ? '' : _default) : _value));
+				_container.appendChild(arrow_right);
+			break;
+			case 'Text':
+				_container.appendChild(this._createInput('text', _value == null ? (_default == null ? '' : _default) : _value));			
+			break;
+			case 'Password':
+				_container.appendChild(this._createInput('password', _value == null ? (_default == null ? '' : _default) : _value));			
+			break;
+		}
+	};
+	
+	this._createText = function _createText(text) {
+		let element			= document.createElement('ui-text');
+		element.innerHTML	= text;
+		return element;
+	};
+	
+	this._createInput = function _createInput(type, value) {
+		let element			= document.createElement('input');
+		element.type		= type;
+		element.value		= value;
+		return element;
+	};
+	
+	this._createArrow = function _createArrow(character) {
+		let arrow		= document.createElement('ui-arrow');
+		arrow.innerHTML	= character;
+		return arrow;
+	}
+	
+	this.setName = function setName(name) {
+		_name					= name;
+		_element.dataset.name	= name;
+	};
+	
+	this.setTitle = function setTitle(title) {
+		_title			= title;
+		let name		= document.createElement('ui-name');
+		name.innerHTML	= _title;
+		_element.appendChild(name);
+	};
+	
+	this.setValue = function setValue(value) {
+		_value = value;
+	};
+	
+	this.setDefault = function setDefault(value) {
+		_default					= value;
+		_element.dataset.default	= value;
+	};
+	
+	this.setList = function setList(list) {
+		_list = list;
+	};
+	
+	this.setDescription = function setDescription(description) {
+		_description 					= description;
+		_element.dataset.description	= description;
+	};
+	
+	this.getElement = function getElement() {
+		_element.appendChild(_container);
+		return _element;
+	};
+	
+	this.__constructor.apply(this, arguments);
+};
+
+customElements.define('ui-entry', EntryElement, { extends: 'div' });
+
 const BotEditor = (new function BotEditor() {
 	const DEBUG				= true;
 	const VERSION			= '1.0.0-Beta';
@@ -25,6 +132,8 @@ const BotEditor = (new function BotEditor() {
 		
 		this.bindMouseEvents();
 		this.bindKeyboardEvents();
+		
+		this.openSettings('[{"value":"false","types":"Boolean","category":"GLOBAL","title":"Spawn in Same Team","description":"If true, Bots spawn in the team of the player","name":"spawnInSameTeam","default":"<default>"},{"value":"270.0","types":"Number","category":"GLOBAL","title":"Bot FOV","description":"The Field Of View of the bots, where they can detect a player","name":"fovForShooting","default":"<default>"},{"value":"10.0","types":"Number","category":"GLOBAL","title":"Damage Bot Bullet","description":"The damage a normal Bullet does","name":"bulletDamageBot","default":"<default>"},{"value":"24.0","types":"Number","category":"TRACE","title":"Damage Bot Sniper","description":"The damage a Sniper-Bullet does","name":"bulletDamageBotSniper","default":"<default>"},{"value":"48.0","types":"Number","category":"TRACE","title":"Damage Bot Melee","description":"The Damage a melee-attack does","name":"meleeDamageBot","default":"<default>"},{"value":"true","types":"Boolean","category":"TRACE","title":"Attack with Melee","description":"Bots attack the playe with the knife, if close","name":"meleeAttackIfClose","default":"<default>"},{"value":"true","types":"Boolean","category":"OTHER","title":"Attack if Hit","description":"Bots imidiatly attack player, if shot by it","name":"shootBackIfHit","default":"<default>"},{"value":"0.0","types":"Number","category":"OTHER","title":"Aim Worsening","description":"0.0 = hard, 1.0 (or higher) = easy (and all between). Only takes effect on level Start","name":"botAimWorsening","default":"<default>"},{"value":"0.0","types":"Number","category":"OTHER","title":"Bot Kit","description":"The Kit a bots spawns with. If == 0 a random Kit will be selected","name":"botKit","default":"<default>"},{"description":"The Kit-Color a bots spawns with. If == 0 a random color is chosen. See config.lua for colors","value":"0.0","types":"List","category":"OTHER","title":"Bot Color","default":"<default>","name":"botColor","list":["Urban","ExpForce","Ninja","DrPepper","Para","Ranger","Specact","Veteran","Desert02","Green","Jungle","Navy","Wood01"]}]');
 	};
 	
 	this.bindMouseEvents = function bindMouseEvents() {
@@ -270,7 +379,41 @@ const BotEditor = (new function BotEditor() {
 	};
 	
 	this.openSettings = function openSettings(data) {
-		console.warn(JSON.parse(data));
+		let json;
+		let container = document.querySelector('ui-view[data-name="settings"] figure');
+		
+		try {
+			json = JSON.parse(data);
+		} catch(e) {
+			console.error(e, data);
+			return;
+		}
+		
+		json.forEach(function onEntry(entry) {
+			let element	= container.querySelector('ui-tab[class="' + entry.category + '"]');
+			let output	= new EntryElement();
+			
+			output.setType(entry.types);
+			output.setName(entry.name);
+			output.setTitle(entry.title);
+			output.setValue(entry.value);
+			output.setDefault(entry.default);
+			output.setDescription(entry.description);
+			
+			switch(entry.types) {
+				case 'List':
+					output.setList(entry.list);			
+				break;
+				case 'Boolean':
+				case 'Number':
+				case 'Text':
+				case 'Password':
+				
+				break;
+			}
+			
+			element.appendChild(output.getElement());
+		});		
 	};
 	
 	/* Translate */

@@ -342,15 +342,15 @@ ui-view[data-name="settings"] ui-tabs figure > ui-tab {
 	padding: 20px;
 }
 
-#General:checked ~ figure .General,
-#Trace:checked ~ figure .Trace,
-#Other:checked ~ figure .Other {
+#GLOBAL:checked ~ figure .GLOBAL,
+#TRACE:checked ~ figure .TRACE,
+#OTHER:checked ~ figure .OTHER {
 	display: block;
 }
 
-#General:checked ~ nav > ul > li label[for="General"],
-#Trace:checked ~ nav > ul > li label[for="Trace"],
-#Other:checked ~ nav > ul > li label[for="Other"] {
+#GLOBAL:checked ~ nav > ul > li label[for="GLOBAL"],
+#TRACE:checked ~ nav > ul > li label[for="TRACE"],
+#OTHER:checked ~ nav > ul > li label[for="OTHER"] {
 	color: var(--color_text_hover);
 	text-shadow: 0 0 6px var(--color_text_hover_shadow);
 	background: linear-gradient(180deg, var(--color_button_active_from) 0%, var(--color_button_active_to) 100%);

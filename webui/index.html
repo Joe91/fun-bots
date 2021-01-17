@@ -64,84 +64,34 @@
 		</ui-view>
 		
 		<!-- Settings -->
-		<ui-view data-name="settings" data-type="dialog">
+		<ui-view data-name="settings" data-type="dialog" data-show="true">
 			<ui-header>
 				<span data-lang="Settings">Settings</span>
 			</ui-header>
 			<ui-content data-type="form" data-action="UI_Save_Settings">
 				<ui-tabs>
-					<input checked="checked" id="General" type="radio" name="tabs" />
-					<input id="Trace" type="radio" name="tabs" />
-					<input id="Other" type="radio" name="tabs" />
+					<input checked="checked" id="GLOBAL" type="radio" name="tabs" />
+					<input id="TRACE" type="radio" name="tabs" />
+					<input id="OTHER" type="radio" name="tabs" />
 					
 					<nav>
 						<ul class="main">
 							<li>
-								<label for="General"><span data-lang="General">General</span></label>
+								<label for="GLOBAL"><span data-lang="General">General</span></label>
 							</li>
 							<li>
-								<label for="Trace"><span data-lang="Trace">Trace</span></label>
+								<label for="TRACE"><span data-lang="Trace">Trace</span></label>
 							</li>
 							<li>
-								<label for="Other"><span data-lang="Other">Other</span></label>
+								<label for="OTHER"><span data-lang="Other">Other</span></label>
 							</li>
 						</ul>
 					</nav>
 					
 					<figure>
-						<ui-tab class="General">
-							<!-- Boolean -->
-							<ui-entry data-name="$NAME" data-default="$DEFAULTVALUE" data-description="$DESCRIPTION" data-type="Boolean">
-								<ui-name>$BOOLEAN</ui-name>
-								<ui-container>
-									<ui-arrow>❰</ui-arrow>
-									<ui-text>Yes</ui-text>
-									<ui-arrow>❱</ui-arrow>
-								</ui-container>
-							</ui-entry>
-							
-							<!-- Number -->
-							<ui-entry data-name="$NAME" data-default="$DEFAULTVALUE" data-description="$DESCRIPTION" data-type="Number">
-								<ui-name>$NUMBER</ui-name>
-								<ui-container>
-									<ui-arrow>❰</ui-arrow>
-									<ui-text><input type="text" value="123" /></ui-text>
-									<ui-arrow>❱</ui-arrow>
-								</ui-container>
-							</ui-entry>
-							
-							<!-- Text -->
-							<ui-entry data-name="$NAME" data-default="$DEFAULTVALUE" data-description="$DESCRIPTION" data-type="Text">
-								<ui-name>$TEXT</ui-name>
-								<ui-container>
-									<ui-text><input type="text" value="Text for you" /></ui-text>
-								</ui-container>
-							</ui-entry>
-							
-							<!-- Password -->
-							<ui-entry data-name="$NAME" data-default="$DEFAULTVALUE" data-description="$DESCRIPTION" data-type="Password">
-								<ui-name>$PASSWORD</ui-name>
-								<ui-container>
-									<ui-text><input type="password" value="Samplepassword" /></ui-text>
-								</ui-container>
-							</ui-entry>
-							
-							<!-- List -->
-							<ui-entry data-name="$NAME" data-default="$DEFAULTVALUE" data-description="$DESCRIPTION" data-type="LIST">
-								<ui-name>$LIST</ui-name>
-								<ui-container>
-									<ui-arrow>❰</ui-arrow>
-									<ui-text>Sample-Entry</ui-text>
-									<ui-arrow>❱</ui-arrow>
-								</ui-container>
-							</ui-entry>
-						</ui-tab>
-						<ui-tab class="Trace">
-							Trace Settings..
-						</ui-tab>
-						<ui-tab class="Other">
-							Other Settings..
-						</ui-tab>
+						<ui-tab class="GLOBAL"></ui-tab>
+						<ui-tab class="TRACE"></ui-tab>
+						<ui-tab class="OTHER"></ui-tab>
 					</figure>
 				</ui-tabs>
 				
