@@ -4,12 +4,13 @@ Language['de_DE'] = {
 	'Spawn Bots':				'Bots spawnen',
 	'Spawn random Way':			'zufällig Spawnen',
 	'Kick All':					'Alle kicken',
+	'Kill All':					'Alle killen',
 	'Respawn':					'Neuspawnen',
+	'Attack':					'Attackieren',
 	
 	/* Waypoints */
 	'Waypoints':				'Wegpunkte',
-	'Start Trace':				'Aufzeichnung starten',
-	'Stop Trace':				'Aufzeichnung stoppen',
+	'Toggle Trace':				'Aufzeichnung starten oder stoppen',
 	'Clear current Trace':		'Aktuelle Aufzeichnung löschen',
 	'Reset all Traces':			'Alle Aufzeichnungen löschen',
 	'Save':						'Speichern',
