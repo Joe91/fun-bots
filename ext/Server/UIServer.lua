@@ -53,6 +53,10 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 	local request = json.decode(data);
 
 	if request.action == "request_settings" then
+		if Config.language == nil then
+			Config.language = "en_US";
+		end
+		
 		NetEvents:SendTo('UI_Settings', player, Config);
 
 	-- Bots
