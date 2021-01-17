@@ -377,14 +377,14 @@ function BotSpawner:_modifyWeapon(soldier)
 end
 
 function BotSpawner:spawnBot(bot, trans, setKit)
-    local botColor = Colors[Config.botColor]
+    local botColor = Config.botColor
     local botKit = Config.botKit
 
     if setKit or Config.botNewLoadoutOnSpawn then
-        if Config.botColor == "RANDOM_COLOR" then
+        if botColor == "RANDOM_COLOR" then
             botColor = Colors[MathUtils:GetRandomInt(2, #Colors)]
         end
-        if kitNumber == "RANDOM_KIT" then
+        if botKit == "RANDOM_KIT" then
             botKit = Kits[MathUtils:GetRandomInt(2, #Kits)]
         end
         bot.color = botColor

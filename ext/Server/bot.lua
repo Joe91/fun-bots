@@ -13,8 +13,8 @@ function Bot:__init(player)
     --common settings
     self._spawnMode = 0
     self._moveMode = 0
-    self.kit = 0
-    self.color = 0
+    self.kit = ""
+    self.color = ""
     self._checkSwapTeam = false
     self._respawning = false
 
