@@ -71,7 +71,7 @@ end
 
 function FunBotServer:_onChat(player, recipientMask, message)
 
-    if player == nil then
+    if player == nil or Config.disableChatCommands == true then
         return
     end
 

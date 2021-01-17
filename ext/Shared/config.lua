@@ -7,6 +7,7 @@ Config = {
     spawnDelayBots = 2.0,   --time till bots respawn, if respawn enabled
     botTeam = TeamId.Team2, --default bot team
     botNewLoadoutOnSpawn = true,
+    disableChatCommands = false,
     --shooting
     fovForShooting = 270,  -- Degrees of FOV of Bot
     botFireDuration = 0.2,

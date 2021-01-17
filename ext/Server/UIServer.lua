@@ -1,7 +1,10 @@
 class 'FunBotUIServer';
 
 require('__shared/ArrayMap');
-local TraceManager	= require('traceManager');
+require('__shared/config')
+local BotManager = require('botManager')
+local TraceManager = require('traceManager')
+local BotSpawner = require('botSpawner')
 
 function FunBotUIServer:__init()
 	self._webui			= 0;
@@ -27,17 +30,40 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 		NetEvents:SendTo('UI_Settings', player, Config);
 		
 	-- Bots
-	-- elseif request.action == "bot_spawn_default" then
-	-- elseif request.action == "bot_spawn_random" then
-	-- elseif request.action == "bot_kick_all" then
-	-- elseif request.action == "bot_respawn" then
-	
+	elseif request.action == "bot_spawn_default" then  --not needed?
+	elseif request.action == "bot_spawn_random" then
+		local amount = 1 --todo: fill with data
+		BotSpawner:spawnWayBots(player, amount, true)
+
+	elseif request.action == "bot_kick_all" then
+		BotManager:destroyAllBots()
+
+	elseif request.action == "bot_kill_all" then
+		BotManager:killAll()
+
+	elseif request.action == "bot_respawn" then
+		local respawning = true --todo: fill with data
+		Config.respawnWayBots = respawning
+        BotManager:setOptionForAll("respawn", respawning)
+
 	-- Trace
-	-- elseif request.action == "trace_toggle" then
-	-- elseif request.action == "trace_clear_current" then
-	-- elseif request.action == "trace_reset_all" then
-	-- elseif request.action == "trace_save" then
-	-- elseif request.action == "trace_reload" then
+	elseif request.action == "trace_toggle" then
+		local index = 0 --todo: fill with data
+		TraceManager:startTrace(player, index)
+		TraceManager:endTrace(player)
+
+	elseif request.action == "trace_clear_current" then
+		local index = 0 --todo: fill with data
+		TraceManager:clearTrace(index)
+
+	elseif request.action == "trace_reset_all" then
+		TraceManager:clearAllTraces()
+
+	elseif request.action == "trace_save" then
+		TraceManager:savePaths()
+
+	elseif request.action == "trace_reload" then
+		TraceManager:loadPaths()
 	
 	else
 		ChatManager:Yell(request.action .. ' is currently not implemented. 😒', 2.5);

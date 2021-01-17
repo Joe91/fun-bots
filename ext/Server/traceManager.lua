@@ -18,6 +18,10 @@ function TraceManager:onLevelLoaded(levelName, gameMode)
         gameMode = "TeamDeathMatch0"
     end
     self._mapName = levelName.."_"..gameMode
+    self:loadPaths()
+end
+
+function TraceManager:loadPaths()
     for i = 1, Config.maxTraceNumber do
         Globals.wayPoints[i] = {}
     end
