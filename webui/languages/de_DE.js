@@ -2,7 +2,7 @@ Language['de_DE'] = {
 	/* Bots */
 	'Bots':						'Bots',
 	'Spawn Bots':				'Bots spawnen',
-	'Spawn random Way':			'zufällig Spawnen',
+	'Spawn Bot on Way':			'Bot auf Weg spawnen',
 	'Kick All':					'Alle kicken',
 	'Kill All':					'Alle killen',
 	'Toggle Respawn':			'Neuspawnen umschalten',

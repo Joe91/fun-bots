@@ -34,10 +34,11 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 		local amount = tonumber(request.value)
 		BotSpawner:spawnWayBots(player, amount, true)
 
-	elseif request.action == "bot_spawn_random" then--todo: whats the difference? make a function to spawn bots on a fixed way instead?
-		local amount = tonumber(request.value)
-		local index = 0
-		BotSpawner:spawnWayBots(player, amount, false, index)
+	elseif request.action == "bot_spawn_path" then--todo: whats the difference? make a function to spawn bots on a fixed way instead?
+		local amount = 1
+		local indexOnPath = 1
+		local index = tonumber(request.value)
+		BotSpawner:spawnWayBots(player, amount, false, index, indexOnPath)
 
 	elseif request.action == "bot_kick_all" then
 		BotManager:destroyAllBots()

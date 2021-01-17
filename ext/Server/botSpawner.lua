@@ -10,6 +10,7 @@ function BotSpawner:__init()
     self._playerVarOfBot = nil
     self._useRandomWay = false
     self._activeWayIndex = 1
+    self._indexOnPath = 0
     Events:Subscribe('UpdateManager:Update', self, self._onUpdate)
     Events:Subscribe('Bot:RespawnBot', self, self._onRespawnBot)
     Events:Subscribe('Player:KitPickup', self, self._onKitPickup)
@@ -44,7 +45,7 @@ function BotSpawner:_onUpdate(dt, pass)
     if self._botsToSpawn > 0 then
         if self._botSpawnTimer > 0.1 then   --time to wait between spawn. 0.2 works
             self._botsToSpawn = self._botsToSpawn - 1
-            self:_spawnSigleWayBot(self._playerVarOfBot, self._useRandomWay, self._activeWayIndex)
+            self:_spawnSigleWayBot(self._playerVarOfBot, self._useRandomWay, self._activeWayIndex, self._indexOnPath)
         end
         self._botSpawnTimer = self._botSpawnTimer + dt
     end
@@ -156,7 +157,7 @@ function BotSpawner:spawnLineBots(player, amount, spacing)
     end
 end
 
-function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex)
+function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, indexOnPath)
     local name = BotManager:findNextBotName()
     if name ~= nil then
         if useRandomWay or activeWayIndex == nil or activeWayIndex == 0 then
@@ -168,19 +169,21 @@ function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex)
         if Globals.wayPoints[activeWayIndex][1] == nil then
             return
         end
-        local randIndex = MathUtils:GetRandomInt(1, #Globals.wayPoints[activeWayIndex])
+        if indexOnPath == nil or indexOnPath == 0 then
+            indexOnPath = MathUtils:GetRandomInt(1, #Globals.wayPoints[activeWayIndex])
+        end
         local transform = LinearTransform()
-        transform.trans = Globals.wayPoints[activeWayIndex][randIndex].trans
+        transform.trans = Globals.wayPoints[activeWayIndex][indexOnPath].trans
 
         local bot = BotManager:createBot(name, self:getBotTeam(player))
         if bot ~= nil then
-            bot:setVarsWay(player, useRandomWay, activeWayIndex, randIndex)
+            bot:setVarsWay(player, useRandomWay, activeWayIndex, indexOnPath)
             self:spawnBot(bot, transform, true)
         end
     end
 end
 
-function BotSpawner:spawnWayBots(player, amount, useRandomWay, activeWayIndex)
+function BotSpawner:spawnWayBots(player, amount, useRandomWay, activeWayIndex, indexOnPath)
     if Globals.activeTraceIndexes <= 0 then
         return
     end
@@ -188,6 +191,7 @@ function BotSpawner:spawnWayBots(player, amount, useRandomWay, activeWayIndex)
     self._playerVarOfBot = player
     self._useRandomWay = useRandomWay
     self._activeWayIndex = activeWayIndex
+    self._indexOnPath = indexOnPath
 end
 
 function BotSpawner:_getNewWayIndex()
