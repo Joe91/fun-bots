@@ -30,10 +30,11 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 		NetEvents:SendTo('UI_Settings', player, Config);
 		
 	-- Bots
-	elseif request.action == "bot_spawn_default" then  --not needed?
+	elseif request.action == "bot_spawn_default" then  --not needed? or should we use it for spawn on a defined way?
+		BotSpawner:spawnWayBots(player, request.value, true)
+		
 	elseif request.action == "bot_spawn_random" then
-		local amount = 1 --todo: fill with data
-		BotSpawner:spawnWayBots(player, amount, true)
+		BotSpawner:spawnWayBots(player, request.value, true)
 
 	elseif request.action == "bot_kick_all" then
 		BotManager:destroyAllBots()
