@@ -48,12 +48,14 @@ end
 
 function FunBotServer:_onExtensionLoaded()
     local fullLevelPath = SharedUtils:GetLevelName()
-    fullLevelPath = fullLevelPath:split('/')
-    local level = fullLevelPath[#fullLevelPath]
-    local gameMode = SharedUtils:GetCurrentGameMode()
-    print(level.."_"..gameMode.." reloaded")
-    if level ~= nil and gameMode~= nil then
-        self:_onLevelLoaded(level, gameMode)
+    if fullLevelPath ~= nil then
+        fullLevelPath = fullLevelPath:split('/')
+        local level = fullLevelPath[#fullLevelPath]
+        local gameMode = SharedUtils:GetCurrentGameMode()
+        print(level.."_"..gameMode.." reloaded")
+        if level ~= nil and gameMode~= nil then
+            self:_onLevelLoaded(level, gameMode)
+        end
     end
 end
 
