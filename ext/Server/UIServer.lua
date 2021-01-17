@@ -52,6 +52,9 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 	-- Trace
 	elseif request.action == "trace_toggle" then
 		local index = tonumber(request.value)
+		if index == nil then
+			index = 0
+		end
 		local traceState = TraceManager:getTraceState(player)
 		if traceState == 0 then
 			TraceManager:startTrace(player, index)
