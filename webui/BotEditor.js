@@ -98,9 +98,19 @@ const BotEditor = (new function BotEditor() {
 						action:	'bot_kick_all'
 					}));
 				break;
+				case 'bot_kill_all':
+					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
+						action:	'bot_kill_all'
+					}));
+				break;
 				case 'bot_respawn':
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
 						action:	'bot_respawn'
+					}));
+				break;
+				case 'bot_attack':
+					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
+						action:	'bot_attack'
 					}));
 				break;
 				
