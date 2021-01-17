@@ -18,7 +18,7 @@ end
 function FunBotUIServer:_parseConfigData(data)
 	for _, valueToSave in pairs(data) do
 		if valueToSave.name == "spawnInSameTeam" then
-			Config.spawnInSameTeam = toboolean(valueToSave.value)
+			Config.spawnInSameTeam = valueToSave.value  == "true"  --TODO: is toboolean() supported?
 		elseif valueToSave.name == "fovForShooting" then
 			Config.fovForShooting = tonumber(valueToSave.value)
 		elseif valueToSave.name == "bulletDamageBot" then
@@ -28,9 +28,9 @@ function FunBotUIServer:_parseConfigData(data)
 		elseif valueToSave.name == "meleeDamageBot" then
 			Config.meleeDamageBot = tonumber(valueToSave.value)
 		elseif valueToSave.name == "meleeAttackIfClose" then
-			Config.meleeAttackIfClose = toboolean(valueToSave.value)
+			Config.meleeAttackIfClose = valueToSave.value == "true"
 		elseif valueToSave.name == "shootBackIfHit" then
-			Config.shootBackIfHit = toboolean(valueToSave.value)
+			Config.shootBackIfHit = valueToSave.value  == "true"
 		elseif valueToSave.name == "botAimWorsening" then
 			Config.botAimWorsening = tonumber(valueToSave.value)
 		elseif valueToSave.name == "botKit" then
