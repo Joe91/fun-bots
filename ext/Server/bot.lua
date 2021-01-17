@@ -167,16 +167,17 @@ function Bot:setVarsWay(player, useRandomWay, pathIndex, currentWayPoint)
     if useRandomWay then
         self._spawnMode = 5
         self._targetPlayer = nil
+        self._shoot = Config.attackWayBots
     else
         self._spawnMode = 4
         self._targetPlayer = player
+        self._shoot = false
     end
     self._botSpeed = 3
     self._moveMode = 5
     self._pathIndex = pathIndex
     self._currentWayPoint = currentWayPoint
     self._respawning = Config.respawnWayBots
-    self._shoot = Config.attackWayBots
 end
 
 function Bot:isStaticMovement()
