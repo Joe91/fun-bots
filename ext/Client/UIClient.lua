@@ -37,11 +37,20 @@ function FunBotUIClient:_onUIToggle()
 end
 
 function FunBotUIClient:_onUISettings(data)
+	local 
 	print('UIClient: UI_Settings (' .. json.encode(data) .. ')');
 	
 	local settings = UISettings();
-	
-	--settings:add();
+	settings:add("Spawn in Same Team", "Boolean", Config.spawnInSameTeam, "If true, Bots spawn in the team of the player");
+	settings:add("Bot FOV", "Number", Config.fovForShooting, "The Field Of View of the bots, where they can detect a player");
+	settings:add("Damage Bot Bullet", "Number", Config.bulletDamageBot, "The damage a normal Bullet does");
+	settings:add("Damage Bot Sniper", Config.bulletDamageBotSniper, "The damage a Sniper-Bullet does");
+	settings:add("Damage Bot Melee", Config.meleeDamageBot, "The Damage a melee-attack does");
+	settings:add("Attack with Melee", "Boolean", Config.meleeAttackIfClose, "Bots attack the playe with the knife, if close");
+	settings:add("Attack if Hit", "Boolean", Config.shootBackIfHit, "Bots imidiatly attack player, if shot by it");
+	settings:add("Aim Worsening", "Number", Config.botAimWorsening, "0.0 = hard, 1.0 (or higher) = easy (and all between). Only takes effect on level Start");
+	settings:add("Bot Kit", "Number", Config.botKit, "The Kit a bots spawns with. If == 0 a random Kit will be selected");
+	settings:add("Bot Color", "Number", Config.botColor, "The Kit-Color a bots spawns with. If == 0 a random color is chosen. See config.lua for colors");
 	self._views:execute('BotEditor.openSettings(\'' .. json.encode(settings:getProperties()) .. '\');');
 end
 

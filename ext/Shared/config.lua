@@ -7,19 +7,19 @@ Config = {
     spawnDelayBots = 2.0,   --time till bots respawn, if respawn enabled
     botTeam = TeamId.Team2, --default bot team
     botNewLoadoutOnSpawn = true,
-    disableChatCommands = false,
+    disableChatCommands = true,
+    respawnWayBots = true,  --bots respawn
     --shooting
-    fovForShooting = 270,  -- Degrees of FOV of Bot
     botFireDuration = 0.2,
     botFirePause = 0.3,
     botMinTimeShootAtPlayer = 1.0,
     botFireModeDuration = 5.0,
     meleeAttackCoolDown = 3.0,
+    attackWayBots = true,  --bots attack player
 
     --values that can be modified ingame. These are the startup settings
+    fovForShooting = 270,  -- Degrees of FOV of Bot
     spawnInSameTeam = false,
-    respawnWayBots = true,
-    attackWayBots = true,
     bulletDamageBot = 10,
     bulletDamageBotSniper = 24,
     meleeDamageBot = 48,
@@ -29,14 +29,14 @@ Config = {
     botKit = 0, -- 0 = random, 1 = assault, 2 = engineer, 3 = support, 4 = recon
     botColor = 0, -- 0 = random, see Colors
 
+    -- UI settings & language options
+	settingsPassword = nil, -- if nil, disable it. Otherwise use a String with your password
+    language = nil, --"de_DE", -- de_DE as sample (default is english, when language file doesnt exists)
+
     --trace
     traceUsageAllowed = true,
     maxTraceNumber = 15,
 
-	-- UI settings & language options
-	settingsPassword = nil, -- if nil, disable it. Otherwise use a String with your password
-	language = "de_DE", -- de_DE as sample (default is english, when language file doesnt exists)
-	
     --don't change these values unless you know what you do
     traceDelta = 0.2,
     raycastInterval = 0.1, -- seconds
