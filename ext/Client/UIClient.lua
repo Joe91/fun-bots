@@ -16,6 +16,7 @@ function FunBotUIClient:__init()
 	NetEvents:Subscribe('UI_Password_Protection', self, self._onUIPasswordProtection);
 	NetEvents:Subscribe('UI_Show_Toolbar', self, self._onUIShowToolbar);
 	NetEvents:Subscribe('UI_Settings', self, self._onUISettings);
+	Events:Subscribe('UI_Settings', self, self._onUISettings);
 	Events:Subscribe('UI_Save_Settings', self, self._onUISaveSettings);
 	Events:Subscribe('UI_Send_Password', self, self._onUISendPassword);
 	
@@ -59,6 +60,8 @@ function FunBotUIClient:_onUISettings(data)
 	settings:add("OTHER", "Password", "settingsPassword", "Password", tostring(data.settingsPassword), nil, "Password protection of these Mod");
 	
 	self._views:execute('BotEditor.openSettings(\'' .. settings:getJSON() .. '\');');
+	self._views:show('settings');
+	self._views:focus();
 end
 
 function FunBotUIClient:_onUISaveSettings(data)
