@@ -16,7 +16,7 @@ function FunBotUIClient:__init()
 	NetEvents:Subscribe('UI_Password_Protection', self, self._onUIPasswordProtection);
 	NetEvents:Subscribe('UI_Show_Toolbar', self, self._onUIShowToolbar);
 	NetEvents:Subscribe('UI_Settings', self, self._onUISettings);
-	--Events:Subscribe('UI_Settings', self, self._onUISettings);
+	Events:Subscribe('UI_Save_Settings', self, self._onUISaveSettings);
 	Events:Subscribe('UI_Send_Password', self, self._onUISendPassword);
 	
 	-- Events from BotManager, TraceManager & Other
@@ -53,10 +53,17 @@ function FunBotUIClient:_onUISettings(data)
 	settings:add("TRACE", "Boolean", "meleeAttackIfClose", "Attack with Melee", tostring(data.meleeAttackIfClose), "true", "Bots attack the playe with the knife, if close");
 	settings:add("OTHER", "Boolean", "shootBackIfHit", "Attack if Hit", tostring(data.shootBackIfHit), "true", "Bots imidiatly attack player, if shot by it");
 	settings:add("OTHER", "Number", "botAimWorsening", "Aim Worsening", tostring(data.botAimWorsening),"0.0", "0.0 = hard, 1.0 (or higher) = easy (and all between). Only takes effect on level Start");
-	settings:addList("OTHER", "botKit", "Bot Kit", Kts, tostring(data.botKit), "RANDOM_KIT", "The Kit a bots spawns with. If Random is selected a random color is chosen. See config.lua for Kits");
+	settings:addList("OTHER", "botKit", "Bot Kit", Kits, tostring(data.botKit), "RANDOM_KIT", "The Kit a bots spawns with. If Random is selected a random color is chosen. See config.lua for Kits");
 	settings:addList("OTHER", "botColor", "Bot Color", Colors, tostring(data.botColor), "RANDOM_COLOR", "The Kit-Color a bots spawns with.  If Random is selected  a random color is chosen. See config.lua for colors");
-
+	settings:addList("OTHER", "language", "Language", { "de_DE", "en_US" }, tostring(data.language), "en_US", "Select the language of this mod");
+	settings:add("OTHER", "Password", "settingsPassword", "Password", tostring(data.settingsPassword), nil, "Password protection of these Mod");
+	
 	self._views:execute('BotEditor.openSettings(\'' .. settings:getJSON() .. '\');');
+end
+
+function FunBotUIClient:_onUISaveSettings(data)
+	print('UIClient: UI_Save_Settings (' .. data .. ')');
+	NetEvents:Send('UI_Request_Save_Settings', data);
 end
 
 function FunBotUIClient:_onBotEditorEvent(data)

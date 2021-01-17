@@ -12,6 +12,7 @@ function FunBotUIServer:__init()
 
 	Events:Subscribe('Player:Left', self, self._onPlayerLeft);
 	NetEvents:Subscribe('UI_Request_Open', self, self._onUIRequestOpen);
+	NetEvents:Subscribe('UI_Request_Save_Settings', self, self._onUIRequestSaveSettings);
 	NetEvents:Subscribe('BotEditor', self, self._onBotEditorEvent);
 end
 
@@ -115,6 +116,24 @@ end
 function FunBotUIServer:_onPlayerLeft(player)
 	-- @ToDo current fix for auth-check after rejoin, remove it later or make it as configuration!
 	self._authenticated:delete(tostring(player.accountGuid));
+end
+
+function FunBotUIServer:_onUIRequestSaveSettings(player, data)
+	print(player.name .. ' requesting to save settings.');
+	
+	if (Config.settingsPassword ~= nil and self:_isAuthenticated(player.accountGuid) ~= true) then
+		print(player.name .. ' has no permissions for Bot-Editor.');
+		ChatManager:Yell('You are not permitted to change Bots. Please press F12 for authenticate!', 2.5);
+		return;
+	end
+	
+	local request = json.decode(data);
+	
+	-- Hier parst du nun die request-variable, dies ist das JSON mit folgenden Werten:
+	-- [    { "name": "<configVarName>", "value": "<newValue>" }, { "name": "maxNumberOfBots", "value": "1337" }, [...] ]
+	-- BITTE AN VALIDATION & DATATYPE-CASTING DENKEN!
+	
+	print(data);
 end
 
 function FunBotUIServer:_onUIRequestOpen(player, data)

@@ -8,20 +8,24 @@ const EntryElement = function EntryElement() {
 	let _value			= null;
 	let _default		= null;
 	let _list			= null;
+	let _list_index		= 0;
 	let _description	= null;
 	let _container		= null;
 	
 	this.__constructor = function __constructor() {
 		_element	= document.createElement('ui-entry');
 		_container	= document.createElement('ui-container');
+		
+		_element.onPrevious	= this.onPrevious.bind(this);
+		_element.onNext		= this.onNext.bind(this);
 	};
 	
 	this.setType = function setType(type) {
 		_type					= type;
 		_element.dataset.type	= type;
 		
-		let arrow_left			= this._createArrow('❰');
-		let arrow_right			= this._createArrow('❱');
+		let arrow_left			= this._createArrow('left');
+		let arrow_right			= this._createArrow('right');
 		
 		switch(_type) {
 			case 'Boolean':
@@ -31,7 +35,7 @@ const EntryElement = function EntryElement() {
 			break;
 			case 'Number':
 				_container.appendChild(arrow_left);
-				_container.appendChild(this._createText(_value == null ? '' : _value));
+				_container.appendChild(this._createInput('number', _value == null ? (_default == null ? '' : _default) : _value));
 				_container.appendChild(arrow_right);
 			break;
 			case 'List':
@@ -40,7 +44,7 @@ const EntryElement = function EntryElement() {
 				_container.appendChild(arrow_right);
 			break;
 			case 'Text':
-				_container.appendChild(this._createInput('text', _value == null ? (_default == null ? '' : _default) : _value));			
+				_container.appendChild(this._createInput('text', _value == null ? (_default == null ? '' : _default) : _value));
 			break;
 			case 'Password':
 				_container.appendChild(this._createInput('password', _value == null ? (_default == null ? '' : _default) : _value));			
@@ -61,9 +65,9 @@ const EntryElement = function EntryElement() {
 		return element;
 	};
 	
-	this._createArrow = function _createArrow(character) {
-		let arrow		= document.createElement('ui-arrow');
-		arrow.innerHTML	= character;
+	this._createArrow = function _createArrow(direction) {
+		let arrow				= document.createElement('ui-arrow');
+		arrow.dataset.direction	= direction;
 		return arrow;
 	}
 	
@@ -79,8 +83,69 @@ const EntryElement = function EntryElement() {
 		_element.appendChild(name);
 	};
 	
+	this.onPrevious = function onPrevious() {
+		switch(_type) {
+			case 'Boolean':
+				this.setValue(!_value);
+			break;
+			case 'Number':
+				this.setValue(_value - 1);				
+			break;
+			case 'List':
+				console.log(_list);
+				console.log('Old list index', _list_index);
+				--_list_index;
+				
+				console.log('New list index', _list_index);
+				if(_list_index < 0) {
+					_list_index = _list.length - 1;
+				}
+				console.log('Updated list index', _list_index);
+				
+				
+				this.setValue(_list[_list_index]);
+			break;
+		}
+	};
+	
+	this.onNext = function onNext() {
+		switch(_type) {
+			case 'Boolean':
+				this.setValue(!_value);
+			break;
+			case 'Number':
+				this.setValue(_value + 1);
+			break;
+			case 'List':
+				console.log(_list);
+				console.log('Old list index', _list_index);
+				++_list_index;
+				console.log('New list index', _list_index);
+				
+				if(_list_index >= _list.length) {
+					_list_index = 0;
+				}
+				console.log('Updated list index', _list_index);
+				this.setValue(_list[_list_index]);
+			break;
+		}
+	};
+	
 	this.setValue = function setValue(value) {
 		_value = value;
+		
+		switch(_type) {
+			case 'Boolean':
+				_container.querySelector('ui-text').innerHTML = (_value ? 'Yes' : 'No');
+			break;
+			case 'Number':
+				_value = parseInt(value, 10);
+				_container.querySelector('input[type="number"]').value = _value;
+			break;
+			case 'List':
+				_container.querySelector('ui-text').innerHTML = _value;
+			break;
+		}
 	};
 	
 	this.setDefault = function setDefault(value) {
@@ -89,7 +154,8 @@ const EntryElement = function EntryElement() {
 	};
 	
 	this.setList = function setList(list) {
-		_list = list;
+		_list		= list;
+		_list_index	= 0;
 	};
 	
 	this.setDescription = function setDescription(description) {
@@ -110,6 +176,7 @@ customElements.define('ui-entry', EntryElement, { extends: 'div' });
 const BotEditor = (new function BotEditor() {
 	const DEBUG				= true;
 	const VERSION			= '1.0.0-Beta';
+	let _language			= 'en_US';
 	const InputDeviceKeys	= {
 		IDK_Enter:	13,
 		IDK_F1:		112,
@@ -125,7 +192,6 @@ const BotEditor = (new function BotEditor() {
 		IDK_F11:	122,
 		IDK_F12:	123
 	};
-	let _language = 'en_US';
 	
 	this.__constructor = function __constructor() {
 		console.log('Init BotEditor UI (v' + VERSION + ') by https://github.com/Bizarrus.');
@@ -133,10 +199,38 @@ const BotEditor = (new function BotEditor() {
 		this.bindMouseEvents();
 		this.bindKeyboardEvents();
 		
-		this.openSettings('[{"value":"false","types":"Boolean","category":"GLOBAL","title":"Spawn in Same Team","description":"If true, Bots spawn in the team of the player","name":"spawnInSameTeam","default":"<default>"},{"value":"270.0","types":"Number","category":"GLOBAL","title":"Bot FOV","description":"The Field Of View of the bots, where they can detect a player","name":"fovForShooting","default":"<default>"},{"value":"10.0","types":"Number","category":"GLOBAL","title":"Damage Bot Bullet","description":"The damage a normal Bullet does","name":"bulletDamageBot","default":"<default>"},{"value":"24.0","types":"Number","category":"TRACE","title":"Damage Bot Sniper","description":"The damage a Sniper-Bullet does","name":"bulletDamageBotSniper","default":"<default>"},{"value":"48.0","types":"Number","category":"TRACE","title":"Damage Bot Melee","description":"The Damage a melee-attack does","name":"meleeDamageBot","default":"<default>"},{"value":"true","types":"Boolean","category":"TRACE","title":"Attack with Melee","description":"Bots attack the playe with the knife, if close","name":"meleeAttackIfClose","default":"<default>"},{"value":"true","types":"Boolean","category":"OTHER","title":"Attack if Hit","description":"Bots imidiatly attack player, if shot by it","name":"shootBackIfHit","default":"<default>"},{"value":"0.0","types":"Number","category":"OTHER","title":"Aim Worsening","description":"0.0 = hard, 1.0 (or higher) = easy (and all between). Only takes effect on level Start","name":"botAimWorsening","default":"<default>"},{"value":"0.0","types":"Number","category":"OTHER","title":"Bot Kit","description":"The Kit a bots spawns with. If == 0 a random Kit will be selected","name":"botKit","default":"<default>"},{"description":"The Kit-Color a bots spawns with. If == 0 a random color is chosen. See config.lua for colors","value":"0.0","types":"List","category":"OTHER","title":"Bot Color","default":"<default>","name":"botColor","list":["Urban","ExpForce","Ninja","DrPepper","Para","Ranger","Specact","Veteran","Desert02","Green","Jungle","Navy","Wood01"]}]');
+		this.openSettings('[{"title":"Spawn in Same Team","category":"GLOBAL","name":"spawnInSameTeam","description":"If true, Bots spawn in the team of the player","types":"Boolean","value":"false","default":"false"},{"title":"Bot FOV","category":"GLOBAL","name":"fovForShooting","description":"The Field Of View of the bots, where they can detect a player","types":"Number","value":"270.0","default":"270"},{"title":"Damage Bot Bullet","category":"GLOBAL","name":"bulletDamageBot","description":"The damage a normal Bullet does","types":"Number","value":"10.0","default":"9"},{"title":"Damage Bot Sniper","category":"TRACE","name":"bulletDamageBotSniper","description":"The damage a Sniper-Bullet does","types":"Number","value":"24.0","default":"24"},{"title":"Damage Bot Melee","category":"TRACE","name":"meleeDamageBot","description":"The Damage a melee-attack does","types":"Number","value":"48.0","default":"42"},{"title":"Attack with Melee","category":"TRACE","name":"meleeAttackIfClose","description":"Bots attack the playe with the knife, if close","types":"Boolean","value":"true","default":"true"},{"title":"Attack if Hit","category":"OTHER","name":"shootBackIfHit","description":"Bots imidiatly attack player, if shot by it","types":"Boolean","value":"true","default":"true"},{"title":"Aim Worsening","category":"OTHER","name":"botAimWorsening","description":"0.0 = hard, 1.0 (or higher) = easy (and all between). Only takes effect on level Start","types":"Number","value":"0.0","default":"0.0"},{"description":"The Kit a bots spawns with. If Random is selected a random color is chosen. See config.lua for Kits","title":"Bot Kit","category":"OTHER","name":"botKit","default":"RANDOM_KIT","types":"List","value":"RANDOM_KIT"},{"description":"The Kit-Color a bots spawns with.  If Random is selected  a random color is chosen. See config.lua for colors","title":"Bot Color","category":"OTHER","name":"botColor","default":"RANDOM_COLOR","types":"List","value":"RANDOM_COLOR","list":["RANDOM_COLOR","Urban","ExpForce","Ninja","DrPepper","Para","Ranger","Specact","Veteran","Desert02","Green","Jungle","Navy","Wood01"]},{"description":"Select the language of this mod","title":"Language","category":"OTHER","name":"language","default":"en_US","types":"List","value":"en_US","list":["de_DE","en_US"]},{"title":"Password","category":"OTHER","name":"settingsPassword","description":"Password protection of these Mod","types":"Password","value":"nil"}]');
 	};
 	
 	this.bindMouseEvents = function bindMouseEvents() {
+		document.body.addEventListener('mouseover', function onMouseDown(event) {
+			if(!event) {
+				event = window.event;
+			}
+			
+			var parent = Utils.getClosest(event.target, '[data-description]');
+			
+			if(typeof(parent) == 'undefined') {
+				return;
+			}
+			
+			document.querySelector('ui-description').innerHTML = parent.dataset.description;
+		});
+		
+		document.body.addEventListener('mouseout', function onMouseDown(event) {
+			if(!event) {
+				event = window.event;
+			}
+			
+			var parent = Utils.getClosest(event.target, '[data-description]');
+			
+			if(typeof(parent) == 'undefined') {
+				return;
+			}
+			
+			document.querySelector('ui-description').innerHTML = '';
+		});
+		
 		document.body.addEventListener('mousedown', function onMouseDown(event) {
 			if(!event) {
 				event = window.event;
@@ -170,19 +264,6 @@ const BotEditor = (new function BotEditor() {
 				/* Exit */
 				case 'close':
 					WebUI.Call('DispatchEventLocal', 'UI_Toggle');
-				break;
-				
-				/* Sumbit Forms */
-				case 'submit':
-					let form	= Utils.getClosest(event.target, 'ui-view').querySelector('[data-type="form"]');
-					let action	= form.dataset.action;
-					let data	= {};
-					
-					[].map.call(form.querySelectorAll('input[type="text"], input[type="password"]'), function onInputEntry(input) {
-						data[input.name] = input.value;
-					});
-					
-					WebUI.Call('DispatchEventLocal', action, JSON.stringify(data));
 				break;
 				
 				/* Bots */
@@ -280,6 +361,64 @@ const BotEditor = (new function BotEditor() {
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
 						action:	'submit_settings'
 					}));
+				break;
+				
+				/* Other Stuff */
+				default:
+					if(event.target.nodeName == 'UI-ARROW') {
+						let entry	= Utils.getClosest(event.target, 'ui-entry');
+						
+						switch(event.target.dataset.direction) {
+							case 'left':
+								entry.onPrevious();
+							break;
+							case 'right':
+								entry.onNext();							
+							break;
+						}						
+					}
+					
+					/* Sumbit Forms */
+					if(parent.dataset.action.startsWith('submit')) {
+						let form	= Utils.getClosest(event.target, 'ui-view').querySelector('[data-type="form"]');
+						let action	= form.dataset.action;
+						let data	= {
+							subaction: null
+						};
+						
+						if(parent.dataset.action.startsWith('submit_')) {
+							data.subaction = parent.dataset.action.replace('submit_', '');
+						}
+						
+						[].map.call(form.querySelectorAll('input[type="text"], input[type="password"]'), function onInputEntry(input) {
+							if(typeof(input.name) !== 'undefined' && input.name.length > 0) {
+								data[input.name] = input.value;
+							}
+						});
+						
+						/* UI-Entrys :: Boolean */
+						[].map.call(form.querySelectorAll('ui-entry[data-type="Boolean"]'), function onInputEntry(input) {
+							if(typeof(input.dataset.name) !== 'undefined' && input.dataset.name.length > 0) {
+								data[input.dataset.name] = (input.querySelector('ui-text').innerHTML == 'Yes');
+							}
+						});
+						
+						/* UI-Entrys :: List */
+						[].map.call(form.querySelectorAll('ui-entry[data-type="List"]'), function onInputEntry(input) {
+							if(typeof(input.dataset.name) !== 'undefined' && input.dataset.name.length > 0) {
+								data[input.dataset.name] = input.querySelector('ui-text').innerHTML;
+							}
+						});
+						
+						/* UI-Entrys :: Number, Text & Password */
+						[].map.call(form.querySelectorAll('ui-entry[data-type="Number"], ui-entry[data-type="Text"], ui-entry[data-type="Password"]'), function onInputEntry(input) {
+							if(typeof(input.dataset.name) !== 'undefined' && input.dataset.name.length > 0) {
+								data[input.dataset.name] = input.querySelector('input').value;
+							}
+						});
+						
+						WebUI.Call('DispatchEventLocal', action, JSON.stringify(data));
+					}
 				break;
 			}
 		}.bind(this));
@@ -400,6 +539,11 @@ const BotEditor = (new function BotEditor() {
 			console.error(e, data);
 			return;
 		}
+		
+		/* Clear/Remove previous Data */
+		[].map.call(container.querySelectorAll('ui-tab[class]'), function(element) {
+			element.innerHTML = '';
+		});
 		
 		json.forEach(function onEntry(entry) {
 			let element	= container.querySelector('ui-tab[class="' + entry.category + '"]');

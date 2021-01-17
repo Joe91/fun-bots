@@ -280,7 +280,7 @@ ui-view[data-name="settings"] ui-content ui-description {
 	padding: 5px 10px;
 	color: var(--color_text);
 	text-shadow: 0 0 6px var(--color_text_shadow);
-	min-height: 30px;
+	min-height: 31px;
 	display: block;
 }
 
@@ -381,6 +381,14 @@ ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container ui-arr
     font-size: 30px;
 }
 
+ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container ui-arrow[data-direction="left"]:before {
+	content: "❰";
+}
+
+ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container ui-arrow[data-direction="right"]:after {
+	content: "❱";
+}
+
 ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container ui-text {
 	flex: 1 auto;
 	flex: 1 auto;
@@ -391,7 +399,8 @@ ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container ui-tex
 }
 
 ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container ui-text input[type="text"],
-ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container ui-text input[type="password"] {
+ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container ui-text input[type="password"],
+ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container input[type="number"] {
 	border: none;
 	width:100%;
 	min-width: 1px;
@@ -403,6 +412,11 @@ ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container ui-tex
     font-size: 16px;
 	margin: 1px 0;
 	text-shadow: 0 0 6px var(--color_text_shadow);
+}
+
+ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container input[type="number"]::-webkit-outer-spin-button,
+ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container input[type="number"]::-webkit-inner-spin-button {
+	-webkit-appearance: none;
 }
 
 ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry[data-type="Text"] ui-container ui-text input[type="text"],
