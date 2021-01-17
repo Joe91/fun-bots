@@ -107,7 +107,8 @@ const BotEditor = (new function BotEditor() {
 				/* Trace */
 				case 'trace_toggle':
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'trace_toggle'
+						action:	'trace_toggle',
+						value: '0' // todo: fill with real value
 					}));
 				break;
 				case 'trace_clear_current':

@@ -51,9 +51,13 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 
 	-- Trace
 	elseif request.action == "trace_toggle" then
-		local index = 0 --todo: fill with data
-		TraceManager:startTrace(player, index)
-		TraceManager:endTrace(player)
+		local index = tonumber(request.value)
+		local traceState = TraceManager:getTraceState(player)
+		if traceState == 0 then
+			TraceManager:startTrace(player, index)
+		else
+			TraceManager:endTrace(player)
+		end
 
 	elseif request.action == "trace_clear_current" then
 		local index = 0 --todo: fill with data
