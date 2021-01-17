@@ -15,6 +15,32 @@ function FunBotUIServer:__init()
 	NetEvents:Subscribe('BotEditor', self, self._onBotEditorEvent);
 end
 
+function FunBotUIServer:_parseConfigData(data)
+	for _, valueToSave in pairs(data) do
+		if valueToSave.name == "spawnInSameTeam" then
+			Config.spawnInSameTeam = toboolean(valueToSave.value)
+		elseif valueToSave.name == "fovForShooting" then
+			Config.fovForShooting = tonumber(valueToSave.value)
+		elseif valueToSave.name == "bulletDamageBot" then
+			Config.bulletDamageBot = tonumber(valueToSave.value)
+		elseif valueToSave.name == "bulletDamageBotSniper" then
+			Config.bulletDamageBotSniper = tonumber(valueToSave.value)
+		elseif valueToSave.name == "meleeDamageBot" then
+			Config.meleeDamageBot = tonumber(valueToSave.value)
+		elseif valueToSave.name == "meleeAttackIfClose" then
+			Config.meleeAttackIfClose = toboolean(valueToSave.value)
+		elseif valueToSave.name == "shootBackIfHit" then
+			Config.shootBackIfHit = toboolean(valueToSave.value)
+		elseif valueToSave.name == "botAimWorsening" then
+			Config.botAimWorsening = tonumber(valueToSave.value)
+		elseif valueToSave.name == "botKit" then
+			Config.botKit = valueToSave.value
+		elseif valueToSave.name == "botColor" then
+			Config.botColor = valueToSave.value
+		end
+	end
+end
+
 function FunBotUIServer:_onBotEditorEvent(player, data)
 	print('UIServer: BotEditor (' .. tostring(data) .. ')');
 
