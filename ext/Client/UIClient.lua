@@ -1,6 +1,7 @@
 class 'FunBotUIClient';
 
 require('UIViews');
+require('UISettings');
 
 function FunBotUIClient:__init()
 	self._views = UIViews();
@@ -12,7 +13,10 @@ function FunBotUIClient:__init()
 	Events:Subscribe('BotEditor', self, self._onBotEditorEvent);
 	NetEvents:Subscribe('UI_Request_Password', self, self._onUIRequestPassword);
 	NetEvents:Subscribe('UI_Request_Password_Error', self, self._onUIRequestPasswordError);
+	NetEvents:Subscribe('UI_Password_Protection', self, self._onUIPasswordProtection);
 	NetEvents:Subscribe('UI_Show_Toolbar', self, self._onUIShowToolbar);
+	NetEvents:Subscribe('UI_Settings', self, self._onUISettings);
+	Events:Subscribe('UI_Settings', self, self._onUISettings);
 	Events:Subscribe('UI_Send_Password', self, self._onUISendPassword);
 	
 	-- Events from BotManager, TraceManager & Other
@@ -42,6 +46,15 @@ function FunBotUIClient:_onUIToggle()
 	end
 end
 
+function FunBotUIClient:_onUISettings(data)
+	print('UIClient: UI_Settings (' .. json.encode(data) .. ')');
+	
+	local settings = UISettings();
+	
+	--settings:add();
+	self._views:execute('BotEditor.openSettings(\'' .. json.encode(settings:getProperties()) .. '\');');
+end
+
 function FunBotUIClient:_onBotEditorEvent(data)
 	print('UIClient: BotEditor (' .. data .. ')');
 	
@@ -57,6 +70,18 @@ function FunBotUIClient:_onUIShowToolbar(data)
 		self._views:focus();
 	else
 		self._views:hide('toolbar');
+		self._views:blur();
+	end
+end
+
+function FunBotUIClient:_onUIPasswordProtection(data)
+	print('UIClient: UI_Password_Protection (' .. tostring(data) .. ')');
+	
+	if (data == 'true') then
+		self._views:show('password_protection');
+		self._views:focus();
+	else
+		self._views:hide('password_protection');
 		self._views:blur();
 	end
 end

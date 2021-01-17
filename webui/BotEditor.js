@@ -242,6 +242,10 @@ const BotEditor = (new function BotEditor() {
 		});
 	};
 	
+	this.openSettings = function openSettings(data) {
+		console.warn(JSON.parse(data));
+	};
+	
 	/* Translate */
 	this.loadLanguage = function loadLanguage(string) {
 		if(DEBUG) {
@@ -351,7 +355,14 @@ const BotEditor = (new function BotEditor() {
 			console.log('Error View: ', name);
 		}
 		
-		this.getView(name).querySelector('ui-error').innerHTML = text;
+		let view	= this.getView(name);
+		let error	= view.querySelector('ui-error');
+		
+		[].map.call(view.querySelectorAll('input[type="password"]'), function(element) {
+			element.value = '';
+		});
+		
+		error.innerHTML = text;
 	};
 	
 	this.__constructor.apply(this, arguments);

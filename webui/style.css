@@ -76,6 +76,19 @@ ui-view[data-show="true"] {
 	display: block;
 }
 
+/* View :: Password Protection */
+ui-view[data-name="password_protection"] {
+	position: absolute;
+	bottom: 20px;
+	left: 50%;
+	color: rgba(255, 0, 0, 0.8);
+	text-shadow: 0 0 1px rgba(255, 0, 0, 0.5);
+	font-size: 20px;
+	font-weight: 900;
+	transform: translate(-50%, -50%);
+}
+
+
 /* View :: Dialog */
 ui-view[data-type="dialog"] {
 	position: absolute;

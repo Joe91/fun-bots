@@ -5,6 +5,13 @@
 		<link rel="stylesheet" href="style.css" />
 	</head>
 	<body>
+		<!-- Warning: Password Protection -->
+		<ui-view data-name="password_protection">
+			<strong><span data-lang="WARNING:">WARNING:</span></strong>
+			<span data-lang="The Bot-Editor is not protected by an password. Other players can change all the settings!">The Bot-Editor is not protected by an password. Other players can change all the settings!</span>
+		</ui-view>
+		
+		<!-- Toolbar -->
 		<ui-view data-name="toolbar" data-type="toolbar">
 			<ui-logo>
 				Bot-Editor<sub>fun-bots</sub>
@@ -36,6 +43,8 @@
 				</ul>
 			</ui-menu>
 		</ui-view>
+		
+		<!-- Authentication -->
 		<ui-view data-name="password" data-type="dialog">
 			<ui-header>
 				<span data-lang="Enter password">Enter password</span>

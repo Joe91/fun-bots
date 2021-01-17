@@ -24,5 +24,9 @@ Language['de_DE'] = {
 	
 	/* Authentication */
 	'Enter password':											'Gebe das Passwort ein',
-	'Please enter the password to open the Bot-Editor.':		'Bitte gebe das Passwort ein um den Bot-Editor zu öffnen.'
+	'Please enter the password to open the Bot-Editor.':		'Bitte gebe das Passwort ein um den Bot-Editor zu öffnen.',
+
+	/* Password Protection */
+	'WARNING:':					'WARNUNG:',
+	'The Bot-Editor is not protected by an password. Other players can change all the settings!': 'Der Bot-Editor ist durch kein Passwort geschützt. Andere Spieler können alle Einstellungen ändern!'
 };
