@@ -53,9 +53,9 @@ function FunBotUIClient:_onUISettings(data)
 	settings:add("TRACE", "Boolean", "meleeAttackIfClose", "Attack with Melee", tostring(data.meleeAttackIfClose), "<default>", "Bots attack the playe with the knife, if close");
 	settings:add("OTHER", "Boolean", "shootBackIfHit", "Attack if Hit", tostring(data.shootBackIfHit), "<default>", "Bots imidiatly attack player, if shot by it");
 	settings:add("OTHER", "Number", "botAimWorsening", "Aim Worsening", tostring(data.botAimWorsening),"<default>", "0.0 = hard, 1.0 (or higher) = easy (and all between). Only takes effect on level Start");
-	settings:add("OTHER", "Number", "botKit", "Bot Kit", tostring(data.botKit), "<default>", "The Kit a bots spawns with. If == 0 a random Kit will be selected");
-	settings:addList("OTHER", "botColor", "Bot Color", Colors, tostring(data.botColor), "<default>", "The Kit-Color a bots spawns with. If == 0 a random color is chosen. See config.lua for colors");
-		
+	settings:addList("OTHER", "botKit", "Bot Kit", Kts, tostring(data.botKit), "<default>", "The Kit a bots spawns with. If Random is selected a random color is chosen. See config.lua for Kits");
+	settings:addList("OTHER", "botColor", "Bot Color", Colors, tostring(data.botColor), "<default>", "The Kit-Color a bots spawns with.  If Random is selected  a random color is chosen. See config.lua for colors");
+
 	self._views:execute('BotEditor.openSettings(\'' .. settings:getJSON() .. '\');');
 end
 
