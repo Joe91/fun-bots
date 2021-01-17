@@ -57,14 +57,12 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
         BotManager:setOptionForAll("shoot", attack)
 
 	-- Trace
-	elseif request.action == "trace_toggle" then
+	elseif request.action == "trace_start" then
 		local index = tonumber(request.value)
-		local traceState = TraceManager:getTraceState(player)
-		if traceState == 0 then
-			TraceManager:startTrace(player, index)
-		else
-			TraceManager:endTrace(player)
-		end
+		TraceManager:startTrace(player, index)
+
+	elseif request.action == "trace_end" then
+		TraceManager:endTrace(player)
 
 	elseif request.action == "trace_clear_current" then
 		local index = tonumber(request.value)

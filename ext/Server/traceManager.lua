@@ -69,8 +69,13 @@ function TraceManager:startTrace(player, index)
     if not self:_checkForValidUsage(player) then
         return
     end
-    if  self._traceStatePlayer[player.name] ~= 0 then
-        return
+    if  self._traceStatePlayer[player.name] ~= 0 then  --trace still running
+        for i = 1, Config.maxTraceNumber do
+            if self._tracePlayer[i] == player then
+                self._tracePlayer[i] = nil
+                Globals.wayPoints[i] = {}
+            end
+        end
     end
     if index == 0 then
         for i = 1, Config.maxTraceNumber do

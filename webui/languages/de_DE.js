@@ -10,7 +10,8 @@ Language['de_DE'] = {
 	
 	/* Waypoints */
 	'Waypoints':				'Wegpunkte',
-	'Toggle Trace':				'Aufzeichnung starten / stoppen',
+	'Start Trace':				'Aufzeichnung starten',
+	'End Trace':				'Aufzeichnung stoppen',
 	'Clear Trace':				'Aufzeichnung löschen',
 	'Reset all Traces':			'Alle Aufzeichnungen löschen',
 	'Save':						'Speichern',

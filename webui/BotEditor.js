@@ -114,11 +114,16 @@ const BotEditor = (new function BotEditor() {
 				break;
 				
 				/* Trace */
-				case 'trace_toggle':
-					index = document.querySelector('[data-action="trace_toggle"] input[type="number"]');
+				case 'trace_start':
+					index = document.querySelector('[data-action="trace_start"] input[type="number"]');
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'trace_toggle',
+						action:	'trace_start',
 						value: index.value
+					}));
+				break;
+				case 'trace_end':
+					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
+						action:	'trace_end',
 					}));
 				break;
 				case 'trace_clear':
@@ -188,10 +193,10 @@ const BotEditor = (new function BotEditor() {
 					count.value = 1;
 				break;
 				case InputDeviceKeys.IDK_F2:
-					count = document.querySelector('[data-action="bot_spawn_random"] input[type="number"]');
+					index = document.querySelector('[data-action="bot_spawn_path"] input[type="number"]');
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'bot_spawn_random',
-						value:	count.value
+						action:	'bot_spawn_path',
+						value:	index.value
 					}));
 					count.value = 1;
 				break;
@@ -202,19 +207,28 @@ const BotEditor = (new function BotEditor() {
 				break;
 				case InputDeviceKeys.IDK_F4:
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'bot_respawn'
+						action:	'bot_kill_all'
 					}));
 				break;
 				
 				/* Trace */
 				case InputDeviceKeys.IDK_F5:
+					index = document.querySelector('[data-action="trace_start"] input[type="number"]');
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'trace_toggle'
+						action:	'trace_start',
+						value:	index.value
+					}));
+				break;
+				case InputDeviceKeys.IDK_F6:
+					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
+						action:	'trace_end'
 					}));
 				break;
 				case InputDeviceKeys.IDK_F7:
+					index = document.querySelector('[data-action="trace_clear"] input[type="number"]');
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'trace_clear_current'
+						action:	'trace_clear_current',
+						value:	index.value
 					}));
 				break;
 				case InputDeviceKeys.IDK_F8:
