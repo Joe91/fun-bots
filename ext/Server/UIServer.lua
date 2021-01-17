@@ -12,6 +12,7 @@ function FunBotUIServer:__init()
 
 	Events:Subscribe('Player:Left', self, self._onPlayerLeft);
 	NetEvents:Subscribe('UI_Request_Open', self, self._onUIRequestOpen);
+	NetEvents:Subscribe('UI_Request_Save_Settings', self, self._onUIRequestSaveSettings);
 	NetEvents:Subscribe('BotEditor', self, self._onBotEditorEvent);
 end
 
@@ -27,6 +28,10 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 	local request = json.decode(data);
 
 	if request.action == "request_settings" then
+		if Config.language == nil then
+			Config.language = "en_US";
+		end
+		
 		NetEvents:SendTo('UI_Settings', player, Config);
 
 	-- Bots
@@ -85,6 +90,77 @@ end
 function FunBotUIServer:_onPlayerLeft(player)
 	-- @ToDo current fix for auth-check after rejoin, remove it later or make it as configuration!
 	self._authenticated:delete(tostring(player.accountGuid));
+end
+
+function FunBotUIServer:_onUIRequestSaveSettings(player, data)
+	print(player.name .. ' requesting to save settings.');
+
+	if (Config.settingsPassword ~= nil and self:_isAuthenticated(player.accountGuid) ~= true) then
+		print(player.name .. ' has no permissions for Bot-Editor.');
+		ChatManager:Yell('You are not permitted to change Bots. Please press F12 for authenticate!', 2.5);
+		return;
+	end
+
+	local request = json.decode(data);
+
+	print(request.spawnInSameTeam)
+	if request.spawnInSameTeam ~= nil then
+		Config.spawnInSameTeam = (request.spawnInSameTeam == "true")
+	end
+	if request.fovForShooting ~= nil then
+		local tempValue = tonumber(request.fovForShooting)
+		if tempValue >= 0 and tempValue <= 360 then
+			Config.fovForShooting = tempValue
+		end
+	end
+	if request.bulletDamageBot ~= nil then
+		local tempValue = tonumber(request.bulletDamageBot)
+		if tempValue >= 0 then
+			Config.bulletDamageBot = tempValue
+		end
+	end
+	if request.bulletDamageBotSniper ~= nil then
+		local tempValue = tonumber(request.bulletDamageBotSniper)
+		if tempValue >= 0 then
+			Config.bulletDamageBotSniper = tempValue
+		end
+	end
+	if request.meleeDamageBot ~= nil then
+		local tempValue = tonumber(request.meleeDamageBot)
+		if tempValue >= 0 then
+			Config.meleeDamageBot = tempValue
+		end
+	end
+	if request.meleeAttackIfClose ~= nil then
+		Config.meleeAttackIfClose = (request.meleeAttackIfClose == "true")
+	end
+	if request.shootBackIfHit ~= nil then
+		Config.shootBackIfHit = (request.shootBackIfHit == "true")
+	end
+	if request.botAimWorsening ~= nil then
+		local tempValue = tonumber(request.botAimWorsening) / 100
+		if tempValue >= 0 and temValue < 10 then
+			Config.botAimWorsening = tempValue
+		end
+	end
+	if request.botKit ~= nil then
+		local tempString = request.botKit
+		for _, kit in pairs(Kits) do
+			if tempString == kit then
+				Config.botKit = tempString
+				break
+			end
+		end
+	end
+	if request.botColor ~= nil then
+		local tempString = request.botColor
+		for _, color in pairs(Colors) do
+			if tempString == color then
+				Config.botColor = tempString
+				break
+			end
+		end
+	end
 end
 
 function FunBotUIServer:_onUIRequestOpen(player, data)

@@ -144,7 +144,7 @@ function BotManager:_onSoldierDamage(hook, soldier, info, giverInfo)
                 if bot ~= nil and bot.player.soldier ~= nil then
                     if info.damage > 0.09 and info.damage < 0.11 then
                         info.isBulletDamage = true
-                        if bot.kit == 4 then
+                        if bot.kit == "Recon" then
                             info.damage = Config.bulletDamageBotSniper
                         else
                             info.damage = Config.bulletDamageBot

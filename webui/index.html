@@ -63,6 +63,47 @@
 			</ui-buttons>
 		</ui-view>
 		
+		<!-- Settings -->
+		<ui-view data-name="settings" data-type="dialog">
+			<ui-header>
+				<span data-lang="Settings">Settings</span>
+			</ui-header>
+			<ui-content data-type="form" data-action="UI_Save_Settings">
+				<ui-tabs>
+					<input checked="checked" id="GLOBAL" type="radio" name="tabs" />
+					<input id="TRACE" type="radio" name="tabs" />
+					<input id="OTHER" type="radio" name="tabs" />
+					
+					<nav>
+						<ul class="main">
+							<li>
+								<label for="GLOBAL"><span data-lang="General">General</span></label>
+							</li>
+							<li>
+								<label for="TRACE"><span data-lang="Trace">Trace</span></label>
+							</li>
+							<li>
+								<label for="OTHER"><span data-lang="Other">Other</span></label>
+							</li>
+						</ul>
+					</nav>
+					
+					<figure>
+						<ui-tab class="GLOBAL"></ui-tab>
+						<ui-tab class="TRACE"></ui-tab>
+						<ui-tab class="OTHER"></ui-tab>
+					</figure>
+				</ui-tabs>
+				
+				<ui-description></ui-description>
+			</ui-content>
+			<ui-buttons>
+				<button data-action="close"><span data-lang="Cancel">Cancel</span></button>
+				<button data-action="submit_temp"><span data-lang="Save temporarily">Save temporarily</span></button>
+				<button data-action="submit"><span data-lang="Save">Save</span></button>
+			</ui-buttons>
+		</ui-view>
+		
 		<script src="Utils.js"></script>
 		<script src="BotEditor.js"></script>
 	</body>

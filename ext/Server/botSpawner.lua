@@ -293,7 +293,7 @@ function BotSpawner:getKitApperanceCustomization(team, kit, color)
 	meleeWeapon.weapon = SoldierWeaponUnlockAsset(knife)
     meleeWeapon.slot = WeaponSlot.WeaponSlot_7
 
-    if kit == 1 then --assault
+    if kit == "Assault" then
         local m416 = ResourceManager:SearchForDataContainer('Weapons/M416/U_M416')
         local m416Attachments = { 'Weapons/M416/U_M416_Kobra', 'Weapons/M416/U_M416_Silencer' }
         primaryWeapon.weapon = SoldierWeaponUnlockAsset(m416)
@@ -301,7 +301,7 @@ function BotSpawner:getKitApperanceCustomization(team, kit, color)
         gadget01.weapon = SoldierWeaponUnlockAsset(ResourceManager:SearchForDataContainer('Weapons/Gadgets/Medicbag/U_Medkit'))
         gadget02.weapon = SoldierWeaponUnlockAsset(ResourceManager:SearchForDataContainer('Weapons/Gadgets/Defibrillator/U_Defib'))
 
-    elseif kit == 2 then --engineer
+    elseif kit == "Engineer" then --engineer
         local asval = ResourceManager:SearchForDataContainer('Weapons/ASVal/U_ASVal')
         local asvalAttachments = { 'Weapons/ASVal/U_ASVal_Kobra', 'Weapons/ASVal/U_ASVal_ExtendedMag' }
         primaryWeapon.weapon = SoldierWeaponUnlockAsset(asval)
@@ -309,7 +309,7 @@ function BotSpawner:getKitApperanceCustomization(team, kit, color)
         gadget01.weapon = SoldierWeaponUnlockAsset(ResourceManager:SearchForDataContainer('Weapons/Gadgets/Repairtool/U_Repairtool'))
         gadget02.weapon = SoldierWeaponUnlockAsset(ResourceManager:SearchForDataContainer('Weapons/SMAW/U_SMAW'))
 
-    elseif kit == 3 then --support
+    elseif kit == "Support" then --support
         local m249 = ResourceManager:SearchForDataContainer('Weapons/M249/U_M249')
         local m249Attachments = { 'Weapons/M249/U_M249_Eotech', 'Weapons/M249/U_M249_Bipod' }
         primaryWeapon.weapon = SoldierWeaponUnlockAsset(m249)
@@ -317,7 +317,7 @@ function BotSpawner:getKitApperanceCustomization(team, kit, color)
         gadget01.weapon = SoldierWeaponUnlockAsset(ResourceManager:SearchForDataContainer('Weapons/Gadgets/Ammobag/U_Ammobag'))
         gadget02.weapon = SoldierWeaponUnlockAsset(ResourceManager:SearchForDataContainer('Weapons/Gadgets/Claymore/U_Claymore'))
 
-    else    --recon
+    else    --"Recon"
         local l96 = ResourceManager:SearchForDataContainer('Weapons/XP1_L96/U_L96')
         local l96Attachments = { 'Weapons/XP1_L96/U_L96_Rifle_6xScope' }
         primaryWeapon.weapon = SoldierWeaponUnlockAsset(l96)
@@ -328,13 +328,13 @@ function BotSpawner:getKitApperanceCustomization(team, kit, color)
 
 
     if team == TeamId.Team1 then -- US
-        if kit == 1 then --assault
+        if kit == "Assault" then --assault
             appearance = self:_findAppearance('Us', 'Assault', color)
             soldierKit = self:_findKit('US', 'Assault')
-        elseif kit == 2 then --engineer
+        elseif kit == "Engineer" then --engineer
             appearance = self:_findAppearance('Us', 'Engi', color)
             soldierKit = self:_findKit('US', 'Engineer')
-        elseif kit == 3 then --support
+        elseif kit == "Support" then --support
             appearance = self:_findAppearance('Us', 'Support', color)
             soldierKit = self:_findKit('US', 'Support')
         else    --recon
@@ -342,13 +342,13 @@ function BotSpawner:getKitApperanceCustomization(team, kit, color)
             soldierKit = self:_findKit('US', 'Recon')
         end
     else -- RU
-        if kit == 1 then --assault
+        if kit == "Assault" then --assault
             appearance = self:_findAppearance('RU', 'Assault', color)
             soldierKit = self:_findKit('RU', 'Assault')
-        elseif kit == 2 then --engineer
+        elseif kit == "Engineer" then --engineer
             appearance = self:_findAppearance('RU', 'Engi', color)
             soldierKit = self:_findKit('RU', 'Engineer')
-        elseif kit == 3 then --support
+        elseif kit == "Support" then --support
             appearance = self:_findAppearance('RU', 'Support', color)
             soldierKit = self:_findKit('RU', 'Support')
         else    --recon
@@ -377,21 +377,21 @@ function BotSpawner:_modifyWeapon(soldier)
 end
 
 function BotSpawner:spawnBot(bot, trans, setKit)
-    local botColor = Colors[Config.botColor]
-    local kitNumber = Config.botKit
+    local botColor = Config.botColor
+    local botKit = Config.botKit
 
     if setKit or Config.botNewLoadoutOnSpawn then
-        if Config.botColor == 0 then
-            botColor = Colors[MathUtils:GetRandomInt(1, #Colors)]
+        if botColor == "RANDOM_COLOR" then
+            botColor = Colors[MathUtils:GetRandomInt(2, #Colors)]
         end
-        if kitNumber == 0 then
-            kitNumber = MathUtils:GetRandomInt(1, 4)
+        if botKit == "RANDOM_KIT" then
+            botKit = Kits[MathUtils:GetRandomInt(2, #Kits)]
         end
         bot.color = botColor
-        bot.kit = kitNumber
+        bot.kit = botKit
     else
         botColor = bot.color
-        kitNumber = bot.kit
+        botKit = bot.kit
     end
 
     bot:resetSpawnVars()
@@ -401,7 +401,7 @@ function BotSpawner:spawnBot(bot, trans, setKit)
     local soldierCustomization = nil
     local soldierKit = nil
     local appearance = nil
-    soldierKit, appearance, soldierCustomization = self:getKitApperanceCustomization(bot.player.teamId, kitNumber, botColor)
+    soldierKit, appearance, soldierCustomization = self:getKitApperanceCustomization(bot.player.teamId, botKit, botColor)
 
 	-- Create the transform of where to spawn the bot at.
 	local transform = LinearTransform()

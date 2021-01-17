@@ -17,6 +17,7 @@ function FunBotUIClient:__init()
 	NetEvents:Subscribe('UI_Show_Toolbar', self, self._onUIShowToolbar);
 	NetEvents:Subscribe('UI_Settings', self, self._onUISettings);
 	Events:Subscribe('UI_Settings', self, self._onUISettings);
+	Events:Subscribe('UI_Save_Settings', self, self._onUISaveSettings);
 	Events:Subscribe('UI_Send_Password', self, self._onUISendPassword);
 	
 	-- Events from BotManager, TraceManager & Other
@@ -41,8 +42,31 @@ function FunBotUIClient:_onUISettings(data)
 	
 	local settings = UISettings();
 	
-	--settings:add();
-	self._views:execute('BotEditor.openSettings(\'' .. json.encode(settings:getProperties()) .. '\');');
+	-- Samples
+	-- add(<category>, <types>, <name>, <title>, <value>, <default>, <description>)
+	-- addList(<category>, <name>, <title>, <list>, <value>, <default>, <description>)
+	
+	settings:add("GLOBAL", "Boolean", "spawnInSameTeam", "Spawn in Same Team", tostring(data.spawnInSameTeam), "false", "If true, Bots spawn in the team of the player");
+	settings:add("GLOBAL", "Number", "fovForShooting", "Bot FOV", tostring(data.fovForShooting), "270", "The Field Of View of the bots, where they can detect a player");
+	settings:add("GLOBAL", "Number", "bulletDamageBot", "Damage Bot Bullet", tostring(data.bulletDamageBot), "9", "The damage a normal Bullet does");
+	settings:add("GLOBAL", "Number", "bulletDamageBotSniper", "Damage Bot Sniper", tostring(data.bulletDamageBotSniper), "24", "The damage a Sniper-Bullet does");
+	settings:add("GLOBAL", "Number", "meleeDamageBot", "Damage Bot Melee", tostring(data.meleeDamageBot), "42", "The Damage a melee-attack does");
+	settings:add("GLOBAL", "Boolean", "meleeAttackIfClose", "Attack with Melee", tostring(data.meleeAttackIfClose), "true", "Bots attack the playe with the knife, if close");
+	settings:add("GLOBAL", "Boolean", "shootBackIfHit", "Attack if Hit", tostring(data.shootBackIfHit), "true", "Bots imidiatly attack player, if shot by it");
+	settings:add("GLOBAL", "Number", "botAimWorsening", "Aim Worsening", tostring(data.botAimWorsening * 100),"0.0", "0.0 = hard, 1.0 (or higher) = easy (and all between). Only takes effect on level Start");
+	settings:addList("GLOBAL", "botKit", "Bot Kit", Kits, tostring(data.botKit), "RANDOM_KIT", "The Kit a bots spawns with. If Random is selected a random color is chosen. See config.lua for Kits");
+	settings:addList("GLOBAL", "botColor", "Bot Color", Colors, tostring(data.botColor), "RANDOM_COLOR", "The Kit-Color a bots spawns with.  If Random is selected  a random color is chosen. See config.lua for colors");
+	settings:addList("OTHER", "language", "Language", { "de_DE", "en_US" }, tostring(data.language), "en_US", "Select the language of this mod");
+	settings:add("OTHER", "Password", "settingsPassword", "Password", tostring(data.settingsPassword), nil, "Password protection of these Mod");
+	
+	self._views:execute('BotEditor.openSettings(\'' .. settings:getJSON() .. '\');');
+	self._views:show('settings');
+	self._views:focus();
+end
+
+function FunBotUIClient:_onUISaveSettings(data)
+	print('UIClient: UI_Save_Settings (' .. data .. ')');
+	NetEvents:Send('UI_Request_Save_Settings', data);
 end
 
 function FunBotUIClient:_onBotEditorEvent(data)

@@ -166,13 +166,13 @@ function FunBotServer:_onChat(player, recipientMask, message)
     elseif parts[1] == '!setbotkit' then
         local kitNumber = tonumber(parts[2]) or 1
         if kitNumber <= 4 and kitNumber >= 0 then
-            Config.botKit = kitNumber
+            Config.botKit = Kits[kitNumber]
         end
 
     elseif parts[1] == '!setbotcolor' then
         local botColor = tonumber(parts[2]) or 1
         if botColor <= #Colors and botColor >= 0 then
-            Config.botColor = botColor
+            Config.botColor = Colors[botColor]
         end
 
     elseif parts[1] == '!setaim' then

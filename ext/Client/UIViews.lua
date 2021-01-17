@@ -76,7 +76,9 @@ end
 
 -- Change language
 function UIViews:setLanguage(name)
-	WebUI:ExecuteJS('BotEditor.loadLanguage(\'' .. name .. '\');');
+	if name ~= nil then
+		WebUI:ExecuteJS('BotEditor.loadLanguage(\'' .. name .. '\');');
+	end
 end
 
 -- Show an view
