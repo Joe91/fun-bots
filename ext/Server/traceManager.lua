@@ -14,12 +14,22 @@ function TraceManager:__init()
 end
 
 function TraceManager:onLevelLoaded(levelName, gameMode)
+    if gameMode == "TeamDeathMatchC0" then
+        gameMode = "TeamDeathMatch0"
+    end
     self._mapName = levelName.."_"..gameMode
     for i = 1, Config.maxTraceNumber do
         Globals.wayPoints[i] = {}
     end
     self:_loadWayPoints()
     print(Globals.activeTraceIndexes.." paths have been loaded")
+end
+
+function TraceManager:onUnload()
+    for i = 1, Config.maxTraceNumber do
+        Globals.wayPoints[i] = {}
+    end
+    Globals.activeTraceIndexes = 0
 end
 
 function TraceManager:_onPlayerLeft(player)

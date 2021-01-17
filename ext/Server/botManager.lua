@@ -5,9 +5,9 @@ local Globals = require('globals')
 function BotManager:__init()
     self._bots = {}
     self._botInputs = {}
+    self._shooterBots = {}
 
 	Events:Subscribe('UpdateManager:Update', self, self._onUpdate)
-    Events:Subscribe('Extension:Unloading', self, self._onUnloading)
     Events:Subscribe('Level:Destroy', self, self._onLevelDestroy)
     Events:Subscribe('Player:Left', self, self._onPlayerLeft)
     NetEvents:Subscribe('BotShootAtPlayer', self, self._onShootAt)
@@ -110,8 +110,8 @@ end
 function BotManager:_onUpdate(dt, pass)
 	if pass ~= UpdatePass.UpdatePass_PostFrame then
 		return
-	end
-
+    end
+    
     for _, bot in pairs(self._bots) do
         bot:onUpdate(dt)
 	end
@@ -125,11 +125,40 @@ function BotManager:_onPlayerLeft(player)
 end
 
 function BotManager:_onSoldierDamage(hook, soldier, info, giverInfo)
+    --detect if we need to shoot back
     if Config.shootBackIfHit then
         if giverInfo.giver ~= nil and soldier.player ~= nil then
             local bot = self:GetBotByName(soldier.player.name)
             if soldier ~= nil and bot ~= nil then
                 self:_onShootAt(giverInfo.giver, bot.name, true)
+            end
+        end
+    end
+
+    --find out, if a player was hit by the server:
+    if soldier.player ~= nil then
+        local bot = self:GetBotByName(soldier.player.name)
+        if bot == nil then
+            if giverInfo.giver == nil then
+                bot = self:GetBotByName(self._shooterBots[soldier.player.name])
+                if bot ~= nil and bot.player.soldier ~= nil then
+                    if info.damage > 0.09 and info.damage < 0.11 then
+                        info.isBulletDamage = true
+                        if bot.kit == 4 then
+                            info.damage = Config.bulletDamageBotSniper
+                        else
+                            info.damage = Config.bulletDamageBot
+                        end
+                    elseif info.damage > 0.19 and info.damage < 0.21 then --melee
+                        info.damage = Config.meleeDamageBot
+                        info.isBulletDamage = false
+                    end
+                    info.boneIndex = 0
+                    info.position = Vec3(soldier.worldTransform.trans.x, soldier.worldTransform.trans.y + 1, soldier.worldTransform.trans.z)
+                    info.direction = soldier.worldTransform.trans - bot.player.soldier.worldTransform.trans
+                    info.origin = bot.player.soldier.worldTransform.trans
+                    hook:Pass(soldier, info, giverInfo)
+                end
             end
         end
     end
@@ -148,21 +177,19 @@ function BotManager:_onDamagePlayer(player, shooterName, meleeAttack)
     if not player.alive or bot == nil then
         return
     end
-    local damage = 0
-    if not meleeAttack then
-        damage = (bot.kit == 4) and Config.bulletDamageBotSniper or Config.bulletDamageBot
-    else
-        damage = Config.meleeDamageBot
+    local damage = 0.1 --only trigger soldier-damage with this
+    if meleeAttack then
+        damage = 0.2 --signal melee damage with this value
     end
+    --save potential killer bot
+    self._shooterBots[player.name] = shooterName
 
     if player.soldier ~= nil then
         player.soldier.health = player.soldier.health - damage
     end
-    --[[if player.soldier == nil then 
-        local killerBot = self:GetBotByName(shooterName)
-        killerBot.player.kills = killerBot.player.kills + 1  --not writable
-    end--]]
 end
+
+
 
 function BotManager:_onShootAt(player, botname, ignoreYaw)
     local bot = self:GetBotByName(botname)
@@ -170,11 +197,6 @@ function BotManager:_onShootAt(player, botname, ignoreYaw)
         return
     end
     bot:shootAt(player, ignoreYaw)
-end
-
-
-function BotManager:_onUnloading()
-	self:destroyAllBots()
 end
 
 function BotManager:_onLevelDestroy()

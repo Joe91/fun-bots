@@ -1,15 +1,19 @@
 class('FunBotServer')
-require('__shared/Config')
+require('__shared/config')
 local BotManager = require('botManager')
 local TraceManager = require('traceManager')
 local BotSpawner = require('botSpawner')
+local WeaponModification = require('__shared/weaponModification')
 local FunBotUIServer = require('UIServer')
 
 function FunBotServer:__init()
+    self._initDone = false
     Events:Subscribe('Level:Loaded', self, self._onLevelLoaded)
     Events:Subscribe('Player:Chat', self, self._onChat)
+    Events:Subscribe('Extension:Unloading', self, self._onExtensionUnload)
+    Events:Subscribe('Extension:Loaded', self, self._onExtensionLoaded)
 
-	NetEvents:Subscribe('spawnbots', self, self._uispawnbots)
+    NetEvents:Subscribe('spawnbots', self, self._uispawnbots)
 	NetEvents:Subscribe('spawnrandombot', self, self._uispawnrandombot)
 	NetEvents:Subscribe('kickallbots', self, self._uikickallbots)
 	NetEvents:Subscribe('respawnbots', self, self._uibotrespawn)
@@ -38,12 +42,37 @@ function FunBotServer:_uibotrespawn(player, spawnbots)
     print("Bots will respawn")
 end
 
+function FunBotServer:_onExtensionUnload()
+    BotManager:destroyAllBots()
+    TraceManager:onUnload()
+    self._initDone = false
+end
+
+function FunBotServer:_onExtensionLoaded()
+    if not self._initDone then
+        local fullLevelPath = SharedUtils:GetLevelName()
+        fullLevelPath = fullLevelPath:split('/')
+        local level = fullLevelPath[#fullLevelPath]
+        local gameMode = SharedUtils:GetCurrentGameMode()
+        print(level.."_"..gameMode.." reloaded")
+        if level ~= nil and gameMode~= nil then
+            self:_onLevelLoaded(level, gameMode)
+        end
+    end
+end
+
 function FunBotServer:_onLevelLoaded(levelName, gameMode)
+    self:_modifyWeapons(Config.botAimWorsening)
     print("level "..levelName.." loaded...")
     TraceManager:onLevelLoaded(levelName, gameMode)
     BotSpawner:onLevelLoaded()
+    self._initDone = true
 end
 
+function FunBotServer:_modifyWeapons(botAimWorsening)
+    NetEvents:BroadcastLocal('ModifyAllWeapons', botAimWorsening)
+    WeaponModification:ModifyAllWeapons(botAimWorsening)
+end
 
 function FunBotServer:_onChat(player, recipientMask, message)
 
@@ -150,7 +179,9 @@ function FunBotServer:_onChat(player, recipientMask, message)
         end
 
     elseif parts[1] == '!setaim' then
-        Config.deviationAdditionFactor = tonumber(parts[2]) or 1
+        Config.botAimWorsening = tonumber(parts[2]) or 0.5
+        --self:_modifyWeapons(Config.botAimWorsening)  --causes lag. Instead restart round
+        print("difficulty set to "..Config.botAimWorsening..". Please restart round or level to take effect")
     elseif parts[1] == '!bullet' then
         Config.bulletDamageBot = tonumber(parts[2]) or 1
     elseif parts[1] == '!sniper' then

@@ -236,27 +236,17 @@ function BotSpawner:_findKit(teamName, kitName)
     return
 end
 
--- Tries to find first available kit
--- @param teamName string Values: 'US', 'RU'
--- @param kitName string Values: 'Assault', 'Engineer', 'Support', 'Recon'
 function BotSpawner:_findAppearance(teamName, kitName, color)
-    --Persistence/Unlocks/Soldiers/Visual/MP/Us/MP_US_Support_Appearance_'
     local gameModeAppearances = {
-        '', -- Standard
-        '_GM', --Gun Master on XP2 Maps
-        '_GM_XP4', -- Gun Master on XP4 Maps
-        '_XP4', -- Copy of Standard for XP4 Maps
-        '_XP4_SCV' -- Scavenger on XP4 Maps
+        'MP/', -- Standard
+        'MP_XP4/', --Gun Master on XP2 Maps
     }
-
-    for appearence=1, #gameModeAppearances do
-        local properAppearanceName = color
-        properAppearanceName = properKitName:gsub("%a", string.upper, 1)
-
-        local fullAppearanceName = string.upper(teamName)..properAppearanceName..gameModeAppearances[appearence]
-        local kit = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/'..fullAppearanceName)
-        if kit ~= nil then
-            return kit
+    --'Persistence/Unlocks/Soldiers/Visual/MP[or:MP_XP4]/Us/MP_US_Assault_Appearance_'..color
+    for _, gameMode in pairs(gameModeAppearances) do
+        local appearanceString = gameMode..teamName..'/MP_'..string.upper(teamName)..'_'..kitName..'_Appearance_'..color
+        local appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/'..appearanceString)
+        if appearance ~= nil then
+            return appearance
         end
     end
 
@@ -306,7 +296,7 @@ function BotSpawner:getKitApperanceCustomization(team, kit, color)
         self:_setAttachments(primaryWeapon, m416Attachments)
         gadget01.weapon = SoldierWeaponUnlockAsset(ResourceManager:SearchForDataContainer('Weapons/Gadgets/Medicbag/U_Medkit'))
         gadget02.weapon = SoldierWeaponUnlockAsset(ResourceManager:SearchForDataContainer('Weapons/Gadgets/Defibrillator/U_Defib'))
-        
+
     elseif kit == 2 then --engineer
         local asval = ResourceManager:SearchForDataContainer('Weapons/ASVal/U_ASVal')
         local asvalAttachments = { 'Weapons/ASVal/U_ASVal_Kobra', 'Weapons/ASVal/U_ASVal_ExtendedMag' }
@@ -322,7 +312,7 @@ function BotSpawner:getKitApperanceCustomization(team, kit, color)
         self:_setAttachments(primaryWeapon, m249Attachments)
         gadget01.weapon = SoldierWeaponUnlockAsset(ResourceManager:SearchForDataContainer('Weapons/Gadgets/Ammobag/U_Ammobag'))
         gadget02.weapon = SoldierWeaponUnlockAsset(ResourceManager:SearchForDataContainer('Weapons/Gadgets/Claymore/U_Claymore'))
-        
+
     else    --recon
         local l96 = ResourceManager:SearchForDataContainer('Weapons/XP1_L96/U_L96')
         local l96Attachments = { 'Weapons/XP1_L96/U_L96_Rifle_6xScope' }
@@ -335,30 +325,30 @@ function BotSpawner:getKitApperanceCustomization(team, kit, color)
 
     if team == TeamId.Team1 then -- US
         if kit == 1 then --assault
-            appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/Us/MP_US_Assault_Appearance_'..color)
+            appearance = self:_findAppearance('Us', 'Assault', color)
             soldierKit = self:_findKit('US', 'Assault')
         elseif kit == 2 then --engineer
-            appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/Us/MP_US_Engi_Appearance_'..color)
+            appearance = self:_findAppearance('Us', 'Engi', color)
             soldierKit = self:_findKit('US', 'Engineer')
         elseif kit == 3 then --support
-            appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/Us/MP_US_Support_Appearance_'..color)
+            appearance = self:_findAppearance('Us', 'Support', color)
             soldierKit = self:_findKit('US', 'Support')
         else    --recon
-            appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/Us/MP_US_Recon_Appearance_'..color)
+            appearance = self:_findAppearance('Us', 'Recon', color)
             soldierKit = self:_findKit('US', 'Recon')
         end
     else -- RU
         if kit == 1 then --assault
-            appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/RU/MP_RU_Assault_Appearance_'..color)
+            appearance = self:_findAppearance('RU', 'Assault', color)
             soldierKit = self:_findKit('RU', 'Assault')
         elseif kit == 2 then --engineer
-            appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/RU/MP_RU_Engi_Appearance_'..color)
+            appearance = self:_findAppearance('RU', 'Engi', color)
             soldierKit = self:_findKit('RU', 'Engineer')
         elseif kit == 3 then --support
-            appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/RU/MP_RU_Support_Appearance_'..color)
+            appearance = self:_findAppearance('RU', 'Support', color)
             soldierKit = self:_findKit('RU', 'Support')
         else    --recon
-            appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/MP/RU/MP_RU_Recon_Appearance_'..color)
+            appearance = self:_findAppearance('RU', 'Recon', color)
             soldierKit = self:_findKit('RU', 'Recon')
         end
     end

@@ -44,6 +44,9 @@ function Bot:__init(player)
     self._shoot = false
     self._shootPlayer = nil
     self._shootWayPoints = {}
+    self._lastTargetTrans = Vec3()
+    self._lastShootPlayer = nil
+    self._fireMode = 0
 
     --simple movement
     self._botSpeed = 0
@@ -60,8 +63,8 @@ function Bot:onUpdate(dt)
     self._aimUpdateTimer = self._aimUpdateTimer + dt
 
     if self._aimUpdateTimer > Config.botAimUpdateCycle then
-        self._aimUpdateTimer = 0
-        self:_updateAiming() --needs to be faster? TODO: find out how fast...
+        self:_updateAiming(dt)
+        self._aimUpdateTimer = 0  --reset afterwards, to use it for targetinterpolation
     end
 
     if self._updateTimer > Config.botUpdateCycle then
@@ -123,8 +126,19 @@ function Bot:resetVars()
     self._shoot = false
     self._targetPlayer = nil
     self._shootPlayer = nil
+    self._lastShootPlayer = nil
     self._updateTimer = 0
     self._aimUpdateTimer = 0 --timer sync
+    self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 0)
+    self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0)
+    self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 0)
+    self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0)
+    self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0)
+    self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0)
+    self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0)
+    self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0)
+    self.player.input:SetLevel(EntryInputActionEnum.EIAThrottle, 0)
+    self.player.input:SetLevel(EntryInputActionEnum.EIASprint, 0)
 end
 
 function Bot:setVarsStatic(player)
@@ -212,6 +226,7 @@ function Bot:resetSpawnVars()
     self._obstacleRetryCounter = 0
     self._lastWayDistance = 1000
     self._shootPlayer = nil
+    self._lastShootPlayer = nil
     self._shootModeTimer = nil
     self._meleeCooldownTimer = 0
 end
@@ -223,11 +238,14 @@ function Bot:clearPlayer(player)
     if self._targetPlayer == player then
         self._targetPlayer = nil
     end
+    if self._lastShootPlayer == player then
+        self._lastShootPlayer = nil
+    end
 end
 
 function Bot:destroy()
-    self.player.input = nil
     self:resetVars()
+    self.player.input = nil
     PlayerManager:DeletePlayer(self.player)
     self.player = nil
 end
@@ -244,37 +262,34 @@ function Bot:_updateRespwawn()
     end
 end
 
-function Bot:_getYawAddition(currentWeapon)
-    local yawOffset = 0
-    if currentWeapon.weaponFiring.gunSway ~= nil then
-        yawOffset = currentWeapon.weaponFiring.gunSway.currentDispersionDeviation.yaw
-    end
-    return  yawOffset * Config.deviationAdditionFactor
-end
-
-function Bot:_getPitchAddition(currentWeapon)
-    local pitchOffset = 0
-    if currentWeapon.weaponFiring.gunSway ~= nil then
-        pitchOffset = currentWeapon.weaponFiring.gunSway.currentDispersionDeviation.pitch
-    end
-    return pitchOffset * Config.deviationAdditionFactor
-end
-
-function Bot:_updateAiming()
+function Bot:_updateAiming(dt)
     if self.player.alive and self._shoot then
         if self._shootPlayer ~= nil and self._shootPlayer.soldier ~= nil then
-            self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 1) --does not work.
+            --interpolate player movement
+            local targetMovement = Vec3(0,0,0)
+            if self._lastShootPlayer ~= nil and self._lastShootPlayer ==  self._shootPlayer then
+                targetMovement = self._shootPlayer.soldier.worldTransform.trans - self._lastTargetTrans  --movement in one dt
+                --calculate how long the distance is --> time to travel
+                local distanceToPlayer = self._shootPlayer.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans)
+                local timeToTravel = (distanceToPlayer / Config.botBulletSpeed) + dt
+                local factorForMovement =  timeToTravel / self._aimUpdateTimer
+                targetMovement = targetMovement * factorForMovement
+            end
+            self._lastShootPlayer = self._shootPlayer
+            self._lastTargetTrans = self._shootPlayer.soldier.worldTransform.trans:Clone()
             --calculate yaw and pith
-            local dz = self._shootPlayer.soldier.worldTransform.trans.z - self.player.soldier.worldTransform.trans.z
-            local dx = self._shootPlayer.soldier.worldTransform.trans.x - self.player.soldier.worldTransform.trans.x
-            local dy = self._shootPlayer.soldier.worldTransform.trans.y + self:_getCameraHight(self._shootPlayer.soldier) - 0.1 -self.player.soldier.worldTransform.trans.y - self:_getCameraHight(self.player.soldier) --0.2 to shoot a litle lower
+            local dz = self._shootPlayer.soldier.worldTransform.trans.z + targetMovement.z - self.player.soldier.worldTransform.trans.z
+            local dx = self._shootPlayer.soldier.worldTransform.trans.x + targetMovement.x - self.player.soldier.worldTransform.trans.x
+            local dy = (self._shootPlayer.soldier.worldTransform.trans.y + targetMovement.y + self:_getCameraHight(self._shootPlayer.soldier, true)) -
+                                (self.player.soldier.worldTransform.trans.y + self:_getCameraHight(self.player.soldier, false))
             local atanDzDx = math.atan(dz, dx)
             local yaw = (atanDzDx > math.pi / 2) and (atanDzDx - math.pi / 2) or (atanDzDx + 3 * math.pi / 2)
             --calculate pitch
             local distance = math.sqrt(dz^2 + dx^2)
             local pitch =  math.atan(dy, distance)
-            self.player.input.authoritativeAimingPitch = pitch + self:_getPitchAddition(self.player.soldier.weaponsComponent.currentWeapon)
-            self.player.input.authoritativeAimingYaw = yaw + self:_getYawAddition(self.player.soldier.weaponsComponent.currentWeapon)
+            self.player.input.authoritativeAimingPitch = pitch
+            self.player.input.authoritativeAimingYaw = yaw
+            self.player.input:SetLevel(EntryInputActionEnum.EIAFire, self._fireMode)
         end
     end
 end
@@ -286,6 +301,7 @@ function Bot:_updateShooting()
                 self._shootModeTimer = self._shootModeTimer + Config.botUpdateCycle
 
                 self.activeMoveMode = 9 -- movement-mode : shoot
+                --self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 1) --does not work.
 
                 --check for melee attack
                 if Config.meleeAttackIfClose and self._shootPlayer.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans) < 1 then
@@ -302,6 +318,9 @@ function Bot:_updateShooting()
                         self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 0)
                         self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0)
                     end
+                else
+                    self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 0)
+                    self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0)
                 end
 
                 --shooting sequence
@@ -314,23 +333,25 @@ function Bot:_updateShooting()
                     table.insert(self._shootWayPoints, point)
                 end
                 if self._shotTimer >= Config.botFireDuration then
-                    self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0)
+                    self._fireMode = 0
                 else
-                    self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1)
-                    --self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 1)
-                    --print(self.player.soldier.weaponsComponent.isZooming)
+                    self._fireMode = 1
                 end
                 self._shotTimer = self._shotTimer + Config.botUpdateCycle
             else
                 self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0)
+                self._fireMode = 0
                 self._shootPlayer = nil
+                self._lastShootPlayer = nil
             end
         else
             self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 0)
             self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0)
+            self._fireMode = 0
             self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 0)
             self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0)
             self._shootPlayer = nil
+            self._lastShootPlayer = nil
             self._shootModeTimer = nil
         end
     end
@@ -484,11 +505,8 @@ function Bot:_updateMovement()
 
         -- shooting MoveMode
         elseif self.activeMoveMode == 9 then
-            --reduce speed
-            if self.activeSpeedValue > 1 then
-                self.activeSpeedValue = self.activeSpeedValue - 1
-            end
-            -- TODO: trace way back
+            --crouch moving (only mode with modified gun)
+            self.activeSpeedValue = 2
         end
 
         -- additional movement
@@ -531,12 +549,22 @@ function Bot:_setActiveVars()
     self.activeSpeedValue = self._botSpeed
 end
 
-function Bot:_getCameraHight(soldier)
-    local camereaHight = 1.6 --bot.soldier.pose == CharacterPoseType.CharacterPoseType_Stand
-    if soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
-        camereaHight = 0.3
-    elseif soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
-        camereaHight = 1.0
+function Bot:_getCameraHight(soldier, isTarget)
+    local camereaHight = 0
+    if not isTarget then
+        camereaHight = 1.6 --bot.soldier.pose == CharacterPoseType.CharacterPoseType_Stand
+        if soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
+            camereaHight = 0.3
+        elseif soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
+            camereaHight = 1.0
+        end
+    else
+        camereaHight = 1.3 --bot.soldier.pose == CharacterPoseType.CharacterPoseType_Stand - reduce by 0.3
+        if soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
+            camereaHight = 0.3      -- don't reduce
+        elseif soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
+            camereaHight = 0.8      -- reduce by 0.2
+        end
     end
     return camereaHight
 end
