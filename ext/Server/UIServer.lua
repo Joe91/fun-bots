@@ -159,11 +159,13 @@ function FunBotUIServer:_isAuthenticated(guid)
 end
 
 function FunBotUIServer:_writeSettings(request)
+	print(request)
+
 	if request.spawnInSameTeam ~= nil then
-		Config.spawnInSameTeam = (request.spawnInSameTeam == "true")
+		Config.spawnInSameTeam = (request.spawnInSameTeam == true)
 	end
 	if request.disableChatCommands ~= nil then
-		Config.disableChatCommands = (request.disableChatCommands == "true")
+		Config.disableChatCommands = (request.disableChatCommands == true)
 	end
 	if request.fovForShooting ~= nil then
 		local tempValue = tonumber(request.fovForShooting)
@@ -190,17 +192,19 @@ function FunBotUIServer:_writeSettings(request)
 		end
 	end
 	if request.meleeAttackIfClose ~= nil then
-		Config.meleeAttackIfClose = (request.meleeAttackIfClose == "true")
+		print(request.meleeAttackIfClose)
+		Config.meleeAttackIfClose = (request.meleeAttackIfClose == true)
 	end
 	if request.useKnifeOnly ~= nil then
-		Config.useKnifeOnly = (request.useKnifeOnly == "true")
+		print(request.useKnifeOnly)
+		Config.useKnifeOnly = (request.useKnifeOnly == true)
 	end
 	if request.shootBackIfHit ~= nil then
-		Config.shootBackIfHit = (request.shootBackIfHit == "true")
+		Config.shootBackIfHit = (request.shootBackIfHit == true)
 	end
 	if request.botAimWorsening ~= nil then
 		local tempValue = tonumber(request.botAimWorsening) / 100
-		if tempValue >= 0 and temValue < 10 then
+		if tempValue >= 0 and tempValue < 10 then
 			Config.botAimWorsening = tempValue
 		end
 	end
@@ -236,6 +240,13 @@ function FunBotUIServer:_writeSettings(request)
 			Config.distanceForDirectAttack = tempValue
 		end
 	end
+
+	--UI
+	if request.language ~= nil then
+		Config.language = request.value
+	end
+	-- dont save password jet!!
+
 	NetEvents:BroadcastLocal('WriteClientSettings', Config, false)
 end
 

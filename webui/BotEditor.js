@@ -444,19 +444,11 @@ const BotEditor = (new function BotEditor() {
 				break;
 				
 				/* Bots */
-				case InputDeviceKeys.IDK_F1:
+				case InputDeviceKeys.IDK_F2:
 					count = document.querySelector('[data-action="bot_spawn_default"] input[type="number"]');
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
 						action:	'bot_spawn_default',
 						value:	count.value
-					}));
-					count.value = 1;
-				break;
-				case InputDeviceKeys.IDK_F2:
-					index = document.querySelector('[data-action="bot_spawn_path"] input[type="number"]');
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'bot_spawn_path',
-						value:	index.value
 					}));
 					count.value = 1;
 				break;
