@@ -27,6 +27,7 @@ function Bot:__init(player)
     self._obstaceSequenceTimer = 0;
     self._shotTimer = 0;
     self._shootModeTimer = nil;
+    self._attackModeMoveTimer = 0;
     self._meleeCooldownTimer = 0;
 
     --shared movement vars
@@ -243,6 +244,7 @@ function Bot:resetSpawnVars()
     self._lastShootPlayer		= nil;
     self._shootModeTimer		= nil;
     self._meleeCooldownTimer	= 0;
+    self._attackModeMoveTimer   = 0;
 end
 
 function Bot:clearPlayer(player)
@@ -441,7 +443,7 @@ function Bot:_updateMovement()
             self.player.input.authoritativeAimingPitch	= self._targetPlayer.input.authoritativeAimingPitch;
 
         -- mirroring
-        elseif self.activeMoveMode == 4 and self._targetPlayer ~= nil then 
+        elseif self.activeMoveMode == 4 and self._targetPlayer ~= nil then
             additionalMovementPossible = false;
 			
             for i = 0, 36 do
@@ -587,17 +589,66 @@ function Bot:_updateMovement()
         -- knive-Only MoveMode
         elseif self.activeMoveMode == 8 then
             self.activeSpeedValue = 4;  --run towards player
+            -- do some stupid movement and jumping
+            if self._attackModeMoveTimer > 3.6 then
+                self._attackModeMoveTimer = 0;
+            elseif self._attackModeMoveTimer > 3.0 then
+                self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0);
+            elseif self._attackModeMoveTimer > 2.5 then
+                self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, -1.0);
+            elseif self._attackModeMoveTimer > 2.0 then
+                self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 1.0);
+            elseif self._attackModeMoveTimer > 1.8 then
+                self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
+                self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0);
+            elseif self._attackModeMoveTimer > 0.3 then
+                self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 1);
+                self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1);
+            end
+
+            self._attackModeMoveTimer = self._attackModeMoveTimer + Config.botUpdateCycle;
 			
-            self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
-            self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
 
         -- Shoot MoveMode
         elseif self.activeMoveMode == 9 then
             --crouch moving (only mode with modified gun)
             self.activeSpeedValue = 2;
-			
-            self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
-            self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
+            local targetTime = 5.0
+            local targetCycles = targetTime / (Config.botFireDuration + Config.botFirePause);
+
+            if #self._shootWayPoints > targetCycles then
+                local distanceDone = self._shootWayPoints[#self._shootWayPoints]:Distance(self._shootWayPoints[#self._shootWayPoints-targetCycles]);
+                if distanceDone < 1.5 then --no movement was possible. Try to jump over obstacle
+                    self.activeSpeedValue = 3;
+                    self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 1);
+                    self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1);
+                else
+                    self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
+                    self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0);
+                end
+            else
+                self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
+                self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
+            end
+            
+            -- do some sidwards movement from time to time
+            if self._attackModeMoveTimer > 20 then
+                self._attackModeMoveTimer = 0;
+                self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
+            elseif self._attackModeMoveTimer > 17 then
+                self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, -1.0);
+            elseif self._attackModeMoveTimer > 13 then
+                self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
+            elseif self._attackModeMoveTimer > 12 then
+                self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 1.0);
+            elseif self._attackModeMoveTimer > 9 then
+                self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0);
+            elseif self._attackModeMoveTimer > 7 then
+                self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 1.0);
+            end
+
+            self._attackModeMoveTimer = self._attackModeMoveTimer + Config.botUpdateCycle;
+
         end
 
         -- additional movement
