@@ -1,7 +1,7 @@
-class('BotSpawner')
+class('BotSpawner');
 
-local BotManager = require('botManager')
-local Globals = require('globals')
+local BotManager	= require('BotManager');
+local Globals		= require('Globals');
 
 function BotSpawner:__init()
     self._botSpawnTimer = 0

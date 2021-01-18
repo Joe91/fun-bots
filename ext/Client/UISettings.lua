@@ -40,7 +40,7 @@ function UISettings:getJSON()
 		return json.encode(self._properties:getEntries());		
 	end
 	
-	return "{}";
+	return '{}';
 end
 
 return UISettings;

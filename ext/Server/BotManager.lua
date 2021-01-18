@@ -1,6 +1,8 @@
-class('BotManager')
-require('bot')
-local Globals = require('globals')
+class('BotManager');
+
+require('Bot');
+
+local Globals = require('Globals');
 
 function BotManager:__init()
     self._bots = {}

@@ -49,6 +49,7 @@ Config = {
     targetHeightDistanceWayPoint = 2 -- distance the bots have to reach in height to continue with next Waypoint
 }
 
+-- @ToDo move these values outside config
 Kits = {
     "RANDOM_KIT",
     "Assault",
