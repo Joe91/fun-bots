@@ -50,6 +50,10 @@ function ArrayMap:getEntries()
 	return self._entries;
 end
 
+function ArrayMap:join(character)
+	return table.concat(self._entries, character)
+end
+
 function ArrayMap:_tostring()
 	return '[ArrayList Count=' .. self:count() .. ', ' .. json.encode(self._entries) .. ']';
 end
