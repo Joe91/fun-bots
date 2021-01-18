@@ -1,15 +1,16 @@
-class('FunBotShared')
-local WeaponModification = require('__shared/weaponModification')
+class('FunBotShared');
+
+local WeaponModification = require('__shared/WeaponModification');
 
 function FunBotShared:__init()
-	Events:Subscribe('Partition:Loaded', self, self.OnPartitionLoaded)
+	Events:Subscribe('Partition:Loaded', self, self.OnPartitionLoaded);
 end
 
 function FunBotShared:OnPartitionLoaded(p_Partition)
-	WeaponModification:OnPartitionLoaded(p_Partition)
+	WeaponModification:OnPartitionLoaded(p_Partition);
 end
 
 -- Singleton.
 if g_FunBotShared == nil then
-	g_FunBotShared = FunBotShared()
+	g_FunBotShared = FunBotShared();
 end
