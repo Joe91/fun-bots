@@ -532,7 +532,7 @@ function Bot:_updateMovement()
         -- knive-Only MoveMode
         elseif self.activeMoveMode == 8 then
             self.activeSpeedValue = 4  --run towards player
-            self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 1)
+            self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0)
             self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0)
 
         -- Shoot MoveMode

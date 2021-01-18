@@ -159,8 +159,7 @@ function FunBotUIServer:_isAuthenticated(guid)
 end
 
 function FunBotUIServer:_writeSettings(request)
-	print(request)
-
+	--global settings
 	if request.spawnInSameTeam ~= nil then
 		Config.spawnInSameTeam = (request.spawnInSameTeam == true)
 	end
@@ -192,11 +191,9 @@ function FunBotUIServer:_writeSettings(request)
 		end
 	end
 	if request.meleeAttackIfClose ~= nil then
-		print(request.meleeAttackIfClose)
 		Config.meleeAttackIfClose = (request.meleeAttackIfClose == true)
 	end
 	if request.useKnifeOnly ~= nil then
-		print(request.useKnifeOnly)
 		Config.useKnifeOnly = (request.useKnifeOnly == true)
 	end
 	if request.shootBackIfHit ~= nil then
