@@ -107,6 +107,9 @@ function FunBotUIServer:_onUIRequestSaveSettings(player, data)
 	if request.spawnInSameTeam ~= nil then
 		Config.spawnInSameTeam = (request.spawnInSameTeam == "true")
 	end
+	if request.disableChatCommands ~= nil then
+		Config.disableChatCommands = (request.disableChatCommands == "true")
+	end
 	if request.fovForShooting ~= nil then
 		local tempValue = tonumber(request.fovForShooting)
 		if tempValue >= 0 and tempValue <= 360 then
