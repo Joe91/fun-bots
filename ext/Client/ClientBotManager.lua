@@ -1,6 +1,8 @@
 class('ClientBotManager');
+
 require('__shared/Config');
-local WeaponModification = require('__shared/weaponModification');
+
+local WeaponModification = require('__shared/WeaponModification');
 
 function ClientBotManager:__init()
 	self._raycastTimer	= 0;

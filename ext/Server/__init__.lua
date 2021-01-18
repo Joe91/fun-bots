@@ -1,6 +1,6 @@
 class('FunBotServer');
 
-require('__shared/config');
+require('__shared/Config');
 
 local BotManager			= require('BotManager');
 local TraceManager			= require('TraceManager');

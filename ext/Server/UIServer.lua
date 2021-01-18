@@ -1,10 +1,11 @@
 class 'FunBotUIServer';
 
 require('__shared/ArrayMap');
-require('__shared/config')
-local BotManager = require('botManager')
-local TraceManager = require('traceManager')
-local BotSpawner = require('botSpawner')
+require('__shared/Config');
+
+local BotManager	= require('BotManager');
+local TraceManager	= require('TraceManager');
+local BotSpawner	= require('BotSpawner');
 
 function FunBotUIServer:__init()
 	self._webui			= 0;
@@ -27,63 +28,63 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 
 	local request = json.decode(data);
 
-	if request.action == "request_settings" then
+	if request.action == 'request_settings' then
 		if Config.language == nil then
-			Config.language = "en_US";
+			Config.language = 'en_US';
 		end
 		
 		NetEvents:SendTo('UI_Settings', player, Config);
 
 	-- Bots
-	elseif request.action == "bot_spawn_default" then
-		local amount = tonumber(request.value)
-		BotSpawner:spawnWayBots(player, amount, true)
+	elseif request.action == 'bot_spawn_default' then
+		local amount = tonumber(request.value);
+		BotSpawner:spawnWayBots(player, amount, true);
 
-	elseif request.action == "bot_spawn_path" then--todo: whats the difference? make a function to spawn bots on a fixed way instead?
-		local amount = 1
-		local indexOnPath = 1
-		local index = tonumber(request.value)
-		BotSpawner:spawnWayBots(player, amount, false, index, indexOnPath)
+	elseif request.action == 'bot_spawn_path' then --todo: whats the difference? make a function to spawn bots on a fixed way instead?
+		local amount		= 1;
+		local indexOnPath	= 1;
+		local index			= tonumber(request.value);
+		BotSpawner:spawnWayBots(player, amount, false, index, indexOnPath);
 
-	elseif request.action == "bot_kick_all" then
-		BotManager:destroyAllBots()
+	elseif request.action == 'bot_kick_all' then
+		BotManager:destroyAllBots();
 
-	elseif request.action == "bot_kill_all" then
-		BotManager:killAll()
+	elseif request.action == 'bot_kill_all' then
+		BotManager:killAll();
 
-	elseif request.action == "bot_respawn" then  --toggle this function
-		local respawning = not Config.respawnWayBots
-		Config.respawnWayBots = respawning
-		BotManager:setOptionForAll("respawn", respawning)
+	elseif request.action == 'bot_respawn' then  --toggle this function
+		local respawning		= not Config.respawnWayBots;
+		Config.respawnWayBots	= respawning;
+		BotManager:setOptionForAll('respawn', respawning);
 
-	elseif request.action == "bot_attack" then  --toggle this function
-		local attack = not Config.attackWayBots
-		Config.attackWayBots = attack
-        BotManager:setOptionForAll("shoot", attack)
+	elseif request.action == 'bot_attack' then  --toggle this function
+		local attack			= not Config.attackWayBots;
+		Config.attackWayBots	= attack;
+        BotManager:setOptionForAll('shoot', attack);
 
 	-- Trace
-	elseif request.action == "trace_start" then
-		local index = tonumber(request.value)
-		TraceManager:startTrace(player, index)
+	elseif request.action == 'trace_start' then
+		local index = tonumber(request.value);
+		TraceManager:startTrace(player, index);
 
-	elseif request.action == "trace_end" then
-		TraceManager:endTrace(player)
+	elseif request.action == 'trace_end' then
+		TraceManager:endTrace(player);
 
-	elseif request.action == "trace_clear" then
-		local index = tonumber(request.value)
-		TraceManager:clearTrace(index)
+	elseif request.action == 'trace_clear' then
+		local index = tonumber(request.value);
+		TraceManager:clearTrace(index);
 
-	elseif request.action == "trace_reset_all" then
-		TraceManager:clearAllTraces()
+	elseif request.action == 'trace_reset_all' then
+		TraceManager:clearAllTraces();
 
-	elseif request.action == "trace_save" then
-		TraceManager:savePaths()
+	elseif request.action == 'trace_save' then
+		TraceManager:savePaths();
 
-	elseif request.action == "trace_reload" then
-		TraceManager:loadPaths()
+	elseif request.action == 'trace_reload' then
+		TraceManager:loadPaths();
 	
 	else
-		ChatManager:Yell(request.action .. ' is currently not implemented. 😒', 2.5);
+		ChatManager:Yell(request.action .. ' is currently not implemented.', 2.5);
 	end
 end
 
@@ -103,8 +104,7 @@ function FunBotUIServer:_onUIRequestSaveSettings(player, data)
 
 	local request = json.decode(data);
 
-	self:_writeSettings(request)
-
+	self:_writeSettings(request);
 end
 
 function FunBotUIServer:_onUIRequestOpen(player, data)
@@ -161,64 +161,82 @@ end
 function FunBotUIServer:_writeSettings(request)
 	--global settings
 	if request.spawnInSameTeam ~= nil then
-		Config.spawnInSameTeam = (request.spawnInSameTeam == true)
+		Config.spawnInSameTeam = (request.spawnInSameTeam == true);
 	end
+	
 	if request.disableChatCommands ~= nil then
-		Config.disableChatCommands = (request.disableChatCommands == true)
+		Config.disableChatCommands = (request.disableChatCommands == true);
 	end
+	
 	if request.fovForShooting ~= nil then
-		local tempValue = tonumber(request.fovForShooting)
+		local tempValue = tonumber(request.fovForShooting);
+		
 		if tempValue >= 0 and tempValue <= 360 then
-			Config.fovForShooting = tempValue
+			Config.fovForShooting = tempValue;
 		end
 	end
+	
 	if request.bulletDamageBot ~= nil then
-		local tempValue = tonumber(request.bulletDamageBot)
+		local tempValue = tonumber(request.bulletDamageBot);
+		
 		if tempValue >= 0 then
-			Config.bulletDamageBot = tempValue
+			Config.bulletDamageBot = tempValue;
 		end
 	end
+	
 	if request.bulletDamageBotSniper ~= nil then
-		local tempValue = tonumber(request.bulletDamageBotSniper)
+		local tempValue = tonumber(request.bulletDamageBotSniper);
+		
 		if tempValue >= 0 then
-			Config.bulletDamageBotSniper = tempValue
+			Config.bulletDamageBotSniper = tempValue;
 		end
 	end
+	
 	if request.meleeDamageBot ~= nil then
-		local tempValue = tonumber(request.meleeDamageBot)
+		local tempValue = tonumber(request.meleeDamageBot);
+		
 		if tempValue >= 0 then
-			Config.meleeDamageBot = tempValue
+			Config.meleeDamageBot = tempValue;
 		end
 	end
+	
 	if request.meleeAttackIfClose ~= nil then
-		Config.meleeAttackIfClose = (request.meleeAttackIfClose == true)
+		Config.meleeAttackIfClose = (request.meleeAttackIfClose == true);
 	end
+	
 	if request.useKnifeOnly ~= nil then
-		Config.useKnifeOnly = (request.useKnifeOnly == true)
+		Config.useKnifeOnly = (request.useKnifeOnly == true);
 	end
+	
 	if request.shootBackIfHit ~= nil then
-		Config.shootBackIfHit = (request.shootBackIfHit == true)
+		Config.shootBackIfHit = (request.shootBackIfHit == true);
 	end
+	
 	if request.botAimWorsening ~= nil then
-		local tempValue = tonumber(request.botAimWorsening) / 100
+		local tempValue = tonumber(request.botAimWorsening) / 100;
+		
 		if tempValue >= 0 and tempValue < 10 then
-			Config.botAimWorsening = tempValue
+			Config.botAimWorsening = tempValue;
 		end
 	end
+	
 	if request.botKit ~= nil then
-		local tempString = request.botKit
+		local tempString = request.botKit;
+		
 		for _, kit in pairs(Kits) do
 			if tempString == kit then
-				Config.botKit = tempString
+				Config.botKit = tempString;
 				break
 			end
 		end
 	end
+	
 	if request.botColor ~= nil then
-		local tempString = request.botColor
+		local tempString = request.botColor;
+		
 		for _, color in pairs(Colors) do
 			if tempString == color then
-				Config.botColor = tempString
+				Config.botColor = tempString;
 				break
 			end
 		end
@@ -226,25 +244,28 @@ function FunBotUIServer:_writeSettings(request)
 
 	--client settings
 	if request.maxRaycastDistance ~= nil then
-		local tempValue = tonumber(request.maxRaycastDistance)
+		local tempValue = tonumber(request.maxRaycastDistance);
+		
 		if tempValue >= 0 and tempValue <= 500 then
-			Config.maxRaycastDistance = tempValue
+			Config.maxRaycastDistance = tempValue;
 		end
 	end
+	
 	if request.distanceForDirectAttack ~= nil then
-		local tempValue = tonumber(request.distanceForDirectAttack)
+		local tempValue = tonumber(request.distanceForDirectAttack);
+		
 		if tempValue >= 0 and tempValue <= 10 then
-			Config.distanceForDirectAttack = tempValue
+			Config.distanceForDirectAttack = tempValue;
 		end
 	end
 
 	--UI
 	if request.language ~= nil then
-		Config.language = request.value
+		Config.language = request.value;
 	end
 	-- dont save password jet!!
 
-	NetEvents:BroadcastLocal('WriteClientSettings', Config, false)
+	NetEvents:BroadcastLocal('WriteClientSettings', Config, false);
 end
 
 if (g_FunBotUIServer == nil) then
