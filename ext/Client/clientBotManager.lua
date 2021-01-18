@@ -1,4 +1,5 @@
 class('ClientBotManager')
+require('__shared/Config')
 local WeaponModification = require('__shared/weaponModification')
 
 function ClientBotManager:__init()
@@ -6,7 +7,7 @@ function ClientBotManager:__init()
 	self._lastIndex = 0
 	Events:Subscribe('UpdateManager:Update', self, self._onUpdate)
 	Hooks:Install('BulletEntity:Collision', 1, self, self._onBulletCollision)
-	NetEvents:Subscribe('ModifyAllWeapons', self, self._onModifyWeapons)
+	NetEvents:Subscribe('WriteClientSettings', self, self._onWriteClientSettings)
 end
 
 function ClientBotManager:onExtensionUnload()
@@ -14,9 +15,19 @@ function ClientBotManager:onExtensionUnload()
 	self._lastIndex = 0
 end
 
-function ClientBotManager:_onModifyWeapons(botAimWorsening)
-	Config.botAimWorsening = botAimWorsening
-	WeaponModification:ModifyAllWeapons(botAimWorsening)
+function ClientBotManager:onEngineMessage(p_Message)
+	if p_Message.type == MessageType.ClientLevelFinalizedMessage then
+		NetEvents:SendLocal('RequestClientSettings')
+	end
+end
+
+function ClientBotManager:_onWriteClientSettings(newConfig, isInitialConfig)
+	for key, value in pairs(newConfig) do
+		Config[key] = value
+	end
+	if isInitialConfig then
+		WeaponModification:ModifyAllWeapons(Config.botAimWorsening)
+	end
 end
 
 function ClientBotManager:_onUpdate(p_Delta, p_Pass)
@@ -51,7 +62,7 @@ function ClientBotManager:_onUpdate(p_Delta, p_Pass)
 								bot.soldier.worldTransform.trans.z)
 
 						local distance = playerCameraTrans.trans:Distance(bot.soldier.worldTransform.trans)
-						if distance < 3	then --shoot, because you are near
+						if distance < Config.distanceForDirectAttack then --shoot, because you are near
 							NetEvents:SendLocal("BotShootAtPlayer", bot.name, true)
 						elseif distance < Config.maxRaycastDistance then
 							self._lastIndex = newIndex

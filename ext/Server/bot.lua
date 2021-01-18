@@ -297,14 +297,61 @@ end
 function Bot:_updateShooting()
     if self.player.alive and self._shoot then
         if self._shootPlayer ~= nil and self._shootPlayer.soldier ~= nil then
-            if self._shootModeTimer < Config.botFireModeDuration then
-                self._shootModeTimer = self._shootModeTimer + Config.botUpdateCycle
+            if not Config.useKnifeOnly then
+                -- normal shooting
+                if self._shootModeTimer < Config.botFireModeDuration then
+                    self._shootModeTimer = self._shootModeTimer + Config.botUpdateCycle
 
-                self.activeMoveMode = 9 -- movement-mode : shoot
-                --self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 1) --does not work.
+                    self.activeMoveMode = 9 -- movement-mode : shoot
+                    --self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 1) --does not work.
 
+                    --check for melee attack
+                    if Config.meleeAttackIfClose and self._shootPlayer.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans) < 1 then
+                        if self._meleeCooldownTimer <= 0 then
+                            self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 1)
+                            self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 1)
+                            self._meleeCooldownTimer = Config.meleeAttackCoolDown
+                            Events:DispatchLocal("ServerDamagePlayer", self._shootPlayer.name, self.player.name, true)
+                        else
+                            self._meleeCooldownTimer = self._meleeCooldownTimer - Config.botUpdateCycle
+                            if self._meleeCooldownTimer < 0 then
+                                self._meleeCooldownTimer = 0
+                            end
+                            self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 0)
+                            self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0)
+                        end
+                    else
+                        self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 0)
+                        self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0)
+                    end
+
+                    --shooting sequence
+                    if self._shotTimer >= (Config.botFireDuration + Config.botFirePause) then
+                        self._shotTimer = 0
+                        --create a Trace to find way back
+                        local point = WayPoint()
+                        point.trans = self.player.soldier.worldTransform.trans:Clone()
+                        point.speedMode = 4
+                        table.insert(self._shootWayPoints, point)
+                    end
+                    if self._shotTimer >= Config.botFireDuration then
+                        self._fireMode = 0
+                    else
+                        self._fireMode = 1
+                    end
+                    self._shotTimer = self._shotTimer + Config.botUpdateCycle
+                else
+                    self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0)
+                    self._fireMode = 0
+                    self._shootPlayer = nil
+                    self._lastShootPlayer = nil
+                end
+            else
+                --knive only
+                self._fireMode = 0
+                self.activeMoveMode = 8 -- movement-mode : knive only
                 --check for melee attack
-                if Config.meleeAttackIfClose and self._shootPlayer.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans) < 1 then
+                if self._shootPlayer.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans) < 1 then
                     if self._meleeCooldownTimer <= 0 then
                         self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 1)
                         self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 1)
@@ -322,27 +369,6 @@ function Bot:_updateShooting()
                     self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 0)
                     self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0)
                 end
-
-                --shooting sequence
-                if self._shotTimer >= (Config.botFireDuration + Config.botFirePause) then
-                    self._shotTimer = 0
-                    --create a Trace to find way back
-                    local point = WayPoint()
-                    point.trans = self.player.soldier.worldTransform.trans:Clone()
-                    point.speedMode = 4
-                    table.insert(self._shootWayPoints, point)
-                end
-                if self._shotTimer >= Config.botFireDuration then
-                    self._fireMode = 0
-                else
-                    self._fireMode = 1
-                end
-                self._shotTimer = self._shotTimer + Config.botUpdateCycle
-            else
-                self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0)
-                self._fireMode = 0
-                self._shootPlayer = nil
-                self._lastShootPlayer = nil
             end
         else
             self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 0)
@@ -354,6 +380,7 @@ function Bot:_updateShooting()
             self._lastShootPlayer = nil
             self._shootModeTimer = nil
         end
+    elseif  --knive only mode
     end
 end
 
@@ -503,7 +530,13 @@ function Bot:_updateMovement()
                 end
             end
 
-        -- shooting MoveMode
+        -- knive-Only MoveMode
+        elseif self.activeMoveMode == 8 then
+            self.activeSpeedValue = 4  --run towards player
+            self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 1)
+            self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0)
+
+        -- Shoot MoveMode
         elseif self.activeMoveMode == 9 then
             --crouch moving (only mode with modified gun)
             self.activeSpeedValue = 2

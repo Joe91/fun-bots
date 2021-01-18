@@ -12,6 +12,7 @@ function FunBotServer:__init()
     Events:Subscribe('Player:Chat', self, self._onChat)
     Events:Subscribe('Extension:Unloading', self, self._onExtensionUnload)
     Events:Subscribe('Extension:Loaded', self, self._onExtensionLoaded)
+    Netevents:Subscribe('RequestClientSettings', self, self._onRequestClientSettings)
 end
 
 function FunBotServer:_onExtensionUnload()
@@ -32,16 +33,16 @@ function FunBotServer:_onExtensionLoaded()
     end
 end
 
+function FunBotServer:_onRequestClientSettings(player)
+    NetEvents:SendToLocal('WriteClientSettings', player, Config, true)
+end
+
 function FunBotServer:_onLevelLoaded(levelName, gameMode)
-    self:_modifyWeapons(Config.botAimWorsening)
+    NetEvents:BroadcastLocal('WriteClientSettings', Config, true)
+    WeaponModification:ModifyAllWeapons(Config.botAimWorsening)
     print("level "..levelName.." loaded...")
     TraceManager:onLevelLoaded(levelName, gameMode)
     BotSpawner:onLevelLoaded()
-end
-
-function FunBotServer:_modifyWeapons(botAimWorsening)
-    NetEvents:BroadcastLocal('ModifyAllWeapons', botAimWorsening)
-    WeaponModification:ModifyAllWeapons(botAimWorsening)
 end
 
 function FunBotServer:_onChat(player, recipientMask, message)

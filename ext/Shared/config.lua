@@ -1,13 +1,14 @@
 Config = {
     --general
-    maxNumberOfBots = 32,           --maximum bots that can be spawned
-    initNumberOfBots = 10,          --bots on levelstart
-    spawnOnLevelstart = true,       --bots spawn on levelstart (if valid paths are available)
-    maxRaycastDistance = 125,       --meters bots start shooting at player
-    spawnDelayBots = 2.0,           --time till bots respawn, if respawn enabled
-    botTeam = TeamId.Team2,         --default bot team
+    maxNumberOfBots = 32,           -- maximum bots that can be spawned
+    initNumberOfBots = 10,          -- bots on levelstart
+    spawnOnLevelstart = true,       -- bots spawn on levelstart (if valid paths are available)
+    maxRaycastDistance = 125,       -- meters bots start shooting at player
+    distanceForDirectAttack = 3,    -- if a bot is that close he will attack, even if not in FOV
+    spawnDelayBots = 2.0,           -- time till bots respawn, if respawn enabled
+    botTeam = TeamId.Team2,         -- default bot team (0 = neutral, 1 = US, 2 = RU) TeamId.Team2
     botNewLoadoutOnSpawn = true,
-    respawnWayBots = true,          --bots on paths respawn if killed
+    respawnWayBots = true,          -- bots on paths respawn if killed
     --shooting
     botFireDuration = 0.2,          -- the duration a bot fires
     botFirePause = 0.3,             -- the duration a bot waits after fire
@@ -24,6 +25,7 @@ Config = {
     bulletDamageBotSniper = 24,     -- damage of a bot with sniper bullet
     meleeDamageBot = 48,            -- damage of a bot with melee attack
     meleeAttackIfClose = true,      -- bot attacks with melee if close
+    useKnifeOnly = false,           -- bots don't shoot but try to attack with the knive
     shootBackIfHit = true,          -- bot shoots back, if hit
     botAimWorsening = 0.0,          -- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy). Restart of level needed
     botKit = "RANDOM_KIT",          -- see Kits

@@ -1,14 +1,18 @@
 class('FunBotClient')
-require('__shared/Config')
 local FunBotUIClient = require('UIClient')
 local ClientBotManager = require('clientBotManager')
 
 function FunBotClient:__init()
 	Events:Subscribe('Extension:Unloading', self, self._onExtensionUnload)
+	Events:Subscribe('Engine:Message', self, self._onEngineMessage)
 end
 
 function FunBotClient:_onExtensionUnload()
 	ClientBotManager:onExtensionUnload()
+end
+
+function FunBotClient:_onEngineMessage()
+	ClientBotManager:onEngineMessage()
 end
 
 -- Singleton.
