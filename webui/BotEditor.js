@@ -487,7 +487,7 @@ const BotEditor = (new function BotEditor() {
 				case InputDeviceKeys.IDK_F7:
 					index = document.querySelector('[data-action="trace_clear"] input[type="number"]');
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'trace_clear_current',
+						action:	'trace_clear',
 						value:	index.value
 					}));
 				break;

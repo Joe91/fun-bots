@@ -380,7 +380,6 @@ function Bot:_updateShooting()
             self._lastShootPlayer = nil
             self._shootModeTimer = nil
         end
-    elseif  --knive only mode
     end
 end
 

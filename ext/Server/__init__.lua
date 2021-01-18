@@ -12,7 +12,7 @@ function FunBotServer:__init()
     Events:Subscribe('Player:Chat', self, self._onChat)
     Events:Subscribe('Extension:Unloading', self, self._onExtensionUnload)
     Events:Subscribe('Extension:Loaded', self, self._onExtensionLoaded)
-    Netevents:Subscribe('RequestClientSettings', self, self._onRequestClientSettings)
+    NetEvents:Subscribe('RequestClientSettings', self, self._onRequestClientSettings)
 end
 
 function FunBotServer:_onExtensionUnload()

@@ -24,9 +24,12 @@ function BotSpawner:onLevelLoaded()
         amountToSpawn = BotManager:getBotCount()
     end
 
-    BotManager:destroyAllBots()
     for i = 1,amountToSpawn do
         BotManager:createBot(BotNames[i], Config.botTeam)
+    end
+    if BotManager:getBotCount() > amountToSpawn then --if bots have been added in between
+        local numberToKick = BotManager:getBotCount() - amountToSpawn
+        BotManager:destroyAmount(numberToKick)
     end
 
     -- create initial bots

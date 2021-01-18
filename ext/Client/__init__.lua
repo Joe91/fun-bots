@@ -11,8 +11,8 @@ function FunBotClient:_onExtensionUnload()
 	ClientBotManager:onExtensionUnload()
 end
 
-function FunBotClient:_onEngineMessage()
-	ClientBotManager:onEngineMessage()
+function FunBotClient:_onEngineMessage(p_Message)
+	ClientBotManager:onEngineMessage(p_Message)
 end
 
 -- Singleton.

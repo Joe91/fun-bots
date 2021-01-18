@@ -69,7 +69,7 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 	elseif request.action == "trace_end" then
 		TraceManager:endTrace(player)
 
-	elseif request.action == "trace_clear_current" then
+	elseif request.action == "trace_clear" then
 		local index = tonumber(request.value)
 		TraceManager:clearTrace(index)
 
