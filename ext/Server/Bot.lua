@@ -324,6 +324,7 @@ function Bot:_updateShooting()
         --select weapon-slot TODO: keep button pressed or not?
         if Config.useKnifeOnly then
             if self.player.soldier.currentWeaponSlot ~= WeaponSlot.WeaponSlot_7 then
+                print("switch to knife")
                 self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon8, 1);
                 self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
                 self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
@@ -332,6 +333,7 @@ function Bot:_updateShooting()
             end
         elseif Config.onlyPistol then
             if self.player.soldier.currentWeaponSlot ~= WeaponSlot.WeaponSlot_1 then
+                print("switch to secondary")
                 self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon8, 0);
                 self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 1);
                 self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
@@ -340,6 +342,7 @@ function Bot:_updateShooting()
             end
         else
             if self.player.soldier.currentWeaponSlot ~= WeaponSlot.WeaponSlot_0 then
+                print("switch to primary")
                 self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon8, 0);
                 self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
                 self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 1);
