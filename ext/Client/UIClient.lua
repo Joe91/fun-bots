@@ -4,6 +4,7 @@ require('UIViews');
 require('UISettings');
 
 function FunBotUIClient:__init()
+	self._settingsActive = false
 	self._views = UIViews();
 	
 	Events:Subscribe('Client:UpdateInput', self, self._onUpdateInput);
@@ -38,30 +39,38 @@ function FunBotUIClient:_onUIToggle()
 end
 
 function FunBotUIClient:_onUISettings(data)
-	print('UIClient: UI_Settings (' .. json.encode(data) .. ')');
-	
-	local settings = UISettings();
-	
-	-- Samples
-	-- add(<category>, <types>, <name>, <title>, <value>, <default>, <description>)
-	-- addList(<category>, <name>, <title>, <list>, <value>, <default>, <description>)
-	
-	settings:add("GLOBAL", "Boolean", "spawnInSameTeam", "Spawn in Same Team", data.spawnInSameTeam, false, "If true, Bots spawn in the team of the player");
-	settings:add("GLOBAL", "Number", "fovForShooting", "Bot FOV", data.fovForShooting, 270, "The Field Of View of the bots, where they can detect a player");
-	settings:add("GLOBAL", "Number", "bulletDamageBot", "Damage Bot Bullet", data.bulletDamageBot, 9, "The damage a normal Bullet does");
-	settings:add("GLOBAL", "Number", "bulletDamageBotSniper", "Damage Bot Sniper", data.bulletDamageBotSniper, 24, "The damage a Sniper-Bullet does");
-	settings:add("GLOBAL", "Number", "meleeDamageBot", "Damage Bot Melee", data.meleeDamageBot, 42, "The Damage a melee-attack does");
-	settings:add("GLOBAL", "Boolean", "meleeAttackIfClose", "Attack with Melee", data.meleeAttackIfClose, true, "Bots attack the playe with the knife, if close");
-	settings:add("GLOBAL", "Boolean", "shootBackIfHit", "Attack if Hit", data.shootBackIfHit, true, "Bots imidiatly attack player, if shot by it");
-	settings:add("GLOBAL", "Number", "botAimWorsening", "Aim Worsening", data.botAimWorsening * 100, 0, "0 = hard, 100 (or higher) = easy. Only takes effect on level Start");
-	settings:addList("GLOBAL", "botKit", "Bot Kit", Kits, data.botKit, "RANDOM_KIT", "The Kit a bots spawns with.");
-	settings:addList("GLOBAL", "botColor", "Bot Color", Colors, data.botColor, "RANDOM_COLOR", "The Kit-Color a bots spawns with.");
-	settings:addList("OTHER", "language", "Language", { "de_DE", "en_US" }, data.language, "en_US", "Select the language of this mod");
-	settings:add("OTHER", "Password", "settingsPassword", "Password", data.settingsPassword, nil, "Password protection of these Mod");
-	
-	self._views:execute('BotEditor.openSettings(\'' .. settings:getJSON() .. '\');');
-	self._views:show('settings');
-	self._views:focus();
+	if not self._settingsActive then
+		self._settingsActive = true
+
+		print('UIClient: UI_Settings (' .. json.encode(data) .. ')');
+		
+		local settings = UISettings();
+		
+		-- Samples
+		-- add(<category>, <types>, <name>, <title>, <value>, <default>, <description>)
+		-- addList(<category>, <name>, <title>, <list>, <value>, <default>, <description>)
+		
+		settings:add("GLOBAL", "Boolean", "spawnInSameTeam", "Spawn in Same Team", data.spawnInSameTeam, false, "If true, Bots spawn in the team of the player");
+		settings:add("GLOBAL", "Number", "fovForShooting", "Bot FOV", data.fovForShooting, 270, "The Field Of View of the bots, where they can detect a player");
+		settings:add("GLOBAL", "Number", "bulletDamageBot", "Damage Bot Bullet", data.bulletDamageBot, 9, "The damage a normal Bullet does");
+		settings:add("GLOBAL", "Number", "bulletDamageBotSniper", "Damage Bot Sniper", data.bulletDamageBotSniper, 24, "The damage a Sniper-Bullet does");
+		settings:add("GLOBAL", "Number", "meleeDamageBot", "Damage Bot Melee", data.meleeDamageBot, 42, "The Damage a melee-attack does");
+		settings:add("GLOBAL", "Boolean", "meleeAttackIfClose", "Attack with Melee", data.meleeAttackIfClose, true, "Bots attack the playe with the knife, if close");
+		settings:add("GLOBAL", "Boolean", "shootBackIfHit", "Attack if Hit", data.shootBackIfHit, true, "Bots imidiatly attack player, if shot by it");
+		settings:add("GLOBAL", "Number", "botAimWorsening", "Aim Worsening", data.botAimWorsening * 100, 0, "0 = hard, 100 (or higher) = easy. Only takes effect on level Start");
+		settings:addList("GLOBAL", "botKit", "Bot Kit", Kits, data.botKit, "RANDOM_KIT", "The Kit a bots spawns with.");
+		settings:addList("GLOBAL", "botColor", "Bot Color", Colors, data.botColor, "RANDOM_COLOR", "The Kit-Color a bots spawns with.");
+		settings:addList("OTHER", "language", "Language", { "de_DE", "en_US" }, data.language, "en_US", "Select the language of this mod");
+		settings:add("OTHER", "Password", "settingsPassword", "Password", data.settingsPassword, nil, "Password protection of these Mod");
+		
+		self._views:execute('BotEditor.openSettings(\'' .. settings:getJSON() .. '\');');
+		self._views:show('settings');
+		self._views:focus();
+	else
+		self._settingsActive = false
+		self._views:hide('settings');
+		self._views:blur();
+	end
 end
 
 function FunBotUIClient:_onUISaveSettings(data)
