@@ -617,7 +617,7 @@ function Bot:_updateMovement()
             local targetCycles = targetTime / (Config.botFireDuration + Config.botFirePause);
 
             if #self._shootWayPoints > targetCycles then
-                local distanceDone = self._shootWayPoints[#self._shootWayPoints]:Distance(self._shootWayPoints[#self._shootWayPoints-targetCycles]);
+                local distanceDone = self._shootWayPoints[#self._shootWayPoints].trans:Distance(self._shootWayPoints[#self._shootWayPoints-targetCycles].trans);
                 if distanceDone < 1.5 then --no movement was possible. Try to jump over obstacle
                     self.activeSpeedValue = 3;
                     self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 1);
