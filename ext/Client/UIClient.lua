@@ -50,6 +50,7 @@ function FunBotUIClient:_onUISettings(data)
 	settings:add("GLOBAL", "Boolean", "meleeAttackIfClose", "Attack with Melee", data.meleeAttackIfClose, true, "Bots attack the playe with the knife, if close");
 	settings:add("GLOBAL", "Boolean", "shootBackIfHit", "Attack if Hit", data.shootBackIfHit, true, "Bots imidiatly attack player, if shot by it");
 	settings:add("GLOBAL", "Boolean", "useKnifeOnly", "Knive Only", data.useKnifeOnly, false, "Bots do not shoot but try to attack with the knive");
+	settings:add("GLOBAL", "Boolean", "onlyPistols", "Pistols Only", data.onlyPistols, false, "Bots do only shoot with pistols");
 	settings:addList("GLOBAL", "botKit", "Bot Kit", Kits, data.botKit, "RANDOM_KIT", "The Kit a bots spawns with.");
 	settings:addList("GLOBAL", "botColor", "Bot Color", Colors, data.botColor, "RANDOM_COLOR", "The Kit-Color a bots spawns with.");
 	settings:add("DIFFICULTY", "Number", "botAimWorsening", "Aim Worsening", data.botAimWorsening * 100, 0, "0 = hard, 100 (or higher) = easy. Only takes effect on level Start");

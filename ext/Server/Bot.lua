@@ -321,6 +321,33 @@ end
 
 function Bot:_updateShooting()
     if self.player.alive and self._shoot then
+        --select weapon-slot TODO: keep button pressed or not?
+        if Config.useKnifeOnly then
+            if self.player.soldier.currentWeaponSlot ~= WeaponSlot.WeaponSlot_7 then
+                self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon8, 1);
+                self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
+                self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
+            else
+                self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon8, 0);
+            end
+        elseif Config.onlyPistol then
+            if self.player.soldier.currentWeaponSlot ~= WeaponSlot.WeaponSlot_1 then
+                self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon8, 0);
+                self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 1);
+                self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
+            else
+                elf.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
+            end
+        else
+            if self.player.soldier.currentWeaponSlot ~= WeaponSlot.WeaponSlot_0 then
+                self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon8, 0);
+                self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
+                self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 1);
+            else
+                self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
+            end
+        end
+
         if self._shootPlayer ~= nil and self._shootPlayer.soldier ~= nil then
             if not Config.useKnifeOnly then
 			

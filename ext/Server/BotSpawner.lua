@@ -371,12 +371,15 @@ end
 
 function BotSpawner:_onKitPickup(player, newCustomization)
     if player.soldier ~= nil then
-        player.soldier.weaponsComponent.currentWeapon.secondaryAmmo = 125
+        player.soldier.weaponsComponent.weapons[1].secondaryAmmo = 182;
+        player.soldier.weaponsComponent.weapons[2].secondaryAmmo = 58;
     end
 end
 
 function BotSpawner:_modifyWeapon(soldier)
-    soldier.weaponsComponent.currentWeapon.secondaryAmmo = 9999
+    --soldier.weaponsComponent.currentWeapon.secondaryAmmo = 9999;
+    soldier.weaponsComponent.weapons[1].secondaryAmmo = 9999;
+    soldier.weaponsComponent.weapons[2].secondaryAmmo = 9999;
 end
 
 function BotSpawner:spawnBot(bot, trans, setKit)

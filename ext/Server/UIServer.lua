@@ -207,6 +207,10 @@ function FunBotUIServer:_writeSettings(request)
 	if request.useKnifeOnly ~= nil then
 		Config.useKnifeOnly = (request.useKnifeOnly == true);
 	end
+
+	if request.onlyPistols ~= nil then
+		Config.useKnifeOnly = (request.onlyPistols == true);
+	end
 	
 	if request.shootBackIfHit ~= nil then
 		Config.shootBackIfHit = (request.shootBackIfHit == true);

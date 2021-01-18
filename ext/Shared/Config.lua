@@ -25,7 +25,8 @@ Config = {
     bulletDamageBotSniper = 24,     -- damage of a bot with sniper bullet
     meleeDamageBot = 48,            -- damage of a bot with melee attack
     meleeAttackIfClose = true,      -- bot attacks with melee if close
-    useKnifeOnly = false,           -- bots don't shoot but try to attack with the knive
+    useKnifeOnly = false,           -- bots do not shoot but try to attack with the knive
+    onlyPistols = false,            -- bots only shoot with pistol
     shootBackIfHit = true,          -- bot shoots back, if hit
     botAimWorsening = 0.0,          -- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy). Restart of level needed
     botKit = "RANDOM_KIT",          -- see Kits
