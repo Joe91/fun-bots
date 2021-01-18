@@ -11,34 +11,6 @@ function FunBotServer:__init()
     Events:Subscribe('Player:Chat', self, self._onChat)
     Events:Subscribe('Extension:Unloading', self, self._onExtensionUnload)
     Events:Subscribe('Extension:Loaded', self, self._onExtensionLoaded)
-
-    NetEvents:Subscribe('spawnbots', self, self._uispawnbots)
-	NetEvents:Subscribe('spawnrandombot', self, self._uispawnrandombot)
-	NetEvents:Subscribe('kickallbots', self, self._uikickallbots)
-	NetEvents:Subscribe('respawnbots', self, self._uibotrespawn)
-end
-
---webui events -Bitcrusher
-
---spawn bots
-function FunBotServer:_uispawnbots(player, spawnbots)
-    local amount = tonumber(spawnbots)
-    BotSpawner:spawnWayBots(player, amount, true)
-    print(player.name .." spawning ".. spawnbots .." bot/s")
-end
-
-function FunBotServer:_uispawnrandombot(player, spawnbots)
-    print("spawnrandombot - it worked!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-end
-
-function FunBotServer:_uikickallbots(player, spawnbots)
-    BotManager:destroyAllBots()
-    print("Kicking Bots")
-end
-
-function FunBotServer:_uibotrespawn(player, spawnbots)
-    BotManager:setOptionForAll("respawn", true)
-    print("Bots will respawn")
 end
 
 function FunBotServer:_onExtensionUnload()

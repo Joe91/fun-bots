@@ -1,7 +1,7 @@
 Config = {
     --general
     maxNumberOfBots = 32,           --maximum bots that can be spawned
-    initNumberOfBots = 16,          --bots on levelstart
+    initNumberOfBots = 10,          --bots on levelstart
     spawnOnLevelstart = true,       --bots spawn on levelstart (if valid paths are available)
     maxRaycastDistance = 125,       --meters bots start shooting at player
     spawnDelayBots = 2.0,           --time till bots respawn, if respawn enabled
