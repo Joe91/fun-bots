@@ -3,15 +3,10 @@ local WeaponModification = require('__shared/weaponModification')
 
 function FunBotShared:__init()
 	Events:Subscribe('Partition:Loaded', self, self.OnPartitionLoaded)
-	Events:Subscribe('Engine:Message', self, self.OnEngineMessage)
 end
 
 function FunBotShared:OnPartitionLoaded(p_Partition)
 	WeaponModification:OnPartitionLoaded(p_Partition)
-end
-
-function FunBotShared:OnEngineMessage(p_Message)
-	WeaponModification:OnEngineMessage(p_Message)
 end
 
 -- Singleton.

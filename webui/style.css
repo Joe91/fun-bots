@@ -343,13 +343,13 @@ ui-view[data-name="settings"] ui-tabs figure > ui-tab {
 }
 
 #GLOBAL:checked ~ figure .GLOBAL,
-#TRACE:checked ~ figure .TRACE,
+#DIFFICULTY:checked ~ figure .DIFFICULTY,
 #OTHER:checked ~ figure .OTHER {
 	display: block;
 }
 
 #GLOBAL:checked ~ nav > ul > li label[for="GLOBAL"],
-#TRACE:checked ~ nav > ul > li label[for="TRACE"],
+#DIFFICULTY:checked ~ nav > ul > li label[for="DIFFICULTY"],
 #OTHER:checked ~ nav > ul > li label[for="OTHER"] {
 	color: var(--color_text_hover);
 	text-shadow: 0 0 6px var(--color_text_hover_shadow);

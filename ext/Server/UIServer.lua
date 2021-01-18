@@ -69,7 +69,7 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 	elseif request.action == "trace_end" then
 		TraceManager:endTrace(player)
 
-	elseif request.action == "trace_clear_current" then
+	elseif request.action == "trace_clear" then
 		local index = tonumber(request.value)
 		TraceManager:clearTrace(index)
 
@@ -103,64 +103,8 @@ function FunBotUIServer:_onUIRequestSaveSettings(player, data)
 
 	local request = json.decode(data);
 
-	print(request.spawnInSameTeam)
-	if request.spawnInSameTeam ~= nil then
-		Config.spawnInSameTeam = (request.spawnInSameTeam == "true")
-	end
-	if request.fovForShooting ~= nil then
-		local tempValue = tonumber(request.fovForShooting)
-		if tempValue >= 0 and tempValue <= 360 then
-			Config.fovForShooting = tempValue
-		end
-	end
-	if request.bulletDamageBot ~= nil then
-		local tempValue = tonumber(request.bulletDamageBot)
-		if tempValue >= 0 then
-			Config.bulletDamageBot = tempValue
-		end
-	end
-	if request.bulletDamageBotSniper ~= nil then
-		local tempValue = tonumber(request.bulletDamageBotSniper)
-		if tempValue >= 0 then
-			Config.bulletDamageBotSniper = tempValue
-		end
-	end
-	if request.meleeDamageBot ~= nil then
-		local tempValue = tonumber(request.meleeDamageBot)
-		if tempValue >= 0 then
-			Config.meleeDamageBot = tempValue
-		end
-	end
-	if request.meleeAttackIfClose ~= nil then
-		Config.meleeAttackIfClose = (request.meleeAttackIfClose == "true")
-	end
-	if request.shootBackIfHit ~= nil then
-		Config.shootBackIfHit = (request.shootBackIfHit == "true")
-	end
-	if request.botAimWorsening ~= nil then
-		local tempValue = tonumber(request.botAimWorsening) / 100
-		if tempValue >= 0 and temValue < 10 then
-			Config.botAimWorsening = tempValue
-		end
-	end
-	if request.botKit ~= nil then
-		local tempString = request.botKit
-		for _, kit in pairs(Kits) do
-			if tempString == kit then
-				Config.botKit = tempString
-				break
-			end
-		end
-	end
-	if request.botColor ~= nil then
-		local tempString = request.botColor
-		for _, color in pairs(Colors) do
-			if tempString == color then
-				Config.botColor = tempString
-				break
-			end
-		end
-	end
+	self:_writeSettings(request)
+
 end
 
 function FunBotUIServer:_onUIRequestOpen(player, data)
@@ -210,8 +154,97 @@ function FunBotUIServer:_isAuthenticated(guid)
 	if self._authenticated:isEmpty() then
 		return false;
 	end
-	
+
 	return self._authenticated:exists(tostring(guid));
+end
+
+function FunBotUIServer:_writeSettings(request)
+	--global settings
+	if request.spawnInSameTeam ~= nil then
+		Config.spawnInSameTeam = (request.spawnInSameTeam == true)
+	end
+	if request.disableChatCommands ~= nil then
+		Config.disableChatCommands = (request.disableChatCommands == true)
+	end
+	if request.fovForShooting ~= nil then
+		local tempValue = tonumber(request.fovForShooting)
+		if tempValue >= 0 and tempValue <= 360 then
+			Config.fovForShooting = tempValue
+		end
+	end
+	if request.bulletDamageBot ~= nil then
+		local tempValue = tonumber(request.bulletDamageBot)
+		if tempValue >= 0 then
+			Config.bulletDamageBot = tempValue
+		end
+	end
+	if request.bulletDamageBotSniper ~= nil then
+		local tempValue = tonumber(request.bulletDamageBotSniper)
+		if tempValue >= 0 then
+			Config.bulletDamageBotSniper = tempValue
+		end
+	end
+	if request.meleeDamageBot ~= nil then
+		local tempValue = tonumber(request.meleeDamageBot)
+		if tempValue >= 0 then
+			Config.meleeDamageBot = tempValue
+		end
+	end
+	if request.meleeAttackIfClose ~= nil then
+		Config.meleeAttackIfClose = (request.meleeAttackIfClose == true)
+	end
+	if request.useKnifeOnly ~= nil then
+		Config.useKnifeOnly = (request.useKnifeOnly == true)
+	end
+	if request.shootBackIfHit ~= nil then
+		Config.shootBackIfHit = (request.shootBackIfHit == true)
+	end
+	if request.botAimWorsening ~= nil then
+		local tempValue = tonumber(request.botAimWorsening) / 100
+		if tempValue >= 0 and tempValue < 10 then
+			Config.botAimWorsening = tempValue
+		end
+	end
+	if request.botKit ~= nil then
+		local tempString = request.botKit
+		for _, kit in pairs(Kits) do
+			if tempString == kit then
+				Config.botKit = tempString
+				break
+			end
+		end
+	end
+	if request.botColor ~= nil then
+		local tempString = request.botColor
+		for _, color in pairs(Colors) do
+			if tempString == color then
+				Config.botColor = tempString
+				break
+			end
+		end
+	end
+
+	--client settings
+	if request.maxRaycastDistance ~= nil then
+		local tempValue = tonumber(request.maxRaycastDistance)
+		if tempValue >= 0 and tempValue <= 500 then
+			Config.maxRaycastDistance = tempValue
+		end
+	end
+	if request.distanceForDirectAttack ~= nil then
+		local tempValue = tonumber(request.distanceForDirectAttack)
+		if tempValue >= 0 and tempValue <= 10 then
+			Config.distanceForDirectAttack = tempValue
+		end
+	end
+
+	--UI
+	if request.language ~= nil then
+		Config.language = request.value
+	end
+	-- dont save password jet!!
+
+	NetEvents:BroadcastLocal('WriteClientSettings', Config, false)
 end
 
 if (g_FunBotUIServer == nil) then
