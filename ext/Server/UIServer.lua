@@ -192,6 +192,9 @@ function FunBotUIServer:_writeSettings(request)
 	if request.meleeAttackIfClose ~= nil then
 		Config.meleeAttackIfClose = (request.meleeAttackIfClose == "true")
 	end
+	if request.useKnifeOnly ~= nil then
+		Config.useKnifeOnly = (request.useKnifeOnly == "true")
+	end
 	if request.shootBackIfHit ~= nil then
 		Config.shootBackIfHit = (request.shootBackIfHit == "true")
 	end
@@ -217,6 +220,20 @@ function FunBotUIServer:_writeSettings(request)
 				Config.botColor = tempString
 				break
 			end
+		end
+	end
+
+	--client settings
+	if request.maxRaycastDistance ~= nil then
+		local tempValue = tonumber(request.maxRaycastDistance)
+		if tempValue >= 0 and tempValue <= 500 then
+			Config.maxRaycastDistance = tempValue
+		end
+	end
+	if request.distanceForDirectAttack ~= nil then
+		local tempValue = tonumber(request.distanceForDirectAttack)
+		if tempValue >= 0 and tempValue <= 10 then
+			Config.distanceForDirectAttack = tempValue
 		end
 	end
 	NetEvents:BroadcastLocal('WriteClientSettings', Config, false)
