@@ -7,7 +7,6 @@ Config = {
     spawnDelayBots = 2.0,           --time till bots respawn, if respawn enabled
     botTeam = TeamId.Team2,         --default bot team
     botNewLoadoutOnSpawn = true,
-    disableChatCommands = true,     --if true, no chat commands can be used
     respawnWayBots = true,          --bots on paths respawn if killed
     --shooting
     botFireDuration = 0.2,          -- the duration a bot fires
@@ -20,6 +19,7 @@ Config = {
     --values that can be modified ingame. These are the startup settings
     fovForShooting = 270,           -- Degrees of FOV of Bot
     spawnInSameTeam = false,        -- Team the bots spawn in
+    disableChatCommands = true,     -- if true, no chat commands can be used
     bulletDamageBot = 10,           -- damage of a bot with normal bullet
     bulletDamageBotSniper = 24,     -- damage of a bot with sniper bullet
     meleeDamageBot = 48,            -- damage of a bot with melee attack

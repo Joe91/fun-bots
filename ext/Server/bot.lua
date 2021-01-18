@@ -507,6 +507,8 @@ function Bot:_updateMovement()
         elseif self.activeMoveMode == 9 then
             --crouch moving (only mode with modified gun)
             self.activeSpeedValue = 2
+            self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0)
+            self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0)
         end
 
         -- additional movement
