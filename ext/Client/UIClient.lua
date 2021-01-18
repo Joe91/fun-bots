@@ -54,6 +54,8 @@ function FunBotUIClient:_onUISettings(data)
 		settings:add("GLOBAL", "Boolean", "meleeAttackIfClose", "Attack with Melee", data.meleeAttackIfClose, true, "Bots attack the playe with the knife, if close");
 		settings:add("GLOBAL", "Boolean", "shootBackIfHit", "Attack if Hit", data.shootBackIfHit, true, "Bots imidiatly attack player, if shot by it");
 		settings:add("GLOBAL", "Boolean", "useKnifeOnly", "Knive Only", data.useKnifeOnly, false, "Bots do not shoot but try to attack with the knive");
+		settings:addList("GLOBAL", "botKit", "Bot Kit", Kits, data.botKit, "RANDOM_KIT", "The Kit a bots spawns with.");
+		settings:addList("GLOBAL", "botColor", "Bot Color", Colors, data.botColor, "RANDOM_COLOR", "The Kit-Color a bots spawns with.");
 		settings:add("DIFFICULTY", "Number", "botAimWorsening", "Aim Worsening", data.botAimWorsening * 100, 0, "0 = hard, 100 (or higher) = easy. Only takes effect on level Start");
 		settings:add("DIFFICULTY", "Number", "maxRaycastDistance", "View Distance Bots", data.maxRaycastDistance, 125, "The maximum distance a bots starts shooting at a player");
 		settings:add("DIFFICULTY", "Number", "distanceForDirectAttack", "Direct Attack Distance", data.distanceForDirectAttack, 3, "When this close to a bot, he starts attacking");
@@ -61,10 +63,8 @@ function FunBotUIClient:_onUISettings(data)
 		settings:add("DIFFICULTY", "Number", "bulletDamageBot", "Damage Bot Bullet", data.bulletDamageBot, 9, "The damage a normal Bullet does");
 		settings:add("DIFFICULTY", "Number", "bulletDamageBotSniper", "Damage Bot Sniper", data.bulletDamageBotSniper, 24, "The damage a Sniper-Bullet does");
 		settings:add("DIFFICULTY", "Number", "meleeDamageBot", "Damage Bot Melee", data.meleeDamageBot, 42, "The Damage a melee-attack does");
-		settings:addList("GLOBAL", "botKit", "Bot Kit", Kits, data.botKit, "RANDOM_KIT", "The Kit a bots spawns with.");
-		settings:addList("GLOBAL", "botColor", "Bot Color", Colors, data.botColor, "RANDOM_COLOR", "The Kit-Color a bots spawns with.");
 		settings:add("OTHER", "Boolean", "disableChatCommands", "Disable Chat Commands", data.disableChatCommands, true, "if true, no chat commands can be used");
-		settings:addList("OTHER", "language", "Language", { "de_DE", "en_US" }, data.language, "en_US", "Select the language of this mod");
+		settings:addList("OTHER", "language", "Language", { "de_DE", "cn_CN", "en_US" }, data.language, "en_US", "Select the language of this mod");
 		settings:add("OTHER", "Password", "settingsPassword", "Password", data.settingsPassword, nil, "Password protection of these Mod");
 		
 		self._views:execute('BotEditor.openSettings(\'' .. settings:getJSON() .. '\');');
