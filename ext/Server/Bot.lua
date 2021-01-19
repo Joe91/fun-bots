@@ -321,32 +321,33 @@ end
 function Bot:_updateShooting()
     if self.player.alive and self._shoot then
         --select weapon-slot TODO: keep button pressed or not?
-        if Config.botWeapon == "Knive" then
-            if self.player.soldier.currentWeaponSlot ~= WeaponSlot.WeaponSlot_7 then
-                print("switch to Knive")
-                self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon8, 1);
-                self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
-                self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
-            else
-                self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon8, 0);
-            end
-        elseif Config.botWeapon == "Pistol" then
-            if self.player.soldier.currentWeaponSlot ~= WeaponSlot.WeaponSlot_1 then
-                print("switch to secondary")
-                self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon8, 0);
-                self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 1);
-                self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
-            else
-                elf.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
-            end
-        else --"Primary"
-            if self.player.soldier.currentWeaponSlot ~= WeaponSlot.WeaponSlot_0 then
-                print("switch to primary")
-                self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon8, 0);
-                self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
-                self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 1);
-            else
-                self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
+        if self.player.soldier.weaponsComponent ~= nil then
+            if Config.botWeapon == "Knive" then
+                if self.player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_7 then
+                    print("switch to Knive")
+                    print(self.player.soldier.weaponsComponent.currentWeaponSlot)
+                    self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 1); -- !8 !7 !6 5 !4 3 
+                    self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
+                    self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
+                else
+                    self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon8, 0);
+                end
+            elseif Config.botWeapon == "Pistol" then
+                if self.player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_1 then
+                    self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon8, 0);
+                    self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 1);
+                    self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
+                else
+                    self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
+                end
+            else --"Primary"
+                if self.player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_0 then
+                    self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon8, 0);
+                    self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
+                    self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 1);
+                else
+                    self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
+                end
             end
         end
 
@@ -652,7 +653,6 @@ function Bot:_updateMovement()
                 end
 
                 self._attackModeMoveTimer = self._attackModeMoveTimer + Config.botUpdateCycle;
-                end
             end
         end
 
