@@ -22,6 +22,9 @@ Config = {
 	maxRaycastDistance = 125,		-- meters bots start shooting at player
 	distanceForDirectAttack = 3,	-- if a bot is that close he will attack, even if not in FOV
 	meleeAttackCoolDown = 3.0,		-- the time a bot waits before attacking with melee again
+	botTeam = TeamId.Team2,		 	-- default bot team (0 = neutral, 1 = US, 2 = RU) TeamId.Team2
+	respawnWayBots = true,			-- bots on paths respawn if killed
+	attackWayBots = true,			-- bots on paths attack player
 	spawnDelayBots = 2.0,			-- time till bots respawn, if respawn enabled
 	initNumberOfBots = 10,			-- bots on levelstart
 	spawnOnLevelstart = true,		-- bots spawn on levelstart (if valid paths are available)
@@ -32,11 +35,6 @@ Config = {
 	traceUsageAllowed = true,		-- if false, no traces can be recorded, deleted or saved
 	settingsPassword = nil,		 	-- if nil, disable it. Otherwise use a String with your password
 	language = nil, --"de_DE",		-- de_DE as sample (default is english, when language file doesnt exists)
-
-	-- values that are changed by the mod while running TODO: better solution for them
-	botTeam = TeamId.Team2,		 	-- default bot team (0 = neutral, 1 = US, 2 = RU) TeamId.Team2
-	respawnWayBots = true,			-- bots on paths respawn if killed
-	attackWayBots = true,			-- bots on paths attack player
 }
 
 --don't change these values unless you know what you do

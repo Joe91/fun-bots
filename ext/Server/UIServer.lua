@@ -164,62 +164,6 @@ function FunBotUIServer:_writeSettings(request)
 		Config.spawnInSameTeam = (request.spawnInSameTeam == true);
 	end
 
-	if request.disableChatCommands ~= nil then
-		Config.disableChatCommands = (request.disableChatCommands == true);
-	end
-
-	if request.fovForShooting ~= nil then
-		local tempValue = tonumber(request.fovForShooting);
-
-		if tempValue >= 0 and tempValue <= 360 then
-			Config.fovForShooting = tempValue;
-		end
-	end
-
-	if request.bulletDamageBot ~= nil then
-		local tempValue = tonumber(request.bulletDamageBot);
-
-		if tempValue >= 0 then
-			Config.bulletDamageBot = tempValue;
-		end
-	end
-
-	if request.bulletDamageBotSniper ~= nil then
-		local tempValue = tonumber(request.bulletDamageBotSniper);
-
-		if tempValue >= 0 then
-			Config.bulletDamageBotSniper = tempValue;
-		end
-	end
-
-	if request.meleeDamageBot ~= nil then
-		local tempValue = tonumber(request.meleeDamageBot);
-
-		if tempValue >= 0 then
-			Config.meleeDamageBot = tempValue;
-		end
-	end
-
-	if request.meleeAttackIfClose ~= nil then
-		Config.meleeAttackIfClose = (request.meleeAttackIfClose == true);
-	end
-
-	if request.shootBackIfHit ~= nil then
-		Config.shootBackIfHit = (request.shootBackIfHit == true);
-	end
-
-	if request.jumpWhileShooting ~= nil then
-		Config.jumpWhileShooting = (request.jumpWhileShooting == true);
-	end
-
-	if request.botAimWorsening ~= nil then
-		local tempValue = tonumber(request.botAimWorsening) / 100;
-
-		if tempValue >= 0 and tempValue < 10 then
-			Config.botAimWorsening = tempValue;
-		end
-	end
-
 	if request.botWeapon ~= nil then
 		local tempString = request.botWeapon;
 
@@ -253,7 +197,60 @@ function FunBotUIServer:_writeSettings(request)
 		end
 	end
 
-	--client settings
+	-- difficulty
+	if request.botAimWorsening ~= nil then
+		local tempValue = tonumber(request.botAimWorsening) / 100;
+
+		if tempValue >= 0 and tempValue < 10 then
+			Config.botAimWorsening = tempValue;
+		end
+	end
+
+	if request.bulletDamageBot ~= nil then
+		local tempValue = tonumber(request.bulletDamageBot);
+
+		if tempValue >= 0 then
+			Config.bulletDamageBot = tempValue;
+		end
+	end
+
+	if request.bulletDamageBotSniper ~= nil then
+		local tempValue = tonumber(request.bulletDamageBotSniper);
+
+		if tempValue >= 0 then
+			Config.bulletDamageBotSniper = tempValue;
+		end
+	end
+
+	if request.meleeDamageBot ~= nil then
+		local tempValue = tonumber(request.meleeDamageBot);
+
+		if tempValue >= 0 then
+			Config.meleeDamageBot = tempValue;
+		end
+	end
+
+	--advanced
+	if request.fovForShooting ~= nil then
+		local tempValue = tonumber(request.fovForShooting);
+
+		if tempValue >= 0 and tempValue <= 360 then
+			Config.fovForShooting = tempValue;
+		end
+	end
+
+	if request.shootBackIfHit ~= nil then
+		Config.shootBackIfHit = (request.shootBackIfHit == true);
+	end
+
+	if request.botNewLoadoutOnSpawn ~= nil then
+		Config.botNewLoadoutOnSpawn = (request.botNewLoadoutOnSpawn == true);
+	end
+
+	if request.meleeAttackIfClose ~= nil then
+		Config.meleeAttackIfClose = (request.meleeAttackIfClose == true);
+	end
+
 	if request.maxRaycastDistance ~= nil then
 		local tempValue = tonumber(request.maxRaycastDistance);
 
@@ -270,11 +267,72 @@ function FunBotUIServer:_writeSettings(request)
 		end
 	end
 
-	--UI
+	if request.meleeAttackCoolDown ~= nil then
+		local tempValue = tonumber(request.meleeAttackCoolDown);
+
+		if tempValue >= 0 and tempValue <= 10 then
+			Config.meleeAttackCoolDown = tempValue;
+		end
+	end
+
+	if request.botTeam ~= nil then
+		local tempValue = tonumber(request.botTeam);
+		if tempValue == 1 then
+			Config.botTeam = TeamId.Team1;
+		elseif tempValue == 2 then
+			Config.botTeam = TeamId.Team2;
+		end
+	end
+
+	if request.respawnWayBots ~= nil then
+		Config.respawnWayBots = (request.respawnWayBots == true);
+	end
+
+	if request.attackWayBots ~= nil then
+		Config.attackWayBots = (request.attackWayBots == true);
+	end
+
+	if request.spawnDelayBots ~= nil then
+		local tempValue = tonumber(request.spawnDelayBots);
+
+		if tempValue >= 0 and tempValue <= 30 then
+			Config.spawnDelayBots = tempValue;
+		end
+	end
+
+	if request.initNumberOfBots ~= nil then
+		local tempValue = tonumber(request.initNumberOfBots);
+
+		if tempValue >= 0 and tempValue <= MAX_NUMBER_OF_BOTS then
+			Config.initNumberOfBots = tempValue;
+		end
+	end
+
+	if request.spawnOnLevelstart ~= nil then
+		Config.spawnOnLevelstart = (request.spawnOnLevelstart == true);
+	end
+
+	if request.jumpWhileShooting ~= nil then
+		Config.jumpWhileShooting = (request.jumpWhileShooting == true);
+	end
+
+	
+	-- other options
+	if request.disableChatCommands ~= nil then
+		Config.disableChatCommands = (request.disableChatCommands == true);
+	end
+
+	if request.traceUsageAllowed ~= nil then
+		Config.traceUsageAllowed = (request.traceUsageAllowed == true);
+	end
+
 	if request.language ~= nil then
 		Config.language = request.value;
 	end
-	-- dont save password jet!!
+
+	if request.settingsPassword ~= nil and Config.settingsPassword ~= nil then
+		Config.settingsPassword = request.value;
+	end
 
 	NetEvents:BroadcastLocal('WriteClientSettings', Config, false);
 end
