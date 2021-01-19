@@ -1,1 +1,0 @@
-stuff\vuicc.exe "D:\Daten Jonathan\Dokumente\Battlefield 3\Server\Admin\Mods\fun-bots\webui" "D:\Daten Jonathan\Dokumente\Battlefield 3\Server\Admin\Mods\fun-bots\ui.vuic"
