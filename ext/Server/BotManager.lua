@@ -47,7 +47,7 @@ function BotManager:detectBotTeam()
 end
 
 function BotManager:findNextBotName()
-	for i = 1, Config.maxNumberOfBots do
+	for i = 1, MAX_NUMBER_OF_BOTS do
 		local name = BotNames[i]
 		local bot = self:GetBotByName(name)
 		if bot == nil then
@@ -282,8 +282,8 @@ end
 
 function BotManager:destroyAmount(number)
 	local count = 0
-	for i = 1, Config.maxNumberOfBots do
-		local index = Config.maxNumberOfBots + 1 - i
+	for i = 1, MAX_NUMBER_OF_BOTS do
+		local index = MAX_NUMBER_OF_BOTS + 1 - i
 		local bot = self:GetBotByName(BotNames[index])
 		if bot ~= nil then
 			self:destroyBot(bot.name)
@@ -296,7 +296,7 @@ function BotManager:destroyAmount(number)
 end
 
 function BotManager:destroyTeam(teamId)
-	for i = 1, Config.maxNumberOfBots do
+	for i = 1, MAX_NUMBER_OF_BOTS do
 		local bot = self:GetBotByName(BotNames[i])
 		if bot ~= nil then
 			if bot.player.teamId == teamId then
@@ -307,7 +307,7 @@ function BotManager:destroyTeam(teamId)
 end
 
 function BotManager:destroyPlayerBots(player)
-	for i = 1, Config.maxNumberOfBots do
+	for i = 1, MAX_NUMBER_OF_BOTS do
 		local bot = self:GetBotByName(BotNames[i])
 		if bot ~= nil then
 			if bot:getTargetPlayer() == player then
