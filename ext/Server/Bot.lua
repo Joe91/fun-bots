@@ -173,8 +173,8 @@ function Bot:setVarsWay(player, useRandomWay, pathIndex, currentWayPoint)
 	if useRandomWay then
 		self._spawnMode		= 5;
 		self._targetPlayer	= nil;
-		self._shoot			= Config.attackWayBots;
-		self._respawning	= Config.respawnWayBots;
+		self._shoot			= Globals.attackWayBots;
+		self._respawning	= Globals.respawnWayBots;
 	else
 		self._spawnMode		= 4;
 		self._targetPlayer	= player;

@@ -46,7 +46,7 @@ function BotManager:detectBotTeam()
 		end
 	end
 	Globals.respawnWayBots 	= Config.respawnWayBots;
-	Gloabls.attackWayBots 	= Config.attackWayBots;
+	Globals.attackWayBots 	= Config.attackWayBots;
 end
 
 function BotManager:findNextBotName()
