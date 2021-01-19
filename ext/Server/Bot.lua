@@ -609,7 +609,11 @@ function Bot:_updateMovement()
                     -- TODO: Move yaw while waiting?
                     if  self._wayWaitTimer > point.optValue then
                         self._wayWaitTimer		= 0;
-                        self._currentWayPoint	= activePointIndex + 1;
+                        if self._invertPathDirection then
+                            self._currentWayPoint	= activePointIndex - 1;
+                        else
+                            self._currentWayPoint	= activePointIndex + 1;
+                        end
                     end
                 end
             end
