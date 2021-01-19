@@ -5,11 +5,11 @@ function SettingsManager:__init()
 end
 
 function SettingsManager:onLoad()
-    -- get Values from Config.lua
-    -- Check SQL if Config.lua has changed
-    -- if changed, update SETTINGS SQL
-    
-    -- Load Settings SQL and update Config.lua
+	-- get Values from Config.lua
+	-- Check SQL if Config.lua has changed
+	-- if changed, update SETTINGS SQL
+	
+	-- Load Settings SQL and update Config.lua
 end
 
 -- Singleton.

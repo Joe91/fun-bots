@@ -60,7 +60,7 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 	elseif request.action == 'bot_attack' then  --toggle this function
 		local attack			= not Config.attackWayBots;
 		Config.attackWayBots	= attack;
-        BotManager:setOptionForAll('shoot', attack);
+		BotManager:setOptionForAll('shoot', attack);
 
 	-- Trace
 	elseif request.action == 'trace_start' then

@@ -30,16 +30,16 @@ end
 function Database:query(query, parameters)
 	if not SQL:Open() then
 		self.lastError = 'Can\'t open mod.db!';
-        return nil;
-    end
+		return nil;
+	end
 	
 	-- @ToDo build query with given parameters
 	local result = SQL:Query(query);
 	
 	if not result then
-        self.lastError = 'Failed to execute query: ' .. self:getError();
-        return nil;
-    end
+		self.lastError = 'Failed to execute query: ' .. self:getError();
+		return nil;
+	end
 	
 	SQL:Close();
 	
