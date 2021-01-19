@@ -326,17 +326,15 @@ function Bot:_updateShooting()
         if self.player.soldier.weaponsComponent ~= nil then
             if Config.botWeapon == "Knive" then
                 if self.player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_7 then
-                    print("switch to Knive")
-                    print(self.player.soldier.weaponsComponent.currentWeaponSlot)
-                    self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 1); -- !8 !7 !6 5 !4 3 
+                    self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 1);
                     self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
                     self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
                 else
-                    self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon8, 0);
+                    self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 0);
                 end
             elseif Config.botWeapon == "Pistol" then
                 if self.player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_1 then
-                    self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon8, 0);
+                    self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 0);
                     self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 1);
                     self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
                 else
@@ -344,7 +342,7 @@ function Bot:_updateShooting()
                 end
             else --"Primary"
                 if self.player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_0 then
-                    self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon8, 0);
+                    self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 0);
                     self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
                     self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 1);
                 else
@@ -449,11 +447,11 @@ function Bot:_updateMovement()
         -- mirroring
         elseif self.activeMoveMode == 4 and self._targetPlayer ~= nil then
             additionalMovementPossible = false;
-			
+
             for i = 0, 36 do
                 self.player.input:SetLevel(i, self._targetPlayer.input:GetLevel(i));
             end
-			
+
             self.player.input.authoritativeAimingYaw	= self._targetPlayer.input.authoritativeAimingYaw + ((self._targetPlayer.input.authoritativeAimingYaw > math.pi) and -math.pi or math.pi);
             self.player.input.authoritativeAimingPitch	= self._targetPlayer.input.authoritativeAimingPitch;
 
