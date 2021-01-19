@@ -27,7 +27,7 @@ function TraceManager:onLevelLoaded(levelName, gameMode)
 end
 
 function TraceManager:loadPaths()
-	for i = 1, Config.maxTraceNumber do
+	for i = 1, MAX_TRACE_NUMBERS do
 		Globals.wayPoints[i] = {};
 	end
 
@@ -37,7 +37,7 @@ function TraceManager:loadPaths()
 end
 
 function TraceManager:onUnload()
-	for i = 1, Config.maxTraceNumber do
+	for i = 1, MAX_TRACE_NUMBERS do
 		Globals.wayPoints[i] = {};
 	end
 
@@ -61,7 +61,7 @@ end
 function TraceManager:_onPlayerLeft(player)
 	self._traceStatePlayer[player.name] = nil;
 
-	for i = 1, Config.maxTraceNumber do
+	for i = 1, MAX_TRACE_NUMBERS do
 		if self._tracePlayer[i] == player then
 			self._tracePlayer[i] = nil;
 		end
@@ -82,7 +82,7 @@ function TraceManager:startTrace(player, index)
 	end
 
 	if  self._traceStatePlayer[player.name] ~= 0 then  --trace still running
-		for i = 1, Config.maxTraceNumber do
+		for i = 1, MAX_TRACE_NUMBERS do
 			if self._tracePlayer[i] == player then
 				self._tracePlayer[i] = nil;
 				Globals.wayPoints[i] = {};
@@ -91,7 +91,7 @@ function TraceManager:startTrace(player, index)
 	end
 
 	if index == 0 then
-		for i = 1, Config.maxTraceNumber do
+		for i = 1, MAX_TRACE_NUMBERS do
 			if Globals.wayPoints[i][1] == nil then
 				index = i;
 				break
@@ -99,7 +99,7 @@ function TraceManager:startTrace(player, index)
 		end
 	end
 
-	if index > Config.maxTraceNumber or index < 1 then
+	if index > MAX_TRACE_NUMBERS or index < 1 then
 		index = 1;
 	end
 
@@ -118,7 +118,7 @@ function TraceManager:endTrace(player)
 	end
 
 	local traceIndex = 0;
-	for i = 1, Config.maxTraceNumber do
+	for i = 1, MAX_TRACE_NUMBERS do
 		if self._tracePlayer[i] == player then
 			traceIndex = i;
 			break;
@@ -136,7 +136,7 @@ end
 
 function TraceManager:_onClientEndTraceResponse(player, isClearView)
 	local traceIndex = 0;
-	for i = 1, Config.maxTraceNumber do
+	for i = 1, MAX_TRACE_NUMBERS do
 		if self._tracePlayer[i] == player then
 			traceIndex = i;
 			break;
@@ -176,7 +176,7 @@ function TraceManager:clearAllTraces()
 	print('Clearing all traces');
 	ChatManager:Yell("Clearing all traces", 2.5);
 
-	for i = 1, Config.maxTraceNumber do
+	for i = 1, MAX_TRACE_NUMBERS do
 		self:_clearTrace(i);
 	end
 
@@ -198,7 +198,7 @@ function TraceManager:savePaths()
 end
 
 function TraceManager:_clearTrace(traceIndex)
-	if traceIndex < 1 or traceIndex > Config.maxTraceNumber then
+	if traceIndex < 1 or traceIndex > MAX_TRACE_NUMBERS then
 		return;
 	end
 
@@ -211,7 +211,7 @@ end
 
 function TraceManager:_onUpdate(dt)
 	--trace way if wanted
-	for i = 1, Config.maxTraceNumber do
+	for i = 1, MAX_TRACE_NUMBERS do
 		if self._tracePlayer[i] ~= nil then
 			self._traceUpdateTimer[i] = self._traceUpdateTimer[i] + dt;
 
@@ -315,7 +315,7 @@ function TraceManager:_loadWayPoints()
 	-- clear waypoints
 	Globals.wayPoints = {};
 
-	for i = 1, Config.maxTraceNumber do
+	for i = 1, MAX_TRACE_NUMBERS do
 		Globals.wayPoints[i] = {};
 	end
 
@@ -380,7 +380,7 @@ function TraceManager:_saveWayPoints()
 	query				= 'INSERT INTO ' .. self._mapName .. '_table (pathIndex, pointIndex, transX, transY, transZ, inputVar) VALUES ';
 	local pathIndex		= 0;
 
-	for oldPathIndex = 1, Config.maxTraceNumber do
+	for oldPathIndex = 1, MAX_TRACE_NUMBERS do
 		local pointsDone			= 0;
 		local maxPointsInOneQuery	= 1000;
 		local errorActive			= false;

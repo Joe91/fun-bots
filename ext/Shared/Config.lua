@@ -1,20 +1,20 @@
-Config = {
-	--general
-	maxNumberOfBots = 32,			-- maximum bots that can be spawned
-	maxTraceNumber = 15,			-- maximum number of traces in one level
+MAX_NUMBER_OF_BOTS = 32;	-- maximum bots that can be spawned
+MAX_TRACE_NUMBERS = 15;		-- maximum number of traces in one level
 
-	--values that can be modified ingame. These are the startup settings
+Config = {
+	--global
 	spawnInSameTeam = false,		-- Team the bots spawn in
 	botWeapon = "Primary",			-- Select the weapon the bots use
 	botKit = "RANDOM_KIT",			-- see BotKits
 	botColor = "RANDOM_COLOR",		-- see BotColors
 
+	--difficluty
 	botAimWorsening = 0.0,			-- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy). Restart of level needed
 	bulletDamageBot = 10,			-- damage of a bot with normal bullet
 	bulletDamageBotSniper = 24,	 	-- damage of a bot with sniper bullet
 	meleeDamageBot = 48,			-- damage of a bot with melee attack
 
-	-- Advanced
+	--advanced
 	fovForShooting = 270,			-- Degrees of FOV of Bot
 	shootBackIfHit = true,			-- bot shoots back, if hit
 	botNewLoadoutOnSpawn = true,	-- bots get a new kit and color, if they respawn
@@ -35,8 +35,10 @@ Config = {
 	traceUsageAllowed = true,		-- if false, no traces can be recorded, deleted or saved
 	settingsPassword = nil,		 	-- if nil, disable it. Otherwise use a String with your password
 	language = nil, --"de_DE",		-- de_DE as sample (default is english, when language file doesnt exists)
+}
 
-	--don't change these values unless you know what you do
+--don't change these values unless you know what you do
+StaticConfig = {
 	traceDelta = 0.2,				-- update intervall of trace
 	traceDeltaShooting = 0.4,		-- update intervall of trace back to path the bots left for shooting
 	raycastInterval = 0.1,			-- update intervall of client raycasts

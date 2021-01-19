@@ -204,7 +204,7 @@ function BotSpawner:_getNewWayIndex()
 	end
 	local targetWaypoint = MathUtils:GetRandomInt(1, Globals.activeTraceIndexes)
 	local count = 0
-	for i = 1, Config.maxTraceNumber do
+	for i = 1, MAX_TRACE_NUMBERS do
 		if Globals.wayPoints[i][1] ~= nil then
 			count = count + 1
 		end

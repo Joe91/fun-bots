@@ -72,7 +72,7 @@ function ChatCommands:execute(parts, player)
 
 		local activeWayIndex = tonumber(parts[3]) or 1;
 
-		if activeWayIndex > Config.maxTraceNumber or activeWayIndex < 1 then
+		if activeWayIndex > MAX_TRACE_NUMBERS or activeWayIndex < 1 then
 			activeWayIndex = 1;
 		end
 
