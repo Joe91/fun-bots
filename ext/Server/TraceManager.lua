@@ -14,6 +14,7 @@ function TraceManager:__init()
 
     Events:Subscribe('Engine:Update', self, self._onUpdate);
     Events:Subscribe('Player:Left', self, self._onPlayerLeft);
+    NetEvents:Subscribe('ClientEndTraceResponse', self, self._onClientEndTraceResponse);
 end
 
 function TraceManager:onLevelLoaded(levelName, gameMode)
@@ -116,21 +117,46 @@ function TraceManager:endTrace(player)
         return;
     end
 	
-    if  self._traceStatePlayer[player.name] == 0 then
+    local traceIndex = 0;
+    for i = 1, Config.maxTraceNumber do
+        if self._tracePlayer[i] == player then
+            traceIndex = i;
+            break;
+        end
+    end
+
+    if  self._traceStatePlayer[player.name] == 0 or traceIndex == 0 then
         return;
     end
-	
+
+    -- find out if trace is a roundway or not
+    NetEvents:SendToLocal('ClientEndTraceRequest', player, Globals.wayPoints[traceIndex][1].trans, Globals.wayPoints[traceIndex][#Globals.wayPoints[traceIndex]].trans);
+    -- continue with respone
+end
+
+function TraceManager:_onClientEndTraceResponse(player, isClearView)
+    local traceIndex = 0;
+    for i = 1, Config.maxTraceNumber do
+        if self._tracePlayer[i] == player then
+            traceIndex = i;
+            break;
+        end
+    end
+
+    print("View clear? "..isClearView)
+
+    if isClearView then
+        Globals.wayPoints[traceIndex][1].optValue = 0  --normal behavior
+    else
+        Globals.wayPoints[traceIndex][1].optValue = 0XFF;  --signal, that the way needs to reverse its directon 
+    end
+
     print('Trace done');
     ChatManager:Yell('Trace done', 2.5);
 	
     Globals.activeTraceIndexes = Globals.activeTraceIndexes + 1;
 	
-    for i = 1, Config.maxTraceNumber do
-        if self._tracePlayer[i] == player then
-            self._tracePlayer[i] = nil;
-        end
-    end
-	
+    self._tracePlayer[traceIndex] = nil;
     self._traceStatePlayer[player.name] = 0;
 end
 

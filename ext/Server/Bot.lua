@@ -41,6 +41,7 @@ function Bot:__init(player)
     self._jumpTargetPoint = nil;
     self._jumpTriggerDistance = 0;
     self._lastWayDistance = 0;
+    self._invertPathDirection = false;
     self._obstacleRetryCounter = 0;
 
     --shooting
@@ -246,6 +247,7 @@ function Bot:resetSpawnVars()
     self._meleeCooldownTimer	= 0;
     self._shootTraceTimer       = 0;
     self._attackModeMoveTimer   = 0;
+    self._shootWayPoints        = {};
 end
 
 function Bot:clearPlayer(player)
