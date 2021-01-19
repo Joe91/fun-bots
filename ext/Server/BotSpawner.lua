@@ -388,10 +388,10 @@ function BotSpawner:spawnBot(bot, trans, setKit)
 
     if setKit or Config.botNewLoadoutOnSpawn then
         if botColor == "RANDOM_COLOR" then
-            botColor = Colors[MathUtils:GetRandomInt(2, #Colors)]
+            botColor = BotColors[MathUtils:GetRandomInt(2, #BotColors)]
         end
         if botKit == "RANDOM_KIT" then
-            botKit = Kits[MathUtils:GetRandomInt(2, #Kits)]
+            botKit = BotKits[MathUtils:GetRandomInt(2, #BotKits)]
         end
         bot.color = botColor
         bot.kit = botKit

@@ -15,6 +15,7 @@ Config = {
     botMinTimeShootAtPlayer = 1.0,  -- the minimum time a bot shoots at one player
     botFireModeDuration = 5.0,      -- the minimum time a bot tries to shoot a player
     meleeAttackCoolDown = 3.0,      -- the time a bot waits before attacking with melee again
+    jumpWhileShooting = true,       -- bots jump over obstacles while shooting if needed
     attackWayBots = true,           -- bots on paths attack player
 
     --values that can be modified ingame. These are the startup settings
@@ -25,12 +26,11 @@ Config = {
     bulletDamageBotSniper = 24,     -- damage of a bot with sniper bullet
     meleeDamageBot = 48,            -- damage of a bot with melee attack
     meleeAttackIfClose = true,      -- bot attacks with melee if close
-    useKnifeOnly = false,           -- bots do not shoot but try to attack with the knive
-    onlyPistols = false,            -- bots only shoot with pistol
+    botWeapon = "Primary",          -- Select the weapon the bots use
     shootBackIfHit = true,          -- bot shoots back, if hit
     botAimWorsening = 0.0,          -- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy). Restart of level needed
-    botKit = "RANDOM_KIT",          -- see Kits
-    botColor = "RANDOM_COLOR",      -- see Colors
+    botKit = "RANDOM_KIT",          -- see BotKits
+    botColor = "RANDOM_COLOR",      -- see BotColors
 
     -- UI settings & language options
 	settingsPassword = nil,         -- if nil, disable it. Otherwise use a String with your password
@@ -42,6 +42,7 @@ Config = {
 
     --don't change these values unless you know what you do
     traceDelta = 0.2,               -- update intervall of trace
+    traceDeltaShooting = 0.4,       -- update intervall of trace back to path the bots left for shooting
     raycastInterval = 0.1,          -- update intervall of client raycasts
     botUpdateCycle = 0.1,           -- update-intervall of bots
     botAimUpdateCycle = 0.05,       -- = 3 frames at 60 Hz
@@ -51,7 +52,7 @@ Config = {
 }
 
 -- @ToDo move these values outside config
-Kits = {
+BotKits = {
     "RANDOM_KIT",
     "Assault",
     "Engineer",
@@ -59,7 +60,7 @@ Kits = {
     "Recon"
 }
 
-Colors = {
+BotColors = {
     "RANDOM_COLOR", --0
     "Urban", --1
     "ExpForce", --2
@@ -74,6 +75,12 @@ Colors = {
     "Jungle", --11
     "Navy", --12
     "Wood01" --13
+}
+
+BotWeapons = {
+    "Primary",
+    "Pistol",
+    "Knive"
 }
 
 BotNames = {

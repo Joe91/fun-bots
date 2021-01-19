@@ -49,10 +49,10 @@ function FunBotUIClient:_onUISettings(data)
 	settings:add("GLOBAL", "Boolean", "spawnInSameTeam", "Spawn in Same Team", data.spawnInSameTeam, false, "If true, Bots spawn in the team of the player");
 	settings:add("GLOBAL", "Boolean", "meleeAttackIfClose", "Attack with Melee", data.meleeAttackIfClose, true, "Bots attack the playe with the knife, if close");
 	settings:add("GLOBAL", "Boolean", "shootBackIfHit", "Attack if Hit", data.shootBackIfHit, true, "Bots imidiatly attack player, if shot by it");
-	settings:add("GLOBAL", "Boolean", "useKnifeOnly", "Knive Only", data.useKnifeOnly, false, "Bots do not shoot but try to attack with the knive");
-	settings:add("GLOBAL", "Boolean", "onlyPistols", "Pistols Only", data.onlyPistols, false, "Bots do only shoot with pistols");
-	settings:addList("GLOBAL", "botKit", "Bot Kit", Kits, data.botKit, "RANDOM_KIT", "The Kit a bots spawns with.");
-	settings:addList("GLOBAL", "botColor", "Bot Color", Colors, data.botColor, "RANDOM_COLOR", "The Kit-Color a bots spawns with.");
+	settings:add("GLOBAL", "Boolean", "jumpWhileShooting", "Allow Jump while shooting", data.jumpWhileShooting, true, "Bots jump over obstacles while shooting");
+	settings:addList("GLOBAL", "botWeapon", "Bot Weapon", BotWeapons, data.botWeapon, "Primary", "Select the weapon the bots use");
+	settings:addList("GLOBAL", "botKit", "Bot Kit", BotKits, data.botKit, "RANDOM_KIT", "The Kit a bots spawns with.");
+	settings:addList("GLOBAL", "botColor", "Bot Color", BotColors, data.botColor, "RANDOM_COLOR", "The Kit-Color a bots spawns with.");
 	settings:add("DIFFICULTY", "Number", "botAimWorsening", "Aim Worsening", data.botAimWorsening * 100, 0, "0 = hard, 100 (or higher) = easy. Only takes effect on level Start");
 	settings:add("DIFFICULTY", "Number", "maxRaycastDistance", "View Distance Bots", data.maxRaycastDistance, 125, "The maximum distance a bots starts shooting at a player");
 	settings:add("DIFFICULTY", "Number", "distanceForDirectAttack", "Direct Attack Distance", data.distanceForDirectAttack, 3, "When this close to a bot, he starts attacking");

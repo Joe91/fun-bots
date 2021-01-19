@@ -204,18 +204,14 @@ function FunBotUIServer:_writeSettings(request)
 		Config.meleeAttackIfClose = (request.meleeAttackIfClose == true);
 	end
 	
-	if request.useKnifeOnly ~= nil then
-		Config.useKnifeOnly = (request.useKnifeOnly == true);
-	end
-
-	if request.onlyPistols ~= nil then
-		Config.onlyPistols = (request.onlyPistols == true);
-	end
-	
 	if request.shootBackIfHit ~= nil then
 		Config.shootBackIfHit = (request.shootBackIfHit == true);
 	end
 	
+	if request.jumpWhileShooting ~= nil then
+		Config.jumpWhileShooting = (request.jumpWhileShooting == true);
+	end
+
 	if request.botAimWorsening ~= nil then
 		local tempValue = tonumber(request.botAimWorsening) / 100;
 		
@@ -223,11 +219,22 @@ function FunBotUIServer:_writeSettings(request)
 			Config.botAimWorsening = tempValue;
 		end
 	end
+
+	if request.botWeapon ~= nil then
+		local tempString = request.botWeapon;
+		
+		for _, weapon in pairs(BotWeapons) do
+			if tempString == weapon then
+				Config.botWeapon = tempString;
+				break
+			end
+		end
+	end
 	
 	if request.botKit ~= nil then
 		local tempString = request.botKit;
 		
-		for _, kit in pairs(Kits) do
+		for _, kit in pairs(BotKits) do
 			if tempString == kit then
 				Config.botKit = tempString;
 				break
@@ -238,7 +245,7 @@ function FunBotUIServer:_writeSettings(request)
 	if request.botColor ~= nil then
 		local tempString = request.botColor;
 		
-		for _, color in pairs(Colors) do
+		for _, color in pairs(BotColors) do
 			if tempString == color then
 				Config.botColor = tempString;
 				break

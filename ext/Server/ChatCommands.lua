@@ -122,14 +122,14 @@ function ChatCommands:execute(parts, player)
         local kitNumber = tonumber(parts[2]) or 1;
 		
         if kitNumber <= 4 and kitNumber >= 0 then
-            Config.botKit = Kits[kitNumber];
+            Config.botKit = BotKits[kitNumber];
         end
 
     elseif parts[1] == '!setbotcolor' then
         local botColor = tonumber(parts[2]) or 1;
 		
-        if botColor <= #Colors and botColor >= 0 then
-            Config.botColor = Colors[botColor];
+        if botColor <= #BotColors and botColor >= 0 then
+            Config.botColor = BotColors[botColor];
         end
 
     elseif parts[1] == '!setaim' then
