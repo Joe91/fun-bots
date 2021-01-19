@@ -6,6 +6,7 @@ require('__shared/Config');
 local BotManager	= require('BotManager');
 local TraceManager	= require('TraceManager');
 local BotSpawner	= require('BotSpawner');
+local Globals 		= require('Globals');
 
 function FunBotUIServer:__init()
 	self._webui			= 0;
@@ -53,13 +54,13 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 		BotManager:killAll();
 
 	elseif request.action == 'bot_respawn' then  --toggle this function
-		local respawning		= not Config.respawnWayBots;
-		Config.respawnWayBots	= respawning;
+		local respawning		= not Globals.respawnWayBots;
+		Globals.respawnWayBots	= respawning;
 		BotManager:setOptionForAll('respawn', respawning);
 
 	elseif request.action == 'bot_attack' then  --toggle this function
-		local attack			= not Config.attackWayBots;
-		Config.attackWayBots	= attack;
+		local attack			= not Globals.attackWayBots;
+		Globals.attackWayBots	= attack;
 		BotManager:setOptionForAll('shoot', attack);
 
 	-- Trace
@@ -316,7 +317,7 @@ function FunBotUIServer:_writeSettings(request)
 		Config.jumpWhileShooting = (request.jumpWhileShooting == true);
 	end
 
-	
+
 	-- other options
 	if request.disableChatCommands ~= nil then
 		Config.disableChatCommands = (request.disableChatCommands == true);

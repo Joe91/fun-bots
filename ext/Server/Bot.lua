@@ -117,8 +117,8 @@ function Bot:setVarsDefault()
 	self._moveMode		= 5;
 	self._botSpeed		= 3;
 	self._pathIndex		= 1;
-	self._respawning	= Config.respawnWayBots;
-	self._shoot			= Config.attackWayBots;
+	self._respawning	= Globals.respawnWayBots;
+	self._shoot			= Globals.attackWayBots;
 end
 
 function Bot:resetVars()

@@ -19,31 +19,34 @@ function BotManager:__init()
 end
 
 function BotManager:detectBotTeam()
-	local countPlayerTeam = 0
-	local countPlayers = 0
+	local countPlayerTeam = 0;
+	local countPlayers = 0;
 	local players = PlayerManager:GetPlayers()
 	for i = 1, PlayerManager:GetPlayerCount() do
 		if self:GetBotByName(players[i].name) == nil then
-			countPlayers = countPlayers + 1
+			countPlayers = countPlayers + 1;
 			if players[i].teamId ~= Config.botTeam then
-				countPlayerTeam = countPlayerTeam + 1
+				countPlayerTeam = countPlayerTeam + 1;
 			end
 		end
 	end
 
+	-- init global Vars
 	if countPlayerTeam >= countPlayers/2 then
 		if Config.botTeam == TeamId.Team1 and not Config.spawnInSameTeam then
-			Config.botTeam = TeamId.Team2
+			Globals.botTeam = TeamId.Team2;
 		else
-			Config.botTeam = TeamId.Team1
+			Globals.botTeam = TeamId.Team1;
 		end
 	else
 		if Config.botTeam == TeamId.Team1 and not Config.spawnInSameTeam then
-			Config.botTeam = TeamId.Team1
+			Globals.botTeam = TeamId.Team1;
 		else
-			Config.botTeam = TeamId.Team2
+			Globals.botTeam = TeamId.Team2;
 		end
 	end
+	Globals.respawnWayBots 	= Config.respawnWayBots;
+	Gloabls.attackWayBots 	= Config.attackWayBots;
 end
 
 function BotManager:findNextBotName()

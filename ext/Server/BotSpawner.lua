@@ -25,7 +25,7 @@ function BotSpawner:onLevelLoaded()
 	end
 
 	for i = 1,amountToSpawn do
-		BotManager:createBot(BotNames[i], Config.botTeam)
+		BotManager:createBot(BotNames[i], Globals.botTeam)
 	end
 	if BotManager:getBotCount() > amountToSpawn then --if bots have been added in between
 		local numberToKick = BotManager:getBotCount() - amountToSpawn
@@ -85,7 +85,7 @@ function BotSpawner:_onRespawnBot(botname)
 end
 
 function BotSpawner:getBotTeam(player)
-	local team = Config.botTeam
+	local team = Globals.botTeam
 	if player ~= nil then
 		if Config.spawnInSameTeam then
 			team = player.teamId
