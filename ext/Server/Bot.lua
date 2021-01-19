@@ -124,16 +124,17 @@ function Bot:setVarsDefault()
 end
 
 function Bot:resetVars()
-    self._spawnMode			= 0;
-    self._moveMode			= 0;
-    self._pathIndex			= 0;
-    self._respawning		= false;
-    self._shoot				= false;
-    self._targetPlayer		= nil;
-    self._shootPlayer		= nil;
-    self._lastShootPlayer	= nil;
-    self._updateTimer		= 0;
-    self._aimUpdateTimer	= 0; --timer sync
+    self._spawnMode			    = 0;
+    self._moveMode			    = 0;
+    self._pathIndex			    = 0;
+    self._respawning		    = false;
+    self._shoot				    = false;
+    self._targetPlayer		    = nil;
+    self._shootPlayer		    = nil;
+    self._lastShootPlayer	    = nil;
+    self._invertPathDirection   = false;
+    self._updateTimer		    = 0;
+    self._aimUpdateTimer	    = 0; --timer sync
 	
     self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 0);
     self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
