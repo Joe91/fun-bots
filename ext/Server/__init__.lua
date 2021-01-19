@@ -2,6 +2,7 @@ class('FunBotServer');
 
 require('__shared/Config');
 
+local SettingsManager       = require('SettingsManager');
 local BotManager			= require('BotManager');
 local TraceManager			= require('TraceManager');
 local BotSpawner			= require('BotSpawner');
@@ -23,6 +24,8 @@ function FunBotServer:_onExtensionUnload()
 end
 
 function FunBotServer:_onExtensionLoaded()
+    SettingsManager:onLoad();
+    
     local fullLevelPath = SharedUtils:GetLevelName();
 	
     if (fullLevelPath ~= nil) then
