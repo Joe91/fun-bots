@@ -344,12 +344,14 @@ ui-view[data-name="settings"] ui-tabs figure > ui-tab {
 
 #GLOBAL:checked ~ figure .GLOBAL,
 #DIFFICULTY:checked ~ figure .DIFFICULTY,
+#ADVANCED:checked ~ figure .ADVANCED,
 #OTHER:checked ~ figure .OTHER {
 	display: block;
 }
 
 #GLOBAL:checked ~ nav > ul > li label[for="GLOBAL"],
 #DIFFICULTY:checked ~ nav > ul > li label[for="DIFFICULTY"],
+#ADVANCED:checked ~ nav > ul > li label[for="ADVANCED"],
 #OTHER:checked ~ nav > ul > li label[for="OTHER"] {
 	color: var(--color_text_hover);
 	text-shadow: 0 0 6px var(--color_text_hover_shadow);

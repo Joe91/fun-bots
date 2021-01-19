@@ -61,7 +61,7 @@ function BotSpawner:_onRespawnBot(botname)
 	if spawnMode == 2 then --spawnInLine
 		local transform = LinearTransform()
 		transform = bot:getSpawnTransform()
-		self:spawnBot(bot, transform, true)
+		self:spawnBot(bot, transform, false)
 
 	elseif spawnMode == 4 then	--fixed Way
 		local wayIndex = bot:getWayIndex()
@@ -69,7 +69,7 @@ function BotSpawner:_onRespawnBot(botname)
 		local transform = LinearTransform()
 		transform.trans = Globals.wayPoints[wayIndex][randIndex].trans
 		bot:setCurrentWayPoint(randIndex)
-		self:spawnBot(bot, transform, true)
+		self:spawnBot(bot, transform, false)
 
 	elseif spawnMode == 5 then --random Way
 		local wayIndex = self:_getNewWayIndex()
@@ -79,7 +79,7 @@ function BotSpawner:_onRespawnBot(botname)
 			bot:setWayIndex(wayIndex)
 			bot:setCurrentWayPoint(randIndex)
 			transform.trans = Globals.wayPoints[wayIndex][randIndex].trans
-			self:spawnBot(bot, transform, true)
+			self:spawnBot(bot, transform, false)
 		end
 	end
 end
