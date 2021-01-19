@@ -425,7 +425,7 @@ function Bot:_updateMovement()
 	if self.player.alive then
 		-- pointing
 		if self.activeMoveMode == 2 and self._targetPlayer ~= nil then
-			if self._targetPlayer.soldier ~= nil then 
+			if self._targetPlayer.soldier ~= nil then
 				local dy		= self._targetPlayer.soldier.worldTransform.trans.z - self.player.soldier.worldTransform.trans.z;
 				local dx		= self._targetPlayer.soldier.worldTransform.trans.x - self.player.soldier.worldTransform.trans.x;
 				local atanDzDx	= math.atan(dy, dx);
@@ -434,7 +434,7 @@ function Bot:_updateMovement()
 			end
 
 		-- mimicking
-		elseif self.activeMoveMode == 3 and self._targetPlayer ~= nil then 
+		elseif self.activeMoveMode == 3 and self._targetPlayer ~= nil then
 			additionalMovementPossible = false;
 
 			for i = 0, 36 do

@@ -146,7 +146,7 @@ function TraceManager:_onClientEndTraceResponse(player, isClearView)
 	if isClearView then
 		Globals.wayPoints[traceIndex][1].optValue = 0  --normal behavior
 	else
-		Globals.wayPoints[traceIndex][1].optValue = 0XFF;  --signal, that the way needs to reverse its directon 
+		Globals.wayPoints[traceIndex][1].optValue = 0XFF;  --signal, that the way needs to reverse its directon
 	end
 
 	print('Trace done');

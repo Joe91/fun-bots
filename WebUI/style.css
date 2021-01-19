@@ -328,8 +328,8 @@ ui-view[data-name="settings"] ui-tabs nav ul li:hover label {
 }
 
 /* View :: Settings :: Tab Content */
-ui-view[data-name="settings"] ui-tabs figure { 
-	display: block; 
+ui-view[data-name="settings"] ui-tabs figure {
+	display: block;
 	clear: both;
 	padding: 5px 10px;
 	display: block;
