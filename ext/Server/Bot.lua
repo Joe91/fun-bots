@@ -467,9 +467,22 @@ function Bot:_updateMovement()
                 self._currentWayPoint = activePointIndex;
             else
                 activePointIndex = self._currentWayPoint;
-				
-                if #Globals.wayPoints[self._pathIndex] < activePointIndex then
-                    activePointIndex = 1;
+                
+                -- direction handling
+                if activePointIndex > #Globals.wayPoints[self._pathIndex] then
+                    if Globals.wayPoints[self._pathIndex][1].optValue == 0xFF then --inversion needed
+                        activePointIndex            = #Globals.wayPoints[self._pathIndex];
+                        self._invertPathDirection   = true;
+                    else
+                        activePointIndex            = 1;
+                    end
+                elseif activePointIndex < 1 then
+                    if Globals.wayPoints[self._pathIndex][1].optValue == 0xFF then --inversion needed
+                        activePointIndex            = 1;
+                        self._invertPathDirection   = false;
+                    else
+                        activePointIndex            = #Globals.wayPoints[self._pathIndex];
+                    end
                 end
             end
             if Globals.wayPoints[self._pathIndex][1] ~= nil then -- check for reached point
@@ -543,7 +556,7 @@ function Bot:_updateMovement()
                     end
 
                     -- jup on command
-                    if point.extraMode == 1 and self._jumpTargetPoint == nil then
+                    if point.extraMode == 1 and self._jumpTargetPoint == nil and not self._invertPathDirection then
                         self._jumpTargetPoint		= point.trans;
                         self._jumpTriggerDistance	= math.abs(point.trans.x -self.player.soldier.worldTransform.trans.x) + math.abs(point.trans.z -self.player.soldier.worldTransform.trans.z);
 						
@@ -560,6 +573,10 @@ function Bot:_updateMovement()
                         else
                             self._jumpTriggerDistance = currentJumpDistance;
                         end
+                    elseif self._invertPathDirection and (point.trans.y - self.player.soldier.worldTransform.trans.y) > 0.3 then  --detect jump in other direction
+                        self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 1);
+                        self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1);
+                        
                     elseif self._obstaceSequenceTimer == 0 then --only reset, if no obstacle-sequence active
                         self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0);
                         self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
@@ -573,7 +590,16 @@ function Bot:_updateMovement()
 						
                     else  -- target reached
                         if not useShootWayPoint then
-                            self._currentWayPoint = activePointIndex + pointIncrement;
+                            if self._invertPathDirection then
+                                self._currentWayPoint = activePointIndex - pointIncrement;
+                            else
+                                self._currentWayPoint = activePointIndex + pointIncrement;
+                            end
+
+                        elseif pointIncrement > 1 then
+                            for i = 1, pointIncrement - 1 do --one already gets removed on start of wayfinding
+                                table.remove(self._shootWayPoints);
+                            end
                         end
                         self._obstaceSequenceTimer	= 0;
                         self._lastWayDistance		= 1000;
