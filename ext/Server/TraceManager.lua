@@ -107,7 +107,7 @@ function TraceManager:startTrace(player, index)
     self._traceUpdateTimer[index]		= 0;
     self._tracePlayer[index]			= player;
     self._traceStatePlayer[player.name]	= 1; --trace started
-    self._generateAndInsertPoint(player, index); --create first point, to block this trace
+    self:_generateAndInsertPoint(player, index); --create first point, to block this trace
     print('Trace ' .. index .. ' started');
     ChatManager:Yell('Trace ' .. index .. ' started', 2.5);
 end
@@ -142,8 +142,6 @@ function TraceManager:_onClientEndTraceResponse(player, isClearView)
             break;
         end
     end
-
-    print("View clear? "..isClearView)
 
     if isClearView then
         Globals.wayPoints[traceIndex][1].optValue = 0  --normal behavior
@@ -219,7 +217,7 @@ function TraceManager:_onUpdate(dt)
 			
             if self._traceUpdateTimer[i] >= Config.traceDelta then
                 self._traceUpdateTimer[i] = 0;
-                self._generateAndInsertPoint(self._tracePlayer[i], i);
+                self:_generateAndInsertPoint(self._tracePlayer[i], i);
             end
         end
     end

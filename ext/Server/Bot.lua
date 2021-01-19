@@ -38,8 +38,6 @@ function Bot:__init(player)
     --advanced movement
     self._currentWayPoint = nil;
     self._pathIndex = 0;
-    self._jumpTargetPoint = nil;
-    self._jumpTriggerDistance = 0;
     self._lastWayDistance = 0;
     self._invertPathDirection = false;
     self._obstacleRetryCounter = 0;
@@ -176,17 +174,18 @@ function Bot:setVarsWay(player, useRandomWay, pathIndex, currentWayPoint)
         self._spawnMode		= 5;
         self._targetPlayer	= nil;
         self._shoot			= Config.attackWayBots;
+        self._respawning	= Config.respawnWayBots;
     else
         self._spawnMode		= 4;
         self._targetPlayer	= player;
         self._shoot			= false;
+        self._respawning    = false;
     end
 	
     self._botSpeed			= 3;
     self._moveMode			= 5;
     self._pathIndex			= pathIndex;
     self._currentWayPoint	= currentWayPoint;
-    self._respawning		= Config.respawnWayBots;
 end
 
 function Bot:isStaticMovement()
@@ -522,7 +521,7 @@ function Bot:_updateMovement()
                             self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 1); --maybe a fence?
                             self._obstacleRetryCounter = self._obstacleRetryCounter + 1;
 							
-                        elseif self._obstaceSequenceTimer > 0.8 then  --step 2
+                        elseif self._obstaceSequenceTimer > 0.4 then  --step 2
                             self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
                             self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0);
 							
@@ -554,31 +553,16 @@ function Bot:_updateMovement()
                         self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0);
                     end
 
-                    -- jup on command
-                    if point.extraMode == 1 and self._jumpTargetPoint == nil and not self._invertPathDirection then
-                        self._jumpTargetPoint		= point.trans;
-                        self._jumpTriggerDistance	= math.abs(point.trans.x -self.player.soldier.worldTransform.trans.x) + math.abs(point.trans.z -self.player.soldier.worldTransform.trans.z);
-						
-                    elseif self._jumpTargetPoint ~= nil then
-                        local currentJumpDistance = math.abs(self._jumpTargetPoint.x -self.player.soldier.worldTransform.trans.x) + math.abs(self._jumpTargetPoint.z -self.player.soldier.worldTransform.trans.z);
-                        
-						if currentJumpDistance > self._jumpTriggerDistance then
-                            --now we are really close to the Jump-Point --> Jump
+                    -- jump detection. Much more simple now, but works fine ;-)
+                    if self._obstaceSequenceTimer == 0 then
+                        if (point.trans.y - self.player.soldier.worldTransform.trans.y) > 0.3 then  --detect jump
                             self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 1);
                             self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1);
-							
-                            self._jumpTargetPoint = nil;
-							
-                        else
-                            self._jumpTriggerDistance = currentJumpDistance;
+                            
+                        else --only reset, if no obstacle-sequence active
+                            self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0);
+                            self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
                         end
-                    elseif self._invertPathDirection and (point.trans.y - self.player.soldier.worldTransform.trans.y) > 0.3 then  --detect jump in other direction
-                        self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 1);
-                        self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1);
-                        
-                    elseif self._obstaceSequenceTimer == 0 then --only reset, if no obstacle-sequence active
-                        self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0);
-                        self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
                     end
 
                     --check for reached target
