@@ -12,27 +12,27 @@ function ArrayMap:deleteByIndex(index)
 	table.remove(self._entries, index);
 end
 
-function ArrayMap:exists(value)	
+function ArrayMap:exists(value)
 	local index = {};
-	
+
 	for key, data in pairs(self._entries) do
 		index[data] = key;
 	end
-	
+
 	if index[value] ~= nil then
 		return true;
 	end
-	
+
 	return false;
 end
 
 function ArrayMap:delete(value)
 	local index = {};
-	
+
 	for key, data in pairs(self._entries) do
 		index[data] = key;
 	end
-	
+
 	if index[value] ~= nil then
 		self:deleteByIndex(index[value]);
 	end

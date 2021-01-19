@@ -25,16 +25,16 @@ end
 
 function FunBotServer:_onExtensionLoaded()
 	SettingsManager:onLoad();
-	
+
 	local fullLevelPath = SharedUtils:GetLevelName();
-	
+
 	if (fullLevelPath ~= nil) then
 		fullLevelPath	= fullLevelPath:split('/');
 		local level		= fullLevelPath[#fullLevelPath];
 		local gameMode	= SharedUtils:GetCurrentGameMode();
-		
+
 		print(level .. '_' .. gameMode .. ' reloaded');
-		
+
 		if (level ~= nil and gameMode~= nil) then
 			self:_onLevelLoaded(level, gameMode);
 		end
@@ -55,7 +55,7 @@ end
 
 function FunBotServer:_onChat(player, recipientMask, message)
 	local messageParts = string.lower(message):split(' ');
-	
+
 	ChatCommands:execute(messageParts, player);
 end
 
@@ -63,9 +63,9 @@ end
 function string:split(sep)
 	local sep, fields	= sep or ':', {};
 	local pattern		= string.format("([^%s]+)", sep);
-	
+
 	self:gsub(pattern, function(c) fields[#fields + 1] = c end);
-	
+
 	return fields;
 end
 

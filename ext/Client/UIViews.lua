@@ -5,7 +5,7 @@ require('__shared/ArrayMap');
 function UIViews:__init()
 	self._webui = 0;
 	self._views = ArrayMap();
-	
+
 	Events:Subscribe('Extension:Loaded', self, self._onExtensionLoaded);
 	Events:Subscribe('Extension:Unloading', self, self._onExtensionUnload);
 	Events:Subscribe('UI_Close', self, self._onUIClose);
@@ -84,9 +84,9 @@ end
 -- Show an view
 function UIViews:show(name)
 	if self._views:exists(name) then
-		self._views:delete(name);	
+		self._views:delete(name);
 	end
-	
+
 	self._views:add(name);
 	WebUI:ExecuteJS('BotEditor.show(\'' .. name .. '\');');
 	self:_handleViewManagement();
@@ -95,9 +95,9 @@ end
 -- Hide an view
 function UIViews:hide(name)
 	if self._views:exists(name) then
-		self._views:delete(name);	
+		self._views:delete(name);
 	end
-	
+
 	WebUI:ExecuteJS('BotEditor.hide(\'' .. name .. '\');');
 	self:_handleViewManagement();
 end

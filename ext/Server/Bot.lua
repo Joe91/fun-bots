@@ -83,7 +83,7 @@ end
 function Bot:shootAt(player, ignoreYaw)
 	local dYaw		= 0;
 	local fovHalf	= 0;
-	
+
 	if not ignoreYaw then
 		local oldYaw	= self.player.input.authoritativeAimingYaw;
 		local dy		= player.soldier.worldTransform.trans.z - self.player.soldier.worldTransform.trans.z;
@@ -91,11 +91,11 @@ function Bot:shootAt(player, ignoreYaw)
 		local yaw		= (math.atan(dy, dx) > math.pi / 2) and (math.atan(dy, dx) - math.pi / 2) or (math.atan(dy, dx) + 3 * math.pi / 2);
 
 		dYaw			= math.abs(oldYaw-yaw);
-		
+
 		if dYaw > math.pi then
 			dYaw =math.pi * 2 - dYaw;
 		end
-		
+
 		fovHalf = Config.fovForShooting / 360 * math.pi;
 	end
 
@@ -133,7 +133,7 @@ function Bot:resetVars()
 	self._invertPathDirection	= false;
 	self._updateTimer			= 0;
 	self._aimUpdateTimer		= 0; --timer sync
-	
+
 	self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 0);
 	self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
 	self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 0);
@@ -163,7 +163,7 @@ function Bot:setVarsSimpleMovement(player, spawnMode, transform)
 	self._respawning	= false;
 	self._shoot			= false;
 	self._targetPlayer	= player;
-	
+
 	if transform ~= nil then
 		self._spawnTransform = transform;
 	end
@@ -181,7 +181,7 @@ function Bot:setVarsWay(player, useRandomWay, pathIndex, currentWayPoint)
 		self._shoot			= false;
 		self._respawning	= false;
 	end
-	
+
 	self._botSpeed			= 3;
 	self._moveMode			= 5;
 	self._pathIndex			= pathIndex;
@@ -254,11 +254,11 @@ function Bot:clearPlayer(player)
 	if self._shootPlayer == player then
 		self._shootPlayer = nil;
 	end
-	
+
 	if self._targetPlayer == player then
 		self._targetPlayer = nil;
 	end
-	
+
 	if self._lastShootPlayer == player then
 		self._lastShootPlayer = nil;
 	end
@@ -267,7 +267,7 @@ end
 function Bot:destroy()
 	self:resetVars();
 	self.player.input	= nil;
-	
+
 	PlayerManager:DeletePlayer(self.player);
 	self.player			= nil;
 end
@@ -287,33 +287,33 @@ end
 function Bot:_updateAiming(dt)
 	if self.player.alive and self._shoot then
 		if self._shootPlayer ~= nil and self._shootPlayer.soldier ~= nil then
-		
+
 			--interpolate player movement
 			local targetMovement = Vec3(0, 0, 0);
-			
-			if self._lastShootPlayer ~= nil and self._lastShootPlayer ==  self._shootPlayer then
-				targetMovement			= self._shootPlayer.soldier.worldTransform.trans - self._lastTargetTrans  --movement in one dt
+
+			if self._lastShootPlayer ~= nil and self._lastShootPlayer == self._shootPlayer then
+				targetMovement			= self._shootPlayer.soldier.worldTransform.trans - self._lastTargetTrans --movement in one dt
 				--calculate how long the distance is --> time to travel
 				local distanceToPlayer	= self._shootPlayer.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans);
 				local timeToTravel		= (distanceToPlayer / Config.botBulletSpeed) + dt;
 				local factorForMovement	= timeToTravel / self._aimUpdateTimer;
 				targetMovement			= targetMovement * factorForMovement;
 			end
-			
+
 			self._lastShootPlayer = self._shootPlayer;
 			self._lastTargetTrans = self._shootPlayer.soldier.worldTransform.trans:Clone();
-			
+
 			--calculate yaw and pith
 			local dz		= self._shootPlayer.soldier.worldTransform.trans.z + targetMovement.z - self.player.soldier.worldTransform.trans.z;
 			local dx		= self._shootPlayer.soldier.worldTransform.trans.x + targetMovement.x - self.player.soldier.worldTransform.trans.x;
 			local dy		= (self._shootPlayer.soldier.worldTransform.trans.y + targetMovement.y + self:_getCameraHight(self._shootPlayer.soldier, true)) - (self.player.soldier.worldTransform.trans.y + self:_getCameraHight(self.player.soldier, false));
 			local atanDzDx	= math.atan(dz, dx);
 			local yaw		= (atanDzDx > math.pi / 2) and (atanDzDx - math.pi / 2) or (atanDzDx + 3 * math.pi / 2);
-			
+
 			--calculate pitch
 			local distance	= math.sqrt(dz ^ 2 + dx ^ 2);
 			local pitch		= math.atan(dy, distance);
-			
+
 			self.player.input.authoritativeAimingPitch		= pitch;
 			self.player.input.authoritativeAimingYaw		= yaw;
 		end
@@ -385,7 +385,7 @@ function Bot:_updateShooting()
 					local point		= WayPoint();
 					point.trans		= self.player.soldier.worldTransform.trans:Clone();
 					point.speedMode	= 4;
-					
+
 					table.insert(self._shootWayPoints, point);
 				end
 				self._shootTraceTimer = self._shootTraceTimer + Config.botUpdateCycle;
@@ -425,7 +425,7 @@ function Bot:_updateMovement()
 	if self.player.alive then
 		-- pointing
 		if self.activeMoveMode == 2 and self._targetPlayer ~= nil then
-			if self._targetPlayer.soldier  ~= nil then 
+			if self._targetPlayer.soldier ~= nil then 
 				local dy		= self._targetPlayer.soldier.worldTransform.trans.z - self.player.soldier.worldTransform.trans.z;
 				local dx		= self._targetPlayer.soldier.worldTransform.trans.x - self.player.soldier.worldTransform.trans.x;
 				local atanDzDx	= math.atan(dy, dx);
@@ -436,11 +436,11 @@ function Bot:_updateMovement()
 		-- mimicking
 		elseif self.activeMoveMode == 3 and self._targetPlayer ~= nil then 
 			additionalMovementPossible = false;
-			
+
 			for i = 0, 36 do
 				self.player.input:SetLevel(i, self._targetPlayer.input:GetLevel(i));
 			end
-			
+
 			self.player.input.authoritativeAimingYaw	= self._targetPlayer.input.authoritativeAimingYaw;
 			self.player.input.authoritativeAimingPitch	= self._targetPlayer.input.authoritativeAimingPitch;
 
@@ -457,15 +457,15 @@ function Bot:_updateMovement()
 
 		-- move along points
 		elseif self.activeMoveMode == 5 then
-		
+
 			-- get next point
 			local activePointIndex = 1;
-			
+
 			if self._currentWayPoint == nil then
 				self._currentWayPoint = activePointIndex;
 			else
 				activePointIndex = self._currentWayPoint;
-				
+
 				-- direction handling
 				if activePointIndex > #Globals.wayPoints[self._pathIndex] then
 					if Globals.wayPoints[self._pathIndex][1].optValue == 0xFF then --inversion needed
@@ -487,14 +487,14 @@ function Bot:_updateMovement()
 				local point				= nil;
 				local pointIncrement	= 1;
 				local useShootWayPoint	= false;
-				
+
 				if #self._shootWayPoints > 0 then	--we need to go back to path first
 					point				= table.remove(self._shootWayPoints);
 					useShootWayPoint	= true;
 				else
 					point				= Globals.wayPoints[self._pathIndex][activePointIndex];
 				end
-				
+
 				if (point.speedMode) > 0 then -- movement
 					self._wayWaitTimer			= 0;
 					self.activeSpeedValue		= point.speedMode; --speed
@@ -505,37 +505,37 @@ function Bot:_updateMovement()
 
 					--detect obstacle and move over or around TODO: Move before normal jump
 					local currentWayPontDistance = self.player.soldier.worldTransform.trans:Distance(point.trans);
-					
+
 					if currentWayPontDistance >= self._lastWayDistance or self._obstaceSequenceTimer ~= 0 then
-					
+
 						-- try to get around obstacle
 						self.activeSpeedValue = 4; --always try to run stand
-						
+
 						if self._obstaceSequenceTimer == 0 then --step 0
 							self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
 							self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0);
-							
+
 						elseif self._obstaceSequenceTimer > 1.8 then --step 3 - repeat afterwards
 							self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
 							self._obstaceSequenceTimer = 0;
 							self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 1); --maybe a fence?
 							self._obstacleRetryCounter = self._obstacleRetryCounter + 1;
-							
+
 						elseif self._obstaceSequenceTimer > 0.4 then --step 2
 							self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
 							self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0);
-							
+
 							if self._obstacleRetryCounter == 1 then
 								self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 1.0);
 							else
 								self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, -1.0);
 							end
-							
+
 						elseif self._obstaceSequenceTimer > 0.0 then --step 1
 							self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1);
 							self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 1);
 						end
-						
+
 						self._obstaceSequenceTimer = self._obstaceSequenceTimer + Config.botUpdateCycle;
 
 						if self._obstacleRetryCounter >= 2 then --tried twice, try next waypoint
@@ -546,7 +546,7 @@ function Bot:_updateMovement()
 						end
 					else
 						self._lastWayDistance = currentWayPontDistance;
-						
+
 						self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
@@ -555,10 +555,10 @@ function Bot:_updateMovement()
 
 					-- jump detection. Much more simple now, but works fine ;-)
 					if self._obstaceSequenceTimer == 0 then
-						if (point.trans.y - self.player.soldier.worldTransform.trans.y) > 0.3 then  --detect jump
+						if (point.trans.y - self.player.soldier.worldTransform.trans.y) > 0.3 then --detect jump
 							self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 1);
 							self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1);
-							
+
 						else --only reset, if no obstacle-sequence active
 							self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0);
 							self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
@@ -570,7 +570,7 @@ function Bot:_updateMovement()
 						local atanDzDx	= math.atan(dy, dx);
 						local yaw		= (atanDzDx > math.pi / 2) and (atanDzDx - math.pi / 2) or (atanDzDx + 3 * math.pi / 2);
 						self.player.input.authoritativeAimingYaw = yaw;
-						
+
 					else -- target reached
 						if not useShootWayPoint then
 							if self._invertPathDirection then
@@ -588,11 +588,11 @@ function Bot:_updateMovement()
 						self._lastWayDistance		= 1000;
 					end
 				else -- wait mode
-					self._wayWaitTimer		= self._wayWaitTimer  + Config.botUpdateCycle;
+					self._wayWaitTimer		= self._wayWaitTimer + Config.botUpdateCycle;
 					self.activeSpeedValue	= 0;
-					
+
 					-- TODO: Move yaw while waiting?
-					if  self._wayWaitTimer > point.optValue then
+					if self._wayWaitTimer > point.optValue then
 						self._wayWaitTimer		= 0;
 						if self._invertPathDirection then
 							self._currentWayPoint	= activePointIndex - 1;
@@ -606,7 +606,7 @@ function Bot:_updateMovement()
 		-- Shoot MoveMode
 		elseif self.activeMoveMode == 9 then
 			if Config.botWeapon == "Knive" then --Knive Only Mode
-				self.activeSpeedValue = 4;  --run towards player
+				self.activeSpeedValue = 4; --run towards player
 				-- do some stupid movement and jumping
 				if self._attackModeMoveTimer > 3.6 then
 					self._attackModeMoveTimer = 0;
@@ -623,9 +623,9 @@ function Bot:_updateMovement()
 					self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 1);
 					self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1);
 				end
-	
+
 				self._attackModeMoveTimer = self._attackModeMoveTimer + Config.botUpdateCycle;
-	
+
 			else --Pistol and primary
 				--crouch moving (only mode with modified gun)
 				if Config.botWeapon == "Primary" then
@@ -650,7 +650,7 @@ function Bot:_updateMovement()
 					self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
 					self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
 				end
-				
+
 				-- do some sidwards movement from time to time
 				if self._attackModeMoveTimer > 20 then
 					self._attackModeMoveTimer = 0;
@@ -674,25 +674,25 @@ function Bot:_updateMovement()
 		-- additional movement
 		if additionalMovementPossible then
 			local speedVal = 0;
-			
+
 			if self.activeMoveMode > 0 then
 				if self.activeSpeedValue == 1 then
 					speedVal = 1.0;
-					
+
 					if self.player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Prone then
 						self.player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Prone, true, true);
 					end
-					
+
 				elseif self.activeSpeedValue == 2 then
 					speedVal = 1.0;
-					
+
 					if self.player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Crouch then
 						self.player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Crouch, true, true);
 					end
-					
+
 				elseif self.activeSpeedValue >= 3 then
 					speedVal = 1.0;
-					
+
 					if self.player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Stand then
 						self.player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Stand, true, true);
 					end
@@ -702,7 +702,7 @@ function Bot:_updateMovement()
 			-- movent speed
 			if self.player.alive then
 				self.player.input:SetLevel(EntryInputActionEnum.EIAThrottle, speedVal);
-				
+
 				if self.activeSpeedValue > 3 then
 					self.player.input:SetLevel(EntryInputActionEnum.EIASprint, 1);
 				else
@@ -720,10 +720,10 @@ end
 
 function Bot:_getCameraHight(soldier, isTarget)
 	local camereaHight = 0;
-	
+
 	if not isTarget then
 		camereaHight = 1.6; --bot.soldier.pose == CharacterPoseType.CharacterPoseType_Stand
-		
+
 		if soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
 			camereaHight = 0.3;
 		elseif soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
@@ -731,14 +731,14 @@ function Bot:_getCameraHight(soldier, isTarget)
 		end
 	else
 		camereaHight = 1.3; --bot.soldier.pose == CharacterPoseType.CharacterPoseType_Stand - reduce by 0.3
-		
+
 		if soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
 			camereaHight = 0.3; -- don't reduce
 		elseif soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
 			camereaHight = 0.8; -- reduce by 0.2
 		end
 	end
-	
+
 	return camereaHight;
 end
 

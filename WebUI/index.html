@@ -10,7 +10,7 @@
 			<strong><span data-lang="WARNING:">WARNING:</span></strong>
 			<span data-lang="The Bot-Editor is not protected by an password. Other players can change all the settings!">The Bot-Editor is not protected by an password. Other players can change all the settings!</span>
 		</ui-view>
-		
+
 		<!-- Toolbar -->
 		<ui-view data-name="toolbar" data-type="toolbar">
 			<ui-logo>
@@ -46,7 +46,7 @@
 				</ul>
 			</ui-menu>
 		</ui-view>
-		
+
 		<!-- Authentication -->
 		<ui-view data-name="password" data-type="dialog">
 			<ui-header>
@@ -62,7 +62,7 @@
 				<button data-action="submit"><span data-lang="OK">OK</span></button>
 			</ui-buttons>
 		</ui-view>
-		
+
 		<!-- Settings -->
 		<ui-view data-name="settings" data-type="dialog">
 			<ui-header>
@@ -73,7 +73,7 @@
 					<input checked="checked" id="GLOBAL" type="radio" name="tabs" />
 					<input id="DIFFICULTY" type="radio" name="tabs" />
 					<input id="OTHER" type="radio" name="tabs" />
-					
+
 					<nav>
 						<ul class="main">
 							<li>
@@ -87,14 +87,14 @@
 							</li>
 						</ul>
 					</nav>
-					
+
 					<figure>
 						<ui-tab class="GLOBAL"></ui-tab>
 						<ui-tab class="DIFFICULTY"></ui-tab>
 						<ui-tab class="OTHER"></ui-tab>
 					</figure>
 				</ui-tabs>
-				
+
 				<ui-description></ui-description>
 			</ui-content>
 			<ui-buttons>
@@ -103,7 +103,7 @@
 				<button data-action="submit"><span data-lang="Save">Save</span></button>
 			</ui-buttons>
 		</ui-view>
-		
+
 		<script src="Utils.js"></script>
 		<script src="BotEditor.js"></script>
 	</body>

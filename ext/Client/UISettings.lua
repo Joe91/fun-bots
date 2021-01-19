@@ -37,9 +37,9 @@ end
 
 function UISettings:getJSON()
 	if self._properties ~= nil then
-		return json.encode(self._properties:getEntries());		
+		return json.encode(self._properties:getEntries());
 	end
-	
+
 	return '{}';
 end
 

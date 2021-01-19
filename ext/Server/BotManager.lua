@@ -113,7 +113,7 @@ function BotManager:_onUpdate(dt, pass)
 	if pass ~= UpdatePass.UpdatePass_PostFrame then
 		return
 	end
-	
+
 	for _, bot in pairs(self._bots) do
 		bot:onUpdate(dt)
 	end

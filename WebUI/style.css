@@ -149,14 +149,14 @@ ui-view[data-type="toolbar"] {
 }
 
 ui-view[data-type="toolbar"][data-show="true"] {
-	display: flex;	
+	display: flex;
 }
 
 /* View :: Toolbar :: Logo */
 ui-view[data-type="toolbar"] ui-logo {
 	flex: 0 auto;
 	display: block;
-	position: relative;	
+	position: relative;
 	color: var(--color_text);
 	text-shadow: 0 0 6px var(--color_text_shadow);
 	font-weight: 900;
@@ -364,7 +364,7 @@ ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry {
 }
 
 ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-name {
-	flex: 1 auto;	
+	flex: 1 auto;
 	align-self: center;
 }
 

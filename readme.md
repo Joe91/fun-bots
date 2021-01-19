@@ -50,7 +50,7 @@ Just press **F12** to open the Menu
 - meleeDamageBot
 - meleeAttackIfClose
 - shootBackIfHit
-- botAimWorsening  -- for difficulty: 0 = no offset (hard), 1 or greater = more sway (easy). Restart of round neededs
+- botAimWorsening -- for difficulty: 0 = no offset (hard), 1 or greater = more sway (easy). Restart of round neededs
 - botKit -- 0 = random, 1 = assault, 2 = engineer, 3 = support, 4 = recon
 - botColor -- 0 = random, see Colors
 

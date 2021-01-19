@@ -71,7 +71,7 @@ function BotSpawner:_onRespawnBot(botname)
 		bot:setCurrentWayPoint(randIndex)
 		self:spawnBot(bot, transform, true)
 
-	elseif spawnMode == 5 then  --random Way
+	elseif spawnMode == 5 then --random Way
 		local wayIndex = self:_getNewWayIndex()
 		if wayIndex ~= 0 then
 			local randIndex = MathUtils:GetRandomInt(1, #Globals.wayPoints[wayIndex])
@@ -402,7 +402,7 @@ function BotSpawner:spawnBot(bot, trans, setKit)
 
 	bot:resetSpawnVars()
 
-	  -- create kit and appearance
+	-- create kit and appearance
 	local soldierBlueprint = ResourceManager:SearchForDataContainer('Characters/Soldiers/MpSoldier')
 	local soldierCustomization = nil
 	local soldierKit = nil

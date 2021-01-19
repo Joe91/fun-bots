@@ -32,7 +32,7 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 		if Config.language == nil then
 			Config.language = 'en_US';
 		end
-		
+
 		NetEvents:SendTo('UI_Settings', player, Config);
 
 	-- Bots
@@ -82,7 +82,7 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 
 	elseif request.action == 'trace_reload' then
 		TraceManager:loadPaths();
-	
+
 	else
 		ChatManager:Yell(request.action .. ' is currently not implemented.', 2.5);
 	end
@@ -115,7 +115,7 @@ function FunBotUIServer:_onUIRequestOpen(player, data)
 			ChatManager:Yell('The Bot-Editor is not protected by an password!', 2.5);
 			NetEvents:SendTo('UI_Password_Protection', player, 'true');
 		end
-		
+
 		print('Open Bot-Editor for ' .. player.name .. '.');
 		NetEvents:SendTo('UI_Toggle', player);
 		NetEvents:SendTo('UI_Show_Toolbar', player, 'true');
@@ -126,10 +126,10 @@ function FunBotUIServer:_onUIRequestOpen(player, data)
 			NetEvents:SendTo('UI_Request_Password', player, 'true');
 		else
 			local form = json.decode(data);
-			
+
 			if (form.password ~= nil or form.password ~= '') then
 				print(player.name .. ' has entered following Password: ' .. form.password);
-				
+
 				if (form.password == Config.settingsPassword) then
 					self._authenticated:add(tostring(player.accountGuid));
 					print('accountGuid: ' .. tostring(player.accountGuid));
@@ -163,58 +163,58 @@ function FunBotUIServer:_writeSettings(request)
 	if request.spawnInSameTeam ~= nil then
 		Config.spawnInSameTeam = (request.spawnInSameTeam == true);
 	end
-	
+
 	if request.disableChatCommands ~= nil then
 		Config.disableChatCommands = (request.disableChatCommands == true);
 	end
-	
+
 	if request.fovForShooting ~= nil then
 		local tempValue = tonumber(request.fovForShooting);
-		
+
 		if tempValue >= 0 and tempValue <= 360 then
 			Config.fovForShooting = tempValue;
 		end
 	end
-	
+
 	if request.bulletDamageBot ~= nil then
 		local tempValue = tonumber(request.bulletDamageBot);
-		
+
 		if tempValue >= 0 then
 			Config.bulletDamageBot = tempValue;
 		end
 	end
-	
+
 	if request.bulletDamageBotSniper ~= nil then
 		local tempValue = tonumber(request.bulletDamageBotSniper);
-		
+
 		if tempValue >= 0 then
 			Config.bulletDamageBotSniper = tempValue;
 		end
 	end
-	
+
 	if request.meleeDamageBot ~= nil then
 		local tempValue = tonumber(request.meleeDamageBot);
-		
+
 		if tempValue >= 0 then
 			Config.meleeDamageBot = tempValue;
 		end
 	end
-	
+
 	if request.meleeAttackIfClose ~= nil then
 		Config.meleeAttackIfClose = (request.meleeAttackIfClose == true);
 	end
-	
+
 	if request.shootBackIfHit ~= nil then
 		Config.shootBackIfHit = (request.shootBackIfHit == true);
 	end
-	
+
 	if request.jumpWhileShooting ~= nil then
 		Config.jumpWhileShooting = (request.jumpWhileShooting == true);
 	end
 
 	if request.botAimWorsening ~= nil then
 		local tempValue = tonumber(request.botAimWorsening) / 100;
-		
+
 		if tempValue >= 0 and tempValue < 10 then
 			Config.botAimWorsening = tempValue;
 		end
@@ -222,7 +222,7 @@ function FunBotUIServer:_writeSettings(request)
 
 	if request.botWeapon ~= nil then
 		local tempString = request.botWeapon;
-		
+
 		for _, weapon in pairs(BotWeapons) do
 			if tempString == weapon then
 				Config.botWeapon = tempString;
@@ -230,10 +230,10 @@ function FunBotUIServer:_writeSettings(request)
 			end
 		end
 	end
-	
+
 	if request.botKit ~= nil then
 		local tempString = request.botKit;
-		
+
 		for _, kit in pairs(BotKits) do
 			if tempString == kit then
 				Config.botKit = tempString;
@@ -241,10 +241,10 @@ function FunBotUIServer:_writeSettings(request)
 			end
 		end
 	end
-	
+
 	if request.botColor ~= nil then
 		local tempString = request.botColor;
-		
+
 		for _, color in pairs(BotColors) do
 			if tempString == color then
 				Config.botColor = tempString;
@@ -256,15 +256,15 @@ function FunBotUIServer:_writeSettings(request)
 	--client settings
 	if request.maxRaycastDistance ~= nil then
 		local tempValue = tonumber(request.maxRaycastDistance);
-		
+
 		if tempValue >= 0 and tempValue <= 500 then
 			Config.maxRaycastDistance = tempValue;
 		end
 	end
-	
+
 	if request.distanceForDirectAttack ~= nil then
 		local tempValue = tonumber(request.distanceForDirectAttack);
-		
+
 		if tempValue >= 0 and tempValue <= 10 then
 			Config.distanceForDirectAttack = tempValue;
 		end
