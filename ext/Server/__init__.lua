@@ -2,7 +2,7 @@ class('FunBotServer');
 
 require('__shared/Config');
 
-local SettingsManager	   = require('SettingsManager');
+local SettingsManager		= require('SettingsManager');
 local BotManager			= require('BotManager');
 local TraceManager			= require('TraceManager');
 local BotSpawner			= require('BotSpawner');

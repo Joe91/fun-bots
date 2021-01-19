@@ -74,7 +74,7 @@ function Bot:onUpdate(dt)
 		self:_setActiveVars();
 		self:_updateRespwawn();
 		self:_updateShooting();
-		self:_updateMovement();  --TODO: move-mode shoot
+		self:_updateMovement(); --TODO: move-mode shoot
 	end
 end
 
@@ -130,7 +130,7 @@ function Bot:resetVars()
 	self._targetPlayer			= nil;
 	self._shootPlayer			= nil;
 	self._lastShootPlayer		= nil;
-	self._invertPathDirection   = false;
+	self._invertPathDirection	= false;
 	self._updateTimer			= 0;
 	self._aimUpdateTimer		= 0; --timer sync
 	
@@ -245,8 +245,8 @@ function Bot:resetSpawnVars()
 	self._lastShootPlayer		= nil;
 	self._shootModeTimer		= nil;
 	self._meleeCooldownTimer	= 0;
-	self._shootTraceTimer	   = 0;
-	self._attackModeMoveTimer   = 0;
+	self._shootTraceTimer		= 0;
+	self._attackModeMoveTimer	= 0;
 	self._shootWayPoints		= {};
 end
 
@@ -470,14 +470,14 @@ function Bot:_updateMovement()
 				if activePointIndex > #Globals.wayPoints[self._pathIndex] then
 					if Globals.wayPoints[self._pathIndex][1].optValue == 0xFF then --inversion needed
 						activePointIndex			= #Globals.wayPoints[self._pathIndex];
-						self._invertPathDirection   = true;
+						self._invertPathDirection	= true;
 					else
 						activePointIndex			= 1;
 					end
 				elseif activePointIndex < 1 then
 					if Globals.wayPoints[self._pathIndex][1].optValue == 0xFF then --inversion needed
 						activePointIndex			= 1;
-						self._invertPathDirection   = false;
+						self._invertPathDirection	= false;
 					else
 						activePointIndex			= #Globals.wayPoints[self._pathIndex];
 					end
@@ -488,7 +488,7 @@ function Bot:_updateMovement()
 				local pointIncrement	= 1;
 				local useShootWayPoint	= false;
 				
-				if #self._shootWayPoints > 0 then   --we need to go back to path first
+				if #self._shootWayPoints > 0 then	--we need to go back to path first
 					point				= table.remove(self._shootWayPoints);
 					useShootWayPoint	= true;
 				else
@@ -506,22 +506,22 @@ function Bot:_updateMovement()
 					--detect obstacle and move over or around TODO: Move before normal jump
 					local currentWayPontDistance = self.player.soldier.worldTransform.trans:Distance(point.trans);
 					
-					if currentWayPontDistance >= self._lastWayDistance  or self._obstaceSequenceTimer ~= 0 then
+					if currentWayPontDistance >= self._lastWayDistance or self._obstaceSequenceTimer ~= 0 then
 					
 						-- try to get around obstacle
 						self.activeSpeedValue = 4; --always try to run stand
 						
-						if self._obstaceSequenceTimer == 0 then  --step 0
+						if self._obstaceSequenceTimer == 0 then --step 0
 							self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
 							self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0);
 							
-						elseif self._obstaceSequenceTimer > 1.8 then  --step 3 - repeat afterwards
+						elseif self._obstaceSequenceTimer > 1.8 then --step 3 - repeat afterwards
 							self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
 							self._obstaceSequenceTimer = 0;
 							self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 1); --maybe a fence?
 							self._obstacleRetryCounter = self._obstacleRetryCounter + 1;
 							
-						elseif self._obstaceSequenceTimer > 0.4 then  --step 2
+						elseif self._obstaceSequenceTimer > 0.4 then --step 2
 							self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
 							self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0);
 							
@@ -571,7 +571,7 @@ function Bot:_updateMovement()
 						local yaw		= (atanDzDx > math.pi / 2) and (atanDzDx - math.pi / 2) or (atanDzDx + 3 * math.pi / 2);
 						self.player.input.authoritativeAimingYaw = yaw;
 						
-					else  -- target reached
+					else -- target reached
 						if not useShootWayPoint then
 							if self._invertPathDirection then
 								self._currentWayPoint = activePointIndex - pointIncrement;

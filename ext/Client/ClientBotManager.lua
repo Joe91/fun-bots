@@ -76,7 +76,7 @@ function ClientBotManager:_onUpdate(p_Delta, p_Pass)
 								-- we found a valid bot in Sight (either no hit, or player-hit). Signal Server with players
 								NetEvents:SendLocal("BotShootAtPlayer", bot.name, false);
 							end
-							return  --only one raycast per cycle
+							return --only one raycast per cycle
 						end
 					end
 				end

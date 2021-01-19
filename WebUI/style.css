@@ -33,7 +33,7 @@
 	border: none;
 }
 
-*:not([type="input"]) {    
+*:not([type="input"]) {
 	user-select: none;
 }
 
@@ -57,7 +57,7 @@ button {
 	text-shadow: 0 0 6px var(--color_text_shadow);
 	cursor: pointer;
 	font-weight: 900;
-    font-size: 16px;
+	font-size: 16px;
 	text-align: center;
 	text-transform: uppercase;
 	background: linear-gradient(180deg, var(--color_button_default_from) 0%, var(--color_button_default_to) 100%);
@@ -160,15 +160,15 @@ ui-view[data-type="toolbar"] ui-logo {
 	color: var(--color_text);
 	text-shadow: 0 0 6px var(--color_text_shadow);
 	font-weight: 900;
-    font-size: 24px;
+	font-size: 24px;
 }
 
 ui-view[data-type="toolbar"] ui-logo sub {
 	color: var(--color_white);
-    font-weight: 400;
-    font-size: 12px;
-    display: inline-block;
-    transform: translate(-22px, -20px);
+	font-weight: 400;
+	font-size: 12px;
+	display: inline-block;
+	transform: translate(-22px, -20px);
 }
 
 /* View :: Toolbar :: Menu */
@@ -182,7 +182,7 @@ ui-view[data-type="toolbar"] ui-menu ul {
 
 ui-view[data-type="toolbar"] ui-menu ul.main {
 	display: flex;
-    justify-content: flex-end;
+	justify-content: flex-end;
 }
 
 ui-view[data-type="toolbar"] ui-menu ul.main > li {
@@ -199,7 +199,7 @@ ui-view[data-type="toolbar"] ui-menu ul.main > li > a {
 	text-shadow: 0 0 6px var(--color_text_shadow);
 	cursor: pointer;
 	font-weight: 900;
-    font-size: 18px;
+	font-size: 18px;
 	text-align: center;
 	text-transform: uppercase;
 	background: linear-gradient(180deg, var(--color_button_default_from) 0%, var(--color_button_default_to) 100%);
@@ -292,7 +292,7 @@ ui-view[data-name="settings"] ui-tabs nav {}
 ui-view[data-name="settings"] ui-tabs nav ul {
 	list-style: none;
 	display: flex;
-    justify-content: center;
+	justify-content: center;
 }
 
 ui-view[data-name="settings"] ui-tabs nav ul li {
@@ -309,7 +309,7 @@ ui-view[data-name="settings"] ui-tabs nav ul li label {
 	text-shadow: 0 0 6px var(--color_text_shadow);
 	cursor: pointer;
 	font-weight: 900;
-    font-size: 18px;
+	font-size: 18px;
 	text-align: center;
 	text-transform: uppercase;
 	background: linear-gradient(180deg, var(--color_button_default_from) 0%, var(--color_button_default_to) 100%);
@@ -365,7 +365,7 @@ ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry {
 
 ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-name {
 	flex: 1 auto;	
-    align-self: center;
+	align-self: center;
 }
 
 ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container {
@@ -378,7 +378,7 @@ ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container {
 ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container ui-arrow {
 	flex: 0 auto;
 	cursor: pointer;
-    font-size: 30px;
+	font-size: 30px;
 }
 
 ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container ui-arrow[data-direction="left"]:before {
@@ -392,10 +392,10 @@ ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container ui-arr
 ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container ui-text {
 	flex: 1 auto;
 	flex: 1 auto;
-    text-align: center;
-    vertical-align: middle;
-    align-self: center;
-    font-size: 16px;
+	text-align: center;
+	vertical-align: middle;
+	align-self: center;
+	font-size: 16px;
 }
 
 ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container ui-text input[type="text"],
@@ -409,7 +409,7 @@ ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container input[
 	text-align: center;
 	color: var(--color_text);
 	font-weight: 900;
-    font-size: 16px;
+	font-size: 16px;
 	margin: 1px 0;
 	text-shadow: 0 0 6px var(--color_text_shadow);
 }

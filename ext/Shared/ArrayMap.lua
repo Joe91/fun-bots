@@ -16,7 +16,7 @@ function ArrayMap:exists(value)
 	local index = {};
 	
 	for key, data in pairs(self._entries) do
-	   index[data] = key;
+		index[data] = key;
 	end
 	
 	if index[value] ~= nil then
@@ -30,7 +30,7 @@ function ArrayMap:delete(value)
 	local index = {};
 	
 	for key, data in pairs(self._entries) do
-	   index[data] = key;
+		index[data] = key;
 	end
 	
 	if index[value] ~= nil then
