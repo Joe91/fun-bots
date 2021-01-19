@@ -3,9 +3,9 @@
 Simple AI for TDM-bots with some functions:
 - Bots can walk around on paths and shoot at player (Khark Island and Noshar as example paths provided)
 - You can record you own paths
-    - while holding your primary weapon, all movement is recorded
-    - recording includes jumping, running, walking, couching, ...
-    - while holding your secondary weapon, bot will pause in this position
+	- while holding your primary weapon, all movement is recorded
+	- recording includes jumping, running, walking, couching, ...
+	- while holding your secondary weapon, bot will pause in this position
 - You can spwan static bots (tower, line or grid)
 
 
@@ -25,8 +25,8 @@ Just press **F12** to open the Menu
 
 ### Bot Menu
 - SpawnBots
-    - same Team or not? --> Config.spawnInSameTeam
-    - Amount of Bots
+	- same Team or not? --> Config.spawnInSameTeam
+	- Amount of Bots
 - killall
 - kickall
 - kickTeam (1 / 2)
@@ -50,7 +50,7 @@ Just press **F12** to open the Menu
 - meleeDamageBot
 - meleeAttackIfClose
 - shootBackIfHit
-- botAimWorsening  -- for difficulty: 0 = no offset (hard), 1 or greater = more sway (easy). Restart of round neededs
+- botAimWorsening -- for difficulty: 0 = no offset (hard), 1 or greater = more sway (easy). Restart of round neededs
 - botKit -- 0 = random, 1 = assault, 2 = engineer, 3 = support, 4 = recon
 - botColor -- 0 = random, see Colors
 

@@ -7,7 +7,7 @@ Language['xx_XX'] = {
 	'Kill All':					'',
 	'Toggle Respawn':			'',
 	'Toggle Attack':			'',
-	
+
 	/* Waypoints */
 	'Waypoints':				'',
 	'Start Trace':				'',
@@ -17,13 +17,13 @@ Language['xx_XX'] = {
 	'Save':						'',
 	'Reload':					'',
 	'List all Traces':			'',
-	
+
 	/* Other */
 	'Settings':					'',
 	'Exit':						'',
 	'Cancel':					'',
 	'OK':						'',
-	
+
 	/* Authentication */
 	'Enter password':											'',
 	'Please enter the password to open the Bot-Editor.':		'',
