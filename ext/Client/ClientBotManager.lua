@@ -41,7 +41,7 @@ function ClientBotManager:_onUpdate(p_Delta, p_Pass)
 
 	self._raycastTimer = self._raycastTimer + p_Delta;
 
-	if (self._raycastTimer >= Config.raycastInterval) then
+	if (self._raycastTimer >= StaticConfig.raycastInterval) then
 		self._raycastTimer = 0;
 
 		for i = self._lastIndex, MAX_NUMBER_OF_BOTS + self._lastIndex do

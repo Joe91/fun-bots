@@ -25,9 +25,6 @@ Config = {
 	spawnDelayBots = 2.0,			-- time till bots respawn, if respawn enabled
 	initNumberOfBots = 10,			-- bots on levelstart
 	spawnOnLevelstart = true,		-- bots spawn on levelstart (if valid paths are available)
-	botTeam = TeamId.Team2,		 	-- default bot team (0 = neutral, 1 = US, 2 = RU) TeamId.Team2
-	respawnWayBots = true,			-- bots on paths respawn if killed
-	attackWayBots = true,			-- bots on paths attack player
 	jumpWhileShooting = true,		-- bots jump over obstacles while shooting if needed
 
 	-- UI settings & language options
@@ -35,6 +32,11 @@ Config = {
 	traceUsageAllowed = true,		-- if false, no traces can be recorded, deleted or saved
 	settingsPassword = nil,		 	-- if nil, disable it. Otherwise use a String with your password
 	language = nil, --"de_DE",		-- de_DE as sample (default is english, when language file doesnt exists)
+
+	-- values that are changed by the mod while running TODO: better solution for them
+	botTeam = TeamId.Team2,		 	-- default bot team (0 = neutral, 1 = US, 2 = RU) TeamId.Team2
+	respawnWayBots = true,			-- bots on paths respawn if killed
+	attackWayBots = true,			-- bots on paths attack player
 }
 
 --don't change these values unless you know what you do
