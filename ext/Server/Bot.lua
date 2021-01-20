@@ -672,10 +672,10 @@ function Bot:_updateMovement()
 				if Config.botWeapon == "Primary" then
 					self.activeSpeedValue = 2;
 				else
-					self.activeSpeedValue = 2; -- 3; TODO: Test aiming in Mode 2
+					self.activeSpeedValue = 3; --TODO: Test aiming in Mode 2
 				end
 				local targetTime = 5.0
-				local targetCycles = targetTime / StaticConfig.traceDeltaShooting;
+				local targetCycles = math.floor(targetTime / StaticConfig.traceDeltaShooting);
 
 				if #self._shootWayPoints > targetCycles and Config.jumpWhileShooting then
 					local distanceDone = self._shootWayPoints[#self._shootWayPoints].trans:Distance(self._shootWayPoints[#self._shootWayPoints-targetCycles].trans);

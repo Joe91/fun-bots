@@ -454,6 +454,7 @@ function BotSpawner:spawnBot(bot, trans, setKit)
 		end
 		if botKit == "RANDOM_KIT" then
 			botKit = self:_getSpawnBotKit();
+		end
 		bot.color = botColor
 		bot.kit = botKit
 	else
