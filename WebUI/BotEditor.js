@@ -97,7 +97,7 @@ const EntryElement = function EntryElement() {
 				--_list_index;
 
 				console.log('New list index', _list_index);
-				if(_list_index < 0) {
+				if(_list_index > 0) {
 					_list_index = _list.length - 1;
 				}
 				console.log('Updated list index', _list_index);
@@ -588,14 +588,16 @@ const BotEditor = (new function BotEditor() {
 			if(DEBUG) {
 				console.log('Language file was not exists:', string);
 			}
-		};
+			
+			this.reloadLanguageStrings();
+		}.bind(this);
 
 		document.body.appendChild(script);
 	};
 
 	this.reloadLanguageStrings = function reloadLanguageStrings() {
 		[].map.call(document.querySelectorAll('[data-lang]'), function(element) {
-			element.innerHTML = this.I18N(element.innerHTML);
+			element.innerHTML = this.I18N(element.dataset.lang);
 		}.bind(this));
 	};
 

@@ -125,12 +125,23 @@ function SettingsManager:update(name, value, temporary)
 			value = DatabaseField.NULL;
 		end
 		
-		Database:update('FB_Config_Trace', {
-			Key		= name,
-			Value	= value,
-			Time	= Database:now()
-		}, 'Key');
+		local single = Database:single('SELECT * FROM `FB_Settings` WHERE `Key`=\'' .. name .. '\' LIMIT 1');
 	
+		-- If not exists, create
+		if single == nil then
+			Database:insert('FB_Settings', {
+				ID		= DatabaseField.NULL,
+				Key		= name,
+				Value	= value,
+				Time	= Database:now()
+			});
+		else
+			Database:update('FB_Settings', {
+				Key		= name,
+				Value	= value,
+				Time	= Database:now()
+			}, 'Key');
+		end
 		if value == DatabaseField.NULL then
 			value = nil;
 		end

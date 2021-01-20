@@ -59,7 +59,7 @@ function FunBotServer:_onChat(player, recipientMask, message)
 	ChatCommands:execute(messageParts, player);
 end
 
---helper fucntion for string
+--helper fucntion for string, @ToDo move to Utils class
 function string:split(sep)
 	local sep, fields	= sep or ':', {};
 	local pattern		= string.format("([^%s]+)", sep);

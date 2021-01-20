@@ -278,20 +278,22 @@ function FunBotUIServer:_writeSettings(player, request)
 	end
 
 	--UI
-	if request.language ~= nil then
-		SettingsManager:update('language', request.value, temporary);
+	if request.language ~= nil then	
+		print('Lang changed to: ' .. request.language);
+		NetEvents:SendTo('UI_Change_Language', player, request.language);
+		SettingsManager:update('language', request.language, temporary);
 	end
 	
 	-- Password
 	if request.settingsPassword ~= nil then
-		if request.value == "" then
-			request.value = nil;
+		if request.settingsPassword == "" then
+			request.settingsPassword = nil;
 		end
 		
-		if Config.settingsPassword == nil and request.value ~= nil then
+		if Config.settingsPassword == nil and request.settingsPassword ~= nil then
 			ChatManager:Yell('You can\'t change the password, if it\'s never set!', 2.5);
 		else
-			SettingsManager:update('settingsPassword', request.value, temporary);
+			SettingsManager:update('settingsPassword', request.settingsPassword, temporary);
 		end
 	end
 
