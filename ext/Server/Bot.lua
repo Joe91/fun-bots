@@ -63,12 +63,12 @@ function Bot:onUpdate(dt)
 	self._updateTimer		= self._updateTimer + dt;
 	self._aimUpdateTimer	= self._aimUpdateTimer + dt;
 
-	if self._aimUpdateTimer > Config.botAimUpdateCycle then
+	if self._aimUpdateTimer > StaticConfig.botAimUpdateCycle then
 		self:_updateAiming(dt);
 		self._aimUpdateTimer = 0; --reset afterwards, to use it for targetinterpolation
 	end
 
-	if self._updateTimer > Config.botUpdateCycle then
+	if self._updateTimer > StaticConfig.botUpdateCycle then
 		self._updateTimer = 0;
 
 		self:_setActiveVars();
@@ -101,13 +101,13 @@ function Bot:shootAt(player, ignoreYaw)
 
 	if dYaw < fovHalf or ignoreYaw then
 		if self._shoot then
-			if self._shootModeTimer == nil or self._shootModeTimer > Config.botMinTimeShootAtPlayer then
+			if self._shootModeTimer == nil or self._shootModeTimer > StaticConfig.botMinTimeShootAtPlayer then
 				self._shootModeTimer	= 0;
 				self._shootPlayer		= player;
 				self._shotTimer			= 0;
 			end
 		else
-			self._shootModeTimer = Config.botFireModeDuration;
+			self._shootModeTimer = StaticConfig.botFireModeDuration;
 		end
 	end
 end
@@ -117,8 +117,8 @@ function Bot:setVarsDefault()
 	self._moveMode		= 5;
 	self._botSpeed		= 3;
 	self._pathIndex		= 1;
-	self._respawning	= Config.respawnWayBots;
-	self._shoot			= Config.attackWayBots;
+	self._respawning	= Globals.respawnWayBots;
+	self._shoot			= Globals.attackWayBots;
 end
 
 function Bot:resetVars()
@@ -169,12 +169,12 @@ function Bot:setVarsSimpleMovement(player, spawnMode, transform)
 	end
 end
 
-function Bot:setVarsWay(player, useRandomWay, pathIndex, currentWayPoint)
+function Bot:setVarsWay(player, useRandomWay, pathIndex, currentWayPoint, inverseDirection)
 	if useRandomWay then
 		self._spawnMode		= 5;
 		self._targetPlayer	= nil;
-		self._shoot			= Config.attackWayBots;
-		self._respawning	= Config.respawnWayBots;
+		self._shoot			= Globals.attackWayBots;
+		self._respawning	= Globals.respawnWayBots;
 	else
 		self._spawnMode		= 4;
 		self._targetPlayer	= player;
@@ -182,10 +182,11 @@ function Bot:setVarsWay(player, useRandomWay, pathIndex, currentWayPoint)
 		self._respawning	= false;
 	end
 
-	self._botSpeed			= 3;
-	self._moveMode			= 5;
-	self._pathIndex			= pathIndex;
-	self._currentWayPoint	= currentWayPoint;
+	self._botSpeed				= 3;
+	self._moveMode				= 5;
+	self._pathIndex				= pathIndex;
+	self._currentWayPoint		= currentWayPoint;
+	self._invertPathDirection	= inverseDirection;
 end
 
 function Bot:isStaticMovement()
@@ -214,6 +215,10 @@ end
 
 function Bot:setCurrentWayPoint(wayPoint)
 	self._currentWayPoint = wayPoint;
+end
+
+function Bot:setDirectionInversion(invertWayDirection)
+	self._invertPathDirection = invertWayDirection;
 end
 
 function Bot:setSpeed(speed)
@@ -277,7 +282,7 @@ function Bot:_updateRespwawn()
 	if self._respawning and self.player.soldier == nil and self._spawnMode > 0 then
 		-- wait for respawn-delay gone
 		if self._spawnDelayTimer < Config.spawnDelayBots then
-			self._spawnDelayTimer = self._spawnDelayTimer + Config.botUpdateCycle;
+			self._spawnDelayTimer = self._spawnDelayTimer + StaticConfig.botUpdateCycle;
 		else
 			Events:DispatchLocal('Bot:RespawnBot', self.name);
 		end
@@ -295,7 +300,7 @@ function Bot:_updateAiming(dt)
 				targetMovement			= self._shootPlayer.soldier.worldTransform.trans - self._lastTargetTrans --movement in one dt
 				--calculate how long the distance is --> time to travel
 				local distanceToPlayer	= self._shootPlayer.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans);
-				local timeToTravel		= (distanceToPlayer / Config.botBulletSpeed) + dt;
+				local timeToTravel		= (distanceToPlayer / StaticConfig.botBulletSpeed) + dt;
 				local factorForMovement	= timeToTravel / self._aimUpdateTimer;
 				targetMovement			= targetMovement * factorForMovement;
 			end
@@ -352,8 +357,8 @@ function Bot:_updateShooting()
 		end
 
 		if self._shootPlayer ~= nil and self._shootPlayer.soldier ~= nil then
-			if self._shootModeTimer < Config.botFireModeDuration then
-				self._shootModeTimer	= self._shootModeTimer + Config.botUpdateCycle;
+			if self._shootModeTimer < StaticConfig.botFireModeDuration then
+				self._shootModeTimer	= self._shootModeTimer + StaticConfig.botUpdateCycle;
 				self.activeMoveMode		= 9; -- movement-mode : attack
 				--self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 1) --does not work.
 
@@ -365,7 +370,7 @@ function Bot:_updateShooting()
 						self._meleeCooldownTimer = Config.meleeAttackCoolDown;
 						Events:DispatchLocal("ServerDamagePlayer", self._shootPlayer.name, self.player.name, true);
 					else
-						self._meleeCooldownTimer = self._meleeCooldownTimer - Config.botUpdateCycle;
+						self._meleeCooldownTimer = self._meleeCooldownTimer - StaticConfig.botUpdateCycle;
 
 						if self._meleeCooldownTimer < 0 then
 							self._meleeCooldownTimer = 0;
@@ -380,26 +385,62 @@ function Bot:_updateShooting()
 				end
 
 				--trace way back
-				if self._shootTraceTimer > Config.traceDeltaShooting then
+				if self._shootTraceTimer > StaticConfig.traceDeltaShooting then
 					--create a Trace to find way back
-					local point		= WayPoint();
-					point.trans		= self.player.soldier.worldTransform.trans:Clone();
-					point.speedMode	= 4;
+					self._shootTraceTimer 	= 0;
+					local point				= WayPoint();
+					point.trans				= self.player.soldier.worldTransform.trans:Clone();
+					point.speedMode			= 4;
 
 					table.insert(self._shootWayPoints, point);
 				end
-				self._shootTraceTimer = self._shootTraceTimer + Config.botUpdateCycle;
+				self._shootTraceTimer = self._shootTraceTimer + StaticConfig.botUpdateCycle;
 
 				--shooting sequence
-				if self._shotTimer >= (Config.botFireDuration + Config.botFirePause) then
-					self._shotTimer	= 0;
-				end
-				if self._shotTimer >= Config.botFireDuration or Config.botWeapon == "Knive" then
+				if Config.botWeapon == "Knive" then
 					self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
+					self._shotTimer	= 0;
+				elseif Config.botWeapon == "Pistol" then
+					if self._shotTimer >= (StaticConfig.botFireDurationPistol + StaticConfig.botFirePausePistol) then
+						self._shotTimer	= 0;
+					end
+					if self._shotTimer >= StaticConfig.botFireDurationPistol then
+						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
+					else
+						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
+					end
 				else
-					self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
+					if self.kit == "Support" then
+						if self._shotTimer >= (StaticConfig.botFireDurationSupport + StaticConfig.botFirePauseSupport) then
+							self._shotTimer	= 0;
+						end
+						if self._shotTimer >= StaticConfig.botFireDurationSupport then
+							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
+						else
+							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
+						end
+					elseif self.kit == "Recon" then
+						if self._shotTimer >= (StaticConfig.botFireDurationRecon + StaticConfig.botFirePauseRecon) then
+							self._shotTimer	= 0;
+						end
+						if self._shotTimer >= StaticConfig.botFireDurationRecon then
+							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
+						else
+							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
+						end
+					else -- Enineer and Assalut
+						if self._shotTimer >= (StaticConfig.botFireDuration + StaticConfig.botFirePause) then
+							self._shotTimer	= 0;
+						end
+						if self._shotTimer >= StaticConfig.botFireDuration then
+							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
+						else
+							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
+						end
+					end
 				end
-				self._shotTimer = self._shotTimer + Config.botUpdateCycle;
+
+				self._shotTimer = self._shotTimer + StaticConfig.botUpdateCycle;
 
 			else
 				self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
@@ -536,7 +577,7 @@ function Bot:_updateMovement()
 							self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 1);
 						end
 
-						self._obstaceSequenceTimer = self._obstaceSequenceTimer + Config.botUpdateCycle;
+						self._obstaceSequenceTimer = self._obstaceSequenceTimer + StaticConfig.botUpdateCycle;
 
 						if self._obstacleRetryCounter >= 2 then --tried twice, try next waypoint
 							self._obstacleRetryCounter	= 0;
@@ -566,7 +607,7 @@ function Bot:_updateMovement()
 					end
 
 					--check for reached target
-					if distanceFromTarget > Config.targetDistanceWayPoint or heightDistance > Config.targetHeightDistanceWayPoint then
+					if distanceFromTarget > StaticConfig.targetDistanceWayPoint or heightDistance > StaticConfig.targetHeightDistanceWayPoint then
 						local atanDzDx	= math.atan(dy, dx);
 						local yaw		= (atanDzDx > math.pi / 2) and (atanDzDx - math.pi / 2) or (atanDzDx + 3 * math.pi / 2);
 						self.player.input.authoritativeAimingYaw = yaw;
@@ -588,7 +629,7 @@ function Bot:_updateMovement()
 						self._lastWayDistance		= 1000;
 					end
 				else -- wait mode
-					self._wayWaitTimer		= self._wayWaitTimer + Config.botUpdateCycle;
+					self._wayWaitTimer		= self._wayWaitTimer + StaticConfig.botUpdateCycle;
 					self.activeSpeedValue	= 0;
 
 					-- TODO: Move yaw while waiting?
@@ -624,17 +665,17 @@ function Bot:_updateMovement()
 					self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1);
 				end
 
-				self._attackModeMoveTimer = self._attackModeMoveTimer + Config.botUpdateCycle;
+				self._attackModeMoveTimer = self._attackModeMoveTimer + StaticConfig.botUpdateCycle;
 
 			else --Pistol and primary
 				--crouch moving (only mode with modified gun)
 				if Config.botWeapon == "Primary" then
 					self.activeSpeedValue = 2;
 				else
-					self.activeSpeedValue = 3;
+					self.activeSpeedValue = 3; --TODO: Test aiming in Mode 2
 				end
 				local targetTime = 5.0
-				local targetCycles = targetTime / (Config.botFireDuration + Config.botFirePause);
+				local targetCycles = math.floor(targetTime / StaticConfig.traceDeltaShooting);
 
 				if #self._shootWayPoints > targetCycles and Config.jumpWhileShooting then
 					local distanceDone = self._shootWayPoints[#self._shootWayPoints].trans:Distance(self._shootWayPoints[#self._shootWayPoints-targetCycles].trans);
@@ -667,7 +708,7 @@ function Bot:_updateMovement()
 					self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 1.0);
 				end
 
-				self._attackModeMoveTimer = self._attackModeMoveTimer + Config.botUpdateCycle;
+				self._attackModeMoveTimer = self._attackModeMoveTimer + StaticConfig.botUpdateCycle;
 			end
 		end
 

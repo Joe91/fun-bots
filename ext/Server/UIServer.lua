@@ -7,6 +7,7 @@ require('SettingsManager');
 local BotManager	= require('BotManager');
 local TraceManager	= require('TraceManager');
 local BotSpawner	= require('BotSpawner');
+local Globals 		= require('Globals');
 
 function FunBotUIServer:__init()
 	self._webui			= 0;
@@ -54,13 +55,13 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 		BotManager:killAll();
 
 	elseif request.action == 'bot_respawn' then  --toggle this function
-		local respawning		= not Config.respawnWayBots;
-		Config.respawnWayBots	= respawning;
+		local respawning		= not Globals.respawnWayBots;
+		Globals.respawnWayBots	= respawning;
 		BotManager:setOptionForAll('respawn', respawning);
 
 	elseif request.action == 'bot_attack' then  --toggle this function
-		local attack			= not Config.attackWayBots;
-		Config.attackWayBots	= attack;
+		local attack			= not Globals.attackWayBots;
+		Globals.attackWayBots	= attack;
 		BotManager:setOptionForAll('shoot', attack);
 
 	-- Trace
@@ -165,68 +166,12 @@ function FunBotUIServer:_writeSettings(player, request)
 	if request.subaction ~= nil then
 		temporary = (request.subaction == 'temp');
 	end
-	
+
 	--global settings
 	if request.spawnInSameTeam ~= nil then
 		SettingsManager:update('spawnInSameTeam', (request.spawnInSameTeam == true), temporary);
 	end
-
-	if request.disableChatCommands ~= nil then
-		SettingsManager:update('disableChatCommands', (request.disableChatCommands == true), temporary);
-	end
-
-	if request.fovForShooting ~= nil then
-		local tempValue = tonumber(request.fovForShooting);
-
-		if tempValue >= 0 and tempValue <= 360 then
-			SettingsManager:update('fovForShooting', tempValue, temporary);
-		end
-	end
-
-	if request.bulletDamageBot ~= nil then
-		local tempValue = tonumber(request.bulletDamageBot);
-
-		if tempValue >= 0 then
-			SettingsManager:update('bulletDamageBot', tempValue, temporary);
-		end
-	end
-
-	if request.bulletDamageBotSniper ~= nil then
-		local tempValue = tonumber(request.bulletDamageBotSniper);
-
-		if tempValue >= 0 then
-			SettingsManager:update('bulletDamageBotSniper', tempValue, temporary);
-		end
-	end
-
-	if request.meleeDamageBot ~= nil then
-		local tempValue = tonumber(request.meleeDamageBot);
-
-		if tempValue >= 0 then
-			SettingsManager:update('meleeDamageBot', tempValue, temporary);
-		end
-	end
-
-	if request.meleeAttackIfClose ~= nil then
-		SettingsManager:update('meleeAttackIfClose', (request.meleeAttackIfClose == true), temporary);
-	end
-
-	if request.shootBackIfHit ~= nil then
-		SettingsManager:update('shootBackIfHit', (request.shootBackIfHit == true), temporary);
-	end
-
-	if request.jumpWhileShooting ~= nil then
-		SettingsManager:update('jumpWhileShooting', (request.jumpWhileShooting == true), temporary);
-	end
-
-	if request.botAimWorsening ~= nil then
-		local tempValue = tonumber(request.botAimWorsening) / 100;
-
-		if tempValue >= 0 and tempValue < 10 then
-			SettingsManager:update('botAimWorsening', tempValue, temporary);
-		end
-	end
-
+	
 	if request.botWeapon ~= nil then
 		local tempString = request.botWeapon;
 
@@ -260,7 +205,52 @@ function FunBotUIServer:_writeSettings(player, request)
 		end
 	end
 
-	--client settings
+	-- difficluty
+	if request.botAimWorsening ~= nil then
+		local tempValue = tonumber(request.botAimWorsening) / 100;
+
+		if tempValue >= 0 and tempValue < 10 then
+			SettingsManager:update('botAimWorsening', tempValue, temporary);
+		end
+	end
+
+	if request.bulletDamageBot ~= nil then
+		local tempValue = tonumber(request.bulletDamageBot);
+
+		if tempValue >= 0 then
+			SettingsManager:update('bulletDamageBot', tempValue, temporary);
+		end
+	end
+
+	if request.bulletDamageBotSniper ~= nil then
+		local tempValue = tonumber(request.bulletDamageBotSniper);
+
+		if tempValue >= 0 then
+			SettingsManager:update('bulletDamageBotSniper', tempValue, temporary);
+		end
+	end
+
+	if request.meleeDamageBot ~= nil then
+		local tempValue = tonumber(request.meleeDamageBot);
+
+		if tempValue >= 0 then
+			SettingsManager:update('meleeDamageBot', tempValue, temporary);
+		end
+	end
+
+	-- advanced
+	if request.fovForShooting ~= nil then
+		local tempValue = tonumber(request.fovForShooting);
+
+		if tempValue >= 0 and tempValue <= 360 then
+			SettingsManager:update('fovForShooting', tempValue, temporary);
+		end
+	end
+
+	if request.shootBackIfHit ~= nil then
+		SettingsManager:update('shootBackIfHit', (request.shootBackIfHit == true), temporary);
+	end
+
 	if request.maxRaycastDistance ~= nil then
 		local tempValue = tonumber(request.maxRaycastDistance);
 
@@ -277,6 +267,106 @@ function FunBotUIServer:_writeSettings(player, request)
 		end
 	end
 
+	if request.meleeAttackIfClose ~= nil then
+		SettingsManager:update('meleeAttackIfClose', (request.meleeAttackIfClose == true), temporary);
+	end
+
+	if request.meleeAttackIfClose ~= nil then
+		SettingsManager:update('attackWayBots', (request.attackWayBots == true), temporary);
+	end
+
+	if request.meleeAttackCoolDown ~= nil then
+		local tempValue = tonumber(request.meleeAttackCoolDown);
+
+		if tempValue >= 0 and tempValue <= 10 then
+			SettingsManager:update('meleeAttackCoolDown', tempValue, temporary);
+		end
+	end
+
+	if request.jumpWhileShooting ~= nil then
+		SettingsManager:update('jumpWhileShooting', (request.jumpWhileShooting == true), temporary);
+	end
+
+	--spawnning
+	if request.spawnOnLevelstart ~= nil then
+		SettingsManager:update('spawnOnLevelstart', (request.spawnOnLevelstart == true), temporary);
+	end
+
+	if request.initNumberOfBots ~= nil then
+		local tempValue = tonumber(request.initNumberOfBots);
+
+		if tempValue > 0 and tempValue <= MAX_NUMBER_OF_BOTS then
+			SettingsManager:update('initNumberOfBots', tempValue, temporary);
+		end
+	end
+
+	if request.spawnDelayBots ~= nil then
+		local tempValue = tonumber(request.spawnDelayBots);
+
+		if tempValue >= 0 and tempValue <= 60 then
+			SettingsManager:update('spawnDelayBots', tempValue, temporary);
+		end
+	end
+
+	if request.spawnDelayBots ~= nil then
+		local tempValue = tonumber(request.spawnDelayBots);
+
+		if tempValue == 1 then
+			SettingsManager:update('spawnDelayBots', TeamId.Team1, temporary);
+		elseif tempValue == 2 then
+			SettingsManager:update('spawnDelayBots', TeamId.Team2, temporary);
+		end
+	end
+
+	if request.respawnWayBots ~= nil then
+		SettingsManager:update('respawnWayBots', (request.respawnWayBots == true), temporary);
+	end
+
+	if request.botNewLoadoutOnSpawn ~= nil then
+		SettingsManager:update('botNewLoadoutOnSpawn', (request.botNewLoadoutOnSpawn == true), temporary);
+	end
+
+	if request.maxAssaultBots ~= nil then
+		local tempValue = tonumber(request.maxAssaultBots);
+
+		if tempValue >= -1 and tempValue <= MAX_NUMBER_OF_BOTS then
+			SettingsManager:update('maxAssaultBots', tempValue, temporary);
+		end
+	end
+
+	if request.maxEngineerBots ~= nil then
+		local tempValue = tonumber(request.maxEngineerBots);
+
+		if tempValue >= -1 and tempValue <= MAX_NUMBER_OF_BOTS then
+			SettingsManager:update('maxEngineerBots', tempValue, temporary);
+		end
+	end
+
+	if request.maxSupportBots ~= nil then
+		local tempValue = tonumber(request.maxSupportBots);
+
+		if tempValue >= -1 and tempValue <= MAX_NUMBER_OF_BOTS then
+			SettingsManager:update('maxSupportBots', tempValue, temporary);
+		end
+	end
+
+	if request.maxReconBots ~= nil then
+		local tempValue = tonumber(request.maxReconBots);
+
+		if tempValue >= -1 and tempValue <= MAX_NUMBER_OF_BOTS then
+			SettingsManager:update('maxReconBots', tempValue, temporary);
+		end
+	end
+
+	-- Other
+	if request.disableChatCommands ~= nil then
+		SettingsManager:update('disableChatCommands', (request.disableChatCommands == true), temporary);
+	end
+	
+	if request.traceUsageAllowed ~= nil then
+		SettingsManager:update('traceUsageAllowed', (request.traceUsageAllowed == true), temporary);
+	end
+
 	--UI
 	if request.language ~= nil then	
 		print('Lang changed to: ' .. request.language);
@@ -284,7 +374,6 @@ function FunBotUIServer:_writeSettings(player, request)
 		SettingsManager:update('language', request.language, temporary);
 	end
 	
-	-- Password
 	if request.settingsPassword ~= nil then
 		if request.settingsPassword == "" then
 			request.settingsPassword = nil;

@@ -25,7 +25,7 @@ function BotSpawner:onLevelLoaded()
 	end
 
 	for i = 1,amountToSpawn do
-		BotManager:createBot(BotNames[i], Config.botTeam)
+		BotManager:createBot(BotNames[i], Globals.botTeam)
 	end
 	if BotManager:getBotCount() > amountToSpawn then --if bots have been added in between
 		local numberToKick = BotManager:getBotCount() - amountToSpawn
@@ -56,36 +56,46 @@ end
 
 function BotSpawner:_onRespawnBot(botname)
 	local bot = BotManager:GetBotByName(botname)
-	local spawnMode = bot:getSpawnMode()
+	local spawnMode = bot:getSpawnMode();
 
 	if spawnMode == 2 then --spawnInLine
-		local transform = LinearTransform()
-		transform = bot:getSpawnTransform()
-		self:spawnBot(bot, transform, true)
+		local transform = LinearTransform();
+		transform = bot:getSpawnTransform();
+		self:spawnBot(bot, transform, false);
 
 	elseif spawnMode == 4 then	--fixed Way
-		local wayIndex = bot:getWayIndex()
-		local randIndex = MathUtils:GetRandomInt(1, #Globals.wayPoints[wayIndex])
-		local transform = LinearTransform()
-		transform.trans = Globals.wayPoints[wayIndex][randIndex].trans
-		bot:setCurrentWayPoint(randIndex)
-		self:spawnBot(bot, transform, true)
+		local wayIndex 			= bot:getWayIndex();
+		local randIndex 		= MathUtils:GetRandomInt(1, #Globals.wayPoints[wayIndex]);
+		local transform 		= LinearTransform();
+		local inverseDirection 	= false;
+		if Globals.wayPoints[wayIndex][1].optValue == 0xFF then
+			inverseDirection = (MathUtils:GetRandomInt(0,1) == 1);
+		end
+		transform.trans = Globals.wayPoints[wayIndex][randIndex].trans;
+		bot:setCurrentWayPoint(randIndex);
+		bot:setDirectionInversion(inverseDirection);
+		self:spawnBot(bot, transform, false);
 
 	elseif spawnMode == 5 then --random Way
 		local wayIndex = self:_getNewWayIndex()
 		if wayIndex ~= 0 then
 			local randIndex = MathUtils:GetRandomInt(1, #Globals.wayPoints[wayIndex])
-			local transform = LinearTransform()
-			bot:setWayIndex(wayIndex)
-			bot:setCurrentWayPoint(randIndex)
+			local transform = LinearTransform();
+			local inverseDirection 	= false;
+			if Globals.wayPoints[wayIndex][1].optValue == 0xFF then
+				inverseDirection = (MathUtils:GetRandomInt(0,1) == 1);
+			end
+			bot:setWayIndex(wayIndex);
+			bot:setCurrentWayPoint(randIndex);
+			bot:setDirectionInversion(inverseDirection);
 			transform.trans = Globals.wayPoints[wayIndex][randIndex].trans
-			self:spawnBot(bot, transform, true)
+			self:spawnBot(bot, transform, false)
 		end
 	end
 end
 
 function BotSpawner:getBotTeam(player)
-	local team = Config.botTeam
+	local team = Globals.botTeam
 	if player ~= nil then
 		if Config.spawnInSameTeam then
 			team = player.teamId
@@ -162,6 +172,7 @@ end
 
 function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, indexOnPath)
 	local name = BotManager:findNextBotName()
+	local inverseDirection = false;
 	if name ~= nil then
 		if useRandomWay or activeWayIndex == nil or activeWayIndex == 0 then
 			activeWayIndex = self:_getNewWayIndex()
@@ -172,6 +183,11 @@ function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, inde
 		if Globals.wayPoints[activeWayIndex][1] == nil then
 			return
 		end
+		--find out direction, if path has a return point
+		if Globals.wayPoints[activeWayIndex][1].optValue == 0xFF then
+			inverseDirection = (MathUtils:GetRandomInt(0,1) == 1);
+		end
+
 		if indexOnPath == nil or indexOnPath == 0 then
 			indexOnPath = MathUtils:GetRandomInt(1, #Globals.wayPoints[activeWayIndex])
 		end
@@ -180,7 +196,7 @@ function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, inde
 
 		local bot = BotManager:createBot(name, self:getBotTeam(player))
 		if bot ~= nil then
-			bot:setVarsWay(player, useRandomWay, activeWayIndex, indexOnPath)
+			bot:setVarsWay(player, useRandomWay, activeWayIndex, indexOnPath, inverseDirection)
 			self:spawnBot(bot, transform, true)
 		end
 	end
@@ -204,7 +220,7 @@ function BotSpawner:_getNewWayIndex()
 	end
 	local targetWaypoint = MathUtils:GetRandomInt(1, Globals.activeTraceIndexes)
 	local count = 0
-	for i = 1, Config.maxTraceNumber do
+	for i = 1, MAX_TRACE_NUMBERS do
 		if Globals.wayPoints[i][1] ~= nil then
 			count = count + 1
 		end
@@ -298,7 +314,7 @@ function BotSpawner:getKitApperanceCustomization(team, kit, color)
 
 	if kit == "Assault" then
 		local m416 = ResourceManager:SearchForDataContainer('Weapons/M416/U_M416')
-		local m416Attachments = { 'Weapons/M416/U_M416_Kobra', 'Weapons/M416/U_M416_Silencer' }
+		local m416Attachments = { 'Weapons/M416/U_M416_Kobra', 'Weapons/M416/U_M416_HeavyBarrel' }
 		primaryWeapon.weapon = SoldierWeaponUnlockAsset(m416)
 		self:_setAttachments(primaryWeapon, m416Attachments)
 		gadget01.weapon = SoldierWeaponUnlockAsset(ResourceManager:SearchForDataContainer('Weapons/Gadgets/Medicbag/U_Medkit'))
@@ -322,7 +338,7 @@ function BotSpawner:getKitApperanceCustomization(team, kit, color)
 
 	else	--"Recon"
 		local l96 = ResourceManager:SearchForDataContainer('Weapons/XP1_L96/U_L96')
-		local l96Attachments = { 'Weapons/XP1_L96/U_L96_Rifle_6xScope' }
+		local l96Attachments = { 'Weapons/XP1_L96/U_L96_Rifle_6xScope', 'Weapons/XP1_L96/U_L96_StraightPull' }
 		primaryWeapon.weapon = SoldierWeaponUnlockAsset(l96)
 		self:_setAttachments(primaryWeapon, l96Attachments)
 		gadget01.weapon = SoldierWeaponUnlockAsset(ResourceManager:SearchForDataContainer('Weapons/Gadgets/RadioBeacon/U_RadioBeacon'))
@@ -382,6 +398,52 @@ function BotSpawner:_modifyWeapon(soldier)
 	soldier.weaponsComponent.weapons[2].secondaryAmmo = 9999;
 end
 
+function BotSpawner:_getSpawnBotKit()
+	local botKit = BotKits[MathUtils:GetRandomInt(2, #BotKits)];
+	local changeKit = false;
+	--find out, if possible
+	local kitCount = BotManager:getKitCount(botKit);
+	if botKit == "Assault" then
+		if Config.maxAssaultBots >= 0 and kitCount > Config.maxAssaultBots then
+			changeKit = true;
+		end
+	elseif botKit == "Engineer" then
+		if Config.maxEngineerBots >= 0 and kitCount > Config.maxEngineerBots then
+			changeKit = true;
+		end
+	elseif botKit == "Support" then
+		if Config.maxSupportBots >= 0 and kitCount > Config.maxSupportBots then
+			changeKit = true;
+		end
+	else -- botKit == "Support"
+		if Config.maxReconBots >= 0 and kitCount > Config.maxReconBots then
+			changeKit = true;
+		end
+	end
+
+	if changeKit then
+		local availableKitList = {};
+		if (Config.maxAssaultBots == -1) and true or (BotManager:getKitCount("Assault") < Config.maxAssaultBots) then
+			table.insert(availableKitList, "Assault")
+		end
+		if (Config.maxEngineerBots == -1) and true or (BotManager:getKitCount("Engineer") < Config.maxEngineerBots) then
+			table.insert(availableKitList, "Engineer")
+		end
+		if (Config.maxSupportBots == -1) and true or (BotManager:getKitCount("Support") < Config.maxSupportBots) then
+			table.insert(availableKitList, "Support")
+		end
+		if(Config.maxReconBots == -1) and true or (BotManager:getKitCount("Recon") < Config.maxReconBots) then
+			table.insert(availableKitList, "Recon")
+		end
+
+		if #availableKitList > 0 then
+			botKit = availableKitList[MathUtils:GetRandomInt(1, #availableKitList)];
+		end
+	end
+
+	return botKit
+end
+
 function BotSpawner:spawnBot(bot, trans, setKit)
 	local botColor = Config.botColor
 	local botKit = Config.botKit
@@ -391,7 +453,7 @@ function BotSpawner:spawnBot(bot, trans, setKit)
 			botColor = BotColors[MathUtils:GetRandomInt(2, #BotColors)]
 		end
 		if botKit == "RANDOM_KIT" then
-			botKit = BotKits[MathUtils:GetRandomInt(2, #BotKits)]
+			botKit = self:_getSpawnBotKit();
 		end
 		bot.color = botColor
 		bot.kit = botKit
