@@ -392,14 +392,49 @@ function Bot:_updateShooting()
 				self._shootTraceTimer = self._shootTraceTimer + StaticConfig.botUpdateCycle;
 
 				--shooting sequence
-				if self._shotTimer >= (StaticConfig.botFireDuration + StaticConfig.botFirePause) then
-					self._shotTimer	= 0;
-				end
-				if self._shotTimer >= StaticConfig.botFireDuration or Config.botWeapon == "Knive" then
+				if Config.botWeapon == "Knive" then
 					self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
+					self._shotTimer	= 0;
+				elseif Config.botWeapon == "Pistol" then
+					if self._shotTimer >= (StaticConfig.botFireDurationPistol + StaticConfig.botFirePausePistol) then
+						self._shotTimer	= 0;
+					end
+					if self._shotTimer >= StaticConfig.botFireDurationPistol then
+						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
+					else
+						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
+					end
 				else
-					self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
+					if self.kit == "Support" then
+						if self._shotTimer >= (StaticConfig.botFireDurationSupport + StaticConfig.botFirePauseSupport) then
+							self._shotTimer	= 0;
+						end
+						if self._shotTimer >= StaticConfig.botFireDurationSupport then
+							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
+						else
+							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
+						end
+					elseif self.kit == "Recon" then
+						if self._shotTimer >= (StaticConfig.botFireDurationRecon + StaticConfig.botFirePauseRecon) then
+							self._shotTimer	= 0;
+						end
+						if self._shotTimer >= StaticConfig.botFireDurationRecon then
+							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
+						else
+							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
+						end
+					else -- Enineer and Assalut
+						if self._shotTimer >= (StaticConfig.botFireDuration + StaticConfig.botFirePause) then
+							self._shotTimer	= 0;
+						end
+						if self._shotTimer >= StaticConfig.botFireDuration then
+							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
+						else
+							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
+						end
+					end
 				end
+
 				self._shotTimer = self._shotTimer + StaticConfig.botUpdateCycle;
 
 			else
@@ -632,7 +667,7 @@ function Bot:_updateMovement()
 				if Config.botWeapon == "Primary" then
 					self.activeSpeedValue = 2;
 				else
-					self.activeSpeedValue = 3;
+					self.activeSpeedValue = 2; -- 3; TODO: Test aiming in Mode 2
 				end
 				local targetTime = 5.0
 				local targetCycles = targetTime / StaticConfig.traceDeltaShooting;

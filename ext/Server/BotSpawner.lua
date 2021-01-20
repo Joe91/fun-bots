@@ -298,7 +298,7 @@ function BotSpawner:getKitApperanceCustomization(team, kit, color)
 
 	if kit == "Assault" then
 		local m416 = ResourceManager:SearchForDataContainer('Weapons/M416/U_M416')
-		local m416Attachments = { 'Weapons/M416/U_M416_Kobra', 'Weapons/M416/U_M416_Silencer' }
+		local m416Attachments = { 'Weapons/M416/U_M416_Kobra', 'Weapons/M416/U_M416_HeavyBarrel' }
 		primaryWeapon.weapon = SoldierWeaponUnlockAsset(m416)
 		self:_setAttachments(primaryWeapon, m416Attachments)
 		gadget01.weapon = SoldierWeaponUnlockAsset(ResourceManager:SearchForDataContainer('Weapons/Gadgets/Medicbag/U_Medkit'))
@@ -322,7 +322,7 @@ function BotSpawner:getKitApperanceCustomization(team, kit, color)
 
 	else	--"Recon"
 		local l96 = ResourceManager:SearchForDataContainer('Weapons/XP1_L96/U_L96')
-		local l96Attachments = { 'Weapons/XP1_L96/U_L96_Rifle_6xScope' }
+		local l96Attachments = { 'Weapons/XP1_L96/U_L96_Rifle_6xScope', 'Weapons/XP1_L96/U_L96_StraightPull' }
 		primaryWeapon.weapon = SoldierWeaponUnlockAsset(l96)
 		self:_setAttachments(primaryWeapon, l96Attachments)
 		gadget01.weapon = SoldierWeaponUnlockAsset(ResourceManager:SearchForDataContainer('Weapons/Gadgets/RadioBeacon/U_RadioBeacon'))
