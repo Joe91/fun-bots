@@ -1,4 +1,4 @@
-Language['miku_CN'] = {
+Language['cn_CN'] = {
 	/* Bots */
 	'Bots': 'BOT',
 	'Spawn Bots': '生成BOT',
