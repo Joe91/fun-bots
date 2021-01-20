@@ -56,28 +56,38 @@ end
 
 function BotSpawner:_onRespawnBot(botname)
 	local bot = BotManager:GetBotByName(botname)
-	local spawnMode = bot:getSpawnMode()
+	local spawnMode = bot:getSpawnMode();
 
 	if spawnMode == 2 then --spawnInLine
-		local transform = LinearTransform()
-		transform = bot:getSpawnTransform()
-		self:spawnBot(bot, transform, false)
+		local transform = LinearTransform();
+		transform = bot:getSpawnTransform();
+		self:spawnBot(bot, transform, false);
 
 	elseif spawnMode == 4 then	--fixed Way
-		local wayIndex = bot:getWayIndex()
-		local randIndex = MathUtils:GetRandomInt(1, #Globals.wayPoints[wayIndex])
-		local transform = LinearTransform()
-		transform.trans = Globals.wayPoints[wayIndex][randIndex].trans
-		bot:setCurrentWayPoint(randIndex)
-		self:spawnBot(bot, transform, false)
+		local wayIndex 			= bot:getWayIndex();
+		local randIndex 		= MathUtils:GetRandomInt(1, #Globals.wayPoints[wayIndex]);
+		local transform 		= LinearTransform();
+		local inverseDirection 	= false;
+		if Globals.wayPoints[wayIndex][1].optValue == 0xFF then
+			inverseDirection = (MathUtils:GetRandomInt(0,1) == 1);
+		end
+		transform.trans = Globals.wayPoints[wayIndex][randIndex].trans;
+		bot:setCurrentWayPoint(randIndex);
+		bot:setDirectionInversion(inverseDirection);
+		self:spawnBot(bot, transform, false);
 
 	elseif spawnMode == 5 then --random Way
 		local wayIndex = self:_getNewWayIndex()
 		if wayIndex ~= 0 then
 			local randIndex = MathUtils:GetRandomInt(1, #Globals.wayPoints[wayIndex])
-			local transform = LinearTransform()
-			bot:setWayIndex(wayIndex)
-			bot:setCurrentWayPoint(randIndex)
+			local transform = LinearTransform();
+			local inverseDirection 	= false;
+			if Globals.wayPoints[wayIndex][1].optValue == 0xFF then
+				inverseDirection = (MathUtils:GetRandomInt(0,1) == 1);
+			end
+			bot:setWayIndex(wayIndex);
+			bot:setCurrentWayPoint(randIndex);
+			bot:setDirectionInversion(inverseDirection);
 			transform.trans = Globals.wayPoints[wayIndex][randIndex].trans
 			self:spawnBot(bot, transform, false)
 		end
@@ -162,6 +172,7 @@ end
 
 function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, indexOnPath)
 	local name = BotManager:findNextBotName()
+	local inverseDirection = false;
 	if name ~= nil then
 		if useRandomWay or activeWayIndex == nil or activeWayIndex == 0 then
 			activeWayIndex = self:_getNewWayIndex()
@@ -172,6 +183,11 @@ function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, inde
 		if Globals.wayPoints[activeWayIndex][1] == nil then
 			return
 		end
+		--find out direction, if path has a return point
+		if Globals.wayPoints[activeWayIndex][1].optValue == 0xFF then
+			inverseDirection = (MathUtils:GetRandomInt(0,1) == 1);
+		end
+
 		if indexOnPath == nil or indexOnPath == 0 then
 			indexOnPath = MathUtils:GetRandomInt(1, #Globals.wayPoints[activeWayIndex])
 		end
@@ -180,7 +196,7 @@ function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, inde
 
 		local bot = BotManager:createBot(name, self:getBotTeam(player))
 		if bot ~= nil then
-			bot:setVarsWay(player, useRandomWay, activeWayIndex, indexOnPath)
+			bot:setVarsWay(player, useRandomWay, activeWayIndex, indexOnPath, inverseDirection)
 			self:spawnBot(bot, transform, true)
 		end
 	end
@@ -437,7 +453,7 @@ function BotSpawner:spawnBot(bot, trans, setKit)
 			botColor = BotColors[MathUtils:GetRandomInt(2, #BotColors)]
 		end
 		if botKit == "RANDOM_KIT" then
-			botKit = self:__getSpawnBotKit();
+			botKit = self:_getSpawnBotKit();
 		bot.color = botColor
 		bot.kit = botKit
 	else

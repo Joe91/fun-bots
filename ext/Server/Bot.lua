@@ -169,7 +169,7 @@ function Bot:setVarsSimpleMovement(player, spawnMode, transform)
 	end
 end
 
-function Bot:setVarsWay(player, useRandomWay, pathIndex, currentWayPoint)
+function Bot:setVarsWay(player, useRandomWay, pathIndex, currentWayPoint, inverseDirection)
 	if useRandomWay then
 		self._spawnMode		= 5;
 		self._targetPlayer	= nil;
@@ -182,10 +182,11 @@ function Bot:setVarsWay(player, useRandomWay, pathIndex, currentWayPoint)
 		self._respawning	= false;
 	end
 
-	self._botSpeed			= 3;
-	self._moveMode			= 5;
-	self._pathIndex			= pathIndex;
-	self._currentWayPoint	= currentWayPoint;
+	self._botSpeed				= 3;
+	self._moveMode				= 5;
+	self._pathIndex				= pathIndex;
+	self._currentWayPoint		= currentWayPoint;
+	self._invertPathDirection	= inverseDirection;
 end
 
 function Bot:isStaticMovement()
@@ -214,6 +215,10 @@ end
 
 function Bot:setCurrentWayPoint(wayPoint)
 	self._currentWayPoint = wayPoint;
+end
+
+function Bot:setDirectionInversion(invertWayDirection)
+	self._invertPathDirection = invertWayDirection;
 end
 
 function Bot:setSpeed(speed)
