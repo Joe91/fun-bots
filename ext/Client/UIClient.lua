@@ -72,6 +72,10 @@ function FunBotUIClient:_onUISettings(data)
 	settings:add("ADVANCED", "Number", "botTeam", "Default Bot Team", data.botTeam, 2, "default bot team 1 = US, 2 = RU");
 	settings:add("ADVANCED", "Boolean", "respawnWayBots", "Respawn Bots", data.respawnWayBots, true, "Bots on paths respawn if killed on startup");
 	settings:add("ADVANCED", "Boolean", "botNewLoadoutOnSpawn", "New Loadout on Spawn", data.botNewLoadoutOnSpawn, true, "bots get a new kit and color, if they respawn");
+	settings:add("ADVANCED", "Number", "maxAssaultBots", "Max Assault Bots", data.maxAssaultBots, -1, "maximum number of Bots with Assault Kit. -1 = unlimited");
+	settings:add("ADVANCED", "Number", "maxEngineerBots", "Max Engineer Bots", data.maxEngineerBots, -1, "maximum number of Bots with Engineer Kit. -1 = unlimited");
+	settings:add("ADVANCED", "Number", "maxSupportBots", "Max Support Bots", data.maxSupportBots, -1, "maximum number of Bots with Support Kit. -1 = unlimited");
+	settings:add("ADVANCED", "Number", "maxReconBots", "Max Recon Bots", data.maxReconBots, -1, "maximum number of Bots with Recon Kit. -1 = unlimited");
 
 
 	settings:add("OTHER", "Boolean", "disableChatCommands", "Disable Chat Commands", data.disableChatCommands, true, "if true, no chat commands can be used");

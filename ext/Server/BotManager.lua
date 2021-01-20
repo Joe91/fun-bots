@@ -63,7 +63,17 @@ function BotManager:findNextBotName()
 end
 
 function BotManager:getBotCount()
-	return #self._bots
+	return #self._bots;
+end
+
+function BotManager:getKitCount(kit)
+	local count = 0;
+	for _, bot in pairs(self._bots) do
+		if bot.kit == kit then
+			count = count + 1;
+		end
+	end
+	return count;
 end
 
 function BotManager:resetAllBots()

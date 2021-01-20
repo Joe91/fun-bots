@@ -29,6 +29,10 @@ Config = {
 	initNumberOfBots = 10,			-- bots on levelstart
 	spawnOnLevelstart = true,		-- bots spawn on levelstart (if valid paths are available)
 	jumpWhileShooting = true,		-- bots jump over obstacles while shooting if needed
+	maxAssaultBots = -1,			-- maximum number of Bots with Assault Kit
+	maxEngineerBots = -1,			-- maximum number of Bots with Engineer Kit
+	maxSupportBots = -1,			-- maximum number of Bots with Support Kit
+	maxReconBots = -1,				-- maximum number of Bots with Recon Kit
 
 	-- UI settings & language options
 	disableChatCommands = true,	 	-- if true, no chat commands can be used

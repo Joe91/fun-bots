@@ -382,6 +382,52 @@ function BotSpawner:_modifyWeapon(soldier)
 	soldier.weaponsComponent.weapons[2].secondaryAmmo = 9999;
 end
 
+function BotSpawner:_getSpawnBotKit()
+	local botKit = BotKits[MathUtils:GetRandomInt(2, #BotKits)];
+	local changeKit = false;
+	--find out, if possible
+	local kitCount = BotManager:getKitCount(botKit);
+	if botKit == "Assault" then
+		if Config.maxAssaultBots >= 0 and kitCount > Config.maxAssaultBots then
+			changeKit = true;
+		end
+	elseif botKit == "Engineer" then
+		if Config.maxEngineerBots >= 0 and kitCount > Config.maxEngineerBots then
+			changeKit = true;
+		end
+	elseif botKit == "Support" then
+		if Config.maxSupportBots >= 0 and kitCount > Config.maxSupportBots then
+			changeKit = true;
+		end
+	else -- botKit == "Support"
+		if Config.maxReconBots >= 0 and kitCount > Config.maxReconBots then
+			changeKit = true;
+		end
+	end
+
+	if changeKit then
+		local availableKitList = {};
+		if (Config.maxAssaultBots == -1) and true or (BotManager:getKitCount("Assault") < Config.maxAssaultBots) then
+			table.insert(availableKitList, "Assault")
+		end
+		if (Config.maxEngineerBots == -1) and true or (BotManager:getKitCount("Engineer") < Config.maxEngineerBots) then
+			table.insert(availableKitList, "Engineer")
+		end
+		if (Config.maxSupportBots == -1) and true or (BotManager:getKitCount("Support") < Config.maxSupportBots) then
+			table.insert(availableKitList, "Support")
+		end
+		if(Config.maxReconBots == -1) and true or (BotManager:getKitCount("Recon") < Config.maxReconBots) then
+			table.insert(availableKitList, "Recon")
+		end
+
+		if #availableKitList > 0 then
+			botKit = availableKitList[MathUtils:GetRandomInt(1, #availableKitList)];
+		end
+	end
+
+	return botKit
+end
+
 function BotSpawner:spawnBot(bot, trans, setKit)
 	local botColor = Config.botColor
 	local botKit = Config.botKit
@@ -391,8 +437,7 @@ function BotSpawner:spawnBot(bot, trans, setKit)
 			botColor = BotColors[MathUtils:GetRandomInt(2, #BotColors)]
 		end
 		if botKit == "RANDOM_KIT" then
-			botKit = BotKits[MathUtils:GetRandomInt(2, #BotKits)]
-		end
+			botKit = self:__getSpawnBotKit();
 		bot.color = botColor
 		bot.kit = botKit
 	else

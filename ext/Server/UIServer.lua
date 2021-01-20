@@ -317,6 +317,37 @@ function FunBotUIServer:_writeSettings(request)
 		Config.jumpWhileShooting = (request.jumpWhileShooting == true);
 	end
 
+	if request.maxAssaultBots ~= nil then
+		local tempValue = tonumber(request.maxAssaultBots);
+
+		if tempValue >= -1 and tempValue <= MAX_NUMBER_OF_BOTS then
+			Config.maxAssaultBots = tempValue;
+		end
+	end
+
+	if request.maxEngineerBots ~= nil then
+		local tempValue = tonumber(request.maxEngineerBots);
+
+		if tempValue >= -1 and tempValue <= MAX_NUMBER_OF_BOTS then
+			Config.maxEngineerBots = tempValue;
+		end
+	end
+
+	if request.maxSupportBots ~= nil then
+		local tempValue = tonumber(request.maxSupportBots);
+
+		if tempValue >= -1 and tempValue <= MAX_NUMBER_OF_BOTS then
+			Config.maxSupportBots = tempValue;
+		end
+	end
+
+	if request.maxReconBots ~= nil then
+		local tempValue = tonumber(request.maxReconBots);
+
+		if tempValue >= -1 and tempValue <= MAX_NUMBER_OF_BOTS then
+			Config.maxReconBots = tempValue;
+		end
+	end
 
 	-- other options
 	if request.disableChatCommands ~= nil then
