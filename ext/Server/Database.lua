@@ -3,12 +3,13 @@ class('Database');
 require('__shared/ArrayMap');
 
 DatabaseField = {
-	NULL	= 0,
-	ID		= 1,
-	Text	= 2,
-	Time	= 3,
-	Integer	= 4,
-	Float	= 5
+	NULL	= '{::DB:NULL::}',
+	ID		= '{::DB:ID::}',
+	Text	= '{::DB:TEXT::}',
+	Time	= '{::DB:TIME::}',
+	Integer	= '{::DB:INTEGER::}',
+	Float	= '{::DB:FLOAT::}',
+	Boolean	= '{::DB:BOOLEAN::}'
 };
 
 function Database:__init()
@@ -76,6 +77,10 @@ end
 function Database:single(query)
 	local results = self:query(query);
 
+	if results == nil then
+		return nil;
+	end
+	
 	return results[1];
 end
 
@@ -89,14 +94,39 @@ function Database:fetch(query)
 	return self:query(query);
 end
 
-function Database:update(tableName, where, parameters)
-	--local fields = '';
+function Database:update(tableName, parameters, where)
+	local fields	= ArrayMap();
+	local found		= nil;
+	
+	for name, value in pairs(parameters) do
+		if value == nil then
+			value = 'NULL';
+		
+		elseif value == self:now() then
+			value = 'CURRENT_TIMESTAMP';
 
-	--foreach(parameters AS name => value) {
-	--	fields .= ' `' . $name . '`=:' . $name . ',';
-	--}
+		elseif value == DatabaseField.NULL then
+			value = 'NULL';
+			
+		elseif tostring(value) == 'true' or value == true then
+			value = '\'true\'';
+			
+		elseif tostring(value) == 'false' or value == false then
+			value = '\'false\'';
+			
+		else
+			value = '\'' .. tostring(value) .. '\'';
+		end
+		
+		if where == name then
+			found = value;
+		end
+		
+		fields:add(' `' .. name .. '`=' .. value .. '');
+	end
 
-	--return self:query(sprintf('UPDATE `%1$s` SET %2$s WHERE `%3$s`=:%3$s', $table, rtrim($fields, ','), $where), $parameters)->fetchAll(\PDO::FETCH_OBJ);
+print('UPDATE `' .. tableName .. '` SET ' .. fields:join(',') .. ' WHERE `' .. where .. '`=' .. found);
+	return self:query('UPDATE `' .. tableName .. '` SET ' .. fields:join(', ') .. ' WHERE `' .. where .. '`=' .. found);
 end
 
 function Database:delete(tableName, parameters)
@@ -116,14 +146,23 @@ function Database:insert(tableName, parameters)
 	for name, value in pairs(parameters) do
 		names:add('`' .. name .. '`');
 
-		if value == 'CURRENT_TIMESTAMP' then
+		if value == nil then
+			values:add('NULL');
+		
+		elseif value == self:now() then
 			values:add('CURRENT_TIMESTAMP');
 
 		elseif value == DatabaseField.NULL then
 			values:add('NULL');
-
+			
+		elseif tostring(value) == 'true' or value == true then
+			values:add('\'true\'');
+			
+		elseif tostring(value) == 'false' or value == false then
+			values:add('\'false\'');
+			
 		else
-			values:add('\'' .. value .. '\'');
+			values:add('\'' .. tostring(value) .. '\'');
 		end
 	end
 
