@@ -69,7 +69,6 @@ function string:split(sep)
 	return fields;
 end
 
-
 -- Singleton.
 if g_FunBotServer == nil then
 	g_FunBotServer = FunBotServer();

@@ -51,7 +51,7 @@ function ArrayMap:getEntries()
 end
 
 function ArrayMap:join(character)
-	return table.concat(self._entries, character)
+	return table.concat(self._entries, character);
 end
 
 function ArrayMap:_tostring()
