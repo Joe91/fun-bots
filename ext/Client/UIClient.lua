@@ -38,6 +38,13 @@ function FunBotUIClient:_onUIToggle()
 end
 
 function FunBotUIClient:_onUISettings(data)
+	if data == false then
+		print('UIClient: close UI_Settings');
+		self._views:hide('settings');
+		--self._views:blur();
+		return;
+	end
+	
 	print('UIClient: UI_Settings (' .. json.encode(data) .. ')');
 
 	local settings = UISettings();

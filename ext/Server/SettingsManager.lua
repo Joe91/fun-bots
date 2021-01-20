@@ -105,7 +105,7 @@ function SettingsManager:onLoad()
 											`Config`.`Time` > `Settings`.`Time`;]]);
 
 	for name, value in pairs(settings) do
-		print('Updating Config Variable: ' .. value.Key .. ' = ' .. value.Value .. ' (' .. value.Time .. ')');
+		print('Updating Config Variable: ' .. tostring(value.Key) .. ' = ' .. tostring(value.Value) .. ' (' .. tostring(value.Time) .. ')');
 		Config[value.Key] = value.Value;
 	end
 	
@@ -117,6 +117,26 @@ function SettingsManager:onLoad()
 	if Config.settingsPassword == DatabaseField.NULL then
 		Config.settingsPassword = nil;
 	end
+end
+
+function SettingsManager:update(name, value, temporary)
+	if temporary ~= true then
+		if value == nil then
+			value = DatabaseField.NULL;
+		end
+		
+		Database:update('FB_Config_Trace', {
+			Key		= name,
+			Value	= value,
+			Time	= Database:now()
+		}, 'Key');
+	
+		if value == DatabaseField.NULL then
+			value = nil;
+		end
+	end
+		
+	Config[name] = value;
 end
 
 -- Singleton.

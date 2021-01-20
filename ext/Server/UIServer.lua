@@ -2,6 +2,7 @@ class 'FunBotUIServer';
 
 require('__shared/ArrayMap');
 require('__shared/Config');
+require('SettingsManager');
 
 local BotManager	= require('BotManager');
 local TraceManager	= require('TraceManager');
@@ -104,7 +105,7 @@ function FunBotUIServer:_onUIRequestSaveSettings(player, data)
 
 	local request = json.decode(data);
 
-	self:_writeSettings(request);
+	self:_writeSettings(player, request);
 end
 
 function FunBotUIServer:_onUIRequestOpen(player, data)
@@ -158,21 +159,27 @@ function FunBotUIServer:_isAuthenticated(guid)
 	return self._authenticated:exists(tostring(guid));
 end
 
-function FunBotUIServer:_writeSettings(request)
+function FunBotUIServer:_writeSettings(player, request)
+	local temporary = false;
+	
+	if request.subaction ~= nil then
+		temporary = (request.subaction == 'temp');
+	end
+	
 	--global settings
 	if request.spawnInSameTeam ~= nil then
-		Config.spawnInSameTeam = (request.spawnInSameTeam == true);
+		SettingsManager:update('spawnInSameTeam', (request.spawnInSameTeam == true), temporary);
 	end
 
 	if request.disableChatCommands ~= nil then
-		Config.disableChatCommands = (request.disableChatCommands == true);
+		SettingsManager:update('disableChatCommands', (request.disableChatCommands == true), temporary);
 	end
 
 	if request.fovForShooting ~= nil then
 		local tempValue = tonumber(request.fovForShooting);
 
 		if tempValue >= 0 and tempValue <= 360 then
-			Config.fovForShooting = tempValue;
+			SettingsManager:update('fovForShooting', tempValue, temporary);
 		end
 	end
 
@@ -180,7 +187,7 @@ function FunBotUIServer:_writeSettings(request)
 		local tempValue = tonumber(request.bulletDamageBot);
 
 		if tempValue >= 0 then
-			Config.bulletDamageBot = tempValue;
+			SettingsManager:update('bulletDamageBot', tempValue, temporary);
 		end
 	end
 
@@ -188,7 +195,7 @@ function FunBotUIServer:_writeSettings(request)
 		local tempValue = tonumber(request.bulletDamageBotSniper);
 
 		if tempValue >= 0 then
-			Config.bulletDamageBotSniper = tempValue;
+			SettingsManager:update('bulletDamageBotSniper', tempValue, temporary);
 		end
 	end
 
@@ -196,27 +203,27 @@ function FunBotUIServer:_writeSettings(request)
 		local tempValue = tonumber(request.meleeDamageBot);
 
 		if tempValue >= 0 then
-			Config.meleeDamageBot = tempValue;
+			SettingsManager:update('meleeDamageBot', tempValue, temporary);
 		end
 	end
 
 	if request.meleeAttackIfClose ~= nil then
-		Config.meleeAttackIfClose = (request.meleeAttackIfClose == true);
+		SettingsManager:update('meleeAttackIfClose', (request.meleeAttackIfClose == true), temporary);
 	end
 
 	if request.shootBackIfHit ~= nil then
-		Config.shootBackIfHit = (request.shootBackIfHit == true);
+		SettingsManager:update('shootBackIfHit', (request.shootBackIfHit == true), temporary);
 	end
 
 	if request.jumpWhileShooting ~= nil then
-		Config.jumpWhileShooting = (request.jumpWhileShooting == true);
+		SettingsManager:update('jumpWhileShooting', (request.jumpWhileShooting == true), temporary);
 	end
 
 	if request.botAimWorsening ~= nil then
 		local tempValue = tonumber(request.botAimWorsening) / 100;
 
 		if tempValue >= 0 and tempValue < 10 then
-			Config.botAimWorsening = tempValue;
+			SettingsManager:update('botAimWorsening', tempValue, temporary);
 		end
 	end
 
@@ -225,7 +232,7 @@ function FunBotUIServer:_writeSettings(request)
 
 		for _, weapon in pairs(BotWeapons) do
 			if tempString == weapon then
-				Config.botWeapon = tempString;
+				SettingsManager:update('botWeapon', tempString, temporary);
 				break
 			end
 		end
@@ -236,7 +243,7 @@ function FunBotUIServer:_writeSettings(request)
 
 		for _, kit in pairs(BotKits) do
 			if tempString == kit then
-				Config.botKit = tempString;
+				SettingsManager:update('botKit', tempString, temporary);
 				break
 			end
 		end
@@ -247,7 +254,7 @@ function FunBotUIServer:_writeSettings(request)
 
 		for _, color in pairs(BotColors) do
 			if tempString == color then
-				Config.botColor = tempString;
+				SettingsManager:update('botColor', tempString, temporary);
 				break
 			end
 		end
@@ -258,7 +265,7 @@ function FunBotUIServer:_writeSettings(request)
 		local tempValue = tonumber(request.maxRaycastDistance);
 
 		if tempValue >= 0 and tempValue <= 500 then
-			Config.maxRaycastDistance = tempValue;
+			SettingsManager:update('maxRaycastDistance', tempValue, temporary);
 		end
 	end
 
@@ -266,17 +273,36 @@ function FunBotUIServer:_writeSettings(request)
 		local tempValue = tonumber(request.distanceForDirectAttack);
 
 		if tempValue >= 0 and tempValue <= 10 then
-			Config.distanceForDirectAttack = tempValue;
+			SettingsManager:update('distanceForDirectAttack', tempValue, temporary);
 		end
 	end
 
 	--UI
 	if request.language ~= nil then
-		Config.language = request.value;
+		SettingsManager:update('language', request.value, temporary);
 	end
-	-- dont save password jet!!
+	
+	-- Password
+	if request.settingsPassword ~= nil then
+		if request.value == "" then
+			request.value = nil;
+		end
+		
+		if Config.settingsPassword == nil and request.value ~= nil then
+			ChatManager:Yell('You can\'t change the password, if it\'s never set!', 2.5);
+		else
+			SettingsManager:update('settingsPassword', request.value, temporary);
+		end
+	end
 
-	NetEvents:BroadcastLocal('WriteClientSettings', Config, false);
+	if temporary then
+		ChatManager:Yell('Settings has been saved temporarily.', 2.5);
+	else
+		ChatManager:Yell('Settings has been saved.', 2.5);
+	end
+	
+	-- @ToDo create Error Array and dont hide if has values
+	NetEvents:SendTo('UI_Settings', player, false);
 end
 
 if (g_FunBotUIServer == nil) then
