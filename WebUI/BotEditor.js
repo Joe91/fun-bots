@@ -154,7 +154,7 @@ const EntryElement = function EntryElement() {
 				_container.querySelector('input[type="integer"]').value = _value;
 			break;
 			case 'Float':
-				_value = parseFloat(value).toFixed(2);
+				_value = parseFloat(value);
 				_container.querySelector('input[type="float"]').value = _value;
 			break;
 			case 'List':
