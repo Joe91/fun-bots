@@ -101,7 +101,7 @@ function Bot:shootAt(player, ignoreYaw)
 
 	if dYaw < fovHalf or ignoreYaw then
 		if self._shoot then
-			if self._shootModeTimer == nil or self._shootModeTimer > StaticConfig.botMinTimeShootAtPlayer then
+			if self._shootModeTimer == nil or self._shootModeTimer > Config.botMinTimeShootAtPlayer then
 				self._shootModeTimer	= 0;
 				self._shootPlayer		= player;
 				self._shotTimer			= 0;
@@ -410,8 +410,7 @@ function Bot:_updateShooting()
 						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
 					end
 				else --primary
-					if self.player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Crouch then --TODO: wait till crouch
-						print("not in crouch jet")
+					if self.player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Crouch then -- wait till crouch
 						self._shotTimer =  -Config.botFirstShotDelay;
 					end
 					if self.kit == "Support" then
