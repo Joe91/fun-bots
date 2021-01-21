@@ -10,7 +10,7 @@
 			<strong><span data-lang="WARNING:">WARNING:</span></strong>
 			<span data-lang="The Bot-Editor is not protected by an password. Other players can change all the settings!">The Bot-Editor is not protected by an password. Other players can change all the settings!</span>
 		</ui-view>
-		
+
 		<!-- Toolbar -->
 		<ui-view data-name="toolbar" data-type="toolbar">
 			<ui-logo>
@@ -21,7 +21,7 @@
 					<li>
 						<a><span data-lang="Bots">Bots</span></a>
 						<ul>
-							<li data-action="bot_spawn_default"><a data-key="F1"><input type="number" name="bots" value="1" /> <span data-lang="Spawn Bots">Spawn Bots</span></a></li>
+							<li data-action="bot_spawn_default"><a data-key="F2"><input type="number" name="bots" value="1" /> <span data-lang="Spawn Bots">Spawn Bots</span></a></li>
 							<li data-action="bot_kick_all"><a data-key="F3"><span data-lang="Kick All">Kick All</span></a></li>
 							<li data-action="bot_kill_all"><a data-key="F4"><span data-lang="Kill All">Kill All</span></a></li>
 							<li data-action="bot_respawn"><a ><span data-lang="Toggle Respawn">Toggle Respawn</span></a></li>
@@ -33,7 +33,7 @@
 						<ul>
 							<li data-action="trace_start"><a data-key="F5"><input type="number" name="index" value="0" /><span data-lang="Start Trace">Start Trace</span></a></li>
 							<li data-action="trace_end"><a data-key="F6"><span data-lang="End Trace">End Trace</span></a></li>
-							<li data-action="bot_spawn_path"><a data-key="F2"><input type="number" name="index" value="1" />  <span data-lang="Spawn Bot on Way">Spawn Bot on Way</span></a></li>
+							<li data-action="bot_spawn_path"><a><input type="number" name="index" value="0" />  <span data-lang="Spawn Bot on Way">Spawn Bot on Way</span></a></li>
 							<li data-action="trace_clear"><a data-key="F7"><input type="number" name="index" value="0" /><span data-lang="Clear Trace with index">Clear Trace</span></a></li>
 							<li data-action="trace_reset_all"><a data-key="F8"><span data-lang="Reset all Traces">Reset all Traces</span></a></li>
 							<li data-action="trace_save"><a data-key="F9"><span data-lang="Save">Save</span></a></li>
@@ -46,7 +46,7 @@
 				</ul>
 			</ui-menu>
 		</ui-view>
-		
+
 		<!-- Authentication -->
 		<ui-view data-name="password" data-type="dialog">
 			<ui-header>
@@ -62,7 +62,7 @@
 				<button data-action="submit"><span data-lang="OK">OK</span></button>
 			</ui-buttons>
 		</ui-view>
-		
+
 		<!-- Settings -->
 		<ui-view data-name="settings" data-type="dialog">
 			<ui-header>
@@ -71,30 +71,45 @@
 			<ui-content data-type="form" data-action="UI_Save_Settings">
 				<ui-tabs>
 					<input checked="checked" id="GLOBAL" type="radio" name="tabs" />
-					<input id="TRACE" type="radio" name="tabs" />
+					<input id="DIFFICULTY" type="radio" name="tabs" />
+					<input id="SPAWN" type="radio" name="tabs" />
+					<input id="ADVANCED" type="radio" name="tabs" />
+					<input id="EXPERT" type="radio" name="tabs" />
 					<input id="OTHER" type="radio" name="tabs" />
-					
+
 					<nav>
 						<ul class="main">
 							<li>
 								<label for="GLOBAL"><span data-lang="General">General</span></label>
 							</li>
 							<li>
-								<label for="TRACE"><span data-lang="Trace">Trace</span></label>
+								<label for="DIFFICULTY"><span data-lang="Difficulty">Difficulty</span></label>
+							</li>
+							<li>
+								<label for="SPAWN"><span data-lang="Spawn">Spawn</span></label>
+							</li>
+							<li>
+								<label for="ADVANCED"><span data-lang="Advanced">Advanced</span></label>
+							</li>
+							<li>
+								<label for="EXPERT"><span data-lang="Expert">Expert</span></label>
 							</li>
 							<li>
 								<label for="OTHER"><span data-lang="Other">Other</span></label>
 							</li>
 						</ul>
 					</nav>
-					
+
 					<figure>
 						<ui-tab class="GLOBAL"></ui-tab>
-						<ui-tab class="TRACE"></ui-tab>
+						<ui-tab class="DIFFICULTY"></ui-tab>
+						<ui-tab class="SPAWN"></ui-tab>
+						<ui-tab class="ADVANCED"></ui-tab>
+						<ui-tab class="EXPERT"></ui-tab>
 						<ui-tab class="OTHER"></ui-tab>
 					</figure>
 				</ui-tabs>
-				
+
 				<ui-description></ui-description>
 			</ui-content>
 			<ui-buttons>
@@ -103,8 +118,10 @@
 				<button data-action="submit"><span data-lang="Save">Save</span></button>
 			</ui-buttons>
 		</ui-view>
-		
-		<script src="Utils.js"></script>
-		<script src="BotEditor.js"></script>
+
+		<script src="classes/Utils.js"></script>
+		<script src="classes/Constants.js"></script>
+		<script src="classes/EntryElement.js"></script>
+		<script src="classes/BotEditor.js"></script>
 	</body>
 </html>
