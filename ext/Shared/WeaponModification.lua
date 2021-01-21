@@ -5,10 +5,31 @@ require('__shared/Config');
 function WeaponModification:__init()
 	self.m_alreadyLoaded	= false;
 	self.m_WeaponInstances	= {};
+
 	self.m_maxAngles		= {};
 	self.m_minAngles		= {};
+	self.m_incPerShot		= {};
+
 	self.m_maxRecoilPitch	= {};
+	self.m_recoilIncShot	= {};
 	self.m_maxRecoilYaw		= {};
+	self.m_recoilIncShotMin	= {};
+	self.m_recoilIncShotMax	= {};
+end
+
+function WeaponModification:_resetAll()
+	self.m_alreadyLoaded	= false;
+	self.m_WeaponInstances	= {};
+
+	self.m_maxAngles		= {};
+	self.m_minAngles		= {};
+	self.m_incPerShot		= {};
+
+	self.m_maxRecoilPitch	= {};
+	self.m_recoilIncShot	= {};
+	self.m_maxRecoilYaw		= {};
+	self.m_recoilIncShotMin	= {};
+	self.m_recoilIncShotMax	= {};
 end
 
 function WeaponModification:OnPartitionLoaded(p_Partition)
@@ -20,10 +41,7 @@ function WeaponModification:OnPartitionLoaded(p_Partition)
 
 			if s_SoldierWeaponData.soldierWeaponBlueprint ~= nil then
 				if self.m_alreadyLoaded then
-					self.m_alreadyLoaded	= false;
-					self.m_WeaponInstances	= {};
-					self.m_maxAngles		= {};
-					self.m_minAngles		= {};
+					self:_resetAll();
 				end
 
 				table.insert(self.m_WeaponInstances, s_SoldierWeaponData);
@@ -66,10 +84,13 @@ function WeaponModification:_ModifyWeapon(p_SoldierWeaponData, index, botAimWors
 				if self.m_maxAngles[index] == nil then
 					self.m_minAngles[index] = s_MovingValue.minAngle;
 					self.m_maxAngles[index] = s_MovingValue.maxAngle;
+					self.m_incPerShot[index] = s_MovingValue.increasePerShot;
 				end
 
-				s_MovingValue.minAngle = self.m_minAngles[index] * botAimWorsening;
-				s_MovingValue.maxAngle = self.m_maxAngles[index] * botAimWorsening;
+				s_MovingValue.minAngle 			= self.m_minAngles[index] * botAimWorsening;
+				s_MovingValue.maxAngle 			= self.m_maxAngles[index] * botAimWorsening;
+				s_MovingValue.increasePerShot 	= self.m_incPerShot[index] * botAimWorsening;
+				--decreasePerSecond 	float
 			end
 
 			local s_RecoilData = GunSwayRecoilData(s_CrouchNoZoom.recoil);
@@ -77,11 +98,18 @@ function WeaponModification:_ModifyWeapon(p_SoldierWeaponData, index, botAimWors
 			if s_RecoilData ~= nil then
 				if self.m_maxRecoilPitch[index] == nil then
 					self.m_maxRecoilPitch[index] = s_RecoilData.recoilAmplitudeMax;
+					self.m_recoilIncShot[index] = s_RecoilData.recoilAmplitudeIncPerShot;
 					self.m_maxRecoilYaw[index] = s_RecoilData.horizontalRecoilAmplitudeMax;
+					self.m_recoilIncShotMin[index] = s_RecoilData.horizontalRecoilAmplitudeIncPerShotMin;
+					self.m_recoilIncShotMax[index] = s_RecoilData.horizontalRecoilAmplitudeIncPerShotMax;
 				end
 
 				s_RecoilData.recoilAmplitudeMax 			= self.m_maxRecoilPitch[index] * botAimWorsening;
+				s_RecoilData.recoilAmplitudeIncPerShot		= self.m_recoilIncShot[index] * botAimWorsening;
 				s_RecoilData.horizontalRecoilAmplitudeMax 	= self.m_maxRecoilYaw[index] * botAimWorsening;
+				s_RecoilData.horizontalRecoilAmplitudeIncPerShotMin = self.m_recoilIncShotMin[index] * botAimWorsening;
+				s_RecoilData.horizontalRecoilAmplitudeIncPerShotMax = self.m_recoilIncShotMax[index] * botAimWorsening;
+				-- recoilAmplitudeDecreaseFactor 	float
 			end
 		end
 	end

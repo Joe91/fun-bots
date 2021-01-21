@@ -409,14 +409,18 @@ function Bot:_updateShooting()
 					else
 						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
 					end
-				else
+				else --primary
+					if self.player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Crouch then --TODO: wait till crouch
+						print("not in crouch jet")
+						self._shotTimer =  -StaticConfig.botFirstShotDelay;
+					end
 					if self.kit == "Support" then
 						if self._shotTimer >= (StaticConfig.botFireDurationSupport + StaticConfig.botFirePauseSupport) then
 							self._shotTimer	= 0;
 						end
 						if self._shotTimer >= StaticConfig.botFireDurationSupport then
 							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
-						else
+						elseif self._shotTimer >= 0 then
 							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
 						end
 					elseif self.kit == "Recon" then
@@ -425,7 +429,7 @@ function Bot:_updateShooting()
 						end
 						if self._shotTimer >= StaticConfig.botFireDurationRecon then
 							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
-						else
+						elseif self._shotTimer >= 0 then
 							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
 						end
 					else -- Enineer and Assalut
@@ -434,7 +438,7 @@ function Bot:_updateShooting()
 						end
 						if self._shotTimer >= StaticConfig.botFireDuration then
 							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
-						else
+						elseif self._shotTimer >= 0 then
 							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
 						end
 					end
