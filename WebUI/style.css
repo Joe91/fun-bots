@@ -262,7 +262,15 @@ ui-view[data-type="toolbar"] ui-menu ul.main > li:hover > ul > li:hover > a {
 	background: linear-gradient(180deg, var(--color_button_hover_from) 0%, var(--color_button_hover_to) 100%);
 }
 
-ui-view[data-type="toolbar"] ui-menu ul.main li a input[type="number"] {
+ui-view[data-type="toolbar"] ui-menu ul.main li a input[type="integer"] {
+	background: rgba(255, 255, 255, 0.1);
+	width: 30px;
+	text-align: center;
+	border: 1px solid rgba(255, 255, 255, 0.5);
+	color: rgba(255, 255, 255, 0.5);
+}
+
+ui-view[data-type="toolbar"] ui-menu ul.main li a input[type="float"] {
 	background: rgba(255, 255, 255, 0.1);
 	width: 30px;
 	text-align: center;
@@ -406,7 +414,20 @@ ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container ui-tex
 
 ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container ui-text input[type="text"],
 ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container ui-text input[type="password"],
-ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container input[type="number"] {
+ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container input[type="integer"] {
+	border: none;
+	width:100%;
+	min-width: 1px;
+	max-width: 100%;
+	background: rgba(0, 0, 0, 0);
+	text-align: center;
+	color: var(--color_text);
+	font-weight: 900;
+	font-size: 16px;
+	margin: 1px 0;
+	text-shadow: 0 0 6px var(--color_text_shadow);
+}
+ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container input[type="float"] {
 	border: none;
 	width:100%;
 	min-width: 1px;
@@ -420,8 +441,12 @@ ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container input[
 	text-shadow: 0 0 6px var(--color_text_shadow);
 }
 
-ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container input[type="number"]::-webkit-outer-spin-button,
-ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container input[type="number"]::-webkit-inner-spin-button {
+ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container input[type="ingeger"]::-webkit-outer-spin-button,
+ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container input[type="ingeger"]::-webkit-inner-spin-button {
+	-webkit-appearance: none;
+}
+ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container input[type="float"]::-webkit-outer-spin-button,
+ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container input[type="float"]::-webkit-inner-spin-button {
 	-webkit-appearance: none;
 }
 

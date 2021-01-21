@@ -155,7 +155,7 @@ const EntryElement = function EntryElement() {
 			break;
 			case 'Float':
 				_value = parseFloat(value);
-				_container.querySelector('input[type="flaot"]').value = _value;
+				_container.querySelector('input[type="float"]').value = _value;
 			break;
 			case 'List':
 				_container.querySelector('ui-text').innerHTML = _value;
@@ -425,8 +425,8 @@ const BotEditor = (new function BotEditor() {
 							}
 						});
 
-						/* UI-Entrys :: Number, Text & Password */
-						[].map.call(form.querySelectorAll('ui-entry[data-type="Number"], ui-entry[data-type="Text"], ui-entry[data-type="Password"]'), function onInputEntry(input) {
+						/* UI-Entrys :: Integer, Float, Text & Password */
+						[].map.call(form.querySelectorAll('ui-entry[data-type="Integer"], ui-entry[data-type="Float"], ui-entry[data-type="Text"], ui-entry[data-type="Password"]'), function onInputEntry(input) {
 							if(typeof(input.dataset.name) !== 'undefined' && input.dataset.name.length > 0) {
 								data[input.dataset.name] = input.querySelector('input').value;
 							}
@@ -568,7 +568,8 @@ const BotEditor = (new function BotEditor() {
 					output.setList(entry.list);
 				break;
 				case 'Boolean':
-				case 'Number':
+				case 'Float':
+				case 'Integer':
 				case 'Text':
 				case 'Password':
 

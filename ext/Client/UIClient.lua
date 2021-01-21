@@ -67,7 +67,7 @@ function FunBotUIClient:_onUISettings(data)
 
 	settings:add("SPAWN", "Boolean", "spawnOnLevelstart", "Spawn on Levelstart", data.spawnOnLevelstart, true, "Bots spawn on levelstart (if valid paths are available)");
 	settings:add("SPAWN", "Integer", "initNumberOfBots", "Number Bots on Levelstart", data.initNumberOfBots, 10, "Bots on levelstart");
-	settings:add("SPAWN", "Float", "spawnDelayBots", "Respawn Delay", data.spawnDelayBots, 2, "time till bots respawn, if respawn enabled");
+	settings:add("SPAWN", "Float", "spawnDelayBots", "Respawn Delay", data.spawnDelayBots, 2.0, "time till bots respawn, if respawn enabled");
 	settings:add("SPAWN", "Integer", "botTeam", "Default Bot Team", data.botTeam, 2, "default bot team 1 = US, 2 = RU");
 	settings:add("SPAWN", "Boolean", "respawnWayBots", "Respawn Bots", data.respawnWayBots, true, "Bots on paths respawn if killed on startup");
 	settings:add("SPAWN", "Boolean", "botNewLoadoutOnSpawn", "New Loadout on Spawn", data.botNewLoadoutOnSpawn, true, "bots get a new kit and color, if they respawn");
@@ -94,6 +94,7 @@ function FunBotUIClient:_onUISettings(data)
 	settings:addList("OTHER", "language", "Language", { "de_DE", "cn_CN", "en_US" }, data.language, "en_US", "Select the language of this mod");
 	settings:add("OTHER", "Password", "settingsPassword", "Password", data.settingsPassword, nil, "Password protection of these Mod");
 
+	print(settings:getJSON())
 	self._views:execute('BotEditor.openSettings(\'' .. settings:getJSON() .. '\');');
 	self._views:show('settings');
 	self._views:focus();
