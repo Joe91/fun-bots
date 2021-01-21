@@ -1,8 +1,14 @@
 class('FunBotClient');
 
-local FunBotUIClient	= require('UIClient');
-local ClientTraceManager = require('ClientTraceManager');
-local ClientBotManager	= require('ClientBotManager');
+require('__shared/Constants/BotColors');
+require('__shared/Constants/BotNames');
+require('__shared/Constants/BotKits');
+require('__shared/Constants/BotNames');
+require('__shared/Constants/BotWeapons');
+
+local FunBotUIClient		= require('UIClient');
+local ClientTraceManager	= require('ClientTraceManager');
+local ClientBotManager		= require('ClientBotManager');
 
 function FunBotClient:__init()
 	Events:Subscribe('Extension:Unloading', self, self._onExtensionUnload);

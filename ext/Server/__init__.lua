@@ -1,6 +1,11 @@
 class('FunBotServer');
 
 require('__shared/Config');
+require('__shared/Constants/BotColors');
+require('__shared/Constants/BotNames');
+require('__shared/Constants/BotKits');
+require('__shared/Constants/BotNames');
+require('__shared/Constants/BotWeapons');
 
 local SettingsManager		= require('SettingsManager');
 local BotManager			= require('BotManager');
