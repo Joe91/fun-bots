@@ -34,6 +34,11 @@ Config = {
 	maxSupportBots = -1,			-- maximum number of Bots with Support Kit
 	maxReconBots = -1,				-- maximum number of Bots with Recon Kit
 
+	--expert
+	botFirstShotDelay = 0.3,		-- delay for first shot. If too small, there will be great spread in first cycle because its not kompensated jet.
+	botMinTimeShootAtPlayer = 1.0,	-- the minimum time a bot shoots at one player
+	botFireModeDuration = 5.0,		-- the minimum time a bot tries to shoot a player
+
 	-- UI settings & language options
 	disableChatCommands = true,	 	-- if true, no chat commands can be used
 	traceUsageAllowed = true,		-- if false, no traces can be recorded, deleted or saved
@@ -49,16 +54,16 @@ StaticConfig = {
 	botUpdateCycle = 0.1,			-- update-intervall of bots
 	botAimUpdateCycle = 0.05,		-- = 3 frames at 60 Hz
 	botBulletSpeed = 600,			-- speed a bullet travels ingame (aproximately)
+
 	botFireDuration = 0.3,			-- the duration a bot fires (Assault / Engi)
 	botFirePause = 0.3,			 	-- the duration a bot waits after fire (Assault / Engi)
-	botFireDurationSupport = 4.0,	-- the duration a bot fires (Support)
+	botFireDurationSupport = 3.0,	-- the duration a bot fires (Support)
 	botFirePauseSupport = 1.0,		-- the duration a bot waits after fire (Support)
 	botFireDurationRecon = 0.1,		-- the duration a bot fires (Recon)
 	botFirePauseRecon = 2.0,		-- the duration a bot waits after fire (Recon)
 	botFireDurationPistol = 0.1,	-- the duration a bot fires (Pistol)
 	botFirePausePistol = 0.2,		-- the duration a bot waits after fire (Pistol)
-	botMinTimeShootAtPlayer = 1.0,	-- the minimum time a bot shoots at one player
-	botFireModeDuration = 5.0,		-- the minimum time a bot tries to shoot a player
+
 	targetDistanceWayPoint = 0.5,	-- distance the bots have to reach to continue with next Waypoint
 	targetHeightDistanceWayPoint = 2-- distance the bots have to reach in height to continue with next Waypoint
 }

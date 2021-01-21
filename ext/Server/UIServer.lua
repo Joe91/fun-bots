@@ -207,7 +207,7 @@ function FunBotUIServer:_writeSettings(player, request)
 
 	-- difficluty
 	if request.botAimWorsening ~= nil then
-		local tempValue = tonumber(request.botAimWorsening) / 100;
+		local tempValue = tonumber(request.botAimWorsening)
 
 		if tempValue >= 0 and tempValue < 10 then
 			SettingsManager:update('botAimWorsening', tempValue, temporary);
@@ -355,6 +355,31 @@ function FunBotUIServer:_writeSettings(player, request)
 
 		if tempValue >= -1 and tempValue <= MAX_NUMBER_OF_BOTS then
 			SettingsManager:update('maxReconBots', tempValue, temporary);
+		end
+	end
+
+	-- expert
+	if request.botFirstShotDelay ~= nil then
+		local tempValue = tonumber(request.botFirstShotDelay);
+
+		if tempValue >= 0 and tempValue <= 10.0 then
+			SettingsManager:update('botFirstShotDelay', tempValue, temporary);
+		end
+	end
+
+	if request.botMinTimeShootAtPlayer ~= nil then
+		local tempValue = tonumber(request.botMinTimeShootAtPlayer);
+
+		if tempValue >= 0 and tempValue <= Config.botFireModeDuration then
+			SettingsManager:update('botMinTimeShootAtPlayer', tempValue, temporary);
+		end
+	end
+
+	if request.botFireModeDuration ~= nil then
+		local tempValue = tonumber(request.botFireModeDuration);
+
+		if tempValue >= 0 and tempValue <= 30.0 then
+			SettingsManager:update('botFireModeDuration', tempValue, temporary);
 		end
 	end
 

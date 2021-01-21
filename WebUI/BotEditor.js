@@ -33,7 +33,8 @@ const EntryElement = function EntryElement() {
 				_container.appendChild(this._createText(_value == null ? (_default == null ? '' : (_default ? 'Yes' : 'No')) : (_value ? 'Yes' : 'No')));
 				_container.appendChild(arrow_right);
 			break;
-			case 'Number':
+			case 'Integer':
+			case 'Float':
 				_container.appendChild(arrow_left);
 				_container.appendChild(this._createInput('number', _value == null ? (_default == null ? '' : _default) : _value));
 				_container.appendChild(arrow_right);
@@ -88,8 +89,11 @@ const EntryElement = function EntryElement() {
 			case 'Boolean':
 				this.setValue(!_value);
 			break;
-			case 'Number':
+			case 'Integer':
 				this.setValue(_value - 1);
+			break;
+			case 'Float':
+				this.setValue(_value - 0.1);
 			break;
 			case 'List':
 				console.log(_list);
@@ -113,8 +117,11 @@ const EntryElement = function EntryElement() {
 			case 'Boolean':
 				this.setValue(!_value);
 			break;
-			case 'Number':
+			case 'Integer':
 				this.setValue(_value + 1);
+			break;
+			case 'Float':
+				this.setValue(_value + 0.1);
 			break;
 			case 'List':
 				console.log(_list);
@@ -138,9 +145,13 @@ const EntryElement = function EntryElement() {
 			case 'Boolean':
 				_container.querySelector('ui-text').innerHTML = (_value ? 'Yes' : 'No');
 			break;
-			case 'Number':
+			case 'Integer':
 				_value = parseInt(value, 10);
 				_container.querySelector('input[type="number"]').value = _value;
+			break;
+			case 'Float':
+				_value = parseFloat(value);
+				_container.querySelector('input[type="number"]').value = _value.toFixed(2);
 			break;
 			case 'List':
 				_container.querySelector('ui-text').innerHTML = _value;
@@ -410,8 +421,8 @@ const BotEditor = (new function BotEditor() {
 							}
 						});
 
-						/* UI-Entrys :: Number, Text & Password */
-						[].map.call(form.querySelectorAll('ui-entry[data-type="Number"], ui-entry[data-type="Text"], ui-entry[data-type="Password"]'), function onInputEntry(input) {
+						/* UI-Entrys :: Integer, Float, Text & Password */
+						[].map.call(form.querySelectorAll('ui-entry[data-type="Integer"], ui-entry[data-type="Float"], ui-entry[data-type="Text"], ui-entry[data-type="Password"]'), function onInputEntry(input) {
 							if(typeof(input.dataset.name) !== 'undefined' && input.dataset.name.length > 0) {
 								data[input.dataset.name] = input.querySelector('input').value;
 							}
@@ -553,7 +564,8 @@ const BotEditor = (new function BotEditor() {
 					output.setList(entry.list);
 				break;
 				case 'Boolean':
-				case 'Number':
+				case 'Float':
+				case 'Integer':
 				case 'Text':
 				case 'Password':
 

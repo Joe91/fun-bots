@@ -101,13 +101,13 @@ function Bot:shootAt(player, ignoreYaw)
 
 	if dYaw < fovHalf or ignoreYaw then
 		if self._shoot then
-			if self._shootModeTimer == nil or self._shootModeTimer > StaticConfig.botMinTimeShootAtPlayer then
+			if self._shootModeTimer == nil or self._shootModeTimer > Config.botMinTimeShootAtPlayer then
 				self._shootModeTimer	= 0;
 				self._shootPlayer		= player;
 				self._shotTimer			= 0;
 			end
 		else
-			self._shootModeTimer = StaticConfig.botFireModeDuration;
+			self._shootModeTimer = Config.botFireModeDuration;
 		end
 	end
 end
@@ -357,7 +357,7 @@ function Bot:_updateShooting()
 		end
 
 		if self._shootPlayer ~= nil and self._shootPlayer.soldier ~= nil then
-			if self._shootModeTimer < StaticConfig.botFireModeDuration then
+			if self._shootModeTimer < Config.botFireModeDuration then
 				self._shootModeTimer	= self._shootModeTimer + StaticConfig.botUpdateCycle;
 				self.activeMoveMode		= 9; -- movement-mode : attack
 				--self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 1) --does not work.
@@ -409,14 +409,17 @@ function Bot:_updateShooting()
 					else
 						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
 					end
-				else
+				else --primary
+					if self.player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Crouch then -- wait till crouch
+						self._shotTimer =  -Config.botFirstShotDelay;
+					end
 					if self.kit == "Support" then
 						if self._shotTimer >= (StaticConfig.botFireDurationSupport + StaticConfig.botFirePauseSupport) then
 							self._shotTimer	= 0;
 						end
 						if self._shotTimer >= StaticConfig.botFireDurationSupport then
 							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
-						else
+						elseif self._shotTimer >= 0 then
 							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
 						end
 					elseif self.kit == "Recon" then
@@ -425,7 +428,7 @@ function Bot:_updateShooting()
 						end
 						if self._shotTimer >= StaticConfig.botFireDurationRecon then
 							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
-						else
+						elseif self._shotTimer >= 0 then
 							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
 						end
 					else -- Enineer and Assalut
@@ -434,7 +437,7 @@ function Bot:_updateShooting()
 						end
 						if self._shotTimer >= StaticConfig.botFireDuration then
 							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
-						else
+						elseif self._shotTimer >= 0 then
 							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
 						end
 					end
