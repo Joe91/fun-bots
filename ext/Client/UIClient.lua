@@ -60,29 +60,29 @@ function FunBotUIClient:_onUISettings(data)
 	settings:addList("GLOBAL", "botKit", "Bot Kit", BotKits, data.botKit, "RANDOM_KIT", "The Kit a bots spawns with.");
 	settings:addList("GLOBAL", "botColor", "Bot Color", BotColors, data.botColor, "RANDOM_COLOR", "The Kit-Color a bots spawns with.");
 
-	settings:add("DIFFICULTY", "Number", "botAimWorsening", "Aim Worsening", data.botAimWorsening * 100, 0, "0 = hard, 100 (or higher) = easy. Only takes effect on level Start");
-	settings:add("DIFFICULTY", "Number", "bulletDamageBot", "Damage Bot Bullet", data.bulletDamageBot, 9, "The damage a normal Bullet does");
-	settings:add("DIFFICULTY", "Number", "bulletDamageBotSniper", "Damage Bot Sniper", data.bulletDamageBotSniper, 24, "The damage a Sniper-Bullet does");
-	settings:add("DIFFICULTY", "Number", "meleeDamageBot", "Damage Bot Melee", data.meleeDamageBot, 42, "The Damage a melee-attack does");
+	settings:add("DIFFICULTY", "Float", "botAimWorsening", "Aim Worsening", data.botAimWorsening, 0.0, "0 = hard, 1 (or higher) = easy. Only takes effect on level Start");
+	settings:add("DIFFICULTY", "Integer", "bulletDamageBot", "Damage Bot Bullet", data.bulletDamageBot, 9, "The damage a normal Bullet does");
+	settings:add("DIFFICULTY", "Integer", "bulletDamageBotSniper", "Damage Bot Sniper", data.bulletDamageBotSniper, 24, "The damage a Sniper-Bullet does");
+	settings:add("DIFFICULTY", "Integer", "meleeDamageBot", "Damage Bot Melee", data.meleeDamageBot, 42, "The Damage a melee-attack does");
 
 	settings:add("SPAWN", "Boolean", "spawnOnLevelstart", "Spawn on Levelstart", data.spawnOnLevelstart, true, "Bots spawn on levelstart (if valid paths are available)");
-	settings:add("SPAWN", "Number", "initNumberOfBots", "Number Bots on Levelstart", data.initNumberOfBots, 10, "Bots on levelstart");
-	settings:add("SPAWN", "Number", "spawnDelayBots", "Respawn Delay", data.spawnDelayBots, 2, "time till bots respawn, if respawn enabled");
-	settings:add("SPAWN", "Number", "botTeam", "Default Bot Team", data.botTeam, 2, "default bot team 1 = US, 2 = RU");
+	settings:add("SPAWN", "Integer", "initNumberOfBots", "Number Bots on Levelstart", data.initNumberOfBots, 10, "Bots on levelstart");
+	settings:add("SPAWN", "Float", "spawnDelayBots", "Respawn Delay", data.spawnDelayBots, 2, "time till bots respawn, if respawn enabled");
+	settings:add("SPAWN", "Integer", "botTeam", "Default Bot Team", data.botTeam, 2, "default bot team 1 = US, 2 = RU");
 	settings:add("SPAWN", "Boolean", "respawnWayBots", "Respawn Bots", data.respawnWayBots, true, "Bots on paths respawn if killed on startup");
 	settings:add("SPAWN", "Boolean", "botNewLoadoutOnSpawn", "New Loadout on Spawn", data.botNewLoadoutOnSpawn, true, "bots get a new kit and color, if they respawn");
-	settings:add("SPAWN", "Number", "maxAssaultBots", "Max Assault Bots", data.maxAssaultBots, -1, "maximum number of Bots with Assault Kit. -1 = unlimited");
-	settings:add("SPAWN", "Number", "maxEngineerBots", "Max Engineer Bots", data.maxEngineerBots, -1, "maximum number of Bots with Engineer Kit. -1 = unlimited");
-	settings:add("SPAWN", "Number", "maxSupportBots", "Max Support Bots", data.maxSupportBots, -1, "maximum number of Bots with Support Kit. -1 = unlimited");
-	settings:add("SPAWN", "Number", "maxReconBots", "Max Recon Bots", data.maxReconBots, -1, "maximum number of Bots with Recon Kit. -1 = unlimited");
+	settings:add("SPAWN", "Integer", "maxAssaultBots", "Max Assault Bots", data.maxAssaultBots, -1, "maximum number of Bots with Assault Kit. -1 = unlimited");
+	settings:add("SPAWN", "Integer", "maxEngineerBots", "Max Engineer Bots", data.maxEngineerBots, -1, "maximum number of Bots with Engineer Kit. -1 = unlimited");
+	settings:add("SPAWN", "Integer", "maxSupportBots", "Max Support Bots", data.maxSupportBots, -1, "maximum number of Bots with Support Kit. -1 = unlimited");
+	settings:add("SPAWN", "Integer", "maxReconBots", "Max Recon Bots", data.maxReconBots, -1, "maximum number of Bots with Recon Kit. -1 = unlimited");
 
-	settings:add("ADVANCED", "Number", "fovForShooting", "Bot FOV", data.fovForShooting, 270, "The Field Of View of the bots, where they can detect a player");
+	settings:add("ADVANCED", "Integer", "fovForShooting", "Bot FOV", data.fovForShooting, 270, "The Field Of View of the bots, where they can detect a player");
 	settings:add("ADVANCED", "Boolean", "shootBackIfHit", "Attack if Hit", data.shootBackIfHit, true, "Bots imidiatly attack player, if shot by it");
-	settings:add("ADVANCED", "Number", "maxRaycastDistance", "View Distance Bots", data.maxRaycastDistance, 125, "The maximum distance a bots starts shooting at a player");
-	settings:add("ADVANCED", "Number", "distanceForDirectAttack", "Direct Attack Distance", data.distanceForDirectAttack, 3, "When this close to a bot, he starts attacking");
+	settings:add("ADVANCED", "Integer", "maxRaycastDistance", "View Distance Bots", data.maxRaycastDistance, 125, "The maximum distance a bots starts shooting at a player");
+	settings:add("ADVANCED", "Integer", "distanceForDirectAttack", "Direct Attack Distance", data.distanceForDirectAttack, 3, "When this close to a bot, he starts attacking");
 	settings:add("ADVANCED", "Boolean", "meleeAttackIfClose", "Attack with Melee", data.meleeAttackIfClose, true, "Bots attack the playe with the knife, if close");
 	settings:add("ADVANCED", "Boolean", "attackWayBots", "Attack other players", data.attackWayBots, true, "Bots on paths attack player by default");
-	settings:add("ADVANCED", "Number", "meleeAttackCoolDown", "Melee Cooldown", data.meleeAttackCoolDown, 3, "the time a Bot waits before attacking with melee again");
+	settings:add("ADVANCED", "Float", "meleeAttackCoolDown", "Melee Cooldown", data.meleeAttackCoolDown, 3, "the time a Bot waits before attacking with melee again");
 	settings:add("ADVANCED", "Boolean", "jumpWhileShooting", "Allow Jump while shooting", data.jumpWhileShooting, true, "Bots jump over obstacles while shooting");
 
 

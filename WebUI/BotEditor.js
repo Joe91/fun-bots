@@ -33,9 +33,14 @@ const EntryElement = function EntryElement() {
 				_container.appendChild(this._createText(_value == null ? (_default == null ? '' : (_default ? 'Yes' : 'No')) : (_value ? 'Yes' : 'No')));
 				_container.appendChild(arrow_right);
 			break;
-			case 'Number':
+			case 'Integer':
 				_container.appendChild(arrow_left);
-				_container.appendChild(this._createInput('number', _value == null ? (_default == null ? '' : _default) : _value));
+				_container.appendChild(this._createInput('integer', _value == null ? (_default == null ? '' : _default) : _value));
+				_container.appendChild(arrow_right);
+			break;
+			case 'Float':
+				_container.appendChild(arrow_left);
+				_container.appendChild(this._createInput('float', _value == null ? (_default == null ? '' : _default) : _value));
 				_container.appendChild(arrow_right);
 			break;
 			case 'List':
@@ -88,8 +93,11 @@ const EntryElement = function EntryElement() {
 			case 'Boolean':
 				this.setValue(!_value);
 			break;
-			case 'Number':
+			case 'Integer':
 				this.setValue(_value - 1);
+			break;
+			case 'Float':
+				this.setValue(_value - 0.1);
 			break;
 			case 'List':
 				console.log(_list);
@@ -113,8 +121,11 @@ const EntryElement = function EntryElement() {
 			case 'Boolean':
 				this.setValue(!_value);
 			break;
-			case 'Number':
+			case 'Integer':
 				this.setValue(_value + 1);
+			break;
+			case 'Float':
+				this.setValue(_value + 0.1);
 			break;
 			case 'List':
 				console.log(_list);
@@ -138,9 +149,13 @@ const EntryElement = function EntryElement() {
 			case 'Boolean':
 				_container.querySelector('ui-text').innerHTML = (_value ? 'Yes' : 'No');
 			break;
-			case 'Number':
+			case 'Integer':
 				_value = parseInt(value, 10);
-				_container.querySelector('input[type="number"]').value = _value;
+				_container.querySelector('input[type="integer"]').value = _value;
+			break;
+			case 'Float':
+				_value = parseFloat(value);
+				_container.querySelector('input[type="flaot"]').value = _value;
 			break;
 			case 'List':
 				_container.querySelector('ui-text').innerHTML = _value;
@@ -268,7 +283,7 @@ const BotEditor = (new function BotEditor() {
 
 				/* Bots */
 				case 'bot_spawn_default':
-					count = document.querySelector('[data-action="bot_spawn_default"] input[type="number"]');
+					count = document.querySelector('[data-action="bot_spawn_default"] input[type="integer"]');
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
 						action:	'bot_spawn_default',
 						value:	count.value
@@ -276,7 +291,7 @@ const BotEditor = (new function BotEditor() {
 					count.value = 1;
 				break;
 				case 'bot_spawn_path':
-					index = document.querySelector('[data-action="bot_spawn_path"] input[type="number"]');
+					index = document.querySelector('[data-action="bot_spawn_path"] input[type="integer"]');
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
 						action:	'bot_spawn_path',
 						value:	index.value
@@ -305,7 +320,7 @@ const BotEditor = (new function BotEditor() {
 
 				/* Trace */
 				case 'trace_start':
-					index = document.querySelector('[data-action="trace_start"] input[type="number"]');
+					index = document.querySelector('[data-action="trace_start"] input[type="integer"]');
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
 						action:	'trace_start',
 						value: index.value
@@ -317,7 +332,7 @@ const BotEditor = (new function BotEditor() {
 					}));
 				break;
 				case 'trace_clear':
-					index = document.querySelector('[data-action="trace_clear"] input[type="number"]');
+					index = document.querySelector('[data-action="trace_clear"] input[type="integer"]');
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
 						action:	'trace_clear',
 						value: index.value
@@ -445,7 +460,7 @@ const BotEditor = (new function BotEditor() {
 
 				/* Bots */
 				case InputDeviceKeys.IDK_F2:
-					count = document.querySelector('[data-action="bot_spawn_default"] input[type="number"]');
+					count = document.querySelector('[data-action="bot_spawn_default"] input[type="integer"]');
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
 						action:	'bot_spawn_default',
 						value:	count.value
@@ -465,7 +480,7 @@ const BotEditor = (new function BotEditor() {
 
 				/* Trace */
 				case InputDeviceKeys.IDK_F5:
-					index = document.querySelector('[data-action="trace_start"] input[type="number"]');
+					index = document.querySelector('[data-action="trace_start"] input[type="integer"]');
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
 						action:	'trace_start',
 						value:	index.value
@@ -477,7 +492,7 @@ const BotEditor = (new function BotEditor() {
 					}));
 				break;
 				case InputDeviceKeys.IDK_F7:
-					index = document.querySelector('[data-action="trace_clear"] input[type="number"]');
+					index = document.querySelector('[data-action="trace_clear"] input[type="integer"]');
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
 						action:	'trace_clear',
 						value:	index.value

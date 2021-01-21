@@ -207,7 +207,7 @@ function FunBotUIServer:_writeSettings(player, request)
 
 	-- difficluty
 	if request.botAimWorsening ~= nil then
-		local tempValue = tonumber(request.botAimWorsening) / 100;
+		local tempValue = tonumber(request.botAimWorsening)
 
 		if tempValue >= 0 and tempValue < 10 then
 			SettingsManager:update('botAimWorsening', tempValue, temporary);
