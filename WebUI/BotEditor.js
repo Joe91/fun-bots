@@ -151,7 +151,7 @@ const EntryElement = function EntryElement() {
 			break;
 			case 'Float':
 				_value = parseFloat(value);
-				_container.querySelector('input[type="number"]').value = _value;
+				_container.querySelector('input[type="number"]').value = _value.toFixed(2);
 			break;
 			case 'List':
 				_container.querySelector('ui-text').innerHTML = _value;
