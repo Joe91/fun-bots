@@ -107,7 +107,7 @@ function Bot:shootAt(player, ignoreYaw)
 				self._shotTimer			= 0;
 			end
 		else
-			self._shootModeTimer = StaticConfig.botFireModeDuration;
+			self._shootModeTimer = Config.botFireModeDuration;
 		end
 	end
 end
@@ -357,7 +357,7 @@ function Bot:_updateShooting()
 		end
 
 		if self._shootPlayer ~= nil and self._shootPlayer.soldier ~= nil then
-			if self._shootModeTimer < StaticConfig.botFireModeDuration then
+			if self._shootModeTimer < Config.botFireModeDuration then
 				self._shootModeTimer	= self._shootModeTimer + StaticConfig.botUpdateCycle;
 				self.activeMoveMode		= 9; -- movement-mode : attack
 				--self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 1) --does not work.
@@ -412,7 +412,7 @@ function Bot:_updateShooting()
 				else --primary
 					if self.player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Crouch then --TODO: wait till crouch
 						print("not in crouch jet")
-						self._shotTimer =  -StaticConfig.botFirstShotDelay;
+						self._shotTimer =  -Config.botFirstShotDelay;
 					end
 					if self.kit == "Support" then
 						if self._shotTimer >= (StaticConfig.botFireDurationSupport + StaticConfig.botFirePauseSupport) then

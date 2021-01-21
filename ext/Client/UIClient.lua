@@ -85,7 +85,9 @@ function FunBotUIClient:_onUISettings(data)
 	settings:add("ADVANCED", "Float", "meleeAttackCoolDown", "Melee Cooldown", data.meleeAttackCoolDown, 3, "the time a Bot waits before attacking with melee again");
 	settings:add("ADVANCED", "Boolean", "jumpWhileShooting", "Allow Jump while shooting", data.jumpWhileShooting, true, "Bots jump over obstacles while shooting");
 
-
+	settings:add("EXPERT", "Float", "botFirstShotDelay", "First Shot Delay", data.botFirstShotDelay, 0.3, "delay for first shot");
+	settings:add("EXPERT", "Float", "botMinTimeShootAtPlayer", "Min Time Shoot", data.botMinTimeShootAtPlayer, 1.0, "the minimum time a Bot shoots at one player");
+	settings:add("EXPERT", "Float", "botFireModeDuration", "First Shot Delay", data.botFireModeDuration, 5.0, "the minimum time a Bot tries to shoot a player");
 
 	settings:add("OTHER", "Boolean", "disableChatCommands", "Disable Chat Commands", data.disableChatCommands, true, "if true, no chat commands can be used");
 	settings:add("OTHER", "Boolean", "traceUsageAllowed", "Allow Trace Usage", data.traceUsageAllowed, true, "if false, no traces can be recorded, deleted or saved");
