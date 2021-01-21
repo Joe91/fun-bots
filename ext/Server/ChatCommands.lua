@@ -5,6 +5,8 @@ require('__shared/Config');
 local BotManager	= require('BotManager');
 local TraceManager	= require('TraceManager');
 local BotSpawner	= require('BotSpawner');
+local Globals 		= require('Globals');
+
 
 function ChatCommands:__init()
 	--nothing to do here
@@ -72,7 +74,7 @@ function ChatCommands:execute(parts, player)
 
 		local activeWayIndex = tonumber(parts[3]) or 1;
 
-		if activeWayIndex > Config.maxTraceNumber or activeWayIndex < 1 then
+		if activeWayIndex > MAX_TRACE_NUMBERS or activeWayIndex < 1 then
 			activeWayIndex = 1;
 		end
 
@@ -97,7 +99,7 @@ function ChatCommands:execute(parts, player)
 			respawning = false;
 		end
 
-		Config.respawnWayBots = respawning;
+		Globals.respawnWayBots = respawning;
 
 		BotManager:setOptionForAll('respawn', respawning);
 
@@ -107,6 +109,8 @@ function ChatCommands:execute(parts, player)
 		if tonumber(parts[2]) == 0 then
 			shooting = false;
 		end
+
+		Globals.attackWayBots = shooting;
 
 		BotManager:setOptionForAll('shoot', shooting);
 
