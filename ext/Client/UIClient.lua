@@ -66,6 +66,7 @@ function FunBotUIClient:_onUISettings(data)
 	settings:add("DIFFICULTY", "Integer", "meleeDamageBot", "Damage Bot Melee", data.meleeDamageBot, 42, "The Damage a melee-attack does");
 
 	settings:add("SPAWN", "Boolean", "spawnOnLevelstart", "Spawn on Levelstart", data.spawnOnLevelstart, true, "Bots spawn on levelstart (if valid paths are available)");
+	settings:add("SPAWN", "Boolean", "onlySpawnBotsWithPlayers", "Only spawn with players", data.onlySpawnBotsWithPlayers, true, "Bots only spawn if at least one Player is on the server");
 	settings:add("SPAWN", "Integer", "initNumberOfBots", "Number Bots on Levelstart", data.initNumberOfBots, 10, "Bots on levelstart");
 	settings:add("SPAWN", "Float", "spawnDelayBots", "Respawn Delay", data.spawnDelayBots, 2.0, "time till bots respawn, if respawn enabled");
 	settings:add("SPAWN", "Integer", "botTeam", "Default Bot Team", data.botTeam, 2, "default bot team 1 = US, 2 = RU");

@@ -14,29 +14,41 @@ function BotSpawner:__init()
 	Events:Subscribe('UpdateManager:Update', self, self._onUpdate)
 	Events:Subscribe('Bot:RespawnBot', self, self._onRespawnBot)
 	Events:Subscribe('Player:KitPickup', self, self._onKitPickup)
+	Events:Subscribe('Player:Joining', self, self._onPlayerJoining)
 end
 
-function BotSpawner:onLevelLoaded()
-	BotManager:detectBotTeam()
-
-	local amountToSpawn = Config.initNumberOfBots
-	if BotManager:getBotCount() > amountToSpawn then
-		amountToSpawn = BotManager:getBotCount()
+function BotSpawner:_onPlayerJoining()
+	if Config.onlySpawnBotsWithPlayers then
+		if BotManager:getPlayerCount() == 0 then
+			print("first player - spawn bots")
+			self:onLevelLoaded(true)
+		end
 	end
+end
 
-	for i = 1,amountToSpawn do
-		BotManager:createBot(BotNames[i], Globals.botTeam)
-	end
-	if BotManager:getBotCount() > amountToSpawn then --if bots have been added in between
-		local numberToKick = BotManager:getBotCount() - amountToSpawn
-		BotManager:destroyAmount(numberToKick)
-	end
+function BotSpawner:onLevelLoaded(forceSpawn)
+	if not Config.onlySpawnBotsWithPlayers or BotManager:getPlayerCount() > 0 or (forceSpawn ~= nil and forceSpawn) then
+		BotManager:detectBotTeam()
 
-	-- create initial bots
-	if Globals.activeTraceIndexes > 0 and Config.spawnOnLevelstart then
-		--signal bot Spawner to do its stuff
-		self._botSpawnTimer = -2.5
-		self:spawnWayBots(nil, amountToSpawn, true, 1)
+		local amountToSpawn = Config.initNumberOfBots
+		if BotManager:getBotCount() > amountToSpawn then
+			amountToSpawn = BotManager:getBotCount()
+		end
+
+		for i = 1,amountToSpawn do
+			BotManager:createBot(BotNames[i], Globals.botTeam)
+		end
+		if BotManager:getBotCount() > amountToSpawn then --if bots have been added in between
+			local numberToKick = BotManager:getBotCount() - amountToSpawn
+			BotManager:destroyAmount(numberToKick)
+		end
+
+		-- create initial bots
+		if Globals.activeTraceIndexes > 0 and Config.spawnOnLevelstart then
+			--signal bot Spawner to do its stuff
+			self._botSpawnTimer = -2.5
+			self:spawnWayBots(nil, amountToSpawn, true, 1)
+		end
 	end
 end
 
