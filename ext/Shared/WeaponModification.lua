@@ -7,6 +7,8 @@ function WeaponModification:__init()
 	self.m_WeaponInstances	= {};
 	self.m_maxAngles		= {};
 	self.m_minAngles		= {};
+	self.m_maxRecoilPitch	= {};
+	self.m_maxRecoilYaw		= {};
 end
 
 function WeaponModification:OnPartitionLoaded(p_Partition)
@@ -68,6 +70,18 @@ function WeaponModification:_ModifyWeapon(p_SoldierWeaponData, index, botAimWors
 
 				s_MovingValue.minAngle = self.m_minAngles[index] * botAimWorsening;
 				s_MovingValue.maxAngle = self.m_maxAngles[index] * botAimWorsening;
+			end
+
+			local s_RecoilData = GunSwayRecoilData(s_CrouchNoZoom.recoil);
+
+			if s_RecoilData ~= nil then
+				if self.m_maxRecoilPitch[index] == nil then
+					self.m_maxRecoilPitch[index] = s_RecoilData.recoilAmplitudeMax;
+					self.m_maxRecoilYaw[index] = s_RecoilData.horizontalRecoilAmplitudeMax;
+				end
+
+				s_RecoilData.recoilAmplitudeMax 			= self.m_maxRecoilPitch[index] * botAimWorsening;
+				s_RecoilData.horizontalRecoilAmplitudeMax 	= self.m_maxRecoilYaw[index] * botAimWorsening;
 			end
 		end
 	end
