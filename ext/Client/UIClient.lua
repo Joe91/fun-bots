@@ -46,7 +46,7 @@ function FunBotUIClient:_onUISettings(data)
 		--self._views:blur();
 		return;
 	end
-	
+
 	print('UIClient: UI_Settings (' .. json.encode(data) .. ')');
 
 	local settings = UISettings();
@@ -94,7 +94,6 @@ function FunBotUIClient:_onUISettings(data)
 	settings:addList("OTHER", "language", "Language", { "de_DE", "cn_CN", "en_US" }, data.language, "en_US", "Select the language of this mod");
 	settings:add("OTHER", "Password", "settingsPassword", "Password", data.settingsPassword, nil, "Password protection of these Mod");
 
-	print(settings:getJSON())
 	self._views:execute('BotEditor.openSettings(\'' .. settings:getJSON() .. '\');');
 	self._views:show('settings');
 	self._views:focus();
