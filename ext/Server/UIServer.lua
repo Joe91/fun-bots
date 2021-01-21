@@ -4,10 +4,11 @@ require('__shared/ArrayMap');
 require('__shared/Config');
 require('SettingsManager');
 
-local BotManager	= require('BotManager');
-local TraceManager	= require('TraceManager');
-local BotSpawner	= require('BotSpawner');
-local Globals 		= require('Globals');
+local BotManager			= require('BotManager');
+local TraceManager			= require('TraceManager');
+local BotSpawner			= require('BotSpawner');
+local WeaponModification	= require('__shared/WeaponModification');
+local Globals 				= require('Globals');
 
 function FunBotUIServer:__init()
 	self._webui			= 0;
@@ -162,6 +163,7 @@ end
 
 function FunBotUIServer:_writeSettings(player, request)
 	local temporary = false;
+	local updateWeapons = false;
 	
 	if request.subaction ~= nil then
 		temporary = (request.subaction == 'temp');
@@ -210,7 +212,10 @@ function FunBotUIServer:_writeSettings(player, request)
 		local tempValue = tonumber(request.botAimWorsening)
 
 		if tempValue >= 0 and tempValue < 10 then
-			SettingsManager:update('botAimWorsening', tempValue, temporary);
+			if math.abs(request.botAimWorsening - Config.botAimWorsening) > 0.001 then
+				SettingsManager:update('botAimWorsening', tempValue, temporary);
+				updateWeapons = true;
+			end
 		end
 	end
 
@@ -290,6 +295,10 @@ function FunBotUIServer:_writeSettings(player, request)
 	--spawnning
 	if request.spawnOnLevelstart ~= nil then
 		SettingsManager:update('spawnOnLevelstart', (request.spawnOnLevelstart == true), temporary);
+	end
+
+	if request.onlySpawnBotsWithPlayers ~= nil then
+		SettingsManager:update('onlySpawnBotsWithPlayers', (request.onlySpawnBotsWithPlayers == true), temporary);
 	end
 
 	if request.initNumberOfBots ~= nil then
@@ -383,6 +392,54 @@ function FunBotUIServer:_writeSettings(player, request)
 		end
 	end
 
+	if request.botFireDuration ~= nil then
+		local tempValue = tonumber(request.botFireDuration);
+
+		if tempValue >= 0.1 and tempValue <= Config.botFireModeDuration then
+			SettingsManager:update('botFireDuration', tempValue, temporary);
+		end
+	end
+
+	if request.botFirePause ~= nil then
+		local tempValue = tonumber(request.botFirePause);
+
+		if tempValue >= 0.1 and tempValue <= Config.botFireModeDuration then
+			SettingsManager:update('botFirePause', tempValue, temporary);
+		end
+	end
+
+	if request.botFireDurationSupport ~= nil then
+		local tempValue = tonumber(request.botFireDurationSupport);
+
+		if tempValue >= 0.1 and tempValue <= Config.botFireModeDuration then
+			SettingsManager:update('botFireDurationSupport', tempValue, temporary);
+		end
+	end
+
+	if request.botFirePauseSupport ~= nil then
+		local tempValue = tonumber(request.botFirePauseSupport);
+
+		if tempValue >= 0.1 and tempValue <= Config.botFireModeDuration then
+			SettingsManager:update('botFirePauseSupport', tempValue, temporary);
+		end
+	end
+
+	if request.botFireCycleRecon ~= nil then
+		local tempValue = tonumber(request.botFireCycleRecon);
+
+		if tempValue >= 0.2 and tempValue <= Config.botFireModeDuration then
+			SettingsManager:update('botFireCycleRecon', tempValue, temporary);
+		end
+	end
+
+	if request.botFireCyclePistol ~= nil then
+		local tempValue = tonumber(request.botFireCyclePistol);
+
+		if tempValue >= 0.2 and tempValue <= Config.botFireModeDuration then
+			SettingsManager:update('botFireCyclePistol', tempValue, temporary);
+		end
+	end
+
 	-- Other
 	if request.disableChatCommands ~= nil then
 		SettingsManager:update('disableChatCommands', (request.disableChatCommands == true), temporary);
@@ -417,6 +474,12 @@ function FunBotUIServer:_writeSettings(player, request)
 		ChatManager:Yell('Settings has been saved.', 2.5);
 	end
 	
+	-- update Weapons if needed
+	if updateWeapons then
+		WeaponModification:ModifyAllWeapons(Config.botAimWorsening);
+	end
+	NetEvents:BroadcastLocal('WriteClientSettings', Config, updateWeapons);
+
 	-- @ToDo create Error Array and dont hide if has values
 	NetEvents:SendTo('UI_Settings', player, false);
 end

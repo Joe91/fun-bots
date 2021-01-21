@@ -50,7 +50,7 @@ function FunBotServer:_onLevelLoaded(levelName, gameMode)
 	WeaponModification:ModifyAllWeapons(Config.botAimWorsening);
 	print('level ' .. levelName .. ' loaded...');
 	TraceManager:onLevelLoaded(levelName, gameMode);
-	BotSpawner:onLevelLoaded();
+	BotSpawner:onLevelLoaded(false);
 end
 
 function FunBotServer:_onChat(player, recipientMask, message)

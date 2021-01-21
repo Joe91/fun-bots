@@ -66,6 +66,10 @@ function BotManager:getBotCount()
 	return #self._bots;
 end
 
+function BotManager:getPlayerCount()
+	return PlayerManager:GetPlayerCount() - #self._bots;
+end
+
 function BotManager:getKitCount(kit)
 	local count = 0;
 	for _, bot in pairs(self._bots) do
@@ -136,6 +140,12 @@ function BotManager:_onPlayerLeft(player)
 	--remove all references of player
 	for _, bot in pairs(self._bots) do
 		bot:clearPlayer(player)
+	end
+	if Config.onlySpawnBotsWithPlayers then
+		if self:getPlayerCount() == 1 then
+			print("no player left - kill all bots")
+			self:killAll()
+		end
 	end
 end
 
