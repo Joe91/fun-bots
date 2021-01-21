@@ -215,7 +215,7 @@ function TraceManager:_onUpdate(dt)
 		if self._tracePlayer[i] ~= nil then
 			self._traceUpdateTimer[i] = self._traceUpdateTimer[i] + dt;
 
-			if self._traceUpdateTimer[i] >= StaticConfig.traceDeltaeDelta then
+			if self._traceUpdateTimer[i] >= StaticConfig.traceDelta then
 				self._traceUpdateTimer[i] = 0;
 				self:_generateAndInsertPoint(self._tracePlayer[i], i);
 			end
