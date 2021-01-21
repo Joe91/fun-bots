@@ -228,47 +228,49 @@ function TraceManager:_generateAndInsertPoint(player, traceIndex)
 	local MoveAddon	= 0; -- 0 = nothing, 1 = jump ... (4 Bits)
 	local vlaue		= 0; -- waittime in 0.5 s (0-255) (8 Bits)
 	local point		= WayPoint();
-	point.trans		= player.soldier.worldTransform.trans:Clone();
+	if player.soldier ~= nil then
+		point.trans		= player.soldier.worldTransform.trans:Clone();
 
-	--trace movement with primary weapon
-	if player.soldier.weaponsComponent.currentWeaponSlot == WeaponSlot.WeaponSlot_0 then
-		self._traceWaitTimer[traceIndex] = 0;
-
-		if player.input:GetLevel(EntryInputActionEnum.EIAThrottle) > 0 then --record only if moving
-			if player.soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
-				MoveMode = 1;
-			elseif player.soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
-				MoveMode = 2;
-			else
-				MoveMode = 3;
-
-				if player.input:GetLevel(EntryInputActionEnum.EIASprint) == 1 then
-					MoveMode = 4;
-				end
-			end
-
-			if player.input:GetLevel(EntryInputActionEnum.EIAJump) == 1 then
-				MoveAddon = 1;
-			end
-
-			point.speedMode	= MoveMode;
-			point.extraMode	= MoveAddon;
-			point.optValue	= vlaue;
-
-			table.insert(Globals.wayPoints[traceIndex], point);
-		end
-
-	-- trace wait time with secondary weapon
-	elseif player.soldier.weaponsComponent.currentWeaponSlot == WeaponSlot.WeaponSlot_1 then
-		if self._traceWaitTimer[traceIndex] == 0 or self._traceWaitTimer[traceIndex] == nil then
+		--trace movement with primary weapon
+		if player.soldier.weaponsComponent.currentWeaponSlot == WeaponSlot.WeaponSlot_0 then
 			self._traceWaitTimer[traceIndex] = 0;
-			table.insert(Globals.wayPoints[traceIndex], point);
+
+			if player.input:GetLevel(EntryInputActionEnum.EIAThrottle) > 0 then --record only if moving
+				if player.soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
+					MoveMode = 1;
+				elseif player.soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
+					MoveMode = 2;
+				else
+					MoveMode = 3;
+
+					if player.input:GetLevel(EntryInputActionEnum.EIASprint) == 1 then
+						MoveMode = 4;
+					end
+				end
+
+				if player.input:GetLevel(EntryInputActionEnum.EIAJump) == 1 then
+					MoveAddon = 1;
+				end
+
+				point.speedMode	= MoveMode;
+				point.extraMode	= MoveAddon;
+				point.optValue	= vlaue;
+
+				table.insert(Globals.wayPoints[traceIndex], point);
+			end
+
+		-- trace wait time with secondary weapon
+		elseif player.soldier.weaponsComponent.currentWeaponSlot == WeaponSlot.WeaponSlot_1 then
+			if self._traceWaitTimer[traceIndex] == 0 or self._traceWaitTimer[traceIndex] == nil then
+				self._traceWaitTimer[traceIndex] = 0;
+				table.insert(Globals.wayPoints[traceIndex], point);
+			end
+
+			self._traceWaitTimer[traceIndex]	= self._traceWaitTimer[traceIndex] + StaticConfig.traceDelta;
+			local waitValue						= math.floor(tonumber(self._traceWaitTimer[traceIndex]));
+
+			Globals.wayPoints[traceIndex][#Globals.wayPoints[traceIndex]].optValue = waitValue;
 		end
-
-		self._traceWaitTimer[traceIndex]	= self._traceWaitTimer[traceIndex] + StaticConfig.traceDelta;
-		local waitValue						= math.floor(tonumber(self._traceWaitTimer[traceIndex]));
-
-		Globals.wayPoints[traceIndex][#Globals.wayPoints[traceIndex]].optValue = waitValue;
 	end
 end
 

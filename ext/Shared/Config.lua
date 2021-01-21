@@ -45,8 +45,8 @@ Config = {
 	botFirePause = 0.3,			 	-- the duration a bot waits after fire (Assault / Engi)
 	botFireDurationSupport = 3.0,	-- the duration a bot fires (Support)
 	botFirePauseSupport = 1.0,		-- the duration a bot waits after fire (Support)
-	botFireCycleRecon = 2.1,		-- the duration a bot fires (Recon)
-	botFireCyclePistol = 0.3,		-- the duration of a FireCycle (Pistol)
+	botFireCycleRecon = 0.5,		-- the duration a bot fires (Recon)
+	botFireCyclePistol = 0.4,		-- the duration of a FireCycle (Pistol)
 
 	-- UI settings & language options
 	disableChatCommands = true,	 	-- if true, no chat commands can be used
