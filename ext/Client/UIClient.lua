@@ -89,6 +89,12 @@ function FunBotUIClient:_onUISettings(data)
 	settings:add("EXPERT", "Float", "botFirstShotDelay", "First Shot Delay", data.botFirstShotDelay, 0.3, "delay for first shot");
 	settings:add("EXPERT", "Float", "botMinTimeShootAtPlayer", "Min Time Shoot", data.botMinTimeShootAtPlayer, 1.0, "the minimum time a Bot shoots at one player");
 	settings:add("EXPERT", "Float", "botFireModeDuration", "First Shot Delay", data.botFireModeDuration, 5.0, "the minimum time a Bot tries to shoot a player");
+	settings:add("EXPERT", "Float", "botFireDuration", "Fire Time (Assault/Engi)", data.botFireDuration, 0.3, "the duration a bot fires (Assault / Engi)");
+	settings:add("EXPERT", "Float", "botFirePause", "Fire Pause (Assalut/Engi)", data.botFirePause, 0.3, "the duration a bot waits after fire (Assault / Engi)");
+	settings:add("EXPERT", "Float", "botFireDurationSupport", "Fire Time (Support)", data.botFireDurationSupport, 3.0, "the duration a bot fires (Support)");
+	settings:add("EXPERT", "Float", "botFirePauseSupport", "Fire Pause (Support)", data.botFirePauseSupport, 1.0, "the duration a Bot waits after fire (Support)");
+	settings:add("EXPERT", "Float", "botFireCycleRecon", "Fire Cycle (Recon)", data.botFireCycleRecon, 2.1, "the duration of a FireCycle (Recon)");
+	settings:add("EXPERT", "Float", "botFireCyclePistol", "Fire Cycle (Pistol)", data.botFireCyclePistol, 0.3, "the duration of a FireCycle (Pistol)");
 
 	settings:add("OTHER", "Boolean", "disableChatCommands", "Disable Chat Commands", data.disableChatCommands, true, "if true, no chat commands can be used");
 	settings:add("OTHER", "Boolean", "traceUsageAllowed", "Allow Trace Usage", data.traceUsageAllowed, true, "if false, no traces can be recorded, deleted or saved");

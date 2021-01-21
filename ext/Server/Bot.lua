@@ -401,10 +401,10 @@ function Bot:_updateShooting()
 					self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
 					self._shotTimer	= 0;
 				elseif Config.botWeapon == "Pistol" then
-					if self._shotTimer >= (StaticConfig.botFireDurationPistol + StaticConfig.botFirePausePistol) then
+					if self._shotTimer >= Config.botFireCyclePistol then
 						self._shotTimer	= 0;
 					end
-					if self._shotTimer >= StaticConfig.botFireDurationPistol then
+					if self._shotTimer >= (Config.botFireCyclePistol / 2) then
 						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
 					else
 						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
@@ -414,28 +414,28 @@ function Bot:_updateShooting()
 						self._shotTimer =  -Config.botFirstShotDelay;
 					end
 					if self.kit == "Support" then
-						if self._shotTimer >= (StaticConfig.botFireDurationSupport + StaticConfig.botFirePauseSupport) then
+						if self._shotTimer >= (Config.botFireDurationSupport + Config.botFirePauseSupport) then
 							self._shotTimer	= 0;
 						end
-						if self._shotTimer >= StaticConfig.botFireDurationSupport then
+						if self._shotTimer >= Config.botFireDurationSupport then
 							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
 						elseif self._shotTimer >= 0 then
 							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
 						end
 					elseif self.kit == "Recon" then
-						if self._shotTimer >= (StaticConfig.botFireDurationRecon + StaticConfig.botFirePauseRecon) then
+						if self._shotTimer >= Config.botFireCycleRecon then
 							self._shotTimer	= 0;
 						end
-						if self._shotTimer >= StaticConfig.botFireDurationRecon then
+						if self._shotTimer >= (Config.botFireCycleRecon / 2) then
 							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
 						elseif self._shotTimer >= 0 then
 							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
 						end
 					else -- Enineer and Assalut
-						if self._shotTimer >= (StaticConfig.botFireDuration + StaticConfig.botFirePause) then
+						if self._shotTimer >= (Config.botFireDuration + Config.botFirePause) then
 							self._shotTimer	= 0;
 						end
-						if self._shotTimer >= StaticConfig.botFireDuration then
+						if self._shotTimer >= Config.botFireDuration then
 							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
 						elseif self._shotTimer >= 0 then
 							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
