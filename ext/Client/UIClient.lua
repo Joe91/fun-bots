@@ -65,6 +65,16 @@ function FunBotUIClient:_onUISettings(data)
 	settings:add("DIFFICULTY", "Number", "bulletDamageBotSniper", "Damage Bot Sniper", data.bulletDamageBotSniper, 24, "The damage a Sniper-Bullet does");
 	settings:add("DIFFICULTY", "Number", "meleeDamageBot", "Damage Bot Melee", data.meleeDamageBot, 42, "The Damage a melee-attack does");
 
+	settings:add("SPAWN", "Boolean", "spawnOnLevelstart", "Spawn on Levelstart", data.spawnOnLevelstart, true, "Bots spawn on levelstart (if valid paths are available)");
+	settings:add("SPAWN", "Number", "initNumberOfBots", "Number Bots on Levelstart", data.initNumberOfBots, 10, "Bots on levelstart");
+	settings:add("SPAWN", "Number", "spawnDelayBots", "Respawn Delay", data.spawnDelayBots, 2, "time till bots respawn, if respawn enabled");
+	settings:add("SPAWN", "Number", "botTeam", "Default Bot Team", data.botTeam, 2, "default bot team 1 = US, 2 = RU");
+	settings:add("SPAWN", "Boolean", "respawnWayBots", "Respawn Bots", data.respawnWayBots, true, "Bots on paths respawn if killed on startup");
+	settings:add("SPAWN", "Boolean", "botNewLoadoutOnSpawn", "New Loadout on Spawn", data.botNewLoadoutOnSpawn, true, "bots get a new kit and color, if they respawn");
+	settings:add("SPAWN", "Number", "maxAssaultBots", "Max Assault Bots", data.maxAssaultBots, -1, "maximum number of Bots with Assault Kit. -1 = unlimited");
+	settings:add("SPAWN", "Number", "maxEngineerBots", "Max Engineer Bots", data.maxEngineerBots, -1, "maximum number of Bots with Engineer Kit. -1 = unlimited");
+	settings:add("SPAWN", "Number", "maxSupportBots", "Max Support Bots", data.maxSupportBots, -1, "maximum number of Bots with Support Kit. -1 = unlimited");
+	settings:add("SPAWN", "Number", "maxReconBots", "Max Recon Bots", data.maxReconBots, -1, "maximum number of Bots with Recon Kit. -1 = unlimited");
 
 	settings:add("ADVANCED", "Number", "fovForShooting", "Bot FOV", data.fovForShooting, 270, "The Field Of View of the bots, where they can detect a player");
 	settings:add("ADVANCED", "Boolean", "shootBackIfHit", "Attack if Hit", data.shootBackIfHit, true, "Bots imidiatly attack player, if shot by it");
@@ -75,16 +85,6 @@ function FunBotUIClient:_onUISettings(data)
 	settings:add("ADVANCED", "Number", "meleeAttackCoolDown", "Melee Cooldown", data.meleeAttackCoolDown, 3, "the time a Bot waits before attacking with melee again");
 	settings:add("ADVANCED", "Boolean", "jumpWhileShooting", "Allow Jump while shooting", data.jumpWhileShooting, true, "Bots jump over obstacles while shooting");
 
-	settings:add("ADVANCED", "Boolean", "spawnOnLevelstart", "Spawn on Levelstart", data.spawnOnLevelstart, true, "Bots spawn on levelstart (if valid paths are available)");
-	settings:add("ADVANCED", "Number", "initNumberOfBots", "Number Bots on Levelstart", data.initNumberOfBots, 10, "Bots on levelstart");
-	settings:add("ADVANCED", "Number", "spawnDelayBots", "Respawn Delay", data.spawnDelayBots, 2, "time till bots respawn, if respawn enabled");
-	settings:add("ADVANCED", "Number", "botTeam", "Default Bot Team", data.botTeam, 2, "default bot team 1 = US, 2 = RU");
-	settings:add("ADVANCED", "Boolean", "respawnWayBots", "Respawn Bots", data.respawnWayBots, true, "Bots on paths respawn if killed on startup");
-	settings:add("ADVANCED", "Boolean", "botNewLoadoutOnSpawn", "New Loadout on Spawn", data.botNewLoadoutOnSpawn, true, "bots get a new kit and color, if they respawn");
-	settings:add("ADVANCED", "Number", "maxAssaultBots", "Max Assault Bots", data.maxAssaultBots, -1, "maximum number of Bots with Assault Kit. -1 = unlimited");
-	settings:add("ADVANCED", "Number", "maxEngineerBots", "Max Engineer Bots", data.maxEngineerBots, -1, "maximum number of Bots with Engineer Kit. -1 = unlimited");
-	settings:add("ADVANCED", "Number", "maxSupportBots", "Max Support Bots", data.maxSupportBots, -1, "maximum number of Bots with Support Kit. -1 = unlimited");
-	settings:add("ADVANCED", "Number", "maxReconBots", "Max Recon Bots", data.maxReconBots, -1, "maximum number of Bots with Recon Kit. -1 = unlimited");
 
 
 	settings:add("OTHER", "Boolean", "disableChatCommands", "Disable Chat Commands", data.disableChatCommands, true, "if true, no chat commands can be used");
