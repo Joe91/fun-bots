@@ -1,0 +1,54 @@
+version: 1.0.0-{build}
+
+# Debugging
+#init:
+   - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+
+# Fuck'd up the shit variables; Can't set on the Backend, must be set here oÔ
+environment:
+  matrix:
+    - nodejs_version: "7"
+  GITHUB_AUTH_TOKEN_SECRET:
+    secure: +hQ3dXqlACVh9ITYULpeRcTaro3L9gHt9fiLlNbhmI0hwKfSY1SNNAaBe0JRCh2U 
+  GITHUB_LANG_TOKEN:
+    secure: +hQ3dXqlACVh9ITYULpeRcTaro3L9gHt9fiLlNbhmI0hwKfSY1SNNAaBe0JRCh2U
+  LANG_DIR: C:\Lang-Temp
+  
+# Branches
+branches:
+  only:
+  - fun-bots-bizzi
+
+# Installation
+install:
+  # Update Node.js
+  - ps: Install-Product node $env:nodejs_version
+  
+  # Generate Language-Strings
+  - .\I18N.bat
+  
+  # Language Deployment
+  - git config --global credential.helper store
+  - ps: Add-Content "$env:USERPROFILE\.git-credentials" "https://$($env:GITHUB_LANG_TOKEN)@github.com`n"
+  - git config --global user.email "build@build.fruithost.de"
+  - git config --global user.name "[fun-bots] Build Server"
+  - git clone -q --depth=1 --branch=master https://%GITHUB_LANG_TOKEN%:x-oauth-basic@github.com/Joe91/fun-bots.git %LANG_DIR%
+  - git -C %LANG_DIR% remote set-url origin https://%GITHUB_LANG_TOKEN%:x-oauth-basic@github.com/Joe91/fun-bots.git
+  - git -C %LANG_DIR% checkout fun-bots-bizzi
+  #- cp .\en_US.json %LANG_DIR%\xx_XX.json
+  #- git -C %LANG_DIR% add xx_XX.json
+  #- git -C %LANG_DIR% diff-index --quiet HEAD || git -C %LANG_DIR% commit -m "[AutoUpdate] Default Language (xx_XX.json)"
+  #- git -C %LANG_DIR% push origin master
+  
+  # Start Build
+  #- .\Build-All.bat
+
+matrix:
+  fast_finish: true
+
+clone_depth: 1
+max_jobs: 10
+
+# Disable other
+build: OFF
+test: OFF
