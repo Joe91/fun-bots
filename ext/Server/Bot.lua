@@ -453,8 +453,8 @@ function Bot:_updateShooting()
 		else
 			self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 0);
 			self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
-			self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 0);
-			self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0);
+			--self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 0);
+			--self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0);
 			self._shootPlayer		= nil;
 			self._lastShootPlayer	= nil;
 			self._shootModeTimer	= nil;
@@ -559,18 +559,25 @@ function Bot:_updateMovement()
 							self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
 							self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0);
 
+						elseif self._obstaceSequenceTimer > 2.2 then --step 4 - repeat afterwards
+							self._obstaceSequenceTimer = 0;
+							self._obstacleRetryCounter = self._obstacleRetryCounter + 1;
+							self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0);
+							self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 0);
+						
 						elseif self._obstaceSequenceTimer > 1.8 then --step 3 - repeat afterwards
 							self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
-							self._obstaceSequenceTimer = 0;
+							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0.0);
+							self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 1);
 							self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 1); --maybe a fence?
-							self._obstacleRetryCounter = self._obstacleRetryCounter + 1;
-
+							
 						elseif self._obstaceSequenceTimer > 0.4 then --step 2
 							self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
 							self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0);
-
-							if self._obstacleRetryCounter == 1 then
+							self.player.input.authoritativeAimingPitch		= 0.0;
+							if (self._obstacleRetryCounter % 2) == 1 then
 								self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 1.0);
+								--self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1.0);
 							else
 								self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, -1.0);
 							end
@@ -595,13 +602,27 @@ function Bot:_updateMovement()
 						self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0);
+						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0.0);
 					end
 
 					-- jump detection. Much more simple now, but works fine ;-)
 					if self._obstaceSequenceTimer == 0 then
-						if (point.trans.y - self.player.soldier.worldTransform.trans.y) > 0.3 then --detect jump
-							self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 1);
-							self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1);
+						if (point.trans.y - self.player.soldier.worldTransform.trans.y) > 0.3 and Config.jumpWhileMoving then
+							--detect, if a jump was recorded or not
+							local timeForwardBackwardJumpDetection = 3; --3 s ahead and back
+							local jumpValid = false;
+							for i = 1, timeForwardBackwardJumpDetection/StaticConfig.traceDelta do
+								local pointBefore = Globals.wayPoints[self._pathIndex][activePointIndex - i];
+								local pointAfter = Globals.wayPoints[self._pathIndex][activePointIndex + i];
+								if (pointBefore ~= nil and pointBefore.extraMode == 1) or (pointAfter ~= nil and pointAfter.extraMode == 1) then
+									jumpValid = true;
+									break;
+								end
+							end
+							if jumpValid then
+								self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 1);
+								self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1);
+							end
 
 						else --only reset, if no obstacle-sequence active
 							self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0);
@@ -649,70 +670,49 @@ function Bot:_updateMovement()
 
 		-- Shoot MoveMode
 		elseif self.activeMoveMode == 9 then
+			--crouch moving (only mode with modified gun)
 			if Config.botWeapon == "Knive" then --Knive Only Mode
 				self.activeSpeedValue = 4; --run towards player
-				-- do some stupid movement and jumping
-				if self._attackModeMoveTimer > 3.6 then
-					self._attackModeMoveTimer = 0;
-				elseif self._attackModeMoveTimer > 3.0 then
-					self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0);
-				elseif self._attackModeMoveTimer > 2.5 then
-					self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, -1.0);
-				elseif self._attackModeMoveTimer > 2.0 then
-					self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 1.0);
-				elseif self._attackModeMoveTimer > 1.8 then
-					self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
-					self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0);
-				elseif self._attackModeMoveTimer > 0.3 then
+			elseif Config.botWeapon == "Primary" then
+				self.activeSpeedValue = 2;
+			else
+				self.activeSpeedValue = 3; --TODO: Test aiming in Mode 2
+			end
+			local targetTime = 5.0
+			local targetCycles = math.floor(targetTime / StaticConfig.traceDeltaShooting);
+
+			if #self._shootWayPoints > targetCycles and Config.jumpWhileShooting then
+				local distanceDone = self._shootWayPoints[#self._shootWayPoints].trans:Distance(self._shootWayPoints[#self._shootWayPoints-targetCycles].trans);
+				if distanceDone < 1.5 then --no movement was possible. Try to jump over obstacle
+					self.activeSpeedValue = 3;
 					self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 1);
 					self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1);
-				end
-
-				self._attackModeMoveTimer = self._attackModeMoveTimer + StaticConfig.botUpdateCycle;
-
-			else --Pistol and primary
-				--crouch moving (only mode with modified gun)
-				if Config.botWeapon == "Primary" then
-					self.activeSpeedValue = 2;
-				else
-					self.activeSpeedValue = 3; --TODO: Test aiming in Mode 2
-				end
-				local targetTime = 5.0
-				local targetCycles = math.floor(targetTime / StaticConfig.traceDeltaShooting);
-
-				if #self._shootWayPoints > targetCycles and Config.jumpWhileShooting then
-					local distanceDone = self._shootWayPoints[#self._shootWayPoints].trans:Distance(self._shootWayPoints[#self._shootWayPoints-targetCycles].trans);
-					if distanceDone < 1.5 then --no movement was possible. Try to jump over obstacle
-						self.activeSpeedValue = 3;
-						self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 1);
-						self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1);
-					else
-						self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
-						self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0);
-					end
 				else
 					self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
-					self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
+					self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0);
 				end
-
-				-- do some sidwards movement from time to time
-				if self._attackModeMoveTimer > 20 then
-					self._attackModeMoveTimer = 0;
-					self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
-				elseif self._attackModeMoveTimer > 17 then
-					self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, -1.0);
-				elseif self._attackModeMoveTimer > 13 then
-					self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
-				elseif self._attackModeMoveTimer > 12 then
-					self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 1.0);
-				elseif self._attackModeMoveTimer > 9 then
-					self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0);
-				elseif self._attackModeMoveTimer > 7 then
-					self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 1.0);
-				end
-
-				self._attackModeMoveTimer = self._attackModeMoveTimer + StaticConfig.botUpdateCycle;
+			else
+				self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
+				self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
 			end
+
+			-- do some sidwards movement from time to time
+			if self._attackModeMoveTimer > 20 then
+				self._attackModeMoveTimer = 0;
+				self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
+			elseif self._attackModeMoveTimer > 17 then
+				self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, -1.0);
+			elseif self._attackModeMoveTimer > 13 then
+				self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
+			elseif self._attackModeMoveTimer > 12 then
+				self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 1.0);
+			elseif self._attackModeMoveTimer > 9 then
+				self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0);
+			elseif self._attackModeMoveTimer > 7 then
+				self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 1.0);
+			end
+
+			self._attackModeMoveTimer = self._attackModeMoveTimer + StaticConfig.botUpdateCycle;
 		end
 
 		-- additional movement
