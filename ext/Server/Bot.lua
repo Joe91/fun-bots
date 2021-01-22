@@ -553,29 +553,30 @@ function Bot:_updateMovement()
 					if currentWayPontDistance >= self._lastWayDistance or self._obstaceSequenceTimer ~= 0 then
 
 						-- try to get around obstacle
-						self.activeSpeedValue = 3; --always try to stand
+						self.activeSpeedValue = 4; --always try to stand
 
 						if self._obstaceSequenceTimer == 0 then --step 0
 							self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
 							self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0);
 
-						elseif self._obstaceSequenceTimer > 2.2 then --step 4 - repeat afterwards
+						elseif self._obstaceSequenceTimer > 2.1 then --step 4 - repeat afterwards
 							self._obstaceSequenceTimer = 0;
 							self._obstacleRetryCounter = self._obstacleRetryCounter + 1;
 							self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0);
-						
-						elseif self._obstaceSequenceTimer > 1.8 then --step 3 - repeat afterwards
-							self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
 							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0.0);
-							self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 1); --maybe a fence?
+						
+						elseif self._obstaceSequenceTimer > 1.8 then --step 3
+							self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
+							if self._obstacleRetryCounter == 0 then
+								self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1.0);
+							else
+								self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 1); --maybe a fence?
+							end
 							
 						elseif self._obstaceSequenceTimer > 0.4 then --step 2
 							self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
 							self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0);
 							self.player.input.authoritativeAimingPitch		= 0.0;
-							if self._obstacleRetryCounter == 1 then
-								self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1.0);
-							end
 							if (MathUtils:GetRandomInt(0,1) == 1) then
 								self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 1.0);
 							else
@@ -609,9 +610,9 @@ function Bot:_updateMovement()
 					if self._obstaceSequenceTimer == 0 then
 						if (point.trans.y - self.player.soldier.worldTransform.trans.y) > 0.3 and Config.jumpWhileMoving then
 							--detect, if a jump was recorded or not
-							local timeForwardBackwardJumpDetection = 3; --3 s ahead and back
+							local timeForwardBackwardJumpDetection = 1.8; -- 1.5 s ahead and back
 							local jumpValid = false;
-							for i = 1, timeForwardBackwardJumpDetection/StaticConfig.traceDelta do
+							for i = 1, math.floor(timeForwardBackwardJumpDetection/StaticConfig.traceDelta) do
 								local pointBefore = Globals.wayPoints[self._pathIndex][activePointIndex - i];
 								local pointAfter = Globals.wayPoints[self._pathIndex][activePointIndex + i];
 								if (pointBefore ~= nil and pointBefore.extraMode == 1) or (pointAfter ~= nil and pointAfter.extraMode == 1) then

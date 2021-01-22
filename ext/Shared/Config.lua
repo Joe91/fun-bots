@@ -36,6 +36,7 @@ Config = {
 	attackWayBots = true,			-- bots on paths attack player
 	meleeAttackCoolDown = 3.0,		-- the time a bot waits before attacking with melee again
 	jumpWhileShooting = true,		-- bots jump over obstacles while shooting if needed
+	jumpWhileMoving = true,			-- bots jump while moving. If false, only on obstacles!
 
 	--expert
 	botFirstShotDelay = 0.3,		-- delay for first shot. If too small, there will be great spread in first cycle because its not kompensated jet.
@@ -51,7 +52,7 @@ Config = {
 	-- UI settings & language options
 	disableChatCommands = true,	 	-- if true, no chat commands can be used
 	traceUsageAllowed = true,		-- if false, no traces can be recorded, deleted or saved
-	settingsPassword = nil,		 	-- if nil, disable it. Otherwise use a String with your password
+	settingsPassword = "fun",		-- if nil, disable it. Otherwise use a String with your password
 	language = nil, --"de_DE",		-- de_DE as sample (default is english, when language file doesnt exists)
 };
 
