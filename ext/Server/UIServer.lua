@@ -276,7 +276,7 @@ function FunBotUIServer:_writeSettings(player, request)
 		SettingsManager:update('meleeAttackIfClose', (request.meleeAttackIfClose == true), temporary);
 	end
 
-	if request.meleeAttackIfClose ~= nil then
+	if request.attackWayBots ~= nil then
 		SettingsManager:update('attackWayBots', (request.attackWayBots == true), temporary);
 	end
 
@@ -290,6 +290,10 @@ function FunBotUIServer:_writeSettings(player, request)
 
 	if request.jumpWhileShooting ~= nil then
 		SettingsManager:update('jumpWhileShooting', (request.jumpWhileShooting == true), temporary);
+	end
+
+	if request.jumpWhileMoving ~= nil then
+		SettingsManager:update('jumpWhileMoving', (request.jumpWhileMoving == true), temporary);
 	end
 
 	--spawnning
@@ -317,13 +321,13 @@ function FunBotUIServer:_writeSettings(player, request)
 		end
 	end
 
-	if request.spawnDelayBots ~= nil then
-		local tempValue = tonumber(request.spawnDelayBots);
+	if request.botTeam ~= nil then
+		local tempValue = tonumber(request.botTeam);
 
 		if tempValue == 1 then
-			SettingsManager:update('spawnDelayBots', TeamId.Team1, temporary);
+			SettingsManager:update('botTeam', TeamId.Team1, temporary);
 		elseif tempValue == 2 then
-			SettingsManager:update('spawnDelayBots', TeamId.Team2, temporary);
+			SettingsManager:update('botTeam', TeamId.Team2, temporary);
 		end
 	end
 

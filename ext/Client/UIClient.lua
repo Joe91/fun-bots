@@ -85,6 +85,7 @@ function FunBotUIClient:_onUISettings(data)
 	settings:add("ADVANCED", "Boolean", "attackWayBots", "Attack other players", data.attackWayBots, true, "Bots on paths attack player by default");
 	settings:add("ADVANCED", "Float", "meleeAttackCoolDown", "Melee Cooldown", data.meleeAttackCoolDown, 3, "the time a Bot waits before attacking with melee again");
 	settings:add("ADVANCED", "Boolean", "jumpWhileShooting", "Allow Jump while shooting", data.jumpWhileShooting, true, "Bots jump over obstacles while shooting");
+	settings:add("ADVANCED", "Boolean", "jumpWhileMoving", "Allow Jump while moving", data.jumpWhileMoving, true, "Bots jump while moving. If false, only on obstacles!");
 
 	settings:add("EXPERT", "Float", "botFirstShotDelay", "First Shot Delay", data.botFirstShotDelay, 0.3, "delay for first shot");
 	settings:add("EXPERT", "Float", "botMinTimeShootAtPlayer", "Min Time Shoot", data.botMinTimeShootAtPlayer, 1.0, "the minimum time a Bot shoots at one player");
