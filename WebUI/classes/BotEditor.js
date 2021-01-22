@@ -172,7 +172,8 @@ const BotEditor = (new function BotEditor() {
 				/* Settings */
 				case 'request_settings':
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'request_settings'
+						action:	'request_settings',
+						opened:	this.isVisible('settings')
 					}));
 				break;
 
@@ -327,7 +328,8 @@ const BotEditor = (new function BotEditor() {
 				/* Settings */
 				case InputDeviceKeys.IDK_F10:
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'request_settings'
+						action:	'request_settings',
+						opened:	this.isVisible('settings')
 					}));
 				break;
 
@@ -343,7 +345,7 @@ const BotEditor = (new function BotEditor() {
 					}
 				break;
 			}
-		});
+		}.bind(this));
 	};
 
 	this.openSettings = function openSettings(data) {
@@ -451,13 +453,13 @@ const BotEditor = (new function BotEditor() {
 
 	this.toggleTraceRun = function toggleTraceRun(state) {
 		let menu	= document.querySelector('[data-lang="Start Trace"]');
-		let string	= 'Start Trace';
+		let string	= this.I18N('Start Trace');
 
 		if(state) {
-			string = 'Stop Trace';
+			string = this.I18N('Stop Trace');
 		}
 
-		menu.innerHTML = this.I18N(string);
+		menu.innerHTML = string;
 	};
 
 	this.getView = function getView(name) {
@@ -472,7 +474,7 @@ const BotEditor = (new function BotEditor() {
 		let view = this.getView(name);
 
 		view.dataset.show = true;
-		view.setAttribute('data-show', 'true');
+		//view.setAttribute('data-show', 'true');
 
 		switch(name) {
 			/* Reset Error-Messages & Password field on opening */
@@ -485,6 +487,12 @@ const BotEditor = (new function BotEditor() {
 		}
 	};
 
+	this.isVisible = function isVisible(name) {
+		let view = this.getView(name);
+		
+		return view.dataset.show;
+	};
+	
 	this.hide = function hide(name) {
 		if(DEBUG) {
 			console.log('Hide View: ', name);
@@ -493,7 +501,7 @@ const BotEditor = (new function BotEditor() {
 		let view = this.getView(name);
 
 		view.dataset.show = false;
-		view.setAttribute('data-show', 'false');
+		//view.setAttribute('data-show', 'false');
 	};
 
 	this.error = function error(name, text) {

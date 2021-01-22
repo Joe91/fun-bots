@@ -7,6 +7,7 @@ require('__shared/Constants/BotKits');
 require('__shared/Constants/BotNames');
 require('__shared/Constants/BotWeapons');
 
+Language					= require('__shared/Language');
 local SettingsManager		= require('SettingsManager');
 local BotManager			= require('BotManager');
 local TraceManager			= require('TraceManager');
@@ -16,6 +17,8 @@ local ChatCommands			= require('ChatCommands');
 local FunBotUIServer		= require('UIServer');
 
 function FunBotServer:__init()
+	Language:loadLanguage(Config.language);
+
 	Events:Subscribe('Level:Loaded', self, self._onLevelLoaded);
 	Events:Subscribe('Player:Chat', self, self._onChat);
 	Events:Subscribe('Extension:Unloading', self, self._onExtensionUnload);

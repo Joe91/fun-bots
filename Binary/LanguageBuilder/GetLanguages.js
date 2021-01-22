@@ -3,17 +3,20 @@ const path	= require('path');
 
 (function GetLanguages() {
 	var _source = null;
-	var _table	= [];
+	var _table	= {
+		LUA:	[],
+		JS:		[]
+	};
 	
 	this.init = function init() {
 		_source = process.argv[2];
 		
 		console.log('Getting Files...');
-		this.LoadFiles(_source, function(error, list) {
+		this.LoadFiles(path.resolve(_source, '..'), function(error, list) {
 			var files = [];
 			
 			list.forEach(function(file) {
-				if(new RegExp('\.(js|html)$', 'gi').test(file) && !new RegExp('node_modules', 'gi').test(file)) {
+				if(new RegExp('\.(js|html|lua)$', 'gi').test(file) && !new RegExp('node_modules', 'gi').test(file) && !new RegExp('languages', 'gi').test(file)) {
 					console.log(' - ' + file.replace(_source, ''));
 					files.push(file);
 				}
@@ -65,7 +68,7 @@ const path	= require('path');
 			this.handleContent(file, fs.readFileSync(file, 'utf8'));
 		}.bind(this));
 		
-		console.log('Finished with ' + _table.length + ' Entries.');
+		console.log('Finished with ' + (_table.LUA.length + _table.JS.length) + ' Entries.');
 		
 		var json = {
 			__LANGUAGE_INFO:	{
@@ -75,23 +78,42 @@ const path	= require('path');
 			}
 		};
 		
-		var comment = 0;
-		_table.forEach(function(entrie) {
+		_table.JS.forEach(function(entrie) {
 			if(entrie.substr(0, 2) == '/*') {
-				// json['__comment_' + ++comment] = entrie;
 				return;
 			}
 			
-			json[entrie] = entrie;
+			json[entrie] = '';
 		});
 		
 		console.log('...Write Language-File');
-		fs.writeFile(path.resolve(_source, '..') + path.sep + 'en_US.json', JSON.stringify(json, null, 2), function(error) {
+		fs.writeFile(path.resolve(_source, 'languages') + path.sep + 'DEFAULT.js', 'Language[\'xx_XX\'] /* Add/replace the xx_XX here with your language code (like de_DE, en_US, or other)! */ = '  + JSON.stringify(json, null, 2) + ';', function(error) {
 			if(error) {
 				throw error;
 			}
 			
-			console.log('I18N was FINISHED! :)');
+			console.log('I18N for JavaScript & HTML was FINISHED! :)');
+		});
+		
+		var lua = [
+			'local code = \'xx_XX\'; -- Add/replace the xx_XX here with your language code (like de_DE, en_US, or other)!\n'
+		];
+		
+		_table.LUA.forEach(function(entrie) {
+			if(entrie.substr(0, 2) == '/*') {
+				return;
+			}
+			
+			lua.push('Language:add(code, "' + entrie + '", "");');
+		});
+		
+		/* @ToDo Adding \n\t"__LANGUAGE_INFO" = {\n\t\tname = "English",\n\t\tauthor = "Unknown",\n\t\tversion = "1.0.0"\n\t}, */
+		fs.writeFile(path.resolve(_source, '../ext/Shared/Languages') + path.sep + 'DEFAULT.lua', ''  + lua.join('\n') + '', function(error) {
+			if(error) {
+				throw error;
+			}
+			
+			console.log('I18N for LUA was FINISHED! :)');
 		}); 
 	};
 	
@@ -112,8 +134,12 @@ const path	= require('path');
 	
 	/* Find I18N.__() */
 	this.fetchFunction = function fetchFunction(file, content) {
-		var found = 0;
-		var regex = /I18N\.__\(("|')([^("|')]+)("|')\)/gi;
+		let LUA_NAME		= 'Language:I18N';
+		let JS_NAME_LOCAL	= 'this\\.I18N';
+		let JS_NAME_CLASS	= 'BotEditor\\.I18N';
+		let PARAMETERS		= '\\(("|\')([^("|\')]+)("|\')(\\)|, )';
+		var found			= 0;
+		var regex			= new RegExp('(' + LUA_NAME + '|' + JS_NAME_LOCAL + '|' + JS_NAME_CLASS + ')' + PARAMETERS, 'gi');
 		var m;
 
 		while((m = regex.exec(content)) !== null) {
@@ -121,8 +147,12 @@ const path	= require('path');
 				regex.lastIndex++;
 			}
 			
-			if(_table.indexOf(m[2]) == -1) {
-				_table.push(m[2]);
+			if(m[1] == 'Language:I18N' && _table.LUA.indexOf(m[3]) == -1) {
+				_table.LUA.push(m[3]);
+				++found;
+			} else if(_table.JS.indexOf(m[3]) == -1) {
+				console.log(m[3]);
+				_table.JS.push(m[3]);
 				++found;
 			}
 		}
@@ -141,9 +171,9 @@ const path	= require('path');
 				regex.lastIndex++;
 			}
 			
-			if(_table.indexOf(m[1]) == -1) {
+			if(_table.JS.indexOf(m[1]) == -1) {
 				if(this.isString(m[1])) {
-					_table.push(m[1]);
+					_table.JS.push(m[1]);
 				}
 				++found;
 			}
@@ -153,7 +183,7 @@ const path	= require('path');
 	};
 	
 	this.isString = function isString(input) {
-		if(input.charAt(0) == '\'') {
+		if(input.charAt(0) == '\'' || input.charAt(0) == '"') {
 			return false;
 		}
 		
