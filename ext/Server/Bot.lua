@@ -141,7 +141,6 @@ function Bot:resetVars()
 	self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0);
 	self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
 	self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
-	self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0);
 	self.player.input:SetLevel(EntryInputActionEnum.EIAThrottle, 0);
 	self.player.input:SetLevel(EntryInputActionEnum.EIASprint, 0);
 end
@@ -328,30 +327,32 @@ end
 function Bot:_updateShooting()
 	if self.player.alive and self._shoot then
 		--select weapon-slot TODO: keep button pressed or not?
-		if self.player.soldier.weaponsComponent ~= nil then
-			if Config.botWeapon == "Knive" then
-				if self.player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_7 then
-					self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 1);
-					self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
-					self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
-				else
-					self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 0);
-				end
-			elseif Config.botWeapon == "Pistol" then
-				if self.player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_1 then
-					self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 0);
-					self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 1);
-					self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
-				else
-					self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
-				end
-			else --"Primary"
-				if self.player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_0 then
-					self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 0);
-					self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
-					self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 1);
-				else
-					self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
+		if self._obstaceSequenceTimer == 0 and self._shootModeTimer == nil then
+			if self.player.soldier.weaponsComponent ~= nil then
+				if Config.botWeapon == "Knive" then
+					if self.player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_7 then
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 1);
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
+					else
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 0);
+					end
+				elseif Config.botWeapon == "Pistol" then
+					if self.player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_1 then
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 0);
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 1);
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
+					else
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
+					end
+				else --"Primary"
+					if self.player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_0 then
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 0);
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 1);
+					else
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
+					end
 				end
 			end
 		end
@@ -365,7 +366,7 @@ function Bot:_updateShooting()
 				--check for melee attack
 				if Config.meleeAttackIfClose and self._shootPlayer.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans) < 1 then
 					if self._meleeCooldownTimer <= 0 then
-						self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 1);
+						--self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 1);
 						self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 1);
 						self._meleeCooldownTimer = Config.meleeAttackCoolDown;
 						Events:DispatchLocal("ServerDamagePlayer", self._shootPlayer.name, self.player.name, true);
@@ -376,11 +377,11 @@ function Bot:_updateShooting()
 							self._meleeCooldownTimer = 0;
 						end
 
-						self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 0);
+						--self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0);
 					end
 				else
-					self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 0);
+					--self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 0);
 					self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0);
 				end
 
@@ -551,7 +552,6 @@ function Bot:_updateMovement()
 					local currentWayPontDistance = self.player.soldier.worldTransform.trans:Distance(point.trans);
 
 					if currentWayPontDistance >= self._lastWayDistance or self._obstaceSequenceTimer ~= 0 then
-
 						-- try to get around obstacle
 						self.activeSpeedValue = 4; --always try to stand
 
@@ -559,7 +559,7 @@ function Bot:_updateMovement()
 							self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
 							self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0);
 
-						elseif self._obstaceSequenceTimer > 2.1 then --step 4 - repeat afterwards
+						elseif self._obstaceSequenceTimer > 2.0 then --step 4 - repeat afterwards
 							self._obstaceSequenceTimer = 0;
 							self._obstacleRetryCounter = self._obstacleRetryCounter + 1;
 							self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0);
@@ -567,7 +567,7 @@ function Bot:_updateMovement()
 						
 						elseif self._obstaceSequenceTimer > 1.8 then --step 3
 							self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
-							if self._obstacleRetryCounter == 0 then
+							if self._obstacleRetryCounter == 1 then
 								self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1.0);
 							else
 								self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 1); --maybe a fence?
