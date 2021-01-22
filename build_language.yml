@@ -19,10 +19,10 @@ branches:
 # Installation
 install:
   # Update Node.js
-  #- ps: Install-Product node $env:nodejs_version
+  - ps: Install-Product node $env:nodejs_version
   
   # Generate Language-Strings
-  #- .\I18N.bat
+  - .\Binary\LanguageBuilder\I18N.bat
   
   # Language Deployment
   #- git config --global credential.helper store
