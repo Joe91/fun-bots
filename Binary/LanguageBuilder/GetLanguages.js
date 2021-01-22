@@ -134,12 +134,8 @@ const path	= require('path');
 	
 	/* Find I18N.__() */
 	this.fetchFunction = function fetchFunction(file, content) {
-		let LUA_NAME		= 'Language:I18N';
-		let JS_NAME_LOCAL	= 'this\\.I18N';
-		let JS_NAME_CLASS	= 'BotEditor\\.I18N';
-		let PARAMETERS		= '\\(("|\')([^("|\')]+)("|\')(\\)|, )';
+		let regex			= /(Language:I18N|this\.I18N|BotEditor\.I18N)(\("([^"]+)"\)|\('([^']+)'\)|\("([^"]+)",|\('([^']+)',)/gi;
 		var found			= 0;
-		var regex			= new RegExp('(' + LUA_NAME + '|' + JS_NAME_LOCAL + '|' + JS_NAME_CLASS + ')' + PARAMETERS, 'gi');
 		var m;
 
 		while((m = regex.exec(content)) !== null) {
@@ -147,12 +143,22 @@ const path	= require('path');
 				regex.lastIndex++;
 			}
 			
-			if(m[1] == 'Language:I18N' && _table.LUA.indexOf(m[3]) == -1) {
-				_table.LUA.push(m[3]);
+			let value = m[2];
+			
+			if(value.substring(0, 2) == '("' || value.substring(0, 2) == '(\'') {
+				value = value.substring(2);
+			}
+			
+			if(value.substr(-2) == '")' || value.substr(-2) == '\')' || value.substr(-2) == '",' || value.substr(-2) == '\',') {
+				value = value.substring(0, value.length - 2);
+			}
+			
+			if(m[1] == 'Language:I18N' && _table.LUA.indexOf(value) == -1) {
+				_table.LUA.push(value);
 				++found;
-			} else if(_table.JS.indexOf(m[3]) == -1) {
-				console.log(m[3]);
-				_table.JS.push(m[3]);
+			} else if(_table.JS.indexOf(value) == -1) {
+				console.log(value);
+				_table.JS.push(value);
 				++found;
 			}
 		}

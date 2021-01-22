@@ -79,3 +79,17 @@ Language:add(code, "Successfully authenticated.", "Erfolgreich authentifiziert."
 Language:add(code, "The password you entered is not correct!", "Das von Ihnen eingegebene Passwort ist nicht korrekt!");
 Language:add(code, "Settings has been saved temporarily.", "Die Einstellungen wurden temporär gespeichert.");
 Language:add(code, "Settings has been saved.", "Die Einstellungen wurden gespeichert.");
+Language:add(code, "Fire Time (Assault/Engi)", "Feuerzeit (Assault/Engi)");
+Language:add(code, "the duration a bot fires (Assault / Engi)", "die Dauer, die ein Bot feuert (Assault / Engi)");
+Language:add(code, "Fire Pause (Assalut/Engi)", "Feuerpause (Assalut/Engi)");
+Language:add(code, "the duration a bot waits after fire (Assault / Engi)", "die Dauer, die ein Bot nach dem Feuer wartet (Assault / Engi)");
+Language:add(code, "Fire Time (Support)", "Feuerzeit (Support)");
+Language:add(code, "the duration a bot fires (Support)", "die Dauer, die ein Bot feuert (Support)");
+Language:add(code, "Fire Pause (Support)", "Feuerpause (Support)");
+Language:add(code, "the duration a Bot waits after fire (Support)", "die Dauer, die ein Bot nach dem Feuer wartet (Support)");
+Language:add(code, "Fire Cycle (Recon)", "Feuerzyklus (Recon)");
+Language:add(code, "the duration of a FireCycle (Recon)", "Die Dauer eines Feuerzyklus (Recon)");
+Language:add(code, "Fire Cycle (Pistol)", "Feuerzyklus (Pistole)");
+Language:add(code, "the duration of a FireCycle (Pistol)", "Die Dauer eines Feuerzyklus (Pistole)");
+Language:add(code, "Bots spawn on levelstart (if valid paths are available)", "Bots spawnen bei Levelstart (wenn gültige Pfade vorhanden sind)");
+Language:add(code, "0 = hard, 1 (or higher) = easy. Only takes effect on level Start", "0 = schwer, 1 (oder höher) = leicht. Wird nur bei Level Start wirksam");
