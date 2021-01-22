@@ -553,7 +553,7 @@ function Bot:_updateMovement()
 
 					if currentWayPontDistance >= self._lastWayDistance or self._obstaceSequenceTimer ~= 0 then
 						-- try to get around obstacle
-						self.activeSpeedValue = 4; --always try to stand
+						self.activeSpeedValue = 3; --always try to stand
 
 						if self._obstaceSequenceTimer == 0 then --step 0
 							self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
