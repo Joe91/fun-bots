@@ -453,8 +453,8 @@ function Bot:_updateShooting()
 		else
 			self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 0);
 			self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
-			--self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 0);
-			--self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0);
+			self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 0);
+			self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0);
 			self._shootPlayer		= nil;
 			self._lastShootPlayer	= nil;
 			self._shootModeTimer	= nil;
@@ -553,7 +553,7 @@ function Bot:_updateMovement()
 					if currentWayPontDistance >= self._lastWayDistance or self._obstaceSequenceTimer ~= 0 then
 
 						-- try to get around obstacle
-						self.activeSpeedValue = 4; --always try to run stand
+						self.activeSpeedValue = 3; --always try to stand
 
 						if self._obstaceSequenceTimer == 0 then --step 0
 							self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
@@ -563,21 +563,21 @@ function Bot:_updateMovement()
 							self._obstaceSequenceTimer = 0;
 							self._obstacleRetryCounter = self._obstacleRetryCounter + 1;
 							self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0);
-							self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 0);
 						
 						elseif self._obstaceSequenceTimer > 1.8 then --step 3 - repeat afterwards
 							self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
 							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0.0);
-							self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 1);
 							self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 1); --maybe a fence?
 							
 						elseif self._obstaceSequenceTimer > 0.4 then --step 2
 							self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
 							self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0);
 							self.player.input.authoritativeAimingPitch		= 0.0;
-							if (self._obstacleRetryCounter % 2) == 1 then
+							if self._obstacleRetryCounter == 1 then
+								self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1.0);
+							end
+							if (MathUtils:GetRandomInt(0,1) == 1) then
 								self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 1.0);
-								--self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1.0);
 							else
 								self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, -1.0);
 							end
