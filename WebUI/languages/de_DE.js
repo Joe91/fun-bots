@@ -39,5 +39,7 @@ Language['de_DE'] = {
   "Advanced": "Erweitert",
   "Expert": "Experte",
   "Other": "Sonstiges",
-  "Save temporarily": "Temporär speichern"
+  "Save temporarily": "Temporär speichern",
+  "Restore all to Default": "Alle Werte zurücksetzen",
+  "Restore this value to Default": "Diesen Wert zurücksetzen"
 };
