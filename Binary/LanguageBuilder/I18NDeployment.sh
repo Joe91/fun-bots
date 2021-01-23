@@ -26,9 +26,7 @@ git add ext/Shared/Languages/DEFAULT.lua
 
 
 # Debug
-echo GitHub-Token: ${GITHUB_TOKEN}
-git remote -v
-git branch -vv
+git status
 
 # Check difference otherwise commit and push
 git diff-index --quiet HEAD || git commit -m "[AutoUpdate] Default Language"
