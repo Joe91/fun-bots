@@ -23,7 +23,7 @@ install:
   - sh: nvm install $nodejs_version
   
   # Generate Language-Strings
-  - .\Binary\LanguageBuilder\I18N.bat
+  - .\Binary\LanguageBuilder\I18N.sh
   
   # Language Deployment
   - git config --global credential.helper store
