@@ -1,6 +1,11 @@
 version: 1.0.0-{build}
 
 # Debugging
+#init:
+   - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+
+
+# Debugging
 # Fuck'd up the shit variables; Can't set on the Backend, must be set here oÔ
 environment:
   matrix:
