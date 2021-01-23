@@ -22,7 +22,7 @@ install:
   - ps: Install-Product node $env:nodejs_version
   
   # Generate Language-Strings
-  - C:\projects\bizzi\Binary\LanguageBuilder\I18N.bat
+  - .\Binary\LanguageBuilder\I18N.bat
   
   # Language Deployment
   - git config --global credential.helper store
