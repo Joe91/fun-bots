@@ -16,6 +16,9 @@ const EntryElement = function EntryElement() {
 
 		_element.onPrevious	= this.onPrevious.bind(this);
 		_element.onNext		= this.onNext.bind(this);
+		
+		
+				let reset	= BotEditor.I18N('Reset to Defaul');
 	};
 
 	this.setType = function setType(type) {
