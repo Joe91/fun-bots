@@ -581,7 +581,7 @@ function Bot:_updateMovement()
 				local useShootWayPoint	= false;
 
 				if #self._shootWayPoints > 0 then	--we need to go back to path first
-					if self._nextPoint == nil then
+					if self._nextPoint == nil or self._nextPoint == self._targetPoint then
 						point 			= table.remove(self._shootWayPoints);
 					else
 						point			= self._nextPoint;
@@ -589,7 +589,7 @@ function Bot:_updateMovement()
 					self._nextPoint 	= table.remove(self._shootWayPoints);
 					useShootWayPoint	= true;
 				else
-					if self._nextPoint == nil then
+					if self._nextPoint == nil or self._nextPoint == self._targetPoint then
 						point = Globals.wayPoints[self._pathIndex][activePointIndex];
 						if not self._invertPathDirection then
 							self._nextPoint = Globals.wayPoints[self._pathIndex][self:_getWayIndex(self._currentWayPoint + 1)]
@@ -605,18 +605,19 @@ function Bot:_updateMovement()
 				if (point.speedMode) > 0 then -- movement
 					self._wayWaitTimer			= 0;
 					self.activeSpeedValue		= point.speedMode; --speed
-					local dy					= point.trans.z - self.player.soldier.worldTransform.trans.z;
-					local dx					= point.trans.x - self.player.soldier.worldTransform.trans.x;
-					local distanceFromTarget	= math.sqrt(dx ^ 2 + dy ^ 2);
-					local heightDistance		= math.abs(point.trans.y - self.player.soldier.worldTransform.trans.y);
 
 					--detect obstacle and move over or around TODO: Move before normal jump
-					local currentWayPontDistance = self.player.soldier.worldTransform.trans:Distance(self._nextPoint.trans);
+					local currentWayPontDistance = self.player.soldier.worldTransform.trans:Distance(point.trans);
 					if currentWayPontDistance > self._lastWayDistance then
 						self._targetPoint = self._nextPoint;
 					else
 						self._targetPoint = point;
 					end
+
+					local dy					= self._targetPoint.trans.z - self.player.soldier.worldTransform.trans.z;
+					local dx					= self._targetPoint.trans.x - self.player.soldier.worldTransform.trans.x;
+					local distanceFromTarget	= math.sqrt(dx ^ 2 + dy ^ 2);
+					local heightDistance		= math.abs(self._targetPoint.trans.y - self.player.soldier.worldTransform.trans.y);
 
 					if math.abs(currentWayPontDistance - self._lastWayDistance) < 0.001 or self._obstaceSequenceTimer ~= 0 then
 						-- try to get around obstacle
@@ -671,7 +672,7 @@ function Bot:_updateMovement()
 						self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0.0);
-					end --]]
+					end
 
 					-- jump detection. Much more simple now, but works fine ;-)
 					if self._obstaceSequenceTimer == 0 then
