@@ -7,6 +7,8 @@ environment:
     - nodejs_version: "15"
   GITHUB_TOKEN:
     secure: pZqIt0P3IaT/7M8TG1EzMs3Jp4W8CRvN5fYRonJf/H0w5poSz2wh2psSAmw0elF9
+  GITHUB_EMAIL:
+    secure: y/l+pr7BBvtyltZv3WuwnyZhYZW6La2t+bZ31v31mWM=
     
 # Branches
 branches:
