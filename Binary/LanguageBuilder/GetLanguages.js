@@ -87,7 +87,7 @@ const path	= require('path');
 		});
 		
 		console.log('...Write Language-File');
-		fs.writeFile(path.resolve(_source, 'languages') + path.sep + 'DEFAULT.js', 'Language[\'xx_XX\'] /* Add/replace the xx_XX here with your language code (like de_DE, en_US, or other)! */ = '  + JSON.stringify(json, null, 2) + ';', function(error) {
+		fs.writeFile(path.resolve(_source, '../../WebUI/languages') + path.sep + 'DEFAULT.js', 'Language[\'xx_XX\'] /* Add/replace the xx_XX here with your language code (like de_DE, en_US, or other)! */ = '  + JSON.stringify(json, null, 2) + ';', function(error) {
 			if(error) {
 				throw error;
 			}
@@ -108,7 +108,7 @@ const path	= require('path');
 		});
 		
 		/* @ToDo Adding \n\t"__LANGUAGE_INFO" = {\n\t\tname = "English",\n\t\tauthor = "Unknown",\n\t\tversion = "1.0.0"\n\t}, */
-		fs.writeFile(path.resolve(_source, '../ext/Shared/Languages') + path.sep + 'DEFAULT.lua', ''  + lua.join('\n') + '', function(error) {
+		fs.writeFile(path.resolve(_source, '../../ext/Shared/Languages') + path.sep + 'DEFAULT.lua', ''  + lua.join('\n') + '', function(error) {
 			if(error) {
 				throw error;
 			}
