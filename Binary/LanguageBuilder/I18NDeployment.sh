@@ -12,6 +12,7 @@ ls
 git config --global credential.helper store
 echo "https://${GITHUB_TOKEN}:x-oauth-basic@github.com" >> ~/.git-credentials
 echo "" >> ~/.git-credentials
+git config --global user.mail "appveyor@appveyor-vm.com"
 git config --global user.name "[fun-bots] Build Server"
 git remote set-url origin https://${GITHUB_TOKEN}@github.com/Joe91/fun-bots.git
 
