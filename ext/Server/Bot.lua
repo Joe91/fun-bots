@@ -331,19 +331,26 @@ function Bot:_updateYaw()
 	local otherDirection = false;
 	local deltaYaw = self.player.input.authoritativeAimingYaw - self._targetYaw;
 	local absDeltaYaw = math.abs(deltaYaw)
-	if absDeltaYaw < Globals.yawPerFrame then
+	if absDeltaYaw > math.pi then
+		otherDirection = true;
+		absDeltaYaw = math.abs(absDeltaYaw - 2*math.pi)
+	end
+	local inkrement = Globals.yawPerFrame;
+	if absDeltaYaw < inkrement then
 		self.player.input.authoritativeAimingYaw = self._targetYaw;
 		return;
 	end
 
-	if absDeltaYaw > math.pi then
-		otherDirection = true;
-	end
-	local inkrement = Globals.yawPerFrame;
 	if deltaYaw > 0 or (deltaYaw < 0 and otherDirection) then
 		inkrement = -inkrement;
 	end
-	self.player.input.authoritativeAimingYaw = self.player.input.authoritativeAimingYaw + inkrement;
+	local tempYaw = self.player.input.authoritativeAimingYaw + inkrement;
+	if tempYaw >= (math.pi * 2) then
+		tempYaw = tempYaw - (math.pi * 2);
+	elseif tempYaw < 0.0 then
+		tempYaw = tempYaw + (math.pi * 2);
+	end
+	self.player.input.authoritativeAimingYaw = tempYaw
 end
 
 function Bot:_updateShooting()
