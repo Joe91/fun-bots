@@ -10,7 +10,7 @@ environment:
     secure: +hQ3dXqlACVh9ITYULpeRcTaro3L9gHt9fiLlNbhmI0hwKfSY1SNNAaBe0JRCh2U 
   GITHUB_LANG_TOKEN:
     secure: +hQ3dXqlACVh9ITYULpeRcTaro3L9gHt9fiLlNbhmI0hwKfSY1SNNAaBe0JRCh2U
-  LANG_DIR: C:\Lang-Temp
+  LANG_DIR: /opt/temp/
   
 # Branches
 branches:
@@ -23,7 +23,7 @@ install:
   - sh: nvm install $nodejs_version
   
   # Generate Language-Strings
-  - .\Binary\LanguageBuilder\I18N.sh
+  - ./Binary/LanguageBuilder/I18N.sh
   
   # Language Deployment
   - git config --global credential.helper store
