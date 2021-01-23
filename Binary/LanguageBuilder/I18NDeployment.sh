@@ -18,7 +18,7 @@ git remote set-url origin https://${GITHUB_TOKEN}@github.com/Joe91/fun-bots.git
 
 
 # Check out Branch
-#git -C ${DIR} checkout fun-bots-bizzi
+git checkout fun-bots-bizzi
 
 # Add files
 git add WebUI/languages/DEFAULT.js
