@@ -14,11 +14,9 @@ const EntryElement = function EntryElement() {
 		_element	= document.createElement('ui-entry');
 		_container	= document.createElement('ui-container');
 
-		_element.onPrevious	= this.onPrevious.bind(this);
-		_element.onNext		= this.onNext.bind(this);
-		
-		
-				let reset	= BotEditor.I18N('Reset to Defaul');
+		_element.onPrevious			= this.onPrevious.bind(this);
+		_element.onNext				= this.onNext.bind(this);
+		_element.resetToDefault		= this.resetToDefault.bind(this);
 	};
 
 	this.setType = function setType(type) {
@@ -27,7 +25,6 @@ const EntryElement = function EntryElement() {
 
 		let arrow_left			= this._createArrow('left');
 		let arrow_right			= this._createArrow('right');
-
 		
 		switch(_type) {
 			case EntryType.Boolean:
@@ -71,11 +68,17 @@ const EntryElement = function EntryElement() {
 		return element;
 	};
 
+	this._createRestore = function _createRestore() {
+		let restore						= document.createElement('ui-restore');
+		restore.dataset.description		= BotEditor.I18N('Restore this value to Default');
+		return restore;
+	};
+	
 	this._createArrow = function _createArrow(direction) {
 		let arrow				= document.createElement('ui-arrow');
 		arrow.dataset.direction	= direction;
 		return arrow;
-	}
+	};
 
 	this.setName = function setName(name) {
 		_name					= name;
@@ -89,6 +92,10 @@ const EntryElement = function EntryElement() {
 		_element.appendChild(name);
 	};
 
+	this.resetToDefault = function resetToDefault() {
+		this.setValue(_default);
+	};
+	
 	this.onPrevious = function onPrevious() {
 		switch(_type) {
 			case EntryType.Boolean:
@@ -185,6 +192,8 @@ const EntryElement = function EntryElement() {
 
 	this.getElement = function getElement() {
 		_element.appendChild(_container);
+		_element.appendChild(this._createRestore());
+		
 		return _element;
 	};
 

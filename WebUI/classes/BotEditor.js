@@ -71,6 +71,13 @@ const BotEditor = (new function BotEditor() {
 			}
 
 			switch(parent.dataset.action) {
+				/* Restore all values to default */
+				case 'restore':
+					[].map.call(Utils.getClosest(event.target, 'ui-view').querySelectorAll('ui-entry'), function(entry) {
+						entry.resetToDefault();
+					});
+				break;
+				
 				/* Exit */
 				case 'close':
 					WebUI.Call('DispatchEventLocal', 'UI_Toggle');
@@ -176,17 +183,26 @@ const BotEditor = (new function BotEditor() {
 
 				/* Other Stuff */
 				default:
-					if(event.target.nodeName == 'UI-ARROW') {
-						let entry	= Utils.getClosest(event.target, 'ui-entry');
+					let entry;
+					
+					switch(event.target.nodeName) {
+						case 'UI-RESTORE':
+							entry = Utils.getClosest(event.target, 'ui-entry');
+							
+							entry.resetToDefault();
+						break;
+						case 'UI-ARROW':
+							entry = Utils.getClosest(event.target, 'ui-entry');
 
-						switch(event.target.dataset.direction) {
-							case 'left':
-								entry.onPrevious();
-							break;
-							case 'right':
-								entry.onNext();
-							break;
-						}
+							switch(event.target.dataset.direction) {
+								case 'left':
+									entry.onPrevious();
+								break;
+								case 'right':
+									entry.onNext();
+								break;
+							}
+						break;
 					}
 
 					/* Sumbit Forms */
