@@ -15,6 +15,7 @@ git remote -v
 
 # Check out Branch
 #git -C ${DIR} checkout fun-bots-bizzi
+git -C ${DIR} checkout -b fun-bots-bizzi origin/fun-bots-bizzi
 
 # Add files
 git -C ${DIR} add ../../WebUI/languages/DEFAULT.js
