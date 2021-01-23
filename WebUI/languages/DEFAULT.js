@@ -4,9 +4,6 @@ Language['xx_XX'] /* Add/replace the xx_XX here with your language code (like de
     "author": "Unknown",
     "version": "1.0.0"
   },
-  "First Shot Delay": "",
-  "You are not permitted to change Bots. Please press F12 for authenticate!": "",
-  "The password you entered is not correct!": "",
   "Start Trace": "",
   "Stop Trace": "",
   "Yes": "",
@@ -39,5 +36,8 @@ Language['xx_XX'] /* Add/replace the xx_XX here with your language code (like de
   "Advanced": "",
   "Expert": "",
   "Other": "",
-  "Save temporarily": ""
+  "Save temporarily": "",
+  "First Shot Delay": "",
+  "You are not permitted to change Bots. Please press F12 for authenticate!": "",
+  "The password you entered is not correct!": ""
 };
