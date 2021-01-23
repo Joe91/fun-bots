@@ -4,7 +4,7 @@ DIR="$( cd "$( dirname "$0" )" && pwd )"
 
 # Main directory
 cd ${DIR}
-dc ..
+cd ..
 cd ..
 ls
 
