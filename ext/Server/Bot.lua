@@ -37,6 +37,7 @@ function Bot:__init(player)
 
 	--advanced movement
 	self._currentWayPoint = nil;
+	self._tragetYaw = 0;
 	self._pathIndex = 0;
 	self._lastWayDistance = 0;
 	self._invertPathDirection = false;
@@ -67,6 +68,8 @@ function Bot:onUpdate(dt)
 		self:_updateAiming(dt);
 		self._aimUpdateTimer = 0; --reset afterwards, to use it for targetinterpolation
 	end
+
+	self:_updateYaw();
 
 	if self._updateTimer > StaticConfig.botUpdateCycle then
 		self._updateTimer = 0;
@@ -319,9 +322,28 @@ function Bot:_updateAiming(dt)
 			local pitch		= math.atan(dy, distance);
 
 			self.player.input.authoritativeAimingPitch		= pitch;
-			self.player.input.authoritativeAimingYaw		= yaw;
+			self._tragetYaw									= yaw;
 		end
 	end
+end
+
+function Bot:_updateYaw()
+	local otherDirection = false;
+	local deltaYaw = self.player.input.authoritativeAimingYaw - self._targetYaw;
+	local absDeltaYaw = math.abs(deltaYaw)
+	if absDeltaYaw < Globals.yawPerFrame then
+		self.player.input.authoritativeAimingYaw = self._targetYaw;
+		return;
+	end
+
+	if absDeltaYaw > math.pi then
+		otherDirection = true;
+	end
+	local inkrement = Globals.yawPerFrame;
+	if deltaYaw > 0 or (deltaYaw < 0 and otherDirection) then
+		inkrement = -inkrement;
+	end
+	self.player.input.authoritativeAimingYaw = self.player.input.authoritativeAimingYaw + inkrement;
 end
 
 function Bot:_updateShooting()
@@ -475,7 +497,7 @@ function Bot:_updateMovement()
 				local dx		= self._targetPlayer.soldier.worldTransform.trans.x - self.player.soldier.worldTransform.trans.x;
 				local atanDzDx	= math.atan(dy, dx);
 				local yaw		= (atanDzDx > math.pi / 2) and (atanDzDx - math.pi / 2) or (atanDzDx + 3 * math.pi / 2);
-				self.player.input.authoritativeAimingYaw = yaw;
+				self._tragetYaw = yaw;
 			end
 
 		-- mimicking
@@ -486,7 +508,7 @@ function Bot:_updateMovement()
 				self.player.input:SetLevel(i, self._targetPlayer.input:GetLevel(i));
 			end
 
-			self.player.input.authoritativeAimingYaw	= self._targetPlayer.input.authoritativeAimingYaw;
+			self._tragetYaw								= self._targetPlayer.input.authoritativeAimingYaw;
 			self.player.input.authoritativeAimingPitch	= self._targetPlayer.input.authoritativeAimingPitch;
 
 		-- mirroring
@@ -497,7 +519,7 @@ function Bot:_updateMovement()
 				self.player.input:SetLevel(i, self._targetPlayer.input:GetLevel(i));
 			end
 
-			self.player.input.authoritativeAimingYaw	= self._targetPlayer.input.authoritativeAimingYaw + ((self._targetPlayer.input.authoritativeAimingYaw > math.pi) and -math.pi or math.pi);
+			self._tragetYaw	= self._targetPlayer.input.authoritativeAimingYaw + ((self._targetPlayer.input.authoritativeAimingYaw > math.pi) and -math.pi or math.pi);
 			self.player.input.authoritativeAimingPitch	= self._targetPlayer.input.authoritativeAimingPitch;
 
 		-- move along points
@@ -635,7 +657,7 @@ function Bot:_updateMovement()
 					if distanceFromTarget > StaticConfig.targetDistanceWayPoint or heightDistance > StaticConfig.targetHeightDistanceWayPoint then
 						local atanDzDx	= math.atan(dy, dx);
 						local yaw		= (atanDzDx > math.pi / 2) and (atanDzDx - math.pi / 2) or (atanDzDx + 3 * math.pi / 2);
-						self.player.input.authoritativeAimingYaw = yaw;
+						self._tragetYaw = yaw;
 
 					else -- target reached
 						if not useShootWayPoint then

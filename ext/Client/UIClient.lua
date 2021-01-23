@@ -89,10 +89,11 @@ function FunBotUIClient:_onUISettings(data)
 	settings:add("ADVANCED", "Float", "meleeAttackCoolDown", Language:I18N("Melee Cooldown"), data.meleeAttackCoolDown, 3, Language:I18N("the time a Bot waits before attacking with melee again"));
 	settings:add("ADVANCED", "Boolean", "jumpWhileShooting", Language:I18N("Allow Jump while shooting"), data.jumpWhileShooting, true, Language:I18N("Bots jump over obstacles while shooting"));
 	settings:add("ADVANCED", "Boolean", "jumpWhileMoving", Language:I18N("Allow Jump while moving"), data.jumpWhileMoving, true, Language:I18N("Bots jump while moving. If false, only on obstacles!"));
-	
+
 	settings:add("EXPERT", "Float", "botFirstShotDelay", Language:I18N("First Shot Delay"), data.botFirstShotDelay, 0.3, Language:I18N("delay for first shot"));
 	settings:add("EXPERT", "Float", "botMinTimeShootAtPlayer", Language:I18N("Min Time Shoot"), data.botMinTimeShootAtPlayer, 1.0, Language:I18N("the minimum time a Bot shoots at one player"));
 	settings:add("EXPERT", "Float", "botFireModeDuration", Language:I18N("First Shot Delay"), data.botFireModeDuration, 5.0, Language:I18N("the minimum time a Bot tries to shoot a player"));
+	settings:add("EXPERT", "Float", "maximunYawPerSec", Language:I18N("Maximum Degree per Sec"), data.maximunYawPerSec, 400, Language:I18N("in Degree. Maximum Rotaion-Movement of a Bot per second."));
 	settings:add("EXPERT", "Float", "botFireDuration", Language:I18N("Fire Time (Assault/Engi)"), data.botFireDuration, 0.3, Language:I18N("the duration a bot fires (Assault / Engi)"));
 	settings:add("EXPERT", "Float", "botFirePause", Language:I18N("Fire Pause (Assalut/Engi)"), data.botFirePause, 0.3, Language:I18N("the duration a bot waits after fire (Assault / Engi)"));
 	settings:add("EXPERT", "Float", "botFireDurationSupport", Language:I18N("Fire Time (Support)"), data.botFireDurationSupport, 3.0, Language:I18N("the duration a bot fires (Support)"));

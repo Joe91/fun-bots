@@ -42,6 +42,7 @@ Config = {
 	botFirstShotDelay = 0.3,		-- delay for first shot. If too small, there will be great spread in first cycle because its not kompensated jet.
 	botMinTimeShootAtPlayer = 1.0,	-- the minimum time a bot shoots at one player
 	botFireModeDuration = 5.0,		-- the minimum time a bot tries to shoot a player
+	maximunYawPerSec = 400,			-- in Degree. Rotaion-Movement per second.
 	botFireDuration = 0.3,			-- the duration a bot fires (Assault / Engi)
 	botFirePause = 0.3,			 	-- the duration a bot waits after fire (Assault / Engi)
 	botFireDurationSupport = 3.0,	-- the duration a bot fires (Support)

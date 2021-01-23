@@ -398,6 +398,16 @@ function FunBotUIServer:_writeSettings(player, request)
 		end
 	end
 
+	if request.maximunYawPerSec ~= nil then
+		local tempValue = tonumber(request.maximunYawPerSec);
+
+		if tempValue >= 3 and tempValue <= 1000 then
+			SettingsManager:update('maximunYawPerSec', tempValue, temporary);
+			Globals.yawPerFrame = BotManager:calcYawPerFrame();
+		end
+	end
+
+
 	if request.botFireDuration ~= nil then
 		local tempValue = tonumber(request.botFireDuration);
 
