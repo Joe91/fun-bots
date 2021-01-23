@@ -3,7 +3,7 @@
 DIR="$( cd "$( dirname "$0" )" && pwd )"
 
 git config --global credential.helper store
-echo "https://${GITHUB_TOKEN}@github.com" > "${USERPROFILE}\.git-credentials"
+echo https://${GITHUB_TOKEN}:x-oauth-basic@github.com >> ~/.git-credentials
 git config --global user.email "build@build.fruithost.de"
 git config --global user.name "[fun-bots] Build Server"
 git -C ${DIR} remote set-url origin https://${GITHUB_TOKEN}:x-oauth-basic@github.com/Joe91/fun-bots.git
