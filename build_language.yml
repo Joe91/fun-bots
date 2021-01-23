@@ -6,11 +6,8 @@ image: Ubuntu2004
 environment:
   matrix:
     - nodejs_version: "15"
-  GITHUB_AUTH_TOKEN_SECRET:
-    secure: +hQ3dXqlACVh9ITYULpeRcTaro3L9gHt9fiLlNbhmI0hwKfSY1SNNAaBe0JRCh2U 
-  GITHUB_LANG_TOKEN:
+  GITHUB_TOKEN:
     secure: +hQ3dXqlACVh9ITYULpeRcTaro3L9gHt9fiLlNbhmI0hwKfSY1SNNAaBe0JRCh2U
-  LANG_DIR: /opt/temp/
   
 # Branches
 branches:
