@@ -1,4 +1,4 @@
-version: 1.0.0-{build}
+version: LANG_{build}
 image: Ubuntu2004
 
 # Debugging
