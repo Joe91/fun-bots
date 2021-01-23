@@ -90,6 +90,7 @@ function FunBotUIClient:_onUISettings(data)
 	settings:add("EXPERT", "Float", "botFirstShotDelay", "First Shot Delay", data.botFirstShotDelay, 0.3, "delay for first shot");
 	settings:add("EXPERT", "Float", "botMinTimeShootAtPlayer", "Min Time Shoot", data.botMinTimeShootAtPlayer, 1.0, "the minimum time a Bot shoots at one player");
 	settings:add("EXPERT", "Float", "botFireModeDuration", "First Shot Delay", data.botFireModeDuration, 5.0, "the minimum time a Bot tries to shoot a player");
+	settings:add("EXPERT", "Float", "maximunYawPerSec", "Maximum Degree per Sec", data.maximunYawPerSec, 400, "in Degree. Maximum Rotaion-Movement of a Bot per second.");
 	settings:add("EXPERT", "Float", "botFireDuration", "Fire Time (Assault/Engi)", data.botFireDuration, 0.3, "the duration a bot fires (Assault / Engi)");
 	settings:add("EXPERT", "Float", "botFirePause", "Fire Pause (Assalut/Engi)", data.botFirePause, 0.3, "the duration a bot waits after fire (Assault / Engi)");
 	settings:add("EXPERT", "Float", "botFireDurationSupport", "Fire Time (Support)", data.botFireDurationSupport, 3.0, "the duration a bot fires (Support)");

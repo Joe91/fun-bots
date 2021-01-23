@@ -9,6 +9,8 @@ function BotManager:__init()
 	self._botInputs = {}
 	self._shooterBots = {}
 
+	self._lastYaw = 0.0
+
 	Events:Subscribe('UpdateManager:Update', self, self._onUpdate)
 	Events:Subscribe('Level:Destroy', self, self._onLevelDestroy)
 	Events:Subscribe('Player:Left', self, self._onPlayerLeft)
@@ -47,6 +49,13 @@ function BotManager:detectBotTeam()
 	end
 	Globals.respawnWayBots 	= Config.respawnWayBots;
 	Globals.attackWayBots 	= Config.attackWayBots;
+	Globals.yawPerFrame 	= self:calcYawPerFrame()
+end
+
+function BotManager:calcYawPerFrame()
+	local dt = 1.0/SharedUtils:GetTickrate();
+	local degreePerDt = Config.maximunYawPerSec * dt;
+	return (degreePerDt / 360.0) * 2 * math.pi
 end
 
 function BotManager:findNextBotName()
