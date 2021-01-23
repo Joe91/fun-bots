@@ -394,34 +394,60 @@ const BotEditor = (new function BotEditor() {
 	};
 
 	/* Translate */
+	this._createLanguage = function _createLanguage(url, success, error) {
+		let script	= document.createElement('script');
+		script.type	= 'text/javascript';
+		script.src	= url;
+
+		script.onload = function onLoad() {
+			success();
+		}.bind(this);
+
+		script.onerror = function onError() {
+			error();
+		}.bind(this);
+
+		document.body.appendChild(script);
+	};
+	
 	this.loadLanguage = function loadLanguage(string) {
 		if(DEBUG) {
 			console.log('Trying to loading language file:', string);
 		}
-
-		let script	= document.createElement('script');
-		script.type	= 'text/javascript';
-		script.src	= 'languages/' + string + '.js';
-
-		script.onload = function onLoad() {
+		
+		this._createLanguage('languages/' + string + '.js', function onSuccess() {
 			if(DEBUG) {
 				console.log('Language file was loaded:', string);
 			}
-
+			
 			_language = string;
 
 			this.reloadLanguageStrings();
-		}.bind(this);
+		}.bind(this), function onError() {
+			this._createLanguage('https://min.gitcdn.link/repo/Joe91/fun-bots/fun-bots-bizzi/WebUI/languages/' + string + '.js', function() {
+				if(DEBUG) {
+					console.log('Language file was loaded:', string);
+				}
+				
+				_language = string;
 
-		script.onerror = function onError() {
-			if(DEBUG) {
-				console.log('Language file was not exists:', string);
-			}
-			
-			this.reloadLanguageStrings();
-		}.bind(this);
+				this.reloadLanguageStrings();
+			}, function onSuccess() {
+				if(DEBUG) {
+					console.log('Fallback-Language file was loaded:', string);
+				}
+				
+				_language = string;
 
-		document.body.appendChild(script);
+				this.reloadLanguageStrings();
+			}.bind(this), function onSuccess() {
+				if(DEBUG) {
+					console.log('Language & Fallback file was not exists:', string);
+				}
+				
+				this.reloadLanguageStrings();
+			}.bind(this));
+		}.bind(this));		
 	};
 
 	this.reloadLanguageStrings = function reloadLanguageStrings() {
