@@ -1,0 +1,39 @@
+version: 1.0.0-{build}
+image: Ubuntu2004
+
+# Debugging
+# Fuck'd up the shit variables; Can't set on the Backend, must be set here oÔ
+environment:
+  matrix:
+    - nodejs_version: "15"
+  GITHUB_AUTH_TOKEN_SECRET:
+    secure: +hQ3dXqlACVh9ITYULpeRcTaro3L9gHt9fiLlNbhmI0hwKfSY1SNNAaBe0JRCh2U 
+  GITHUB_LANG_TOKEN:
+    secure: +hQ3dXqlACVh9ITYULpeRcTaro3L9gHt9fiLlNbhmI0hwKfSY1SNNAaBe0JRCh2U
+  LANG_DIR: /opt/temp/
+  
+# Branches
+branches:
+  only:
+  - fun-bots-bizzi
+
+# Installation
+install:
+  # Update Node.js
+  - sh: nvm install $nodejs_version
+  
+  # Generate Language-Strings
+  - ./Binary/LanguageBuilder/I18N.sh
+  
+  # Language Deployment
+  - ./Binary/LanguageBuilder/I18NDeployment.sh  
+
+matrix:
+  fast_finish: true
+
+clone_depth: 1
+max_jobs: 10
+
+# Disable other
+build: OFF
+test: OFF

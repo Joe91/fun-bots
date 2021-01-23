@@ -3,6 +3,9 @@ class 'FunBotUIClient';
 require('UIViews');
 require('UISettings');
 
+
+Language = require('__shared/Language');
+
 function FunBotUIClient:__init()
 	self._views = UIViews();
 
@@ -55,53 +58,53 @@ function FunBotUIClient:_onUISettings(data)
 	-- add(<category>, <types>, <name>, <title>, <value>, <default>, <description>)
 	-- addList(<category>, <name>, <title>, <list>, <value>, <default>, <description>)
 
-	settings:add("GLOBAL", "Boolean", "spawnInSameTeam", "Spawn in Same Team", data.spawnInSameTeam, false, "If true, Bots spawn in the team of the player");
-	settings:addList("GLOBAL", "botWeapon", "Bot Weapon", BotWeapons, data.botWeapon, "Primary", "Select the weapon the bots use");
-	settings:addList("GLOBAL", "botKit", "Bot Kit", BotKits, data.botKit, "RANDOM_KIT", "The Kit a bots spawns with.");
-	settings:addList("GLOBAL", "botColor", "Bot Color", BotColors, data.botColor, "RANDOM_COLOR", "The Kit-Color a bots spawns with.");
+	settings:add("GLOBAL", "Boolean", "spawnInSameTeam", Language:I18N("Spawn in Same Team"), data.spawnInSameTeam, false, Language:I18N("If true, Bots spawn in the team of the player"));
+	settings:addList("GLOBAL", "botWeapon", "Bot Weapon", BotWeapons, data.botWeapon, "Primary", Language:I18N("Select the weapon the bots use"));
+	settings:addList("GLOBAL", "botKit", Language:I18N("Bot Kit"), BotKits, data.botKit, "RANDOM_KIT", Language:I18N("The Kit a bots spawns with."));
+	settings:addList("GLOBAL", "botColor", Language:I18N("Bot Color"), BotColors, data.botColor, "RANDOM_COLOR", Language:I18N("The Kit-Color a bots spawns with."));
 
-	settings:add("DIFFICULTY", "Float", "botAimWorsening", "Aim Worsening", data.botAimWorsening, 0.0, "0 = hard, 1 (or higher) = easy. Only takes effect on level Start");
-	settings:add("DIFFICULTY", "Integer", "bulletDamageBot", "Damage Bot Bullet", data.bulletDamageBot, 9, "The damage a normal Bullet does");
-	settings:add("DIFFICULTY", "Integer", "bulletDamageBotSniper", "Damage Bot Sniper", data.bulletDamageBotSniper, 24, "The damage a Sniper-Bullet does");
-	settings:add("DIFFICULTY", "Integer", "meleeDamageBot", "Damage Bot Melee", data.meleeDamageBot, 42, "The Damage a melee-attack does");
+	settings:add("DIFFICULTY", "Float", "botAimWorsening", Language:I18N("Aim Worsening"), data.botAimWorsening, 0.0, Language:I18N("0 = hard, 1 (or higher) = easy. Only takes effect on level Start"));
+	settings:add("DIFFICULTY", "Integer", "bulletDamageBot", Language:I18N("Damage Bot Bullet"), data.bulletDamageBot, 9, Language:I18N("The damage a normal Bullet does"));
+	settings:add("DIFFICULTY", "Integer", "bulletDamageBotSniper", Language:I18N("Damage Bot Sniper"), data.bulletDamageBotSniper, 24, Language:I18N("The damage a Sniper-Bullet does"));
+	settings:add("DIFFICULTY", "Integer", "meleeDamageBot", Language:I18N("Damage Bot Melee"), data.meleeDamageBot, 42, Language:I18N("The Damage a melee-attack does"));
 
-	settings:add("SPAWN", "Boolean", "spawnOnLevelstart", "Spawn on Levelstart", data.spawnOnLevelstart, true, "Bots spawn on levelstart (if valid paths are available)");
-	settings:add("SPAWN", "Boolean", "onlySpawnBotsWithPlayers", "Only spawn with players", data.onlySpawnBotsWithPlayers, true, "Bots only spawn if at least one Player is on the server");
-	settings:add("SPAWN", "Integer", "initNumberOfBots", "Number Bots on Levelstart", data.initNumberOfBots, 10, "Bots on levelstart");
-	settings:add("SPAWN", "Float", "spawnDelayBots", "Respawn Delay", data.spawnDelayBots, 2.0, "time till bots respawn, if respawn enabled");
-	settings:add("SPAWN", "Integer", "botTeam", "Default Bot Team", data.botTeam, 2, "default bot team 1 = US, 2 = RU");
-	settings:add("SPAWN", "Boolean", "respawnWayBots", "Respawn Bots", data.respawnWayBots, true, "Bots on paths respawn if killed on startup");
-	settings:add("SPAWN", "Boolean", "botNewLoadoutOnSpawn", "New Loadout on Spawn", data.botNewLoadoutOnSpawn, true, "bots get a new kit and color, if they respawn");
-	settings:add("SPAWN", "Integer", "maxAssaultBots", "Max Assault Bots", data.maxAssaultBots, -1, "maximum number of Bots with Assault Kit. -1 = unlimited");
-	settings:add("SPAWN", "Integer", "maxEngineerBots", "Max Engineer Bots", data.maxEngineerBots, -1, "maximum number of Bots with Engineer Kit. -1 = unlimited");
-	settings:add("SPAWN", "Integer", "maxSupportBots", "Max Support Bots", data.maxSupportBots, -1, "maximum number of Bots with Support Kit. -1 = unlimited");
-	settings:add("SPAWN", "Integer", "maxReconBots", "Max Recon Bots", data.maxReconBots, -1, "maximum number of Bots with Recon Kit. -1 = unlimited");
+	settings:add("SPAWN", "Boolean", "spawnOnLevelstart", Language:I18N("Spawn on Levelstart"), data.spawnOnLevelstart, true, Language:I18N("Bots spawn on levelstart (if valid paths are available)"));
+	settings:add("SPAWN", "Boolean", "onlySpawnBotsWithPlayers", Language:I18N("Only spawn with players"), data.onlySpawnBotsWithPlayers, true, Language:I18N("Bots only spawn if at least one Player is on the server"));
+	settings:add("SPAWN", "Integer", "initNumberOfBots", Language:I18N("Number Bots on Levelstart"), data.initNumberOfBots, 10, Language:I18N("Bots on levelstart"));
+	settings:add("SPAWN", "Float", "spawnDelayBots", Language:I18N("Respawn Delay"), data.spawnDelayBots, 2.0, Language:I18N("time till bots respawn, if respawn enabled"));
+	settings:add("SPAWN", "Integer", "botTeam", Language:I18N("Default Bot Team"), data.botTeam, 2, Language:I18N("default bot team 1 = US, 2 = RU"));
+	settings:add("SPAWN", "Boolean", "respawnWayBots", Language:I18N("Respawn Bots"), data.respawnWayBots, true, Language:I18N("Bots on paths respawn if killed on startup"));
+	settings:add("SPAWN", "Boolean", "botNewLoadoutOnSpawn", Language:I18N("New Loadout on Spawn"), data.botNewLoadoutOnSpawn, true, Language:I18N("bots get a new kit and color, if they respawn"));
+	settings:add("SPAWN", "Integer", "maxAssaultBots", Language:I18N("Max Assault Bots"), data.maxAssaultBots, -1, Language:I18N("maximum number of Bots with Assault Kit. -1 = unlimited"));
+	settings:add("SPAWN", "Integer", "maxEngineerBots", Language:I18N("Max Engineer Bots"), data.maxEngineerBots, -1, Language:I18N("maximum number of Bots with Engineer Kit. -1 = unlimited"));
+	settings:add("SPAWN", "Integer", "maxSupportBots", Language:I18N("Max Support Bots"), data.maxSupportBots, -1, Language:I18N("maximum number of Bots with Support Kit. -1 = unlimited"));
+	settings:add("SPAWN", "Integer", "maxReconBots", Language:I18N("Max Recon Bots"), data.maxReconBots, -1, Language:I18N("maximum number of Bots with Recon Kit. -1 = unlimited"));
 
-	settings:add("ADVANCED", "Integer", "fovForShooting", "Bot FOV", data.fovForShooting, 270, "The Field Of View of the bots, where they can detect a player");
-	settings:add("ADVANCED", "Boolean", "shootBackIfHit", "Attack if Hit", data.shootBackIfHit, true, "Bots imidiatly attack player, if shot by it");
-	settings:add("ADVANCED", "Integer", "maxRaycastDistance", "View Distance Bots", data.maxRaycastDistance, 125, "The maximum distance a bots starts shooting at a player");
-	settings:add("ADVANCED", "Integer", "distanceForDirectAttack", "Direct Attack Distance", data.distanceForDirectAttack, 3, "When this close to a bot, he starts attacking");
-	settings:add("ADVANCED", "Boolean", "meleeAttackIfClose", "Attack with Melee", data.meleeAttackIfClose, true, "Bots attack the playe with the knife, if close");
-	settings:add("ADVANCED", "Boolean", "attackWayBots", "Attack other players", data.attackWayBots, true, "Bots on paths attack player by default");
-	settings:add("ADVANCED", "Float", "meleeAttackCoolDown", "Melee Cooldown", data.meleeAttackCoolDown, 3, "the time a Bot waits before attacking with melee again");
-	settings:add("ADVANCED", "Boolean", "jumpWhileShooting", "Allow Jump while shooting", data.jumpWhileShooting, true, "Bots jump over obstacles while shooting");
-	settings:add("ADVANCED", "Boolean", "jumpWhileMoving", "Allow Jump while moving", data.jumpWhileMoving, true, "Bots jump while moving. If false, only on obstacles!");
+	settings:add("ADVANCED", "Integer", "fovForShooting", Language:I18N("Bot FOV"), data.fovForShooting, 270, Language:I18N("The Field Of View of the bots, where they can detect a player"));
+	settings:add("ADVANCED", "Boolean", "shootBackIfHit", Language:I18N("Attack if Hit"), data.shootBackIfHit, true, Language:I18N("Bots imidiatly attack player, if shot by it"));
+	settings:add("ADVANCED", "Integer", "maxRaycastDistance", Language:I18N("View Distance Bots"), data.maxRaycastDistance, 125, Language:I18N("The maximum distance a bots starts shooting at a player"));
+	settings:add("ADVANCED", "Integer", "distanceForDirectAttack", Language:I18N("Direct Attack Distance"), data.distanceForDirectAttack, 3, Language:I18N("When this close to a bot, he starts attacking"));
+	settings:add("ADVANCED", "Boolean", "meleeAttackIfClose", Language:I18N("Attack with Melee"), data.meleeAttackIfClose, true, Language:I18N("Bots attack the playe with the knife, if close"));
+	settings:add("ADVANCED", "Boolean", "attackWayBots", Language:I18N("Attack other players"), data.attackWayBots, true, Language:I18N("Bots on paths attack player by default"));
+	settings:add("ADVANCED", "Float", "meleeAttackCoolDown", Language:I18N("Melee Cooldown"), data.meleeAttackCoolDown, 3, Language:I18N("the time a Bot waits before attacking with melee again"));
+	settings:add("ADVANCED", "Boolean", "jumpWhileShooting", Language:I18N("Allow Jump while shooting"), data.jumpWhileShooting, true, Language:I18N("Bots jump over obstacles while shooting"));
+	settings:add("ADVANCED", "Boolean", "jumpWhileMoving", Language:I18N("Allow Jump while moving"), data.jumpWhileMoving, true, Language:I18N("Bots jump while moving. If false, only on obstacles!"));
 
-	settings:add("EXPERT", "Float", "botFirstShotDelay", "First Shot Delay", data.botFirstShotDelay, 0.3, "delay for first shot");
-	settings:add("EXPERT", "Float", "botMinTimeShootAtPlayer", "Min Time Shoot", data.botMinTimeShootAtPlayer, 1.0, "the minimum time a Bot shoots at one player");
-	settings:add("EXPERT", "Float", "botFireModeDuration", "First Shot Delay", data.botFireModeDuration, 5.0, "the minimum time a Bot tries to shoot a player");
-	settings:add("EXPERT", "Float", "maximunYawPerSec", "Maximum Degree per Sec", data.maximunYawPerSec, 400, "in Degree. Maximum Rotaion-Movement of a Bot per second.");
-	settings:add("EXPERT", "Float", "botFireDuration", "Fire Time (Assault/Engi)", data.botFireDuration, 0.3, "the duration a bot fires (Assault / Engi)");
-	settings:add("EXPERT", "Float", "botFirePause", "Fire Pause (Assalut/Engi)", data.botFirePause, 0.3, "the duration a bot waits after fire (Assault / Engi)");
-	settings:add("EXPERT", "Float", "botFireDurationSupport", "Fire Time (Support)", data.botFireDurationSupport, 3.0, "the duration a bot fires (Support)");
-	settings:add("EXPERT", "Float", "botFirePauseSupport", "Fire Pause (Support)", data.botFirePauseSupport, 1.0, "the duration a Bot waits after fire (Support)");
-	settings:add("EXPERT", "Float", "botFireCycleRecon", "Fire Cycle (Recon)", data.botFireCycleRecon, 2.1, "the duration of a FireCycle (Recon)");
-	settings:add("EXPERT", "Float", "botFireCyclePistol", "Fire Cycle (Pistol)", data.botFireCyclePistol, 0.3, "the duration of a FireCycle (Pistol)");
+	settings:add("EXPERT", "Float", "botFirstShotDelay", Language:I18N("First Shot Delay"), data.botFirstShotDelay, 0.3, Language:I18N("delay for first shot"));
+	settings:add("EXPERT", "Float", "botMinTimeShootAtPlayer", Language:I18N("Min Time Shoot"), data.botMinTimeShootAtPlayer, 1.0, Language:I18N("the minimum time a Bot shoots at one player"));
+	settings:add("EXPERT", "Float", "botFireModeDuration", Language:I18N("First Shot Delay"), data.botFireModeDuration, 5.0, Language:I18N("the minimum time a Bot tries to shoot a player"));
+	settings:add("EXPERT", "Float", "maximunYawPerSec", Language:I18N("Maximum Degree per Sec"), data.maximunYawPerSec, 400, Language:I18N("in Degree. Maximum Rotaion-Movement of a Bot per second."));
+	settings:add("EXPERT", "Float", "botFireDuration", Language:I18N("Fire Time (Assault/Engi)"), data.botFireDuration, 0.3, Language:I18N("the duration a bot fires (Assault / Engi)"));
+	settings:add("EXPERT", "Float", "botFirePause", Language:I18N("Fire Pause (Assalut/Engi)"), data.botFirePause, 0.3, Language:I18N("the duration a bot waits after fire (Assault / Engi)"));
+	settings:add("EXPERT", "Float", "botFireDurationSupport", Language:I18N("Fire Time (Support)"), data.botFireDurationSupport, 3.0, Language:I18N("the duration a bot fires (Support)"));
+	settings:add("EXPERT", "Float", "botFirePauseSupport", Language:I18N("Fire Pause (Support)"), data.botFirePauseSupport, 1.0, Language:I18N("the duration a Bot waits after fire (Support)"));
+	settings:add("EXPERT", "Float", "botFireCycleRecon", Language:I18N("Fire Cycle (Recon)"), data.botFireCycleRecon, 2.1, Language:I18N("the duration of a FireCycle (Recon)"));
+	settings:add("EXPERT", "Float", "botFireCyclePistol", Language:I18N("Fire Cycle (Pistol)"), data.botFireCyclePistol, 0.3, Language:I18N("the duration of a FireCycle (Pistol)"));
 
-	settings:add("OTHER", "Boolean", "disableChatCommands", "Disable Chat Commands", data.disableChatCommands, true, "if true, no chat commands can be used");
-	settings:add("OTHER", "Boolean", "traceUsageAllowed", "Allow Trace Usage", data.traceUsageAllowed, true, "if false, no traces can be recorded, deleted or saved");
-	settings:addList("OTHER", "language", "Language", { "de_DE", "cn_CN", "en_US" }, data.language, "en_US", "Select the language of this mod");
-	settings:add("OTHER", "Password", "settingsPassword", "Password", data.settingsPassword, nil, "Password protection of these Mod");
+	settings:add("OTHER", "Boolean", "disableChatCommands", Language:I18N("Disable Chat Commands"), data.disableChatCommands, true, Language:I18N("if true, no chat commands can be used"));
+	settings:add("OTHER", "Boolean", "traceUsageAllowed", Language:I18N("Allow Trace Usage"), data.traceUsageAllowed, true, Language:I18N("if false, no traces can be recorded, deleted or saved"));
+	settings:addList("OTHER", "language", Language:I18N("Language"), { "de_DE", "cn_CN", "en_US" }, data.language, "en_US", Language:I18N("Select the language of this mod"));
+	settings:add("OTHER", "Password", "settingsPassword", Language:I18N("Password"), data.settingsPassword, nil, Language:I18N("Password protection of these Mod"));
 
 	self._views:execute('BotEditor.openSettings(\'' .. settings:getJSON() .. '\');');
 	self._views:show('settings');

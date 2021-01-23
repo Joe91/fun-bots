@@ -1,6 +1,7 @@
 class('FunBotShared');
 
-local WeaponModification = require('__shared/WeaponModification');
+Language					= require('__shared/Language');
+local WeaponModification	= require('__shared/WeaponModification');
 
 function FunBotShared:__init()
 	Events:Subscribe('Partition:Loaded', self, self.OnPartitionLoaded);

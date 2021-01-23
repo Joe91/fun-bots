@@ -28,8 +28,11 @@ const EntryElement = function EntryElement() {
 		
 		switch(_type) {
 			case EntryType.Boolean:
+				let yes	= BotEditor.I18N('Yes');
+				let no	= BotEditor.I18N('No');
+				
 				_container.appendChild(arrow_left);
-				_container.appendChild(this._createText(_value == null ? (_default == null ? '' : (_default ? 'Yes' : 'No')) : (_value ? 'Yes' : 'No')));
+				_container.appendChild(this._createText(_value == null ? (_default == null ? '' : (_default ? yes : no)) : (_value ? yes : no)));
 				_container.appendChild(arrow_right);
 			break;
 			case EntryType.Integer:
@@ -143,7 +146,10 @@ const EntryElement = function EntryElement() {
 
 		switch(_type) {
 			case EntryType.Boolean:
-				_container.querySelector('ui-text').innerHTML = (_value ? 'Yes' : 'No');
+				let yes	= BotEditor.I18N('Yes');
+				let no	= BotEditor.I18N('No');
+				
+				_container.querySelector('ui-text').innerHTML = (_value ? yes : no);
 			break;
 			case EntryType.Integer:
 				_value = parseInt(value, 10);

@@ -56,3 +56,10 @@ Just press **F12** to open the Menu
 
 ### :grey_exclamation: Commands
 A full list of available commands can be found here: [/wiki/Commands](https://github.com/Joe91/fun-bots/wiki/Commands)
+
+### Language build status
+[![Build status](https://ci.appveyor.com/api/projects/status/m32v0gb03s3lkgrk?svg=true)](https://ci.appveyor.com/project/Bizarrus/bizzi)
+
+Here you can see the status of the build process.
+
+With each commit, the language files are rebuildet.
