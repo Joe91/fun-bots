@@ -13,8 +13,9 @@ call :ColorText 0C "---"
 echo.
 echo.
 
-node %CUR_DIR%\GetLanguages.js "%CUR_DIR:"=%\%NAME_SOURCE:"=%"
-
+rem "%CUR_DIR:"=%\%NAME_SOURCE:"=%"
+node %CUR_DIR%\GetLanguages.js ..
+pause
 goto :eof
 
 :ColorText
