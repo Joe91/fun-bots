@@ -6,7 +6,7 @@ environment:
   matrix:
     - nodejs_version: "15"
   GITHUB_TOKEN:
-    secure: 6luPO1MyuqLxwBLYRHu86ezR5o22yRX6NY5vbOUJOhSIcT7J2tLixjzLuW55Bnoz
+    secure: pZqIt0P3IaT/7M8TG1EzMs3Jp4W8CRvN5fYRonJf/H0w5poSz2wh2psSAmw0elF9
     
 # Branches
 branches:
