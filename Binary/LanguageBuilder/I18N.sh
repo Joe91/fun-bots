@@ -1,2 +1,5 @@
 #!/bin/bash
-node ${PWD}/Binary/LanguageBuilder/GetLanguages.js ${PWD}
+
+DIR="$( cd "$( dirname "$0" )" && pwd )"
+
+node ${DIR}/Binary/LanguageBuilder/GetLanguages.js ${DIR}

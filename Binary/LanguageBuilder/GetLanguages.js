@@ -157,7 +157,6 @@ const path	= require('path');
 				_table.LUA.push(value);
 				++found;
 			} else if(_table.JS.indexOf(value) == -1) {
-				console.log(value);
 				_table.JS.push(value);
 				++found;
 			}
