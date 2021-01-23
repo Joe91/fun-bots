@@ -12,7 +12,7 @@ const path	= require('path');
 		_source = process.argv[2];
 		
 		console.log('Getting Files...');
-		this.LoadFiles(path.resolve(_source, '..'), function(error, list) {
+		this.LoadFiles(_source, function(error, list) {
 			var files = [];
 			
 			list.forEach(function(file) {
@@ -108,7 +108,7 @@ const path	= require('path');
 		});
 		
 		/* @ToDo Adding \n\t"__LANGUAGE_INFO" = {\n\t\tname = "English",\n\t\tauthor = "Unknown",\n\t\tversion = "1.0.0"\n\t}, */
-		fs.writeFile(path.resolve(_source, '../ext/Shared/Languages') + path.sep + 'DEFAULT.lua', ''  + lua.join('\n') + '', function(error) {
+		fs.writeFile(path.resolve(_source, '/ext/Shared/Languages') + path.sep + 'DEFAULT.lua', ''  + lua.join('\n') + '', function(error) {
 			if(error) {
 				throw error;
 			}
