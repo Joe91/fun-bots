@@ -6,11 +6,13 @@ require('__shared/Constants/BotKits');
 require('__shared/Constants/BotNames');
 require('__shared/Constants/BotWeapons');
 
+Language					= require('__shared/Language');
 local FunBotUIClient		= require('UIClient');
 local ClientTraceManager	= require('ClientTraceManager');
 local ClientBotManager		= require('ClientBotManager');
 
 function FunBotClient:__init()
+	Language:loadLanguage(Config.language);
 	Events:Subscribe('Extension:Unloading', self, self._onExtensionUnload);
 	Events:Subscribe('Engine:Message', self, self._onEngineMessage);
 end

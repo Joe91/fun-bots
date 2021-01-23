@@ -14,6 +14,7 @@ function ClientTraceManager:_endTrace(pos1, pos2)
 	if (raycast == nil or raycast.rigidBody == nil) then
 		clearView = true;
 	end
+	
 	NetEvents:SendLocal('ClientEndTraceResponse', clearView);
 end
 

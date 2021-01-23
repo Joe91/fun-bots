@@ -1,34 +1,45 @@
-Language['xx_XX'] = {
-	/* Bots */
-	'Bots':						'',
-	'Spawn Bots':				'',
-	'Spawn Bot on Way':			'',
-	'Kick All':					'',
-	'Kill All':					'',
-	'Toggle Respawn':			'',
-	'Toggle Attack':			'',
-
-	/* Waypoints */
-	'Waypoints':				'',
-	'Start Trace':				'',
-	'End Trace':				'',
-	'Clear Trace':				'',
-	'Reset all Traces':			'',
-	'Save':						'',
-	'Reload':					'',
-	'List all Traces':			'',
-
-	/* Other */
-	'Settings':					'',
-	'Exit':						'',
-	'Cancel':					'',
-	'OK':						'',
-
-	/* Authentication */
-	'Enter password':											'',
-	'Please enter the password to open the Bot-Editor.':		'',
-
-	/* Password Protection */
-	'WARNING:':					'',
-	'The Bot-Editor is not protected by an password. Other players can change all the settings!': ''
+Language['xx_XX'] /* Add/replace the xx_XX here with your language code (like de_DE, en_US, or other)! */ = {
+  "__LANGUAGE_INFO": {
+    "name": "English",
+    "author": "Unknown",
+    "version": "1.0.0"
+  },
+  "Start Trace": "",
+  "Stop Trace": "",
+  "Yes": "",
+  "No": "",
+  "Restore this value to Default": "",
+  "WARNING:": "",
+  "The Bot-Editor is not protected by an password. Other players can change all the settings!": "",
+  "Bots": "",
+  "Spawn Bots": "",
+  "Kick All": "",
+  "Kill All": "",
+  "Toggle Respawn": "",
+  "Toggle Attack": "",
+  "Waypoints": "",
+  "End Trace": "",
+  "Spawn Bot on Way": "",
+  "Clear Trace with index": "",
+  "Reset all Traces": "",
+  "Save": "",
+  "Reload": "",
+  "List all Traces": "",
+  "Settings": "",
+  "Exit": "",
+  "Enter password": "",
+  "Please enter the password to open the Bot-Editor.": "",
+  "Cancel": "",
+  "OK": "",
+  "General": "",
+  "Difficulty": "",
+  "Spawn": "",
+  "Advanced": "",
+  "Expert": "",
+  "Other": "",
+  "Restore all to Default": "",
+  "Save temporarily": "",
+  "First Shot Delay": "",
+  "You are not permitted to change Bots. Please press F12 for authenticate!": "",
+  "The password you entered is not correct!": ""
 };

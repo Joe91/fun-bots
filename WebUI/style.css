@@ -135,11 +135,17 @@ ui-view[data-type="dialog"] ui-content p {
 }
 
 ui-view[data-type="dialog"] ui-buttons {
-	display: block;
+	display: flex;
 	position: relative;
 	background: var(--color_container_background);
 	padding: 10px;
 	text-align: center;
+}
+
+ui-view[data-type="dialog"] ui-buttons ui-spacer {
+	display: block;
+	position: relative;
+	flex: 1 auto;
 }
 
 /* View :: Toolbar */
@@ -367,6 +373,7 @@ ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry {
 	display: flex;
 	color: var(--color_text);
 	text-shadow: 0 0 6px var(--color_text_shadow);
+    flex-direction: row;
 }
 
 ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-name {
@@ -377,12 +384,28 @@ ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-name {
 ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container {
 	flex: 1 auto;
 	display: flex;
+    flex-direction: row;
 	font-weight: 900;
 	max-width: 200px;
 }
 
+ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-restore {
+	flex: 0 30px;
+	cursor: pointer;
+	background: url('assets/restore.png');
+	background-size: 30px;
+	background-repeat: no-repeat;
+	background-position: 50% 50%;
+	filter: grayscale(100%) brightness(0.4);
+	margin: 0 0 0 10px;
+}
+
+ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-restore:hover {
+	filter: unset;
+}
+
 ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container ui-arrow {
-	flex: 0 auto;
+	flex: 0 13px;
 	cursor: pointer;
 	font-size: 30px;
 }
@@ -396,8 +419,7 @@ ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container ui-arr
 }
 
 ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container ui-text {
-	flex: 1 auto;
-	flex: 1 auto;
+	flex: 0 170px;
 	text-align: center;
 	vertical-align: middle;
 	align-self: center;
@@ -409,6 +431,7 @@ ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container ui-tex
 ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container input[type="number"] {
 	border: none;
 	width:100%;
+	flex: 0 170px;
 	min-width: 1px;
 	max-width: 100%;
 	background: rgba(0, 0, 0, 0);

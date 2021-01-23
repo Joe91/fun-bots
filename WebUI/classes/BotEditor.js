@@ -4,22 +4,7 @@ const BotEditor = (new function BotEditor() {
 	const DEBUG				= false;
 	const VERSION			= '1.0.0-Beta';
 	let _language			= 'en_US';
-	const InputDeviceKeys	= {
-		IDK_Enter:	13,
-		IDK_F1:		112,
-		IDK_F2:		113,
-		IDK_F3:		114,
-		IDK_F4:		115,
-		IDK_F5:		116,
-		IDK_F6:		117,
-		IDK_F7:		118,
-		IDK_F8:		119,
-		IDK_F9:		120,
-		IDK_F10:	121,
-		IDK_F11:	122,
-		IDK_F12:	123
-	};
-
+	
 	this.__constructor = function __constructor() {
 		console.log('Init BotEditor UI (v' + VERSION + ') by https://github.com/Bizarrus.');
 
@@ -86,6 +71,13 @@ const BotEditor = (new function BotEditor() {
 			}
 
 			switch(parent.dataset.action) {
+				/* Restore all values to default */
+				case 'restore':
+					[].map.call(Utils.getClosest(event.target, 'ui-view').querySelectorAll('ui-entry'), function(entry) {
+						entry.resetToDefault();
+					});
+				break;
+				
 				/* Exit */
 				case 'close':
 					WebUI.Call('DispatchEventLocal', 'UI_Toggle');
@@ -172,7 +164,8 @@ const BotEditor = (new function BotEditor() {
 				/* Settings */
 				case 'request_settings':
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'request_settings'
+						action:	'request_settings',
+						opened:	this.isVisible('settings')
 					}));
 				break;
 
@@ -190,17 +183,26 @@ const BotEditor = (new function BotEditor() {
 
 				/* Other Stuff */
 				default:
-					if(event.target.nodeName == 'UI-ARROW') {
-						let entry	= Utils.getClosest(event.target, 'ui-entry');
+					let entry;
+					
+					switch(event.target.nodeName) {
+						case 'UI-RESTORE':
+							entry = Utils.getClosest(event.target, 'ui-entry');
+							
+							entry.resetToDefault();
+						break;
+						case 'UI-ARROW':
+							entry = Utils.getClosest(event.target, 'ui-entry');
 
-						switch(event.target.dataset.direction) {
-							case 'left':
-								entry.onPrevious();
-							break;
-							case 'right':
-								entry.onNext();
-							break;
-						}
+							switch(event.target.dataset.direction) {
+								case 'left':
+									entry.onPrevious();
+								break;
+								case 'right':
+									entry.onNext();
+								break;
+							}
+						break;
 					}
 
 					/* Sumbit Forms */
@@ -327,7 +329,8 @@ const BotEditor = (new function BotEditor() {
 				/* Settings */
 				case InputDeviceKeys.IDK_F10:
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'request_settings'
+						action:	'request_settings',
+						opened:	this.isVisible('settings')
 					}));
 				break;
 
@@ -343,7 +346,7 @@ const BotEditor = (new function BotEditor() {
 					}
 				break;
 			}
-		});
+		}.bind(this));
 	};
 
 	this.openSettings = function openSettings(data) {
@@ -391,34 +394,60 @@ const BotEditor = (new function BotEditor() {
 	};
 
 	/* Translate */
+	this._createLanguage = function _createLanguage(url, success, error) {
+		let script	= document.createElement('script');
+		script.type	= 'text/javascript';
+		script.src	= url;
+
+		script.onload = function onLoad() {
+			success();
+		}.bind(this);
+
+		script.onerror = function onError() {
+			error();
+		}.bind(this);
+
+		document.body.appendChild(script);
+	};
+	
 	this.loadLanguage = function loadLanguage(string) {
 		if(DEBUG) {
 			console.log('Trying to loading language file:', string);
 		}
-
-		let script	= document.createElement('script');
-		script.type	= 'text/javascript';
-		script.src	= 'languages/' + string + '.js';
-
-		script.onload = function onLoad() {
+		
+		this._createLanguage('languages/' + string + '.js', function onSuccess() {
 			if(DEBUG) {
 				console.log('Language file was loaded:', string);
 			}
-
+			
 			_language = string;
 
 			this.reloadLanguageStrings();
-		}.bind(this);
+		}.bind(this), function onError() {
+			this._createLanguage('https://min.gitcdn.link/repo/Joe91/fun-bots/fun-bots-bizzi/WebUI/languages/' + string + '.js', function() {
+				if(DEBUG) {
+					console.log('Language file was loaded:', string);
+				}
+				
+				_language = string;
 
-		script.onerror = function onError() {
-			if(DEBUG) {
-				console.log('Language file was not exists:', string);
-			}
-			
-			this.reloadLanguageStrings();
-		}.bind(this);
+				this.reloadLanguageStrings();
+			}, function onSuccess() {
+				if(DEBUG) {
+					console.log('Fallback-Language file was loaded:', string);
+				}
+				
+				_language = string;
 
-		document.body.appendChild(script);
+				this.reloadLanguageStrings();
+			}.bind(this), function onSuccess() {
+				if(DEBUG) {
+					console.log('Language & Fallback file was not exists:', string);
+				}
+				
+				this.reloadLanguageStrings();
+			}.bind(this));
+		}.bind(this));		
 	};
 
 	this.reloadLanguageStrings = function reloadLanguageStrings() {
@@ -451,13 +480,13 @@ const BotEditor = (new function BotEditor() {
 
 	this.toggleTraceRun = function toggleTraceRun(state) {
 		let menu	= document.querySelector('[data-lang="Start Trace"]');
-		let string	= 'Start Trace';
+		let string	= this.I18N('Start Trace');
 
 		if(state) {
-			string = 'Stop Trace';
+			string = this.I18N('Stop Trace');
 		}
 
-		menu.innerHTML = this.I18N(string);
+		menu.innerHTML = string;
 	};
 
 	this.getView = function getView(name) {
@@ -472,7 +501,7 @@ const BotEditor = (new function BotEditor() {
 		let view = this.getView(name);
 
 		view.dataset.show = true;
-		view.setAttribute('data-show', 'true');
+		//view.setAttribute('data-show', 'true');
 
 		switch(name) {
 			/* Reset Error-Messages & Password field on opening */
@@ -485,6 +514,12 @@ const BotEditor = (new function BotEditor() {
 		}
 	};
 
+	this.isVisible = function isVisible(name) {
+		let view = this.getView(name);
+		
+		return view.dataset.show;
+	};
+	
 	this.hide = function hide(name) {
 		if(DEBUG) {
 			console.log('Hide View: ', name);
@@ -493,7 +528,7 @@ const BotEditor = (new function BotEditor() {
 		let view = this.getView(name);
 
 		view.dataset.show = false;
-		view.setAttribute('data-show', 'false');
+		//view.setAttribute('data-show', 'false');
 	};
 
 	this.error = function error(name, text) {

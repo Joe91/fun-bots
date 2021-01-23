@@ -4,6 +4,7 @@ require('__shared/ArrayMap');
 require('__shared/Config');
 require('SettingsManager');
 
+Language					= require('__shared/Language');
 local BotManager			= require('BotManager');
 local TraceManager			= require('TraceManager');
 local BotSpawner			= require('BotSpawner');
@@ -25,7 +26,7 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 
 	if (Config.settingsPassword ~= nil and self:_isAuthenticated(player.accountGuid) ~= true) then
 			print(player.name .. ' has no permissions for Bot-Editor.');
-			ChatManager:Yell('You are not permitted to change Bots. Please press F12 for authenticate!', 2.5);
+			ChatManager:Yell(Language:I18N('You are not permitted to change Bots. Please press F12 for authenticate!'), 2.5);
 		return;
 	end
 
@@ -36,8 +37,9 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 			Config.language = 'en_US';
 		end
 
+		-- request.opened
 		NetEvents:SendTo('UI_Settings', player, Config);
-
+		
 	-- Bots
 	elseif request.action == 'bot_spawn_default' then
 		local amount = tonumber(request.value);
@@ -87,7 +89,7 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 		TraceManager:loadPaths();
 
 	else
-		ChatManager:Yell(request.action .. ' is currently not implemented.', 2.5);
+		ChatManager:Yell(Language:I18N('%s is currently not implemented.', request.action), 2.5);
 	end
 end
 
@@ -101,7 +103,7 @@ function FunBotUIServer:_onUIRequestSaveSettings(player, data)
 
 	if (Config.settingsPassword ~= nil and self:_isAuthenticated(player.accountGuid) ~= true) then
 		print(player.name .. ' has no permissions for Bot-Editor.');
-		ChatManager:Yell('You are not permitted to change Bots. Please press F12 for authenticate!', 2.5);
+		ChatManager:Yell(Language:I18N('You are not permitted to change Bots. Please press F12 for authenticate!'), 2.5);
 		return;
 	end
 
@@ -115,7 +117,7 @@ function FunBotUIServer:_onUIRequestOpen(player, data)
 
 	if (Config.settingsPassword == nil or self:_isAuthenticated(player.accountGuid)) then
 		if (Config.settingsPassword == nil) then
-			ChatManager:Yell('The Bot-Editor is not protected by an password!', 2.5);
+			ChatManager:Yell(Language:I18N('The Bot-Editor is not protected by an password!'), 2.5);
 			NetEvents:SendTo('UI_Password_Protection', player, 'true');
 		end
 
@@ -125,7 +127,7 @@ function FunBotUIServer:_onUIRequestOpen(player, data)
 	else
 		if (data == nil) then
 			print('Ask ' .. player.name .. ' for Bot-Editor password.');
-			ChatManager:Yell('Please authenticate with password!', 2.5);
+			ChatManager:Yell(Language:I18N('Please authenticate with password!'), 2.5);
 			NetEvents:SendTo('UI_Request_Password', player, 'true');
 		else
 			local form = json.decode(data);
@@ -136,17 +138,17 @@ function FunBotUIServer:_onUIRequestOpen(player, data)
 				if (form.password == Config.settingsPassword) then
 					self._authenticated:add(tostring(player.accountGuid));
 					print('accountGuid: ' .. tostring(player.accountGuid));
-					ChatManager:Yell('Successfully authenticated.', 2.5);
+					ChatManager:Yell(Language:I18N('Successfully authenticated.'), 2.5);
 					NetEvents:SendTo('UI_Request_Password', player, 'false');
 					NetEvents:SendTo('UI_Show_Toolbar', player, 'true');
 				else
 					print(player.name .. ' has entered a bad password.');
-					NetEvents:SendTo('UI_Request_Password_Error', player, 'The password you entered is not correct!');
+					NetEvents:SendTo('UI_Request_Password_Error', player, Language:I18N('The password you entered is not correct!'));
 					ChatManager:Yell('Bad password.', 2.5);
 				end
 			else
 				print(player.name .. ' has entered an empty password.');
-				NetEvents:SendTo('UI_Request_Password_Error', player, 'The password you entered is not correct!');
+				NetEvents:SendTo('UI_Request_Password_Error', player, Language:I18N('The password you entered is not correct!'));
 				ChatManager:Yell('Please enter a password!', 2.5);
 			end
 		end
@@ -458,6 +460,7 @@ function FunBotUIServer:_writeSettings(player, request)
 		print('Lang changed to: ' .. request.language);
 		NetEvents:SendTo('UI_Change_Language', player, request.language);
 		SettingsManager:update('language', request.language, temporary);
+		Language:loadLanguage(request.language);
 	end
 	
 	if request.settingsPassword ~= nil then
@@ -466,16 +469,16 @@ function FunBotUIServer:_writeSettings(player, request)
 		end
 		
 		if Config.settingsPassword == nil and request.settingsPassword ~= nil then
-			ChatManager:Yell('You can\'t change the password, if it\'s never set!', 2.5);
+			ChatManager:Yell(Language:I18N('You can\'t change the password, if it\'s never set!'), 2.5);
 		else
 			SettingsManager:update('settingsPassword', request.settingsPassword, temporary);
 		end
 	end
 
 	if temporary then
-		ChatManager:Yell('Settings has been saved temporarily.', 2.5);
+		ChatManager:Yell(Language:I18N('Settings has been saved temporarily.'), 2.5);
 	else
-		ChatManager:Yell('Settings has been saved.', 2.5);
+		ChatManager:Yell(Language:I18N('Settings has been saved.'), 2.5);
 	end
 	
 	-- update Weapons if needed

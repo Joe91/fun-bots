@@ -1,34 +1,45 @@
 Language['de_DE'] = {
-	/* Bots */
-	'Bots':						'Bots',
-	'Spawn Bots':				'Bots spawnen',
-	'Spawn Bot on Way':			'Bot auf Weg spawnen',
-	'Kick All':					'Alle kicken',
-	'Kill All':					'Alle killen',
-	'Toggle Respawn':			'Neuspawnen umschalten',
-	'Toggle Attack':			'Attackieren umschalten',
-
-	/* Waypoints */
-	'Waypoints':				'Wegpunkte',
-	'Start Trace':				'Aufzeichnung starten',
-	'End Trace':				'Aufzeichnung stoppen',
-	'Clear Trace':				'Aufzeichnung löschen',
-	'Reset all Traces':			'Alle Aufzeichnungen löschen',
-	'Save':						'Speichern',
-	'Reload':					'Neuladen',
-	'List all Traces':			'Alle Aufzeichnungen auflisten',
-
-	/* Other */
-	'Settings':					'Einstellungen',
-	'Exit':						'Beenden',
-	'Cancel':					'Abbrechen',
-	'OK':						'OK',
-
-	/* Authentication */
-	'Enter password':											'Gebe das Passwort ein',
-	'Please enter the password to open the Bot-Editor.':		'Bitte gebe das Passwort ein um den Bot-Editor zu öffnen.',
-
-	/* Password Protection */
-	'WARNING:':					'WARNUNG:',
-	'The Bot-Editor is not protected by an password. Other players can change all the settings!': 'Der Bot-Editor ist durch kein Passwort geschützt. Andere Spieler können alle Einstellungen ändern!'
+  "__LANGUAGE_INFO": {
+    "name": "German",
+    "author": "Bizarrus <Bizzi>",
+    "version": "1.0.0"
+  },
+  "First Shot Delay": "Verzögerung des ersten Schusses",
+  "You are not permitted to change Bots. Please press F12 for authenticate!": "Es ist nicht erlaubt, Bots zu verändern. Bitte drücke F12 zum dich zu Authentifizieren!",
+  "The password you entered is not correct!": "Das von Ihnen eingegebene Passwort ist nicht korrekt!",
+  "Start Trace": "Trace starten",
+  "Stop Trace": "Trace stoppen",
+  "Yes": "Ja",
+  "No": "Nein",
+  "WARNING:": "WARNUNG:",
+  "The Bot-Editor is not protected by an password. Other players can change all the settings!": "Der Bot-Editor ist durch kein Passwort geschützt. Andere Spieler können alle Einstellungen ändern!",
+  "Bots": "Bots",
+  "Spawn Bots": "Spawn Bots",
+  "Kick All": "Alle kicken",
+  "Kill All": "Alle killen",
+  "Toggle Respawn": "Respawn umschalten",
+  "Toggle Attack": "Angriff umschalten",
+  "Waypoints": "Wegpunkte",
+  "End Trace": "Trace beenden",
+  "Spawn Bot on Way": "Bot auf dem Weg spawnen",
+  "Clear Trace with index": "Trace mit Index löschen",
+  "Reset all Traces": "Alle Traces zurücksetzen",
+  "Save": "Speichern",
+  "Reload": "Neu laden",
+  "List all Traces": "Alle Traces auflisten",
+  "Settings": "Einstellungen",
+  "Exit": "Beenden",
+  "Enter password": "Passwort eingeben",
+  "Please enter the password to open the Bot-Editor.": "Bitte gebe das Passwort ein, um den Bot-Editor zu öffnen.",
+  "Cancel": "Abbrechen",
+  "OK": "OK",
+  "General": "Allgemein",
+  "Difficulty": "Schwierigkeit",
+  "Spawn": "Spawn",
+  "Advanced": "Erweitert",
+  "Expert": "Experte",
+  "Other": "Sonstiges",
+  "Save temporarily": "Temporär speichern",
+  "Restore all to Default": "Alle Werte zurücksetzen",
+  "Restore this value to Default": "Diesen Wert zurücksetzen"
 };
