@@ -1,8 +1,7 @@
 version: LANG_{build}
 image: Ubuntu2004
 
-# Debugging
-# Fuck'd up the shit variables; Can't set on the Backend, must be set here oÔ
+# Set GitHub-Token from here https://github.com/settings/tokens => https://ci.appveyor.com/tools/encrypt
 environment:
   matrix:
     - nodejs_version: "15"
