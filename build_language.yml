@@ -6,8 +6,6 @@ image: Ubuntu2004
 environment:
   matrix:
     - nodejs_version: "15"
-  GITHUB_TOKEN:
-    secure: +hQ3dXqlACVh9ITYULpeRcTaro3L9gHt9fiLlNbhmI0hwKfSY1SNNAaBe0JRCh2U
   
 # Branches
 branches:
