@@ -11,9 +11,9 @@ ls
 # Auth helper
 git config --global credential.helper store
 echo "https://${GITHUB_TOKEN}:x-oauth-basic@github.com" >> ~/.git-credentials
-git config --global user.email "build@bizzi.appveyor.com"
+echo "" >> ~/.git-credentials
 git config --global user.name "[fun-bots] Build Server"
-git remote set-url origin https://${GITHUB_TOKEN}:x-oauth-basic@github.com/Joe91/fun-bots.git
+git remote set-url origin https://${GITHUB_TOKEN}@github.com/Joe91/fun-bots.git
 
 
 # Check out Branch
