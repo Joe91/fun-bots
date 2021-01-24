@@ -106,7 +106,12 @@ function SettingsManager:onLoad()
 
 	for name, value in pairs(settings) do
 		print('Updating Config Variable: ' .. tostring(value.Key) .. ' = ' .. tostring(value.Value) .. ' (' .. tostring(value.Time) .. ')');
-		Config[value.Key] = value.Value;
+		local tempValue = tonumber(value.Value)
+		if tempValue then --number?
+			Config[value.Key] = tempValue;
+		else --string
+			Config[value.Key] = value.Value;
+		end
 	end
 	
 	-- revert Fix nil values on config
