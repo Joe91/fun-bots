@@ -35,8 +35,9 @@ function BotSpawner:onLevelLoaded(forceSpawn)
 			amountToSpawn = BotManager:getBotCount()
 		end
 
+		local team = BotManager:getBotTeam();
 		for i = 1,amountToSpawn do
-			BotManager:createBot(BotNames[i], Globals.botTeam)
+			BotManager:createBot(BotNames[i], team)
 		end
 		if BotManager:getBotCount() > amountToSpawn then --if bots have been added in between
 			local numberToKick = BotManager:getBotCount() - amountToSpawn
@@ -119,8 +120,7 @@ function BotSpawner:getBotTeam(player)
 			end
 		end
 	else
-		BotManager:detectBotTeam();
-		team = Globals.botTeam;
+		team = BotManager:getBotTeam();
 	end
 	return team
 end

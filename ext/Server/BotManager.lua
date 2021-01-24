@@ -20,7 +20,8 @@ function BotManager:__init()
 	Hooks:Install('Soldier:Damage', 1, self, self._onSoldierDamage)
 end
 
-function BotManager:detectBotTeam()
+function BotManager:getBotTeam()
+	local botTeam;
 	local countPlayersTeam1 = 0;
 	local countPlayersTeam2 = 0;
 	local players = PlayerManager:GetPlayers()
@@ -37,23 +38,24 @@ function BotManager:detectBotTeam()
 	-- init global Vars
 	if countPlayersTeam1 > countPlayersTeam2 then
 		if  Config.spawnInSameTeam then
-			Globals.botTeam = TeamId.Team1;
+			botTeam = TeamId.Team1;
 		else
-			Globals.botTeam = TeamId.Team2;
+			botTeam = TeamId.Team2;
 		end
 	elseif countPlayersTeam2 > countPlayersTeam1 then
 		if Config.spawnInSameTeam then
-			Globals.botTeam = TeamId.Team2;
+			botTeam = TeamId.Team2;
 		else
-			Globals.botTeam = TeamId.Team1;
+			botTeam = TeamId.Team1;
 		end
 	else
-		Globals.botTeam = Config.botTeam;
+		botTeam = Config.botTeam;
 	end
+
+	return botTeam;
 end
 
 function BotManager:configGlobas()
-	self:detectBotTeam()
 	Globals.respawnWayBots 	= Config.respawnWayBots;
 	Globals.attackWayBots 	= Config.attackWayBots;
 	Globals.yawPerFrame 	= self:calcYawPerFrame()
