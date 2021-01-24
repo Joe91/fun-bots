@@ -1,9 +1,9 @@
 {
 	"Name": "fun-bots",
-	"Authors": ["Janssent", "Bizzi", "Bictcrusher", "DeJoe"],
+	"Authors": ["Bizzi","Joe-91"],
 	"Description": "simple AI-Bots and some dumb spawn options",
 	"URL": "https://github.com/Joe91/fun-bots",
-	"Version": "1.1.0.0",
+	"Version": "1.2.0.0",
 	"HasWebUI": true,
 	"Tags": ["fun-bots"],
 	"HasVeniceEXT": true

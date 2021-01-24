@@ -109,7 +109,7 @@ function TraceManager:startTrace(player, index)
 	self._traceStatePlayer[player.name]	= 1; --trace started
 	self:_generateAndInsertPoint(player, index); --create first point, to block this trace
 	print('Trace ' .. index .. ' started');
-	ChatManager:Yell('Trace ' .. index .. ' started', 2.5);
+	ChatManager:Yell(Language:I18N('Trace %d started', index), 2.5);
 end
 
 function TraceManager:endTrace(player)
@@ -150,7 +150,7 @@ function TraceManager:_onClientEndTraceResponse(player, isClearView)
 	end
 
 	print('Trace done');
-	ChatManager:Yell('Trace done', 2.5);
+	ChatManager:Yell(Language:I18N('Trace done'), 2.5);
 
 	Globals.activeTraceIndexes = Globals.activeTraceIndexes + 1;
 
@@ -164,7 +164,7 @@ function TraceManager:clearTrace(index)
 	end
 
 	print('clear trace');
-	ChatManager:Yell('Clearing trace ' .. index, 2.5);
+	ChatManager:Yell(Language:I18N('Clearing Trace %d', index), 2.5);
 	self:_clearTrace(index);
 end
 
@@ -174,7 +174,7 @@ function TraceManager:clearAllTraces()
 	end
 
 	print('Clearing all traces');
-	ChatManager:Yell("Clearing all traces", 2.5);
+	ChatManager:Yell(Language:I18N("Clearing all traces"), 2.5);
 
 	for i = 1, MAX_TRACE_NUMBERS do
 		self:_clearTrace(i);
@@ -189,7 +189,7 @@ function TraceManager:savePaths()
 	end
 
 	print('Trying to Save paths');
-	ChatManager:Yell('Trying to save paths check console...', 2.5);
+	ChatManager:Yell(Language:I18N('Trying to save paths check console...'), 2.5);
 	self:_saveWayPoints();
 	--local co = coroutine.create(function ()
 	--	self:_saveWayPoints();
@@ -429,13 +429,13 @@ function TraceManager:_saveWayPoints()
 
 	if not results then
 		print('Failed to execute query: ' .. SQL:Error());
-		ChatManager:Yell('Failed to execute query: ' .. SQL:Error(), 5.5);
+		ChatManager:Yell(Language:I18N('Failed to execute query: %s', SQL:Error()), 5.5);
 		return;
 	end
 
 	SQL:Close();
 	print('SAVE - The waypoint list has been saved.');
-	ChatManager:Yell('The waypoint list has been saved', 5.5);
+	ChatManager:Yell(Language:I18N('The waypoint list has been saved'), 5.5);
 end
 
 

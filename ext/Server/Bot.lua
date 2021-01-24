@@ -37,6 +37,8 @@ function Bot:__init(player)
 
 	--advanced movement
 	self._currentWayPoint = nil;
+	self._targetYaw = 0;
+	self._targetPoint = nil;
 	self._pathIndex = 0;
 	self._lastWayDistance = 0;
 	self._invertPathDirection = false;
@@ -67,6 +69,8 @@ function Bot:onUpdate(dt)
 		self:_updateAiming(dt);
 		self._aimUpdateTimer = 0; --reset afterwards, to use it for targetinterpolation
 	end
+
+	self:_updateYaw();
 
 	if self._updateTimer > StaticConfig.botUpdateCycle then
 		self._updateTimer = 0;
@@ -319,9 +323,45 @@ function Bot:_updateAiming(dt)
 			local pitch		= math.atan(dy, distance);
 
 			self.player.input.authoritativeAimingPitch		= pitch;
-			self.player.input.authoritativeAimingYaw		= yaw;
+			self._targetYaw									= yaw;
 		end
 	end
+end
+
+function Bot:_updateYaw()
+	if self._targetPoint ~= nil and self._shootPlayer == nil and self.player.soldier ~= nil then
+		local dy					= self._targetPoint.trans.z - self.player.soldier.worldTransform.trans.z;
+		local dx					= self._targetPoint.trans.x - self.player.soldier.worldTransform.trans.x;
+		local atanDzDx	= math.atan(dy, dx);
+		local yaw		= (atanDzDx > math.pi / 2) and (atanDzDx - math.pi / 2) or (atanDzDx + 3 * math.pi / 2);
+		self._targetYaw = yaw;
+	end
+
+	local deltaYaw = self.player.input.authoritativeAimingYaw - self._targetYaw;
+	if deltaYaw > math.pi then
+		deltaYaw = deltaYaw - 2*math.pi
+	elseif deltaYaw < -math.pi then
+		deltaYaw = deltaYaw + 2*math.pi
+	end
+
+	local absDeltaYaw = math.abs(deltaYaw)
+
+	local inkrement = Globals.yawPerFrame;
+	if absDeltaYaw < inkrement then
+		self.player.input.authoritativeAimingYaw = self._targetYaw;
+		return;
+	end
+
+	if deltaYaw > 0  then
+		inkrement = -inkrement;
+	end
+	local tempYaw = self.player.input.authoritativeAimingYaw + inkrement;
+	if tempYaw >= (math.pi * 2) then
+		tempYaw = tempYaw - (math.pi * 2);
+	elseif tempYaw < 0.0 then
+		tempYaw = tempYaw + (math.pi * 2);
+	end
+	self.player.input.authoritativeAimingYaw = tempYaw
 end
 
 function Bot:_updateShooting()
@@ -463,6 +503,34 @@ function Bot:_updateShooting()
 	end
 end
 
+function Bot:_getWayIndex(currentWayPoint)
+	local activePointIndex = 1;
+
+	if currentWayPoint == nil then
+		currentWayPoint = activePointIndex;
+	else
+		activePointIndex = currentWayPoint;
+
+		-- direction handling
+		if activePointIndex > #Globals.wayPoints[self._pathIndex] then
+			if Globals.wayPoints[self._pathIndex][1].optValue == 0xFF then --inversion needed
+				activePointIndex			= #Globals.wayPoints[self._pathIndex];
+				self._invertPathDirection	= true;
+			else
+				activePointIndex			= 1;
+			end
+		elseif activePointIndex < 1 then
+			if Globals.wayPoints[self._pathIndex][1].optValue == 0xFF then --inversion needed
+				activePointIndex			= 1;
+				self._invertPathDirection	= false;
+			else
+				activePointIndex			= #Globals.wayPoints[self._pathIndex];
+			end
+		end
+	end
+	return activePointIndex;
+end
+
 function Bot:_updateMovement()
 	-- movement-mode of bots
 	local additionalMovementPossible = true;
@@ -475,7 +543,7 @@ function Bot:_updateMovement()
 				local dx		= self._targetPlayer.soldier.worldTransform.trans.x - self.player.soldier.worldTransform.trans.x;
 				local atanDzDx	= math.atan(dy, dx);
 				local yaw		= (atanDzDx > math.pi / 2) and (atanDzDx - math.pi / 2) or (atanDzDx + 3 * math.pi / 2);
-				self.player.input.authoritativeAimingYaw = yaw;
+				self._targetYaw = yaw;
 			end
 
 		-- mimicking
@@ -486,7 +554,7 @@ function Bot:_updateMovement()
 				self.player.input:SetLevel(i, self._targetPlayer.input:GetLevel(i));
 			end
 
-			self.player.input.authoritativeAimingYaw	= self._targetPlayer.input.authoritativeAimingYaw;
+			self._targetYaw								= self._targetPlayer.input.authoritativeAimingYaw;
 			self.player.input.authoritativeAimingPitch	= self._targetPlayer.input.authoritativeAimingPitch;
 
 		-- mirroring
@@ -497,47 +565,35 @@ function Bot:_updateMovement()
 				self.player.input:SetLevel(i, self._targetPlayer.input:GetLevel(i));
 			end
 
-			self.player.input.authoritativeAimingYaw	= self._targetPlayer.input.authoritativeAimingYaw + ((self._targetPlayer.input.authoritativeAimingYaw > math.pi) and -math.pi or math.pi);
+			self._targetYaw	= self._targetPlayer.input.authoritativeAimingYaw + ((self._targetPlayer.input.authoritativeAimingYaw > math.pi) and -math.pi or math.pi);
 			self.player.input.authoritativeAimingPitch	= self._targetPlayer.input.authoritativeAimingPitch;
 
 		-- move along points
 		elseif self.activeMoveMode == 5 then
 
 			-- get next point
-			local activePointIndex = 1;
+			local activePointIndex = self:_getWayIndex(self._currentWayPoint)
 
-			if self._currentWayPoint == nil then
-				self._currentWayPoint = activePointIndex;
-			else
-				activePointIndex = self._currentWayPoint;
-
-				-- direction handling
-				if activePointIndex > #Globals.wayPoints[self._pathIndex] then
-					if Globals.wayPoints[self._pathIndex][1].optValue == 0xFF then --inversion needed
-						activePointIndex			= #Globals.wayPoints[self._pathIndex];
-						self._invertPathDirection	= true;
-					else
-						activePointIndex			= 1;
-					end
-				elseif activePointIndex < 1 then
-					if Globals.wayPoints[self._pathIndex][1].optValue == 0xFF then --inversion needed
-						activePointIndex			= 1;
-						self._invertPathDirection	= false;
-					else
-						activePointIndex			= #Globals.wayPoints[self._pathIndex];
-					end
-				end
-			end
 			if Globals.wayPoints[self._pathIndex][1] ~= nil then -- check for reached point
 				local point				= nil;
+				local nextPoint			= nil;
 				local pointIncrement	= 1;
 				local useShootWayPoint	= false;
 
 				if #self._shootWayPoints > 0 then	--we need to go back to path first
-					point				= table.remove(self._shootWayPoints);
+					point 				= self._shootWayPoints[#self._shootWayPoints];
+					nextPoint 			= self._shootWayPoints[#self._shootWayPoints - 1];
+					if nextPoint == nil then
+						nextPoint = Globals.wayPoints[self._pathIndex][activePointIndex];
+					end
 					useShootWayPoint	= true;
 				else
-					point				= Globals.wayPoints[self._pathIndex][activePointIndex];
+					point = Globals.wayPoints[self._pathIndex][activePointIndex];
+					if not self._invertPathDirection then
+						nextPoint = Globals.wayPoints[self._pathIndex][self:_getWayIndex(self._currentWayPoint + 1)]
+					else
+						nextPoint = Globals.wayPoints[self._pathIndex][self:_getWayIndex(self._currentWayPoint - 1)]
+					end
 				end
 
 				if (point.speedMode) > 0 then -- movement
@@ -548,12 +604,23 @@ function Bot:_updateMovement()
 					local distanceFromTarget	= math.sqrt(dx ^ 2 + dy ^ 2);
 					local heightDistance		= math.abs(point.trans.y - self.player.soldier.worldTransform.trans.y);
 
+
 					--detect obstacle and move over or around TODO: Move before normal jump
 					local currentWayPontDistance = self.player.soldier.worldTransform.trans:Distance(point.trans);
+					if currentWayPontDistance > self._lastWayDistance and self._obstaceSequenceTimer == 0 then
+						--TODO: skip one pooint?
+						self._targetPoint = nextPoint;
+						distanceFromTarget			= 0;
+						heightDistance				= 0;
 
-					if currentWayPontDistance >= self._lastWayDistance or self._obstaceSequenceTimer ~= 0 then
+					else
+						self._targetPoint = point;
+					end
+
+
+					if math.abs(currentWayPontDistance - self._lastWayDistance) < 0.02 or self._obstaceSequenceTimer ~= 0 then
 						-- try to get around obstacle
-						self.activeSpeedValue = 3; --always try to stand
+						self.activeSpeedValue = 4; --always try to stand
 
 						if self._obstaceSequenceTimer == 0 then --step 0
 							self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
@@ -597,8 +664,6 @@ function Bot:_updateMovement()
 							pointIncrement				= 5; -- go 5 points further
 						end
 					else
-						self._lastWayDistance = currentWayPontDistance;
-
 						self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
@@ -606,11 +671,13 @@ function Bot:_updateMovement()
 						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0.0);
 					end
 
+					self._lastWayDistance = currentWayPontDistance;
+
 					-- jump detection. Much more simple now, but works fine ;-)
 					if self._obstaceSequenceTimer == 0 then
 						if (point.trans.y - self.player.soldier.worldTransform.trans.y) > 0.3 and Config.jumpWhileMoving then
 							--detect, if a jump was recorded or not
-							local timeForwardBackwardJumpDetection = 1.8; -- 1.5 s ahead and back
+							local timeForwardBackwardJumpDetection = 1.1; -- 1.5 s ahead and back
 							local jumpValid = false;
 							for i = 1, math.floor(timeForwardBackwardJumpDetection/StaticConfig.traceDelta) do
 								local pointBefore = Globals.wayPoints[self._pathIndex][activePointIndex - i];
@@ -632,12 +699,7 @@ function Bot:_updateMovement()
 					end
 
 					--check for reached target
-					if distanceFromTarget > StaticConfig.targetDistanceWayPoint or heightDistance > StaticConfig.targetHeightDistanceWayPoint then
-						local atanDzDx	= math.atan(dy, dx);
-						local yaw		= (atanDzDx > math.pi / 2) and (atanDzDx - math.pi / 2) or (atanDzDx + 3 * math.pi / 2);
-						self.player.input.authoritativeAimingYaw = yaw;
-
-					else -- target reached
+					if distanceFromTarget <= StaticConfig.targetDistanceWayPoint and heightDistance <= StaticConfig.targetHeightDistanceWayPoint then
 						if not useShootWayPoint then
 							if self._invertPathDirection then
 								self._currentWayPoint = activePointIndex - pointIncrement;
@@ -645,8 +707,8 @@ function Bot:_updateMovement()
 								self._currentWayPoint = activePointIndex + pointIncrement;
 							end
 
-						elseif pointIncrement > 1 then
-							for i = 1, pointIncrement - 1 do --one already gets removed on start of wayfinding
+						else
+							for i = 1, pointIncrement do --one already gets removed on start of wayfinding
 								table.remove(self._shootWayPoints);
 							end
 						end
