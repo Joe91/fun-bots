@@ -13,7 +13,8 @@ DatabaseField = {
 };
 
 function Database:__init()
-	self.lastError = nil;
+	self.lastError	= nil;
+	self.batches	= ArrayMap();
 end
 
 function Database:getLastError()
@@ -125,8 +126,68 @@ function Database:update(tableName, parameters, where)
 		fields:add(' `' .. name .. '`=' .. value .. '');
 	end
 
-print('UPDATE `' .. tableName .. '` SET ' .. fields:join(',') .. ' WHERE `' .. where .. '`=' .. found);
+	print('UPDATE `' .. tableName .. '` SET ' .. fields:join(',') .. ' WHERE `' .. where .. '`=' .. found);
 	return self:query('UPDATE `' .. tableName .. '` SET ' .. fields:join(', ') .. ' WHERE `' .. where .. '`=' .. found);
+end
+
+function Database:executeBatch()
+	print('Database:executeBatch');
+	
+	for name, value in pairs(self.batch) do
+		print("BATCHED: " .. name);
+		print("       : " .. value);
+	end
+	
+	print('END BATCH');
+end
+
+function Database:batchQuery(tableName, parameters, where)
+	local fields	= ArrayMap();
+	local names		= ArrayMap();
+	local values	= ArrayMap();
+	local found		= nil;
+	
+	for name, value in pairs(parameters) do
+		names:add('`' .. name .. '`');
+		
+		if value == nil then
+			value = 'NULL';
+			values:add('NULL');
+		
+		elseif value == self:now() then
+			value = 'CURRENT_TIMESTAMP';
+			values:add('CURRENT_TIMESTAMP');
+
+		elseif value == DatabaseField.NULL then
+			value = 'NULL';
+			values:add('NULL');
+			
+		elseif tostring(value) == 'true' or value == true then
+			value = '\'true\'';
+			values:add('\'true\'');
+			
+		elseif tostring(value) == 'false' or value == false then
+			value = '\'false\'';
+			values:add('\'false\'');
+			
+		else
+			value = '\'' .. tostring(value) .. '\'';
+			values:add('\'' .. tostring(value) .. '\'');
+		end
+		
+		if where == name then
+			found = value;
+		end
+		
+		if name ~= 'ID' then
+			fields:add(' `' .. name .. '`=' .. value .. '');
+		end
+	end
+	
+	self.batches:add('INSERT OR IGNORE INTO `' .. tableName .. '` (' .. names:join(', ') .. ') VALUES  (' .. values:join(', ') .. ');');
+	self.batches:add('UPDATE `' .. tableName .. '` SET ' .. fields:join(', ') .. ' `' .. where .. '`=' .. found .. ' LIMIT 1;');
+	
+	return true;
 end
 
 function Database:delete(tableName, parameters)

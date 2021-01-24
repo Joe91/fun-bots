@@ -124,29 +124,42 @@ function SettingsManager:onLoad()
 	end
 end
 
-function SettingsManager:update(name, value, temporary)
+function SettingsManager:update(name, value, temporary, batch)
 	if temporary ~= true then
 		if value == nil then
 			value = DatabaseField.NULL;
 		end
 		
-		local single = Database:single('SELECT * FROM `FB_Settings` WHERE `Key`=\'' .. name .. '\' LIMIT 1');
-	
-		-- If not exists, create
-		if single == nil then
-			Database:insert('FB_Settings', {
-				ID		= DatabaseField.NULL,
-				Key		= name,
-				Value	= value,
-				Time	= Database:now()
-			});
+		-- Use old deprecated querys
+		if batch == false then
+			local single = Database:single('SELECT * FROM `FB_Settings` WHERE `Key`=\'' .. name .. '\' LIMIT 1');
+		
+			-- If not exists, create
+			if single == nil then
+				Database:insert('FB_Settings', {
+					ID		= DatabaseField.NULL,
+					Key		= name,
+					Value	= value,
+					Time	= Database:now()
+				});
+			else
+				Database:update('FB_Settings', {
+					Key		= name,
+					Value	= value,
+					Time	= Database:now()
+				}, 'Key');
+			end
+		
+		-- Use new querys
 		else
-			Database:update('FB_Settings', {
+			Database:batchQuery('FB_Settings', {
+				ID		= DatabaseField.NULL,
 				Key		= name,
 				Value	= value,
 				Time	= Database:now()
 			}, 'Key');
 		end
+			
 		if value == DatabaseField.NULL then
 			value = nil;
 		end
