@@ -39,7 +39,6 @@ function Bot:__init(player)
 	self._currentWayPoint = nil;
 	self._targetYaw = 0;
 	self._targetPoint = nil;
-	self._nextPoint = nil;
 	self._pathIndex = 0;
 	self._lastWayDistance = 0;
 	self._invertPathDirection = false;
@@ -577,48 +576,44 @@ function Bot:_updateMovement()
 
 			if Globals.wayPoints[self._pathIndex][1] ~= nil then -- check for reached point
 				local point				= nil;
+				local nextPoint			= nil;
 				local pointIncrement	= 1;
 				local useShootWayPoint	= false;
 
 				if #self._shootWayPoints > 0 then	--we need to go back to path first
-					if self._nextPoint == nil or self._nextPoint == self._targetPoint then
-						point 			= table.remove(self._shootWayPoints);
-					else
-						point			= self._nextPoint;
-					end
-					self._nextPoint 	= table.remove(self._shootWayPoints);
+					point 				= self._shootWayPoints[#self._shootWayPoints];
+					nextPoint 			= self._shootWayPoints[#self._shootWayPoints - 1];
 					useShootWayPoint	= true;
 				else
-					if self._nextPoint == nil or self._nextPoint == self._targetPoint then
-						point = Globals.wayPoints[self._pathIndex][activePointIndex];
-						if not self._invertPathDirection then
-							self._nextPoint = Globals.wayPoints[self._pathIndex][self:_getWayIndex(self._currentWayPoint + 1)]
-						else
-							self._nextPoint = Globals.wayPoints[self._pathIndex][self:_getWayIndex(self._currentWayPoint - 1)]
-						end
+					point = Globals.wayPoints[self._pathIndex][activePointIndex];
+					if not self._invertPathDirection then
+						nextPoint = Globals.wayPoints[self._pathIndex][self:_getWayIndex(self._currentWayPoint + 1)]
 					else
-						point				= self._nextPoint;
-						self._nextPoint		= Globals.wayPoints[self._pathIndex][activePointIndex];
+						nextPoint = Globals.wayPoints[self._pathIndex][self:_getWayIndex(self._currentWayPoint - 1)]
 					end
 				end
 
 				if (point.speedMode) > 0 then -- movement
 					self._wayWaitTimer			= 0;
 					self.activeSpeedValue		= point.speedMode; --speed
-
-					--detect obstacle and move over or around TODO: Move before normal jump
-					local currentWayPontDistance = self.player.soldier.worldTransform.trans:Distance(point.trans);
-					if currentWayPontDistance > self._lastWayDistance then
-						--TODO: skip one pooint?
-						self._targetPoint = self._nextPoint;
-					else
-						self._targetPoint = point;
-					end
-
 					local dy					= point.trans.z - self.player.soldier.worldTransform.trans.z;
 					local dx					= point.trans.x - self.player.soldier.worldTransform.trans.x;
 					local distanceFromTarget	= math.sqrt(dx ^ 2 + dy ^ 2);
 					local heightDistance		= math.abs(point.trans.y - self.player.soldier.worldTransform.trans.y);
+
+
+					--detect obstacle and move over or around TODO: Move before normal jump
+					local currentWayPontDistance = self.player.soldier.worldTransform.trans:Distance(point.trans);
+					if currentWayPontDistance > self._lastWayDistance and self._obstaceSequenceTimer == 0 then
+						--TODO: skip one pooint?
+						self._targetPoint = nextPoint;
+						distanceFromTarget			= 0;
+						heightDistance				= 0;
+
+					else
+						self._targetPoint = point;
+					end
+
 
 					if math.abs(currentWayPontDistance - self._lastWayDistance) < 0.02 or self._obstaceSequenceTimer ~= 0 then
 						-- try to get around obstacle
@@ -710,7 +705,7 @@ function Bot:_updateMovement()
 							end
 
 						elseif pointIncrement > 1 then
-							for i = 1, pointIncrement - 1 do --one already gets removed on start of wayfinding
+							for i = 1, pointIncrement do --one already gets removed on start of wayfinding
 								table.remove(self._shootWayPoints);
 							end
 						end
