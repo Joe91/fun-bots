@@ -174,8 +174,12 @@ function BotManager:_onSoldierDamage(hook, soldier, info, giverInfo)
 		local bot = self:GetBotByName(soldier.player.name)
 		if bot == nil then
 			if giverInfo.giver == nil then
+				local newGiverInfo = DamageGiverInfo()
 				bot = self:GetBotByName(self._shooterBots[soldier.player.name])
 				if bot ~= nil and bot.player.soldier ~= nil then
+					newGiverInfo.giver = bot.player;
+					--newGiverInfo.weaponUnlock = nil;
+					--newGiverInfo.weaponFiring = nil;
 					if info.damage > 0.09 and info.damage < 0.11 then
 						info.isBulletDamage = true
 						if bot.kit == "Recon" and Config.botWeapon ~= "Pistol" then
@@ -187,11 +191,17 @@ function BotManager:_onSoldierDamage(hook, soldier, info, giverInfo)
 						info.damage = Config.meleeDamageBot
 						info.isBulletDamage = false
 					end
+					--[[info.isBulletDamage = false;
+					info.isExplosionDamage = false;
+					info.isDemolitionDamage = true;
+					info.shouldForceDamage = false;
+					info.isClientDamage = false;--]]
+
 					info.boneIndex = 0
 					info.position = Vec3(soldier.worldTransform.trans.x, soldier.worldTransform.trans.y + 1, soldier.worldTransform.trans.z)
 					info.direction = soldier.worldTransform.trans - bot.player.soldier.worldTransform.trans
 					info.origin = bot.player.soldier.worldTransform.trans
-					hook:Pass(soldier, info, giverInfo)
+					hook:Pass(soldier, info, newGiverInfo)
 				end
 			end
 		end

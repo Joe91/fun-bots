@@ -583,6 +583,9 @@ function Bot:_updateMovement()
 				if #self._shootWayPoints > 0 then	--we need to go back to path first
 					point 				= self._shootWayPoints[#self._shootWayPoints];
 					nextPoint 			= self._shootWayPoints[#self._shootWayPoints - 1];
+					if nextPoint == nil then
+						nextPoint = Globals.wayPoints[self._pathIndex][activePointIndex];
+					end
 					useShootWayPoint	= true;
 				else
 					point = Globals.wayPoints[self._pathIndex][activePointIndex];
@@ -704,7 +707,7 @@ function Bot:_updateMovement()
 								self._currentWayPoint = activePointIndex + pointIncrement;
 							end
 
-						elseif pointIncrement > 1 then
+						else
 							for i = 1, pointIncrement do --one already gets removed on start of wayfinding
 								table.remove(self._shootWayPoints);
 							end
