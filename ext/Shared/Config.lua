@@ -39,14 +39,14 @@ Config = {
 	jumpWhileMoving = true,			-- bots jump while moving. If false, only on obstacles!
 
 	--expert
-	botFirstShotDelay = 0.3,		-- delay for first shot. If too small, there will be great spread in first cycle because its not kompensated jet.
+	botFirstShotDelay = 0.2,		-- delay for first shot. If too small, there will be great spread in first cycle because its not kompensated jet.
 	botMinTimeShootAtPlayer = 1.0,	-- the minimum time a bot shoots at one player
 	botFireModeDuration = 5.0,		-- the minimum time a bot tries to shoot a player
 	maximunYawPerSec = 720,			-- in Degree. Rotaion-Movement per second.
 	botFireDuration = 0.3,			-- the duration a bot fires (Assault / Engi)
 	botFirePause = 0.3,			 	-- the duration a bot waits after fire (Assault / Engi)
-	botFireDurationSupport = 3.0,	-- the duration a bot fires (Support)
-	botFirePauseSupport = 1.0,		-- the duration a bot waits after fire (Support)
+	botFireDurationSupport = 2.0,	-- the duration a bot fires (Support)
+	botFirePauseSupport = 0.6,		-- the duration a bot waits after fire (Support)
 	botFireCycleRecon = 0.4,		-- the duration a bot fires (Recon)
 	botFireCyclePistol = 0.4,		-- the duration of a FireCycle (Pistol)
 
