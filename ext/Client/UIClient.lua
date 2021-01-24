@@ -94,6 +94,7 @@ function FunBotUIClient:_onUISettings(data)
 	settings:add("EXPERT", "Float", "botMinTimeShootAtPlayer", Language:I18N("Min Time Shoot"), data.botMinTimeShootAtPlayer, 1.0, Language:I18N("the minimum time a Bot shoots at one player"));
 	settings:add("EXPERT", "Float", "botFireModeDuration", Language:I18N("First Shot Delay"), data.botFireModeDuration, 5.0, Language:I18N("the minimum time a Bot tries to shoot a player"));
 	settings:add("EXPERT", "Float", "maximunYawPerSec", Language:I18N("Maximum Degree per Sec"), data.maximunYawPerSec, 720, Language:I18N("in Degree. Maximum Rotaion-Movement of a Bot per second."));
+	settings:add("EXPERT", "Float", "targetDistanceWayPoint", Language:I18N("Target Distance Way-Point"), data.targetDistanceWayPoint, 1.5, Language:I18N("distance the bots have to reach to continue with next Waypoint."));
 	settings:add("EXPERT", "Float", "botFireDuration", Language:I18N("Fire Time (Assault/Engi)"), data.botFireDuration, 0.3, Language:I18N("the duration a bot fires (Assault / Engi)"));
 	settings:add("EXPERT", "Float", "botFirePause", Language:I18N("Fire Pause (Assalut/Engi)"), data.botFirePause, 0.3, Language:I18N("the duration a bot waits after fire (Assault / Engi)"));
 	settings:add("EXPERT", "Float", "botFireDurationSupport", Language:I18N("Fire Time (Support)"), data.botFireDurationSupport, 2.0, Language:I18N("the duration a bot fires (Support)"));

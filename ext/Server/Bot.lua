@@ -700,7 +700,7 @@ function Bot:_updateMovement()
 					end
 
 					--check for reached target
-					if distanceFromTarget <= StaticConfig.targetDistanceWayPoint and heightDistance <= StaticConfig.targetHeightDistanceWayPoint then
+					if distanceFromTarget <= Config.targetDistanceWayPoint and heightDistance <= StaticConfig.targetHeightDistanceWayPoint then
 						if not useShootWayPoint then
 							if self._invertPathDirection then
 								self._currentWayPoint = activePointIndex - pointIncrement;
