@@ -28,7 +28,7 @@ end
 
 function BotSpawner:onLevelLoaded(forceSpawn)
 	if not Config.onlySpawnBotsWithPlayers or BotManager:getPlayerCount() > 0 or (forceSpawn ~= nil and forceSpawn) then
-		BotManager:detectBotTeam()
+		BotManager:configGlobas()
 
 		local amountToSpawn = Config.initNumberOfBots
 		if BotManager:getBotCount() > amountToSpawn then
@@ -107,7 +107,7 @@ function BotSpawner:_onRespawnBot(botname)
 end
 
 function BotSpawner:getBotTeam(player)
-	local team = Globals.botTeam
+	local team;
 	if player ~= nil then
 		if Config.spawnInSameTeam then
 			team = player.teamId
@@ -118,6 +118,9 @@ function BotSpawner:getBotTeam(player)
 				team = TeamId.Team1
 			end
 		end
+	else
+		BotManager:detectBotTeam();
+		team = Globals.botTeam;
 	end
 	return team
 end
@@ -206,7 +209,7 @@ function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, inde
 		local transform = LinearTransform()
 		transform.trans = Globals.wayPoints[activeWayIndex][indexOnPath].trans
 
-		local bot = BotManager:createBot(name, self:getBotTeam(player))
+		local bot = BotManager:createBot(name, self:getBotTeam(player, name))
 		if bot ~= nil then
 			bot:setVarsWay(player, useRandomWay, activeWayIndex, indexOnPath, inverseDirection)
 			self:spawnBot(bot, transform, true)
