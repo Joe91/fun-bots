@@ -9,6 +9,8 @@ function BotManager:__init()
 	self._botInputs = {}
 	self._shooterBots = {}
 
+	self._lastYaw = 0.0
+
 	Events:Subscribe('UpdateManager:Update', self, self._onUpdate)
 	Events:Subscribe('Level:Destroy', self, self._onLevelDestroy)
 	Events:Subscribe('Player:Left', self, self._onPlayerLeft)
@@ -47,6 +49,13 @@ function BotManager:detectBotTeam()
 	end
 	Globals.respawnWayBots 	= Config.respawnWayBots;
 	Globals.attackWayBots 	= Config.attackWayBots;
+	Globals.yawPerFrame 	= self:calcYawPerFrame()
+end
+
+function BotManager:calcYawPerFrame()
+	local dt = 1.0/SharedUtils:GetTickrate();
+	local degreePerDt = Config.maximunYawPerSec * dt;
+	return (degreePerDt / 360.0) * 2 * math.pi
 end
 
 function BotManager:findNextBotName()
@@ -165,8 +174,12 @@ function BotManager:_onSoldierDamage(hook, soldier, info, giverInfo)
 		local bot = self:GetBotByName(soldier.player.name)
 		if bot == nil then
 			if giverInfo.giver == nil then
+				local newGiverInfo = DamageGiverInfo()
 				bot = self:GetBotByName(self._shooterBots[soldier.player.name])
 				if bot ~= nil and bot.player.soldier ~= nil then
+					newGiverInfo.giver = bot.player;
+					--newGiverInfo.weaponUnlock = nil;
+					--newGiverInfo.weaponFiring = nil;
 					if info.damage > 0.09 and info.damage < 0.11 then
 						info.isBulletDamage = true
 						if bot.kit == "Recon" and Config.botWeapon ~= "Pistol" then
@@ -178,11 +191,17 @@ function BotManager:_onSoldierDamage(hook, soldier, info, giverInfo)
 						info.damage = Config.meleeDamageBot
 						info.isBulletDamage = false
 					end
+					--[[info.isBulletDamage = false;
+					info.isExplosionDamage = false;
+					info.isDemolitionDamage = true;
+					info.shouldForceDamage = false;
+					info.isClientDamage = false;--]]
+
 					info.boneIndex = 0
 					info.position = Vec3(soldier.worldTransform.trans.x, soldier.worldTransform.trans.y + 1, soldier.worldTransform.trans.z)
 					info.direction = soldier.worldTransform.trans - bot.player.soldier.worldTransform.trans
 					info.origin = bot.player.soldier.worldTransform.trans
-					hook:Pass(soldier, info, giverInfo)
+					hook:Pass(soldier, info, newGiverInfo)
 				end
 			end
 		end
@@ -221,7 +240,9 @@ function BotManager:_onShootAt(player, botname, ignoreYaw)
 	if bot == nil or bot.player.soldier == nil or player.soldier == nil then
 		return
 	end
-	bot:shootAt(player, ignoreYaw)
+	if bot.player.teamId ~= player.teamId then
+		bot:shootAt(player, ignoreYaw)
+	end
 end
 
 function BotManager:_onLevelDestroy()

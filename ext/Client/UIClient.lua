@@ -88,16 +88,18 @@ function FunBotUIClient:_onUISettings(data)
 	settings:add("ADVANCED", "Boolean", "attackWayBots", Language:I18N("Attack other players"), data.attackWayBots, true, Language:I18N("Bots on paths attack player by default"));
 	settings:add("ADVANCED", "Float", "meleeAttackCoolDown", Language:I18N("Melee Cooldown"), data.meleeAttackCoolDown, 3, Language:I18N("the time a Bot waits before attacking with melee again"));
 	settings:add("ADVANCED", "Boolean", "jumpWhileShooting", Language:I18N("Allow Jump while shooting"), data.jumpWhileShooting, true, Language:I18N("Bots jump over obstacles while shooting"));
+	settings:add("ADVANCED", "Boolean", "jumpWhileMoving", Language:I18N("Allow Jump while moving"), data.jumpWhileMoving, true, Language:I18N("Bots jump while moving. If false, only on obstacles!"));
 
-	settings:add("EXPERT", "Float", "botFirstShotDelay", Language:I18N("First Shot Delay"), data.botFirstShotDelay, 0.3, Language:I18N("delay for first shot"));
+	settings:add("EXPERT", "Float", "botFirstShotDelay", Language:I18N("First Shot Delay"), data.botFirstShotDelay, 0.2, Language:I18N("delay for first shot"));
 	settings:add("EXPERT", "Float", "botMinTimeShootAtPlayer", Language:I18N("Min Time Shoot"), data.botMinTimeShootAtPlayer, 1.0, Language:I18N("the minimum time a Bot shoots at one player"));
 	settings:add("EXPERT", "Float", "botFireModeDuration", Language:I18N("First Shot Delay"), data.botFireModeDuration, 5.0, Language:I18N("the minimum time a Bot tries to shoot a player"));
+	settings:add("EXPERT", "Float", "maximunYawPerSec", Language:I18N("Maximum Degree per Sec"), data.maximunYawPerSec, 720, Language:I18N("in Degree. Maximum Rotaion-Movement of a Bot per second."));
 	settings:add("EXPERT", "Float", "botFireDuration", Language:I18N("Fire Time (Assault/Engi)"), data.botFireDuration, 0.3, Language:I18N("the duration a bot fires (Assault / Engi)"));
 	settings:add("EXPERT", "Float", "botFirePause", Language:I18N("Fire Pause (Assalut/Engi)"), data.botFirePause, 0.3, Language:I18N("the duration a bot waits after fire (Assault / Engi)"));
-	settings:add("EXPERT", "Float", "botFireDurationSupport", Language:I18N("Fire Time (Support)"), data.botFireDurationSupport, 3.0, Language:I18N("the duration a bot fires (Support)"));
-	settings:add("EXPERT", "Float", "botFirePauseSupport", Language:I18N("Fire Pause (Support)"), data.botFirePauseSupport, 1.0, Language:I18N("the duration a Bot waits after fire (Support)"));
-	settings:add("EXPERT", "Float", "botFireCycleRecon", Language:I18N("Fire Cycle (Recon)"), data.botFireCycleRecon, 2.1, Language:I18N("the duration of a FireCycle (Recon)"));
-	settings:add("EXPERT", "Float", "botFireCyclePistol", Language:I18N("Fire Cycle (Pistol)"), data.botFireCyclePistol, 0.3, Language:I18N("the duration of a FireCycle (Pistol)"));
+	settings:add("EXPERT", "Float", "botFireDurationSupport", Language:I18N("Fire Time (Support)"), data.botFireDurationSupport, 2.0, Language:I18N("the duration a bot fires (Support)"));
+	settings:add("EXPERT", "Float", "botFirePauseSupport", Language:I18N("Fire Pause (Support)"), data.botFirePauseSupport, 0.6, Language:I18N("the duration a Bot waits after fire (Support)"));
+	settings:add("EXPERT", "Float", "botFireCycleRecon", Language:I18N("Fire Cycle (Recon)"), data.botFireCycleRecon, 0.4, Language:I18N("the duration of a FireCycle (Recon)"));
+	settings:add("EXPERT", "Float", "botFireCyclePistol", Language:I18N("Fire Cycle (Pistol)"), data.botFireCyclePistol, 0.4, Language:I18N("the duration of a FireCycle (Pistol)"));
 
 	settings:add("OTHER", "Boolean", "disableChatCommands", Language:I18N("Disable Chat Commands"), data.disableChatCommands, true, Language:I18N("if true, no chat commands can be used"));
 	settings:add("OTHER", "Boolean", "traceUsageAllowed", Language:I18N("Allow Trace Usage"), data.traceUsageAllowed, true, Language:I18N("if false, no traces can be recorded, deleted or saved"));
