@@ -139,6 +139,7 @@ function Bot:resetVars()
 	self._invertPathDirection	= false;
 	self._updateTimer			= 0;
 	self._aimUpdateTimer		= 0; --timer sync
+	self._targetPoint			= nil;
 
 	self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 0);
 	self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
@@ -721,6 +722,7 @@ function Bot:_updateMovement()
 					self._wayWaitTimer		= self._wayWaitTimer + StaticConfig.botUpdateCycle;
 					self._wayWaitYawTimer 	= self._wayWaitYawTimer + StaticConfig.botUpdateCycle;
 					self.activeSpeedValue	= 0;
+					self._targetPoint		= nil;
 
 					if self._wayWaitYawTimer > 2 then
 						self._wayWaitYawTimer = 0;
