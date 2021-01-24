@@ -610,15 +610,17 @@ function Bot:_updateMovement()
 					local currentWayPontDistance = self.player.soldier.worldTransform.trans:Distance(point.trans);
 					if currentWayPontDistance > self._lastWayDistance then
 						--TODO: skip one pooint?
+						self._targetPoint = self._nextPoint;
+					else
+						self._targetPoint = point;
 					end
-					self._targetPoint = point;
 
 					local dy					= point.trans.z - self.player.soldier.worldTransform.trans.z;
 					local dx					= point.trans.x - self.player.soldier.worldTransform.trans.x;
 					local distanceFromTarget	= math.sqrt(dx ^ 2 + dy ^ 2);
 					local heightDistance		= math.abs(point.trans.y - self.player.soldier.worldTransform.trans.y);
 
-					if math.abs(currentWayPontDistance - self._lastWayDistance) < 0.01 or self._obstaceSequenceTimer ~= 0 then
+					if math.abs(currentWayPontDistance - self._lastWayDistance) < 0.02 or self._obstaceSequenceTimer ~= 0 then
 						-- try to get around obstacle
 						self.activeSpeedValue = 4; --always try to stand
 
