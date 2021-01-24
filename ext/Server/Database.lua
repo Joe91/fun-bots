@@ -1,7 +1,8 @@
 class('Database');
 
 require('__shared/ArrayMap');
-
+local batches	= ArrayMap();
+	
 DatabaseField = {
 	NULL	= '{::DB:NULL::}',
 	ID		= '{::DB:ID::}',
@@ -14,7 +15,6 @@ DatabaseField = {
 
 function Database:__init()
 	self.lastError	= nil;
-	self.batches	= ArrayMap();
 end
 
 function Database:getLastError()
@@ -133,10 +133,7 @@ end
 function Database:executeBatch()
 	print('Database:executeBatch');
 	
-	for name, value in pairs(self.batch) do
-		print("BATCHED: " .. name);
-		print("       : " .. value);
-	end
+	self:query(batches:join('\n'));
 	
 	print('END BATCH');
 end
@@ -184,8 +181,8 @@ function Database:batchQuery(tableName, parameters, where)
 		end
 	end
 	
-	self.batches:add('INSERT OR IGNORE INTO `' .. tableName .. '` (' .. names:join(', ') .. ') VALUES  (' .. values:join(', ') .. ');');
-	self.batches:add('UPDATE `' .. tableName .. '` SET ' .. fields:join(', ') .. ' `' .. where .. '`=' .. found .. ' LIMIT 1;');
+	batches:add('INSERT OR IGNORE INTO `' .. tableName .. '` (' .. names:join(', ') .. ') VALUES  (' .. values:join(', ') .. ');');
+	batches:add('UPDATE `' .. tableName .. '` SET ' .. fields:join(', ') .. ' `' .. where .. '`=' .. found .. ' LIMIT 1;');
 	
 	return true;
 end
