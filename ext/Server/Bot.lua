@@ -25,6 +25,7 @@ function Bot:__init(player)
 	self._aimUpdateTimer = 0;
 	self._spawnDelayTimer = 0;
 	self._wayWaitTimer = 0;
+	self._wayWaitYawTimer = 0;
 	self._obstaceSequenceTimer = 0;
 	self._shotTimer = 0;
 	self._shootModeTimer = nil;
@@ -718,9 +719,17 @@ function Bot:_updateMovement()
 					end
 				else -- wait mode
 					self._wayWaitTimer		= self._wayWaitTimer + StaticConfig.botUpdateCycle;
+					self._wayWaitYawTimer 	= self._wayWaitYawTimer + StaticConfig.botUpdateCycle;
 					self.activeSpeedValue	= 0;
 
-					-- TODO: Move yaw while waiting?
+					if self._wayWaitYawTimer > 2 then
+						self._wayWaitYawTimer = 0;
+						self._targetYaw = self._targetYaw + 2; -- 120 ° Drehung
+						if self._targetYaw > (math.pi * 2) then
+							self._targetYaw = self._targetYaw - (2 * math.pi)
+						end
+					end
+
 					if self._wayWaitTimer > point.optValue then
 						self._wayWaitTimer		= 0;
 						if self._invertPathDirection then
