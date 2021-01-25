@@ -16,6 +16,7 @@ function Bot:__init(player)
 	self._moveMode = 0;
 	self.kit = "";
 	self.color = "";
+	self.inEnemyTeam = false;
 	self._checkSwapTeam = false;
 	self._respawning = false;
 
@@ -24,6 +25,7 @@ function Bot:__init(player)
 	self._aimUpdateTimer = 0;
 	self._spawnDelayTimer = 0;
 	self._wayWaitTimer = 0;
+	self._wayWaitYawTimer = 0;
 	self._obstaceSequenceTimer = 0;
 	self._shotTimer = 0;
 	self._shootModeTimer = nil;
@@ -137,6 +139,7 @@ function Bot:resetVars()
 	self._invertPathDirection	= false;
 	self._updateTimer			= 0;
 	self._aimUpdateTimer		= 0; --timer sync
+	self._targetPoint			= nil;
 
 	self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 0);
 	self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
@@ -699,7 +702,7 @@ function Bot:_updateMovement()
 					end
 
 					--check for reached target
-					if distanceFromTarget <= StaticConfig.targetDistanceWayPoint and heightDistance <= StaticConfig.targetHeightDistanceWayPoint then
+					if distanceFromTarget <= Config.targetDistanceWayPoint and heightDistance <= StaticConfig.targetHeightDistanceWayPoint then
 						if not useShootWayPoint then
 							if self._invertPathDirection then
 								self._currentWayPoint = activePointIndex - pointIncrement;
@@ -717,9 +720,18 @@ function Bot:_updateMovement()
 					end
 				else -- wait mode
 					self._wayWaitTimer		= self._wayWaitTimer + StaticConfig.botUpdateCycle;
+					self._wayWaitYawTimer 	= self._wayWaitYawTimer + StaticConfig.botUpdateCycle;
 					self.activeSpeedValue	= 0;
+					self._targetPoint		= nil;
 
-					-- TODO: Move yaw while waiting?
+					if self._wayWaitYawTimer > 2 then
+						self._wayWaitYawTimer = 0;
+						self._targetYaw = self._targetYaw + 2; -- 120 ° Drehung
+						if self._targetYaw > (math.pi * 2) then
+							self._targetYaw = self._targetYaw - (2 * math.pi)
+						end
+					end
+
 					if self._wayWaitTimer > point.optValue then
 						self._wayWaitTimer		= 0;
 						if self._invertPathDirection then

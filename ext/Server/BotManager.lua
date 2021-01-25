@@ -20,33 +20,42 @@ function BotManager:__init()
 	Hooks:Install('Soldier:Damage', 1, self, self._onSoldierDamage)
 end
 
-function BotManager:detectBotTeam()
-	local countPlayerTeam = 0;
-	local countPlayers = 0;
+function BotManager:getBotTeam()
+	local botTeam;
+	local countPlayersTeam1 = 0;
+	local countPlayersTeam2 = 0;
 	local players = PlayerManager:GetPlayers()
 	for i = 1, PlayerManager:GetPlayerCount() do
 		if self:GetBotByName(players[i].name) == nil then
-			countPlayers = countPlayers + 1;
-			if players[i].teamId ~= Config.botTeam then
-				countPlayerTeam = countPlayerTeam + 1;
+			if players[i].teamId == TeamId.Team1 then
+				countPlayersTeam1 = countPlayersTeam1 + 1;
+			else
+				countPlayersTeam2 = countPlayersTeam2 + 1;
 			end
 		end
 	end
 
 	-- init global Vars
-	if countPlayerTeam >= countPlayers/2 then
-		if Config.botTeam == TeamId.Team1 and not Config.spawnInSameTeam then
-			Globals.botTeam = TeamId.Team2;
+	if countPlayersTeam1 > countPlayersTeam2 then
+		if  Config.spawnInSameTeam then
+			botTeam = TeamId.Team1;
 		else
-			Globals.botTeam = TeamId.Team1;
+			botTeam = TeamId.Team2;
+		end
+	elseif countPlayersTeam2 > countPlayersTeam1 then
+		if Config.spawnInSameTeam then
+			botTeam = TeamId.Team2;
+		else
+			botTeam = TeamId.Team1;
 		end
 	else
-		if Config.botTeam == TeamId.Team1 and not Config.spawnInSameTeam then
-			Globals.botTeam = TeamId.Team1;
-		else
-			Globals.botTeam = TeamId.Team2;
-		end
+		botTeam = Config.botTeam;
 	end
+
+	return botTeam;
+end
+
+function BotManager:configGlobas()
 	Globals.respawnWayBots 	= Config.respawnWayBots;
 	Globals.attackWayBots 	= Config.attackWayBots;
 	Globals.yawPerFrame 	= self:calcYawPerFrame()
