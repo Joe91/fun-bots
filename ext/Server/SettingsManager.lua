@@ -7,29 +7,31 @@ require('Database');
 function SettingsManager:__init()
 	-- Create Config-Trace
 	Database:createTable('FB_Config_Trace', {
-		DatabaseField.ID,
-		DatabaseField.Text,
+		DatabaseField.PrimaryText,
 		DatabaseField.Text,
 		DatabaseField.Time
 	}, {
-		'ID',
 		'Key',
 		'Value',
 		'Time'
+	}, {
+		'PRIMARY KEY("Key")'
 	});
 
 	-- Create Settings
 	Database:createTable('FB_Settings', {
-		DatabaseField.ID,
-		DatabaseField.Text,
+		DatabaseField.PrimaryText,
 		DatabaseField.Text,
 		DatabaseField.Time
 	}, {
-		'ID',
 		'Key',
 		'Value',
 		'Time'
+	}, {
+		'PRIMARY KEY("Key")'
 	});
+	
+	--Database:query('CREATE UNIQUE INDEX USKey ON FB_Settings(Key);');
 end
 
 function SettingsManager:onLoad()
@@ -49,14 +51,19 @@ function SettingsManager:onLoad()
 	
 		-- If not exists, create
 		if single == nil then
-			print('SettingsManager: ADD (' .. name .. ' = ' .. tostring(value) .. ')');
+			--print('SettingsManager: ADD (' .. name .. ' = ' .. tostring(value) .. ')');
 			
 			Database:insert('FB_Config_Trace', {
-				ID		= DatabaseField.NULL,
 				Key		= name,
 				Value	= value,
 				Time	= Database:now()
 			});
+			
+			--Database:insert('FB_Settings', {
+			--	Key		= name,
+			--	Value	= DatabaseField.NULL,
+			--	Time	= DatabaseField.NULL
+			--});
 
 		-- If exists update Settings, if newer
 		else
@@ -68,9 +75,9 @@ function SettingsManager:onLoad()
 			
 			-- @ToDo check Time / Timestamp, if newer
 			if tostring(value) == tostring(old) then
-				print('SettingsManager: SKIP (' .. name .. ' = ' .. tostring(value) .. ', NOT MODIFIED)');
+				--print('SettingsManager: SKIP (' .. name .. ' = ' .. tostring(value) .. ', NOT MODIFIED)');
 			else
-				print('SettingsManager: UPDATE (' .. name .. ' = ' .. tostring(value) .. ', Old = ' .. tostring(old) .. ')');
+				--print('SettingsManager: UPDATE (' .. name .. ' = ' .. tostring(value) .. ', Old = ' .. tostring(old) .. ')');
 				
 				-- if changed, update SETTINGS SQL
 				Database:update('FB_Config_Trace', {
@@ -88,7 +95,7 @@ function SettingsManager:onLoad()
 	local settings = Database:fetch([[SELECT
 											`Settings`.`Key`,
 											CASE WHEN
-												`Config`.`ID` IS NULL
+												`Config`.`Key` IS NULL
 											THEN
 												`Settings`.`Value`
 											ELSE
@@ -104,13 +111,21 @@ function SettingsManager:onLoad()
 										AND
 											`Config`.`Time` > `Settings`.`Time`;]]);
 
-	for name, value in pairs(settings) do
-		print('Updating Config Variable: ' .. tostring(value.Key) .. ' = ' .. tostring(value.Value) .. ' (' .. tostring(value.Time) .. ')');
-		local tempValue = tonumber(value.Value)
-		if tempValue then --number?
-			Config[value.Key] = tempValue;
-		else --string
-			Config[value.Key] = value.Value;
+	if settings ~= nil then
+		for name, value in pairs(settings) do
+			--print('Updating Config Variable: ' .. tostring(value.Key) .. ' = ' .. tostring(value.Value) .. ' (' .. tostring(value.Time) .. ')');
+			local tempValue = tonumber(value.Value)
+			if tempValue then --number?
+				Config[value.Key] = tempValue;
+			else --string
+				if value.Value == 'true' then
+					Config[value.Key] = true;
+				elseif value.Value == 'false' then
+					Config[value.Key] = false;
+				else
+					Config[value.Key] = value.Value;
+				end
+			end
 		end
 	end
 	
@@ -124,29 +139,40 @@ function SettingsManager:onLoad()
 	end
 end
 
-function SettingsManager:update(name, value, temporary)
+function SettingsManager:update(name, value, temporary, batch)
 	if temporary ~= true then
 		if value == nil then
 			value = DatabaseField.NULL;
 		end
 		
-		local single = Database:single('SELECT * FROM `FB_Settings` WHERE `Key`=\'' .. name .. '\' LIMIT 1');
-	
-		-- If not exists, create
-		if single == nil then
-			Database:insert('FB_Settings', {
-				ID		= DatabaseField.NULL,
-				Key		= name,
-				Value	= value,
-				Time	= Database:now()
-			});
+		-- Use old deprecated querys
+		if batch == false then
+			local single = Database:single('SELECT * FROM `FB_Settings` WHERE `Key`=\'' .. name .. '\' LIMIT 1');
+		
+			-- If not exists, create
+			if single == nil then
+				Database:insert('FB_Settings', {
+					Key		= name,
+					Value	= value,
+					Time	= Database:now()
+				});
+			else
+				Database:update('FB_Settings', {
+					Key		= name,
+					Value	= value,
+					Time	= Database:now()
+				}, 'Key');
+			end
+		
+		-- Use new querys
 		else
-			Database:update('FB_Settings', {
+			Database:batchQuery('FB_Settings', {
 				Key		= name,
 				Value	= value,
 				Time	= Database:now()
 			}, 'Key');
 		end
+			
 		if value == DatabaseField.NULL then
 			value = nil;
 		end
