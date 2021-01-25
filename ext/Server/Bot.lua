@@ -726,23 +726,23 @@ function Bot:_updateMovement()
 					self._targetPoint		= nil;
 
 					-- move around a little
-					if self._wayWaitYawTimer > 7 then
+					if self._wayWaitYawTimer > 6 then
 						self._wayWaitYawTimer = 0;
 						self._targetYaw = self._targetYaw + 1.0; -- 60 ° rotation right
 						if self._targetYaw > (math.pi * 2) then
 							self._targetYaw = self._targetYaw - (2 * math.pi)
-						end
-					elseif self._wayWaitYawTimer > 5 then
-						self._targetYaw = self._targetYaw - 1.0; -- 60 ° rotation left
-						if self._targetYaw < 0 then
-							self._targetYaw = self._targetYaw + (2 * math.pi)
 						end
 					elseif self._wayWaitYawTimer > 4 then
 						self._targetYaw = self._targetYaw - 1.0; -- 60 ° rotation left
 						if self._targetYaw < 0 then
 							self._targetYaw = self._targetYaw + (2 * math.pi)
 						end
-					elseif self._wayWaitYawTimer > 2 then
+					elseif self._wayWaitYawTimer > 3 then
+						self._targetYaw = self._targetYaw - 1.0; -- 60 ° rotation left
+						if self._targetYaw < 0 then
+							self._targetYaw = self._targetYaw + (2 * math.pi)
+						end
+					elseif self._wayWaitYawTimer > 1 then
 						self._targetYaw = self._targetYaw + 1.0; -- 60 ° rotation right
 						if self._targetYaw > (math.pi * 2) then
 							self._targetYaw = self._targetYaw - (2 * math.pi)
