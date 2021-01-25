@@ -138,8 +138,9 @@ function Database:update(tableName, parameters, where)
 end
 
 function Database:executeBatch()
-	self:query('DROP TABLE IF EXISTS `FB_Settings`');
-	self:query(batched .. batches:join(' '));
+	self:query('DELETE FROM `FB_Settings`');
+	self:query(batched .. batches:join(', '));
+	print(self:getError());
 end
 
 function Database:batchQuery(tableName, parameters, where)
@@ -187,7 +188,7 @@ function Database:batchQuery(tableName, parameters, where)
 
 	--batches:add('UPDATE `' .. tableName .. '` SET ' .. fields:join(', ') .. ' WHERE `' .. where .. '`=\'' .. found .. '\'');
 	--batches:add('INSERT OR REPLACE INTO ' .. tableName .. ' (' .. names:join(', ') .. ') VALUES (' .. values:join(', ') .. ')');
-	batched = 'INSERT OR REPLACE INTO ' .. tableName .. ' (' .. names:join(', ') .. ') VALUES ';
+	batched = 'INSERT INTO ' .. tableName .. ' (' .. names:join(', ') .. ') VALUES ';
 	batches:add('(' .. values:join(', ') .. ')');
 
 	return true;
