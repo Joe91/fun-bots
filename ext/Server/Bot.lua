@@ -601,6 +601,7 @@ function Bot:_updateMovement()
 
 				if (point.speedMode) > 0 then -- movement
 					self._wayWaitTimer			= 0;
+					self._wayWaitYawTimer		= 0;
 					self.activeSpeedValue		= point.speedMode; --speed
 					local dy					= point.trans.z - self.player.soldier.worldTransform.trans.z;
 					local dx					= point.trans.x - self.player.soldier.worldTransform.trans.x;
@@ -724,9 +725,25 @@ function Bot:_updateMovement()
 					self.activeSpeedValue	= 0;
 					self._targetPoint		= nil;
 
-					if self._wayWaitYawTimer > 2 then
+					-- move around a little
+					if self._wayWaitYawTimer > 7 then
 						self._wayWaitYawTimer = 0;
-						self._targetYaw = self._targetYaw + 2; -- 120 ° Drehung
+						self._targetYaw = self._targetYaw + 1.0; -- 60 ° rotation right
+						if self._targetYaw > (math.pi * 2) then
+							self._targetYaw = self._targetYaw - (2 * math.pi)
+						end
+					elseif self._wayWaitYawTimer > 5 then
+						self._targetYaw = self._targetYaw - 1.0; -- 60 ° rotation left
+						if self._targetYaw < 0 then
+							self._targetYaw = self._targetYaw + (2 * math.pi)
+						end
+					elseif self._wayWaitYawTimer > 4 then
+						self._targetYaw = self._targetYaw - 1.0; -- 60 ° rotation left
+						if self._targetYaw < 0 then
+							self._targetYaw = self._targetYaw + (2 * math.pi)
+						end
+					elseif self._wayWaitYawTimer > 2 then
+						self._targetYaw = self._targetYaw + 1.0; -- 60 ° rotation right
 						if self._targetYaw > (math.pi * 2) then
 							self._targetYaw = self._targetYaw - (2 * math.pi)
 						end
