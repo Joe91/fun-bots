@@ -2,18 +2,22 @@ class('Database');
 
 require('__shared/ArrayMap');
 local batches	= ArrayMap();
+local batched	= '';
 	
 DatabaseField = {
-	NULL	= '{::DB:NULL::}',
-	ID		= '{::DB:ID::}',
-	Text	= '{::DB:TEXT::}',
-	Time	= '{::DB:TIME::}',
-	Integer	= '{::DB:INTEGER::}',
-	Float	= '{::DB:FLOAT::}',
-	Boolean	= '{::DB:BOOLEAN::}'
+	NULL		= '{::DB:NULL::}',
+	ID			= '{::DB:ID::}',
+	Text		= '{::DB:TEXT::}',
+	Time		= '{::DB:TIME::}',
+	Integer		= '{::DB:INTEGER::}',
+	Float		= '{::DB:FLOAT::}',
+	Boolean		= '{::DB:BOOLEAN::}',
+	PrimaryText	= '{::DB:TEXT:PRIMARY::}',
 };
 
 function Database:__init()
+	SQL:Open();
+	
 	self.lastError	= nil;
 end
 
@@ -30,11 +34,6 @@ function Database:getError()
 end
 
 function Database:query(query, parameters)
-	if not SQL:Open() then
-		self.lastError = 'Can\'t open mod.db!';
-		return nil;
-	end
-
 	-- @ToDo build query with given parameters
 	local result = SQL:Query(query);
 
@@ -43,22 +42,23 @@ function Database:query(query, parameters)
 		return nil;
 	end
 
-	SQL:Close();
+	--SQL:Close();
 
 	return result;
 end
 
-function Database:createTable(tableName, definitions, names)
-	local entries = ArrayMap();
-
+function Database:createTable(tableName, definitions, names, additional)
+	local entries		= ArrayMap();
+	local additionals	= ArrayMap();
+	
 	for index, value in ipairs(definitions) do
 		local name = names[index];
 
-		if value == DatabaseField.ID then
-			entries:add(name .. ' INTEGER PRIMARY KEY AUTOINCREMENT');
-
-		elseif value == DatabaseField.Text then
+		if value == DatabaseField.Text then
 			entries:add(name .. ' TEXT');
+			
+		elseif value == DatabaseField.PrimaryText then
+			entries:add(name .. ' TEXT UNIQUE');
 
 		elseif value == DatabaseField.Integer then
 			entries:add(name .. ' INTEGER');
@@ -71,8 +71,15 @@ function Database:createTable(tableName, definitions, names)
 
 		end
 	end
+	
+	if additional ~= nil then
+		for index, value in pairs(additional) do
+			entries:add(value);
+			additionals:add(value);
+		end
+	end
 
-	return self:query('CREATE TABLE IF NOT EXISTS ' .. tableName .. ' (' .. entries:join(', ') .. ')');
+	return self:query('CREATE TABLE IF NOT EXISTS ' .. tableName .. ' (' .. entries:join(', ') .. ')');	
 end
 
 function Database:single(query)
@@ -127,63 +134,62 @@ function Database:update(tableName, parameters, where)
 	end
 
 	print('UPDATE `' .. tableName .. '` SET ' .. fields:join(',') .. ' WHERE `' .. where .. '`=' .. found);
-	return self:query('UPDATE `' .. tableName .. '` SET ' .. fields:join(', ') .. ' WHERE `' .. where .. '`=' .. found);
+	return self:query('UPDATE `' .. tableName .. '` SET ' .. fields:join(', ') .. ' WHERE `' .. where .. '`=\'' .. found .. '\'');
 end
 
 function Database:executeBatch()
-	print('Database:executeBatch');
-	
-	self:query(batches:join('\n'));
-	
-	print('END BATCH');
+	self:query('DROP TABLE IF EXISTS `FB_Settings`');
+	self:query(batched .. batches:join(' '));
 end
 
 function Database:batchQuery(tableName, parameters, where)
-	local fields	= ArrayMap();
 	local names		= ArrayMap();
 	local values	= ArrayMap();
+	local fields	= ArrayMap();
 	local found		= nil;
-	
+
 	for name, value in pairs(parameters) do
 		names:add('`' .. name .. '`');
-		
+
 		if value == nil then
-			value = 'NULL';
 			values:add('NULL');
+			value = 'NULL';
 		
 		elseif value == self:now() then
-			value = 'CURRENT_TIMESTAMP';
 			values:add('CURRENT_TIMESTAMP');
+			value = 'CURRENT_TIMESTAMP';
 
 		elseif value == DatabaseField.NULL then
-			value = 'NULL';
 			values:add('NULL');
+			value = 'NULL';
 			
 		elseif tostring(value) == 'true' or value == true then
-			value = '\'true\'';
 			values:add('\'true\'');
+			value = '\'true\'';
 			
 		elseif tostring(value) == 'false' or value == false then
-			value = '\'false\'';
 			values:add('\'false\'');
+			value = '\'false\'';
 			
 		else
-			value = '\'' .. tostring(value) .. '\'';
 			values:add('\'' .. tostring(value) .. '\'');
+			value = tostring(value);
 		end
 		
 		if where == name then
 			found = value;
 		end
 		
-		if name ~= 'ID' then
-			fields:add(' `' .. name .. '`=' .. value .. '');
+		if where ~= name then
+			fields:add('`' .. name .. '`=' .. value .. '');
 		end
 	end
-	
-	batches:add('INSERT OR IGNORE INTO `' .. tableName .. '` (' .. names:join(', ') .. ') VALUES  (' .. values:join(', ') .. ');');
-	batches:add('UPDATE `' .. tableName .. '` SET ' .. fields:join(', ') .. ' `' .. where .. '`=' .. found .. ' LIMIT 1;');
-	
+
+	--batches:add('UPDATE `' .. tableName .. '` SET ' .. fields:join(', ') .. ' WHERE `' .. where .. '`=\'' .. found .. '\'');
+	--batches:add('INSERT OR REPLACE INTO ' .. tableName .. ' (' .. names:join(', ') .. ') VALUES (' .. values:join(', ') .. ')');
+	batched = 'INSERT OR REPLACE INTO ' .. tableName .. ' (' .. names:join(', ') .. ') VALUES ';
+	batches:add('(' .. values:join(', ') .. ')');
+
 	return true;
 end
 
