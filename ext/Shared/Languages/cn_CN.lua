@@ -85,7 +85,7 @@ Language:add(code, "Password protection of these Mod", "此Mod的保护密码");
 Language:add(code, "Trace %d started", "路径 %d 已开始");
 Language:add(code, "Trace done", "路径完成");
 Language:add(code, "Clearing Trace %d", "清除路径 %d");
-Language:add(code, "Clearing all traces", "清除所有路径 %d");
+Language:add(code, "Clearing all traces", "清除所有路径");
 Language:add(code, "Trying to save paths check console...", "尝试保存路径,请检查控制台...");
 Language:add(code, "Failed to execute query: %s", "无法执行查询：%s");
 Language:add(code, "The waypoint list has been saved", "路径点列表已保存");
