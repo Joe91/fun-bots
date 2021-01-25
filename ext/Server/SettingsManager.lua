@@ -122,7 +122,7 @@ function SettingsManager:onLoad()
 					Config[value.Key] = true;
 				elseif value.Value == 'false' then
 					Config[value.Key] = false;
-				end
+				else
 					Config[value.Key] = value.Value;
 				end
 			end
