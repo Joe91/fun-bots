@@ -304,8 +304,8 @@ function BotSpawner:getKitApperanceCustomization(team, kit, color)
 	local appearance = nil
 	local soldierCustomization = CustomizeSoldierData()
 
-	local m1911 = ResourceManager:SearchForDataContainer('Weapons/M1911/U_M1911_Tactical')
-	local knife = ResourceManager:SearchForDataContainer('Weapons/Knife/U_Knife')
+	local m1911 = ResourceManager:SearchForDataContainer('Weapons/M1911/U_M1911_Lit')
+	local knife = ResourceManager:SearchForDataContainer('Weapons/XP2_Knife_RazorBlade/U_Knife_Razor')
 
 	soldierCustomization.activeSlot = WeaponSlot.WeaponSlot_0
 	soldierCustomization.removeAllExistingWeapons = true

@@ -42,6 +42,7 @@ function Bot:__init(player)
 	self._targetYaw = 0;
 	self._targetPoint = nil;
 	self._pathIndex = 0;
+	self._meleeActive = false;
 	self._lastWayDistance = 0;
 	self._invertPathDirection = false;
 	self._obstacleRetryCounter = 0;
@@ -140,6 +141,7 @@ function Bot:resetVars()
 	self._updateTimer			= 0;
 	self._aimUpdateTimer		= 0; --timer sync
 	self._targetPoint			= nil;
+	self._meleeActive 			= false;
 
 	self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 0);
 	self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
@@ -370,7 +372,7 @@ end
 function Bot:_updateShooting()
 	if self.player.alive and self._shoot then
 		--select weapon-slot TODO: keep button pressed or not?
-		if self._obstaceSequenceTimer == 0 and self._shootModeTimer == nil then
+		if not self._meleeActive then
 			if self.player.soldier.weaponsComponent ~= nil then
 				if Config.botWeapon == "Knive" then
 					if self.player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_7 then
@@ -407,25 +409,24 @@ function Bot:_updateShooting()
 				--self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 1) --does not work.
 
 				--check for melee attack
-				if Config.meleeAttackIfClose and self._shootPlayer.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans) < 1 then
-					if self._meleeCooldownTimer <= 0 then
-						--self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 1);
-						self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 1);
-						self._meleeCooldownTimer = Config.meleeAttackCoolDown;
-						Events:DispatchLocal("ServerDamagePlayer", self._shootPlayer.name, self.player.name, true);
-					else
-						self._meleeCooldownTimer = self._meleeCooldownTimer - StaticConfig.botUpdateCycle;
+				if Config.meleeAttackIfClose and not self._meleeActive and self._shootPlayer.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans) < 1 and self._meleeCooldownTimer <= 0 then
+					self._meleeActive = true;
+					self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
+					self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 1);
+					self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 1);
+					self._meleeCooldownTimer = Config.meleeAttackCoolDown;
+					Events:DispatchLocal("ServerDamagePlayer", self._shootPlayer.name, self.player.name, true);
+				else
+					self._meleeCooldownTimer = self._meleeCooldownTimer - StaticConfig.botUpdateCycle;
 
-						if self._meleeCooldownTimer < 0 then
-							self._meleeCooldownTimer = 0;
-						end
+					if self._meleeCooldownTimer < 0 then
+						self._meleeCooldownTimer = 0;
+					end
 
-						--self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 0);
+					if self._meleeCooldownTimer < (Config.meleeAttackCoolDown - 1.0) then
+						self._meleeActive = false;
 						self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0);
 					end
-				else
-					--self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 0);
-					self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0);
 				end
 
 				--trace way back
@@ -448,7 +449,7 @@ function Bot:_updateShooting()
 					if self._shotTimer >= Config.botFireCyclePistol then
 						self._shotTimer	= 0;
 					end
-					if self._shotTimer >= (Config.botFireCyclePistol / 2) then
+					if self._shotTimer >= (Config.botFireCyclePistol / 2) or self._meleeActive then
 						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
 					else
 						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
@@ -461,7 +462,7 @@ function Bot:_updateShooting()
 						if self._shotTimer >= (Config.botFireDurationSupport + Config.botFirePauseSupport) then
 							self._shotTimer	= 0;
 						end
-						if self._shotTimer >= Config.botFireDurationSupport then
+						if self._shotTimer >= Config.botFireDurationSupport or self._meleeActive then
 							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
 						elseif self._shotTimer >= 0 then
 							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
@@ -470,7 +471,7 @@ function Bot:_updateShooting()
 						if self._shotTimer >= Config.botFireCycleRecon then
 							self._shotTimer	= 0;
 						end
-						if self._shotTimer >= (Config.botFireCycleRecon / 2) then
+						if self._shotTimer >= (Config.botFireCycleRecon / 2) or self._meleeActive then
 							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
 						elseif self._shotTimer >= 0 then
 							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
@@ -479,7 +480,7 @@ function Bot:_updateShooting()
 						if self._shotTimer >= (Config.botFireDuration + Config.botFirePause) then
 							self._shotTimer	= 0;
 						end
-						if self._shotTimer >= Config.botFireDuration then
+						if self._shotTimer >= Config.botFireDuration or self._meleeActive then
 							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
 						elseif self._shotTimer >= 0 then
 							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
@@ -630,19 +631,18 @@ function Bot:_updateMovement()
 							self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
 							self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0);
 
-						elseif self._obstaceSequenceTimer > 2.0 then --step 4 - repeat afterwards
+						elseif self._obstaceSequenceTimer > 2.4 then --step 4 - repeat afterwards
 							self._obstaceSequenceTimer = 0;
+							self._meleeActive = false;
 							self._obstacleRetryCounter = self._obstacleRetryCounter + 1;
+							self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
 							self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0);
 							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0.0);
 						
-						elseif self._obstaceSequenceTimer > 1.8 then --step 3
-							self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
-							if self._obstacleRetryCounter == 1 then
-								self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1.0);
-							else
-								self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 1); --maybe a fence?
-							end
+						elseif self._obstaceSequenceTimer > 1.0 then --step 3
+							self._meleeActive = true;
+							self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 1);
+							self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 1); --maybe a fence?
 							
 						elseif self._obstaceSequenceTimer > 0.4 then --step 2
 							self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
@@ -661,13 +661,15 @@ function Bot:_updateMovement()
 
 						self._obstaceSequenceTimer = self._obstaceSequenceTimer + StaticConfig.botUpdateCycle;
 
-						if self._obstacleRetryCounter >= 2 then --tried twice, try next waypoint
+						if self._obstacleRetryCounter >= 1 then --try next waypoint
 							self._obstacleRetryCounter	= 0;
+							self._meleeActive 			= false;
 							distanceFromTarget			= 0;
 							heightDistance				= 0;
 							pointIncrement				= 5; -- go 5 points further
 						end
 					else
+						self._meleeActive = false;
 						self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
@@ -717,10 +719,12 @@ function Bot:_updateMovement()
 							end
 						end
 						self._obstaceSequenceTimer	= 0;
+						self._meleeActive = false;
 						self._lastWayDistance		= 1000;
 					end
 				else -- wait mode
 					self._wayWaitTimer		= self._wayWaitTimer + StaticConfig.botUpdateCycle;
+					local lastYawTimer 		= self._wayWaitYawTimer
 					self._wayWaitYawTimer 	= self._wayWaitYawTimer + StaticConfig.botUpdateCycle;
 					self.activeSpeedValue	= 0;
 					self._targetPoint		= nil;
@@ -732,17 +736,17 @@ function Bot:_updateMovement()
 						if self._targetYaw > (math.pi * 2) then
 							self._targetYaw = self._targetYaw - (2 * math.pi)
 						end
-					elseif self._wayWaitYawTimer > 4 then
+					elseif self._wayWaitYawTimer >= 4 and lastYawTimer < 4 then
 						self._targetYaw = self._targetYaw - 1.0; -- 60 ° rotation left
 						if self._targetYaw < 0 then
 							self._targetYaw = self._targetYaw + (2 * math.pi)
 						end
-					elseif self._wayWaitYawTimer > 3 then
+					elseif self._wayWaitYawTimer >= 3 and lastYawTimer < 3 then
 						self._targetYaw = self._targetYaw - 1.0; -- 60 ° rotation left
 						if self._targetYaw < 0 then
 							self._targetYaw = self._targetYaw + (2 * math.pi)
 						end
-					elseif self._wayWaitYawTimer > 1 then
+					elseif self._wayWaitYawTimer >= 1 and lastYawTimer < 1 then
 						self._targetYaw = self._targetYaw + 1.0; -- 60 ° rotation right
 						if self._targetYaw > (math.pi * 2) then
 							self._targetYaw = self._targetYaw - (2 * math.pi)
