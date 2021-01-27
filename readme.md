@@ -8,7 +8,7 @@ AI for TDM-bots with some functions:
 	- while holding your secondary weapon, bot will pause in this position
 
 
-This mod is based on the Mod [BotSpawn](https://github.com/J4nssent/VU-Mods/tree/master/BotSpawn "Original Mod by Jassent") by [Jassent](https://github.com/J4nssent "Jassent").
+This mod is inspired by the mod [BotSpawn](https://github.com/J4nssent/VU-Mods/tree/master/BotSpawn "Original Mod by Jassent") by [Jassent](https://github.com/J4nssent "Jassent").
 It provids lots of ways to play and mess with bots. Also with multible Players at once.
 
 The following TDM-Maps (Or TDM QC) are supported right now:  
