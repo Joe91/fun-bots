@@ -61,11 +61,21 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 		local respawning		= not Globals.respawnWayBots;
 		Globals.respawnWayBots	= respawning;
 		BotManager:setOptionForAll('respawn', respawning);
+		if respawning then
+			ChatManager:Yell(Language:I18N('Bot respawn activated!', request.action), 2.5);
+		else
+			ChatManager:Yell(Language:I18N('Bot respawn deactivated!', request.action), 2.5);
+		end
 
 	elseif request.action == 'bot_attack' then  --toggle this function
 		local attack			= not Globals.attackWayBots;
 		Globals.attackWayBots	= attack;
 		BotManager:setOptionForAll('shoot', attack);
+		if attack then
+			ChatManager:Yell(Language:I18N('Bots will attack!', request.action), 2.5);
+		else
+			ChatManager:Yell(Language:I18N('Bots will not attack!', request.action), 2.5);
+		end
 
 	-- Trace
 	elseif request.action == 'trace_start' then
