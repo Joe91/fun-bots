@@ -12,26 +12,26 @@ This mod is based on the Mod [BotSpawn](https://github.com/J4nssent/VU-Mods/tree
 It provids lots of ways to play and mess with bots. Also with multible Players at once.
 
 The following TDM-Maps (Or TDM QC) are supported right now:
-MP_001
-MP_011
-MP_012
-MP_017
-MP_018
-MP_Subway
-XP1_003
-XP2_Factory
-XP2_Office
-XP2_Palace
-XP3_Alborz
-XP3_Desert
-XP3_Shield
-XP3_Valley
-XP4_FD
-XP3_Parl
-XP5_001
-XP5_002
-XP5_003
-XP5_004
+MP_001  
+MP_011  
+MP_012  
+MP_017  
+MP_018  
+MP_Subway  
+XP1_003  
+XP2_Factory  
+XP2_Office  
+XP2_Palace  
+XP3_Alborz  
+XP3_Desert  
+XP3_Shield  
+XP3_Valley  
+XP4_FD  
+XP3_Parl  
+XP5_001  
+XP5_002  
+XP5_003  
+XP5_004  
 
 
 Just press **F12** for the ingame menu!
