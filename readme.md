@@ -41,7 +41,7 @@ Feel free to contribute or improve ;-)
 If you have any questions or problems just ask them on Discord (Joe_91#5467) or create an issue
 
 ## NEW: Possible Options for the UI
-Just press **F12** to open the Menu
+Just press **F12** to open the Menu. Default Password is **fun**.
 
 ### Bot Menu
 - SpawnBots
