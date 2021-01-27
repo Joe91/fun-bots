@@ -50,18 +50,17 @@ Just press **F12** to open the Menu. Default Password is **fun**.
 	- Amount of Bots
 - killall
 - kickall
-- kickTeam (1 / 2)
-- kickNumber (with Number)
 - respawn (0/1)
 - shoot (0/1)
 
 ### Waypoint Menu
 - Start Trace (either 0 or fixed index - if 0, the next free slot is used)
+(Primary weapon = record movement, secondary weapon = record pause)
 - End Trace
 - Clear Trace (with Index)
 - Clear all traces
 - Save traces
-- (spawnBotsOnWay (with Index)) optional. we can optionaly add this later
+- spawn 1 Bot On Way (with trace index)
 
 ### Settings Menu
 Lots and lots of stuff :-)
