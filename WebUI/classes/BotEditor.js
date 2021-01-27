@@ -8,6 +8,11 @@ const BotEditor = (new function BotEditor() {
 	this.__constructor = function __constructor() {
 		console.log('Init BotEditor UI (v' + VERSION + ') by https://github.com/Bizarrus.');
 
+		/* Fix Views */
+		[].map.call(document.querySelectorAll('ui-view'), function(view) {
+			view.dataset.show = false;
+		}.bind(this));
+
 		this.bindMouseEvents();
 		this.bindKeyboardEvents();
 	};
@@ -79,6 +84,9 @@ const BotEditor = (new function BotEditor() {
 				break;
 				
 				/* Exit */
+				case 'exit':
+					WebUI.Call('DispatchEventLocal', 'UI_Toggle');
+				break;
 				case 'close':
 					/* Check if some Views visible */
 					let views_opened = 0;
@@ -98,6 +106,11 @@ const BotEditor = (new function BotEditor() {
 					/* Otherwise hide current view */
 					let view	= Utils.getClosest(event.target, 'ui-view');
 					this.hide(view.dataset.name);
+					
+					/* Close by password */
+					if(view.dataset.name == 'password') {
+						WebUI.Call('DispatchEventLocal', 'UI_Toggle');
+					}
 				break;
 
 				/* Bots */
