@@ -408,6 +408,14 @@ function FunBotUIServer:_writeSettings(player, request)
 		end
 	end
 
+	if request.targetDistanceWayPoint ~= nil then
+		local tempValue = tonumber(request.targetDistanceWayPoint);
+
+		if tempValue >= 0 and tempValue <= 10 then
+			SettingsManager:update('targetDistanceWayPoint', tempValue, temporary);
+			Globals.yawPerFrame = BotManager:calcYawPerFrame();
+		end
+	end
 
 	if request.botFireDuration ~= nil then
 		local tempValue = tonumber(request.botFireDuration);

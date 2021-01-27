@@ -18,7 +18,7 @@ git remote set-url origin https://${GITHUB_TOKEN}@github.com/Joe91/fun-bots.git
 
 
 # Check out Branch
-git checkout fun-bots-bizzi
+git checkout master
 
 # Add files
 git add WebUI/languages/DEFAULT.js
@@ -30,4 +30,4 @@ git status
 
 # Check difference otherwise commit and push
 git diff-index --quiet HEAD || git commit -m "[AutoUpdate] Default Language"
-git push origin fun-bots-bizzi
+git push origin master

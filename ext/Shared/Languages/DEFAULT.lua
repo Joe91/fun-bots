@@ -62,6 +62,8 @@ Language:add(code, "the minimum time a Bot shoots at one player", "");
 Language:add(code, "the minimum time a Bot tries to shoot a player", "");
 Language:add(code, "Maximum Degree per Sec", "");
 Language:add(code, "in Degree. Maximum Rotaion-Movement of a Bot per second.", "");
+Language:add(code, "Target Distance Way-Point", "");
+Language:add(code, "distance the bots have to reach to continue with next Waypoint.", "");
 Language:add(code, "Fire Time (Assault/Engi)", "");
 Language:add(code, "the duration a bot fires (Assault / Engi)", "");
 Language:add(code, "Fire Pause (Assalut/Engi)", "");
