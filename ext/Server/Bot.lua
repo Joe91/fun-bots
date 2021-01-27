@@ -28,7 +28,7 @@ function Bot:__init(player)
 	self._wayWaitYawTimer = 0;
 	self._obstaceSequenceTimer = 0;
 	self._shotTimer = 0;
-	self._shootModeTimer = nil;
+	self._shootModeTimer = 0;
 	self._attackModeMoveTimer = 0;
 	self._meleeCooldownTimer = 0;
 	self._shootTraceTimer = 0;
@@ -108,7 +108,7 @@ function Bot:shootAt(player, ignoreYaw)
 
 	if dYaw < fovHalf or ignoreYaw then
 		if self._shoot then
-			if self._shootModeTimer == nil or self._shootModeTimer > Config.botMinTimeShootAtPlayer then
+			if self._shootPlayer == nil or self._shootModeTimer > Config.botMinTimeShootAtPlayer then
 				self._shootModeTimer	= 0;
 				self._shootPlayer		= player;
 				self._shotTimer			= 0;
@@ -256,7 +256,7 @@ function Bot:resetSpawnVars()
 	self._lastWayDistance		= 1000;
 	self._shootPlayer			= nil;
 	self._lastShootPlayer		= nil;
-	self._shootModeTimer		= nil;
+	self._shootModeTimer		= 0;
 	self._meleeCooldownTimer	= 0;
 	self._shootTraceTimer		= 0;
 	self._attackModeMoveTimer	= 0;
@@ -502,7 +502,7 @@ function Bot:_updateShooting()
 			self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0);
 			self._shootPlayer		= nil;
 			self._lastShootPlayer	= nil;
-			self._shootModeTimer	= nil;
+			self._shootModeTimer	= 0;
 		end
 	end
 end
