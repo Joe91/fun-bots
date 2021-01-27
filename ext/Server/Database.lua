@@ -15,9 +15,7 @@ DatabaseField = {
 	PrimaryText	= '{::DB:TEXT:PRIMARY::}',
 };
 
-function Database:__init()
-	SQL:Open();
-	
+function Database:__init()	
 	self.lastError	= nil;
 end
 
@@ -34,15 +32,17 @@ function Database:getError()
 end
 
 function Database:query(query, parameters)
+	SQL:Open();
 	-- @ToDo build query with given parameters
 	local result = SQL:Query(query);
 
 	if not result then
 		self.lastError = 'Failed to execute query: ' .. self:getError();
+		SQL:Close();
 		return nil;
 	end
 
-	--SQL:Close();
+	SQL:Close();
 
 	return result;
 end
