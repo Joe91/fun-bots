@@ -80,7 +80,24 @@ const BotEditor = (new function BotEditor() {
 				
 				/* Exit */
 				case 'close':
-					WebUI.Call('DispatchEventLocal', 'UI_Toggle');
+					/* Check if some Views visible */
+					let views_opened = 0;
+					
+					[].map.call(document.querySelectorAll('ui-view'), function(view) {
+						if(view.dataset.show) {
+							++views_opened;
+						}
+					});
+					
+					/* Close completely if only one view is visible */
+					if(views_opened == 1) {
+						WebUI.Call('DispatchEventLocal', 'UI_Toggle');
+						return;
+					}
+					
+					/* Otherwise hide current view */
+					let view	= Utils.getClosest(event.target, 'ui-view');
+					this.hide(view.dataset.name);
 				break;
 
 				/* Bots */
