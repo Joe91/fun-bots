@@ -419,19 +419,19 @@ function BotSpawner:_getSpawnBotKit()
 	--find out, if possible
 	local kitCount = BotManager:getKitCount(botKit);
 	if botKit == "Assault" then
-		if Config.maxAssaultBots >= 0 and kitCount > Config.maxAssaultBots then
+		if Config.maxAssaultBots >= 0 and kitCount >= Config.maxAssaultBots then
 			changeKit = true;
 		end
 	elseif botKit == "Engineer" then
-		if Config.maxEngineerBots >= 0 and kitCount > Config.maxEngineerBots then
+		if Config.maxEngineerBots >= 0 and kitCount >= Config.maxEngineerBots then
 			changeKit = true;
 		end
 	elseif botKit == "Support" then
-		if Config.maxSupportBots >= 0 and kitCount > Config.maxSupportBots then
+		if Config.maxSupportBots >= 0 and kitCount >= Config.maxSupportBots then
 			changeKit = true;
 		end
 	else -- botKit == "Support"
-		if Config.maxReconBots >= 0 and kitCount > Config.maxReconBots then
+		if Config.maxReconBots >= 0 and kitCount >= Config.maxReconBots then
 			changeKit = true;
 		end
 	end
