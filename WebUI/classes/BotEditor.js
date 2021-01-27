@@ -84,7 +84,7 @@ const BotEditor = (new function BotEditor() {
 					let views_opened = 0;
 					
 					[].map.call(document.querySelectorAll('ui-view'), function(view) {
-						if(view.dataset.show) {
+						if(view.dataset.show && view.dataset.name != 'toolbar') {
 							++views_opened;
 						}
 					});
