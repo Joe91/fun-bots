@@ -438,16 +438,16 @@ function BotSpawner:_getSpawnBotKit()
 
 	if changeKit then
 		local availableKitList = {};
-		if (Config.maxAssaultBots == -1) and true or (BotManager:getKitCount("Assault") < Config.maxAssaultBots) then
+		if (Config.maxAssaultBots == -1) or (BotManager:getKitCount("Assault") < Config.maxAssaultBots) then
 			table.insert(availableKitList, "Assault")
 		end
-		if (Config.maxEngineerBots == -1) and true or (BotManager:getKitCount("Engineer") < Config.maxEngineerBots) then
+		if (Config.maxEngineerBots == -1) or (BotManager:getKitCount("Engineer") < Config.maxEngineerBots) then
 			table.insert(availableKitList, "Engineer")
 		end
-		if (Config.maxSupportBots == -1) and true or (BotManager:getKitCount("Support") < Config.maxSupportBots) then
+		if (Config.maxSupportBots == -1) or (BotManager:getKitCount("Support") < Config.maxSupportBots) then
 			table.insert(availableKitList, "Support")
 		end
-		if(Config.maxReconBots == -1) and true or (BotManager:getKitCount("Recon") < Config.maxReconBots) then
+		if(Config.maxReconBots == -1) or (BotManager:getKitCount("Recon") < Config.maxReconBots) then
 			table.insert(availableKitList, "Recon")
 		end
 
