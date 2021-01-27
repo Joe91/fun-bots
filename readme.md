@@ -11,7 +11,8 @@ AI for TDM-bots with some functions:
 This mod is based on the Mod [BotSpawn](https://github.com/J4nssent/VU-Mods/tree/master/BotSpawn "Original Mod by Jassent") by [Jassent](https://github.com/J4nssent "Jassent").
 It provids lots of ways to play and mess with bots. Also with multible Players at once.
 
-The following TDM-Maps (Or TDM QC) are supported right now:
+The following TDM-Maps (Or TDM QC) are supported right now:  
+
 MP_001  
 MP_011  
 MP_012  
