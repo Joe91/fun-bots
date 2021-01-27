@@ -1,18 +1,17 @@
 # fun-bots
 
-Simple AI for TDM-bots with some functions:
+AI for TDM-bots with some functions:
 - Bots can walk around on paths and shoot at player
 - You can record you own paths
 	- while holding your primary weapon, all movement is recorded
 	- recording includes jumping, running, walking, couching, ...
 	- while holding your secondary weapon, bot will pause in this position
-- You can spwan static bots (tower, line or grid)
 
 
 This mod is based on the Mod [BotSpawn](https://github.com/J4nssent/VU-Mods/tree/master/BotSpawn "Original Mod by Jassent") by [Jassent](https://github.com/J4nssent "Jassent").
-It provieds lots of ways to play and mess with bots. Also with multible Players at once.
+It provids lots of ways to play and mess with bots. Also with multible Players at once.
 
-The following TDM-Maps are supported right now:
+The following TDM-Maps (Or TDM QC) are supported right now:
 MP_001
 MP_011
 MP_012
@@ -56,7 +55,7 @@ Just press **F12** to open the Menu
 - shoot (0/1)
 
 ### Waypoint Menu
-- Start Trace (either 0 or fixed index)
+- Start Trace (either 0 or fixed index - if 0, the next free slot is used)
 - End Trace
 - Clear Trace (with Index)
 - Clear all traces
@@ -64,16 +63,13 @@ Just press **F12** to open the Menu
 - (spawnBotsOnWay (with Index)) optional. we can optionaly add this later
 
 ### Settings Menu
-- spawnInSameTeam
-- respawnWayBots
-- bulletDamageBot
-- bulletDamageBotSniper
-- meleeDamageBot
-- meleeAttackIfClose
-- shootBackIfHit
-- botAimWorsening -- for difficulty: 0 = no offset (hard), 1 or greater = more sway (easy). Restart of round neededs
-- botKit -- 0 = random, 1 = assault, 2 = engineer, 3 = support, 4 = recon
-- botColor -- 0 = random, see Colors
+Lots and lots of stuff :-)
+Be carefull what you modify ;-)
+
+### Other Menu
+- change password
+- activate Chat-Commands
+- change Language
 
 ### :grey_exclamation: Commands
 A full list of available commands can be found here: [/wiki/Commands](https://github.com/Joe91/fun-bots/wiki/Commands)
