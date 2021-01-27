@@ -42,19 +42,39 @@ function Language:add(code, string, translation)
 	self._translations[code][string] = translation;
 end
 
-function Language:I18N(string, ...)
-	-- @ToDo check if language-file exists and translate.
+function Language:I18NReplace(input, arguments)
+    local position = 0;
+    
+    -- ToDo implement %1$d, %2$d for indexes
+    
+   return (string.gsub(input, '%%[d|s]', function(placeholder)
+        position = position + 1;
+        
+        return arguments[position];
+    end));
+end
+
+function Language:I18N(input, ...)
+	local arguments = {};
+    local length    = select('#', ...);
+    
+    for index = 1, length do
+        arguments[#arguments + 1] = select(index, ...);
+    end
+    
+    --print(arguments[1]);
+	
     if (self._translations ~= nil) then
 		if (self._translations[self._language] ~= nil) then
-			if(self._translations[self._language][string] ~= nil) then
-				if(self._translations[self._language][string] ~= "") then
-					return self._translations[self._language][string];
+			if(self._translations[self._language][input] ~= nil) then
+				if(self._translations[self._language][input] ~= "") then
+					return self:I18NReplace(self._translations[self._language][input], arguments);
 				end
 			end
 		end
 	end
     
-    return string;
+    return self:I18NReplace(input, arguments);
 end
 
 if (g_Language == nil) then
