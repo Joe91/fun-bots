@@ -111,7 +111,6 @@ function Bot:shootAt(player, ignoreYaw)
 			if self._shootPlayer == nil or self._shootModeTimer > Config.botMinTimeShootAtPlayer then
 				self._shootModeTimer	= 0;
 				self._shootPlayer		= player;
-				self._shotTimer			= 0;
 			end
 		else
 			self._shootModeTimer = Config.botFireModeDuration;
@@ -138,6 +137,7 @@ function Bot:resetVars()
 	self._shootPlayer			= nil;
 	self._lastShootPlayer		= nil;
 	self._invertPathDirection	= false;
+	self._shotTimer				= 0;
 	self._updateTimer			= 0;
 	self._aimUpdateTimer		= 0; --timer sync
 	self._targetPoint			= nil;
@@ -462,10 +462,10 @@ function Bot:_updateShooting()
 						if self._shotTimer >= (Config.botFireDurationSupport + Config.botFirePauseSupport) then
 							self._shotTimer	= 0;
 						end
-						if self._shotTimer >= Config.botFireDurationSupport or self._meleeActive then
-							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
+						if self._shotTimer >= Config.botFirePauseSupport and not self._meleeActive then
+							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1); --support waits a short time and starts shooting then
 						elseif self._shotTimer >= 0 then
-							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
+							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
 						end
 					elseif self.kit == "Recon" then
 						if self._shotTimer >= Config.botFireCycleRecon then
@@ -492,6 +492,7 @@ function Bot:_updateShooting()
 
 			else
 				self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
+				self._shotTimer	= 0;
 				self._shootPlayer		= nil;
 				self._lastShootPlayer	= nil;
 			end
@@ -574,6 +575,7 @@ function Bot:_updateMovement()
 
 		-- move along points
 		elseif self.activeMoveMode == 5 then
+			self._attackModeMoveTimer = 0;
 
 			-- get next point
 			local activePointIndex = self:_getWayIndex(self._currentWayPoint)

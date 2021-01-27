@@ -10,9 +10,9 @@ Config = {
 
 	--difficluty
 	botAimWorsening = 0.0,			-- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy). Restart of level needed
-	bulletDamageBot = 10,			-- damage of a bot with normal bullet
-	bulletDamageBotSniper = 24,	 	-- damage of a bot with sniper bullet
-	meleeDamageBot = 48,			-- damage of a bot with melee attack
+	bulletDamageBot = 16,			-- damage of a bot with normal bullet
+	bulletDamageBotSniper = 48,	 	-- damage of a bot with sniper bullet
+	meleeDamageBot = 56,			-- damage of a bot with melee attack
 
 	--spawn
 	spawnOnLevelstart = true,		-- bots spawn on levelstart (if valid paths are available)
@@ -46,7 +46,7 @@ Config = {
 	targetDistanceWayPoint = 1.4,	-- distance the bots have to reach to continue with next Waypoint
 	botFireDuration = 0.3,			-- the duration a bot fires (Assault / Engi)
 	botFirePause = 0.3,			 	-- the duration a bot waits after fire (Assault / Engi)
-	botFireDurationSupport = 2.0,	-- the duration a bot fires (Support)
+	botFireDurationSupport = 3.0,	-- the duration a bot fires (Support)
 	botFirePauseSupport = 0.6,		-- the duration a bot waits after fire (Support)
 	botFireCycleRecon = 0.4,		-- the duration a bot fires (Recon)
 	botFireCyclePistol = 0.4,		-- the duration of a FireCycle (Pistol)
