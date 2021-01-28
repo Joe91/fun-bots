@@ -8,7 +8,7 @@ AI for TDM-bots with some functions:
 	- while holding your secondary weapon, bot will pause in this position
 
 
-This mod is based on the Mod [BotSpawn](https://github.com/J4nssent/VU-Mods/tree/master/BotSpawn "Original Mod by Jassent") by [Jassent](https://github.com/J4nssent "Jassent").
+This mod is inspired by the mod [BotSpawn](https://github.com/J4nssent/VU-Mods/tree/master/BotSpawn "Original Mod by Jassent") by [Jassent](https://github.com/J4nssent "Jassent").
 It provids lots of ways to play and mess with bots. Also with multible Players at once.
 
 The following TDM-Maps (Or TDM QC) are supported right now:  
@@ -50,18 +50,17 @@ Just press **F12** to open the Menu. Default Password is **fun**.
 	- Amount of Bots
 - killall
 - kickall
-- kickTeam (1 / 2)
-- kickNumber (with Number)
 - respawn (0/1)
 - shoot (0/1)
 
 ### Waypoint Menu
 - Start Trace (either 0 or fixed index - if 0, the next free slot is used)
+(Primary weapon = record movement, secondary weapon = record pause)
 - End Trace
 - Clear Trace (with Index)
 - Clear all traces
 - Save traces
-- (spawnBotsOnWay (with Index)) optional. we can optionaly add this later
+- spawn 1 Bot On Way (with trace index)
 
 ### Settings Menu
 Lots and lots of stuff :-)
