@@ -279,6 +279,16 @@ function BotManager:createBot(name, team)
 		return bot
 	end
 
+	-- check for max-players
+	local playerlimt = Globals.maxPlayers
+	if Config.keepOneSlotForPlayers then
+		playerlimt = playerlimt - 1;
+	end
+	if (playerlimt) <=  PlayerManager:GetPlayerCount() then
+		print("playerlimit reached")
+		return
+	end
+
 	-- Create a player for this bot.
 	local botPlayer = PlayerManager:CreatePlayer(name, team, SquadId.SquadNone)
 	if botPlayer == nil then
