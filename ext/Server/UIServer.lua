@@ -15,13 +15,19 @@ function FunBotUIServer:__init()
 	self._webui			= 0;
 	self._authenticated	= ArrayMap();
 
-	Events:Subscribe('Player:Left', self, self._onPlayerLeft);
-	NetEvents:Subscribe('UI_Request_Open', self, self._onUIRequestOpen);
-	NetEvents:Subscribe('UI_Request_Save_Settings', self, self._onUIRequestSaveSettings);
-	NetEvents:Subscribe('BotEditor', self, self._onBotEditorEvent);
+	if Config.disableUserInterface ~= true then
+		Events:Subscribe('Player:Left', self, self._onPlayerLeft);
+		NetEvents:Subscribe('UI_Request_Open', self, self._onUIRequestOpen);
+		NetEvents:Subscribe('UI_Request_Save_Settings', self, self._onUIRequestSaveSettings);
+		NetEvents:Subscribe('BotEditor', self, self._onBotEditorEvent);
+	end
 end
 
 function FunBotUIServer:_onBotEditorEvent(player, data)
+	if Config.disableUserInterface == true then
+		return;
+	end
+	
 	print('UIServer: BotEditor (' .. tostring(data) .. ')');
 
 	if (Config.settingsPassword ~= nil and self:_isAuthenticated(player.accountGuid) ~= true) then
@@ -94,11 +100,19 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 end
 
 function FunBotUIServer:_onPlayerLeft(player)
+	if Config.disableUserInterface == true then
+		return;
+	end
+	
 	-- @ToDo current fix for auth-check after rejoin, remove it later or make it as configuration!
 	self._authenticated:delete(tostring(player.accountGuid));
 end
 
 function FunBotUIServer:_onUIRequestSaveSettings(player, data)
+	if Config.disableUserInterface == true then
+		return;
+	end
+	
 	print(player.name .. ' requesting to save settings.');
 
 	if (Config.settingsPassword ~= nil and self:_isAuthenticated(player.accountGuid) ~= true) then
@@ -113,6 +127,10 @@ function FunBotUIServer:_onUIRequestSaveSettings(player, data)
 end
 
 function FunBotUIServer:_onUIRequestOpen(player, data)
+	if Config.disableUserInterface == true then
+		return;
+	end
+	
 	print(player.name .. ' requesting open Bot-Editor.');
 
 	if (Config.settingsPassword == nil or self:_isAuthenticated(player.accountGuid)) then
@@ -156,6 +174,10 @@ function FunBotUIServer:_onUIRequestOpen(player, data)
 end
 
 function FunBotUIServer:_isAuthenticated(guid)
+	if Config.disableUserInterface == true then
+		return false;
+	end
+	
 	if self._authenticated:isEmpty() then
 		return false;
 	end
@@ -164,6 +186,10 @@ function FunBotUIServer:_isAuthenticated(guid)
 end
 
 function FunBotUIServer:_writeSettings(player, request)
+	if Config.disableUserInterface == true then
+		return;
+	end
+	
 	local temporary		= false;
 	local updateWeapons	= false;
 	local batched		= true;
