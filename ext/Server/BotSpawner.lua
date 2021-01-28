@@ -67,7 +67,10 @@ function BotSpawner:_onPlayerLeft(player)
 		local playerCount = BotManager:getPlayerCount();
 		local botCount = BotManager:getBotCount();
 		local targetBotCount = Config.initNumberOfBots + ((playerCount-1) * Config.newBotsPerNewPlayer)
-		if targetBotCount < botCount and targetBotCount <= Config.initNumberOfBots then
+		if targetBotCount < Config.initNumberOfBots then
+			targetBotCount = Config.initNumberOfBots;
+		end
+		if targetBotCount < botCount then
 			BotManager:destroyAmount(botCount - targetBotCount);
 		end
 	end
