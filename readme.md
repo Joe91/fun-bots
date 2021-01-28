@@ -55,12 +55,16 @@ Since the last version, even beginners can setup the bots. You only need to pres
 ![Spawn Boots](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Menu/Bots/SpawnBots.png?raw=true)
    - On same Team or not? Look at `Config.spawnInSameTeam`!
    - Amount of Bots
+   
 ![Kill All](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Menu/Bots/KillAll.png?raw=true)
    - Kills all Bots on the Server
+   
 ![Kick All](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Menu/Bots/KickAll.png?raw=true)
    - Kick/Remove all Bots on the Server
+   
 ![Toggle Respawn](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Menu/Bots/ToggleRespawn.png?raw=true)
    - Start/Stop Bots to respawn after death
+   
 ![Toggle Attack](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Menu/Bots/ToggleAttack.png?raw=true)
    - Start/Stop Bots to attack players
 
@@ -71,14 +75,19 @@ Since the last version, even beginners can setup the bots. You only need to pres
    - Either `0` or fixed index
    - If the value is `0`, the next free slot will be used
    - `Primary weapon` = record movement, `secondary weapon` = record pause
+   
 ![End Trace](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Menu/Waypoints/EndTrace.png?raw=true)
    - Stops an actual trace process
+   
 ![Clear Traces](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Menu/Waypoints/ClearTrace.png?raw=true)
    - Removes/Delete a trace with given index
+   
 ![Reset all Traces](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Menu/Waypoints/ResetAllTraces.png?raw=true)
    - Removes/Delete all traces
+   
 ![Save](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Menu/Waypoints/Save.png?raw=true)
    - Saves all recorded traces to the database
+   
 ![Reload](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Menu/Waypoints/Reload.png?raw=true)
    - Reload all traces from the database
 
