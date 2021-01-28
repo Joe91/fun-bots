@@ -19,20 +19,38 @@ function BotSpawner:__init()
 end
 
 function BotSpawner:_onPlayerJoining()
-	if Config.onlySpawnBotsWithPlayers then
-		if BotManager:getPlayerCount() == 0 then
-			print("first player - spawn bots")
-			self:onLevelLoaded(true)
+	if Config.onlySpawnBotsWithPlayers and BotManager:getPlayerCount() == 0 then
+		print("first player - spawn bots")
+		self:onLevelLoaded(true)
+	else
+		--detect if we have to kick a bot for the next player
+		if Config.keepOneSlotForPlayers then
+			local playerlimt = Globals.maxPlayers - 1
+			local amoutToDestroy = PlayerManager:GetPlayerCount() + 1 - playerlimt -- +1 because on join, player is not counted jet
+			if amoutToDestroy > 0 then
+				BotManager:destroyAmount(amoutToDestroy)
+			end
 		end
-	end
-	if Config.incBotsWithPlayers then
-		--check if we have to reduce the bots for the next player
-		--detect amount
-		local playerCount = BotManager:getPlayerCount();
-		local botCount = BotManager:getBotCount();
-		local targetBotCount = Config.initNumberOfBots + (playerCount * Config.newBotsPerNewPlayer)
-		if targetBotCount > botCount then
-			self:spawnWayBots(nil, (targetBotCount - botCount), true, 1)
+
+		if Config.incBotsWithPlayers then
+			--detect amount
+			local totalPlayers = PlayerManager:GetPlayerCount() + 1;	-- +1 for new player
+			local playerCount = BotManager:getPlayerCount() + 1; 		-- +1 for new player
+			local botCount = BotManager:getBotCount();
+			local targetBotCount = Config.initNumberOfBots + ((playerCount-1) * Config.newBotsPerNewPlayer)
+			local amountToSpawn = targetBotCount - botCount;
+			local playerlimt = Globals.maxPlayers;
+			if Config.keepOneSlotForPlayers then
+				local playerlimt = playerlimt - 1
+			end
+			local slotsLeft = totalPlayers - playerlimt;
+			if amountToSpawn > slotsLeft then
+				amountToSpawn = slotsLeft;
+			end
+			if amountToSpawn > 0 then
+				self._botSpawnTimer = -2;
+				self:spawnWayBots(nil, amountToSpawn, true, 1);
+			end
 		end
 	end
 end
@@ -51,7 +69,7 @@ function BotSpawner:_onPlayerLeft(player)
 		local botCount = BotManager:getBotCount();
 		local targetBotCount = Config.initNumberOfBots + ((playerCount-1) * Config.newBotsPerNewPlayer)
 		if targetBotCount < botCount and targetBotCount <= Config.initNumberOfBots then
-			BotManager:destroyAmount(botCount - targetBotCount)
+			BotManager:destroyAmount(botCount - targetBotCount);
 		end
 	end
 end
@@ -68,7 +86,7 @@ function BotSpawner:onLevelLoaded(forceSpawn)
 			end
 		end
 
-		if BotManager:getBotCount() > amountToSpawn then
+		if BotManager:getBotCount() > amountToSpawn and not Config.incBotsWithPlayers then
 			amountToSpawn = BotManager:getBotCount()
 		end
 

@@ -284,7 +284,7 @@ function BotManager:createBot(name, team)
 	if Config.keepOneSlotForPlayers then
 		playerlimt = playerlimt - 1;
 	end
-	if (playerlimt) <=  PlayerManager:GetPlayerCount() then
+	if playerlimt <=  PlayerManager:GetPlayerCount() then
 		print("playerlimit reached")
 		return
 	end
