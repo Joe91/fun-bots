@@ -48,7 +48,6 @@ function BotSpawner:_onPlayerJoining()
 				amountToSpawn = slotsLeft;
 			end
 			if amountToSpawn > 0 then
-				self._botSpawnTimer = -2;
 				self:spawnWayBots(nil, amountToSpawn, true, 1);
 			end
 		end
