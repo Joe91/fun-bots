@@ -73,6 +73,7 @@ function FunBotUIClient:_onUISettings(data)
 	settings:add("SPAWN", "Integer", "initNumberOfBots", Language:I18N("Number Bots on Levelstart"), data.initNumberOfBots, 10, Language:I18N("Bots on levelstart"));
 	settings:add("SPAWN", "Boolean", "incBotsWithPlayers", Language:I18N("More Bots with new Players"), data.incBotsWithPlayers, true, Language:I18N("increase Bots, when new players join"));
 	settings:add("SPAWN", "Integer", "newBotsPerNewPlayer", Language:I18N("Number Bots on new Player"), data.newBotsPerNewPlayer, 2, Language:I18N("number to increase Bots, when new players join"));
+	settings:add("SPAWN", "Boolean", "keepOneSlotForPlayers", Language:I18N("Keep one Player-Slot"), data.keepOneSlotForPlayers, true, Language:I18N("always keep one slot for new Players to join"));
 	settings:add("SPAWN", "Float", "spawnDelayBots", Language:I18N("Respawn Delay"), data.spawnDelayBots, 2.0, Language:I18N("time till bots respawn, if respawn enabled"));
 	settings:add("SPAWN", "Integer", "botTeam", Language:I18N("Default Bot Team"), data.botTeam, 2, Language:I18N("default bot team 1 = US, 2 = RU"));
 	settings:add("SPAWN", "Boolean", "respawnWayBots", Language:I18N("Respawn Bots"), data.respawnWayBots, true, Language:I18N("Bots on paths respawn if killed on startup"));

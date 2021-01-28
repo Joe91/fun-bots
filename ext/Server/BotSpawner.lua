@@ -26,6 +26,7 @@ function BotSpawner:_onPlayerJoining()
 		end
 	end
 	if Config.incBotsWithPlayers then
+		--check if we have to reduce the bots for the next player
 		--detect amount
 		local playerCount = BotManager:getPlayerCount();
 		local botCount = BotManager:getBotCount();

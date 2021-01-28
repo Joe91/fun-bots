@@ -58,6 +58,14 @@ function BotManager:configGlobas()
 	Globals.respawnWayBots 	= Config.respawnWayBots;
 	Globals.attackWayBots 	= Config.attackWayBots;
 	Globals.yawPerFrame 	= self:calcYawPerFrame()
+	local maxPlayers = RCON:SendCommand('vars.maxPlayers');
+	maxPlayers = tonumber(maxPlayers[2]);
+	if maxPlayers ~= nil and maxPlayers > 0 then
+		Globals.maxPlayers = maxPlayers;
+		print("there are "..maxPlayers.." slots on this server")
+	else
+		Globals.maxPlayers = MAX_NUMBER_OF_BOTS; --only fallback
+	end
 end
 
 function BotManager:calcYawPerFrame()

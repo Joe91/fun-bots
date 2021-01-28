@@ -338,6 +338,10 @@ function FunBotUIServer:_writeSettings(player, request)
 		end
 	end
 
+	if request.keepOneSlotForPlayers ~= nil then
+		SettingsManager:update('keepOneSlotForPlayers', (request.keepOneSlotForPlayers == true), temporary, batched);
+	end
+
 	if request.spawnDelayBots ~= nil then
 		local tempValue = tonumber(request.spawnDelayBots);
 

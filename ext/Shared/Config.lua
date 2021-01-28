@@ -20,6 +20,7 @@ Config = {
 	initNumberOfBots = 10,			-- bots on levelstart
 	incBotsWithPlayers = true,		-- increase Bots, when new players join
 	newBotsPerNewPlayer = 3,		-- number to increase Bots, when new players join
+	keepOneSlotForPlayers = true,	-- always keep one slot for new Players to join
 	spawnDelayBots = 2.0,			-- time till bots respawn, if respawn enabled
 	botTeam = TeamId.Team2,		 	-- default bot team (0 = neutral, 1 = US, 2 = RU) TeamId.Team2
 	respawnWayBots = true,			-- bots on paths respawn if killed
