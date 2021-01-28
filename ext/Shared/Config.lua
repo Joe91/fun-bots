@@ -18,6 +18,8 @@ Config = {
 	spawnOnLevelstart = true,		-- bots spawn on levelstart (if valid paths are available)
 	onlySpawnBotsWithPlayers = true,-- Bots only spawn if at least one Player is on the server
 	initNumberOfBots = 10,			-- bots on levelstart
+	incBotsWithPlayers = true,		-- increase Bots, when new players join
+	newBotsPerNewPlayer = 3,		-- number to increase Bots, when new players join
 	spawnDelayBots = 2.0,			-- time till bots respawn, if respawn enabled
 	botTeam = TeamId.Team2,		 	-- default bot team (0 = neutral, 1 = US, 2 = RU) TeamId.Team2
 	respawnWayBots = true,			-- bots on paths respawn if killed

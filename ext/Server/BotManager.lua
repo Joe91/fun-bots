@@ -13,7 +13,6 @@ function BotManager:__init()
 
 	Events:Subscribe('UpdateManager:Update', self, self._onUpdate)
 	Events:Subscribe('Level:Destroy', self, self._onLevelDestroy)
-	Events:Subscribe('Player:Left', self, self._onPlayerLeft)
 	NetEvents:Subscribe('BotShootAtPlayer', self, self._onShootAt)
 	Events:Subscribe('ServerDamagePlayer', self, self._onServerDamagePlayer)
 	NetEvents:Subscribe('ClientDamagePlayer', self, self._onDamagePlayer)
@@ -154,16 +153,10 @@ function BotManager:_onUpdate(dt, pass)
 	end
 end
 
-function BotManager:_onPlayerLeft(player)
+function BotManager:onPlayerLeft(player)
 	--remove all references of player
 	for _, bot in pairs(self._bots) do
 		bot:clearPlayer(player)
-	end
-	if Config.onlySpawnBotsWithPlayers then
-		if self:getPlayerCount() == 1 then
-			print("no player left - kill all bots")
-			self:killAll()
-		end
 	end
 end
 

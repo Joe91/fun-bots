@@ -15,6 +15,7 @@ function BotSpawner:__init()
 	Events:Subscribe('Bot:RespawnBot', self, self._onRespawnBot)
 	Events:Subscribe('Player:KitPickup', self, self._onKitPickup)
 	Events:Subscribe('Player:Joining', self, self._onPlayerJoining)
+	Events:Subscribe('Player:Left', self, self._onPlayerLeft)
 end
 
 function BotSpawner:_onPlayerJoining()
@@ -24,6 +25,34 @@ function BotSpawner:_onPlayerJoining()
 			self:onLevelLoaded(true)
 		end
 	end
+	if Config.incBotsWithPlayers then
+		--detect amount
+		local playerCount = BotManager:getPlayerCount();
+		local botCount = BotManager:getBotCount();
+		local targetBotCount = Config.initNumberOfBots + (playerCount * Config.newBotsPerNewPlayer)
+		if targetBotCount > botCount then
+			self:spawnWayBots(nil, (targetBotCount - botCount), true, 1)
+		end
+	end
+end
+
+function BotSpawner:_onPlayerLeft(player)
+	BotManager:onPlayerLeft(player)
+	--remove all references of player
+	if Config.onlySpawnBotsWithPlayers then
+		if BotManager:getPlayerCount() == 1 then
+			print("no player left - kill all bots")
+			BotManager:killAll()
+		end
+	end
+	if Config.incBotsWithPlayers then
+		local playerCount = BotManager:getPlayerCount();
+		local botCount = BotManager:getBotCount();
+		local targetBotCount = Config.initNumberOfBots + ((playerCount-1) * Config.newBotsPerNewPlayer)
+		if targetBotCount < botCount and targetBotCount <= Config.initNumberOfBots then
+			BotManager:destroyAmount(botCount - targetBotCount)
+		end
+	end
 end
 
 function BotSpawner:onLevelLoaded(forceSpawn)
@@ -31,6 +60,13 @@ function BotSpawner:onLevelLoaded(forceSpawn)
 		BotManager:configGlobas()
 
 		local amountToSpawn = Config.initNumberOfBots
+		if Config.incBotsWithPlayers then
+			local playerCount = BotManager:getPlayerCount();
+			if playerCount >= 1 then
+				amountToSpawn = Config.initNumberOfBots + ((playerCount-1) * Config.newBotsPerNewPlayer)
+			end
+		end
+
 		if BotManager:getBotCount() > amountToSpawn then
 			amountToSpawn = BotManager:getBotCount()
 		end
