@@ -9,29 +9,35 @@ Language = require('__shared/Language');
 function FunBotUIClient:__init()
 	self._views = UIViews();
 
-	Events:Subscribe('Client:UpdateInput', self, self._onUpdateInput);
-	NetEvents:Subscribe('UI_Toggle', self, self._onUIToggle);
-	Events:Subscribe('UI_Toggle', self, self._onUIToggle);
-	NetEvents:Subscribe('BotEditor', self, self._onBotEditorEvent);
-	Events:Subscribe('BotEditor', self, self._onBotEditorEvent);
-	NetEvents:Subscribe('UI_Request_Password', self, self._onUIRequestPassword);
-	NetEvents:Subscribe('UI_Request_Password_Error', self, self._onUIRequestPasswordError);
-	NetEvents:Subscribe('UI_Password_Protection', self, self._onUIPasswordProtection);
-	NetEvents:Subscribe('UI_Show_Toolbar', self, self._onUIShowToolbar);
-	NetEvents:Subscribe('UI_Settings', self, self._onUISettings);
-	Events:Subscribe('UI_Settings', self, self._onUISettings);
-	NetEvents:Subscribe('UI_Change_Language', self, self._onUIChangeLanguage);
-	Events:Subscribe('UI_Change_Language', self, self._onUIChangeLanguage);
-	Events:Subscribe('UI_Save_Settings', self, self._onUISaveSettings);
-	Events:Subscribe('UI_Send_Password', self, self._onUISendPassword);
+	if Config.disableUserInterface ~= true then
+		Events:Subscribe('Client:UpdateInput', self, self._onUpdateInput);
+		NetEvents:Subscribe('UI_Toggle', self, self._onUIToggle);
+		Events:Subscribe('UI_Toggle', self, self._onUIToggle);
+		NetEvents:Subscribe('BotEditor', self, self._onBotEditorEvent);
+		Events:Subscribe('BotEditor', self, self._onBotEditorEvent);
+		NetEvents:Subscribe('UI_Request_Password', self, self._onUIRequestPassword);
+		NetEvents:Subscribe('UI_Request_Password_Error', self, self._onUIRequestPasswordError);
+		NetEvents:Subscribe('UI_Password_Protection', self, self._onUIPasswordProtection);
+		NetEvents:Subscribe('UI_Show_Toolbar', self, self._onUIShowToolbar);
+		NetEvents:Subscribe('UI_Settings', self, self._onUISettings);
+		Events:Subscribe('UI_Settings', self, self._onUISettings);
+		NetEvents:Subscribe('UI_Change_Language', self, self._onUIChangeLanguage);
+		Events:Subscribe('UI_Change_Language', self, self._onUIChangeLanguage);
+		Events:Subscribe('UI_Save_Settings', self, self._onUISaveSettings);
+		Events:Subscribe('UI_Send_Password', self, self._onUISendPassword);
 
-	-- Events from BotManager, TraceManager & Other
+		-- Events from BotManager, TraceManager & Other
 
-	self._views:setLanguage(Config.language);
+		self._views:setLanguage(Config.language);
+	end
 end
 
 -- Events
 function FunBotUIClient:_onUIToggle()
+	if Config.disableUserInterface == true then
+		return;
+	end
+	
 	print('UIClient: UI_Toggle');
 
 	if self._views:isVisible() then
@@ -43,6 +49,10 @@ function FunBotUIClient:_onUIToggle()
 end
 
 function FunBotUIClient:_onUISettings(data)
+	if Config.disableUserInterface == true then
+		return;
+	end
+	
 	if data == false then
 		print('UIClient: close UI_Settings');
 		self._views:hide('settings');
@@ -116,15 +126,27 @@ function FunBotUIClient:_onUISettings(data)
 end
 
 function FunBotUIClient:_onUIChangeLanguage(language)
+	if Config.disableUserInterface == true then
+		return;
+	end
+	
 	self._views:setLanguage(language);
 end
 
 function FunBotUIClient:_onUISaveSettings(data)
+	if Config.disableUserInterface == true then
+		return;
+	end
+	
 	print('UIClient: UI_Save_Settings (' .. data .. ')');
 	NetEvents:Send('UI_Request_Save_Settings', data);
 end
 
 function FunBotUIClient:_onBotEditorEvent(data)
+	if Config.disableUserInterface == true then
+		return;
+	end
+	
 	print('UIClient: BotEditor (' .. data .. ')');
 
 	-- Redirect to Server
@@ -132,6 +154,10 @@ function FunBotUIClient:_onBotEditorEvent(data)
 end
 
 function FunBotUIClient:_onUIShowToolbar(data)
+	if Config.disableUserInterface == true then
+		return;
+	end
+	
 	print('UIClient: UI_Show_Toolbar (' .. tostring(data) .. ')');
 
 	if (data == 'true') then
@@ -144,6 +170,10 @@ function FunBotUIClient:_onUIShowToolbar(data)
 end
 
 function FunBotUIClient:_onUIPasswordProtection(data)
+	if Config.disableUserInterface == true then
+		return;
+	end
+	
 	print('UIClient: UI_Password_Protection (' .. tostring(data) .. ')');
 
 	if (data == 'true') then
@@ -156,11 +186,19 @@ function FunBotUIClient:_onUIPasswordProtection(data)
 end
 
 function FunBotUIClient:_onUIRequestPasswordError(data)
+	if Config.disableUserInterface == true then
+		return;
+	end
+	
 	print('UIClient: UI_Request_Password_Error');
 	self._views:error('password', data);
 end
 
 function FunBotUIClient:_onUIRequestPassword(data)
+	if Config.disableUserInterface == true then
+		return;
+	end
+	
 	print('UIClient: UI_Request_Password (' .. tostring(data) .. ')');
 
 	if (data == 'true') then
@@ -173,12 +211,20 @@ function FunBotUIClient:_onUIRequestPassword(data)
 end
 
 function FunBotUIClient:_onUISendPassword(data)
+	if Config.disableUserInterface == true then
+		return;
+	end
+	
 	print('UIClient: UI_Send_Password (' .. data .. ')');
 	NetEvents:Send('UI_Request_Open', data);
 end
 
 
 function FunBotUIClient:_onUpdateInput(data)
+	if Config.disableUserInterface == true then
+		return;
+	end
+	
 	-- Show or Hide the Bot-Editor by requesting permissions
 	if InputManager:WentKeyDown(InputDeviceKeys.IDK_F12) then
 		print('Client send: UI_Request_Open');

@@ -55,6 +55,7 @@ Config = {
 	botFireCyclePistol = 0.4,		-- the duration of a FireCycle (Pistol)
 
 	-- UI settings & language options
+	disableUserInterface = false,	-- if true, the complete UI will be disabled
 	disableChatCommands = true,	 	-- if true, no chat commands can be used
 	traceUsageAllowed = true,		-- if false, no traces can be recorded, deleted or saved
 	settingsPassword = "fun",		-- if nil, disable it. Otherwise use a String with your password
