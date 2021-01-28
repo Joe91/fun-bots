@@ -64,9 +64,9 @@ function BotSpawner:_onPlayerLeft(player)
 		end
 	end
 	if Config.incBotsWithPlayers then
-		local playerCount = BotManager:getPlayerCount();
+		local playerCount = BotManager:getPlayerCount() - 1; -- -1 for leaving player
 		local botCount = BotManager:getBotCount();
-		local targetBotCount = Config.initNumberOfBots + ((playerCount-1) * Config.newBotsPerNewPlayer)
+		local targetBotCount = Config.initNumberOfBots + ((playerCount - 1) * Config.newBotsPerNewPlayer)
 		if targetBotCount < Config.initNumberOfBots then
 			targetBotCount = Config.initNumberOfBots;
 		end
