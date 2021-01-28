@@ -17,7 +17,7 @@ Config = {
 	--spawn
 	spawnOnLevelstart = true,		-- bots spawn on levelstart (if valid paths are available)
 	onlySpawnBotsWithPlayers = true,-- Bots only spawn if at least one Player is on the server
-	initNumberOfBots = 10,			-- bots on levelstart
+	initNumberOfBots = 8,			-- bots on levelstart
 	incBotsWithPlayers = true,		-- increase Bots, when new players join
 	newBotsPerNewPlayer = 3,		-- number to increase Bots, when new players join
 	keepOneSlotForPlayers = true,	-- always keep one slot for new Players to join
