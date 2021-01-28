@@ -90,11 +90,11 @@ Since the last version, even beginners can setup the bots. You only need to pres
  >    
  > ![Reload](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Menu/Waypoints/Reload.png?raw=true)
  >    - Reload all traces from the database
-
-#### Settings-Menu
-![Bots](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Menu/Settings.png?raw=true)
-
-Lots and lots of stuff, **be carefull** what you modify ;-)
+ > 
+ > #### Settings-Menu
+ > ![Bots](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Menu/Settings.png?raw=true)
+ > 
+ > Lots and lots of stuff, **be carefull** what you modify ;-)
 
 ### :grey_exclamation: Commands
 A full list of available commands can be found here: [/wiki/Commands](https://github.com/Joe91/fun-bots/wiki/Commands)
