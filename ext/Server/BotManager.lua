@@ -210,13 +210,21 @@ function BotManager:_onSoldierDamage(hook, soldier, info, giverInfo)
 					info.position = Vec3(soldier.worldTransform.trans.x, soldier.worldTransform.trans.y + 1, soldier.worldTransform.trans.z)
 					info.direction = soldier.worldTransform.trans - bot.player.soldier.worldTransform.trans
 					info.origin = bot.player.soldier.worldTransform.trans
+					if (soldier.health - info.damage) < 0 then
+						if Globals.isTdm then
+							local enemyTeam = TeamId.Team1;
+							if soldier.player.teamId == TeamId.Team1 then
+								enemyTeam = TeamId.Team2;
+							end
+							TicketManager:SetTicketCount(enemyTeam, (TicketManager:GetTicketCount(enemyTeam) + 1));
+						end
+					end
 					hook:Pass(soldier, info, newGiverInfo)
 				end
 			end
 		end
 	end
 end
-
 
 function BotManager:_onServerDamagePlayer(playerName, shooterName, meleeAttack)
 	local player = PlayerManager:GetPlayerByName(playerName)
