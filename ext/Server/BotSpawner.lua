@@ -41,9 +41,9 @@ function BotSpawner:_onPlayerJoining()
 			local amountToSpawn = targetBotCount - botCount;
 			local playerlimt = Globals.maxPlayers;
 			if Config.keepOneSlotForPlayers then
-				local playerlimt = playerlimt - 1
+				playerlimt = playerlimt - 1
 			end
-			local slotsLeft = totalPlayers - playerlimt;
+			local slotsLeft = playerlimt - totalPlayers;
 			if amountToSpawn > slotsLeft then
 				amountToSpawn = slotsLeft;
 			end
