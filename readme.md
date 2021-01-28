@@ -99,8 +99,7 @@ Since the last version, even beginners can setup the bots. You only need to pres
 ### :grey_exclamation: Commands
 A full list of available commands can be found here: [/wiki/Commands](https://github.com/Joe91/fun-bots/wiki/Commands)
 
-### :rainbow_flag: Language build status
-[![Build status](https://ci.appveyor.com/api/projects/status/m32v0gb03s3lkgrk?svg=true)](https://ci.appveyor.com/project/Bizarrus/bizzi)
+### :rainbow_flag: Language build status [![Build status](https://ci.appveyor.com/api/projects/status/m32v0gb03s3lkgrk?svg=true)](https://ci.appveyor.com/project/Bizarrus/bizzi)
 
 Here you can see the status of the build process of our language files. If you want to contribute the translation in other languages, take a look at [Contributing > Languages](https://github.com/Joe91/fun-bots/wiki/Languages)
 
