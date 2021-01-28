@@ -1,7 +1,7 @@
 # fun-bots
 With this `Venice Unleashed` Mod you bring virtual bots to your `Battlefield 3` server.
 
-### BOT-AI
+### :robot: BOT-AI
 AI for TDM-bots with some functions:
 - Bots can walk around on paths and shoot at player
 - You can record you own paths
@@ -9,11 +9,11 @@ AI for TDM-bots with some functions:
 	- recording includes jumping, running, walking, couching, and other stuff...
 	- while holding your `secondary weapon`, bot will pause in this position.
 
-### Inspirated
+### :smiling_face_with_three_hearts: Inspirated
 This mod was inspired by the mod [BotSpawn](https://github.com/J4nssent/VU-Mods/tree/master/BotSpawn "Original Mod by Jassent") by [Jassent](https://github.com/J4nssent "Jassent").
 It provids lots of ways to play and mess with bots. Also with multible Players at once.
 
-### Supported Maps
+### :world_map: Supported Maps
 The following Maps are official supported right now with waypoints/traces:
 
 |   	|   Internal Name	|   Name	|   Supported Types	|
@@ -43,10 +43,10 @@ The following Maps are official supported right now with waypoints/traces:
  > Just press **F12** for the InGame-Menu and start a new Trace on your own `Map` or `Game Mode`!
  > You can find detailed instructions in the [Wiki](https://github.com/Joe91/fun-bots/wiki).
  
-### Configuration
+### :gear: Configuration
 Many Settings can be changed InGame width an [Chat-Command](https://github.com/Joe91/fun-bots/wiki/Commands) or with our [Bot-Editor](https://github.com/Joe91/fun-bots/wiki/Bot-Editor).
  
-### New User Interface
+### :computer_mouse: New User Interface
 Since the last version, even beginners can setup the bots. You only need to press the `F12` key to enter the [Bot-Editor](https://github.com/Joe91/fun-bots/wiki/Bot-Editor). In our [Bot-Editor](https://github.com/Joe91/fun-bots/wiki/Bot-Editor) all settings can be changed, which can also be changed via the `Config.lua` or a [Chat-Command](https://github.com/Joe91/fun-bots/wiki/Commands).
 
 #### Bot-Menu
@@ -99,7 +99,7 @@ Lots and lots of stuff, **be carefull** what you modify ;-)
 ### :grey_exclamation: Commands
 A full list of available commands can be found here: [/wiki/Commands](https://github.com/Joe91/fun-bots/wiki/Commands)
 
-### Language build status
+### :rainbow_flag: Language build status
 [![Build status](https://ci.appveyor.com/api/projects/status/m32v0gb03s3lkgrk?svg=true)](https://ci.appveyor.com/project/Bizarrus/bizzi)
 
 Here you can see the status of the build process of our language files. If you want to contribute the translation in other languages, take a look at [Contributing > Languages](https://github.com/Joe91/fun-bots/wiki/Languages)
