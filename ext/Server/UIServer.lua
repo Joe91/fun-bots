@@ -500,7 +500,7 @@ function FunBotUIServer:_writeSettings(player, request)
 		if Config.settingsPassword == nil and request.settingsPassword ~= nil then
 			ChatManager:Yell(Language:I18N('You can\'t change the password, if it\'s never set!'), 2.5);
 		else
-			if request.settingsPassword ~= "" then
+			if request.settingsPassword ~= nil and request.settingsPassword ~= "" then
 				if request.settingsPassword == "NULL" or request.settingsPassword == "nil" then
 					request.settingsPassword = DatabaseField.NULL;
 				end
