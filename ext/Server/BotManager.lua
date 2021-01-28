@@ -258,9 +258,7 @@ function BotManager:_onShootAt(player, botname, ignoreYaw)
 	if bot == nil or bot.player.soldier == nil or player.soldier == nil then
 		return
 	end
-	if bot.player.teamId ~= player.teamId then
-		bot:shootAt(player, ignoreYaw)
-	end
+	bot:shootAt(player, ignoreYaw)
 end
 
 function BotManager:_onLevelDestroy()
