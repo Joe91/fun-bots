@@ -67,11 +67,21 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 		local respawning		= not Globals.respawnWayBots;
 		Globals.respawnWayBots	= respawning;
 		BotManager:setOptionForAll('respawn', respawning);
+		if respawning then
+			ChatManager:Yell(Language:I18N('Bot respawn activated!', request.action), 2.5);
+		else
+			ChatManager:Yell(Language:I18N('Bot respawn deactivated!', request.action), 2.5);
+		end
 
 	elseif request.action == 'bot_attack' then  --toggle this function
 		local attack			= not Globals.attackWayBots;
 		Globals.attackWayBots	= attack;
 		BotManager:setOptionForAll('shoot', attack);
+		if attack then
+			ChatManager:Yell(Language:I18N('Bots will attack!', request.action), 2.5);
+		else
+			ChatManager:Yell(Language:I18N('Bots will not attack!', request.action), 2.5);
+		end
 
 	-- Trace
 	elseif request.action == 'trace_start' then
@@ -342,6 +352,22 @@ function FunBotUIServer:_writeSettings(player, request)
 		end
 	end
 
+	if request.incBotsWithPlayers ~= nil then
+		SettingsManager:update('incBotsWithPlayers', (request.incBotsWithPlayers == true), temporary, batched);
+	end
+
+	if request.newBotsPerNewPlayer ~= nil then
+		local tempValue = tonumber(request.newBotsPerNewPlayer);
+
+		if tempValue > 0 and tempValue <= 10 then
+			SettingsManager:update('newBotsPerNewPlayer', tempValue, temporary, batched);
+		end
+	end
+
+	if request.keepOneSlotForPlayers ~= nil then
+		SettingsManager:update('keepOneSlotForPlayers', (request.keepOneSlotForPlayers == true), temporary, batched);
+	end
+
 	if request.spawnDelayBots ~= nil then
 		local tempValue = tonumber(request.spawnDelayBots);
 
@@ -516,7 +542,7 @@ function FunBotUIServer:_writeSettings(player, request)
 		if Config.settingsPassword == nil and request.settingsPassword ~= nil then
 			ChatManager:Yell(Language:I18N('You can\'t change the password, if it\'s never set!'), 2.5);
 		else
-			if request.settingsPassword ~= "" then
+			if request.settingsPassword ~= nil and request.settingsPassword ~= "" then
 				if request.settingsPassword == "NULL" or request.settingsPassword == "nil" then
 					request.settingsPassword = DatabaseField.NULL;
 				end

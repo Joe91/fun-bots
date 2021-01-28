@@ -13,7 +13,6 @@ function BotManager:__init()
 
 	Events:Subscribe('UpdateManager:Update', self, self._onUpdate)
 	Events:Subscribe('Level:Destroy', self, self._onLevelDestroy)
-	Events:Subscribe('Player:Left', self, self._onPlayerLeft)
 	NetEvents:Subscribe('BotShootAtPlayer', self, self._onShootAt)
 	Events:Subscribe('ServerDamagePlayer', self, self._onServerDamagePlayer)
 	NetEvents:Subscribe('ClientDamagePlayer', self, self._onDamagePlayer)
@@ -59,6 +58,14 @@ function BotManager:configGlobas()
 	Globals.respawnWayBots 	= Config.respawnWayBots;
 	Globals.attackWayBots 	= Config.attackWayBots;
 	Globals.yawPerFrame 	= self:calcYawPerFrame()
+	local maxPlayers = RCON:SendCommand('vars.maxPlayers');
+	maxPlayers = tonumber(maxPlayers[2]);
+	if maxPlayers ~= nil and maxPlayers > 0 then
+		Globals.maxPlayers = maxPlayers;
+		print("there are "..maxPlayers.." slots on this server")
+	else
+		Globals.maxPlayers = MAX_NUMBER_OF_BOTS; --only fallback
+	end
 end
 
 function BotManager:calcYawPerFrame()
@@ -154,16 +161,10 @@ function BotManager:_onUpdate(dt, pass)
 	end
 end
 
-function BotManager:_onPlayerLeft(player)
+function BotManager:onPlayerLeft(player)
 	--remove all references of player
 	for _, bot in pairs(self._bots) do
 		bot:clearPlayer(player)
-	end
-	if Config.onlySpawnBotsWithPlayers then
-		if self:getPlayerCount() == 1 then
-			print("no player left - kill all bots")
-			self:killAll()
-		end
 	end
 end
 
@@ -210,13 +211,21 @@ function BotManager:_onSoldierDamage(hook, soldier, info, giverInfo)
 					info.position = Vec3(soldier.worldTransform.trans.x, soldier.worldTransform.trans.y + 1, soldier.worldTransform.trans.z)
 					info.direction = soldier.worldTransform.trans - bot.player.soldier.worldTransform.trans
 					info.origin = bot.player.soldier.worldTransform.trans
+					if (soldier.health - info.damage) < 0 then
+						if Globals.isTdm then
+							local enemyTeam = TeamId.Team1;
+							if soldier.player.teamId == TeamId.Team1 then
+								enemyTeam = TeamId.Team2;
+							end
+							TicketManager:SetTicketCount(enemyTeam, (TicketManager:GetTicketCount(enemyTeam) + 1));
+						end
+					end
 					hook:Pass(soldier, info, newGiverInfo)
 				end
 			end
 		end
 	end
 end
-
 
 function BotManager:_onServerDamagePlayer(playerName, shooterName, meleeAttack)
 	local player = PlayerManager:GetPlayerByName(playerName)
@@ -249,9 +258,7 @@ function BotManager:_onShootAt(player, botname, ignoreYaw)
 	if bot == nil or bot.player.soldier == nil or player.soldier == nil then
 		return
 	end
-	if bot.player.teamId ~= player.teamId then
-		bot:shootAt(player, ignoreYaw)
-	end
+	bot:shootAt(player, ignoreYaw)
 end
 
 function BotManager:_onLevelDestroy()
@@ -276,6 +283,16 @@ function BotManager:createBot(name, team)
 		bot.player.teamId = team
 		bot:resetVars()
 		return bot
+	end
+
+	-- check for max-players
+	local playerlimt = Globals.maxPlayers
+	if Config.keepOneSlotForPlayers then
+		playerlimt = playerlimt - 1;
+	end
+	if playerlimt <=  PlayerManager:GetPlayerCount() then
+		print("playerlimit reached")
+		return
 	end
 
 	-- Create a player for this bot.

@@ -10,14 +10,17 @@ Config = {
 
 	--difficluty
 	botAimWorsening = 0.0,			-- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy). Restart of level needed
-	bulletDamageBot = 10,			-- damage of a bot with normal bullet
-	bulletDamageBotSniper = 24,	 	-- damage of a bot with sniper bullet
-	meleeDamageBot = 48,			-- damage of a bot with melee attack
+	bulletDamageBot = 16,			-- damage of a bot with normal bullet
+	bulletDamageBotSniper = 48,	 	-- damage of a bot with sniper bullet
+	meleeDamageBot = 56,			-- damage of a bot with melee attack
 
 	--spawn
 	spawnOnLevelstart = true,		-- bots spawn on levelstart (if valid paths are available)
 	onlySpawnBotsWithPlayers = true,-- Bots only spawn if at least one Player is on the server
-	initNumberOfBots = 10,			-- bots on levelstart
+	initNumberOfBots = 8,			-- bots on levelstart
+	incBotsWithPlayers = true,		-- increase Bots, when new players join
+	newBotsPerNewPlayer = 3,		-- number to increase Bots, when new players join
+	keepOneSlotForPlayers = true,	-- always keep one slot for new Players to join
 	spawnDelayBots = 2.0,			-- time till bots respawn, if respawn enabled
 	botTeam = TeamId.Team2,		 	-- default bot team (0 = neutral, 1 = US, 2 = RU) TeamId.Team2
 	respawnWayBots = true,			-- bots on paths respawn if killed
@@ -46,7 +49,7 @@ Config = {
 	targetDistanceWayPoint = 1.4,	-- distance the bots have to reach to continue with next Waypoint
 	botFireDuration = 0.3,			-- the duration a bot fires (Assault / Engi)
 	botFirePause = 0.3,			 	-- the duration a bot waits after fire (Assault / Engi)
-	botFireDurationSupport = 2.0,	-- the duration a bot fires (Support)
+	botFireDurationSupport = 3.0,	-- the duration a bot fires (Support)
 	botFirePauseSupport = 0.6,		-- the duration a bot waits after fire (Support)
 	botFireCycleRecon = 0.4,		-- the duration a bot fires (Recon)
 	botFireCyclePistol = 0.4,		-- the duration of a FireCycle (Pistol)

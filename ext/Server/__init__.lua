@@ -15,6 +15,7 @@ local BotSpawner			= require('BotSpawner');
 local WeaponModification	= require('__shared/WeaponModification');
 local ChatCommands			= require('ChatCommands');
 local FunBotUIServer		= require('UIServer');
+local Globals 				= require('Globals');
 
 function FunBotServer:__init()
 	Language:loadLanguage(Config.language);
@@ -57,6 +58,11 @@ function FunBotServer:_onLevelLoaded(levelName, gameMode)
 	NetEvents:BroadcastLocal('WriteClientSettings', Config, true);
 	WeaponModification:ModifyAllWeapons(Config.botAimWorsening);
 	print('level ' .. levelName .. ' loaded...');
+	if gameMode == 'TeamDeathMatchC0' or gameMode == 'TeamDeathMatch0' then
+		Globals.isTdm = true;
+	else
+		Globals.isTdm = false;
+	end
 	TraceManager:onLevelLoaded(levelName, gameMode);
 	BotSpawner:onLevelLoaded(false);
 end
