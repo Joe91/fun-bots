@@ -88,6 +88,10 @@ end
 
 --public functions
 function Bot:shootAt(player, ignoreYaw)
+	if self.player.teamId == player.teamId then
+		return
+	end
+
 	local dYaw		= 0;
 	local fovHalf	= 0;
 

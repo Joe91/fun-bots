@@ -326,6 +326,22 @@ function FunBotUIServer:_writeSettings(player, request)
 		end
 	end
 
+	if request.incBotsWithPlayers ~= nil then
+		SettingsManager:update('incBotsWithPlayers', (request.incBotsWithPlayers == true), temporary, batched);
+	end
+
+	if request.newBotsPerNewPlayer ~= nil then
+		local tempValue = tonumber(request.newBotsPerNewPlayer);
+
+		if tempValue > 0 and tempValue <= 10 then
+			SettingsManager:update('newBotsPerNewPlayer', tempValue, temporary, batched);
+		end
+	end
+
+	if request.keepOneSlotForPlayers ~= nil then
+		SettingsManager:update('keepOneSlotForPlayers', (request.keepOneSlotForPlayers == true), temporary, batched);
+	end
+
 	if request.spawnDelayBots ~= nil then
 		local tempValue = tonumber(request.spawnDelayBots);
 
