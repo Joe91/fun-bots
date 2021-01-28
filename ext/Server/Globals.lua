@@ -4,6 +4,7 @@ function Globals:__init()
 	self.wayPoints			= {};
 	self.activeTraceIndexes	= 0;
 	self.yawPerFrame 		= 0.0;
+	self.isTdm				= true;
 	self.maxPlayers			= 0;
 
 	self.respawnWayBots 	= false;	--used for the runtime respawn
