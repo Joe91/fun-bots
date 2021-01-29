@@ -338,7 +338,7 @@ function FunBotUIServer:_writeSettings(player, request)
 	if request.overWriteBotSpeedMode ~= nil then
 		local tempValue = tonumber(request.overWriteBotSpeedMode);
 
-		if tempValue >= 0 and tempValue <= 10 then
+		if tempValue >= 0 and tempValue <= 5 then
 			SettingsManager:update('overWriteBotSpeedMode', tempValue, temporary, batched);
 		end
 	end
@@ -346,7 +346,7 @@ function FunBotUIServer:_writeSettings(player, request)
 	if request.speedFactor ~= nil then
 		local tempValue = tonumber(request.speedFactor);
 
-		if tempValue > 0 and tempValue <= 10 then
+		if tempValue > 0 and tempValue <= 2 then
 			SettingsManager:update('speedFactor', tempValue, temporary, batched);
 		end
 	end
