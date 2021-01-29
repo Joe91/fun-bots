@@ -335,6 +335,22 @@ function FunBotUIServer:_writeSettings(player, request)
 		SettingsManager:update('jumpWhileMoving', (request.jumpWhileMoving == true), temporary, batched);
 	end
 
+	if request.overWriteBotSpeedMode ~= nil then
+		local tempValue = tonumber(request.overWriteBotSpeedMode);
+
+		if tempValue >= 0 and tempValue <= 10 then
+			SettingsManager:update('overWriteBotSpeedMode', tempValue, temporary, batched);
+		end
+	end
+
+	if request.speedFactor ~= nil then
+		local tempValue = tonumber(request.speedFactor);
+
+		if tempValue > 0 and tempValue <= 10 then
+			SettingsManager:update('speedFactor', tempValue, temporary, batched);
+		end
+	end
+
 	--spawnning
 	if request.spawnOnLevelstart ~= nil then
 		SettingsManager:update('spawnOnLevelstart', (request.spawnOnLevelstart == true), temporary, batched);

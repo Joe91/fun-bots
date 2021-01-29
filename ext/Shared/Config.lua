@@ -40,6 +40,8 @@ Config = {
 	meleeAttackCoolDown = 3.0,		-- the time a bot waits before attacking with melee again
 	jumpWhileShooting = true,		-- bots jump over obstacles while shooting if needed
 	jumpWhileMoving = true,			-- bots jump while moving. If false, only on obstacles!
+	overWriteBotSpeedMode = 0,		-- 0 = no overwrite. 1 = prone, 2 = crouch, 3 = walk, 4 = run
+	speedFactor = 1.0,				-- modifies the movementspeed
 
 	--expert
 	botFirstShotDelay = 0.2,		-- delay for first shot. If too small, there will be great spread in first cycle because its not kompensated jet.

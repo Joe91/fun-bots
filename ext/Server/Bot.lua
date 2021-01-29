@@ -610,6 +610,9 @@ function Bot:_updateMovement()
 					self._wayWaitTimer			= 0;
 					self._wayWaitYawTimer		= 0;
 					self.activeSpeedValue		= point.speedMode; --speed
+					if Config.overWriteBotSpeedMode > 0 then
+						self.activeSpeedValue = Config.overWriteBotSpeedMode;
+					end
 					local dy					= point.trans.z - self.player.soldier.worldTransform.trans.z;
 					local dx					= point.trans.x - self.player.soldier.worldTransform.trans.x;
 					local distanceFromTarget	= math.sqrt(dx ^ 2 + dy ^ 2);
@@ -847,7 +850,7 @@ function Bot:_updateMovement()
 
 			-- movent speed
 			if self.player.alive then
-				self.player.input:SetLevel(EntryInputActionEnum.EIAThrottle, speedVal);
+				self.player.input:SetLevel(EntryInputActionEnum.EIAThrottle, speedVal * Config.speedFactor);
 
 				if self.activeSpeedValue > 3 then
 					self.player.input:SetLevel(EntryInputActionEnum.EIASprint, 1);
