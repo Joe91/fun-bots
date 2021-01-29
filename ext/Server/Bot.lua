@@ -783,6 +783,10 @@ function Bot:_updateMovement()
 			else
 				self.activeSpeedValue = 3; --TODO: Test aiming in Mode 2
 			end
+			if Config.overWriteBotAttackMode > 0 then
+				self.activeSpeedValue = Config.overWriteBotAttackMode;
+			end
+			
 			local targetTime = 5.0
 			local targetCycles = math.floor(targetTime / StaticConfig.traceDeltaShooting);
 

@@ -41,6 +41,7 @@ Config = {
 	jumpWhileShooting = true,		-- bots jump over obstacles while shooting if needed
 	jumpWhileMoving = true,			-- bots jump while moving. If false, only on obstacles!
 	overWriteBotSpeedMode = 0,		-- 0 = no overwrite. 1 = prone, 2 = crouch, 3 = walk, 4 = run
+	overWriteBotAttackMode = 0,		-- Affects Aiming!!! 0 = no overwrite. 1 = prone, 2 = crouch, 3 = walk, 4 = run
 	speedFactor = 1.0,				-- modifies the movementspeed
 
 	--expert

@@ -343,6 +343,14 @@ function FunBotUIServer:_writeSettings(player, request)
 		end
 	end
 
+	if request.overWriteBotAttackMode ~= nil then
+		local tempValue = tonumber(request.overWriteBotAttackMode);
+
+		if tempValue >= 0 and tempValue <= 5 then
+			SettingsManager:update('overWriteBotAttackMode', tempValue, temporary, batched);
+		end
+	end
+
 	if request.speedFactor ~= nil then
 		local tempValue = tonumber(request.speedFactor);
 
