@@ -359,6 +359,14 @@ function FunBotUIServer:_writeSettings(player, request)
 		end
 	end
 
+	if request.speedFactorAttack ~= nil then
+		local tempValue = tonumber(request.speedFactorAttack);
+
+		if tempValue > 0 and tempValue <= 2 then
+			SettingsManager:update('speedFactorAttack', tempValue, temporary, batched);
+		end
+	end
+
 	--spawnning
 	if request.spawnOnLevelstart ~= nil then
 		SettingsManager:update('spawnOnLevelstart', (request.spawnOnLevelstart == true), temporary, batched);
