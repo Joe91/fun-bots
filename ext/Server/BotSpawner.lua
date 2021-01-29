@@ -92,6 +92,10 @@ function BotSpawner:onLevelLoaded(forceSpawn)
 			amountToSpawn = BotManager:getBotCount()
 		end
 
+		if amountToSpawn > MAX_NUMBER_OF_BOTS then
+			amountToSpawn = MAX_NUMBER_OF_BOTS;
+		end
+
 		local team = BotManager:getBotTeam();
 		for i = 1,amountToSpawn do
 			BotManager:createBot(BotNames[i], team)
