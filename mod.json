@@ -1,10 +1,13 @@
 {
 	"Name": "fun-bots",
 	"Authors": ["Bizzi","Joe-91"],
-	"Description": "simple AI-Bots and some dumb spawn options",
+	"Description": "AI-Bots for TDM",
 	"URL": "https://github.com/Joe91/fun-bots",
-	"Version": "1.2.0.1",
+	"Version": "1.2.1.2",
 	"HasWebUI": true,
 	"Tags": ["fun-bots"],
-	"HasVeniceEXT": true
+	"HasVeniceEXT": true,
+	"Dependencies": {
+        "veniceext": "^1.0.8"
+    }
 }
