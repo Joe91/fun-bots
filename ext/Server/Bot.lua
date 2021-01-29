@@ -783,7 +783,7 @@ function Bot:_updateMovement()
 			else
 				self.activeSpeedValue = 3; --TODO: Test aiming in Mode 2
 			end
-			if Config.overWriteBotAttackMode > 0 then
+			if Config.overWriteBotAttackMode > 0 and Config.botWeapon ~= "Knive" then
 				self.activeSpeedValue = Config.overWriteBotAttackMode;
 			end
 
@@ -852,7 +852,7 @@ function Bot:_updateMovement()
 				end
 			end
 
-			if speedVal > 0 and self._shootPlayer ~= nil and self._shootPlayer.soldier ~= nil then
+			if speedVal > 0 and self._shootPlayer ~= nil and self._shootPlayer.soldier ~= nil and Config.botWeapon ~= "Knive" then
 				speedVal = speedVal * Config.speedFactorAttack;
 			end
 
