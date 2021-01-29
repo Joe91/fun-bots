@@ -459,7 +459,7 @@ function Bot:_updateShooting()
 						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
 					end
 				else --primary
-					if self.player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Crouch then -- wait till crouch
+					if self.player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Crouch and Config.overWriteBotAttackMode == 0 then -- wait till crouch
 						self._shotTimer =  -Config.botFirstShotDelay;
 					end
 					if self.kit == "Support" then
@@ -610,6 +610,9 @@ function Bot:_updateMovement()
 					self._wayWaitTimer			= 0;
 					self._wayWaitYawTimer		= 0;
 					self.activeSpeedValue		= point.speedMode; --speed
+					if Config.overWriteBotSpeedMode > 0 then
+						self.activeSpeedValue = Config.overWriteBotSpeedMode;
+					end
 					local dy					= point.trans.z - self.player.soldier.worldTransform.trans.z;
 					local dx					= point.trans.x - self.player.soldier.worldTransform.trans.x;
 					local distanceFromTarget	= math.sqrt(dx ^ 2 + dy ^ 2);
@@ -780,6 +783,10 @@ function Bot:_updateMovement()
 			else
 				self.activeSpeedValue = 3; --TODO: Test aiming in Mode 2
 			end
+			if Config.overWriteBotAttackMode > 0 then
+				self.activeSpeedValue = Config.overWriteBotAttackMode;
+			end
+
 			local targetTime = 5.0
 			local targetCycles = math.floor(targetTime / StaticConfig.traceDeltaShooting);
 
@@ -847,7 +854,7 @@ function Bot:_updateMovement()
 
 			-- movent speed
 			if self.player.alive then
-				self.player.input:SetLevel(EntryInputActionEnum.EIAThrottle, speedVal);
+				self.player.input:SetLevel(EntryInputActionEnum.EIAThrottle, speedVal * Config.speedFactor);
 
 				if self.activeSpeedValue > 3 then
 					self.player.input:SetLevel(EntryInputActionEnum.EIASprint, 1);
