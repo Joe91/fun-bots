@@ -459,7 +459,7 @@ function Bot:_updateShooting()
 						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
 					end
 				else --primary
-					if self.player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Crouch then -- wait till crouch
+					if self.player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Crouch and Config.overWriteBotAttackMode == 0 then -- wait till crouch
 						self._shotTimer =  -Config.botFirstShotDelay;
 					end
 					if self.kit == "Support" then
@@ -786,7 +786,7 @@ function Bot:_updateMovement()
 			if Config.overWriteBotAttackMode > 0 then
 				self.activeSpeedValue = Config.overWriteBotAttackMode;
 			end
-			
+
 			local targetTime = 5.0
 			local targetCycles = math.floor(targetTime / StaticConfig.traceDeltaShooting);
 
