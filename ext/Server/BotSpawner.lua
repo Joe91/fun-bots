@@ -390,6 +390,10 @@ function BotSpawner:getKitApperanceCustomization(team, kit, color)
 
 	if kit == "Assault" then
 		if Config.useShotgun then
+			local usas12 = ResourceManager:SearchForDataContainer('Weapons/USAS-12/U_USAS-12')
+			local usas12Attachments = {'Weapons/USAS-12/U_USAS-12_Kobra', 'Weapons/USAS-12/U_USAS-12_ExtendedMag', 'Weapons/USAS-12/U_USAS-12_Frag' }
+			primaryWeapon.weapon = SoldierWeaponUnlockAsset(usas12)
+			self:_setAttachments(primaryWeapon, usas12Attachments)
 		else
 			local m416 = ResourceManager:SearchForDataContainer('Weapons/M416/U_M416')
 			local m416Attachments = { 'Weapons/M416/U_M416_Kobra', 'Weapons/M416/U_M416_HeavyBarrel' }
@@ -401,6 +405,10 @@ function BotSpawner:getKitApperanceCustomization(team, kit, color)
 
 	elseif kit == "Engineer" then --engineer
 		if Config.useShotgun then
+			local saiga20 = ResourceManager:SearchForDataContainer('Weapons/SAIGA20K/U_SAIGA_20K')
+			local saiga20Attachments = {'Weapons/SAIGA20K/U_Saiga_20k_Kobra', 'Weapons/SAIGA20K/U_Saiga_20k_Silencer', 'Weapons/SAIGA20K/U_Saiga_20k_ExtendedMag', 'Weapons/SAIGA20K/U_Saiga_20k_Frag' }
+			primaryWeapon.weapon = SoldierWeaponUnlockAsset(saiga20)
+			self:_setAttachments(primaryWeapon, saiga20Attachments)
 		else
 			local asval = ResourceManager:SearchForDataContainer('Weapons/ASVal/U_ASVal')
 			local asvalAttachments = { 'Weapons/ASVal/U_ASVal_Kobra', 'Weapons/ASVal/U_ASVal_ExtendedMag' }
@@ -412,6 +420,10 @@ function BotSpawner:getKitApperanceCustomization(team, kit, color)
 
 	elseif kit == "Support" then --support
 		if Config.useShotgun then
+			local mk3a1 = ResourceManager:SearchForDataContainer('Weapons/XP1_Jackhammer/U_Jackhammer')
+			local mk3a1Attachments = {'Weapons/XP1_Jackhammer/U_Jackhammer_Kobra', 'Weapons/XP1_Jackhammer/U_Jackhammer_TargetPointer', 'Weapons/XP1_Jackhammer/U_Jackhammer_Frag' }
+			primaryWeapon.weapon = SoldierWeaponUnlockAsset(mk3a1)
+			self:_setAttachments(primaryWeapon, mk3a1Attachments)
 		else
 			local m249 = ResourceManager:SearchForDataContainer('Weapons/M249/U_M249')
 			local m249Attachments = { 'Weapons/M249/U_M249_Eotech', 'Weapons/M249/U_M249_Bipod' }
@@ -423,6 +435,10 @@ function BotSpawner:getKitApperanceCustomization(team, kit, color)
 
 	else	--"Recon"
 		if Config.useShotgun then
+			local spas12 = ResourceManager:SearchForDataContainer('Weapons/XP2_SPAS12/U_SPAS12')
+			local spas12Attachments = {'Weapons/XP2_SPAS12/U_SPAS12_Kobra', 'Weapons/XP2_SPAS12/U_SPAS12_Frag' }
+			primaryWeapon.weapon = SoldierWeaponUnlockAsset(spas12)
+			self:_setAttachments(primaryWeapon, spas12Attachments)
 		else
 			local l96 = ResourceManager:SearchForDataContainer('Weapons/XP1_L96/U_L96')
 			local l96Attachments = { 'Weapons/XP1_L96/U_L96_Rifle_6xScope', 'Weapons/XP1_L96/U_L96_StraightPull' }
