@@ -278,6 +278,14 @@ function FunBotUIServer:_writeSettings(player, request)
 		end
 	end
 
+	if request.bulletDamageBotShotgun ~= nil then
+		local tempValue = tonumber(request.bulletDamageBotShotgun);
+
+		if tempValue >= 0 then
+			SettingsManager:update('bulletDamageBotShotgun', tempValue, temporary, batched);
+		end
+	end
+
 	if request.meleeDamageBot ~= nil then
 		local tempValue = tonumber(request.meleeDamageBot);
 

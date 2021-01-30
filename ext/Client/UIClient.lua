@@ -75,9 +75,10 @@ function FunBotUIClient:_onUISettings(data)
 	settings:add("GLOBAL", "Boolean", "useShotgun", Language:I18N("Bots use Shotguns"), data.useShotgun, true, Language:I18N("only shotguns cause kills for bots"));
 
 	settings:add("DIFFICULTY", "Float", "botAimWorsening", Language:I18N("Aim Worsening"), data.botAimWorsening, 0.0, Language:I18N("0 = hard, 1 (or higher) = easy. Only takes effect on level Start"));
-	settings:add("DIFFICULTY", "Integer", "bulletDamageBot", Language:I18N("Damage Bot Bullet"), data.bulletDamageBot, 9, Language:I18N("The damage a normal Bullet does"));
-	settings:add("DIFFICULTY", "Integer", "bulletDamageBotSniper", Language:I18N("Damage Bot Sniper"), data.bulletDamageBotSniper, 24, Language:I18N("The damage a Sniper-Bullet does"));
-	settings:add("DIFFICULTY", "Integer", "meleeDamageBot", Language:I18N("Damage Bot Melee"), data.meleeDamageBot, 42, Language:I18N("The Damage a melee-attack does"));
+	settings:add("DIFFICULTY", "Integer", "bulletDamageBot", Language:I18N("Damage Bot Bullet"), data.bulletDamageBot, 16, Language:I18N("The damage a normal Bullet does"));
+	settings:add("DIFFICULTY", "Integer", "bulletDamageBotSniper", Language:I18N("Damage Bot Sniper"), data.bulletDamageBotSniper, 48, Language:I18N("The damage a Sniper-Bullet does"));
+	settings:add("DIFFICULTY", "Integer", "bulletDamageBotShotgun", Language:I18N("Damage Bot Shotgun"), data.bulletDamageBotShotgun, 56, Language:I18N("The damage a Shotgun-Bullet does"));
+	settings:add("DIFFICULTY", "Integer", "meleeDamageBot", Language:I18N("Damage Bot Melee"), data.meleeDamageBot, 24, Language:I18N("The Damage a melee-attack does"));
 
 	settings:add("SPAWN", "Boolean", "spawnOnLevelstart", Language:I18N("Spawn on Levelstart"), data.spawnOnLevelstart, true, Language:I18N("Bots spawn on levelstart (if valid paths are available)"));
 	settings:add("SPAWN", "Boolean", "onlySpawnBotsWithPlayers", Language:I18N("Only spawn with players"), data.onlySpawnBotsWithPlayers, true, Language:I18N("Bots only spawn if at least one Player is on the server"));

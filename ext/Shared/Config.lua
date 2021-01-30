@@ -13,6 +13,7 @@ Config = {
 	botAimWorsening = 0.0,			-- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy). Restart of level needed
 	bulletDamageBot = 16,			-- damage of a bot with normal bullet
 	bulletDamageBotSniper = 48,	 	-- damage of a bot with sniper bullet
+	bulletDamageBotShotgun = 24, 	-- damage of a bot with shotgun bullet
 	meleeDamageBot = 56,			-- damage of a bot with melee attack
 
 	--spawn

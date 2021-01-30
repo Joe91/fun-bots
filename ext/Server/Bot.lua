@@ -29,6 +29,7 @@ function Bot:__init(player)
 	self._obstaceSequenceTimer = 0;
 	self._shotTimer = 0;
 	self._shootModeTimer = 0;
+	self._reloadTimer = 0;
 	self._attackModeMoveTimer = 0;
 	self._meleeCooldownTimer = 0;
 	self._shootTraceTimer = 0;
