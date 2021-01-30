@@ -246,6 +246,10 @@ function FunBotUIServer:_writeSettings(player, request)
 		end
 	end
 
+	if request.useShotgun ~= nil then
+		SettingsManager:update('useShotgun', (request.useShotgun == true), temporary, batched);
+	end	
+
 	-- difficluty
 	if request.botAimWorsening ~= nil then
 		local tempValue = tonumber(request.botAimWorsening)

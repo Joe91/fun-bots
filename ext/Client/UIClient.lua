@@ -72,6 +72,7 @@ function FunBotUIClient:_onUISettings(data)
 	settings:addList("GLOBAL", "botWeapon", "Bot Weapon", BotWeapons, data.botWeapon, "Primary", Language:I18N("Select the weapon the bots use"));
 	settings:addList("GLOBAL", "botKit", Language:I18N("Bot Kit"), BotKits, data.botKit, "RANDOM_KIT", Language:I18N("The Kit a bots spawns with."));
 	settings:addList("GLOBAL", "botColor", Language:I18N("Bot Color"), BotColors, data.botColor, "RANDOM_COLOR", Language:I18N("The Kit-Color a bots spawns with."));
+	settings:add("GLOBAL", "Boolean", "useShotgun", Language:I18N("Bots use Shotguns"), data.useShotgun, true, Language:I18N("only shotguns cause kills for bots"));
 
 	settings:add("DIFFICULTY", "Float", "botAimWorsening", Language:I18N("Aim Worsening"), data.botAimWorsening, 0.0, Language:I18N("0 = hard, 1 (or higher) = easy. Only takes effect on level Start"));
 	settings:add("DIFFICULTY", "Integer", "bulletDamageBot", Language:I18N("Damage Bot Bullet"), data.bulletDamageBot, 9, Language:I18N("The damage a normal Bullet does"));
