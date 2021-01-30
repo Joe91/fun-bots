@@ -211,11 +211,21 @@ function BotManager:_onSoldierDamage(hook, soldier, info, giverInfo)
 							TicketManager:SetTicketCount(enemyTeam, (TicketManager:GetTicketCount(enemyTeam) + 1));
 						end
 					end
-					hook:Pass(soldier, info, giverInfo)
+				end
+			else
+				--valid bot-damage?
+				bot = self:GetBotByName(giverInfo.giver.name)
+				if bot ~= nil then
+					-- giver was a bot (with shotgun)
+					if Config.useShotgun then
+						info.damage = Config.bulletDamageBotShotgun;
+						info.boneIndex = 0;
+					end
 				end
 			end
 		end
 	end
+	hook:Pass(soldier, info, giverInfo)
 end
 
 function BotManager:_onServerDamagePlayer(playerName, shooterName, meleeAttack)

@@ -29,6 +29,7 @@ function Bot:__init(player)
 	self._obstaceSequenceTimer = 0;
 	self._shotTimer = 0;
 	self._shootModeTimer = 0;
+	self._reloadTimer = 0;
 	self._attackModeMoveTimer = 0;
 	self._meleeCooldownTimer = 0;
 	self._shootTraceTimer = 0;
@@ -263,6 +264,7 @@ function Bot:resetSpawnVars()
 	self._shootModeTimer		= 0;
 	self._meleeCooldownTimer	= 0;
 	self._shootTraceTimer		= 0;
+	self._reloadTimer 			= 0;
 	self._attackModeMoveTimer	= 0;
 	self._shootWayPoints		= {};
 end
@@ -312,7 +314,12 @@ function Bot:_updateAiming(dt)
 				targetMovement			= self._shootPlayer.soldier.worldTransform.trans - self._lastTargetTrans --movement in one dt
 				--calculate how long the distance is --> time to travel
 				local distanceToPlayer	= self._shootPlayer.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans);
-				local timeToTravel		= (distanceToPlayer / StaticConfig.botBulletSpeed) + dt;
+				local timeToTravel = 0.0;
+				if Config.useShotgun then
+					timeToTravel		= (distanceToPlayer / StaticConfig.botBulletSpeedShotgun) + dt;
+				else
+					timeToTravel		= (distanceToPlayer / StaticConfig.botBulletSpeed) + dt;
+				end
 				local factorForMovement	= timeToTravel / self._aimUpdateTimer;
 				targetMovement			= targetMovement * factorForMovement;
 			end
@@ -408,8 +415,10 @@ function Bot:_updateShooting()
 
 		if self._shootPlayer ~= nil and self._shootPlayer.soldier ~= nil then
 			if self._shootModeTimer < Config.botFireModeDuration then
+				self.player.input:SetLevel(EntryInputActionEnum.EIAReload, 0);
 				self._shootModeTimer	= self._shootModeTimer + StaticConfig.botUpdateCycle;
 				self.activeMoveMode		= 9; -- movement-mode : attack
+				self._reloadTimer		= 0; -- reset reloading
 				--self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 1) --does not work.
 
 				--check for melee attack
@@ -508,6 +517,15 @@ function Bot:_updateShooting()
 			self._shootPlayer		= nil;
 			self._lastShootPlayer	= nil;
 			self._shootModeTimer	= 0;
+
+			self._reloadTimer = self._reloadTimer + StaticConfig.botUpdateCycle;
+			if self._reloadTimer > 4 then
+				self.player.input:SetLevel(EntryInputActionEnum.EIAReload, 0);
+			elseif self._reloadTimer > 3 and self.player.soldier.weaponsComponent.currentWeapon.primaryAmmo < 5 and Config.useShotgun then
+				self.player.input:SetLevel(EntryInputActionEnum.EIAReload, 1);
+			elseif self._reloadTimer > 3 and self.player.soldier.weaponsComponent.currentWeapon.primaryAmmo < 15 and not Config.useShotgun then
+				self.player.input:SetLevel(EntryInputActionEnum.EIAReload, 1);
+			end
 		end
 	end
 end
@@ -658,9 +676,9 @@ function Bot:_updateMovement()
 							self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0);
 							self.player.input.authoritativeAimingPitch		= 0.0;
 							if (MathUtils:GetRandomInt(0,1) == 1) then
-								self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 1.0);
+								self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 1.0 * Config.speedFactor);
 							else
-								self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, -1.0);
+								self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, -1.0 * Config.speedFactor);
 							end
 
 						elseif self._obstaceSequenceTimer > 0.0 then --step 1
@@ -783,7 +801,7 @@ function Bot:_updateMovement()
 			else
 				self.activeSpeedValue = 3; --TODO: Test aiming in Mode 2
 			end
-			if Config.overWriteBotAttackMode > 0 then
+			if Config.overWriteBotAttackMode > 0 and Config.botWeapon ~= "Knive" then
 				self.activeSpeedValue = Config.overWriteBotAttackMode;
 			end
 
@@ -810,15 +828,15 @@ function Bot:_updateMovement()
 				self._attackModeMoveTimer = 0;
 				self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
 			elseif self._attackModeMoveTimer > 17 then
-				self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, -1.0);
+				self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, -1.0 * Config.speedFactorAttack);
 			elseif self._attackModeMoveTimer > 13 then
 				self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
 			elseif self._attackModeMoveTimer > 12 then
-				self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 1.0);
+				self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 1.0 * Config.speedFactorAttack);
 			elseif self._attackModeMoveTimer > 9 then
 				self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0);
 			elseif self._attackModeMoveTimer > 7 then
-				self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 1.0);
+				self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 1.0 * Config.speedFactorAttack);
 			end
 
 			self._attackModeMoveTimer = self._attackModeMoveTimer + StaticConfig.botUpdateCycle;
@@ -850,6 +868,10 @@ function Bot:_updateMovement()
 						self.player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Stand, true, true);
 					end
 				end
+			end
+
+			if speedVal > 0 and self._shootPlayer ~= nil and self._shootPlayer.soldier ~= nil and Config.botWeapon ~= "Knive" then
+				speedVal = speedVal * Config.speedFactorAttack;
 			end
 
 			-- movent speed

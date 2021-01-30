@@ -7,11 +7,13 @@ Config = {
 	botWeapon = "Primary",			-- Select the weapon the bots use
 	botKit = "RANDOM_KIT",			-- see BotKits
 	botColor = "RANDOM_COLOR",		-- see BotColors
+	useShotgun = true,				-- only shotguns cause kills for bots
 
 	--difficluty
 	botAimWorsening = 0.0,			-- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy). Restart of level needed
 	bulletDamageBot = 16,			-- damage of a bot with normal bullet
 	bulletDamageBotSniper = 48,	 	-- damage of a bot with sniper bullet
+	bulletDamageBotShotgun = 24, 	-- damage of a bot with shotgun bullet
 	meleeDamageBot = 56,			-- damage of a bot with melee attack
 
 	--spawn
@@ -43,6 +45,7 @@ Config = {
 	overWriteBotSpeedMode = 0,		-- 0 = no overwrite. 1 = prone, 2 = crouch, 3 = walk, 4 = run
 	overWriteBotAttackMode = 0,		-- Affects Aiming!!! 0 = no overwrite. 1 = prone, 2 = crouch (good aim), 3 = walk, 4 = run
 	speedFactor = 1.0,				-- reduces the movementspeed. 1 = normal, 0 = standing.
+	speedFactorAttack = 0.6,		-- reduces the movementspeed while attacking. 1 = normal, 0 = standing.
 
 	--expert
 	botFirstShotDelay = 0.2,		-- delay for first shot. If too small, there will be great spread in first cycle because its not kompensated jet.
@@ -73,5 +76,6 @@ StaticConfig = {
 	botUpdateCycle = 0.1,			-- update-intervall of bots
 	botAimUpdateCycle = 0.05,		-- = 3 frames at 60 Hz
 	botBulletSpeed = 600,			-- speed a bullet travels ingame (aproximately)
+	botBulletSpeedShotgun = 150,	-- speed a shutgun-bullet travel ingame (aproximately)
 	targetHeightDistanceWayPoint = 2-- distance the bots have to reach in height to continue with next Waypoint
 };
