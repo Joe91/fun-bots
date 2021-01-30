@@ -240,6 +240,9 @@ function BotManager:_onDamagePlayer(player, shooterName, meleeAttack)
 	if not player.alive or bot == nil then
 		return
 	end
+	if player.teamId == bot.player.teamId then
+		return
+	end
 	local damage = 0.1 --only trigger soldier-damage with this
 	if meleeAttack then
 		damage = 0.2 --signal melee damage with this value
