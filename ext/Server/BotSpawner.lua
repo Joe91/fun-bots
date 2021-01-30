@@ -2,6 +2,7 @@ class('BotSpawner');
 
 local BotManager	= require('BotManager');
 local Globals		= require('Globals');
+local WeaponList	= require('WeaponList');
 
 function BotSpawner:__init()
 	self._botSpawnTimer = 0
@@ -361,7 +362,7 @@ function BotSpawner:_setAttachments(unlockWeapon, attachments)
 	end
 end
 
-function BotSpawner:getKitApperanceCustomization(team, kit, color)
+function BotSpawner:getKitApperanceCustomization(team, kit, color, weaponName)
 	-- Create the loadouts
 	local soldierKit = nil
 	local appearance = nil
@@ -375,6 +376,11 @@ function BotSpawner:getKitApperanceCustomization(team, kit, color)
 
 	local primaryWeapon = UnlockWeaponAndSlot()
 	primaryWeapon.slot = WeaponSlot.WeaponSlot_0
+
+	local weaponClass = WeaponList:getWeapon(weaponName)
+	local weaponResource = ResourceManager:SearchForDataContainer(weaponClass:getResourcePath())
+	primaryWeapon.weapon = SoldierWeaponUnlockAsset(weaponResource)
+	self:_setAttachments(primaryWeapon, weaponClass:getAllAttachements())
 
 	local gadget01 = UnlockWeaponAndSlot()
 	gadget01.slot = WeaponSlot.WeaponSlot_2
@@ -391,7 +397,7 @@ function BotSpawner:getKitApperanceCustomization(team, kit, color)
 	meleeWeapon.slot = WeaponSlot.WeaponSlot_7
 
 	if kit == "Assault" then
-		if Config.useShotgun then
+		--[[if Config.useShotgun then
 			local usas12 = ResourceManager:SearchForDataContainer('Weapons/USAS-12/U_USAS-12')
 			local usas12Attachments = {'Weapons/USAS-12/U_USAS-12_Kobra', 'Weapons/USAS-12/U_USAS-12_ExtendedMag', 'Weapons/USAS-12/U_USAS-12_Frag' }
 			primaryWeapon.weapon = SoldierWeaponUnlockAsset(usas12)
@@ -401,12 +407,12 @@ function BotSpawner:getKitApperanceCustomization(team, kit, color)
 			local m416Attachments = { 'Weapons/M416/U_M416_Kobra', 'Weapons/M416/U_M416_HeavyBarrel' }
 			primaryWeapon.weapon = SoldierWeaponUnlockAsset(m416)
 			self:_setAttachments(primaryWeapon, m416Attachments)
-		end
+		end--]]
 		gadget01.weapon = SoldierWeaponUnlockAsset(ResourceManager:SearchForDataContainer('Weapons/Gadgets/Medicbag/U_Medkit'))
 		gadget02.weapon = SoldierWeaponUnlockAsset(ResourceManager:SearchForDataContainer('Weapons/Gadgets/Defibrillator/U_Defib'))
 
 	elseif kit == "Engineer" then --engineer
-		if Config.useShotgun then
+		--[[if Config.useShotgun then
 			local saiga20 = ResourceManager:SearchForDataContainer('Weapons/SAIGA20K/U_SAIGA_20K')
 			local saiga20Attachments = {'Weapons/SAIGA20K/U_Saiga_20k_Kobra', 'Weapons/SAIGA20K/U_Saiga_20k_Silencer', 'Weapons/SAIGA20K/U_Saiga_20k_ExtendedMag', 'Weapons/SAIGA20K/U_Saiga_20k_Frag' }
 			primaryWeapon.weapon = SoldierWeaponUnlockAsset(saiga20)
@@ -416,12 +422,12 @@ function BotSpawner:getKitApperanceCustomization(team, kit, color)
 			local asvalAttachments = { 'Weapons/ASVal/U_ASVal_Kobra', 'Weapons/ASVal/U_ASVal_ExtendedMag' }
 			primaryWeapon.weapon = SoldierWeaponUnlockAsset(asval)
 			self:_setAttachments(primaryWeapon, asvalAttachments)
-		end
+		end--]]
 		gadget01.weapon = SoldierWeaponUnlockAsset(ResourceManager:SearchForDataContainer('Weapons/Gadgets/Repairtool/U_Repairtool'))
 		gadget02.weapon = SoldierWeaponUnlockAsset(ResourceManager:SearchForDataContainer('Weapons/SMAW/U_SMAW'))
 
 	elseif kit == "Support" then --support
-		if Config.useShotgun then
+		--[[if Config.useShotgun then
 			local mk3a1 = ResourceManager:SearchForDataContainer('Weapons/XP1_Jackhammer/U_Jackhammer')
 			local mk3a1Attachments = {'Weapons/XP1_Jackhammer/U_Jackhammer_Kobra', 'Weapons/XP1_Jackhammer/U_Jackhammer_TargetPointer', 'Weapons/XP1_Jackhammer/U_Jackhammer_Frag' }
 			primaryWeapon.weapon = SoldierWeaponUnlockAsset(mk3a1)
@@ -431,12 +437,12 @@ function BotSpawner:getKitApperanceCustomization(team, kit, color)
 			local m249Attachments = { 'Weapons/M249/U_M249_Eotech', 'Weapons/M249/U_M249_Bipod' }
 			primaryWeapon.weapon = SoldierWeaponUnlockAsset(m249)
 			self:_setAttachments(primaryWeapon, m249Attachments)
-		end
+		end--]]
 		gadget01.weapon = SoldierWeaponUnlockAsset(ResourceManager:SearchForDataContainer('Weapons/Gadgets/Ammobag/U_Ammobag'))
 		gadget02.weapon = SoldierWeaponUnlockAsset(ResourceManager:SearchForDataContainer('Weapons/Gadgets/Claymore/U_Claymore'))
 
 	else	--"Recon"
-		if Config.useShotgun then
+		--[[if Config.useShotgun then
 			local spas12 = ResourceManager:SearchForDataContainer('Weapons/XP2_SPAS12/U_SPAS12')
 			local spas12Attachments = {'Weapons/XP2_SPAS12/U_SPAS12_Kobra', 'Weapons/XP2_SPAS12/U_SPAS12_Frag' }
 			primaryWeapon.weapon = SoldierWeaponUnlockAsset(spas12)
@@ -446,7 +452,7 @@ function BotSpawner:getKitApperanceCustomization(team, kit, color)
 			local l96Attachments = { 'Weapons/XP1_L96/U_L96_Rifle_6xScope', 'Weapons/XP1_L96/U_L96_StraightPull' }
 			primaryWeapon.weapon = SoldierWeaponUnlockAsset(l96)
 			self:_setAttachments(primaryWeapon, l96Attachments)
-		end
+		end--]]
 		gadget01.weapon = SoldierWeaponUnlockAsset(ResourceManager:SearchForDataContainer('Weapons/Gadgets/RadioBeacon/U_RadioBeacon'))
 		--no second gadget
 	end
@@ -575,7 +581,7 @@ function BotSpawner:spawnBot(bot, trans, setKit)
 	local soldierCustomization = nil
 	local soldierKit = nil
 	local appearance = nil
-	soldierKit, appearance, soldierCustomization = self:getKitApperanceCustomization(bot.player.teamId, botKit, botColor)
+	soldierKit, appearance, soldierCustomization = self:getKitApperanceCustomization(bot.player.teamId, botKit, botColor, "SPAS12")
 
 	-- Create the transform of where to spawn the bot at.
 	local transform = LinearTransform()

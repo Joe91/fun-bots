@@ -16,6 +16,7 @@ function Bot:__init(player)
 	self._moveMode = 0;
 	self.kit = "";
 	self.color = "";
+	self.weapon = nil;
 	self.inEnemyTeam = false;
 	self._checkSwapTeam = false;
 	self._respawning = false;
