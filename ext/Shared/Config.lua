@@ -75,5 +75,6 @@ StaticConfig = {
 	botUpdateCycle = 0.1,			-- update-intervall of bots
 	botAimUpdateCycle = 0.05,		-- = 3 frames at 60 Hz
 	botBulletSpeed = 600,			-- speed a bullet travels ingame (aproximately)
+	botBulletSpeedShotgun = 150,	-- speed a shutgun-bullet travel ingame (aproximately)
 	targetHeightDistanceWayPoint = 2-- distance the bots have to reach in height to continue with next Waypoint
 };

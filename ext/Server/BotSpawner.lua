@@ -389,34 +389,46 @@ function BotSpawner:getKitApperanceCustomization(team, kit, color)
 	meleeWeapon.slot = WeaponSlot.WeaponSlot_7
 
 	if kit == "Assault" then
-		local m416 = ResourceManager:SearchForDataContainer('Weapons/M416/U_M416')
-		local m416Attachments = { 'Weapons/M416/U_M416_Kobra', 'Weapons/M416/U_M416_HeavyBarrel' }
-		primaryWeapon.weapon = SoldierWeaponUnlockAsset(m416)
-		self:_setAttachments(primaryWeapon, m416Attachments)
+		if Config.useShotgun then
+		else
+			local m416 = ResourceManager:SearchForDataContainer('Weapons/M416/U_M416')
+			local m416Attachments = { 'Weapons/M416/U_M416_Kobra', 'Weapons/M416/U_M416_HeavyBarrel' }
+			primaryWeapon.weapon = SoldierWeaponUnlockAsset(m416)
+			self:_setAttachments(primaryWeapon, m416Attachments)
+		end
 		gadget01.weapon = SoldierWeaponUnlockAsset(ResourceManager:SearchForDataContainer('Weapons/Gadgets/Medicbag/U_Medkit'))
 		gadget02.weapon = SoldierWeaponUnlockAsset(ResourceManager:SearchForDataContainer('Weapons/Gadgets/Defibrillator/U_Defib'))
 
 	elseif kit == "Engineer" then --engineer
-		local asval = ResourceManager:SearchForDataContainer('Weapons/ASVal/U_ASVal')
-		local asvalAttachments = { 'Weapons/ASVal/U_ASVal_Kobra', 'Weapons/ASVal/U_ASVal_ExtendedMag' }
-		primaryWeapon.weapon = SoldierWeaponUnlockAsset(asval)
-		self:_setAttachments(primaryWeapon, asvalAttachments)
+		if Config.useShotgun then
+		else
+			local asval = ResourceManager:SearchForDataContainer('Weapons/ASVal/U_ASVal')
+			local asvalAttachments = { 'Weapons/ASVal/U_ASVal_Kobra', 'Weapons/ASVal/U_ASVal_ExtendedMag' }
+			primaryWeapon.weapon = SoldierWeaponUnlockAsset(asval)
+			self:_setAttachments(primaryWeapon, asvalAttachments)
+		end
 		gadget01.weapon = SoldierWeaponUnlockAsset(ResourceManager:SearchForDataContainer('Weapons/Gadgets/Repairtool/U_Repairtool'))
 		gadget02.weapon = SoldierWeaponUnlockAsset(ResourceManager:SearchForDataContainer('Weapons/SMAW/U_SMAW'))
 
 	elseif kit == "Support" then --support
-		local m249 = ResourceManager:SearchForDataContainer('Weapons/M249/U_M249')
-		local m249Attachments = { 'Weapons/M249/U_M249_Eotech', 'Weapons/M249/U_M249_Bipod' }
-		primaryWeapon.weapon = SoldierWeaponUnlockAsset(m249)
-		self:_setAttachments(primaryWeapon, m249Attachments)
+		if Config.useShotgun then
+		else
+			local m249 = ResourceManager:SearchForDataContainer('Weapons/M249/U_M249')
+			local m249Attachments = { 'Weapons/M249/U_M249_Eotech', 'Weapons/M249/U_M249_Bipod' }
+			primaryWeapon.weapon = SoldierWeaponUnlockAsset(m249)
+			self:_setAttachments(primaryWeapon, m249Attachments)
+		end
 		gadget01.weapon = SoldierWeaponUnlockAsset(ResourceManager:SearchForDataContainer('Weapons/Gadgets/Ammobag/U_Ammobag'))
 		gadget02.weapon = SoldierWeaponUnlockAsset(ResourceManager:SearchForDataContainer('Weapons/Gadgets/Claymore/U_Claymore'))
 
 	else	--"Recon"
-		local l96 = ResourceManager:SearchForDataContainer('Weapons/XP1_L96/U_L96')
-		local l96Attachments = { 'Weapons/XP1_L96/U_L96_Rifle_6xScope', 'Weapons/XP1_L96/U_L96_StraightPull' }
-		primaryWeapon.weapon = SoldierWeaponUnlockAsset(l96)
-		self:_setAttachments(primaryWeapon, l96Attachments)
+		if Config.useShotgun then
+		else
+			local l96 = ResourceManager:SearchForDataContainer('Weapons/XP1_L96/U_L96')
+			local l96Attachments = { 'Weapons/XP1_L96/U_L96_Rifle_6xScope', 'Weapons/XP1_L96/U_L96_StraightPull' }
+			primaryWeapon.weapon = SoldierWeaponUnlockAsset(l96)
+			self:_setAttachments(primaryWeapon, l96Attachments)
+		end
 		gadget01.weapon = SoldierWeaponUnlockAsset(ResourceManager:SearchForDataContainer('Weapons/Gadgets/RadioBeacon/U_RadioBeacon'))
 		--no second gadget
 	end
