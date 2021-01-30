@@ -65,15 +65,17 @@ function ClientBotManager:_onUpdate(p_Delta, p_Pass)
 					local target	= Vec3(bot.soldier.worldTransform.trans.x, bot.soldier.worldTransform.trans.y + botCamereaHight, bot.soldier.worldTransform.trans.z);
 					local distance	= playerCameraTrans.trans:Distance(bot.soldier.worldTransform.trans);
 
-					if (distance < Config.distanceForDirectAttack) then --shoot, because you are near
-						NetEvents:SendLocal('BotShootAtPlayer', bot.name, true);
-					elseif (distance < Config.maxRaycastDistance) then
+					if (distance < Config.maxRaycastDistance) then
 						self._lastIndex	= newIndex;
 						local raycast	= RaycastManager:Raycast(playerCameraTrans.trans, target, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.IsAsyncRaycast)
 
 						if (raycast == nil or raycast.rigidBody == nil) then
 							-- we found a valid bot in Sight (either no hit, or player-hit). Signal Server with players
-							NetEvents:SendLocal("BotShootAtPlayer", bot.name, false);
+							local ignoreYaw = false;
+							if (distance < Config.distanceForDirectAttack) then
+								ignoreYaw = true; --shoot, because you are near
+							end
+							NetEvents:SendLocal("BotShootAtPlayer", bot.name, ignoreYaw);
 						end
 						return --only one raycast per cycle
 					end
