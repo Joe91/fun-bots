@@ -122,6 +122,7 @@ function BotSpawner:_onUpdate(dt, pass)
 
 	if self._botsToSpawn > 0 then
 		if self._botSpawnTimer > 0.1 then	--time to wait between spawn. 0.2 works
+			self._botSpawnTimer = 0
 			self._botsToSpawn = self._botsToSpawn - 1
 			self:_spawnSigleWayBot(self._playerVarOfBot, self._useRandomWay, self._activeWayIndex, self._indexOnPath)
 		end
