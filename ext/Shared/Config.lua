@@ -7,7 +7,7 @@ Config = {
 	botWeapon = "Primary",			-- Select the weapon the bots use
 	botKit = "RANDOM_KIT",			-- see BotKits
 	botColor = "RANDOM_COLOR",		-- see BotColors
-	useShotgun = false,				-- only shotguns with frag, as it counts the kills of the Bots
+	useShotgun = true,				-- only shotguns with frag, as it counts the kills of the Bots
 
 	--difficluty
 	botAimWorsening = 0.0,			-- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy). Restart of level needed

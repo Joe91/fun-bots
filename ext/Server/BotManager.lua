@@ -179,6 +179,15 @@ function BotManager:_onSoldierDamage(hook, soldier, info, giverInfo)
 		end
 	end
 
+	if Config.useShotgun then -- prevent bots from killing themself.
+		if giverInfo.giver ~= nil and soldier.player ~= nil then
+			local bot = self:GetBotByName(soldier.player.name)
+			if bot ~= nil and bot.player == giverInfo.giver then
+				info.damage = 0;
+			end
+		end
+	end
+
 	--find out, if a player was hit by the server:
 	if soldier.player ~= nil then
 		local bot = self:GetBotByName(soldier.player.name)
