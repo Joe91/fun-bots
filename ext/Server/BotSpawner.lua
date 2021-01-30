@@ -48,6 +48,7 @@ function BotSpawner:_onPlayerJoining()
 				amountToSpawn = slotsLeft;
 			end
 			if amountToSpawn > 0 then
+				self._botSpawnTimer = -5.0
 				self:spawnWayBots(nil, amountToSpawn, true, 1);
 			end
 		end
@@ -108,7 +109,7 @@ function BotSpawner:onLevelLoaded(forceSpawn)
 		-- create initial bots
 		if Globals.activeTraceIndexes > 0 and Config.spawnOnLevelstart then
 			--signal bot Spawner to do its stuff
-			self._botSpawnTimer = -2.5
+			self._botSpawnTimer = -5.0
 			self:spawnWayBots(nil, amountToSpawn, true, 1)
 		end
 	end
