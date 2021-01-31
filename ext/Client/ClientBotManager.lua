@@ -86,7 +86,7 @@ function ClientBotManager:_onUpdate(p_Delta, p_Pass)
 end
 
 function ClientBotManager:_onBulletCollision(hook, entity, hit, shooter)
-	if Config.botWeapon ~= "Shotgun" then
+	if not Config.useShotgun then
 		if (hit.rigidBody.typeInfo.name == 'CharacterPhysicsEntity') then
 			local player = PlayerManager:GetLocalPlayer();
 

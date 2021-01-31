@@ -179,7 +179,7 @@ function BotManager:_onSoldierDamage(hook, soldier, info, giverInfo)
 		end
 	end
 
-	if Config.botWeapon == "Shotgun" then -- prevent bots from killing themself.
+	if Config.useShotgun then -- prevent bots from killing themself.
 		if giverInfo.giver ~= nil and soldier.player ~= nil then
 			local bot = self:GetBotByName(soldier.player.name)
 			if bot ~= nil and bot.player == giverInfo.giver then
@@ -222,7 +222,7 @@ function BotManager:_onSoldierDamage(hook, soldier, info, giverInfo)
 				bot = self:GetBotByName(giverInfo.giver.name)
 				if bot ~= nil then
 					-- giver was a bot (with shotgun)
-					if Config.botWeapon == "Shotgun" then
+					if Config.useShotgun then
 						info.damage = info.damage * Config.damageFactor;
 						info.boneIndex = 0;
 					end

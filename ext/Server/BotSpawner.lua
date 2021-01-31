@@ -566,24 +566,34 @@ end
 
 function BotSpawner:setBotWeapons(bot, botKit, newWeapons)
 	if botKit == "Assault" then
-		bot.primary = WeaponList:getWeapon(Config.assaultWeapon)
-		bot.shotgun = WeaponList:getWeapon(Config.assaultShotgun)
+		if not Config.useShotgun then
+			bot.primary = WeaponList:getWeapon(Config.assaultWeapon)
+		else
+			bot.shotgun = WeaponList:getWeapon(Config.assaultShotgun)
+		end
 	elseif botKit == "Engineer" then
-		bot.primary = WeaponList:getWeapon(Config.engineerWeapon)
-		bot.shotgun = WeaponList:getWeapon(Config.engineerShotgun)
+		if not Config.useShotgun then
+			bot.primary = WeaponList:getWeapon(Config.engineerWeapon)
+		else
+			bot.shotgun = WeaponList:getWeapon(Config.engineerShotgun)
+		end
 	elseif botKit == "Support" then
-		bot.primary = WeaponList:getWeapon(Config.supportWeapon)
-		bot.shotgun = WeaponList:getWeapon(Config.supportShotgun)
+		if not Config.useShotgun then
+			bot.primary = WeaponList:getWeapon(Config.supportWeapon)
+		else
+			bot.shotgun = WeaponList:getWeapon(Config.supportShotgun)
+		end
 	else
-		bot.primary = WeaponList:getWeapon(Config.reconWeapon)
-		bot.shotgun = WeaponList:getWeapon(Config.reconShotgun)
+		if not Config.useShotgun then
+			bot.primary = WeaponList:getWeapon(Config.reconWeapon)
+		else
+			bot.shotgun = WeaponList:getWeapon(Config.reconShotgun)
+		end
 	end
 	bot.pistol = WeaponList:getWeapon(Config.pistol)
 	bot.knive = WeaponList:getWeapon(Config.knive)
 
-	if Config.botWeapon == "Shotgun" then
-		bot.activeWeapon = bot.shotgun;
-	elseif Config.botWeapon == "Primary" then
+	if Config.botWeapon == "Primary" then
 		bot.activeWeapon = bot.primary;
 	elseif Config.botWeapon == "Pistol" then
 		bot.activeWeapon = bot.pistol;

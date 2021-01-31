@@ -20,7 +20,6 @@ function Bot:__init(player)
 	self.primary = nil;
 	self.pistol = nil;
 	self.knive = nil;
-	self.shotgun = nil;
 	self.inEnemyTeam = false;
 	self._checkSwapTeam = false;
 	self._respawning = false;
@@ -403,7 +402,7 @@ function Bot:_updateShooting()
 					else
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
 					end
-				else -- "Primary or Shotgun" then
+				else -- "Primary" then
 					if self.player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_0 then
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
