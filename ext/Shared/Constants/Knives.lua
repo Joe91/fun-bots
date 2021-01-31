@@ -1,0 +1,4 @@
+KnifeList = {
+	'Knife',
+	'Razor'
+}

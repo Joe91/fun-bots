@@ -19,7 +19,7 @@ function Bot:__init(player)
 	self.activeWeapon = nil;
 	self.primary = nil;
 	self.pistol = nil;
-	self.knive = nil;
+	self.knife = nil;
 	self.inEnemyTeam = false;
 	self._checkSwapTeam = false;
 	self._respawning = false;
@@ -321,7 +321,7 @@ function Bot:_updateAiming(dt)
 			if self._lastShootPlayer ~= nil and self._lastShootPlayer == self._shootPlayer then
 				targetMovement			= self._shootPlayer.soldier.worldTransform.trans - self._lastTargetTrans --movement in one dt
 				--calculate how long the distance is --> time to travel
-				local factorForMovement	= (timeToTravel + dt) / self._aimUpdateTimer;
+				local factorForMovement	= (timeToTravel) / self._aimUpdateTimer; -- + dt ?
 				targetMovement			= targetMovement * factorForMovement;
 			end
 
@@ -386,12 +386,12 @@ function Bot:_updateShooting()
 		--select weapon-slot TODO: keep button pressed or not?
 		if not self._meleeActive then
 			if self.player.soldier.weaponsComponent ~= nil then
-				if Config.botWeapon == "Knive" then
+				if Config.botWeapon == "Knife" then
 					if self.player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_7 then
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 1);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
-						self.activeWeapon = self.knive;
+						self.activeWeapon = self.knife;
 					else
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 0);
 					end
@@ -459,7 +459,7 @@ function Bot:_updateShooting()
 				self._shootTraceTimer = self._shootTraceTimer + StaticConfig.botUpdateCycle;
 
 				--shooting sequence
-				if Config.botWeapon == "Knive" then
+				if Config.botWeapon == "Knife" then
 					self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
 					self._shotTimer	= 0;
 				else 
@@ -772,14 +772,14 @@ function Bot:_updateMovement()
 		-- Shoot MoveMode
 		elseif self.activeMoveMode == 9 then
 			--crouch moving (only mode with modified gun)
-			if Config.botWeapon == "Knive" then --Knive Only Mode
+			if Config.botWeapon == "Knife" then --Knife Only Mode
 				self.activeSpeedValue = 4; --run towards player
 			elseif Config.botWeapon == "Primary" then
 				self.activeSpeedValue = 2;
 			else
 				self.activeSpeedValue = 3; --TODO: Test aiming in Mode 2
 			end
-			if Config.overWriteBotAttackMode > 0 and Config.botWeapon ~= "Knive" then
+			if Config.overWriteBotAttackMode > 0 and Config.botWeapon ~= "Knife" then
 				self.activeSpeedValue = Config.overWriteBotAttackMode;
 			end
 
@@ -848,7 +848,7 @@ function Bot:_updateMovement()
 				end
 			end
 
-			if speedVal > 0 and self._shootPlayer ~= nil and self._shootPlayer.soldier ~= nil and Config.botWeapon ~= "Knive" then
+			if speedVal > 0 and self._shootPlayer ~= nil and self._shootPlayer.soldier ~= nil and Config.botWeapon ~= "Knife" then
 				speedVal = speedVal * Config.speedFactorAttack;
 			end
 

@@ -43,7 +43,7 @@ Config = {
 	reconWeapon = "M416",			-- weapon of Assault class
 	reconShotgun = "SPAS12",		-- shotgun of Assault class
 	pistol = "M1911_Tac",			-- pistol
-	knive = "Razor",				-- knive
+	knife = "Razor",				-- knife
 
 	--advanced
 	fovForShooting = 270,			-- Degrees of FOV of Bot

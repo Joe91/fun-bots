@@ -199,7 +199,7 @@ function BotManager:_onSoldierDamage(hook, soldier, info, giverInfo)
 						info.isBulletDamage = true
 						info.damage = bot.activeWeapon.damage * Config.damageFactor;
 					elseif info.damage > 0.19 and info.damage < 0.21 then --melee
-						info.damage = bot.knive.damage * Config.damageFactor;
+						info.damage = bot.knife.damage * Config.damageFactor;
 						info.isBulletDamage = false
 					end
 

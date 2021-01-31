@@ -37,11 +37,17 @@ function WeaponList:__init()
 	table.insert(self._weapons, weapon);
 
 	-- pistols
-	weapon = Weapon('M1911_Tac', '', {}, 34, 300, 4, 0.2, 0.2, false)
+	weapon = Weapon('M1911_Lit', '', {}, 34, 300, 4, 0.2, 0.2, false, 'Weapons/M1911/U_M1911_Lit')
 	table.insert(self._weapons, weapon);
 
-	-- knives
-	weapon = Weapon('Razor', '', {}, 50, 0, 0, 0, 0, false)
+	weapon = Weapon('M1911_Lit', '', {}, 34, 300, 4, 0.2, 0.2, false, 'Weapons/M1911/U_M1911_Lit')
+	table.insert(self._weapons, weapon);
+
+	-- knifes
+	weapon = Weapon('Razor', '', {}, 50, 0, 0, 0, 0, false, )
+	table.insert(self._weapons, weapon);
+
+	weapon = Weapon('Knife', '', {}, 50, 0, 0, 0, 0, false, 'Weapons/XP2_Knife_RazorBlade/U_Knife_Razor')
 	table.insert(self._weapons, weapon);
 end
 

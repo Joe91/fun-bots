@@ -1,6 +1,5 @@
 BotWeapons = {
-	'Shotgun',
 	'Primary',
 	'Pistol',
-	'Knive'
+	'Knife'
 };

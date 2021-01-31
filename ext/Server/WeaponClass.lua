@@ -1,6 +1,6 @@
 class('Weapon');
 
-function Weapon:__init(name, extension, unlocks, damage, bulletSpeed, bulletDrop, reload, fireCycle, pauseCycle, delayed)
+function Weapon:__init(name, extension, unlocks, damage, bulletSpeed, bulletDrop, reload, fireCycle, pauseCycle, delayed, fullResource)
 	self.name		= name;
 	self.extension	= extension;
 	self.unlocks 	= unlocks;
@@ -11,19 +11,24 @@ function Weapon:__init(name, extension, unlocks, damage, bulletSpeed, bulletDrop
 	self.pauseCycle	= pauseCycle;
 	self.reload		= reload;
 	self.delayed	= delayed;
+	self.fullResource = fullResource;
 end
 
 function Weapon:getResourcePath(unlock)
-	local ext = ""
-	local unl = ""
-	if unlock ~= nil then
-		unl = "_"..unlock;
-	end
-	if self.extension ~= '' then
-		ext = self.extension.."_"
-	end
+	if self.fullResource == nil then
+		local ext = ""
+		local unl = ""
+		if unlock ~= nil then
+			unl = "_"..unlock;
+		end
+		if self.extension ~= '' then
+			ext = self.extension.."_"
+		end
 
-	return	"Weapons/"..ext..self.name.."/U_"..self.name..unl;
+		return	"Weapons/"..ext..self.name.."/U_"..self.name..unl;
+	else
+		return self.fullResource;
+	end
 end
 
 function Weapon:getAllAttachements()
