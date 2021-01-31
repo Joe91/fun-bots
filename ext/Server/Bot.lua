@@ -314,12 +314,14 @@ function Bot:_updateAiming(dt)
 			--interpolate player movement
 			local targetMovement = Vec3(0, 0, 0);
 
+			local distanceToPlayer	= self._shootPlayer.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans);
+			local timeToTravel		= (distanceToPlayer / self.activeWeapon.bulletSpeed)
+			local ptichCorrection	= timeToTravel * self.activeWeapon.bulletDrop;
+
 			if self._lastShootPlayer ~= nil and self._lastShootPlayer == self._shootPlayer then
 				targetMovement			= self._shootPlayer.soldier.worldTransform.trans - self._lastTargetTrans --movement in one dt
 				--calculate how long the distance is --> time to travel
-				local distanceToPlayer	= self._shootPlayer.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans);
-				local timeToTravel		= (distanceToPlayer / self.activeWeapon.bulletSpeed) + dt;
-				local factorForMovement	= timeToTravel / self._aimUpdateTimer;
+				local factorForMovement	= (timeToTravel + dt) / self._aimUpdateTimer;
 				targetMovement			= targetMovement * factorForMovement;
 			end
 
@@ -329,7 +331,7 @@ function Bot:_updateAiming(dt)
 			--calculate yaw and pith
 			local dz		= self._shootPlayer.soldier.worldTransform.trans.z + targetMovement.z - self.player.soldier.worldTransform.trans.z;
 			local dx		= self._shootPlayer.soldier.worldTransform.trans.x + targetMovement.x - self.player.soldier.worldTransform.trans.x;
-			local dy		= (self._shootPlayer.soldier.worldTransform.trans.y + targetMovement.y + self:_getCameraHight(self._shootPlayer.soldier, true)) - (self.player.soldier.worldTransform.trans.y + self:_getCameraHight(self.player.soldier, false));
+			local dy		= (self._shootPlayer.soldier.worldTransform.trans.y + targetMovement.y + self:_getCameraHight(self._shootPlayer.soldier, true)) + ptichCorrection - (self.player.soldier.worldTransform.trans.y + self:_getCameraHight(self.player.soldier, false));
 			local atanDzDx	= math.atan(dz, dx);
 			local yaw		= (atanDzDx > math.pi / 2) and (atanDzDx - math.pi / 2) or (atanDzDx + 3 * math.pi / 2);
 
