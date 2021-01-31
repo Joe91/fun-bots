@@ -200,9 +200,10 @@ function FunBotUIServer:_writeSettings(player, request)
 		return;
 	end
 	
-	local temporary		= false;
-	local updateWeapons	= false;
-	local batched		= true;
+	local temporary			= false;
+	local updateWeapons		= false;
+	local respawnAllBots 	= false;
+	local batched			= true;
 	
 	if request.subaction ~= nil then
 		temporary = (request.subaction == 'temp');
@@ -247,7 +248,11 @@ function FunBotUIServer:_writeSettings(player, request)
 	end
 
 	if request.useShotgun ~= nil then
-		SettingsManager:update('useShotgun', (request.useShotgun == true), temporary, batched);
+		local temValue = (request.useShotgun == true)
+		if Config.useShotgun ~= temValue then
+			respawnAllBots = true;
+		end
+		SettingsManager:update('useShotgun', temValue, temporary, batched);
 	end	
 
 	-- difficluty
@@ -262,37 +267,14 @@ function FunBotUIServer:_writeSettings(player, request)
 		end
 	end
 
-	if request.bulletDamageBot ~= nil then
-		local tempValue = tonumber(request.bulletDamageBot);
+	if request.damageFactor ~= nil then
+		local tempValue = tonumber(request.damageFactor);
 
 		if tempValue >= 0 then
-			SettingsManager:update('bulletDamageBot', tempValue, temporary, batched);
+			SettingsManager:update('damageFactor', tempValue, temporary, batched);
 		end
 	end
 
-	if request.bulletDamageBotSniper ~= nil then
-		local tempValue = tonumber(request.bulletDamageBotSniper);
-
-		if tempValue >= 0 then
-			SettingsManager:update('bulletDamageBotSniper', tempValue, temporary, batched);
-		end
-	end
-
-	if request.bulletDamageBotShotgun ~= nil then
-		local tempValue = tonumber(request.bulletDamageBotShotgun);
-
-		if tempValue >= 0 then
-			SettingsManager:update('bulletDamageBotShotgun', tempValue, temporary, batched);
-		end
-	end
-
-	if request.meleeDamageBot ~= nil then
-		local tempValue = tonumber(request.meleeDamageBot);
-
-		if tempValue >= 0 then
-			SettingsManager:update('meleeDamageBot', tempValue, temporary, batched);
-		end
-	end
 
 	-- advanced
 	if request.fovForShooting ~= nil then
@@ -613,6 +595,13 @@ function FunBotUIServer:_writeSettings(player, request)
 	end
 	
 	NetEvents:BroadcastLocal('WriteClientSettings', Config, updateWeapons);
+
+	if respawnAllBots then
+		--TODO: kill all bots and respawn themself
+		local amount = BotManager:getBotCount()
+		BotManager:killAll();
+		BotSpawner:spawnWayBots(nil, amount, true);
+	end
 
 	-- @ToDo create Error Array and dont hide if has values
 	NetEvents:SendTo('UI_Settings', player, false);

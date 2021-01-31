@@ -11,10 +11,6 @@ Config = {
 
 	--difficluty
 	botAimWorsening = 0.0,			-- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy). Restart of level needed
-	bulletDamageBot = 16,			-- damage of a bot with normal bullet
-	bulletDamageBotSniper = 48,	 	-- damage of a bot with sniper bullet
-	bulletDamageBotShotgun = 24, 	-- damage of a bot with shotgun bullet
-	meleeDamageBot = 56,			-- damage of a bot with melee attack
 	damageFactor = 0.8,				-- origninal Damage from bots gets multiplied by this
 
 	--spawn
@@ -35,14 +31,14 @@ Config = {
 
 	-- weapons
 	assaultWeapon = "M416",			-- weapon of Assault class
-	assaultShotgun = "SPAS12",		-- shotgun of Assault class
-	engineerWeapon = "M416",			-- weapon of Assault class
-	engineerShotgun = "SPAS12",		-- shotgun of Assault class
-	supportWeapon = "M416",			-- weapon of Assault class
-	supportShotgun = "SPAS12",		-- shotgun of Assault class
-	reconWeapon = "M416",			-- weapon of Assault class
+	assaultShotgun = "USAS-12",		-- shotgun of Assault class
+	engineerWeapon = "M4A1",		-- weapon of Assault class
+	engineerShotgun = "saiga20",	-- shotgun of Assault class
+	supportWeapon = "M240",			-- weapon of Assault class
+	supportShotgun = "Jackhammer",	-- shotgun of Assault class
+	reconWeapon = "M98B",			-- weapon of Assault class
 	reconShotgun = "SPAS12",		-- shotgun of Assault class
-	pistol = "M1911_Tac",			-- pistol
+	pistol = "MP412Rex",			-- pistol
 	knife = "Razor",				-- knife
 
 	--advanced
