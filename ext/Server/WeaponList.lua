@@ -6,6 +6,8 @@ function WeaponList:__init()
 	self._weapons		= {};
 
 	local weapon = nil
+
+	-- shotguns
 	weapon = Weapon('USAS-12', '', {'ExtendedMag', 'Frag'}, 33, 150, 3, 0.4, 0.4, false)
 	table.insert(self._weapons, weapon);
 
@@ -18,6 +20,7 @@ function WeaponList:__init()
 	weapon = Weapon('SPAS12', 'XP2', {'Kobra', 'Frag'}, 33, 150, 3, 0.4, 0.4, false)
 	table.insert(self._weapons, weapon);
 
+	-- others
 	weapon = Weapon('M416', '', {'Kobra', 'HeavyBarrel'}, 25, 600, 12, 0.4, 0.4, false)
 	table.insert(self._weapons, weapon);
 
@@ -31,6 +34,14 @@ function WeaponList:__init()
 	table.insert(self._weapons, weapon);
 
 	weapon = Weapon('L96', 'XP1', {'6xScope', 'StraightPull'}, 80, 600, 4, 0.4, 0.4, true)
+	table.insert(self._weapons, weapon);
+
+	-- pistols
+	weapon = Weapon('M1911_Tac', '', {}, 33, 600, 4, 0.2, 0.2, false)
+	table.insert(self._weapons, weapon);
+
+	-- knives
+	weapon = Weapon('Razor', '', {}, 56, 0, 0, 0, 0, false)
 	table.insert(self._weapons, weapon);
 end
 

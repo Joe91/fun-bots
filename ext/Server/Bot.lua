@@ -387,7 +387,6 @@ function Bot:_updateShooting()
 			if self.player.soldier.weaponsComponent ~= nil then
 				if Config.botWeapon == "Knive" then
 					if self.player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_7 then
-						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon8, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 1);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
@@ -397,7 +396,6 @@ function Bot:_updateShooting()
 					end
 				elseif Config.botWeapon == "Pistol" then
 					if self.player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_1 then
-						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon8, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 1);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
@@ -405,25 +403,14 @@ function Bot:_updateShooting()
 					else
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
 					end
-				elseif Config.botWeapon == "Primary" then
+				else -- "Primary or Shotgun" then
 					if self.player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_0 then
-						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon8, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 1);
 						self.activeWeapon = self.primary;
 					else
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
-					end
-				else --"Shotgun"
-					if self.player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_8 then
-						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon8, 1);
-						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 0);
-						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
-						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 1);
-						self.activeWeapon = self.shotgun;
-					else
-						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon8, 0);
 					end
 				end
 			end
@@ -492,7 +479,7 @@ function Bot:_updateShooting()
 						end
 					end
 				end
-				
+
 				self._shotTimer = self._shotTimer + StaticConfig.botUpdateCycle;
 
 			else

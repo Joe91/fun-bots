@@ -362,7 +362,7 @@ function BotSpawner:_setAttachments(unlockWeapon, attachments)
 	end
 end
 
-function BotSpawner:getKitApperanceCustomization(team, kit, color, weaponName)
+function BotSpawner:getKitApperanceCustomization(team, kit, color, primary, shotgun, pistol, knive)
 	-- Create the loadouts
 	local soldierKit = nil
 	local appearance = nil
@@ -377,10 +377,9 @@ function BotSpawner:getKitApperanceCustomization(team, kit, color, weaponName)
 	local primaryWeapon = UnlockWeaponAndSlot()
 	primaryWeapon.slot = WeaponSlot.WeaponSlot_0
 
-	local weaponClass = WeaponList:getWeapon(weaponName)
-	local weaponResource = ResourceManager:SearchForDataContainer(weaponClass:getResourcePath())
+	local weaponResource = ResourceManager:SearchForDataContainer(primary:getResourcePath())
 	primaryWeapon.weapon = SoldierWeaponUnlockAsset(weaponResource)
-	self:_setAttachments(primaryWeapon, weaponClass:getAllAttachements())
+	self:_setAttachments(primaryWeapon, primary:getAllAttachements())
 
 	local gadget01 = UnlockWeaponAndSlot()
 	gadget01.slot = WeaponSlot.WeaponSlot_2
@@ -396,8 +395,13 @@ function BotSpawner:getKitApperanceCustomization(team, kit, color, weaponName)
 	meleeWeapon.weapon = SoldierWeaponUnlockAsset(knife)
 	meleeWeapon.slot = WeaponSlot.WeaponSlot_7
 
-	local shotgun = UnlockWeaponAndSlot()
-	primaryWeapon.slot = WeaponSlot.WeaponSlot_8
+	local shotgunWeapon = UnlockWeaponAndSlot()
+	shotgunWeapon.slot = WeaponSlot.WeaponSlot_8
+
+	local weaponResource = ResourceManager:SearchForDataContainer(shotgun:getResourcePath())
+	shotgunWeapon.weapon = SoldierWeaponUnlockAsset(weaponResource)
+	self:_setAttachments(primaryWeapon, shotgun:getAllAttachements())
+
 
 	if kit == "Assault" then
 		--[[if Config.useShotgun then
@@ -496,6 +500,7 @@ function BotSpawner:getKitApperanceCustomization(team, kit, color, weaponName)
 	soldierCustomization.weapons:add(gadget01)
 	soldierCustomization.weapons:add(gadget02)
 	soldierCustomization.weapons:add(meleeWeapon)
+	soldierCustomization.weapons:add(shotgunWeapon)
 
 	return soldierKit, appearance, soldierCustomization
 end
@@ -559,11 +564,43 @@ function BotSpawner:_getSpawnBotKit()
 	return botKit
 end
 
+function BotSpawner:setBotWeapons(bot, botKit, newWeapons)
+	if botKit == "Assault" then
+		bot.primary = WeaponList:getWeapon(Config.assaultWeapon)
+		bot.shotgun = WeaponList:getWeapon(Config.assaultShotgun)
+	elseif botKit == "Engineer" then
+		bot.primary = WeaponList:getWeapon(Config.engineerWeapon)
+		bot.shotgun = WeaponList:getWeapon(Config.engineerShotgun)
+	elseif botKit == "Support" then
+		bot.primary = WeaponList:getWeapon(Config.supportWeapon)
+		bot.shotgun = WeaponList:getWeapon(Config.supportShotgun)
+	else
+		bot.primary = WeaponList:getWeapon(Config.reconWeapon)
+		bot.shotgun = WeaponList:getWeapon(Config.reconShotgun)
+	end
+	bot.pistol = WeaponList:getWeapon(Config.pistol)
+	bot.knive = WeaponList:getWeapon(Config.knive)
+
+	if Config.botWeapon == "Shotgun" then
+		bot.activeWeapon = bot.shotgun;
+	elseif Config.botWeapon == "Primary" then
+		bot.activeWeapon = bot.primary;
+	elseif Config.botWeapon == "Pistol" then
+		bot.activeWeapon = bot.pistol;
+	else
+		bot.activeWeapon = bot.knive;
+	end
+end
+
 function BotSpawner:spawnBot(bot, trans, setKit)
+	local writeNewKit = (setKit or Config.botNewLoadoutOnSpawn)
+	if not writeNewKit and (bot.color == "" or bot.kit == "" or bot.activeWeapon == nil) then
+		writeNewKit = true;
+	end
 	local botColor = Config.botColor
 	local botKit = Config.botKit
 
-	if setKit or Config.botNewLoadoutOnSpawn then
+	if writeNewKit then
 		if botColor == "RANDOM_COLOR" then
 			botColor = BotColors[MathUtils:GetRandomInt(2, #BotColors)]
 		end
@@ -577,6 +614,8 @@ function BotSpawner:spawnBot(bot, trans, setKit)
 		botKit = bot.kit
 	end
 
+	self:setBotWeapons(bot, botKit, writeNewKit)
+
 	bot:resetSpawnVars()
 
 	-- create kit and appearance
@@ -584,7 +623,7 @@ function BotSpawner:spawnBot(bot, trans, setKit)
 	local soldierCustomization = nil
 	local soldierKit = nil
 	local appearance = nil
-	soldierKit, appearance, soldierCustomization = self:getKitApperanceCustomization(bot.player.teamId, botKit, botColor, "SPAS12")
+	soldierKit, appearance, soldierCustomization = self:getKitApperanceCustomization(bot.player.teamId, botKit, botColor, bot.primary, bot.shotgun)
 
 	-- Create the transform of where to spawn the bot at.
 	local transform = LinearTransform()

@@ -33,6 +33,18 @@ Config = {
 	maxSupportBots = -1,			-- maximum number of Bots with Support Kit
 	maxReconBots = -1,				-- maximum number of Bots with Recon Kit
 
+	-- weapons
+	assaultWeapon = "M416",			-- weapon of Assault class
+	assaultShotgun = "SPAS12",		-- shotgun of Assault class
+	engineerWeapon = "M416",			-- weapon of Assault class
+	engineerShotgun = "SPAS12",		-- shotgun of Assault class
+	supportWeapon = "M416",			-- weapon of Assault class
+	supportShotgun = "SPAS12",		-- shotgun of Assault class
+	reconWeapon = "M416",			-- weapon of Assault class
+	reconShotgun = "SPAS12",		-- shotgun of Assault class
+	pistol = "M1911_Tac",			-- pistol
+	knive = "Razor",				-- knive
+
 	--advanced
 	fovForShooting = 270,			-- Degrees of FOV of Bot
 	shootBackIfHit = true,			-- bot shoots back, if hit
