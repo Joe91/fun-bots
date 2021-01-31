@@ -171,7 +171,7 @@ end
 function BotManager:_onSoldierDamage(hook, soldier, info, giverInfo)
 	--detect if we need to shoot back
 	if Config.shootBackIfHit then
-		if giverInfo.giver ~= nil and soldier.player ~= nil then
+		if giverInfo.giver ~= nil and soldier.player ~= nil and info.damage > 0 then
 			local bot = self:GetBotByName(soldier.player.name)
 			if soldier ~= nil and bot ~= nil then
 				self:_onShootAt(giverInfo.giver, bot.name, true)
