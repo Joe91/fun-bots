@@ -1,4 +1,4 @@
-KnifeList = {
+KnifeWeapons = {
 	'Knife',
 	'Razor'
 }

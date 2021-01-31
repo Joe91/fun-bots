@@ -467,7 +467,7 @@ function FunBotUIServer:_writeSettings(player, request)
 
 	if request.knife ~= nil then
 		local tempString = request.knife;
-
+		
 		for _, knife in pairs(KnifeWeapons) do
 			if tempString == knife then
 				SettingsManager:update('knife', tempString, temporary, batched);
