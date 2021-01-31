@@ -6,12 +6,11 @@ function WeaponList:__init()
 	self._weapons		= {};
 
 	local weapon = nil
-
 	-- shotguns
 	weapon = Weapon('USAS-12', '', {'ExtendedMag', 'Frag'}, 20, 150, 15, 3, 0.4, 0.4, false)
 	table.insert(self._weapons, weapon);
 
-	weapon = Weapon('saiga20', '', {'Kobra', 'Silencer', 'Frag'}, 20, 150, 15, 3, 0.4, 0.4, false)
+	weapon = Weapon('saiga20', '', {'Kobra', 'Silencer', 'Frag'}, 20, 150, 15, 3, 0.4, 0.4, false, "Weapons/SAIGA20K/U_SAIGA_20K")
 	table.insert(self._weapons, weapon);
 
 	weapon = Weapon('Jackhammer', 'XP1', {'Kobra', 'TargetPointer', 'Frag'}, 20, 150, 15, 3, 3, 0.6, false)
@@ -54,29 +53,28 @@ function WeaponList:__init()
 
 	weapon = Weapon('SKS', '', {'Rifle_Scope', 'Target_Pointer'}, 43, 440, 15, 3, 0.4, 0.4, true)
 	table.insert(self._weapons, weapon);
-
 	
 	-- pistols
-	weapon = Weapon('M1911_Lit', '', {}, 34, 300, 4, 0.2, 0.2, false, 'Weapons/M1911/U_M1911_Lit')
+	weapon = Weapon('M1911_Lit', '', {}, 34, 300, 15, 4, 0.2, 0.2, false, 'Weapons/M1911/U_M1911_Lit')
 	table.insert(self._weapons, weapon);
 
-	weapon = Weapon('M1911_Silenced', '', {}, 34, 300, 4, 0.2, 0.2, false, 'Weapons/M1911/U_M1911_Silenced')
+	weapon = Weapon('M1911_Silenced', '', {}, 34, 300, 15, 4, 0.2, 0.2, false, 'Weapons/M1911/U_M1911_Silenced')
 	table.insert(self._weapons, weapon);
 
-	weapon = Weapon('M1911_Tactical', '', {}, 34, 300, 4, 0.2, 0.2, false, 'Weapons/M1911/U_M1911_Tactical')
+	weapon = Weapon('M1911_Tactical', '', {}, 34, 300, 15, 4, 0.2, 0.2, false, 'Weapons/M1911/U_M1911_Tactical')
 	table.insert(self._weapons, weapon);
 
-	weapon = Weapon('MP412Rex', '', {}, 50, 300, 2, 0.2, 0.2, false)
+	weapon = Weapon('MP412Rex', '', {}, 50, 300, 15, 2, 0.2, 0.2, false)
 	table.insert(self._weapons, weapon);
 	
-	--weapon = Weapon('Magnum?', '', {}, 60, 460, 2, 0.2, 0.2, false)
+	--weapon = Weapon('Magnum?', '', {}, 60, 460, 15, 2, 0.2, 0.2, false)
 	--table.insert(self._weapons, weapon);
 
 	-- knifes
-	weapon = Weapon('Razor', '', {}, 50, 0, 0, 1, 0, false, 'Weapons/XP2_Knife_RazorBlade/U_Knife_Razor')
+	weapon = Weapon('Razor', '', {}, 70, 0, 0, 0, 1, 0, false, 'Weapons/XP2_Knife_RazorBlade/U_Knife_Razor')
 	table.insert(self._weapons, weapon);
 
-	weapon = Weapon('Knife', '', {}, 50, 0, 0, 1, 0, false)
+	weapon = Weapon('Knife', '', {}, 50, 0, 0, 0, 1, 0, false)
 	table.insert(self._weapons, weapon);
 end
 

@@ -377,8 +377,8 @@ function BotSpawner:getKitApperanceCustomization(team, kit, color, primary, pist
 	local primaryWeapon = UnlockWeaponAndSlot()
 	primaryWeapon.slot = WeaponSlot.WeaponSlot_0
 
-	local weaponResource = ResourceManager:SearchForDataContainer(primary:getResourcePath())
-	primaryWeapon.weapon = SoldierWeaponUnlockAsset(weaponResource)
+	local primaryWeaponResource = ResourceManager:SearchForDataContainer(primary:getResourcePath())
+	primaryWeapon.weapon = SoldierWeaponUnlockAsset(primaryWeaponResource)
 	self:_setAttachments(primaryWeapon, primary:getAllAttachements())
 
 	local gadget01 = UnlockWeaponAndSlot()
