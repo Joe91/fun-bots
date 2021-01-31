@@ -316,7 +316,7 @@ function Bot:_updateAiming(dt)
 
 			local distanceToPlayer	= self._shootPlayer.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans);
 			local timeToTravel		= (distanceToPlayer / self.activeWeapon.bulletSpeed)
-			local ptichCorrection	= timeToTravel * self.activeWeapon.bulletDrop;
+			local ptichCorrection	= 0.5 * timeToTravel * timeToTravel * self.activeWeapon.bulletDrop;
 
 			if self._lastShootPlayer ~= nil and self._lastShootPlayer == self._shootPlayer then
 				targetMovement			= self._shootPlayer.soldier.worldTransform.trans - self._lastTargetTrans --movement in one dt

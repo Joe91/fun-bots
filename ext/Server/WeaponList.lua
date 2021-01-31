@@ -21,27 +21,27 @@ function WeaponList:__init()
 	table.insert(self._weapons, weapon);
 
 	-- others
-	weapon = Weapon('M416', '', {'Kobra', 'HeavyBarrel'}, 25, 600, 15, 12, 0.4, 0.4, false)
+	weapon = Weapon('M416', '', {'Kobra', 'HeavyBarrel'}, 25, 580, 15, 10, 0.4, 0.4, false)
 	table.insert(self._weapons, weapon);
 
-	weapon = Weapon('AEK971', '', {'Kobra', 'HeavyBarrel'}, 25, 600, 15, 12, 0.4, 0.4, false)
+	weapon = Weapon('AEK971', '', {'Kobra', 'HeavyBarrel'}, 25, 580, 15, 10, 0.4, 0.4, false)
 	table.insert(self._weapons, weapon);
 
-	weapon = Weapon('ASVal', '', {'Kobra', 'ExtendedMag'}, 18, 600, 9.81, 10, 0.4, 0.4, false)
+	weapon = Weapon('ASVal', '', {'Kobra', 'ExtendedMag'}, 18, 333, 9.81, 10, 0.4, 0.4, false)
 	table.insert(self._weapons, weapon);
 
 	weapon = Weapon('M249', '', {'Eotech', 'Bipod'}, 25, 600, 15, 20, 0.4, 0.4, true)
 	table.insert(self._weapons, weapon);
 
-	weapon = Weapon('L96', 'XP1', {'6xScope', 'StraightPull'}, 80, 600, 9.81, 4, 0.4, 0.4, true)
+	weapon = Weapon('L96', 'XP1', {'6xScope', 'StraightPull'}, 80, 540, 9.81, 4, 0.4, 0.4, true)
 	table.insert(self._weapons, weapon);
 
 	-- pistols
-	weapon = Weapon('M1911_Tac', '', {}, 33, 600, 4, 0.2, 0.2, false)
+	weapon = Weapon('M1911_Tac', '', {}, 34, 300, 4, 0.2, 0.2, false)
 	table.insert(self._weapons, weapon);
 
 	-- knives
-	weapon = Weapon('Razor', '', {}, 56, 0, 0, 0, 0, false)
+	weapon = Weapon('Razor', '', {}, 50, 0, 0, 0, 0, false)
 	table.insert(self._weapons, weapon);
 end
 
