@@ -362,7 +362,7 @@ function BotSpawner:_setAttachments(unlockWeapon, attachments)
 	end
 end
 
-function BotSpawner:getKitApperanceCustomization(team, kit, color, primary, shotgun, pistol, knive)
+function BotSpawner:getKitApperanceCustomization(team, kit, color, primary, pistol, knive)
 	-- Create the loadouts
 	local soldierKit = nil
 	local appearance = nil
