@@ -452,6 +452,118 @@ function FunBotUIServer:_writeSettings(player, request)
 		end
 	end
 
+
+	-- weapons
+	if request.pistol ~= nil then
+		local tempString = request.pistol;
+
+		for _, pistol in pairs(PistoWeapons) do
+			if tempString == pistol then
+				SettingsManager:update('pistol', tempString, temporary, batched);
+				break
+			end
+		end
+	end
+
+	if request.knife ~= nil then
+		local tempString = request.knife;
+
+		for _, knife in pairs(KnifeWeapons) do
+			if tempString == knife then
+				SettingsManager:update('knife', tempString, temporary, batched);
+				break
+			end
+		end
+	end
+
+	if request.assaultWeapon ~= nil then
+		local tempString = request.assaultWeapon;
+
+		for _, assaultWeapon in pairs(WeaponsAssault) do
+			if tempString == assaultWeapon then
+				SettingsManager:update('assaultWeapon', tempString, temporary, batched);
+				break
+			end
+		end
+	end
+
+	if request.assaultShotgun ~= nil then
+		local tempString = request.assaultShotgun;
+
+		for _, assaultShotgun in pairs(ShotgunsAssault) do
+			if tempString == assaultShotgun then
+				SettingsManager:update('assaultShotgun', tempString, temporary, batched);
+				break
+			end
+		end
+	end
+
+	if request.engineerWeapon ~= nil then
+		local tempString = request.engineerWeapon;
+
+		for _, engineerWeapon in pairs(WeaponsEngineer) do
+			if tempString == engineerWeapon then
+				SettingsManager:update('engineerWeapon', tempString, temporary, batched);
+				break
+			end
+		end
+	end
+
+	if request.engineerShotgun ~= nil then
+		local tempString = request.engineerShotgun;
+
+		for _, engineerShotgun in pairs(ShotgunsEngineer) do
+			if tempString == engineerShotgun then
+				SettingsManager:update('engineerShotgun', tempString, temporary, batched);
+				break
+			end
+		end
+	end
+
+	if request.supportWeapon ~= nil then
+		local tempString = request.supportWeapon;
+
+		for _, supportWeapon in pairs(WeaponsSupport) do
+			if tempString == supportWeapon then
+				SettingsManager:update('supportWeapon', tempString, temporary, batched);
+				break
+			end
+		end
+	end
+
+	if request.supportShotgun ~= nil then
+		local tempString = request.supportShotgun;
+
+		for _, supportShotgun in pairs(ShotgunsSupport) do
+			if tempString == supportShotgun then
+				SettingsManager:update('supportShotgun', tempString, temporary, batched);
+				break
+			end
+		end
+	end
+
+	if request.reconWeapon ~= nil then
+		local tempString = request.reconWeapon;
+
+		for _, reconWeapon in pairs(WeaponsRecon) do
+			if tempString == reconWeapon then
+				SettingsManager:update('reconWeapon', tempString, temporary, batched);
+				break
+			end
+		end
+	end
+
+	if request.reconShotgun ~= nil then
+		local tempString = request.reconShotgun;
+
+		for _, reconShotgun in pairs(ShotgunsRecon) do
+			if tempString == reconShotgun then
+				SettingsManager:update('reconShotgun', tempString, temporary, batched);
+				break
+			end
+		end
+	end
+
 	-- expert
 	if request.botFirstShotDelay ~= nil then
 		local tempValue = tonumber(request.botFirstShotDelay);
