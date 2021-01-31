@@ -19,7 +19,7 @@ function WeaponList:__init()
 	weapon = Weapon('DAO-12', '', {'Kobra', 'TargetPointer', 'Frag'}, 20, 150, 15, 3, 3, 0.6, false)
 	table.insert(self._weapons, weapon);
 
-	weapon = Weapon('SPAS12', 'XP2', {'Kobra', 'Frag'}, 37.5, 150, 15, 3, 0.4, 0.4, false)
+	weapon = Weapon('SPAS12', 'XP2', {'Kobra', 'Frag'}, 37.5, 150, 15, 2, 0.4, 0.4, false)
 	table.insert(self._weapons, weapon);
 
 	-- others
@@ -53,7 +53,7 @@ function WeaponList:__init()
 
 	weapon = Weapon('SKS', '', {'Rifle_Scope', 'Target_Pointer'}, 43, 440, 15, 3, 0.4, 0.4, true)
 	table.insert(self._weapons, weapon);
-	
+
 	-- pistols
 	weapon = Weapon('M1911_Lit', '', {}, 34, 300, 15, 4, 0.2, 0.2, false, 'Weapons/M1911/U_M1911_Lit')
 	table.insert(self._weapons, weapon);
@@ -66,9 +66,9 @@ function WeaponList:__init()
 
 	weapon = Weapon('MP412Rex', '', {}, 50, 300, 15, 2, 0.2, 0.2, false)
 	table.insert(self._weapons, weapon);
-	
-	--weapon = Weapon('Magnum?', '', {}, 60, 460, 15, 2, 0.2, 0.2, false)
-	--table.insert(self._weapons, weapon);
+
+	weapon = Weapon('Taurus44', '', {}, 60, 460, 15, 2, 0.2, 0.2, false)
+	table.insert(self._weapons, weapon);
 
 	-- knifes
 	weapon = Weapon('Razor', '', {}, 70, 0, 0, 0, 1, 0, false, 'Weapons/XP2_Knife_RazorBlade/U_Knife_Razor')

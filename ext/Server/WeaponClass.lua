@@ -15,9 +15,9 @@ function Weapon:__init(name, extension, unlocks, damage, bulletSpeed, bulletDrop
 end
 
 function Weapon:getResourcePath(unlock)
+	local unl = ""
 	if self.fullResource == nil then
 		local ext = ""
-		local unl = ""
 		if unlock ~= nil then
 			unl = "_"..unlock;
 		end
@@ -27,7 +27,10 @@ function Weapon:getResourcePath(unlock)
 
 		return	"Weapons/"..ext..self.name.."/U_"..self.name..unl;
 	else
-		return self.fullResource;
+		if unlock ~= nil then
+			unl = "_"..unlock;
+		end
+		return self.fullResource..unl;
 	end
 end
 
