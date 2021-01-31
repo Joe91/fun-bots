@@ -1,14 +1,9 @@
 WeaponsAssault = {
-	'AEK-971',
-	'AN-94',
-	'G3A3',
-	'M16A3',
+	'AEK971',
 	'M416'
 }
 ShotgunsAssault = {
-	'870MCS',
-	'M1014',
-	'SPAS-12',
+	'SPAS12',
 	'USAS-12',
-	'Saiga 20K'
+	'saiga20'
 };

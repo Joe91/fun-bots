@@ -2,13 +2,11 @@ WeaponsEngineer = {
 	'M4A1',
 	'SCAR H',
 	'ACW-R',
-	'AS-Val',
+	'ASVal',
 	'MTAR-21'
 }
 ShotgunsEngineer = {
-	'870MCS',
-	'M1014',
-	'SPAS-12',
+	'SPAS12',
 	'USAS-12',
-	'Saiga 20K'
+	'saiga20'
 }

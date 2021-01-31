@@ -1,12 +1,10 @@
 
 WeaponsSupport = {
-	'M27 IAR',
 	'M249',
-	'M240B',
-	'PKP Pecheneg'
+	'M240'
 }
 ShotgunsSupport = {
 	'DAO-12',
 	'Jackhammer',
-	'SPAS-12'
+	'SPAS12'
 }
