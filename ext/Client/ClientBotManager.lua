@@ -86,11 +86,11 @@ function ClientBotManager:_onUpdate(p_Delta, p_Pass)
 end
 
 function ClientBotManager:_onBulletCollision(hook, entity, hit, shooter)
-	if not Config.useShotgun then
+	if Config.botWeapon ~= "Shotgun" then
 		if (hit.rigidBody.typeInfo.name == 'CharacterPhysicsEntity') then
 			local player = PlayerManager:GetLocalPlayer();
 
-			if (player.soldier ~= nil) then -- TODO: Check shooter for bot
+			if (player.soldier ~= nil) then
 				local dx	= math.abs(player.soldier.worldTransform.trans.x - hit.position.x);
 				local dz	= math.abs(player.soldier.worldTransform.trans.z - hit.position.z);
 				local dy	= hit.position.y - player.soldier.worldTransform.trans.y; --player y is on ground. Hit must be higher to be valid

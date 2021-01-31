@@ -1,14 +1,15 @@
 class('Weapon');
 
-function Weapon:__init(name, extension, unlocks, damage, bulletSpeed, isShotgun, fireCycle, pauseCycle)
+function Weapon:__init(name, extension, unlocks, damage, bulletSpeed, reload, fireCycle, pauseCycle, delayed)
 	self.name		= name;
 	self.extension	= extension;
 	self.unlocks 	= unlocks;
 	self.damage		= damage;
 	self.bulletSpeed= bulletSpeed;
-	self.isShotgun	= isShotgun;
 	self.fireCycle	= fireCycle;
 	self.pauseCycle	= pauseCycle;
+	self.reload		= reload;
+	self.delayed	= delayed;
 end
 
 function Weapon:getResourcePath(unlock)

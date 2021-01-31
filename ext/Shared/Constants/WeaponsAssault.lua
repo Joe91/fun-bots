@@ -3,8 +3,9 @@ WeaponsAssault = {
 	'AN-94',
 	'G3A3',
 	'M16A3',
-	'M416',
-	-- shotguns
+	'M416'
+}
+ShotgunsAssault = {
 	'870MCS',
 	'M1014',
 	'SPAS-12',

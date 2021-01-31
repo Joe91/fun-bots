@@ -3,8 +3,9 @@ WeaponsRecon = {
 	'SV98',
 	'M98B',
 	'M417',
-	'SKS',
-	--Shotguns
+	'SKS'
+}
+ShotgunsRecon = {
 	'870MCS',
 	'SPAS-12'
 }

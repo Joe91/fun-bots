@@ -16,7 +16,11 @@ function Bot:__init(player)
 	self._moveMode = 0;
 	self.kit = "";
 	self.color = "";
-	self.weapon = nil;
+	self.activeWeapon = nil;
+	self.primary = nil;
+	self.pistol = nil;
+	self.knive = nil;
+	self.shotgun = nil;
 	self.inEnemyTeam = false;
 	self._checkSwapTeam = false;
 	self._respawning = false;
@@ -315,12 +319,7 @@ function Bot:_updateAiming(dt)
 				targetMovement			= self._shootPlayer.soldier.worldTransform.trans - self._lastTargetTrans --movement in one dt
 				--calculate how long the distance is --> time to travel
 				local distanceToPlayer	= self._shootPlayer.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans);
-				local timeToTravel = 0.0;
-				if Config.useShotgun then
-					timeToTravel		= (distanceToPlayer / StaticConfig.botBulletSpeedShotgun) + dt;
-				else
-					timeToTravel		= (distanceToPlayer / StaticConfig.botBulletSpeed) + dt;
-				end
+				local timeToTravel		= (distanceToPlayer / self.activeWeapon.bulletSpeed) + dt;
 				local factorForMovement	= timeToTravel / self._aimUpdateTimer;
 				targetMovement			= targetMovement * factorForMovement;
 			end
@@ -388,27 +387,43 @@ function Bot:_updateShooting()
 			if self.player.soldier.weaponsComponent ~= nil then
 				if Config.botWeapon == "Knive" then
 					if self.player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_7 then
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon8, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 1);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
+						self.activeWeapon = self.knive;
 					else
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 0);
 					end
 				elseif Config.botWeapon == "Pistol" then
 					if self.player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_1 then
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon8, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 1);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
+						self.activeWeapon = self.pistol;
 					else
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
 					end
-				else --"Primary"
+				elseif Config.botWeapon == "Primary" then
 					if self.player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_0 then
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon8, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 1);
+						self.activeWeapon = self.primary;
 					else
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
+					end
+				else --"Shotgun"
+					if self.player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_8 then
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon8, 1);
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 0);
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 1);
+						self.activeWeapon = self.shotgun;
+					else
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon8, 0);
 					end
 				end
 			end
@@ -459,49 +474,25 @@ function Bot:_updateShooting()
 				if Config.botWeapon == "Knive" then
 					self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
 					self._shotTimer	= 0;
-				elseif Config.botWeapon == "Pistol" then
-					if self._shotTimer >= Config.botFireCyclePistol then
+				else 
+					if self._shotTimer >= (self.activeWeapon.fireCycle + self.activeWeapon.pauseCycle) then
 						self._shotTimer	= 0;
 					end
-					if self._shotTimer >= (Config.botFireCyclePistol / 2) or self._meleeActive then
-						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
-					else
-						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
-					end
-				else --primary
-					if self.player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Crouch and Config.overWriteBotAttackMode == 0 then -- wait till crouch
-						self._shotTimer =  -Config.botFirstShotDelay;
-					end
-					if self.kit == "Support" then
-						if self._shotTimer >= (Config.botFireDurationSupport + Config.botFirePauseSupport) then
-							self._shotTimer	= 0;
-						end
-						if self._shotTimer >= Config.botFirePauseSupport and not self._meleeActive then
-							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1); --support waits a short time and starts shooting then
-						elseif self._shotTimer >= 0 then
+					if self.activeWeapon.delayed == true then
+						if self._shotTimer >= self.activeWeapon.fireCycle or self._meleeActive then
 							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
-						end
-					elseif self.kit == "Recon" then
-						if self._shotTimer >= Config.botFireCycleRecon then
-							self._shotTimer	= 0;
-						end
-						if self._shotTimer >= (Config.botFireCycleRecon / 2) or self._meleeActive then
-							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
-						elseif self._shotTimer >= 0 then
+						else
 							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
 						end
-					else -- Enineer and Assalut
-						if self._shotTimer >= (Config.botFireDuration + Config.botFirePause) then
-							self._shotTimer	= 0;
-						end
-						if self._shotTimer >= Config.botFireDuration or self._meleeActive then
-							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
-						elseif self._shotTimer >= 0 then
+					else --start with pause Cycle
+						if self._shotTimer >= self.activeWeapon.pauseCycle and not self._meleeActive then
 							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
+						else
+							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
 						end
 					end
 				end
-
+				
 				self._shotTimer = self._shotTimer + StaticConfig.botUpdateCycle;
 
 			else
@@ -522,9 +513,7 @@ function Bot:_updateShooting()
 			self._reloadTimer = self._reloadTimer + StaticConfig.botUpdateCycle;
 			if self._reloadTimer > 4 then
 				self.player.input:SetLevel(EntryInputActionEnum.EIAReload, 0);
-			elseif self._reloadTimer > 3 and self.player.soldier.weaponsComponent.currentWeapon.primaryAmmo < 5 and Config.useShotgun then
-				self.player.input:SetLevel(EntryInputActionEnum.EIAReload, 1);
-			elseif self._reloadTimer > 3 and self.player.soldier.weaponsComponent.currentWeapon.primaryAmmo < 15 and not Config.useShotgun then
+			elseif self._reloadTimer > 3 and self.player.soldier.weaponsComponent.currentWeapon.primaryAmmo <= self.activeWeapon.reload then
 				self.player.input:SetLevel(EntryInputActionEnum.EIAReload, 1);
 			end
 		end

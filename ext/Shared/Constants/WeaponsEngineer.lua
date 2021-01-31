@@ -3,8 +3,9 @@ WeaponsEngineer = {
 	'SCAR H',
 	'ACW-R',
 	'AS-Val',
-	'MTAR-21',
-	-- shotguns
+	'MTAR-21'
+}
+ShotgunsEngineer = {
 	'870MCS',
 	'M1014',
 	'SPAS-12',

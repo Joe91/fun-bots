@@ -396,6 +396,9 @@ function BotSpawner:getKitApperanceCustomization(team, kit, color, weaponName)
 	meleeWeapon.weapon = SoldierWeaponUnlockAsset(knife)
 	meleeWeapon.slot = WeaponSlot.WeaponSlot_7
 
+	local shotgun = UnlockWeaponAndSlot()
+	primaryWeapon.slot = WeaponSlot.WeaponSlot_8
+
 	if kit == "Assault" then
 		--[[if Config.useShotgun then
 			local usas12 = ResourceManager:SearchForDataContainer('Weapons/USAS-12/U_USAS-12')

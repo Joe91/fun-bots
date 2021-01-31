@@ -15,10 +15,11 @@ Config = {
 	bulletDamageBotSniper = 48,	 	-- damage of a bot with sniper bullet
 	bulletDamageBotShotgun = 24, 	-- damage of a bot with shotgun bullet
 	meleeDamageBot = 56,			-- damage of a bot with melee attack
+	damageFactor = 0.8,				-- origninal Damage from bots gets multiplied by this
 
 	--spawn
 	spawnOnLevelstart = true,		-- bots spawn on levelstart (if valid paths are available)
-	onlySpawnBotsWithPlayers = true,-- Bots only spawn if at least one Player is on the server
+	onlySpawnBotsWithPlayers = false,-- Bots only spawn if at least one Player is on the server
 	initNumberOfBots = 8,			-- bots on levelstart
 	incBotsWithPlayers = true,		-- increase Bots, when new players join
 	newBotsPerNewPlayer = 3,		-- number to increase Bots, when new players join
