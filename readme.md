@@ -19,6 +19,7 @@ The following Maps are official supported right now with waypoints/traces:
 |   	|   Internal Name	|   Name	|   Supported Types	|
 |---	|---	|---	|---	|
 |   ![MP_001](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_001.jpg?raw=true) 	|   `MP_001`	| **Grand Bazaar** | `TDM`, `TDM QC` |
+|   ![MP_003](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_003.jpg?raw=true) 	|   `MP_003`	| **Teheran Highway** | `TDM`, `TDM QC` |
 |   ![MP_007](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_007.jpg?raw=true) 	|   `MP_007`	| **Caspian Border** | `TDM`, `TDM QC` |
 |   ![MP_011](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_011.jpg?raw=true) 	|   `MP_011`	| **Seine Crossing** | `TDM`, `TDM QC` |
 |   ![MP_012](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_012.jpg?raw=true) 	|   `MP_012`	| **Operation Firestorm** | `TDM`, `TDM QC` |
@@ -37,6 +38,8 @@ The following Maps are official supported right now with waypoints/traces:
 |   ![XP3_Shield](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp3_shield.jpg?raw=true) 	|   `XP3_Shield`	| **Armored Shield** | `TDM`, `TDM QC` |
 |   ![XP3_Valley](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp3_valley.jpg?raw=true) 	|   `XP3_Valley`	| **Death Valley** | `TDM`, `TDM QC` |
 |   ![XP4_FD](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp4_fd.jpg?raw=true) 	|   `XP4_FD`	| **Markaz Monolith** | `TDM`, `TDM QC` |
+|   ![XP4_Rubble](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp4_rubble.jpg?raw=true) 	|   `XP4_Rubble`	| **Talah Market** | `TDM`, `TDM QC` |
+|   ![XP4_Quake](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp4_quake.jpg?raw=true) 	|   `XP4_Quake`	| **Epicenter** | `TDM`, `TDM QC` |
 |   ![XP4_Parl](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp4_parl.jpg?raw=true) 	|   `XP4_Parl`	| **Azadi Palace** | `TDM`, `TDM QC` |
 |   ![XP5_001](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp5_001.jpg?raw=true) 	|   `XP5_001`	| **Operation Riverside** | `TDM`, `TDM QC` |
 |   ![XP5_002](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp5_002.jpg?raw=true) 	|   `XP5_002`	| **Nebandan Flats** | `TDM`, `TDM QC` |
