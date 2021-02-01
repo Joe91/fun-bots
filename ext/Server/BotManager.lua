@@ -223,7 +223,8 @@ function BotManager:_onSoldierDamage(hook, soldier, info, giverInfo)
 				if bot ~= nil then
 					-- giver was a bot (with shotgun)
 					if Config.useShotgun then
-						info.damage = info.damage * Config.damageFactor;
+						--info.damage = info.damage * Config.damageFactor;
+						info.damage = bot.activeWeapon.damage * Config.damageFactor;
 						info.boneIndex = 0;
 					end
 				end
