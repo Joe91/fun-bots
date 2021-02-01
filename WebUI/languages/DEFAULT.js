@@ -34,11 +34,13 @@ Language['xx_XX'] /* Add/replace the xx_XX here with your language code (like de
   "General": "",
   "Difficulty": "",
   "Spawn": "",
+  "Weapons": "",
   "Advanced": "",
   "Expert": "",
   "Other": "",
   "Restore all to Default": "",
   "Save temporarily": "",
+  "Origninal Damage from bots gets multiplied by this": "",
   "First Shot Delay": "",
   "You are not permitted to change Bots. Please press F12 for authenticate!": "",
   "The password you entered is not correct!": ""
