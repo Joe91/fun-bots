@@ -11,7 +11,7 @@ Config = {
 
 	--difficluty
 	botAimWorsening = 0.0,			-- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy). Restart of level needed
-	damageFactor = 0.8,				-- origninal Damage from bots gets multiplied by this
+	damageFactor = 1.0,				-- origninal Damage from bots gets multiplied by this
 
 	--spawn
 	spawnOnLevelstart = true,		-- bots spawn on levelstart (if valid paths are available)

@@ -120,6 +120,8 @@ function Bot:shootAt(player, ignoreYaw)
 			if self._shootPlayer == nil or self._shootModeTimer > Config.botMinTimeShootAtPlayer then
 				self._shootModeTimer	= 0;
 				self._shootPlayer		= player;
+				self._lastShootPlayer 	= player;
+				self._lastTargetTrans 	= player.soldier.worldTransform.trans:Clone();
 			end
 		else
 			self._shootModeTimer = Config.botFireModeDuration;
@@ -315,15 +317,11 @@ function Bot:_updateAiming(dt)
 			local targetMovement = Vec3(0, 0, 0);
 
 			local distanceToPlayer	= self._shootPlayer.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans);
+			--calculate how long the distance is --> time to travel
 			local timeToTravel		= (distanceToPlayer / self.activeWeapon.bulletSpeed)
+			local factorForMovement	= (timeToTravel) / self._aimUpdateTimer; -- + dt ?
 			local ptichCorrection	= 0.5 * timeToTravel * timeToTravel * self.activeWeapon.bulletDrop;
-
-			if self._lastShootPlayer ~= nil and self._lastShootPlayer == self._shootPlayer then
-				targetMovement			= self._shootPlayer.soldier.worldTransform.trans - self._lastTargetTrans --movement in one dt
-				--calculate how long the distance is --> time to travel
-				local factorForMovement	= (timeToTravel) / self._aimUpdateTimer; -- + dt ?
-				targetMovement			= targetMovement * factorForMovement;
-			end
+			targetMovement			= (self._shootPlayer.soldier.worldTransform.trans - self._lastTargetTrans) * factorForMovement; --movement in one dt
 
 			self._lastShootPlayer = self._shootPlayer;
 			self._lastTargetTrans = self._shootPlayer.soldier.worldTransform.trans:Clone();
