@@ -267,14 +267,61 @@ function FunBotUIServer:_writeSettings(player, request)
 		end
 	end
 
-	if request.damageFactor ~= nil then
-		local tempValue = tonumber(request.damageFactor);
+	if request.damageFactorAssault ~= nil then
+		local tempValue = tonumber(request.damageFactorAssault);
 
 		if tempValue >= 0 then
-			SettingsManager:update('damageFactor', tempValue, temporary, batched);
+			SettingsManager:update('damageFactorAssault', tempValue, temporary, batched);
 		end
 	end
 
+	if request.damageFactorCarabine ~= nil then
+		local tempValue = tonumber(request.damageFactorCarabine);
+
+		if tempValue >= 0 then
+			SettingsManager:update('damageFactorCarabine', tempValue, temporary, batched);
+		end
+	end
+
+	if request.damageFactorLMG ~= nil then
+		local tempValue = tonumber(request.damageFactorLMG);
+
+		if tempValue >= 0 then
+			SettingsManager:update('damageFactorLMG', tempValue, temporary, batched);
+		end
+	end
+
+	if request.damageFactorSniper ~= nil then
+		local tempValue = tonumber(request.damageFactorSniper);
+
+		if tempValue >= 0 then
+			SettingsManager:update('damageFactorSniper', tempValue, temporary, batched);
+		end
+	end
+
+	if request.damageFactorShotgun ~= nil then
+		local tempValue = tonumber(request.damageFactorShotgun);
+
+		if tempValue >= 0 then
+			SettingsManager:update('damageFactorShotgun', tempValue, temporary, batched);
+		end
+	end
+
+	if request.damageFactorPistol ~= nil then
+		local tempValue = tonumber(request.damageFactorPistol);
+
+		if tempValue >= 0 then
+			SettingsManager:update('damageFactorPistol', tempValue, temporary, batched);
+		end
+	end
+
+	if request.damageFactorKnife ~= nil then
+		local tempValue = tonumber(request.damageFactorKnife);
+
+		if tempValue >= 0 then
+			SettingsManager:update('damageFactorKnife', tempValue, temporary, batched);
+		end
+	end
 
 	-- advanced
 	if request.fovForShooting ~= nil then
