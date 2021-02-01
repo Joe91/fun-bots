@@ -34,14 +34,17 @@ function WeaponList:__init()
 	weapon = Weapon('ASVal', '', {'Kobra', 'ExtendedMag'}, 18, 333, 9.81, 10, 0.4, 0.4, "Carabine", false)
 	table.insert(self._weapons, weapon);
 
-	weapon = Weapon('M4A1', '', {'Kobra', 'HeavyBarrel'}, 25, 580, 9.81, 10, 0.4, 0.4, "Carabine", false)
+	weapon = Weapon('M4A1', '', {'Kobra', 'Silencer'}, 25, 580, 15, 10, 0.4, 0.4, "Carabine", false)
+	table.insert(self._weapons, weapon);
+
+	weapon = Weapon('SCAR-H', '', {'Kobra', 'Silencer'}, 30, 420, 15, 10, 0.4, 0.4, "Carabine", false)
 	table.insert(self._weapons, weapon);
 
 	--support
-	weapon = Weapon('M249', '', {'Eotech', 'Bipod'}, 25, 620, 15, 20, 0.4, 0.4, "LMG", true)
+	weapon = Weapon('M249', '', {'Eotech', 'Bipod'}, 25, 620, 15, 20, 2.0, 0.6, "LMG", true)
 	table.insert(self._weapons, weapon);
 
-	weapon = Weapon('M240', '', {'Eotech', 'Bipod'}, 34, 610, 15, 20, 0.4, 0.4, "LMG", true)
+	weapon = Weapon('M240', '', {'Eotech', 'Bipod'}, 34, 610, 15, 20, 2.0, 0.6, "LMG", true)
 	table.insert(self._weapons, weapon);
 
 	-- recon
