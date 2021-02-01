@@ -4,6 +4,7 @@ require('__shared/Config');
 require('Waypoint');
 
 local Globals = require('Globals');
+local Utilities = require('__shared/Utilities')
 
 function Bot:__init(player)
 	--Player Object
@@ -329,7 +330,7 @@ function Bot:_updateAiming(dt)
 			--calculate yaw and pith
 			local dz		= self._shootPlayer.soldier.worldTransform.trans.z + targetMovement.z - self.player.soldier.worldTransform.trans.z;
 			local dx		= self._shootPlayer.soldier.worldTransform.trans.x + targetMovement.x - self.player.soldier.worldTransform.trans.x;
-			local dy		= (self._shootPlayer.soldier.worldTransform.trans.y + targetMovement.y + self:_getCameraHight(self._shootPlayer.soldier, true)) + ptichCorrection - (self.player.soldier.worldTransform.trans.y + self:_getCameraHight(self.player.soldier, false));
+			local dy		= (self._shootPlayer.soldier.worldTransform.trans.y + targetMovement.y + Utilities:getTargetHeight(self._shootPlayer.soldier, true)) + ptichCorrection - (self.player.soldier.worldTransform.trans.y + Utilities:getTargetHeight(self.player.soldier, false));
 			local atanDzDx	= math.atan(dz, dx);
 			local yaw		= (atanDzDx > math.pi / 2) and (atanDzDx - math.pi / 2) or (atanDzDx + 3 * math.pi / 2);
 
