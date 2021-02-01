@@ -168,6 +168,38 @@ function BotManager:onPlayerLeft(player)
 	end
 end
 
+function BotManager:_getDamageValue(damage, bot, fake)
+	local resultDamage = 0;
+	local damageFactor = 1.0;
+	if bot.activeWeapon.type == "Shotgun" then
+		damageFactor = Config.damageFactorShotgun;
+	elseif bot.activeWeapon.type == "Assault" then
+		damageFactor = Config.damageFactorAssault;
+	elseif bot.activeWeapon.type == "Carabine" then
+		damageFactor = Config.damageFactorCarabine;
+	elseif bot.activeWeapon.type == "LMG" then
+		damageFactor = Config.damageFactorLMG;
+	elseif bot.activeWeapon.type == "Sniper" then
+		damageFactor = Config.damageFactorSniper;
+	elseif bot.activeWeapon.type == "Pistol" then
+		damageFactor = Config.damageFactorPistol;
+	elseif bot.activeWeapon.type == "Knife" then
+		damageFactor = Config.damageFactorKnife;
+	end
+
+
+	if not fake then -- frag mode shotgun
+		resultDamage = damage * damageFactor;
+	else
+		if damage > 0.09 and damage < 0.11 then
+			resultDamage = bot.activeWeapon.damage * damageFactor;
+		elseif damage > 0.19 and damage < 0.21 then --melee
+			resultDamage = bot.knife.damage * Config.damageFactorKnife;
+		end
+	end
+	return resultDamage;
+end
+
 function BotManager:_onSoldierDamage(hook, soldier, info, giverInfo)
 	--detect if we need to shoot back
 	if Config.shootBackIfHit then
@@ -195,15 +227,9 @@ function BotManager:_onSoldierDamage(hook, soldier, info, giverInfo)
 			if giverInfo.giver == nil then
 				bot = self:GetBotByName(self._shooterBots[soldier.player.name])
 				if bot ~= nil and bot.player.soldier ~= nil then
-					if info.damage > 0.09 and info.damage < 0.11 then
-						info.isBulletDamage = true
-						info.damage = bot.activeWeapon.damage * Config.damageFactor;
-					elseif info.damage > 0.19 and info.damage < 0.21 then --melee
-						info.damage = bot.knife.damage * Config.damageFactor;
-						info.isBulletDamage = false
-					end
-
-					info.boneIndex = 0
+					info.damage = self._getDamageValue(info.damage, bot, true);
+					info.boneIndex = 0;
+					info.isBulletDamage = true;
 					info.position = Vec3(soldier.worldTransform.trans.x, soldier.worldTransform.trans.y + 1, soldier.worldTransform.trans.z)
 					info.direction = soldier.worldTransform.trans - bot.player.soldier.worldTransform.trans
 					info.origin = bot.player.soldier.worldTransform.trans
@@ -223,9 +249,7 @@ function BotManager:_onSoldierDamage(hook, soldier, info, giverInfo)
 				if bot ~= nil then
 					-- giver was a bot (with shotgun)
 					if Config.useShotgun then
-						info.damage = info.damage * Config.damageFactor;
-						--info.damage = bot.activeWeapon.damage * Config.damageFactor;
-						--info.boneIndex = 0;
+						info.damage = self._getDamageValue(info.damage, bot, false);
 					end
 				end
 			end

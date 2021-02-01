@@ -11,7 +11,13 @@ Config = {
 
 	--difficluty
 	botAimWorsening = 0.0,			-- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy). Restart of level needed
-	damageFactor = 1.0,				-- origninal Damage from bots gets multiplied by this
+	damageFactorAssault = 1.0,		-- origninal Damage from bots gets multiplied by this
+	damageFactorCarabine = 1.0,		-- origninal Damage from bots gets multiplied by this
+	damageFactorLMG = 1.0,			-- origninal Damage from bots gets multiplied by this
+	damageFactorSniper = 1.0,		-- origninal Damage from bots gets multiplied by this
+	damageFactorShotgun = 1.0,		-- origninal Damage from bots gets multiplied by this
+	damageFactorPistol = 1.0,		-- origninal Damage from bots gets multiplied by this
+	damageFactorKnife = 1.0,		-- origninal Damage from bots gets multiplied by this
 
 	--spawn
 	spawnOnLevelstart = true,		-- bots spawn on levelstart (if valid paths are available)
@@ -84,7 +90,5 @@ StaticConfig = {
 	raycastInterval = 0.1,			-- update intervall of client raycasts
 	botUpdateCycle = 0.1,			-- update-intervall of bots
 	botAimUpdateCycle = 0.05,		-- = 3 frames at 60 Hz
-	botBulletSpeed = 600,			-- speed a bullet travels ingame (aproximately)
-	botBulletSpeedShotgun = 150,	-- speed a shutgun-bullet travel ingame (aproximately)
 	targetHeightDistanceWayPoint = 2-- distance the bots have to reach in height to continue with next Waypoint
 };

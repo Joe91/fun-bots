@@ -1,6 +1,6 @@
 class('Weapon');
 
-function Weapon:__init(name, extension, unlocks, damage, bulletSpeed, bulletDrop, reload, fireCycle, pauseCycle, delayed, fullResource)
+function Weapon:__init(name, extension, unlocks, damage, bulletSpeed, bulletDrop, reload, fireCycle, pauseCycle, type, delayed, fullResource)
 	self.name		= name;
 	self.extension	= extension;
 	self.unlocks 	= unlocks;
@@ -11,6 +11,7 @@ function Weapon:__init(name, extension, unlocks, damage, bulletSpeed, bulletDrop
 	self.pauseCycle	= pauseCycle;
 	self.reload		= reload;
 	self.delayed	= delayed;
+	self.type		= type;
 	self.fullResource = fullResource;
 end
 
