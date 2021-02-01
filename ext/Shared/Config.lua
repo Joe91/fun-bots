@@ -32,14 +32,14 @@ Config = {
 	-- weapons
 	assaultWeapon = "M416",			-- weapon of Assault class
 	assaultShotgun = "USAS-12",		-- shotgun of Assault class
-	engineerWeapon = "M4A1",		-- weapon of Assault class
-	engineerShotgun = "saiga20",	-- shotgun of Assault class
-	supportWeapon = "M240",			-- weapon of Assault class
-	supportShotgun = "Jackhammer",	-- shotgun of Assault class
-	reconWeapon = "M98B",			-- weapon of Assault class
-	reconShotgun = "SPAS12",		-- shotgun of Assault class
-	pistol = "MP412Rex",			-- pistol
-	knife = "Razor",				-- knife
+	engineerWeapon = "M4A1",		-- weapon of Engineer class
+	engineerShotgun = "saiga20",	-- shotgun of Engineer class
+	supportWeapon = "M240",			-- weapon of Support class
+	supportShotgun = "Jackhammer",	-- shotgun of Support class
+	reconWeapon = "M98B",			-- weapon of Recon class
+	reconShotgun = "SPAS12",		-- shotgun of Recon class
+	pistol = "MP412Rex",			-- Bot pistol
+	knife = "Razor",				-- Bot knife
 
 	--advanced
 	fovForShooting = 270,			-- Degrees of FOV of Bot

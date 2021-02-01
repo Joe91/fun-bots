@@ -5,7 +5,7 @@ Language:add(code, "If true, Bots spawn in the team of the player", "如果为YE
 Language:add(code, "Select the weapon the bots use", "选择BOT使用的武器");
 Language:add(code, "Bot Kit", "BOT兵种");
 Language:add(code, "The Kit a bots spawns with.", "BOT出生选择的兵种");
-Language:add(code, "Bots use Shotguns", "BOT使用霰弹枪");
+Language:add(code, "Frag Mode", "BOT使用霰弹枪");
 Language:add(code, "only shotguns with frag, as it counts the kills of the Bots", "BOT可以使用霰弹枪");
 Language:add(code, "Bot Color", "BOT主武器皮肤");
 Language:add(code, "The Kit-Color a bots spawns with.", "BOT生成时的枪械皮肤");

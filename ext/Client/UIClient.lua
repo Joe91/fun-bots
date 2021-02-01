@@ -69,11 +69,11 @@ function FunBotUIClient:_onUISettings(data)
 	-- addList(<category>, <name>, <title>, <list>, <value>, <default>, <description>)
 
 	settings:add("GLOBAL", "Boolean", "spawnInSameTeam", Language:I18N("Spawn in Same Team"), data.spawnInSameTeam, false, Language:I18N("If true, Bots spawn in the team of the player"));
+	settings:add("GLOBAL", "Boolean", "useShotgun", Language:I18N("Frag Mode"), data.useShotgun, false, Language:I18N("only shotguns with frag, as it counts the kills of the Bots"));
 	settings:addList("GLOBAL", "botWeapon", Language:I18N("Bot Weapon"), BotWeapons, data.botWeapon, "Primary", Language:I18N("Select the weapon the bots use"));
 	settings:addList("GLOBAL", "botKit", Language:I18N("Bot Kit"), BotKits, data.botKit, "RANDOM_KIT", Language:I18N("The Kit a bots spawns with."));
 	settings:addList("GLOBAL", "botColor", Language:I18N("Bot Color"), BotColors, data.botColor, "RANDOM_COLOR", Language:I18N("The Kit-Color a bots spawns with."));
-	settings:add("GLOBAL", "Boolean", "useShotgun", Language:I18N("Frag Mode"), data.useShotgun, false, Language:I18N("only shotguns with frag, as it counts the kills of the Bots"));
-
+	
 	settings:add("DIFFICULTY", "Float", "botAimWorsening", Language:I18N("Aim Worsening"), data.botAimWorsening, 0.0, Language:I18N("0 = hard, 1 (or higher) = easy. Only takes effect on level Start"));
 	settings:add("DIFFICULTY", "Float", "damageFactor", Language:I18N("Factor for Weapon-Damage"), data.damageFactor, 0.8, Language:I18N("Origninal Damage from bots gets multiplied by this"));
 
