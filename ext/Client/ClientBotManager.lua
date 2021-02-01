@@ -2,7 +2,8 @@ class('ClientBotManager');
 
 require('__shared/Config');
 
-local WeaponModification = require('__shared/WeaponModification');
+local WeaponModification 	= require('__shared/WeaponModification');
+local Utilities 			= require('__shared/Utilities')
 
 function ClientBotManager:__init()
 	self._raycastTimer	= 0;
@@ -52,22 +53,16 @@ function ClientBotManager:_onUpdate(p_Delta, p_Pass)
 			if (bot ~= nil) then
 				if (bot.soldier ~= nil and player.soldier ~= nil) then
 					-- check for clear view
-					local playerCameraTrans	= ClientUtils:GetCameraTransform();
-					local botCamereaHight	= 1.6; --bot.soldier.pose == CharacterPoseType.CharacterPoseType_Stand
-
-					if (bot.soldier.pose == CharacterPoseType.CharacterPoseType_Prone) then
-						botCamereaHight = 0.3;
-					elseif (bot.soldier.pose == CharacterPoseType.CharacterPoseType_Crouch) then
-						botCamereaHight = 1.0;
-					end
+					-- local playerCameraTrans	= ClientUtils:GetCameraTransform(); -- don't use camera, as this is used by mav or eod
+					local playerPosition = Vec3(player.soldier.worldTransform.trans.x, player.soldier.worldTransform.trans.y + Utilities:getTargetHeight(player.soldier, false), player.soldier.worldTransform.trans.z)
 
 					-- find direction of Bot
-					local target	= Vec3(bot.soldier.worldTransform.trans.x, bot.soldier.worldTransform.trans.y + botCamereaHight, bot.soldier.worldTransform.trans.z);
-					local distance	= playerCameraTrans.trans:Distance(bot.soldier.worldTransform.trans);
+					local target	= Vec3(bot.soldier.worldTransform.trans.x, bot.soldier.worldTransform.trans.y + Utilities:getTargetHeight(bot.soldier, false), bot.soldier.worldTransform.trans.z);
+					local distance	= playerPosition:Distance(bot.soldier.worldTransform.trans);
 
 					if (distance < Config.maxRaycastDistance) then
 						self._lastIndex	= newIndex;
-						local raycast	= RaycastManager:Raycast(playerCameraTrans.trans, target, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.IsAsyncRaycast)
+						local raycast	= RaycastManager:Raycast(playerPosition, target, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.IsAsyncRaycast)
 
 						if (raycast == nil or raycast.rigidBody == nil) then
 							-- we found a valid bot in Sight (either no hit, or player-hit). Signal Server with players
@@ -90,7 +85,7 @@ function ClientBotManager:_onBulletCollision(hook, entity, hit, shooter)
 		if (hit.rigidBody.typeInfo.name == 'CharacterPhysicsEntity') then
 			local player = PlayerManager:GetLocalPlayer();
 
-			if (player.soldier ~= nil) then -- TODO: Check shooter for bot
+			if (player.soldier ~= nil) then
 				local dx	= math.abs(player.soldier.worldTransform.trans.x - hit.position.x);
 				local dz	= math.abs(player.soldier.worldTransform.trans.z - hit.position.z);
 				local dy	= hit.position.y - player.soldier.worldTransform.trans.y; --player y is on ground. Hit must be higher to be valid

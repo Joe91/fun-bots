@@ -1,0 +1,4 @@
+KnifeWeapons = {
+	'Knife',
+	'Razor'
+}

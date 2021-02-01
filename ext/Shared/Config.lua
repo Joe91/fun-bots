@@ -7,14 +7,17 @@ Config = {
 	botWeapon = "Primary",			-- Select the weapon the bots use
 	botKit = "RANDOM_KIT",			-- see BotKits
 	botColor = "RANDOM_COLOR",		-- see BotColors
-	useShotgun = true,				-- only shotguns with frag, as it counts the kills of the Bots
+	useShotgun = false,				-- only shotguns with frag, as it counts the kills of the Bots
 
 	--difficluty
 	botAimWorsening = 0.0,			-- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy). Restart of level needed
-	bulletDamageBot = 16,			-- damage of a bot with normal bullet
-	bulletDamageBotSniper = 48,	 	-- damage of a bot with sniper bullet
-	bulletDamageBotShotgun = 24, 	-- damage of a bot with shotgun bullet
-	meleeDamageBot = 56,			-- damage of a bot with melee attack
+	damageFactorAssault = 1.0,		-- origninal Damage from bots gets multiplied by this
+	damageFactorCarabine = 1.0,		-- origninal Damage from bots gets multiplied by this
+	damageFactorLMG = 1.0,			-- origninal Damage from bots gets multiplied by this
+	damageFactorSniper = 1.0,		-- origninal Damage from bots gets multiplied by this
+	damageFactorShotgun = 1.0,		-- origninal Damage from bots gets multiplied by this
+	damageFactorPistol = 1.0,		-- origninal Damage from bots gets multiplied by this
+	damageFactorKnife = 1.0,		-- origninal Damage from bots gets multiplied by this
 
 	--spawn
 	spawnOnLevelstart = true,		-- bots spawn on levelstart (if valid paths are available)
@@ -31,6 +34,18 @@ Config = {
 	maxEngineerBots = -1,			-- maximum number of Bots with Engineer Kit
 	maxSupportBots = -1,			-- maximum number of Bots with Support Kit
 	maxReconBots = -1,				-- maximum number of Bots with Recon Kit
+
+	-- weapons
+	assaultWeapon = "M416",			-- weapon of Assault class
+	assaultShotgun = "USAS-12",		-- shotgun of Assault class
+	engineerWeapon = "M4A1",		-- weapon of Engineer class
+	engineerShotgun = "saiga20",	-- shotgun of Engineer class
+	supportWeapon = "M240",			-- weapon of Support class
+	supportShotgun = "Jackhammer",	-- shotgun of Support class
+	reconWeapon = "M98B",			-- weapon of Recon class
+	reconShotgun = "SPAS12",		-- shotgun of Recon class
+	pistol = "MP412Rex",			-- Bot pistol
+	knife = "Razor",				-- Bot knife
 
 	--advanced
 	fovForShooting = 270,			-- Degrees of FOV of Bot
@@ -75,7 +90,5 @@ StaticConfig = {
 	raycastInterval = 0.1,			-- update intervall of client raycasts
 	botUpdateCycle = 0.1,			-- update-intervall of bots
 	botAimUpdateCycle = 0.05,		-- = 3 frames at 60 Hz
-	botBulletSpeed = 600,			-- speed a bullet travels ingame (aproximately)
-	botBulletSpeedShotgun = 150,	-- speed a shutgun-bullet travel ingame (aproximately)
 	targetHeightDistanceWayPoint = 2-- distance the bots have to reach in height to continue with next Waypoint
 };
