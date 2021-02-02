@@ -34,11 +34,13 @@ Language['cn_CN'] /* Add/replace the xx_XX here with your language code (like de
     "General": "一般设置",
     "Difficulty": "难度设置",
     "Spawn": "BOT生成设置",
+    "Weapons": "武器设置",
     "Advanced": "高级设置",
     "Expert": "专家设置",
     "Other": "其他设置",
     "Restore all to Default": "还原全部为默认值",
     "Save temporarily": "临时保存",
+    "Origninal Damage from bots gets multiplied by this": "BOT的原伤害乘以此",
     "First Shot Delay": "第一枪延迟",
     "You are not permitted to change Bots. Please press F12 for authenticate!": "您无权修改BOT配置,请按F12键进行身份验证！",
     "The password you entered is not correct!": "您输入的密码不正确！"
