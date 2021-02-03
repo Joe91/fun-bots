@@ -320,7 +320,7 @@ function Bot:_updateAiming(dt)
 			local distanceToPlayer	= self._shootPlayer.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans);
 			--calculate how long the distance is --> time to travel
 			local timeToTravel		= (distanceToPlayer / self.activeWeapon.bulletSpeed)
-			local factorForMovement	= (timeToTravel) / self._aimUpdateTimer; -- + dt ?
+			local factorForMovement	= (timeToTravel) / self._aimUpdateTimer + dt;
 			local ptichCorrection	= 0.5 * timeToTravel * timeToTravel * self.activeWeapon.bulletDrop;
 			targetMovement			= (self._shootPlayer.soldier.worldTransform.trans - self._lastTargetTrans) * factorForMovement; --movement in one dt
 
@@ -807,22 +807,24 @@ function Bot:_updateMovement()
 			end
 
 			-- do some sidwards movement from time to time
-			if self._attackModeMoveTimer > 20 then
-				self._attackModeMoveTimer = 0;
-				self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
-			elseif self._attackModeMoveTimer > 17 then
-				self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, -1.0 * Config.speedFactorAttack);
-			elseif self._attackModeMoveTimer > 13 then
-				self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
-			elseif self._attackModeMoveTimer > 12 then
-				self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 1.0 * Config.speedFactorAttack);
-			elseif self._attackModeMoveTimer > 9 then
-				self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0);
-			elseif self._attackModeMoveTimer > 7 then
-				self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 1.0 * Config.speedFactorAttack);
-			end
+			if self.kit ~= "Recon" then
+				if self._attackModeMoveTimer > 20 then
+					self._attackModeMoveTimer = 0;
+					self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
+				elseif self._attackModeMoveTimer > 17 then
+					self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, -1.0 * Config.speedFactorAttack);
+				elseif self._attackModeMoveTimer > 13 then
+					self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
+				elseif self._attackModeMoveTimer > 12 then
+					self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 1.0 * Config.speedFactorAttack);
+				elseif self._attackModeMoveTimer > 9 then
+					self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0);
+				elseif self._attackModeMoveTimer > 7 then
+					self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 1.0 * Config.speedFactorAttack);
+				end
 
-			self._attackModeMoveTimer = self._attackModeMoveTimer + StaticConfig.botUpdateCycle;
+				self._attackModeMoveTimer = self._attackModeMoveTimer + StaticConfig.botUpdateCycle;
+			end
 		end
 
 		-- additional movement
