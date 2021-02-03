@@ -94,7 +94,13 @@ end
 
 --public functions
 function Bot:shootAt(player, ignoreYaw)
+	-- don't shoot at teammates
 	if self.player.teamId == player.teamId then
+		return
+	end
+	-- don't shoot if too far away
+	local distance = player.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans)
+	if self.activeWeapon.type ~= "Sniper" and distance > Config.maxShootDistanceNoSniper then
 		return
 	end
 

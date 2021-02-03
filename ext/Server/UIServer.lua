@@ -355,6 +355,14 @@ function FunBotUIServer:_writeSettings(player, request)
 		end
 	end
 
+	if request.maxShootDistanceNoSniper ~= nil then
+		local tempValue = tonumber(request.maxShootDistanceNoSniper);
+
+		if tempValue >= 0 and tempValue <= 500 then
+			SettingsManager:update('maxShootDistanceNoSniper', tempValue, temporary, batched);
+		end
+	end
+
 	if request.distanceForDirectAttack ~= nil then
 		local tempValue = tonumber(request.distanceForDirectAttack);
 
