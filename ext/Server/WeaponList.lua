@@ -61,15 +61,15 @@ function WeaponList:__init()
 
 	-- recon
 	weapon = Weapon('L96', 'XP1', {'Rifle_6xScope', 'StraightPull'}, 'Sniper')
-	weapon:setStatsValues(80, 540, 9.81, 3, 0.3, 0.3, false);
+	weapon:setStatsValues(80, 540, 9.81, 3, 0.3, 0.3, true);
 	table.insert(self._weapons, weapon);
 
 	weapon = Weapon('M98B', '', {'Ballistic_Scope', 'StraightPull'}, 'Sniper', 'Weapons/Model98B/U_M98B')
-	weapon:setStatsValues(95, 650, 9.81, 3, 0.3, 0.3, false);
+	weapon:setStatsValues(95, 650, 9.81, 3, 0.3, 0.3, true);
 	table.insert(self._weapons, weapon);
 
 	weapon = Weapon('SKS', '', {'Rifle_Scope', 'Target_Pointer'}, 'Sniper')
-	weapon:setStatsValues(43, 440, 15, 3, 0.3, 0.3, false);
+	weapon:setStatsValues(43, 440, 15, 3, 0.3, 0.3, true);
 	table.insert(self._weapons, weapon);
 
 	-- pistols
