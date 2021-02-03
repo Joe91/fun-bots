@@ -74,7 +74,9 @@ Language:add(code, "The Field Of View of the bots, where they can detect a playe
 Language:add(code, "Attack if Hit", "");
 Language:add(code, "Bots imidiatly attack player, if shot by it", "");
 Language:add(code, "View Distance Bots", "");
-Language:add(code, "The maximum distance a bots starts shooting at a player", "");
+Language:add(code, "The maximum distance a Sniper Bot starts shooting at a player", "");
+Language:add(code, "Attack Distance no Sniper", "");
+Language:add(code, "The maximum distance a non Sniper Bot starts shooting at a player", "");
 Language:add(code, "Direct Attack Distance", "");
 Language:add(code, "When this close to a bot, he starts attacking", "");
 Language:add(code, "Attack with Melee", "");
