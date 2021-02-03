@@ -31,7 +31,7 @@ function ClientBotManager:_onWriteClientSettings(newConfig, isInitialConfig)
 	end
 
 	if isInitialConfig then
-		WeaponModification:ModifyAllWeapons(Config.botAimWorsening);
+		WeaponModification:ModifyAllWeapons(Config.botAimWorsening, Config.botSniperAimWorsening);
 	end
 end
 

@@ -63,7 +63,7 @@ end
 
 function FunBotServer:_onLevelLoaded(levelName, gameMode)
 	NetEvents:BroadcastLocal('WriteClientSettings', Config, true);
-	WeaponModification:ModifyAllWeapons(Config.botAimWorsening);
+	WeaponModification:ModifyAllWeapons(Config.botAimWorsening, Config.botSniperAimWorsening);
 	print('level ' .. levelName .. ' loaded...');
 	if gameMode == 'TeamDeathMatchC0' or gameMode == 'TeamDeathMatch0' then
 		Globals.isTdm = true;

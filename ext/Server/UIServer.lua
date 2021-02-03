@@ -267,6 +267,17 @@ function FunBotUIServer:_writeSettings(player, request)
 		end
 	end
 
+	if request.botSniperAimWorsening ~= nil then
+		local tempValue = tonumber(request.botSniperAimWorsening)
+
+		if tempValue >= 0 and tempValue < 10 then
+			if math.abs(request.botSniperAimWorsening - Config.botSniperAimWorsening) > 0.001 then
+				SettingsManager:update('botAimWorsening', tempValue, temporary, batched);
+				updateWeapons = true;
+			end
+		end
+	end
+
 	if request.damageFactorAssault ~= nil then
 		local tempValue = tonumber(request.damageFactorAssault);
 
@@ -750,7 +761,7 @@ function FunBotUIServer:_writeSettings(player, request)
 	
 	-- update Weapons if needed
 	if updateWeapons then
-		WeaponModification:ModifyAllWeapons(Config.botAimWorsening);
+		WeaponModification:ModifyAllWeapons(Config.botAimWorsening, Config.botSniperAimWorsening);
 	end
 	
 	NetEvents:BroadcastLocal('WriteClientSettings', Config, updateWeapons);

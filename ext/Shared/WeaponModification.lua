@@ -50,22 +50,33 @@ function WeaponModification:OnPartitionLoaded(p_Partition)
 	end
 end
 
-function WeaponModification:ModifyAllWeapons(botAimWorsening)
+function WeaponModification:ModifyAllWeapons(aimWorseningNormal, aimWorseningSniper)
 	print(#self.m_WeaponInstances .. ' loaded weapons to modify');
 
 	for i, weaponInstance in pairs(self.m_WeaponInstances) do
-		self:_ModifyWeapon(weaponInstance , i, botAimWorsening);
+		self:_ModifyWeapon(weaponInstance , i, aimWorseningNormal, aimWorseningSniper);
 	end
 
 	self.m_alreadyLoaded = true;
 end
 
-function WeaponModification:_ModifyWeapon(p_SoldierWeaponData, index, botAimWorsening)
+function WeaponModification:_ModifyWeapon(p_SoldierWeaponData, index, aimWorseningNormal, aimWorseningSniper)
 	local s_SoldierWeaponData	= self:_MakeWritable(p_SoldierWeaponData);
 	local s_WeaponFiringData	= self:_MakeWritable(s_SoldierWeaponData.weaponFiring);
 
 	if s_WeaponFiringData.weaponSway == nil then
 		return;
+	end
+
+	local botAimWorsening = aimWorseningNormal;
+	-- check for sniper rifles:
+	--https://docs.veniceunleashed.net/vext/ref/fb/weaponclassenum/ and EBX-Dumb
+	local class = s_SoldierWeaponData.weaponClass;
+	if class == WeaponClassEnum.wc338Magnum --M98B
+	or class == WeaponClassEnum.wc762x51mmNATO --L96
+	or class == WeaponClassEnum.wc762x39mmWP --SKS
+	then
+		botAimWorsening = aimWorseningSniper
 	end
 
 	local s_GunSwayData = self:_MakeWritable(s_WeaponFiringData.weaponSway);

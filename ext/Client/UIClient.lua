@@ -75,6 +75,7 @@ function FunBotUIClient:_onUISettings(data)
 	settings:addList("GLOBAL", "botColor", Language:I18N("Bot Color"), BotColors, data.botColor, "RANDOM_COLOR", Language:I18N("The Kit-Color a bots spawns with."));
 	
 	settings:add("DIFFICULTY", "Float", "botAimWorsening", Language:I18N("Aim Worsening"), data.botAimWorsening, 0.0, Language:I18N("0 = hard, 1 (or higher) = easy. Only takes effect on level Start"));
+	settings:add("DIFFICULTY", "Float", "botSniperAimWorsening", Language:I18N("Aim Worsening Sniper"), data.botSniperAimWorsening, 0.0, Language:I18N("0 = hard, 1 (or higher) = easy. Only takes effect on level Start"));
 	settings:add("DIFFICULTY", "Float", "damageFactorAssault", Language:I18N("Factor for Assault-Weapon-Damage"), data.damageFactorAssault, 1.0, Language:I18N("Origninal Damage from bots gets multiplied by this"));
 	settings:add("DIFFICULTY", "Float", "damageFactorCarabine", Language:I18N("Factor for Carabine-Weapon-Damage"), data.damageFactorCarabine, 1.0, Language:I18N("Origninal Damage from bots gets multiplied by this"));
 	settings:add("DIFFICULTY", "Float", "damageFactorLMG", Language:I18N("Factor for LMG-Weapon-Damage"), data.damageFactorLMG, 1.0, Language:I18N("Origninal Damage from bots gets multiplied by this"));
