@@ -777,37 +777,42 @@ function Bot:_updateMovement()
 		-- Shoot MoveMode
 		elseif self.activeMoveMode == 9 then
 			--crouch moving (only mode with modified gun)
-			if Config.botWeapon == "Knife" then --Knife Only Mode
-				self.activeSpeedValue = 4; --run towards player
-			elseif Config.botWeapon == "Primary" then
-				self.activeSpeedValue = 2;
+			if self.activeWeapon.type == "Sniper" then
+				if self.player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Crouch then
+					self.player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Crouch, true, true);
+				end
+				self.activeSpeedValue = 0;
 			else
-				self.activeSpeedValue = 3; --TODO: Test aiming in Mode 2
-			end
-			if Config.overWriteBotAttackMode > 0 and Config.botWeapon ~= "Knife" then
-				self.activeSpeedValue = Config.overWriteBotAttackMode;
-			end
+				if Config.botWeapon == "Knife" then --Knife Only Mode
+					self.activeSpeedValue = 4; --run towards player
+				elseif Config.botWeapon == "Primary" then
+					self.activeSpeedValue = 2;
+				else
+					self.activeSpeedValue = 3; --TODO: Test aiming in Mode 2
+				end
+				if Config.overWriteBotAttackMode > 0 and Config.botWeapon ~= "Knife" then
+					self.activeSpeedValue = Config.overWriteBotAttackMode;
+				end
 
-			local targetTime = 5.0
-			local targetCycles = math.floor(targetTime / StaticConfig.traceDeltaShooting);
+				local targetTime = 5.0
+				local targetCycles = math.floor(targetTime / StaticConfig.traceDeltaShooting);
 
-			if #self._shootWayPoints > targetCycles and Config.jumpWhileShooting then
-				local distanceDone = self._shootWayPoints[#self._shootWayPoints].trans:Distance(self._shootWayPoints[#self._shootWayPoints-targetCycles].trans);
-				if distanceDone < 1.5 then --no movement was possible. Try to jump over obstacle
-					self.activeSpeedValue = 3;
-					self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 1);
-					self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1);
+				if #self._shootWayPoints > targetCycles and Config.jumpWhileShooting then
+					local distanceDone = self._shootWayPoints[#self._shootWayPoints].trans:Distance(self._shootWayPoints[#self._shootWayPoints-targetCycles].trans);
+					if distanceDone < 1.5 then --no movement was possible. Try to jump over obstacle
+						self.activeSpeedValue = 3;
+						self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 1);
+						self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1);
+					else
+						self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
+						self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0);
+					end
 				else
 					self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
-					self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0);
+					self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
 				end
-			else
-				self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
-				self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
-			end
 
-			-- do some sidwards movement from time to time
-			if self.kit ~= "Recon" then
+				-- do some sidwards movement from time to time
 				if self._attackModeMoveTimer > 20 then
 					self._attackModeMoveTimer = 0;
 					self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);

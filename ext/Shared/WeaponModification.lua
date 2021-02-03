@@ -10,6 +10,10 @@ function WeaponModification:__init()
 	self.m_minAngles		= {};
 	self.m_incPerShot		= {};
 
+	self.m_minAnglesStand	= {};
+	self.m_maxAnglesStand	= {};
+	self.m_incPerShotStand	= {};
+
 	self.m_maxRecoilPitch	= {};
 	self.m_recoilIncShot	= {};
 	self.m_maxRecoilYaw		= {};
@@ -24,6 +28,10 @@ function WeaponModification:_resetAll()
 	self.m_maxAngles		= {};
 	self.m_minAngles		= {};
 	self.m_incPerShot		= {};
+
+	self.m_minAnglesStand	= {};
+	self.m_maxAnglesStand	= {};
+	self.m_incPerShotStand	= {};
 
 	self.m_maxRecoilPitch	= {};
 	self.m_recoilIncShot	= {};
@@ -69,6 +77,7 @@ function WeaponModification:_ModifyWeapon(p_SoldierWeaponData, index, aimWorseni
 	end
 
 	local botAimWorsening = aimWorseningNormal;
+	local isReconWeapon = false;
 	-- check for sniper rifles:
 	--https://docs.veniceunleashed.net/vext/ref/fb/weaponclassenum/ and EBX-Dumb
 	local class = s_SoldierWeaponData.weaponClass;
@@ -77,6 +86,7 @@ function WeaponModification:_ModifyWeapon(p_SoldierWeaponData, index, aimWorseni
 	or class == WeaponClassEnum.wc762x39mmWP --SKS
 	then
 		botAimWorsening = aimWorseningSniper
+		isReconWeapon = true;
 	end
 
 	local s_GunSwayData = self:_MakeWritable(s_WeaponFiringData.weaponSway);
@@ -121,6 +131,23 @@ function WeaponModification:_ModifyWeapon(p_SoldierWeaponData, index, aimWorseni
 				s_RecoilData.horizontalRecoilAmplitudeIncPerShotMin = self.m_recoilIncShotMin[index] * botAimWorsening;
 				s_RecoilData.horizontalRecoilAmplitudeIncPerShotMax = self.m_recoilIncShotMax[index] * botAimWorsening;
 				-- recoilAmplitudeDecreaseFactor 	float
+			end
+
+			if isReconWeapon then --only for recon in standing as well.
+				local s_StandingValue = GunSwayDispersionData(s_CrouchNoZoom.baseValue);
+
+				if s_MovingValue ~= nil then
+					if self.m_maxAnglesStand[index] == nil then
+						self.m_minAnglesStand[index] = s_StandingValue.minAngle;
+						self.m_maxAnglesStand[index] = s_StandingValue.maxAngle;
+						self.m_incPerShotStand[index] = s_StandingValue.increasePerShot;
+					end
+
+					s_StandingValue.minAngle 			= self.m_minAnglesStand[index] * botAimWorsening;
+					s_StandingValue.maxAngle 			= self.m_maxAnglesStand[index] * botAimWorsening;
+					s_StandingValue.increasePerShot 	= self.m_incPerShotStand[index] * botAimWorsening;
+					--decreasePerSecond 	float
+				end
 			end
 		end
 	end
