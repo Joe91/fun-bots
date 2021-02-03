@@ -644,9 +644,13 @@ function Bot:_updateMovement()
 							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0.0);
 						
 						elseif self._obstaceSequenceTimer > 1.0 then --step 3
-							self._meleeActive = true;
-							self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 1);
-							self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 1); --maybe a fence?
+							if self._obstacleRetryCounter == 0 then
+								self._meleeActive = true;
+								self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 1);
+								self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 1); --maybe a fence?
+							else
+								self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
+							end
 							
 						elseif self._obstaceSequenceTimer > 0.4 then --step 2
 							self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
@@ -666,11 +670,13 @@ function Bot:_updateMovement()
 						self._obstaceSequenceTimer = self._obstaceSequenceTimer + StaticConfig.botUpdateCycle;
 
 						if self._obstacleRetryCounter >= 1 then --try next waypoint
-							self._obstacleRetryCounter	= 0;
 							self._meleeActive 			= false;
 							distanceFromTarget			= 0;
 							heightDistance				= 0;
 							pointIncrement				= 5; -- go 5 points further
+						end
+						if self._obstacleRetryCounter >= 2 then
+							self._obstacleRetryCounter	= 0;
 						end
 					else
 						self._meleeActive = false;
