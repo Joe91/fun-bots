@@ -320,7 +320,7 @@ function Bot:_updateAiming(dt)
 			local distanceToPlayer	= self._shootPlayer.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans);
 			--calculate how long the distance is --> time to travel
 			local timeToTravel		= (distanceToPlayer / self.activeWeapon.bulletSpeed)
-			local factorForMovement	= (timeToTravel) / self._aimUpdateTimer + dt;
+			local factorForMovement	= (timeToTravel) / self._aimUpdateTimer
 			local ptichCorrection	= 0.5 * timeToTravel * timeToTravel * self.activeWeapon.bulletDrop;
 			targetMovement			= (self._shootPlayer.soldier.worldTransform.trans - self._lastTargetTrans) * factorForMovement; --movement in one dt
 
