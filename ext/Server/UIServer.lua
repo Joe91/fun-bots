@@ -665,54 +665,6 @@ function FunBotUIServer:_writeSettings(player, request)
 		end
 	end
 
-	if request.botFireDuration ~= nil then
-		local tempValue = tonumber(request.botFireDuration);
-
-		if tempValue >= 0.1 and tempValue <= Config.botFireModeDuration then
-			SettingsManager:update('botFireDuration', tempValue, temporary, batched);
-		end
-	end
-
-	if request.botFirePause ~= nil then
-		local tempValue = tonumber(request.botFirePause);
-
-		if tempValue >= 0.1 and tempValue <= Config.botFireModeDuration then
-			SettingsManager:update('botFirePause', tempValue, temporary, batched);
-		end
-	end
-
-	if request.botFireDurationSupport ~= nil then
-		local tempValue = tonumber(request.botFireDurationSupport);
-
-		if tempValue >= 0.1 and tempValue <= Config.botFireModeDuration then
-			SettingsManager:update('botFireDurationSupport', tempValue, temporary, batched);
-		end
-	end
-
-	if request.botFirePauseSupport ~= nil then
-		local tempValue = tonumber(request.botFirePauseSupport);
-
-		if tempValue >= 0.1 and tempValue <= Config.botFireModeDuration then
-			SettingsManager:update('botFirePauseSupport', tempValue, temporary, batched);
-		end
-	end
-
-	if request.botFireCycleRecon ~= nil then
-		local tempValue = tonumber(request.botFireCycleRecon);
-
-		if tempValue >= 0.2 and tempValue <= Config.botFireModeDuration then
-			SettingsManager:update('botFireCycleRecon', tempValue, temporary, batched);
-		end
-	end
-
-	if request.botFireCyclePistol ~= nil then
-		local tempValue = tonumber(request.botFireCyclePistol);
-
-		if tempValue >= 0.2 and tempValue <= Config.botFireModeDuration then
-			SettingsManager:update('botFireCyclePistol', tempValue, temporary, batched);
-		end
-	end
-
 	-- Other
 	if request.disableChatCommands ~= nil then
 		SettingsManager:update('disableChatCommands', (request.disableChatCommands == true), temporary, batched);

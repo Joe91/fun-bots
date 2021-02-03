@@ -817,15 +817,15 @@ function Bot:_updateMovement()
 					self._attackModeMoveTimer = 0;
 					self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
 				elseif self._attackModeMoveTimer > 17 then
-					self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, -1.0 * Config.speedFactorAttack);
+					self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, -0.5 * Config.speedFactorAttack);
 				elseif self._attackModeMoveTimer > 13 then
 					self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
 				elseif self._attackModeMoveTimer > 12 then
-					self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 1.0 * Config.speedFactorAttack);
+					self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.5 * Config.speedFactorAttack);
 				elseif self._attackModeMoveTimer > 9 then
 					self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0);
 				elseif self._attackModeMoveTimer > 7 then
-					self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 1.0 * Config.speedFactorAttack);
+					self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.5 * Config.speedFactorAttack);
 				end
 
 				self._attackModeMoveTimer = self._attackModeMoveTimer + StaticConfig.botUpdateCycle;
