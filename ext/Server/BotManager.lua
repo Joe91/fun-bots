@@ -171,18 +171,39 @@ end
 function BotManager:_getDamageValue(damage, bot, soldier, fake)
 	local resultDamage = 0;
 	local damageFactor = 1.0;
+	local damageDropDistance = 0;
+	local damageDropEndDistance = 0;
+	local damageDropFactor = 0.7;
 
 	if bot.activeWeapon.type == "Shotgun" then
+		damageDropFactor = 0.6;
+		damageDropDistance = 5;
+		damageDropEndDistance = 30;
 		damageFactor = Config.damageFactorShotgun;
 	elseif bot.activeWeapon.type == "Assault" then
+		damageDropFactor = 0.73;
+		damageDropDistance = 10;
+		damageDropEndDistance = 50;
 		damageFactor = Config.damageFactorAssault;
 	elseif bot.activeWeapon.type == "Carabine" then
+		damageDropFactor = 0.6;
+		damageDropDistance = 10;
+		damageDropEndDistance = 50;
 		damageFactor = Config.damageFactorCarabine;
 	elseif bot.activeWeapon.type == "LMG" then
+		damageDropFactor = 0.73;
+		damageDropDistance = 10;
+		damageDropEndDistance = 50;
 		damageFactor = Config.damageFactorLMG;
 	elseif bot.activeWeapon.type == "Sniper" then
+		damageDropFactor = 0.73;
+		damageDropDistance = 15;
+		damageDropEndDistance = 100;
 		damageFactor = Config.damageFactorSniper;
 	elseif bot.activeWeapon.type == "Pistol" then
+		damageDropFactor = 0.6;
+		damageDropDistance = 10;
+		damageDropEndDistance = 50;
 		damageFactor = Config.damageFactorPistol;
 	elseif bot.activeWeapon.type == "Knife" then
 		damageFactor = Config.damageFactorKnife;
@@ -194,7 +215,17 @@ function BotManager:_getDamageValue(damage, bot, soldier, fake)
 	else
 		if damage > 0.09 and damage < 0.11 then
 			local distance = bot.player.soldier.worldTransform.trans:Distance(soldier.worldTransform.trans)
-			resultDamage = bot.activeWeapon.damage * damageFactor;
+			local lowDamage = bot.activeWeapon.damage * damageDropFactor;
+			if distance >= damageDropEndDistance then
+				resultDamage = lowDamage;
+			elseif distance <= damageDropDistance then
+				resultDamage =  bot.activeWeapon.damage;
+			else --extrapolate damage
+				local relativePosion = (distance-damageDropDistance)/(damageDropEndDistance - damageDropDistance)
+				resultDamage = bot.activeWeapon.damage - (relativePosion * (bot.activeWeapon.damage-lowDamage));
+			end
+
+			resultDamage = resultDamage * damageFactor;
 		elseif damage > 0.19 and damage < 0.21 then --melee
 			resultDamage = bot.knife.damage * Config.damageFactorKnife;
 		end

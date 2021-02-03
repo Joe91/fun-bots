@@ -78,7 +78,7 @@ function WeaponList:__init()
 	table.insert(self._weapons, weapon);
 
 	weapon = Weapon('M1911_Silenced', '', {},'Pistol', 'Weapons/M1911/U_M1911_Silenced')
-	weapon.setStatsValues( 34, 300, 15, 4, 0.2, 0.2, false);
+	weapon.setStatsValues(34, 300, 15, 4, 0.2, 0.2, false);
 	table.insert(self._weapons, weapon);
 
 	weapon = Weapon('M1911_Tactical', '', {}, 'Pistol', 'Weapons/M1911/U_M1911_Tactical')
