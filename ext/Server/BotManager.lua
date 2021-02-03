@@ -171,9 +171,9 @@ end
 function BotManager:_getDamageValue(damage, bot, soldier, fake)
 	local resultDamage = 0;
 	local damageFactor = 1.0;
-	local damageDropDistance = 0;
-	local damageDropEndDistance = 0;
-	local damageDropFactor = 0.7;
+	local damageDropDistance = 8;
+	local damageDropEndDistance = 50;
+	local damageDropFactor = 0.73;
 
 	if bot.activeWeapon.type == "Shotgun" then
 		damageDropFactor = 0.6;
@@ -182,17 +182,17 @@ function BotManager:_getDamageValue(damage, bot, soldier, fake)
 		damageFactor = Config.damageFactorShotgun;
 	elseif bot.activeWeapon.type == "Assault" then
 		damageDropFactor = 0.73;
-		damageDropDistance = 10;
-		damageDropEndDistance = 50;
+		damageDropDistance = 8;
+		damageDropEndDistance = 60;
 		damageFactor = Config.damageFactorAssault;
 	elseif bot.activeWeapon.type == "Carabine" then
 		damageDropFactor = 0.6;
-		damageDropDistance = 10;
+		damageDropDistance = 8;
 		damageDropEndDistance = 50;
 		damageFactor = Config.damageFactorCarabine;
 	elseif bot.activeWeapon.type == "LMG" then
 		damageDropFactor = 0.73;
-		damageDropDistance = 10;
+		damageDropDistance = 8;
 		damageDropEndDistance = 50;
 		damageFactor = Config.damageFactorLMG;
 	elseif bot.activeWeapon.type == "Sniper" then
@@ -202,7 +202,7 @@ function BotManager:_getDamageValue(damage, bot, soldier, fake)
 		damageFactor = Config.damageFactorSniper;
 	elseif bot.activeWeapon.type == "Pistol" then
 		damageDropFactor = 0.6;
-		damageDropDistance = 10;
+		damageDropDistance = 8;
 		damageDropEndDistance = 50;
 		damageFactor = Config.damageFactorPistol;
 	elseif bot.activeWeapon.type == "Knife" then
