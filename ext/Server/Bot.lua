@@ -75,7 +75,7 @@ function Bot:onUpdate(dt)
 	self._aimUpdateTimer	= self._aimUpdateTimer + dt;
 
 	if self._aimUpdateTimer > StaticConfig.botAimUpdateCycle then
-		self:_updateAiming(dt);
+		self:_updateAiming();
 		self._aimUpdateTimer = 0; --reset afterwards, to use it for targetinterpolation
 	end
 
@@ -310,7 +310,7 @@ function Bot:_updateRespwawn()
 	end
 end
 
-function Bot:_updateAiming(dt)
+function Bot:_updateAiming()
 	if self.player.alive and self._shoot then
 		if self._shootPlayer ~= nil and self._shootPlayer.soldier ~= nil then
 
