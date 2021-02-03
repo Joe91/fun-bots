@@ -1,9 +1,22 @@
 class('Weapon');
 
-function Weapon:__init(name, extension, unlocks, damage, bulletSpeed, bulletDrop, reload, fireCycle, pauseCycle, type, delayed, fullResource)
+function Weapon:__init(name, extension, unlocks, type, fullResource)
 	self.name		= name;
 	self.extension	= extension;
 	self.unlocks 	= unlocks;
+	self.type		= type;
+	self.fullResource = fullResource;
+
+	self.damage		= 0;
+	self.bulletSpeed= 0;
+	self.bulletDrop = 0;
+	self.fireCycle	= 0;
+	self.pauseCycle	= 0;
+	self.reload		= 0;
+	self.delayed	= false;
+end
+
+function Weapon:setStatsValues(damage, bulletSpeed, bulletDrop, reload, fireCycle, pauseCycle, delayed)
 	self.damage		= damage;
 	self.bulletSpeed= bulletSpeed;
 	self.bulletDrop = bulletDrop;
@@ -11,8 +24,6 @@ function Weapon:__init(name, extension, unlocks, damage, bulletSpeed, bulletDrop
 	self.pauseCycle	= pauseCycle;
 	self.reload		= reload;
 	self.delayed	= delayed;
-	self.type		= type;
-	self.fullResource = fullResource;
 end
 
 function Weapon:getResourcePath(unlock)
