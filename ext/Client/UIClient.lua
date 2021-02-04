@@ -99,15 +99,15 @@ function FunBotUIClient:_onUISettings(data)
 	settings:add("SPAWN", "Integer", "maxSupportBots", Language:I18N("Max Support Bots"), data.maxSupportBots, -1, Language:I18N("maximum number of Bots with Support Kit. -1 = unlimited"));
 	settings:add("SPAWN", "Integer", "maxReconBots", Language:I18N("Max Recon Bots"), data.maxReconBots, -1, Language:I18N("maximum number of Bots with Recon Kit. -1 = unlimited"));
 
-	settings:addList("WEAPONS", "pistol", Language:I18N("Bot Pistol"), PistoWeapons, data.pistol, "MP412Rex", Language:I18N("Pistol of Bots"));
+	settings:addList("WEAPONS", "pistol", Language:I18N("Bot Pistol"), PistoWeapons, data.pistol, "M1911_Lit", Language:I18N("Pistol of Bots"));
 	settings:addList("WEAPONS", "knife", Language:I18N("Bot Knife"), KnifeWeapons, data.knife, "Razor", Language:I18N("Knife of Bots"));
 	settings:addList("WEAPONS", "assaultWeapon",  Language:I18N("Weapon Assault"), WeaponsAssault, data.assaultWeapon, "M416", Language:I18N("Weapon of Assault class"));
-	settings:addList("WEAPONS", "assaultShotgun", Language:I18N("Shotgun Assault"), ShotgunsAssault, data.assaultShotgun, "USAS-12", Language:I18N("Shotgun of Assault class"));
 	settings:addList("WEAPONS", "engineerWeapon",  Language:I18N("Weapon Engineer"), WeaponsEngineer, data.engineerWeapon, "M4A1", Language:I18N("Weapon of Engineer class"));
-	settings:addList("WEAPONS", "engineerShotgun", Language:I18N("Shotgun Engineer"), ShotgunsEngineer, data.engineerShotgun, "saiga20", Language:I18N("Shotgun of Engineer class"));
 	settings:addList("WEAPONS", "supportWeapon",  Language:I18N("Weapon Support"), WeaponsSupport, data.supportWeapon, "M240", Language:I18N("Weapon of Support class"));
+	settings:addList("WEAPONS", "reconWeapon",  Language:I18N("Weapon Recon"), WeaponsRecon, data.reconWeapon, "L96", Language:I18N("Weapon of Recon class"));
+	settings:addList("WEAPONS", "assaultShotgun", Language:I18N("Shotgun Assault"), ShotgunsAssault, data.assaultShotgun, "USAS-12", Language:I18N("Shotgun of Assault class"));
+	settings:addList("WEAPONS", "engineerShotgun", Language:I18N("Shotgun Engineer"), ShotgunsEngineer, data.engineerShotgun, "saiga20", Language:I18N("Shotgun of Engineer class"));
 	settings:addList("WEAPONS", "supportShotgun", Language:I18N("Shotgun Support"), ShotgunsSupport, data.supportShotgun, "Jackhammer", Language:I18N("Shotgun of Support class"));
-	settings:addList("WEAPONS", "reconWeapon",  Language:I18N("Weapon Recon"), WeaponsRecon, data.reconWeapon, "M98B", Language:I18N("Weapon of Recon class"));
 	settings:addList("WEAPONS", "reconShotgun", Language:I18N("Shotgun Recon"), ShotgunsRecon, data.reconShotgun, "SPAS12", Language:I18N("Shotgun of Recon class"));
 
 	settings:add("ADVANCED", "Integer", "fovForShooting", Language:I18N("Bot FOV"), data.fovForShooting, 270, Language:I18N("The Field Of View of the bots, where they can detect a player"));

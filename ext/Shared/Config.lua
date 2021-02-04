@@ -43,9 +43,9 @@ Config = {
 	engineerShotgun = "saiga20",	-- shotgun of Engineer class
 	supportWeapon = "M240",			-- weapon of Support class
 	supportShotgun = "Jackhammer",	-- shotgun of Support class
-	reconWeapon = "M98B",			-- weapon of Recon class
+	reconWeapon = "L96",			-- weapon of Recon class
 	reconShotgun = "SPAS12",		-- shotgun of Recon class
-	pistol = "MP412Rex",			-- Bot pistol
+	pistol = "M1911_Lit",			-- Bot pistol
 	knife = "Razor",				-- Bot knife
 
 	--advanced
@@ -81,10 +81,10 @@ Config = {
 
 --don't change these values unless you know what you do
 StaticConfig = {
-	traceDelta = 0.2,				-- update intervall of trace
-	traceDeltaShooting = 0.4,		-- update intervall of trace back to path the bots left for shooting
-	raycastInterval = 0.1,			-- update intervall of client raycasts
-	botUpdateCycle = 0.1,			-- update-intervall of bots
-	botAimUpdateCycle = 0.05,		-- = 3 frames at 60 Hz
-	targetHeightDistanceWayPoint = 1.5-- distance the bots have to reach in height to continue with next Waypoint
+	traceDelta = 0.2,					-- update intervall of trace
+	traceDeltaShooting = 0.4,			-- update intervall of trace back to path the bots left for shooting
+	raycastInterval = 0.1,				-- update intervall of client raycasts
+	botUpdateCycle = 0.1,				-- update-intervall of bots
+	botAimUpdateCycle = 0.05,			-- = 3 frames at 60 Hz
+	targetHeightDistanceWayPoint = 1.5	-- distance the bots have to reach in height to continue with next Waypoint
 };
