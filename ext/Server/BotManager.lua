@@ -214,7 +214,6 @@ function BotManager:_getDamageValue(damage, bot, soldier, fake)
 		resultDamage = damage * damageFactor;
 	else
 		if damage <= 2 then
-			print("hit")
 			local distance = bot.player.soldier.worldTransform.trans:Distance(soldier.worldTransform.trans)
 			local lowDamage = bot.activeWeapon.damage * damageDropFactor;
 			if distance >= damageDropEndDistance then
@@ -227,13 +226,11 @@ function BotManager:_getDamageValue(damage, bot, soldier, fake)
 			end
 			if damage == 2 then
 				resultDamage = resultDamage * Config.headShotFactorBots;
-				print("headshot")
 			end
 
 			resultDamage = resultDamage * damageFactor;
 		elseif damage == 3 then --melee
 			resultDamage = bot.knife.damage * Config.damageFactorKnife;
-			print("melee")
 		end
 	end
 	return resultDamage;
@@ -315,7 +312,6 @@ function BotManager:_onDamagePlayer(player, shooterName, meleeAttack, isHeadShot
 	local damage = 1 --only trigger soldier-damage with this
 	if isHeadShot then
 		damage = 2	-- singal Headshot
-		print("trigger headshot")
 	elseif meleeAttack then
 		damage = 3 --signal melee damage with this value
 	end
