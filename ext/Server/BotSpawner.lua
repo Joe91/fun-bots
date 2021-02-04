@@ -370,6 +370,7 @@ function BotSpawner:getKitApperanceCustomization(team, kit, color, primary, pist
 
 	local pistolWeapon = ResourceManager:SearchForDataContainer(pistol:getResourcePath())
 	local knifeWeapon = ResourceManager:SearchForDataContainer(knife:getResourcePath())
+	local grenadeWeapon = ResourceManager:SearchForDataContainer('Weapons/M67/U_M67')
 
 	soldierCustomization.activeSlot = WeaponSlot.WeaponSlot_0
 	soldierCustomization.removeAllExistingWeapons = true
@@ -386,6 +387,10 @@ function BotSpawner:getKitApperanceCustomization(team, kit, color, primary, pist
 
 	local gadget02 = UnlockWeaponAndSlot()
 	gadget02.slot = WeaponSlot.WeaponSlot_5
+
+	local thrownWeapon = UnlockWeaponAndSlot()
+	thrownWeapon.weapon = SoldierWeaponUnlockAsset(grenadeWeapon)
+	thrownWeapon.slot = WeaponSlot.WeaponSlot_6
 
 	local secondaryWeapon = UnlockWeaponAndSlot()
 	secondaryWeapon.weapon = SoldierWeaponUnlockAsset(pistolWeapon)
@@ -448,6 +453,7 @@ function BotSpawner:getKitApperanceCustomization(team, kit, color, primary, pist
 	soldierCustomization.weapons:add(secondaryWeapon)
 	soldierCustomization.weapons:add(gadget01)
 	soldierCustomization.weapons:add(gadget02)
+	soldierCustomization.weapons:add(thrownWeapon)
 	soldierCustomization.weapons:add(meleeWeapon)
 
 	return soldierKit, appearance, soldierCustomization
