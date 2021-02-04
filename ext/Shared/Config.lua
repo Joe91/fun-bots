@@ -68,8 +68,8 @@ Config = {
 	botFirstShotDelay = 0.2,		-- delay for first shot. If too small, there will be great spread in first cycle because its not kompensated jet.
 	botMinTimeShootAtPlayer = 1.0,	-- the minimum time a bot shoots at one player
 	botFireModeDuration = 5.0,		-- the minimum time a bot tries to shoot a player
-	maximunYawPerSec = 720,			-- in Degree. Rotaion-Movement per second.
-	targetDistanceWayPoint = 1.4,	-- distance the bots have to reach to continue with next Waypoint
+	maximunYawPerSec = 540,			-- in Degree. Rotaion-Movement per second.
+	targetDistanceWayPoint = 1.2,	-- distance the bots have to reach to continue with next Waypoint
 
 	-- UI settings & language options
 	disableUserInterface = false,	-- if true, the complete UI will be disabled
@@ -86,5 +86,5 @@ StaticConfig = {
 	raycastInterval = 0.1,			-- update intervall of client raycasts
 	botUpdateCycle = 0.1,			-- update-intervall of bots
 	botAimUpdateCycle = 0.05,		-- = 3 frames at 60 Hz
-	targetHeightDistanceWayPoint = 2-- distance the bots have to reach in height to continue with next Waypoint
+	targetHeightDistanceWayPoint = 1.5-- distance the bots have to reach in height to continue with next Waypoint
 };

@@ -675,14 +675,12 @@ function Bot:_updateMovement()
 
 						self._obstaceSequenceTimer = self._obstaceSequenceTimer + StaticConfig.botUpdateCycle;
 
-						if self._obstacleRetryCounter >= 1 then --try next waypoint
+						if self._obstacleRetryCounter >= 2 then --try next waypoint
+							self._obstacleRetryCounter	= 0;
 							self._meleeActive 			= false;
 							distanceFromTarget			= 0;
 							heightDistance				= 0;
 							pointIncrement				= 5; -- go 5 points further
-						end
-						if self._obstacleRetryCounter >= 2 then
-							self._obstacleRetryCounter	= 0;
 						end
 					else
 						self._meleeActive = false;
