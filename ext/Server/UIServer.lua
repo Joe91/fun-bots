@@ -518,6 +518,29 @@ function FunBotUIServer:_writeSettings(player, request)
 		end
 	end
 
+	if request.distanceToSpawnBots ~= nil then
+		local tempValue = tonumber(request.distanceToSpawnBots);
+
+		if tempValue >= 1 and tempValue <= 100 then
+			SettingsManager:update('distanceToSpawnBots', tempValue, temporary, batched);
+		end
+	end
+
+	if request.distanceToSpawnReduction ~= nil then
+		local tempValue = tonumber(request.distanceToSpawnReduction);
+
+		if tempValue >= 1 and tempValue <= 100 then
+			SettingsManager:update('distanceToSpawnReduction', tempValue, temporary, batched);
+		end
+	end
+
+	if request.maxTrysToSpawnAtDistance ~= nil then
+		local tempValue = tonumber(request.maxTrysToSpawnAtDistance);
+
+		if tempValue >= 1 and tempValue <= 10 then
+			SettingsManager:update('maxTrysToSpawnAtDistance', tempValue, temporary, batched);
+		end
+	end
 
 	-- weapons
 	if request.pistol ~= nil then

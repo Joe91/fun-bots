@@ -98,6 +98,9 @@ function FunBotUIClient:_onUISettings(data)
 	settings:add("SPAWN", "Integer", "maxEngineerBots", Language:I18N("Max Engineer Bots"), data.maxEngineerBots, -1, Language:I18N("maximum number of Bots with Engineer Kit. -1 = unlimited"));
 	settings:add("SPAWN", "Integer", "maxSupportBots", Language:I18N("Max Support Bots"), data.maxSupportBots, -1, Language:I18N("maximum number of Bots with Support Kit. -1 = unlimited"));
 	settings:add("SPAWN", "Integer", "maxReconBots", Language:I18N("Max Recon Bots"), data.maxReconBots, -1, Language:I18N("maximum number of Bots with Recon Kit. -1 = unlimited"));
+	settings:add("SPAWN", "Integer", "distanceToSpawnBots", Language:I18N("Distance to Spawn Bots"), data.distanceToSpawnBots, 50, Language:I18N("distance to spawn Bots away from players"));
+	settings:add("SPAWN", "Integer", "distanceToSpawnReduction", Language:I18N("Reduce Distance on Fail"), data.distanceToSpawnReduction, 5, Language:I18N("reduce distance if not possible"));
+	settings:add("SPAWN", "Integer", "maxTrysToSpawnAtDistance", Language:I18N("Max Retrys on Distance"), data.maxTrysToSpawnAtDistance, 3, Language:I18N("try this often to spawn a bot away from players"));
 
 	settings:addList("WEAPONS", "pistol", Language:I18N("Bot Pistol"), PistoWeapons, data.pistol, "M1911_Lit", Language:I18N("Pistol of Bots"));
 	settings:addList("WEAPONS", "knife", Language:I18N("Bot Knife"), KnifeWeapons, data.knife, "Razor", Language:I18N("Knife of Bots"));

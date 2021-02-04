@@ -253,12 +253,55 @@ function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, inde
 	local name = BotManager:findNextBotName()
 	local inverseDirection = false;
 	if name ~= nil then
+
+		-- find a spawnpoint away from players
 		if useRandomWay or activeWayIndex == nil or activeWayIndex == 0 then
-			activeWayIndex = self:_getNewWayIndex()
-			if activeWayIndex == 0 then
-				return
+			local validPointFound = false;
+			local targetDistance = Config.distanceToSpawnBots;
+			local retryCounter = Config.maxTrysToSpawnAtDistance;
+			while not validPointFound do
+				-- get new point
+				activeWayIndex = self:_getNewWayIndex()
+				if activeWayIndex == 0 then
+					return
+				end
+				indexOnPath = MathUtils:GetRandomInt(1, #Globals.wayPoints[activeWayIndex])
+				if Globals.wayPoints[activeWayIndex][1] == nil then
+					return
+				end
+				local spawnPoint = Globals.wayPoints[activeWayIndex][indexOnPath].trans
+
+				--check for nearby player
+				local playerNearby = false;
+				local players = PlayerManager:GetPlayers()
+				for i = 1, PlayerManager:GetPlayerCount() do
+					local tempPlayer = players[i];
+					local bot = BotManager:GetBotByName(tempPlayer.name)
+					if bot == nil then
+						--real player
+						if tempPlayer.alive then
+							local distance = tempPlayer.soldier.worldTransform.trans:Distance(spawnPoint)
+							if distance < targetDistance then
+								playerNearby = true;
+								break;
+							end
+						end
+					end
+				end
+				retryCounter = retryCounter - 1;
+				if retryCounter == 0 then
+					retryCounter = Config.maxTrysToSpawnAtDistance;
+					targetDistance = targetDistance - Config.distanceToSpawnReduction;
+					if targetDistance < 0 then
+						targetDistance = 0
+					end
+				end
+				if not playerNearby then
+					validPointFound = true;
+				end
 			end
 		end
+
 		if Globals.wayPoints[activeWayIndex][1] == nil then
 			return
 		end
@@ -267,10 +310,10 @@ function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, inde
 			inverseDirection = (MathUtils:GetRandomInt(0,1) == 1);
 		end
 
-		if indexOnPath == nil or indexOnPath == 0 then
-			indexOnPath = MathUtils:GetRandomInt(1, #Globals.wayPoints[activeWayIndex])
-		end
 		local transform = LinearTransform()
+		if indexOnPath == nil or indexOnPath == 0 then
+			indexOnPath = 1;
+		end
 		transform.trans = Globals.wayPoints[activeWayIndex][indexOnPath].trans
 
 		local bot = BotManager:createBot(name, self:getBotTeam(player, name))

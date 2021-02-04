@@ -36,6 +36,9 @@ Config = {
 	maxEngineerBots = -1,			-- maximum number of Bots with Engineer Kit
 	maxSupportBots = -1,			-- maximum number of Bots with Support Kit
 	maxReconBots = -1,				-- maximum number of Bots with Recon Kit
+	distanceToSpawnBots	= 50,		-- distance to spawn Bots away from players
+	distanceToSpawnReduction = 5,	-- reduce distance if not possible
+	maxTrysToSpawnAtDistance = 3,	-- try this often to spawn a bot away from players
 
 	-- weapons
 	assaultWeapon = "M416",			-- weapon of Assault class
