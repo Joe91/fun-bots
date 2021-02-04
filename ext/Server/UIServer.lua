@@ -278,6 +278,17 @@ function FunBotUIServer:_writeSettings(player, request)
 		end
 	end
 
+	if request.aimForHead ~= nil then
+		SettingsManager:update('aimForHead', (request.aimForHead == true), temporary, batched);
+	end
+	if request.headShotFactorBots ~= nil then
+		local tempValue = tonumber(request.headShotFactorBots);
+
+		if tempValue >= 0.0 then
+			SettingsManager:update('headShotFactorBots', tempValue, temporary, batched);
+		end
+	end
+
 	if request.damageFactorAssault ~= nil then
 		local tempValue = tonumber(request.damageFactorAssault);
 

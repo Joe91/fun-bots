@@ -213,7 +213,8 @@ function BotManager:_getDamageValue(damage, bot, soldier, fake)
 	if not fake then -- frag mode shotgun
 		resultDamage = damage * damageFactor;
 	else
-		if damage > 0.09 and damage < 0.11 then
+		if damage <= 2 then
+			print("hit")
 			local distance = bot.player.soldier.worldTransform.trans:Distance(soldier.worldTransform.trans)
 			local lowDamage = bot.activeWeapon.damage * damageDropFactor;
 			if distance >= damageDropEndDistance then
@@ -224,10 +225,15 @@ function BotManager:_getDamageValue(damage, bot, soldier, fake)
 				local relativePosion = (distance-damageDropDistance)/(damageDropEndDistance - damageDropDistance)
 				resultDamage = bot.activeWeapon.damage - (relativePosion * (bot.activeWeapon.damage-lowDamage));
 			end
+			if damage == 2 then
+				resultDamage = resultDamage * Config.headShotFactorBots;
+				print("headshot")
+			end
 
 			resultDamage = resultDamage * damageFactor;
-		elseif damage > 0.19 and damage < 0.21 then --melee
+		elseif damage == 3 then --melee
 			resultDamage = bot.knife.damage * Config.damageFactorKnife;
+			print("melee")
 		end
 	end
 	return resultDamage;
@@ -298,7 +304,7 @@ function BotManager:_onServerDamagePlayer(playerName, shooterName, meleeAttack)
 	end
 end
 
-function BotManager:_onDamagePlayer(player, shooterName, meleeAttack)
+function BotManager:_onDamagePlayer(player, shooterName, meleeAttack, isHeadShot)
 	local bot = self:GetBotByName(shooterName)
 	if not player.alive or bot == nil then
 		return
@@ -306,9 +312,12 @@ function BotManager:_onDamagePlayer(player, shooterName, meleeAttack)
 	if player.teamId == bot.player.teamId then
 		return
 	end
-	local damage = 0.1 --only trigger soldier-damage with this
-	if meleeAttack then
-		damage = 0.2 --signal melee damage with this value
+	local damage = 1 --only trigger soldier-damage with this
+	if isHeadShot then
+		damage = 2	-- singal Headshot
+		print("trigger headshot")
+	elseif meleeAttack then
+		damage = 3 --signal melee damage with this value
 	end
 	--save potential killer bot
 	self._shooterBots[player.name] = shooterName
