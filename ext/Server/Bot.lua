@@ -99,9 +99,11 @@ function Bot:shootAt(player, ignoreYaw)
 		return
 	end
 	-- don't shoot if too far away
-	local distance = player.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans)
-	if self.activeWeapon.type ~= "Sniper" and distance > Config.maxShootDistanceNoSniper then
-		return
+	if not ignoreYaw then
+		local distance = player.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans)
+		if self.activeWeapon.type ~= "Sniper" and distance > Config.maxShootDistanceNoSniper then
+			return
+		end
 	end
 
 	local dYaw		= 0;

@@ -12,7 +12,7 @@ Config = {
 	--difficluty
 	botAimWorsening = 0.2,			-- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy). Restart of level needed
 	botSniperAimWorsening = 0.0,	-- see botAimWorsening, only for Sniper-rifles
-	aimForHead = true,				-- bots aim for the head
+	aimForHead = false,				-- bots aim for the head
 	damageFactorAssault = 0.8,		-- origninal Damage from bots gets multiplied by this
 	damageFactorCarabine = 0.8,		-- origninal Damage from bots gets multiplied by this
 	damageFactorLMG = 0.8,			-- origninal Damage from bots gets multiplied by this
