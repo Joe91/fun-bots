@@ -90,8 +90,14 @@ function ClientBotManager:_onBulletCollision(hook, entity, hit, shooter)
 				local dz	= math.abs(player.soldier.worldTransform.trans.z - hit.position.z);
 				local dy	= hit.position.y - player.soldier.worldTransform.trans.y; --player y is on ground. Hit must be higher to be valid
 
+				local isHeadshot = false;
+				local camaraHeight = Utilities:getTargetHeight(player.soldier, false)
+				if dy < camaraHeight + 0.3 and dy > camaraHeight - 0.15 then
+					isHeadshot = true;
+				end
+
 				if (dx < 1 and dz < 1 and dy < 2 and dy > 0) then --included bodyhight
-					NetEvents:SendLocal('ClientDamagePlayer', shooter.name, false);
+					NetEvents:SendLocal('ClientDamagePlayer', shooter.name, false, isHeadshot);
 				end
 			end
 		end
