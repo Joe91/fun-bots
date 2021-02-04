@@ -10,19 +10,19 @@ Config = {
 	useShotgun = false,				-- only shotguns with frag, as it counts the kills of the Bots
 
 	--difficluty
-	botAimWorsening = 0.0,			-- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy). Restart of level needed
+	botAimWorsening = 0.2,			-- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy). Restart of level needed
 	botSniperAimWorsening = 0.0,	-- see botAimWorsening, only for Sniper-rifles
-	damageFactorAssault = 1.0,		-- origninal Damage from bots gets multiplied by this
-	damageFactorCarabine = 1.0,		-- origninal Damage from bots gets multiplied by this
-	damageFactorLMG = 1.0,			-- origninal Damage from bots gets multiplied by this
-	damageFactorSniper = 1.0,		-- origninal Damage from bots gets multiplied by this
-	damageFactorShotgun = 1.0,		-- origninal Damage from bots gets multiplied by this
-	damageFactorPistol = 1.0,		-- origninal Damage from bots gets multiplied by this
-	damageFactorKnife = 1.0,		-- origninal Damage from bots gets multiplied by this
+	damageFactorAssault = 0.8,		-- origninal Damage from bots gets multiplied by this
+	damageFactorCarabine = 0.8,		-- origninal Damage from bots gets multiplied by this
+	damageFactorLMG = 0.8,			-- origninal Damage from bots gets multiplied by this
+	damageFactorSniper = 0.8,		-- origninal Damage from bots gets multiplied by this
+	damageFactorShotgun = 0.8,		-- origninal Damage from bots gets multiplied by this
+	damageFactorPistol = 0.8,		-- origninal Damage from bots gets multiplied by this
+	damageFactorKnife = 0.8,		-- origninal Damage from bots gets multiplied by this
 
 	--spawn
 	spawnOnLevelstart = true,		-- bots spawn on levelstart (if valid paths are available)
-	onlySpawnBotsWithPlayers = true,-- Bots only spawn if at least one Player is on the server
+	onlySpawnBotsWithPlayers = false,-- Bots only spawn if at least one Player is on the server
 	initNumberOfBots = 8,			-- bots on levelstart
 	incBotsWithPlayers = true,		-- increase Bots, when new players join
 	newBotsPerNewPlayer = 3,		-- number to increase Bots, when new players join
