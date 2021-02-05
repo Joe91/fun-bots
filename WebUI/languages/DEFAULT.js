@@ -40,7 +40,7 @@ Language['xx_XX'] /* Add/replace the xx_XX here with your language code (like de
   "Other": "",
   "Restore all to Default": "",
   "Save temporarily": "",
-  "0 = hard, 1 (or higher) = easy. Only takes effect on level Start": "",
+  "0 = hard, 1 (or higher) = easy": "",
   "Origninal Damage from bots gets multiplied by this": "",
   "First Shot Delay": "",
   "You are not permitted to change Bots. Please press F12 for authenticate!": "",
