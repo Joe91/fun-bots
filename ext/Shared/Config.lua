@@ -1,7 +1,7 @@
 MAX_NUMBER_OF_BOTS	= 32;			-- maximum bots that can be spawned
 MAX_TRACE_NUMBERS	= 15;			-- maximum number of traces in one level
 
-BOT_ATTACK_MODE 	= "Stand";		-- use "Crouch" or "Stand"
+BOT_ATTACK_MODE 	= "Crouch";		-- use "Crouch" or "Stand"
 
 Config = {
 	--global
