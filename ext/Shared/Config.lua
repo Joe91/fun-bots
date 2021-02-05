@@ -71,7 +71,7 @@ Config = {
 	speedFactorAttack = 1.0,		-- reduces the movementspeed while attacking. 1 = normal, 0 = standing.
 
 	--expert
-	botFirstShotDelay = 0.2,		-- delay for first shot. If too small, there will be great spread in first cycle because its not kompensated jet.
+	botFirstShotDelay = 0.4,		-- delay for first shot. If too small, there will be great spread in first cycle because its not kompensated jet.
 	botMinTimeShootAtPlayer = 1.0,	-- the minimum time a bot shoots at one player
 	botFireModeDuration = 5.0,		-- the minimum time a bot tries to shoot a player
 	maximunYawPerSec = 540,			-- in Degree. Rotaion-Movement per second.

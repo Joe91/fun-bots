@@ -57,7 +57,7 @@ function ClientBotManager:_onUpdate(p_Delta, p_Pass)
 					local playerPosition = player.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(player, false); --Vec3(player.soldier.worldTransform.trans.x, player.soldier.worldTransform.trans.y + Utilities:getTargetHeight(player.soldier, false), player.soldier.worldTransform.trans.z)
 
 					-- find direction of Bot
-					local target	= bot.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(bot.soldier, false);
+					local target	= bot.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(bot, false);
 					local distance	= playerPosition:Distance(bot.soldier.worldTransform.trans);
 
 					if (distance < Config.maxRaycastDistance) then
