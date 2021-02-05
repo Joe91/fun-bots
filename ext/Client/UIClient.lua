@@ -121,6 +121,7 @@ function FunBotUIClient:_onUISettings(data)
 	settings:add("ADVANCED", "Integer", "maxShootDistanceNoSniper", Language:I18N("Attack Distance no Sniper"), data.maxShootDistanceNoSniper, 80, Language:I18N("The maximum distance a non Sniper Bot starts shooting at a player"));
 	settings:add("ADVANCED", "Float", "distanceForDirectAttack", Language:I18N("Direct Attack Distance"), data.distanceForDirectAttack, 5, Language:I18N("When this close to a bot, he starts attacking"));
 	settings:add("ADVANCED", "Boolean", "meleeAttackIfClose", Language:I18N("Attack with Melee"), data.meleeAttackIfClose, true, Language:I18N("Bots attack the playe with the knife, if close"));
+	settings:add("ADVANCED", "Boolean", "botCanKillHimself", Language:I18N("Bots can kill themself"), data.botCanKillHimself, false, Language:I18N("If false, Bots take no fall or Frag damage"));
 	settings:add("ADVANCED", "Boolean", "attackWayBots", Language:I18N("Attack other players"), data.attackWayBots, true, Language:I18N("Bots on paths attack player by default"));
 	settings:add("ADVANCED", "Float", "meleeAttackCoolDown", Language:I18N("Melee Cooldown"), data.meleeAttackCoolDown, 3, Language:I18N("the time a Bot waits before attacking with melee again"));
 	settings:add("ADVANCED", "Boolean", "jumpWhileShooting", Language:I18N("Allow Jump while shooting"), data.jumpWhileShooting, true, Language:I18N("Bots jump over obstacles while shooting"));
@@ -129,6 +130,9 @@ function FunBotUIClient:_onUISettings(data)
 	settings:add("ADVANCED", "Integer", "overWriteBotAttackMode", Language:I18N("Overwrite Attack-Speed-Mode"), data.overWriteBotAttackMode, 0, Language:I18N("!!Affects Aiming!!! 0 = no overwrite. 1 = prone, 2 = crouch (good aim), 3 = walk, 4 = run"));
 	settings:add("ADVANCED", "Float", "speedFactor", Language:I18N("Speed Reduction"), data.speedFactor, 1.0, Language:I18N("reduces the movementspeed. 1 = normal, 0.1 = slow"));
 	settings:add("ADVANCED", "Float", "speedFactorAttack", Language:I18N("Speed Reduction Attack"), data.speedFactorAttack, 1.0, Language:I18N("reduces the movementspeed while attacking. 1 = normal, 0.1 = slow."));
+
+
+	
 
 	settings:add("EXPERT", "Float", "botFirstShotDelay", Language:I18N("First Shot Delay"), data.botFirstShotDelay, 0.2, Language:I18N("delay for first shot"));
 	settings:add("EXPERT", "Float", "botMinTimeShootAtPlayer", Language:I18N("Min Time Shoot"), data.botMinTimeShootAtPlayer, 1.0, Language:I18N("the minimum time a Bot shoots at one player"));
