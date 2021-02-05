@@ -312,21 +312,23 @@ function Bot:_updateAiming()
 
 			--interpolate player movement
 			local targetMovement = Vec3();
+			local fullPositionTarget =  self._shootPlayer.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(self._shootPlayer.soldier, true);
+			local fullPositionBot = self.player.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(self.player.soldier, false);
 
-			local distanceToPlayer	= self._shootPlayer.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans);
+			local distanceToPlayer	= fullPositionTarget:Distance(fullPositionBot);
 			--calculate how long the distance is --> time to travel
 			local timeToTravel		= (distanceToPlayer / self.activeWeapon.bulletSpeed)
 			local factorForMovement	= (timeToTravel) / self._aimUpdateTimer
 			local ptichCorrection	= 0.5 * timeToTravel * timeToTravel * self.activeWeapon.bulletDrop;
-			targetMovement			= (self._shootPlayer.soldier.worldTransform.trans:Clone() - self._lastTargetTrans) * factorForMovement; --movement in one dt
+			targetMovement			= (fullPositionTarget - self._lastTargetTrans) * factorForMovement; --movement in one dt
 
 			self._lastShootPlayer = self._shootPlayer;
-			self._lastTargetTrans = self._shootPlayer.soldier.worldTransform.trans:Clone();
+			self._lastTargetTrans = fullPositionTarget;
 
 			--calculate yaw and pith
-			local dz		= self._shootPlayer.soldier.worldTransform.trans.z + targetMovement.z - self.player.soldier.worldTransform.trans.z;
-			local dx		= self._shootPlayer.soldier.worldTransform.trans.x + targetMovement.x - self.player.soldier.worldTransform.trans.x;
-			local dy		= (self._shootPlayer.soldier.worldTransform.trans.y + targetMovement.y + Utilities:getCameraPos(self._shootPlayer.soldier, true).y) + ptichCorrection - (self.player.soldier.worldTransform.trans.y + Utilities:getTargetHeight(self.player.soldier, false));
+			local dz		= fullPositionTarget.z + targetMovement.z - fullPositionBot.z;
+			local dx		= fullPositionTarget.x + targetMovement.x - fullPositionBot.x;
+			local dy		= fullPositionTarget.y + targetMovement.y + ptichCorrection - fullPositionBot.y;
 			local atanDzDx	= math.atan(dz, dx);
 			local yaw		= (atanDzDx > math.pi / 2) and (atanDzDx - math.pi / 2) or (atanDzDx + 3 * math.pi / 2);
 
