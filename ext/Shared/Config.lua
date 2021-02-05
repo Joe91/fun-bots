@@ -1,5 +1,7 @@
-MAX_NUMBER_OF_BOTS	= 32;	-- maximum bots that can be spawned
-MAX_TRACE_NUMBERS	= 15;		-- maximum number of traces in one level
+MAX_NUMBER_OF_BOTS	= 32;			-- maximum bots that can be spawned
+MAX_TRACE_NUMBERS	= 15;			-- maximum number of traces in one level
+
+BOT_ATTACK_MODE 	= "Crouch";		-- use "Crouch" or "Stand"
 
 Config = {
 	--global
@@ -10,7 +12,7 @@ Config = {
 	useShotgun = false,				-- only shotguns with frag, as it counts the kills of the Bots
 
 	--difficluty
-	botAimWorsening = 0.2,			-- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy). Restart of level needed
+	botAimWorsening = 0.1,			-- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy). Restart of level needed
 	botSniperAimWorsening = 0.0,	-- see botAimWorsening, only for Sniper-rifles
 	aimForHead = false,				-- bots aim for the head
 	headShotFactorBots = 1.5,		-- factor for damage if headshot
