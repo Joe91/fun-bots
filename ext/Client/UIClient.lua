@@ -73,8 +73,8 @@ function FunBotUIClient:_onUISettings(data)
 	settings:addList("GLOBAL", "botWeapon", Language:I18N("Bot Weapon"), BotWeapons, data.botWeapon, "Primary", Language:I18N("Select the weapon the bots use"));
 	settings:addList("GLOBAL", "botKit", Language:I18N("Bot Kit"), BotKits, data.botKit, "RANDOM_KIT", Language:I18N("The Kit a bots spawns with."));
 	settings:addList("GLOBAL", "botColor", Language:I18N("Bot Color"), BotColors, data.botColor, "RANDOM_COLOR", Language:I18N("The Kit-Color a bots spawns with."));
-	
-	settings:add("DIFFICULTY", "Float", "botAimWorsening", Language:I18N("Aim Worsening"), data.botAimWorsening, 0.2, Language:I18N("0 = hard, 1 (or higher) = easy"));
+
+	settings:add("DIFFICULTY", "Float", "botAimWorsening", Language:I18N("Aim Worsening"), data.botAimWorsening, 0.1, Language:I18N("0 = hard, 1 (or higher) = easy"));
 	settings:add("DIFFICULTY", "Float", "botSniperAimWorsening", Language:I18N("Aim Worsening Sniper"), data.botSniperAimWorsening, 0.0, Language:I18N("0 = hard, 1 (or higher) = easy"));
 	settings:add("DIFFICULTY", "Boolean", "aimForHead", Language:I18N("Aim for Head"), data.aimForHead, false, Language:I18N("Bots aim for the head. If false for the body"));
 	settings:add("DIFFICULTY", "Float", "headShotFactorBots", Language:I18N("Factor for HeadShot"), data.headShotFactorBots, 0.8, Language:I18N("Factor for damage if Bot does a headshot"));
@@ -101,6 +101,7 @@ function FunBotUIClient:_onUISettings(data)
 	settings:add("SPAWN", "Integer", "maxSupportBots", Language:I18N("Max Support Bots"), data.maxSupportBots, -1, Language:I18N("maximum number of Bots with Support Kit. -1 = unlimited"));
 	settings:add("SPAWN", "Integer", "maxReconBots", Language:I18N("Max Recon Bots"), data.maxReconBots, -1, Language:I18N("maximum number of Bots with Recon Kit. -1 = unlimited"));
 	settings:add("SPAWN", "Integer", "distanceToSpawnBots", Language:I18N("Distance to Spawn Bots"), data.distanceToSpawnBots, 50, Language:I18N("distance to spawn Bots away from players"));
+	settings:add("SPAWN", "Float", "heightDistanceToSpawn", Language:I18N("Height to Spawn Bots"), data.heightDistanceToSpawn, 4, Language:I18N("distance vertically, Bots should spawn away, if closer than distance"));
 	settings:add("SPAWN", "Integer", "distanceToSpawnReduction", Language:I18N("Reduce Distance on Fail"), data.distanceToSpawnReduction, 5, Language:I18N("reduce distance if not possible"));
 	settings:add("SPAWN", "Integer", "maxTrysToSpawnAtDistance", Language:I18N("Max Retrys on Distance"), data.maxTrysToSpawnAtDistance, 3, Language:I18N("try this often to spawn a bot away from players"));
 
@@ -121,6 +122,7 @@ function FunBotUIClient:_onUISettings(data)
 	settings:add("ADVANCED", "Integer", "maxShootDistanceNoSniper", Language:I18N("Attack Distance no Sniper"), data.maxShootDistanceNoSniper, 80, Language:I18N("The maximum distance a non Sniper Bot starts shooting at a player"));
 	settings:add("ADVANCED", "Float", "distanceForDirectAttack", Language:I18N("Direct Attack Distance"), data.distanceForDirectAttack, 5, Language:I18N("When this close to a bot, he starts attacking"));
 	settings:add("ADVANCED", "Boolean", "meleeAttackIfClose", Language:I18N("Attack with Melee"), data.meleeAttackIfClose, true, Language:I18N("Bots attack the playe with the knife, if close"));
+	settings:add("ADVANCED", "Boolean", "botCanKillHimself", Language:I18N("Bots can kill themself"), data.botCanKillHimself, false, Language:I18N("If false, Bots take no fall or Frag damage"));
 	settings:add("ADVANCED", "Boolean", "attackWayBots", Language:I18N("Attack other players"), data.attackWayBots, true, Language:I18N("Bots on paths attack player by default"));
 	settings:add("ADVANCED", "Float", "meleeAttackCoolDown", Language:I18N("Melee Cooldown"), data.meleeAttackCoolDown, 3, Language:I18N("the time a Bot waits before attacking with melee again"));
 	settings:add("ADVANCED", "Boolean", "jumpWhileShooting", Language:I18N("Allow Jump while shooting"), data.jumpWhileShooting, true, Language:I18N("Bots jump over obstacles while shooting"));
@@ -128,7 +130,10 @@ function FunBotUIClient:_onUISettings(data)
 	settings:add("ADVANCED", "Integer", "overWriteBotSpeedMode", Language:I18N("Overwrite Speed-Mode"), data.overWriteBotSpeedMode, 0, Language:I18N("0 = no overwrite. 1 = prone, 2 = crouch, 3 = walk, 4 = run"));
 	settings:add("ADVANCED", "Integer", "overWriteBotAttackMode", Language:I18N("Overwrite Attack-Speed-Mode"), data.overWriteBotAttackMode, 0, Language:I18N("!!Affects Aiming!!! 0 = no overwrite. 1 = prone, 2 = crouch (good aim), 3 = walk, 4 = run"));
 	settings:add("ADVANCED", "Float", "speedFactor", Language:I18N("Speed Reduction"), data.speedFactor, 1.0, Language:I18N("reduces the movementspeed. 1 = normal, 0.1 = slow"));
-	settings:add("ADVANCED", "Float", "speedFactorAttack", Language:I18N("Speed Reduction Attack"), data.speedFactorAttack, 1.0, Language:I18N("reduces the movementspeed while attacking. 1 = normal, 0.1 = slow."));
+	settings:add("ADVANCED", "Float", "speedFactorAttack", Language:I18N("Speed Reduction Attack"), data.speedFactorAttack, 0.6, Language:I18N("reduces the movementspeed while attacking. 1 = normal, 0.1 = slow."));
+
+
+	
 
 	settings:add("EXPERT", "Float", "botFirstShotDelay", Language:I18N("First Shot Delay"), data.botFirstShotDelay, 0.2, Language:I18N("delay for first shot"));
 	settings:add("EXPERT", "Float", "botMinTimeShootAtPlayer", Language:I18N("Min Time Shoot"), data.botMinTimeShootAtPlayer, 1.0, Language:I18N("the minimum time a Bot shoots at one player"));

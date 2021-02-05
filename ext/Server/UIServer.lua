@@ -386,6 +386,10 @@ function FunBotUIServer:_writeSettings(player, request)
 		SettingsManager:update('meleeAttackIfClose', (request.meleeAttackIfClose == true), temporary, batched);
 	end
 
+	if request.botCanKillHimself ~= nil then
+		SettingsManager:update('botCanKillHimself', (request.botCanKillHimself == true), temporary, batched);
+	end
+
 	if request.attackWayBots ~= nil then
 		SettingsManager:update('attackWayBots', (request.attackWayBots == true), temporary, batched);
 	end
@@ -534,6 +538,14 @@ function FunBotUIServer:_writeSettings(player, request)
 
 		if tempValue >= 1 and tempValue <= 100 then
 			SettingsManager:update('distanceToSpawnBots', tempValue, temporary, batched);
+		end
+	end
+
+	if request.heightDistanceToSpawn ~= nil then
+		local tempValue = tonumber(request.heightDistanceToSpawn);
+
+		if tempValue >= 2 and tempValue <= 100 then
+			SettingsManager:update('heightDistanceToSpawn', tempValue, temporary, batched);
 		end
 	end
 

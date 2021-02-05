@@ -1,5 +1,7 @@
-MAX_NUMBER_OF_BOTS	= 32;	-- maximum bots that can be spawned
-MAX_TRACE_NUMBERS	= 15;		-- maximum number of traces in one level
+MAX_NUMBER_OF_BOTS	= 32;			-- maximum bots that can be spawned
+MAX_TRACE_NUMBERS	= 15;			-- maximum number of traces in one level
+
+BOT_ATTACK_MODE 	= "Stand";		-- use "Crouch" or "Stand"
 
 Config = {
 	--global
@@ -10,7 +12,7 @@ Config = {
 	useShotgun = false,				-- only shotguns with frag, as it counts the kills of the Bots
 
 	--difficluty
-	botAimWorsening = 0.2,			-- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy). Restart of level needed
+	botAimWorsening = 0.1,			-- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy).
 	botSniperAimWorsening = 0.0,	-- see botAimWorsening, only for Sniper-rifles
 	aimForHead = false,				-- bots aim for the head
 	headShotFactorBots = 1.5,		-- factor for damage if headshot
@@ -38,6 +40,7 @@ Config = {
 	maxSupportBots = -1,			-- maximum number of Bots with Support Kit
 	maxReconBots = -1,				-- maximum number of Bots with Recon Kit
 	distanceToSpawnBots	= 50,		-- distance to spawn Bots away from players
+	heightDistanceToSpawn = 4,		-- distance vertically, Bots should spawn away, if closer than distance
 	distanceToSpawnReduction = 5,	-- reduce distance if not possible
 	maxTrysToSpawnAtDistance = 3,	-- try this often to spawn a bot away from players
 
@@ -68,7 +71,7 @@ Config = {
 	overWriteBotSpeedMode = 0,		-- 0 = no overwrite. 1 = prone, 2 = crouch, 3 = walk, 4 = run
 	overWriteBotAttackMode = 0,		-- Affects Aiming!!! 0 = no overwrite. 1 = prone, 2 = crouch (good aim), 3 = walk, 4 = run
 	speedFactor = 1.0,				-- reduces the movementspeed. 1 = normal, 0 = standing.
-	speedFactorAttack = 1.0,		-- reduces the movementspeed while attacking. 1 = normal, 0 = standing.
+	speedFactorAttack = 0.6,		-- reduces the movementspeed while attacking. 1 = normal, 0 = standing.
 
 	--expert
 	botFirstShotDelay = 0.4,		-- delay for first shot. If too small, there will be great spread in first cycle because its not kompensated jet.

@@ -266,7 +266,8 @@ function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, inde
 						--real player
 						if tempPlayer.alive then
 							local distance = tempPlayer.soldier.worldTransform.trans:Distance(spawnPoint)
-							if distance < targetDistance then
+							local heightDiff = math.abs(tempPlayer.soldier.worldTransform.trans.y - spawnPoint.y)
+							if distance < targetDistance and heightDiff < Config.heightDistanceToSpawn then
 								playerNearby = true;
 								break;
 							end
