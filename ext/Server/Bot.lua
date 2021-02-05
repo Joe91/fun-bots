@@ -798,7 +798,7 @@ function Bot:_updateMovement()
 						self.activeSpeedValue = 3;
 					end
 				end
-				if Config.overWriteBotAttackMode > 0 and Config.botWeapon ~= "Knife" then
+				if Config.overWriteBotAttackMode > 0 then
 					self.activeSpeedValue = Config.overWriteBotAttackMode;
 				end
 
@@ -807,7 +807,7 @@ function Bot:_updateMovement()
 
 				if #self._shootWayPoints > targetCycles and Config.jumpWhileShooting then
 					local distanceDone = self._shootWayPoints[#self._shootWayPoints].trans:Distance(self._shootWayPoints[#self._shootWayPoints-targetCycles].trans);
-					if distanceDone < 1.5 then --no movement was possible. Try to jump over obstacle
+					if distanceDone < 1.0 then --no movement was possible. Try to jump over obstacle
 						self.activeSpeedValue = 3;
 						self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 1);
 						self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1);
