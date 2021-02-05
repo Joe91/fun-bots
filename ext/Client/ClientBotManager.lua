@@ -81,24 +81,22 @@ function ClientBotManager:_onUpdate(p_Delta, p_Pass)
 end
 
 function ClientBotManager:_onBulletCollision(hook, entity, hit, shooter)
-	if not Config.useShotgun then
-		if (hit.rigidBody.typeInfo.name == 'CharacterPhysicsEntity') then
-			if Utilities:isBot(shooter.name) then
-				local player = PlayerManager:GetLocalPlayer();
+	if (hit.rigidBody.typeInfo.name == 'CharacterPhysicsEntity') then
+		if Utilities:isBot(shooter.name) then
+			local player = PlayerManager:GetLocalPlayer();
 
-				if (player.soldier ~= nil) then
-					local dx	= math.abs(player.soldier.worldTransform.trans.x - hit.position.x);
-					local dz	= math.abs(player.soldier.worldTransform.trans.z - hit.position.z);
-					local dy	= hit.position.y - player.soldier.worldTransform.trans.y; --player y is on ground. Hit must be higher to be valid
+			if (player.soldier ~= nil) then
+				local dx	= math.abs(player.soldier.worldTransform.trans.x - hit.position.x);
+				local dz	= math.abs(player.soldier.worldTransform.trans.z - hit.position.z);
+				local dy	= hit.position.y - player.soldier.worldTransform.trans.y; --player y is on ground. Hit must be higher to be valid
 
-					if (dx < 1 and dz < 1 and dy < 2 and dy > 0) then --included bodyhight
-						local isHeadshot = false;
-						local camaraHeight = Utilities:getTargetHeight(player.soldier, false)
-						if dy < camaraHeight + 0.3 and dy > camaraHeight - 0.20 then
-							isHeadshot = true;
-						end
-						NetEvents:SendLocal('ClientDamagePlayer', shooter.name, false, isHeadshot);
+				if (dx < 1 and dz < 1 and dy < 2 and dy > 0) then --included bodyhight
+					local isHeadshot = false;
+					local camaraHeight = Utilities:getTargetHeight(player.soldier, false)
+					if dy < camaraHeight + 0.3 and dy > camaraHeight - 0.20 then
+						isHeadshot = true;
 					end
+					NetEvents:SendLocal('ClientDamagePlayer', shooter.name, false, isHeadshot);
 				end
 			end
 		end

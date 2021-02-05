@@ -1,5 +1,7 @@
 class('Utilities');
 
+require('__shared/Config');
+
 function Utilities:__init()
 	-- nothing to do
 end
@@ -35,9 +37,12 @@ end
 
 function Utilities:isBot(name)
 	local isBot = false
-	for  _, botname in pairs(BotNames) do
+	for  index, botname in pairs(BotNames) do
 		if name == botname then
 			isBot = true;
+			break;
+		end
+		if index > MAX_NUMBER_OF_BOTS then
 			break;
 		end
 	end

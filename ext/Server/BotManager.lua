@@ -211,7 +211,7 @@ function BotManager:_getDamageValue(damage, bot, soldier, fake)
 	end
 
 
-	if not fake then -- frag mode shotgun
+	if not fake then -- frag mode
 		resultDamage = damage * damageFactor;
 	else
 		if damage <= 2 then
