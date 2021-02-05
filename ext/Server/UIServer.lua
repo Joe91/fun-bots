@@ -541,6 +541,14 @@ function FunBotUIServer:_writeSettings(player, request)
 		end
 	end
 
+	if request.heightDistanceToSpawn ~= nil then
+		local tempValue = tonumber(request.heightDistanceToSpawn);
+
+		if tempValue >= 2 and tempValue <= 100 then
+			SettingsManager:update('heightDistanceToSpawn', tempValue, temporary, batched);
+		end
+	end
+
 	if request.distanceToSpawnReduction ~= nil then
 		local tempValue = tonumber(request.distanceToSpawnReduction);
 

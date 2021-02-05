@@ -136,22 +136,22 @@ function WeaponModification:_ModifyWeapon(p_SoldierWeaponData, index, aimWorseni
 					-- recoilAmplitudeDecreaseFactor 	float
 				end
 
-				if isReconWeapon then --only for recon in standing as well.
-					local s_StandingValue = GunSwayDispersionData(s_CrouchNoZoom.baseValue);
+				--if isReconWeapon then --only for recon in standing as well.
+				local s_StandingValue = GunSwayDispersionData(s_CrouchNoZoom.baseValue);
 
-					if s_MovingValue ~= nil then
-						if self.m_maxAnglesStand[index] == nil then
-							self.m_minAnglesStand[index] = s_StandingValue.minAngle;
-							self.m_maxAnglesStand[index] = s_StandingValue.maxAngle;
-							self.m_incPerShotStand[index] = s_StandingValue.increasePerShot;
-						end
-
-						s_StandingValue.minAngle 			= self.m_minAnglesStand[index] * botAimWorsening;
-						s_StandingValue.maxAngle 			= self.m_maxAnglesStand[index] * botAimWorsening;
-						s_StandingValue.increasePerShot 	= self.m_incPerShotStand[index] * botAimWorsening;
-						--decreasePerSecond 	float
+				if s_MovingValue ~= nil then
+					if self.m_maxAnglesStand[index] == nil then
+						self.m_minAnglesStand[index] = s_StandingValue.minAngle;
+						self.m_maxAnglesStand[index] = s_StandingValue.maxAngle;
+						self.m_incPerShotStand[index] = s_StandingValue.increasePerShot;
 					end
+
+					s_StandingValue.minAngle 			= self.m_minAnglesStand[index] * botAimWorsening;
+					s_StandingValue.maxAngle 			= self.m_maxAnglesStand[index] * botAimWorsening;
+					s_StandingValue.increasePerShot 	= self.m_incPerShotStand[index] * botAimWorsening;
+					--decreasePerSecond 	float
 				end
+				--end
 			end
 		end
 	else
@@ -197,22 +197,22 @@ function WeaponModification:_ModifyWeapon(p_SoldierWeaponData, index, aimWorseni
 					-- recoilAmplitudeDecreaseFactor 	float
 				end
 
-				if isReconWeapon then --only for recon in standing as well.
-					local s_StandingValue = GunSwayDispersionData(s_StandNoZoom.baseValue);
+				--if isReconWeapon then --only for recon in standing as well.
+				local s_StandingValue = GunSwayDispersionData(s_StandNoZoom.baseValue);
 
-					if s_MovingValue ~= nil then
-						if self.m_maxAnglesStand[index] == nil then
-							self.m_minAnglesStand[index] = s_StandingValue.minAngle;
-							self.m_maxAnglesStand[index] = s_StandingValue.maxAngle;
-							self.m_incPerShotStand[index] = s_StandingValue.increasePerShot;
-						end
-
-						s_StandingValue.minAngle 			= self.m_minAnglesStand[index] * botAimWorsening;
-						s_StandingValue.maxAngle 			= self.m_maxAnglesStand[index] * botAimWorsening;
-						s_StandingValue.increasePerShot 	= self.m_incPerShotStand[index] * botAimWorsening;
-						--decreasePerSecond 	float
+				if s_MovingValue ~= nil then
+					if self.m_maxAnglesStand[index] == nil then
+						self.m_minAnglesStand[index] = s_StandingValue.minAngle;
+						self.m_maxAnglesStand[index] = s_StandingValue.maxAngle;
+						self.m_incPerShotStand[index] = s_StandingValue.increasePerShot;
 					end
+
+					s_StandingValue.minAngle 			= self.m_minAnglesStand[index] * botAimWorsening;
+					s_StandingValue.maxAngle 			= self.m_maxAnglesStand[index] * botAimWorsening;
+					s_StandingValue.increasePerShot 	= self.m_incPerShotStand[index] * botAimWorsening;
+					--decreasePerSecond 	float
 				end
+				--end
 			end
 		end
 	end

@@ -778,17 +778,25 @@ function Bot:_updateMovement()
 		elseif self.activeMoveMode == 9 then
 			--crouch moving (only mode with modified gun)
 			if self.activeWeapon.type == "Sniper" then
-				if self.player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Crouch then
-					self.player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Crouch, true, true);
+				if BOT_ATTACK_MODE == "Crouch" then
+					if self.player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Crouch then
+						self.player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Crouch, true, true);
+					end
+				else
+					if self.player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Stand then
+						self.player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Stand, true, true);
+					end
 				end
 				self.activeSpeedValue = 0;
 			else
 				if Config.botWeapon == "Knife" then --Knife Only Mode
 					self.activeSpeedValue = 4; --run towards player
-				elseif Config.botWeapon == "Primary" then
-					self.activeSpeedValue = 2;
 				else
-					self.activeSpeedValue = 3; --TODO: Test aiming in Mode 2
+					if BOT_ATTACK_MODE == "Crouch" then
+						self.activeSpeedValue = 2;
+					else
+						self.activeSpeedValue = 3;
+					end
 				end
 				if Config.overWriteBotAttackMode > 0 and Config.botWeapon ~= "Knife" then
 					self.activeSpeedValue = Config.overWriteBotAttackMode;
