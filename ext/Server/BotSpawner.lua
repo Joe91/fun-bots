@@ -3,6 +3,7 @@ class('BotSpawner');
 local BotManager	= require('BotManager');
 local Globals		= require('Globals');
 local WeaponList	= require('WeaponList');
+local Utilities 	= require('__shared/Utilities')
 
 function BotSpawner:__init()
 	self._botSpawnTimer = 0
@@ -61,7 +62,7 @@ function BotSpawner:_onPlayerLeft(player)
 	--remove all references of player
 	if Config.onlySpawnBotsWithPlayers then
 		if BotManager:getPlayerCount() == 1 then
-			print("no player left - kill all bots")
+			print("no player left - kick all bots")
 			BotManager:destroyAllBots()
 		end
 	end
@@ -141,33 +142,12 @@ function BotSpawner:_onRespawnBot(botname)
 		self:spawnBot(bot, transform, false);
 
 	elseif spawnMode == 4 then	--fixed Way
-		local wayIndex 			= bot:getWayIndex();
-		local randIndex 		= MathUtils:GetRandomInt(1, #Globals.wayPoints[wayIndex]);
-		local transform 		= LinearTransform();
-		local inverseDirection 	= false;
-		if Globals.wayPoints[wayIndex][1].optValue == 0xFF then
-			inverseDirection = (MathUtils:GetRandomInt(0,1) == 1);
-		end
-		transform.trans = Globals.wayPoints[wayIndex][randIndex].trans;
-		bot:setCurrentWayPoint(randIndex);
-		bot:setDirectionInversion(inverseDirection);
-		self:spawnBot(bot, transform, false);
+		local wayIndex 		= bot:getWayIndex();
+		local randIndex 	= MathUtils:GetRandomInt(1, #Globals.wayPoints[wayIndex]);
+		self:_spawnSigleWayBot(nil, false, wayIndex, randIndex, bot)
 
 	elseif spawnMode == 5 then --random Way
-		local wayIndex = self:_getNewWayIndex()
-		if wayIndex ~= 0 then
-			local randIndex = MathUtils:GetRandomInt(1, #Globals.wayPoints[wayIndex])
-			local transform = LinearTransform();
-			local inverseDirection 	= false;
-			if Globals.wayPoints[wayIndex][1].optValue == 0xFF then
-				inverseDirection = (MathUtils:GetRandomInt(0,1) == 1);
-			end
-			bot:setWayIndex(wayIndex);
-			bot:setCurrentWayPoint(randIndex);
-			bot:setDirectionInversion(inverseDirection);
-			transform.trans = Globals.wayPoints[wayIndex][randIndex].trans
-			self:spawnBot(bot, transform, false)
-		end
+		self:_spawnSigleWayBot(nil, true, 0, 0, bot)
 	end
 end
 
@@ -249,10 +229,16 @@ function BotSpawner:spawnLineBots(player, amount, spacing)
 	end
 end
 
-function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, indexOnPath)
-	local name = BotManager:findNextBotName()
+function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, indexOnPath, existingBot)
+	local isRespawn = false;
+	local name = nil;
+	if existingBot ~= nil then
+		isRespawn = true;
+	else
+		name = BotManager:findNextBotName()
+	end
 	local inverseDirection = false;
-	if name ~= nil then
+	if name ~= nil or isRespawn then
 
 		-- find a spawnpoint away from players
 		if useRandomWay or activeWayIndex == nil or activeWayIndex == 0 then
@@ -276,8 +262,7 @@ function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, inde
 				local players = PlayerManager:GetPlayers()
 				for i = 1, PlayerManager:GetPlayerCount() do
 					local tempPlayer = players[i];
-					local bot = BotManager:GetBotByName(tempPlayer.name)
-					if bot == nil then
+					if not Utilities:isBot(tempPlayer.name) then
 						--real player
 						if tempPlayer.alive then
 							local distance = tempPlayer.soldier.worldTransform.trans:Distance(spawnPoint)
@@ -316,10 +301,15 @@ function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, inde
 		end
 		transform.trans = Globals.wayPoints[activeWayIndex][indexOnPath].trans
 
-		local bot = BotManager:createBot(name, self:getBotTeam(player, name))
-		if bot ~= nil then
-			bot:setVarsWay(player, useRandomWay, activeWayIndex, indexOnPath, inverseDirection)
-			self:spawnBot(bot, transform, true)
+		if isRespawn then
+			existingBot:setVarsWay(player, useRandomWay, activeWayIndex, indexOnPath, inverseDirection)
+			self:spawnBot(existingBot, transform, false)
+		else
+			local bot = BotManager:createBot(name, self:getBotTeam(player, name))
+			if bot ~= nil then
+				bot:setVarsWay(player, useRandomWay, activeWayIndex, indexOnPath, inverseDirection)
+				self:spawnBot(bot, transform, true)
+			end
 		end
 	end
 end

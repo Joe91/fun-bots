@@ -13,7 +13,7 @@ Config = {
 	botAimWorsening = 0.2,			-- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy). Restart of level needed
 	botSniperAimWorsening = 0.0,	-- see botAimWorsening, only for Sniper-rifles
 	aimForHead = false,				-- bots aim for the head
-	headShotFactorBots = 2.0,		-- factor for damage if headshot
+	headShotFactorBots = 1.5,		-- factor for damage if headshot
 	damageFactorAssault = 0.8,		-- origninal Damage from bots gets multiplied by this
 	damageFactorCarabine = 0.8,		-- origninal Damage from bots gets multiplied by this
 	damageFactorLMG = 0.8,			-- origninal Damage from bots gets multiplied by this
@@ -59,6 +59,7 @@ Config = {
 	maxRaycastDistance = 150,		-- meters bots start shooting at player
 	maxShootDistanceNoSniper = 80,	-- meters a bot (not sniper) start shooting at player
 	distanceForDirectAttack = 5,	-- if a bot is that close he will attack, even if not in FOV
+	botCanKillHimself = false,		-- if a bot is that close he will attack, even if not in FOV
 	meleeAttackIfClose = true,		-- bot attacks with melee if close
 	attackWayBots = true,			-- bots on paths attack player
 	meleeAttackCoolDown = 3.0,		-- the time a bot waits before attacking with melee again
@@ -70,7 +71,7 @@ Config = {
 	speedFactorAttack = 1.0,		-- reduces the movementspeed while attacking. 1 = normal, 0 = standing.
 
 	--expert
-	botFirstShotDelay = 0.2,		-- delay for first shot. If too small, there will be great spread in first cycle because its not kompensated jet.
+	botFirstShotDelay = 0.4,		-- delay for first shot. If too small, there will be great spread in first cycle because its not kompensated jet.
 	botMinTimeShootAtPlayer = 1.0,	-- the minimum time a bot shoots at one player
 	botFireModeDuration = 5.0,		-- the minimum time a bot tries to shoot a player
 	maximunYawPerSec = 540,			-- in Degree. Rotaion-Movement per second.

@@ -32,7 +32,7 @@ function Bot:__init(player)
 	self._wayWaitTimer = 0;
 	self._wayWaitYawTimer = 0;
 	self._obstaceSequenceTimer = 0;
-	self._shotTimer = 0;
+	self._shotTimer = -Config.botFirstShotDelay;
 	self._shootModeTimer = 0;
 	self._reloadTimer = 0;
 	self._attackModeMoveTimer = 0;
@@ -157,7 +157,7 @@ function Bot:resetVars()
 	self._shootPlayer			= nil;
 	self._lastShootPlayer		= nil;
 	self._invertPathDirection	= false;
-	self._shotTimer				= 0;
+	self._shotTimer				= -Config.botFirstShotDelay;
 	self._updateTimer			= 0;
 	self._aimUpdateTimer		= 0; --timer sync
 	self._targetPoint			= nil;
@@ -237,18 +237,6 @@ function Bot:setShoot(shoot)
 	self._shoot = shoot;
 end
 
-function Bot:setWayIndex(wayIndex)
-	self._pathIndex = wayIndex;
-end
-
-function Bot:setCurrentWayPoint(wayPoint)
-	self._currentWayPoint = wayPoint;
-end
-
-function Bot:setDirectionInversion(invertWayDirection)
-	self._invertPathDirection = invertWayDirection;
-end
-
 function Bot:setSpeed(speed)
 	self._botSpeed = speed;
 end
@@ -323,22 +311,26 @@ function Bot:_updateAiming()
 		if self._shootPlayer ~= nil and self._shootPlayer.soldier ~= nil then
 
 			--interpolate player movement
-			local targetMovement = Vec3(0, 0, 0);
+			local targetMovement = Vec3(0,0,0);
+			local fullPositionTarget =  self._shootPlayer.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(self._shootPlayer, true);
+			local fullPositionBot = self.player.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(self.player, false);
 
-			local distanceToPlayer	= self._shootPlayer.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans);
+			local distanceToPlayer	= fullPositionTarget:Distance(fullPositionBot);
 			--calculate how long the distance is --> time to travel
 			local timeToTravel		= (distanceToPlayer / self.activeWeapon.bulletSpeed)
 			local factorForMovement	= (timeToTravel) / self._aimUpdateTimer
 			local ptichCorrection	= 0.5 * timeToTravel * timeToTravel * self.activeWeapon.bulletDrop;
-			targetMovement			= (self._shootPlayer.soldier.worldTransform.trans - self._lastTargetTrans) * factorForMovement; --movement in one dt
+			if self._lastShootPlayer == self._shootPlayer then
+				targetMovement			= (fullPositionTarget - self._lastTargetTrans) * factorForMovement; --movement in one dt
+			end
 
 			self._lastShootPlayer = self._shootPlayer;
-			self._lastTargetTrans = self._shootPlayer.soldier.worldTransform.trans:Clone();
+			self._lastTargetTrans = fullPositionTarget;
 
 			--calculate yaw and pith
-			local dz		= self._shootPlayer.soldier.worldTransform.trans.z + targetMovement.z - self.player.soldier.worldTransform.trans.z;
-			local dx		= self._shootPlayer.soldier.worldTransform.trans.x + targetMovement.x - self.player.soldier.worldTransform.trans.x;
-			local dy		= (self._shootPlayer.soldier.worldTransform.trans.y + targetMovement.y + Utilities:getTargetHeight(self._shootPlayer.soldier, true)) + ptichCorrection - (self.player.soldier.worldTransform.trans.y + Utilities:getTargetHeight(self.player.soldier, false));
+			local dz		= fullPositionTarget.z + targetMovement.z - fullPositionBot.z;
+			local dx		= fullPositionTarget.x + targetMovement.x - fullPositionBot.x;
+			local dy		= fullPositionTarget.y + targetMovement.y + ptichCorrection - fullPositionBot.y;
 			local atanDzDx	= math.atan(dz, dx);
 			local yaw		= (atanDzDx > math.pi / 2) and (atanDzDx - math.pi / 2) or (atanDzDx + 3 * math.pi / 2);
 
@@ -468,22 +460,24 @@ function Bot:_updateShooting()
 				--shooting sequence
 				if Config.botWeapon == "Knife" then
 					self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
-					self._shotTimer	= 0;
-				else 
+					self._shotTimer	= -Config.botFirstShotDelay;
+				else
 					if self._shotTimer >= (self.activeWeapon.fireCycle + self.activeWeapon.pauseCycle) then
 						self._shotTimer	= 0;
 					end
-					if self.activeWeapon.delayed == true then
-						if self._shotTimer >= self.activeWeapon.fireCycle or self._meleeActive then
-							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
-						else
-							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
-						end
-					else --start with pause Cycle
-						if self._shotTimer >= self.activeWeapon.pauseCycle and not self._meleeActive then
-							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
-						else
-							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
+					if self._shotTimer >= 0 then
+						if self.activeWeapon.delayed == false then
+							if self._shotTimer >= self.activeWeapon.fireCycle or self._meleeActive then
+								self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
+							else
+								self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
+							end
+						else --start with pause Cycle
+							if self._shotTimer >= self.activeWeapon.pauseCycle and not self._meleeActive then
+								self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
+							else
+								self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
+							end
 						end
 					end
 				end
@@ -492,7 +486,7 @@ function Bot:_updateShooting()
 
 			else
 				self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
-				self._shotTimer	= 0;
+				self._shotTimer			= -Config.botFirstShotDelay;
 				self._shootPlayer		= nil;
 				self._lastShootPlayer	= nil;
 			end
