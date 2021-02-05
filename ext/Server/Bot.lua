@@ -237,18 +237,6 @@ function Bot:setShoot(shoot)
 	self._shoot = shoot;
 end
 
-function Bot:setWayIndex(wayIndex)
-	self._pathIndex = wayIndex;
-end
-
-function Bot:setCurrentWayPoint(wayPoint)
-	self._currentWayPoint = wayPoint;
-end
-
-function Bot:setDirectionInversion(invertWayDirection)
-	self._invertPathDirection = invertWayDirection;
-end
-
 function Bot:setSpeed(speed)
 	self._botSpeed = speed;
 end
