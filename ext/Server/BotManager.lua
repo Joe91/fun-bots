@@ -238,6 +238,9 @@ function BotManager:_getDamageValue(damage, bot, soldier, fake)
 end
 
 function BotManager:_onSoldierDamage(hook, soldier, info, giverInfo)
+	if soldier.player == nil then
+		return
+	end
 	local soldierIsBot = Utilities:isBot(soldier.player.name);
 	--detect if we need to shoot back
 	if Config.shootBackIfHit then
@@ -255,34 +258,32 @@ function BotManager:_onSoldierDamage(hook, soldier, info, giverInfo)
 	end
 
 	--find out, if a player was hit by the server:
-	if soldier.player ~= nil then
-		if not soldierIsBot then
-			if giverInfo.giver == nil then
-				local bot = self:GetBotByName(self._shooterBots[soldier.player.name])
-				if bot ~= nil and bot.player.soldier ~= nil then
-					info.damage = self:_getDamageValue(info.damage, bot, soldier, true);
-					info.boneIndex = 0;
-					info.isBulletDamage = true;
-					info.position = Vec3(soldier.worldTransform.trans.x, soldier.worldTransform.trans.y + 1, soldier.worldTransform.trans.z)
-					info.direction = soldier.worldTransform.trans - bot.player.soldier.worldTransform.trans
-					info.origin = bot.player.soldier.worldTransform.trans
-					if (soldier.health - info.damage) <= 0 then
-						if Globals.isTdm then
-							local enemyTeam = TeamId.Team1;
-							if soldier.player.teamId == TeamId.Team1 then
-								enemyTeam = TeamId.Team2;
-							end
-							TicketManager:SetTicketCount(enemyTeam, (TicketManager:GetTicketCount(enemyTeam) + 1));
+	if not soldierIsBot then
+		if giverInfo.giver == nil then
+			local bot = self:GetBotByName(self._shooterBots[soldier.player.name])
+			if bot ~= nil and bot.player.soldier ~= nil then
+				info.damage = self:_getDamageValue(info.damage, bot, soldier, true);
+				info.boneIndex = 0;
+				info.isBulletDamage = true;
+				info.position = Vec3(soldier.worldTransform.trans.x, soldier.worldTransform.trans.y + 1, soldier.worldTransform.trans.z)
+				info.direction = soldier.worldTransform.trans - bot.player.soldier.worldTransform.trans
+				info.origin = bot.player.soldier.worldTransform.trans
+				if (soldier.health - info.damage) <= 0 then
+					if Globals.isTdm then
+						local enemyTeam = TeamId.Team1;
+						if soldier.player.teamId == TeamId.Team1 then
+							enemyTeam = TeamId.Team2;
 						end
+						TicketManager:SetTicketCount(enemyTeam, (TicketManager:GetTicketCount(enemyTeam) + 1));
 					end
 				end
-			else
-				--valid bot-damage?
-				local bot = self:GetBotByName(giverInfo.giver.name)
-				if bot ~= nil and bot.player.soldier ~= nil then
-					-- giver was a bot (with explosives)
-					info.damage = self:_getDamageValue(info.damage, bot, soldier, false);
-				end
+			end
+		else
+			--valid bot-damage?
+			local bot = self:GetBotByName(giverInfo.giver.name)
+			if bot ~= nil and bot.player.soldier ~= nil then
+				-- giver was a bot (with explosives)
+				info.damage = self:_getDamageValue(info.damage, bot, soldier, false);
 			end
 		end
 	end
