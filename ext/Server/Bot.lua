@@ -788,6 +788,8 @@ function Bot:_updateMovement()
 					end
 				end
 				self.activeSpeedValue = 0;
+				self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
+				self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
 			else
 				if Config.botWeapon == "Knife" then --Knife Only Mode
 					self.activeSpeedValue = 4; --run towards player
