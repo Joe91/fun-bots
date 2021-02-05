@@ -213,7 +213,7 @@ function BotManager:_getDamageValue(damage, bot, soldier, fake)
 
 	if not fake then -- frag mode
 		resultDamage = damage * damageFactor;
-	else
+	elseif bot.activeWeapon.type ~= "Shotgun" then
 		if damage <= 2 then
 			local distance = bot.player.soldier.worldTransform.trans:Distance(soldier.worldTransform.trans)
 			local lowDamage = bot.activeWeapon.damage * damageDropFactor;
