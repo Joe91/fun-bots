@@ -3,6 +3,7 @@ class('BotSpawner');
 local BotManager	= require('BotManager');
 local Globals		= require('Globals');
 local WeaponList	= require('WeaponList');
+local Utilities 	= require('__shared/Utilities')
 
 function BotSpawner:__init()
 	self._botSpawnTimer = 0

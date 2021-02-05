@@ -2,7 +2,8 @@ class('BotManager');
 
 require('Bot');
 
-local Globals = require('Globals');
+local Globals 	= require('Globals');
+local Utilities = require('__shared/Utilities')
 
 function BotManager:__init()
 	self._bots = {}
@@ -16,7 +17,7 @@ function BotManager:__init()
 	NetEvents:Subscribe('BotShootAtPlayer', self, self._onShootAt)
 	Events:Subscribe('ServerDamagePlayer', self, self._onServerDamagePlayer)
 	NetEvents:Subscribe('ClientDamagePlayer', self, self._onDamagePlayer)
-	Hooks:Install('Soldier:Damage', 1, self, self._onSoldierDamage)
+	Hooks:Install('Soldier:Damage', 100, self, self._onSoldierDamage)
 end
 
 function BotManager:getBotTeam()
@@ -237,20 +238,17 @@ function BotManager:_getDamageValue(damage, bot, soldier, fake)
 end
 
 function BotManager:_onSoldierDamage(hook, soldier, info, giverInfo)
+	local soldierIsBot = Utilities:isBot(soldier.player.name);
 	--detect if we need to shoot back
 	if Config.shootBackIfHit then
-		if giverInfo.giver ~= nil and soldier.player ~= nil and info.damage > 0 then
-			local bot = self:GetBotByName(soldier.player.name)
-			if soldier ~= nil and bot ~= nil then
-				self:_onShootAt(giverInfo.giver, bot.name, true)
-			end
+		if soldierIsBot and giverInfo.giver ~= nil and info.damage > 0 then
+			self:_onShootAt(giverInfo.giver, soldier.player.name, true)
 		end
 	end
 
-	if Config.useShotgun then -- prevent bots from killing themself.
-		if giverInfo.giver ~= nil and soldier.player ~= nil then
-			local bot = self:GetBotByName(soldier.player.name)
-			if bot ~= nil and bot.player == giverInfo.giver then
+	if not Config.botCanKillHimself then -- prevent bots from killing themself.
+		if giverInfo.giver ~= nil and soldierIsBot then
+			if soldier.player == giverInfo.giver then
 				info.damage = 0;
 			end
 		end
@@ -258,10 +256,9 @@ function BotManager:_onSoldierDamage(hook, soldier, info, giverInfo)
 
 	--find out, if a player was hit by the server:
 	if soldier.player ~= nil then
-		local bot = self:GetBotByName(soldier.player.name)
-		if bot == nil then
+		if not soldierIsBot then
 			if giverInfo.giver == nil then
-				bot = self:GetBotByName(self._shooterBots[soldier.player.name])
+				local bot = self:GetBotByName(self._shooterBots[soldier.player.name])
 				if bot ~= nil and bot.player.soldier ~= nil then
 					info.damage = self:_getDamageValue(info.damage, bot, soldier, true);
 					info.boneIndex = 0;
@@ -281,12 +278,10 @@ function BotManager:_onSoldierDamage(hook, soldier, info, giverInfo)
 				end
 			else
 				--valid bot-damage?
-				bot = self:GetBotByName(giverInfo.giver.name)
+				local bot = self:GetBotByName(giverInfo.giver.name)
 				if bot ~= nil and bot.player.soldier ~= nil then
-					-- giver was a bot (with shotgun)
-					if Config.useShotgun then
-						info.damage = self:_getDamageValue(info.damage, bot, soldier, false);
-					end
+					-- giver was a bot (with explosives)
+					info.damage = self:_getDamageValue(info.damage, bot, soldier, false);
 				end
 			end
 		end
@@ -297,7 +292,7 @@ end
 function BotManager:_onServerDamagePlayer(playerName, shooterName, meleeAttack)
 	local player = PlayerManager:GetPlayerByName(playerName)
 	if player ~= nil then
-		self:_onDamagePlayer(player, shooterName, meleeAttack)
+		self:_onDamagePlayer(player, shooterName, meleeAttack, false)
 	end
 end
 

@@ -10,7 +10,7 @@ function ClientBotManager:__init()
 	self._lastIndex		= 0;
 
 	Events:Subscribe('UpdateManager:Update', self, self._onUpdate);
-	Hooks:Install('BulletEntity:Collision', 1, self, self._onBulletCollision);
+	Hooks:Install('BulletEntity:Collision', 200, self, self._onBulletCollision);
 	NetEvents:Subscribe('WriteClientSettings', self, self._onWriteClientSettings);
 end
 
@@ -83,21 +83,22 @@ end
 function ClientBotManager:_onBulletCollision(hook, entity, hit, shooter)
 	if not Config.useShotgun then
 		if (hit.rigidBody.typeInfo.name == 'CharacterPhysicsEntity') then
-			local player = PlayerManager:GetLocalPlayer();
+			if Utilities:isBot(shooter.name) then
+				local player = PlayerManager:GetLocalPlayer();
 
-			if (player.soldier ~= nil) then
-				local dx	= math.abs(player.soldier.worldTransform.trans.x - hit.position.x);
-				local dz	= math.abs(player.soldier.worldTransform.trans.z - hit.position.z);
-				local dy	= hit.position.y - player.soldier.worldTransform.trans.y; --player y is on ground. Hit must be higher to be valid
+				if (player.soldier ~= nil) then
+					local dx	= math.abs(player.soldier.worldTransform.trans.x - hit.position.x);
+					local dz	= math.abs(player.soldier.worldTransform.trans.z - hit.position.z);
+					local dy	= hit.position.y - player.soldier.worldTransform.trans.y; --player y is on ground. Hit must be higher to be valid
 
-				local isHeadshot = false;
-				local camaraHeight = Utilities:getTargetHeight(player.soldier, false)
-				if dy < camaraHeight + 0.3 and dy > camaraHeight - 0.15 then
-					isHeadshot = true;
-				end
-
-				if (dx < 1 and dz < 1 and dy < 2 and dy > 0) then --included bodyhight
-					NetEvents:SendLocal('ClientDamagePlayer', shooter.name, false, isHeadshot);
+					if (dx < 1 and dz < 1 and dy < 2 and dy > 0) then --included bodyhight
+						local isHeadshot = false;
+						local camaraHeight = Utilities:getTargetHeight(player.soldier, false)
+						if dy < camaraHeight + 0.3 and dy > camaraHeight - 0.20 then
+							isHeadshot = true;
+						end
+						NetEvents:SendLocal('ClientDamagePlayer', shooter.name, false, isHeadshot);
+					end
 				end
 			end
 		end
