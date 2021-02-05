@@ -6,6 +6,29 @@ function Utilities:__init()
 	-- nothing to do
 end
 
+function Utilities:getCameraPos(player, isTarget)
+	local returnVec = Vec3()
+	if not self:isBot(player.name) then
+		returnVec = player.input.authoritativeCameraPosition:Clone();
+		if isTarget then
+			if Config.aimForHead then
+				returnVec.y = returnVec.y + 0.05
+			else
+				if player.soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
+					returnVec.y = returnVec.y - 0.05
+				elseif player.soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
+					returnVec.y = returnVec.y - 0.2
+				else
+					returnVec.y = returnVec.y - 0.3
+				end
+			end
+		end
+	else
+		returnVec = Vec3(0.0 ,self:getTargetHeight(player.soldier, isTarget), 0.0)
+	end
+	return returnVec;
+end
+
 function Utilities:getTargetHeight(soldier, isTarget)
 	local camereaHight = 0;
 

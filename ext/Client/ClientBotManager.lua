@@ -54,10 +54,10 @@ function ClientBotManager:_onUpdate(p_Delta, p_Pass)
 				if (bot.soldier ~= nil and player.soldier ~= nil) then
 					-- check for clear view
 					-- local playerCameraTrans	= ClientUtils:GetCameraTransform(); -- don't use camera, as this is used by mav or eod
-					local playerPosition = Vec3(player.soldier.worldTransform.trans.x, player.soldier.worldTransform.trans.y + Utilities:getTargetHeight(player.soldier, false), player.soldier.worldTransform.trans.z)
+					local playerPosition = player.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(player, false); --Vec3(player.soldier.worldTransform.trans.x, player.soldier.worldTransform.trans.y + Utilities:getTargetHeight(player.soldier, false), player.soldier.worldTransform.trans.z)
 
 					-- find direction of Bot
-					local target	= Vec3(bot.soldier.worldTransform.trans.x, bot.soldier.worldTransform.trans.y + Utilities:getTargetHeight(bot.soldier, false), bot.soldier.worldTransform.trans.z);
+					local target	= bot.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(bot.soldier, false);
 					local distance	= playerPosition:Distance(bot.soldier.worldTransform.trans);
 
 					if (distance < Config.maxRaycastDistance) then
@@ -92,7 +92,7 @@ function ClientBotManager:_onBulletCollision(hook, entity, hit, shooter)
 
 				if (dx < 1 and dz < 1 and dy < 2 and dy > 0) then --included bodyhight
 					local isHeadshot = false;
-					local camaraHeight = Utilities:getTargetHeight(player.soldier, false)
+					local camaraHeight = Utilities:getTargetHeight(shooter.soldier, false)
 					if dy < camaraHeight + 0.3 and dy > camaraHeight - 0.20 then
 						isHeadshot = true;
 					end
