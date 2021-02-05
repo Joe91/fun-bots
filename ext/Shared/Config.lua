@@ -12,6 +12,8 @@ Config = {
 	--difficluty
 	botAimWorsening = 0.2,			-- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy). Restart of level needed
 	botSniperAimWorsening = 0.0,	-- see botAimWorsening, only for Sniper-rifles
+	aimForHead = false,				-- bots aim for the head
+	headShotFactorBots = 2.0,		-- factor for damage if headshot
 	damageFactorAssault = 0.8,		-- origninal Damage from bots gets multiplied by this
 	damageFactorCarabine = 0.8,		-- origninal Damage from bots gets multiplied by this
 	damageFactorLMG = 0.8,			-- origninal Damage from bots gets multiplied by this
@@ -22,7 +24,7 @@ Config = {
 
 	--spawn
 	spawnOnLevelstart = true,		-- bots spawn on levelstart (if valid paths are available)
-	onlySpawnBotsWithPlayers = false,-- Bots only spawn if at least one Player is on the server
+	onlySpawnBotsWithPlayers = true,-- Bots only spawn if at least one Player is on the server
 	initNumberOfBots = 8,			-- bots on levelstart
 	incBotsWithPlayers = true,		-- increase Bots, when new players join
 	newBotsPerNewPlayer = 3,		-- number to increase Bots, when new players join
@@ -35,6 +37,9 @@ Config = {
 	maxEngineerBots = -1,			-- maximum number of Bots with Engineer Kit
 	maxSupportBots = -1,			-- maximum number of Bots with Support Kit
 	maxReconBots = -1,				-- maximum number of Bots with Recon Kit
+	distanceToSpawnBots	= 50,		-- distance to spawn Bots away from players
+	distanceToSpawnReduction = 5,	-- reduce distance if not possible
+	maxTrysToSpawnAtDistance = 3,	-- try this often to spawn a bot away from players
 
 	-- weapons
 	assaultWeapon = "M416",			-- weapon of Assault class
@@ -43,9 +48,9 @@ Config = {
 	engineerShotgun = "saiga20",	-- shotgun of Engineer class
 	supportWeapon = "M240",			-- weapon of Support class
 	supportShotgun = "Jackhammer",	-- shotgun of Support class
-	reconWeapon = "M98B",			-- weapon of Recon class
+	reconWeapon = "L96",			-- weapon of Recon class
 	reconShotgun = "SPAS12",		-- shotgun of Recon class
-	pistol = "MP412Rex",			-- Bot pistol
+	pistol = "M1911_Lit",			-- Bot pistol
 	knife = "Razor",				-- Bot knife
 
 	--advanced
@@ -81,10 +86,10 @@ Config = {
 
 --don't change these values unless you know what you do
 StaticConfig = {
-	traceDelta = 0.2,				-- update intervall of trace
-	traceDeltaShooting = 0.4,		-- update intervall of trace back to path the bots left for shooting
-	raycastInterval = 0.1,			-- update intervall of client raycasts
-	botUpdateCycle = 0.1,			-- update-intervall of bots
-	botAimUpdateCycle = 0.05,		-- = 3 frames at 60 Hz
-	targetHeightDistanceWayPoint = 1.5-- distance the bots have to reach in height to continue with next Waypoint
+	traceDelta = 0.2,					-- update intervall of trace
+	traceDeltaShooting = 0.4,			-- update intervall of trace back to path the bots left for shooting
+	raycastInterval = 0.1,				-- update intervall of client raycasts
+	botUpdateCycle = 0.1,				-- update-intervall of bots
+	botAimUpdateCycle = 0.05,			-- = 3 frames at 60 Hz
+	targetHeightDistanceWayPoint = 1.5	-- distance the bots have to reach in height to continue with next Waypoint
 };

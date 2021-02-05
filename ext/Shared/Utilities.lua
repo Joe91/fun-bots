@@ -7,7 +7,7 @@ end
 function Utilities:getTargetHeight(soldier, isTarget)
 	local camereaHight = 0;
 
-	if not isTarget then
+	if not isTarget or Config.aimForHead then
 		camereaHight = 1.6; --bot.soldier.pose == CharacterPoseType.CharacterPoseType_Stand
 
 		if soldier.pose == CharacterPoseType.CharacterPoseType_Prone then

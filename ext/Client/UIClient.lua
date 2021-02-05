@@ -74,8 +74,10 @@ function FunBotUIClient:_onUISettings(data)
 	settings:addList("GLOBAL", "botKit", Language:I18N("Bot Kit"), BotKits, data.botKit, "RANDOM_KIT", Language:I18N("The Kit a bots spawns with."));
 	settings:addList("GLOBAL", "botColor", Language:I18N("Bot Color"), BotColors, data.botColor, "RANDOM_COLOR", Language:I18N("The Kit-Color a bots spawns with."));
 	
-	settings:add("DIFFICULTY", "Float", "botAimWorsening", Language:I18N("Aim Worsening"), data.botAimWorsening, 0.2, Language:I18N("0 = hard, 1 (or higher) = easy. Only takes effect on level Start"));
-	settings:add("DIFFICULTY", "Float", "botSniperAimWorsening", Language:I18N("Aim Worsening Sniper"), data.botSniperAimWorsening, 0.0, Language:I18N("0 = hard, 1 (or higher) = easy. Only takes effect on level Start"));
+	settings:add("DIFFICULTY", "Float", "botAimWorsening", Language:I18N("Aim Worsening"), data.botAimWorsening, 0.2, Language:I18N("0 = hard, 1 (or higher) = easy"));
+	settings:add("DIFFICULTY", "Float", "botSniperAimWorsening", Language:I18N("Aim Worsening Sniper"), data.botSniperAimWorsening, 0.0, Language:I18N("0 = hard, 1 (or higher) = easy"));
+	settings:add("DIFFICULTY", "Boolean", "aimForHead", Language:I18N("Aim for Head"), data.aimForHead, false, Language:I18N("Bots aim for the head. If false for the body"));
+	settings:add("DIFFICULTY", "Float", "headShotFactorBots", Language:I18N("Factor for HeadShot"), data.headShotFactorBots, 0.8, Language:I18N("Factor for damage if Bot does a headshot"));
 	settings:add("DIFFICULTY", "Float", "damageFactorAssault", Language:I18N("Factor for Assault-Weapon-Damage"), data.damageFactorAssault, 0.8, Language:I18N("Origninal Damage from bots gets multiplied by this"));
 	settings:add("DIFFICULTY", "Float", "damageFactorCarabine", Language:I18N("Factor for Carabine-Weapon-Damage"), data.damageFactorCarabine, 0.8, Language:I18N("Origninal Damage from bots gets multiplied by this"));
 	settings:add("DIFFICULTY", "Float", "damageFactorLMG", Language:I18N("Factor for LMG-Weapon-Damage"), data.damageFactorLMG, 0.8, Language:I18N("Origninal Damage from bots gets multiplied by this"));
@@ -98,16 +100,19 @@ function FunBotUIClient:_onUISettings(data)
 	settings:add("SPAWN", "Integer", "maxEngineerBots", Language:I18N("Max Engineer Bots"), data.maxEngineerBots, -1, Language:I18N("maximum number of Bots with Engineer Kit. -1 = unlimited"));
 	settings:add("SPAWN", "Integer", "maxSupportBots", Language:I18N("Max Support Bots"), data.maxSupportBots, -1, Language:I18N("maximum number of Bots with Support Kit. -1 = unlimited"));
 	settings:add("SPAWN", "Integer", "maxReconBots", Language:I18N("Max Recon Bots"), data.maxReconBots, -1, Language:I18N("maximum number of Bots with Recon Kit. -1 = unlimited"));
+	settings:add("SPAWN", "Integer", "distanceToSpawnBots", Language:I18N("Distance to Spawn Bots"), data.distanceToSpawnBots, 50, Language:I18N("distance to spawn Bots away from players"));
+	settings:add("SPAWN", "Integer", "distanceToSpawnReduction", Language:I18N("Reduce Distance on Fail"), data.distanceToSpawnReduction, 5, Language:I18N("reduce distance if not possible"));
+	settings:add("SPAWN", "Integer", "maxTrysToSpawnAtDistance", Language:I18N("Max Retrys on Distance"), data.maxTrysToSpawnAtDistance, 3, Language:I18N("try this often to spawn a bot away from players"));
 
-	settings:addList("WEAPONS", "pistol", Language:I18N("Bot Pistol"), PistoWeapons, data.pistol, "MP412Rex", Language:I18N("Pistol of Bots"));
+	settings:addList("WEAPONS", "pistol", Language:I18N("Bot Pistol"), PistoWeapons, data.pistol, "M1911_Lit", Language:I18N("Pistol of Bots"));
 	settings:addList("WEAPONS", "knife", Language:I18N("Bot Knife"), KnifeWeapons, data.knife, "Razor", Language:I18N("Knife of Bots"));
 	settings:addList("WEAPONS", "assaultWeapon",  Language:I18N("Weapon Assault"), WeaponsAssault, data.assaultWeapon, "M416", Language:I18N("Weapon of Assault class"));
-	settings:addList("WEAPONS", "assaultShotgun", Language:I18N("Shotgun Assault"), ShotgunsAssault, data.assaultShotgun, "USAS-12", Language:I18N("Shotgun of Assault class"));
 	settings:addList("WEAPONS", "engineerWeapon",  Language:I18N("Weapon Engineer"), WeaponsEngineer, data.engineerWeapon, "M4A1", Language:I18N("Weapon of Engineer class"));
-	settings:addList("WEAPONS", "engineerShotgun", Language:I18N("Shotgun Engineer"), ShotgunsEngineer, data.engineerShotgun, "saiga20", Language:I18N("Shotgun of Engineer class"));
 	settings:addList("WEAPONS", "supportWeapon",  Language:I18N("Weapon Support"), WeaponsSupport, data.supportWeapon, "M240", Language:I18N("Weapon of Support class"));
+	settings:addList("WEAPONS", "reconWeapon",  Language:I18N("Weapon Recon"), WeaponsRecon, data.reconWeapon, "L96", Language:I18N("Weapon of Recon class"));
+	settings:addList("WEAPONS", "assaultShotgun", Language:I18N("Shotgun Assault"), ShotgunsAssault, data.assaultShotgun, "USAS-12", Language:I18N("Shotgun of Assault class"));
+	settings:addList("WEAPONS", "engineerShotgun", Language:I18N("Shotgun Engineer"), ShotgunsEngineer, data.engineerShotgun, "saiga20", Language:I18N("Shotgun of Engineer class"));
 	settings:addList("WEAPONS", "supportShotgun", Language:I18N("Shotgun Support"), ShotgunsSupport, data.supportShotgun, "Jackhammer", Language:I18N("Shotgun of Support class"));
-	settings:addList("WEAPONS", "reconWeapon",  Language:I18N("Weapon Recon"), WeaponsRecon, data.reconWeapon, "M98B", Language:I18N("Weapon of Recon class"));
 	settings:addList("WEAPONS", "reconShotgun", Language:I18N("Shotgun Recon"), ShotgunsRecon, data.reconShotgun, "SPAS12", Language:I18N("Shotgun of Recon class"));
 
 	settings:add("ADVANCED", "Integer", "fovForShooting", Language:I18N("Bot FOV"), data.fovForShooting, 270, Language:I18N("The Field Of View of the bots, where they can detect a player"));
