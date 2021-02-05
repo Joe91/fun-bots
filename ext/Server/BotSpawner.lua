@@ -62,7 +62,7 @@ function BotSpawner:_onPlayerLeft(player)
 	--remove all references of player
 	if Config.onlySpawnBotsWithPlayers then
 		if BotManager:getPlayerCount() == 1 then
-			print("no player left - kill all bots")
+			print("no player left - kick all bots")
 			BotManager:destroyAllBots()
 		end
 	end
