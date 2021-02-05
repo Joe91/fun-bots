@@ -311,7 +311,7 @@ function Bot:_updateAiming()
 		if self._shootPlayer ~= nil and self._shootPlayer.soldier ~= nil then
 
 			--interpolate player movement
-			local targetMovement = Vec3();
+			local targetMovement = Vec3(0,0,0);
 			local fullPositionTarget =  self._shootPlayer.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(self._shootPlayer.soldier, true);
 			local fullPositionBot = self.player.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(self.player.soldier, false);
 
@@ -320,7 +320,9 @@ function Bot:_updateAiming()
 			local timeToTravel		= (distanceToPlayer / self.activeWeapon.bulletSpeed)
 			local factorForMovement	= (timeToTravel) / self._aimUpdateTimer
 			local ptichCorrection	= 0.5 * timeToTravel * timeToTravel * self.activeWeapon.bulletDrop;
-			targetMovement			= (fullPositionTarget - self._lastTargetTrans) * factorForMovement; --movement in one dt
+			if self._lastShootPlayer == self._shootPlayer then
+				targetMovement			= (fullPositionTarget - self._lastTargetTrans) * factorForMovement; --movement in one dt
+			end
 
 			self._lastShootPlayer = self._shootPlayer;
 			self._lastTargetTrans = fullPositionTarget;
