@@ -58,12 +58,13 @@ Config = {
 
 
 	-- traces
-	waypointRange = 100,
-	drawWaypointLines = true,
-	lineRange = 15,
-	drawWaypointIDs = true,
-	textRange = 3,
-	debugTraces = false,
+	debugTracePaths = false,		-- Shows the trace line and search area from Commo Rose selection
+	waypointRange = 100,			-- Set how far away waypoints are visible (meters)
+	drawWaypointLines = true,		-- Draw waypoint connection Lines
+	lineRange = 15,					-- Set how far away waypoint lines are visible (meters)
+	drawWaypointIDs = true,			-- Draw waypoint IDs
+	textRange = 3,					-- Set how far away waypoint text is visible (meters)
+	debugSelectionRaytraces = false,-- Shows the trace line and search area from Commo Rose selection
 
 	--advanced
 	fovForShooting = 270,			-- Degrees of FOV of Bot

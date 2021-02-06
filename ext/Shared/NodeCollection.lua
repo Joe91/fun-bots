@@ -49,7 +49,8 @@ function NodeCollection:Create(vec3Position, pathIndex, inputVar)
 		Position = vec3Position,
 		PathIndex = pathIndex,
 		InputVar = inputVar,
-		Distance = nil
+		Distance = nil,
+		Updated = false
 	}
 	self:Add(waypoint)
 	return waypoint
@@ -81,6 +82,7 @@ function NodeCollection:Remove(waypoint)
 end
 
 function NodeCollection:Update(waypoint)
+	waypoint.Updated = true
 	self.waypointsByID[waypoint.ID] = waypoint
 	self.waypointsByIndex[waypoint.Index] = waypoint
 	for i = 1, #self.waypoints do
@@ -186,6 +188,20 @@ function NodeCollection:Load(mapName)
 end
 
 function NodeCollection:Save(mapName)
+
+	if not SQL:Open() then
+		return
+	end
+
+	local pathsSaved = {}
+	local waypointCount = 0
+
+	for _,waypoint in pairs(self.waypoints) do
+
+		if (waypoint.Updated) then
+
+		end
+	end
 
 	--> TODO save back to DB <--
 
@@ -317,4 +333,8 @@ function NodeCollection:getModuleState()
      return 'Unkown'
 end
 
-return NodeCollection()
+if (g_NodeCollection == nil) then
+	g_NodeCollection = NodeCollection()
+end
+
+return g_NodeCollection

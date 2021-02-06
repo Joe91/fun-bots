@@ -1,226 +1,261 @@
+class "ClientNodeEditor"
+
 require('__shared/Config');
-local nodeCollection = require('__shared/NodeCollection')
+require('__shared/NodeCollection')
 
+function ClientNodeEditor:__init()
+	-- caching values for drawing performance
+	self.player = nil
+	self.waypoints = {}
+	self.playerPos = nil
+	self.textColor = Vec4(1,1,1,1)
+	self.sphereColors = {
+		Vec4(1,0,0,0.25),
+		Vec4(0,1,0,0.25),
+		Vec4(0,0,1,0.25),
+		Vec4(1,1,0,0.25),
+		Vec4(1,0,1,0.25),
+		Vec4(0,1,1,0.25),
+		Vec4(1,0.5,0,0.25),
+		Vec4(1,0,0.5,0.25),
+		Vec4(0,0.5,1,0.25),
+		Vec4(1,0.5,0.5,0.25),
+	}
+	self.lineColors = {
+		Vec4(1,0,0,1),
+		Vec4(0,1,0,1),
+		Vec4(0,0,1,1),
+		Vec4(1,1,0,1),
+		Vec4(1,0,1,1),
+		Vec4(0,1,1,1),
+		Vec4(1,0.5,0,1),
+		Vec4(1,0,0.5,1),
+		Vec4(0,0.5,1,1),
+		Vec4(1,0.5,0.5,1),
+	}
 
--- caching values for drawing performance
-local waypoints = {}
-local playerPos = nil
-local textColor = Vec4(1,1,1,1)
-local sphereColors = {
-	Vec4(1,0,0,0.25),
-	Vec4(0,1,0,0.25),
-	Vec4(0,0,1,0.25),
-	Vec4(1,1,0,0.25),
-	Vec4(1,0,1,0.25),
-	Vec4(0,1,1,0.25),
-	Vec4(1,0.5,0,0.25),
-	Vec4(1,0,0.5,0.25),
-	Vec4(0,0.5,1,0.25),
-	Vec4(1,0.5,0.5,0.25),
-}
-local lineColors = {
-	Vec4(1,0,0,1),
-	Vec4(0,1,0,1),
-	Vec4(0,0,1,1),
-	Vec4(1,1,0,1),
-	Vec4(1,0,1,1),
-	Vec4(0,1,1,1),
-	Vec4(1,0.5,0,1),
-	Vec4(1,0,0.5,1),
-	Vec4(0,0.5,1,1),
-	Vec4(1,0.5,0.5,1),
-}
+	self.CommoRose = {
+		Pressed = false,
+		Active = false,
+		LastAction = ''
+	}
 
+	self.lastTraceSrearchAreaPos = nil
+	self.lastTraceSrearchAreaSize = nil
+	self.lastTraceStart = nil
+	self.lastTraceEnd = nil
 
+	self:RegisterEvents()
+end
 
-local lastTraceSrearchAreaPos = nil
-local lastTraceSrearchAreaSize = nil
-NetEvents:Subscribe('NodeEditor:SetLastTraceSearchArea', function(data)
-	--print('NodeEditor:SetLastTraceSearchArea')
-	lastTraceSrearchAreaPos = data[1]
-	lastTraceSrearchAreaSize = data[2]
-end)
+function ClientNodeEditor:RegisterEvents()
+	NetEvents:Subscribe('NodeEditor:SetLastTraceSearchArea', self, self._onSetLastTraceSearchArea)
+	NetEvents:Subscribe('NodeEditor:ClientInit', self, self._onClientInit)
 
-NetEvents:Subscribe('NodeEditor:ClientInit', function(args)
-	--print('NodeEditor:Init')
-	player = PlayerManager:GetLocalPlayer()
-	waypoints = nodeCollection:Get()
-end)
+	Events:Subscribe('UpdateManager:Update', self, self._onUpdateManagerUpdate)
+	Events:Subscribe('UI:DrawHud', self, self._onUIDrawHud)
+	Events:Subscribe('Player:Respawn', self, self._onPlayerRespawn)
 
+	Hooks:Install('UI:PushScreen', 100, self, self._onUIPushScreen)
+	Hooks:Install('UI:InputConceptEvent', 100, self, self._onUIInputConceptEvent)
+	Hooks:Install('UI:CreateAction', 100, self, self._onUICreateAction)
+end
 
-Events:Subscribe('UpdateManager:Update', function(delta, pass)
+function ClientNodeEditor:_onSetLastTraceSearchArea(data)
+	self.lastTraceSrearchAreaPos = data[1]
+	self.lastTraceSrearchAreaSize = data[2]
+end
+
+function ClientNodeEditor:_onClientInit()
+	self.player = PlayerManager:GetLocalPlayer()
+	self.waypoints = g_NodeCollection:Get()
+end
+
+function ClientNodeEditor:_onPlayerRespawn(args)
+	if (Config.debugTracePaths) then
+		NetEvents:Send('NodeEditor:GetNodes')
+	end
+end
+
+function ClientNodeEditor:_onUpdateManagerUpdate(delta, pass)
+
+	if (not Config.debugTracePaths) then
+		return
+	end
+	
 	-- Only do math on presimulation UpdatePass
 	if pass ~= UpdatePass.UpdatePass_PreSim then
 		return
 	end
 
 	-- doing this here and not in UI:DrawHud prevents a memory leak that crashes you in under a minute
-	if (player ~= nil and player.soldier ~= nil and player.soldier.worldTransform ~= nil) then
-		playerPos = player.soldier.worldTransform.trans
-    	for i=1, #waypoints do
-    		if (waypoints[i] ~= nil) then
+	if (self.player ~= nil and self.player.soldier ~= nil and self.player.soldier.worldTransform ~= nil) then
+		self.playerPos = self.player.soldier.worldTransform.trans
+    	for i=1, #self.waypoints do
+    		if (self.waypoints[i] ~= nil) then
     			-- precalc the distances for less overhead on the hud draw
-    			waypoints[i].Distance = playerPos:Distance(waypoints[i].Position)
+    			self.waypoints[i].Distance = self.playerPos:Distance(self.waypoints[i].Position)
     		end
     	end
     end
-end)
+end
 
-CommoRose = {
-	Pressed = false,
-	Active = false,
-	LastAction = ''
-}
+function ClientNodeEditor:_onUIPushScreen(hook, screen, priority, parentGraph, stateNodeGuid)
 
-Hooks:Install('UI:PushScreen', 999, function(hook, screen, priority, parentGraph, stateNodeGuid)
+	if (not Config.debugTracePaths) then
+		return
+	end
+
 	if (screen ~= nil and UIScreenAsset(screen).name == 'UI/Flow/Screen/CommRoseScreen') then
-    	CommoRose.Active = CommoRose.Pressed
+    	self.CommoRose.Active = self.CommoRose.Pressed
 
-    	if (CommoRose.Active) then
-    		hook:Return() -- don't actually display the UI
-    	end
+    	hook:Return() -- don't actually display the UI
     end
 	hook:Pass(screen, priority, parentGraph, stateNodeGuid)
-end)
+end
 
-Hooks:Install('UI:InputConceptEvent', 1, function(hook, eventType, action)
+function ClientNodeEditor:_onUIInputConceptEvent(hook, eventType, action)
     if (action == UIInputAction.UIInputAction_CommoRose) then
-		CommoRose.Pressed = (eventType == UIInputActionEventType.UIInputActionEventType_Pressed)
+		self.CommoRose.Pressed = (eventType == UIInputActionEventType.UIInputActionEventType_Pressed)
 	end
     hook:Pass(eventType, action)
-end)
+end
 
-Hooks:Install('UI:CreateAction', 1, function(hook, action)
-	if (action == UIAction.ContextVO and CommoRose.Active) then -- center item used
-		CommoRose.LastAction = 'ContextVO'
+function ClientNodeEditor:_onUICreateAction(hook, action)
+	if (action == UIAction.ContextVO and self.CommoRose.Active) then -- center item used
+		self.CommoRose.LastAction = 'ContextVO'
     end
 
-    if (action == UIAction.RadioVO and CommoRose.Active) then -- side item used
-    	CommoRose.LastAction = 'RadioVO'
+    if (action == UIAction.RadioVO and self.CommoRose.Active) then -- side item used
+    	self.CommoRose.LastAction = 'RadioVO'
     end
 
-    if (CommoRose.LastAction ~= '') then
+    if (self.CommoRose.LastAction ~= '') then
 
-    	local selectedWaypoints = nodeCollection:GetSelected()
+    	local selectedWaypoints = g_NodeCollection:GetSelected()
     	for k,v in pairs(selectedWaypoints) do
     		if (v) then
     			print('selectedWaypoints['..tostring(k)..']: '..tostring(v))
     		end
     	end
 
-		CommoRoseAction(CommoRose.LastAction)
-		CommoRose.LastAction = ''
+		self:_onCommoRoseAction(self.CommoRose.LastAction)
+		self.CommoRose.LastAction = ''
 	end
 
     hook:Pass(action)
-end)
+end
 
-local lastTraceStart = nil
-local lastTraceEnd = nil
-function CommoRoseAction(action, hit)
+
+function ClientNodeEditor:_onCommoRoseAction(action, hit)
 	print('CommoRoseAction')
 
-	local localPlayer = PlayerManager:GetLocalPlayer() 
-	local hit = Raycast()
-    local hitPoint = nodeCollection:Find(hit.position)
+	local hit = self:Raycast()
+    local hitPoint = g_NodeCollection:Find(hit.position)
 
 	-- nothing found at hit location, try a raytracing check
-	if (hitPoint == nil and localPlayer ~= nil and localPlayer.soldier ~= nil) then
-		local playerCamPos = localPlayer.soldier.worldTransform.trans + localPlayer.input.authoritativeCameraPosition
-		hitPoint = nodeCollection:FindAlongTrace(playerCamPos, hit.position)
-		lastTraceStart = playerCamPos
-		lastTraceEnd = hit.position
+	if (hitPoint == nil and self.player ~= nil and self.player ~= nil) then
+		local playerCamPos = self.player.soldier.worldTransform.trans + self.player.input.authoritativeCameraPosition
+		hitPoint = g_NodeCollection:FindAlongTrace(playerCamPos, hit.position)
+		self.lastTraceStart = playerCamPos
+		self.lastTraceEnd = hit.position
 	end
 
 	-- still no results, let's create one
 	if (hitPoint == nil) then
-		local waypoint = nodeCollection:Create(hit.position, 10, 0)
-		-- then send it to everyone
-		NetEvents:Send('NodeEditor:Add', waypoint)
-		-- tell the player who made it that it should be selected
-		nodeCollection:Select(waypoint)
+		local waypoint = g_NodeCollection:Create(hit.position, 10, 0)
+		NetEvents:Send('NodeEditor:Add', waypoint) -- send it to everyone
+		g_NodeCollection:Select(waypoint)
 		return
-
 	else -- we found one, let's toggle its selected state
 
-		local isSelected = nodeCollection:IsSelected(hitPoint)
+		local isSelected = g_NodeCollection:IsSelected(hitPoint)
 
 		if (isSelected) then 
-			nodeCollection:Deselect(hitPoint)
+			g_NodeCollection:Deselect(hitPoint)
 			return
 		else
-			nodeCollection:Select(hitPoint)
+			g_NodeCollection:Select(hitPoint)
 			return
 		end
 	end
 end
 
-Events:Subscribe('UI:DrawHud', function()
+function ClientNodeEditor:_onUIDrawHud()
 
-	DebugRenderer:DrawText2D(20, 20, 'CommoRose.Pressed: '..tostring(CommoRose.Pressed).."\nCommoRose.Active: "..tostring(CommoRose.Active).."\nCommoRose.LastAction: "..tostring(CommoRose.LastAction) ,textColor, 1)
+	if (not Config.debugTracePaths) then
+		return
+	end
 
-	if (Config.debugTraces) then
-		if (lastTraceStart ~= nil and lastTraceEnd ~= nil) then
-			DebugRenderer:DrawLine(lastTraceStart, lastTraceEnd, textColor, textColor)
+	DebugRenderer:DrawText2D(20, 20,
+		'CommoRose.Pressed: '..tostring(self.CommoRose.Pressed).."\nCommoRose.Active: "..tostring(self.CommoRose.Active).."\nCommoRose.LastAction: "..tostring(self.CommoRose.LastAction),
+		self.textColor, 1)
+
+	if (Config.debugSelectionRaytraces) then
+		if (self.lastTraceStart ~= nil and self.lastTraceEnd ~= nil) then
+			DebugRenderer:DrawLine(self.lastTraceStart, self.lastTraceEnd, self.textColor, self.textColor)
 		end
-		if (lastTraceSrearchAreaPos ~= nil and lastTraceSrearchAreaSize ~= nil) then
-			DebugRenderer:DrawSphere(lastTraceSrearchAreaPos, lastTraceSrearchAreaSize, sphereColors[9], false, false)
+		if (self.lastTraceSrearchAreaPos ~= nil and self.lastTraceSrearchAreaSize ~= nil) then
+			DebugRenderer:DrawSphere(self.lastTraceSrearchAreaPos, self.lastTraceSrearchAreaSize, self.sphereColors[9], false, false)
 		end
 	end
 
-	for i=1, #waypoints do
-		if (waypoints[i] ~= nil) then
+	for i=1, #self.waypoints do
+		local waypoint = self.waypoints[i]
+		if (waypoint ~= nil) then
 
-			local isSelected = nodeCollection:IsSelected(waypoints[i])
+			local isSelected = g_NodeCollection:IsSelected(waypoint)
 
-			if (waypoints[i].Distance ~= nil and waypoints[i].Distance < Config.waypointRange) then
-				DebugRenderer:DrawSphere(waypoints[i].Position, 0.05, sphereColors[waypoints[i].PathIndex], false, false)
+			if (waypoint.Distance ~= nil and waypoint.Distance < Config.waypointRange) then
+				DebugRenderer:DrawSphere(waypoint.Position, 0.05, self.sphereColors[waypoint.PathIndex], false, false)
 			end
 
-			if (waypoints[i].Distance ~= nil and waypoints[i].Distance < Config.waypointRange and isSelected) then
-				DebugRenderer:DrawSphere(waypoints[i].Position, 0.07, sphereColors[waypoints[i].PathIndex], false, false)
-				DebugRenderer:DrawLine(waypoints[i].Position, waypoints[i].Position + (Vec3.up * 0.5), lineColors[waypoints[i].PathIndex], lineColors[waypoints[i].PathIndex])
+			if (waypoint.Distance ~= nil and waypoint.Distance < Config.waypointRange and isSelected) then
+				DebugRenderer:DrawSphere(waypoint.Position, 0.07, self.sphereColors[waypoint.PathIndex], false, false)
+				DebugRenderer:DrawLine(waypoint.Position, waypoint.Position + (Vec3.up * 0.5), self.lineColors[waypoint.PathIndex], self.lineColors[waypoint.PathIndex])
 			end
 
-			if (waypoints[i].Distance ~= nil and waypoints[i].Distance < Config.lineRange and Config.drawWaypointLines) then
+			if (waypoint.Distance ~= nil and waypoint.Distance < Config.lineRange and Config.drawWaypointLines) then
 				-- try to find a previous node and draw a line to it
-				local previousWaypoint = nodeCollection:Previous(waypoints[i])
+				local previousWaypoint = g_NodeCollection:Previous(waypoint)
 				if (previousWaypoint ~= nil) then
-					DebugRenderer:DrawLine(previousWaypoint.Position, waypoints[i].Position, lineColors[waypoints[i].PathIndex], lineColors[waypoints[i].PathIndex])
+					DebugRenderer:DrawLine(previousWaypoint.Position, waypoint.Position, self.lineColors[waypoint.PathIndex], self.lineColors[waypoint.PathIndex])
 					previousWaypoint = nil
 				end
 			end
 
-			if (waypoints[i].Distance ~= nil and waypoints[i].Distance < Config.textRange and Config.drawWaypointIDs) then
-				-- don't try to precalc this value like with the distance, another memory leak crash awaits you
+			if (waypoint.Distance ~= nil and waypoint.Distance < Config.textRange and Config.drawWaypointIDs) then
 				if (isSelected) then
-					local screenPos = ClientUtils:WorldToScreen(waypoints[i].Position + (Vec3.up * 0.5))
+					-- don't try to precalc this value like with the distance, another memory leak crash awaits you
+					local screenPos = ClientUtils:WorldToScreen(waypoint.Position + (Vec3.up * 0.5))
 					if (screenPos ~= nil) then
-						local text = 'ID: '..tostring(waypoints[i].ID).."\n"
-						text = text..'PathIndex: '..tostring(waypoints[i].PathIndex).."\n"
-						text = text..'InputVar: '..tostring(getEnumName(EntryInputActionEnum, waypoints[i].InputVar))..' ('..tostring(waypoints[i].InputVar)..')'
-						DebugRenderer:DrawText2D(screenPos.x, screenPos.y, text, textColor, 1.2)
+						local text = 'ID: '..tostring(waypoint.ID).."\n"
+						text = text..'PathIndex: '..tostring(waypoint.PathIndex).."\n"
+						text = text..'InputVar: '..tostring(g_Utilities:getEnumName(EntryInputActionEnum, waypoint.InputVar))..' ('..tostring(waypoint.InputVar)..')'
+						DebugRenderer:DrawText2D(screenPos.x, screenPos.y, text, self.textColor, 1.2)
 					end
 					screenPos = nil
 				else
-					local screenPos = ClientUtils:WorldToScreen(waypoints[i].Position + (Vec3.up * 0.05))
+					-- don't try to precalc this value like with the distance, another memory leak crash awaits you
+					local screenPos = ClientUtils:WorldToScreen(waypoint.Position + (Vec3.up * 0.05))
 					if (screenPos ~= nil) then
-						DebugRenderer:DrawText2D(screenPos.x, screenPos.y, tostring(waypoints[i].ID).."\n"..tostring(getEnumName(EntryInputActionEnum, waypoints[i].InputVar)), textColor, 1)
+						DebugRenderer:DrawText2D(screenPos.x, screenPos.y, tostring(waypoint.ID).."\n"..tostring(g_Utilities:getEnumName(EntryInputActionEnum, waypoint.InputVar)), self.textColor, 1)
 						screenPos = nil
 					end
 				end
 			end
 		end
 	end
-end)
+end
 
 -- ##################################################
 -- ##################################################
 -- ###################################### DEBUG STUFF
 
-local TheBigList = {}
-Events:Subscribe('Level:Loaded', function(player)
-	print('Level:Loaded')
+
+function ClientNodeEditor:_onLevelLoaded(player)
+
+	local TheBigList = {}
 
 	EntityManager:TraverseAllEntities(function(entity)
 		if (entity.typeInfo ~= nil) then
@@ -236,17 +271,13 @@ Events:Subscribe('Level:Loaded', function(player)
 		print(k..': '..tostring(v))
 	end
 
-	print('ClientUIGraphEntity Callbacks Registered: '..registerCallbacks('ClientUIGraphEntity'))
-	print('ClientSoldierEntity Callbacks Registered: '..registerCallbacks('ClientSoldierEntity'))
-
-end)
+	print('ClientUIGraphEntity Callbacks Registered: '..self:_registerCallbacks('ClientUIGraphEntity'))
+	print('ClientSoldierEntity Callbacks Registered: '..self:_registerCallbacks('ClientSoldierEntity'))
+end
 
 -- stolen't https://github.com/EmulatorNexus/VEXT-Samples/blob/80cddf7864a2cdcaccb9efa810e65fae1baeac78/no-headglitch-raycast/ext/Client/__init__.lua
-function Raycast()
-
-	local localPlayer = PlayerManager:GetLocalPlayer()
-
-	if localPlayer == nil then
+function ClientNodeEditor:Raycast()
+	if self.player == nil then
 		return
 	end
 
@@ -273,7 +304,7 @@ function Raycast()
 	return raycastHit	
 end
 
-function registerCallbacks(entityType)
+function ClientNodeEditor:_registerCallbacks(entityType)
 	local messageIterator = EntityManager:GetIterator(entityType)
 	local messageEntity = messageIterator:Next()
 	local total = 0
@@ -292,11 +323,8 @@ function registerCallbacks(entityType)
 	return total
 end
 
-function getEnumName(enum, value)
-	for k,v in pairs(getmetatable(enum)['__index']) do
-		if (v == value) then
-			return k
-		end
-	end
-	return nil
+if (g_ClientNodeEditor == nil) then
+	g_ClientNodeEditor = ClientNodeEditor()
 end
+
+return g_ClientNodeEditor

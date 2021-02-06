@@ -677,12 +677,20 @@ function FunBotUIServer:_writeSettings(player, request)
 	end
 
 	-- trace
+	if request.debugTracePaths ~= nil then
+		SettingsManager:update('debugTracePaths', (request.debugTracePaths == true), temporary, batched);
+	end
+
 	if request.waypointRange ~= nil then
 		local tempValue = tonumber(request.waypointRange);
 
 		if tempValue >= 0 and tempValue <= 1000.0 then
 			SettingsManager:update('waypointRange', tempValue, temporary, batched);
 		end
+	end
+
+	if request.drawWaypointLines ~= nil then
+		SettingsManager:update('drawWaypointLines', (request.drawWaypointLines == true), temporary, batched);
 	end
 
 	if request.lineRange ~= nil then
@@ -693,6 +701,10 @@ function FunBotUIServer:_writeSettings(player, request)
 		end
 	end
 
+	if request.drawWaypointIDs ~= nil then
+		SettingsManager:update('drawWaypointIDs', (request.drawWaypointIDs == true), temporary, batched);
+	end
+	
 	if request.textRange ~= nil then
 		local tempValue = tonumber(request.textRange);
 
@@ -701,16 +713,8 @@ function FunBotUIServer:_writeSettings(player, request)
 		end
 	end
 
-	if request.drawWaypointLines ~= nil then
-		SettingsManager:update('drawWaypointLines', (request.drawWaypointLines == true), temporary, batched);
-	end
-
-	if request.drawWaypointIDs ~= nil then
-		SettingsManager:update('drawWaypointIDs', (request.drawWaypointIDs == true), temporary, batched);
-	end
-
-	if request.debugTraces ~= nil then
-		SettingsManager:update('debugTraces', (request.debugTraces == true), temporary, batched);
+	if request.debugSelectionRaytraces ~= nil then
+		SettingsManager:update('debugSelectionRaytraces', (request.debugSelectionRaytraces == true), temporary, batched);
 	end
 
 	-- expert

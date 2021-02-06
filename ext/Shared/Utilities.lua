@@ -74,6 +74,15 @@ function Utilities:isBot(name)
 	return isBot;
 end
 
+function Utilities:getEnumName(enum, value)
+	for k,v in pairs(getmetatable(enum)['__index']) do
+		if (v == value) then
+			return k
+		end
+	end
+	return nil
+end
+
 -- Singleton.
 if g_Utilities == nil then
 	g_Utilities = Utilities();

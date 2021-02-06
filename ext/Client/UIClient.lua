@@ -132,12 +132,13 @@ function FunBotUIClient:_onUISettings(data)
 	settings:add("ADVANCED", "Float", "speedFactor", Language:I18N("Speed Reduction"), data.speedFactor, 1.0, Language:I18N("reduces the movementspeed. 1 = normal, 0.1 = slow"));
 	settings:add("ADVANCED", "Float", "speedFactorAttack", Language:I18N("Speed Reduction Attack"), data.speedFactorAttack, 0.6, Language:I18N("reduces the movementspeed while attacking. 1 = normal, 0.1 = slow."));
 
+	settings:add("TRACE", "Boolean", "debugTracePaths", Language:I18N("Debug Trace Paths"), data.debugTracePaths, false, Language:I18N("Enable Trace Path Editing and Visualizations"));
 	settings:add("TRACE", "Integer", "waypointRange", Language:I18N("Waypoint Range"), data.waypointRange, 100, Language:I18N("Set how far away waypoints are visible (meters)"));
+	settings:add("TRACE", "Boolean", "drawWaypointLines", Language:I18N("Draw Waypoint Lines"), data.drawWaypointLines, true, Language:I18N("Draw waypoint connection Lines"));
 	settings:add("TRACE", "Integer", "lineRange", Language:I18N("Line Range"), data.lineRange, 15, Language:I18N("Set how far away waypoint lines are visible (meters)"));
-	settings:add("TRACE", "Integer", "textRange", Language:I18N("Text Range"), data.textRange, 3, Language:I18N("Set how far away waypoint text is visible (meters)"));
-	settings:add("TRACE", "Boolean", "drawWaypointLines", Language:I18N("Draw Waypoint Lines"), data.drawWaypointLines, true, Language:I18N("Draw waypoint Lines"));
 	settings:add("TRACE", "Boolean", "drawWaypointIDs", Language:I18N("Draw Waypoint IDs"), data.drawWaypointIDs, true, Language:I18N("Draw waypoint IDs"));
-	settings:add("TRACE", "Boolean", "debugTraces", Language:I18N("Debug Traces"), data.debugTraces, false, Language:I18N("Shows the trace line and search area"));
+	settings:add("TRACE", "Integer", "textRange", Language:I18N("Text Range"), data.textRange, 3, Language:I18N("Set how far away waypoint text is visible (meters)"));
+	settings:add("TRACE", "Boolean", "debugSelectionRaytraces", Language:I18N("Debug Selection Raytraces"), data.debugTraces, false, Language:I18N("Shows the last trace line and search area from Commo Rose selection"));
 
 	settings:add("EXPERT", "Float", "botFirstShotDelay", Language:I18N("First Shot Delay"), data.botFirstShotDelay, 0.2, Language:I18N("delay for first shot"));
 	settings:add("EXPERT", "Float", "botMinTimeShootAtPlayer", Language:I18N("Min Time Shoot"), data.botMinTimeShootAtPlayer, 1.0, Language:I18N("the minimum time a Bot shoots at one player"));
