@@ -92,7 +92,7 @@ function ClientBotManager:_onBulletCollision(hook, entity, hit, shooter)
 
 				if (dx < 1 and dz < 1 and dy < 2 and dy > 0) then --included bodyhight
 					local isHeadshot = false;
-					local camaraHeight = Utilities:getTargetHeight(shooter.soldier, false)
+					local camaraHeight = Utilities:getTargetHeight(player.soldier, false)
 					if dy < camaraHeight + 0.3 and dy > camaraHeight - 0.20 then
 						isHeadshot = true;
 					end
