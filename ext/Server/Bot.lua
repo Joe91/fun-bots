@@ -446,16 +446,18 @@ function Bot:_updateShooting()
 				end
 
 				--trace way back
-				if self._shootTraceTimer > StaticConfig.traceDeltaShooting then
-					--create a Trace to find way back
-					self._shootTraceTimer 	= 0;
-					local point				= WayPoint();
-					point.trans				= self.player.soldier.worldTransform.trans:Clone();
-					point.speedMode			= 4;
+				if self.activeWeapon.type ~= "Sniper" then
+					if self._shootTraceTimer > StaticConfig.traceDeltaShooting then
+						--create a Trace to find way back
+						self._shootTraceTimer 	= 0;
+						local point				= WayPoint();
+						point.trans				= self.player.soldier.worldTransform.trans:Clone();
+						point.speedMode			= 4;
 
-					table.insert(self._shootWayPoints, point);
+						table.insert(self._shootWayPoints, point);
+					end
+					self._shootTraceTimer = self._shootTraceTimer + StaticConfig.botUpdateCycle;
 				end
-				self._shootTraceTimer = self._shootTraceTimer + StaticConfig.botUpdateCycle;
 
 				--shooting sequence
 				if Config.botWeapon == "Knife" then
