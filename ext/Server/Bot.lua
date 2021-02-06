@@ -589,19 +589,27 @@ function Bot:_updateMovement()
 
 				if #self._shootWayPoints > 0 then	--we need to go back to path first
 					point 				= self._shootWayPoints[#self._shootWayPoints];
+					NetEvents:Broadcast('NodeEditor:DeselectByID', (#self._shootWayPoints))
 					nextPoint 			= self._shootWayPoints[#self._shootWayPoints - 1];
 					if nextPoint == nil then
 						nextPoint = Globals.wayPoints[self._pathIndex][activePointIndex];
+						NetEvents:Broadcast('NodeEditor:SelectByID', activePointIndex)
+					else 
+						NetEvents:Broadcast('NodeEditor:SelectByID', (#self._shootWayPoints - 1))
 					end
 					useShootWayPoint	= true;
 				else
 					point = Globals.wayPoints[self._pathIndex][activePointIndex];
+					NetEvents:Broadcast('NodeEditor:DeselectByID', activePointIndex)
 					if not self._invertPathDirection then
 						nextPoint = Globals.wayPoints[self._pathIndex][self:_getWayIndex(self._currentWayPoint + 1)]
+						NetEvents:Broadcast('NodeEditor:SelectByID', (self._currentWayPoint + 1))
 					else
 						nextPoint = Globals.wayPoints[self._pathIndex][self:_getWayIndex(self._currentWayPoint - 1)]
+						NetEvents:Broadcast('NodeEditor:SelectByID', (self._currentWayPoint - 1))
 					end
 				end
+
 
 				if (point.speedMode) > 0 then -- movement
 					self._wayWaitTimer			= 0;

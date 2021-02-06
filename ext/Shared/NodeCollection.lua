@@ -21,6 +21,9 @@ function NodeCollection:RegisterEvents()
 	NetEvents:Subscribe('NodeEditor:Remove', self, self.Remove)
 	NetEvents:Subscribe('NodeEditor:Update', self, self.Update)
 	NetEvents:Subscribe('NodeEditor:Clear', self, self.Clear)
+	NetEvents:Subscribe('NodeEditor:SetInput', self, self.SetInput)
+	NetEvents:Subscribe('NodeEditor:Merge', self, self.Merge)
+	NetEvents:Subscribe('NodeEditor:Split', self, self.Split)
 
 	-- Selection
 	NetEvents:Subscribe('NodeEditor:Select', self, self.Select)
@@ -45,9 +48,11 @@ function NodeCollection:Create(vec3Position, pathIndex, inputVar)
 	local newIndex = self:_createID()
 	local waypoint = {
 		ID = string.format('p_%d', newIndex),
+		OriginalID = 0,
 		Index = newIndex,
 		Position = vec3Position,
 		PathIndex = pathIndex,
+		PointIndex = 0,
 		InputVar = inputVar,
 		Distance = nil,
 		Updated = false
@@ -92,10 +97,6 @@ function NodeCollection:Update(waypoint)
 	end
 end
 
-function NodeCollection:Clear()
-	self:InitTables()
-end
-
 function NodeCollection:Get()
 	return self.waypoints
 end
@@ -133,6 +134,29 @@ end
 
 function NodeCollection:GetSelected()
 	return self.selectedWaypoints
+end
+
+
+function NodeCollection:SetInput(inputVar)
+	-- TODO
+	-- set input var for selected waypoints
+	-- any number of selected nodes
+end
+
+function NodeCollection:Merge()
+	-- TODO
+	-- combine selected nodes
+	-- nodes must be sequential or the start/end of two paths
+end
+
+function NodeCollection:Split()
+	-- TODO
+	-- splits selected nodes in half
+	-- must be at least two sequential nodes
+end
+
+function NodeCollection:Clear()
+	self:InitTables()
 end
 
 -----------------------------
@@ -197,8 +221,17 @@ function NodeCollection:Save(mapName)
 	local waypointCount = 0
 
 	for _,waypoint in pairs(self.waypoints) do
-
 		if (waypoint.Updated) then
+
+			local row = {
+				id = waypoint.Index,
+				pathIndex = waypoint.PathIndex,
+				pointIndex = waypoint.PointIndex,
+				transX = waypoint.Position.x,
+				transY = waypoint.Position.y,
+				transZ = waypoint.Position.z,
+				inputVar = waypoint.InputVar,
+			}
 
 		end
 	end
