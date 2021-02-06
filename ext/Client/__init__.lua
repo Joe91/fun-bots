@@ -12,6 +12,8 @@ require('__shared/Constants/WeaponsRecon');
 require('__shared/Constants/Pistols');
 require('__shared/Constants/Knifes');
 
+require('ClientNodeEditor');
+
 Language					= require('__shared/Language');
 local FunBotUIClient		= require('UIClient');
 local ClientTraceManager	= require('ClientTraceManager');

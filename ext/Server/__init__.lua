@@ -13,6 +13,8 @@ require('__shared/Constants/WeaponsRecon');
 require('__shared/Constants/Pistols');
 require('__shared/Constants/Knifes');
 
+require('NodeEditor');
+
 
 Language					= require('__shared/Language');
 local SettingsManager		= require('SettingsManager');
