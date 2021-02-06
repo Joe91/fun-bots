@@ -1,11 +1,6 @@
-nodeCollection = require('__shared/NodeCollection')
+require('__shared/Config');
+local nodeCollection = require('__shared/NodeCollection')
 
-local waypointRange = 100
-local drawWaypointLines = true
-local lineRange = 15
-local drawWaypointIDs = true
-local textRange = 3
-local debugTraces = false
 
 -- caching values for drawing performance
 local waypoints = {}
@@ -36,26 +31,6 @@ local lineColors = {
 	Vec4(1,0.5,0.5,1),
 }
 
-Console:Register('waypointRange', 'Set how far away waypoints are visible (meters): Default '..tostring(waypointRange), function(args)
-	waypointRange = tonumber(args[1])
-end)
-Console:Register('lineRange', 'Set how far away waypoint lines are visible (meters): Default '..tostring(lineRange), function(args)
-	lineRange = tonumber(args[1])
-end)
-Console:Register('textRange', 'Set how far away waypoint text is visible (meters): Default '..tostring(textRange), function(args)
-	textRange = tonumber(args[1])
-end)
-Console:Register('drawWaypointIDs', 'Draw waypoint IDs: Default '..tostring(drawWaypointIDs), function(args)
-	drawWaypointIDs = (args[1]:lower() == 'true' or args[1] == '1')
-end)
-Console:Register('drawWaypointLines', 'Draw waypoint Lines: Default '..tostring(drawWaypointLines), function(args)
-	drawWaypointLines = (args[1]:lower() == 'true' or args[1] == '1')
-end)
-Console:Register('debugTraces', 'Shows the trace line and search area: Default '..tostring(debugTraces), function(args)
-	debugTraces = (args[1]:lower() == 'true' or args[1] == '1')
-end)
-
-------
 
 
 local lastTraceSrearchAreaPos = nil
@@ -184,7 +159,7 @@ Events:Subscribe('UI:DrawHud', function()
 
 	DebugRenderer:DrawText2D(20, 20, 'CommoRose.Pressed: '..tostring(CommoRose.Pressed).."\nCommoRose.Active: "..tostring(CommoRose.Active).."\nCommoRose.LastAction: "..tostring(CommoRose.LastAction) ,textColor, 1)
 
-	if (debugTraces) then
+	if (Config.debugTraces) then
 		if (lastTraceStart ~= nil and lastTraceEnd ~= nil) then
 			DebugRenderer:DrawLine(lastTraceStart, lastTraceEnd, textColor, textColor)
 		end
@@ -198,16 +173,16 @@ Events:Subscribe('UI:DrawHud', function()
 
 			local isSelected = nodeCollection:IsSelected(waypoints[i])
 
-			if (waypoints[i].Distance ~= nil and waypoints[i].Distance < waypointRange) then
+			if (waypoints[i].Distance ~= nil and waypoints[i].Distance < Config.waypointRange) then
 				DebugRenderer:DrawSphere(waypoints[i].Position, 0.05, sphereColors[waypoints[i].PathIndex], false, false)
 			end
 
-			if (waypoints[i].Distance ~= nil and waypoints[i].Distance < waypointRange and isSelected) then
+			if (waypoints[i].Distance ~= nil and waypoints[i].Distance < Config.waypointRange and isSelected) then
 				DebugRenderer:DrawSphere(waypoints[i].Position, 0.07, sphereColors[waypoints[i].PathIndex], false, false)
 				DebugRenderer:DrawLine(waypoints[i].Position, waypoints[i].Position + (Vec3.up * 0.5), lineColors[waypoints[i].PathIndex], lineColors[waypoints[i].PathIndex])
 			end
 
-			if (waypoints[i].Distance ~= nil and waypoints[i].Distance < lineRange and drawWaypointLines) then
+			if (waypoints[i].Distance ~= nil and waypoints[i].Distance < Config.lineRange and Config.drawWaypointLines) then
 				-- try to find a previous node and draw a line to it
 				local previousWaypoint = nodeCollection:Previous(waypoints[i])
 				if (previousWaypoint ~= nil) then
@@ -216,7 +191,7 @@ Events:Subscribe('UI:DrawHud', function()
 				end
 			end
 
-			if (waypoints[i].Distance ~= nil and waypoints[i].Distance < textRange and drawWaypointIDs) then
+			if (waypoints[i].Distance ~= nil and waypoints[i].Distance < Config.textRange and Config.drawWaypointIDs) then
 				-- don't try to precalc this value like with the distance, another memory leak crash awaits you
 				if (isSelected) then
 					local screenPos = ClientUtils:WorldToScreen(waypoints[i].Position + (Vec3.up * 0.5))

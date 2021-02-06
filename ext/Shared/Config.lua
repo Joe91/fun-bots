@@ -56,6 +56,15 @@ Config = {
 	pistol = "M1911_Lit",			-- Bot pistol
 	knife = "Razor",				-- Bot knife
 
+
+	-- traces
+	waypointRange = 100,
+	drawWaypointLines = true,
+	lineRange = 15,
+	drawWaypointIDs = true,
+	textRange = 3,
+	debugTraces = false,
+
 	--advanced
 	fovForShooting = 270,			-- Degrees of FOV of Bot
 	shootBackIfHit = true,			-- bot shoots back, if hit

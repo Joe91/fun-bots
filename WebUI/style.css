@@ -352,6 +352,7 @@ ui-view[data-name="settings"] ui-tabs figure > ui-tab {
 #DIFFICULTY:checked ~ figure .DIFFICULTY,
 #SPAWN:checked ~ figure .SPAWN,
 #WEAPONS:checked ~ figure .WEAPONS,
+#TRACE:checked ~ figure .TRACE,
 #ADVANCED:checked ~ figure .ADVANCED,
 #EXPERT:checked ~ figure .EXPERT,
 #OTHER:checked ~ figure .OTHER {
@@ -362,6 +363,7 @@ ui-view[data-name="settings"] ui-tabs figure > ui-tab {
 #DIFFICULTY:checked ~ nav > ul > li label[for="DIFFICULTY"],
 #SPAWN:checked ~ nav > ul > li label[for="SPAWN"],
 #WEAPONS:checked ~ nav > ul > li label[for="WEAPONS"],
+#TRACE:checked ~ nav > ul > li label[for="TRACE"],
 #ADVANCED:checked ~ nav > ul > li label[for="ADVANCED"],
 #EXPERT:checked ~ nav > ul > li label[for="EXPERT"],
 #OTHER:checked ~ nav > ul > li label[for="OTHER"] {

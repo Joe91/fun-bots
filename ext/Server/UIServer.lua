@@ -676,6 +676,43 @@ function FunBotUIServer:_writeSettings(player, request)
 		end
 	end
 
+	-- trace
+	if request.waypointRange ~= nil then
+		local tempValue = tonumber(request.waypointRange);
+
+		if tempValue >= 0 and tempValue <= 1000.0 then
+			SettingsManager:update('waypointRange', tempValue, temporary, batched);
+		end
+	end
+
+	if request.lineRange ~= nil then
+		local tempValue = tonumber(request.lineRange);
+
+		if tempValue >= 0 and tempValue <= 1000.0 then
+			SettingsManager:update('lineRange', tempValue, temporary, batched);
+		end
+	end
+
+	if request.textRange ~= nil then
+		local tempValue = tonumber(request.textRange);
+
+		if tempValue >= 0 and tempValue <= 1000.0 then
+			SettingsManager:update('textRange', tempValue, temporary, batched);
+		end
+	end
+
+	if request.drawWaypointLines ~= nil then
+		SettingsManager:update('drawWaypointLines', (request.drawWaypointLines == true), temporary, batched);
+	end
+
+	if request.drawWaypointIDs ~= nil then
+		SettingsManager:update('drawWaypointIDs', (request.drawWaypointIDs == true), temporary, batched);
+	end
+
+	if request.debugTraces ~= nil then
+		SettingsManager:update('debugTraces', (request.debugTraces == true), temporary, batched);
+	end
+
 	-- expert
 	if request.botFirstShotDelay ~= nil then
 		local tempValue = tonumber(request.botFirstShotDelay);
