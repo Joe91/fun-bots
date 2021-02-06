@@ -10,9 +10,11 @@ function Utilities:getCameraPos(player, isTarget)
 	local returnVec = Vec3()
 	if not self:isBot(player.name) then
 		returnVec = player.input.authoritativeCameraPosition:Clone();
+		returnVec.x = 0;
+		returnVec.z = 0;
 		if isTarget then
 			if Config.aimForHead then
-				returnVec.y = returnVec.y + 0.05
+				returnVec.y = returnVec.y - 0.05
 			else
 				if player.soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
 					returnVec.y = returnVec.y - 0.05
