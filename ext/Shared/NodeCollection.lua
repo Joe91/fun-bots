@@ -1,13 +1,17 @@
 class "NodeCollection"
 
 function NodeCollection:__init()
+	self:InitTables()
+	self:RegisterEvents()
+end
+
+function NodeCollection:InitTables()
 	self.waypointIDs = 0
 	self.waypoints = {}
 	self.waypointsByID = {}
 	self.waypointsByIndex = {}
 	self.selectedWaypoints = {}
-
-	self:RegisterEvents()
+	self.disabledPaths = {}
 end
 
 function NodeCollection:RegisterEvents()
@@ -25,11 +29,16 @@ function NodeCollection:RegisterEvents()
 	NetEvents:Subscribe('NodeEditor:DeselectByID', self, self.DeselectByID)
 	NetEvents:Subscribe('NodeEditor:DeselectAll', self, self.DeselectAll)
 
+	-- Paths
+	NetEvents:Subscribe('NodeEditor:EnablePath', self, self.EnablePath)
+	NetEvents:Subscribe('NodeEditor:DisablePath', self, self.DisablePath)
+
 	-- Save/Load
 	NetEvents:Subscribe('NodeEditor:Save', self, self.Save)
 	NetEvents:Subscribe('NodeEditor:Load', self, self.Load)
 end
 
+-----------------------------
 -- Management
 
 function NodeCollection:Create(vec3Position, pathIndex, inputVar)
@@ -51,6 +60,9 @@ function NodeCollection:Add(waypoint)
 	self.waypointsByIndex[waypoint.Index] = waypoint
 	self.selectedWaypoints[waypoint.ID] = false
 	table.insert(self.waypoints, waypoint)
+	if (self.disabledPaths[waypoint.PathIndex] == nil) then
+		self.disabledPaths[waypoint.PathIndex] = false
+	end
 end
 
 function NodeCollection:Remove(waypoint)
@@ -79,16 +91,14 @@ function NodeCollection:Update(waypoint)
 end
 
 function NodeCollection:Clear()
-	self.waypoints = {}
-	self.waypointsByID = {}
-	self.waypointsByIndex = {}
-	self.selectedWaypoints = {}
+	self:InitTables()
 end
 
 function NodeCollection:Get()
 	return self.waypoints
 end
 
+-----------------------------
 -- Selection
 
 function NodeCollection:Select(waypoint)
@@ -123,6 +133,26 @@ function NodeCollection:GetSelected()
 	return self.selectedWaypoints
 end
 
+-----------------------------
+-- Paths
+
+function NodeCollection:EnablePath(pathIndex)
+	return self.disabledPaths[pathIndex] == false
+end
+
+function NodeCollection:DisablePath(pathIndex)
+	self.disabledPaths[pathIndex] = true
+end
+
+function NodeCollection:IsPathEnabled(waypoint)
+	return self.disabledPaths[waypoint.ID] == nil or self.disabledPaths[waypoint.ID] == false
+end
+
+function NodeCollection:GetDisabledPaths()
+	return self.disabledPaths
+end
+
+-----------------------------
 -- Save/Load
 
 function NodeCollection:Load(mapName)
@@ -157,9 +187,11 @@ end
 
 function NodeCollection:Save(mapName)
 
+	--> TODO save back to DB <--
 
 end
 
+-----------------------------
 -- Navigation
 
 function NodeCollection:Previous(currentWaypoint)
@@ -188,6 +220,9 @@ function NodeCollection:Find(vec3Position, tolerance)
 	local closestWaypointDist = tolerance
 
 	for _,waypoint in pairs(self.waypointsByID) do
+
+		--> TODO check if path disabled here <--
+
 		if (waypoint ~= nil and waypoint.Position ~= nil) then
 			local distance = waypoint.Position:Distance(vec3Position)
 			if (distance <= tolerance) then
@@ -215,6 +250,9 @@ function NodeCollection:FindAll(vec3Position, tolerance)
 	local waypointsFound = {}
 
 	for _,waypoint in pairs(self.waypointsByID) do
+
+		--> TODO check if path disabled here <--
+
 		if (waypoint ~= nil and waypoint.Position ~= nil and waypoint.Position:Distance(vec3Position) <= tolerance) then
 			print('NodeCollection:FindAll -> Found: '..waypoint.ID)
 			table.insert(waypointsFound, waypoint)
@@ -248,6 +286,9 @@ function NodeCollection:FindAlongTrace(vec3Start, vec3End, granularity, toleranc
 
 	while distance > granularity and distance > 0 do
 		for _,waypoint in pairs(searchWaypoints) do
+
+			--> TODO check if path disabled here <--
+
 			if (waypoint ~= nil and waypoint.Position ~= nil and waypoint.Position:Distance(testPos) <= tolerance) then
 				print('NodeCollection:FindAlongTrace -> Found: '..waypoint.ID)
 				return waypoint
