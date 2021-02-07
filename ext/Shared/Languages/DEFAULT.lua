@@ -2,8 +2,6 @@ local code = 'xx_XX'; -- Add/replace the xx_XX here with your language code (lik
 
 Language:add(code, "Spawn in Same Team", "");
 Language:add(code, "If true, Bots spawn in the team of the player", "");
-Language:add(code, "Frag Mode", "");
-Language:add(code, "only shotguns with frag, as it counts the kills of the Bots", "");
 Language:add(code, "Bot Weapon", "");
 Language:add(code, "Select the weapon the bots use", "");
 Language:add(code, "Bot Kit", "");
@@ -73,14 +71,6 @@ Language:add(code, "Weapon Support", "");
 Language:add(code, "Weapon of Support class", "");
 Language:add(code, "Weapon Recon", "");
 Language:add(code, "Weapon of Recon class", "");
-Language:add(code, "Shotgun Assault", "");
-Language:add(code, "Shotgun of Assault class", "");
-Language:add(code, "Shotgun Engineer", "");
-Language:add(code, "Shotgun of Engineer class", "");
-Language:add(code, "Shotgun Support", "");
-Language:add(code, "Shotgun of Support class", "");
-Language:add(code, "Shotgun Recon", "");
-Language:add(code, "Shotgun of Recon class", "");
 Language:add(code, "Bot FOV", "");
 Language:add(code, "The Field Of View of the bots, where they can detect a player", "");
 Language:add(code, "Attack if Hit", "");
