@@ -58,6 +58,7 @@ function Bot:__init(player)
 	self._shootPlayer = nil;
 	self._shootWayPoints = {};
 	self._lastTargetTrans = Vec3();
+	self._meleeAttackState = 0;
 	self._lastShootPlayer = nil;
 
 	--simple movement
@@ -165,6 +166,7 @@ function Bot:resetVars()
 	self._aimUpdateTimer		= 0; --timer sync
 	self._targetPoint			= nil;
 	self._meleeActive 			= false;
+	self._meleeAttackState		= 0;
 
 	self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 0);
 	self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
@@ -272,6 +274,7 @@ function Bot:resetSpawnVars()
 	self._shootTraceTimer		= 0;
 	self._reloadTimer 			= 0;
 	self._attackModeMoveTimer	= 0;
+	self._meleeAttackState		= 0;
 	self._shootWayPoints		= {};
 end
 
@@ -348,6 +351,9 @@ function Bot:_updateAiming()
 end
 
 function Bot:_updateYaw()
+	if self._meleeActive then
+		return
+	end
 	if self._targetPoint ~= nil and self._shootPlayer == nil and self.player.soldier ~= nil then
 		local dy					= self._targetPoint.trans.z - self.player.soldier.worldTransform.trans.z;
 		local dx					= self._targetPoint.trans.x - self.player.soldier.worldTransform.trans.x;
@@ -381,6 +387,45 @@ function Bot:_updateYaw()
 		tempYaw = tempYaw + (math.pi * 2);
 	end
 	self.player.input.authoritativeAimingYaw = tempYaw
+end
+
+function Bot:_updateMeleeAttack()
+	if Config.meleeAttackIfClose and not self._meleeActive and self._shootPlayer.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans) < 1 and self._meleeAttackState == 0 then
+		self._meleeActive = true;
+		self.activeWeapon = self.knife;
+		self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
+		self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 1);
+		self._meleeAttackState = 1;
+	else
+		if self._meleeAttackState == 1 then
+			if self.player.soldier.weaponsComponent.currentWeaponSlot == WeaponSlot.WeaponSlot_7 then
+				self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 0);
+				self._meleeAttackState = 2;
+				self._meleeCooldownTimer = 0.2;
+			end
+		elseif self._meleeAttackState == 2 then
+			if self._meleeCooldownTimer <= 0 then
+				self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 1);
+				self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
+				self._meleeAttackState = 3;
+				self._meleeCooldownTimer = 1.2;
+			end
+		elseif self._meleeAttackState == 3 then
+			if self._meleeCooldownTimer <= 0 then
+				self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0);
+				self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
+				self._meleeActive = false;
+				self._meleeAttackState = 4;
+				self._meleeCooldownTimer = Config.meleeAttackCoolDown - 1.2;
+			end
+		else --if self._meleeAttackState == 4 then
+			if self._meleeCooldownTimer <= 0 then
+				self._meleeAttackState = 0;
+			end
+		end
+
+		self._meleeCooldownTimer = self._meleeCooldownTimer - StaticConfig.botUpdateCycle;
+	end
 end
 
 function Bot:_updateShooting()
@@ -428,25 +473,7 @@ function Bot:_updateShooting()
 				--self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 1) --does not work.
 
 				--check for melee attack
-				if Config.meleeAttackIfClose and not self._meleeActive and self._shootPlayer.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans) < 1 and self._meleeCooldownTimer <= 0 then
-					self._meleeActive = true;
-					self.activeWeapon = self.knife;
-					self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
-					self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 1);
-					self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 1);
-					self._meleeCooldownTimer = Config.meleeAttackCoolDown;
-				else
-					self._meleeCooldownTimer = self._meleeCooldownTimer - StaticConfig.botUpdateCycle;
-
-					if self._meleeCooldownTimer < 0 then
-						self._meleeCooldownTimer = 0;
-					end
-
-					if self._meleeCooldownTimer < (Config.meleeAttackCoolDown - 1.0) then
-						self._meleeActive = false;
-						self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0);
-					end
-				end
+				self:_updateMeleeAttack();
 
 				--trace way back
 				if self.activeWeapon.type ~= "Sniper" then
@@ -464,7 +491,7 @@ function Bot:_updateShooting()
 
 				--shooting sequence
 				if Config.botWeapon == "Knife" then
-					self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
+					--self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
 					self._shotTimer	= -Config.botFirstShotDelay;
 				else
 					if self._shotTimer >= (self.activeWeapon.fireCycle + self.activeWeapon.pauseCycle) then
