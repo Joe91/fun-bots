@@ -318,20 +318,23 @@ function Bot:_updateAiming()
 
 			--interpolate player movement
 			local targetMovement = Vec3(0,0,0);
+			local ptichCorrection = 0.0;
 			local fullPositionTarget =  self._shootPlayer.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(self._shootPlayer, true);
 			local fullPositionBot = self.player.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(self.player, false);
 
-			local distanceToPlayer	= fullPositionTarget:Distance(fullPositionBot);
-			--calculate how long the distance is --> time to travel
-			local timeToTravel		= (distanceToPlayer / self.activeWeapon.bulletSpeed)
-			local factorForMovement	= (timeToTravel) / self._aimUpdateTimer
-			local ptichCorrection	= 0.5 * timeToTravel * timeToTravel * self.activeWeapon.bulletDrop;
-			if self._lastShootPlayer == self._shootPlayer then
-				targetMovement			= (fullPositionTarget - self._lastTargetTrans) * factorForMovement; --movement in one dt
-			end
+			if self.activeWeapon.type ~= "Knife" then
+				local distanceToPlayer	= fullPositionTarget:Distance(fullPositionBot);
+				--calculate how long the distance is --> time to travel
+				local timeToTravel		= (distanceToPlayer / self.activeWeapon.bulletSpeed)
+				local factorForMovement	= (timeToTravel) / self._aimUpdateTimer
+				ptichCorrection	= 0.5 * timeToTravel * timeToTravel * self.activeWeapon.bulletDrop;
+				if self._lastShootPlayer == self._shootPlayer then
+					targetMovement			= (fullPositionTarget - self._lastTargetTrans) * factorForMovement; --movement in one dt
+				end
 
-			self._lastShootPlayer = self._shootPlayer;
-			self._lastTargetTrans = fullPositionTarget;
+				self._lastShootPlayer = self._shootPlayer;
+				self._lastTargetTrans = fullPositionTarget;
+			end
 
 			--calculate yaw and pith
 			local dz		= fullPositionTarget.z + targetMovement.z - fullPositionBot.z;
@@ -406,15 +409,15 @@ function Bot:_updateMeleeAttack()
 		elseif self._meleeAttackState == 2 then
 			if self._meleeCooldownTimer <= 0 then
 				Events:DispatchLocal("ServerDamagePlayer", self._shootPlayer.name, self.player.name, true);
-				--self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 1);
-				--self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
+				--self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 1); 	-- triggers taketown. not supported
+				--self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);			-- triggers taketown. not supported
 				self._meleeAttackState = 3;
 				self._meleeCooldownTimer = 1.2;
 			end
 		elseif self._meleeAttackState == 3 then
 			if self._meleeCooldownTimer <= 0 then
-				self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0);
-				self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
+				--self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0);
+				--self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
 				self._meleeActive = false;
 				self._meleeAttackState = 4;
 				self._meleeCooldownTimer = Config.meleeAttackCoolDown - 1.2;
@@ -439,6 +442,7 @@ function Bot:_updateShooting()
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 1);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
+						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
 						self.activeWeapon = self.knife;
 					else
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 0);
@@ -448,6 +452,7 @@ function Bot:_updateShooting()
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 1);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
+						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
 						self.activeWeapon = self.pistol;
 					else
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
@@ -457,6 +462,7 @@ function Bot:_updateShooting()
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 1);
+						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
 						self.activeWeapon = self.primary;
 					else
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
@@ -492,7 +498,6 @@ function Bot:_updateShooting()
 
 				--shooting sequence
 				if Config.botWeapon == "Knife" then
-					--self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
 					self._shotTimer	= -Config.botFirstShotDelay;
 				else
 					if self._shotTimer >= (self.activeWeapon.fireCycle + self.activeWeapon.pauseCycle) then

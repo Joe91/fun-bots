@@ -225,7 +225,7 @@ function BotManager:_onSoldierDamage(hook, soldier, info, giverInfo)
 				info.position = Vec3(soldier.worldTransform.trans.x, soldier.worldTransform.trans.y + 1, soldier.worldTransform.trans.z)
 				info.direction = soldier.worldTransform.trans - bot.player.soldier.worldTransform.trans
 				info.origin = bot.player.soldier.worldTransform.trans
-				if (soldier.health - info.damage) <= 0 then
+				if (soldier.health - info.damage) <= 0 and Config.botWeapon ~= "Knife" then
 					info.damage = soldier.health - 0.4;
 				end
 			end
