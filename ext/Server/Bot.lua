@@ -405,8 +405,8 @@ function Bot:_updateMeleeAttack()
 			end
 		elseif self._meleeAttackState == 2 then
 			if self._meleeCooldownTimer <= 0 then
-				self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 1);
-				self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
+				--self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 1);
+				--self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
 				self._meleeAttackState = 3;
 				self._meleeCooldownTimer = 1.2;
 			end
