@@ -69,7 +69,6 @@ function FunBotUIClient:_onUISettings(data)
 	-- addList(<category>, <name>, <title>, <list>, <value>, <default>, <description>)
 
 	settings:add("GLOBAL", "Boolean", "spawnInSameTeam", Language:I18N("Spawn in Same Team"), data.spawnInSameTeam, false, Language:I18N("If true, Bots spawn in the team of the player"));
-	settings:add("GLOBAL", "Boolean", "useShotgun", Language:I18N("Frag Mode"), data.useShotgun, false, Language:I18N("only shotguns with frag, as it counts the kills of the Bots"));
 	settings:addList("GLOBAL", "botWeapon", Language:I18N("Bot Weapon"), BotWeapons, data.botWeapon, "Primary", Language:I18N("Select the weapon the bots use"));
 	settings:addList("GLOBAL", "botKit", Language:I18N("Bot Kit"), BotKits, data.botKit, "RANDOM_KIT", Language:I18N("The Kit a bots spawns with."));
 	settings:addList("GLOBAL", "botColor", Language:I18N("Bot Color"), BotColors, data.botColor, "RANDOM_COLOR", Language:I18N("The Kit-Color a bots spawns with."));
@@ -111,10 +110,6 @@ function FunBotUIClient:_onUISettings(data)
 	settings:addList("WEAPONS", "engineerWeapon",  Language:I18N("Weapon Engineer"), WeaponsEngineer, data.engineerWeapon, "M4A1", Language:I18N("Weapon of Engineer class"));
 	settings:addList("WEAPONS", "supportWeapon",  Language:I18N("Weapon Support"), WeaponsSupport, data.supportWeapon, "M240", Language:I18N("Weapon of Support class"));
 	settings:addList("WEAPONS", "reconWeapon",  Language:I18N("Weapon Recon"), WeaponsRecon, data.reconWeapon, "L96", Language:I18N("Weapon of Recon class"));
-	settings:addList("WEAPONS", "assaultShotgun", Language:I18N("Shotgun Assault"), ShotgunsAssault, data.assaultShotgun, "USAS-12", Language:I18N("Shotgun of Assault class"));
-	settings:addList("WEAPONS", "engineerShotgun", Language:I18N("Shotgun Engineer"), ShotgunsEngineer, data.engineerShotgun, "saiga20", Language:I18N("Shotgun of Engineer class"));
-	settings:addList("WEAPONS", "supportShotgun", Language:I18N("Shotgun Support"), ShotgunsSupport, data.supportShotgun, "Jackhammer", Language:I18N("Shotgun of Support class"));
-	settings:addList("WEAPONS", "reconShotgun", Language:I18N("Shotgun Recon"), ShotgunsRecon, data.reconShotgun, "SPAS12", Language:I18N("Shotgun of Recon class"));
 
 	settings:add("ADVANCED", "Integer", "fovForShooting", Language:I18N("Bot FOV"), data.fovForShooting, 270, Language:I18N("The Field Of View of the bots, where they can detect a player"));
 	settings:add("ADVANCED", "Boolean", "shootBackIfHit", Language:I18N("Attack if Hit"), data.shootBackIfHit, true, Language:I18N("Bots imidiatly attack player, if shot by it"));

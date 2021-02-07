@@ -431,7 +431,6 @@ function Bot:_updateShooting()
 					self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 1);
 					self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 1);
 					self._meleeCooldownTimer = Config.meleeAttackCoolDown;
-					Events:DispatchLocal("ServerDamagePlayer", self._shootPlayer.name, self.player.name, true);
 				else
 					self._meleeCooldownTimer = self._meleeCooldownTimer - StaticConfig.botUpdateCycle;
 
