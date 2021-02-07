@@ -167,7 +167,7 @@ function BotManager:onPlayerLeft(player)
 	end
 end
 
-function BotManager:_getDamageValue(damage, bot, soldier, fake)
+function BotManager:_getDamageValue(damage, bot)
 	local damageFactor = 1.0;
 
 	if bot.activeWeapon.type == "Shotgun" then
@@ -213,7 +213,7 @@ function BotManager:_onSoldierDamage(hook, soldier, info, giverInfo)
 
 	if not soldierIsBot and bot ~= nil and bot.player.soldier ~= nil then
 		-- adjust damage with our own values
-		info.damage = self:_getDamageValue(info.damage, bot, soldier, false);
+		info.damage = self:_getDamageValue(info.damage, bot);
 	end
 
 	hook:Pass(soldier, info, giverInfo)
