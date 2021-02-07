@@ -69,7 +69,6 @@ function FunBotUIClient:_onUISettings(data)
 	-- addList(<category>, <name>, <title>, <list>, <value>, <default>, <description>)
 
 	settings:add("GLOBAL", "Boolean", "spawnInSameTeam", Language:I18N("Spawn in Same Team"), data.spawnInSameTeam, false, Language:I18N("If true, Bots spawn in the team of the player"));
-	settings:add("GLOBAL", "Boolean", "useShotgun", Language:I18N("Frag Mode"), data.useShotgun, false, Language:I18N("only shotguns with frag, as it counts the kills of the Bots"));
 	settings:addList("GLOBAL", "botWeapon", Language:I18N("Bot Weapon"), BotWeapons, data.botWeapon, "Primary", Language:I18N("Select the weapon the bots use"));
 	settings:addList("GLOBAL", "botKit", Language:I18N("Bot Kit"), BotKits, data.botKit, "RANDOM_KIT", Language:I18N("The Kit a bots spawns with."));
 	settings:addList("GLOBAL", "botColor", Language:I18N("Bot Color"), BotColors, data.botColor, "RANDOM_COLOR", Language:I18N("The Kit-Color a bots spawns with."));
@@ -88,7 +87,7 @@ function FunBotUIClient:_onUISettings(data)
 
 	settings:add("SPAWN", "Boolean", "spawnOnLevelstart", Language:I18N("Spawn on Levelstart"), data.spawnOnLevelstart, true, Language:I18N("Bots spawn on levelstart (if valid paths are available)"));
 	settings:add("SPAWN", "Boolean", "onlySpawnBotsWithPlayers", Language:I18N("Only spawn with players"), data.onlySpawnBotsWithPlayers, true, Language:I18N("Bots only spawn if at least one Player is on the server"));
-	settings:add("SPAWN", "Integer", "initNumberOfBots", Language:I18N("Number Bots on Levelstart"), data.initNumberOfBots, 10, Language:I18N("Bots on levelstart"));
+	settings:add("SPAWN", "Integer", "initNumberOfBots", Language:I18N("Number Bots on Levelstart"), data.initNumberOfBots, 5, Language:I18N("Bots on levelstart"));
 	settings:add("SPAWN", "Boolean", "incBotsWithPlayers", Language:I18N("More Bots with new Players"), data.incBotsWithPlayers, true, Language:I18N("increase Bots, when new players join"));
 	settings:add("SPAWN", "Integer", "newBotsPerNewPlayer", Language:I18N("Number Bots on new Player"), data.newBotsPerNewPlayer, 2, Language:I18N("number to increase Bots, when new players join"));
 	settings:add("SPAWN", "Boolean", "keepOneSlotForPlayers", Language:I18N("Keep one Player-Slot"), data.keepOneSlotForPlayers, true, Language:I18N("always keep one slot for new Players to join"));
@@ -100,8 +99,8 @@ function FunBotUIClient:_onUISettings(data)
 	settings:add("SPAWN", "Integer", "maxEngineerBots", Language:I18N("Max Engineer Bots"), data.maxEngineerBots, -1, Language:I18N("maximum number of Bots with Engineer Kit. -1 = unlimited"));
 	settings:add("SPAWN", "Integer", "maxSupportBots", Language:I18N("Max Support Bots"), data.maxSupportBots, -1, Language:I18N("maximum number of Bots with Support Kit. -1 = unlimited"));
 	settings:add("SPAWN", "Integer", "maxReconBots", Language:I18N("Max Recon Bots"), data.maxReconBots, -1, Language:I18N("maximum number of Bots with Recon Kit. -1 = unlimited"));
-	settings:add("SPAWN", "Integer", "distanceToSpawnBots", Language:I18N("Distance to Spawn Bots"), data.distanceToSpawnBots, 50, Language:I18N("distance to spawn Bots away from players"));
-	settings:add("SPAWN", "Float", "heightDistanceToSpawn", Language:I18N("Height to Spawn Bots"), data.heightDistanceToSpawn, 4, Language:I18N("distance vertically, Bots should spawn away, if closer than distance"));
+	settings:add("SPAWN", "Integer", "distanceToSpawnBots", Language:I18N("Distance to Spawn Bots"), data.distanceToSpawnBots, 30, Language:I18N("distance to spawn Bots away from players"));
+	settings:add("SPAWN", "Float", "heightDistanceToSpawn", Language:I18N("Height to Spawn Bots"), data.heightDistanceToSpawn, 2.5, Language:I18N("distance vertically, Bots should spawn away, if closer than distance"));
 	settings:add("SPAWN", "Integer", "distanceToSpawnReduction", Language:I18N("Reduce Distance on Fail"), data.distanceToSpawnReduction, 5, Language:I18N("reduce distance if not possible"));
 	settings:add("SPAWN", "Integer", "maxTrysToSpawnAtDistance", Language:I18N("Max Retrys on Distance"), data.maxTrysToSpawnAtDistance, 3, Language:I18N("try this often to spawn a bot away from players"));
 
@@ -111,10 +110,6 @@ function FunBotUIClient:_onUISettings(data)
 	settings:addList("WEAPONS", "engineerWeapon",  Language:I18N("Weapon Engineer"), WeaponsEngineer, data.engineerWeapon, "M4A1", Language:I18N("Weapon of Engineer class"));
 	settings:addList("WEAPONS", "supportWeapon",  Language:I18N("Weapon Support"), WeaponsSupport, data.supportWeapon, "M240", Language:I18N("Weapon of Support class"));
 	settings:addList("WEAPONS", "reconWeapon",  Language:I18N("Weapon Recon"), WeaponsRecon, data.reconWeapon, "L96", Language:I18N("Weapon of Recon class"));
-	settings:addList("WEAPONS", "assaultShotgun", Language:I18N("Shotgun Assault"), ShotgunsAssault, data.assaultShotgun, "USAS-12", Language:I18N("Shotgun of Assault class"));
-	settings:addList("WEAPONS", "engineerShotgun", Language:I18N("Shotgun Engineer"), ShotgunsEngineer, data.engineerShotgun, "saiga20", Language:I18N("Shotgun of Engineer class"));
-	settings:addList("WEAPONS", "supportShotgun", Language:I18N("Shotgun Support"), ShotgunsSupport, data.supportShotgun, "Jackhammer", Language:I18N("Shotgun of Support class"));
-	settings:addList("WEAPONS", "reconShotgun", Language:I18N("Shotgun Recon"), ShotgunsRecon, data.reconShotgun, "SPAS12", Language:I18N("Shotgun of Recon class"));
 
 	settings:add("ADVANCED", "Integer", "fovForShooting", Language:I18N("Bot FOV"), data.fovForShooting, 270, Language:I18N("The Field Of View of the bots, where they can detect a player"));
 	settings:add("ADVANCED", "Boolean", "shootBackIfHit", Language:I18N("Attack if Hit"), data.shootBackIfHit, true, Language:I18N("Bots imidiatly attack player, if shot by it"));

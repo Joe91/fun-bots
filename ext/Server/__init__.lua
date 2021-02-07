@@ -33,6 +33,7 @@ function FunBotServer:__init()
 	Events:Subscribe('Player:Chat', self, self._onChat);
 	Events:Subscribe('Extension:Unloading', self, self._onExtensionUnload);
 	Events:Subscribe('Extension:Loaded', self, self._onExtensionLoaded);
+	Events:Subscribe('Partition:Loaded', self, self._onPartitionLoaded)
 	NetEvents:Subscribe('RequestClientSettings', self, self._onRequestClientSettings);
 end
 
@@ -56,6 +57,21 @@ function FunBotServer:_onExtensionLoaded()
 		if (level ~= nil and gameMode~= nil) then
 			self:_onLevelLoaded(level, gameMode);
 		end
+	end
+end
+
+function FunBotServer:_onPartitionLoaded(partition)
+	for _, instance in pairs(partition.instances) do
+		if instance:Is("SyncedGameSettings") then
+            local syncedGameSettings = SyncedGameSettings(instance)
+            syncedGameSettings:MakeWritable()
+            syncedGameSettings.allowClientSideDamageArbitration = false
+        end
+		if instance:Is("ServerSettings") then
+            local serverSettings = ServerSettings(instance)
+            serverSettings:MakeWritable()
+            serverSettings.isRenderDamageEvents = true
+        end
 	end
 end
 

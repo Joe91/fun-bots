@@ -9,7 +9,6 @@ Config = {
 	botWeapon = "Primary",			-- Select the weapon the bots use
 	botKit = "RANDOM_KIT",			-- see BotKits
 	botColor = "RANDOM_COLOR",		-- see BotColors
-	useShotgun = false,				-- only shotguns with frag, as it counts the kills of the Bots
 
 	--difficluty
 	botAimWorsening = 0.1,			-- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy).
@@ -27,9 +26,9 @@ Config = {
 	--spawn
 	spawnOnLevelstart = true,		-- bots spawn on levelstart (if valid paths are available)
 	onlySpawnBotsWithPlayers = true,-- Bots only spawn if at least one Player is on the server
-	initNumberOfBots = 8,			-- bots on levelstart
+	initNumberOfBots = 5,			-- bots on levelstart
 	incBotsWithPlayers = true,		-- increase Bots, when new players join
-	newBotsPerNewPlayer = 3,		-- number to increase Bots, when new players join
+	newBotsPerNewPlayer = 2,		-- number to increase Bots, when new players join
 	keepOneSlotForPlayers = true,	-- always keep one slot for new Players to join
 	spawnDelayBots = 2.0,			-- time till bots respawn, if respawn enabled
 	botTeam = TeamId.Team2,		 	-- default bot team (0 = neutral, 1 = US, 2 = RU) TeamId.Team2
@@ -39,20 +38,16 @@ Config = {
 	maxEngineerBots = -1,			-- maximum number of Bots with Engineer Kit
 	maxSupportBots = -1,			-- maximum number of Bots with Support Kit
 	maxReconBots = -1,				-- maximum number of Bots with Recon Kit
-	distanceToSpawnBots	= 50,		-- distance to spawn Bots away from players
-	heightDistanceToSpawn = 4,		-- distance vertically, Bots should spawn away, if closer than distance
+	distanceToSpawnBots	= 30,		-- distance to spawn Bots away from players
+	heightDistanceToSpawn = 2.5,		-- distance vertically, Bots should spawn away, if closer than distance
 	distanceToSpawnReduction = 5,	-- reduce distance if not possible
 	maxTrysToSpawnAtDistance = 3,	-- try this often to spawn a bot away from players
 
 	-- weapons
 	assaultWeapon = "M416",			-- weapon of Assault class
-	assaultShotgun = "USAS-12",		-- shotgun of Assault class
 	engineerWeapon = "M4A1",		-- weapon of Engineer class
-	engineerShotgun = "saiga20",	-- shotgun of Engineer class
 	supportWeapon = "M240",			-- weapon of Support class
-	supportShotgun = "Jackhammer",	-- shotgun of Support class
 	reconWeapon = "L96",			-- weapon of Recon class
-	reconShotgun = "SPAS12",		-- shotgun of Recon class
 	pistol = "M1911_Lit",			-- Bot pistol
 	knife = "Razor",				-- Bot knife
 
