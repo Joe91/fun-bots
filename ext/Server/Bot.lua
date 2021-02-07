@@ -427,6 +427,7 @@ function Bot:_updateShooting()
 				--check for melee attack
 				if Config.meleeAttackIfClose and not self._meleeActive and self._shootPlayer.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans) < 1 and self._meleeCooldownTimer <= 0 then
 					self._meleeActive = true;
+					self.activeWeapon = self.knife;
 					self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
 					self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 1);
 					self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 1);
