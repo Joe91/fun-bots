@@ -20,7 +20,7 @@ function WeaponList:__init()
 	table.insert(self._weapons, weapon);
 
 	weapon = Weapon('DAO-12', '', {'Kobra', 'TargetPointer', 'Frag'}, 'Shotgun')
-	weapon:setStatsValues(20, 150, 15, 3, 3, 0.6, false);
+	weapon:setStatsValues(20, 150, 15, 3, 0.2, 0.2, false);
 	table.insert(self._weapons, weapon);
 
 	weapon = Weapon('SPAS12', 'XP2', {'Kobra', 'Frag'}, 'Shotgun')
@@ -69,7 +69,7 @@ function WeaponList:__init()
 	table.insert(self._weapons, weapon);
 
 	weapon = Weapon('SKS', '', {'Rifle_Scope', 'Target_Pointer'}, 'Sniper')
-	weapon:setStatsValues(43, 440, 15, 3, 0.2, 0.5, true);
+	weapon:setStatsValues(43, 440, 15, 3, 0.2, 0.2, true);
 	table.insert(self._weapons, weapon);
 
 	-- pistols

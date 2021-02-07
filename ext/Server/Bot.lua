@@ -98,6 +98,9 @@ function Bot:shootAt(player, ignoreYaw)
 	if self.player.teamId == player.teamId then
 		return
 	end
+	if player.soldier == nil or self.player.soldier == nil then
+		return
+	end
 	-- don't shoot if too far away
 	if not ignoreYaw then
 		local distance = player.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans)
