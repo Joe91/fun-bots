@@ -274,8 +274,24 @@ function Bot:resetSpawnVars()
 	self._shootTraceTimer		= 0;
 	self._reloadTimer 			= 0;
 	self._attackModeMoveTimer	= 0;
-	self._meleeAttackState		= 0;
 	self._shootWayPoints		= {};
+
+	self._shotTimer				= -Config.botFirstShotDelay;
+	self._updateTimer			= 0;
+	self._aimUpdateTimer		= 0; --timer sync
+	self._targetPoint			= nil;
+	self._meleeActive 			= false;
+	self._meleeAttackState		= 0;
+
+	self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 0);
+	self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
+	self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 0);
+	self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0);
+	self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0);
+	self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
+	self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
+	self.player.input:SetLevel(EntryInputActionEnum.EIAThrottle, 0);
+	self.player.input:SetLevel(EntryInputActionEnum.EIASprint, 0);
 end
 
 function Bot:clearPlayer(player)
