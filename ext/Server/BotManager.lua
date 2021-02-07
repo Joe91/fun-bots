@@ -15,8 +15,6 @@ function BotManager:__init()
 	Events:Subscribe('UpdateManager:Update', self, self._onUpdate)
 	Events:Subscribe('Level:Destroy', self, self._onLevelDestroy)
 	NetEvents:Subscribe('BotShootAtPlayer', self, self._onShootAt)
-	Events:Subscribe('ServerDamagePlayer', self, self._onServerDamagePlayer)
-	NetEvents:Subscribe('ClientDamagePlayer', self, self._onDamagePlayer)
 	Hooks:Install('Soldier:Damage', 100, self, self._onSoldierDamage)
 end
 
@@ -238,92 +236,38 @@ function BotManager:_getDamageValue(damage, bot, soldier, fake)
 end
 
 function BotManager:_onSoldierDamage(hook, soldier, info, giverInfo)
-	if soldier.player == nil then
+	-- soldier -> soldier damage only
+	if soldier.player == nil or giverInfo.giver == nil then
 		return
 	end
+
 	local soldierIsBot = Utilities:isBot(soldier.player.name);
-	--detect if we need to shoot back
-	if Config.shootBackIfHit then
-		if soldierIsBot and giverInfo.giver ~= nil and info.damage > 0 then
+	if soldierIsBot then
+		--detect if we need to shoot back
+		if Config.shootBackIfHit and info.damage > 0 then
 			self:_onShootAt(giverInfo.giver, soldier.player.name, true)
 		end
-	end
 
-	if not Config.botCanKillHimself then -- prevent bots from killing themself.
-		if giverInfo.giver ~= nil and soldierIsBot then
-			if soldier.player == giverInfo.giver then
-				info.damage = 0;
-			end
+		-- prevent bots from killing themselves. Bad bot, no suicide.
+		if not Config.botCanKillHimself and soldier.player == giverInfo.giver then 
+			info.damage = 0;
 		end
 	end
 
-	--find out, if a player was hit by the server:
-	if not soldierIsBot then
-		if giverInfo.giver == nil then
-			local bot = self:GetBotByName(self._shooterBots[soldier.player.name])
-			if bot ~= nil and bot.player.soldier ~= nil then
-				info.damage = self:_getDamageValue(info.damage, bot, soldier, true);
-				info.boneIndex = 0;
-				info.isBulletDamage = true;
-				info.position = Vec3(soldier.worldTransform.trans.x, soldier.worldTransform.trans.y + 1, soldier.worldTransform.trans.z)
-				info.direction = soldier.worldTransform.trans - bot.player.soldier.worldTransform.trans
-				info.origin = bot.player.soldier.worldTransform.trans
-				if (soldier.health - info.damage) <= 0 then
-					if Globals.isTdm then
-						local enemyTeam = TeamId.Team1;
-						if soldier.player.teamId == TeamId.Team1 then
-							enemyTeam = TeamId.Team2;
-						end
-						TicketManager:SetTicketCount(enemyTeam, (TicketManager:GetTicketCount(enemyTeam) + 1));
-					end
-				end
-			end
-		else
-			--valid bot-damage?
-			local bot = self:GetBotByName(giverInfo.giver.name)
-			if bot ~= nil and bot.player.soldier ~= nil then
-				-- giver was a bot (with explosives)
-				info.damage = self:_getDamageValue(info.damage, bot, soldier, false);
-			end
-		end
+	-- if a player was hit by a bot
+	local bot = self:GetBotByName(giverInfo.giver.name)
+
+	if not soldierIsBot and bot ~= nil and bot.player.soldier ~= nil then
+		-- adjust damage with our own values
+		info.damage = self:_getDamageValue(info.damage, bot, soldier, false);
 	end
+
 	hook:Pass(soldier, info, giverInfo)
 end
 
-function BotManager:_onServerDamagePlayer(playerName, shooterName, meleeAttack)
-	local player = PlayerManager:GetPlayerByName(playerName)
-	if player ~= nil then
-		self:_onDamagePlayer(player, shooterName, meleeAttack, false)
-	end
-end
-
-function BotManager:_onDamagePlayer(player, shooterName, meleeAttack, isHeadShot)
-	local bot = self:GetBotByName(shooterName)
-	if not player.alive or bot == nil then
-		return
-	end
-	if player.teamId == bot.player.teamId then
-		return
-	end
-	local damage = 1 --only trigger soldier-damage with this
-	if isHeadShot then
-		damage = 2	-- singal Headshot
-	elseif meleeAttack then
-		damage = 3 --signal melee damage with this value
-	end
-	--save potential killer bot
-	self._shooterBots[player.name] = shooterName
-
-	if player.soldier ~= nil then
-		player.soldier.health = player.soldier.health - damage
-	end
-end
-
-
-
 function BotManager:_onShootAt(player, botname, ignoreYaw)
 	local bot = self:GetBotByName(botname)
-	if bot == nil or bot.player.soldier == nil or player.soldier == nil then
+	if bot == nil or bot.player == nil or bot.player.soldier == nil or player == nil then
 		return
 	end
 	bot:shootAt(player, ignoreYaw)
