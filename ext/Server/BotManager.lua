@@ -168,71 +168,25 @@ function BotManager:onPlayerLeft(player)
 end
 
 function BotManager:_getDamageValue(damage, bot, soldier, fake)
-	local resultDamage = 0;
 	local damageFactor = 1.0;
-	local damageDropDistance = 8;
-	local damageDropEndDistance = 50;
-	local damageDropFactor = 0.73;
 
 	if bot.activeWeapon.type == "Shotgun" then
-		damageDropFactor = 0.6;
-		damageDropDistance = 5;
-		damageDropEndDistance = 30;
 		damageFactor = Config.damageFactorShotgun;
 	elseif bot.activeWeapon.type == "Assault" then
-		damageDropFactor = 0.73;
-		damageDropDistance = 8;
-		damageDropEndDistance = 60;
 		damageFactor = Config.damageFactorAssault;
 	elseif bot.activeWeapon.type == "Carabine" then
-		damageDropFactor = 0.6;
-		damageDropDistance = 8;
-		damageDropEndDistance = 50;
 		damageFactor = Config.damageFactorCarabine;
 	elseif bot.activeWeapon.type == "LMG" then
-		damageDropFactor = 0.73;
-		damageDropDistance = 8;
-		damageDropEndDistance = 50;
 		damageFactor = Config.damageFactorLMG;
 	elseif bot.activeWeapon.type == "Sniper" then
-		damageDropFactor = 0.73;
-		damageDropDistance = 15;
-		damageDropEndDistance = 100;
 		damageFactor = Config.damageFactorSniper;
 	elseif bot.activeWeapon.type == "Pistol" then
-		damageDropFactor = 0.6;
-		damageDropDistance = 8;
-		damageDropEndDistance = 50;
 		damageFactor = Config.damageFactorPistol;
 	elseif bot.activeWeapon.type == "Knife" then
 		damageFactor = Config.damageFactorKnife;
 	end
 
-
-	if not fake then -- frag mode
-		resultDamage = damage * damageFactor;
-	elseif bot.activeWeapon.type ~= "Shotgun" then
-		if damage <= 2 then
-			local distance = bot.player.soldier.worldTransform.trans:Distance(soldier.worldTransform.trans)
-			local lowDamage = bot.activeWeapon.damage * damageDropFactor;
-			if distance >= damageDropEndDistance then
-				resultDamage = lowDamage;
-			elseif distance <= damageDropDistance then
-				resultDamage =  bot.activeWeapon.damage;
-			else --extrapolate damage
-				local relativePosion = (distance-damageDropDistance)/(damageDropEndDistance - damageDropDistance)
-				resultDamage = bot.activeWeapon.damage - (relativePosion * (bot.activeWeapon.damage-lowDamage));
-			end
-			if damage == 2 then
-				resultDamage = resultDamage * Config.headShotFactorBots;
-			end
-
-			resultDamage = resultDamage * damageFactor;
-		elseif damage == 3 then --melee
-			resultDamage = bot.knife.damage * Config.damageFactorKnife;
-		end
-	end
-	return resultDamage;
+	return damage * damageFactor;
 end
 
 function BotManager:_onSoldierDamage(hook, soldier, info, giverInfo)
