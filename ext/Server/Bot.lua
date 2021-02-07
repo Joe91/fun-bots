@@ -98,6 +98,9 @@ function Bot:shootAt(player, ignoreYaw)
 	if self.player.teamId == player.teamId then
 		return
 	end
+	if player.soldier == nil or self.player.soldier == nil then
+		return
+	end
 	-- don't shoot if too far away
 	if not ignoreYaw then
 		local distance = player.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans)
@@ -427,11 +430,11 @@ function Bot:_updateShooting()
 				--check for melee attack
 				if Config.meleeAttackIfClose and not self._meleeActive and self._shootPlayer.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans) < 1 and self._meleeCooldownTimer <= 0 then
 					self._meleeActive = true;
+					self.activeWeapon = self.knife;
 					self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
 					self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 1);
 					self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 1);
 					self._meleeCooldownTimer = Config.meleeAttackCoolDown;
-					Events:DispatchLocal("ServerDamagePlayer", self._shootPlayer.name, self.player.name, true);
 				else
 					self._meleeCooldownTimer = self._meleeCooldownTimer - StaticConfig.botUpdateCycle;
 

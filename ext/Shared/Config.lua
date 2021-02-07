@@ -9,7 +9,6 @@ Config = {
 	botWeapon = "Primary",			-- Select the weapon the bots use
 	botKit = "RANDOM_KIT",			-- see BotKits
 	botColor = "RANDOM_COLOR",		-- see BotColors
-	useShotgun = false,				-- only shotguns with frag, as it counts the kills of the Bots
 
 	--difficluty
 	botAimWorsening = 0.1,			-- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy).
@@ -46,13 +45,9 @@ Config = {
 
 	-- weapons
 	assaultWeapon = "M416",			-- weapon of Assault class
-	assaultShotgun = "USAS-12",		-- shotgun of Assault class
 	engineerWeapon = "M4A1",		-- weapon of Engineer class
-	engineerShotgun = "saiga20",	-- shotgun of Engineer class
 	supportWeapon = "M240",			-- weapon of Support class
-	supportShotgun = "Jackhammer",	-- shotgun of Support class
 	reconWeapon = "L96",			-- weapon of Recon class
-	reconShotgun = "SPAS12",		-- shotgun of Recon class
 	pistol = "M1911_Lit",			-- Bot pistol
 	knife = "Razor",				-- Bot knife
 
