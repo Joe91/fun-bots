@@ -111,6 +111,15 @@ Language:add(code, "Speed Reduction", "");
 Language:add(code, "reduces the movementspeed. 1 = normal, 0.1 = slow", "");
 Language:add(code, "Speed Reduction Attack", "");
 Language:add(code, "reduces the movementspeed while attacking. 1 = normal, 0.1 = slow.", "");
+
+Language:add(code, "Enable Trace Path Editing and Visualizations")
+Language:add(code, "Set how far away waypoints are visible (meters)")
+Language:add(code, "Draw waypoint connection Lines")
+Language:add(code, "Set how far away waypoint lines are visible (meters)")
+Language:add(code, "Draw waypoint IDs")
+Language:add(code, "Set how far away waypoint text is visible (meters)")
+Language:add(code, "Shows the last trace line and search area from Commo Rose selection")
+
 Language:add(code, "First Shot Delay", "");
 Language:add(code, "delay for first shot", "");
 Language:add(code, "Min Time Shoot", "");

@@ -83,6 +83,16 @@ function Utilities:getEnumName(enum, value)
 	return nil
 end
 
+-- do not use on numerically indexed tables, only tables with string keys
+-- this is shallow merge, does not recurse deeper than one level
+function Utilities:mergeKeys(originalTable, newData)
+   for k,v in ipairs(newData) do
+      originalTable[k] = v
+   end 
+ 
+   return originalTable
+end
+
 -- Singleton.
 if g_Utilities == nil then
 	g_Utilities = Utilities();

@@ -593,20 +593,20 @@ function Bot:_updateMovement()
 					nextPoint 			= self._shootWayPoints[#self._shootWayPoints - 1];
 					if nextPoint == nil then
 						nextPoint = Globals.wayPoints[self._pathIndex][activePointIndex];
-						NetEvents:Broadcast('NodeEditor:SelectByID', activePointIndex)
+						NetEvents:Broadcast('NodeEditor:SelectByID', activePointIndex, self._pathIndex)
 					else 
 						NetEvents:Broadcast('NodeEditor:SelectByID', (#self._shootWayPoints - 1))
 					end
 					useShootWayPoint	= true;
 				else
 					point = Globals.wayPoints[self._pathIndex][activePointIndex];
-					NetEvents:Broadcast('NodeEditor:DeselectByID', activePointIndex)
+					NetEvents:Broadcast('NodeEditor:DeselectByID', activePointIndex, self._pathIndex)
 					if not self._invertPathDirection then
 						nextPoint = Globals.wayPoints[self._pathIndex][self:_getWayIndex(self._currentWayPoint + 1)]
-						NetEvents:Broadcast('NodeEditor:SelectByID', (self._currentWayPoint + 1))
+						NetEvents:Broadcast('NodeEditor:SelectByID', (self._currentWayPoint + 1), self._pathIndex)
 					else
 						nextPoint = Globals.wayPoints[self._pathIndex][self:_getWayIndex(self._currentWayPoint - 1)]
-						NetEvents:Broadcast('NodeEditor:SelectByID', (self._currentWayPoint - 1))
+						NetEvents:Broadcast('NodeEditor:SelectByID', (self._currentWayPoint - 1), self._pathIndex)
 					end
 				end
 

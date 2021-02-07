@@ -59,6 +59,22 @@ function ClientNodeEditor:RegisterEvents()
 	Hooks:Install('UI:PushScreen', 100, self, self._onUIPushScreen)
 	Hooks:Install('UI:InputConceptEvent', 100, self, self._onUIInputConceptEvent)
 	Hooks:Install('UI:CreateAction', 100, self, self._onUICreateAction)
+
+	Console:Register('Merge', 'Merge selected waypoints', self, self._onMerge)
+	Console:Register('Split', 'Split selected waypoints', self, self._onSplit)
+
+end
+
+function ClientNodeEditor:_onMerge(args)
+	local result, message = g_NodeCollection:Merge()
+	print(Language:I18N(message))
+	return result
+end
+
+function ClientNodeEditor:_onSplit(args)
+	local result, message = g_NodeCollection:Split()
+	print(Language:I18N(message))
+	return result
 end
 
 function ClientNodeEditor:_onSetLastTraceSearchArea(data)
@@ -82,7 +98,7 @@ function ClientNodeEditor:_onUpdateManagerUpdate(delta, pass)
 	if (not Config.debugTracePaths) then
 		return
 	end
-	
+
 	-- Only do math on presimulation UpdatePass
 	if pass ~= UpdatePass.UpdatePass_PreSim then
 		return
@@ -102,19 +118,27 @@ end
 
 function ClientNodeEditor:_onUIPushScreen(hook, screen, priority, parentGraph, stateNodeGuid)
 
-	if (not Config.debugTracePaths) then
-		return
-	end
-
-	if (screen ~= nil and UIScreenAsset(screen).name == 'UI/Flow/Screen/CommRoseScreen') then
+	if (Config.debugTracePaths and screen ~= nil and UIScreenAsset(screen).name == 'UI/Flow/Screen/CommRoseScreen') then
     	self.CommoRose.Active = self.CommoRose.Pressed
-
     	hook:Return() -- don't actually display the UI
     end
 	hook:Pass(screen, priority, parentGraph, stateNodeGuid)
 end
 
 function ClientNodeEditor:_onUIInputConceptEvent(hook, eventType, action)
+
+	if (not Config.debugTracePaths) then
+		hook:Pass(eventType, action)
+	end
+	
+	-- was pressed quickly, quick-sele
+    if (action == UIInputAction.UIInputAction_CommoRose 
+    	and eventType == UIInputActionEventType.UIInputActionEventType_Released
+    	and self.CommoRose.Pressed and not self.CommoRose.Active) then
+		self.CommoRose.Pressed = (eventType == UIInputActionEventType.UIInputActionEventType_Pressed)
+		self:_onCommoRoseAction('QuickSelect')
+	end
+
     if (action == UIInputAction.UIInputAction_CommoRose) then
 		self.CommoRose.Pressed = (eventType == UIInputActionEventType.UIInputActionEventType_Pressed)
 	end
@@ -146,11 +170,13 @@ function ClientNodeEditor:_onUICreateAction(hook, action)
     hook:Pass(action)
 end
 
-
 function ClientNodeEditor:_onCommoRoseAction(action, hit)
-	print('CommoRoseAction')
+	print('CommoRoseAction: '..tostring(action))
 
 	local hit = self:Raycast()
+	if (hit == nil) then
+		return
+	end
     local hitPoint = g_NodeCollection:Find(hit.position)
 
 	-- nothing found at hit location, try a raytracing check
@@ -163,7 +189,7 @@ function ClientNodeEditor:_onCommoRoseAction(action, hit)
 
 	-- still no results, let's create one
 	if (hitPoint == nil) then
-		local waypoint = g_NodeCollection:Create(hit.position, 10, 0)
+		local waypoint = g_NodeCollection:Create(hit.position)
 		NetEvents:Send('NodeEditor:Add', waypoint) -- send it to everyone
 		g_NodeCollection:Select(waypoint)
 		return
@@ -229,8 +255,11 @@ function ClientNodeEditor:_onUIDrawHud()
 					-- don't try to precalc this value like with the distance, another memory leak crash awaits you
 					local screenPos = ClientUtils:WorldToScreen(waypoint.Position + (Vec3.up * 0.5))
 					if (screenPos ~= nil) then
-						local text = 'ID: '..tostring(waypoint.ID).."\n"
+						local text = 'Custom ID: '..tostring(waypoint.ID).."\n"
+						text = text..'Custom Index: '..tostring(waypoint.Index).."\n"
+						text = text..'Database ID: '..tostring(waypoint.OriginalID).."\n"
 						text = text..'PathIndex: '..tostring(waypoint.PathIndex).."\n"
+						text = text..'PointIndex: '..tostring(waypoint.PointIndex).."\n"
 						text = text..'InputVar: '..tostring(g_Utilities:getEnumName(EntryInputActionEnum, waypoint.InputVar))..' ('..tostring(waypoint.InputVar)..')'
 						DebugRenderer:DrawText2D(screenPos.x, screenPos.y, text, self.textColor, 1.2)
 					end

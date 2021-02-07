@@ -1,5 +1,7 @@
 class "NodeCollection"
 
+require('__shared/Utilities.lua')
+
 function NodeCollection:__init()
 	self:InitTables()
 	self:RegisterEvents()
@@ -44,18 +46,23 @@ end
 -----------------------------
 -- Management
 
-function NodeCollection:Create(vec3Position, pathIndex, inputVar)
+function NodeCollection:Create(vec3Position, pathIndex, pointIndex, inputVar, setIndex)
 	local newIndex = self:_createID()
+	local inputVar = tonumber(inputVar) or 20
+
 	local waypoint = {
-		ID = string.format('p_%d', newIndex),
-		OriginalID = 0,
-		Index = newIndex,
+		ID = string.format('p_%d', newIndex), 	-- new generated id for internal storage
+		OriginalID = nil,							-- original id from database
+		Index = setIndex or newIndex, 						-- new generated id in numerical form
 		Position = vec3Position,
-		PathIndex = pathIndex,
-		PointIndex = 0,
-		InputVar = inputVar,
-		Distance = nil,
-		Updated = false
+		PathIndex = tonumber(pathIndex) or 10, 	-- Path #
+		PointIndex = tonumber(pointIndex) or 0, -- index inside parent path
+		InputVar = inputVar, 					-- raw input value
+		SpeedMode = inputVar & 0xF,
+		ExtraMode = (inputVar >> 4) & 0xF,
+		OptValue = (inputVar >> 8) & 0xFF,
+		Distance = nil,							-- current distance to player
+		Updated = false							-- if true, needs to be sent to server for saving
 	}
 	self:Add(waypoint)
 	return waypoint
@@ -68,6 +75,9 @@ function NodeCollection:Add(waypoint)
 	table.insert(self.waypoints, waypoint)
 	if (self.disabledPaths[waypoint.PathIndex] == nil) then
 		self.disabledPaths[waypoint.PathIndex] = false
+	end
+	if (self.waypointIDs < waypoint.Index) then
+		self.waypointIDs = waypoint.Index+1
 	end
 end
 
@@ -86,8 +96,11 @@ function NodeCollection:Remove(waypoint)
 	end
 end
 
-function NodeCollection:Update(waypoint)
+function NodeCollection:Update(waypoint, data)
+
+	g_Utilities:mergeKeys(waypoint, data)
 	waypoint.Updated = true
+
 	self.waypointsByID[waypoint.ID] = waypoint
 	self.waypointsByIndex[waypoint.Index] = waypoint
 	for i = 1, #self.waypoints do
@@ -95,6 +108,88 @@ function NodeCollection:Update(waypoint)
 			self.waypoints[i] = waypoint
 		end
 	end
+	return waypoint
+end
+
+function NodeCollection:SetInput(inputVar)
+
+	for i=1, #self.selectedWaypoints do
+		self:Update(self.selectedWaypoints[i], {InputVar = (tonumber(inputVar) or 20)})
+	end
+
+	-- TODO
+	-- set input var for selected waypoints
+	-- any number of selected nodes
+end
+
+function NodeCollection:Merge()
+	-- TODO
+	-- combine selected nodes
+	-- nodes must be sequential or the start/end of two paths
+
+	-- move selection into index-based array and sort ascending
+	local selection = {}
+	for k,v in pairs(self.selectedWaypoints) do
+		if (v) then
+			table.insert(selection, self.waypointsByID[k])
+		end
+	end
+	self:Sort(selection, 'PointIndex', true)
+	
+	if (#selection < 2) then
+		return false, 'Must select two or more waypoints'
+	end
+
+	-- check is same path and sequential
+	local currentpath = selection[1].PathIndex
+	local expectedIndex = selection[1].PointIndex
+	for i=1, #selection do
+		print('NodeCollection:Split -> selection['..tostring(i)..']: '..tostring(selection[i].ID))
+
+		if (selection[i].PathIndex ~= currentpath) then
+			return false, 'Waypoints must be on same path'
+		end
+
+		if (selection[i].PointIndex == expectedIndex) then
+			expectedIndex = selection[i].PointIndex+1
+		else
+			return false, 'Waypoints must be sequential'
+		end
+	end
+
+	-- all clear, points are on same path, and in order with no gaps
+	local firstPoint = selection[1]
+	local lastPoint = selection[#selection]
+	local middlePosition = (firstPoint.Position + lastPoint.Position) / 2
+
+	-- remove all selected nodes
+	for i=1, #selection do
+		self:Remove(selection[i])
+	end
+
+	-- create new node in the center
+	local newWaypoint = self:Create(middlePosition, firstPoint.PathIndex, firstPoint.PointIndex, firstPoint.InputVar, firstPoint.Index)
+
+	-- shift all node's indexes by the removed amount
+	-- start at first selected node, iterate to the end
+	local indexDifference = lastPoint.Index - firstPoint.Index 
+	for i=(lastPoint.Index+1), (#self.waypointsByIndex - (firstPoint.Index+1)) do
+		local nextWaypoint = self.waypointsByIndex[i]
+		if (nextWaypoint ~= nil) then
+			nextWaypoint.Updated = true
+			nextWaypoint.Index = nextWaypoint.Index - indexDifference
+			nextWaypoint.PointIndex = nextWaypoint.PointIndex - indexDifference
+			self.waypointsByIndex[nextWaypoint.Index] = nextWaypoint
+		end
+	end
+ 	
+	return true, 'Success'
+end
+
+function NodeCollection:Split()
+	-- TODO
+	-- splits selected nodes in half
+	-- must be at least two sequential nodes
 end
 
 function NodeCollection:Get()
@@ -108,8 +203,17 @@ function NodeCollection:Select(waypoint)
 	self.selectedWaypoints[waypoint.ID] = true
 end
 
-function NodeCollection:SelectByID(waypointID)
-	self:Select({ID = string.format('p_%d', waypointID)})
+function NodeCollection:SelectByID(waypointID, pathID)
+	if (pathID == nil) then
+		self:Select({ID = string.format('p_%d', waypointID)})
+	else
+		for i = 1, #self.waypoints do
+			if (self.waypoints[i].PointIndex == waypointID and self.waypoints[i].PathIndex == pathID) then
+				self:Select(self.waypoints[i])
+				return
+			end
+		end
+	end
 end
 
 function NodeCollection:Deselect(waypoint)
@@ -120,39 +224,48 @@ function NodeCollection:Deselect(waypoint)
 	end
 end
 
-function NodeCollection:DeselectByID(waypointID)
-	self:Deselect({ID = string.format('p_%d', waypointID)})
+function NodeCollection:DeselectByID(waypointID, pathID)
+	if (pathID == nil) then
+		self:Deselect({ID = string.format('p_%d', waypointID)})
+	else
+		for i = 1, #self.waypoints do
+			if (self.waypoints[i].PointIndex == waypointID and self.waypoints[i].PathIndex == pathID) then
+				self:Deselect(self.waypoints[i])
+				return
+			end
+		end
+	end
 end
 
 function NodeCollection:IsSelected(waypoint)
 	return self.selectedWaypoints[waypoint.ID] == true
 end
 
-function NodeCollection:IsSelectedByID(waypointID)
-	return self:IsSelected({ID = string.format('p_%d', waypointID)})
+function NodeCollection:IsSelectedByID(waypointID, pathID)
+	if (pathID == nil) then
+		return self:IsSelected({ID = string.format('p_%d', waypointID)})
+	else
+		for i = 1, #self.waypoints do
+			if (self.waypoints[i].PointIndex == waypointID and self.waypoints[i].PathIndex == pathID) then
+				self:IsSelected(self.waypoints[i])
+				return
+			end
+		end
+	end
 end
 
 function NodeCollection:GetSelected()
 	return self.selectedWaypoints
 end
 
-
-function NodeCollection:SetInput(inputVar)
-	-- TODO
-	-- set input var for selected waypoints
-	-- any number of selected nodes
-end
-
-function NodeCollection:Merge()
-	-- TODO
-	-- combine selected nodes
-	-- nodes must be sequential or the start/end of two paths
-end
-
-function NodeCollection:Split()
-	-- TODO
-	-- splits selected nodes in half
-	-- must be at least two sequential nodes
+function NodeCollection:Sort(collection, keyName, ascending)
+	return table.sort(collection, function(a,b)
+		if (ascending) then
+			return a[keyName] < b[keyName]
+		else
+			return a[keyName] > b[keyName]
+		end
+	end)
 end
 
 function NodeCollection:Clear()
@@ -203,7 +316,8 @@ function NodeCollection:Load(mapName)
 			pathCount = row["pathIndex"]
 		end
 
-		self:Create(Vec3(row["transX"], row["transY"], row["transZ"]), row["pathIndex"], row["inputVar"])
+		local newPoint = self:Create(Vec3(row["transX"], row["transY"], row["transZ"]), row["pathIndex"], row["pointIndex"], row["inputVar"])
+		newPoint.OriginalID = tonumber(row["id"])
 		waypointCount = waypointCount+1
 	end
 
