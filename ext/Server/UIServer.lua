@@ -264,7 +264,7 @@ function FunBotUIServer:_writeSettings(player, request)
 
 		if tempValue >= 0 and tempValue < 10 then
 			if math.abs(request.botSniperAimWorsening - Config.botSniperAimWorsening) > 0.001 then
-				SettingsManager:update('botAimWorsening', tempValue, temporary, batched);
+				SettingsManager:update('botSniperAimWorsening', tempValue, temporary, batched);
 				updateWeapons = true;
 			end
 		end
