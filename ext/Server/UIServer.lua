@@ -273,6 +273,7 @@ function FunBotUIServer:_writeSettings(player, request)
 	if request.aimForHead ~= nil then
 		SettingsManager:update('aimForHead', (request.aimForHead == true), temporary, batched);
 	end
+	
 	if request.headShotFactorBots ~= nil then
 		local tempValue = tonumber(request.headShotFactorBots);
 
@@ -622,6 +623,8 @@ function FunBotUIServer:_writeSettings(player, request)
 				break
 			end
 		end
+	end
+	
 	-- trace
 	if request.debugTracePaths ~= nil then
 		SettingsManager:update('debugTracePaths', (request.debugTracePaths == true), temporary, batched);
