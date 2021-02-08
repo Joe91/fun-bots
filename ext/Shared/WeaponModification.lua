@@ -81,7 +81,6 @@ function WeaponModification:_ModifyWeapon(p_SoldierWeaponData, index, aimWorseni
 	end
 
 	local botAimWorsening = aimWorseningNormal;
-	local recoilFactor = 0;
 	local isReconWeapon = false;
 	-- check for sniper rifles:
 	--https://docs.veniceunleashed.net/vext/ref/fb/weaponclassenum/ and EBX-Dumb
@@ -93,6 +92,7 @@ function WeaponModification:_ModifyWeapon(p_SoldierWeaponData, index, aimWorseni
 		botAimWorsening = aimWorseningSniper
 		isReconWeapon = true;
 	end
+	local recoilFactor = botAimWorsening;
 
 	local s_GunSwayData = self:_MakeWritable(s_WeaponFiringData.weaponSway);
 	-- From here on, you can modify everything in GunSwayData
