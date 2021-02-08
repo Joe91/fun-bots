@@ -58,7 +58,6 @@ function Bot:__init(player)
 	self._shootPlayer = nil;
 	self._shootWayPoints = {};
 	self._lastTargetTrans = Vec3();
-	self._meleeAttackState = 0;
 	self._lastShootPlayer = nil;
 
 	--simple movement
@@ -166,7 +165,6 @@ function Bot:resetVars()
 	self._aimUpdateTimer		= 0; --timer sync
 	self._targetPoint			= nil;
 	self._meleeActive 			= false;
-	self._meleeAttackState		= 0;
 
 	self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 0);
 	self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
@@ -281,7 +279,6 @@ function Bot:resetSpawnVars()
 	self._aimUpdateTimer		= 0; --timer sync
 	self._targetPoint			= nil;
 	self._meleeActive 			= false;
-	self._meleeAttackState		= 0;
 
 	self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 0);
 	self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
@@ -408,45 +405,6 @@ function Bot:_updateYaw()
 	self.player.input.authoritativeAimingYaw = tempYaw
 end
 
-function Bot:_updateMeleeAttack()
-	if Config.meleeAttackIfClose and not self._meleeActive and self._shootPlayer.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans) < 1 and self._meleeAttackState == 0 then
-		self._meleeActive = true;
-		self.activeWeapon = self.knife;
-		self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
-		self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 1);
-		self._meleeAttackState = 1;
-	else
-		if self._meleeAttackState == 1 then
-			if self.player.soldier.weaponsComponent.currentWeaponSlot == WeaponSlot.WeaponSlot_7 then
-				self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 0);
-				self._meleeAttackState = 2;
-				self._meleeCooldownTimer = 0.2;
-			end
-		elseif self._meleeAttackState == 2 then
-			if self._meleeCooldownTimer <= 0 then
-				Events:DispatchLocal("ServerDamagePlayer", self._shootPlayer.name, self.player.name, true);
-				--self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 1); 	-- triggers taketown. not supported
-				--self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);			-- triggers taketown. not supported
-				self._meleeAttackState = 3;
-				self._meleeCooldownTimer = 1.2;
-			end
-		elseif self._meleeAttackState == 3 then
-			if self._meleeCooldownTimer <= 0 then
-				--self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0);
-				--self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
-				self._meleeActive = false;
-				self._meleeAttackState = 4;
-				self._meleeCooldownTimer = Config.meleeAttackCoolDown - 1.2;
-			end
-		else --if self._meleeAttackState == 4 then
-			if self._meleeCooldownTimer <= 0 then
-				self._meleeAttackState = 0;
-			end
-		end
-
-		self._meleeCooldownTimer = self._meleeCooldownTimer - StaticConfig.botUpdateCycle;
-	end
-end
 
 function Bot:_updateShooting()
 	if self.player.alive and self._shoot then
@@ -496,7 +454,26 @@ function Bot:_updateShooting()
 				--self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 1) --does not work.
 
 				--check for melee attack
-				self:_updateMeleeAttack();
+				if Config.meleeAttackIfClose and not self._meleeActive and self._shootPlayer.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans) < 1.5 and self._meleeCooldownTimer <= 0 then
+					self._meleeActive = true;
+					self.activeWeapon = self.knife;
+					self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
+					self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 1);
+					self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 1);
+					self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 1);
+					self._meleeCooldownTimer = Config.meleeAttackCoolDown;
+				else
+					if self._meleeCooldownTimer < 0 then
+						self._meleeCooldownTimer = 0;
+					elseif self._meleeCooldownTimer > 0 then
+						self._meleeCooldownTimer = self._meleeCooldownTimer - StaticConfig.botUpdateCycle;
+						if self._meleeCooldownTimer < (Config.meleeAttackCoolDown - 0.8) then
+							self._meleeActive = false;
+							self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 0);
+							self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0);
+						end
+					end
+				end
 
 				--trace way back
 				if self.activeWeapon.type ~= "Sniper" then
@@ -697,12 +674,14 @@ function Bot:_updateMovement()
 							self._obstacleRetryCounter = self._obstacleRetryCounter + 1;
 							self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
 							self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0);
+							self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 0);
 							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0.0);
 						
 						elseif self._obstaceSequenceTimer > 1.0 then --step 3
 							if self._obstacleRetryCounter == 0 then
 								self._meleeActive = true;
 								self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 1);
+								self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 1);
 								self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 1); --maybe a fence?
 							else
 								self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
