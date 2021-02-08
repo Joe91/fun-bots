@@ -114,7 +114,7 @@ function FunBotUIClient:_onUISettings(data)
 	settings:add("ADVANCED", "Integer", "fovForShooting", Language:I18N("Bot FOV"), data.fovForShooting, 270, Language:I18N("The Field Of View of the bots, where they can detect a player"));
 	settings:add("ADVANCED", "Boolean", "shootBackIfHit", Language:I18N("Attack if Hit"), data.shootBackIfHit, true, Language:I18N("Bots imidiatly attack player, if shot by it"));
 	settings:add("ADVANCED", "Integer", "maxRaycastDistance", Language:I18N("View Distance Bots"), data.maxRaycastDistance, 150, Language:I18N("The maximum distance a Sniper Bot starts shooting at a player"));
-	settings:add("ADVANCED", "Integer", "maxShootDistanceNoSniper", Language:I18N("Attack Distance no Sniper"), data.maxShootDistanceNoSniper, 80, Language:I18N("The maximum distance a non Sniper Bot starts shooting at a player"));
+	settings:add("ADVANCED", "Integer", "maxShootDistanceNoSniper", Language:I18N("Attack Distance no Sniper"), data.maxShootDistanceNoSniper, 70, Language:I18N("The maximum distance a non Sniper Bot starts shooting at a player"));
 	settings:add("ADVANCED", "Float", "distanceForDirectAttack", Language:I18N("Direct Attack Distance"), data.distanceForDirectAttack, 5, Language:I18N("When this close to a bot, he starts attacking"));
 	settings:add("ADVANCED", "Boolean", "meleeAttackIfClose", Language:I18N("Attack with Melee"), data.meleeAttackIfClose, true, Language:I18N("Bots attack the playe with the knife, if close"));
 	settings:add("ADVANCED", "Boolean", "botCanKillHimself", Language:I18N("Bots can kill themself"), data.botCanKillHimself, false, Language:I18N("If false, Bots take no fall or Frag damage"));
