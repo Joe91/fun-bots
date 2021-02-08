@@ -20,6 +20,13 @@ function ClientNodeEditor:__init()
 		Vec4(1,0,0.5,0.25),
 		Vec4(0,0.5,1,0.25),
 		Vec4(1,0.5,0.5,0.25),
+		Vec4(0.5,0.5,0.5,0.25),
+		Vec4(1,0.5,0.25,0.25),
+		Vec4(0.25,1,0.5,0.25),
+		Vec4(0.5,0.25,1,0.25),
+		Vec4(0.5,0.5,0.25,0.25),
+		Vec4(0.25,0.5,0.5,0.25),
+		Vec4(0.5,0.25,0.5,0.25),
 	}
 	self.lineColors = {
 		Vec4(1,0,0,1),
@@ -32,6 +39,13 @@ function ClientNodeEditor:__init()
 		Vec4(1,0,0.5,1),
 		Vec4(0,0.5,1,1),
 		Vec4(1,0.5,0.5,1),
+		Vec4(0.5,0.5,0.5,1),
+		Vec4(1,0.5,0.25,1),
+		Vec4(0.25,1,0.5,1),
+		Vec4(0.5,0.25,1,1),
+		Vec4(0.5,0.5,0.25,1),
+		Vec4(0.25,0.5,0.5,1),
+		Vec4(0.5,0.25,0.5,1),
 	}
 
 	self.CommoRose = {
@@ -156,9 +170,11 @@ end
 
 function ClientNodeEditor:_onUIPushScreen(hook, screen, priority, parentGraph, stateNodeGuid)
 
-	if (Config.debugTracePaths and screen ~= nil and UIScreenAsset(screen).name == 'UI/Flow/Screen/CommRoseScreen') then
-    	self.CommoRose.Active = self.CommoRose.Pressed
+	if (Config.debugTracePaths and screen ~= nil and UIScreenAsset(screen).name == 'UI/Flow/Screen/CommRoseScreen') and self.CommoRose.Pressed then
+		self.CommoRose.Active = self.CommoRose.Pressed
     	self:_onCommoRoseAction('Show')
+    end
+    if (Config.debugTracePaths and screen ~= nil and UIScreenAsset(screen).name == 'UI/Flow/Screen/CommRoseScreen') then
     	hook:Return() -- don't actually display the UI
     end
 	hook:Pass(screen, priority, parentGraph, stateNodeGuid)
@@ -174,21 +190,23 @@ function ClientNodeEditor:_onUIInputConceptEvent(hook, eventType, action)
     if (action == UIInputAction.UIInputAction_CommoRose 
     	and eventType == UIInputActionEventType.UIInputActionEventType_Released
     	and self.CommoRose.Pressed and not self.CommoRose.Active) then
-		self.CommoRose.Pressed = (eventType == UIInputActionEventType.UIInputActionEventType_Pressed)
+		self.CommoRose.Pressed = false
 		self:_onCommoRoseAction('Select')
 	end
 
-	-- was pressed long enough to trigger, then released
+	-- was pressed quickly, quick-select
     if (action == UIInputAction.UIInputAction_CommoRose 
     	and eventType == UIInputActionEventType.UIInputActionEventType_Released
     	and self.CommoRose.Pressed and self.CommoRose.Active) then
-		self.CommoRose.Pressed = (eventType == UIInputActionEventType.UIInputActionEventType_Pressed)
+		self.CommoRose.Pressed = false
+		self.CommoRose.Active = false
 		self:_onCommoRoseAction('Hide')
 	end
 
-    if (action == UIInputAction.UIInputAction_CommoRose) then
+	if (action == UIInputAction.UIInputAction_CommoRose) then
 		self.CommoRose.Pressed = (eventType == UIInputActionEventType.UIInputActionEventType_Pressed)
 	end
+
     hook:Pass(eventType, action)
 end
 
