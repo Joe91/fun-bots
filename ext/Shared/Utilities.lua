@@ -93,6 +93,33 @@ function Utilities:mergeKeys(originalTable, newData)
    return originalTable
 end
 
+function Utilities:dump(o, format, level)
+	local tablevel = ''
+	local newline = ''
+	if (level == nil) then
+		level = 1
+	end
+	if format then
+		tablevel = string.rep("\t", level)
+		tablevellessone = string.rep("\t", math.max(level-1, 0))
+		newline = "\n"
+	end
+
+	if o == nil then
+		return 'nil'
+	end
+	if type(o) == 'table' then
+		local s = '{ ' .. newline
+		for k,v in pairs(o) do
+			if type(k) ~= 'number' then k = '"'..k..'"' end
+				s = s .. tablevel .. '['..k..'] = ' .. g_Utilities:dump(v, format, level+1) .. ',' .. newline
+			end
+			return s .. tablevellessone .. '} '
+	else
+		return tostring(o)
+	end
+end
+
 -- Singleton.
 if g_Utilities == nil then
 	g_Utilities = Utilities();

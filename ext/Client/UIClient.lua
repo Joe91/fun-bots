@@ -133,7 +133,7 @@ function FunBotUIClient:_onUISettings(data)
 	settings:add("TRACE", "Integer", "lineRange", Language:I18N("Line Range"), data.lineRange, 15, Language:I18N("Set how far away waypoint lines are visible (meters)"));
 	settings:add("TRACE", "Boolean", "drawWaypointIDs", Language:I18N("Draw Waypoint IDs"), data.drawWaypointIDs, true, Language:I18N("Draw waypoint IDs"));
 	settings:add("TRACE", "Integer", "textRange", Language:I18N("Text Range"), data.textRange, 3, Language:I18N("Set how far away waypoint text is visible (meters)"));
-	settings:add("TRACE", "Boolean", "debugSelectionRaytraces", Language:I18N("Debug Selection Raytraces"), data.debugTraces, false, Language:I18N("Shows the last trace line and search area from Commo Rose selection"));
+	settings:add("TRACE", "Boolean", "debugSelectionRaytraces", Language:I18N("Debug Selection Raytraces"), data.debugSelectionRaytraces, false, Language:I18N("Shows the last trace line and search area from Commo Rose selection"));
 
 	settings:add("EXPERT", "Float", "botFirstShotDelay", Language:I18N("First Shot Delay"), data.botFirstShotDelay, 0.2, Language:I18N("delay for first shot"));
 	settings:add("EXPERT", "Float", "botMinTimeShootAtPlayer", Language:I18N("Min Time Shoot"), data.botMinTimeShootAtPlayer, 1.0, Language:I18N("the minimum time a Bot shoots at one player"));
