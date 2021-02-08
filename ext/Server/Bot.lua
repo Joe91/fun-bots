@@ -46,6 +46,7 @@ function Bot:__init(player)
 	--advanced movement
 	self._currentWayPoint = nil;
 	self._targetYaw = 0;
+	self._targetPitch = 0;
 	self._targetPoint = nil;
 	self._pathIndex = 0;
 	self._meleeActive = false;
@@ -360,8 +361,8 @@ function Bot:_updateAiming()
 			local distance	= math.sqrt(dz ^ 2 + dx ^ 2);
 			local pitch		= math.atan(dy, distance);
 
-			self.player.input.authoritativeAimingPitch		= pitch;
-			self._targetYaw									= yaw;
+			self._targetPitch	= pitch;
+			self._targetYaw		= yaw;
 		end
 	end
 end
@@ -390,6 +391,7 @@ function Bot:_updateYaw()
 	local inkrement = Globals.yawPerFrame;
 	if absDeltaYaw < inkrement then
 		self.player.input.authoritativeAimingYaw = self._targetYaw;
+		self.player.input.authoritativeAimingPitch = self._targetPitch;
 		return;
 	end
 
@@ -403,6 +405,7 @@ function Bot:_updateYaw()
 		tempYaw = tempYaw + (math.pi * 2);
 	end
 	self.player.input.authoritativeAimingYaw = tempYaw
+	self.player.input.authoritativeAimingPitch = self._targetPitch;
 end
 
 
@@ -447,11 +450,11 @@ function Bot:_updateShooting()
 
 		if self._shootPlayer ~= nil and self._shootPlayer.soldier ~= nil then
 			if self._shootModeTimer < Config.botFireModeDuration then
+				self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 1); --does not work.
 				self.player.input:SetLevel(EntryInputActionEnum.EIAReload, 0);
 				self._shootModeTimer	= self._shootModeTimer + StaticConfig.botUpdateCycle;
 				self.activeMoveMode		= 9; -- movement-mode : attack
 				self._reloadTimer		= 0; -- reset reloading
-				--self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 1) --does not work.
 
 				--check for melee attack
 				if Config.meleeAttackIfClose and not self._meleeActive and self._shootPlayer.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans) < 1.5 and self._meleeCooldownTimer <= 0 then
@@ -591,8 +594,8 @@ function Bot:_updateMovement()
 				self.player.input:SetLevel(i, self._targetPlayer.input:GetLevel(i));
 			end
 
-			self._targetYaw								= self._targetPlayer.input.authoritativeAimingYaw;
-			self.player.input.authoritativeAimingPitch	= self._targetPlayer.input.authoritativeAimingPitch;
+			self._targetYaw		= self._targetPlayer.input.authoritativeAimingYaw;
+			self._targetPitch	= self._targetPlayer.input.authoritativeAimingPitch;
 
 		-- mirroring
 		elseif self.activeMoveMode == 4 and self._targetPlayer ~= nil then
@@ -602,8 +605,8 @@ function Bot:_updateMovement()
 				self.player.input:SetLevel(i, self._targetPlayer.input:GetLevel(i));
 			end
 
-			self._targetYaw	= self._targetPlayer.input.authoritativeAimingYaw + ((self._targetPlayer.input.authoritativeAimingYaw > math.pi) and -math.pi or math.pi);
-			self.player.input.authoritativeAimingPitch	= self._targetPlayer.input.authoritativeAimingPitch;
+			self._targetYaw		= self._targetPlayer.input.authoritativeAimingYaw + ((self._targetPlayer.input.authoritativeAimingYaw > math.pi) and -math.pi or math.pi);
+			self._targetPitch	= self._targetPlayer.input.authoritativeAimingPitch;
 
 		-- move along points
 		elseif self.activeMoveMode == 5 then
@@ -690,7 +693,7 @@ function Bot:_updateMovement()
 						elseif self._obstaceSequenceTimer > 0.4 then --step 2
 							self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
 							self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0);
-							self.player.input.authoritativeAimingPitch		= 0.0;
+							self._targetPitch		= 0.0;
 							if (MathUtils:GetRandomInt(0,1) == 1) then
 								self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 1.0 * Config.speedFactor);
 							else
