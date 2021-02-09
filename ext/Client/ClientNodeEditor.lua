@@ -69,7 +69,7 @@ function ClientNodeEditor:RegisterEvents()
 	NetEvents:Subscribe('NodeEditor:SetLastTraceSearchArea', self, self._onSetLastTraceSearchArea)
 	NetEvents:Subscribe('NodeEditor:ClientInit', self, self._onClientInit)
 
-	Events:Subscribe('Player:Respawn', self, self._onPlayerRespawn)
+	--Events:Subscribe('Player:Respawn', self, self._onPlayerRespawn)
 	Events:Subscribe('Player:Deleted', self, self._onUnload)
 	Events:Subscribe('Level:Destroy', self, self._onUnload)
 	Events:Subscribe('Client:UpdateInput', self, self._onUpdateInput)

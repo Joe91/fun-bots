@@ -321,13 +321,13 @@ function NodeCollection:SetInput(inputVar)
 	end
 end
 
-function NodeCollection:Get(waypointID, pathIndex)
-	if (waypointID ~= nil) then
+function NodeCollection:Get(waypointIndex, pathIndex)
+	if (waypointIndex ~= nil) then
 		local searchTable = self.waypoints
 		if (pathIndex ~= nil) then
 			local searchTable = self:Get(nil, pathIndex)
 			for _, waypoint in pairs(searchTable) do
-				if (waypoint.ID == waypointID) then
+				if (waypoint.Index == waypointIndex) then
 					return waypoint
 				end
 			end
@@ -350,7 +350,7 @@ end
 
 function NodeCollection:Clear(initSize)
 	print('NodeCollection:Clear')
-	
+
 	self.waypoints = {}
 	self.waypointsByID = {}
 	for i=1, #self.waypointsByPathIndex do
@@ -368,7 +368,7 @@ end
 -- Selection
 
 function NodeCollection:Select(waypoint)
-	if (waypoint.ID == nil) then return end
+	if (waypoint == nil or waypoint.ID == nil) then return end
 	self.selectedWaypoints[waypoint.ID] = waypoint
 end
 
@@ -390,7 +390,7 @@ function NodeCollection:DeselectByID(waypointID, pathIndex)
 end
 
 function NodeCollection:IsSelected(waypoint)
-	if (waypoint.ID == nil) then return false end
+	if (waypoint == nil or waypoint.ID == nil) then return false end
 	return self.selectedWaypoints[waypoint.ID] ~= nil
 end
 
