@@ -9,43 +9,28 @@ function ClientNodeEditor:__init()
 	self.waypoints = {}
 	self.playerPos = nil
 	self.textColor = Vec4(1,1,1,1)
-	self.sphereColors = {
-		Vec4(1,0,0,0.25),
-		Vec4(0,1,0,0.25),
-		Vec4(0,0,1,0.25),
-		Vec4(1,1,0,0.25),
-		Vec4(1,0,1,0.25),
-		Vec4(0,1,1,0.25),
-		Vec4(1,0.5,0,0.25),
-		Vec4(1,0,0.5,0.25),
-		Vec4(0,0.5,1,0.25),
-		Vec4(1,0.5,0.5,0.25),
-		Vec4(0.5,0.5,0.5,0.25),
-		Vec4(1,0.5,0.25,0.25),
-		Vec4(0.25,1,0.5,0.25),
-		Vec4(0.5,0.25,1,0.25),
-		Vec4(0.5,0.5,0.25,0.25),
-		Vec4(0.25,0.5,0.5,0.25),
-		Vec4(0.5,0.25,0.5,0.25),
-	}
-	self.lineColors = {
-		Vec4(1,0,0,1),
-		Vec4(0,1,0,1),
-		Vec4(0,0,1,1),
-		Vec4(1,1,0,1),
-		Vec4(1,0,1,1),
-		Vec4(0,1,1,1),
-		Vec4(1,0.5,0,1),
-		Vec4(1,0,0.5,1),
-		Vec4(0,0.5,1,1),
-		Vec4(1,0.5,0.5,1),
-		Vec4(0.5,0.5,0.5,1),
-		Vec4(1,0.5,0.25,1),
-		Vec4(0.25,1,0.5,1),
-		Vec4(0.5,0.25,1,1),
-		Vec4(0.5,0.5,0.25,1),
-		Vec4(0.25,0.5,0.5,1),
-		Vec4(0.5,0.25,0.5,1),
+
+	self.colors = {
+		{Node = Vec4(1,0,0,0.25), Line = Vec4(1,0,0,1)},
+		{Node = Vec4(1,0.55,0,0.25), Line = Vec4(1,0.55,0,1)},
+		{Node = Vec4(1,1,0,0.25), Line = Vec4(1,1,0,1)},
+		{Node = Vec4(0,0.5,0,0.25), Line = Vec4(0,0.5,0,1)},
+		{Node = Vec4(0,0,1,0.25), Line = Vec4(0,0,1,1)},
+		{Node = Vec4(0.29,0,0.51,0.25), Line = Vec4(0.29,0,0.51,1)},
+		{Node = Vec4(1,0,1,0.25), Line = Vec4(1,0,1,1)},
+		{Node = Vec4(0.55,0,0,0.25), Line = Vec4(0.55,0,0,1)},
+		{Node = Vec4(1,0.65,0,0.25), Line = Vec4(1,0.65,0,1)},
+		{Node = Vec4(0.94,0.9,0.55,0.25), Line = Vec4(0.94,0.9,0.55,1)},
+		{Node = Vec4(0.5,1,0,0.25), Line = Vec4(0.5,1,0,1)},
+		{Node = Vec4(0.39,0.58,0.93,0.25), Line = Vec4(0.39,0.58,0.93,1)},
+		{Node = Vec4(0.86,0.44,0.58,0.25), Line = Vec4(0.86,0.44,0.58,1)},
+		{Node = Vec4(0.93,0.51,0.93,0.25), Line = Vec4(0.93,0.51,0.93,1)},
+		{Node = Vec4(1,0.63,0.48,0.25), Line = Vec4(1,0.63,0.48,1)},
+		{Node = Vec4(0.5,0.5,0,0.25), Line = Vec4(0.5,0.5,0,1)},
+		{Node = Vec4(0,0.98,0.6,0.25), Line = Vec4(0,0.98,0.6,1)},
+		{Node = Vec4(0.18,0.31,0.31,0.25), Line = Vec4(0.18,0.31,0.31,1)},
+		{Node = Vec4(0,1,1,0.25), Line = Vec4(0,1,1,1)},
+		{Node = Vec4(1,0.08,0.58,0.25), Line = Vec4(1,0.08,0.58,1)},
 	}
 
 	self.CommoRose = {
@@ -59,6 +44,8 @@ function ClientNodeEditor:__init()
 	self.lastTraceStart = nil
 	self.lastTraceEnd = nil
 
+	self.debugprints = 0
+
 	self:RegisterEvents()
 end
 
@@ -66,20 +53,21 @@ function ClientNodeEditor:RegisterEvents()
 	NetEvents:Subscribe('NodeEditor:SetLastTraceSearchArea', self, self._onSetLastTraceSearchArea)
 	NetEvents:Subscribe('NodeEditor:ClientInit', self, self._onClientInit)
 
-	Events:Subscribe('UpdateManager:Update', self, self._onUpdateManagerUpdate)
-	Events:Subscribe('UI:DrawHud', self, self._onUIDrawHud)
-	Events:Subscribe('Player:Respawn', self, self._onPlayerRespawn)
-	Events:Subscribe('Player:Deleted', self, self._onPlayerDeleted)
-	Events:Subscribe('Level:Destroy', self, self._onLevelDestroy)
+	--Events:Subscribe('Player:Respawn', self, self._onPlayerRespawn)
+	Events:Subscribe('Player:Deleted', self, self._onUnload)
+	Events:Subscribe('Level:Destroy', self, self._onUnload)
 
 	Hooks:Install('UI:PushScreen', 100, self, self._onUIPushScreen)
 	Hooks:Install('UI:InputConceptEvent', 100, self, self._onUIInputConceptEvent)
 
-	Console:Register('GetNodes', 'Remove selected waypoints', self, self._onGetNodes)
+	Console:Register('GetNodes', 'Have server resend all waypoints and lose all changes', self, self._onGetNodes)
 	Console:Register('Remove', 'Remove selected waypoints', self, self._onRemove)
 	Console:Register('Merge', 'Merge selected waypoints', self, self._onMerge)
 	Console:Register('Split', 'Split selected waypoints', self, self._onSplit)
-	Console:Register('ClearSelection', 'Clear selected waypoints', self, self._onClearSelection)
+	Console:Register('ClearSelection', 'Clear selection', self, self._onClearSelection)
+	Console:Register('Move', 'toggle move mode on selected waypoints', self, self._onToggleMove)
+	Console:Register('ShowPath', '(\'all\' or *<number|PathIndex>*) - Show path\'s waypoints', self, self._onShowPath)
+	Console:Register('HidePath', '(\'all\' or *<number|PathIndex>*) - Hide path\'s waypoints', self, self._onHidePath)
 
 end
 
@@ -116,6 +104,59 @@ function ClientNodeEditor:_onClearSelection(args)
 	return true
 end
 
+function ClientNodeEditor:_onToggleMove(args)
+	print(Language:I18N('Not Implemented Yet'))
+	return false
+end
+
+function ClientNodeEditor:_onShowPath(args)
+
+	if (args[1] == nil) then
+		print('Use `all` or *<number|PathIndex>*')
+		return false
+	end
+
+	if (args[1]:lower() == 'all') then
+		for pathID, waypoints in pairs(g_NodeCollection:GetPaths()) do
+			g_NodeCollection:ShowPath(pathID)
+		end
+		print(Language:I18N('Success'))
+		return true
+	end
+
+	if (tonumber(args[1]) ~= nil) then
+		g_NodeCollection:ShowPath(tonumber(args[1]))
+		print(Language:I18N('Success'))
+		return true
+	end
+	print('Use `all` or *<number|PathIndex>*')
+	return false
+end
+
+function ClientNodeEditor:_onHidePath(args)
+
+	if (args[1] == nil) then
+		print('Use `all` or *<number|PathIndex>*')
+		return false
+	end
+
+	if (args[1]:lower() == 'all') then
+		for pathID, waypoints in pairs(g_NodeCollection:GetPaths()) do
+			g_NodeCollection:HidePath(pathID)
+		end
+		print(Language:I18N('Success'))
+		return true
+	end
+
+	if (tonumber(args[1]) ~= nil) then
+		g_NodeCollection:HidePath(tonumber(args[1]))
+		print(Language:I18N('Success'))
+		return true
+	end
+	print('Use `all` or *<number|PathIndex>*')
+	return false
+end
+
 function ClientNodeEditor:_onSetLastTraceSearchArea(data)
 	self.lastTraceSearchAreaPos = data[1]
 	self.lastTraceSearchAreaSize = data[2]
@@ -123,8 +164,28 @@ end
 
 function ClientNodeEditor:_onClientInit()
 	g_NodeCollection:RegisterEvents()
-	self.player = PlayerManager:GetLocalPlayer()
+	g_NodeCollection:RecalculateIndexes()
+
 	self.waypoints = g_NodeCollection:Get()
+	self.player = PlayerManager:GetLocalPlayer()
+
+	Events:Subscribe('UpdateManager:Update', self, self._onUpdateManagerUpdate)
+	Events:Subscribe('UI:DrawHud', self, self._onUIDrawHud)
+
+	print('ClientNodeEditor:_onClientInit -> Nodes received: '..tostring(#self.waypoints))
+	local counter = 0
+	for i=1, #self.waypoints do
+
+		local waypoint = self.waypoints[i]
+		if (type(waypoint.Next) == 'string') then
+			counter = counter+1
+		end
+		if (type(waypoint.Previous) == 'string') then
+			counter = counter+1
+		end
+	end
+	print('ClientNodeEditor:_onClientInit -> Stale Nodes: '..tostring(counter))
+
 end
 
 function ClientNodeEditor:_onPlayerRespawn(args)
@@ -133,16 +194,14 @@ function ClientNodeEditor:_onPlayerRespawn(args)
 	end
 end
 
-function ClientNodeEditor:_onPlayerDeleted(args)
-	g_NodeCollection:Clear()
-	self.player = nil
-	self.waypoints = {}
-end
+function ClientNodeEditor:_onUnload(args)
 
-function ClientNodeEditor:_onLevelDestroy()
+	Events:Unsubscribe('UpdateManager:Update')
+	Events:Unsubscribe('UI:DrawHud')
+
+	g_NodeCollection:DeregisterEvents()
 	g_NodeCollection:Clear()
 	self.player = nil
-	self.waypoints = {}
 end
 
 function ClientNodeEditor:_onUpdateManagerUpdate(delta, pass)
@@ -272,32 +331,36 @@ function ClientNodeEditor:_onUIDrawHud()
 
 	if (Config.debugSelectionRaytraces) then
 		if (self.lastTraceStart ~= nil and self.lastTraceEnd ~= nil) then
-			DebugRenderer:DrawLine(self.lastTraceStart, self.lastTraceEnd, self.textColor, self.textColor)
+			DebugRenderer:DrawLine(self.lastTraceStart, self.lastTraceEnd, self.colors[19].Line, self.colors[19].Line)
 		end
 		if (self.lastTraceSearchAreaPos ~= nil and self.lastTraceSearchAreaSize ~= nil) then
-			DebugRenderer:DrawSphere(self.lastTraceSearchAreaPos, self.lastTraceSearchAreaSize, self.sphereColors[9], false, false)
+			DebugRenderer:DrawSphere(self.lastTraceSearchAreaPos, self.lastTraceSearchAreaSize, self.colors[18].Node, false, false)
 		end
 	end
 
 	for i=1, #self.waypoints do
 		local waypoint = self.waypoints[i]
-		if (waypoint ~= nil) then
+		if (waypoint ~= nil and g_NodeCollection:IsPathVisible(waypoint.PathIndex)) then
 
 			local isSelected = g_NodeCollection:IsSelected(waypoint)
 
 			if (waypoint.Distance ~= nil and waypoint.Distance < Config.waypointRange) then
-				DebugRenderer:DrawSphere(waypoint.Position, 0.05, self.sphereColors[waypoint.PathIndex], false, false)
+				DebugRenderer:DrawSphere(waypoint.Position, 0.05, self.colors[waypoint.PathIndex].Node, false, false)
 			end
 
 			if (waypoint.Distance ~= nil and waypoint.Distance < Config.waypointRange and isSelected) then
-				DebugRenderer:DrawSphere(waypoint.Position, 0.07, self.sphereColors[waypoint.PathIndex], false, false)
-				DebugRenderer:DrawLine(waypoint.Position, waypoint.Position + (Vec3.up * 0.7), self.lineColors[waypoint.PathIndex], self.lineColors[waypoint.PathIndex])
+				DebugRenderer:DrawSphere(waypoint.Position, 0.07,  self.colors[waypoint.PathIndex].Node, false, false)
+				DebugRenderer:DrawLine(waypoint.Position, waypoint.Position + (Vec3.up * 0.7), self.colors[waypoint.PathIndex].Line, self.colors[waypoint.PathIndex].Line)
 			end
 
 			if (waypoint.Distance ~= nil and waypoint.Distance < Config.lineRange and Config.drawWaypointLines) then
 				-- try to find a previous node and draw a line to it
+				if (waypoint.Previous ~= nil and type(waypoint.Previous) == 'string') then
+					waypoint.Previous = g_NodeCollection:Get(waypoint.Previous)
+				end
+
 				if (waypoint.Previous ~= nil) then
-					DebugRenderer:DrawLine(waypoint.Previous.Position, waypoint.Position, self.lineColors[waypoint.PathIndex], self.lineColors[waypoint.PathIndex])
+					DebugRenderer:DrawLine(waypoint.Previous.Position, waypoint.Position, self.colors[waypoint.PathIndex].Line, self.colors[waypoint.PathIndex].Line)
 				end
 			end
 
@@ -307,8 +370,8 @@ function ClientNodeEditor:_onUIDrawHud()
 					local screenPos = ClientUtils:WorldToScreen(waypoint.Position + (Vec3.up * 0.7))
 					if (screenPos ~= nil) then
 
-						local previousNode = "None\n"
-						local nextNode = "None\n"
+						local previousNode = "None"
+						local nextNode = "None"
 						if (waypoint.Previous ~= nil) then
 							previousNode = waypoint.Previous.ID
 						end
@@ -321,9 +384,8 @@ function ClientNodeEditor:_onUIDrawHud()
 						text = text..'Database ID: '..tostring(waypoint.OriginalID).."\n"
 						text = text..'PathIndex: '..tostring(waypoint.PathIndex).."\n"
 						text = text..'PointIndex: '..tostring(waypoint.PointIndex).."\n"
-						text = text..'Previous Node: '..tostring(waypoint.Previous)..' -> '..previousNode.."\n"
-						text = text..'Next Node: '..tostring(waypoint.Next)..' -> '..nextNode.."\n"
-						text = text..'PointIndex: '..tostring(waypoint.PointIndex).."\n"
+						text = text..'Previous Node: '..tostring(waypoint.Previous)..' -> '..tostring(previousNode).."\n"
+						text = text..'Next Node: '..tostring(waypoint.Next)..' -> '..tostring(nextNode).."\n"
 						text = text..'InputVar: '..tostring(g_Utilities:getEnumName(EntryInputActionEnum, waypoint.InputVar))..' ('..tostring(waypoint.InputVar)..')'
 						DebugRenderer:DrawText2D(screenPos.x, screenPos.y, text, self.textColor, 1.2)
 					end

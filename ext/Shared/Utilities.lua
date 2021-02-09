@@ -95,6 +95,7 @@ end
 
 function Utilities:dump(o, format, level)
 	local tablevel = ''
+	local tablevellessone = ''
 	local newline = ''
 	if (level == nil) then
 		level = 1

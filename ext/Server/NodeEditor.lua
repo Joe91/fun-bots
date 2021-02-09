@@ -59,10 +59,14 @@ function NodeEditor:_onEngineUpdate(deltaTime, simulationDeltaTime)
 			for j = sendStatus.Index, #sendStatus.Nodes do
 
 				local sendableNode = sendStatus.Nodes[j]
-				sendableNode.Next = nil
-				sendableNode.Previous = nil
+				if (sendableNode.Next ~= nil) then
+					sendableNode.Next = sendableNode.Next.ID
+				end
+				if (sendableNode.Previous ~= nil) then
+					sendableNode.Previous = sendableNode.Previous.ID
+				end
 
-				NetEvents:SendToLocal('NodeEditor:Add', sendStatus.Player, sendableNode)
+				NetEvents:SendToLocal('NodeEditor:Create', sendStatus.Player, sendableNode)
 				doneThisBatch = doneThisBatch + 1
 				sendStatus.Index = j
 				if (doneThisBatch >= 30) then
@@ -83,6 +87,20 @@ end
 function NodeEditor:_onLevelLoaded(levelName, gameMode)
 	print('NodeEditor:_onLevelLoaded -> '.. levelName..'_'..gameMode)
 	g_NodeCollection:Load(levelName .. '_TeamDeathMatch0')
+
+	local counter = 0
+	local waypoints = g_NodeCollection:Get()
+	for i=1, #waypoints do
+
+		local waypoint = waypoints[i]
+		if (type(waypoint.Next) == 'string') then
+			counter = counter+1
+		end
+		if (type(waypoint.Previous) == 'string') then
+			counter = counter+1
+		end
+	end
+	print('NodeEditor:_onLevelLoaded -> Stale Nodes: '..tostring(counter))
 end
 
 function NodeEditor:_onUIRequestSaveSettings(player, data)
