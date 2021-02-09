@@ -152,40 +152,41 @@ function FunBotUIServer:_onUIRequestCommonRoseShow(player, data)
 	NetEvents:SendTo('UI_CommonRose', player, {
 		Top = {
 			Action	= 'cr_save',
-			Label	= 'Save',
+			Label	= Language:I18N('Save'),
 			Confirm	= true
 		},
 		Left = {
 			{
 				Action	= 'cr_merge',
-				Label	= 'Merge'
+				Label	= Language:I18N('Merge')
 			}, {
 				Action	= 'cr_move',
-				Label	= 'Move'
+				Label	= Language:I18N('Move')
 			}, {
 				Action	= 'cr_delete',
-				Label	= 'Delete'
+				Label	= Language:I18N('Delete')
 			}
 		},
 		Center = {
 			Action	= 'cr_select',
-			Label	= 'Select' -- or "Unselect"
+			Label	= Language:I18N('Select') -- or "Unselect"
 		},
 		Right = {
 			{
 				Action	= 'cr_split',
-				Label	= 'Split'
+				Label	= Language:I18N('Split')
 			}, {
 				Action	= 'cr_set_input',
-				Label	= 'Set Input'
+				Label	= Language:I18N('Set Input'),
+				Confirm	= true
 			}, {
 				Action	= 'cr_create',
-				Label	= 'Create'
+				Label	= Language:I18N('Create')
 			}
 		},
 		Bottom = {
 			Action	= 'cr_load',
-			Label	= 'Load',
+			Label	= Language:I18N('Load'),
 			Confirm	= true
 		}
 	});
