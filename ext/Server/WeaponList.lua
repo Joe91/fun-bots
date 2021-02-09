@@ -117,6 +117,10 @@ function WeaponList:__init()
 	weapon:setStatsValues(80, 560, 15, 3, 0.2, 0.5, true);
 	table.insert(self._weapons, weapon);
 
+	weapon = Weapon('Crossbow', '', {}, 'Sniper', 'Weapons/XP4_Crossbow_Prototype/U_Crossbow_Scoped_Cobra')
+	weapon:setStatsValues(100, 100, 15, 3, 0.2, 0.5, true);
+	table.insert(self._weapons, weapon);
+
 	weapon = Weapon('SKS', '', {'Rifle_Scope', 'Target_Pointer'}, 'Sniper')
 	weapon:setStatsValues(43, 440, 15, 3, 0.2, 0.2, true);
 	table.insert(self._weapons, weapon);

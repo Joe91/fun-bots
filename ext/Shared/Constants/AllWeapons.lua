@@ -24,6 +24,7 @@ AllWeapons = {
 'M98B',
 'M40A5',
 'JNG90',
+'Crossbow',
 'SKS',
 --shotguns with frag
 'SPAS12',
