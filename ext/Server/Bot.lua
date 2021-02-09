@@ -46,6 +46,7 @@ function Bot:__init(player)
 	--advanced movement
 	self._currentWayPoint = nil;
 	self._targetYaw = 0;
+	self._targetPitch = 0;
 	self._targetPoint = nil;
 	self._pathIndex = 0;
 	self._meleeActive = false;
@@ -58,7 +59,6 @@ function Bot:__init(player)
 	self._shootPlayer = nil;
 	self._shootWayPoints = {};
 	self._lastTargetTrans = Vec3();
-	self._meleeAttackState = 0;
 	self._lastShootPlayer = nil;
 
 	--simple movement
@@ -166,7 +166,6 @@ function Bot:resetVars()
 	self._aimUpdateTimer		= 0; --timer sync
 	self._targetPoint			= nil;
 	self._meleeActive 			= false;
-	self._meleeAttackState		= 0;
 
 	self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 0);
 	self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
@@ -281,7 +280,6 @@ function Bot:resetSpawnVars()
 	self._aimUpdateTimer		= 0; --timer sync
 	self._targetPoint			= nil;
 	self._meleeActive 			= false;
-	self._meleeAttackState		= 0;
 
 	self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 0);
 	self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
@@ -363,8 +361,8 @@ function Bot:_updateAiming()
 			local distance	= math.sqrt(dz ^ 2 + dx ^ 2);
 			local pitch		= math.atan(dy, distance);
 
-			self.player.input.authoritativeAimingPitch		= pitch;
-			self._targetYaw									= yaw;
+			self._targetPitch	= pitch;
+			self._targetYaw		= yaw;
 		end
 	end
 end
@@ -393,6 +391,7 @@ function Bot:_updateYaw()
 	local inkrement = Globals.yawPerFrame;
 	if absDeltaYaw < inkrement then
 		self.player.input.authoritativeAimingYaw = self._targetYaw;
+		self.player.input.authoritativeAimingPitch = self._targetPitch;
 		return;
 	end
 
@@ -406,47 +405,9 @@ function Bot:_updateYaw()
 		tempYaw = tempYaw + (math.pi * 2);
 	end
 	self.player.input.authoritativeAimingYaw = tempYaw
+	self.player.input.authoritativeAimingPitch = self._targetPitch;
 end
 
-function Bot:_updateMeleeAttack()
-	if Config.meleeAttackIfClose and not self._meleeActive and self._shootPlayer.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans) < 1 and self._meleeAttackState == 0 then
-		self._meleeActive = true;
-		self.activeWeapon = self.knife;
-		self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
-		self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 1);
-		self._meleeAttackState = 1;
-	else
-		if self._meleeAttackState == 1 then
-			if self.player.soldier.weaponsComponent.currentWeaponSlot == WeaponSlot.WeaponSlot_7 then
-				self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 0);
-				self._meleeAttackState = 2;
-				self._meleeCooldownTimer = 0.2;
-			end
-		elseif self._meleeAttackState == 2 then
-			if self._meleeCooldownTimer <= 0 then
-				Events:DispatchLocal("ServerDamagePlayer", self._shootPlayer.name, self.player.name, true);
-				--self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 1); 	-- triggers taketown. not supported
-				--self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);			-- triggers taketown. not supported
-				self._meleeAttackState = 3;
-				self._meleeCooldownTimer = 1.2;
-			end
-		elseif self._meleeAttackState == 3 then
-			if self._meleeCooldownTimer <= 0 then
-				--self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0);
-				--self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
-				self._meleeActive = false;
-				self._meleeAttackState = 4;
-				self._meleeCooldownTimer = Config.meleeAttackCoolDown - 1.2;
-			end
-		else --if self._meleeAttackState == 4 then
-			if self._meleeCooldownTimer <= 0 then
-				self._meleeAttackState = 0;
-			end
-		end
-
-		self._meleeCooldownTimer = self._meleeCooldownTimer - StaticConfig.botUpdateCycle;
-	end
-end
 
 function Bot:_updateShooting()
 	if self.player.alive and self._shoot then
@@ -489,14 +450,33 @@ function Bot:_updateShooting()
 
 		if self._shootPlayer ~= nil and self._shootPlayer.soldier ~= nil then
 			if self._shootModeTimer < Config.botFireModeDuration then
+				self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 1); --does not work.
 				self.player.input:SetLevel(EntryInputActionEnum.EIAReload, 0);
 				self._shootModeTimer	= self._shootModeTimer + StaticConfig.botUpdateCycle;
 				self.activeMoveMode		= 9; -- movement-mode : attack
 				self._reloadTimer		= 0; -- reset reloading
-				--self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 1) --does not work.
 
 				--check for melee attack
-				self:_updateMeleeAttack();
+				if Config.meleeAttackIfClose and not self._meleeActive and self._shootPlayer.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans) < 1.5 and self._meleeCooldownTimer <= 0 then
+					self._meleeActive = true;
+					self.activeWeapon = self.knife;
+					self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
+					self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 1);
+					self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 1);
+					self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 1);
+					self._meleeCooldownTimer = Config.meleeAttackCoolDown;
+				else
+					if self._meleeCooldownTimer < 0 then
+						self._meleeCooldownTimer = 0;
+					elseif self._meleeCooldownTimer > 0 then
+						self._meleeCooldownTimer = self._meleeCooldownTimer - StaticConfig.botUpdateCycle;
+						if self._meleeCooldownTimer < (Config.meleeAttackCoolDown - 0.8) then
+							self._meleeActive = false;
+							self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 0);
+							self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0);
+						end
+					end
+				end
 
 				--trace way back
 				if self.activeWeapon.type ~= "Sniper" then
@@ -614,8 +594,8 @@ function Bot:_updateMovement()
 				self.player.input:SetLevel(i, self._targetPlayer.input:GetLevel(i));
 			end
 
-			self._targetYaw								= self._targetPlayer.input.authoritativeAimingYaw;
-			self.player.input.authoritativeAimingPitch	= self._targetPlayer.input.authoritativeAimingPitch;
+			self._targetYaw		= self._targetPlayer.input.authoritativeAimingYaw;
+			self._targetPitch	= self._targetPlayer.input.authoritativeAimingPitch;
 
 		-- mirroring
 		elseif self.activeMoveMode == 4 and self._targetPlayer ~= nil then
@@ -625,8 +605,8 @@ function Bot:_updateMovement()
 				self.player.input:SetLevel(i, self._targetPlayer.input:GetLevel(i));
 			end
 
-			self._targetYaw	= self._targetPlayer.input.authoritativeAimingYaw + ((self._targetPlayer.input.authoritativeAimingYaw > math.pi) and -math.pi or math.pi);
-			self.player.input.authoritativeAimingPitch	= self._targetPlayer.input.authoritativeAimingPitch;
+			self._targetYaw		= self._targetPlayer.input.authoritativeAimingYaw + ((self._targetPlayer.input.authoritativeAimingYaw > math.pi) and -math.pi or math.pi);
+			self._targetPitch	= self._targetPlayer.input.authoritativeAimingPitch;
 
 		-- move along points
 		elseif self.activeMoveMode == 5 then
@@ -705,12 +685,14 @@ function Bot:_updateMovement()
 							self._obstacleRetryCounter = self._obstacleRetryCounter + 1;
 							self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
 							self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0);
+							self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 0);
 							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0.0);
 						
 						elseif self._obstaceSequenceTimer > 1.0 then --step 3
 							if self._obstacleRetryCounter == 0 then
 								self._meleeActive = true;
 								self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 1);
+								self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 1);
 								self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 1); --maybe a fence?
 							else
 								self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
@@ -719,7 +701,7 @@ function Bot:_updateMovement()
 						elseif self._obstaceSequenceTimer > 0.4 then --step 2
 							self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
 							self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0);
-							self.player.input.authoritativeAimingPitch		= 0.0;
+							self._targetPitch		= 0.0;
 							if (MathUtils:GetRandomInt(0,1) == 1) then
 								self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 1.0 * Config.speedFactor);
 							else

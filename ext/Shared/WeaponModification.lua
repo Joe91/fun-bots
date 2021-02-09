@@ -19,6 +19,7 @@ function WeaponModification:__init()
 	self.m_maxRecoilYaw		= {};
 	self.m_recoilIncShotMin	= {};
 	self.m_recoilIncShotMax	= {};
+	self.m_recoilDecrease	= {};
 
 	self.crouch = (BOT_ATTACK_MODE == "Crouch");
 end
@@ -40,6 +41,7 @@ function WeaponModification:_resetAll()
 	self.m_maxRecoilYaw		= {};
 	self.m_recoilIncShotMin	= {};
 	self.m_recoilIncShotMax	= {};
+	self.m_recoilDecrease	= {};
 end
 
 function WeaponModification:OnPartitionLoaded(p_Partition)
@@ -90,6 +92,7 @@ function WeaponModification:_ModifyWeapon(p_SoldierWeaponData, index, aimWorseni
 		botAimWorsening = aimWorseningSniper
 		isReconWeapon = true;
 	end
+	local recoilFactor = botAimWorsening;
 
 	local s_GunSwayData = self:_MakeWritable(s_WeaponFiringData.weaponSway);
 	-- From here on, you can modify everything in GunSwayData
@@ -111,7 +114,7 @@ function WeaponModification:_ModifyWeapon(p_SoldierWeaponData, index, aimWorseni
 						self.m_incPerShot[index] = s_MovingValue.increasePerShot;
 					end
 
-					s_MovingValue.minAngle 			= self.m_minAngles[index] * botAimWorsening;
+					s_MovingValue.minAngle 			= self.m_minAngles[index] * 0;
 					s_MovingValue.maxAngle 			= self.m_maxAngles[index] * botAimWorsening;
 					s_MovingValue.increasePerShot 	= self.m_incPerShot[index] * botAimWorsening;
 					--decreasePerSecond 	float
@@ -126,14 +129,15 @@ function WeaponModification:_ModifyWeapon(p_SoldierWeaponData, index, aimWorseni
 						self.m_maxRecoilYaw[index] = s_RecoilData.horizontalRecoilAmplitudeMax;
 						self.m_recoilIncShotMin[index] = s_RecoilData.horizontalRecoilAmplitudeIncPerShotMin;
 						self.m_recoilIncShotMax[index] = s_RecoilData.horizontalRecoilAmplitudeIncPerShotMax;
+						self.m_recoilDecrease[index] = s_RecoilData.recoilAmplitudeDecreaseFactor
 					end
 
-					s_RecoilData.recoilAmplitudeMax 			= self.m_maxRecoilPitch[index] * botAimWorsening;
-					s_RecoilData.recoilAmplitudeIncPerShot		= self.m_recoilIncShot[index] * botAimWorsening;
-					s_RecoilData.horizontalRecoilAmplitudeMax 	= self.m_maxRecoilYaw[index] * botAimWorsening;
-					s_RecoilData.horizontalRecoilAmplitudeIncPerShotMin = self.m_recoilIncShotMin[index] * botAimWorsening;
-					s_RecoilData.horizontalRecoilAmplitudeIncPerShotMax = self.m_recoilIncShotMax[index] * botAimWorsening;
-					-- recoilAmplitudeDecreaseFactor 	float
+					s_RecoilData.recoilAmplitudeMax 			= self.m_maxRecoilPitch[index] * recoilFactor;
+					s_RecoilData.recoilAmplitudeIncPerShot		= self.m_recoilIncShot[index] * recoilFactor;
+					s_RecoilData.horizontalRecoilAmplitudeMax 	= self.m_maxRecoilYaw[index] * recoilFactor;
+					s_RecoilData.horizontalRecoilAmplitudeIncPerShotMin = self.m_recoilIncShotMin[index] * 0;
+					s_RecoilData.horizontalRecoilAmplitudeIncPerShotMax = self.m_recoilIncShotMax[index] * recoilFactor;
+					--s_RecoilData.recoilAmplitudeDecreaseFactor 	= self.m_recoilDecrease[index] * (1/(recoilFactor + 0.0001))
 				end
 
 				--if isReconWeapon then --only for recon in standing as well.
@@ -146,7 +150,7 @@ function WeaponModification:_ModifyWeapon(p_SoldierWeaponData, index, aimWorseni
 						self.m_incPerShotStand[index] = s_StandingValue.increasePerShot;
 					end
 
-					s_StandingValue.minAngle 			= self.m_minAnglesStand[index] * botAimWorsening;
+					s_StandingValue.minAngle 			= self.m_minAnglesStand[index] * 0;
 					s_StandingValue.maxAngle 			= self.m_maxAnglesStand[index] * botAimWorsening;
 					s_StandingValue.increasePerShot 	= self.m_incPerShotStand[index] * botAimWorsening;
 					--decreasePerSecond 	float
@@ -172,7 +176,7 @@ function WeaponModification:_ModifyWeapon(p_SoldierWeaponData, index, aimWorseni
 						self.m_incPerShot[index] = s_MovingValue.increasePerShot;
 					end
 
-					s_MovingValue.minAngle 			= self.m_minAngles[index] * botAimWorsening;
+					s_MovingValue.minAngle 			= self.m_minAngles[index] * 0;
 					s_MovingValue.maxAngle 			= self.m_maxAngles[index] * botAimWorsening;
 					s_MovingValue.increasePerShot 	= self.m_incPerShot[index] * botAimWorsening;
 					--decreasePerSecond 	float
@@ -187,14 +191,15 @@ function WeaponModification:_ModifyWeapon(p_SoldierWeaponData, index, aimWorseni
 						self.m_maxRecoilYaw[index] = s_RecoilData.horizontalRecoilAmplitudeMax;
 						self.m_recoilIncShotMin[index] = s_RecoilData.horizontalRecoilAmplitudeIncPerShotMin;
 						self.m_recoilIncShotMax[index] = s_RecoilData.horizontalRecoilAmplitudeIncPerShotMax;
+						self.m_recoilDecrease[index] = s_RecoilData.recoilAmplitudeDecreaseFactor
 					end
 
-					s_RecoilData.recoilAmplitudeMax 			= self.m_maxRecoilPitch[index] * botAimWorsening;
-					s_RecoilData.recoilAmplitudeIncPerShot		= self.m_recoilIncShot[index] * botAimWorsening;
-					s_RecoilData.horizontalRecoilAmplitudeMax 	= self.m_maxRecoilYaw[index] * botAimWorsening;
-					s_RecoilData.horizontalRecoilAmplitudeIncPerShotMin = self.m_recoilIncShotMin[index] * botAimWorsening;
-					s_RecoilData.horizontalRecoilAmplitudeIncPerShotMax = self.m_recoilIncShotMax[index] * botAimWorsening;
-					-- recoilAmplitudeDecreaseFactor 	float
+					s_RecoilData.recoilAmplitudeMax 			= self.m_maxRecoilPitch[index] * recoilFactor;
+					s_RecoilData.recoilAmplitudeIncPerShot		= self.m_recoilIncShot[index] * recoilFactor;
+					s_RecoilData.horizontalRecoilAmplitudeMax 	= self.m_maxRecoilYaw[index] * recoilFactor;
+					s_RecoilData.horizontalRecoilAmplitudeIncPerShotMin = self.m_recoilIncShotMin[index] * 0;
+					s_RecoilData.horizontalRecoilAmplitudeIncPerShotMax = self.m_recoilIncShotMax[index] * recoilFactor;
+					--s_RecoilData.recoilAmplitudeDecreaseFactor 	= self.m_recoilDecrease[index] * (1/(recoilFactor + 0.0001))
 				end
 
 				--if isReconWeapon then --only for recon in standing as well.
@@ -207,7 +212,7 @@ function WeaponModification:_ModifyWeapon(p_SoldierWeaponData, index, aimWorseni
 						self.m_incPerShotStand[index] = s_StandingValue.increasePerShot;
 					end
 
-					s_StandingValue.minAngle 			= self.m_minAnglesStand[index] * botAimWorsening;
+					s_StandingValue.minAngle 			= self.m_minAnglesStand[index] * 0;
 					s_StandingValue.maxAngle 			= self.m_maxAnglesStand[index] * botAimWorsening;
 					s_StandingValue.increasePerShot 	= self.m_incPerShotStand[index] * botAimWorsening;
 					--decreasePerSecond 	float

@@ -51,12 +51,16 @@ function WeaponList:__init()
 	table.insert(self._weapons, weapon);
 
 	--support
-	weapon = Weapon('M249', '', {'Eotech', 'Bipod'},'LMG')
-	weapon:setStatsValues( 25, 620, 15, 20, 2.0, 0.6, true)
+	weapon = Weapon('M249', '', {'Eotech', 'TargetPointer'},'LMG')
+	weapon:setStatsValues( 25, 620, 15, 20, 1.5, 0.6, true)
 	table.insert(self._weapons, weapon);
 
-	weapon = Weapon('M240', '', {'Eotech', 'Bipod'}, 'LMG')
-	weapon:setStatsValues(34, 610, 15, 20, 2.0, 0.6, true)
+	weapon = Weapon('Pecheneg', '', {'EOTech', 'Target_Pointer'},'LMG')
+	weapon:setStatsValues( 34, 560, 15, 20, 1.5, 0.6, true)
+	table.insert(self._weapons, weapon);
+
+	weapon = Weapon('M240', '', {'Eotech', 'TargetPointer'}, 'LMG')
+	weapon:setStatsValues(34, 610, 15, 20, 1.5, 0.6, true)
 	table.insert(self._weapons, weapon);
 
 	-- recon

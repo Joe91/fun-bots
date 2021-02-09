@@ -11,17 +11,17 @@ Config = {
 	botColor = "RANDOM_COLOR",		-- see BotColors
 
 	--difficluty
-	botAimWorsening = 0.1,			-- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy).
+	botAimWorsening = 0.3,			-- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy).
 	botSniperAimWorsening = 0.0,	-- see botAimWorsening, only for Sniper-rifles
 	aimForHead = false,				-- bots aim for the head
 	headShotFactorBots = 1.5,		-- factor for damage if headshot
-	damageFactorAssault = 0.8,		-- origninal Damage from bots gets multiplied by this
-	damageFactorCarabine = 0.8,		-- origninal Damage from bots gets multiplied by this
-	damageFactorLMG = 0.8,			-- origninal Damage from bots gets multiplied by this
+	damageFactorAssault = 0.5,		-- origninal Damage from bots gets multiplied by this
+	damageFactorCarabine = 0.5,		-- origninal Damage from bots gets multiplied by this
+	damageFactorLMG = 0.5,			-- origninal Damage from bots gets multiplied by this
 	damageFactorSniper = 0.8,		-- origninal Damage from bots gets multiplied by this
-	damageFactorShotgun = 0.8,		-- origninal Damage from bots gets multiplied by this
+	damageFactorShotgun = 0.5,		-- origninal Damage from bots gets multiplied by this
 	damageFactorPistol = 0.8,		-- origninal Damage from bots gets multiplied by this
-	damageFactorKnife = 0.8,		-- origninal Damage from bots gets multiplied by this
+	damageFactorKnife = 1.2,		-- origninal Damage from bots gets multiplied by this
 
 	--spawn
 	spawnOnLevelstart = true,		-- bots spawn on levelstart (if valid paths are available)
@@ -46,7 +46,7 @@ Config = {
 	-- weapons
 	assaultWeapon = "M416",			-- weapon of Assault class
 	engineerWeapon = "M4A1",		-- weapon of Engineer class
-	supportWeapon = "M240",			-- weapon of Support class
+	supportWeapon = "M249",			-- weapon of Support class
 	reconWeapon = "L96",			-- weapon of Recon class
 	pistol = "M1911_Lit",			-- Bot pistol
 	knife = "Razor",				-- Bot knife
@@ -65,7 +65,7 @@ Config = {
 	fovForShooting = 270,			-- Degrees of FOV of Bot
 	shootBackIfHit = true,			-- bot shoots back, if hit
 	maxRaycastDistance = 150,		-- meters bots start shooting at player
-	maxShootDistanceNoSniper = 80,	-- meters a bot (not sniper) start shooting at player
+	maxShootDistanceNoSniper = 70,	-- meters a bot (not sniper) start shooting at player
 	distanceForDirectAttack = 5,	-- if a bot is that close he will attack, even if not in FOV
 	botCanKillHimself = false,		-- if a bot is that close he will attack, even if not in FOV
 	meleeAttackIfClose = true,		-- bot attacks with melee if close
