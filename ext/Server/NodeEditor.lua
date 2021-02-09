@@ -41,8 +41,9 @@ end
 
 -- send to players when they spawn
 function NodeEditor:_onGetNodes(player)
-	NetEvents:SendToLocal('NodeEditor:Clear', player)
 	local nodes = g_NodeCollection:Get()
+	NetEvents:SendToLocal('NodeEditor:Clear', player, #nodes)
+
 	table.insert(self.playersReceivingNodes, {Player = player, Index = 1, Nodes = nodes})
 	print('Sending '..tostring(#nodes)..' waypoints to '..player.name)
 end
@@ -68,7 +69,7 @@ function NodeEditor:_onEngineUpdate(deltaTime, simulationDeltaTime)
 
 				NetEvents:SendToLocal('NodeEditor:Create', sendStatus.Player, sendableNode)
 				doneThisBatch = doneThisBatch + 1
-				sendStatus.Index = j
+				sendStatus.Index = j+1
 				if (doneThisBatch >= 30) then
 					break
 				end

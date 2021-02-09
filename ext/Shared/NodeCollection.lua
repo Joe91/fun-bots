@@ -9,7 +9,6 @@ function NodeCollection:__init()
 end
 
 function NodeCollection:InitTables()
-	self.waypointIDs = 1
 	self.waypoints = {}
 	self.waypointsByID = {}
 	self.waypointsByPathIndex = {}
@@ -79,24 +78,24 @@ end
 -- Management
 
 function NodeCollection:Create(data)
-	local newIndex = self:_createID()
+	local newIndex = #self.waypoints+1
 	local inputVar = 20
 
 	-- setup defaults for a blank node
 	local waypoint = {
-		ID = string.format('p_%d', newIndex), 	-- new generated id for internal storage
-		OriginalID = nil,						-- original id from database
-		Index = newIndex, 						-- new generated id in numerical form
+		ID = string.format('p_%d', newIndex), -- new generated id for internal storage
+		OriginalID = nil,					-- original id from database
+		Index = newIndex, 					-- new generated id in numerical form
 		Position = Vec3(0,0,0),
-		PathIndex = 1, 					-- Path #
-		PointIndex = 1, 				-- index inside parent path
-		InputVar = inputVar, 					-- raw input value
+		PathIndex = 1, 						-- Path #
+		PointIndex = 1, 					-- index inside parent path
+		InputVar = inputVar, 				-- raw input value
 		SpeedMode = inputVar & 0xF,
 		ExtraMode = (inputVar >> 4) & 0xF,
 		OptValue = (inputVar >> 8) & 0xFF,
-		Distance = nil,							-- current distance to player
-		Updated = false,						-- if true, needs to be sent to server for saving
-		Previous = nil,							-- tree navigation
+		Distance = nil,						-- current distance to player
+		Updated = false,					-- if true, needs to be sent to server for saving
+		Previous = nil,						-- tree navigation
 		Next = nil
 	}
 
@@ -117,9 +116,6 @@ function NodeCollection:Register(waypoint)
 	end
 	if (self.waypointsByPathIndex[waypoint.PathIndex] == nil) then
 		self.waypointsByPathIndex[waypoint.PathIndex] = {}
-	end
-	if (self.waypointIDs < waypoint.Index) then
-		self.waypointIDs = waypoint.Index+1
 	end
 
 	-- node associations are already set, don't change them
@@ -146,8 +142,15 @@ function NodeCollection:Register(waypoint)
 	end
 
 	table.insert(self.waypoints, waypoint)
+	if (#self.waypoints ~= waypoint.Index) then
+		local diff = waypoint.Index - #self.waypoints
+		print('Warning, New Node index does not match: waypoint.Index:'..tostring(waypoint.Index)..' ('..type(waypoint.Index)..') | #self.waypoints:'..tostring(#self.waypoints)..' ('..type(waypoint.Index)..') | '.. tostring(diff))
+	end
+
 	table.insert(self.waypointsByPathIndex[waypoint.PathIndex], self.waypoints[#self.waypoints])
 	self.waypointsByID[waypoint.ID] = self.waypoints[#self.waypoints]
+
+	return waypoint
 end
 
 function NodeCollection:Remove(waypoint)
@@ -175,21 +178,10 @@ function NodeCollection:Remove(waypoint)
 	waypoint.Previous = nil
 
 	-- delete facebook
-	self.waypointsByID[waypoint.ID] = nil
+	self.waypoints[waypoint.Index] = waypoint
+	self.waypointsByID[waypoint.ID] = waypoint
+	self.waypointsByPathIndex[waypoint.PathIndex][waypoint.PointIndex] = waypoint
 	self.selectedWaypoints[waypoint.ID] = nil
-
-	for i = 1, #self.waypoints do
-		if (self.waypoints[i].ID == waypoint.ID) then
-			table.remove(self.waypoints, i)
-			break
-		end
-	end
-	for i = 1, #self.waypointsByPathIndex[waypoint.PathIndex] do
-		if (self.waypointsByPathIndex[waypoint.PathIndex][i].ID == waypoint.ID) then
-			table.remove(self.waypointsByPathIndex[waypoint.PathIndex], i)
-			break
-		end
-	end
 	-- go hit the gym
 end
 
@@ -266,7 +258,7 @@ function NodeCollection:RecalculateIndexes(waypoint)
 		end
 	else
 		while waypoint do
-			waypoint = self:_processWaypointRecalc(waypoint)
+			self.waypoints[waypoint.Index] = self:_processWaypointRecalc(waypoint)
 			waypoint = waypoint.Next
 			counter = counter + 1
 		end
@@ -277,9 +269,11 @@ end
 function NodeCollection:_processWaypointRecalc(waypoint)
 	
 	local lastIndex = 0
+	local lastPathIndex = 0
 	local lastPointIndex = 0
 	local currentPathIndex = -1
 
+	-- convert neighbor referrences
 	if (type(waypoint.Next) == 'string') then
 		waypoint.Next = self.waypointsByID[waypoint.Next]
 		if (waypoint.Next ~= nil) then
@@ -295,35 +289,35 @@ function NodeCollection:_processWaypointRecalc(waypoint)
 
 	if (waypoint.Previous ~= nil) then
 		lastIndex = waypoint.Previous.Index
+		lastPathIndex = waypoint.Previous.PathIndex
 		lastPointIndex = waypoint.Previous.PointIndex
 	end
+		
 	--reset lastPointIndex on new path
-	if (waypoint.PathIndex ~= currentPathIndex) then
-		currentPathIndex = waypoint.PathIndex
+	if (waypoint.PathIndex ~= lastPathIndex) then
+		lastPathIndex = waypoint.PathIndex
 		lastPointIndex = 0
 	end
 
-	if (waypoint.Index ~= lastIndex + 1) then
-		lastIndex = lastIndex + 1
-		waypoint.Index = lastIndex
-		waypoint.Updated = true
-	end
 	if (waypoint.PointIndex ~= lastPointIndex + 1) then
 		lastPointIndex = lastPointIndex + 1
 		waypoint.PointIndex = lastPointIndex
 		waypoint.Updated = true
 	end
+
 	return waypoint
 end
 
 function NodeCollection:Update(waypoint, data)
 	g_Utilities:mergeKeys(waypoint, data)
 	waypoint.Updated = true
+	self.waypoints[waypoint.Index] = waypoint
 end
 
 function NodeCollection:SetInput(inputVar)
-	for i=1, #self.selectedWaypoints do
-		self:Update(self.selectedWaypoints[i], {InputVar = (tonumber(inputVar) or 20)})
+	local selection = self:GetSelected()
+	for _,selectedWaypoint in pairs(selection) do
+		self:Update(selectedWaypoint, {InputVar = (tonumber(inputVar) or 20)})
 	end
 end
 
@@ -354,11 +348,20 @@ function NodeCollection:GetPaths()
 	return self.waypointsByPathIndex
 end
 
-function NodeCollection:Clear()
-	self.waypointIDs = 1
+function NodeCollection:Clear(initSize)
+	print('NodeCollection:Clear')
+	
 	self.waypoints = {}
 	self.waypointsByID = {}
+	for i=1, #self.waypointsByPathIndex do
+		self.waypointsByPathIndex[i] = {}
+	end
 	self.waypointsByPathIndex = {}
+	self.selectedWaypoints = {}
+
+	if (initSize ~= nil) then
+		print('NodeCollection:Clear -> Expecting: '..tostring(initSize))
+	end
 end
 
 -----------------------------
@@ -423,6 +426,7 @@ function NodeCollection:MergeSelection()
 	print('currentWaypoint.Next: '..tostring(currentWaypoint.Next))
 	print('currentWaypoint.Previous: '..tostring(currentWaypoint.Previous))
 	print('NodeCollection:Merge -> selection[1]: '..tostring(selection[1].Index))
+	print('NodeCollection:Merge -> selection[1].Next: '..tostring(selection[1].Next.Index))
 	for i=2, #selection do
 		print('NodeCollection:Merge -> selection['..tostring(i)..']: '..tostring(selection[i].Index))
 
@@ -431,8 +435,8 @@ function NodeCollection:MergeSelection()
 		end
 
 		if (currentWaypoint.Next.Index ~= selection[i].Index) then
-			print('selection[i].Index: '..tostring(selection[i].Index))
 			print('currentWaypoint.Next.Index: '..tostring(currentWaypoint.Next.Index))
+			print('selection['..tostring(i)..'].Index: '..tostring(selection[i].Index))
 			return false, 'Waypoints must be sequential'
 		end
 		currentWaypoint = selection[i]
@@ -702,12 +706,6 @@ function NodeCollection:FindAlongTrace(vec3Start, vec3End, granularity, toleranc
 		distance = testPos:Distance(vec3End)
 	end
 	return nil
-end
-
-function NodeCollection:_createID()
-	local index = self.waypointIDs
-	self.waypointIDs = self.waypointIDs+1
-	return index
 end
 
 function NodeCollection:getModuleState()

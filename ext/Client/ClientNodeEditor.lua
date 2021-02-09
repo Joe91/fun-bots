@@ -8,9 +8,11 @@ function ClientNodeEditor:__init()
 	self.player = nil
 	self.waypoints = {}
 	self.playerPos = nil
-	self.textColor = Vec4(1,1,1,1)
 
 	self.colors = {
+		["Text"] = Vec4(1,1,1,1),
+		["Ray"] = {Node = Vec4(1,1,1,0.2), Line = {Vec4(1,1,1,1),Vec4(0,0,0,1)}},
+		["Orphan"] = {Node = Vec4(0,0,0,0.2), Line = Vec4(0,0,0,1)},
 		{Node = Vec4(1,0,0,0.25), Line = Vec4(1,0,0,1)},
 		{Node = Vec4(1,0.55,0,0.25), Line = Vec4(1,0.55,0,1)},
 		{Node = Vec4(1,1,0,0.25), Line = Vec4(1,1,0,1)},
@@ -50,25 +52,104 @@ function ClientNodeEditor:__init()
 end
 
 function ClientNodeEditor:RegisterEvents()
+
+	NetEvents:Subscribe('UI_CommoRose_Action_Select', self, self._onSelectNode)
+
+	NetEvents:Subscribe('UI_CommoRose_Action_Merge', self, self._onMergeNode)
+	NetEvents:Subscribe('UI_CommoRose_Action_Move', self, self._onToggleMoveNode)
+	NetEvents:Subscribe('UI_CommoRose_Action_Delete', self, self._onRemoveNode)
+
+	NetEvents:Subscribe('UI_CommoRose_Action_Split', self, self._onSplitNode)
+	NetEvents:Subscribe('UI_CommoRose_Action_SetInput', self, self._onSetInputNode)
+	NetEvents:Subscribe('UI_CommoRose_Action_Create', self, self._onCreateNode)
+
+	NetEvents:Subscribe('UI_CommoRose_Action_Save', self, self._onSaveNodes)
+	NetEvents:Subscribe('UI_CommoRose_Action_Load', self, self._onLoadNodes)
+
 	NetEvents:Subscribe('NodeEditor:SetLastTraceSearchArea', self, self._onSetLastTraceSearchArea)
 	NetEvents:Subscribe('NodeEditor:ClientInit', self, self._onClientInit)
 
-	--Events:Subscribe('Player:Respawn', self, self._onPlayerRespawn)
+	Events:Subscribe('Player:Respawn', self, self._onPlayerRespawn)
 	Events:Subscribe('Player:Deleted', self, self._onUnload)
 	Events:Subscribe('Level:Destroy', self, self._onUnload)
+	Events:Subscribe('Client:UpdateInput', self, self._onUpdateInput)
 
 	Hooks:Install('UI:PushScreen', 100, self, self._onUIPushScreen)
-	Hooks:Install('UI:InputConceptEvent', 100, self, self._onUIInputConceptEvent)
 
 	Console:Register('GetNodes', 'Have server resend all waypoints and lose all changes', self, self._onGetNodes)
-	Console:Register('Remove', 'Remove selected waypoints', self, self._onRemove)
-	Console:Register('Merge', 'Merge selected waypoints', self, self._onMerge)
-	Console:Register('Split', 'Split selected waypoints', self, self._onSplit)
+	Console:Register('Remove', 'Remove selected waypoints', self, self._onRemoveNode)
+	Console:Register('Merge', 'Merge selected waypoints', self, self._onMergeNode)
+	Console:Register('Split', 'Split selected waypoints', self, self._onSplitNode)
 	Console:Register('ClearSelection', 'Clear selection', self, self._onClearSelection)
-	Console:Register('Move', 'toggle move mode on selected waypoints', self, self._onToggleMove)
+	Console:Register('Move', 'toggle move mode on selected waypoints', self, self._onToggleMoveNode)
 	Console:Register('ShowPath', '(\'all\' or *<number|PathIndex>*) - Show path\'s waypoints', self, self._onShowPath)
 	Console:Register('HidePath', '(\'all\' or *<number|PathIndex>*) - Hide path\'s waypoints', self, self._onHidePath)
+	Console:Register('ShowRose', 'Show custom Commo Rose', self, self._onShowRose)
+	Console:Register('HideRose', 'Hide custom Commo Rose', self, self._onHideRose)
 
+end
+
+function ClientNodeEditor:_onSelectNode(args)
+	self.CommoRose.Active = false
+	self:_onCommoRoseAction('Select')
+end
+
+
+function ClientNodeEditor:_onMergeNode(args)
+	self.CommoRose.Active = false
+	local result, message = g_NodeCollection:MergeSelection()
+	self.waypoints = g_NodeCollection:Get()
+	print(Language:I18N(message))
+	return result
+end
+
+function ClientNodeEditor:_onToggleMoveNode(args)
+	self.CommoRose.Active = false
+	print(Language:I18N('Not Implemented Yet'))
+	return false
+end
+
+function ClientNodeEditor:_onRemoveNode(args)
+	self.CommoRose.Active = false
+	g_NodeCollection:Remove()
+	self.waypoints = g_NodeCollection:Get()
+	print(Language:I18N('Success'))
+	return true
+end
+
+
+function ClientNodeEditor:_onSplitNode(args)
+	self.CommoRose.Active = false
+	local result, message = g_NodeCollection:SplitSelection()
+	self.waypoints = g_NodeCollection:Get()
+	print(Language:I18N(message))
+	return result
+end
+
+function ClientNodeEditor:_onSetInputNode(args)
+	self.CommoRose.Active = false
+	g_NodeCollection:SetInput(args[1])
+	print(Language:I18N('Success'))
+	return true
+end
+
+function ClientNodeEditor:_onCreateNode(args)
+	self.CommoRose.Active = false
+	print(Language:I18N('Not Implemented Yet'))
+	return false
+end
+
+
+function ClientNodeEditor:_onSaveNodes(args)
+	self.CommoRose.Active = false
+	print(Language:I18N('Not Implemented Yet'))
+	return false
+end
+
+function ClientNodeEditor:_onLoadNodes(args)
+	self.CommoRose.Active = false
+	print(Language:I18N('Not Implemented Yet'))
+	return false
 end
 
 
@@ -77,36 +158,10 @@ function ClientNodeEditor:_onGetNodes(args)
 	return true
 end
 
-function ClientNodeEditor:_onRemove(args)
-	g_NodeCollection:Remove()
-	self.waypoints = g_NodeCollection:Get()
-	print(Language:I18N('Success'))
-	return true
-end
-
-function ClientNodeEditor:_onMerge(args)
-	local result, message = g_NodeCollection:MergeSelection()
-	self.waypoints = g_NodeCollection:Get()
-	print(Language:I18N(message))
-	return result
-end
-
-function ClientNodeEditor:_onSplit(args)
-	local result, message = g_NodeCollection:SplitSelection()
-	self.waypoints = g_NodeCollection:Get()
-	print(Language:I18N(message))
-	return result
-end
-
 function ClientNodeEditor:_onClearSelection(args)
 	g_NodeCollection:ClearSelection()
 	print(Language:I18N('Success'))
 	return true
-end
-
-function ClientNodeEditor:_onToggleMove(args)
-	print(Language:I18N('Not Implemented Yet'))
-	return false
 end
 
 function ClientNodeEditor:_onShowPath(args)
@@ -157,9 +212,37 @@ function ClientNodeEditor:_onHidePath(args)
 	return false
 end
 
+function ClientNodeEditor:_onShowRose(args)
+	self:_onCommoRoseAction('Show')
+	print(Language:I18N('Success'))
+	return true
+end
+
+function ClientNodeEditor:_onHideRose(args)
+	self:_onCommoRoseAction('Hide')
+	print(Language:I18N('Success'))
+	return true
+end
+
 function ClientNodeEditor:_onSetLastTraceSearchArea(data)
 	self.lastTraceSearchAreaPos = data[1]
 	self.lastTraceSearchAreaSize = data[2]
+end
+
+function ClientNodeEditor:_onPlayerRespawn(args)
+	if (Config.debugTracePaths) then
+		self:_onUnload()
+		NetEvents:Send('NodeEditor:GetNodes')
+	end
+end
+
+function ClientNodeEditor:_onUnload(args)
+	self.player = nil
+	self.waypoints = {}
+	g_NodeCollection:Clear()
+	g_NodeCollection:DeregisterEvents()
+	Events:Unsubscribe('UpdateManager:Update')
+	Events:Unsubscribe('UI:DrawHud')
 end
 
 function ClientNodeEditor:_onClientInit()
@@ -185,23 +268,6 @@ function ClientNodeEditor:_onClientInit()
 		end
 	end
 	print('ClientNodeEditor:_onClientInit -> Stale Nodes: '..tostring(counter))
-
-end
-
-function ClientNodeEditor:_onPlayerRespawn(args)
-	if (Config.debugTracePaths) then
-		NetEvents:Send('NodeEditor:GetNodes')
-	end
-end
-
-function ClientNodeEditor:_onUnload(args)
-
-	Events:Unsubscribe('UpdateManager:Update')
-	Events:Unsubscribe('UI:DrawHud')
-
-	g_NodeCollection:DeregisterEvents()
-	g_NodeCollection:Clear()
-	self.player = nil
 end
 
 function ClientNodeEditor:_onUpdateManagerUpdate(delta, pass)
@@ -229,55 +295,53 @@ end
 
 function ClientNodeEditor:_onUIPushScreen(hook, screen, priority, parentGraph, stateNodeGuid)
 
-	if (Config.debugTracePaths and screen ~= nil and UIScreenAsset(screen).name == 'UI/Flow/Screen/CommRoseScreen') and self.CommoRose.Pressed then
-		self.CommoRose.Active = self.CommoRose.Pressed
-    	self:_onCommoRoseAction('Show')
-    end
-    if (Config.debugTracePaths and screen ~= nil and UIScreenAsset(screen).name == 'UI/Flow/Screen/CommRoseScreen') then
-    	hook:Return() -- don't actually display the UI
+	if (Config.debugTracePaths and screen ~= nil and UIScreenAsset(screen).name == 'UI/Flow/Screen/CommRoseScreen') then
+
+		-- triggered vanilla commo rose
+		if self.CommoRose.Pressed and not self.CommoRose.Active then
+    		self:_onCommoRoseAction('Show')
+    	end
+		hook:Return() -- don't actually display the UI
     end
 	hook:Pass(screen, priority, parentGraph, stateNodeGuid)
 end
 
-function ClientNodeEditor:_onUIInputConceptEvent(hook, eventType, action)
 
+function ClientNodeEditor:_onUpdateInput(delta)
 	if (not Config.debugTracePaths) then
-		hook:Pass(eventType, action)
+		return
 	end
-	
-	-- was pressed quickly, quick-select
-    if (action == UIInputAction.UIInputAction_CommoRose 
-    	and eventType == UIInputActionEventType.UIInputActionEventType_Released
-    	and self.CommoRose.Pressed and not self.CommoRose.Active) then
-		self.CommoRose.Pressed = false
+
+	local Comm1 = InputManager:GetLevel(InputConceptIdentifiers.ConceptCommMenu1) > 0
+	local Comm2 = InputManager:GetLevel(InputConceptIdentifiers.ConceptCommMenu2) > 0
+	local Comm3 = InputManager:GetLevel(InputConceptIdentifiers.ConceptCommMenu3) > 0
+
+	-- pressed and released without triggering commo rose
+	if (self.CommoRose.Pressed and not self.CommoRose.Active and not (Comm1 or Comm2 or Comm3)) then
 		self:_onCommoRoseAction('Select')
 	end
 
-	-- was pressed quickly, quick-select
-    if (action == UIInputAction.UIInputAction_CommoRose 
-    	and eventType == UIInputActionEventType.UIInputActionEventType_Released
-    	and self.CommoRose.Pressed and self.CommoRose.Active) then
-		self.CommoRose.Pressed = false
-		self.CommoRose.Active = false
-		self:_onCommoRoseAction('Hide')
+	self.CommoRose.Pressed = (Comm1 or Comm2 or Comm3)
+
+	if (not self.CommoRose.Pressed and self.CommoRose.Active) then
+		--self:_onCommoRoseAction('Select')
+		--self:_onCommoRoseAction('Hide')
+		--self.CommoRose.Active = false
 	end
 
-	if (action == UIInputAction.UIInputAction_CommoRose) then
-		self.CommoRose.Pressed = (eventType == UIInputActionEventType.UIInputActionEventType_Pressed)
-	end
-
-    hook:Pass(eventType, action)
 end
 
 function ClientNodeEditor:_onCommoRoseAction(action, hit)
 	print('CommoRoseAction: '..tostring(action))
 
 	if (action == 'Show') then
+		self.CommoRose.Active = true
 		NetEvents:Send('UI_Request_CommoRose_Show')
 		return
 	end
 
 	if (action == 'Hide') then
+		self.CommoRose.Active = false
 		NetEvents:Send('UI_Request_CommoRose_Hide')
 		return
 	end
@@ -327,14 +391,14 @@ function ClientNodeEditor:_onUIDrawHud()
 
 	DebugRenderer:DrawText2D(20, 20,
 		'CommoRose.Pressed: '..tostring(self.CommoRose.Pressed).."\nCommoRose.Active: "..tostring(self.CommoRose.Active).."\nCommoRose.LastAction: "..tostring(self.CommoRose.LastAction),
-		self.textColor, 1)
+		self.colors.Text, 1)
 
 	if (Config.debugSelectionRaytraces) then
 		if (self.lastTraceStart ~= nil and self.lastTraceEnd ~= nil) then
-			DebugRenderer:DrawLine(self.lastTraceStart, self.lastTraceEnd, self.colors[19].Line, self.colors[19].Line)
+			DebugRenderer:DrawLine(self.lastTraceStart, self.lastTraceEnd, self.colors.Ray.Line[1], self.colors.Ray.Line[2])
 		end
 		if (self.lastTraceSearchAreaPos ~= nil and self.lastTraceSearchAreaSize ~= nil) then
-			DebugRenderer:DrawSphere(self.lastTraceSearchAreaPos, self.lastTraceSearchAreaSize, self.colors[18].Node, false, false)
+			DebugRenderer:DrawSphere(self.lastTraceSearchAreaPos, self.lastTraceSearchAreaSize, self.colors.Ray.Node, false, false)
 		end
 	end
 
@@ -343,14 +407,20 @@ function ClientNodeEditor:_onUIDrawHud()
 		if (waypoint ~= nil and g_NodeCollection:IsPathVisible(waypoint.PathIndex)) then
 
 			local isSelected = g_NodeCollection:IsSelected(waypoint)
+			local color = self.colors[waypoint.PathIndex]
+
+			if (waypoint.Previous == nil and waypoint.Next == nil) then
+				color = self.colors.Orphan
+			end
+
 
 			if (waypoint.Distance ~= nil and waypoint.Distance < Config.waypointRange) then
-				DebugRenderer:DrawSphere(waypoint.Position, 0.05, self.colors[waypoint.PathIndex].Node, false, false)
+				DebugRenderer:DrawSphere(waypoint.Position, 0.05, color.Node, false, false)
 			end
 
 			if (waypoint.Distance ~= nil and waypoint.Distance < Config.waypointRange and isSelected) then
-				DebugRenderer:DrawSphere(waypoint.Position, 0.07,  self.colors[waypoint.PathIndex].Node, false, false)
-				DebugRenderer:DrawLine(waypoint.Position, waypoint.Position + (Vec3.up * 0.7), self.colors[waypoint.PathIndex].Line, self.colors[waypoint.PathIndex].Line)
+				DebugRenderer:DrawSphere(waypoint.Position, 0.07,  color.Node, false, false)
+				DebugRenderer:DrawLine(waypoint.Position, waypoint.Position + (Vec3.up * 0.7), color.Line, color.Line)
 			end
 
 			if (waypoint.Distance ~= nil and waypoint.Distance < Config.lineRange and Config.drawWaypointLines) then
@@ -360,7 +430,7 @@ function ClientNodeEditor:_onUIDrawHud()
 				end
 
 				if (waypoint.Previous ~= nil) then
-					DebugRenderer:DrawLine(waypoint.Previous.Position, waypoint.Position, self.colors[waypoint.PathIndex].Line, self.colors[waypoint.PathIndex].Line)
+					DebugRenderer:DrawLine(waypoint.Previous.Position, waypoint.Position, color.Line, color.Node)
 				end
 			end
 
@@ -379,22 +449,20 @@ function ClientNodeEditor:_onUIDrawHud()
 							nextNode = waypoint.Next.ID
 						end
 
-						local text = 'Custom ID: '..tostring(waypoint.ID).."\n"
+						local text = tostring(previousNode)..' <-- |'..tostring(waypoint.ID)..'| --> '..tostring(nextNode).."\n"
 						text = text..'Custom Index: '..tostring(waypoint.Index).."\n"
 						text = text..'Database ID: '..tostring(waypoint.OriginalID).."\n"
 						text = text..'PathIndex: '..tostring(waypoint.PathIndex).."\n"
 						text = text..'PointIndex: '..tostring(waypoint.PointIndex).."\n"
-						text = text..'Previous Node: '..tostring(waypoint.Previous)..' -> '..tostring(previousNode).."\n"
-						text = text..'Next Node: '..tostring(waypoint.Next)..' -> '..tostring(nextNode).."\n"
 						text = text..'InputVar: '..tostring(g_Utilities:getEnumName(EntryInputActionEnum, waypoint.InputVar))..' ('..tostring(waypoint.InputVar)..')'
-						DebugRenderer:DrawText2D(screenPos.x, screenPos.y, text, self.textColor, 1.2)
+						DebugRenderer:DrawText2D(screenPos.x, screenPos.y, text, self.colors.Text, 1.2)
 					end
 					screenPos = nil
 				else
 					-- don't try to precalc this value like with the distance, another memory leak crash awaits you
 					local screenPos = ClientUtils:WorldToScreen(waypoint.Position + (Vec3.up * 0.05))
 					if (screenPos ~= nil) then
-						DebugRenderer:DrawText2D(screenPos.x, screenPos.y, tostring(waypoint.ID).."\n"..tostring(g_Utilities:getEnumName(EntryInputActionEnum, waypoint.InputVar)), self.textColor, 1)
+						DebugRenderer:DrawText2D(screenPos.x, screenPos.y, tostring(waypoint.ID), self.colors.Text, 1)
 						screenPos = nil
 					end
 				end
