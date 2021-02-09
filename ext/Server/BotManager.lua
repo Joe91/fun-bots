@@ -2,7 +2,8 @@ class('BotManager');
 
 require('Bot');
 
-local Globals = require('Globals');
+local Globals 	= require('Globals');
+local Utilities = require('__shared/Utilities')
 
 function BotManager:__init()
 	self._bots = {}
@@ -14,9 +15,7 @@ function BotManager:__init()
 	Events:Subscribe('UpdateManager:Update', self, self._onUpdate)
 	Events:Subscribe('Level:Destroy', self, self._onLevelDestroy)
 	NetEvents:Subscribe('BotShootAtPlayer', self, self._onShootAt)
-	Events:Subscribe('ServerDamagePlayer', self, self._onServerDamagePlayer)
-	NetEvents:Subscribe('ClientDamagePlayer', self, self._onDamagePlayer)
-	Hooks:Install('Soldier:Damage', 1, self, self._onSoldierDamage)
+	Hooks:Install('Soldier:Damage', 100, self, self._onSoldierDamage)
 end
 
 function BotManager:getBotTeam()
@@ -169,7 +168,6 @@ function BotManager:onPlayerLeft(player)
 end
 
 function BotManager:_getDamageValue(damage, bot, fake)
-	local resultDamage = 0;
 	local damageFactor = 1.0;
 
 	if bot.activeWeapon.type == "Shotgun" then
@@ -188,109 +186,49 @@ function BotManager:_getDamageValue(damage, bot, fake)
 		damageFactor = Config.damageFactorKnife;
 	end
 
-
-	if not fake then -- frag mode shotgun
-		resultDamage = damage * damageFactor;
-	else
-		if damage > 0.09 and damage < 0.11 then
-			resultDamage = bot.activeWeapon.damage * damageFactor;
-		elseif damage > 0.19 and damage < 0.21 then --melee
-			resultDamage = bot.knife.damage * Config.damageFactorKnife;
+	if not fake then
+		return damage * damageFactor;
+	else -- fake melee damage?
+		if damage == 1 then
+			return bot.knife.damage * Config.damageFactorKnife;
 		end
 	end
-	return resultDamage;
 end
 
 function BotManager:_onSoldierDamage(hook, soldier, info, giverInfo)
-	--detect if we need to shoot back
-	if Config.shootBackIfHit then
-		if giverInfo.giver ~= nil and soldier.player ~= nil and info.damage > 0 then
-			local bot = self:GetBotByName(soldier.player.name)
-			if soldier ~= nil and bot ~= nil then
-				self:_onShootAt(giverInfo.giver, bot.name, true)
-			end
+	-- soldier -> soldier damage only
+	if soldier.player == nil or giverInfo.giver == nil then
+		return
+	end
+
+	local soldierIsBot = Utilities:isBot(soldier.player.name);
+	if soldierIsBot then
+		--detect if we need to shoot back
+		if Config.shootBackIfHit and info.damage > 0 then
+			self:_onShootAt(giverInfo.giver, soldier.player.name, true)
+		end
+
+		-- prevent bots from killing themselves. Bad bot, no suicide.
+		if not Config.botCanKillHimself and soldier.player == giverInfo.giver then
+			info.damage = 0;
 		end
 	end
 
-	if Config.useShotgun then -- prevent bots from killing themself.
-		if giverInfo.giver ~= nil and soldier.player ~= nil then
-			local bot = self:GetBotByName(soldier.player.name)
-			if bot ~= nil and bot.player == giverInfo.giver then
-				info.damage = 0;
-			end
+	if not soldierIsBot then
+		--valid bot-damage?
+		local bot = self:GetBotByName(giverInfo.giver.name)
+		if bot ~= nil and bot.player.soldier ~= nil then
+			-- giver was a bot (with explosives)
+			info.damage = self:_getDamageValue(info.damage, bot, false);
 		end
 	end
 
-	--find out, if a player was hit by the server:
-	if soldier.player ~= nil then
-		local bot = self:GetBotByName(soldier.player.name)
-		if bot == nil then
-			if giverInfo.giver == nil then
-				bot = self:GetBotByName(self._shooterBots[soldier.player.name])
-				if bot ~= nil and bot.player.soldier ~= nil then
-					info.damage = self:_getDamageValue(info.damage, bot, true);
-					info.boneIndex = 0;
-					info.isBulletDamage = true;
-					info.position = Vec3(soldier.worldTransform.trans.x, soldier.worldTransform.trans.y + 1, soldier.worldTransform.trans.z)
-					info.direction = soldier.worldTransform.trans - bot.player.soldier.worldTransform.trans
-					info.origin = bot.player.soldier.worldTransform.trans
-					if (soldier.health - info.damage) < 0 then
-						if Globals.isTdm then
-							local enemyTeam = TeamId.Team1;
-							if soldier.player.teamId == TeamId.Team1 then
-								enemyTeam = TeamId.Team2;
-							end
-							TicketManager:SetTicketCount(enemyTeam, (TicketManager:GetTicketCount(enemyTeam) + 1));
-						end
-					end
-				end
-			else
-				--valid bot-damage?
-				bot = self:GetBotByName(giverInfo.giver.name)
-				if bot ~= nil then
-					-- giver was a bot (with shotgun)
-					if Config.useShotgun then
-						info.damage = self:_getDamageValue(info.damage, bot, false);
-					end
-				end
-			end
-		end
-	end
 	hook:Pass(soldier, info, giverInfo)
 end
 
-function BotManager:_onServerDamagePlayer(playerName, shooterName, meleeAttack)
-	local player = PlayerManager:GetPlayerByName(playerName)
-	if player ~= nil then
-		self:_onDamagePlayer(player, shooterName, meleeAttack)
-	end
-end
-
-function BotManager:_onDamagePlayer(player, shooterName, meleeAttack)
-	local bot = self:GetBotByName(shooterName)
-	if not player.alive or bot == nil then
-		return
-	end
-	if player.teamId == bot.player.teamId then
-		return
-	end
-	local damage = 0.1 --only trigger soldier-damage with this
-	if meleeAttack then
-		damage = 0.2 --signal melee damage with this value
-	end
-	--save potential killer bot
-	self._shooterBots[player.name] = shooterName
-
-	if player.soldier ~= nil then
-		player.soldier.health = player.soldier.health - damage
-	end
-end
-
-
-
 function BotManager:_onShootAt(player, botname, ignoreYaw)
 	local bot = self:GetBotByName(botname)
-	if bot == nil or bot.player.soldier == nil or player.soldier == nil then
+	if bot == nil or bot.player == nil or bot.player.soldier == nil or player == nil then
 		return
 	end
 	bot:shootAt(player, ignoreYaw)

@@ -3,6 +3,7 @@ class('BotSpawner');
 local BotManager	= require('BotManager');
 local Globals		= require('Globals');
 local WeaponList	= require('WeaponList');
+local Utilities 	= require('__shared/Utilities')
 
 function BotSpawner:__init()
 	self._botSpawnTimer = 0
@@ -61,8 +62,8 @@ function BotSpawner:_onPlayerLeft(player)
 	--remove all references of player
 	if Config.onlySpawnBotsWithPlayers then
 		if BotManager:getPlayerCount() == 1 then
-			print("no player left - kill all bots")
-			BotManager:killAll()
+			print("no player left - kick all bots")
+			BotManager:destroyAllBots()
 		end
 	end
 	if Config.incBotsWithPlayers then
@@ -141,33 +142,12 @@ function BotSpawner:_onRespawnBot(botname)
 		self:spawnBot(bot, transform, false);
 
 	elseif spawnMode == 4 then	--fixed Way
-		local wayIndex 			= bot:getWayIndex();
-		local randIndex 		= MathUtils:GetRandomInt(1, #Globals.wayPoints[wayIndex]);
-		local transform 		= LinearTransform();
-		local inverseDirection 	= false;
-		if Globals.wayPoints[wayIndex][1].optValue == 0xFF then
-			inverseDirection = (MathUtils:GetRandomInt(0,1) == 1);
-		end
-		transform.trans = Globals.wayPoints[wayIndex][randIndex].trans;
-		bot:setCurrentWayPoint(randIndex);
-		bot:setDirectionInversion(inverseDirection);
-		self:spawnBot(bot, transform, false);
+		local wayIndex 		= bot:getWayIndex();
+		local randIndex 	= MathUtils:GetRandomInt(1, #Globals.wayPoints[wayIndex]);
+		self:_spawnSigleWayBot(nil, false, wayIndex, randIndex, bot)
 
 	elseif spawnMode == 5 then --random Way
-		local wayIndex = self:_getNewWayIndex()
-		if wayIndex ~= 0 then
-			local randIndex = MathUtils:GetRandomInt(1, #Globals.wayPoints[wayIndex])
-			local transform = LinearTransform();
-			local inverseDirection 	= false;
-			if Globals.wayPoints[wayIndex][1].optValue == 0xFF then
-				inverseDirection = (MathUtils:GetRandomInt(0,1) == 1);
-			end
-			bot:setWayIndex(wayIndex);
-			bot:setCurrentWayPoint(randIndex);
-			bot:setDirectionInversion(inverseDirection);
-			transform.trans = Globals.wayPoints[wayIndex][randIndex].trans
-			self:spawnBot(bot, transform, false)
-		end
+		self:_spawnSigleWayBot(nil, true, 0, 0, bot)
 	end
 end
 
@@ -249,16 +229,65 @@ function BotSpawner:spawnLineBots(player, amount, spacing)
 	end
 end
 
-function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, indexOnPath)
-	local name = BotManager:findNextBotName()
+function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, indexOnPath, existingBot)
+	local isRespawn = false;
+	local name = nil;
+	if existingBot ~= nil then
+		isRespawn = true;
+	else
+		name = BotManager:findNextBotName()
+	end
 	local inverseDirection = false;
-	if name ~= nil then
+	if name ~= nil or isRespawn then
+
+		-- find a spawnpoint away from players
 		if useRandomWay or activeWayIndex == nil or activeWayIndex == 0 then
-			activeWayIndex = self:_getNewWayIndex()
-			if activeWayIndex == 0 then
-				return
+			local validPointFound = false;
+			local targetDistance = Config.distanceToSpawnBots;
+			local retryCounter = Config.maxTrysToSpawnAtDistance;
+			while not validPointFound do
+				-- get new point
+				activeWayIndex = self:_getNewWayIndex()
+				if activeWayIndex == 0 then
+					return
+				end
+				indexOnPath = MathUtils:GetRandomInt(1, #Globals.wayPoints[activeWayIndex])
+				if Globals.wayPoints[activeWayIndex][1] == nil then
+					return
+				end
+				local spawnPoint = Globals.wayPoints[activeWayIndex][indexOnPath].trans
+
+				--check for nearby player
+				local playerNearby = false;
+				local players = PlayerManager:GetPlayers()
+				for i = 1, PlayerManager:GetPlayerCount() do
+					local tempPlayer = players[i];
+					if not Utilities:isBot(tempPlayer.name) then
+						--real player
+						if tempPlayer.alive then
+							local distance = tempPlayer.soldier.worldTransform.trans:Distance(spawnPoint)
+							local heightDiff = math.abs(tempPlayer.soldier.worldTransform.trans.y - spawnPoint.y)
+							if distance < targetDistance and heightDiff < Config.heightDistanceToSpawn then
+								playerNearby = true;
+								break;
+							end
+						end
+					end
+				end
+				retryCounter = retryCounter - 1;
+				if retryCounter == 0 then
+					retryCounter = Config.maxTrysToSpawnAtDistance;
+					targetDistance = targetDistance - Config.distanceToSpawnReduction;
+					if targetDistance < 0 then
+						targetDistance = 0
+					end
+				end
+				if not playerNearby then
+					validPointFound = true;
+				end
 			end
 		end
+
 		if Globals.wayPoints[activeWayIndex][1] == nil then
 			return
 		end
@@ -267,16 +296,21 @@ function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, inde
 			inverseDirection = (MathUtils:GetRandomInt(0,1) == 1);
 		end
 
-		if indexOnPath == nil or indexOnPath == 0 then
-			indexOnPath = MathUtils:GetRandomInt(1, #Globals.wayPoints[activeWayIndex])
-		end
 		local transform = LinearTransform()
+		if indexOnPath == nil or indexOnPath == 0 then
+			indexOnPath = 1;
+		end
 		transform.trans = Globals.wayPoints[activeWayIndex][indexOnPath].trans
 
-		local bot = BotManager:createBot(name, self:getBotTeam(player, name))
-		if bot ~= nil then
-			bot:setVarsWay(player, useRandomWay, activeWayIndex, indexOnPath, inverseDirection)
-			self:spawnBot(bot, transform, true)
+		if isRespawn then
+			existingBot:setVarsWay(player, useRandomWay, activeWayIndex, indexOnPath, inverseDirection)
+			self:spawnBot(existingBot, transform, false)
+		else
+			local bot = BotManager:createBot(name, self:getBotTeam(player, name))
+			if bot ~= nil then
+				bot:setVarsWay(player, useRandomWay, activeWayIndex, indexOnPath, inverseDirection)
+				self:spawnBot(bot, transform, true)
+			end
 		end
 	end
 end
@@ -370,6 +404,7 @@ function BotSpawner:getKitApperanceCustomization(team, kit, color, primary, pist
 
 	local pistolWeapon = ResourceManager:SearchForDataContainer(pistol:getResourcePath())
 	local knifeWeapon = ResourceManager:SearchForDataContainer(knife:getResourcePath())
+	local grenadeWeapon = ResourceManager:SearchForDataContainer('Weapons/M67/U_M67')
 
 	soldierCustomization.activeSlot = WeaponSlot.WeaponSlot_0
 	soldierCustomization.removeAllExistingWeapons = true
@@ -386,6 +421,10 @@ function BotSpawner:getKitApperanceCustomization(team, kit, color, primary, pist
 
 	local gadget02 = UnlockWeaponAndSlot()
 	gadget02.slot = WeaponSlot.WeaponSlot_5
+
+	local thrownWeapon = UnlockWeaponAndSlot()
+	thrownWeapon.weapon = SoldierWeaponUnlockAsset(grenadeWeapon)
+	thrownWeapon.slot = WeaponSlot.WeaponSlot_6
 
 	local secondaryWeapon = UnlockWeaponAndSlot()
 	secondaryWeapon.weapon = SoldierWeaponUnlockAsset(pistolWeapon)
@@ -448,6 +487,7 @@ function BotSpawner:getKitApperanceCustomization(team, kit, color, primary, pist
 	soldierCustomization.weapons:add(secondaryWeapon)
 	soldierCustomization.weapons:add(gadget01)
 	soldierCustomization.weapons:add(gadget02)
+	soldierCustomization.weapons:add(thrownWeapon)
 	soldierCustomization.weapons:add(meleeWeapon)
 
 	return soldierKit, appearance, soldierCustomization
@@ -515,29 +555,13 @@ end
 function BotSpawner:setBotWeapons(bot, botKit, newWeapons)
 	if newWeapons then
 		if botKit == "Assault" then
-			if not Config.useShotgun then
-				bot.primary = WeaponList:getWeapon(Config.assaultWeapon)
-			else
-				bot.primary = WeaponList:getWeapon(Config.assaultShotgun)
-			end
+			bot.primary = WeaponList:getWeapon(Config.assaultWeapon)
 		elseif botKit == "Engineer" then
-			if not Config.useShotgun then
-				bot.primary = WeaponList:getWeapon(Config.engineerWeapon)
-			else
-				bot.primary = WeaponList:getWeapon(Config.engineerShotgun)
-			end
+			bot.primary = WeaponList:getWeapon(Config.engineerWeapon)
 		elseif botKit == "Support" then
-			if not Config.useShotgun then
-				bot.primary = WeaponList:getWeapon(Config.supportWeapon)
-			else
-				bot.primary = WeaponList:getWeapon(Config.supportShotgun)
-			end
+			bot.primary = WeaponList:getWeapon(Config.supportWeapon)
 		else
-			if not Config.useShotgun then
-				bot.primary = WeaponList:getWeapon(Config.reconWeapon)
-			else
-				bot.primary = WeaponList:getWeapon(Config.reconShotgun)
-			end
+			bot.primary = WeaponList:getWeapon(Config.reconWeapon)
 		end
 		bot.pistol = WeaponList:getWeapon(Config.pistol)
 		bot.knife = WeaponList:getWeapon(Config.knife)

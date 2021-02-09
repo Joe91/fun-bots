@@ -31,6 +31,7 @@ function FunBotServer:__init()
 	Events:Subscribe('Player:Chat', self, self._onChat);
 	Events:Subscribe('Extension:Unloading', self, self._onExtensionUnload);
 	Events:Subscribe('Extension:Loaded', self, self._onExtensionLoaded);
+	Events:Subscribe('Partition:Loaded', self, self._onPartitionLoaded)
 	NetEvents:Subscribe('RequestClientSettings', self, self._onRequestClientSettings);
 end
 
@@ -57,13 +58,28 @@ function FunBotServer:_onExtensionLoaded()
 	end
 end
 
+function FunBotServer:_onPartitionLoaded(partition)
+	for _, instance in pairs(partition.instances) do
+		if instance:Is("SyncedGameSettings") then
+            local syncedGameSettings = SyncedGameSettings(instance)
+            syncedGameSettings:MakeWritable()
+            syncedGameSettings.allowClientSideDamageArbitration = false
+        end
+		if instance:Is("ServerSettings") then
+            local serverSettings = ServerSettings(instance)
+            serverSettings:MakeWritable()
+            serverSettings.isRenderDamageEvents = true
+        end
+	end
+end
+
 function FunBotServer:_onRequestClientSettings(player)
 	NetEvents:SendToLocal('WriteClientSettings', player, Config, true);
 end
 
 function FunBotServer:_onLevelLoaded(levelName, gameMode)
 	NetEvents:BroadcastLocal('WriteClientSettings', Config, true);
-	WeaponModification:ModifyAllWeapons(Config.botAimWorsening);
+	WeaponModification:ModifyAllWeapons(Config.botAimWorsening, Config.botSniperAimWorsening);
 	print('level ' .. levelName .. ' loaded...');
 	if gameMode == 'TeamDeathMatchC0' or gameMode == 'TeamDeathMatch0' then
 		Globals.isTdm = true;

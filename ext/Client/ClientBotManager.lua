@@ -10,7 +10,6 @@ function ClientBotManager:__init()
 	self._lastIndex		= 0;
 
 	Events:Subscribe('UpdateManager:Update', self, self._onUpdate);
-	Hooks:Install('BulletEntity:Collision', 1, self, self._onBulletCollision);
 	NetEvents:Subscribe('WriteClientSettings', self, self._onWriteClientSettings);
 end
 
@@ -31,7 +30,7 @@ function ClientBotManager:_onWriteClientSettings(newConfig, isInitialConfig)
 	end
 
 	if isInitialConfig then
-		WeaponModification:ModifyAllWeapons(Config.botAimWorsening);
+		WeaponModification:ModifyAllWeapons(Config.botAimWorsening, Config.botSniperAimWorsening);
 	end
 end
 
@@ -54,10 +53,10 @@ function ClientBotManager:_onUpdate(p_Delta, p_Pass)
 				if (bot.soldier ~= nil and player.soldier ~= nil) then
 					-- check for clear view
 					-- local playerCameraTrans	= ClientUtils:GetCameraTransform(); -- don't use camera, as this is used by mav or eod
-					local playerPosition = Vec3(player.soldier.worldTransform.trans.x, player.soldier.worldTransform.trans.y + Utilities:getTargetHeight(player.soldier, false), player.soldier.worldTransform.trans.z)
+					local playerPosition = player.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(player, false); --Vec3(player.soldier.worldTransform.trans.x, player.soldier.worldTransform.trans.y + Utilities:getTargetHeight(player.soldier, false), player.soldier.worldTransform.trans.z)
 
 					-- find direction of Bot
-					local target	= Vec3(bot.soldier.worldTransform.trans.x, bot.soldier.worldTransform.trans.y + Utilities:getTargetHeight(bot.soldier, false), bot.soldier.worldTransform.trans.z);
+					local target	= bot.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(bot, false);
 					local distance	= playerPosition:Distance(bot.soldier.worldTransform.trans);
 
 					if (distance < Config.maxRaycastDistance) then
@@ -74,24 +73,6 @@ function ClientBotManager:_onUpdate(p_Delta, p_Pass)
 						end
 						return --only one raycast per cycle
 					end
-				end
-			end
-		end
-	end
-end
-
-function ClientBotManager:_onBulletCollision(hook, entity, hit, shooter)
-	if not Config.useShotgun then
-		if (hit.rigidBody.typeInfo.name == 'CharacterPhysicsEntity') then
-			local player = PlayerManager:GetLocalPlayer();
-
-			if (player.soldier ~= nil) then
-				local dx	= math.abs(player.soldier.worldTransform.trans.x - hit.position.x);
-				local dz	= math.abs(player.soldier.worldTransform.trans.z - hit.position.z);
-				local dy	= hit.position.y - player.soldier.worldTransform.trans.y; --player y is on ground. Hit must be higher to be valid
-
-				if (dx < 1 and dz < 1 and dy < 2 and dy > 0) then --included bodyhight
-					NetEvents:SendLocal('ClientDamagePlayer', shooter.name, false);
 				end
 			end
 		end
