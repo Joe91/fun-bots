@@ -555,16 +555,42 @@ end
 function BotSpawner:setBotWeapons(bot, botKit, newWeapons)
 	if newWeapons then
 		if botKit == "Assault" then
-			bot.primary = WeaponList:getWeapon(Config.assaultWeapon)
+			local weapon = Config.assaultWeapon;
+			if Config.useRandomWeapon then
+				weapon = WeaponsAssault[MathUtils:GetRandomInt(1, #WeaponsAssault)]
+			end
+			print(weapon)
+			bot.primary = WeaponList:getWeapon(weapon)
 		elseif botKit == "Engineer" then
-			bot.primary = WeaponList:getWeapon(Config.engineerWeapon)
+			local weapon = Config.engineerWeapon;
+			if Config.useRandomWeapon then
+				weapon = WeaponsEngineer[MathUtils:GetRandomInt(1, #WeaponsEngineer)]
+			end
+			print(weapon)
+			bot.primary = WeaponList:getWeapon(weapon)
 		elseif botKit == "Support" then
-			bot.primary = WeaponList:getWeapon(Config.supportWeapon)
+			local weapon = Config.supportWeapon;
+			if Config.useRandomWeapon then
+				weapon = WeaponsSupport[MathUtils:GetRandomInt(1, #WeaponsSupport)]
+			end
+			print(weapon)
+			bot.primary = WeaponList:getWeapon(weapon)
 		else
-			bot.primary = WeaponList:getWeapon(Config.reconWeapon)
+			local weapon = Config.reconWeapon;
+			if Config.useRandomWeapon then
+				weapon = WeaponsRecon[MathUtils:GetRandomInt(1, #WeaponsRecon)]
+			end
+			print(weapon)
+			bot.primary = WeaponList:getWeapon(weapon)
 		end
-		bot.pistol = WeaponList:getWeapon(Config.pistol)
-		bot.knife = WeaponList:getWeapon(Config.knife)
+		local knife = Config.knife;
+		local pistol = Config.pistol
+		if Config.useRandomWeapon then
+			knife = KnifeWeapons[MathUtils:GetRandomInt(1, #KnifeWeapons)]
+			pistol = PistoWeapons[MathUtils:GetRandomInt(1, #PistoWeapons)]
+		end
+		bot.pistol = WeaponList:getWeapon(pistol)
+		bot.knife = WeaponList:getWeapon(knife)
 	end
 
 	if Config.botWeapon == "Primary" then

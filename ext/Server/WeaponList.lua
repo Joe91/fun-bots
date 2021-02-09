@@ -37,6 +37,14 @@ function WeaponList:__init()
 	weapon:setStatsValues(25, 580, 15, 10, 0.4, 0.4, false);
 	table.insert(self._weapons, weapon);
 
+	weapon = Weapon('M16A4', '', {'Kobra', 'HeavyBarrel'}, 'Assault')
+	weapon:setStatsValues(25, 650, 15, 10, 0.4, 0.4, false);
+	table.insert(self._weapons, weapon);
+
+	weapon = Weapon('AN94', '', {'Kobra', 'HeavyBarrel', 'Foregrip'}, 'Assault')
+	weapon:setStatsValues(25, 600, 15, 10, 0.4, 0.4, false);
+	table.insert(self._weapons, weapon);
+
 	--engi
 	weapon = Weapon('ASVal', '', {'Kobra', 'ExtendedMag'}, 'Carabine')
 	weapon:setStatsValues(18, 333, 9.81, 10, 0.4, 0.4, false)
@@ -46,21 +54,33 @@ function WeaponList:__init()
 	weapon:setStatsValues(25, 580, 15, 10, 0.4, 0.4, false)
 	table.insert(self._weapons, weapon);
 
+	weapon = Weapon('HK53', 'XP1', {'Kobra', 'Silencer'}, 'Carabine')
+	weapon:setStatsValues(25, 450, 15, 10, 0.4, 0.4, false)
+	table.insert(self._weapons, weapon);
+
 	weapon = Weapon('SCAR-H', '', {'Kobra', 'Silencer'}, 'Carabine')
 	weapon:setStatsValues(30, 420, 15, 10, 0.4, 0.4, false)
 	table.insert(self._weapons, weapon);
 
 	--support
 	weapon = Weapon('M249', '', {'Eotech', 'TargetPointer'},'LMG')
-	weapon:setStatsValues( 25, 620, 15, 20, 1.5, 0.6, true)
+	weapon:setStatsValues( 25, 620, 15, 20, 1.0, 0.6, true)
 	table.insert(self._weapons, weapon);
 
 	weapon = Weapon('Pecheneg', '', {'EOTech', 'Target_Pointer'},'LMG')
-	weapon:setStatsValues( 34, 560, 15, 20, 1.5, 0.6, true)
+	weapon:setStatsValues( 34, 560, 15, 20, 1.0, 0.6, true)
+	table.insert(self._weapons, weapon);
+
+	weapon = Weapon('LSAT', 'XP2', {'EOTech', 'ExtendedMag', 'Foregrip'},'LMG')
+	weapon:setStatsValues( 25, 620, 15, 20, 1.0, 0.6, true)
+	table.insert(self._weapons, weapon);
+
+	weapon = Weapon('QBB-95', 'XP1', {'EOTech', 'HeavyBarrel', 'Foregrip'},'LMG')
+	weapon:setStatsValues( 25, 670, 15, 20, 1.0, 0.6, true)
 	table.insert(self._weapons, weapon);
 
 	weapon = Weapon('M240', '', {'Eotech', 'TargetPointer'}, 'LMG')
-	weapon:setStatsValues(34, 610, 15, 20, 1.5, 0.6, true)
+	weapon:setStatsValues(34, 610, 15, 20, 1.0, 0.6, true)
 	table.insert(self._weapons, weapon);
 
 	-- recon
@@ -70,6 +90,10 @@ function WeaponList:__init()
 
 	weapon = Weapon('M98B', '', {'Ballistic_Scope', 'StraightPull'}, 'Sniper', 'Weapons/Model98B/U_M98B')
 	weapon:setStatsValues(95, 650, 9.81, 3, 0.2, 0.5, true);
+	table.insert(self._weapons, weapon);
+
+	weapon = Weapon('M40A5', '', {'Rifle_Scope', 'StraightPull', 'Target_Pointer'}, 'Sniper')
+	weapon:setStatsValues(80, 490, 15, 3, 0.2, 0.2, true);
 	table.insert(self._weapons, weapon);
 
 	weapon = Weapon('SKS', '', {'Rifle_Scope', 'Target_Pointer'}, 'Sniper')

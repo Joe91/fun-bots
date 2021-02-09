@@ -1,9 +1,8 @@
 WeaponsEngineer = {
 	'M4A1',
 	'SCAR-H',
+	'HK53',
 	'ASVal',
 	--Shotguns with frag
-	'SPAS12',
-	'USAS-12',
 	'saiga20'
 }

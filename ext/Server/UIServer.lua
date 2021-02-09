@@ -558,6 +558,10 @@ function FunBotUIServer:_writeSettings(player, request)
 	end
 
 	-- weapons
+	if request.useRandomWeapon ~= nil then
+		SettingsManager:update('useRandomWeapon', (request.useRandomWeapon == true), temporary, batched);
+	end
+
 	if request.pistol ~= nil then
 		local tempString = request.pistol;
 

@@ -44,7 +44,8 @@ Config = {
 	maxTrysToSpawnAtDistance = 3,	-- try this often to spawn a bot away from players
 
 	-- weapons
-	assaultWeapon = "M416",			-- weapon of Assault class
+	useRandomWeapon = true,			-- use a random weapon out of the class list
+	assaultWeapon = "M16A4",		-- weapon of Assault class
 	engineerWeapon = "M4A1",		-- weapon of Engineer class
 	supportWeapon = "M249",			-- weapon of Support class
 	reconWeapon = "L96",			-- weapon of Recon class
