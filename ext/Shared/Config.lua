@@ -11,7 +11,7 @@ Config = {
 	botColor = "RANDOM_COLOR",		-- see BotColors
 
 	--difficluty
-	botAimWorsening = 0.5,			-- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy).
+	botAimWorsening = 0.6,			-- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy).
 	botSniperAimWorsening = 0.2,	-- see botAimWorsening, only for Sniper-rifles
 	aimForHead = false,				-- bots aim for the head
 	headShotFactorBots = 1.5,		-- factor for damage if headshot
