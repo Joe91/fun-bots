@@ -40,6 +40,7 @@ Language['cn_CN'] /* Add/replace the xx_XX here with your language code (like de
     "Other": "其他设置",
     "Restore all to Default": "还原全部为默认值",
     "Save temporarily": "临时保存",
+     "0 = hard, 1 (or higher) = easy": "0 = 难, 1 (或者更高) = 容易",
     "Origninal Damage from bots gets multiplied by this": "BOT的原伤害乘以此",
     "First Shot Delay": "第一枪延迟",
     "You are not permitted to change Bots. Please press F12 for authenticate!": "您无权修改BOT配置,请按F12键进行身份验证！",
