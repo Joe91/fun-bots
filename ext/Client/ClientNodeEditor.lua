@@ -336,13 +336,27 @@ function ClientNodeEditor:_onCommoRoseAction(action, hit)
 
 	if (action == 'Show') then
 		self.CommoRose.Active = true
-		NetEvents:Send('UI_Request_CommoRose_Show')
+		g_FunBotUIClient:_onUICommonRose({
+			Top = { Action = 'UI_CommoRose_Action_Save', Label = Language:I18N('Save') },
+			Bottom = { Action = 'UI_CommoRose_Action_Load', Label = Language:I18N('Load') },
+			Center = { Action = 'UI_CommoRose_Action_Select', Label = Language:I18N('Select') },
+			Left = {
+				{ Action = 'UI_CommoRose_Action_Merge', Label = Language:I18N('Merge') },
+				{ Action = 'UI_CommoRose_Action_Move', Label = Language:I18N('Move') },
+				{ Action = 'UI_CommoRose_Action_Delete', Label = Language:I18N('Delete') },
+			},
+			Right = {
+				{ Action = 'UI_CommoRose_Action_Split', Label = Language:I18N('Split') },
+				{ Action = 'UI_CommoRose_Action_SetInput', Label = Language:I18N('Set Input') },
+				{ Action = 'UI_CommoRose_Action_Create', Label = Language:I18N('Create') },
+			}
+		})
 		return
 	end
 
 	if (action == 'Hide') then
 		self.CommoRose.Active = false
-		NetEvents:Send('UI_Request_CommoRose_Hide')
+		g_FunBotUIClient:_onUICommonRose(false)
 		return
 	end
 
