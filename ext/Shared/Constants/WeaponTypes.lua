@@ -5,5 +5,6 @@ WeaponTypes = {
 	"Assault",
 	"LMG",
 	"Carabine",
+	"PDW",
 	"Sniper"
 }

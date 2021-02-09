@@ -18,6 +18,7 @@ Config = {
 	damageFactorAssault = 0.5,		-- origninal Damage from bots gets multiplied by this
 	damageFactorCarabine = 0.5,		-- origninal Damage from bots gets multiplied by this
 	damageFactorLMG = 0.5,			-- origninal Damage from bots gets multiplied by this
+	damageFactorPDW = 0.5,			-- origninal Damage from bots gets multiplied by this
 	damageFactorSniper = 0.8,		-- origninal Damage from bots gets multiplied by this
 	damageFactorShotgun = 0.5,		-- origninal Damage from bots gets multiplied by this
 	damageFactorPistol = 0.8,		-- origninal Damage from bots gets multiplied by this

@@ -176,6 +176,8 @@ function BotManager:_getDamageValue(damage, bot, fake)
 		damageFactor = Config.damageFactorAssault;
 	elseif bot.activeWeapon.type == "Carabine" then
 		damageFactor = Config.damageFactorCarabine;
+	elseif bot.activeWeapon.type == "PDW" then
+		damageFactor = Config.damageFactorPDW;
 	elseif bot.activeWeapon.type == "LMG" then
 		damageFactor = Config.damageFactorLMG;
 	elseif bot.activeWeapon.type == "Sniper" then

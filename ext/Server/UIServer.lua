@@ -305,6 +305,14 @@ function FunBotUIServer:_writeSettings(player, request)
 		end
 	end
 
+	if request.damageFactorPDW ~= nil then
+		local tempValue = tonumber(request.damageFactorPDW);
+
+		if tempValue >= 0 then
+			SettingsManager:update('damageFactorPDW', tempValue, temporary, batched);
+		end
+	end
+
 	if request.damageFactorSniper ~= nil then
 		local tempValue = tonumber(request.damageFactorSniper);
 

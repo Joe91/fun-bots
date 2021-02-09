@@ -79,6 +79,7 @@ function FunBotUIClient:_onUISettings(data)
 	settings:add("DIFFICULTY", "Float", "headShotFactorBots", Language:I18N("Factor for HeadShot"), data.headShotFactorBots, 0.8, Language:I18N("Factor for damage if Bot does a headshot"));
 	settings:add("DIFFICULTY", "Float", "damageFactorAssault", Language:I18N("Factor for Assault-Weapon-Damage"), data.damageFactorAssault, 0.5, Language:I18N("Origninal Damage from bots gets multiplied by this"));
 	settings:add("DIFFICULTY", "Float", "damageFactorCarabine", Language:I18N("Factor for Carabine-Weapon-Damage"), data.damageFactorCarabine, 0.5, Language:I18N("Origninal Damage from bots gets multiplied by this"));
+	settings:add("DIFFICULTY", "Float", "damageFactorPDW", Language:I18N("Factor for PDW-Weapon-Damage"), data.damageFactorPDW, 0.5, Language:I18N("Origninal Damage from bots gets multiplied by this"));
 	settings:add("DIFFICULTY", "Float", "damageFactorLMG", Language:I18N("Factor for LMG-Weapon-Damage"), data.damageFactorLMG, 0.5, Language:I18N("Origninal Damage from bots gets multiplied by this"));
 	settings:add("DIFFICULTY", "Float", "damageFactorSniper", Language:I18N("Factor for Sniper-Weapon-Damage"), data.damageFactorSniper, 0.8, Language:I18N("Origninal Damage from bots gets multiplied by this"));
 	settings:add("DIFFICULTY", "Float", "damageFactorShotgun", Language:I18N("Factor for Shotgun-Weapon-Damage"), data.damageFactorShotgun, 0.5, Language:I18N("Origninal Damage from bots gets multiplied by this"));
