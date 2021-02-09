@@ -20,6 +20,8 @@ function FunBotUIServer:__init()
 		NetEvents:Subscribe('UI_Request_Open', self, self._onUIRequestOpen);
 		NetEvents:Subscribe('UI_Request_Save_Settings', self, self._onUIRequestSaveSettings);
 		NetEvents:Subscribe('BotEditor', self, self._onBotEditorEvent);
+		NetEvents:Subscribe('UI_Request_CommoRose_Show', self, self._onUIRequestCommonRoseShow);
+		NetEvents:Subscribe('UI_Request_CommoRose_Hide', self, self._onUIRequestCommonRoseHide);
 	end
 end
 
@@ -134,6 +136,73 @@ function FunBotUIServer:_onUIRequestSaveSettings(player, data)
 	local request = json.decode(data);
 
 	self:_writeSettings(player, request);
+end
+
+function FunBotUIServer:_onUIRequestCommonRoseShow(player, data)
+	if Config.disableUserInterface == true then
+		return;
+	end
+	
+	if (Config.settingsPassword ~= nil and self:_isAuthenticated(player.accountGuid) ~= true) then
+		print(player.name .. ' has no permissions for Waypoint-Editor.');
+		return;
+	end
+	
+	print(player.name .. ' requesting show CommonRose.');
+	NetEvents:SendTo('UI_CommonRose', player, {
+		Top = {
+			Action	= 'cr_save',
+			Label	= 'Save',
+			Confirm	= true
+		},
+		Left = {
+			{
+				Action	= 'cr_merge',
+				Label	= 'Merge'
+			}, {
+				Action	= 'cr_move',
+				Label	= 'Move'
+			}, {
+				Action	= 'cr_delete',
+				Label	= 'Delete'
+			}
+		},
+		Center = {
+			Action	= 'cr_select',
+			Label	= 'Select' -- or "Unselect"
+		},
+		Right = {
+			{
+				Action	= 'cr_split',
+				Label	= 'Split'
+			}, {
+				Action	= 'cr_set_input',
+				Label	= 'Set Input'
+			}, {
+				Action	= 'cr_create',
+				Label	= 'Create'
+			}
+		},
+		Bottom = {
+			Action	= 'cr_load',
+			Label	= 'Load',
+			Confirm	= true
+		}
+	});
+end
+
+function FunBotUIServer:_onUIRequestCommonRoseHide(player, data)
+	if Config.disableUserInterface == true then
+		return;
+	end
+	
+	if (Config.settingsPassword ~= nil and self:_isAuthenticated(player.accountGuid) ~= true) then
+		print(player.name .. ' has no permissions for Waypoint-Editor.');
+		return;
+	end
+	
+	print(player.name .. ' requesting hide CommonRose.');
+	NetEvents:SendTo('UI_CommonRose', player, 'false');
 end
 
 function FunBotUIServer:_onUIRequestOpen(player, data)

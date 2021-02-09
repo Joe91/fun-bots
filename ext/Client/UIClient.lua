@@ -20,6 +20,7 @@ function FunBotUIClient:__init()
 		NetEvents:Subscribe('UI_Password_Protection', self, self._onUIPasswordProtection);
 		NetEvents:Subscribe('UI_Show_Toolbar', self, self._onUIShowToolbar);
 		NetEvents:Subscribe('UI_Settings', self, self._onUISettings);
+		NetEvents:Subscribe('UI_CommonRose', self, self._onUICommonRose);
 		Events:Subscribe('UI_Settings', self, self._onUISettings);
 		NetEvents:Subscribe('UI_Change_Language', self, self._onUIChangeLanguage);
 		Events:Subscribe('UI_Change_Language', self, self._onUIChangeLanguage);
@@ -46,6 +47,17 @@ function FunBotUIClient:_onUIToggle()
 		self._views:open();
 		self._views:focus();
 	end
+end
+
+function FunBotUIClient:_onUICommonRose(data)
+	if data == "false" then
+		self._views:execute('BotEditor.setCommonRose(false);');
+		self._views:blur();
+		return;
+	end
+	
+	self._views:execute('BotEditor.setCommonRose(\'' .. json.encode(data) .. '\');');
+	self._views:focus();
 end
 
 function FunBotUIClient:_onUISettings(data)
