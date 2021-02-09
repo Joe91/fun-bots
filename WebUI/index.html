@@ -2,7 +2,15 @@
 <html>
 	<head>
 		<meta charset="utf-8" />
-		<link rel="stylesheet" href="style.css" />
+		<link rel="stylesheet" href="css/Globals.css" />
+		<link rel="stylesheet" href="css/Forms.css" />
+		<link rel="stylesheet" href="css/View.css" />
+		<link rel="stylesheet" href="css/Views/PasswordProtection.css" />
+		<link rel="stylesheet" href="css/Views/Dialog.css" />
+		<link rel="stylesheet" href="css/Views/Toolbar.css" />
+		<link rel="stylesheet" href="css/Views/SettingsTabs.css" />
+		<link rel="stylesheet" href="css/Views/Settings.css" />
+		<link rel="stylesheet" href="css/Views/WaypointEditor/CommonRose.css" />
 	</head>
 	<body>
 		<!-- Warning: Password Protection -->
@@ -45,6 +53,17 @@
 					<li data-action="exit"><a data-key="F12"><span data-lang="Exit">Exit</span></a></li>
 				</ul>
 			</ui-menu>
+		</ui-view>
+		
+		<!-- CommonRose -->
+		<ui-view data-name="commorose" data-type="commorose">
+			<ui-top><span></span></ui-top>
+			<ui-horizontal>
+				<ul class="left"></ul>
+				<ui-hexagon></ui-hexagon>
+				<ul class="right"></ul>
+			</ui-horizontal>
+			<ui-bottom><span></span></ui-bottom>
 		</ui-view>
 
 		<!-- Authentication -->

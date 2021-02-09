@@ -1,0 +1,154 @@
+ui-view[data-name="settings"] ui-content {
+	min-width: 700px;
+}
+
+ui-view[data-name="settings"] ui-content ui-description {
+	padding: 5px 10px;
+	color: var(--color_text);
+	text-shadow: 0 0 6px var(--color_text_shadow);
+	min-height: 31px;
+	display: block;
+}
+
+ui-view[data-name="settings"] ui-tabs {}
+
+/* Menu */
+ui-view[data-name="settings"] ui-tabs nav {}
+
+ui-view[data-name="settings"] ui-tabs nav ul {
+	list-style: none;
+	display: flex;
+	justify-content: center;
+}
+
+ui-view[data-name="settings"] ui-tabs nav ul li {
+	flex: auto;
+}
+
+ui-view[data-name="settings"] ui-tabs nav ul li label {
+	display: block;
+	position: relative;
+	padding: 5px 15px;
+	min-width: 120px;
+	margin: 0 1px;
+	color: var(--color_text);
+	text-shadow: 0 0 6px var(--color_text_shadow);
+	cursor: pointer;
+	font-weight: 900;
+	font-size: 18px;
+	text-align: center;
+	text-transform: uppercase;
+	background: linear-gradient(180deg, var(--color_button_default_from) 0%, var(--color_button_default_to) 100%);
+}
+
+ui-view[data-name="settings"] ui-tabs nav ul li:first-child label {
+	margin: 0 1px 0 0;
+}
+
+ui-view[data-name="settings"] ui-tabs nav ul li:last-child label {
+	margin: 0 0 0 1px;
+}
+
+ui-view[data-name="settings"] ui-tabs nav ul li:hover label {
+	background: linear-gradient(180deg, var(--color_button_hover_from) 0%, var(--color_button_hover_to) 100%);
+}
+
+/* Tab Content */
+ui-view[data-name="settings"] ui-tabs figure {
+	display: block;
+	clear: both;
+	padding: 5px 10px;
+	display: block;
+}
+
+ui-view[data-name="settings"] ui-tabs > input,
+ui-view[data-name="settings"] ui-tabs figure > ui-tab { display: none; }
+
+ui-view[data-name="settings"] ui-tabs figure > ui-tab {
+	padding: 20px;
+}
+
+/* Tab Content :: Entries */
+ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry {
+	display: flex;
+	color: var(--color_text);
+	text-shadow: 0 0 6px var(--color_text_shadow);
+    flex-direction: row;
+}
+
+ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-name {
+	flex: 1 auto;
+	align-self: center;
+}
+
+ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container {
+	flex: 1 auto;
+	display: flex;
+    flex-direction: row;
+	font-weight: 900;
+	max-width: 200px;
+}
+
+ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-restore {
+	flex: 0 30px;
+	cursor: pointer;
+	background: url('assets/restore.png');
+	background-size: 30px;
+	background-repeat: no-repeat;
+	background-position: 50% 50%;
+	filter: grayscale(100%) brightness(0.4);
+	margin: 0 0 0 10px;
+}
+
+ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-restore:hover {
+	filter: unset;
+}
+
+ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container ui-arrow {
+	flex: 0 13px;
+	cursor: pointer;
+	font-size: 30px;
+}
+
+ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container ui-arrow[data-direction="left"]:before {
+	content: "❰";
+}
+
+ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container ui-arrow[data-direction="right"]:after {
+	content: "❱";
+}
+
+ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container ui-text {
+	flex: 0 170px;
+	text-align: center;
+	vertical-align: middle;
+	align-self: center;
+	font-size: 16px;
+}
+
+ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container ui-text input[type="text"],
+ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container ui-text input[type="password"],
+ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container input[type="number"] {
+	border: none;
+	width:100%;
+	flex: 0 170px;
+	min-width: 1px;
+	max-width: 100%;
+	background: rgba(0, 0, 0, 0);
+	text-align: center;
+	color: var(--color_text);
+	font-weight: 900;
+	font-size: 16px;
+	margin: 1px 0;
+	text-shadow: 0 0 6px var(--color_text_shadow);
+}
+
+ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container input[type="number"]::-webkit-outer-spin-button,
+ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container input[type="number"]::-webkit-inner-spin-button {
+	-webkit-appearance: none;
+}
+
+ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry[data-type="Text"] ui-container ui-text input[type="text"],
+ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry[data-type="Password"] ui-container ui-text input[type="password"] {
+	border: 1px solid;
+}
