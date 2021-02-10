@@ -8,6 +8,9 @@ function Weapon:__init(name, extension, unlocks, type, fullResource)
 	self.fullResource = fullResource;
 
 	self.damage		= 0;
+    self.endDamage = 0;
+    self.damageFalloffStartDistance	= 0;
+    self.damageFalloffEndDistance 	= 0;
 	self.bulletSpeed= 0;
 	self.bulletDrop = 0;
 	self.fireCycle	= 0;
@@ -54,12 +57,15 @@ function Weapon:learnStatsValues()
 
 	print(self.name..': '..tostring(aiData.name))
 
-	self.damage 		= bulletData.startDamage
+	self.damage 		= bulletData.StartDamage
+	self.endDamage 		= bulletData.EndDamage;
+    self.damageFalloffStartDistance	= bulletData.DamageFalloffStartDistance;
+    self.damageFalloffEndDistance 	= bulletData.DamageFalloffEndDistance;
 	self.bulletSpeed 	= fireData.shot.initialSpeed.z
-	self.bulletDrop 	= bulletData.gravity
-	self.fireCycle 		= aiData.maxBurstCoolDownTime
+	self.bulletDrop 	= -bulletData.gravity
+	self.fireCycle 		= aiData.minBurstCoolDownTime
 	self.pauseCycle 	= (aiData.maxBurstCoolDownTime + aiData.minBurstCoolDownTime) / 2
-	self.reload			= fireData.fireLogic.reloadTime;
+	self.reload			= math.floor(fireData.ammo.magazineCapacity * 0.2)--fireData.fireLogic.reloadTime;
 	self.delayed		= fireData.fireLogic.boltAction.forceBoltActionOnFireTrigger or fireData.ammo.magazineCapacity >= 80
 	self.needvalues 	= false
 end
