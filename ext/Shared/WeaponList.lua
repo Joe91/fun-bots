@@ -138,11 +138,11 @@ function WeaponList:__init()
 	weapon:setStatsValues(80, 540, 9.81, 3, 0.2, 0.5, true);
 	table.insert(self._weapons, weapon);
 
-	weapon = Weapon('M98B_Balllistic', '', {'Ballistic_20xScope', 'Bipod', 'FlashSuppressor'}, 'Sniper', 'Weapons/Model98B/U_M98B')
+	weapon = Weapon('M98B_Balllistic', '', {'Ballistic_Scope', 'Bipod', 'Flash_Suppressor'}, 'Sniper', 'Weapons/Model98B/U_M98B')
 	weapon:setStatsValues(95, 650, 9.81, 3, 0.2, 0.5, true);
 	table.insert(self._weapons, weapon);
 
-	weapon = Weapon('M98B_6x', '', {'Rifle_6xScope', 'StraightPull', 'TargetPointer'}, 'Sniper', 'Weapons/Model98B/U_M98B')
+	weapon = Weapon('M98B_6x', '', {'Rifle_Scope', 'StraightPull', 'Target_Pointer'}, 'Sniper', 'Weapons/Model98B/U_M98B')
 	weapon:setStatsValues(95, 650, 9.81, 3, 0.2, 0.5, true);
 	table.insert(self._weapons, weapon);
 
@@ -165,7 +165,7 @@ function WeaponList:__init()
 	weapon = Weapon('JNG90_Balllistic', 'XP2', {'Ballistic_Scope', 'Bipod', 'Flash_Suppressor'}, 'Sniper', 'Weapons/XP2_JNG90/U_JNG90')
 	table.insert(self._weapons, weapon);
 
-	weapon = Weapon('JNG90_6x', 'XP2', {'Rifle_6xScope', 'StraightPull', 'TargetPointer'}, 'Sniper', 'Weapons/XP2_JNG90/U_JNG90')
+	weapon = Weapon('JNG90_6x', 'XP2', {'Rifle_Scope', 'StraightPull', 'Target_Pointer'}, 'Sniper', 'Weapons/XP2_JNG90/U_JNG90')
 	table.insert(self._weapons, weapon);
 
 	weapon = Weapon('JNG90_IRNV', 'XP2', {'IRNV', 'Silencer', 'StraightPull'}, 'Sniper', 'Weapons/XP2_JNG90/U_JNG90')
