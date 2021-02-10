@@ -54,16 +54,21 @@ end
 
 function FunBotServer:_onPartitionLoaded(partition)
 	for _, instance in pairs(partition.instances) do
-		if instance:Is("SyncedGameSettings") then
-            local syncedGameSettings = SyncedGameSettings(instance)
-            syncedGameSettings:MakeWritable()
-            syncedGameSettings.allowClientSideDamageArbitration = false
-        end
-		if instance:Is("ServerSettings") then
-            local serverSettings = ServerSettings(instance)
-            serverSettings:MakeWritable()
-            serverSettings.isRenderDamageEvents = true
-        end
+		if USE_REAL_DAMAGE then
+			if instance:Is("SyncedGameSettings") then
+				local syncedGameSettings = SyncedGameSettings(instance)
+				syncedGameSettings:MakeWritable()
+				syncedGameSettings.allowClientSideDamageArbitration = false
+			end
+			if instance:Is("ServerSettings") then
+				local serverSettings = ServerSettings(instance)
+				serverSettings:MakeWritable()
+				--serverSettings.drawActivePhysicsObjects = true --doesn't matter
+				--serverSettings.isSoldierAnimationEnabled = true --doesn't matter
+				--serverSettings.isSoldierDetailedCollisionEnabled = true --doesn't matter
+				serverSettings.isRenderDamageEvents = true
+			end
+		end
 	end
 end
 

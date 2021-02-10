@@ -11,6 +11,9 @@ function ClientBotManager:__init()
 
 	Events:Subscribe('UpdateManager:Update', self, self._onUpdate);
 	NetEvents:Subscribe('WriteClientSettings', self, self._onWriteClientSettings);
+	if not USE_REAL_DAMAGE then
+		Hooks:Install('BulletEntity:Collision', 200, self, self._onBulletCollision);
+	end
 end
 
 function ClientBotManager:onExtensionUnload()
@@ -52,8 +55,7 @@ function ClientBotManager:_onUpdate(p_Delta, p_Pass)
 			if (bot ~= nil) then
 				if (bot.soldier ~= nil and player.soldier ~= nil) then
 					-- check for clear view
-					-- local playerCameraTrans	= ClientUtils:GetCameraTransform(); -- don't use camera, as this is used by mav or eod
-					local playerPosition = player.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(player, false); --Vec3(player.soldier.worldTransform.trans.x, player.soldier.worldTransform.trans.y + Utilities:getTargetHeight(player.soldier, false), player.soldier.worldTransform.trans.z)
+					local playerPosition = ClientUtils:GetCameraTransform().trans:Clone(); --player.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(player, false);
 
 					-- find direction of Bot
 					local target	= bot.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(bot, false);
@@ -73,6 +75,29 @@ function ClientBotManager:_onUpdate(p_Delta, p_Pass)
 						end
 						return --only one raycast per cycle
 					end
+				end
+			end
+		end
+	end
+end
+
+function ClientBotManager:_onBulletCollision(hook, entity, hit, shooter)
+	if (hit.rigidBody.typeInfo.name == 'CharacterPhysicsEntity') then
+		if Utilities:isBot(shooter.name) then
+			local player = PlayerManager:GetLocalPlayer();
+
+			if (player.soldier ~= nil) then
+				local dx	= math.abs(player.soldier.worldTransform.trans.x - hit.position.x);
+				local dz	= math.abs(player.soldier.worldTransform.trans.z - hit.position.z);
+				local dy	= hit.position.y - player.soldier.worldTransform.trans.y; --player y is on ground. Hit must be higher to be valid
+
+				if (dx < 1 and dz < 1 and dy < 2 and dy > 0) then --included bodyhight
+					local isHeadshot = false;
+					local camaraHeight = Utilities:getTargetHeight(player.soldier, false)
+					if dy < camaraHeight + 0.3 and dy > camaraHeight - 0.10 then
+						isHeadshot = true;
+					end
+					NetEvents:SendLocal('ClientDamagePlayer', shooter.name, false, isHeadshot);
 				end
 			end
 		end
