@@ -2,7 +2,7 @@ class('BotSpawner');
 
 local BotManager	= require('BotManager');
 local Globals		= require('Globals');
-local WeaponList	= require('WeaponList');
+local WeaponList	= require('__shared/WeaponList');
 local Utilities 	= require('__shared/Utilities')
 
 function BotSpawner:__init()
@@ -391,8 +391,12 @@ end
 
 function BotSpawner:_setAttachments(unlockWeapon, attachments)
 	for _, attachment in pairs(attachments) do
-		local unlockAsset = UnlockAsset(ResourceManager:SearchForDataContainer(attachment))
-		unlockWeapon.unlockAssets:add(unlockAsset)
+		local asset = ResourceManager:SearchForDataContainer(attachment)
+		if (asset == nil) then
+			print('Warning! Attachment invalid ['..tostring(unlockWeapon.weapon.name)..']: '..tostring(attachment))
+		else
+			unlockWeapon.unlockAssets:add(UnlockAsset(asset))
+		end
 	end
 end
 

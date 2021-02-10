@@ -6,12 +6,6 @@ require('__shared/Constants/BotNames');
 require('__shared/Constants/BotKits');
 require('__shared/Constants/BotNames');
 require('__shared/Constants/BotWeapons');
-require('__shared/Constants/WeaponsAssault');
-require('__shared/Constants/WeaponsEngineer');
-require('__shared/Constants/WeaponsSupport');
-require('__shared/Constants/WeaponsRecon');
-require('__shared/Constants/Pistols');
-require('__shared/Constants/Knifes');
 
 
 Language					= require('__shared/Language');
