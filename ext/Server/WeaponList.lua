@@ -7,24 +7,24 @@ function WeaponList:__init()
 
 	local weapon = nil
 	-- shotguns
-	weapon = Weapon('USAS-12', '', {'ExtendedMag', 'Frag'}, 'Shotgun')
-	weapon:setStatsValues(20, 150, 15, 3, 0.4, 0.4, false)
+	weapon = Weapon('USAS-12', '', {'Kobra', 'ExtendedMag'}, 'Shotgun')
+	weapon:setStatsValues(18, 300, 15, 3, 0.4, 0.4, false)
 	table.insert(self._weapons, weapon);
 
-	weapon = Weapon('saiga20', '', {'Kobra', 'Silencer', 'Frag'}, 'Shotgun', 'Weapons/SAIGA20K/U_SAIGA_20K')
-	weapon:setStatsValues(20, 150, 15, 3, 0.4, 0.4, false)
+	weapon = Weapon('saiga20', '', {'Kobra', 'Silencer'}, 'Shotgun', 'Weapons/SAIGA20K/U_SAIGA_20K')
+	weapon:setStatsValues(18, 300, 15, 3, 0.4, 0.4, false)
 	table.insert(self._weapons, weapon);
 
-	weapon = Weapon('Jackhammer', 'XP1', {'Kobra', 'TargetPointer', 'Frag'}, 'Shotgun')
-	weapon:setStatsValues(20, 150, 15, 3, 3, 0.6, false)
+	weapon = Weapon('Jackhammer', 'XP1', {'Kobra', 'TargetPointer'}, 'Shotgun')
+	weapon:setStatsValues(16, 300, 15, 3, 3, 0.6, false)
 	table.insert(self._weapons, weapon);
 
-	weapon = Weapon('DAO-12', '', {'Kobra', 'TargetPointer', 'Frag'}, 'Shotgun')
-	weapon:setStatsValues(20, 150, 15, 3, 0.2, 0.2, false);
+	weapon = Weapon('DAO-12', '', {'Kobra', 'TargetPointer'}, 'Shotgun')
+	weapon:setStatsValues(16, 300, 15, 3, 0.2, 0.2, false);
 	table.insert(self._weapons, weapon);
 
-	weapon = Weapon('SPAS12', 'XP2', {'Kobra', 'Frag'}, 'Shotgun')
-	weapon:setStatsValues(37.5, 150, 15, 2, 0.4, 0.4, false);
+	weapon = Weapon('SPAS12', 'XP2', {'Kobra', 'Slug'}, 'Shotgun')
+	weapon:setStatsValues(100, 300, 15, 2, 0.4, 0.4, false);
 	table.insert(self._weapons, weapon);
 
 	-- others
