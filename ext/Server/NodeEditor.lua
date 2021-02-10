@@ -124,7 +124,7 @@ function NodeEditor:_onUIRequestSaveSettings(player, data)
 
 	if (request.debugTracePaths) then
 		-- enabled, send them a fresh list
-		self:_onGetNodes(player)
+		self:_onRequestNodes(player)
 	else
 		-- disabled, delete the client's list
 		NetEvents:SendToLocal('NodeEditor:Clear', player)
