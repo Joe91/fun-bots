@@ -28,7 +28,7 @@ function WeaponList:__init()
 	weapon = Weapon('DAO-12', '', {'Weapons/Common/12gBuckshot', 'Kobra', 'TargetPointer'}, 'Shotgun')
 	table.insert(self._weapons, weapon);
 
-	weapon = Weapon('SPAS12', 'XP2', {'Weapons/Common/12gBuckshot', 'Kobra'}, 'Shotgun')
+	weapon = Weapon('SPAS12', 'XP2', {'Weapons/Common/12gBuckshot', 'Kobra'}, 'Shotgun') --'Slug'?
 	table.insert(self._weapons, weapon);
 
 	-- others
