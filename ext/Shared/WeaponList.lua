@@ -221,10 +221,10 @@ function WeaponList:__init()
 			--table.insert(WeaponsAssault, wep.name)
 			table.insert(WeaponsEngineer, wep.name)
 			--table.insert(WeaponsSupport, wep.name)
-			table.insert(WeaponsRecon, wep.name)
+			--table.insert(WeaponsRecon, wep.name)
 
 		elseif (wep.type == 'Shotgun') then
-			table.insert(WeaponsAssault, wep.name)
+			--table.insert(WeaponsAssault, wep.name)
 			--table.insert(WeaponsEngineer, wep.name)
 			table.insert(WeaponsSupport, wep.name)
 			--table.insert(WeaponsRecon, wep.name)
