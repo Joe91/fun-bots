@@ -43,12 +43,12 @@ function Weapon:learnStatsValues()
 	bulletData, success = g_EbxEditUtils:GetWritableContainer(fireData, 'shot.ProjectileData')
 	if (not success) then print('No bulletData for: '..self.name) return end
 
-	--print(self.name..': '..tostring(aiData.name))
+	print(self.name..': '..tostring(aiData.name))
 
-	self.damage 		= bulletData.StartDamage
-	self.endDamage 		= bulletData.EndDamage;
-    self.damageFalloffStartDistance	= bulletData.DamageFalloffStartDistance;
-    self.damageFalloffEndDistance 	= bulletData.DamageFalloffEndDistance;
+	self.damage 		= bulletData.startDamage
+	self.endDamage 		= bulletData.endDamage;
+    self.damageFalloffStartDistance	= bulletData.damageFalloffStartDistance;
+	self.damageFalloffEndDistance 	= bulletData.damageFalloffStartDistance;
 	self.bulletSpeed 	= fireData.shot.initialSpeed.z
 	self.bulletDrop 	= -bulletData.gravity
 	self.fireCycle 		= aiData.minBurstCoolDownTime
