@@ -18,8 +18,6 @@ function Weapon:__init(name, extension, unlocks, type, fullResource)
 	self.reload		= 0;
 	self.delayed	= false;
 	self.needvalues	= true;
-
-	Events:Subscribe('Level:Loaded', self, self.OnLevelLoaded);
 end
 
 function Weapon:overwriteStatsValues(damage, fireCycle, pauseCycle, delayed)
@@ -27,12 +25,6 @@ function Weapon:overwriteStatsValues(damage, fireCycle, pauseCycle, delayed)
 	self.fireCycle	= fireCycle;
 	self.pauseCycle	= pauseCycle;
 	self.delayed	= delayed;
-end
-
-function Weapon:OnLevelLoaded()
-	if (self.needvalues) then
-		self:learnStatsValues()
-	end
 end
 
 function Weapon:learnStatsValues()

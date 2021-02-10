@@ -217,11 +217,17 @@ function WeaponList:__init()
 		elseif (wep.type == 'Assault') then
 			table.insert(WeaponsAssault, wep.name)
 
-		elseif (wep.type == 'PDW' or wep.type == 'Shotgun') then
-			table.insert(WeaponsAssault, wep.name)
+		elseif (wep.type == 'PDW') then
+			--table.insert(WeaponsAssault, wep.name)
 			table.insert(WeaponsEngineer, wep.name)
-			table.insert(WeaponsSupport, wep.name)
+			--table.insert(WeaponsSupport, wep.name)
 			table.insert(WeaponsRecon, wep.name)
+
+		elseif (wep.type == 'Shotgun') then
+			table.insert(WeaponsAssault, wep.name)
+			--table.insert(WeaponsEngineer, wep.name)
+			table.insert(WeaponsSupport, wep.name)
+			--table.insert(WeaponsRecon, wep.name)
 
 		elseif (wep.type == 'Carabine') then
 			table.insert(WeaponsEngineer, wep.name)
