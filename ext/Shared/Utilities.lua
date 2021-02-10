@@ -94,13 +94,12 @@ function Utilities:mergeKeys(originalTable, newData)
    return originalTable
 end
 
-function Utilities:dump(o, format, level)
+function Utilities:dump(o, format, maxLevels, level)
 	local tablevel = ''
 	local tablevellessone = ''
 	local newline = ''
-	if (level == nil) then
-		level = 1
-	end
+	maxLevels = maxLevels or -1
+	level = level or 1
 	if format then
 		tablevel = string.rep("\t", level)
 		tablevellessone = string.rep("\t", math.max(level-1, 0))
@@ -111,12 +110,16 @@ function Utilities:dump(o, format, level)
 		return 'nil'
 	end
 	if type(o) == 'table' then
-		local s = '{ ' .. newline
-		for k,v in pairs(o) do
-			if type(k) ~= 'number' then k = '"'..k..'"' end
-				s = s .. tablevel .. '['..k..'] = ' .. g_Utilities:dump(v, format, level+1) .. ',' .. newline
+		if (maxLevels == -1 or level <= maxLevels) then
+			local s = tostring(o) .. ' -> { ' .. newline
+			for k,v in pairs(o) do
+				if type(k) ~= 'number' then k = '"'..k..'"' end
+				s = s .. tablevel .. '['..k..'] = ' .. g_Utilities:dump(v, format, maxLevels, level+1) .. ',' .. newline
 			end
-			return s .. tablevellessone .. '} '
+			return s .. tablevellessone .. '}'
+		else
+			return '{ '.. tostring(o) .. ' }'
+		end
 	else
 		return tostring(o)
 	end

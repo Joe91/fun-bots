@@ -8,6 +8,8 @@ function ClientNodeEditor:__init()
 	self.player = nil
 	self.waypoints = {}
 	self.playerPos = nil
+	self.cumulatedTime = 0
+	self.nodeGetTimer = 0
 
 	self.colors = {
 		["Text"] = Vec4(1,1,1,1),
@@ -41,6 +43,7 @@ function ClientNodeEditor:__init()
 		LastAction = ''
 	}
 
+
 	self.lastTraceSearchAreaPos = nil
 	self.lastTraceSearchAreaSize = nil
 	self.lastTraceStart = nil
@@ -53,7 +56,13 @@ end
 
 function ClientNodeEditor:RegisterEvents()
 
+	NetEvents:Subscribe('ClientNodeEditor:SetLastTraceSearchArea', self, self._onSetLastTraceSearchArea)
+	NetEvents:Subscribe('ClientNodeEditor:ReceiveNodes', self, self._onGetNodes)
+	NetEvents:Subscribe('ClientNodeEditor:Init', self, self._onInit)
+
+	NetEvents:Subscribe('UI_CommoRose_Action_Save', self, self._onSaveNodes)
 	NetEvents:Subscribe('UI_CommoRose_Action_Select', self, self._onSelectNode)
+	NetEvents:Subscribe('UI_CommoRose_Action_Load', self, self._onLoadNodes)
 
 	NetEvents:Subscribe('UI_CommoRose_Action_Merge', self, self._onMergeNode)
 	NetEvents:Subscribe('UI_CommoRose_Action_Move', self, self._onToggleMoveNode)
@@ -63,20 +72,16 @@ function ClientNodeEditor:RegisterEvents()
 	NetEvents:Subscribe('UI_CommoRose_Action_SetInput', self, self._onSetInputNode)
 	NetEvents:Subscribe('UI_CommoRose_Action_Create', self, self._onCreateNode)
 
-	NetEvents:Subscribe('UI_CommoRose_Action_Save', self, self._onSaveNodes)
-	NetEvents:Subscribe('UI_CommoRose_Action_Load', self, self._onLoadNodes)
-
-	NetEvents:Subscribe('NodeEditor:SetLastTraceSearchArea', self, self._onSetLastTraceSearchArea)
-	NetEvents:Subscribe('NodeEditor:ClientInit', self, self._onClientInit)
-
 	--Events:Subscribe('Player:Respawn', self, self._onPlayerRespawn)
 	Events:Subscribe('Player:Deleted', self, self._onUnload)
 	Events:Subscribe('Level:Destroy', self, self._onUnload)
 	Events:Subscribe('Client:UpdateInput', self, self._onUpdateInput)
+	Events:Subscribe('UpdateManager:Update', self, self._onUpdateManagerUpdate)
+	Events:Subscribe('UI:DrawHud', self, self._onUIDrawHud)
 
 	Hooks:Install('UI:PushScreen', 100, self, self._onUIPushScreen)
 
-	Console:Register('GetNodes', 'Have server resend all waypoints and lose all changes', self, self._onGetNodes)
+	Console:Register('GetNodes', 'Resend all waypoints and lose all changes', self, self._onGetNodes)
 	Console:Register('Remove', 'Remove selected waypoints', self, self._onRemoveNode)
 	Console:Register('Merge', 'Merge selected waypoints', self, self._onMergeNode)
 	Console:Register('Split', 'Split selected waypoints', self, self._onSplitNode)
@@ -86,7 +91,17 @@ function ClientNodeEditor:RegisterEvents()
 	Console:Register('HidePath', '(\'all\' or *<number|PathIndex>*) - Hide path\'s waypoints', self, self._onHidePath)
 	Console:Register('ShowRose', 'Show custom Commo Rose', self, self._onShowRose)
 	Console:Register('HideRose', 'Hide custom Commo Rose', self, self._onHideRose)
+	Console:Register('DumpNodes', 'Print selected nodes or all nodes', self, self._onDumpNodes)
+	Console:Register('RecalculateIndexes', 'Recalculate Indexes starting with selected nodes or all nodes', self, self._onRecalculateIndexes)
+	Console:Register('UnloadNodes', 'Clears and unloads all clientside nodes', self, self._onUnload)
+end
 
+-- commo rose top / middle / bottom
+
+function ClientNodeEditor:_onSaveNodes(args)
+	self.CommoRose.Active = false
+	print(Language:I18N('Not Implemented Yet'))
+	return false
 end
 
 function ClientNodeEditor:_onSelectNode(args)
@@ -94,6 +109,13 @@ function ClientNodeEditor:_onSelectNode(args)
 	self:_onCommoRoseAction('Select')
 end
 
+function ClientNodeEditor:_onLoadNodes(args)
+	self.CommoRose.Active = false
+	print(Language:I18N('Not Implemented Yet'))
+	return false
+end
+
+-- commo rose left side
 
 function ClientNodeEditor:_onMergeNode(args)
 	self.CommoRose.Active = false
@@ -117,6 +139,7 @@ function ClientNodeEditor:_onRemoveNode(args)
 	return true
 end
 
+-- commo rose right side
 
 function ClientNodeEditor:_onSplitNode(args)
 	self.CommoRose.Active = false
@@ -140,21 +163,32 @@ function ClientNodeEditor:_onCreateNode(args)
 end
 
 
-function ClientNodeEditor:_onSaveNodes(args)
-	self.CommoRose.Active = false
-	print(Language:I18N('Not Implemented Yet'))
-	return false
+-- debug methods
+
+function ClientNodeEditor:_onDumpNodes(args)
+
+	local selection = g_NodeCollection:GetSelected()
+
+	if (#selection < 1) then
+		selection = g_NodeCollection:Get()
+	end
+
+	for i=1, #selection do
+		print(g_Utilities:dump(selection[i], true, 1))
+	end
+	print('Dumped ['..tostring(#selection)..'] Nodes!')
+	return true
 end
 
-function ClientNodeEditor:_onLoadNodes(args)
-	self.CommoRose.Active = false
-	print(Language:I18N('Not Implemented Yet'))
-	return false
-end
+function ClientNodeEditor:_onRecalculateIndexes(args)
 
+	local selection = g_NodeCollection:GetSelected()
+	local firstnode = nil
 
-function ClientNodeEditor:_onGetNodes(args)
-	NetEvents:Send('NodeEditor:GetNodes')
+	if (#selection > 0) then
+		firstnode = selection[1]
+	end
+	g_NodeCollection:RecalculateIndexes(firstnode)
 	return true
 end
 
@@ -231,31 +265,42 @@ end
 
 function ClientNodeEditor:_onPlayerRespawn(args)
 	if (Config.debugTracePaths) then
-		self:_onUnload()
-		NetEvents:Send('NodeEditor:GetNodes')
+		self:_onGetNodes()
 	end
 end
 
-function ClientNodeEditor:_onUnload(args)
-	self.player = nil
-	self.waypoints = {}
-	g_NodeCollection:Clear()
-	g_NodeCollection:DeregisterEvents()
-	Events:Unsubscribe('UpdateManager:Update')
-	Events:Unsubscribe('UI:DrawHud')
+-- request a fresh node list from the server
+-- or server has told us be ready to receive
+function ClientNodeEditor:_onGetNodes(args)
+	print('ClientNodeEditor:_onGetNodes: '..tostring(args))
+	-- unload our current cache
+	self:_onUnload(args)
+	-- set a 1 second timer before we are ready to receive
+	self.cumulatedTime = 0
+	self.nodeGetTimer = 1
+	return true
 end
 
-function ClientNodeEditor:_onClientInit()
+function ClientNodeEditor:_onUnload(args)
+	for i=1, #self.waypoints do
+		self.waypoints[i].Next = nil
+		self.waypoints[i].Previous = nil
+	end
+	self.player = nil
+	self.waypoints = {}
+	g_NodeCollection:Clear(args)
+	g_NodeCollection:DeregisterEvents()
+end
+
+-- node payload has finished sending, setup events and calc indexes
+function ClientNodeEditor:_onInit()
 	g_NodeCollection:RegisterEvents()
 	g_NodeCollection:RecalculateIndexes()
 
 	self.waypoints = g_NodeCollection:Get()
 	self.player = PlayerManager:GetLocalPlayer()
 
-	Events:Subscribe('UpdateManager:Update', self, self._onUpdateManagerUpdate)
-	Events:Subscribe('UI:DrawHud', self, self._onUIDrawHud)
-
-	print('ClientNodeEditor:_onClientInit -> Nodes received: '..tostring(#self.waypoints))
+	print('ClientNodeEditor:_onInit -> Nodes received: '..tostring(#self.waypoints))
 	local counter = 0
 	for i=1, #self.waypoints do
 
@@ -267,10 +312,22 @@ function ClientNodeEditor:_onClientInit()
 			counter = counter+1
 		end
 	end
-	print('ClientNodeEditor:_onClientInit -> Stale Nodes: '..tostring(counter))
+	print('ClientNodeEditor:_onInit -> Stale Nodes: '..tostring(counter))
 end
 
 function ClientNodeEditor:_onUpdateManagerUpdate(delta, pass)
+
+	if (self.nodeGetTimer > 0) then
+		self.cumulatedTime = self.cumulatedTime + delta
+	end
+
+	if (self.cumulatedTime > self.nodeGetTimer) then
+		print('NodeEditor:SendNodes')
+		-- timer has passed, ready to receive node payload
+		NetEvents:Send('NodeEditor:SendNodes')
+		self.cumulatedTime = 0
+		self.nodeGetTimer = 0
+	end
 
 	if (not Config.debugTracePaths) then
 		return
@@ -423,7 +480,7 @@ function ClientNodeEditor:_onUIDrawHud()
 			local isSelected = g_NodeCollection:IsSelected(waypoint)
 			local color = self.colors[waypoint.PathIndex]
 
-			if (waypoint.Previous == nil and waypoint.Next == nil) then
+			if (waypoint.Previous == false and waypoint.Next == false) then
 				color = self.colors.Orphan
 			end
 
@@ -439,11 +496,11 @@ function ClientNodeEditor:_onUIDrawHud()
 
 			if (waypoint.Distance ~= nil and waypoint.Distance < Config.lineRange and Config.drawWaypointLines) then
 				-- try to find a previous node and draw a line to it
-				if (waypoint.Previous ~= nil and type(waypoint.Previous) == 'string') then
+				if (waypoint.Previous and type(waypoint.Previous) == 'string') then
 					waypoint.Previous = g_NodeCollection:Get(waypoint.Previous)
 				end
 
-				if (waypoint.Previous ~= nil) then
+				if (waypoint.Previous) then
 					DebugRenderer:DrawLine(waypoint.Previous.Position, waypoint.Position, color.Line, color.Node)
 				end
 			end
@@ -454,12 +511,12 @@ function ClientNodeEditor:_onUIDrawHud()
 					local screenPos = ClientUtils:WorldToScreen(waypoint.Position + (Vec3.up * 0.7))
 					if (screenPos ~= nil) then
 
-						local previousNode = "None"
-						local nextNode = "None"
-						if (waypoint.Previous ~= nil) then
+						local previousNode = tostring(waypoint.Previous)
+						local nextNode = tostring(waypoint.Next)
+						if (type(waypoint.Previous) == 'table') then
 							previousNode = waypoint.Previous.ID
 						end
-						if (waypoint.Next ~= nil) then
+						if (type(waypoint.Next) == 'table') then
 							nextNode = waypoint.Next.ID
 						end
 

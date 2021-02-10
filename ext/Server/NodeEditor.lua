@@ -7,10 +7,12 @@ function NodeEditor:__init()
 	self.batchSendTimer = 0
 	self.nexBatchSend = 0
 	self.playersReceivingNodes = {}
+	self.debugprints = 0
 end
 
 function NodeEditor:RegisterEvents()
-	NetEvents:Subscribe('NodeEditor:GetNodes', self, self._onGetNodes)
+	NetEvents:Subscribe('NodeEditor:RequestNodes', self, self._onRequestNodes)
+	NetEvents:Subscribe('NodeEditor:SendNodes', self, self._onSendNodes)
 	NetEvents:Subscribe('UI_Request_Save_Settings', self, self._onUIRequestSaveSettings)
 	Events:Subscribe('Level:Loaded', self, self._onLevelLoaded)
 	Events:Subscribe('Level:Destroy', self, self._onLevelDestroy)
@@ -39,11 +41,16 @@ function NodeEditor:_onLevelDestroy()
 	g_NodeCollection:Clear()
 end
 
--- send to players when they spawn
-function NodeEditor:_onGetNodes(player)
-	local nodes = g_NodeCollection:Get()
-	NetEvents:SendToLocal('NodeEditor:Clear', player, #nodes)
+-- player has requested node collection to be sent
+function NodeEditor:_onRequestNodes(player)
+	print('NodeEditor:_onRequestNodes: '..tostring(player.name))
+	-- tell client to clear their list and how many to expect
+	NetEvents:SendToLocal('ClientNodeEditor:ReceivingNodes', player, #g_NodeCollection:Get())
+end
 
+-- player has indicated they are ready for nodes to send
+function NodeEditor:_onSendNodes(player)
+	local nodes = g_NodeCollection:Get()
 	table.insert(self.playersReceivingNodes, {Player = player, Index = 1, Nodes = nodes})
 	print('Sending '..tostring(#nodes)..' waypoints to '..player.name)
 end
@@ -60,10 +67,10 @@ function NodeEditor:_onEngineUpdate(deltaTime, simulationDeltaTime)
 			for j = sendStatus.Index, #sendStatus.Nodes do
 
 				local sendableNode = sendStatus.Nodes[j]
-				if (sendableNode.Next ~= nil) then
+				if (type(sendableNode.Next) == 'table') then
 					sendableNode.Next = sendableNode.Next.ID
 				end
-				if (sendableNode.Previous ~= nil) then
+				if (type(sendableNode.Previous) == 'table') then
 					sendableNode.Previous = sendableNode.Previous.ID
 				end
 
@@ -77,7 +84,7 @@ function NodeEditor:_onEngineUpdate(deltaTime, simulationDeltaTime)
 			if (sendStatus.Index >= #sendStatus.Nodes) then
 				print('Finished sending waypoints to '..sendStatus.Player.name)
 				table.remove(self.playersReceivingNodes, i)
-				NetEvents:SendToLocal('NodeEditor:ClientInit', sendStatus.Player)
+				NetEvents:SendToLocal('ClientNodeEditor:Init', sendStatus.Player)
 				break
 			end
 		end
