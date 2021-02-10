@@ -58,6 +58,9 @@ function WeaponList:__init()
 	weapon = Weapon('PP-19', 'XP1', {'IRNV', 'Silencer', 'TargetPointer'}, 'PDW')
 	table.insert(self._weapons, weapon);
 
+	weapon = Weapon('Crossbow', '', {}, 'PDW', 'Weapons/XP4_Crossbow_Prototype/U_Crossbow_Scoped_Cobra')
+	table.insert(self._weapons, weapon);
+
 	--Carabines
 	weapon = Weapon('M4A1', '', {'Kobra', 'Silencer'}, 'Carabine')
 	table.insert(self._weapons, weapon);
@@ -93,8 +96,8 @@ function WeaponList:__init()
 	weapon = Weapon('Type88', '', {'EOTech', 'ExtendedMag', 'Foregrip'},'LMG')
 	table.insert(self._weapons, weapon);
 
-	weapon = Weapon('M240', '', {'Eotech', 'TargetPointer'}, 'LMG')
-	table.insert(self._weapons, weapon);
+	--weapon = Weapon('M240', '', {'Eotech', 'TargetPointer'}, 'LMG')  -- not usable, because it has the same ammo as some sniper rifles
+	--table.insert(self._weapons, weapon);
 
 	weapon = Weapon('M60', '', {'Ballistic_scope', 'Foregrip', 'TargetPointer'}, 'LMG')
 	table.insert(self._weapons, weapon);
@@ -134,9 +137,6 @@ function WeaponList:__init()
 	table.insert(self._weapons, weapon);
 
 	weapon = Weapon('JNG90_IRNV', 'XP2', {'IRNV', 'Silencer', 'StraightPull'}, 'Sniper', 'Weapons/XP2_JNG90/U_JNG90')
-	table.insert(self._weapons, weapon);
-
-	weapon = Weapon('Crossbow', '', {}, 'Sniper', 'Weapons/XP4_Crossbow_Prototype/U_Crossbow_Scoped_Cobra')
 	table.insert(self._weapons, weapon);
 
 	weapon = Weapon('SKS_LongRange', '', {'PK-AS', 'Foregrip'}, 'Sniper', 'Weapons/SKS/U_SKS')
@@ -199,11 +199,9 @@ function WeaponList:__init()
 
 	-- knifes
 	weapon = Weapon('Razor', '', {}, 'Knife', 'Weapons/XP2_Knife_RazorBlade/U_Knife_Razor')
-	weapon:overwriteStatsValues(50, 0, 1, false);
 	table.insert(self._weapons, weapon);
 
 	weapon = Weapon('Knife', '', {}, 'Knife')
-	weapon:overwriteStatsValues(50, 0, 1, false);
 	table.insert(self._weapons, weapon);
 
 	for i=1, #self._weapons do
@@ -252,6 +250,14 @@ function WeaponList:getWeapon(name)
 	end
 
 	return retWeapon;
+end
+
+function WeaponList:onLevelLoaded()
+	for _, weapon in pairs(self._weapons) do
+		if weapon.needvalues then
+			weapon:learnStatsValues();
+		end
+	end
 end
 
 
