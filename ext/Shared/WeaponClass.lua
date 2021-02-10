@@ -22,15 +22,11 @@ function Weapon:__init(name, extension, unlocks, type, fullResource)
 	Events:Subscribe('Level:Loaded', self, self.OnLevelLoaded);
 end
 
-function Weapon:setStatsValues(damage, bulletSpeed, bulletDrop, reload, fireCycle, pauseCycle, delayed)
+function Weapon:overwriteStatsValues(damage, fireCycle, pauseCycle, delayed)
 	self.damage		= damage;
-	self.bulletSpeed= bulletSpeed;
-	self.bulletDrop = bulletDrop;
 	self.fireCycle	= fireCycle;
 	self.pauseCycle	= pauseCycle;
-	self.reload		= reload;
 	self.delayed	= delayed;
-	self.needvalues = false;
 end
 
 function Weapon:OnLevelLoaded()
@@ -55,7 +51,7 @@ function Weapon:learnStatsValues()
 	bulletData, success = g_EbxEditUtils:GetWritableContainer(fireData, 'shot.ProjectileData')
 	if (not success) then print('No bulletData for: '..self.name) return end
 
-	print(self.name..': '..tostring(aiData.name))
+	--print(self.name..': '..tostring(aiData.name))
 
 	self.damage 		= bulletData.StartDamage
 	self.endDamage 		= bulletData.EndDamage;

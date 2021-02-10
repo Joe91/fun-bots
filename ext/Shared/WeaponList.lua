@@ -199,11 +199,11 @@ function WeaponList:__init()
 
 	-- knifes
 	weapon = Weapon('Razor', '', {}, 'Knife', 'Weapons/XP2_Knife_RazorBlade/U_Knife_Razor')
-	weapon:setStatsValues(50, 0, 0, 0, 1, 0, false);
+	weapon:overwriteStatsValues(50, 0, 1, false);
 	table.insert(self._weapons, weapon);
 
 	weapon = Weapon('Knife', '', {}, 'Knife')
-	weapon:setStatsValues( 50, 0, 0, 0, 1, 0, false);
+	weapon:overwriteStatsValues(50, 0, 1, false);
 	table.insert(self._weapons, weapon);
 
 	for i=1, #self._weapons do
