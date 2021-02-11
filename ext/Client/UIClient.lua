@@ -112,6 +112,10 @@ function FunBotUIClient:_onUISettings(data)
 	settings:addList("WEAPONS", "engineerWeapon",  Language:I18N("Weapon Engineer"), WeaponsEngineer, data.engineerWeapon, "M4A1", Language:I18N("Weapon of Engineer class"));
 	settings:addList("WEAPONS", "supportWeapon",  Language:I18N("Weapon Support"), WeaponsSupport, data.supportWeapon, "M249", Language:I18N("Weapon of Support class"));
 	settings:addList("WEAPONS", "reconWeapon",  Language:I18N("Weapon Recon"), WeaponsRecon, data.reconWeapon, "L96", Language:I18N("Weapon of Recon class"));
+	settings:addList("WEAPONS", "assaultWeaponSet",  Language:I18N("Weaponset of Assault"), WeaponSets, data.assaultWeaponSet, "Class", Language:I18N("Weaponset of Assault class"));
+	settings:addList("WEAPONS", "engineerWeaponSet",  Language:I18N("Weaponset Engineer"), WeaponSets, data.engineerWeaponSet, "Class_PDW", Language:I18N("Weaponset of Engineer class"));
+	settings:addList("WEAPONS", "supportWeaponSet",  Language:I18N("Weaponset Support"), WeaponSets, data.supportWeaponSet, "Class_Shotgun", Language:I18N("Weaponset of Support class"));
+	settings:addList("WEAPONS", "reconWeaponSet",  Language:I18N("Weaponset Recon"), WeaponSets, data.reconWeaponSet, "Class", Language:I18N("Weaponset of Recon class"));
 
 	settings:add("ADVANCED", "Integer", "fovForShooting", Language:I18N("Bot FOV"), data.fovForShooting, 270, Language:I18N("The Field Of View of the bots, where they can detect a player"));
 	settings:add("ADVANCED", "Boolean", "shootBackIfHit", Language:I18N("Attack if Hit"), data.shootBackIfHit, true, Language:I18N("Bots imidiatly attack player, if shot by it"));

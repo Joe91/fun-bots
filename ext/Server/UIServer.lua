@@ -9,6 +9,7 @@ local BotManager			= require('BotManager');
 local TraceManager			= require('TraceManager');
 local BotSpawner			= require('BotSpawner');
 local WeaponModification	= require('__shared/WeaponModification');
+local WeaponList			= require('__shared/WeaponList');
 local Globals 				= require('Globals');
 
 function FunBotUIServer:__init()
@@ -202,6 +203,7 @@ function FunBotUIServer:_writeSettings(player, request)
 	
 	local temporary			= false;
 	local updateWeapons		= false;
+	local updateWeaponSets	= false;
 	local respawnAllBots 	= false;
 	local batched			= true;
 	
@@ -251,8 +253,8 @@ function FunBotUIServer:_writeSettings(player, request)
 	if request.botAimWorsening ~= nil then
 		local tempValue = tonumber(request.botAimWorsening)
 
-		if tempValue >= 0 and tempValue < 10 then
-			if math.abs(request.botAimWorsening - Config.botAimWorsening) > 0.001 then
+		if tempValue >= 0 and tempValue <= 10 then
+			if math.abs(tempValue - Config.botAimWorsening) > 0.001 then
 				SettingsManager:update('botAimWorsening', tempValue, temporary, batched);
 				updateWeapons = true;
 			end
@@ -262,8 +264,8 @@ function FunBotUIServer:_writeSettings(player, request)
 	if request.botSniperAimWorsening ~= nil then
 		local tempValue = tonumber(request.botSniperAimWorsening)
 
-		if tempValue >= 0 and tempValue < 10 then
-			if math.abs(request.botSniperAimWorsening - Config.botSniperAimWorsening) > 0.001 then
+		if tempValue >= 0 and tempValue <= 10 then
+			if math.abs(tempValue - Config.botSniperAimWorsening) > 0.001 then
 				SettingsManager:update('botSniperAimWorsening', tempValue, temporary, batched);
 				updateWeapons = true;
 			end
@@ -636,6 +638,62 @@ function FunBotUIServer:_writeSettings(player, request)
 		end
 	end
 
+
+	if request.assaultWeaponSet ~= nil then
+		local tempString = request.assaultWeaponSet;
+		for _, assaultWeaponSet in pairs(WeaponSets) do
+			if tempString == assaultWeaponSet then
+				if assaultWeaponSet ~= Config.assaultWeaponSet then
+					updateWeaponSets = true;
+					SettingsManager:update('assaultWeaponSet', tempString, temporary, batched);
+				end
+				break
+			end
+		end
+	end
+
+	if request.engineerWeaponSet ~= nil then
+		local tempString = request.engineerWeaponSet;
+
+		for _, engineerWeaponSet in pairs(WeaponSets) do
+			if tempString == engineerWeaponSet then
+				if engineerWeaponSet ~= Config.engineerWeaponSet then
+					updateWeaponSets = true;
+					SettingsManager:update('engineerWeaponSet', tempString, temporary, batched);
+				end
+				break
+			end
+		end
+	end
+
+	if request.supportWeaponSet ~= nil then
+		local tempString = request.supportWeaponSet;
+
+		for _, supportWeaponSet in pairs(WeaponSets) do
+			if tempString == supportWeaponSet then
+				if supportWeaponSet ~= Config.supportWeaponSet then
+					updateWeaponSets = true;
+					SettingsManager:update('supportWeaponSet', tempString, temporary, batched);
+				end
+				break
+			end
+		end
+	end
+
+	if request.reconWeaponSet ~= nil then
+		local tempString = request.reconWeaponSet;
+
+		for _, reconWeaponSet in pairs(WeaponSets) do
+			if tempString == reconWeaponSet then
+				if reconWeaponSet ~= Config.reconWeaponSet then
+					updateWeaponSets = true;
+					SettingsManager:update('reconWeaponSet', tempString, temporary, batched);
+				end
+				break
+			end
+		end
+	end
+
 	-- expert
 	if request.botFirstShotDelay ~= nil then
 		local tempValue = tonumber(request.botFirstShotDelay);
@@ -729,8 +787,12 @@ function FunBotUIServer:_writeSettings(player, request)
 	if updateWeapons then
 		WeaponModification:ModifyAllWeapons(Config.botAimWorsening, Config.botSniperAimWorsening);
 	end
+
+	if updateWeaponSets then
+		WeaponList:updateWeaponList()
+	end
 	
-	NetEvents:BroadcastLocal('WriteClientSettings', Config, updateWeapons);
+	NetEvents:BroadcastLocal('WriteClientSettings', Config, updateWeaponSets);
 
 	if respawnAllBots then
 		--TODO: kill all bots and respawn themself

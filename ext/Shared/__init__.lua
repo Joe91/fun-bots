@@ -1,5 +1,8 @@
 class('FunBotShared');
 
+require('__shared/WeaponList');
+require('__shared/EbxEditUtils');
+
 Language					= require('__shared/Language');
 local WeaponModification	= require('__shared/WeaponModification');
 
