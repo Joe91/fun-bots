@@ -1,6 +1,7 @@
 MAX_NUMBER_OF_BOTS	= 32;			-- maximum bots that can be spawned
 MAX_TRACE_NUMBERS	= 15;			-- maximum number of traces in one level
 
+USE_REAL_DAMAGE 	= true;			-- with real damage, the hitboxes are a bit buggy
 BOT_ATTACK_MODE 	= "Crouch";		-- use "Crouch" or "Stand"
 
 Config = {
@@ -11,13 +12,14 @@ Config = {
 	botColor = "RANDOM_COLOR",		-- see BotColors
 
 	--difficluty
-	botAimWorsening = 0.3,			-- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy).
-	botSniperAimWorsening = 0.0,	-- see botAimWorsening, only for Sniper-rifles
+	botAimWorsening = 0.6,			-- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy).
+	botSniperAimWorsening = 0.2,	-- see botAimWorsening, only for Sniper-rifles
 	aimForHead = false,				-- bots aim for the head
 	headShotFactorBots = 1.5,		-- factor for damage if headshot
 	damageFactorAssault = 0.5,		-- origninal Damage from bots gets multiplied by this
 	damageFactorCarabine = 0.5,		-- origninal Damage from bots gets multiplied by this
 	damageFactorLMG = 0.5,			-- origninal Damage from bots gets multiplied by this
+	damageFactorPDW = 0.5,			-- origninal Damage from bots gets multiplied by this
 	damageFactorSniper = 0.8,		-- origninal Damage from bots gets multiplied by this
 	damageFactorShotgun = 0.5,		-- origninal Damage from bots gets multiplied by this
 	damageFactorPistol = 0.8,		-- origninal Damage from bots gets multiplied by this
@@ -44,12 +46,17 @@ Config = {
 	maxTrysToSpawnAtDistance = 3,	-- try this often to spawn a bot away from players
 
 	-- weapons
-	assaultWeapon = "M416",			-- weapon of Assault class
+	useRandomWeapon = true,			-- use a random weapon out of the class list
+	assaultWeapon = "M16A4",		-- weapon of Assault class
 	engineerWeapon = "M4A1",		-- weapon of Engineer class
 	supportWeapon = "M249",			-- weapon of Support class
 	reconWeapon = "L96",			-- weapon of Recon class
 	pistol = "M1911_Lit",			-- Bot pistol
 	knife = "Razor",				-- Bot knife
+	assaultWeaponSet = "Class",				-- weaponset of Assault class
+	engineerWeaponSet = "Class_PDW",		-- weaponset of Engineer class
+	supportWeaponSet = "Class_Shotgun",	-- weaponset of Support class
+	reconWeaponSet = "Class",				-- weaponset of Recon class
 
 
 	-- traces

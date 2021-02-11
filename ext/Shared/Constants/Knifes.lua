@@ -1,4 +1,0 @@
-KnifeWeapons = {
-	'Knife',
-	'Razor'
-}

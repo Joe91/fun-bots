@@ -6,12 +6,7 @@ require('__shared/Constants/BotNames');
 require('__shared/Constants/BotKits');
 require('__shared/Constants/BotNames');
 require('__shared/Constants/BotWeapons');
-require('__shared/Constants/WeaponsAssault');
-require('__shared/Constants/WeaponsEngineer');
-require('__shared/Constants/WeaponsSupport');
-require('__shared/Constants/WeaponsRecon');
-require('__shared/Constants/Pistols');
-require('__shared/Constants/Knifes');
+require('__shared/Constants/WeaponSets');
 
 require('NodeEditor');
 
@@ -22,6 +17,7 @@ local BotManager			= require('BotManager');
 local TraceManager			= require('TraceManager');
 local BotSpawner			= require('BotSpawner');
 local WeaponModification	= require('__shared/WeaponModification');
+local WeaponList			= require('__shared/WeaponList');
 local ChatCommands			= require('ChatCommands');
 local FunBotUIServer		= require('UIServer');
 local Globals 				= require('Globals');
@@ -62,16 +58,21 @@ end
 
 function FunBotServer:_onPartitionLoaded(partition)
 	for _, instance in pairs(partition.instances) do
-		if instance:Is("SyncedGameSettings") then
-            local syncedGameSettings = SyncedGameSettings(instance)
-            syncedGameSettings:MakeWritable()
-            syncedGameSettings.allowClientSideDamageArbitration = false
-        end
-		if instance:Is("ServerSettings") then
-            local serverSettings = ServerSettings(instance)
-            serverSettings:MakeWritable()
-            serverSettings.isRenderDamageEvents = true
-        end
+		if USE_REAL_DAMAGE then
+			if instance:Is("SyncedGameSettings") then
+				local syncedGameSettings = SyncedGameSettings(instance)
+				syncedGameSettings:MakeWritable()
+				syncedGameSettings.allowClientSideDamageArbitration = false
+			end
+			if instance:Is("ServerSettings") then
+				local serverSettings = ServerSettings(instance)
+				serverSettings:MakeWritable()
+				--serverSettings.drawActivePhysicsObjects = true --doesn't matter
+				--serverSettings.isSoldierAnimationEnabled = true --doesn't matter
+				--serverSettings.isSoldierDetailedCollisionEnabled = true --doesn't matter
+				serverSettings.isRenderDamageEvents = true
+			end
+		end
 	end
 end
 
@@ -82,6 +83,7 @@ end
 function FunBotServer:_onLevelLoaded(levelName, gameMode)
 	NetEvents:BroadcastLocal('WriteClientSettings', Config, true);
 	WeaponModification:ModifyAllWeapons(Config.botAimWorsening, Config.botSniperAimWorsening);
+	WeaponList:onLevelLoaded();
 	print('level ' .. levelName .. ' loaded...');
 	if gameMode == 'TeamDeathMatchC0' or gameMode == 'TeamDeathMatch0' then
 		Globals.isTdm = true;

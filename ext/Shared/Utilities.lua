@@ -7,27 +7,33 @@ function Utilities:__init()
 end
 
 function Utilities:getCameraPos(player, isTarget)
-	local returnVec = player.input.authoritativeCameraPosition:Clone();
-	if returnVec.x ~= 0 and returnVec.z ~= 0 then
-		--returnVec.x = 0;
-		--returnVec.z = 0;
+	local returnVec = Vec3(0,0,0)
+	local cameraVec = player.input.authoritativeCameraPosition:Clone();
+	if cameraVec.z ~= 0 then
+		returnVec = player.soldier.worldTransform.forward* cameraVec.z + player.soldier.worldTransform.left * cameraVec.x + player.soldier.worldTransform.up * cameraVec.y;
+		--print(returnVec)
+
 		if isTarget then
 			if Config.aimForHead then
 				if player.soldier.pose == CharacterPoseType.CharacterPoseType_Stand then
-					returnVec.y = returnVec.y - 0.2
+					returnVec.y = returnVec.y - 0.1
+				elseif player.soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
+					returnVec.y = returnVec.y - 0.05
+				else
+					returnVec.y = returnVec.y - 0.05
 				end
 			else
-				if player.soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
-					returnVec.y = returnVec.y - 0.0
+				if player.soldier.pose == CharacterPoseType.CharacterPoseType_Stand then
+					returnVec.y = returnVec.y - 0.4
 				elseif player.soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
 					returnVec.y = returnVec.y - 0.2
 				else
-					returnVec.y = returnVec.y - 0.4
+					returnVec.y = returnVec.y - 0.05
 				end
 			end
 		end
 	else
-		returnVec = Vec3(0.0 ,self:getTargetHeight(player.soldier, isTarget), 0.0)
+		returnVec = Vec3(0.03 ,self:getTargetHeight(player.soldier, isTarget), 0.03)
 	end
 	return returnVec;
 end
@@ -43,16 +49,16 @@ function Utilities:getTargetHeight(soldier, isTarget)
 			camereaHight = 1.0;
 		end
 	elseif isTarget and Config.aimForHead then
-		camereaHight = 1.4; --bot.soldier.pose == CharacterPoseType.CharacterPoseType_Stand
+		camereaHight = 1.50; --bot.soldier.pose == CharacterPoseType.CharacterPoseType_Stand
 		if soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
 			camereaHight = 0.25;
 		elseif soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
-			camereaHight = 0.95;
+			camereaHight = 1;
 		end
 	else --aim a little lower
-		camereaHight = 1.2; --bot.soldier.pose == CharacterPoseType.CharacterPoseType_Stand - reduce by 0.6
+		camereaHight = 1.2; --bot.soldier.pose == CharacterPoseType.CharacterPoseType_Stand - reduce by 0.4
 		if soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
-			camereaHight = 0.3; -- don't reduce
+			camereaHight = 0.25; -- don't reduce
 		elseif soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
 			camereaHight = 0.8; -- reduce by 0.2
 		end

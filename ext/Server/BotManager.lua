@@ -15,6 +15,8 @@ function BotManager:__init()
 	Events:Subscribe('UpdateManager:Update', self, self._onUpdate)
 	Events:Subscribe('Level:Destroy', self, self._onLevelDestroy)
 	NetEvents:Subscribe('BotShootAtPlayer', self, self._onShootAt)
+	Events:Subscribe('ServerDamagePlayer', self, self._onServerDamagePlayer) 	--only triggered on false damage
+	NetEvents:Subscribe('ClientDamagePlayer', self, self._onDamagePlayer)   	--only triggered on false damage
 	Hooks:Install('Soldier:Damage', 100, self, self._onSoldierDamage)
 end
 
@@ -167,7 +169,8 @@ function BotManager:onPlayerLeft(player)
 	end
 end
 
-function BotManager:_getDamageValue(damage, bot, fake)
+function BotManager:_getDamageValue(damage, bot, soldier, fake)
+	local resultDamage = 0;
 	local damageFactor = 1.0;
 
 	if bot.activeWeapon.type == "Shotgun" then
@@ -176,6 +179,8 @@ function BotManager:_getDamageValue(damage, bot, fake)
 		damageFactor = Config.damageFactorAssault;
 	elseif bot.activeWeapon.type == "Carabine" then
 		damageFactor = Config.damageFactorCarabine;
+	elseif bot.activeWeapon.type == "PDW" then
+		damageFactor = Config.damageFactorPDW;
 	elseif bot.activeWeapon.type == "LMG" then
 		damageFactor = Config.damageFactorLMG;
 	elseif bot.activeWeapon.type == "Sniper" then
@@ -186,23 +191,39 @@ function BotManager:_getDamageValue(damage, bot, fake)
 		damageFactor = Config.damageFactorKnife;
 	end
 
-	if not fake then
-		return damage * damageFactor;
-	else -- fake melee damage?
-		if damage == 1 then
-			return bot.knife.damage * Config.damageFactorKnife;
+	if not fake then -- frag mode
+		resultDamage = damage * damageFactor;
+	elseif bot.activeWeapon.type ~= "Shotgun" then
+		if damage <= 2 then
+			local distance = bot.player.soldier.worldTransform.trans:Distance(soldier.worldTransform.trans)
+			if distance >= bot.activeWeapon.damageFalloffEndDistance then
+				resultDamage = bot.activeWeapon.endDamage;
+			elseif distance <= bot.activeWeapon.damageFalloffStartDistance then
+				resultDamage =  bot.activeWeapon.damage;
+			else --extrapolate damage
+				local relativePosion = (distance-bot.activeWeapon.damageFalloffStartDistance)/(bot.activeWeapon.damageFalloffEndDistance - bot.activeWeapon.damageFalloffStartDistance)
+				resultDamage = bot.activeWeapon.damage - (relativePosion * (bot.activeWeapon.damage-bot.activeWeapon.endDamage));
+			end
+			if damage == 2 then
+				resultDamage = resultDamage * Config.headShotFactorBots;
+			end
+
+			resultDamage = resultDamage * damageFactor;
+		elseif damage == 3 then --melee
+			resultDamage = bot.knife.damage * Config.damageFactorKnife;
 		end
 	end
+	return resultDamage;
 end
 
 function BotManager:_onSoldierDamage(hook, soldier, info, giverInfo)
 	-- soldier -> soldier damage only
-	if soldier.player == nil or giverInfo.giver == nil then
+	if soldier.player == nil then
 		return
 	end
 
 	local soldierIsBot = Utilities:isBot(soldier.player.name);
-	if soldierIsBot then
+	if soldierIsBot and giverInfo.giver ~= nil then
 		--detect if we need to shoot back
 		if Config.shootBackIfHit and info.damage > 0 then
 			self:_onShootAt(giverInfo.giver, soldier.player.name, true)
@@ -214,16 +235,66 @@ function BotManager:_onSoldierDamage(hook, soldier, info, giverInfo)
 		end
 	end
 
+	--find out, if a player was hit by the server:
 	if not soldierIsBot then
-		--valid bot-damage?
-		local bot = self:GetBotByName(giverInfo.giver.name)
-		if bot ~= nil and bot.player.soldier ~= nil then
-			-- giver was a bot (with explosives)
-			info.damage = self:_getDamageValue(info.damage, bot, false);
+		if giverInfo.giver == nil then
+			local bot = self:GetBotByName(self._shooterBots[soldier.player.name])
+			if bot ~= nil and bot.player.soldier ~= nil then
+				info.damage = self:_getDamageValue(info.damage, bot, soldier, true);
+				info.boneIndex = 0;
+				info.isBulletDamage = true;
+				info.position = Vec3(soldier.worldTransform.trans.x, soldier.worldTransform.trans.y + 1, soldier.worldTransform.trans.z)
+				info.direction = soldier.worldTransform.trans - bot.player.soldier.worldTransform.trans
+				info.origin = bot.player.soldier.worldTransform.trans
+				if (soldier.health - info.damage) <= 0 then
+					if Globals.isTdm then
+						local enemyTeam = TeamId.Team1;
+						if soldier.player.teamId == TeamId.Team1 then
+							enemyTeam = TeamId.Team2;
+						end
+						TicketManager:SetTicketCount(enemyTeam, (TicketManager:GetTicketCount(enemyTeam) + 1));
+					end
+				end
+			end
+		else
+			--valid bot-damage?
+			local bot = self:GetBotByName(giverInfo.giver.name)
+			if bot ~= nil and bot.player.soldier ~= nil then
+				-- giver was a bot
+				info.damage = self:_getDamageValue(info.damage, bot, soldier, false);
+			end
 		end
 	end
-
 	hook:Pass(soldier, info, giverInfo)
+end
+
+function BotManager:_onServerDamagePlayer(playerName, shooterName, meleeAttack)
+	local player = PlayerManager:GetPlayerByName(playerName)
+	if player ~= nil then
+		self:_onDamagePlayer(player, shooterName, meleeAttack, false)
+	end
+end
+
+function BotManager:_onDamagePlayer(player, shooterName, meleeAttack, isHeadShot)
+	local bot = self:GetBotByName(shooterName)
+	if not player.alive or bot == nil then
+		return
+	end
+	if player.teamId == bot.player.teamId then
+		return
+	end
+	local damage = 1 --only trigger soldier-damage with this
+	if isHeadShot then
+		damage = 2	-- singal Headshot
+	elseif meleeAttack then
+		damage = 3 --signal melee damage with this value
+	end
+	--save potential killer bot
+	self._shooterBots[player.name] = shooterName
+
+	if player.soldier ~= nil then
+		player.soldier.health = player.soldier.health - damage
+	end
 end
 
 function BotManager:_onShootAt(player, botname, ignoreYaw)

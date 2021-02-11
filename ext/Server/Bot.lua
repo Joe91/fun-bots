@@ -465,6 +465,9 @@ function Bot:_updateShooting()
 					self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 1);
 					self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 1);
 					self._meleeCooldownTimer = Config.meleeAttackCoolDown;
+					if not USE_REAL_DAMAGE then
+						Events:DispatchLocal("ServerDamagePlayer", self._shootPlayer.name, self.player.name, true);
+					end
 				else
 					if self._meleeCooldownTimer < 0 then
 						self._meleeCooldownTimer = 0;
