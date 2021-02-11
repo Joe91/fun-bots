@@ -119,14 +119,30 @@ function WeaponList:__init()
 	weapon = Weapon('SG553LB', '', {'Kobra', 'Silencer'}, 'Carabine')
 	table.insert(self._weapons, weapon);
 
-	--LMG
-	weapon = Weapon('M249', '', {'Eotech', 'TargetPointer'},'LMG')
-	table.insert(self._weapons, weapon);
 
-	weapon = Weapon('Pecheneg', '', {'EOTech', 'Target_Pointer'},'LMG')
+	--LMG
+	weapon = Weapon('L86', 'XP2', {'EOTech', 'ExtendedMag', 'Foregrip'},'LMG')
 	table.insert(self._weapons, weapon);
 
 	weapon = Weapon('LSAT', 'XP2', {'EOTech', 'ExtendedMag', 'Foregrip'},'LMG')
+	table.insert(self._weapons, weapon);
+
+	weapon = Weapon('M249', '', {'Eotech', 'TargetPointer'},'LMG')
+	table.insert(self._weapons, weapon);
+
+	weapon = Weapon('M27IAR', '', {'Eotech', 'ExtendedMag'},'LMG')
+	table.insert(self._weapons, weapon);
+
+	--weapon = Weapon('M240', '', {'Eotech', 'TargetPointer'}, 'LMG')  -- not usable, because it has the same ammo as some sniper rifles
+	--table.insert(self._weapons, weapon);
+
+	weapon = Weapon('M60', '', {'Ballistic_scope', 'Foregrip', 'TargetPointer'}, 'LMG')
+	table.insert(self._weapons, weapon);
+
+	weapon = Weapon('MG36', 'XP1', {'Ballistic_scope', 'Foregrip', 'ExtendedMag'}, 'LMG')
+	table.insert(self._weapons, weapon);
+
+	weapon = Weapon('Pecheneg', '', {'EOTech', 'Target_Pointer'},'LMG')
 	table.insert(self._weapons, weapon);
 
 	weapon = Weapon('QBB-95', 'XP1', {'EOTech', 'Foregrip'},'LMG')
@@ -135,11 +151,8 @@ function WeaponList:__init()
 	weapon = Weapon('Type88', '', {'EOTech', 'ExtendedMag', 'Foregrip'},'LMG')
 	table.insert(self._weapons, weapon);
 
-	--weapon = Weapon('M240', '', {'Eotech', 'TargetPointer'}, 'LMG')  -- not usable, because it has the same ammo as some sniper rifles
+	--weapon = Weapon('RPK', '', {'EOTech', 'ExtendedMag', 'Foregrip'},'LMG', 'Weapons/RPK/U_RPK-74M') --doesn't work with the path I think
 	--table.insert(self._weapons, weapon);
-
-	weapon = Weapon('M60', '', {'Ballistic_scope', 'Foregrip', 'TargetPointer'}, 'LMG')
-	table.insert(self._weapons, weapon);
 
 	-- Sniper
 	weapon = Weapon('L96_Balllistic', 'XP1', {'Ballistic_20xScope', 'Bipod', 'FlashSuppressor'}, 'Sniper', 'Weapons/XP1_L96/U_L96')
