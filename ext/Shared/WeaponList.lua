@@ -28,15 +28,20 @@ function WeaponList:__init()
 	weapon = Weapon('Saiga20', '', {'Weapons/Common/12gBuckshot', 'Kobra', 'Silencer'}, 'Shotgun', 'Weapons/SAIGA20K/U_SAIGA_20K')
 	table.insert(self._weapons, weapon);
 
-	weapon = Weapon('SPAS12', 'XP2', {'Weapons/Common/12gBuckshot', 'Kobra'}, 'Shotgun') --'Slug'?
+	weapon = Weapon('SPAS12', 'XP2', {'Slug', 'Kobra'}, 'Shotgun')   --TODO: Get Damage-Values and Speed of other ammo
 	table.insert(self._weapons, weapon);
 
 	weapon = Weapon('USAS-12', '', {'Weapons/Common/12gBuckshot', 'ExtendedMag'}, 'Shotgun')
 	table.insert(self._weapons, weapon);
 
-	-- M1014
-	-- M870
-	-- M26
+	weapon = Weapon('M1014', '', {'Weapons/Common/12gBuckshot', 'ExtendedMag'}, 'Shotgun')
+	table.insert(self._weapons, weapon);
+
+	weapon = Weapon('M1014', '', {'Weapons/Common/12gBuckshot', 'ExtendedMag'}, 'Shotgun')
+	table.insert(self._weapons, weapon);
+
+	weapon = Weapon('870M', '', {'Weapons/Remington870/U_870_Slug', 'Weapons/Remington870/U_870_ExtendedMag'}, 'Shotgun', 'Weapons/Remington870/U_870')
+	table.insert(self._weapons, weapon);
 
 	---------------------------
 	--assault
@@ -85,19 +90,27 @@ function WeaponList:__init()
 	weapon = Weapon('MP7', '', {'Kobra', 'ExtendedMag'}, 'PDW')
 	table.insert(self._weapons, weapon);
 
-	weapon = Weapon('P90', '', {'Kobra', 'Silencer'}, 'PDW')
+	weapon = Weapon('P90', '', {'Kobra'}, 'PDW')
 	table.insert(self._weapons, weapon);
 
 	weapon = Weapon('PP-19', 'XP1', {'IRNV', 'Silencer', 'TargetPointer'}, 'PDW')
 	table.insert(self._weapons, weapon);
 
+	weapon = Weapon('PP2000', '', {'Kobra'}, 'PDW')
+	table.insert(self._weapons, weapon);
+
+	weapon = Weapon('UMP45', '', {'Kobra', 'Flashlight'}, 'PDW')
+	table.insert(self._weapons, weapon);
+
+	weapon = Weapon('MP5K', 'XP2', {'Kobra', 'Flashlight'}, 'PDW')
+	table.insert(self._weapons, weapon);
+
+	weapon = Weapon('MagpulPDR', '', {'Kobra', 'Flashsuppressor'}, 'PDW')
+	table.insert(self._weapons, weapon);
+
 	weapon = Weapon('Crossbow', '', {}, 'PDW', 'Weapons/XP4_Crossbow_Prototype/U_Crossbow_Scoped_Cobra')
 	table.insert(self._weapons, weapon);
-	
-	--PP-2000
-	--UMP
-	--MP5K
-	--PDW-R
+
 
 	---------------------------
 	--Carabines
@@ -146,9 +159,6 @@ function WeaponList:__init()
 	weapon = Weapon('M27IAR', '', {'Eotech', 'ExtendedMag'},'LMG')
 	table.insert(self._weapons, weapon);
 
-	--weapon = Weapon('M240', '', {'Eotech', 'TargetPointer'}, 'LMG')  -- not usable, because it has the same ammo as some sniper rifles
-	--table.insert(self._weapons, weapon);
-
 	weapon = Weapon('M60', '', {'Ballistic_scope', 'Foregrip', 'TargetPointer'}, 'LMG')
 	table.insert(self._weapons, weapon);
 
@@ -167,6 +177,8 @@ function WeaponList:__init()
 	weapon = Weapon('RPK', '', {'Weapons/RPK/U_RPK_Kobra', 'Weapons/RPK/U_RPK_ExtendedMag', 'Weapons/RPK/U_RPK_Foregrip'},'LMG', 'Weapons/RPK/U_RPK-74M')
 	table.insert(self._weapons, weapon);
 
+	--weapon = Weapon('M240', '', {'Eotech', 'TargetPointer'}, 'LMG')  -- not usable, because it has the same ammo as some sniper rifles
+	--table.insert(self._weapons, weapon);
 
 	---------------------------
 	-- Sniper
@@ -278,8 +290,8 @@ function WeaponList:__init()
 	weapon = Weapon('Taurus44', '', {}, 'Pistol')
 	table.insert(self._weapons, weapon);
 
-	weapon = Weapon('MP443', '', {}, 'Pistol')
-	table.insert(self._weapons, weapon);
+	--weapon = Weapon('MP443', '', {}, 'Pistol', 'Weapons/MP443/U_MP443_TacticalLight') --TODO: find out why not working
+	--table.insert(self._weapons, weapon);
 
 	-- knifes
 	weapon = Weapon('Razor', '', {}, 'Knife', 'Weapons/XP2_Knife_RazorBlade/U_Knife_Razor')
