@@ -34,16 +34,40 @@ function WeaponList:__init()
 
 	-- others
 	--assault
-	weapon = Weapon('M416', '', {'Kobra'},'Assault')
+	weapon = Weapon('AEK971', '', {'Kobra'}, 'Assault')
 	table.insert(self._weapons, weapon);
 
-	weapon = Weapon('AEK971', '', {'Kobra'}, 'Assault')
+	weapon = Weapon('AN94', '', {'Kobra', 'Foregrip'}, 'Assault')
+	table.insert(self._weapons, weapon);
+
+	weapon = Weapon('AK74', '', {'Kobra'}, 'Assault', 'Weapons/AK74M/AK74')
+	table.insert(self._weapons, weapon);
+
+	weapon = Weapon('SteyrAug', 'XP2', {'Kobra', 'Foregrip'},'Assault')
+	table.insert(self._weapons, weapon);
+
+	weapon = Weapon('F2000', '', {'Kobra', 'Foregrip'},'Assault')
+	table.insert(self._weapons, weapon);
+
+	weapon = Weapon('FAMAS', 'XP1', {'Kobra', 'Foregrip'}, 'Assault')
+	table.insert(self._weapons, weapon);
+
+	weapon = Weapon('G3A3', '', {'Kobra', 'Target_Pointer', 'Foregrip'}, 'Assault')
+	table.insert(self._weapons, weapon);
+
+	weapon = Weapon('KH2002', '', {'Kobra', 'Foregrip'}, 'Assault')
+	table.insert(self._weapons, weapon);
+
+	weapon = Weapon('L85A2', 'XP1', {'Kobra', 'FlashSuppressor'},'Assault')
 	table.insert(self._weapons, weapon);
 
 	weapon = Weapon('M16A4', '', {'Kobra'}, 'Assault')
 	table.insert(self._weapons, weapon);
 
-	weapon = Weapon('AN94', '', {'Kobra', 'Foregrip'}, 'Assault')
+	weapon = Weapon('M416', '', {'Kobra'},'Assault')
+	table.insert(self._weapons, weapon);
+
+	weapon = Weapon('SCAR-L', 'XP2', {'Kobra', 'Foregrip'},'Assault')
 	table.insert(self._weapons, weapon);
 
 	-- PDW
@@ -76,9 +100,6 @@ function WeaponList:__init()
 	table.insert(self._weapons, weapon);
 
 	weapon = Weapon('MTAR', 'XP2', {'Kobra', 'Silencer', 'Foregrip'}, 'Carabine')
-	table.insert(self._weapons, weapon);
-
-	weapon = Weapon('FAMAS', 'XP1', {'EOTech', 'Foregrip'}, 'Carabine')
 	table.insert(self._weapons, weapon);
 
 	--LMG
