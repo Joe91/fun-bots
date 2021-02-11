@@ -22,14 +22,8 @@ function WeaponList:__init()
 	weapon = Weapon('DAO-12', '', {'Weapons/Common/12gBuckshot', 'Kobra', 'TargetPointer'}, 'Shotgun')
 	table.insert(self._weapons, weapon);
 
-	-- M1014
-
-	-- M26
-
 	weapon = Weapon('Jackhammer', 'XP1', {'Weapons/Common/12gBuckshot', 'Kobra', 'TargetPointer'}, 'Shotgun')
 	table.insert(self._weapons, weapon);
-
-	--M870
 
 	weapon = Weapon('Saiga20', '', {'Weapons/Common/12gBuckshot', 'Kobra', 'Silencer'}, 'Shotgun', 'Weapons/SAIGA20K/U_SAIGA_20K')
 	table.insert(self._weapons, weapon);
@@ -40,6 +34,10 @@ function WeaponList:__init()
 	weapon = Weapon('USAS-12', '', {'Weapons/Common/12gBuckshot', 'ExtendedMag'}, 'Shotgun')
 	table.insert(self._weapons, weapon);
 
+	-- M1014
+	-- M870
+	-- M26
+
 	---------------------------
 	--assault
 	weapon = Weapon('AEK971', '', {'Kobra'}, 'Assault')
@@ -48,7 +46,7 @@ function WeaponList:__init()
 	weapon = Weapon('AN94', '', {'Kobra', 'Foregrip'}, 'Assault')
 	table.insert(self._weapons, weapon);
 
-	weapon = Weapon('AK74', '', {'Kobra'}, 'Assault', 'Weapons/AK74M/AK74')
+	weapon = Weapon('AK74M', '', {'Kobra'}, 'Assault')
 	table.insert(self._weapons, weapon);
 
 	weapon = Weapon('SteyrAug', 'XP2', {'Kobra', 'Foregrip'},'Assault')
@@ -84,33 +82,29 @@ function WeaponList:__init()
 	weapon = Weapon('ASVal', '', {'Kobra', 'ExtendedMag'}, 'PDW')
 	table.insert(self._weapons, weapon);
 
-	--MP5K
-
 	weapon = Weapon('MP7', '', {'Kobra', 'ExtendedMag'}, 'PDW')
 	table.insert(self._weapons, weapon);
 
 	weapon = Weapon('P90', '', {'Kobra', 'Silencer'}, 'PDW')
 	table.insert(self._weapons, weapon);
 
-	--PDW-R
-
 	weapon = Weapon('PP-19', 'XP1', {'IRNV', 'Silencer', 'TargetPointer'}, 'PDW')
 	table.insert(self._weapons, weapon);
 
-	--PP-2000
-
-	--UMP
-
 	weapon = Weapon('Crossbow', '', {}, 'PDW', 'Weapons/XP4_Crossbow_Prototype/U_Crossbow_Scoped_Cobra')
 	table.insert(self._weapons, weapon);
-
+	
+	--PP-2000
+	--UMP
+	--MP5K
+	--PDW-R
 
 	---------------------------
 	--Carabines
 	weapon = Weapon('A91', '', {'Kobra', 'Silencer'}, 'Carabine')
 	table.insert(self._weapons, weapon);
 	
-	weapon = Weapon('ACR', '', {'Kobra', 'Silencer'}, 'Carabine')
+	weapon = Weapon('ACR', 'XP2', {'Kobra', 'Silencer'}, 'Carabine')
 	table.insert(self._weapons, weapon);
 
 	weapon = Weapon('AKS74u', '', {'Kobra', 'Silencer'}, 'Carabine')
@@ -128,7 +122,7 @@ function WeaponList:__init()
 	weapon = Weapon('MTAR', 'XP2', {'Kobra', 'Silencer', 'Foregrip'}, 'Carabine')
 	table.insert(self._weapons, weapon);
 
-	weapon = Weapon('QBZ-95B', 'XP1', {'Kobra', 'Silencer', 'Foregrip'}, 'Carabine')
+	weapon = Weapon('QBZ-95B', 'XP1', {'Kobra', 'Silencer'}, 'Carabine')
 	table.insert(self._weapons, weapon);
 
 	weapon = Weapon('SCAR-H', '', {'Kobra', 'Silencer'}, 'Carabine')
@@ -170,8 +164,8 @@ function WeaponList:__init()
 	weapon = Weapon('Type88', '', {'EOTech', 'ExtendedMag', 'Foregrip'},'LMG')
 	table.insert(self._weapons, weapon);
 
-	--weapon = Weapon('RPK', '', {'EOTech', 'ExtendedMag', 'Foregrip'},'LMG', 'Weapons/RPK/U_RPK-74M') --doesn't work with the path I think
-	--table.insert(self._weapons, weapon);
+	weapon = Weapon('RPK', '', {'Weapons/RPK/U_RPK_Kobra', 'Weapons/RPK/U_RPK_ExtendedMag', 'Weapons/RPK/U_RPK_Foregrip'},'LMG', 'Weapons/RPK/U_RPK-74M')
+	table.insert(self._weapons, weapon);
 
 
 	---------------------------
@@ -196,7 +190,7 @@ function WeaponList:__init()
 
 	weapon = Weapon('M39EBR', '', {'Ballistic_scope', 'Target_pointer'}, 'Sniper')
 	table.insert(self._weapons, weapon);
-	
+
 	weapon = Weapon('M98B_Balllistic', '', {'Ballistic_Scope', 'Bipod', 'Flash_Suppressor'}, 'Sniper', 'Weapons/Model98B/U_M98B')
 	table.insert(self._weapons, weapon);
 
@@ -215,10 +209,10 @@ function WeaponList:__init()
 	weapon = Weapon('M40A5_IRNV', '', {'IRNV', 'Silencer', 'StraightPull'}, 'Sniper', 'Weapons/M40A5/U_M40A5')
 	table.insert(self._weapons, weapon);
 
-	weapon = Weapon('HK417', 'XP2', {'Ballistic_scope', 'Target_pointer'}, 'Sniper')
+	weapon = Weapon('HK417', 'XP2', {'Ballistic_Scope', 'TargetPointer'}, 'Sniper')
 	table.insert(self._weapons, weapon);
 	
-	weapon = Weapon('MK11', 'XP2', {'Ballistic_scope', 'Target_pointer'}, 'Sniper')
+	weapon = Weapon('MK11', '', {'Ballistic_scope', 'Target_pointer'}, 'Sniper')
 	table.insert(self._weapons, weapon);
 	
 	weapon = Weapon('SKS_LongRange', '', {'PK-AS', 'Foregrip'}, 'Sniper', 'Weapons/SKS/U_SKS')
@@ -230,7 +224,7 @@ function WeaponList:__init()
 	weapon = Weapon('SKS_IRNV', '', {'IRNV', 'Foregrip', 'Silencer'}, 'Sniper', 'Weapons/SKS/U_SKS')
 	table.insert(self._weapons, weapon);
 
-	weapon = Weapon('SV98', 'XP2', {'Ballistic_scope', 'StraightPull'}, 'Sniper')
+	weapon = Weapon('SV98', '', {'Ballistic_scope', 'StraightPull'}, 'Sniper')
 	table.insert(self._weapons, weapon);
 
 	weapon = Weapon('SVD_LongRange', '', {'PK-AS', 'Foregrip', 'FlashSuppressor'}, 'Sniper', 'Weapons/SVD/U_SVD')
@@ -284,8 +278,8 @@ function WeaponList:__init()
 	weapon = Weapon('Taurus44', '', {}, 'Pistol')
 	table.insert(self._weapons, weapon);
 
-	--MP412
-	--G18
+	weapon = Weapon('MP443', '', {}, 'Pistol')
+	table.insert(self._weapons, weapon);
 
 	-- knifes
 	weapon = Weapon('Razor', '', {}, 'Knife', 'Weapons/XP2_Knife_RazorBlade/U_Knife_Razor')

@@ -64,7 +64,7 @@ function Weapon:getResourcePath(unlock)
 		local ext = ""
 		if unlock ~= nil then
 
-			if (string.starts(unlock, 'Weapons/Common/')) then
+			if (string.starts(unlock, 'Weapons/')) then
 				return unlock
 			end
 
@@ -78,7 +78,7 @@ function Weapon:getResourcePath(unlock)
 	else
 		if unlock ~= nil then
 
-			if (string.starts(unlock, 'Weapons/Common/')) then
+			if (string.starts(unlock, 'Weapons/')) then
 				return unlock
 			end
 
