@@ -70,6 +70,7 @@ function WeaponList:__init()
 	weapon = Weapon('SCAR-L', 'XP2', {'Kobra', 'Foregrip'},'Assault')
 	table.insert(self._weapons, weapon);
 
+
 	-- PDW
 	weapon = Weapon('ASVal', '', {'Kobra', 'ExtendedMag'}, 'PDW')
 	table.insert(self._weapons, weapon);
@@ -86,20 +87,36 @@ function WeaponList:__init()
 	weapon = Weapon('Crossbow', '', {}, 'PDW', 'Weapons/XP4_Crossbow_Prototype/U_Crossbow_Scoped_Cobra')
 	table.insert(self._weapons, weapon);
 
+
 	--Carabines
-	weapon = Weapon('M4A1', '', {'Kobra', 'Silencer'}, 'Carabine')
+	weapon = Weapon('A91', '', {'Kobra', 'Silencer'}, 'Carabine')
+	table.insert(self._weapons, weapon);
+	
+	weapon = Weapon('ACR', '', {'Kobra', 'Silencer'}, 'Carabine')
+	table.insert(self._weapons, weapon);
+
+	weapon = Weapon('AKS74u', '', {'Kobra', 'Silencer'}, 'Carabine')
+	table.insert(self._weapons, weapon);
+
+	weapon = Weapon('G36C', '', {'Kobra', 'Silencer'}, 'Carabine')
 	table.insert(self._weapons, weapon);
 
 	weapon = Weapon('HK53', 'XP1', {'Kobra', 'Silencer'}, 'Carabine')
 	table.insert(self._weapons, weapon);
 
-	weapon = Weapon('SCAR-H', '', {'Kobra', 'Silencer'}, 'Carabine')
-	table.insert(self._weapons, weapon);
-
-	weapon = Weapon('SCAR-L', 'XP2', {'Ballistic_Scope', 'TargetPointer', 'Bipod'}, 'Carabine')
+	weapon = Weapon('M4A1', '', {'Kobra', 'Silencer'}, 'Carabine')
 	table.insert(self._weapons, weapon);
 
 	weapon = Weapon('MTAR', 'XP2', {'Kobra', 'Silencer', 'Foregrip'}, 'Carabine')
+	table.insert(self._weapons, weapon);
+
+	weapon = Weapon('QBZ-95B', 'XP1', {'Kobra', 'Silencer', 'Foregrip'}, 'Carabine')
+	table.insert(self._weapons, weapon);
+
+	weapon = Weapon('SCAR-H', '', {'Kobra', 'Silencer'}, 'Carabine')
+	table.insert(self._weapons, weapon);
+
+	weapon = Weapon('SG553LB', '', {'Kobra', 'Silencer'}, 'Carabine')
 	table.insert(self._weapons, weapon);
 
 	--LMG
