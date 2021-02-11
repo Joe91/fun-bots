@@ -1,6 +1,7 @@
 class('WeaponList');
 
 require('__shared/WeaponClass');
+require('__shared/Config');
 
 -- create globals
 AllWeapons = {}
@@ -204,6 +205,70 @@ function WeaponList:__init()
 	weapon = Weapon('Knife', '', {}, 'Knife')
 	table.insert(self._weapons, weapon);
 
+	self:updateWeaponList();
+end
+
+function WeaponList:_useWeaponType(class, type)
+	local useThisWeapon = false;
+	local isClassWeapon = false;
+	local weaponSet = ""
+	if class == "Assault" then
+		weaponSet = Config.assaultWeaponSet;
+		if type == "Assault" then
+			isClassWeapon = true;
+		end
+	elseif class == "Engineer" then
+		weaponSet = Config.engineerWeaponSet;
+		if type == "Carabine" then
+			isClassWeapon = true;
+		end
+	elseif class == "Support" then
+		weaponSet = Config.supportWeaponSet;
+		if type == "LMG" then
+			isClassWeapon = true;
+		end
+	else --if class == "Recon" then
+		weaponSet = Config.reconWeaponSet;
+		if type == "Sniper" then
+			isClassWeapon = true;
+		end
+	end
+	if type == "PDW" then
+		if weaponSet == "PDW" or
+		weaponSet == "Class & PDW" or
+		weaponSet == "Class & PDW & Shotgun" or
+		weaponSet == "PDW & Shotgun" then
+			useThisWeapon = true;
+		end
+	elseif type == "Shotgun" then
+		if weaponSet == "Shotgun" or
+		weaponSet == "Class & Shotgun" or
+		weaponSet == "Class & PDW & Shotgun" or
+		weaponSet == "PDW & Shotgun" then
+			useThisWeapon = true;
+		end
+	else
+		if weaponSet == "Class" or
+		weaponSet == "Class & Shotgun" or
+		weaponSet == "Class & PDW & Shotgun" or
+		weaponSet == "Class & PDW" then
+			if isClassWeapon then
+				useThisWeapon = true;
+			end
+		end
+	end
+	return useThisWeapon;
+end
+
+function WeaponList:updateWeaponList()
+	AllWeapons = {}
+	KnifeWeapons = {}
+	PistoWeapons = {}
+	WeaponsAssault = {}
+	WeaponsEngineer = {}
+	WeaponsRecon = {}
+	WeaponsSupport = {}
+
 	for i=1, #self._weapons do
 		local wep = self._weapons[i]
 		table.insert(AllWeapons, wep.name)
@@ -214,30 +279,19 @@ function WeaponList:__init()
 		elseif (wep.type == 'Pistol') then
 			table.insert(PistoWeapons, wep.name)
 
-		elseif (wep.type == 'Assault') then
-			table.insert(WeaponsAssault, wep.name)
-
-		elseif (wep.type == 'PDW') then
-			--table.insert(WeaponsAssault, wep.name)
-			table.insert(WeaponsEngineer, wep.name)
-			--table.insert(WeaponsSupport, wep.name)
-			--table.insert(WeaponsRecon, wep.name)
-
-		elseif (wep.type == 'Shotgun') then
-			--table.insert(WeaponsAssault, wep.name)
-			--table.insert(WeaponsEngineer, wep.name)
-			table.insert(WeaponsSupport, wep.name)
-			--table.insert(WeaponsRecon, wep.name)
-
-		elseif (wep.type == 'Carabine') then
-			table.insert(WeaponsEngineer, wep.name)
-
-		elseif (wep.type == 'LMG') then
-			table.insert(WeaponsSupport, wep.name)
-
-		elseif (wep.type == 'Sniper') then
-			table.insert(WeaponsRecon, wep.name)
-
+		else --'PDW' 'Shotgun' 'Assault' 'Carabine' 'LMG' 'Sniper'
+			if self:_useWeaponType("Assault", wep.type) then
+				table.insert(WeaponsAssault, wep.name)
+			end
+			if self:_useWeaponType("Engineer", wep.type) then
+				table.insert(WeaponsEngineer, wep.name)
+			end
+			if self:_useWeaponType("Support", wep.type) then
+				table.insert(WeaponsSupport, wep.name)
+			end
+			if self:_useWeaponType("Recon", wep.type) then
+				table.insert(WeaponsRecon, wep.name)
+			end
 		end
 	end
 end

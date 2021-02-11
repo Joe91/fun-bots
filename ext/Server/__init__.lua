@@ -6,6 +6,7 @@ require('__shared/Constants/BotNames');
 require('__shared/Constants/BotKits');
 require('__shared/Constants/BotNames');
 require('__shared/Constants/BotWeapons');
+require('__shared/Constants/WeaponsSets');
 
 
 Language					= require('__shared/Language');
@@ -74,11 +75,11 @@ function FunBotServer:_onPartitionLoaded(partition)
 end
 
 function FunBotServer:_onRequestClientSettings(player)
-	NetEvents:SendToLocal('WriteClientSettings', player, Config, true);
+	NetEvents:SendToLocal('WriteClientSettings', player, Config);
 end
 
 function FunBotServer:_onLevelLoaded(levelName, gameMode)
-	NetEvents:BroadcastLocal('WriteClientSettings', Config, true);
+	NetEvents:BroadcastLocal('WriteClientSettings', Config);
 	WeaponModification:ModifyAllWeapons(Config.botAimWorsening, Config.botSniperAimWorsening);
 	WeaponList:onLevelLoaded();
 	print('level ' .. levelName .. ' loaded...');

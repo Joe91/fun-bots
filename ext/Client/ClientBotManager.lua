@@ -27,13 +27,9 @@ function ClientBotManager:onEngineMessage(p_Message)
 	end
 end
 
-function ClientBotManager:_onWriteClientSettings(newConfig, isInitialConfig)
+function ClientBotManager:_onWriteClientSettings(newConfig)
 	for key, value in pairs(newConfig) do
 		Config[key] = value;
-	end
-
-	if isInitialConfig then
-		--WeaponModification:ModifyAllWeapons(Config.botAimWorsening, Config.botSniperAimWorsening);
 	end
 end
 
