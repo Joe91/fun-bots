@@ -7,6 +7,7 @@ function NodeEditor:__init()
 	self.batchSendTimer = 0
 	self.nexBatchSend = 0
 	self.playersReceivingNodes = {}
+	self.botVision = {}
 	self.debugprints = 0
 end
 
@@ -19,6 +20,10 @@ function NodeEditor:RegisterEvents()
 	Events:Subscribe('Engine:Update', self, self._onEngineUpdate)
 	Events:Subscribe('Player:Destroyed', self, self._onPlayerDestroyed)
 	Events:Subscribe('Player:Left', self, self._onPlayerLeft)
+
+	NetEvents:Subscribe('NodeEditor:SetBotVision', self, self._onSetBotVision)
+	Events:Subscribe('Player:Respawn', self, self._onPlayerRespawn)
+	Events:Subscribe('Player:Killed', self, self._onPlayerKilled)
 end
 
 function NodeEditor:_onPlayerDestroyed(player)
@@ -53,6 +58,24 @@ function NodeEditor:_onSendNodes(player)
 	local nodes = g_NodeCollection:Get()
 	table.insert(self.playersReceivingNodes, {Player = player, Index = 1, Nodes = nodes})
 	print('Sending '..tostring(#nodes)..' waypoints to '..player.name)
+end
+
+function NodeEditor:_onSetBotVision(player, enabled)
+	print('NodeEditor:_onSetBotVision ['..player.name..']: '..tostring(enabled))
+	self.botVision[player.name] = enabled
+	player:Fade(0.5, self.botVision[player.name])
+end
+
+function NodeEditor:_onPlayerKilled(player, inflictor, position, weapon, isRoadKill, isHeadShot, wasVictimInReviveState, info)
+    if (player ~= nil and self.botVision[player.name]) then
+    	player:Fade(0.5, false)
+    end
+end
+
+function NodeEditor:_onPlayerRespawn(player)
+	if (self.botVision[player.name] ~= nil) then
+		player:Fade(0.5, self.botVision[player.name])
+	end
 end
 
 function NodeEditor:_onEngineUpdate(deltaTime, simulationDeltaTime)

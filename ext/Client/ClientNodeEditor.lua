@@ -49,6 +49,10 @@ function ClientNodeEditor:__init()
 	self.lastTraceStart = nil
 	self.lastTraceEnd = nil
 
+	self.botVisionEnabled = false
+	self.botVisionPlayers = {}
+	self.botVistionCrosshair = nil
+
 	self.debugprints = 0
 
 	self:RegisterEvents()
@@ -72,7 +76,6 @@ function ClientNodeEditor:RegisterEvents()
 	NetEvents:Subscribe('UI_CommoRose_Action_SetInput', self, self._onSetInputNode)
 	NetEvents:Subscribe('UI_CommoRose_Action_Create', self, self._onCreateNode)
 
-	--Events:Subscribe('Player:Respawn', self, self._onPlayerRespawn)
 	Events:Subscribe('Player:Deleted', self, self._onUnload)
 	Events:Subscribe('Level:Destroy', self, self._onUnload)
 	Events:Subscribe('Client:UpdateInput', self, self._onUpdateInput)
@@ -94,6 +97,8 @@ function ClientNodeEditor:RegisterEvents()
 	Console:Register('DumpNodes', 'Print selected nodes or all nodes', self, self._onDumpNodes)
 	Console:Register('RecalculateIndexes', 'Recalculate Indexes starting with selected nodes or all nodes', self, self._onRecalculateIndexes)
 	Console:Register('UnloadNodes', 'Clears and unloads all clientside nodes', self, self._onUnload)
+
+	Console:Register('BotVision', 'Lets you see what the bots see [Experimental]', self, self._onSetBotVision)
 end
 
 -- commo rose top / middle / bottom
@@ -162,6 +167,18 @@ function ClientNodeEditor:_onCreateNode(args)
 	return false
 end
 
+function ClientNodeEditor:_onSetBotVision(args)
+	self.botVisionEnabled = (args ~= nil and (args[1] == '1' or args[1] == 'true'))
+	print('ClientNodeEditor:_onSetBotVision: '..tostring(self.botVisionEnabled))
+	NetEvents:Send('NodeEditor:SetBotVision', self.botVisionEnabled)
+	if (self.botVisionEnabled) then
+		-- unload our current cache
+		self:_onUnload(args)
+		-- set a 1 second timer before we are ready to receive
+		self.cumulatedTime = 0
+		self.nodeGetTimer = 1
+	end
+end
 
 -- debug methods
 
@@ -263,12 +280,6 @@ function ClientNodeEditor:_onSetLastTraceSearchArea(data)
 	self.lastTraceSearchAreaSize = data[2]
 end
 
-function ClientNodeEditor:_onPlayerRespawn(args)
-	if (Config.debugTracePaths) then
-		self:_onGetNodes()
-	end
-end
-
 -- request a fresh node list from the server
 -- or server has told us be ready to receive
 function ClientNodeEditor:_onGetNodes(args)
@@ -314,42 +325,6 @@ function ClientNodeEditor:_onInit()
 	end
 	print('ClientNodeEditor:_onInit -> Stale Nodes: '..tostring(counter))
 end
-
-function ClientNodeEditor:_onUpdateManagerUpdate(delta, pass)
-
-	if (self.nodeGetTimer > 0) then
-		self.cumulatedTime = self.cumulatedTime + delta
-	end
-
-	if (self.cumulatedTime > self.nodeGetTimer) then
-		print('NodeEditor:SendNodes')
-		-- timer has passed, ready to receive node payload
-		NetEvents:Send('NodeEditor:SendNodes')
-		self.cumulatedTime = 0
-		self.nodeGetTimer = 0
-	end
-
-	if (not Config.debugTracePaths) then
-		return
-	end
-
-	-- Only do math on presimulation UpdatePass
-	if pass ~= UpdatePass.UpdatePass_PreSim then
-		return
-	end
-
-	-- doing this here and not in UI:DrawHud prevents a memory leak that crashes you in under a minute
-	if (self.player ~= nil and self.player.alive and self.player.soldier ~= nil and self.player.soldier.alive and self.player.soldier.worldTransform ~= nil) then
-		self.playerPos = self.player.soldier.worldTransform.trans
-    	for i=1, #self.waypoints do
-    		if (self.waypoints[i] ~= nil) then
-    			-- precalc the distances for less overhead on the hud draw
-    			self.waypoints[i].Distance = self.playerPos:Distance(self.waypoints[i].Position)
-    		end
-    	end
-    end
-end
-
 function ClientNodeEditor:_onUIPushScreen(hook, screen, priority, parentGraph, stateNodeGuid)
 
 	if (Config.debugTracePaths and screen ~= nil and UIScreenAsset(screen).name == 'UI/Flow/Screen/CommRoseScreen') then
@@ -454,15 +429,137 @@ function ClientNodeEditor:_onCommoRoseAction(action, hit)
 	end
 end
 
-function ClientNodeEditor:_onUIDrawHud()
+function ClientNodeEditor:_onUpdateManagerUpdate(delta, pass)
+
+	if (self.nodeGetTimer > 0) then
+		self.cumulatedTime = self.cumulatedTime + delta
+	end
+
+	if (self.cumulatedTime > self.nodeGetTimer) then
+		print('NodeEditor:SendNodes')
+		-- timer has passed, ready to receive node payload
+		NetEvents:Send('NodeEditor:SendNodes')
+		self.cumulatedTime = 0
+		self.nodeGetTimer = 0
+	end
 
 	if (not Config.debugTracePaths) then
 		return
 	end
 
-	DebugRenderer:DrawText2D(20, 20,
-		'CommoRose.Pressed: '..tostring(self.CommoRose.Pressed).."\nCommoRose.Active: "..tostring(self.CommoRose.Active).."\nCommoRose.LastAction: "..tostring(self.CommoRose.LastAction),
-		self.colors.Text, 1)
+	-- Only do math on presimulation UpdatePass
+	if pass ~= UpdatePass.UpdatePass_PreSim then
+		return
+	end
+
+	-- doing this here and not in UI:DrawHud prevents a memory leak that crashes you in under a minute
+	if (self.player ~= nil and self.player.alive and self.player.soldier ~= nil and self.player.soldier.alive and self.player.soldier.worldTransform ~= nil) then
+		self.playerPos = self.player.soldier.worldTransform.trans
+    	for i=1, #self.waypoints do
+    		if (self.waypoints[i] ~= nil) then
+    			-- precalc the distances for less overhead on the hud draw
+    			self.waypoints[i].Distance = self.playerPos:Distance(self.waypoints[i].Position)
+    		end
+    	end
+
+    	if (self.botVisionEnabled) then
+
+    		if (self.botVistionCrosshair == nil) then
+    			local windowSize = ClientUtils:GetWindowSize()
+				local cx = math.floor(windowSize.x / 2.0 + 0.5)
+				local cy = math.floor(windowSize.y / 2.0 + 0.5)
+
+				self.botVistionCrosshair = {
+					Vec2(cx - 7, cy - 1), Vec2(cx + 6, cy - 1),
+					Vec2(cx - 7, cy), Vec2(cx + 6, cy),
+					Vec2(cx - 7, cy + 1), Vec2(cx + 6, cy + 1),
+					Vec2(cx - 1, cy - 7), Vec2(cx - 1, cy - 2),
+					Vec2(cx, cy - 7), Vec2(cx, cy - 2),
+					Vec2(cx + 1, cy - 7), Vec2(cx + 1, cy - 2),
+					Vec2(cx - 1, cy + 1), Vec2(cx - 1, cy + 6),
+					Vec2(cx, cy + 1), Vec2(cx, cy + 6),
+					Vec2(cx + 1, cy + 1), Vec2(cx + 1, cy + 6)
+				}
+    		end
+
+    		local players = PlayerManager:GetPlayers()
+    		for p=1, #players do
+    			if (players[p].soldier ~= nil and self.player.teamId ~= players[p].teamId) then
+
+    				local ray = RaycastManager:Raycast(self.playerPos+Vec3.up, (players[p].soldier.worldTransform.trans+Vec3.up), RayCastFlags.CheckDetailMesh | RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.IsAsyncRaycast)
+    				
+					local posData = {
+						Position = players[p].soldier.worldTransform.trans,
+						Visible = (ray == nil or ray.rigidBody == nil),
+						Alive = players[p].soldier.alive
+					}
+
+					self.botVisionPlayers[players[p].name] = posData
+    			end
+
+    		end
+    	end
+    end
+end
+
+
+function ClientNodeEditor:_onUIDrawHud()
+
+	if (self.botVisionEnabled) then
+
+		if(self.botVistionCrosshair ~= nil) then
+			local windowSize = ClientUtils:GetWindowSize()
+			local cx = math.floor(windowSize.x / 2.0 + 0.5)
+			local cy = math.floor(windowSize.y / 2.0 + 0.5)
+
+			DebugRenderer:DrawLine2D(self.botVistionCrosshair[1], self.botVistionCrosshair[2], self.colors.Text)
+			DebugRenderer:DrawLine2D(self.botVistionCrosshair[3], self.botVistionCrosshair[4], self.colors.Text)
+			DebugRenderer:DrawLine2D(self.botVistionCrosshair[5], self.botVistionCrosshair[6], self.colors.Text)
+			DebugRenderer:DrawLine2D(self.botVistionCrosshair[7], self.botVistionCrosshair[8], self.colors.Text)
+			DebugRenderer:DrawLine2D(self.botVistionCrosshair[9], self.botVistionCrosshair[10], self.colors.Text)
+			DebugRenderer:DrawLine2D(self.botVistionCrosshair[11], self.botVistionCrosshair[12],self.colors.Text)
+			DebugRenderer:DrawLine2D(self.botVistionCrosshair[13], self.botVistionCrosshair[14], self.colors.Text)
+			DebugRenderer:DrawLine2D(self.botVistionCrosshair[15], self.botVistionCrosshair[16], self.colors.Text)
+			DebugRenderer:DrawLine2D(self.botVistionCrosshair[17], self.botVistionCrosshair[18], self.colors.Text)
+		end
+
+		for k,v in pairs(self.botVisionPlayers) do
+			if (v ~= nil and v ~= false) then
+				local screenPos = ClientUtils:WorldToScreen(v.Position + (Vec3.up * 0.3))
+
+				if (screenPos ~= nil) then
+					DebugRenderer:DrawText2D(screenPos.x, screenPos.y, k, self.colors.Text, 1)
+				end
+
+				local color = self.colors.Text
+				
+				if (not v.Alive) then
+					color = self.colors[1].Line
+				else
+					if (v.Visible) then
+						color = self.colors[4].Line
+					end
+				end
+
+				DebugRenderer:DrawSphere(v.Position+(Vec3.up*1.5), 0.15, color, false, false)
+				DebugRenderer:DrawSphere(v.Position+(Vec3.up*1.0), 0.3, color, false, false)
+				DebugRenderer:DrawSphere(v.Position+(Vec3.up*0.3), 0.2, color, false, false)
+			end
+		end
+	end
+
+	local debugText = ''
+	debugText = debugText .. 'Config.debugTracePaths: '..tostring(Config.debugTracePaths).."\n"
+	debugText = debugText .. 'CommoRose.Pressed: '..tostring(self.CommoRose.Pressed).."\n"
+	debugText = debugText .. 'CommoRose.Active: '..tostring(self.CommoRose.Active).."\n"
+	debugText = debugText .. 'CommoRose.LastAction: '..tostring(self.CommoRose.LastAction).."\n"
+	debugText = debugText .. 'Bot Vision: '..tostring(self.botVisionEnabled).."\n"
+
+	DebugRenderer:DrawText2D(20, 20, debugText, self.colors.Text, 1)
+
+	if (not Config.debugTracePaths) then
+		return
+	end
 
 	if (Config.debugSelectionRaytraces) then
 		if (self.lastTraceStart ~= nil and self.lastTraceEnd ~= nil) then
