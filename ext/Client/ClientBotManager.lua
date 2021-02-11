@@ -2,7 +2,7 @@ class('ClientBotManager');
 
 require('__shared/Config');
 
-local WeaponModification 	= require('__shared/WeaponModification');
+local WeaponList			= require('__shared/WeaponList');
 local Utilities 			= require('__shared/Utilities')
 
 function ClientBotManager:__init()
@@ -27,9 +27,13 @@ function ClientBotManager:onEngineMessage(p_Message)
 	end
 end
 
-function ClientBotManager:_onWriteClientSettings(newConfig)
+function ClientBotManager:_onWriteClientSettings(newConfig, updateWeaponSets)
 	for key, value in pairs(newConfig) do
 		Config[key] = value;
+	end
+
+	if updateWeaponSets then
+		WeaponList:updateWeaponList();
 	end
 end
 

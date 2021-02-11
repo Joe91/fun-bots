@@ -641,7 +641,6 @@ function FunBotUIServer:_writeSettings(player, request)
 
 	if request.assaultWeaponSet ~= nil then
 		local tempString = request.assaultWeaponSet;
-
 		for _, assaultWeaponSet in pairs(WeaponSets) do
 			if tempString == assaultWeaponSet then
 				if assaultWeaponSet ~= Config.assaultWeaponSet then
@@ -793,7 +792,7 @@ function FunBotUIServer:_writeSettings(player, request)
 		WeaponList:updateWeaponList()
 	end
 	
-	NetEvents:BroadcastLocal('WriteClientSettings', Config);
+	NetEvents:BroadcastLocal('WriteClientSettings', Config, updateWeaponSets);
 
 	if respawnAllBots then
 		--TODO: kill all bots and respawn themself

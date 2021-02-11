@@ -224,7 +224,7 @@ function WeaponList:__init()
 	weapon = Weapon('HK417', 'XP2', {'Ballistic_Scope', 'TargetPointer'}, 'Sniper')
 	table.insert(self._weapons, weapon);
 	
-	weapon = Weapon('MK11', '', {'Ballistic_scope', 'Target_pointer'}, 'Sniper')
+	weapon = Weapon('MK11', '', {'Ballistic_scope', 'TargetPointer'}, 'Sniper')
 	table.insert(self._weapons, weapon);
 	
 	weapon = Weapon('SKS_LongRange', '', {'PK-AS', 'Foregrip'}, 'Sniper', 'Weapons/SKS/U_SKS')
@@ -330,23 +330,23 @@ function WeaponList:_useWeaponType(class, type)
 	end
 	if type == "PDW" then
 		if weaponSet == "PDW" or
-		weaponSet == "Class & PDW" or
-		weaponSet == "Class & PDW & Shotgun" or
-		weaponSet == "PDW & Shotgun" then
+		weaponSet == "Class_PDW" or
+		weaponSet == "Class_PDW_Shotgun" or
+		weaponSet == "PDW_Shotgun" then
 			useThisWeapon = true;
 		end
 	elseif type == "Shotgun" then
 		if weaponSet == "Shotgun" or
-		weaponSet == "Class & Shotgun" or
-		weaponSet == "Class & PDW & Shotgun" or
-		weaponSet == "PDW & Shotgun" then
+		weaponSet == "Class_Shotgun" or
+		weaponSet == "Class_PDW_Shotgun" or
+		weaponSet == "PDW_Shotgun" then
 			useThisWeapon = true;
 		end
 	else
 		if weaponSet == "Class" or
-		weaponSet == "Class & Shotgun" or
-		weaponSet == "Class & PDW & Shotgun" or
-		weaponSet == "Class & PDW" then
+		weaponSet == "Class_Shotgun" or
+		weaponSet == "Class_PDW_Shotgun" or
+		weaponSet == "Class_PDW" then
 			if isClassWeapon then
 				useThisWeapon = true;
 			end
