@@ -63,6 +63,7 @@ Config = {
 	shootBackIfHit = true,			-- bot shoots back, if hit
 	maxRaycastDistance = 150,		-- meters bots start shooting at player
 	maxShootDistanceNoSniper = 70,	-- meters a bot (not sniper) start shooting at player
+	maxBotAttackBotDistance = 30,	-- meters a bot attacks an other bot
 	distanceForDirectAttack = 5,	-- if a bot is that close he will attack, even if not in FOV
 	botCanKillHimself = false,		-- if a bot is that close he will attack, even if not in FOV
 	meleeAttackIfClose = true,		-- bot attacks with melee if close

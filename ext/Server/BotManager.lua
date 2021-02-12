@@ -15,6 +15,7 @@ function BotManager:__init()
 	Events:Subscribe('UpdateManager:Update', self, self._onUpdate)
 	Events:Subscribe('Level:Destroy', self, self._onLevelDestroy)
 	NetEvents:Subscribe('BotShootAtPlayer', self, self._onShootAt)
+	NetEvents:Subscribe('BotShootAtBot', self, self._onBotShootAtBot)
 	Events:Subscribe('ServerDamagePlayer', self, self._onServerDamagePlayer) 	--only triggered on false damage
 	NetEvents:Subscribe('ClientDamagePlayer', self, self._onDamagePlayer)   	--only triggered on false damage
 	Hooks:Install('Soldier:Damage', 100, self, self._onSoldierDamage)
@@ -160,6 +161,33 @@ function BotManager:_onUpdate(dt, pass)
 	for _, bot in pairs(self._bots) do
 		bot:onUpdate(dt)
 	end
+
+	self:_checkForBotBotAttack()
+end
+
+function BotManager:_checkForBotBotAttack()
+	local connectionsChecked = {}
+	if self:getPlayerCount() > 0 then
+		for _, bot in pairs(self._bots) do
+			for _, bot2 in pairs(self._bots) do
+				if bot.player ~= bot2.player then
+					if bot.player.TeamId ~= bot2.player.teamId or bot.player.teamId == TeamId.TeamNeutral then
+						if bot.player.alive and bot2.player.alive then
+							if connectionsChecked[bot.player.name..bot2.player.name] == nil and connectionsChecked[bot2.player.name..bot.player.name] == nil then
+								if bot.player.soldier.worldTransform.trans:Distance(bot2.player.soldier.worldTransform.trans) <= Config.maxBotAttackBotDistance then
+									--find next client-player
+									-- check this bot view. Let one client do it
+									NetEvents:SendToLocal('CheckBotBotAttack', player, bot.player.soldier.worldTransform.trans, bot2.player.soldier.worldTransform.trans, bot.player.name, bot2.player.name)
+									connectionsChecked[bot.player.name..bot2.player.name] = true;
+									return
+								end
+							end
+						end
+					end
+				end
+			end
+		end
+	end
 end
 
 function BotManager:onPlayerLeft(player)
@@ -304,6 +332,17 @@ function BotManager:_onShootAt(player, botname, ignoreYaw)
 	end
 	bot:shootAt(player, ignoreYaw)
 end
+
+function BotManager:_onBotShootAtBot(player, botname1, botname2)
+	local bot1 = self:GetBotByName(botname1)
+	local bot2 = self:GetBotByName(botname2)
+	if bot1 == nil or bot1.player == nil or  bot2 == nil or bot2.player == nil then
+		return
+	end
+	bot1:shootAt(bot2.player)
+	bot2:shootAt(bot1.player)
+end
+
 
 function BotManager:_onLevelDestroy()
 	print("destroyLevel")
