@@ -10,6 +10,7 @@ function BotManager:__init()
 	self._botInputs = {}
 	self._shooterBots = {}
 	self._botToBotConnections = {}
+	self._botAttackBotTimer = 0;
 
 	Events:Subscribe('UpdateManager:Update', self, self._onUpdate)
 	Events:Subscribe('Level:Destroy', self, self._onLevelDestroy)
@@ -161,7 +162,13 @@ function BotManager:_onUpdate(dt, pass)
 		bot:onUpdate(dt)
 	end
 
-	self:_checkForBotBotAttack()
+	if Config.botsAttackBots then
+		if self._botAttackBotTimer >= StaticConfig.botAttackBotCheckInterval then
+			self._botAttackBotTimer = 0;
+			self:_checkForBotBotAttack()
+		end
+		self._botAttackBotTimer = self._botAttackBotTimer + dt;
+	end
 end
 
 function BotManager:_checkForBotBotAttack()

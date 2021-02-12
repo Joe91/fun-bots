@@ -63,6 +63,7 @@ Config = {
 	shootBackIfHit = true,			-- bot shoots back, if hit
 	maxRaycastDistance = 150,		-- meters bots start shooting at player
 	maxShootDistanceNoSniper = 70,	-- meters a bot (not sniper) start shooting at player
+	botsAttackBots = true,			-- bots attack bots from other team
 	maxBotAttackBotDistance = 30,	-- meters a bot attacks an other bot
 	distanceForDirectAttack = 5,	-- if a bot is that close he will attack, even if not in FOV
 	botCanKillHimself = false,		-- if a bot is that close he will attack, even if not in FOV
@@ -95,7 +96,8 @@ Config = {
 StaticConfig = {
 	traceDelta = 0.2,					-- update intervall of trace
 	traceDeltaShooting = 0.4,			-- update intervall of trace back to path the bots left for shooting
-	raycastInterval = 0.1,				-- update intervall of client raycasts
+	raycastInterval = 0.05,				-- update intervall of client raycasts
+	botAttackInterval = 0.05,				-- update intervall of client raycasts
 	botUpdateCycle = 0.1,				-- update-intervall of bots
 	botAimUpdateCycle = 0.05,			-- = 3 frames at 60 Hz
 	targetHeightDistanceWayPoint = 1.5	-- distance the bots have to reach in height to continue with next Waypoint
