@@ -96,7 +96,7 @@ end
 --public functions
 function Bot:shootAt(player, ignoreYaw)
 	-- don't shoot at teammates
-	if self.player.teamId == player.teamId and not Globals.isGm then
+	if self.player.teamId == player.teamId then
 		return
 	end
 

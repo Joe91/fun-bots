@@ -173,7 +173,7 @@ function BotManager:_checkForBotBotAttack()
 		for _, bot in pairs(self._bots) do
 			for _, bot2 in pairs(self._bots) do
 				if bot.player ~= bot2.player then
-					if bot.player.TeamId ~= bot2.player.teamId or bot.player.teamId == nil then
+					if bot.player.TeamId ~= bot2.player.teamId then
 						if bot.player.alive and bot2.player.alive then
 							if self._botToBotConnections[bot.player.name..bot2.player.name] == nil and self._botToBotConnections[bot2.player.name..bot.player.name] == nil then
 								if bot.player.soldier.worldTransform.trans:Distance(bot2.player.soldier.worldTransform.trans) <= Config.maxBotAttackBotDistance then
