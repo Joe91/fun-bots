@@ -96,12 +96,14 @@ end
 --public functions
 function Bot:shootAt(player, ignoreYaw)
 	-- don't shoot at teammates
-	if self.player.teamId == player.teamId then
+	if self.player.teamId == player.teamId and not Globals.isGm then
 		return
 	end
+
 	if player.soldier == nil or self.player.soldier == nil then
 		return
 	end
+
 	-- don't shoot if too far away
 	if not ignoreYaw then
 		local distance = player.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans)

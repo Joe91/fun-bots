@@ -9,8 +9,7 @@ function BotManager:__init()
 	self._bots = {}
 	self._botInputs = {}
 	self._shooterBots = {}
-
-	self._lastYaw = 0.0
+	self._botToBotConnections = {}
 
 	Events:Subscribe('UpdateManager:Update', self, self._onUpdate)
 	Events:Subscribe('Level:Destroy', self, self._onLevelDestroy)
@@ -166,20 +165,31 @@ function BotManager:_onUpdate(dt, pass)
 end
 
 function BotManager:_checkForBotBotAttack()
-	local connectionsChecked = {}
-	if self:getPlayerCount() > 0 then
+	local players = PlayerManager:GetPlayers()
+	local playerCount = self:getPlayerCount();
+	local playerIndex = 1;
+	local playersUsed = 0;
+	if playerCount > 0 then
 		for _, bot in pairs(self._bots) do
 			for _, bot2 in pairs(self._bots) do
 				if bot.player ~= bot2.player then
-					if bot.player.TeamId ~= bot2.player.teamId or bot.player.teamId == TeamId.TeamNeutral then
+					if bot.player.TeamId ~= bot2.player.teamId or bot.player.teamId == nil then
 						if bot.player.alive and bot2.player.alive then
-							if connectionsChecked[bot.player.name..bot2.player.name] == nil and connectionsChecked[bot2.player.name..bot.player.name] == nil then
+							if self._botToBotConnections[bot.player.name..bot2.player.name] == nil and self._botToBotConnections[bot2.player.name..bot.player.name] == nil then
 								if bot.player.soldier.worldTransform.trans:Distance(bot2.player.soldier.worldTransform.trans) <= Config.maxBotAttackBotDistance then
-									--find next client-player
-									-- check this bot view. Let one client do it
-									NetEvents:SendToLocal('CheckBotBotAttack', player, bot.player.soldier.worldTransform.trans, bot2.player.soldier.worldTransform.trans, bot.player.name, bot2.player.name)
-									connectionsChecked[bot.player.name..bot2.player.name] = true;
-									return
+									for i = playerIndex, playerCount do
+										if self:GetBotByName(players[i].name) == nil then
+											-- check this bot view. Let one client do it
+											NetEvents:SendToLocal('CheckBotBotAttack', players[i], bot.player.soldier.worldTransform.trans, bot2.player.soldier.worldTransform.trans, bot.player.name, bot2.player.name)
+											self._botToBotConnections[bot.player.name..bot2.player.name] = true;
+											playerIndex = i + 1;
+											break
+										end
+									end
+									playersUsed = playersUsed + 1;
+									if playersUsed >= playerCount then
+										return
+									end
 								end
 							end
 						end
@@ -188,6 +198,8 @@ function BotManager:_checkForBotBotAttack()
 			end
 		end
 	end
+	--clear connections, if all are checked
+	self._botToBotConnections = {}
 end
 
 function BotManager:onPlayerLeft(player)
@@ -339,8 +351,8 @@ function BotManager:_onBotShootAtBot(player, botname1, botname2)
 	if bot1 == nil or bot1.player == nil or  bot2 == nil or bot2.player == nil then
 		return
 	end
-	bot1:shootAt(bot2.player)
-	bot2:shootAt(bot1.player)
+	bot1:shootAt(bot2.player, false)
+	bot2:shootAt(bot1.player, false)
 end
 
 

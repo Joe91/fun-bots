@@ -88,6 +88,12 @@ function FunBotServer:_onLevelLoaded(levelName, gameMode)
 	else
 		Globals.isTdm = false;
 	end
+	if gameMode == 'GunMaster0' then
+		Globals.isGm = true;
+	else
+		Globals.isGm = false;
+	end
+
 	TraceManager:onLevelLoaded(levelName, gameMode);
 	BotSpawner:onLevelLoaded(false);
 end
