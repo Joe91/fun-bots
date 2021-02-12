@@ -165,8 +165,8 @@ function WeaponList:__init()
 	weapon = Weapon('MG36', 'XP1', {'Ballistic_scope', 'Foregrip', 'ExtendedMag'}, 'LMG')
 	table.insert(self._weapons, weapon);
 
-	weapon = Weapon('Pecheneg', '', {'EOTech', 'Target_Pointer'},'LMG')
-	table.insert(self._weapons, weapon);
+	--weapon = Weapon('Pecheneg', '', {'EOTech', 'Target_Pointer'},'LMG')  -- same ammo as sv98 and svd
+	--table.insert(self._weapons, weapon);
 
 	weapon = Weapon('QBB-95', 'XP1', {'EOTech', 'Foregrip'},'LMG')
 	table.insert(self._weapons, weapon);

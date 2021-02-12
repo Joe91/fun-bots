@@ -86,8 +86,9 @@ function WeaponModification:_ModifyWeapon(p_SoldierWeaponData, index, aimWorseni
 	--https://docs.veniceunleashed.net/vext/ref/fb/weaponclassenum/ and EBX-Dumb
 	local class = s_SoldierWeaponData.weaponClass;
 	if class == WeaponClassEnum.wc338Magnum --M98B
-	or class == WeaponClassEnum.wc762x51mmNATO --L96 --M40 --JNG90
+	or class == WeaponClassEnum.wc762x51mmNATO --L96 --M40 --JNG90 --M39 --M417  --SR25 --MK11    --also:M240
 	or class == WeaponClassEnum.wc762x39mmWP --SKS
+	or class == WeaponClassEnum.wc762x54mmR	-- SV98  --SVD  --also: Pecheneg
 	or class == WeaponClassEnum.wcSniper
 	then
 		botAimWorsening = aimWorseningSniper
