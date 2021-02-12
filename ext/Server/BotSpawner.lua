@@ -507,7 +507,9 @@ end
 function BotSpawner:_modifyWeapon(soldier)
 	--soldier.weaponsComponent.currentWeapon.secondaryAmmo = 9999;
 	soldier.weaponsComponent.weapons[1].secondaryAmmo = 9999;
-	soldier.weaponsComponent.weapons[2].secondaryAmmo = 9999;
+	if soldier.weaponsComponent.weapons[2] ~= nil then
+		soldier.weaponsComponent.weapons[2].secondaryAmmo = 9999;
+	end
 end
 
 function BotSpawner:_getSpawnBotKit()
