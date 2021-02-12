@@ -9,12 +9,13 @@ function BotManager:__init()
 	self._bots = {}
 	self._botInputs = {}
 	self._shooterBots = {}
-
-	self._lastYaw = 0.0
+	self._botToBotConnections = {}
+	self._botAttackBotTimer = 0;
 
 	Events:Subscribe('UpdateManager:Update', self, self._onUpdate)
 	Events:Subscribe('Level:Destroy', self, self._onLevelDestroy)
 	NetEvents:Subscribe('BotShootAtPlayer', self, self._onShootAt)
+	NetEvents:Subscribe('BotShootAtBot', self, self._onBotShootAtBot)
 	Events:Subscribe('ServerDamagePlayer', self, self._onServerDamagePlayer) 	--only triggered on false damage
 	NetEvents:Subscribe('ClientDamagePlayer', self, self._onDamagePlayer)   	--only triggered on false damage
 	Hooks:Install('Soldier:Damage', 100, self, self._onSoldierDamage)
@@ -160,6 +161,52 @@ function BotManager:_onUpdate(dt, pass)
 	for _, bot in pairs(self._bots) do
 		bot:onUpdate(dt)
 	end
+
+	if Config.botsAttackBots then
+		if self._botAttackBotTimer >= StaticConfig.botAttackBotCheckInterval then
+			self._botAttackBotTimer = 0;
+			self:_checkForBotBotAttack()
+		end
+		self._botAttackBotTimer = self._botAttackBotTimer + dt;
+	end
+end
+
+function BotManager:_checkForBotBotAttack()
+	local players = PlayerManager:GetPlayers()
+	local playerCount = self:getPlayerCount();
+	local playerIndex = 1;
+	local playersUsed = 0;
+	if playerCount > 0 then
+		for _, bot in pairs(self._bots) do
+			for _, bot2 in pairs(self._bots) do
+				if bot.player ~= bot2.player then
+					if bot.player.TeamId ~= bot2.player.teamId then
+						if bot.player.alive and bot2.player.alive then
+							if self._botToBotConnections[bot.player.name..bot2.player.name] == nil and self._botToBotConnections[bot2.player.name..bot.player.name] == nil then
+								if bot.player.soldier.worldTransform.trans:Distance(bot2.player.soldier.worldTransform.trans) <= Config.maxBotAttackBotDistance then
+									for i = playerIndex, playerCount do
+										if self:GetBotByName(players[i].name) == nil then
+											-- check this bot view. Let one client do it
+											NetEvents:SendToLocal('CheckBotBotAttack', players[i], bot.player.soldier.worldTransform.trans, bot2.player.soldier.worldTransform.trans, bot.player.name, bot2.player.name)
+											self._botToBotConnections[bot.player.name..bot2.player.name] = true;
+											playerIndex = i + 1;
+											break
+										end
+									end
+									playersUsed = playersUsed + 1;
+									if playersUsed >= playerCount then
+										return
+									end
+								end
+							end
+						end
+					end
+				end
+			end
+		end
+	end
+	--clear connections, if all are checked
+	self._botToBotConnections = {}
 end
 
 function BotManager:onPlayerLeft(player)
@@ -304,6 +351,17 @@ function BotManager:_onShootAt(player, botname, ignoreYaw)
 	end
 	bot:shootAt(player, ignoreYaw)
 end
+
+function BotManager:_onBotShootAtBot(player, botname1, botname2)
+	local bot1 = self:GetBotByName(botname1)
+	local bot2 = self:GetBotByName(botname2)
+	if bot1 == nil or bot1.player == nil or  bot2 == nil or bot2.player == nil then
+		return
+	end
+	bot1:shootAt(bot2.player, false)
+	bot2:shootAt(bot1.player, false)
+end
+
 
 function BotManager:_onLevelDestroy()
 	print("destroyLevel")

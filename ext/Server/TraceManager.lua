@@ -18,11 +18,8 @@ function TraceManager:__init()
 end
 
 function TraceManager:onLevelLoaded(levelName, gameMode)
-	if Globals.isTdm then
+	if Globals.isTdm or Globals.isGm then
 		gameMode = 'TeamDeathMatch0';
-	end
-	if gameMode =="GunMaster0" then 
-		gameMode = 'TeamDeathMatch0'
 	end
 	self._mapName = levelName .. '_' .. gameMode;
 	self:loadPaths();
