@@ -41,7 +41,7 @@ Config = {
 	maxSupportBots = -1,			-- maximum number of Bots with Support Kit
 	maxReconBots = -1,				-- maximum number of Bots with Recon Kit
 	distanceToSpawnBots	= 30,		-- distance to spawn Bots away from players
-	heightDistanceToSpawn = 2.5,		-- distance vertically, Bots should spawn away, if closer than distance
+	heightDistanceToSpawn = 2.5,	-- distance vertically, Bots should spawn away, if closer than distance
 	distanceToSpawnReduction = 5,	-- reduce distance if not possible
 	maxTrysToSpawnAtDistance = 3,	-- try this often to spawn a bot away from players
 

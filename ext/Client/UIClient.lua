@@ -135,9 +135,6 @@ function FunBotUIClient:_onUISettings(data)
 	settings:add("ADVANCED", "Float", "speedFactor", Language:I18N("Speed Reduction"), data.speedFactor, 1.0, Language:I18N("reduces the movementspeed. 1 = normal, 0.1 = slow"));
 	settings:add("ADVANCED", "Float", "speedFactorAttack", Language:I18N("Speed Reduction Attack"), data.speedFactorAttack, 0.6, Language:I18N("reduces the movementspeed while attacking. 1 = normal, 0.1 = slow."));
 
-
-	
-
 	settings:add("EXPERT", "Float", "botFirstShotDelay", Language:I18N("First Shot Delay"), data.botFirstShotDelay, 0.2, Language:I18N("delay for first shot"));
 	settings:add("EXPERT", "Float", "botMinTimeShootAtPlayer", Language:I18N("Min Time Shoot"), data.botMinTimeShootAtPlayer, 1.0, Language:I18N("the minimum time a Bot shoots at one player"));
 	settings:add("EXPERT", "Float", "botFireModeDuration", Language:I18N("First Shot Delay"), data.botFireModeDuration, 5.0, Language:I18N("the minimum time a Bot tries to shoot a player"));
