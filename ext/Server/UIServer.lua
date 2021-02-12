@@ -384,6 +384,18 @@ function FunBotUIServer:_writeSettings(player, request)
 		end
 	end
 
+	if request.botsAttackBots ~= nil then
+		SettingsManager:update('botsAttackBots', (request.botsAttackBots == true), temporary, batched);
+	end
+
+	if request.maxBotAttackBotDistance ~= nil then
+		local tempValue = tonumber(request.maxBotAttackBotDistance);
+
+		if tempValue >= 0 and tempValue <= 10 then
+			SettingsManager:update('maxBotAttackBotDistance', tempValue, temporary, batched);
+		end
+	end
+
 	if request.meleeAttackIfClose ~= nil then
 		SettingsManager:update('meleeAttackIfClose', (request.meleeAttackIfClose == true), temporary, batched);
 	end

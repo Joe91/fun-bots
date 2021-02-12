@@ -122,8 +122,10 @@ function FunBotUIClient:_onUISettings(data)
 	settings:add("ADVANCED", "Integer", "maxRaycastDistance", Language:I18N("View Distance Bots"), data.maxRaycastDistance, 150, Language:I18N("The maximum distance a Sniper Bot starts shooting at a player"));
 	settings:add("ADVANCED", "Integer", "maxShootDistanceNoSniper", Language:I18N("Attack Distance no Sniper"), data.maxShootDistanceNoSniper, 70, Language:I18N("The maximum distance a non Sniper Bot starts shooting at a player"));
 	settings:add("ADVANCED", "Float", "distanceForDirectAttack", Language:I18N("Direct Attack Distance"), data.distanceForDirectAttack, 5, Language:I18N("When this close to a bot, he starts attacking"));
-	settings:add("ADVANCED", "Boolean", "meleeAttackIfClose", Language:I18N("Attack with Melee"), data.meleeAttackIfClose, true, Language:I18N("Bots attack the playe with the knife, if close"));
 	settings:add("ADVANCED", "Boolean", "botCanKillHimself", Language:I18N("Bots can kill themself"), data.botCanKillHimself, false, Language:I18N("If false, Bots take no fall or Frag damage"));
+	settings:add("ADVANCED", "Boolean", "botsAttackBots", Language:I18N("Attack if Hit"), data.botsAttackBots, true, Language:I18N("Bots attack bots from other team"));
+	settings:add("ADVANCED", "Integer", "maxBotAttackBotDistance", Language:I18N("View Distance Bots"), data.maxBotAttackBotDistance, 30, Language:I18N("The maximum distance a Bot attacks an other Bot"));
+	settings:add("ADVANCED", "Boolean", "meleeAttackIfClose", Language:I18N("Attack with Melee"), data.meleeAttackIfClose, true, Language:I18N("Bots attack the playe with the knife, if close"));
 	settings:add("ADVANCED", "Boolean", "attackWayBots", Language:I18N("Attack other players"), data.attackWayBots, true, Language:I18N("Bots on paths attack player by default"));
 	settings:add("ADVANCED", "Float", "meleeAttackCoolDown", Language:I18N("Melee Cooldown"), data.meleeAttackCoolDown, 3, Language:I18N("the time a Bot waits before attacking with melee again"));
 	settings:add("ADVANCED", "Boolean", "jumpWhileShooting", Language:I18N("Allow Jump while shooting"), data.jumpWhileShooting, true, Language:I18N("Bots jump over obstacles while shooting"));
