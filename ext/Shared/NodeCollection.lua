@@ -315,9 +315,10 @@ function NodeCollection:_processWaypointRecalc(waypoint)
 end
 
 function NodeCollection:Update(waypoint, data)
-	g_Utilities:mergeKeys(waypoint, data)
+	waypoint = g_Utilities:mergeKeys(waypoint, data)
 	waypoint.Updated = true
 	self.waypoints[waypoint.Index] = waypoint
+	return self.waypoints[waypoint.Index]
 end
 
 function NodeCollection:SetInput(inputVar)
@@ -481,7 +482,13 @@ function NodeCollection:SplitSelection()
 	end
 
 	local middlePosition = (selection[1].Position + selection[2].Position) / 2
-	local newWaypoint = self:Create(middlePosition, selection[1].PathIndex)
+
+	local newWaypoint = self:Create({
+		Position = middlePosition,
+		PathIndex = selection[1].PathIndex,
+		Previous = selection[1].ID,
+		Next = selection[2].ID,
+	})
 	self:InsertAfter(selection[1], newWaypoint)
 	return true, 'Success'
 end

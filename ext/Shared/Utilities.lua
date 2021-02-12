@@ -93,7 +93,7 @@ end
 -- do not use on numerically indexed tables, only tables with string keys
 -- this is shallow merge, does not recurse deeper than one level
 function Utilities:mergeKeys(originalTable, newData)
-   for k,v in ipairs(newData) do
+   for k,v in pairs(newData) do
       originalTable[k] = v
    end 
  

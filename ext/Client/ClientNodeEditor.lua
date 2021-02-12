@@ -8,8 +8,14 @@ function ClientNodeEditor:__init()
 	self.player = nil
 	self.waypoints = {}
 	self.playerPos = nil
+
+
 	self.cumulatedTime = 0
 	self.nodeGetTimer = 0
+
+	self.editMode = 'none' -- 'move', 'linkprevious', 'linknext', 'none'
+	self.editStartPos = nil
+	self.nodeStartPos = {}
 
 	self.colors = {
 		["Text"] = Vec4(1,1,1,1),
@@ -76,7 +82,7 @@ function ClientNodeEditor:RegisterEvents()
 	NetEvents:Subscribe('UI_CommoRose_Action_SetInput', self, self._onSetInputNode)
 	NetEvents:Subscribe('UI_CommoRose_Action_Create', self, self._onCreateNode)
 
-	Events:Subscribe('Player:Deleted', self, self._onUnload)
+	Events:Subscribe('Player:Deleted', self, self._onPlayerDeleted)
 	Events:Subscribe('Level:Destroy', self, self._onUnload)
 	Events:Subscribe('Client:UpdateInput', self, self._onUpdateInput)
 	Events:Subscribe('UpdateManager:Update', self, self._onUpdateManagerUpdate)
@@ -132,6 +138,35 @@ end
 
 function ClientNodeEditor:_onToggleMoveNode(args)
 	self.CommoRose.Active = false
+
+	if (self.editMode == 'move') then
+		self.editMode = 'none'
+		self.editStartPos = nil
+	else
+		if (self.player ~= nil and self.player.soldier ~= nil) then
+			self.editMode = 'move'
+			self.editStartPos = self.player.soldier.worldTransform.trans:Clone()
+			
+			local selection = g_NodeCollection:GetSelected()
+
+			if (#selection < 1) then
+				print(Language:I18N('Must select at least one waypoint'))
+				return false
+			end
+
+			self.nodeStartPos = {}
+			for i=1, #selection do
+				self.nodeStartPos[selection[i].ID] = selection[i].Position:Clone()
+			end
+			print(Language:I18N('Entering Node Move Mode'))
+			return true
+
+		else
+			print(Language:I18N('Player not alive'))
+			return false
+		end
+	end
+
 	print(Language:I18N('Not Implemented Yet'))
 	return false
 end
@@ -166,6 +201,8 @@ function ClientNodeEditor:_onCreateNode(args)
 	print(Language:I18N('Not Implemented Yet'))
 	return false
 end
+
+-- other methods
 
 function ClientNodeEditor:_onSetBotVision(args)
 	self.botVisionEnabled = (args ~= nil and (args[1] == '1' or args[1] == 'true'))
@@ -292,6 +329,12 @@ function ClientNodeEditor:_onGetNodes(args)
 	return true
 end
 
+function ClientNodeEditor:_onPlayerDeleted(player)
+	if (self.player ~= nil and player ~= nil and self.player.name == player.name) then
+		self:_onUnload()
+	end
+end
+
 function ClientNodeEditor:_onUnload(args)
 	for i=1, #self.waypoints do
 		self.waypoints[i].Next = nil
@@ -325,6 +368,7 @@ function ClientNodeEditor:_onInit()
 	end
 	print('ClientNodeEditor:_onInit -> Stale Nodes: '..tostring(counter))
 end
+
 function ClientNodeEditor:_onUIPushScreen(hook, screen, priority, parentGraph, stateNodeGuid)
 
 	if (Config.debugTracePaths and screen ~= nil and UIScreenAsset(screen).name == 'UI/Flow/Screen/CommRoseScreen') then
@@ -337,7 +381,6 @@ function ClientNodeEditor:_onUIPushScreen(hook, screen, priority, parentGraph, s
     end
 	hook:Pass(screen, priority, parentGraph, stateNodeGuid)
 end
-
 
 function ClientNodeEditor:_onUpdateInput(delta)
 	if (not Config.debugTracePaths) then
@@ -360,7 +403,6 @@ function ClientNodeEditor:_onUpdateInput(delta)
 		--self:_onCommoRoseAction('Hide')
 		--self.CommoRose.Active = false
 	end
-
 end
 
 function ClientNodeEditor:_onCommoRoseAction(action, hit)
@@ -368,10 +410,20 @@ function ClientNodeEditor:_onCommoRoseAction(action, hit)
 
 	if (action == 'Show') then
 		self.CommoRose.Active = true
+
+		local center = { Action = 'UI_CommoRose_Action_Select', Label = Language:I18N('Select') }
+
+		if (self.editMode == 'move') then
+			center = { Action = 'UI_CommoRose_Action_Move', Label = Language:I18N('Place') }
+		elseif (self.editMode == 'link') then
+			center = { Action = 'UI_CommoRose_Action_Connect', Label = Language:I18N('Connect') }
+		end
+
+
 		g_FunBotUIClient:_onUICommonRose({
 			Top = { Action = 'UI_CommoRose_Action_Save', Label = Language:I18N('Save') },
 			Bottom = { Action = 'UI_CommoRose_Action_Load', Label = Language:I18N('Load') },
-			Center = { Action = 'UI_CommoRose_Action_Select', Label = Language:I18N('Select') },
+			Center = center,
 			Left = {
 				{ Action = 'UI_CommoRose_Action_Merge', Label = Language:I18N('Merge') },
 				{ Action = 'UI_CommoRose_Action_Move', Label = Language:I18N('Move') },
@@ -455,8 +507,35 @@ function ClientNodeEditor:_onUpdateManagerUpdate(delta, pass)
 	-- doing this here and not in UI:DrawHud prevents a memory leak that crashes you in under a minute
 	if (self.player ~= nil and self.player.alive and self.player.soldier ~= nil and self.player.soldier.alive and self.player.soldier.worldTransform ~= nil) then
 		self.playerPos = self.player.soldier.worldTransform.trans
+
+		if (self.editMode == 'move') then
+
+			--raycast to 10 meters
+			local hit = self:Raycast(4)
+			self.editRayHit = Vec3(0,0,0)
+			if (hit ~= nil) then
+				self.editRayHit = hit.position
+			end
+
+			--self.editRelativePos = (self.editStartPos - self.playerPos)
+		end
+
     	for i=1, #self.waypoints do
     		if (self.waypoints[i] ~= nil) then
+
+    			if (self.editMode == 'move') then
+					if (g_NodeCollection:IsSelected(self.waypoints[i])) then
+
+						local relativeHit = self.editRayHit - self.nodeStartPos[self.waypoints[i].ID]
+
+						local nodeRelativePos = self.nodeStartPos[self.waypoints[i].ID] + relativeHit
+
+						self.waypoints[i] = g_NodeCollection:Update(self.waypoints[i], {
+							Position = nodeRelativePos
+						})
+					end
+				end
+
     			-- precalc the distances for less overhead on the hud draw
     			self.waypoints[i].Distance = self.playerPos:Distance(self.waypoints[i].Position)
     		end
@@ -489,10 +568,13 @@ function ClientNodeEditor:_onUpdateManagerUpdate(delta, pass)
     				local ray = RaycastManager:Raycast(self.playerPos+Vec3.up, (players[p].soldier.worldTransform.trans+Vec3.up), RayCastFlags.CheckDetailMesh | RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.IsAsyncRaycast)
     				
 					local posData = {
-						Position = players[p].soldier.worldTransform.trans,
 						Visible = (ray == nil or ray.rigidBody == nil),
 						Alive = players[p].soldier.alive
 					}
+
+					if (posData.Visible) then
+						posData.Position = players[p].soldier.worldTransform.trans
+					end
 
 					self.botVisionPlayers[players[p].name] = posData
     			end
@@ -524,7 +606,7 @@ function ClientNodeEditor:_onUIDrawHud()
 		end
 
 		for k,v in pairs(self.botVisionPlayers) do
-			if (v ~= nil and v ~= false) then
+			if (v ~= nil and v ~= false and v.Position ~= nil) then
 				local screenPos = ClientUtils:WorldToScreen(v.Position + (Vec3.up * 0.3))
 
 				if (screenPos ~= nil) then
@@ -549,15 +631,13 @@ function ClientNodeEditor:_onUIDrawHud()
 	end
 
 	local debugText = ''
-	debugText = debugText .. 'Config.debugTracePaths: '..tostring(Config.debugTracePaths).."\n"
-	debugText = debugText .. 'CommoRose.Pressed: '..tostring(self.CommoRose.Pressed).."\n"
-	debugText = debugText .. 'CommoRose.Active: '..tostring(self.CommoRose.Active).."\n"
-	debugText = debugText .. 'CommoRose.LastAction: '..tostring(self.CommoRose.LastAction).."\n"
-	debugText = debugText .. 'Bot Vision: '..tostring(self.botVisionEnabled).."\n"
+	debugText = debugText .. 'self.editMode: '..tostring(self.editMode).."\n"
+	debugText = debugText .. 'self.playerPos: '..tostring(self.playerPos).."\n"
+	debugText = debugText .. 'self.editStartPos: '..tostring(self.editStartPos).."\n"
 
 	DebugRenderer:DrawText2D(20, 20, debugText, self.colors.Text, 1)
 
-	if (not Config.debugTracePaths) then
+	if (not Config.debugTracePaths and not self.botVisionEnabled) then
 		return
 	end
 
@@ -667,10 +747,11 @@ function ClientNodeEditor:_onLevelLoaded(player)
 end
 
 -- stolen't https://github.com/EmulatorNexus/VEXT-Samples/blob/80cddf7864a2cdcaccb9efa810e65fae1baeac78/no-headglitch-raycast/ext/Client/__init__.lua
-function ClientNodeEditor:Raycast()
+function ClientNodeEditor:Raycast(maxDistance)
 	if self.player == nil then
 		return
 	end
+	maxDistance = maxDistance or 100
 
 	-- We get the camera transform, from which we will start the raycast. We get the direction from the forward vector. Camera transform
 	-- is inverted, so we have to invert this vector.
@@ -685,9 +766,9 @@ function ClientNodeEditor:Raycast()
 
 	-- We get the raycast end transform with the calculated direction and the max distance.
 	local castEnd = Vec3(
-		transform.trans.x + (direction.x * 100),
-		transform.trans.y + (direction.y * 100),
-		transform.trans.z + (direction.z * 100))
+		transform.trans.x + (direction.x * maxDistance),
+		transform.trans.y + (direction.y * maxDistance),
+		transform.trans.z + (direction.z * maxDistance))
 
 	-- Perform raycast, returns a RayCastHit object.
 	local raycastHit = RaycastManager:Raycast(castStart, castEnd, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll | RayCastFlags.CheckDetailMesh)
