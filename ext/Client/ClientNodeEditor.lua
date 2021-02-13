@@ -16,9 +16,15 @@ function ClientNodeEditor:__init()
 	self.editMode = 'none' -- 'move', 'linkprevious', 'linknext', 'none'
 	self.editStartPos = nil
 	self.nodeStartPos = {}
+	self.editModeManualOffset = Vec3.zero
+	self.editModeManualSpeed = 0.05
 
 	self.colors = {
 		["Text"] = Vec4(1,1,1,1),
+		["White"] = Vec4(1,1,1,1),
+		["Red"] = Vec4(1,0,0,1),
+		["Green"] = Vec4(0,1,0,1),
+		["Blue"] = Vec4(0,0,1,1),
 		["Ray"] = {Node = Vec4(1,1,1,0.2), Line = {Vec4(1,1,1,1),Vec4(0,0,0,1)}},
 		["Orphan"] = {Node = Vec4(0,0,0,0.2), Line = Vec4(0,0,0,1)},
 		{Node = Vec4(1,0,0,0.25), Line = Vec4(1,0,0,1)},
@@ -59,7 +65,7 @@ function ClientNodeEditor:__init()
 	self.botVisionPlayers = {}
 	self.botVistionCrosshair = nil
 
-	self.debugprints = 0
+	self.debugEntries = {}
 
 	self:RegisterEvents()
 end
@@ -82,6 +88,9 @@ function ClientNodeEditor:RegisterEvents()
 	NetEvents:Subscribe('UI_CommoRose_Action_SetInput', self, self._onSetInputNode)
 	NetEvents:Subscribe('UI_CommoRose_Action_Create', self, self._onCreateNode)
 
+	NetEvents:Subscribe('UI_Settings', self, self._onUISettings)
+
+	Events:Subscribe('Player:Created', self, self._onPlayerCreated)
 	Events:Subscribe('Player:Deleted', self, self._onPlayerDeleted)
 	Events:Subscribe('Level:Destroy', self, self._onUnload)
 	Events:Subscribe('Client:UpdateInput', self, self._onUpdateInput)
@@ -122,8 +131,8 @@ end
 
 function ClientNodeEditor:_onLoadNodes(args)
 	self.CommoRose.Active = false
-	print(Language:I18N('Not Implemented Yet'))
-	return false
+	self:_onGetNodes()
+	return true
 end
 
 -- commo rose left side
@@ -137,27 +146,43 @@ function ClientNodeEditor:_onMergeNode(args)
 end
 
 function ClientNodeEditor:_onToggleMoveNode(args)
+	print('ClientNodeEditor:_onToggleMoveNode: '..tostring(args))
 	self.CommoRose.Active = false
 
 	if (self.editMode == 'move') then
 		self.editMode = 'none'
-		self.editStartPos = nil
+		self.editRayHitStart = nil
+		self.editModeManualOffset = Vec3.zero
+
+		-- move was cancelled
+		if (args ~= nil and args == true) then
+			local selection = g_NodeCollection:GetSelected()
+			for i=1, #selection do
+				g_NodeCollection:Update(selection[i], {
+					Position = self.editNodeStartPos[selection[i].ID]
+				})
+			end
+		end
+
+		print(Language:I18N('Exiting Node Move Mode'))
+		return true
 	else
 		if (self.player ~= nil and self.player.soldier ~= nil) then
-			self.editMode = 'move'
-			self.editStartPos = self.player.soldier.worldTransform.trans:Clone()
 			
 			local selection = g_NodeCollection:GetSelected()
-
 			if (#selection < 1) then
 				print(Language:I18N('Must select at least one waypoint'))
 				return false
 			end
 
-			self.nodeStartPos = {}
+			self.editNodeStartPos = {}
 			for i=1, #selection do
-				self.nodeStartPos[selection[i].ID] = selection[i].Position:Clone()
+				self.editNodeStartPos[i] = selection[i].Position:Clone()
+				self.editNodeStartPos[selection[i].ID] = selection[i].Position:Clone()
 			end
+
+			self.editMode = 'move'
+			self.editModeManualOffset = Vec3.zero
 			print(Language:I18N('Entering Node Move Mode'))
 			return true
 
@@ -317,6 +342,19 @@ function ClientNodeEditor:_onSetLastTraceSearchArea(data)
 	self.lastTraceSearchAreaSize = data[2]
 end
 
+function ClientNodeEditor:_onUISettings(data)
+
+	if (data == false) then -- client closed settings
+
+		if (Config.debugTracePaths) then
+			self:_onUnload(args)
+			-- set a 1 second timer before we are ready to receive
+			self.cumulatedTime = 0
+			self.nodeGetTimer = 1
+		end
+	end
+end
+
 -- request a fresh node list from the server
 -- or server has told us be ready to receive
 function ClientNodeEditor:_onGetNodes(args)
@@ -327,6 +365,16 @@ function ClientNodeEditor:_onGetNodes(args)
 	self.cumulatedTime = 0
 	self.nodeGetTimer = 1
 	return true
+end
+
+function ClientNodeEditor:_onPlayerCreated(player)
+	print('ClientNodeEditor:_onPlayerCreated: '..tostring(player.name))
+	if (Config.debugTracePaths) then
+		self:_onUnload(args)
+		-- set a 1 second timer before we are ready to receive
+		self.cumulatedTime = 0
+		self.nodeGetTimer = 1
+	end
 end
 
 function ClientNodeEditor:_onPlayerDeleted(player)
@@ -382,7 +430,7 @@ function ClientNodeEditor:_onUIPushScreen(hook, screen, priority, parentGraph, s
 	hook:Pass(screen, priority, parentGraph, stateNodeGuid)
 end
 
-function ClientNodeEditor:_onUpdateInput(delta)
+function ClientNodeEditor:_onUpdateInput(player, delta)
 	if (not Config.debugTracePaths) then
 		return
 	end
@@ -398,10 +446,110 @@ function ClientNodeEditor:_onUpdateInput(delta)
 
 	self.CommoRose.Pressed = (Comm1 or Comm2 or Comm3)
 
-	if (not self.CommoRose.Pressed and self.CommoRose.Active) then
-		--self:_onCommoRoseAction('Select')
-		--self:_onCommoRoseAction('Hide')
-		--self.CommoRose.Active = false
+	if (self.editMode == 'move') then
+
+		self.debugEntries['self.editModeManualSpeed'] = self.editModeManualSpeed
+
+		if InputManager:WentKeyDown(InputDeviceKeys.IDK_ArrowLeft) or InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad4) then
+			self.editModeManualOffset = self.editModeManualOffset + (Vec3.left * self.editModeManualSpeed)
+			return false
+		end
+
+		if InputManager:WentKeyDown(InputDeviceKeys.IDK_ArrowRight) or InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad6) then
+			self.editModeManualOffset = self.editModeManualOffset - (Vec3.left * self.editModeManualSpeed)
+			return false
+		end
+
+		if InputManager:WentKeyDown(InputDeviceKeys.IDK_ArrowUp) or InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad8) then
+			self.editModeManualOffset = self.editModeManualOffset + (Vec3.forward * self.editModeManualSpeed)
+			return false
+		end
+
+		if InputManager:WentKeyDown(InputDeviceKeys.IDK_ArrowDown) or InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad2) then
+			self.editModeManualOffset = self.editModeManualOffset - (Vec3.forward * self.editModeManualSpeed)
+			return false
+		end
+
+		if InputManager:WentKeyDown(InputDeviceKeys.IDK_PageUp) or InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad9) then
+			self.editModeManualOffset = self.editModeManualOffset + (Vec3.up * self.editModeManualSpeed)
+			return false
+		end
+
+		if InputManager:WentKeyDown(InputDeviceKeys.IDK_PageDown) or InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad7) then
+			self.editModeManualOffset = self.editModeManualOffset - (Vec3.up * self.editModeManualSpeed)
+			return false
+		end
+
+		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Equals) or InputManager:WentKeyDown(InputDeviceKeys.IDK_Add) then
+			self.editModeManualSpeed = self.editModeManualSpeed + 0.05
+			return false
+		end
+
+		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Minus) or InputManager:WentKeyDown(InputDeviceKeys.IDK_Subtract) then
+			self.editModeManualSpeed = self.editModeManualSpeed - 0.05
+			return false
+		end
+
+		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Multiply) then
+			self.editModeManualOffset = Vec3.zero
+			return false
+		end
+
+		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Divide) then
+			if (self.editPositionMode == 'absolute') then
+				self.editPositionMode = 'relative'
+			else
+				self.editPositionMode = 'absolute'
+			end
+			return false
+		end
+
+		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Backspace) then
+			self:_onToggleMoveNode(true)
+			return false
+		end
+
+		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad5) then
+			self:_onToggleMoveNode()
+			return false
+		end
+
+	elseif (self.editMode == 'none') then
+
+		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad8) then
+			self:_onSaveNodes()
+		end
+
+		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad5) then
+			self:_onSelectNode()
+		end
+
+		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad2) then
+			self:_onLoadNodes()
+		end
+
+
+		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad7) then
+			self:_onMergeNode()
+		end
+		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad4) then
+			self:_onToggleMoveNode()
+			return false
+		end
+		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad1) then
+			self:_onRemoveNode()
+		end
+
+
+		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad9) then
+			self:_onSplitNode()
+		end
+		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad6) then
+			self:_onSetInputNode()
+		end
+		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad3) then
+			self:_onCreateNode()
+		end
 	end
 end
 
@@ -487,20 +635,16 @@ function ClientNodeEditor:_onUpdateManagerUpdate(delta, pass)
 		self.cumulatedTime = self.cumulatedTime + delta
 	end
 
+	-- timer for receiving node payload
 	if (self.cumulatedTime > self.nodeGetTimer) then
 		print('NodeEditor:SendNodes')
-		-- timer has passed, ready to receive node payload
 		NetEvents:Send('NodeEditor:SendNodes')
 		self.cumulatedTime = 0
 		self.nodeGetTimer = 0
 	end
 
-	if (not Config.debugTracePaths) then
-		return
-	end
-
-	-- Only do math on presimulation UpdatePass
-	if pass ~= UpdatePass.UpdatePass_PreSim then
+	-- Only do math on presimulation UpdatePass, don't bother if debugging is off
+	if pass ~= UpdatePass.UpdatePass_PreSim and not Config.debugTracePaths and not self.botVisionEnabled then
 		return
 	end
 
@@ -509,15 +653,21 @@ function ClientNodeEditor:_onUpdateManagerUpdate(delta, pass)
 		self.playerPos = self.player.soldier.worldTransform.trans
 
 		if (self.editMode == 'move') then
-
-			--raycast to 10 meters
-			local hit = self:Raycast(4)
-			self.editRayHit = Vec3(0,0,0)
-			if (hit ~= nil) then
-				self.editRayHit = hit.position
+			local selection = g_NodeCollection:GetSelected()
+			if (#selection > 0) then
+				--raycast to 4 meters
+				local hit = self:Raycast(4)
+				if (hit ~= nil) then
+					if (self.editRayHitStart == nil) then
+						self.editRayHitStart = hit.position
+						self.editRayHitCurrent = hit.position
+						self.editRayHitRelative = Vec3.zero
+					else 
+						self.editRayHitCurrent = hit.position
+						self.editRayHitRelative = self.editRayHitCurrent - self.editRayHitStart
+					end
+				end
 			end
-
-			--self.editRelativePos = (self.editStartPos - self.playerPos)
 		end
 
     	for i=1, #self.waypoints do
@@ -526,12 +676,15 @@ function ClientNodeEditor:_onUpdateManagerUpdate(delta, pass)
     			if (self.editMode == 'move') then
 					if (g_NodeCollection:IsSelected(self.waypoints[i])) then
 
-						local relativeHit = self.editRayHit - self.nodeStartPos[self.waypoints[i].ID]
-
-						local nodeRelativePos = self.nodeStartPos[self.waypoints[i].ID] + relativeHit
+						local adjustedPosition = self.editNodeStartPos[self.waypoints[i].ID] + self.editModeManualOffset
+						if (self.editPositionMode == 'relative') then
+							adjustedPosition = adjustedPosition + self.editRayHitRelative
+						else
+							adjustedPosition = self.editRayHitCurrent
+						end 
 
 						self.waypoints[i] = g_NodeCollection:Update(self.waypoints[i], {
-							Position = nodeRelativePos
+							Position = adjustedPosition
 						})
 					end
 				end
@@ -543,24 +696,24 @@ function ClientNodeEditor:_onUpdateManagerUpdate(delta, pass)
 
     	if (self.botVisionEnabled) then
 
+    		-- bot vision crosshair lines, generate once only
     		if (self.botVistionCrosshair == nil) then
     			local windowSize = ClientUtils:GetWindowSize()
 				local cx = math.floor(windowSize.x / 2.0 + 0.5)
 				local cy = math.floor(windowSize.y / 2.0 + 0.5)
 
 				self.botVistionCrosshair = {
-					Vec2(cx - 7, cy - 1), Vec2(cx + 6, cy - 1),
-					Vec2(cx - 7, cy), Vec2(cx + 6, cy),
-					Vec2(cx - 7, cy + 1), Vec2(cx + 6, cy + 1),
-					Vec2(cx - 1, cy - 7), Vec2(cx - 1, cy - 2),
-					Vec2(cx, cy - 7), Vec2(cx, cy - 2),
-					Vec2(cx + 1, cy - 7), Vec2(cx + 1, cy - 2),
-					Vec2(cx - 1, cy + 1), Vec2(cx - 1, cy + 6),
-					Vec2(cx, cy + 1), Vec2(cx, cy + 6),
-					Vec2(cx + 1, cy + 1), Vec2(cx + 1, cy + 6)
+					Vec2(cx - 9, cy - 1),	Vec2(cx + 8, cy - 1),
+					Vec2(cx - 10, cy),		Vec2(cx + 9, cy),
+					Vec2(cx - 9, cy + 1),	Vec2(cx + 8, cy + 1),
+
+					Vec2(cx - 1, cy - 9),	Vec2(cx - 1, cy + 8),
+					Vec2(cx,	 cy - 10),	Vec2(cx,	 cy + 9),
+					Vec2(cx + 1, cy - 9),	Vec2(cx + 1, cy + 8)
 				}
     		end
 
+    		-- check vision from player to "enemies", only update position if visible
     		local players = PlayerManager:GetPlayers()
     		for p=1, #players do
     			if (players[p].soldier ~= nil and self.player.teamId ~= players[p].teamId) then
@@ -590,19 +743,13 @@ function ClientNodeEditor:_onUIDrawHud()
 	if (self.botVisionEnabled) then
 
 		if(self.botVistionCrosshair ~= nil) then
-			local windowSize = ClientUtils:GetWindowSize()
-			local cx = math.floor(windowSize.x / 2.0 + 0.5)
-			local cy = math.floor(windowSize.y / 2.0 + 0.5)
-
-			DebugRenderer:DrawLine2D(self.botVistionCrosshair[1], self.botVistionCrosshair[2], self.colors.Text)
-			DebugRenderer:DrawLine2D(self.botVistionCrosshair[3], self.botVistionCrosshair[4], self.colors.Text)
-			DebugRenderer:DrawLine2D(self.botVistionCrosshair[5], self.botVistionCrosshair[6], self.colors.Text)
-			DebugRenderer:DrawLine2D(self.botVistionCrosshair[7], self.botVistionCrosshair[8], self.colors.Text)
-			DebugRenderer:DrawLine2D(self.botVistionCrosshair[9], self.botVistionCrosshair[10], self.colors.Text)
-			DebugRenderer:DrawLine2D(self.botVistionCrosshair[11], self.botVistionCrosshair[12],self.colors.Text)
-			DebugRenderer:DrawLine2D(self.botVistionCrosshair[13], self.botVistionCrosshair[14], self.colors.Text)
-			DebugRenderer:DrawLine2D(self.botVistionCrosshair[15], self.botVistionCrosshair[16], self.colors.Text)
-			DebugRenderer:DrawLine2D(self.botVistionCrosshair[17], self.botVistionCrosshair[18], self.colors.Text)
+			-- all this for a simple + in the middle of the screen
+			DebugRenderer:DrawLine2D(self.botVistionCrosshair[1],	self.botVistionCrosshair[2],	self.colors.Text)
+			DebugRenderer:DrawLine2D(self.botVistionCrosshair[3],	self.botVistionCrosshair[4],	self.colors.Text)
+			DebugRenderer:DrawLine2D(self.botVistionCrosshair[5],	self.botVistionCrosshair[6],	self.colors.Text)
+			DebugRenderer:DrawLine2D(self.botVistionCrosshair[7],	self.botVistionCrosshair[8],	self.colors.Text)
+			DebugRenderer:DrawLine2D(self.botVistionCrosshair[9],	self.botVistionCrosshair[10],	self.colors.Text)
+			DebugRenderer:DrawLine2D(self.botVistionCrosshair[11],	self.botVistionCrosshair[12],	self.colors.Text)
 		end
 
 		for k,v in pairs(self.botVisionPlayers) do
@@ -630,17 +777,24 @@ function ClientNodeEditor:_onUIDrawHud()
 		end
 	end
 
+	-- generic debug values
 	local debugText = ''
-	debugText = debugText .. 'self.editMode: '..tostring(self.editMode).."\n"
-	debugText = debugText .. 'self.playerPos: '..tostring(self.playerPos).."\n"
-	debugText = debugText .. 'self.editStartPos: '..tostring(self.editStartPos).."\n"
+	self.debugEntries['self.editPositionMode'] = self.editPositionMode
+
+	for k,v in pairs(self.debugEntries) do
+		debugText = debugText .. k..': '..tostring(v).."\n"
+	end
 
 	DebugRenderer:DrawText2D(20, 20, debugText, self.colors.Text, 1)
 
+	-- dont process waypoints if we're not supposed to see them
 	if (not Config.debugTracePaths and not self.botVisionEnabled) then
 		return
 	end
 
+	-- TODO draw help info?
+
+	-- draw debug selection traces
 	if (Config.debugSelectionRaytraces) then
 		if (self.lastTraceStart ~= nil and self.lastTraceEnd ~= nil) then
 			DebugRenderer:DrawLine(self.lastTraceStart, self.lastTraceEnd, self.colors.Ray.Line[1], self.colors.Ray.Line[2])
@@ -650,27 +804,37 @@ function ClientNodeEditor:_onUIDrawHud()
 		end
 	end
 
+	-- draw the actual waypoints
 	for i=1, #self.waypoints do
 		local waypoint = self.waypoints[i]
 		if (waypoint ~= nil and g_NodeCollection:IsPathVisible(waypoint.PathIndex)) then
 
 			local isSelected = g_NodeCollection:IsSelected(waypoint)
-			local color = self.colors[waypoint.PathIndex]
 
+			-- setup node color information
+			local color = self.colors[waypoint.PathIndex]
 			if (waypoint.Previous == false and waypoint.Next == false) then
 				color = self.colors.Orphan
 			end
 
 
+			-- draw the node for the waypoint itself
 			if (waypoint.Distance ~= nil and waypoint.Distance < Config.waypointRange) then
 				DebugRenderer:DrawSphere(waypoint.Position, 0.05, color.Node, false, false)
 			end
 
+			-- if selected draw bigger node and transform helper
 			if (waypoint.Distance ~= nil and waypoint.Distance < Config.waypointRange and isSelected) then
-				DebugRenderer:DrawSphere(waypoint.Position, 0.07,  color.Node, false, false)
-				DebugRenderer:DrawLine(waypoint.Position, waypoint.Position + (Vec3.up * 0.7), color.Line, color.Line)
+				-- node selection indicator
+				DebugRenderer:DrawSphere(waypoint.Position, 0.08,  color.Node, false, false)
+
+				-- transform marker
+				DebugRenderer:DrawLine(waypoint.Position, waypoint.Position + (Vec3.up * 0.7), self.colors.Red, self.colors.Red)
+				DebugRenderer:DrawLine(waypoint.Position, waypoint.Position + (Vec3.right * 0.5), self.colors.Green, self.colors.Green)
+				DebugRenderer:DrawLine(waypoint.Position, waypoint.Position + (Vec3.forward * 0.5), self.colors.Blue, self.colors.Blue)
 			end
 
+			-- draw connection lines
 			if (waypoint.Distance ~= nil and waypoint.Distance < Config.lineRange and Config.drawWaypointLines) then
 				-- try to find a previous node and draw a line to it
 				if (waypoint.Previous and type(waypoint.Previous) == 'string') then
@@ -678,10 +842,17 @@ function ClientNodeEditor:_onUIDrawHud()
 				end
 
 				if (waypoint.Previous) then
-					DebugRenderer:DrawLine(waypoint.Previous.Position, waypoint.Position, color.Line, color.Node)
+					if (waypoint.PathIndex ~= waypoint.Previous.PathIndex) then
+						-- draw a white line between nodes on separate paths
+						DebugRenderer:DrawLine(waypoint.Previous.Position, waypoint.Position, self.colors.White, self.colors.White)
+					else
+						-- draw fading line between nodes on same path
+						DebugRenderer:DrawLine(waypoint.Previous.Position, waypoint.Position, color.Line, color.Node)
+					end
 				end
 			end
 
+			-- draw debugging text
 			if (waypoint.Distance ~= nil and waypoint.Distance < Config.textRange and Config.drawWaypointIDs) then
 				if (isSelected) then
 					-- don't try to precalc this value like with the distance, another memory leak crash awaits you
@@ -698,6 +869,7 @@ function ClientNodeEditor:_onUIDrawHud()
 						end
 
 						local text = tostring(previousNode)..' <-- |'..tostring(waypoint.ID)..'| --> '..tostring(nextNode).."\n"
+						text = text..'self.waypoints Index: '..tostring(i).."\n"
 						text = text..'Custom Index: '..tostring(waypoint.Index).."\n"
 						text = text..'Database ID: '..tostring(waypoint.OriginalID).."\n"
 						text = text..'PathIndex: '..tostring(waypoint.PathIndex).."\n"
@@ -711,7 +883,6 @@ function ClientNodeEditor:_onUIDrawHud()
 					local screenPos = ClientUtils:WorldToScreen(waypoint.Position + (Vec3.up * 0.05))
 					if (screenPos ~= nil) then
 						DebugRenderer:DrawText2D(screenPos.x, screenPos.y, tostring(waypoint.ID), self.colors.Text, 1)
-						screenPos = nil
 					end
 				end
 			end
@@ -747,7 +918,7 @@ function ClientNodeEditor:_onLevelLoaded(player)
 end
 
 -- stolen't https://github.com/EmulatorNexus/VEXT-Samples/blob/80cddf7864a2cdcaccb9efa810e65fae1baeac78/no-headglitch-raycast/ext/Client/__init__.lua
-function ClientNodeEditor:Raycast(maxDistance)
+function ClientNodeEditor:Raycast(maxDistance, useAsync)
 	if self.player == nil then
 		return
 	end
@@ -758,7 +929,7 @@ function ClientNodeEditor:Raycast(maxDistance)
 	local transform = ClientUtils:GetCameraTransform()
 	local direction = Vec3(-transform.forward.x, -transform.forward.y, -transform.forward.z)
 
-	if transform.trans == Vec3(0,0,0) then
+	if transform.trans == Vec3.zero then
 		return
 	end
 
@@ -771,7 +942,13 @@ function ClientNodeEditor:Raycast(maxDistance)
 		transform.trans.z + (direction.z * maxDistance))
 
 	-- Perform raycast, returns a RayCastHit object.
-	local raycastHit = RaycastManager:Raycast(castStart, castEnd, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll | RayCastFlags.CheckDetailMesh)
+
+	local flags = RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll | RayCastFlags.CheckDetailMesh
+	if (useAsync) then
+		flags = flags | RayCastFlags.IsAsyncRaycast
+	end
+
+	local raycastHit = RaycastManager:Raycast(castStart, castEnd, flags)
 
 	return raycastHit	
 end

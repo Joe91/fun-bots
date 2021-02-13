@@ -144,11 +144,11 @@ function NodeCollection:Register(waypoint)
 	table.insert(self.waypoints, waypoint)
 	if (#self.waypoints ~= waypoint.Index) then
 		local diff = waypoint.Index - #self.waypoints
-		print('Warning, New Node index does not match: waypoint.Index:'..tostring(waypoint.Index)..' ('..type(waypoint.Index)..') | #self.waypoints:'..tostring(#self.waypoints)..' ('..type(waypoint.Index)..') | '.. tostring(diff))
+		print('Warning, New Node index does not match: waypoint.Index:'..tostring(waypoint.Index)..' | #self.waypoints:'..tostring(#self.waypoints)..' | '.. tostring(diff))
 	end
 
-	table.insert(self.waypointsByPathIndex[waypoint.PathIndex], self.waypoints[#self.waypoints])
-	self.waypointsByID[waypoint.ID] = self.waypoints[#self.waypoints]
+	table.insert(self.waypointsByPathIndex[waypoint.PathIndex], waypoint)
+	self.waypointsByID[waypoint.ID] = waypoint
 
 	return waypoint
 end
@@ -186,31 +186,20 @@ function NodeCollection:Remove(waypoint)
 end
 
 function NodeCollection:InsertAfter(referrenceWaypoint, waypoint)
-
+	
 	if (type(waypoint.Next) == 'string') then
 		waypoint.Next = self.waypointsByID[waypoint.Next]
-		if (waypoint.Next) then
-			waypoint.Next.Previous = waypoint
-		end
 	end
 	if (type(waypoint.Previous) == 'string') then
 		waypoint.Previous = self.waypointsByID[waypoint.Previous]
-		if (waypoint.Previous) then
-			waypoint.Previous.Next = waypoint
-		end
 	end
 
-	-- update connections
-	waypoint.Previous = referrenceWaypoint
 	waypoint.Next = referrenceWaypoint.Next
+	waypoint.Previous = referrenceWaypoint
 	referrenceWaypoint.Next = waypoint
-
 	if (waypoint.Next) then
 		waypoint.Next.Previous = waypoint
 	end
-
-	-- add to lookup tables
-	self:Register(waypoint)
 
 	-- use connections to update indexes
 	self:RecalculateIndexes(referrenceWaypoint)
@@ -220,28 +209,17 @@ function NodeCollection:InsertBefore(referrenceWaypoint, waypoint)
 
 	if (type(waypoint.Next) == 'string') then
 		waypoint.Next = self.waypointsByID[waypoint.Next]
-		if (waypoint.Next) then
-			waypoint.Next.Previous = waypoint
-		end
 	end
 	if (type(waypoint.Previous) == 'string') then
 		waypoint.Previous = self.waypointsByID[waypoint.Previous]
-		if (waypoint.Previous) then
-			waypoint.Previous.Next = waypoint
-		end
 	end
 
-	-- update connections
 	waypoint.Previous = referrenceWaypoint.Previous
 	waypoint.Next = referrenceWaypoint
 	referrenceWaypoint.Previous = waypoint
-
 	if (waypoint.Previous) then
 		waypoint.Previous.Next = waypoint
 	end
-
-	-- add to lookup tables
-	self:Register(waypoint)
 
 	-- use connections to update indexes
 	self:RecalculateIndexes(waypoint)
@@ -476,8 +454,6 @@ function NodeCollection:SplitSelection()
 	end
 
 	if (selection[1].Next and selection[1].Next.Index ~= selection[2].Index) then
-		print('selection[1].Next.Index: '..tostring(selection[1].Next.Index))
-		print('selection[2].Index: '..tostring(selection[2].Index))
 		return false, 'Waypoints must be sequential'
 	end
 
@@ -485,10 +461,9 @@ function NodeCollection:SplitSelection()
 
 	local newWaypoint = self:Create({
 		Position = middlePosition,
-		PathIndex = selection[1].PathIndex,
-		Previous = selection[1].ID,
-		Next = selection[2].ID,
+		PathIndex = selection[1].PathIndex
 	})
+
 	self:InsertAfter(selection[1], newWaypoint)
 	return true, 'Success'
 end
@@ -647,11 +622,11 @@ function NodeCollection:Find(vec3Position, tolerance)
 			local distance = waypoint.Position:Distance(vec3Position)
 			if (distance <= tolerance) then
 				if (closestWaypoint == nil) then
-					print('NodeCollection:Find -> Found: '..waypoint.ID.. '('..tostring(distance)..')')
+					--print('NodeCollection:Find -> Found: '..waypoint.ID.. '('..tostring(distance)..')')
 					closestWaypoint = waypoint
 					closestWaypointDist = distance
 				elseif (distance < closestWaypointDist) then
-					print('NodeCollection:Find -> Found Closer: '..waypoint.ID.. '('..tostring(distance)..')')
+					--print('NodeCollection:Find -> Found Closer: '..waypoint.ID.. '('..tostring(distance)..')')
 					closestWaypoint = waypoint
 					closestWaypointDist = distance
 				end
@@ -672,7 +647,7 @@ function NodeCollection:FindAll(vec3Position, tolerance)
 	for _,waypoint in pairs(self.waypointsByID) do
 
 		if (waypoint ~= nil and waypoint.Position ~= nil and self:IsPathVisible(waypoint.PathIndex) and waypoint.Position:Distance(vec3Position) <= tolerance) then
-			print('NodeCollection:FindAll -> Found: '..waypoint.ID)
+			--print('NodeCollection:FindAll -> Found: '..waypoint.ID)
 			table.insert(waypointsFound, waypoint)
 		end
 	end
@@ -686,7 +661,7 @@ function NodeCollection:FindAlongTrace(vec3Start, vec3End, granularity, toleranc
 	if (tolerance == nil) then
 		tolerance = 0.2
 	end
-	print('NodeCollection:FindAlongTrace - granularity: '..tostring(granularity))
+	--print('NodeCollection:FindAlongTrace - granularity: '..tostring(granularity))
 
 	local distance = math.min(math.max(vec3Start:Distance(vec3End), 0.05), 10)
 
@@ -694,19 +669,22 @@ function NodeCollection:FindAlongTrace(vec3Start, vec3End, granularity, toleranc
 	-- shift the search area forward by 1/2 distance and also 1/2 the radius needed
 	local searchAreaPos = vec3Start + ((vec3End - vec3Start) * 0.4) -- not exactly half ahead
 	local searchAreaSize = (distance*0.6) -- lil bit bigger than half for searching
-	NetEvents:Send('NodeEditor:SetLastTraceSearchArea', {searchAreaPos, searchAreaSize})
+	NetEvents:Send('ClientNodeEditor:SetLastTraceSearchArea', {searchAreaPos, searchAreaSize})
+	if (g_ClientNodeEditor) then
+		g_ClientNodeEditor:_onSetLastTraceSearchArea({searchAreaPos, searchAreaSize})
+	end
 
 	local searchWaypoints = self:FindAll(searchAreaPos, searchAreaSize)
 	local testPos = vec3Start
 
-	print('distance: '..tostring(distance))
-	print('searchWaypoints: '..tostring(#searchWaypoints))
+	--print('distance: '..tostring(distance))
+	--print('searchWaypoints: '..tostring(#searchWaypoints))
 
 	while distance > granularity and distance > 0 do
 		for _,waypoint in pairs(searchWaypoints) do
 
 			if (waypoint ~= nil and self:IsPathVisible(waypoint.PathIndex) and waypoint.Position ~= nil and waypoint.Position:Distance(testPos) <= tolerance) then
-				print('NodeCollection:FindAlongTrace -> Found: '..waypoint.ID)
+				--print('NodeCollection:FindAlongTrace -> Found: '..waypoint.ID)
 				return waypoint
 			end
 		end
