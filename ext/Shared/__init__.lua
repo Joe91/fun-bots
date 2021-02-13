@@ -28,6 +28,8 @@ function FunBotShared:OnUpdateCheck()
 	else
 		print('You have already the newest version installed.');
 	end
+	
+	-- @ToDo adding new update-info on WebUI
 end
 
 function FunBotShared:OnPartitionLoaded(p_Partition)
