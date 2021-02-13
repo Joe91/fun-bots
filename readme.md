@@ -31,10 +31,10 @@ The following Maps are official supported right now with waypoints/traces:
 |   ![XP1_002](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp1_002.jpg?raw=true) 	|   `XP1_002`	| **Gulf of Oman** | `TDM`, `TDM QC` |
 |   ![XP1_003](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp1_003.jpg?raw=true) 	|   `XP1_003`	| **Sharqi Peninsula** | `TDM`, `TDM QC` |
 |   ![XP1_004](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp1_004.jpg?raw=true) 	|   `XP1_004`	| **Wake Island** | `TDM`, `TDM QC` |
-|   ![XP2_Factory](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp2_factory.jpg?raw=true) 	|   `XP2_Factory`	| **Scrapmetal** | `TDM`, `TDM QC`, `GM` |
-|   ![XP2_Office](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp2_office.jpg?raw=true) 	|   `XP2_Office`	| **Operation 925** | `TDM`, `TDM QC`, `GM` |
-|   ![XP2_Skybar](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp2_skybar.jpg?raw=true) 	|   `XP2_Skybar`	| **Ziba Tower** | `TDM`, `TDM QC`, `GM` |
-|   ![XP2_Palace](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp2_palace.jpg?raw=true) 	|   `XP2_Palace`	| **Donya Fortress** | `TDM`, `TDM QC`, `GM` |
+|   ![XP2_Factory](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp2_factory.jpg?raw=true) 	|   `XP2_Factory`	| **Scrapmetal** | `TDM`, `TDM QC`, `GM`, `CD` |
+|   ![XP2_Office](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp2_office.jpg?raw=true) 	|   `XP2_Office`	| **Operation 925** | `TDM`, `TDM QC`, `GM`, `CD` |
+|   ![XP2_Skybar](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp2_skybar.jpg?raw=true) 	|   `XP2_Skybar`	| **Ziba Tower** | `TDM`, `TDM QC`, `GM`, `CD` |
+|   ![XP2_Palace](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp2_palace.jpg?raw=true) 	|   `XP2_Palace`	| **Donya Fortress** | `TDM`, `TDM QC`, `GM`, `CD` |
 |   ![XP3_Alborz](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp3_alborz.jpg?raw=true) 	|   `XP3_Alborz`	| **Alborz Mountains** | `TDM`, `TDM QC` |
 |   ![XP3_Desert](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp3_desert.jpg?raw=true) 	|   `XP3_Desert`	| **Bandar Desert** | `TDM`, `TDM QC` |
 |   ![XP3_Shield](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp3_shield.jpg?raw=true) 	|   `XP3_Shield`	| **Armored Shield** | `TDM`, `TDM QC` |
