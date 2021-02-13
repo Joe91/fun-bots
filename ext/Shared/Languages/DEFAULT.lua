@@ -4,6 +4,8 @@ Language:add(code, "Spawn in Same Team", "");
 Language:add(code, "If true, Bots spawn in the team of the player", "");
 Language:add(code, "Bot Weapon", "");
 Language:add(code, "Select the weapon the bots use", "");
+Language:add(code, "Bot Attack Mode", "");
+Language:add(code, "Mode the Bots attack with. Crouch or Stand", "");
 Language:add(code, "Bot Kit", "");
 Language:add(code, "The Kit a bots spawns with.", "");
 Language:add(code, "Bot Color", "");
