@@ -18,6 +18,7 @@ function ClientNodeEditor:__init()
 	self.nodeStartPos = {}
 	self.editModeManualOffset = Vec3.zero
 	self.editModeManualSpeed = 0.05
+	self.editPositionMode = 'relative'
 
 	self.colors = {
 		["Text"] = Vec4(1,1,1,1),
@@ -120,6 +121,7 @@ end
 
 function ClientNodeEditor:_onSaveNodes(args)
 	self.CommoRose.Active = false
+	g_NodeCollection:Save()
 	print(Language:I18N('Not Implemented Yet'))
 	return false
 end
@@ -868,13 +870,23 @@ function ClientNodeEditor:_onUIDrawHud()
 							nextNode = waypoint.Next.ID
 						end
 
-						local text = tostring(previousNode)..' <-- |'..tostring(waypoint.ID)..'| --> '..tostring(nextNode).."\n"
-						text = text..'self.waypoints Index: '..tostring(i).."\n"
-						text = text..'Custom Index: '..tostring(waypoint.Index).."\n"
-						text = text..'Database ID: '..tostring(waypoint.OriginalID).."\n"
-						text = text..'PathIndex: '..tostring(waypoint.PathIndex).."\n"
-						text = text..'PointIndex: '..tostring(waypoint.PointIndex).."\n"
-						text = text..'InputVar: '..tostring(g_Utilities:getEnumName(EntryInputActionEnum, waypoint.InputVar))..' ('..tostring(waypoint.InputVar)..')'
+						local speedMode = 'N/A'
+						if (waypoint.SpeedMode == 1) then speedMode = 'Prone' end
+						if (waypoint.SpeedMode == 2) then speedMode = 'Crouch' end
+						if (waypoint.SpeedMode == 3) then speedMode = 'Walk' end
+						if (waypoint.SpeedMode == 4) then speedMode = 'Sprint' end
+
+						local extraMode = 'N/A'
+						if (waypoint.ExtraMode == 1) then extraMode = 'Jump' end
+
+						local text = ''
+						text = text..tostring(previousNode)..' <-- |'..tostring(waypoint.ID)..'| --> '..tostring(nextNode).."\n"
+						text = text..'Index: '..tostring(waypoint.Index)..' | DB ID: '..tostring(waypoint.OriginalID).."\n"
+						text = text..'Path['..tostring(waypoint.PathIndex)..']['..tostring(waypoint.PointIndex).."]\n"
+						text = text..'InputVar: '..tostring(waypoint.InputVar).."\n"
+						text = text..'SpeedMode: '..speedMode..' ('..tostring(waypoint.SpeedMode)..")\n"
+						text = text..'ExtraMode: '..extraMode..' ('..tostring(waypoint.ExtraMode)..")\n"
+						text = text..'OptValue: '..tostring(waypoint.OptValue).."\n"
 						DebugRenderer:DrawText2D(screenPos.x, screenPos.y, text, self.colors.Text, 1.2)
 					end
 					screenPos = nil
@@ -883,6 +895,7 @@ function ClientNodeEditor:_onUIDrawHud()
 					local screenPos = ClientUtils:WorldToScreen(waypoint.Position + (Vec3.up * 0.05))
 					if (screenPos ~= nil) then
 						DebugRenderer:DrawText2D(screenPos.x, screenPos.y, tostring(waypoint.ID), self.colors.Text, 1)
+						screenPos = nil
 					end
 				end
 			end

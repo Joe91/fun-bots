@@ -569,9 +569,9 @@ end
 
 function NodeCollection:Save(mapName)
 
-	if not SQL:Open() then
-		return
-	end
+	--if not SQL:Open() then
+	--	return
+	--end
 
 	local changedWaypoints = {}
 	local waypointCount = 0
