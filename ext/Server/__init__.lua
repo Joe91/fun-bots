@@ -7,6 +7,7 @@ require('__shared/Constants/BotKits');
 require('__shared/Constants/BotNames');
 require('__shared/Constants/BotWeapons');
 require('__shared/Constants/WeaponSets');
+require('__shared/Utilities');
 
 require('NodeEditor');
 
@@ -84,12 +85,15 @@ function FunBotServer:_onLevelLoaded(levelName, gameMode)
 	NetEvents:BroadcastLocal('WriteClientSettings', Config, true);
 	WeaponModification:ModifyAllWeapons(Config.botAimWorsening, Config.botSniperAimWorsening);
 	WeaponList:onLevelLoaded();
+	
 	print('level ' .. levelName .. ' loaded...');
+	
 	if gameMode == 'TeamDeathMatchC0' or gameMode == 'TeamDeathMatch0' then
 		Globals.isTdm = true;
 	else
 		Globals.isTdm = false;
 	end
+	
 	TraceManager:onLevelLoaded(levelName, gameMode);
 	BotSpawner:onLevelLoaded(false);
 end
@@ -98,16 +102,6 @@ function FunBotServer:_onChat(player, recipientMask, message)
 	local messageParts = string.lower(message):split(' ');
 
 	ChatCommands:execute(messageParts, player);
-end
-
---helper fucntion for string, @ToDo move to Utils class
-function string:split(sep)
-	local sep, fields	= sep or ':', {};
-	local pattern		= string.format("([^%s]+)", sep);
-
-	self:gsub(pattern, function(c) fields[#fields + 1] = c end);
-
-	return fields;
 end
 
 -- Singleton.
