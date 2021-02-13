@@ -3,7 +3,7 @@
 	"Authors": ["MajorVictory", "Bizzi","Joe-91"],
 	"Description": "AI-Bots for TDM",
 	"URL": "https://github.com/Joe91/fun-bots",
-	"Version": "1.5.3.0",
+	"Version": "1.5.3.2",
 	"HasWebUI": true,
 	"Tags": ["fun-bots"],
 	"HasVeniceEXT": true,
