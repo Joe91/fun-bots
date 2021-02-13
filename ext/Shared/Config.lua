@@ -2,12 +2,12 @@ MAX_NUMBER_OF_BOTS	= 32;			-- maximum bots that can be spawned
 MAX_TRACE_NUMBERS	= 15;			-- maximum number of traces in one level
 
 USE_REAL_DAMAGE 	= true;			-- with real damage, the hitboxes are a bit buggy
-BOT_ATTACK_MODE 	= "Crouch";		-- use "Crouch" or "Stand"
 
 Config = {
 	--global
 	spawnInSameTeam = false,		-- Team the bots spawn in
 	botWeapon = "Primary",			-- Select the weapon the bots use
+	botAttackMode = "Crouch",		-- Mode the Bots attack with. Crouch or Stand
 	botKit = "RANDOM_KIT",			-- see BotKits
 	botColor = "RANDOM_COLOR",		-- see BotColors
 
@@ -21,7 +21,7 @@ Config = {
 	damageFactorLMG = 0.5,			-- origninal Damage from bots gets multiplied by this
 	damageFactorPDW = 0.5,			-- origninal Damage from bots gets multiplied by this
 	damageFactorSniper = 0.8,		-- origninal Damage from bots gets multiplied by this
-	damageFactorShotgun = 0.5,		-- origninal Damage from bots gets multiplied by this
+	damageFactorShotgun = 0.8,		-- origninal Damage from bots gets multiplied by this
 	damageFactorPistol = 0.8,		-- origninal Damage from bots gets multiplied by this
 	damageFactorKnife = 1.2,		-- origninal Damage from bots gets multiplied by this
 
@@ -32,7 +32,7 @@ Config = {
 	incBotsWithPlayers = true,		-- increase Bots, when new players join
 	newBotsPerNewPlayer = 2,		-- number to increase Bots, when new players join
 	keepOneSlotForPlayers = true,	-- always keep one slot for new Players to join
-	spawnDelayBots = 2.0,			-- time till bots respawn, if respawn enabled
+	spawnDelayBots = 7.0,			-- time till bots respawn, if respawn enabled
 	botTeam = TeamId.Team2,		 	-- default bot team (0 = neutral, 1 = US, 2 = RU) TeamId.Team2
 	respawnWayBots = true,			-- bots on paths respawn if killed
 	botNewLoadoutOnSpawn = true,	-- bots get a new kit and color, if they respawn
@@ -59,7 +59,7 @@ Config = {
 	reconWeaponSet = "Class",				-- weaponset of Recon class
 
 	--advanced
-	fovForShooting = 270,			-- Degrees of FOV of Bot
+	fovForShooting = 200,			-- Degrees of FOV of Bot
 	shootBackIfHit = true,			-- bot shoots back, if hit
 	maxRaycastDistance = 150,		-- meters bots start shooting at player
 	maxShootDistanceNoSniper = 70,	-- meters a bot (not sniper) start shooting at player

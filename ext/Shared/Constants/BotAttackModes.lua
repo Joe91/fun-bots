@@ -1,0 +1,4 @@
+BotAttackModes = {
+	"Crouch",
+	"Stand"
+}

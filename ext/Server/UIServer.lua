@@ -227,6 +227,17 @@ function FunBotUIServer:_writeSettings(player, request)
 		end
 	end
 
+	if request.botAttackMode ~= nil then
+		local tempString = request.botAttackMode;
+
+		for _, botAttackMode in pairs(BotAttackModes) do
+			if tempString == botAttackMode then
+				SettingsManager:update('botAttackMode', tempString, temporary, batched);
+				break
+			end
+		end
+	end
+
 	if request.botKit ~= nil then
 		local tempString = request.botKit;
 
