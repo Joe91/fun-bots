@@ -70,7 +70,7 @@ function FunBotUIClient:_onUISettings(data)
 
 	settings:add("GLOBAL", "Boolean", "spawnInSameTeam", Language:I18N("Spawn in Same Team"), data.spawnInSameTeam, false, Language:I18N("If true, Bots spawn in the team of the player"));
 	settings:addList("GLOBAL", "botWeapon", Language:I18N("Bot Weapon"), BotWeapons, data.botWeapon, "Primary", Language:I18N("Select the weapon the bots use"));
-	settings:addList("GLOBAL", "botAttackMode", Language:I18N("Bot Attack Mode"), BotAttackModes, data.botAttackMode, "Crouch", Language:I18N("Mode the Bots attack with. Crouch or Stand"));
+	settings:addList("GLOBAL", "botAttackMode", Language:I18N("Bot Attack Mode"), BotAttackModes, data.botAttackMode, "Random", Language:I18N("Mode the Bots attack with. Crouch or Stand"));
 	settings:addList("GLOBAL", "botKit", Language:I18N("Bot Kit"), BotKits, data.botKit, "RANDOM_KIT", Language:I18N("The Kit a bots spawns with."));
 	settings:addList("GLOBAL", "botColor", Language:I18N("Bot Color"), BotColors, data.botColor, "RANDOM_COLOR", Language:I18N("The Kit-Color a bots spawns with."));
 

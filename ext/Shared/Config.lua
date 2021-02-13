@@ -7,7 +7,7 @@ Config = {
 	--global
 	spawnInSameTeam = false,		-- Team the bots spawn in
 	botWeapon = "Primary",			-- Select the weapon the bots use
-	botAttackMode = "Crouch",		-- Mode the Bots attack with. Crouch or Stand
+	botAttackMode = "Random",		-- Mode the Bots attack with. Random, Crouch or Stand
 	botKit = "RANDOM_KIT",			-- see BotKits
 	botColor = "RANDOM_COLOR",		-- see BotColors
 
