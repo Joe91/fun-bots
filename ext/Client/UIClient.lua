@@ -87,8 +87,8 @@ function FunBotUIClient:_onUISettings(data)
 	settings:add("DIFFICULTY", "Float", "damageFactorPistol", Language:I18N("Factor for Pistol-Weapon-Damage"), data.damageFactorPistol, 0.8, Language:I18N("Origninal Damage from bots gets multiplied by this"));
 	settings:add("DIFFICULTY", "Float", "damageFactorKnife", Language:I18N("Factor for Knife-Weapon-Damage"), data.damageFactorKnife, 1.2, Language:I18N("Origninal Damage from bots gets multiplied by this"));
 
-	settings:addList("SPAWN", "spawnMode", Language:I18N("Spawn Mode"), SpawnModes, data.spawnMode, "auto_increment", Language:I18N("Mode the bots spawn with"));
 	settings:add("SPAWN", "Boolean", "spawnInBothTeams", Language:I18N("Spawn in both teams"), data.spawnInBothTeams, true, Language:I18N("Bots spawn in both teams"));
+	settings:addList("SPAWN", "spawnMode", Language:I18N("Spawn Mode"), SpawnModes, data.spawnMode, "keep_playercount", Language:I18N("Mode the bots spawn with"));
 	settings:add("SPAWN", "Boolean", "onlySpawnBotsWithPlayers", Language:I18N("Only spawn with players"), data.onlySpawnBotsWithPlayers, true, Language:I18N("Bots only spawn if at least one Player is on the server"));
 	settings:add("SPAWN", "Integer", "initNumberOfBots", Language:I18N("Number Bots on Levelstart"), data.initNumberOfBots, 5, Language:I18N("Bots on levelstart"));
 	settings:add("SPAWN", "Integer", "newBotsPerNewPlayer", Language:I18N("Number Bots on new Player"), data.newBotsPerNewPlayer, 2, Language:I18N("number to increase Bots, when new players join"));
