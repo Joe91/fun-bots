@@ -467,12 +467,18 @@ function BotManager:destroyAmount(number)
 	end
 end
 
-function BotManager:destroyTeam(teamId)
+function BotManager:destroyTeam(teamId, amount)
 	for i = 1, MAX_NUMBER_OF_BOTS do
 		local bot = self:GetBotByName(BotNames[i])
 		if bot ~= nil then
 			if bot.player.teamId == teamId then
 				self:destroyBot(bot.name)
+				if amount ~= nil then
+					amount = amount - 1;
+					if amount <= 0 then
+						return
+					end
+				end
 			end
 		end
 	end

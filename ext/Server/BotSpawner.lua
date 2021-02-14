@@ -1,5 +1,7 @@
 class('BotSpawner');
 
+require('SpawnSet')
+
 local BotManager	= require('BotManager');
 local Globals		= require('Globals');
 local WeaponList	= require('__shared/WeaponList');
@@ -13,11 +15,43 @@ function BotSpawner:__init()
 	self._useRandomWay = false
 	self._activeWayIndex = 1
 	self._indexOnPath = 0
+	self._spawnSets = {}
 	Events:Subscribe('UpdateManager:Update', self, self._onUpdate)
 	Events:Subscribe('Bot:RespawnBot', self, self._onRespawnBot)
 	Events:Subscribe('Player:KitPickup', self, self._onKitPickup)
 	Events:Subscribe('Player:Joining', self, self._onPlayerJoining)
 	Events:Subscribe('Player:Left', self, self._onPlayerLeft)
+	Events:Subscribe('Player:Respawn', self, self._onPlayerRespawn)
+end
+
+function BotSpawner:_onPlayerRespawn(player)
+	if not Utilities:isBot(player.name) then
+		if Config.spawnMode == 'keep_playercount' then
+			local team1Count = #PlayerManager:GetPlayersByTeam(TeamId.Team1);
+			local team2Count = #PlayerManager:GetPlayersByTeam(TeamId.Team2);
+			local targetTeam1 = Config.initNumberOfBots;
+			local targetTeam2 = Config.initNumberOfBots;
+			if Config.spawnInBothTeams then
+				targetTeam1 = Config.initNumberOfBots/2;
+				targetTeam2 = Config.initNumberOfBots/2;
+			end
+			if (team1Count + team2Count) < Config.initNumberOfBots then
+				if team1Count < targetTeam1 then
+					self:spawnWayBots(nil, targetTeam1-team1Count, true, 1, TeamId.Team1);
+				end
+				if team2Count < targetTeam2 then
+					self:spawnWayBots(nil, targetTeam2-team2Count, true, 1, TeamId.Team2);
+				end
+			elseif (team1Count + team2Count) > Config.initNumberOfBots and BotManager:getBotCount() > 0 then
+				if team1Count > targetTeam1 then
+					BotManager:destroyTeam(TeamId.Team1, team1Count-targetTeam1)
+				end
+				if team2Count > targetTeam2 then
+					BotManager:destroyTeam(TeamId.Team2, team1Count-targetTeam1)
+				end
+			end
+		end
+	end
 end
 
 function BotSpawner:_onPlayerJoining()
@@ -122,11 +156,11 @@ function BotSpawner:_onUpdate(dt, pass)
 		return
 	end
 
-	if self._botsToSpawn > 0 then
+	if #self._spawnSets > 0 then
 		if self._botSpawnTimer > 0.1 then	--time to wait between spawn. 0.2 works
 			self._botSpawnTimer = 0
-			self._botsToSpawn = self._botsToSpawn - 1
-			self:_spawnSigleWayBot(self._playerVarOfBot, self._useRandomWay, self._activeWayIndex, self._indexOnPath)
+			local spawnSet = table.remove(self._spawnSets);
+			self:_spawnSigleWayBot(spawnSet.playerVarOfBot, spawnSet.useRandomWay, spawnSet.activeWayIndex, spawnSet.indexOnPath, nil, spawnSet.team)
 		end
 		self._botSpawnTimer = self._botSpawnTimer + dt
 	end
@@ -229,7 +263,7 @@ function BotSpawner:spawnLineBots(player, amount, spacing)
 	end
 end
 
-function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, indexOnPath, existingBot)
+function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, indexOnPath, existingBot, forcedTeam)
 	local isRespawn = false;
 	local name = nil;
 	if existingBot ~= nil then
@@ -306,7 +340,12 @@ function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, inde
 			existingBot:setVarsWay(player, useRandomWay, activeWayIndex, indexOnPath, inverseDirection)
 			self:spawnBot(existingBot, transform, false)
 		else
-			local bot = BotManager:createBot(name, self:getBotTeam(player, name))
+			local bot = nil;
+			if forcedTeam ~= nil then
+				bot = BotManager:createBot(name, forcedTeam)
+			else
+				bot = BotManager:createBot(name, self:getBotTeam(player, name))
+			end
 			if bot ~= nil then
 				bot:setVarsWay(player, useRandomWay, activeWayIndex, indexOnPath, inverseDirection)
 				self:spawnBot(bot, transform, true)
@@ -315,9 +354,18 @@ function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, inde
 	end
 end
 
-function BotSpawner:spawnWayBots(player, amount, useRandomWay, activeWayIndex, indexOnPath)
+function BotSpawner:spawnWayBots(player, amount, useRandomWay, activeWayIndex, indexOnPath, teamId)
 	if Globals.activeTraceIndexes <= 0 then
 		return
+	end
+	for i = 1, amount do
+		local spawnSet = SpawnSet()
+		spawnSet.playerVarOfBot 	= nil;
+		spawnSet.useRandomWay 		= useRandomWay;
+		spawnSet.activeWayIndex 	= activeWayIndex;
+		spawnSet.indexOnPath 		= indexOnPath;
+		spawnSet.team				= teamId;
+		table.insert(self._spawnSets, spawnSet)
 	end
 	self._botsToSpawn = amount
 	self._playerVarOfBot = player

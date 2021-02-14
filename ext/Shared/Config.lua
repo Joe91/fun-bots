@@ -26,10 +26,12 @@ Config = {
 	damageFactorKnife = 1.2,		-- origninal Damage from bots gets multiplied by this
 
 	--spawn
-	spawnOnLevelstart = true,		-- bots spawn on levelstart (if valid paths are available)
+	spawnMode = 'keep_playercount',	-- mode the bots spawn with
+	--spawnOnLevelstart = true,		-- bots spawn on levelstart (if valid paths are available)
 	onlySpawnBotsWithPlayers = true,-- Bots only spawn if at least one Player is on the server
+	spawnInBothTeams = true,		-- Bots spawn in both teams
 	initNumberOfBots = 5,			-- bots on levelstart
-	incBotsWithPlayers = true,		-- increase Bots, when new players join
+	--incBotsWithPlayers = true,		-- increase Bots, when new players join
 	newBotsPerNewPlayer = 2,		-- number to increase Bots, when new players join
 	keepOneSlotForPlayers = true,	-- always keep one slot for new Players to join
 	spawnDelayBots = 7.0,			-- time till bots respawn, if respawn enabled

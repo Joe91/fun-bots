@@ -87,10 +87,12 @@ function FunBotUIClient:_onUISettings(data)
 	settings:add("DIFFICULTY", "Float", "damageFactorPistol", Language:I18N("Factor for Pistol-Weapon-Damage"), data.damageFactorPistol, 0.8, Language:I18N("Origninal Damage from bots gets multiplied by this"));
 	settings:add("DIFFICULTY", "Float", "damageFactorKnife", Language:I18N("Factor for Knife-Weapon-Damage"), data.damageFactorKnife, 1.2, Language:I18N("Origninal Damage from bots gets multiplied by this"));
 
-	settings:add("SPAWN", "Boolean", "spawnOnLevelstart", Language:I18N("Spawn on Levelstart"), data.spawnOnLevelstart, true, Language:I18N("Bots spawn on levelstart (if valid paths are available)"));
+	settings:addList("SPAWN", "spawnMode", Language:I18N("Spawn Mode"), SpawnModes, data.spawnMode, "auto_increment", Language:I18N("Mode the bots spawn with"));
+	--settings:add("SPAWN", "Boolean", "spawnOnLevelstart", Language:I18N("Spawn on Levelstart"), data.spawnOnLevelstart, true, Language:I18N("Bots spawn on levelstart (if valid paths are available)"));
+	settings:add("SPAWN", "Boolean", "spawnInBothTeams", Language:I18N("Spawn in both teams"), data.spawnInBothTeams, true, Language:I18N("Bots spawn in both teams"));
 	settings:add("SPAWN", "Boolean", "onlySpawnBotsWithPlayers", Language:I18N("Only spawn with players"), data.onlySpawnBotsWithPlayers, true, Language:I18N("Bots only spawn if at least one Player is on the server"));
 	settings:add("SPAWN", "Integer", "initNumberOfBots", Language:I18N("Number Bots on Levelstart"), data.initNumberOfBots, 5, Language:I18N("Bots on levelstart"));
-	settings:add("SPAWN", "Boolean", "incBotsWithPlayers", Language:I18N("More Bots with new Players"), data.incBotsWithPlayers, true, Language:I18N("increase Bots, when new players join"));
+	--settings:add("SPAWN", "Boolean", "incBotsWithPlayers", Language:I18N("More Bots with new Players"), data.incBotsWithPlayers, true, Language:I18N("increase Bots, when new players join"));
 	settings:add("SPAWN", "Integer", "newBotsPerNewPlayer", Language:I18N("Number Bots on new Player"), data.newBotsPerNewPlayer, 2, Language:I18N("number to increase Bots, when new players join"));
 	settings:add("SPAWN", "Boolean", "keepOneSlotForPlayers", Language:I18N("Keep one Player-Slot"), data.keepOneSlotForPlayers, true, Language:I18N("always keep one slot for new Players to join"));
 	settings:add("SPAWN", "Float", "spawnDelayBots", Language:I18N("Respawn Delay"), data.spawnDelayBots, 7.0, Language:I18N("time till bots respawn, if respawn enabled"));
