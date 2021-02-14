@@ -468,8 +468,19 @@ function FunBotUIServer:_writeSettings(player, request)
 	end
 
 	--spawnning
-	if request.spawnOnLevelstart ~= nil then
-		SettingsManager:update('spawnOnLevelstart', (request.spawnOnLevelstart == true), temporary, batched);
+	if request.spawnMode ~= nil then
+		local tempString = request.spawnMode;
+
+		for _, spawnMode in pairs(SpawnModes) do
+			if tempString == spawnMode then
+				SettingsManager:update('spawnMode', tempString, temporary, batched);
+				break
+			end
+		end
+	end
+
+	if request.spawnInBothTeams ~= nil then
+		SettingsManager:update('spawnInBothTeams', (request.spawnInBothTeams == true), temporary, batched);
 	end
 
 	if request.onlySpawnBotsWithPlayers ~= nil then
@@ -482,10 +493,6 @@ function FunBotUIServer:_writeSettings(player, request)
 		if tempValue > 0 and tempValue <= MAX_NUMBER_OF_BOTS then
 			SettingsManager:update('initNumberOfBots', tempValue, temporary, batched);
 		end
-	end
-
-	if request.incBotsWithPlayers ~= nil then
-		SettingsManager:update('incBotsWithPlayers', (request.incBotsWithPlayers == true), temporary, batched);
 	end
 
 	if request.newBotsPerNewPlayer ~= nil then
