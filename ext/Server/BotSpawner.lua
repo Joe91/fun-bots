@@ -10,7 +10,7 @@ local Utilities 	= require('__shared/Utilities')
 function BotSpawner:__init()
 	self._botSpawnTimer = 0
 	self._spawnSets = {}
-	
+
 	Events:Subscribe('UpdateManager:Update', self, self._onUpdate)
 	Events:Subscribe('Bot:RespawnBot', self, self._onRespawnBot)
 	Events:Subscribe('Player:KitPickup', self, self._onKitPickup)
@@ -317,6 +317,12 @@ function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, inde
 	end
 	local inverseDirection = false;
 	if name ~= nil or isRespawn then
+		local teamOfBot = nil;
+		if existingBot ~= nil then
+			teamOfBot = existingBot.player.teamId;
+		elseif forcedTeam ~= nil then
+			teamOfBot = forcedTeam;
+		end
 
 		-- find a spawnpoint away from players
 		if useRandomWay or activeWayIndex == nil or activeWayIndex == 0 then
@@ -343,11 +349,13 @@ function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, inde
 					if not Utilities:isBot(tempPlayer.name) then
 						--real player
 						if tempPlayer.alive then
-							local distance = tempPlayer.soldier.worldTransform.trans:Distance(spawnPoint)
-							local heightDiff = math.abs(tempPlayer.soldier.worldTransform.trans.y - spawnPoint.y)
-							if distance < targetDistance and heightDiff < Config.heightDistanceToSpawn then
-								playerNearby = true;
-								break;
+							if teamOfBot == nil or teamOfBot ~= tempPlayer.teamId then
+								local distance = tempPlayer.soldier.worldTransform.trans:Distance(spawnPoint)
+								local heightDiff = math.abs(tempPlayer.soldier.worldTransform.trans.y - spawnPoint.y)
+								if distance < targetDistance and heightDiff < Config.heightDistanceToSpawn then
+									playerNearby = true;
+									break;
+								end
 							end
 						end
 					end
