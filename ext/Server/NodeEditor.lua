@@ -1,11 +1,15 @@
 class "NodeEditor"
 
+require('UIServer')
 require('__shared/NodeCollection')
 
 function NodeEditor:__init()
 	self:RegisterEvents()
+	self.nodeReceiveDelay = 1
+	self.nodeReceiveTimer = -1
 	self.batchSendTimer = 0
 	self.nexBatchSend = 0
+	self.playerSendingNodes = nil
 	self.playersReceivingNodes = {}
 	self.botVision = {}
 	self.debugprints = 0
@@ -14,6 +18,12 @@ end
 function NodeEditor:RegisterEvents()
 	NetEvents:Subscribe('NodeEditor:RequestNodes', self, self._onRequestNodes)
 	NetEvents:Subscribe('NodeEditor:SendNodes', self, self._onSendNodes)
+
+	NetEvents:Subscribe('NodeEditor:ReceivingNodes', self, self._onReceiveNodes)
+	NetEvents:Subscribe('NodeEditor:Create', self, self._onCreate)
+	NetEvents:Subscribe('NodeEditor:Init', self, self._onInit)
+
+
 	NetEvents:Subscribe('UI_Request_Save_Settings', self, self._onUIRequestSaveSettings)
 	Events:Subscribe('Level:Loaded', self, self._onLevelLoaded)
 	Events:Subscribe('Level:Destroy', self, self._onLevelDestroy)
@@ -42,8 +52,9 @@ function NodeEditor:_stopSendingNodes(player)
 	end
 end
 
-function NodeEditor:_onLevelDestroy()
-	g_NodeCollection:Clear()
+function NodeEditor:_onLevelDestroy(args)
+	g_NodeCollection:Clear(args)
+	g_NodeCollection:DeregisterEvents()
 end
 
 -- player has requested node collection to be sent
@@ -53,11 +64,63 @@ function NodeEditor:_onRequestNodes(player)
 	NetEvents:SendToLocal('ClientNodeEditor:ReceivingNodes', player, #g_NodeCollection:Get())
 end
 
--- player has indicated they are ready for nodes to send
+-- player has indicated they are ready to receive nodes
 function NodeEditor:_onSendNodes(player)
 	local nodes = g_NodeCollection:Get()
-	table.insert(self.playersReceivingNodes, {Player = player, Index = 1, Nodes = nodes})
+	table.insert(self.playersReceivingNodes, {Player = player, Index = 1, Nodes = nodes, BatchSendDelay = 0})
+	self.batchSendTimer = 0
 	print('Sending '..tostring(#nodes)..' waypoints to '..player.name)
+end
+
+-- player has indicated they are ready to send nodes to the server
+function NodeEditor:_onReceiveNodes(player, nodeCount)
+
+	if (Config.settingsPassword ~= nil and g_FunBotUIServer:_isAuthenticated(player.accountGuid) ~= true) then
+		print(player.name .. ' has no permissions for Waypoint-Editor.')
+		return
+	end
+
+	g_NodeCollection:Clear()
+	self.playerSendingNodes = player
+	self.nodeReceiveTimer = 0
+	print('Receiving '..tostring(nodeCount)..' waypoints from '..player.name)
+end
+
+-- player is sending a single node over
+function NodeEditor:_onCreate(player, data)
+
+	if (Config.settingsPassword ~= nil and g_FunBotUIServer:_isAuthenticated(player.accountGuid) ~= true) then
+		print(player.name .. ' has no permissions for Waypoint-Editor.')
+		return
+	end
+
+	g_NodeCollection:Create(data)
+end
+
+-- node payload has finished sending, setup events and calc indexes
+function NodeEditor:_onInit(player)
+
+	if (Config.settingsPassword ~= nil and g_FunBotUIServer:_isAuthenticated(player.accountGuid) ~= true) then
+		print(player.name .. ' has no permissions for Waypoint-Editor.')
+		return
+	end
+
+	g_NodeCollection:RecalculateIndexes()
+
+	local staleNodes = 0
+	local nodesToCheck = g_NodeCollection:Get()
+	print('NodeEditor:_onInit -> Nodes received: '..tostring(#nodesToCheck))
+	for i=1, #nodesToCheck do
+
+		local waypoint = nodesToCheck[i]
+		if (type(waypoint.Next) == 'string') then
+			staleNodes = staleNodes+1
+		end
+		if (type(waypoint.Previous) == 'string') then
+			staleNodes = staleNodes+1
+		end
+	end
+	print('NodeEditor:_onInit -> Stale Nodes: '..tostring(staleNodes))
 end
 
 function NodeEditor:_onSetBotVision(player, enabled)
@@ -80,35 +143,55 @@ end
 
 function NodeEditor:_onEngineUpdate(deltaTime, simulationDeltaTime)
 
-	self.batchSendTimer = self.batchSendTimer + deltaTime
+	-- receiving nodes from player takes priority over sending
+	if (self.nodeReceiveTimer >= 0 and self.playerSendingNodes ~= nil) then
+		self.nodeReceiveTimer = self.nodeReceiveTimer + deltaTime
 
-	if (self.batchSendTimer > self.nexBatchSend and #self.playersReceivingNodes > 0) then
-		self.nexBatchSend = self.batchSendTimer + 0.02 -- milliseconds
-		for i = 1, #self.playersReceivingNodes do
-			local sendStatus = self.playersReceivingNodes[i]
-			local doneThisBatch = 0
-			for j = sendStatus.Index, #sendStatus.Nodes do
+		if (self.nodeReceiveTimer >= self.nodeReceiveDelay) then
+			NetEvents:SendToLocal('ClientNodeEditor:SendNodes', self.playerSendingNodes, #g_NodeCollection:Get())
+			self.nodeReceiveTimer = -1
+		end
+	else
 
-				local sendableNode = sendStatus.Nodes[j]
-				if (type(sendableNode.Next) == 'table') then
-					sendableNode.Next = sendableNode.Next.ID
-				end
-				if (type(sendableNode.Previous) == 'table') then
-					sendableNode.Previous = sendableNode.Previous.ID
-				end
+		-- only do sending if not receiving
+		if (self.batchSendTimer >= 0 and #self.playersReceivingNodes > 0) then
+			self.batchSendTimer = self.batchSendTimer + deltaTime
 
-				NetEvents:SendToLocal('NodeEditor:Create', sendStatus.Player, sendableNode)
-				doneThisBatch = doneThisBatch + 1
-				sendStatus.Index = j+1
-				if (doneThisBatch >= 30) then
-					break
+			for i = 1, #self.playersReceivingNodes do
+				local sendStatus = self.playersReceivingNodes[i]
+
+				if (self.batchSendTimer > sendStatus.BatchSendDelay) then
+					sendStatus.BatchSendDelay = sendStatus.BatchSendDelay + 0.02 -- milliseconds
+
+					local doneThisBatch = 0
+					for j = sendStatus.Index, #sendStatus.Nodes do
+
+						local sendableNode = {}
+						for k,v in pairs(sendStatus.Nodes[j]) do
+							if ((k == 'Next' or k == 'Previous') and type(v) == 'table') then
+								sendableNode[k] = v.ID
+							else
+								sendableNode[k] = v
+							end
+						end
+
+						NetEvents:SendToLocal('ClientNodeEditor:Create', sendStatus.Player, sendableNode)
+						doneThisBatch = doneThisBatch + 1
+						sendStatus.Index = j+1
+						if (doneThisBatch >= 30) then
+							break
+						end
+					end
+					if (sendStatus.Index >= #sendStatus.Nodes) then
+						print('Finished sending waypoints to '..sendStatus.Player.name)
+						table.remove(self.playersReceivingNodes, i)
+						NetEvents:SendToLocal('ClientNodeEditor:Init', sendStatus.Player)
+						break
+					end
 				end
 			end
-			if (sendStatus.Index >= #sendStatus.Nodes) then
-				print('Finished sending waypoints to '..sendStatus.Player.name)
-				table.remove(self.playersReceivingNodes, i)
-				NetEvents:SendToLocal('ClientNodeEditor:Init', sendStatus.Player)
-				break
+			if (#self.playersReceivingNodes < 1) then
+				self.batchSendTimer = -1
 			end
 		end
 	end
@@ -116,8 +199,8 @@ end
 
 -- load waypoints from sql
 function NodeEditor:_onLevelLoaded(levelName, gameMode)
-	print('NodeEditor:_onLevelLoaded -> '.. levelName..'_'..gameMode)
-	g_NodeCollection:Load(levelName .. '_TeamDeathMatch0')
+	print('NodeEditor:_onLevelLoaded -> '.. levelName..', '..gameMode)
+	g_NodeCollection:Load(levelName, gameMode)
 
 	local counter = 0
 	local waypoints = g_NodeCollection:Get()

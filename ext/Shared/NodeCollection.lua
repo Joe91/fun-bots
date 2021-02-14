@@ -1,11 +1,12 @@
 class "NodeCollection"
 
 require('__shared/Utilities.lua')
+requireExists('Globals')
 
 function NodeCollection:__init()
 	self:InitTables()
-	NetEvents:Subscribe('NodeEditor:Clear', self, self.Clear)
-	NetEvents:Subscribe('NodeEditor:Create', self, self.Create)
+	NetEvents:Subscribe('NodeCollection:Clear', self, self.Clear)
+	NetEvents:Subscribe('NodeCollection:Create', self, self.Create)
 end
 
 function NodeCollection:InitTables()
@@ -16,62 +17,64 @@ function NodeCollection:InitTables()
 	self.selectedWaypoints = {}
 	self.hiddenPaths = {}
 
+	self.mapName = ''
+
 	self.debugcount = 0
 	self.debugcount2 = 0
 end
 
 function NodeCollection:RegisterEvents()
 	-- Management
-	NetEvents:Subscribe('NodeEditor:Register', self, self.Register)
-	NetEvents:Subscribe('NodeEditor:Remove', self, self.Remove)
-	NetEvents:Subscribe('NodeEditor:InsertAfter', self, self.InsertAfter)
-	NetEvents:Subscribe('NodeEditor:InsertBefore', self, self.InsertBefore)
-	NetEvents:Subscribe('NodeEditor:Update', self, self.Update)
-	NetEvents:Subscribe('NodeEditor:SetInput', self, self.SetInput)
-	NetEvents:Subscribe('NodeEditor:Merge', self, self.MergeSelected)
-	NetEvents:Subscribe('NodeEditor:Split', self, self.SplitSelected)
+	NetEvents:Subscribe('NodeCollection:Register', self, self.Register)
+	NetEvents:Subscribe('NodeCollection:Remove', self, self.Remove)
+	NetEvents:Subscribe('NodeCollection:InsertAfter', self, self.InsertAfter)
+	NetEvents:Subscribe('NodeCollection:InsertBefore', self, self.InsertBefore)
+	NetEvents:Subscribe('NodeCollection:Update', self, self.Update)
+	NetEvents:Subscribe('NodeCollection:SetInput', self, self.SetInput)
+	NetEvents:Subscribe('NodeCollection:Merge', self, self.MergeSelected)
+	NetEvents:Subscribe('NodeCollection:Split', self, self.SplitSelected)
 
 	-- Selection
-	NetEvents:Subscribe('NodeEditor:Select', self, self.Select)
-	NetEvents:Subscribe('NodeEditor:SelectByID', self, self.SelectByID)
-	NetEvents:Subscribe('NodeEditor:Deselect', self, self.Deselect)
-	NetEvents:Subscribe('NodeEditor:DeselectByID', self, self.DeselectByID)
-	NetEvents:Subscribe('NodeEditor:ClearSelection', self, self.ClearSelection)
+	NetEvents:Subscribe('NodeCollection:Select', self, self.Select)
+	NetEvents:Subscribe('NodeCollection:SelectByID', self, self.SelectByID)
+	NetEvents:Subscribe('NodeCollection:Deselect', self, self.Deselect)
+	NetEvents:Subscribe('NodeCollection:DeselectByID', self, self.DeselectByID)
+	NetEvents:Subscribe('NodeCollection:ClearSelection', self, self.ClearSelection)
 
 	-- Paths
-	NetEvents:Subscribe('NodeEditor:ShowPath', self, self.ShowPath)
-	NetEvents:Subscribe('NodeEditor:HidePath', self, self.HidePath)
+	NetEvents:Subscribe('NodeCollection:ShowPath', self, self.ShowPath)
+	NetEvents:Subscribe('NodeCollection:HidePath', self, self.HidePath)
 
 	-- Save/Load
-	NetEvents:Subscribe('NodeEditor:Save', self, self.Save)
-	NetEvents:Subscribe('NodeEditor:Load', self, self.Load)
+	NetEvents:Subscribe('NodeCollection:Save', self, self.Save)
+	NetEvents:Subscribe('NodeCollection:Load', self, self.Load)
 end
 
 function NodeCollection:DeregisterEvents()
 		-- Management
-	NetEvents:Unsubscribe('NodeEditor:Register')
-	NetEvents:Unsubscribe('NodeEditor:Remove')
-	NetEvents:Unsubscribe('NodeEditor:InsertAfter')
-	NetEvents:Unsubscribe('NodeEditor:InsertBefore')
-	NetEvents:Unsubscribe('NodeEditor:Update')
-	NetEvents:Unsubscribe('NodeEditor:SetInput')
-	NetEvents:Unsubscribe('NodeEditor:Merge')
-	NetEvents:Unsubscribe('NodeEditor:Split')
+	NetEvents:Unsubscribe('NodeCollection:Register')
+	NetEvents:Unsubscribe('NodeCollection:Remove')
+	NetEvents:Unsubscribe('NodeCollection:InsertAfter')
+	NetEvents:Unsubscribe('NodeCollection:InsertBefore')
+	NetEvents:Unsubscribe('NodeCollection:Update')
+	NetEvents:Unsubscribe('NodeCollection:SetInput')
+	NetEvents:Unsubscribe('NodeCollection:Merge')
+	NetEvents:Unsubscribe('NodeCollection:Split')
 
 	-- Selection
-	NetEvents:Unsubscribe('NodeEditor:Select')
-	NetEvents:Unsubscribe('NodeEditor:SelectByID')
-	NetEvents:Unsubscribe('NodeEditor:Deselect')
-	NetEvents:Unsubscribe('NodeEditor:DeselectByID')
-	NetEvents:Unsubscribe('NodeEditor:ClearSelection')
+	NetEvents:Unsubscribe('NodeCollection:Select')
+	NetEvents:Unsubscribe('NodeCollection:SelectByID')
+	NetEvents:Unsubscribe('NodeCollection:Deselect')
+	NetEvents:Unsubscribe('NodeCollection:DeselectByID')
+	NetEvents:Unsubscribe('NodeCollection:ClearSelection')
 
 	-- Paths
-	NetEvents:Unsubscribe('NodeEditor:ShowPath')
-	NetEvents:Unsubscribe('NodeEditor:HidePath')
+	NetEvents:Unsubscribe('NodeCollection:ShowPath')
+	NetEvents:Unsubscribe('NodeCollection:HidePath')
 
 	-- Save/Load
-	NetEvents:Unsubscribe('NodeEditor:Save')
-	NetEvents:Unsubscribe('NodeEditor:Load')
+	NetEvents:Unsubscribe('NodeCollection:Save')
+	NetEvents:Unsubscribe('NodeCollection:Load')
 end
 
 -----------------------------
@@ -514,13 +517,20 @@ end
 -----------------------------
 -- Save/Load
 
-function NodeCollection:Load(mapName)
+function NodeCollection:Load(levelName, gameMode)
+
+	if g_Globals.isTdm then
+		gameMode = 'TeamDeathMatch0'
+	end
+	self.mapName = levelName .. '_' .. gameMode
+	print('NodeCollection:Load: '..self.mapName)
+
 	if not SQL:Open() then
 		return
 	end
 
 	-- Fetch all rows from the table.
-	local results = SQL:Query('SELECT * FROM ' .. mapName .. '_table ORDER BY `pathIndex`, `pointIndex` ASC')
+	local results = SQL:Query('SELECT * FROM ' .. self.mapName .. '_table ORDER BY `pathIndex`, `pointIndex` ASC')
 
 	if not results then
 		print('Failed to execute query: ' .. SQL:Error())
@@ -567,11 +577,12 @@ function NodeCollection:Load(mapName)
 	print('NodeCollection:Load -> Paths: '..tostring(pathCount)..' | Waypoints: '..tostring(waypointCount))
 end
 
-function NodeCollection:Save(mapName)
-
+function NodeCollection:Save()
 	--if not SQL:Open() then
 	--	return
 	--end
+
+	--self.mapName
 
 	local changedWaypoints = {}
 	local waypointCount = 0
@@ -600,11 +611,31 @@ end
 -- Navigation
 
 function NodeCollection:Previous(waypoint)
+	if (type(waypoint.Previous) == 'string') then
+		return self.waypointsByID[waypoint.Previous]
+	end
 	return waypoint.Previous
 end
 
 function NodeCollection:Next(waypoint)
+	if (type(waypoint.Next) == 'string') then
+		return self.waypointsByID[waypoint.Next]
+	end
+
 	return waypoint.Next
+end
+
+-- this method avoids the use of the Vec3:Distance() method to avoid complex math
+-- @returns boolean whther given waypint is inside the given range
+function NodeCollection:InRange(waypoint, vec3Position, range)
+
+	local posA = waypoint.Position or Vec3.zero
+	local posB = vec3Position or Vec3.zero
+
+	return ( math.abs(posA.x - posB.x) <= range and
+		math.abs(posA.y - posB.y) <= range and
+		math.abs(posA.z - posB.z) <= range )
+
 end
 
 -- Find the closest waypoint at position `vec3Position` with a search radius of `tolerance`
