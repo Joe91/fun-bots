@@ -125,23 +125,58 @@ end
 
 function NodeEditor:_onSetBotVision(player, enabled)
 	print('NodeEditor:_onSetBotVision ['..player.name..']: '..tostring(enabled))
-	self.botVision[player.name] = enabled
-	player:Fade(0.5, self.botVision[player.name])
+	if (enabled) then
+		self.botVision[player.name] = {
+			Player = player,
+			Current = 0,
+			Delay = 1,
+			Speed = 1,
+			State = enabled
+		}
+	else
+		player:Fade(1, false)
+		self.botVision[player.name] = nil
+	end
 end
 
 function NodeEditor:_onPlayerKilled(player, inflictor, position, weapon, isRoadKill, isHeadShot, wasVictimInReviveState, info)
-    if (player ~= nil and self.botVision[player.name]) then
-    	player:Fade(0.5, false)
+    if (player ~= nil and self.botVision[player.name] ~= nil) then
+    	self.botVision[player.name] = {
+			Player = player,
+			Current = 0,
+			Delay = 0,
+			Speed = 0.25,
+			State = false
+		}
     end
 end
 
 function NodeEditor:_onPlayerRespawn(player)
 	if (self.botVision[player.name] ~= nil) then
-		player:Fade(0.5, self.botVision[player.name])
+		self.botVision[player.name] = {
+			Player = player,
+			Current = 0,
+			Delay = 1,
+			Speed = 0.25,
+			State = true
+		}
 	end
 end
 
 function NodeEditor:_onEngineUpdate(deltaTime, simulationDeltaTime)
+
+	if (#self.botVision > 0) then
+		for playerName, timeData in pairs(self.botVision) do
+			if (type(timeData) == 'table') then
+				timeData.Current = timeData.Current + deltaTime
+
+				if (timeData.Current >= timeData.Delay) then
+					timeData.Player:Fade(timeData.Speed, timeData.State)
+					self.botVision[playerName] = true
+				end
+			end
+		end
+	end
 
 	-- receiving nodes from player takes priority over sending
 	if (self.nodeReceiveTimer >= 0 and self.playerSendingNodes ~= nil) then

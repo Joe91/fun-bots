@@ -336,7 +336,7 @@ function NodeCollection:GetPaths()
 	return self.waypointsByPathIndex
 end
 
-function NodeCollection:Clear(initSize)
+function NodeCollection:Clear()
 	print('NodeCollection:Clear')
 
 	for i=1, #self.waypoints do
@@ -352,10 +352,6 @@ function NodeCollection:Clear(initSize)
 	self.waypointsByPathIndex = {}
 	self.selectedWaypoints = {}
 	self.debugcount = 0
-
-	if (initSize ~= nil) then
-		print('NodeCollection:Clear -> Expecting: '..tostring(initSize))
-	end
 end
 
 -----------------------------
@@ -626,16 +622,14 @@ function NodeCollection:Next(waypoint)
 end
 
 -- this method avoids the use of the Vec3:Distance() method to avoid complex math
+-- it's a tradeoff for speed over accuracy, as this method produces a box instead of a sphere
 -- @returns boolean whther given waypint is inside the given range
 function NodeCollection:InRange(waypoint, vec3Position, range)
-
 	local posA = waypoint.Position or Vec3.zero
 	local posB = vec3Position or Vec3.zero
-
 	return ( math.abs(posA.x - posB.x) <= range and
 		math.abs(posA.y - posB.y) <= range and
 		math.abs(posA.z - posB.z) <= range )
-
 end
 
 -- Find the closest waypoint at position `vec3Position` with a search radius of `tolerance`

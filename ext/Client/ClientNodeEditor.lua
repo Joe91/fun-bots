@@ -27,6 +27,8 @@ function ClientNodeEditor:__init()
 	self.editModeManualSpeed = 0.05
 	self.editPositionMode = 'relative'
 
+	self.debugTracePaths = Config.debugTracePaths
+
 	self.colors = {
 		["Text"] = Vec4(1,1,1,1),
 		["White"] = Vec4(1,1,1,1),
@@ -124,7 +126,7 @@ function ClientNodeEditor:RegisterEvents()
 	Console:Register('RecalculateIndexes', 'Recalculate Indexes starting with selected nodes or all nodes', self, self._onRecalculateIndexes)
 	Console:Register('UnloadNodes', 'Clears and unloads all clientside nodes', self, self._onUnload)
 
-	Console:Register('BotVision', 'Lets you see what the bots see [Experimental]', self, self._onSetBotVision)
+	Console:Register('BotVision', '*<boolean|Enabled>* Lets you see what the bots see [Experimental]', self, self._onSetBotVision)
 end
 
 -- commo rose top / middle / bottom
@@ -361,14 +363,17 @@ function ClientNodeEditor:_onSetLastTraceSearchArea(data)
 end
 
 function ClientNodeEditor:_onUISettings(data)
-
 	if (data == false) then -- client closed settings
-
-		if (Config.debugTracePaths) then
-			self:_onUnload(args)
-			-- enable the timer before we are ready to receive
-			self.nodeReceiveTimer = 0
+		if (self.debugTracePaths ~= Config.debugTracePaths) then
+			if (Config.debugTracePaths) then
+				self:_onUnload(args)
+				-- enable the timer before we are ready to receive
+				self.nodeReceiveTimer = 0
+			else
+				self:_onUnload()
+			end
 		end
+		self.debugTracePaths = Config.debugTracePaths
 	end
 end
 
@@ -386,10 +391,8 @@ end
 -- server is ready to receive our nodes
 function ClientNodeEditor:_onSendNodes(args)
 	print('ClientNodeEditor:_onSendNodes: '..tostring(#g_NodeCollection:Get()))
-
 	self.nodesToSend = g_NodeCollection:Get()
 	self.nodeSendTimer = 0
-
 end
 
 function ClientNodeEditor:_onPlayerCreated(player)
@@ -415,8 +418,12 @@ function ClientNodeEditor:_onUnload(args)
 	self.player = nil
 	self.waypoints = {}
 	self.nodeReceiveProgress = 0
-	self.nodeReceiveExpected = (args or 0)
-	g_NodeCollection:Clear(args)
+	self.nodeReceiveExpected = 0
+	if (args ~= nil) then
+		self.nodeReceiveExpected = args[1]
+	end
+	print('NodeCollection:Clear -> Expecting: '..tostring(self.nodeReceiveExpected))
+	g_NodeCollection:Clear()
 	g_NodeCollection:DeregisterEvents()
 end
 
@@ -833,6 +840,7 @@ function ClientNodeEditor:_onUIDrawHud()
 
 				if (screenPos ~= nil) then
 					DebugRenderer:DrawText2D(screenPos.x, screenPos.y, k, self.colors.Text, 1)
+					screenPos = nil
 				end
 
 				local color = self.colors.Text
@@ -894,6 +902,7 @@ function ClientNodeEditor:_onUIDrawHud()
 			for node=1, #pathWaypoints do
 				local waypoint = pathWaypoints[node]
 				local isSelected = g_NodeCollection:IsSelected(waypoint)
+				local qualityAtRange = g_NodeCollection:InRange(waypoint, self.playerPos, Config.lineRange)
 
 				-- setup node color information
 				local color = self.colors[waypoint.PathIndex]
@@ -903,13 +912,13 @@ function ClientNodeEditor:_onUIDrawHud()
 
 				-- draw the node for the waypoint itself
 				if (g_NodeCollection:InRange(waypoint, self.playerPos, Config.waypointRange)) then
-					DebugRenderer:DrawSphere(waypoint.Position, 0.05, color.Node, false, true)
+					DebugRenderer:DrawSphere(waypoint.Position, 0.05, color.Node, false, (not qualityAtRange))
 				end
 
 				-- if selected draw bigger node and transform helper
 				if (isSelected and g_NodeCollection:InRange(waypoint, self.playerPos, Config.waypointRange)) then
 					-- node selection indicator
-					DebugRenderer:DrawSphere(waypoint.Position, 0.08,  color.Node, false, false)
+					DebugRenderer:DrawSphere(waypoint.Position, 0.08,  color.Node, false, (not qualityAtRange))
 
 					-- transform marker
 					DebugRenderer:DrawLine(waypoint.Position, waypoint.Position + (Vec3.up * 0.7), self.colors.Red, self.colors.Red)
