@@ -1,6 +1,6 @@
 SpawnModes = {
 	'manual',
-	'fixed_number_on_start',
-	'auto_increment',
+	'fixed_number',
+	'increment_with_players',
 	'keep_playercount'
 }
