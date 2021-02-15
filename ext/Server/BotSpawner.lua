@@ -52,7 +52,7 @@ function BotSpawner:updateBotAmountAndTeam(levelstart)
 	local botCountTeam2 = team2Count - countPlayersTeam2;
 
 	-- KEEP PLAYERCOUNT
-	if Config.spawnMode == 'keep_playercount' then
+	if Globals.spawnMode == 'keep_playercount' then
 		local targetTeam1 = Config.initNumberOfBots;
 		local targetTeam2 = Config.initNumberOfBots;
 		if Config.spawnInBothTeams then
@@ -88,7 +88,7 @@ function BotSpawner:updateBotAmountAndTeam(levelstart)
 		end
 
 	-- INCREMENT WITH PLAYER
-	elseif Config.spawnMode == 'increment_with_players' then
+	elseif Globals.spawnMode == 'increment_with_players' then
 		if Config.spawnInBothTeams then
 			local targetBotCountTeam1 = 0;
 			local targetBotCountTeam2 = 0;
@@ -142,7 +142,7 @@ function BotSpawner:updateBotAmountAndTeam(levelstart)
 		end
 
 	-- FIXED NUMBER TO SPAWN
-	elseif Config.spawnMode == 'fixed_number' then
+	elseif Globals.spawnMode == 'fixed_number' then
 		if levelstart then
 			botCountTeam1 = 0;
 			botCountTeam2 = 0;
@@ -182,7 +182,7 @@ function BotSpawner:updateBotAmountAndTeam(levelstart)
 			end
 		end
 	-- MANUAL BOT COUNT
-	elseif Config.spawnMode == 'manual' then
+	elseif Globals.spawnMode == 'manual' then
 		if levelstart then
 			self:spawnWayBots(nil, botCountTeam2, true, 0, 0, TeamId.Team2);
 			self:spawnWayBots(nil, botCountTeam1, true, 0, 0, TeamId.Team1);
