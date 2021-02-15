@@ -20,7 +20,6 @@ function BotSpawner:__init()
 end
 
 function BotSpawner:updateBotAmountAndTeam(levelstart)
-	print("uptade amount and team")
 	-- keep Slot for next player
 	if Config.keepOneSlotForPlayers then
 		local playerlimt = Globals.maxPlayers - 1

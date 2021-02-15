@@ -861,7 +861,7 @@ function FunBotUIServer:_writeSettings(player, request)
 	NetEvents:BroadcastLocal('WriteClientSettings', Config, updateWeaponSets);
 
 	if updateBotTeamAndNumber then
-		Globals.spawnMode		= Config.spawnmMode;
+		Globals.spawnMode		= Config.spawnMode;
 		BotSpawner:updateBotAmountAndTeam();
 	end
 	-- @ToDo create Error Array and dont hide if has values
