@@ -10,6 +10,7 @@ function Globals:__init()
 
 	self.respawnWayBots 	= false;	--used for the runtime respawn
 	self.attackWayBots 		= false;	--used for the runtime attack
+	self.spawnmMode			= "manual"	--used for the runtime spawnmode
 end
 
 -- Singleton.

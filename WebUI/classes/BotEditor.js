@@ -122,6 +122,14 @@ const BotEditor = (new function BotEditor() {
 					}));
 					count.value = 1;
 				break;
+				case 'bot_spawn_friend':
+					count = document.querySelector('[data-action="bot_spawn_friend"] input[type="number"]');
+					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
+						action:	'bot_spawn_friend',
+						value:	count.value
+					}));
+					count.value = 1;
+				break;
 				case 'bot_spawn_path':
 					index = document.querySelector('[data-action="bot_spawn_path"] input[type="number"]');
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
@@ -133,6 +141,14 @@ const BotEditor = (new function BotEditor() {
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
 						action:	'bot_kick_all'
 					}));
+				break;
+				case 'bot_kick_team':
+					count = document.querySelector('[data-action="bot_kick_team"] input[type="number"]');
+					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
+						action:	'bot_kick_team',
+						value:	count.value
+					}));
+					count.value = 1;
 				break;
 				case 'bot_kill_all':
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({

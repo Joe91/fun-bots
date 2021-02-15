@@ -68,7 +68,6 @@ function FunBotUIClient:_onUISettings(data)
 	-- add(<category>, <types>, <name>, <title>, <value>, <default>, <description>)
 	-- addList(<category>, <name>, <title>, <list>, <value>, <default>, <description>)
 
-	settings:add("GLOBAL", "Boolean", "spawnInSameTeam", Language:I18N("Spawn in Same Team"), data.spawnInSameTeam, false, Language:I18N("If true, Bots spawn in the team of the player"));
 	settings:addList("GLOBAL", "botWeapon", Language:I18N("Bot Weapon"), BotWeapons, data.botWeapon, "Primary", Language:I18N("Select the weapon the bots use"));
 	settings:addList("GLOBAL", "botAttackMode", Language:I18N("Bot Attack Mode"), BotAttackModes, data.botAttackMode, "Random", Language:I18N("Mode the Bots attack with. Crouch or Stand"));
 	settings:addList("GLOBAL", "botKit", Language:I18N("Bot Kit"), BotKits, data.botKit, "RANDOM_KIT", Language:I18N("The Kit a bots spawns with."));
@@ -87,11 +86,11 @@ function FunBotUIClient:_onUISettings(data)
 	settings:add("DIFFICULTY", "Float", "damageFactorPistol", Language:I18N("Factor for Pistol-Weapon-Damage"), data.damageFactorPistol, 0.8, Language:I18N("Origninal Damage from bots gets multiplied by this"));
 	settings:add("DIFFICULTY", "Float", "damageFactorKnife", Language:I18N("Factor for Knife-Weapon-Damage"), data.damageFactorKnife, 1.2, Language:I18N("Origninal Damage from bots gets multiplied by this"));
 
-	settings:add("SPAWN", "Boolean", "spawnOnLevelstart", Language:I18N("Spawn on Levelstart"), data.spawnOnLevelstart, true, Language:I18N("Bots spawn on levelstart (if valid paths are available)"));
+	settings:add("SPAWN", "Boolean", "spawnInBothTeams", Language:I18N("Spawn in both teams"), data.spawnInBothTeams, true, Language:I18N("Bots spawn in both teams"));
 	settings:add("SPAWN", "Boolean", "onlySpawnBotsWithPlayers", Language:I18N("Only spawn with players"), data.onlySpawnBotsWithPlayers, true, Language:I18N("Bots only spawn if at least one Player is on the server"));
-	settings:add("SPAWN", "Integer", "initNumberOfBots", Language:I18N("Number Bots on Levelstart"), data.initNumberOfBots, 5, Language:I18N("Bots on levelstart"));
-	settings:add("SPAWN", "Boolean", "incBotsWithPlayers", Language:I18N("More Bots with new Players"), data.incBotsWithPlayers, true, Language:I18N("increase Bots, when new players join"));
-	settings:add("SPAWN", "Integer", "newBotsPerNewPlayer", Language:I18N("Number Bots on new Player"), data.newBotsPerNewPlayer, 2, Language:I18N("number to increase Bots, when new players join"));
+	settings:addList("SPAWN", "spawnMode", Language:I18N("Spawn Mode"), SpawnModes, data.spawnMode, "increment_with_players", Language:I18N("Mode the bots spawn with"));
+	settings:add("SPAWN", "Integer", "initNumberOfBots", Language:I18N("Number of Bots for Spawn-Mode"), data.initNumberOfBots, 5, Language:I18N("Bots for the spawnmode"));
+	settings:add("SPAWN", "Integer", "newBotsPerNewPlayer", Language:I18N("Number Bots on new Player"), data.newBotsPerNewPlayer, 2, Language:I18N("number to increase Bots, when new players join, if mode is selected"));
 	settings:add("SPAWN", "Boolean", "keepOneSlotForPlayers", Language:I18N("Keep one Player-Slot"), data.keepOneSlotForPlayers, true, Language:I18N("always keep one slot for new Players to join"));
 	settings:add("SPAWN", "Float", "spawnDelayBots", Language:I18N("Respawn Delay"), data.spawnDelayBots, 7.0, Language:I18N("time till bots respawn, if respawn enabled"));
 	settings:add("SPAWN", "Integer", "botTeam", Language:I18N("Default Bot Team"), data.botTeam, 2, Language:I18N("default bot team 1 = US, 2 = RU"));

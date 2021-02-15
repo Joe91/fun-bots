@@ -7,6 +7,7 @@ require('__shared/Constants/BotNames');
 require('__shared/Constants/BotWeapons');
 require('__shared/Constants/WeaponSets');
 require('__shared/Constants/BotAttackModes');
+require('__shared/Constants/SpawnModes');
 
 Language					= require('__shared/Language');
 local FunBotUIClient		= require('UIClient');

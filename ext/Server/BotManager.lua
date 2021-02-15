@@ -38,17 +38,9 @@ function BotManager:getBotTeam()
 
 	-- init global Vars
 	if countPlayersTeam1 > countPlayersTeam2 then
-		if  Config.spawnInSameTeam then
-			botTeam = TeamId.Team1;
-		else
-			botTeam = TeamId.Team2;
-		end
+		botTeam = TeamId.Team2;
 	elseif countPlayersTeam2 > countPlayersTeam1 then
-		if Config.spawnInSameTeam then
-			botTeam = TeamId.Team2;
-		else
-			botTeam = TeamId.Team1;
-		end
+		botTeam = TeamId.Team1;
 	else
 		botTeam = Config.botTeam;
 	end
@@ -59,6 +51,7 @@ end
 function BotManager:configGlobas()
 	Globals.respawnWayBots 	= Config.respawnWayBots;
 	Globals.attackWayBots 	= Config.attackWayBots;
+	Globals.spawnMode		= Config.spawnmMode;
 	Globals.yawPerFrame 	= self:calcYawPerFrame()
 	local maxPlayers = RCON:SendCommand('vars.maxPlayers');
 	maxPlayers = tonumber(maxPlayers[2]);
@@ -467,12 +460,18 @@ function BotManager:destroyAmount(number)
 	end
 end
 
-function BotManager:destroyTeam(teamId)
+function BotManager:destroyTeam(teamId, amount)
 	for i = 1, MAX_NUMBER_OF_BOTS do
 		local bot = self:GetBotByName(BotNames[i])
 		if bot ~= nil then
 			if bot.player.teamId == teamId then
 				self:destroyBot(bot.name)
+				if amount ~= nil then
+					amount = amount - 1;
+					if amount <= 0 then
+						return
+					end
+				end
 			end
 		end
 	end

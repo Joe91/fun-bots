@@ -8,6 +8,7 @@ require('__shared/Constants/BotNames');
 require('__shared/Constants/BotWeapons');
 require('__shared/Constants/WeaponSets');
 require('__shared/Constants/BotAttackModes');
+require('__shared/Constants/SpawnModes');
 
 
 Language					= require('__shared/Language');
@@ -20,6 +21,9 @@ local WeaponList			= require('__shared/WeaponList');
 local ChatCommands			= require('ChatCommands');
 local FunBotUIServer		= require('UIServer');
 local Globals 				= require('Globals');
+
+local serverSettings		= nil;
+local syncedGameSettings	= nil;
 
 function FunBotServer:__init()
 	Language:loadLanguage(Config.language);
@@ -59,12 +63,12 @@ function FunBotServer:_onPartitionLoaded(partition)
 	for _, instance in pairs(partition.instances) do
 		if USE_REAL_DAMAGE then
 			if instance:Is("SyncedGameSettings") then
-				local syncedGameSettings = SyncedGameSettings(instance)
+				syncedGameSettings = SyncedGameSettings(instance)
 				syncedGameSettings:MakeWritable()
 				syncedGameSettings.allowClientSideDamageArbitration = false
 			end
 			if instance:Is("ServerSettings") then
-				local serverSettings = ServerSettings(instance)
+				serverSettings = ServerSettings(instance)
 				serverSettings:MakeWritable()
 				--serverSettings.drawActivePhysicsObjects = true --doesn't matter
 				--serverSettings.isSoldierAnimationEnabled = true --doesn't matter
