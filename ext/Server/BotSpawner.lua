@@ -19,7 +19,7 @@ function BotSpawner:__init()
 	Events:Subscribe('Player:Respawn', self, self._onPlayerRespawn)
 end
 
-function BotSpawner:_updateBotAmountAndTeam(levelstart)
+function BotSpawner:updateBotAmountAndTeam(levelstart)
 	print("uptade amount and team")
 	-- keep Slot for next player
 	if Config.keepOneSlotForPlayers then
@@ -192,7 +192,7 @@ end
 
 function BotSpawner:_onPlayerRespawn(player)
 	if not Utilities:isBot(player.name) then
-		self:_updateBotAmountAndTeam(false);
+		self:updateBotAmountAndTeam(false);
 	end
 end
 
@@ -219,7 +219,7 @@ function BotSpawner:onLevelLoaded(forceSpawn)
 		BotManager:configGlobas()
 
 		self._botSpawnTimer = -5.0
-		self:_updateBotAmountAndTeam(true);
+		self:updateBotAmountAndTeam(true);
 	end
 end
 

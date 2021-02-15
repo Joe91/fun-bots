@@ -218,11 +218,11 @@ function FunBotUIServer:_writeSettings(player, request)
 		return;
 	end
 	
-	local temporary			= false;
-	local updateWeapons		= false;
-	local updateWeaponSets	= false;
-	local respawnAllBots 	= false;
-	local batched			= true;
+	local temporary					= false;
+	local updateWeapons				= false;
+	local updateBotTeamAndNumber	= false;
+	local updateWeaponSets			= false;
+	local batched					= true;
 	
 	if request.subaction ~= nil then
 		temporary = (request.subaction == 'temp');
@@ -490,14 +490,21 @@ function FunBotUIServer:_writeSettings(player, request)
 
 		for _, spawnMode in pairs(SpawnModes) do
 			if tempString == spawnMode then
-				SettingsManager:update('spawnMode', tempString, temporary, batched);
+				if Config.spawnMode ~= tempString then
+					SettingsManager:update('spawnMode', tempString, temporary, batched);
+					updateBotTeamAndNumber = true;
+				end
 				break
 			end
 		end
 	end
 
 	if request.spawnInBothTeams ~= nil then
-		SettingsManager:update('spawnInBothTeams', (request.spawnInBothTeams == true), temporary, batched);
+		local tempVal = (request.spawnInBothTeams == true);
+		if tempVal ~= Config.spawnInBothTeams then
+			SettingsManager:update('spawnInBothTeams', tempVal, temporary, batched);
+			updateBotTeamAndNumber = true;
+		end
 	end
 
 	if request.onlySpawnBotsWithPlayers ~= nil then
@@ -508,7 +515,10 @@ function FunBotUIServer:_writeSettings(player, request)
 		local tempValue = tonumber(request.initNumberOfBots);
 
 		if tempValue > 0 and tempValue <= MAX_NUMBER_OF_BOTS then
-			SettingsManager:update('initNumberOfBots', tempValue, temporary, batched);
+			if Config.initNumberOfBots ~= tempValue then
+				SettingsManager:update('initNumberOfBots', tempValue, temporary, batched);
+				updateBotTeamAndNumber = true;
+			end
 		end
 	end
 
@@ -516,12 +526,19 @@ function FunBotUIServer:_writeSettings(player, request)
 		local tempValue = tonumber(request.newBotsPerNewPlayer);
 
 		if tempValue > 0 and tempValue <= 10 then
-			SettingsManager:update('newBotsPerNewPlayer', tempValue, temporary, batched);
+			if Config.newBotsPerNewPlayer ~= tempValue then
+				SettingsManager:update('newBotsPerNewPlayer', tempValue, temporary, batched);
+				updateBotTeamAndNumber = true;
+			end
 		end
 	end
 
 	if request.keepOneSlotForPlayers ~= nil then
-		SettingsManager:update('keepOneSlotForPlayers', (request.keepOneSlotForPlayers == true), temporary, batched);
+		local tempVal = (request.keepOneSlotForPlayers == true);
+		if Config.keepOneSlotForPlayers ~= tempVal then
+			SettingsManager:update('keepOneSlotForPlayers', tempVal, temporary, batched);
+			updateBotTeamAndNumber = true;
+		end
 	end
 
 	if request.spawnDelayBots ~= nil then
@@ -841,13 +858,9 @@ function FunBotUIServer:_writeSettings(player, request)
 	
 	NetEvents:BroadcastLocal('WriteClientSettings', Config, updateWeaponSets);
 
-	if respawnAllBots then
-		--TODO: kill all bots and respawn themself
-		local amount = BotManager:getBotCount()
-		BotManager:killAll();
-		BotSpawner:spawnWayBots(nil, amount, true);
+	if updateBotTeamAndNumber then
+		BotSpawner:updateBotAmountAndTeam();
 	end
-
 	-- @ToDo create Error Array and dont hide if has values
 	NetEvents:SendTo('UI_Settings', player, false);
 end
