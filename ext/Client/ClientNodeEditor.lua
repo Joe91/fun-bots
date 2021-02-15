@@ -118,13 +118,14 @@ function ClientNodeEditor:RegisterEvents()
 	Console:Register('Remove', 'Remove selected waypoints', self, self._onRemoveNode)
 	Console:Register('Merge', 'Merge selected waypoints', self, self._onMergeNode)
 	Console:Register('Split', 'Split selected waypoints', self, self._onSplitNode)
+	Console:Register('SetInput', '<number|0-15> <number|0-15> <number|0-255> - Sets input variables for the selected waypoints', self, self._onSetInputNode)
 	Console:Register('ClearSelection', 'Clear selection', self, self._onClearSelection)
 	Console:Register('Move', 'toggle move mode on selected waypoints', self, self._onToggleMoveNode)
-	Console:Register('ShowPath', '(\'all\' or *<number|PathIndex>*) - Show path\'s waypoints', self, self._onShowPath)
-	Console:Register('HidePath', '(\'all\' or *<number|PathIndex>*) - Hide path\'s waypoints', self, self._onHidePath)
+	Console:Register('ShowPath', '\'all\' or <number|PathIndex> - Show path\'s waypoints', self, self._onShowPath)
+	Console:Register('HidePath', '\'all\' or <number|PathIndex> - Hide path\'s waypoints', self, self._onHidePath)
 	Console:Register('ShowRose', 'Show custom Commo Rose', self, self._onShowRose)
 	Console:Register('HideRose', 'Hide custom Commo Rose', self, self._onHideRose)
-	Console:Register('DumpNodes', 'Print selected nodes or all nodes', self, self._onDumpNodes)
+	Console:Register('DumpNodes', 'Print selected nodes or all nodes to console', self, self._onDumpNodes)
 	Console:Register('RecalculateIndexes', 'Recalculate Indexes starting with selected nodes or all nodes', self, self._onRecalculateIndexes)
 	Console:Register('UnloadNodes', 'Clears and unloads all clientside nodes', self, self._onUnload)
 
@@ -242,7 +243,7 @@ end
 
 function ClientNodeEditor:_onSetInputNode(args)
 	self.CommoRose.Active = false
-	g_NodeCollection:SetInput(args[1])
+	print('ClientNodeEditor:_onSetInputNode: '..g_NodeCollection:SetInput(args[1], args[2], args[3]))
 	print(Language:I18N('Success'))
 	return true
 end
@@ -1105,6 +1106,7 @@ function ClientNodeEditor:_onUIDrawHud()
 							end
 
 							local speedMode = 'N/A'
+							if (waypoint.SpeedMode == 0) then speedMode = 'Wait' end
 							if (waypoint.SpeedMode == 1) then speedMode = 'Prone' end
 							if (waypoint.SpeedMode == 2) then speedMode = 'Crouch' end
 							if (waypoint.SpeedMode == 3) then speedMode = 'Walk' end
@@ -1113,6 +1115,18 @@ function ClientNodeEditor:_onUIDrawHud()
 							local extraMode = 'N/A'
 							if (waypoint.ExtraMode == 1) then extraMode = 'Jump' end
 
+							local optionValue = 'N/A'
+							if (waypoint.SpeedMode == 0) then 
+								optionValue = tostring(waypoint.OptValue)..' Seconds'
+							end
+							if (not waypoint.Previous) then
+								if (waypoint.OptValue == 255) then
+									optionValue = 'Path Reverses'
+								else
+									optionValue = 'Path Loops'
+								end
+							end
+
 							local text = ''
 							text = text..string.format("%s <--[ %s ]--> %s\n", previousNode, waypoint.ID, nextNode)
 							text = text..string.format("Index[%d]\n", waypoint.Index)
@@ -1120,7 +1134,7 @@ function ClientNodeEditor:_onUIDrawHud()
 							text = text..string.format("InputVar: %d\n", waypoint.InputVar)
 							text = text..string.format("SpeedMode: %s (%d)\n", speedMode, waypoint.SpeedMode)
 							text = text..string.format("ExtraMode: %s (%d)\n", extraMode, waypoint.ExtraMode)
-							text = text..string.format("OptValue: %d\n", waypoint.OptValue)
+							text = text..string.format("OptValue: %s (%d)\n", optionValue, waypoint.OptValue)
 							DebugRenderer:DrawText2D(screenPos.x, screenPos.y, text, self.colors.Text, 1.2)
 						end
 						screenPos = nil

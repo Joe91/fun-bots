@@ -93,8 +93,8 @@ function NodeCollection:Create(data)
 		PathIndex = 1, 						-- Path #
 		PointIndex = 1, 					-- index inside parent path
 		InputVar = inputVar, 				-- raw input value
-		SpeedMode = inputVar & 0xF,
-		ExtraMode = (inputVar >> 4) & 0xF,
+		SpeedMode = inputVar & 0xF,			-- 0 = wait, 1 = prone, 2 = crouch, 3 = walk, 4 run
+		ExtraMode = (inputVar >> 4) & 0xF,	-- 
 		OptValue = (inputVar >> 8) & 0xFF,
 		Distance = nil,						-- current distance to player
 		Updated = false,					-- if true, needs to be sent to server for saving
@@ -296,17 +296,26 @@ function NodeCollection:_processWaypointRecalc(waypoint)
 end
 
 function NodeCollection:Update(waypoint, data)
-	waypoint = g_Utilities:mergeKeys(waypoint, data)
-	waypoint.Updated = true
-	self.waypoints[waypoint.Index] = waypoint
-	return self.waypoints[waypoint.Index]
+	g_Utilities:mergeKeys(waypoint, data)
 end
 
-function NodeCollection:SetInput(inputVar)
+function NodeCollection:SetInput(speed, extra, option)
+
+	speed = tonumber(speed) or 3
+	extra = tonumber(extra) or 0
+	option = tonumber(option) or 0
+	local inputVar = (speed & 0xF) + ((extra & 0xF)<<4) + ((option & 0xFF) <<8)
+
 	local selection = self:GetSelected()
-	for _,selectedWaypoint in pairs(selection) do
-		self:Update(selectedWaypoint, {InputVar = (tonumber(inputVar) or 20)})
+	for i=1, #selection do
+		self:Update(selection[i], {
+			InputVar = inputVar,
+			SpeedMode = speed,
+			ExtraMode = extra,
+			OptValue = option
+		})
 	end
+	return inputVar
 end
 
 function NodeCollection:Get(waypointIndex, pathIndex)
@@ -686,7 +695,9 @@ function NodeCollection:Next(waypoint)
 	return waypoint.Next
 end
 
--- this method avoids the use of the Vec3:Distance() method to avoid complex math
+
+
+-- this method avoids the use of the Vec3:Distance() method to avoid complex math internally
 -- it's a tradeoff for speed over accuracy, as this method produces a box instead of a sphere
 -- @returns boolean whther given waypint is inside the given range
 function NodeCollection:InRange(waypoint, vec3Position, range)
@@ -708,15 +719,14 @@ function NodeCollection:Find(vec3Position, tolerance)
 
 	for _,waypoint in pairs(self.waypointsByID) do
 
-		if (waypoint ~= nil and waypoint.Position ~= nil and self:IsPathVisible(waypoint.PathIndex)) then
-			local distance = waypoint.Position:Distance(vec3Position)
-			if (distance <= tolerance) then
+		if (waypoint ~= nil and waypoint.Position ~= nil and self:IsPathVisible(waypoint.PathIndex) and self:IsPathVisible(waypoint.PathIndex)) then
+			if (self:InRange(waypoint, vec3Position, tolerance)) then -- faster check
+
+				local distance = waypoint.Position:Distance(vec3Position) -- then do slower math
 				if (closestWaypoint == nil) then
-					--print('NodeCollection:Find -> Found: '..waypoint.ID.. '('..tostring(distance)..')')
 					closestWaypoint = waypoint
 					closestWaypointDist = distance
 				elseif (distance < closestWaypointDist) then
-					--print('NodeCollection:Find -> Found Closer: '..waypoint.ID.. '('..tostring(distance)..')')
 					closestWaypoint = waypoint
 					closestWaypointDist = distance
 				end
@@ -736,8 +746,7 @@ function NodeCollection:FindAll(vec3Position, tolerance)
 
 	for _,waypoint in pairs(self.waypointsByID) do
 
-		if (waypoint ~= nil and waypoint.Position ~= nil and self:IsPathVisible(waypoint.PathIndex) and waypoint.Position:Distance(vec3Position) <= tolerance) then
-			--print('NodeCollection:FindAll -> Found: '..waypoint.ID)
+		if (waypoint ~= nil and waypoint.Position ~= nil and self:IsPathVisible(waypoint.PathIndex) and self:InRange(waypoint, vec3Position, tolerance)) then
 			table.insert(waypointsFound, waypoint)
 		end
 	end
