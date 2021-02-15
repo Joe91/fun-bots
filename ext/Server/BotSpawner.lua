@@ -93,10 +93,10 @@ function BotSpawner:updateBotAmountAndTeam(levelstart)
 			local targetBotCountTeam1 = 0;
 			local targetBotCountTeam2 = 0;
 			if countPlayersTeam1 > 0 then
-				targetBotCountTeam1 = Config.initNumberOfBots + ((countPlayersTeam1-1) * Config.newBotsPerNewPlayer)
+				targetBotCountTeam2 = Config.initNumberOfBots + ((countPlayersTeam1-1) * Config.newBotsPerNewPlayer)
 			end
 			if countPlayersTeam2 > 0 then
-				targetBotCountTeam2 = Config.initNumberOfBots + ((countPlayersTeam2-1) * Config.newBotsPerNewPlayer)
+				targetBotCountTeam1 = Config.initNumberOfBots + ((countPlayersTeam2-1) * Config.newBotsPerNewPlayer)
 			end
 			if levelstart then
 				botCountTeam1 = 0;
@@ -137,7 +137,7 @@ function BotSpawner:updateBotAmountAndTeam(levelstart)
 				self:spawnWayBots(nil, amountToSpawn, true, 0, 0, botTeam);
 			end
 			if amountToSpawn < 0 then
-				BotManager:destroyAmount(amountToSpawn)
+				BotManager:destroyAmount(-amountToSpawn)
 			end
 		end
 
