@@ -91,8 +91,14 @@ function BotSpawner:_updateBotAmountAndTeam()
 	-- INCREMENT WITH PLAYER
 	elseif Config.spawnMode == 'increment_with_players' then
 		if Config.spawnInBothTeams then
-			local targetBotCountTeam1 = Config.initNumberOfBots + ((countPlayersTeam1-1) * Config.newBotsPerNewPlayer)
-			local targetBotCountTeam2 = Config.initNumberOfBots + ((countPlayersTeam2-1) * Config.newBotsPerNewPlayer)
+			local targetBotCountTeam1 = 0;
+			local targetBotCountTeam2 = 0;
+			if countPlayersTeam1 > 0 then
+				targetBotCountTeam1 = Config.initNumberOfBots + ((countPlayersTeam1-1) * Config.newBotsPerNewPlayer)
+			end
+			if countPlayersTeam2 > 0 then
+				targetBotCountTeam2 = Config.initNumberOfBots + ((countPlayersTeam2-1) * Config.newBotsPerNewPlayer)
+			end
 			local amountToSpawnTeam1 = targetBotCountTeam1 - botCountTeam1;
 			local amountToSpawnTeam2 = targetBotCountTeam2 - botCountTeam2;
 
