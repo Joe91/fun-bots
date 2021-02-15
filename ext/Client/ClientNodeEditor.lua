@@ -682,7 +682,7 @@ function ClientNodeEditor:_onCommoRoseAction(action, hit)
 	print('CommoRoseAction: '..tostring(action))
 
 	if (action == 'Show') then
-		self.CommoRose.Active = true
+		--self.CommoRose.Active = true
 
 		local center = { Action = 'UI_CommoRose_Action_Select', Label = Language:I18N('Select') }
 
@@ -692,7 +692,7 @@ function ClientNodeEditor:_onCommoRoseAction(action, hit)
 			center = { Action = 'UI_CommoRose_Action_Connect', Label = Language:I18N('Connect') }
 		end
 
-
+		--[[
 		g_FunBotUIClient:_onUICommonRose({
 			Top = { Action = 'UI_CommoRose_Action_Save', Label = Language:I18N('Save') },
 			Bottom = { Action = 'UI_CommoRose_Action_Load', Label = Language:I18N('Load') },
@@ -708,6 +708,7 @@ function ClientNodeEditor:_onCommoRoseAction(action, hit)
 				--{ Action = 'UI_CommoRose_Action_Create', Label = Language:I18N('Create') },
 			}
 		})
+		]]
 		return
 	end
 

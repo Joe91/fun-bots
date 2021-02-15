@@ -388,41 +388,48 @@ function TraceManager:_saveWayPoints()
 
 		if (g_Globals.wayPoints[oldPathIndex] == nil) then
 			print('WARNING! Path ['..oldPathIndex..'] is nil!')
-		end
+		else
 
-		if g_Globals.wayPoints[oldPathIndex][1] ~= nil then
-			pathIndex = pathIndex + 1;
+			if g_Globals.wayPoints[oldPathIndex][1] ~= nil then
+				pathIndex = pathIndex + 1;
 
-			while #g_Globals.wayPoints[oldPathIndex] > pointsDone and not errorActive do
-				local pointsToTo = #g_Globals.wayPoints[oldPathIndex] - pointsDone;
+				while #g_Globals.wayPoints[oldPathIndex] > pointsDone and not errorActive do
+					local pointsToTo = #g_Globals.wayPoints[oldPathIndex] - pointsDone;
 
-				if pointsToTo > maxPointsInOneQuery then
-					pointsToTo = maxPointsInOneQuery;
-				end
-
-				local sqlValuesString = '';
-
-				for pointIndex = 1 + pointsDone, pointsToTo + pointsDone do
-					local trans			= Vec3();
-					trans				= g_Globals.wayPoints[oldPathIndex][pointIndex].trans;
-					local transX		= trans.x;
-					local transY		= trans.y;
-					local transZ		= trans.z;
-					local inputVar		= self:_getInputVar(g_Globals.wayPoints[oldPathIndex][pointIndex]);
-					local inerString	= '(' .. pathIndex .. ',' .. pointIndex .. ',' .. tostring(transX) .. ',' .. tostring(transY) .. ',' .. tostring(transZ) .. ',' .. tostring(inputVar) .. ')';
-					sqlValuesString		= sqlValuesString..inerString;
-
-					if pointIndex < pointsToTo + pointsDone then
-						sqlValuesString = sqlValuesString .. ',';
+					if pointsToTo > maxPointsInOneQuery then
+						pointsToTo = maxPointsInOneQuery;
 					end
-				end
 
-				if not SQL:Query(query..sqlValuesString) then
-					print('Failed to execute query: ' .. SQL:Error());
-					return;
-				end
+					local sqlValuesString = '';
 
-				pointsDone = pointsDone + pointsToTo;
+					for pointIndex = 1 + pointsDone, pointsToTo + pointsDone do
+
+						if (g_Globals.wayPoints[oldPathIndex][pointIndex] == nil) then
+							print('WARNING! Node ['..oldPathIndex..']['..pointIndex..'] is nil!')
+						else
+
+							local trans			= Vec3();
+							trans				= g_Globals.wayPoints[oldPathIndex][pointIndex].trans;
+							local transX		= trans.x;
+							local transY		= trans.y;
+							local transZ		= trans.z;
+							local inputVar		= self:_getInputVar(g_Globals.wayPoints[oldPathIndex][pointIndex]);
+							local inerString	= '(' .. pathIndex .. ',' .. pointIndex .. ',' .. tostring(transX) .. ',' .. tostring(transY) .. ',' .. tostring(transZ) .. ',' .. tostring(inputVar) .. ')';
+							sqlValuesString		= sqlValuesString..inerString;
+
+							if pointIndex < pointsToTo + pointsDone then
+								sqlValuesString = sqlValuesString .. ',';
+							end
+						end
+					end
+
+					if not SQL:Query(query..sqlValuesString) then
+						print('Failed to execute query: ' .. SQL:Error());
+						return;
+					end
+
+					pointsDone = pointsDone + pointsToTo;
+				end
 			end
 		end
 	end
