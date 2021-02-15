@@ -5,6 +5,7 @@ function Globals:__init()
 	self.activeTraceIndexes	= 0;
 	self.yawPerFrame 		= 0.0;
 	self.isTdm				= true;
+	self.isScavenger		= false;
 	self.isGm				= false;
 	self.maxPlayers			= 0;
 

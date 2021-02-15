@@ -98,6 +98,11 @@ function FunBotServer:_onLevelLoaded(levelName, gameMode)
 	else
 		Globals.isGm = false;
 	end
+	if gameMode == 'Scavenger0' then
+		Globals.isScavenger = true;
+	else
+		Globals.isScavenger = false;
+	end
 
 	TraceManager:onLevelLoaded(levelName, gameMode);
 	BotSpawner:onLevelLoaded(false);
