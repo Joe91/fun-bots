@@ -73,10 +73,10 @@ function BotSpawner:_updateBotAmountAndTeam()
 		end
 
 		if team1Count < targetTeam1 then
-			self:spawnWayBots(nil, targetTeam1-team1Count, true, 1, 0, TeamId.Team1);
+			self:spawnWayBots(nil, targetTeam1-team1Count, true, 0, 0, TeamId.Team1);
 		end
 		if team2Count < targetTeam2 then
-			self:spawnWayBots(nil, targetTeam2-team2Count, true, 1, 0, TeamId.Team2);
+			self:spawnWayBots(nil, targetTeam2-team2Count, true, 0, 0, TeamId.Team2);
 		end
 
 		if BotManager:getBotCount() > 0 then
@@ -103,10 +103,10 @@ function BotSpawner:_updateBotAmountAndTeam()
 			local amountToSpawnTeam2 = targetBotCountTeam2 - botCountTeam2;
 
 			if amountToSpawnTeam1 > 0 then
-				self:spawnWayBots(nil, amountToSpawnTeam1, true, 1, 0, TeamId.Team1);
+				self:spawnWayBots(nil, amountToSpawnTeam1, true, 0, 0, TeamId.Team1);
 			end
 			if amountToSpawnTeam2 > 0 then
-				self:spawnWayBots(nil, amountToSpawnTeam2, true, 1, 0, TeamId.Team2);
+				self:spawnWayBots(nil, amountToSpawnTeam2, true, 0, 0, TeamId.Team2);
 			end
 			if amountToSpawnTeam1 < 0 then
 				BotManager:destroyTeam(TeamId.Team1, -amountToSpawnTeam1)
@@ -128,7 +128,7 @@ function BotSpawner:_updateBotAmountAndTeam()
 			local amountToSpawn = targetBotCount - botCount;
 			if amountToSpawn > 0 then
 				self._botSpawnTimer = -5.0
-				self:spawnWayBots(nil, amountToSpawn, true, 1, 0, botTeam);
+				self:spawnWayBots(nil, amountToSpawn, true, 0, 0, botTeam);
 			end
 			if amountToSpawn < 0 then
 				BotManager:destroyAmount(amountToSpawn)
@@ -148,10 +148,10 @@ function BotSpawner:_updateBotAmountAndTeam()
 			end
 
 			if botCountTeam2 < amoutPerTeam then
-				self:spawnWayBots(nil, amoutPerTeam - botCountTeam2, true, 1, 0, TeamId.Team2);
+				self:spawnWayBots(nil, amoutPerTeam - botCountTeam2, true, 0, 0, TeamId.Team2);
 			end
 			if botCountTeam1 < amoutPerTeam then
-				self:spawnWayBots(nil, amoutPerTeam - botCountTeam1, true, 1, 0, TeamId.Team1);
+				self:spawnWayBots(nil, amoutPerTeam - botCountTeam1, true, 0, 0, TeamId.Team1);
 			end
 		else
 			-- check for bots in wrong team
@@ -163,11 +163,11 @@ function BotSpawner:_updateBotAmountAndTeam()
 
 			if botTeam == TeamId.Team1 then
 				if Config.initNumberOfBots > botCountTeam1 then
-					self:spawnWayBots(nil, Config.initNumberOfBots-botCountTeam1, true, 1, 0, TeamId.Team1);
+					self:spawnWayBots(nil, Config.initNumberOfBots-botCountTeam1, true, 0, 0, TeamId.Team1);
 				end
 			else
 				if Config.initNumberOfBots > botCountTeam2 then
-					self:spawnWayBots(nil, Config.initNumberOfBots-botCountTeam2, true, 1, 0, TeamId.Team2);
+					self:spawnWayBots(nil, Config.initNumberOfBots-botCountTeam2, true, 0, 0, TeamId.Team2);
 				end
 			end
 		end

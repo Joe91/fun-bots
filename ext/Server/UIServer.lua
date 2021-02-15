@@ -46,11 +46,20 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 
 		-- request.opened
 		NetEvents:SendTo('UI_Settings', player, Config);
-		
+
 	-- Bots
 	elseif request.action == 'bot_spawn_default' then
 		local amount = tonumber(request.value);
-		BotSpawner:spawnWayBots(player, amount, true);
+		local team = player.teamId;
+		if team == TeamId.Team1 then
+			BotSpawner:spawnWayBots(player, amount, true, 0, 0, TeamId.Team2);
+		else
+			BotSpawner:spawnWayBots(player, amount, true, 0, 0, TeamId.Team1);
+		end
+
+	elseif request.action == 'bot_spawn_friend' then
+		local amount = tonumber(request.value);
+		BotSpawner:spawnWayBots(player, amount, true, 0, 0, player.teamId);
 
 	elseif request.action == 'bot_spawn_path' then --todo: whats the difference? make a function to spawn bots on a fixed way instead?
 		local amount		= 1;
@@ -60,6 +69,14 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 
 	elseif request.action == 'bot_kick_all' then
 		BotManager:destroyAllBots();
+
+	elseif request.action == 'bot_kick_team' then
+		local teamNumber = tonumber(request.value);
+		if teamNumber == 1 then
+			BotManager:destroyTeam(TeamId.Team1);
+		elseif teamNumber == 2 then
+			BotManager:destroyTeam(TeamId.Team2);
+		end
 
 	elseif request.action == 'bot_kill_all' then
 		BotManager:killAll();
