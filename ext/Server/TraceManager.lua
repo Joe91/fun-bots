@@ -2,8 +2,7 @@ class('TraceManager');
 
 require('Waypoint');
 require('__shared/Config');
-
-local Globals = require('Globals');
+require('Globals');
 
 function TraceManager:__init()
 	self._tracePlayer		= {};
@@ -18,7 +17,7 @@ function TraceManager:__init()
 end
 
 function TraceManager:onLevelLoaded(levelName, gameMode)
-	if Globals.isTdm then
+	if g_Globals.isTdm then
 		gameMode = 'TeamDeathMatch0';
 	end
 	
@@ -28,20 +27,20 @@ end
 
 function TraceManager:loadPaths()
 	for i = 1, MAX_TRACE_NUMBERS do
-		Globals.wayPoints[i] = {};
+		g_Globals.wayPoints[i] = {};
 	end
 
 	self:_loadWayPoints();
 
-	print(Globals.activeTraceIndexes .. ' paths have been loaded');
+	print(g_Globals.activeTraceIndexes .. ' paths have been loaded');
 end
 
 function TraceManager:onUnload()
 	for i = 1, MAX_TRACE_NUMBERS do
-		Globals.wayPoints[i] = {};
+		g_Globals.wayPoints[i] = {};
 	end
 
-	Globals.activeTraceIndexes = 0;
+	g_Globals.activeTraceIndexes = 0;
 end
 
 function TraceManager:_checkForValidUsage(player)
@@ -85,14 +84,14 @@ function TraceManager:startTrace(player, index)
 		for i = 1, MAX_TRACE_NUMBERS do
 			if self._tracePlayer[i] == player then
 				self._tracePlayer[i] = nil;
-				Globals.wayPoints[i] = {};
+				g_Globals.wayPoints[i] = {};
 			end
 		end
 	end
 
 	if index == 0 then
 		for i = 1, MAX_TRACE_NUMBERS do
-			if Globals.wayPoints[i][1] == nil then
+			if g_Globals.wayPoints[i][1] == nil then
 				index = i;
 				break
 			end
@@ -130,7 +129,7 @@ function TraceManager:endTrace(player)
 	end
 
 	-- find out if trace is a roundway or not
-	NetEvents:SendToLocal('ClientEndTraceRequest', player, Globals.wayPoints[traceIndex][1].trans, Globals.wayPoints[traceIndex][#Globals.wayPoints[traceIndex]].trans);
+	NetEvents:SendToLocal('ClientEndTraceRequest', player, g_Globals.wayPoints[traceIndex][1].trans, g_Globals.wayPoints[traceIndex][#g_Globals.wayPoints[traceIndex]].trans);
 	-- continue with respone
 end
 
@@ -144,15 +143,15 @@ function TraceManager:_onClientEndTraceResponse(player, isClearView)
 	end
 
 	if isClearView then
-		Globals.wayPoints[traceIndex][1].optValue = 0  --normal behavior
+		g_Globals.wayPoints[traceIndex][1].optValue = 0  --normal behavior
 	else
-		Globals.wayPoints[traceIndex][1].optValue = 0XFF;  --signal, that the way needs to reverse its directon
+		g_Globals.wayPoints[traceIndex][1].optValue = 0XFF;  --signal, that the way needs to reverse its directon
 	end
 
 	print('Trace done');
 	ChatManager:Yell(Language:I18N('Trace done'), 2.5);
 
-	Globals.activeTraceIndexes = Globals.activeTraceIndexes + 1;
+	g_Globals.activeTraceIndexes = g_Globals.activeTraceIndexes + 1;
 
 	self._tracePlayer[traceIndex] = nil;
 	self._traceStatePlayer[player.name] = 0;
@@ -180,7 +179,7 @@ function TraceManager:clearAllTraces()
 		self:_clearTrace(i);
 	end
 
-	Globals.activeTraceIndexes = 0;
+	g_Globals.activeTraceIndexes = 0;
 end
 
 function TraceManager:savePaths()
@@ -202,11 +201,11 @@ function TraceManager:_clearTrace(traceIndex)
 		return;
 	end
 
-	if Globals.wayPoints[traceIndex][1] ~= nil then
-		Globals.activeTraceIndexes = Globals.activeTraceIndexes - 1;
+	if g_Globals.wayPoints[traceIndex][1] ~= nil then
+		g_Globals.activeTraceIndexes = g_Globals.activeTraceIndexes - 1;
 	end
 
-	Globals.wayPoints[traceIndex] = {};
+	g_Globals.wayPoints[traceIndex] = {};
 end
 
 function TraceManager:_onUpdate(dt)
@@ -256,20 +255,20 @@ function TraceManager:_generateAndInsertPoint(player, traceIndex)
 				point.extraMode	= MoveAddon;
 				point.optValue	= vlaue;
 
-				table.insert(Globals.wayPoints[traceIndex], point);
+				table.insert(g_Globals.wayPoints[traceIndex], point);
 			end
 
 		-- trace wait time with secondary weapon
 		elseif player.soldier.weaponsComponent.currentWeaponSlot == WeaponSlot.WeaponSlot_1 then
 			if self._traceWaitTimer[traceIndex] == 0 or self._traceWaitTimer[traceIndex] == nil then
 				self._traceWaitTimer[traceIndex] = 0;
-				table.insert(Globals.wayPoints[traceIndex], point);
+				table.insert(g_Globals.wayPoints[traceIndex], point);
 			end
 
 			self._traceWaitTimer[traceIndex]	= self._traceWaitTimer[traceIndex] + StaticConfig.traceDelta;
 			local waitValue						= math.floor(tonumber(self._traceWaitTimer[traceIndex]));
 
-			Globals.wayPoints[traceIndex][#Globals.wayPoints[traceIndex]].optValue = waitValue;
+			g_Globals.wayPoints[traceIndex][#g_Globals.wayPoints[traceIndex]].optValue = waitValue;
 		end
 	end
 end
@@ -315,10 +314,10 @@ function TraceManager:_loadWayPoints()
 	end
 
 	-- clear waypoints
-	Globals.wayPoints = {};
+	g_Globals.wayPoints = {};
 
 	for i = 1, MAX_TRACE_NUMBERS do
-		Globals.wayPoints[i] = {};
+		g_Globals.wayPoints[i] = {};
 	end
 
 	-- Load the fetched rows.
@@ -341,10 +340,10 @@ function TraceManager:_loadWayPoints()
 
 		self:_setWaypointWithInputVar(point, inputVar);
 
-		Globals.wayPoints[pathIndex][pointIndex] = point;
+		g_Globals.wayPoints[pathIndex][pointIndex] = point;
 	end
 
-	Globals.activeTraceIndexes = nrOfPaths;
+	g_Globals.activeTraceIndexes = nrOfPaths;
 	SQL:Close();
 	print('LOAD - The waypoint list has been loaded.');
 end
@@ -387,11 +386,15 @@ function TraceManager:_saveWayPoints()
 		local maxPointsInOneQuery	= 1000;
 		local errorActive			= false;
 
-		if Globals.wayPoints[oldPathIndex][1] ~= nil then
+		if (g_Globals.wayPoints[oldPathIndex] == nil) then
+			print('WARNING! Path ['..oldPathIndex..'] is nil!')
+		end
+
+		if g_Globals.wayPoints[oldPathIndex][1] ~= nil then
 			pathIndex = pathIndex + 1;
 
-			while #Globals.wayPoints[oldPathIndex] > pointsDone and not errorActive do
-				local pointsToTo = #Globals.wayPoints[oldPathIndex] - pointsDone;
+			while #g_Globals.wayPoints[oldPathIndex] > pointsDone and not errorActive do
+				local pointsToTo = #g_Globals.wayPoints[oldPathIndex] - pointsDone;
 
 				if pointsToTo > maxPointsInOneQuery then
 					pointsToTo = maxPointsInOneQuery;
@@ -401,11 +404,11 @@ function TraceManager:_saveWayPoints()
 
 				for pointIndex = 1 + pointsDone, pointsToTo + pointsDone do
 					local trans			= Vec3();
-					trans				= Globals.wayPoints[oldPathIndex][pointIndex].trans;
+					trans				= g_Globals.wayPoints[oldPathIndex][pointIndex].trans;
 					local transX		= trans.x;
 					local transY		= trans.y;
 					local transZ		= trans.z;
-					local inputVar		= self:_getInputVar(Globals.wayPoints[oldPathIndex][pointIndex]);
+					local inputVar		= self:_getInputVar(g_Globals.wayPoints[oldPathIndex][pointIndex]);
 					local inerString	= '(' .. pathIndex .. ',' .. pointIndex .. ',' .. tostring(transX) .. ',' .. tostring(transY) .. ',' .. tostring(transZ) .. ',' .. tostring(inputVar) .. ')';
 					sqlValuesString		= sqlValuesString..inerString;
 

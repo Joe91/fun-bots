@@ -1,7 +1,7 @@
 class('BotSpawner');
+require('Globals');
 
 local BotManager	= require('BotManager');
-local Globals		= require('Globals');
 local WeaponList	= require('__shared/WeaponList');
 local Utilities 	= require('__shared/Utilities')
 
@@ -27,7 +27,7 @@ function BotSpawner:_onPlayerJoining()
 	else
 		--detect if we have to kick a bot for the next player
 		if Config.keepOneSlotForPlayers then
-			local playerlimt = Globals.maxPlayers - 1
+			local playerlimt = g_Globals.maxPlayers - 1
 			local amoutToDestroy = PlayerManager:GetPlayerCount() + 1 - playerlimt -- +1 because on join, player is not counted jet
 			if amoutToDestroy > 0 then
 				BotManager:destroyAmount(amoutToDestroy)
@@ -41,7 +41,7 @@ function BotSpawner:_onPlayerJoining()
 			local botCount = BotManager:getBotCount();
 			local targetBotCount = Config.initNumberOfBots + ((playerCount-1) * Config.newBotsPerNewPlayer)
 			local amountToSpawn = targetBotCount - botCount;
-			local playerlimt = Globals.maxPlayers;
+			local playerlimt = g_Globals.maxPlayers;
 			if Config.keepOneSlotForPlayers then
 				playerlimt = playerlimt - 1
 			end
@@ -109,7 +109,7 @@ function BotSpawner:onLevelLoaded(forceSpawn)
 		end
 
 		-- create initial bots
-		if Globals.activeTraceIndexes > 0 and Config.spawnOnLevelstart then
+		if g_Globals.activeTraceIndexes > 0 and Config.spawnOnLevelstart then
 			--signal bot Spawner to do its stuff
 			self._botSpawnTimer = -5.0
 			self:spawnWayBots(nil, amountToSpawn, true, 1)
@@ -143,7 +143,7 @@ function BotSpawner:_onRespawnBot(botname)
 
 	elseif spawnMode == 4 then	--fixed Way
 		local wayIndex 		= bot:getWayIndex();
-		local randIndex 	= MathUtils:GetRandomInt(1, #Globals.wayPoints[wayIndex]);
+		local randIndex 	= MathUtils:GetRandomInt(1, #g_Globals.wayPoints[wayIndex]);
 		self:_spawnSigleWayBot(nil, false, wayIndex, randIndex, bot)
 
 	elseif spawnMode == 5 then --random Way
@@ -251,11 +251,11 @@ function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, inde
 				if activeWayIndex == 0 then
 					return
 				end
-				indexOnPath = MathUtils:GetRandomInt(1, #Globals.wayPoints[activeWayIndex])
-				if Globals.wayPoints[activeWayIndex][1] == nil then
+				indexOnPath = MathUtils:GetRandomInt(1, #g_Globals.wayPoints[activeWayIndex])
+				if g_Globals.wayPoints[activeWayIndex][1] == nil then
 					return
 				end
-				local spawnPoint = Globals.wayPoints[activeWayIndex][indexOnPath].trans
+				local spawnPoint = g_Globals.wayPoints[activeWayIndex][indexOnPath].trans
 
 				--check for nearby player
 				local playerNearby = false;
@@ -288,11 +288,11 @@ function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, inde
 			end
 		end
 
-		if Globals.wayPoints[activeWayIndex][1] == nil then
+		if g_Globals.wayPoints[activeWayIndex][1] == nil then
 			return
 		end
 		--find out direction, if path has a return point
-		if Globals.wayPoints[activeWayIndex][1].optValue == 0xFF then
+		if g_Globals.wayPoints[activeWayIndex][1].optValue == 0xFF then
 			inverseDirection = (MathUtils:GetRandomInt(0,1) == 1);
 		end
 
@@ -300,8 +300,8 @@ function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, inde
 		if indexOnPath == nil or indexOnPath == 0 then
 			indexOnPath = 1;
 		end
-		transform.trans = Globals.wayPoints[activeWayIndex][indexOnPath].trans
-
+		transform.trans = g_Globals.wayPoints[activeWayIndex][indexOnPath].trans
+		
 		if isRespawn then
 			existingBot:setVarsWay(player, useRandomWay, activeWayIndex, indexOnPath, inverseDirection)
 			self:spawnBot(existingBot, transform, false)
@@ -316,7 +316,7 @@ function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, inde
 end
 
 function BotSpawner:spawnWayBots(player, amount, useRandomWay, activeWayIndex, indexOnPath)
-	if Globals.activeTraceIndexes <= 0 then
+	if g_Globals.activeTraceIndexes <= 0 then
 		return
 	end
 	self._botsToSpawn = amount
@@ -328,13 +328,13 @@ end
 
 function BotSpawner:_getNewWayIndex()
 	local newWayIdex = 0
-	if Globals.activeTraceIndexes <= 0 then
+	if g_Globals.activeTraceIndexes <= 0 then
 		return newWayIdex
 	end
-	local targetWaypoint = MathUtils:GetRandomInt(1, Globals.activeTraceIndexes)
+	local targetWaypoint = MathUtils:GetRandomInt(1, g_Globals.activeTraceIndexes)
 	local count = 0
 	for i = 1, MAX_TRACE_NUMBERS do
-		if Globals.wayPoints[i][1] ~= nil then
+		if g_Globals.wayPoints[i][1] ~= nil then
 			count = count + 1
 		end
 		if count == targetWaypoint then
@@ -507,7 +507,9 @@ end
 function BotSpawner:_modifyWeapon(soldier)
 	--soldier.weaponsComponent.currentWeapon.secondaryAmmo = 9999;
 	soldier.weaponsComponent.weapons[1].secondaryAmmo = 9999;
-	soldier.weaponsComponent.weapons[2].secondaryAmmo = 9999;
+	if soldier.weaponsComponent.weapons[2] ~= nil then
+		soldier.weaponsComponent.weapons[2].secondaryAmmo = 9999;
+	end
 end
 
 function BotSpawner:_getSpawnBotKit()
@@ -644,9 +646,6 @@ function BotSpawner:spawnBot(bot, trans, setKit)
 	bot.player.soldier:ApplyCustomization(soldierCustomization)
 	self:_modifyWeapon(bot.player.soldier)
 end
-
-
-
 
 
 -- Singleton.

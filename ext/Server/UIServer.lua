@@ -56,7 +56,7 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 
 	elseif request.action == 'bot_spawn_path' then --todo: whats the difference? make a function to spawn bots on a fixed way instead?
 		local amount		= 1;
-		local indexOnPath	= 1;
+		local indexOnPath	= tonumber(request.pointindex) or 1;
 		local index			= tonumber(request.value);
 		BotSpawner:spawnWayBots(player, amount, false, index, indexOnPath);
 

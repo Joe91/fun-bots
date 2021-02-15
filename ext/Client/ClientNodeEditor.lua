@@ -27,6 +27,8 @@ function ClientNodeEditor:__init()
 	self.editModeManualSpeed = 0.05
 	self.editPositionMode = 'relative'
 
+	self.helpTextLocation = Vec2.zero
+
 	self.debugTracePaths = Config.debugTracePaths
 
 	self.colors = {
@@ -127,6 +129,9 @@ function ClientNodeEditor:RegisterEvents()
 	Console:Register('UnloadNodes', 'Clears and unloads all clientside nodes', self, self._onUnload)
 
 	Console:Register('BotVision', '*<boolean|Enabled>* Lets you see what the bots see [Experimental]', self, self._onSetBotVision)
+
+	Console:Register('WarpTo', '*<string|WaypointID>* Teleport yourself to the specified Waypoint ID', self, self._onWarpTo)
+	Console:Register('SpawnAtWaypoint', '', self, self._onSpawnAtWaypoint)
 end
 
 -- commo rose top / middle / bottom
@@ -262,6 +267,47 @@ function ClientNodeEditor:_onSetBotVision(args)
 	end
 end
 
+function ClientNodeEditor:_onWarpTo(args)
+	if (args == nil or #args == 0) then
+		print('Must provide Waypoint ID')
+		return false
+	end
+	local waypoint = g_NodeCollection:Get(args[1])
+
+	if (waypoint == nil) then
+		print('Waypoint not found!')
+		return false
+	end
+
+	local player = PlayerManager:GetLocalPlayer()
+	if (player == nil or not player.alive or player.soldier == nil or not player.soldier.isAlive) then
+		print('Player invalid!')
+		return false
+	end
+
+	print('Teleporting to ['..waypoint.ID..']: '..tostring(waypoint.Position))
+	NetEvents:Send('NodeEditor:WarpTo', waypoint.Position)
+end
+
+function ClientNodeEditor:_onSpawnAtWaypoint(args)
+	if (args == nil or #args == 0) then
+		print('Must provide Waypoint ID')
+		return false
+	end
+	local waypoint = g_NodeCollection:Get(args[1])
+
+	if (waypoint == nil) then
+		print('Waypoint not found!')
+		return false
+	end
+
+	NetEvents:Send('BotEditor', json.encode({
+		action = 'bot_spawn_path',
+		value = waypoint.PathIndex,
+		pointindex = waypoint.PointIndex,
+	}))
+end
+
 -- debug methods
 
 function ClientNodeEditor:_onDumpNodes(args)
@@ -373,6 +419,7 @@ function ClientNodeEditor:_onUISettings(data)
 				self:_onUnload()
 			end
 		end
+		self.helpTextLocation = Vec2.zero
 		self.debugTracePaths = Config.debugTracePaths
 	end
 end
@@ -390,9 +437,15 @@ end
 
 -- server is ready to receive our nodes
 function ClientNodeEditor:_onSendNodes(args)
-	print('ClientNodeEditor:_onSendNodes: '..tostring(#g_NodeCollection:Get()))
+
 	self.nodesToSend = g_NodeCollection:Get()
-	self.nodeSendTimer = 0
+
+	print('ClientNodeEditor:_onSendNodes: '..tostring(#self.nodesToSend))
+	if (self.nodesToSend ~= nil and #self.nodesToSend > 0) then
+		self.nodeSendTimer = 0
+	else
+		print('ClientNodeEditor:_onSendNodes: Client has 0 Nodes, Cancelling Send!')
+	end
 end
 
 function ClientNodeEditor:_onPlayerCreated(player)
@@ -422,7 +475,7 @@ function ClientNodeEditor:_onUnload(args)
 	if (args ~= nil) then
 		self.nodeReceiveExpected = args[1]
 	end
-	print('NodeCollection:Clear -> Expecting: '..tostring(self.nodeReceiveExpected))
+	print('NodeCollection:Clear -> Expecting: '..g_Utilities:dump(args))
 	g_NodeCollection:Clear()
 	g_NodeCollection:DeregisterEvents()
 end
@@ -484,114 +537,143 @@ function ClientNodeEditor:_onUpdateInput(player, delta)
 
 	-- pressed and released without triggering commo rose
 	if (self.CommoRose.Pressed and not self.CommoRose.Active and not (Comm1 or Comm2 or Comm3)) then
-		self:_onCommoRoseAction('Select')
+		if (self.editMode == 'move') then
+			self:_onToggleMoveNode()
+		else
+			self:_onCommoRoseAction('Select')
+		end
 	end
 
 	self.CommoRose.Pressed = (Comm1 or Comm2 or Comm3)
 
 	if (self.editMode == 'move') then
 
-		self.debugEntries['self.editModeManualSpeed'] = self.editModeManualSpeed
-
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_ArrowLeft) or InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad4) then
 			self.editModeManualOffset = self.editModeManualOffset + (Vec3.left * self.editModeManualSpeed)
-			return false
+			return
 		end
 
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_ArrowRight) or InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad6) then
 			self.editModeManualOffset = self.editModeManualOffset - (Vec3.left * self.editModeManualSpeed)
-			return false
+			return
 		end
 
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_ArrowUp) or InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad8) then
 			self.editModeManualOffset = self.editModeManualOffset + (Vec3.forward * self.editModeManualSpeed)
-			return false
+			return
 		end
 
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_ArrowDown) or InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad2) then
 			self.editModeManualOffset = self.editModeManualOffset - (Vec3.forward * self.editModeManualSpeed)
-			return false
+			return
 		end
 
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_PageUp) or InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad9) then
 			self.editModeManualOffset = self.editModeManualOffset + (Vec3.up * self.editModeManualSpeed)
-			return false
+			return
 		end
 
-		if InputManager:WentKeyDown(InputDeviceKeys.IDK_PageDown) or InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad7) then
+		if InputManager:WentKeyDown(InputDeviceKeys.IDK_PageDown) or InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad3) then
 			self.editModeManualOffset = self.editModeManualOffset - (Vec3.up * self.editModeManualSpeed)
-			return false
+			return
 		end
 
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Equals) or InputManager:WentKeyDown(InputDeviceKeys.IDK_Add) then
-			self.editModeManualSpeed = self.editModeManualSpeed + 0.05
-			return false
+			self.editModeManualSpeed = math.min(self.editModeManualSpeed + 0.05, 1)
+			return
 		end
 
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Minus) or InputManager:WentKeyDown(InputDeviceKeys.IDK_Subtract) then
-			self.editModeManualSpeed = self.editModeManualSpeed - 0.05
-			return false
+			self.editModeManualSpeed = math.max(self.editModeManualSpeed - 0.05, 0.05)
+			return
 		end
 
-		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Multiply) then
+		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad7) then
 			self.editModeManualOffset = Vec3.zero
-			return false
+			return
 		end
 
-		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Divide) then
+		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad1) then
 			if (self.editPositionMode == 'absolute') then
 				self.editPositionMode = 'relative'
+			elseif (self.editPositionMode == 'relative') then
+				self.editPositionMode = 'standing'
 			else
 				self.editPositionMode = 'absolute'
 			end
-			return false
+			return
 		end
 
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Backspace) then
 			self:_onToggleMoveNode(true)
-			return false
+			return
 		end
 
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad5) then
 			self:_onToggleMoveNode()
-			return false
+			return
 		end
 
 	elseif (self.editMode == 'none') then
 
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad8) then
 			self:_onSaveNodes()
+			return
 		end
 
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad5) then
 			self:_onSelectNode()
+			return
 		end
 
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad2) then
 			self:_onLoadNodes()
+			return
 		end
 
 
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad7) then
 			self:_onMergeNode()
+			return
 		end
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad4) then
 			self:_onToggleMoveNode()
-			return false
+			return
 		end
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad1) then
 			self:_onRemoveNode()
+			return
 		end
 
 
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad9) then
 			self:_onSplitNode()
+			return
 		end
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad6) then
 			self:_onSetInputNode()
+			return
 		end
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad3) then
 			self:_onCreateNode()
+			return
+		end
+
+		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Backspace) then
+			g_NodeCollection:ClearSelection()
+			return
+		end
+
+		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Insert) then
+			local selection = g_NodeCollection:GetSelected()
+			if (#selection > 0) then
+				NetEvents:Send('BotEditor', json.encode({
+					action = 'bot_spawn_path',
+					value = selection[1].PathIndex,
+					pointindex = selection[1].PointIndex,
+				}))
+			end
+			return
 		end
 	end
 end
@@ -605,7 +687,7 @@ function ClientNodeEditor:_onCommoRoseAction(action, hit)
 		local center = { Action = 'UI_CommoRose_Action_Select', Label = Language:I18N('Select') }
 
 		if (self.editMode == 'move') then
-			center = { Action = 'UI_CommoRose_Action_Move', Label = Language:I18N('Place') }
+			center = { Action = 'UI_CommoRose_Action_Move', Label = Language:I18N('Finish') }
 		elseif (self.editMode == 'link') then
 			center = { Action = 'UI_CommoRose_Action_Connect', Label = Language:I18N('Connect') }
 		end
@@ -700,7 +782,7 @@ function ClientNodeEditor:_onEngineUpdate(delta, simDelta)
 				self.nodesToSend = {}
 				self.nodeSendTimer = -1
 				self.nodeSendProgress = 1
-				NetEvents:Send('NodeEditor:Init')
+				NetEvents:Send('NodeEditor:Init', true)
 			end
 		end
 	end
@@ -722,6 +804,12 @@ function ClientNodeEditor:_onUpdateManagerUpdate(delta, pass)
 	-- Only do math on presimulation UpdatePass, don't bother if debugging is off
 	if pass ~= UpdatePass.UpdatePass_PreSim and not Config.debugTracePaths and not self.botVisionEnabled then
 		return
+	end
+
+	if (self.helpTextLocation == Vec2.zero) then
+		local windowSize = ClientUtils:GetWindowSize()
+		-- fun fact, debugtext is 8x15 pixels
+		self.helpTextLocation = Vec2(windowSize.x - 256, math.floor(windowSize.y / 2.0 + 0.5) - 195)
 	end
 
 	-- doing this here and not in UI:DrawHud prevents a memory leak that crashes you in under a minute
@@ -762,8 +850,10 @@ function ClientNodeEditor:_onUpdateManagerUpdate(delta, pass)
 							local adjustedPosition = self.editNodeStartPos[pathWaypoints[i].ID] + self.editModeManualOffset
 							if (self.editPositionMode == 'relative') then
 								adjustedPosition = adjustedPosition + (self.editRayHitRelative or Vec3.zero)
+							elseif (self.editPositionMode == 'standing') then
+								adjustedPosition = self.playerPos + self.editModeManualOffset
 							else
-								adjustedPosition = self.editRayHitCurrent
+								adjustedPosition = self.editRayHitCurrent + self.editModeManualOffset
 							end 
 
 							g_NodeCollection:Update(pathWaypoints[i], {
@@ -875,7 +965,60 @@ function ClientNodeEditor:_onUIDrawHud()
 		return
 	end
 
-	-- TODO draw help info?
+	-- draw help info
+	local helpText = ''
+	if (self.editMode == 'none') then
+
+		helpText = helpText..' Node Operation Controls '.."\n"
+		helpText = helpText..'+-------+-------+-------+'.."\n"
+		helpText = helpText..'|   7   |   8   |   9   |'.."\n"
+		helpText = helpText..'| Merge | Send  | Split |'.."\n"
+		helpText = helpText..'+-------+-------+-------+'.."\n"
+		helpText = helpText..'|   4   |   5   |   6   |'.."\n"
+		helpText = helpText..'| Move  |Select | Input |'.."\n"
+		helpText = helpText..'+-------+-------+-------+'.."\n"
+		helpText = helpText..'|   1   |   2   |   3   |'.."\n"
+		helpText = helpText..'|Remove | Load  |       |'.."\n"
+		helpText = helpText..'+-------+-------+-------+'.."\n"
+		helpText = helpText..'                         '.."\n"
+		helpText = helpText..'        F12 - Settings    '.."\n"
+		helpText = helpText..'     [Spot] - Quick Select'.."\n"
+		helpText = helpText..'[Backspace] - Clear Select'.."\n"
+		helpText = helpText..'   [Insert] - Spawn Bot   '.."\n"
+
+	elseif (self.editMode == 'move') then
+
+		helpText = helpText..'  Nudge Position Controls '.."\n"
+		helpText = helpText..'+-------+-------+-------+'.."\n"
+		helpText = helpText..'|   7   |   8   |   9   |'.."\n"
+		helpText = helpText..'| Reset |Forward|  Up   |'.."\n"
+		helpText = helpText..'+-------+-------+-------+'.."\n"
+		helpText = helpText..'|   4   |   5   |   6   |'.."\n"
+		helpText = helpText..'| Left  |Finish | Right |'.."\n"
+		helpText = helpText..'+-------+-------+-------+'.."\n"
+		helpText = helpText..'|   1   |   2   |   3   |'.."\n"
+		helpText = helpText..'| Mode  | Back  | Down  |'.."\n"
+		helpText = helpText..'+-------+-------+-------+'.."\n"
+		helpText = helpText..string.format('|X %+04.2f | Y %+04.2f|', self.editModeManualOffset.x, self.editModeManualOffset.y).."\n"
+		helpText = helpText..string.format('|      Z %+04.2f       |', self.editModeManualOffset.z).."\n"
+		helpText = helpText..'+-----------------------+'.."\n"
+		helpText = helpText..' Nudge Speed: '..tostring(self.editModeManualSpeed).."\n"
+		if (self.editPositionMode == 'relative') then
+		helpText = helpText..'   Move Mode: Relative   '.."\n"
+		elseif (self.editPositionMode == 'standing') then
+		helpText = helpText..'   Move Mode: Standing   '.."\n"
+		else
+		helpText = helpText..'   Move Mode: Absolute   '.."\n"
+		end
+		helpText = helpText..'                         '.."\n"
+		helpText = helpText..'        F12 - Settings    '.."\n"
+		helpText = helpText..'     [Spot] - Finish Move '.."\n"
+		helpText = helpText..'[Backspace] - Cancel Move '.."\n"
+		helpText = helpText..' [Numpad +] - Nudge Speed +'.."\n"
+		helpText = helpText..' [Numpad -] - Nudge Speed -'.."\n"
+	end
+
+	DebugRenderer:DrawText2D(self.helpTextLocation.x, self.helpTextLocation.y, helpText, self.colors.Text, 1)
 
 	-- draw debug selection traces
 	if (Config.debugSelectionRaytraces) then

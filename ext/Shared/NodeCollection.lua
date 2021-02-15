@@ -82,7 +82,7 @@ end
 
 function NodeCollection:Create(data)
 	local newIndex = #self.waypoints+1
-	local inputVar = 20
+	local inputVar = 3
 
 	-- setup defaults for a blank node
 	local waypoint = {
@@ -320,7 +320,7 @@ function NodeCollection:Get(waypointIndex, pathIndex)
 				end
 			end
 		else
-			return self.waypointsByID[waypointsByID]
+			return self.waypointsByID[waypointIndex]
 		end
 		return nil
 	elseif (pathIndex ~= nil) then
@@ -330,6 +330,21 @@ function NodeCollection:Get(waypointIndex, pathIndex)
 		return self.waypointsByPathIndex[pathIndex]
 	end
 	return self.waypoints
+end
+
+function NodeCollection:GetFirst(pathIndex)
+	local firstWaypoint = nil
+	local searchTable = self.waypoints
+	if (pathIndex ~= nil) then
+		searchTable = self.waypointsByPathIndex[pathIndex]
+	end
+
+	for i=1, #searchTable do
+		local waypoint = searchTable[i]
+		if (waypoint.Previous == false and waypoint.Next ~= false) then
+			return waypoint
+		end
+	end
 end
 
 function NodeCollection:GetPaths()
@@ -444,26 +459,34 @@ end
 function NodeCollection:SplitSelection()
 
 	local selection = self:GetSelected()
-	if (#selection ~= 2) then
-		return false, 'Must select only two waypoints'
+	if (#selection < 2) then
+		return false, 'Must select two or more waypoints'
 	end
 
-	if (selection[1].PathIndex ~= selection[2].PathIndex) then
-		return false, 'Waypoints must be on same path'
+	-- check is same path and sequential
+	local currentWaypoint = selection[1]
+	for i=2, #selection do
+
+		if (currentWaypoint.PathIndex ~= selection[i].PathIndex) then
+			return false, 'Waypoints must be on same path'
+		end
+
+		if (currentWaypoint.Next and currentWaypoint.Next.Index ~= selection[i].Index) then
+			return false, 'Waypoints must be sequential'
+		end
+		currentWaypoint = selection[i]
 	end
 
-	if (selection[1].Next and selection[1].Next.Index ~= selection[2].Index) then
-		return false, 'Waypoints must be sequential'
+	for i=1, #selection-1 do
+		local newWaypoint = self:Create({
+			Position = ((selection[i].Position + selection[i+1].Position) / 2),
+			PathIndex = selection[i].PathIndex
+		})
+
+		self:Select(newWaypoint)
+		self:InsertAfter(selection[i], newWaypoint)
 	end
-
-	local middlePosition = (selection[1].Position + selection[2].Position) / 2
-
-	local newWaypoint = self:Create({
-		Position = middlePosition,
-		PathIndex = selection[1].PathIndex
-	})
-
-	self:InsertAfter(selection[1], newWaypoint)
+	
 	return true, 'Success'
 end
 
@@ -581,26 +604,68 @@ function NodeCollection:Save()
 	--self.mapName
 
 	local changedWaypoints = {}
-	local waypointCount = 0
+	local waypointCount = #self.waypoints
+	local waypointsChanged = 0
+	local orphans = {}
+	local disconnects = {}
+
+	print('NodeCollection:Save -> Processing: '..(waypointCount))
 
 	for _,waypoint in pairs(self.waypoints) do
-		if (waypoint.Updated) then
-			local rowData = {
-				id = waypoint.Index,
-				pathIndex = waypoint.PathIndex,
-				pointIndex = waypoint.PointIndex,
-				transX = waypoint.Position.x,
-				transY = waypoint.Position.y,
-				transZ = waypoint.Position.z,
-				inputVar = waypoint.InputVar,
-			}
-			table.insert(changedWaypoints, rowData)
+
+		-- keep track of disconnected nodes, only two should exist
+		-- the first node and the last node
+		if (waypoint.Previous == false and waypoint.Next ~= false) then
+			table.insert(disconnects, waypoint)
+		elseif (waypoint.Previous ~= false and waypoint.Next == false) then
+			table.insert(disconnects, waypoint)
 		end
-		print('NodeCollection:Save -> Changed nodes: '..tostring(#changedWaypoints))
+
+		-- skip orphaned nodes
+		if (waypoint.Previous == false and waypoint.Next == false) then
+			table.insert(orphans, waypoint)
+		else 
+			local rowData = {
+				trans = waypoint.Position:Clone(),
+				speedMode = waypoint.SpeedMode,
+				extraMode = waypoint.ExtraMode,
+				optValue = waypoint.OptValue,
+			}
+
+			if (changedWaypoints[waypoint.PathIndex] == nil) then
+				changedWaypoints[waypoint.PathIndex] = {}
+			end
+			changedWaypoints[waypoint.PathIndex][waypoint.PointIndex] = rowData
+			waypointsChanged = waypointsChanged + 1
+		end
 	end
 
-	--> TODO save back to DB <--
+	print('NodeCollection:Save -> Updated: '..(waypointsChanged))
+	print('NodeCollection:Save -> Orphans: '..(#orphans)..' (Removed)')
+	print('NodeCollection:Save -> Disconnected: '..(#disconnects)..' (Expected: 2)')
 
+	if (#disconnects > 2) then
+		print('WARNING! More than two disconnected nodes were found!')
+		print(g_Utilities:dump(disconnects, true, 2))
+	end
+
+	-- we're on the server
+	if (g_Globals ~= nil) then
+
+		-- replace global waypoints table
+		local lastPathIndex = 0
+		for i=1, MAX_TRACE_NUMBERS do
+			if (changedWaypoints[i] ~= nil) then
+				if (lastPathIndex < i) then
+					lastPathIndex = i
+				end
+			else
+				changedWaypoints[i] = {}
+			end
+		end
+		g_Globals.wayPoints = changedWaypoints
+		g_Globals.activeTraceIndexes = lastPathIndex
+	end
 end
 
 -----------------------------

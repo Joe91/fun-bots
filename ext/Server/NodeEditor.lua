@@ -23,6 +23,8 @@ function NodeEditor:RegisterEvents()
 	NetEvents:Subscribe('NodeEditor:Create', self, self._onCreate)
 	NetEvents:Subscribe('NodeEditor:Init', self, self._onInit)
 
+	NetEvents:Subscribe('NodeEditor:WarpTo', self, self._onWarpTo)
+
 
 	NetEvents:Subscribe('UI_Request_Save_Settings', self, self._onUIRequestSaveSettings)
 	Events:Subscribe('Level:Loaded', self, self._onLevelLoaded)
@@ -36,20 +38,36 @@ function NodeEditor:RegisterEvents()
 	Events:Subscribe('Player:Killed', self, self._onPlayerKilled)
 end
 
+function NodeEditor:_onPlayerKilled(player, inflictor, position, weapon, isRoadKill, isHeadShot, wasVictimInReviveState, info)
+    if (player ~= nil and self.botVision[player.name] ~= nil) then
+    	self.botVision[player.name] = {
+			Player = player,
+			Current = 0,
+			Delay = 0,
+			Speed = 0.25,
+			State = false
+		}
+    end
+end
+
+function NodeEditor:_onPlayerRespawn(player)
+	if (self.botVision[player.name] ~= nil) then
+		self.botVision[player.name] = {
+			Player = player,
+			Current = 0,
+			Delay = 1,
+			Speed = 0.25,
+			State = true
+		}
+	end
+end
+
 function NodeEditor:_onPlayerDestroyed(player)
 	self:_stopSendingNodes(player)
 end
+
 function NodeEditor:_onPlayerLeft(player)
 	self:_stopSendingNodes(player)
-end
-
-function NodeEditor:_stopSendingNodes(player)
-	for i = 1, #self.playersReceivingNodes do
-		if (self.playersReceivingNodes[i].Player.name == player.name) then
-			table.remove(self.playersReceivingNodes, i)
-			break
-		end
-	end
 end
 
 function NodeEditor:_onLevelDestroy(args)
@@ -70,6 +88,15 @@ function NodeEditor:_onSendNodes(player)
 	table.insert(self.playersReceivingNodes, {Player = player, Index = 1, Nodes = nodes, BatchSendDelay = 0})
 	self.batchSendTimer = 0
 	print('Sending '..tostring(#nodes)..' waypoints to '..player.name)
+end
+
+function NodeEditor:_stopSendingNodes(player)
+	for i = 1, #self.playersReceivingNodes do
+		if (self.playersReceivingNodes[i].Player.name == player.name) then
+			table.remove(self.playersReceivingNodes, i)
+			break
+		end
+	end
 end
 
 -- player has indicated they are ready to send nodes to the server
@@ -98,7 +125,7 @@ function NodeEditor:_onCreate(player, data)
 end
 
 -- node payload has finished sending, setup events and calc indexes
-function NodeEditor:_onInit(player)
+function NodeEditor:_onInit(player, save)
 
 	if (Config.settingsPassword ~= nil and g_FunBotUIServer:_isAuthenticated(player.accountGuid) ~= true) then
 		print(player.name .. ' has no permissions for Waypoint-Editor.')
@@ -121,6 +148,21 @@ function NodeEditor:_onInit(player)
 		end
 	end
 	print('NodeEditor:_onInit -> Stale Nodes: '..tostring(staleNodes))
+
+	if (save) then
+		g_NodeCollection:Save()
+	end
+end
+
+function NodeEditor:_onWarpTo(player, vec3Position)
+
+	if (player == nil or not player.alive or player.soldier == nil or not player.soldier.isAlive) then
+		print('Player invalid!')
+		return
+	end
+
+	print('Teleporting '..player.name..': '..tostring(vec3Position))
+	player.soldier:SetPosition(vec3Position)
 end
 
 function NodeEditor:_onSetBotVision(player, enabled)
@@ -136,30 +178,6 @@ function NodeEditor:_onSetBotVision(player, enabled)
 	else
 		player:Fade(1, false)
 		self.botVision[player.name] = nil
-	end
-end
-
-function NodeEditor:_onPlayerKilled(player, inflictor, position, weapon, isRoadKill, isHeadShot, wasVictimInReviveState, info)
-    if (player ~= nil and self.botVision[player.name] ~= nil) then
-    	self.botVision[player.name] = {
-			Player = player,
-			Current = 0,
-			Delay = 0,
-			Speed = 0.25,
-			State = false
-		}
-    end
-end
-
-function NodeEditor:_onPlayerRespawn(player)
-	if (self.botVision[player.name] ~= nil) then
-		self.botVision[player.name] = {
-			Player = player,
-			Current = 0,
-			Delay = 1,
-			Speed = 0.25,
-			State = true
-		}
 	end
 end
 
