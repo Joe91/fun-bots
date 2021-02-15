@@ -260,14 +260,10 @@ end
 function BotSpawner:getBotTeam(player)
 	local team;
 	if player ~= nil then
-		if Config.spawnInSameTeam then
-			team = player.teamId
+		if player.teamId == TeamId.Team1 then
+			team = TeamId.Team2
 		else
-			if player.teamId == TeamId.Team1 then
-				team = TeamId.Team2
-			else
-				team = TeamId.Team1
-			end
+			team = TeamId.Team1
 		end
 	else
 		team = BotManager:getBotTeam();

@@ -229,10 +229,6 @@ function FunBotUIServer:_writeSettings(player, request)
 	end
 
 	--global settings
-	if request.spawnInSameTeam ~= nil then
-		SettingsManager:update('spawnInSameTeam', (request.spawnInSameTeam == true), temporary, batched);
-	end
-	
 	if request.botWeapon ~= nil then
 		local tempString = request.botWeapon;
 

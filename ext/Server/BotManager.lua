@@ -38,17 +38,9 @@ function BotManager:getBotTeam()
 
 	-- init global Vars
 	if countPlayersTeam1 > countPlayersTeam2 then
-		if  Config.spawnInSameTeam then
-			botTeam = TeamId.Team1;
-		else
-			botTeam = TeamId.Team2;
-		end
+		botTeam = TeamId.Team2;
 	elseif countPlayersTeam2 > countPlayersTeam1 then
-		if Config.spawnInSameTeam then
-			botTeam = TeamId.Team2;
-		else
-			botTeam = TeamId.Team1;
-		end
+		botTeam = TeamId.Team1;
 	else
 		botTeam = Config.botTeam;
 	end
