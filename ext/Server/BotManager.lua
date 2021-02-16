@@ -3,7 +3,8 @@ class('BotManager');
 require('Bot');
 
 local Globals 	= require('Globals');
-local Utilities = require('__shared/Utilities')
+local Utilities = require('__shared/Utilities');
+local damageHook = nil;
 
 function BotManager:__init()
 	self._bots = {}
@@ -12,12 +13,12 @@ function BotManager:__init()
 
 	self._lastYaw = 0.0
 
+	self._damageHookInstalled = false;
 	Events:Subscribe('UpdateManager:Update', self, self._onUpdate)
 	Events:Subscribe('Level:Destroy', self, self._onLevelDestroy)
 	NetEvents:Subscribe('BotShootAtPlayer', self, self._onShootAt)
 	Events:Subscribe('ServerDamagePlayer', self, self._onServerDamagePlayer) 	--only triggered on false damage
 	NetEvents:Subscribe('ClientDamagePlayer', self, self._onDamagePlayer)   	--only triggered on false damage
-	Hooks:Install('Soldier:Damage', 100, self, self._onSoldierDamage)
 end
 
 function BotManager:getBotTeam()
@@ -37,17 +38,9 @@ function BotManager:getBotTeam()
 
 	-- init global Vars
 	if countPlayersTeam1 > countPlayersTeam2 then
-		if  Config.spawnInSameTeam then
-			botTeam = TeamId.Team1;
-		else
-			botTeam = TeamId.Team2;
-		end
+		botTeam = TeamId.Team2;
 	elseif countPlayersTeam2 > countPlayersTeam1 then
-		if Config.spawnInSameTeam then
-			botTeam = TeamId.Team2;
-		else
-			botTeam = TeamId.Team1;
-		end
+		botTeam = TeamId.Team1;
 	else
 		botTeam = Config.botTeam;
 	end
@@ -58,7 +51,13 @@ end
 function BotManager:configGlobas()
 	Globals.respawnWayBots 	= Config.respawnWayBots;
 	Globals.attackWayBots 	= Config.attackWayBots;
+	Globals.spawnMode		= Config.spawnMode;
 	Globals.yawPerFrame 	= self:calcYawPerFrame()
+	if not self._damageHookInstalled then
+		damageHook = Hooks:Install('Soldier:Damage', 100, self, self._onSoldierDamage)
+		self._damageHookInstalled = true;
+	end
+	self:killAll();
 	local maxPlayers = RCON:SendCommand('vars.maxPlayers');
 	maxPlayers = tonumber(maxPlayers[2]);
 	if maxPlayers ~= nil and maxPlayers > 0 then
@@ -307,7 +306,11 @@ end
 
 function BotManager:_onLevelDestroy()
 	print("destroyLevel")
-	self:killAll()
+	if damageHook ~= nil then
+		damageHook:Uninstall();
+	end
+	self._damageHookInstalled = false;
+	--self:killAll() -- this crashes when the server ended. do it on levelstart instead
 end
 
 function BotManager:GetBotByName(name)
@@ -409,12 +412,18 @@ function BotManager:destroyAmount(number)
 	end
 end
 
-function BotManager:destroyTeam(teamId)
+function BotManager:destroyTeam(teamId, amount)
 	for i = 1, MAX_NUMBER_OF_BOTS do
 		local bot = self:GetBotByName(BotNames[i])
 		if bot ~= nil then
 			if bot.player.teamId == teamId then
 				self:destroyBot(bot.name)
+				if amount ~= nil then
+					amount = amount - 1;
+					if amount <= 0 then
+						return
+					end
+				end
 			end
 		end
 	end

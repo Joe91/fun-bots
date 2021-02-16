@@ -48,22 +48,45 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 
 		-- request.opened
 		NetEvents:SendTo('UI_Settings', player, Config);
-		
+
 	-- Bots
 	elseif request.action == 'bot_spawn_default' then
 		local amount = tonumber(request.value);
-		BotSpawner:spawnWayBots(player, amount, true);
+		local team = player.teamId;
+		Globals.spawnMode		= "manual";
+		if team == TeamId.Team1 then
+			BotSpawner:spawnWayBots(player, amount, true, 0, 0, TeamId.Team2);
+		else
+			BotSpawner:spawnWayBots(player, amount, true, 0, 0, TeamId.Team1);
+		end
+
+	elseif request.action == 'bot_spawn_friend' then
+		local amount = tonumber(request.value);
+		Globals.spawnMode		= "manual";
+		BotSpawner:spawnWayBots(player, amount, true, 0, 0, player.teamId);
 
 	elseif request.action == 'bot_spawn_path' then --todo: whats the difference? make a function to spawn bots on a fixed way instead?
 		local amount		= 1;
 		local indexOnPath	= tonumber(request.pointindex) or 1;
 		local index			= tonumber(request.value);
+		Globals.spawnMode	= "manual";
 		BotSpawner:spawnWayBots(player, amount, false, index, indexOnPath);
 
 	elseif request.action == 'bot_kick_all' then
+		Globals.spawnMode	= "manual";
 		BotManager:destroyAllBots();
 
+	elseif request.action == 'bot_kick_team' then
+		Globals.spawnMode	= "manual";
+		local teamNumber = tonumber(request.value);
+		if teamNumber == 1 then
+			BotManager:destroyTeam(TeamId.Team1);
+		elseif teamNumber == 2 then
+			BotManager:destroyTeam(TeamId.Team2);
+		end
+
 	elseif request.action == 'bot_kill_all' then
+		Globals.spawnMode	= "manual";
 		BotManager:killAll();
 
 	elseif request.action == 'bot_respawn' then  --toggle this function
@@ -271,27 +294,34 @@ function FunBotUIServer:_writeSettings(player, request)
 		return;
 	end
 	
-	local temporary			= false;
-	local updateWeapons		= false;
-	local updateWeaponSets	= false;
-	local respawnAllBots 	= false;
-	local batched			= true;
+	local temporary					= false;
+	local updateWeapons				= false;
+	local updateBotTeamAndNumber	= false;
+	local updateWeaponSets			= false;
+	local batched					= true;
 	
 	if request.subaction ~= nil then
 		temporary = (request.subaction == 'temp');
 	end
 
 	--global settings
-	if request.spawnInSameTeam ~= nil then
-		SettingsManager:update('spawnInSameTeam', (request.spawnInSameTeam == true), temporary, batched);
-	end
-	
 	if request.botWeapon ~= nil then
 		local tempString = request.botWeapon;
 
 		for _, weapon in pairs(BotWeapons) do
 			if tempString == weapon then
 				SettingsManager:update('botWeapon', tempString, temporary, batched);
+				break
+			end
+		end
+	end
+
+	if request.botAttackMode ~= nil then
+		local tempString = request.botAttackMode;
+
+		for _, botAttackMode in pairs(BotAttackModes) do
+			if tempString == botAttackMode then
+				SettingsManager:update('botAttackMode', tempString, temporary, batched);
 				break
 			end
 		end
@@ -516,8 +546,26 @@ function FunBotUIServer:_writeSettings(player, request)
 	end
 
 	--spawnning
-	if request.spawnOnLevelstart ~= nil then
-		SettingsManager:update('spawnOnLevelstart', (request.spawnOnLevelstart == true), temporary, batched);
+	if request.spawnMode ~= nil then
+		local tempString = request.spawnMode;
+
+		for _, spawnMode in pairs(SpawnModes) do
+			if tempString == spawnMode then
+				if Config.spawnMode ~= tempString then
+					SettingsManager:update('spawnMode', tempString, temporary, batched);
+					updateBotTeamAndNumber = true;
+				end
+				break
+			end
+		end
+	end
+
+	if request.spawnInBothTeams ~= nil then
+		local tempVal = (request.spawnInBothTeams == true);
+		if tempVal ~= Config.spawnInBothTeams then
+			SettingsManager:update('spawnInBothTeams', tempVal, temporary, batched);
+			updateBotTeamAndNumber = true;
+		end
 	end
 
 	if request.onlySpawnBotsWithPlayers ~= nil then
@@ -528,24 +576,30 @@ function FunBotUIServer:_writeSettings(player, request)
 		local tempValue = tonumber(request.initNumberOfBots);
 
 		if tempValue > 0 and tempValue <= MAX_NUMBER_OF_BOTS then
-			SettingsManager:update('initNumberOfBots', tempValue, temporary, batched);
+			if Config.initNumberOfBots ~= tempValue then
+				SettingsManager:update('initNumberOfBots', tempValue, temporary, batched);
+				updateBotTeamAndNumber = true;
+			end
 		end
-	end
-
-	if request.incBotsWithPlayers ~= nil then
-		SettingsManager:update('incBotsWithPlayers', (request.incBotsWithPlayers == true), temporary, batched);
 	end
 
 	if request.newBotsPerNewPlayer ~= nil then
 		local tempValue = tonumber(request.newBotsPerNewPlayer);
 
 		if tempValue > 0 and tempValue <= 10 then
-			SettingsManager:update('newBotsPerNewPlayer', tempValue, temporary, batched);
+			if Config.newBotsPerNewPlayer ~= tempValue then
+				SettingsManager:update('newBotsPerNewPlayer', tempValue, temporary, batched);
+				updateBotTeamAndNumber = true;
+			end
 		end
 	end
 
 	if request.keepOneSlotForPlayers ~= nil then
-		SettingsManager:update('keepOneSlotForPlayers', (request.keepOneSlotForPlayers == true), temporary, batched);
+		local tempVal = (request.keepOneSlotForPlayers == true);
+		if Config.keepOneSlotForPlayers ~= tempVal then
+			SettingsManager:update('keepOneSlotForPlayers', tempVal, temporary, batched);
+			updateBotTeamAndNumber = true;
+		end
 	end
 
 	if request.spawnDelayBots ~= nil then
@@ -906,13 +960,10 @@ function FunBotUIServer:_writeSettings(player, request)
 	
 	NetEvents:BroadcastLocal('WriteClientSettings', Config, updateWeaponSets);
 
-	if respawnAllBots then
-		--TODO: kill all bots and respawn themself
-		local amount = BotManager:getBotCount()
-		BotManager:killAll();
-		BotSpawner:spawnWayBots(nil, amount, true);
+	if updateBotTeamAndNumber then
+		Globals.spawnMode		= Config.spawnMode;
+		BotSpawner:updateBotAmountAndTeam();
 	end
-
 	-- @ToDo create Error Array and dont hide if has values
 	NetEvents:SendTo('UI_Settings', player, false);
 end

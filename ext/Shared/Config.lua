@@ -2,12 +2,11 @@ MAX_NUMBER_OF_BOTS	= 32;			-- maximum bots that can be spawned
 MAX_TRACE_NUMBERS	= 15;			-- maximum number of traces in one level
 
 USE_REAL_DAMAGE 	= true;			-- with real damage, the hitboxes are a bit buggy
-BOT_ATTACK_MODE 	= "Crouch";		-- use "Crouch" or "Stand"
 
 Config = {
 	--global
-	spawnInSameTeam = false,		-- Team the bots spawn in
 	botWeapon = "Primary",			-- Select the weapon the bots use
+	botAttackMode = "Random",		-- Mode the Bots attack with. Random, Crouch or Stand
 	botKit = "RANDOM_KIT",			-- see BotKits
 	botColor = "RANDOM_COLOR",		-- see BotColors
 
@@ -21,18 +20,18 @@ Config = {
 	damageFactorLMG = 0.5,			-- origninal Damage from bots gets multiplied by this
 	damageFactorPDW = 0.5,			-- origninal Damage from bots gets multiplied by this
 	damageFactorSniper = 0.8,		-- origninal Damage from bots gets multiplied by this
-	damageFactorShotgun = 0.5,		-- origninal Damage from bots gets multiplied by this
+	damageFactorShotgun = 0.8,		-- origninal Damage from bots gets multiplied by this
 	damageFactorPistol = 0.8,		-- origninal Damage from bots gets multiplied by this
 	damageFactorKnife = 1.2,		-- origninal Damage from bots gets multiplied by this
 
 	--spawn
-	spawnOnLevelstart = true,		-- bots spawn on levelstart (if valid paths are available)
+	spawnMode = 'increment_with_players',	-- mode the bots spawn with
 	onlySpawnBotsWithPlayers = true,-- Bots only spawn if at least one Player is on the server
-	initNumberOfBots = 5,			-- bots on levelstart
-	incBotsWithPlayers = true,		-- increase Bots, when new players join
+	spawnInBothTeams = true,		-- Bots spawn in both teams
+	initNumberOfBots = 5,			-- bots for spawnmode
 	newBotsPerNewPlayer = 2,		-- number to increase Bots, when new players join
 	keepOneSlotForPlayers = true,	-- always keep one slot for new Players to join
-	spawnDelayBots = 2.0,			-- time till bots respawn, if respawn enabled
+	spawnDelayBots = 7.0,			-- time till bots respawn, if respawn enabled
 	botTeam = TeamId.Team2,		 	-- default bot team (0 = neutral, 1 = US, 2 = RU) TeamId.Team2
 	respawnWayBots = true,			-- bots on paths respawn if killed
 	botNewLoadoutOnSpawn = true,	-- bots get a new kit and color, if they respawn
@@ -41,7 +40,7 @@ Config = {
 	maxSupportBots = -1,			-- maximum number of Bots with Support Kit
 	maxReconBots = -1,				-- maximum number of Bots with Recon Kit
 	distanceToSpawnBots	= 30,		-- distance to spawn Bots away from players
-	heightDistanceToSpawn = 2.5,		-- distance vertically, Bots should spawn away, if closer than distance
+	heightDistanceToSpawn = 2.5,	-- distance vertically, Bots should spawn away, if closer than distance
 	distanceToSpawnReduction = 5,	-- reduce distance if not possible
 	maxTrysToSpawnAtDistance = 3,	-- try this often to spawn a bot away from players
 
@@ -50,7 +49,7 @@ Config = {
 	assaultWeapon = "M16A4",		-- weapon of Assault class
 	engineerWeapon = "M4A1",		-- weapon of Engineer class
 	supportWeapon = "M249",			-- weapon of Support class
-	reconWeapon = "L96",			-- weapon of Recon class
+	reconWeapon = "L96_6x",			-- weapon of Recon class
 	pistol = "M1911_Lit",			-- Bot pistol
 	knife = "Razor",				-- Bot knife
 	assaultWeaponSet = "Class",				-- weaponset of Assault class
@@ -69,11 +68,13 @@ Config = {
 	debugSelectionRaytraces = false,-- Shows the trace line and search area from Commo Rose selection
 
 	--advanced
-	fovForShooting = 270,			-- Degrees of FOV of Bot
+	fovForShooting = 200,			-- Degrees of FOV of Bot
 	shootBackIfHit = true,			-- bot shoots back, if hit
 	maxRaycastDistance = 150,		-- meters bots start shooting at player
 	maxShootDistanceNoSniper = 70,	-- meters a bot (not sniper) start shooting at player
-	distanceForDirectAttack = 5,	-- if a bot is that close he will attack, even if not in FOV
+	distanceForDirectAttack = 5,	-- if that close, the bot can hear you
+	botsAttackBots = true,			-- bots attack bots from other team
+	maxBotAttackBotDistance = 30,	-- meters a bot attacks an other bot
 	botCanKillHimself = false,		-- if a bot is that close he will attack, even if not in FOV
 	meleeAttackIfClose = true,		-- bot attacks with melee if close
 	attackWayBots = true,			-- bots on paths attack player
@@ -104,7 +105,8 @@ Config = {
 StaticConfig = {
 	traceDelta = 0.2,					-- update intervall of trace
 	traceDeltaShooting = 0.4,			-- update intervall of trace back to path the bots left for shooting
-	raycastInterval = 0.1,				-- update intervall of client raycasts
+	raycastInterval = 0.05,				-- update intervall of client raycasts
+	botAttackBotCheckInterval = 0.05,	-- update intervall of client raycasts
 	botUpdateCycle = 0.1,				-- update-intervall of bots
 	botAimUpdateCycle = 0.05,			-- = 3 frames at 60 Hz
 	targetHeightDistanceWayPoint = 1.5	-- distance the bots have to reach in height to continue with next Waypoint

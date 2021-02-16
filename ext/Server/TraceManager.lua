@@ -17,7 +17,7 @@ function TraceManager:__init()
 end
 
 function TraceManager:onLevelLoaded(levelName, gameMode)
-	if g_Globals.isTdm then
+	if g_Globals.isTdm or g_Globals.isGm or g_Globals.isScavenger then
 		gameMode = 'TeamDeathMatch0';
 	end
 	
