@@ -177,8 +177,8 @@ function WeaponList:__init()
 	weapon = Weapon('RPK', '', {'Weapons/RPK/U_RPK_Kobra', 'Weapons/RPK/U_RPK_ExtendedMag', 'Weapons/RPK/U_RPK_Foregrip'},'LMG', 'Weapons/RPK/U_RPK-74M')
 	table.insert(self._weapons, weapon);
 
-	--weapon = Weapon('M240', '', {'Eotech', 'TargetPointer'}, 'LMG')  -- not usable, because it has the same ammo as some sniper rifles
-	--table.insert(self._weapons, weapon);
+	weapon = Weapon('M240', '', {'Eotech', 'TargetPointer'}, 'LMG')  -- not usable, because it has the same ammo as some sniper rifles
+	table.insert(self._weapons, weapon);
 
 	---------------------------
 	-- Sniper
@@ -290,8 +290,8 @@ function WeaponList:__init()
 	weapon = Weapon('Taurus44', '', {}, 'Pistol')
 	table.insert(self._weapons, weapon);
 
-	--weapon = Weapon('MP443', '', {}, 'Pistol', 'Weapons/MP443/U_MP443_TacticalLight') --TODO: find out why not working
-	--table.insert(self._weapons, weapon);
+	weapon = Weapon('MP443', '', {}, 'Pistol') --TODO: find out why not working
+	table.insert(self._weapons, weapon);
 
 	-- knifes
 	weapon = Weapon('Razor', '', {}, 'Knife', 'Weapons/XP2_Knife_RazorBlade/U_Knife_Razor')
