@@ -646,6 +646,7 @@ function Bot:_updateMovement()
 					useShootWayPoint	= true;
 				else
 					point = Globals.wayPoints[self._pathIndex][activePointIndex];
+					if not self._invertPathDirection then
 						nextPoint 		= Globals.wayPoints[self._pathIndex][self:_getWayIndex(self._currentWayPoint + 1)]
 						nextNextPoint 	= Globals.wayPoints[self._pathIndex][self:_getWayIndex(self._currentWayPoint + 2)]
 						NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', self._pathIndex, self:_getWayIndex(self._currentWayPoint + 1), self.player.soldier.worldTransform.trans, (self._obstaceSequenceTimer > 0), "Green")
@@ -663,14 +664,14 @@ function Bot:_updateMovement()
 					if Config.overWriteBotSpeedMode > 0 then
 						self.activeSpeedValue = Config.overWriteBotSpeedMode;
 					end
-					local dy					= point.trans.z - self.player.soldier.worldTransform.trans.z;
-					local dx					= point.trans.x - self.player.soldier.worldTransform.trans.x;
+					local dy					= nextPoint.trans.z - self.player.soldier.worldTransform.trans.z;
+					local dx					= nextPoint.trans.x - self.player.soldier.worldTransform.trans.x;
 					local distanceFromTarget	= math.sqrt(dx ^ 2 + dy ^ 2);
-					local heightDistance		= math.abs(point.trans.y - self.player.soldier.worldTransform.trans.y);
+					local heightDistance		= math.abs(nextPoint.trans.y - self.player.soldier.worldTransform.trans.y);
 
 
 					--detect obstacle and move over or around TODO: Move before normal jump
-					local currentWayPontDistance = self.player.soldier.worldTransform.trans:Distance(point.trans);
+					local currentWayPontDistance = self.player.soldier.worldTransform.trans:Distance(nextPoint.trans);
 					if currentWayPontDistance > self._lastWayDistance and self._obstaceSequenceTimer == 0 then
 						--TODO: skip one pooint?
 						self._targetPoint = nextNextPoint;
@@ -746,7 +747,7 @@ function Bot:_updateMovement()
 
 					-- jump detection. Much more simple now, but works fine ;-)
 					if self._obstaceSequenceTimer == 0 then
-						if (point.trans.y - self.player.soldier.worldTransform.trans.y) > 0.3 and Config.jumpWhileMoving then
+						if (nextPoint.trans.y - self.player.soldier.worldTransform.trans.y) > 0.3 and Config.jumpWhileMoving then
 							--detect, if a jump was recorded or not
 							local timeForwardBackwardJumpDetection = 1.1; -- 1.5 s ahead and back
 							local jumpValid = false;
