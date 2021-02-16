@@ -110,7 +110,12 @@ function BotSpawner:updateBotAmountAndTeam(levelstart)
 		if Config.spawnInBothTeams then
 			local targetBotCountTeam1 = 0;
 			local targetBotCountTeam2 = 0;
-			if countPlayersTeam1 > 0 or countPlayersTeam2 == 0 then  -- add bots with first player joining (bots teams count 0)
+			if countPlayersTeam1 == 0 and countPlayersTeam2 == 0 then
+				-- add bots with first player joining (bots teams count 0)
+				countPlayersTeam1 = 1;
+			end
+
+			if countPlayersTeam1 > 0 then  
 				targetBotCountTeam2 = Config.initNumberOfBots + ((countPlayersTeam1-1) * Config.newBotsPerNewPlayer)
 			end
 			if countPlayersTeam2 > 0 then
