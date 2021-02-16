@@ -624,35 +624,24 @@ function Bot:_updateMovement()
 			if Globals.wayPoints[self._pathIndex][1] ~= nil then -- check for reached point
 				local point				= nil;
 				local nextPoint			= nil;
-				local nextNextPoint		= nil;
 				local pointIncrement	= 1;
 				local useShootWayPoint	= false;
 
 				if #self._shootWayPoints > 0 then	--we need to go back to path first
 					point 				= self._shootWayPoints[#self._shootWayPoints];
 					nextPoint 			= self._shootWayPoints[#self._shootWayPoints - 1];
-					nextNextPoint		= self._shootWayPoints[#self._shootWayPoints - 2];
 					if nextPoint == nil then
 						nextPoint = Globals.wayPoints[self._pathIndex][activePointIndex];
 						NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', self._pathIndex, activePointIndex, self.player.soldier.worldTransform.trans, (self._obstaceSequenceTimer > 0), "Blue")
-					end
-					if nextNextPoint == nil then
-						if not self._invertPathDirection then
-							nextPoint = Globals.wayPoints[self._pathIndex][self:_getWayIndex(self._currentWayPoint + 1)]
-						else
-							nextPoint = Globals.wayPoints[self._pathIndex][self:_getWayIndex(self._currentWayPoint - 1)]
-						end
 					end
 					useShootWayPoint	= true;
 				else
 					point = Globals.wayPoints[self._pathIndex][activePointIndex];
 					if not self._invertPathDirection then
 						nextPoint 		= Globals.wayPoints[self._pathIndex][self:_getWayIndex(self._currentWayPoint + 1)]
-						nextNextPoint 	= Globals.wayPoints[self._pathIndex][self:_getWayIndex(self._currentWayPoint + 2)]
 						NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', self._pathIndex, self:_getWayIndex(self._currentWayPoint + 1), self.player.soldier.worldTransform.trans, (self._obstaceSequenceTimer > 0), "Green")
 					else
 						nextPoint 		= Globals.wayPoints[self._pathIndex][self:_getWayIndex(self._currentWayPoint - 1)]
-						nextNextPoint	= Globals.wayPoints[self._pathIndex][self:_getWayIndex(self._currentWayPoint - 2)]
 						NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', self._pathIndex, self:_getWayIndex(self._currentWayPoint + 1), self.player.soldier.worldTransform.trans, (self._obstaceSequenceTimer > 0), "Green")
 					end
 				end
@@ -672,15 +661,7 @@ function Bot:_updateMovement()
 
 					--detect obstacle and move over or around TODO: Move before normal jump
 					local currentWayPontDistance = self.player.soldier.worldTransform.trans:Distance(nextPoint.trans);
-					if currentWayPontDistance > self._lastWayDistance and self._obstaceSequenceTimer == 0 then
-						--TODO: skip one pooint?
-						self._targetPoint = nextNextPoint;
-						distanceFromTarget			= 0;
-						heightDistance				= 0;
-
-					else
-						self._targetPoint = nextPoint;
-					end
+					self._targetPoint = nextPoint;
 
 
 					if math.abs(currentWayPontDistance - self._lastWayDistance) < 0.02 or self._obstaceSequenceTimer ~= 0 then

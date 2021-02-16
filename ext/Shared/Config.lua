@@ -68,7 +68,7 @@ Config = {
 	debugSelectionRaytraces = false,-- Shows the trace line and search area from Commo Rose selection
 
 	--advanced
-	fovForShooting = 200,			-- Degrees of FOV of Bot
+	fovForShooting = 160,			-- Degrees of FOV of Bot
 	shootBackIfHit = true,			-- bot shoots back, if hit
 	maxRaycastDistance = 150,		-- meters bots start shooting at player
 	maxShootDistanceNoSniper = 70,	-- meters a bot (not sniper) start shooting at player
@@ -90,8 +90,8 @@ Config = {
 	botFirstShotDelay = 0.4,		-- delay for first shot. If too small, there will be great spread in first cycle because its not kompensated jet.
 	botMinTimeShootAtPlayer = 1.0,	-- the minimum time a bot shoots at one player
 	botFireModeDuration = 5.0,		-- the minimum time a bot tries to shoot a player
-	maximunYawPerSec = 540,			-- in Degree. Rotaion-Movement per second.
-	targetDistanceWayPoint = 1.2,	-- distance the bots have to reach to continue with next Waypoint
+	maximunYawPerSec = 450,			-- in Degree. Rotaion-Movement per second.
+	targetDistanceWayPoint = 1.1,	-- distance the bots have to reach to continue with next Waypoint
 
 	-- UI settings & language options
 	disableUserInterface = false,	-- if true, the complete UI will be disabled
