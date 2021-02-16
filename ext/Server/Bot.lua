@@ -2,8 +2,8 @@ class('Bot');
 
 require('__shared/Config');
 require('Waypoint');
+require('Globals');
 
-local Globals = require('Globals');
 local Utilities = require('__shared/Utilities')
 
 function Bot:__init(player)
@@ -149,8 +149,8 @@ function Bot:setVarsDefault()
 	self._moveMode		= 5;
 	self._botSpeed		= 3;
 	self._pathIndex		= 1;
-	self._respawning	= Globals.respawnWayBots;
-	self._shoot			= Globals.attackWayBots;
+	self._respawning	= g_Globals.respawnWayBots;
+	self._shoot			= g_Globals.attackWayBots;
 end
 
 function Bot:resetVars()
@@ -208,8 +208,8 @@ function Bot:setVarsWay(player, useRandomWay, pathIndex, currentWayPoint, invers
 	if useRandomWay then
 		self._spawnMode		= 5;
 		self._targetPlayer	= nil;
-		self._shoot			= Globals.attackWayBots;
-		self._respawning	= Globals.respawnWayBots;
+		self._shoot			= g_Globals.attackWayBots;
+		self._respawning	= g_Globals.respawnWayBots;
 	else
 		self._spawnMode		= 4;
 		self._targetPlayer	= player;
@@ -396,7 +396,7 @@ function Bot:_updateYaw()
 
 	local absDeltaYaw = math.abs(deltaYaw)
 
-	local inkrement = Globals.yawPerFrame;
+	local inkrement = g_Globals.yawPerFrame;
 	if absDeltaYaw < inkrement then
 		self.player.input.authoritativeAimingYaw = self._targetYaw;
 		self.player.input.authoritativeAimingPitch = self._targetPitch;
@@ -564,19 +564,19 @@ function Bot:_getWayIndex(currentWayPoint)
 		activePointIndex = currentWayPoint;
 
 		-- direction handling
-		if activePointIndex > #Globals.wayPoints[self._pathIndex] then
-			if Globals.wayPoints[self._pathIndex][1].optValue == 0xFF then --inversion needed
-				activePointIndex			= #Globals.wayPoints[self._pathIndex];
+		if activePointIndex > #g_Globals.wayPoints[self._pathIndex] then
+			if g_Globals.wayPoints[self._pathIndex][1].optValue == 0xFF then --inversion needed
+				activePointIndex			= #g_Globals.wayPoints[self._pathIndex];
 				self._invertPathDirection	= true;
 			else
 				activePointIndex			= 1;
 			end
 		elseif activePointIndex < 1 then
-			if Globals.wayPoints[self._pathIndex][1].optValue == 0xFF then --inversion needed
+			if g_Globals.wayPoints[self._pathIndex][1].optValue == 0xFF then --inversion needed
 				activePointIndex			= 1;
 				self._invertPathDirection	= false;
 			else
-				activePointIndex			= #Globals.wayPoints[self._pathIndex];
+				activePointIndex			= #g_Globals.wayPoints[self._pathIndex];
 			end
 		end
 	end
@@ -627,7 +627,7 @@ function Bot:_updateMovement()
 			-- get next point
 			local activePointIndex = self:_getWayIndex(self._currentWayPoint)
 
-			if Globals.wayPoints[self._pathIndex][1] ~= nil then -- check for reached point
+			if g_Globals.wayPoints[self._pathIndex][1] ~= nil then -- check for reached point
 				local point				= nil;
 				local nextPoint			= nil;
 				local pointIncrement	= 1;
@@ -637,21 +637,21 @@ function Bot:_updateMovement()
 					point 				= self._shootWayPoints[#self._shootWayPoints];
 					nextPoint 			= self._shootWayPoints[#self._shootWayPoints - 1];
 					if nextPoint == nil then
-						nextPoint = Globals.wayPoints[self._pathIndex][activePointIndex];
+						nextPoint = g_Globals.wayPoints[self._pathIndex][activePointIndex];
 						if Config.debugTracePaths then
 							NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', self._pathIndex, activePointIndex, self.player.soldier.worldTransform.trans, (self._obstaceSequenceTimer > 0), "Blue")
 						end
 					end
 					useShootWayPoint	= true;
 				else
-					point = Globals.wayPoints[self._pathIndex][activePointIndex];
+					point = g_Globals.wayPoints[self._pathIndex][activePointIndex];
 					if not self._invertPathDirection then
-						nextPoint 		= Globals.wayPoints[self._pathIndex][self:_getWayIndex(self._currentWayPoint + 1)]
+						nextPoint 		= g_Globals.wayPoints[self._pathIndex][self:_getWayIndex(self._currentWayPoint + 1)]
 						if Config.debugTracePaths then
 							NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', self._pathIndex, self:_getWayIndex(self._currentWayPoint + 1), self.player.soldier.worldTransform.trans, (self._obstaceSequenceTimer > 0), "Green")
 						end
 					else
-						nextPoint 		= Globals.wayPoints[self._pathIndex][self:_getWayIndex(self._currentWayPoint - 1)]
+						nextPoint 		= g_Globals.wayPoints[self._pathIndex][self:_getWayIndex(self._currentWayPoint - 1)]
 						if Config.debugTracePaths then
 							NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', self._pathIndex, self:_getWayIndex(self._currentWayPoint - 1), self.player.soldier.worldTransform.trans, (self._obstaceSequenceTimer > 0), "Green")
 						end
@@ -752,8 +752,8 @@ function Bot:_updateMovement()
 							local timeForwardBackwardJumpDetection = 1.1; -- 1.5 s ahead and back
 							local jumpValid = false;
 							for i = 1, math.floor(timeForwardBackwardJumpDetection/StaticConfig.traceDelta) do
-								local pointBefore = Globals.wayPoints[self._pathIndex][activePointIndex - i];
-								local pointAfter = Globals.wayPoints[self._pathIndex][activePointIndex + i];
+								local pointBefore = g_Globals.wayPoints[self._pathIndex][activePointIndex - i];
+								local pointAfter = g_Globals.wayPoints[self._pathIndex][activePointIndex + i];
 								if (pointBefore ~= nil and pointBefore.extraMode == 1) or (pointAfter ~= nil and pointAfter.extraMode == 1) then
 									jumpValid = true;
 									break;
