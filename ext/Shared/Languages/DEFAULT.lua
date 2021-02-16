@@ -1,9 +1,9 @@
 local code = 'xx_XX'; -- Add/replace the xx_XX here with your language code (like de_DE, en_US, or other)!
 
-Language:add(code, "Spawn in Same Team", "");
-Language:add(code, "If true, Bots spawn in the team of the player", "");
 Language:add(code, "Bot Weapon", "");
 Language:add(code, "Select the weapon the bots use", "");
+Language:add(code, "Bot Attack Mode", "");
+Language:add(code, "Mode the Bots attack with. Crouch or Stand", "");
 Language:add(code, "Bot Kit", "");
 Language:add(code, "The Kit a bots spawns with.", "");
 Language:add(code, "Bot Color", "");
@@ -24,16 +24,16 @@ Language:add(code, "Factor for Sniper-Weapon-Damage", "");
 Language:add(code, "Factor for Shotgun-Weapon-Damage", "");
 Language:add(code, "Factor for Pistol-Weapon-Damage", "");
 Language:add(code, "Factor for Knife-Weapon-Damage", "");
-Language:add(code, "Spawn on Levelstart", "");
-Language:add(code, "Bots spawn on levelstart (if valid paths are available)", "");
+Language:add(code, "Spawn in both teams", "");
+Language:add(code, "Bots spawn in both teams", "");
 Language:add(code, "Only spawn with players", "");
 Language:add(code, "Bots only spawn if at least one Player is on the server", "");
-Language:add(code, "Number Bots on Levelstart", "");
-Language:add(code, "Bots on levelstart", "");
-Language:add(code, "More Bots with new Players", "");
-Language:add(code, "increase Bots, when new players join", "");
+Language:add(code, "Spawn Mode", "");
+Language:add(code, "Mode the bots spawn with", "");
+Language:add(code, "Number of Bots for Spawn-Mode", "");
+Language:add(code, "Bots for the spawnmode", "");
 Language:add(code, "Number Bots on new Player", "");
-Language:add(code, "number to increase Bots, when new players join", "");
+Language:add(code, "number to increase Bots, when new players join, if mode is selected", "");
 Language:add(code, "Keep one Player-Slot", "");
 Language:add(code, "always keep one slot for new Players to join", "");
 Language:add(code, "Respawn Delay", "");

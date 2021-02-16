@@ -44,10 +44,12 @@ function Bot:__init(player)
 	self.activeSpeedValue = 0;
 
 	--advanced movement
+	self._attackMode = 0;
 	self._currentWayPoint = nil;
 	self._targetYaw = 0;
 	self._targetPitch = 0;
 	self._targetPoint = nil;
+	self._nextTargetPoint = nil;
 	self._pathIndex = 0;
 	self._meleeActive = false;
 	self._lastWayDistance = 0;
@@ -165,6 +167,7 @@ function Bot:resetVars()
 	self._updateTimer			= 0;
 	self._aimUpdateTimer		= 0; --timer sync
 	self._targetPoint			= nil;
+	self._nextTargetPoint		= nil;
 	self._meleeActive 			= false;
 
 	self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 0);
@@ -273,12 +276,14 @@ function Bot:resetSpawnVars()
 	self._shootTraceTimer		= 0;
 	self._reloadTimer 			= 0;
 	self._attackModeMoveTimer	= 0;
+	self._attackMode 			= 0;
 	self._shootWayPoints		= {};
 
 	self._shotTimer				= -Config.botFirstShotDelay;
 	self._updateTimer			= 0;
 	self._aimUpdateTimer		= 0; --timer sync
 	self._targetPoint			= nil;
+	self._nextTargetPoint		= nil;
 	self._meleeActive 			= false;
 
 	self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 0);
@@ -372,6 +377,9 @@ function Bot:_updateYaw()
 		return
 	end
 	if self._targetPoint ~= nil and self._shootPlayer == nil and self.player.soldier ~= nil then
+		if self.player.soldier.worldTransform.trans:Distance(self._targetPoint.trans) < 0.2 then
+			self._targetPoint = self._nextTargetPoint
+		end
 		local dy					= self._targetPoint.trans.z - self.player.soldier.worldTransform.trans.z;
 		local dx					= self._targetPoint.trans.x - self.player.soldier.worldTransform.trans.x;
 		local atanDzDx	= math.atan(dy, dx);
@@ -457,7 +465,7 @@ function Bot:_updateShooting()
 				self._reloadTimer		= 0; -- reset reloading
 
 				--check for melee attack
-				if Config.meleeAttackIfClose and not self._meleeActive and self._shootPlayer.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans) < 1.5 and self._meleeCooldownTimer <= 0 then
+				if Config.meleeAttackIfClose and not self._meleeActive and self._shootPlayer.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans) < 2 and self._meleeCooldownTimer <= 0 then
 					self._meleeActive = true;
 					self.activeWeapon = self.knife;
 					self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
@@ -535,6 +543,7 @@ function Bot:_updateShooting()
 			self._shootPlayer		= nil;
 			self._lastShootPlayer	= nil;
 			self._shootModeTimer	= 0;
+			self._attackMode		= 0;
 
 			self._reloadTimer = self._reloadTimer + StaticConfig.botUpdateCycle;
 			if self._reloadTimer > 4 then
@@ -629,21 +638,25 @@ function Bot:_updateMovement()
 					nextPoint 			= self._shootWayPoints[#self._shootWayPoints - 1];
 					if nextPoint == nil then
 						nextPoint = Globals.wayPoints[self._pathIndex][activePointIndex];
-						NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', self._pathIndex, activePointIndex, self.player.soldier.worldTransform.trans, (self._obstaceSequenceTimer > 0), "Blue")
+						if Config.debugTracePaths then
+							NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', self._pathIndex, activePointIndex, self.player.soldier.worldTransform.trans, (self._obstaceSequenceTimer > 0), "Blue")
+						end
 					end
 					useShootWayPoint	= true;
 				else
 					point = Globals.wayPoints[self._pathIndex][activePointIndex];
-					NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', self._pathIndex, activePointIndex, self.player.soldier.worldTransform.trans, (self._obstaceSequenceTimer > 0), "White")
 					if not self._invertPathDirection then
-						nextPoint = Globals.wayPoints[self._pathIndex][self:_getWayIndex(self._currentWayPoint + 1)]
-						NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', self._pathIndex, self:_getWayIndex(self._currentWayPoint + 1), self.player.soldier.worldTransform.trans, (self._obstaceSequenceTimer > 0), "Green")
+						nextPoint 		= Globals.wayPoints[self._pathIndex][self:_getWayIndex(self._currentWayPoint + 1)]
+						if Config.debugTracePaths then
+							NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', self._pathIndex, self:_getWayIndex(self._currentWayPoint + 1), self.player.soldier.worldTransform.trans, (self._obstaceSequenceTimer > 0), "Green")
+						end
 					else
-						nextPoint = Globals.wayPoints[self._pathIndex][self:_getWayIndex(self._currentWayPoint - 1)]
-						NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', self._pathIndex, self:_getWayIndex(self._currentWayPoint - 1), self.player.soldier.worldTransform.trans, (self._obstaceSequenceTimer > 0), "Green")
+						nextPoint 		= Globals.wayPoints[self._pathIndex][self:_getWayIndex(self._currentWayPoint - 1)]
+						if Config.debugTracePaths then
+							NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', self._pathIndex, self:_getWayIndex(self._currentWayPoint - 1), self.player.soldier.worldTransform.trans, (self._obstaceSequenceTimer > 0), "Green")
+						end
 					end
 				end
-
 
 				if (point.speedMode) > 0 then -- movement
 					self._wayWaitTimer			= 0;
@@ -660,15 +673,14 @@ function Bot:_updateMovement()
 
 					--detect obstacle and move over or around TODO: Move before normal jump
 					local currentWayPontDistance = self.player.soldier.worldTransform.trans:Distance(point.trans);
-					if currentWayPontDistance > self._lastWayDistance and self._obstaceSequenceTimer == 0 then
+					if currentWayPontDistance > self._lastWayDistance + 0.02 and self._obstaceSequenceTimer == 0 then
 						--TODO: skip one pooint?
-						self._targetPoint = nextPoint;
 						distanceFromTarget			= 0;
 						heightDistance				= 0;
-
-					else
-						self._targetPoint = point;
 					end
+
+					self._targetPoint = point;
+					self._nextTargetPoint = nextPoint;
 
 
 					if math.abs(currentWayPontDistance - self._lastWayDistance) < 0.02 or self._obstaceSequenceTimer ~= 0 then
@@ -820,9 +832,18 @@ function Bot:_updateMovement()
 
 		-- Shoot MoveMode
 		elseif self.activeMoveMode == 9 then
+			if self._attackMode == 0 then
+				if Config.botAttackMode == "Crouch" then
+					self._attackMode = 2;
+				elseif Config.botAttackMode == "Stand" then
+					self._attackMode = 3;
+				else -- random
+					self._attackMode = MathUtils:GetRandomInt(2, 3);
+				end
+			end
 			--crouch moving (only mode with modified gun)
 			if self.activeWeapon.type == "Sniper" then
-				if BOT_ATTACK_MODE == "Crouch" then
+				if self._attackMode == 2 then
 					if self.player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Crouch then
 						self.player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Crouch, true, true);
 					end
@@ -835,10 +856,14 @@ function Bot:_updateMovement()
 				self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
 				self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
 			else
+				local targetTime = 5.0
+				local targetCycles = math.floor(targetTime / StaticConfig.traceDeltaShooting);
+
 				if Config.botWeapon == "Knife" then --Knife Only Mode
+					targetCycles = 1;
 					self.activeSpeedValue = 4; --run towards player
 				else
-					if BOT_ATTACK_MODE == "Crouch" then
+					if self._attackMode == 2 then
 						self.activeSpeedValue = 2;
 					else
 						self.activeSpeedValue = 3;
@@ -848,12 +873,9 @@ function Bot:_updateMovement()
 					self.activeSpeedValue = Config.overWriteBotAttackMode;
 				end
 
-				local targetTime = 5.0
-				local targetCycles = math.floor(targetTime / StaticConfig.traceDeltaShooting);
-
 				if #self._shootWayPoints > targetCycles and Config.jumpWhileShooting then
 					local distanceDone = self._shootWayPoints[#self._shootWayPoints].trans:Distance(self._shootWayPoints[#self._shootWayPoints-targetCycles].trans);
-					if distanceDone < 1.0 then --no movement was possible. Try to jump over obstacle
+					if distanceDone < 0.5 then --no movement was possible. Try to jump over obstacle
 						self.activeSpeedValue = 3;
 						self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 1);
 						self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1);
