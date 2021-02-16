@@ -770,8 +770,17 @@ function Bot:_updateMovement()
 						end
 					end
 
+					local targetDistanceSpeed = Config.targetDistanceWayPoint;
+					if self.activeSpeedValue == 4 then
+						targetDistanceSpeed = targetDistanceSpeed * 1.5;
+					elseif self.activeSpeedValue == 2 then
+						targetDistanceSpeed = targetDistanceSpeed * 0.7;
+					elseif self.activeSpeedValue == 1 then
+						targetDistanceSpeed = targetDistanceSpeed * 0.5;
+					end
+
 					--check for reached target
-					if distanceFromTarget <= Config.targetDistanceWayPoint and heightDistance <= StaticConfig.targetHeightDistanceWayPoint then
+					if distanceFromTarget <= targetDistanceSpeed and heightDistance <= StaticConfig.targetHeightDistanceWayPoint then
 						if not useShootWayPoint then
 							if self._invertPathDirection then
 								self._currentWayPoint = activePointIndex - pointIncrement;
