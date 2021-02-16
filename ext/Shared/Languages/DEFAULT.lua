@@ -1,5 +1,22 @@
 local code = 'xx_XX'; -- Add/replace the xx_XX here with your language code (like de_DE, en_US, or other)!
 
+Language:add(code, "Exiting Node Move Mode", "");
+Language:add(code, "Must select at least one waypoint", "");
+Language:add(code, "Entering Node Move Mode", "");
+Language:add(code, "Player not alive", "");
+Language:add(code, "Not Implemented Yet", "");
+Language:add(code, "Success", "");
+Language:add(code, "Select", "");
+Language:add(code, "Finish", "");
+Language:add(code, "Connect", "");
+Language:add(code, "Save", "");
+Language:add(code, "Load", "");
+Language:add(code, "Merge", "");
+Language:add(code, "Move", "");
+Language:add(code, "Delete", "");
+Language:add(code, "Split", "");
+Language:add(code, "Set Input", "");
+Language:add(code, "Create", "");
 Language:add(code, "Bot Weapon", "");
 Language:add(code, "Select the weapon the bots use", "");
 Language:add(code, "Bot Attack Mode", "");
@@ -112,15 +129,20 @@ Language:add(code, "Speed Reduction", "");
 Language:add(code, "reduces the movementspeed. 1 = normal, 0.1 = slow", "");
 Language:add(code, "Speed Reduction Attack", "");
 Language:add(code, "reduces the movementspeed while attacking. 1 = normal, 0.1 = slow.", "");
-
-Language:add(code, "Enable Trace Path Editing and Visualizations")
-Language:add(code, "Set how far away waypoints are visible (meters)")
-Language:add(code, "Draw waypoint connection Lines")
-Language:add(code, "Set how far away waypoint lines are visible (meters)")
-Language:add(code, "Draw waypoint IDs")
-Language:add(code, "Set how far away waypoint text is visible (meters)")
-Language:add(code, "Shows the last trace line and search area from Commo Rose selection")
-
+Language:add(code, "Debug Trace Paths", "");
+Language:add(code, "Enable Trace Path Editing and Visualizations", "");
+Language:add(code, "Waypoint Range", "");
+Language:add(code, "Set how far away waypoints are visible (meters)", "");
+Language:add(code, "Draw Waypoint Lines", "");
+Language:add(code, "Draw waypoint connection Lines", "");
+Language:add(code, "Line Range", "");
+Language:add(code, "Set how far away waypoint lines are visible (meters)", "");
+Language:add(code, "Draw Waypoint IDs", "");
+Language:add(code, "Draw waypoint IDs", "");
+Language:add(code, "Text Range", "");
+Language:add(code, "Set how far away waypoint text is visible (meters)", "");
+Language:add(code, "Debug Selection Raytraces", "");
+Language:add(code, "Shows the last trace line and search area from Commo Rose selection", "");
 Language:add(code, "First Shot Delay", "");
 Language:add(code, "delay for first shot", "");
 Language:add(code, "Min Time Shoot", "");
