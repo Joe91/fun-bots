@@ -1088,6 +1088,11 @@ function ClientNodeEditor:_onUIDrawHud()
 		end
 	end
 
+	-- dont process waypoints if we're not supposed to see them
+	if (not Config.debugTracePaths and not self.botVisionEnabled) then
+		return
+	end
+
 	-- generic debug values
 	local debugText = ''
 
@@ -1096,11 +1101,7 @@ function ClientNodeEditor:_onUIDrawHud()
 	end
 
 	DebugRenderer:DrawText2D(20, 20, debugText, self.colors.Text, 1)
-
-	-- dont process waypoints if we're not supposed to see them
-	if (not Config.debugTracePaths and not self.botVisionEnabled) then
-		return
-	end
+	
 
 	-- draw help info
 	local helpText = ''
