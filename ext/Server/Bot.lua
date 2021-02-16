@@ -49,6 +49,7 @@ function Bot:__init(player)
 	self._targetYaw = 0;
 	self._targetPitch = 0;
 	self._targetPoint = nil;
+	self._nextTargetPoint = nil;
 	self._pathIndex = 0;
 	self._meleeActive = false;
 	self._lastWayDistance = 0;
@@ -166,6 +167,7 @@ function Bot:resetVars()
 	self._updateTimer			= 0;
 	self._aimUpdateTimer		= 0; --timer sync
 	self._targetPoint			= nil;
+	self._nextTargetPoint		= nil;
 	self._meleeActive 			= false;
 
 	self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 0);
@@ -281,6 +283,7 @@ function Bot:resetSpawnVars()
 	self._updateTimer			= 0;
 	self._aimUpdateTimer		= 0; --timer sync
 	self._targetPoint			= nil;
+	self._nextTargetPoint		= nil;
 	self._meleeActive 			= false;
 
 	self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 0);
@@ -374,6 +377,9 @@ function Bot:_updateYaw()
 		return
 	end
 	if self._targetPoint ~= nil and self._shootPlayer == nil and self.player.soldier ~= nil then
+		if self.player.soldier.worldTransform.trans:Distance(self._targetPoint.trans) < 0.2 then
+			self._targetPoint = self._nextTargetPoint
+		end
 		local dy					= self._targetPoint.trans.z - self.player.soldier.worldTransform.trans.z;
 		local dx					= self._targetPoint.trans.x - self.player.soldier.worldTransform.trans.x;
 		local atanDzDx	= math.atan(dy, dx);
@@ -624,24 +630,35 @@ function Bot:_updateMovement()
 			if Globals.wayPoints[self._pathIndex][1] ~= nil then -- check for reached point
 				local point				= nil;
 				local nextPoint			= nil;
+				local nextNextPoint		= nil;
 				local pointIncrement	= 1;
 				local useShootWayPoint	= false;
 
 				if #self._shootWayPoints > 0 then	--we need to go back to path first
 					point 				= self._shootWayPoints[#self._shootWayPoints];
 					nextPoint 			= self._shootWayPoints[#self._shootWayPoints - 1];
+					nextNextPoint		= self._shootWayPoints[#self._shootWayPoints - 2];
 					if nextPoint == nil then
 						nextPoint = Globals.wayPoints[self._pathIndex][activePointIndex];
 						NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', self._pathIndex, activePointIndex, self.player.soldier.worldTransform.trans, (self._obstaceSequenceTimer > 0), "Blue")
+					end
+					if nextNextPoint == nil then
+						if not self._invertPathDirection then
+							nextPoint = Globals.wayPoints[self._pathIndex][self:_getWayIndex(self._currentWayPoint + 1)]
+						else
+							nextPoint = Globals.wayPoints[self._pathIndex][self:_getWayIndex(self._currentWayPoint - 1)]
+						end
 					end
 					useShootWayPoint	= true;
 				else
 					point = Globals.wayPoints[self._pathIndex][activePointIndex];
 					if not self._invertPathDirection then
 						nextPoint 		= Globals.wayPoints[self._pathIndex][self:_getWayIndex(self._currentWayPoint + 1)]
+						nextNextPoint 	= Globals.wayPoints[self._pathIndex][self:_getWayIndex(self._currentWayPoint + 2)]
 						NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', self._pathIndex, self:_getWayIndex(self._currentWayPoint + 1), self.player.soldier.worldTransform.trans, (self._obstaceSequenceTimer > 0), "Green")
 					else
 						nextPoint 		= Globals.wayPoints[self._pathIndex][self:_getWayIndex(self._currentWayPoint - 1)]
+						nextNextPoint	= Globals.wayPoints[self._pathIndex][self:_getWayIndex(self._currentWayPoint - 2)]
 						NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', self._pathIndex, self:_getWayIndex(self._currentWayPoint + 1), self.player.soldier.worldTransform.trans, (self._obstaceSequenceTimer > 0), "Green")
 					end
 				end
@@ -661,7 +678,14 @@ function Bot:_updateMovement()
 
 					--detect obstacle and move over or around TODO: Move before normal jump
 					local currentWayPontDistance = self.player.soldier.worldTransform.trans:Distance(nextPoint.trans);
+					if currentWayPontDistance > self._lastWayDistance + 0.02 and self._obstaceSequenceTimer == 0 then
+						--TODO: skip one pooint?
+						distanceFromTarget			= 0;
+						heightDistance				= 0;
+					end
+
 					self._targetPoint = nextPoint;
+					self._nextTargetPoint = nextNextPoint;
 
 
 					if math.abs(currentWayPontDistance - self._lastWayDistance) < 0.02 or self._obstaceSequenceTimer ~= 0 then

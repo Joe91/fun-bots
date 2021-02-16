@@ -91,7 +91,7 @@ Config = {
 	botMinTimeShootAtPlayer = 1.0,	-- the minimum time a bot shoots at one player
 	botFireModeDuration = 5.0,		-- the minimum time a bot tries to shoot a player
 	maximunYawPerSec = 450,			-- in Degree. Rotaion-Movement per second.
-	targetDistanceWayPoint = 1.1,	-- distance the bots have to reach to continue with next Waypoint
+	targetDistanceWayPoint = 0.8,	-- distance the bots have to reach to continue with next Waypoint
 
 	-- UI settings & language options
 	disableUserInterface = false,	-- if true, the complete UI will be disabled
