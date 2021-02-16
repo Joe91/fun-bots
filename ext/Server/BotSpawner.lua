@@ -22,7 +22,7 @@ end
 function BotSpawner:updateBotAmountAndTeam(levelstart)
 	-- keep Slot for next player
 	if Config.keepOneSlotForPlayers then
-		local playerlimt = Globals.maxPlayers - 1
+		local playerlimt = g_Globals.maxPlayers - 1
 		local amoutToDestroy = PlayerManager:GetPlayerCount() - playerlimt
 		if amoutToDestroy > 0 then
 			BotManager:destroyAmount(amoutToDestroy)
@@ -51,7 +51,7 @@ function BotSpawner:updateBotAmountAndTeam(levelstart)
 	local botCountTeam2 = team2Count - countPlayersTeam2;
 
 	-- KEEP PLAYERCOUNT
-	if Globals.spawnMode == 'keep_playercount' then
+	if g_Globals.spawnMode == 'keep_playercount' then
 		local targetTeam1 = Config.initNumberOfBots;
 		local targetTeam2 = Config.initNumberOfBots;
 		if Config.spawnInBothTeams then
@@ -87,7 +87,7 @@ function BotSpawner:updateBotAmountAndTeam(levelstart)
 		end
 
 	-- INCREMENT WITH PLAYER
-	elseif Globals.spawnMode == 'increment_with_players' then
+	elseif g_Globals.spawnMode == 'increment_with_players' then
 		if Config.spawnInBothTeams then
 			local targetBotCountTeam1 = 0;
 			local targetBotCountTeam2 = 0;
@@ -141,7 +141,7 @@ function BotSpawner:updateBotAmountAndTeam(levelstart)
 		end
 
 	-- FIXED NUMBER TO SPAWN
-	elseif Globals.spawnMode == 'fixed_number' then
+	elseif g_Globals.spawnMode == 'fixed_number' then
 		if levelstart then
 			botCountTeam1 = 0;
 			botCountTeam2 = 0;
@@ -181,7 +181,7 @@ function BotSpawner:updateBotAmountAndTeam(levelstart)
 			end
 		end
 	-- MANUAL BOT COUNT
-	elseif Globals.spawnMode == 'manual' then
+	elseif g_Globals.spawnMode == 'manual' then
 		if levelstart then
 			self:spawnWayBots(nil, botCountTeam2, true, 0, 0, TeamId.Team2);
 			self:spawnWayBots(nil, botCountTeam1, true, 0, 0, TeamId.Team1);
@@ -430,12 +430,12 @@ function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, inde
 end
 
 function BotSpawner:spawnWayBots(player, amount, useRandomWay, activeWayIndex, indexOnPath, teamId)
-	if Globals.activeTraceIndexes <= 0 then
+	if g_Globals.activeTraceIndexes <= 0 then
 		return
 	end
 
 	-- check for amount available
-	local playerlimt = Globals.maxPlayers;
+	local playerlimt = g_Globals.maxPlayers;
 	if Config.keepOneSlotForPlayers then
 		playerlimt = playerlimt - 1
 	end
