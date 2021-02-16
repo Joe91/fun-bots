@@ -11,6 +11,7 @@ function ClientBotManager:__init()
 
 	Events:Subscribe('UpdateManager:Update', self, self._onUpdate);
 	NetEvents:Subscribe('WriteClientSettings', self, self._onWriteClientSettings);
+	NetEvents:Subscribe('CheckBotBotAttack', self, self._checkForBotBotAttack);
 	if not USE_REAL_DAMAGE then
 		Hooks:Install('BulletEntity:Collision', 200, self, self._onBulletCollision);
 	end
@@ -78,6 +79,17 @@ function ClientBotManager:_onUpdate(p_Delta, p_Pass)
 				end
 			end
 		end
+	end
+end
+
+function ClientBotManager:_checkForBotBotAttack(pos1, pos2, name1, name2)
+	--check for clear view to startpoint
+	local startPos 	= Vec3(pos1.x, pos1.y + 1.0, pos1.z);
+	local endPos 	= Vec3(pos2.x, pos2.y + 1.0, pos2.z);
+	local raycast	= RaycastManager:Raycast(startPos, endPos, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter| RayCastFlags.IsAsyncRaycast);
+
+	if (raycast == nil or raycast.rigidBody == nil) then
+		NetEvents:SendLocal("BotShootAtBot", name1, name2);
 	end
 end
 
