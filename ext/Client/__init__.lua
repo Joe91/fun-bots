@@ -9,6 +9,8 @@ require('__shared/Constants/WeaponSets');
 require('__shared/Constants/BotAttackModes');
 require('__shared/Constants/SpawnModes');
 
+require('ClientNodeEditor');
+
 Language					= require('__shared/Language');
 local FunBotUIClient		= require('UIClient');
 local ClientTraceManager	= require('ClientTraceManager');

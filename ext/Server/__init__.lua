@@ -9,6 +9,9 @@ require('__shared/Constants/BotWeapons');
 require('__shared/Constants/WeaponSets');
 require('__shared/Constants/BotAttackModes');
 require('__shared/Constants/SpawnModes');
+require('__shared/Utilities');
+
+require('NodeEditor');
 
 
 Language					= require('__shared/Language');
@@ -112,16 +115,6 @@ function FunBotServer:_onChat(player, recipientMask, message)
 	local messageParts = string.lower(message):split(' ');
 
 	ChatCommands:execute(messageParts, player);
-end
-
---helper fucntion for string, @ToDo move to Utils class
-function string:split(sep)
-	local sep, fields	= sep or ':', {};
-	local pattern		= string.format("([^%s]+)", sep);
-
-	self:gsub(pattern, function(c) fields[#fields + 1] = c end);
-
-	return fields;
 end
 
 -- Singleton.

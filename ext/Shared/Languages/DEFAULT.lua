@@ -92,14 +92,10 @@ Language:add(code, "Attack Distance no Sniper", "");
 Language:add(code, "The maximum distance a non Sniper Bot starts shooting at a player", "");
 Language:add(code, "Direct Attack Distance", "");
 Language:add(code, "When this close to a bot, he starts attacking", "");
-Language:add(code, "Bots can kill themself", "");
-Language:add(code, "If false, Bots take no fall or Frag damage", "");
-Language:add(code, "Bots Attack Bots", "");
-Language:add(code, "Bots attack bots from other team", "");
-Language:add(code, "Distance Bot Bot attack", "");
-Language:add(code, "The maximum distance a Bot attacks an other Bot", "");
 Language:add(code, "Attack with Melee", "");
 Language:add(code, "Bots attack the playe with the knife, if close", "");
+Language:add(code, "Bots can kill themself", "");
+Language:add(code, "If false, Bots take no fall or Frag damage", "");
 Language:add(code, "Attack other players", "");
 Language:add(code, "Bots on paths attack player by default", "");
 Language:add(code, "Melee Cooldown", "");
@@ -116,6 +112,15 @@ Language:add(code, "Speed Reduction", "");
 Language:add(code, "reduces the movementspeed. 1 = normal, 0.1 = slow", "");
 Language:add(code, "Speed Reduction Attack", "");
 Language:add(code, "reduces the movementspeed while attacking. 1 = normal, 0.1 = slow.", "");
+
+Language:add(code, "Enable Trace Path Editing and Visualizations")
+Language:add(code, "Set how far away waypoints are visible (meters)")
+Language:add(code, "Draw waypoint connection Lines")
+Language:add(code, "Set how far away waypoint lines are visible (meters)")
+Language:add(code, "Draw waypoint IDs")
+Language:add(code, "Set how far away waypoint text is visible (meters)")
+Language:add(code, "Shows the last trace line and search area from Commo Rose selection")
+
 Language:add(code, "First Shot Delay", "");
 Language:add(code, "delay for first shot", "");
 Language:add(code, "Min Time Shoot", "");

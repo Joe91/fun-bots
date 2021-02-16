@@ -21,6 +21,8 @@ function FunBotUIServer:__init()
 		NetEvents:Subscribe('UI_Request_Open', self, self._onUIRequestOpen);
 		NetEvents:Subscribe('UI_Request_Save_Settings', self, self._onUIRequestSaveSettings);
 		NetEvents:Subscribe('BotEditor', self, self._onBotEditorEvent);
+		NetEvents:Subscribe('UI_Request_CommoRose_Show', self, self._onUIRequestCommonRoseShow);
+		NetEvents:Subscribe('UI_Request_CommoRose_Hide', self, self._onUIRequestCommonRoseHide);
 	end
 end
 
@@ -65,7 +67,7 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 
 	elseif request.action == 'bot_spawn_path' then --todo: whats the difference? make a function to spawn bots on a fixed way instead?
 		local amount		= 1;
-		local indexOnPath	= 1;
+		local indexOnPath	= tonumber(request.pointindex) or 1;
 		local index			= tonumber(request.value);
 		Globals.spawnMode	= "manual";
 		BotSpawner:spawnWayBots(player, amount, false, index, indexOnPath);
@@ -158,6 +160,74 @@ function FunBotUIServer:_onUIRequestSaveSettings(player, data)
 	local request = json.decode(data);
 
 	self:_writeSettings(player, request);
+end
+
+function FunBotUIServer:_onUIRequestCommonRoseShow(player, data)
+	if Config.disableUserInterface == true then
+		return;
+	end
+	
+	if (Config.settingsPassword ~= nil and self:_isAuthenticated(player.accountGuid) ~= true) then
+		print(player.name .. ' has no permissions for Waypoint-Editor.');
+		return;
+	end
+	
+	print(player.name .. ' requesting show CommonRose.');
+	NetEvents:SendTo('UI_CommonRose', player, {
+		Top = {
+			Action	= 'cr_save',
+			Label	= Language:I18N('Save'),
+			Confirm	= true
+		},
+		Left = {
+			{
+				Action	= 'cr_merge',
+				Label	= Language:I18N('Merge')
+			}, {
+				Action	= 'cr_move',
+				Label	= Language:I18N('Move')
+			}, {
+				Action	= 'cr_delete',
+				Label	= Language:I18N('Delete')
+			}
+		},
+		Center = {
+			Action	= 'cr_select',
+			Label	= Language:I18N('Select') -- or "Unselect"
+		},
+		Right = {
+			{
+				Action	= 'cr_split',
+				Label	= Language:I18N('Split')
+			}, {
+				Action	= 'cr_set_input',
+				Label	= Language:I18N('Set Input'),
+				Confirm	= true
+			}, {
+				Action	= 'cr_create',
+				Label	= Language:I18N('Create')
+			}
+		},
+		Bottom = {
+			Action	= 'cr_load',
+			Label	= Language:I18N('Load'),
+			Confirm	= true
+		}
+	});
+end
+
+function FunBotUIServer:_onUIRequestCommonRoseHide(player, data)
+	if Config.disableUserInterface == true then
+		return;
+	end
+	
+	if (Config.settingsPassword ~= nil and self:_isAuthenticated(player.accountGuid) ~= true) then
+		print(player.name .. ' has no permissions for Waypoint-Editor.');
+		return;
+	end
+	
+	print(player.name .. ' requesting hide CommonRose.');
+	NetEvents:SendTo('UI_CommonRose', player, 'false');
 end
 
 function FunBotUIServer:_onUIRequestOpen(player, data)
@@ -305,6 +375,7 @@ function FunBotUIServer:_writeSettings(player, request)
 	if request.aimForHead ~= nil then
 		SettingsManager:update('aimForHead', (request.aimForHead == true), temporary, batched);
 	end
+	
 	if request.headShotFactorBots ~= nil then
 		local tempValue = tonumber(request.headShotFactorBots);
 
@@ -411,18 +482,6 @@ function FunBotUIServer:_writeSettings(player, request)
 
 		if tempValue >= 0 and tempValue <= 10 then
 			SettingsManager:update('distanceForDirectAttack', tempValue, temporary, batched);
-		end
-	end
-
-	if request.botsAttackBots ~= nil then
-		SettingsManager:update('botsAttackBots', (request.botsAttackBots == true), temporary, batched);
-	end
-
-	if request.maxBotAttackBotDistance ~= nil then
-		local tempValue = tonumber(request.maxBotAttackBotDistance);
-
-		if tempValue >= 0 and tempValue <= 10 then
-			SettingsManager:update('maxBotAttackBotDistance', tempValue, temporary, batched);
 		end
 	end
 
@@ -702,6 +761,47 @@ function FunBotUIServer:_writeSettings(player, request)
 				break
 			end
 		end
+	end
+	
+	-- trace
+	if request.debugTracePaths ~= nil then
+		SettingsManager:update('debugTracePaths', (request.debugTracePaths == true), temporary, batched);
+	end
+
+	if request.waypointRange ~= nil then
+		local tempValue = tonumber(request.waypointRange);
+
+		if tempValue >= 0 and tempValue <= 1000.0 then
+			SettingsManager:update('waypointRange', tempValue, temporary, batched);
+		end
+	end
+
+	if request.drawWaypointLines ~= nil then
+		SettingsManager:update('drawWaypointLines', (request.drawWaypointLines == true), temporary, batched);
+	end
+
+	if request.lineRange ~= nil then
+		local tempValue = tonumber(request.lineRange);
+
+		if tempValue >= 0 and tempValue <= 1000.0 then
+			SettingsManager:update('lineRange', tempValue, temporary, batched);
+		end
+	end
+
+	if request.drawWaypointIDs ~= nil then
+		SettingsManager:update('drawWaypointIDs', (request.drawWaypointIDs == true), temporary, batched);
+	end
+	
+	if request.textRange ~= nil then
+		local tempValue = tonumber(request.textRange);
+
+		if tempValue >= 0 and tempValue <= 1000.0 then
+			SettingsManager:update('textRange', tempValue, temporary, batched);
+		end
+	end
+
+	if request.debugSelectionRaytraces ~= nil then
+		SettingsManager:update('debugSelectionRaytraces', (request.debugSelectionRaytraces == true), temporary, batched);
 	end
 
 

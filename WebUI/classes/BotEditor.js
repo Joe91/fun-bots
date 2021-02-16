@@ -559,6 +559,113 @@ const BotEditor = (new function BotEditor() {
 			break;
 		}
 	};
+	
+	this.setCommonRose = function setCommonRose(data) {
+		let state	= false;
+		
+		if(data === false) {
+			this.hide('commorose');
+			
+			if(state) {
+				this.show('toolbar');
+			} else {
+				this.hide('toolbar');
+			}
+			return;
+		}
+		
+		let json;
+		let container = document.querySelector('ui-view[data-name="commorose"]');
+
+		try {
+			json = JSON.parse(data);
+		} catch(e) {
+			console.error(e, data);
+			return;
+		}
+		
+		/* Top */
+		let top = container.querySelector('ui-top span');
+		
+		if(json.Top) {
+			if(json.Top.Action) {
+				top.dataset.action = json.Top.Action;
+			}
+			
+			if(json.Top.Label) {
+				top.innerHTML = json.Top.Label;
+			}
+		} else {
+			top.dataset.action	= '';
+			top.innerHTML		= '';
+		}
+		
+		/* Bottom */
+		let bottom = container.querySelector('ui-bottom span');
+		
+		if(json.Bottom) {
+			if(json.Bottom.Action) {
+				bottom.dataset.action = json.Bottom.Action;
+			}
+			
+			if(json.Bottom.Label) {
+				bottom.innerHTML = json.Bottom.Label;
+			}
+		} else {
+			bottom.dataset.action	= '';
+			bottom.innerHTML		= '';
+		}
+		
+		/* Center */
+		let center = container.querySelector('ui-hexagon');
+		
+		if(json.Center) {
+			if(json.Center.Action) {
+				center.dataset.action = json.Center.Action;
+			}
+			
+			if(json.Center.Label) {
+				center.innerHTML = json.Center.Label;
+			}
+		} else {
+			center.dataset.action	= '';
+			center.innerHTML		= '';
+		}
+		
+		/* Left */
+		let left			= container.querySelector('ul.left');
+		left.innerHTML		= '';
+		
+		if(json.Left) {
+			json.Left.forEach(function(entry) {
+				let element				= document.createElement('li');
+				element.innerHTML		= (entry.Label ? '<span>' + entry.Label + '</span>' : '<span></span>');
+				element.dataset.action	= entry.Action;
+				left.appendChild(element);
+			});
+		}
+		
+		/* Right */
+		let right			= container.querySelector('ul.right');
+		right.innerHTML		= '';
+		
+		if(json.Right) {
+			json.Right.forEach(function(entry) {
+				let element				= document.createElement('li');
+				element.innerHTML		= (entry.Label ? '<span>' + entry.Label + '</span>' : '<span></span>');
+				element.dataset.action	= entry.Action;
+				right.appendChild(element);
+			});
+		}
+		
+		state = this.isVisible('toolbar');
+		
+		if(state) {
+			this.hide('toolbar');
+		}
+		
+		this.show('commorose');
+	};
 
 	this.isVisible = function isVisible(name) {
 		let view = this.getView(name);

@@ -57,8 +57,18 @@ Config = {
 	supportWeaponSet = "Class_Shotgun",	-- weaponset of Support class
 	reconWeaponSet = "Class",				-- weaponset of Recon class
 
+
+	-- traces
+	debugTracePaths = false,		-- Shows the trace line and search area from Commo Rose selection
+	waypointRange = 100,			-- Set how far away waypoints are visible (meters)
+	drawWaypointLines = true,		-- Draw waypoint connection Lines
+	lineRange = 15,					-- Set how far away waypoint lines are visible (meters)
+	drawWaypointIDs = true,			-- Draw waypoint IDs
+	textRange = 3,					-- Set how far away waypoint text is visible (meters)
+	debugSelectionRaytraces = false,-- Shows the trace line and search area from Commo Rose selection
+
 	--advanced
-	fovForShooting = 200,			-- Degrees of FOV of Bot
+	fovForShooting = 160,			-- Degrees of FOV of Bot
 	shootBackIfHit = true,			-- bot shoots back, if hit
 	maxRaycastDistance = 150,		-- meters bots start shooting at player
 	maxShootDistanceNoSniper = 70,	-- meters a bot (not sniper) start shooting at player
@@ -80,8 +90,8 @@ Config = {
 	botFirstShotDelay = 0.4,		-- delay for first shot. If too small, there will be great spread in first cycle because its not kompensated jet.
 	botMinTimeShootAtPlayer = 1.0,	-- the minimum time a bot shoots at one player
 	botFireModeDuration = 5.0,		-- the minimum time a bot tries to shoot a player
-	maximunYawPerSec = 540,			-- in Degree. Rotaion-Movement per second.
-	targetDistanceWayPoint = 1.2,	-- distance the bots have to reach to continue with next Waypoint
+	maximunYawPerSec = 450,			-- in Degree. Rotaion-Movement per second.
+	targetDistanceWayPoint = 0.8,	-- distance the bots have to reach to continue with next Waypoint
 
 	-- UI settings & language options
 	disableUserInterface = false,	-- if true, the complete UI will be disabled
@@ -96,7 +106,7 @@ StaticConfig = {
 	traceDelta = 0.2,					-- update intervall of trace
 	traceDeltaShooting = 0.4,			-- update intervall of trace back to path the bots left for shooting
 	raycastInterval = 0.05,				-- update intervall of client raycasts
-	botAttackBotCheckInterval = 0.1,	-- update intervall of client raycasts
+	botAttackBotCheckInterval = 0.05,	-- update intervall of client raycasts
 	botUpdateCycle = 0.1,				-- update-intervall of bots
 	botAimUpdateCycle = 0.05,			-- = 3 frames at 60 Hz
 	targetHeightDistanceWayPoint = 1.5	-- distance the bots have to reach in height to continue with next Waypoint

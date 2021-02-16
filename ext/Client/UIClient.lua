@@ -20,6 +20,7 @@ function FunBotUIClient:__init()
 		NetEvents:Subscribe('UI_Password_Protection', self, self._onUIPasswordProtection);
 		NetEvents:Subscribe('UI_Show_Toolbar', self, self._onUIShowToolbar);
 		NetEvents:Subscribe('UI_Settings', self, self._onUISettings);
+		NetEvents:Subscribe('UI_CommonRose', self, self._onUICommonRose);
 		Events:Subscribe('UI_Settings', self, self._onUISettings);
 		NetEvents:Subscribe('UI_Change_Language', self, self._onUIChangeLanguage);
 		Events:Subscribe('UI_Change_Language', self, self._onUIChangeLanguage);
@@ -46,6 +47,17 @@ function FunBotUIClient:_onUIToggle()
 		self._views:open();
 		self._views:focus();
 	end
+end
+
+function FunBotUIClient:_onUICommonRose(data)
+	if data == "false" then
+		self._views:execute('BotEditor.setCommonRose(false);');
+		self._views:blur();
+		return;
+	end
+	
+	self._views:execute('BotEditor.setCommonRose(\'' .. json.encode(data) .. '\');');
+	self._views:focus();
 end
 
 function FunBotUIClient:_onUISettings(data)
@@ -111,7 +123,7 @@ function FunBotUIClient:_onUISettings(data)
 	settings:addList("WEAPONS", "assaultWeapon",  Language:I18N("Weapon Assault"), WeaponsAssault, data.assaultWeapon, "M416", Language:I18N("Weapon of Assault class"));
 	settings:addList("WEAPONS", "engineerWeapon",  Language:I18N("Weapon Engineer"), WeaponsEngineer, data.engineerWeapon, "M4A1", Language:I18N("Weapon of Engineer class"));
 	settings:addList("WEAPONS", "supportWeapon",  Language:I18N("Weapon Support"), WeaponsSupport, data.supportWeapon, "M249", Language:I18N("Weapon of Support class"));
-	settings:addList("WEAPONS", "reconWeapon",  Language:I18N("Weapon Recon"), WeaponsRecon, data.reconWeapon, "L96_6x", Language:I18N("Weapon of Recon class"));
+	settings:addList("WEAPONS", "reconWeapon",  Language:I18N("Weapon Recon"), WeaponsRecon, data.reconWeapon, "L96", Language:I18N("Weapon of Recon class"));
 	settings:addList("WEAPONS", "assaultWeaponSet",  Language:I18N("Weaponset of Assault"), WeaponSets, data.assaultWeaponSet, "Class", Language:I18N("Weaponset of Assault class"));
 	settings:addList("WEAPONS", "engineerWeaponSet",  Language:I18N("Weaponset Engineer"), WeaponSets, data.engineerWeaponSet, "Class_PDW", Language:I18N("Weaponset of Engineer class"));
 	settings:addList("WEAPONS", "supportWeaponSet",  Language:I18N("Weaponset Support"), WeaponSets, data.supportWeaponSet, "Class_Shotgun", Language:I18N("Weaponset of Support class"));
@@ -122,10 +134,8 @@ function FunBotUIClient:_onUISettings(data)
 	settings:add("ADVANCED", "Integer", "maxRaycastDistance", Language:I18N("View Distance Bots"), data.maxRaycastDistance, 150, Language:I18N("The maximum distance a Sniper Bot starts shooting at a player"));
 	settings:add("ADVANCED", "Integer", "maxShootDistanceNoSniper", Language:I18N("Attack Distance no Sniper"), data.maxShootDistanceNoSniper, 70, Language:I18N("The maximum distance a non Sniper Bot starts shooting at a player"));
 	settings:add("ADVANCED", "Float", "distanceForDirectAttack", Language:I18N("Direct Attack Distance"), data.distanceForDirectAttack, 5, Language:I18N("When this close to a bot, he starts attacking"));
-	settings:add("ADVANCED", "Boolean", "botCanKillHimself", Language:I18N("Bots can kill themself"), data.botCanKillHimself, false, Language:I18N("If false, Bots take no fall or Frag damage"));
-	settings:add("ADVANCED", "Boolean", "botsAttackBots", Language:I18N("Bots Attack Bots"), data.botsAttackBots, true, Language:I18N("Bots attack bots from other team"));
-	settings:add("ADVANCED", "Integer", "maxBotAttackBotDistance", Language:I18N("Distance Bot Bot attack"), data.maxBotAttackBotDistance, 30, Language:I18N("The maximum distance a Bot attacks an other Bot"));
 	settings:add("ADVANCED", "Boolean", "meleeAttackIfClose", Language:I18N("Attack with Melee"), data.meleeAttackIfClose, true, Language:I18N("Bots attack the playe with the knife, if close"));
+	settings:add("ADVANCED", "Boolean", "botCanKillHimself", Language:I18N("Bots can kill themself"), data.botCanKillHimself, false, Language:I18N("If false, Bots take no fall or Frag damage"));
 	settings:add("ADVANCED", "Boolean", "attackWayBots", Language:I18N("Attack other players"), data.attackWayBots, true, Language:I18N("Bots on paths attack player by default"));
 	settings:add("ADVANCED", "Float", "meleeAttackCoolDown", Language:I18N("Melee Cooldown"), data.meleeAttackCoolDown, 3, Language:I18N("the time a Bot waits before attacking with melee again"));
 	settings:add("ADVANCED", "Boolean", "jumpWhileShooting", Language:I18N("Allow Jump while shooting"), data.jumpWhileShooting, true, Language:I18N("Bots jump over obstacles while shooting"));
@@ -134,6 +144,14 @@ function FunBotUIClient:_onUISettings(data)
 	settings:add("ADVANCED", "Integer", "overWriteBotAttackMode", Language:I18N("Overwrite Attack-Speed-Mode"), data.overWriteBotAttackMode, 0, Language:I18N("!!Affects Aiming!!! 0 = no overwrite. 1 = prone, 2 = crouch (good aim), 3 = walk, 4 = run"));
 	settings:add("ADVANCED", "Float", "speedFactor", Language:I18N("Speed Reduction"), data.speedFactor, 1.0, Language:I18N("reduces the movementspeed. 1 = normal, 0.1 = slow"));
 	settings:add("ADVANCED", "Float", "speedFactorAttack", Language:I18N("Speed Reduction Attack"), data.speedFactorAttack, 0.6, Language:I18N("reduces the movementspeed while attacking. 1 = normal, 0.1 = slow."));
+
+	settings:add("TRACE", "Boolean", "debugTracePaths", Language:I18N("Debug Trace Paths"), data.debugTracePaths, false, Language:I18N("Enable Trace Path Editing and Visualizations"));
+	settings:add("TRACE", "Integer", "waypointRange", Language:I18N("Waypoint Range"), data.waypointRange, 100, Language:I18N("Set how far away waypoints are visible (meters)"));
+	settings:add("TRACE", "Boolean", "drawWaypointLines", Language:I18N("Draw Waypoint Lines"), data.drawWaypointLines, true, Language:I18N("Draw waypoint connection Lines"));
+	settings:add("TRACE", "Integer", "lineRange", Language:I18N("Line Range"), data.lineRange, 15, Language:I18N("Set how far away waypoint lines are visible (meters)"));
+	settings:add("TRACE", "Boolean", "drawWaypointIDs", Language:I18N("Draw Waypoint IDs"), data.drawWaypointIDs, true, Language:I18N("Draw waypoint IDs"));
+	settings:add("TRACE", "Integer", "textRange", Language:I18N("Text Range"), data.textRange, 3, Language:I18N("Set how far away waypoint text is visible (meters)"));
+	settings:add("TRACE", "Boolean", "debugSelectionRaytraces", Language:I18N("Debug Selection Raytraces"), data.debugSelectionRaytraces, false, Language:I18N("Shows the last trace line and search area from Commo Rose selection"));
 
 	settings:add("EXPERT", "Float", "botFirstShotDelay", Language:I18N("First Shot Delay"), data.botFirstShotDelay, 0.2, Language:I18N("delay for first shot"));
 	settings:add("EXPERT", "Float", "botMinTimeShootAtPlayer", Language:I18N("Min Time Shoot"), data.botMinTimeShootAtPlayer, 1.0, Language:I18N("the minimum time a Bot shoots at one player"));

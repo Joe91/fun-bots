@@ -117,14 +117,14 @@ function WeaponModification:_ModifyWeapon(p_SoldierWeaponData, index, aimWorseni
 	-- check for sniper rifles:
 	--https://docs.veniceunleashed.net/vext/ref/fb/weaponclassenum/ and EBX-Dumb
 	local class = s_SoldierWeaponData.weaponClass;
-	local aiData = s_SoldierWeaponData.aiData;
-	local nameOfAiData = tostring(aiData.name)
-	if string.find(nameOfAiData ,"Handheld_sni_AI_Weapon") ~= nil
-	or string.find(nameOfAiData ,"Handheld_snisemi_AI_Weapon") ~= nil then
+	if class == WeaponClassEnum.wc338Magnum --M98B
+	or class == WeaponClassEnum.wc762x51mmNATO --L96 --M40 --JNG90
+	or class == WeaponClassEnum.wc762x39mmWP --SKS
+	or class == WeaponClassEnum.wcSniper
+	then
 		botAimWorsening = aimWorseningSniper
 		isReconWeapon = true;
 	end
-
 	local recoilFactor = botAimWorsening;
 
 	local s_GunSwayData = self:_MakeWritable(s_WeaponFiringData.weaponSway);
