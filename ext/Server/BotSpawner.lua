@@ -49,6 +49,25 @@ function BotSpawner:updateBotAmountAndTeam(levelstart)
 	end
 	local botCountTeam1 = team1Count - countPlayersTeam1;
 	local botCountTeam2 = team2Count - countPlayersTeam2;
+	if levelstart then
+		local tempVar = team1Count;
+		team1Count = team2Count;
+		team2Count = tempVar;
+
+		tempVar = countPlayersTeam1;
+		countPlayersTeam1 = countPlayersTeam2;
+		countPlayersTeam2 = tempVar;
+
+		tempVar = botCountTeam1;
+		botCountTeam1 = botCountTeam2;
+		botCountTeam2 = tempVar;
+
+		if botTeam == TeamId.Team1 then
+			botTeam = TeamId.Team2
+		else
+			botTeam = TeamId.Team1
+		end
+	end
 
 	-- KEEP PLAYERCOUNT
 	if g_Globals.spawnMode == 'keep_playercount' then
@@ -91,7 +110,7 @@ function BotSpawner:updateBotAmountAndTeam(levelstart)
 		if Config.spawnInBothTeams then
 			local targetBotCountTeam1 = 0;
 			local targetBotCountTeam2 = 0;
-			if countPlayersTeam1 > 0 then
+			if countPlayersTeam1 > 0 or countPlayersTeam2 == 0 then  -- add bots with first player joining (bots teams count 0)
 				targetBotCountTeam2 = Config.initNumberOfBots + ((countPlayersTeam1-1) * Config.newBotsPerNewPlayer)
 			end
 			if countPlayersTeam2 > 0 then
