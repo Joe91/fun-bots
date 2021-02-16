@@ -44,7 +44,7 @@ function NodeEditor:_onPlayerKilled(player, inflictor, position, weapon, isRoadK
 			Player = player,
 			Current = 0,
 			Delay = 0,
-			Speed = 0.25,
+			Speed = 0.5,
 			State = false
 		}
     end
@@ -56,7 +56,7 @@ function NodeEditor:_onPlayerRespawn(player)
 			Player = player,
 			Current = 0,
 			Delay = 1,
-			Speed = 0.25,
+			Speed = 0.5,
 			State = true
 		}
 	end
@@ -172,26 +172,27 @@ function NodeEditor:_onSetBotVision(player, enabled)
 			Player = player,
 			Current = 0,
 			Delay = 1,
-			Speed = 1,
+			Speed = 0.5,
 			State = enabled
 		}
 	else
-		player:Fade(1, false)
+		player:Fade(0.5, false)
 		self.botVision[player.name] = nil
 	end
 end
 
 function NodeEditor:_onEngineUpdate(deltaTime, simulationDeltaTime)
 
-	if (#self.botVision > 0) then
-		for playerName, timeData in pairs(self.botVision) do
-			if (type(timeData) == 'table') then
-				timeData.Current = timeData.Current + deltaTime
+	for playerName, timeData in pairs(self.botVision) do
+		if (type(timeData) == 'table') then
+			timeData.Current = timeData.Current + deltaTime
 
-				if (timeData.Current >= timeData.Delay) then
-					timeData.Player:Fade(timeData.Speed, timeData.State)
-					self.botVision[playerName] = true
-				end
+			if (timeData.Current >= timeData.Delay) then
+				print('Player:Fade ['..timeData.Player.name..']: '..tostring(timeData.State))
+				timeData.Player:Fade(timeData.Speed, timeData.State)
+				self.botVision[playerName] = true
+			else
+				self.botVision[playerName] = timeData
 			end
 		end
 	end

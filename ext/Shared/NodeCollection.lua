@@ -320,16 +320,28 @@ end
 
 function NodeCollection:Get(waypointIndex, pathIndex)
 	if (waypointIndex ~= nil) then
-		local searchTable = self.waypoints
 		if (pathIndex ~= nil) then
-			local searchTable = self:Get(nil, pathIndex)
-			for _, waypoint in pairs(searchTable) do
-				if (waypoint.Index == waypointIndex) then
+			
+			if (self.waypointsByPathIndex[pathIndex] == nil) then
+				self.waypointsByPathIndex[pathIndex] = {}
+			end
+
+			for i=1, #self.waypointsByPathIndex[pathIndex] do
+				local waypoint = self.waypointsByPathIndex[pathIndex][i]
+				if (waypoint.PathIndex == pathIndex and waypoint.PointIndex == waypointIndex) then
 					return waypoint
 				end
 			end
 		else
-			return self.waypointsByID[waypointIndex]
+			if (type(waypointIndex) == 'string') then
+				return self.waypointsByID[waypointIndex]
+			else
+				for i=1, #self.waypoints do
+					if (self.waypoints[i].Index == waypointIndex) then
+						return self.waypoints[i]
+					end
+				end
+			end
 		end
 		return nil
 	elseif (pathIndex ~= nil) then
@@ -694,8 +706,6 @@ function NodeCollection:Next(waypoint)
 
 	return waypoint.Next
 end
-
-
 
 -- this method avoids the use of the Vec3:Distance() method to avoid complex math internally
 -- it's a tradeoff for speed over accuracy, as this method produces a box instead of a sphere

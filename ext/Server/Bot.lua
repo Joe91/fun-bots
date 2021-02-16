@@ -626,24 +626,21 @@ function Bot:_updateMovement()
 
 				if #self._shootWayPoints > 0 then	--we need to go back to path first
 					point 				= self._shootWayPoints[#self._shootWayPoints];
-					NetEvents:Broadcast('NodeEditor:DeselectByID', (#self._shootWayPoints))
 					nextPoint 			= self._shootWayPoints[#self._shootWayPoints - 1];
 					if nextPoint == nil then
 						nextPoint = Globals.wayPoints[self._pathIndex][activePointIndex];
-						NetEvents:Broadcast('NodeEditor:SelectByID', activePointIndex, self._pathIndex)
-					else 
-						NetEvents:Broadcast('NodeEditor:SelectByID', (#self._shootWayPoints - 1))
+						NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', self._pathIndex, activePointIndex, self.player.soldier.worldTransform.trans, (self._obstaceSequenceTimer > 0), "Blue")
 					end
 					useShootWayPoint	= true;
 				else
 					point = Globals.wayPoints[self._pathIndex][activePointIndex];
-					NetEvents:Broadcast('NodeEditor:DeselectByID', activePointIndex, self._pathIndex)
+					NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', self._pathIndex, activePointIndex, self.player.soldier.worldTransform.trans, (self._obstaceSequenceTimer > 0), "White")
 					if not self._invertPathDirection then
 						nextPoint = Globals.wayPoints[self._pathIndex][self:_getWayIndex(self._currentWayPoint + 1)]
-						NetEvents:Broadcast('NodeEditor:SelectByID', (self._currentWayPoint + 1), self._pathIndex)
+						NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', self._pathIndex, self:_getWayIndex(self._currentWayPoint + 1), self.player.soldier.worldTransform.trans, (self._obstaceSequenceTimer > 0), "Green")
 					else
 						nextPoint = Globals.wayPoints[self._pathIndex][self:_getWayIndex(self._currentWayPoint - 1)]
-						NetEvents:Broadcast('NodeEditor:SelectByID', (self._currentWayPoint - 1), self._pathIndex)
+						NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', self._pathIndex, self:_getWayIndex(self._currentWayPoint - 1), self.player.soldier.worldTransform.trans, (self._obstaceSequenceTimer > 0), "Green")
 					end
 				end
 
