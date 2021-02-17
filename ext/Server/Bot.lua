@@ -395,16 +395,15 @@ function Bot:_updateYaw()
 	end
 	if Config.zombieMode or Config.botWeapon == "Knife" then
 		if self._shootPlayer ~= nil and self.player.soldier ~= nil then
-			if #self._knifeWayPoints > 1 then
-				if self.player.soldier.worldTransform.trans:Distance(self._knifeWayPoints[1]) < 1.5 then
-					table.remove(self._knifeWayPoints, 1)
-					print("remove point")
-				end
+			if #self._knifeWayPoints > 0 then
 				local dy					= self._knifeWayPoints[1].z - self.player.soldier.worldTransform.trans.z;
 				local dx					= self._knifeWayPoints[1].x - self.player.soldier.worldTransform.trans.x;
 				local atanDzDx	= math.atan(dy, dx);
 				local yaw		= (atanDzDx > math.pi / 2) and (atanDzDx - math.pi / 2) or (atanDzDx + 3 * math.pi / 2);
 				self._targetYaw = yaw;
+				if self.player.soldier.worldTransform.trans:Distance(self._knifeWayPoints[1]) < 1.5 then
+					table.remove(self._knifeWayPoints, 1)
+				end
 			end
 		end
 	end
