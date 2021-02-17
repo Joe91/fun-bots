@@ -314,6 +314,7 @@ end
 
 function NodeCollection:_processWaypointMetadata(waypoint)
 
+	-- safety checks
 	if (waypoint.Data == nil) then
 		waypoint.Data = {}
 	end
@@ -321,16 +322,36 @@ function NodeCollection:_processWaypointMetadata(waypoint)
 	if (type(waypoint.Data) == 'string') then
 		waypoint.Data = json.decode(waypoint.Data)
 	end
+	-- -----
 
-	-- TODO Check if indirect connections
+	-- Check if indirect connections, create if missing
 	-- waypoint.Data.LinkMode = 0
-	-- waypoint.Data.Links = { 'p_1', ... }
+	-- waypoint.Data.Links = { 
+		-- <waypoint_ID>, 
+		-- <waypoint_ID>, 
+		-- ...
+	--}
 
-	-- TODO Check if direct connections
+	-- if the node has a linkmode and no links then try to find them
+	if (waypoint.Data.LinkMode ~= nil and (waypoint.Data.Links == nil or (type(waypoint.Data.Links) == 'table' and #waypoint.Data.Links < 1))) then
+
+		-- indirect connections
+		if (waypoint.Data.LinkMode = 0) then
+
+			local range = waypoint.Data.Range or 3 -- meters, box-like area
+			local chance = waypoint.Data.Chance or  -- 1 - 100
+			local nearbyNodes = self:FindAll(waypoint.Position, range)
+
+			waypoint.Data.Links = {}
+			for i=1, nearbyNodes do
+				table.insert(waypoint.Data.Links, nearbyNodes[i].ID)
+			end
+		end 
+	end
+
+	-- if direct connections
 	-- waypoint.Data.LinkMode = 1
 	-- waypoint.Data.Links = { 'p_1', ... }
-
-
 end
 
 
@@ -696,6 +717,7 @@ function NodeCollection:Save()
 				speedMode = waypoint.SpeedMode,
 				extraMode = waypoint.ExtraMode,
 				optValue = waypoint.OptValue,
+				data = waypoint.Data,
 			}
 
 			if (changedWaypoints[waypoint.PathIndex] == nil) then
