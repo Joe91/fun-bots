@@ -42,6 +42,7 @@ function Bot:__init(player)
 	--shared movement vars
 	self.activeMoveMode = 0;
 	self.activeSpeedValue = 0;
+	self.knifeMode = false;
 
 	--advanced movement
 	self._attackMode = 0;
@@ -140,7 +141,7 @@ function Bot:shootAt(player, ignoreYaw)
 				self._lastShootPlayer 	= player;
 				self._lastTargetTrans 	= player.soldier.worldTransform.trans:Clone();
 				self._knifeWayPoints 	= {};
-				if Config.zombieMode or Config.botWeapon == "Knife" then
+				if self.knifeMode then
 					table.insert(self._knifeWayPoints, self._lastTargetTrans)
 				end
 			end
@@ -351,7 +352,7 @@ function Bot:_updateAiming()
 			local fullPositionTarget =  self._shootPlayer.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(self._shootPlayer, true);
 			local fullPositionBot = self.player.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(self.player, false);
 
-			if self.activeWeapon.type ~= "Knife" and not Config.zombieMode then
+			if not self.knifeMode then
 				local distanceToPlayer	= fullPositionTarget:Distance(fullPositionBot);
 				--calculate how long the distance is --> time to travel
 				local timeToTravel		= (distanceToPlayer / self.activeWeapon.bulletSpeed)
@@ -396,7 +397,7 @@ function Bot:_updateYaw()
 		local yaw		= (atanDzDx > math.pi / 2) and (atanDzDx - math.pi / 2) or (atanDzDx + 3 * math.pi / 2);
 		self._targetYaw = yaw;
 	end
-	if Config.zombieMode or Config.botWeapon == "Knife" then
+	if self.knifeMode then
 		if self._shootPlayer ~= nil and self.player.soldier ~= nil then
 			if #self._knifeWayPoints > 0 then
 				local dy					= self._knifeWayPoints[1].z - self.player.soldier.worldTransform.trans.z;
@@ -446,7 +447,7 @@ function Bot:_updateShooting()
 		--select weapon-slot TODO: keep button pressed or not?
 		if not self._meleeActive then
 			if self.player.soldier.weaponsComponent ~= nil then
-				if Config.botWeapon == "Knife" or Config.zombieMode then
+				if self.knifeMode then
 					if self.player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_7 then
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 1);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
@@ -514,7 +515,7 @@ function Bot:_updateShooting()
 				end
 
 				--trace way back
-				if self.activeWeapon.type ~= "Sniper" or Config.botWeapon == "Knife" or Config.zombieMode then
+				if self.activeWeapon.type ~= "Sniper" or self.knifeMode then
 					if self._shootTraceTimer > StaticConfig.traceDeltaShooting then
 						--create a Trace to find way back
 						self._shootTraceTimer 	= 0;
@@ -523,7 +524,7 @@ function Bot:_updateShooting()
 						point.speedMode			= 4;
 
 						table.insert(self._shootWayPoints, point);
-						if Config.botWeapon == "Knife" or Config.zombieMode then
+						if self.knifeMode then
 							table.insert(self._knifeWayPoints, self._shootPlayer.soldier.worldTransform.trans)
 						end
 					end
@@ -531,7 +532,7 @@ function Bot:_updateShooting()
 				end
 
 				--shooting sequence
-				if Config.botWeapon == "Knife" or Config.zombieMode then
+				if self.knifeMode then
 					self._shotTimer	= -Config.botFirstShotDelay;
 				else
 					if self._shotTimer >= (self.activeWeapon.fireCycle + self.activeWeapon.pauseCycle) then
@@ -884,7 +885,7 @@ function Bot:_updateMovement()
 				end
 			end
 			--crouch moving (only mode with modified gun)
-			if self.activeWeapon.type == "Sniper" and Config.botWeapon ~= "Knife" and not Config.zombieMode then
+			if self.activeWeapon.type == "Sniper" and not self.knifeMode then
 				if self._attackMode == 2 then
 					if self.player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Crouch then
 						self.player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Crouch, true, true);
@@ -901,7 +902,7 @@ function Bot:_updateMovement()
 				local targetTime = 5.0
 				local targetCycles = math.floor(targetTime / StaticConfig.traceDeltaShooting);
 
-				if Config.botWeapon == "Knife" or Config.zombieMode then --Knife Only Mode
+				if self.knifeMode then --Knife Only Mode
 					targetCycles = 1;
 					self.activeSpeedValue = 4; --run towards player
 				else
@@ -978,7 +979,7 @@ function Bot:_updateMovement()
 				end
 			end
 
-			if speedVal > 0 and self._shootPlayer ~= nil and self._shootPlayer.soldier ~= nil and Config.botWeapon ~= "Knife" and not Config.zombieMode then
+			if speedVal > 0 and self._shootPlayer ~= nil and self._shootPlayer.soldier ~= nil and not self.knifeMode then
 				speedVal = speedVal * Config.speedFactorAttack;
 			end
 
@@ -999,6 +1000,11 @@ end
 function Bot:_setActiveVars()
 	self.activeMoveMode		= self._moveMode;
 	self.activeSpeedValue	= self._botSpeed;
+	if Config.botWeapon == "Knife" or Config.zombieMode then
+		self.knifeMode = true;
+	else
+		self.knifeMode = false;
+	end
 end
 
 function Bot:_getCameraHight(soldier, isTarget)
