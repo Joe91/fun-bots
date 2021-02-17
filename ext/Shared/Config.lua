@@ -9,6 +9,7 @@ Config = {
 	botAttackMode = "Random",		-- Mode the Bots attack with. Random, Crouch or Stand
 	botKit = "RANDOM_KIT",			-- see BotKits
 	botColor = "RANDOM_COLOR",		-- see BotColors
+	zombieMode = true,				-- Zombie Bot Mode
 
 	--difficluty
 	botAimWorsening = 0.6,			-- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy).

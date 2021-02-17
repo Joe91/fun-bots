@@ -640,26 +640,37 @@ function BotSpawner:getKitApperanceCustomization(team, kit, color, primary, pist
 		end
 	end
 
-	soldierCustomization.weapons:add(primaryWeapon)
-	soldierCustomization.weapons:add(secondaryWeapon)
-	soldierCustomization.weapons:add(gadget01)
-	soldierCustomization.weapons:add(gadget02)
-	soldierCustomization.weapons:add(thrownWeapon)
-	soldierCustomization.weapons:add(meleeWeapon)
+	if Config.zombieMode then
+		soldierCustomization.activeSlot = WeaponSlot.WeaponSlot_7
+		soldierCustomization.weapons:add(meleeWeapon)
+	else
+		soldierCustomization.weapons:add(primaryWeapon)
+		soldierCustomization.weapons:add(secondaryWeapon)
+		soldierCustomization.weapons:add(gadget01)
+		soldierCustomization.weapons:add(gadget02)
+		soldierCustomization.weapons:add(thrownWeapon)
+		soldierCustomization.weapons:add(meleeWeapon)
+	end
 
 	return soldierKit, appearance, soldierCustomization
 end
 
 function BotSpawner:_onKitPickup(player, newCustomization)
 	if player.soldier ~= nil then
-		player.soldier.weaponsComponent.weapons[1].secondaryAmmo = 182;
-		player.soldier.weaponsComponent.weapons[2].secondaryAmmo = 58;
+		if player.soldier.weaponsComponent.weapons[1] ~= nil then
+			player.soldier.weaponsComponent.weapons[1].secondaryAmmo = 182;
+		end
+		if player.soldier.weaponsComponent.weapons[2] ~= nil then
+			player.soldier.weaponsComponent.weapons[2].secondaryAmmo = 58;
+		end
 	end
 end
 
 function BotSpawner:_modifyWeapon(soldier)
 	--soldier.weaponsComponent.currentWeapon.secondaryAmmo = 9999;
-	soldier.weaponsComponent.weapons[1].secondaryAmmo = 9999;
+	if soldier.weaponsComponent.weapons[1] ~= nil then
+		soldier.weaponsComponent.weapons[1].secondaryAmmo = 9999;
+	end
 	if soldier.weaponsComponent.weapons[2] ~= nil then
 		soldier.weaponsComponent.weapons[2].secondaryAmmo = 9999;
 	end

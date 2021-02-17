@@ -84,6 +84,7 @@ function FunBotUIClient:_onUISettings(data)
 	settings:addList("GLOBAL", "botAttackMode", Language:I18N("Bot Attack Mode"), BotAttackModes, data.botAttackMode, "Random", Language:I18N("Mode the Bots attack with. Crouch or Stand"));
 	settings:addList("GLOBAL", "botKit", Language:I18N("Bot Kit"), BotKits, data.botKit, "RANDOM_KIT", Language:I18N("The Kit a bots spawns with."));
 	settings:addList("GLOBAL", "botColor", Language:I18N("Bot Color"), BotColors, data.botColor, "RANDOM_COLOR", Language:I18N("The Kit-Color a bots spawns with."));
+	settings:add("GLOBAL", "Boolean", "zombieMode", Language:I18N("Zombie Mode"), data.zombieMode, false, Language:I18N("Bots act like zombies"));
 
 	settings:add("DIFFICULTY", "Float", "botAimWorsening", Language:I18N("Aim Worsening"), data.botAimWorsening, 0.6, Language:I18N("0 = hard, 1 (or higher) = easy"));
 	settings:add("DIFFICULTY", "Float", "botSniperAimWorsening", Language:I18N("Aim Worsening Sniper"), data.botSniperAimWorsening, 0.2, Language:I18N("0 = hard, 1 (or higher) = easy"));
