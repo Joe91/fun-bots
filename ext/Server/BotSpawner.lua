@@ -609,6 +609,10 @@ function BotSpawner:getKitApperanceCustomization(team, kit, color, primary, pist
 		--no second gadget
 	end
 
+	if Config.zombieMode then
+		kit = "Engineer";
+		color = "Ninja";
+	end
 
 	if team == TeamId.Team1 then -- US
 		if kit == "Assault" then --assault
