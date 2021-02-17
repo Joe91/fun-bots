@@ -174,6 +174,8 @@ function Bot:resetVars()
 	self._aimUpdateTimer		= 0; --timer sync
 	self._targetPoint			= nil;
 	self._nextTargetPoint		= nil;
+	self._knifeWayPoints		= {};
+	self._zombieSpeedValue 		= 0;
 	self._meleeActive 			= false;
 
 	self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 0);
@@ -291,6 +293,7 @@ function Bot:resetSpawnVars()
 	self._targetPoint			= nil;
 	self._nextTargetPoint		= nil;
 	self._meleeActive 			= false;
+	self._knifeWayPoints		= {};
 	self._zombieSpeedValue 		= 0;
 
 	self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 0);
