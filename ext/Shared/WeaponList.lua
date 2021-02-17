@@ -183,7 +183,7 @@ function WeaponList:__init()
 	weapon = Weapon('RPK', '', {'Weapons/RPK/U_RPK_Kobra', 'Weapons/RPK/U_RPK_ExtendedMag', 'Weapons/RPK/U_RPK_Foregrip'},'LMG', 'Weapons/RPK/U_RPK-74M')
 	table.insert(self._weapons, weapon);
 
-	weapon = Weapon('M240', '', {'Eotech', 'TargetPointer'}, 'LMG')  -- not usable, because it has the same ammo as some sniper rifles
+	weapon = Weapon('M240', '', {'Eotech', 'TargetPointer'}, 'LMG')
 	table.insert(self._weapons, weapon);
 
 	---------------------------
