@@ -96,6 +96,7 @@ function NodeCollection:Create(data)
 		SpeedMode = inputVar & 0xF,			-- 0 = wait, 1 = prone, 2 = crouch, 3 = walk, 4 run
 		ExtraMode = (inputVar >> 4) & 0xF,	-- 
 		OptValue = (inputVar >> 8) & 0xFF,
+		Data = {},
 		Distance = nil,						-- current distance to player
 		Updated = false,					-- if true, needs to be sent to server for saving
 		Previous = false,						-- tree navigation
@@ -295,8 +296,50 @@ function NodeCollection:_processWaypointRecalc(waypoint)
 	return waypoint
 end
 
+function NodeCollection:ProcessMetadata(waypoint)
+	print('NodeCollection:ProcessMetadata Starting...')
+	local counter = 0
+
+	if (waypoint == nil) then
+		for i=1, #self.waypoints do
+			self.waypoints[i] = self:_processWaypointMetadata(self.waypoints[i])
+			counter = counter + 1
+		end
+	else
+		self.waypoints[waypoint.Index] = self:_processWaypointMetadata(waypoint)
+		counter = counter + 1
+	end
+	print('NodeCollection:ProcessMetadata Finished! ['..tostring(counter)..']')
+end
+
+function NodeCollection:_processWaypointMetadata(waypoint)
+
+	if (waypoint.Data == nil) then
+		waypoint.Data = {}
+	end
+
+	if (type(waypoint.Data) == 'string') then
+		waypoint.Data = json.decode(waypoint.Data)
+	end
+
+	-- TODO Check if indirect connections
+	-- waypoint.Data.LinkMode = 0
+	-- waypoint.Data.Links = { 'p_1', ... }
+
+	-- TODO Check if direct connections
+	-- waypoint.Data.LinkMode = 1
+	-- waypoint.Data.Links = { 'p_1', ... }
+
+
+end
+
+
 function NodeCollection:Update(waypoint, data)
 	g_Utilities:mergeKeys(waypoint, data)
+end
+
+function NodeCollection:UpdateMetadata(waypoint, data)
+	self:Update(waypoint, {Data = g_Utilities:mergeKeys(waypoint.Data, data)})
 end
 
 function NodeCollection:SetInput(speed, extra, option)
@@ -317,6 +360,7 @@ function NodeCollection:SetInput(speed, extra, option)
 	end
 	return inputVar
 end
+
 
 function NodeCollection:Get(waypointIndex, pathIndex)
 	if (waypointIndex ~= nil) then
@@ -596,7 +640,8 @@ function NodeCollection:Load(levelName, gameMode)
 			InputVar = row["inputVar"],
 			SpeedMode = row["inputVar"] & 0xF,
 			ExtraMode = (row["inputVar"] >> 4) & 0xF,
-			OptValue = (row["inputVar"] >> 8) & 0xFF
+			OptValue = (row["inputVar"] >> 8) & 0xFF,
+			Data = json.decode(row["data"] or '{}')
 		}
 
 		if (firstWaypoint == nil) then
@@ -709,7 +754,7 @@ end
 
 -- this method avoids the use of the Vec3:Distance() method to avoid complex math internally
 -- it's a tradeoff for speed over accuracy, as this method produces a box instead of a sphere
--- @returns boolean whther given waypint is inside the given range
+-- @returns boolean whther given waypoint is inside the given range
 function NodeCollection:InRange(waypoint, vec3Position, range)
 	local posA = waypoint.Position or Vec3.zero
 	local posB = vec3Position or Vec3.zero

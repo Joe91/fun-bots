@@ -296,7 +296,8 @@ function TraceManager:_loadWayPoints()
 		transX FLOAT,
 		transY FLOAT,
 		transZ FLOAT,
-		inputVar INTEGER
+		inputVar INTEGER,
+		data TEXT
 		)
 	]]
 
@@ -337,6 +338,7 @@ function TraceManager:_loadWayPoints()
 		local inputVar		= row["inputVar"];
 		local point			= WayPoint();
 		point.trans			= Vec3(transX, transY, transZ);
+		point.data 			= json.decode(row['data'] or '{}')
 
 		self:_setWaypointWithInputVar(point, inputVar);
 
@@ -369,7 +371,8 @@ function TraceManager:_saveWayPoints()
 		transX FLOAT,
 		transY FLOAT,
 		transZ FLOAT,
-		inputVar INTEGER
+		inputVar INTEGER,
+		data TEXT
 		)
 	]]
 
@@ -378,7 +381,7 @@ function TraceManager:_saveWayPoints()
 		return;
 	end
 
-	query				= 'INSERT INTO ' .. self._mapName .. '_table (pathIndex, pointIndex, transX, transY, transZ, inputVar) VALUES ';
+	query				= 'INSERT INTO ' .. self._mapName .. '_table (pathIndex, pointIndex, transX, transY, transZ, inputVar, data) VALUES ';
 	local pathIndex		= 0;
 
 	for oldPathIndex = 1, MAX_TRACE_NUMBERS do
@@ -404,18 +407,20 @@ function TraceManager:_saveWayPoints()
 
 					for pointIndex = 1 + pointsDone, pointsToTo + pointsDone do
 
-						if (g_Globals.wayPoints[oldPathIndex][pointIndex] == nil) then
+						local waypoint = g_Globals.wayPoints[oldPathIndex][pointIndex]
+
+						if (waypoint == nil) then
 							print('WARNING! Node ['..oldPathIndex..']['..pointIndex..'] is nil!')
 						else
 
-							local trans			= Vec3();
-							trans				= g_Globals.wayPoints[oldPathIndex][pointIndex].trans;
-							local transX		= trans.x;
-							local transY		= trans.y;
-							local transZ		= trans.z;
-							local inputVar		= self:_getInputVar(g_Globals.wayPoints[oldPathIndex][pointIndex]);
-							local inerString	= '(' .. pathIndex .. ',' .. pointIndex .. ',' .. tostring(transX) .. ',' .. tostring(transY) .. ',' .. tostring(transZ) .. ',' .. tostring(inputVar) .. ')';
-							sqlValuesString		= sqlValuesString..inerString;
+							local trans			= waypoint.trans;
+							local inputVar		= self:_getInputVar(waypoint);
+							local data			= ''
+							if (waypoint.data ~= nil and type(waypoint) == 'table' and #waypoint > 0) then
+								data = json.encode(waypoint.data)
+							end
+
+							sqlValuesString		= sqlValuesString..'('..table.concat({pathIndex, pointIndex, trans.x, trans.y, trans.z, inputVar, '"'..data..'"'}, ',')..')';
 
 							if pointIndex < pointsToTo + pointsDone then
 								sqlValuesString = sqlValuesString .. ',';
