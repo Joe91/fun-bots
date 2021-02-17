@@ -915,6 +915,15 @@ function FunBotUIServer:_writeSettings(player, request)
 		end
 	end
 
+	if request.traceDelta ~= nil then
+		local tempValue = tonumber(request.traceDelta);
+
+		if tempValue >= 0 and tempValue <= 10 then
+			SettingsManager:update('traceDelta', tempValue, temporary);
+		end
+	end
+
+
 	-- Other
 	if request.disableChatCommands ~= nil then
 		SettingsManager:update('disableChatCommands', (request.disableChatCommands == true), temporary, batched);

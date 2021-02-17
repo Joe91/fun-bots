@@ -92,6 +92,7 @@ Config = {
 	botFireModeDuration = 5.0,		-- the minimum time a bot tries to shoot a player
 	maximunYawPerSec = 450,			-- in Degree. Rotaion-Movement per second.
 	targetDistanceWayPoint = 0.8,	-- distance the bots have to reach to continue with next Waypoint
+	traceDelta = 0.2,				-- update intervall of trace
 
 	-- UI settings & language options
 	disableUserInterface = false,	-- if true, the complete UI will be disabled
@@ -103,7 +104,6 @@ Config = {
 
 --don't change these values unless you know what you do
 StaticConfig = {
-	traceDelta = 0.2,					-- update intervall of trace
 	traceDeltaShooting = 0.4,			-- update intervall of trace back to path the bots left for shooting
 	raycastInterval = 0.05,				-- update intervall of client raycasts
 	botAttackBotCheckInterval = 0.1,	-- update intervall of client raycasts

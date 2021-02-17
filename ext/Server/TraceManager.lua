@@ -214,7 +214,7 @@ function TraceManager:_onUpdate(dt)
 		if self._tracePlayer[i] ~= nil then
 			self._traceUpdateTimer[i] = self._traceUpdateTimer[i] + dt;
 
-			if self._traceUpdateTimer[i] >= StaticConfig.traceDelta then
+			if self._traceUpdateTimer[i] >= Config.traceDelta then
 				self._traceUpdateTimer[i] = 0;
 				self:_generateAndInsertPoint(self._tracePlayer[i], i);
 			end
@@ -265,7 +265,7 @@ function TraceManager:_generateAndInsertPoint(player, traceIndex)
 				table.insert(g_Globals.wayPoints[traceIndex], point);
 			end
 
-			self._traceWaitTimer[traceIndex]	= self._traceWaitTimer[traceIndex] + StaticConfig.traceDelta;
+			self._traceWaitTimer[traceIndex]	= self._traceWaitTimer[traceIndex] + Config.traceDelta;
 			local waitValue						= math.floor(tonumber(self._traceWaitTimer[traceIndex]));
 
 			g_Globals.wayPoints[traceIndex][#g_Globals.wayPoints[traceIndex]].optValue = waitValue;

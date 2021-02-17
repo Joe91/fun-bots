@@ -751,7 +751,7 @@ function Bot:_updateMovement()
 							--detect, if a jump was recorded or not
 							local timeForwardBackwardJumpDetection = 1.1; -- 1.5 s ahead and back
 							local jumpValid = false;
-							for i = 1, math.floor(timeForwardBackwardJumpDetection/StaticConfig.traceDelta) do
+							for i = 1, math.floor(timeForwardBackwardJumpDetection/Config.traceDelta) do
 								local pointBefore = g_Globals.wayPoints[self._pathIndex][activePointIndex - i];
 								local pointAfter = g_Globals.wayPoints[self._pathIndex][activePointIndex + i];
 								if (pointBefore ~= nil and pointBefore.extraMode == 1) or (pointAfter ~= nil and pointAfter.extraMode == 1) then
