@@ -336,10 +336,10 @@ function NodeCollection:_processWaypointMetadata(waypoint)
 	if (waypoint.Data.LinkMode ~= nil and (waypoint.Data.Links == nil or (type(waypoint.Data.Links) == 'table' and #waypoint.Data.Links < 1))) then
 
 		-- indirect connections
-		if (waypoint.Data.LinkMode = 0) then
+		if (waypoint.Data.LinkMode == 0) then
 
 			local range = waypoint.Data.Range or 3 -- meters, box-like area
-			local chance = waypoint.Data.Chance or  -- 1 - 100
+			local chance = waypoint.Data.Chance or 25 -- 1 - 100
 			local nearbyNodes = self:FindAll(waypoint.Position, range)
 
 			waypoint.Data.Links = {}

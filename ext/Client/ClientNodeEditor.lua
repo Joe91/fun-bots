@@ -98,13 +98,17 @@ function ClientNodeEditor:RegisterEvents()
 	NetEvents:Subscribe('UI_CommoRose_Action_Select', self, self._onSelectNode)
 	NetEvents:Subscribe('UI_CommoRose_Action_Load', self, self._onLoadNodes)
 
-	NetEvents:Subscribe('UI_CommoRose_Action_Merge', self, self._onMergeNode)
-	NetEvents:Subscribe('UI_CommoRose_Action_Move', self, self._onToggleMoveNode)
 	NetEvents:Subscribe('UI_CommoRose_Action_Delete', self, self._onRemoveNode)
+	NetEvents:Subscribe('UI_CommoRose_Action_Merge', self, self._onMergeNode)
+	NetEvents:Subscribe('UI_CommoRose_Action_SelectPrevious', self, self._onSelectPrevious)
+	NetEvents:Subscribe('UI_CommoRose_Action_ClearSelections', self, self._onClearSelection)
+	NetEvents:Subscribe('UI_CommoRose_Action_Move', self, self._onToggleMoveNode)
 
-	NetEvents:Subscribe('UI_CommoRose_Action_Split', self, self._onSplitNode)
-	NetEvents:Subscribe('UI_CommoRose_Action_SetInput', self, self._onSetInputNode)
 	NetEvents:Subscribe('UI_CommoRose_Action_Create', self, self._onCreateNode)
+	NetEvents:Subscribe('UI_CommoRose_Action_Split', self, self._onSplitNode)
+	NetEvents:Subscribe('UI_CommoRose_Action_SelectNext', self, self._onSelectNext)
+	NetEvents:Subscribe('UI_CommoRose_Action_SelectBetween', self, self._onSelectBetween)
+	NetEvents:Subscribe('UI_CommoRose_Action_SetInput', self, self._onSetInputNode)
 
 	NetEvents:Subscribe('ClientNodeEditor:BotSelect', self, self._onBotSelect)
 
@@ -651,23 +655,25 @@ function ClientNodeEditor:_onCommoRoseAction(action, hit)
 			center = { Action = 'UI_CommoRose_Action_Connect', Label = Language:I18N('Connect') }
 		end
 
-		--[[
 		g_FunBotUIClient:_onUICommonRose({
 			Top = { Action = 'UI_CommoRose_Action_Save', Label = Language:I18N('Save') },
 			Bottom = { Action = 'UI_CommoRose_Action_Load', Label = Language:I18N('Load') },
 			Center = center,
 			Left = {
-				{ Action = 'UI_CommoRose_Action_Merge', Label = Language:I18N('Merge') },
-				{ Action = 'UI_CommoRose_Action_Move', Label = Language:I18N('Move') },
 				{ Action = 'UI_CommoRose_Action_Delete', Label = Language:I18N('Delete') },
+				{ Action = 'UI_CommoRose_Action_Merge', Label = Language:I18N('Merge') },
+				{ Action = 'UI_CommoRose_Action_SelectPrevious', Label = Language:I18N('Select Previous') },
+				{ Action = 'UI_CommoRose_Action_ClearSelection', Label = Language:I18N('Clear Selection') },
+				{ Action = 'UI_CommoRose_Action_Move', Label = Language:I18N('Move') },
 			},
 			Right = {
+				{ Action = 'UI_CommoRose_Action_Create', Label = Language:I18N('Create') },
 				{ Action = 'UI_CommoRose_Action_Split', Label = Language:I18N('Split') },
-				--{ Action = 'UI_CommoRose_Action_SetInput', Label = Language:I18N('Set Input') },
-				--{ Action = 'UI_CommoRose_Action_Create', Label = Language:I18N('Create') },
+				{ Action = 'UI_CommoRose_Action_SelectNext', Label = Language:I18N('Select Next') },
+				{ Action = 'UI_CommoRose_Action_SelectBetween', Label = Language:I18N('Select Between') },
+				{ Action = 'UI_CommoRose_Action_SetInput', Label = Language:I18N('Set Input') },
 			}
 		})
-		]]
 		return
 	end
 
@@ -709,6 +715,11 @@ function ClientNodeEditor:_onCommoRoseAction(action, hit)
 end
 
 function ClientNodeEditor:_onUIPushScreen(hook, screen, priority, parentGraph, stateNodeGuid)
+
+	if (screen ~= nil) then
+		print('ClientNodeEditor:_onUIPushScreen: '..UIScreenAsset(screen).name)
+	end
+
 	if (Config.debugTracePaths and screen ~= nil and UIScreenAsset(screen).name == 'UI/Flow/Screen/CommRoseScreen') then
 
 		-- triggered vanilla commo rose
