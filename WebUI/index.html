@@ -2,7 +2,15 @@
 <html>
 	<head>
 		<meta charset="utf-8" />
-		<link rel="stylesheet" href="style.css" />
+		<link rel="stylesheet" href="css/Globals.css" />
+		<link rel="stylesheet" href="css/Forms.css" />
+		<link rel="stylesheet" href="css/View.css" />
+		<link rel="stylesheet" href="css/Views/PasswordProtection.css" />
+		<link rel="stylesheet" href="css/Views/Dialog.css" />
+		<link rel="stylesheet" href="css/Views/Toolbar.css" />
+		<link rel="stylesheet" href="css/Views/SettingsTabs.css" />
+		<link rel="stylesheet" href="css/Views/Settings.css" />
+		<link rel="stylesheet" href="css/Views/WaypointEditor/CommonRose.css" />
 	</head>
 	<body>
 		<!-- Warning: Password Protection -->
@@ -21,8 +29,10 @@
 					<li>
 						<a><span data-lang="Bots">Bots</span></a>
 						<ul>
-							<li data-action="bot_spawn_default"><a data-key="F2"><input type="number" name="bots" value="1" /> <span data-lang="Spawn Bots">Spawn Bots</span></a></li>
+							<li data-action="bot_spawn_default"><a data-key="F2"><input type="number" name="bots" value="1" /> <span data-lang="Spawn Enemy Bots">Spawn Enemy Bots</span></a></li>
+							<li data-action="bot_spawn_friend"><a ><input type="number" name="bots_friend" value="1" /> <span data-lang="Spawn Friend Bots">Spawn Friend Bots</span></a></li>
 							<li data-action="bot_kick_all"><a data-key="F3"><span data-lang="Kick All">Kick All</span></a></li>
+							<li data-action="bot_kick_team"><a ><input type="number" name="team" value="1" /><span data-lang="Kick Team">Kick Team</span></a></li>
 							<li data-action="bot_kill_all"><a data-key="F4"><span data-lang="Kill All">Kill All</span></a></li>
 							<li data-action="bot_respawn"><a ><span data-lang="Toggle Respawn">Toggle Respawn</span></a></li>
 							<li data-action="bot_attack"><a ><span data-lang="Toggle Attack">Toggle Attack</span></a></li>
@@ -45,6 +55,17 @@
 					<li data-action="exit"><a data-key="F12"><span data-lang="Exit">Exit</span></a></li>
 				</ul>
 			</ui-menu>
+		</ui-view>
+		
+		<!-- CommonRose -->
+		<ui-view data-name="commorose" data-type="commorose">
+			<ui-top><span></span></ui-top>
+			<ui-horizontal>
+				<ul class="left"></ul>
+				<ui-hexagon></ui-hexagon>
+				<ul class="right"></ul>
+			</ui-horizontal>
+			<ui-bottom><span></span></ui-bottom>
 		</ui-view>
 
 		<!-- Authentication -->
@@ -73,6 +94,8 @@
 					<input checked="checked" id="GLOBAL" type="radio" name="tabs" />
 					<input id="DIFFICULTY" type="radio" name="tabs" />
 					<input id="SPAWN" type="radio" name="tabs" />
+					<input id="WEAPONS" type="radio" name="tabs" />
+					<input id="TRACE" type="radio" name="tabs" />
 					<input id="ADVANCED" type="radio" name="tabs" />
 					<input id="EXPERT" type="radio" name="tabs" />
 					<input id="OTHER" type="radio" name="tabs" />
@@ -87,6 +110,12 @@
 							</li>
 							<li>
 								<label for="SPAWN"><span data-lang="Spawn">Spawn</span></label>
+							</li>
+							<li>
+								<label for="WEAPONS"><span data-lang="Weapons">Weapons</span></label>
+							</li>
+							<li>
+								<label for="TRACE"><span data-lang="Trace">Trace</span></label>
 							</li>
 							<li>
 								<label for="ADVANCED"><span data-lang="Advanced">Advanced</span></label>
@@ -104,6 +133,8 @@
 						<ui-tab class="GLOBAL"></ui-tab>
 						<ui-tab class="DIFFICULTY"></ui-tab>
 						<ui-tab class="SPAWN"></ui-tab>
+						<ui-tab class="WEAPONS"></ui-tab>
+						<ui-tab class="TRACE"></ui-tab>
 						<ui-tab class="ADVANCED"></ui-tab>
 						<ui-tab class="EXPERT"></ui-tab>
 						<ui-tab class="OTHER"></ui-tab>

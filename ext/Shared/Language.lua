@@ -1,17 +1,6 @@
 class 'Language';
 
--- @ToDo export to global utils
-function requireExists(module)
-    local function reference(module)
-        require(module)
-    end
-	
-    res = pcall(reference, module);
-	
-    if not(res) then
-        -- Not found.
-    end
-end
+require('__shared/Utilities');
 
 function Language:__init()
 	self._translations	= {};

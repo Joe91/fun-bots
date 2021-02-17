@@ -2,21 +2,24 @@ class('BotManager');
 
 require('Bot');
 
-local Globals = require('Globals');
+local Globals 	= require('Globals');
+local Utilities = require('__shared/Utilities');
+local damageHook = nil;
 
 function BotManager:__init()
 	self._bots = {}
 	self._botInputs = {}
 	self._shooterBots = {}
+	self._botToBotConnections = {}
+	self._botAttackBotTimer = 0;
 
-	self._lastYaw = 0.0
-
+	self._damageHookInstalled = false;
 	Events:Subscribe('UpdateManager:Update', self, self._onUpdate)
 	Events:Subscribe('Level:Destroy', self, self._onLevelDestroy)
 	NetEvents:Subscribe('BotShootAtPlayer', self, self._onShootAt)
-	Events:Subscribe('ServerDamagePlayer', self, self._onServerDamagePlayer)
-	NetEvents:Subscribe('ClientDamagePlayer', self, self._onDamagePlayer)
-	Hooks:Install('Soldier:Damage', 1, self, self._onSoldierDamage)
+	NetEvents:Subscribe('BotShootAtBot', self, self._onBotShootAtBot)
+	Events:Subscribe('ServerDamagePlayer', self, self._onServerDamagePlayer) 	--only triggered on false damage
+	NetEvents:Subscribe('ClientDamagePlayer', self, self._onDamagePlayer)   	--only triggered on false damage
 end
 
 function BotManager:getBotTeam()
@@ -36,17 +39,9 @@ function BotManager:getBotTeam()
 
 	-- init global Vars
 	if countPlayersTeam1 > countPlayersTeam2 then
-		if  Config.spawnInSameTeam then
-			botTeam = TeamId.Team1;
-		else
-			botTeam = TeamId.Team2;
-		end
+		botTeam = TeamId.Team2;
 	elseif countPlayersTeam2 > countPlayersTeam1 then
-		if Config.spawnInSameTeam then
-			botTeam = TeamId.Team2;
-		else
-			botTeam = TeamId.Team1;
-		end
+		botTeam = TeamId.Team1;
 	else
 		botTeam = Config.botTeam;
 	end
@@ -57,7 +52,13 @@ end
 function BotManager:configGlobas()
 	Globals.respawnWayBots 	= Config.respawnWayBots;
 	Globals.attackWayBots 	= Config.attackWayBots;
+	Globals.spawnMode		= Config.spawnMode;
 	Globals.yawPerFrame 	= self:calcYawPerFrame()
+	if not self._damageHookInstalled then
+		damageHook = Hooks:Install('Soldier:Damage', 100, self, self._onSoldierDamage)
+		self._damageHookInstalled = true;
+	end
+	self:killAll();
 	local maxPlayers = RCON:SendCommand('vars.maxPlayers');
 	maxPlayers = tonumber(maxPlayers[2]);
 	if maxPlayers ~= nil and maxPlayers > 0 then
@@ -80,7 +81,7 @@ function BotManager:findNextBotName()
 		local bot = self:GetBotByName(name)
 		if bot == nil then
 			return name
-		elseif bot.player.soldier == nil then
+		elseif bot.player.soldier == nil and bot:getSpawnMode() < 4 then
 			return name
 		end
 	end
@@ -159,6 +160,52 @@ function BotManager:_onUpdate(dt, pass)
 	for _, bot in pairs(self._bots) do
 		bot:onUpdate(dt)
 	end
+
+	if Config.botsAttackBots then
+		if self._botAttackBotTimer >= StaticConfig.botAttackBotCheckInterval then
+			self._botAttackBotTimer = 0;
+			self:_checkForBotBotAttack()
+		end
+		self._botAttackBotTimer = self._botAttackBotTimer + dt;
+	end
+end
+
+function BotManager:_checkForBotBotAttack()
+	local players = PlayerManager:GetPlayers()
+	local playerCount = self:getPlayerCount();
+	local playerIndex = 1;
+	local playersUsed = 0;
+	if playerCount > 0 then
+		for _, bot in pairs(self._bots) do
+			for _, bot2 in pairs(self._bots) do
+				if bot.player ~= bot2.player then
+					if bot.player.TeamId ~= bot2.player.teamId then
+						if bot.player.alive and bot2.player.alive then
+							if self._botToBotConnections[bot.player.name..bot2.player.name] == nil and self._botToBotConnections[bot2.player.name..bot.player.name] == nil then
+								if bot.player.soldier.worldTransform.trans:Distance(bot2.player.soldier.worldTransform.trans) <= Config.maxBotAttackBotDistance then
+									for i = playerIndex, playerCount do
+										if self:GetBotByName(players[i].name) == nil then
+											-- check this bot view. Let one client do it
+											NetEvents:SendToLocal('CheckBotBotAttack', players[i], bot.player.soldier.worldTransform.trans, bot2.player.soldier.worldTransform.trans, bot.player.name, bot2.player.name)
+											self._botToBotConnections[bot.player.name..bot2.player.name] = true;
+											playerIndex = i + 1;
+											break
+										end
+									end
+									playersUsed = playersUsed + 1;
+									if playersUsed >= playerCount then
+										return
+									end
+								end
+							end
+						end
+					end
+				end
+			end
+		end
+	end
+	--clear connections, if all are checked
+	self._botToBotConnections = {}
 end
 
 function BotManager:onPlayerLeft(player)
@@ -168,80 +215,125 @@ function BotManager:onPlayerLeft(player)
 	end
 end
 
-function BotManager:_onSoldierDamage(hook, soldier, info, giverInfo)
-	--detect if we need to shoot back
-	if Config.shootBackIfHit then
-		if giverInfo.giver ~= nil and soldier.player ~= nil then
-			local bot = self:GetBotByName(soldier.player.name)
-			if soldier ~= nil and bot ~= nil then
-				self:_onShootAt(giverInfo.giver, bot.name, true)
+function BotManager:_getDamageValue(damage, bot, soldier, fake)
+	local resultDamage = 0;
+	local damageFactor = 1.0;
+
+	if bot.activeWeapon.type == "Shotgun" then
+		damageFactor = Config.damageFactorShotgun;
+	elseif bot.activeWeapon.type == "Assault" then
+		damageFactor = Config.damageFactorAssault;
+	elseif bot.activeWeapon.type == "Carabine" then
+		damageFactor = Config.damageFactorCarabine;
+	elseif bot.activeWeapon.type == "PDW" then
+		damageFactor = Config.damageFactorPDW;
+	elseif bot.activeWeapon.type == "LMG" then
+		damageFactor = Config.damageFactorLMG;
+	elseif bot.activeWeapon.type == "Sniper" then
+		damageFactor = Config.damageFactorSniper;
+	elseif bot.activeWeapon.type == "Pistol" then
+		damageFactor = Config.damageFactorPistol;
+	elseif bot.activeWeapon.type == "Knife" then
+		damageFactor = Config.damageFactorKnife;
+	end
+
+	if not fake then -- frag mode
+		resultDamage = damage * damageFactor;
+	elseif bot.activeWeapon.type ~= "Shotgun" then
+		if damage <= 2 then
+			local distance = bot.player.soldier.worldTransform.trans:Distance(soldier.worldTransform.trans)
+			if distance >= bot.activeWeapon.damageFalloffEndDistance then
+				resultDamage = bot.activeWeapon.endDamage;
+			elseif distance <= bot.activeWeapon.damageFalloffStartDistance then
+				resultDamage =  bot.activeWeapon.damage;
+			else --extrapolate damage
+				local relativePosion = (distance-bot.activeWeapon.damageFalloffStartDistance)/(bot.activeWeapon.damageFalloffEndDistance - bot.activeWeapon.damageFalloffStartDistance)
+				resultDamage = bot.activeWeapon.damage - (relativePosion * (bot.activeWeapon.damage-bot.activeWeapon.endDamage));
 			end
+			if damage == 2 then
+				resultDamage = resultDamage * Config.headShotFactorBots;
+			end
+
+			resultDamage = resultDamage * damageFactor;
+		elseif damage == 3 then --melee
+			resultDamage = bot.knife.damage * Config.damageFactorKnife;
+		end
+	end
+	return resultDamage;
+end
+
+function BotManager:_onSoldierDamage(hook, soldier, info, giverInfo)
+	-- soldier -> soldier damage only
+	if soldier.player == nil then
+		return
+	end
+
+	local soldierIsBot = Utilities:isBot(soldier.player.name);
+	if soldierIsBot and giverInfo.giver ~= nil then
+		--detect if we need to shoot back
+		if Config.shootBackIfHit and info.damage > 0 then
+			self:_onShootAt(giverInfo.giver, soldier.player.name, true)
+		end
+
+		-- prevent bots from killing themselves. Bad bot, no suicide.
+		if not Config.botCanKillHimself and soldier.player == giverInfo.giver then
+			info.damage = 0;
 		end
 	end
 
 	--find out, if a player was hit by the server:
-	if soldier.player ~= nil then
-		local bot = self:GetBotByName(soldier.player.name)
-		if bot == nil then
-			if giverInfo.giver == nil then
-				local newGiverInfo = DamageGiverInfo()
-				bot = self:GetBotByName(self._shooterBots[soldier.player.name])
-				if bot ~= nil and bot.player.soldier ~= nil then
-					newGiverInfo.giver = bot.player;
-					--newGiverInfo.weaponUnlock = nil;
-					--newGiverInfo.weaponFiring = nil;
-					if info.damage > 0.09 and info.damage < 0.11 then
-						info.isBulletDamage = true
-						if bot.kit == "Recon" and Config.botWeapon ~= "Pistol" then
-							info.damage = Config.bulletDamageBotSniper
-						else
-							info.damage = Config.bulletDamageBot
+	if not soldierIsBot then
+		if giverInfo.giver == nil then
+			local bot = self:GetBotByName(self._shooterBots[soldier.player.name])
+			if bot ~= nil and bot.player.soldier ~= nil then
+				info.damage = self:_getDamageValue(info.damage, bot, soldier, true);
+				info.boneIndex = 0;
+				info.isBulletDamage = true;
+				info.position = Vec3(soldier.worldTransform.trans.x, soldier.worldTransform.trans.y + 1, soldier.worldTransform.trans.z)
+				info.direction = soldier.worldTransform.trans - bot.player.soldier.worldTransform.trans
+				info.origin = bot.player.soldier.worldTransform.trans
+				if (soldier.health - info.damage) <= 0 then
+					if Globals.isTdm then
+						local enemyTeam = TeamId.Team1;
+						if soldier.player.teamId == TeamId.Team1 then
+							enemyTeam = TeamId.Team2;
 						end
-					elseif info.damage > 0.19 and info.damage < 0.21 then --melee
-						info.damage = Config.meleeDamageBot
-						info.isBulletDamage = false
+						TicketManager:SetTicketCount(enemyTeam, (TicketManager:GetTicketCount(enemyTeam) + 1));
 					end
-					--[[info.isBulletDamage = false;
-					info.isExplosionDamage = false;
-					info.isDemolitionDamage = true;
-					info.shouldForceDamage = false;
-					info.isClientDamage = false;--]]
-
-					info.boneIndex = 0
-					info.position = Vec3(soldier.worldTransform.trans.x, soldier.worldTransform.trans.y + 1, soldier.worldTransform.trans.z)
-					info.direction = soldier.worldTransform.trans - bot.player.soldier.worldTransform.trans
-					info.origin = bot.player.soldier.worldTransform.trans
-					if (soldier.health - info.damage) < 0 then
-						if Globals.isTdm then
-							local enemyTeam = TeamId.Team1;
-							if soldier.player.teamId == TeamId.Team1 then
-								enemyTeam = TeamId.Team2;
-							end
-							TicketManager:SetTicketCount(enemyTeam, (TicketManager:GetTicketCount(enemyTeam) + 1));
-						end
-					end
-					hook:Pass(soldier, info, newGiverInfo)
 				end
+			end
+		else
+			--valid bot-damage?
+			local bot = self:GetBotByName(giverInfo.giver.name)
+			if bot ~= nil and bot.player.soldier ~= nil then
+				-- giver was a bot
+				info.damage = self:_getDamageValue(info.damage, bot, soldier, false);
 			end
 		end
 	end
+	hook:Pass(soldier, info, giverInfo)
 end
 
 function BotManager:_onServerDamagePlayer(playerName, shooterName, meleeAttack)
 	local player = PlayerManager:GetPlayerByName(playerName)
 	if player ~= nil then
-		self:_onDamagePlayer(player, shooterName, meleeAttack)
+		self:_onDamagePlayer(player, shooterName, meleeAttack, false)
 	end
 end
 
-function BotManager:_onDamagePlayer(player, shooterName, meleeAttack)
+function BotManager:_onDamagePlayer(player, shooterName, meleeAttack, isHeadShot)
 	local bot = self:GetBotByName(shooterName)
 	if not player.alive or bot == nil then
 		return
 	end
-	local damage = 0.1 --only trigger soldier-damage with this
-	if meleeAttack then
-		damage = 0.2 --signal melee damage with this value
+	if player.teamId == bot.player.teamId then
+		return
+	end
+	local damage = 1 --only trigger soldier-damage with this
+	if isHeadShot then
+		damage = 2	-- singal Headshot
+	elseif meleeAttack then
+		damage = 3 --signal melee damage with this value
 	end
 	--save potential killer bot
 	self._shooterBots[player.name] = shooterName
@@ -251,19 +343,32 @@ function BotManager:_onDamagePlayer(player, shooterName, meleeAttack)
 	end
 end
 
-
-
 function BotManager:_onShootAt(player, botname, ignoreYaw)
 	local bot = self:GetBotByName(botname)
-	if bot == nil or bot.player.soldier == nil or player.soldier == nil then
+	if bot == nil or bot.player == nil or bot.player.soldier == nil or player == nil then
 		return
 	end
 	bot:shootAt(player, ignoreYaw)
 end
 
+function BotManager:_onBotShootAtBot(player, botname1, botname2)
+	local bot1 = self:GetBotByName(botname1)
+	local bot2 = self:GetBotByName(botname2)
+	if bot1 == nil or bot1.player == nil or  bot2 == nil or bot2.player == nil then
+		return
+	end
+	bot1:shootAt(bot2.player, false)
+	bot2:shootAt(bot1.player, false)
+end
+
+
 function BotManager:_onLevelDestroy()
 	print("destroyLevel")
-	self:killAll()
+	if damageHook ~= nil then
+		damageHook:Uninstall();
+	end
+	self._damageHookInstalled = false;
+	--self:killAll() -- this crashes when the server ended. do it on levelstart instead
 end
 
 function BotManager:GetBotByName(name)
@@ -365,12 +470,18 @@ function BotManager:destroyAmount(number)
 	end
 end
 
-function BotManager:destroyTeam(teamId)
+function BotManager:destroyTeam(teamId, amount)
 	for i = 1, MAX_NUMBER_OF_BOTS do
 		local bot = self:GetBotByName(BotNames[i])
 		if bot ~= nil then
 			if bot.player.teamId == teamId then
 				self:destroyBot(bot.name)
+				if amount ~= nil then
+					amount = amount - 1;
+					if amount <= 0 then
+						return
+					end
+				end
 			end
 		end
 	end

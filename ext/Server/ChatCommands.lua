@@ -115,13 +115,6 @@ function ChatCommands:execute(parts, player)
 		BotManager:setOptionForAll('shoot', shooting);
 
 	-- spawn team settings
-	elseif parts[1] == '!spawnsameteam' then
-		Config.spawnInSameTeam = true;
-
-		if tonumber(parts[2]) == 0 then
-			Config.spawnInSameTeam = false;
-		end
-
 	elseif parts[1] == '!setbotkit' then
 		local kitNumber = tonumber(parts[2]) or 1;
 
@@ -140,15 +133,6 @@ function ChatCommands:execute(parts, player)
 		Config.botAimWorsening = tonumber(parts[2]) or 0.5;
 		--self:_modifyWeapons(Config.botAimWorsening) --causes lag. Instead restart round
 		print('difficulty set to ' .. Config.botAimWorsening .. '. Please restart round or level to take effect');
-
-	elseif parts[1] == '!bullet' then
-		Config.bulletDamageBot = tonumber(parts[2]) or 1;
-
-	elseif parts[1] == '!sniper' then
-		Config.bulletDamageBotSniper = tonumber(parts[2]) or 1;
-
-	elseif parts[1] == '!melee' then
-		Config.meleeDamageBot = tonumber(parts[2]) or 1;
 
 	elseif parts[1] == '!shootback' then
 		if tonumber(parts[2]) == 0 then

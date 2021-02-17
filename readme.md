@@ -19,21 +19,30 @@ The following Maps are official supported right now with waypoints/traces:
 |   	|   Internal Name	|   Name	|   Supported Types	|
 |---	|---	|---	|---	|
 |   ![MP_001](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_001.jpg?raw=true) 	|   `MP_001`	| **Grand Bazaar** | `TDM`, `TDM QC` |
+|   ![MP_003](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_003.jpg?raw=true) 	|   `MP_003`	| **Teheran Highway** | `TDM`, `TDM QC` |
+|   ![MP_007](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_007.jpg?raw=true) 	|   `MP_007`	| **Caspian Border** | `TDM`, `TDM QC` |
 |   ![MP_011](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_011.jpg?raw=true) 	|   `MP_011`	| **Seine Crossing** | `TDM`, `TDM QC` |
 |   ![MP_012](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_012.jpg?raw=true) 	|   `MP_012`	| **Operation Firestorm** | `TDM`, `TDM QC` |
+|   ![MP_013](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_013.jpg?raw=true) 	|   `MP_013`	| **Damavand Peak** | `TDM`, `TDM QC` |
 |   ![MP_017](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_017.jpg?raw=true) 	|   `MP_017`	| **Noshahr Canals** | `TDM`, `TDM QC` |
 |   ![MP_018](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_018.jpg?raw=true) 	|   `MP_018`	| **Kharg Island** | `TDM`, `TDM QC` |
 |   ![MP_Subway](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_subway.jpg?raw=true) 	|   `MP_Subway`	| **Operation Metro** | `TDM`, `TDM QC` |
+|   ![XP1_001](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp1_001.jpg?raw=true) 	|   `XP1_001`	| **Strike at Karkand** | `TDM`, `TDM QC` |
+|   ![XP1_002](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp1_002.jpg?raw=true) 	|   `XP1_002`	| **Gulf of Oman** | `TDM`, `TDM QC` |
 |   ![XP1_003](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp1_003.jpg?raw=true) 	|   `XP1_003`	| **Sharqi Peninsula** | `TDM`, `TDM QC` |
-|   ![XP2_Factory](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp2_factory.jpg?raw=true) 	|   `XP2_Factory`	| **Scrapmetal** | `TDM`, `TDM QC` |
-|   ![XP2_Office](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp2_office.jpg?raw=true) 	|   `XP2_Office`	| **Operation 925** | `TDM`, `TDM QC` |
-|   ![XP2_Palace](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp2_palace.jpg?raw=true) 	|   `XP2_Palace`	| **Donya Fortress** | `TDM`, `TDM QC` |
+|   ![XP1_004](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp1_004.jpg?raw=true) 	|   `XP1_004`	| **Wake Island** | `TDM`, `TDM QC` |
+|   ![XP2_Factory](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp2_factory.jpg?raw=true) 	|   `XP2_Factory`	| **Scrapmetal** | `TDM`, `TDM QC`, `GM`, `CD` |
+|   ![XP2_Office](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp2_office.jpg?raw=true) 	|   `XP2_Office`	| **Operation 925** | `TDM`, `TDM QC`, `GM`, `CD` |
+|   ![XP2_Skybar](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp2_skybar.jpg?raw=true) 	|   `XP2_Skybar`	| **Ziba Tower** | `TDM`, `TDM QC`, `GM`, `CD` |
+|   ![XP2_Palace](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp2_palace.jpg?raw=true) 	|   `XP2_Palace`	| **Donya Fortress** | `TDM`, `TDM QC`, `GM`, `CD` |
 |   ![XP3_Alborz](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp3_alborz.jpg?raw=true) 	|   `XP3_Alborz`	| **Alborz Mountains** | `TDM`, `TDM QC` |
 |   ![XP3_Desert](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp3_desert.jpg?raw=true) 	|   `XP3_Desert`	| **Bandar Desert** | `TDM`, `TDM QC` |
 |   ![XP3_Shield](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp3_shield.jpg?raw=true) 	|   `XP3_Shield`	| **Armored Shield** | `TDM`, `TDM QC` |
 |   ![XP3_Valley](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp3_valley.jpg?raw=true) 	|   `XP3_Valley`	| **Death Valley** | `TDM`, `TDM QC` |
-|   ![XP4_FD](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp4_fd.jpg?raw=true) 	|   `XP4_FD`	| **Markaz Monolith** | `TDM`, `TDM QC` |
-|   ![XP4_Parl](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp4_parl.jpg?raw=true) 	|   `XP4_Parl`	| **Azadi Palace** | `TDM`, `TDM QC` |
+|   ![XP4_FD](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp4_fd.jpg?raw=true) 	|   `XP4_FD`	| **Markaz Monolith** | `TDM`, `TDM QC`, `GM` |
+|   ![XP4_Rubble](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp4_rubble.jpg?raw=true) 	|   `XP4_Rubble`	| **Talah Market** | `TDM`, `TDM QC`, `GM` |
+|   ![XP4_Quake](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp4_quake.jpg?raw=true) 	|   `XP4_Quake`	| **Epicenter** | `TDM`, `TDM QC`, `GM` |
+|   ![XP4_Parl](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp4_parl.jpg?raw=true) 	|   `XP4_Parl`	| **Azadi Palace** | `TDM`, `TDM QC`, `GM` |
 |   ![XP5_001](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp5_001.jpg?raw=true) 	|   `XP5_001`	| **Operation Riverside** | `TDM`, `TDM QC` |
 |   ![XP5_002](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp5_002.jpg?raw=true) 	|   `XP5_002`	| **Nebandan Flats** | `TDM`, `TDM QC` |
 |   ![XP5_003](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp5_003.jpg?raw=true) 	|   `XP5_003`	| **Kiasar Railroad** | `TDM`, `TDM QC` |

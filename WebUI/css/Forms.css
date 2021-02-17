@@ -1,0 +1,28 @@
+input[type="text"],
+input[type="password"] {
+	background: var(--color_button_default_from);
+	display: block;
+	border: 1px solid var(--color_white);
+	color: var(--color_white);
+	margin: 0 auto;
+	padding: 5px;
+}
+
+button {
+	padding: 5px 15px;
+	min-width: 100px;
+	margin: 0 1px;
+	border: 1px solid;
+	color: var(--color_text);
+	text-shadow: 0 0 6px var(--color_text_shadow);
+	cursor: pointer;
+	font-weight: 900;
+	font-size: 16px;
+	text-align: center;
+	text-transform: uppercase;
+	background: linear-gradient(180deg, var(--color_button_default_from) 0%, var(--color_button_default_to) 100%);
+}
+
+button:hover {
+	background: linear-gradient(180deg, var(--color_button_hover_from) 0%, var(--color_button_hover_to) 100%);
+}

@@ -9,6 +9,7 @@ local BotManager			= require('BotManager');
 local TraceManager			= require('TraceManager');
 local BotSpawner			= require('BotSpawner');
 local WeaponModification	= require('__shared/WeaponModification');
+local WeaponList			= require('__shared/WeaponList');
 local Globals 				= require('Globals');
 
 function FunBotUIServer:__init()
@@ -20,6 +21,8 @@ function FunBotUIServer:__init()
 		NetEvents:Subscribe('UI_Request_Open', self, self._onUIRequestOpen);
 		NetEvents:Subscribe('UI_Request_Save_Settings', self, self._onUIRequestSaveSettings);
 		NetEvents:Subscribe('BotEditor', self, self._onBotEditorEvent);
+		NetEvents:Subscribe('UI_Request_CommoRose_Show', self, self._onUIRequestCommonRoseShow);
+		NetEvents:Subscribe('UI_Request_CommoRose_Hide', self, self._onUIRequestCommonRoseHide);
 	end
 end
 
@@ -45,22 +48,45 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 
 		-- request.opened
 		NetEvents:SendTo('UI_Settings', player, Config);
-		
+
 	-- Bots
 	elseif request.action == 'bot_spawn_default' then
 		local amount = tonumber(request.value);
-		BotSpawner:spawnWayBots(player, amount, true);
+		local team = player.teamId;
+		Globals.spawnMode		= "manual";
+		if team == TeamId.Team1 then
+			BotSpawner:spawnWayBots(player, amount, true, 0, 0, TeamId.Team2);
+		else
+			BotSpawner:spawnWayBots(player, amount, true, 0, 0, TeamId.Team1);
+		end
+
+	elseif request.action == 'bot_spawn_friend' then
+		local amount = tonumber(request.value);
+		Globals.spawnMode		= "manual";
+		BotSpawner:spawnWayBots(player, amount, true, 0, 0, player.teamId);
 
 	elseif request.action == 'bot_spawn_path' then --todo: whats the difference? make a function to spawn bots on a fixed way instead?
 		local amount		= 1;
-		local indexOnPath	= 1;
+		local indexOnPath	= tonumber(request.pointindex) or 1;
 		local index			= tonumber(request.value);
+		Globals.spawnMode	= "manual";
 		BotSpawner:spawnWayBots(player, amount, false, index, indexOnPath);
 
 	elseif request.action == 'bot_kick_all' then
+		Globals.spawnMode	= "manual";
 		BotManager:destroyAllBots();
 
+	elseif request.action == 'bot_kick_team' then
+		Globals.spawnMode	= "manual";
+		local teamNumber = tonumber(request.value);
+		if teamNumber == 1 then
+			BotManager:destroyTeam(TeamId.Team1);
+		elseif teamNumber == 2 then
+			BotManager:destroyTeam(TeamId.Team2);
+		end
+
 	elseif request.action == 'bot_kill_all' then
+		Globals.spawnMode	= "manual";
 		BotManager:killAll();
 
 	elseif request.action == 'bot_respawn' then  --toggle this function
@@ -136,6 +162,74 @@ function FunBotUIServer:_onUIRequestSaveSettings(player, data)
 	self:_writeSettings(player, request);
 end
 
+function FunBotUIServer:_onUIRequestCommonRoseShow(player, data)
+	if Config.disableUserInterface == true then
+		return;
+	end
+	
+	if (Config.settingsPassword ~= nil and self:_isAuthenticated(player.accountGuid) ~= true) then
+		print(player.name .. ' has no permissions for Waypoint-Editor.');
+		return;
+	end
+	
+	print(player.name .. ' requesting show CommonRose.');
+	NetEvents:SendTo('UI_CommonRose', player, {
+		Top = {
+			Action	= 'cr_save',
+			Label	= Language:I18N('Save'),
+			Confirm	= true
+		},
+		Left = {
+			{
+				Action	= 'cr_merge',
+				Label	= Language:I18N('Merge')
+			}, {
+				Action	= 'cr_move',
+				Label	= Language:I18N('Move')
+			}, {
+				Action	= 'cr_delete',
+				Label	= Language:I18N('Delete')
+			}
+		},
+		Center = {
+			Action	= 'cr_select',
+			Label	= Language:I18N('Select') -- or "Unselect"
+		},
+		Right = {
+			{
+				Action	= 'cr_split',
+				Label	= Language:I18N('Split')
+			}, {
+				Action	= 'cr_set_input',
+				Label	= Language:I18N('Set Input'),
+				Confirm	= true
+			}, {
+				Action	= 'cr_create',
+				Label	= Language:I18N('Create')
+			}
+		},
+		Bottom = {
+			Action	= 'cr_load',
+			Label	= Language:I18N('Load'),
+			Confirm	= true
+		}
+	});
+end
+
+function FunBotUIServer:_onUIRequestCommonRoseHide(player, data)
+	if Config.disableUserInterface == true then
+		return;
+	end
+	
+	if (Config.settingsPassword ~= nil and self:_isAuthenticated(player.accountGuid) ~= true) then
+		print(player.name .. ' has no permissions for Waypoint-Editor.');
+		return;
+	end
+	
+	print(player.name .. ' requesting hide CommonRose.');
+	NetEvents:SendTo('UI_CommonRose', player, 'false');
+end
+
 function FunBotUIServer:_onUIRequestOpen(player, data)
 	if Config.disableUserInterface == true then
 		return;
@@ -200,25 +294,34 @@ function FunBotUIServer:_writeSettings(player, request)
 		return;
 	end
 	
-	local temporary		= false;
-	local updateWeapons	= false;
-	local batched		= true;
+	local temporary					= false;
+	local updateWeapons				= false;
+	local updateBotTeamAndNumber	= false;
+	local updateWeaponSets			= false;
+	local batched					= true;
 	
 	if request.subaction ~= nil then
 		temporary = (request.subaction == 'temp');
 	end
 
 	--global settings
-	if request.spawnInSameTeam ~= nil then
-		SettingsManager:update('spawnInSameTeam', (request.spawnInSameTeam == true), temporary, batched);
-	end
-	
 	if request.botWeapon ~= nil then
 		local tempString = request.botWeapon;
 
 		for _, weapon in pairs(BotWeapons) do
 			if tempString == weapon then
 				SettingsManager:update('botWeapon', tempString, temporary, batched);
+				break
+			end
+		end
+	end
+
+	if request.botAttackMode ~= nil then
+		local tempString = request.botAttackMode;
+
+		for _, botAttackMode in pairs(BotAttackModes) do
+			if tempString == botAttackMode then
+				SettingsManager:update('botAttackMode', tempString, temporary, batched);
 				break
 			end
 		end
@@ -250,35 +353,98 @@ function FunBotUIServer:_writeSettings(player, request)
 	if request.botAimWorsening ~= nil then
 		local tempValue = tonumber(request.botAimWorsening)
 
-		if tempValue >= 0 and tempValue < 10 then
-			if math.abs(request.botAimWorsening - Config.botAimWorsening) > 0.001 then
+		if tempValue >= 0 and tempValue <= 10 then
+			if math.abs(tempValue - Config.botAimWorsening) > 0.001 then
 				SettingsManager:update('botAimWorsening', tempValue, temporary, batched);
 				updateWeapons = true;
 			end
 		end
 	end
 
-	if request.bulletDamageBot ~= nil then
-		local tempValue = tonumber(request.bulletDamageBot);
+	if request.botSniperAimWorsening ~= nil then
+		local tempValue = tonumber(request.botSniperAimWorsening)
 
-		if tempValue >= 0 then
-			SettingsManager:update('bulletDamageBot', tempValue, temporary, batched);
+		if tempValue >= 0 and tempValue <= 10 then
+			if math.abs(tempValue - Config.botSniperAimWorsening) > 0.001 then
+				SettingsManager:update('botSniperAimWorsening', tempValue, temporary, batched);
+				updateWeapons = true;
+			end
 		end
 	end
 
-	if request.bulletDamageBotSniper ~= nil then
-		local tempValue = tonumber(request.bulletDamageBotSniper);
+	if request.aimForHead ~= nil then
+		SettingsManager:update('aimForHead', (request.aimForHead == true), temporary, batched);
+	end
+	
+	if request.headShotFactorBots ~= nil then
+		local tempValue = tonumber(request.headShotFactorBots);
 
-		if tempValue >= 0 then
-			SettingsManager:update('bulletDamageBotSniper', tempValue, temporary, batched);
+		if tempValue >= 0.0 then
+			SettingsManager:update('headShotFactorBots', tempValue, temporary, batched);
 		end
 	end
 
-	if request.meleeDamageBot ~= nil then
-		local tempValue = tonumber(request.meleeDamageBot);
+	if request.damageFactorAssault ~= nil then
+		local tempValue = tonumber(request.damageFactorAssault);
 
 		if tempValue >= 0 then
-			SettingsManager:update('meleeDamageBot', tempValue, temporary, batched);
+			SettingsManager:update('damageFactorAssault', tempValue, temporary, batched);
+		end
+	end
+
+	if request.damageFactorCarabine ~= nil then
+		local tempValue = tonumber(request.damageFactorCarabine);
+
+		if tempValue >= 0 then
+			SettingsManager:update('damageFactorCarabine', tempValue, temporary, batched);
+		end
+	end
+
+	if request.damageFactorLMG ~= nil then
+		local tempValue = tonumber(request.damageFactorLMG);
+
+		if tempValue >= 0 then
+			SettingsManager:update('damageFactorLMG', tempValue, temporary, batched);
+		end
+	end
+
+	if request.damageFactorPDW ~= nil then
+		local tempValue = tonumber(request.damageFactorPDW);
+
+		if tempValue >= 0 then
+			SettingsManager:update('damageFactorPDW', tempValue, temporary, batched);
+		end
+	end
+
+	if request.damageFactorSniper ~= nil then
+		local tempValue = tonumber(request.damageFactorSniper);
+
+		if tempValue >= 0 then
+			SettingsManager:update('damageFactorSniper', tempValue, temporary, batched);
+		end
+	end
+
+	if request.damageFactorShotgun ~= nil then
+		local tempValue = tonumber(request.damageFactorShotgun);
+
+		if tempValue >= 0 then
+			SettingsManager:update('damageFactorShotgun', tempValue, temporary, batched);
+		end
+	end
+
+	if request.damageFactorPistol ~= nil then
+		local tempValue = tonumber(request.damageFactorPistol);
+
+		if tempValue >= 0 then
+			SettingsManager:update('damageFactorPistol', tempValue, temporary, batched);
+		end
+	end
+
+	if request.damageFactorKnife ~= nil then
+		local tempValue = tonumber(request.damageFactorKnife);
+
+		if tempValue >= 0 then
+			SettingsManager:update('damageFactorKnife', tempValue, temporary, batched);
 		end
 	end
 
@@ -303,6 +469,14 @@ function FunBotUIServer:_writeSettings(player, request)
 		end
 	end
 
+	if request.maxShootDistanceNoSniper ~= nil then
+		local tempValue = tonumber(request.maxShootDistanceNoSniper);
+
+		if tempValue >= 0 and tempValue <= 500 then
+			SettingsManager:update('maxShootDistanceNoSniper', tempValue, temporary, batched);
+		end
+	end
+
 	if request.distanceForDirectAttack ~= nil then
 		local tempValue = tonumber(request.distanceForDirectAttack);
 
@@ -311,8 +485,24 @@ function FunBotUIServer:_writeSettings(player, request)
 		end
 	end
 
+	if request.botsAttackBots ~= nil then
+		SettingsManager:update('botsAttackBots', (request.botsAttackBots == true), temporary, batched);
+	end
+
+	if request.maxBotAttackBotDistance ~= nil then
+		local tempValue = tonumber(request.maxBotAttackBotDistance);
+
+		if tempValue >= 0 and tempValue <= 10 then
+			SettingsManager:update('maxBotAttackBotDistance', tempValue, temporary, batched);
+		end
+	end
+
 	if request.meleeAttackIfClose ~= nil then
 		SettingsManager:update('meleeAttackIfClose', (request.meleeAttackIfClose == true), temporary, batched);
+	end
+
+	if request.botCanKillHimself ~= nil then
+		SettingsManager:update('botCanKillHimself', (request.botCanKillHimself == true), temporary, batched);
 	end
 
 	if request.attackWayBots ~= nil then
@@ -335,9 +525,59 @@ function FunBotUIServer:_writeSettings(player, request)
 		SettingsManager:update('jumpWhileMoving', (request.jumpWhileMoving == true), temporary, batched);
 	end
 
+	if request.overWriteBotSpeedMode ~= nil then
+		local tempValue = tonumber(request.overWriteBotSpeedMode);
+
+		if tempValue >= 0 and tempValue <= 5 then
+			SettingsManager:update('overWriteBotSpeedMode', tempValue, temporary, batched);
+		end
+	end
+
+	if request.overWriteBotAttackMode ~= nil then
+		local tempValue = tonumber(request.overWriteBotAttackMode);
+
+		if tempValue >= 0 and tempValue <= 5 then
+			SettingsManager:update('overWriteBotAttackMode', tempValue, temporary, batched);
+		end
+	end
+
+	if request.speedFactor ~= nil then
+		local tempValue = tonumber(request.speedFactor);
+
+		if tempValue > 0 and tempValue <= 2 then
+			SettingsManager:update('speedFactor', tempValue, temporary, batched);
+		end
+	end
+
+	if request.speedFactorAttack ~= nil then
+		local tempValue = tonumber(request.speedFactorAttack);
+
+		if tempValue > 0 and tempValue <= 2 then
+			SettingsManager:update('speedFactorAttack', tempValue, temporary, batched);
+		end
+	end
+
 	--spawnning
-	if request.spawnOnLevelstart ~= nil then
-		SettingsManager:update('spawnOnLevelstart', (request.spawnOnLevelstart == true), temporary, batched);
+	if request.spawnMode ~= nil then
+		local tempString = request.spawnMode;
+
+		for _, spawnMode in pairs(SpawnModes) do
+			if tempString == spawnMode then
+				if Config.spawnMode ~= tempString then
+					SettingsManager:update('spawnMode', tempString, temporary, batched);
+					updateBotTeamAndNumber = true;
+				end
+				break
+			end
+		end
+	end
+
+	if request.spawnInBothTeams ~= nil then
+		local tempVal = (request.spawnInBothTeams == true);
+		if tempVal ~= Config.spawnInBothTeams then
+			SettingsManager:update('spawnInBothTeams', tempVal, temporary, batched);
+			updateBotTeamAndNumber = true;
+		end
 	end
 
 	if request.onlySpawnBotsWithPlayers ~= nil then
@@ -348,24 +588,30 @@ function FunBotUIServer:_writeSettings(player, request)
 		local tempValue = tonumber(request.initNumberOfBots);
 
 		if tempValue > 0 and tempValue <= MAX_NUMBER_OF_BOTS then
-			SettingsManager:update('initNumberOfBots', tempValue, temporary, batched);
+			if Config.initNumberOfBots ~= tempValue then
+				SettingsManager:update('initNumberOfBots', tempValue, temporary, batched);
+				updateBotTeamAndNumber = true;
+			end
 		end
-	end
-
-	if request.incBotsWithPlayers ~= nil then
-		SettingsManager:update('incBotsWithPlayers', (request.incBotsWithPlayers == true), temporary, batched);
 	end
 
 	if request.newBotsPerNewPlayer ~= nil then
 		local tempValue = tonumber(request.newBotsPerNewPlayer);
 
 		if tempValue > 0 and tempValue <= 10 then
-			SettingsManager:update('newBotsPerNewPlayer', tempValue, temporary, batched);
+			if Config.newBotsPerNewPlayer ~= tempValue then
+				SettingsManager:update('newBotsPerNewPlayer', tempValue, temporary, batched);
+				updateBotTeamAndNumber = true;
+			end
 		end
 	end
 
 	if request.keepOneSlotForPlayers ~= nil then
-		SettingsManager:update('keepOneSlotForPlayers', (request.keepOneSlotForPlayers == true), temporary, batched);
+		local tempVal = (request.keepOneSlotForPlayers == true);
+		if Config.keepOneSlotForPlayers ~= tempVal then
+			SettingsManager:update('keepOneSlotForPlayers', tempVal, temporary, batched);
+			updateBotTeamAndNumber = true;
+		end
 	end
 
 	if request.spawnDelayBots ~= nil then
@@ -426,6 +672,206 @@ function FunBotUIServer:_writeSettings(player, request)
 		end
 	end
 
+	if request.distanceToSpawnBots ~= nil then
+		local tempValue = tonumber(request.distanceToSpawnBots);
+
+		if tempValue >= 1 and tempValue <= 100 then
+			SettingsManager:update('distanceToSpawnBots', tempValue, temporary, batched);
+		end
+	end
+
+	if request.heightDistanceToSpawn ~= nil then
+		local tempValue = tonumber(request.heightDistanceToSpawn);
+
+		if tempValue >= 2 and tempValue <= 100 then
+			SettingsManager:update('heightDistanceToSpawn', tempValue, temporary, batched);
+		end
+	end
+
+	if request.distanceToSpawnReduction ~= nil then
+		local tempValue = tonumber(request.distanceToSpawnReduction);
+
+		if tempValue >= 1 and tempValue <= 100 then
+			SettingsManager:update('distanceToSpawnReduction', tempValue, temporary, batched);
+		end
+	end
+
+	if request.maxTrysToSpawnAtDistance ~= nil then
+		local tempValue = tonumber(request.maxTrysToSpawnAtDistance);
+
+		if tempValue >= 1 and tempValue <= 10 then
+			SettingsManager:update('maxTrysToSpawnAtDistance', tempValue, temporary, batched);
+		end
+	end
+
+	-- weapons
+	if request.useRandomWeapon ~= nil then
+		SettingsManager:update('useRandomWeapon', (request.useRandomWeapon == true), temporary, batched);
+	end
+
+	if request.pistol ~= nil then
+		local tempString = request.pistol;
+
+		for _, pistol in pairs(PistoWeapons) do
+			if tempString == pistol then
+				SettingsManager:update('pistol', tempString, temporary, batched);
+				break
+			end
+		end
+	end
+
+	if request.knife ~= nil then
+		local tempString = request.knife;
+		
+		for _, knife in pairs(KnifeWeapons) do
+			if tempString == knife then
+				SettingsManager:update('knife', tempString, temporary, batched);
+				break
+			end
+		end
+	end
+
+	if request.assaultWeapon ~= nil then
+		local tempString = request.assaultWeapon;
+
+		for _, assaultWeapon in pairs(WeaponsAssault) do
+			if tempString == assaultWeapon then
+				SettingsManager:update('assaultWeapon', tempString, temporary, batched);
+				break
+			end
+		end
+	end
+
+	if request.engineerWeapon ~= nil then
+		local tempString = request.engineerWeapon;
+
+		for _, engineerWeapon in pairs(WeaponsEngineer) do
+			if tempString == engineerWeapon then
+				SettingsManager:update('engineerWeapon', tempString, temporary, batched);
+				break
+			end
+		end
+	end
+
+	if request.supportWeapon ~= nil then
+		local tempString = request.supportWeapon;
+
+		for _, supportWeapon in pairs(WeaponsSupport) do
+			if tempString == supportWeapon then
+				SettingsManager:update('supportWeapon', tempString, temporary, batched);
+				break
+			end
+		end
+	end
+
+	if request.reconWeapon ~= nil then
+		local tempString = request.reconWeapon;
+
+		for _, reconWeapon in pairs(WeaponsRecon) do
+			if tempString == reconWeapon then
+				SettingsManager:update('reconWeapon', tempString, temporary, batched);
+				break
+			end
+		end
+	end
+	
+	-- trace
+	if request.debugTracePaths ~= nil then
+		SettingsManager:update('debugTracePaths', (request.debugTracePaths == true), temporary, batched);
+	end
+
+	if request.waypointRange ~= nil then
+		local tempValue = tonumber(request.waypointRange);
+
+		if tempValue >= 0 and tempValue <= 1000.0 then
+			SettingsManager:update('waypointRange', tempValue, temporary, batched);
+		end
+	end
+
+	if request.drawWaypointLines ~= nil then
+		SettingsManager:update('drawWaypointLines', (request.drawWaypointLines == true), temporary, batched);
+	end
+
+	if request.lineRange ~= nil then
+		local tempValue = tonumber(request.lineRange);
+
+		if tempValue >= 0 and tempValue <= 1000.0 then
+			SettingsManager:update('lineRange', tempValue, temporary, batched);
+		end
+	end
+
+	if request.drawWaypointIDs ~= nil then
+		SettingsManager:update('drawWaypointIDs', (request.drawWaypointIDs == true), temporary, batched);
+	end
+	
+	if request.textRange ~= nil then
+		local tempValue = tonumber(request.textRange);
+
+		if tempValue >= 0 and tempValue <= 1000.0 then
+			SettingsManager:update('textRange', tempValue, temporary, batched);
+		end
+	end
+
+	if request.debugSelectionRaytraces ~= nil then
+		SettingsManager:update('debugSelectionRaytraces', (request.debugSelectionRaytraces == true), temporary, batched);
+	end
+
+
+	if request.assaultWeaponSet ~= nil then
+		local tempString = request.assaultWeaponSet;
+		for _, assaultWeaponSet in pairs(WeaponSets) do
+			if tempString == assaultWeaponSet then
+				if assaultWeaponSet ~= Config.assaultWeaponSet then
+					updateWeaponSets = true;
+					SettingsManager:update('assaultWeaponSet', tempString, temporary, batched);
+				end
+				break
+			end
+		end
+	end
+
+	if request.engineerWeaponSet ~= nil then
+		local tempString = request.engineerWeaponSet;
+
+		for _, engineerWeaponSet in pairs(WeaponSets) do
+			if tempString == engineerWeaponSet then
+				if engineerWeaponSet ~= Config.engineerWeaponSet then
+					updateWeaponSets = true;
+					SettingsManager:update('engineerWeaponSet', tempString, temporary, batched);
+				end
+				break
+			end
+		end
+	end
+
+	if request.supportWeaponSet ~= nil then
+		local tempString = request.supportWeaponSet;
+
+		for _, supportWeaponSet in pairs(WeaponSets) do
+			if tempString == supportWeaponSet then
+				if supportWeaponSet ~= Config.supportWeaponSet then
+					updateWeaponSets = true;
+					SettingsManager:update('supportWeaponSet', tempString, temporary, batched);
+				end
+				break
+			end
+		end
+	end
+
+	if request.reconWeaponSet ~= nil then
+		local tempString = request.reconWeaponSet;
+
+		for _, reconWeaponSet in pairs(WeaponSets) do
+			if tempString == reconWeaponSet then
+				if reconWeaponSet ~= Config.reconWeaponSet then
+					updateWeaponSets = true;
+					SettingsManager:update('reconWeaponSet', tempString, temporary, batched);
+				end
+				break
+			end
+		end
+	end
+
 	-- expert
 	if request.botFirstShotDelay ~= nil then
 		local tempValue = tonumber(request.botFirstShotDelay);
@@ -466,54 +912,6 @@ function FunBotUIServer:_writeSettings(player, request)
 		if tempValue >= 0 and tempValue <= 10 then
 			SettingsManager:update('targetDistanceWayPoint', tempValue, temporary);
 			Globals.yawPerFrame = BotManager:calcYawPerFrame();
-		end
-	end
-
-	if request.botFireDuration ~= nil then
-		local tempValue = tonumber(request.botFireDuration);
-
-		if tempValue >= 0.1 and tempValue <= Config.botFireModeDuration then
-			SettingsManager:update('botFireDuration', tempValue, temporary, batched);
-		end
-	end
-
-	if request.botFirePause ~= nil then
-		local tempValue = tonumber(request.botFirePause);
-
-		if tempValue >= 0.1 and tempValue <= Config.botFireModeDuration then
-			SettingsManager:update('botFirePause', tempValue, temporary, batched);
-		end
-	end
-
-	if request.botFireDurationSupport ~= nil then
-		local tempValue = tonumber(request.botFireDurationSupport);
-
-		if tempValue >= 0.1 and tempValue <= Config.botFireModeDuration then
-			SettingsManager:update('botFireDurationSupport', tempValue, temporary, batched);
-		end
-	end
-
-	if request.botFirePauseSupport ~= nil then
-		local tempValue = tonumber(request.botFirePauseSupport);
-
-		if tempValue >= 0.1 and tempValue <= Config.botFireModeDuration then
-			SettingsManager:update('botFirePauseSupport', tempValue, temporary, batched);
-		end
-	end
-
-	if request.botFireCycleRecon ~= nil then
-		local tempValue = tonumber(request.botFireCycleRecon);
-
-		if tempValue >= 0.2 and tempValue <= Config.botFireModeDuration then
-			SettingsManager:update('botFireCycleRecon', tempValue, temporary, batched);
-		end
-	end
-
-	if request.botFireCyclePistol ~= nil then
-		local tempValue = tonumber(request.botFireCyclePistol);
-
-		if tempValue >= 0.2 and tempValue <= Config.botFireModeDuration then
-			SettingsManager:update('botFireCyclePistol', tempValue, temporary, batched);
 		end
 	end
 
@@ -565,11 +963,19 @@ function FunBotUIServer:_writeSettings(player, request)
 	
 	-- update Weapons if needed
 	if updateWeapons then
-		WeaponModification:ModifyAllWeapons(Config.botAimWorsening);
+		WeaponModification:ModifyAllWeapons(Config.botAimWorsening, Config.botSniperAimWorsening);
+	end
+
+	if updateWeaponSets then
+		WeaponList:updateWeaponList()
 	end
 	
-	NetEvents:BroadcastLocal('WriteClientSettings', Config, updateWeapons);
+	NetEvents:BroadcastLocal('WriteClientSettings', Config, updateWeaponSets);
 
+	if updateBotTeamAndNumber then
+		Globals.spawnMode		= Config.spawnMode;
+		BotSpawner:updateBotAmountAndTeam();
+	end
 	-- @ToDo create Error Array and dont hide if has values
 	NetEvents:SendTo('UI_Settings', player, false);
 end
