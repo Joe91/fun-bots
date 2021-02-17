@@ -144,6 +144,12 @@ function WeaponList:__init()
 	weapon = Weapon('SG553LB', '', {'Kobra', 'Silencer'}, 'Carabine')
 	table.insert(self._weapons, weapon);
 
+	-- comment these lines if you don't like rockets
+	weapon = Weapon('SMAW', '', {}, 'Carabine')
+	table.insert(self._weapons, weapon)
+
+	weapon = Weapon('RPG7', '', {}, 'Carabine')
+	table.insert(self._weapons, weapon)
 
 	---------------------------
 	--LMG
