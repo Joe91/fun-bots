@@ -525,7 +525,8 @@ function Bot:_updateShooting()
 
 						table.insert(self._shootWayPoints, point);
 						if self.knifeMode then
-							table.insert(self._knifeWayPoints, self._shootPlayer.soldier.worldTransform.trans)
+							local trans = self._shootPlayer.soldier.worldTransform.trans:Clone()
+							table.insert(self._knifeWayPoints, trans)
 						end
 					end
 					self._shootTraceTimer = self._shootTraceTimer + StaticConfig.botUpdateCycle;

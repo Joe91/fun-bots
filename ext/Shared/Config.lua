@@ -69,7 +69,7 @@ Config = {
 	debugSelectionRaytraces = false,-- Shows the trace line and search area from Commo Rose selection
 
 	--advanced
-	fovForShooting = 160,			-- Degrees of FOV of Bot
+	fovForShooting = 200,			-- Degrees of FOV of Bot
 	shootBackIfHit = true,			-- bot shoots back, if hit
 	maxRaycastDistance = 150,		-- meters bots start shooting at player
 	maxShootDistanceNoSniper = 70,	-- meters a bot (not sniper) start shooting at player
