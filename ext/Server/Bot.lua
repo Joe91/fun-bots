@@ -61,6 +61,7 @@ function Bot:__init(player)
 	self._shoot = false;
 	self._shootPlayer = nil;
 	self._shootWayPoints = {};
+	self._knifeWayPoints = {};
 	self._lastTargetTrans = Vec3();
 	self._lastShootPlayer = nil;
 
@@ -138,6 +139,10 @@ function Bot:shootAt(player, ignoreYaw)
 				self._shootPlayer		= player;
 				self._lastShootPlayer 	= player;
 				self._lastTargetTrans 	= player.soldier.worldTransform.trans:Clone();
+				self._knifeWayPoints 	= {};
+				if Config.zombieMode or Config.botWeapon == "Knife" then
+					table.insert(self._knifeWayPoints, self._lastTargetTrans)
+				end
 			end
 		else
 			self._shootModeTimer = Config.botFireModeDuration;
@@ -388,6 +393,21 @@ function Bot:_updateYaw()
 		local yaw		= (atanDzDx > math.pi / 2) and (atanDzDx - math.pi / 2) or (atanDzDx + 3 * math.pi / 2);
 		self._targetYaw = yaw;
 	end
+	if Config.zombieMode or Config.botWeapon == "Knife" then
+		if self._shootPlayer ~= nil and self.player.soldier ~= nil then
+			if #self._knifeWayPoints > 1 then
+				if self.player.soldier.worldTransform.trans:Distance(self._knifeWayPoints[1]) < 1.5 then
+					table.remove(self._knifeWayPoints, 1)
+					print("remove point")
+				end
+				local dy					= self._knifeWayPoints[1].z - self.player.soldier.worldTransform.trans.z;
+				local dx					= self._knifeWayPoints[1].x - self.player.soldier.worldTransform.trans.x;
+				local atanDzDx	= math.atan(dy, dx);
+				local yaw		= (atanDzDx > math.pi / 2) and (atanDzDx - math.pi / 2) or (atanDzDx + 3 * math.pi / 2);
+				self._targetYaw = yaw;
+			end
+		end
+	end
 
 	local deltaYaw = self.player.input.authoritativeAimingYaw - self._targetYaw;
 	if deltaYaw > math.pi then
@@ -492,7 +512,7 @@ function Bot:_updateShooting()
 				end
 
 				--trace way back
-				if self.activeWeapon.type ~= "Sniper" then
+				if self.activeWeapon.type ~= "Sniper" or Config.botWeapon == "Knife" or Config.zombieMode then
 					if self._shootTraceTimer > StaticConfig.traceDeltaShooting then
 						--create a Trace to find way back
 						self._shootTraceTimer 	= 0;
@@ -501,6 +521,9 @@ function Bot:_updateShooting()
 						point.speedMode			= 4;
 
 						table.insert(self._shootWayPoints, point);
+						if Config.botWeapon == "Knife" or Config.zombieMode then
+							table.insert(self._knifeWayPoints, self._shootPlayer.soldier.worldTransform.trans)
+						end
 					end
 					self._shootTraceTimer = self._shootTraceTimer + StaticConfig.botUpdateCycle;
 				end
