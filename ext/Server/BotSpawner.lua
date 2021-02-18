@@ -10,7 +10,7 @@ local Utilities 	= require('__shared/Utilities')
 function BotSpawner:__init()
 	self._botSpawnTimer = 0
 	self._firstSpawnInLevel = true;
-	self._firstSpawnDelay = 5;
+	self._firstSpawnDelay = 10;
 	self._spawnSets = {}
 
 	Events:Subscribe('UpdateManager:Update', self, self._onUpdate)
@@ -210,7 +210,7 @@ end
 
 function BotSpawner:onLevelLoaded()
 	self._firstSpawnInLevel = true;
-	self._firstSpawnDelay 	= 5;
+	self._firstSpawnDelay 	= 10;
 end
 
 function BotSpawner:_onUpdate(dt, pass)
