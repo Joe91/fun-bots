@@ -6,7 +6,6 @@ USE_REAL_DAMAGE 	= true;			-- with real damage, the hitboxes are a bit buggy
 Config = {
 	--global
 	botWeapon = "Primary",			-- Select the weapon the bots use
-	botAttackMode = "Random",		-- Mode the Bots attack with. Random, Crouch or Stand
 	botKit = "RANDOM_KIT",			-- see BotKits
 	botColor = "RANDOM_COLOR",		-- see BotColors
 	zombieMode = false,				-- Zombie Bot Mode
@@ -53,6 +52,7 @@ Config = {
 	fovForShooting = 200,			-- Degrees of FOV of Bot
 	maxRaycastDistance = 150,		-- meters bots start shooting at player
 	maxShootDistanceNoSniper = 70,	-- meters a bot (not sniper) start shooting at player
+	botAttackMode = "Random",		-- Mode the Bots attack with. Random, Crouch or Stand
 	shootBackIfHit = true,			-- bot shoots back, if hit
 	botsAttackBots = true,			-- bots attack bots from other team
 	meleeAttackIfClose = true,		-- bot attacks with melee if close
