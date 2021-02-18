@@ -165,7 +165,7 @@ function NodeCollection:Remove(waypoint)
 		for _,selectedWaypoint in pairs(selection) do
 			self:Remove(selectedWaypoint)
 		end
-		return
+		return true, 'Success'
 	end
 
 	print('Removing: '..tostring(waypoint.ID))
@@ -186,7 +186,33 @@ function NodeCollection:Remove(waypoint)
 	self.waypointsByID[waypoint.ID] = waypoint
 	self.waypointsByPathIndex[waypoint.PathIndex][waypoint.PointIndex] = waypoint
 	self.selectedWaypoints[waypoint.ID] = nil
+	return true, 'Success'
 	-- go hit the gym
+end
+
+function NodeCollection:CreateAfter()
+
+	local newWaypointData = {}
+	local lastWaypoint = nil
+	local newWaypoint = nil
+
+	local selection = self:GetSelected()
+	if (#selection > 0) then
+		lastWaypoint = selection[#selection]
+		newWaypoint = self:Create({
+			PathIndex = lastWaypoint.PathIndex,
+			Previous = lastWaypoint.ID
+		})
+	else
+		lastWaypoint = self:GetLast()
+		newWaypoint = self:Create({
+			PathIndex = lastWaypoint.PathIndex + 1,
+			Previous = lastWaypoint.ID
+		})
+	end
+
+	self:InsertAfter(lastWaypoint, newWaypoint)
+	return newWaypoint, 'Success'
 end
 
 function NodeCollection:InsertAfter(referrenceWaypoint, waypoint)
@@ -352,15 +378,34 @@ function NodeCollection:_processWaypointMetadata(waypoint)
 	-- if direct connections
 	-- waypoint.Data.LinkMode = 1
 	-- waypoint.Data.Links = { 'p_1', ... }
-end
 
+	return waypoint
+end
 
 function NodeCollection:Update(waypoint, data)
 	g_Utilities:mergeKeys(waypoint, data)
 end
 
-function NodeCollection:UpdateMetadata(waypoint, data)
-	self:Update(waypoint, {Data = g_Utilities:mergeKeys(waypoint.Data, data)})
+function NodeCollection:UpdateMetadata(data)
+	print('[A] NodeCollection:UpdateMetadata -> data: '..g_Utilities:dump(data, true))
+
+	local selection = self:GetSelected()
+	if (#selection < 1) then
+		return false, 'Must select one or more waypoints'
+	end
+
+	local errorMsg = ''
+	if (type(data) == 'string') then
+		data, errorMsg = json.decode(data) or {}
+	end
+	print('[B] NodeCollection:UpdateMetadata -> data: '..g_Utilities:dump(data, true))
+
+	for i=1, #selection do
+		self:Update(selection[i], {
+			Data = g_Utilities:mergeKeys(selection[i].Data, data)
+		})
+	end
+	return true, 'Success'
 end
 
 function NodeCollection:SetInput(speed, extra, option)
@@ -382,6 +427,33 @@ function NodeCollection:SetInput(speed, extra, option)
 	return inputVar
 end
 
+function NodeCollection:Connect()
+	local selection = g_NodeCollection:GetSelected()
+	if (#selection ~= 2) then
+		return false, 'Must select only two waypoints'
+	end
+
+	local orphan = nil
+	local referrence = nil
+	for i=1, #selection do
+		if (not selection[i].Previous and not selection[i].Next) then
+			orphan = selection[i]
+		else
+			referrence = selection[i]
+		end
+	end
+
+	if (orphan == nil or referrence == nil) then
+		return false, 'Must select one orphan waypoint and one connected waypoint'
+	end
+
+	self:Update(orphan, {
+		PathIndex = referrence.PathIndex
+	})
+
+	self:InsertAfter(referrence, orphan)
+	return true
+end
 
 function NodeCollection:Get(waypointIndex, pathIndex)
 	if (waypointIndex ~= nil) then
@@ -419,18 +491,33 @@ function NodeCollection:Get(waypointIndex, pathIndex)
 end
 
 function NodeCollection:GetFirst(pathIndex)
-	local firstWaypoint = nil
-	local searchTable = self.waypoints
+	local currentWaypoint = self.waypoints[1]
 	if (pathIndex ~= nil) then
-		searchTable = self.waypointsByPathIndex[pathIndex]
+		currentWaypoint = self.waypointsByPathIndex[pathIndex][1]
 	end
 
-	for i=1, #searchTable do
-		local waypoint = searchTable[i]
-		if (waypoint.Previous == false and waypoint.Next ~= false) then
-			return waypoint
+	while currentWaypoint.Previous do
+		if (pathIndex ~= nil and currentWaypoint.Previous and currentWaypoint.Previous.PathIndex ~= pathIndex) then
+			return currentWaypoint
 		end
+		currentWaypoint = currentWaypoint.Previous
 	end
+	return currentWaypoint
+end
+
+function NodeCollection:GetLast(pathIndex)
+	local currentWaypoint = self.waypoints[1]
+	if (pathIndex ~= nil) then
+		currentWaypoint = self.waypointsByPathIndex[pathIndex][1]
+	end
+
+	while currentWaypoint.Next do
+		if (pathIndex ~= nil and currentWaypoint.Next.PathIndex ~= pathIndex) then
+			return currentWaypoint
+		end
+		currentWaypoint = currentWaypoint.Next
+	end
+	return currentWaypoint
 end
 
 function NodeCollection:GetPaths()
@@ -498,8 +585,36 @@ function NodeCollection:GetSelected(pathIndex)
 		end
 	end
 
-	self:_sort(selection, 'PointIndex')
+	if (pathIndex == nil) then
+		self:_sort(selection, 'Index')
+	else
+		self:_sort(selection, 'PointIndex')
+	end
 	return selection
+end
+
+function NodeCollection:ClearSelection()
+	self.selectedWaypoints = {}
+end
+
+function NodeCollection:_sort(collection, keyName, descending)
+
+	keyName = keyName or 'Index'
+
+	table.sort(collection, function(a,b)
+		if (a == nil) then
+			return false
+		end
+		if (b == nil) then
+			return true
+		end
+		if (descending) then
+			return a[keyName] > b[keyName]
+		else
+			return a[keyName] < b[keyName]
+		end
+	end)
+	return collection
 end
 
 function NodeCollection:MergeSelection()
@@ -576,29 +691,7 @@ function NodeCollection:SplitSelection()
 	return true, 'Success'
 end
 
-function NodeCollection:_sort(collection, keyName, descending)
 
-	keyName = keyName or 'Index'
-
-	table.sort(collection, function(a,b)
-		if (a == nil) then
-			return false
-		end
-		if (b == nil) then
-			return true
-		end
-		if (descending) then
-			return a[keyName] > b[keyName]
-		else
-			return a[keyName] < b[keyName]
-		end
-	end)
-	return collection
-end
-
-function NodeCollection:ClearSelection()
-	self.selectedWaypoints = {}
-end
 
 -----------------------------
 -- Paths
@@ -679,6 +772,7 @@ function NodeCollection:Load(levelName, gameMode)
 	end
 	SQL:Close()
 	self:RecalculateIndexes(lastWaypoint)
+	self:ProcessMetadata()
 
 	print('NodeCollection:Load -> Paths: '..tostring(pathCount)..' | Waypoints: '..tostring(waypointCount))
 end

@@ -96,6 +96,7 @@ function ClientNodeEditor:RegisterEvents()
 
 	NetEvents:Subscribe('UI_CommoRose_Action_Save', self, self._onSaveNodes)
 	NetEvents:Subscribe('UI_CommoRose_Action_Select', self, self._onSelectNode)
+	NetEvents:Subscribe('UI_CommoRose_Action_Connect', self, self._onConnectNode)
 	NetEvents:Subscribe('UI_CommoRose_Action_Load', self, self._onLoadNodes)
 
 	NetEvents:Subscribe('UI_CommoRose_Action_Delete', self, self._onRemoveNode)
@@ -123,10 +124,13 @@ function ClientNodeEditor:RegisterEvents()
 	self.pushScreenHook = Hooks:Install('UI:PushScreen', 100, self, self._onUIPushScreen)
 
 	Console:Register('GetNodes', 'Resend all waypoints and lose all changes', self, self._onGetNodes)
+	Console:Register('Create', 'Create a new waypoint after the selected one', self, self._onCreateNode)
+	Console:Register('Connect', 'Connect an orphaned waypoint after the selected one', self, self._onConnectNode)
 	Console:Register('Remove', 'Remove selected waypoints', self, self._onRemoveNode)
 	Console:Register('Merge', 'Merge selected waypoints', self, self._onMergeNode)
 	Console:Register('Split', 'Split selected waypoints', self, self._onSplitNode)
 	Console:Register('SetInput', '<number|0-15> <number|0-15> <number|0-255> - Sets input variables for the selected waypoints', self, self._onSetInputNode)
+	Console:Register('SetMetadata', '<string|Data> - Set Metadata for waypoint, Must be valid JSON string', self, self._onSetMetadata)
 	Console:Register('ClearSelection', 'Clear selection', self, self._onClearSelection)
 	Console:Register('SelectBetween', 'Select all waypoint between start and end of selection', self, self._onSelectBetween)
 	Console:Register('SelectNext', 'Extend selection to next waypoint', self, self._onSelectNext)
@@ -137,8 +141,10 @@ function ClientNodeEditor:RegisterEvents()
 	Console:Register('ShowRose', 'Show custom Commo Rose', self, self._onShowRose)
 	Console:Register('HideRose', 'Hide custom Commo Rose', self, self._onHideRose)
 	Console:Register('DumpNodes', 'Print selected nodes or all nodes to console', self, self._onDumpNodes)
-	Console:Register('RecalculateIndexes', 'Recalculate Indexes starting with selected nodes or all nodes', self, self._onRecalculateIndexes)
 	Console:Register('UnloadNodes', 'Clears and unloads all clientside nodes', self, self._onUnload)
+
+	Console:Register('RecalculateIndexes', 'Recalculate Indexes starting with selected nodes or all nodes', self, self._onRecalculateIndexes)
+	Console:Register('ProcessMetadata', 'Process waypoint metadata starting with selected nodes or all nodes', self, self._onProcessMetadata)
 
 	Console:Register('BotVision', '*<boolean|Enabled>* Lets you see what the bots see [Experimental]', self, self._onSetBotVision)
 
@@ -153,15 +159,23 @@ function ClientNodeEditor:DeregisterEvents()
 	NetEvents:Unsubscribe('ClientNodeEditor:SendNodes')
 	NetEvents:Unsubscribe('ClientNodeEditor:Create')
 	NetEvents:Unsubscribe('ClientNodeEditor:Init')
+
 	NetEvents:Unsubscribe('UI_CommoRose_Action_Save')
 	NetEvents:Unsubscribe('UI_CommoRose_Action_Select')
+	NetEvents:Unsubscribe('UI_CommoRose_Action_Connect')
 	NetEvents:Unsubscribe('UI_CommoRose_Action_Load')
-	NetEvents:Unsubscribe('UI_CommoRose_Action_Merge')
-	NetEvents:Unsubscribe('UI_CommoRose_Action_Move')
+
 	NetEvents:Unsubscribe('UI_CommoRose_Action_Delete')
-	NetEvents:Unsubscribe('UI_CommoRose_Action_Split')
-	NetEvents:Unsubscribe('UI_CommoRose_Action_SetInput')
+	NetEvents:Unsubscribe('UI_CommoRose_Action_Merge')
+	NetEvents:Unsubscribe('UI_CommoRose_Action_SelectPrevious')
+	NetEvents:Unsubscribe('UI_CommoRose_Action_ClearSelections')
+	NetEvents:Unsubscribe('UI_CommoRose_Action_Move')
+
 	NetEvents:Unsubscribe('UI_CommoRose_Action_Create')
+	NetEvents:Unsubscribe('UI_CommoRose_Action_Split')
+	NetEvents:Unsubscribe('UI_CommoRose_Action_SelectNext')
+	NetEvents:Unsubscribe('UI_CommoRose_Action_SelectBetween')
+	NetEvents:Unsubscribe('UI_CommoRose_Action_SetInput')
 
 	Events:Unsubscribe('Player:Created')
 	Events:Unsubscribe('Player:Deleted')
@@ -177,6 +191,8 @@ function ClientNodeEditor:DeregisterEvents()
 	end
 
 	Console:Deregister('GetNodes')
+	Console:Deregister('Create')
+	Console:Deregister('Connect')
 	Console:Deregister('Remove')
 	Console:Deregister('Merge')
 	Console:Deregister('Split')
@@ -284,11 +300,36 @@ end
 -- ####################### commo rose left side
 -- ############################################
 
+function ClientNodeEditor:_onRemoveNode(args)
+	self.CommoRose.Active = false
+	g_NodeCollection:Remove()
+	print(Language:I18N('Success'))
+	return true
+end
+
 function ClientNodeEditor:_onMergeNode(args)
 	self.CommoRose.Active = false
 	local result, message = g_NodeCollection:MergeSelection()
 	print(Language:I18N(message))
 	return result
+end
+
+function ClientNodeEditor:_onSelectPrevious()
+	print('ClientNodeEditor:_onSelectPrevious')
+	local selection = g_NodeCollection:GetSelected()
+	if (#selection < 1) then
+		print('Must select at least one node')
+	end
+
+	if (selection[1].Previous ~= false) then
+		g_NodeCollection:Select(selection[1].Previous)
+	end
+end
+
+function ClientNodeEditor:_onClearSelection(args)
+	g_NodeCollection:ClearSelection()
+	print(Language:I18N('Success'))
+	return true
 end
 
 function ClientNodeEditor:_onToggleMoveNode(args)
@@ -342,15 +383,26 @@ function ClientNodeEditor:_onToggleMoveNode(args)
 	return false
 end
 
-function ClientNodeEditor:_onRemoveNode(args)
-	self.CommoRose.Active = false
-	g_NodeCollection:Remove()
-	print(Language:I18N('Success'))
-	return true
-end
-
 -- ###################### commo rose right side
 -- ############################################
+
+function ClientNodeEditor:_onCreateNode(args)
+	self.CommoRose.Active = false
+
+	print('ClientNodeEditor:_onCreateNode')
+	
+	local result, message = g_NodeCollection:CreateAfter()
+
+	if (result ~= nil) then
+		g_NodeCollection:ClearSelection()
+		g_NodeCollection:Select(result)
+		self.editPositionMode = 'absolute'
+		self:_onToggleMoveNode()
+	end
+
+	print(Language:I18N(message))
+	return result ~= nil
+end
 
 function ClientNodeEditor:_onSplitNode(args)
 	self.CommoRose.Active = false
@@ -359,26 +411,16 @@ function ClientNodeEditor:_onSplitNode(args)
 	return result
 end
 
-function ClientNodeEditor:_onSetInputNode(args)
-	self.CommoRose.Active = false
-	print('ClientNodeEditor:_onSetInputNode: '..g_NodeCollection:SetInput(args[1], args[2], args[3]))
-	print(Language:I18N('Success'))
-	return true
-end
+function ClientNodeEditor:_onSelectNext()
+	print('ClientNodeEditor:_onSelectNext')
+	local selection = g_NodeCollection:GetSelected()
+	if (#selection < 1) then
+		print('Must select at least one waypoint')
+	end
 
-function ClientNodeEditor:_onCreateNode(args)
-	self.CommoRose.Active = false
-	print(Language:I18N('Not Implemented Yet'))
-	return false
-end
-
--- ############################## Other Methods
--- ############################################
-
-function ClientNodeEditor:_onClearSelection(args)
-	g_NodeCollection:ClearSelection()
-	print(Language:I18N('Success'))
-	return true
+	if (selection[#selection].Next ~= false) then
+		g_NodeCollection:Select(selection[#selection].Next)
+	end
 end
 
 function ClientNodeEditor:_onSelectBetween()
@@ -401,31 +443,38 @@ function ClientNodeEditor:_onSelectBetween()
 	end
 end
 
-function ClientNodeEditor:_onSelectNext()
-	print('ClientNodeEditor:_onSelectNext')
-	local selection = g_NodeCollection:GetSelected()
-	if (#selection < 1) then
-		print('Must select at least one node')
-	end
-
-	if (selection[#selection].Next ~= false) then
-		g_NodeCollection:Select(selection[#selection].Next)
-	end
+function ClientNodeEditor:_onSetInputNode(args)
+	self.CommoRose.Active = false
+	print('ClientNodeEditor:_onSetInputNode: '..g_NodeCollection:SetInput(args[1], args[2], args[3]))
+	print(Language:I18N('Success'))
+	return true
 end
 
-function ClientNodeEditor:_onSelectPrevious()
-	print('ClientNodeEditor:_onSelectPrevious')
-	local selection = g_NodeCollection:GetSelected()
-	if (#selection < 1) then
-		print('Must select at least one node')
-	end
+-- ############################## Other Methods
+-- ############################################
 
-	if (selection[1].Previous ~= false) then
-		g_NodeCollection:Select(selection[1].Previous)
-	end
+
+function ClientNodeEditor:_onConnectNode()
+	self.CommoRose.Active = false
+	local result, message = g_NodeCollection:Connect()
+	print(Language:I18N(message))
+	return result
 end
 
--- NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', pathIndex, pointIndex, botPosition)
+function ClientNodeEditor:_onSetMetadata(args)
+	self.CommoRose.Active = false
+	print('[A] ClientNodeEditor:_onSetMetadata -> args: '..g_Utilities:dump(args, true))
+
+	local data = table.concat(args or {}, ' ')
+
+	print('[B] ClientNodeEditor:_onSetMetadata -> data: '..g_Utilities:dump(data, true))
+
+	local result, message = g_NodeCollection:UpdateMetadata(data)
+	print(Language:I18N(message))
+	return result
+end
+
+-- NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', pathIndex, pointIndex, botPosition, color)
 function ClientNodeEditor:_onBotSelect(pathIndex, pointIndex, botPosition, isObstacleMode, color)
 	local waypoint = g_NodeCollection:Get(pointIndex, pathIndex)
 	if (waypoint ~= nil) then
@@ -566,6 +615,18 @@ function ClientNodeEditor:_onRecalculateIndexes(args)
 		firstnode = selection[1]
 	end
 	g_NodeCollection:RecalculateIndexes(firstnode)
+	return true
+end
+
+function ClientNodeEditor:_onProcessMetadata(args)
+
+	local selection = g_NodeCollection:GetSelected()
+	local firstnode = nil
+
+	if (#selection > 0) then
+		firstnode = selection[1]
+	end
+	g_NodeCollection:ProcessMetadata(firstnode)
 	return true
 end
 
@@ -715,7 +776,6 @@ function ClientNodeEditor:_onCommoRoseAction(action, hit)
 end
 
 function ClientNodeEditor:_onUIPushScreen(hook, screen, priority, parentGraph, stateNodeGuid)
-
 	if (screen ~= nil) then
 		print('ClientNodeEditor:_onUIPushScreen: '..UIScreenAsset(screen).name)
 	end
@@ -1293,6 +1353,8 @@ function ClientNodeEditor:_onUIDrawHud()
 							text = text..string.format("SpeedMode: %s (%d)\n", speedMode, waypoint.SpeedMode)
 							text = text..string.format("ExtraMode: %s (%d)\n", extraMode, waypoint.ExtraMode)
 							text = text..string.format("OptValue: %s (%d)\n", optionValue, waypoint.OptValue)
+							text = text..'Data: '..g_Utilities:dump(waypoint.Data, true)
+
 							DebugRenderer:DrawText2D(screenPos.x, screenPos.y, text, self.colors.Text, 1.2)
 						end
 						screenPos = nil

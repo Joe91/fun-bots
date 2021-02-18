@@ -416,8 +416,14 @@ function TraceManager:_saveWayPoints()
 							local trans			= waypoint.trans;
 							local inputVar		= self:_getInputVar(waypoint);
 							local data			= ''
-							if (waypoint.data ~= nil and type(waypoint) == 'table' and #waypoint > 0) then
-								data = json.encode(waypoint.data)
+							if (waypoint.data ~= nil and type(waypoint.data) == 'table') then
+								local _data, encodeError = json.encode(waypoint.data)
+								if (_data == nil) then
+									print('WARNING! Node ['..oldPathIndex..']['..pointIndex..'] data could not encode: '..tostring(encodeError))
+								end
+								if (_data ~= '{}') then
+									data = SQL:Escape(table.concat(_data:split('"'), '""'))
+								end
 							end
 
 							sqlValuesString		= sqlValuesString..'('..table.concat({pathIndex, pointIndex, trans.x, trans.y, trans.z, inputVar, '"'..data..'"'}, ',')..')';
