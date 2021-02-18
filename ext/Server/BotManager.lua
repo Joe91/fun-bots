@@ -23,6 +23,9 @@ function BotManager:__init()
 end
 
 function BotManager:getBotTeam()
+	if Config.botTeam ~= TeamId.TeamNeutral then
+		return Config.botTeam;
+	end
 	local botTeam;
 	local countPlayersTeam1 = 0;
 	local countPlayersTeam2 = 0;
@@ -38,12 +41,10 @@ function BotManager:getBotTeam()
 	end
 
 	-- init global Vars
-	if countPlayersTeam1 > countPlayersTeam2 then
-		botTeam = TeamId.Team2;
-	elseif countPlayersTeam2 > countPlayersTeam1 then
+	if countPlayersTeam2 > countPlayersTeam1 then
 		botTeam = TeamId.Team1;
-	else
-		botTeam = Config.botTeam;
+	else -- if countPlayersTeam1 > countPlayersTeam2 then  --default case
+		botTeam = TeamId.Team2;
 	end
 
 	return botTeam;

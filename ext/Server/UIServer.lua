@@ -625,7 +625,9 @@ function FunBotUIServer:_writeSettings(player, request)
 	if request.botTeam ~= nil then
 		local tempValue = tonumber(request.botTeam);
 
-		if tempValue == 1 then
+		if tempValue == 0 then
+			SettingsManager:update('botTeam', TeamId.TeamNeutral, temporary, batched);
+		elseif tempValue == 1 then
 			SettingsManager:update('botTeam', TeamId.Team1, temporary, batched);
 		elseif tempValue == 2 then
 			SettingsManager:update('botTeam', TeamId.Team2, temporary, batched);

@@ -32,7 +32,7 @@ Config = {
 	newBotsPerNewPlayer = 2,		-- number to increase Bots, when new players join
 	keepOneSlotForPlayers = true,	-- always keep one slot for new Players to join
 	spawnDelayBots = 10.0,			-- time till bots respawn, if respawn enabled
-	botTeam = TeamId.Team2,		 	-- default bot team (0 = neutral, 1 = US, 2 = RU) TeamId.Team2
+	botTeam = TeamId.TeamNeutral, 	-- default bot team (0 = neutral / auto, 1 = US, 2 = RU) TeamId.Team2
 	respawnWayBots = true,			-- bots on paths respawn if killed
 	botNewLoadoutOnSpawn = true,	-- bots get a new kit and color, if they respawn
 	maxAssaultBots = -1,			-- maximum number of Bots with Assault Kit

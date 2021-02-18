@@ -259,27 +259,13 @@ function BotSpawner:_onRespawnBot(botname)
 	end
 end
 
-function BotSpawner:getBotTeam(player)
-	local team;
-	if player ~= nil then
-		if player.teamId == TeamId.Team1 then
-			team = TeamId.Team2
-		else
-			team = TeamId.Team1
-		end
-	else
-		team = BotManager:getBotTeam();
-	end
-	return team
-end
-
 function BotSpawner:spawnBotRow(player, length, spacing)
 	for i = 1, length do
 		local name = BotManager:findNextBotName()
 		if name ~= nil then
 			local transform = LinearTransform()
 			transform.trans = player.soldier.worldTransform.trans + (player.soldier.worldTransform.forward * i * spacing)
-			local bot = BotManager:createBot(name, self:getBotTeam(player))
+			local bot = BotManager:createBot(name, BotManager:getBotTeam())
 			bot:setVarsStatic(player)
 			self:spawnBot(bot, transform, true)
 		end
@@ -295,7 +281,7 @@ function BotSpawner:spawnBotTower(player, height)
 			transform.trans.x = player.soldier.worldTransform.trans.x + (math.cos(yaw + (math.pi / 2)))
 			transform.trans.y = player.soldier.worldTransform.trans.y + ((i - 1) * 1.8)
 			transform.trans.z = player.soldier.worldTransform.trans.z + (math.sin(yaw + (math.pi / 2)))
-			local bot = BotManager:createBot(name, self:getBotTeam(player))
+			local bot = BotManager:createBot(name, BotManager:getBotTeam())
 			bot:setVarsStatic(player)
 			self:spawnBot(bot, transform, true)
 		end
@@ -312,7 +298,7 @@ function BotSpawner:spawnBotGrid(player, rows, columns, spacing)
 				transform.trans.x = player.soldier.worldTransform.trans.x + (i * math.cos(yaw + (math.pi / 2)) * spacing) + ((j - 1) * math.cos(yaw) * spacing)
 				transform.trans.y = player.soldier.worldTransform.trans.y
 				transform.trans.z = player.soldier.worldTransform.trans.z + (i * math.sin(yaw + (math.pi / 2)) * spacing) + ((j - 1) * math.sin(yaw) * spacing)
-				local bot = BotManager:createBot(name, self:getBotTeam(player))
+				local bot = BotManager:createBot(name, BotManager:getBotTeam())
 				bot:setVarsStatic(player)
 				self:spawnBot(bot, transform, true)
 			end
@@ -326,7 +312,7 @@ function BotSpawner:spawnLineBots(player, amount, spacing)
 		if name ~= nil then
 			local transform = LinearTransform()
 			transform.trans = player.soldier.worldTransform.trans + (player.soldier.worldTransform.forward * i * spacing)
-			local bot = BotManager:createBot(name, self:getBotTeam(player))
+			local bot = BotManager:createBot(name, BotManager:getBotTeam())
 			bot:setVarsSimpleMovement(player, 2, transform)
 			self:spawnBot(bot, transform, true)
 		end
@@ -422,7 +408,7 @@ function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, inde
 			if forcedTeam ~= nil then
 				bot = BotManager:createBot(name, forcedTeam)
 			else
-				bot = BotManager:createBot(name, self:getBotTeam(player))
+				bot = BotManager:createBot(name, BotManager:getBotTeam())
 			end
 			if bot ~= nil then
 				bot:setVarsWay(player, useRandomWay, activeWayIndex, indexOnPath, inverseDirection)
