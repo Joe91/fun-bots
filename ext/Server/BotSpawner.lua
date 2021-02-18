@@ -175,13 +175,13 @@ function BotSpawner:updateBotAmountAndTeam()
 			self:spawnWayBots(nil, team1TempCount, true, 0, 0, TeamId.Team1);
 		end
 	end
-
-	self._firstSpawnInLevel = false;
 end
 
 function BotSpawner:_onPlayerRespawn(player)
 	if not Utilities:isBot(player.name) then
-		self:updateBotAmountAndTeam();
+		if not self._firstSpawnInLevel then
+			self:updateBotAmountAndTeam();
+		end
 	end
 end
 
@@ -234,6 +234,7 @@ function BotSpawner:_onUpdate(dt, pass)
 		self._botSpawnTimer = self._botSpawnTimer + dt
 	else
 		if self._desytroyUnneededBots then
+			self._firstSpawnInLevel = false;
 			self._desytroyUnneededBots = false;
 			--garbage-collection of unwanted bots
 			BotManager:destroyDisabledBots();
