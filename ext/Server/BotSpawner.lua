@@ -94,7 +94,7 @@ function BotSpawner:updateBotAmountAndTeam()
 				BotManager:destroyTeam(TeamId.Team1, team1Count-targetTeam1)
 			end
 			if team2Count > targetTeam2 then
-				BotManager:destroyTeam(TeamId.Team2, team1Count-targetTeam1)
+				BotManager:destroyTeam(TeamId.Team2, team2Count-targetTeam2)
 			end
 		end
 
