@@ -27,7 +27,6 @@ Config = {
 
 	--spawn
 	spawnMode = 'increment_with_players',	-- mode the bots spawn with
-	onlySpawnBotsWithPlayers = true,-- Bots only spawn if at least one Player is on the server
 	spawnInBothTeams = true,		-- Bots spawn in both teams
 	initNumberOfBots = 5,			-- bots for spawnmode
 	newBotsPerNewPlayer = 2,		-- number to increase Bots, when new players join

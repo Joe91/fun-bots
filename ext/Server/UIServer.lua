@@ -584,10 +584,6 @@ function FunBotUIServer:_writeSettings(player, request)
 		end
 	end
 
-	if request.onlySpawnBotsWithPlayers ~= nil then
-		SettingsManager:update('onlySpawnBotsWithPlayers', (request.onlySpawnBotsWithPlayers == true), temporary, batched);
-	end
-
 	if request.initNumberOfBots ~= nil then
 		local tempValue = tonumber(request.initNumberOfBots);
 

@@ -193,7 +193,7 @@ function BotSpawner:_onPlayerRespawn(player)
 end
 
 function BotSpawner:_onPlayerJoining()
-	if Config.onlySpawnBotsWithPlayers and BotManager:getPlayerCount() == 0 then
+	if BotManager:getPlayerCount() == 0 then
 		print("first player - spawn bots")
 		self:onLevelLoaded()
 	end
@@ -202,11 +202,9 @@ end
 function BotSpawner:_onPlayerLeft(player)
 	BotManager:onPlayerLeft(player)
 	--remove all references of player
-	if Config.onlySpawnBotsWithPlayers then
-		if BotManager:getPlayerCount() == 1 then
-			print("no player left - kick all bots")
-			BotManager:destroyAllBots()
-		end
+	if BotManager:getPlayerCount() == 1 then
+		print("no player left - kick all bots")
+		BotManager:destroyAllBots()
 	end
 end
 
@@ -222,7 +220,7 @@ function BotSpawner:_onUpdate(dt, pass)
 
 	if self._firstSpawnInLevel then
 		if self._firstSpawnDelay <= 0 then
-			if BotManager:getPlayerCount() > 0 or not Config.onlySpawnBotsWithPlayers then
+			if BotManager:getPlayerCount() > 0 then
 				BotManager:configGlobas()
 
 				self:updateBotAmountAndTeam();
