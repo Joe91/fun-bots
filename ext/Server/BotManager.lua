@@ -240,7 +240,7 @@ function BotManager:_getDamageValue(damage, bot, soldier, fake)
 
 	if not fake then -- frag mode
 		resultDamage = damage * damageFactor;
-	elseif bot.activeWeapon.type ~= "Shotgun" then
+	else
 		if damage <= 2 then
 			local distance = bot.player.soldier.worldTransform.trans:Distance(soldier.worldTransform.trans)
 			if distance >= bot.activeWeapon.damageFalloffEndDistance then
@@ -286,7 +286,7 @@ function BotManager:_onSoldierDamage(hook, soldier, info, giverInfo)
 	if not soldierIsBot then
 		if giverInfo.giver == nil then
 			local bot = self:GetBotByName(self._shooterBots[soldier.player.name])
-			if bot ~= nil and bot.player.soldier ~= nil then
+			if bot ~= nil and bot.player.soldier ~= nil and info.damage > 0 then
 				info.damage = self:_getDamageValue(info.damage, bot, soldier, true);
 				info.boneIndex = 0;
 				info.isBulletDamage = true;

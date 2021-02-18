@@ -981,18 +981,20 @@ function Bot:_updateMovement()
 				end
 			end
 
-			if speedVal > 0 and self._shootPlayer ~= nil and self._shootPlayer.soldier ~= nil and not self.knifeMode then
+			-- do not reduce speed if sprinting
+			if speedVal > 0 and self._shootPlayer ~= nil and self._shootPlayer.soldier ~= nil and self.activeSpeedValue <= 3 then
 				speedVal = speedVal * Config.speedFactorAttack;
 			end
 
 			-- movent speed
 			if self.player.alive then
-				self.player.input:SetLevel(EntryInputActionEnum.EIAThrottle, speedVal * Config.speedFactor);
-
-				if self.activeSpeedValue > 3 then
-					self.player.input:SetLevel(EntryInputActionEnum.EIASprint, 1);
-				else
+				if self.activeSpeedValue <= 3 then
+					self.player.input:SetLevel(EntryInputActionEnum.EIAThrottle, speedVal * Config.speedFactor);
 					self.player.input:SetLevel(EntryInputActionEnum.EIASprint, 0);
+				else
+					self.player.input:SetLevel(EntryInputActionEnum.EIAThrottle, 1.0);
+					self.player.input:SetLevel(EntryInputActionEnum.EIASprint, 1);
+
 				end
 			end
 		end
