@@ -9,6 +9,8 @@ local Utilities 	= require('__shared/Utilities')
 
 function BotSpawner:__init()
 	self._botSpawnTimer = 0
+	self._firstSpawnInLevel = true;
+	self._firstSpawnDelay = 5;
 	self._spawnSets = {}
 
 	Events:Subscribe('UpdateManager:Update', self, self._onUpdate)
@@ -19,7 +21,7 @@ function BotSpawner:__init()
 	Events:Subscribe('Player:Respawn', self, self._onPlayerRespawn)
 end
 
-function BotSpawner:updateBotAmountAndTeam(levelstart)
+function BotSpawner:updateBotAmountAndTeam()
 	-- keep Slot for next player
 	if Config.keepOneSlotForPlayers then
 		local playerlimt = g_Globals.maxPlayers - 1
@@ -49,23 +51,19 @@ function BotSpawner:updateBotAmountAndTeam(levelstart)
 	end
 	local botCountTeam1 = team1Count - countPlayersTeam1;
 	local botCountTeam2 = team2Count - countPlayersTeam2;
-	if levelstart then
-		local tempVar = team1Count;
-		team1Count = team2Count;
-		team2Count = tempVar;
-
-		tempVar = countPlayersTeam1;
-		countPlayersTeam1 = countPlayersTeam2;
-		countPlayersTeam2 = tempVar;
-
-		tempVar = botCountTeam1;
-		botCountTeam1 = botCountTeam2;
-		botCountTeam2 = tempVar;
-
-		if botTeam == TeamId.Team1 then
-			botTeam = TeamId.Team2
+	if self._firstSpawnInLevel then
+		-- MANUAL BOT COUNT
+		if g_Globals.spawnMode == 'manual' then
+			if self._firstSpawnInLevel then
+				self:spawnWayBots(nil, botCountTeam2, true, 0, 0, TeamId.Team2);
+				self:spawnWayBots(nil, botCountTeam1, true, 0, 0, TeamId.Team1);
+			end
 		else
-			botTeam = TeamId.Team1
+			team1Count = team1Count - botCountTeam1;
+			team2Count = team2Count - botCountTeam2;
+			botCountTeam1 = 0;
+			botCountTeam2 = 0;
+			botCount = 0;
 		end
 	end
 
@@ -84,11 +82,6 @@ function BotSpawner:updateBotAmountAndTeam(levelstart)
 			end
 		end
 
-		if levelstart then
-			team1Count = team1Count - botCountTeam1;
-			team2Count = team2Count - botCountTeam2;
-		end
-
 		if team1Count < targetTeam1 then
 			self:spawnWayBots(nil, targetTeam1-team1Count, true, 0, 0, TeamId.Team1);
 		end
@@ -96,7 +89,7 @@ function BotSpawner:updateBotAmountAndTeam(levelstart)
 			self:spawnWayBots(nil, targetTeam2-team2Count, true, 0, 0, TeamId.Team2);
 		end
 
-		if BotManager:getBotCount() > 0 then
+		if botCount > 0 then
 			if team1Count > targetTeam1 then
 				BotManager:destroyTeam(TeamId.Team1, team1Count-targetTeam1)
 			end
@@ -110,20 +103,12 @@ function BotSpawner:updateBotAmountAndTeam(levelstart)
 		if Config.spawnInBothTeams then
 			local targetBotCountTeam1 = 0;
 			local targetBotCountTeam2 = 0;
-			if countPlayersTeam1 == 0 and countPlayersTeam2 == 0 then
-				-- add bots with first player joining (bots teams count 0)
-				countPlayersTeam1 = 1;
-			end
 
-			if countPlayersTeam1 > 0 then  
+			if countPlayersTeam1 > 0 then
 				targetBotCountTeam2 = Config.initNumberOfBots + ((countPlayersTeam1-1) * Config.newBotsPerNewPlayer)
 			end
 			if countPlayersTeam2 > 0 then
 				targetBotCountTeam1 = Config.initNumberOfBots + ((countPlayersTeam2-1) * Config.newBotsPerNewPlayer)
-			end
-			if levelstart then
-				botCountTeam1 = 0;
-				botCountTeam2 = 0;
 			end
 			local amountToSpawnTeam1 = targetBotCountTeam1 - botCountTeam1;
 			local amountToSpawnTeam2 = targetBotCountTeam2 - botCountTeam2;
@@ -149,10 +134,6 @@ function BotSpawner:updateBotAmountAndTeam(levelstart)
 				BotManager:destroyTeam(TeamId.Team1)
 			end
 
-			-- set needed number
-			if levelstart then
-				botCount = 0;
-			end
 			local targetBotCount = Config.initNumberOfBots + ((playerCount-1) * Config.newBotsPerNewPlayer)
 			local amountToSpawn = targetBotCount - botCount;
 			if amountToSpawn > 0 then
@@ -166,10 +147,6 @@ function BotSpawner:updateBotAmountAndTeam(levelstart)
 
 	-- FIXED NUMBER TO SPAWN
 	elseif g_Globals.spawnMode == 'fixed_number' then
-		if levelstart then
-			botCountTeam1 = 0;
-			botCountTeam2 = 0;
-		end
 		if Config.spawnInBothTeams then
 			local amoutPerTeam = math.floor(Config.initNumberOfBots/2);
 			-- check for too many bots in one team
@@ -204,25 +181,21 @@ function BotSpawner:updateBotAmountAndTeam(levelstart)
 				end
 			end
 		end
-	-- MANUAL BOT COUNT
-	elseif g_Globals.spawnMode == 'manual' then
-		if levelstart then
-			self:spawnWayBots(nil, botCountTeam2, true, 0, 0, TeamId.Team2);
-			self:spawnWayBots(nil, botCountTeam1, true, 0, 0, TeamId.Team1);
-		end
 	end
+
+	self._firstSpawnInLevel = false;
 end
 
 function BotSpawner:_onPlayerRespawn(player)
 	if not Utilities:isBot(player.name) then
-		self:updateBotAmountAndTeam(false);
+		self:updateBotAmountAndTeam();
 	end
 end
 
 function BotSpawner:_onPlayerJoining()
 	if Config.onlySpawnBotsWithPlayers and BotManager:getPlayerCount() == 0 then
 		print("first player - spawn bots")
-		self:onLevelLoaded(true)
+		self:onLevelLoaded()
 	end
 end
 
@@ -237,18 +210,26 @@ function BotSpawner:_onPlayerLeft(player)
 	end
 end
 
-function BotSpawner:onLevelLoaded(forceSpawn)
-	if not Config.onlySpawnBotsWithPlayers or BotManager:getPlayerCount() > 0 or (forceSpawn ~= nil and forceSpawn) then
-		BotManager:configGlobas()
-
-		self._botSpawnTimer = -5.0
-		self:updateBotAmountAndTeam(true);
-	end
+function BotSpawner:onLevelLoaded()
+	self._firstSpawnInLevel = true;
+	self._firstSpawnDelay 	= 5;
 end
 
 function BotSpawner:_onUpdate(dt, pass)
 	if pass ~= UpdatePass.UpdatePass_PostFrame then
 		return
+	end
+
+	if self._firstSpawnInLevel then
+		if self._firstSpawnDelay <= 0 then
+			if BotManager:getPlayerCount() > 0 or not Config.onlySpawnBotsWithPlayers then
+				BotManager:configGlobas()
+
+				self:updateBotAmountAndTeam();
+			end
+		else
+			self._firstSpawnDelay = self._firstSpawnDelay - dt;
+		end
 	end
 
 	if #self._spawnSets > 0 then
