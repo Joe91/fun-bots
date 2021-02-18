@@ -93,6 +93,18 @@ function BotManager:getBotCount()
 	return #self._bots;
 end
 
+function BotManager:getActiveBotCount(teamId)
+	local count = 0;
+	for _, bot in pairs(self._bots) do
+		if not bot:isInactive() then
+			if teamId == nil or bot.player.teamId == teamId then
+				count = count + 1
+			end
+		end
+	end
+	return count
+end
+
 function BotManager:getPlayerCount()
 	return PlayerManager:GetPlayerCount() - #self._bots;
 end
@@ -471,6 +483,20 @@ function BotManager:destroyAmount(number)
 	end
 end
 
+function BotManager:killAmount()
+	local count = 0
+	for _, bot in pairs(self._bots) do
+		bot:resetVars()
+		if bot.player.alive then
+			bot.player.soldier:Kill()
+		end
+		count = count + 1
+		if count >= number then
+			return
+		end
+	end
+end
+
 function BotManager:destroyTeam(teamId, amount)
 	for i = 1, MAX_NUMBER_OF_BOTS do
 		local index = MAX_NUMBER_OF_BOTS + 1 - i
@@ -484,6 +510,38 @@ function BotManager:destroyTeam(teamId, amount)
 						return
 					end
 				end
+			end
+		end
+	end
+end
+
+function BotManager:killTeam(teamId, amount)
+	for _, bot in pairs(self._bots) do
+		if bot.player.teamId == teamId then
+			bot:resetVars()
+			if bot.player.alive then
+				bot.player.soldier:Kill()
+			end
+			print("bot killed")
+			if amount ~= nil then
+				amount = amount - 1;
+				if amount <= 0 then
+					return
+				end
+			end
+		end
+	end
+end
+
+function BotManager:destroyDisabledBots()
+	local numberOfBots = #self._bots
+	for i = 1,  numberOfBots do
+		local index = numberOfBots + 1 - i
+		local bot = self._bots[index]
+		if bot ~= nil then
+			if bot:isInactive() then
+				print("destroy bot")
+				self:destroyBot(bot.name)
 			end
 		end
 	end

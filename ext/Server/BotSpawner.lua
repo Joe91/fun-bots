@@ -10,7 +10,8 @@ local Utilities 	= require('__shared/Utilities')
 function BotSpawner:__init()
 	self._botSpawnTimer = 0
 	self._firstSpawnInLevel = true;
-	self._firstSpawnDelay = 10;
+	self._firstSpawnDelay = 0;
+	self._desytroyUnneededBots = false;
 	self._spawnSets = {}
 
 	Events:Subscribe('UpdateManager:Update', self, self._onUpdate)
@@ -33,9 +34,7 @@ function BotSpawner:updateBotAmountAndTeam()
 
 	-- find all needed vars
 	local playerCount = BotManager:getPlayerCount();
-	local botCount = BotManager:getBotCount();
-	local team1Count = #PlayerManager:GetPlayersByTeam(TeamId.Team1);
-	local team2Count = #PlayerManager:GetPlayersByTeam(TeamId.Team2);
+	local botCount = BotManager:getActiveBotCount();
 	local countPlayersTeam1 = 0;
 	local countPlayersTeam2 = 0;
 	local botTeam = BotManager:getBotTeam();
@@ -49,23 +48,10 @@ function BotSpawner:updateBotAmountAndTeam()
 			end
 		end
 	end
-	local botCountTeam1 = team1Count - countPlayersTeam1;
-	local botCountTeam2 = team2Count - countPlayersTeam2;
-	if self._firstSpawnInLevel then
-		-- MANUAL BOT COUNT
-		if g_Globals.spawnMode == 'manual' then
-			if self._firstSpawnInLevel then
-				self:spawnWayBots(nil, botCountTeam2, true, 0, 0, TeamId.Team2);
-				self:spawnWayBots(nil, botCountTeam1, true, 0, 0, TeamId.Team1);
-			end
-		else
-			team1Count = team1Count - botCountTeam1;
-			team2Count = team2Count - botCountTeam2;
-			botCountTeam1 = 0;
-			botCountTeam2 = 0;
-			botCount = 0;
-		end
-	end
+	local botCountTeam1 = BotManager:getActiveBotCount(TeamId.Team1);
+	local botCountTeam2 = BotManager:getActiveBotCount(TeamId.Team2);
+	local team1Count = countPlayersTeam1 + botCountTeam1;
+	local team2Count = countPlayersTeam2 + botCountTeam2;
 
 	-- KEEP PLAYERCOUNT
 	if g_Globals.spawnMode == 'keep_playercount' then
@@ -91,10 +77,10 @@ function BotSpawner:updateBotAmountAndTeam()
 
 		if botCount > 0 then
 			if team1Count > targetTeam1 then
-				BotManager:destroyTeam(TeamId.Team1, team1Count-targetTeam1)
+				BotManager:killTeam(TeamId.Team1, team1Count-targetTeam1)
 			end
 			if team2Count > targetTeam2 then
-				BotManager:destroyTeam(TeamId.Team2, team2Count-targetTeam2)
+				BotManager:killTeam(TeamId.Team2, team2Count-targetTeam2)
 			end
 		end
 
@@ -120,18 +106,18 @@ function BotSpawner:updateBotAmountAndTeam()
 				self:spawnWayBots(nil, amountToSpawnTeam2, true, 0, 0, TeamId.Team2);
 			end
 			if amountToSpawnTeam1 < 0 then
-				BotManager:destroyTeam(TeamId.Team1, -amountToSpawnTeam1)
+				BotManager:killTeam(TeamId.Team1, -amountToSpawnTeam1)
 			end
 			if amountToSpawnTeam2 < 0 then
-				BotManager:destroyTeam(TeamId.Team2, -amountToSpawnTeam2)
+				BotManager:killTeam(TeamId.Team2, -amountToSpawnTeam2)
 			end
 
 		else
 			-- check for bots in wrong team
 			if botTeam == TeamId.Team1 and botCountTeam2 > 0 then
-				BotManager:destroyTeam(TeamId.Team2)
+				BotManager:killTeam(TeamId.Team2)
 			elseif botTeam == TeamId.Team2 and botCountTeam1 > 0 then
-				BotManager:destroyTeam(TeamId.Team1)
+				BotManager:killTeam(TeamId.Team1)
 			end
 
 			local targetBotCount = Config.initNumberOfBots + ((playerCount-1) * Config.newBotsPerNewPlayer)
@@ -141,7 +127,7 @@ function BotSpawner:updateBotAmountAndTeam()
 				self:spawnWayBots(nil, amountToSpawn, true, 0, 0, botTeam);
 			end
 			if amountToSpawn < 0 then
-				BotManager:destroyAmount(-amountToSpawn)
+				BotManager:killAmount(-amountToSpawn)
 			end
 		end
 
@@ -151,10 +137,10 @@ function BotSpawner:updateBotAmountAndTeam()
 			local amoutPerTeam = math.floor(Config.initNumberOfBots/2);
 			-- check for too many bots in one team
 			if botCountTeam2 > amoutPerTeam then
-				BotManager:destroyTeam(TeamId.Team2, botCountTeam2-amoutPerTeam)
+				BotManager:killTeam(TeamId.Team2, botCountTeam2-amoutPerTeam)
 			end
 			if botCountTeam1 > amoutPerTeam then
-				BotManager:destroyTeam(TeamId.Team1, botCountTeam1-amoutPerTeam)
+				BotManager:killTeam(TeamId.Team1, botCountTeam1-amoutPerTeam)
 			end
 
 			if botCountTeam2 < amoutPerTeam then
@@ -166,9 +152,9 @@ function BotSpawner:updateBotAmountAndTeam()
 		else
 			-- check for bots in wrong team
 			if botTeam == TeamId.Team1 and botCountTeam2 > 0 then
-				BotManager:destroyTeam(TeamId.Team2)
+				BotManager:killTeam(TeamId.Team2)
 			elseif botTeam == TeamId.Team2 and botCountTeam1 > 0 then
-				BotManager:destroyTeam(TeamId.Team1)
+				BotManager:killTeam(TeamId.Team1)
 			end
 
 			if botTeam == TeamId.Team1 then
@@ -180,6 +166,13 @@ function BotSpawner:updateBotAmountAndTeam()
 					self:spawnWayBots(nil, Config.initNumberOfBots-botCountTeam2, true, 0, 0, TeamId.Team2);
 				end
 			end
+		end
+	elseif g_Globals.spawnMode == 'manual' then
+		if self._firstSpawnInLevel then
+			local team1TempCount = #PlayerManager:GetPlayersByTeam(TeamId.Team1) - countPlayersTeam1;
+			local team2TempCount = #PlayerManager:GetPlayersByTeam(TeamId.Team2) - countPlayersTeam2;
+			self:spawnWayBots(nil, team2TempCount, true, 0, 0, TeamId.Team2);
+			self:spawnWayBots(nil, team1TempCount, true, 0, 0, TeamId.Team1);
 		end
 	end
 
@@ -209,8 +202,10 @@ function BotSpawner:_onPlayerLeft(player)
 end
 
 function BotSpawner:onLevelLoaded()
+	print("on level loaded on spawner")
+	self._desytroyUnneededBots = false;
 	self._firstSpawnInLevel = true;
-	self._firstSpawnDelay 	= 10;
+	self._firstSpawnDelay 	= 5;
 end
 
 function BotSpawner:_onUpdate(dt, pass)
@@ -222,7 +217,6 @@ function BotSpawner:_onUpdate(dt, pass)
 		if self._firstSpawnDelay <= 0 then
 			if BotManager:getPlayerCount() > 0 then
 				BotManager:configGlobas()
-
 				self:updateBotAmountAndTeam();
 			end
 		else
@@ -231,12 +225,19 @@ function BotSpawner:_onUpdate(dt, pass)
 	end
 
 	if #self._spawnSets > 0 then
+		self._desytroyUnneededBots = true;
 		if self._botSpawnTimer > 0.1 then	--time to wait between spawn. 0.2 works
 			self._botSpawnTimer = 0
 			local spawnSet = table.remove(self._spawnSets);
 			self:_spawnSigleWayBot(spawnSet.playerVarOfBot, spawnSet.useRandomWay, spawnSet.activeWayIndex, spawnSet.indexOnPath, nil, spawnSet.team)
 		end
 		self._botSpawnTimer = self._botSpawnTimer + dt
+	else
+		if self._desytroyUnneededBots then
+			self._desytroyUnneededBots = false;
+			--garbage-collection of unwanted bots
+			BotManager:destroyDisabledBots();
+		end
 	end
 end
 
@@ -428,7 +429,9 @@ function BotSpawner:spawnWayBots(player, amount, useRandomWay, activeWayIndex, i
 	if Config.keepOneSlotForPlayers then
 		playerlimt = playerlimt - 1
 	end
-	local slotsLeft = playerlimt - PlayerManager:GetPlayerCount();
+
+	local incactiveBots = BotManager:getBotCount() - BotManager:getActiveBotCount()
+	local slotsLeft = playerlimt - (PlayerManager:GetPlayerCount() - incactiveBots);
 	if amount > slotsLeft then
 		amount = slotsLeft;
 	end

@@ -274,6 +274,14 @@ function Bot:getTargetPlayer()
 	return self._targetPlayer;
 end
 
+function Bot:isInactive()
+	if self.player.alive or self._spawnMode ~= 0 then
+		return false;
+	else
+		return true;
+	end
+end
+
 function Bot:resetSpawnVars()
 	self._spawnDelayTimer		= 0;
 	self._obstaceSequenceTimer	= 0;
