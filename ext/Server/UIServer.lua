@@ -349,6 +349,10 @@ function FunBotUIServer:_writeSettings(player, request)
 		end
 	end
 
+	if request.zombieMode ~= nil then
+		SettingsManager:update('zombieMode', (request.zombieMode == true), temporary, batched);
+	end
+
 	-- difficluty
 	if request.botAimWorsening ~= nil then
 		local tempValue = tonumber(request.botAimWorsening)

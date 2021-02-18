@@ -9,6 +9,7 @@ Config = {
 	botAttackMode = "Random",		-- Mode the Bots attack with. Random, Crouch or Stand
 	botKit = "RANDOM_KIT",			-- see BotKits
 	botColor = "RANDOM_COLOR",		-- see BotColors
+	zombieMode = false,				-- Zombie Bot Mode
 
 	--difficluty
 	botAimWorsening = 0.6,			-- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy).
@@ -31,7 +32,7 @@ Config = {
 	initNumberOfBots = 5,			-- bots for spawnmode
 	newBotsPerNewPlayer = 2,		-- number to increase Bots, when new players join
 	keepOneSlotForPlayers = true,	-- always keep one slot for new Players to join
-	spawnDelayBots = 7.0,			-- time till bots respawn, if respawn enabled
+	spawnDelayBots = 10.0,			-- time till bots respawn, if respawn enabled
 	botTeam = TeamId.Team2,		 	-- default bot team (0 = neutral, 1 = US, 2 = RU) TeamId.Team2
 	respawnWayBots = true,			-- bots on paths respawn if killed
 	botNewLoadoutOnSpawn = true,	-- bots get a new kit and color, if they respawn
@@ -68,7 +69,7 @@ Config = {
 	debugSelectionRaytraces = false,-- Shows the trace line and search area from Commo Rose selection
 
 	--advanced
-	fovForShooting = 160,			-- Degrees of FOV of Bot
+	fovForShooting = 200,			-- Degrees of FOV of Bot
 	shootBackIfHit = true,			-- bot shoots back, if hit
 	maxRaycastDistance = 150,		-- meters bots start shooting at player
 	maxShootDistanceNoSniper = 70,	-- meters a bot (not sniper) start shooting at player

@@ -108,7 +108,7 @@ function FunBotServer:_onLevelLoaded(levelName, gameMode)
 	end
 
 	TraceManager:onLevelLoaded(levelName, gameMode);
-	BotSpawner:onLevelLoaded(false);
+	BotSpawner:onLevelLoaded();
 end
 
 function FunBotServer:_onChat(player, recipientMask, message)

@@ -84,6 +84,7 @@ function FunBotUIClient:_onUISettings(data)
 	settings:addList("GLOBAL", "botAttackMode", Language:I18N("Bot Attack Mode"), BotAttackModes, data.botAttackMode, "Random", Language:I18N("Mode the Bots attack with. Crouch or Stand"));
 	settings:addList("GLOBAL", "botKit", Language:I18N("Bot Kit"), BotKits, data.botKit, "RANDOM_KIT", Language:I18N("The Kit a bots spawns with."));
 	settings:addList("GLOBAL", "botColor", Language:I18N("Bot Color"), BotColors, data.botColor, "RANDOM_COLOR", Language:I18N("The Kit-Color a bots spawns with."));
+	settings:add("GLOBAL", "Boolean", "zombieMode", Language:I18N("Zombie Mode"), data.zombieMode, false, Language:I18N("Bots act like zombies"));
 
 	settings:add("DIFFICULTY", "Float", "botAimWorsening", Language:I18N("Aim Worsening"), data.botAimWorsening, 0.6, Language:I18N("0 = hard, 1 (or higher) = easy"));
 	settings:add("DIFFICULTY", "Float", "botSniperAimWorsening", Language:I18N("Aim Worsening Sniper"), data.botSniperAimWorsening, 0.2, Language:I18N("0 = hard, 1 (or higher) = easy"));
@@ -104,7 +105,7 @@ function FunBotUIClient:_onUISettings(data)
 	settings:add("SPAWN", "Integer", "initNumberOfBots", Language:I18N("Number of Bots for Spawn-Mode"), data.initNumberOfBots, 5, Language:I18N("Bots for the spawnmode"));
 	settings:add("SPAWN", "Integer", "newBotsPerNewPlayer", Language:I18N("Number Bots on new Player"), data.newBotsPerNewPlayer, 2, Language:I18N("number to increase Bots, when new players join, if mode is selected"));
 	settings:add("SPAWN", "Boolean", "keepOneSlotForPlayers", Language:I18N("Keep one Player-Slot"), data.keepOneSlotForPlayers, true, Language:I18N("always keep one slot for new Players to join"));
-	settings:add("SPAWN", "Float", "spawnDelayBots", Language:I18N("Respawn Delay"), data.spawnDelayBots, 7.0, Language:I18N("time till bots respawn, if respawn enabled"));
+	settings:add("SPAWN", "Float", "spawnDelayBots", Language:I18N("Respawn Delay"), data.spawnDelayBots, 10.0, Language:I18N("time till bots respawn, if respawn enabled"));
 	settings:add("SPAWN", "Integer", "botTeam", Language:I18N("Default Bot Team"), data.botTeam, 2, Language:I18N("default bot team 1 = US, 2 = RU"));
 	settings:add("SPAWN", "Boolean", "respawnWayBots", Language:I18N("Respawn Bots"), data.respawnWayBots, true, Language:I18N("Bots on paths respawn if killed on startup"));
 	settings:add("SPAWN", "Boolean", "botNewLoadoutOnSpawn", Language:I18N("New Loadout on Spawn"), data.botNewLoadoutOnSpawn, true, Language:I18N("bots get a new kit and color, if they respawn"));
