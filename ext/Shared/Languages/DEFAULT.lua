@@ -25,6 +25,8 @@ Language:add(code, "Bot Kit", "");
 Language:add(code, "The Kit a bots spawns with.", "");
 Language:add(code, "Bot Color", "");
 Language:add(code, "The Kit-Color a bots spawns with.", "");
+Language:add(code, "Zombie Mode", "");
+Language:add(code, "Bots act like zombies", "");
 Language:add(code, "Aim Worsening", "");
 Language:add(code, "0 = hard, 1 (or higher) = easy", "");
 Language:add(code, "Aim Worsening Sniper", "");
