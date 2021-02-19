@@ -55,11 +55,11 @@ function BotManager:configGlobas()
 	Globals.attackWayBots 	= Config.attackWayBots;
 	Globals.spawnMode		= Config.spawnMode;
 	Globals.yawPerFrame 	= self:calcYawPerFrame()
+	self:killAll();
 	if not self._damageHookInstalled then
 		damageHook = Hooks:Install('Soldier:Damage', 100, self, self._onSoldierDamage)
 		self._damageHookInstalled = true;
 	end
-	self:killAll();
 	local maxPlayers = RCON:SendCommand('vars.maxPlayers');
 	maxPlayers = tonumber(maxPlayers[2]);
 	if maxPlayers ~= nil and maxPlayers > 0 then
