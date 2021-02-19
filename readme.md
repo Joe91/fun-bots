@@ -1,6 +1,10 @@
 # fun-bots
 With this `Venice Unleashed` Mod you bring virtual bots to your `Battlefield 3` server.
 
+### Changelog and Downloads
+All released versions and downloads can be found here:  
+[Changelog and Downloads](https://github.com/Joe91/fun-bots/blob/master/changelog.md)
+
 ### :robot: BOT-AI
 AI for TDM-bots with some functions:
 - Bots can walk around on paths and shoot at player

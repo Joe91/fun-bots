@@ -37,6 +37,7 @@ Language['xx_XX'] /* Add/replace the xx_XX here with your language code (like de
   "Difficulty": "",
   "Spawn": "",
   "Weapons": "",
+  "Behaviour": "",
   "Trace": "",
   "Advanced": "",
   "Expert": "",

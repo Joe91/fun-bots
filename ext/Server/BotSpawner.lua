@@ -9,17 +9,21 @@ local Utilities 	= require('__shared/Utilities')
 
 function BotSpawner:__init()
 	self._botSpawnTimer = 0
+	self._firstSpawnInLevel = true;
+	self._firstSpawnDelay = 0;
+	self._updateActive = false;
 	self._spawnSets = {}
 
 	Events:Subscribe('UpdateManager:Update', self, self._onUpdate)
 	Events:Subscribe('Bot:RespawnBot', self, self._onRespawnBot)
+	Events:Subscribe('Level:Destroy', self, self._onLevelDestroy)
 	Events:Subscribe('Player:KitPickup', self, self._onKitPickup)
 	Events:Subscribe('Player:Joining', self, self._onPlayerJoining)
 	Events:Subscribe('Player:Left', self, self._onPlayerLeft)
 	Events:Subscribe('Player:Respawn', self, self._onPlayerRespawn)
 end
 
-function BotSpawner:updateBotAmountAndTeam(levelstart)
+function BotSpawner:updateBotAmountAndTeam()
 	-- keep Slot for next player
 	if Config.keepOneSlotForPlayers then
 		local playerlimt = g_Globals.maxPlayers - 1
@@ -29,11 +33,16 @@ function BotSpawner:updateBotAmountAndTeam(levelstart)
 		end
 	end
 
+	-- if update active do nothing
+	if self._updateActive then
+		return
+	else
+		self._updateActive = true;
+	end
+
 	-- find all needed vars
 	local playerCount = BotManager:getPlayerCount();
-	local botCount = BotManager:getBotCount();
-	local team1Count = #PlayerManager:GetPlayersByTeam(TeamId.Team1);
-	local team2Count = #PlayerManager:GetPlayersByTeam(TeamId.Team2);
+	local botCount = BotManager:getActiveBotCount();
 	local countPlayersTeam1 = 0;
 	local countPlayersTeam2 = 0;
 	local botTeam = BotManager:getBotTeam();
@@ -47,27 +56,10 @@ function BotSpawner:updateBotAmountAndTeam(levelstart)
 			end
 		end
 	end
-	local botCountTeam1 = team1Count - countPlayersTeam1;
-	local botCountTeam2 = team2Count - countPlayersTeam2;
-	if levelstart then
-		local tempVar = team1Count;
-		team1Count = team2Count;
-		team2Count = tempVar;
-
-		tempVar = countPlayersTeam1;
-		countPlayersTeam1 = countPlayersTeam2;
-		countPlayersTeam2 = tempVar;
-
-		tempVar = botCountTeam1;
-		botCountTeam1 = botCountTeam2;
-		botCountTeam2 = tempVar;
-
-		if botTeam == TeamId.Team1 then
-			botTeam = TeamId.Team2
-		else
-			botTeam = TeamId.Team1
-		end
-	end
+	local botCountTeam1 = BotManager:getActiveBotCount(TeamId.Team1);
+	local botCountTeam2 = BotManager:getActiveBotCount(TeamId.Team2);
+	local team1Count = countPlayersTeam1 + botCountTeam1;
+	local team2Count = countPlayersTeam2 + botCountTeam2;
 
 	-- KEEP PLAYERCOUNT
 	if g_Globals.spawnMode == 'keep_playercount' then
@@ -84,11 +76,6 @@ function BotSpawner:updateBotAmountAndTeam(levelstart)
 			end
 		end
 
-		if levelstart then
-			team1Count = team1Count - botCountTeam1;
-			team2Count = team2Count - botCountTeam2;
-		end
-
 		if team1Count < targetTeam1 then
 			self:spawnWayBots(nil, targetTeam1-team1Count, true, 0, 0, TeamId.Team1);
 		end
@@ -96,12 +83,12 @@ function BotSpawner:updateBotAmountAndTeam(levelstart)
 			self:spawnWayBots(nil, targetTeam2-team2Count, true, 0, 0, TeamId.Team2);
 		end
 
-		if BotManager:getBotCount() > 0 then
+		if botCount > 0 then
 			if team1Count > targetTeam1 then
-				BotManager:destroyTeam(TeamId.Team1, team1Count-targetTeam1)
+				BotManager:killTeam(TeamId.Team1, team1Count-targetTeam1)
 			end
 			if team2Count > targetTeam2 then
-				BotManager:destroyTeam(TeamId.Team2, team1Count-targetTeam1)
+				BotManager:killTeam(TeamId.Team2, team2Count-targetTeam2)
 			end
 		end
 
@@ -110,20 +97,12 @@ function BotSpawner:updateBotAmountAndTeam(levelstart)
 		if Config.spawnInBothTeams then
 			local targetBotCountTeam1 = 0;
 			local targetBotCountTeam2 = 0;
-			if countPlayersTeam1 == 0 and countPlayersTeam2 == 0 then
-				-- add bots with first player joining (bots teams count 0)
-				countPlayersTeam1 = 1;
-			end
 
-			if countPlayersTeam1 > 0 then  
+			if countPlayersTeam1 > 0 then
 				targetBotCountTeam2 = Config.initNumberOfBots + ((countPlayersTeam1-1) * Config.newBotsPerNewPlayer)
 			end
 			if countPlayersTeam2 > 0 then
 				targetBotCountTeam1 = Config.initNumberOfBots + ((countPlayersTeam2-1) * Config.newBotsPerNewPlayer)
-			end
-			if levelstart then
-				botCountTeam1 = 0;
-				botCountTeam2 = 0;
 			end
 			local amountToSpawnTeam1 = targetBotCountTeam1 - botCountTeam1;
 			local amountToSpawnTeam2 = targetBotCountTeam2 - botCountTeam2;
@@ -135,24 +114,20 @@ function BotSpawner:updateBotAmountAndTeam(levelstart)
 				self:spawnWayBots(nil, amountToSpawnTeam2, true, 0, 0, TeamId.Team2);
 			end
 			if amountToSpawnTeam1 < 0 then
-				BotManager:destroyTeam(TeamId.Team1, -amountToSpawnTeam1)
+				BotManager:killTeam(TeamId.Team1, -amountToSpawnTeam1)
 			end
 			if amountToSpawnTeam2 < 0 then
-				BotManager:destroyTeam(TeamId.Team2, -amountToSpawnTeam2)
+				BotManager:killTeam(TeamId.Team2, -amountToSpawnTeam2)
 			end
 
 		else
 			-- check for bots in wrong team
 			if botTeam == TeamId.Team1 and botCountTeam2 > 0 then
-				BotManager:destroyTeam(TeamId.Team2)
+				BotManager:killTeam(TeamId.Team2)
 			elseif botTeam == TeamId.Team2 and botCountTeam1 > 0 then
-				BotManager:destroyTeam(TeamId.Team1)
+				BotManager:killTeam(TeamId.Team1)
 			end
 
-			-- set needed number
-			if levelstart then
-				botCount = 0;
-			end
 			local targetBotCount = Config.initNumberOfBots + ((playerCount-1) * Config.newBotsPerNewPlayer)
 			local amountToSpawn = targetBotCount - botCount;
 			if amountToSpawn > 0 then
@@ -160,24 +135,20 @@ function BotSpawner:updateBotAmountAndTeam(levelstart)
 				self:spawnWayBots(nil, amountToSpawn, true, 0, 0, botTeam);
 			end
 			if amountToSpawn < 0 then
-				BotManager:destroyAmount(-amountToSpawn)
+				BotManager:killAmount(-amountToSpawn)
 			end
 		end
 
 	-- FIXED NUMBER TO SPAWN
 	elseif g_Globals.spawnMode == 'fixed_number' then
-		if levelstart then
-			botCountTeam1 = 0;
-			botCountTeam2 = 0;
-		end
 		if Config.spawnInBothTeams then
 			local amoutPerTeam = math.floor(Config.initNumberOfBots/2);
 			-- check for too many bots in one team
 			if botCountTeam2 > amoutPerTeam then
-				BotManager:destroyTeam(TeamId.Team2, botCountTeam2-amoutPerTeam)
+				BotManager:killTeam(TeamId.Team2, botCountTeam2-amoutPerTeam)
 			end
 			if botCountTeam1 > amoutPerTeam then
-				BotManager:destroyTeam(TeamId.Team1, botCountTeam1-amoutPerTeam)
+				BotManager:killTeam(TeamId.Team1, botCountTeam1-amoutPerTeam)
 			end
 
 			if botCountTeam2 < amoutPerTeam then
@@ -189,9 +160,9 @@ function BotSpawner:updateBotAmountAndTeam(levelstart)
 		else
 			-- check for bots in wrong team
 			if botTeam == TeamId.Team1 and botCountTeam2 > 0 then
-				BotManager:destroyTeam(TeamId.Team2)
+				BotManager:killTeam(TeamId.Team2)
 			elseif botTeam == TeamId.Team2 and botCountTeam1 > 0 then
-				BotManager:destroyTeam(TeamId.Team1)
+				BotManager:killTeam(TeamId.Team1)
 			end
 
 			if botTeam == TeamId.Team1 then
@@ -204,51 +175,66 @@ function BotSpawner:updateBotAmountAndTeam(levelstart)
 				end
 			end
 		end
-	-- MANUAL BOT COUNT
 	elseif g_Globals.spawnMode == 'manual' then
-		if levelstart then
-			self:spawnWayBots(nil, botCountTeam2, true, 0, 0, TeamId.Team2);
-			self:spawnWayBots(nil, botCountTeam1, true, 0, 0, TeamId.Team1);
+		if self._firstSpawnInLevel then
+			local team1TempCount = #PlayerManager:GetPlayersByTeam(TeamId.Team1) - countPlayersTeam1;
+			local team2TempCount = #PlayerManager:GetPlayersByTeam(TeamId.Team2) - countPlayersTeam2;
+			self:spawnWayBots(nil, team2TempCount, true, 0, 0, TeamId.Team2);
+			self:spawnWayBots(nil, team1TempCount, true, 0, 0, TeamId.Team1);
 		end
 	end
 end
 
 function BotSpawner:_onPlayerRespawn(player)
 	if not Utilities:isBot(player.name) then
-		self:updateBotAmountAndTeam(false);
+		if not self._firstSpawnInLevel then
+			self:updateBotAmountAndTeam();
+		end
 	end
 end
 
+function BotSpawner:_onLevelDestroy()
+	self._spawnSets = {}
+	self._updateActive = false;
+end
+
 function BotSpawner:_onPlayerJoining()
-	if Config.onlySpawnBotsWithPlayers and BotManager:getPlayerCount() == 0 then
+	if BotManager:getPlayerCount() == 0 then
 		print("first player - spawn bots")
-		self:onLevelLoaded(true)
+		self:onLevelLoaded()
 	end
 end
 
 function BotSpawner:_onPlayerLeft(player)
 	BotManager:onPlayerLeft(player)
 	--remove all references of player
-	if Config.onlySpawnBotsWithPlayers then
-		if BotManager:getPlayerCount() == 1 then
-			print("no player left - kick all bots")
-			BotManager:destroyAllBots()
-		end
+	if BotManager:getPlayerCount() == 1 then
+		print("no player left - kick all bots")
+		BotManager:destroyAllBots()
 	end
 end
 
-function BotSpawner:onLevelLoaded(forceSpawn)
-	if not Config.onlySpawnBotsWithPlayers or BotManager:getPlayerCount() > 0 or (forceSpawn ~= nil and forceSpawn) then
-		BotManager:configGlobas()
-
-		self._botSpawnTimer = -5.0
-		self:updateBotAmountAndTeam(true);
-	end
+function BotSpawner:onLevelLoaded()
+	print("on level loaded on spawner")
+	self._firstSpawnInLevel = true;
+	self._firstSpawnDelay 	= 5;
 end
 
 function BotSpawner:_onUpdate(dt, pass)
 	if pass ~= UpdatePass.UpdatePass_PostFrame then
 		return
+	end
+
+	if self._firstSpawnInLevel then
+		if self._firstSpawnDelay <= 0 then
+			if BotManager:getPlayerCount() > 0 then
+				BotManager:configGlobas()
+				self:updateBotAmountAndTeam();
+				self._firstSpawnInLevel = false;
+			end
+		else
+			self._firstSpawnDelay = self._firstSpawnDelay - dt;
+		end
 	end
 
 	if #self._spawnSets > 0 then
@@ -258,6 +244,12 @@ function BotSpawner:_onUpdate(dt, pass)
 			self:_spawnSigleWayBot(spawnSet.playerVarOfBot, spawnSet.useRandomWay, spawnSet.activeWayIndex, spawnSet.indexOnPath, nil, spawnSet.team)
 		end
 		self._botSpawnTimer = self._botSpawnTimer + dt
+	else
+		if self._updateActive then
+			self._updateActive = false;
+			--garbage-collection of unwanted bots
+			BotManager:destroyDisabledBots();
+		end
 	end
 end
 
@@ -280,27 +272,13 @@ function BotSpawner:_onRespawnBot(botname)
 	end
 end
 
-function BotSpawner:getBotTeam(player)
-	local team;
-	if player ~= nil then
-		if player.teamId == TeamId.Team1 then
-			team = TeamId.Team2
-		else
-			team = TeamId.Team1
-		end
-	else
-		team = BotManager:getBotTeam();
-	end
-	return team
-end
-
 function BotSpawner:spawnBotRow(player, length, spacing)
 	for i = 1, length do
 		local name = BotManager:findNextBotName()
 		if name ~= nil then
 			local transform = LinearTransform()
 			transform.trans = player.soldier.worldTransform.trans + (player.soldier.worldTransform.forward * i * spacing)
-			local bot = BotManager:createBot(name, self:getBotTeam(player))
+			local bot = BotManager:createBot(name, BotManager:getBotTeam())
 			bot:setVarsStatic(player)
 			self:spawnBot(bot, transform, true)
 		end
@@ -316,7 +294,7 @@ function BotSpawner:spawnBotTower(player, height)
 			transform.trans.x = player.soldier.worldTransform.trans.x + (math.cos(yaw + (math.pi / 2)))
 			transform.trans.y = player.soldier.worldTransform.trans.y + ((i - 1) * 1.8)
 			transform.trans.z = player.soldier.worldTransform.trans.z + (math.sin(yaw + (math.pi / 2)))
-			local bot = BotManager:createBot(name, self:getBotTeam(player))
+			local bot = BotManager:createBot(name, BotManager:getBotTeam())
 			bot:setVarsStatic(player)
 			self:spawnBot(bot, transform, true)
 		end
@@ -333,7 +311,7 @@ function BotSpawner:spawnBotGrid(player, rows, columns, spacing)
 				transform.trans.x = player.soldier.worldTransform.trans.x + (i * math.cos(yaw + (math.pi / 2)) * spacing) + ((j - 1) * math.cos(yaw) * spacing)
 				transform.trans.y = player.soldier.worldTransform.trans.y
 				transform.trans.z = player.soldier.worldTransform.trans.z + (i * math.sin(yaw + (math.pi / 2)) * spacing) + ((j - 1) * math.sin(yaw) * spacing)
-				local bot = BotManager:createBot(name, self:getBotTeam(player))
+				local bot = BotManager:createBot(name, BotManager:getBotTeam())
 				bot:setVarsStatic(player)
 				self:spawnBot(bot, transform, true)
 			end
@@ -347,7 +325,7 @@ function BotSpawner:spawnLineBots(player, amount, spacing)
 		if name ~= nil then
 			local transform = LinearTransform()
 			transform.trans = player.soldier.worldTransform.trans + (player.soldier.worldTransform.forward * i * spacing)
-			local bot = BotManager:createBot(name, self:getBotTeam(player))
+			local bot = BotManager:createBot(name, BotManager:getBotTeam())
 			bot:setVarsSimpleMovement(player, 2, transform)
 			self:spawnBot(bot, transform, true)
 		end
@@ -443,7 +421,7 @@ function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, inde
 			if forcedTeam ~= nil then
 				bot = BotManager:createBot(name, forcedTeam)
 			else
-				bot = BotManager:createBot(name, self:getBotTeam(player))
+				bot = BotManager:createBot(name, BotManager:getBotTeam())
 			end
 			if bot ~= nil then
 				bot:setVarsWay(player, useRandomWay, activeWayIndex, indexOnPath, inverseDirection)
@@ -463,7 +441,9 @@ function BotSpawner:spawnWayBots(player, amount, useRandomWay, activeWayIndex, i
 	if Config.keepOneSlotForPlayers then
 		playerlimt = playerlimt - 1
 	end
-	local slotsLeft = playerlimt - PlayerManager:GetPlayerCount();
+
+	local incactiveBots = BotManager:getBotCount() - BotManager:getActiveBotCount()
+	local slotsLeft = playerlimt - (PlayerManager:GetPlayerCount() - incactiveBots);
 	if amount > slotsLeft then
 		amount = slotsLeft;
 	end
@@ -609,6 +589,10 @@ function BotSpawner:getKitApperanceCustomization(team, kit, color, primary, pist
 		--no second gadget
 	end
 
+	if Config.zombieMode then
+		kit = "Engineer";
+		color = "Ninja";
+	end
 
 	if team == TeamId.Team1 then -- US
 		if kit == "Assault" then --assault
@@ -640,26 +624,37 @@ function BotSpawner:getKitApperanceCustomization(team, kit, color, primary, pist
 		end
 	end
 
-	soldierCustomization.weapons:add(primaryWeapon)
-	soldierCustomization.weapons:add(secondaryWeapon)
-	soldierCustomization.weapons:add(gadget01)
-	soldierCustomization.weapons:add(gadget02)
-	soldierCustomization.weapons:add(thrownWeapon)
-	soldierCustomization.weapons:add(meleeWeapon)
+	if Config.zombieMode then
+		soldierCustomization.activeSlot = WeaponSlot.WeaponSlot_7
+		soldierCustomization.weapons:add(meleeWeapon)
+	else
+		soldierCustomization.weapons:add(primaryWeapon)
+		soldierCustomization.weapons:add(secondaryWeapon)
+		soldierCustomization.weapons:add(gadget01)
+		soldierCustomization.weapons:add(gadget02)
+		soldierCustomization.weapons:add(thrownWeapon)
+		soldierCustomization.weapons:add(meleeWeapon)
+	end
 
 	return soldierKit, appearance, soldierCustomization
 end
 
 function BotSpawner:_onKitPickup(player, newCustomization)
 	if player.soldier ~= nil then
-		player.soldier.weaponsComponent.weapons[1].secondaryAmmo = 182;
-		player.soldier.weaponsComponent.weapons[2].secondaryAmmo = 58;
+		if player.soldier.weaponsComponent.weapons[1] ~= nil then
+			player.soldier.weaponsComponent.weapons[1].secondaryAmmo = 182;
+		end
+		if player.soldier.weaponsComponent.weapons[2] ~= nil then
+			player.soldier.weaponsComponent.weapons[2].secondaryAmmo = 58;
+		end
 	end
 end
 
 function BotSpawner:_modifyWeapon(soldier)
 	--soldier.weaponsComponent.currentWeapon.secondaryAmmo = 9999;
-	soldier.weaponsComponent.weapons[1].secondaryAmmo = 9999;
+	if soldier.weaponsComponent.weapons[1] ~= nil then
+		soldier.weaponsComponent.weapons[1].secondaryAmmo = 9999;
+	end
 	if soldier.weaponsComponent.weapons[2] ~= nil then
 		soldier.weaponsComponent.weapons[2].secondaryAmmo = 9999;
 	end
