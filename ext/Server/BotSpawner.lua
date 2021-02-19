@@ -11,11 +11,12 @@ function BotSpawner:__init()
 	self._botSpawnTimer = 0
 	self._firstSpawnInLevel = true;
 	self._firstSpawnDelay = 0;
-	self._desytroyUnneededBots = false;
+	self._updateActive = false;
 	self._spawnSets = {}
 
 	Events:Subscribe('UpdateManager:Update', self, self._onUpdate)
 	Events:Subscribe('Bot:RespawnBot', self, self._onRespawnBot)
+	Events:Subscribe('Level:Destroy', self, self._onLevelDestroy)
 	Events:Subscribe('Player:KitPickup', self, self._onKitPickup)
 	Events:Subscribe('Player:Joining', self, self._onPlayerJoining)
 	Events:Subscribe('Player:Left', self, self._onPlayerLeft)
@@ -30,6 +31,13 @@ function BotSpawner:updateBotAmountAndTeam()
 		if amoutToDestroy > 0 then
 			BotManager:destroyAmount(amoutToDestroy)
 		end
+	end
+
+	-- if update active do nothing
+	if self._updateActive then
+		return
+	else
+		self._updateActive = true;
 	end
 
 	-- find all needed vars
@@ -185,6 +193,11 @@ function BotSpawner:_onPlayerRespawn(player)
 	end
 end
 
+function BotSpawner:_onLevelDestroy()
+	self._spawnSets = {}
+	self._updateActive = false;
+end
+
 function BotSpawner:_onPlayerJoining()
 	if BotManager:getPlayerCount() == 0 then
 		print("first player - spawn bots")
@@ -203,7 +216,6 @@ end
 
 function BotSpawner:onLevelLoaded()
 	print("on level loaded on spawner")
-	self._desytroyUnneededBots = false;
 	self._firstSpawnInLevel = true;
 	self._firstSpawnDelay 	= 5;
 end
@@ -218,6 +230,7 @@ function BotSpawner:_onUpdate(dt, pass)
 			if BotManager:getPlayerCount() > 0 then
 				BotManager:configGlobas()
 				self:updateBotAmountAndTeam();
+				self._firstSpawnInLevel = false;
 			end
 		else
 			self._firstSpawnDelay = self._firstSpawnDelay - dt;
@@ -225,7 +238,6 @@ function BotSpawner:_onUpdate(dt, pass)
 	end
 
 	if #self._spawnSets > 0 then
-		self._desytroyUnneededBots = true;
 		if self._botSpawnTimer > 0.1 then	--time to wait between spawn. 0.2 works
 			self._botSpawnTimer = 0
 			local spawnSet = table.remove(self._spawnSets);
@@ -233,9 +245,8 @@ function BotSpawner:_onUpdate(dt, pass)
 		end
 		self._botSpawnTimer = self._botSpawnTimer + dt
 	else
-		if self._desytroyUnneededBots then
-			self._firstSpawnInLevel = false;
-			self._desytroyUnneededBots = false;
+		if self._updateActive then
+			self._updateActive = false;
 			--garbage-collection of unwanted bots
 			BotManager:destroyDisabledBots();
 		end
