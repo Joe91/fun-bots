@@ -23,6 +23,9 @@ function BotManager:__init()
 end
 
 function BotManager:getBotTeam()
+	if Config.botTeam ~= TeamId.TeamNeutral then
+		return Config.botTeam;
+	end
 	local botTeam;
 	local countPlayersTeam1 = 0;
 	local countPlayersTeam2 = 0;
@@ -38,12 +41,10 @@ function BotManager:getBotTeam()
 	end
 
 	-- init global Vars
-	if countPlayersTeam1 > countPlayersTeam2 then
-		botTeam = TeamId.Team2;
-	elseif countPlayersTeam2 > countPlayersTeam1 then
+	if countPlayersTeam2 > countPlayersTeam1 then
 		botTeam = TeamId.Team1;
-	else
-		botTeam = Config.botTeam;
+	else -- if countPlayersTeam1 > countPlayersTeam2 then  --default case
+		botTeam = TeamId.Team2;
 	end
 
 	return botTeam;
@@ -54,11 +55,11 @@ function BotManager:configGlobas()
 	Globals.attackWayBots 	= Config.attackWayBots;
 	Globals.spawnMode		= Config.spawnMode;
 	Globals.yawPerFrame 	= self:calcYawPerFrame()
+	self:killAll();
 	if not self._damageHookInstalled then
 		damageHook = Hooks:Install('Soldier:Damage', 100, self, self._onSoldierDamage)
 		self._damageHookInstalled = true;
 	end
-	self:killAll();
 	local maxPlayers = RCON:SendCommand('vars.maxPlayers');
 	maxPlayers = tonumber(maxPlayers[2]);
 	if maxPlayers ~= nil and maxPlayers > 0 then
@@ -90,6 +91,18 @@ end
 
 function BotManager:getBotCount()
 	return #self._bots;
+end
+
+function BotManager:getActiveBotCount(teamId)
+	local count = 0;
+	for _, bot in pairs(self._bots) do
+		if not bot:isInactive() then
+			if teamId == nil or bot.player.teamId == teamId then
+				count = count + 1
+			end
+		end
+	end
+	return count
 end
 
 function BotManager:getPlayerCount()
@@ -239,7 +252,7 @@ function BotManager:_getDamageValue(damage, bot, soldier, fake)
 
 	if not fake then -- frag mode
 		resultDamage = damage * damageFactor;
-	elseif bot.activeWeapon.type ~= "Shotgun" then
+	else
 		if damage <= 2 then
 			local distance = bot.player.soldier.worldTransform.trans:Distance(soldier.worldTransform.trans)
 			if distance >= bot.activeWeapon.damageFalloffEndDistance then
@@ -285,7 +298,7 @@ function BotManager:_onSoldierDamage(hook, soldier, info, giverInfo)
 	if not soldierIsBot then
 		if giverInfo.giver == nil then
 			local bot = self:GetBotByName(self._shooterBots[soldier.player.name])
-			if bot ~= nil and bot.player.soldier ~= nil then
+			if bot ~= nil and bot.player.soldier ~= nil and info.damage > 0 then
 				info.damage = self:_getDamageValue(info.damage, bot, soldier, true);
 				info.boneIndex = 0;
 				info.isBulletDamage = true;
@@ -470,9 +483,24 @@ function BotManager:destroyAmount(number)
 	end
 end
 
+function BotManager:killAmount()
+	local count = 0
+	for _, bot in pairs(self._bots) do
+		bot:resetVars()
+		if bot.player.alive then
+			bot.player.soldier:Kill()
+		end
+		count = count + 1
+		if count >= number then
+			return
+		end
+	end
+end
+
 function BotManager:destroyTeam(teamId, amount)
 	for i = 1, MAX_NUMBER_OF_BOTS do
-		local bot = self:GetBotByName(BotNames[i])
+		local index = MAX_NUMBER_OF_BOTS + 1 - i
+		local bot = self:GetBotByName(BotNames[index])
 		if bot ~= nil then
 			if bot.player.teamId == teamId then
 				self:destroyBot(bot.name)
@@ -482,6 +510,38 @@ function BotManager:destroyTeam(teamId, amount)
 						return
 					end
 				end
+			end
+		end
+	end
+end
+
+function BotManager:killTeam(teamId, amount)
+	for _, bot in pairs(self._bots) do
+		if bot.player.teamId == teamId then
+			bot:resetVars()
+			if bot.player.alive then
+				bot.player.soldier:Kill()
+			end
+			print("bot killed")
+			if amount ~= nil then
+				amount = amount - 1;
+				if amount <= 0 then
+					return
+				end
+			end
+		end
+	end
+end
+
+function BotManager:destroyDisabledBots()
+	local numberOfBots = #self._bots
+	for i = 1,  numberOfBots do
+		local index = numberOfBots + 1 - i
+		local bot = self._bots[index]
+		if bot ~= nil then
+			if bot:isInactive() then
+				print("destroy bot")
+				self:destroyBot(bot.name)
 			end
 		end
 	end

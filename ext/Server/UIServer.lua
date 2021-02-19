@@ -349,6 +349,10 @@ function FunBotUIServer:_writeSettings(player, request)
 		end
 	end
 
+	if request.zombieMode ~= nil then
+		SettingsManager:update('zombieMode', (request.zombieMode == true), temporary, batched);
+	end
+
 	-- difficluty
 	if request.botAimWorsening ~= nil then
 		local tempValue = tonumber(request.botAimWorsening)
@@ -580,10 +584,6 @@ function FunBotUIServer:_writeSettings(player, request)
 		end
 	end
 
-	if request.onlySpawnBotsWithPlayers ~= nil then
-		SettingsManager:update('onlySpawnBotsWithPlayers', (request.onlySpawnBotsWithPlayers == true), temporary, batched);
-	end
-
 	if request.initNumberOfBots ~= nil then
 		local tempValue = tonumber(request.initNumberOfBots);
 
@@ -625,7 +625,9 @@ function FunBotUIServer:_writeSettings(player, request)
 	if request.botTeam ~= nil then
 		local tempValue = tonumber(request.botTeam);
 
-		if tempValue == 1 then
+		if tempValue == 0 then
+			SettingsManager:update('botTeam', TeamId.TeamNeutral, temporary, batched);
+		elseif tempValue == 1 then
 			SettingsManager:update('botTeam', TeamId.Team1, temporary, batched);
 		elseif tempValue == 2 then
 			SettingsManager:update('botTeam', TeamId.Team2, temporary, batched);
