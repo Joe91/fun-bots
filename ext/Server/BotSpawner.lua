@@ -249,6 +249,7 @@ function BotSpawner:_onPlayerLeft(player)
 	if BotManager:getPlayerCount() == 1 then
 		print("no player left - kick all bots")
 		BotManager:destroyAllBots()
+		BotManager:_onLevelDestroy()
 	end
 end
 
