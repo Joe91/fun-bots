@@ -2,7 +2,7 @@
  
 ## [Unreleased - 1.6.X.X] - 2021-02-XX
  
-[Download](https://github.com/Joe91/fun-bots/archive/V1.6.1.3.zip)  
+[Download](https://github.com/Joe91/fun-bots/archive/V1.6.1.4.zip)  
 Big update of everything
 
 - Zombie-mode added

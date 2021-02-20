@@ -92,6 +92,44 @@ function BotSpawner:updateBotAmountAndTeam()
 			end
 		end
 
+	-- BALANCED teams
+	elseif g_Globals.spawnMode == 'balanced_teams' then
+		local targetBotCountTeam1 = 0;
+		local targetBotCountTeam2 = 0;
+
+		if countPlayersTeam1 > 0 then
+			targetBotCountTeam2 = Config.initNumberOfBots + ((countPlayersTeam1-1) * Config.newBotsPerNewPlayer)
+		end
+		if countPlayersTeam2 > 0 then
+			targetBotCountTeam1 = Config.initNumberOfBots + ((countPlayersTeam2-1) * Config.newBotsPerNewPlayer)
+		end
+
+		local targetTeam1 = countPlayersTeam1 + targetBotCountTeam1
+		local targetTeam2 = countPlayersTeam2 + targetBotCountTeam2
+		if targetTeam1 > targetTeam2 then
+			targetTeam2 = targetTeam1;
+		elseif targetTeam2 > targetTeam1 then
+			targetTeam1 = targetTeam2;
+		end
+		targetTeam1 = targetTeam1 - countPlayersTeam1;
+		targetTeam2 = targetTeam2 - countPlayersTeam2;
+
+		local amountToSpawnTeam1 = targetTeam1 - botCountTeam1;
+		local amountToSpawnTeam2 = targetTeam2 - botCountTeam2;
+
+		if amountToSpawnTeam1 > 0 then
+			self:spawnWayBots(nil, amountToSpawnTeam1, true, 0, 0, TeamId.Team1);
+		end
+		if amountToSpawnTeam2 > 0 then
+			self:spawnWayBots(nil, amountToSpawnTeam2, true, 0, 0, TeamId.Team2);
+		end
+		if amountToSpawnTeam1 < 0 then
+			BotManager:killTeam(TeamId.Team1, -amountToSpawnTeam1)
+		end
+		if amountToSpawnTeam2 < 0 then
+			BotManager:killTeam(TeamId.Team2, -amountToSpawnTeam2)
+		end
+
 	-- INCREMENT WITH PLAYER
 	elseif g_Globals.spawnMode == 'increment_with_players' then
 		if Config.spawnInBothTeams then
