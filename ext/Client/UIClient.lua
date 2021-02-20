@@ -34,6 +34,8 @@ function FunBotUIClient:__init()
 		Events:Subscribe('UI_Trace', self, self._onUITrace);
 		NetEvents:Subscribe('UI_Trace_Index', self, self._onUITraceIndex);
 		Events:Subscribe('UI_Trace_Index', self, self._onUITraceIndex);
+		NetEvents:Subscribe('UI_Trace_Waypoints', self, self._onUITraceWaypoints);
+		Events:Subscribe('UI_Trace_Waypoints', self, self._onUITraceWaypoints);
 		
 		self._views:setLanguage(Config.language);
 	end
@@ -98,6 +100,14 @@ function FunBotUIClient:_onUITraceIndex(index)
 	end
 	
 	self._views:execute('BotEditor.updateTraceIndex(' .. tostring(index) .. ');');
+end
+
+function FunBotUIClient:_onUITraceWaypoints(index)
+	if Config.disableUserInterface == true then
+		return;
+	end
+	
+	self._views:execute('BotEditor.updateTraceWaypoints(' .. tostring(index) .. ');');
 end
 
 function FunBotUIClient:_onUITrace(state)
