@@ -8,6 +8,10 @@ function ClientNodeEditor:__init()
 	self.player = nil
 	self.playerPos = nil
 
+	self.enabled = Config.debugTracePaths
+	self.disableUserInterface = Config.disableUserInterface
+	self.commoRoseEnabled = false
+
 	self.nodeReceiveTimer = -1
 	self.nodeReceiveProgress = 0
 	self.nodeReceiveDelay = 1
@@ -28,8 +32,6 @@ function ClientNodeEditor:__init()
 
 	self.botSelectedWaypoints = {}
 
-	self.debugTracePaths = Config.debugTracePaths
-	self.disableUserInterface = Config.disableUserInterface
 
 	self.colors = {
 		["Text"] = Vec4(1,1,1,1),
@@ -80,7 +82,13 @@ function ClientNodeEditor:__init()
 	self.debugEntries = {}
 	self.pushScreenHook = nil
 
+	-- ('UI_ClientNodeEditor_Enabled', <Bool|Enabled>)
+	NetEvents:Subscribe('UI_ClientNodeEditor_Enabled', self, self._onSetEnabled)
+
+	-- listens to UI settings for changes
 	NetEvents:Subscribe('UI_Settings', self, self._onUISettings)
+
+
 	self:RegisterEvents()
 end
 
@@ -89,74 +97,105 @@ function ClientNodeEditor:RegisterEvents()
 	-- simple check to make sure we don't reregister things if they are already done
 	if (self.pushScreenHook ~= nil) then return end
 
-	NetEvents:Subscribe('ClientNodeEditor:SetLastTraceSearchArea', self, self._onSetLastTraceSearchArea)
-	NetEvents:Subscribe('ClientNodeEditor:ReceiveNodes', self, self._onGetNodes)
-	NetEvents:Subscribe('ClientNodeEditor:SendNodes', self, self._onSendNodes)
-	NetEvents:Subscribe('ClientNodeEditor:Create', self, self._onServerCreateNode)
-	NetEvents:Subscribe('ClientNodeEditor:Init', self, self._onInit)
+	-- enable/disable events
+	-- ('UI_CommoRose_Enabled', <Bool|Enabled>) -- true == block the BF3 commo rose
+	NetEvents:Subscribe('UI_CommoRose_Enabled', self, self._onSetCommoRoseEnabled)
 
+	-- selection-based events, no arguments required
 	NetEvents:Subscribe('UI_CommoRose_Action_Save', self, self._onSaveNodes)
 	NetEvents:Subscribe('UI_CommoRose_Action_Select', self, self._onSelectNode)
-	NetEvents:Subscribe('UI_CommoRose_Action_Connect', self, self._onConnectNode)
 	NetEvents:Subscribe('UI_CommoRose_Action_Load', self, self._onLoadNodes)
 
+	-- Commo Rose left buttons
 	NetEvents:Subscribe('UI_CommoRose_Action_Delete', self, self._onRemoveNode)
+	NetEvents:Subscribe('UI_CommoRose_Action_Disconnect', self, self._onDisconnectNode)
 	NetEvents:Subscribe('UI_CommoRose_Action_Merge', self, self._onMergeNode)
 	NetEvents:Subscribe('UI_CommoRose_Action_SelectPrevious', self, self._onSelectPrevious)
 	NetEvents:Subscribe('UI_CommoRose_Action_ClearSelections', self, self._onClearSelection)
 	NetEvents:Subscribe('UI_CommoRose_Action_Move', self, self._onToggleMoveNode)
 
+	-- Commor Rose right buttons
 	NetEvents:Subscribe('UI_CommoRose_Action_Create', self, self._onCreateNode)
+	NetEvents:Subscribe('UI_CommoRose_Action_Connect', self, self._onConnectNode)
 	NetEvents:Subscribe('UI_CommoRose_Action_Split', self, self._onSplitNode)
 	NetEvents:Subscribe('UI_CommoRose_Action_SelectNext', self, self._onSelectNext)
 	NetEvents:Subscribe('UI_CommoRose_Action_SelectBetween', self, self._onSelectBetween)
 	NetEvents:Subscribe('UI_CommoRose_Action_SetInput', self, self._onSetInputNode)
 
+	-- must provide arguments
+	-- ('UI_ClientNodeEditor_Trace_Show', <Int|PathIndex>)
+	NetEvents:Subscribe('UI_ClientNodeEditor_Trace_Show', self, self._onShowPath)
+	-- ('UI_ClientNodeEditor_Trace_Hide', <Int|PathIndex>)
+	NetEvents:Subscribe('UI_ClientNodeEditor_Trace_Hide', self, self._onHidePath)
+
+	-- debug stuff
+	NetEvents:Subscribe('ClientNodeEditor:SetLastTraceSearchArea', self, self._onSetLastTraceSearchArea)
 	NetEvents:Subscribe('ClientNodeEditor:BotSelect', self, self._onBotSelect)
 
-	Events:Subscribe('Player:Created', self, self._onPlayerCreated)
+	-- sever->client and client->server syncing events
+	NetEvents:Subscribe('ClientNodeEditor:ReceiveNodes', self, self._onGetNodes)
+	NetEvents:Subscribe('ClientNodeEditor:SendNodes', self, self._onSendNodes)
+	NetEvents:Subscribe('ClientNodeEditor:Create', self, self._onServerCreateNode)
+	NetEvents:Subscribe('ClientNodeEditor:Init', self, self._onInit)
+
+	-- destroy events, clean up memory
 	Events:Subscribe('Player:Deleted', self, self._onPlayerDeleted)
 	Events:Subscribe('Level:Destroy', self, self._onUnload)
+
+	-- keypresses
 	Events:Subscribe('Client:UpdateInput', self, self._onUpdateInput)
+	-- node send/receiver logic
 	Events:Subscribe('UpdateManager:Update', self, self._onUpdateManagerUpdate)
+	-- math for draw event
 	Events:Subscribe('Engine:Update', self, self._onEngineUpdate)
+	-- draw nodes and info
 	Events:Subscribe('UI:DrawHud', self, self._onUIDrawHud)
 
 	self.pushScreenHook = Hooks:Install('UI:PushScreen', 100, self, self._onUIPushScreen)
 
-	Console:Register('GetNodes', 'Resend all waypoints and lose all changes', self, self._onGetNodes)
+	-- UI Commands as Console commands
+
+	Console:Register('Save', 'Send waypoints to server for saving to file', self, self._onSaveNodes)
+	Console:Register('Select', 'Select or Deselect the waypoint you are looking at', self, self._onSelectNode)
+	Console:Register('Load', 'Resend all waypoints and lose all changes', self, self._onGetNodes)
+
+	Console:Register('Delete', 'Remove selected waypoints', self, self._onRemoveNode)
+	Console:Register('Disconnect', 'Unlink two waypoints', self, self._onDisconnectNode)
+	Console:Register('Merge', 'Merge selected waypoints', self, self._onMergeNode)
+	Console:Register('SelectPrevious', 'Extend selection to previous waypoint', self, self._onSelectPrevious)
+	Console:Register('ClearSelection', 'Clear selection', self, self._onClearSelection)
+	Console:Register('Move', 'toggle move mode on selected waypoints', self, self._onToggleMoveNode)
+
 	Console:Register('Create', 'Create a new waypoint after the selected one', self, self._onCreateNode)
 	Console:Register('Connect', 'Link two waypoints', self, self._onConnectNode)
-	Console:Register('Disconnect', 'Unlink two waypoints', self, self._onDisconnectNode)
-	Console:Register('Remove', 'Remove selected waypoints', self, self._onRemoveNode)
-	Console:Register('Merge', 'Merge selected waypoints', self, self._onMergeNode)
 	Console:Register('Split', 'Split selected waypoints', self, self._onSplitNode)
-	Console:Register('SetInput', '<number|0-15> <number|0-15> <number|0-255> - Sets input variables for the selected waypoints', self, self._onSetInputNode)
-	Console:Register('SetMetadata', '<string|Data> - Set Metadata for waypoint, Must be valid JSON string', self, self._onSetMetadata)
-	Console:Register('ClearSelection', 'Clear selection', self, self._onClearSelection)
-	Console:Register('SelectBetween', 'Select all waypoint between start and end of selection', self, self._onSelectBetween)
 	Console:Register('SelectNext', 'Extend selection to next waypoint', self, self._onSelectNext)
-	Console:Register('SelectPrevious', 'Extend selection to previous waypoint', self, self._onSelectPrevious)
-	Console:Register('Move', 'toggle move mode on selected waypoints', self, self._onToggleMoveNode)
-	Console:Register('ShowPath', '\'all\' or <number|PathIndex> - Show path\'s waypoints', self, self._onShowPath)
-	Console:Register('HidePath', '\'all\' or <number|PathIndex> - Hide path\'s waypoints', self, self._onHidePath)
+	Console:Register('SelectBetween', 'Select all waypoint between start and end of selection', self, self._onSelectBetween)
+	Console:Register('SetInput', '<number|0-15> <number|0-15> <number|0-255> - Sets input variables for the selected waypoints', self, self._onSetInputNode)
+
+	Console:Register('TraceShow', '\'all\' or <number|PathIndex> - Show trace\'s waypoints', self, self._onShowPath)
+	Console:Register('TraceHide', '\'all\' or <number|PathIndex> - Hide trace\'s waypoints', self, self._onHidePath)
+	Console:Register('WarpTo', '*<string|WaypointID>* Teleport yourself to the specified Waypoint ID', self, self._onWarpTo)
+	Console:Register('SpawnAtWaypoint', '', self, self._onSpawnAtWaypoint)
+
+	-- debugging commands, not meant for UI
+	Console:Register('Enabled', 'Enable / Disable the waypoint editor', self, self._onSetEnabled)
+	Console:Register('CommoRoseEnabled', 'Enable / Disable the waypoint editor Commo Rose', self, self._onSetCommoRoseEnabled)
+	Console:Register('SetMetadata', '<string|Data> - Set Metadata for waypoint, Must be valid JSON string', self, self._onSetMetadata)
+	Console:Register('ProcessMetadata', 'Process waypoint metadata starting with selected nodes or all nodes', self, self._onProcessMetadata)
+	Console:Register('RecalculateIndexes', 'Recalculate Indexes starting with selected nodes or all nodes', self, self._onRecalculateIndexes)
 	Console:Register('ShowRose', 'Show custom Commo Rose', self, self._onShowRose)
 	Console:Register('HideRose', 'Hide custom Commo Rose', self, self._onHideRose)
 	Console:Register('DumpNodes', 'Print selected nodes or all nodes to console', self, self._onDumpNodes)
 	Console:Register('UnloadNodes', 'Clears and unloads all clientside nodes', self, self._onUnload)
 
-	Console:Register('RecalculateIndexes', 'Recalculate Indexes starting with selected nodes or all nodes', self, self._onRecalculateIndexes)
-	Console:Register('ProcessMetadata', 'Process waypoint metadata starting with selected nodes or all nodes', self, self._onProcessMetadata)
-
 	Console:Register('BotVision', '*<boolean|Enabled>* Lets you see what the bots see [Experimental]', self, self._onSetBotVision)
-
-	Console:Register('WarpTo', '*<string|WaypointID>* Teleport yourself to the specified Waypoint ID', self, self._onWarpTo)
-	Console:Register('SpawnAtWaypoint', '', self, self._onSpawnAtWaypoint)
 end
 
 -- used when the UI is disabled
 function ClientNodeEditor:DeregisterEvents()
 	NetEvents:Unsubscribe('ClientNodeEditor:SetLastTraceSearchArea')
+	NetEvents:Unsubscribe('ClientNodeEditor:BotSelect')
 	NetEvents:Unsubscribe('ClientNodeEditor:ReceiveNodes')
 	NetEvents:Unsubscribe('ClientNodeEditor:SendNodes')
 	NetEvents:Unsubscribe('ClientNodeEditor:Create')
@@ -164,24 +203,25 @@ function ClientNodeEditor:DeregisterEvents()
 
 	NetEvents:Unsubscribe('UI_CommoRose_Action_Save')
 	NetEvents:Unsubscribe('UI_CommoRose_Action_Select')
-	NetEvents:Unsubscribe('UI_CommoRose_Action_Connect')
 	NetEvents:Unsubscribe('UI_CommoRose_Action_Load')
 
 	NetEvents:Unsubscribe('UI_CommoRose_Action_Delete')
+	NetEvents:Unsubscribe('UI_CommoRose_Action_Disconnect')
 	NetEvents:Unsubscribe('UI_CommoRose_Action_Merge')
 	NetEvents:Unsubscribe('UI_CommoRose_Action_SelectPrevious')
 	NetEvents:Unsubscribe('UI_CommoRose_Action_ClearSelections')
 	NetEvents:Unsubscribe('UI_CommoRose_Action_Move')
 
 	NetEvents:Unsubscribe('UI_CommoRose_Action_Create')
+	NetEvents:Unsubscribe('UI_CommoRose_Action_Connect')
 	NetEvents:Unsubscribe('UI_CommoRose_Action_Split')
 	NetEvents:Unsubscribe('UI_CommoRose_Action_SelectNext')
 	NetEvents:Unsubscribe('UI_CommoRose_Action_SelectBetween')
 	NetEvents:Unsubscribe('UI_CommoRose_Action_SetInput')
 
-	Events:Unsubscribe('Player:Created')
 	Events:Unsubscribe('Player:Deleted')
 	Events:Unsubscribe('Level:Destroy')
+
 	Events:Unsubscribe('Client:UpdateInput')
 	Events:Unsubscribe('UpdateManager:Update')
 	Events:Unsubscribe('Engine:Update')
@@ -192,84 +232,90 @@ function ClientNodeEditor:DeregisterEvents()
 		self.pushScreenHook = nil
 	end
 
-	Console:Deregister('GetNodes')
-	Console:Deregister('Create')
-	Console:Deregister('Connect')
-	Console:Deregister('Remove')
+	Console:Deregister('Save')
+	Console:Deregister('Select')
+	Console:Deregister('Load')
+
+	Console:Deregister('Delete')
+	Console:Deregister('Disconnect')
 	Console:Deregister('Merge')
-	Console:Deregister('Split')
-	Console:Deregister('SetInput')
+	Console:Deregister('SelectPrevious')
 	Console:Deregister('ClearSelection')
 	Console:Deregister('Move')
-	Console:Deregister('ShowPath')
-	Console:Deregister('HidePath')
+
+	Console:Deregister('Create')
+	Console:Deregister('Connect')
+	Console:Deregister('Split')
+	Console:Deregister('SelectNext')
+	Console:Deregister('SetInput')
+
+	Console:Deregister('TraceShow')
+	Console:Deregister('TraceHide')
+	Console:Deregister('WarpTo')
+	Console:Deregister('SpawnAtWaypoint')
+
+	Console:Deregister('Enabled')
+	Console:Deregister('CommoRoseEnabled')
+	Console:Deregister('SetMetadata')
+	Console:Deregister('ProcessMetadata')
+	Console:Deregister('RecalculateIndexes')
 	Console:Deregister('ShowRose')
 	Console:Deregister('HideRose')
 	Console:Deregister('DumpNodes')
-	Console:Deregister('RecalculateIndexes')
 	Console:Deregister('UnloadNodes')
 
 	Console:Deregister('BotVision')
-
-	Console:Deregister('WarpTo')
-	Console:Deregister('SpawnAtWaypoint')
 end
 
--- ################# Node sending and retrieval
--- ############################################
+function ClientNodeEditor:_onSetEnabled(args)
 
--- request a fresh node list from the server
--- or server has told us be ready to receive
-function ClientNodeEditor:_onGetNodes(args)
-	print('ClientNodeEditor:_onGetNodes: '..tostring(args))
-	-- unload our current cache
-	self:_onUnload(args)
-	-- enable the timer before we are ready to receive
-	self.nodeReceiveTimer = 0
-	return true
-end
-
--- server is ready to receive our nodes
-function ClientNodeEditor:_onSendNodes(args)
-
-	self.nodesToSend = g_NodeCollection:Get()
-
-	print('ClientNodeEditor:_onSendNodes: '..tostring(#self.nodesToSend))
-	if (self.nodesToSend ~= nil and #self.nodesToSend > 0) then
-		self.nodeSendTimer = 0
-	else
-		print('ClientNodeEditor:_onSendNodes: Client has 0 Nodes, Cancelling Send!')
+	local enabled = args
+	if (type(args) == 'table') then
+		enabled = args[1]
 	end
-end
 
-function ClientNodeEditor:_onServerCreateNode(data)
-	g_NodeCollection:Create(data)
-	self.nodeReceiveProgress = self.nodeReceiveProgress + 1
-	self.debugEntries['nodeReceiveProgress'] = self.nodeReceiveProgress..'/'..(self.nodeReceiveExpected)
-end
+	enabled = (enabled == true or enabled == 'true' or enabled == '1')
 
--- node payload has finished sending, setup events and calc indexes
-function ClientNodeEditor:_onInit()
-	g_NodeCollection:RegisterEvents()
-	g_NodeCollection:RecalculateIndexes()
-	g_NodeCollection:ProcessMetadata()
-
-	local waypoints = g_NodeCollection:Get()
-	self.player = PlayerManager:GetLocalPlayer()
-
-	local staleNodes = 0
-	print('ClientNodeEditor:_onInit -> Nodes received: '..tostring(#waypoints))
-	for i=1, #waypoints do
-
-		local waypoint = waypoints[i]
-		if (type(waypoint.Next) == 'string') then
-			staleNodes = staleNodes+1
-		end
-		if (type(waypoint.Previous) == 'string') then
-			staleNodes = staleNodes+1
+	if (self.enabled ~= enabled) then
+		self.enabled = enabled
+		Config.debugTracePaths = enabled
+		if (self.enabled) then
+			self:_onUnload(args) -- clear local copy
+			self.nodeReceiveTimer = 0 -- enable the timer for receiving nodes
+		else
+			self:_onUnload()
 		end
 	end
-	print('ClientNodeEditor:_onInit -> Stale Nodes: '..tostring(staleNodes))
+end
+
+function ClientNodeEditor:_onSetCommoRoseEnabled(data)
+
+	local enabled = args
+	if (type(args) == 'table') then
+		enabled = args[1]
+	end
+
+	enabled = (enabled == true or enabled == 'true' or enabled == '1')
+
+	self.commoRoseEnabled = enabled
+end
+
+function ClientNodeEditor:_onUISettings(data)
+	if (data == false) then -- client closed settings
+
+		self:_onSetEnabled(Config.debugTracePaths)
+
+		if (self.disableUserInterface ~= Config.disableUserInterface) then
+			self.disableUserInterface = Config.disableUserInterface
+			if (self.disableUserInterface) then
+				self:DeregisterEvents()
+			else
+				self:RegisterEvents()
+			end
+		end
+
+		self.helpTextLocation = Vec2.zero
+	end
 end
 
 -- ########### commo rose top / middle / bottom
@@ -308,6 +354,13 @@ function ClientNodeEditor:_onRemoveNode(args)
 	g_NodeCollection:Remove()
 	print(Language:I18N('Success'))
 	return true
+end
+
+function ClientNodeEditor:_onDisconnectNode()
+	self.CommoRose.Active = false
+	local result, message = g_NodeCollection:Disconnect()
+	print(Language:I18N(message))
+	return result
 end
 
 function ClientNodeEditor:_onMergeNode(args)
@@ -407,6 +460,13 @@ function ClientNodeEditor:_onCreateNode(args)
 	return result ~= nil
 end
 
+function ClientNodeEditor:_onConnectNode()
+	self.CommoRose.Active = false
+	local result, message = g_NodeCollection:Connect()
+	print(Language:I18N(message))
+	return result
+end
+
 function ClientNodeEditor:_onSplitNode(args)
 	self.CommoRose.Active = false
 	local result, message = g_NodeCollection:SplitSelection()
@@ -457,45 +517,62 @@ end
 -- ############################################
 
 
-function ClientNodeEditor:_onConnectNode()
-	self.CommoRose.Active = false
-	local result, message = g_NodeCollection:Connect()
-	print(Language:I18N(message))
-	return result
-end
+function ClientNodeEditor:_onShowPath(args)
 
-function ClientNodeEditor:_onDisconnectNode()
-	self.CommoRose.Active = false
-	local result, message = g_NodeCollection:Disconnect()
-	print(Language:I18N(message))
-	return result
-end
-
-function ClientNodeEditor:_onSetMetadata(args)
-	self.CommoRose.Active = false
-
-	local data = table.concat(args or {}, ' ')
-	print('ClientNodeEditor:_onSetMetadata -> data: '..g_Utilities:dump(data, true))
-
-	local result, message = g_NodeCollection:UpdateMetadata(data)
-	if (result ~= false) then
-		g_NodeCollection:ProcessMetadata(result)
+	local pathIndex = args
+	if (type(args) == 'table') then
+		pathIndex = args[1]
 	end
-	print(Language:I18N(message))
-	return result
+
+	if (pathIndex == nil) then
+		print('Use `all` or *<number|PathIndex>*')
+		return false
+	end
+
+	if (pathIndex:lower() == 'all') then
+		for pathID, waypoints in pairs(g_NodeCollection:GetPaths()) do
+			g_NodeCollection:ShowPath(pathID)
+		end
+		print(Language:I18N('Success'))
+		return true
+	end
+
+	if (tonumber(pathIndex) ~= nil) then
+		g_NodeCollection:ShowPath(tonumber(pathIndex))
+		print(Language:I18N('Success'))
+		return true
+	end
+	print('Use `all` or *<number|PathIndex>*')
+	return false
 end
 
--- NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', pathIndex, pointIndex, botPosition, color)
-function ClientNodeEditor:_onBotSelect(pathIndex, pointIndex, botPosition, isObstacleMode, color)
-	local waypoint = g_NodeCollection:Get(pointIndex, pathIndex)
-	if (waypoint ~= nil) then
-		self.botSelectedWaypoints[waypoint.ID] = {
-			Timer = 1,
-			Position = botPosition,
-			Obstacle = isObstacleMode,
-			Color = (color or 'White')
-		}
+function ClientNodeEditor:_onHidePath(args)
+
+	local pathIndex = args
+	if (type(args) == 'table') then
+		pathIndex = args[1]
 	end
+
+	if (pathIndex == nil) then
+		print('Use `all` or *<number|PathIndex>*')
+		return false
+	end
+
+	if (pathIndex:lower() == 'all') then
+		for pathID, waypoints in pairs(g_NodeCollection:GetPaths()) do
+			g_NodeCollection:HidePath(pathID)
+		end
+		print(Language:I18N('Success'))
+		return true
+	end
+
+	if (tonumber(pathIndex) ~= nil) then
+		g_NodeCollection:HidePath(tonumber(pathIndex))
+		print(Language:I18N('Success'))
+		return true
+	end
+	print('Use `all` or *<number|PathIndex>*')
+	return false
 end
 
 function ClientNodeEditor:_onWarpTo(args)
@@ -520,54 +597,6 @@ function ClientNodeEditor:_onWarpTo(args)
 	NetEvents:Send('NodeEditor:WarpTo', waypoint.Position)
 end
 
-function ClientNodeEditor:_onShowPath(args)
-
-	if (args[1] == nil) then
-		print('Use `all` or *<number|PathIndex>*')
-		return false
-	end
-
-	if (args[1]:lower() == 'all') then
-		for pathID, waypoints in pairs(g_NodeCollection:GetPaths()) do
-			g_NodeCollection:ShowPath(pathID)
-		end
-		print(Language:I18N('Success'))
-		return true
-	end
-
-	if (tonumber(args[1]) ~= nil) then
-		g_NodeCollection:ShowPath(tonumber(args[1]))
-		print(Language:I18N('Success'))
-		return true
-	end
-	print('Use `all` or *<number|PathIndex>*')
-	return false
-end
-
-function ClientNodeEditor:_onHidePath(args)
-
-	if (args[1] == nil) then
-		print('Use `all` or *<number|PathIndex>*')
-		return false
-	end
-
-	if (args[1]:lower() == 'all') then
-		for pathID, waypoints in pairs(g_NodeCollection:GetPaths()) do
-			g_NodeCollection:HidePath(pathID)
-		end
-		print(Language:I18N('Success'))
-		return true
-	end
-
-	if (tonumber(args[1]) ~= nil) then
-		g_NodeCollection:HidePath(tonumber(args[1]))
-		print(Language:I18N('Success'))
-		return true
-	end
-	print('Use `all` or *<number|PathIndex>*')
-	return false
-end
-
 function ClientNodeEditor:_onSpawnAtWaypoint(args)
 	if (args == nil or #args == 0) then
 		print('Must provide Waypoint ID')
@@ -587,20 +616,38 @@ function ClientNodeEditor:_onSpawnAtWaypoint(args)
 	}))
 end
 
-function ClientNodeEditor:_onSetBotVision(args)
-	self.botVisionEnabled = (args ~= nil and (args[1] == '1' or args[1] == 'true'))
-	print('ClientNodeEditor:_onSetBotVision: '..tostring(self.botVisionEnabled))
-	NetEvents:Send('NodeEditor:SetBotVision', self.botVisionEnabled)
-	if (self.botVisionEnabled) then
-		-- unload our current cache
-		self:_onUnload(args)
-		-- enable the timer before we are ready to receive
-		self.nodeReceiveTimer = 0
+-- ############################## Debug Methods
+-- ############################################
+
+function ClientNodeEditor:_onSetLastTraceSearchArea(data)
+	self.lastTraceSearchAreaPos = data[1]
+	self.lastTraceSearchAreaSize = data[2]
+end
+
+-- NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', pathIndex, pointIndex, botPosition, color)
+function ClientNodeEditor:_onBotSelect(pathIndex, pointIndex, botPosition, isObstacleMode, color)
+	local waypoint = g_NodeCollection:Get(pointIndex, pathIndex)
+	if (waypoint ~= nil) then
+		self.botSelectedWaypoints[waypoint.ID] = {
+			Timer = 1,
+			Position = botPosition,
+			Obstacle = isObstacleMode,
+			Color = (color or 'White')
+		}
 	end
 end
 
--- ############################## debug methods
--- ############################################
+function ClientNodeEditor:_onShowRose(args)
+	self:_onCommoRoseAction('Show')
+	print(Language:I18N('Success'))
+	return true
+end
+
+function ClientNodeEditor:_onHideRose(args)
+	self:_onCommoRoseAction('Hide')
+	print(Language:I18N('Success'))
+	return true
+end
 
 function ClientNodeEditor:_onDumpNodes(args)
 
@@ -615,6 +662,20 @@ function ClientNodeEditor:_onDumpNodes(args)
 	end
 	print('Dumped ['..tostring(#selection)..'] Nodes!')
 	return true
+end
+
+function ClientNodeEditor:_onSetMetadata(args)
+	self.CommoRose.Active = false
+
+	local data = table.concat(args or {}, ' ')
+	print('ClientNodeEditor:_onSetMetadata -> data: '..g_Utilities:dump(data, true))
+
+	local result, message = g_NodeCollection:UpdateMetadata(data)
+	if (result ~= false) then
+		g_NodeCollection:ProcessMetadata(result)
+	end
+	print(Language:I18N(message))
+	return result
 end
 
 function ClientNodeEditor:_onRecalculateIndexes(args)
@@ -641,34 +702,20 @@ function ClientNodeEditor:_onProcessMetadata(args)
 	return true
 end
 
-function ClientNodeEditor:_onShowRose(args)
-	self:_onCommoRoseAction('Show')
-	print(Language:I18N('Success'))
-	return true
-end
-
-function ClientNodeEditor:_onHideRose(args)
-	self:_onCommoRoseAction('Hide')
-	print(Language:I18N('Success'))
-	return true
-end
-
-function ClientNodeEditor:_onSetLastTraceSearchArea(data)
-	self.lastTraceSearchAreaPos = data[1]
-	self.lastTraceSearchAreaSize = data[2]
-end
-
--- ##################################### Events
--- ############################################
-
-function ClientNodeEditor:_onPlayerCreated(player)
-	print('ClientNodeEditor:_onPlayerCreated: '..tostring(player.name))
-	if (Config.debugTracePaths) then
+function ClientNodeEditor:_onSetBotVision(args)
+	self.botVisionEnabled = (args ~= nil and (args[1] == '1' or args[1] == 'true'))
+	print('ClientNodeEditor:_onSetBotVision: '..tostring(self.botVisionEnabled))
+	NetEvents:Send('NodeEditor:SetBotVision', self.botVisionEnabled)
+	if (self.botVisionEnabled) then
+		-- unload our current cache
 		self:_onUnload(args)
 		-- enable the timer before we are ready to receive
 		self.nodeReceiveTimer = 0
 	end
 end
+
+-- ##################################### Events
+-- ############################################
 
 function ClientNodeEditor:_onPlayerDeleted(player)
 	if (self.player ~= nil and player ~= nil and self.player.name == player.name) then
@@ -686,31 +733,6 @@ function ClientNodeEditor:_onUnload(args)
 	print('NodeCollection:Clear -> Expecting: '..g_Utilities:dump(args))
 	g_NodeCollection:Clear()
 	g_NodeCollection:DeregisterEvents()
-end
-
-function ClientNodeEditor:_onUISettings(data)
-	if (data == false) then -- client closed settings
-		if (self.debugTracePaths ~= Config.debugTracePaths) then
-			if (Config.debugTracePaths) then
-				self:_onUnload(args)
-				-- enable the timer before we are ready to receive
-				self.nodeReceiveTimer = 0
-			else
-				self:_onUnload()
-			end
-		end
-
-		if (self.disableUserInterface ~= Config.disableUserInterface) then
-			if (Config.disableUserInterface) then
-				self:DeregisterEvents()
-			else
-				self:RegisterEvents()
-			end
-		end
-
-		self.helpTextLocation = Vec2.zero
-		self.debugTracePaths = Config.debugTracePaths
-	end
 end
 
 function ClientNodeEditor:_onCommoRoseAction(action, hit)
@@ -749,12 +771,6 @@ function ClientNodeEditor:_onCommoRoseAction(action, hit)
 		return
 	end
 
-	if (action == 'Hide') then
-		self.CommoRose.Active = false
-		g_FunBotUIClient:_onUICommonRose(false)
-		return
-	end
-
 	if (action == 'Select') then
 
 		local hit = self:Raycast()
@@ -787,17 +803,10 @@ function ClientNodeEditor:_onCommoRoseAction(action, hit)
 end
 
 function ClientNodeEditor:_onUIPushScreen(hook, screen, priority, parentGraph, stateNodeGuid)
-	if (screen ~= nil) then
-		print('ClientNodeEditor:_onUIPushScreen: '..UIScreenAsset(screen).name)
-	end
-
-	if (Config.debugTracePaths and screen ~= nil and UIScreenAsset(screen).name == 'UI/Flow/Screen/CommRoseScreen') then
-
-		-- triggered vanilla commo rose
-		if self.CommoRose.Pressed and not self.CommoRose.Active then
-    		self:_onCommoRoseAction('Show')
-    	end
-		hook:Return() -- don't actually display the UI
+	if (self.commoRoseEnabled and screen ~= nil and UIScreenAsset(screen).name == 'UI/Flow/Screen/CommRoseScreen') then
+		-- triggered vanilla commo rose and ours should be active
+		-- block it
+		hook:Return() 
     end
 	hook:Pass(screen, priority, parentGraph, stateNodeGuid)
 end
@@ -806,7 +815,7 @@ end
 -- ############################################
 
 function ClientNodeEditor:_onUpdateInput(player, delta)
-	if (not Config.debugTracePaths) then
+	if (not self.enabled) then
 		return
 	end
 
@@ -1032,7 +1041,7 @@ end
 function ClientNodeEditor:_onUpdateManagerUpdate(delta, pass)
 
 	-- Only do math on presimulation UpdatePass, don't bother if debugging is off
-	if pass ~= UpdatePass.UpdatePass_PreSim and not Config.debugTracePaths and not self.botVisionEnabled then
+	if not self.enabled or pass ~= UpdatePass.UpdatePass_PreSim then
 		return
 	end
 
@@ -1181,7 +1190,7 @@ function ClientNodeEditor:_onUIDrawHud()
 	end
 
 	-- dont process waypoints if we're not supposed to see them
-	if (not Config.debugTracePaths and not self.botVisionEnabled) then
+	if (not self.enabled) then
 		return
 	end
 
@@ -1192,7 +1201,7 @@ function ClientNodeEditor:_onUIDrawHud()
 		debugText = debugText .. k..': '..tostring(v).."\n"
 	end
 
-	DebugRenderer:DrawText2D(20, 20, debugText, self.colors.Text, 1)
+	--DebugRenderer:DrawText2D(20, 20, debugText, self.colors.Text, 1)
 	
 
 	-- draw help info
@@ -1250,10 +1259,10 @@ function ClientNodeEditor:_onUIDrawHud()
 		helpText = helpText..' [Numpad -] - Nudge Speed -'.."\n"
 	end
 
-	DebugRenderer:DrawText2D(self.helpTextLocation.x, self.helpTextLocation.y, helpText, self.colors.Text, 1)
+	--DebugRenderer:DrawText2D(self.helpTextLocation.x, self.helpTextLocation.y, helpText, self.colors.Text, 1)
 
 	-- draw debug selection traces
-	if (Config.debugSelectionRaytraces) then
+	if (self.debugSelectionRaytraces) then
 		if (self.lastTraceStart ~= nil and self.lastTraceEnd ~= nil) then
 			DebugRenderer:DrawLine(self.lastTraceStart, self.lastTraceEnd, self.colors.Ray.Line[1], self.colors.Ray.Line[2])
 		end
@@ -1402,6 +1411,63 @@ function ClientNodeEditor:_onUIDrawHud()
 			end
 		end
 	end
+end
+
+-- ################# Node sending and retrieval
+-- ############################################
+
+-- request a fresh node list from the server
+-- or server has told us be ready to receive
+function ClientNodeEditor:_onGetNodes(args)
+	print('ClientNodeEditor:_onGetNodes: '..tostring(args))
+	-- unload our current cache
+	self:_onUnload(args)
+	-- enable the timer before we are ready to receive
+	self.nodeReceiveTimer = 0
+	return true
+end
+
+-- server is ready to receive our nodes
+function ClientNodeEditor:_onSendNodes(args)
+
+	self.nodesToSend = g_NodeCollection:Get()
+
+	print('ClientNodeEditor:_onSendNodes: '..tostring(#self.nodesToSend))
+	if (self.nodesToSend ~= nil and #self.nodesToSend > 0) then
+		self.nodeSendTimer = 0
+	else
+		print('ClientNodeEditor:_onSendNodes: Client has 0 Nodes, Cancelling Send!')
+	end
+end
+
+function ClientNodeEditor:_onServerCreateNode(data)
+	g_NodeCollection:Create(data)
+	self.nodeReceiveProgress = self.nodeReceiveProgress + 1
+	self.debugEntries['nodeReceiveProgress'] = self.nodeReceiveProgress..'/'..(self.nodeReceiveExpected)
+end
+
+-- node payload has finished sending, setup events and calc indexes
+function ClientNodeEditor:_onInit()
+	g_NodeCollection:RegisterEvents()
+	g_NodeCollection:RecalculateIndexes()
+	g_NodeCollection:ProcessMetadata()
+
+	local waypoints = g_NodeCollection:Get()
+	self.player = PlayerManager:GetLocalPlayer()
+
+	local staleNodes = 0
+	print('ClientNodeEditor:_onInit -> Nodes received: '..tostring(#waypoints))
+	for i=1, #waypoints do
+
+		local waypoint = waypoints[i]
+		if (type(waypoint.Next) == 'string') then
+			staleNodes = staleNodes+1
+		end
+		if (type(waypoint.Previous) == 'string') then
+			staleNodes = staleNodes+1
+		end
+	end
+	print('ClientNodeEditor:_onInit -> Stale Nodes: '..tostring(staleNodes))
 end
 
 -- stolen't https://github.com/EmulatorNexus/VEXT-Samples/blob/80cddf7864a2cdcaccb9efa810e65fae1baeac78/no-headglitch-raycast/ext/Client/__init__.lua

@@ -3,9 +3,9 @@ class('FunBotShared');
 require('__shared/Version');
 require('__shared/WeaponList');
 require('__shared/EbxEditUtils');
+require('__shared/WeaponModification');
 
 Language					= require('__shared/Language');
-local WeaponModification	= require('__shared/WeaponModification');
 
 function FunBotShared:__init()
 	Events:Subscribe('Partition:Loaded', self, self.OnPartitionLoaded);
@@ -49,7 +49,7 @@ function FunBotShared:OnUpdateCheck()
 end
 
 function FunBotShared:OnPartitionLoaded(p_Partition)
-	WeaponModification:OnPartitionLoaded(p_Partition);
+	g_WeaponModification:OnPartitionLoaded(p_Partition);
 end
 
 -- Singleton.

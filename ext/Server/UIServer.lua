@@ -2,6 +2,7 @@ class 'FunBotUIServer';
 
 require('__shared/ArrayMap');
 require('__shared/Config');
+require('__shared/NodeCollection');
 require('SettingsManager');
 
 Language					= require('__shared/Language');
@@ -128,8 +129,12 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 	elseif request.action == 'trace_save' then
 		TraceManager:savePaths();
 
-	elseif request.action == 'trace_reload' then
-		TraceManager:loadPaths();
+	elseif request.action == 'trace_save' then
+		TraceManager:savePaths();
+
+	elseif request.action == 'trace_show' then
+		local expectedAmount = g_NodeCollection:Get()
+		NetEvents:SendTo('ClientNodeEditor:ReceiveNodes', player, (#expectedAmount))
 
 	-- Waypoints-Editor
 	elseif request.action == 'request_waypoints_editor' then

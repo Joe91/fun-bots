@@ -282,5 +282,8 @@ function WeaponModification:_MakeWritable(p_Instance)
 	return s_Instance;
 end
 
-
-return WeaponModification();
+-- Singleton.
+if g_WeaponModification == nil then
+	g_WeaponModification = WeaponModification();
+end
+return g_WeaponModification;
