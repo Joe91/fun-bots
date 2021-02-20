@@ -351,7 +351,7 @@ function NodeCollection:_processWaypointMetadata(waypoint)
 	-- -----
 
 	-- Check if indirect connections, create if missing
-	-- waypoint.Data.LinkMode = 0
+	-- waypoint.Data.LinkMode = 1
 	-- waypoint.Data.Links = { 
 		-- <waypoint_ID>, 
 		-- <waypoint_ID>, 
@@ -362,7 +362,7 @@ function NodeCollection:_processWaypointMetadata(waypoint)
 	if (waypoint.Data.LinkMode ~= nil and (waypoint.Data.Links == nil or (type(waypoint.Data.Links) == 'table' and #waypoint.Data.Links < 1))) then
 
 		-- indirect connections
-		if (waypoint.Data.LinkMode == 0) then
+		if (waypoint.Data.LinkMode == 1) then
 
 			local range = waypoint.Data.Range or 3 -- meters, box-like area
 			local chance = waypoint.Data.Chance or 25 -- 1 - 100
@@ -377,32 +377,16 @@ function NodeCollection:_processWaypointMetadata(waypoint)
 
 	-- if the Links table has entries, but they need converting
 	if (waypoint.Data.Links ~= nil) then
-		local fixedConnections = 0
 		for i=1, #waypoint.Data.Links do
-
-			print('waypoint['..waypoint.ID..'].Data.Links['..i..']: '..g_Utilities:dump(waypoint.Data.Links[i], true))
-
 			local linkedData = waypoint.Data.Links[i]
 			if type(linkedData) == 'table' then
 				local linkedWaypoint = self:Get(linkedData[2], linkedData[1])
-				print('waypoint.Data.Links['..i..']: '..g_Utilities:dump(linkedData, true))
-				print('linkedWaypoint['..i..']: '..g_Utilities:dump(linkedWaypoint, true, 1))
 				if (linkedWaypoint ~= nil) then
 					waypoint.Data.Links[i] = linkedWaypoint.ID
-					fixedConnections = fixedConnections + 1
 				end
 			end
 		end
-
-		if (fixedConnections ~= #waypoint.Data.Links) then
-			print('WARNING! Waypoint ['..waypoint.ID..'] has ['..(#waypoint.Data.Links - fixedConnections)..'] possible broken Linked Waypoints')
-			print('waypoint.Data.Links: '..g_Utilities:dump(waypoint.Data.Links, true))
-		end
 	end
-
-	-- if direct connections
-	-- waypoint.Data.LinkMode = 1
-	-- waypoint.Data.Links = { 'p_1', ... }
 
 	return waypoint
 end
