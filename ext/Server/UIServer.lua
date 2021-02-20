@@ -41,6 +41,7 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 
 	local request = json.decode(data);
 
+	-- Settings
 	if request.action == 'request_settings' then
 		if Config.language == nil then
 			Config.language = 'en_US';
@@ -130,6 +131,13 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 	elseif request.action == 'trace_reload' then
 		TraceManager:loadPaths();
 
+	-- Waypoints-Editor
+	elseif request.action == 'request_waypoints_editor' then
+		-- @ToDo Create/check Permissions to use the Wapoints-Editor?
+		NetEvents:SendTo('UI_Waypoints_Editor', player, true);	
+	elseif request.action == 'hide_waypoints_editor' then
+		-- @ToDo Create/check Permissions to use the Wapoints-Editor?
+		NetEvents:SendTo('UI_Waypoints_Editor', player, false);		
 	else
 		ChatManager:Yell(Language:I18N('%s is currently not implemented.', request.action), 2.5);
 	end
