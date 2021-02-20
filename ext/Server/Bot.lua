@@ -3,6 +3,7 @@ class('Bot');
 require('__shared/Config');
 require('Waypoint');
 require('Globals');
+require('PathSwitcher')
 
 local Utilities = require('__shared/Utilities')
 
@@ -826,10 +827,20 @@ function Bot:_updateMovement()
 					--check for reached target
 					if distanceFromTarget <= targetDistanceSpeed and heightDistance <= StaticConfig.targetHeightDistanceWayPoint then
 						if not useShootWayPoint then
-							if self._invertPathDirection then
-								self._currentWayPoint = activePointIndex - pointIncrement;
+							-- CHECK FOr PATH-SWITCHES
+							local swithcPath = false;
+							local newPathIndex = 0;
+							local newPointIndex = 0;
+							swithcPath, newPathIndex, newPointIndex = g_PathSwitcher:getNewPath(point.data, self._pathIndex, self._currentWayPoint);
+							if swithcPath then
+								self._pathIndex = newPathIndex;
+								self._currentWayPoint = newPointIndex;
 							else
-								self._currentWayPoint = activePointIndex + pointIncrement;
+								if self._invertPathDirection then
+									self._currentWayPoint = activePointIndex - pointIncrement;
+								else
+									self._currentWayPoint = activePointIndex + pointIncrement;
+								end
 							end
 
 						else
