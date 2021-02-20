@@ -156,7 +156,8 @@ function TraceManager:_onClientEndTraceResponse(player, isClearView)
 
 	print('Trace done');
 	NetEvents:SendToLocal('UI_Trace', player, 'false');
-	ChatManager:Yell(Language:I18N('Trace done'), 2.5);
+	NetEvents:SendToLocal('UI_Trace_Waypoints', player, 0);
+	ChatManager:Yell(Language:I18N('Trace %d done with %d Waypoints.', traceIndex, #g_Globals.wayPoints[traceIndex]), 2.5);
 
 	g_Globals.activeTraceIndexes = g_Globals.activeTraceIndexes + 1;
 
@@ -277,6 +278,8 @@ function TraceManager:_generateAndInsertPoint(player, traceIndex)
 
 			g_Globals.wayPoints[traceIndex][#g_Globals.wayPoints[traceIndex]].optValue = waitValue;
 		end
+	
+		NetEvents:SendToLocal('UI_Trace_Waypoints', player, #g_Globals.wayPoints[traceIndex]);
 	end
 end
 
