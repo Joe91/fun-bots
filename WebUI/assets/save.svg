@@ -1,0 +1,26 @@
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg"  width="32" height="26" viewBox="0 0 172 172">
+	<defs>
+		<filter id="glow" x="-50%" y="-50%" width="300%" height="300%">
+			<feGaussianBlur result="blurred" in="SourceGraphic" stdDeviation="10" />
+		</filter>
+
+		<filter id="shadow" x="-50%" y="-50%" width="300%" height="300%">
+			<feOffset result="offOut" in="SourceAlpha" dx="0" dy="0" />
+			<feColorMatrix
+			result="matrixOut"
+			in="offOut"
+			type="matrix"
+			values="1 0 0 0 0
+					0 1 0 0 0
+					0 0 1 0.05 0
+					0 0 0 0.2 0"
+					/>
+			<feGaussianBlur result="blurOut" in="matrixOut" stdDeviation="50" />
+		</filter>
+	</defs>
+	<g>
+		<path fill="rgb(118, 226, 255)" d="M26.875,26.875v118.25h118.25v-93.55859l-1.51172,-1.67969l-21.5,-21.5l-1.67969,-1.51172zM37.625,37.625h16.125v32.25h64.5v-29.89844l16.125,16.125v78.27344h-10.75v-48.375h-75.25v48.375h-10.75zM64.5,37.625h21.5v10.75h10.75v-10.75h10.75v21.5h-43zM59.125,96.75h53.75v37.625h-53.75z" />
+		<path fill="rgb(182,239,255)" filter="url(#glow)" d="M26.875,26.875v118.25h118.25v-93.55859l-1.51172,-1.67969l-21.5,-21.5l-1.67969,-1.51172zM37.625,37.625h16.125v32.25h64.5v-29.89844l16.125,16.125v78.27344h-10.75v-48.375h-75.25v48.375h-10.75zM64.5,37.625h21.5v10.75h10.75v-10.75h10.75v21.5h-43zM59.125,96.75h53.75v37.625h-53.75z" />
+		<path fill="rgb(182,239,255)" filter="url(#shadow)" d="M26.875,26.875v118.25h118.25v-93.55859l-1.51172,-1.67969l-21.5,-21.5l-1.67969,-1.51172zM37.625,37.625h16.125v32.25h64.5v-29.89844l16.125,16.125v78.27344h-10.75v-48.375h-75.25v48.375h-10.75zM64.5,37.625h21.5v10.75h10.75v-10.75h10.75v21.5h-43zM59.125,96.75h53.75v37.625h-53.75z" />
+	</g>
+</svg>

@@ -3,44 +3,45 @@ class 'UIViews';
 require('__shared/ArrayMap');
 
 function UIViews:__init()
-	self._webui = 0;
 	self._views = ArrayMap();
 
 	Events:Subscribe('Extension:Loaded', self, self._onExtensionLoaded);
 	Events:Subscribe('Extension:Unloading', self, self._onExtensionUnload);
-	Events:Subscribe('UI_Close', self, self._onUIClose);
+	--Events:Subscribe('UI_Close', self, self._onUIClose);
 end
 
 -- Events
 function UIViews:_onExtensionUnload()
-	self:close();
+	self:disable();
+	WebUI:Hide();
 end
 
 function UIViews:_onExtensionLoaded()
 	WebUI:Init();
+	WebUI:Show();
 	self:setLanguage(Config.language);
-	self:close();
+	self:disable();
 end
 
 function UIViews:_onUIClose(name)
 	-- @ToDo name of closing view
-	if self:isVisible() and self._views:isEmpty() then
-		self:close();
-	end
+	--if self:isVisible() and self._views:isEmpty() then
+	--	self:close();
+	--end
 end
 
 -- Open the complete WebUI
-function UIViews:open()
-	WebUI:Show();
-	self._webui = 1;
-end
+--function UIViews:open()
+	--WebUI:Show();
+	--self._webui = 1;
+--end
 
 -- Close the complete WebUI
-function UIViews:close()
-	WebUI:Hide();
-	self:disable();
-	self._webui = 0;
-end
+--function UIViews:close()
+--	WebUI:Hide();
+--	self:disable();
+--	self._webui = 0;
+--end
 
 -- Enable Mouse/Keyboard actions
 function UIViews:enable()
@@ -55,9 +56,9 @@ function UIViews:disable()
 end
 
 -- Check if WebUI is visible
-function UIViews:isVisible()
-	return self._webui ~= 0;
-end
+--function UIViews:isVisible()
+--	return self._webui ~= 0;
+--end
 
 function UIViews:focus()
 	self:enable();
@@ -89,7 +90,7 @@ function UIViews:show(name)
 
 	self._views:add(name);
 	WebUI:ExecuteJS('BotEditor.show(\'' .. name .. '\');');
-	self:_handleViewManagement();
+	--self:_handleViewManagement();
 end
 
 -- Hide an view
@@ -99,7 +100,7 @@ function UIViews:hide(name)
 	end
 
 	WebUI:ExecuteJS('BotEditor.hide(\'' .. name .. '\');');
-	self:_handleViewManagement();
+	--self:_handleViewManagement();
 end
 
 -- Send an error to the specified view
@@ -108,12 +109,12 @@ function UIViews:error(name, text)
 end
 
 -- Handle WebUI when view-stack is empty
-function UIViews:_handleViewManagement()
-	if self._views:isEmpty() then
-		self:close();
-	else
-		self:open();
-	end
-end
+--function UIViews:_handleViewManagement()
+	--if self._views:isEmpty() then
+	--	self:close();
+	--else
+	--	self:open();
+	--end
+--end
 
 return UIViews;

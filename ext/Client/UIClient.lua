@@ -8,27 +8,29 @@ Language = require('__shared/Language');
 
 function FunBotUIClient:__init()
 	self._views = UIViews();
-
+	
 	if Config.disableUserInterface ~= true then
 		Events:Subscribe('Client:UpdateInput', self, self._onUpdateInput);
+		
+		NetEvents:Subscribe('UI_Password_Protection', self, self._onUIPasswordProtection);
+		NetEvents:Subscribe('UI_Request_Password', self, self._onUIRequestPassword);
+		NetEvents:Subscribe('UI_Request_Password_Error', self, self._onUIRequestPasswordError);
+		Events:Subscribe('UI_Send_Password', self, self._onUISendPassword);
 		NetEvents:Subscribe('UI_Toggle', self, self._onUIToggle);
 		Events:Subscribe('UI_Toggle', self, self._onUIToggle);
 		NetEvents:Subscribe('BotEditor', self, self._onBotEditorEvent);
 		Events:Subscribe('BotEditor', self, self._onBotEditorEvent);
-		NetEvents:Subscribe('UI_Request_Password', self, self._onUIRequestPassword);
-		NetEvents:Subscribe('UI_Request_Password_Error', self, self._onUIRequestPasswordError);
-		NetEvents:Subscribe('UI_Password_Protection', self, self._onUIPasswordProtection);
 		NetEvents:Subscribe('UI_Show_Toolbar', self, self._onUIShowToolbar);
 		NetEvents:Subscribe('UI_Settings', self, self._onUISettings);
 		NetEvents:Subscribe('UI_CommonRose', self, self._onUICommonRose);
 		Events:Subscribe('UI_Settings', self, self._onUISettings);
+		Events:Subscribe('UI_Save_Settings', self, self._onUISaveSettings);
 		NetEvents:Subscribe('UI_Change_Language', self, self._onUIChangeLanguage);
 		Events:Subscribe('UI_Change_Language', self, self._onUIChangeLanguage);
-		Events:Subscribe('UI_Save_Settings', self, self._onUISaveSettings);
-		Events:Subscribe('UI_Send_Password', self, self._onUISendPassword);
-
-		-- Events from BotManager, TraceManager & Other
-
+		
+		NetEvents:Subscribe('UI_Waypoints_Editor', self, self._onUIWaypointsEditor);
+		Events:Subscribe('UI_Waypoints_Editor', self, self._onUIWaypointsEditor);
+		
 		self._views:setLanguage(Config.language);
 	end
 end
@@ -41,12 +43,14 @@ function FunBotUIClient:_onUIToggle()
 	
 	print('UIClient: UI_Toggle');
 
-	if self._views:isVisible() then
-		self._views:close();
-	else
-		self._views:open();
-		self._views:focus();
-	end
+	self._views:execute('BotEditor.Hide();');
+	self._views:disable();
+	--if self._views:isVisible() then
+	--	self._views:close();
+	--else
+	--	self._views:open();
+	--	self._views:focus();
+	--end
 end
 
 function FunBotUIClient:_onUICommonRose(data)
@@ -58,6 +62,29 @@ function FunBotUIClient:_onUICommonRose(data)
 	
 	self._views:execute('BotEditor.setCommonRose(\'' .. json.encode(data) .. '\');');
 	self._views:focus();
+end
+
+function FunBotUIClient:_onUIWaypointsEditor(state)
+	if Config.disableUserInterface == true then
+		return;
+	end
+	
+	if data == false then
+		print('UIClient: close UI_Waypoints_Editor');
+		self._views:hide('waypoint_toolbar');
+		self._views:show('toolbar');
+		Config.debugTracePaths = false;
+		-- @ToDo enable built-in CommonRose from BF3
+		--self._views:blur();
+		return;
+	end
+	
+	print('UIClient: open UI_Waypoints_Editor');
+	Config.debugTracePaths = true;
+	-- @ToDo disable built-in CommonRose from BF3
+	self._views:show('waypoint_toolbar');
+	self._views:hide('toolbar');
+	self._views:disable();
 end
 
 function FunBotUIClient:_onUISettings(data)
@@ -265,7 +292,6 @@ function FunBotUIClient:_onUISendPassword(data)
 	print('UIClient: UI_Send_Password (' .. data .. ')');
 	NetEvents:Send('UI_Request_Open', data);
 end
-
 
 function FunBotUIClient:_onUpdateInput(data)
 	if Config.disableUserInterface == true then
