@@ -135,7 +135,7 @@ function Bot:shootAt(player, ignoreYaw)
 
 	if dYaw < fovHalf or ignoreYaw then
 		if self._shoot then
-			if self._shootPlayer == nil or self._shootModeTimer > Config.botMinTimeShootAtPlayer or self.knifeMode then
+			if self._shootPlayer == nil or self._shootModeTimer > Config.botMinTimeShootAtPlayer or (self.knifeMode and self._shootModeTimer > (Config.botMinTimeShootAtPlayer/2)) then
 				self._shootModeTimer	= 0;
 				self._shootPlayer		= player;
 				self._lastShootPlayer 	= player;
