@@ -41,6 +41,7 @@ function TraceManager:onUnload()
 		g_Globals.wayPoints[i] = {};
 	end
 
+	NetEvents:Send('UI_Trace', 'false');
 	g_Globals.activeTraceIndexes = 0;
 end
 
@@ -109,6 +110,8 @@ function TraceManager:startTrace(player, index)
 	self._traceStatePlayer[player.name]	= 1; --trace started
 	self:_generateAndInsertPoint(player, index); --create first point, to block this trace
 	print('Trace ' .. index .. ' started');
+	NetEvents:SendToLocal('UI_Trace', player, 'true');
+	NetEvents:SendToLocal('UI_Trace_Index', player, index);
 	ChatManager:Yell(Language:I18N('Trace %d started', index), 2.5);
 end
 
@@ -130,6 +133,8 @@ function TraceManager:endTrace(player)
 	end
 
 	-- find out if trace is a roundway or not
+	NetEvents:SendToLocal('UI_Trace', player, 'false');
+	NetEvents:SendToLocal('UI_Trace_Index', player, 0);
 	NetEvents:SendToLocal('ClientEndTraceRequest', player, g_Globals.wayPoints[traceIndex][1].trans, g_Globals.wayPoints[traceIndex][#g_Globals.wayPoints[traceIndex]].trans);
 	-- continue with respone
 end
@@ -150,6 +155,7 @@ function TraceManager:_onClientEndTraceResponse(player, isClearView)
 	end
 
 	print('Trace done');
+	NetEvents:SendToLocal('UI_Trace', player, 'false');
 	ChatManager:Yell(Language:I18N('Trace done'), 2.5);
 
 	g_Globals.activeTraceIndexes = g_Globals.activeTraceIndexes + 1;

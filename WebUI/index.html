@@ -56,7 +56,7 @@
 			</ui-logo>
 			<ui-menu data-name="waypoints">
 				<ul class="main">
-					<li data-action="trace_toggle"><a data-key="F5"><i data-name="start"></i> <span data-lang="Start Trace">Start</span></a></li>
+					<li data-action="trace_start"><a data-key="F5"><i data-name="start"></i> <span data-lang="Start">Start</span></a></li>
 					<li data-action="trace_save"><a data-key="F9"><i data-name="save"></i> <span data-lang="Save">Save</span></a></li>
 					<li data-action="trace_reload"><a data-key="F11"><i data-name="reload"></i> <span data-lang="Reload">Reload</span></a></li>
 					<li data-action="trace_show"><a><i data-name="list"></i> <span data-lang="List">List</span></a></li>
@@ -87,7 +87,7 @@
 					<label data-lang="Current Trace Index">Current Trace Index</label>
 					<ui-container>
 						<ui-arrow data-direction="left"></ui-arrow>
-						<input type="number" value="0" />
+						<input type="number" name="trace_index" value="0" />
 						<ui-arrow data-direction="right"></ui-arrow>
 					</ui-container>
 				</ui-entry>
@@ -101,7 +101,7 @@
 				</ui-entry>
 			</ui-box>
 			
-			<ui-box data-name="record" data-color="red">
+			<ui-box data-name="record" data-color="red" dataset-show="false">
 				Recording...
 			</ui-box>
 			
