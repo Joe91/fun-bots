@@ -91,11 +91,16 @@ ui-view[data-name="waypoint_toolbar"] ui-box[data-color="red"] {
 }
 
 ui-view[data-name="waypoint_toolbar"] ui-box[data-name="record"] {
+	display: none;
 	top: 170px;	
 	height: 40px;
 	padding: 10px;
 	padding-left: 40px;
 	line-height: 18px;
+}
+
+ui-view[data-name="waypoint_toolbar"] ui-box[data-name="record"][data-show="true"] {
+	display: block;
 }
 
 ui-view[data-name="waypoint_toolbar"] ui-box[data-name="record"]:before {

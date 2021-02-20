@@ -250,7 +250,7 @@ const BotEditor = (new function BotEditor() {
 
 				/* Trace */
 				case 'trace_start':
-					index = document.querySelector('[data-action="trace_start"] input[type="number"]');
+					index = document.querySelector('input[type="number"][name="trace_index"]');
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
 						action:	'trace_start',
 						value: index.value
@@ -262,7 +262,7 @@ const BotEditor = (new function BotEditor() {
 					}));
 				break;
 				case 'trace_clear':
-					index = document.querySelector('[data-action="trace_clear"] input[type="number"]');
+					index = document.querySelector('input[type="number"][name="trace_index"]');
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
 						action:	'trace_clear',
 						value: index.value
@@ -618,15 +618,33 @@ const BotEditor = (new function BotEditor() {
 		return string;
 	};
 
+	this.updateTraceIndex = function updateTraceIndex(index) {
+		document.querySelector('input[type="number"][name="trace_index"]').value = index;		
+	};
+	
 	this.toggleTraceRun = function toggleTraceRun(state) {
-		let menu	= document.querySelector('[data-lang="Start Trace"]');
-		let string	= this.I18N('Start Trace');
-
+		console.log('toggleTraceRun', state);
+		let element		= document.querySelector('[data-action="trace_start"], [data-action="trace_end"]');
+		let info		= document.querySelector('ui-box[data-name="record"]');
+		let a			= element.querySelector('a');
+		let icon		= a.querySelector('i');
+		let text		= a.querySelector('span');
+		
 		if(state) {
-			string = this.I18N('Stop Trace');
+			a.dataset.key			= 'F6';
+			icon.dataset.name		= 'stop';
+			text.dataset.lang		= 'Stop';
+			text.innerHTML			= this.I18N('Stop');
+			info.dataset.show		= true;
+			element.dataset.action	= 'trace_end';
+		} else {
+			a.dataset.key			= 'F5';
+			icon.dataset.name		= 'start';	
+			text.dataset.lang		= 'Start';
+			text.innerHTML			= this.I18N('Start');
+			info.dataset.show		= false;
+			element.dataset.action	= 'trace_start';
 		}
-
-		menu.innerHTML = string;
 	};
 
 	this.getView = function getView(name) {

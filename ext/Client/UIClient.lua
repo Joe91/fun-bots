@@ -30,6 +30,10 @@ function FunBotUIClient:__init()
 		
 		NetEvents:Subscribe('UI_Waypoints_Editor', self, self._onUIWaypointsEditor);
 		Events:Subscribe('UI_Waypoints_Editor', self, self._onUIWaypointsEditor);
+		NetEvents:Subscribe('UI_Trace', self, self._onUITrace);
+		Events:Subscribe('UI_Trace', self, self._onUITrace);
+		NetEvents:Subscribe('UI_Trace_Index', self, self._onUITraceIndex);
+		Events:Subscribe('UI_Trace_Index', self, self._onUITraceIndex);
 		
 		self._views:setLanguage(Config.language);
 	end
@@ -56,12 +60,12 @@ end
 function FunBotUIClient:_onUICommonRose(data)
 	if data == "false" then
 		self._views:execute('BotEditor.setCommonRose(false);');
-		self._views:blur();
+		--self._views:blur();
 		return;
 	end
 	
 	self._views:execute('BotEditor.setCommonRose(\'' .. json.encode(data) .. '\');');
-	self._views:focus();
+	--self._views:focus();
 end
 
 function FunBotUIClient:_onUIWaypointsEditor(state)
@@ -69,21 +73,39 @@ function FunBotUIClient:_onUIWaypointsEditor(state)
 		return;
 	end
 	
-	if data == false then
+	if state == false then
 		print('UIClient: close UI_Waypoints_Editor');
 		self._views:hide('waypoint_toolbar');
 		self._views:show('toolbar');
 		Config.debugTracePaths = false;
+		NetEvents:Send('UI_CommoRose_Toggle', false);
 		-- @ToDo enable built-in CommonRose from BF3
-		--self._views:blur();
 		return;
 	end
 	
 	print('UIClient: open UI_Waypoints_Editor');
 	Config.debugTracePaths = true;
 	-- @ToDo disable built-in CommonRose from BF3
+	NetEvents:Send('UI_CommoRose_Toggle', true);
 	self._views:show('waypoint_toolbar');
 	self._views:hide('toolbar');
+	self._views:disable();
+end
+
+function FunBotUIClient:_onUITraceIndex(index)
+	if Config.disableUserInterface == true then
+		return;
+	end
+	
+	self._views:execute('BotEditor.updateTraceIndex(' .. tostring(index) .. ');');
+end
+
+function FunBotUIClient:_onUITrace(state)
+	if Config.disableUserInterface == true then
+		return;
+	end
+	
+	self._views:execute('BotEditor.toggleTraceRun(' .. tostring(state) .. ');');
 	self._views:disable();
 end
 
@@ -299,8 +321,15 @@ function FunBotUIClient:_onUpdateInput(data)
 		return;
 	end
 	
+		
 	-- Show or Hide the Bot-Editor by requesting permissions
-	if InputManager:WentKeyDown(InputDeviceKeys.IDK_F12) then
+	if Config.debugTracePaths and InputManager:IsDown(InputConceptIdentifiers.ConceptCommMenu1) then
+		self._views:focus();
+		
+	elseif Config.debugTracePaths and InputManager:WentUp(InputConceptIdentifiers.ConceptCommMenu1) then
+		self._views:blur();
+	
+	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_F12) then
 		print('Client send: UI_Request_Open');
 
 		-- This request can use for UI-Toggle
