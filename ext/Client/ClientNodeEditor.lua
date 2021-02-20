@@ -37,6 +37,7 @@ function ClientNodeEditor:__init()
 		["Red"] = Vec4(1,0,0,1),
 		["Green"] = Vec4(0,1,0,1),
 		["Blue"] = Vec4(0,0,1,1),
+		["Purple"] = Vec4(0.5,0,1,1),
 		["Ray"] = {Node = Vec4(1,1,1,0.2), Line = {Vec4(1,1,1,1),Vec4(0,0,0,1)}},
 		["Orphan"] = {Node = Vec4(0,0,0,0.5), Line = Vec4(0,0,0,1)},
 		{Node = Vec4(1,0,0,0.25), Line = Vec4(1,0,0,1)},
@@ -250,6 +251,7 @@ end
 function ClientNodeEditor:_onInit()
 	g_NodeCollection:RegisterEvents()
 	g_NodeCollection:RecalculateIndexes()
+	g_NodeCollection:ProcessMetadata()
 
 	local waypoints = g_NodeCollection:Get()
 	self.player = PlayerManager:GetLocalPlayer()
@@ -1303,6 +1305,15 @@ function ClientNodeEditor:_onUIDrawHud()
 						else
 							-- draw fading line between nodes on same path
 							DebugRenderer:DrawLine(waypoint.Previous.Position, waypoint.Position, color.Line, color.Node)
+						end
+					end
+					if (waypoint.Data and waypoint.Data.LinkMode ~= nil and waypoint.Data.Links ~= nil) then
+						for i=1, #waypoint.Data.Links do
+							local linkedWaypoint = g_NodeCollection:Get(waypoint.Data.Links[i])
+							if (linkedWaypoint ~= nil) then
+								-- draw lines between linked nodes
+								DebugRenderer:DrawLine(linkedWaypoint.Position, waypoint.Position, self.colors.Purple, self.colors.Purple)
+							end
 						end
 					end
 				end

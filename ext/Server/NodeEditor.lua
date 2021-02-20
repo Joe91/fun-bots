@@ -133,6 +133,7 @@ function NodeEditor:_onInit(player, save)
 	end
 
 	g_NodeCollection:RecalculateIndexes()
+	g_NodeCollection:ProcessMetadata()
 
 	local staleNodes = 0
 	local nodesToCheck = g_NodeCollection:Get()

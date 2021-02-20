@@ -375,6 +375,31 @@ function NodeCollection:_processWaypointMetadata(waypoint)
 		end 
 	end
 
+	-- if the Links table has entries, but they need converting
+	if (waypoint.Data.Links ~= nil) then
+		local fixedConnections = 0
+		for i=1, #waypoint.Data.Links do
+
+			print('waypoint['..waypoint.ID..'].Data.Links['..i..']: '..g_Utilities:dump(waypoint.Data.Links[i], true))
+
+			local linkedData = waypoint.Data.Links[i]
+			if type(linkedData) == 'table' then
+				local linkedWaypoint = self:Get(linkedData[2], linkedData[1])
+				print('waypoint.Data.Links['..i..']: '..g_Utilities:dump(linkedData, true))
+				print('linkedWaypoint['..i..']: '..g_Utilities:dump(linkedWaypoint, true, 1))
+				if (linkedWaypoint ~= nil) then
+					waypoint.Data.Links[i] = linkedWaypoint.ID
+					fixedConnections = fixedConnections + 1
+				end
+			end
+		end
+
+		if (fixedConnections ~= #waypoint.Data.Links) then
+			print('WARNING! Waypoint ['..waypoint.ID..'] has ['..(#waypoint.Data.Links - fixedConnections)..'] possible broken Linked Waypoints')
+			print('waypoint.Data.Links: '..g_Utilities:dump(waypoint.Data.Links, true))
+		end
+	end
+
 	-- if direct connections
 	-- waypoint.Data.LinkMode = 1
 	-- waypoint.Data.Links = { 'p_1', ... }
@@ -443,16 +468,35 @@ function NodeCollection:Connect()
 		end
 	end
 
-	if (orphan == nil or referrence == nil) then
-		return false, 'Must select one orphan waypoint and one connected waypoint'
+	-- reconnecting orphaned node
+	if (orphan ~= nil and referrence ~= nil) then
+		self:Update(orphan, {
+			PathIndex = referrence.PathIndex
+		})
+
+		self:InsertAfter(referrence, orphan)
+		return true, 'Success'
+
+	-- connecting two waypoints with a special link node
+	else
+		local linksA = selection[1].Data.Links or {}
+		local linksB = selection[2].Data.Links or {}
+		local linkModeA = selection[1].Data.LinkMode or 0
+		local linkModeB = selection[2].Data.LinkMode or 0
+
+		table.insert(linksA, selection[2].ID)
+		table.insert(linksB, selection[1].ID)
+
+		self:Update(selection[1].Data, {
+			LinkMode = linkModeA,
+			Links = linksA
+		})
+		self:Update(selection[2].Data, {
+			LinkMode = linkModeB,
+			Links = linksB
+		})
+		return true, 'Success'
 	end
-
-	self:Update(orphan, {
-		PathIndex = referrence.PathIndex
-	})
-
-	self:InsertAfter(referrence, orphan)
-	return true
 end
 
 function NodeCollection:Get(waypointIndex, pathIndex)
@@ -635,7 +679,7 @@ function NodeCollection:MergeSelection()
 			return false, 'Waypoints must be on same path'
 		end
 
-		if (currentWaypoint.Next and currentWaypoint.Next.Index ~= selection[i].Index) then
+		if (currentWaypoint.Next and currentWaypoint.Next.PointIndex ~= selection[i].PointIndex) then
 			return false, 'Waypoints must be sequential'
 		end
 		currentWaypoint = selection[i]
@@ -672,7 +716,7 @@ function NodeCollection:SplitSelection()
 			return false, 'Waypoints must be on same path'
 		end
 
-		if (currentWaypoint.Next and currentWaypoint.Next.Index ~= selection[i].Index) then
+		if (currentWaypoint.Next and currentWaypoint.Next.PointIndex ~= selection[i].PointIndex) then
 			return false, 'Waypoints must be sequential'
 		end
 		currentWaypoint = selection[i]
@@ -690,7 +734,6 @@ function NodeCollection:SplitSelection()
 	
 	return true, 'Success'
 end
-
 
 
 -----------------------------
@@ -717,8 +760,8 @@ end
 
 function NodeCollection:Load(levelName, gameMode)
 
-	if g_Globals.isTdm then
-		gameMode = 'TeamDeathMatch0'
+	if g_Globals.isTdm or g_Globals.isGm or g_Globals.isScavenger then
+		gameMode = 'TeamDeathMatch0';
 	end
 	self.mapName = levelName .. '_' .. gameMode
 	print('NodeCollection:Load: '..self.mapName)
@@ -813,6 +856,18 @@ function NodeCollection:Save()
 				optValue = waypoint.OptValue,
 				data = waypoint.Data,
 			}
+
+			--convert linked node ids to {pathIndex,pointindex}
+			if (waypoint.Data and waypoint.Data.Links ~= nil and #waypoint.Data.Links > 0) then
+				local convertedLinks = {}
+				for i=1, #waypoint.Data.Links do
+					local linkedWaypoint = self:Get(waypoint.Data.Links[i])
+					if (linkedWaypoint ~= nil) then
+						table.insert(convertedLinks, {linkedWaypoint.PathIndex, linkedWaypoint.PointIndex})
+					end
+				end
+				rowData.data.Links = convertedLinks
+			end
 
 			if (changedWaypoints[waypoint.PathIndex] == nil) then
 				changedWaypoints[waypoint.PathIndex] = {}
