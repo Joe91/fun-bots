@@ -126,7 +126,8 @@ function ClientNodeEditor:RegisterEvents()
 
 	Console:Register('GetNodes', 'Resend all waypoints and lose all changes', self, self._onGetNodes)
 	Console:Register('Create', 'Create a new waypoint after the selected one', self, self._onCreateNode)
-	Console:Register('Connect', 'Connect an orphaned waypoint after the selected one', self, self._onConnectNode)
+	Console:Register('Connect', 'Link two waypoints', self, self._onConnectNode)
+	Console:Register('Disconnect', 'Unlink two waypoints', self, self._onDisconnectNode)
 	Console:Register('Remove', 'Remove selected waypoints', self, self._onRemoveNode)
 	Console:Register('Merge', 'Merge selected waypoints', self, self._onMergeNode)
 	Console:Register('Split', 'Split selected waypoints', self, self._onSplitNode)
@@ -463,15 +464,23 @@ function ClientNodeEditor:_onConnectNode()
 	return result
 end
 
+function ClientNodeEditor:_onDisconnectNode()
+	self.CommoRose.Active = false
+	local result, message = g_NodeCollection:Disconnect()
+	print(Language:I18N(message))
+	return result
+end
+
 function ClientNodeEditor:_onSetMetadata(args)
 	self.CommoRose.Active = false
-	print('[A] ClientNodeEditor:_onSetMetadata -> args: '..g_Utilities:dump(args, true))
 
 	local data = table.concat(args or {}, ' ')
-
-	print('[B] ClientNodeEditor:_onSetMetadata -> data: '..g_Utilities:dump(data, true))
+	print('ClientNodeEditor:_onSetMetadata -> data: '..g_Utilities:dump(data, true))
 
 	local result, message = g_NodeCollection:UpdateMetadata(data)
+	if (result ~= false) then
+		g_NodeCollection:ProcessMetadata(result)
+	end
 	print(Language:I18N(message))
 	return result
 end
@@ -945,6 +954,16 @@ function ClientNodeEditor:_onUpdateInput(player, delta)
 			end
 			return
 		end
+
+		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Equals) or InputManager:WentKeyDown(InputDeviceKeys.IDK_Add) then
+			self:_onConnectNode()
+			return
+		end
+
+		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Minus) or InputManager:WentKeyDown(InputDeviceKeys.IDK_Subtract) then
+			self:_onDisconnectNode()
+			return
+		end
 	end
 end
 
@@ -1189,13 +1208,15 @@ function ClientNodeEditor:_onUIDrawHud()
 		helpText = helpText..'| Move  |Select | Input |'.."\n"
 		helpText = helpText..'+-------+-------+-------+'.."\n"
 		helpText = helpText..'|   1   |   2   |   3   |'.."\n"
-		helpText = helpText..'|Remove | Load  |       |'.."\n"
+		helpText = helpText..'|Remove | Load  |Create |'.."\n"
 		helpText = helpText..'+-------+-------+-------+'.."\n"
 		helpText = helpText..'                         '.."\n"
 		helpText = helpText..'        F12 - Settings    '.."\n"
 		helpText = helpText..'     [Spot] - Quick Select'.."\n"
 		helpText = helpText..'[Backspace] - Clear Select'.."\n"
 		helpText = helpText..'   [Insert] - Spawn Bot   '.."\n"
+		helpText = helpText..' [Numpad +] - Link Node  '.."\n"
+		helpText = helpText..' [Numpad -] - Unlink Node'.."\n"
 
 	elseif (self.editMode == 'move') then
 
@@ -1304,7 +1325,7 @@ function ClientNodeEditor:_onUIDrawHud()
 							DebugRenderer:DrawLine(waypoint.Previous.Position, waypoint.Position, self.colors.White, self.colors.White)
 						else
 							-- draw fading line between nodes on same path
-							DebugRenderer:DrawLine(waypoint.Previous.Position, waypoint.Position, color.Line, color.Node)
+							DebugRenderer:DrawLine(waypoint.Previous.Position, waypoint.Position, color.Line, color.Line)
 						end
 					end
 					if (waypoint.Data and waypoint.Data.LinkMode ~= nil and waypoint.Data.Links ~= nil) then

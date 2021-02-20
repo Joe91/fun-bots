@@ -483,6 +483,11 @@ function NodeCollection:Connect()
 	end
 end
 
+function NodeCollection:Disconnect()
+	-- TODO handle disconnection
+	return false, 'Not Implemented Yet'
+end
+
 function NodeCollection:Get(waypointIndex, pathIndex)
 	if (waypointIndex ~= nil) then
 		if (pathIndex ~= nil) then
