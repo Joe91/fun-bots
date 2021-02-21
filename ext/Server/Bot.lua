@@ -58,6 +58,7 @@ function Bot:__init(player)
 	self._invertPathDirection = false;
 	self._obstacleRetryCounter = 0;
 	self._zombieSpeedValue = 0;
+	self._objective = "";
 
 	--shooting
 	self._shoot = false;
@@ -831,7 +832,7 @@ function Bot:_updateMovement()
 							local swithcPath = false;
 							local newPathIndex = 0;
 							local newPointIndex = 0;
-							swithcPath, newPathIndex, newPointIndex = g_PathSwitcher:getNewPath(point.data, self._pathIndex, self._currentWayPoint);
+							swithcPath, newPathIndex, newPointIndex = g_PathSwitcher:getNewPath(point.data, self._pathIndex, self._currentWayPoint, self._objective);
 							if swithcPath then
 								self._pathIndex = newPathIndex;
 								self._currentWayPoint = newPointIndex;
