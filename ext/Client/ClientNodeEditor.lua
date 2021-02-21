@@ -182,6 +182,8 @@ function ClientNodeEditor:RegisterEvents()
 	Console:Register('Enabled', 'Enable / Disable the waypoint editor', self, self._onSetEnabled)
 	Console:Register('CommoRoseEnabled', 'Enable / Disable the waypoint editor Commo Rose', self, self._onSetCommoRoseEnabled)
 	Console:Register('SetMetadata', '<string|Data> - Set Metadata for waypoint, Must be valid JSON string', self, self._onSetMetadata)
+	Console:Register('AddObjective', '<string|Objective> - Add an objective to a path', self, self._onAddObjective)
+	Console:Register('RemoveObjective', '<string|Objective> - Remove an objective from a path', self, self._onRemoveObjective)
 	Console:Register('ProcessMetadata', 'Process waypoint metadata starting with selected nodes or all nodes', self, self._onProcessMetadata)
 	Console:Register('RecalculateIndexes', 'Recalculate Indexes starting with selected nodes or all nodes', self, self._onRecalculateIndexes)
 	Console:Register('ShowRose', 'Show custom Commo Rose', self, self._onShowRose)
@@ -257,6 +259,8 @@ function ClientNodeEditor:DeregisterEvents()
 	Console:Deregister('Enabled')
 	Console:Deregister('CommoRoseEnabled')
 	Console:Deregister('SetMetadata')
+	Console:Deregister('AddObjective')
+	Console:Deregister('RemoveObjective')
 	Console:Deregister('ProcessMetadata')
 	Console:Deregister('RecalculateIndexes')
 	Console:Deregister('ShowRose')
@@ -676,6 +680,84 @@ function ClientNodeEditor:_onSetMetadata(args)
 	end
 	print(Language:I18N(message))
 	return result
+end
+
+function ClientNodeEditor:_onAddObjective(args)
+	self.CommoRose.Active = false
+
+	local data = table.concat(args or {}, ' ')
+	print('ClientNodeEditor:AddObjective -> data: '..g_Utilities:dump(data, true))
+
+	local selection = g_NodeCollection:GetSelected()
+	local donePaths = {}
+
+	if (#selection > 0) then
+		for i=1, #selection do
+
+			local waypoint = g_NodeCollection:GetFirst(selection[i].PathIndex)
+
+			if (not donePaths[waypoint.PathIndex]) then
+				donePaths[waypoint.PathIndex] = true
+
+				local objectives = waypoint.Data.Objectives or {}
+				local inTable = false
+
+				for i=1, #objectives do
+					if (objectives[i] == data) then
+						inTable = true
+						break
+					end
+				end
+
+				if (not inTable) then
+					table.insert(objectives, data)
+					waypoint.Data.Objectives = objectives
+					print(Language:I18N('Success')..' ['..waypoint.PathIndex..']')
+				else
+					print(Language:I18N('Path already has objective: ')..'['..waypoint.PathIndex..'] -> '..data)
+				end
+			end
+		end
+	else
+		print(Language:I18N('Must select at least one node'))
+		return false
+	end
+	return true
+end
+
+function ClientNodeEditor:_onRemoveObjective(args)
+	self.CommoRose.Active = false
+
+	local data = table.concat(args or {}, ' ')
+	print('ClientNodeEditor:RemoveObjective -> data: '..g_Utilities:dump(data, true))
+
+	local selection = g_NodeCollection:GetSelected()
+	local donePaths = {}
+	if (#selection > 0) then
+		for i=1, #selection do
+			local waypoint = g_NodeCollection:GetFirst(selection[i].PathIndex)
+
+			if (not donePaths[waypoint.PathIndex]) then
+				donePaths[waypoint.PathIndex] = true
+
+				local objectives = waypoint.Data.Objectives or {}
+				local newObjectives = {}
+
+				for i=1, #objectives do
+					if (objectives[i] ~= data) then
+						table.insert(newObjectives, objectives[i])
+					end
+				end
+
+				waypoint.Data.Objectives = newObjectives
+				print(Language:I18N('Success')..' ['..waypoint.PathIndex..']')
+			end
+		end
+		return true
+	else
+		print(Language:I18N('Must select at least one node'))
+		return false
+	end
 end
 
 function ClientNodeEditor:_onRecalculateIndexes(args)
