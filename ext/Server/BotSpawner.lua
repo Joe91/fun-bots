@@ -232,6 +232,7 @@ function BotSpawner:_onPlayerRespawn(player)
 end
 
 function BotSpawner:_onLevelDestroy()
+	BotManager:resetAllBots();
 	self._spawnSets = {}
 	self._updateActive = false;
 end
@@ -248,7 +249,8 @@ function BotSpawner:_onPlayerLeft(player)
 	--remove all references of player
 	if BotManager:getPlayerCount() == 1 then
 		print("no player left - kick all bots")
-		BotManager:destroyAllBots()
+		BotManager:killAll();
+		BotManager:destroyAllBots();
 	end
 end
 

@@ -459,6 +459,12 @@ function BotManager:killPlayerBots(player)
 	end
 end
 
+function BotManager:resetAllBots()
+	for _, bot in pairs(self._bots) do
+		bot:resetVars()
+	end
+end
+
 function BotManager:killAll()
 	for _, bot in pairs(self._bots) do
 		bot:resetVars()
@@ -583,7 +589,8 @@ end
 
 function BotManager:destroyAllBots()
 	for _, bot in pairs(self._bots) do
-		bot:destroy()
+		bot:resetVars();
+		bot:destroy();
 	end
 	self._bots = {}
 	self._botInputs = {}
