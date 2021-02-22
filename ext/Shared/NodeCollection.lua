@@ -3,10 +3,12 @@ class "NodeCollection"
 require('__shared/Utilities.lua')
 requireExists('Globals')
 
-function NodeCollection:__init()
+function NodeCollection:__init(disableServerEvents)
 	self:InitTables()
-	NetEvents:Subscribe('NodeCollection:Clear', self, self.Clear)
-	NetEvents:Subscribe('NodeCollection:Create', self, self.Create)
+	if (disableServerEvents == nil or not disableServerEvents) then
+		NetEvents:Subscribe('NodeCollection:Clear', self, self.Clear)
+		NetEvents:Subscribe('NodeCollection:Create', self, self.Create)
+	end
 end
 
 function NodeCollection:InitTables()

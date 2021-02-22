@@ -138,7 +138,8 @@ function ClientNodeEditor:RegisterEvents()
 	NetEvents:Subscribe('ClientNodeEditor:Create', self, self._onServerCreateNode)
 	NetEvents:Subscribe('ClientNodeEditor:Init', self, self._onInit)
 
-	-- destroy events, clean up memory
+	-- load/destroy events
+	Events:Subscribe('Level:Loaded', self, self._onLevelLoaded)
 	Events:Subscribe('Player:Deleted', self, self._onPlayerDeleted)
 	Events:Subscribe('Level:Destroy', self, self._onUnload)
 
@@ -284,7 +285,7 @@ function ClientNodeEditor:_onSetEnabled(args)
 		self.enabled = enabled
 		Config.debugTracePaths = enabled
 		if (self.enabled) then
-			self:_onUnload(args) -- clear local copy
+			self:_onUnload() -- clear local copy
 			self.nodeReceiveTimer = 0 -- enable the timer for receiving nodes
 		else
 			self:_onUnload()
@@ -798,6 +799,13 @@ end
 
 -- ##################################### Events
 -- ############################################
+
+function ClientNodeEditor:_onLevelLoaded(levelName, gameMode)
+	self.enabled = Config.debugTracePaths
+	if (self.enabled) then
+		self.nodeReceiveTimer = 0 -- enable the timer for receiving nodes
+	end
+end
 
 function ClientNodeEditor:_onPlayerDeleted(player)
 	if (self.player ~= nil and player ~= nil and self.player.name == player.name) then
