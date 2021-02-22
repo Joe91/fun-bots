@@ -20,6 +20,14 @@ function BotManager:__init()
 	NetEvents:Subscribe('BotShootAtBot', self, self._onBotShootAtBot)
 	Events:Subscribe('ServerDamagePlayer', self, self._onServerDamagePlayer) 	--only triggered on false damage
 	NetEvents:Subscribe('ClientDamagePlayer', self, self._onDamagePlayer)   	--only triggered on false damage
+	--Server:RoundOver 	Server:RoundReset
+	Events:Subscribe('Server:RoundOver', function()
+		print("round over")
+	end)
+	Events:Subscribe('Server:RoundReset', function()
+		print("round reset")
+	end)
+
 end
 
 function BotManager:getBotTeam()
@@ -56,10 +64,6 @@ function BotManager:configGlobas()
 	Globals.spawnMode		= Config.spawnMode;
 	Globals.yawPerFrame 	= self:calcYawPerFrame()
 	self:killAll();
-	if not self._damageHookInstalled then
-		damageHook = Hooks:Install('Soldier:Damage', 100, self, self._onSoldierDamage)
-		self._damageHookInstalled = true;
-	end
 	local maxPlayers = RCON:SendCommand('vars.maxPlayers');
 	maxPlayers = tonumber(maxPlayers[2]);
 	if maxPlayers ~= nil and maxPlayers > 0 then
@@ -67,6 +71,10 @@ function BotManager:configGlobas()
 		print("there are "..maxPlayers.." slots on this server")
 	else
 		Globals.maxPlayers = MAX_NUMBER_OF_BOTS; --only fallback
+	end
+	if not self._damageHookInstalled then
+		damageHook = Hooks:Install('Soldier:Damage', 100, self, self._onSoldierDamage)
+		self._damageHookInstalled = true;
 	end
 end
 
