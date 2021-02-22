@@ -1,22 +1,20 @@
 class('PathSwitcher');
 
---require('NodeEditor');
-
 function PathSwitcher:__init()
 	self.dummyData = 0;
 end
 
-function PathSwitcher:getNewPath(data, currentPath, currentPoint, objective)
-	if data ~= nil and data.Links ~= nil and #data.Links > 0 then
-		if data.LinkMode >= 0 then -- random PathSwitcher
+function PathSwitcher:getNewPath(point, objective)
+	if point.Data ~= nil and point.Data.Links ~= nil and #point.Data.Links > 0 then
+		if point.Data.LinkMode >= 0 then -- random PathSwitcher
 			if MathUtils:GetRandomInt(1, 100) > 0 then -- only swith every time :-)
-				local link = data.Links[MathUtils:GetRandomInt(1, #data.Links)];
+				local link = point.Data.Links[MathUtils:GetRandomInt(1, #point.Data.Links)];
 				print(link[2])
 				--local point = g_NodeCollection.waypointsByID[link[2]]
-				local point = g_NodeCollection.waypoints[link[2]]
-				if point~= nil then
+				local newPoint = g_NodeCollection.waypoints[link[2]]
+				if newPoint~= nil then
 					print("switch done")
-					return true, point.PathIndex, point.PointIndex;
+					return true, newPoint.PathIndex, newPoint.PointIndex;
 				else
 					print("point not available")
 				end

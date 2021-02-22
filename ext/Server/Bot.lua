@@ -1,7 +1,7 @@
 class('Bot');
 
 require('__shared/Config');
-require('Waypoint');
+require('__shared/NodeCollection')
 require('Globals');
 require('PathSwitcher')
 
@@ -64,7 +64,7 @@ function Bot:__init(player)
 	self._shoot = false;
 	self._shootPlayer = nil;
 	self._shootWayPoints = {};
-	self._knifeWayPoints = {};
+	self._knifeWayPositions = {};
 	self._lastTargetTrans = Vec3();
 	self._lastShootPlayer = nil;
 
@@ -142,9 +142,9 @@ function Bot:shootAt(player, ignoreYaw)
 				self._shootPlayer		= player;
 				self._lastShootPlayer 	= player;
 				self._lastTargetTrans 	= player.soldier.worldTransform.trans:Clone();
-				self._knifeWayPoints 	= {};
+				self._knifeWayPositions 	= {};
 				if self.knifeMode then
-					table.insert(self._knifeWayPoints, self._lastTargetTrans)
+					table.insert(self._knifeWayPositions, self._lastTargetTrans)
 				end
 			end
 		else
@@ -177,7 +177,7 @@ function Bot:resetVars()
 	self._aimUpdateTimer		= 0; --timer sync
 	self._targetPoint			= nil;
 	self._nextTargetPoint		= nil;
-	self._knifeWayPoints		= {};
+	self._knifeWayPositions		= {};
 	self._zombieSpeedValue 		= 0;
 	self._spawnDelayTimer		= 0;
 	self._meleeActive 			= false;
@@ -305,7 +305,7 @@ function Bot:resetSpawnVars()
 	self._targetPoint			= nil;
 	self._nextTargetPoint		= nil;
 	self._meleeActive 			= false;
-	self._knifeWayPoints		= {};
+	self._knifeWayPositions		= {};
 	self._zombieSpeedValue 		= 0;
 
 	self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 0);
@@ -399,25 +399,25 @@ function Bot:_updateYaw()
 		return
 	end
 	if self._targetPoint ~= nil and self._shootPlayer == nil and self.player.soldier ~= nil then
-		if self.player.soldier.worldTransform.trans:Distance(self._targetPoint.trans) < 0.2 then
+		if self.player.soldier.worldTransform.trans:Distance(self._targetPoint.Position) < 0.2 then
 			self._targetPoint = self._nextTargetPoint
 		end
-		local dy					= self._targetPoint.trans.z - self.player.soldier.worldTransform.trans.z;
-		local dx					= self._targetPoint.trans.x - self.player.soldier.worldTransform.trans.x;
+		local dy					= self._targetPoint.Position.z - self.player.soldier.worldTransform.trans.z;
+		local dx					= self._targetPoint.Position.x - self.player.soldier.worldTransform.trans.x;
 		local atanDzDx	= math.atan(dy, dx);
 		local yaw		= (atanDzDx > math.pi / 2) and (atanDzDx - math.pi / 2) or (atanDzDx + 3 * math.pi / 2);
 		self._targetYaw = yaw;
 	end
 	if self.knifeMode then
 		if self._shootPlayer ~= nil and self.player.soldier ~= nil then
-			if #self._knifeWayPoints > 0 then
-				local dy					= self._knifeWayPoints[1].z - self.player.soldier.worldTransform.trans.z;
-				local dx					= self._knifeWayPoints[1].x - self.player.soldier.worldTransform.trans.x;
+			if #self._knifeWayPositions > 0 then
+				local dy					= self._knifeWayPositions[1].z - self.player.soldier.worldTransform.trans.z;
+				local dx					= self._knifeWayPositions[1].x - self.player.soldier.worldTransform.trans.x;
 				local atanDzDx	= math.atan(dy, dx);
 				local yaw		= (atanDzDx > math.pi / 2) and (atanDzDx - math.pi / 2) or (atanDzDx + 3 * math.pi / 2);
 				self._targetYaw = yaw;
-				if self.player.soldier.worldTransform.trans:Distance(self._knifeWayPoints[1]) < 1.5 then
-					table.remove(self._knifeWayPoints, 1)
+				if self.player.soldier.worldTransform.trans:Distance(self._knifeWayPositions[1]) < 1.5 then
+					table.remove(self._knifeWayPositions, 1)
 				end
 			end
 		end
@@ -530,14 +530,17 @@ function Bot:_updateShooting()
 					if self._shootTraceTimer > StaticConfig.traceDeltaShooting then
 						--create a Trace to find way back
 						self._shootTraceTimer 	= 0;
-						local point				= WayPoint();
-						point.trans				= self.player.soldier.worldTransform.trans:Clone();
-						point.speedMode			= 4;
+						local point				= {
+							Position = self.player.soldier.worldTransform.trans:Clone(),
+							SpeedMode = 4,			-- 0 = wait, 1 = prone, 2 = crouch, 3 = walk, 4 run
+							ExtraMode = 0,
+							OptValue = 0,
+						};
 
 						table.insert(self._shootWayPoints, point);
 						if self.knifeMode then
 							local trans = self._shootPlayer.soldier.worldTransform.trans:Clone()
-							table.insert(self._knifeWayPoints, trans)
+							table.insert(self._knifeWayPositions, trans)
 						end
 					end
 					self._shootTraceTimer = self._shootTraceTimer + StaticConfig.botUpdateCycle;
@@ -604,19 +607,21 @@ function Bot:_getWayIndex(currentWayPoint)
 		activePointIndex = currentWayPoint;
 
 		-- direction handling
-		if activePointIndex > #g_Globals.wayPoints[self._pathIndex] then
-			if g_Globals.wayPoints[self._pathIndex][1].optValue == 0xFF then --inversion needed
-				activePointIndex			= #g_Globals.wayPoints[self._pathIndex];
+		local countOfPoints = #g_NodeCollection:Get(nil, self._pathIndex)
+		local firstPoint =  g_NodeCollection:GetFirst(self._pathIndex)
+		if activePointIndex > countOfPoints then
+			if firstPoint.OptValue == 0xFF then --inversion needed
+				activePointIndex			= countOfPoints;
 				self._invertPathDirection	= true;
 			else
 				activePointIndex			= 1;
 			end
 		elseif activePointIndex < 1 then
-			if g_Globals.wayPoints[self._pathIndex][1].optValue == 0xFF then --inversion needed
+			if firstPoint.OptValue == 0xFF then --inversion needed
 				activePointIndex			= 1;
 				self._invertPathDirection	= false;
 			else
-				activePointIndex			= #g_Globals.wayPoints[self._pathIndex];
+				activePointIndex			= countOfPoints;
 			end
 		end
 	end
@@ -667,7 +672,7 @@ function Bot:_updateMovement()
 			-- get next point
 			local activePointIndex = self:_getWayIndex(self._currentWayPoint)
 
-			if g_Globals.wayPoints[self._pathIndex][1] ~= nil then -- check for reached point
+			if g_NodeCollection:Get(1, self._pathIndex) ~= nil then -- check for valid point
 				local point				= nil;
 				local nextPoint			= nil;
 				local pointIncrement	= 1;
@@ -677,31 +682,31 @@ function Bot:_updateMovement()
 					point 				= self._shootWayPoints[#self._shootWayPoints];
 					nextPoint 			= self._shootWayPoints[#self._shootWayPoints - 1];
 					if nextPoint == nil then
-						nextPoint = g_Globals.wayPoints[self._pathIndex][activePointIndex];
+						nextPoint = g_NodeCollection:Get(activePointIndex, self._pathIndex);
 						if Config.debugTracePaths then
 							NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', self._pathIndex, activePointIndex, self.player.soldier.worldTransform.trans, (self._obstaceSequenceTimer > 0), "Blue")
 						end
 					end
 					useShootWayPoint	= true;
 				else
-					point = g_Globals.wayPoints[self._pathIndex][activePointIndex];
+					point = g_NodeCollection:Get(activePointIndex, self._pathIndex);
 					if not self._invertPathDirection then
-						nextPoint 		= g_Globals.wayPoints[self._pathIndex][self:_getWayIndex(self._currentWayPoint + 1)]
+						nextPoint 		= g_NodeCollection:Get(self:_getWayIndex(self._currentWayPoint + 1), self._pathIndex);
 						if Config.debugTracePaths then
 							NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', self._pathIndex, self:_getWayIndex(self._currentWayPoint + 1), self.player.soldier.worldTransform.trans, (self._obstaceSequenceTimer > 0), "Green")
 						end
 					else
-						nextPoint 		= g_Globals.wayPoints[self._pathIndex][self:_getWayIndex(self._currentWayPoint - 1)]
+						nextPoint 		= g_NodeCollection:Get(self:_getWayIndex(self._currentWayPoint - 1), self._pathIndex);
 						if Config.debugTracePaths then
 							NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', self._pathIndex, self:_getWayIndex(self._currentWayPoint - 1), self.player.soldier.worldTransform.trans, (self._obstaceSequenceTimer > 0), "Green")
 						end
 					end
 				end
 
-				if (point.speedMode) > 0 then -- movement
+				if (point.SpeedMode) > 0 then -- movement
 					self._wayWaitTimer			= 0;
 					self._wayWaitYawTimer		= 0;
-					self.activeSpeedValue		= point.speedMode; --speed
+					self.activeSpeedValue		= point.SpeedMode; --speed
 					if Config.zombieMode then
 						if self._zombieSpeedValue == 0 then
 							self._zombieSpeedValue = MathUtils:GetRandomInt(1,2);
@@ -711,14 +716,14 @@ function Bot:_updateMovement()
 					if Config.overWriteBotSpeedMode > 0 then
 						self.activeSpeedValue = Config.overWriteBotSpeedMode;
 					end
-					local dy					= point.trans.z - self.player.soldier.worldTransform.trans.z;
-					local dx					= point.trans.x - self.player.soldier.worldTransform.trans.x;
+					local dy					= point.Position.z - self.player.soldier.worldTransform.trans.z;
+					local dx					= point.Position.x - self.player.soldier.worldTransform.trans.x;
 					local distanceFromTarget	= math.sqrt(dx ^ 2 + dy ^ 2);
-					local heightDistance		= math.abs(point.trans.y - self.player.soldier.worldTransform.trans.y);
+					local heightDistance		= math.abs(point.Position.y - self.player.soldier.worldTransform.trans.y);
 
 
 					--detect obstacle and move over or around TODO: Move before normal jump
-					local currentWayPontDistance = self.player.soldier.worldTransform.trans:Distance(point.trans);
+					local currentWayPontDistance = self.player.soldier.worldTransform.trans:Distance(point.Position);
 					if currentWayPontDistance > self._lastWayDistance + 0.02 and self._obstaceSequenceTimer == 0 then
 						--TODO: skip one pooint?
 						distanceFromTarget			= 0;
@@ -793,14 +798,14 @@ function Bot:_updateMovement()
 
 					-- jump detection. Much more simple now, but works fine ;-)
 					if self._obstaceSequenceTimer == 0 then
-						if (point.trans.y - self.player.soldier.worldTransform.trans.y) > 0.3 and Config.jumpWhileMoving then
+						if (point.Position.y - self.player.soldier.worldTransform.trans.y) > 0.3 and Config.jumpWhileMoving then
 							--detect, if a jump was recorded or not
 							local timeForwardBackwardJumpDetection = 1.1; -- 1.5 s ahead and back
 							local jumpValid = false;
 							for i = 1, math.floor(timeForwardBackwardJumpDetection/Config.traceDelta) do
-								local pointBefore = g_Globals.wayPoints[self._pathIndex][activePointIndex - i];
-								local pointAfter = g_Globals.wayPoints[self._pathIndex][activePointIndex + i];
-								if (pointBefore ~= nil and pointBefore.extraMode == 1) or (pointAfter ~= nil and pointAfter.extraMode == 1) then
+								local pointBefore = g_NodeCollection:Get(activePointIndex - i, self._pathIndex);
+								local pointAfter = g_NodeCollection:Get(activePointIndex + i, self._pathIndex)
+								if (pointBefore ~= nil and pointBefore.ExtraMode == 1) or (pointAfter ~= nil and pointAfter.ExtraMode == 1) then
 									jumpValid = true;
 									break;
 								end
@@ -832,7 +837,7 @@ function Bot:_updateMovement()
 							local swithcPath = false;
 							local newPathIndex = 0;
 							local newPointIndex = 0;
-							swithcPath, newPathIndex, newPointIndex = g_PathSwitcher:getNewPath(point.data, self._pathIndex, self._currentWayPoint, self._objective);
+							swithcPath, newPathIndex, newPointIndex = g_PathSwitcher:getNewPath(point, self._objective);
 							if swithcPath then
 								self._pathIndex = newPathIndex;
 								self._currentWayPoint = newPointIndex;
@@ -884,7 +889,7 @@ function Bot:_updateMovement()
 						end
 					end
 
-					if self._wayWaitTimer > point.optValue then
+					if self._wayWaitTimer > point.OptValue then
 						self._wayWaitTimer		= 0;
 						if self._invertPathDirection then
 							self._currentWayPoint	= activePointIndex - 1;
