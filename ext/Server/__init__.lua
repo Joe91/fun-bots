@@ -87,7 +87,6 @@ function FunBotServer:_onRequestClientSettings(player)
 end
 
 function FunBotServer:_onLevelLoaded(levelName, gameMode)
-	NetEvents:BroadcastLocal('WriteClientSettings', Config, true);
 	WeaponModification:ModifyAllWeapons(Config.botAimWorsening, Config.botSniperAimWorsening);
 	WeaponList:onLevelLoaded();
 	print('level ' .. levelName .. ' loaded...');
