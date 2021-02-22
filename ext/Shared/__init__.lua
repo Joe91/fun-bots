@@ -3,12 +3,10 @@ class('FunBotShared');
 require('__shared/Version');
 require('__shared/WeaponList');
 require('__shared/EbxEditUtils');
-require('__shared/WeaponModification');
 
 Language					= require('__shared/Language');
 
 function FunBotShared:__init()
-	Events:Subscribe('Partition:Loaded', self, self.OnPartitionLoaded);
 	Events:Subscribe('Extension:Loaded', self, self.OnUpdateCheck)
 end
 
@@ -46,10 +44,6 @@ function FunBotShared:OnUpdateCheck()
 	end
 	
 	-- @ToDo adding new update-info on WebUI
-end
-
-function FunBotShared:OnPartitionLoaded(p_Partition)
-	g_WeaponModification:OnPartitionLoaded(p_Partition);
 end
 
 -- Singleton.
