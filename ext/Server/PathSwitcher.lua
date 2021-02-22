@@ -12,7 +12,8 @@ function PathSwitcher:getNewPath(data, currentPath, currentPoint, objective)
 			if MathUtils:GetRandomInt(1, 100) > 0 then -- only swith every time :-)
 				local link = data.Links[MathUtils:GetRandomInt(1, #data.Links)];
 				print(link[2])
-				local point = g_NodeCollection.waypointsByID[link[2]]
+				--local point = g_NodeCollection.waypointsByID[link[2]]
+				local point = g_NodeCollection.waypoints[link[2]]
 				if point~= nil then
 					print("switch done")
 					return true, point.PathIndex, point.PointIndex;
