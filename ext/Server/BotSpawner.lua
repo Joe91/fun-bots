@@ -302,7 +302,7 @@ function BotSpawner:_onRespawnBot(botname)
 
 	elseif spawnMode == 4 then	--fixed Way
 		local wayIndex 		= bot:getWayIndex();
-		local randIndex 	= MathUtils:GetRandomInt(1, #g_Globals.wayPoints[wayIndex]);
+		local randIndex 	= MathUtils:GetRandomInt(1, #g_NodeCollection:Get(nil, wayIndex));
 		self:_spawnSigleWayBot(nil, false, wayIndex, randIndex, bot)
 
 	elseif spawnMode == 5 then --random Way
@@ -398,11 +398,11 @@ function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, inde
 				if activeWayIndex == 0 then
 					return
 				end
-				indexOnPath = MathUtils:GetRandomInt(1, #g_Globals.wayPoints[activeWayIndex])
-				if g_Globals.wayPoints[activeWayIndex][1] == nil then
+				indexOnPath = MathUtils:GetRandomInt(1, #g_NodeCollection:Get(nil, activeWayIndex))
+				if g_NodeCollection:Get(1, activeWayIndex) == nil then
 					return
 				end
-				local spawnPoint = g_Globals.wayPoints[activeWayIndex][indexOnPath].trans
+				local spawnPoint = g_NodeCollection:Get(indexOnPath, activeWayIndex).Position
 
 				--check for nearby player
 				local playerNearby = false;
@@ -437,11 +437,11 @@ function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, inde
 			end
 		end
 
-		if g_Globals.wayPoints[activeWayIndex][1] == nil then
+		if g_NodeCollection:Get(1, activeWayIndex) == nil then
 			return
 		end
 		--find out direction, if path has a return point
-		if g_Globals.wayPoints[activeWayIndex][1].optValue == 0xFF then
+		if g_NodeCollection:Get(1, activeWayIndex).OptValue == 0xFF then
 			inverseDirection = (MathUtils:GetRandomInt(0,1) == 1);
 		end
 
@@ -449,7 +449,7 @@ function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, inde
 		if indexOnPath == nil or indexOnPath == 0 then
 			indexOnPath = 1;
 		end
-		transform.trans = g_Globals.wayPoints[activeWayIndex][indexOnPath].trans
+		transform.trans = g_NodeCollection:Get(indexOnPath, activeWayIndex).Position
 		
 		if isRespawn then
 			existingBot:setVarsWay(player, useRandomWay, activeWayIndex, indexOnPath, inverseDirection)
@@ -505,7 +505,7 @@ function BotSpawner:_getNewWayIndex()
 	local targetWaypoint = MathUtils:GetRandomInt(1, g_Globals.activeTraceIndexes)
 	local count = 0
 	for i = 1, MAX_TRACE_NUMBERS do
-		if g_Globals.wayPoints[i][1] ~= nil then
+		if g_NodeCollection:Get(1, i) ~= nil then
 			count = count + 1
 		end
 		if count == targetWaypoint then
