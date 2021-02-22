@@ -8,12 +8,15 @@ end
 function PathSwitcher:getNewPath(point, objective)
 	if point.Data ~= nil and point.Data.Links ~= nil and #point.Data.Links > 0 then
 		if point.Data.LinkMode >= 0 then -- random PathSwitcher
-			if MathUtils:GetRandomInt(1, 100) > 0 then -- only swith every time :-)
+
+			local chance = tonumber(point.Data.LinkChance) or 50
+
+			if MathUtils:GetRandomInt(0, 100) >= chance then -- only swith every time :-)
 				local link = point.Data.Links[MathUtils:GetRandomInt(1, #point.Data.Links)];
-				print(link)
+				print(link..' chosen with '..chance..'% chance')
 				--local point = g_NodeCollection.waypointsByID[link[2]]
 				local newPoint = g_NodeCollection:Get(link)
-				if newPoint~= nil then
+				if newPoint ~= nil then
 					print("switch done")
 					return true, newPoint.PathIndex, newPoint.PointIndex;
 				else

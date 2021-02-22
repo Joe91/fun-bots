@@ -818,7 +818,11 @@ function ClientNodeEditor:_onUnload(args)
 	self.nodeReceiveProgress = 0
 	self.nodeReceiveExpected = 0
 	if (args ~= nil) then
-		self.nodeReceiveExpected = args[1]
+		if (type(args) == 'table') then
+			self.nodeReceiveExpected = tonumber(args[1]) or 0
+		else
+			self.nodeReceiveExpected = tonumber(args) or 0
+		end
 	end
 	print('NodeCollection:Clear -> Expecting: '..g_Utilities:dump(args))
 	g_NodeCollection:Clear()
