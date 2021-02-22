@@ -106,6 +106,7 @@ function FunBotServer:_onLevelLoaded(levelName, gameMode)
 		Globals.isScavenger = false;
 	end
 
+	g_NodeEditor:onLevelLoaded(levelName, gameMode)
 	TraceManager:onLevelLoaded(levelName, gameMode);
 	BotSpawner:onLevelLoaded();
 end
