@@ -179,6 +179,7 @@ function Bot:resetVars()
 	self._targetPoint			= nil;
 	self._nextTargetPoint		= nil;
 	self._knifeWayPositions		= {};
+	self._shootWayPoints 		= {};
 	self._zombieSpeedValue 		= 0;
 	self._spawnDelayTimer		= 0;
 	self._meleeActive 			= false;
