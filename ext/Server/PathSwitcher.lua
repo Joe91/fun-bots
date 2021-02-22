@@ -7,7 +7,6 @@ end
 
 function PathSwitcher:getNewPath(point, objective)
 	if point.Data ~= nil and point.Data.Links ~= nil and #point.Data.Links > 0 then
-		print(point.Data)
 		if point.Data.LinkMode >= 0 then -- random PathSwitcher
 			if MathUtils:GetRandomInt(1, 100) > 0 then -- only swith every time :-)
 				local link = point.Data.Links[MathUtils:GetRandomInt(1, #point.Data.Links)];

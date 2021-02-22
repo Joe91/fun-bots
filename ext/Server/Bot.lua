@@ -59,6 +59,7 @@ function Bot:__init(player)
 	self._obstacleRetryCounter = 0;
 	self._zombieSpeedValue = 0;
 	self._objective = "";
+	self._onSwitch = false;
 
 	--shooting
 	self._shoot = false;
@@ -307,6 +308,7 @@ function Bot:resetSpawnVars()
 	self._meleeActive 			= false;
 	self._knifeWayPositions		= {};
 	self._zombieSpeedValue 		= 0;
+	self._onSwitch 				= false;
 
 	self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 0);
 	self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
@@ -838,10 +840,12 @@ function Bot:_updateMovement()
 							local newPathIndex = 0;
 							local newPointIndex = 0;
 							swithcPath, newPathIndex, newPointIndex = g_PathSwitcher:getNewPath(point, self._objective);
-							if swithcPath then
+							if swithcPath and not self._onSwitch then
 								self._pathIndex = newPathIndex;
 								self._currentWayPoint = newPointIndex;
+								self._onSwitch = true;
 							else
+								self._onSwitch = false;
 								if self._invertPathDirection then
 									self._currentWayPoint = activePointIndex - pointIncrement;
 								else
