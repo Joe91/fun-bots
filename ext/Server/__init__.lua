@@ -109,6 +109,7 @@ function FunBotServer:_onLevelLoaded(levelName, gameMode)
 	g_NodeEditor:onLevelLoaded(levelName, gameMode)
 	TraceManager:onLevelLoaded(levelName, gameMode);
 	BotSpawner:onLevelLoaded();
+	NetEvents:BroadcastLocal('WriteClientSettings', Config, true);
 end
 
 function FunBotServer:_onChat(player, recipientMask, message)
