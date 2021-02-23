@@ -4,22 +4,28 @@ require('Bot');
 
 local Globals 	= require('Globals');
 local Utilities = require('__shared/Utilities');
-local damageHook = nil;
 
 function BotManager:__init()
 	self._bots = {}
 	self._botInputs = {}
 	self._shooterBots = {}
+	self._activePlayers = {}
 	self._botToBotConnections = {}
 	self._botAttackBotTimer = 0;
+	self._initDone = false;
 
-	self._damageHookInstalled = false;
 	Events:Subscribe('UpdateManager:Update', self, self._onUpdate)
 	Events:Subscribe('Level:Destroy', self, self._onLevelDestroy)
 	NetEvents:Subscribe('BotShootAtPlayer', self, self._onShootAt)
 	NetEvents:Subscribe('BotShootAtBot', self, self._onBotShootAtBot)
 	Events:Subscribe('ServerDamagePlayer', self, self._onServerDamagePlayer) 	--only triggered on false damage
 	NetEvents:Subscribe('ClientDamagePlayer', self, self._onDamagePlayer)   	--only triggered on false damage
+	Hooks:Install('Soldier:Damage', 100, self, self._onSoldierDamage)
+
+end
+
+function BotManager:registerActivePlayer(player)
+	self._activePlayers[player.name] = true;
 end
 
 function BotManager:getBotTeam()
@@ -55,11 +61,7 @@ function BotManager:configGlobas()
 	Globals.attackWayBots 	= Config.attackWayBots;
 	Globals.spawnMode		= Config.spawnMode;
 	Globals.yawPerFrame 	= self:calcYawPerFrame()
-	self:killAll();
-	if not self._damageHookInstalled then
-		damageHook = Hooks:Install('Soldier:Damage', 100, self, self._onSoldierDamage)
-		self._damageHookInstalled = true;
-	end
+	--self:killAll();
 	local maxPlayers = RCON:SendCommand('vars.maxPlayers');
 	maxPlayers = tonumber(maxPlayers[2]);
 	if maxPlayers ~= nil and maxPlayers > 0 then
@@ -68,6 +70,7 @@ function BotManager:configGlobas()
 	else
 		Globals.maxPlayers = MAX_NUMBER_OF_BOTS; --only fallback
 	end
+	self._initDone = true;
 end
 
 function BotManager:calcYawPerFrame()
@@ -174,7 +177,7 @@ function BotManager:_onUpdate(dt, pass)
 		bot:onUpdate(dt)
 	end
 
-	if Config.botsAttackBots then
+	if Config.botsAttackBots and self._initDone then
 		if self._botAttackBotTimer >= StaticConfig.botAttackBotCheckInterval then
 			self._botAttackBotTimer = 0;
 			self:_checkForBotBotAttack()
@@ -199,9 +202,11 @@ function BotManager:_checkForBotBotAttack()
 									for i = playerIndex, playerCount do
 										if self:GetBotByName(players[i].name) == nil then
 											-- check this bot view. Let one client do it
-											NetEvents:SendToLocal('CheckBotBotAttack', players[i], bot.player.soldier.worldTransform.trans, bot2.player.soldier.worldTransform.trans, bot.player.name, bot2.player.name)
-											self._botToBotConnections[bot.player.name..bot2.player.name] = true;
-											playerIndex = i + 1;
+											if self._activePlayers[players[i].name] then
+												NetEvents:SendUnreliableToLocal('CheckBotBotAttack', players[i], bot.player.soldier.worldTransform.trans, bot2.player.soldier.worldTransform.trans, bot.player.name, bot2.player.name)
+												self._botToBotConnections[bot.player.name..bot2.player.name] = true;
+												playerIndex = i + 1;
+											end
 											break
 										end
 									end
@@ -377,10 +382,9 @@ end
 
 function BotManager:_onLevelDestroy()
 	print("destroyLevel")
-	if damageHook ~= nil then
-		damageHook:Uninstall();
-	end
-	self._damageHookInstalled = false;
+	self:resetAllBots();
+	self._activePlayers = {};
+	self._initDone = false;
 	--self:killAll() -- this crashes when the server ended. do it on levelstart instead
 end
 
@@ -459,6 +463,12 @@ function BotManager:killPlayerBots(player)
 	end
 end
 
+function BotManager:resetAllBots()
+	for _, bot in pairs(self._bots) do
+		bot:resetVars()
+	end
+end
+
 function BotManager:killAll()
 	for _, bot in pairs(self._bots) do
 		bot:resetVars()
@@ -483,7 +493,7 @@ function BotManager:destroyAmount(number)
 	end
 end
 
-function BotManager:killAmount()
+function BotManager:killAmount(number)
 	local count = 0
 	for _, bot in pairs(self._bots) do
 		bot:resetVars()
@@ -583,7 +593,8 @@ end
 
 function BotManager:destroyAllBots()
 	for _, bot in pairs(self._bots) do
-		bot:destroy()
+		bot:resetVars();
+		bot:destroy();
 	end
 	self._bots = {}
 	self._botInputs = {}

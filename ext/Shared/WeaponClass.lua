@@ -50,7 +50,7 @@ function Weapon:learnStatsValues()
     self.damageFalloffStartDistance	= bulletData.damageFalloffStartDistance;
 	self.damageFalloffEndDistance 	= bulletData.damageFalloffStartDistance;
 	self.bulletSpeed 	= fireData.shot.initialSpeed.z
-	self.bulletDrop 	= -bulletData.gravity
+	self.bulletDrop 	= (bulletData.gravity or 0) * -1
 	self.fireCycle 		= aiData.minBurstCoolDownTime
 	self.pauseCycle 	= (aiData.maxBurstCoolDownTime + aiData.minBurstCoolDownTime) / 2
 	self.reload			= math.floor(fireData.ammo.magazineCapacity * 0.2)--fireData.fireLogic.reloadTime;

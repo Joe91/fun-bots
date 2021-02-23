@@ -23,7 +23,7 @@ Config = {
 	damageFactorKnife = 1.4,		-- origninal Damage from bots gets multiplied by this
 
 	--spawn
-	spawnMode = 'increment_with_players',	-- mode the bots spawn with
+	spawnMode = 'balanced_teams',	-- mode the bots spawn with
 	spawnInBothTeams = true,		-- Bots spawn in both teams
 	initNumberOfBots = 5,			-- bots for spawnmode
 	newBotsPerNewPlayer = 2,		-- number to increase Bots, when new players join
@@ -66,6 +66,7 @@ Config = {
 	drawWaypointIDs = true,			-- Draw waypoint IDs
 	textRange = 3,					-- Set how far away waypoint text is visible (meters)
 	debugSelectionRaytraces = false,-- Shows the trace line and search area from Commo Rose selection
+	traceDelta = 0.2,					-- update intervall of trace
 
 	-- advanced
 	distanceForDirectAttack = 5,	-- if that close, the bot can hear you
@@ -104,7 +105,6 @@ Config = {
 
 --don't change these values unless you know what you do
 StaticConfig = {
-	traceDelta = 0.2,					-- update intervall of trace
 	traceDeltaShooting = 0.4,			-- update intervall of trace back to path the bots left for shooting
 	raycastInterval = 0.05,				-- update intervall of client raycasts
 	botAttackBotCheckInterval = 0.1,	-- update intervall of client raycasts

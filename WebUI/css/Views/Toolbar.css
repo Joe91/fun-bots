@@ -27,24 +27,39 @@ ui-view[data-type="toolbar"] ui-logo sub {
 }
 
 /* Menu */
-ui-view[data-type="toolbar"] ui-menu {
+ui-view[data-type="toolbar"] ui-menu,
+ui-view[data-type="toolbar"] ui-submenu {
+	display: block;
+	position: relative;
 	flex: 1 auto;
 }
 
-ui-view[data-type="toolbar"] ui-menu ul {
+ui-view[data-type="toolbar"] ui-menu ul,
+ui-view[data-type="toolbar"] ui-submenu ul {
 	list-style: none;
 }
 
-ui-view[data-type="toolbar"] ui-menu ul.main {
+ui-view[data-type="toolbar"] ui-menu ul.main,
+ui-view[data-type="toolbar"] ui-submenu ul.main {
 	display: flex;
 	justify-content: flex-end;
 }
 
-ui-view[data-type="toolbar"] ui-menu ul.main > li {
+ui-view[data-type="toolbar"] ui-menu ul.main > li,
+ui-view[data-type="toolbar"] ui-submenu ul.main > li {
 	flex: 0 auto;
 }
 
-ui-view[data-type="toolbar"] ui-menu ul.main > li > a {
+ui-view[data-type="toolbar"] ui-menu li.header {
+	color: var(--color_text);
+	text-shadow: 0 0 6px var(--color_text_shadow);
+	text-align: center;
+	font-size: 12px;
+	background: rgba(255, 255, 255, 0.1);
+}
+
+ui-view[data-type="toolbar"] ui-menu ul.main > li > a,
+ui-view[data-type="toolbar"] ui-submenu.main > li > a {
 	display: block;
 	position: relative;
 	padding: 5px 15px;
@@ -60,7 +75,8 @@ ui-view[data-type="toolbar"] ui-menu ul.main > li > a {
 	background: linear-gradient(180deg, var(--color_button_default_from) 0%, var(--color_button_default_to) 100%);
 }
 
-ui-view[data-type="toolbar"] ui-menu ul.main > li > a[data-key]::before {
+ui-view[data-type="toolbar"] ui-menu ul.main > li > a[data-key]::before,
+ui-view[data-type="toolbar"] ui-submenu ul.main > li > a[data-key]::before {
 	content: attr(data-key);
 	color: var(--color_text);
 	text-shadow: 0 0 1px var(--color_text_shadow);
@@ -71,28 +87,33 @@ ui-view[data-type="toolbar"] ui-menu ul.main > li > a[data-key]::before {
 	right: 2px;
 }
 
-ui-view[data-type="toolbar"] ui-menu ul.main > li:hover > a {
+ui-view[data-type="toolbar"] ui-menu ul.main > li:hover > a,
+ui-view[data-type="toolbar"] ui-submenu ul.main > li:hover > a {
 	background: linear-gradient(180deg, var(--color_button_hover_from) 0%, var(--color_button_hover_to) 100%);
 }
 
-ui-view[data-type="toolbar"] ui-menu ul.main > li:active > a {
+ui-view[data-type="toolbar"] ui-menu ul.main > li:active > a,
+ui-view[data-type="toolbar"] ui-submenu ul.main > li:active > a {
 	color: var(--color_text_hover);
 	text-shadow: 0 0 6px var(--color_text_hover_shadow);
 	background: linear-gradient(180deg, var(--color_button_active_from) 0%, var(--color_button_active_to) 100%);
 }
 
-ui-view[data-type="toolbar"] ui-menu ul.main > li > ul {
+ui-view[data-type="toolbar"] ui-menu ul.main > li > ul,
+ui-view[data-type="toolbar"] ui-submenu ul.main > li > ul {
 	display: none;
 	margin: 0 0 0 1px;
 	background: rgba(0, 0, 0, 0.8);
 }
 
-ui-view[data-type="toolbar"] ui-menu ul.main > li:hover > ul {
+ui-view[data-type="toolbar"] ui-menu ul.main > li:hover > ul,
+ui-view[data-type="toolbar"] ui-submenu ul.main > li:hover > ul {
 	display: block;
 	position: absolute;
 }
 
-ui-view[data-type="toolbar"] ui-menu ul.main > li > ul > li > a {
+ui-view[data-type="toolbar"] ui-menu ul.main > li > ul > li > a,
+ui-view[data-type="toolbar"] ui-submenu ul.main > li > ul > li > a {
 	display: block;
 	padding: 5px 15px;
 	min-width: 100px;
@@ -101,7 +122,8 @@ ui-view[data-type="toolbar"] ui-menu ul.main > li > ul > li > a {
 	text-shadow: 0 0 6px var(--color_text_shadow);
 }
 
-ui-view[data-type="toolbar"] ui-menu ul.main > li > ul > li > a[data-key]::before {
+ui-view[data-type="toolbar"] ui-menu ul.main > li > ul > li > a[data-key]::before,
+ui-view[data-type="toolbar"] ui-submenu ul.main > li > ul > li > a[data-key]::before {
 	content: attr(data-key);
 	color: var(--color_text);
 	text-shadow: 0 0 1px var(--color_text_shadow);
@@ -112,12 +134,14 @@ ui-view[data-type="toolbar"] ui-menu ul.main > li > ul > li > a[data-key]::befor
 	right: 2px;
 }
 
-ui-view[data-type="toolbar"] ui-menu ul.main > li:hover > ul > li:hover > a {
+ui-view[data-type="toolbar"] ui-menu ul.main > li:hover > ul > li:hover > a,
+ui-view[data-type="toolbar"] ui-submenu ul.main > li:hover > ul > li:hover > a {
 	cursor: pointer;
 	background: linear-gradient(180deg, var(--color_button_hover_from) 0%, var(--color_button_hover_to) 100%);
 }
 
-ui-view[data-type="toolbar"] ui-menu ul.main li a input[type="number"] {
+ui-view[data-type="toolbar"] ui-menu ul.main li a input[type="number"],
+ui-view[data-type="toolbar"] ui-submenu ul.main li a input[type="number"] {
 	background: rgba(255, 255, 255, 0.1);
 	width: 30px;
 	text-align: center;

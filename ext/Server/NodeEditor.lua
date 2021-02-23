@@ -27,7 +27,6 @@ function NodeEditor:RegisterEvents()
 
 
 	NetEvents:Subscribe('UI_Request_Save_Settings', self, self._onUIRequestSaveSettings)
-	Events:Subscribe('Level:Loaded', self, self._onLevelLoaded)
 	Events:Subscribe('Level:Destroy', self, self._onLevelDestroy)
 	Events:Subscribe('Engine:Update', self, self._onEngineUpdate)
 	Events:Subscribe('Player:Destroyed', self, self._onPlayerDestroyed)
@@ -133,6 +132,7 @@ function NodeEditor:_onInit(player, save)
 	end
 
 	g_NodeCollection:RecalculateIndexes()
+	g_NodeCollection:ProcessMetadata()
 
 	local staleNodes = 0
 	local nodesToCheck = g_NodeCollection:Get()
@@ -252,7 +252,7 @@ function NodeEditor:_onEngineUpdate(deltaTime, simulationDeltaTime)
 end
 
 -- load waypoints from sql
-function NodeEditor:_onLevelLoaded(levelName, gameMode)
+function NodeEditor:onLevelLoaded(levelName, gameMode)
 	print('NodeEditor:_onLevelLoaded -> '.. levelName..', '..gameMode)
 	g_NodeCollection:Load(levelName, gameMode)
 

@@ -2,13 +2,14 @@ class 'FunBotUIServer';
 
 require('__shared/ArrayMap');
 require('__shared/Config');
+require('__shared/NodeCollection');
 require('SettingsManager');
 
 Language					= require('__shared/Language');
 local BotManager			= require('BotManager');
 local TraceManager			= require('TraceManager');
 local BotSpawner			= require('BotSpawner');
-local WeaponModification	= require('__shared/WeaponModification');
+local WeaponModification	= require('WeaponModification');
 local WeaponList			= require('__shared/WeaponList');
 local Globals 				= require('Globals');
 
@@ -41,6 +42,7 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 
 	local request = json.decode(data);
 
+	-- Settings
 	if request.action == 'request_settings' then
 		if Config.language == nil then
 			Config.language = 'en_US';
@@ -130,6 +132,17 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 	elseif request.action == 'trace_reload' then
 		TraceManager:loadPaths();
 
+	elseif request.action == 'trace_show' then
+		local expectedAmount = g_NodeCollection:Get()
+		NetEvents:SendTo('ClientNodeEditor:ReceiveNodes', player, (#expectedAmount))
+
+	-- Waypoints-Editor
+	elseif request.action == 'request_waypoints_editor' then
+		-- @ToDo Create/check Permissions to use the Wapoints-Editor?
+		NetEvents:SendTo('UI_Waypoints_Editor', player, true);	
+	elseif request.action == 'hide_waypoints_editor' then
+		-- @ToDo Create/check Permissions to use the Wapoints-Editor?
+		NetEvents:SendTo('UI_Waypoints_Editor', player, false);		
 	else
 		ChatManager:Yell(Language:I18N('%s is currently not implemented.', request.action), 2.5);
 	end
@@ -916,6 +929,15 @@ function FunBotUIServer:_writeSettings(player, request)
 			Globals.yawPerFrame = BotManager:calcYawPerFrame();
 		end
 	end
+
+	if request.traceDelta ~= nil then
+		local tempValue = tonumber(request.traceDelta);
+
+		if tempValue >= 0 and tempValue <= 10 then
+			SettingsManager:update('traceDelta', tempValue, temporary);
+		end
+	end
+
 
 	-- Other
 	if request.disableChatCommands ~= nil then

@@ -10,7 +10,7 @@ local Utilities 	= require('__shared/Utilities')
 function BotSpawner:__init()
 	self._botSpawnTimer = 0
 	self._firstSpawnInLevel = true;
-	self._firstSpawnDelay = 0;
+	self._firstSpawnDelay = 5;
 	self._updateActive = false;
 	self._spawnSets = {}
 
@@ -234,6 +234,8 @@ end
 function BotSpawner:_onLevelDestroy()
 	self._spawnSets = {}
 	self._updateActive = false;
+	self._firstSpawnInLevel = true;
+	self._firstSpawnDelay 	= 5;
 end
 
 function BotSpawner:_onPlayerJoining()
@@ -248,8 +250,8 @@ function BotSpawner:_onPlayerLeft(player)
 	--remove all references of player
 	if BotManager:getPlayerCount() == 1 then
 		print("no player left - kick all bots")
-		BotManager:destroyAllBots()
-		BotManager:_onLevelDestroy()
+		BotManager:killAll();
+		BotManager:destroyAllBots();
 	end
 end
 
@@ -277,7 +279,7 @@ function BotSpawner:_onUpdate(dt, pass)
 	end
 
 	if #self._spawnSets > 0 then
-		if self._botSpawnTimer > 0.1 then	--time to wait between spawn. 0.2 works
+		if self._botSpawnTimer > 0.2 then	--time to wait between spawn. 0.2 works
 			self._botSpawnTimer = 0
 			local spawnSet = table.remove(self._spawnSets);
 			self:_spawnSigleWayBot(spawnSet.playerVarOfBot, spawnSet.useRandomWay, spawnSet.activeWayIndex, spawnSet.indexOnPath, nil, spawnSet.team)
@@ -303,7 +305,7 @@ function BotSpawner:_onRespawnBot(botname)
 
 	elseif spawnMode == 4 then	--fixed Way
 		local wayIndex 		= bot:getWayIndex();
-		local randIndex 	= MathUtils:GetRandomInt(1, #g_Globals.wayPoints[wayIndex]);
+		local randIndex 	= MathUtils:GetRandomInt(1, #g_NodeCollection:Get(nil, wayIndex));
 		self:_spawnSigleWayBot(nil, false, wayIndex, randIndex, bot)
 
 	elseif spawnMode == 5 then --random Way
@@ -393,38 +395,38 @@ function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, inde
 			local validPointFound = false;
 			local targetDistance = Config.distanceToSpawnBots;
 			local retryCounter = Config.maxTrysToSpawnAtDistance;
-			while not validPointFound do
+			local maximumTrys = 100;
+			local trysDone = 0;
+			while not validPointFound and trysDone < maximumTrys do
 				-- get new point
 				activeWayIndex = self:_getNewWayIndex()
 				if activeWayIndex == 0 then
 					return
 				end
-				indexOnPath = MathUtils:GetRandomInt(1, #g_Globals.wayPoints[activeWayIndex])
-				if g_Globals.wayPoints[activeWayIndex][1] == nil then
+				indexOnPath = MathUtils:GetRandomInt(1, #g_NodeCollection:Get(nil, activeWayIndex))
+				if g_NodeCollection:Get(1, activeWayIndex) == nil then
 					return
 				end
-				local spawnPoint = g_Globals.wayPoints[activeWayIndex][indexOnPath].trans
+				local spawnPoint = g_NodeCollection:Get(indexOnPath, activeWayIndex).Position
 
 				--check for nearby player
 				local playerNearby = false;
 				local players = PlayerManager:GetPlayers()
 				for i = 1, PlayerManager:GetPlayerCount() do
 					local tempPlayer = players[i];
-					if not Utilities:isBot(tempPlayer.name) then
-						--real player
-						if tempPlayer.alive then
-							if teamOfBot == nil or teamOfBot ~= tempPlayer.teamId then
-								local distance = tempPlayer.soldier.worldTransform.trans:Distance(spawnPoint)
-								local heightDiff = math.abs(tempPlayer.soldier.worldTransform.trans.y - spawnPoint.y)
-								if distance < targetDistance and heightDiff < Config.heightDistanceToSpawn then
-									playerNearby = true;
-									break;
-								end
+					if tempPlayer.alive then
+						if teamOfBot == nil or teamOfBot ~= tempPlayer.teamId then
+							local distance = tempPlayer.soldier.worldTransform.trans:Distance(spawnPoint)
+							local heightDiff = math.abs(tempPlayer.soldier.worldTransform.trans.y - spawnPoint.y)
+							if distance < targetDistance and heightDiff < Config.heightDistanceToSpawn then
+								playerNearby = true;
+								break;
 							end
 						end
 					end
 				end
 				retryCounter = retryCounter - 1;
+				trysDone = trysDone + 1;
 				if retryCounter == 0 then
 					retryCounter = Config.maxTrysToSpawnAtDistance;
 					targetDistance = targetDistance - Config.distanceToSpawnReduction;
@@ -438,11 +440,11 @@ function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, inde
 			end
 		end
 
-		if g_Globals.wayPoints[activeWayIndex][1] == nil then
+		if g_NodeCollection:Get(1, activeWayIndex) == nil then
 			return
 		end
 		--find out direction, if path has a return point
-		if g_Globals.wayPoints[activeWayIndex][1].optValue == 0xFF then
+		if g_NodeCollection:Get(1, activeWayIndex).OptValue == 0xFF then
 			inverseDirection = (MathUtils:GetRandomInt(0,1) == 1);
 		end
 
@@ -450,7 +452,7 @@ function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, inde
 		if indexOnPath == nil or indexOnPath == 0 then
 			indexOnPath = 1;
 		end
-		transform.trans = g_Globals.wayPoints[activeWayIndex][indexOnPath].trans
+		transform.trans = g_NodeCollection:Get(indexOnPath, activeWayIndex).Position
 		
 		if isRespawn then
 			existingBot:setVarsWay(player, useRandomWay, activeWayIndex, indexOnPath, inverseDirection)
@@ -506,7 +508,7 @@ function BotSpawner:_getNewWayIndex()
 	local targetWaypoint = MathUtils:GetRandomInt(1, g_Globals.activeTraceIndexes)
 	local count = 0
 	for i = 1, MAX_TRACE_NUMBERS do
-		if g_Globals.wayPoints[i][1] ~= nil then
+		if g_NodeCollection:Get(1, i) ~= nil then
 			count = count + 1
 		end
 		if count == targetWaypoint then

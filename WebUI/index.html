@@ -2,6 +2,7 @@
 <html>
 	<head>
 		<meta charset="utf-8" />
+		<link rel="stylesheet" href="css/Icons.css" />
 		<link rel="stylesheet" href="css/Globals.css" />
 		<link rel="stylesheet" href="css/Forms.css" />
 		<link rel="stylesheet" href="css/View.css" />
@@ -10,7 +11,10 @@
 		<link rel="stylesheet" href="css/Views/Toolbar.css" />
 		<link rel="stylesheet" href="css/Views/SettingsTabs.css" />
 		<link rel="stylesheet" href="css/Views/Settings.css" />
+		<link rel="stylesheet" href="css/Views/WaypointEditor/WaypointToolbar.css" />
 		<link rel="stylesheet" href="css/Views/WaypointEditor/CommonRose.css" />
+		<link rel="stylesheet" href="css/Views/WaypointEditor/Key.css" />
+		<link rel="stylesheet" href="css/Views/WaypointEditor/Help.css" />
 	</head>
 	<body>
 		<!-- Warning: Password Protection -->
@@ -32,29 +36,128 @@
 							<li data-action="bot_spawn_default"><a data-key="F2"><input type="number" name="bots" value="1" /> <span data-lang="Spawn Enemy Bots">Spawn Enemy Bots</span></a></li>
 							<li data-action="bot_spawn_friend"><a ><input type="number" name="bots_friend" value="1" /> <span data-lang="Spawn Friend Bots">Spawn Friend Bots</span></a></li>
 							<li data-action="bot_kick_all"><a data-key="F3"><span data-lang="Kick All">Kick All</span></a></li>
-							<li data-action="bot_kick_team"><a ><input type="number" name="team" value="1" /><span data-lang="Kick Team">Kick Team</span></a></li>
+							<li data-action="bot_kick_team"><a><input type="number" name="team" value="1" /><span data-lang="Kick Team">Kick Team</span></a></li>
 							<li data-action="bot_kill_all"><a data-key="F4"><span data-lang="Kill All">Kill All</span></a></li>
-							<li data-action="bot_respawn"><a ><span data-lang="Toggle Respawn">Toggle Respawn</span></a></li>
-							<li data-action="bot_attack"><a ><span data-lang="Toggle Attack">Toggle Attack</span></a></li>
+							<li data-action="bot_respawn"><a><span data-lang="Toggle Respawn">Toggle Respawn</span></a></li>
+							<li data-action="bot_attack"><a><span data-lang="Toggle Attack">Toggle Attack</span></a></li>
 						</ul>
 					</li>
-					<li>
-						<a><span data-lang="Waypoints">Waypoints</span></a>
-						<ul>
-							<li data-action="trace_start"><a data-key="F5"><input type="number" name="index" value="0" /><span data-lang="Start Trace">Start Trace</span></a></li>
-							<li data-action="trace_end"><a data-key="F6"><span data-lang="End Trace">End Trace</span></a></li>
-							<li data-action="bot_spawn_path"><a><input type="number" name="index" value="0" />  <span data-lang="Spawn Bot on Way">Spawn Bot on Way</span></a></li>
-							<li data-action="trace_clear"><a data-key="F7"><input type="number" name="index" value="0" /><span data-lang="Clear Trace with index">Clear Trace</span></a></li>
-							<li data-action="trace_reset_all"><a data-key="F8"><span data-lang="Reset all Traces">Reset all Traces</span></a></li>
-							<li data-action="trace_save"><a data-key="F9"><span data-lang="Save">Save</span></a></li>
-							<li data-action="trace_reload"><a data-key="F11"><span data-lang="Reload">Reload</span></a></li>
-							<li data-action="trace_show"><a><span data-lang="List all Traces">List all Traces</span></a></li>
-						</ul>
-					</li>
+					<li data-action="request_waypoints_editor"><a><span data-lang="Waypoint-Editor">Waypoints-Editor</span></a></li>
 					<li data-action="request_settings"><a data-key="F10"><span data-lang="Settings">Settings</span></a></li>
 					<li data-action="exit"><a data-key="F12"><span data-lang="Exit">Exit</span></a></li>
 				</ul>
 			</ui-menu>
+		</ui-view>
+		
+		<!-- Waypoint-Editor -->
+		<ui-view data-name="waypoint_toolbar" data-type="toolbar">
+			<ui-logo>
+				Waypoint-Editor<sub>fun-bots</sub>
+			</ui-logo>
+			<ui-menu data-name="waypoints">
+				<ul class="main">
+					<li data-action="trace_start"><a data-key="F5"><i data-name="start"></i> <span data-lang="Start">Start</span></a></li>
+					<li data-action="trace_save"><a data-key="F9"><i data-name="save"></i> <span data-lang="Save">Save</span></a></li>
+					<li data-action="trace_reload"><a data-key="F11"><i data-name="reload"></i> <span data-lang="Reload">Reload</span></a></li>
+					<li data-action="trace_show"><a><i data-name="list"></i> <span data-lang="List">List</span></a></li>
+					<li>
+						<a><span data-lang="View">View</span></a>
+						<ul>
+							<li class="header">General</li>
+							<li data-action=""><a><ui-checkbox data-name="debug_text"></ui-checkbox> <span data-lang="Debug-Text">Debug-Text</span></a></li>
+							<li class="header">Waypoints</li>
+							<li data-action=""><a><ui-checkbox data-checked="true" data-name="dots"></ui-checkbox> <span data-lang="Dots">Dots</span></a></li>
+							<li data-action=""><a><ui-checkbox data-name="lines"></ui-checkbox> <span data-lang="Lines">Lines</span></a></li>
+							<li data-action=""><a><ui-checkbox data-name="labels"></ui-checkbox> <span data-lang="Labels">Labels</span></a></li>
+						</ul>
+					</li>
+					<li data-action="back"><a><span data-lang="Back">Back</span></a></li>
+				</ul>
+				<ui-menu>
+					<ul class="main">
+						<li data-action="bot_spawn_path"><a><i data-name="spawn_bot_way"></i> <span data-lang="Spawn Bot on Way">Spawn Bot on Way</span></a></li>
+						<li data-action="trace_clear"><a data-key="F7"><i data-name="clear"></i> <span data-lang="Clear Trace">Clear Trace</span></a></li>
+						<li data-action="trace_reset_all"><a data-key="F8"><i data-name="trash"></i> <span data-lang="Reset all Traces">Reset all Traces</span></a></li>
+					</ul>
+				</ui-menu>
+			</ui-menu>
+			
+			<ui-box data-name="info">
+				<ui-entry>
+					<label data-lang="Current Trace Index">Current Trace Index</label>
+					<ui-container>
+						<ui-arrow data-direction="left"></ui-arrow>
+						<input type="number" name="trace_index" value="0" />
+						<ui-arrow data-direction="right"></ui-arrow>
+					</ui-container>
+				</ui-entry>
+				<ui-entry>
+					<label data-lang="Waypoints">Waypoints</label>
+					<ui-value data-name="waypoints">0</ui-value>
+				</ui-entry>
+				<ui-entry>
+					<label data-lang="Total Distance">Total Distance</label>
+					<ui-value data-name="distance" data-prefix=" km">0</ui-value>
+				</ui-entry>
+			</ui-box>
+			
+			<ui-box data-name="record" data-color="red" dataset-show="false">
+				Recording...
+			</ui-box>
+			
+			<ui-help data-name="numpad">
+				<p data-lang="Node Operation Controls">Node Operation Controls</p>
+				<ui-entry data-grid="K7">
+					<ui-key data-name="7"></ui-key>
+					<span data-lang="Merge">Merge</span>
+				</ui-entry>
+				<ui-entry data-grid="K8">
+					<ui-key data-name="8"></ui-key>
+					<span data-lang="Send">Send</span>
+				</ui-entry>
+				<ui-entry data-grid="K9">
+					<ui-key data-name="9"></ui-key>
+					<span data-lang="Split">Split</span>
+				</ui-entry>
+				<ui-entry data-grid="K4">
+					<ui-key data-name="4"></ui-key>
+					<span data-lang="Move">Move</span>
+				</ui-entry>
+				<ui-entry data-grid="K5">
+					<ui-key data-name="5"></ui-key>
+					<span data-lang="Select">Select</span>
+				</ui-entry>
+				<ui-entry data-grid="K6">
+					<ui-key data-name="6"></ui-key>
+					<span data-lang="Input">Input</span>
+				</ui-entry>
+				<ui-entry data-grid="K1">
+					<ui-key data-name="1"></ui-key>
+					<span data-lang="Move">Move</span>
+				</ui-entry>
+				<ui-entry data-grid="K2">
+					<ui-key data-name="2"></ui-key>
+					<span data-lang="Load">Load</span>
+				</ui-entry>
+				<ui-entry data-grid="Other">
+					<ui-entry>
+						<ui-key data-name="F12"></ui-key>
+						<span data-lang="Settings">Settings</span>
+					</ui-entry>
+					<ui-entry>
+						<ui-key data-name="BS"></ui-key>
+						<span data-lang="Clear Select">Clear Select</span>
+					</ui-entry>
+					<ui-entry>
+						<ui-key data-name="INS"></ui-key>
+						<span data-lang="Settings">Spawn Bot</span>
+					</ui-entry>
+				</ui-entry>
+			</ui-help>
+			
+			<ui-help data-name="interaction">
+				<ui-key data-name="Q"></ui-key> <span data-lang="Press for Interaction with the Editor">Press for Interaction with the Editor</span>
+			</ui-help>
 		</ui-view>
 		
 		<!-- CommonRose -->

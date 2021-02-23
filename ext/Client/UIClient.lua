@@ -8,27 +8,35 @@ Language = require('__shared/Language');
 
 function FunBotUIClient:__init()
 	self._views = UIViews();
-
+	
 	if Config.disableUserInterface ~= true then
 		Events:Subscribe('Client:UpdateInput', self, self._onUpdateInput);
+		
+		NetEvents:Subscribe('UI_Password_Protection', self, self._onUIPasswordProtection);
+		NetEvents:Subscribe('UI_Request_Password', self, self._onUIRequestPassword);
+		NetEvents:Subscribe('UI_Request_Password_Error', self, self._onUIRequestPasswordError);
+		Events:Subscribe('UI_Send_Password', self, self._onUISendPassword);
 		NetEvents:Subscribe('UI_Toggle', self, self._onUIToggle);
 		Events:Subscribe('UI_Toggle', self, self._onUIToggle);
 		NetEvents:Subscribe('BotEditor', self, self._onBotEditorEvent);
 		Events:Subscribe('BotEditor', self, self._onBotEditorEvent);
-		NetEvents:Subscribe('UI_Request_Password', self, self._onUIRequestPassword);
-		NetEvents:Subscribe('UI_Request_Password_Error', self, self._onUIRequestPasswordError);
-		NetEvents:Subscribe('UI_Password_Protection', self, self._onUIPasswordProtection);
 		NetEvents:Subscribe('UI_Show_Toolbar', self, self._onUIShowToolbar);
 		NetEvents:Subscribe('UI_Settings', self, self._onUISettings);
 		NetEvents:Subscribe('UI_CommonRose', self, self._onUICommonRose);
 		Events:Subscribe('UI_Settings', self, self._onUISettings);
+		Events:Subscribe('UI_Save_Settings', self, self._onUISaveSettings);
 		NetEvents:Subscribe('UI_Change_Language', self, self._onUIChangeLanguage);
 		Events:Subscribe('UI_Change_Language', self, self._onUIChangeLanguage);
-		Events:Subscribe('UI_Save_Settings', self, self._onUISaveSettings);
-		Events:Subscribe('UI_Send_Password', self, self._onUISendPassword);
-
-		-- Events from BotManager, TraceManager & Other
-
+		
+		NetEvents:Subscribe('UI_Waypoints_Editor', self, self._onUIWaypointsEditor);
+		Events:Subscribe('UI_Waypoints_Editor', self, self._onUIWaypointsEditor);
+		NetEvents:Subscribe('UI_Trace', self, self._onUITrace);
+		Events:Subscribe('UI_Trace', self, self._onUITrace);
+		NetEvents:Subscribe('UI_Trace_Index', self, self._onUITraceIndex);
+		Events:Subscribe('UI_Trace_Index', self, self._onUITraceIndex);
+		NetEvents:Subscribe('UI_Trace_Waypoints', self, self._onUITraceWaypoints);
+		Events:Subscribe('UI_Trace_Waypoints', self, self._onUITraceWaypoints);
+		
 		self._views:setLanguage(Config.language);
 	end
 end
@@ -41,23 +49,74 @@ function FunBotUIClient:_onUIToggle()
 	
 	print('UIClient: UI_Toggle');
 
-	if self._views:isVisible() then
-		self._views:close();
-	else
-		self._views:open();
-		self._views:focus();
-	end
+	self._views:execute('BotEditor.Hide();');
+	self._views:disable();
+	--if self._views:isVisible() then
+	--	self._views:close();
+	--else
+	--	self._views:open();
+	--	self._views:focus();
+	--end
 end
 
 function FunBotUIClient:_onUICommonRose(data)
 	if data == "false" then
 		self._views:execute('BotEditor.setCommonRose(false);');
-		self._views:blur();
+		--self._views:blur();
 		return;
 	end
 	
 	self._views:execute('BotEditor.setCommonRose(\'' .. json.encode(data) .. '\');');
-	self._views:focus();
+	--self._views:focus();
+end
+
+function FunBotUIClient:_onUIWaypointsEditor(state)
+	if Config.disableUserInterface == true then
+		return;
+	end
+	
+	if state == false then
+		print('UIClient: close UI_Waypoints_Editor');
+		self._views:hide('waypoint_toolbar');
+		self._views:show('toolbar');
+		Config.debugTracePaths = false;
+		NetEvents:Send('UI_CommoRose_Toggle', false);
+		-- @ToDo enable built-in CommonRose from BF3
+		return;
+	end
+	
+	print('UIClient: open UI_Waypoints_Editor');
+	Config.debugTracePaths = true;
+	-- @ToDo disable built-in CommonRose from BF3
+	NetEvents:Send('UI_CommoRose_Toggle', true);
+	self._views:show('waypoint_toolbar');
+	self._views:hide('toolbar');
+	self._views:disable();
+end
+
+function FunBotUIClient:_onUITraceIndex(index)
+	if Config.disableUserInterface == true then
+		return;
+	end
+	
+	self._views:execute('BotEditor.updateTraceIndex(' .. tostring(index) .. ');');
+end
+
+function FunBotUIClient:_onUITraceWaypoints(index)
+	if Config.disableUserInterface == true then
+		return;
+	end
+	
+	self._views:execute('BotEditor.updateTraceWaypoints(' .. tostring(index) .. ');');
+end
+
+function FunBotUIClient:_onUITrace(state)
+	if Config.disableUserInterface == true then
+		return;
+	end
+	
+	self._views:execute('BotEditor.toggleTraceRun(' .. tostring(state) .. ');');
+	self._views:disable();
 end
 
 function FunBotUIClient:_onUISettings(data)
@@ -147,6 +206,7 @@ function FunBotUIClient:_onUISettings(data)
 	settings:add("TRACE", "Boolean", "drawWaypointIDs", Language:I18N("Draw Waypoint IDs"), data.drawWaypointIDs, true, Language:I18N("Draw waypoint IDs"));
 	settings:add("TRACE", "Integer", "textRange", Language:I18N("Text Range"), data.textRange, 3, Language:I18N("Set how far away waypoint text is visible (meters)"));
 	settings:add("TRACE", "Boolean", "debugSelectionRaytraces", Language:I18N("Debug Selection Raytraces"), data.debugSelectionRaytraces, false, Language:I18N("Shows the last trace line and search area from Commo Rose selection"));
+	settings:add("TRACE", "Float", "traceDelta", Language:I18N("Trace Delta time"), data.traceDelta, 0.2, Language:I18N("update intervall of trace"))
 
 	settings:add("EXPERT", "Float", "botFirstShotDelay", Language:I18N("First Shot Delay"), data.botFirstShotDelay, 0.2, Language:I18N("delay for first shot"));
 	settings:add("EXPERT", "Float", "botMinTimeShootAtPlayer", Language:I18N("Min Time Shoot"), data.botMinTimeShootAtPlayer, 1.0, Language:I18N("the minimum time a Bot shoots at one player"));
@@ -266,14 +326,20 @@ function FunBotUIClient:_onUISendPassword(data)
 	NetEvents:Send('UI_Request_Open', data);
 end
 
-
 function FunBotUIClient:_onUpdateInput(data)
 	if Config.disableUserInterface == true then
 		return;
 	end
 	
+		
 	-- Show or Hide the Bot-Editor by requesting permissions
-	if InputManager:WentKeyDown(InputDeviceKeys.IDK_F12) then
+	if Config.debugTracePaths and InputManager:IsDown(InputConceptIdentifiers.ConceptCommMenu1) then
+		self._views:focus();
+		
+	elseif Config.debugTracePaths and InputManager:WentUp(InputConceptIdentifiers.ConceptCommMenu1) then
+		self._views:blur();
+	
+	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_F12) then
 		print('Client send: UI_Request_Open');
 
 		-- This request can use for UI-Toggle

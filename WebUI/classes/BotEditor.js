@@ -1,7 +1,7 @@
 let Language = {};
 
 const BotEditor = (new function BotEditor() {
-	const DEBUG				= false;
+	const DEBUG				= true;
 	const VERSION			= '1.0.0-Beta';
 	let _language			= 'en_US';
 	
@@ -12,9 +12,91 @@ const BotEditor = (new function BotEditor() {
 		[].map.call(document.querySelectorAll('ui-view'), function(view) {
 			view.dataset.show = false;
 		}.bind(this));
-
+		
+		/* Coloring */
+		[].map.call(document.querySelectorAll('ui-box'), function(box) {
+			var prop	= window.getComputedStyle(box).getPropertyValue('background-image');
+			var re		= /url\((['"])?(.*?)\1\)/gi;
+			var images	= [];
+			var matches;
+			
+			while ((matches = re.exec(prop)) !== null) {
+				images.push(matches[2]);
+			}
+			
+			this.imagesHandler(images, function(results) {
+				let build = [];
+				
+				results.forEach(function(entry) {
+					build.push('url(' + entry + ')');
+				});
+				
+				box.style.backgroundImage = build.join(', ');
+			});
+		}.bind(this));
+		
 		this.bindMouseEvents();
 		this.bindKeyboardEvents();
+	};
+	
+	this.Hide = function Hide() {
+		this.hide('toolbar');
+	};
+	
+	this.imagesHandler = function imagesHandler(images, callback) {
+		let finished = 0;
+		
+		images.forEach(function(image, index) {
+			this.imageHandler(image, function(result) {
+				images[index] = result;
+				++finished;
+			});
+		}.bind(this));
+		
+		let _watcher = setInterval(function() {
+			if(images.length == finished) {
+				clearInterval(_watcher);
+				callback(images);
+				return;
+			}	
+		});
+	};
+	
+	this.buildColor = function buildColor(string) {
+		// RGB
+		if(string.indexOf(',') > -1) {
+			let parts = string.split(',');
+			
+			if(parts.length == 3) {
+				return 'rgb(' + parts.join(', ') + ')';
+				
+			// With Alpha-Transparency
+			} else if(parts.length == 4) {
+				return 'rgba(' + parts.join(', ') + ')';
+			}
+		
+		// HEX
+		} else {
+			return '#' + string;
+		}
+	};
+	
+	this.imageHandler = function imageHandler(url, callback) {
+		let image			= new Image();
+		image.src			= url;
+		image.crossOrigin	= 'Anonymous';
+		image.onload		= function onLoad() {
+			let color			= url.split('#')[1];
+			let canvas			= document.createElement('canvas');
+			var context			= canvas.getContext('2d');
+			canvas.width		= image.width;
+			canvas.height		= image.height;
+			context.fillStyle	= this.buildColor(color);
+			context.fillRect(0, 0, canvas.width, canvas.height);
+			context.globalCompositeOperation = 'destination-in';
+			context.drawImage(image, 0, 0);
+			callback(canvas.toDataURL('image/png'));
+		}.bind(this);
 	};
 
 	this.bindMouseEvents = function bindMouseEvents() {
@@ -168,7 +250,7 @@ const BotEditor = (new function BotEditor() {
 
 				/* Trace */
 				case 'trace_start':
-					index = document.querySelector('[data-action="trace_start"] input[type="number"]');
+					index = document.querySelector('input[type="number"][name="trace_index"]');
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
 						action:	'trace_start',
 						value: index.value
@@ -180,7 +262,7 @@ const BotEditor = (new function BotEditor() {
 					}));
 				break;
 				case 'trace_clear':
-					index = document.querySelector('[data-action="trace_clear"] input[type="number"]');
+					index = document.querySelector('input[type="number"][name="trace_index"]');
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
 						action:	'trace_clear',
 						value: index.value
@@ -204,6 +286,18 @@ const BotEditor = (new function BotEditor() {
 				case 'trace_show':
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
 						action:	'trace_show'
+					}));
+				break;
+				
+				/* Waypoint-Editor */
+				case 'request_waypoints_editor':
+					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
+						action:	'request_waypoints_editor'
+					}));
+				break;
+				case 'back':
+					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
+						action:	'hide_waypoints_editor'
 					}));
 				break;
 
@@ -524,15 +618,38 @@ const BotEditor = (new function BotEditor() {
 		return string;
 	};
 
+	this.updateTraceIndex = function updateTraceIndex(index) {
+		document.querySelector('input[type="number"][name="trace_index"]').value = index;		
+	};
+
+	this.updateTraceWaypoints = function updateTraceWaypoints(count) {
+		console.log('updateTraceWaypoints', count);
+		document.querySelector('ui-value[data-name="waypoints"]').innerHTML = count;		
+	};
+	
 	this.toggleTraceRun = function toggleTraceRun(state) {
-		let menu	= document.querySelector('[data-lang="Start Trace"]');
-		let string	= this.I18N('Start Trace');
-
+		console.log('toggleTraceRun', state);
+		let element		= document.querySelector('[data-action="trace_start"], [data-action="trace_end"]');
+		let info		= document.querySelector('ui-box[data-name="record"]');
+		let a			= element.querySelector('a');
+		let icon		= a.querySelector('i');
+		let text		= a.querySelector('span');
+		
 		if(state) {
-			string = this.I18N('Stop Trace');
+			a.dataset.key			= 'F6';
+			icon.dataset.name		= 'stop';
+			text.dataset.lang		= 'Stop';
+			text.innerHTML			= this.I18N('Stop');
+			info.dataset.show		= true;
+			element.dataset.action	= 'trace_end';
+		} else {
+			a.dataset.key			= 'F5';
+			icon.dataset.name		= 'start';	
+			text.dataset.lang		= 'Start';
+			text.innerHTML			= this.I18N('Start');
+			info.dataset.show		= false;
+			element.dataset.action	= 'trace_start';
 		}
-
-		menu.innerHTML = string;
 	};
 
 	this.getView = function getView(name) {
