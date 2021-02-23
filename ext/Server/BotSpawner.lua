@@ -278,7 +278,7 @@ function BotSpawner:_onUpdate(dt, pass)
 	end
 
 	if #self._spawnSets > 0 then
-		if self._botSpawnTimer > 0.1 then	--time to wait between spawn. 0.2 works
+		if self._botSpawnTimer > 0.2 then	--time to wait between spawn. 0.2 works
 			self._botSpawnTimer = 0
 			local spawnSet = table.remove(self._spawnSets);
 			self:_spawnSigleWayBot(spawnSet.playerVarOfBot, spawnSet.useRandomWay, spawnSet.activeWayIndex, spawnSet.indexOnPath, nil, spawnSet.team)
@@ -413,16 +413,13 @@ function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, inde
 				local players = PlayerManager:GetPlayers()
 				for i = 1, PlayerManager:GetPlayerCount() do
 					local tempPlayer = players[i];
-					if not Utilities:isBot(tempPlayer.name) then
-						--real player
-						if tempPlayer.alive then
-							if teamOfBot == nil or teamOfBot ~= tempPlayer.teamId then
-								local distance = tempPlayer.soldier.worldTransform.trans:Distance(spawnPoint)
-								local heightDiff = math.abs(tempPlayer.soldier.worldTransform.trans.y - spawnPoint.y)
-								if distance < targetDistance and heightDiff < Config.heightDistanceToSpawn then
-									playerNearby = true;
-									break;
-								end
+					if tempPlayer.alive then
+						if teamOfBot == nil or teamOfBot ~= tempPlayer.teamId then
+							local distance = tempPlayer.soldier.worldTransform.trans:Distance(spawnPoint)
+							local heightDiff = math.abs(tempPlayer.soldier.worldTransform.trans.y - spawnPoint.y)
+							if distance < targetDistance and heightDiff < Config.heightDistanceToSpawn then
+								playerNearby = true;
+								break;
 							end
 						end
 					end
