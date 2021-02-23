@@ -232,7 +232,6 @@ function BotSpawner:_onPlayerRespawn(player)
 end
 
 function BotSpawner:_onLevelDestroy()
-	BotManager:resetAllBots();
 	self._spawnSets = {}
 	self._updateActive = false;
 	self._firstSpawnInLevel = true;
