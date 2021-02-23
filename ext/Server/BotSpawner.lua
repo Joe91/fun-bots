@@ -626,8 +626,8 @@ function BotSpawner:getKitApperanceCustomization(team, kit, color, primary, pist
 		gadget02.weapon = SoldierWeaponUnlockAsset(ResourceManager:SearchForDataContainer('Weapons/Gadgets/Claymore/U_Claymore'))
 
 	else	--"Recon"
-		gadget01.weapon = SoldierWeaponUnlockAsset(ResourceManager:SearchForDataContainer('Weapons/Gadgets/RadioBeacon/U_RadioBeacon'))
-		--no second gadget
+		gadget01.weapon = SoldierWeaponUnlockAsset(ResourceManager:SearchForDataContainer('Weapons/Gadgets/T-UGS/U_UGS'))
+		gadget02.weapon = SoldierWeaponUnlockAsset(ResourceManager:SearchForDataContainer('Weapons/Gadgets/RadioBeacon/U_RadioBeacon'))
 	end
 
 	if Config.zombieMode then
