@@ -903,8 +903,8 @@ function ClientNodeEditor:_onUIPushScreen(hook, screen, priority, parentGraph, s
 			-- block it
 			hook:Return() 
 		end
-		hook:Pass(screen, priority, parentGraph, stateNodeGuid)
 	end
+	hook:Pass(screen, priority, parentGraph, stateNodeGuid)
 end
 
 -- ############################## Update Events

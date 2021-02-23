@@ -787,6 +787,10 @@ function Bot:_updateMovement()
 							distanceFromTarget			= 0;
 							heightDistance				= 0;
 							pointIncrement				= MathUtils:GetRandomInt(-3,3); -- go 5 points further
+							-- experimental
+							if pointIncrement == 0 then -- we can't have this
+								pointIncrement = -2 --go backwards and try again
+							end
 						end
 					else
 						self._meleeActive = false;
