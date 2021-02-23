@@ -230,10 +230,10 @@ function ClientNodeEditor:DeregisterEvents()
 	Events:Unsubscribe('Engine:Update')
 	Events:Unsubscribe('UI:DrawHud')
 
-	if (self.pushScreenHook ~= nil) then
-		self.pushScreenHook:Uninstall()
-		self.pushScreenHook = nil
-	end
+	--if (self.pushScreenHook ~= nil) then
+		--self.pushScreenHook:Uninstall()
+		--self.pushScreenHook = nil
+	--end
 
 	Console:Deregister('Save')
 	Console:Deregister('Select')
@@ -897,12 +897,14 @@ function ClientNodeEditor:_onCommoRoseAction(action, hit)
 end
 
 function ClientNodeEditor:_onUIPushScreen(hook, screen, priority, parentGraph, stateNodeGuid)
-	if (self.commoRoseEnabled and screen ~= nil and UIScreenAsset(screen).name == 'UI/Flow/Screen/CommRoseScreen') then
-		-- triggered vanilla commo rose and ours should be active
-		-- block it
-		hook:Return() 
-    end
-	hook:Pass(screen, priority, parentGraph, stateNodeGuid)
+	if (self.enabled) then
+		if (self.commoRoseEnabled and screen ~= nil and UIScreenAsset(screen).name == 'UI/Flow/Screen/CommRoseScreen') then
+			-- triggered vanilla commo rose and ours should be active
+			-- block it
+			hook:Return() 
+		end
+		hook:Pass(screen, priority, parentGraph, stateNodeGuid)
+	end
 end
 
 -- ############################## Update Events

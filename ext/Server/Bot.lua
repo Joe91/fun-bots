@@ -785,7 +785,7 @@ function Bot:_updateMovement()
 							self._meleeActive 			= false;
 							distanceFromTarget			= 0;
 							heightDistance				= 0;
-							pointIncrement				= 5; -- go 5 points further
+							pointIncrement				= MathUtils:GetRandomInt(-3,3); -- go 5 points further
 						end
 					else
 						self._meleeActive = false;
