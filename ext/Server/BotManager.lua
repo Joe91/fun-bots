@@ -203,7 +203,7 @@ function BotManager:_checkForBotBotAttack()
 										if self:GetBotByName(players[i].name) == nil then
 											-- check this bot view. Let one client do it
 											if self._activePlayers[players[i].name] then
-												NetEvents:SendToLocal('CheckBotBotAttack', players[i], bot.player.soldier.worldTransform.trans, bot2.player.soldier.worldTransform.trans, bot.player.name, bot2.player.name)
+												NetEvents:SendUnreliableToLocal('CheckBotBotAttack', players[i], bot.player.soldier.worldTransform.trans, bot2.player.soldier.worldTransform.trans, bot.player.name, bot2.player.name)
 												self._botToBotConnections[bot.player.name..bot2.player.name] = true;
 												playerIndex = i + 1;
 											end
