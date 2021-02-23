@@ -482,7 +482,7 @@ function BotManager:destroyAmount(number)
 	end
 end
 
-function BotManager:killAmount()
+function BotManager:killAmount(number)
 	local count = 0
 	for _, bot in pairs(self._bots) do
 		bot:resetVars()
