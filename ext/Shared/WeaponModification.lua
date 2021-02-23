@@ -112,8 +112,10 @@ function WeaponModification:_ModifyWeapon(p_SoldierWeaponData, index, aimWorseni
 		return;
 	end
 
-	local botAimWorsening = aimWorseningNormal;
+	botAimRandomness = math.random (0, 2) / 10;
+	local botAimWorsening = aimWorseningNormal + botAimRandomness;
 	local isReconWeapon = false;
+
 	-- check for sniper rifles:
 	--https://docs.veniceunleashed.net/vext/ref/fb/weaponclassenum/ and EBX-Dumb
 	local class = s_SoldierWeaponData.weaponClass;
@@ -121,7 +123,7 @@ function WeaponModification:_ModifyWeapon(p_SoldierWeaponData, index, aimWorseni
 	local nameOfAiData = tostring(aiData.name)
 	if string.find(nameOfAiData ,"Handheld_sni_AI_Weapon") ~= nil
 	or string.find(nameOfAiData ,"Handheld_snisemi_AI_Weapon") ~= nil then
-		botAimWorsening = aimWorseningSniper
+		botAimWorsening = aimWorseningSniper + botAimRandomness;
 		isReconWeapon = true;
 	end
 	local recoilFactor = botAimWorsening;
