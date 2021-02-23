@@ -10,7 +10,7 @@ local Utilities 	= require('__shared/Utilities')
 function BotSpawner:__init()
 	self._botSpawnTimer = 0
 	self._firstSpawnInLevel = true;
-	self._firstSpawnDelay = 0;
+	self._firstSpawnDelay = 5;
 	self._updateActive = false;
 	self._spawnSets = {}
 
@@ -235,6 +235,7 @@ function BotSpawner:_onLevelDestroy()
 	self._spawnSets = {}
 	self._updateActive = false;
 	self._firstSpawnInLevel = true;
+	self._firstSpawnDelay 	= 5;
 end
 
 function BotSpawner:_onPlayerJoining()
