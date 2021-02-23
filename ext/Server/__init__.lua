@@ -84,6 +84,7 @@ end
 
 function FunBotServer:_onRequestClientSettings(player)
 	NetEvents:SendToLocal('WriteClientSettings', player, Config, true);
+	BotManager:registerActivePlayer(player)
 end
 
 function FunBotServer:_onLevelLoaded(levelName, gameMode)

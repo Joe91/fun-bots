@@ -9,8 +9,10 @@ function BotManager:__init()
 	self._bots = {}
 	self._botInputs = {}
 	self._shooterBots = {}
+	self._activePlayers = {}
 	self._botToBotConnections = {}
 	self._botAttackBotTimer = 0;
+	self._initDone = false;
 
 	Events:Subscribe('UpdateManager:Update', self, self._onUpdate)
 	Events:Subscribe('Level:Destroy', self, self._onLevelDestroy)
@@ -20,6 +22,10 @@ function BotManager:__init()
 	NetEvents:Subscribe('ClientDamagePlayer', self, self._onDamagePlayer)   	--only triggered on false damage
 	Hooks:Install('Soldier:Damage', 100, self, self._onSoldierDamage)
 
+end
+
+function BotManager:registerActivePlayer(player)
+	self._activePlayers[player.name] = true;
 end
 
 function BotManager:getBotTeam()
@@ -64,6 +70,7 @@ function BotManager:configGlobas()
 	else
 		Globals.maxPlayers = MAX_NUMBER_OF_BOTS; --only fallback
 	end
+	self._initDone = true;
 end
 
 function BotManager:calcYawPerFrame()
@@ -170,7 +177,7 @@ function BotManager:_onUpdate(dt, pass)
 		bot:onUpdate(dt)
 	end
 
-	if Config.botsAttackBots then
+	if Config.botsAttackBots and self._initDone then
 		if self._botAttackBotTimer >= StaticConfig.botAttackBotCheckInterval then
 			self._botAttackBotTimer = 0;
 			self:_checkForBotBotAttack()
@@ -195,9 +202,11 @@ function BotManager:_checkForBotBotAttack()
 									for i = playerIndex, playerCount do
 										if self:GetBotByName(players[i].name) == nil then
 											-- check this bot view. Let one client do it
-											NetEvents:SendToLocal('CheckBotBotAttack', players[i], bot.player.soldier.worldTransform.trans, bot2.player.soldier.worldTransform.trans, bot.player.name, bot2.player.name)
-											self._botToBotConnections[bot.player.name..bot2.player.name] = true;
-											playerIndex = i + 1;
+											if self._activePlayers[players[i].name] then
+												NetEvents:SendToLocal('CheckBotBotAttack', players[i], bot.player.soldier.worldTransform.trans, bot2.player.soldier.worldTransform.trans, bot.player.name, bot2.player.name)
+												self._botToBotConnections[bot.player.name..bot2.player.name] = true;
+												playerIndex = i + 1;
+											end
 											break
 										end
 									end
@@ -374,6 +383,8 @@ end
 function BotManager:_onLevelDestroy()
 	print("destroyLevel")
 	self:resetAllBots();
+	self._activePlayers = {};
+	self._initDone = false;
 	--self:killAll() -- this crashes when the server ended. do it on levelstart instead
 end
 
