@@ -138,7 +138,7 @@ function Bot:shootAt(player, ignoreYaw)
 
 	if dYaw < fovHalf or ignoreYaw then
 		if self._shoot then
-			if self._shootPlayer == nil or self._shootModeTimer > Config.botMinTimeShootAtPlayer then
+			if self._shootPlayer == nil or self._shootModeTimer > Config.botMinTimeShootAtPlayer or (self.knifeMode and self._shootModeTimer > (Config.botMinTimeShootAtPlayer/2)) then
 				self._shootModeTimer	= 0;
 				self._shootPlayer		= player;
 				self._lastShootPlayer 	= player;
@@ -496,7 +496,7 @@ function Bot:_updateShooting()
 		end
 
 		if self._shootPlayer ~= nil and self._shootPlayer.soldier ~= nil then
-			if self._shootModeTimer < Config.botFireModeDuration then
+			if self._shootModeTimer < Config.botFireModeDuration or (Config.zombieMode and self._shootModeTimer < (Config.botFireModeDuration * 4)) then
 				self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 1); --does not work.
 				self.player.input:SetLevel(EntryInputActionEnum.EIAReload, 0);
 				self._shootModeTimer	= self._shootModeTimer + StaticConfig.botUpdateCycle;

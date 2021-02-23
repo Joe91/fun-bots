@@ -37,6 +37,7 @@ Language['cn_CN'] /* Add/replace the xx_XX here with your language code (like de
     "Difficulty": "难度设置",
     "Spawn": "BOT生成设置",
     "Weapons": "武器设置",
+    "Behaviour": "行为设置",
     "Trace": "路径设置",
     "Advanced": "高级设置",
     "Expert": "专家设置",
