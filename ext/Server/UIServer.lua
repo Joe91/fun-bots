@@ -9,7 +9,7 @@ Language					= require('__shared/Language');
 local BotManager			= require('BotManager');
 local TraceManager			= require('TraceManager');
 local BotSpawner			= require('BotSpawner');
-local WeaponModification	= require('__shared/WeaponModification');
+local WeaponModification	= require('WeaponModification');
 local WeaponList			= require('__shared/WeaponList');
 local Globals 				= require('Globals');
 

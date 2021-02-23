@@ -232,8 +232,10 @@ function BotSpawner:_onPlayerRespawn(player)
 end
 
 function BotSpawner:_onLevelDestroy()
+	BotManager:resetAllBots();
 	self._spawnSets = {}
 	self._updateActive = false;
+	self._firstSpawnInLevel = true;
 end
 
 function BotSpawner:_onPlayerJoining()
@@ -248,7 +250,8 @@ function BotSpawner:_onPlayerLeft(player)
 	--remove all references of player
 	if BotManager:getPlayerCount() == 1 then
 		print("no player left - kick all bots")
-		BotManager:destroyAllBots()
+		BotManager:killAll();
+		BotManager:destroyAllBots();
 	end
 end
 
@@ -392,7 +395,9 @@ function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, inde
 			local validPointFound = false;
 			local targetDistance = Config.distanceToSpawnBots;
 			local retryCounter = Config.maxTrysToSpawnAtDistance;
-			while not validPointFound do
+			local maximumTrys = 100;
+			local trysDone = 0;
+			while not validPointFound and trysDone < maximumTrys do
 				-- get new point
 				activeWayIndex = self:_getNewWayIndex()
 				if activeWayIndex == 0 then
@@ -424,6 +429,7 @@ function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, inde
 					end
 				end
 				retryCounter = retryCounter - 1;
+				trysDone = trysDone + 1;
 				if retryCounter == 0 then
 					retryCounter = Config.maxTrysToSpawnAtDistance;
 					targetDistance = targetDistance - Config.distanceToSpawnReduction;

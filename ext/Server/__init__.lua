@@ -12,14 +12,13 @@ require('__shared/Constants/SpawnModes');
 require('__shared/Utilities');
 
 require('NodeEditor');
-
+require('WeaponModification');
 
 Language					= require('__shared/Language');
 local SettingsManager		= require('SettingsManager');
 local BotManager			= require('BotManager');
 local TraceManager			= require('TraceManager');
 local BotSpawner			= require('BotSpawner');
-local WeaponModification	= require('__shared/WeaponModification');
 local WeaponList			= require('__shared/WeaponList');
 local ChatCommands			= require('ChatCommands');
 local FunBotUIServer		= require('UIServer');
@@ -63,6 +62,7 @@ function FunBotServer:_onExtensionLoaded()
 end
 
 function FunBotServer:_onPartitionLoaded(partition)
+	g_WeaponModification:OnPartitionLoaded(partition);
 	for _, instance in pairs(partition.instances) do
 		if USE_REAL_DAMAGE then
 			if instance:Is("SyncedGameSettings") then
@@ -87,8 +87,7 @@ function FunBotServer:_onRequestClientSettings(player)
 end
 
 function FunBotServer:_onLevelLoaded(levelName, gameMode)
-	NetEvents:BroadcastLocal('WriteClientSettings', Config, true);
-	WeaponModification:ModifyAllWeapons(Config.botAimWorsening, Config.botSniperAimWorsening);
+	g_WeaponModification:ModifyAllWeapons(Config.botAimWorsening, Config.botSniperAimWorsening);
 	WeaponList:onLevelLoaded();
 	print('level ' .. levelName .. ' loaded...');
 	if gameMode == 'TeamDeathMatchC0' or gameMode == 'TeamDeathMatch0' then
@@ -107,6 +106,7 @@ function FunBotServer:_onLevelLoaded(levelName, gameMode)
 		Globals.isScavenger = false;
 	end
 
+	g_NodeEditor:onLevelLoaded(levelName, gameMode)
 	TraceManager:onLevelLoaded(levelName, gameMode);
 	BotSpawner:onLevelLoaded();
 end

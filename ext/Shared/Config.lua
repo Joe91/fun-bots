@@ -23,7 +23,7 @@ Config = {
 	damageFactorKnife = 1.4,		-- origninal Damage from bots gets multiplied by this
 
 	--spawn
-	spawnMode = 'increment_with_players',	-- mode the bots spawn with
+	spawnMode = 'balanced_teams',	-- mode the bots spawn with
 	spawnInBothTeams = true,		-- Bots spawn in both teams
 	initNumberOfBots = 5,			-- bots for spawnmode
 	newBotsPerNewPlayer = 2,		-- number to increase Bots, when new players join
