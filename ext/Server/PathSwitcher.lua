@@ -10,6 +10,9 @@ function PathSwitcher:getNewPath(point, objective)
 		return false
 	end
 
+	-- TODO get all paths via links, assign priority, sort by priority
+	-- if multiple are top priority, choose at random
+
 	-- i have an objective to get to, this takes priority over all
 	if (objective ~= '') then
 		print('my objective: '..objective)
