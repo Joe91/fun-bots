@@ -32,7 +32,7 @@ function Bot:__init(player)
 	self._wayWaitTimer = 0;
 	self._wayWaitYawTimer = 0;
 	self._obstaceSequenceTimer = 0;
-	FirstShotRandomness = math.random (0, 2) / 10;
+	FirstShotRandomness = MathUtils:GetRandom(0, 0.2);
 	Config.botFirstShotDelay = Config.botFirstShotDelay + FirstShotRandomness;
 	self._shotTimer = -Config.botFirstShotDelay;
 	self._shootModeTimer = 0;
