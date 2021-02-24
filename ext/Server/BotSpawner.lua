@@ -48,7 +48,7 @@ function BotSpawner:updateBotAmountAndTeam()
 	local botTeam = BotManager:getBotTeam();
 	local players = PlayerManager:GetPlayers()
 	for i = 1, PlayerManager:GetPlayerCount() do
-		if BotManager:GetBotByName(players[i].name) == nil then
+		if BotManager:getBotByName(players[i].name) == nil then
 			if players[i].teamId == TeamId.Team1 then
 				countPlayersTeam1 = countPlayersTeam1 + 1;
 			else
@@ -295,7 +295,7 @@ function BotSpawner:_onUpdate(dt, pass)
 end
 
 function BotSpawner:_onRespawnBot(botname)
-	local bot = BotManager:GetBotByName(botname)
+	local bot = BotManager:getBotByName(botname)
 	local spawnMode = bot:getSpawnMode();
 
 	if spawnMode == 2 then --spawnInLine

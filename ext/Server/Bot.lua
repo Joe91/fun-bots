@@ -58,7 +58,7 @@ function Bot:__init(player)
 	self._invertPathDirection = false;
 	self._obstacleRetryCounter = 0;
 	self._zombieSpeedValue = 0;
-	self._objective = "";
+	self._objective = '';
 	self._onSwitch = false;
 
 	--shooting
@@ -260,6 +260,14 @@ end
 
 function Bot:setSpeed(speed)
 	self._botSpeed = speed;
+end
+
+function Bot:setObjective(objective)
+	self._objective = objective or ''
+end
+
+function Bot:getObjective(objective)
+	return self._objective
 end
 
 function Bot:getSpawnMode()

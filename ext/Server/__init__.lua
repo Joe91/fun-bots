@@ -12,6 +12,7 @@ require('__shared/Constants/SpawnModes');
 require('__shared/Utilities');
 
 require('NodeEditor');
+require('GameDirector');
 require('WeaponModification');
 
 Language					= require('__shared/Language');

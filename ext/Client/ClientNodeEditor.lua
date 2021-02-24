@@ -32,7 +32,6 @@ function ClientNodeEditor:__init()
 
 	self.botSelectedWaypoints = {}
 
-
 	self.colors = {
 		["Text"] = Vec4(1,1,1,1),
 		["White"] = Vec4(1,1,1,1),

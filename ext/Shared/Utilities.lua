@@ -129,7 +129,7 @@ function Utilities:dump(o, format, maxLevels, level)
 		return 'nil';
 	end
 	
-	if type(o) == 'table' then
+	if type(o) == 'table' or tostring(o):starts('sol.VEXTRefArray') or tostring(o):starts('sol.VEXTArray') then
 		if (maxLevels == -1 or level <= maxLevels) then
 			local s = tostring(o) .. ' -> { ' .. newline;
 			
@@ -144,6 +144,24 @@ function Utilities:dump(o, format, maxLevels, level)
 			return s .. tablevellessone .. '}';
 		else
 			return '{ '.. tostring(o) .. ' }';
+		end
+	elseif type(o) == 'userdata' and not tostring(o):starts('sol.VEXTRefArray') and not tostring(o):starts('sol.VEXTArray') and getmetatable(o) ~= nil then
+		if (maxLevels == -1 or level <= maxLevels) then
+			local s = tostring(o)
+
+			if (o.typeInfo ~= nil) then
+				s = s .. ' (' .. o.typeInfo.name .. ')'
+			end
+			s = s .. ' -> [ ' .. newline;
+
+			for k,v in pairs(getmetatable(o)) do
+				if (not k:starts('__') and k ~= 'typeInfo' and k ~= 'class_cast' and k ~= 'class_check') then
+					s = s .. tablevel .. k .. ': ' .. g_Utilities:dump(o[k], format, maxLevels, level+1) .. ',' .. newline
+				end
+			end
+			return s .. tablevellessone .. ']';
+		else
+			return '[ '.. tostring(o) .. ' ]';
 		end
 	else
 		return tostring(o);
