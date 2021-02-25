@@ -206,8 +206,8 @@ function BotManager:_checkForBotBotAttack()
 												NetEvents:SendUnreliableToLocal('CheckBotBotAttack', players[i], bot.player.soldier.worldTransform.trans, bot2.player.soldier.worldTransform.trans, bot.player.name, bot2.player.name)
 												self._botToBotConnections[bot.player.name..bot2.player.name] = true;
 												playerIndex = i + 1;
+												break
 											end
-											break
 										end
 									end
 									playersUsed = playersUsed + 1;

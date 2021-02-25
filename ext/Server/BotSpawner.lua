@@ -249,7 +249,7 @@ function BotSpawner:_onPlayerLeft(player)
 	BotManager:onPlayerLeft(player)
 	--remove all references of player
 	if BotManager:getPlayerCount() == 1 then
-		print("no player left - kick all bots")
+		print("no player left - kill all bots")
 		BotManager:killAll();
 		--BotManager:destroyAllBots();
 	end
