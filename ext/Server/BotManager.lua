@@ -199,7 +199,7 @@ function BotManager:_checkForBotBotAttack()
 						if bot.player.alive and bot2.player.alive then
 							if self._botToBotConnections[bot.player.name..bot2.player.name] == nil and self._botToBotConnections[bot2.player.name..bot.player.name] == nil then
 								if bot.player.soldier.worldTransform.trans:Distance(bot2.player.soldier.worldTransform.trans) <= Config.maxBotAttackBotDistance then
-									for i = playerIndex, playerCount do
+									for i = playerIndex, #players do
 										if self:GetBotByName(players[i].name) == nil then
 											-- check this bot view. Let one client do it
 											if self._activePlayers[players[i].name] then
