@@ -6,8 +6,8 @@ requireExists('Globals')
 function NodeCollection:__init(disableServerEvents)
 	self:InitTables()
 	if (disableServerEvents == nil or not disableServerEvents) then
-		NetEvents:Subscribe('NodeCollection:Clear', self, self.Clear)
 		NetEvents:Subscribe('NodeCollection:Create', self, self.Create)
+		NetEvents:Subscribe('NodeCollection:Clear', self, self.Clear)
 	end
 end
 
@@ -20,27 +20,28 @@ function NodeCollection:InitTables()
 	self.hiddenPaths = {}
 
 	self.mapName = ''
-
-	self.debugcount = 0
-	self.debugcount2 = 0
 end
 
 function NodeCollection:RegisterEvents()
 	-- Management
 	NetEvents:Subscribe('NodeCollection:Register', self, self.Register)
+	NetEvents:Subscribe('NodeCollection:Add', self, self.Add)
 	NetEvents:Subscribe('NodeCollection:Remove', self, self.Remove)
 	NetEvents:Subscribe('NodeCollection:InsertAfter', self, self.InsertAfter)
 	NetEvents:Subscribe('NodeCollection:InsertBefore', self, self.InsertBefore)
+	NetEvents:Subscribe('NodeCollection:RecalculateIndexes', self, self.RecalculateIndexes)
+	NetEvents:Subscribe('NodeCollection:ProcessMetadata', self, self.ProcessMetadata)
 	NetEvents:Subscribe('NodeCollection:Update', self, self.Update)
+	NetEvents:Subscribe('NodeCollection:UpdateMetadata', self, self.UpdateMetadata)
 	NetEvents:Subscribe('NodeCollection:SetInput', self, self.SetInput)
+	NetEvents:Subscribe('NodeCollection:Link', self, self.Link)
+	NetEvents:Subscribe('NodeCollection:Unlink', self, self.Unlink)
 	NetEvents:Subscribe('NodeCollection:Merge', self, self.MergeSelected)
 	NetEvents:Subscribe('NodeCollection:Split', self, self.SplitSelected)
 
 	-- Selection
 	NetEvents:Subscribe('NodeCollection:Select', self, self.Select)
-	NetEvents:Subscribe('NodeCollection:SelectByID', self, self.SelectByID)
 	NetEvents:Subscribe('NodeCollection:Deselect', self, self.Deselect)
-	NetEvents:Subscribe('NodeCollection:DeselectByID', self, self.DeselectByID)
 	NetEvents:Subscribe('NodeCollection:ClearSelection', self, self.ClearSelection)
 
 	-- Paths
@@ -65,9 +66,7 @@ function NodeCollection:DeregisterEvents()
 
 	-- Selection
 	NetEvents:Unsubscribe('NodeCollection:Select')
-	NetEvents:Unsubscribe('NodeCollection:SelectByID')
 	NetEvents:Unsubscribe('NodeCollection:Deselect')
-	NetEvents:Unsubscribe('NodeCollection:DeselectByID')
 	NetEvents:Unsubscribe('NodeCollection:ClearSelection')
 
 	-- Paths
@@ -159,6 +158,50 @@ function NodeCollection:Register(waypoint)
 	return waypoint
 end
 
+function NodeCollection:Add()
+	local selection = self:GetSelected()
+	if (#selection == 2) then
+
+		local orphan = nil
+		local referrence = nil
+		for i=1, #selection do
+			if (not selection[i].Previous and not selection[i].Next) then
+				orphan = selection[i]
+			else
+				referrence = selection[i]
+			end
+		end
+
+		if (orphan ~= nil and referrence ~= nil) then
+			self:Update(orphan, {
+				PathIndex = referrence.PathIndex
+			})
+
+			self:InsertAfter(referrence, orphan)
+			return true, 'Success'
+		else
+			return false, 'Two Waypoints: Must select only orphaned node and connected node'
+		end
+	elseif (#selection == 1) then
+		local lastWaypoint = selection[#selection]
+		local newWaypoint = self:Create({
+			PathIndex = lastWaypoint.PathIndex,
+			Previous = lastWaypoint.ID
+		})
+		self:InsertAfter(lastWaypoint, newWaypoint)
+		return newWaypoint, 'Success'
+	else
+		local lastWaypoint = self:GetLast()
+		local newWaypoint = self:Create({
+			PathIndex = lastWaypoint.PathIndex + 1,
+			Previous = lastWaypoint.ID
+		})
+		self:InsertAfter(lastWaypoint, newWaypoint)
+		return newWaypoint, 'Success'
+	end
+	return false, 'Must select up to two waypoints'
+end
+
 function NodeCollection:Remove(waypoint)
 
 	-- batch operation on selections
@@ -177,6 +220,7 @@ function NodeCollection:Remove(waypoint)
 	waypoint.Next.Previous = waypoint.Previous
 
 	-- use connections to update indexes
+	self:Unlink(selectedWaypoint)
 	self:RecalculateIndexes(waypoint.Previous)
 
 	-- cut ties with old friends
@@ -190,31 +234,6 @@ function NodeCollection:Remove(waypoint)
 	self.selectedWaypoints[waypoint.ID] = nil
 	return true, 'Success'
 	-- go hit the gym
-end
-
-function NodeCollection:CreateAfter()
-
-	local newWaypointData = {}
-	local lastWaypoint = nil
-	local newWaypoint = nil
-
-	local selection = self:GetSelected()
-	if (#selection > 0) then
-		lastWaypoint = selection[#selection]
-		newWaypoint = self:Create({
-			PathIndex = lastWaypoint.PathIndex,
-			Previous = lastWaypoint.ID
-		})
-	else
-		lastWaypoint = self:GetLast()
-		newWaypoint = self:Create({
-			PathIndex = lastWaypoint.PathIndex + 1,
-			Previous = lastWaypoint.ID
-		})
-	end
-
-	self:InsertAfter(lastWaypoint, newWaypoint)
-	return newWaypoint, 'Success'
 end
 
 function NodeCollection:InsertAfter(referrenceWaypoint, waypoint)
@@ -438,60 +457,101 @@ function NodeCollection:SetInput(speed, extra, option)
 	return inputVar
 end
 
-function NodeCollection:Connect()
+function NodeCollection:Link()
 	local selection = g_NodeCollection:GetSelected()
 	if (#selection ~= 2) then
 		return false, 'Must select only two waypoints'
 	end
 
-	local orphan = nil
-	local referrence = nil
-	for i=1, #selection do
-		if (not selection[i].Previous and not selection[i].Next) then
-			orphan = selection[i]
-		else
-			referrence = selection[i]
+	local linksA = selection[1].Data.Links or {}
+	local linksB = selection[2].Data.Links or {}
+
+	table.insert(linksA, selection[2].ID)
+	table.insert(linksB, selection[1].ID)
+
+	self:Update(selection[1].Data, {
+		LinkMode = (selection[1].Data.LinkMode or 0),
+		Links = linksA
+	})
+	self:Update(selection[2].Data, {
+		LinkMode = (selection[2].Data.LinkMode or 0),
+		Links = linksB
+	})
+	return true, 'Success'
+end
+
+function NodeCollection:Unlink()
+
+	local selection = g_NodeCollection:GetSelected()
+	if (#selection ~= 2) then
+		return false, 'Must select only two waypoints'
+	end
+
+	local linksA = selection[1].Data.Links or {}
+	local linksB = selection[2].Data.Links or {}
+	local newLinksA = {}
+	local newLinksB = {}
+
+	for i=1, #linksA do
+		if (linksA[i] ~= selection[2].ID) then
+			table.insert(newLinksA, linksA[i])
+		end
+	end
+	for i=1, #linksB do
+		if (linksB[i] ~= selection[1].ID) then
+			table.insert(newLinksB, linksB[i])
 		end
 	end
 
-	-- reconnecting orphaned node
-	if (orphan ~= nil and referrence ~= nil) then
-		self:Update(orphan, {
-			PathIndex = referrence.PathIndex
-		})
-
-		self:InsertAfter(referrence, orphan)
-		return true, 'Success'
-
-	-- connecting two waypoints with a special link node
-	else
-		local linksA = selection[1].Data.Links or {}
-		local linksB = selection[2].Data.Links or {}
-		local linkModeA = selection[1].Data.LinkMode or 0
-		local linkModeB = selection[2].Data.LinkMode or 0
-
-		table.insert(linksA, selection[2].ID)
-		table.insert(linksB, selection[1].ID)
-
+	if (#newLinksA > 0) then
 		self:Update(selection[1].Data, {
-			LinkMode = linkModeA,
-			Links = linksA
+			LinkMode = (selection[1].Data.LinkMode or 0),
+			Links = newLinksA
 		})
-		self:Update(selection[2].Data, {
-			LinkMode = linkModeB,
-			Links = linksB
+	else
+		local newDataA = {}
+		for k,v in pairs(selection[1].Data) do
+			if (k ~= 'Links' and k ~= 'LinkMode') then
+				newDataA[k] = v
+			end
+		end
+
+		self:Update(selection[1], {
+			Data = newDataA
 		})
-		return true, 'Success'
 	end
+
+	if (#newLinksB > 0) then
+		self:Update(selection[2].Data, {
+			LinkMode = (selection[2].Data.LinkMode or 0),
+			Links = newLinksB
+		})
+	else
+		local newDataB = {}
+		for k,v in pairs(selection[2].Data) do
+			if (k ~= 'Links' and k ~= 'LinkMode') then
+				newDataB[k] = v
+			end
+		end
+
+		self:Update(selection[2], {
+			Data = newDataB
+		})
+	end
+	return true, 'Success'
 end
 
-function NodeCollection:Disconnect()
-	-- TODO handle disconnection
-	return false, 'Not Implemented Yet'
-end
+-- USAGE
+-- g_NodeCollection:Get() -- all waypoints as unsorted table
+-- g_NodeCollection:Get(nil, <int|PathIndex>) -- all waypoints in PathIndex as unsorted table
+--
+-- g_NodeCollection:Get(<string|WaypointID>) -- waypoint from  id - Speed: O(1)
+-- g_NodeCollection:Get(<table|Waypoint) -- waypoint from another waypoint referrence - Speed: O(1)
+-- g_NodeCollection:Get(<int|Index) -- waypoint from waypoint Index - Speed: O(n)
+-- g_NodeCollection:Get(<int|PointIndex, <int|PathIndex>) -- waypoint from PointIndex and PathIndex - Speed: O(1)
 
-function NodeCollection:Get(waypointIndex, pathIndex)
-	if (waypointIndex ~= nil) then
+function NodeCollection:Get(waypoint, pathIndex)
+	if (waypoint ~= nil) then
 		if (pathIndex ~= nil) then
 			
 			if (self.waypointsByPathIndex[pathIndex] == nil) then
@@ -500,16 +560,18 @@ function NodeCollection:Get(waypointIndex, pathIndex)
 
 			for i=1, #self.waypointsByPathIndex[pathIndex] do
 				local waypoint = self.waypointsByPathIndex[pathIndex][i]
-				if (waypoint.PathIndex == pathIndex and waypoint.PointIndex == waypointIndex) then
+				if (waypoint.PathIndex == pathIndex and waypoint.PointIndex == waypoint) then
 					return waypoint
 				end
 			end
 		else
-			if (type(waypointIndex) == 'string') then
-				return self.waypointsByID[waypointIndex]
+			if (type(waypoint) == 'string') then
+				return self.waypointsByID[waypoint]
+			elseif (type(waypoint) == 'table') then
+				return self.waypointsByID[waypoint.ID]
 			else
 				for i=1, #self.waypoints do
-					if (self.waypoints[i].Index == waypointIndex) then
+					if (self.waypoints[i].Index == waypoint) then
 						return self.waypoints[i]
 					end
 				end
@@ -565,41 +627,36 @@ function NodeCollection:Clear()
 	end
 	self.waypointsByPathIndex = {}
 	self.selectedWaypoints = {}
-	self.debugcount = 0
 end
 
 -----------------------------
 -- Selection
 
-function NodeCollection:Select(waypoint)
-	if (waypoint == nil or waypoint.ID == nil) then return end
+function NodeCollection:Select(waypoint, pathIndex)
+	if (waypoint == nil) then return end
+
+	waypoint = self:Get(waypoint, pathIndex)
+	if (waypoint == nil) then return end
 	self.selectedWaypoints[waypoint.ID] = waypoint
 end
 
-function NodeCollection:SelectByID(waypointID, pathIndex)
-	self:Select(self:Get(waypointID, pathIndex))
-end
-
-function NodeCollection:Deselect(waypoint)
+function NodeCollection:Deselect(waypoint, pathIndex)
 	if (waypoint == nil) then
 		self:ClearSelection()
 	else
-		if (waypoint.ID == nil) then return end
+
+		waypoint = self:Get(waypoint, pathIndex)
+		if (waypoint == nil) then return end
 		self.selectedWaypoints[waypoint.ID] = nil
 	end
 end
 
-function NodeCollection:DeselectByID(waypointID, pathIndex)
-	self:Deselect(self:Get(waypointID, pathIndex))
-end
+function NodeCollection:IsSelected(waypoint, pathIndex)
+	if (waypoint == nil) then return false end
 
-function NodeCollection:IsSelected(waypoint)
-	if (waypoint == nil or waypoint.ID == nil) then return false end
+	waypoint = self:Get(waypoint, pathIndex)
+	if (waypoint == nil) then return false end
 	return self.selectedWaypoints[waypoint.ID] ~= nil
-end
-
-function NodeCollection:IsSelectedByID(waypointID, pathIndex)
-	return self:IsSelected(self:Get(waypointID, pathIndex))
 end
 
 function NodeCollection:GetSelected(pathIndex)
@@ -752,11 +809,30 @@ function NodeCollection:Load(levelName, gameMode)
 		return
 	end
 
+	local query = [[
+		CREATE TABLE IF NOT EXISTS ]]..self.mapName..[[_table (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		pathIndex INTEGER,
+		pointIndex INTEGER,
+		transX FLOAT,
+		transY FLOAT,
+		transZ FLOAT,
+		inputVar INTEGER,
+		data TEXT
+		)
+	]]
+
+	if not SQL:Query(query) then
+		print('Failed to create table for map ['..self.mapName..']: '..SQL:Error())
+		return
+	end
+
+
 	-- Fetch all rows from the table.
-	local results = SQL:Query('SELECT * FROM ' .. self.mapName .. '_table ORDER BY `pathIndex`, `pointIndex` ASC')
+	local results = SQL:Query('SELECT * FROM '..self.mapName..'_table ORDER BY `pathIndex`, `pointIndex` ASC')
 
 	if not results then
-		print('Failed to execute query: ' .. SQL:Error())
+		print('Failed to retrieve waypoints for map ['..self.mapName..']: '..SQL:Error())
 		return
 	end
 
@@ -799,13 +875,43 @@ function NodeCollection:Load(levelName, gameMode)
 	self:RecalculateIndexes(lastWaypoint)
 	self:ProcessMetadata()
 
+	-- we're on the server
+	if (g_Globals ~= nil) then
+		g_Globals.wayPoints = self.waypointsByPathIndex
+		g_Globals.activeTraceIndexes = pathCount
+	end
+
 	print('NodeCollection:Load -> Paths: '..tostring(pathCount)..' | Waypoints: '..tostring(waypointCount))
 end
 
 function NodeCollection:Save()
-	--if not SQL:Open() then
-	--	return
-	--end
+	if not SQL:Open() then
+		print('Could not open database')
+		return
+	end
+
+	if not SQL:Query('DROP TABLE IF EXISTS '..self.mapName..'_table') then
+		print('Failed to reset table for map ['..self.mapName..']: '..SQL:Error());
+		return
+	end
+
+	local query = [[
+		CREATE TABLE IF NOT EXISTS ]]..self.mapName..[[_table (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		pathIndex INTEGER,
+		pointIndex INTEGER,
+		transX FLOAT,
+		transY FLOAT,
+		transZ FLOAT,
+		inputVar INTEGER,
+		data TEXT
+		)
+	]]
+
+	if not SQL:Query(query) then
+		print('Failed to create table for map ['..self.mapName..']: '..SQL:Error())
+		return
+	end
 
 	--self.mapName
 
@@ -814,6 +920,8 @@ function NodeCollection:Save()
 	local waypointsChanged = 0
 	local orphans = {}
 	local disconnects = {}
+
+	local batchQueries = {}
 
 	print('NodeCollection:Save -> Processing: '..(waypointCount))
 
@@ -831,35 +939,56 @@ function NodeCollection:Save()
 		if (waypoint.Previous == false and waypoint.Next == false) then
 			table.insert(orphans, waypoint)
 		else 
-			local rowData = {
-				trans = waypoint.Position:Clone(),
-				speedMode = waypoint.SpeedMode,
-				extraMode = waypoint.ExtraMode,
-				optValue = waypoint.OptValue,
-				data = waypoint.Data,
-			}
 
-			--convert linked node ids to {pathIndex,pointindex}
-			if (waypoint.Data and waypoint.Data.Links ~= nil and #waypoint.Data.Links > 0) then
-				local convertedLinks = {}
-				for i=1, #waypoint.Data.Links do
-					local linkedWaypoint = self:Get(waypoint.Data.Links[i])
-					if (linkedWaypoint ~= nil) then
-						table.insert(convertedLinks, {linkedWaypoint.PathIndex, linkedWaypoint.PointIndex})
-					end
+			local waypointData = {}
+
+			if (waypoint.Data) then
+
+				-- shallow clone
+				for k,v in pairs(waypoint.Data) do
+					waypointData[k] = v
 				end
-				rowData.data.Links = convertedLinks
+
+				--convert linked node ids to {pathIndex,pointindex}
+				if (waypoint.Data.Links ~= nil and #waypoint.Data.Links > 0) then
+					local convertedLinks = {}
+					for i=1, #waypoint.Data.Links do
+						local linkedWaypoint = self:Get(waypoint.Data.Links[i])
+						if (linkedWaypoint ~= nil) then
+							table.insert(convertedLinks, {linkedWaypoint.PathIndex, linkedWaypoint.PointIndex})
+						end
+					end
+					waypointData.Links = convertedLinks
+				end
 			end
 
-			if (changedWaypoints[waypoint.PathIndex] == nil) then
-				changedWaypoints[waypoint.PathIndex] = {}
+			local jsonSaveData = ''
+
+			if (waypointData ~= nil and type(waypointData) == 'table') then
+				local jsonData, encodeError = json.encode(waypointData)
+				if (jsonData == nil) then
+					print('WARNING! Waypoint ['..waypoint.ID..'] data could not encode: '..tostring(encodeError))
+					print('waypoint -> '..g_Utilities:dump(waypoint, true, 1))
+					print('waypointData -> '..g_Utilities:dump(waypointData, true))
+				end
+				if (jsonData ~= '{}') then
+					jsonSaveData = SQL:Escape(table.concat(jsonData:split('"'), '""'))
+				end
 			end
-			changedWaypoints[waypoint.PathIndex][waypoint.PointIndex] = rowData
-			waypointsChanged = waypointsChanged + 1
+
+			table.insert(batchQueries, '('..table.concat({
+				waypoint.PathIndex,
+				waypoint.PointIndex,
+				waypoint.Position.x,
+				waypoint.Position.y,
+				waypoint.Position.z,
+				waypoint.InputVar,
+				'"'..jsonSaveData..'"'
+			}, ',')..')')
 		end
 	end
 
-	print('NodeCollection:Save -> Updated: '..(waypointsChanged))
+	print('NodeCollection:Save -> Waypoints to write: '..(#batchQueries))
 	print('NodeCollection:Save -> Orphans: '..(#orphans)..' (Removed)')
 	print('NodeCollection:Save -> Disconnected: '..(#disconnects)..' (Expected: 2)')
 
@@ -868,23 +997,48 @@ function NodeCollection:Save()
 		print(g_Utilities:dump(disconnects, true, 2))
 	end
 
-	-- we're on the server
-	if (g_Globals ~= nil) then
+	local queriesDone = 0;
+	local queriesTotal = #batchQueries
+	local batchSize = 1000;
+	local hasError = false;
+	local insertQuery = 'INSERT INTO '..self.mapName..'_table (pathIndex, pointIndex, transX, transY, transZ, inputVar, data) VALUES '
 
-		-- replace global waypoints table
-		local lastPathIndex = 0
-		for i=1, MAX_TRACE_NUMBERS do
-			if (changedWaypoints[i] ~= nil) then
-				if (lastPathIndex < i) then
-					lastPathIndex = i
-				end
-			else
-				changedWaypoints[i] = {}
+	while queriesTotal > queriesDone and not hasError do
+
+		local queriesLeft = queriesTotal - queriesDone
+		if queriesLeft > batchSize then
+			queriesLeft = batchSize
+		end
+		local values = ''
+
+		for i=1+queriesDone, queriesLeft+queriesDone do
+			values = values..batchQueries[i]
+
+			if i < queriesLeft+queriesDone then
+				values = values .. ','
 			end
 		end
-		g_Globals.wayPoints = changedWaypoints
-		g_Globals.activeTraceIndexes = lastPathIndex
+
+		if not SQL:Query(insertQuery..values) then
+			print('NodeCollection:Save -> Batch query failed ['..queriesDone..']: ' .. SQL:Error())
+			return
+		end
+
+		queriesDone = queriesDone + queriesLeft
 	end
+
+	-- Fetch all rows from the table.
+	local results = SQL:Query('SELECT * FROM '..self.mapName..'_table')
+
+	if not results then
+		print('NodeCollection:Save -> Failed to double-check table entries for map ['..self.mapName..']: '..SQL:Error());
+		ChatManager:Yell(Language:I18N('Failed to execute query: %s', SQL:Error()), 5.5)
+		return
+	end
+
+	SQL:Close();
+	print('NodeCollection:Save -> Saved ['..queriesTotal..'] waypoints for map ['..self.mapName..']');
+	ChatManager:Yell(Language:I18N('Saved %d waypoints for map %s', queriesTotal, self.mapName), 5.5);
 end
 
 -----------------------------

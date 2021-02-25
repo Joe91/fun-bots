@@ -74,9 +74,10 @@ function PathSwitcher:getNewPath(point, objective)
 	end
 
 	-- remove paths below our highest priority
+	local validPaths = {}
 	for i=1, #paths do
-		if (paths[i].Priority < highestPriority) then
-			paths[i] = nil
+		if (paths[i].Priority >= highestPriority) then
+			table.insert(validPaths, paths[i])
 		end
 	end
 
@@ -84,13 +85,13 @@ function PathSwitcher:getNewPath(point, objective)
 	--print('Highest Priority -> '..highestPriority)
 	--print('#paths -> '..(#paths))
 
-	if (#paths == 0) then
+	if (#validPaths == 0) then
 		return false
 	end
 
-	if (#paths == 1 and currentPriority < paths[1].Priority) then
-		--print('found single higher priority path ( '..currentPriority..' | '..paths[1].Priority..' )')
-		return true, paths[1].Point.PathIndex, paths[1].Point.PointIndex
+	if (#validPaths == 1 and currentPriority < validPaths[1].Priority) then
+		--print('found single higher priority path ( '..currentPriority..' | '..validPaths[1].Priority..' )')
+		return true, validPaths[1].Point.PathIndex, validPaths[1].Point.PointIndex
 	end
 
 	local linkMode = tonumber(point.Data.LinkMode) or 0
@@ -98,15 +99,24 @@ function PathSwitcher:getNewPath(point, objective)
 
 		local chance = tonumber(point.Data.LinkChance) or 25
 		local randNum = MathUtils:GetRandomInt(0, 100)
+		local randIndex = MathUtils:GetRandomInt(1, #validPaths)
 
 		if currentPriority < highestPriority then
-			local randomPath = paths[MathUtils:GetRandomInt(1, #paths)]
-			--print('found multiple higher priority paths | Priority: ( '..currentPriority..' | '..highestPriority..' )')
+			local randomPath = validPaths[randIndex]
+			if randomPath == nil then
+				print('[A] validPaths['..randIndex..'] was nil : '..g_Utilities:dump(validPaths, true, 2))
+				return false
+			end
+			--print('found multiple higher priority validPaths | Priority: ( '..currentPriority..' | '..highestPriority..' )')
 			return true, randomPath.Point.PathIndex, randomPath.Point.PointIndex
 		end
 
 		if randNum >= chance then
-			local randomPath = paths[MathUtils:GetRandomInt(1, #paths)]
+			local randomPath = validPaths[randIndex]
+			if randomPath == nil then
+				print('[B] validPaths['..randIndex..'] was nil : '..g_Utilities:dump(validPaths, true, 2))
+				return false
+			end
 			--print('chose to switch at random ('..randNum..' >= '..chance..') | Priority: ( '..currentPriority..' | '..randomPath.Priority..' )')
 			return true, randomPath.Point.PathIndex, randomPath.Point.PointIndex
 		end

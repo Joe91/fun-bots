@@ -46,11 +46,13 @@ function GameDirector:_onCapture(capturePoint)
 	print('self.CurrentAssignedCount: '..g_Utilities:dump(self.CurrentAssignedCount, true))
 
 
-	for botTeam, bot in pairs(self.BotsByTeam) do
-		if (bot:getObjective() == flagEntity.name) then
-			print('Bot completed objective: '..bot.name..' -> '..flagEntity.name)
-			bot:setObjective()
-			self.CurrentAssignedCount[flagEntity.name] = math.max(self.CurrentAssignedCount[flagEntity.name] - 1, 0)
+	for botTeam, bots in pairs(self.BotsByTeam) do
+		for i=1, #bots do
+			if (bots[i]:getObjective() == flagEntity.name and flagEntity.team == botTeam) then
+				print('Bot completed objective: '..bots[i].name..' (team: '..botTeam..') -> '..flagEntity.name)
+				bots[i]:setObjective()
+				self.CurrentAssignedCount[botTeam..'_'..flagEntity.name] = math.max(self.CurrentAssignedCount[botTeam..'_'..flagEntity.name] - 1, 0)
+			end
 		end
 	end
 end
@@ -99,7 +101,7 @@ function GameDirector:_onUpdate(delta)
 					self.BotsByTeam[botList[i].player.teamId] = {}
 				end
 
-				self.BotsByTeam[botList[i].player.teamId] = botList[i]
+				table.insert(self.BotsByTeam[botList[i].player.teamId], botList[i])
 			end
 		end
 
@@ -107,22 +109,23 @@ function GameDirector:_onUpdate(delta)
 
 		-- check objective statuses
 		for objectiveName,objectiveTeam in pairs(self.LevelObjectives) do
-			for botTeam, bot in pairs(self.BotsByTeam) do
+			for botTeam, bots in pairs(self.BotsByTeam) do
+				for i=1, #bots do
+					if (self.CurrentAssignedCount[botTeam..'_'..objectiveName] == nil) then
+						self.CurrentAssignedCount[botTeam..'_'..objectiveName] = 0
+					end
 
-				if (self.CurrentAssignedCount[objectiveName] == nil) then
-					self.CurrentAssignedCount[objectiveName] = 0
-				end
+					if (bots[i]:getObjective() == objectiveName) then
+						self.CurrentAssignedCount[botTeam..'_'..objectiveName] = self.CurrentAssignedCount[botTeam..'_'..objectiveName] + 1
+					end
 
-				if (bot:getObjective() == objectiveName) then
-					self.CurrentAssignedCount[objectiveName] = self.CurrentAssignedCount[objectiveName] + 1
-				end
+					if (objectiveTeam ~= botTeam and bots[i]:getObjective() == '' and self.CurrentAssignedCount[botTeam..'_'..objectiveName] < self.MaxAssignedLimit) then
 
-				if (objectiveTeam ~= botTeam and bot:getObjective() == '' and self.CurrentAssignedCount[objectiveName] < self.MaxAssignedLimit) then
+						print('Assigning bot to objective: '..bots[i].name..' (team: '..botTeam..') -> '..objectiveName)
 
-					print('Assigning bot to objective: '..bot.name..' -> '..objectiveName)
-
-					bot:setObjective(objectiveName)
-					self.CurrentAssignedCount[objectiveName] = self.CurrentAssignedCount[objectiveName] + 1
+						bots[i]:setObjective(objectiveName)
+						self.CurrentAssignedCount[botTeam..'_'..objectiveName] = self.CurrentAssignedCount[botTeam..'_'..objectiveName] + 1
+					end
 				end
 			end
 		end

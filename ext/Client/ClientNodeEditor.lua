@@ -106,16 +106,16 @@ function ClientNodeEditor:RegisterEvents()
 	NetEvents:Subscribe('UI_CommoRose_Action_Load', self, self._onLoadNodes)
 
 	-- Commo Rose left buttons
-	NetEvents:Subscribe('UI_CommoRose_Action_Delete', self, self._onRemoveNode)
-	NetEvents:Subscribe('UI_CommoRose_Action_Disconnect', self, self._onDisconnectNode)
+	NetEvents:Subscribe('UI_CommoRose_Action_Remove', self, self._onRemoveNode)
+	NetEvents:Subscribe('UI_CommoRose_Action_Unlink', self, self._onUnlinkNode)
 	NetEvents:Subscribe('UI_CommoRose_Action_Merge', self, self._onMergeNode)
 	NetEvents:Subscribe('UI_CommoRose_Action_SelectPrevious', self, self._onSelectPrevious)
 	NetEvents:Subscribe('UI_CommoRose_Action_ClearSelections', self, self._onClearSelection)
 	NetEvents:Subscribe('UI_CommoRose_Action_Move', self, self._onToggleMoveNode)
 
 	-- Commor Rose right buttons
-	NetEvents:Subscribe('UI_CommoRose_Action_Create', self, self._onCreateNode)
-	NetEvents:Subscribe('UI_CommoRose_Action_Connect', self, self._onConnectNode)
+	NetEvents:Subscribe('UI_CommoRose_Action_Add', self, self._onAddNode)
+	NetEvents:Subscribe('UI_CommoRose_Action_Link', self, self._onLinkNode)
 	NetEvents:Subscribe('UI_CommoRose_Action_Split', self, self._onSplitNode)
 	NetEvents:Subscribe('UI_CommoRose_Action_SelectNext', self, self._onSelectNext)
 	NetEvents:Subscribe('UI_CommoRose_Action_SelectBetween', self, self._onSelectBetween)
@@ -159,15 +159,15 @@ function ClientNodeEditor:RegisterEvents()
 	Console:Register('Select', 'Select or Deselect the waypoint you are looking at', self, self._onSelectNode)
 	Console:Register('Load', 'Resend all waypoints and lose all changes', self, self._onGetNodes)
 
-	Console:Register('Delete', 'Remove selected waypoints', self, self._onRemoveNode)
-	Console:Register('Disconnect', 'Unlink two waypoints', self, self._onDisconnectNode)
+	Console:Register('Remove', 'Remove selected waypoints', self, self._onRemoveNode)
+	Console:Register('Unlink', 'Unlink two waypoints', self, self._onUnlinkNode)
 	Console:Register('Merge', 'Merge selected waypoints', self, self._onMergeNode)
 	Console:Register('SelectPrevious', 'Extend selection to previous waypoint', self, self._onSelectPrevious)
 	Console:Register('ClearSelection', 'Clear selection', self, self._onClearSelection)
 	Console:Register('Move', 'toggle move mode on selected waypoints', self, self._onToggleMoveNode)
 
-	Console:Register('Create', 'Create a new waypoint after the selected one', self, self._onCreateNode)
-	Console:Register('Connect', 'Link two waypoints', self, self._onConnectNode)
+	Console:Register('Add', 'Create a new waypoint after the selected one', self, self._onAddNode)
+	Console:Register('Link', 'Link two waypoints', self, self._onLinkNode)
 	Console:Register('Split', 'Split selected waypoints', self, self._onSplitNode)
 	Console:Register('SelectNext', 'Extend selection to next waypoint', self, self._onSelectNext)
 	Console:Register('SelectBetween', 'Select all waypoint between start and end of selection', self, self._onSelectBetween)
@@ -207,15 +207,15 @@ function ClientNodeEditor:DeregisterEvents()
 	NetEvents:Unsubscribe('UI_CommoRose_Action_Select')
 	NetEvents:Unsubscribe('UI_CommoRose_Action_Load')
 
-	NetEvents:Unsubscribe('UI_CommoRose_Action_Delete')
-	NetEvents:Unsubscribe('UI_CommoRose_Action_Disconnect')
+	NetEvents:Unsubscribe('UI_CommoRose_Action_Remove')
+	NetEvents:Unsubscribe('UI_CommoRose_Action_Unlink')
 	NetEvents:Unsubscribe('UI_CommoRose_Action_Merge')
 	NetEvents:Unsubscribe('UI_CommoRose_Action_SelectPrevious')
 	NetEvents:Unsubscribe('UI_CommoRose_Action_ClearSelections')
 	NetEvents:Unsubscribe('UI_CommoRose_Action_Move')
 
-	NetEvents:Unsubscribe('UI_CommoRose_Action_Create')
-	NetEvents:Unsubscribe('UI_CommoRose_Action_Connect')
+	NetEvents:Unsubscribe('UI_CommoRose_Action_Add')
+	NetEvents:Unsubscribe('UI_CommoRose_Action_Link')
 	NetEvents:Unsubscribe('UI_CommoRose_Action_Split')
 	NetEvents:Unsubscribe('UI_CommoRose_Action_SelectNext')
 	NetEvents:Unsubscribe('UI_CommoRose_Action_SelectBetween')
@@ -238,15 +238,15 @@ function ClientNodeEditor:DeregisterEvents()
 	Console:Deregister('Select')
 	Console:Deregister('Load')
 
-	Console:Deregister('Delete')
-	Console:Deregister('Disconnect')
+	Console:Deregister('Remove')
+	Console:Deregister('Unlink')
 	Console:Deregister('Merge')
 	Console:Deregister('SelectPrevious')
 	Console:Deregister('ClearSelection')
 	Console:Deregister('Move')
 
-	Console:Deregister('Create')
-	Console:Deregister('Connect')
+	Console:Deregister('Add')
+	Console:Deregister('Link')
 	Console:Deregister('Split')
 	Console:Deregister('SelectNext')
 	Console:Deregister('SetInput')
@@ -360,9 +360,9 @@ function ClientNodeEditor:_onRemoveNode(args)
 	return true
 end
 
-function ClientNodeEditor:_onDisconnectNode()
+function ClientNodeEditor:_onUnlinkNode()
 	self.CommoRose.Active = false
-	local result, message = g_NodeCollection:Disconnect()
+	local result, message = g_NodeCollection:Unlink()
 	print(Language:I18N(message))
 	return result
 end
@@ -446,14 +446,18 @@ end
 -- ###################### commo rose right side
 -- ############################################
 
-function ClientNodeEditor:_onCreateNode(args)
+function ClientNodeEditor:_onAddNode(args)
 	self.CommoRose.Active = false
 
-	print('ClientNodeEditor:_onCreateNode')
+	print('ClientNodeEditor:_onAddNode')
 	
-	local result, message = g_NodeCollection:CreateAfter()
+	local result, message = g_NodeCollection:Add()
+	local selection = g_NodeCollection:GetSelected()
 
-	if (result ~= nil) then
+	-- if selected is 0 or 1, we created a new node
+	-- clear selection, select new node, change to move mode
+	-- otherwise we just connected two nodes, don't change selection
+	if (result ~= nil and #selection <= 1) then
 		g_NodeCollection:ClearSelection()
 		g_NodeCollection:Select(result)
 		self.editPositionMode = 'absolute'
@@ -464,9 +468,9 @@ function ClientNodeEditor:_onCreateNode(args)
 	return result ~= nil
 end
 
-function ClientNodeEditor:_onConnectNode()
+function ClientNodeEditor:_onLinkNode()
 	self.CommoRose.Active = false
-	local result, message = g_NodeCollection:Connect()
+	local result, message = g_NodeCollection:Link()
 	print(Language:I18N(message))
 	return result
 end
@@ -847,14 +851,16 @@ function ClientNodeEditor:_onCommoRoseAction(action, hit)
 			Bottom = { Action = 'UI_CommoRose_Action_Load', Label = Language:I18N('Load') },
 			Center = center,
 			Left = {
-				{ Action = 'UI_CommoRose_Action_Delete', Label = Language:I18N('Delete') },
+				{ Action = 'UI_CommoRose_Action_Remove', Label = Language:I18N('Remove') },
+				{ Action = 'UI_CommoRose_Action_Unlink', Label = Language:I18N('Unlink') },
 				{ Action = 'UI_CommoRose_Action_Merge', Label = Language:I18N('Merge') },
 				{ Action = 'UI_CommoRose_Action_SelectPrevious', Label = Language:I18N('Select Previous') },
 				{ Action = 'UI_CommoRose_Action_ClearSelection', Label = Language:I18N('Clear Selection') },
 				{ Action = 'UI_CommoRose_Action_Move', Label = Language:I18N('Move') },
 			},
 			Right = {
-				{ Action = 'UI_CommoRose_Action_Create', Label = Language:I18N('Create') },
+				{ Action = 'UI_CommoRose_Action_Add', Label = Language:I18N('Add') },
+				{ Action = 'UI_CommoRose_Action_Link', Label = Language:I18N('Link') },
 				{ Action = 'UI_CommoRose_Action_Split', Label = Language:I18N('Split') },
 				{ Action = 'UI_CommoRose_Action_SelectNext', Label = Language:I18N('Select Next') },
 				{ Action = 'UI_CommoRose_Action_SelectBetween', Label = Language:I18N('Select Between') },
@@ -1000,7 +1006,7 @@ function ClientNodeEditor:_onUpdateInput(player, delta)
 	elseif (self.editMode == 'none') then
 
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad8) then
-			self:_onSaveNodes()
+			self:_onLinkNodes()
 			return
 		end
 
@@ -1010,7 +1016,7 @@ function ClientNodeEditor:_onUpdateInput(player, delta)
 		end
 
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad2) then
-			self:_onLoadNodes()
+			self:_onUnlinkNodes()
 			return
 		end
 
@@ -1038,7 +1044,7 @@ function ClientNodeEditor:_onUpdateInput(player, delta)
 			return
 		end
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad3) then
-			self:_onCreateNode()
+			self:_onAddNode()
 			return
 		end
 
@@ -1060,12 +1066,12 @@ function ClientNodeEditor:_onUpdateInput(player, delta)
 		end
 
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Equals) or InputManager:WentKeyDown(InputDeviceKeys.IDK_Add) then
-			self:_onConnectNode()
+			self:_onLinkNode()
 			return
 		end
 
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Minus) or InputManager:WentKeyDown(InputDeviceKeys.IDK_Subtract) then
-			self:_onDisconnectNode()
+			self:_onUnlinkNode()
 			return
 		end
 	end
@@ -1306,21 +1312,21 @@ function ClientNodeEditor:_onUIDrawHud()
 		helpText = helpText..' Node Operation Controls '.."\n"
 		helpText = helpText..'+-------+-------+-------+'.."\n"
 		helpText = helpText..'|   7   |   8   |   9   |'.."\n"
-		helpText = helpText..'| Merge | Send  | Split |'.."\n"
+		helpText = helpText..'| Merge | Link  | Split |'.."\n"
 		helpText = helpText..'+-------+-------+-------+'.."\n"
 		helpText = helpText..'|   4   |   5   |   6   |'.."\n"
 		helpText = helpText..'| Move  |Select | Input |'.."\n"
 		helpText = helpText..'+-------+-------+-------+'.."\n"
 		helpText = helpText..'|   1   |   2   |   3   |'.."\n"
-		helpText = helpText..'|Remove | Load  |Create |'.."\n"
+		helpText = helpText..'|Remove |Unlink |  Add  |'.."\n"
 		helpText = helpText..'+-------+-------+-------+'.."\n"
 		helpText = helpText..'                         '.."\n"
-		helpText = helpText..'        F12 - Settings    '.."\n"
+		helpText = helpText..'      [F12] - Settings   '.."\n"
 		helpText = helpText..'     [Spot] - Quick Select'.."\n"
 		helpText = helpText..'[Backspace] - Clear Select'.."\n"
-		helpText = helpText..'   [Insert] - Spawn Bot   '.."\n"
-		helpText = helpText..' [Numpad +] - Link Node  '.."\n"
-		helpText = helpText..' [Numpad -] - Unlink Node'.."\n"
+		helpText = helpText..'   [Insert] - Spawn Bot  '.."\n"
+		helpText = helpText..'       [F9] - Save Nodes '.."\n"
+		helpText = helpText..'      [F11] - Load Nodes '.."\n"
 
 	elseif (self.editMode == 'move') then
 
@@ -1347,7 +1353,7 @@ function ClientNodeEditor:_onUIDrawHud()
 		helpText = helpText..'   Move Mode: Absolute   '.."\n"
 		end
 		helpText = helpText..'                         '.."\n"
-		helpText = helpText..'        F12 - Settings    '.."\n"
+		helpText = helpText..'      [F12] - Settings    '.."\n"
 		helpText = helpText..'     [Spot] - Finish Move '.."\n"
 		helpText = helpText..'[Backspace] - Cancel Move '.."\n"
 		helpText = helpText..' [Numpad +] - Nudge Speed +'.."\n"
