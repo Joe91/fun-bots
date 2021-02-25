@@ -296,7 +296,13 @@ function WeaponList:__init()
 	weapon = Weapon('Taurus44', '', {}, 'Pistol')
 	table.insert(self._weapons, weapon);
 
-	weapon = Weapon('MP443', '', {}, 'Pistol') --TODO: find out why not working
+	weapon = Weapon('MP443', '', {}, 'Pistol', 'Weapons/MP443/U_MP443')
+	table.insert(self._weapons, weapon);
+
+	weapon = Weapon('MP443_Tactical', '', {}, 'Pistol', 'Weapons/MP443/U_MP443_TacticalLight')
+	table.insert(self._weapons, weapon);
+
+	weapon = Weapon('MP443_Silenced', '', {}, 'Pistol', 'Weapons/MP443/U_MP443_Silenced')
 	table.insert(self._weapons, weapon);
 
 	-- knifes

@@ -2,7 +2,7 @@
  
 ## [Unreleased - 1.6.X.X] - 2021-02-XX
  
-[Download](https://github.com/Joe91/fun-bots/archive/V1.6.1.4.zip)  
+[Download](https://github.com/Joe91/fun-bots/archive/V1.6.2.1.zip)  
 Big update of everything
 
 - Zombie-mode added
@@ -11,10 +11,12 @@ Big update of everything
 - Support for Domination and Gunmaster
 - First Paths for Conquest Large (Thanks to R3trib)
 - Visible traces (WIP)
+- Preparation for smart nodes done (WIP)
 - Bot Vision
 - better following of paths
 - Bots attack bots
 - different spawn-modes
+- fix with some strange crashes
 - lots of bugfixes
 
 
