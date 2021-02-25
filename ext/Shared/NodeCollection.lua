@@ -149,10 +149,14 @@ function NodeCollection:Register(waypoint)
 	table.insert(self.waypoints, waypoint)
 	if (#self.waypoints ~= waypoint.Index) then
 		local diff = waypoint.Index - #self.waypoints
-		print('Warning, New Node index does not match: waypoint.Index:'..tostring(waypoint.Index)..' | #self.waypoints:'..tostring(#self.waypoints)..' | '.. tostring(diff))
+		print('Warning, New Node Index does not match: waypoint.Index:'..tostring(waypoint.Index)..' | #self.waypoints:'..tostring(#self.waypoints)..' | '.. tostring(diff))
 	end
 
 	table.insert(self.waypointsByPathIndex[waypoint.PathIndex], waypoint)
+	if (#self.waypointsByPathIndex[waypoint.PathIndex] ~= waypoint.PointIndex) then
+		local diff = waypoint.PointIndex - #self.waypointsByPathIndex[waypoint.PathIndex]
+		print('Warning, New Node PointIndex does not match: waypoint.PointIndex:'..tostring(waypoint.Index)..' | #self.waypointsByPathIndex['..waypoint.PathIndex..']:'..tostring(#self.waypointsByPathIndex[waypoint.PathIndex])..' | '.. tostring(diff))
+	end
 	self.waypointsByID[waypoint.ID] = waypoint
 
 	return waypoint
@@ -545,10 +549,12 @@ end
 -- g_NodeCollection:Get() -- all waypoints as unsorted table
 -- g_NodeCollection:Get(nil, <int|PathIndex>) -- all waypoints in PathIndex as unsorted table
 --
--- g_NodeCollection:Get(<string|WaypointID>) -- waypoint from  id - Speed: O(1)
--- g_NodeCollection:Get(<table|Waypoint) -- waypoint from another waypoint referrence - Speed: O(1)
--- g_NodeCollection:Get(<int|Index) -- waypoint from waypoint Index - Speed: O(n)
--- g_NodeCollection:Get(<int|PointIndex, <int|PathIndex>) -- waypoint from PointIndex and PathIndex - Speed: O(1)
+-- g_NodeCollection:Get(<string|WaypointID>) -- waypoint from id - Speed: O(1)
+-- g_NodeCollection:Get(<table|Waypoint>) -- waypoint from another waypoint referrence - Speed: O(1)
+-- g_NodeCollection:Get(<int|Index>) -- waypoint from waypoint Index - Speed: O(n)
+-- g_NodeCollection:Get(<int|PointIndex>, <int|PathIndex>) -- waypoint from PointIndex and PathIndex - Speed: O(1)
+-- g_NodeCollection:Get(<string|WaypointID>, <int|PathIndex>) -- waypoint from PointIndex and PathIndex - Speed: O(n)
+-- g_NodeCollection:Get(<table|Waypoint>, <int|PathIndex>) -- waypoint from PointIndex and PathIndex - Speed: O(n)
 
 function NodeCollection:Get(waypoint, pathIndex)
 	if (waypoint ~= nil) then
@@ -558,10 +564,21 @@ function NodeCollection:Get(waypoint, pathIndex)
 				self.waypointsByPathIndex[pathIndex] = {}
 			end
 
-			for i=1, #self.waypointsByPathIndex[pathIndex] do
-				local waypoint = self.waypointsByPathIndex[pathIndex][i]
-				if (waypoint.PathIndex == pathIndex and waypoint.PointIndex == waypoint) then
-					return waypoint
+			if (type(waypoint) == 'number') then
+				return self.waypointsByPathIndex[pathIndex][waypoint]
+			elseif (type(waypoint) == 'string') then
+				for i=1, #self.waypointsByPathIndex[pathIndex] do
+					local targetWaypoint = self.waypointsByPathIndex[pathIndex][i]
+					if (targetWaypoint.PathIndex == pathIndex and targetWaypoint.ID == waypoint) then
+						return targetWaypoint
+					end
+				end
+			elseif (type(waypoint) == 'table') then
+				for i=1, #self.waypointsByPathIndex[pathIndex] do
+					local targetWaypoint = self.waypointsByPathIndex[pathIndex][i]
+					if (targetWaypoint.PathIndex == pathIndex and targetWaypoint.ID == waypoint.ID) then
+						return targetWaypoint
+					end
 				end
 			end
 		else
@@ -876,10 +893,10 @@ function NodeCollection:Load(levelName, gameMode)
 	self:ProcessMetadata()
 
 	-- we're on the server
-	if (g_Globals ~= nil) then
-		g_Globals.wayPoints = self.waypointsByPathIndex
-		g_Globals.activeTraceIndexes = pathCount
-	end
+	--if (g_Globals ~= nil) then
+		--g_Globals.wayPoints = self.waypointsByPathIndex
+		--g_Globals.activeTraceIndexes = pathCount
+	--end
 
 	print('NodeCollection:Load -> Paths: '..tostring(pathCount)..' | Waypoints: '..tostring(waypointCount))
 end

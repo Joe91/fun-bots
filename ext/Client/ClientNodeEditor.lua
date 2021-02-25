@@ -637,7 +637,7 @@ function ClientNodeEditor:_onBotSelect(pathIndex, pointIndex, botPosition, isObs
 	local waypoint = g_NodeCollection:Get(pointIndex, pathIndex)
 	if (waypoint ~= nil) then
 		self.botSelectedWaypoints[waypoint.ID] = {
-			Timer = 1,
+			Timer = 0.5,
 			Position = botPosition,
 			Obstacle = isObstacleMode,
 			Color = (color or 'White')

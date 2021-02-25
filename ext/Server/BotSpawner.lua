@@ -2,6 +2,7 @@ class('BotSpawner');
 
 require('Globals');
 require('SpawnSet')
+require('__shared/NodeCollection')
 
 local BotManager	= require('BotManager');
 local WeaponList	= require('__shared/WeaponList');
@@ -501,22 +502,8 @@ function BotSpawner:spawnWayBots(player, amount, useRandomWay, activeWayIndex, i
 end
 
 function BotSpawner:_getNewWayIndex()
-	local newWayIdex = 0
-	if g_Globals.activeTraceIndexes <= 0 then
-		return newWayIdex
-	end
-	local targetWaypoint = MathUtils:GetRandomInt(1, g_Globals.activeTraceIndexes)
-	local count = 0
-	for i = 1, MAX_TRACE_NUMBERS do
-		if g_NodeCollection:Get(1, i) ~= nil then
-			count = count + 1
-		end
-		if count == targetWaypoint then
-			newWayIdex = i
-			return newWayIdex
-		end
-	end
-	return newWayIdex
+	local paths = g_NodeCollection:GetPaths()
+	return MathUtils:GetRandomInt(1, #paths)
 end
 
 -- Tries to find first available kit
