@@ -13,79 +13,109 @@ function PathSwitcher:getNewPath(point, objective)
 	-- TODO get all paths via links, assign priority, sort by priority
 	-- if multiple are top priority, choose at random
 
-	-- i have an objective to get to, this takes priority over all
-	if (objective ~= '') then
-		print('my objective: '..objective)
+	objective = objective or ''
+	local paths = {}
+	local highestPriority = 0
+	local currentPriority = 0
 
-		local checkedPaths = {}
-
-		-- loop through each link
-		for i=1, #point.Data.Links do
-
-			local newPoint = g_NodeCollection:Get(point.Data.Links[i])
-
-			-- don't double-check paths
-			if (newPoint ~= nil and checkedPaths[newPoint.PathIndex] ~= true) then
-				checkedPaths[newPoint.PathIndex] = true
-
-				local pathNode = g_NodeCollection:GetFirst(newPoint.PathIndex)
-				local myPathNode = g_NodeCollection:GetFirst(point.PathIndex)
-
-				-- this path has listed objectives
-				print('path ['..newPoint.PathIndex..'] has objectives: '..g_Utilities:dump(pathNode.Data.Objectives))
-				if (pathNode.Data.Objectives ~= nil) then
-
-					-- always select a path with a single objective that matches mine
-					if (#pathNode.Data.Objectives == 1 and pathNode.Data.Objectives[1] == objective and
-						#myPathNode.Data.Objectives == 1 and myPathNode.Data.Objectives[1] == objective) then
-						print('found another path with 1 objective that matches mine, retry selection for random choice')
-						return self:getNewPath(point, '') -- retry selection, but with no objective
-
-					-- otherwise, check if the path has an objective i want
-					else
-						-- loop through the path's objectives and compare to mine
-						for _,pathObjective in pairs(pathNode.Data.Objectives) do
-							-- this path is where i want to go
-							if (objective == pathObjective) then
-								print('this path is where i want to go')
-								return true, newPoint.PathIndex, newPoint.PointIndex
-							end 
-						end
-					end
-				end
-			end
+	local possiblePaths = {}
+	table.insert(possiblePaths, point) -- include our current path
+	for i=1, #point.Data.Links do
+		local newPoint = g_NodeCollection:Get(point.Data.Links[i])
+		if (newPoint ~= nil) then
+			table.insert(possiblePaths, newPoint)
 		end
+	end
+	
+	-- loop through each possible path
+	for i=1, #possiblePaths do
 
-		-- nothing better found, don't change
+		local newPoint = possiblePaths[i]
+		local pathNode = g_NodeCollection:GetFirst(newPoint.PathIndex)
 
-		print('nothing better found, dont change')
-		return false
-
-	-- no objectives found or none to look for
-	else
-
-		local linkMode = tonumber(point.Data.LinkMode) or 0
-		if linkMode == 0 then -- random path switch
-
-			local chance = tonumber(point.Data.LinkChance) or 25
-			local randNum = MathUtils:GetRandomInt(0, 100)
-
-			if randNum >= chance then
-				local linkID = point.Data.Links[MathUtils:GetRandomInt(1, #point.Data.Links)];
-				local newPoint = g_NodeCollection:Get(linkID)
-				if newPoint ~= nil then
-					print('chose to switch at random ('..randNum..' >= '..chance..')')
-					return true, newPoint.PathIndex, newPoint.PointIndex;
+		-- this path has listed objectives
+		if (pathNode.Data.Objectives ~= nil and objective ~= '') then
+			-- path with a single objective that matches mine, top priority
+			if (#pathNode.Data.Objectives == 1 and pathNode.Data.Objectives[1] == objective) then
+				if (highestPriority < 2) then highestPriority = 2 end
+				table.insert(paths, {
+					Priority = 2,
+					Point = newPoint
+				})
+				if (newPoint.ID == point.ID) then
+					currentPriority = 2
+				end
+			-- otherwise, check if the path has an objective i want
+			else
+				-- loop through the path's objectives and compare to mine
+				for _,pathObjective in pairs(pathNode.Data.Objectives) do
+					if (objective == pathObjective) then
+						if (highestPriority < 1) then highestPriority = 1 end
+						table.insert(paths, {
+							Priority = 1,
+							Point = newPoint
+						})
+						if (newPoint.ID == point.ID) then
+							currentPriority = 1
+						end
+					end 
 				end
 			end
-		elseif linkMode == 1 then -- some other kind of switching decision
-			-- etc...
+		else
+			--path has no objectives, lowest priority
+			table.insert(paths, {
+				Priority = 0,
+				Point = newPoint
+			})
+			if (newPoint.ID == point.ID) then
+				currentPriority = 0
+			end
 		end
 	end
 
-	-- don't switch at all
-	print('chose not to switch')
-	return false;
+	-- remove paths below our highest priority
+	for i=1, #paths do
+		if (paths[i].Priority < highestPriority) then
+			paths[i] = nil
+		end
+	end
+
+	--print('Trimmed Priority List -> '..g_Utilities:dump(paths, true, 2))
+	--print('Highest Priority -> '..highestPriority)
+	--print('#paths -> '..(#paths))
+
+	if (#paths == 0) then
+		return false
+	end
+
+	if (#paths == 1 and currentPriority < paths[1].Priority) then
+		--print('found single higher priority path ( '..currentPriority..' | '..paths[1].Priority..' )')
+		return true, paths[1].Point.PathIndex, paths[1].Point.PointIndex
+	end
+
+	local linkMode = tonumber(point.Data.LinkMode) or 0
+	if linkMode == 0 then -- random path switch
+
+		local chance = tonumber(point.Data.LinkChance) or 25
+		local randNum = MathUtils:GetRandomInt(0, 100)
+
+		if currentPriority < highestPriority then
+			local randomPath = paths[MathUtils:GetRandomInt(1, #paths)]
+			--print('found multiple higher priority paths | Priority: ( '..currentPriority..' | '..highestPriority..' )')
+			return true, randomPath.Point.PathIndex, randomPath.Point.PointIndex
+		end
+
+		if randNum >= chance then
+			local randomPath = paths[MathUtils:GetRandomInt(1, #paths)]
+			--print('chose to switch at random ('..randNum..' >= '..chance..') | Priority: ( '..currentPriority..' | '..randomPath.Priority..' )')
+			return true, randomPath.Point.PathIndex, randomPath.Point.PointIndex
+		end
+	elseif linkMode == 1 then -- some other kind of switching decision
+		-- etc...
+	end
+
+	--print('dont change')
+	return false
 end
 
 
