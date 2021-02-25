@@ -403,10 +403,22 @@ function BotManager:getBotByName(name)
 	return returnBot
 end
 
+function BotManager:getSquad(team)
+	for i = 9, SquadId.SquadIdCount - 1 do -- first 8 squads for real players
+		if TeamSquadManager:GetSquadPlayerCount(team, i) < 4 then
+			return i
+		end
+	end
+	return 0
+end
+
+
 function BotManager:createBot(name, team)
 	local bot = self:getBotByName(name)
+	local squad = self:getSquad(team)
 	if bot ~= nil then
 		bot.player.teamId = team
+		bot.player.squadId = squad
 		bot:resetVars()
 		return bot
 	end
@@ -422,7 +434,7 @@ function BotManager:createBot(name, team)
 	end
 
 	-- Create a player for this bot.
-	local botPlayer = PlayerManager:CreatePlayer(name, team, SquadId.SquadNone)
+	local botPlayer = PlayerManager:CreatePlayer(name, team, squad)
 	if botPlayer == nil then
 		print("cant create more players on this team")
 		return
