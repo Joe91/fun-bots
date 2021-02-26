@@ -387,7 +387,17 @@ function BotSpawner:_getSpawnPoint(team, squad)
 
 	-- CONQUEST
 	-- spawn at base, squad-mate, captured flag
-	if false then -- g_Globals.isConquest then
+	if g_Globals.isConquest then
+		activeWayIndex = g_GameDirector:getSpawnPath(team, squad)
+
+		if activeWayIndex == 0 then
+			-- something went wrong. use random path
+			activeWayIndex = MathUtils:GetRandomInt(1, #g_NodeCollection:GetPaths())
+		end
+		indexOnPath = MathUtils:GetRandomInt(1, #g_NodeCollection:Get(nil, activeWayIndex))
+
+		targetNode = g_NodeCollection:Get(indexOnPath, activeWayIndex)
+
 
 	-- RUSH
 	-- spawn at base (of zone) or squad-mate
@@ -476,9 +486,9 @@ function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, inde
 	local inverseDirection = false;
 	if name ~= nil or isRespawn then
 
-		-- find a spawnpoint away from players
+		-- find a spawnpoint
 		if useRandomWay or activeWayIndex == nil or activeWayIndex == 0 then
-			spawnPoint = self._getSpawnPoint(team, squad);
+			spawnPoint = self:_getSpawnPoint(team, squad);
 		else
 			spawnPoint = g_NodeCollection:Get(indexOnPath, activeWayIndex)
 		end

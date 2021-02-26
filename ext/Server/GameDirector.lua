@@ -54,9 +54,44 @@ function GameDirector:initObjectives()
 			name = objectiveName,
 			belongs = TeamId.TeamNeutral,
 			isAttacked = false,
+			isBase = false,
 			zone = 0
 		}
+		if string.find(objectiveName:lower(), "base") ~= nil then
+			objective.isBase = true;
+		end
 		table.insert(self.AllObjectives, objective)
+	end
+	print(self.AllObjectives)
+end
+
+function GameDirector:getSpawnPath(team)
+	local possibleObjectives = {}
+	local possibleBases = {}
+	for _,objective in pairs(self.AllObjectives) do
+		if objective.belongs == team then
+			local allObjectives = g_NodeCollection:GetKnownOjectives();
+			local pathsWithObjective = allObjectives[objective.name]
+			for _,path in pairs(pathsWithObjective) do
+				local node = g_NodeCollection:Get(1, path)
+				if node ~= nil and node.Data.Objectives ~= nil then
+					if #node.Data.Objectives == 1 then --possible path
+						if objective.isBase then
+							table.insert(possibleBases, path)
+						else
+							table.insert(possibleObjectives, path)
+						end
+					end
+				end
+			end
+		end
+	end
+	if #possibleObjectives > 0 then
+		return possibleObjectives[MathUtils:GetRandomInt(1, #possibleObjectives)];
+	elseif #possibleBases > 0 then
+		return possibleBases[MathUtils:GetRandomInt(1, #possibleBases)];
+	else
+		return 0;
 	end
 end
 
