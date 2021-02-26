@@ -400,7 +400,7 @@ function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, inde
 			local trysDone = 0;
 			while not validPointFound and trysDone < maximumTrys do
 				-- get new point
-				activeWayIndex = self:_getNewWayIndex()
+				activeWayIndex = MathUtils:GetRandomInt(1, #g_NodeCollection:GetPaths())
 				if activeWayIndex == 0 then
 					return
 				end
@@ -474,7 +474,7 @@ function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, inde
 end
 
 function BotSpawner:spawnWayBots(player, amount, useRandomWay, activeWayIndex, indexOnPath, teamId)
-	if g_Globals.activeTraceIndexes <= 0 then
+	if #g_NodeCollection:GetPaths() <= 0 then
 		return
 	end
 
@@ -499,11 +499,6 @@ function BotSpawner:spawnWayBots(player, amount, useRandomWay, activeWayIndex, i
 		spawnSet.team				= teamId;
 		table.insert(self._spawnSets, spawnSet)
 	end
-end
-
-function BotSpawner:_getNewWayIndex()
-	local paths = g_NodeCollection:GetPaths()
-	return MathUtils:GetRandomInt(1, #paths)
 end
 
 -- Tries to find first available kit
