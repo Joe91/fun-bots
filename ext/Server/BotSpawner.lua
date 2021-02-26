@@ -320,7 +320,7 @@ function BotSpawner:spawnBotRow(player, length, spacing)
 		if name ~= nil then
 			local transform = LinearTransform()
 			transform.trans = player.soldier.worldTransform.trans + (player.soldier.worldTransform.forward * i * spacing)
-			local bot = BotManager:createBot(name, BotManager:getBotTeam())
+			local bot = BotManager:createBot(name, BotManager:getBotTeam(), SquadId.SquadNone)
 			bot:setVarsStatic(player)
 			self:spawnBot(bot, transform, true)
 		end
@@ -336,7 +336,7 @@ function BotSpawner:spawnBotTower(player, height)
 			transform.trans.x = player.soldier.worldTransform.trans.x + (math.cos(yaw + (math.pi / 2)))
 			transform.trans.y = player.soldier.worldTransform.trans.y + ((i - 1) * 1.8)
 			transform.trans.z = player.soldier.worldTransform.trans.z + (math.sin(yaw + (math.pi / 2)))
-			local bot = BotManager:createBot(name, BotManager:getBotTeam())
+			local bot = BotManager:createBot(name, BotManager:getBotTeam(), SquadId.SquadNone)
 			bot:setVarsStatic(player)
 			self:spawnBot(bot, transform, true)
 		end
@@ -353,7 +353,7 @@ function BotSpawner:spawnBotGrid(player, rows, columns, spacing)
 				transform.trans.x = player.soldier.worldTransform.trans.x + (i * math.cos(yaw + (math.pi / 2)) * spacing) + ((j - 1) * math.cos(yaw) * spacing)
 				transform.trans.y = player.soldier.worldTransform.trans.y
 				transform.trans.z = player.soldier.worldTransform.trans.z + (i * math.sin(yaw + (math.pi / 2)) * spacing) + ((j - 1) * math.sin(yaw) * spacing)
-				local bot = BotManager:createBot(name, BotManager:getBotTeam())
+				local bot = BotManager:createBot(name, BotManager:getBotTeam(), SquadId.SquadNone)
 				bot:setVarsStatic(player)
 				self:spawnBot(bot, transform, true)
 			end
@@ -367,14 +367,89 @@ function BotSpawner:spawnLineBots(player, amount, spacing)
 		if name ~= nil then
 			local transform = LinearTransform()
 			transform.trans = player.soldier.worldTransform.trans + (player.soldier.worldTransform.forward * i * spacing)
-			local bot = BotManager:createBot(name, BotManager:getBotTeam())
+			local bot = BotManager:createBot(name, BotManager:getBotTeam(), SquadId.SquadNone)
 			bot:setVarsSimpleMovement(player, 2, transform)
 			self:spawnBot(bot, transform, true)
 		end
 	end
 end
 
+function BotSpawner:_getSpawnPoint(team, squad)
+	local activeWayIndex = 0;
+	local indexOnPath = 0;
+
+	local targetNode = nil
+	local validPointFound = false;
+	local targetDistance = Config.distanceToSpawnBots;
+	local retryCounter = Config.maxTrysToSpawnAtDistance;
+	local maximumTrys = 100;
+	local trysDone = 0;
+
+	-- CONQUEST
+	-- spawn at base, squad-mate, captured flag
+
+	-- RUSH
+	-- spawn at base (of zone) or squad-mate
+
+	-- TDM / GM / SCAVANGER
+	while not validPointFound and trysDone < maximumTrys do
+		-- get new point
+		activeWayIndex = MathUtils:GetRandomInt(1, #g_NodeCollection:GetPaths())
+		if activeWayIndex == 0 then
+			return
+		end
+		indexOnPath = MathUtils:GetRandomInt(1, #g_NodeCollection:Get(nil, activeWayIndex))
+		if g_NodeCollection:Get(1, activeWayIndex) == nil then
+			return
+		end
+
+		targetNode = g_NodeCollection:Get(indexOnPath, activeWayIndex)
+		local spawnPoint = targetNode.Position
+
+		--check for nearby player
+		local playerNearby = false;
+		local players = PlayerManager:GetPlayers()
+		for i = 1, PlayerManager:GetPlayerCount() do
+			local tempPlayer = players[i];
+			if tempPlayer.alive then
+				if team == nil or team ~= tempPlayer.teamId then
+					local distance = tempPlayer.soldier.worldTransform.trans:Distance(spawnPoint)
+					local heightDiff = math.abs(tempPlayer.soldier.worldTransform.trans.y - spawnPoint.y)
+					if distance < targetDistance and heightDiff < Config.heightDistanceToSpawn then
+						playerNearby = true;
+						break;
+					end
+				end
+			end
+		end
+		retryCounter = retryCounter - 1;
+		trysDone = trysDone + 1;
+		if retryCounter == 0 then
+			retryCounter = Config.maxTrysToSpawnAtDistance;
+			targetDistance = targetDistance - Config.distanceToSpawnReduction;
+			if targetDistance < 0 then
+				targetDistance = 0
+			end
+		end
+		if not playerNearby then
+			validPointFound = true;
+		end
+	end
+	return targetNode
+end
+
+
+function BotSpawner:getSquad(team)  --TODO: create a more advanced algorithm?
+	for i = 9, SquadId.SquadIdCount - 1 do -- first 8 squads for real players
+		if TeamSquadManager:GetSquadPlayerCount(team, i) < 4 then
+			return i
+		end
+	end
+	return 0
+end
+
 function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, indexOnPath, existingBot, forcedTeam)
+	local spawnPoint = nil
 	local isRespawn = false;
 	local name = nil;
 	if existingBot ~= nil then
@@ -382,68 +457,34 @@ function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, inde
 	else
 		name = BotManager:findNextBotName()
 	end
+	local team = forcedTeam;
+	local squad = SquadId.SquadNone
+	if team == nil then
+		team = BotManager:getBotTeam();
+	end
+	if isRespawn then
+		team = existingBot.player.teamId;
+		squad = existingBot.player.squadId;
+	else
+		squad = self:getSquad(team)
+	end
 	local inverseDirection = false;
 	if name ~= nil or isRespawn then
-		local teamOfBot = nil;
-		if existingBot ~= nil then
-			teamOfBot = existingBot.player.teamId;
-		elseif forcedTeam ~= nil then
-			teamOfBot = forcedTeam;
-		end
 
 		-- find a spawnpoint away from players
 		if useRandomWay or activeWayIndex == nil or activeWayIndex == 0 then
-			local validPointFound = false;
-			local targetDistance = Config.distanceToSpawnBots;
-			local retryCounter = Config.maxTrysToSpawnAtDistance;
-			local maximumTrys = 100;
-			local trysDone = 0;
-			while not validPointFound and trysDone < maximumTrys do
-				-- get new point
-				activeWayIndex = MathUtils:GetRandomInt(1, #g_NodeCollection:GetPaths())
-				if activeWayIndex == 0 then
-					return
-				end
-				indexOnPath = MathUtils:GetRandomInt(1, #g_NodeCollection:Get(nil, activeWayIndex))
-				if g_NodeCollection:Get(1, activeWayIndex) == nil then
-					return
-				end
-				local spawnPoint = g_NodeCollection:Get(indexOnPath, activeWayIndex).Position
-
-				--check for nearby player
-				local playerNearby = false;
-				local players = PlayerManager:GetPlayers()
-				for i = 1, PlayerManager:GetPlayerCount() do
-					local tempPlayer = players[i];
-					if tempPlayer.alive then
-						if teamOfBot == nil or teamOfBot ~= tempPlayer.teamId then
-							local distance = tempPlayer.soldier.worldTransform.trans:Distance(spawnPoint)
-							local heightDiff = math.abs(tempPlayer.soldier.worldTransform.trans.y - spawnPoint.y)
-							if distance < targetDistance and heightDiff < Config.heightDistanceToSpawn then
-								playerNearby = true;
-								break;
-							end
-						end
-					end
-				end
-				retryCounter = retryCounter - 1;
-				trysDone = trysDone + 1;
-				if retryCounter == 0 then
-					retryCounter = Config.maxTrysToSpawnAtDistance;
-					targetDistance = targetDistance - Config.distanceToSpawnReduction;
-					if targetDistance < 0 then
-						targetDistance = 0
-					end
-				end
-				if not playerNearby then
-					validPointFound = true;
-				end
-			end
+			spawnPoint = self._getSpawnPoint(team, squad);
+		else
+			spawnPoint = g_NodeCollection:Get(indexOnPath, activeWayIndex)
 		end
 
-		if g_NodeCollection:Get(1, activeWayIndex) == nil then
+		if spawnPoint == nil then
 			return
+		else
+			indexOnPath = spawnPoint.PointIndex;
+			activeWayIndex = spawnPoint.PathIndex;
 		end
+
 		--find out direction, if path has a return point
 		if g_NodeCollection:Get(1, activeWayIndex).OptValue == 0xFF then
 			inverseDirection = (MathUtils:GetRandomInt(0,1) == 1);
@@ -453,18 +494,14 @@ function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, inde
 		if indexOnPath == nil or indexOnPath == 0 then
 			indexOnPath = 1;
 		end
-		transform.trans = g_NodeCollection:Get(indexOnPath, activeWayIndex).Position
+		transform.trans = spawnPoint.Position
 		
 		if isRespawn then
 			existingBot:setVarsWay(player, useRandomWay, activeWayIndex, indexOnPath, inverseDirection)
 			self:spawnBot(existingBot, transform, false)
 		else
-			local bot = nil;
-			if forcedTeam ~= nil then
-				bot = BotManager:createBot(name, forcedTeam)
-			else
-				bot = BotManager:createBot(name, BotManager:getBotTeam())
-			end
+			local bot = BotManager:createBot(name, team, squad)
+	
 			if bot ~= nil then
 				bot:setVarsWay(player, useRandomWay, activeWayIndex, indexOnPath, inverseDirection)
 				self:spawnBot(bot, transform, true)

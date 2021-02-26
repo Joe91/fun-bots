@@ -403,19 +403,8 @@ function BotManager:getBotByName(name)
 	return returnBot
 end
 
-function BotManager:getSquad(team)
-	for i = 9, SquadId.SquadIdCount - 1 do -- first 8 squads for real players
-		if TeamSquadManager:GetSquadPlayerCount(team, i) < 4 then
-			return i
-		end
-	end
-	return 0
-end
-
-
-function BotManager:createBot(name, team)
+function BotManager:createBot(name, team, squad)
 	local bot = self:getBotByName(name)
-	local squad = self:getSquad(team)
 	if bot ~= nil then
 		bot.player.teamId = team
 		bot.player.squadId = squad
@@ -511,6 +500,7 @@ end
 
 function BotManager:killAmount(number)
 	local count = 0
+	-- TODO: try to kill dead bots first
 	for _, bot in pairs(self._bots) do
 		bot:resetVars()
 		if bot.player.alive then
@@ -542,13 +532,13 @@ function BotManager:destroyTeam(teamId, amount)
 end
 
 function BotManager:killTeam(teamId, amount)
+	-- TODO: try to kill dead bots first
 	for _, bot in pairs(self._bots) do
 		if bot.player.teamId == teamId then
 			bot:resetVars()
 			if bot.player.alive then
 				bot.player.soldier:Kill()
 			end
-			print("bot killed")
 			if amount ~= nil then
 				amount = amount - 1;
 				if amount <= 0 then

@@ -108,6 +108,22 @@ function FunBotServer:_onLevelLoaded(levelName, gameMode)
 		Globals.isScavenger = false;
 	end
 
+	if gameMode == 'ConquestLarge0' or
+	gameMode == 'ConquestSmall0' or
+	gameMode == 'ConquestAssaultLarge0' or
+	gameMode == 'ConquestAssaultSmall0' or
+	gameMode == 'ConquestAssaultSmall1' then
+		Globals.isConquest = true;
+	else
+		Globals.isConquest = false;
+	end
+
+	if gameMode == 'RushLarge0' then
+		Globals.isRush = true;
+	else
+		Globals.isRush = false;
+	end
+
 	g_NodeEditor:onLevelLoaded(levelName, gameMode)
 	TraceManager:onLevelLoaded(levelName, gameMode);
 	BotSpawner:onLevelLoaded();
