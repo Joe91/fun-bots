@@ -39,6 +39,9 @@ function GameDirector:_onLevelLoaded(levelName, gameMode)
 	self.Objectives[levelName][gameMode] = {}
 	self.LevelObjectives = self.Objectives[levelName][gameMode]
 
+	self.AllObjectives = {}
+	self.Translatinos = {}
+
 	-- TODO, assign weights to each objective
 
 	self.UpdateLast = 0
@@ -63,6 +66,7 @@ function GameDirector:_updateObjective(name, data)
 			for key, value in pairs(data) do
 				objective[key] = value;
 			end
+			break;
 		end
 	end
 end
@@ -98,11 +102,10 @@ end
 function GameDirector:_onCapture(capturePoint)
 	local flagEntity = CapturePointEntity(capturePoint)
 	local objective = self:_translateObjective(flagEntity);
-	local data = {
-		belongs = capturePoint.team,
-		isAttacked = capturePoint.isAttacked
-	}
-	self:_updateObjective(objective, data)
+	self:_updateObjective(objective, {
+		belongs = flagEntity.team,
+		isAttacked = flagEntity.isAttacked
+	})
 
 	print('GameDirector:_onCapture: '..flagEntity.name)
 
@@ -125,11 +128,10 @@ end
 function GameDirector:_onLost(capturePoint)
 	local flagEntity = CapturePointEntity(capturePoint)
 	local objective = self:_translateObjective(flagEntity);
-	local data = {
-		belongs = capturePoint.team,
-		isAttacked = capturePoint.isAttacked
-	}
-	self:_updateObjective(objective, data)
+	self:_updateObjective(objective, {
+		belongs = flagEntity.team,
+		isAttacked = flagEntity.isAttacked
+	})
 
 	print('GameDirector:_onLost: '..flagEntity.name)
 
@@ -141,11 +143,10 @@ end
 function GameDirector:_onPlayerEnterCapturePoint(player, capturePoint)
 	local flagEntity = CapturePointEntity(capturePoint)
 	local objective = self:_translateObjective(flagEntity);
-	local data = {
-		belongs = capturePoint.team,
-		isAttacked = capturePoint.isAttacked
-	}
-	self:_updateObjective(objective, data)
+	self:_updateObjective(objective, {
+		belongs = flagEntity.team,
+		isAttacked = flagEntity.isAttacked
+	})
 
 	--print('GameDirector:_onPlayerEnterCapturePoint: '..player.name..' -> '..flagEntity.name)
 	self.LevelObjectives[flagEntity.name] = flagEntity.team
