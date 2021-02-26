@@ -387,52 +387,57 @@ function BotSpawner:_getSpawnPoint(team, squad)
 
 	-- CONQUEST
 	-- spawn at base, squad-mate, captured flag
+	if false then -- g_Globals.isConquest then
 
 	-- RUSH
 	-- spawn at base (of zone) or squad-mate
+	elseif g_Globals.isRush then
 
 	-- TDM / GM / SCAVANGER
-	while not validPointFound and trysDone < maximumTrys do
-		-- get new point
-		activeWayIndex = MathUtils:GetRandomInt(1, #g_NodeCollection:GetPaths())
-		if activeWayIndex == 0 then
-			return
-		end
-		indexOnPath = MathUtils:GetRandomInt(1, #g_NodeCollection:Get(nil, activeWayIndex))
-		if g_NodeCollection:Get(1, activeWayIndex) == nil then
-			return
-		end
+	-- spawn away from other team
+	else
+		while not validPointFound and trysDone < maximumTrys do
+			-- get new point
+			activeWayIndex = MathUtils:GetRandomInt(1, #g_NodeCollection:GetPaths())
+			if activeWayIndex == 0 then
+				return
+			end
+			indexOnPath = MathUtils:GetRandomInt(1, #g_NodeCollection:Get(nil, activeWayIndex))
+			if g_NodeCollection:Get(1, activeWayIndex) == nil then
+				return
+			end
 
-		targetNode = g_NodeCollection:Get(indexOnPath, activeWayIndex)
-		local spawnPoint = targetNode.Position
+			targetNode = g_NodeCollection:Get(indexOnPath, activeWayIndex)
+			local spawnPoint = targetNode.Position
 
-		--check for nearby player
-		local playerNearby = false;
-		local players = PlayerManager:GetPlayers()
-		for i = 1, PlayerManager:GetPlayerCount() do
-			local tempPlayer = players[i];
-			if tempPlayer.alive then
-				if team == nil or team ~= tempPlayer.teamId then
-					local distance = tempPlayer.soldier.worldTransform.trans:Distance(spawnPoint)
-					local heightDiff = math.abs(tempPlayer.soldier.worldTransform.trans.y - spawnPoint.y)
-					if distance < targetDistance and heightDiff < Config.heightDistanceToSpawn then
-						playerNearby = true;
-						break;
+			--check for nearby player
+			local playerNearby = false;
+			local players = PlayerManager:GetPlayers()
+			for i = 1, PlayerManager:GetPlayerCount() do
+				local tempPlayer = players[i];
+				if tempPlayer.alive then
+					if team == nil or team ~= tempPlayer.teamId then
+						local distance = tempPlayer.soldier.worldTransform.trans:Distance(spawnPoint)
+						local heightDiff = math.abs(tempPlayer.soldier.worldTransform.trans.y - spawnPoint.y)
+						if distance < targetDistance and heightDiff < Config.heightDistanceToSpawn then
+							playerNearby = true;
+							break;
+						end
 					end
 				end
 			end
-		end
-		retryCounter = retryCounter - 1;
-		trysDone = trysDone + 1;
-		if retryCounter == 0 then
-			retryCounter = Config.maxTrysToSpawnAtDistance;
-			targetDistance = targetDistance - Config.distanceToSpawnReduction;
-			if targetDistance < 0 then
-				targetDistance = 0
+			retryCounter = retryCounter - 1;
+			trysDone = trysDone + 1;
+			if retryCounter == 0 then
+				retryCounter = Config.maxTrysToSpawnAtDistance;
+				targetDistance = targetDistance - Config.distanceToSpawnReduction;
+				if targetDistance < 0 then
+					targetDistance = 0
+				end
 			end
-		end
-		if not playerNearby then
-			validPointFound = true;
+			if not playerNearby then
+				validPointFound = true;
+			end
 		end
 	end
 	return targetNode
