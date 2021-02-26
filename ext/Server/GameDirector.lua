@@ -1,5 +1,8 @@
 class('GameDirector');
 
+require('Globals')
+require('__shared/NodeCollection')
+
 function GameDirector:__init()
 	self.currentLevel = ''
 	self.currentGameMode = ''
@@ -12,6 +15,9 @@ function GameDirector:__init()
 	self.Objectives = {}
 	self.MaxAssignedLimit = 8
 	self.CurrentAssignedCount = {}
+
+	self.AllObjectives = {}
+	self.Translatinos = {}
 
 	Events:Subscribe('Level:Loaded', self, self._onLevelLoaded)
 
@@ -38,8 +44,66 @@ function GameDirector:_onLevelLoaded(levelName, gameMode)
 	self.UpdateLast = 0
 end
 
+function GameDirector:initObjectives()
+	self.AllObjectives = {}
+	for objectiveName,_ in pairs(g_NodeCollection:GetKnownOjectives()) do
+		local objective = {
+			name = objectiveName,
+			belongs = TeamId.TeamNeutral,
+			isAttacked = false,
+			zone = 0
+		}
+		table.insert(self.AllObjectives, objective)
+	end
+end
+
+function GameDirector:_updateObjective(name, data)
+	for _,objective in pairs(self.AllObjectives) do
+		if objective.name == name then
+			for key, value in pairs(data) do
+				objective[key] = value;
+			end
+		end
+	end
+end
+
+function GameDirector:_translateObjective(flagEntity)
+	if self.Translatinos[flagEntity.name] == nil then
+		local allObjectives = g_NodeCollection:GetKnownOjectives();
+		local pathsDone = {}
+		local closestObjective = ""
+		local closestDistance = nil
+		for objective, paths in pairs(allObjectives) do
+			for _,path in pairs(paths) do
+				if not pathsDone[path] then
+					local node = g_NodeCollection:Get(1, path)
+					if node ~= nil and node.Data.Objectives ~= nil then
+						if #node.Data.Objectives == 1 then --possible objective
+							local distance = flagEntity.transform.trans:Distance(node.Position)
+							if closestDistance == nil or closestDistance > distance then
+								closestObjective = objective;
+								closestDistance = distance;
+							end
+						end
+					end
+					pathsDone[path] = true;
+				end
+			end
+		end
+		self.Translatinos[flagEntity.name] = closestObjective;
+	end
+	return self.Translatinos[flagEntity.name];
+end
+
 function GameDirector:_onCapture(capturePoint)
 	local flagEntity = CapturePointEntity(capturePoint)
+	local objective = self:_translateObjective(flagEntity);
+	local data = {
+		belongs = capturePoint.team,
+		isAttacked = capturePoint.isAttacked
+	}
+	self:_updateObjective(objective, data)
+
 	print('GameDirector:_onCapture: '..flagEntity.name)
 
 	self.LevelObjectives[flagEntity.name] = flagEntity.team
@@ -60,6 +124,13 @@ end
 
 function GameDirector:_onLost(capturePoint)
 	local flagEntity = CapturePointEntity(capturePoint)
+	local objective = self:_translateObjective(flagEntity);
+	local data = {
+		belongs = capturePoint.team,
+		isAttacked = capturePoint.isAttacked
+	}
+	self:_updateObjective(objective, data)
+
 	print('GameDirector:_onLost: '..flagEntity.name)
 
 	self.LevelObjectives[flagEntity.name] = TeamId.TeamNeutral
@@ -69,6 +140,13 @@ end
 
 function GameDirector:_onPlayerEnterCapturePoint(player, capturePoint)
 	local flagEntity = CapturePointEntity(capturePoint)
+	local objective = self:_translateObjective(flagEntity);
+	local data = {
+		belongs = capturePoint.team,
+		isAttacked = capturePoint.isAttacked
+	}
+	self:_updateObjective(objective, data)
+
 	--print('GameDirector:_onPlayerEnterCapturePoint: '..player.name..' -> '..flagEntity.name)
 	self.LevelObjectives[flagEntity.name] = flagEntity.team
 end
