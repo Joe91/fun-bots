@@ -168,6 +168,23 @@ function Utilities:dump(o, format, maxLevels, level)
 	end
 end
 
+function table:has(value)
+	for i=1, #self do
+		if (self[i] == value) then
+			return true
+		end
+	end
+	return false
+end
+
+function string:isLower(value)
+     return str:lower() == str
+end
+
+function string:isDigit(value)
+     return tonumber(str) ~= nil
+end
+
 function string:split(sep)
 	local sep, fields	= sep or ':', {};
 	local pattern		= string.format("([^%s]+)", sep);

@@ -191,6 +191,10 @@ function ClientNodeEditor:RegisterEvents()
 	Console:Register('DumpNodes', 'Print selected nodes or all nodes to console', self, self._onDumpNodes)
 	Console:Register('UnloadNodes', 'Clears and unloads all clientside nodes', self, self._onUnload)
 
+	Console:Register('ObjectiveDirection', 'Show best direction to given objective', self, self._onObjectiveDirection)
+	Console:Register('GetKnownOjectives', 'print all known objectives and associated paths', self, self._onGetKnownOjectives)
+
+
 	Console:Register('BotVision', '*<boolean|Enabled>* Lets you see what the bots see [Experimental]', self, self._onSetBotVision)
 end
 
@@ -798,6 +802,33 @@ function ClientNodeEditor:_onSetBotVision(args)
 		-- enable the timer before we are ready to receive
 		self.nodeReceiveTimer = 0
 	end
+end
+
+
+function ClientNodeEditor:_onObjectiveDirection(args)
+	self.CommoRose.Active = false
+
+	local data = table.concat(args or {}, ' ')
+	print('ClientNodeEditor:_onObjectiveDirection -> data: '..g_Utilities:dump(data, true))
+
+	local selection = g_NodeCollection:GetSelected()
+	if (#selection < 1) then
+		print('Must select at least one waypoint')
+		return false
+	end
+
+	local direction, bestPreviousWaypoint = g_NodeCollection:ObjectiveDirection(selection[1], data)
+	print('ClientNodeEditor:_onObjectiveDirection -> direction: '..tostring(direction))
+	if (bestPreviousWaypoint ~= nil) then
+		print('ClientNodeEditor:_onObjectiveDirection -> bestPreviousWaypoint: '..bestPreviousWaypoint.ID)
+	end
+	return true
+end
+
+function ClientNodeEditor:_onGetKnownOjectives(args)
+	self.CommoRose.Active = false
+	print('ClientNodeEditor:_onGetKnownOjectives -> '..g_Utilities:dump(g_NodeCollection:GetKnownOjectives(), true))
+	return true
 end
 
 -- ##################################### Events
