@@ -1076,6 +1076,81 @@ function NodeCollection:Next(waypoint)
 	return waypoint.Next
 end
 
+-- discover in which direction an objective is from a given waypoint
+-- returns <Direction>, <BestWaypoint>
+-- <Direction> will be either 'Next' or 'Previous'
+function NodeCollection:ObjectiveDirection(waypoint, objective)
+
+	local bestDirection = nil
+	local bestWaypoint = nil
+
+	local direction = 'Next'
+	local currentWaypoint = waypoint
+
+	while currentWaypoint[direction] do
+
+		if (currentWaypoint[direction].PathIndex > waypoint.PathIndex) then
+			-- hit the last node in the path, reset start and reverse direction
+			currentWaypoint = waypoint
+			direction = 'Previous'
+
+		elseif (currentWaypoint[direction].PathIndex < waypoint.PathIndex) then
+			-- hit the first node in the path, finish searching
+			break
+		else
+			if (currentWaypoint[direction].Data.Links ~= nil) then
+				for _,linkID in pairs(currentWaypoint[direction].Data.Links) do
+
+					local link = self:Get(linkID)
+					local pathWaypoint = self:GetFirst(link.PathIndex)
+
+					if (pathWaypoint ~= nil and pathWaypoint.Data.Objectives ~= nil and table.has(pathWaypoint.Data.Objectives, objective)) then
+
+						-- highest priority path found, return now
+						if (#pathWaypoint.Data.Objectives == 1) then
+							return direction, currentWaypoint[direction]
+
+						-- lower priority connecting path found, store for now
+						else
+							if (bestDirection == nil) then
+								bestDirection = direction
+								bestWaypoint = currentWaypoint[direction]
+							end
+						end
+					end
+				end
+			end
+		end
+		
+		currentWaypoint = currentWaypoint[direction]
+	end
+
+	if (bestDirection == nil) then
+		local directions = {'Next','Previous'}
+		bestDirection = directions[MathUtils:GetRandomInt(1, 2)]
+	end
+
+	return bestDirection, bestWaypoint
+end
+
+function NodeCollection:GetKnownOjectives()
+	local objectives = {
+		--[<Objective Name>] = {<PathIndex 1>, <PathIndex 2>}
+	}
+	for i=1, #self.waypointsByPathIndex do
+		local pathWaypoint = self.waypointsByPathIndex[i][1]
+		if (pathWaypoint ~= nil and pathWaypoint.Data.Objectives ~= nil) then
+			for _,objective in pairs(pathWaypoint.Data.Objectives) do
+				if (objectives[objective] == nil) then
+					objectives[objective] = {}
+				end
+				table.insert(objectives[objective], i)
+			end
+		end
+	end
+	return objectives
+end
+
 -- this method avoids the use of the Vec3:Distance() method to avoid complex math internally
 -- it's a tradeoff for speed over accuracy, as this method produces a box instead of a sphere
 -- @returns boolean whther given waypoint is inside the given range

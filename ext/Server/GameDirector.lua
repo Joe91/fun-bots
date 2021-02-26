@@ -1,6 +1,5 @@
 class('GameDirector');
 
-
 function GameDirector:__init()
 	self.currentLevel = ''
 	self.currentGameMode = ''
@@ -33,6 +32,8 @@ function GameDirector:_onLevelLoaded(levelName, gameMode)
 	self.Objectives[levelName] = {}
 	self.Objectives[levelName][gameMode] = {}
 	self.LevelObjectives = self.Objectives[levelName][gameMode]
+
+	-- TODO, assign weights to each objective
 
 	self.UpdateLast = 0
 end
@@ -80,7 +81,6 @@ function GameDirector:_onRoundReset(roundTime, winningTeam)
 	self.Objectives[self.currentLevel] = {}
 	self.Objectives[self.currentLevel][self.currentGameMode] = {}
 	self.LevelObjectives = self.Objectives[self.currentLevel][self.currentGameMode]
-
 	self.UpdateLast = 0
 end
 

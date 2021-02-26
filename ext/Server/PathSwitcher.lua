@@ -91,7 +91,7 @@ function PathSwitcher:getNewPath(point, objective)
 
 	if (#validPaths == 1 and currentPriority < validPaths[1].Priority) then
 		--print('found single higher priority path ( '..currentPriority..' | '..validPaths[1].Priority..' )')
-		return true, validPaths[1].Point.PathIndex, validPaths[1].Point.PointIndex
+		return true, validPaths[1].Point
 	end
 
 	local linkMode = tonumber(point.Data.LinkMode) or 0
@@ -108,7 +108,7 @@ function PathSwitcher:getNewPath(point, objective)
 				return false
 			end
 			--print('found multiple higher priority validPaths | Priority: ( '..currentPriority..' | '..highestPriority..' )')
-			return true, randomPath.Point.PathIndex, randomPath.Point.PointIndex
+			return true, randomPath.Point
 		end
 
 		if randNum >= chance then
@@ -118,7 +118,7 @@ function PathSwitcher:getNewPath(point, objective)
 				return false
 			end
 			--print('chose to switch at random ('..randNum..' >= '..chance..') | Priority: ( '..currentPriority..' | '..randomPath.Priority..' )')
-			return true, randomPath.Point.PathIndex, randomPath.Point.PointIndex
+			return true, randomPath.Point
 		end
 	elseif linkMode == 1 then -- some other kind of switching decision
 		-- etc...

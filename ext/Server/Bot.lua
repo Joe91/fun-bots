@@ -849,13 +849,20 @@ function Bot:_updateMovement()
 					if distanceFromTarget <= targetDistanceSpeed and heightDistance <= StaticConfig.targetHeightDistanceWayPoint then
 						if not useShootWayPoint then
 							-- CHECK FOr PATH-SWITCHES
-							local swithcPath = false;
-							local newPathIndex = 0;
-							local newPointIndex = 0;
-							swithcPath, newPathIndex, newPointIndex = g_PathSwitcher:getNewPath(point, self._objective);
-							if swithcPath and not self._onSwitch then
-								self._pathIndex = newPathIndex;
-								self._currentWayPoint = newPointIndex;
+							local switchPath, newWaypoint = g_PathSwitcher:getNewPath(point, self._objective);
+
+							if switchPath and not self._onSwitch then
+								if (self._objective ~= '') then
+									-- 'best' direction for objective on switch
+									local direction = g_NodeCollection:ObjectiveDirection(newWaypoint, self._objective)
+									self._invertPathDirection = (direction == 'Previous')
+								else 
+									-- random path direction on switch
+									self._invertPathDirection = MathUtils:GetRandomInt(1,2) == 1
+								end
+
+								self._pathIndex = newWaypoint.PathIndex;
+								self._currentWayPoint = newWaypoint.PointIndex;
 								self._onSwitch = true;
 							else
 								self._onSwitch = false;
