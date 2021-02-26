@@ -59,6 +59,11 @@ function GameDirector:initObjectives()
 		}
 		if string.find(objectiveName:lower(), "base") ~= nil then
 			objective.isBase = true;
+			if string.find(objectiveName:lower(), "us") ~= nil then
+				objective.belongs = TeamId.Team1
+			else
+				objective.belongs = TeamId.Team2
+			end
 		end
 		table.insert(self.AllObjectives, objective)
 	end
