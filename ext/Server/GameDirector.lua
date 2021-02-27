@@ -4,9 +4,6 @@ require('Globals')
 require('__shared/NodeCollection')
 
 function GameDirector:__init()
-	self.currentLevel = ''
-	self.currentGameMode = ''
-
 	self.UpdateLast = -1
 	self.UpdateInterval = 1.5 -- seconds interval
 
@@ -38,9 +35,6 @@ function GameDirector:__init()
 end
 
 function GameDirector:_onLevelLoaded(levelName, gameMode)
-	self.currentLevel = levelName
-	self.currentGameMode = gameMode
-
 	self.AllObjectives = {}
 	self.Translations = {}
 
@@ -66,6 +60,8 @@ function GameDirector:_onLevelLoaded(levelName, gameMode)
 			end)
 			mcomEntity = mcomIterator:Next()
 		end
+
+		self:_updateValidObjectives()
 	end
 
 	-- TODO, assign weights to each objective
@@ -81,7 +77,7 @@ function GameDirector:_onMcomArmed(player)
 	table.insert(self.ArmedMcoms[player.name], objective.name)
 
 	self:_updateObjective(objective, {
-		team = player.temId,
+		team = player.teamId,
 		isAttacked = true;
 	})
 end
@@ -100,7 +96,7 @@ function GameDirector:_onMcomDisarmed(player)
 		end
 	end
 	self:_updateObjective(objective, {
-		team = player.temId,
+		team = player.teamId,
 		isAttacked = false;
 	})
 end
@@ -116,13 +112,13 @@ function GameDirector:_onMcomDestroyed(player)
 		end
 	end
 	self:_updateObjective(objective, {
-		team = player.temId,
+		team = player.teamId,
 		isAttacked = false;
-		enabled = false;
+		active = false;
 	})
 	self.McomCounter = self.McomCounter + 1;
+	self:_updateValidObjectives();
 end
-
 
 
 function GameDirector:initObjectives()
@@ -133,7 +129,7 @@ function GameDirector:initObjectives()
 			team = TeamId.TeamNeutral,
 			isAttacked = false,
 			isBase = false,
-			enabled = true
+			active = true
 		}
 		if string.find(objectiveName:lower(), "base") ~= nil then
 			objective.isBase = true;
@@ -148,12 +144,60 @@ function GameDirector:initObjectives()
 	print('self.AllObjectives -> '..g_Utilities:dump(self.AllObjectives, true))
 end
 
+
+function GameDirector:_updateValidObjectives()
+	local baseIndex = 0;
+	local mcomIndexes = {0, 0};
+	if self.McomCounter < 2 then
+		baseIndex = 1;
+		mcomIndexes = {1, 2};
+	elseif self.McomCounter < 4 then
+		baseIndex = 2;
+		mcomIndexes = {3, 4};
+	elseif self.McomCounter < 6 then
+		baseIndex = 3;
+		mcomIndexes = {5, 6};
+	elseif self.McomCounter < 8 then
+		baseIndex = 4;
+		mcomIndexes = {7, 8};
+	elseif self.McomCounter < 10 then
+		baseIndex = 5;
+		mcomIndexes = {9, 10};
+	else
+		baseIndex = 6;
+		mcomIndexes = {11, 12};
+	end
+
+	for _,objective in pairs(self.AllObjectives) do
+		local fields = objective.name:split(" ")
+		local active = false;
+		if not objective.isBase then
+			if #fields > 1 then
+				local index = tonumber(fields[2])
+				for _,targetIndex in paris(mcomIndexes) do
+					if index == targetIndex then
+						active = true;
+					end
+				end
+			end
+		else
+			if #fields > 2 then
+				local index = tonumber(fields[3])
+				if index == baseIndex then
+					active = true;
+				end
+			end
+		end
+		objective.active = active;
+	end
+end
+
 function GameDirector:getSpawnPath(team)
 	local possibleObjectives = {}
 	local possibleBases = {}
 	local pathsDone = {}
 	for _,objective in pairs(self.AllObjectives) do
-		if objective.team == team then
+		if objective.team == team and objective.active then
 			local allObjectives = g_NodeCollection:GetKnownOjectives();
 			local pathsWithObjective = allObjectives[objective.name]
 			for _,path in pairs(pathsWithObjective) do
@@ -227,15 +271,16 @@ end
 
 function GameDirector:_onCapture(capturePoint)
 	local flagEntity = CapturePointEntity(capturePoint)
-	local objective = self:_translateObjective(flagEntity.transform.trans, flagEntity.name);
-	self:_updateObjective(objective, {
+	local objectiveName = self:_translateObjective(flagEntity.transform.trans, flagEntity.name);
+	self:_updateObjective(objectiveName, {
 		team = flagEntity.team,
 		isAttacked = flagEntity.isAttacked
 	})
 
-	print('GameDirector:_onCapture: '..objective.name)
+	print('GameDirector:_onCapture: '..objectiveName)
 	print('self.CurrentAssignedCount: '..g_Utilities:dump(self.CurrentAssignedCount, true))
 
+	local objective = self:_getObjective(objectiveName)
 
 	for botTeam, bots in pairs(self.BotsByTeam) do
 		for i=1, #bots do
@@ -248,22 +293,30 @@ function GameDirector:_onCapture(capturePoint)
 	end
 end
 
+function GameDirector:_getObjective(name)
+	for _,objective in pairs(self.AllObjectives) do
+		if objective.name == name then
+			return objective
+		end
+	end
+end
+
 function GameDirector:_onLost(capturePoint)
 	local flagEntity = CapturePointEntity(capturePoint)
-	local objective = self:_translateObjective(flagEntity.transform.trans, flagEntity.name);
-	self:_updateObjective(objective, {
+	local objectiveName = self:_translateObjective(flagEntity.transform.trans, flagEntity.name);
+	self:_updateObjective(objectiveName, {
 		team = flagEntity.team, --TeamId.TeamNeutral
 		isAttacked = flagEntity.isAttacked
 	})
 
-	print('GameDirector:_onLost: '..objective.name)
+	print('GameDirector:_onLost: '..objectiveName)
 	print('self.CurrentAssignedCount: '..g_Utilities:dump(self.CurrentAssignedCount, true))
 end
 
 function GameDirector:_onPlayerEnterCapturePoint(player, capturePoint)
 	local flagEntity = CapturePointEntity(capturePoint)
-	local objective = self:_translateObjective(flagEntity.transform.trans, flagEntity.name);
-	self:_updateObjective(objective, {
+	local objectiveName = self:_translateObjective(flagEntity.transform.trans, flagEntity.name);
+	self:_updateObjective(objectiveName, {
 		team = flagEntity.team,
 		isAttacked = flagEntity.isAttacked
 	})
@@ -301,8 +354,9 @@ function GameDirector:_onUpdate(delta)
 
 		self.CurrentAssignedCount = {}
 
+		-- TODO: check for inactive objectives of bots
 		-- check objective statuses
-		for objective in pairs(self.AllObjectives) do
+		for _,objective in pairs(self.AllObjectives) do
 			for botTeam, bots in pairs(self.BotsByTeam) do
 				for i=1, #bots do
 					if (self.CurrentAssignedCount[botTeam..'_'..objective.name] == nil) then

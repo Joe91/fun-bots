@@ -58,7 +58,7 @@ function PathSwitcher:getNewPath(point, objective)
 						if (newPoint.ID == point.ID) then
 							currentPriority = 1
 						end
-					end 
+					end
 				end
 			end
 		else
