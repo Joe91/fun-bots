@@ -12,12 +12,11 @@ function GameDirector:__init()
 
 	self.BotsByTeam = {}
 
-	self.Objectives = {}
 	self.MaxAssignedLimit = 8
 	self.CurrentAssignedCount = {}
 
 	self.AllObjectives = {}
-	self.Translatinos = {}
+	self.Translations = {}
 
 	self.McomCounter = 0;
 	self.ArmedMcoms = {}
@@ -42,12 +41,8 @@ function GameDirector:_onLevelLoaded(levelName, gameMode)
 	self.currentLevel = levelName
 	self.currentGameMode = gameMode
 
-	self.Objectives[levelName] = {}
-	self.Objectives[levelName][gameMode] = {}
-	self.LevelObjectives = self.Objectives[levelName][gameMode]
-
 	self.AllObjectives = {}
-	self.Translatinos = {}
+	self.Translations = {}
 
 	if g_Globals.isRush then
 		self.McomCounter = 0;
@@ -86,7 +81,7 @@ function GameDirector:_onMcomArmed(player)
 	table.insert(self.ArmedMcoms[player.name], objective.name)
 
 	self:_updateObjective(objective, {
-		belongs = player.temId,
+		team = player.temId,
 		isAttacked = true;
 	})
 end
@@ -105,7 +100,7 @@ function GameDirector:_onMcomDisarmed(player)
 		end
 	end
 	self:_updateObjective(objective, {
-		belongs = player.temId,
+		team = player.temId,
 		isAttacked = false;
 	})
 end
@@ -121,7 +116,7 @@ function GameDirector:_onMcomDestroyed(player)
 		end
 	end
 	self:_updateObjective(objective, {
-		belongs = player.temId,
+		team = player.temId,
 		isAttacked = false;
 		enabled = false;
 	})
@@ -135,7 +130,7 @@ function GameDirector:initObjectives()
 	for objectiveName,_ in pairs(g_NodeCollection:GetKnownOjectives()) do
 		local objective = {
 			name = objectiveName,
-			belongs = TeamId.TeamNeutral,
+			team = TeamId.TeamNeutral,
 			isAttacked = false,
 			isBase = false,
 			enabled = true
@@ -143,9 +138,9 @@ function GameDirector:initObjectives()
 		if string.find(objectiveName:lower(), "base") ~= nil then
 			objective.isBase = true;
 			if string.find(objectiveName:lower(), "us") ~= nil then
-				objective.belongs = TeamId.Team1
+				objective.team = TeamId.Team1
 			else
-				objective.belongs = TeamId.Team2
+				objective.team = TeamId.Team2
 			end
 		end
 		table.insert(self.AllObjectives, objective)
@@ -158,7 +153,7 @@ function GameDirector:getSpawnPath(team)
 	local possibleBases = {}
 	local pathsDone = {}
 	for _,objective in pairs(self.AllObjectives) do
-		if objective.belongs == team then
+		if objective.team == team then
 			local allObjectives = g_NodeCollection:GetKnownOjectives();
 			local pathsWithObjective = allObjectives[objective.name]
 			for _,path in pairs(pathsWithObjective) do
@@ -199,7 +194,7 @@ function GameDirector:_updateObjective(name, data)
 end
 
 function GameDirector:_translateObjective(positon, name)
-	if name == nil or self.Translatinos[name] == nil then
+	if name == nil or self.Translations[name] == nil then
 		local allObjectives = g_NodeCollection:GetKnownOjectives();
 		local pathsDone = {}
 		local closestObjective = ""
@@ -222,11 +217,11 @@ function GameDirector:_translateObjective(positon, name)
 			end
 		end
 		if name ~= nil then
-			self.Translatinos[name] = closestObjective;
+			self.Translations[name] = closestObjective;
 		end
 		return closestObjective;
 	else
-		return self.Translatinos[name];
+		return self.Translations[name];
 	end
 end
 
@@ -234,23 +229,20 @@ function GameDirector:_onCapture(capturePoint)
 	local flagEntity = CapturePointEntity(capturePoint)
 	local objective = self:_translateObjective(flagEntity.transform.trans, flagEntity.name);
 	self:_updateObjective(objective, {
-		belongs = flagEntity.team,
+		team = flagEntity.team,
 		isAttacked = flagEntity.isAttacked
 	})
 
-	print('GameDirector:_onCapture: '..flagEntity.name)
-
-	self.LevelObjectives[flagEntity.name] = flagEntity.team
-	print('self.Objectives: '..g_Utilities:dump(self.Objectives, true))
+	print('GameDirector:_onCapture: '..objective.name)
 	print('self.CurrentAssignedCount: '..g_Utilities:dump(self.CurrentAssignedCount, true))
 
 
 	for botTeam, bots in pairs(self.BotsByTeam) do
 		for i=1, #bots do
-			if (bots[i]:getObjective() == flagEntity.name and flagEntity.team == botTeam) then
-				print('Bot completed objective: '..bots[i].name..' (team: '..botTeam..') -> '..flagEntity.name)
+			if (bots[i]:getObjective() == objective.name and objective.team == botTeam) then
+				print('Bot completed objective: '..bots[i].name..' (team: '..botTeam..') -> '..objective.name)
 				bots[i]:setObjective()
-				self.CurrentAssignedCount[botTeam..'_'..flagEntity.name] = math.max(self.CurrentAssignedCount[botTeam..'_'..flagEntity.name] - 1, 0)
+				self.CurrentAssignedCount[botTeam..'_'..objective.name] = math.max(self.CurrentAssignedCount[botTeam..'_'..objective.name] - 1, 0)
 			end
 		end
 	end
@@ -260,14 +252,11 @@ function GameDirector:_onLost(capturePoint)
 	local flagEntity = CapturePointEntity(capturePoint)
 	local objective = self:_translateObjective(flagEntity.transform.trans, flagEntity.name);
 	self:_updateObjective(objective, {
-		belongs = flagEntity.team,
+		team = flagEntity.team, --TeamId.TeamNeutral
 		isAttacked = flagEntity.isAttacked
 	})
 
-	print('GameDirector:_onLost: '..flagEntity.name)
-
-	self.LevelObjectives[flagEntity.name] = TeamId.TeamNeutral
-	print('self.Objectives: '..g_Utilities:dump(self.Objectives, true))
+	print('GameDirector:_onLost: '..objective.name)
 	print('self.CurrentAssignedCount: '..g_Utilities:dump(self.CurrentAssignedCount, true))
 end
 
@@ -275,12 +264,9 @@ function GameDirector:_onPlayerEnterCapturePoint(player, capturePoint)
 	local flagEntity = CapturePointEntity(capturePoint)
 	local objective = self:_translateObjective(flagEntity.transform.trans, flagEntity.name);
 	self:_updateObjective(objective, {
-		belongs = flagEntity.team,
+		team = flagEntity.team,
 		isAttacked = flagEntity.isAttacked
 	})
-
-	--print('GameDirector:_onPlayerEnterCapturePoint: '..player.name..' -> '..flagEntity.name)
-	self.LevelObjectives[flagEntity.name] = flagEntity.team
 end
 
 function GameDirector:_onRoundOver(roundTime, winningTeam)
@@ -288,9 +274,7 @@ function GameDirector:_onRoundOver(roundTime, winningTeam)
 end
 
 function GameDirector:_onRoundReset(roundTime, winningTeam)
-	self.Objectives[self.currentLevel] = {}
-	self.Objectives[self.currentLevel][self.currentGameMode] = {}
-	self.LevelObjectives = self.Objectives[self.currentLevel][self.currentGameMode]
+	self.AllObjectives = {}
 	self.UpdateLast = 0
 end
 
@@ -318,23 +302,23 @@ function GameDirector:_onUpdate(delta)
 		self.CurrentAssignedCount = {}
 
 		-- check objective statuses
-		for objectiveName,objectiveTeam in pairs(self.LevelObjectives) do
+		for objective in pairs(self.AllObjectives) do
 			for botTeam, bots in pairs(self.BotsByTeam) do
 				for i=1, #bots do
-					if (self.CurrentAssignedCount[botTeam..'_'..objectiveName] == nil) then
-						self.CurrentAssignedCount[botTeam..'_'..objectiveName] = 0
+					if (self.CurrentAssignedCount[botTeam..'_'..objective.name] == nil) then
+						self.CurrentAssignedCount[botTeam..'_'..objective.name] = 0
 					end
 
-					if (bots[i]:getObjective() == objectiveName) then
-						self.CurrentAssignedCount[botTeam..'_'..objectiveName] = self.CurrentAssignedCount[botTeam..'_'..objectiveName] + 1
+					if (bots[i]:getObjective() == objective.name) then
+						self.CurrentAssignedCount[botTeam..'_'..objective.name] = self.CurrentAssignedCount[botTeam..'_'..objective.name] + 1
 					end
 
-					if (objectiveTeam ~= botTeam and bots[i]:getObjective() == '' and self.CurrentAssignedCount[botTeam..'_'..objectiveName] < self.MaxAssignedLimit) then
+					if (objective.team ~= botTeam and bots[i]:getObjective() == '' and self.CurrentAssignedCount[botTeam..'_'..objective.name] < self.MaxAssignedLimit) then
 
-						print('Assigning bot to objective: '..bots[i].name..' (team: '..botTeam..') -> '..objectiveName)
+						print('Assigning bot to objective: '..bots[i].name..' (team: '..botTeam..') -> '..objective.name)
 
-						bots[i]:setObjective(objectiveName)
-						self.CurrentAssignedCount[botTeam..'_'..objectiveName] = self.CurrentAssignedCount[botTeam..'_'..objectiveName] + 1
+						bots[i]:setObjective(objective.name)
+						self.CurrentAssignedCount[botTeam..'_'..objective.name] = self.CurrentAssignedCount[botTeam..'_'..objective.name] + 1
 					end
 				end
 			end
