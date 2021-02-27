@@ -8,9 +8,12 @@ Language = require('__shared/Language');
 
 function FunBotUIClient:__init()
 	self._views = UIViews();
+	self.WaypointEditorTimer = -1
+	self.WaypointEditorDelay = 0.25
 	
 	if Config.disableUserInterface ~= true then
 		Events:Subscribe('Client:UpdateInput', self, self._onUpdateInput);
+		Events:Subscribe('Engine:Update', self, self._onEngineUpdate)
 		
 		NetEvents:Subscribe('UI_Password_Protection', self, self._onUIPasswordProtection);
 		NetEvents:Subscribe('UI_Request_Password', self, self._onUIRequestPassword);
@@ -102,12 +105,20 @@ function FunBotUIClient:_onUITraceIndex(index)
 	self._views:execute('BotEditor.updateTraceIndex(' .. tostring(index) .. ');');
 end
 
-function FunBotUIClient:_onUITraceWaypoints(index)
+function FunBotUIClient:_onUITraceWaypoints(count)
 	if Config.disableUserInterface == true then
 		return;
 	end
 	
-	self._views:execute('BotEditor.updateTraceWaypoints(' .. tostring(index) .. ');');
+	self._views:execute('BotEditor.updateTraceWaypoints(' .. tostring(count) .. ');');
+end
+
+function FunBotUIClient:_onUITraceWaypointsDistance(distance)
+	if Config.disableUserInterface == true then
+		return;
+	end
+	
+	self._views:execute('BotEditor.updateTraceWaypointsDistance(' .. string.format('%4.2f', distance) .. ');');
 end
 
 function FunBotUIClient:_onUITrace(state)
@@ -326,20 +337,46 @@ function FunBotUIClient:_onUISendPassword(data)
 	NetEvents:Send('UI_Request_Open', data);
 end
 
+function FunBotUIClient:_onEngineUpdate(delta, simDelta)
+	if (Config.debugTracePaths) then
+		if (self.WaypointEditorTimerActive) then
+			self.WaypointEditorTimer = self.WaypointEditorTimer + delta
+		end
+		if (self.WaypointEditorTimer >= self.WaypointEditorDelay) then
+			self:_onUIWaypointsEditor()
+			self._views:focus()
+			self.WaypointEditorTimerActive = false
+			self.WaypointEditorTimer = 0
+		end
+	end
+end
+
 function FunBotUIClient:_onUpdateInput(data)
 	if Config.disableUserInterface == true then
 		return;
 	end
 	
+	-- Show or Hide the Bot-Editor
+	local Comm1 = InputManager:IsDown(InputConceptIdentifiers.ConceptCommMenu1)
+	local Comm2 = InputManager:IsDown(InputConceptIdentifiers.ConceptCommMenu2)
+	local Comm3 = InputManager:IsDown(InputConceptIdentifiers.ConceptCommMenu3)
+	local commButtonDown = (Comm1 or Comm2 or Comm3)
+
+	Comm1 = InputManager:WentUp(InputConceptIdentifiers.ConceptCommMenu1)
+	Comm2 = InputManager:WentUp(InputConceptIdentifiers.ConceptCommMenu2)
+	Comm3 = InputManager:WentUp(InputConceptIdentifiers.ConceptCommMenu3)
+	local commButtonUp = (Comm1 or Comm2 or Comm3)
+
+	if Config.debugTracePaths then
+		self.WaypointEditorTimerActive = commButtonDown
+
+		if (commButtonUp) then
+			self.WaypointEditorTimer = 0
+			self._views:blur()
+		end
+	end
 		
-	-- Show or Hide the Bot-Editor by requesting permissions
-	if Config.debugTracePaths and InputManager:IsDown(InputConceptIdentifiers.ConceptCommMenu1) then
-		self._views:focus();
-		
-	elseif Config.debugTracePaths and InputManager:WentUp(InputConceptIdentifiers.ConceptCommMenu1) then
-		self._views:blur();
-	
-	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_F12) then
+	if InputManager:WentKeyDown(InputDeviceKeys.IDK_F12) then
 		print('Client send: UI_Request_Open');
 
 		-- This request can use for UI-Toggle

@@ -150,7 +150,7 @@ function GameDirector:initObjectives()
 		end
 		table.insert(self.AllObjectives, objective)
 	end
-	print(self.AllObjectives)
+	print('self.AllObjectives -> '..g_Utilities:dump(self.AllObjectives, true))
 end
 
 function GameDirector:getSpawnPath(team)

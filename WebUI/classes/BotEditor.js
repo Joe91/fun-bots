@@ -626,6 +626,11 @@ const BotEditor = (new function BotEditor() {
 		console.log('updateTraceWaypoints', count);
 		document.querySelector('ui-value[data-name="waypoints"]').innerHTML = count;		
 	};
+
+	this.updateTraceWaypointsDistance = function updateTraceWaypointsDistance(distance) {
+		console.log('updateTraceWaypointsDistance', distance);
+		document.querySelector('ui-value[data-name="distance"]').innerHTML = distance;		
+	};
 	
 	this.toggleTraceRun = function toggleTraceRun(state) {
 		console.log('toggleTraceRun', state);
