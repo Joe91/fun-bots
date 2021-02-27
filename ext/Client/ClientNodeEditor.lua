@@ -30,6 +30,12 @@ function ClientNodeEditor:__init()
 	self.editPositionMode = 'relative'
 	self.helpTextLocation = Vec2.zero
 
+	self.customTrace = nil
+	self.customTraceIndex = nil
+	self.customTraceTimer = -1
+	self.customTraceDelay = Config.traceDelta
+	self.customTraceDistance = 0
+
 	self.botSelectedWaypoints = {}
 
 	self.colors = {
@@ -137,6 +143,12 @@ function ClientNodeEditor:RegisterEvents()
 	NetEvents:Subscribe('ClientNodeEditor:Create', self, self._onServerCreateNode)
 	NetEvents:Subscribe('ClientNodeEditor:Init', self, self._onInit)
 
+	-- trace recording events
+	NetEvents:Subscribe('ClientNodeEditor:StartTrace', self, self._onStartTrace)
+	NetEvents:Subscribe('ClientNodeEditor:EndTrace', self, self._onEndTrace)
+	NetEvents:Subscribe('ClientNodeEditor:ClearTrace', self, self._onClearTrace)
+	NetEvents:Subscribe('ClientNodeEditor:SaveTrace', self, self._onSaveTrace)
+
 	-- load/destroy events
 	Events:Subscribe('Level:Loaded', self, self._onLevelLoaded)
 	Events:Subscribe('Player:Deleted', self, self._onPlayerDeleted)
@@ -151,7 +163,7 @@ function ClientNodeEditor:RegisterEvents()
 	-- draw nodes and info
 	Events:Subscribe('UI:DrawHud', self, self._onUIDrawHud)
 
-	self.pushScreenHook = Hooks:Install('UI:PushScreen', 100, self, self._onUIPushScreen)
+	self.pushScreenHook = Hooks:Install('UI:PushScreen', 1, self, self._onUIPushScreen)
 
 	-- UI Commands as Console commands
 
@@ -323,6 +335,7 @@ function ClientNodeEditor:_onUISettings(data)
 		end
 
 		self.helpTextLocation = Vec2.zero
+		self.customTraceDelay = Config.traceDelta
 	end
 end
 
@@ -831,6 +844,52 @@ function ClientNodeEditor:_onGetKnownOjectives(args)
 	return true
 end
 
+-- ############################ Trace Recording
+-- ############################################
+
+function ClientNodeEditor:_onStartTrace(pathIndex)
+	if (self.customTrace ~= nil) then
+		self.customTrace:Clear()
+	end
+	self.customTrace = NodeCollection(true)
+	self.customTraceTimer = 0
+	self.customTraceIndex = pathIndex
+
+	local firstWaypoint = self.customTrace:Create({
+		Position = self.playerPos:Clone()
+	})
+	self.customTrace:ClearSelection()
+	self.customTrace:Select(firstWaypoint)
+
+	print('Trace ' .. tostring(pathIndex) .. ' started');
+	g_FunBotUIClient:_onUITrace(true)
+	g_FunBotUIClient:_onUITraceIndex(pathIndex)
+	--ChatManager:Yell(Language:I18N('Trace %d started', pathIndex), 2.5);
+end
+
+function ClientNodeEditor:_onEndTrace()
+	self.customTraceTimer = -1
+
+	g_FunBotUIClient:_onUITrace(false)
+	g_FunBotUIClient:_onUITraceIndex(1)
+end
+
+function ClientNodeEditor:_onClearTrace()
+	self.customTraceDistance = 0
+	self.customTrace:Clear()
+	g_FunBotUIClient:_onUITraceWaypointsDistance(self.customTraceDistance)
+	g_FunBotUIClient:_onUITraceWaypoints(#self.customTrace:Get())
+end
+
+function ClientNodeEditor:_onSaveTrace(pathIndex)
+
+	-- TODO merge self.customTrace with self.waypoints
+
+	-- remove pathIndex from self.waypoints
+	-- merge new nodes into main table
+
+end
+
 -- ##################################### Events
 -- ############################################
 
@@ -858,6 +917,11 @@ function ClientNodeEditor:_onUnload(args)
 			self.nodeReceiveExpected = tonumber(args) or 0
 		end
 	end
+
+	if (self.customTrace ~= nil) then
+		self.customTrace:Clear()
+	end
+
 	print('NodeCollection:Clear -> Expecting: '..g_Utilities:dump(args))
 	g_NodeCollection:Clear()
 	g_NodeCollection:DeregisterEvents()
@@ -933,12 +997,9 @@ function ClientNodeEditor:_onCommoRoseAction(action, hit)
 end
 
 function ClientNodeEditor:_onUIPushScreen(hook, screen, priority, parentGraph, stateNodeGuid)
-	if (self.enabled) then
-		if (self.commoRoseEnabled and screen ~= nil and UIScreenAsset(screen).name == 'UI/Flow/Screen/CommRoseScreen') then
-			-- triggered vanilla commo rose and ours should be active
-			-- block it
-			hook:Return() 
-		end
+	if (self.enabled and screen ~= nil and UIScreenAsset(screen).name == 'UI/Flow/Screen/CommRoseScreen') then
+		print('ClientNodeEditor:_onUIPushScreen: Blocked Commo Rose')
+		hook:Return()
 	end
 	hook:Pass(screen, priority, parentGraph, stateNodeGuid)
 end
@@ -1157,6 +1218,66 @@ function ClientNodeEditor:_onEngineUpdate(delta, simDelta)
 		end
 	end
 
+	if (self.customTraceTimer >= 0 and self.player ~= nil and self.player.soldier ~= nil) then
+		self.customTraceTimer = self.customTraceTimer + delta
+
+		if (self.customTraceTimer > self.customTraceDelay) then
+
+			local lastWaypoint = self.customTrace:GetLast()
+			local lastDistance = lastWaypoint.Position:Distance(self.playerPos)
+
+			if (lastDistance >= self.customTraceDelay) then
+				-- primary weapon, record movement
+				if (self.player.soldier.weaponsComponent.currentWeaponSlot == WeaponSlot.WeaponSlot_0) then
+
+					local newWaypoint, msg = self.customTrace:Add()
+					self.customTrace:Update(newWaypoint, {
+						Position = self.playerPos:Clone()
+					})
+					self.customTrace:ClearSelection()
+					self.customTrace:Select(newWaypoint)
+
+					local speed = 0; -- 0 = wait, 1 = prone ... (4 Bits)
+					local extra = 0; -- 0 = nothing, 1 = jump ... (4 Bits)
+
+					if self.player.input:GetLevel(EntryInputActionEnum.EIAThrottle) > 0 then --record only if moving
+						if self.player.soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
+							speed = 1;
+						elseif self.player.soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
+							speed = 2;
+						else
+							speed = 3;
+
+							if self.player.input:GetLevel(EntryInputActionEnum.EIASprint) == 1 then
+								speed = 4;
+							end
+						end
+
+						if self.player.input:GetLevel(EntryInputActionEnum.EIAJump) == 1 then
+							extra = 1;
+						end
+
+						self.customTrace:SetInput(speed, extra, 0)
+					end
+
+				-- secondary weapon, increase wait timer
+				elseif (self.player.soldier.weaponsComponent.currentWeaponSlot == WeaponSlot.WeaponSlot_1) then
+
+					local lastWaypoint = self.customTrace:GetLast()
+					self.customTrace:ClearSelection()
+					self.customTrace:Select(lastWaypoint)
+					self.customTrace:SetInput(lastWaypoint.SpeedMode, lastWaypoint.ExtraMode, lastWaypoint.OptValue + delta)
+				end
+
+				self.customTraceDistance = self.customTraceDistance + lastDistance
+				g_FunBotUIClient:_onUITraceWaypointsDistance(self.customTraceDistance)
+				g_FunBotUIClient:_onUITraceWaypoints(#self.customTrace:Get())
+			end
+
+			self.customTraceTimer = 0
+		end
+	end
+
 	local botwpcount = 0
 	for waypointID, data in pairs(self.botSelectedWaypoints) do
 		if (data.Timer < 0) then
@@ -1232,9 +1353,6 @@ function ClientNodeEditor:_onUpdateManagerUpdate(delta, pass)
 							})
 						end
 					end
-
-	    			-- precalc the distances for less overhead on the hud draw
-	    			--pathWaypoints[i].Distance = self.playerPos:Distance(pathWaypoints[i].Position)
 	    		end
     		end
     	end
@@ -1407,139 +1525,151 @@ function ClientNodeEditor:_onUIDrawHud()
 		return
 	end
 
-	-- draw the actual waypoints
-	local nodePaths = g_NodeCollection:GetPaths()
-	for path=1, #nodePaths do
-
+	-- draw waypoints stored in main collection
+	local waypointPaths = g_NodeCollection:GetPaths()
+	for path=1, #waypointPaths do
 		if (g_NodeCollection:IsPathVisible(path)) then
+			for waypoint=1, #waypointPaths[path] do
+				self:_drawNode(waypointPaths[path][waypoint], false)
+			end
+		end
+	end
 
-			local pathWaypoints = nodePaths[path]
+	-- draw waypoints for custom trace
+	if (self.customTrace ~= nil) then
+		local customWaypoints = self.customTrace:Get()
+		for i=1, #customWaypoints do
+			self:_drawNode(customWaypoints[i], true)
+		end
+	end
+end
 
-			for node=1, #pathWaypoints do
-				local waypoint = pathWaypoints[node]
-				local isSelected = g_NodeCollection:IsSelected(waypoint)
-				local qualityAtRange = g_NodeCollection:InRange(waypoint, self.playerPos, Config.lineRange)
+function ClientNodeEditor:_drawNode(waypoint, isTracePath)
+	local isSelected = not isTracePath and g_NodeCollection:IsSelected(waypoint)
+	local qualityAtRange = g_NodeCollection:InRange(waypoint, self.playerPos, Config.lineRange)
 
+	-- setup node color information
+	local color = self.colors[waypoint.PathIndex]
+	if (waypoint.Previous == false and waypoint.Next == false) then
+		color = self.colors.Orphan
+	end
+	if (isTracePath) then
+		color = {
+			Node = self.colors.White,
+			Line = self.colors.White,
+		}
+	end
 
-				-- setup node color information
-				local color = self.colors[waypoint.PathIndex]
-				if (waypoint.Previous == false and waypoint.Next == false) then
-					color = self.colors.Orphan
+	-- draw the node for the waypoint itself
+	if (g_NodeCollection:InRange(waypoint, self.playerPos, Config.waypointRange)) then
+		DebugRenderer:DrawSphere(waypoint.Position, 0.05, color.Node, false, (not qualityAtRange))
+	end
+
+	-- if bot has selected draw it
+	if (not isTracePath and self.botSelectedWaypoints[waypoint.ID] ~= nil) then
+		local selectData = self.botSelectedWaypoints[waypoint.ID]
+		if (selectData.Obstacle) then
+			DebugRenderer:DrawLine(selectData.Position + (Vec3.up * 1.2), waypoint.Position, self.colors.Red, self.colors.Red)
+		else
+			DebugRenderer:DrawLine(selectData.Position + (Vec3.up * 1.2), waypoint.Position, self.colors[selectData.Color], self.colors[selectData.Color])
+		end
+	end
+
+	-- if selected draw bigger node and transform helper
+	if (not isTracePath and isSelected and g_NodeCollection:InRange(waypoint, self.playerPos, Config.waypointRange)) then
+		-- node selection indicator
+		DebugRenderer:DrawSphere(waypoint.Position, 0.08,  color.Node, false, (not qualityAtRange))
+
+		-- transform marker
+		DebugRenderer:DrawLine(waypoint.Position, waypoint.Position + (Vec3.up * 0.7), self.colors.Red, self.colors.Red)
+		DebugRenderer:DrawLine(waypoint.Position, waypoint.Position + (Vec3.right * 0.5), self.colors.Green, self.colors.Green)
+		DebugRenderer:DrawLine(waypoint.Position, waypoint.Position + (Vec3.forward * 0.5), self.colors.Blue, self.colors.Blue)
+	end
+
+	-- draw connection lines
+	if (Config.drawWaypointLines and g_NodeCollection:InRange(waypoint, self.playerPos, Config.lineRange)) then
+		-- try to find a previous node and draw a line to it
+		if (waypoint.Previous and type(waypoint.Previous) == 'string') then
+			waypoint.Previous = g_NodeCollection:Get(waypoint.Previous)
+		end
+
+		if (waypoint.Previous) then
+			if (waypoint.PathIndex ~= waypoint.Previous.PathIndex) then
+				-- draw a white line between nodes on separate paths
+				DebugRenderer:DrawLine(waypoint.Previous.Position, waypoint.Position, self.colors.White, self.colors.White)
+			else
+				-- draw fading line between nodes on same path
+				DebugRenderer:DrawLine(waypoint.Previous.Position, waypoint.Position, color.Line, color.Line)
+			end
+		end
+		if (waypoint.Data and waypoint.Data.LinkMode ~= nil and waypoint.Data.Links ~= nil) then
+			for i=1, #waypoint.Data.Links do
+				local linkedWaypoint = g_NodeCollection:Get(waypoint.Data.Links[i])
+				if (linkedWaypoint ~= nil) then
+					-- draw lines between linked nodes
+					DebugRenderer:DrawLine(linkedWaypoint.Position, waypoint.Position, self.colors.Purple, self.colors.Purple)
+				end
+			end
+		end
+	end
+
+	-- draw debugging text
+	if (Config.drawWaypointIDs and g_NodeCollection:InRange(waypoint, self.playerPos, Config.textRange)) then
+		if (isSelected) then
+			-- don't try to precalc this value like with the distance, another memory leak crash awaits you
+			local screenPos = ClientUtils:WorldToScreen(waypoint.Position + (Vec3.up * 0.7))
+			if (screenPos ~= nil) then
+
+				local previousNode = tostring(waypoint.Previous)
+				local nextNode = tostring(waypoint.Next)
+				if (type(waypoint.Previous) == 'table') then
+					previousNode = waypoint.Previous.ID
+				end
+				if (type(waypoint.Next) == 'table') then
+					nextNode = waypoint.Next.ID
 				end
 
-				-- draw the node for the waypoint itself
-				if (g_NodeCollection:InRange(waypoint, self.playerPos, Config.waypointRange)) then
-					DebugRenderer:DrawSphere(waypoint.Position, 0.05, color.Node, false, (not qualityAtRange))
-				end
+				local speedMode = 'N/A'
+				if (waypoint.SpeedMode == 0) then speedMode = 'Wait' end
+				if (waypoint.SpeedMode == 1) then speedMode = 'Prone' end
+				if (waypoint.SpeedMode == 2) then speedMode = 'Crouch' end
+				if (waypoint.SpeedMode == 3) then speedMode = 'Walk' end
+				if (waypoint.SpeedMode == 4) then speedMode = 'Sprint' end
 
-				-- if bot has selected draw it
-				if (self.botSelectedWaypoints[waypoint.ID] ~= nil) then
-					local selectData = self.botSelectedWaypoints[waypoint.ID]
-					if (selectData.Obstacle) then
-						DebugRenderer:DrawLine(selectData.Position + (Vec3.up * 1.2), waypoint.Position, self.colors.Red, self.colors.Red)
+				local extraMode = 'N/A'
+				if (waypoint.ExtraMode == 1) then extraMode = 'Jump' end
+
+				local optionValue = 'N/A'
+				if (waypoint.SpeedMode == 0) then 
+					optionValue = tostring(waypoint.OptValue)..' Seconds'
+				end
+				if (not waypoint.Previous or (waypoint.Previous and waypoint.Previous.PathIndex ~= waypoint.PathIndex)) then
+					if (waypoint.OptValue == 255) then
+						optionValue = 'Path Reverses'
 					else
-						DebugRenderer:DrawLine(selectData.Position + (Vec3.up * 1.2), waypoint.Position, self.colors[selectData.Color], self.colors[selectData.Color])
+						optionValue = 'Path Loops'
 					end
 				end
 
-				-- if selected draw bigger node and transform helper
-				if (isSelected and g_NodeCollection:InRange(waypoint, self.playerPos, Config.waypointRange)) then
-					-- node selection indicator
-					DebugRenderer:DrawSphere(waypoint.Position, 0.08,  color.Node, false, (not qualityAtRange))
+				local text = ''
+				text = text..string.format("%s <--[ %s ]--> %s\n", previousNode, waypoint.ID, nextNode)
+				text = text..string.format("Index[%d]\n", waypoint.Index)
+				text = text..string.format("Path[%d][%d]\n", waypoint.PathIndex, waypoint.PointIndex)
+				text = text..string.format("InputVar: %d\n", waypoint.InputVar)
+				text = text..string.format("SpeedMode: %s (%d)\n", speedMode, waypoint.SpeedMode)
+				text = text..string.format("ExtraMode: %s (%d)\n", extraMode, waypoint.ExtraMode)
+				text = text..string.format("OptValue: %s (%d)\n", optionValue, waypoint.OptValue)
+				text = text..'Data: '..g_Utilities:dump(waypoint.Data, true)
 
-					-- transform marker
-					DebugRenderer:DrawLine(waypoint.Position, waypoint.Position + (Vec3.up * 0.7), self.colors.Red, self.colors.Red)
-					DebugRenderer:DrawLine(waypoint.Position, waypoint.Position + (Vec3.right * 0.5), self.colors.Green, self.colors.Green)
-					DebugRenderer:DrawLine(waypoint.Position, waypoint.Position + (Vec3.forward * 0.5), self.colors.Blue, self.colors.Blue)
-				end
-
-				-- draw connection lines
-				if (Config.drawWaypointLines and g_NodeCollection:InRange(waypoint, self.playerPos, Config.lineRange)) then
-					-- try to find a previous node and draw a line to it
-					if (waypoint.Previous and type(waypoint.Previous) == 'string') then
-						waypoint.Previous = g_NodeCollection:Get(waypoint.Previous)
-					end
-
-					if (waypoint.Previous) then
-						if (waypoint.PathIndex ~= waypoint.Previous.PathIndex) then
-							-- draw a white line between nodes on separate paths
-							DebugRenderer:DrawLine(waypoint.Previous.Position, waypoint.Position, self.colors.White, self.colors.White)
-						else
-							-- draw fading line between nodes on same path
-							DebugRenderer:DrawLine(waypoint.Previous.Position, waypoint.Position, color.Line, color.Line)
-						end
-					end
-					if (waypoint.Data and waypoint.Data.LinkMode ~= nil and waypoint.Data.Links ~= nil) then
-						for i=1, #waypoint.Data.Links do
-							local linkedWaypoint = g_NodeCollection:Get(waypoint.Data.Links[i])
-							if (linkedWaypoint ~= nil) then
-								-- draw lines between linked nodes
-								DebugRenderer:DrawLine(linkedWaypoint.Position, waypoint.Position, self.colors.Purple, self.colors.Purple)
-							end
-						end
-					end
-				end
-
-				-- draw debugging text
-				if (Config.drawWaypointIDs and g_NodeCollection:InRange(waypoint, self.playerPos, Config.textRange)) then
-					if (isSelected) then
-						-- don't try to precalc this value like with the distance, another memory leak crash awaits you
-						local screenPos = ClientUtils:WorldToScreen(waypoint.Position + (Vec3.up * 0.7))
-						if (screenPos ~= nil) then
-
-							local previousNode = tostring(waypoint.Previous)
-							local nextNode = tostring(waypoint.Next)
-							if (type(waypoint.Previous) == 'table') then
-								previousNode = waypoint.Previous.ID
-							end
-							if (type(waypoint.Next) == 'table') then
-								nextNode = waypoint.Next.ID
-							end
-
-							local speedMode = 'N/A'
-							if (waypoint.SpeedMode == 0) then speedMode = 'Wait' end
-							if (waypoint.SpeedMode == 1) then speedMode = 'Prone' end
-							if (waypoint.SpeedMode == 2) then speedMode = 'Crouch' end
-							if (waypoint.SpeedMode == 3) then speedMode = 'Walk' end
-							if (waypoint.SpeedMode == 4) then speedMode = 'Sprint' end
-
-							local extraMode = 'N/A'
-							if (waypoint.ExtraMode == 1) then extraMode = 'Jump' end
-
-							local optionValue = 'N/A'
-							if (waypoint.SpeedMode == 0) then 
-								optionValue = tostring(waypoint.OptValue)..' Seconds'
-							end
-							if (not waypoint.Previous or (waypoint.Previous and waypoint.Previous.PathIndex ~= waypoint.PathIndex)) then
-								if (waypoint.OptValue == 255) then
-									optionValue = 'Path Reverses'
-								else
-									optionValue = 'Path Loops'
-								end
-							end
-
-							local text = ''
-							text = text..string.format("%s <--[ %s ]--> %s\n", previousNode, waypoint.ID, nextNode)
-							text = text..string.format("Index[%d]\n", waypoint.Index)
-							text = text..string.format("Path[%d][%d]\n", waypoint.PathIndex, waypoint.PointIndex)
-							text = text..string.format("InputVar: %d\n", waypoint.InputVar)
-							text = text..string.format("SpeedMode: %s (%d)\n", speedMode, waypoint.SpeedMode)
-							text = text..string.format("ExtraMode: %s (%d)\n", extraMode, waypoint.ExtraMode)
-							text = text..string.format("OptValue: %s (%d)\n", optionValue, waypoint.OptValue)
-							text = text..'Data: '..g_Utilities:dump(waypoint.Data, true)
-
-							DebugRenderer:DrawText2D(screenPos.x, screenPos.y, text, self.colors.Text, 1.2)
-						end
-						screenPos = nil
-					else
-						-- don't try to precalc this value like with the distance, another memory leak crash awaits you
-						local screenPos = ClientUtils:WorldToScreen(waypoint.Position + (Vec3.up * 0.05))
-						if (screenPos ~= nil) then
-							DebugRenderer:DrawText2D(screenPos.x, screenPos.y, tostring(waypoint.ID), self.colors.Text, 1)
-							screenPos = nil
-						end
-					end
-				end
+				DebugRenderer:DrawText2D(screenPos.x, screenPos.y, text, self.colors.Text, 1.2)
+			end
+			screenPos = nil
+		else
+			-- don't try to precalc this value like with the distance, another memory leak crash awaits you
+			local screenPos = ClientUtils:WorldToScreen(waypoint.Position + (Vec3.up * 0.05))
+			if (screenPos ~= nil) then
+				DebugRenderer:DrawText2D(screenPos.x, screenPos.y, tostring(waypoint.ID), self.colors.Text, 1)
+				screenPos = nil
 			end
 		end
 	end

@@ -104,9 +104,11 @@ function NodeCollection:Create(data)
 		Next = false
 	}
 
-	for k,v in pairs(data) do
-		if (v ~= nil) then
-			waypoint[k] = v
+	if (data ~= nil) then
+		for k,v in pairs(data) do
+			if (v ~= nil) then
+				waypoint[k] = v
+			end
 		end
 	end
 
@@ -155,7 +157,7 @@ function NodeCollection:Register(waypoint)
 	table.insert(self.waypointsByPathIndex[waypoint.PathIndex], waypoint)
 	if (#self.waypointsByPathIndex[waypoint.PathIndex] ~= waypoint.PointIndex) then
 		local diff = waypoint.PointIndex - #self.waypointsByPathIndex[waypoint.PathIndex]
-		print('Warning, New Node PointIndex does not match: waypoint.PointIndex:'..tostring(waypoint.Index)..' | #self.waypointsByPathIndex['..waypoint.PathIndex..']:'..tostring(#self.waypointsByPathIndex[waypoint.PathIndex])..' | '.. tostring(diff))
+		print('Warning, New Node PointIndex does not match: waypoint.PointIndex: '..tostring(waypoint.PointIndex)..' | #self.waypointsByPathIndex['..waypoint.PathIndex..']: '..tostring(#self.waypointsByPathIndex[waypoint.PathIndex])..' | '.. tostring(diff))
 	end
 	self.waypointsByID[waypoint.ID] = waypoint
 
@@ -190,14 +192,16 @@ function NodeCollection:Add()
 		local lastWaypoint = selection[#selection]
 		local newWaypoint = self:Create({
 			PathIndex = lastWaypoint.PathIndex,
+			PointIndex = lastWaypoint.PointIndex + 1,
 			Previous = lastWaypoint.ID
 		})
 		self:InsertAfter(lastWaypoint, newWaypoint)
 		return newWaypoint, 'Success'
 	else
-		local lastWaypoint = self:GetLast()
+		local lastWaypoint = self.waypoints[#self.waypoints]
 		local newWaypoint = self:Create({
 			PathIndex = lastWaypoint.PathIndex + 1,
+			PointIndex = lastWaypoint.PointIndex + 1,
 			Previous = lastWaypoint.ID
 		})
 		self:InsertAfter(lastWaypoint, newWaypoint)
@@ -606,23 +610,30 @@ end
 
 function NodeCollection:GetFirst(pathIndex)
 
-	local p = pathIndex or 1
-	local currentWaypoint = self.waypointsByPathIndex[p][1]
+	local firstWaypoint = self.waypoints[1]
 
-	while currentWaypoint.Previous and currentWaypoint.Previous.PathIndex == pathIndex do
-		currentWaypoint = currentWaypoint.Previous
+	if (pathIndex ~= nil) then
+		firstWaypoint = self.waypointsByPathIndex[pathIndex][1]
 	end
-	return currentWaypoint
+
+	while firstWaypoint.Previous and ((pathIndex ~= nil and firstWaypoint.Previous.PathIndex == firstWaypoint.PathIndex) or pathIndex == nil) do
+		firstWaypoint = firstWaypoint.Previous
+	end
+	return firstWaypoint
 end
 
 function NodeCollection:GetLast(pathIndex)
-	local p = pathIndex or 1
-	local currentWaypoint = self.waypointsByPathIndex[p][1]
-	
-	while currentWaypoint.Next and currentWaypoint.Next.PathIndex == pathIndex do
-		currentWaypoint = currentWaypoint.Next
+
+	local lastWaypoint = self.waypoints[#self.waypoints]
+
+	if (pathIndex ~= nil) then
+		lastWaypoint = self.waypointsByPathIndex[pathIndex][#self.waypointsByPathIndex[pathIndex]]
 	end
-	return currentWaypoint
+	
+	while lastWaypoint.Next and ((pathIndex ~= nil and lastWaypoint.Previous.PathIndex == lastWaypoint.PathIndex) or pathIndex == nil) do
+		lastWaypoint = lastWaypoint.Next
+	end
+	return lastWaypoint
 end
 
 function NodeCollection:GetPaths()
@@ -1245,17 +1256,6 @@ function NodeCollection:FindAlongTrace(vec3Start, vec3End, granularity, toleranc
 		distance = testPos:Distance(vec3End)
 	end
 	return nil
-end
-
-function NodeCollection:getModuleState()
-     if (SharedUtils:IsClientModule() and SharedUtils:IsServerModule()) then
-          return 'Shared'
-     elseif (SharedUtils:IsClientModule() and not SharedUtils:IsServerModule()) then
-          return 'Client'
-     elseif (not SharedUtils:IsClientModule() and SharedUtils:IsServerModule()) then
-          return 'Server'
-     end
-     return 'Unkown'
 end
 
 if (g_NodeCollection == nil) then

@@ -114,14 +114,17 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 	-- Trace
 	elseif request.action == 'trace_start' then
 		local index = tonumber(request.value);
-		TraceManager:startTrace(player, index);
+		--TraceManager:startTrace(player, index);
+		NetEvents:SendTo('ClientNodeEditor:StartTrace', player, index)
 
 	elseif request.action == 'trace_end' then
-		TraceManager:endTrace(player);
+		--TraceManager:endTrace(player);
+		NetEvents:SendTo('ClientNodeEditor:EndTrace', player)
 
 	elseif request.action == 'trace_clear' then
 		local index = tonumber(request.value);
-		TraceManager:clearTrace(index);
+		--TraceManager:clearTrace(index);
+		NetEvents:SendTo('ClientNodeEditor:ClearTrace', player, index)
 
 	elseif request.action == 'trace_reset_all' then
 		TraceManager:clearAllTraces();

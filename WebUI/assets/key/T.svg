@@ -34,8 +34,8 @@
 		<path fill="rgb(182,239,255)" filter="url(#shadow)" d="M129.86,125.56c-0.47472,0 -0.86,-0.38528 -0.86,-0.86c0,-0.47472 0.38528,-0.86 0.86,-0.86c5.21676,0 9.46,-4.24324 9.46,-9.46c0,-0.47472 0.38528,-0.86 0.86,-0.86c0.47472,0 0.86,0.38528 0.86,0.86c0,6.16448 -5.01552,11.18 -11.18,11.18z"></path>
 	</g>
 	<g>
-		<text text-anchor="middle" alignment-baseline="middle" x="50%" y="50%" font-size="80" font-family="Arial" fill="rgb(118, 226, 255)">9</text>
-		<text text-anchor="middle" alignment-baseline="middle" x="50%" y="50%" font-size="80" font-family="Arial" fill="rgb(182,239,255)" filter="url(#glow)">9</text>
-		<text text-anchor="middle" alignment-baseline="middle" x="50%" y="50%" font-size="80" font-family="Arial" fill="rgb(182,239,255)" filter="url(#shadow)">9</text>
+		<text text-anchor="middle" alignment-baseline="middle" x="50%" y="50%" font-size="80" font-family="Arial" fill="rgb(118, 226, 255)">T</text>
+		<text text-anchor="middle" alignment-baseline="middle" x="50%" y="50%" font-size="80" font-family="Arial" fill="rgb(182,239,255)" filter="url(#glow)">T</text>
+		<text text-anchor="middle" alignment-baseline="middle" x="50%" y="50%" font-size="80" font-family="Arial" fill="rgb(182,239,255)" filter="url(#shadow)">T</text>
 	</g>
 </svg>
