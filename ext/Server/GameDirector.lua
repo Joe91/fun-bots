@@ -78,7 +78,7 @@ function GameDirector:_onMcomArmed(player)
 
 	self:_updateObjective(objective, {
 		team = player.teamId,
-		isAttacked = true;
+		isAttacked = true
 	})
 end
 
@@ -96,8 +96,8 @@ function GameDirector:_onMcomDisarmed(player)
 		end
 	end
 	self:_updateObjective(objective, {
-		team = player.teamId,
-		isAttacked = false;
+		team = TeamId.TeamNeutral,--player.teamId,
+		isAttacked = false
 	})
 end
 
@@ -112,9 +112,9 @@ function GameDirector:_onMcomDestroyed(player)
 		end
 	end
 	self:_updateObjective(objective, {
-		team = player.teamId,
-		isAttacked = false;
-		active = false;
+		team = TeamId.TeamNeutral,--player.teamId,
+		isAttacked = false,
+		active = false
 	})
 	self.McomCounter = self.McomCounter + 1;
 	self:_updateValidObjectives();
@@ -280,7 +280,7 @@ function GameDirector:_onCapture(capturePoint)
 	print('GameDirector:_onCapture: '..objectiveName)
 	print('self.CurrentAssignedCount: '..g_Utilities:dump(self.CurrentAssignedCount, true))
 
-	local objective = self:_getObjective(objectiveName)
+	local objective = self:getObjectiveObject(objectiveName)
 
 	for botTeam, bots in pairs(self.BotsByTeam) do
 		for i=1, #bots do
@@ -293,12 +293,24 @@ function GameDirector:_onCapture(capturePoint)
 	end
 end
 
-function GameDirector:_getObjective(name)
+function GameDirector:getObjectiveObject(name)
 	for _,objective in pairs(self.AllObjectives) do
 		if objective.name == name then
 			return objective
 		end
 	end
+end
+
+function GameDirector:isBasePath(ObjectiveNames)
+	local isBase = false;
+	for _,name in pairs(ObjectiveNames) do
+		local objective = self:getObjectiveObject(name)
+		if objective ~= nil and objective.isBase then
+			isBase = true;
+			break;
+		end
+	end
+	return isBase;
 end
 
 function GameDirector:_onLost(capturePoint)

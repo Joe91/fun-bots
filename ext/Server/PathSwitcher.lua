@@ -1,11 +1,19 @@
 class('PathSwitcher');
 require('__shared/NodeCollection')
+require('GameDirector')
 
 function PathSwitcher:__init()
 	self.dummyData = 0;
 end
 
 function PathSwitcher:getNewPath(point, objective)
+	-- check if on base, or on path away from base. In this case: change path
+	local isBasePath = false;
+	local currentPathFirst = g_NodeCollection:GetFirst(point.PathIndex)
+	if currentPathFirst.Data ~= nil and currentPathFirst.Data.Objectives ~= nil then
+		isBasePath = g_GameDirector:isBasePath(currentPathFirst.Data.Objectives)
+	end
+
 	if point.Data == nil or point.Data.Links == nil or #point.Data.Links < 1 then
 		return false
 	end
@@ -36,7 +44,7 @@ function PathSwitcher:getNewPath(point, objective)
 		-- this path has listed objectives
 		if (pathNode.Data.Objectives ~= nil and objective ~= '') then
 			-- path with a single objective that matches mine, top priority
-			if (#pathNode.Data.Objectives == 1 and pathNode.Data.Objectives[1] == objective) then
+			if (#pathNode.Data.Objectives == 1 and pathNode.Data.Objectives[1] == objective) or isBasePath then
 				if (highestPriority < 2) then highestPriority = 2 end
 				table.insert(paths, {
 					Priority = 2,
@@ -49,7 +57,7 @@ function PathSwitcher:getNewPath(point, objective)
 			else
 				-- loop through the path's objectives and compare to mine
 				for _,pathObjective in pairs(pathNode.Data.Objectives) do
-					if (objective == pathObjective) then
+					if (objective == pathObjective) or isBasePath then
 						if (highestPriority < 1) then highestPriority = 1 end
 						table.insert(paths, {
 							Priority = 1,
