@@ -192,7 +192,7 @@ function GameDirector:_updateValidObjectives()
 	end
 end
 
-function GameDirector:getSpawnPath(team)
+function GameDirector:getSpawnPath(team, squad, onlyBase)
 	local possibleObjectives = {}
 	local possibleBases = {}
 	local pathsDone = {}
@@ -207,7 +207,7 @@ function GameDirector:getSpawnPath(team)
 						if #node.Data.Objectives == 1 then --possible path
 							if objective.isBase then
 								table.insert(possibleBases, path)
-							else
+							elseif not onlyBase then
 								table.insert(possibleObjectives, path)
 							end
 						end
