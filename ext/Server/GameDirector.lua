@@ -19,6 +19,9 @@ function GameDirector:__init()
 	self.AllObjectives = {}
 	self.Translatinos = {}
 
+	self.McomCounter = 0;
+	self.ArmedMcoms = {}
+
 	Events:Subscribe('Level:Loaded', self, self._onLevelLoaded)
 
 	Events:Subscribe('CapturePoint:Lost', self, self._onLost)
@@ -29,6 +32,10 @@ function GameDirector:__init()
 	Events:Subscribe('Server:RoundReset', self, self._onRoundReset)
 
 	Events:Subscribe('Engine:Update', self, self._onUpdate)
+
+	Events:Subscribe('MCOM:Armed', self, self._onMcomArmed)
+	Events:Subscribe('MCOM:Disarmed', self, self._onMcomDisarmed)
+	Events:Subscribe('MCOM:Destroyed', self, self._onMcomDestroyed)
 end
 
 function GameDirector:_onLevelLoaded(levelName, gameMode)
@@ -42,10 +49,86 @@ function GameDirector:_onLevelLoaded(levelName, gameMode)
 	self.AllObjectives = {}
 	self.Translatinos = {}
 
+	if g_Globals.isRush then
+		self.McomCounter = 0;
+		self.ArmedMcoms = {}
+
+		local mcomIterator = EntityManager:GetIterator("EventSplitterEntity")
+		local mcomEntity = mcomIterator:Next()
+
+		while mcomEntity do
+			mcomEntity = Entity(mcomEntity)
+			mcomEntity:RegisterEventCallback(function(ent, entityEvent)
+				if ent.data.instanceGuid == Guid("87E78B77-78F9-4DE0-82FF-904CDC2F7D03") then
+					Events:Dispatch('MCOM:Armed', entityEvent.player)
+				end
+				if ent.data.instanceGuid == Guid("74B7AD6D-8EB5-40B1-BB53-C0CFB956048E") then
+					Events:Dispatch('MCOM:Disarmed', entityEvent.player)
+				end
+				if ent.data.instanceGuid == Guid("70B36E2F-0B6F-40EC-870B-1748239A63A8") then
+					Events:Dispatch('MCOM:Destroyed', entityEvent.player)
+				end
+			end)
+			mcomEntity = mcomIterator:Next()
+		end
+	end
+
 	-- TODO, assign weights to each objective
 
 	self.UpdateLast = 0
 end
+
+function GameDirector:_onMcomArmed(player)
+	local objective = self:_translateObjective(player.soldier.worldTransform.trans);
+	if self.ArmedMcoms[player.name] == nil then
+		self.ArmedMcoms[player.name] = {}
+	end
+	table.insert(self.ArmedMcoms[player.name], objective.name)
+
+	self:_updateObjective(objective, {
+		belongs = player.temId,
+		isAttacked = true;
+	})
+end
+
+function GameDirector:_onMcomDisarmed(player)
+	local objective = self:_translateObjective(player.soldier.worldTransform.trans);
+	-- remove information of armed mcom
+	for playerMcom,mcomsOfPlayer in pairs(self.ArmedMcoms) do
+		if mcomsOfPlayer ~= nil and #mcomsOfPlayer > 0 then
+			for i,mcomName in pairs(mcomsOfPlayer) do
+				if mcomName == objective.name then
+					table.remove(self.ArmedMcoms[playerMcom], i)
+					break;
+				end
+			end
+		end
+	end
+	self:_updateObjective(objective, {
+		belongs = player.temId,
+		isAttacked = false;
+	})
+end
+
+function GameDirector:_onMcomDestroyed(player)
+	local objective = self:_translateObjective(player.soldier.worldTransform.trans);
+	if self.ArmedMcoms[player.name] ~= nil then
+		for i,mcomName in pairs(elf.ArmedMcoms[player.name]) do
+			if mcomName == objective.name then
+				table.remove(self.ArmedMcoms[player.name], i)
+				break;
+			end
+		end
+	end
+	self:_updateObjective(objective, {
+		belongs = player.temId,
+		isAttacked = false;
+		enabled = false;
+	})
+	self.McomCounter = self.McomCounter + 1;
+end
+
+
 
 function GameDirector:initObjectives()
 	self.AllObjectives = {}
@@ -55,7 +138,7 @@ function GameDirector:initObjectives()
 			belongs = TeamId.TeamNeutral,
 			isAttacked = false,
 			isBase = false,
-			zone = 0
+			enabled = true
 		}
 		if string.find(objectiveName:lower(), "base") ~= nil then
 			objective.isBase = true;
@@ -73,20 +156,24 @@ end
 function GameDirector:getSpawnPath(team)
 	local possibleObjectives = {}
 	local possibleBases = {}
+	local pathsDone = {}
 	for _,objective in pairs(self.AllObjectives) do
 		if objective.belongs == team then
 			local allObjectives = g_NodeCollection:GetKnownOjectives();
 			local pathsWithObjective = allObjectives[objective.name]
 			for _,path in pairs(pathsWithObjective) do
-				local node = g_NodeCollection:Get(1, path)
-				if node ~= nil and node.Data.Objectives ~= nil then
-					if #node.Data.Objectives == 1 then --possible path
-						if objective.isBase then
-							table.insert(possibleBases, path)
-						else
-							table.insert(possibleObjectives, path)
+				if not pathsDone[path] then
+					local node = g_NodeCollection:Get(1, path)
+					if node ~= nil and node.Data.Objectives ~= nil then
+						if #node.Data.Objectives == 1 then --possible path
+							if objective.isBase then
+								table.insert(possibleBases, path)
+							else
+								table.insert(possibleObjectives, path)
+							end
 						end
 					end
+					pathsDone[path] = true;
 				end
 			end
 		end
@@ -111,8 +198,8 @@ function GameDirector:_updateObjective(name, data)
 	end
 end
 
-function GameDirector:_translateObjective(flagEntity)
-	if self.Translatinos[flagEntity.name] == nil then
+function GameDirector:_translateObjective(positon, name)
+	if name == nil or self.Translatinos[name] == nil then
 		local allObjectives = g_NodeCollection:GetKnownOjectives();
 		local pathsDone = {}
 		local closestObjective = ""
@@ -123,7 +210,7 @@ function GameDirector:_translateObjective(flagEntity)
 					local node = g_NodeCollection:Get(1, path)
 					if node ~= nil and node.Data.Objectives ~= nil then
 						if #node.Data.Objectives == 1 then --possible objective
-							local distance = flagEntity.transform.trans:Distance(node.Position)
+							local distance = positon:Distance(node.Position)
 							if closestDistance == nil or closestDistance > distance then
 								closestObjective = objective;
 								closestDistance = distance;
@@ -134,14 +221,18 @@ function GameDirector:_translateObjective(flagEntity)
 				end
 			end
 		end
-		self.Translatinos[flagEntity.name] = closestObjective;
+		if name ~= nil then
+			self.Translatinos[name] = closestObjective;
+		end
+		return closestObjective;
+	else
+		return self.Translatinos[name];
 	end
-	return self.Translatinos[flagEntity.name];
 end
 
 function GameDirector:_onCapture(capturePoint)
 	local flagEntity = CapturePointEntity(capturePoint)
-	local objective = self:_translateObjective(flagEntity);
+	local objective = self:_translateObjective(flagEntity.transform.trans, flagEntity.name);
 	self:_updateObjective(objective, {
 		belongs = flagEntity.team,
 		isAttacked = flagEntity.isAttacked
@@ -167,7 +258,7 @@ end
 
 function GameDirector:_onLost(capturePoint)
 	local flagEntity = CapturePointEntity(capturePoint)
-	local objective = self:_translateObjective(flagEntity);
+	local objective = self:_translateObjective(flagEntity.transform.trans, flagEntity.name);
 	self:_updateObjective(objective, {
 		belongs = flagEntity.team,
 		isAttacked = flagEntity.isAttacked
@@ -182,7 +273,7 @@ end
 
 function GameDirector:_onPlayerEnterCapturePoint(player, capturePoint)
 	local flagEntity = CapturePointEntity(capturePoint)
-	local objective = self:_translateObjective(flagEntity);
+	local objective = self:_translateObjective(flagEntity.transform.trans, flagEntity.name);
 	self:_updateObjective(objective, {
 		belongs = flagEntity.team,
 		isAttacked = flagEntity.isAttacked
