@@ -950,6 +950,7 @@ function NodeCollection:Load(levelName, gameMode)
 	--end
 
 	print('NodeCollection:Load -> Paths: '..tostring(pathCount)..' | Waypoints: '..tostring(waypointCount))
+	ChatManager:Yell(Language:I18N('Loaded %d paths with %d waypoints for map %s', pathCount, waypointCount, self.mapName), 5.5);
 end
 
 function NodeCollection:Save()
@@ -985,6 +986,7 @@ function NodeCollection:Save()
 
 	local changedWaypoints = {}
 	local waypointCount = #self.waypoints
+	local pathCount = 0
 	local waypointsChanged = 0
 	local orphans = {}
 	local disconnects = {}
@@ -1042,6 +1044,10 @@ function NodeCollection:Save()
 				if (jsonData ~= '{}') then
 					jsonSaveData = SQL:Escape(table.concat(jsonData:split('"'), '""'))
 				end
+			end
+
+			if (waypoint.PathIndex > pathCount) then
+				pathCount = waypoint.PathIndex
 			end
 
 			table.insert(batchQueries, '('..table.concat({
@@ -1106,7 +1112,7 @@ function NodeCollection:Save()
 
 	SQL:Close();
 	print('NodeCollection:Save -> Saved ['..queriesTotal..'] waypoints for map ['..self.mapName..']');
-	ChatManager:Yell(Language:I18N('Saved %d waypoints for map %s', queriesTotal, self.mapName), 5.5);
+	ChatManager:Yell(Language:I18N('Saved %d paths with %d waypoints for map %s', pathCount, queriesTotal, self.mapName), 5.5);
 end
 
 -----------------------------

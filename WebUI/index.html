@@ -52,14 +52,14 @@
 		<!-- Waypoint-Editor -->
 		<ui-view data-name="waypoint_toolbar" data-type="toolbar">
 			<ui-logo>
-				Waypoint-Editor<sub>fun-bots</sub>
+				Waypoints-Editor<sub>fun-bots</sub>
 			</ui-logo>
 			<ui-menu data-name="waypoints">
 				<ul class="main">
-					<li data-action="trace_start"><a data-key="F5"><i data-name="start"></i> <span data-lang="Start">Start</span></a></li>
-					<li data-action="trace_save"><a data-key="F9"><i data-name="save"></i> <span data-lang="Save">Save</span></a></li>
-					<li data-action="trace_reload"><a data-key="F11"><i data-name="reload"></i> <span data-lang="Reload">Reload</span></a></li>
-					<li data-action="trace_show"><a><i data-name="list"></i> <span data-lang="List">List</span></a></li>
+					<li data-action="waypoints_client_load"><a><i data-name="client_load"></i> <span data-lang="[Client] Load">[Client] Load</span></a></li>
+					<li data-action="waypoints_client_save"><a><i data-name="client_save"></i> <span data-lang="[Client] Save">[Client] Save</span></a></li>
+					<li data-action="waypoints_server_load"><a data-key="F11"><i data-name="server_load"></i> <span data-lang="[Server] Load">[Server] Load</span></a></li>
+					<li data-action="waypoints_server_save"><a data-key="F9"><i data-name="server_save"></i> <span data-lang="[Server] Save">[Server] Save</span></a></li>
 					<li>
 						<a><span data-lang="View">View</span></a>
 						<ul>
@@ -75,6 +75,8 @@
 				</ul>
 				<ui-menu>
 					<ul class="main">
+						<li data-action="trace_start"><a data-key="F5"><i data-name="start"></i> <span data-lang="Start Trace">Start Trace</span></a></li>
+						<li data-action="trace_save"><a><i data-name="save"></i> <span data-lang="Save Trace">Save Trace</span></a></li>
 						<li data-action="bot_spawn_path"><a><i data-name="spawn_bot_way"></i> <span data-lang="Spawn Bot on Way">Spawn Bot on Way</span></a></li>
 						<li data-action="trace_clear"><a data-key="F7"><i data-name="clear"></i> <span data-lang="Clear Trace">Clear Trace</span></a></li>
 						<li data-action="trace_reset_all"><a data-key="F8"><i data-name="trash"></i> <span data-lang="Reset all Traces">Reset all Traces</span></a></li>
