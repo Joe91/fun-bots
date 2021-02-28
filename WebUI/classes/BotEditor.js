@@ -250,10 +250,8 @@ const BotEditor = (new function BotEditor() {
 
 				/* Trace */
 				case 'trace_start':
-					index = document.querySelector('input[type="number"][name="trace_index"]');
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'trace_start',
-						value: index.value
+						action:	'trace_start'
 					}));
 				break;
 				case 'trace_end':
@@ -261,11 +259,16 @@ const BotEditor = (new function BotEditor() {
 						action:	'trace_end',
 					}));
 				break;
-				case 'trace_clear':
+				case 'trace_save':
 					index = document.querySelector('input[type="number"][name="trace_index"]');
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'trace_clear',
+						action:	'trace_save',
 						value: index.value
+					}));
+				break;
+				case 'trace_clear':
+					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
+						action:	'trace_clear'
 					}));
 				break;
 				case 'trace_reset_all':
@@ -273,14 +276,24 @@ const BotEditor = (new function BotEditor() {
 						action:	'trace_reset_all'
 					}));
 				break;
-				case 'trace_save':
+				case 'waypoints_client_load':
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'trace_save'
+						action:	'waypoints_client_load'
 					}));
 				break;
-				case 'trace_reload':
+				case 'waypoints_client_save':
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'trace_reload'
+						action:	'waypoints_client_save'
+					}));
+				break;
+				case 'waypoints_server_load':
+					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
+						action:	'waypoints_server_load'
+					}));
+				break;
+				case 'waypoints_server_save':
+					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
+						action:	'waypoints_server_save'
 					}));
 				break;
 				case 'trace_show':
@@ -432,10 +445,8 @@ const BotEditor = (new function BotEditor() {
 
 				/* Trace */
 				case InputDeviceKeys.IDK_F5:
-					index = document.querySelector('[data-action="trace_start"] input[type="number"]');
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'trace_start',
-						value:	index.value
+						action:	'trace_start'
 					}));
 				break;
 				case InputDeviceKeys.IDK_F6:
@@ -444,10 +455,8 @@ const BotEditor = (new function BotEditor() {
 					}));
 				break;
 				case InputDeviceKeys.IDK_F7:
-					index = document.querySelector('[data-action="trace_clear"] input[type="number"]');
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'trace_clear',
-						value:	index.value
+						action:	'trace_clear'
 					}));
 				break;
 				case InputDeviceKeys.IDK_F8:
@@ -457,12 +466,12 @@ const BotEditor = (new function BotEditor() {
 				break;
 				case InputDeviceKeys.IDK_F9:
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'trace_save'
+						action:	'waypoints_server_save'
 					}));
 				break;
 				case InputDeviceKeys.IDK_F11:
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'trace_reload'
+						action:	'waypoints_server_load'
 					}));
 				break;
 
@@ -643,15 +652,15 @@ const BotEditor = (new function BotEditor() {
 		if(state) {
 			a.dataset.key			= 'F6';
 			icon.dataset.name		= 'stop';
-			text.dataset.lang		= 'Stop';
-			text.innerHTML			= this.I18N('Stop');
+			text.dataset.lang		= 'End Trace';
+			text.innerHTML			= this.I18N('End Trace');
 			info.dataset.show		= true;
 			element.dataset.action	= 'trace_end';
 		} else {
 			a.dataset.key			= 'F5';
 			icon.dataset.name		= 'start';	
-			text.dataset.lang		= 'Start';
-			text.innerHTML			= this.I18N('Start');
+			text.dataset.lang		= 'Start Trace';
+			text.innerHTML			= this.I18N('Start Trace');
 			info.dataset.show		= false;
 			element.dataset.action	= 'trace_start';
 		}

@@ -112,29 +112,35 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 
 	-- Trace
 	elseif request.action == 'trace_start' then
-		local index = tonumber(request.value);
-		NetEvents:SendTo('ClientNodeEditor:StartTrace', player, index)
+		NetEvents:SendToLocal('ClientNodeEditor:StartTrace', player)
 
 	elseif request.action == 'trace_end' then
-		NetEvents:SendTo('ClientNodeEditor:EndTrace', player)
+		NetEvents:SendToLocal('ClientNodeEditor:EndTrace', player)
+
+	elseif request.action == 'trace_save' then
+		local index = tonumber(request.value);
+		NetEvents:SendToLocal('ClientNodeEditor:SaveTrace', player, index)
 
 	elseif request.action == 'trace_clear' then
-		local index = tonumber(request.value);
-		NetEvents:SendTo('ClientNodeEditor:ClearTrace', player, index)
+		NetEvents:SendToLocal('ClientNodeEditor:ClearTrace', player)
 
 	elseif request.action == 'trace_reset_all' then
 		g_NodeCollection:Clear()
+		NetEvents:BroadcastLocal('NodeCollection:Clear')
 
-	elseif request.action == 'trace_save' then
-		g_NodeCollection:Save()
+	elseif request.action == 'waypoints_client_load' then
+		local expectedAmount = g_NodeCollection:Get()
+		NetEvents:SendToLocal('ClientNodeEditor:ReceiveNodes', player, (#expectedAmount))
 
-	elseif request.action == 'trace_reload' then
+	elseif request.action == 'waypoints_client_save' then
+		NetEvents:SendToLocal('ClientNodeEditor:SaveNodes', player)
+
+	elseif request.action == 'waypoints_server_load' then
 		g_NodeCollection:Load()
 
-	elseif request.action == 'trace_show' then
-		local expectedAmount = g_NodeCollection:Get()
-		NetEvents:SendTo('ClientNodeEditor:ReceiveNodes', player, (#expectedAmount))
-
+	elseif request.action == 'waypoints_server_save' then
+		g_NodeCollection:Save()
+		
 	-- Waypoints-Editor
 	elseif request.action == 'request_waypoints_editor' then
 		-- @ToDo Create/check Permissions to use the Wapoints-Editor?

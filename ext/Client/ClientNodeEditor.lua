@@ -853,13 +853,13 @@ end
 -- ############################ Trace Recording
 -- ############################################
 
-function ClientNodeEditor:_onStartTrace(pathIndex)
+function ClientNodeEditor:_onStartTrace()
 	if (self.customTrace ~= nil) then
 		self.customTrace:Clear()
 	end
 	self.customTrace = NodeCollection(true)
 	self.customTraceTimer = 0
-	self.customTraceIndex = pathIndex
+	self.customTraceIndex = #g_NodeCollection:GetPaths()+1
 	self.customTraceDistance = 0
 
 	local firstWaypoint = self.customTrace:Create({
@@ -871,6 +871,7 @@ function ClientNodeEditor:_onStartTrace(pathIndex)
 	print('Trace ' .. tostring(self.customTraceIndex) .. ' started');
 	g_FunBotUIClient:_onUITrace(true)
 	g_FunBotUIClient:_onUITraceIndex(self.customTraceIndex)
+	g_FunBotUIClient:_onUITraceWaypoints(#self.customTrace:Get())
 	g_FunBotUIClient:_onUITraceWaypointsDistance(self.customTraceDistance)
 	--ChatManager:Yell(Language:I18N('Trace %d started', pathIndex), 2.5);
 end
@@ -878,15 +879,34 @@ end
 function ClientNodeEditor:_onEndTrace()
 	self.customTraceTimer = -1
 
+	local firstWaypoint = self.customTrace:GetFirst()
+	local startPos 	= firstWaypoint.Position + Vec3.up
+	local endPos 	= self.customTrace:GetLast().Position + Vec3.up
+	local raycast	= RaycastManager:Raycast(startPos, endPos, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll | RayCastFlags.CheckDetailMesh | RayCastFlags.IsAsyncRaycast);
+
+	self.customTrace:ClearSelection()
+	self.customTrace:Select(firstWaypoint)
+	if (raycast == nil or raycast.rigidBody == nil) then
+		-- clear view from start node to end node, path loops
+		self.customTrace:SetInput(firstWaypoint.SpeedMode, firstWaypoint.ExtraMode, 0)
+	else
+		-- no clear view, path should just invert at the end
+		self.customTrace:SetInput(firstWaypoint.SpeedMode, firstWaypoint.ExtraMode, 0XFF)
+	end
+	self.customTrace:ClearSelection()
+
 	g_FunBotUIClient:_onUITrace(false)
-	g_FunBotUIClient:_onUITraceIndex(1)
 end
 
 function ClientNodeEditor:_onClearTrace()
+	self.customTraceTimer = -1
+	self.customTraceIndex = #g_NodeCollection:GetPaths()+1
 	self.customTraceDistance = 0
 	self.customTrace:Clear()
-	g_FunBotUIClient:_onUITraceWaypointsDistance(self.customTraceDistance)
+	g_FunBotUIClient:_onUITrace(false)
+	g_FunBotUIClient:_onUITraceIndex(self.customTraceIndex)
 	g_FunBotUIClient:_onUITraceWaypoints(#self.customTrace:Get())
+	g_FunBotUIClient:_onUITraceWaypointsDistance(self.customTraceDistance)
 end
 
 function ClientNodeEditor:_onSaveTrace(pathIndex)
