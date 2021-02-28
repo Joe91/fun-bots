@@ -650,7 +650,16 @@ function NodeCollection:GetFirst(pathIndex)
 	local firstWaypoint = self.waypoints[1]
 
 	if (pathIndex ~= nil) then
+
+		if (self.waypointsByPathIndex[pathIndex] == nil) then
+			return false
+		end
+
 		firstWaypoint = self.waypointsByPathIndex[pathIndex][1]
+	end
+
+	if (firstWaypoint == nil) then
+		return false
 	end
 
 	while firstWaypoint.Previous and ((pathIndex ~= nil and firstWaypoint.Previous.PathIndex == firstWaypoint.PathIndex) or pathIndex == nil) do
@@ -664,10 +673,19 @@ function NodeCollection:GetLast(pathIndex)
 	local lastWaypoint = self.waypoints[#self.waypoints]
 
 	if (pathIndex ~= nil) then
+
+		if (self.waypointsByPathIndex[pathIndex] == nil) then
+			return false
+		end
+		
 		lastWaypoint = self.waypointsByPathIndex[pathIndex][#self.waypointsByPathIndex[pathIndex]]
 	end
+
+	if (lastWaypoint == nil) then
+		return false
+	end
 	
-	while lastWaypoint.Next and ((pathIndex ~= nil and lastWaypoint.Previous.PathIndex == lastWaypoint.PathIndex) or pathIndex == nil) do
+	while lastWaypoint.Next and ((pathIndex ~= nil and lastWaypoint.Next.PathIndex == lastWaypoint.PathIndex) or pathIndex == nil) do
 		lastWaypoint = lastWaypoint.Next
 	end
 	return lastWaypoint

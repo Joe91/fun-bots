@@ -878,24 +878,26 @@ end
 
 function ClientNodeEditor:_onEndTrace()
 	self.customTraceTimer = -1
+	g_FunBotUIClient:_onUITrace(false)
 
 	local firstWaypoint = self.customTrace:GetFirst()
-	local startPos 	= firstWaypoint.Position + Vec3.up
-	local endPos 	= self.customTrace:GetLast().Position + Vec3.up
-	local raycast	= RaycastManager:Raycast(startPos, endPos, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll | RayCastFlags.CheckDetailMesh | RayCastFlags.IsAsyncRaycast);
 
-	self.customTrace:ClearSelection()
-	self.customTrace:Select(firstWaypoint)
-	if (raycast == nil or raycast.rigidBody == nil) then
-		-- clear view from start node to end node, path loops
-		self.customTrace:SetInput(firstWaypoint.SpeedMode, firstWaypoint.ExtraMode, 0)
-	else
-		-- no clear view, path should just invert at the end
-		self.customTrace:SetInput(firstWaypoint.SpeedMode, firstWaypoint.ExtraMode, 0XFF)
+	if (firstWaypoint) then
+		local startPos 	= firstWaypoint.Position + Vec3.up
+		local endPos 	= self.customTrace:GetLast().Position + Vec3.up
+		local raycast	= RaycastManager:Raycast(startPos, endPos, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll | RayCastFlags.CheckDetailMesh | RayCastFlags.IsAsyncRaycast);
+
+		self.customTrace:ClearSelection()
+		self.customTrace:Select(firstWaypoint)
+		if (raycast == nil or raycast.rigidBody == nil) then
+			-- clear view from start node to end node, path loops
+			self.customTrace:SetInput(firstWaypoint.SpeedMode, firstWaypoint.ExtraMode, 0)
+		else
+			-- no clear view, path should just invert at the end
+			self.customTrace:SetInput(firstWaypoint.SpeedMode, firstWaypoint.ExtraMode, 0XFF)
+		end
+		self.customTrace:ClearSelection()
 	end
-	self.customTrace:ClearSelection()
-
-	g_FunBotUIClient:_onUITrace(false)
 end
 
 function ClientNodeEditor:_onClearTrace()
@@ -1319,54 +1321,61 @@ function ClientNodeEditor:_onEngineUpdate(delta, simDelta)
 		if (self.customTraceTimer > self.customTraceDelay) then
 
 			local lastWaypoint = self.customTrace:GetLast()
-			local lastDistance = lastWaypoint.Position:Distance(self.playerPos)
 
-			if (lastDistance >= self.customTraceDelay) then
-				-- primary weapon, record movement
-				if (self.player.soldier.weaponsComponent.currentWeaponSlot == WeaponSlot.WeaponSlot_0) then
+			if (lastWaypoint) then
 
-					local newWaypoint, msg = self.customTrace:Add()
-					self.customTrace:Update(newWaypoint, {
-						Position = self.playerPos:Clone()
-					})
-					self.customTrace:ClearSelection()
-					self.customTrace:Select(newWaypoint)
+				local lastDistance = lastWaypoint.Position:Distance(self.playerPos)
 
-					local speed = 0; -- 0 = wait, 1 = prone ... (4 Bits)
-					local extra = 0; -- 0 = nothing, 1 = jump ... (4 Bits)
+				if (lastDistance >= self.customTraceDelay) then
+					-- primary weapon, record movement
+					if (self.player.soldier.weaponsComponent.currentWeaponSlot == WeaponSlot.WeaponSlot_0) then
 
-					if self.player.input:GetLevel(EntryInputActionEnum.EIAThrottle) > 0 then --record only if moving
-						if self.player.soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
-							speed = 1;
-						elseif self.player.soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
-							speed = 2;
-						else
-							speed = 3;
+						local newWaypoint, msg = self.customTrace:Add()
+						self.customTrace:Update(newWaypoint, {
+							Position = self.playerPos:Clone()
+						})
+						self.customTrace:ClearSelection()
+						self.customTrace:Select(newWaypoint)
 
-							if self.player.input:GetLevel(EntryInputActionEnum.EIASprint) == 1 then
-								speed = 4;
+						local speed = 0; -- 0 = wait, 1 = prone ... (4 Bits)
+						local extra = 0; -- 0 = nothing, 1 = jump ... (4 Bits)
+
+						if self.player.input:GetLevel(EntryInputActionEnum.EIAThrottle) > 0 then --record only if moving
+							if self.player.soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
+								speed = 1;
+							elseif self.player.soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
+								speed = 2;
+							else
+								speed = 3;
+
+								if self.player.input:GetLevel(EntryInputActionEnum.EIASprint) == 1 then
+									speed = 4;
+								end
 							end
+
+							if self.player.input:GetLevel(EntryInputActionEnum.EIAJump) == 1 then
+								extra = 1;
+							end
+
+							self.customTrace:SetInput(speed, extra, 0)
 						end
 
-						if self.player.input:GetLevel(EntryInputActionEnum.EIAJump) == 1 then
-							extra = 1;
-						end
+					-- secondary weapon, increase wait timer
+					elseif (self.player.soldier.weaponsComponent.currentWeaponSlot == WeaponSlot.WeaponSlot_1) then
 
-						self.customTrace:SetInput(speed, extra, 0)
+						local lastWaypoint = self.customTrace:GetLast()
+						self.customTrace:ClearSelection()
+						self.customTrace:Select(lastWaypoint)
+						self.customTrace:SetInput(lastWaypoint.SpeedMode, lastWaypoint.ExtraMode, lastWaypoint.OptValue + delta)
 					end
 
-				-- secondary weapon, increase wait timer
-				elseif (self.player.soldier.weaponsComponent.currentWeaponSlot == WeaponSlot.WeaponSlot_1) then
-
-					local lastWaypoint = self.customTrace:GetLast()
-					self.customTrace:ClearSelection()
-					self.customTrace:Select(lastWaypoint)
-					self.customTrace:SetInput(lastWaypoint.SpeedMode, lastWaypoint.ExtraMode, lastWaypoint.OptValue + delta)
+					self.customTraceDistance = self.customTraceDistance + lastDistance
+					g_FunBotUIClient:_onUITraceWaypointsDistance(self.customTraceDistance)
+					g_FunBotUIClient:_onUITraceWaypoints(#self.customTrace:Get())
 				end
-
-				self.customTraceDistance = self.customTraceDistance + lastDistance
-				g_FunBotUIClient:_onUITraceWaypointsDistance(self.customTraceDistance)
-				g_FunBotUIClient:_onUITraceWaypoints(#self.customTrace:Get())
+			else
+				-- collection is empty, stop the timer
+				self.customTraceTimer = -1
 			end
 
 			self.customTraceTimer = 0
@@ -1644,9 +1653,18 @@ function ClientNodeEditor:_drawNode(waypoint, isTracePath)
 	local qualityAtRange = g_NodeCollection:InRange(waypoint, self.playerPos, Config.lineRange)
 
 	-- setup node color information
-	local color = self.colors[waypoint.PathIndex]
-	if (waypoint.Previous == false and waypoint.Next == false) then
-		color = self.colors.Orphan
+	local color = self.colors.Orphan
+	if (waypoint.Previous ~= false and waypoint.Next ~= false) then
+
+		-- happens after the 20th path
+		if (self.colors[waypoint.PathIndex] == nil) then
+			local r, g, b = (math.random(20, 100) / 100), (math.random(20, 100) / 100), (math.random(20, 100) / 100)
+			self.colors[waypoint.PathIndex] = {
+				Node = Vec4(r, g, b, 0.25),
+				Line = Vec4(r, g, b, 1),
+			}
+		end
+		color = self.colors[waypoint.PathIndex]
 	end
 	if (isTracePath) then
 		color = {
