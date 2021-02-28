@@ -389,22 +389,24 @@ function GameDirector:_onUpdate(delta)
 		-- TODO: check for inactive objectives of bots
 		-- check objective statuses
 		for _,objective in pairs(self.AllObjectives) do
-			for botTeam, bots in pairs(self.BotsByTeam) do
-				for i=1, #bots do
-					if (self.CurrentAssignedCount[botTeam..'_'..objective.name] == nil) then
-						self.CurrentAssignedCount[botTeam..'_'..objective.name] = 0
-					end
+			if not objective.isBase and objective.active then
+				for botTeam, bots in pairs(self.BotsByTeam) do
+					for i=1, #bots do
+						if (self.CurrentAssignedCount[botTeam..'_'..objective.name] == nil) then
+							self.CurrentAssignedCount[botTeam..'_'..objective.name] = 0
+						end
 
-					if (bots[i]:getObjective() == objective.name) then
-						self.CurrentAssignedCount[botTeam..'_'..objective.name] = self.CurrentAssignedCount[botTeam..'_'..objective.name] + 1
-					end
+						if (bots[i]:getObjective() == objective.name) then
+							self.CurrentAssignedCount[botTeam..'_'..objective.name] = self.CurrentAssignedCount[botTeam..'_'..objective.name] + 1
+						end
 
-					if (objective.team ~= botTeam and bots[i]:getObjective() == '' and self.CurrentAssignedCount[botTeam..'_'..objective.name] < self.MaxAssignedLimit) then
+						if (objective.team ~= botTeam and bots[i]:getObjective() == '' and self.CurrentAssignedCount[botTeam..'_'..objective.name] < self.MaxAssignedLimit) then
 
-						print('Assigning bot to objective: '..bots[i].name..' (team: '..botTeam..') -> '..objective.name)
+							print('Assigning bot to objective: '..bots[i].name..' (team: '..botTeam..') -> '..objective.name)
 
-						bots[i]:setObjective(objective.name)
-						self.CurrentAssignedCount[botTeam..'_'..objective.name] = self.CurrentAssignedCount[botTeam..'_'..objective.name] + 1
+							bots[i]:setObjective(objective.name)
+							self.CurrentAssignedCount[botTeam..'_'..objective.name] = self.CurrentAssignedCount[botTeam..'_'..objective.name] + 1
+						end
 					end
 				end
 			end
