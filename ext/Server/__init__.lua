@@ -123,6 +123,7 @@ function FunBotServer:_onLevelLoaded(levelName, gameMode)
 	end
 
 	g_NodeEditor:onLevelLoaded(levelName, gameMode)
+	g_GameDirector:onLevelLoaded()
 	g_GameDirector:initObjectives()
 	BotSpawner:onLevelLoaded()
 	NetEvents:BroadcastUnreliableLocal('WriteClientSettings', Config, true)

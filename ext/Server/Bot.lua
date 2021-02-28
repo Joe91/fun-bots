@@ -182,6 +182,7 @@ function Bot:resetVars()
 	self._shootWayPoints 		= {};
 	self._zombieSpeedValue 		= 0;
 	self._spawnDelayTimer		= 0;
+	self._objective 			= '';
 	self._meleeActive 			= false;
 
 	self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 0);

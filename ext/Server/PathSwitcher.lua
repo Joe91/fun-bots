@@ -9,10 +9,10 @@ end
 function PathSwitcher:getNewPath(point, objective)
 	-- check if on base, or on path away from base. In this case: change path
 	local isBasePath = false;
-	local currentPathFirst = g_NodeCollection:GetFirst(point.PathIndex)
-	local currentActiveStatus = 0;
+	local currentPathFirst = g_NodeCollection:GetFirst(point.PathIndex);
+	local currentPathStatus = 0;
 	if currentPathFirst.Data ~= nil and currentPathFirst.Data.Objectives ~= nil then
-		currentActiveStatus = g_GameDirector:enableSateOfPath(currentPathFirst.Data.Objectives)
+		currentPathStatus = g_GameDirector:getEnableSateOfPath(currentPathFirst.Data.Objectives)
 		isBasePath = g_GameDirector:isBasePath(currentPathFirst.Data.Objectives)
 	end
 
@@ -40,12 +40,14 @@ function PathSwitcher:getNewPath(point, objective)
 	-- loop through each possible path
 	for i=1, #possiblePaths do
 
-		local newActiveStatus = 0;
+		local newPathStatus = 0;
 		local newPoint = possiblePaths[i]
 		local pathNode = g_NodeCollection:GetFirst(newPoint.PathIndex)
 
 		-- this path has listed objectives
 		if (pathNode.Data.Objectives ~= nil and objective ~= '') then
+			newPathStatus = g_GameDirector:getEnableSateOfPath(pathNode.Data.Objectives)
+			local switchFromInactive = newPathStatus > currentPathStatus;
 			-- path with a single objective that matches mine, top priority
 			if (#pathNode.Data.Objectives == 1 and pathNode.Data.Objectives[1] == objective) or isBasePath then
 				if (highestPriority < 2) then highestPriority = 2 end
@@ -60,7 +62,7 @@ function PathSwitcher:getNewPath(point, objective)
 			else
 				-- loop through the path's objectives and compare to mine
 				for _,pathObjective in pairs(pathNode.Data.Objectives) do
-					if (objective == pathObjective) or isBasePath then
+					if (objective == pathObjective) or isBasePath or switchFromInactive then
 						if (highestPriority < 1) then highestPriority = 1 end
 						table.insert(paths, {
 							Priority = 1,

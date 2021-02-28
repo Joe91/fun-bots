@@ -18,8 +18,6 @@ function GameDirector:__init()
 	self.McomCounter = 0;
 	self.ArmedMcoms = {}
 
-	Events:Subscribe('Level:Loaded', self, self._onLevelLoaded)
-
 	Events:Subscribe('CapturePoint:Lost', self, self._onLost)
 	Events:Subscribe('CapturePoint:Captured', self, self._onCapture)
 	Events:Subscribe('Player:EnteredCapturePoint', self, self._onPlayerEnterCapturePoint)
@@ -34,7 +32,7 @@ function GameDirector:__init()
 	Events:Subscribe('MCOM:Destroyed', self, self._onMcomDestroyed)
 end
 
-function GameDirector:_onLevelLoaded(levelName, gameMode)
+function GameDirector:onLevelLoaded()
 	self.AllObjectives = {}
 	self.Translations = {}
 
@@ -60,13 +58,36 @@ function GameDirector:_onLevelLoaded(levelName, gameMode)
 			end)
 			mcomEntity = mcomIterator:Next()
 		end
-
-		self:_updateValidObjectives()
 	end
 
 	-- TODO, assign weights to each objective
 
 	self.UpdateLast = 0
+end
+
+function GameDirector:initObjectives()
+	self.AllObjectives = {}
+	for objectiveName,_ in pairs(g_NodeCollection:GetKnownOjectives()) do
+		local objective = {
+			name = objectiveName,
+			team = TeamId.TeamNeutral,
+			isAttacked = false,
+			isBase = false,
+			active = true,
+			assigned = {}
+		}
+		if string.find(objectiveName:lower(), "base") ~= nil then
+			objective.isBase = true;
+			if string.find(objectiveName:lower(), "us") ~= nil then
+				objective.team = TeamId.Team1
+			else
+				objective.team = TeamId.Team2
+			end
+		end
+		table.insert(self.AllObjectives, objective)
+	end
+	print('self.AllObjectives -> '..g_Utilities:dump(self.AllObjectives, true))
+	self:_updateValidObjectives()
 end
 
 function GameDirector:_onMcomArmed(player)
@@ -120,31 +141,6 @@ function GameDirector:_onMcomDestroyed(player)
 	self:_updateValidObjectives();
 end
 
-
-function GameDirector:initObjectives()
-	self.AllObjectives = {}
-	for objectiveName,_ in pairs(g_NodeCollection:GetKnownOjectives()) do
-		local objective = {
-			name = objectiveName,
-			team = TeamId.TeamNeutral,
-			isAttacked = false,
-			isBase = false,
-			active = true
-		}
-		if string.find(objectiveName:lower(), "base") ~= nil then
-			objective.isBase = true;
-			if string.find(objectiveName:lower(), "us") ~= nil then
-				objective.team = TeamId.Team1
-			else
-				objective.team = TeamId.Team2
-			end
-		end
-		table.insert(self.AllObjectives, objective)
-	end
-	print('self.AllObjectives -> '..g_Utilities:dump(self.AllObjectives, true))
-end
-
-
 function GameDirector:_updateValidObjectives()
 	local baseIndex = 0;
 	local mcomIndexes = {0, 0};
@@ -189,6 +185,7 @@ function GameDirector:_updateValidObjectives()
 			end
 		end
 		objective.active = active;
+		print(objective.name.."  "..tostring(active))
 	end
 end
 
@@ -316,7 +313,7 @@ end
 -- 0 = all inactive
 -- 1 = partly inactive
 -- 2 = all active
-function GameDirector:enableSateOfPath(ObjectiveNamesOfPath)
+function GameDirector:getEnableSateOfPath(ObjectiveNamesOfPath)
 	local activeCount = 0;
 	for _,name in pairs(ObjectiveNamesOfPath) do
 		local objective = self:getObjectiveObject(name)
@@ -385,6 +382,15 @@ function GameDirector:_onUpdate(delta)
 		end
 
 		self.CurrentAssignedCount = {}
+		local maxAssings = {0,0}
+		for i = 1, 2 do
+			if self.BotsByTeam[i] ~= nil then 
+				maxAssings[i] = math.floor(#self.BotsByTeam[i] / 2) + 1;
+			end
+			if maxAssings[i] > self.MaxAssignedLimit then
+				maxAssings[i] = self.MaxAssignedLimit;
+			end
+		end
 
 		-- TODO: check for inactive objectives of bots
 		-- check objective statuses
@@ -400,13 +406,20 @@ function GameDirector:_onUpdate(delta)
 							self.CurrentAssignedCount[botTeam..'_'..objective.name] = self.CurrentAssignedCount[botTeam..'_'..objective.name] + 1
 						end
 
-						if (objective.team ~= botTeam and bots[i]:getObjective() == '' and self.CurrentAssignedCount[botTeam..'_'..objective.name] < self.MaxAssignedLimit) then
+						if (objective.team ~= botTeam and bots[i]:getObjective() == '' and self.CurrentAssignedCount[botTeam..'_'..objective.name] < maxAssings[botTeam]) then
 
 							print('Assigning bot to objective: '..bots[i].name..' (team: '..botTeam..') -> '..objective.name)
 
 							bots[i]:setObjective(objective.name)
 							self.CurrentAssignedCount[botTeam..'_'..objective.name] = self.CurrentAssignedCount[botTeam..'_'..objective.name] + 1
 						end
+					end
+				end
+			else
+				-- remove bots from this objective
+				for _,bot in pairs(botList) do
+					if bot:getObjective() == objective.name then
+						bot:setObjective();	-- clear objective
 					end
 				end
 			end
