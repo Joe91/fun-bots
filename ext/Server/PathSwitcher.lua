@@ -10,7 +10,9 @@ function PathSwitcher:getNewPath(point, objective)
 	-- check if on base, or on path away from base. In this case: change path
 	local isBasePath = false;
 	local currentPathFirst = g_NodeCollection:GetFirst(point.PathIndex)
+	local currentActiveStatus = 0;
 	if currentPathFirst.Data ~= nil and currentPathFirst.Data.Objectives ~= nil then
+		currentActiveStatus = g_GameDirector:enableSateOfPath(currentPathFirst.Data.Objectives)
 		isBasePath = g_GameDirector:isBasePath(currentPathFirst.Data.Objectives)
 	end
 
@@ -38,6 +40,7 @@ function PathSwitcher:getNewPath(point, objective)
 	-- loop through each possible path
 	for i=1, #possiblePaths do
 
+		local newActiveStatus = 0;
 		local newPoint = possiblePaths[i]
 		local pathNode = g_NodeCollection:GetFirst(newPoint.PathIndex)
 

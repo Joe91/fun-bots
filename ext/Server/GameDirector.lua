@@ -313,6 +313,26 @@ function GameDirector:isBasePath(ObjectiveNames)
 	return isBase;
 end
 
+-- 0 = all inactive
+-- 1 = partly inactive
+-- 2 = all active
+function GameDirector:enableSateOfPath(ObjectiveNamesOfPath)
+	local activeCount = 0;
+	for _,name in pairs(ObjectiveNamesOfPath) do
+		local objective = self:getObjectiveObject(name)
+		if objective ~= nil and objective.active then
+			activeCount = activeCount + 1;
+		end
+	end
+	if activeCount == 0 then
+		return 0;
+	elseif activeCount < #ObjectiveNamesOfPath then
+		return 1;
+	else
+		return 2;
+	end
+end
+
 function GameDirector:_onLost(capturePoint)
 	local flagEntity = CapturePointEntity(capturePoint)
 	local objectiveName = self:_translateObjective(flagEntity.transform.trans, flagEntity.name);
