@@ -3,7 +3,6 @@ class('ChatCommands');
 require('__shared/Config');
 
 local BotManager	= require('BotManager');
-local TraceManager	= require('TraceManager');
 local BotSpawner	= require('BotSpawner');
 local Globals 		= require('Globals');
 
@@ -188,26 +187,25 @@ function ChatCommands:execute(parts, player)
 		BotManager:killAll();
 
 	-- waypoint stuff
-	elseif parts[1] == '!trace' then
-		local traceIndex = tonumber(parts[2]) or 0;
+	elseif parts[1] == '!getnodes' then
+		NetEvents:SendToLocal('ClientNodeEditor:ReceiveNodes', player, #g_NodeCollection:Get())
 
-		TraceManager:startTrace(player, traceIndex);
+	elseif parts[1] == '!sendnodes' then
+		NetEvents:SendToLocal('ClientNodeEditor:SaveNodes', player)
+
+	elseif parts[1] == '!trace' then
+		NetEvents:SendToLocal('ClientNodeEditor:StartTrace', player)
 
 	elseif parts[1] == '!tracedone' then
-		TraceManager:endTrace(player);
+		NetEvents:SendToLocal('ClientNodeEditor:EndTrace', player)
 
-	elseif parts[1] == '!setpoint' then
-		local traceIndex = tonumber(parts[2]) or 1;
-
-		TraceManager:setPoint(player, traceIndex);
 
 	elseif parts[1] == '!cleartrace' then
-		local traceIndex = tonumber(parts[2]) or 1;
-
-		TraceManager:clearTrace(traceIndex);
+		NetEvents:SendToLocal('ClientNodeEditor:ClearTrace', player)
 
 	elseif parts[1] == '!clearalltraces' then
-		TraceManager:clearAllTraces();
+		g_NodeCollection:Clear()
+		NetEvents:SendLocal('NodeCollection:Clear')
 
 	elseif parts[1] == '!printtrans' then
 		print('!printtrans');
@@ -217,8 +215,9 @@ function ChatCommands:execute(parts, player)
 		print(player.soldier.worldTransform.trans.y);
 		print(player.soldier.worldTransform.trans.z);
 
-	elseif parts[1] == '!savepaths' then
-		TraceManager:savePaths();
+	elseif parts[1] == '!tracesave' then
+		local traceIndex = tonumber(parts[2]) or 0;
+		NetEvents:SendToLocal('ClientNodeEditor:SaveTrace', player, traceIndex)
 	end
 end
 

@@ -138,6 +138,7 @@ function ClientNodeEditor:RegisterEvents()
 	NetEvents:Subscribe('ClientNodeEditor:BotSelect', self, self._onBotSelect)
 
 	-- sever->client and client->server syncing events
+	NetEvents:Subscribe('ClientNodeEditor:SaveNodes', self, self._onSaveNodes)
 	NetEvents:Subscribe('ClientNodeEditor:ReceiveNodes', self, self._onGetNodes)
 	NetEvents:Subscribe('ClientNodeEditor:SendNodes', self, self._onSendNodes)
 	NetEvents:Subscribe('ClientNodeEditor:Create', self, self._onServerCreateNode)
@@ -189,6 +190,11 @@ function ClientNodeEditor:RegisterEvents()
 	Console:Register('TraceHide', '\'all\' or <number|PathIndex> - Hide trace\'s waypoints', self, self._onHidePath)
 	Console:Register('WarpTo', '*<string|WaypointID>* Teleport yourself to the specified Waypoint ID', self, self._onWarpTo)
 	Console:Register('SpawnAtWaypoint', '', self, self._onSpawnAtWaypoint)
+
+	Console:Register('StartTrace', 'Begin recording a new trace', self, self._onStartTrace)
+	Console:Register('EndTrace', 'Stop recording a new trace', self, self._onEndTrace)
+	Console:Register('ClearTrace', 'Clear all nodes from recorded trace', self, self._onClearTrace)
+	Console:Register('SaveTrace', '<number|PathIndex> Merge new trace with current waypoints', self, self._onSaveTrace)
 
 	-- debugging commands, not meant for UI
 	Console:Register('Enabled', 'Enable / Disable the waypoint editor', self, self._onSetEnabled)
@@ -854,6 +860,7 @@ function ClientNodeEditor:_onStartTrace(pathIndex)
 	self.customTrace = NodeCollection(true)
 	self.customTraceTimer = 0
 	self.customTraceIndex = pathIndex
+	self.customTraceDistance = 0
 
 	local firstWaypoint = self.customTrace:Create({
 		Position = self.playerPos:Clone()
@@ -861,9 +868,10 @@ function ClientNodeEditor:_onStartTrace(pathIndex)
 	self.customTrace:ClearSelection()
 	self.customTrace:Select(firstWaypoint)
 
-	print('Trace ' .. tostring(pathIndex) .. ' started');
+	print('Trace ' .. tostring(self.customTraceIndex) .. ' started');
 	g_FunBotUIClient:_onUITrace(true)
-	g_FunBotUIClient:_onUITraceIndex(pathIndex)
+	g_FunBotUIClient:_onUITraceIndex(self.customTraceIndex)
+	g_FunBotUIClient:_onUITraceWaypointsDistance(self.customTraceDistance)
 	--ChatManager:Yell(Language:I18N('Trace %d started', pathIndex), 2.5);
 end
 
@@ -883,10 +891,77 @@ end
 
 function ClientNodeEditor:_onSaveTrace(pathIndex)
 
-	-- TODO merge self.customTrace with self.waypoints
+	if (type(pathIndex) == 'table') then
+		pathIndex = pathIndex[1]
+	end
 
-	-- remove pathIndex from self.waypoints
-	-- merge new nodes into main table
+	if (self.customTrace == nil) then
+		print('No custom trace has been recorded')
+		return false
+	end
+
+	local pathCount = #g_NodeCollection:GetPaths()
+	pathIndex = tonumber(pathIndex) or pathCount+1
+	local currentWaypoint = self.customTrace:GetFirst()
+	local referrenceWaypoint = nil
+	local direction = 'Next'
+
+	if (pathCount == 0) then
+		currentWaypoint.PathIndex = 1
+		referrenceWaypoint = g_NodeCollection:Create(currentWaypoint)
+		currentWaypoint = currentWaypoint.Next
+
+		pathCount = #g_NodeCollection:GetPaths()
+	end
+
+	-- remove existing path and replace with current
+	if (pathIndex == 1) then
+
+		if (pathCount == 1) then
+			referrenceWaypoint = g_NodeCollection:GetFirst()
+		else
+			-- get first node of 2nd path, we'll InsertBefore the new nodes
+			referrenceWaypoint = g_NodeCollection:GetFirst(2)
+			currentWaypoint = self.customTrace:GetLast()
+			direction = 'Previous' 
+		end
+
+	-- pathIndex is between 2 and #g_NodeCollection:GetPaths()
+	-- get the node before the start of the specified path
+	elseif (pathIndex <= pathCount) then
+		referrenceWaypoint = g_NodeCollection:GetFirst(pathIndex).Previous
+
+	-- pathIndex == last path index, append all nodes to end of collection
+	elseif (pathIndex > pathCount) then
+		referrenceWaypoint = g_NodeCollection:GetLast()
+	end
+
+	-- we have a path to delete
+	if (pathIndex > 0 and pathIndex <= pathCount) then
+		local pathWaypoints = g_NodeCollection:Get(nil, pathIndex)
+		for i=1, #pathWaypoints do
+			g_NodeCollection:Remove(pathWaypoints[i])
+		end
+	end
+
+	-- merge custom trace into main node collection
+	while currentWaypoint do
+
+		currentWaypoint.PathIndex = pathIndex
+
+		local newWaypoint = g_NodeCollection:Create(currentWaypoint)
+
+		if (direction == 'Next') then
+			g_NodeCollection:InsertAfter(referrenceWaypoint, newWaypoint)
+		else
+			g_NodeCollection:InsertBefore(referrenceWaypoint, newWaypoint)
+		end
+
+		referrenceWaypoint = newWaypoint
+		currentWaypoint = currentWaypoint[direction]
+	end
+
+	self.customTrace:Clear()
 
 end
 
@@ -1098,7 +1173,7 @@ function ClientNodeEditor:_onUpdateInput(player, delta)
 	elseif (self.editMode == 'none') then
 
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad8) then
-			self:_onLinkNodes()
+			self:_onLinkNode()
 			return
 		end
 
@@ -1108,7 +1183,7 @@ function ClientNodeEditor:_onUpdateInput(player, delta)
 		end
 
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad2) then
-			self:_onUnlinkNodes()
+			self:_onUnlinkNode()
 			return
 		end
 
@@ -1703,7 +1778,7 @@ function ClientNodeEditor:_onSendNodes(args)
 end
 
 function ClientNodeEditor:_onServerCreateNode(data)
-	g_NodeCollection:Create(data)
+	g_NodeCollection:Create(data, true)
 	self.nodeReceiveProgress = self.nodeReceiveProgress + 1
 	self.debugEntries['nodeReceiveProgress'] = self.nodeReceiveProgress..'/'..(self.nodeReceiveExpected)
 end

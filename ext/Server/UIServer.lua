@@ -7,7 +7,6 @@ require('SettingsManager');
 
 Language					= require('__shared/Language');
 local BotManager			= require('BotManager');
-local TraceManager			= require('TraceManager');
 local BotSpawner			= require('BotSpawner');
 local WeaponModification	= require('WeaponModification');
 local WeaponList			= require('__shared/WeaponList');
@@ -114,26 +113,23 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 	-- Trace
 	elseif request.action == 'trace_start' then
 		local index = tonumber(request.value);
-		--TraceManager:startTrace(player, index);
 		NetEvents:SendTo('ClientNodeEditor:StartTrace', player, index)
 
 	elseif request.action == 'trace_end' then
-		--TraceManager:endTrace(player);
 		NetEvents:SendTo('ClientNodeEditor:EndTrace', player)
 
 	elseif request.action == 'trace_clear' then
 		local index = tonumber(request.value);
-		--TraceManager:clearTrace(index);
 		NetEvents:SendTo('ClientNodeEditor:ClearTrace', player, index)
 
 	elseif request.action == 'trace_reset_all' then
-		TraceManager:clearAllTraces();
+		g_NodeCollection:Clear()
 
 	elseif request.action == 'trace_save' then
-		TraceManager:savePaths();
+		g_NodeCollection:Save()
 
 	elseif request.action == 'trace_reload' then
-		TraceManager:loadPaths();
+		g_NodeCollection:Load()
 
 	elseif request.action == 'trace_show' then
 		local expectedAmount = g_NodeCollection:Get()

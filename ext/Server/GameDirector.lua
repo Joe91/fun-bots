@@ -104,7 +104,7 @@ end
 function GameDirector:_onMcomDestroyed(player)
 	local objective = self:_translateObjective(player.soldier.worldTransform.trans);
 	if self.ArmedMcoms[player.name] ~= nil then
-		for i,mcomName in pairs(elf.ArmedMcoms[player.name]) do
+		for i,mcomName in pairs(self.ArmedMcoms[player.name]) do
 			if mcomName == objective.name then
 				table.remove(self.ArmedMcoms[player.name], i)
 				break;
@@ -174,7 +174,7 @@ function GameDirector:_updateValidObjectives()
 		if not objective.isBase then
 			if #fields > 1 then
 				local index = tonumber(fields[2])
-				for _,targetIndex in paris(mcomIndexes) do
+				for _,targetIndex in pairs(mcomIndexes) do
 					if index == targetIndex then
 						active = true;
 					end

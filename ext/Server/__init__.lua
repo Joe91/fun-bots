@@ -18,7 +18,6 @@ require('WeaponModification');
 Language					= require('__shared/Language');
 local SettingsManager		= require('SettingsManager');
 local BotManager			= require('BotManager');
-local TraceManager			= require('TraceManager');
 local BotSpawner			= require('BotSpawner');
 local WeaponList			= require('__shared/WeaponList');
 local ChatCommands			= require('ChatCommands');
@@ -41,7 +40,6 @@ end
 
 function FunBotServer:_onExtensionUnload()
 	BotManager:destroyAllBots();
-	TraceManager:onUnload();
 end
 
 function FunBotServer:_onExtensionLoaded()
@@ -126,9 +124,8 @@ function FunBotServer:_onLevelLoaded(levelName, gameMode)
 
 	g_NodeEditor:onLevelLoaded(levelName, gameMode)
 	g_GameDirector:initObjectives()
-	TraceManager:onLevelLoaded(levelName, gameMode);
-	BotSpawner:onLevelLoaded();
-	NetEvents:BroadcastUnreliableLocal('WriteClientSettings', Config, true);
+	BotSpawner:onLevelLoaded()
+	NetEvents:BroadcastUnreliableLocal('WriteClientSettings', Config, true)
 end
 
 function FunBotServer:_onChat(player, recipientMask, message)

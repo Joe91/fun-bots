@@ -120,7 +120,7 @@ function NodeEditor:_onCreate(player, data)
 		return
 	end
 
-	g_NodeCollection:Create(data)
+	g_NodeCollection:Create(data, true)
 end
 
 -- node payload has finished sending, setup events and calc indexes

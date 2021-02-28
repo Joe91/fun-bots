@@ -13,7 +13,6 @@ require('ClientNodeEditor');
 
 Language					= require('__shared/Language');
 local FunBotUIClient		= require('UIClient');
-local ClientTraceManager	= require('ClientTraceManager');
 local ClientBotManager		= require('ClientBotManager');
 
 function FunBotClient:__init()

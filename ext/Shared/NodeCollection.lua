@@ -81,7 +81,8 @@ end
 -----------------------------
 -- Management
 
-function NodeCollection:Create(data)
+function NodeCollection:Create(data, authoritative)
+	authoritative = authoritative or false
 	local newIndex = #self.waypoints+1
 	local inputVar = 3
 
@@ -107,8 +108,12 @@ function NodeCollection:Create(data)
 	if (data ~= nil) then
 		for k,v in pairs(data) do
 			if (v ~= nil) then
+				if (not authoritative and (k == 'ID' or k == 'Index' or k == 'Previous' or k == 'Next')) then
+					goto continue
+				end
 				waypoint[k] = v
 			end
+			::continue::
 		end
 	end
 
@@ -224,12 +229,20 @@ function NodeCollection:Remove(waypoint)
 	print('Removing: '..tostring(waypoint.ID))
 
 	-- update connections, no more middle-man
-	waypoint.Previous.Next = waypoint.Next
-	waypoint.Next.Previous = waypoint.Previous
+	if (waypoint.Previous) then
+		waypoint.Previous.Next = waypoint.Next
+	end
+	if (waypoint.Next) then
+		waypoint.Next.Previous = waypoint.Previous
+	end
 
 	-- use connections to update indexes
-	self:Unlink(selectedWaypoint)
-	self:RecalculateIndexes(waypoint.Previous)
+	self:Unlink(waypoint)
+	if (waypoint.Previous) then
+		self:RecalculateIndexes(waypoint.Previous)
+	elseif (waypoint.Next) then
+		self:RecalculateIndexes(waypoint.Next)
+	end 
 
 	-- cut ties with old friends
 	waypoint.Next = false
@@ -281,7 +294,7 @@ function NodeCollection:InsertBefore(referrenceWaypoint, waypoint)
 	end
 
 	-- use connections to update indexes
-	self:RecalculateIndexes(waypoint)
+	self:RecalculateIndexes(waypoint.Previous or waypoint)
 end
 
 function NodeCollection:RecalculateIndexes(waypoint)
@@ -465,85 +478,109 @@ function NodeCollection:SetInput(speed, extra, option)
 	return inputVar
 end
 
-function NodeCollection:Link()
-	local selection = g_NodeCollection:GetSelected()
-	if (#selection ~= 2) then
-		return false, 'Must select only two waypoints'
+-- Created a linked connection between two or more arbitrary waypoints
+-- waypoints | Waypoint or {Waypoint} | Can be a single waypoint or a table of waypoints, `nil` defaults to current selection
+-- linkID | string | a waypoint ID, must not be `nil`
+-- oneWay | boolean | if true, the connection is only made on this node, prevents infinite recursion
+function NodeCollection:Link(waypoints, linkID, oneWay)
+
+	local selection = waypoints or g_NodeCollection:GetSelected()
+	oneWay = oneWay or false
+
+	if (#selection == 2) then
+		--special case, nodes link to each other
+		self:Link(selection[1], selection[2].ID, true)
+		self:Link(selection[2], selection[1].ID, true)
+		return true, 'Success'
+
+	elseif (#selection > 0) then
+		for i=1, #selection do
+			local success, msg = self:Link(selection[i], linkID)
+			if (not success) then
+				return success, msg
+			end
+		end
+		return true, 'Success'
 	end
 
-	local linksA = selection[1].Data.Links or {}
-	local linksB = selection[2].Data.Links or {}
+	if (linkID == nil) then
+		return false, 'Must specify link id'
+	end
 
-	table.insert(linksA, selection[2].ID)
-	table.insert(linksB, selection[1].ID)
+	local links = selection.Data.Links or {}
+	table.insert(links, linkID)
+	self:Update(selection.Data, {
+		LinkMode = (selection.Data.LinkMode or 0),
+		Links = links
+	})
 
-	self:Update(selection[1].Data, {
-		LinkMode = (selection[1].Data.LinkMode or 0),
-		Links = linksA
-	})
-	self:Update(selection[2].Data, {
-		LinkMode = (selection[2].Data.LinkMode or 0),
-		Links = linksB
-	})
+	if (not oneWay) then
+		self:Link(self:Get(linkID), selection.ID, true)
+	end
+
 	return true, 'Success'
 end
 
-function NodeCollection:Unlink()
+-- Removes a linked connection between two or more arbitrary waypoints
+-- waypoints | Waypoint or {Waypoint} | Can be a single waypoint or a table of waypoints, `nil` defaults to current selection
+-- linkID | string | a waypoint ID to remove, can be `nil` to clear connections
+-- oneWay | boolean | if true, the connection is only made on this node, prevents infinite recursion
+function NodeCollection:Unlink(waypoints, linkID, oneWay)
 
-	local selection = g_NodeCollection:GetSelected()
-	if (#selection ~= 2) then
-		return false, 'Must select only two waypoints'
-	end
+	local selection = waypoints or g_NodeCollection:GetSelected()
+	oneWay = oneWay or false
 
-	local linksA = selection[1].Data.Links or {}
-	local linksB = selection[2].Data.Links or {}
-	local newLinksA = {}
-	local newLinksB = {}
+	if (#selection == 2) then
+		--special case, nodes unlink from each other
+		self:Unlink(selection[1], selection[2].ID, true)
+		self:Unlink(selection[2], selection[1].ID, true)
+		return true, 'Success'
 
-	for i=1, #linksA do
-		if (linksA[i] ~= selection[2].ID) then
-			table.insert(newLinksA, linksA[i])
-		end
-	end
-	for i=1, #linksB do
-		if (linksB[i] ~= selection[1].ID) then
-			table.insert(newLinksB, linksB[i])
-		end
-	end
-
-	if (#newLinksA > 0) then
-		self:Update(selection[1].Data, {
-			LinkMode = (selection[1].Data.LinkMode or 0),
-			Links = newLinksA
-		})
-	else
-		local newDataA = {}
-		for k,v in pairs(selection[1].Data) do
-			if (k ~= 'Links' and k ~= 'LinkMode') then
-				newDataA[k] = v
+	elseif (#selection > 0) then
+		for i=1, #selection do
+			local success, msg = self:Unlink(selection[i], linkID)
+			if (not success) then
+				return success, msg
 			end
 		end
-
-		self:Update(selection[1], {
-			Data = newDataA
-		})
+		return true, 'Success'
 	end
 
-	if (#newLinksB > 0) then
-		self:Update(selection[2].Data, {
-			LinkMode = (selection[2].Data.LinkMode or 0),
-			Links = newLinksB
-		})
-	else
-		local newDataB = {}
-		for k,v in pairs(selection[2].Data) do
-			if (k ~= 'Links' and k ~= 'LinkMode') then
-				newDataB[k] = v
+	local newLinks = {}
+
+	-- generate new links table, otherwise it gets emptied
+	if (linkID ~= nil and selection.Data.Links ~= nil) then
+		for i=1, #selection.Data.Links do
+			if (selection.Data.Links[i] ~= linkID) then
+				-- skip matching connections
+				table.insert(newLinks, selection.Data.Links[i])
+			else
+				-- remove link from connected node, `oneWay` prevents infinite recursion
+				if (not oneWay) then
+					self:Unlink(self:Get(linkID), selection.ID, true)
+				end
 			end
 		end
+	end
 
-		self:Update(selection[2], {
-			Data = newDataB
+	-- update waypoint's Data table, remove linking info if necessary
+	print('newLinks -> '..g_Utilities:dump(newLinks, true))
+	if (#newLinks > 0) then
+		self:Update(selection.Data, {
+			LinkMode = (selection.Data.LinkMode or 0),
+			Links = newLinks
+		})
+	else
+		local newData = {}
+		if (selection.Data ~= nil) then
+			for k,v in pairs(selection.Data) do
+				if (k ~= 'Links' and k ~= 'LinkMode') then
+					newData[k] = v
+				end
+			end
+		end
+		self:Update(selection, {
+			Data = newData
 		})
 	end
 	return true, 'Success'
@@ -827,10 +864,13 @@ end
 
 function NodeCollection:Load(levelName, gameMode)
 
+	self.levelName = levelName or self.levelName
+	self.gameMode = gameMode or self.gameMode
+
 	if g_Globals.isTdm or g_Globals.isGm or g_Globals.isScavenger then
-		gameMode = 'TeamDeathMatch0';
+		self.gameMode = 'TeamDeathMatch0';
 	end
-	self.mapName = levelName .. '_' .. gameMode
+	self.mapName = self.levelName .. '_' .. self.gameMode
 	print('NodeCollection:Load: '..self.mapName)
 
 	if not SQL:Open() then
@@ -895,7 +935,7 @@ function NodeCollection:Load(levelName, gameMode)
 			lastWaypoint.Next = waypoint.ID
 		end
 
-		waypoint = self:Create(waypoint)
+		waypoint = self:Create(waypoint, true)
 		lastWaypoint = waypoint
 		waypointCount = waypointCount+1
 	end
