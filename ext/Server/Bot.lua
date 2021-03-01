@@ -358,41 +358,42 @@ end
 
 function Bot:_updateAiming()
 	if self.player.alive and self._shoot then
-		if self._shootPlayer ~= nil and self._shootPlayer.soldier ~= nil then
+			if self._shootPlayer ~= nil then
+				if self._shootPlayer.soldier ~= nil then
+					--interpolate player movement
+					local targetMovement = Vec3(0,0,0);
+					local ptichCorrection = 0.0;
+					local fullPositionTarget =  self._shootPlayer.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(self._shootPlayer, true);
+					local fullPositionBot = self.player.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(self.player, false);
 
-			--interpolate player movement
-			local targetMovement = Vec3(0,0,0);
-			local ptichCorrection = 0.0;
-			local fullPositionTarget =  self._shootPlayer.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(self._shootPlayer, true);
-			local fullPositionBot = self.player.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(self.player, false);
+					if not self.knifeMode then
+						local distanceToPlayer	= fullPositionTarget:Distance(fullPositionBot);
+						--calculate how long the distance is --> time to travel
+						local timeToTravel		= (distanceToPlayer / self.activeWeapon.bulletSpeed)
+						local factorForMovement	= (timeToTravel) / self._aimUpdateTimer
+						ptichCorrection	= 0.5 * timeToTravel * timeToTravel * self.activeWeapon.bulletDrop;
+						if self._lastShootPlayer == self._shootPlayer then
+							targetMovement			= (fullPositionTarget - self._lastTargetTrans) * factorForMovement; --movement in one dt
+						end
 
-			if not self.knifeMode then
-				local distanceToPlayer	= fullPositionTarget:Distance(fullPositionBot);
-				--calculate how long the distance is --> time to travel
-				local timeToTravel		= (distanceToPlayer / self.activeWeapon.bulletSpeed)
-				local factorForMovement	= (timeToTravel) / self._aimUpdateTimer
-				ptichCorrection	= 0.5 * timeToTravel * timeToTravel * self.activeWeapon.bulletDrop;
-				if self._lastShootPlayer == self._shootPlayer then
-					targetMovement			= (fullPositionTarget - self._lastTargetTrans) * factorForMovement; --movement in one dt
-				end
+						self._lastShootPlayer = self._shootPlayer;
+						self._lastTargetTrans = fullPositionTarget;
+					end
 
-				self._lastShootPlayer = self._shootPlayer;
-				self._lastTargetTrans = fullPositionTarget;
+					--calculate yaw and pith
+					local dz		= fullPositionTarget.z + targetMovement.z - fullPositionBot.z;
+					local dx		= fullPositionTarget.x + targetMovement.x - fullPositionBot.x;
+					local dy		= fullPositionTarget.y + targetMovement.y + ptichCorrection - fullPositionBot.y;
+					local atanDzDx	= math.atan(dz, dx);
+					local yaw		= (atanDzDx > math.pi / 2) and (atanDzDx - math.pi / 2) or (atanDzDx + 3 * math.pi / 2);
+
+					--calculate pitch
+					local distance	= math.sqrt(dz ^ 2 + dx ^ 2);
+					local pitch		= math.atan(dy, distance);
+
+					self._targetPitch	= pitch;
+					self._targetYaw		= yaw;
 			end
-
-			--calculate yaw and pith
-			local dz		= fullPositionTarget.z + targetMovement.z - fullPositionBot.z;
-			local dx		= fullPositionTarget.x + targetMovement.x - fullPositionBot.x;
-			local dy		= fullPositionTarget.y + targetMovement.y + ptichCorrection - fullPositionBot.y;
-			local atanDzDx	= math.atan(dz, dx);
-			local yaw		= (atanDzDx > math.pi / 2) and (atanDzDx - math.pi / 2) or (atanDzDx + 3 * math.pi / 2);
-
-			--calculate pitch
-			local distance	= math.sqrt(dz ^ 2 + dx ^ 2);
-			local pitch		= math.atan(dy, distance);
-
-			self._targetPitch	= pitch;
-			self._targetYaw		= yaw;
 		end
 	end
 end
