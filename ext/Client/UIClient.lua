@@ -2,18 +2,16 @@ class 'FunBotUIClient';
 
 require('UIViews');
 require('UISettings');
+require('ClientNodeEditor');
 
 
 Language = require('__shared/Language');
 
 function FunBotUIClient:__init()
 	self._views = UIViews();
-	self.WaypointEditorTimer = -1
-	self.WaypointEditorDelay = 0.25
 	
 	if Config.disableUserInterface ~= true then
 		Events:Subscribe('Client:UpdateInput', self, self._onUpdateInput);
-		Events:Subscribe('Engine:Update', self, self._onEngineUpdate)
 		
 		NetEvents:Subscribe('UI_Password_Protection', self, self._onUIPasswordProtection);
 		NetEvents:Subscribe('UI_Request_Password', self, self._onUIRequestPassword);
@@ -65,12 +63,16 @@ end
 function FunBotUIClient:_onUICommonRose(data)
 	if data == "false" then
 		self._views:execute('BotEditor.setCommonRose(false);');
-		--self._views:blur();
+		self._views:blur();
 		return;
 	end
 	
 	self._views:execute('BotEditor.setCommonRose(\'' .. json.encode(data) .. '\');');
-	--self._views:focus();
+	self._views:focus();
+end
+
+function FunBotUIClient:_onSetOperationControls(data)
+	self._views:execute('BotEditor.setOperationControls(\'' .. json.encode(data) .. '\');');
 end
 
 function FunBotUIClient:_onUIWaypointsEditor(state)
@@ -83,15 +85,14 @@ function FunBotUIClient:_onUIWaypointsEditor(state)
 		self._views:hide('waypoint_toolbar');
 		self._views:show('toolbar');
 		Config.debugTracePaths = false;
-		NetEvents:Send('UI_CommoRose_Toggle', false);
-		-- @ToDo enable built-in CommonRose from BF3
+		NetEvents:Send('UI_CommoRose_Enabled', false);
 		return;
 	end
 	
 	print('UIClient: open UI_Waypoints_Editor');
 	Config.debugTracePaths = true;
-	-- @ToDo disable built-in CommonRose from BF3
-	NetEvents:Send('UI_CommoRose_Toggle', true);
+	NetEvents:Send('UI_CommoRose_Enabled', true);
+	g_ClientNodeEditor:_onSetEnabled(true);
 	self._views:show('waypoint_toolbar');
 	self._views:hide('toolbar');
 	self._views:disable();
@@ -337,43 +338,9 @@ function FunBotUIClient:_onUISendPassword(data)
 	NetEvents:Send('UI_Request_Open', data);
 end
 
-function FunBotUIClient:_onEngineUpdate(delta, simDelta)
-	if (Config.debugTracePaths) then
-		if (self.WaypointEditorTimerActive) then
-			self.WaypointEditorTimer = self.WaypointEditorTimer + delta
-		end
-		if (self.WaypointEditorTimer >= self.WaypointEditorDelay) then
-			self:_onUIWaypointsEditor()
-			self._views:focus()
-			self.WaypointEditorTimerActive = false
-			self.WaypointEditorTimer = 0
-		end
-	end
-end
-
 function FunBotUIClient:_onUpdateInput(data)
 	if Config.disableUserInterface == true then
 		return;
-	end
-	
-	-- Show or Hide the Bot-Editor
-	local Comm1 = InputManager:IsDown(InputConceptIdentifiers.ConceptCommMenu1)
-	local Comm2 = InputManager:IsDown(InputConceptIdentifiers.ConceptCommMenu2)
-	local Comm3 = InputManager:IsDown(InputConceptIdentifiers.ConceptCommMenu3)
-	local commButtonDown = (Comm1 or Comm2 or Comm3)
-
-	Comm1 = InputManager:WentUp(InputConceptIdentifiers.ConceptCommMenu1)
-	Comm2 = InputManager:WentUp(InputConceptIdentifiers.ConceptCommMenu2)
-	Comm3 = InputManager:WentUp(InputConceptIdentifiers.ConceptCommMenu3)
-	local commButtonUp = (Comm1 or Comm2 or Comm3)
-
-	if Config.debugTracePaths then
-		self.WaypointEditorTimerActive = commButtonDown
-
-		if (commButtonUp) then
-			self.WaypointEditorTimer = 0
-			self._views:blur()
-		end
 	end
 		
 	if InputManager:WentKeyDown(InputDeviceKeys.IDK_F12) then

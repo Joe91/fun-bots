@@ -32,7 +32,15 @@ ui-view[data-type="commorose"] ui-horizontal ul {
 ui-view[data-type="commorose"] ui-horizontal ul li {
 	margin: 5px 0;
 	padding: 2px 40px;
-	background: linear-gradient(180deg, rgb(15 50 65 / 0.5) 0%, rgb(20 50 78 / 0.9) 100%);
+	background: linear-gradient(180deg, rgba(15, 50, 65, 0.25) 0%, rgba(20, 50, 78, 0.65) 100%);
+	border-bottom: 1px solid rgba(20, 50, 78, 0.8);
+	text-align: center;
+}
+
+ui-view[data-type="commorose"] ui-horizontal ul li:hover {
+	margin: 5px 0;
+	padding: 2px 40px;
+	background: linear-gradient(180deg, rgba(83, 117, 132, 0.25) 0%, rgba(110, 149, 185, 0.65) 100%);
 	border-bottom: 1px solid rgba(20, 50, 78, 0.8);
 	text-align: center;
 }
@@ -294,7 +302,20 @@ ui-view[data-type="commorose"] ui-top:before,
 ui-view[data-type="commorose"] ui-bottom:before {
 	content: "";
 	position: absolute;
-	background: linear-gradient(180deg, rgb(15 50 65 / 0.5) 0%, rgb(20 50 78 / 0.9) 100%);
+	background: linear-gradient(180deg, rgba(15, 50, 65, 0.25) 0%, rgba(20, 50, 78, 0.65) 100%);
+	border-bottom: 1px solid rgba(20, 50, 78, 0.8);
+	top: -4px;
+	bottom: -4px;
+	left: 0;
+	right: 0;
+	z-index: -1;
+}
+
+ui-view[data-type="commorose"] ui-top:before:hover,
+ui-view[data-type="commorose"] ui-bottom:before:hover {
+	content: "";
+	position: absolute;
+	background: linear-gradient(180deg, rgba(83, 117, 132, 0.25) 0%, rgba(110, 149, 185, 0.65) 100%);
 	border-bottom: 1px solid rgba(20, 50, 78, 0.8);
 	top: -4px;
 	bottom: -4px;

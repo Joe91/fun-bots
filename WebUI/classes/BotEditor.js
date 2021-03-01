@@ -157,6 +157,10 @@ const BotEditor = (new function BotEditor() {
 				console.log('CLICK', parent.dataset.action);
 			}
 
+			if (parent.dataset.action.startsWith('UI_CommoRose_Action_')) {
+				WebUI.Call('DispatchEventLocal', parent.dataset.action);
+			}
+
 			switch(parent.dataset.action) {
 				/* Restore all values to default */
 				case 'restore':
@@ -690,6 +694,50 @@ const BotEditor = (new function BotEditor() {
 			break;
 		}
 	};
+
+	this.setOperationControls = function setOperationControls(data) {
+		let json;
+		let container = document.querySelector('ui-help[data-name="numpad"]');
+
+		try {
+			json = JSON.parse(data);
+		} catch(e) {
+			console.error(e, data);
+			return;
+		}
+
+		if (json.Numpad) {
+			json.Numpad.forEach(function(entry) {
+				let keyElement = document.querySelector('ui-entry[data-grid="'+entry.Grid+'"] ui-key');
+				let spanElement = document.querySelector('ui-entry[data-grid="'+entry.Grid+'"] span');
+				keyElement.dataset.name = entry.Key
+				spanElement.dataset.lang = entry.Name
+				spanElement.innerHTML = entry.Name
+			});
+		}
+
+		if (json.Other) {
+			let otherKeysElement = document.querySelector('ui-entry[data-grid="Other"]');
+			while (otherKeysElement.hasChildNodes()) {  
+				otherKeysElement.removeChild(otherKeysElement.firstChild);
+			}
+			
+			json.Other.forEach(function(entry) {
+				let entryElement = document.createElement('ui-entry');
+				let keyElement = document.createElement('ui-key');
+				keyElement.dataset.name = entry.Key
+
+				let spanElement = document.createElement('span');
+				spanElement.dataset.lang = entry.Name
+				spanElement.innerHTML = entry.Name
+
+				entryElement.appendChild(keyElement);
+				entryElement.appendChild(spanElement);
+				otherKeysElement.appendChild(entryElement);
+			});
+		}
+
+	};
 	
 	this.setCommonRose = function setCommonRose(data) {
 		let state	= false;
@@ -770,7 +818,7 @@ const BotEditor = (new function BotEditor() {
 		if(json.Left) {
 			json.Left.forEach(function(entry) {
 				let element				= document.createElement('li');
-				element.innerHTML		= (entry.Label ? '<span>' + entry.Label + '</span>' : '<span></span>');
+				element.innerHTML		= (entry.Label ? '<a><span>' + entry.Label + '</span></a>' : '<a><span></span></a>');
 				element.dataset.action	= entry.Action;
 				left.appendChild(element);
 			});
@@ -783,7 +831,7 @@ const BotEditor = (new function BotEditor() {
 		if(json.Right) {
 			json.Right.forEach(function(entry) {
 				let element				= document.createElement('li');
-				element.innerHTML		= (entry.Label ? '<span>' + entry.Label + '</span>' : '<span></span>');
+				element.innerHTML		= (entry.Label ? '<a><span>' + entry.Label + '</span></a>' : '<a><span></span></a>');
 				element.dataset.action	= entry.Action;
 				right.appendChild(element);
 			});

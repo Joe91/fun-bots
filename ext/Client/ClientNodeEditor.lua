@@ -10,7 +10,12 @@ function ClientNodeEditor:__init()
 
 	self.enabled = Config.debugTracePaths
 	self.disableUserInterface = Config.disableUserInterface
+
 	self.commoRoseEnabled = false
+	self.commoRosePressed = false
+	self.commoRoseActive = false
+	self.commoRoseTimer = -1
+	self.commoRoseDelay = 0.25
 
 	self.nodeReceiveTimer = -1
 	self.nodeReceiveProgress = 0
@@ -22,7 +27,7 @@ function ClientNodeEditor:__init()
 	self.nodeSendProgress = 1
 	self.nodeSendDelay = 0.02
 
-	self.editMode = 'none' -- 'move', 'linkprevious', 'linknext', 'none'
+	self.editMode = 'none' -- 'move', 'none'
 	self.editStartPos = nil
 	self.nodeStartPos = {}
 	self.editModeManualOffset = Vec3.zero
@@ -67,12 +72,6 @@ function ClientNodeEditor:__init()
 		{Node = Vec4(0.18,0.31,0.31,0.25), Line = Vec4(0.18,0.31,0.31,1)},
 		{Node = Vec4(0,1,1,0.25), Line = Vec4(0,1,1,1)},
 		{Node = Vec4(1,0.08,0.58,0.25), Line = Vec4(1,0.08,0.58,1)},
-	}
-
-	self.CommoRose = {
-		Pressed = false,
-		Active = false,
-		LastAction = ''
 	}
 
 	self.lastTraceSearchAreaPos = nil
@@ -199,13 +198,13 @@ function ClientNodeEditor:RegisterEvents()
 	-- debugging commands, not meant for UI
 	Console:Register('Enabled', 'Enable / Disable the waypoint editor', self, self._onSetEnabled)
 	Console:Register('CommoRoseEnabled', 'Enable / Disable the waypoint editor Commo Rose', self, self._onSetCommoRoseEnabled)
+	Console:Register('CommoRoseShow', 'Show custom Commo Rose', self, self._onShowRose)
+	Console:Register('CommoRoseHide', 'Hide custom Commo Rose', self, self._onHideRose)
 	Console:Register('SetMetadata', '<string|Data> - Set Metadata for waypoint, Must be valid JSON string', self, self._onSetMetadata)
 	Console:Register('AddObjective', '<string|Objective> - Add an objective to a path', self, self._onAddObjective)
 	Console:Register('RemoveObjective', '<string|Objective> - Remove an objective from a path', self, self._onRemoveObjective)
 	Console:Register('ProcessMetadata', 'Process waypoint metadata starting with selected nodes or all nodes', self, self._onProcessMetadata)
 	Console:Register('RecalculateIndexes', 'Recalculate Indexes starting with selected nodes or all nodes', self, self._onRecalculateIndexes)
-	Console:Register('ShowRose', 'Show custom Commo Rose', self, self._onShowRose)
-	Console:Register('HideRose', 'Hide custom Commo Rose', self, self._onHideRose)
 	Console:Register('DumpNodes', 'Print selected nodes or all nodes to console', self, self._onDumpNodes)
 	Console:Register('UnloadNodes', 'Clears and unloads all clientside nodes', self, self._onUnload)
 
@@ -304,7 +303,8 @@ function ClientNodeEditor:_onSetEnabled(args)
 
 	if (self.enabled ~= enabled) then
 		self.enabled = enabled
-		Config.debugTracePaths = enabled
+		self.commoRoseEnabled = enabled
+
 		if (self.enabled) then
 			self:_onUnload() -- clear local copy
 			self.nodeReceiveTimer = 0 -- enable the timer for receiving nodes
@@ -349,7 +349,7 @@ end
 -- ############################################
 
 function ClientNodeEditor:_onSaveNodes(args)
-	self.CommoRose.Active = false
+	self.commoRoseActive = false
 	if (self.nodeSendTimer == -1) then
 		NetEvents:Send('NodeEditor:ReceivingNodes', #g_NodeCollection:Get())
 		return true
@@ -359,12 +359,12 @@ function ClientNodeEditor:_onSaveNodes(args)
 end
 
 function ClientNodeEditor:_onSelectNode(args)
-	self.CommoRose.Active = false
+	self.commoRoseActive = false
 	self:_onCommoRoseAction('Select')
 end
 
 function ClientNodeEditor:_onLoadNodes(args)
-	self.CommoRose.Active = false
+	self.commoRoseActive = false
 	if (self.nodeReceiveTimer == -1) then
 		self:_onGetNodes()
 		return true
@@ -377,21 +377,21 @@ end
 -- ############################################
 
 function ClientNodeEditor:_onRemoveNode(args)
-	self.CommoRose.Active = false
+	self.commoRoseActive = false
 	g_NodeCollection:Remove()
 	print(Language:I18N('Success'))
 	return true
 end
 
 function ClientNodeEditor:_onUnlinkNode()
-	self.CommoRose.Active = false
+	self.commoRoseActive = false
 	local result, message = g_NodeCollection:Unlink()
 	print(Language:I18N(message))
 	return result
 end
 
 function ClientNodeEditor:_onMergeNode(args)
-	self.CommoRose.Active = false
+	self.commoRoseActive = false
 	local result, message = g_NodeCollection:MergeSelection()
 	print(Language:I18N(message))
 	return result
@@ -417,7 +417,7 @@ end
 
 function ClientNodeEditor:_onToggleMoveNode(args)
 	print('ClientNodeEditor:_onToggleMoveNode: '..tostring(args))
-	self.CommoRose.Active = false
+	self.commoRoseActive = false
 
 	if (self.editMode == 'move') then
 		self.editMode = 'none'
@@ -433,6 +433,26 @@ function ClientNodeEditor:_onToggleMoveNode(args)
 				})
 			end
 		end
+
+		g_FunBotUIClient:_onSetOperationControls({
+			Numpad = {
+				{Grid = 'K1', Key = '1', Name = 'Remove'},
+				{Grid = 'K2', Key = '2', Name = 'Unlink'},
+				{Grid = 'K3', Key = '3', Name = 'Add'},
+				{Grid = 'K4', Key = '4', Name = 'Move'},
+				{Grid = 'K5', Key = '5', Name = 'Select'},
+				{Grid = 'K6', Key = '6', Name = 'Input'},
+				{Grid = 'K7', Key = '7', Name = 'Merge'},
+				{Grid = 'K8', Key = '8', Name = 'Link'},
+				{Grid = 'K9', Key = '9', Name = 'Split'},
+			},
+			Other = {
+				{Key = 'F12', Name = 'Settings'},
+				{Key = 'Q', Name = 'Quick Select'},
+				{Key = 'BS', Name = 'Clear Select'},
+				{Key = 'INS', Name = 'Spawn Bot'},
+			}
+		})
 
 		print(Language:I18N('Exiting Node Move Mode'))
 		return true
@@ -453,6 +473,28 @@ function ClientNodeEditor:_onToggleMoveNode(args)
 
 			self.editMode = 'move'
 			self.editModeManualOffset = Vec3.zero
+
+			g_FunBotUIClient:_onSetOperationControls({
+				Numpad = {
+					{Grid = 'K1', Key = '1', Name = 'Mode'},
+					{Grid = 'K2', Key = '2', Name = 'Back'},
+					{Grid = 'K3', Key = '3', Name = 'Down'},
+					{Grid = 'K4', Key = '4', Name = 'Left'},
+					{Grid = 'K5', Key = '5', Name = 'Finish'},
+					{Grid = 'K6', Key = '6', Name = 'Right'},
+					{Grid = 'K7', Key = '7', Name = 'Reset'},
+					{Grid = 'K8', Key = '8', Name = 'Forward'},
+					{Grid = 'K9', Key = '9', Name = 'Up'},
+				},
+				Other = {
+					{Key = 'F12', Name = 'Settings'},
+					{Key = 'Q', Name = 'Finish Move'},
+					{Key = 'BS', Name = 'Cancel Move'},
+					{Key = 'KP_PLUS', Name = 'Speed +'},
+					{Key = 'KP_MINUS', Name = 'Speed -'},
+				}
+			})
+
 			print(Language:I18N('Entering Node Move Mode'))
 			return true
 
@@ -470,7 +512,7 @@ end
 -- ############################################
 
 function ClientNodeEditor:_onAddNode(args)
-	self.CommoRose.Active = false
+	self.commoRoseActive = false
 
 	print('ClientNodeEditor:_onAddNode')
 	
@@ -492,14 +534,14 @@ function ClientNodeEditor:_onAddNode(args)
 end
 
 function ClientNodeEditor:_onLinkNode()
-	self.CommoRose.Active = false
+	self.commoRoseActive = false
 	local result, message = g_NodeCollection:Link()
 	print(Language:I18N(message))
 	return result
 end
 
 function ClientNodeEditor:_onSplitNode(args)
-	self.CommoRose.Active = false
+	self.commoRoseActive = false
 	local result, message = g_NodeCollection:SplitSelection()
 	print(Language:I18N(message))
 	return result
@@ -538,7 +580,7 @@ function ClientNodeEditor:_onSelectBetween()
 end
 
 function ClientNodeEditor:_onSetInputNode(args)
-	self.CommoRose.Active = false
+	self.commoRoseActive = false
 	print('ClientNodeEditor:_onSetInputNode: '..g_NodeCollection:SetInput(args[1], args[2], args[3]))
 	print(Language:I18N('Success'))
 	return true
@@ -669,12 +711,15 @@ function ClientNodeEditor:_onBotSelect(pathIndex, pointIndex, botPosition, isObs
 end
 
 function ClientNodeEditor:_onShowRose(args)
+	self.commoRoseEnabled = true
+	self.commoRoseActive = true
 	self:_onCommoRoseAction('Show')
 	print(Language:I18N('Success'))
 	return true
 end
 
 function ClientNodeEditor:_onHideRose(args)
+	self.commoRoseActive = false
 	self:_onCommoRoseAction('Hide')
 	print(Language:I18N('Success'))
 	return true
@@ -696,7 +741,7 @@ function ClientNodeEditor:_onDumpNodes(args)
 end
 
 function ClientNodeEditor:_onSetMetadata(args)
-	self.CommoRose.Active = false
+	self.commoRoseActive = false
 
 	local data = table.concat(args or {}, ' ')
 	print('ClientNodeEditor:_onSetMetadata -> data: '..g_Utilities:dump(data, true))
@@ -710,7 +755,7 @@ function ClientNodeEditor:_onSetMetadata(args)
 end
 
 function ClientNodeEditor:_onAddObjective(args)
-	self.CommoRose.Active = false
+	self.commoRoseActive = false
 
 	local data = table.concat(args or {}, ' ')
 	print('ClientNodeEditor:AddObjective -> data: '..g_Utilities:dump(data, true))
@@ -753,7 +798,7 @@ function ClientNodeEditor:_onAddObjective(args)
 end
 
 function ClientNodeEditor:_onRemoveObjective(args)
-	self.CommoRose.Active = false
+	self.commoRoseActive = false
 
 	local data = table.concat(args or {}, ' ')
 	print('ClientNodeEditor:RemoveObjective -> data: '..g_Utilities:dump(data, true))
@@ -825,7 +870,7 @@ end
 
 
 function ClientNodeEditor:_onObjectiveDirection(args)
-	self.CommoRose.Active = false
+	self.commoRoseActive = false
 
 	local data = table.concat(args or {}, ' ')
 	print('ClientNodeEditor:_onObjectiveDirection -> data: '..g_Utilities:dump(data, true))
@@ -845,7 +890,7 @@ function ClientNodeEditor:_onObjectiveDirection(args)
 end
 
 function ClientNodeEditor:_onGetKnownOjectives(args)
-	self.CommoRose.Active = false
+	self.commoRoseActive = false
 	print('ClientNodeEditor:_onGetKnownOjectives -> '..g_Utilities:dump(g_NodeCollection:GetKnownOjectives(), true))
 	return true
 end
@@ -1027,8 +1072,15 @@ end
 function ClientNodeEditor:_onCommoRoseAction(action, hit)
 	print('CommoRoseAction: '..tostring(action))
 
+
+	if (action == 'Hide') then
+		self.commoRoseActive = false
+		g_FunBotUIClient:_onUICommonRose('false')
+		return 
+	end
+
 	if (action == 'Show') then
-		--self.CommoRose.Active = true
+		self.commoRoseActive = false -- disabled for now
 
 		local center = { Action = 'UI_CommoRose_Action_Select', Label = Language:I18N('Select') }
 
@@ -1037,28 +1089,27 @@ function ClientNodeEditor:_onCommoRoseAction(action, hit)
 		elseif (self.editMode == 'link') then
 			center = { Action = 'UI_CommoRose_Action_Connect', Label = Language:I18N('Connect') }
 		end
-
+		--[[
 		g_FunBotUIClient:_onUICommonRose({
-			Top = { Action = 'UI_CommoRose_Action_Save', Label = Language:I18N('Save') },
-			Bottom = { Action = 'UI_CommoRose_Action_Load', Label = Language:I18N('Load') },
+			Top = { Action = 'UI_CommoRose_Action_ClearSelection', Label = Language:I18N('Clear Selection') },
+			Bottom = { Action = 'UI_CommoRose_Action_SelectBetween', Label = Language:I18N('Select Between') },
 			Center = center,
 			Left = {
 				{ Action = 'UI_CommoRose_Action_Remove', Label = Language:I18N('Remove') },
 				{ Action = 'UI_CommoRose_Action_Unlink', Label = Language:I18N('Unlink') },
-				{ Action = 'UI_CommoRose_Action_Merge', Label = Language:I18N('Merge') },
 				{ Action = 'UI_CommoRose_Action_SelectPrevious', Label = Language:I18N('Select Previous') },
-				{ Action = 'UI_CommoRose_Action_ClearSelection', Label = Language:I18N('Clear Selection') },
 				{ Action = 'UI_CommoRose_Action_Move', Label = Language:I18N('Move') },
+				{ Action = 'UI_CommoRose_Action_Merge', Label = Language:I18N('Merge') },
 			},
 			Right = {
 				{ Action = 'UI_CommoRose_Action_Add', Label = Language:I18N('Add') },
 				{ Action = 'UI_CommoRose_Action_Link', Label = Language:I18N('Link') },
-				{ Action = 'UI_CommoRose_Action_Split', Label = Language:I18N('Split') },
 				{ Action = 'UI_CommoRose_Action_SelectNext', Label = Language:I18N('Select Next') },
-				{ Action = 'UI_CommoRose_Action_SelectBetween', Label = Language:I18N('Select Between') },
 				{ Action = 'UI_CommoRose_Action_SetInput', Label = Language:I18N('Set Input') },
+				{ Action = 'UI_CommoRose_Action_Split', Label = Language:I18N('Split') },
 			}
 		})
+		]] -- disabled for now
 		return
 	end
 
@@ -1094,9 +1145,10 @@ function ClientNodeEditor:_onCommoRoseAction(action, hit)
 end
 
 function ClientNodeEditor:_onUIPushScreen(hook, screen, priority, parentGraph, stateNodeGuid)
-	if (self.enabled and screen ~= nil and UIScreenAsset(screen).name == 'UI/Flow/Screen/CommRoseScreen') then
+	if (self.enabled and self.commoRoseEnabled and screen ~= nil and UIScreenAsset(screen).name == 'UI/Flow/Screen/CommRoseScreen') then
 		print('ClientNodeEditor:_onUIPushScreen: Blocked Commo Rose')
-		hook:Return()
+		hook:Return(nil)
+		return
 	end
 	hook:Pass(screen, priority, parentGraph, stateNodeGuid)
 end
@@ -1109,20 +1161,24 @@ function ClientNodeEditor:_onUpdateInput(player, delta)
 		return
 	end
 
-	local Comm1 = InputManager:GetLevel(InputConceptIdentifiers.ConceptCommMenu1) > 0
-	local Comm2 = InputManager:GetLevel(InputConceptIdentifiers.ConceptCommMenu2) > 0
-	local Comm3 = InputManager:GetLevel(InputConceptIdentifiers.ConceptCommMenu3) > 0
+	if (self.commoRoseEnabled and not self.commoRoseActive) then
 
-	-- pressed and released without triggering commo rose
-	if (self.CommoRose.Pressed and not self.CommoRose.Active and not (Comm1 or Comm2 or Comm3)) then
-		if (self.editMode == 'move') then
-			self:_onToggleMoveNode()
-		else
-			self:_onCommoRoseAction('Select')
+		local Comm1 = InputManager:GetLevel(InputConceptIdentifiers.ConceptCommMenu1) > 0
+		local Comm2 = InputManager:GetLevel(InputConceptIdentifiers.ConceptCommMenu2) > 0
+		local Comm3 = InputManager:GetLevel(InputConceptIdentifiers.ConceptCommMenu3) > 0
+		local commButtonDown = (Comm1 or Comm2 or Comm3)
+
+		-- pressed and released without triggering commo rose
+		if (self.commoRosePressed and not commButtonDown) then
+			if (self.editMode == 'move') then
+				self:_onToggleMoveNode()
+			else
+				self:_onCommoRoseAction('Select')
+			end
 		end
-	end
 
-	self.CommoRose.Pressed = (Comm1 or Comm2 or Comm3)
+		self.commoRosePressed = (Comm1 or Comm2 or Comm3)
+	end
 
 	if (self.editMode == 'move') then
 
@@ -1312,6 +1368,24 @@ function ClientNodeEditor:_onEngineUpdate(delta, simDelta)
 			print('NodeEditor:SendNodes')
 			NetEvents:Send('NodeEditor:SendNodes')
 			self.nodeReceiveTimer = -1
+		end
+	end
+
+	if (self.commoRoseEnabled and not self.commoRoseActive) then
+
+		if (self.commoRoseTimer == -1 and self.commoRosePressed) then
+			self.commoRoseTimer = 0
+		end
+
+		if (self.commoRosePressed and self.commoRoseTimer >= 0) then
+
+			self.commoRoseTimer = self.commoRoseTimer + delta
+
+			if (self.commoRoseTimer > self.commoRoseDelay) then
+				self.commoRoseTimer = -1
+				self.commoRoseActive = true
+				self:_onCommoRoseAction('Show')
+			end
 		end
 	end
 
@@ -1551,11 +1625,16 @@ function ClientNodeEditor:_onUIDrawHud()
 	-- generic debug values
 	local debugText = ''
 
+	self.debugEntries['commoRoseEnabled'] = self.commoRoseEnabled
+	self.debugEntries['commoRosePressed'] = self.commoRosePressed
+	self.debugEntries['commoRoseTimer'] = string.format('%4.2f', self.commoRoseTimer)
+	self.debugEntries['commoRoseActive'] = self.commoRoseActive
+
 	for k,v in pairs(self.debugEntries) do
 		debugText = debugText .. k..': '..tostring(v).."\n"
 	end
 
-	--DebugRenderer:DrawText2D(20, 20, debugText, self.colors.Text, 1)
+	--DebugRenderer:DrawText2D(20, 400, debugText, self.colors.Text, 1)
 	
 
 	-- draw help info
@@ -1694,7 +1773,7 @@ function ClientNodeEditor:_drawNode(waypoint, isTracePath)
 		DebugRenderer:DrawSphere(waypoint.Position, 0.08,  color.Node, false, (not qualityAtRange))
 
 		-- transform marker
-		DebugRenderer:DrawLine(waypoint.Position, waypoint.Position + (Vec3.up * 0.7), self.colors.Red, self.colors.Red)
+		DebugRenderer:DrawLine(waypoint.Position, waypoint.Position + (Vec3.up), self.colors.Red, self.colors.Red)
 		DebugRenderer:DrawLine(waypoint.Position, waypoint.Position + (Vec3.right * 0.5), self.colors.Green, self.colors.Green)
 		DebugRenderer:DrawLine(waypoint.Position, waypoint.Position + (Vec3.forward * 0.5), self.colors.Blue, self.colors.Blue)
 	end
@@ -1730,11 +1809,13 @@ function ClientNodeEditor:_drawNode(waypoint, isTracePath)
 	if (Config.drawWaypointIDs and g_NodeCollection:InRange(waypoint, self.playerPos, Config.textRange)) then
 		if (isSelected) then
 			-- don't try to precalc this value like with the distance, another memory leak crash awaits you
-			local screenPos = ClientUtils:WorldToScreen(waypoint.Position + (Vec3.up * 0.7))
+			local screenPos = ClientUtils:WorldToScreen(waypoint.Position + Vec3.up)
 			if (screenPos ~= nil) then
 
 				local previousNode = tostring(waypoint.Previous)
 				local nextNode = tostring(waypoint.Next)
+				local pathNode = g_NodeCollection:GetFirst(waypoint.PathIndex)
+
 				if (type(waypoint.Previous) == 'table') then
 					previousNode = waypoint.Previous.ID
 				end
@@ -1756,18 +1837,19 @@ function ClientNodeEditor:_drawNode(waypoint, isTracePath)
 				if (waypoint.SpeedMode == 0) then 
 					optionValue = tostring(waypoint.OptValue)..' Seconds'
 				end
-				if (not waypoint.Previous or (waypoint.Previous and waypoint.Previous.PathIndex ~= waypoint.PathIndex)) then
-					if (waypoint.OptValue == 255) then
-						optionValue = 'Path Reverses'
-					else
-						optionValue = 'Path Loops'
+
+				local pathMode = 'Loops'
+				if (pathNode) then
+					if (pathNode.OptValue == 0XFF) then
+						pathMode = 'Reverses'
 					end
 				end
 
 				local text = ''
-				text = text..string.format("%s <--[ %s ]--> %s\n", previousNode, waypoint.ID, nextNode)
+				text = text..string.format("(%s)Pevious [ %s ] Next(%s)\n", previousNode, waypoint.ID, nextNode)
 				text = text..string.format("Index[%d]\n", waypoint.Index)
-				text = text..string.format("Path[%d][%d]\n", waypoint.PathIndex, waypoint.PointIndex)
+				text = text..string.format("Path[%d][%d] (%s)\n", waypoint.PathIndex, waypoint.PointIndex, pathMode)
+				text = text..string.format("Path Objectives: %s\n", g_Utilities:dump(pathNode.Data.Objectives, false))
 				text = text..string.format("InputVar: %d\n", waypoint.InputVar)
 				text = text..string.format("SpeedMode: %s (%d)\n", speedMode, waypoint.SpeedMode)
 				text = text..string.format("ExtraMode: %s (%d)\n", extraMode, waypoint.ExtraMode)
