@@ -16,6 +16,7 @@ function GameDirector:__init()
 	self.Translations = {}
 
 	self.McomCounter = 0;
+	self.OnlyOneMcom = false;
 	self.ArmedMcoms = {}
 
 	Events:Subscribe('CapturePoint:Lost', self, self._onLost)
@@ -91,14 +92,12 @@ function GameDirector:initObjectives()
 end
 
 function GameDirector:_onMcomArmed(player)
-	print("mcom armed")
-	print(player.name)
+	print("mcom armed by "..player.name)
 	local objective = self:_translateObjective(player.soldier.worldTransform.trans);
-	print(objective)
 	if self.ArmedMcoms[player.name] == nil then
 		self.ArmedMcoms[player.name] = {}
 	end
-	table.insert(self.ArmedMcoms[player.name], objective.name)
+	table.insert(self.ArmedMcoms[player.name], objective)
 
 	self:_updateObjective(objective, {
 		team = player.teamId,
@@ -112,7 +111,7 @@ function GameDirector:_onMcomDisarmed(player)
 	for playerMcom,mcomsOfPlayer in pairs(self.ArmedMcoms) do
 		if mcomsOfPlayer ~= nil and #mcomsOfPlayer > 0 then
 			for i,mcomName in pairs(mcomsOfPlayer) do
-				if mcomName == objective.name then
+				if mcomName == objective then
 					table.remove(self.ArmedMcoms[playerMcom], i)
 					break;
 				end
@@ -126,73 +125,75 @@ function GameDirector:_onMcomDisarmed(player)
 end
 
 function GameDirector:_onMcomDestroyed(player)
-	print("mcom destroyed")
-	print(player.name)
+	print("mcom destroyed by "..player.name)
 	local objective = '';
 	if self.ArmedMcoms[player.name] ~= nil then
-		for i,mcomName in pairs(self.ArmedMcoms[player.name]) do
-			if mcomName == objective then
-				objective = table.remove(self.ArmedMcoms[player.name], i)
-				break;
-			end
-		end
+		objective = self.ArmedMcoms[player.name][1]
+		table.remove(self.ArmedMcoms[player.name], 1)
 	end
-	print(objective)
 	
 	self.McomCounter = self.McomCounter + 1;
-	self:_updateValidObjectives();
 	self:_updateObjective(objective, {
 		team = TeamId.TeamNeutral,--player.teamId,
 		isAttacked = false,
 		active = false
 	})
+	self:_updateValidObjectives();
 end
 
 function GameDirector:_updateValidObjectives()
-	local baseIndex = 0;
-	local mcomIndexes = {0, 0};
-	if self.McomCounter < 2 then
-		baseIndex = 1;
-		mcomIndexes = {1, 2};
-	elseif self.McomCounter < 4 then
-		baseIndex = 2;
-		mcomIndexes = {3, 4};
-	elseif self.McomCounter < 6 then
-		baseIndex = 3;
-		mcomIndexes = {5, 6};
-	elseif self.McomCounter < 8 then
-		baseIndex = 4;
-		mcomIndexes = {7, 8};
-	elseif self.McomCounter < 10 then
-		baseIndex = 5;
-		mcomIndexes = {9, 10};
-	else
-		baseIndex = 6;
-		mcomIndexes = {11, 12};
-	end
+	if (self.McomCounter % 2) == 0 then
+		self.OnlyOneMcom = false;
+		local baseIndex = 0;
+		local mcomIndexes = {0, 0};
+		if self.McomCounter < 2 then
+			baseIndex = 1;
+			mcomIndexes = {1, 2};
+		elseif self.McomCounter < 4 then
+			baseIndex = 2;
+			mcomIndexes = {3, 4};
+		elseif self.McomCounter < 6 then
+			baseIndex = 3;
+			mcomIndexes = {5, 6};
+		elseif self.McomCounter < 8 then
+			baseIndex = 4;
+			mcomIndexes = {7, 8};
+		elseif self.McomCounter < 10 then
+			baseIndex = 5;
+			mcomIndexes = {9, 10};
+		else
+			baseIndex = 6;
+			mcomIndexes = {11, 12};
+		end
 
-	for _,objective in pairs(self.AllObjectives) do
-		local fields = objective.name:split(" ")
-		local active = false;
-		if not objective.isBase then
-			if #fields > 1 then
-				local index = tonumber(fields[2])
-				for _,targetIndex in pairs(mcomIndexes) do
-					if index == targetIndex then
+		for _,objective in pairs(self.AllObjectives) do
+			local fields = objective.name:split(" ")
+			local active = false;
+			if not objective.isBase then
+				if #fields > 1 then
+					local index = tonumber(fields[2])
+					for _,targetIndex in pairs(mcomIndexes) do
+						if index == targetIndex then
+							active = true;
+						end
+					end
+				end
+			else
+				if #fields > 2 then
+					local index = tonumber(fields[3])
+					if index == baseIndex then
 						active = true;
 					end
 				end
 			end
-		else
-			if #fields > 2 then
-				local index = tonumber(fields[3])
-				if index == baseIndex then
-					active = true;
-				end
-			end
+			objective.active = active;
+			print(objective.name.."  "..tostring(active))
 		end
-		objective.active = active;
-		print(objective.name.."  "..tostring(active))
+	else
+		self.OnlyOneMcom = true;
+		for _,objective in pairs(self.AllObjectives) do
+			print(objective.name.."  "..tostring(objective.active))
+		end
 	end
 end
 
@@ -391,11 +392,19 @@ function GameDirector:_onUpdate(delta)
 		self.CurrentAssignedCount = {}
 		local maxAssings = {0,0}
 		for i = 1, 2 do
-			if self.BotsByTeam[i] ~= nil then 
-				maxAssings[i] = math.floor(#self.BotsByTeam[i] / 2) + 1;
+			if self.BotsByTeam[i] ~= nil then
+				maxAssings[i] = math.floor(#self.BotsByTeam[i] / 2);
+				if (#self.BotsByTeam[i] % 2) == 1 then
+					maxAssings[i] = maxAssings[i] + 1;
+				end
 			end
 			if maxAssings[i] > self.MaxAssignedLimit then
 				maxAssings[i] = self.MaxAssignedLimit;
+			end
+			if self.OnlyOneMcom then
+				if self.BotsByTeam[i] ~= nil then
+					maxAssings[i] = #self.BotsByTeam[i];
+				end
 			end
 		end
 
@@ -426,6 +435,7 @@ function GameDirector:_onUpdate(delta)
 				-- remove bots from this objective
 				for _,bot in pairs(botList) do
 					if bot:getObjective() == objective.name then
+						print("clear objective")
 						bot:setObjective();	-- clear objective
 					end
 				end

@@ -9,7 +9,6 @@ end
 function PathSwitcher:getNewPath(point, objective)
 	-- check if on base, or on path away from base. In this case: change path
 	local onBasePath = false;
-	local switchFromInactive = false;
 	local currentPathFirst = g_NodeCollection:GetFirst(point.PathIndex);
 	local currentPathStatus = 0;
 	if currentPathFirst.Data ~= nil and currentPathFirst.Data.Objectives ~= nil then
@@ -87,9 +86,6 @@ function PathSwitcher:getNewPath(point, objective)
 			local switchAnyways = false;
 			local newBasePath = g_GameDirector:isBasePath(pathNode.Data.Objectives)
 			local newPathStatus = g_GameDirector:getEnableSateOfPath(pathNode.Data.Objectives)
-			if (newPathStatus > currentPathStatus) then -- always away from inactive paths if possible
-				switchAnyways = true;
-			end
 			if onBasePath then -- if on base path, check for objective count.
 				if not newBasePath then
 					switchAnyways = true;
@@ -100,6 +96,8 @@ function PathSwitcher:getNewPath(point, objective)
 						switchAnyways = true;
 					end
 				end
+			elseif (newPathStatus > currentPathStatus) then -- not on base path
+				switchAnyways = true;
 			end
 			if switchAnyways then
 				if (highestPriority < 3) then highestPriority = 3 end
