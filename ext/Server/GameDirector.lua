@@ -17,6 +17,7 @@ function GameDirector:__init()
 
 	self.McomCounter = 0;
 	self.OnlyOneMcom = false;
+	self.RushAttackingBase = ''
 	self.ArmedMcoms = {}
 
 	Events:Subscribe('CapturePoint:Lost', self, self._onLost)
@@ -184,6 +185,9 @@ function GameDirector:_updateValidObjectives()
 					if index == baseIndex then
 						active = true;
 					end
+					if index == baseIndex - 1 then
+						self.RushAttackingBase = objective.name;
+					end
 				end
 			end
 			objective.active = active;
@@ -197,28 +201,55 @@ function GameDirector:_updateValidObjectives()
 	end
 end
 
+function GameDirector:checkForExecution(point, team)
+	local execute = false;
+	if point.Data.Action ~= nil then
+		local action = point.Data.Action;
+		if action.type == "mcom" then
+			local mcom = self:_translateObjective(point.Position)
+			if mcom ~= nil then
+				local objective = self:getObjectiveObject(mcom);
+				if objective.active then
+					if team == TeamId.Team1 and objective.team == TeamId.TeamNeutral then
+						execute = true;	--Attacking Team
+					else
+						if objective ~= nil then
+							if objective.isAttacked then
+								execute = true;	--Defending Team
+							end
+						end
+					end
+				end
+			end
+		end
+	end
+	return execute;
+end
+
 function GameDirector:getSpawnPath(team, squad, onlyBase)
 	local possibleObjectives = {}
 	local possibleBases = {}
 	local pathsDone = {}
 	for _,objective in pairs(self.AllObjectives) do
-		if objective.team == team and objective.active then
-			local allObjectives = g_NodeCollection:GetKnownOjectives();
-			local pathsWithObjective = allObjectives[objective.name]
-			for _,path in pairs(pathsWithObjective) do
-				if not pathsDone[path] then
-					local node = g_NodeCollection:Get(1, path)
-					if node ~= nil and node.Data.Objectives ~= nil then
-						if #node.Data.Objectives == 1 then --possible path
+		local allObjectives = g_NodeCollection:GetKnownOjectives();
+		local pathsWithObjective = allObjectives[objective.name]
+		for _,path in pairs(pathsWithObjective) do
+			if not pathsDone[path] then
+				local node = g_NodeCollection:Get(1, path)
+				if node ~= nil and node.Data.Objectives ~= nil then
+					if #node.Data.Objectives == 1 then --possible path
+						if objective.team == team and objective.active then
 							if objective.isBase then
 								table.insert(possibleBases, path)
 							elseif not onlyBase then
 								table.insert(possibleObjectives, path)
 							end
+						elseif objective.team ~= team and objective.isBase and not objective.active and objective.name == self.RushAttackingBase then --rush attacking team
+							table.insert(possibleBases, path)
 						end
 					end
-					pathsDone[path] = true;
 				end
+				pathsDone[path] = true;
 			end
 		end
 	end

@@ -202,6 +202,7 @@ function ClientNodeEditor:RegisterEvents()
 	Console:Register('CommoRoseHide', 'Hide custom Commo Rose', self, self._onHideRose)
 	Console:Register('SetMetadata', '<string|Data> - Set Metadata for waypoint, Must be valid JSON string', self, self._onSetMetadata)
 	Console:Register('AddObjective', '<string|Objective> - Add an objective to a path', self, self._onAddObjective)
+	Console:Register('AddMcom', 'Add an MCOM Arm/Disarm-Action to a point', self, self._onAddMcom)
 	Console:Register('RemoveObjective', '<string|Objective> - Remove an objective from a path', self, self._onRemoveObjective)
 	Console:Register('ProcessMetadata', 'Process waypoint metadata starting with selected nodes or all nodes', self, self._onProcessMetadata)
 	Console:Register('RecalculateIndexes', 'Recalculate Indexes starting with selected nodes or all nodes', self, self._onRecalculateIndexes)
@@ -752,6 +753,29 @@ function ClientNodeEditor:_onSetMetadata(args)
 	end
 	print(Language:I18N(message))
 	return result
+end
+
+function ClientNodeEditor:_onAddMcom(args)
+	self.commoRoseActive = false
+
+	local selection = g_NodeCollection:GetSelected()
+	if (#selection == 1) then
+		local waypoint = selection[1];
+		local player = PlayerManager:GetLocalPlayer();
+		if player.soldier == nil then
+			return
+		end
+
+		local action = {
+			type = "mcom",
+			inputs = {EntryInputActionEnum.EIAInteract},
+			time = 6.0,
+			yaw = player.input.authoritativeAimingYaw,
+			pitch = player.input.authoritativeAimingPitch
+		}
+		waypoint.Data.Action = action;
+		print(Language:I18N('Success'))
+	end
 end
 
 function ClientNodeEditor:_onAddObjective(args)

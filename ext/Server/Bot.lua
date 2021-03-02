@@ -39,6 +39,7 @@ function Bot:__init(player)
 	self._attackModeMoveTimer = 0;
 	self._meleeCooldownTimer = 0;
 	self._shootTraceTimer = 0;
+	self._actionTimer = 0;
 
 	--shared movement vars
 	self.activeMoveMode = 0;
@@ -60,6 +61,7 @@ function Bot:__init(player)
 	self._zombieSpeedValue = 0;
 	self._objective = '';
 	self._onSwitch = false;
+	self._actionActive = false;
 
 	--shooting
 	self._shoot = false;
@@ -184,6 +186,7 @@ function Bot:resetVars()
 	self._spawnDelayTimer		= 0;
 	self._objective 			= '';
 	self._meleeActive 			= false;
+	self._actionActive 			= false;
 
 	self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 0);
 	self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
@@ -319,6 +322,7 @@ function Bot:resetSpawnVars()
 	self._knifeWayPositions		= {};
 	self._zombieSpeedValue 		= 0;
 	self._onSwitch 				= false;
+	self._actionActive 			= false;
 
 	self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 0);
 	self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
@@ -715,6 +719,24 @@ function Bot:_updateMovement()
 					end
 				end
 
+				-- execute Action if needed
+				if self._actionActive then
+					if self._actionTimer == point.Data.Action.time then
+						for _,input in pairs(point.Data.Action.inputs) do
+							self.player.input:SetLevel(input, 1)
+						end
+					end
+
+					self._actionTimer = self._actionTimer - StaticConfig.botUpdateCycle;
+					if self._actionTimer <= 0 then
+						self._actionActive = false;
+					end
+
+					if self._actionActive then
+						return --DONT EXECUTE ANYTHING ELSE
+					end
+				end
+
 				if (point.SpeedMode) > 0 then -- movement
 					self._wayWaitTimer			= 0;
 					self._wayWaitYawTimer		= 0;
@@ -849,7 +871,32 @@ function Bot:_updateMovement()
 					--check for reached target
 					if distanceFromTarget <= targetDistanceSpeed and heightDistance <= StaticConfig.targetHeightDistanceWayPoint then
 						if not useShootWayPoint then
-							-- CHECK FOr PATH-SWITCHES
+							-- CHECK FOR ACTION
+							if point.Data.Action ~= nil then
+								local action = point.Data.Action;
+								if g_GameDirector:checkForExecution(point, self.player.teamId) then
+									self._actionActive = true;
+									if action.time ~= nil then
+										self._actionTimer = action.time
+									else
+										self._actionTimer = 0;
+									end
+									if action.yaw ~= nil then
+										self._targetYaw = action.yaw;
+									end
+									if action.pitch ~= nil then
+										self._targetPitch = action.pitch;
+									end
+
+									-- reset all inputs
+									for i = 0, 36 do
+										self.player.input:SetLevel(i, 0);
+									end
+
+									return --DONT DO ANYTHING ELSE ANYMORE
+								end
+							end
+							-- CHECK FOR PATH-SWITCHES
 							local switchPath, newWaypoint = g_PathSwitcher:getNewPath(point, self._objective);
 
 							if switchPath and not self._onSwitch then
