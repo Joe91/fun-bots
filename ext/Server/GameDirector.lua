@@ -91,7 +91,10 @@ function GameDirector:initObjectives()
 end
 
 function GameDirector:_onMcomArmed(player)
+	print("mcom armed")
+	print(player.name)
 	local objective = self:_translateObjective(player.soldier.worldTransform.trans);
+	print(objective)
 	if self.ArmedMcoms[player.name] == nil then
 		self.ArmedMcoms[player.name] = {}
 	end
@@ -123,22 +126,26 @@ function GameDirector:_onMcomDisarmed(player)
 end
 
 function GameDirector:_onMcomDestroyed(player)
-	local objective = self:_translateObjective(player.soldier.worldTransform.trans);
+	print("mcom destroyed")
+	print(player.name)
+	local objective = '';
 	if self.ArmedMcoms[player.name] ~= nil then
 		for i,mcomName in pairs(self.ArmedMcoms[player.name]) do
-			if mcomName == objective.name then
-				table.remove(self.ArmedMcoms[player.name], i)
+			if mcomName == objective then
+				objective = table.remove(self.ArmedMcoms[player.name], i)
 				break;
 			end
 		end
 	end
+	print(objective)
+	
+	self.McomCounter = self.McomCounter + 1;
+	self:_updateValidObjectives();
 	self:_updateObjective(objective, {
 		team = TeamId.TeamNeutral,--player.teamId,
 		isAttacked = false,
 		active = false
 	})
-	self.McomCounter = self.McomCounter + 1;
-	self:_updateValidObjectives();
 end
 
 function GameDirector:_updateValidObjectives()

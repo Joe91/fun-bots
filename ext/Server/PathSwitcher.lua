@@ -8,12 +8,13 @@ end
 
 function PathSwitcher:getNewPath(point, objective)
 	-- check if on base, or on path away from base. In this case: change path
-	local isBasePath = false;
+	local onBasePath = false;
+	local switchFromInactive = false;
 	local currentPathFirst = g_NodeCollection:GetFirst(point.PathIndex);
 	local currentPathStatus = 0;
 	if currentPathFirst.Data ~= nil and currentPathFirst.Data.Objectives ~= nil then
 		currentPathStatus = g_GameDirector:getEnableSateOfPath(currentPathFirst.Data.Objectives)
-		isBasePath = g_GameDirector:isBasePath(currentPathFirst.Data.Objectives)
+		onBasePath = g_GameDirector:isBasePath(currentPathFirst.Data.Objectives)
 	end
 
 	if point.Data == nil or point.Data.Links == nil or #point.Data.Links < 1 then
@@ -39,17 +40,13 @@ function PathSwitcher:getNewPath(point, objective)
 	
 	-- loop through each possible path
 	for i=1, #possiblePaths do
-
-		local newPathStatus = 0;
 		local newPoint = possiblePaths[i]
 		local pathNode = g_NodeCollection:GetFirst(newPoint.PathIndex)
 
 		-- this path has listed objectives
 		if (pathNode.Data.Objectives ~= nil and objective ~= '') then
-			newPathStatus = g_GameDirector:getEnableSateOfPath(pathNode.Data.Objectives)
-			local switchFromInactive = newPathStatus > currentPathStatus;
 			-- path with a single objective that matches mine, top priority
-			if (#pathNode.Data.Objectives == 1 and pathNode.Data.Objectives[1] == objective) or isBasePath then
+			if (#pathNode.Data.Objectives == 1 and pathNode.Data.Objectives[1] == objective) then
 				if (highestPriority < 2) then highestPriority = 2 end
 				table.insert(paths, {
 					Priority = 2,
@@ -62,7 +59,7 @@ function PathSwitcher:getNewPath(point, objective)
 			else
 				-- loop through the path's objectives and compare to mine
 				for _,pathObjective in pairs(pathNode.Data.Objectives) do
-					if (objective == pathObjective) or isBasePath or switchFromInactive then
+					if (objective == pathObjective) then
 						if (highestPriority < 1) then highestPriority = 1 end
 						table.insert(paths, {
 							Priority = 1,
@@ -82,6 +79,34 @@ function PathSwitcher:getNewPath(point, objective)
 			})
 			if (newPoint.ID == point.ID) then
 				currentPriority = 0
+			end
+		end
+
+		-- check for base-Path or inactive path
+		if (newPoint.ID ~= point.ID) then
+			local switchAnyways = false;
+			local newBasePath = g_GameDirector:isBasePath(pathNode.Data.Objectives)
+			local newPathStatus = g_GameDirector:getEnableSateOfPath(pathNode.Data.Objectives)
+			if (newPathStatus > currentPathStatus) then -- always away from inactive paths if possible
+				switchAnyways = true;
+			end
+			if onBasePath then -- if on base path, check for objective count.
+				if not newBasePath then
+					switchAnyways = true;
+				else
+					local countOld = #currentPathFirst.Data.Objectives;
+					local countNew = #pathNode.Data.Objectives
+					if countOld == 1 and countNew > 1 then
+						switchAnyways = true;
+					end
+				end
+			end
+			if switchAnyways then
+				if (highestPriority < 3) then highestPriority = 3 end
+				table.insert(paths, {
+					Priority = 3,
+					Point = newPoint
+				})
 			end
 		end
 	end
