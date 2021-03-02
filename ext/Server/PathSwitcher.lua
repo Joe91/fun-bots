@@ -133,7 +133,7 @@ function PathSwitcher:getNewPath(point, objective)
 	local linkMode = tonumber(point.Data.LinkMode) or 0
 	if linkMode == 0 then -- random path switch
 
-		local chance = tonumber(point.Data.LinkChance) or 25
+		local chance = tonumber(point.Data.LinkChance) or 10
 		local randNum = MathUtils:GetRandomInt(0, 100)
 		local randIndex = MathUtils:GetRandomInt(1, #validPaths)
 
@@ -147,7 +147,7 @@ function PathSwitcher:getNewPath(point, objective)
 			return true, randomPath.Point
 		end
 
-		if randNum >= chance then
+		if randNum <= chance then
 			local randomPath = validPaths[randIndex]
 			if randomPath == nil then
 				print('[B] validPaths['..randIndex..'] was nil : '..g_Utilities:dump(validPaths, true, 2))
