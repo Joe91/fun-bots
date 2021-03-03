@@ -897,7 +897,7 @@ function Bot:_updateMovement()
 								end
 							end
 							-- CHECK FOR PATH-SWITCHES
-							local switchPath, newWaypoint = g_PathSwitcher:getNewPath(point, self._objective);
+							local switchPath, newWaypoint = g_PathSwitcher:getNewPath(self.name, point, self._objective);
 
 							if switchPath and not self._onSwitch then
 								if (self._objective ~= '') then

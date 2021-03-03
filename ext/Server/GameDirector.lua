@@ -76,7 +76,9 @@ function GameDirector:initObjectives()
 			isAttacked = false,
 			isBase = false,
 			active = true,
-			assigned = {}
+			subObjective = false,
+			assigned = {},
+			bots = {}
 		}
 		if string.find(objectiveName:lower(), "base") ~= nil then
 			objective.isBase = true;
@@ -139,6 +141,18 @@ function GameDirector:_onMcomDestroyed(player)
 		isAttacked = false,
 		active = false
 	})
+	local subObjective = self:getSubObjectiveFromObj(objective);
+	local topObjective = self:getObjectiveFromSubObj(objective)
+	if topObjective ~= nil then
+		self:_updateObjective(topObjective, {
+			active = false
+		})
+	end
+	if subObjective ~= nil then
+		self:_updateObjective(subObjective, {
+			active = false
+		})
+	end
 	self:_updateValidObjectives();
 end
 
@@ -170,6 +184,7 @@ function GameDirector:_updateValidObjectives()
 		for _,objective in pairs(self.AllObjectives) do
 			local fields = objective.name:split(" ")
 			local active = false;
+			local subObjective = false;
 			if not objective.isBase then
 				if #fields > 1 then
 					local index = tonumber(fields[2])
@@ -177,6 +192,9 @@ function GameDirector:_updateValidObjectives()
 						if index == targetIndex then
 							active = true;
 						end
+					end
+					if #fields > 2 then
+						subObjective = true;
 					end
 				end
 			else
@@ -191,6 +209,7 @@ function GameDirector:_updateValidObjectives()
 				end
 			end
 			objective.active = active;
+			objective.subObjective = subObjective;
 			print(objective.name.."  "..tostring(active))
 		end
 	else
@@ -209,14 +228,12 @@ function GameDirector:checkForExecution(point, team)
 			local mcom = self:_translateObjective(point.Position)
 			if mcom ~= nil then
 				local objective = self:getObjectiveObject(mcom);
-				if objective.active then
-					if team == TeamId.Team1 and objective.team == TeamId.TeamNeutral then
-						execute = true;	--Attacking Team
-					else
-						if objective ~= nil then
-							if objective.isAttacked then
-								execute = true;	--Defending Team
-							end
+				if objective ~= nil then
+					if objective.active then
+						if team == TeamId.Team1 and objective.team == TeamId.TeamNeutral then
+							execute = true;	--Attacking Team
+						elseif team == TeamId.Team2 and objective.isAttacked then
+							execute = true;	--Defending Team
 						end
 					end
 				end
@@ -369,6 +386,70 @@ function GameDirector:getEnableSateOfPath(ObjectiveNamesOfPath)
 	end
 end
 
+function GameDirector:getSubObjectiveFromObj(objective)
+	for tempObjective in pairs(self.AllObjectives) do
+		if tempObjective.subObjective then
+			local name = tempObjective.name:lower()
+			if string.find(name, objective:lower()) ~= nil then
+				return tempObjective.name
+			end
+		end
+	end
+end
+
+function GameDirector:getObjectiveFromSubObj(subObjective)
+	for tempObjective in pairs(self.AllObjectives) do
+		if tempObjective.subObjective then
+			local name = tempObjective.name:lower()
+			if string.find(subObjective:lower(), name) ~= nil then
+				return tempObjective.name
+			end
+		end
+	end
+end
+
+function GameDirector:notifyBotAtObjective(botname, objectiveName, onObjective)
+	local objective = self:getObjectiveObject(objectiveName)
+	if objective ~= nil and objective.active then
+		if onObjective then
+			for _,bot in pairs(objective.bots) do
+				if bot == botname then
+					break; -- dont insert bot, if already in
+				end
+				table.insert(objective.bots, botname)
+			end
+		else
+			self:_removeBotFromObjective(botname)
+		end
+	end
+end
+
+function GameDirector:_removeBotFromObjective(botname)
+	for _,singleObjective in pairs(self.AllObjectives) do
+		for pos,bot in pairs(singleObjective.bots) do
+			if bot == botname then
+				table.remove(singleObjective.bots, pos)
+				break;
+			end
+		end
+	end
+end
+
+function GameDirector:_useSubobjective(botTeam, objectiveName)
+	local use = false;
+	local objective = self:getObjectiveObject(objectiveName);
+	if objective ~= nil then
+		if objective.active then
+			if botTeam == TeamId.Team1 and objective.team == TeamId.TeamNeutral then
+				use = true;	--Attacking Team
+			elseif botTeam == TramId.Team2 and objective.isAttacked then
+				use = true;	--Defending Team
+			end
+		end
+	end
+	return use;
+end
+
 function GameDirector:_onLost(capturePoint)
 	local flagEntity = CapturePointEntity(capturePoint)
 	local objectiveName = self:_translateObjective(flagEntity.transform.trans, flagEntity.name);
@@ -420,7 +501,6 @@ function GameDirector:_onUpdate(delta)
 			end
 		end
 
-		self.CurrentAssignedCount = {}
 		local maxAssings = {0,0}
 		for i = 1, 2 do
 			if self.BotsByTeam[i] ~= nil then
@@ -442,23 +522,54 @@ function GameDirector:_onUpdate(delta)
 		-- TODO: check for inactive objectives of bots
 		-- check objective statuses
 		for _,objective in pairs(self.AllObjectives) do
+			local parentObjective = self:getObjectiveFromSubObj(objective.name)
+			local subObjective = self:getSubObjectiveFromObj(objective.name)
 			if not objective.isBase and objective.active then
+
 				for botTeam, bots in pairs(self.BotsByTeam) do
-					for i=1, #bots do
-						if (self.CurrentAssignedCount[botTeam..'_'..objective.name] == nil) then
-							self.CurrentAssignedCount[botTeam..'_'..objective.name] = 0
+					objective.assigned[botTeam] = 0;
+
+					if objective.subObjective then
+						if self:_useSubobjective(botTeam, objective.name) then
+							local parentObject = self:getObjectiveObject(parentObjective)
+							for botname in pairs(parentObject.bots) do
+								for i=1, #bots do
+									if bots[i].name == botname then
+										if (bots[i]:getObjective() == objective.name) then
+											objective.assigned[botTeam] = objective.assigned[botTeam] + 1
+										end
+
+										if (bots[i]:getObjective() == parentObjective and objective.assigned[botTeam] < 2) then
+											print('Assigning bot to objective: '..bots[i].name..' (team: '..botTeam..') -> '..objective.name)
+
+											bots[i]:setObjective(objective.name)
+											objective.assigned[botTeam] = objective.assigned[botTeam] + 1
+										end
+									end
+								end
+							end
+						else
+							-- unassign bots
+							for i=1, #bots do
+								if (bots[i]:getObjective() == objective.name) then
+									print('Assigning bot to objective: '..bots[i].name..' (team: '..botTeam..') -> '..parentObjective)
+									bots[i]:setObjective(parentObjective)
+								end
+							end
 						end
+					else
+						for i=1, #bots do
+							if (bots[i]:getObjective() == objective.name or bots[i]:getObjective() == subObjective) then
+								objective.assigned[botTeam] = objective.assigned[botTeam] + 1
+							end
 
-						if (bots[i]:getObjective() == objective.name) then
-							self.CurrentAssignedCount[botTeam..'_'..objective.name] = self.CurrentAssignedCount[botTeam..'_'..objective.name] + 1
-						end
+							if (objective.team ~= botTeam and bots[i]:getObjective() == '' and objective.assigned[botTeam] < maxAssings[botTeam]) then
 
-						if (objective.team ~= botTeam and bots[i]:getObjective() == '' and self.CurrentAssignedCount[botTeam..'_'..objective.name] < maxAssings[botTeam]) then
+								print('Assigning bot to objective: '..bots[i].name..' (team: '..botTeam..') -> '..objective.name)
 
-							print('Assigning bot to objective: '..bots[i].name..' (team: '..botTeam..') -> '..objective.name)
-
-							bots[i]:setObjective(objective.name)
-							self.CurrentAssignedCount[botTeam..'_'..objective.name] = self.CurrentAssignedCount[botTeam..'_'..objective.name] + 1
+								bots[i]:setObjective(objective.name)
+								objective.assigned[botTeam] = objective.assigned[botTeam] + 1
+							end
 						end
 					end
 				end

@@ -6,7 +6,7 @@ function PathSwitcher:__init()
 	self.dummyData = 0;
 end
 
-function PathSwitcher:getNewPath(point, objective)
+function PathSwitcher:getNewPath(botname, point, objective)
 	-- check if on base, or on path away from base. In this case: change path
 	local onBasePath = false;
 	local currentPathFirst = g_NodeCollection:GetFirst(point.PathIndex);
@@ -109,6 +109,10 @@ function PathSwitcher:getNewPath(point, objective)
 		end
 	end
 
+	-- notify GameDirector
+	local onObjective = (currentPriority == 2)
+	g_GameDirector:notifyBotAtObjective(botname, objective, onObjective)
+
 	-- remove paths below our highest priority
 	local validPaths = {}
 	for i=1, #paths do
@@ -133,7 +137,7 @@ function PathSwitcher:getNewPath(point, objective)
 	local linkMode = tonumber(point.Data.LinkMode) or 0
 	if linkMode == 0 then -- random path switch
 
-		local chance = tonumber(point.Data.LinkChance) or 10
+		local chance = tonumber(point.Data.LinkChance) or 20
 		local randNum = MathUtils:GetRandomInt(0, 100)
 		local randIndex = MathUtils:GetRandomInt(1, #validPaths)
 
