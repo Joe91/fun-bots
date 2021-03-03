@@ -86,17 +86,22 @@ function PathSwitcher:getNewPath(botname, point, objective)
 			local switchAnyways = false;
 			local newBasePath = g_GameDirector:isBasePath(pathNode.Data.Objectives)
 			local newPathStatus = g_GameDirector:getEnableSateOfPath(pathNode.Data.Objectives)
+			local countOld = #currentPathFirst.Data.Objectives;
+			local countNew = #pathNode.Data.Objectives
+
 			if onBasePath then -- if on base path, check for objective count.
-				if not newBasePath then
+				if not newBasePath and newPathStatus == 2 then
 					switchAnyways = true;
-				else
-					local countOld = #currentPathFirst.Data.Objectives;
-					local countNew = #pathNode.Data.Objectives
-					if countOld == 1 and countNew > 1 then
+				elseif newBasePath then
+					if countOld == 1 and countNew > 1 and newPathStatus > 0 then
 						switchAnyways = true;
 					end
 				end
-			elseif (newPathStatus > currentPathStatus) then -- not on base path
+			end--]]
+			if (newPathStatus > currentPathStatus) then -- not on base path
+				switchAnyways = true;
+			end
+			if newPathStatus == 0 and currentPathStatus == 0 and countOld > countNew then
 				switchAnyways = true;
 			end
 			if switchAnyways then

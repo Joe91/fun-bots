@@ -75,6 +75,7 @@ function GameDirector:initObjectives()
 			team = TeamId.TeamNeutral,
 			isAttacked = false,
 			isBase = false,
+			destroyed = false,
 			active = true,
 			subObjective = false,
 			assigned = {},
@@ -139,18 +140,18 @@ function GameDirector:_onMcomDestroyed(player)
 	self:_updateObjective(objective, {
 		team = TeamId.TeamNeutral,--player.teamId,
 		isAttacked = false,
-		active = false
+		destroyed = true
 	})
 	local subObjective = self:getSubObjectiveFromObj(objective);
 	local topObjective = self:getObjectiveFromSubObj(objective)
 	if topObjective ~= nil then
 		self:_updateObjective(topObjective, {
-			active = false
+			destroyed = true
 		})
 	end
 	if subObjective ~= nil then
 		self:_updateObjective(subObjective, {
-			active = false
+			destroyed = true
 		})
 	end
 	self:_updateValidObjectives();
@@ -528,7 +529,7 @@ function GameDirector:_onUpdate(delta)
 		for _,objective in pairs(self.AllObjectives) do
 			local parentObjective = self:getObjectiveFromSubObj(objective.name)
 			local subObjective = self:getSubObjectiveFromObj(objective.name)
-			if not objective.isBase and objective.active then
+			if not objective.isBase and objective.active and not objective.destroyed then
 
 				for botTeam, bots in pairs(self.BotsByTeam) do
 					objective.assigned[botTeam] = 0;
