@@ -10,7 +10,6 @@ function GameDirector:__init()
 	self.BotsByTeam = {}
 
 	self.MaxAssignedLimit = 8
-	self.CurrentAssignedCount = {}
 
 	self.AllObjectives = {}
 	self.Translations = {}
@@ -335,17 +334,17 @@ function GameDirector:_onCapture(capturePoint)
 		isAttacked = flagEntity.isAttacked
 	})
 
-	print('GameDirector:_onCapture: '..objectiveName)
-	print('self.CurrentAssignedCount: '..g_Utilities:dump(self.CurrentAssignedCount, true))
-
 	local objective = self:getObjectiveObject(objectiveName)
+
+	print('GameDirector:_onCapture: '..objectiveName)
+	print('self.CurrentAssignedCount: '..g_Utilities:dump(objective.assigned, true))
 
 	for botTeam, bots in pairs(self.BotsByTeam) do
 		for i=1, #bots do
 			if (bots[i]:getObjective() == objective.name and objective.team == botTeam) then
 				print('Bot completed objective: '..bots[i].name..' (team: '..botTeam..') -> '..objective.name)
 				bots[i]:setObjective()
-				self.CurrentAssignedCount[botTeam..'_'..objective.name] = math.max(self.CurrentAssignedCount[botTeam..'_'..objective.name] - 1, 0)
+				objective.assigned[botTeam] = math.max(objective.assigned[botTeam] - 1, 0)
 			end
 		end
 	end
@@ -468,7 +467,6 @@ function GameDirector:_onLost(capturePoint)
 	})
 
 	print('GameDirector:_onLost: '..objectiveName)
-	print('self.CurrentAssignedCount: '..g_Utilities:dump(self.CurrentAssignedCount, true))
 end
 
 function GameDirector:_onPlayerEnterCapturePoint(player, capturePoint)
