@@ -158,6 +158,10 @@ function GameDirector:_onMcomDestroyed(player)
 end
 
 function GameDirector:_updateValidObjectives()
+	if g_Globals.isConquest then
+		return
+	end
+
 	if (self.McomCounter % 2) == 0 then
 		self.OnlyOneMcom = false;
 		local baseIndex = 0;
