@@ -387,7 +387,7 @@ function GameDirector:getEnableSateOfPath(ObjectiveNamesOfPath)
 end
 
 function GameDirector:getSubObjectiveFromObj(objective)
-	for tempObjective in pairs(self.AllObjectives) do
+	for _,tempObjective in pairs(self.AllObjectives) do
 		if tempObjective.subObjective then
 			local name = tempObjective.name:lower()
 			if string.find(name, objective:lower()) ~= nil then
@@ -398,8 +398,8 @@ function GameDirector:getSubObjectiveFromObj(objective)
 end
 
 function GameDirector:getObjectiveFromSubObj(subObjective)
-	for tempObjective in pairs(self.AllObjectives) do
-		if tempObjective.subObjective then
+	for _,tempObjective in pairs(self.AllObjectives) do
+		if not tempObjective.subObjective then
 			local name = tempObjective.name:lower()
 			if string.find(subObjective:lower(), name) ~= nil then
 				return tempObjective.name
@@ -412,10 +412,14 @@ function GameDirector:notifyBotAtObjective(botname, objectiveName, onObjective)
 	local objective = self:getObjectiveObject(objectiveName)
 	if objective ~= nil and objective.active then
 		if onObjective then
+			local found = false;
 			for _,bot in pairs(objective.bots) do
 				if bot == botname then
+					found = true;
 					break; -- dont insert bot, if already in
 				end
+			end
+			if not found then
 				table.insert(objective.bots, botname)
 			end
 		else
@@ -442,7 +446,7 @@ function GameDirector:_useSubobjective(botTeam, objectiveName)
 		if objective.active then
 			if botTeam == TeamId.Team1 and objective.team == TeamId.TeamNeutral then
 				use = true;	--Attacking Team
-			elseif botTeam == TramId.Team2 and objective.isAttacked then
+			elseif botTeam == TeamId.Team2 and objective.isAttacked then
 				use = true;	--Defending Team
 			end
 		end
@@ -531,8 +535,11 @@ function GameDirector:_onUpdate(delta)
 
 					if objective.subObjective then
 						if self:_useSubobjective(botTeam, objective.name) then
+							print("use it")
 							local parentObject = self:getObjectiveObject(parentObjective)
-							for botname in pairs(parentObject.bots) do
+							print(parentObject.name)
+							print(parentObject.bots)
+							for _,botname in pairs(parentObject.bots) do
 								for i=1, #bots do
 									if bots[i].name == botname then
 										if (bots[i]:getObjective() == objective.name) then
