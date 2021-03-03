@@ -467,7 +467,7 @@ end
 
 
 function BotSpawner:getSquad(team)  --TODO: create a more advanced algorithm?
-	for i = 9, SquadId.SquadIdCount - 1 do -- first 8 squads for real players
+	for i = 1, SquadId.SquadIdCount - 1 do --for i = 9, SquadId.SquadIdCount - 1 do -- first 8 squads for real players
 		if TeamSquadManager:GetSquadPlayerCount(team, i) < 4 then
 			return i
 		end
