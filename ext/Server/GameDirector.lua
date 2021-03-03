@@ -535,10 +535,7 @@ function GameDirector:_onUpdate(delta)
 
 					if objective.subObjective then
 						if self:_useSubobjective(botTeam, objective.name) then
-							print("use it")
 							local parentObject = self:getObjectiveObject(parentObjective)
-							print(parentObject.name)
-							print(parentObject.bots)
 							for _,botname in pairs(parentObject.bots) do
 								for i=1, #bots do
 									if bots[i].name == botname then

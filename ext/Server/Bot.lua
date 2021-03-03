@@ -105,6 +105,10 @@ end
 
 --public functions
 function Bot:shootAt(player, ignoreYaw)
+	if self._actionActive then
+		return;
+	end
+
 	-- don't shoot at teammates
 	if self.player.teamId == player.teamId then
 		return
