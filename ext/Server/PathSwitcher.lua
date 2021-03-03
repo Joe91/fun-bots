@@ -97,8 +97,7 @@ function PathSwitcher:getNewPath(botname, point, objective)
 						switchAnyways = true;
 					end
 				end
-			end--]]
-			if (newPathStatus > currentPathStatus) then -- not on base path
+			elseif (newPathStatus > currentPathStatus) then -- not on base path
 				switchAnyways = true;
 			end
 			if newPathStatus == 0 and currentPathStatus == 0 and countOld > countNew then
