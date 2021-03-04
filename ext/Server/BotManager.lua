@@ -12,6 +12,8 @@ function BotManager:__init()
 	self._activePlayers = {}
 	self._botToBotConnections = {}
 	self._botAttackBotTimer = 0;
+	self._destroyBotsTimer = 0;
+	self._botsToDestroy = {};
 	self._initDone = false;
 
 	Events:Subscribe('UpdateManager:Update', self, self._onUpdate)
@@ -187,6 +189,14 @@ function BotManager:_onUpdate(dt, pass)
 			self:_checkForBotBotAttack()
 		end
 		self._botAttackBotTimer = self._botAttackBotTimer + dt;
+	end
+
+	if #self._botsToDestroy > 0 then
+		if self._destroyBotsTimer >= 0.05 then
+			self._destroyBotsTimer = 0;
+			self:destroyBot(table.remove(self._botsToDestroy))
+		end
+		self._destroyBotsTimer = self._destroyBotsTimer + dt;
 	end
 end
 
@@ -489,7 +499,7 @@ function BotManager:destroyAmount(number)
 		local index = MAX_NUMBER_OF_BOTS + 1 - i
 		local bot = self:getBotByName(BotNames[index])
 		if bot ~= nil then
-			self:destroyBot(bot.name)
+			table.insert(self._botsToDestroy, bot.name)
 			count = count + 1
 		end
 		if count >= number then
@@ -519,7 +529,7 @@ function BotManager:destroyTeam(teamId, amount)
 		local bot = self:getBotByName(BotNames[index])
 		if bot ~= nil then
 			if bot.player.teamId == teamId then
-				self:destroyBot(bot.name)
+				table.insert(self._botsToDestroy, bot.name)
 				if amount ~= nil then
 					amount = amount - 1;
 					if amount <= 0 then
@@ -556,8 +566,7 @@ function BotManager:destroyDisabledBots()
 		local bot = self._bots[index]
 		if bot ~= nil then
 			if bot:isInactive() then
-				print("destroy bot")
-				self:destroyBot(bot.name)
+				table.insert(self._botsToDestroy, bot.name)
 			end
 		end
 	end
@@ -568,7 +577,7 @@ function BotManager:destroyPlayerBots(player)
 		local bot = self:getBotByName(BotNames[i])
 		if bot ~= nil then
 			if bot:getTargetPlayer() == player then
-				self:destroyBot(bot.name)
+				table.insert(self._botsToDestroy, bot.name)
 			end
 		end
 	end
@@ -592,6 +601,7 @@ function BotManager:destroyBot(botName)
 
 	local bot = self:getBotByName(botName)
 	local botId = bot.id
+	bot:resetVars()
 	bot:destroy()
 	self._botInputs[botId] = nil
 	table.remove(self._bots, idx)
@@ -599,8 +609,7 @@ end
 
 function BotManager:destroyAllBots()
 	for _, bot in pairs(self._bots) do
-		bot:resetVars();
-		bot:destroy();
+		table.insert(self._botsToDestroy, bot.name)
 	end
 	self._bots = {}
 	self._botInputs = {}
