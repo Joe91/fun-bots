@@ -75,7 +75,7 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 
 	elseif request.action == 'bot_kick_all' then
 		Globals.spawnMode	= "manual";
-		BotManager:destroyAllBots();
+		BotManager:destroyAllBots(false);
 
 	elseif request.action == 'bot_kick_team' then
 		Globals.spawnMode	= "manual";

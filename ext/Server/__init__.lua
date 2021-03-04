@@ -39,7 +39,7 @@ function FunBotServer:__init()
 end
 
 function FunBotServer:_onExtensionUnload()
-	BotManager:destroyAllBots();
+	BotManager:destroyAllBots(true);
 end
 
 function FunBotServer:_onExtensionLoaded()

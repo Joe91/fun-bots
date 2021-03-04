@@ -607,12 +607,19 @@ function BotManager:destroyBot(botName)
 	table.remove(self._bots, idx)
 end
 
-function BotManager:destroyAllBots()
-	for _, bot in pairs(self._bots) do
-		table.insert(self._botsToDestroy, bot.name)
+function BotManager:destroyAllBots(forced)
+	if forced then
+		for _, bot in pairs(self._bots) do
+			bot:resetVars()
+			bot:destroy()
+		end
+		self._bots = {}
+		self._botInputs = {}
+	else
+		for _, bot in pairs(self._bots) do
+			table.insert(self._botsToDestroy, bot.name)
+		end
 	end
-	self._bots = {}
-	self._botInputs = {}
 end
 
 
