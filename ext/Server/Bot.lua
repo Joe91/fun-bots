@@ -822,6 +822,9 @@ function Bot:_updateMovement()
 							distanceFromTarget			= 0;
 							heightDistance				= 0;
 							pointIncrement				= MathUtils:GetRandomInt(-3,3); -- go 5 points further
+							if g_Globals.isConquest or g_Globals.isRush then
+								self._invertPathDirection	= (MathUtils:GetRandomInt(0,100) < 40);
+							end
 							-- experimental
 							if pointIncrement == 0 then -- we can't have this
 								pointIncrement = -2 --go backwards and try again

@@ -539,9 +539,11 @@ function GameDirector:_onUpdate(delta)
 					if objective.subObjective then
 						if self:_useSubobjective(botTeam, objective.name) then
 							local parentObject = self:getObjectiveObject(parentObjective)
-							for _,botname in pairs(parentObject.bots) do
-								for i=1, #bots do
+							for i=1, #bots do
+								local botPossible = false;
+								for _,botname in pairs(parentObject.bots) do
 									if bots[i].name == botname then
+										botPossible = true;
 										if (bots[i]:getObjective() == objective.name) then
 											objective.assigned[botTeam] = objective.assigned[botTeam] + 1
 										end
@@ -553,6 +555,10 @@ function GameDirector:_onUpdate(delta)
 											objective.assigned[botTeam] = objective.assigned[botTeam] + 1
 										end
 									end
+								end
+								if not botPossible and bots[i]:getObjective() == objective.name then
+									print('Assigning bot to objective: '..bots[i].name..' (team: '..botTeam..') -> '..parentObjective)
+									bots[i]:setObjective(parentObjective)
 								end
 							end
 						else
