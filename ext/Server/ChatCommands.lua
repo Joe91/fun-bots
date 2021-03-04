@@ -8,7 +8,52 @@ local Globals 		= require('Globals');
 
 
 function ChatCommands:__init()
-	--nothing to do here
+	RCON:RegisterCommand('funbots', RemoteCommandFlag.RequiresLogin, function(command, args, loggedIn)
+		return {
+			'OK',
+			'funbots.kickAll',
+			'funbots.killAll',
+			'funbots.spawn <Amount> <Team>'
+		};
+	end);
+	
+	RCON:RegisterCommand('funbots.kickAll', RemoteCommandFlag.RequiresLogin, function(command, args, loggedIn)
+		BotManager:destroyAllBots();
+	end);
+	
+	RCON:RegisterCommand('funbots.killAll', RemoteCommandFlag.RequiresLogin, function(command, args, loggedIn)
+		BotManager:killAll();
+	end);
+	
+	RCON:RegisterCommand('funbots.spawn', RemoteCommandFlag.RequiresLogin, function(command, args, loggedIn)
+		local value	= args[1];
+		local team	= args[2];
+		
+		if value == nil then
+			return {'ERROR', 'Needing Spawn amount.'};
+		end
+		
+		if team == nil then
+			return {'ERROR', 'Needing Team.'};
+		end
+		
+		if tonumber(value) == nil then
+			return {'ERROR', 'Needing Spawn amount.'};
+		end
+
+		local amount	= tonumber(value);
+		local t			= TeamId.Neutral;
+
+		if team == "Team1" then
+			t = TeamId.Team1;
+		elseif team == "Team2" then
+			t = TeamId.Team2;
+		end
+		
+		BotSpawner:spawnWayBots(player, amount, true, nil, nil, t);
+		
+		return {'OK'};
+	end);
 end
 
 function ChatCommands:execute(parts, player)
