@@ -63,6 +63,7 @@ function PathSwitcher:getNewPath(botname, point, objective)
 	for i=1, #possiblePaths do
 		local newPoint = possiblePaths[i]
 		local pathNode = g_NodeCollection:GetFirst(newPoint.PathIndex)
+		local newPathStatus = g_GameDirector:getEnableSateOfPath(pathNode.Data.Objectives)
 
 		-- this path has listed objectives
 		if (pathNode.Data.Objectives ~= nil and objective ~= '') then
@@ -71,7 +72,8 @@ function PathSwitcher:getNewPath(botname, point, objective)
 				if (highestPriority < 2) then highestPriority = 2 end
 				table.insert(paths, {
 					Priority = 2,
-					Point = newPoint
+					Point = newPoint,
+					State = newPathStatus
 				})
 				if (newPoint.ID == point.ID) then
 					currentPriority = 2
@@ -84,7 +86,8 @@ function PathSwitcher:getNewPath(botname, point, objective)
 						if (highestPriority < 1) then highestPriority = 1 end
 						table.insert(paths, {
 							Priority = 1,
-							Point = newPoint
+							Point = newPoint,
+							State = newPathStatus
 						})
 						if (newPoint.ID == point.ID) then
 							currentPriority = 1
@@ -96,7 +99,8 @@ function PathSwitcher:getNewPath(botname, point, objective)
 			--path has no objectives, lowest priority
 			table.insert(paths, {
 				Priority = 0,
-				Point = newPoint
+				Point = newPoint,
+				State = newPathStatus
 			})
 			if (newPoint.ID == point.ID) then
 				currentPriority = 0
@@ -107,7 +111,6 @@ function PathSwitcher:getNewPath(botname, point, objective)
 		if (newPoint.ID ~= point.ID) then
 			local switchAnyways = false;
 			local newBasePath = g_GameDirector:isBasePath(pathNode.Data.Objectives)
-			local newPathStatus = g_GameDirector:getEnableSateOfPath(pathNode.Data.Objectives)
 			local countOld = #currentPathFirst.Data.Objectives;
 			local countNew = #pathNode.Data.Objectives
 
@@ -115,7 +118,7 @@ function PathSwitcher:getNewPath(botname, point, objective)
 				if not newBasePath and newPathStatus == 2 then
 					switchAnyways = true;
 				elseif newBasePath then
-					if countOld == 1 and countNew > 1 and newPathStatus > 0 then
+					if countOld == 1 and countNew > 1 and newPathStatus == 2 then
 						switchAnyways = true;
 					end
 				end
@@ -123,14 +126,15 @@ function PathSwitcher:getNewPath(botname, point, objective)
 			if (newPathStatus > currentPathStatus) then
 				switchAnyways = true;
 			end
-			if newPathStatus == 0 and currentPathStatus == 0 and countOld > countNew then
+			if newPathStatus == 0 and currentPathStatus == 0 and countOld > countNew and not newBasePath then
 				switchAnyways = true;
 			end
 			if switchAnyways then
 				if (highestPriority < 3) then highestPriority = 3 end
 				table.insert(paths, {
 					Priority = 3,
-					Point = newPoint
+					Point = newPoint,
+					State = newPathStatus
 				})
 			end
 		end
@@ -143,7 +147,7 @@ function PathSwitcher:getNewPath(botname, point, objective)
 	-- remove paths below our highest priority
 	local validPaths = {}
 	for i=1, #paths do
-		if (paths[i].Priority >= highestPriority) then
+		if (paths[i].Priority >= highestPriority and paths[i].State >= currentPathStatus) then
 			table.insert(validPaths, paths[i])
 		end
 	end

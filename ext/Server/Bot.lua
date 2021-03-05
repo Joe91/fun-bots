@@ -33,6 +33,7 @@ function Bot:__init(player)
 	self._wayWaitTimer = 0;
 	self._wayWaitYawTimer = 0;
 	self._obstaceSequenceTimer = 0;
+	self._stuckTimer = 0;
 	self._shotTimer = -Config.botFirstShotDelay;
 	self._shootModeTimer = 0;
 	self._reloadTimer = 0;
@@ -320,6 +321,7 @@ function Bot:resetSpawnVars()
 	self._shotTimer				= -Config.botFirstShotDelay;
 	self._updateTimer			= 0;
 	self._aimUpdateTimer		= 0; --timer sync
+	self._stuckTimer			= 0;
 	self._targetPoint			= nil;
 	self._nextTargetPoint		= nil;
 	self._meleeActive 			= false;
@@ -697,6 +699,7 @@ function Bot:_updateMovement()
 				local point				= nil;
 				local nextPoint			= nil;
 				local pointIncrement	= 1;
+				local noStuckReset		= false;
 				local useShootWayPoint	= false;
 
 				if #self._shootWayPoints > 0 then	--we need to go back to path first
@@ -816,12 +819,14 @@ function Bot:_updateMovement()
 						end
 
 						self._obstaceSequenceTimer = self._obstaceSequenceTimer + StaticConfig.botUpdateCycle;
+						self._stuckTimer = self._stuckTimer + StaticConfig.botUpdateCycle; 
 
 						if self._obstacleRetryCounter >= 2 then --try next waypoint
 							self._obstacleRetryCounter	= 0;
 							self._meleeActive 			= false;
 							distanceFromTarget			= 0;
 							heightDistance				= 0;
+							noStuckReset				= true;
 							pointIncrement				= MathUtils:GetRandomInt(-3,7); -- go 5 points further
 							if g_Globals.isConquest or g_Globals.isRush then
 								self._invertPathDirection	= (MathUtils:GetRandomInt(0,100) < 40);
@@ -830,6 +835,12 @@ function Bot:_updateMovement()
 							if pointIncrement == 0 then -- we can't have this
 								pointIncrement = 2 --go backwards and try again
 							end
+						end
+
+						if self._stuckTimer > 10 then
+							self.player.soldier:Kill()
+							print(self.player.name.." got stuck. Kill")
+							return
 						end
 					else
 						self._meleeActive = false;
@@ -878,6 +889,9 @@ function Bot:_updateMovement()
 
 					--check for reached target
 					if distanceFromTarget <= targetDistanceSpeed and heightDistance <= StaticConfig.targetHeightDistanceWayPoint then
+						if not noStuckReset then
+							self._stuckTimer = 0;
+						end
 						if not useShootWayPoint then
 							-- CHECK FOR ACTION
 							if point.Data.Action ~= nil then
