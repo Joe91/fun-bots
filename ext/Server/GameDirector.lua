@@ -90,7 +90,6 @@ function GameDirector:initObjectives()
 		end
 		table.insert(self.AllObjectives, objective)
 	end
-	print('self.AllObjectives -> '..g_Utilities:dump(self.AllObjectives, true))
 	self:_updateValidObjectives()
 end
 
@@ -214,13 +213,9 @@ function GameDirector:_updateValidObjectives()
 			end
 			objective.active = active;
 			objective.subObjective = subObjective;
-			print(objective.name.."  "..tostring(active))
 		end
 	else
 		self.OnlyOneMcom = true;
-		for _,objective in pairs(self.AllObjectives) do
-			print(objective.name.."  "..tostring(objective.active))
-		end
 	end
 end
 
@@ -590,7 +585,6 @@ function GameDirector:_onUpdate(delta)
 				-- remove bots from this objective
 				for _,bot in pairs(botList) do
 					if bot:getObjective() == objective.name then
-						print("clear objective")
 						bot:setObjective();	-- clear objective
 					end
 				end

@@ -1,9 +1,11 @@
 class('PathSwitcher');
 require('__shared/NodeCollection')
 require('GameDirector')
+require('Globals')
 
 function PathSwitcher:__init()
 	self.dummyData = 0;
+	self.killYourselfCounter = {}
 end
 
 function PathSwitcher:getNewPath(botname, point, objective)
@@ -18,6 +20,26 @@ function PathSwitcher:getNewPath(botname, point, objective)
 
 	if point.Data == nil or point.Data.Links == nil or #point.Data.Links < 1 then
 		return false
+	end
+
+	if g_Globals.isRush then
+		if self.killYourselfCounter[botname] == nil then
+			self.killYourselfCounter[botname] = 0
+		end
+		if currentPathStatus == 0 then
+			self.killYourselfCounter[botname] = self.killYourselfCounter[botname] + 1;
+		else
+			self.killYourselfCounter[botname] = 0
+		end
+		if self.killYourselfCounter[botname] > 20 then
+			local bot = PlayerManager:GetPlayerByName(botname)
+			if bot ~= nil and bot.soldier ~= nil then
+				bot.soldier:Kill()
+				self.killYourselfCounter[botname] = 0
+				print("kill "..botname.." because of inactivity on wrong paths")
+				return false
+			end
+		end
 	end
 
 	-- TODO get all paths via links, assign priority, sort by priority
@@ -97,7 +119,8 @@ function PathSwitcher:getNewPath(botname, point, objective)
 						switchAnyways = true;
 					end
 				end
-			elseif (newPathStatus > currentPathStatus) then -- not on base path
+			end
+			if (newPathStatus > currentPathStatus) then
 				switchAnyways = true;
 			end
 			if newPathStatus == 0 and currentPathStatus == 0 and countOld > countNew then

@@ -822,13 +822,13 @@ function Bot:_updateMovement()
 							self._meleeActive 			= false;
 							distanceFromTarget			= 0;
 							heightDistance				= 0;
-							pointIncrement				= MathUtils:GetRandomInt(-3,3); -- go 5 points further
+							pointIncrement				= MathUtils:GetRandomInt(-3,7); -- go 5 points further
 							if g_Globals.isConquest or g_Globals.isRush then
 								self._invertPathDirection	= (MathUtils:GetRandomInt(0,100) < 40);
 							end
 							-- experimental
 							if pointIncrement == 0 then -- we can't have this
-								pointIncrement = -2 --go backwards and try again
+								pointIncrement = 2 --go backwards and try again
 							end
 						end
 					else
@@ -906,6 +906,9 @@ function Bot:_updateMovement()
 							end
 							-- CHECK FOR PATH-SWITCHES
 							local switchPath, newWaypoint = g_PathSwitcher:getNewPath(self.name, point, self._objective);
+							if not self.player.alive then
+								return
+							end
 
 							if switchPath and not self._onSwitch then
 								if (self._objective ~= '') then
