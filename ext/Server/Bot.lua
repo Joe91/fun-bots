@@ -21,8 +21,8 @@ function Bot:__init(player)
 	self.activeWeapon = nil;
 	self.primary = nil;
 	self.pistol = nil;
+	self.sidearm = nil;
 	self.knife = nil;
-	self.inEnemyTeam = false;
 	self._checkSwapTeam = false;
 	self._respawning = false;
 
@@ -67,6 +67,7 @@ function Bot:__init(player)
 	--shooting
 	self._shoot = false;
 	self._shootPlayer = nil;
+	self._weaponToUse = "Primary";
 	self._shootWayPoints = {};
 	self._knifeWayPositions = {};
 	self._lastTargetTrans = Vec3();
@@ -192,6 +193,7 @@ function Bot:resetVars()
 	self._objective 			= '';
 	self._meleeActive 			= false;
 	self._actionActive 			= false;
+	self._weaponToUse 			= "Primary";
 
 	self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 0);
 	self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
@@ -329,6 +331,7 @@ function Bot:resetSpawnVars()
 	self._zombieSpeedValue 		= 0;
 	self._onSwitch 				= false;
 	self._actionActive 			= false;
+	self._weaponToUse 			= "Primary";
 
 	self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 0);
 	self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
@@ -484,6 +487,7 @@ function Bot:_updateShooting()
 				if self.knifeMode then
 					if self.player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_7 then
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 1);
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon5, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
@@ -491,9 +495,10 @@ function Bot:_updateShooting()
 					else
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 0);
 					end
-				elseif Config.botWeapon == "Pistol" then
+				elseif (self._weaponToUse == "Pistol" and Config.botWeapon == "Auto") or Config.botWeapon == "Pistol" then
 					if self.player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_1 then
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 0);
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon5, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 1);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
@@ -501,9 +506,21 @@ function Bot:_updateShooting()
 					else
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
 					end
-				else -- "Primary" then
+				elseif (self._weaponToUse == "Sidearm" and Config.botWeapon == "Auto") or Config.botWeapon == "Sidearm" then
+					if self.player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_5 then
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 0);
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon5, 1);
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
+						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
+						self.activeWeapon = self.sidearm;
+					else
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon5, 0);
+					end
+				elseif (self._weaponToUse == "Primary" and Config.botWeapon == "Auto") or Config.botWeapon == "Primary" then
 					if self.player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_0 then
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 0);
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon5, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 1);
 						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
@@ -545,6 +562,20 @@ function Bot:_updateShooting()
 							self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 0);
 							self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0);
 						end
+					end
+				end
+
+				if self._shootPlayer.attachedControllable then
+					if self.sidearm ~= nil then
+						if self.sidearm.type == "Rocket" then
+							self._weaponToUse = "Sidearm"
+						end
+					end
+				else
+					if self.player.soldier.weaponsComponent.weapons[1].primaryAmmo == 0 then
+						self._weaponToUse = "Pistol"
+					else
+						self._weaponToUse = "Primary"
 					end
 				end
 
@@ -597,6 +628,7 @@ function Bot:_updateShooting()
 
 			else
 				self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
+				self._weaponToUse 		= "Primary"
 				self._shotTimer			= -Config.botFirstShotDelay;
 				self._shootPlayer		= nil;
 				self._lastShootPlayer	= nil;
@@ -606,6 +638,7 @@ function Bot:_updateShooting()
 			self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
 			self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 0);
 			self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0);
+			self._weaponToUse 		= "Primary"
 			self._shootPlayer		= nil;
 			self._lastShootPlayer	= nil;
 			self._shootModeTimer	= 0;

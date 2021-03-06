@@ -6,5 +6,6 @@ WeaponTypes = {
 	"LMG",
 	"Carabine",
 	"PDW",
-	"Sniper"
+	"Sniper",
+	"Rocket"
 }
