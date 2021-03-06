@@ -5,7 +5,7 @@ USE_REAL_DAMAGE 	= true;			-- with real damage, the hitboxes are a bit buggy
 
 Config = {
 	--global
-	botWeapon = "Primary",			-- Select the weapon the bots use
+	botWeapon = "Auto",			-- Select the weapon the bots use
 	botKit = "RANDOM_KIT",			-- see BotKits
 	botColor = "RANDOM_COLOR",		-- see BotColors
 	zombieMode = false,				-- Zombie Bot Mode

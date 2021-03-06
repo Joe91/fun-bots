@@ -619,14 +619,19 @@ function BotSpawner:_setAttachments(unlockWeapon, attachments)
 	end
 end
 
-function BotSpawner:getKitApperanceCustomization(team, kit, color, primary, pistol, knife)
+function BotSpawner:getKitApperanceCustomization(team, kit, color, primary, pistol, knife, sidearm)
 	-- Create the loadouts
 	local soldierKit = nil
 	local appearance = nil
+	local sideArmWeapon = nil
 	local soldierCustomization = CustomizeSoldierData()
 
 	local pistolWeapon = ResourceManager:SearchForDataContainer(pistol:getResourcePath())
 	local knifeWeapon = ResourceManager:SearchForDataContainer(knife:getResourcePath())
+	if sidearm ~= nil then
+		print(sidearm:getResourcePath())
+		sideArmWeapon = ResourceManager:SearchForDataContainer(sidearm:getResourcePath())
+	end
 	local grenadeWeapon = ResourceManager:SearchForDataContainer('Weapons/M67/U_M67')
 
 	soldierCustomization.activeSlot = WeaponSlot.WeaponSlot_0
@@ -673,6 +678,12 @@ function BotSpawner:getKitApperanceCustomization(team, kit, color, primary, pist
 	else	--"Recon"
 		gadget01.weapon = SoldierWeaponUnlockAsset(ResourceManager:SearchForDataContainer('Weapons/Gadgets/T-UGS/U_UGS'))
 		gadget02.weapon = SoldierWeaponUnlockAsset(ResourceManager:SearchForDataContainer('Weapons/Gadgets/RadioBeacon/U_RadioBeacon'))
+	end
+
+	-- overwrite sidearm if available
+	if sideArmWeapon ~= nil then
+		print("overwrite sidearm")
+		gadget02.weapon = SoldierWeaponUnlockAsset(sideArmWeapon)
 	end
 
 	if Config.zombieMode then
@@ -805,7 +816,10 @@ function BotSpawner:setBotWeapons(bot, botKit, newWeapons)
 			if Config.useRandomWeapon then
 				weapon = WeaponsEngineer[MathUtils:GetRandomInt(1, #WeaponsEngineer)]
 			end
+			local sidearmWeapon = SidearmsEngineer[MathUtils:GetRandomInt(1, #SidearmsEngineer)]
+			print(sidearmWeapon)
 			bot.primary = WeaponList:getWeapon(weapon)
+			bot.sidearm = WeaponList:getWeapon(sidearmWeapon)
 		elseif botKit == "Support" then
 			local weapon = Config.supportWeapon;
 			if Config.useRandomWeapon then
@@ -829,10 +843,12 @@ function BotSpawner:setBotWeapons(bot, botKit, newWeapons)
 		bot.knife = WeaponList:getWeapon(knife)
 	end
 
-	if Config.botWeapon == "Primary" then
+	if Config.botWeapon == "Primary" or Config.botWeapon == "Auto" then
 		bot.activeWeapon = bot.primary;
 	elseif Config.botWeapon == "Pistol" then
 		bot.activeWeapon = bot.pistol;
+	elseif Config.botWeapon == "Sidearm" then
+		bot.activeWeapon = bot.sidearm;
 	else
 		bot.activeWeapon = bot.knife;
 	end
@@ -869,7 +885,7 @@ function BotSpawner:spawnBot(bot, trans, setKit)
 	local soldierCustomization = nil
 	local soldierKit = nil
 	local appearance = nil
-	soldierKit, appearance, soldierCustomization = self:getKitApperanceCustomization(bot.player.teamId, botKit, botColor, bot.primary, bot.pistol, bot.knife)
+	soldierKit, appearance, soldierCustomization = self:getKitApperanceCustomization(bot.player.teamId, botKit, botColor, bot.primary, bot.pistol, bot.knife, bot.sidearm)
 
 	-- Create the transform of where to spawn the bot at.
 	local transform = LinearTransform()
