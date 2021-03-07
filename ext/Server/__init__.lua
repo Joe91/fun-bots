@@ -22,6 +22,7 @@ local BotManager			= require('BotManager');
 local BotSpawner			= require('BotSpawner');
 local WeaponList			= require('__shared/WeaponList');
 local ChatCommands			= require('ChatCommands');
+local RCONCommands			= require('RCONCommands');
 local FunBotUIServer		= require('UIServer');
 local Globals 				= require('Globals');
 
