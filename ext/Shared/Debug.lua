@@ -13,7 +13,8 @@ Debug = {
 		SETTINGS		= false,		-- Debug the Settings-Migrator
 		TRACE			= false,		-- Debug the TraceManager
 		UI				= false,		-- Debug all UI thinks
-		MODIFICATIONS	= false			-- Debug some Modifications
+		MODIFICATIONS	= false,		-- Debug some Modifications
+		RCON			= false			-- Debug some RCON Commands
 	},
 	Client = {
 		INFO			= false,		-- Global Informations
