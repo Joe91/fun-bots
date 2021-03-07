@@ -575,7 +575,11 @@ function Bot:_updateShooting()
 						end
 					end
 				else
-					if self.player.soldier.weaponsComponent.weapons[1].primaryAmmo == 0 then
+					if Config.botWeapon == "Knife" or Config.zombieMode then
+						self._weaponToUse = "Knife"
+					elseif self.player.soldier.weaponsComponent.weapons[1] == nil then
+						self._weaponToUse = "Primary"
+					elseif self.player.soldier.weaponsComponent.weapons[1].primaryAmmo == 0 then
 						self._weaponToUse = "Pistol"
 					else
 						self._weaponToUse = "Primary"
