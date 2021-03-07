@@ -133,7 +133,10 @@ function Database:update(tableName, parameters, where)
 		fields:add(' `' .. name .. '`=' .. value .. '');
 	end
 
-	print('UPDATE `' .. tableName .. '` SET ' .. fields:join(',') .. ' WHERE `' .. where .. '`=' .. found);
+	if Debug.Server.DATABASE then
+		print('UPDATE `' .. tableName .. '` SET ' .. fields:join(',') .. ' WHERE `' .. where .. '`=' .. found);
+	end
+	
 	return self:query('UPDATE `' .. tableName .. '` SET ' .. fields:join(', ') .. ' WHERE `' .. where .. '`=\'' .. found .. '\'');
 end
 

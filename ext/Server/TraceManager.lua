@@ -33,7 +33,9 @@ function TraceManager:loadPaths()
 
 	self:_loadWayPoints();
 
-	print(g_Globals.activeTraceIndexes .. ' paths have been loaded');
+	if Debug.Server.TRACE then
+		print(g_Globals.activeTraceIndexes .. ' paths have been loaded');
+	end
 end
 
 function TraceManager:onUnload()
@@ -109,7 +111,11 @@ function TraceManager:startTrace(player, index)
 	self._tracePlayer[index]			= player;
 	self._traceStatePlayer[player.name]	= 1; --trace started
 	self:_generateAndInsertPoint(player, index); --create first point, to block this trace
-	print('Trace ' .. index .. ' started');
+	
+	if Debug.Server.TRACE then
+		print('Trace ' .. index .. ' started');
+	end
+	
 	NetEvents:SendToLocal('UI_Trace', player, 'true');
 	NetEvents:SendToLocal('UI_Trace_Index', player, index);
 	ChatManager:Yell(Language:I18N('Trace %d started', index), 2.5);
@@ -154,7 +160,10 @@ function TraceManager:_onClientEndTraceResponse(player, isClearView)
 		g_Globals.wayPoints[traceIndex][1].optValue = 0XFF;  --signal, that the way needs to reverse its directon
 	end
 
-	print('Trace done');
+	if Debug.Server.TRACE then
+		print('Trace done');
+	end
+	
 	NetEvents:SendToLocal('UI_Trace', player, 'false');
 	NetEvents:SendToLocal('UI_Trace_Waypoints', player, 0);
 	ChatManager:Yell(Language:I18N('Trace %d done with %d Waypoints.', traceIndex, #g_Globals.wayPoints[traceIndex]), 2.5);
@@ -170,7 +179,10 @@ function TraceManager:clearTrace(index)
 		return;
 	end
 
-	print('clear trace');
+	if Debug.Server.TRACE then
+		print('clear trace');
+	end
+	
 	ChatManager:Yell(Language:I18N('Clearing Trace %d', index), 2.5);
 	self:_clearTrace(index);
 end
@@ -180,7 +192,10 @@ function TraceManager:clearAllTraces()
 		return;
 	end
 
-	print('Clearing all traces');
+	if Debug.Server.TRACE then
+		print('Clearing all traces');
+	end
+	
 	ChatManager:Yell(Language:I18N("Clearing all traces"), 2.5);
 
 	for i = 1, MAX_TRACE_NUMBERS do
@@ -195,7 +210,10 @@ function TraceManager:savePaths()
 		return;
 	end
 
-	print('Trying to Save paths');
+	if Debug.Server.TRACE then
+		print('Trying to Save paths');
+	end
+	
 	ChatManager:Yell(Language:I18N('Trying to save paths check console...'), 2.5);
 	self:_saveWayPoints();
 	--local co = coroutine.create(function ()
@@ -312,7 +330,9 @@ function TraceManager:_loadWayPoints()
 	]]
 
 	if not SQL:Query(query) then
-		print('Failed to execute query: ' .. SQL:Error());
+		if Debug.Server.DATABASE then
+			print('Failed to execute query: ' .. SQL:Error());
+		end
 		return;
 	end
 
@@ -320,7 +340,9 @@ function TraceManager:_loadWayPoints()
 	local results = SQL:Query('SELECT * FROM ' .. self._mapName .. '_table');
 
 	if not results then
-		print('Failed to execute query: ' .. SQL:Error());
+		if Debug.Server.DATABASE then
+			print('Failed to execute query: ' .. SQL:Error());
+		end
 		return;
 	end
 
@@ -357,19 +379,25 @@ function TraceManager:_loadWayPoints()
 
 	g_Globals.activeTraceIndexes = nrOfPaths;
 	SQL:Close();
-	print('LOAD - The waypoint list has been loaded.');
+	if Debug.Server.TRACE then
+		print('LOAD - The waypoint list has been loaded.');
+	end
 end
 
 function TraceManager:_saveWayPoints()
 	if not SQL:Open() then
-		print('failed to save');
+		if Debug.Server.DATABASE then
+			print('failed to save');
+		end
 		return;
 	end
 
 	local query = [[DROP TABLE IF EXISTS ]] .. self._mapName .. [[_table]]
 
 	if not SQL:Query(query) then
-		print('Failed to execute query: ' .. SQL:Error());
+		if Debug.Server.DATABASE then
+			print('Failed to execute query: ' .. SQL:Error());
+		end
 		return
 	end
 
@@ -387,7 +415,9 @@ function TraceManager:_saveWayPoints()
 	]]
 
 	if not SQL:Query(query) then
-		print('Failed to execute query: ' .. SQL:Error());
+		if Debug.Server.DATABASE then
+			print('Failed to execute query: ' .. SQL:Error());
+		end
 		return;
 	end
 
@@ -400,7 +430,9 @@ function TraceManager:_saveWayPoints()
 		local errorActive			= false;
 
 		if (g_Globals.wayPoints[oldPathIndex] == nil) then
-			print('WARNING! Path ['..oldPathIndex..'] is nil!')
+			if Debug.Server.TRACE then
+				print('WARNING! Path ['..oldPathIndex..'] is nil!')
+			end
 		else
 
 			if g_Globals.wayPoints[oldPathIndex][1] ~= nil then
@@ -420,7 +452,9 @@ function TraceManager:_saveWayPoints()
 						local waypoint = g_Globals.wayPoints[oldPathIndex][pointIndex]
 
 						if (waypoint == nil) then
-							print('WARNING! Node ['..oldPathIndex..']['..pointIndex..'] is nil!')
+							if Debug.Server.TRACE then
+								print('WARNING! Node ['..oldPathIndex..']['..pointIndex..'] is nil!')
+							end
 						else
 
 							local trans			= waypoint.trans;
@@ -429,7 +463,9 @@ function TraceManager:_saveWayPoints()
 							if (waypoint.data ~= nil and type(waypoint.data) == 'table') then
 								local _data, encodeError = json.encode(waypoint.data)
 								if (_data == nil) then
-									print('WARNING! Node ['..oldPathIndex..']['..pointIndex..'] data could not encode: '..tostring(encodeError))
+									if Debug.Server.TRACE then
+										print('WARNING! Node ['..oldPathIndex..']['..pointIndex..'] data could not encode: '..tostring(encodeError))
+									end
 								end
 								if (_data ~= '{}') then
 									data = SQL:Escape(table.concat(_data:split('"'), '""'))
@@ -445,7 +481,9 @@ function TraceManager:_saveWayPoints()
 					end
 
 					if not SQL:Query(query..sqlValuesString) then
-						print('Failed to execute query: ' .. SQL:Error());
+						if Debug.Server.DATABASE then
+							print('Failed to execute query: ' .. SQL:Error());
+						end
 						return;
 					end
 
@@ -459,13 +497,20 @@ function TraceManager:_saveWayPoints()
 	local results = SQL:Query('SELECT * FROM ' .. self._mapName .. '_table');
 
 	if not results then
-		print('Failed to execute query: ' .. SQL:Error());
+		if Debug.Server.DATABASE then
+			print('Failed to execute query: ' .. SQL:Error());
+		end
+		
 		ChatManager:Yell(Language:I18N('Failed to execute query: %s', SQL:Error()), 5.5);
 		return;
 	end
 
 	SQL:Close();
-	print('SAVE - The waypoint list has been saved.');
+	
+	if Debug.Server.TRACE then
+		print('SAVE - The waypoint list has been saved.');
+	end
+	
 	ChatManager:Yell(Language:I18N('The waypoint list has been saved'), 5.5);
 end
 

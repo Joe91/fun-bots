@@ -176,8 +176,10 @@ function ChatCommands:execute(parts, player)
 	elseif parts[1] == '!setaim' then
 		Config.botAimWorsening = tonumber(parts[2]) or 0.5;
 		--self:_modifyWeapons(Config.botAimWorsening) --causes lag. Instead restart round
-		print('difficulty set to ' .. Config.botAimWorsening .. '. Please restart round or level to take effect');
-
+		if Debug.Server.COMMAND then
+			print('difficulty set to ' .. Config.botAimWorsening .. '. Please restart round or level to take effect');
+		end
+		
 	elseif parts[1] == '!shootback' then
 		if tonumber(parts[2]) == 0 then
 			Config.shootBackIfHit = false;

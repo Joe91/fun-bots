@@ -31,10 +31,15 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 		return;
 	end
 	
-	print('UIServer: BotEditor (' .. tostring(data) .. ')');
-
+	if Debug.Server.UI then
+		print('UIServer: BotEditor (' .. tostring(data) .. ')');
+	end
+	
 	if (Config.settingsPassword ~= nil and self:_isAuthenticated(player.accountGuid) ~= true) then
-			print(player.name .. ' has no permissions for Bot-Editor.');
+			if Debug.Server.UI then
+				print(player.name .. ' has no permissions for Bot-Editor.');
+			end
+			
 			ChatManager:Yell(Language:I18N('You are not permitted to change Bots. Please press F12 for authenticate!'), 2.5);
 		return;
 	end
@@ -167,10 +172,15 @@ function FunBotUIServer:_onUIRequestSaveSettings(player, data)
 		return;
 	end
 	
-	print(player.name .. ' requesting to save settings.');
-
+	if Debug.Server.UI then
+		print(player.name .. ' requesting to save settings.');
+	end
+	
 	if (Config.settingsPassword ~= nil and self:_isAuthenticated(player.accountGuid) ~= true) then
-		print(player.name .. ' has no permissions for Bot-Editor.');
+		if Debug.Server.UI then
+			print(player.name .. ' has no permissions for Bot-Editor.');
+		end
+		
 		ChatManager:Yell(Language:I18N('You are not permitted to change Bots. Please press F12 for authenticate!'), 2.5);
 		return;
 	end
@@ -186,11 +196,17 @@ function FunBotUIServer:_onUIRequestCommonRoseShow(player, data)
 	end
 	
 	if (Config.settingsPassword ~= nil and self:_isAuthenticated(player.accountGuid) ~= true) then
-		print(player.name .. ' has no permissions for Waypoint-Editor.');
+		if Debug.Server.UI then
+			print(player.name .. ' has no permissions for Waypoint-Editor.');
+		end
+		
 		return;
 	end
 	
-	print(player.name .. ' requesting show CommonRose.');
+	if Debug.Server.UI then
+		print(player.name .. ' requesting show CommonRose.');
+	end
+	
 	NetEvents:SendTo('UI_CommonRose', player, {
 		Top = {
 			Action	= 'cr_save',
@@ -240,11 +256,17 @@ function FunBotUIServer:_onUIRequestCommonRoseHide(player, data)
 	end
 	
 	if (Config.settingsPassword ~= nil and self:_isAuthenticated(player.accountGuid) ~= true) then
-		print(player.name .. ' has no permissions for Waypoint-Editor.');
+		if Debug.Server.UI then
+			print(player.name .. ' has no permissions for Waypoint-Editor.');
+		end
+		
 		return;
 	end
 	
-	print(player.name .. ' requesting hide CommonRose.');
+	if Debug.Server.UI then
+		print(player.name .. ' requesting hide CommonRose.');
+	end
+	
 	NetEvents:SendTo('UI_CommonRose', player, 'false');
 end
 
@@ -253,41 +275,59 @@ function FunBotUIServer:_onUIRequestOpen(player, data)
 		return;
 	end
 	
-	print(player.name .. ' requesting open Bot-Editor.');
-
+	if Debug.Server.UI then
+		print(player.name .. ' requesting open Bot-Editor.');
+	end
+	
 	if (Config.settingsPassword == nil or self:_isAuthenticated(player.accountGuid)) then
 		if (Config.settingsPassword == nil) then
 			ChatManager:Yell(Language:I18N('The Bot-Editor is not protected by an password!'), 2.5);
 			NetEvents:SendTo('UI_Password_Protection', player, 'true');
 		end
 
-		print('Open Bot-Editor for ' .. player.name .. '.');
+		if Debug.Server.UI then
+			print('Open Bot-Editor for ' .. player.name .. '.');
+		end
+		
 		NetEvents:SendTo('UI_Toggle', player);
 		NetEvents:SendTo('UI_Show_Toolbar', player, 'true');
 	else
 		if (data == nil) then
-			print('Ask ' .. player.name .. ' for Bot-Editor password.');
+			if Debug.Server.UI then
+				print('Ask ' .. player.name .. ' for Bot-Editor password.');
+			end
+			
 			ChatManager:Yell(Language:I18N('Please authenticate with password!'), 2.5);
 			NetEvents:SendTo('UI_Request_Password', player, 'true');
 		else
 			local form = json.decode(data);
 
 			if (form.password ~= nil or form.password ~= '') then
-				print(player.name .. ' has entered following Password: ' .. form.password);
-
+				if Debug.Server.UI then
+					print(player.name .. ' has entered following Password: ' .. form.password);
+				end
+				
 				if (form.password == Config.settingsPassword) then
 					self._authenticated:add(tostring(player.accountGuid));
-					print('accountGuid: ' .. tostring(player.accountGuid));
+					if Debug.Server.UI then
+						print('accountGuid: ' .. tostring(player.accountGuid));
+					end
 					ChatManager:Yell(Language:I18N('Successfully authenticated.'), 2.5);
 					NetEvents:SendTo('UI_Request_Password', player, 'false');
 					NetEvents:SendTo('UI_Show_Toolbar', player, 'true');
 				else
-					print(player.name .. ' has entered a bad password.');
+					if Debug.Server.UI then
+						print(player.name .. ' has entered a bad password.');
+					end
+					
 					NetEvents:SendTo('UI_Request_Password_Error', player, Language:I18N('The password you entered is not correct!'));
 					ChatManager:Yell('Bad password.', 2.5);
 				end
 			else
-				print(player.name .. ' has entered an empty password.');
+				if Debug.Server.UI then
+					print(player.name .. ' has entered an empty password.');
+				end
+				
 				NetEvents:SendTo('UI_Request_Password_Error', player, Language:I18N('The password you entered is not correct!'));
 				ChatManager:Yell('Please enter a password!', 2.5);
 			end
@@ -482,7 +522,10 @@ function FunBotUIServer:_writeSettings(player, request)
 
 	--UI
 	if request.language ~= nil then	
-		print('Lang changed to: ' .. request.language);
+		if Debug.Server.UI then
+			print('Lang changed to: ' .. request.language);
+		end
+		
 		NetEvents:SendTo('UI_Change_Language', player, request.language);
 		SettingsManager:update('language', request.language, temporary, batched);
 		Language:loadLanguage(request.language);

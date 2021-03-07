@@ -48,7 +48,9 @@ function FunBotUIClient:_onUIToggle()
 		return;
 	end
 	
-	print('UIClient: UI_Toggle');
+	if Debug.Client.UI then
+		print('UIClient: UI_Toggle');
+	end
 
 	self._views:execute('BotEditor.Hide();');
 	self._views:disable();
@@ -81,7 +83,10 @@ function FunBotUIClient:_onUIWaypointsEditor(state)
 	end
 	
 	if state == false then
-		print('UIClient: close UI_Waypoints_Editor');
+		if Debug.Client.UI then
+			print('UIClient: close UI_Waypoints_Editor');
+		end
+		
 		self._views:hide('waypoint_toolbar');
 		self._views:show('toolbar');
 		Config.debugTracePaths = false;
@@ -89,7 +94,10 @@ function FunBotUIClient:_onUIWaypointsEditor(state)
 		return;
 	end
 	
-	print('UIClient: open UI_Waypoints_Editor');
+	if Debug.Client.UI then
+		print('UIClient: open UI_Waypoints_Editor');
+	end
+	
 	Config.debugTracePaths = true;
 	NetEvents:Send('UI_CommoRose_Enabled', true);
 	g_ClientNodeEditor:_onSetEnabled(true);
@@ -137,14 +145,19 @@ function FunBotUIClient:_onUISettings(data)
 	end
 	
 	if data == false then
-		print('UIClient: close UI_Settings');
+		if Debug.Client.UI then
+			print('UIClient: close UI_Settings');
+		end
+		
 		self._views:hide('settings');
 		--self._views:blur();
 		return;
 	end
 
-	print('UIClient: UI_Settings (' .. json.encode(data) .. ')');
-
+	if Debug.Client.UI then
+		print('UIClient: UI_Settings (' .. json.encode(data) .. ')');
+	end
+	
 	local settings = UISettings();
 
 	-- Samples
@@ -257,7 +270,10 @@ function FunBotUIClient:_onUISaveSettings(data)
 		return;
 	end
 	
-	print('UIClient: UI_Save_Settings (' .. data .. ')');
+	if Debug.Client.UI then
+		print('UIClient: UI_Save_Settings (' .. data .. ')');
+	end
+	
 	NetEvents:Send('UI_Request_Save_Settings', data);
 end
 
@@ -266,8 +282,10 @@ function FunBotUIClient:_onBotEditorEvent(data)
 		return;
 	end
 	
-	print('UIClient: BotEditor (' .. data .. ')');
-
+	if Debug.Client.UI then
+		print('UIClient: BotEditor (' .. data .. ')');
+	end
+	
 	-- Redirect to Server
 	NetEvents:Send('BotEditor', data);
 end
@@ -277,7 +295,9 @@ function FunBotUIClient:_onUIShowToolbar(data)
 		return;
 	end
 	
-	print('UIClient: UI_Show_Toolbar (' .. tostring(data) .. ')');
+	if Debug.Client.UI then
+		print('UIClient: UI_Show_Toolbar (' .. tostring(data) .. ')');
+	end
 
 	if (data == 'true') then
 		self._views:show('toolbar');
@@ -293,8 +313,10 @@ function FunBotUIClient:_onUIPasswordProtection(data)
 		return;
 	end
 	
-	print('UIClient: UI_Password_Protection (' .. tostring(data) .. ')');
-
+	if Debug.Client.UI then
+		print('UIClient: UI_Password_Protection (' .. tostring(data) .. ')');
+	end
+	
 	if (data == 'true') then
 		self._views:show('password_protection');
 		self._views:focus();
@@ -309,7 +331,10 @@ function FunBotUIClient:_onUIRequestPasswordError(data)
 		return;
 	end
 	
-	print('UIClient: UI_Request_Password_Error');
+	if Debug.Client.UI then
+		print('UIClient: UI_Request_Password_Error');
+	end
+	
 	self._views:error('password', data);
 end
 
@@ -318,8 +343,10 @@ function FunBotUIClient:_onUIRequestPassword(data)
 		return;
 	end
 	
-	print('UIClient: UI_Request_Password (' .. tostring(data) .. ')');
-
+	if Debug.Client.UI then
+		print('UIClient: UI_Request_Password (' .. tostring(data) .. ')');
+	end
+	
 	if (data == 'true') then
 		self._views:show('password');
 		self._views:focus();
@@ -334,7 +361,10 @@ function FunBotUIClient:_onUISendPassword(data)
 		return;
 	end
 	
-	print('UIClient: UI_Send_Password (' .. data .. ')');
+	if Debug.Client.UI then
+		print('UIClient: UI_Send_Password (' .. data .. ')');
+	end
+	
 	NetEvents:Send('UI_Request_Open', data);
 end
 
@@ -344,8 +374,10 @@ function FunBotUIClient:_onUpdateInput(data)
 	end
 		
 	if InputManager:WentKeyDown(InputDeviceKeys.IDK_F12) then
-		print('Client send: UI_Request_Open');
-
+		if Debug.Client.UI then
+			print('Client send: UI_Request_Open');
+		end
+				
 		-- This request can use for UI-Toggle
 		NetEvents:Send('UI_Request_Open');
 	end

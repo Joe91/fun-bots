@@ -72,7 +72,10 @@ function BotManager:configGlobas()
 	maxPlayers = tonumber(maxPlayers[2]);
 	if maxPlayers ~= nil and maxPlayers > 0 then
 		Globals.maxPlayers = maxPlayers;
-		print("there are "..maxPlayers.." slots on this server")
+		
+		if Debug.Server.BOT then
+			print("there are "..maxPlayers.." slots on this server")
+		end
 	else
 		Globals.maxPlayers = MAX_NUMBER_OF_BOTS; --only fallback
 	end
@@ -395,7 +398,10 @@ end
 
 
 function BotManager:_onLevelDestroy()
-	print("destroyLevel")
+	if Debug.Server.INFO then
+		print("destroyLevel")
+	end
+	
 	self:resetAllBots();
 	self._activePlayers = {};
 	self._initDone = false;
@@ -428,14 +434,18 @@ function BotManager:createBot(name, team, squad)
 		playerlimt = playerlimt - 1;
 	end
 	if playerlimt <=  PlayerManager:GetPlayerCount() then
-		print("playerlimit reached")
+		if Debug.Server.BOT then
+			print("playerlimit reached")
+		end
 		return
 	end
 
 	-- Create a player for this bot.
 	local botPlayer = PlayerManager:CreatePlayer(name, team, squad)
 	if botPlayer == nil then
-		print("cant create more players on this team")
+		if Debug.Server.BOT then
+			print("cant create more players on this team")
+		end
 		return
 	end
 

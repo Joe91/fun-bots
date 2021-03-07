@@ -13,14 +13,23 @@ end
 
 function Language:loadLanguage(name)
 	if name == nil then
-		print('Language:loadLanguage parameter is nil.');
+		if Debug.Shared.LANGUAGE then
+			print('Language:loadLanguage parameter is nil.');
+		end
+		
 		return;
 	end
 	
-	print('Loading language file: ' .. name);
+	if Debug.Shared.LANGUAGE then
+		print('Loading language file: ' .. name);
+	end
+	
 	self._language = name;
     requireExists('__shared/Languages/' .. name .. '.lua');
-	print(self._translations);
+	
+	if Debug.Shared.LANGUAGE then
+		print(self._translations);
+	end
 end
 
 function Language:add(code, string, translation)
@@ -51,7 +60,9 @@ function Language:I18N(input, ...)
         arguments[#arguments + 1] = select(index, ...);
     end
     
+	--if Debug.Shared.LANGUAGE then
     --print(arguments[1]);
+	--end
 	
     if (self._translations ~= nil) then
 		if (self._translations[self._language] ~= nil) then

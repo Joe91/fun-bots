@@ -25,7 +25,10 @@ end
 function ClientBotManager:onEngineMessage(p_Message)
 	if (p_Message.type == MessageType.ClientLevelFinalizedMessage) then
 		NetEvents:SendLocal('RequestClientSettings');
-		print("level loaded on Client")
+		
+		if Debug.Client.INFO then
+			print("level loaded on Client")
+		end
 	end
 end
 
@@ -33,8 +36,11 @@ function ClientBotManager:_onWriteClientSettings(newConfig, updateWeaponSets)
 	for key, value in pairs(newConfig) do
 		Config[key] = value;
 	end
-	print("write settings")
-
+	
+	if Debug.Client.INFO then
+		print("write settings")
+	end
+	
 	if updateWeaponSets then
 		WeaponList:updateWeaponList();
 	end

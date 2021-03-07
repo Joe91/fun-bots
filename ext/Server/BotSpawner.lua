@@ -241,7 +241,9 @@ end
 
 function BotSpawner:_onPlayerJoining()
 	if BotManager:getPlayerCount() == 0 then
-		print("first player - spawn bots")
+		if Debug.Server.BOT then
+			print("first player - spawn bots")
+		end
 		self:onLevelLoaded()
 	end
 end
@@ -250,13 +252,17 @@ function BotSpawner:_onPlayerLeft(player)
 	BotManager:onPlayerLeft(player)
 	--remove all references of player
 	if BotManager:getPlayerCount() == 1 then
-		print("no player left - kick all bots")
+		if Debug.Server.BOT then
+			print("no player left - kick all bots")
+		end
 		BotManager:destroyAllBots(false);
 	end
 end
 
 function BotSpawner:onLevelLoaded()
-	print("on level loaded on spawner")
+	if Debug.Server.BOT then
+		print("on level loaded on spawner")
+	end
 	self._firstSpawnInLevel = true;
 	self._firstSpawnDelay 	= 5;
 end
@@ -391,7 +397,9 @@ function BotSpawner:_getSpawnPoint(team, squad)
 
 		if activeWayIndex == 0 then
 			-- something went wrong. use random path
-			print("no base or capturepoint found to spawn")
+			if Debug.Server.BOT then
+				print("no base or capturepoint found to spawn")
+			end
 			activeWayIndex = MathUtils:GetRandomInt(1, #g_NodeCollection:GetPaths())
 		end
 		indexOnPath = MathUtils:GetRandomInt(1, #g_NodeCollection:Get(nil, activeWayIndex))
@@ -406,7 +414,9 @@ function BotSpawner:_getSpawnPoint(team, squad)
 
 		if activeWayIndex == 0 then
 			-- something went wrong. use random path
-			print("no base found to spawn")
+			if Debug.Server.BOT then
+				print("no base found to spawn")
+			end
 			activeWayIndex = MathUtils:GetRandomInt(1, #g_NodeCollection:GetPaths())
 		end
 		indexOnPath = MathUtils:GetRandomInt(1, #g_NodeCollection:Get(nil, activeWayIndex))
@@ -612,7 +622,9 @@ function BotSpawner:_setAttachments(unlockWeapon, attachments)
 	for _, attachment in pairs(attachments) do
 		local asset = ResourceManager:SearchForDataContainer(attachment)
 		if (asset == nil) then
-			print('Warning! Attachment invalid ['..tostring(unlockWeapon.weapon.name)..']: '..tostring(attachment))
+			if Debug.Server.BOT then
+				print('Warning! Attachment invalid ['..tostring(unlockWeapon.weapon.name)..']: '..tostring(attachment))
+			end
 		else
 			unlockWeapon.unlockAssets:add(UnlockAsset(asset))
 		end
@@ -681,7 +693,9 @@ function BotSpawner:getKitApperanceCustomization(team, kit, color, primary, pist
 
 	-- overwrite sidearm if available
 	if sideArmWeapon ~= nil then
-		print("overwrite sidearm")
+		if Debug.Server.BOT then
+			print("overwrite sidearm")
+		end
 		gadget02.weapon = SoldierWeaponUnlockAsset(sideArmWeapon)
 	end
 

@@ -95,8 +95,10 @@ function WeaponModification:OnPartitionLoaded(p_Partition)
 end
 
 function WeaponModification:ModifyAllWeapons(aimWorseningNormal, aimWorseningSniper)
-	print(#self.m_WeaponInstances .. ' loaded weapons to modify');
-
+	if Debug.Server.MODIFICATIONS then
+		print(#self.m_WeaponInstances .. ' loaded weapons to modify');
+	end
+	
 	for i, weaponInstance in pairs(self.m_WeaponInstances) do
 		self:_ModifyWeapon(weaponInstance , i, aimWorseningNormal, aimWorseningSniper);
 	end
@@ -263,13 +265,19 @@ function WeaponModification:_MakeWritable(p_Instance)
 	local s_Instance = _G[p_Instance.typeInfo.name](p_Instance);
 
 	if p_Instance.isLazyLoaded == true then
-		print('The instance ' .. tostring(p_Instance.instanceGuid) .. ' was modified, even though its lazyloaded');
+		if Debug.Server.MODIFICATIONS then
+			print('The instance ' .. tostring(p_Instance.instanceGuid) .. ' was modified, even though its lazyloaded');
+		end
+		
 		return;
 	end
 
 	if p_Instance.isReadOnly == nil then
 		-- If .isReadOnly is nil it means that its not a DataContainer, it's a Structure. We return it casted
-		print('The instance ' .. p_Instance.typeInfo.name .. ' is not a DataContainer, it\'s a Structure');
+		if Debug.Server.MODIFICATIONS then
+			print('The instance ' .. p_Instance.typeInfo.name .. ' is not a DataContainer, it\'s a Structure');
+		end
+		
 		return s_Instance;
 	end
 

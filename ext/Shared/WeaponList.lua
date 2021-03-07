@@ -418,7 +418,9 @@ function WeaponList:getWeapon(name)
 	end
 
 	if (retWeapon == nil) then
-		print('Warning! Weapon not found: '..tostring(name))
+		if Debug.Shared.MODIFICATIONS then
+			print('Warning! Weapon not found: '..tostring(name))
+		end
 	end
 
 	return retWeapon;

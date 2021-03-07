@@ -36,7 +36,9 @@ function PathSwitcher:getNewPath(botname, point, objective)
 			if bot ~= nil and bot.soldier ~= nil then
 				bot.soldier:Kill()
 				self.killYourselfCounter[botname] = 0
-				print("kill "..botname.." because of inactivity on wrong paths")
+				if Debug.Server.PATH then
+					print("kill "..botname.." because of inactivity on wrong paths")
+				end
 				return false
 			end
 		end
@@ -152,16 +154,20 @@ function PathSwitcher:getNewPath(botname, point, objective)
 		end
 	end
 
+	--if Debug.Server.PATH then
 	--print('Trimmed Priority List -> '..g_Utilities:dump(paths, true, 2))
 	--print('Highest Priority -> '..highestPriority)
 	--print('#paths -> '..(#paths))
-
+	--end
+	
 	if (#validPaths == 0) then
 		return false
 	end
 
 	if (#validPaths == 1 and currentPriority < validPaths[1].Priority) then
+		--if Debug.Server.PATH then
 		--print('found single higher priority path ( '..currentPriority..' | '..validPaths[1].Priority..' )')
+		--end
 		return true, validPaths[1].Point
 	end
 
@@ -175,27 +181,41 @@ function PathSwitcher:getNewPath(botname, point, objective)
 		if currentPriority < highestPriority then
 			local randomPath = validPaths[randIndex]
 			if randomPath == nil then
-				print('[A] validPaths['..randIndex..'] was nil : '..g_Utilities:dump(validPaths, true, 2))
+				if Debug.Server.PATH then
+					print('[A] validPaths['..randIndex..'] was nil : '..g_Utilities:dump(validPaths, true, 2))
+				end
 				return false
 			end
+			
+			--if Debug.Server.PATH then
 			--print('found multiple higher priority validPaths | Priority: ( '..currentPriority..' | '..highestPriority..' )')
+			--end
+			
 			return true, randomPath.Point
 		end
 
 		if randNum <= chance then
 			local randomPath = validPaths[randIndex]
 			if randomPath == nil then
-				print('[B] validPaths['..randIndex..'] was nil : '..g_Utilities:dump(validPaths, true, 2))
+				if Debug.Server.PATH then
+					print('[B] validPaths['..randIndex..'] was nil : '..g_Utilities:dump(validPaths, true, 2))
+				end
+				
 				return false
 			end
+			
+			--if Debug.Server.PATH then
 			--print('chose to switch at random ('..randNum..' >= '..chance..') | Priority: ( '..currentPriority..' | '..randomPath.Priority..' )')
+			--end
 			return true, randomPath.Point
 		end
 	elseif linkMode == 1 then -- some other kind of switching decision
 		-- etc...
 	end
 
+	--if Debug.Server.PATH then
 	--print('dont change')
+	--end
 	return false
 end
 

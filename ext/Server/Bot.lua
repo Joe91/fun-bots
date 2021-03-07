@@ -877,7 +877,11 @@ function Bot:_updateMovement()
 
 						if self._stuckTimer > 10 then
 							self.player.soldier:Kill()
-							print(self.player.name.." got stuck. Kill")
+							
+							if Debug.Server.BOT then
+								print(self.player.name.." got stuck. Kill")
+							end
+							
 							return
 						end
 					else

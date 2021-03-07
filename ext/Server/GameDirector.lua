@@ -94,7 +94,10 @@ function GameDirector:initObjectives()
 end
 
 function GameDirector:_onMcomArmed(player)
-	print("mcom armed by "..player.name)
+	if Debug.Server.GAMEDIRECTOR then
+		print("mcom armed by "..player.name)
+	end
+	
 	local objective = self:_translateObjective(player.soldier.worldTransform.trans);
 	if self.ArmedMcoms[player.name] == nil then
 		self.ArmedMcoms[player.name] = {}
@@ -127,7 +130,10 @@ function GameDirector:_onMcomDisarmed(player)
 end
 
 function GameDirector:_onMcomDestroyed(player)
-	print("mcom destroyed by "..player.name)
+	if Debug.Server.GAMEDIRECTOR then
+		print("mcom destroyed by "..player.name)
+	end
+	
 	local objective = '';
 	if self.ArmedMcoms[player.name] ~= nil then
 		objective = self.ArmedMcoms[player.name][1]
@@ -331,13 +337,18 @@ function GameDirector:_onCapture(capturePoint)
 
 	local objective = self:getObjectiveObject(objectiveName)
 
-	print('GameDirector:_onCapture: '..objectiveName)
-	print('self.CurrentAssignedCount: '..g_Utilities:dump(objective.assigned, true))
-
+	if Debug.Server.GAMEDIRECTOR then
+		print('GameDirector:_onCapture: '..objectiveName)
+		print('self.CurrentAssignedCount: '..g_Utilities:dump(objective.assigned, true))
+	end
+	
 	for botTeam, bots in pairs(self.BotsByTeam) do
 		for i=1, #bots do
 			if (bots[i]:getObjective() == objective.name and objective.team == botTeam) then
-				print('Bot completed objective: '..bots[i].name..' (team: '..botTeam..') -> '..objective.name)
+				if Debug.Server.GAMEDIRECTOR then
+					print('Bot completed objective: '..bots[i].name..' (team: '..botTeam..') -> '..objective.name)
+				end
+				
 				bots[i]:setObjective()
 				objective.assigned[botTeam] = math.max(objective.assigned[botTeam] - 1, 0)
 			end
@@ -461,7 +472,9 @@ function GameDirector:_onLost(capturePoint)
 		isAttacked = flagEntity.isAttacked
 	})
 
-	print('GameDirector:_onLost: '..objectiveName)
+	if Debug.Server.GAMEDIRECTOR then
+		print('GameDirector:_onLost: '..objectiveName)
+	end
 end
 
 function GameDirector:_onPlayerEnterCapturePoint(player, capturePoint)
@@ -544,15 +557,20 @@ function GameDirector:_onUpdate(delta)
 										end
 
 										if (bots[i]:getObjective() == parentObjective and objective.assigned[botTeam] < 2) then
-											print('Assigning bot to objective: '..bots[i].name..' (team: '..botTeam..') -> '..objective.name)
-
+											if Debug.Server.GAMEDIRECTOR then
+												print('Assigning bot to objective: '..bots[i].name..' (team: '..botTeam..') -> '..objective.name)
+											end
+											
 											bots[i]:setObjective(objective.name)
 											objective.assigned[botTeam] = objective.assigned[botTeam] + 1
 										end
 									end
 								end
 								if not botPossible and bots[i]:getObjective() == objective.name then
-									print('Assigning bot to objective: '..bots[i].name..' (team: '..botTeam..') -> '..parentObjective)
+									if Debug.Server.GAMEDIRECTOR then
+										print('Assigning bot to objective: '..bots[i].name..' (team: '..botTeam..') -> '..parentObjective)
+									end
+									
 									bots[i]:setObjective(parentObjective)
 								end
 							end
@@ -560,7 +578,10 @@ function GameDirector:_onUpdate(delta)
 							-- unassign bots
 							for i=1, #bots do
 								if (bots[i]:getObjective() == objective.name) then
-									print('Assigning bot to objective: '..bots[i].name..' (team: '..botTeam..') -> '..parentObjective)
+									if Debug.Server.GAMEDIRECTOR then
+										print('Assigning bot to objective: '..bots[i].name..' (team: '..botTeam..') -> '..parentObjective)
+									end
+									
 									bots[i]:setObjective(parentObjective)
 								end
 							end
@@ -573,8 +594,10 @@ function GameDirector:_onUpdate(delta)
 
 							if (objective.team ~= botTeam and bots[i]:getObjective() == '' and objective.assigned[botTeam] < maxAssings[botTeam]) then
 
-								print('Assigning bot to objective: '..bots[i].name..' (team: '..botTeam..') -> '..objective.name)
-
+								if Debug.Server.GAMEDIRECTOR then
+									print('Assigning bot to objective: '..bots[i].name..' (team: '..botTeam..') -> '..objective.name)
+								end
+								
 								bots[i]:setObjective(objective.name)
 								objective.assigned[botTeam] = objective.assigned[botTeam] + 1
 							end

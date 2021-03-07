@@ -156,13 +156,19 @@ function NodeCollection:Register(waypoint)
 	table.insert(self.waypoints, waypoint)
 	if (#self.waypoints ~= waypoint.Index) then
 		local diff = waypoint.Index - #self.waypoints
-		print('Warning, New Node Index does not match: waypoint.Index:'..tostring(waypoint.Index)..' | #self.waypoints:'..tostring(#self.waypoints)..' | '.. tostring(diff))
+		
+		if Debug.Shared.NODECOLLECTION then
+			print('Warning, New Node Index does not match: waypoint.Index:'..tostring(waypoint.Index)..' | #self.waypoints:'..tostring(#self.waypoints)..' | '.. tostring(diff))
+		end
 	end
 
 	table.insert(self.waypointsByPathIndex[waypoint.PathIndex], waypoint)
 	if (#self.waypointsByPathIndex[waypoint.PathIndex] ~= waypoint.PointIndex) then
 		local diff = waypoint.PointIndex - #self.waypointsByPathIndex[waypoint.PathIndex]
-		print('Warning, New Node PointIndex does not match: waypoint.PointIndex: '..tostring(waypoint.PointIndex)..' | #self.waypointsByPathIndex['..waypoint.PathIndex..']: '..tostring(#self.waypointsByPathIndex[waypoint.PathIndex])..' | '.. tostring(diff))
+		
+		if Debug.Shared.NODECOLLECTION then
+			print('Warning, New Node PointIndex does not match: waypoint.PointIndex: '..tostring(waypoint.PointIndex)..' | #self.waypointsByPathIndex['..waypoint.PathIndex..']: '..tostring(#self.waypointsByPathIndex[waypoint.PathIndex])..' | '.. tostring(diff))
+		end
 	end
 	self.waypointsByID[waypoint.ID] = waypoint
 
@@ -226,8 +232,10 @@ function NodeCollection:Remove(waypoint)
 		return true, 'Success'
 	end
 
-	print('Removing: '..tostring(waypoint.ID))
-
+	if Debug.Shared.NODECOLLECTION then
+		print('Removing: '..tostring(waypoint.ID))
+	end
+	
 	-- update connections, no more middle-man
 	if (waypoint.Previous) then
 		waypoint.Previous.Next = waypoint.Next
@@ -298,7 +306,10 @@ function NodeCollection:InsertBefore(referrenceWaypoint, waypoint)
 end
 
 function NodeCollection:RecalculateIndexes(waypoint)
-	print('NodeCollection:RecalculateIndexes Starting...')
+	if Debug.Shared.NODECOLLECTION then
+		print('NodeCollection:RecalculateIndexes Starting...')
+	end
+	
 	local counter = 0
 
 	if (waypoint == nil) then
@@ -319,11 +330,13 @@ function NodeCollection:RecalculateIndexes(waypoint)
 			counter = counter + 1
 		end
 	end
-	print('NodeCollection:RecalculateIndexes Finished! ['..tostring(counter)..']')
+	
+	if Debug.Shared.NODECOLLECTION then
+		print('NodeCollection:RecalculateIndexes Finished! ['..tostring(counter)..']')
+	end
 end
 
 function NodeCollection:_processWaypointRecalc(waypoint)
-	
 	local lastIndex = 0
 	local lastPathIndex = 0
 	local lastPointIndex = 0
@@ -336,6 +349,7 @@ function NodeCollection:_processWaypointRecalc(waypoint)
 			waypoint.Next.Previous = waypoint
 		end
 	end
+	
 	if (type(waypoint.Previous) == 'string') then
 		waypoint.Previous = self.waypointsByID[waypoint.Previous]
 		if (waypoint.Previous) then
@@ -365,7 +379,10 @@ function NodeCollection:_processWaypointRecalc(waypoint)
 end
 
 function NodeCollection:ProcessMetadata(waypoint)
-	print('NodeCollection:ProcessMetadata Starting...')
+	if Debug.Shared.NODECOLLECTION then
+		print('NodeCollection:ProcessMetadata Starting...')
+	end
+	
 	local counter = 0
 
 	if (waypoint == nil) then
@@ -377,11 +394,13 @@ function NodeCollection:ProcessMetadata(waypoint)
 		self.waypoints[waypoint.Index] = self:_processWaypointMetadata(waypoint)
 		counter = counter + 1
 	end
-	print('NodeCollection:ProcessMetadata Finished! ['..tostring(counter)..']')
+	
+	if Debug.Shared.NODECOLLECTION then
+		print('NodeCollection:ProcessMetadata Finished! ['..tostring(counter)..']')
+	end
 end
 
 function NodeCollection:_processWaypointMetadata(waypoint)
-
 	-- safety checks
 	if (waypoint.Data == nil) then
 		waypoint.Data = {}
@@ -438,8 +457,10 @@ function NodeCollection:Update(waypoint, data)
 end
 
 function NodeCollection:UpdateMetadata(data)
-	print('[A] NodeCollection:UpdateMetadata -> data: '..g_Utilities:dump(data, true))
-
+	if Debug.Shared.NODECOLLECTION then
+		print('[A] NodeCollection:UpdateMetadata -> data: '..g_Utilities:dump(data, true))
+	end
+	
 	local selection = self:GetSelected()
 	if (#selection < 1) then
 		return false, 'Must select one or more waypoints'
@@ -449,8 +470,11 @@ function NodeCollection:UpdateMetadata(data)
 	if (type(data) == 'string') then
 		data, errorMsg = json.decode(data) or {}
 	end
-	print('[B] NodeCollection:UpdateMetadata -> data: '..g_Utilities:dump(data, true))
-
+	
+	if Debug.Shared.NODECOLLECTION then
+		print('[B] NodeCollection:UpdateMetadata -> data: '..g_Utilities:dump(data, true))
+	end
+	
 	for i=1, #selection do
 		self:Update(selection[i], {
 			Data = g_Utilities:mergeKeys(selection[i].Data, data)
@@ -564,7 +588,10 @@ function NodeCollection:Unlink(waypoints, linkID, oneWay)
 	end
 
 	-- update waypoint's Data table, remove linking info if necessary
-	print('newLinks -> '..g_Utilities:dump(newLinks, true))
+	if Debug.Shared.NODECOLLECTION then
+		print('newLinks -> '..g_Utilities:dump(newLinks, true))
+	end
+	
 	if (#newLinks > 0) then
 		self:Update(selection.Data, {
 			LinkMode = (selection.Data.LinkMode or 0),
@@ -696,8 +723,10 @@ function NodeCollection:GetPaths()
 end
 
 function NodeCollection:Clear()
-	print('NodeCollection:Clear')
-
+	if Debug.Shared.NODECOLLECTION then
+		print('NodeCollection:Clear')
+	end
+	
 	for i=1, #self.waypoints do
 		self.waypoints[i].Next = nil
 		self.waypoints[i].Previous = nil
@@ -889,8 +918,10 @@ function NodeCollection:Load(levelName, gameMode)
 		self.gameMode = 'TeamDeathMatch0';
 	end
 	self.mapName = self.levelName .. '_' .. self.gameMode
-	print('NodeCollection:Load: '..self.mapName)
-
+	if Debug.Shared.NODECOLLECTION then
+		print('NodeCollection:Load: '..self.mapName)
+	end
+	
 	if not SQL:Open() then
 		return
 	end
@@ -909,7 +940,10 @@ function NodeCollection:Load(levelName, gameMode)
 	]]
 
 	if not SQL:Query(query) then
-		print('Failed to create table for map ['..self.mapName..']: '..SQL:Error())
+		if Debug.Shared.DATABASE then
+			print('Failed to create table for map ['..self.mapName..']: '..SQL:Error())
+		end
+		
 		return
 	end
 
@@ -918,7 +952,10 @@ function NodeCollection:Load(levelName, gameMode)
 	local results = SQL:Query('SELECT * FROM '..self.mapName..'_table ORDER BY `pathIndex`, `pointIndex` ASC')
 
 	if not results then
-		print('Failed to retrieve waypoints for map ['..self.mapName..']: '..SQL:Error())
+		if Debug.Shared.DATABASE then
+			print('Failed to retrieve waypoints for map ['..self.mapName..']: '..SQL:Error())
+		end
+		
 		return
 	end
 
@@ -967,18 +1004,27 @@ function NodeCollection:Load(levelName, gameMode)
 		--g_Globals.activeTraceIndexes = pathCount
 	--end
 
-	print('NodeCollection:Load -> Paths: '..tostring(pathCount)..' | Waypoints: '..tostring(waypointCount))
+	if Debug.Shared.NODECOLLECTION then
+		print('NodeCollection:Load -> Paths: '..tostring(pathCount)..' | Waypoints: '..tostring(waypointCount))
+	end
+	
 	ChatManager:Yell(Language:I18N('Loaded %d paths with %d waypoints for map %s', pathCount, waypointCount, self.mapName), 5.5);
 end
 
 function NodeCollection:Save()
 	if not SQL:Open() then
-		print('Could not open database')
+		if Debug.Shared.DATABASE then
+			print('Could not open database')
+		end
+		
 		return
 	end
 
 	if not SQL:Query('DROP TABLE IF EXISTS '..self.mapName..'_table') then
-		print('Failed to reset table for map ['..self.mapName..']: '..SQL:Error());
+		if Debug.Shared.DATABASE then
+			print('Failed to reset table for map ['..self.mapName..']: '..SQL:Error());
+		end
+		
 		return
 	end
 
@@ -996,7 +1042,10 @@ function NodeCollection:Save()
 	]]
 
 	if not SQL:Query(query) then
-		print('Failed to create table for map ['..self.mapName..']: '..SQL:Error())
+		if Debug.Shared.DATABASE then
+			print('Failed to create table for map ['..self.mapName..']: '..SQL:Error())
+		end
+		
 		return
 	end
 
@@ -1011,8 +1060,10 @@ function NodeCollection:Save()
 
 	local batchQueries = {}
 
-	print('NodeCollection:Save -> Processing: '..(waypointCount))
-
+	if Debug.Shared.NODECOLLECTION then
+		print('NodeCollection:Save -> Processing: '..(waypointCount))
+	end
+	
 	for _,waypoint in pairs(self.waypoints) do
 
 		-- keep track of disconnected nodes, only two should exist
@@ -1055,10 +1106,13 @@ function NodeCollection:Save()
 			if (waypointData ~= nil and type(waypointData) == 'table') then
 				local jsonData, encodeError = json.encode(waypointData)
 				if (jsonData == nil) then
-					print('WARNING! Waypoint ['..waypoint.ID..'] data could not encode: '..tostring(encodeError))
-					print('waypoint -> '..g_Utilities:dump(waypoint, true, 1))
-					print('waypointData -> '..g_Utilities:dump(waypointData, true))
+					if Debug.Shared.NODECOLLECTION then
+						print('WARNING! Waypoint ['..waypoint.ID..'] data could not encode: '..tostring(encodeError))
+						print('waypoint -> '..g_Utilities:dump(waypoint, true, 1))
+						print('waypointData -> '..g_Utilities:dump(waypointData, true))
+					end
 				end
+				
 				if (jsonData ~= '{}') then
 					jsonSaveData = SQL:Escape(table.concat(jsonData:split('"'), '""'))
 				end
@@ -1080,13 +1134,17 @@ function NodeCollection:Save()
 		end
 	end
 
-	print('NodeCollection:Save -> Waypoints to write: '..(#batchQueries))
-	print('NodeCollection:Save -> Orphans: '..(#orphans)..' (Removed)')
-	print('NodeCollection:Save -> Disconnected: '..(#disconnects)..' (Expected: 2)')
-
+	if Debug.Shared.NODECOLLECTION then
+		print('NodeCollection:Save -> Waypoints to write: '..(#batchQueries))
+		print('NodeCollection:Save -> Orphans: '..(#orphans)..' (Removed)')
+		print('NodeCollection:Save -> Disconnected: '..(#disconnects)..' (Expected: 2)')
+	end
+	
 	if (#disconnects > 2) then
-		print('WARNING! More than two disconnected nodes were found!')
-		print(g_Utilities:dump(disconnects, true, 2))
+		if Debug.Shared.NODECOLLECTION then
+			print('WARNING! More than two disconnected nodes were found!')
+			print(g_Utilities:dump(disconnects, true, 2))
+		end
 	end
 
 	local queriesDone = 0;
@@ -1112,7 +1170,10 @@ function NodeCollection:Save()
 		end
 
 		if not SQL:Query(insertQuery..values) then
-			print('NodeCollection:Save -> Batch query failed ['..queriesDone..']: ' .. SQL:Error())
+			if Debug.Shared.DATABASE then
+				print('NodeCollection:Save -> Batch query failed ['..queriesDone..']: ' .. SQL:Error())
+			end
+			
 			return
 		end
 
@@ -1123,13 +1184,20 @@ function NodeCollection:Save()
 	local results = SQL:Query('SELECT * FROM '..self.mapName..'_table')
 
 	if not results then
-		print('NodeCollection:Save -> Failed to double-check table entries for map ['..self.mapName..']: '..SQL:Error());
+		if Debug.Shared.DATABASE then
+			print('NodeCollection:Save -> Failed to double-check table entries for map ['..self.mapName..']: '..SQL:Error());
+		end
+		
 		ChatManager:Yell(Language:I18N('Failed to execute query: %s', SQL:Error()), 5.5)
 		return
 	end
 
 	SQL:Close();
-	print('NodeCollection:Save -> Saved ['..queriesTotal..'] waypoints for map ['..self.mapName..']');
+	
+	if Debug.Shared.NODECOLLECTION then
+		print('NodeCollection:Save -> Saved ['..queriesTotal..'] waypoints for map ['..self.mapName..']');
+	end
+	
 	ChatManager:Yell(Language:I18N('Saved %d paths with %d waypoints for map %s', pathCount, queriesTotal, self.mapName), 5.5);
 end
 
@@ -1289,8 +1357,11 @@ function NodeCollection:FindAlongTrace(vec3Start, vec3End, granularity, toleranc
 	if (tolerance == nil) then
 		tolerance = 0.2
 	end
+	
+	--if Debug.Shared.NODECOLLECTION then
 	--print('NodeCollection:FindAlongTrace - granularity: '..tostring(granularity))
-
+	--end
+	
 	local distance = math.min(math.max(vec3Start:Distance(vec3End), 0.05), 10)
 
 	-- instead of searching a possible 3k or more nodes, we grab only those that would be in range
@@ -1305,14 +1376,18 @@ function NodeCollection:FindAlongTrace(vec3Start, vec3End, granularity, toleranc
 	local searchWaypoints = self:FindAll(searchAreaPos, searchAreaSize)
 	local testPos = vec3Start
 
+	--if Debug.Shared.NODECOLLECTION then
 	--print('distance: '..tostring(distance))
 	--print('searchWaypoints: '..tostring(#searchWaypoints))
-
+	--end
+	
 	while distance > granularity and distance > 0 do
 		for _,waypoint in pairs(searchWaypoints) do
 
 			if (waypoint ~= nil and self:IsPathVisible(waypoint.PathIndex) and waypoint.Position ~= nil and waypoint.Position:Distance(testPos) <= tolerance) then
+				--if Debug.Shared.NODECOLLECTION then
 				--print('NodeCollection:FindAlongTrace -> Found: '..waypoint.ID)
+				--end
 				return waypoint
 			end
 		end

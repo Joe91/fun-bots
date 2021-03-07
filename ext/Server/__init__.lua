@@ -1,5 +1,6 @@
 class('FunBotServer');
 
+require('__shared/Debug');
 require('__shared/Config');
 require('__shared/Constants/BotColors');
 require('__shared/Constants/BotNames');
@@ -52,8 +53,10 @@ function FunBotServer:_onExtensionLoaded()
 		local level		= fullLevelPath[#fullLevelPath];
 		local gameMode	= SharedUtils:GetCurrentGameMode();
 
-		print(level .. '_' .. gameMode .. ' reloaded');
-
+		if Debug.Server.INFO then
+			print(level .. '_' .. gameMode .. ' reloaded');
+		end
+		
 		if (level ~= nil and gameMode~= nil) then
 			self:_onLevelLoaded(level, gameMode);
 		end
@@ -89,7 +92,11 @@ end
 function FunBotServer:_onLevelLoaded(levelName, gameMode)
 	g_WeaponModification:ModifyAllWeapons(Config.botAimWorsening, Config.botSniperAimWorsening);
 	WeaponList:onLevelLoaded();
-	print('level ' .. levelName .. ' loaded...');
+	
+	if Debug.Server.INFO then
+		print('level ' .. levelName .. ' loaded...');
+	end
+	
 	if gameMode == 'TeamDeathMatchC0' or gameMode == 'TeamDeathMatch0' then
 		Globals.isTdm = true;
 	else

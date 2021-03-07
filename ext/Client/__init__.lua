@@ -1,5 +1,6 @@
 class('FunBotClient');
 
+require('__shared/Debug');
 require('__shared/Constants/BotColors');
 require('__shared/Constants/BotNames');
 require('__shared/Constants/BotKits');

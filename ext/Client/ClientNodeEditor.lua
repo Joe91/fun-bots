@@ -355,7 +355,11 @@ function ClientNodeEditor:_onSaveNodes(args)
 		NetEvents:Send('NodeEditor:ReceivingNodes', #g_NodeCollection:Get())
 		return true
 	end
-	print('Saving in progress, please wait...')
+	
+	if Debug.Client.NODEEDITOR then
+		print('Saving in progress, please wait...')
+	end
+	
 	return false
 end
 
@@ -370,7 +374,11 @@ function ClientNodeEditor:_onLoadNodes(args)
 		self:_onGetNodes()
 		return true
 	end
-	print('Loading in progress, please wait...')
+	
+	if Debug.Client.NODEEDITOR then
+		print('Loading in progress, please wait...')
+	end
+	
 	return false
 end
 
@@ -380,29 +388,47 @@ end
 function ClientNodeEditor:_onRemoveNode(args)
 	self.commoRoseActive = false
 	g_NodeCollection:Remove()
-	print(Language:I18N('Success'))
+	
+	if Debug.Client.NODEEDITOR then
+		print(Language:I18N('Success'))
+	end
+	
 	return true
 end
 
 function ClientNodeEditor:_onUnlinkNode()
 	self.commoRoseActive = false
 	local result, message = g_NodeCollection:Unlink()
-	print(Language:I18N(message))
+	
+	if Debug.Client.NODEEDITOR then
+		print(Language:I18N(message))
+	end
+	
 	return result
 end
 
 function ClientNodeEditor:_onMergeNode(args)
 	self.commoRoseActive = false
 	local result, message = g_NodeCollection:MergeSelection()
-	print(Language:I18N(message))
+	
+	if Debug.Client.NODEEDITOR then
+		print(Language:I18N(message))
+	end
+	
 	return result
 end
 
 function ClientNodeEditor:_onSelectPrevious()
-	print('ClientNodeEditor:_onSelectPrevious')
+	if Debug.Client.NODEEDITOR then
+		print('ClientNodeEditor:_onSelectPrevious')
+	end
+	
 	local selection = g_NodeCollection:GetSelected()
+	
 	if (#selection < 1) then
-		print('Must select at least one node')
+		if Debug.Client.NODEEDITOR then
+			print('Must select at least one node')
+		end
 	end
 
 	if (selection[1].Previous ~= false) then
@@ -412,12 +438,19 @@ end
 
 function ClientNodeEditor:_onClearSelection(args)
 	g_NodeCollection:ClearSelection()
-	print(Language:I18N('Success'))
+	
+	if Debug.Client.NODEEDITOR then
+		print(Language:I18N('Success'))
+	end
+	
 	return true
 end
 
 function ClientNodeEditor:_onToggleMoveNode(args)
-	print('ClientNodeEditor:_onToggleMoveNode: '..tostring(args))
+	if Debug.Client.NODEEDITOR then
+		print('ClientNodeEditor:_onToggleMoveNode: '..tostring(args))
+	end
+	
 	self.commoRoseActive = false
 
 	if (self.editMode == 'move') then
@@ -455,14 +488,20 @@ function ClientNodeEditor:_onToggleMoveNode(args)
 			}
 		})
 
-		print(Language:I18N('Exiting Node Move Mode'))
+		if Debug.Client.NODEEDITOR then
+			print(Language:I18N('Exiting Node Move Mode'))
+		end
+		
 		return true
 	else
 		if (self.player ~= nil and self.player.soldier ~= nil) then
 			
 			local selection = g_NodeCollection:GetSelected()
 			if (#selection < 1) then
-				print(Language:I18N('Must select at least one waypoint'))
+				if Debug.Client.NODEEDITOR then
+					print(Language:I18N('Must select at least one waypoint'))
+				end
+				
 				return false
 			end
 
@@ -496,16 +535,25 @@ function ClientNodeEditor:_onToggleMoveNode(args)
 				}
 			})
 
-			print(Language:I18N('Entering Node Move Mode'))
+			if Debug.Client.NODEEDITOR then
+				print(Language:I18N('Entering Node Move Mode'))
+			end
+			
 			return true
 
 		else
-			print(Language:I18N('Player not alive'))
+			if Debug.Client.NODEEDITOR then
+				print(Language:I18N('Player not alive'))
+			end
+			
 			return false
 		end
 	end
 
-	print(Language:I18N('Not Implemented Yet'))
+	if Debug.Client.NODEEDITOR then
+		print(Language:I18N('Not Implemented Yet'))
+	end
+	
 	return false
 end
 
@@ -515,8 +563,10 @@ end
 function ClientNodeEditor:_onAddNode(args)
 	self.commoRoseActive = false
 
-	print('ClientNodeEditor:_onAddNode')
-	
+	if Debug.Client.NODEEDITOR then
+		print('ClientNodeEditor:_onAddNode')
+	end
+
 	local result, message = g_NodeCollection:Add()
 	local selection = g_NodeCollection:GetSelected()
 
@@ -530,29 +580,45 @@ function ClientNodeEditor:_onAddNode(args)
 		self:_onToggleMoveNode()
 	end
 
-	print(Language:I18N(message))
+	if Debug.Client.NODEEDITOR then
+		print(Language:I18N(message))
+	end
+	
 	return result ~= nil
 end
 
 function ClientNodeEditor:_onLinkNode()
 	self.commoRoseActive = false
 	local result, message = g_NodeCollection:Link()
-	print(Language:I18N(message))
+	
+	if Debug.Client.NODEEDITOR then
+		print(Language:I18N(message))
+	end
+	
 	return result
 end
 
 function ClientNodeEditor:_onSplitNode(args)
 	self.commoRoseActive = false
 	local result, message = g_NodeCollection:SplitSelection()
-	print(Language:I18N(message))
+	
+	if Debug.Client.NODEEDITOR then
+		print(Language:I18N(message))
+	end
+	
 	return result
 end
 
 function ClientNodeEditor:_onSelectNext()
-	print('ClientNodeEditor:_onSelectNext')
+	if Debug.Client.NODEEDITOR then
+		print('ClientNodeEditor:_onSelectNext')
+	end
+	
 	local selection = g_NodeCollection:GetSelected()
 	if (#selection < 1) then
-		print('Must select at least one waypoint')
+		if Debug.Client.NODEEDITOR then
+			print('Must select at least one waypoint')
+		end
 	end
 
 	if (selection[#selection].Next ~= false) then
@@ -561,10 +627,15 @@ function ClientNodeEditor:_onSelectNext()
 end
 
 function ClientNodeEditor:_onSelectBetween()
-	print('ClientNodeEditor:_onSelectBetween')
+	if Debug.Client.NODEEDITOR then
+		print('ClientNodeEditor:_onSelectBetween')
+	end
+	
 	local selection = g_NodeCollection:GetSelected()
 	if (#selection < 1) then
-		print('Must select more than one')
+		if Debug.Client.NODEEDITOR then
+			print('Must select more than one')
+		end
 	end
 
 	local breakAt = (#g_NodeCollection:Get())
@@ -582,8 +653,12 @@ end
 
 function ClientNodeEditor:_onSetInputNode(args)
 	self.commoRoseActive = false
-	print('ClientNodeEditor:_onSetInputNode: '..g_NodeCollection:SetInput(args[1], args[2], args[3]))
-	print(Language:I18N('Success'))
+	
+	if Debug.Client.NODEEDITOR then
+		print('ClientNodeEditor:_onSetInputNode: '..g_NodeCollection:SetInput(args[1], args[2], args[3]))
+		print(Language:I18N('Success'))
+	end
+	
 	return true
 end
 
@@ -599,7 +674,10 @@ function ClientNodeEditor:_onShowPath(args)
 	end
 
 	if (pathIndex == nil) then
-		print('Use `all` or *<number|PathIndex>*')
+		if Debug.Client.NODEEDITOR then
+			print('Use `all` or *<number|PathIndex>*')
+		end
+		
 		return false
 	end
 
@@ -607,16 +685,28 @@ function ClientNodeEditor:_onShowPath(args)
 		for pathID, waypoints in pairs(g_NodeCollection:GetPaths()) do
 			g_NodeCollection:ShowPath(pathID)
 		end
-		print(Language:I18N('Success'))
+		
+		if Debug.Client.NODEEDITOR then
+			print(Language:I18N('Success'))
+		end
+		
 		return true
 	end
 
 	if (tonumber(pathIndex) ~= nil) then
 		g_NodeCollection:ShowPath(tonumber(pathIndex))
-		print(Language:I18N('Success'))
+		
+		if Debug.Client.NODEEDITOR then
+			print(Language:I18N('Success'))
+		end
+		
 		return true
 	end
-	print('Use `all` or *<number|PathIndex>*')
+	
+	if Debug.Client.NODEEDITOR then
+		print('Use `all` or *<number|PathIndex>*')
+	end
+	
 	return false
 end
 
@@ -628,7 +718,10 @@ function ClientNodeEditor:_onHidePath(args)
 	end
 
 	if (pathIndex == nil) then
-		print('Use `all` or *<number|PathIndex>*')
+		if Debug.Client.NODEEDITOR then
+			print('Use `all` or *<number|PathIndex>*')
+		end
+		
 		return false
 	end
 
@@ -636,50 +729,81 @@ function ClientNodeEditor:_onHidePath(args)
 		for pathID, waypoints in pairs(g_NodeCollection:GetPaths()) do
 			g_NodeCollection:HidePath(pathID)
 		end
-		print(Language:I18N('Success'))
+		
+		if Debug.Client.NODEEDITOR then
+			print(Language:I18N('Success'))
+		end
+		
 		return true
 	end
 
 	if (tonumber(pathIndex) ~= nil) then
 		g_NodeCollection:HidePath(tonumber(pathIndex))
-		print(Language:I18N('Success'))
+		
+		if Debug.Client.NODEEDITOR then
+			print(Language:I18N('Success'))
+		end
+		
 		return true
 	end
-	print('Use `all` or *<number|PathIndex>*')
+	
+	if Debug.Client.NODEEDITOR then
+		print('Use `all` or *<number|PathIndex>*')
+	end
+	
 	return false
 end
 
 function ClientNodeEditor:_onWarpTo(args)
 	if (args == nil or #args == 0) then
-		print('Must provide Waypoint ID')
+		if Debug.Client.NODEEDITOR then
+			print('Must provide Waypoint ID')
+		end
+		
 		return false
 	end
+	
 	local waypoint = g_NodeCollection:Get(args[1])
 
 	if (waypoint == nil) then
-		print('Waypoint not found!')
+		if Debug.Client.NODEEDITOR then
+			print('Waypoint not found!')
+		end
+		
 		return false
 	end
 
 	local player = PlayerManager:GetLocalPlayer()
 	if (player == nil or not player.alive or player.soldier == nil or not player.soldier.isAlive) then
-		print('Player invalid!')
+		if Debug.Client.NODEEDITOR then
+			print('Player invalid!')
+		end
+		
 		return false
 	end
 
-	print('Teleporting to ['..waypoint.ID..']: '..tostring(waypoint.Position))
+	if Debug.Client.NODEEDITOR then
+		print('Teleporting to ['..waypoint.ID..']: '..tostring(waypoint.Position))
+	end
+	
 	NetEvents:Send('NodeEditor:WarpTo', waypoint.Position)
 end
 
 function ClientNodeEditor:_onSpawnAtWaypoint(args)
 	if (args == nil or #args == 0) then
-		print('Must provide Waypoint ID')
+		if Debug.Client.NODEEDITOR then
+			print('Must provide Waypoint ID')
+		end
 		return false
 	end
+	
 	local waypoint = g_NodeCollection:Get(args[1])
 
 	if (waypoint == nil) then
-		print('Waypoint not found!')
+		if Debug.Client.NODEEDITOR then
+			print('Waypoint not found!')
+		end
+		
 		return false
 	end
 
@@ -715,14 +839,22 @@ function ClientNodeEditor:_onShowRose(args)
 	self.commoRoseEnabled = true
 	self.commoRoseActive = true
 	self:_onCommoRoseAction('Show')
-	print(Language:I18N('Success'))
+	
+	if Debug.Client.NODEEDITOR then
+		print(Language:I18N('Success'))
+	end
+	
 	return true
 end
 
 function ClientNodeEditor:_onHideRose(args)
 	self.commoRoseActive = false
 	self:_onCommoRoseAction('Hide')
-	print(Language:I18N('Success'))
+	
+	if Debug.Client.NODEEDITOR then
+		print(Language:I18N('Success'))
+	end
+	
 	return true
 end
 
@@ -735,9 +867,15 @@ function ClientNodeEditor:_onDumpNodes(args)
 	end
 
 	for i=1, #selection do
-		print(g_Utilities:dump(selection[i], true, 1))
+		if Debug.Client.NODEEDITOR then
+			print(g_Utilities:dump(selection[i], true, 1))
+		end
 	end
-	print('Dumped ['..tostring(#selection)..'] Nodes!')
+	
+	if Debug.Client.NODEEDITOR then
+		print('Dumped ['..tostring(#selection)..'] Nodes!')
+	end
+	
 	return true
 end
 
@@ -745,13 +883,19 @@ function ClientNodeEditor:_onSetMetadata(args)
 	self.commoRoseActive = false
 
 	local data = table.concat(args or {}, ' ')
-	print('ClientNodeEditor:_onSetMetadata -> data: '..g_Utilities:dump(data, true))
-
+	if Debug.Client.NODEEDITOR then
+		print('ClientNodeEditor:_onSetMetadata -> data: '..g_Utilities:dump(data, true))
+	end
+	
 	local result, message = g_NodeCollection:UpdateMetadata(data)
 	if (result ~= false) then
 		g_NodeCollection:ProcessMetadata(result)
 	end
-	print(Language:I18N(message))
+	
+	if Debug.Client.NODEEDITOR then
+		print(Language:I18N(message))
+	end
+	
 	return result
 end
 
@@ -774,7 +918,10 @@ function ClientNodeEditor:_onAddMcom(args)
 			pitch = player.input.authoritativeAimingPitch
 		}
 		waypoint.Data.Action = action;
-		print(Language:I18N('Success'))
+		
+		if Debug.Client.NODEEDITOR then
+			print(Language:I18N('Success'))
+		end
 	end
 end
 
@@ -782,8 +929,10 @@ function ClientNodeEditor:_onAddObjective(args)
 	self.commoRoseActive = false
 
 	local data = table.concat(args or {}, ' ')
-	print('ClientNodeEditor:AddObjective -> data: '..g_Utilities:dump(data, true))
-
+	if Debug.Client.NODEEDITOR then
+		print('ClientNodeEditor:AddObjective -> data: '..g_Utilities:dump(data, true))
+	end
+	
 	local selection = g_NodeCollection:GetSelected()
 	local donePaths = {}
 
@@ -808,16 +957,25 @@ function ClientNodeEditor:_onAddObjective(args)
 				if (not inTable) then
 					table.insert(objectives, data)
 					waypoint.Data.Objectives = objectives
-					print(Language:I18N('Success')..' ['..waypoint.PathIndex..']')
+					
+					if Debug.Client.NODEEDITOR then
+						print(Language:I18N('Success')..' ['..waypoint.PathIndex..']')
+					end
 				else
-					print(Language:I18N('Path already has objective: ')..'['..waypoint.PathIndex..'] -> '..data)
+					if Debug.Client.NODEEDITOR then
+						print(Language:I18N('Path already has objective: ')..'['..waypoint.PathIndex..'] -> '..data)
+					end
 				end
 			end
 		end
 	else
-		print(Language:I18N('Must select at least one node'))
+		if Debug.Client.NODEEDITOR then
+			print(Language:I18N('Must select at least one node'))
+		end
+		
 		return false
 	end
+	
 	return true
 end
 
@@ -825,8 +983,10 @@ function ClientNodeEditor:_onRemoveObjective(args)
 	self.commoRoseActive = false
 
 	local data = table.concat(args or {}, ' ')
-	print('ClientNodeEditor:RemoveObjective -> data: '..g_Utilities:dump(data, true))
-
+	if Debug.Client.NODEEDITOR then
+		print('ClientNodeEditor:RemoveObjective -> data: '..g_Utilities:dump(data, true))
+	end
+	
 	local selection = g_NodeCollection:GetSelected()
 	local donePaths = {}
 	if (#selection > 0) then
@@ -846,12 +1006,18 @@ function ClientNodeEditor:_onRemoveObjective(args)
 				end
 
 				waypoint.Data.Objectives = newObjectives
-				print(Language:I18N('Success')..' ['..waypoint.PathIndex..']')
+				
+				if Debug.Client.NODEEDITOR then
+					print(Language:I18N('Success')..' ['..waypoint.PathIndex..']')
+				end
 			end
 		end
 		return true
 	else
-		print(Language:I18N('Must select at least one node'))
+		if Debug.Client.NODEEDITOR then
+			print(Language:I18N('Must select at least one node'))
+		end
+		
 		return false
 	end
 end
@@ -882,7 +1048,11 @@ end
 
 function ClientNodeEditor:_onSetBotVision(args)
 	self.botVisionEnabled = (args ~= nil and (args[1] == '1' or args[1] == 'true'))
-	print('ClientNodeEditor:_onSetBotVision: '..tostring(self.botVisionEnabled))
+	
+	if Debug.Client.NODEEDITOR then
+		print('ClientNodeEditor:_onSetBotVision: '..tostring(self.botVisionEnabled))
+	end
+	
 	NetEvents:Send('NodeEditor:SetBotVision', self.botVisionEnabled)
 	if (self.botVisionEnabled) then
 		-- unload our current cache
@@ -897,25 +1067,40 @@ function ClientNodeEditor:_onObjectiveDirection(args)
 	self.commoRoseActive = false
 
 	local data = table.concat(args or {}, ' ')
-	print('ClientNodeEditor:_onObjectiveDirection -> data: '..g_Utilities:dump(data, true))
-
+	if Debug.Client.NODEEDITOR then
+		print('ClientNodeEditor:_onObjectiveDirection -> data: '..g_Utilities:dump(data, true))
+	end
+	
 	local selection = g_NodeCollection:GetSelected()
 	if (#selection < 1) then
-		print('Must select at least one waypoint')
+		if Debug.Client.NODEEDITOR then
+			print('Must select at least one waypoint')
+		end
+		
 		return false
 	end
 
 	local direction, bestPreviousWaypoint = g_NodeCollection:ObjectiveDirection(selection[1], data)
-	print('ClientNodeEditor:_onObjectiveDirection -> direction: '..tostring(direction))
-	if (bestPreviousWaypoint ~= nil) then
-		print('ClientNodeEditor:_onObjectiveDirection -> bestPreviousWaypoint: '..bestPreviousWaypoint.ID)
+	if Debug.Client.NODEEDITOR then
+		print('ClientNodeEditor:_onObjectiveDirection -> direction: '..tostring(direction))
 	end
+	
+	if (bestPreviousWaypoint ~= nil) then
+		if Debug.Client.NODEEDITOR then
+			print('ClientNodeEditor:_onObjectiveDirection -> bestPreviousWaypoint: '..bestPreviousWaypoint.ID)
+		end
+	end
+	
 	return true
 end
 
 function ClientNodeEditor:_onGetKnownOjectives(args)
 	self.commoRoseActive = false
-	print('ClientNodeEditor:_onGetKnownOjectives -> '..g_Utilities:dump(g_NodeCollection:GetKnownOjectives(), true))
+	
+	if Debug.Client.NODEEDITOR then
+		print('ClientNodeEditor:_onGetKnownOjectives -> '..g_Utilities:dump(g_NodeCollection:GetKnownOjectives(), true))
+	end
+	
 	return true
 end
 
@@ -937,7 +1122,10 @@ function ClientNodeEditor:_onStartTrace()
 	self.customTrace:ClearSelection()
 	self.customTrace:Select(firstWaypoint)
 
-	print('Trace ' .. tostring(self.customTraceIndex) .. ' started');
+	if Debug.Client.NODEEDITOR then
+		print('Trace ' .. tostring(self.customTraceIndex) .. ' started');
+	end
+	
 	g_FunBotUIClient:_onUITrace(true)
 	g_FunBotUIClient:_onUITraceIndex(self.customTraceIndex)
 	g_FunBotUIClient:_onUITraceWaypoints(#self.customTrace:Get())
@@ -987,7 +1175,10 @@ function ClientNodeEditor:_onSaveTrace(pathIndex)
 	end
 
 	if (self.customTrace == nil) then
-		print('No custom trace has been recorded')
+		if Debug.Client.NODEEDITOR then
+			print('No custom trace has been recorded')
+		end
+		
 		return false
 	end
 
@@ -1088,14 +1279,18 @@ function ClientNodeEditor:_onUnload(args)
 		self.customTrace:Clear()
 	end
 
-	print('NodeCollection:Clear -> Expecting: '..g_Utilities:dump(args))
+	if Debug.Client.NODEEDITOR then
+		print('NodeCollection:Clear -> Expecting: '..g_Utilities:dump(args))
+	end
+	
 	g_NodeCollection:Clear()
 	g_NodeCollection:DeregisterEvents()
 end
 
 function ClientNodeEditor:_onCommoRoseAction(action, hit)
-	print('CommoRoseAction: '..tostring(action))
-
+	if Debug.Client.NODEEDITOR then
+		print('CommoRoseAction: '..tostring(action))
+	end
 
 	if (action == 'Hide') then
 		self.commoRoseActive = false
@@ -1170,7 +1365,10 @@ end
 
 function ClientNodeEditor:_onUIPushScreen(hook, screen, priority, parentGraph, stateNodeGuid)
 	if (self.enabled and self.commoRoseEnabled and screen ~= nil and UIScreenAsset(screen).name == 'UI/Flow/Screen/CommRoseScreen') then
-		print('ClientNodeEditor:_onUIPushScreen: Blocked Commo Rose')
+		if Debug.Client.NODEEDITOR then
+			print('ClientNodeEditor:_onUIPushScreen: Blocked Commo Rose')
+		end
+		
 		hook:Return(nil)
 		return
 	end
@@ -1375,7 +1573,10 @@ function ClientNodeEditor:_onEngineUpdate(delta, simDelta)
 			end
 
 			if (self.nodeSendProgress >= #self.nodesToSend) then
-				print('Finished sending waypoints to server')
+				if Debug.Client.NODEEDITOR then
+					print('Finished sending waypoints to server')
+				end
+				
 				self.nodesToSend = {}
 				self.nodeSendTimer = -1
 				self.nodeSendProgress = 1
@@ -1389,7 +1590,10 @@ function ClientNodeEditor:_onEngineUpdate(delta, simDelta)
 
 		-- timer for receiving node payload
 		if (self.nodeReceiveTimer > self.nodeReceiveDelay) then
-			print('NodeEditor:SendNodes')
+			if Debug.Client.NODEEDITOR then
+				print('NodeEditor:SendNodes')
+			end
+			
 			NetEvents:Send('NodeEditor:SendNodes')
 			self.nodeReceiveTimer = -1
 		end
@@ -1900,7 +2104,10 @@ end
 -- request a fresh node list from the server
 -- or server has told us be ready to receive
 function ClientNodeEditor:_onGetNodes(args)
-	print('ClientNodeEditor:_onGetNodes: '..tostring(args))
+	if Debug.Client.NODEEDITOR then
+		print('ClientNodeEditor:_onGetNodes: '..tostring(args))
+	end
+	
 	-- unload our current cache
 	self:_onUnload(args)
 	-- enable the timer before we are ready to receive
@@ -1913,11 +2120,16 @@ function ClientNodeEditor:_onSendNodes(args)
 
 	self.nodesToSend = g_NodeCollection:Get()
 
-	print('ClientNodeEditor:_onSendNodes: '..tostring(#self.nodesToSend))
+	if Debug.Client.NODEEDITOR then
+		print('ClientNodeEditor:_onSendNodes: '..tostring(#self.nodesToSend))
+	end
+	
 	if (self.nodesToSend ~= nil and #self.nodesToSend > 0) then
 		self.nodeSendTimer = 0
 	else
-		print('ClientNodeEditor:_onSendNodes: Client has 0 Nodes, Cancelling Send!')
+		if Debug.Client.NODEEDITOR then
+			print('ClientNodeEditor:_onSendNodes: Client has 0 Nodes, Cancelling Send!')
+		end
 	end
 end
 
@@ -1937,7 +2149,11 @@ function ClientNodeEditor:_onInit()
 	self.player = PlayerManager:GetLocalPlayer()
 
 	local staleNodes = 0
-	print('ClientNodeEditor:_onInit -> Nodes received: '..tostring(#waypoints))
+	
+	if Debug.Client.NODEEDITOR then
+		print('ClientNodeEditor:_onInit -> Nodes received: '..tostring(#waypoints))
+	end
+	
 	for i=1, #waypoints do
 
 		local waypoint = waypoints[i]
@@ -1948,7 +2164,10 @@ function ClientNodeEditor:_onInit()
 			staleNodes = staleNodes+1
 		end
 	end
-	print('ClientNodeEditor:_onInit -> Stale Nodes: '..tostring(staleNodes))
+	
+	if Debug.Client.NODEEDITOR then
+		print('ClientNodeEditor:_onInit -> Stale Nodes: '..tostring(staleNodes))
+	end
 end
 
 -- stolen't https://github.com/EmulatorNexus/VEXT-Samples/blob/80cddf7864a2cdcaccb9efa810e65fae1baeac78/no-headglitch-raycast/ext/Client/__init__.lua
