@@ -565,10 +565,14 @@ function Bot:_updateShooting()
 					end
 				end
 
-				if self._shootPlayer.attachedControllable then
+				if self._shootPlayer.attachedControllable or Config.botWeapon == "Sidearm" then
 					if self.sidearm ~= nil then
 						if self.sidearm.type == "Rocket" then
 							self._weaponToUse = "Sidearm"
+							print(self.player.soldier.weaponsComponent.currentWeapon.secondaryAmmo)
+							if self.player.soldier.weaponsComponent.currentWeapon.secondaryAmmo <= 2 then
+								self.player.soldier.weaponsComponent.currentWeapon.secondaryAmmo = self.player.soldier.weaponsComponent.currentWeapon.secondaryAmmo + 3
+							end
 						end
 					end
 				else
