@@ -569,7 +569,6 @@ function Bot:_updateShooting()
 					if self.sidearm ~= nil then
 						if self.sidearm.type == "Rocket" then
 							self._weaponToUse = "Sidearm"
-							print(self.player.soldier.weaponsComponent.currentWeapon.secondaryAmmo)
 							if self.player.soldier.weaponsComponent.currentWeapon.secondaryAmmo <= 2 then
 								self.player.soldier.weaponsComponent.currentWeapon.secondaryAmmo = self.player.soldier.weaponsComponent.currentWeapon.secondaryAmmo + 3
 							end
