@@ -17,6 +17,11 @@ function RCONCommands:__init()
 		GET_CONFIG	= {
 			Name		= 'funbots.config',
 			Callback	= (function(command, args);
+				if Debug.Server.RCON then
+					print('[RCON] call funbots.config');
+					print(json.encode(args));
+				end
+				
 				return {
 					'OK',
 					json.encode({
@@ -35,6 +40,11 @@ function RCONCommands:__init()
 			Name		= 'funbots.set.config',
 			Parameters	= { 'Name', 'Value' },
 			Callback	= (function(command, args);
+				if Debug.Server.RCON then
+					print('[RCON] call funbots.set.config');
+					print(json.encode(args));
+				end
+				
 				local old	= {
 					Name	= nil,
 					Value	= nil
@@ -177,6 +187,97 @@ function RCONCommands:__init()
 					else
 						print('Unknown Config property: ' .. name);
 					end
+				end
+				
+				-- Update some things
+				local updateBotTeamAndNumber = false;
+				local updateWeaponSets = false;
+				local updateWeapons = false;
+				local calcYawPerFrame = false;
+				
+				if name == 'botAimWorsening' then
+					updateWeapons = true;
+				end
+				
+				if name == 'botSniperAimWorsening' then
+					updateWeapons = true;
+				end
+				
+				if name == 'spawnMode' then
+					updateBotTeamAndNumber = true;
+				end
+				
+				if name == 'spawnInBothTeams' then
+					updateBotTeamAndNumber = true;
+				end
+				
+				if name == 'initNumberOfBots' then
+					updateBotTeamAndNumber = true;
+				end
+				
+				if name == 'newBotsPerNewPlayer' then
+					updateBotTeamAndNumber = true;
+				end
+				
+				if name == 'keepOneSlotForPlayers' then
+					updateBotTeamAndNumber = true;
+				end
+				
+				if name == 'assaultWeaponSet' then
+					updateWeaponSets = true;
+				end
+				
+				if name == 'engineerWeaponSet' then
+					updateWeaponSets = true;
+				end
+				
+				if name == 'supportWeaponSet' then
+					updateWeaponSets = true;
+				end
+				
+				if name == 'reconWeaponSet' then
+					updateWeaponSets = true;
+				end
+				
+				if updateWeapons then
+					if Debug.Server.RCON then
+						print('[RCON] call WeaponModification:ModifyAllWeapons()');
+					end
+					
+					WeaponModification:ModifyAllWeapons(Config.botAimWorsening, Config.botSniperAimWorsening);
+				end
+				
+				NetEvents:BroadcastLocal('WriteClientSettings', Config, updateWeaponSets);
+				
+				if updateWeaponSets then
+					if Debug.Server.RCON then
+						print('[RCON] call WeaponList:updateWeaponList()');
+					end
+					
+					WeaponList:updateWeaponList()
+				end
+				
+				if calcYawPerFrame then
+					if Debug.Server.RCON then
+						print('[RCON] call BotManager:calcYawPerFrame()');
+					end
+					
+					Globals.yawPerFrame = BotManager:calcYawPerFrame();
+				end
+				
+				if updateBotTeamAndNumber then
+					if Debug.Server.RCON then
+						print('[RCON] call BotSpawner:updateBotAmountAndTeam()');
+					end
+					
+					Globals.spawnMode = Config.spawnMode;
+					BotSpawner:updateBotAmountAndTeam();
+				end
+				
+				if Debug.Server.RCON then
+					print('[RCON] Config Result');
+					print('[RCON] ' .. old.Name .. ' = ' .. tostring(old.Value));
+					print('[RCON] ' .. new.Name .. ' = ' .. tostring(new.Value));
 				end
 				
 				return { 'OK', old.Name .. ' = ' .. tostring(old.Value), new.Name .. ' = ' .. tostring(new.Value) };
