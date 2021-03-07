@@ -381,7 +381,7 @@ end
 function Bot:_updateAiming()
 	if self.player.alive and self._shoot then
 			if self._shootPlayer ~= nil then
-				if self._shootPlayer.soldier ~= nil then
+				if self._shootPlayer.soldier ~= nil and self.activeWeapon ~= nil then
 					--interpolate player movement
 					local targetMovement = Vec3(0,0,0);
 					local ptichCorrection = 0.0;
@@ -583,7 +583,7 @@ function Bot:_updateShooting()
 				end
 
 				--trace way back
-				if self.activeWeapon.type ~= "Sniper" or self.knifeMode then
+				if self.activeWeapon ~= nil and self.activeWeapon.type ~= "Sniper" or self.knifeMode then
 					if self._shootTraceTimer > StaticConfig.traceDeltaShooting then
 						--create a Trace to find way back
 						self._shootTraceTimer 	= 0;
@@ -604,30 +604,32 @@ function Bot:_updateShooting()
 				end
 
 				--shooting sequence
-				if self.knifeMode then
-					self._shotTimer	= -Config.botFirstShotDelay;
-				else
-					if self._shotTimer >= (self.activeWeapon.fireCycle + self.activeWeapon.pauseCycle) then
-						self._shotTimer	= 0;
-					end
-					if self._shotTimer >= 0 then
-						if self.activeWeapon.delayed == false then
-							if self._shotTimer >= self.activeWeapon.fireCycle or self._meleeActive then
-								self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
-							else
-								self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
-							end
-						else --start with pause Cycle
-							if self._shotTimer >= self.activeWeapon.pauseCycle and not self._meleeActive then
-								self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
-							else
-								self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
+				if self.activeWeapon ~= nil then
+					if self.knifeMode then
+						self._shotTimer	= -Config.botFirstShotDelay;
+					else
+						if self._shotTimer >= (self.activeWeapon.fireCycle + self.activeWeapon.pauseCycle) then
+							self._shotTimer	= 0;
+						end
+						if self._shotTimer >= 0 then
+							if self.activeWeapon.delayed == false then
+								if self._shotTimer >= self.activeWeapon.fireCycle or self._meleeActive then
+									self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
+								else
+									self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
+								end
+							else --start with pause Cycle
+								if self._shotTimer >= self.activeWeapon.pauseCycle and not self._meleeActive then
+									self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
+								else
+									self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
+								end
 							end
 						end
 					end
-				end
 
-				self._shotTimer = self._shotTimer + StaticConfig.botUpdateCycle;
+					self._shotTimer = self._shotTimer + StaticConfig.botUpdateCycle;
+				end
 
 			else
 				self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);

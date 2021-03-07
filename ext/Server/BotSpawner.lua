@@ -629,7 +629,6 @@ function BotSpawner:getKitApperanceCustomization(team, kit, color, primary, pist
 	local pistolWeapon = ResourceManager:SearchForDataContainer(pistol:getResourcePath())
 	local knifeWeapon = ResourceManager:SearchForDataContainer(knife:getResourcePath())
 	if sidearm ~= nil then
-		print(sidearm:getResourcePath())
 		sideArmWeapon = ResourceManager:SearchForDataContainer(sidearm:getResourcePath())
 	end
 	local grenadeWeapon = ResourceManager:SearchForDataContainer('Weapons/M67/U_M67')
@@ -805,6 +804,7 @@ end
 
 function BotSpawner:setBotWeapons(bot, botKit, newWeapons)
 	if newWeapons then
+		bot.sidearm = nil;
 		if botKit == "Assault" then
 			local weapon = Config.assaultWeapon;
 			if Config.useRandomWeapon then
@@ -817,7 +817,6 @@ function BotSpawner:setBotWeapons(bot, botKit, newWeapons)
 				weapon = WeaponsEngineer[MathUtils:GetRandomInt(1, #WeaponsEngineer)]
 			end
 			local sidearmWeapon = SidearmsEngineer[MathUtils:GetRandomInt(1, #SidearmsEngineer)]
-			print(sidearmWeapon)
 			bot.primary = WeaponList:getWeapon(weapon)
 			bot.sidearm = WeaponList:getWeapon(sidearmWeapon)
 		elseif botKit == "Support" then
