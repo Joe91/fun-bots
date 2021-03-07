@@ -514,6 +514,7 @@ function Bot:_updateShooting()
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
 						self.activeWeapon = self.sidearm;
+						self._shotTimer	= -1.0;
 					else
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon5, 0);
 					end
@@ -575,14 +576,16 @@ function Bot:_updateShooting()
 						end
 					end
 				else
-					if Config.botWeapon == "Knife" or Config.zombieMode then
+					if self.knifeMode or self._meleeActive then
 						self._weaponToUse = "Knife"
-					elseif self.player.soldier.weaponsComponent.weapons[1] == nil then
-						self._weaponToUse = "Primary"
-					elseif self.player.soldier.weaponsComponent.weapons[1].primaryAmmo == 0 then
-						self._weaponToUse = "Pistol"
 					else
-						self._weaponToUse = "Primary"
+						if self.player.soldier.weaponsComponent.weapons[1] ~= nil then
+							if self.player.soldier.weaponsComponent.weapons[1].primaryAmmo == 0 then
+								self._weaponToUse = "Pistol"
+							else
+								self._weaponToUse = "Primary"
+							end
+						end
 					end
 				end
 
