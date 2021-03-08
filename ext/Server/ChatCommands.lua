@@ -1,6 +1,7 @@
 class('ChatCommands');
 
 require('__shared/Config');
+require('__shared/NodeCollection');
 
 local BotManager	= require('BotManager');
 local BotSpawner	= require('BotSpawner');
@@ -66,13 +67,9 @@ function ChatCommands:execute(parts, player)
 			return;
 		end
 
+		local amount = tonumber(parts[2]) or 1;
 		local activeWayIndex = tonumber(parts[3]) or 1;
-
-		if activeWayIndex > MAX_TRACE_NUMBERS or activeWayIndex < 1 then
-			activeWayIndex = 1;
-		end
-
-		local amount = tonumber(parts[2]);
+		activeWayIndex = math.min(math.max(activeWayIndex, 1), #g_NodeCollection:GetPaths())
 
 		BotSpawner:spawnWayBots(player, amount, false, activeWayIndex);
 

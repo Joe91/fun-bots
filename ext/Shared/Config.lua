@@ -1,6 +1,4 @@
 MAX_NUMBER_OF_BOTS	= 32;			-- maximum bots that can be spawned
-MAX_TRACE_NUMBERS	= 15;			-- maximum number of traces in one level
-
 USE_REAL_DAMAGE 	= true;			-- with real damage, the hitboxes are a bit buggy
 
 Config = {
