@@ -26,7 +26,6 @@ function RCONCommands:__init()
 					'OK',
 					json.encode({
 						MAX_NUMBER_OF_BOTS	= MAX_NUMBER_OF_BOTS,
-						MAX_TRACE_NUMBERS	= MAX_TRACE_NUMBERS,
 						USE_REAL_DAMAGE		= USE_REAL_DAMAGE,
 						Config				= Config,
 						StaticConfig		= StaticConfig
@@ -73,13 +72,6 @@ function RCONCommands:__init()
 					MAX_NUMBER_OF_BOTS	= tonumber(value);
 					new.Name			= name;
 					new.Value			= MAX_NUMBER_OF_BOTS;
-					
-				elseif name == 'MAX_TRACE_NUMBERS' then
-					old.Name			= name;
-					old.Value			= MAX_TRACE_NUMBERS;
-					MAX_TRACE_NUMBERS	= tonumber(value);
-					new.Name			= name;
-					new.Value			= MAX_TRACE_NUMBERS;
 					
 				elseif name == 'USE_REAL_DAMAGE' then
 					local new_value = false;
