@@ -13,6 +13,8 @@ function BotManager:__init()
 	self._botAttackBotTimer = 0;
 	self._destroyBotsTimer = 0;
 	self._botsToDestroy = {};
+	self._botToBotConnections = {};
+	self._lastBotCheckIndex = 1
 	self._initDone = false;
 
 	Events:Subscribe('UpdateManager:Update', self, self._onUpdate)
@@ -98,6 +100,18 @@ end
 
 function BotManager:getBots()
 	return self._bots
+end
+
+function BotManager:getBotsByTeam(teamId)
+	local allPlayers = PlayerManager:GetPlayers()
+	local teamBots = {}
+
+	for i=1, #self._bots do
+		if not self._bots[i]:isInactive() and self._bots[i].player.teamId == teamId then
+			table.insert(teamBots, self._bots[i])
+		end
+	end
+	return teamBots
 end
 
 function BotManager:getBotCount()
@@ -216,24 +230,31 @@ end
 
 function BotManager:_checkForBotBotAttack()
 	local players = self:getPlayers()
-	local botConnections = {}
-	if #players > 0 and #self._bots > 0 then
-		for _, bot in pairs(self._bots) do
+	local playerCount = #players
+	local raycasts = 0
+	if playerCount > 0 and #self._bots > 1 then
+		for i=self._lastBotCheckIndex, #self._bots do
+
+			local bot = self._bots[i]
+
+			if (self._botToBotConnections[bot.player.name] == nil) then
+				self._botToBotConnections[bot.player.name] = 'unchecked'
+			end
 
 			-- bot has player and hasn't found that special someone yet
-			if (bot.player and not botConnections[bot.player.name]) then
+			if (bot.player and self._botToBotConnections[bot.player.name] == 'unchecked') then
 
 				for _, bot2 in pairs(self._bots) do
 
-					-- don't match self, and make sure it's living
+					-- don't match self, and make sure it's living, opposite team
 					-- don't check if bot2 already has a target
-					if (bot.player ~= bot2.player and bot.player.alive and bot2.player.alive) then
+					if (bot.player ~= bot2.player and bot.player.alive and bot2.player.alive and bot.player.TeamId ~= bot2.player.teamId) then
 
 						local distance = bot.player.soldier.worldTransform.trans:Distance(bot2.player.soldier.worldTransform.trans)
 						if distance <= Config.maxBotAttackBotDistance then
 
 							-- choose a player at random, try until an active player is found
-							for i = math.random(1, #players), #players do
+							for i = math.random(1, playerCount), playerCount do
 								if self._activePlayers[players[i].name] then
 
 									-- check this bot view. Let one client do it
@@ -241,17 +262,29 @@ function BotManager:_checkForBotBotAttack()
 									local pos2 = bot2.player.soldier.worldTransform.trans:Clone()
 
 									NetEvents:SendUnreliableToLocal('CheckBotBotAttack', players[i], pos1, pos2, bot.player.name, bot2.player.name)
-									botConnections[bot.player.name] = true
-									botConnections[bot2.player.name] = true
+									self._botToBotConnections[bot.player.name] = 'checking'
+									self._botToBotConnections[bot2.player.name] = 'checking'
+									raycasts = raycasts + 1
 									break
 								end
+							end
+
+							if (raycasts >= playerCount) then
+								-- leave the function early for this cycle
+								self._lastBotCheckIndex = i
+								return
 							end
 						end
 					end
 				end
 			end
+			self._lastBotCheckIndex = i
 		end
 	end
+	-- should only reach here if every connection has been checked
+	-- clear the cache and start over
+	self._lastBotCheckIndex = 1
+	self._botToBotConnections = {}
 end
 
 function BotManager:onPlayerLeft(player)
@@ -405,6 +438,8 @@ function BotManager:_onBotShootAtBot(player, botname1, botname2)
 	end
 	bot1:shootAt(bot2.player, false)
 	bot2:shootAt(bot1.player, false)
+	self._botToBotConnections[bot1.player.name] = 'attacking '..bot2.player.name
+	self._botToBotConnections[bot2.player.name] = 'attacking '..bot1.player.name
 end
 
 
