@@ -75,21 +75,18 @@ function Utilities:getTargetHeight(soldier, isTarget)
 	return camereaHight;
 end
 
-function Utilities:isBot(name)
-	local isBot = false;
-	
-	for  index, botname in pairs(BotNames) do
-		if name == botname then
-			isBot = true;
-			break;
-		end
-		
-		if index > MAX_NUMBER_OF_BOTS then
-			break;
+function Utilities:isBot(player)
+	if (type(player) == 'string') then
+		player = PlayerManager:GetPlayerByName(player)
+	end
+	if (type(player) == 'number') then
+		player = PlayerManager:GetPlayerById(player)
+		if (player == nil) then
+			player = PlayerManager:GetPlayerByOnlineId(player)
 		end
 	end
-	
-	return isBot;
+
+	return player ~= nil and player.onlineId == 0
 end
 
 function Utilities:getEnumName(enum, value)

@@ -225,7 +225,7 @@ function BotSpawner:updateBotAmountAndTeam()
 end
 
 function BotSpawner:_onPlayerRespawn(player)
-	if not Utilities:isBot(player.name) then
+	if not Utilities:isBot(player) then
 		if not self._firstSpawnInLevel then
 			self:updateBotAmountAndTeam();
 		end
@@ -275,7 +275,7 @@ function BotSpawner:_onUpdate(dt, pass)
 	if self._firstSpawnInLevel then
 		if self._firstSpawnDelay <= 0 then
 			if BotManager:getPlayerCount() > 0 then
-				BotManager:configGlobas()
+				BotManager:configGlobals()
 				self:updateBotAmountAndTeam();
 				self._firstSpawnInLevel = false;
 			end

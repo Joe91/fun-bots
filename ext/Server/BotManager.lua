@@ -10,7 +10,6 @@ function BotManager:__init()
 	self._botInputs = {}
 	self._shooterBots = {}
 	self._activePlayers = {}
-	self._botToBotConnections = {}
 	self._botAttackBotTimer = 0;
 	self._destroyBotsTimer = 0;
 	self._botsToDestroy = {};
@@ -24,10 +23,6 @@ function BotManager:__init()
 	NetEvents:Subscribe('ClientDamagePlayer', self, self._onDamagePlayer)   	--only triggered on false damage
 	Hooks:Install('Soldier:Damage', 100, self, self._onSoldierDamage)
 
-end
-
-function BotManager:getBots()
-	return self._bots
 end
 
 function BotManager:registerActivePlayer(player)
@@ -62,7 +57,7 @@ function BotManager:getBotTeam()
 	return botTeam;
 end
 
-function BotManager:configGlobas()
+function BotManager:configGlobals()
 	Globals.respawnWayBots 	= Config.respawnWayBots;
 	Globals.attackWayBots 	= Config.attackWayBots;
 	Globals.spawnMode		= Config.spawnMode;
@@ -101,6 +96,10 @@ function BotManager:findNextBotName()
 	return nil
 end
 
+function BotManager:getBots()
+	return self._bots
+end
+
 function BotManager:getBotCount()
 	return #self._bots;
 end
@@ -115,6 +114,18 @@ function BotManager:getActiveBotCount(teamId)
 		end
 	end
 	return count
+end
+
+function BotManager:getPlayers()
+	local allPlayers = PlayerManager:GetPlayers()
+	local players = {}
+
+	for i=1, #allPlayers do
+		if not Utilities:isBot(allPlayers[i]) then
+			table.insert(players, allPlayers[i])
+		end
+	end
+	return players
 end
 
 function BotManager:getPlayerCount()
@@ -204,33 +215,35 @@ function BotManager:_onUpdate(dt, pass)
 end
 
 function BotManager:_checkForBotBotAttack()
-	local players = PlayerManager:GetPlayers()
-	local playerCount = self:getPlayerCount();
-	local playerIndex = 1;
-	local playersUsed = 0;
-	if playerCount > 0 then
+	local players = self:getPlayers()
+	local botConnections = {}
+	if #players > 0 and #self._bots > 0 then
 		for _, bot in pairs(self._bots) do
-			for _, bot2 in pairs(self._bots) do
-				if bot.player ~= bot2.player then
-					if bot.player.TeamId ~= bot2.player.teamId then
-						if bot.player.alive and bot2.player.alive then
-							if self._botToBotConnections[bot.player.name..bot2.player.name] == nil and self._botToBotConnections[bot2.player.name..bot.player.name] == nil then
-								if bot.player.soldier.worldTransform.trans:Distance(bot2.player.soldier.worldTransform.trans) <= Config.maxBotAttackBotDistance then
-									for i = playerIndex, #players do
-										if self:getBotByName(players[i].name) == nil then
-											-- check this bot view. Let one client do it
-											if self._activePlayers[players[i].name] then
-												NetEvents:SendUnreliableToLocal('CheckBotBotAttack', players[i], bot.player.soldier.worldTransform.trans, bot2.player.soldier.worldTransform.trans, bot.player.name, bot2.player.name)
-												self._botToBotConnections[bot.player.name..bot2.player.name] = true;
-												playerIndex = i + 1;
-												break
-											end
-										end
-									end
-									playersUsed = playersUsed + 1;
-									if playersUsed >= playerCount then
-										return
-									end
+
+			-- bot has player and hasn't found that special someone yet
+			if (bot.player and not botConnections[bot.player.name]) then
+
+				for _, bot2 in pairs(self._bots) do
+
+					-- don't match self, and make sure it's living
+					-- don't check if bot2 already has a target
+					if (bot.player ~= bot2.player and bot.player.alive and bot2.player.alive) then
+
+						local distance = bot.player.soldier.worldTransform.trans:Distance(bot2.player.soldier.worldTransform.trans)
+						if distance <= Config.maxBotAttackBotDistance then
+
+							-- choose a player at random, try until an active player is found
+							for i = math.random(1, #players), #players do
+								if self._activePlayers[players[i].name] then
+
+									-- check this bot view. Let one client do it
+									local pos1 = bot.player.soldier.worldTransform.trans:Clone()
+									local pos2 = bot2.player.soldier.worldTransform.trans:Clone()
+
+									NetEvents:SendUnreliableToLocal('CheckBotBotAttack', players[i], pos1, pos2, bot.player.name, bot2.player.name)
+									botConnections[bot.player.name] = true
+									botConnections[bot2.player.name] = true
+									break
 								end
 							end
 						end
@@ -239,8 +252,6 @@ function BotManager:_checkForBotBotAttack()
 			end
 		end
 	end
-	--clear connections, if all are checked
-	self._botToBotConnections = {}
 end
 
 function BotManager:onPlayerLeft(player)
@@ -303,7 +314,7 @@ function BotManager:_onSoldierDamage(hook, soldier, info, giverInfo)
 		return
 	end
 
-	local soldierIsBot = Utilities:isBot(soldier.player.name);
+	local soldierIsBot = Utilities:isBot(soldier.player);
 	if soldierIsBot and giverInfo.giver ~= nil then
 		--detect if we need to shoot back
 		if Config.shootBackIfHit and info.damage > 0 then
