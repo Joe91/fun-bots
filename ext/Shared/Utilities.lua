@@ -112,6 +112,12 @@ function Utilities:mergeKeys(originalTable, newData)
    return originalTable;
 end
 
+
+-- <object|o> | The object to dump
+-- <boolean|format> | If enabled, tab-spacing and newlines are used
+-- <int|maxLevels> | Max recursion level, defaults to -1 for infinite
+-- <int|level> | Current recursion level
+-- returns <string> | a string representation of the object
 function Utilities:dump(o, format, maxLevels, level)
 	local tablevel			= '';
 	local tablevellessone	= '';

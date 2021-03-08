@@ -1397,6 +1397,12 @@ function NodeCollection:FindAlongTrace(vec3Start, vec3End, granularity, toleranc
 	return nil
 end
 
+function NodeCollection:Print(...)
+	if Debug.Shared.NODECOLLECTION then
+		print('NodeCollection: ' .. Language:I18N(...))
+	end
+end
+
 if (g_NodeCollection == nil) then
 	g_NodeCollection = NodeCollection()
 end
