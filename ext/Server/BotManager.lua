@@ -14,6 +14,7 @@ function BotManager:__init()
 	self._destroyBotsTimer = 0;
 	self._botsToDestroy = {};
 	self._botToBotConnections = {};
+	self._botCheckState = {};
 	self._lastBotCheckIndex = 1
 	self._initDone = false;
 
@@ -238,43 +239,51 @@ function BotManager:_checkForBotBotAttack()
 
 			local bot = self._bots[i]
 
-			if (self._botToBotConnections[bot.player.name] == nil) then
-				self._botToBotConnections[bot.player.name] = 'unchecked'
+			if (self._botCheckState[bot.player.name] == nil) then
+				self._botCheckState[bot.player.name] = 'unchecked'
 			end
 
 			-- bot has player and hasn't found that special someone yet
-			if (bot.player and self._botToBotConnections[bot.player.name] == 'unchecked') then
+			if (bot.player and (self._botCheckState[bot.player.name] == 'unchecked' or  self._botCheckState[bot.player.name] == 'checking')) then
 
 				for _, bot2 in pairs(self._bots) do
 
 					-- don't match self, and make sure it's living, opposite team
 					-- don't check if bot2 already has a target
 					if (bot.player ~= bot2.player and bot.player.alive and bot2.player.alive and bot.player.TeamId ~= bot2.player.teamId) then
+						if self._botToBotConnections[bot.player.name..bot2.player.name] == nil and self._botToBotConnections[bot2.player.name..bot.player.name] == nil then
 
-						local distance = bot.player.soldier.worldTransform.trans:Distance(bot2.player.soldier.worldTransform.trans)
-						if distance <= Config.maxBotAttackBotDistance then
+							local distance = bot.player.soldier.worldTransform.trans:Distance(bot2.player.soldier.worldTransform.trans)
+							if distance <= Config.maxBotAttackBotDistance then
 
-							-- choose a player at random, try until an active player is found
-							for playerIndex = nextPlayerIndex, playerCount do
-								if self._activePlayers[players[playerIndex].name] then
+								-- don't check if already attacking someone
+								if (self._botCheckState[bot2.player.name] == 'unchecked' or  self._botCheckState[bot2.player.name] == 'checking') then
 
-									-- check this bot view. Let one client do it
-									local pos1 = bot.player.soldier.worldTransform.trans:Clone()
-									local pos2 = bot2.player.soldier.worldTransform.trans:Clone()
+									-- choose a player at random, try until an active player is found
+									for playerIndex = nextPlayerIndex, playerCount do
+										if self._activePlayers[players[playerIndex].name] then
 
-									NetEvents:SendUnreliableToLocal('CheckBotBotAttack', players[playerIndex], pos1, pos2, bot.player.name, bot2.player.name)
-									self._botToBotConnections[bot.player.name] = 'checking'
-									self._botToBotConnections[bot2.player.name] = 'checking'
-									raycasts = raycasts + 1
-									nextPlayerIndex = playerIndex + 1;
-									break
+											-- check this bot view. Let one client do it
+											local pos1 = bot.player.soldier.worldTransform.trans:Clone()
+											local pos2 = bot2.player.soldier.worldTransform.trans:Clone()
+
+											NetEvents:SendUnreliableToLocal('CheckBotBotAttack', players[playerIndex], pos1, pos2, bot.player.name, bot2.player.name)
+											self._botCheckState[bot.player.name] = 'checking'
+											self._botCheckState[bot2.player.name] = 'checking'
+											self._botToBotConnections[bot.player.name..bot2.player.name] = 'checked'
+											self._botToBotConnections[bot2.player.name..bot.player.name] = 'checked'
+											raycasts = raycasts + 1
+											nextPlayerIndex = playerIndex + 1;
+											break
+										end
+									end
+
+									if (raycasts >= playerCount) then
+										-- leave the function early for this cycle
+										self._lastBotCheckIndex = i
+										return
+									end
 								end
-							end
-
-							if (raycasts >= playerCount) then
-								-- leave the function early for this cycle
-								self._lastBotCheckIndex = i
-								return
 							end
 						end
 					end
@@ -287,6 +296,7 @@ function BotManager:_checkForBotBotAttack()
 	-- clear the cache and start over
 	self._lastBotCheckIndex = 1
 	self._botToBotConnections = {}
+	self._botCheckState = {}
 end
 
 function BotManager:onPlayerLeft(player)
@@ -438,10 +448,17 @@ function BotManager:_onBotShootAtBot(player, botname1, botname2)
 	if bot1 == nil or bot1.player == nil or  bot2 == nil or bot2.player == nil then
 		return
 	end
-	bot1:shootAt(bot2.player, false)
-	bot2:shootAt(bot1.player, false)
-	self._botToBotConnections[bot1.player.name] = 'attacking '..bot2.player.name
-	self._botToBotConnections[bot2.player.name] = 'attacking '..bot1.player.name
+	local attackPossible = false;
+	if bot1:shootAt(bot2.player, false) then
+		attackPossible = true
+	end
+	if bot2:shootAt(bot1.player, false) then
+		attackPossible = true
+	end
+	if attackPossible then
+		self._botCheckState[bot1.player.name] = 'attacking '..bot2.player.name
+		self._botCheckState[bot2.player.name] = 'attacking '..bot1.player.name
+	end
 end
 
 

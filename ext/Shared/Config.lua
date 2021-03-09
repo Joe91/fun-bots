@@ -1,4 +1,4 @@
-MAX_NUMBER_OF_BOTS	= 32;			-- maximum bots that can be spawned
+MAX_NUMBER_OF_BOTS	= 64;			-- maximum bots that can be spawned
 USE_REAL_DAMAGE 	= true;			-- with real damage, the hitboxes are a bit buggy
 
 Config = {

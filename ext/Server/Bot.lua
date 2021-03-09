@@ -108,21 +108,21 @@ end
 --public functions
 function Bot:shootAt(player, ignoreYaw)
 	if self._actionActive then
-		return;
+		return false;
 	end
 
 	-- don't shoot at teammates
 	if self.player.teamId == player.teamId then
-		return
+		return false
 	end
 	if player.soldier == nil or self.player.soldier == nil then
-		return
+		return false
 	end
 	-- don't shoot if too far away
 	if not ignoreYaw then
 		local distance = player.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans)
 		if self.activeWeapon.type ~= "Sniper" and distance > Config.maxShootDistanceNoSniper then
-			return
+			return false
 		end
 	end
 
@@ -155,11 +155,14 @@ function Bot:shootAt(player, ignoreYaw)
 				if self.knifeMode then
 					table.insert(self._knifeWayPositions, self._lastTargetTrans)
 				end
+				return true
 			end
 		else
 			self._shootModeTimer = Config.botFireModeDuration;
+			return false
 		end
 	end
+	return false
 end
 
 function Bot:setVarsDefault()
