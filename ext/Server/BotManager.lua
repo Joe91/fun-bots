@@ -232,6 +232,7 @@ function BotManager:_checkForBotBotAttack()
 	local players = self:getPlayers()
 	local playerCount = #players
 	local raycasts = 0
+	local nextPlayerIndex = 1
 	if playerCount > 0 and #self._bots > 1 then
 		for i=self._lastBotCheckIndex, #self._bots do
 
@@ -254,17 +255,18 @@ function BotManager:_checkForBotBotAttack()
 						if distance <= Config.maxBotAttackBotDistance then
 
 							-- choose a player at random, try until an active player is found
-							for i = math.random(1, playerCount), playerCount do
-								if self._activePlayers[players[i].name] then
+							for playerIndex = nextPlayerIndex, playerCount do
+								if self._activePlayers[players[playerIndex].name] then
 
 									-- check this bot view. Let one client do it
 									local pos1 = bot.player.soldier.worldTransform.trans:Clone()
 									local pos2 = bot2.player.soldier.worldTransform.trans:Clone()
 
-									NetEvents:SendUnreliableToLocal('CheckBotBotAttack', players[i], pos1, pos2, bot.player.name, bot2.player.name)
+									NetEvents:SendUnreliableToLocal('CheckBotBotAttack', players[playerIndex], pos1, pos2, bot.player.name, bot2.player.name)
 									self._botToBotConnections[bot.player.name] = 'checking'
 									self._botToBotConnections[bot2.player.name] = 'checking'
 									raycasts = raycasts + 1
+									nextPlayerIndex = playerIndex + 1;
 									break
 								end
 							end
