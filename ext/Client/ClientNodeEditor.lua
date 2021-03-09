@@ -830,7 +830,7 @@ function ClientNodeEditor:_onDumpNodes(args)
 		self:Print(g_Utilities:dump(selection[i], true, 1))
 	end
 	
-	self:Print('Dumped ['..tostring(#selection)..'] Nodes!')
+	self:Print('Dumped [%d] Nodes!', #selection)
 	return true
 end
 
@@ -871,7 +871,7 @@ function ClientNodeEditor:_onAddMcom(args)
 		return false
 	end
 
-	self:Print('Updating %s Waypoints', (#selection))
+	self:Print('Updating %d Possible Waypoints', (#selection))
 
 	for i=1, #selection do
 		local action = {
@@ -904,7 +904,7 @@ function ClientNodeEditor:_onAddObjective(args)
 	end
 
 	local donePaths = {}
-	self:Print('Updating %s Waypoints', (#selection))
+	self:Print('Updating %d Possible Waypoints', (#selection))
 
 	for i=1, #selection do
 		local waypoint = g_NodeCollection:GetFirst(selection[i].PathIndex)
@@ -949,7 +949,7 @@ function ClientNodeEditor:_onRemoveObjective(args)
 	end
 
 	local donePaths = {}
-	self:Print('Updating %s Waypoints', (#selection))
+	self:Print('Updating %d Possible Waypoints', (#selection))
 
 	for i=1, #selection do
 		local waypoint = g_NodeCollection:GetFirst(selection[i].PathIndex)
@@ -1010,7 +1010,7 @@ end
 function ClientNodeEditor:_onSetBotVision(args)
 	self.botVisionEnabled = (args ~= nil and (args[1] == '1' or args[1] == 'true'))
 
-	self:Print('BotVision: %s', tostring(self.botVisionEnabled))
+	self:Print('BotVision: %s', self.botVisionEnabled)
 	
 	NetEvents:Send('NodeEditor:SetBotVision', self.botVisionEnabled)
 	if (self.botVisionEnabled) then
@@ -1040,7 +1040,7 @@ function ClientNodeEditor:_onObjectiveDirection(args)
 
 	local direction, bestPreviousWaypoint = g_NodeCollection:ObjectiveDirection(selection[1], data)
 
-	self:Print('Direction: %s', tostring(direction))
+	self:Print('Direction: %s', direction)
 	
 	if (bestPreviousWaypoint ~= nil) then
 		self:Print('Best Previous Waypoint: %s', bestPreviousWaypoint.ID)
@@ -1200,7 +1200,7 @@ function ClientNodeEditor:_onSaveTrace(pathIndex)
 	end
 
 	self.customTrace:Clear()
-	self:Print('Custom Trace Saved to Path: %s', pathIndex)
+	self:Print('Custom Trace Saved to Path: %d', pathIndex)
 	self.nodeOperation = ''
 end
 
@@ -1239,7 +1239,7 @@ function ClientNodeEditor:_onUnload(args)
 end
 
 function ClientNodeEditor:_onCommoRoseAction(action, hit)
-	self:Print('Commo Rose -> '..tostring(action))
+	self:Print('Commo Rose -> %s', action)
 
 	if (action == 'Hide') then
 		self.commoRoseActive = false
@@ -1302,11 +1302,11 @@ function ClientNodeEditor:_onCommoRoseAction(action, hit)
 			local isSelected = g_NodeCollection:IsSelected(hitPoint)
 
 			if (isSelected) then
-				self:Print('Deselect -> '..tostring(hitPoint.ID))
+				self:Print('Deselect -> %s', hitPoint.ID)
 				g_NodeCollection:Deselect(hitPoint)
 				return
 			else
-				self:Print('Select -> '..tostring(hitPoint.ID))
+				self:Print('Select -> %s', hitPoint.ID)
 				g_NodeCollection:Select(hitPoint)
 				return
 			end
@@ -1540,10 +1540,7 @@ function ClientNodeEditor:_onEngineUpdate(delta, simDelta)
 
 		-- timer for receiving node payload
 		if (self.nodeReceiveTimer > self.nodeReceiveDelay) then
-			if Debug.Client.NODEEDITOR then
-				print('NodeEditor:SendNodes')
-			end
-			
+			self:Print('Ready to receive waypoints')			
 			NetEvents:Send('NodeEditor:SendNodes')
 			self.nodeReceiveTimer = -1
 		end
@@ -2072,7 +2069,7 @@ end
 function ClientNodeEditor:_onSendNodes(args)
 
 	self.nodesToSend = g_NodeCollection:Get()
-	self:Print('Sending Nodes: %s', tostring(#self.nodesToSend))
+	self:Print('Sending Nodes: %d', #self.nodesToSend)
 	
 	if (self.nodesToSend == nil or #self.nodesToSend < 1) then
 		self:Print('Client has 0 Nodes, Cancelling Send!')
@@ -2100,7 +2097,7 @@ function ClientNodeEditor:_onInit()
 
 	local staleNodes = 0
 
-	self:Print('Receved Nodes: %s', tostring(#waypoints))
+	self:Print('Receved Nodes: %d', #waypoints)
 	
 	for i=1, #waypoints do
 
@@ -2114,7 +2111,7 @@ function ClientNodeEditor:_onInit()
 	end
 
 	if (staleNodes > 0) then
-		self:Print('Warning! Stale Nodes: %s', tostring(staleNodes))
+		self:Print('Warning! Stale Nodes: %d', staleNodes)
 	end
 
 	self.nodeOperation = ''

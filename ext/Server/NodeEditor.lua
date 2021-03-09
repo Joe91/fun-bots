@@ -37,6 +37,12 @@ function NodeEditor:RegisterEvents()
 	Events:Subscribe('Player:Killed', self, self._onPlayerKilled)
 end
 
+function NodeEditor:Print(...)
+	if Debug.Server.NODEEDITOR then
+		print('NodeEditor: ' .. Language:I18N(...))
+	end
+end
+
 function NodeEditor:_onPlayerKilled(player, inflictor, position, weapon, isRoadKill, isHeadShot, wasVictimInReviveState, info)
     if (player ~= nil and self.botVision[player.name] ~= nil) then
     	self.botVision[player.name] = {
@@ -76,10 +82,6 @@ end
 
 -- player has requested node collection to be sent
 function NodeEditor:_onRequestNodes(player)
-	if Debug.Server.NODEEDITOR then
-		print('NodeEditor:_onRequestNodes: '..tostring(player.name))
-	end
-	
 	-- tell client to clear their list and how many to expect
 	NetEvents:SendToLocal('ClientNodeEditor:ReceivingNodes', player, #g_NodeCollection:Get())
 end
@@ -89,9 +91,7 @@ function NodeEditor:_onSendNodes(player)
 	local nodes = g_NodeCollection:Get()
 	table.insert(self.playersReceivingNodes, {Player = player, Index = 1, Nodes = nodes, BatchSendDelay = 0})
 	self.batchSendTimer = 0
-	if Debug.Server.NODEEDITOR then
-		print('Sending '..tostring(#nodes)..' waypoints to '..player.name)
-	end
+	self:Print('Sending %d waypoints to %s', #nodes, player.name)
 end
 
 function NodeEditor:_stopSendingNodes(player)
@@ -107,28 +107,21 @@ end
 function NodeEditor:_onReceiveNodes(player, nodeCount)
 
 	if (Config.settingsPassword ~= nil and g_FunBotUIServer:_isAuthenticated(player.accountGuid) ~= true) then
-		if Debug.Server.NODEEDITOR then
-			print(player.name .. ' has no permissions for Waypoint-Editor.')
-		end
-		
+		self:Print('%s has no permissions for Waypoint-Editor.', player.name)
 		return
 	end
 
 	g_NodeCollection:Clear()
 	self.playerSendingNodes = player
 	self.nodeReceiveTimer = 0
-	if Debug.Server.NODEEDITOR then
-		print('Receiving '..tostring(nodeCount)..' waypoints from '..player.name)
-	end
+	self:Print('Receiving %d waypoints from %s', nodeCount, player.name)
 end
 
 -- player is sending a single node over
 function NodeEditor:_onCreate(player, data)
 
 	if (Config.settingsPassword ~= nil and g_FunBotUIServer:_isAuthenticated(player.accountGuid) ~= true) then
-		if Debug.Server.NODEEDITOR then
-			print(player.name .. ' has no permissions for Waypoint-Editor.')
-		end
+		self:Print('%s has no permissions for Waypoint-Editor.', player.name)
 		return
 	end
 
@@ -139,9 +132,7 @@ end
 function NodeEditor:_onInit(player, save)
 
 	if (Config.settingsPassword ~= nil and g_FunBotUIServer:_isAuthenticated(player.accountGuid) ~= true) then
-		if Debug.Server.NODEEDITOR then
-			print(player.name .. ' has no permissions for Waypoint-Editor.')
-		end
+		self:Print('%s has no permissions for Waypoint-Editor.', player.name)
 		return
 	end
 
@@ -150,9 +141,7 @@ function NodeEditor:_onInit(player, save)
 
 	local staleNodes = 0
 	local nodesToCheck = g_NodeCollection:Get()
-	if Debug.Server.NODEEDITOR then
-		print('NodeEditor:_onInit -> Nodes received: '..tostring(#nodesToCheck))
-	end
+	self:Print('Nodes Received: %d', #nodesToCheck)
 	
 	for i=1, #nodesToCheck do
 
@@ -165,9 +154,7 @@ function NodeEditor:_onInit(player, save)
 		end
 	end
 	
-	if Debug.Server.NODEEDITOR then
-		print('NodeEditor:_onInit -> Stale Nodes: '..tostring(staleNodes))
-	end
+	self:Print('Stale Nodes: %d', staleNodes)
 	
 	if (save) then
 		g_NodeCollection:Save()
@@ -177,24 +164,16 @@ end
 function NodeEditor:_onWarpTo(player, vec3Position)
 
 	if (player == nil or not player.alive or player.soldier == nil or not player.soldier.isAlive) then
-		if Debug.Server.NODEEDITOR then
-			print('Player invalid!')
-		end
-		
 		return
 	end
 
-	if Debug.Server.NODEEDITOR then
-		print('Teleporting '..player.name..': '..tostring(vec3Position))
-	end
+	self:Print('Teleporting %s to %s', player.name, tostring(vec3Position))
 	
 	player.soldier:SetPosition(vec3Position)
 end
 
 function NodeEditor:_onSetBotVision(player, enabled)
-	if Debug.Server.NODEEDITOR then
-		print('NodeEditor:_onSetBotVision ['..player.name..']: '..tostring(enabled))
-	end
+	self:Print('Player -> BotVision [%s]: %s', player.name, enabled)
 	
 	if (enabled) then
 		self.botVision[player.name] = {
@@ -217,9 +196,8 @@ function NodeEditor:_onEngineUpdate(deltaTime, simulationDeltaTime)
 			timeData.Current = timeData.Current + deltaTime
 
 			if (timeData.Current >= timeData.Delay) then
-				if Debug.Server.NODEEDITOR then
-					print('Player:Fade ['..timeData.Player.name..']: '..tostring(timeData.State))
-				end
+				self:Print('Player -> Fade [%s]: %s', timeData.Player.name, timeData.State)
+
 				timeData.Player:Fade(timeData.Speed, timeData.State)
 				self.botVision[playerName] = true
 			else
@@ -268,9 +246,7 @@ function NodeEditor:_onEngineUpdate(deltaTime, simulationDeltaTime)
 						end
 					end
 					if (sendStatus.Index >= #sendStatus.Nodes) then
-						if Debug.Server.NODEEDITOR then
-							print('Finished sending waypoints to '..sendStatus.Player.name)
-						end
+						self:Print('Finished sending waypoints to %s', sendStatus.Player.name)
 						
 						table.remove(self.playersReceivingNodes, i)
 						NetEvents:SendToLocal('ClientNodeEditor:Init', sendStatus.Player)
@@ -287,9 +263,7 @@ end
 
 -- load waypoints from sql
 function NodeEditor:onLevelLoaded(levelName, gameMode)
-	if Debug.Server.NODEEDITOR then
-		print('NodeEditor:_onLevelLoaded -> '.. levelName..', '..gameMode)
-	end
+	self:Print('Level Load: %s %s', levelName, gameMode)
 	
 	g_NodeCollection:Load(levelName, gameMode)
 
@@ -305,9 +279,7 @@ function NodeEditor:onLevelLoaded(levelName, gameMode)
 			counter = counter+1
 		end
 	end
-	if Debug.Server.NODEEDITOR then
-		print('NodeEditor:_onLevelLoaded -> Stale Nodes: '..tostring(counter))
-	end
+	self:Print('Load -> Stale Nodes: %d', counter)
 end
 
 function NodeEditor:_onUIRequestSaveSettings(player, data)
