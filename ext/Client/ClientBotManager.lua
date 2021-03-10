@@ -7,9 +7,11 @@ local Utilities 			= require('__shared/Utilities')
 
 function ClientBotManager:__init()
 	self._raycastTimer	= 0;
-	self._lastIndex		= 0;
+	self._lastIndex		= 1;
+	self.player = nil
 
 	Events:Subscribe('UpdateManager:Update', self, self._onUpdate);
+	Events:Subscribe('Level:Destroy', self, self.onExtensionUnload)
 	NetEvents:Subscribe('WriteClientSettings', self, self._onWriteClientSettings);
 	NetEvents:Subscribe('CheckBotBotAttack', self, self._checkForBotBotAttack);
 	if not USE_REAL_DAMAGE then
@@ -19,7 +21,8 @@ end
 
 function ClientBotManager:onExtensionUnload()
 	self._raycastTimer	= 0;
-	self._lastIndex		= 0;
+	self._lastIndex		= 1;
+	self.player = nil
 end
 
 function ClientBotManager:onEngineMessage(p_Message)
@@ -44,6 +47,8 @@ function ClientBotManager:_onWriteClientSettings(newConfig, updateWeaponSets)
 	if updateWeaponSets then
 		WeaponList:updateWeaponList();
 	end
+
+	self.player = PlayerManager:GetLocalPlayer()
 end
 
 function ClientBotManager:_onUpdate(p_Delta, p_Pass)
@@ -51,39 +56,52 @@ function ClientBotManager:_onUpdate(p_Delta, p_Pass)
 		return
 	end
 
+	if (self.player == nil) then
+		self.player = PlayerManager:GetLocalPlayer()
+	end
+
+	if (self.player == nil) then
+		return
+	end
+
 	self._raycastTimer = self._raycastTimer + p_Delta;
 
 	if (self._raycastTimer >= StaticConfig.raycastInterval) then
 		self._raycastTimer = 0;
+		local team = 0
+		if (self.player.teamId == TeamId.Team1) then team = TeamId.Team2 else team = TeamId.Team1 end
+		local enemyPlayers = PlayerManager:GetPlayersByTeam(team)
+		if (self._lastIndex >= #enemyPlayers) then
+			self._lastIndex = 1
+		end
 
-		for i = self._lastIndex, MAX_NUMBER_OF_BOTS + self._lastIndex do
-			local newIndex	= i % MAX_NUMBER_OF_BOTS + 1;
-			local bot		= PlayerManager:GetPlayerByName(BotNames[newIndex]);
-			local player	= PlayerManager:GetLocalPlayer();
+		for i = self._lastIndex, #enemyPlayers do
 
-			if (bot ~= nil) then
-				if (bot.soldier ~= nil and player.soldier ~= nil) then
-					-- check for clear view
-					local playerPosition = ClientUtils:GetCameraTransform().trans:Clone(); --player.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(player, false);
+			local bot = enemyPlayers[i]
 
-					-- find direction of Bot
-					local target	= bot.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(bot, false);
-					local distance	= playerPosition:Distance(bot.soldier.worldTransform.trans);
+			-- valid player and is bot
+			if (bot ~= nil and bot.onlineId == 0 and bot.soldier ~= nil) then
 
-					if (distance < Config.maxRaycastDistance) then
-						self._lastIndex	= newIndex;
-						local raycast	= RaycastManager:Raycast(playerPosition, target, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.IsAsyncRaycast)
+				-- check for clear view
+				local playerPosition = ClientUtils:GetCameraTransform().trans:Clone(); --player.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(player, false);
 
-						if (raycast == nil or raycast.rigidBody == nil) then
-							-- we found a valid bot in Sight (either no hit, or player-hit). Signal Server with players
-							local ignoreYaw = false;
-							if (distance < Config.distanceForDirectAttack) then
-								ignoreYaw = true; --shoot, because you are near
-							end
-							NetEvents:SendLocal("BotShootAtPlayer", bot.name, ignoreYaw);
+				-- find direction of Bot
+				local target	= bot.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(bot, false);
+				local distance	= playerPosition:Distance(bot.soldier.worldTransform.trans);
+
+				if (distance < Config.maxRaycastDistance) then
+					self._lastIndex	= self._lastIndex+1;
+					local raycast	= RaycastManager:Raycast(playerPosition, target, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.IsAsyncRaycast)
+
+					if (raycast == nil or raycast.rigidBody == nil) then
+						-- we found a valid bot in Sight (either no hit, or player-hit). Signal Server with players
+						local ignoreYaw = false;
+						if (distance < Config.distanceForDirectAttack) then
+							ignoreYaw = true; --shoot, because you are near
 						end
-						return --only one raycast per cycle
+						NetEvents:SendLocal("BotShootAtPlayer", bot.name, ignoreYaw);
 					end
+					return --only one raycast per cycle
 				end
 			end
 		end

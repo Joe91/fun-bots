@@ -552,7 +552,7 @@ function Bot:_updateShooting()
 				self._reloadTimer		= 0; -- reset reloading
 
 				--check for melee attack
-				if Config.meleeAttackIfClose and not self._meleeActive and self._shootPlayer.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans) < 2 and self._meleeCooldownTimer <= 0 then
+				if Config.meleeAttackIfClose and not self._meleeActive and self._meleeCooldownTimer <= 0 and self._shootPlayer.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans) < 2 then
 					self._meleeActive = true;
 					self.activeWeapon = self.knife;
 					self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
