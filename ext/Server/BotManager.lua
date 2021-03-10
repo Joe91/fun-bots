@@ -629,6 +629,7 @@ function BotManager:destroyBot(bot)
 		if bot.name ~= checkBot.name then
 			table.insert(newTable, checkBot)
 		end
+		checkBot:clearPlayer(bot.player)
 	end
 	self._bots = newTable
 
