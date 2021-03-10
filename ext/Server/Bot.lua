@@ -113,16 +113,19 @@ function Bot:shootAt(player, ignoreYaw)
 
 	-- don't shoot at teammates
 	if self.player.teamId == player.teamId then
-		return false
+		return false;
 	end
+	
 	if player.soldier == nil or self.player.soldier == nil then
-		return false
+		return false;
 	end
+	
 	-- don't shoot if too far away
 	if not ignoreYaw then
-		local distance = player.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans)
+		local distance = player.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans);
+		
 		if self.activeWeapon.type ~= "Sniper" and distance > Config.maxShootDistanceNoSniper then
-			return false
+			return false;
 		end
 	end
 
@@ -147,21 +150,24 @@ function Bot:shootAt(player, ignoreYaw)
 	if dYaw < fovHalf or ignoreYaw then
 		if self._shoot then
 			if self._shootPlayer == nil or self._shootModeTimer > Config.botMinTimeShootAtPlayer or (self.knifeMode and self._shootModeTimer > (Config.botMinTimeShootAtPlayer/2)) then
-				self._shootModeTimer	= 0;
-				self._shootPlayer		= player;
-				self._lastShootPlayer 	= player;
-				self._lastTargetTrans 	= player.soldier.worldTransform.trans:Clone();
+				self._shootModeTimer		= 0;
+				self._shootPlayer			= player;
+				self._lastShootPlayer 		= player;
+				self._lastTargetTrans 		= player.soldier.worldTransform.trans:Clone();
 				self._knifeWayPositions 	= {};
+				
 				if self.knifeMode then
-					table.insert(self._knifeWayPositions, self._lastTargetTrans)
+					table.insert(self._knifeWayPositions, self._lastTargetTrans);
 				end
-				return true
+				
+				return true;
 			end
 		else
 			self._shootModeTimer = Config.botFireModeDuration;
-			return false
+			return false;
 		end
 	end
+	
 	return false
 end
 
@@ -277,7 +283,7 @@ function Bot:setSpeed(speed)
 end
 
 function Bot:setObjective(objective)
-	self._objective = objective or ''
+	self._objective = objective or '';
 end
 
 function Bot:getObjective(objective)
@@ -362,9 +368,10 @@ function Bot:clearPlayer(player)
 end
 
 function Bot:kill()
-	self:resetVars()
+	self:resetVars();
+	
 	if self.player.alive then
-		self.player.soldier:Kill()
+		self.player.soldier:Kill();
 	end
 end
 
@@ -389,24 +396,23 @@ function Bot:_updateRespwawn()
 end
 
 function Bot:_updateAiming()
-
-	if (not self.player.alive or not self._shoot or self._shootPlayer == nil or
-		self._shootPlayer.soldier == nil or self.activeWeapon == nil) then
-		return
+	if (not self.player.alive or not self._shoot or self._shootPlayer == nil or self._shootPlayer.soldier == nil or self.activeWeapon == nil) then
+		return;
 	end
 
 	--interpolate player movement
-	local targetMovement = Vec3.zero;
-	local pitchCorrection = 0.0;
-	local fullPositionTarget =  self._shootPlayer.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(self._shootPlayer, true);
-	local fullPositionBot = self.player.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(self.player, false);
+	local targetMovement		= Vec3.zero;
+	local pitchCorrection		= 0.0;
+	local fullPositionTarget	=  self._shootPlayer.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(self._shootPlayer, true);
+	local fullPositionBot		= self.player.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(self.player, false);
 
 	if not self.knifeMode then
 		local distanceToPlayer	= fullPositionTarget:Distance(fullPositionBot);
 		--calculate how long the distance is --> time to travel
-		local timeToTravel		= (distanceToPlayer / self.activeWeapon.bulletSpeed)
-		local factorForMovement	= (timeToTravel) / self._aimUpdateTimer
+		local timeToTravel		= (distanceToPlayer / self.activeWeapon.bulletSpeed);
+		local factorForMovement	= (timeToTravel) / self._aimUpdateTimer;
 		pitchCorrection	= 0.5 * timeToTravel * timeToTravel * self.activeWeapon.bulletDrop;
+		
 		if self._lastShootPlayer == self._shootPlayer then
 			targetMovement			= (fullPositionTarget - self._lastTargetTrans) * factorForMovement; --movement in one dt
 		end
@@ -432,60 +438,68 @@ end
 
 function Bot:_updateYaw()
 	if self._meleeActive then
-		return
+		return;
 	end
+	
 	if self._targetPoint ~= nil and self._shootPlayer == nil and self.player.soldier ~= nil then
 		if self.player.soldier.worldTransform.trans:Distance(self._targetPoint.Position) < 0.2 then
-			self._targetPoint = self._nextTargetPoint
+			self._targetPoint = self._nextTargetPoint;
 		end
-		local dy					= self._targetPoint.Position.z - self.player.soldier.worldTransform.trans.z;
-		local dx					= self._targetPoint.Position.x - self.player.soldier.worldTransform.trans.x;
+		
+		local dy		= self._targetPoint.Position.z - self.player.soldier.worldTransform.trans.z;
+		local dx		= self._targetPoint.Position.x - self.player.soldier.worldTransform.trans.x;
 		local atanDzDx	= math.atan(dy, dx);
 		local yaw		= (atanDzDx > math.pi / 2) and (atanDzDx - math.pi / 2) or (atanDzDx + 3 * math.pi / 2);
 		self._targetYaw = yaw;
 	end
+	
 	if self.knifeMode then
 		if self._shootPlayer ~= nil and self.player.soldier ~= nil then
 			if #self._knifeWayPositions > 0 then
-				local dy					= self._knifeWayPositions[1].z - self.player.soldier.worldTransform.trans.z;
-				local dx					= self._knifeWayPositions[1].x - self.player.soldier.worldTransform.trans.x;
+				local dy		= self._knifeWayPositions[1].z - self.player.soldier.worldTransform.trans.z;
+				local dx		= self._knifeWayPositions[1].x - self.player.soldier.worldTransform.trans.x;
 				local atanDzDx	= math.atan(dy, dx);
 				local yaw		= (atanDzDx > math.pi / 2) and (atanDzDx - math.pi / 2) or (atanDzDx + 3 * math.pi / 2);
 				self._targetYaw = yaw;
+				
 				if self.player.soldier.worldTransform.trans:Distance(self._knifeWayPositions[1]) < 1.5 then
-					table.remove(self._knifeWayPositions, 1)
+					table.remove(self._knifeWayPositions, 1);
 				end
 			end
 		end
 	end
 
 	local deltaYaw = self.player.input.authoritativeAimingYaw - self._targetYaw;
+	
 	if deltaYaw > math.pi then
 		deltaYaw = deltaYaw - 2*math.pi
 	elseif deltaYaw < -math.pi then
 		deltaYaw = deltaYaw + 2*math.pi
 	end
 
-	local absDeltaYaw = math.abs(deltaYaw)
-
-	local inkrement = g_Globals.yawPerFrame;
+	local absDeltaYaw	= math.abs(deltaYaw);
+	local inkrement 	= g_Globals.yawPerFrame;
+	
 	if absDeltaYaw < inkrement then
-		self.player.input.authoritativeAimingYaw = self._targetYaw;
-		self.player.input.authoritativeAimingPitch = self._targetPitch;
+		self.player.input.authoritativeAimingYaw	= self._targetYaw;
+		self.player.input.authoritativeAimingPitch	= self._targetPitch;
 		return;
 	end
 
 	if deltaYaw > 0  then
 		inkrement = -inkrement;
 	end
+	
 	local tempYaw = self.player.input.authoritativeAimingYaw + inkrement;
+	
 	if tempYaw >= (math.pi * 2) then
 		tempYaw = tempYaw - (math.pi * 2);
 	elseif tempYaw < 0.0 then
 		tempYaw = tempYaw + (math.pi * 2);
 	end
-	self.player.input.authoritativeAimingYaw = tempYaw
-	self.player.input.authoritativeAimingPitch = self._targetPitch;
+	
+	self.player.input.authoritativeAimingYaw	= tempYaw
+	self.player.input.authoritativeAimingPitch	= self._targetPitch;
 end
 
 
@@ -555,11 +569,13 @@ function Bot:_updateShooting()
 				if Config.meleeAttackIfClose and not self._meleeActive and self._meleeCooldownTimer <= 0 and self._shootPlayer.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans) < 2 then
 					self._meleeActive = true;
 					self.activeWeapon = self.knife;
+					
 					self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
 					self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 1);
 					self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 1);
 					self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 1);
 					self._meleeCooldownTimer = Config.meleeAttackCoolDown;
+					
 					if not USE_REAL_DAMAGE then
 						Events:DispatchLocal("ServerDamagePlayer", self._shootPlayer.name, self.player.name, true);
 					end
@@ -1185,6 +1201,7 @@ end
 function Bot:_setActiveVars()
 	self.activeMoveMode		= self._moveMode;
 	self.activeSpeedValue	= self._botSpeed;
+	
 	if Config.botWeapon == "Knife" or Config.zombieMode then
 		self.knifeMode = true;
 	else

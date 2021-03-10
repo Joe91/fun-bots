@@ -8,12 +8,13 @@ local Utilities 			= require('__shared/Utilities')
 function ClientBotManager:__init()
 	self._raycastTimer	= 0;
 	self._lastIndex		= 1;
-	self.player = nil
+	self.player			= nil
 
 	Events:Subscribe('UpdateManager:Update', self, self._onUpdate);
 	Events:Subscribe('Level:Destroy', self, self.onExtensionUnload)
 	NetEvents:Subscribe('WriteClientSettings', self, self._onWriteClientSettings);
 	NetEvents:Subscribe('CheckBotBotAttack', self, self._checkForBotBotAttack);
+	
 	if not USE_REAL_DAMAGE then
 		Hooks:Install('BulletEntity:Collision', 200, self, self._onBulletCollision);
 	end
@@ -22,7 +23,7 @@ end
 function ClientBotManager:onExtensionUnload()
 	self._raycastTimer	= 0;
 	self._lastIndex		= 1;
-	self.player = nil
+	self.player			= nil
 end
 
 function ClientBotManager:onEngineMessage(p_Message)
@@ -67,17 +68,23 @@ function ClientBotManager:_onUpdate(p_Delta, p_Pass)
 	self._raycastTimer = self._raycastTimer + p_Delta;
 
 	if (self._raycastTimer >= StaticConfig.raycastInterval) then
-		self._raycastTimer = 0;
-		local team = 0
-		if (self.player.teamId == TeamId.Team1) then team = TeamId.Team2 else team = TeamId.Team1 end
-		local enemyPlayers = PlayerManager:GetPlayersByTeam(team)
+		self._raycastTimer	= 0;
+		local team			= 0;
+		
+		if (self.player.teamId == TeamId.Team1) then
+			team = TeamId.Team2;
+		else
+			team = TeamId.Team1;
+		end
+		
+		local enemyPlayers = PlayerManager:GetPlayersByTeam(team);
+		
 		if (self._lastIndex >= #enemyPlayers) then
-			self._lastIndex = 1
+			self._lastIndex = 1;
 		end
 
 		for i = self._lastIndex, #enemyPlayers do
-
-			local bot = enemyPlayers[i]
+			local bot = enemyPlayers[i];
 
 			-- valid player and is bot
 			if (bot ~= nil and bot.onlineId == 0 and bot.soldier ~= nil) then
@@ -96,12 +103,15 @@ function ClientBotManager:_onUpdate(p_Delta, p_Pass)
 					if (raycast == nil or raycast.rigidBody == nil) then
 						-- we found a valid bot in Sight (either no hit, or player-hit). Signal Server with players
 						local ignoreYaw = false;
+						
 						if (distance < Config.distanceForDirectAttack) then
 							ignoreYaw = true; --shoot, because you are near
 						end
+						
 						NetEvents:SendLocal("BotShootAtPlayer", bot.name, ignoreYaw);
 					end
-					return --only one raycast per cycle
+					
+					return; --only one raycast per cycle
 				end
 			end
 		end
@@ -130,11 +140,13 @@ function ClientBotManager:_onBulletCollision(hook, entity, hit, shooter)
 				local dy	= hit.position.y - player.soldier.worldTransform.trans.y; --player y is on ground. Hit must be higher to be valid
 
 				if (dx < 1 and dz < 1 and dy < 2 and dy > 0) then --included bodyhight
-					local isHeadshot = false;
-					local camaraHeight = Utilities:getTargetHeight(player.soldier, false)
+					local isHeadshot	= false;;
+					local camaraHeight	= Utilities:getTargetHeight(player.soldier, false);
+					
 					if dy < camaraHeight + 0.3 and dy > camaraHeight - 0.10 then
 						isHeadshot = true;
 					end
+					
 					NetEvents:SendLocal('ClientDamagePlayer', shooter.name, false, isHeadshot);
 				end
 			end
