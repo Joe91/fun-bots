@@ -30,7 +30,7 @@ function BotSpawner:updateBotAmountAndTeam()
 		local playerlimt = g_Globals.maxPlayers - 1
 		local amoutToDestroy = PlayerManager:GetPlayerCount() - playerlimt
 		if amoutToDestroy > 0 then
-			BotManager:destroyAmount(amoutToDestroy)
+			BotManager:destroyAll(amoutToDestroy)
 		end
 	end
 
@@ -86,10 +86,10 @@ function BotSpawner:updateBotAmountAndTeam()
 
 		if botCount > 0 then
 			if team1Count > targetTeam1 then
-				BotManager:killTeam(TeamId.Team1, team1Count-targetTeam1)
+				BotManager:killAll(team1Count-targetTeam1, TeamId.Team1)
 			end
 			if team2Count > targetTeam2 then
-				BotManager:killTeam(TeamId.Team2, team2Count-targetTeam2)
+				BotManager:killAll(team2Count-targetTeam2, TeamId.Team2)
 			end
 		end
 
@@ -125,10 +125,10 @@ function BotSpawner:updateBotAmountAndTeam()
 			self:spawnWayBots(nil, amountToSpawnTeam2, true, 0, 0, TeamId.Team2);
 		end
 		if amountToSpawnTeam1 < 0 then
-			BotManager:killTeam(TeamId.Team1, -amountToSpawnTeam1)
+			BotManager:killAll(-amountToSpawnTeam1, TeamId.Team1)
 		end
 		if amountToSpawnTeam2 < 0 then
-			BotManager:killTeam(TeamId.Team2, -amountToSpawnTeam2)
+			BotManager:killAll(-amountToSpawnTeam2, TeamId.Team2)
 		end
 
 	-- INCREMENT WITH PLAYER
@@ -153,18 +153,18 @@ function BotSpawner:updateBotAmountAndTeam()
 				self:spawnWayBots(nil, amountToSpawnTeam2, true, 0, 0, TeamId.Team2);
 			end
 			if amountToSpawnTeam1 < 0 then
-				BotManager:killTeam(TeamId.Team1, -amountToSpawnTeam1)
+				BotManager:killAll(-amountToSpawnTeam1, TeamId.Team1)
 			end
 			if amountToSpawnTeam2 < 0 then
-				BotManager:killTeam(TeamId.Team2, -amountToSpawnTeam2)
+				BotManager:killAll(-amountToSpawnTeam2, TeamId.Team2)
 			end
 
 		else
 			-- check for bots in wrong team
 			if botTeam == TeamId.Team1 and botCountTeam2 > 0 then
-				BotManager:killTeam(TeamId.Team2)
+				BotManager:killAll(nil, TeamId.Team2)
 			elseif botTeam == TeamId.Team2 and botCountTeam1 > 0 then
-				BotManager:killTeam(TeamId.Team1)
+				BotManager:killAll(nil, TeamId.Team1)
 			end
 
 			local targetBotCount = Config.initNumberOfBots + ((playerCount-1) * Config.newBotsPerNewPlayer)
@@ -174,7 +174,7 @@ function BotSpawner:updateBotAmountAndTeam()
 				self:spawnWayBots(nil, amountToSpawn, true, 0, 0, botTeam);
 			end
 			if amountToSpawn < 0 then
-				BotManager:killAmount(-amountToSpawn)
+				BotManager:killAll(-amountToSpawn)
 			end
 		end
 
@@ -184,10 +184,10 @@ function BotSpawner:updateBotAmountAndTeam()
 			local amoutPerTeam = math.floor(Config.initNumberOfBots/2);
 			-- check for too many bots in one team
 			if botCountTeam2 > amoutPerTeam then
-				BotManager:killTeam(TeamId.Team2, botCountTeam2-amoutPerTeam)
+				BotManager:killAll(botCountTeam2-amoutPerTeam, TeamId.Team2)
 			end
 			if botCountTeam1 > amoutPerTeam then
-				BotManager:killTeam(TeamId.Team1, botCountTeam1-amoutPerTeam)
+				BotManager:killAll(botCountTeam1-amoutPerTeam, TeamId.Team1)
 			end
 
 			if botCountTeam2 < amoutPerTeam then
@@ -199,9 +199,9 @@ function BotSpawner:updateBotAmountAndTeam()
 		else
 			-- check for bots in wrong team
 			if botTeam == TeamId.Team1 and botCountTeam2 > 0 then
-				BotManager:killTeam(TeamId.Team2)
+				BotManager:killAll(nil, TeamId.Team2)
 			elseif botTeam == TeamId.Team2 and botCountTeam1 > 0 then
-				BotManager:killTeam(TeamId.Team1)
+				BotManager:killAll(nil, TeamId.Team1)
 			end
 
 			if botTeam == TeamId.Team1 then
@@ -255,7 +255,7 @@ function BotSpawner:_onPlayerLeft(player)
 		if Debug.Server.BOT then
 			print("no player left - kick all bots")
 		end
-		BotManager:destroyAllBots(false);
+		BotManager:destroyAll();
 	end
 end
 

@@ -80,15 +80,15 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 
 	elseif request.action == 'bot_kick_all' then
 		Globals.spawnMode	= "manual";
-		BotManager:destroyAllBots(false);
+		BotManager:destroyAll();
 
 	elseif request.action == 'bot_kick_team' then
 		Globals.spawnMode	= "manual";
 		local teamNumber = tonumber(request.value);
 		if teamNumber == 1 then
-			BotManager:destroyTeam(TeamId.Team1);
+			BotManager:destroyAll(nil, TeamId.Team1);
 		elseif teamNumber == 2 then
-			BotManager:destroyTeam(TeamId.Team2);
+			BotManager:destroyAll(nil, TeamId.Team2);
 		end
 
 	elseif request.action == 'bot_kill_all' then

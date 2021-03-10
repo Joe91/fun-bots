@@ -158,7 +158,7 @@ function ChatCommands:execute(parts, player)
 	elseif parts[1] == '!kick' then
 		local amount = tonumber(parts[2]) or 1;
 
-		BotManager:destroyAmount(amount);
+		BotManager:destroyAll(amount);
 
 	elseif parts[1] == '!kickteam' then
 		local teamToKick = tonumber(parts[2]) or 1;
@@ -169,10 +169,10 @@ function ChatCommands:execute(parts, player)
 
 		local teamId = teamToKick == 1 and TeamId.Team1 or TeamId.Team2;
 
-		BotManager:destroyTeam(teamId);
+		BotManager:destroyAll(nil, teamId);
 
 	elseif parts[1] == '!kickall' then
-		BotManager:destroyAllBots();
+		BotManager:destroyAll();
 
 	elseif parts[1] == '!kill' then
 		BotManager:killPlayerBots(player);

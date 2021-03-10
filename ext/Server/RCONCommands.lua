@@ -330,7 +330,7 @@ function RCONCommands:__init()
 		KICKALLL	= {
 			Name		= 'funbots.kickAll',
 			Callback	= (function(command, args)
-				BotManager:destroyAllBots();
+				BotManager:destroyAll();
 				
 				return { 'OK' };
 			end)

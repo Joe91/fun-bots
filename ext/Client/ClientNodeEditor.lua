@@ -1968,7 +1968,7 @@ function ClientNodeEditor:_drawNode(waypoint, isTracePath)
 		if (waypoint.Previous) then
 			if (waypoint.PathIndex ~= waypoint.Previous.PathIndex) then
 				-- draw a white line between nodes on separate paths
-				DebugRenderer:DrawLine(waypoint.Previous.Position, waypoint.Position, self.colors.White, self.colors.White)
+				-- DebugRenderer:DrawLine(waypoint.Previous.Position, waypoint.Position, self.colors.White, self.colors.White)
 			else
 				-- draw fading line between nodes on same path
 				DebugRenderer:DrawLine(waypoint.Previous.Position, waypoint.Position, color.Line, color.Line)
