@@ -25,11 +25,11 @@ function Utilities:getCameraPos(player, isTarget)
 				end
 			else
 				if player.soldier.pose == CharacterPoseType.CharacterPoseType_Stand then
-					returnVec.y = returnVec.y - 0.4;
+					returnVec.y = returnVec.y - 0.6;
 				elseif player.soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
-					returnVec.y = returnVec.y - 0.2;
+					returnVec.y = returnVec.y - 0.4;
 				else
-					returnVec.y = returnVec.y - 0.05;
+					returnVec.y = returnVec.y - 0.1;
 				end
 			end
 		end
@@ -62,12 +62,12 @@ function Utilities:getTargetHeight(soldier, isTarget)
 		end
 		
 	else --aim a little lower
-		camereaHight = 1.2; --bot.soldier.pose == CharacterPoseType.CharacterPoseType_Stand - reduce by 0.4
+		camereaHight = 1.0; --bot.soldier.pose == CharacterPoseType.CharacterPoseType_Stand - reduce by 0.4
 		
 		if soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
-			camereaHight = 0.25; -- don't reduce
+			camereaHight = 0.2; -- don't reduce
 		elseif soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
-			camereaHight = 0.8; -- reduce by 0.2
+			camereaHight = 0.6; -- reduce by 0.2
 		end
 		
 	end

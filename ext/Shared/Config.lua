@@ -9,7 +9,7 @@ Config = {
 	zombieMode = false,				-- Zombie Bot Mode
 
 	--difficluty
-	botAimWorsening = 0.6,			-- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy).
+	botAimWorsening = 0.8,			-- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy).
 	botSniperAimWorsening = 0.2,	-- see botAimWorsening, only for Sniper-rifles
 	damageFactorAssault = 0.5,		-- origninal Damage from bots gets multiplied by this
 	damageFactorCarabine = 0.5,		-- origninal Damage from bots gets multiplied by this
@@ -23,7 +23,7 @@ Config = {
 	--spawn
 	spawnMode = 'balanced_teams',	-- mode the bots spawn with
 	spawnInBothTeams = true,		-- Bots spawn in both teams
-	initNumberOfBots = 5,			-- bots for spawnmode
+	initNumberOfBots = 6,			-- bots for spawnmode
 	newBotsPerNewPlayer = 2,		-- number to increase Bots, when new players join
 	spawnDelayBots = 10.0,			-- time till bots respawn, if respawn enabled
 	botTeam = TeamId.TeamNeutral, 	-- default bot team (0 = neutral / auto, 1 = US, 2 = RU) TeamId.Team2
