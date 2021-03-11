@@ -35,16 +35,42 @@ function Weapon:learnStatsValues()
 	local bulletData = nil
 
 	blueprint, success = g_EbxEditUtils:GetWritableInstance(self:getResourcePath())
-	if (not success) then print('No blueprint for: '..self.name) return end
+	
+	if (not success) then
+		if Debug.Shared.MODIFICATIONS then
+			print('No blueprint for: '..self.name)
+		end
+		return
+	end
+	
 	fireData, success = g_EbxEditUtils:GetWritableContainer(blueprint, 'Weapon.Object.WeaponFiring.PrimaryFire')
-	if (not success) then print('No fireData for: '..self.name) return end
+	if (not success) then
+		if Debug.Shared.MODIFICATIONS then
+			print('No fireData for: '..self.name)
+		end
+		return
+	end
+	
 	aiData, success = g_EbxEditUtils:GetWritableContainer(blueprint, 'Weapon.Object.aiData')
-	if (not success) then print('No aiData for: '..self.name) return end
+	if (not success) then
+		if Debug.Shared.MODIFICATIONS then
+			print('No aiData for: '..self.name)
+		end
+		return
+	end
+	
 	bulletData, success = g_EbxEditUtils:GetWritableContainer(fireData, 'shot.ProjectileData')
-	if (not success) then print('No bulletData for: '..self.name) return end
+	if (not success) then
+		if Debug.Shared.MODIFICATIONS then
+			print('No bulletData for: '..self.name)
+		end
+		return
+	end
 
+	--if Debug.Shared.MODIFICATIONS then
 	--print(self.name..': '..tostring(aiData.name))
-
+	--end
+	
 	self.damage 		= bulletData.startDamage
 	self.endDamage 		= bulletData.endDamage;
     self.damageFalloffStartDistance	= bulletData.damageFalloffStartDistance;

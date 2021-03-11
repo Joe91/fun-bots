@@ -62,3 +62,11 @@ ui-key[data-name="BS"] {
 ui-key[data-name="INS"] {
 	background-image: url('../../../assets/key/INS.svg');
 }
+
+ui-key[data-name="KP_PLUS"] {
+	background-image: url('../../../assets/key/KP_PLUS.svg');
+}
+
+ui-key[data-name="KP_MINUS"] {
+	background-image: url('../../../assets/key/KP_MINUS.svg');
+}

@@ -25,11 +25,11 @@ function Utilities:getCameraPos(player, isTarget)
 				end
 			else
 				if player.soldier.pose == CharacterPoseType.CharacterPoseType_Stand then
-					returnVec.y = returnVec.y - 0.4;
+					returnVec.y = returnVec.y - 0.5;
 				elseif player.soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
-					returnVec.y = returnVec.y - 0.2;
+					returnVec.y = returnVec.y - 0.3;
 				else
-					returnVec.y = returnVec.y - 0.05;
+					returnVec.y = returnVec.y - 0.1;
 				end
 			end
 		end
@@ -62,12 +62,12 @@ function Utilities:getTargetHeight(soldier, isTarget)
 		end
 		
 	else --aim a little lower
-		camereaHight = 1.2; --bot.soldier.pose == CharacterPoseType.CharacterPoseType_Stand - reduce by 0.4
+		camereaHight = 1.1; --bot.soldier.pose == CharacterPoseType.CharacterPoseType_Stand - reduce by 0.5
 		
 		if soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
-			camereaHight = 0.25; -- don't reduce
+			camereaHight = 0.2; -- reduce by 0.1
 		elseif soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
-			camereaHight = 0.8; -- reduce by 0.2
+			camereaHight = 0.7; -- reduce by 0.3
 		end
 		
 	end
@@ -75,21 +75,18 @@ function Utilities:getTargetHeight(soldier, isTarget)
 	return camereaHight;
 end
 
-function Utilities:isBot(name)
-	local isBot = false;
-	
-	for  index, botname in pairs(BotNames) do
-		if name == botname then
-			isBot = true;
-			break;
-		end
-		
-		if index > MAX_NUMBER_OF_BOTS then
-			break;
+function Utilities:isBot(player)
+	if (type(player) == 'string') then
+		player = PlayerManager:GetPlayerByName(player)
+	end
+	if (type(player) == 'number') then
+		player = PlayerManager:GetPlayerById(player)
+		if (player == nil) then
+			player = PlayerManager:GetPlayerByOnlineId(player)
 		end
 	end
-	
-	return isBot;
+
+	return player ~= nil and player.onlineId == 0
 end
 
 function Utilities:getEnumName(enum, value)
@@ -112,6 +109,12 @@ function Utilities:mergeKeys(originalTable, newData)
    return originalTable;
 end
 
+
+-- <object|o> | The object to dump
+-- <boolean|format> | If enabled, tab-spacing and newlines are used
+-- <int|maxLevels> | Max recursion level, defaults to -1 for infinite
+-- <int|level> | Current recursion level
+-- returns <string> | a string representation of the object
 function Utilities:dump(o, format, maxLevels, level)
 	local tablevel			= '';
 	local tablevellessone	= '';
@@ -129,7 +132,7 @@ function Utilities:dump(o, format, maxLevels, level)
 		return 'nil';
 	end
 	
-	if type(o) == 'table' then
+	if type(o) == 'table' or tostring(o):starts('sol.VEXTRefArray') or tostring(o):starts('sol.VEXTArray') then
 		if (maxLevels == -1 or level <= maxLevels) then
 			local s = tostring(o) .. ' -> { ' .. newline;
 			
@@ -145,9 +148,44 @@ function Utilities:dump(o, format, maxLevels, level)
 		else
 			return '{ '.. tostring(o) .. ' }';
 		end
+	elseif type(o) == 'userdata' and not tostring(o):starts('sol.VEXTRefArray') and not tostring(o):starts('sol.VEXTArray') and getmetatable(o) ~= nil then
+		if (maxLevels == -1 or level <= maxLevels) then
+			local s = tostring(o)
+
+			if (o.typeInfo ~= nil) then
+				s = s .. ' (' .. o.typeInfo.name .. ')'
+			end
+			s = s .. ' -> [ ' .. newline;
+
+			for k,v in pairs(getmetatable(o)) do
+				if (not k:starts('__') and k ~= 'typeInfo' and k ~= 'class_cast' and k ~= 'class_check') then
+					s = s .. tablevel .. k .. ': ' .. g_Utilities:dump(o[k], format, maxLevels, level+1) .. ',' .. newline
+				end
+			end
+			return s .. tablevellessone .. ']';
+		else
+			return '[ '.. tostring(o) .. ' ]';
+		end
 	else
 		return tostring(o);
 	end
+end
+
+function table:has(value)
+	for i=1, #self do
+		if (self[i] == value) then
+			return true
+		end
+	end
+	return false
+end
+
+function string:isLower(value)
+     return str:lower() == str
+end
+
+function string:isDigit(value)
+     return tonumber(str) ~= nil
 end
 
 function string:split(sep)

@@ -1,6 +1,16 @@
 # Changelog
  
-## [Unreleased - 1.6.X.X] - 2021-02-XX
+## [Unreleased - 1.7.X.X] - 2021-03-XX
+ 
+[Download](not available yet)  
+The Smart Node update
+
+- Qonquest supported
+- Rush supported
+- Bots switch to Pistol or Sidearm if needed
+
+
+## [Unreleased - 1.6.2.1] - 2021-02-28
  
 [Download](https://github.com/Joe91/fun-bots/archive/V1.6.2.1.zip)  
 Big update of everything

@@ -141,11 +141,12 @@ function WeaponList:__init()
 	weapon = Weapon('SG553LB', '', {'Kobra', 'Silencer'}, 'Carabine')
 	table.insert(self._weapons, weapon);
 
-	-- comment these lines if you don't like rockets
-	weapon = Weapon('SMAW', '', {}, 'Carabine')
+	---------------------------
+	-- Sidearms
+	weapon = Weapon('SMAW', '', {}, 'Rocket')
 	table.insert(self._weapons, weapon)
 
-	weapon = Weapon('RPG7', '', {}, 'Carabine')
+	weapon = Weapon('RPG7', '', {}, 'Rocket')
 	table.insert(self._weapons, weapon)
 
 	---------------------------
@@ -372,6 +373,7 @@ function WeaponList:updateWeaponList()
 	WeaponsEngineer = {}
 	WeaponsRecon = {}
 	WeaponsSupport = {}
+	SidearmsEngineer = {}
 
 	for i=1, #self._weapons do
 		local wep = self._weapons[i]
@@ -382,6 +384,9 @@ function WeaponList:updateWeaponList()
 
 		elseif (wep.type == 'Pistol') then
 			table.insert(PistoWeapons, wep.name)
+
+		elseif (wep.type == "Rocket") then
+			table.insert(SidearmsEngineer,  wep.name)
 
 		else --'PDW' 'Shotgun' 'Assault' 'Carabine' 'LMG' 'Sniper'
 			if self:_useWeaponType("Assault", wep.type) then
@@ -410,7 +415,9 @@ function WeaponList:getWeapon(name)
 	end
 
 	if (retWeapon == nil) then
-		print('Warning! Weapon not found: '..tostring(name))
+		if Debug.Shared.MODIFICATIONS then
+			print('Warning! Weapon not found: '..tostring(name))
+		end
 	end
 
 	return retWeapon;

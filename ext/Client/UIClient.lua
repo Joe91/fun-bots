@@ -2,6 +2,7 @@ class 'FunBotUIClient';
 
 require('UIViews');
 require('UISettings');
+require('ClientNodeEditor');
 
 
 Language = require('__shared/Language');
@@ -47,7 +48,9 @@ function FunBotUIClient:_onUIToggle()
 		return;
 	end
 	
-	print('UIClient: UI_Toggle');
+	if Debug.Client.UI then
+		print('UIClient: UI_Toggle');
+	end
 
 	self._views:execute('BotEditor.Hide();');
 	self._views:disable();
@@ -62,12 +65,16 @@ end
 function FunBotUIClient:_onUICommonRose(data)
 	if data == "false" then
 		self._views:execute('BotEditor.setCommonRose(false);');
-		--self._views:blur();
+		self._views:blur();
 		return;
 	end
 	
 	self._views:execute('BotEditor.setCommonRose(\'' .. json.encode(data) .. '\');');
-	--self._views:focus();
+	self._views:focus();
+end
+
+function FunBotUIClient:_onSetOperationControls(data)
+	self._views:execute('BotEditor.setOperationControls(\'' .. json.encode(data) .. '\');');
 end
 
 function FunBotUIClient:_onUIWaypointsEditor(state)
@@ -76,19 +83,24 @@ function FunBotUIClient:_onUIWaypointsEditor(state)
 	end
 	
 	if state == false then
-		print('UIClient: close UI_Waypoints_Editor');
+		if Debug.Client.UI then
+			print('UIClient: close UI_Waypoints_Editor');
+		end
+		
 		self._views:hide('waypoint_toolbar');
 		self._views:show('toolbar');
 		Config.debugTracePaths = false;
-		NetEvents:Send('UI_CommoRose_Toggle', false);
-		-- @ToDo enable built-in CommonRose from BF3
+		NetEvents:Send('UI_CommoRose_Enabled', false);
 		return;
 	end
 	
-	print('UIClient: open UI_Waypoints_Editor');
+	if Debug.Client.UI then
+		print('UIClient: open UI_Waypoints_Editor');
+	end
+	
 	Config.debugTracePaths = true;
-	-- @ToDo disable built-in CommonRose from BF3
-	NetEvents:Send('UI_CommoRose_Toggle', true);
+	NetEvents:Send('UI_CommoRose_Enabled', true);
+	g_ClientNodeEditor:_onSetEnabled(true);
 	self._views:show('waypoint_toolbar');
 	self._views:hide('toolbar');
 	self._views:disable();
@@ -102,12 +114,20 @@ function FunBotUIClient:_onUITraceIndex(index)
 	self._views:execute('BotEditor.updateTraceIndex(' .. tostring(index) .. ');');
 end
 
-function FunBotUIClient:_onUITraceWaypoints(index)
+function FunBotUIClient:_onUITraceWaypoints(count)
 	if Config.disableUserInterface == true then
 		return;
 	end
 	
-	self._views:execute('BotEditor.updateTraceWaypoints(' .. tostring(index) .. ');');
+	self._views:execute('BotEditor.updateTraceWaypoints(' .. tostring(count) .. ');');
+end
+
+function FunBotUIClient:_onUITraceWaypointsDistance(distance)
+	if Config.disableUserInterface == true then
+		return;
+	end
+	
+	self._views:execute('BotEditor.updateTraceWaypointsDistance(' .. string.format('%4.2f', distance) .. ');');
 end
 
 function FunBotUIClient:_onUITrace(state)
@@ -125,14 +145,19 @@ function FunBotUIClient:_onUISettings(data)
 	end
 	
 	if data == false then
-		print('UIClient: close UI_Settings');
+		if Debug.Client.UI then
+			print('UIClient: close UI_Settings');
+		end
+		
 		self._views:hide('settings');
 		--self._views:blur();
 		return;
 	end
 
-	print('UIClient: UI_Settings (' .. json.encode(data) .. ')');
-
+	if Debug.Client.UI then
+		print('UIClient: UI_Settings (' .. json.encode(data) .. ')');
+	end
+	
 	local settings = UISettings();
 
 	-- Samples
@@ -210,7 +235,7 @@ function FunBotUIClient:_onUISettings(data)
 
 	settings:add("EXPERT", "Float", "botFirstShotDelay", Language:I18N("First Shot Delay"), data.botFirstShotDelay, 0.2, Language:I18N("delay for first shot"));
 	settings:add("EXPERT", "Float", "botMinTimeShootAtPlayer", Language:I18N("Min Time Shoot"), data.botMinTimeShootAtPlayer, 1.0, Language:I18N("the minimum time a Bot shoots at one player"));
-	settings:add("EXPERT", "Float", "botFireModeDuration", Language:I18N("First Shot Delay"), data.botFireModeDuration, 5.0, Language:I18N("the minimum time a Bot tries to shoot a player"));
+	settings:add("EXPERT", "Float", "botFireModeDuration", Language:I18N("Fire Mode Duration"), data.botFireModeDuration, 5.0, Language:I18N("the minimum time a Bot tries to shoot a player"));
 	settings:add("EXPERT", "Float", "maximunYawPerSec", Language:I18N("Maximum Degree per Sec"), data.maximunYawPerSec, 540, Language:I18N("in Degree. Maximum Rotaion-Movement of a Bot per second."));
 	settings:add("EXPERT", "Float", "targetDistanceWayPoint", Language:I18N("Target Distance Way-Point"), data.targetDistanceWayPoint, 1.2, Language:I18N("distance the bots have to reach to continue with next Waypoint."));
 	settings:add("EXPERT", "Boolean", "keepOneSlotForPlayers", Language:I18N("Keep one Player-Slot"), data.keepOneSlotForPlayers, true, Language:I18N("always keep one slot for new Players to join"));
@@ -245,7 +270,10 @@ function FunBotUIClient:_onUISaveSettings(data)
 		return;
 	end
 	
-	print('UIClient: UI_Save_Settings (' .. data .. ')');
+	if Debug.Client.UI then
+		print('UIClient: UI_Save_Settings (' .. data .. ')');
+	end
+	
 	NetEvents:Send('UI_Request_Save_Settings', data);
 end
 
@@ -254,8 +282,10 @@ function FunBotUIClient:_onBotEditorEvent(data)
 		return;
 	end
 	
-	print('UIClient: BotEditor (' .. data .. ')');
-
+	if Debug.Client.UI then
+		print('UIClient: BotEditor (' .. data .. ')');
+	end
+	
 	-- Redirect to Server
 	NetEvents:Send('BotEditor', data);
 end
@@ -265,7 +295,9 @@ function FunBotUIClient:_onUIShowToolbar(data)
 		return;
 	end
 	
-	print('UIClient: UI_Show_Toolbar (' .. tostring(data) .. ')');
+	if Debug.Client.UI then
+		print('UIClient: UI_Show_Toolbar (' .. tostring(data) .. ')');
+	end
 
 	if (data == 'true') then
 		self._views:show('toolbar');
@@ -281,8 +313,10 @@ function FunBotUIClient:_onUIPasswordProtection(data)
 		return;
 	end
 	
-	print('UIClient: UI_Password_Protection (' .. tostring(data) .. ')');
-
+	if Debug.Client.UI then
+		print('UIClient: UI_Password_Protection (' .. tostring(data) .. ')');
+	end
+	
 	if (data == 'true') then
 		self._views:show('password_protection');
 		self._views:focus();
@@ -297,7 +331,10 @@ function FunBotUIClient:_onUIRequestPasswordError(data)
 		return;
 	end
 	
-	print('UIClient: UI_Request_Password_Error');
+	if Debug.Client.UI then
+		print('UIClient: UI_Request_Password_Error');
+	end
+	
 	self._views:error('password', data);
 end
 
@@ -306,8 +343,10 @@ function FunBotUIClient:_onUIRequestPassword(data)
 		return;
 	end
 	
-	print('UIClient: UI_Request_Password (' .. tostring(data) .. ')');
-
+	if Debug.Client.UI then
+		print('UIClient: UI_Request_Password (' .. tostring(data) .. ')');
+	end
+	
 	if (data == 'true') then
 		self._views:show('password');
 		self._views:focus();
@@ -322,7 +361,10 @@ function FunBotUIClient:_onUISendPassword(data)
 		return;
 	end
 	
-	print('UIClient: UI_Send_Password (' .. data .. ')');
+	if Debug.Client.UI then
+		print('UIClient: UI_Send_Password (' .. data .. ')');
+	end
+	
 	NetEvents:Send('UI_Request_Open', data);
 end
 
@@ -330,18 +372,12 @@ function FunBotUIClient:_onUpdateInput(data)
 	if Config.disableUserInterface == true then
 		return;
 	end
-	
 		
-	-- Show or Hide the Bot-Editor by requesting permissions
-	if Config.debugTracePaths and InputManager:IsDown(InputConceptIdentifiers.ConceptCommMenu1) then
-		self._views:focus();
-		
-	elseif Config.debugTracePaths and InputManager:WentUp(InputConceptIdentifiers.ConceptCommMenu1) then
-		self._views:blur();
-	
-	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_F12) then
-		print('Client send: UI_Request_Open');
-
+	if InputManager:WentKeyDown(InputDeviceKeys.IDK_F12) then
+		if Debug.Client.UI then
+			print('Client send: UI_Request_Open');
+		end
+				
 		-- This request can use for UI-Toggle
 		NetEvents:Send('UI_Request_Open');
 	end

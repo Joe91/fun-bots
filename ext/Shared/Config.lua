@@ -1,17 +1,15 @@
-MAX_NUMBER_OF_BOTS	= 32;			-- maximum bots that can be spawned
-MAX_TRACE_NUMBERS	= 15;			-- maximum number of traces in one level
-
+MAX_NUMBER_OF_BOTS	= 64;			-- maximum bots that can be spawned
 USE_REAL_DAMAGE 	= true;			-- with real damage, the hitboxes are a bit buggy
 
 Config = {
 	--global
-	botWeapon = "Primary",			-- Select the weapon the bots use
+	botWeapon = "Auto",			-- Select the weapon the bots use
 	botKit = "RANDOM_KIT",			-- see BotKits
 	botColor = "RANDOM_COLOR",		-- see BotColors
 	zombieMode = false,				-- Zombie Bot Mode
 
 	--difficluty
-	botAimWorsening = 0.6,			-- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy).
+	botAimWorsening = 0.8,			-- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy).
 	botSniperAimWorsening = 0.2,	-- see botAimWorsening, only for Sniper-rifles
 	damageFactorAssault = 0.5,		-- origninal Damage from bots gets multiplied by this
 	damageFactorCarabine = 0.5,		-- origninal Damage from bots gets multiplied by this
@@ -25,7 +23,7 @@ Config = {
 	--spawn
 	spawnMode = 'balanced_teams',	-- mode the bots spawn with
 	spawnInBothTeams = true,		-- Bots spawn in both teams
-	initNumberOfBots = 5,			-- bots for spawnmode
+	initNumberOfBots = 6,			-- bots for spawnmode
 	newBotsPerNewPlayer = 2,		-- number to increase Bots, when new players join
 	spawnDelayBots = 10.0,			-- time till bots respawn, if respawn enabled
 	botTeam = TeamId.TeamNeutral, 	-- default bot team (0 = neutral / auto, 1 = US, 2 = RU) TeamId.Team2
@@ -98,6 +96,7 @@ Config = {
 	-- UI settings & language options
 	disableUserInterface = false,	-- if true, the complete UI will be disabled (not available in the UI ;-) )
 	disableChatCommands = true,	 	-- if true, no chat commands can be used
+	disableRCONCommands = true,	 	-- if true, no RCON commands can be used
 	traceUsageAllowed = true,		-- if false, no traces can be recorded, deleted or saved
 	settingsPassword = "fun",		-- if nil, disable it. Otherwise use a String with your password
 	language = nil, --"de_DE",		-- de_DE as sample (default is english, when language file doesnt exists)
@@ -107,7 +106,7 @@ Config = {
 StaticConfig = {
 	traceDeltaShooting = 0.4,			-- update intervall of trace back to path the bots left for shooting
 	raycastInterval = 0.05,				-- update intervall of client raycasts
-	botAttackBotCheckInterval = 0.1,	-- update intervall of client raycasts
+	botAttackBotCheckInterval = 0.05,	-- update intervall of client raycasts
 	botUpdateCycle = 0.1,				-- update-intervall of bots
 	botAimUpdateCycle = 0.05,			-- = 3 frames at 60 Hz
 	targetHeightDistanceWayPoint = 1.5	-- distance the bots have to reach in height to continue with next Waypoint
