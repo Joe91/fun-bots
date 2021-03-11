@@ -37,9 +37,6 @@ function WeaponList:__init()
 	weapon = Weapon('M1014', '', {'Weapons/Common/12gBuckshot', 'ExtendedMag'}, 'Shotgun')
 	table.insert(self._weapons, weapon);
 
-	weapon = Weapon('M1014', '', {'Weapons/Common/12gBuckshot', 'ExtendedMag'}, 'Shotgun')
-	table.insert(self._weapons, weapon);
-
 	weapon = Weapon('870M', '', {'Weapons/Remington870/U_870_Slug', 'Weapons/Remington870/U_870_ExtendedMag'}, 'Shotgun', 'Weapons/Remington870/U_870')
 	table.insert(self._weapons, weapon);
 
