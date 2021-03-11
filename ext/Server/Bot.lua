@@ -908,7 +908,7 @@ function Bot:_updateMovement()
 							end
 						end
 
-						if self._stuckTimer > 10 then
+						if self._stuckTimer > 15 then
 							self.player.soldier:Kill()
 							
 							if Debug.Server.BOT then
