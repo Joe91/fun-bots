@@ -164,7 +164,7 @@ function FunBotUIClient:_onUISettings(data)
 	-- add(<category>, <types>, <name>, <title>, <value>, <default>, <description>)
 	-- addList(<category>, <name>, <title>, <list>, <value>, <default>, <description>)
 
-	settings:addList("GLOBAL", "botWeapon", Language:I18N("Bot Weapon"), BotWeapons, data.botWeapon, "Primary", Language:I18N("Select the weapon the bots use"));
+	settings:addList("GLOBAL", "botWeapon", Language:I18N("Bot Weapon"), BotWeapons, data.botWeapon, "Auto", Language:I18N("Select the weapon the bots use"));
 	settings:addList("GLOBAL", "botKit", Language:I18N("Bot Kit"), BotKits, data.botKit, "RANDOM_KIT", Language:I18N("The Kit a bots spawns with."));
 	settings:addList("GLOBAL", "botColor", Language:I18N("Bot Color"), BotColors, data.botColor, "RANDOM_COLOR", Language:I18N("The Kit-Color a bots spawns with."));
 	settings:add("GLOBAL", "Boolean", "zombieMode", Language:I18N("Zombie Mode"), data.zombieMode, false, Language:I18N("Bots act like zombies"));

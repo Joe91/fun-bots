@@ -65,7 +65,7 @@ function PathSwitcher:getNewPath(botname, point, objective)
 	for i=1, #possiblePaths do
 		local newPoint = possiblePaths[i]
 		local pathNode = g_NodeCollection:GetFirst(newPoint.PathIndex)
-		local newPathStatus = g_GameDirector:getEnableSateOfPath(pathNode.Data.Objectives)
+		local newPathStatus = g_GameDirector:getEnableSateOfPath(pathNode.Data.Objectives or {})
 
 		-- this path has listed objectives
 		if (pathNode.Data.Objectives ~= nil and objective ~= '') then
@@ -112,9 +112,9 @@ function PathSwitcher:getNewPath(botname, point, objective)
 		-- check for base-Path or inactive path
 		if (newPoint.ID ~= point.ID) then
 			local switchAnyways = false;
-			local newBasePath = g_GameDirector:isBasePath(pathNode.Data.Objectives)
-			local countOld = #currentPathFirst.Data.Objectives;
-			local countNew = #pathNode.Data.Objectives
+			local newBasePath = g_GameDirector:isBasePath(pathNode.Data.Objectives or {})
+			local countOld = #(currentPathFirst.Data.Objectives or {})
+			local countNew = #(pathNode.Data.Objectives or {})
 
 			if onBasePath then -- if on base path, check for objective count.
 				if not newBasePath and newPathStatus == 2 then
