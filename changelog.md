@@ -2,7 +2,7 @@
  
 ## [Unreleased - 1.7.X.X] - 2021-03-XX
  
-[Download](https://github.com/Joe91/fun-bots/archive/V1.7.0.0.zip)  
+[Download](https://github.com/Joe91/fun-bots/archive/V1.7.0.1.zip)  
 The Smart Node update
 
 - Qonquest supported
