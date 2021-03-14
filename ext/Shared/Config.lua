@@ -64,7 +64,7 @@ Config = {
 	drawWaypointIDs = true,			-- Draw waypoint IDs
 	textRange = 3,					-- Set how far away waypoint text is visible (meters)
 	debugSelectionRaytraces = false,-- Shows the trace line and search area from Commo Rose selection
-	traceDelta = 0.2,					-- update intervall of trace
+	traceDelta = 0.3,					-- update intervall of trace
 
 	-- advanced
 	distanceForDirectAttack = 5,	-- if that close, the bot can hear you
