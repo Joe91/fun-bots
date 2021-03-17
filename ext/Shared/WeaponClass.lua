@@ -20,13 +20,6 @@ function Weapon:__init(name, extension, unlocks, type, fullResource)
 	self.needvalues	= true;
 end
 
-function Weapon:overwriteStatsValues(damage, fireCycle, pauseCycle, delayed)
-	self.damage		= damage;
-	self.fireCycle	= fireCycle;
-	self.pauseCycle	= pauseCycle;
-	self.delayed	= delayed;
-end
-
 function Weapon:learnStatsValues()
 	local success = false
 	local blueprint = nil
@@ -68,19 +61,99 @@ function Weapon:learnStatsValues()
 	end
 
 	--if Debug.Shared.MODIFICATIONS then
-	--print(self.name..': '..tostring(aiData.name))
+	--	print(self.name..': '..tostring(aiData.name))
 	--end
-	
+
+	-- stats depending on weapon-type
+	local aiDataString = tostring(aiData.name)
+	local fireDuration = 0;
+	local firePause = 0;
+	local delayedShot = false
+	if Debug.Shared.MODIFICATIONS then
+		print(self.name)
+	end
+	if string.find(aiDataString, "_lmg_") ~= nil then
+		if Debug.Shared.MODIFICATIONS then
+			print("LMG")
+		end
+		fireDuration 	= 1.5
+		firePause		= 0.6
+		delayedShot		= true
+	elseif string.find(aiDataString, "_sni_") ~= nil then
+		if Debug.Shared.MODIFICATIONS then
+			print("sniper")
+		end
+		fireDuration 	= 0.2
+		firePause		= 0.5
+		delayedShot		= true
+	elseif string.find(aiDataString, "_snisemi_") ~= nil then
+		if Debug.Shared.MODIFICATIONS then
+			print("auto sniper")
+		end
+		fireDuration 	= 0.2
+		firePause		= 0.2
+		delayedShot		= true
+	elseif string.find(aiDataString, "_rif_") ~= nil then
+		if Debug.Shared.MODIFICATIONS then
+			print("rifle")
+		end
+		fireDuration 	= 0.4
+		firePause		= 0.4
+		delayedShot		= true
+	elseif string.find(aiDataString, "_shg_") ~= nil then
+		if Debug.Shared.MODIFICATIONS then
+			print("shotgun")
+		end
+		fireDuration 	= 0.2
+		firePause		= 0.2
+		delayedShot		= true
+	elseif string.find(aiDataString, "_smg_") ~= nil then
+		if Debug.Shared.MODIFICATIONS then
+			print("PDW")
+		end
+		fireDuration 	= 0.3
+		firePause		= 0.2
+		delayedShot		= true
+	elseif string.find(aiDataString, "_hg_") ~= nil or string.find(self.name, "MP443") ~= nil then -- "MP443 has no ai data"
+		if Debug.Shared.MODIFICATIONS then
+			print("pistol")
+		end
+		fireDuration 	= 0.2
+		firePause		= 0.2
+		delayedShot		= false
+	elseif string.find(aiDataString, "_kni_") ~= nil then
+		if Debug.Shared.MODIFICATIONS then
+			print("knife")
+		end
+		fireDuration 	= 0.2
+		firePause		= 0.2
+		delayedShot		= false
+	elseif string.find(aiDataString, "_at_") ~= nil then
+		if Debug.Shared.MODIFICATIONS then
+			print("Rocket")
+		end
+		fireDuration 	= 0.2
+		firePause		= 0.2
+		delayedShot		= true
+	else
+		if Debug.Shared.MODIFICATIONS then
+			print("No data found for "..self.name..': '..tostring(aiData.name))
+		end
+		fireDuration 	= 0.2
+		firePause		= 0.2
+		delayedShot		= false
+	end
+
 	self.damage 		= bulletData.startDamage
 	self.endDamage 		= bulletData.endDamage;
     self.damageFalloffStartDistance	= bulletData.damageFalloffStartDistance;
 	self.damageFalloffEndDistance 	= bulletData.damageFalloffStartDistance;
 	self.bulletSpeed 	= fireData.shot.initialSpeed.z
 	self.bulletDrop 	= (bulletData.gravity or 0) * -1
-	self.fireCycle 		= aiData.minBurstCoolDownTime
-	self.pauseCycle 	= (aiData.maxBurstCoolDownTime + aiData.minBurstCoolDownTime) / 2
-	self.reload			= math.floor(fireData.ammo.magazineCapacity * 0.2)--fireData.fireLogic.reloadTime;
-	self.delayed		= fireData.fireLogic.boltAction.forceBoltActionOnFireTrigger or fireData.ammo.magazineCapacity >= 80
+	self.fireCycle 		= fireDuration --aiData.minBurstCoolDownTime
+	self.pauseCycle 	= firePause --(aiData.maxBurstCoolDownTime + aiData.minBurstCoolDownTime) / 2
+	self.reload			= math.floor(fireData.ammo.magazineCapacity * 0.2)
+	self.delayed		= delayedShot
 	self.needvalues 	= false
 end
 
