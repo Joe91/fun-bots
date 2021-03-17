@@ -2,17 +2,19 @@
  
 ## [Unreleased - 1.7.X.X] - 2021-03-XX
  
-[Download](https://github.com/Joe91/fun-bots/archive/V1.7.0.2.zip)  
+[Download](https://github.com/Joe91/fun-bots/archive/V1.7.0.3.zip)  
 The Smart Node update
 
 - Conquest supported
 	- Bazaar (small + large)
 	- Caspian Border (small + large)
-	- Metro
+	- Seine Crossing (small + large)
+	- Metro (large)
 - Rush supported
 	- Metro
 	- Damavand Peak
 - Bots switch to Pistol or Sidearm (Rockets) if needed
+- Shoot-Cycles adapted
 
 
 ## [Unreleased - 1.6.2.1] - 2021-02-28
