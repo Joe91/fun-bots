@@ -31,7 +31,7 @@ The following Maps are official supported right now with waypoints/traces:
 |   ![MP_017](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_017.jpg?raw=true) 	|   `MP_017`	| **Noshahr Canals** | `TDM`, `TDM QC` |
 |   ![MP_018](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_018.jpg?raw=true) 	|   `MP_018`	| **Kharg Island** | `TDM`, `TDM QC` |
 |   ![MP_Subway](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_subway.jpg?raw=true) 	|   `MP_Subway`	| **Operation Metro** | `TDM`, `TDM QC`, `Conquest Large`, `Rush` |
-|   ![XP1_001](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp1_001.jpg?raw=true) 	|   `XP1_001`	| **Strike at Karkand** | `TDM`, `TDM QC` |
+|   ![XP1_001](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp1_001.jpg?raw=true) 	|   `XP1_001`	| **Strike at Karkand** | `TDM`, `TDM QC`, `Assault` |
 |   ![XP1_002](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp1_002.jpg?raw=true) 	|   `XP1_002`	| **Gulf of Oman** | `TDM`, `TDM QC` |
 |   ![XP1_003](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp1_003.jpg?raw=true) 	|   `XP1_003`	| **Sharqi Peninsula** | `TDM`, `TDM QC` |
 |   ![XP1_004](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp1_004.jpg?raw=true) 	|   `XP1_004`	| **Wake Island** | `TDM`, `TDM QC` |

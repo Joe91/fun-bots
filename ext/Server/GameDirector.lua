@@ -88,6 +88,11 @@ function GameDirector:initObjectives()
 				objective.team = TeamId.Team2
 			end
 		end
+		if g_Globals.isAssault then
+			if not objective.isBase then
+				objective.team = TeamId.Team2
+			end
+		end
 		table.insert(self.AllObjectives, objective)
 	end
 	self:_updateValidObjectives()
