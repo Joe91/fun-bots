@@ -124,6 +124,14 @@ function FunBotServer:_onLevelLoaded(levelName, gameMode)
 		Globals.isConquest = false;
 	end
 
+	if gameMode == 'ConquestAssaultLarge0' or
+	gameMode == 'ConquestAssaultSmall0' or
+	gameMode == 'ConquestAssaultSmall1' then
+		Globals.isAssault = true;
+	else
+		Globals.isAssault = false;
+	end
+
 	if gameMode == 'RushLarge0' then
 		Globals.isRush = true;
 	else

@@ -10,6 +10,7 @@ function Globals:__init()
 	self.isRush				= false;
 	self.isGm				= false;
 	self.isConquest			= false;
+	self.isAssault			= false;
 	self.maxPlayers			= 0;
 
 	self.respawnWayBots 	= false;	--used for the runtime respawn
