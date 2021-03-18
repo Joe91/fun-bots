@@ -11,8 +11,8 @@ AI for TDM-bots with some functions:
 - You can record you own paths
 	- while holding your `primary weapon`, all movement is recorded
 	- recording includes jumping, running, walking, couching, and other stuff...
-	- while holding your `secondary weapon`, bot will pause in this position.
-	[how to record a Trace](https://github.com/Joe91/fun-bots/blob/master/trace.md)
+	- while holding your `secondary weapon`, bot will pause in this position.  
+	[how to record a Trace](https://github.com/Joe91/fun-bots/blob/master/traces.md)
 
 ### :smiling_face_with_three_hearts: Inspirated
 This mod was inspired by the mod [BotSpawn](https://github.com/J4nssent/VU-Mods/tree/master/BotSpawn "Original Mod by Jassent") by [Jassent](https://github.com/J4nssent "Jassent").
