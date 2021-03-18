@@ -91,6 +91,10 @@ function FunBotServer:_onRequestClientSettings(player)
 end
 
 function FunBotServer:_onLevelLoaded(levelName, gameMode)
+	local customGameMode = ServerUtils:GetCustomGameModeName()
+	if customGameMode ~= nil then
+		gameMode = customGameMode
+	end
 	g_WeaponModification:ModifyAllWeapons(Config.botAimWorsening, Config.botSniperAimWorsening);
 	WeaponList:onLevelLoaded();
 	
@@ -118,7 +122,8 @@ function FunBotServer:_onLevelLoaded(levelName, gameMode)
 	gameMode == 'ConquestSmall0' or
 	gameMode == 'ConquestAssaultLarge0' or
 	gameMode == 'ConquestAssaultSmall0' or
-	gameMode == 'ConquestAssaultSmall1' then
+	gameMode == 'ConquestAssaultSmall1' or
+	gameMode == 'BFLAG'then
 		Globals.isConquest = true;
 	else
 		Globals.isConquest = false;
