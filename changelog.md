@@ -7,8 +7,9 @@ The Smart Node update
 
 - Conquest supported
 	- Bazaar (small + large)
-	- Caspian Border (small + large)
+	- Caspian Border (small + large) Thanks to RekkieSA
 	- Seine Crossing (small + large)
+	- Khark Island (small) Thanks to RekkieSA
 	- Metro (large)
 - Rush supported
 	- Metro
