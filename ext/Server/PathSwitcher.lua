@@ -66,6 +66,7 @@ function PathSwitcher:getNewPath(botname, point, objective)
 		local newPoint = possiblePaths[i]
 		local pathNode = g_NodeCollection:GetFirst(newPoint.PathIndex)
 		local newPathStatus = g_GameDirector:getEnableSateOfPath(pathNode.Data.Objectives or {})
+		local newBasePath = g_GameDirector:isBasePath(pathNode.Data.Objectives or {})
 
 		-- this path has listed objectives
 		if (pathNode.Data.Objectives ~= nil and objective ~= '') then
@@ -75,7 +76,8 @@ function PathSwitcher:getNewPath(botname, point, objective)
 				table.insert(paths, {
 					Priority = 2,
 					Point = newPoint,
-					State = newPathStatus
+					State = newPathStatus,
+					Base = newBasePath
 				})
 				if (newPoint.ID == point.ID) then
 					currentPriority = 2
@@ -89,7 +91,8 @@ function PathSwitcher:getNewPath(botname, point, objective)
 						table.insert(paths, {
 							Priority = 1,
 							Point = newPoint,
-							State = newPathStatus
+							State = newPathStatus,
+							Base = newBasePath
 						})
 						if (newPoint.ID == point.ID) then
 							currentPriority = 1
@@ -102,7 +105,8 @@ function PathSwitcher:getNewPath(botname, point, objective)
 			table.insert(paths, {
 				Priority = 0,
 				Point = newPoint,
-				State = newPathStatus
+				State = newPathStatus,
+				Base = newBasePath
 			})
 			if (newPoint.ID == point.ID) then
 				currentPriority = 0
@@ -112,7 +116,6 @@ function PathSwitcher:getNewPath(botname, point, objective)
 		-- check for base-Path or inactive path
 		if (newPoint.ID ~= point.ID) then
 			local switchAnyways = false;
-			local newBasePath = g_GameDirector:isBasePath(pathNode.Data.Objectives or {})
 			local countOld = #(currentPathFirst.Data.Objectives or {})
 			local countNew = #(pathNode.Data.Objectives or {})
 
@@ -136,7 +139,8 @@ function PathSwitcher:getNewPath(botname, point, objective)
 				table.insert(paths, {
 					Priority = 3,
 					Point = newPoint,
-					State = newPathStatus
+					State = newPathStatus,
+					Base = newBasePath
 				})
 			end
 		end
@@ -150,7 +154,9 @@ function PathSwitcher:getNewPath(botname, point, objective)
 	local validPaths = {}
 	for i=1, #paths do
 		if (paths[i].Priority >= highestPriority and paths[i].State >= currentPathStatus) then
-			table.insert(validPaths, paths[i])
+			if(onBasePath or (not onBasePath and paths[i].Base == false)) then
+				table.insert(validPaths, paths[i])
+			end
 		end
 	end
 
@@ -174,7 +180,7 @@ function PathSwitcher:getNewPath(botname, point, objective)
 	local linkMode = tonumber(point.Data.LinkMode) or 0
 	if linkMode == 0 then -- random path switch
 
-		local chance = tonumber(point.Data.LinkChance) or 20
+		local chance = tonumber(point.Data.LinkChance) or 40
 		local randNum = MathUtils:GetRandomInt(0, 100)
 		local randIndex = MathUtils:GetRandomInt(1, #validPaths)
 
