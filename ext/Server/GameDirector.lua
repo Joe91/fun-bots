@@ -341,6 +341,9 @@ function GameDirector:_onCapture(capturePoint)
 	})
 
 	local objective = self:getObjectiveObject(objectiveName)
+	if objective == nil then
+		return
+	end
 
 	if Debug.Server.GAMEDIRECTOR then
 		print('GameDirector:_onCapture: '..objectiveName)
