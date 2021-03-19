@@ -10,6 +10,7 @@ The Smart Node update
 	- Caspian Border (small + large) Thanks to RekkieSA
 	- Seine Crossing (small + large)
 	- Khark Island (small) Thanks to RekkieSA
+	- Firestorm (small) Thanks to RekkieSA
 	- Metro (large)
 - Rush supported
 	- Metro
@@ -17,6 +18,7 @@ The Smart Node update
 - BFLAG supported
 	- Bazaar small
 - Bots switch to Pistol or Sidearm (Rockets) if needed
+- Bots revive dead players
 - Shoot-Cycles adapted
 
 

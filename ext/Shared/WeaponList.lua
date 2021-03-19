@@ -158,6 +158,9 @@ function WeaponList:__init()
 	weapon = Weapon('Ammobag', '', {}, 'Bag', 'Weapons/Gadgets/Ammobag/U_Ammobag')
 	table.insert(self._weapons, weapon)
 
+	weapon = Weapon('Claymore', '', {}, 'Bag', 'Weapons/Gadgets/Claymore/U_Claymore')
+	table.insert(self._weapons, weapon)
+
 	weapon = Weapon('Tug', '', {}, 'Bag', 'Weapons/Gadgets/T-UGS/U_UGS')
 	table.insert(self._weapons, weapon)
 
