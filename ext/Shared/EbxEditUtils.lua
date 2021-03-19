@@ -284,8 +284,11 @@ end
 
 function EbxEditUtils:dump(o)
 	if (o == nil) then
-		print("nil")
+		if Debug.Shared.EBX then
+			print("nil")
+		end
 	end
+	
 	if (type(o) == 'table') then
 		local s = '{ '
 		for k,v in pairs(o) do

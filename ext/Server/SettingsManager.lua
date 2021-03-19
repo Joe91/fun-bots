@@ -51,7 +51,9 @@ function SettingsManager:onLoad()
 	
 		-- If not exists, create
 		if single == nil then
+			--if Debug.Server.SETTINGS then
 			--print('SettingsManager: ADD (' .. name .. ' = ' .. tostring(value) .. ')');
+			--end
 			
 			Database:insert('FB_Config_Trace', {
 				Key		= name,
@@ -75,9 +77,13 @@ function SettingsManager:onLoad()
 			
 			-- @ToDo check Time / Timestamp, if newer
 			if tostring(value) == tostring(old) then
+				--if Debug.Server.SETTINGS then
 				--print('SettingsManager: SKIP (' .. name .. ' = ' .. tostring(value) .. ', NOT MODIFIED)');
+				--end
 			else
+				--if Debug.Server.SETTINGS then
 				--print('SettingsManager: UPDATE (' .. name .. ' = ' .. tostring(value) .. ', Old = ' .. tostring(old) .. ')');
+				--end
 				
 				-- if changed, update SETTINGS SQL
 				Database:update('FB_Config_Trace', {
@@ -89,7 +95,9 @@ function SettingsManager:onLoad()
 		end
 	end
     
-	print('Start migrating of Settings/Config...');
+	if Debug.Server.SETTINGS then
+		print('Start migrating of Settings/Config...');
+	end
 	
 	-- Load Settings
 	local settings = Database:fetch([[SELECT
@@ -113,7 +121,9 @@ function SettingsManager:onLoad()
 
 	if settings ~= nil then
 		for name, value in pairs(settings) do
+			--if Debug.Server.SETTINGS then
 			--print('Updating Config Variable: ' .. tostring(value.Key) .. ' = ' .. tostring(value.Value) .. ' (' .. tostring(value.Time) .. ')');
+			--end
 			local tempValue = tonumber(value.Value)
 			if tempValue then --number?
 				Config[value.Key] = tempValue;

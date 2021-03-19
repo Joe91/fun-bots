@@ -157,6 +157,10 @@ const BotEditor = (new function BotEditor() {
 				console.log('CLICK', parent.dataset.action);
 			}
 
+			if (parent.dataset.action.startsWith('UI_CommoRose_Action_')) {
+				WebUI.Call('DispatchEventLocal', parent.dataset.action);
+			}
+
 			switch(parent.dataset.action) {
 				/* Restore all values to default */
 				case 'restore':
@@ -250,10 +254,8 @@ const BotEditor = (new function BotEditor() {
 
 				/* Trace */
 				case 'trace_start':
-					index = document.querySelector('input[type="number"][name="trace_index"]');
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'trace_start',
-						value: index.value
+						action:	'trace_start'
 					}));
 				break;
 				case 'trace_end':
@@ -261,11 +263,16 @@ const BotEditor = (new function BotEditor() {
 						action:	'trace_end',
 					}));
 				break;
-				case 'trace_clear':
+				case 'trace_save':
 					index = document.querySelector('input[type="number"][name="trace_index"]');
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'trace_clear',
+						action:	'trace_save',
 						value: index.value
+					}));
+				break;
+				case 'trace_clear':
+					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
+						action:	'trace_clear'
 					}));
 				break;
 				case 'trace_reset_all':
@@ -273,14 +280,24 @@ const BotEditor = (new function BotEditor() {
 						action:	'trace_reset_all'
 					}));
 				break;
-				case 'trace_save':
+				case 'waypoints_client_load':
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'trace_save'
+						action:	'waypoints_client_load'
 					}));
 				break;
-				case 'trace_reload':
+				case 'waypoints_client_save':
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'trace_reload'
+						action:	'waypoints_client_save'
+					}));
+				break;
+				case 'waypoints_server_load':
+					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
+						action:	'waypoints_server_load'
+					}));
+				break;
+				case 'waypoints_server_save':
+					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
+						action:	'waypoints_server_save'
 					}));
 				break;
 				case 'trace_show':
@@ -432,10 +449,8 @@ const BotEditor = (new function BotEditor() {
 
 				/* Trace */
 				case InputDeviceKeys.IDK_F5:
-					index = document.querySelector('[data-action="trace_start"] input[type="number"]');
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'trace_start',
-						value:	index.value
+						action:	'trace_start'
 					}));
 				break;
 				case InputDeviceKeys.IDK_F6:
@@ -444,10 +459,8 @@ const BotEditor = (new function BotEditor() {
 					}));
 				break;
 				case InputDeviceKeys.IDK_F7:
-					index = document.querySelector('[data-action="trace_clear"] input[type="number"]');
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'trace_clear',
-						value:	index.value
+						action:	'trace_clear'
 					}));
 				break;
 				case InputDeviceKeys.IDK_F8:
@@ -457,12 +470,12 @@ const BotEditor = (new function BotEditor() {
 				break;
 				case InputDeviceKeys.IDK_F9:
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'trace_save'
+						action:	'waypoints_server_save'
 					}));
 				break;
 				case InputDeviceKeys.IDK_F11:
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'trace_reload'
+						action:	'waypoints_server_load'
 					}));
 				break;
 
@@ -626,6 +639,11 @@ const BotEditor = (new function BotEditor() {
 		console.log('updateTraceWaypoints', count);
 		document.querySelector('ui-value[data-name="waypoints"]').innerHTML = count;		
 	};
+
+	this.updateTraceWaypointsDistance = function updateTraceWaypointsDistance(distance) {
+		console.log('updateTraceWaypointsDistance', distance);
+		document.querySelector('ui-value[data-name="distance"]').innerHTML = distance;		
+	};
 	
 	this.toggleTraceRun = function toggleTraceRun(state) {
 		console.log('toggleTraceRun', state);
@@ -638,15 +656,15 @@ const BotEditor = (new function BotEditor() {
 		if(state) {
 			a.dataset.key			= 'F6';
 			icon.dataset.name		= 'stop';
-			text.dataset.lang		= 'Stop';
-			text.innerHTML			= this.I18N('Stop');
+			text.dataset.lang		= 'End Trace';
+			text.innerHTML			= this.I18N('End Trace');
 			info.dataset.show		= true;
 			element.dataset.action	= 'trace_end';
 		} else {
 			a.dataset.key			= 'F5';
 			icon.dataset.name		= 'start';	
-			text.dataset.lang		= 'Start';
-			text.innerHTML			= this.I18N('Start');
+			text.dataset.lang		= 'Start Trace';
+			text.innerHTML			= this.I18N('Start Trace');
 			info.dataset.show		= false;
 			element.dataset.action	= 'trace_start';
 		}
@@ -675,6 +693,50 @@ const BotEditor = (new function BotEditor() {
 				password.focus();
 			break;
 		}
+	};
+
+	this.setOperationControls = function setOperationControls(data) {
+		let json;
+		let container = document.querySelector('ui-help[data-name="numpad"]');
+
+		try {
+			json = JSON.parse(data);
+		} catch(e) {
+			console.error(e, data);
+			return;
+		}
+
+		if (json.Numpad) {
+			json.Numpad.forEach(function(entry) {
+				let keyElement = document.querySelector('ui-entry[data-grid="'+entry.Grid+'"] ui-key');
+				let spanElement = document.querySelector('ui-entry[data-grid="'+entry.Grid+'"] span');
+				keyElement.dataset.name = entry.Key
+				spanElement.dataset.lang = entry.Name
+				spanElement.innerHTML = entry.Name
+			});
+		}
+
+		if (json.Other) {
+			let otherKeysElement = document.querySelector('ui-entry[data-grid="Other"]');
+			while (otherKeysElement.hasChildNodes()) {  
+				otherKeysElement.removeChild(otherKeysElement.firstChild);
+			}
+			
+			json.Other.forEach(function(entry) {
+				let entryElement = document.createElement('ui-entry');
+				let keyElement = document.createElement('ui-key');
+				keyElement.dataset.name = entry.Key
+
+				let spanElement = document.createElement('span');
+				spanElement.dataset.lang = entry.Name
+				spanElement.innerHTML = entry.Name
+
+				entryElement.appendChild(keyElement);
+				entryElement.appendChild(spanElement);
+				otherKeysElement.appendChild(entryElement);
+			});
+		}
+
 	};
 	
 	this.setCommonRose = function setCommonRose(data) {
@@ -756,7 +818,7 @@ const BotEditor = (new function BotEditor() {
 		if(json.Left) {
 			json.Left.forEach(function(entry) {
 				let element				= document.createElement('li');
-				element.innerHTML		= (entry.Label ? '<span>' + entry.Label + '</span>' : '<span></span>');
+				element.innerHTML		= (entry.Label ? '<a><span>' + entry.Label + '</span></a>' : '<a><span></span></a>');
 				element.dataset.action	= entry.Action;
 				left.appendChild(element);
 			});
@@ -769,7 +831,7 @@ const BotEditor = (new function BotEditor() {
 		if(json.Right) {
 			json.Right.forEach(function(entry) {
 				let element				= document.createElement('li');
-				element.innerHTML		= (entry.Label ? '<span>' + entry.Label + '</span>' : '<span></span>');
+				element.innerHTML		= (entry.Label ? '<a><span>' + entry.Label + '</span></a>' : '<a><span></span></a>');
 				element.dataset.action	= entry.Action;
 				right.appendChild(element);
 			});

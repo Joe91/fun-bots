@@ -1,16 +1,11 @@
 class('ChatCommands');
 
 require('__shared/Config');
+require('__shared/NodeCollection');
 
 local BotManager	= require('BotManager');
-local TraceManager	= require('TraceManager');
 local BotSpawner	= require('BotSpawner');
 local Globals 		= require('Globals');
-
-
-function ChatCommands:__init()
-	--nothing to do here
-end
 
 function ChatCommands:execute(parts, player)
 	if player == nil or Config.disableChatCommands == true then
@@ -72,13 +67,9 @@ function ChatCommands:execute(parts, player)
 			return;
 		end
 
+		local amount = tonumber(parts[2]) or 1;
 		local activeWayIndex = tonumber(parts[3]) or 1;
-
-		if activeWayIndex > MAX_TRACE_NUMBERS or activeWayIndex < 1 then
-			activeWayIndex = 1;
-		end
-
-		local amount = tonumber(parts[2]);
+		activeWayIndex = math.min(math.max(activeWayIndex, 1), #g_NodeCollection:GetPaths())
 
 		BotSpawner:spawnWayBots(player, amount, false, activeWayIndex);
 
@@ -132,8 +123,10 @@ function ChatCommands:execute(parts, player)
 	elseif parts[1] == '!setaim' then
 		Config.botAimWorsening = tonumber(parts[2]) or 0.5;
 		--self:_modifyWeapons(Config.botAimWorsening) --causes lag. Instead restart round
-		print('difficulty set to ' .. Config.botAimWorsening .. '. Please restart round or level to take effect');
-
+		if Debug.Server.COMMAND then
+			print('difficulty set to ' .. Config.botAimWorsening .. '. Please restart round or level to take effect');
+		end
+		
 	elseif parts[1] == '!shootback' then
 		if tonumber(parts[2]) == 0 then
 			Config.shootBackIfHit = false;
@@ -165,7 +158,7 @@ function ChatCommands:execute(parts, player)
 	elseif parts[1] == '!kick' then
 		local amount = tonumber(parts[2]) or 1;
 
-		BotManager:destroyAmount(amount);
+		BotManager:destroyAll(amount);
 
 	elseif parts[1] == '!kickteam' then
 		local teamToKick = tonumber(parts[2]) or 1;
@@ -176,10 +169,10 @@ function ChatCommands:execute(parts, player)
 
 		local teamId = teamToKick == 1 and TeamId.Team1 or TeamId.Team2;
 
-		BotManager:destroyTeam(teamId);
+		BotManager:destroyAll(nil, teamId);
 
 	elseif parts[1] == '!kickall' then
-		BotManager:destroyAllBots();
+		BotManager:destroyAll();
 
 	elseif parts[1] == '!kill' then
 		BotManager:killPlayerBots(player);
@@ -188,26 +181,25 @@ function ChatCommands:execute(parts, player)
 		BotManager:killAll();
 
 	-- waypoint stuff
-	elseif parts[1] == '!trace' then
-		local traceIndex = tonumber(parts[2]) or 0;
+	elseif parts[1] == '!getnodes' then
+		NetEvents:SendToLocal('ClientNodeEditor:ReceiveNodes', player, #g_NodeCollection:Get())
 
-		TraceManager:startTrace(player, traceIndex);
+	elseif parts[1] == '!sendnodes' then
+		NetEvents:SendToLocal('ClientNodeEditor:SaveNodes', player)
+
+	elseif parts[1] == '!trace' then
+		NetEvents:SendToLocal('ClientNodeEditor:StartTrace', player)
 
 	elseif parts[1] == '!tracedone' then
-		TraceManager:endTrace(player);
+		NetEvents:SendToLocal('ClientNodeEditor:EndTrace', player)
 
-	elseif parts[1] == '!setpoint' then
-		local traceIndex = tonumber(parts[2]) or 1;
-
-		TraceManager:setPoint(player, traceIndex);
 
 	elseif parts[1] == '!cleartrace' then
-		local traceIndex = tonumber(parts[2]) or 1;
-
-		TraceManager:clearTrace(traceIndex);
+		NetEvents:SendToLocal('ClientNodeEditor:ClearTrace', player)
 
 	elseif parts[1] == '!clearalltraces' then
-		TraceManager:clearAllTraces();
+		g_NodeCollection:Clear()
+		NetEvents:SendLocal('NodeCollection:Clear')
 
 	elseif parts[1] == '!printtrans' then
 		print('!printtrans');
@@ -217,8 +209,9 @@ function ChatCommands:execute(parts, player)
 		print(player.soldier.worldTransform.trans.y);
 		print(player.soldier.worldTransform.trans.z);
 
-	elseif parts[1] == '!savepaths' then
-		TraceManager:savePaths();
+	elseif parts[1] == '!tracesave' then
+		local traceIndex = tonumber(parts[2]) or 0;
+		NetEvents:SendToLocal('ClientNodeEditor:SaveTrace', player, traceIndex)
 	end
 end
 

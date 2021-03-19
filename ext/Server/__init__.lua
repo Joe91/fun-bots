@@ -1,5 +1,6 @@
 class('FunBotServer');
 
+require('__shared/Debug');
 require('__shared/Config');
 require('__shared/Constants/BotColors');
 require('__shared/Constants/BotNames');
@@ -12,16 +13,16 @@ require('__shared/Constants/SpawnModes');
 require('__shared/Utilities');
 
 require('NodeEditor');
-
+require('GameDirector');
+require('WeaponModification');
 
 Language					= require('__shared/Language');
 local SettingsManager		= require('SettingsManager');
 local BotManager			= require('BotManager');
-local TraceManager			= require('TraceManager');
 local BotSpawner			= require('BotSpawner');
-local WeaponModification	= require('__shared/WeaponModification');
 local WeaponList			= require('__shared/WeaponList');
 local ChatCommands			= require('ChatCommands');
+local RCONCommands			= require('RCONCommands');
 local FunBotUIServer		= require('UIServer');
 local Globals 				= require('Globals');
 
@@ -40,8 +41,7 @@ function FunBotServer:__init()
 end
 
 function FunBotServer:_onExtensionUnload()
-	BotManager:destroyAllBots();
-	TraceManager:onUnload();
+	BotManager:destroyAll(nil, nil, true);
 end
 
 function FunBotServer:_onExtensionLoaded()
@@ -54,8 +54,10 @@ function FunBotServer:_onExtensionLoaded()
 		local level		= fullLevelPath[#fullLevelPath];
 		local gameMode	= SharedUtils:GetCurrentGameMode();
 
-		print(level .. '_' .. gameMode .. ' reloaded');
-
+		if Debug.Server.INFO then
+			print(level .. '_' .. gameMode .. ' reloaded');
+		end
+		
 		if (level ~= nil and gameMode~= nil) then
 			self:_onLevelLoaded(level, gameMode);
 		end
@@ -63,6 +65,7 @@ function FunBotServer:_onExtensionLoaded()
 end
 
 function FunBotServer:_onPartitionLoaded(partition)
+	g_WeaponModification:OnPartitionLoaded(partition);
 	for _, instance in pairs(partition.instances) do
 		if USE_REAL_DAMAGE then
 			if instance:Is("SyncedGameSettings") then
@@ -84,13 +87,21 @@ end
 
 function FunBotServer:_onRequestClientSettings(player)
 	NetEvents:SendToLocal('WriteClientSettings', player, Config, true);
+	BotManager:registerActivePlayer(player)
 end
 
 function FunBotServer:_onLevelLoaded(levelName, gameMode)
-	NetEvents:BroadcastLocal('WriteClientSettings', Config, true);
-	WeaponModification:ModifyAllWeapons(Config.botAimWorsening, Config.botSniperAimWorsening);
+	local customGameMode = ServerUtils:GetCustomGameModeName()
+	if customGameMode ~= nil then
+		gameMode = customGameMode
+	end
+	g_WeaponModification:ModifyAllWeapons(Config.botAimWorsening, Config.botSniperAimWorsening);
 	WeaponList:onLevelLoaded();
-	print('level ' .. levelName .. ' loaded...');
+	
+	if Debug.Server.INFO then
+		print('level ' .. levelName .. ' loaded...');
+	end
+	
 	if gameMode == 'TeamDeathMatchC0' or gameMode == 'TeamDeathMatch0' then
 		Globals.isTdm = true;
 	else
@@ -107,8 +118,36 @@ function FunBotServer:_onLevelLoaded(levelName, gameMode)
 		Globals.isScavenger = false;
 	end
 
-	TraceManager:onLevelLoaded(levelName, gameMode);
-	BotSpawner:onLevelLoaded();
+	if gameMode == 'ConquestLarge0' or
+	gameMode == 'ConquestSmall0' or
+	gameMode == 'ConquestAssaultLarge0' or
+	gameMode == 'ConquestAssaultSmall0' or
+	gameMode == 'ConquestAssaultSmall1' or
+	gameMode == 'BFLAG'then
+		Globals.isConquest = true;
+	else
+		Globals.isConquest = false;
+	end
+
+	if gameMode == 'ConquestAssaultLarge0' or
+	gameMode == 'ConquestAssaultSmall0' or
+	gameMode == 'ConquestAssaultSmall1' then
+		Globals.isAssault = true;
+	else
+		Globals.isAssault = false;
+	end
+
+	if gameMode == 'RushLarge0' then
+		Globals.isRush = true;
+	else
+		Globals.isRush = false;
+	end
+
+	g_NodeEditor:onLevelLoaded(levelName, gameMode)
+	g_GameDirector:onLevelLoaded()
+	g_GameDirector:initObjectives()
+	BotSpawner:onLevelLoaded()
+	NetEvents:BroadcastUnreliableLocal('WriteClientSettings', Config, true)
 end
 
 function FunBotServer:_onChat(player, recipientMask, message)

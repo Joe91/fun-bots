@@ -1,8 +1,28 @@
 # Changelog
  
-## [Unreleased - 1.6.X.X] - 2021-02-XX
+## [Unreleased - 1.7.X.X] - 2021-03-XX
  
-[Download](https://github.com/Joe91/fun-bots/archive/V1.6.1.3.zip)  
+[Download](https://github.com/Joe91/fun-bots/archive/V1.7.0.3.zip)  
+The Smart Node update
+
+- Conquest supported
+	- Bazaar (small + large)
+	- Caspian Border (small + large) Thanks to RekkieSA
+	- Seine Crossing (small + large)
+	- Khark Island (small) Thanks to RekkieSA
+	- Metro (large)
+- Rush supported
+	- Metro
+	- Damavand Peak
+- BFLAG supported
+	- Bazaar small
+- Bots switch to Pistol or Sidearm (Rockets) if needed
+- Shoot-Cycles adapted
+
+
+## [Unreleased - 1.6.2.1] - 2021-02-28
+ 
+[Download](https://github.com/Joe91/fun-bots/archive/V1.6.2.1.zip)  
 Big update of everything
 
 - Zombie-mode added
@@ -11,10 +31,12 @@ Big update of everything
 - Support for Domination and Gunmaster
 - First Paths for Conquest Large (Thanks to R3trib)
 - Visible traces (WIP)
+- Preparation for smart nodes done (WIP)
 - Bot Vision
 - better following of paths
 - Bots attack bots
 - different spawn-modes
+- fix with some strange crashes
 - lots of bugfixes
 
 

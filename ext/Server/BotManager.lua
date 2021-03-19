@@ -4,22 +4,33 @@ require('Bot');
 
 local Globals 	= require('Globals');
 local Utilities = require('__shared/Utilities');
-local damageHook = nil;
 
 function BotManager:__init()
 	self._bots = {}
+	self._botsByName = {}
+	self._botsByTeam = {{}, {}, {}} -- neutral, team1, team2
 	self._botInputs = {}
 	self._shooterBots = {}
-	self._botToBotConnections = {}
+	self._activePlayers = {}
 	self._botAttackBotTimer = 0;
+	self._destroyBotsTimer = 0;
+	self._botsToDestroy = {};
+	self._botCheckState = {};
+	self._lastBotCheckIndex = 1
+	self._initDone = false;
 
-	self._damageHookInstalled = false;
 	Events:Subscribe('UpdateManager:Update', self, self._onUpdate)
 	Events:Subscribe('Level:Destroy', self, self._onLevelDestroy)
 	NetEvents:Subscribe('BotShootAtPlayer', self, self._onShootAt)
 	NetEvents:Subscribe('BotShootAtBot', self, self._onBotShootAtBot)
 	Events:Subscribe('ServerDamagePlayer', self, self._onServerDamagePlayer) 	--only triggered on false damage
 	NetEvents:Subscribe('ClientDamagePlayer', self, self._onDamagePlayer)   	--only triggered on false damage
+	Hooks:Install('Soldier:Damage', 100, self, self._onSoldierDamage)
+
+end
+
+function BotManager:registerActivePlayer(player)
+	self._activePlayers[player.name] = true;
 end
 
 function BotManager:getBotTeam()
@@ -31,7 +42,7 @@ function BotManager:getBotTeam()
 	local countPlayersTeam2 = 0;
 	local players = PlayerManager:GetPlayers()
 	for i = 1, PlayerManager:GetPlayerCount() do
-		if self:GetBotByName(players[i].name) == nil then
+		if self:getBotByName(players[i].name) == nil then
 			if players[i].teamId == TeamId.Team1 then
 				countPlayersTeam1 = countPlayersTeam1 + 1;
 			else
@@ -50,24 +61,24 @@ function BotManager:getBotTeam()
 	return botTeam;
 end
 
-function BotManager:configGlobas()
+function BotManager:configGlobals()
 	Globals.respawnWayBots 	= Config.respawnWayBots;
 	Globals.attackWayBots 	= Config.attackWayBots;
 	Globals.spawnMode		= Config.spawnMode;
 	Globals.yawPerFrame 	= self:calcYawPerFrame()
-	self:killAll();
-	if not self._damageHookInstalled then
-		damageHook = Hooks:Install('Soldier:Damage', 100, self, self._onSoldierDamage)
-		self._damageHookInstalled = true;
-	end
+	--self:killAll();
 	local maxPlayers = RCON:SendCommand('vars.maxPlayers');
 	maxPlayers = tonumber(maxPlayers[2]);
 	if maxPlayers ~= nil and maxPlayers > 0 then
 		Globals.maxPlayers = maxPlayers;
-		print("there are "..maxPlayers.." slots on this server")
+		
+		if Debug.Server.BOT then
+			print("there are "..maxPlayers.." slots on this server")
+		end
 	else
 		Globals.maxPlayers = MAX_NUMBER_OF_BOTS; --only fallback
 	end
+	self._initDone = true;
 end
 
 function BotManager:calcYawPerFrame()
@@ -79,7 +90,7 @@ end
 function BotManager:findNextBotName()
 	for i = 1, MAX_NUMBER_OF_BOTS do
 		local name = BotNames[i]
-		local bot = self:GetBotByName(name)
+		local bot = self:getBotByName(name)
 		if bot == nil then
 			return name
 		elseif bot.player.soldier == nil and bot:getSpawnMode() < 4 then
@@ -87,6 +98,14 @@ function BotManager:findNextBotName()
 		end
 	end
 	return nil
+end
+
+function BotManager:getBots(teamId)
+	if (teamId ~= nil) then
+		return self._botInfo.team[teamId+1]
+	else
+		return self._bots
+	end
 end
 
 function BotManager:getBotCount()
@@ -103,6 +122,18 @@ function BotManager:getActiveBotCount(teamId)
 		end
 	end
 	return count
+end
+
+function BotManager:getPlayers()
+	local allPlayers = PlayerManager:GetPlayers()
+	local players = {}
+
+	for i=1, #allPlayers do
+		if not Utilities:isBot(allPlayers[i]) then
+			table.insert(players, allPlayers[i])
+		end
+	end
+	return players
 end
 
 function BotManager:getPlayerCount()
@@ -174,51 +205,97 @@ function BotManager:_onUpdate(dt, pass)
 		bot:onUpdate(dt)
 	end
 
-	if Config.botsAttackBots then
+	if Config.botsAttackBots and self._initDone then
 		if self._botAttackBotTimer >= StaticConfig.botAttackBotCheckInterval then
 			self._botAttackBotTimer = 0;
 			self:_checkForBotBotAttack()
 		end
 		self._botAttackBotTimer = self._botAttackBotTimer + dt;
 	end
+
+	if #self._botsToDestroy > 0 then
+		if self._destroyBotsTimer >= 0.05 then
+			self._destroyBotsTimer = 0;
+			self:destroyBot(table.remove(self._botsToDestroy))
+		end
+		self._destroyBotsTimer = self._destroyBotsTimer + dt;
+	end
 end
 
 function BotManager:_checkForBotBotAttack()
-	local players = PlayerManager:GetPlayers()
-	local playerCount = self:getPlayerCount();
-	local playerIndex = 1;
-	local playersUsed = 0;
-	if playerCount > 0 then
-		for _, bot in pairs(self._bots) do
-			for _, bot2 in pairs(self._bots) do
-				if bot.player ~= bot2.player then
-					if bot.player.TeamId ~= bot2.player.teamId then
-						if bot.player.alive and bot2.player.alive then
-							if self._botToBotConnections[bot.player.name..bot2.player.name] == nil and self._botToBotConnections[bot2.player.name..bot.player.name] == nil then
-								if bot.player.soldier.worldTransform.trans:Distance(bot2.player.soldier.worldTransform.trans) <= Config.maxBotAttackBotDistance then
-									for i = playerIndex, playerCount do
-										if self:GetBotByName(players[i].name) == nil then
-											-- check this bot view. Let one client do it
-											NetEvents:SendToLocal('CheckBotBotAttack', players[i], bot.player.soldier.worldTransform.trans, bot2.player.soldier.worldTransform.trans, bot.player.name, bot2.player.name)
-											self._botToBotConnections[bot.player.name..bot2.player.name] = true;
-											playerIndex = i + 1;
-											break
-										end
-									end
-									playersUsed = playersUsed + 1;
-									if playersUsed >= playerCount then
-										return
-									end
-								end
+
+	-- not enough on either team and no players to use
+	if (#self._botsByTeam[2] < 1 or #self._botsByTeam[3] < 1) then
+		return
+	end
+
+	local players = self:getPlayers()
+	local playerCount = #players
+
+	if (playerCount < 1) then
+		return
+	end
+
+	local raycasts = 0
+	local nextPlayerIndex = 1
+
+	for i=self._lastBotCheckIndex, #self._bots do
+
+		local bot = self._bots[i]
+
+		-- bot has player, is alive, and hasn't found that special someone yet
+		if (bot ~= nil and bot.player and bot.player.alive and not self._botCheckState[bot.player.name]) then
+
+			local opposingTeam = 1
+			if (bot.player.teamId == TeamId.Team1) then
+				opposingTeam = TeamId.Team2 + 1
+			else
+				opposingTeam = TeamId.Team1 + 1
+			end
+
+			-- search only opposing team
+			for _, bot2 in pairs(self._botsByTeam[opposingTeam]) do
+
+				if (bot2.player == nil) then
+					--print(tostring(bot2.name)..' has no player')
+				end
+
+				-- make sure it's living and has no target
+				if (bot2 ~= nil and bot2.player ~= nil and bot2.player.alive and not self._botCheckState[bot2.player.name]) then
+
+					local distance = bot.player.soldier.worldTransform.trans:Distance(bot2.player.soldier.worldTransform.trans)
+					if distance <= Config.maxBotAttackBotDistance then
+
+						-- choose a player at random, try until an active player is found
+						for playerIndex = nextPlayerIndex, playerCount do
+							if self._activePlayers[players[playerIndex].name] then
+
+								-- check this bot view. Let one client do it
+								local pos1 = bot.player.soldier.worldTransform.trans:Clone()
+								local pos2 = bot2.player.soldier.worldTransform.trans:Clone()
+
+								NetEvents:SendUnreliableToLocal('CheckBotBotAttack', players[playerIndex], pos1, pos2, bot.player.name, bot2.player.name)
+								raycasts = raycasts + 1
+								nextPlayerIndex = playerIndex + 1;
+								break
 							end
+						end
+
+						if (raycasts >= playerCount) then
+							-- leave the function early for this cycle
+							self._lastBotCheckIndex = i+1
+							return
 						end
 					end
 				end
 			end
 		end
+		self._lastBotCheckIndex = i
 	end
-	--clear connections, if all are checked
-	self._botToBotConnections = {}
+	-- should only reach here if every connection has been checked
+	-- clear the cache and start over
+	self._lastBotCheckIndex = 1
+	self._botCheckState = {}
 end
 
 function BotManager:onPlayerLeft(player)
@@ -281,7 +358,7 @@ function BotManager:_onSoldierDamage(hook, soldier, info, giverInfo)
 		return
 	end
 
-	local soldierIsBot = Utilities:isBot(soldier.player.name);
+	local soldierIsBot = Utilities:isBot(soldier.player);
 	if soldierIsBot and giverInfo.giver ~= nil then
 		--detect if we need to shoot back
 		if Config.shootBackIfHit and info.damage > 0 then
@@ -297,7 +374,7 @@ function BotManager:_onSoldierDamage(hook, soldier, info, giverInfo)
 	--find out, if a player was hit by the server:
 	if not soldierIsBot then
 		if giverInfo.giver == nil then
-			local bot = self:GetBotByName(self._shooterBots[soldier.player.name])
+			local bot = self:getBotByName(self._shooterBots[soldier.player.name])
 			if bot ~= nil and bot.player.soldier ~= nil and info.damage > 0 then
 				info.damage = self:_getDamageValue(info.damage, bot, soldier, true);
 				info.boneIndex = 0;
@@ -317,7 +394,7 @@ function BotManager:_onSoldierDamage(hook, soldier, info, giverInfo)
 			end
 		else
 			--valid bot-damage?
-			local bot = self:GetBotByName(giverInfo.giver.name)
+			local bot = self:getBotByName(giverInfo.giver.name)
 			if bot ~= nil and bot.player.soldier ~= nil then
 				-- giver was a bot
 				info.damage = self:_getDamageValue(info.damage, bot, soldier, false);
@@ -335,7 +412,7 @@ function BotManager:_onServerDamagePlayer(playerName, shooterName, meleeAttack)
 end
 
 function BotManager:_onDamagePlayer(player, shooterName, meleeAttack, isHeadShot)
-	local bot = self:GetBotByName(shooterName)
+	local bot = self:getBotByName(shooterName)
 	if not player.alive or bot == nil then
 		return
 	end
@@ -357,7 +434,7 @@ function BotManager:_onDamagePlayer(player, shooterName, meleeAttack, isHeadShot
 end
 
 function BotManager:_onShootAt(player, botname, ignoreYaw)
-	local bot = self:GetBotByName(botname)
+	local bot = self:getBotByName(botname)
 	if bot == nil or bot.player == nil or bot.player.soldier == nil or player == nil then
 		return
 	end
@@ -365,40 +442,43 @@ function BotManager:_onShootAt(player, botname, ignoreYaw)
 end
 
 function BotManager:_onBotShootAtBot(player, botname1, botname2)
-	local bot1 = self:GetBotByName(botname1)
-	local bot2 = self:GetBotByName(botname2)
+	local bot1 = self:getBotByName(botname1)
+	local bot2 = self:getBotByName(botname2)
 	if bot1 == nil or bot1.player == nil or  bot2 == nil or bot2.player == nil then
 		return
 	end
-	bot1:shootAt(bot2.player, false)
-	bot2:shootAt(bot1.player, false)
+	if bot1:shootAt(bot2.player, false) or bot2:shootAt(bot1.player, false) then
+		self._botCheckState[bot1.player.name] = bot2.player.name
+		self._botCheckState[bot2.player.name] = bot1.player.name
+	else
+		self._botCheckState[bot1.player.name] = nil
+		self._botCheckState[bot2.player.name] = nil
+	end
 end
 
-
 function BotManager:_onLevelDestroy()
-	print("destroyLevel")
-	if damageHook ~= nil then
-		damageHook:Uninstall();
+	if Debug.Server.INFO then
+		print("destroyLevel")
 	end
-	self._damageHookInstalled = false;
+	
+	self:resetAllBots();
+	self._activePlayers = {};
+	self._initDone = false;
 	--self:killAll() -- this crashes when the server ended. do it on levelstart instead
 end
 
-function BotManager:GetBotByName(name)
-	local returnBot = nil
-	for _, bot in pairs(self._bots) do
-		if bot.name == name then
-			returnBot = bot
-			break
-		end
-	end
-	return returnBot
+function BotManager:getBotByName(name)
+	return self._botsByName[name]
 end
 
-function BotManager:createBot(name, team)
-	local bot = self:GetBotByName(name)
+function BotManager:createBot(name, team, squad)
+
+	--print('botsByTeam['..#self._botsByTeam[2]..'|'..#self._botsByTeam[3]..']')
+
+	local bot = self:getBotByName(name)
 	if bot ~= nil then
 		bot.player.teamId = team
+		bot.player.squadId = squad
 		bot:resetVars()
 		return bot
 	end
@@ -409,28 +489,35 @@ function BotManager:createBot(name, team)
 		playerlimt = playerlimt - 1;
 	end
 	if playerlimt <=  PlayerManager:GetPlayerCount() then
-		print("playerlimit reached")
+		if Debug.Server.BOT then
+			print("playerlimit reached")
+		end
 		return
 	end
 
 	-- Create a player for this bot.
-	local botPlayer = PlayerManager:CreatePlayer(name, team, SquadId.SquadNone)
+	local botPlayer = PlayerManager:CreatePlayer(name, team, squad)
 	if botPlayer == nil then
-		print("cant create more players on this team")
+		if Debug.Server.BOT then
+			print("cant create more players on this team")
+		end
 		return
 	end
 
 	-- Create input for this bot.
 	local botInput = EntryInput()
 	botInput.deltaTime = 1.0 / SharedUtils:GetTickrate()
+	botInput.flags = EntryInputFlags.AuthoritativeAiming
 	botPlayer.input = botInput
 
 	bot = Bot(botPlayer)
 
+	local teamLookup = bot.player.teamId+1
 	table.insert(self._bots, bot)
-	self._botInputs[botPlayer.id] = botInput
-	bot.player.input.flags = EntryInputFlags.AuthoritativeAiming
-
+	self._botsByTeam[teamLookup] = self._botsByTeam[teamLookup] or {}
+	table.insert(self._botsByTeam[teamLookup], bot)
+	self._botsByName[name] = bot
+	self._botInputs[botPlayer.id] = botInput -- bot inputs are stored to prevent garbage collection
 	return bot
 end
 
@@ -459,136 +546,107 @@ function BotManager:killPlayerBots(player)
 	end
 end
 
-function BotManager:killAll()
+function BotManager:resetAllBots()
 	for _, bot in pairs(self._bots) do
 		bot:resetVars()
-		if bot.player.alive then
-			bot.player.soldier:Kill()
-		end
 	end
 end
 
-function BotManager:destroyAmount(number)
-	local count = 0
-	for i = 1, MAX_NUMBER_OF_BOTS do
-		local index = MAX_NUMBER_OF_BOTS + 1 - i
-		local bot = self:GetBotByName(BotNames[index])
-		if bot ~= nil then
-			self:destroyBot(bot.name)
-			count = count + 1
-		end
-		if count >= number then
+function BotManager:killAll(amount, teamId)
+
+	local botTable = self._bots
+	if (teamId ~= nil) then
+		botTable = self._botsByTeam[teamId+1]
+	end
+
+	amount = amount or #botTable
+
+	for _, bot in pairs(botTable) do
+
+		bot:kill()
+		
+		amount = amount - 1;
+		if amount <= 0 then
 			return
 		end
 	end
 end
 
-function BotManager:killAmount()
-	local count = 0
-	for _, bot in pairs(self._bots) do
-		bot:resetVars()
-		if bot.player.alive then
-			bot.player.soldier:Kill()
+function BotManager:destroyAll(amount, teamId, force)
+
+	local botTable = self._bots
+	if (teamId ~= nil) then
+		botTable = self._botsByTeam[teamId+1]
+	end
+
+	amount = amount or #botTable
+
+	for _, bot in pairs(botTable) do
+
+		if (force) then
+			self:destroyBot(bot)
+		else
+			table.insert(self._botsToDestroy, bot.name)
 		end
-		count = count + 1
-		if count >= number then
+		
+		amount = amount - 1;
+		if amount <= 0 then
 			return
-		end
-	end
-end
-
-function BotManager:destroyTeam(teamId, amount)
-	for i = 1, MAX_NUMBER_OF_BOTS do
-		local index = MAX_NUMBER_OF_BOTS + 1 - i
-		local bot = self:GetBotByName(BotNames[index])
-		if bot ~= nil then
-			if bot.player.teamId == teamId then
-				self:destroyBot(bot.name)
-				if amount ~= nil then
-					amount = amount - 1;
-					if amount <= 0 then
-						return
-					end
-				end
-			end
-		end
-	end
-end
-
-function BotManager:killTeam(teamId, amount)
-	for _, bot in pairs(self._bots) do
-		if bot.player.teamId == teamId then
-			bot:resetVars()
-			if bot.player.alive then
-				bot.player.soldier:Kill()
-			end
-			print("bot killed")
-			if amount ~= nil then
-				amount = amount - 1;
-				if amount <= 0 then
-					return
-				end
-			end
 		end
 	end
 end
 
 function BotManager:destroyDisabledBots()
-	local numberOfBots = #self._bots
-	for i = 1,  numberOfBots do
-		local index = numberOfBots + 1 - i
-		local bot = self._bots[index]
-		if bot ~= nil then
-			if bot:isInactive() then
-				print("destroy bot")
-				self:destroyBot(bot.name)
-			end
+	for _, bot in pairs(self._bots) do
+		if bot:isInactive() then
+			table.insert(self._botsToDestroy, bot.name)
 		end
 	end
 end
 
 function BotManager:destroyPlayerBots(player)
-	for i = 1, MAX_NUMBER_OF_BOTS do
-		local bot = self:GetBotByName(BotNames[i])
-		if bot ~= nil then
-			if bot:getTargetPlayer() == player then
-				self:destroyBot(bot.name)
-			end
+	for _, bot in pairs(self._bots) do
+		if bot:getTargetPlayer() == player then
+			table.insert(self._botsToDestroy, bot.name)
 		end
 	end
 end
 
-function BotManager:destroyBot(botName)
-	-- Find index of this bot.
-	local idx = nil
+function BotManager:destroyBot(bot)
 
-	for i, bot in pairs(self._bots) do
-		if botName == bot.name then
-			idx = i
-			break
-		end
+	if (type(bot) == 'string') then
+		bot = self._botsByName[bot]
 	end
 
 	-- Bot was not found.
-	if idx == nil then
+	if bot == nil then
 		return
 	end
 
-	local bot = self:GetBotByName(botName)
-	local botId = bot.id
-	bot:destroy()
-	self._botInputs[botId] = nil
-	table.remove(self._bots, idx)
-end
-
-function BotManager:destroyAllBots()
-	for _, bot in pairs(self._bots) do
-		bot:destroy()
+	-- Find index of this bot.
+	local newTable = {}
+	for i, checkBot in pairs(self._bots) do
+		if bot.name ~= checkBot.name then
+			table.insert(newTable, checkBot)
+		end
+		checkBot:clearPlayer(bot.player)
 	end
-	self._bots = {}
-	self._botInputs = {}
-end
+	self._bots = newTable
 
+
+	local newTeamsTable = {}
+	for i, checkBot in pairs(self._botsByTeam[bot.player.teamId+1]) do
+		if bot.name ~= checkBot.name then
+			table.insert(newTeamsTable, checkBot)
+		end
+	end
+	self._botsByTeam[bot.player.teamId+1] = newTeamsTable
+	self._botsByName[bot.name] = nil
+	self._botInputs[bot.id] = nil
+
+	bot:destroy()
+	bot = nil
+end
 
 -- Singleton.
 if g_BotManager == nil then

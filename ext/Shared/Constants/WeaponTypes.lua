@@ -1,10 +1,11 @@
 WeaponTypes = {
-	"Knife",
-	"Pistol",
-	"Shotgun",
-	"Assault",
-	"LMG",
-	"Carabine",
-	"PDW",
-	"Sniper"
-}
+	'Knife',
+	'Pistol',
+	'Shotgun',
+	'Assault',
+	'LMG',
+	'Carabine',
+	'PDW',
+	'Sniper',
+	'Rocket'
+};

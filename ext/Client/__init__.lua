@@ -1,5 +1,6 @@
 class('FunBotClient');
 
+require('__shared/Debug');
 require('__shared/Constants/BotColors');
 require('__shared/Constants/BotNames');
 require('__shared/Constants/BotKits');
@@ -13,7 +14,6 @@ require('ClientNodeEditor');
 
 Language					= require('__shared/Language');
 local FunBotUIClient		= require('UIClient');
-local ClientTraceManager	= require('ClientTraceManager');
 local ClientBotManager		= require('ClientBotManager');
 
 function FunBotClient:__init()

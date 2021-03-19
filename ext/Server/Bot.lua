@@ -1,8 +1,9 @@
 class('Bot');
 
 require('__shared/Config');
-require('Waypoint');
+require('__shared/NodeCollection')
 require('Globals');
+require('PathSwitcher')
 
 local Utilities = require('__shared/Utilities')
 
@@ -20,8 +21,8 @@ function Bot:__init(player)
 	self.activeWeapon = nil;
 	self.primary = nil;
 	self.pistol = nil;
+	self.sidearm = nil;
 	self.knife = nil;
-	self.inEnemyTeam = false;
 	self._checkSwapTeam = false;
 	self._respawning = false;
 
@@ -32,12 +33,14 @@ function Bot:__init(player)
 	self._wayWaitTimer = 0;
 	self._wayWaitYawTimer = 0;
 	self._obstaceSequenceTimer = 0;
+	self._stuckTimer = 0;
 	self._shotTimer = -Config.botFirstShotDelay;
 	self._shootModeTimer = 0;
 	self._reloadTimer = 0;
 	self._attackModeMoveTimer = 0;
 	self._meleeCooldownTimer = 0;
 	self._shootTraceTimer = 0;
+	self._actionTimer = 0;
 
 	--shared movement vars
 	self.activeMoveMode = 0;
@@ -57,12 +60,16 @@ function Bot:__init(player)
 	self._invertPathDirection = false;
 	self._obstacleRetryCounter = 0;
 	self._zombieSpeedValue = 0;
+	self._objective = '';
+	self._onSwitch = false;
+	self._actionActive = false;
 
 	--shooting
 	self._shoot = false;
 	self._shootPlayer = nil;
+	self._weaponToUse = "Primary";
 	self._shootWayPoints = {};
-	self._knifeWayPoints = {};
+	self._knifeWayPositions = {};
 	self._lastTargetTrans = Vec3();
 	self._lastShootPlayer = nil;
 
@@ -100,18 +107,25 @@ end
 
 --public functions
 function Bot:shootAt(player, ignoreYaw)
+	if self._actionActive then
+		return false;
+	end
+
 	-- don't shoot at teammates
 	if self.player.teamId == player.teamId then
-		return
+		return false;
 	end
+	
 	if player.soldier == nil or self.player.soldier == nil then
-		return
+		return false;
 	end
+	
 	-- don't shoot if too far away
 	if not ignoreYaw then
-		local distance = player.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans)
+		local distance = player.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans);
+		
 		if self.activeWeapon.type ~= "Sniper" and distance > Config.maxShootDistanceNoSniper then
-			return
+			return false;
 		end
 	end
 
@@ -135,20 +149,26 @@ function Bot:shootAt(player, ignoreYaw)
 
 	if dYaw < fovHalf or ignoreYaw then
 		if self._shoot then
-			if self._shootPlayer == nil or self._shootModeTimer > Config.botMinTimeShootAtPlayer then
-				self._shootModeTimer	= 0;
-				self._shootPlayer		= player;
-				self._lastShootPlayer 	= player;
-				self._lastTargetTrans 	= player.soldier.worldTransform.trans:Clone();
-				self._knifeWayPoints 	= {};
+			if self._shootPlayer == nil or self._shootModeTimer > Config.botMinTimeShootAtPlayer or (self.knifeMode and self._shootModeTimer > (Config.botMinTimeShootAtPlayer/2)) then
+				self._shootModeTimer		= 0;
+				self._shootPlayer			= player;
+				self._lastShootPlayer 		= player;
+				self._lastTargetTrans 		= player.soldier.worldTransform.trans:Clone();
+				self._knifeWayPositions 	= {};
+				
 				if self.knifeMode then
-					table.insert(self._knifeWayPoints, self._lastTargetTrans)
+					table.insert(self._knifeWayPositions, self._lastTargetTrans);
 				end
+				
+				return true;
 			end
 		else
 			self._shootModeTimer = Config.botFireModeDuration;
+			return false;
 		end
 	end
+	
+	return false
 end
 
 function Bot:setVarsDefault()
@@ -175,10 +195,14 @@ function Bot:resetVars()
 	self._aimUpdateTimer		= 0; --timer sync
 	self._targetPoint			= nil;
 	self._nextTargetPoint		= nil;
-	self._knifeWayPoints		= {};
+	self._knifeWayPositions		= {};
+	self._shootWayPoints 		= {};
 	self._zombieSpeedValue 		= 0;
 	self._spawnDelayTimer		= 0;
+	self._objective 			= '';
 	self._meleeActive 			= false;
+	self._actionActive 			= false;
+	self._weaponToUse 			= "Primary";
 
 	self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 0);
 	self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
@@ -258,6 +282,14 @@ function Bot:setSpeed(speed)
 	self._botSpeed = speed;
 end
 
+function Bot:setObjective(objective)
+	self._objective = objective or '';
+end
+
+function Bot:getObjective(objective)
+	return self._objective
+end
+
 function Bot:getSpawnMode()
 	return self._spawnMode;
 end
@@ -300,11 +332,15 @@ function Bot:resetSpawnVars()
 	self._shotTimer				= -Config.botFirstShotDelay;
 	self._updateTimer			= 0;
 	self._aimUpdateTimer		= 0; --timer sync
+	self._stuckTimer			= 0;
 	self._targetPoint			= nil;
 	self._nextTargetPoint		= nil;
 	self._meleeActive 			= false;
-	self._knifeWayPoints		= {};
+	self._knifeWayPositions		= {};
 	self._zombieSpeedValue 		= 0;
+	self._onSwitch 				= false;
+	self._actionActive 			= false;
+	self._weaponToUse 			= "Primary";
 
 	self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 0);
 	self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
@@ -331,6 +367,14 @@ function Bot:clearPlayer(player)
 	end
 end
 
+function Bot:kill()
+	self:resetVars();
+	
+	if self.player.alive then
+		self.player.soldier:Kill();
+	end
+end
+
 function Bot:destroy()
 	self:resetVars();
 	self.player.input	= nil;
@@ -352,102 +396,110 @@ function Bot:_updateRespwawn()
 end
 
 function Bot:_updateAiming()
-	if self.player.alive and self._shoot then
-		if self._shootPlayer ~= nil and self._shootPlayer.soldier ~= nil then
-
-			--interpolate player movement
-			local targetMovement = Vec3(0,0,0);
-			local ptichCorrection = 0.0;
-			local fullPositionTarget =  self._shootPlayer.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(self._shootPlayer, true);
-			local fullPositionBot = self.player.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(self.player, false);
-
-			if not self.knifeMode then
-				local distanceToPlayer	= fullPositionTarget:Distance(fullPositionBot);
-				--calculate how long the distance is --> time to travel
-				local timeToTravel		= (distanceToPlayer / self.activeWeapon.bulletSpeed)
-				local factorForMovement	= (timeToTravel) / self._aimUpdateTimer
-				ptichCorrection	= 0.5 * timeToTravel * timeToTravel * self.activeWeapon.bulletDrop;
-				if self._lastShootPlayer == self._shootPlayer then
-					targetMovement			= (fullPositionTarget - self._lastTargetTrans) * factorForMovement; --movement in one dt
-				end
-
-				self._lastShootPlayer = self._shootPlayer;
-				self._lastTargetTrans = fullPositionTarget;
-			end
-
-			--calculate yaw and pith
-			local dz		= fullPositionTarget.z + targetMovement.z - fullPositionBot.z;
-			local dx		= fullPositionTarget.x + targetMovement.x - fullPositionBot.x;
-			local dy		= fullPositionTarget.y + targetMovement.y + ptichCorrection - fullPositionBot.y;
-			local atanDzDx	= math.atan(dz, dx);
-			local yaw		= (atanDzDx > math.pi / 2) and (atanDzDx - math.pi / 2) or (atanDzDx + 3 * math.pi / 2);
-
-			--calculate pitch
-			local distance	= math.sqrt(dz ^ 2 + dx ^ 2);
-			local pitch		= math.atan(dy, distance);
-
-			self._targetPitch	= pitch;
-			self._targetYaw		= yaw;
-		end
+	if (not self.player.alive or not self._shoot or self._shootPlayer == nil or self._shootPlayer.soldier == nil or self.activeWeapon == nil) then
+		return;
 	end
+
+	--interpolate player movement
+	local targetMovement		= Vec3.zero;
+	local pitchCorrection		= 0.0;
+	local fullPositionTarget	=  self._shootPlayer.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(self._shootPlayer, true);
+	local fullPositionBot		= self.player.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(self.player, false);
+
+	if not self.knifeMode then
+		local distanceToPlayer	= fullPositionTarget:Distance(fullPositionBot);
+		--calculate how long the distance is --> time to travel
+		local timeToTravel		= (distanceToPlayer / self.activeWeapon.bulletSpeed);
+		local factorForMovement	= (timeToTravel) / self._aimUpdateTimer;
+		pitchCorrection	= 0.5 * timeToTravel * timeToTravel * self.activeWeapon.bulletDrop;
+		
+		if self._lastShootPlayer == self._shootPlayer then
+			targetMovement			= (fullPositionTarget - self._lastTargetTrans) * factorForMovement; --movement in one dt
+		end
+
+		self._lastShootPlayer = self._shootPlayer;
+		self._lastTargetTrans = fullPositionTarget;
+	end
+
+	--calculate yaw and pitch
+	local dz		= fullPositionTarget.z + targetMovement.z - fullPositionBot.z;
+	local dx		= fullPositionTarget.x + targetMovement.x - fullPositionBot.x;
+	local dy		= fullPositionTarget.y + targetMovement.y + pitchCorrection - fullPositionBot.y;
+	local atanDzDx	= math.atan(dz, dx);
+	local yaw		= (atanDzDx > math.pi / 2) and (atanDzDx - math.pi / 2) or (atanDzDx + 3 * math.pi / 2);
+
+	--calculate pitch
+	local distance	= math.sqrt(dz ^ 2 + dx ^ 2);
+	local pitch		= math.atan(dy, distance);
+
+	self._targetPitch	= pitch;
+	self._targetYaw		= yaw;
 end
 
 function Bot:_updateYaw()
 	if self._meleeActive then
-		return
+		return;
 	end
+	
 	if self._targetPoint ~= nil and self._shootPlayer == nil and self.player.soldier ~= nil then
-		if self.player.soldier.worldTransform.trans:Distance(self._targetPoint.trans) < 0.2 then
-			self._targetPoint = self._nextTargetPoint
+		if self.player.soldier.worldTransform.trans:Distance(self._targetPoint.Position) < 0.2 then
+			self._targetPoint = self._nextTargetPoint;
 		end
-		local dy					= self._targetPoint.trans.z - self.player.soldier.worldTransform.trans.z;
-		local dx					= self._targetPoint.trans.x - self.player.soldier.worldTransform.trans.x;
+		
+		local dy		= self._targetPoint.Position.z - self.player.soldier.worldTransform.trans.z;
+		local dx		= self._targetPoint.Position.x - self.player.soldier.worldTransform.trans.x;
 		local atanDzDx	= math.atan(dy, dx);
 		local yaw		= (atanDzDx > math.pi / 2) and (atanDzDx - math.pi / 2) or (atanDzDx + 3 * math.pi / 2);
 		self._targetYaw = yaw;
 	end
+	
 	if self.knifeMode then
 		if self._shootPlayer ~= nil and self.player.soldier ~= nil then
-			if #self._knifeWayPoints > 0 then
-				local dy					= self._knifeWayPoints[1].z - self.player.soldier.worldTransform.trans.z;
-				local dx					= self._knifeWayPoints[1].x - self.player.soldier.worldTransform.trans.x;
+			if #self._knifeWayPositions > 0 then
+				local dy		= self._knifeWayPositions[1].z - self.player.soldier.worldTransform.trans.z;
+				local dx		= self._knifeWayPositions[1].x - self.player.soldier.worldTransform.trans.x;
 				local atanDzDx	= math.atan(dy, dx);
 				local yaw		= (atanDzDx > math.pi / 2) and (atanDzDx - math.pi / 2) or (atanDzDx + 3 * math.pi / 2);
 				self._targetYaw = yaw;
-				if self.player.soldier.worldTransform.trans:Distance(self._knifeWayPoints[1]) < 1.5 then
-					table.remove(self._knifeWayPoints, 1)
+				
+				if self.player.soldier.worldTransform.trans:Distance(self._knifeWayPositions[1]) < 1.5 then
+					table.remove(self._knifeWayPositions, 1);
 				end
 			end
 		end
 	end
 
 	local deltaYaw = self.player.input.authoritativeAimingYaw - self._targetYaw;
+	
 	if deltaYaw > math.pi then
 		deltaYaw = deltaYaw - 2*math.pi
 	elseif deltaYaw < -math.pi then
 		deltaYaw = deltaYaw + 2*math.pi
 	end
 
-	local absDeltaYaw = math.abs(deltaYaw)
-
-	local inkrement = g_Globals.yawPerFrame;
+	local absDeltaYaw	= math.abs(deltaYaw);
+	local inkrement 	= g_Globals.yawPerFrame;
+	
 	if absDeltaYaw < inkrement then
-		self.player.input.authoritativeAimingYaw = self._targetYaw;
-		self.player.input.authoritativeAimingPitch = self._targetPitch;
+		self.player.input.authoritativeAimingYaw	= self._targetYaw;
+		self.player.input.authoritativeAimingPitch	= self._targetPitch;
 		return;
 	end
 
 	if deltaYaw > 0  then
 		inkrement = -inkrement;
 	end
+	
 	local tempYaw = self.player.input.authoritativeAimingYaw + inkrement;
+	
 	if tempYaw >= (math.pi * 2) then
 		tempYaw = tempYaw - (math.pi * 2);
 	elseif tempYaw < 0.0 then
 		tempYaw = tempYaw + (math.pi * 2);
 	end
-	self.player.input.authoritativeAimingYaw = tempYaw
-	self.player.input.authoritativeAimingPitch = self._targetPitch;
+	
+	self.player.input.authoritativeAimingYaw	= tempYaw
+	self.player.input.authoritativeAimingPitch	= self._targetPitch;
 end
 
 
@@ -459,6 +511,7 @@ function Bot:_updateShooting()
 				if self.knifeMode then
 					if self.player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_7 then
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 1);
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon5, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
@@ -466,9 +519,10 @@ function Bot:_updateShooting()
 					else
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 0);
 					end
-				elseif Config.botWeapon == "Pistol" then
+				elseif (self._weaponToUse == "Pistol" and Config.botWeapon == "Auto") or Config.botWeapon == "Pistol" then
 					if self.player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_1 then
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 0);
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon5, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 1);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
@@ -476,9 +530,22 @@ function Bot:_updateShooting()
 					else
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
 					end
-				else -- "Primary" then
+				elseif (self._weaponToUse == "Sidearm" and Config.botWeapon == "Auto") or Config.botWeapon == "Sidearm" then
+					if self.player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_5 then
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 0);
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon5, 1);
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
+						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
+						self.activeWeapon = self.sidearm;
+						self._shotTimer	= -1.0;
+					else
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon5, 0);
+					end
+				elseif (self._weaponToUse == "Primary" and Config.botWeapon == "Auto") or Config.botWeapon == "Primary" then
 					if self.player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_0 then
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 0);
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon5, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 1);
 						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
@@ -491,7 +558,7 @@ function Bot:_updateShooting()
 		end
 
 		if self._shootPlayer ~= nil and self._shootPlayer.soldier ~= nil then
-			if self._shootModeTimer < Config.botFireModeDuration then
+			if self._shootModeTimer < Config.botFireModeDuration or (Config.zombieMode and self._shootModeTimer < (Config.botFireModeDuration * 4)) then
 				self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 1); --does not work.
 				self.player.input:SetLevel(EntryInputActionEnum.EIAReload, 0);
 				self._shootModeTimer	= self._shootModeTimer + StaticConfig.botUpdateCycle;
@@ -499,14 +566,16 @@ function Bot:_updateShooting()
 				self._reloadTimer		= 0; -- reset reloading
 
 				--check for melee attack
-				if Config.meleeAttackIfClose and not self._meleeActive and self._shootPlayer.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans) < 2 and self._meleeCooldownTimer <= 0 then
+				if Config.meleeAttackIfClose and not self._meleeActive and self._meleeCooldownTimer <= 0 and self._shootPlayer.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans) < 2 then
 					self._meleeActive = true;
 					self.activeWeapon = self.knife;
+					
 					self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
 					self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 1);
 					self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 1);
 					self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 1);
 					self._meleeCooldownTimer = Config.meleeAttackCoolDown;
+					
 					if not USE_REAL_DAMAGE then
 						Events:DispatchLocal("ServerDamagePlayer", self._shootPlayer.name, self.player.name, true);
 					end
@@ -523,52 +592,81 @@ function Bot:_updateShooting()
 					end
 				end
 
+				if self._shootPlayer.attachedControllable or Config.botWeapon == "Sidearm" then
+					if self.sidearm ~= nil then
+						if self.sidearm.type == "Rocket" then
+							self._weaponToUse = "Sidearm"
+							if self.player.soldier.weaponsComponent.currentWeapon.secondaryAmmo <= 2 then
+								self.player.soldier.weaponsComponent.currentWeapon.secondaryAmmo = self.player.soldier.weaponsComponent.currentWeapon.secondaryAmmo + 3
+							end
+						end
+					end
+				else
+					if self.knifeMode or self._meleeActive then
+						self._weaponToUse = "Knife"
+					else
+						if self.player.soldier.weaponsComponent.weapons[1] ~= nil then
+							if self.player.soldier.weaponsComponent.weapons[1].primaryAmmo == 0 then
+								self._weaponToUse = "Pistol"
+							else
+								self._weaponToUse = "Primary"
+							end
+						end
+					end
+				end
+
 				--trace way back
-				if self.activeWeapon.type ~= "Sniper" or self.knifeMode then
+				if self.activeWeapon ~= nil and self.activeWeapon.type ~= "Sniper" or self.knifeMode then
 					if self._shootTraceTimer > StaticConfig.traceDeltaShooting then
 						--create a Trace to find way back
 						self._shootTraceTimer 	= 0;
-						local point				= WayPoint();
-						point.trans				= self.player.soldier.worldTransform.trans:Clone();
-						point.speedMode			= 4;
+						local point				= {
+							Position = self.player.soldier.worldTransform.trans:Clone(),
+							SpeedMode = 4,			-- 0 = wait, 1 = prone, 2 = crouch, 3 = walk, 4 run
+							ExtraMode = 0,
+							OptValue = 0,
+						};
 
 						table.insert(self._shootWayPoints, point);
 						if self.knifeMode then
 							local trans = self._shootPlayer.soldier.worldTransform.trans:Clone()
-							table.insert(self._knifeWayPoints, trans)
+							table.insert(self._knifeWayPositions, trans)
 						end
 					end
 					self._shootTraceTimer = self._shootTraceTimer + StaticConfig.botUpdateCycle;
 				end
 
 				--shooting sequence
-				if self.knifeMode then
-					self._shotTimer	= -Config.botFirstShotDelay;
-				else
-					if self._shotTimer >= (self.activeWeapon.fireCycle + self.activeWeapon.pauseCycle) then
-						self._shotTimer	= 0;
-					end
-					if self._shotTimer >= 0 then
-						if self.activeWeapon.delayed == false then
-							if self._shotTimer >= self.activeWeapon.fireCycle or self._meleeActive then
-								self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
-							else
-								self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
-							end
-						else --start with pause Cycle
-							if self._shotTimer >= self.activeWeapon.pauseCycle and not self._meleeActive then
-								self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
-							else
-								self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
+				if self.activeWeapon ~= nil then
+					if self.knifeMode then
+						self._shotTimer	= -Config.botFirstShotDelay;
+					else
+						if self._shotTimer >= (self.activeWeapon.fireCycle + self.activeWeapon.pauseCycle) then
+							self._shotTimer	= 0;
+						end
+						if self._shotTimer >= 0 then
+							if self.activeWeapon.delayed == false then
+								if self._shotTimer >= self.activeWeapon.fireCycle or self._meleeActive then
+									self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
+								else
+									self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
+								end
+							else --start with pause Cycle
+								if self._shotTimer >= self.activeWeapon.pauseCycle and not self._meleeActive then
+									self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
+								else
+									self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
+								end
 							end
 						end
 					end
-				end
 
-				self._shotTimer = self._shotTimer + StaticConfig.botUpdateCycle;
+					self._shotTimer = self._shotTimer + StaticConfig.botUpdateCycle;
+				end
 
 			else
 				self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
+				self._weaponToUse 		= "Primary"
 				self._shotTimer			= -Config.botFirstShotDelay;
 				self._shootPlayer		= nil;
 				self._lastShootPlayer	= nil;
@@ -578,6 +676,7 @@ function Bot:_updateShooting()
 			self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
 			self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 0);
 			self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0);
+			self._weaponToUse 		= "Primary"
 			self._shootPlayer		= nil;
 			self._lastShootPlayer	= nil;
 			self._shootModeTimer	= 0;
@@ -602,19 +701,21 @@ function Bot:_getWayIndex(currentWayPoint)
 		activePointIndex = currentWayPoint;
 
 		-- direction handling
-		if activePointIndex > #g_Globals.wayPoints[self._pathIndex] then
-			if g_Globals.wayPoints[self._pathIndex][1].optValue == 0xFF then --inversion needed
-				activePointIndex			= #g_Globals.wayPoints[self._pathIndex];
+		local countOfPoints = #g_NodeCollection:Get(nil, self._pathIndex)
+		local firstPoint =  g_NodeCollection:GetFirst(self._pathIndex)
+		if activePointIndex > countOfPoints then
+			if firstPoint.OptValue == 0xFF then --inversion needed
+				activePointIndex			= countOfPoints;
 				self._invertPathDirection	= true;
 			else
 				activePointIndex			= 1;
 			end
 		elseif activePointIndex < 1 then
-			if g_Globals.wayPoints[self._pathIndex][1].optValue == 0xFF then --inversion needed
+			if firstPoint.OptValue == 0xFF then --inversion needed
 				activePointIndex			= 1;
 				self._invertPathDirection	= false;
 			else
-				activePointIndex			= #g_Globals.wayPoints[self._pathIndex];
+				activePointIndex			= countOfPoints;
 			end
 		end
 	end
@@ -665,41 +766,60 @@ function Bot:_updateMovement()
 			-- get next point
 			local activePointIndex = self:_getWayIndex(self._currentWayPoint)
 
-			if g_Globals.wayPoints[self._pathIndex][1] ~= nil then -- check for reached point
+			if g_NodeCollection:Get(1, self._pathIndex) ~= nil then -- check for valid point
 				local point				= nil;
 				local nextPoint			= nil;
 				local pointIncrement	= 1;
+				local noStuckReset		= false;
 				local useShootWayPoint	= false;
 
 				if #self._shootWayPoints > 0 then	--we need to go back to path first
 					point 				= self._shootWayPoints[#self._shootWayPoints];
 					nextPoint 			= self._shootWayPoints[#self._shootWayPoints - 1];
 					if nextPoint == nil then
-						nextPoint = g_Globals.wayPoints[self._pathIndex][activePointIndex];
+						nextPoint = g_NodeCollection:Get(activePointIndex, self._pathIndex);
 						if Config.debugTracePaths then
 							NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', self._pathIndex, activePointIndex, self.player.soldier.worldTransform.trans, (self._obstaceSequenceTimer > 0), "Blue")
 						end
 					end
 					useShootWayPoint	= true;
 				else
-					point = g_Globals.wayPoints[self._pathIndex][activePointIndex];
+					point = g_NodeCollection:Get(activePointIndex, self._pathIndex);
 					if not self._invertPathDirection then
-						nextPoint 		= g_Globals.wayPoints[self._pathIndex][self:_getWayIndex(self._currentWayPoint + 1)]
+						nextPoint 		= g_NodeCollection:Get(self:_getWayIndex(self._currentWayPoint + 1), self._pathIndex);
 						if Config.debugTracePaths then
 							NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', self._pathIndex, self:_getWayIndex(self._currentWayPoint + 1), self.player.soldier.worldTransform.trans, (self._obstaceSequenceTimer > 0), "Green")
 						end
 					else
-						nextPoint 		= g_Globals.wayPoints[self._pathIndex][self:_getWayIndex(self._currentWayPoint - 1)]
+						nextPoint 		= g_NodeCollection:Get(self:_getWayIndex(self._currentWayPoint - 1), self._pathIndex);
 						if Config.debugTracePaths then
 							NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', self._pathIndex, self:_getWayIndex(self._currentWayPoint - 1), self.player.soldier.worldTransform.trans, (self._obstaceSequenceTimer > 0), "Green")
 						end
 					end
 				end
 
-				if (point.speedMode) > 0 then -- movement
+				-- execute Action if needed
+				if self._actionActive then
+					if self._actionTimer == point.Data.Action.time then
+						for _,input in pairs(point.Data.Action.inputs) do
+							self.player.input:SetLevel(input, 1)
+						end
+					end
+
+					self._actionTimer = self._actionTimer - StaticConfig.botUpdateCycle;
+					if self._actionTimer <= 0 then
+						self._actionActive = false;
+					end
+
+					if self._actionActive then
+						return --DONT EXECUTE ANYTHING ELSE
+					end
+				end
+
+				if (point.SpeedMode) > 0 then -- movement
 					self._wayWaitTimer			= 0;
 					self._wayWaitYawTimer		= 0;
-					self.activeSpeedValue		= point.speedMode; --speed
+					self.activeSpeedValue		= point.SpeedMode; --speed
 					if Config.zombieMode then
 						if self._zombieSpeedValue == 0 then
 							self._zombieSpeedValue = MathUtils:GetRandomInt(1,2);
@@ -709,14 +829,14 @@ function Bot:_updateMovement()
 					if Config.overWriteBotSpeedMode > 0 then
 						self.activeSpeedValue = Config.overWriteBotSpeedMode;
 					end
-					local dy					= point.trans.z - self.player.soldier.worldTransform.trans.z;
-					local dx					= point.trans.x - self.player.soldier.worldTransform.trans.x;
+					local dy					= point.Position.z - self.player.soldier.worldTransform.trans.z;
+					local dx					= point.Position.x - self.player.soldier.worldTransform.trans.x;
 					local distanceFromTarget	= math.sqrt(dx ^ 2 + dy ^ 2);
-					local heightDistance		= math.abs(point.trans.y - self.player.soldier.worldTransform.trans.y);
+					local heightDistance		= math.abs(point.Position.y - self.player.soldier.worldTransform.trans.y);
 
 
 					--detect obstacle and move over or around TODO: Move before normal jump
-					local currentWayPontDistance = self.player.soldier.worldTransform.trans:Distance(point.trans);
+					local currentWayPontDistance = self.player.soldier.worldTransform.trans:Distance(point.Position);
 					if currentWayPontDistance > self._lastWayDistance + 0.02 and self._obstaceSequenceTimer == 0 then
 						--TODO: skip one pooint?
 						distanceFromTarget			= 0;
@@ -770,13 +890,32 @@ function Bot:_updateMovement()
 						end
 
 						self._obstaceSequenceTimer = self._obstaceSequenceTimer + StaticConfig.botUpdateCycle;
+						self._stuckTimer = self._stuckTimer + StaticConfig.botUpdateCycle; 
 
 						if self._obstacleRetryCounter >= 2 then --try next waypoint
 							self._obstacleRetryCounter	= 0;
 							self._meleeActive 			= false;
 							distanceFromTarget			= 0;
 							heightDistance				= 0;
-							pointIncrement				= 5; -- go 5 points further
+							noStuckReset				= true;
+							pointIncrement				= MathUtils:GetRandomInt(-3,7); -- go 5 points further
+							if g_Globals.isConquest or g_Globals.isRush then
+								self._invertPathDirection	= (MathUtils:GetRandomInt(0,100) < 40);
+							end
+							-- experimental
+							if pointIncrement == 0 then -- we can't have this
+								pointIncrement = 2 --go backwards and try again
+							end
+						end
+
+						if self._stuckTimer > 15 then
+							self.player.soldier:Kill()
+							
+							if Debug.Server.BOT then
+								print(self.player.name.." got stuck. Kill")
+							end
+							
+							return
 						end
 					else
 						self._meleeActive = false;
@@ -791,14 +930,14 @@ function Bot:_updateMovement()
 
 					-- jump detection. Much more simple now, but works fine ;-)
 					if self._obstaceSequenceTimer == 0 then
-						if (point.trans.y - self.player.soldier.worldTransform.trans.y) > 0.3 and Config.jumpWhileMoving then
+						if (point.Position.y - self.player.soldier.worldTransform.trans.y) > 0.3 and Config.jumpWhileMoving then
 							--detect, if a jump was recorded or not
 							local timeForwardBackwardJumpDetection = 1.1; -- 1.5 s ahead and back
 							local jumpValid = false;
-							for i = 1, math.floor(timeForwardBackwardJumpDetection/StaticConfig.traceDelta) do
-								local pointBefore = g_Globals.wayPoints[self._pathIndex][activePointIndex - i];
-								local pointAfter = g_Globals.wayPoints[self._pathIndex][activePointIndex + i];
-								if (pointBefore ~= nil and pointBefore.extraMode == 1) or (pointAfter ~= nil and pointAfter.extraMode == 1) then
+							for i = 1, math.floor(timeForwardBackwardJumpDetection/Config.traceDelta) do
+								local pointBefore = g_NodeCollection:Get(activePointIndex - i, self._pathIndex);
+								local pointAfter = g_NodeCollection:Get(activePointIndex + i, self._pathIndex)
+								if (pointBefore ~= nil and pointBefore.ExtraMode == 1) or (pointAfter ~= nil and pointAfter.ExtraMode == 1) then
 									jumpValid = true;
 									break;
 								end
@@ -825,11 +964,61 @@ function Bot:_updateMovement()
 
 					--check for reached target
 					if distanceFromTarget <= targetDistanceSpeed and heightDistance <= StaticConfig.targetHeightDistanceWayPoint then
+						if not noStuckReset then
+							self._stuckTimer = 0;
+						end
 						if not useShootWayPoint then
-							if self._invertPathDirection then
-								self._currentWayPoint = activePointIndex - pointIncrement;
+							-- CHECK FOR ACTION
+							if point.Data.Action ~= nil then
+								local action = point.Data.Action;
+								if g_GameDirector:checkForExecution(point, self.player.teamId) then
+									self._actionActive = true;
+									if action.time ~= nil then
+										self._actionTimer = action.time
+									else
+										self._actionTimer = 0;
+									end
+									if action.yaw ~= nil then
+										self._targetYaw = action.yaw;
+									end
+									if action.pitch ~= nil then
+										self._targetPitch = action.pitch;
+									end
+
+									-- reset all inputs
+									for i = 0, 36 do
+										self.player.input:SetLevel(i, 0);
+									end
+
+									return --DONT DO ANYTHING ELSE ANYMORE
+								end
+							end
+							-- CHECK FOR PATH-SWITCHES
+							local switchPath, newWaypoint = g_PathSwitcher:getNewPath(self.name, point, self._objective);
+							if not self.player.alive then
+								return
+							end
+
+							if switchPath and not self._onSwitch then
+								if (self._objective ~= '') then
+									-- 'best' direction for objective on switch
+									local direction = g_NodeCollection:ObjectiveDirection(newWaypoint, self._objective)
+									self._invertPathDirection = (direction == 'Previous')
+								else 
+									-- random path direction on switch
+									self._invertPathDirection = MathUtils:GetRandomInt(1,2) == 1
+								end
+
+								self._pathIndex = newWaypoint.PathIndex;
+								self._currentWayPoint = newWaypoint.PointIndex;
+								self._onSwitch = true;
 							else
-								self._currentWayPoint = activePointIndex + pointIncrement;
+								self._onSwitch = false;
+								if self._invertPathDirection then
+									self._currentWayPoint = activePointIndex - pointIncrement;
+								else
+									self._currentWayPoint = activePointIndex + pointIncrement;
+								end
 							end
 
 						else
@@ -872,7 +1061,7 @@ function Bot:_updateMovement()
 						end
 					end
 
-					if self._wayWaitTimer > point.optValue then
+					if self._wayWaitTimer > point.OptValue then
 						self._wayWaitTimer		= 0;
 						if self._invertPathDirection then
 							self._currentWayPoint	= activePointIndex - 1;
@@ -927,7 +1116,7 @@ function Bot:_updateMovement()
 				end
 
 				if #self._shootWayPoints > targetCycles and Config.jumpWhileShooting then
-					local distanceDone = self._shootWayPoints[#self._shootWayPoints].trans:Distance(self._shootWayPoints[#self._shootWayPoints-targetCycles].trans);
+					local distanceDone = self._shootWayPoints[#self._shootWayPoints].Position:Distance(self._shootWayPoints[#self._shootWayPoints-targetCycles].Position);
 					if distanceDone < 0.5 then --no movement was possible. Try to jump over obstacle
 						self.activeSpeedValue = 3;
 						self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 1);
@@ -1012,6 +1201,7 @@ end
 function Bot:_setActiveVars()
 	self.activeMoveMode		= self._moveMode;
 	self.activeSpeedValue	= self._botSpeed;
+	
 	if Config.botWeapon == "Knife" or Config.zombieMode then
 		self.knifeMode = true;
 	else

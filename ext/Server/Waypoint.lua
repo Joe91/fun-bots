@@ -5,6 +5,7 @@ function WayPoint:__init()
 	self.speedMode	= 0;
 	self.extraMode	= 0;
 	self.optValue	= 0;
+	self.data		= {};
 end
 
 return WayPoint;
