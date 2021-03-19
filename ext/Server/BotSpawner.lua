@@ -825,6 +825,7 @@ function BotSpawner:setBotWeapons(bot, botKit, newWeapons)
 				weapon = WeaponsAssault[MathUtils:GetRandomInt(1, #WeaponsAssault)]
 			end
 			bot.primary = WeaponList:getWeapon(weapon)
+			bot.sidearm = WeaponList:getWeapon(SidearmsAssault[1]); --defib
 		elseif botKit == "Engineer" then
 			local weapon = Config.engineerWeapon;
 			if Config.useRandomWeapon then

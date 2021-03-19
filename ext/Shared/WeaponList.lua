@@ -149,6 +149,24 @@ function WeaponList:__init()
 	weapon = Weapon('RPG7', '', {}, 'Rocket')
 	table.insert(self._weapons, weapon)
 
+	weapon = Weapon('Defib', '', {}, 'Defib', 'Weapons/Gadgets/Defibrillator/U_Defib')
+	table.insert(self._weapons, weapon)
+
+	weapon = Weapon('Medkit', '', {}, 'Bag', 'Weapons/Gadgets/Medicbag/U_Medkit')
+	table.insert(self._weapons, weapon)
+
+	weapon = Weapon('Ammobag', '', {}, 'Bag', 'Weapons/Gadgets/Ammobag/U_Ammobag')
+	table.insert(self._weapons, weapon)
+
+	weapon = Weapon('Tug', '', {}, 'Bag', 'Weapons/Gadgets/T-UGS/U_UGS')
+	table.insert(self._weapons, weapon)
+
+	weapon = Weapon('Beacon', '', {}, 'Bag', 'Weapons/Gadgets/RadioBeacon/U_RadioBeacon')
+	table.insert(self._weapons, weapon)
+
+	--weapon = Weapon('Beacon', '', {}, 'Grenade')  --TODO
+	--table.insert(self._weapons, weapon)
+
 	---------------------------
 	--LMG
 	weapon = Weapon('L86', 'XP2', {'EOTech', 'ExtendedMag', 'Foregrip'},'LMG')
@@ -374,6 +392,7 @@ function WeaponList:updateWeaponList()
 	WeaponsRecon = {}
 	WeaponsSupport = {}
 	SidearmsEngineer = {}
+	SidearmsAssault = {}
 
 	for i=1, #self._weapons do
 		local wep = self._weapons[i]
@@ -387,6 +406,9 @@ function WeaponList:updateWeaponList()
 
 		elseif (wep.type == "Rocket") then
 			table.insert(SidearmsEngineer,  wep.name)
+
+		elseif (wep.type == "Defib") then
+			table.insert(SidearmsAssault,  wep.name)
 
 		else --'PDW' 'Shotgun' 'Assault' 'Carabine' 'LMG' 'Sniper'
 			if self:_useWeaponType("Assault", wep.type) then

@@ -448,7 +448,6 @@ function BotManager:_onRevivePlayer(player, botname)
 		return
 	end
 	bot:revive(player)
-	print("trigger revive")
 end
 
 function BotManager:_onBotShootAtBot(player, botname1, botname2)
