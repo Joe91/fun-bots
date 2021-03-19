@@ -69,49 +69,84 @@ function ClientBotManager:_onUpdate(p_Delta, p_Pass)
 
 	if (self._raycastTimer >= StaticConfig.raycastInterval) then
 		self._raycastTimer	= 0;
-		local team			= 0;
-		
-		if (self.player.teamId == TeamId.Team1) then
-			team = TeamId.Team2;
-		else
-			team = TeamId.Team1;
-		end
-		
-		local enemyPlayers = PlayerManager:GetPlayersByTeam(team);
-		
-		if (self._lastIndex >= #enemyPlayers) then
-			self._lastIndex = 1;
-		end
 
-		for i = self._lastIndex, #enemyPlayers do
-			local bot = enemyPlayers[i];
+		if self.player.soldier ~= nil then  -- alive. Check for enemy bots
 
-			-- valid player and is bot
-			if (bot ~= nil and bot.onlineId == 0 and bot.soldier ~= nil) then
+			local team			= 0;
+			
+			if (self.player.teamId == TeamId.Team1) then
+				team = TeamId.Team2;
+			else
+				team = TeamId.Team1;
+			end
+			
+			local enemyPlayers = PlayerManager:GetPlayersByTeam(team);
+			
+			if (self._lastIndex >= #enemyPlayers) then
+				self._lastIndex = 1;
+			end
 
-				-- check for clear view
-				local playerPosition = ClientUtils:GetCameraTransform().trans:Clone(); --player.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(player, false);
+			for i = self._lastIndex, #enemyPlayers do
+				local bot = enemyPlayers[i];
 
-				-- find direction of Bot
-				local target	= bot.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(bot, false);
-				local distance	= playerPosition:Distance(bot.soldier.worldTransform.trans);
+				-- valid player and is bot
+				if (bot ~= nil and bot.onlineId == 0 and bot.soldier ~= nil) then
 
-				if (distance < Config.maxRaycastDistance) then
-					self._lastIndex	= self._lastIndex+1;
-					local raycast	= RaycastManager:Raycast(playerPosition, target, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.IsAsyncRaycast)
+					-- check for clear view
+					local playerPosition = ClientUtils:GetCameraTransform().trans:Clone(); --player.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(player, false);
 
-					if (raycast == nil or raycast.rigidBody == nil) then
-						-- we found a valid bot in Sight (either no hit, or player-hit). Signal Server with players
-						local ignoreYaw = false;
-						
-						if (distance < Config.distanceForDirectAttack) then
-							ignoreYaw = true; --shoot, because you are near
+					-- find direction of Bot
+					local target	= bot.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(bot, false);
+					local distance	= playerPosition:Distance(bot.soldier.worldTransform.trans);
+
+					if (distance < Config.maxRaycastDistance) then
+						self._lastIndex	= self._lastIndex+1;
+						local raycast	= RaycastManager:Raycast(playerPosition, target, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.IsAsyncRaycast)
+
+						if (raycast == nil or raycast.rigidBody == nil) then
+							-- we found a valid bot in Sight (either no hit, or player-hit). Signal Server with players
+							local ignoreYaw = false;
+							
+							if (distance < Config.distanceForDirectAttack) then
+								ignoreYaw = true; --shoot, because you are near
+							end
+							
+							NetEvents:SendLocal("BotShootAtPlayer", bot.name, ignoreYaw);
 						end
 						
-						NetEvents:SendLocal("BotShootAtPlayer", bot.name, ignoreYaw);
+						return; --only one raycast per cycle
 					end
-					
-					return; --only one raycast per cycle
+				end
+			end
+		elseif self.player.corpse ~= nil then -- dead. check for revive botsAttackBots
+			local teamMates = PlayerManager:GetPlayersByTeam(self.player.teamId);
+			if (self._lastIndex >= #teamMates) then
+				self._lastIndex = 1;
+			end
+
+			for i = self._lastIndex, #teamMates do
+				local bot = teamMates[i];
+
+				-- valid player and is bot
+				if (bot ~= nil and bot.onlineId == 0 and bot.soldier ~= nil) then
+
+					-- check for clear view
+					local playerPosition = self.player.corpse.worldTransform.trans:Clone() + Vec3(0, 1, 0);
+
+					-- find direction of Bot
+					local target	= bot.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(bot, false);
+					local distance	= playerPosition:Distance(bot.soldier.worldTransform.trans);
+
+					if (distance < 35) then  -- TODO: use config var for this
+						self._lastIndex	= self._lastIndex+1;
+						local raycast	= RaycastManager:Raycast(playerPosition, target, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.IsAsyncRaycast)
+
+						if (raycast == nil or raycast.rigidBody == nil) then
+							-- we found a valid bot in Sight (either no hit, or player-hit). Signal Server with players							
+							NetEvents:SendLocal("BotRevivePlayer", bot.name);
+						end
+						return; --only one raycast per cycle
+					end
 				end
 			end
 		end

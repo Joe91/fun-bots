@@ -22,6 +22,7 @@ function BotManager:__init()
 	Events:Subscribe('UpdateManager:Update', self, self._onUpdate)
 	Events:Subscribe('Level:Destroy', self, self._onLevelDestroy)
 	NetEvents:Subscribe('BotShootAtPlayer', self, self._onShootAt)
+	NetEvents:Subscribe('BotRevivePlayer', self, self._onRevivePlayer)
 	NetEvents:Subscribe('BotShootAtBot', self, self._onBotShootAtBot)
 	Events:Subscribe('ServerDamagePlayer', self, self._onServerDamagePlayer) 	--only triggered on false damage
 	NetEvents:Subscribe('ClientDamagePlayer', self, self._onDamagePlayer)   	--only triggered on false damage
@@ -439,6 +440,15 @@ function BotManager:_onShootAt(player, botname, ignoreYaw)
 		return
 	end
 	bot:shootAt(player, ignoreYaw)
+end
+
+function BotManager:_onRevivePlayer(player, botname)
+	local bot = self:getBotByName(botname)
+	if bot == nil or bot.player == nil or bot.player.soldier == nil or player == nil then
+		return
+	end
+	bot:revive(player)
+	print("trigger revive")
 end
 
 function BotManager:_onBotShootAtBot(player, botname1, botname2)
