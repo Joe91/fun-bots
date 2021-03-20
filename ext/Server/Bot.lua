@@ -635,6 +635,7 @@ function Bot:_updateShooting()
 
 		if self._shootPlayer ~= nil and self._shootPlayer.soldier ~= nil then
 			if self._shootModeTimer < Config.botFireModeDuration or (Config.zombieMode and self._shootModeTimer < (Config.botFireModeDuration * 4)) then
+				self._deployActive = false;
 				self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 1); --does not work.
 				self.player.input:SetLevel(EntryInputActionEnum.EIAReload, 0);
 				self._shootModeTimer	= self._shootModeTimer + StaticConfig.botUpdateCycle;
@@ -748,6 +749,7 @@ function Bot:_updateShooting()
 				self._lastShootPlayer	= nil;
 			end
 		elseif self._reviveActive and self._shootPlayer ~= nil then
+			self._deployActive = false;
 			if self._shootPlayer.corpse ~= nil then  -- revive
 				self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 1); --does not work.
 				self.player.input:SetLevel(EntryInputActionEnum.EIAReload, 0);
@@ -810,11 +812,14 @@ function Bot:_updateShooting()
 				self.player.input:SetLevel(EntryInputActionEnum.EIAReload, 1);
 			end
 
+			-- deploy from time to time
 			if self.kit == "Support" or self.kit == "Assault" then
-				self._deployTimer = self._deployTimer + StaticConfig.botUpdateCycle;
-				if self._deployTimer > Config.deployCycle then
-					self._deployTimer = 0;
-					self._deployActive = true;
+				if self.gadget1.type == "Ammobag" or self.gadget1.type == "Medkit" then
+					self._deployTimer = self._deployTimer + StaticConfig.botUpdateCycle;
+					if self._deployTimer > Config.deployCycle then
+						self._deployTimer = 0;
+						self._deployActive = true;
+					end
 				end
 			end
 		end
