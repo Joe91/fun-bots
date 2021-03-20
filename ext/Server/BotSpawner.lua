@@ -10,6 +10,7 @@ local Utilities 	= require('__shared/Utilities')
 
 function BotSpawner:__init()
 	self._botSpawnTimer = 0
+	self._playerUpdateTimer = 0
 	self._firstSpawnInLevel = true;
 	self._firstSpawnDelay = 5;
 	self._updateActive = false;
@@ -21,7 +22,6 @@ function BotSpawner:__init()
 	Events:Subscribe('Player:KitPickup', self, self._onKitPickup)
 	Events:Subscribe('Player:Joining', self, self._onPlayerJoining)
 	Events:Subscribe('Player:Left', self, self._onPlayerLeft)
-	Events:Subscribe('Player:Respawn', self, self._onPlayerRespawn)
 end
 
 function BotSpawner:updateBotAmountAndTeam()
@@ -224,14 +224,6 @@ function BotSpawner:updateBotAmountAndTeam()
 	end
 end
 
-function BotSpawner:_onPlayerRespawn(player)
-	if not Utilities:isBot(player) then
-		if not self._firstSpawnInLevel then
-			self:updateBotAmountAndTeam();
-		end
-	end
-end
-
 function BotSpawner:_onLevelDestroy()
 	self._spawnSets = {}
 	self._updateActive = false;
@@ -277,10 +269,17 @@ function BotSpawner:_onUpdate(dt, pass)
 			if BotManager:getPlayerCount() > 0 then
 				BotManager:configGlobals()
 				self:updateBotAmountAndTeam();
+				self._playerUpdateTimer = 0;
 				self._firstSpawnInLevel = false;
 			end
 		else
 			self._firstSpawnDelay = self._firstSpawnDelay - dt;
+		end
+	else
+		self._playerUpdateTimer = self._playerUpdateTimer + dt;
+		if self._playerUpdateTimer > 2 then
+			self._playerUpdateTimer = 0;
+			self:updateBotAmountAndTeam();
 		end
 	end
 
