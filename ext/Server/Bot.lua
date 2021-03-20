@@ -685,6 +685,12 @@ function Bot:_updateShooting()
 						if self.player.soldier.weaponsComponent.weapons[1] ~= nil then
 							if self.player.soldier.weaponsComponent.weapons[1].primaryAmmo == 0 then
 								self._weaponToUse = "Pistol"
+								--[[if self._shootModeTimer < (Config.botFireModeDuration - 0.5) then  --TODO: When to throw grenade???
+									self._weaponToUse = "Grenade"
+									if self.player.soldier.weaponsComponent.currentWeapon.secondaryAmmo <= 2 then
+										self.player.soldier.weaponsComponent.currentWeapon.secondaryAmmo = self.player.soldier.weaponsComponent.currentWeapon.secondaryAmmo + 3
+									end
+								end--]]
 							else
 								self._weaponToUse = "Primary"
 							end
