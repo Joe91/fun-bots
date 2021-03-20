@@ -19,6 +19,7 @@ The Smart Node update
 	- Bazaar small
 - Bots switch to Pistol or Sidearm (Rockets) if needed
 - Bots revive dead players
+- Bots deply Ammobag and medkit from time to time
 - Shoot-Cycles adapted
 
 

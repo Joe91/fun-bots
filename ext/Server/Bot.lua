@@ -39,6 +39,7 @@ function Bot:__init(player)
 	self._shotTimer = -Config.botFirstShotDelay;
 	self._shootModeTimer = 0;
 	self._reloadTimer = 0;
+	self._deployTimer = 0;
 	self._attackModeMoveTimer = 0;
 	self._meleeCooldownTimer = 0;
 	self._shootTraceTimer = 0;
@@ -66,6 +67,7 @@ function Bot:__init(player)
 	self._onSwitch = false;
 	self._actionActive = false;
 	self._reviveActive = false;
+	self._deployActive = false;
 
 	--shooting
 	self._shoot = false;
@@ -212,6 +214,7 @@ function Bot:resetVars()
 	self._meleeActive 			= false;
 	self._actionActive 			= false;
 	self._reviveActive 			= false;
+	self._deployActive 			= false;
 	self._weaponToUse 			= "Primary";
 
 	self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 0);
@@ -335,6 +338,7 @@ function Bot:resetSpawnVars()
 	self._meleeCooldownTimer	= 0;
 	self._shootTraceTimer		= 0;
 	self._reloadTimer 			= 0;
+	self._deployTimer 			= MathUtils:GetRandomInt(1, Config.deployCycle);
 	self._attackModeMoveTimer	= 0;
 	self._attackMode 			= 0;
 	self._shootWayPoints		= {};
@@ -351,6 +355,7 @@ function Bot:resetSpawnVars()
 	self._onSwitch 				= false;
 	self._actionActive 			= false;
 	self._reviveActive 			= false;
+	self._deployActive 			= false;
 	self._weaponToUse 			= "Primary";
 
 	self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 0);
@@ -567,11 +572,10 @@ function Bot:_updateShooting()
 						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
 						self.activeWeapon = self.gadget2;
 						self._shotTimer	= -1.0;
-						print("switch to gadget 2")
 					else
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon5, 0);
 					end
-				elseif (self._weaponToUse == "Gadget1" and Config.botWeapon == "Auto") or Config.botWeapon == "Gadget1" then
+				elseif self._deployActive or (self._weaponToUse == "Gadget1" and Config.botWeapon == "Auto") or Config.botWeapon == "Gadget1" then
 					if self.player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_2 then
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon6, 0);
@@ -582,7 +586,6 @@ function Bot:_updateShooting()
 						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
 						self.activeWeapon = self.gadget1;
 						self._shotTimer	= -1.0;
-						print("switch to gadget 1")
 					else
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon3, 0);
 					end
@@ -597,7 +600,6 @@ function Bot:_updateShooting()
 						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
 						self.activeWeapon = self.grenade;
 						self._shotTimer	= -1.0;
-						print("switch to grenade")
 					else
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon6, 0);
 					end
@@ -783,6 +785,13 @@ function Bot:_updateShooting()
 				self._shootPlayer		= nil;
 				self._reviveActive		= false;
 			end
+		elseif self._deployActive then --deploy bag
+			self._deployTimer = self._deployTimer + StaticConfig.botUpdateCycle;
+			self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
+			if self._deployTimer > 1 then
+				self._deployActive = false;
+				self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
+			end
 		else
 			self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 0);
 			self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
@@ -799,6 +808,14 @@ function Bot:_updateShooting()
 				self.player.input:SetLevel(EntryInputActionEnum.EIAReload, 0);
 			elseif self._reloadTimer > 3 and self.player.soldier.weaponsComponent.currentWeapon.primaryAmmo <= self.activeWeapon.reload then
 				self.player.input:SetLevel(EntryInputActionEnum.EIAReload, 1);
+			end
+
+			if self.kit == "Support" or self.kit == "Assault" then
+				self._deployTimer = self._deployTimer + StaticConfig.botUpdateCycle;
+				if self._deployTimer > Config.deployCycle then
+					self._deployTimer = 0;
+					self._deployActive = true;
+				end
 			end
 		end
 	end
@@ -1035,7 +1052,9 @@ function Bot:_updateMovement()
 						self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0);
-						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0.0);
+						if not self._deployActive then
+							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0.0);
+						end
 					end
 
 					self._lastWayDistance = currentWayPontDistance;
