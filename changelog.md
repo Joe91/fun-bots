@@ -9,8 +9,9 @@ The Smart Node update
 	- Bazaar (small + large)
 	- Caspian Border (small + large) Thanks to RekkieSA
 	- Seine Crossing (small + large)
-	- Khark Island (small) Thanks to RekkieSA
-	- Firestorm (small) Thanks to RekkieSA
+	- Khark Island (small + large) Thanks to RekkieSA
+	- Noshar Canals (small) Thanks to RekkieSA
+	- Firestorm (small + large) Thanks to RekkieSA
 	- Metro (large)
 - Rush supported
 	- Metro
