@@ -142,35 +142,6 @@ function WeaponList:__init()
 	table.insert(self._weapons, weapon);
 
 	---------------------------
-	-- Sidearms
-	weapon = Weapon('SMAW', '', {}, 'Rocket')
-	table.insert(self._weapons, weapon)
-
-	weapon = Weapon('RPG7', '', {}, 'Rocket')
-	table.insert(self._weapons, weapon)
-
-	weapon = Weapon('Defib', '', {}, 'Defib', 'Weapons/Gadgets/Defibrillator/U_Defib')
-	table.insert(self._weapons, weapon)
-
-	weapon = Weapon('Medkit', '', {}, 'Bag', 'Weapons/Gadgets/Medicbag/U_Medkit')
-	table.insert(self._weapons, weapon)
-
-	weapon = Weapon('Ammobag', '', {}, 'Bag', 'Weapons/Gadgets/Ammobag/U_Ammobag')
-	table.insert(self._weapons, weapon)
-
-	weapon = Weapon('Claymore', '', {}, 'Bag', 'Weapons/Gadgets/Claymore/U_Claymore')
-	table.insert(self._weapons, weapon)
-
-	weapon = Weapon('Tug', '', {}, 'Bag', 'Weapons/Gadgets/T-UGS/U_UGS')
-	table.insert(self._weapons, weapon)
-
-	weapon = Weapon('Beacon', '', {}, 'Bag', 'Weapons/Gadgets/RadioBeacon/U_RadioBeacon')
-	table.insert(self._weapons, weapon)
-
-	--weapon = Weapon('Beacon', '', {}, 'Grenade')  --TODO
-	--table.insert(self._weapons, weapon)
-
-	---------------------------
 	--LMG
 	weapon = Weapon('L86', 'XP2', {'EOTech', 'ExtendedMag', 'Foregrip'},'LMG')
 	table.insert(self._weapons, weapon);
@@ -331,6 +302,41 @@ function WeaponList:__init()
 	weapon = Weapon('Knife', '', {}, 'Knife')
 	table.insert(self._weapons, weapon);
 
+	---------------------------
+	-- Sidearms
+	weapon = Weapon('SMAW', '', {}, 'Rocket')		-- only rockets supported for engineers right now
+	table.insert(self._weapons, weapon)
+
+	weapon = Weapon('RPG7', '', {}, 'Rocket')		-- only rockets supported for engineers right now
+	table.insert(self._weapons, weapon)
+
+	weapon = Weapon('Repairtool', '', {}, 'Torch', 'Weapons/Gadgets/Repairtool/U_Repairtool')	
+	table.insert(self._weapons, weapon)
+
+	weapon = Weapon('Defib', '', {}, 'Defibrillator', 'Weapons/Gadgets/Defibrillator/U_Defib')
+	table.insert(self._weapons, weapon)
+
+	weapon = Weapon('Medkit', '', {}, 'Medkit', 'Weapons/Gadgets/Medicbag/U_Medkit')
+	table.insert(self._weapons, weapon)
+
+	weapon = Weapon('Ammobag', '', {}, 'Ammobag', 'Weapons/Gadgets/Ammobag/U_Ammobag')
+	table.insert(self._weapons, weapon)
+
+	weapon = Weapon('Claymore', '', {}, 'Claymore', 'Weapons/Gadgets/Claymore/U_Claymore')
+	table.insert(self._weapons, weapon)
+
+	weapon = Weapon('C4', '', {}, 'C4', 'Weapons/Gadgets/C4/U_C4')
+	table.insert(self._weapons, weapon)
+
+	weapon = Weapon('Tug', '', {}, 'Tug', 'Weapons/Gadgets/T-UGS/U_UGS')
+	table.insert(self._weapons, weapon)
+
+	weapon = Weapon('Beacon', '', {}, 'Beacon', 'Weapons/Gadgets/RadioBeacon/U_RadioBeacon')
+	table.insert(self._weapons, weapon)
+
+	weapon = Weapon('M67', '', {}, 'Grenade')
+	table.insert(self._weapons, weapon)
+
 	self:updateWeaponList();
 end
 
@@ -394,8 +400,15 @@ function WeaponList:updateWeaponList()
 	WeaponsEngineer = {}
 	WeaponsRecon = {}
 	WeaponsSupport = {}
-	SidearmsEngineer = {}
-	SidearmsAssault = {}
+	GrenadeWeapons = {}
+	EngineerGadget2 = {}
+	AssaultGadget2 = {}
+	ReconGadget2 = {}
+	SupportGadget2 = {}
+	EngineerGadget1 = {}
+	AssaultGadget1 = {}
+	ReconGadget1 = {}
+	SupportGadget1 = {}
 
 	for i=1, #self._weapons do
 		local wep = self._weapons[i]
@@ -407,11 +420,33 @@ function WeaponList:updateWeaponList()
 		elseif (wep.type == 'Pistol') then
 			table.insert(PistoWeapons, wep.name)
 
+		elseif (wep.type == 'Grenade') then
+			table.insert(GrenadeWeapons, wep.name)
+		
+		--Gadgets
 		elseif (wep.type == "Rocket") then
-			table.insert(SidearmsEngineer,  wep.name)
+			table.insert(EngineerGadget2,  wep.name)
 
-		elseif (wep.type == "Defib") then
-			table.insert(SidearmsAssault,  wep.name)
+		elseif (wep.type == "Defibrillator") then
+			table.insert(AssaultGadget2,  wep.name)
+
+		elseif (wep.type == "Claymore") or (wep.type == "C4") then
+			table.insert(SupportGadget2,  wep.name)
+
+		elseif (wep.type == "Beacon") then
+			table.insert(ReconGadget2,  wep.name)
+		
+		elseif (wep.type == "Torch") then
+			table.insert(EngineerGadget1,  wep.name)
+
+		elseif (wep.type == "Medkit") then
+			table.insert(AssaultGadget1,  wep.name)
+
+		elseif (wep.type == "Ammobag") then
+			table.insert(SupportGadget1,  wep.name)
+
+		elseif (wep.type == "Tug") then
+			table.insert(ReconGadget1,  wep.name)
 
 		else --'PDW' 'Shotgun' 'Assault' 'Carabine' 'LMG' 'Sniper'
 			if self:_useWeaponType("Assault", wep.type) then

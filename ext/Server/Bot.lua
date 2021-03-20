@@ -21,7 +21,9 @@ function Bot:__init(player)
 	self.activeWeapon = nil;
 	self.primary = nil;
 	self.pistol = nil;
-	self.sidearm = nil;
+	self.gadget2 = nil;
+	self.gadget1 = nil;
+	self.grenade = nil;
 	self.knife = nil;
 	self._checkSwapTeam = false;
 	self._respawning = false;
@@ -544,7 +546,9 @@ function Bot:_updateShooting()
 				if self.knifeMode then
 					if self.player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_7 then
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 1);
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon6, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon5, 0);
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon3, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
@@ -552,22 +556,57 @@ function Bot:_updateShooting()
 					else
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 0);
 					end
-				elseif self._reviveActive or (self._weaponToUse == "Sidearm" and Config.botWeapon == "Auto") or Config.botWeapon == "Sidearm" then
+				elseif self._reviveActive or (self._weaponToUse == "Gadget2" and Config.botWeapon == "Auto") or Config.botWeapon == "Gadget2" then
 					if self.player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_5 then
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 0);
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon6, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon5, 1);
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon3, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
-						self.activeWeapon = self.sidearm;
+						self.activeWeapon = self.gadget2;
 						self._shotTimer	= -1.0;
+						print("switch to gadget 2")
 					else
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon5, 0);
+					end
+				elseif (self._weaponToUse == "Gadget1" and Config.botWeapon == "Auto") or Config.botWeapon == "Gadget1" then
+					if self.player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_2 then
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 0);
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon6, 0);
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon5, 0);
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon3, 1);
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
+						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
+						self.activeWeapon = self.gadget1;
+						self._shotTimer	= -1.0;
+						print("switch to gadget 1")
+					else
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon3, 0);
+					end
+				elseif (self._weaponToUse == "Grenade" and Config.botWeapon == "Auto") or Config.botWeapon == "Grenade" then
+					if self.player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_6 then
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 0);
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon6, 1);
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon5, 0);
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon3, 0);
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
+						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
+						self.activeWeapon = self.grenade;
+						self._shotTimer	= -1.0;
+						print("switch to grenade")
+					else
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon6, 0);
 					end
 				elseif (self._weaponToUse == "Pistol" and Config.botWeapon == "Auto") or Config.botWeapon == "Pistol" then
 					if self.player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_1 then
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 0);
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon6, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon5, 0);
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon3, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 1);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
@@ -578,7 +617,9 @@ function Bot:_updateShooting()
 				elseif (self._weaponToUse == "Primary" and Config.botWeapon == "Auto") or Config.botWeapon == "Primary" then
 					if self.player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_0 then
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 0);
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon6, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon5, 0);
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon3, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 1);
 						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
@@ -625,10 +666,10 @@ function Bot:_updateShooting()
 					end
 				end
 
-				if self._shootPlayer.attachedControllable or Config.botWeapon == "Sidearm" then
-					if self.sidearm ~= nil then
-						if self.sidearm.type == "Rocket" then
-							self._weaponToUse = "Sidearm"
+				if self._shootPlayer.attachedControllable ~= nil or Config.botWeapon == "Gadget2" then
+					if self.gadget2 ~= nil then
+						if self.gadget2.type == "Rocket" then
+							self._weaponToUse = "Gadget2"
 							if self.player.soldier.weaponsComponent.currentWeapon.secondaryAmmo <= 2 then
 								self.player.soldier.weaponsComponent.currentWeapon.secondaryAmmo = self.player.soldier.weaponsComponent.currentWeapon.secondaryAmmo + 3
 							end
