@@ -1,0 +1,146 @@
+class('WaypointEditor');
+
+function WaypointEditor:__init(core)
+	self.view = View(core, 'WaypointEditor');
+end
+
+function WaypointEditor:Show(player)
+	self.view:Show(player);
+	self.view:Deactivate(player);
+	self.view:GetCore():GetView('BotEditor'):Hide(player);
+end
+
+function WaypointEditor:Hide(player)
+	self.view:Hide(player);
+	self.view:GetCore():GetView('BotEditor'):Show(player);
+end
+
+function WaypointEditor:Toggle(player)
+	self.view:Toggle(player);
+end
+
+function WaypointEditor:Call(element, name)
+	self.view:Call(element, name);
+end
+
+function WaypointEditor:GetName()
+	return self.view:GetName();
+end
+
+function WaypointEditor:InitializeComponent()
+	-- Logo
+	local logo = Logo('Waypoint-Editor', 'fun-bots');
+	logo:SetPosition(Position.Absolute, {
+		Top		= 20,
+		Left	= 20
+	});
+	self.view:AddComponent(logo);
+	
+	-- Menu
+	local navigation = Menu();
+	
+	navigation:SetPosition(Position.Absolute, {
+		Top		= 20,
+		Right	= 20
+	});
+	
+	-- Waypoints
+	local client = MenuItem('Client', 'client');
+		client:SetIcon('Assets/Icons/Client.svg');
+		
+		client:AddItem(MenuItem('Load', 'waypoints_client_load', function()
+			print('waypoints_client_load Executed');
+		end):SetIcon('Assets/Icons/Reload.svg'));
+		
+		client:AddItem(MenuItem('Save', 'waypoints_client_save', function()
+			print('waypoints_client_save Executed');
+		end):SetIcon('Assets/Icons/Save.svg'));
+		
+	navigation:AddItem(client);
+	
+	local server = MenuItem('Server', 'server');
+		server:SetIcon('Assets/Icons/Server.svg');
+		
+		server:AddItem(MenuItem('Load', 'waypoints_server_load', function()
+			print('waypoints_server_load Executed');
+		end):SetIcon('Assets/Icons/Reload.svg'));
+		
+		server:AddItem(MenuItem('Save', 'waypoints_server_save', function()
+			print('waypoints_server_save Executed');
+		end):SetIcon('Assets/Icons/Save.svg'));
+	navigation:AddItem(server);
+
+	-- View
+	local view = MenuItem('View', 'view');
+		view:SetIcon('Assets/Icons/View.svg');
+		view:AddItem(MenuSeparator('General'));
+		
+		view:AddItem(MenuItem('Debug-Text', 'debug_text', function()
+			print('debug_text Executed');
+		end));
+		
+		view:AddItem(MenuSeparator('Waypoints'));
+		
+		view:AddItem(MenuItem('Dots', 'dots', function()
+			print('dots Executed');
+		end));
+		
+		view:AddItem(MenuItem('Lines', 'lines', function()
+			print('lines Executed');
+		end));
+		
+		view:AddItem(MenuItem('Labels', 'labels', function()
+			print('labels Executed');
+		end));
+		
+	navigation:AddItem(view);
+	
+	navigation:AddItem(MenuItem('Back', 'back', 'UI:VIEW:' .. self.view:GetName() .. ':HIDE', 'F12'));
+	
+	-- Tools-Menu
+	local tools = Menu();
+	
+	local tracing = false;
+	
+	tools:AddItem(MenuItem('Start Trace', 'trace_toggle', function()
+		print('trace_start Executed');
+		
+		tracing = (tracing ~= true);
+		local text = 'Start Trace';
+		local icon = 'Assets/Icons/Start.svg';
+		
+		if (tracing) then
+			text = 'Stop Trace';
+			icon = 'Assets/Icons/Stop.svg';
+		end
+		
+		NetEvents:Broadcast('UI', 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
+			Type	= 'MenuItem',
+			Name	= 'trace_toggle',
+			Text	= text,
+			Icon	= icon
+		}));
+	end):SetIcon('Assets/Icons/Start.svg'));
+	
+	tools:AddItem(MenuItem('Save Trace', 'trace_save', function()
+		print('trace_save Executed');
+	end):SetIcon('Assets/Icons/Save.svg'));
+	
+	tools:AddItem(MenuItem('Spawn Bot on Way', 'bot_spawn_path', function()
+		print('bot_spawn_path Executed');
+	end):SetIcon('Assets/Icons/SpawnBotWay.svg'));
+	
+	tools:AddItem(MenuItem('Clear Trace', 'trace_clear', function()
+		print('trace_clear Executed');
+	end):SetIcon('Assets/Icons/Clear.svg'));
+	
+	tools:AddItem(MenuItem('Reset all Traces', 'trace_reset_all', function()
+		print('trace_reset_all Executed');
+	end):SetIcon('Assets/Icons/Trash.svg'));
+	
+	navigation:AddItem(tools);
+	
+	self.view:AddComponent(navigation);
+end
+
+return WaypointEditor;

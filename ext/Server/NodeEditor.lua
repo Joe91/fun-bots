@@ -1,6 +1,6 @@
 class "NodeEditor"
 
-require('UIServer')
+--require('UIServer')
 require('__shared/NodeCollection')
 
 function NodeEditor:__init()
@@ -26,7 +26,7 @@ function NodeEditor:RegisterEvents()
 	NetEvents:Subscribe('NodeEditor:WarpTo', self, self._onWarpTo)
 
 
-	NetEvents:Subscribe('UI_Request_Save_Settings', self, self._onUIRequestSaveSettings)
+	--NetEvents:Subscribe('UI_Request_Save_Settings', self, self._onUIRequestSaveSettings)
 	Events:Subscribe('Level:Destroy', self, self._onLevelDestroy)
 	Events:Subscribe('Engine:Update', self, self._onEngineUpdate)
 	Events:Subscribe('Player:Destroyed', self, self._onPlayerDestroyed)

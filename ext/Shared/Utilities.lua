@@ -199,14 +199,17 @@ end
 
 function requireExists(module)
     local function reference(module)
-        require(module)
+        require(module);
+		return true;
     end
 	
-    res = pcall(reference, module);
+    local status, error = pcall(reference, module);
 	
-    if not(res) then
-        -- Not found.
+    if not(status) then
+		return error;
     end
+	
+	return status;
 end
 
 -- Singleton.

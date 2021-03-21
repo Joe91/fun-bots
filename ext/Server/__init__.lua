@@ -12,6 +12,7 @@ require('__shared/Constants/BotAttackModes');
 require('__shared/Constants/SpawnModes');
 require('__shared/Utilities');
 
+require('UI/UI');
 require('NodeEditor');
 require('GameDirector');
 require('WeaponModification');
@@ -23,7 +24,7 @@ local BotSpawner			= require('BotSpawner');
 local WeaponList			= require('__shared/WeaponList');
 local ChatCommands			= require('ChatCommands');
 local RCONCommands			= require('RCONCommands');
-local FunBotUIServer		= require('UIServer');
+--local FunBotUIServer		= require('UIServer');
 local Globals 				= require('Globals');
 
 local serverSettings		= nil;

@@ -11,13 +11,13 @@ require('__shared/Constants/BotAttackModes');
 require('__shared/Constants/SpawnModes');
 
 require('ClientNodeEditor');
+require('UI/UI');
 
-Language					= require('__shared/Language');
-local FunBotUIClient		= require('UIClient');
+--Language					= require('__shared/Language');
 local ClientBotManager		= require('ClientBotManager');
 
 function FunBotClient:__init()
-	Language:loadLanguage(Config.language);
+	--Language:loadLanguage(Config.language);
 	Events:Subscribe('Extension:Unloading', self, self._onExtensionUnload);
 	Events:Subscribe('Engine:Message', self, self._onEngineMessage);
 end
