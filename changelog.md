@@ -21,6 +21,9 @@ The Smart Node update
 - Bots switch to Pistol or Sidearm (Rockets) if needed
 - Bots revive dead players
 - Bots deply Ammobag and medkit from time to time
+- Bots use Grenades form time to time
+- improved spawning
+- If Bots only in one team, players are kept in the other team
 - Shoot-Cycles adapted
 
 

@@ -28,6 +28,8 @@ local Globals 				= require('Globals');
 
 local serverSettings		= nil;
 local syncedGameSettings	= nil;
+local humanPlayerData		= nil;
+local autoTeamData			= nil;
 
 function FunBotServer:__init()
 	Language:loadLanguage(Config.language);
@@ -81,6 +83,20 @@ function FunBotServer:_onPartitionLoaded(partition)
 				--serverSettings.isSoldierDetailedCollisionEnabled = true --doesn't matter
 				serverSettings.isRenderDamageEvents = true
 			end
+			if instance:Is("HumanPlayerEntityData") then
+				humanPlayerData = HumanPlayerEntityData(instance)
+			end
+			if instance:Is("AutoTeamEntityData") then
+				autoTeamData = AutoTeamEntityData(instance)
+				autoTeamData:MakeWritable()
+				--autoTeamData.enabled = false
+				autoTeamData.rotateTeamOnNewRound = false
+				autoTeamData.teamAssignMode = TeamAssignMode.TamOneTeam
+				autoTeamData.playerCountNeededToAutoBalance = 127
+				autoTeamData.teamDifferenceToAutoBalance = 127
+				autoTeamData.autoBalance = false
+				autoTeamData.forceIntoSquad = true
+			end
 		end
 	end
 end
@@ -100,6 +116,15 @@ function FunBotServer:_onLevelLoaded(levelName, gameMode)
 	
 	if Debug.Server.INFO then
 		print('level ' .. levelName .. ' loaded...');
+	end
+
+	--get RespawnDelay
+	if humanPlayerData ~= nil and humanPlayerData.playerKilledDelay ~= nil and serverSettings ~= nil and serverSettings.respawnTimeModifier ~= nil then
+		Globals.respawnDelay = humanPlayerData.playerKilledDelay * serverSettings.respawnTimeModifier
+		print("found delay: "..tostring(Globals.respawnDelay))
+	else
+		Globals.respawnDelay = 10;
+		print("no delay found")
 	end
 	
 	if gameMode == 'TeamDeathMatchC0' or gameMode == 'TeamDeathMatch0' then

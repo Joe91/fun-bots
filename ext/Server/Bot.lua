@@ -406,7 +406,7 @@ end
 function Bot:_updateRespwawn()
 	if self._respawning and self.player.soldier == nil and self._spawnMode > 0 then
 		-- wait for respawn-delay gone
-		if self._spawnDelayTimer < Config.spawnDelayBots then
+		if self._spawnDelayTimer < g_Globals.respawnDelay then
 			self._spawnDelayTimer = self._spawnDelayTimer + StaticConfig.botUpdateCycle;
 		else
 			Events:DispatchLocal('Bot:RespawnBot', self.name);

@@ -28,14 +28,17 @@ function BotSpawner:_onTeamChange(player, team, squad)
 	if not Config.spawnInBothTeams then
 		if player ~= nil then
 			if player.onlineId ~= 0 then
+				local oldTeam = TeamId.Team1
+				if team == TeamId.Team1 then
+					oldTeam = TeamId.Team2;
+				end
+				print(team)
+				print(oldTeam)
 				if player ~= nil and team ~= nil then
 					local botTeam = BotManager:getBotTeam()
+					print(botTeam)
 					if team == botTeam then
-						local playerTeam = TeamId.Team1;
-						if botTeam == TeamId.Team1 then
-							playerTeam = TeamId.Team2;
-						end
-						player.teamId = playerTeam;
+						player.teamId = oldTeam;
 						ChatManager:SendMessage(Language:I18N('CANT_JOIN_BOT_TEAM', player), player);
 					end
 				end
@@ -557,7 +560,12 @@ function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, inde
 			self:spawnBot(existingBot, transform, false)
 		else
 			local bot = BotManager:createBot(name, team, squad)
-	
+
+			-- check for first one in squad
+			if (TeamSquadManager:GetSquadPlayerCount(team, squad) == 1) then
+				bot.player:SetSquadLeader(true, false);  -- not private
+			end
+
 			if bot ~= nil then
 				bot:setVarsWay(player, useRandomWay, activeWayIndex, indexOnPath, inverseDirection)
 				self:spawnBot(bot, transform, true)
