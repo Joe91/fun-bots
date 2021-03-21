@@ -21,7 +21,27 @@ function BotSpawner:__init()
 	Events:Subscribe('Level:Destroy', self, self._onLevelDestroy)
 	Events:Subscribe('Player:KitPickup', self, self._onKitPickup)
 	Events:Subscribe('Player:Joining', self, self._onPlayerJoining)
-	Events:Subscribe('Player:Left', self, self._onPlayerLeft)
+	Events:Subscribe('Player:TeamChange', self, self._onTeamChange)
+end
+
+function BotSpawner:_onTeamChange(player, team, squad)
+	if not Config.spawnInBothTeams then
+		if player ~= nil then
+			if player.onlineId ~= 0 then
+				if player ~= nil and team ~= nil then
+					local botTeam = BotManager:getBotTeam()
+					if team == botTeam then
+						local playerTeam = TeamId.Team1;
+						if botTeam == TeamId.Team1 then
+							playerTeam = TeamId.Team2;
+						end
+						player.teamId = playerTeam;
+						ChatManager:SendMessage(Language:I18N('CANT_JOIN_BOT_TEAM', player), player);
+					end
+				end
+			end
+		end
+    end
 end
 
 function BotSpawner:updateBotAmountAndTeam()
@@ -44,6 +64,18 @@ function BotSpawner:updateBotAmountAndTeam()
 	-- find all needed vars
 	local playerCount = BotManager:getPlayerCount();
 	local botCount = BotManager:getActiveBotCount();
+
+	-- kill and destroy bots, if no player left
+	if (playerCount == 0) then
+		if botCount > 0 then
+			BotManager:killAll();
+			self._updateActive = true;
+		else
+			self._updateActive = false;
+		end
+		return
+	end
+
 	local countPlayersTeam1 = 0;
 	local countPlayersTeam2 = 0;
 	local botTeam = BotManager:getBotTeam();
@@ -237,17 +269,6 @@ function BotSpawner:_onPlayerJoining()
 			print("first player - spawn bots")
 		end
 		self:onLevelLoaded()
-	end
-end
-
-function BotSpawner:_onPlayerLeft(player)
-	BotManager:onPlayerLeft(player)
-	--remove all references of player
-	if BotManager:getPlayerCount() == 1 then
-		if Debug.Server.BOT then
-			print("no player left - kick all bots")
-		end
-		BotManager:destroyAll();
 	end
 end
 

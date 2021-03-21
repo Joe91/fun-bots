@@ -68,6 +68,7 @@ function Bot:__init(player)
 	self._actionActive = false;
 	self._reviveActive = false;
 	self._deployActive = false;
+	self._grenadeActive	= false;
 
 	--shooting
 	self._shoot = false;
@@ -215,6 +216,7 @@ function Bot:resetVars()
 	self._actionActive 			= false;
 	self._reviveActive 			= false;
 	self._deployActive 			= false;
+	self._grenadeActive			= false;
 	self._weaponToUse 			= "Primary";
 
 	self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 0);
@@ -356,6 +358,7 @@ function Bot:resetSpawnVars()
 	self._actionActive 			= false;
 	self._reviveActive 			= false;
 	self._deployActive 			= false;
+	self._grenadeActive			= false;
 	self._weaponToUse 			= "Primary";
 
 	self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 0);
@@ -589,7 +592,7 @@ function Bot:_updateShooting()
 					else
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon3, 0);
 					end
-				elseif (self._weaponToUse == "Grenade" and Config.botWeapon == "Auto") or Config.botWeapon == "Grenade" then
+				elseif self._grenadeActive or (self._weaponToUse == "Grenade" and Config.botWeapon == "Auto") or Config.botWeapon == "Grenade" then
 					if self.player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_6 then
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon6, 1);
@@ -599,7 +602,7 @@ function Bot:_updateShooting()
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
 						self.activeWeapon = self.grenade;
-						self._shotTimer	= -1.0;
+						self._shotTimer	= -0.2;
 					else
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon6, 0);
 					end
@@ -669,7 +672,16 @@ function Bot:_updateShooting()
 					end
 				end
 
-				if self._shootPlayer.attachedControllable ~= nil or Config.botWeapon == "Gadget2" then
+				if self._grenadeActive then -- throw grenade
+					if self.player.soldier.weaponsComponent.currentWeapon.secondaryAmmo <= 1 then
+						self.player.soldier.weaponsComponent.currentWeapon.secondaryAmmo = self.player.soldier.weaponsComponent.currentWeapon.secondaryAmmo + 1
+					end
+					if self._shotTimer > 0.5 then
+						self._grenadeActive = false;
+					end
+				end
+				-- target in vehicle - use gadget 2 if rocket --TODO: don't shoot with other classes
+				if self._shootPlayer.attachedControllable ~= nil then
 					if self.gadget2 ~= nil then
 						if self.gadget2.type == "Rocket" then
 							self._weaponToUse = "Gadget2"
@@ -682,17 +694,21 @@ function Bot:_updateShooting()
 					if self.knifeMode or self._meleeActive then
 						self._weaponToUse = "Knife"
 					else
-						if self.player.soldier.weaponsComponent.weapons[1] ~= nil then
+						if not self._grenadeActive and self.player.soldier.weaponsComponent.weapons[1] ~= nil then
 							if self.player.soldier.weaponsComponent.weapons[1].primaryAmmo == 0 then
 								self._weaponToUse = "Pistol"
-								--[[if self._shootModeTimer < (Config.botFireModeDuration - 0.5) then  --TODO: When to throw grenade???
-									self._weaponToUse = "Grenade"
-									if self.player.soldier.weaponsComponent.currentWeapon.secondaryAmmo <= 2 then
-										self.player.soldier.weaponsComponent.currentWeapon.secondaryAmmo = self.player.soldier.weaponsComponent.currentWeapon.secondaryAmmo + 3
-									end
-								end--]]
 							else
 								self._weaponToUse = "Primary"
+							end
+						end
+						-- use grenade from time to time
+						local targetTimeValue = Config.botFireModeDuration - 1.0;
+						if ((self._shootModeTimer >= targetTimeValue) and (self._shootModeTimer < (targetTimeValue + StaticConfig.botUpdateCycle))) or Config.botWeapon == "Grenade" then
+							-- should be triggered only once per fireMode
+							if MathUtils:GetRandomInt(0,100) < 20 then
+								if self.grenade ~= nil then
+									self._grenadeActive = true;
+								end
 							end
 						end
 					end
@@ -752,6 +768,7 @@ function Bot:_updateShooting()
 				self._weaponToUse 		= "Primary"
 				self._shotTimer			= -Config.botFirstShotDelay;
 				self._shootPlayer		= nil;
+				self._grenadeActive 	= false;
 				self._lastShootPlayer	= nil;
 			end
 		elseif self._reviveActive and self._shootPlayer ~= nil then
@@ -793,6 +810,7 @@ function Bot:_updateShooting()
 				self._shootPlayer		= nil;
 				self._reviveActive		= false;
 			end
+
 		elseif self._deployActive then --deploy bag
 			self._deployTimer = self._deployTimer + StaticConfig.botUpdateCycle;
 			self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
@@ -806,6 +824,7 @@ function Bot:_updateShooting()
 			self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 0);
 			self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0);
 			self._weaponToUse 		= "Primary"
+			self._grenadeActive 	= false;
 			self._shootPlayer		= nil;
 			self._lastShootPlayer	= nil;
 			self._shootModeTimer	= 0;
@@ -1063,7 +1082,7 @@ function Bot:_updateMovement()
 						self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0);
-						if not self._deployActive then
+						if not self._deployActive and not self._grenadeActive then
 							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0.0);
 						end
 					end
