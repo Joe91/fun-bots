@@ -124,9 +124,9 @@ function FunBotServer:_onLevelLoaded(levelName, gameMode)
 		print("found delay: "..tostring(Globals.respawnDelay))
 	else
 		Globals.respawnDelay = 10;
-		print("no delay found")
+		print("no delay found, use 10 as default")
 	end
-	
+
 	if gameMode == 'TeamDeathMatchC0' or gameMode == 'TeamDeathMatch0' then
 		Globals.isTdm = true;
 	else

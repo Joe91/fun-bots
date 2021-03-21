@@ -258,6 +258,7 @@ function BotSpawner:_onLevelDestroy()
 	self._updateActive = false;
 	self._firstSpawnInLevel = true;
 	self._firstSpawnDelay 	= 5;
+	self._playerUpdateTimer = 0;
 end
 
 function BotSpawner:_onPlayerJoining()
@@ -274,6 +275,7 @@ function BotSpawner:onLevelLoaded()
 		print("on level loaded on spawner")
 	end
 	self._firstSpawnInLevel = true;
+	self._playerUpdateTimer = 0;
 	self._firstSpawnDelay 	= 5;
 end
 
