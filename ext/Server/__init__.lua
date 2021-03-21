@@ -26,10 +26,7 @@ local RCONCommands			= require('RCONCommands');
 local FunBotUIServer		= require('UIServer');
 local Globals 				= require('Globals');
 
-local serverSettings		= nil;
-local syncedGameSettings	= nil;
-local humanPlayerData		= nil;
-local autoTeamData			= nil;
+local playerKilledDelay 	= 0;
 
 function FunBotServer:__init()
 	Language:loadLanguage(Config.language);
@@ -71,31 +68,32 @@ function FunBotServer:_onPartitionLoaded(partition)
 	for _, instance in pairs(partition.instances) do
 		if USE_REAL_DAMAGE then
 			if instance:Is("SyncedGameSettings") then
-				syncedGameSettings = SyncedGameSettings(instance)
-				syncedGameSettings:MakeWritable()
-				syncedGameSettings.allowClientSideDamageArbitration = false
+				instance = SyncedGameSettings(instance)
+				instance:MakeWritable()
+				instance.allowClientSideDamageArbitration = false
 			end
 			if instance:Is("ServerSettings") then
-				serverSettings = ServerSettings(instance)
-				serverSettings:MakeWritable()
-				--serverSettings.drawActivePhysicsObjects = true --doesn't matter
-				--serverSettings.isSoldierAnimationEnabled = true --doesn't matter
-				--serverSettings.isSoldierDetailedCollisionEnabled = true --doesn't matter
-				serverSettings.isRenderDamageEvents = true
+				instance = ServerSettings(instance)
+				instance:MakeWritable()
+				--instance.drawActivePhysicsObjects = true --doesn't matter
+				--instance.isSoldierAnimationEnabled = true --doesn't matter
+				--instance.isSoldierDetailedCollisionEnabled = true --doesn't matter
+				instance.isRenderDamageEvents = true
 			end
 			if instance:Is("HumanPlayerEntityData") then
-				humanPlayerData = HumanPlayerEntityData(instance)
+				instance = HumanPlayerEntityData(instance)
+				playerKilledDelay =  instance.playerKilledDelay
 			end
 			if instance:Is("AutoTeamEntityData") then
-				autoTeamData = AutoTeamEntityData(instance)
-				autoTeamData:MakeWritable()
+				instance = AutoTeamEntityData(instance)
+				instance:MakeWritable()
 				--autoTeamData.enabled = false
-				autoTeamData.rotateTeamOnNewRound = false
-				autoTeamData.teamAssignMode = TeamAssignMode.TamOneTeam
-				autoTeamData.playerCountNeededToAutoBalance = 127
-				autoTeamData.teamDifferenceToAutoBalance = 127
-				autoTeamData.autoBalance = false
-				autoTeamData.forceIntoSquad = true
+				instance.rotateTeamOnNewRound = false
+				instance.teamAssignMode = TeamAssignMode.TamOneTeam
+				instance.playerCountNeededToAutoBalance = 127
+				instance.teamDifferenceToAutoBalance = 127
+				instance.autoBalance = false
+				instance.forceIntoSquad = true
 			end
 		end
 	end
@@ -119,8 +117,10 @@ function FunBotServer:_onLevelLoaded(levelName, gameMode)
 	end
 
 	--get RespawnDelay
-	if humanPlayerData ~= nil and humanPlayerData.playerKilledDelay ~= nil and serverSettings ~= nil and serverSettings.respawnTimeModifier ~= nil then
-		Globals.respawnDelay = humanPlayerData.playerKilledDelay * serverSettings.respawnTimeModifier
+	local rconResponseTable = RCON:SendCommand('vars.playerRespawnTime')
+    local respawnTimeModifier = tonumber(rconResponseTable[2]) / 100
+	if playerKilledDelay > 0 and respawnTimeModifier ~= nil then
+		Globals.respawnDelay = playerKilledDelay * respawnTimeModifier
 		print("found delay: "..tostring(Globals.respawnDelay))
 	else
 		Globals.respawnDelay = 10;
