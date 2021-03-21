@@ -25,22 +25,16 @@ function BotSpawner:__init()
 end
 
 function BotSpawner:_onTeamChange(player, team, squad)
-	if not Config.spawnInBothTeams then
+	if Config.botTeam ~= TeamId.TeamNeutral then
 		if player ~= nil then
-			if player.onlineId ~= 0 then
-				local oldTeam = TeamId.Team1
-				if team == TeamId.Team1 then
-					oldTeam = TeamId.Team2;
+			if player.onlineId ~= 0 then -- no bot
+				local playerTeam = TeamId.Team1
+				if Config.botTeam == TeamId.Team1 then
+					playerTeam = TeamId.Team2;
 				end
-				print(team)
-				print(oldTeam)
-				if player ~= nil and team ~= nil then
-					local botTeam = BotManager:getBotTeam()
-					print(botTeam)
-					if team == botTeam then
-						player.teamId = oldTeam;
-						ChatManager:SendMessage(Language:I18N('CANT_JOIN_BOT_TEAM', player), player);
-					end
+				if player ~= nil and team ~= nil and (team ~= playerTeam) then
+					player.teamId = playerTeam;
+					ChatManager:SendMessage(Language:I18N('CANT_JOIN_BOT_TEAM', player), player);
 				end
 			end
 		end
