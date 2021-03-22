@@ -11,6 +11,7 @@ The Smart Node update
 	- Seine Crossing (small + large)
 	- Khark Island (small + large) Thanks to RekkieSA
 	- Noshar Canals (small) Thanks to RekkieSA
+	- Damavand Peak (small) Thanks to RekkieSA
 	- Firestorm (small + large) Thanks to RekkieSA
 	- Metro (large)
 - Rush supported
