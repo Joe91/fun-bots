@@ -9,7 +9,10 @@ The Smart Node update
 	- Bazaar (small + large)
 	- Caspian Border (small + large) Thanks to RekkieSA
 	- Seine Crossing (small + large)
-	- Khark Island (small) Thanks to RekkieSA
+	- Khark Island (small + large) Thanks to RekkieSA
+	- Noshar Canals (small) Thanks to RekkieSA
+	- Damavand Peak (small) Thanks to RekkieSA
+	- Firestorm (small + large) Thanks to RekkieSA
 	- Metro (large)
 - Rush supported
 	- Metro
@@ -17,6 +20,11 @@ The Smart Node update
 - BFLAG supported
 	- Bazaar small
 - Bots switch to Pistol or Sidearm (Rockets) if needed
+- Bots revive dead players
+- Bots deply Ammobag and medkit from time to time
+- Bots use Grenades form time to time
+- improved spawning
+- If Bots only in one team, players are kept in the other team
 - Shoot-Cycles adapted
 
 

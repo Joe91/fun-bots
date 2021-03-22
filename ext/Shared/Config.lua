@@ -55,6 +55,7 @@ Config = {
 	botsAttackBots = true,			-- bots attack bots from other team
 	meleeAttackIfClose = true,		-- bot attacks with melee if close
 	botCanKillHimself = false,		-- if a bot is that close he will attack, even if not in FOV
+	deployCycle	= 50,				-- time between deployment of bots
 
 	-- traces
 	debugTracePaths = false,		-- Shows the trace line and search area from Commo Rose selection

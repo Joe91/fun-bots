@@ -12,6 +12,8 @@ function Globals:__init()
 	self.isConquest			= false;
 	self.isAssault			= false;
 	self.maxPlayers			= 0;
+	self.respawnDelay		= 0;
+	self.globalBotTeam		= 0;
 
 	self.respawnWayBots 	= false;	--used for the runtime respawn
 	self.attackWayBots 		= false;	--used for the runtime attack

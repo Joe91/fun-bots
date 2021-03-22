@@ -476,7 +476,7 @@ function GameDirector:_onLost(capturePoint)
 	local flagEntity = CapturePointEntity(capturePoint)
 	local objectiveName = self:_translateObjective(flagEntity.transform.trans, flagEntity.name);
 	self:_updateObjective(objectiveName, {
-		team = flagEntity.team, --TeamId.TeamNeutral
+		team = TeamId.TeamNeutral, --flagEntity.team
 		isAttacked = flagEntity.isAttacked
 	})
 
@@ -489,8 +489,7 @@ function GameDirector:_onPlayerEnterCapturePoint(player, capturePoint)
 	local flagEntity = CapturePointEntity(capturePoint)
 	local objectiveName = self:_translateObjective(flagEntity.transform.trans, flagEntity.name);
 	self:_updateObjective(objectiveName, {
-		team = flagEntity.team,
-		isAttacked = flagEntity.isAttacked
+		isAttacked = flagEntity.isAttacked  --		team = flagEntity.team,
 	})
 end
 
