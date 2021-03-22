@@ -431,7 +431,12 @@ function Bot:_updateAiming()
 		if not self.knifeMode then
 			local distanceToPlayer	= fullPositionTarget:Distance(fullPositionBot);
 			--calculate how long the distance is --> time to travel
-			local timeToTravel		= (distanceToPlayer / self.activeWeapon.bulletSpeed);
+			local timeToTravel = 0
+			if self.activeWeapon.type == "Grenade" then
+				timeToTravel 		=  2 * 0.8 * self.activeWeapon.bulletSpeed / self.activeWeapon.bulletDrop;
+			else
+				timeToTravel		= (distanceToPlayer / self.activeWeapon.bulletSpeed);
+			end
 			local factorForMovement	= (timeToTravel) / self._aimUpdateTimer;
 			pitchCorrection	= 0.5 * timeToTravel * timeToTravel * self.activeWeapon.bulletDrop;
 			
