@@ -25,7 +25,7 @@ Config = {
 	spawnInBothTeams = true,		-- Bots spawn in both teams
 	initNumberOfBots = 6,			-- bots for spawnmode
 	newBotsPerNewPlayer = 2,		-- number to increase Bots, when new players join
-	spawnDelayBots = 10.0,			-- time till bots spawn on levelstart
+	spawnDelayBots = 10.0,			-- time till bots spawn on levelstart -- OBSOLETE
 	botTeam = TeamId.TeamNeutral, 	-- default bot team (0 = neutral / auto, 1 = US, 2 = RU) TeamId.Team2
 	botNewLoadoutOnSpawn = true,	-- bots get a new kit and color, if they respawn
 	maxAssaultBots = -1,			-- maximum number of Bots with Assault Kit
@@ -83,7 +83,7 @@ Config = {
 	speedFactorAttack = 0.6,		-- reduces the movementspeed while attacking. 1 = normal, 0 = standing.
 
 	-- expert
-	botFirstShotDelay = 0.17,		-- delay for first shot. If too small, there will be great spread in first cycle because its not kompensated jet.
+	botFirstShotDelay = 0.35,		-- delay for first shot. If too small, there will be great spread in first cycle because its not kompensated jet.
 	botMinTimeShootAtPlayer = 2.0,	-- the minimum time a bot shoots at one player
 	botFireModeDuration = 5.0,		-- the minimum time a bot tries to shoot a player
 	maximunYawPerSec = 450,			-- in Degree. Rotaion-Movement per second.
