@@ -85,7 +85,7 @@ function MenuItem:SetCallback(callback)
 	return self;
 end
 
-function MenuItem:FireCallback()
+function MenuItem:FireCallback(player)
 	if (self.callback == nil) then
 		print('MenuItem ' .. self.name .. ' has no Callback.');
 		return;
@@ -96,7 +96,7 @@ function MenuItem:FireCallback()
 		return;
 	end;
 	
-	self.callback();
+	self.callback(player);
 	
 	return self;
 end

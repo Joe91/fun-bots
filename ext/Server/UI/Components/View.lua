@@ -85,38 +85,38 @@ function View:Toggle(player)
 	end
 end
 
-function View:SubCall(element, name, component)	
+function View:SubCall(player, element, name, component)	
 	if (component:__class() == element and component['HasItems'] == nil and component['FireCallback'] ~= nil and component['GetName'] ~= nil and component:GetName() == name) then
 		print('FireCallback ' .. name);
 		
-		component:FireCallback();
+		component:FireCallback(player);
 	elseif (component['HasItems'] ~= nil and component:HasItems()) then
 		for _, item in pairs(component:GetItems()) do
 			if (item:__class() == element) then
 				if (item['GetName'] ~= nil and item:GetName() == name and item['FireCallback'] ~= nil) then
 					print('Sub-FireCallback ' .. name);
-					item:FireCallback();
+					item:FireCallback(player);
 				elseif (item['Name'] ~= nil and item.Name == element) then
 					print('Callback-Trigger ' .. name);
-					item:Callback();
+					item:Callback(player);
 				else
-					self:SubCall(element, name, item);
+					self:SubCall(player, element, name, item);
 				end
 			else
-				self:SubCall(element, name, item);
+				self:SubCall(player, element, name, item);
 			end
 		end
 	end
 end
 
-function View:Call(element, name)
+function View:Call(player, element, name)
 	if (_G.Callbacks[name] ~= nil) then
-		_G.Callbacks[name]();
+		_G.Callbacks[name](player);
 		return;
 	end
 	
 	for _, component in pairs(self.components) do
-		self:SubCall(element, name, component);
+		self:SubCall(player, element, name, component);
 	end
 end
 

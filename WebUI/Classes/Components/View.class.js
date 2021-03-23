@@ -13,6 +13,11 @@ class View extends Component {
 	}	
 	
 	InitializeComponent(data) {
+		if(data == null) {
+			console.warn('InitializeComponent(data) is null:', data);
+			return;
+		}
+		
 		if(typeof(data.Name) != 'undefined') {
 			this.name = data.Name;
 		}

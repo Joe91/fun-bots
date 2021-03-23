@@ -17,6 +17,14 @@ class Input extends Component {
 		this.input.value	= this.value;
 	};
 	
+	Enable() {
+		this.input.disabled = false;
+	}
+	
+	Disable() {
+		this.input.disabled = true;
+	}
+	
 	SetValue(value) {
 		this.value = value;
 		

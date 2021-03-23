@@ -25,21 +25,29 @@ class MenuItem extends Component {
 		
 		if(typeof(data.Inputs) != 'undefined' && data.Inputs.length >= 1) {
 			data.Inputs.forEach((properties) => {
-				let element = new Input(properties.Data.Name, properties.Data.Value);
+				let input = new Input(properties.Data.Name, properties.Data.Value);
 				
 				if(typeof(properties.Data.Arrows) != 'undefined' && properties.Data.Arrows.length >= 1) {
 					properties.Data.Arrows.forEach((arrow) => {
-						element.SetArrow(arrow.Name, arrow.Position, arrow.Character);
+						input.SetArrow(arrow.Name, arrow.Position, arrow.Character);
 						
 						this.element.dataset.arrows = true;
 					});
 				}
 				
-				if(typeof(element.InitializeComponent) != 'undefined') {
-					element.InitializeComponent();
+				if(typeof(input.InitializeComponent) != 'undefined') {
+					input.InitializeComponent();
 				}
 				
-				element = new Proxy(element, {
+				if(typeof(properties.Data.Disabled) != 'undefined') {
+					if(properties.Data.Disabled) {
+						input.Disable();
+					} else {
+						input.Enable();
+					}
+				}
+				
+				input = new Proxy(input, {
 					set: function Setter(target, key, value) {
 						if(Array.isArray(value) || value instanceof Object) {
 							target[key][value.Name] = value.Value;
@@ -53,13 +61,13 @@ class MenuItem extends Component {
 				});
 				
 				if(typeof(properties.Position) != 'undefined') {
-					element.Attributes = {
+					input.Attributes = {
 						Name: 	'Position',
 						Value:	properties.Position
 					};
 				}
 				
-				this.inputs.push(element);
+				this.inputs.push(input);
 			});
 		}
 		

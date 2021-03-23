@@ -15,6 +15,16 @@
 	user-select: none;
 }
 
+*::selection {
+	background: rgba(255, 255, 255, 0);
+}
+
+input:disabled {
+    background: transparent;
+    user-select: none;
+    border-color: transparent;
+}
+
 button {
 	display: inline-block;
 	position: relative;

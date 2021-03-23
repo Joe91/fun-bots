@@ -1,10 +1,11 @@
 class('Input');
 
 function Input:__init(type, name, value)
-	self.type	= type or nil;
-	self.name	= name or nil;
-	self.value	= value or nil;
-	self.arrows	= {};
+	self.type		= type or nil;
+	self.name		= name or nil;
+	self.value		= value or nil;
+	self.disabled	= false;
+	self.arrows		= {};
 end
 
 function Input:__class()
@@ -40,6 +41,14 @@ function Input:AddArrow(position, character, callback)
 	});
 end
 
+function Input:Enable()
+	self.disabled = false;
+end
+
+function Input:Disable()
+	self.disabled = true;
+end
+
 function Input:GetValue()
 	return self.value;
 end
@@ -50,10 +59,11 @@ end
 
 function Input:Serialize()
 	return {
-		Type	= self.type,
-		Name	= self.name,
-		Value	= self.value,
-		Arrows	= self.arrows
+		Type		= self.type,
+		Name		= self.name,
+		Value		= self.value,
+		Disabled	= self.disabled,
+		Arrows		= self.arrows
 	};
 end
 

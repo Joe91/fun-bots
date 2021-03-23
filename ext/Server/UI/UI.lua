@@ -133,7 +133,7 @@ function UI:__action(player, type, destination, action, data)
 				name		= data;
 			end
 			
-			view:Call(element, name);
+			view:Call(player, element, name);
 		end
 	end
 end
