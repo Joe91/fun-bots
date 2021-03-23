@@ -12,7 +12,7 @@ function BotSpawner:__init()
 	self._botSpawnTimer = 0
 	self._playerUpdateTimer = 0
 	self._firstSpawnInLevel = true;
-	self._firstSpawnDelay = 5;
+	self._firstSpawnDelay = Config.spawnDelayBots;
 	self._updateActive = false;
 	self._spawnSets = {}
 
@@ -261,7 +261,7 @@ function BotSpawner:_onLevelDestroy()
 	self._spawnSets = {}
 	self._updateActive = false;
 	self._firstSpawnInLevel = true;
-	self._firstSpawnDelay 	= 5;
+	self._firstSpawnDelay 	= Config.spawnDelayBots;
 	self._playerUpdateTimer = 0;
 end
 
@@ -280,7 +280,7 @@ function BotSpawner:onLevelLoaded()
 	end
 	self._firstSpawnInLevel = true;
 	self._playerUpdateTimer = 0;
-	self._firstSpawnDelay 	= 5;
+	self._firstSpawnDelay 	= Config.spawnDelayBots;
 end
 
 function BotSpawner:_onUpdate(dt, pass)
