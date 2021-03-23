@@ -7,13 +7,13 @@ require('__shared/NodeCollection')
 local BotManager	= require('BotManager');
 local WeaponList	= require('__shared/WeaponList');
 local Utilities 	= require('__shared/Utilities')
-local spawnDelayBots = 3.0 -- needs to be big enough to register the inputActiveEvents. 1 is too small
+local FIRST_SPAWN_DELAY = 3.0 -- needs to be big enough to register the inputActiveEvents. 1 is too small
 
 function BotSpawner:__init()
 	self._botSpawnTimer = 0
 	self._playerUpdateTimer = 0
 	self._firstSpawnInLevel = true;
-	self._firstSpawnDelay = spawnDelayBots;
+	self._firstSpawnDelay = FIRST_SPAWN_DELAY;
 	self._updateActive = false;
 	self._spawnSets = {}
 
@@ -262,7 +262,7 @@ function BotSpawner:_onLevelDestroy()
 	self._spawnSets = {}
 	self._updateActive = false;
 	self._firstSpawnInLevel = true;
-	self._firstSpawnDelay 	= spawnDelayBots;
+	self._firstSpawnDelay 	= FIRST_SPAWN_DELAY;
 	self._playerUpdateTimer = 0;
 end
 
@@ -281,7 +281,7 @@ function BotSpawner:onLevelLoaded()
 	end
 	self._firstSpawnInLevel = true;
 	self._playerUpdateTimer = 0;
-	self._firstSpawnDelay 	= spawnDelayBots;
+	self._firstSpawnDelay 	= FIRST_SPAWN_DELAY;
 end
 
 function BotSpawner:_onUpdate(dt, pass)
