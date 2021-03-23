@@ -77,7 +77,7 @@ function Weapon:learnStatsValues()
 			print("LMG")
 		end
 		fireDuration 	= 1.5
-		firePause		= 0.6
+		firePause		= 0.5
 		delayedShot		= true
 	elseif string.find(aiDataString, "_sni_") ~= nil then
 		if Debug.Shared.MODIFICATIONS then
@@ -99,21 +99,21 @@ function Weapon:learnStatsValues()
 		end
 		fireDuration 	= 0.4
 		firePause		= 0.4
-		delayedShot		= true
+		delayedShot		= false
 	elseif string.find(aiDataString, "_shg_") ~= nil then
 		if Debug.Shared.MODIFICATIONS then
 			print("shotgun")
 		end
 		fireDuration 	= 0.2
 		firePause		= 0.2
-		delayedShot		= true
+		delayedShot		= false
 	elseif string.find(aiDataString, "_smg_") ~= nil then
 		if Debug.Shared.MODIFICATIONS then
 			print("PDW")
 		end
 		fireDuration 	= 0.3
 		firePause		= 0.2
-		delayedShot		= true
+		delayedShot		= false
 	elseif string.find(aiDataString, "_hg_") ~= nil or string.find(self.name, "MP443") ~= nil then -- "MP443 has no ai data"
 		if Debug.Shared.MODIFICATIONS then
 			print("pistol")
@@ -133,8 +133,15 @@ function Weapon:learnStatsValues()
 			print("Rocket")
 		end
 		fireDuration 	= 0.2
-		firePause		= 0.2
+		firePause		= 0.4
 		delayedShot		= true
+	elseif string.find(aiDataString, "_hgr_") ~= nil then
+		if Debug.Shared.MODIFICATIONS then
+			print("Grenade")
+		end
+		fireDuration 	= 0.2
+		firePause		= 0.2
+		delayedShot		= false
 	else
 		if Debug.Shared.MODIFICATIONS then
 			print("No data found for "..self.name..': '..tostring(aiData.name))

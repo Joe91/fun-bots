@@ -2,7 +2,7 @@
  
 ## [Unreleased - 1.7.X.X] - 2021-03-XX
  
-[Download](https://github.com/Joe91/fun-bots/archive/V1.7.0.7.zip)  
+[Download](https://github.com/Joe91/fun-bots/archive/V1.7.0.8.zip)  
 The Smart Node update
 
 - Conquest supported
@@ -17,7 +17,7 @@ The Smart Node update
 - Rush supported
 	- Metro
 	- Damavand Peak
-- BFLAG supported
+- BFLAG supported (only a first version, not that usable yet)
 	- Bazaar small
 - Bots switch to Pistol or Sidearm (Rockets) if needed
 - Bots revive dead players
@@ -25,6 +25,9 @@ The Smart Node update
 - Bots use Grenades form time to time
 - improved spawning
 - Bugfix spawning
+- Many fixes and Improvements thanks to Bre_Arnold!! including:
+	- Bots use the same spawn-delay as the players
+	- Bots don't move on round start
 - If Bots only in one team, players are kept in the other team
 - Shoot-Cycles adapted
 

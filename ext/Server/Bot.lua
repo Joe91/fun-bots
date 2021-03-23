@@ -90,23 +90,25 @@ function Bot:onUpdate(dt)
 		self.player.soldier:SingleStepEntry(self.player.controlledEntryId);
 	end
 
-	self._updateTimer		= self._updateTimer + dt;
-	self._aimUpdateTimer	= self._aimUpdateTimer + dt;
+	if g_Globals.isInputAllowed then
+		self._updateTimer		= self._updateTimer + dt;
+		self._aimUpdateTimer	= self._aimUpdateTimer + dt;
 
-	if self._aimUpdateTimer > StaticConfig.botAimUpdateCycle then
-		self:_updateAiming();
-		self._aimUpdateTimer = 0; --reset afterwards, to use it for targetinterpolation
-	end
+		if self._aimUpdateTimer > StaticConfig.botAimUpdateCycle then
+			self:_updateAiming();
+			self._aimUpdateTimer = 0; --reset afterwards, to use it for targetinterpolation
+		end
 
-	self:_updateYaw();
+		self:_updateYaw();
 
-	if self._updateTimer > StaticConfig.botUpdateCycle then
-		self._updateTimer = 0;
+		if self._updateTimer > StaticConfig.botUpdateCycle then
+			self._updateTimer = 0;
 
-		self:_setActiveVars();
-		self:_updateRespwawn();
-		self:_updateShooting();
-		self:_updateMovement(); --TODO: move-mode shoot
+			self:_setActiveVars();
+			self:_updateRespwawn();
+			self:_updateShooting();
+			self:_updateMovement(); --TODO: move-mode shoot
+		end
 	end
 end
 
@@ -568,6 +570,7 @@ function Bot:_updateShooting()
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
 						self.activeWeapon = self.knife;
+						self._shotTimer = 0;
 					else
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 0);
 					end
@@ -581,7 +584,7 @@ function Bot:_updateShooting()
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
 						self.activeWeapon = self.gadget2;
-						self._shotTimer	= -1.0;
+						self._shotTimer = 0;
 					else
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon5, 0);
 					end
@@ -595,7 +598,7 @@ function Bot:_updateShooting()
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
 						self.activeWeapon = self.gadget1;
-						self._shotTimer	= -1.0;
+						self._shotTimer = 0;
 					else
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon3, 0);
 					end
@@ -609,7 +612,7 @@ function Bot:_updateShooting()
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
 						self.activeWeapon = self.grenade;
-						self._shotTimer	= -0.2;
+						self._shotTimer = 0;
 					else
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon6, 0);
 					end
@@ -623,6 +626,7 @@ function Bot:_updateShooting()
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
 						self.activeWeapon = self.pistol;
+						self._shotTimer = 0;
 					else
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
 					end
@@ -636,6 +640,7 @@ function Bot:_updateShooting()
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 1);
 						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
 						self.activeWeapon = self.primary;
+						self._shotTimer = 0;
 					else
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
 					end
@@ -713,7 +718,7 @@ function Bot:_updateShooting()
 							local targetTimeValue = Config.botFireModeDuration - 1.0;
 							if ((self._shootModeTimer >= targetTimeValue) and (self._shootModeTimer < (targetTimeValue + StaticConfig.botUpdateCycle))) or Config.botWeapon == "Grenade" then
 								-- should be triggered only once per fireMode
-								if MathUtils:GetRandomInt(0,100) < 20 then
+								if MathUtils:GetRandomInt(0,100) < 18 then
 									if self.grenade ~= nil then
 										self._grenadeActive = true;
 									end

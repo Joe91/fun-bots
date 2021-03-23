@@ -16,6 +16,7 @@ function BotManager:__init()
 	self._destroyBotsTimer = 0;
 	self._botsToDestroy = {};
 	self._botCheckState = {};
+	self._pendingAcceptRevives = {};
 	self._lastBotCheckIndex = 1
 	self._initDone = false;
 
@@ -27,6 +28,7 @@ function BotManager:__init()
 	Events:Subscribe('ServerDamagePlayer', self, self._onServerDamagePlayer) 	--only triggered on false damage
 	NetEvents:Subscribe('ClientDamagePlayer', self, self._onDamagePlayer)   	--only triggered on false damage
 	Hooks:Install('Soldier:Damage', 100, self, self._onSoldierDamage)
+	--Events:Subscribe('Soldier:HealthAction', self, self._onHealthAction)	-- use this for more options on revive. Not needed yet
 
 end
 
@@ -221,6 +223,29 @@ function BotManager:_onUpdate(dt, pass)
 		end
 		self._destroyBotsTimer = self._destroyBotsTimer + dt;
 	end
+
+	-- accept revives
+	for i, botname in pairs(self._pendingAcceptRevives) do
+        local botPlayer = self:getBotByName(botname)
+        if botPlayer ~= nil and botPlayer.player.soldier ~= nil then
+            if botPlayer.player.soldier.health == 20 then
+                botPlayer.player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Stand, true, true)
+                self._pendingAcceptRevives[i] = nil
+            end
+        else
+			self._pendingAcceptRevives[i] = nil
+        end
+    end
+end
+
+function BotManager:_onHealthAction(soldier, action)
+	if action == HealthStateAction.OnRevive then --7
+		if soldier.player ~= nil then
+			if Utilities:isBot(soldier.player.name) then
+				table.insert(self._pendingAcceptRevives, soldier.player.name)
+			end
+		end
+    end
 end
 
 function BotManager:_checkForBotBotAttack()

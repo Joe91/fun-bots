@@ -9,23 +9,23 @@ Config = {
 	zombieMode = false,				-- Zombie Bot Mode
 
 	--difficluty
-	botAimWorsening = 0.8,			-- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy).
+	botAimWorsening = 0.6,			-- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy).
 	botSniperAimWorsening = 0.2,	-- see botAimWorsening, only for Sniper-rifles
-	damageFactorAssault = 0.5,		-- origninal Damage from bots gets multiplied by this
-	damageFactorCarabine = 0.5,		-- origninal Damage from bots gets multiplied by this
-	damageFactorLMG = 0.5,			-- origninal Damage from bots gets multiplied by this
-	damageFactorPDW = 0.5,			-- origninal Damage from bots gets multiplied by this
+	damageFactorAssault = 0.3,		-- origninal Damage from bots gets multiplied by this
+	damageFactorCarabine = 0.3,		-- origninal Damage from bots gets multiplied by this
+	damageFactorLMG = 0.3,			-- origninal Damage from bots gets multiplied by this
+	damageFactorPDW = 0.3,			-- origninal Damage from bots gets multiplied by this
 	damageFactorSniper = 0.8,		-- origninal Damage from bots gets multiplied by this
-	damageFactorShotgun = 0.8,		-- origninal Damage from bots gets multiplied by this
-	damageFactorPistol = 0.8,		-- origninal Damage from bots gets multiplied by this
-	damageFactorKnife = 1.4,		-- origninal Damage from bots gets multiplied by this
+	damageFactorShotgun = 0.7,		-- origninal Damage from bots gets multiplied by this
+	damageFactorPistol = 0.7,		-- origninal Damage from bots gets multiplied by this
+	damageFactorKnife = 1.5,		-- origninal Damage from bots gets multiplied by this
 
 	--spawn
 	spawnMode = 'balanced_teams',	-- mode the bots spawn with
 	spawnInBothTeams = true,		-- Bots spawn in both teams
 	initNumberOfBots = 6,			-- bots for spawnmode
 	newBotsPerNewPlayer = 2,		-- number to increase Bots, when new players join
-	spawnDelayBots = 10.0,			-- time till bots respawn, if respawn enabled
+	spawnDelayBots = 10.0,			-- time till bots spawn on levelstart -- OBSOLETE
 	botTeam = TeamId.TeamNeutral, 	-- default bot team (0 = neutral / auto, 1 = US, 2 = RU) TeamId.Team2
 	botNewLoadoutOnSpawn = true,	-- bots get a new kit and color, if they respawn
 	maxAssaultBots = -1,			-- maximum number of Bots with Assault Kit
@@ -35,11 +35,11 @@ Config = {
 
 	-- weapons
 	useRandomWeapon = true,			-- use a random weapon out of the class list
-	assaultWeapon = "M16A4",		-- weapon of Assault class
+	assaultWeapon = "M416",		-- weapon of Assault class
 	engineerWeapon = "M4A1",		-- weapon of Engineer class
 	supportWeapon = "M249",			-- weapon of Support class
 	reconWeapon = "L96_6x",			-- weapon of Recon class
-	pistol = "M1911_Lit",			-- Bot pistol
+	pistol = "MP412Rex",			-- Bot pistol
 	knife = "Razor",				-- Bot knife
 	assaultWeaponSet = "Class",				-- weaponset of Assault class
 	engineerWeaponSet = "Class_PDW",		-- weaponset of Engineer class
@@ -47,7 +47,7 @@ Config = {
 	reconWeaponSet = "Class",				-- weaponset of Recon class
 
 	-- behaviour
-	fovForShooting = 200,			-- Degrees of FOV of Bot
+	fovForShooting = 245,			-- Degrees of FOV of Bot
 	maxRaycastDistance = 150,		-- meters bots start shooting at player
 	maxShootDistanceNoSniper = 70,	-- meters a bot (not sniper) start shooting at player
 	botAttackMode = "Random",		-- Mode the Bots attack with. Random, Crouch or Stand
@@ -83,8 +83,8 @@ Config = {
 	speedFactorAttack = 0.6,		-- reduces the movementspeed while attacking. 1 = normal, 0 = standing.
 
 	-- expert
-	botFirstShotDelay = 0.4,		-- delay for first shot. If too small, there will be great spread in first cycle because its not kompensated jet.
-	botMinTimeShootAtPlayer = 1.0,	-- the minimum time a bot shoots at one player
+	botFirstShotDelay = 0.35,		-- delay for first shot. If too small, there will be great spread in first cycle because its not kompensated jet.
+	botMinTimeShootAtPlayer = 2.0,	-- the minimum time a bot shoots at one player
 	botFireModeDuration = 5.0,		-- the minimum time a bot tries to shoot a player
 	maximunYawPerSec = 450,			-- in Degree. Rotaion-Movement per second.
 	targetDistanceWayPoint = 0.8,	-- distance the bots have to reach to continue with next Waypoint
