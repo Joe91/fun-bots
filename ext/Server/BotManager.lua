@@ -621,6 +621,24 @@ function BotManager:destroyPlayerBots(player)
 	end
 end
 
+function BotManager:freshnTables()
+	local newTeamsTable = {{},{},{}}
+	local newBotTable = {}
+	local newBotbyNameTable = {}
+
+	for _,bot in pairs(self._bots) do
+		if bot.player ~= nil then
+			table.insert(newBotTable, bot);
+			table.insert(newTeamsTable[bot.player.teamId + 1], bot)
+			newBotbyNameTable[bot.player.name] = bot;
+		end
+	end
+
+	self._bots = newBotTable;
+	self._botsByTeam = newTeamsTable;
+	self._botsByName = newBotbyNameTable;
+end
+
 function BotManager:destroyBot(bot)
 
 	if (type(bot) == 'string') then
