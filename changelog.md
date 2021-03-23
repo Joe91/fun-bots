@@ -2,7 +2,7 @@
  
 ## [Unreleased - 1.7.X.X] - 2021-03-XX
  
-[Download](https://github.com/Joe91/fun-bots/archive/V1.7.0.6.zip)  
+[Download](https://github.com/Joe91/fun-bots/archive/V1.7.0.7.zip)  
 The Smart Node update
 
 - Conquest supported
@@ -24,6 +24,7 @@ The Smart Node update
 - Bots deply Ammobag and medkit from time to time
 - Bots use Grenades form time to time
 - improved spawning
+- Bugfix spawning
 - If Bots only in one team, players are kept in the other team
 - Shoot-Cycles adapted
 
