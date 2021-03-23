@@ -13,64 +13,59 @@ class View extends Component {
 	}	
 	
 	InitializeComponent(data) {
-		if(data == null) {
-			console.warn('InitializeComponent(data) is null:', data);
-		} else {
+		if(typeof(data.Name) != 'undefined') {
+			this.name = data.Name;
+		}
 		
-			if(typeof(data.Name) != 'undefined') {
-				this.name = data.Name;
-			}
-			
-			if(typeof(data.Components) != 'undefined') {
-				data.Components.forEach((properties) => {
-					let component = null;
-					
-					if(typeof(properties.Type) != 'undefined') {
-						switch(properties.Type) {
-							case 'Logo':
-								component		= new Logo(properties.Data.Title, properties.Data.Subtitle);
-							break;
-							case 'Menu':
-								component		= new Menu();
-								component.Items	= properties.Data.Items;
-							break;
-						}
+		if(typeof(data.Components) != 'undefined') {
+			data.Components.forEach((properties) => {
+				let component = null;
+				
+				if(typeof(properties.Type) != 'undefined') {
+					switch(properties.Type) {
+						case 'Logo':
+							component		= new Logo(properties.Data.Title, properties.Data.Subtitle);
+						break;
+						case 'Menu':
+							component		= new Menu();
+							component.Items	= properties.Data.Items;
+						break;
+					}
+				}
+				
+				if(component != null) {
+					if(typeof(component.InitializeComponent) != 'undefined') {
+						component.InitializeComponent();
+						this.element.appendChild(component.GetElement());
 					}
 					
-					if(component != null) {
-						if(typeof(component.InitializeComponent) != 'undefined') {
-							component.InitializeComponent();
-							this.element.appendChild(component.GetElement());
-						}
-						
-						component = new Proxy(component, {
-							set: function Setter(target, key, value) {
-								if(Array.isArray(value) || value instanceof Object) {
-									target[key][value.Name] = value.Value;
-								} else {
-									target[key] = value;
-								}
-								
-								target.Repaint();
-								return true;
+					component = new Proxy(component, {
+						set: function Setter(target, key, value) {
+							if(Array.isArray(value) || value instanceof Object) {
+								target[key][value.Name] = value.Value;
+							} else {
+								target[key] = value;
 							}
-						});
-						
-						if(typeof(properties.Attributes) != 'undefined' && properties.Attributes.length > 0) {
-							properties.Attributes.forEach(function OnAttribute(attribute) {
-								component.Attributes = {
-									Name: 	attribute.Name,
-									Value:	attribute.Value
-								};
-							});
+							
+							target.Repaint();
+							return true;
 						}
+					});
 					
-						this.components.push(component);
-					} else {
-						console.warn('Unknown Component: ', properties.Type);
+					if(typeof(properties.Attributes) != 'undefined' && properties.Attributes.length > 0) {
+						properties.Attributes.forEach(function OnAttribute(attribute) {
+							component.Attributes = {
+								Name: 	attribute.Name,
+								Value:	attribute.Value
+							};
+						});
 					}
-				});
-			}
+				
+					this.components.push(component);
+				} else {
+					console.warn('Unknown Component: ', properties.Type);
+				}
+			});
 		}
 		
 		document.querySelector('body').appendChild(this.element);
