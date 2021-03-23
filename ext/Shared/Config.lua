@@ -9,14 +9,14 @@ Config = {
 	zombieMode = false,				-- Zombie Bot Mode
 
 	--difficluty
-	botAimWorsening = 0.5,			-- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy).
+	botAimWorsening = 0.6,			-- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy).
 	botSniperAimWorsening = 0.2,	-- see botAimWorsening, only for Sniper-rifles
-	damageFactorAssault = 0.4,		-- origninal Damage from bots gets multiplied by this
-	damageFactorCarabine = 0.4,		-- origninal Damage from bots gets multiplied by this
-	damageFactorLMG = 0.4,			-- origninal Damage from bots gets multiplied by this
-	damageFactorPDW = 0.4,			-- origninal Damage from bots gets multiplied by this
+	damageFactorAssault = 0.3,		-- origninal Damage from bots gets multiplied by this
+	damageFactorCarabine = 0.3,		-- origninal Damage from bots gets multiplied by this
+	damageFactorLMG = 0.3,			-- origninal Damage from bots gets multiplied by this
+	damageFactorPDW = 0.3,			-- origninal Damage from bots gets multiplied by this
 	damageFactorSniper = 0.8,		-- origninal Damage from bots gets multiplied by this
-	damageFactorShotgun = 0.8,		-- origninal Damage from bots gets multiplied by this
+	damageFactorShotgun = 0.7,		-- origninal Damage from bots gets multiplied by this
 	damageFactorPistol = 0.7,		-- origninal Damage from bots gets multiplied by this
 	damageFactorKnife = 1.5,		-- origninal Damage from bots gets multiplied by this
 
