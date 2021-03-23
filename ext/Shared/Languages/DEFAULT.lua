@@ -165,6 +165,7 @@ Language:add(code, "Language", "");
 Language:add(code, "Select the language of this mod", "");
 Language:add(code, "Password", "");
 Language:add(code, "Password protection of these Mod", "");
+Language:add(code, "CANT_JOIN_BOT_TEAM", "");
 Language:add(code, "You are not permitted to change Bots. Please press F12 for authenticate!", "");
 Language:add(code, "Bot respawn activated!", "");
 Language:add(code, "Bot respawn deactivated!", "");
