@@ -33,8 +33,8 @@ class UserInterface {
 	
 	Handle(packet) {
 		if(window.location.href == 'webui://fun-bots/') {
-			console.log(packet);
-			console.warn(JSON.stringify(packet, 0, 1));
+			console.info(packet);
+			//console.warn(JSON.stringify(packet, 0, 1));
 		}
 		
 		let type			= packet.Type || null;
