@@ -90,23 +90,25 @@ function Bot:onUpdate(dt)
 		self.player.soldier:SingleStepEntry(self.player.controlledEntryId);
 	end
 
-	self._updateTimer		= self._updateTimer + dt;
-	self._aimUpdateTimer	= self._aimUpdateTimer + dt;
+	if g_Globals.isInputAllowed then
+		self._updateTimer		= self._updateTimer + dt;
+		self._aimUpdateTimer	= self._aimUpdateTimer + dt;
 
-	if self._aimUpdateTimer > StaticConfig.botAimUpdateCycle then
-		self:_updateAiming();
-		self._aimUpdateTimer = 0; --reset afterwards, to use it for targetinterpolation
-	end
+		if self._aimUpdateTimer > StaticConfig.botAimUpdateCycle then
+			self:_updateAiming();
+			self._aimUpdateTimer = 0; --reset afterwards, to use it for targetinterpolation
+		end
 
-	self:_updateYaw();
+		self:_updateYaw();
 
-	if self._updateTimer > StaticConfig.botUpdateCycle then
-		self._updateTimer = 0;
+		if self._updateTimer > StaticConfig.botUpdateCycle then
+			self._updateTimer = 0;
 
-		self:_setActiveVars();
-		self:_updateRespwawn();
-		self:_updateShooting();
-		self:_updateMovement(); --TODO: move-mode shoot
+			self:_setActiveVars();
+			self:_updateRespwawn();
+			self:_updateShooting();
+			self:_updateMovement(); --TODO: move-mode shoot
+		end
 	end
 end
 

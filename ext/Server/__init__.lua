@@ -121,11 +121,34 @@ function FunBotServer:_onLevelLoaded(levelName, gameMode)
     local respawnTimeModifier = tonumber(rconResponseTable[2]) / 100
 	if playerKilledDelay > 0 and respawnTimeModifier ~= nil then
 		Globals.respawnDelay = playerKilledDelay * respawnTimeModifier
-		print("found delay: "..tostring(Globals.respawnDelay))
 	else
-		Globals.respawnDelay = 10;
-		print("no delay found, use 10 as default")
+		Globals.respawnDelay = 10.0;
 	end
+
+	-- disable inputs on start of round
+	Globals.isInputAllowed = true
+    local s_EntityIterator = EntityManager:GetIterator("ServerInputRestrictionEntity")
+    local s_Entity = s_EntityIterator:Next()
+
+    while s_Entity do
+        s_Entity = Entity(s_Entity)
+        if s_Entity.data.instanceGuid == Guid('E8C37E6A-0C8B-4F97-ABDD-28715376BD2D') or -- cq / cq assault / tank- / air superiority
+        s_Entity.data.instanceGuid == Guid('6F42FBE3-428A-463A-9014-AA0C6E09DA64') or -- tdm
+        s_Entity.data.instanceGuid == Guid('9EDC59FB-5821-4A37-A739-FE867F251000') or -- rush / sq rush
+        s_Entity.data.instanceGuid == Guid('BF4003AC-4B85-46DC-8975-E6682815204D') or -- domination / scavenger
+        s_Entity.data.instanceGuid == Guid('AAF90FE3-D1CA-4CFE-84F3-66C6146AD96F') or -- gunmaster
+        s_Entity.data.instanceGuid == Guid('A40B08B7-D781-487A-8D0C-2E1B911C1949') then -- sqdm
+        -- rip CTF
+            s_Entity:RegisterEventCallback(function(entity, event)
+                if event.eventId == -559281700 and Globals.isInputAllowed then
+                    Globals.isInputAllowed = false
+                elseif event.eventId == 1928776733 and not Globals.isInputAllowed then
+                    Globals.isInputAllowed = true
+                end
+            end)
+        end
+        s_Entity = s_EntityIterator:Next()
+    end
 
 	if gameMode == 'TeamDeathMatchC0' or gameMode == 'TeamDeathMatch0' then
 		Globals.isTdm = true;
