@@ -236,10 +236,14 @@ function BotSpawner:updateBotAmountAndTeam()
 			if botTeam == TeamId.Team1 then
 				if Config.initNumberOfBots > botCountTeam1 then
 					self:spawnWayBots(nil, Config.initNumberOfBots-botCountTeam1, true, 0, 0, TeamId.Team1);
+				elseif Config.initNumberOfBots < botCountTeam1 then
+					BotManager:killAll(botCountTeam1-Config.initNumberOfBots, TeamId.Team1)
 				end
 			else
 				if Config.initNumberOfBots > botCountTeam2 then
 					self:spawnWayBots(nil, Config.initNumberOfBots-botCountTeam2, true, 0, 0, TeamId.Team2);
+				elseif Config.initNumberOfBots < botCountTeam1 then
+					BotManager:killAll(botCountTeam1-Config.initNumberOfBots, TeamId.Team2)
 				end
 			end
 		end
@@ -315,6 +319,7 @@ function BotSpawner:_onUpdate(dt, pass)
 			self._updateActive = false;
 			--garbage-collection of unwanted bots
 			BotManager:destroyDisabledBots();
+			BotManager:freshnTables();
 		end
 	end
 end

@@ -113,8 +113,10 @@ end
 --public functions
 function Bot:revive(player)
 	if self.kit == "Assault" and player.corpse ~= nil then
-		self._reviveActive = true;
-		self._shootPlayer = player;
+		if Config.botsRevive then
+			self._reviveActive = true;
+			self._shootPlayer = player;
+		end
 	end
 end
 
@@ -127,15 +129,15 @@ function Bot:shootAt(player, ignoreYaw)
 	if self.player.teamId == player.teamId then
 		return false;
 	end
-	
+
 	if player.soldier == nil or self.player.soldier == nil then
 		return false;
 	end
-	
+
 	-- don't shoot if too far away
 	if not ignoreYaw then
 		local distance = player.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans);
-		
+
 		if self.activeWeapon.type ~= "Sniper" and distance > Config.maxShootDistanceNoSniper then
 			return false;
 		end
@@ -707,12 +709,14 @@ function Bot:_updateShooting()
 							end
 						end
 						-- use grenade from time to time
-						local targetTimeValue = Config.botFireModeDuration - 1.0;
-						if ((self._shootModeTimer >= targetTimeValue) and (self._shootModeTimer < (targetTimeValue + StaticConfig.botUpdateCycle))) or Config.botWeapon == "Grenade" then
-							-- should be triggered only once per fireMode
-							if MathUtils:GetRandomInt(0,100) < 20 then
-								if self.grenade ~= nil then
-									self._grenadeActive = true;
+						if Config.botsThrowGrenades then
+							local targetTimeValue = Config.botFireModeDuration - 1.0;
+							if ((self._shootModeTimer >= targetTimeValue) and (self._shootModeTimer < (targetTimeValue + StaticConfig.botUpdateCycle))) or Config.botWeapon == "Grenade" then
+								-- should be triggered only once per fireMode
+								if MathUtils:GetRandomInt(0,100) < 20 then
+									if self.grenade ~= nil then
+										self._grenadeActive = true;
+									end
 								end
 							end
 						end
@@ -843,12 +847,14 @@ function Bot:_updateShooting()
 			end
 
 			-- deploy from time to time
-			if self.kit == "Support" or self.kit == "Assault" then
-				if self.gadget1.type == "Ammobag" or self.gadget1.type == "Medkit" then
-					self._deployTimer = self._deployTimer + StaticConfig.botUpdateCycle;
-					if self._deployTimer > Config.deployCycle then
-						self._deployTimer = 0;
-						self._deployActive = true;
+			if Config.botsDeploy then
+				if self.kit == "Support" or self.kit == "Assault" then
+					if self.gadget1.type == "Ammobag" or self.gadget1.type == "Medkit" then
+						self._deployTimer = self._deployTimer + StaticConfig.botUpdateCycle;
+						if self._deployTimer > Config.deployCycle then
+							self._deployTimer = 0;
+							self._deployActive = true;
+						end
 					end
 				end
 			end
