@@ -41,10 +41,10 @@ Config = {
 	reconWeapon = "L96_6x",			-- weapon of Recon class
 	pistol = "MP412Rex",			-- Bot pistol
 	knife = "Razor",				-- Bot knife
-	assaultWeaponSet = "Class",				-- weaponset of Assault class
-	engineerWeaponSet = "Class_PDW",		-- weaponset of Engineer class
-	supportWeaponSet = "Class_Shotgun",	-- weaponset of Support class
-	reconWeaponSet = "Class",				-- weaponset of Recon class
+	assaultWeaponSet = "Custom",	-- weaponset of Assault class
+	engineerWeaponSet = "Custom",	-- weaponset of Engineer class
+	supportWeaponSet = "Custom",	-- weaponset of Support class
+	reconWeaponSet = "Custom",		-- weaponset of Recon class
 
 	-- behaviour
 	fovForShooting = 245,			-- Degrees of FOV of Bot

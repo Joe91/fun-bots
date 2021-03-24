@@ -25,11 +25,12 @@ The Smart Node update
 - Bots use Grenades form time to time
 - improved spawning
 - Bugfix spawning
-- Many fixes and Improvements thanks to Bre_Arnold!! including:
+- Many fixes and Improvements thanks to Bree_Arnold!! including:
 	- Bots use the same spawn-delay as the players
 	- Bots don't move on round start
 - If Bots only in one team, players are kept in the other team
 - Shoot-Cycles adapted
+- custom-weapon-sets added
 
 
 ## [Unreleased - 1.6.2.1] - 2021-02-28

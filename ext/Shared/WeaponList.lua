@@ -2,6 +2,11 @@ class('WeaponList');
 
 require('__shared/WeaponClass');
 require('__shared/Config');
+require('__shared/WeaponLists/CustomWeaponsAssault');
+require('__shared/WeaponLists/CustomWeaponsEngineer');
+require('__shared/WeaponLists/CustomWeaponsRecon');
+require('__shared/WeaponLists/CustomWeaponsSupport');
+require('__shared/WeaponLists/CustomWeaponsPistols');
 
 -- create globals
 AllWeapons = {}
@@ -14,7 +19,6 @@ WeaponsSupport = {}
 
 function WeaponList:__init()
 	self._weapons = {};
-
 	local weapon = nil
 
 	---------------------------
@@ -340,7 +344,33 @@ function WeaponList:__init()
 	self:updateWeaponList();
 end
 
-function WeaponList:_useWeaponType(class, type)
+function WeaponList:_isCustomWeapon(class, name)
+	local customWeaponList = nil
+	local isCustomWeapon = false
+	if class == "Assault" then
+		customWeaponList = CustomWeaponsAssault;
+	elseif class == "Engineer" then
+		customWeaponList = CustomWeaponsEngineer;
+	elseif class == "Support" then
+		customWeaponList = CustomWeaponsSupport;
+	elseif class == "Recon" then
+		customWeaponList = CustomWeaponsRecon;
+	-- use thhis function for pistols as well
+	elseif class == "Pistol" then
+		customWeaponList = CustomWeaponsPistols;
+	end
+
+	for _,customName in pairs(customWeaponList) do
+		if (customName == name) then
+			isCustomWeapon = true;
+			break;
+		end
+	end
+
+	return isCustomWeapon;
+end
+
+function WeaponList:_useWeaponType(class, type, name)
 	local useThisWeapon = false;
 	local isClassWeapon = false;
 	local weaponSet = ""
@@ -365,27 +395,33 @@ function WeaponList:_useWeaponType(class, type)
 			isClassWeapon = true;
 		end
 	end
-	if type == "PDW" then
-		if weaponSet == "PDW" or
-		weaponSet == "Class_PDW" or
-		weaponSet == "Class_PDW_Shotgun" or
-		weaponSet == "PDW_Shotgun" then
-			useThisWeapon = true;
-		end
-	elseif type == "Shotgun" then
-		if weaponSet == "Shotgun" or
-		weaponSet == "Class_Shotgun" or
-		weaponSet == "Class_PDW_Shotgun" or
-		weaponSet == "PDW_Shotgun" then
-			useThisWeapon = true;
-		end
-	else
-		if weaponSet == "Class" or
-		weaponSet == "Class_Shotgun" or
-		weaponSet == "Class_PDW_Shotgun" or
-		weaponSet == "Class_PDW" then
-			if isClassWeapon then
+
+	-- check for custom-weapon
+	if weaponSet == "Custom" then
+		useThisWeapon = self:_isCustomWeapon(class, name);
+	else -- check for other classes
+		if type == "PDW" then
+			if weaponSet == "PDW" or
+			weaponSet == "Class_PDW" or
+			weaponSet == "Class_PDW_Shotgun" or
+			weaponSet == "PDW_Shotgun" then
 				useThisWeapon = true;
+			end
+		elseif type == "Shotgun" then
+			if weaponSet == "Shotgun" or
+			weaponSet == "Class_Shotgun" or
+			weaponSet == "Class_PDW_Shotgun" or
+			weaponSet == "PDW_Shotgun" then
+				useThisWeapon = true;
+			end
+		else
+			if weaponSet == "Class" or
+			weaponSet == "Class_Shotgun" or
+			weaponSet == "Class_PDW_Shotgun" or
+			weaponSet == "Class_PDW" then
+				if isClassWeapon then
+					useThisWeapon = true;
+				end
 			end
 		end
 	end
@@ -418,7 +454,10 @@ function WeaponList:updateWeaponList()
 			table.insert(KnifeWeapons, wep.name)
 
 		elseif (wep.type == 'Pistol') then
-			table.insert(PistoWeapons, wep.name)
+			--always use custom weapon
+			if self:_isCustomWeapon(wep.type, wep.name) then
+				table.insert(PistoWeapons, wep.name)
+			end
 
 		elseif (wep.type == 'Grenade') then
 			table.insert(GrenadeWeapons, wep.name)
@@ -449,16 +488,16 @@ function WeaponList:updateWeaponList()
 			table.insert(ReconGadget1,  wep.name)
 
 		else --'PDW' 'Shotgun' 'Assault' 'Carabine' 'LMG' 'Sniper'
-			if self:_useWeaponType("Assault", wep.type) then
+			if self:_useWeaponType("Assault", wep.type, wep.name) then
 				table.insert(WeaponsAssault, wep.name)
 			end
-			if self:_useWeaponType("Engineer", wep.type) then
+			if self:_useWeaponType("Engineer", wep.type, wep.name) then
 				table.insert(WeaponsEngineer, wep.name)
 			end
-			if self:_useWeaponType("Support", wep.type) then
+			if self:_useWeaponType("Support", wep.type, wep.name) then
 				table.insert(WeaponsSupport, wep.name)
 			end
-			if self:_useWeaponType("Recon", wep.type) then
+			if self:_useWeaponType("Recon", wep.type, wep.name) then
 				table.insert(WeaponsRecon, wep.name)
 			end
 		end
