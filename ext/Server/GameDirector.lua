@@ -92,7 +92,6 @@ function GameDirector:initObjectives()
 		if string.find(objectiveName:lower(), "spawn") ~= nil then
 			objective.isSpawnPath = true
 			objective.active = false
-			print("spawn objective found")
 		end
 		if g_Globals.isAssault then
 			if not objective.isBase then
@@ -100,9 +99,6 @@ function GameDirector:initObjectives()
 			end
 		end
 		table.insert(self.AllObjectives, objective)
-		print(objectiveName)
-		print(objective)
-		print(objective.isSpawnPath)
 	end
 	self:_updateValidObjectives()
 end
@@ -289,12 +285,10 @@ function GameDirector:getSpawnPath(team, squad, onlyBase)
 			end
 		end
 	end
-	print(possibleObjectives)
 	if #possibleObjectives > 0 then
 		local tempObj = possibleObjectives[MathUtils:GetRandomInt(1, #possibleObjectives)];
 		local availableSpawnPaths = nil
 		for _,objective in pairs(self.AllObjectives) do
-			print(objective.isSpawnPath)
 			if objective.isSpawnPath and string.find(objective.name, tempObj.name) ~= nil then
 				availableSpawnPaths = objective.name;
 				break;
