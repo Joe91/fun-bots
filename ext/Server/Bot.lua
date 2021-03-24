@@ -804,7 +804,7 @@ function Bot:_updateShooting()
 				self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 1); --does not work.
 				self.player.input:SetLevel(EntryInputActionEnum.EIAReload, 0);
 				self._shootModeTimer	= self._shootModeTimer + StaticConfig.botUpdateCycle;
-				self.activeMoveMode		= 9; -- movement-mode : attack
+				self.activeMoveMode		= 8; -- movement-mode : revive
 				self._reloadTimer		= 0; -- reset reloading
 
 				--check for revive if close
@@ -854,6 +854,7 @@ function Bot:_updateShooting()
 			self._grenadeActive 	= false;
 			self._shootPlayer		= nil;
 			self._lastShootPlayer	= nil;
+			self._reviveActive		= false;
 			self._shootModeTimer	= 0;
 			self._attackMode		= 0;
 
@@ -1359,8 +1360,8 @@ function Bot:_updateMovement()
 			end
 
 			if self._shootPlayer ~= nil and self._shootPlayer.corpse ~= nil then
-				if self.player.soldier.worldTransform.trans:Distance(self._shootPlayer.corpse) < 0.5 then
-					self.activeSpeedValue = 1;
+				if self.player.soldier.worldTransform.trans:Distance(self._shootPlayer.corpse.worldTransform.trans) < 1 then
+					self.activeSpeedValue = 0;
 				end
 			end
 		end
