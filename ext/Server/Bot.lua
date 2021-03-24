@@ -123,7 +123,7 @@ function Bot:revive(player)
 end
 
 function Bot:shootAt(player, ignoreYaw)
-	if self._actionActive or self._reviveActive then
+	if self._actionActive or self._reviveActive or self._grenadeActive then
 		return false;
 	end
 
@@ -431,19 +431,25 @@ function Bot:_updateAiming()
 		local pitchCorrection		= 0.0;
 		local fullPositionTarget	=  self._shootPlayer.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(self._shootPlayer, true);
 		local fullPositionBot		= self.player.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(self.player, false);
+		local grenadePith			= 0.0;
 
 		if not self.knifeMode then
 			local distanceToPlayer	= fullPositionTarget:Distance(fullPositionBot);
 			--calculate how long the distance is --> time to travel
-			local timeToTravel = 0
+			local factorForMovement = 0.0
 			if self.activeWeapon.type == "Grenade" then
-				timeToTravel 		=  2 * 0.8 * self.activeWeapon.bulletSpeed / self.activeWeapon.bulletDrop;
+				if distanceToPlayer < 30 then
+					local angle =  math.asin((distanceToPlayer * self.activeWeapon.bulletDrop)/(self.activeWeapon.bulletSpeed*self.activeWeapon.bulletSpeed));
+					grenadePith = (math.pi / 2) - (angle / 2);
+				else
+					grenadePith = (math.pi / 4)
+				end
 			else
-				timeToTravel		= (distanceToPlayer / self.activeWeapon.bulletSpeed);
+				local timeToTravel		= (distanceToPlayer / self.activeWeapon.bulletSpeed);
+				factorForMovement	= (timeToTravel) / self._aimUpdateTimer;
+				pitchCorrection	= 0.5 * timeToTravel * timeToTravel * self.activeWeapon.bulletDrop;
 			end
-			local factorForMovement	= (timeToTravel) / self._aimUpdateTimer;
-			pitchCorrection	= 0.5 * timeToTravel * timeToTravel * self.activeWeapon.bulletDrop;
-			
+
 			if self._lastShootPlayer == self._shootPlayer then
 				targetMovement			= (fullPositionTarget - self._lastTargetTrans) * factorForMovement; --movement in one dt
 			end
@@ -460,8 +466,13 @@ function Bot:_updateAiming()
 		local yaw		= (atanDzDx > math.pi / 2) and (atanDzDx - math.pi / 2) or (atanDzDx + 3 * math.pi / 2);
 
 		--calculate pitch
-		local distance	= math.sqrt(dz ^ 2 + dx ^ 2);
-		local pitch		= math.atan(dy, distance);
+		local pitch = 0;
+		if self.activeWeapon.type == "Grenade" then
+			pitch	= grenadePith;
+		else
+			local distance	= math.sqrt(dz ^ 2 + dx ^ 2);
+			pitch	= math.atan(dy, distance);
+		end
 
 		self._targetPitch	= pitch;
 		self._targetYaw		= yaw;
@@ -653,7 +664,9 @@ function Bot:_updateShooting()
 				self._deployActive = false;
 				self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 1); --does not work.
 				self.player.input:SetLevel(EntryInputActionEnum.EIAReload, 0);
-				self._shootModeTimer	= self._shootModeTimer + StaticConfig.botUpdateCycle;
+				if not self._grenadeActive then
+					self._shootModeTimer	= self._shootModeTimer + StaticConfig.botUpdateCycle;
+				end
 				self.activeMoveMode		= 9; -- movement-mode : attack
 				self._reloadTimer		= 0; -- reset reloading
 
@@ -685,11 +698,10 @@ function Bot:_updateShooting()
 				end
 
 				if self._grenadeActive then -- throw grenade
-					if self.player.soldier.weaponsComponent.currentWeapon.secondaryAmmo <= 1 then
+					if self.player.soldier.weaponsComponent.currentWeapon.secondaryAmmo <= 0 then
 						self.player.soldier.weaponsComponent.currentWeapon.secondaryAmmo = self.player.soldier.weaponsComponent.currentWeapon.secondaryAmmo + 1
-					end
-					if self._shotTimer > 0.5 then
 						self._grenadeActive = false;
+						self._shootModeTimer = Config.botFireModeDuration;
 					end
 				end
 				-- target in vehicle - use gadget 2 if rocket --TODO: don't shoot with other classes
@@ -715,10 +727,10 @@ function Bot:_updateShooting()
 						end
 						-- use grenade from time to time
 						if Config.botsThrowGrenades then
-							local targetTimeValue = Config.botFireModeDuration - 1.0;
-							if ((self._shootModeTimer >= targetTimeValue) and (self._shootModeTimer < (targetTimeValue + StaticConfig.botUpdateCycle))) or Config.botWeapon == "Grenade" then
+							local targetTimeValue = Config.botFireModeDuration - 0.5;
+							if ((self._shootModeTimer >= targetTimeValue) and (self._shootModeTimer < (targetTimeValue + StaticConfig.botUpdateCycle)) and not self._grenadeActive) or Config.botWeapon == "Grenade" then
 								-- should be triggered only once per fireMode
-								if MathUtils:GetRandomInt(0,100) < 18 then
+								if MathUtils:GetRandomInt(0,100) < 20 then
 									if self.grenade ~= nil then
 										self._grenadeActive = true;
 									end
@@ -779,7 +791,8 @@ function Bot:_updateShooting()
 
 			else
 				self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
-				self._weaponToUse 		= "Primary"
+				self._targetPitch 		= 0.0;
+				self._weaponToUse 		= "Primary";
 				self._shotTimer			= -Config.botFirstShotDelay;
 				self._shootPlayer		= nil;
 				self._grenadeActive 	= false;
