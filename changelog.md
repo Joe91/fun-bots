@@ -2,7 +2,7 @@
  
 ## [Unreleased - 1.7.X.X] - 2021-03-XX
  
-[Download](https://github.com/Joe91/fun-bots/archive/V1.7.0.8.zip)  
+[Download](https://github.com/Joe91/fun-bots/archive/V1.7.0.9.zip)  
 The Smart Node update
 
 - Conquest supported
@@ -30,7 +30,8 @@ The Smart Node update
 	- Bots don't move on round start
 - If Bots only in one team, players are kept in the other team
 - Shoot-Cycles adapted
-- custom-weapon-sets added
+- custom-weapon-sets added (shared/WeaponLists). Active if you choose "Custom" as weapon class
+- fix incompatibility with No-PreRound (thanks to Bree_Arnold!)
 
 
 ## [Unreleased - 1.6.2.1] - 2021-02-28
