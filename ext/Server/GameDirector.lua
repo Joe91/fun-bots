@@ -74,6 +74,7 @@ function GameDirector:initObjectives()
 			team = TeamId.TeamNeutral,
 			isAttacked = false,
 			isBase = false,
+			isSpawnPath = false,
 			destroyed = false,
 			active = true,
 			subObjective = false,
@@ -87,6 +88,10 @@ function GameDirector:initObjectives()
 			else
 				objective.team = TeamId.Team2
 			end
+		end
+		if string.find(objectiveName:lower(), "spawn") ~= nil then
+			objective.isSpawnPath = true
+			objective.active = false
 		end
 		if g_Globals.isAssault then
 			if not objective.isBase then
@@ -199,7 +204,7 @@ function GameDirector:_updateValidObjectives()
 			local fields = objective.name:split(" ")
 			local active = false;
 			local subObjective = false;
-			if not objective.isBase then
+			if not objective.isBase and not objective.isSpawnPath then
 				if #fields > 1 then
 					local index = tonumber(fields[2])
 					for _,targetIndex in pairs(mcomIndexes) do
@@ -269,7 +274,7 @@ function GameDirector:getSpawnPath(team, squad, onlyBase)
 							if objective.isBase then
 								table.insert(possibleBases, path)
 							elseif not onlyBase then
-								table.insert(possibleObjectives, path)
+								table.insert(possibleObjectives, {name = objective.name, path = path})
 							end
 						elseif objective.team ~= team and objective.isBase and not objective.active and objective.name == self.RushAttackingBase then --rush attacking team
 							table.insert(possibleBases, path)
@@ -281,11 +286,27 @@ function GameDirector:getSpawnPath(team, squad, onlyBase)
 		end
 	end
 	if #possibleObjectives > 0 then
-		return possibleObjectives[MathUtils:GetRandomInt(1, #possibleObjectives)];
+		local tempObj = possibleObjectives[MathUtils:GetRandomInt(1, #possibleObjectives)];
+		local availableSpawnPaths = nil
+		for _,objective in pairs(self.AllObjectives) do
+			if objective.isSpawnPath and string.find(objective.name, tempObj.name) ~= nil then
+				availableSpawnPaths = objective.name;
+				break;
+			end
+		end
+		-- check for spawn objectives
+		if availableSpawnPaths ~= nil then
+			local allObjectives = g_NodeCollection:GetKnownOjectives();
+			local pathsWithObjective = allObjectives[availableSpawnPaths]
+			return pathsWithObjective[MathUtils:GetRandomInt(1, #pathsWithObjective)], 1;
+		else
+			return tempObj.path, MathUtils:GetRandomInt(1, #g_NodeCollection:Get(nil, tempObj.path));
+		end
 	elseif #possibleBases > 0 then
-		return possibleBases[MathUtils:GetRandomInt(1, #possibleBases)];
+		local pathIndex = possibleBases[MathUtils:GetRandomInt(1, #possibleBases)]
+		return pathIndex, MathUtils:GetRandomInt(1, #g_NodeCollection:Get(nil, pathIndex));
 	else
-		return 0;
+		return 0 , 0;
 	end
 end
 
@@ -312,10 +333,17 @@ function GameDirector:_translateObjective(positon, name)
 					local node = g_NodeCollection:Get(1, path)
 					if node ~= nil and node.Data.Objectives ~= nil then
 						if #node.Data.Objectives == 1 then --possible objective
-							local distance = positon:Distance(node.Position)
-							if closestDistance == nil or closestDistance > distance then
-								closestObjective = objective;
-								closestDistance = distance;
+							local valid = true;
+							local tempObj = self:getObjectiveObject(objective)
+							if tempObj.isSpawnPath or tempObj.isBase then
+								valid = false;
+							end
+							if valid then
+								local distance = positon:Distance(node.Position)
+								if closestDistance == nil or closestDistance > distance then
+									closestObjective = objective;
+									closestDistance = distance;
+								end
 							end
 						end
 					end

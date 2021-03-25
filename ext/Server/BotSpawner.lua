@@ -420,7 +420,7 @@ function BotSpawner:_getSpawnPoint(team, squad)
 	-- CONQUEST
 	-- spawn at base, squad-mate, captured flag
 	if g_Globals.isConquest then
-		activeWayIndex = g_GameDirector:getSpawnPath(team, squad, false)
+		activeWayIndex, indexOnPath = g_GameDirector:getSpawnPath(team, squad, false)
 
 		if activeWayIndex == 0 then
 			-- something went wrong. use random path
@@ -428,8 +428,8 @@ function BotSpawner:_getSpawnPoint(team, squad)
 				print("no base or capturepoint found to spawn")
 			end
 			activeWayIndex = MathUtils:GetRandomInt(1, #g_NodeCollection:GetPaths())
+			indexOnPath = MathUtils:GetRandomInt(1, #g_NodeCollection:Get(nil, activeWayIndex))
 		end
-		indexOnPath = MathUtils:GetRandomInt(1, #g_NodeCollection:Get(nil, activeWayIndex))
 
 		targetNode = g_NodeCollection:Get(indexOnPath, activeWayIndex)
 
@@ -437,7 +437,7 @@ function BotSpawner:_getSpawnPoint(team, squad)
 	-- RUSH
 	-- spawn at base (of zone) or squad-mate
 	elseif g_Globals.isRush then
-		activeWayIndex = g_GameDirector:getSpawnPath(team, squad, true)
+		activeWayIndex, indexOnPath = g_GameDirector:getSpawnPath(team, squad, true)
 
 		if activeWayIndex == 0 then
 			-- something went wrong. use random path
@@ -445,8 +445,8 @@ function BotSpawner:_getSpawnPoint(team, squad)
 				print("no base found to spawn")
 			end
 			activeWayIndex = MathUtils:GetRandomInt(1, #g_NodeCollection:GetPaths())
+			indexOnPath = MathUtils:GetRandomInt(1, #g_NodeCollection:Get(nil, activeWayIndex))
 		end
-		indexOnPath = MathUtils:GetRandomInt(1, #g_NodeCollection:Get(nil, activeWayIndex))
 
 		targetNode = g_NodeCollection:Get(indexOnPath, activeWayIndex)
 

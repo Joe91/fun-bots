@@ -1,5 +1,6 @@
 WeaponSets = {
 	'Class',
+	'Custom',
 	'PDW',
 	'Shotgun',
 	'Class_PDW',

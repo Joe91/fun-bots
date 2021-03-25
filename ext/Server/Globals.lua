@@ -13,7 +13,8 @@ function Globals:__init()
 	self.isAssault			= false;
 	self.maxPlayers			= 0;
 	self.respawnDelay		= 0;
-	self.isInputAllowed		= 0;
+	self.isInputAllowed		= false;
+	self.isInputRestrictionDisabled = false;
 
 	self.respawnWayBots 	= false;	--used for the runtime respawn
 	self.attackWayBots 		= false;	--used for the runtime attack
