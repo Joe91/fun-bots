@@ -1175,12 +1175,14 @@ function Bot:_updateMovement()
 								end
 							end
 							-- CHECK FOR PATH-SWITCHES
-							local switchPath, newWaypoint = g_PathSwitcher:getNewPath(self.name, point, self._objective);
+							local newWaypoint = nil
+							local switchPath = false
+							switchPath, newWaypoint = g_PathSwitcher:getNewPath(self.name, point, self._objective);
 							if not self.player.alive then
 								return
 							end
 
-							if switchPath and not self._onSwitch then
+							if switchPath == true and not self._onSwitch then
 								if (self._objective ~= '') then
 									-- 'best' direction for objective on switch
 									local direction = g_NodeCollection:ObjectiveDirection(newWaypoint, self._objective)

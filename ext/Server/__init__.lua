@@ -127,6 +127,8 @@ function FunBotServer:_onLevelLoaded(levelName, gameMode)
 
 	-- disable inputs on start of round
 	Globals.isInputAllowed = true
+	Globals.isInputRestrictionDisabled = false;
+
     local s_EntityIterator = EntityManager:GetIterator("ServerInputRestrictionEntity")
     local s_Entity = s_EntityIterator:Next()
 
@@ -140,10 +142,15 @@ function FunBotServer:_onLevelLoaded(levelName, gameMode)
         s_Entity.data.instanceGuid == Guid('A40B08B7-D781-487A-8D0C-2E1B911C1949') then -- sqdm
         -- rip CTF
             s_Entity:RegisterEventCallback(function(entity, event)
-                if event.eventId == -559281700 and Globals.isInputAllowed then
-                    Globals.isInputAllowed = false
-                elseif event.eventId == 1928776733 and not Globals.isInputAllowed then
+				if event.eventId == MathUtils:FNVHash("Disable") then
                     Globals.isInputAllowed = true
+                    Globals.isInputRestrictionDisabled = true
+                elseif not Globals.isInputRestrictionDisabled then
+                    if event.eventId == MathUtils:FNVHash("Activate") and Globals.isInputAllowed then
+                        Globals.isInputAllowed = false
+                    elseif event.eventId == MathUtils:FNVHash("Deactivate") and not Globals.isInputAllowed then
+                        Globals.isInputAllowed = true
+                    end
                 end
             end)
         end
