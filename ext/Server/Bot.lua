@@ -222,16 +222,6 @@ function Bot:resetVars()
 	self._deployActive 			= false;
 	self._grenadeActive			= false;
 	self._weaponToUse 			= "Primary";
-
-	self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 0);
-	self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
-	self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 0);
-	self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0);
-	self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0);
-	self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
-	self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
-	self.player.input:SetLevel(EntryInputActionEnum.EIAThrottle, 0);
-	self.player.input:SetLevel(EntryInputActionEnum.EIASprint, 0);
 end
 
 function Bot:setVarsStatic(player)
