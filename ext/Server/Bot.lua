@@ -428,11 +428,11 @@ function Bot:_updateAiming()
 			--calculate how long the distance is --> time to travel
 			local factorForMovement = 0.0
 			if self.activeWeapon.type == "Grenade" then
-				if distanceToPlayer < 30 then
-					local angle =  math.asin((distanceToPlayer * self.activeWeapon.bulletDrop)/(self.activeWeapon.bulletSpeed*self.activeWeapon.bulletSpeed));
-					grenadePith = (math.pi / 2) - (angle / 2);
-				else
+				local angle =  math.asin((distanceToPlayer * self.activeWeapon.bulletDrop)/(self.activeWeapon.bulletSpeed*self.activeWeapon.bulletSpeed));
+				if angle ~= angle then	--NAN check
 					grenadePith = (math.pi / 4)
+				else
+					grenadePith = (math.pi / 2) - (angle / 2);
 				end
 			else
 				local timeToTravel		= (distanceToPlayer / self.activeWeapon.bulletSpeed);
