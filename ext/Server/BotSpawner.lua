@@ -838,7 +838,7 @@ function BotSpawner:setBotWeapons(bot, botKit, newWeapons)
 		elseif botKit == "Engineer" then
 			local weapon = Config.engineerWeapon;
 			if Config.useRandomWeapon then
-				weapon = WeaponsEngineer[MathUtils:GetRandomInt(1, #WeaponsEngineer)]
+				weapon = EngineerPrimary[MathUtils:GetRandomInt(1, #EngineerPrimary)]
 			end
 			bot.primary = WeaponList:getWeapon(weapon)
 			bot.gadget2 = WeaponList:getWeapon(EngineerGadget2[MathUtils:GetRandomInt(1, #EngineerGadget2)]);
@@ -849,7 +849,7 @@ function BotSpawner:setBotWeapons(bot, botKit, newWeapons)
 		elseif botKit == "Support" then
 			local weapon = Config.supportWeapon;
 			if Config.useRandomWeapon then
-				weapon = WeaponsSupport[MathUtils:GetRandomInt(1, #WeaponsSupport)]
+				weapon = SupportPrimary[MathUtils:GetRandomInt(1, #SupportPrimary)]
 			end
 			bot.primary = WeaponList:getWeapon(weapon)
 			bot.gadget2 = WeaponList:getWeapon(SupportGadget2[MathUtils:GetRandomInt(1, #SupportGadget2)]);
@@ -860,7 +860,7 @@ function BotSpawner:setBotWeapons(bot, botKit, newWeapons)
 		else
 			local weapon = Config.reconWeapon;
 			if Config.useRandomWeapon then
-				weapon = WeaponsRecon[MathUtils:GetRandomInt(1, #WeaponsRecon)]
+				weapon = ReconPrimary[MathUtils:GetRandomInt(1, #ReconPrimary)]
 			end
 			bot.primary = WeaponList:getWeapon(weapon)
 			bot.gadget2 = WeaponList:getWeapon(ReconGadget2[MathUtils:GetRandomInt(1, #ReconGadget2)]);

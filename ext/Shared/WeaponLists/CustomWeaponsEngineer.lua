@@ -55,4 +55,11 @@ CustomWeaponsEngineer = {
 	-- Gadget 2
 	'SMAW',
 	'RPG7',
+
+	-- Knife
+	'Razor',
+	'Knife',
+
+	-- Grenade
+	'M67'
 }
