@@ -590,9 +590,7 @@ function GameDirector:_onUpdate(delta)
 		-- check objective statuses
 		for botTeam, bots in pairs(self.BotsByTeam) do
 			for _,objective in pairs(self.AllObjectives) do
-				if not objective.isBase and objective.active and not objective.destroyed then
-					objective.assigned[botTeam] = 0;
-				end
+				objective.assigned[botTeam] = 0;
 			end
 		end
 
@@ -630,30 +628,34 @@ function GameDirector:_onUpdate(delta)
 					local subObjective = self:getSubObjectiveFromObj(objective.name)
 					objective.assigned[botTeam] = objective.assigned[botTeam] + 1
 					if subObjective ~= nil then
-						-- check for assignment
-						if self:_useSubobjective(botTeam, objective.name) then
-							local botPossible = false;
-							for _,botName in pairs(objective.bots) do
-								if bot.name == botName then
-									botPossible = true;
-									break;
+						local tempObjective = self:getObjectiveObject(subObjective)
+						if tempObjective.active and not tempObjective.destroyed then
+							-- check for assignment
+							if self:_useSubobjective(botTeam, subObjective) then
+								local botPossible = false;
+								for _,botName in pairs(objective.bots) do
+									if bot.name == botName then
+										botPossible = true;
+										break;
+									end
 								end
-							end
-							if botPossible then
-								local tempObjective = self:getObjectiveObject(subObjective)
-								if tempObjective.assigned[botTeam] < 2 then
-									tempObjective.assigned[botTeam] = tempObjective.assigned[botTeam] + 1
-									bot:setObjective(subObjective)
+								if botPossible then
+									if tempObjective.assigned[botTeam] < 2 then
+										tempObjective.assigned[botTeam] = tempObjective.assigned[botTeam] + 1
+										bot:setObjective(subObjective)
+									end
 								end
 							end
 						end
 					end
 					if parentObjective ~= nil then
 						local tempObjective = self:getObjectiveObject(parentObjective)
-						tempObjective.assigned[botTeam] = tempObjective.assigned[botTeam] + 1
-						-- check for leave of subObjective
-						if not self:_useSubobjective(botTeam, objective.name) then
-							bot:setObjective(parentObjective)
+						if tempObjective.active and not tempObjective.destroyed then
+							tempObjective.assigned[botTeam] = tempObjective.assigned[botTeam] + 1
+							-- check for leave of subObjective
+							if not self:_useSubobjective(botTeam, objective.name) then
+								bot:setObjective(parentObjective)
+							end
 						end
 					end
 					if objective.isBase or not objective.active or objective.destroyed then
