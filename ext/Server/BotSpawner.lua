@@ -824,56 +824,51 @@ end
 
 function BotSpawner:setBotWeapons(bot, botKit, newWeapons)
 	if newWeapons then
-		bot.sidearm = nil;
 		if botKit == "Assault" then
 			local weapon = Config.assaultWeapon;
 			if Config.useRandomWeapon then
-				weapon = WeaponsAssault[MathUtils:GetRandomInt(1, #WeaponsAssault)]
+				weapon = AssaultPrimary[MathUtils:GetRandomInt(1, #AssaultPrimary)]
 			end
 			bot.primary = WeaponList:getWeapon(weapon)
-			bot.gadget2 = WeaponList:getWeapon(AssaultGadget2[1]); --defib
-			bot.gadget1 = WeaponList:getWeapon(AssaultGadget1[1]); --medkit
+			bot.gadget2 = WeaponList:getWeapon(AssaultGadget2[MathUtils:GetRandomInt(1, #AssaultGadget2)]);
+			bot.gadget1 = WeaponList:getWeapon(AssaultGadget1[MathUtils:GetRandomInt(1, #AssaultGadget1)]);
+			bot.pistol = WeaponList:getWeapon(AssaultPistol[MathUtils:GetRandomInt(1, #AssaultPistol)]);
+			bot.grenade = WeaponList:getWeapon(AssaultGrenade[MathUtils:GetRandomInt(1, #AssaultGrenade)]);
+			bot.knife = WeaponList:getWeapon(AssaultKnife[MathUtils:GetRandomInt(1, #AssaultKnife)]);
 		elseif botKit == "Engineer" then
 			local weapon = Config.engineerWeapon;
 			if Config.useRandomWeapon then
 				weapon = WeaponsEngineer[MathUtils:GetRandomInt(1, #WeaponsEngineer)]
 			end
-			local gadget2Weapon = EngineerGadget2[MathUtils:GetRandomInt(1, #EngineerGadget2)]
-			local gadget1Weapon = EngineerGadget1[MathUtils:GetRandomInt(1, #EngineerGadget1)]
 			bot.primary = WeaponList:getWeapon(weapon)
-			bot.gadget2 = WeaponList:getWeapon(gadget2Weapon)
-			bot.gadget1 = WeaponList:getWeapon(gadget1Weapon)
+			bot.gadget2 = WeaponList:getWeapon(EngineerGadget2[MathUtils:GetRandomInt(1, #EngineerGadget2)]);
+			bot.gadget1 = WeaponList:getWeapon(EngineerGadget1[MathUtils:GetRandomInt(1, #EngineerGadget1)]);
+			bot.pistol = WeaponList:getWeapon(EngineerPistol[MathUtils:GetRandomInt(1, #EngineerPistol)]);
+			bot.grenade = WeaponList:getWeapon(EngineerGrenade[MathUtils:GetRandomInt(1, #EngineerGrenade)]);
+			bot.knife = WeaponList:getWeapon(EngineerKnife[MathUtils:GetRandomInt(1, #EngineerKnife)]);
 		elseif botKit == "Support" then
 			local weapon = Config.supportWeapon;
 			if Config.useRandomWeapon then
 				weapon = WeaponsSupport[MathUtils:GetRandomInt(1, #WeaponsSupport)]
 			end
 			bot.primary = WeaponList:getWeapon(weapon)
-			local gadget2Weapon = SupportGadget2[MathUtils:GetRandomInt(1, #SupportGadget2)]
-			local gadget1Weapon = SupportGadget1[MathUtils:GetRandomInt(1, #SupportGadget1)]
-			bot.gadget2 = WeaponList:getWeapon(gadget2Weapon)
-			bot.gadget1 = WeaponList:getWeapon(gadget1Weapon)
+			bot.gadget2 = WeaponList:getWeapon(SupportGadget2[MathUtils:GetRandomInt(1, #SupportGadget2)]);
+			bot.gadget1 = WeaponList:getWeapon(SupportGadget1[MathUtils:GetRandomInt(1, #SupportGadget1)]);
+			bot.pistol = WeaponList:getWeapon(SupportPistol[MathUtils:GetRandomInt(1, #SupportPistol)]);
+			bot.grenade = WeaponList:getWeapon(SupportGrenade[MathUtils:GetRandomInt(1, #SupportGrenade)]);
+			bot.knife = WeaponList:getWeapon(SupportKnife[MathUtils:GetRandomInt(1, #SupportKnife)]);
 		else
 			local weapon = Config.reconWeapon;
 			if Config.useRandomWeapon then
 				weapon = WeaponsRecon[MathUtils:GetRandomInt(1, #WeaponsRecon)]
 			end
 			bot.primary = WeaponList:getWeapon(weapon)
-			local gadget2Weapon = ReconGadget2[MathUtils:GetRandomInt(1, #ReconGadget2)]
-			local gadget1Weapon = ReconGadget1[MathUtils:GetRandomInt(1, #ReconGadget1)]
-			bot.gadget2 = WeaponList:getWeapon(gadget2Weapon)
-			bot.gadget1 = WeaponList:getWeapon(gadget1Weapon)
+			bot.gadget2 = WeaponList:getWeapon(ReconGadget2[MathUtils:GetRandomInt(1, #ReconGadget2)]);
+			bot.gadget1 = WeaponList:getWeapon(ReconGadget1[MathUtils:GetRandomInt(1, #ReconGadget1)]);
+			bot.pistol = WeaponList:getWeapon(ReconPistol[MathUtils:GetRandomInt(1, #ReconPistol)]);
+			bot.grenade = WeaponList:getWeapon(ReconGrenade[MathUtils:GetRandomInt(1, #ReconGrenade)]);
+			bot.knife = WeaponList:getWeapon(ReconKnife[MathUtils:GetRandomInt(1, #ReconKnife)]);
 		end
-		local knife = Config.knife;
-		local pistol = Config.pistol
-		local grenade = GrenadeWeapons[MathUtils:GetRandomInt(1, #GrenadeWeapons)]
-		if Config.useRandomWeapon then
-			knife = KnifeWeapons[MathUtils:GetRandomInt(1, #KnifeWeapons)]
-			pistol = PistoWeapons[MathUtils:GetRandomInt(1, #PistoWeapons)]
-		end
-		bot.pistol = WeaponList:getWeapon(pistol)
-		bot.knife = WeaponList:getWeapon(knife)
-		bot.grenade = WeaponList:getWeapon(grenade)
 	end
 
 	if Config.botWeapon == "Primary" or Config.botWeapon == "Auto" then

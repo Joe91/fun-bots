@@ -6,16 +6,32 @@ require('__shared/WeaponLists/CustomWeaponsAssault');
 require('__shared/WeaponLists/CustomWeaponsEngineer');
 require('__shared/WeaponLists/CustomWeaponsRecon');
 require('__shared/WeaponLists/CustomWeaponsSupport');
-require('__shared/WeaponLists/CustomWeaponsPistols');
 
 -- create globals
-AllWeapons = {}
-KnifeWeapons = {}
-PistoWeapons = {}
-WeaponsAssault = {}
-WeaponsEngineer = {}
-WeaponsRecon = {}
-WeaponsSupport = {}
+AssaultPrimary = {}
+AssaultPistol = {}
+AssaultKnife = {}
+AssaultGadget1 = {}
+AssaultGadget2 = {}
+AssaultGrenade = {}
+EngineerPrimary = {}
+EngineerPistol = {}
+EngineerKnife = {}
+EngineerGadget1 = {}
+EngineerGadget2 = {}
+EngineerGrenade = {}
+SupportPrimary = {}
+SupportPistol = {}
+SupportKnife = {}
+SupportGadget1 = {}
+SupportGadget2 = {}
+SupportGrenade = {}
+ReconPrimary = {}
+ReconPistol = {}
+ReconKnife = {}
+ReconGadget1 = {}
+ReconGadget2 = {}
+ReconGrenade = {}
 
 function WeaponList:__init()
 	self._weapons = {};
@@ -414,7 +430,7 @@ function WeaponList:_useWeaponType(class, type, name)
 			weaponSet == "PDW_Shotgun" then
 				useThisWeapon = true;
 			end
-		else
+		elseif type == "Assault" or type == "Carabine" or type == "LMG" or type == "Sniper" then
 			if weaponSet == "Class" or
 			weaponSet == "Class_Shotgun" or
 			weaponSet == "Class_PDW_Shotgun" or
@@ -423,6 +439,9 @@ function WeaponList:_useWeaponType(class, type, name)
 					useThisWeapon = true;
 				end
 			end
+		else
+			-- for all other weapons - use class-list
+			useThisWeapon = self:_isCustomWeapon(class, name);
 		end
 	end
 	return useThisWeapon;
@@ -430,75 +449,94 @@ end
 
 function WeaponList:updateWeaponList()
 	AllWeapons = {}
-	KnifeWeapons = {}
-	PistoWeapons = {}
-	WeaponsAssault = {}
-	WeaponsEngineer = {}
-	WeaponsRecon = {}
-	WeaponsSupport = {}
-	GrenadeWeapons = {}
-	EngineerGadget2 = {}
-	AssaultGadget2 = {}
-	ReconGadget2 = {}
-	SupportGadget2 = {}
-	EngineerGadget1 = {}
+
+	AssaultPrimary = {}
+	AssaultPistol = {}
+	AssaultKnife = {}
 	AssaultGadget1 = {}
-	ReconGadget1 = {}
+	AssaultGadget2 = {}
+	AssaultGrenade = {}
+	EngineerPrimary = {}
+	EngineerPistol = {}
+	EngineerKnife = {}
+	EngineerGadget1 = {}
+	EngineerGadget2 = {}
+	EngineerGrenade = {}
+	SupportPrimary = {}
+	SupportPistol = {}
+	SupportKnife = {}
 	SupportGadget1 = {}
+	SupportGadget2 = {}
+	SupportGrenade = {}
+	ReconPrimary = {}
+	ReconPistol = {}
+	ReconKnife = {}
+	ReconGadget1 = {}
+	ReconGadget2 = {}
+	ReconGrenade = {}
 
 	for i=1, #self._weapons do
 		local wep = self._weapons[i]
 		table.insert(AllWeapons, wep.name)
 
-		if (wep.type == 'Knife') then
-			table.insert(KnifeWeapons, wep.name)
-
-		elseif (wep.type == 'Pistol') then
-			--always use custom weapon
-			if self:_isCustomWeapon(wep.type, wep.name) then
-				table.insert(PistoWeapons, wep.name)
+		if self:_useWeaponType("Assault", wep.type, wep.name) then
+			if (wep.type == 'Knife') then
+				table.insert(AssaultKnife, wep.name)
+			elseif (wep.type == 'Pistol') then
+				table.insert(AssaultPistol, wep.name)
+			elseif (wep.type == 'Grenade') then
+				table.insert(AssaultGrenade, wep.name)
+			elseif (wep.type == "Medkit") then
+				table.insert(AssaultGadget1,  wep.name)
+			elseif (wep.type == "Defibrillator") then
+				table.insert(AssaultGadget2,  wep.name)
+			else
+				table.insert(AssaultPrimary, wep.name)
 			end
-
-		elseif (wep.type == 'Grenade') then
-			table.insert(GrenadeWeapons, wep.name)
-		
-		--Gadgets
-		elseif (wep.type == "Rocket") then
-			table.insert(EngineerGadget2,  wep.name)
-
-		elseif (wep.type == "Defibrillator") then
-			table.insert(AssaultGadget2,  wep.name)
-
-		elseif (wep.type == "Claymore") or (wep.type == "C4") then
-			table.insert(SupportGadget2,  wep.name)
-
-		elseif (wep.type == "Beacon") then
-			table.insert(ReconGadget2,  wep.name)
-		
-		elseif (wep.type == "Torch") then
-			table.insert(EngineerGadget1,  wep.name)
-
-		elseif (wep.type == "Medkit") then
-			table.insert(AssaultGadget1,  wep.name)
-
-		elseif (wep.type == "Ammobag") then
-			table.insert(SupportGadget1,  wep.name)
-
-		elseif (wep.type == "Tug") then
-			table.insert(ReconGadget1,  wep.name)
-
-		else --'PDW' 'Shotgun' 'Assault' 'Carabine' 'LMG' 'Sniper'
-			if self:_useWeaponType("Assault", wep.type, wep.name) then
-				table.insert(WeaponsAssault, wep.name)
+		end
+		if self:_useWeaponType("Engineer", wep.type, wep.name) then
+			if (wep.type == 'Knife') then
+				table.insert(EngineerKnife, wep.name)
+			elseif (wep.type == 'Pistol') then
+				table.insert(EngineerPistol, wep.name)
+			elseif (wep.type == 'Grenade') then
+				table.insert(EngineerGrenade, wep.name)
+			elseif (wep.type == "Torch") then
+				table.insert(EngineerGadget1,  wep.name)
+			elseif (wep.type == "Rocket") then
+				table.insert(EngineerGadget2,  wep.name)
+			else
+				table.insert(EngineerPrimary, wep.name)
 			end
-			if self:_useWeaponType("Engineer", wep.type, wep.name) then
-				table.insert(WeaponsEngineer, wep.name)
+		end
+		if self:_useWeaponType("Support", wep.type, wep.name) then
+			if (wep.type == 'Knife') then
+				table.insert(SupportKnife, wep.name)
+			elseif (wep.type == 'Pistol') then
+				table.insert(SupportPistol, wep.name)
+			elseif (wep.type == 'Grenade') then
+				table.insert(SupportGrenade, wep.name)
+			elseif (wep.type == "Ammobag") then
+				table.insert(SupportGadget1,  wep.name)
+			elseif (wep.type == "Claymore") or (wep.type == "C4") then
+				table.insert(SupportGadget2,  wep.name)
+			else
+				table.insert(SupportPrimary, wep.name)
 			end
-			if self:_useWeaponType("Support", wep.type, wep.name) then
-				table.insert(WeaponsSupport, wep.name)
-			end
-			if self:_useWeaponType("Recon", wep.type, wep.name) then
-				table.insert(WeaponsRecon, wep.name)
+		end
+		if self:_useWeaponType("Recon", wep.type, wep.name) then
+			if (wep.type == 'Knife') then
+				table.insert(ReconKnife, wep.name)
+			elseif (wep.type == 'Pistol') then
+				table.insert(ReconPistol, wep.name)
+			elseif (wep.type == 'Grenade') then
+				table.insert(ReconGrenade, wep.name)
+			elseif (wep.type == "Tug") then
+				table.insert(ReconGadget1,  wep.name)
+			elseif (wep.type == "Beacon") then
+				table.insert(ReconGadget2,  wep.name)
+			else
+				table.insert(ReconPrimary, wep.name)
 			end
 		end
 	end
