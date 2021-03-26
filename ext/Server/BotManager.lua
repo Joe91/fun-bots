@@ -29,6 +29,7 @@ function BotManager:__init()
 	NetEvents:Subscribe('ClientDamagePlayer', self, self._onDamagePlayer)   	--only triggered on false damage
 	Hooks:Install('Soldier:Damage', 100, self, self._onSoldierDamage)
 	--Events:Subscribe('Soldier:HealthAction', self, self._onHealthAction)	-- use this for more options on revive. Not needed yet
+	--Events:Subscribe('GunSway:Update', self, self._onGunSway)
 
 end
 
@@ -245,6 +246,29 @@ function BotManager:_onHealthAction(soldier, action)
 				table.insert(self._pendingAcceptRevives, soldier.player.name)
 			end
 		end
+    end
+end
+
+function BotManager:_onGunSway(gunSway, weapon, weaponFiring, deltaTime)
+    if weapon == nil then
+        return
+    end
+    local soldier = SoldierEntity(weapon.bus.parent.entities[26])
+    if soldier == nil or soldier.player == nil then
+        return
+    end
+	local bot = self:getBotByName(soldier.player.name)
+    if bot ~= nil then
+        local gunSwayData = GunSwayData(gunSway.data)
+        if soldier.pose == CharacterPoseType.CharacterPoseType_Stand then
+            gunSway.dispersionAngle = gunSwayData.stand.zoom.baseValue.minAngle
+        elseif soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
+            gunSway.dispersionAngle = gunSwayData.crouch.zoom.baseValue.minAngle
+        elseif soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
+            gunSway.dispersionAngle = gunSwayData.prone.zoom.baseValue.minAngle
+        else
+            return
+        end
     end
 end
 
