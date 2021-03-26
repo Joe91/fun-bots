@@ -849,9 +849,9 @@ function Bot:_updateShooting()
 			self._attackMode		= 0;
 
 			self._reloadTimer = self._reloadTimer + StaticConfig.botUpdateCycle;
-			if self._reloadTimer > 4 then
+			if self._reloadTimer > 2.5 then
 				self.player.input:SetLevel(EntryInputActionEnum.EIAReload, 0);
-			elseif self._reloadTimer > 3 and self.player.soldier.weaponsComponent.currentWeapon.primaryAmmo <= self.activeWeapon.reload then
+			elseif self._reloadTimer > 1.5 and self.player.soldier.weaponsComponent.currentWeapon.primaryAmmo <= self.activeWeapon.reload then
 				self.player.input:SetLevel(EntryInputActionEnum.EIAReload, 1);
 			end
 
