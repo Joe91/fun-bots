@@ -68,6 +68,27 @@ function View:Show(player)
 	self.visible	= true;
 end
 
+function View:Push(player, component)
+	local attributes = {};
+			
+	if (component['GetAttributes'] ~= nil) then
+		attributes = component:GetAttributes();
+	end
+
+	if (#attributes >= 1) then
+		NetEvents:SendTo('UI', player, 'VIEW', self.name, 'PUSH', {
+			Type 		= component:__class(),
+			Data 		= component:Serialize(),
+			Attributes	= attributes
+		});
+	else
+		NetEvents:SendTo('UI', player, 'VIEW', self.name, 'PUSH', {
+			Type 		= component:__class(),
+			Data 		= component:Serialize()
+		});
+	end
+end
+
 function View:Hide(player)
 	NetEvents:SendTo('UI', player, 'VIEW', self.name, 'HIDE');
 	self.visible	= false;

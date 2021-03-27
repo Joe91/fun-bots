@@ -204,6 +204,8 @@ function BotEditor:InitializeComponent()
 	-- Settings
 	navigation:AddItem(MenuItem('Settings', 'settings', function(player)
 		print('Open Settings');
+		
+		self.view:Push(player, Alert(Position.Bottom_Center, Color.Red, 'Settings are not implemented.', 2500));
 	end, 'F10'):SetIcon('Assets/Icons/Settings.svg'));
 	
 	-- Exit

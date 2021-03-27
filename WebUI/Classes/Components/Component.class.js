@@ -65,7 +65,9 @@ class Component {
 			
 			switch(name) {
 				case 'Position':
-					switch(attribute.Type) {
+					let position = (typeof(attribute.Type) != 'undefined' ? attribute.Type : attribute);
+					
+					switch(position) {
 						case Position.Relative:
 							this.element.style.position = 'relative';
 						break;
@@ -75,16 +77,41 @@ class Component {
 						case Position.Fixed:
 							this.element.style.position = 'fixed';
 						break;
+						case Position.Top_Left:
+							this.element.dataset.position = 'Top_Left';
+						break;
+						case Position.Top_Center:
+							this.element.dataset.position = 'Top_Center';						
+						break;
+						case Position.Top_Right:
+							this.element.dataset.position = 'Top_Right';						
+						break;
+						case Position.Center_Left:
+							this.element.dataset.position = 'Center_Left';
+						break;
+						case Position.Center:
+							this.element.dataset.position = 'Center';						
+						break;
+						case Position.Center_Right:
+							this.element.dataset.position = 'Center_Right';						
+						break;
+						case Position.Bottom_Left:
+							this.element.dataset.position = 'Bottom_Left';						
+						break;
+						case Position.Bottom_Center:
+							this.element.dataset.position = 'Bottom_Center';						
+						break;
+						case Position.Bottom_Right:
+							this.element.dataset.position = 'Bottom_Right';		
+						break;
+						case Position.Left:
+							this.element.dataset.position = 'Left';
+						break;
+						case Position.Right:
+							this.element.dataset.position = 'Right';							
+						break;
 						default:
-							switch(attribute) {
-								case Position.Left:
-								case Position.Right:
-								
-								break;
-								default:
-									console.warn('Unknown Attribute-Type:', attribute.Type, attribute);
-								break;
-							}
+							console.warn('Unknown Attribute-Type:', attribute.Type, attribute);
 						break;
 					}
 					

@@ -141,6 +141,15 @@ function WaypointEditor:InitializeComponent()
 	navigation:AddItem(tools);
 	
 	self.view:AddComponent(navigation);
+	
+	local status = Box();
+	
+	status:SetPosition(Position.Absolute, {
+		Top		= 50,
+		Left	= 20
+	});
+	
+	self.view:AddComponent(status);
 end
 
 return WaypointEditor;

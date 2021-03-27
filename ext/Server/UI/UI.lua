@@ -2,6 +2,7 @@ class('UI');
 
 require('UI/Constants/Type');
 require('UI/Constants/Position');
+require('UI/Constants/Color');
 
 function UI:__init()
 	-- Disable WebInterface
@@ -16,6 +17,7 @@ function UI:__init()
 		'Logo',
 		'Menu',
 		'View',
+		'Alert',
 		'Dialog',
 		'Box',
 	};
