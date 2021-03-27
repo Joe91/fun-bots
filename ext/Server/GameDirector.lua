@@ -78,8 +78,7 @@ function GameDirector:initObjectives()
 			destroyed = false,
 			active = true,
 			subObjective = false,
-			assigned = {},
-			bots = {}
+			assigned = {}
 		}
 		if string.find(objectiveName:lower(), "base") ~= nil then
 			objective.isBase = true;
@@ -470,37 +469,6 @@ function GameDirector:getObjectiveFromSubObj(subObjective)
 	end
 end
 
-function GameDirector:notifyBotAtObjective(botname, objectiveName, onObjective)
-	local objective = self:getObjectiveObject(objectiveName)
-	if objective ~= nil and objective.active then
-		if onObjective then
-			local found = false;
-			for _,bot in pairs(objective.bots) do
-				if bot == botname then
-					found = true;
-					break; -- dont insert bot, if already in
-				end
-			end
-			if not found then
-				table.insert(objective.bots, botname)
-			end
-		else
-			self:_removeBotFromObjective(botname)
-		end
-	end
-end
-
-function GameDirector:_removeBotFromObjective(botname)
-	for _,singleObjective in pairs(self.AllObjectives) do
-		for pos,bot in pairs(singleObjective.bots) do
-			if bot == botname then
-				table.remove(singleObjective.bots, pos)
-				break;
-			end
-		end
-	end
-end
-
 function GameDirector:_useSubobjective(botTeam, objectiveName)
 	local use = false;
 	local objective = self:getObjectiveObject(objectiveName);
@@ -625,29 +593,7 @@ function GameDirector:_onUpdate(delta)
 				else
 					local objective = self:getObjectiveObject(bot:getObjective())
 					local parentObjective = self:getObjectiveFromSubObj(objective.name)
-					local subObjective = self:getSubObjectiveFromObj(objective.name)
 					objective.assigned[botTeam] = objective.assigned[botTeam] + 1
-					if subObjective ~= nil then
-						local tempObjective = self:getObjectiveObject(subObjective)
-						if tempObjective.active and not tempObjective.destroyed then
-							-- check for assignment
-							if self:_useSubobjective(botTeam, subObjective) then
-								local botPossible = false;
-								for _,botName in pairs(objective.bots) do
-									if bot.name == botName then
-										botPossible = true;
-										break;
-									end
-								end
-								if botPossible then
-									if tempObjective.assigned[botTeam] < 2 then
-										tempObjective.assigned[botTeam] = tempObjective.assigned[botTeam] + 1
-										bot:setObjective(subObjective)
-									end
-								end
-							end
-						end
-					end
 					if parentObjective ~= nil then
 						local tempObjective = self:getObjectiveObject(parentObjective)
 						if tempObjective.active and not tempObjective.destroyed then
@@ -665,6 +611,24 @@ function GameDirector:_onUpdate(delta)
 			end
 		end
 	end
+end
+
+function GameDirector:useSubobjective(botname, objective)
+	local tempObjective = self:getObjectiveObject(objective)
+	if tempObjective.subObjective then -- is valid getSubObjective
+		if tempObjective.active and not tempObjective.destroyed then
+			local bot = g_BotManager:getBotByName(botname)
+			local botTeam = bot.player.teamId;
+			if self:_useSubobjective(botTeam, objective) then
+				if tempObjective.assigned[botTeam] < 2 then
+					tempObjective.assigned[botTeam] = tempObjective.assigned[botTeam] + 1
+					bot:setObjective(objective)
+					return true;
+				end
+			end
+		end
+	end
+	return false;
 end
 
 if (g_GameDirector == nil) then
