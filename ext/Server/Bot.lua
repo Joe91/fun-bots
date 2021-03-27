@@ -69,6 +69,7 @@ function Bot:__init(player)
 	self._reviveActive = false;
 	self._deployActive = false;
 	self._grenadeActive	= false;
+	self._c4Active = false;
 
 	--shooting
 	self._shoot = false;
@@ -221,6 +222,7 @@ function Bot:resetVars()
 	self._reviveActive 			= false;
 	self._deployActive 			= false;
 	self._grenadeActive			= false;
+	self._c4Active 				= false;
 	self._weaponToUse 			= "Primary";
 end
 
@@ -353,6 +355,7 @@ function Bot:resetSpawnVars()
 	self._reviveActive 			= false;
 	self._deployActive 			= false;
 	self._grenadeActive			= false;
+	self._c4Active 				= false;
 	self._weaponToUse 			= "Primary";
 
 	self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 0);
@@ -555,6 +558,18 @@ function Bot:_updateYaw()
 	self.player.input.authoritativeAimingPitch	= self._targetPitch;
 end
 
+function Bot:_findOutVehicleType()
+	if self._shootPlayer.attachedControllable ~= nil then
+		local vehicle = VehicleEntityData(self._shootPlayer.attachedControllable.data)
+		print(vehicle.controllableType)
+		print(vehicle.nameSid)
+		if vehicle.nameSid == "Viper" or vehicle.nameSid == "f16" then
+			
+		end
+		print(vehicle.useProtectedShields)
+		print(vehicle.armorMultiplier)
+	end
+end
 
 function Bot:_updateShooting()
 	if self.player.alive and self._shoot then
@@ -694,13 +709,31 @@ function Bot:_updateShooting()
 						self._shootModeTimer = Config.botFireModeDuration;
 					end
 				end
+
+				if self._c4Active then
+					self.activeMoveMode		= 8; -- movement-mode : C4 / revive
+				end
 				-- target in vehicle - use gadget 2 if rocket --TODO: don't shoot with other classes
 				if self._shootPlayer.attachedControllable ~= nil then
+					--self:_findOutVehicleType()
+					-- TODO: find out what vehicle
 					if self.gadget2 ~= nil then
 						if self.gadget2.type == "Rocket" then
 							self._weaponToUse = "Gadget2"
 							if self.player.soldier.weaponsComponent.currentWeapon.secondaryAmmo <= 2 then
 								self.player.soldier.weaponsComponent.currentWeapon.secondaryAmmo = self.player.soldier.weaponsComponent.currentWeapon.secondaryAmmo + 3
+							end
+						elseif self.gadget2.type == "C4" and self._shootPlayer.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans) < 30 then
+							self._weaponToUse = "Gadget2"
+							if self.player.soldier.weaponsComponent.currentWeapon.secondaryAmmo <= 2 then
+								self.player.soldier.weaponsComponent.currentWeapon.secondaryAmmo = self.player.soldier.weaponsComponent.currentWeapon.secondaryAmmo + 3
+							end
+							self._c4Active = true;
+						else
+							if self._shootPlayer.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans) < 35 then
+								self._grenadeActive = true;
+							else
+								self._shootModeTimer = Config.botFireModeDuration; -- end attack
 							end
 						end
 					end
@@ -786,6 +819,7 @@ function Bot:_updateShooting()
 				self._shotTimer			= -Config.botFirstShotDelay;
 				self._shootPlayer		= nil;
 				self._grenadeActive 	= false;
+				self._c4Active 			= false;
 				self._lastShootPlayer	= nil;
 			end
 		elseif self._reviveActive and self._shootPlayer ~= nil then
@@ -842,6 +876,7 @@ function Bot:_updateShooting()
 			self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0);
 			self._weaponToUse 		= "Primary"
 			self._grenadeActive 	= false;
+			self._c4Active 			= false;
 			self._shootPlayer		= nil;
 			self._lastShootPlayer	= nil;
 			self._reviveActive		= false;
@@ -1332,7 +1367,7 @@ function Bot:_updateMovement()
 				self._attackModeMoveTimer = self._attackModeMoveTimer + StaticConfig.botUpdateCycle;
 			end
 
-		elseif self.activeMoveMode == 8 then  -- Revive Move Mode
+		elseif self.activeMoveMode == 8 then  -- Revive Move Mode / C4 Mode
 			self.activeSpeedValue = 4; --run to player
 			if self.player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Stand then
 				self.player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Stand, true, true);
