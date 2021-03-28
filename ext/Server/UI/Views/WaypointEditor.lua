@@ -1,7 +1,8 @@
 class('WaypointEditor');
 
 function WaypointEditor:__init(core)
-	self.view = View(core, 'WaypointEditor');
+	self.view 			= View(core, 'WaypointEditor');
+	self.trace_index	= 0;
 end
 
 function WaypointEditor:Show(player)
@@ -57,7 +58,7 @@ function WaypointEditor:InitializeComponent()
 		client:SetIcon('Assets/Icons/Client.svg');
 		
 		client:AddItem(MenuItem('Load', 'waypoints_client_load', function(player)
-			local expectedAmount = g_NodeCollection:Get()
+			local expectedAmount = g_NodeCollection:Get();
 			NetEvents:SendToLocal('ClientNodeEditor:ReceiveNodes', player, (#expectedAmount));
 		end):SetIcon('Assets/Icons/Reload.svg'));
 		
@@ -96,10 +97,12 @@ function WaypointEditor:InitializeComponent()
 		
 		view:AddItem(MenuItem('Lines', 'lines', function(player)
 			print('lines Executed');
+			Config.drawWaypointLines = true;
 		end));
 		
 		view:AddItem(MenuItem('Labels', 'labels', function(player)
 			print('labels Executed');
+			Config.drawWaypointIDs = true;
 		end));
 		
 	navigation:AddItem(view);
@@ -160,7 +163,53 @@ function WaypointEditor:InitializeComponent()
 		Left	= 20
 	});
 	
+	local input_trace_index = Input(Type.Integer, 'trace_index', self.trace_index);
+		
+	input_trace_index:Disable();
+	
+	input_trace_index:AddArrow(Position.Left, '❰', function(player)
+		self.trace_index = self.trace_index - 1;
+		
+		if (self.trace_index < 0) then
+			self.trace_index = 0;
+		end
+		
+		input_trace_index:SetValue(self.trace_index);
+		
+		NetEvents:SendTo('UI', player, 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
+			Type	= input_trace_index:__class(),
+			Name	= input_trace_index:GetName(),
+			Value	= input_trace_index:GetValue()
+		}));
+	end);
+	
+	input_trace_index:AddArrow(Position.Right, '❱', function(player)
+		self.trace_index = self.trace_index + 1;
+		
+		input_trace_index:SetValue(self.trace_index);
+		
+		NetEvents:SendTo('UI', player, 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
+			Type	= input_trace_index:__class(),
+			Name	= input_trace_index:GetName(),
+			Value	= input_trace_index:GetValue()
+		}));
+	end);
+	
+	
+	status:AddItem(Entry('Current Trace Index', input_trace_index));
+	status:AddItem(Entry('Waypoints', '0'));
+	status:AddItem(Entry('Total Distance', '0 m'));
+	
 	self.view:AddComponent(status);
+	
+	local recording = Box(Color.Red);
+	recording:SetPosition(Position.Absolute, {
+		Top		= 180,
+		Left	= 20
+	});
+			
+	self.view:AddComponent(recording);
+	recording:Hide();
 end
 
 return WaypointEditor;

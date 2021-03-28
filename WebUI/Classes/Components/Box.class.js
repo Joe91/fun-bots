@@ -6,8 +6,10 @@ class Box extends Component {
 	context 	= null;
 	image		= null;
 	background	= null;
-	speed		= 0.2;
-	position	= 20;
+	speed		= 0.15;
+	space		= 20;
+	position	= this.space;
+	items		= [];
 	
 	constructor(color) {
 		super();
@@ -18,6 +20,54 @@ class Box extends Component {
 		this.canvas			= document.createElement('canvas');
 		this.element		= document.createElement('ui-box');
 	};
+	
+	get Items() {
+		return this.items;
+	}
+	
+	set Items(data) {
+		if(Object.keys(data).length == 0) {
+			return;
+		}
+		
+		data.forEach((item) => {
+			let component = null;
+			
+			switch(item.Type) {
+				case 'Entry':
+					component	= new Entry(item.Data.Text, item.Data.Value);
+				break;
+			}
+			
+			if(component != null) {
+				if(typeof(component.InitializeComponent) != 'undefined') {
+					component.InitializeComponent();
+					this.element.appendChild(component.GetElement());
+				}
+				
+				if(typeof(item.Data.Items) != 'undefined') {
+					component.Items	= item.Data.Items;
+				}
+				
+				component = new Proxy(component, {
+					set: function Setter(target, key, value) {
+						if(Array.isArray(value) || value instanceof Object) {
+							target[key][value.Name] = value.Value;
+						} else {
+							target[key] = value;
+						}
+						
+						target.Repaint();
+						return true;
+					}
+				});
+				
+				this.items.push(component);
+			} else {
+				console.warn('Unknown Component: ', properties);
+			}
+		});
+	}
 	
 	SetColor(color) {
 		this.color = color;
@@ -30,6 +80,7 @@ class Box extends Component {
 	InitializeComponent() {
 		super.InitializeComponent();
 		
+		this.position			= Math.random() * (100 - 20) + 20;
 		this.background.src		= 'Assets/UI/bgContainerBox.png';
 		this.image.src			= 'Assets/UI/bgContainer.png';
 		this.image.onload		= function onLoad() {
@@ -65,6 +116,10 @@ class Box extends Component {
 		}
 	}
 	
+	ScalingFactor() {
+		return window.devicePixelRatio || 1;
+	}
+
 	Repaint() {
 		super.Repaint();		
 	}
@@ -76,21 +131,41 @@ class Box extends Component {
 			return;
 		}
 		
-		this.canvas.width	= this.image.width * 1.2;
-		this.canvas.height	= this.image.height * 1.2;
+		let ratio			= this.ScalingFactor();
+		this.canvas.width	= this.image.width * ratio;
+		this.canvas.height	= this.image.height * ratio;
 		this.position		+= this.speed;
 
-		if (this.position < 20 || this.position + 20 > this.canvas.width) {
+		if (this.position < this.space || this.position + this.space > this.canvas.width) {
 			this.speed = this.speed * -1;
 		}
 		
+		this.context.save();
+		this.context.beginPath();
 		this.context.fillStyle	= this.GetColor();
 		this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
 		this.context.globalCompositeOperation = 'destination-in';
-		
 		this.context.drawImage(this.background, 0, 0, this.canvas.width, this.canvas.height);
-		this.context.drawImage(this.image, -this.position, 0, this.canvas.width * 2, this.canvas.height * 2);
+		this.context.closePath();
+		
+		this.context.save();
+		this.context.beginPath();
+		this.context.fillStyle	= this.GetColor();
+		this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
+		this.context.globalCompositeOperation = 'destination-in';
+		this.context.drawImage(this.image, -this.position, 0, this.canvas.width * 1.9, this.canvas.height);
+		this.context.closePath();
+		this.context.restore();
+		this.context.globalCompositeOperation = 'source-over';
 		
 		this.element.style.backgroundImage = 'url(' + this.canvas.toDataURL() + ')';
+	}
+	
+	OnClick(event) {		
+		this.items.forEach((component) => {
+			if(event.target.closest('[data-id="' + component.GetID() + '"]') != null && typeof(component.OnClick) != 'undefined') {
+				component.OnClick(event);
+			}
+		});
 	}
 }

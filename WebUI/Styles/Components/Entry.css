@@ -1,0 +1,17 @@
+ui-entry {
+	flex: 1 0 auto;
+	display: flex;
+}
+
+ui-entry ui-text {
+	align-self: center;
+	place-self: center;
+	flex: 1 0 auto;
+}
+
+ui-entry ui-value {
+	flex: 0 70px;
+	align-self: center;
+	place-self: center;
+	text-align: center;
+}

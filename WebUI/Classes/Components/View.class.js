@@ -32,6 +32,7 @@ class View extends Component {
 						break;
 						case 'Box':
 							component		= new Box(properties.Data.Color);
+							component.Items	= properties.Data.Items;
 						break;
 					}
 				}
@@ -126,8 +127,8 @@ class View extends Component {
 	}
 	
 	UpdateComponent(component, data) {
-		if(typeof(component.items) != 'undefined') {
-			component.items.forEach((item) => {
+		if(typeof(component.Items) != 'undefined') {
+			component.Items.forEach((item) => {
 				this.UpdateComponent(item, data);
 			});
 		}
@@ -136,6 +137,10 @@ class View extends Component {
 			component.inputs.forEach((input) => {
 				this.UpdateComponent(input, data);
 			});
+		}
+		
+		if(typeof(component.GetValue) != 'undefined') {
+			this.UpdateComponent(component.GetValue(), data);
 		}
 		
 		if(component instanceof Input && data.Type == 'Input' && component.GetName() == data.Name) {

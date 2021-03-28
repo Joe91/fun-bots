@@ -8,6 +8,7 @@
 		<link rel="stylesheet" type="text/css" href="Styles/Global.css" />
 		<link rel="stylesheet" type="text/css" href="Styles/Components/Logo.css" />
 		<link rel="stylesheet" type="text/css" href="Styles/Components/Input.css" />
+		<link rel="stylesheet" type="text/css" href="Styles/Components/Entry.css" />
 		<link rel="stylesheet" type="text/css" href="Styles/Components/View.css" />
 		<link rel="stylesheet" type="text/css" href="Styles/Components/Menu.css" />
 		<link rel="stylesheet" type="text/css" href="Styles/Components/Component.css" />
@@ -20,6 +21,7 @@
 		<script src="Classes/Constants/Color.js"></script>
 		<script src="Classes/Constants/Position.js"></script>
 		<script src="Classes/Components/Component.class.js"></script>
+		<script src="Classes/Components/Entry.class.js"></script>
 		<script src="Classes/Components/Box.class.js"></script>
 		<script src="Classes/Components/Alert.class.js"></script>
 		<script src="Classes/Components/Menu.class.js"></script>
@@ -36,254 +38,332 @@
 				document.querySelector('body').style.backgroundSize = 'cover';
 				
 				UI.Handle(
+				
+				
 				{
+ "Destination": "WaypointEditor",
  "Type": "VIEW",
+ "Action": "SHOW",
  "Data": {
+  "Name": "WaypointEditor",
   "Components": [
    {
     "Type": "Logo",
     "Attributes": [
      {
+      "Name": "Position",
       "Value": {
-       "Type": 1,
        "Position": {
-        "Top": 20,
-        "Left": 20
-       }
-      },
-      "Name": "Position"
+        "Left": 20,
+        "Top": 20
+       },
+       "Type": 1
+      }
      }
     ],
     "Data": {
      "Subtitle": "fun-bots",
-     "Title": "Bot-Editor"
+     "Title": "Waypoint-Editor"
     }
    },
    {
     "Type": "Menu",
     "Attributes": [
      {
+      "Name": "Position",
       "Value": {
-       "Type": 1,
        "Position": {
-        "Top": 20,
-        "Right": 20
-       }
-      },
-      "Name": "Position"
+        "Right": 20,
+        "Top": 20
+       },
+       "Type": 1
+      }
      }
     ],
     "Data": {
      "Items": [
       {
+       "Type": "MenuItem",
        "Data": {
-        "Icon": "Assets/Icons/Bot.svg",
-        "Name": "bots",
-        "Title": "Bots",
+        "Icon": "Assets/Icons/Client.svg",
+        "Title": "Client",
+        "Name": "client",
         "Items": [
          {
+          "Type": "MenuItem",
           "Data": {
-           "Callback": "UI:VIEW:BotEditor:ACTION:MenuItem$bot_spawn_default",
-           "Shortcut": "F2",
-           "Title": "Spawn Enemy Bots",
-           "Inputs": [
-            {
-             "Type": "Input",
-             "Data": {
-              "Value": 1,
-              "Type": 1,
-              "Arrows": [
-               {
-                "Callback": "UI:VIEW:BotEditor:CALL:Arrow$Arrow#2",
-                "Character": "❰",
-                "Position": 100,
-                "Type": "Arrow",
-                "Name": "Arrow#2"
-               },
-               {
-                "Callback": "UI:VIEW:BotEditor:CALL:Arrow$Arrow#3",
-                "Character": "❱",
-                "Position": 101,
-                "Type": "Arrow",
-                "Name": "Arrow#3"
-               }
-              ],
-              "Disabled": true,
-              "Name": "bots"
-             },
-             "Position": 100
-            }
-           ],
-           "Name": "bot_spawn_default"
-          },
-          "Type": "MenuItem"
+           "Icon": "Assets/Icons/Reload.svg",
+           "Callback": "UI:VIEW:WaypointEditor:ACTION:MenuItem$waypoints_client_load",
+           "Title": "Load",
+           "Name": "waypoints_client_load",
+           "Inputs": {}
+          }
          },
          {
+          "Type": "MenuItem",
           "Data": {
-           "Callback": "UI:VIEW:BotEditor:ACTION:MenuItem$bot_spawn_friend",
-           "Inputs": [
-            {
-             "Type": "Input",
-             "Data": {
-              "Value": 1,
-              "Type": 1,
-              "Arrows": [
-               {
-                "Callback": "UI:VIEW:BotEditor:CALL:Arrow$Arrow#2",
-                "Character": "❰",
-                "Position": 100,
-                "Type": "Arrow",
-                "Name": "Arrow#2"
-               },
-               {
-                "Callback": "UI:VIEW:BotEditor:CALL:Arrow$Arrow#3",
-                "Character": "❱",
-                "Position": 101,
-                "Type": "Arrow",
-                "Name": "Arrow#3"
-               }
-              ],
-              "Disabled": true,
-              "Name": "bots"
-             },
-             "Position": 100
-            }
-           ],
-           "Title": "Spawn Friend Bots",
-           "Name": "bot_spawn_friend"
-          },
-          "Type": "MenuItem"
-         },
-         {
-          "Data": {},
-          "Type": "MenuSeparator"
-         },
-         {
-          "Data": {
-           "Callback": "UI:VIEW:BotEditor:ACTION:MenuItem$bot_kick_all",
-           "Shortcut": "F3",
-           "Title": "Kick All",
-           "Inputs": {},
-           "Name": "bot_kick_all"
-          },
-          "Type": "MenuItem"
-         },
-         {
-          "Data": {
-           "Callback": "UI:VIEW:BotEditor:ACTION:MenuItem$bot_kick_team",
-           "Inputs": [
-            {
-             "Type": "Input",
-             "Data": {
-              "Value": 1,
-              "Type": 1,
-              "Arrows": [
-               {
-                "Callback": "UI:VIEW:BotEditor:CALL:Arrow$Arrow#4",
-                "Character": "❰",
-                "Position": 100,
-                "Type": "Arrow",
-                "Name": "Arrow#4"
-               },
-               {
-                "Callback": "UI:VIEW:BotEditor:CALL:Arrow$Arrow#5",
-                "Character": "❱",
-                "Position": 101,
-                "Type": "Arrow",
-                "Name": "Arrow#5"
-               }
-              ],
-              "Disabled": true,
-              "Name": "team"
-             },
-             "Position": 100
-            }
-           ],
-           "Title": "Kick Team",
-           "Name": "bot_kick_team"
-          },
-          "Type": "MenuItem"
-         },
-         {
-          "Data": {
-           "Callback": "UI:VIEW:BotEditor:ACTION:MenuItem$bot_kill_all",
-           "Shortcut": "F4",
-           "Title": "Kill All",
-           "Inputs": {},
-           "Name": "bot_kill_all"
-          },
-          "Type": "MenuItem"
-         },
-         {
-          "Data": {},
-          "Type": "MenuSeparator"
-         },
-         {
-          "Data": {
-           "Callback": "UI:VIEW:BotEditor:ACTION:MenuItem$bot_respawn",
-           "Inputs": {},
-           "Title": "Toggle Respawn",
-           "Name": "bot_respawn"
-          },
-          "Type": "MenuItem"
-         },
-         {
-          "Data": {
-           "Callback": "UI:VIEW:BotEditor:ACTION:MenuItem$bot_attack",
-           "Inputs": {},
-           "Title": "Toggle Attack",
-           "Name": "bot_attack"
-          },
-          "Type": "MenuItem"
+           "Icon": "Assets/Icons/Save.svg",
+           "Callback": "UI:VIEW:WaypointEditor:ACTION:MenuItem$waypoints_client_save",
+           "Title": "Save",
+           "Name": "waypoints_client_save",
+           "Inputs": {}
+          }
          }
         ]
-       },
-       "Type": "MenuItem"
+       }
       },
       {
+       "Type": "MenuItem",
        "Data": {
-        "Callback": "UI:VIEW:WaypointEditor:SHOW",
-        "Inputs": {},
-        "Title": "Waypoint-Editor",
-        "Icon": "Assets/Icons/WaypointEditor.svg",
-        "Name": "waypoint-editor"
-       },
-       "Type": "MenuItem"
+        "Icon": "Assets/Icons/Server.svg",
+        "Title": "Server",
+        "Name": "server",
+        "Items": [
+         {
+          "Type": "MenuItem",
+          "Data": {
+           "Icon": "Assets/Icons/Reload.svg",
+           "Callback": "UI:VIEW:WaypointEditor:ACTION:MenuItem$waypoints_server_load",
+           "Title": "Load",
+           "Name": "waypoints_server_load",
+           "Inputs": {}
+          }
+         },
+         {
+          "Type": "MenuItem",
+          "Data": {
+           "Icon": "Assets/Icons/Save.svg",
+           "Callback": "UI:VIEW:WaypointEditor:ACTION:MenuItem$waypoints_server_save",
+           "Title": "Save",
+           "Name": "waypoints_server_save",
+           "Inputs": {}
+          }
+         }
+        ]
+       }
       },
       {
+       "Type": "MenuItem",
        "Data": {
-        "Callback": "UI:VIEW:BotEditor:ACTION:MenuItem$settings",
-        "Shortcut": "F10",
-        "Title": "Settings",
-        "Icon": "Assets/Icons/Settings.svg",
-        "Inputs": {},
-        "Name": "settings"
-       },
-       "Type": "MenuItem"
+        "Icon": "Assets/Icons/View.svg",
+        "Title": "View",
+        "Name": "view",
+        "Items": [
+         {
+          "Type": "MenuSeparator",
+          "Data": {
+           "Title": "General"
+          }
+         },
+         {
+          "Type": "MenuItem",
+          "Data": {
+           "Callback": "UI:VIEW:WaypointEditor:ACTION:MenuItem$debug_text",
+           "Title": "Debug-Text",
+           "Name": "debug_text",
+           "Inputs": {}
+          }
+         },
+         {
+          "Type": "MenuSeparator",
+          "Data": {
+           "Title": "Waypoints"
+          }
+         },
+         {
+          "Type": "MenuItem",
+          "Data": {
+           "Callback": "UI:VIEW:WaypointEditor:ACTION:MenuItem$dots",
+           "Title": "Dots",
+           "Name": "dots",
+           "Inputs": {}
+          }
+         },
+         {
+          "Type": "MenuItem",
+          "Data": {
+           "Callback": "UI:VIEW:WaypointEditor:ACTION:MenuItem$lines",
+           "Title": "Lines",
+           "Name": "lines",
+           "Inputs": {}
+          }
+         },
+         {
+          "Type": "MenuItem",
+          "Data": {
+           "Callback": "UI:VIEW:WaypointEditor:ACTION:MenuItem$labels",
+           "Title": "Labels",
+           "Name": "labels",
+           "Inputs": {}
+          }
+         }
+        ]
+       }
       },
       {
+       "Type": "MenuItem",
        "Data": {
-        "Callback": "UI:VIEW:BotEditor:HIDE",
         "Shortcut": "F12",
-        "Title": "Exit",
-        "Inputs": {},
-        "Name": "exit"
-       },
-       "Type": "MenuItem"
+        "Callback": "UI:VIEW:WaypointEditor:HIDE",
+        "Title": "Back",
+        "Name": "back",
+        "Inputs": {}
+       }
+      },
+      {
+       "Type": "Menu",
+       "Data": {
+        "Items": [
+         {
+          "Type": "MenuItem",
+          "Data": {
+           "Icon": "Assets/Icons/Start.svg",
+           "Callback": "UI:VIEW:WaypointEditor:ACTION:MenuItem$trace_toggle",
+           "Title": "Start Trace",
+           "Name": "trace_toggle",
+           "Inputs": {}
+          }
+         },
+         {
+          "Type": "MenuItem",
+          "Data": {
+           "Icon": "Assets/Icons/Save.svg",
+           "Callback": "UI:VIEW:WaypointEditor:ACTION:MenuItem$trace_save",
+           "Title": "Save Trace",
+           "Name": "trace_save",
+           "Inputs": {}
+          }
+         },
+         {
+          "Type": "MenuItem",
+          "Data": {
+           "Icon": "Assets/Icons/SpawnBotWay.svg",
+           "Callback": "UI:VIEW:WaypointEditor:ACTION:MenuItem$bot_spawn_path",
+           "Title": "Spawn Bot on Way",
+           "Name": "bot_spawn_path",
+           "Inputs": {}
+          }
+         },
+         {
+          "Type": "MenuItem",
+          "Data": {
+           "Icon": "Assets/Icons/Clear.svg",
+           "Callback": "UI:VIEW:WaypointEditor:ACTION:MenuItem$trace_clear",
+           "Title": "Clear Trace",
+           "Name": "trace_clear",
+           "Inputs": {}
+          }
+         },
+         {
+          "Type": "MenuItem",
+          "Data": {
+           "Icon": "Assets/Icons/Trash.svg",
+           "Callback": "UI:VIEW:WaypointEditor:ACTION:MenuItem$trace_reset_all",
+           "Title": "Reset all Traces",
+           "Name": "trace_reset_all",
+           "Inputs": {}
+          }
+         }
+        ]
+       }
       }
      ]
     }
+   },
+   {
+    "Type": "Box",
+    "Attributes": [
+     {
+      "Name": "Position",
+      "Value": {
+       "Position": {
+        "Left": 20,
+        "Top": 50
+       },
+       "Type": 1
+      }
+     }
+    ],
+    "Data": {
+     "Color": 2,
+     "Items": {},
+     "Hidden": false
+    }
+   },
+   {
+    "Type": "Box",
+    "Attributes": [
+     {
+      "Name": "Position",
+      "Value": {
+       "Position": {
+        "Left": 20,
+        "Top": 180
+       },
+       "Type": 1
+      }
+     }
+    ],
+    "Data": {
+     "Color": 1,
+     "Items": [
+      {
+       "Type": "Entry",
+       "Data": {
+        "Value": {
+         "Type": 1,
+         "Disabled": true,
+         "Value": 0,
+         "Name": "trace_index",
+         "Arrows": [
+          {
+           "Character": "❰",
+           "Type": "Arrow",
+           "Position": 100,
+           "Callback": "UI:VIEW:WaypointEditor:CALL:Arrow$Arrow#6",
+           "Name": "Arrow#6"
+          },
+          {
+           "Character": "❱",
+           "Type": "Arrow",
+           "Position": 101,
+           "Callback": "UI:VIEW:WaypointEditor:CALL:Arrow$Arrow#7",
+           "Name": "Arrow#7"
+          }
+         ]
+        },
+        "Text": "Current Trace Index"
+       }
+      },
+      {
+       "Type": "Entry",
+       "Data": {
+        "Value": "0",
+        "Text": "Waypoints"
+       }
+      },
+      {
+       "Type": "Entry",
+       "Data": {
+        "Value": "0 m",
+        "Text": "Total Distance"
+       }
+      }
+     ],
+     "Hidden": true
+    }
    }
-  ],
-  "Name": "BotEditor"
- },
- "Action": "SHOW",
- "Destination": "BotEditor"
+  ]
+ }
 }
+
 				);
-				
-				UI.Handle( {
+			
+			
+			UI.Handle({
  "Type": "VIEW",
+ "Action": "PUSH",
+ "Destination": "BotEditor",
  "Data": {
   "Type": "Alert",
   "Attributes": [
@@ -293,19 +373,11 @@
    }
   ],
   "Data": {
-   "Color": 1,
    "Text": "Settings are not implemented.",
+   "Color": 1,
    "Delay": 2500
   }
- },
- "Action": "PUSH",
- "Destination": "BotEditor"
-});
-
-UI.Handle( {
- "Type": "VIEW",
- "Action": "DEACTIVATE",
- "Destination": "BotEditor"
+ }
 });
 			}
 		</script>

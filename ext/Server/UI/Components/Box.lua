@@ -4,6 +4,7 @@ function Box:__init(color)
 	self.attributes	= {};
 	self.items		= {};
 	self.color		= color or Color.White;
+	self.hidden		= false;
 end
 
 function Box:__class()
@@ -16,6 +17,28 @@ end
 
 function Box:GetItems()
 	return self.items;
+end
+
+function Box:AddItem(item)
+	if (item == nil or item['__class'] == nil) then
+		-- Bad Item
+		return;
+	end
+	
+	if (item:__class() ~= 'Entry') then
+		-- Exception: Only Menu, MenuSeparator (-) or MenuItem
+		return;
+	end
+	
+	table.insert(self.items, item);
+end
+
+function Box:Hide()
+	self.hidden = true;
+end
+
+function Box:Show()
+	self.hidden = false;
 end
 
 function Box:GetAttributes()
@@ -44,7 +67,8 @@ function Box:Serialize()
 	
 	return {
 		Color	= self.color,
-		Items	= items
+		Items	= items,
+		Hidden	= self.hidden
 	};
 end
 

@@ -19,6 +19,7 @@ function UI:__init()
 		'View',
 		'Alert',
 		'Dialog',
+		'Entry',
 		'Box'
 	};
 	
