@@ -1,6 +1,7 @@
 @keyframes Show {
 	0% {
 		opacity: 0;
+		visibility: visible;
 	}
 	
 	100% {
@@ -25,13 +26,13 @@
 
 [data-show="true"] {
 	visibility: visible;
-	animation: Show ease 300ms forwards;
+	animation: Show ease 300ms;
 	opacity: 1;
 }
 
 [data-show="false"] {
 	visibility: hidden;
-	animation: Hide ease 300ms forwards;
+	animation: Hide ease 300ms;
 	opacity: 0;
 }
 

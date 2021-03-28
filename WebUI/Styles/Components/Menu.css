@@ -101,6 +101,10 @@ ui-menu ul li:hover ul.submenu {
 	display: flex;
 }
 
+ui-view[data-activated="false"] ui-menu ul li:hover ul.submenu {
+	display: none !important;
+}
+
 ui-menu ul li ul.submenu li {
 	display: flex;
 	flex: 1 0 auto;

@@ -1,7 +1,4 @@
-ui-view[data-activated="true"] {
-	opacity: 1;
-}
-
 ui-view[data-activated="false"] {
-	opacity: 0.3;
+	opacity: 0.3 !important;
+	animation: none !important;
 }
