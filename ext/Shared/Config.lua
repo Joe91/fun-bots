@@ -98,7 +98,6 @@ Config = {
 	disableChatCommands = true,	 	-- if true, no chat commands can be used
 	disableRCONCommands = true,	 	-- if true, no RCON commands can be used
 	traceUsageAllowed = true,		-- if false, no traces can be recorded, deleted or saved
-	settingsPassword = "fun",		-- if nil, disable it. Otherwise use a String with your password
 	language = nil, --"de_DE",		-- de_DE as sample (default is english, when language file doesnt exists)
 };
 
