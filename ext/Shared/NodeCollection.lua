@@ -1358,9 +1358,8 @@ function NodeCollection:FindAlongTrace(vec3Start, vec3End, granularity, toleranc
 		tolerance = 0.2
 	end
 	
-	--if Debug.Shared.NODECOLLECTION then
-	--print('NodeCollection:FindAlongTrace - granularity: '..tostring(granularity))
-	--end
+	self:Print('NodeCollection:FindAlongTrace - granularity: '..tostring(granularity))
+	self:Print('NodeCollection:FindAlongTrace - tolerance: '..tostring(tolerance))
 	
 	local distance = math.min(math.max(vec3Start:Distance(vec3End), 0.05), 10)
 
@@ -1368,30 +1367,32 @@ function NodeCollection:FindAlongTrace(vec3Start, vec3End, granularity, toleranc
 	-- shift the search area forward by 1/2 distance and also 1/2 the radius needed
 	local searchAreaPos = vec3Start + ((vec3End - vec3Start) * 0.4) -- not exactly half ahead
 	local searchAreaSize = (distance*0.6) -- lil bit bigger than half for searching
-	NetEvents:Send('ClientNodeEditor:SetLastTraceSearchArea', {searchAreaPos, searchAreaSize})
+	NetEvents:Send('ClientNodeEditor:SetLastTraceSearchArea', {searchAreaPos:Clone(), searchAreaSize})
 	if (g_ClientNodeEditor) then
-		g_ClientNodeEditor:_onSetLastTraceSearchArea({searchAreaPos, searchAreaSize})
+		g_ClientNodeEditor:_onSetLastTraceSearchArea({searchAreaPos:Clone(), searchAreaSize})
 	end
 
 	local searchWaypoints = self:FindAll(searchAreaPos, searchAreaSize)
-	local testPos = vec3Start
+	local testPos = vec3Start:Clone()
 
-	--if Debug.Shared.NODECOLLECTION then
-	--print('distance: '..tostring(distance))
-	--print('searchWaypoints: '..tostring(#searchWaypoints))
-	--end
+	self:Print('distance: '..tostring(distance))
+	self:Print('searchWaypoints: '..tostring(#searchWaypoints))
+
+	if (#searchWaypoints == 1) then
+		return searchWaypoints[1]
+	end
+
+	local heading = vec3End - vec3Start
+	local direction = heading / heading.magnitude
 	
-	while distance > granularity and distance > 0 do
+	while #searchWaypoints > 0 and distance > granularity and distance > 0 do
 		for _,waypoint in pairs(searchWaypoints) do
-
 			if (waypoint ~= nil and self:IsPathVisible(waypoint.PathIndex) and waypoint.Position ~= nil and waypoint.Position:Distance(testPos) <= tolerance) then
-				--if Debug.Shared.NODECOLLECTION then
-				--print('NodeCollection:FindAlongTrace -> Found: '..waypoint.ID)
-				--end
+				self:Print('NodeCollection:FindAlongTrace -> Found: '..waypoint.ID)
 				return waypoint
 			end
 		end
-		testPos = testPos:MoveTowards(vec3End, granularity)
+		testPos = testPos + (direction * granularity)
 		distance = testPos:Distance(vec3End)
 	end
 	return nil
