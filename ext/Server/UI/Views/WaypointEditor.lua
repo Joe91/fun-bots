@@ -159,8 +159,8 @@ function WaypointEditor:InitializeComponent()
 	local status = Box(Color.Blue);
 	
 	status:SetPosition(Position.Absolute, {
-		Top		= 50,
-		Left	= 20
+		Top		= 75,
+		Left	= 15
 	});
 	
 	local input_trace_index = Input(Type.Integer, 'trace_index', self.trace_index);

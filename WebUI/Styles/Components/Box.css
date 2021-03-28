@@ -5,8 +5,6 @@ ui-box {
 	font-size: 16px;
 	background-size: cover;
 	background-position: 50% 50%;
-	width: 256px;
-	height: 128px;
 	padding: 20px;
 	display: flex;
 	flex-direction: column;
