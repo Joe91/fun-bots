@@ -23,6 +23,14 @@ function BotEditor:Toggle(player)
 	self.view:Toggle(player);
 end
 
+function BotEditor:Activate(player)
+	self.view:Activate(player);
+end
+
+function BotEditor:Deactivate(player)
+	self.view:Deactivate(player);
+end
+
 function BotEditor:Call(player, element, name)
 	self.view:Call(player, element, name);
 end

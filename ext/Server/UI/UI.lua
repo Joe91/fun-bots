@@ -106,12 +106,12 @@ function UI:__action(player, type, destination, action, data)
 	print('[UI] Action { Type=' .. tostring(type) .. ', Destination=' .. tostring(destination) ..', Action=' .. tostring(action) .. ', Data=' .. json.encode(data) .. '}');
 	
 	if (type == 'VIEW') then
-		if (self.views[destination] == nil) then
+		local view = self.views[destination];
+		
+		if (view == nil) then
 			print('[UI] The View "' .. destination .. '" doesn\'t exists.');
 			return;
 		end
-			
-		local view = self.views[destination];
 		
 		if (action == 'SHOW' or action == 'SHOWING') then
 			view:Show(player);

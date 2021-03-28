@@ -6,13 +6,21 @@ end
 
 function WaypointEditor:Show(player)
 	self.view:Show(player);
-	self.view:Deactivate(player);
+	self:Deactivate(player);
 	self.view:GetCore():GetView('BotEditor'):Hide(player);
 end
 
 function WaypointEditor:Hide(player)
 	self.view:Hide(player);
 	self.view:GetCore():GetView('BotEditor'):Show(player);
+end
+
+function WaypointEditor:Activate(player)
+	self.view:Activate(player);
+end
+
+function WaypointEditor:Deactivate(player)
+	self.view:Deactivate(player);
 end
 
 function WaypointEditor:Toggle(player)

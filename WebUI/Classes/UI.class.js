@@ -12,10 +12,18 @@ class UserInterface {
 			this.OnClick(event);
 		}, true);
 		
-		document.body.addEventListener('keydown', function onMouseDown(event) {
+		document.body.addEventListener('keydown', (event) => {
 			switch(event.keyCode || event.which) {
 				case InputDeviceKeys.IDK_F12:
 					WebUI.Call('DispatchEventLocal', 'UI', JSON.stringify([ 'VIEW', 'BotEditor', 'TOGGLE' ]));
+				break;
+			}
+		});
+		
+		document.body.addEventListener('keyup', (event) => {
+			switch(event.keyCode || event.which) {
+				case InputDeviceKeys.IDK_Q:
+					WebUI.Call('DispatchEventLocal', 'UI', JSON.stringify([ 'VIEW', 'WaypointEditor', 'DEACTIVATE' ]));
 				break;
 			}
 		});
@@ -29,6 +37,16 @@ class UserInterface {
 				view.OnClick(event);
 			}
 		});
+	}
+	
+	IsVisible(destination) {
+		let view = this.views[destination];
+		
+		if(typeof(view) == 'undefined') {
+			return false;
+		}
+		
+		return view.IsVisible();
 	}
 	
 	Handle(packet) {

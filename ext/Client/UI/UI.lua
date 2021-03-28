@@ -1,6 +1,7 @@
 class('UI');
 
 function UI:__init()
+	self.WaypointEditor = false;
 	Events:Subscribe('Extension:Loaded', self, self.__boot);
 	Events:Subscribe('Extension:Unloading', self, self.__destroy);
 end
@@ -24,6 +25,10 @@ function UI:OnUpdateInput(data)
 	if InputManager:WentKeyDown(InputDeviceKeys.IDK_F12) then
 		NetEvents:Send('UI', 'VIEW', 'BotEditor', 'TOGGLE');
 		NetEvents:Send('UI', 'VIEW', 'WaypointEditor', 'HIDE');
+	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_Q) and self.WaypointEditor then
+		self:__local(json.encode({ 'VIEW', 'WaypointEditor', 'ACTIVATE' }));
+	elseif InputManager:WentKeyUp(InputDeviceKeys.IDK_Q) and self.WaypointEditor then
+		self:__local(json.encode({ 'VIEW', 'WaypointEditor', 'DEACTIVATE' }));
 	end
 end
 
@@ -40,19 +45,25 @@ function UI:__local(string)
 	local action		= data[3];
 	local data			= data[4];
 	
-	print('[UI] Action { Type=' .. tostring(type) .. ', Destination=' .. tostring(destination) ..', Action=' .. tostring(action) .. ', Data=' .. json.encode(data) .. '}');
+	print('[UI][Client] LocalAction { Type=' .. tostring(type) .. ', Destination=' .. tostring(destination) ..', Action=' .. tostring(action) .. ', Data=' .. json.encode(data) .. '}');
 	NetEvents:Send('UI', type, destination, action, data);
 end
 
 function UI:__action(type, destination, action, data)
-	print('[UI] Action { Type=' .. tostring(type) .. ', Destination=' .. tostring(destination) ..', Action=' .. tostring(action) .. ', Data=' .. json.encode(data) .. '}');
+	print('[UI][Client] Action { Type=' .. tostring(type) .. ', Destination=' .. tostring(destination) ..', Action=' .. tostring(action) .. ', Data=' .. json.encode(data) .. '}');
 	
 	if action == 'ACTIVATE' then
 		WebUI:EnableMouse();
 		WebUI:EnableKeyboard();
 	elseif action == 'DEACTIVATE' then
-		WebUI:ResetMouse();
-		WebUI:ResetKeyboard();
+		if (self.WaypointEditor and destination == 'WaypointEditor') or destination == 'BotEditor' then
+			WebUI:ResetMouse();
+			WebUI:ResetKeyboard();
+		end
+	elseif action == 'SHOW' and destination == 'WaypointEditor' then
+		self.WaypointEditor = true;
+	elseif action == 'HIDE' and destination == 'WaypointEditor' then
+		self.WaypointEditor = false;
 	end
 	
 	WebUI:ExecuteJS('UI.Handle(' .. json.encode({
