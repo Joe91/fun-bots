@@ -20,10 +20,6 @@ class Alert extends Box {
 		setTimeout(this.Hide.bind(this), this.delay);
 	}
 	
-	GetPosition() {
-		return this.position;
-	}
-	
 	Repaint() {
 		super.Repaint();
 		

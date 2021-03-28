@@ -23,6 +23,10 @@ class Box extends Component {
 		this.color = color;
 	}
 	
+	GetPosition() {
+		return this.position;
+	}
+	
 	InitializeComponent() {
 		super.InitializeComponent();
 		

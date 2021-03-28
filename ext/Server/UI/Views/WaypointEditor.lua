@@ -19,8 +19,8 @@ function WaypointEditor:Toggle(player)
 	self.view:Toggle(player);
 end
 
-function WaypointEditor:Call(element, name)
-	self.view:Call(element, name);
+function WaypointEditor:Call(player, element, name)
+	self.view:Call(player, element, name);
 end
 
 function WaypointEditor:GetName()
@@ -48,12 +48,13 @@ function WaypointEditor:InitializeComponent()
 	local client = MenuItem('Client', 'client');
 		client:SetIcon('Assets/Icons/Client.svg');
 		
-		client:AddItem(MenuItem('Load', 'waypoints_client_load', function()
-			print('waypoints_client_load Executed');
+		client:AddItem(MenuItem('Load', 'waypoints_client_load', function(player)
+			local expectedAmount = g_NodeCollection:Get()
+			NetEvents:SendToLocal('ClientNodeEditor:ReceiveNodes', player, (#expectedAmount));
 		end):SetIcon('Assets/Icons/Reload.svg'));
 		
-		client:AddItem(MenuItem('Save', 'waypoints_client_save', function()
-			print('waypoints_client_save Executed');
+		client:AddItem(MenuItem('Save', 'waypoints_client_save', function(player)
+			NetEvents:SendToLocal('ClientNodeEditor:SaveNodes', player);
 		end):SetIcon('Assets/Icons/Save.svg'));
 		
 	navigation:AddItem(client);
@@ -61,12 +62,12 @@ function WaypointEditor:InitializeComponent()
 	local server = MenuItem('Server', 'server');
 		server:SetIcon('Assets/Icons/Server.svg');
 		
-		server:AddItem(MenuItem('Load', 'waypoints_server_load', function()
-			print('waypoints_server_load Executed');
+		server:AddItem(MenuItem('Load', 'waypoints_server_load', function(player)
+			g_NodeCollection:Load();
 		end):SetIcon('Assets/Icons/Reload.svg'));
 		
-		server:AddItem(MenuItem('Save', 'waypoints_server_save', function()
-			print('waypoints_server_save Executed');
+		server:AddItem(MenuItem('Save', 'waypoints_server_save', function(player)
+			g_NodeCollection:Save();
 		end):SetIcon('Assets/Icons/Save.svg'));
 	navigation:AddItem(server);
 
@@ -75,21 +76,21 @@ function WaypointEditor:InitializeComponent()
 		view:SetIcon('Assets/Icons/View.svg');
 		view:AddItem(MenuSeparator('General'));
 		
-		view:AddItem(MenuItem('Debug-Text', 'debug_text', function()
+		view:AddItem(MenuItem('Debug-Text', 'debug_text', function(player)
 			print('debug_text Executed');
 		end));
 		
 		view:AddItem(MenuSeparator('Waypoints'));
 		
-		view:AddItem(MenuItem('Dots', 'dots', function()
+		view:AddItem(MenuItem('Dots', 'dots', function(player)
 			print('dots Executed');
 		end));
 		
-		view:AddItem(MenuItem('Lines', 'lines', function()
+		view:AddItem(MenuItem('Lines', 'lines', function(player)
 			print('lines Executed');
 		end));
 		
-		view:AddItem(MenuItem('Labels', 'labels', function()
+		view:AddItem(MenuItem('Labels', 'labels', function(player)
 			print('labels Executed');
 		end));
 		
@@ -102,9 +103,7 @@ function WaypointEditor:InitializeComponent()
 	
 	local tracing = false;
 	
-	tools:AddItem(MenuItem('Start Trace', 'trace_toggle', function()
-		print('trace_start Executed');
-		
+	tools:AddItem(MenuItem('Start Trace', 'trace_toggle', function(player)		
 		tracing = (tracing ~= true);
 		local text = 'Start Trace';
 		local icon = 'Assets/Icons/Start.svg';
@@ -120,29 +119,33 @@ function WaypointEditor:InitializeComponent()
 			Text	= text,
 			Icon	= icon
 		}));
+		
+		--NetEvents:SendToLocal('ClientNodeEditor:EndTrace', player);
+		NetEvents:SendToLocal('ClientNodeEditor:StartTrace', player);
 	end):SetIcon('Assets/Icons/Start.svg'));
 	
-	tools:AddItem(MenuItem('Save Trace', 'trace_save', function()
-		print('trace_save Executed');
+	tools:AddItem(MenuItem('Save Trace', 'trace_save', function(player)
+		NetEvents:SendToLocal('ClientNodeEditor:SaveTrace', player, tonumber(0));
 	end):SetIcon('Assets/Icons/Save.svg'));
 	
-	tools:AddItem(MenuItem('Spawn Bot on Way', 'bot_spawn_path', function()
+	tools:AddItem(MenuItem('Spawn Bot on Way', 'bot_spawn_path', function(player)
 		print('bot_spawn_path Executed');
 	end):SetIcon('Assets/Icons/SpawnBotWay.svg'));
 	
-	tools:AddItem(MenuItem('Clear Trace', 'trace_clear', function()
-		print('trace_clear Executed');
+	tools:AddItem(MenuItem('Clear Trace', 'trace_clear', function(player)
+		NetEvents:SendToLocal('ClientNodeEditor:ClearTrace', player);
 	end):SetIcon('Assets/Icons/Clear.svg'));
 	
-	tools:AddItem(MenuItem('Reset all Traces', 'trace_reset_all', function()
-		print('trace_reset_all Executed');
+	tools:AddItem(MenuItem('Reset all Traces', 'trace_reset_all', function(player)
+		g_NodeCollection:Clear();
+		NetEvents:BroadcastLocal('NodeCollection:Clear');
 	end):SetIcon('Assets/Icons/Trash.svg'));
 	
 	navigation:AddItem(tools);
 	
 	self.view:AddComponent(navigation);
 	
-	local status = Box();
+	local status = Box(Color.Blue);
 	
 	status:SetPosition(Position.Absolute, {
 		Top		= 50,

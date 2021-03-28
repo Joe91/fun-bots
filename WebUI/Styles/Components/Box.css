@@ -1,0 +1,9 @@
+ui-box {
+	color: var(--color_white);
+	text-shadow: 0 0 6px var(--color_text_shadow);
+	font-weight: 400;
+	font-size: 18px;
+	background-size: cover;
+	background-position: 50% 50%;
+	padding: 5px 20px;
+}

@@ -4,10 +4,6 @@ class Component {
 	elemement	= null;
 	attributes	= {};
 	
-	constructor() {
-		
-	}
-	
 	GetName() {
 		return this.name;
 	}

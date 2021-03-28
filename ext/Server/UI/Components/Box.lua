@@ -1,8 +1,9 @@
 class('Box');
 
-function Box:__init()
+function Box:__init(color)
 	self.attributes	= {};
 	self.items		= {};
+	self.color		= color or Color.White;
 end
 
 function Box:__class()
@@ -42,7 +43,8 @@ function Box:Serialize()
 	end
 	
 	return {
-		Items		= items
+		Color	= self.color,
+		Items	= items
 	};
 end
 

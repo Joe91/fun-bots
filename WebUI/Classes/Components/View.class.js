@@ -30,6 +30,9 @@ class View extends Component {
 							component		= new Menu();
 							component.Items	= properties.Data.Items;
 						break;
+						case 'Box':
+							component		= new Box(properties.Data.Color);
+						break;
 					}
 				}
 				

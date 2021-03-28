@@ -143,12 +143,10 @@ end
 
 function View:Activate(player)
 	NetEvents:SendTo('UI', player, 'VIEW', self.name, 'ACTIVATE');
-	self.visible	= true;
 end
 
 function View:Deactivate(player)
 	NetEvents:SendTo('UI', player, 'VIEW', self.name, 'DEACTIVATE');
-	self.visible	= false;
 end
 
 function View:Serialize()

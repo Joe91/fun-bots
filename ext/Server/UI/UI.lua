@@ -19,7 +19,7 @@ function UI:__init()
 		'View',
 		'Alert',
 		'Dialog',
-		'Box',
+		'Box'
 	};
 	
 	-- Views that will be loaded

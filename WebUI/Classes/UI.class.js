@@ -63,9 +63,11 @@ class UserInterface {
 						view.Toggle();
 					break;
 					case 'ACTIVATE':
+						console.error('Aktivate', destination);
 						view.Activate();
 					break;
 					case 'DEACTIVATE':
+						console.error('Deaktivate', destination);
 						view.Deactivate();
 					break;
 					case 'UPDATE':
