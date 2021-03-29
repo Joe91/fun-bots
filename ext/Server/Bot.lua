@@ -2,6 +2,7 @@ class('Bot');
 
 require('__shared/Config');
 require('__shared/NodeCollection')
+require('__shared/Constants/VehicleNames');
 require('Globals');
 require('PathSwitcher')
 
@@ -559,16 +560,91 @@ function Bot:_updateYaw()
 end
 
 function Bot:_findOutVehicleType()
+	local type = 0 -- no vehicle
 	if self._shootPlayer.attachedControllable ~= nil then
-		local vehicle = VehicleEntityData(self._shootPlayer.attachedControllable.data)
-		print(vehicle.controllableType)
-		print(vehicle.nameSid)
-		if vehicle.nameSid == "Viper" or vehicle.nameSid == "f16" then
-			
+		local vehicleName = VehicleTable[VehicleEntityData(self._shootPlayer.attachedControllable.data).controllableType:gsub(".+/.+/","")]
+		-- Tank
+		if vehicleName == "[LAV-25]" or 
+		vehicleName == "[SPRUT-SD]" or
+		vehicleName == "[BMP-2M]" or
+		vehicleName == "[M1 ABRAMS]" or
+		vehicleName == "[T-90A]" or
+		vehicleName == "[M1128]" or
+		vehicleName == "[RHINO]"
+		then
+			type = 1
 		end
-		print(vehicle.useProtectedShields)
-		print(vehicle.armorMultiplier)
+
+		-- light Vehicle
+		if vehicleName == "[AAV-7A1 AMTRAC]" or 
+		vehicleName == "[9K22 TUNGUSKA-M]" or
+
+		vehicleName == "[GAZ-3937 VODNIK]" or
+		vehicleName == "[LAV-AD]"  or
+		vehicleName == "[M1114 HMMWV]" or
+		vehicleName == "[HMMWV ASRAD]" or
+		vehicleName == "[GUNSHIP]" or
+		vehicleName == "[M142]" or
+		vehicleName == "[BM-23]" or
+		vehicleName == "[BARSUK]" or
+		vehicleName == "[VODNIK AA]" or
+		vehicleName == "[BTR-90]"
+		then
+			type = 2
+		end
+
+		-- Air vehicles
+		if vehicleName == "[A-10 THUNDERBOLT]" or 
+		vehicleName == "[AH-1Z VIPER]" or
+		vehicleName == "[AH-6J LITTLE BIRD]" or
+		vehicleName == "[F/A-18E SUPER HORNET]" or
+		vehicleName == "[KA-60 KASATKA]" or
+		vehicleName == "[MI-28 HAVOC]" or
+		vehicleName == "[SU-25TM FROGFOOT]" or
+		vehicleName == "[SU-35BM FLANKER-E]" or
+		vehicleName == "[SU-37]" or
+		vehicleName == "[UH-1Y VENOM]" or
+		vehicleName == "[Z-11W]" or
+		vehicleName == "[F-35]"
+		then
+			type = 3
+		end
+
+		-- no armor at all
+		if vehicleName == "[GROWLER ITV]" or
+		vehicleName == "[CIVILIAN CAR]" or
+		vehicleName == "[DELIVERY VAN]" or
+		vehicleName == "[SUV]" or
+		vehicleName == "[POLICE VAN]" or
+		vehicleName == "[RHIB BOAT]" or
+		vehicleName == "[TECHNICAL TRUCK]" or
+		vehicleName == "[VDV Buggy]" or
+		vehicleName == "[QUAD BIKE]" or
+		vehicleName == "[DIRTBIKE]" or
+		vehicleName == "[DPV]" or
+		vehicleName == "[SKID LOADER]"
+		then
+			type = 4
+		end
 	end
+	return type;
+end
+
+function Bot:_ceckForVehicleAttack(type, distance)
+	local attackMode = 0; -- no attack
+	if type == 4 then
+		attackMode = 1; -- attack with rifle
+	elseif type == 2 and distance < 35 then
+		attackMode = 2;	-- attack with grenade
+	end
+	if self.gadget2.type == "Rocket" then
+		attackMode = 3
+	elseif self.gadget2.type == "C4" and distance < 25 then
+		if type ~= 3 then --no air vehicles
+			attackMode = 4
+		end
+	end
+	return attackMode
 end
 
 function Bot:_updateShooting()
@@ -717,25 +793,23 @@ function Bot:_updateShooting()
 				end
 
 				-- target in vehicle - use gadget 2 if rocket --TODO: don't shoot with other classes
-				if self._shootPlayer.attachedControllable ~= nil then
-					--self:_findOutVehicleType()
-					-- TODO: find out what vehicle
-					if self.gadget2 ~= nil then
-						if self.gadget2.type == "Rocket" then
+				local type = self:_findOutVehicleType()
+				if type ~= 0 then
+					local attackMode = self:_ceckForVehicleAttack(type, currentDistance)
+					if attackMode > 0 then
+						if attackMode == 2 then -- grenade
+							self._grenadeActive = true;
+						elseif attackMode == 3 then -- rocket
 							self._weaponToUse = "Gadget2"
 							if self.player.soldier.weaponsComponent.currentWeapon.secondaryAmmo <= 2 then
 								self.player.soldier.weaponsComponent.currentWeapon.secondaryAmmo = self.player.soldier.weaponsComponent.currentWeapon.secondaryAmmo + 3
 							end
-						elseif self.gadget2.type == "C4" and currentDistance < 25 then
+						elseif attackMode == 4 then -- C4
 							self._weaponToUse = "Gadget2"
 							self._c4Active = true;
-						else
-							if currentDistance < 35 then
-								self._grenadeActive = true;
-							else
-								self._shootModeTimer = Config.botFireModeDuration; -- end attack
-							end
 						end
+					else
+						self._shootModeTimer = Config.botFireModeDuration; -- end attack
 					end
 				else
 					if self.knifeMode or self._meleeActive then
