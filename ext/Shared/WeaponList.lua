@@ -8,6 +8,10 @@ require('__shared/WeaponLists/CustomWeaponsRecon');
 require('__shared/WeaponLists/CustomWeaponsSupport');
 
 -- create globals
+AllWeapons = {}
+KnifeWeapons = {}
+PistoWeapons = {}
+
 AssaultPrimary = {}
 AssaultPistol = {}
 AssaultKnife = {}
@@ -449,6 +453,8 @@ end
 
 function WeaponList:updateWeaponList()
 	AllWeapons = {}
+	KnifeWeapons = {}
+	PistoWeapons = {}
 
 	AssaultPrimary = {}
 	AssaultPistol = {}
@@ -478,6 +484,12 @@ function WeaponList:updateWeaponList()
 	for i=1, #self._weapons do
 		local wep = self._weapons[i]
 		table.insert(AllWeapons, wep.name)
+		if (wep.type == 'Knife') then
+			table.insert(KnifeWeapons, wep.name)
+		elseif (wep.type == 'Pistol') then
+			table.insert(PistoWeapons, wep.name)
+		end
+
 
 		if self:_useWeaponType("Assault", wep.type, wep.name) then
 			if (wep.type == 'Knife') then

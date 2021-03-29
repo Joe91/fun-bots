@@ -195,10 +195,10 @@ function FunBotUIClient:_onUISettings(data)
 	settings:add("WEAPONS", "Boolean", "useRandomWeapon", Language:I18N("Random Weapon"), data.useRandomWeapon, true, Language:I18N("use a random weapon out of the class list"));
 	settings:addList("WEAPONS", "pistol", Language:I18N("Bot Pistol"), PistoWeapons, data.pistol, "M1911_Lit", Language:I18N("Pistol of Bots"));
 	settings:addList("WEAPONS", "knife", Language:I18N("Bot Knife"), KnifeWeapons, data.knife, "Razor", Language:I18N("Knife of Bots"));
-	settings:addList("WEAPONS", "assaultWeapon",  Language:I18N("Weapon Assault"), WeaponsAssault, data.assaultWeapon, "M416", Language:I18N("Weapon of Assault class"));
-	settings:addList("WEAPONS", "engineerWeapon",  Language:I18N("Weapon Engineer"), WeaponsEngineer, data.engineerWeapon, "M4A1", Language:I18N("Weapon of Engineer class"));
-	settings:addList("WEAPONS", "supportWeapon",  Language:I18N("Weapon Support"), WeaponsSupport, data.supportWeapon, "M249", Language:I18N("Weapon of Support class"));
-	settings:addList("WEAPONS", "reconWeapon",  Language:I18N("Weapon Recon"), WeaponsRecon, data.reconWeapon, "L96_6x", Language:I18N("Weapon of Recon class"));
+	settings:addList("WEAPONS", "assaultWeapon",  Language:I18N("Weapon Assault"), AssaultPrimary, data.assaultWeapon, "M416", Language:I18N("Weapon of Assault class"));
+	settings:addList("WEAPONS", "engineerWeapon",  Language:I18N("Weapon Engineer"), EngineerPrimary, data.engineerWeapon, "M4A1", Language:I18N("Weapon of Engineer class"));
+	settings:addList("WEAPONS", "supportWeapon",  Language:I18N("Weapon Support"), SupportPrimary, data.supportWeapon, "M249", Language:I18N("Weapon of Support class"));
+	settings:addList("WEAPONS", "reconWeapon",  Language:I18N("Weapon Recon"), ReconPrimary, data.reconWeapon, "L96_6x", Language:I18N("Weapon of Recon class"));
 	settings:addList("WEAPONS", "assaultWeaponSet",  Language:I18N("Weaponset of Assault"), WeaponSets, data.assaultWeaponSet, "Class", Language:I18N("Weaponset of Assault class"));
 	settings:addList("WEAPONS", "engineerWeaponSet",  Language:I18N("Weaponset Engineer"), WeaponSets, data.engineerWeaponSet, "Class_PDW", Language:I18N("Weaponset of Engineer class"));
 	settings:addList("WEAPONS", "supportWeaponSet",  Language:I18N("Weaponset Support"), WeaponSets, data.supportWeaponSet, "Class_Shotgun", Language:I18N("Weaponset of Support class"));
