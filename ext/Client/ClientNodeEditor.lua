@@ -1057,13 +1057,25 @@ end
 -- ############################ Trace Recording
 -- ############################################
 
+function ClientNodeEditor:_getNewIndex()
+	local nextIndex = 0;
+	local allPaths = g_NodeCollection:GetPaths();
+	for pathIndex, points in pairs(allPaths) do
+		if pathIndex - nextIndex > 1 then
+			return nextIndex + 1; -- gap in traces
+		end
+		nextIndex = pathIndex;
+	end
+	return nextIndex + 1 -- increment index
+end
+
 function ClientNodeEditor:_onStartTrace()
 	if (self.customTrace ~= nil) then
 		self.customTrace:Clear()
 	end
 	self.customTrace = NodeCollection(true)
 	self.customTraceTimer = 0
-	self.customTraceIndex = #g_NodeCollection:GetPaths()+1
+	self.customTraceIndex = self:_getNewIndex()
 	self.customTraceDistance = 0
 
 	local firstWaypoint = self.customTrace:Create({
@@ -1108,7 +1120,7 @@ end
 
 function ClientNodeEditor:_onClearTrace()
 	self.customTraceTimer = -1
-	self.customTraceIndex = #g_NodeCollection:GetPaths()+1
+	self.customTraceIndex = self:_getNewIndex()
 	self.customTraceDistance = 0
 	self.customTrace:Clear()
 	g_FunBotUIClient:_onUITrace(false)
@@ -1139,7 +1151,7 @@ function ClientNodeEditor:_onSaveTrace(pathIndex)
 	self.nodeOperation = 'Custom Trace'
 
 	local pathCount = #g_NodeCollection:GetPaths()
-	pathIndex = tonumber(pathIndex) or pathCount+1
+	pathIndex = tonumber(pathIndex) or self:_getNewIndex()
 	local currentWaypoint = self.customTrace:GetFirst()
 	local referrenceWaypoint = nil
 	local direction = 'Next'
@@ -1165,20 +1177,27 @@ function ClientNodeEditor:_onSaveTrace(pathIndex)
 		end
 
 	-- pathIndex is between 2 and #g_NodeCollection:GetPaths()
-	-- get the node before the start of the specified path
+	-- get the node before the start of the specified path, if the path is existing
 	elseif (pathIndex <= pathCount) then
-		referrenceWaypoint = g_NodeCollection:GetFirst(pathIndex).Previous
+		if #g_NodeCollection:Get(nil, pathIndex) > 0 then
+			print("path exists")
+			referrenceWaypoint = g_NodeCollection:GetFirst(pathIndex).Previous
+		else
+			referrenceWaypoint = g_NodeCollection:GetLast()
+		end
 
 	-- pathIndex == last path index, append all nodes to end of collection
 	elseif (pathIndex > pathCount) then
 		referrenceWaypoint = g_NodeCollection:GetLast()
 	end
 
-	-- we have a path to delete
+	-- we might have a path to delete
 	if (pathIndex > 0 and pathIndex <= pathCount) then
 		local pathWaypoints = g_NodeCollection:Get(nil, pathIndex)
-		for i=1, #pathWaypoints do
-			g_NodeCollection:Remove(pathWaypoints[i])
+		if #pathWaypoints > 0 then
+			for i=1, #pathWaypoints do
+				g_NodeCollection:Remove(pathWaypoints[i])
+			end
 		end
 	end
 
@@ -1685,7 +1704,7 @@ function ClientNodeEditor:_onUpdateManagerUpdate(delta, pass)
 
 			-- loop selected nodes and update positions
 			local nodePaths = g_NodeCollection:GetPaths()
-			for path=1, #nodePaths do
+			for path,_ in pairs(nodePaths) do
 
 				if (g_NodeCollection:IsPathVisible(path)) then
 
@@ -1890,7 +1909,7 @@ function ClientNodeEditor:_onUIDrawHud()
 
 	-- draw waypoints stored in main collection
 	local waypointPaths = g_NodeCollection:GetPaths()
-	for path=1, #waypointPaths do
+	for path,_ in pairs(waypointPaths) do
 		if (g_NodeCollection:IsPathVisible(path)) then
 			for waypoint=1, #waypointPaths[path] do
 				self:_drawNode(waypointPaths[path][waypoint], false)
