@@ -60,7 +60,7 @@ function PathSwitcher:getNewPath(botname, point, objective)
 			table.insert(possiblePaths, newPoint)
 		end
 	end
-	
+
 	-- loop through each possible path
 	for i=1, #possiblePaths do
 		local newPoint = possiblePaths[i]
@@ -70,6 +70,13 @@ function PathSwitcher:getNewPath(botname, point, objective)
 
 		-- this path has listed objectives
 		if (pathNode.Data.Objectives ~= nil and objective ~= '') then
+			-- check for possible subObjective
+			if ((#pathNode.Data.Objectives == 1 ) and (newPoint.ID ~= point.ID)) then
+				if (g_GameDirector:useSubobjective(botname, pathNode.Data.Objectives[1]) == true) then
+					return true, newPoint;
+				end
+			end
+
 			-- path with a single objective that matches mine, top priority
 			if (#pathNode.Data.Objectives == 1 and pathNode.Data.Objectives[1] == objective) then
 				if (highestPriority < 2) then highestPriority = 2 end
@@ -145,10 +152,6 @@ function PathSwitcher:getNewPath(botname, point, objective)
 			end
 		end
 	end
-
-	-- notify GameDirector
-	local onObjective = (currentPriority == 2)
-	g_GameDirector:notifyBotAtObjective(botname, objective, onObjective)
 
 	-- remove paths below our highest priority
 	local validPaths = {}

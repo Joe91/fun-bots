@@ -38,6 +38,30 @@ function WeaponModification:__init()
 	self.m_stand_recoilDecrease	= {};
 
 	--self.crouch = (Config.botAttackMode == "Crouch");
+	--[[local isBot = {}
+	isBot["voteban_flash"] = true
+	Events:Subscribe('GunSway:Update', function(gunSway, weapon, weaponFiring, deltaTime)
+		if weapon == nil then
+			return
+		end
+		local soldier = SoldierEntity(weapon.bus.parent.entities[26])
+		if soldier == nil or soldier.player == nil then
+			return
+		end
+		if isBot[soldier.player.name] ~= nil then
+			local gunSwayData = GunSwayData(gunSway.data)
+			if soldier.pose == CharacterPoseType.CharacterPoseType_Stand then
+				gunSway.dispersionAngle = gunSwayData.stand.zoom.baseValue.minAngle
+			elseif soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
+				gunSway.dispersionAngle = gunSwayData.crouch.zoom.baseValue.minAngle
+				
+			elseif soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
+				gunSway.dispersionAngle = gunSwayData.prone.zoom.baseValue.minAngle
+			else
+				return
+			end
+		end
+	end)--]]
 end
 
 function WeaponModification:_resetAll()

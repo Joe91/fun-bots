@@ -1280,14 +1280,14 @@ function NodeCollection:GetKnownOjectives()
 	local objectives = {
 		--[<Objective Name>] = {<PathIndex 1>, <PathIndex 2>}
 	}
-	for i=1, #self.waypointsByPathIndex do
-		local pathWaypoint = self.waypointsByPathIndex[i][1]
+	for pathIndex,_ in pairs(self.waypointsByPathIndex) do
+		local pathWaypoint = self.waypointsByPathIndex[pathIndex][1]
 		if (pathWaypoint ~= nil and pathWaypoint.Data.Objectives ~= nil) then
 			for _,objective in pairs(pathWaypoint.Data.Objectives) do
 				if (objectives[objective] == nil) then
 					objectives[objective] = {}
 				end
-				table.insert(objectives[objective], i)
+				table.insert(objectives[objective], pathIndex)
 			end
 		end
 	end

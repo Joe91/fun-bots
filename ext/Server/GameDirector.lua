@@ -78,8 +78,7 @@ function GameDirector:initObjectives()
 			destroyed = false,
 			active = true,
 			subObjective = false,
-			assigned = {},
-			bots = {}
+			assigned = {}
 		}
 		if string.find(objectiveName:lower(), "base") ~= nil then
 			objective.isBase = true;
@@ -321,6 +320,22 @@ function GameDirector:_updateObjective(name, data)
 	end
 end
 
+function GameDirector:_getDistanceFromObjective(objective, position)
+	local distance = 0;
+	local allObjectives = g_NodeCollection:GetKnownOjectives();
+	local paths = allObjectives[objective];
+	for _,path in pairs(paths) do
+		local node = g_NodeCollection:Get(1, path)
+		if node ~= nil and node.Data.Objectives ~= nil then
+			if #node.Data.Objectives == 1 then
+				distance = position:Distance(node.Position)
+				break;
+			end
+		end
+	end
+	return distance;
+end
+
 function GameDirector:_translateObjective(positon, name)
 	if name == nil or self.Translations[name] == nil then
 		local allObjectives = g_NodeCollection:GetKnownOjectives();
@@ -454,37 +469,6 @@ function GameDirector:getObjectiveFromSubObj(subObjective)
 	end
 end
 
-function GameDirector:notifyBotAtObjective(botname, objectiveName, onObjective)
-	local objective = self:getObjectiveObject(objectiveName)
-	if objective ~= nil and objective.active then
-		if onObjective then
-			local found = false;
-			for _,bot in pairs(objective.bots) do
-				if bot == botname then
-					found = true;
-					break; -- dont insert bot, if already in
-				end
-			end
-			if not found then
-				table.insert(objective.bots, botname)
-			end
-		else
-			self:_removeBotFromObjective(botname)
-		end
-	end
-end
-
-function GameDirector:_removeBotFromObjective(botname)
-	for _,singleObjective in pairs(self.AllObjectives) do
-		for pos,bot in pairs(singleObjective.bots) do
-			if bot == botname then
-				table.remove(singleObjective.bots, pos)
-				break;
-			end
-		end
-	end
-end
-
 function GameDirector:_useSubobjective(botTeam, objectiveName)
 	local use = false;
 	local objective = self:getObjectiveObject(objectiveName);
@@ -569,86 +553,82 @@ function GameDirector:_onUpdate(delta)
 			end
 		end
 
-		-- TODO: check for inactive objectives of bots
+
+		
 		-- check objective statuses
-		for _,objective in pairs(self.AllObjectives) do
-			local parentObjective = self:getObjectiveFromSubObj(objective.name)
-			local subObjective = self:getSubObjectiveFromObj(objective.name)
-			if not objective.isBase and objective.active and not objective.destroyed then
+		for botTeam, bots in pairs(self.BotsByTeam) do
+			for _,objective in pairs(self.AllObjectives) do
+				objective.assigned[botTeam] = 0;
+			end
+		end
 
-				for botTeam, bots in pairs(self.BotsByTeam) do
-					objective.assigned[botTeam] = 0;
-
-					if objective.subObjective then
-						if self:_useSubobjective(botTeam, objective.name) then
-							local parentObject = self:getObjectiveObject(parentObjective)
-							for i=1, #bots do
-								local botPossible = false;
-								for _,botname in pairs(parentObject.bots) do
-									if bots[i].name == botname then
-										botPossible = true;
-										if (bots[i]:getObjective() == objective.name) then
-											objective.assigned[botTeam] = objective.assigned[botTeam] + 1
-										end
-
-										if (bots[i]:getObjective() == parentObjective and objective.assigned[botTeam] < 2) then
-											if Debug.Server.GAMEDIRECTOR then
-												print('Assigning bot to objective: '..bots[i].name..' (team: '..botTeam..') -> '..objective.name)
+		for botTeam, bots in pairs(self.BotsByTeam) do
+			for _,bot in pairs(bots) do
+				if bot:getObjective() == '' then
+					if bot.player.alive then
+						-- find closest objective for bot
+						local closestDistance = nil;
+						local closestObjective = nil;
+						for _,objective in pairs(self.AllObjectives) do
+							if not objective.subObjective then
+								if not objective.isBase and objective.active and not objective.destroyed then
+									if objective.team ~= botTeam then
+										if objective.assigned[botTeam] < maxAssings[botTeam] then
+											local distance = self:_getDistanceFromObjective(objective.name, bot.player.soldier.worldTransform.trans)
+											if closestDistance == nil or closestDistance > distance then
+												closestDistance = distance;
+												closestObjective = objective.name
 											end
-											
-											bots[i]:setObjective(objective.name)
-											objective.assigned[botTeam] = objective.assigned[botTeam] + 1
 										end
 									end
-								end
-								if not botPossible and bots[i]:getObjective() == objective.name then
-									if Debug.Server.GAMEDIRECTOR then
-										print('Assigning bot to objective: '..bots[i].name..' (team: '..botTeam..') -> '..parentObjective)
-									end
-									
-									bots[i]:setObjective(parentObjective)
-								end
-							end
-						else
-							-- unassign bots
-							for i=1, #bots do
-								if (bots[i]:getObjective() == objective.name) then
-									if Debug.Server.GAMEDIRECTOR then
-										print('Assigning bot to objective: '..bots[i].name..' (team: '..botTeam..') -> '..parentObjective)
-									end
-									
-									bots[i]:setObjective(parentObjective)
 								end
 							end
 						end
-					else
-						for i=1, #bots do
-							if (bots[i]:getObjective() == objective.name or bots[i]:getObjective() == subObjective) then
-								objective.assigned[botTeam] = objective.assigned[botTeam] + 1
-							end
-
-							if (objective.team ~= botTeam and bots[i]:getObjective() == '' and objective.assigned[botTeam] < maxAssings[botTeam]) then
-
-								if Debug.Server.GAMEDIRECTOR then
-									print('Assigning bot to objective: '..bots[i].name..' (team: '..botTeam..') -> '..objective.name)
-								end
-								
-								bots[i]:setObjective(objective.name)
-								objective.assigned[botTeam] = objective.assigned[botTeam] + 1
+						if (closestObjective ~= nil) then
+							local objective = self:getObjectiveObject(closestObjective)
+							bot:setObjective(closestObjective)
+							objective.assigned[botTeam] = objective.assigned[botTeam] + 1
+						end
+					end
+				else
+					local objective = self:getObjectiveObject(bot:getObjective())
+					local parentObjective = self:getObjectiveFromSubObj(objective.name)
+					objective.assigned[botTeam] = objective.assigned[botTeam] + 1
+					if parentObjective ~= nil then
+						local tempObjective = self:getObjectiveObject(parentObjective)
+						if tempObjective.active and not tempObjective.destroyed then
+							tempObjective.assigned[botTeam] = tempObjective.assigned[botTeam] + 1
+							-- check for leave of subObjective
+							if not self:_useSubobjective(botTeam, objective.name) then
+								bot:setObjective(parentObjective)
 							end
 						end
 					end
-				end
-			else
-				-- remove bots from this objective
-				for _,bot in pairs(botList) do
-					if bot:getObjective() == objective.name then
-						bot:setObjective();	-- clear objective
+					if objective.isBase or not objective.active or objective.destroyed then
+						bot:setObjective();
 					end
 				end
 			end
 		end
 	end
+end
+
+function GameDirector:useSubobjective(botname, objective)
+	local tempObjective = self:getObjectiveObject(objective)
+	if tempObjective.subObjective then -- is valid getSubObjective
+		if tempObjective.active and not tempObjective.destroyed then
+			local bot = g_BotManager:getBotByName(botname)
+			local botTeam = bot.player.teamId;
+			if self:_useSubobjective(botTeam, objective) then
+				if tempObjective.assigned[botTeam] < 2 then
+					tempObjective.assigned[botTeam] = tempObjective.assigned[botTeam] + 1
+					bot:setObjective(objective)
+					return true;
+				end
+			end
+		end
+	end
+	return false;
 end
 
 if (g_GameDirector == nil) then

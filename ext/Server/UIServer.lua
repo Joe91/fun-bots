@@ -488,10 +488,10 @@ function FunBotUIServer:_writeSettings(player, request)
 	self:_writeSingleSetting('useRandomWeapon', request, 'bool', temporary, batched);
 	self:_writeSingleSettingList('pistol', request, PistoWeapons, temporary, batched);
 	self:_writeSingleSettingList('knife', request, KnifeWeapons, temporary, batched);
-	self:_writeSingleSettingList('assaultWeapon', request, WeaponsAssault, temporary, batched);
-	self:_writeSingleSettingList('engineerWeapon', request, WeaponsEngineer, temporary, batched);
-	self:_writeSingleSettingList('supportWeapon', request, WeaponsSupport, temporary, batched);
-	self:_writeSingleSettingList('reconWeapon', request, WeaponsRecon, temporary, batched);
+	self:_writeSingleSettingList('assaultWeapon', request, AssaultPrimary, temporary, batched);
+	self:_writeSingleSettingList('engineerWeapon', request, EngineerPrimary, temporary, batched);
+	self:_writeSingleSettingList('supportWeapon', request, SupportPrimary, temporary, batched);
+	self:_writeSingleSettingList('reconWeapon', request, ReconPrimary, temporary, batched);
 	
 	-- trace
 	self:_writeSingleSetting('debugTracePaths', request, 'bool', temporary, batched);

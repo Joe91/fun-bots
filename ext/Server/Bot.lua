@@ -2,6 +2,7 @@ class('Bot');
 
 require('__shared/Config');
 require('__shared/NodeCollection')
+require('__shared/Constants/VehicleNames');
 require('Globals');
 require('PathSwitcher')
 
@@ -69,6 +70,7 @@ function Bot:__init(player)
 	self._reviveActive = false;
 	self._deployActive = false;
 	self._grenadeActive	= false;
+	self._c4Active = false;
 
 	--shooting
 	self._shoot = false;
@@ -137,12 +139,18 @@ function Bot:shootAt(player, ignoreYaw)
 	end
 
 	-- don't shoot if too far away
+	local distance = player.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans);
 	if not ignoreYaw then
-		local distance = player.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans);
 
 		if self.activeWeapon.type ~= "Sniper" and distance > Config.maxShootDistanceNoSniper then
 			return false;
 		end
+	end
+
+	-- check for vehicles
+	local type = self:_findOutVehicleType(player)
+	if type ~= 0 and self:_ceckForVehicleAttack(type, distance) == 0 then
+		return false;
 	end
 
 	local dYaw		= 0;
@@ -221,6 +229,7 @@ function Bot:resetVars()
 	self._reviveActive 			= false;
 	self._deployActive 			= false;
 	self._grenadeActive			= false;
+	self._c4Active 				= false;
 	self._weaponToUse 			= "Primary";
 end
 
@@ -353,6 +362,7 @@ function Bot:resetSpawnVars()
 	self._reviveActive 			= false;
 	self._deployActive 			= false;
 	self._grenadeActive			= false;
+	self._c4Active 				= false;
 	self._weaponToUse 			= "Primary";
 
 	self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 0);
@@ -555,6 +565,93 @@ function Bot:_updateYaw()
 	self.player.input.authoritativeAimingPitch	= self._targetPitch;
 end
 
+function Bot:_findOutVehicleType(player)
+	local type = 0 -- no vehicle
+	if player.attachedControllable ~= nil then
+		local vehicleName = VehicleTable[VehicleEntityData(player.attachedControllable.data).controllableType:gsub(".+/.+/","")]
+		-- Tank
+		if vehicleName == "[LAV-25]" or 
+		vehicleName == "[SPRUT-SD]" or
+		vehicleName == "[BMP-2M]" or
+		vehicleName == "[M1 ABRAMS]" or
+		vehicleName == "[T-90A]" or
+		vehicleName == "[M1128]" or
+		vehicleName == "[RHINO]"
+		then
+			type = 1
+		end
+
+		-- light Vehicle
+		if vehicleName == "[AAV-7A1 AMTRAC]" or 
+		vehicleName == "[9K22 TUNGUSKA-M]" or
+
+		vehicleName == "[GAZ-3937 VODNIK]" or
+		vehicleName == "[LAV-AD]"  or
+		vehicleName == "[M1114 HMMWV]" or
+		vehicleName == "[HMMWV ASRAD]" or
+		vehicleName == "[GUNSHIP]" or
+		vehicleName == "[M142]" or
+		vehicleName == "[BM-23]" or
+		vehicleName == "[BARSUK]" or
+		vehicleName == "[VODNIK AA]" or
+		vehicleName == "[BTR-90]"
+		then
+			type = 2
+		end
+
+		-- Air vehicles
+		if vehicleName == "[A-10 THUNDERBOLT]" or 
+		vehicleName == "[AH-1Z VIPER]" or
+		vehicleName == "[AH-6J LITTLE BIRD]" or
+		vehicleName == "[F/A-18E SUPER HORNET]" or
+		vehicleName == "[KA-60 KASATKA]" or
+		vehicleName == "[MI-28 HAVOC]" or
+		vehicleName == "[SU-25TM FROGFOOT]" or
+		vehicleName == "[SU-35BM FLANKER-E]" or
+		vehicleName == "[SU-37]" or
+		vehicleName == "[UH-1Y VENOM]" or
+		vehicleName == "[Z-11W]" or
+		vehicleName == "[F-35]"
+		then
+			type = 3
+		end
+
+		-- no armor at all
+		if vehicleName == "[GROWLER ITV]" or
+		vehicleName == "[CIVILIAN CAR]" or
+		vehicleName == "[DELIVERY VAN]" or
+		vehicleName == "[SUV]" or
+		vehicleName == "[POLICE VAN]" or
+		vehicleName == "[RHIB BOAT]" or
+		vehicleName == "[TECHNICAL TRUCK]" or
+		vehicleName == "[VDV Buggy]" or
+		vehicleName == "[QUAD BIKE]" or
+		vehicleName == "[DIRTBIKE]" or
+		vehicleName == "[DPV]" or
+		vehicleName == "[SKID LOADER]"
+		then
+			type = 4
+		end
+	end
+	return type;
+end
+
+function Bot:_ceckForVehicleAttack(type, distance)
+	local attackMode = 0; -- no attack
+	if type == 4 then
+		attackMode = 1; -- attack with rifle
+	elseif type == 2 and distance < 35 then
+		attackMode = 2;	-- attack with grenade
+	end
+	if self.gadget2.type == "Rocket" then
+		attackMode = 3		-- always use rocket if possible
+	elseif self.gadget2.type == "C4" and distance < 25 then
+		if type ~= 3 then -- no air vehicles
+			attackMode = 4	-- always use c4 if possible
+		end
+	end
+	return attackMode
+end
 
 function Bot:_updateShooting()
 	if self.player.alive and self._shoot then
@@ -651,13 +748,19 @@ function Bot:_updateShooting()
 
 		if self._shootPlayer ~= nil and self._shootPlayer.soldier ~= nil then
 			if self._shootModeTimer < Config.botFireModeDuration or (Config.zombieMode and self._shootModeTimer < (Config.botFireModeDuration * 4)) then
+				local currentDistance = self._shootPlayer.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans);
 				self._deployActive = false;
-				self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 1); --does not work.
+				if not self._c4Active then
+					self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 1); --does not work.
+				end
 				self.player.input:SetLevel(EntryInputActionEnum.EIAReload, 0);
 				if not self._grenadeActive then
 					self._shootModeTimer	= self._shootModeTimer + StaticConfig.botUpdateCycle;
 				end
 				self.activeMoveMode		= 9; -- movement-mode : attack
+				if self._c4Active then
+					self.activeMoveMode		= 8; -- movement-mode : C4 / revive
+				end
 				self._reloadTimer		= 0; -- reset reloading
 
 				--check for melee attack
@@ -694,15 +797,25 @@ function Bot:_updateShooting()
 						self._shootModeTimer = Config.botFireModeDuration;
 					end
 				end
+
 				-- target in vehicle - use gadget 2 if rocket --TODO: don't shoot with other classes
-				if self._shootPlayer.attachedControllable ~= nil then
-					if self.gadget2 ~= nil then
-						if self.gadget2.type == "Rocket" then
+				local type = self:_findOutVehicleType(self._shootPlayer)
+				if type ~= 0 then
+					local attackMode = self:_ceckForVehicleAttack(type, currentDistance)
+					if attackMode > 0 then
+						if attackMode == 2 then -- grenade
+							self._grenadeActive = true;
+						elseif attackMode == 3 then -- rocket
 							self._weaponToUse = "Gadget2"
 							if self.player.soldier.weaponsComponent.currentWeapon.secondaryAmmo <= 2 then
 								self.player.soldier.weaponsComponent.currentWeapon.secondaryAmmo = self.player.soldier.weaponsComponent.currentWeapon.secondaryAmmo + 3
 							end
+						elseif attackMode == 4 then -- C4
+							self._weaponToUse = "Gadget2"
+							self._c4Active = true;
 						end
+					else
+						self._shootModeTimer = Config.botFireModeDuration; -- end attack
 					end
 				else
 					if self.knifeMode or self._meleeActive then
@@ -721,7 +834,7 @@ function Bot:_updateShooting()
 							if ((self._shootModeTimer >= targetTimeValue) and (self._shootModeTimer < (targetTimeValue + StaticConfig.botUpdateCycle)) and not self._grenadeActive) or Config.botWeapon == "Grenade" then
 								-- should be triggered only once per fireMode
 								if MathUtils:GetRandomInt(0,100) < 20 then
-									if self.grenade ~= nil and self._shootPlayer.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans) < 35 then
+									if self.grenade ~= nil and currentDistance < 35 then
 										self._grenadeActive = true;
 									end
 								end
@@ -755,6 +868,37 @@ function Bot:_updateShooting()
 				if self.activeWeapon ~= nil then
 					if self.knifeMode then
 						self._shotTimer	= -Config.botFirstShotDelay;
+					elseif self._c4Active then
+						if self.player.soldier.weaponsComponent.currentWeapon.secondaryAmmo > 0 then
+							if self._shotTimer >= (self.activeWeapon.fireCycle + self.activeWeapon.pauseCycle) then
+								self._shotTimer	= 0;
+							end
+
+							if currentDistance < 5 then
+								if self._shotTimer >= self.activeWeapon.pauseCycle then
+									self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 1);
+									self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
+								else
+									self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 0);
+									self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
+								end
+							else
+								self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 0);
+								self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
+							end
+
+						else
+							if self._shotTimer >= (self.activeWeapon.fireCycle + self.activeWeapon.pauseCycle) then
+								--TODO: run away from object now
+								self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 0);
+								if self._shotTimer >= ((self.activeWeapon.fireCycle * 2) + self.activeWeapon.pauseCycle) then
+									self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
+									self.player.soldier.weaponsComponent.currentWeapon.secondaryAmmo = 4
+									self._c4Active = false;
+								end
+							else
+						end
+						end
 					else
 						if self._shotTimer >= (self.activeWeapon.fireCycle + self.activeWeapon.pauseCycle) then
 							self._shotTimer	= 0;
@@ -786,12 +930,12 @@ function Bot:_updateShooting()
 				self._shotTimer			= -Config.botFirstShotDelay;
 				self._shootPlayer		= nil;
 				self._grenadeActive 	= false;
+				self._c4Active 			= false;
 				self._lastShootPlayer	= nil;
 			end
 		elseif self._reviveActive and self._shootPlayer ~= nil then
 			self._deployActive = false;
 			if self._shootPlayer.corpse ~= nil then  -- revive
-				self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 1); --does not work.
 				self.player.input:SetLevel(EntryInputActionEnum.EIAReload, 0);
 				self._shootModeTimer	= self._shootModeTimer + StaticConfig.botUpdateCycle;
 				self.activeMoveMode		= 8; -- movement-mode : revive
@@ -842,6 +986,7 @@ function Bot:_updateShooting()
 			self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0);
 			self._weaponToUse 		= "Primary"
 			self._grenadeActive 	= false;
+			self._c4Active 			= false;
 			self._shootPlayer		= nil;
 			self._lastShootPlayer	= nil;
 			self._reviveActive		= false;
@@ -1332,28 +1477,31 @@ function Bot:_updateMovement()
 				self._attackModeMoveTimer = self._attackModeMoveTimer + StaticConfig.botUpdateCycle;
 			end
 
-		elseif self.activeMoveMode == 8 then  -- Revive Move Mode
+		elseif self.activeMoveMode == 8 then  -- Revive Move Mode / C4 Mode
 			self.activeSpeedValue = 4; --run to player
 			if self.player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Stand then
 				self.player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Stand, true, true);
 			end
 			self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0);
-
-			--TODO: obstacle detection
-			self._attackModeMoveTimer = self._attackModeMoveTimer + StaticConfig.botUpdateCycle;
-			if self._attackModeMoveTimer > 5 then
-				self._attackModeMoveTimer = 0;
-			elseif self._attackModeMoveTimer > 4.5 then
-				self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 1);
-				self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1);
-			else
-				self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
-				self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0);
-			end
-
+			local jump = true;
 			if self._shootPlayer ~= nil and self._shootPlayer.corpse ~= nil then
 				if self.player.soldier.worldTransform.trans:Distance(self._shootPlayer.corpse.worldTransform.trans) < 1 then
 					self.activeSpeedValue = 0;
+					jump = false;
+				end
+			end
+
+			--TODO: obstacle detection
+			if jump == true then
+				self._attackModeMoveTimer = self._attackModeMoveTimer + StaticConfig.botUpdateCycle;
+				if self._attackModeMoveTimer > 3 then
+					self._attackModeMoveTimer = 0;
+				elseif self._attackModeMoveTimer > 2.5 then
+					self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 1);
+					self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1);
+				else
+					self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
+					self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0);
 				end
 			end
 		end
