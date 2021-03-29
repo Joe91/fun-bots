@@ -427,8 +427,7 @@ function BotSpawner:_getSpawnPoint(team, squad)
 			if Debug.Server.BOT then
 				print("no base or capturepoint found to spawn")
 			end
-			activeWayIndex = MathUtils:GetRandomInt(1, #g_NodeCollection:GetPaths())
-			indexOnPath = MathUtils:GetRandomInt(1, #g_NodeCollection:Get(nil, activeWayIndex))
+			return
 		end
 
 		targetNode = g_NodeCollection:Get(indexOnPath, activeWayIndex)
@@ -444,8 +443,7 @@ function BotSpawner:_getSpawnPoint(team, squad)
 			if Debug.Server.BOT then
 				print("no base found to spawn")
 			end
-			activeWayIndex = MathUtils:GetRandomInt(1, #g_NodeCollection:GetPaths())
-			indexOnPath = MathUtils:GetRandomInt(1, #g_NodeCollection:Get(nil, activeWayIndex))
+			return
 		end
 
 		targetNode = g_NodeCollection:Get(indexOnPath, activeWayIndex)
