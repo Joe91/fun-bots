@@ -2,7 +2,7 @@
  
 ## [Unreleased - 1.7.X.X] - 2021-03-XX
  
-[Download](https://github.com/Joe91/fun-bots/archive/V1.7.0.9.zip)  
+[Download](https://github.com/Joe91/fun-bots/archive/V1.7.0.10.zip)  
 The Smart Node update
 
 - Conquest supported
@@ -15,6 +15,7 @@ The Smart Node update
 	- Desert (small) Thanks to RekkieSA
 	- Theran Highway (small) Thanks to RekkieSA
 	- Firestorm (small + large) Thanks to RekkieSA
+	- Riverside (small) Thanks to RekkieSA
 	- Metro (large)
 - Rush supported
 	- Metro
@@ -34,6 +35,9 @@ The Smart Node update
 - Shoot-Cycles adapted
 - custom-weapon-sets added (shared/WeaponLists). Active if you choose "Custom" as weapon class
 - fix incompatibility with No-PreRound (thanks to Bree_Arnold!)
+- Bots attack vehicles depending on their abilities and armor of the vehicle
+- deleting paths works now
+- Improved logic for conquest and Rush
 
 
 ## [Unreleased - 1.6.2.1] - 2021-02-28

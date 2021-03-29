@@ -48,7 +48,7 @@ The following Maps are official supported right now with waypoints/traces:
 |   ![XP4_Rubble](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp4_rubble.jpg?raw=true) 	|   `XP4_Rubble`	| **Talah Market** | `TDM`, `TDM QC`, `GM` |
 |   ![XP4_Quake](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp4_quake.jpg?raw=true) 	|   `XP4_Quake`	| **Epicenter** | `TDM`, `TDM QC`, `GM` |
 |   ![XP4_Parl](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp4_parl.jpg?raw=true) 	|   `XP4_Parl`	| **Azadi Palace** | `TDM`, `TDM QC`, `GM` |
-|   ![XP5_001](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp5_001.jpg?raw=true) 	|   `XP5_001`	| **Operation Riverside** | `TDM`, `TDM QC` |
+|   ![XP5_001](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp5_001.jpg?raw=true) 	|   `XP5_001`	| **Operation Riverside** | `TDM`, `TDM QC`, `Conquest Small` |
 |   ![XP5_002](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp5_002.jpg?raw=true) 	|   `XP5_002`	| **Nebandan Flats** | `TDM`, `TDM QC` |
 |   ![XP5_003](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp5_003.jpg?raw=true) 	|   `XP5_003`	| **Kiasar Railroad** | `TDM`, `TDM QC` |
 |   ![XP5_004](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp5_004.jpg?raw=true) 	|   `XP5_004`	| **Sabalan Pipeline** | `TDM`, `TDM QC` |
