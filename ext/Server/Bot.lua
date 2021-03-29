@@ -139,12 +139,18 @@ function Bot:shootAt(player, ignoreYaw)
 	end
 
 	-- don't shoot if too far away
+	local distance = player.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans);
 	if not ignoreYaw then
-		local distance = player.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans);
 
 		if self.activeWeapon.type ~= "Sniper" and distance > Config.maxShootDistanceNoSniper then
 			return false;
 		end
+	end
+
+	-- check for vehicles
+	local type = self:_findOutVehicleType(player)
+	if type ~= 0 and self:_ceckForVehicleAttack(type, distance) == 0 then
+		return false;
 	end
 
 	local dYaw		= 0;
@@ -559,10 +565,10 @@ function Bot:_updateYaw()
 	self.player.input.authoritativeAimingPitch	= self._targetPitch;
 end
 
-function Bot:_findOutVehicleType()
+function Bot:_findOutVehicleType(player)
 	local type = 0 -- no vehicle
-	if self._shootPlayer.attachedControllable ~= nil then
-		local vehicleName = VehicleTable[VehicleEntityData(self._shootPlayer.attachedControllable.data).controllableType:gsub(".+/.+/","")]
+	if player.attachedControllable ~= nil then
+		local vehicleName = VehicleTable[VehicleEntityData(player.attachedControllable.data).controllableType:gsub(".+/.+/","")]
 		-- Tank
 		if vehicleName == "[LAV-25]" or 
 		vehicleName == "[SPRUT-SD]" or
@@ -638,10 +644,10 @@ function Bot:_ceckForVehicleAttack(type, distance)
 		attackMode = 2;	-- attack with grenade
 	end
 	if self.gadget2.type == "Rocket" then
-		attackMode = 3
+		attackMode = 3		-- always use rocket if possible
 	elseif self.gadget2.type == "C4" and distance < 25 then
-		if type ~= 3 then --no air vehicles
-			attackMode = 4
+		if type ~= 3 then -- no air vehicles
+			attackMode = 4	-- always use c4 if possible
 		end
 	end
 	return attackMode
@@ -793,7 +799,7 @@ function Bot:_updateShooting()
 				end
 
 				-- target in vehicle - use gadget 2 if rocket --TODO: don't shoot with other classes
-				local type = self:_findOutVehicleType()
+				local type = self:_findOutVehicleType(self._shootPlayer)
 				if type ~= 0 then
 					local attackMode = self:_ceckForVehicleAttack(type, currentDistance)
 					if attackMode > 0 then
