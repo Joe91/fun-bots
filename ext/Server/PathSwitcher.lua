@@ -183,7 +183,7 @@ function PathSwitcher:getNewPath(botname, point, objective)
 	local linkMode = tonumber(point.Data.LinkMode) or 0
 	if linkMode == 0 then -- random path switch
 
-		local chance = tonumber(point.Data.LinkChance) or 40
+		local chance = tonumber(point.Data.LinkChance) or 30
 		local randNum = MathUtils:GetRandomInt(0, 100)
 		local randIndex = MathUtils:GetRandomInt(1, #validPaths)
 
