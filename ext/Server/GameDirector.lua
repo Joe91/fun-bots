@@ -277,6 +277,7 @@ end
 function GameDirector:getSpawnPath(team, squad, onlyBase)
 	local possibleObjectives = {}
 	local possibleBases = {}
+	local rushConvertedBases = {}
 	local pathsDone = {}
 	for _,objective in pairs(self.AllObjectives) do
 		local allObjectives = g_NodeCollection:GetKnownOjectives();
@@ -293,7 +294,7 @@ function GameDirector:getSpawnPath(team, squad, onlyBase)
 								table.insert(possibleObjectives, {name = objective.name, path = path})
 							end
 						elseif objective.team ~= team and objective.isBase and not objective.active and objective.name == self.RushAttackingBase then --rush attacking team
-							table.insert(possibleBases, path)
+							table.insert(rushConvertedBases, path)
 						end
 					end
 				end
@@ -319,8 +320,10 @@ function GameDirector:getSpawnPath(team, squad, onlyBase)
 			return tempObj.path, MathUtils:GetRandomInt(1, #g_NodeCollection:Get(nil, tempObj.path));
 		end
 	elseif #possibleBases > 0 then
-		-- TODO: filter out possible RushAttackingBase if others are available
 		local pathIndex = possibleBases[MathUtils:GetRandomInt(1, #possibleBases)]
+		return pathIndex, MathUtils:GetRandomInt(1, #g_NodeCollection:Get(nil, pathIndex));
+	elseif #rushConvertedBases > 0 then
+		local pathIndex = rushConvertedBases[MathUtils:GetRandomInt(1, #rushConvertedBases)]
 		return pathIndex, MathUtils:GetRandomInt(1, #g_NodeCollection:Get(nil, pathIndex));
 	else
 		return 0 , 0;
