@@ -188,7 +188,7 @@ function GameDirector:_onMcomDestroyed(player)
 end
 
 function GameDirector:_updateValidObjectives()
-	if g_Globals.isConquest then
+	if g_Globals.isConquest then -- nothing to do in conquest
 		return
 	end
 
@@ -228,7 +228,7 @@ function GameDirector:_updateValidObjectives()
 							active = true;
 						end
 					end
-					if #fields > 2 then
+					if #fields > 2 then -- "mcom N interact"
 						subObjective = true;
 					end
 				end
