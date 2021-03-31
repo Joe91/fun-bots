@@ -622,7 +622,7 @@ function GameDirector:_onUpdate(delta)
 							end
 						end
 					end
-					if objective.isBase or not objective.active or objective.destroyed then
+					if objective.isBase or not objective.active or objective.destroyed or objective.team == botTeam then
 						bot:setObjective();
 					end
 				end
