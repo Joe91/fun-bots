@@ -363,6 +363,7 @@ function Bot:resetSpawnVars()
 	self._deployActive 			= false;
 	self._grenadeActive			= false;
 	self._c4Active 				= false;
+	self._objective 			= ''; --reset objective on spawn, as an other spawn-point might have chosen...
 	self._weaponToUse 			= "Primary";
 
 	self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 0);
