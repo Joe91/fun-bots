@@ -253,23 +253,29 @@ function BotManager:_onGunSway(gunSway, weapon, weaponFiring, deltaTime)
     if weapon == nil then
         return
     end
-    local soldier = SoldierEntity(weapon.bus.parent.entities[26])
+	local soldier = nil
+	for _,entity in pairs(weapon.bus.parent.entities) do
+		if entity:Is('ServerSoldierEntity') then
+			soldier = SoldierEntity(entity)
+			break
+		end
+	end
     if soldier == nil or soldier.player == nil then
-        return
-    end
+		return
+	end
 	local bot = self:getBotByName(soldier.player.name)
-    if bot ~= nil then
-        local gunSwayData = GunSwayData(gunSway.data)
-        if soldier.pose == CharacterPoseType.CharacterPoseType_Stand then
-            gunSway.dispersionAngle = gunSwayData.stand.zoom.baseValue.minAngle
-        elseif soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
-            gunSway.dispersionAngle = gunSwayData.crouch.zoom.baseValue.minAngle
-        elseif soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
-            gunSway.dispersionAngle = gunSwayData.prone.zoom.baseValue.minAngle
-        else
-            return
-        end
-    end
+	if bot ~= nil then
+		local gunSwayData = GunSwayData(gunSway.data)
+		if soldier.pose == CharacterPoseType.CharacterPoseType_Stand then
+			gunSway.dispersionAngle = gunSwayData.stand.zoom.baseValue.minAngle
+		elseif soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
+			gunSway.dispersionAngle = gunSwayData.crouch.zoom.baseValue.minAngle
+		elseif soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
+			gunSway.dispersionAngle = gunSwayData.prone.zoom.baseValue.minAngle
+		else
+			return
+		end
+	end
 end
 
 function BotManager:_checkForBotBotAttack()

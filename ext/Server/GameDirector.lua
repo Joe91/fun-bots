@@ -92,14 +92,31 @@ function GameDirector:initObjectives()
 			objective.isSpawnPath = true
 			objective.active = false
 		end
-		if g_Globals.isAssault then
-			if not objective.isBase then
-				objective.team = TeamId.Team2
-			end
-		end
 		table.insert(self.AllObjectives, objective)
 	end
+	self:_initFlagTeams()
 	self:_updateValidObjectives()
+end
+
+function GameDirector:_initFlagTeams()
+	if g_Globals.isConquest then --valid for all Conquest-types
+		local it = EntityManager:GetIterator('ServerCapturePointEntity')
+		local entity = it:Next()
+		while entity ~= nil do
+			local flagEntity = CapturePointEntity(entity)
+			local objectiveName = self:_translateObjective(flagEntity.transform.trans, flagEntity.name);
+			if objectiveName ~= "" then
+				local objective = self:getObjectiveObject(objectiveName)
+				if not objective.isBase then
+					self:_updateObjective(objectiveName, {
+						team = flagEntity.team,
+						isAttacked = flagEntity.isAttacked
+					})
+				end
+			end
+			entity = it:Next()
+		end
+	end
 end
 
 function GameDirector:_onMcomArmed(player)
@@ -171,7 +188,7 @@ function GameDirector:_onMcomDestroyed(player)
 end
 
 function GameDirector:_updateValidObjectives()
-	if g_Globals.isConquest then
+	if g_Globals.isConquest then -- nothing to do in conquest
 		return
 	end
 
@@ -211,7 +228,7 @@ function GameDirector:_updateValidObjectives()
 							active = true;
 						end
 					end
-					if #fields > 2 then
+					if #fields > 2 then -- "mcom N interact"
 						subObjective = true;
 					end
 				end
@@ -260,6 +277,7 @@ end
 function GameDirector:getSpawnPath(team, squad, onlyBase)
 	local possibleObjectives = {}
 	local possibleBases = {}
+	local rushConvertedBases = {}
 	local pathsDone = {}
 	for _,objective in pairs(self.AllObjectives) do
 		local allObjectives = g_NodeCollection:GetKnownOjectives();
@@ -276,7 +294,7 @@ function GameDirector:getSpawnPath(team, squad, onlyBase)
 								table.insert(possibleObjectives, {name = objective.name, path = path})
 							end
 						elseif objective.team ~= team and objective.isBase and not objective.active and objective.name == self.RushAttackingBase then --rush attacking team
-							table.insert(possibleBases, path)
+							table.insert(rushConvertedBases, path)
 						end
 					end
 				end
@@ -303,6 +321,9 @@ function GameDirector:getSpawnPath(team, squad, onlyBase)
 		end
 	elseif #possibleBases > 0 then
 		local pathIndex = possibleBases[MathUtils:GetRandomInt(1, #possibleBases)]
+		return pathIndex, MathUtils:GetRandomInt(1, #g_NodeCollection:Get(nil, pathIndex));
+	elseif #rushConvertedBases > 0 then
+		local pathIndex = rushConvertedBases[MathUtils:GetRandomInt(1, #rushConvertedBases)]
 		return pathIndex, MathUtils:GetRandomInt(1, #g_NodeCollection:Get(nil, pathIndex));
 	else
 		return 0 , 0;
@@ -350,7 +371,7 @@ function GameDirector:_translateObjective(positon, name)
 						if #node.Data.Objectives == 1 then --possible objective
 							local valid = true;
 							local tempObj = self:getObjectiveObject(objective)
-							if tempObj.isSpawnPath or tempObj.isBase then
+							if tempObj.isSpawnPath then -- or tempObj.isBase
 								valid = false;
 							end
 							if valid then
@@ -399,7 +420,7 @@ function GameDirector:_onCapture(capturePoint)
 				if Debug.Server.GAMEDIRECTOR then
 					print('Bot completed objective: '..bots[i].name..' (team: '..botTeam..') -> '..objective.name)
 				end
-				
+
 				bots[i]:setObjective()
 				objective.assigned[botTeam] = math.max(objective.assigned[botTeam] - 1, 0)
 			end
@@ -604,7 +625,7 @@ function GameDirector:_onUpdate(delta)
 							end
 						end
 					end
-					if objective.isBase or not objective.active or objective.destroyed then
+					if objective.isBase or not objective.active or objective.destroyed or objective.team == botTeam then
 						bot:setObjective();
 					end
 				end

@@ -111,7 +111,7 @@ function FunBotServer:_onLevelLoaded(levelName, gameMode)
 	end
 	g_WeaponModification:ModifyAllWeapons(Config.botAimWorsening, Config.botSniperAimWorsening);
 	WeaponList:onLevelLoaded();
-	
+
 	if Debug.Server.INFO then
 		print('level ' .. levelName .. ' loaded...');
 	end
