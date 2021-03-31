@@ -92,14 +92,31 @@ function GameDirector:initObjectives()
 			objective.isSpawnPath = true
 			objective.active = false
 		end
-		if g_Globals.isAssault then
-			if not objective.isBase then
-				objective.team = TeamId.Team2
-			end
-		end
 		table.insert(self.AllObjectives, objective)
 	end
+	self:_initFlagTeams()
 	self:_updateValidObjectives()
+end
+
+function GameDirector:_initFlagTeams()
+	if g_Globals.isConquest then --valid for all Conquest-types
+		local it = EntityManager:GetIterator('ServerCapturePointEntity')
+		local entity = it:Next()
+		while entity ~= nil do
+			local flagEntity = CapturePointEntity(entity)
+			local objectiveName = self:_translateObjective(flagEntity.transform.trans, flagEntity.name);
+			if objectiveName ~= "" then
+				local objective = self:getObjectiveObject(objectiveName)
+				if not objective.isBase then
+					self:_updateObjective(objectiveName, {
+						team = flagEntity.team,
+						isAttacked = flagEntity.isAttacked
+					})
+				end
+			end
+			entity = it:Next()
+		end
+	end
 end
 
 function GameDirector:_onMcomArmed(player)
@@ -351,7 +368,7 @@ function GameDirector:_translateObjective(positon, name)
 						if #node.Data.Objectives == 1 then --possible objective
 							local valid = true;
 							local tempObj = self:getObjectiveObject(objective)
-							if tempObj.isSpawnPath or tempObj.isBase then
+							if tempObj.isSpawnPath then -- or tempObj.isBase
 								valid = false;
 							end
 							if valid then
@@ -400,7 +417,7 @@ function GameDirector:_onCapture(capturePoint)
 				if Debug.Server.GAMEDIRECTOR then
 					print('Bot completed objective: '..bots[i].name..' (team: '..botTeam..') -> '..objective.name)
 				end
-				
+
 				bots[i]:setObjective()
 				objective.assigned[botTeam] = math.max(objective.assigned[botTeam] - 1, 0)
 			end
