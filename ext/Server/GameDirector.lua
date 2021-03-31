@@ -302,6 +302,7 @@ function GameDirector:getSpawnPath(team, squad, onlyBase)
 			return tempObj.path, MathUtils:GetRandomInt(1, #g_NodeCollection:Get(nil, tempObj.path));
 		end
 	elseif #possibleBases > 0 then
+		-- TODO: filter out possible RushAttackingBase if others are available
 		local pathIndex = possibleBases[MathUtils:GetRandomInt(1, #possibleBases)]
 		return pathIndex, MathUtils:GetRandomInt(1, #g_NodeCollection:Get(nil, pathIndex));
 	else
