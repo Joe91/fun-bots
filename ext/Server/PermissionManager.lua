@@ -155,6 +155,10 @@ function PermissionManager:HasPermission(name, permission)
 		return false;
 	end
 	
+	if #permissions == 0 then
+		return false;
+	end
+	
 	permissions		= self:ExtendPermissions(permissions);
 	local search	= permission:split('.');
 	local result	= false;
