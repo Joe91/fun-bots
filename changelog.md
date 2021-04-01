@@ -20,6 +20,7 @@ The Smart Node update
 - Rush supported
 	- Metro
 	- Damavand Peak
+	- Bazaar Tanks to MrDonPotato
 - BFLAG supported (only a first version, not that usable yet)
 	- Bazaar small
 - Bots switch to Pistol or Sidearm (Rockets) if needed
