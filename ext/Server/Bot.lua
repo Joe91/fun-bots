@@ -1133,6 +1133,10 @@ function Bot:_updateMovement()
 
 					self._actionTimer = self._actionTimer - StaticConfig.botUpdateCycle;
 					if self._actionTimer <= 0 then
+						-- reset active inputs
+						for i = 0, 36 do
+							self.player.input:SetLevel(i, 0);
+						end
 						self._actionActive = false;
 					end
 
