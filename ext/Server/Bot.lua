@@ -366,15 +366,10 @@ function Bot:resetSpawnVars()
 	self._objective 			= ''; --reset objective on spawn, as an other spawn-point might have chosen...
 	self._weaponToUse 			= "Primary";
 
-	self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 0);
-	self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
-	self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeFastMelee, 0);
-	self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0);
-	self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0);
-	self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
-	self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
-	self.player.input:SetLevel(EntryInputActionEnum.EIAThrottle, 0);
-	self.player.input:SetLevel(EntryInputActionEnum.EIASprint, 0);
+	-- reset all input-vars
+	for i = 0, 36 do
+		self.player.input:SetLevel(i, 0);
+	end
 end
 
 function Bot:clearPlayer(player)
@@ -1133,6 +1128,10 @@ function Bot:_updateMovement()
 
 					self._actionTimer = self._actionTimer - StaticConfig.botUpdateCycle;
 					if self._actionTimer <= 0 then
+						-- reset active inputs
+						for i = 0, 36 do
+							self.player.input:SetLevel(i, 0);
+						end
 						self._actionActive = false;
 					end
 

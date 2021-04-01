@@ -26,7 +26,7 @@ The following Maps are official supported right now with waypoints/traces:
 |   ![MP_001](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_001.jpg?raw=true) 	|   `MP_001`	| **Grand Bazaar** | `TDM`, `TDM QC`, `Rush`, `Conquest Small + Large` |
 |   ![MP_003](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_003.jpg?raw=true) 	|   `MP_003`	| **Teheran Highway** | `TDM`, `TDM QC`, `Conquest Small` |
 |   ![MP_007](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_007.jpg?raw=true) 	|   `MP_007`	| **Caspian Border** | `TDM`, `TDM QC`, `Conquest Small + Large` |
-|   ![MP_011](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_011.jpg?raw=true) 	|   `MP_011`	| **Seine Crossing** | `TDM`, `TDM QC`, `Conquest Small + Large` |
+|   ![MP_011](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_011.jpg?raw=true) 	|   `MP_011`	| **Seine Crossing** | `TDM`, `TDM QC`, `Rush`, `Conquest Small + Large` |
 |   ![MP_012](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_012.jpg?raw=true) 	|   `MP_012`	| **Operation Firestorm** | `TDM`, `TDM QC`, `Conquest Small + Large`  |
 |   ![MP_013](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_013.jpg?raw=true) 	|   `MP_013`	| **Damavand Peak** | `TDM`, `TDM QC`, `Rush`, `Conquest Small` |
 |   ![MP_017](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_017.jpg?raw=true) 	|   `MP_017`	| **Noshahr Canals** | `TDM`, `TDM QC`, `Conquest Small` |
@@ -50,7 +50,7 @@ The following Maps are official supported right now with waypoints/traces:
 |   ![XP4_Parl](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp4_parl.jpg?raw=true) 	|   `XP4_Parl`	| **Azadi Palace** | `TDM`, `TDM QC`, `GM` |
 |   ![XP5_001](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp5_001.jpg?raw=true) 	|   `XP5_001`	| **Operation Riverside** | `TDM`, `TDM QC`, `Conquest Small` |
 |   ![XP5_002](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp5_002.jpg?raw=true) 	|   `XP5_002`	| **Nebandan Flats** | `TDM`, `TDM QC`, `Conquest Small` |
-|   ![XP5_003](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp5_003.jpg?raw=true) 	|   `XP5_003`	| **Kiasar Railroad** | `TDM`, `TDM QC` |
+|   ![XP5_003](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp5_003.jpg?raw=true) 	|   `XP5_003`	| **Kiasar Railroad** | `TDM`, `TDM QC`, `Conquest Small`|
 |   ![XP5_004](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp5_004.jpg?raw=true) 	|   `XP5_004`	| **Sabalan Pipeline** | `TDM`, `TDM QC` |
 
  > Missing some `Maps` or `Game Modes`? 
@@ -118,3 +118,8 @@ A full list of available commands can be found here: [/wiki/Commands](https://gi
 Here you can see the status of the build process of our language files. If you want to contribute the translation in other languages, take a look at [Contributing > Languages](https://github.com/Joe91/fun-bots/wiki/Languages)
 
 With each commit, the language files are rebuildet.
+
+
+### SPECIAL THANKS TO:
+- RekkieSA
+- MrDonPotato
