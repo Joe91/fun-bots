@@ -171,6 +171,35 @@ function WaypointEditor:InitializeComponent()
 		self.trace_index = self.trace_index - 1;
 		
 		if (self.trace_index < 0) then
+			local lastNode		= g_NodeCollection:GetLast();
+			
+			if lastNode == nil then
+				self.trace_index = 0;
+			else
+				self.trace_index = lastNode.PathIndex;
+			end
+		end
+		
+		input_trace_index:SetValue(self.trace_index);
+		
+		NetEvents:SendTo('UI', player, 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
+			Type	= input_trace_index:__class(),
+			Name	= input_trace_index:GetName(),
+			Value	= input_trace_index:GetValue()
+		}));
+		
+		NetEvents:SendTo('UI', player, 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
+			Type	= 'Entry',
+			Name	= 'trace_waypoints',
+			Value	= #g_NodeCollection:Get(nil, self.trace_index)
+		}));
+	end);
+	
+	input_trace_index:AddArrow(Position.Right, '❱', function(player)
+		self.trace_index	= self.trace_index + 1;
+		local lastNode		= g_NodeCollection:GetLast();
+		
+		if lastNode == nil or self.trace_index > lastNode.PathIndex then
 			self.trace_index = 0;
 		end
 		
@@ -181,24 +210,18 @@ function WaypointEditor:InitializeComponent()
 			Name	= input_trace_index:GetName(),
 			Value	= input_trace_index:GetValue()
 		}));
-	end);
-	
-	input_trace_index:AddArrow(Position.Right, '❱', function(player)
-		self.trace_index = self.trace_index + 1;
-		
-		input_trace_index:SetValue(self.trace_index);
 		
 		NetEvents:SendTo('UI', player, 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
-			Type	= input_trace_index:__class(),
-			Name	= input_trace_index:GetName(),
-			Value	= input_trace_index:GetValue()
+			Type	= 'Entry',
+			Name	= 'trace_waypoints',
+			Value	= #g_NodeCollection:Get(nil, self.trace_index)
 		}));
 	end);
 	
 	
-	status:AddItem(Entry('Current Trace Index', input_trace_index));
-	status:AddItem(Entry('Waypoints', '0'));
-	status:AddItem(Entry('Total Distance', '0 m'));
+	status:AddItem(Entry('trace_index', 'Current Trace Index', input_trace_index));
+	status:AddItem(Entry('trace_waypoints', 'Waypoints', '' .. #g_NodeCollection:Get(nil, self.trace_index)));
+	status:AddItem(Entry('trace_distance', 'Total Distance', '0 m'));
 	
 	self.view:AddComponent(status);
 	

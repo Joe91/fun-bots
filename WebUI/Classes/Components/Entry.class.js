@@ -1,20 +1,26 @@
 'use strict';
 
 class Entry extends Component {
+	name			= null;
 	text			= null;
 	value			= null;
 	element_text	= null;
 	element_value	= null;
 	
-	constructor(text, value) {
+	constructor(name, text, value) {
 		super();
 		
+		this.name			= name || null;
 		this.text			= text || null;
 		this.value			= value || null;
 		this.element		= document.createElement('ui-entry');
 		this.element_text	= document.createElement('ui-text');
 		this.element_value	= document.createElement('ui-value');
 	};
+	
+	SetValue(value) {
+		this.value = value;
+	}
 	
 	GetValue() {
 		return this.value;
@@ -26,6 +32,7 @@ class Entry extends Component {
 		this.element.appendChild(this.element_text);
 		this.element.appendChild(this.element_value);
 		
+		this.element.dataset.name		= this.name;
 		this.element_text.innerHTML		= this.text;
 		
 		if(typeof(this.value) == 'string') {
@@ -89,6 +96,14 @@ class Entry extends Component {
 		super.Repaint();
 		
 		this.element_text.innerHTML		= this.text;
-		//this.element_value.innerHTML	= this.value;
+		
+		if([
+			'string',
+			'number'
+		].indexOf(typeof(this.value)) > -1) {
+			this.element_value.innerHTML	= this.value;
+		} else {
+			// ToDo: Update Input Value
+		}
 	}
 }

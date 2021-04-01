@@ -35,7 +35,7 @@ class Box extends Component {
 			
 			switch(item.Type) {
 				case 'Entry':
-					component	= new Entry(item.Data.Text, item.Data.Value);
+					component	= new Entry(item.Data.Name, item.Data.Text, item.Data.Value);
 				break;
 			}
 			

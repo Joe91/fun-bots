@@ -145,7 +145,9 @@ class View extends Component {
 			this.UpdateComponent(component.GetValue(), data);
 		}
 		
-		if(component instanceof Input && data.Type == 'Input' && component.GetName() == data.Name) {
+		if(component instanceof Entry && data.Type == 'Entry' && component.GetName() == data.Name) {
+			component.SetValue(data.Value);
+		} else if(component instanceof Input && data.Type == 'Input' && component.GetName() == data.Name) {
 			component.SetValue(data.Value);
 		} else if(component instanceof MenuItem && data.Type == 'MenuItem' && component.GetName() == data.Name) {
 			component.SetTitle(data.Text);
