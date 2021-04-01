@@ -23,6 +23,11 @@ function ChatCommands:execute(parts, player)
 		end
 		
 	elseif parts[1] == '!row' then
+		if PermissionManager:HasPermission(player, 'ChatCommands.Row') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Row).', player);
+			return;
+		end
+		
 		if tonumber(parts[2]) == nil then
 			return;
 		end
@@ -33,6 +38,11 @@ function ChatCommands:execute(parts, player)
 		BotSpawner:spawnBotRow(player, length, spacing);
 
 	elseif parts[1] == '!tower' then
+		if PermissionManager:HasPermission(player, 'ChatCommands.Tower') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Tower).', player);
+			return;
+		end
+		
 		if tonumber(parts[2]) == nil then
 			return;
 		end
@@ -41,6 +51,11 @@ function ChatCommands:execute(parts, player)
 		BotSpawner:spawnBotTower(player, height);
 
 	elseif parts[1] == '!grid' then
+		if PermissionManager:HasPermission(player, 'ChatCommands.Grid') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Grid).', player);
+			return;
+		end
+		
 		if tonumber(parts[2]) == nil then
 			return;
 		end
@@ -53,16 +68,36 @@ function ChatCommands:execute(parts, player)
 
 	-- static mode commands
 	elseif parts[1] == '!mimic' then
+		if PermissionManager:HasPermission(player, 'ChatCommands.Mimic') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Mimic).', player);
+			return;
+		end
+		
 		BotManager:setStaticOption(player, 'mode', 3);
 
 	elseif parts[1] == '!mirror' then
+		if PermissionManager:HasPermission(player, 'ChatCommands.Mirror') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Mirror).', player);
+			return;
+		end
+		
 		BotManager:setStaticOption(player, 'mode', 4);
 
 	elseif parts[1] == '!static' then
+		if PermissionManager:HasPermission(player, 'ChatCommands.Static') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Static).', player);
+			return;
+		end
+		
 		BotManager:setStaticOption(player, 'mode', 0);
 
 	-- moving bots spawning
 	elseif parts[1] == '!spawnline' then
+		if PermissionManager:HasPermission(player, 'ChatCommands.SpawnLine') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.SpawnLine).', player);
+			return;
+		end
+		
 		if tonumber(parts[2]) == nil then
 			return;
 		end
@@ -73,6 +108,11 @@ function ChatCommands:execute(parts, player)
 		BotSpawner:spawnLineBots(player, amount, spacing);
 
 	elseif parts[1] == '!spawnway' then
+		if PermissionManager:HasPermission(player, 'ChatCommands.SpawnWay') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.SpawnWay).', player);
+			return;
+		end
+		
 		if tonumber(parts[2]) == nil then
 			return;
 		end
@@ -84,6 +124,11 @@ function ChatCommands:execute(parts, player)
 		BotSpawner:spawnWayBots(player, amount, false, activeWayIndex);
 
 	elseif parts[1] == '!spawnbots' then
+		if PermissionManager:HasPermission(player, 'ChatCommands.SpawnBots') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.SpawnBots).', player);
+			return;
+		end
+		
 		if tonumber(parts[2]) == nil then
 			return;
 		end
@@ -94,6 +139,11 @@ function ChatCommands:execute(parts, player)
 
 	-- respawn moving bots
 	elseif parts[1] == '!respawn' then
+		if PermissionManager:HasPermission(player, 'ChatCommands.Respawn') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Respawn).', player);
+			return;
+		end
+		
 		local respawning = true;
 
 		if tonumber(parts[2]) == 0 then
@@ -105,6 +155,11 @@ function ChatCommands:execute(parts, player)
 		BotManager:setOptionForAll('respawn', respawning);
 
 	elseif parts[1] == '!shoot' then
+		if PermissionManager:HasPermission(player, 'ChatCommands.Shoot') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Shoot).', player);
+			return;
+		end
+		
 		local shooting = true;
 
 		if tonumber(parts[2]) == 0 then
@@ -117,6 +172,11 @@ function ChatCommands:execute(parts, player)
 
 	-- spawn team settings
 	elseif parts[1] == '!setbotkit' then
+		if PermissionManager:HasPermission(player, 'ChatCommands.SetBotKit') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.SetBotKit).', player);
+			return;
+		end
+		
 		local kitNumber = tonumber(parts[2]) or 1;
 
 		if kitNumber <= 4 and kitNumber >= 0 then
@@ -124,6 +184,11 @@ function ChatCommands:execute(parts, player)
 		end
 
 	elseif parts[1] == '!setbotcolor' then
+		if PermissionManager:HasPermission(player, 'ChatCommands.SetBotColor') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.SetBotColor).', player);
+			return;
+		end
+		
 		local botColor = tonumber(parts[2]) or 1;
 
 		if botColor <= #BotColors and botColor >= 0 then
@@ -131,6 +196,11 @@ function ChatCommands:execute(parts, player)
 		end
 
 	elseif parts[1] == '!setaim' then
+		if PermissionManager:HasPermission(player, 'ChatCommands.SetAim') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.SetAim).', player);
+			return;
+		end
+		
 		Config.botAimWorsening = tonumber(parts[2]) or 0.5;
 		--self:_modifyWeapons(Config.botAimWorsening) --causes lag. Instead restart round
 		if Debug.Server.COMMAND then
@@ -138,6 +208,11 @@ function ChatCommands:execute(parts, player)
 		end
 		
 	elseif parts[1] == '!shootback' then
+		if PermissionManager:HasPermission(player, 'ChatCommands.ShootBack') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.ShootBack).', player);
+			return;
+		end
+		
 		if tonumber(parts[2]) == 0 then
 			Config.shootBackIfHit = false;
 		else
@@ -145,6 +220,11 @@ function ChatCommands:execute(parts, player)
 		end
 
 	elseif parts[1] == '!attackmelee' then
+		if PermissionManager:HasPermission(player, 'ChatCommands.AttackMelee') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.AttackMelee).', player);
+			return;
+		end
+		
 		if tonumber(parts[2]) == 0 then
 			Config.meleeAttackIfClose = false;
 		else
@@ -153,24 +233,49 @@ function ChatCommands:execute(parts, player)
 
 	-- reset everything
 	elseif parts[1] == '!stopall' then
+		if PermissionManager:HasPermission(player, 'ChatCommands.StopAll') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.StopAll).', player);
+			return;
+		end
+		
 		BotManager:setOptionForAll('shoot', false);
 		BotManager:setOptionForAll('respawning', false);
 		BotManager:setOptionForAll('moveMode', 0);
 
 	elseif parts[1] == '!stop' then
+		if PermissionManager:HasPermission(player, 'ChatCommands.Stop') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Stop).', player);
+			return;
+		end
+		
 		BotManager:setOptionForPlayer(player, 'shoot', false);
 		BotManager:setOptionForPlayer(player, 'respawning', false);
 		BotManager:setOptionForPlayer(player, 'moveMode', 0);
 
 	elseif parts[1] == '!kickplayer' then
+		if PermissionManager:HasPermission(player, 'ChatCommands.KickPlayer') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.KickPlayer).', player);
+			return;
+		end
+		
 		BotManager:destroyPlayerBots(player);
 
 	elseif parts[1] == '!kick' then
+		if PermissionManager:HasPermission(player, 'ChatCommands.Kick') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Kick).', player);
+			return;
+		end
+		
 		local amount = tonumber(parts[2]) or 1;
 
 		BotManager:destroyAll(amount);
 
 	elseif parts[1] == '!kickteam' then
+		if PermissionManager:HasPermission(player, 'ChatCommands.KickTeam') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.KickTeam).', player);
+			return;
+		end
+		
 		local teamToKick = tonumber(parts[2]) or 1;
 
 		if teamToKick < 1 or teamToKick > 2 then
@@ -182,36 +287,86 @@ function ChatCommands:execute(parts, player)
 		BotManager:destroyAll(nil, teamId);
 
 	elseif parts[1] == '!kickall' then
+		if PermissionManager:HasPermission(player, 'ChatCommands.KickAll') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.KickAll).', player);
+			return;
+		end
+		
 		BotManager:destroyAll();
 
 	elseif parts[1] == '!kill' then
+		if PermissionManager:HasPermission(player, 'ChatCommands.Kill') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Kill).', player);
+			return;
+		end
+		
 		BotManager:killPlayerBots(player);
 
 	elseif parts[1] == '!killall' then
+		if PermissionManager:HasPermission(player, 'ChatCommands.KillAll') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.KillAll).', player);
+			return;
+		end
+		
 		BotManager:killAll();
 
 	-- waypoint stuff
 	elseif parts[1] == '!getnodes' then
+		if PermissionManager:HasPermission(player, 'ChatCommands.GetNodes') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.GetNodes).', player);
+			return;
+		end
+		
 		NetEvents:SendToLocal('ClientNodeEditor:ReceiveNodes', player, #g_NodeCollection:Get())
 
 	elseif parts[1] == '!sendnodes' then
+		if PermissionManager:HasPermission(player, 'ChatCommands.SendNodes') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.SendNodes).', player);
+			return;
+		end
+		
 		NetEvents:SendToLocal('ClientNodeEditor:SaveNodes', player)
 
 	elseif parts[1] == '!trace' then
+		if PermissionManager:HasPermission(player, 'ChatCommands.Trace') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Trace).', player);
+			return;
+		end
+		
 		NetEvents:SendToLocal('ClientNodeEditor:StartTrace', player)
 
 	elseif parts[1] == '!tracedone' then
+		if PermissionManager:HasPermission(player, 'ChatCommands.TraceDone') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.TraceDone).', player);
+			return;
+		end
+		
 		NetEvents:SendToLocal('ClientNodeEditor:EndTrace', player)
 
 
 	elseif parts[1] == '!cleartrace' then
+		if PermissionManager:HasPermission(player, 'ChatCommands.ClearTrace') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.ClearTrace).', player);
+			return;
+		end
+		
 		NetEvents:SendToLocal('ClientNodeEditor:ClearTrace', player)
 
 	elseif parts[1] == '!clearalltraces' then
+		if PermissionManager:HasPermission(player, 'ChatCommands.ClearAllTraces') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.ClearAllTraces).', player);
+			return;
+		end
+		
 		g_NodeCollection:Clear()
 		NetEvents:SendLocal('NodeCollection:Clear')
 
 	elseif parts[1] == '!printtrans' then
+		if PermissionManager:HasPermission(player, 'ChatCommands.PrintTransform') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.PrintTransform).', player);
+			return;
+		end
+		
 		print('!printtrans');
 		ChatManager:Yell('!printtrans check server console', 2.5);
 		print(player.soldier.worldTransform);
@@ -220,6 +375,11 @@ function ChatCommands:execute(parts, player)
 		print(player.soldier.worldTransform.trans.z);
 
 	elseif parts[1] == '!tracesave' then
+		if PermissionManager:HasPermission(player, 'ChatCommands.TraceSave') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.TraceSave).', player);
+			return;
+		end
+		
 		local traceIndex = tonumber(parts[2]) or 0;
 		NetEvents:SendToLocal('ClientNodeEditor:SaveTrace', player, traceIndex)
 	end
