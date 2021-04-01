@@ -13,6 +13,8 @@ class View extends Component {
 	}	
 	
 	InitializeComponent(data) {
+		this.element.innerHTML = '';
+		
 		if(typeof(data.Name) != 'undefined') {
 			this.name = data.Name;
 		}

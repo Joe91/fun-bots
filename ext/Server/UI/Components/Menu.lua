@@ -52,14 +52,28 @@ function Menu:GetItems()
 	return self.items;
 end
 
-function Menu:Serialize()
+function Menu:Serialize(player)
 	local items = {};
 	
 	for _, item in pairs(self.items) do
-		table.insert(items, {
-			Type = item:__class(),
-			Data = item:Serialize()
-		});
+		if item['GetPermission'] ~= nil then
+			if item:GetPermission() == nil then
+				table.insert(items, {
+					Type = item:__class(),
+					Data = item:Serialize(player)
+				});
+			elseif PermissionManager:HasPermission(player, item:GetPermission()) then
+				table.insert(items, {
+					Type = item:__class(),
+					Data = item:Serialize(player)
+				});
+			end
+		else
+			table.insert(items, {
+				Type = item:__class(),
+				Data = item:Serialize(player)
+			});
+		end
 	end
 	
 	return {

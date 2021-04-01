@@ -66,12 +66,12 @@ class UserInterface {
 				
 				if(typeof(view) == 'undefined') {
 					view = new View(destination);
-					view.InitializeComponent(data);
 					this.views[destination] = view;
 				}
 				
 				switch(action) {
 					case 'SHOW':
+						view.InitializeComponent(data);
 						view.Show();
 					break;
 					case 'HIDE':
@@ -81,11 +81,9 @@ class UserInterface {
 						view.Toggle();
 					break;
 					case 'ACTIVATE':
-						console.error('Aktivate', destination);
 						view.Activate();
 					break;
 					case 'DEACTIVATE':
-						console.error('Deaktivate', destination);
 						view.Deactivate();
 					break;
 					case 'UPDATE':

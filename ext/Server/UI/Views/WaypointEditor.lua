@@ -66,7 +66,7 @@ function WaypointEditor:InitializeComponent()
 			NetEvents:SendToLocal('ClientNodeEditor:SaveNodes', player);
 		end):SetIcon('Assets/Icons/Save.svg'));
 		
-	navigation:AddItem(client);
+	navigation:AddItem(client, 'UserInterface.WaypointEditor.Nodes.Client');
 	
 	local server = MenuItem('Server', 'server');
 		server:SetIcon('Assets/Icons/Server.svg');
@@ -78,7 +78,7 @@ function WaypointEditor:InitializeComponent()
 		server:AddItem(MenuItem('Save', 'waypoints_server_save', function(player)
 			g_NodeCollection:Save();
 		end):SetIcon('Assets/Icons/Save.svg'));
-	navigation:AddItem(server);
+	navigation:AddItem(server, 'UserInterface.WaypointEditor.Nodes.Server');
 
 	-- View
 	local view = MenuItem('View', 'view');
@@ -105,7 +105,7 @@ function WaypointEditor:InitializeComponent()
 			Config.drawWaypointIDs = true;
 		end));
 		
-	navigation:AddItem(view);
+	navigation:AddItem(view, 'UserInterface.WaypointEditor.View');
 	
 	navigation:AddItem(MenuItem('Back', 'back', 'UI:VIEW:' .. self.view:GetName() .. ':HIDE', 'F12'));
 	
@@ -133,24 +133,24 @@ function WaypointEditor:InitializeComponent()
 		
 		--NetEvents:SendToLocal('ClientNodeEditor:EndTrace', player);
 		NetEvents:SendToLocal('ClientNodeEditor:StartTrace', player);
-	end):SetIcon('Assets/Icons/Start.svg'));
+	end):SetIcon('Assets/Icons/Start.svg'), 'UserInterface.WaypointEditor.Tracing');
 	
 	tools:AddItem(MenuItem('Save Trace', 'trace_save', function(player)
 		NetEvents:SendToLocal('ClientNodeEditor:SaveTrace', player, tonumber(0));
-	end):SetIcon('Assets/Icons/Save.svg'));
+	end):SetIcon('Assets/Icons/Save.svg'), 'UserInterface.WaypointEditor.TraceSaving');
 	
 	tools:AddItem(MenuItem('Spawn Bot on Way', 'bot_spawn_path', function(player)
 		print('bot_spawn_path Executed');
-	end):SetIcon('Assets/Icons/SpawnBotWay.svg'));
+	end):SetIcon('Assets/Icons/SpawnBotWay.svg'), 'UserInterface.WaypointEditor.SpawnBot');
 	
 	tools:AddItem(MenuItem('Clear Trace', 'trace_clear', function(player)
 		NetEvents:SendToLocal('ClientNodeEditor:ClearTrace', player);
-	end):SetIcon('Assets/Icons/Clear.svg'));
+	end):SetIcon('Assets/Icons/Clear.svg'), 'UserInterface.WaypointEditor.TraceClear');
 	
 	tools:AddItem(MenuItem('Reset all Traces', 'trace_reset_all', function(player)
 		g_NodeCollection:Clear();
 		NetEvents:BroadcastLocal('NodeCollection:Clear');
-	end):SetIcon('Assets/Icons/Trash.svg'));
+	end):SetIcon('Assets/Icons/Trash.svg'), 'UserInterface.WaypointEditor.TraceReset');
 	
 	navigation:AddItem(tools);
 	

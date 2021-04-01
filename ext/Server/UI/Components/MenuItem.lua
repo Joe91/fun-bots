@@ -19,6 +19,10 @@ function MenuItem:BindPermission(permission)
 	self.permission = permission;
 end
 
+function MenuItem:GetPermission()
+	return self.permission;
+end
+
 function MenuItem:AddItem(item, permission)
 	if (item == nil or item['__class'] == nil) then
 		-- Bad Item
@@ -152,7 +156,7 @@ function MenuItem:AddInput(position, input)
 	return self;
 end
 
-function MenuItem:Serialize()
+function MenuItem:Serialize(player)
 	local items		= {};
 	local inputs	= {};
 	local callback	= nil;
@@ -164,10 +168,24 @@ function MenuItem:Serialize()
 	end
 	
 	for _, item in pairs(self.items) do
-		table.insert(items, {
-			Type = item:__class(),
-			Data = item:Serialize()
-		});
+		if item['GetPermission'] ~= nil then
+			if item:GetPermission() == nil then
+				table.insert(items, {
+					Type = item:__class(),
+					Data = item:Serialize(player)
+				});
+			elseif PermissionManager:HasPermission(player, item:GetPermission()) then
+				table.insert(items, {
+					Type = item:__class(),
+					Data = item:Serialize(player)
+				});
+			end
+		else
+			table.insert(items, {
+				Type = item:__class(),
+				Data = item:Serialize(player)
+			});
+		end
 	end
 	
 	for _, data in pairs(self.inputs) do

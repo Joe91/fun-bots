@@ -22,6 +22,10 @@ class Menu extends Component {
 	}
 	
 	set Items(data) {
+		if(typeof(data.forEach) == 'undefined') {
+			return;
+		}
+		
 		data.forEach((item) => {
 			let component = null;
 			let destination = null;

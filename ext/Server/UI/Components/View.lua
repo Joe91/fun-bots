@@ -62,7 +62,7 @@ function View:CallbackModify(destination)
 end
 
 function View:Show(player)
-	local serialized = self:CallbackModify(self:Serialize());
+	local serialized = self:CallbackModify(self:Serialize(player));
 	print(serialized);	
 	NetEvents:SendTo('UI', player, 'VIEW', self.name, 'SHOW', serialized);
 	self.visible	= true;
@@ -78,13 +78,13 @@ function View:Push(player, component)
 	if (#attributes >= 1) then
 		NetEvents:SendTo('UI', player, 'VIEW', self.name, 'PUSH', {
 			Type 		= component:__class(),
-			Data 		= component:Serialize(),
+			Data 		= component:Serialize(player),
 			Attributes	= attributes
 		});
 	else
 		NetEvents:SendTo('UI', player, 'VIEW', self.name, 'PUSH', {
 			Type 		= component:__class(),
-			Data 		= component:Serialize()
+			Data 		= component:Serialize(player)
 		});
 	end
 end
@@ -149,7 +149,7 @@ function View:Deactivate(player)
 	NetEvents:SendTo('UI', player, 'VIEW', self.name, 'DEACTIVATE');
 end
 
-function View:Serialize()
+function View:Serialize(player)
 	local components = {};
 	
 	for _, component in pairs(self.components) do
@@ -162,13 +162,13 @@ function View:Serialize()
 		if (#attributes >= 1) then
 			table.insert(components, {
 				Type 		= component:__class(),
-				Data 		= component:Serialize(),
+				Data 		= component:Serialize(player),
 				Attributes	= attributes
 			});
 		else
 			table.insert(components, {
 				Type 		= component:__class(),
-				Data 		= component:Serialize()
+				Data 		= component:Serialize(player)
 			});
 		end
 	end
