@@ -130,6 +130,24 @@ function PermissionManager:GetAll()
 	return result;
 end
 
+function PermissionManager:ExtendPermissions(permissions)
+	local result = {};
+	
+	for index, permission in pairs(permissions) do
+		local parts	= permission:split('.');
+		local temp 	= '';
+		
+		for _, part in pairs(parts) do
+			temp = temp .. part;
+			table.insert(result, temp);
+			
+			temp = temp .. '.';
+		end
+	end
+	
+	return result;
+end
+
 function PermissionManager:HasPermission(name, permission)
 	local permissions = self:GetPermissions(name);
 	
@@ -137,6 +155,7 @@ function PermissionManager:HasPermission(name, permission)
 		return false;
 	end
 	
+	permissions		= self:ExtendPermissions(permissions);
 	local search	= permission:split('.');
 	local result	= false;
 	
@@ -160,11 +179,13 @@ function PermissionManager:HasPermission(name, permission)
 				return true;
 			end
 			
-			temp = temp .. search[j] .. '.';
+			temp = temp .. search[j];
 
-			if (temp:lower() .. '*' == permissions[i]:lower()) then
+			if (temp:lower() .. '.*' == permissions[i]:lower()) then
 				result = true;
 			end
+			
+			temp = temp .. '.';
 		end
 	end
 	
