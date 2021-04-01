@@ -2,25 +2,27 @@
  
 ## [Unreleased - 1.7.X.X] - 2021-03-XX
  
-[Download](https://github.com/Joe91/fun-bots/archive/V1.7.0.11.zip)  
+[Download](https://github.com/Joe91/fun-bots/archive/V1.7.0.12.zip)  
 The Smart Node update
 
 - Conquest supported
 	- Bazaar (small + large)
-	- Caspian Border (small + large) Thanks to RekkieSA
+	- Caspian Border (small + large) Thanks to RekkieSA!!
 	- Seine Crossing (small + large)
-	- Khark Island (small + large) Thanks to RekkieSA
-	- Noshar Canals (small) Thanks to RekkieSA
-	- Damavand Peak (small) Thanks to RekkieSA
-	- Desert (small) Thanks to RekkieSA
-	- Theran Highway (small) Thanks to RekkieSA
-	- Firestorm (small + large) Thanks to RekkieSA
-	- Riverside (small) Thanks to RekkieSA
+	- Khark Island (small + large) Thanks to RekkieSA!!
+	- Noshar Canals (small) Thanks to RekkieSA!!
+	- Damavand Peak (small) Thanks to RekkieSA!!
+	- Desert (small) Thanks to RekkieSA!!
+	- Theran Highway (small) Thanks to RekkieSA!!
+	- Firestorm (small + large) Thanks to RekkieSA!!
+	- Riverside (small) Thanks to RekkieSA!!
+	- Railroad (small) Thanks to RekkieSA!!
 	- Metro (large)
 - Rush supported
 	- Metro
 	- Damavand Peak
-	- Bazaar Tanks to MrDonPotato
+	- Bazaar - Tanks to MrDonPotato!!
+	- Seinne Crossing - Tanks to MrDonPotato!!
 - BFLAG supported (only a first version, not that usable yet)
 	- Bazaar small
 - Bots switch to Pistol or Sidearm (Rockets) if needed
