@@ -10,6 +10,10 @@ function BotEditor:__init(core)
 end
 
 function BotEditor:Show(player)
+	if PermissionManager:HasPermission(player, 'UserInterface.' .. self:GetName()) == false then
+		return;
+	end
+	
 	self.view:Show(player);
 	self.view:Activate(player);
 end
