@@ -39,12 +39,12 @@ function PermissionManager:__boot()
 			self.guid_players[value.PlayerName] = value.GUID;
 		end
 		
-		print('[PermissionManager] ' .. value.GUID .. ' (' .. value.PlayerName .. ') ~> ' .. value.Value);
-		
 		if self.permissions[value.GUID] == nil then
-			self.permissions[value.GUID] = { value.Value };
-		else
-			table.insert(self.permissions[value.GUID], value.Value);
+			print('[PermissionManager] ' .. value.GUID .. ' (' .. value.PlayerName .. ') ~> ' .. PermissionManager:GetCorrectName(value.Value));
+			self.permissions[value.GUID] = { PermissionManager:GetCorrectName(value.Value) };
+		elseif Utilities:has(self.permissions[value.GUID], value.Value) == false then
+			print('[PermissionManager] ' .. value.GUID .. ' (' .. value.PlayerName .. ') ~> ' .. PermissionManager:GetCorrectName(value.Value));
+			table.insert(self.permissions[value.GUID], PermissionManager:GetCorrectName(value.Value));
 		end
 	end
 end
@@ -76,7 +76,8 @@ function PermissionManager:GetPermissions(name)
 end
 
 function PermissionManager:AddPermission(name, permission)
-	local player = name;
+	local player	= name;
+	permission		= PermissionManager:GetCorrectName(permission);
 	
 	if type(name) == 'string' then
 		player = PlayerManager:GetPlayerByName(name);
@@ -93,7 +94,7 @@ function PermissionManager:AddPermission(name, permission)
 	if self.permissions[tostring(player.guid)] == nil then
 		self.permissions[tostring(player.guid)]	= { permission };
 		self.guid_players[player.name]			= tostring(player.guid);
-	else
+	elseif Utilities:has(self.permissions[tostring(player.guid)], permission) == false then
 		table.insert(self.permissions[tostring(player.guid)], permission);
 	end
 	
@@ -146,6 +147,28 @@ function PermissionManager:ExtendPermissions(permissions)
 	end
 	
 	return result;
+end
+
+function PermissionManager:Exists(name)
+	for _, permission in pairs(Permissions) do	
+		if permission:lower() == name:lower() then
+			return true;
+		end
+	end
+	
+	return false;
+end
+
+function PermissionManager:GetCorrectName(name)
+	for _, permission in pairs(Permissions) do	
+		if permission:lower() .. '.*' == name:lower() then
+			return permission .. '.*';
+		elseif permission:lower() == name:lower() then
+			return permission;
+		end
+	end
+	
+	return name;
 end
 
 function PermissionManager:HasPermission(name, permission)
@@ -226,11 +249,10 @@ function PermissionManager:Revoke(name, permission)
 	end
 	
 	for i = 1, #permissions do
-		print(permissions[i]);
 		if permissions[i]:lower() == permission:lower() then 
 			Database:delete('FB_Permissions', {
 				GUID	= tostring(player.guid),
-				Value	= permissions[i]
+				Value	= PermissionManager:GetCorrectName(permissions[i])
 			});
 			
 			table.remove(self.permissions[tostring(player.guid)], i);
@@ -277,12 +299,6 @@ function PermissionManager:GetDataByName(name)
 	local guid = nil;
 	
 	for temp_name, temp_guid in pairs(self.guid_players) do	
-		print(json.encode({
-			Name = name,
-			TGuid = temp_guid,
-			TName =  temp_name
-		}));
-		
 		if name:lower() == temp_guid:lower() or name:lower() == temp_name:lower() then
 			guid = temp_guid;
 			name = temp_name;

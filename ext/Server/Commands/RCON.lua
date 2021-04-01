@@ -397,10 +397,10 @@ function RCONCommands:__init()
 						
 						if permissions ~= nil and #permissions >= 1 then
 							for key, value in pairs(permissions) do
-								table.insert(result, value);
+								table.insert(result, PermissionManager:GetCorrectName(value));
 							end
 						end
-												
+						
 						if PermissionManager:RevokeAll(name) then
 							return result;
 						else
@@ -411,10 +411,14 @@ function RCONCommands:__init()
 					elseif permission:sub(1, 1) == '!' then
 						permission = permission:sub(2);
 						
+						if PermissionManager:Exists(permission) == false then
+							return {'ERROR', 'Unknown Permission:', permission};
+						end
+						
 						if PermissionManager:Revoke(name, permission) then
 							return {'OK', 'REVOKED'};
 						else
-							return {'ERROR', 'Can\'r revoke the Permission "' .. permission .. '" for "' .. name .. '".'};
+							return {'ERROR', 'Can\'r revoke the Permission "' .. PermissionManager:GetCorrectName(permission) .. '" for "' .. name .. '".'};
 						end				
 					end
 				end
@@ -426,7 +430,7 @@ function RCONCommands:__init()
 						local result = {'OK', 'LIST'};
 						
 						for key, value in pairs(all) do
-							table.insert(result, value);
+							table.insert(result, PermissionManager:GetCorrectName(value));
 						end
 						
 						return result;
@@ -451,11 +455,15 @@ function RCONCommands:__init()
 					
 					if permissions ~= nil then
 						for name, value in pairs(permissions) do
-							table.insert(result, value);
+							table.insert(result, PermissionManager:GetCorrectName(value));
 						end
 					end
 					
 					return result;
+				end
+				
+				if PermissionManager:Exists(permission) == false then
+					return {'ERROR', 'Unknown Permission:', permission};
 				end
 				
 				PermissionManager:AddPermission(player.name, permission);

@@ -13,6 +13,7 @@ require('__shared/Constants/SpawnModes');
 require('__shared/Utilities');
 
 require('UI/UI');
+require('Constants/Permissions');
 require('NodeEditor');
 require('GameDirector');
 require('WeaponModification');

@@ -171,9 +171,9 @@ function Utilities:dump(o, format, maxLevels, level)
 	end
 end
 
-function table:has(value)
-	for i=1, #self do
-		if (self[i] == value) then
+function Utilities:has(object, value)
+	for i=1, #object do
+		if (object[i] == value) then
 			return true
 		end
 	end
@@ -181,11 +181,11 @@ function table:has(value)
 end
 
 function string:isLower(value)
-     return str:lower() == str
+     return str:lower() == value
 end
 
 function string:isDigit(value)
-     return tonumber(str) ~= nil
+     return tonumber(value) ~= nil
 end
 
 function string:split(sep)
