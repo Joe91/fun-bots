@@ -13,7 +13,10 @@ end
 
 function WaypointEditor:Hide(player)
 	self.view:Hide(player);
-	self.view:GetCore():GetView('BotEditor'):Show(player);
+	
+	if PermissionManager:HasPermission(player, 'UserInterface.BotEditor') then
+		self.view:GetCore():GetView('BotEditor'):Show(player);
+	end
 end
 
 function WaypointEditor:Activate(player)
