@@ -371,7 +371,7 @@ function GameDirector:_translateObjective(positon, name)
 						if #node.Data.Objectives == 1 then --possible objective
 							local valid = true;
 							local tempObj = self:getObjectiveObject(objective)
-							if tempObj.isSpawnPath then -- or tempObj.isBase
+							if tempObj ~= nil and tempObj.isSpawnPath then -- or tempObj.isBase
 								valid = false;
 							end
 							if valid then
@@ -636,7 +636,7 @@ end
 
 function GameDirector:useSubobjective(botname, objective)
 	local tempObjective = self:getObjectiveObject(objective)
-	if tempObjective.subObjective then -- is valid getSubObjective
+	if tempObjective ~= nil and tempObjective.subObjective then -- is valid getSubObjective
 		if tempObjective.active and not tempObjective.destroyed then
 			local bot = g_BotManager:getBotByName(botname)
 			local botTeam = bot.player.teamId;
