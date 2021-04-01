@@ -114,6 +114,16 @@ function UI:__action(player, type, destination, action, data)
 			return;
 		end
 		
+		if PermissionManager:HasPermission(player, 'UserInterface.' .. view:GetName()) == false then
+			if (action == 'HIDE' or action == 'HIDING') then
+				view:Hide(player);
+			else
+				ChatManager:SendMessage('You have no permissions for this action (UserInterface.' .. view:GetName() .. ').', player);
+			end
+			
+			return;
+		end
+		
 		if (action == 'SHOW' or action == 'SHOWING') then
 			view:Show(player);
 		elseif (action == 'HIDE' or action == 'HIDING') then

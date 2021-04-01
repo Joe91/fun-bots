@@ -1,7 +1,7 @@
 class('BotSpawner');
 
-require('Globals');
-require('SpawnSet')
+require('Model/Globals');
+require('Model/SpawnSet')
 require('__shared/NodeCollection')
 
 local BotManager	= require('BotManager');

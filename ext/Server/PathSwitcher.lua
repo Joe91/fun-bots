@@ -1,7 +1,7 @@
 class('PathSwitcher');
 require('__shared/NodeCollection')
 require('GameDirector')
-require('Globals')
+require('Model/Globals')
 
 function PathSwitcher:__init()
 	self.dummyData = 0;

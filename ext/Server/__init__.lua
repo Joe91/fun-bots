@@ -17,15 +17,16 @@ require('NodeEditor');
 require('GameDirector');
 require('WeaponModification');
 
+PermissionManager			= require('PermissionManager');
 Language					= require('__shared/Language');
 local SettingsManager		= require('SettingsManager');
 local BotManager			= require('BotManager');
 local BotSpawner			= require('BotSpawner');
 local WeaponList			= require('__shared/WeaponList');
-local ChatCommands			= require('ChatCommands');
-local RCONCommands			= require('RCONCommands');
+local ChatCommands			= require('Commands/Chat');
+local RCONCommands			= require('Commands/RCON');
 --local FunBotUIServer		= require('UIServer');
-local Globals 				= require('Globals');
+local Globals 				= require('Model/Globals');
 
 local serverSettings		= nil;
 local syncedGameSettings	= nil;

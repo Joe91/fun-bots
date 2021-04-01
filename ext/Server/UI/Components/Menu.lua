@@ -16,7 +16,7 @@ function Menu:GetAttributes()
 	return self.attributes;
 end
 
-function Menu:AddItem(item)
+function Menu:AddItem(item, permission)
 	if (item == nil or item['__class'] == nil) then
 		-- Bad Item
 		return;
@@ -25,6 +25,10 @@ function Menu:AddItem(item)
 	if (item:__class() ~= 'Menu' and item:__class() ~= 'MenuItem' and item:__class() ~= 'MenuSeparator') then
 		-- Exception: Only Menu, MenuSeparator (-) or MenuItem
 		return;
+	end
+	
+	if permission ~= nil then
+		item:BindPermission(permission);
 	end
 	
 	table.insert(self.items, item);

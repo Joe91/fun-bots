@@ -1,6 +1,6 @@
 class('GameDirector');
 
-require('Globals')
+require('Model/Globals')
 require('__shared/NodeCollection')
 
 function GameDirector:__init()

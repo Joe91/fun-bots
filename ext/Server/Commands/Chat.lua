@@ -5,14 +5,24 @@ require('__shared/NodeCollection');
 
 local BotManager	= require('BotManager');
 local BotSpawner	= require('BotSpawner');
-local Globals 		= require('Globals');
+local Globals 		= require('Model/Globals');
 
 function ChatCommands:execute(parts, player)
 	if player == nil or Config.disableChatCommands == true then
 		return;
 	end
 
-	if parts[1] == '!row' then
+	if parts[1] == '!permissions' then
+		local permissions	= PermissionManager:GetPermissions(player);
+		
+		if permissions == nil then
+			ChatManager:SendMessage('You have no active permissions (GUID: ' .. tostring(player.guid) .. ').', player);
+		else
+			ChatManager:SendMessage('You have following permissions (GUID: ' .. tostring(player.guid) .. '):', player);
+			ChatManager:SendMessage(table.concat(permissions, ', '), player);
+		end
+		
+	elseif parts[1] == '!row' then
 		if tonumber(parts[2]) == nil then
 			return;
 		end

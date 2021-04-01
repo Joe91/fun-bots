@@ -108,7 +108,7 @@ function BotEditor:InitializeComponent()
 		end, 'F2');
 		
 		bot_spawn_default:AddInput(Position.Left, input_bots);
-		bots:AddItem(bot_spawn_default);
+		bots:AddItem(bot_spawn_default, 'UserInterface.BotEditor.SpawnEnemy');
 		
 		local bot_spawn_friend = MenuItem('Spawn Friend Bots', 'bot_spawn_friend', function(player)
 			Globals.spawnMode	= 'manual';
@@ -117,7 +117,7 @@ function BotEditor:InitializeComponent()
 		end);
 		
 		bot_spawn_friend:AddInput(Position.Left, input_bots);
-		bots:AddItem(bot_spawn_friend);
+		bots:AddItem(bot_spawn_friend, 'UserInterface.BotEditor.SpawnFriend');
 		
 		bots:AddItem(MenuSeparator());
 		
@@ -125,7 +125,7 @@ function BotEditor:InitializeComponent()
 			Globals.spawnMode	= 'manual';
 			
 			BotManager:destroyAll();
-		end, 'F3'));
+		end, 'F3'), 'UserInterface.BotEditor.KickAll');
 		
 		local input_team	= Input(Type.Integer, 'team', self.team);
 		
@@ -170,13 +170,13 @@ function BotEditor:InitializeComponent()
 		end);
 		
 		bot_kick_team:AddInput(Position.Left, input_team);
-		bots:AddItem(bot_kick_team);
+		bots:AddItem(bot_kick_team, 'UserInterface.BotEditor.KickTeam');
 		
 		bots:AddItem(MenuItem('Kill All', 'bot_kill_all', function(player)
 			Globals.spawnMode	= 'manual';
 			
 			BotManager:killAll();
-		end, 'F4'));
+		end, 'F4'), 'UserInterface.BotEditor.KillAll');
 		
 		bots:AddItem(MenuSeparator());
 		
@@ -190,7 +190,7 @@ function BotEditor:InitializeComponent()
 			else
 				ChatManager:Yell(Language:I18N('Bot respawn deactivated!'), 2.5);
 			end
-		end));
+		end), 'UserInterface.BotEditor.ToggleRespawn');
 		
 		bots:AddItem(MenuItem('Toggle Attack', 'bot_attack', function(player)
 			local attack			= not Globals.attackWayBots;
@@ -202,19 +202,19 @@ function BotEditor:InitializeComponent()
 			else
 				ChatManager:Yell(Language:I18N('Bots will not attack!'), 2.5);
 			end
-		end));
+		end), 'UserInterface.BotEditor.ToggleAttack');
 	
 	navigation:AddItem(bots);
 	
 	-- Waypoint-Editor
-	navigation:AddItem(MenuItem('Waypoint-Editor', 'waypoint-editor', 'UI:VIEW:WaypointEditor:SHOW'):SetIcon('Assets/Icons/WaypointEditor.svg'));
+	navigation:AddItem(MenuItem('Waypoint-Editor', 'waypoint-editor', 'UI:VIEW:WaypointEditor:SHOW'):SetIcon('Assets/Icons/WaypointEditor.svg'), 'UserInterface.WaypointEditor');
 	
 	-- Settings
 	navigation:AddItem(MenuItem('Settings', 'settings', function(player)
 		print('Open Settings');
 		
 		self.view:Push(player, Alert(Position.Bottom_Center, Color.Red, 'Settings are not implemented.', 2500));
-	end, 'F10'):SetIcon('Assets/Icons/Settings.svg'));
+	end, 'F10'):SetIcon('Assets/Icons/Settings.svg'), 'UserInterface.Settings');
 	
 	-- Exit
 	navigation:AddItem(MenuItem('Exit', 'exit', 'UI:VIEW:' .. self.view:GetName() .. ':HIDE', 'F12'));

@@ -8,13 +8,18 @@ function MenuItem:__init(title, name, callback, shortcut)
 	self.icon		= nil;
 	self.items		= {};
 	self.inputs		= {};
+	self.permission	= nil;
 end
 
 function MenuItem:__class()
 	return 'MenuItem';
 end
 
-function MenuItem:AddItem(item)
+function MenuItem:BindPermission(permission)
+	self.permission = permission;
+end
+
+function MenuItem:AddItem(item, permission)
 	if (item == nil or item['__class'] == nil) then
 		-- Bad Item
 		return self;
@@ -23,6 +28,10 @@ function MenuItem:AddItem(item)
 	if (item:__class() ~= 'MenuItem' and item:__class() ~= 'MenuSeparator') then
 		-- Exception: Only Menu, MenuSeparator or MenuItem
 		return self;
+	end
+	
+	if permission ~= nil then
+		item:BindPermission(permission);
 	end
 	
 	table.insert(self.items, item);
@@ -96,6 +105,13 @@ function MenuItem:FireCallback(player)
 		return;
 	end;
 	
+	if self.permission ~= nil then
+		if PermissionManager:HasPermission(player, self.permission) == false then
+			ChatManager:SendMessage('You have no permissions for this action (' .. self.permission .. ').', player);
+			return self;
+		end
+	end
+	
 	self.callback(player);
 	
 	return self;
@@ -167,7 +183,8 @@ function MenuItem:Serialize()
 			Title		= self.title,
 			Name		= self.name,
 			Icon		= self.icon,
-			Items		= items
+			Items		= items,
+			Permission	= self.permission
 		};
 	end
 	
@@ -177,7 +194,8 @@ function MenuItem:Serialize()
 		Icon		= self.icon,
 		Callback	= callback,
 		Shortcut	= self.shortcut,
-		Inputs		= inputs
+		Inputs		= inputs,
+		Permission	= self.permission
 	};
 end
 

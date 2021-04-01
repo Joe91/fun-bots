@@ -2,7 +2,7 @@ class('BotManager');
 
 require('Bot');
 
-local Globals 	= require('Globals');
+local Globals 	= require('Model/Globals');
 local Utilities = require('__shared/Utilities');
 
 function BotManager:__init()

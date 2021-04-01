@@ -2,7 +2,7 @@ class('Bot');
 
 require('__shared/Config');
 require('__shared/NodeCollection')
-require('Globals');
+require('Model/Globals');
 require('PathSwitcher')
 
 local Utilities = require('__shared/Utilities')
