@@ -30,7 +30,7 @@ The following Maps are official supported right now with waypoints/traces:
 |   ![MP_012](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_012.jpg?raw=true) 	|   `MP_012`	| **Operation Firestorm** | `TDM`, `TDM QC`, `Conquest Small + Large`  |
 |   ![MP_013](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_013.jpg?raw=true) 	|   `MP_013`	| **Damavand Peak** | `TDM`, `TDM QC`, `Rush`, `Conquest Small` |
 |   ![MP_017](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_017.jpg?raw=true) 	|   `MP_017`	| **Noshahr Canals** | `TDM`, `TDM QC`, `Conquest Small` |
-|   ![MP_018](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_018.jpg?raw=true) 	|   `MP_018`	| **Kharg Island** | `TDM`, `TDM QC`, `Conquest Small + Large` |
+|   ![MP_018](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_018.jpg?raw=true) 	|   `MP_018`	| **Kharg Island** | `TDM`, `TDM QC`, `Rush`, `Conquest Small + Large` |
 |   ![MP_Subway](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_subway.jpg?raw=true) 	|   `MP_Subway`	| **Operation Metro** | `TDM`, `TDM QC`, `Conquest Large`, `Rush` |
 |   ![XP1_001](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp1_001.jpg?raw=true) 	|   `XP1_001`	| **Strike at Karkand** | `TDM`, `TDM QC`, `Assault` |
 |   ![XP1_002](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp1_002.jpg?raw=true) 	|   `XP1_002`	| **Gulf of Oman** | `TDM`, `TDM QC`, `Conquest Small` |
@@ -50,8 +50,8 @@ The following Maps are official supported right now with waypoints/traces:
 |   ![XP4_Parl](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp4_parl.jpg?raw=true) 	|   `XP4_Parl`	| **Azadi Palace** | `TDM`, `TDM QC`, `GM` |
 |   ![XP5_001](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp5_001.jpg?raw=true) 	|   `XP5_001`	| **Operation Riverside** | `TDM`, `TDM QC`, `Conquest Small` |
 |   ![XP5_002](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp5_002.jpg?raw=true) 	|   `XP5_002`	| **Nebandan Flats** | `TDM`, `TDM QC`, `Conquest Small` |
-|   ![XP5_003](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp5_003.jpg?raw=true) 	|   `XP5_003`	| **Kiasar Railroad** | `TDM`, `TDM QC`, `Conquest Small`|
-|   ![XP5_004](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp5_004.jpg?raw=true) 	|   `XP5_004`	| **Sabalan Pipeline** | `TDM`, `TDM QC` |
+|   ![XP5_003](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp5_003.jpg?raw=true) 	|   `XP5_003`	| **Kiasar Railroad** | `TDM`, `TDM QC`, `Conquest Small` |
+|   ![XP5_004](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp5_004.jpg?raw=true) 	|   `XP5_004`	| **Sabalan Pipeline** | `TDM`, `TDM QC`, `Conquest Small` |
 
  > Missing some `Maps` or `Game Modes`? 
  > Just press **F12** for the InGame-Menu and start a new Trace on your own `Map` or `Game Mode`!
