@@ -18,6 +18,7 @@ The Smart Node update
 	- Riverside (small) Thanks to RekkieSA!!
 	- Railroad (small) Thanks to RekkieSA!!
 	- Pipeline (small) Thanks to RekkieSA!!
+	- Shield (small) Thanks to RekkieSA!!
 	- Metro (large)
 - Rush supported
 	- Metro
