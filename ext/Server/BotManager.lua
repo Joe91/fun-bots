@@ -46,7 +46,7 @@ function BotManager:getBotTeam()
 	local countPlayersTeam2 = 0;
 	local players = PlayerManager:GetPlayers()
 	for i = 1, PlayerManager:GetPlayerCount() do
-		if self:getBotByName(players[i].name) == nil then
+		if Utilities:isBot(players[i]) == false then
 			if players[i].teamId == TeamId.Team1 then
 				countPlayersTeam1 = countPlayersTeam1 + 1;
 			else
@@ -95,9 +95,9 @@ function BotManager:findNextBotName()
 	for i = 1, MAX_NUMBER_OF_BOTS do
 		local name = BotNames[i]
 		local bot = self:getBotByName(name)
-		if bot == nil then
+		if bot == nil and PlayerManager:GetPlayerByName(name) == nil then
 			return name
-		elseif bot.player.soldier == nil and bot:getSpawnMode() < 4 then
+		elseif bot ~= nil and bot.player.soldier == nil and bot:getSpawnMode() < 4 then
 			return name
 		end
 	end
