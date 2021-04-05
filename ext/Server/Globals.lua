@@ -15,6 +15,7 @@ function Globals:__init()
 	self.respawnDelay		= 0;
 	self.isInputAllowed		= false;
 	self.isInputRestrictionDisabled = false;
+	self.removeKitVisuals	= false;
 	self.ignoreBotNames		= {};
 
 	self.respawnWayBots 	= false;	--used for the runtime respawn

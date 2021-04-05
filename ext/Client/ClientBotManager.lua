@@ -101,16 +101,21 @@ function ClientBotManager:_onUpdate(p_Delta, p_Pass)
 
 					if (distance < Config.maxRaycastDistance) then
 						self._lastIndex	= self._lastIndex+1;
-						local raycast	= RaycastManager:Raycast(playerPosition, target, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.IsAsyncRaycast)
-
+						local raycast = nil;
+						if self.player.inVehicle then
+							-- TODO: Some Vehicles are detected as objects of type Group. Find a better solution
+							raycast	= RaycastManager:Raycast(playerPosition, target, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckPhantoms | RayCastFlags.DontCheckGroup | RayCastFlags.IsAsyncRaycast)
+						else
+							raycast	= RaycastManager:Raycast(playerPosition, target, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.IsAsyncRaycast)
+						end
 						if (raycast == nil or raycast.rigidBody == nil) then
 							-- we found a valid bot in Sight (either no hit, or player-hit). Signal Server with players
 							local ignoreYaw = false;
-							
+
 							if (distance < Config.distanceForDirectAttack) then
 								ignoreYaw = true; --shoot, because you are near
 							end
-							
+
 							NetEvents:SendLocal("BotShootAtPlayer", bot.name, ignoreYaw);
 						end
 						

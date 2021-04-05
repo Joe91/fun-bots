@@ -568,12 +568,12 @@ function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, inde
 		else
 			local bot = BotManager:createBot(name, team, squad)
 
-			-- check for first one in squad
-			if (TeamSquadManager:GetSquadPlayerCount(team, squad) == 1) then
-				bot.player:SetSquadLeader(true, false);  -- not private
-			end
-
 			if bot ~= nil then
+				-- check for first one in squad
+				if (TeamSquadManager:GetSquadPlayerCount(team, squad) == 1) then
+					bot.player:SetSquadLeader(true, false);  -- not private
+				end
+
 				bot:setVarsWay(player, useRandomWay, activeWayIndex, indexOnPath, inverseDirection)
 				self:spawnBot(bot, transform, true)
 			end
@@ -927,9 +927,17 @@ function BotSpawner:spawnBot(bot, trans, setKit)
 	transform = trans
 
 	-- And then spawn the bot. This will create and return a new SoldierEntity object.
-	BotManager:spawnBot(bot, transform, CharacterPoseType.CharacterPoseType_Stand, soldierBlueprint, soldierKit, { appearance })
+	-- for Civilianizer-Mod
+	if g_Globals.removeKitVisuals then
+		BotManager:spawnBot(bot, transform, CharacterPoseType.CharacterPoseType_Stand, soldierBlueprint, soldierKit, {})
+	else
+		BotManager:spawnBot(bot, transform, CharacterPoseType.CharacterPoseType_Stand, soldierBlueprint, soldierKit, { appearance })
+	end
 	bot.player.soldier:ApplyCustomization(soldierCustomization)
 	self:_modifyWeapon(bot.player.soldier)
+
+	-- for Civilianizer-mod:
+	Events:Dispatch('Bot:SoldierEntity', bot.player.soldier)
 end
 
 
