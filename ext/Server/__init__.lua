@@ -125,10 +125,35 @@ function FunBotServer:_onLevelLoaded(levelName, gameMode)
 		Globals.respawnDelay = 10.0;
 	end
 
-	-- disable inputs on start of round
+	-- prepare some more Globals
 	Globals.ignoreBotNames = {}
+
+	-- detect special mods:
+	rconResponseTable = RCON:SendCommand('Modlist.ListRunning')
+	local noPreroundFound = false;
+	local civilianizerFound = false;
+	for i = 2, #rconResponseTable do
+		local mod = rconResponseTable[i];
+		if string.find(mod:lower(), "preround") ~= nil then
+			noPreroundFound = true;
+		end
+		if string.find(mod:lower(), "civilianizer") ~= nil then
+			civilianizerFound = true;
+		end
+	end
+	if civilianizerFound then
+		Globals.removeKitVisuals = true;
+	else
+		Globals.removeKitVisuals = false;
+	end
+	if noPreroundFound then
+		Globals.isInputRestrictionDisabled = true;
+	else
+		Globals.isInputRestrictionDisabled = false;
+	end
+
+	-- disable inputs on start of round
 	Globals.isInputAllowed = true
-	Globals.isInputRestrictionDisabled = false;
 
     local s_EntityIterator = EntityManager:GetIterator("ServerInputRestrictionEntity")
     local s_Entity = s_EntityIterator:Next()
@@ -143,10 +168,7 @@ function FunBotServer:_onLevelLoaded(levelName, gameMode)
         s_Entity.data.instanceGuid == Guid('A40B08B7-D781-487A-8D0C-2E1B911C1949') then -- sqdm
         -- rip CTF
             s_Entity:RegisterEventCallback(function(entity, event)
-				if event.eventId == MathUtils:FNVHash("Disable") then
-                    Globals.isInputAllowed = true
-                    Globals.isInputRestrictionDisabled = true
-                elseif not Globals.isInputRestrictionDisabled then
+                if not Globals.isInputRestrictionDisabled then
                     if event.eventId == MathUtils:FNVHash("Activate") and Globals.isInputAllowed then
                         Globals.isInputAllowed = false
                     elseif event.eventId == MathUtils:FNVHash("Deactivate") and not Globals.isInputAllowed then

@@ -928,7 +928,7 @@ function BotSpawner:spawnBot(bot, trans, setKit)
 
 	-- And then spawn the bot. This will create and return a new SoldierEntity object.
 	-- for Civilianizer-Mod
-	if REMOVE_KIT_VISUALS then
+	if g_Globals.removeKitVisuals then
 		BotManager:spawnBot(bot, transform, CharacterPoseType.CharacterPoseType_Stand, soldierBlueprint, soldierKit, {})
 	else
 		BotManager:spawnBot(bot, transform, CharacterPoseType.CharacterPoseType_Stand, soldierBlueprint, soldierKit, { appearance })
