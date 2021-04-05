@@ -30,7 +30,16 @@ function BotManager:__init()
 	Hooks:Install('Soldier:Damage', 100, self, self._onSoldierDamage)
 	--Events:Subscribe('Soldier:HealthAction', self, self._onHealthAction)	-- use this for more options on revive. Not needed yet
 	--Events:Subscribe('GunSway:Update', self, self._onGunSway)
+	Events:Subscribe('Player:Destroyed', self, self._onPlayerDestroyed)
 
+end
+
+function BotManager:_onPlayerDestroyed(player)
+	if not Utilities:isBot(player) then
+		if (player ~= nil) then
+			self:onPlayerLeft(player)
+		end
+	end
 end
 
 function BotManager:registerActivePlayer(player)
@@ -94,11 +103,20 @@ end
 function BotManager:findNextBotName()
 	for i = 1, MAX_NUMBER_OF_BOTS do
 		local name = BotNames[i]
-		local bot = self:getBotByName(name)
-		if bot == nil and PlayerManager:GetPlayerByName(name) == nil then
-			return name
-		elseif bot ~= nil and bot.player.soldier == nil and bot:getSpawnMode() < 4 then
-			return name
+		local skipName = false;
+		for _,ignoreName in pairs(g_Globals.ignoreBotNames) do
+			if name == ignoreName then
+				skipName = true;
+				break;
+			end
+		end
+		if not skipName then
+			local bot = self:getBotByName(name)
+			if bot == nil and PlayerManager:GetPlayerByName(name) == nil then
+				return name
+			elseif bot ~= nil and bot.player.soldier == nil and bot:getSpawnMode() < 4 then
+				return name
+			end
 		end
 	end
 	return nil

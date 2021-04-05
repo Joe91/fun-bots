@@ -274,6 +274,7 @@ function BotSpawner:_onPlayerJoining(name)
 		self:onLevelLoaded()
 	else
 		if BotManager:getBotByName(name) ~= nil then
+			table.insert(g_Globals.ignoreBotNames, name);
 			BotManager:destroyBot(name)
 		end
 	end

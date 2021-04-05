@@ -126,6 +126,7 @@ function FunBotServer:_onLevelLoaded(levelName, gameMode)
 	end
 
 	-- disable inputs on start of round
+	Globals.ignoreBotNames = {}
 	Globals.isInputAllowed = true
 	Globals.isInputRestrictionDisabled = false;
 

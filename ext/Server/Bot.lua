@@ -569,6 +569,7 @@ function Bot:_findOutVehicleType(player)
 	local type = 0 -- no vehicle
 	if player.attachedControllable ~= nil then
 		local vehicleName = VehicleTable[VehicleEntityData(player.attachedControllable.data).controllableType:gsub(".+/.+/","")]
+		--print(vehicleName)
 		-- Tank
 		if vehicleName == "[LAV-25]" or 
 		vehicleName == "[SPRUT-SD]" or
@@ -638,9 +639,9 @@ end
 
 function Bot:_ceckForVehicleAttack(type, distance)
 	local attackMode = 0; -- no attack
-	if type == 4 then
+	if type == 4 and distance < Config.maxRaycastDistance then
 		attackMode = 1; -- attack with rifle
-	elseif type == 3 and distance < 80 then
+	elseif type == 3 and distance < Config.maxRaycastDistance then
 		attackMode = 1; -- attack with rifle
 	elseif type == 2 and distance < 35 then
 		attackMode = 2;	-- attack with grenade
@@ -815,6 +816,15 @@ function Bot:_updateShooting()
 						elseif attackMode == 4 then -- C4
 							self._weaponToUse = "Gadget2"
 							self._c4Active = true;
+						elseif attackMode == 1 then
+							-- TODO: doble code is not nice
+							if not self._grenadeActive and self.player.soldier.weaponsComponent.weapons[1] ~= nil then
+								if self.player.soldier.weaponsComponent.weapons[1].primaryAmmo == 0 then
+									self._weaponToUse = "Pistol"
+								else
+									self._weaponToUse = "Primary"
+								end
+							end
 						end
 					else
 						self._shootModeTimer = Config.botFireModeDuration; -- end attack
