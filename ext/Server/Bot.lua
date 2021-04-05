@@ -636,6 +636,8 @@ function Bot:_ceckForVehicleAttack(type, distance)
 	local attackMode = 0; -- no attack
 	if type == 4 then
 		attackMode = 1; -- attack with rifle
+	elseif type == 3 and distance < 80 then
+		attackMode = 1; -- attack with rifle
 	elseif type == 2 and distance < 35 then
 		attackMode = 2;	-- attack with grenade
 	end
