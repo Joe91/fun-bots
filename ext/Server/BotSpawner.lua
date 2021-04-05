@@ -266,12 +266,17 @@ function BotSpawner:_onLevelDestroy()
 	self._playerUpdateTimer = 0;
 end
 
-function BotSpawner:_onPlayerJoining()
+function BotSpawner:_onPlayerJoining(name)
 	if BotManager:getPlayerCount() == 0 then
 		if Debug.Server.BOT then
 			print("first player - spawn bots")
 		end
 		self:onLevelLoaded()
+	else
+		if BotManager:getBotByName(name) ~= nil then
+			table.insert(g_Globals.ignoreBotNames, name);
+			BotManager:destroyBot(name)
+		end
 	end
 end
 

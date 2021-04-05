@@ -125,5 +125,11 @@ BotNames = {
 	'BOT_Craig',
 	'BOT_Lew',
 	'BOT_Christina',
-	'BOT_George'
+	'BOT_George',
+	'BOT_Horst',
+	'BOT_Romeo',
+	'BOT_Erwin',
+	'BOT_Bizzi',
+	'BOT_Major',
+	'BOT_Joe'
 };

@@ -75,6 +75,7 @@ function Bot:__init(player)
 	--shooting
 	self._shoot = false;
 	self._shootPlayer = nil;
+	self._shootPlayerName = "";
 	self._weaponToUse = "Primary";
 	self._shootWayPoints = {};
 	self._knifeWayPositions = {};
@@ -94,22 +95,17 @@ function Bot:onUpdate(dt)
 
 	if g_Globals.isInputAllowed then
 		self._updateTimer		= self._updateTimer + dt;
-		self._aimUpdateTimer	= self._aimUpdateTimer + dt;
-
-		if self._aimUpdateTimer > StaticConfig.botAimUpdateCycle then
-			self:_updateAiming();
-			self._aimUpdateTimer = 0; --reset afterwards, to use it for targetinterpolation
-		end
 
 		self:_updateYaw();
 
 		if self._updateTimer > StaticConfig.botUpdateCycle then
-			self._updateTimer = 0;
-
 			self:_setActiveVars();
 			self:_updateRespwawn();
+			self:_updateAiming();
 			self:_updateShooting();
-			self:_updateMovement(); --TODO: move-mode shoot
+			self:_updateMovement();
+
+			self._updateTimer = 0;
 		end
 	end
 end
@@ -119,7 +115,8 @@ function Bot:revive(player)
 	if self.kit == "Assault" and player.corpse ~= nil then
 		if Config.botsRevive then
 			self._reviveActive = true;
-			self._shootPlayer = player;
+			self._shootPlayer = nil;
+			self._shootPlayerName = player.name;
 		end
 	end
 end
@@ -175,8 +172,9 @@ function Bot:shootAt(player, ignoreYaw)
 		if self._shoot then
 			if self._shootPlayer == nil or self._shootModeTimer > Config.botMinTimeShootAtPlayer or (self.knifeMode and self._shootModeTimer > (Config.botMinTimeShootAtPlayer/2)) then
 				self._shootModeTimer		= 0;
-				self._shootPlayer			= player;
-				self._lastShootPlayer 		= player;
+				self._shootPlayerName		= player.name
+				self._shootPlayer			= nil;
+				self._lastShootPlayer 		= nil;
 				self._lastTargetTrans 		= player.soldier.worldTransform.trans:Clone();
 				self._knifeWayPositions 	= {};
 				
@@ -212,6 +210,7 @@ function Bot:resetVars()
 	self._shoot					= false;
 	self._targetPlayer			= nil;
 	self._shootPlayer			= nil;
+	self._shootPlayerName		= "";
 	self._lastShootPlayer		= nil;
 	self._invertPathDirection	= false;
 	self._shotTimer				= -Config.botFirstShotDelay;
@@ -339,6 +338,7 @@ function Bot:resetSpawnVars()
 	self._lastWayDistance		= 1000;
 	self._shootPlayer			= nil;
 	self._lastShootPlayer		= nil;
+	self._shootPlayerName		= "";
 	self._shootModeTimer		= 0;
 	self._meleeCooldownTimer	= 0;
 	self._shootTraceTimer		= 0;
@@ -383,6 +383,10 @@ function Bot:clearPlayer(player)
 
 	if self._lastShootPlayer == player then
 		self._lastShootPlayer = nil;
+	end
+
+	if self._shootPlayerName == player.name then
+		self._shootPlayerName = "";
 	end
 end
 
@@ -442,7 +446,7 @@ function Bot:_updateAiming()
 				end
 			else
 				local timeToTravel		= (distanceToPlayer / self.activeWeapon.bulletSpeed);
-				factorForMovement	= (timeToTravel) / self._aimUpdateTimer;
+				factorForMovement	= (timeToTravel) / self._updateTimer;
 				pitchCorrection	= 0.5 * timeToTravel * timeToTravel * self.activeWeapon.bulletDrop;
 			end
 
@@ -565,6 +569,7 @@ function Bot:_findOutVehicleType(player)
 	local type = 0 -- no vehicle
 	if player.attachedControllable ~= nil then
 		local vehicleName = VehicleTable[VehicleEntityData(player.attachedControllable.data).controllableType:gsub(".+/.+/","")]
+		--print(vehicleName)
 		-- Tank
 		if vehicleName == "[LAV-25]" or 
 		vehicleName == "[SPRUT-SD]" or
@@ -634,7 +639,9 @@ end
 
 function Bot:_ceckForVehicleAttack(type, distance)
 	local attackMode = 0; -- no attack
-	if type == 4 then
+	if type == 4 and distance < Config.maxRaycastDistance then
+		attackMode = 1; -- attack with rifle
+	elseif type == 3 and distance < Config.maxRaycastDistance then
 		attackMode = 1; -- attack with rifle
 	elseif type == 2 and distance < 35 then
 		attackMode = 2;	-- attack with grenade
@@ -678,7 +685,7 @@ function Bot:_updateShooting()
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
 						self.activeWeapon = self.gadget2;
-						self._shotTimer = 0;
+						self._shotTimer = -Config.botFirstShotDelay;
 					else
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon5, 0);
 					end
@@ -692,7 +699,7 @@ function Bot:_updateShooting()
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
 						self.activeWeapon = self.gadget1;
-						self._shotTimer = 0;
+						self._shotTimer = -Config.botFirstShotDelay;
 					else
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon3, 0);
 					end
@@ -706,7 +713,7 @@ function Bot:_updateShooting()
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
 						self.activeWeapon = self.grenade;
-						self._shotTimer = 0;
+						self._shotTimer = -Config.botFirstShotDelay;
 					else
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon6, 0);
 					end
@@ -809,6 +816,15 @@ function Bot:_updateShooting()
 						elseif attackMode == 4 then -- C4
 							self._weaponToUse = "Gadget2"
 							self._c4Active = true;
+						elseif attackMode == 1 then
+							-- TODO: doble code is not nice
+							if not self._grenadeActive and self.player.soldier.weaponsComponent.weapons[1] ~= nil then
+								if self.player.soldier.weaponsComponent.weapons[1].primaryAmmo == 0 then
+									self._weaponToUse = "Pistol"
+								else
+									self._weaponToUse = "Primary"
+								end
+							end
 						end
 					else
 						self._shootModeTimer = Config.botFireModeDuration; -- end attack
@@ -924,6 +940,7 @@ function Bot:_updateShooting()
 				self._targetPitch 		= 0.0;
 				self._weaponToUse 		= "Primary";
 				self._shotTimer			= -Config.botFirstShotDelay;
+				self._shootPlayerName	= "";
 				self._shootPlayer		= nil;
 				self._grenadeActive 	= false;
 				self._c4Active 			= false;
@@ -1555,6 +1572,13 @@ function Bot:_updateMovement()
 end
 
 function Bot:_setActiveVars()
+	if self._shootPlayerName ~= "" then
+		self._shootPlayer = PlayerManager:GetPlayerByName(self._shootPlayerName)
+	else
+		self._shootPlayer = nil;
+		self._lastShootPlayer = nil;
+	end
+
 	self.activeMoveMode		= self._moveMode;
 	self.activeSpeedValue	= self._botSpeed;
 	

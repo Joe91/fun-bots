@@ -2,7 +2,7 @@
  
 ## [Unreleased - 1.7.X.X] - 2021-03-XX
  
-[Download](https://github.com/Joe91/fun-bots/archive/V1.7.0.13.zip)  
+[Download](https://github.com/Joe91/fun-bots/archive/V1.7.0.14.zip)  
 The Smart Node update
 
 - Conquest supported
@@ -18,6 +18,7 @@ The Smart Node update
 	- Riverside (small) Thanks to RekkieSA!!
 	- Railroad (small) Thanks to RekkieSA!!
 	- Pipeline (small) Thanks to RekkieSA!!
+	- Shield (small) Thanks to RekkieSA!!
 	- Metro (large)
 - Rush supported
 	- Metro
@@ -43,6 +44,7 @@ The Smart Node update
 - Bots attack vehicles depending on their abilities and armor of the vehicle
 - deleting paths works now
 - Improved logic for conquest and Rush
+- fixed crashes if players use real botnames...
 
 
 ## [Unreleased - 1.6.2.1] - 2021-02-28
