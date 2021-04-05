@@ -755,6 +755,11 @@ function BotSpawner:getKitApperanceCustomization(team, kit, color, primary, pist
 		soldierCustomization.weapons:add(meleeWeapon)
 	end
 
+	-- for Civilizer-Mod
+	if REMOVE_KIT_VISUALS then
+		appearance = nil;
+	end
+
 	return soldierKit, appearance, soldierCustomization
 end
 
@@ -930,6 +935,9 @@ function BotSpawner:spawnBot(bot, trans, setKit)
 	BotManager:spawnBot(bot, transform, CharacterPoseType.CharacterPoseType_Stand, soldierBlueprint, soldierKit, { appearance })
 	bot.player.soldier:ApplyCustomization(soldierCustomization)
 	self:_modifyWeapon(bot.player.soldier)
+
+	-- for Civilizer-mod:
+	Events:Dispatch('Bot:SoldierEntity', bot.player.soldier)
 end
 
 
