@@ -568,12 +568,12 @@ function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, inde
 		else
 			local bot = BotManager:createBot(name, team, squad)
 
-			-- check for first one in squad
-			if (TeamSquadManager:GetSquadPlayerCount(team, squad) == 1) then
-				bot.player:SetSquadLeader(true, false);  -- not private
-			end
-
 			if bot ~= nil then
+				-- check for first one in squad
+				if (TeamSquadManager:GetSquadPlayerCount(team, squad) == 1) then
+					bot.player:SetSquadLeader(true, false);  -- not private
+				end
+
 				bot:setVarsWay(player, useRandomWay, activeWayIndex, indexOnPath, inverseDirection)
 				self:spawnBot(bot, transform, true)
 			end
