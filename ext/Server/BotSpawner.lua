@@ -690,7 +690,11 @@ function BotSpawner:getKitApperanceCustomization(team, kit, color, primary, pist
 
 	local gadget01 = UnlockWeaponAndSlot()
 	gadget01.weapon = SoldierWeaponUnlockAsset(gadget1Weapon)
-	gadget01.slot = WeaponSlot.WeaponSlot_2
+	if kit == "Assault" or kit == "Support" then
+		gadget01.slot = WeaponSlot.WeaponSlot_4
+	else
+		gadget01.slot = WeaponSlot.WeaponSlot_2
+	end
 
 	local gadget02 = UnlockWeaponAndSlot()
 	gadget02.weapon = SoldierWeaponUnlockAsset(gadget2Weapon)
@@ -707,11 +711,6 @@ function BotSpawner:getKitApperanceCustomization(team, kit, color, primary, pist
 	local meleeWeapon = UnlockWeaponAndSlot()
 	meleeWeapon.weapon = SoldierWeaponUnlockAsset(knifeWeapon)
 	meleeWeapon.slot = WeaponSlot.WeaponSlot_7
-
-	if Config.zombieMode then
-		kit = "Recon";
-		color = "Ninja";
-	end
 
 	if team == TeamId.Team1 then -- US
 		if kit == "Assault" then --assault
