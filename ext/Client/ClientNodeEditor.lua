@@ -91,10 +91,10 @@ function ClientNodeEditor:__init()
 	self.eventsReady = false
 
 	-- ('UI_ClientNodeEditor_Enabled', <Bool|Enabled>)
-	-- NetEvents:Subscribe('UI_ClientNodeEditor_Enabled', self, self._onSetEnabled)
+	NetEvents:Subscribe('UI_ClientNodeEditor_Enabled', self, self._onSetEnabled)
 
 	-- listens to UI settings for changes
-	-- NetEvents:Subscribe('UI_Settings', self, self._onUISettings)
+	NetEvents:Subscribe('UI_Settings', self, self._onUISettings)
 
 	self:RegisterEvents()
 end
@@ -131,9 +131,9 @@ function ClientNodeEditor:RegisterEvents()
 
 	-- must provide arguments
 	-- ('UI_ClientNodeEditor_Trace_Show', <Int|PathIndex>)
-	--NetEvents:Subscribe('UI_ClientNodeEditor_Trace_Show', self, self._onShowPath)
+	NetEvents:Subscribe('UI_ClientNodeEditor_Trace_Show', self, self._onShowPath)
 	-- ('UI_ClientNodeEditor_Trace_Hide', <Int|PathIndex>)
-	--NetEvents:Subscribe('UI_ClientNodeEditor_Trace_Hide', self, self._onHidePath)
+	NetEvents:Subscribe('UI_ClientNodeEditor_Trace_Hide', self, self._onHidePath)
 
 	-- debug stuff
 	NetEvents:Subscribe('ClientNodeEditor:SetLastTraceSearchArea', self, self._onSetLastTraceSearchArea)
