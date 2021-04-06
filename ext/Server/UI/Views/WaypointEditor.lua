@@ -3,12 +3,58 @@ class('WaypointEditor');
 function WaypointEditor:__init(core)
 	self.view 			= View(core, 'WaypointEditor');
 	self.trace_index	= 0;
+	self.tracing		= false;
+	
+	NetEvents:Subscribe('WaypointEditor:TraceToggle', self, function(userData, player, data)
+		if data.Enabled ~= nil then
+			self.tracing = data.Enabled;
+		end
+		
+		if data.Distance ~= nil then
+			NetEvents:SendToLocal('UI', player, 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
+				Type	= 'Entry',
+				Name	= 'trace_distance',
+				Value	= math.floor(data.Distance) .. ' m'
+			}));
+		end
+		
+		if data.Waypoints ~= nil then
+			NetEvents:SendToLocal('UI', player, 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
+				Type	= 'Entry',
+				Name	= 'trace_waypoints',
+				Value	= data.Waypoints
+			}));
+		end
+		
+		if data.TraceIndex ~= nil then
+			NetEvents:SendToLocal('UI', player, 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
+				Type	= 'Input',
+				Name	= 'trace_index',
+				Value	= data.TraceIndex
+			}));
+		end
+		
+		if self.tracing then
+			NetEvents:SendToLocal('UI', player, 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
+				Type	= 'MenuItem',
+				Name	= 'trace_toggle',
+				Text	= 'Stop Trace',
+				Icon	= 'Assets/Icons/Stop.svg'
+			}));
+		else
+			NetEvents:SendToLocal('UI', player, 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
+				Type	= 'MenuItem',
+				Name	= 'trace_toggle',
+				Text	= 'Start Trace',
+				Icon	= 'Assets/Icons/Start.svg'
+			}));
+		end
+	end);
 end
 
 function WaypointEditor:Show(player)
 	Config.debugTracePaths = true;
-	NetEvents:SendTo('UI_ClientNodeEditor_Enabled', player, Config.debugTracePaths);
-			
+	NetEvents:SendToLocal('UI_ClientNodeEditor_Enabled', player, Config.debugTracePaths);
 	self.view:Show(player);
 	self:Deactivate(player);
 	self.view:GetCore():GetView('BotEditor'):Hide(player);
@@ -16,13 +62,40 @@ end
 
 function WaypointEditor:Hide(player)
 	Config.debugTracePaths = false;
-	NetEvents:SendTo('UI_ClientNodeEditor_Enabled', player, Config.debugTracePaths);
+	NetEvents:SendToLocal('UI_ClientNodeEditor_Enabled', player, Config.debugTracePaths);
 	
 	self.view:Hide(player);
 	
 	if PermissionManager:HasPermission(player, 'UserInterface.BotEditor') then
 		self.view:GetCore():GetView('BotEditor'):Show(player);
 	end
+end
+
+function WaypointEditor:UpdateNewPath(player)
+	local nodes		= g_NodeCollection:Get(nil, self.trace_index);
+	local distance	= 0;
+	
+	-- Show the new path
+	NetEvents:SendToLocal('NodeCollection:ShowPath', player, self.trace_index);
+		
+	NetEvents:SendToLocal('UI', player, 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
+		Type	= 'Input',
+		Name	= 'trace_index',
+		Value	= self.trace_index
+	}));
+	
+	NetEvents:SendToLocal('UI', player, 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
+		Type	= 'Entry',
+		Name	= 'trace_waypoints',
+		Value	= #nodes
+	}));
+	
+	-- @ToDo calculate distance of node collection
+	NetEvents:SendToLocal('UI', player, 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
+		Type	= 'Entry',
+		Name	= 'trace_distance',
+		Value	= distance .. ' m'
+	}));
 end
 
 function WaypointEditor:Activate(player)
@@ -46,6 +119,15 @@ function WaypointEditor:GetName()
 end
 
 function WaypointEditor:InitializeComponent()
+	local recording = Box(Color.Red);
+	recording:SetPosition(Position.Absolute, {
+		Top		= 180,
+		Left	= 20
+	});
+			
+	self.view:AddComponent(recording);
+	recording:Hide();
+	
 	-- Logo
 	local logo = Logo('Waypoint-Editor', 'fun-bots');
 	logo:SetPosition(Position.Absolute, {
@@ -92,23 +174,6 @@ function WaypointEditor:InitializeComponent()
 	-- View
 	local view = MenuItem('View', 'view');
 		view:SetIcon('Assets/Icons/View.svg');
-		view:AddItem(MenuSeparator('General'));
-		
-		view:AddItem(MenuItem('Debug-Paths', 'debug_paths', function(player)
-			Config.debugTracePaths = not Config.debugTracePaths;
-			NetEvents:SendTo('UI_ClientNodeEditor_Enabled', player, Config.debugTracePaths);
-		end));
-		
-		--view:AddItem(MenuItem('Debug-Text', 'debug_text', function(player)
-		--	print('debug_text Executed');
-		--	Config.drawWaypointIDs = not Config.drawWaypointIDs;
-		--end));
-		
-		view:AddItem(MenuSeparator('Waypoints'));
-		
-		--view:AddItem(MenuItem('Dots', 'dots', function(player)
-		--	print('dots Executed');
-		--end));
 		
 		view:AddItem(MenuItem('Lines', 'lines', function(player)
 			Config.drawWaypointLines = not Config.drawWaypointLines;
@@ -125,27 +190,12 @@ function WaypointEditor:InitializeComponent()
 	-- Tools-Menu
 	local tools = Menu();
 	
-	local tracing = false;
-	
 	tools:AddItem(MenuItem('Start Trace', 'trace_toggle', function(player)		
-		tracing = (tracing ~= true);
-		local text = 'Start Trace';
-		local icon = 'Assets/Icons/Start.svg';
-		
-		if (tracing) then
-			text = 'Stop Trace';
-			icon = 'Assets/Icons/Stop.svg';
+		if self.tracing then
+			NetEvents:SendToLocal('ClientNodeEditor:EndTrace', player);
+		else
+			NetEvents:SendToLocal('ClientNodeEditor:StartTrace', player);
 		end
-		
-		NetEvents:Broadcast('UI', 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
-			Type	= 'MenuItem',
-			Name	= 'trace_toggle',
-			Text	= text,
-			Icon	= icon
-		}));
-		
-		--NetEvents:SendToLocal('ClientNodeEditor:EndTrace', player);
-		NetEvents:SendToLocal('ClientNodeEditor:StartTrace', player);
 	end):SetIcon('Assets/Icons/Start.svg'), 'UserInterface.WaypointEditor.Tracing');
 	
 	tools:AddItem(MenuItem('Save Trace', 'trace_save', function(player)
@@ -182,7 +232,7 @@ function WaypointEditor:InitializeComponent()
 	
 	input_trace_index:AddArrow(Position.Left, '❰', function(player)
 		-- Hide the old path
-		NetEvents:SendTo('NodeCollection:HidePath', player, self.trace_index);
+		NetEvents:SendToLocal('NodeCollection:HidePath', player, self.trace_index);
 		
 		self.trace_index = self.trace_index - 1;
 		
@@ -196,27 +246,13 @@ function WaypointEditor:InitializeComponent()
 			end
 		end
 		
-		-- Show the new path
-		NetEvents:SendTo('NodeCollection:ShowPath', player, self.trace_index);
-		
 		input_trace_index:SetValue(self.trace_index);
-		
-		NetEvents:SendTo('UI', player, 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
-			Type	= input_trace_index:__class(),
-			Name	= input_trace_index:GetName(),
-			Value	= input_trace_index:GetValue()
-		}));
-		
-		NetEvents:SendTo('UI', player, 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
-			Type	= 'Entry',
-			Name	= 'trace_waypoints',
-			Value	= #g_NodeCollection:Get(nil, self.trace_index)
-		}));
+		self:UpdateNewPath(player);
 	end);
 	
 	input_trace_index:AddArrow(Position.Right, '❱', function(player)
 		-- Hide the old path
-		NetEvents:SendTo('NodeCollection:HidePath', player, self.trace_index);
+		NetEvents:SendToLocal('NodeCollection:HidePath', player, self.trace_index);
 		
 		self.trace_index	= self.trace_index + 1;
 		local lastNode		= g_NodeCollection:GetLast();
@@ -225,39 +261,15 @@ function WaypointEditor:InitializeComponent()
 			self.trace_index = 0;
 		end
 		
-		-- Show the new path
-		NetEvents:SendTo('NodeCollection:ShowPath', player, self.trace_index);
-		
 		input_trace_index:SetValue(self.trace_index);
-		
-		NetEvents:SendTo('UI', player, 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
-			Type	= input_trace_index:__class(),
-			Name	= input_trace_index:GetName(),
-			Value	= input_trace_index:GetValue()
-		}));
-		
-		NetEvents:SendTo('UI', player, 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
-			Type	= 'Entry',
-			Name	= 'trace_waypoints',
-			Value	= #g_NodeCollection:Get(nil, self.trace_index)
-		}));
+		self:UpdateNewPath(player);
 	end);
-	
 	
 	status:AddItem(Entry('trace_index', 'Current Trace Index', input_trace_index));
 	status:AddItem(Entry('trace_waypoints', 'Waypoints', '' .. #g_NodeCollection:Get(nil, self.trace_index)));
 	status:AddItem(Entry('trace_distance', 'Total Distance', '0 m'));
 	
 	self.view:AddComponent(status);
-	
-	local recording = Box(Color.Red);
-	recording:SetPosition(Position.Absolute, {
-		Top		= 180,
-		Left	= 20
-	});
-			
-	self.view:AddComponent(recording);
-	recording:Hide();
 end
 
 return WaypointEditor;

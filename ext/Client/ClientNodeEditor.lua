@@ -500,25 +500,25 @@ function ClientNodeEditor:_onToggleMoveNode(args)
 			end
 		end
 
-		g_FunBotUIClient:_onSetOperationControls({
-			Numpad = {
-				{Grid = 'K1', Key = '1', Name = 'Remove'},
-				{Grid = 'K2', Key = '2', Name = 'Unlink'},
-				{Grid = 'K3', Key = '3', Name = 'Add'},
-				{Grid = 'K4', Key = '4', Name = 'Move'},
-				{Grid = 'K5', Key = '5', Name = 'Select'},
-				{Grid = 'K6', Key = '6', Name = 'Input'},
-				{Grid = 'K7', Key = '7', Name = 'Merge'},
-				{Grid = 'K8', Key = '8', Name = 'Link'},
-				{Grid = 'K9', Key = '9', Name = 'Split'},
-			},
-			Other = {
-				{Key = 'F12', Name = 'Settings'},
-				{Key = 'Q', Name = 'Quick Select'},
-				{Key = 'BS', Name = 'Clear Select'},
-				{Key = 'INS', Name = 'Spawn Bot'},
-			}
-		})
+		--g_FunBotUIClient:_onSetOperationControls({
+		--	Numpad = {
+		--		{Grid = 'K1', Key = '1', Name = 'Remove'},
+		--		{Grid = 'K2', Key = '2', Name = 'Unlink'},
+		--		{Grid = 'K3', Key = '3', Name = 'Add'},
+		--		{Grid = 'K4', Key = '4', Name = 'Move'},
+		--		{Grid = 'K5', Key = '5', Name = 'Select'},
+		--		{Grid = 'K6', Key = '6', Name = 'Input'},
+		--		{Grid = 'K7', Key = '7', Name = 'Merge'},
+		--		{Grid = 'K8', Key = '8', Name = 'Link'},
+		--		{Grid = 'K9', Key = '9', Name = 'Split'},
+		--	},
+		--	Other = {
+		--		{Key = 'F12', Name = 'Settings'},
+		--		{Key = 'Q', Name = 'Quick Select'},
+		--		{Key = 'BS', Name = 'Clear Select'},
+		--		{Key = 'INS', Name = 'Spawn Bot'},
+		--	}
+		--})
 
 		self:Print('Edit Mode: %s', self.editMode)
 		return true
@@ -543,26 +543,26 @@ function ClientNodeEditor:_onToggleMoveNode(args)
 		self.editMode = 'move'
 		self.editModeManualOffset = Vec3.zero
 
-		g_FunBotUIClient:_onSetOperationControls({
-			Numpad = {
-				{Grid = 'K1', Key = '1', Name = 'Mode'},
-				{Grid = 'K2', Key = '2', Name = 'Back'},
-				{Grid = 'K3', Key = '3', Name = 'Down'},
-				{Grid = 'K4', Key = '4', Name = 'Left'},
-				{Grid = 'K5', Key = '5', Name = 'Finish'},
-				{Grid = 'K6', Key = '6', Name = 'Right'},
-				{Grid = 'K7', Key = '7', Name = 'Reset'},
-				{Grid = 'K8', Key = '8', Name = 'Forward'},
-				{Grid = 'K9', Key = '9', Name = 'Up'},
-			},
-			Other = {
-				{Key = 'F12', Name = 'Settings'},
-				{Key = 'Q', Name = 'Finish Move'},
-				{Key = 'BS', Name = 'Cancel Move'},
-				{Key = 'KP_PLUS', Name = 'Speed +'},
-				{Key = 'KP_MINUS', Name = 'Speed -'},
-			}
-		})
+		--g_FunBotUIClient:_onSetOperationControls({
+		--	Numpad = {
+		--		{Grid = 'K1', Key = '1', Name = 'Mode'},
+		--		{Grid = 'K2', Key = '2', Name = 'Back'},
+		--		{Grid = 'K3', Key = '3', Name = 'Down'},
+		--		{Grid = 'K4', Key = '4', Name = 'Left'},
+		--		{Grid = 'K5', Key = '5', Name = 'Finish'},
+		--		{Grid = 'K6', Key = '6', Name = 'Right'},
+		--		{Grid = 'K7', Key = '7', Name = 'Reset'},
+		--		{Grid = 'K8', Key = '8', Name = 'Forward'},
+		--		{Grid = 'K9', Key = '9', Name = 'Up'},
+		--	},
+		--	Other = {
+		--		{Key = 'F12', Name = 'Settings'},
+		--		{Key = 'Q', Name = 'Finish Move'},
+		--		{Key = 'BS', Name = 'Cancel Move'},
+		--		{Key = 'KP_PLUS', Name = 'Speed +'},
+		--		{Key = 'KP_MINUS', Name = 'Speed -'},
+		--	}
+		--})
 
 		self:Print('Edit Mode: %s', self.editMode)
 		return true
@@ -1074,15 +1074,20 @@ function ClientNodeEditor:_onStartTrace()
 
 	self:Print('Custom Trace Started')
 	
-	g_FunBotUIClient:_onUITrace(true)
-	g_FunBotUIClient:_onUITraceIndex(self.customTraceIndex)
-	g_FunBotUIClient:_onUITraceWaypoints(#self.customTrace:Get())
-	g_FunBotUIClient:_onUITraceWaypointsDistance(self.customTraceDistance)
+	NetEvents:Send('WaypointEditor:TraceToggle', {
+		Enabled		= true,
+		TraceIndex	= self.customTraceIndex,
+		Distance	= self.customTraceDistance,
+		Waypoints	= #self.customTrace:Get()
+	});
 end
 
 function ClientNodeEditor:_onEndTrace()
 	self.customTraceTimer = -1
-	g_FunBotUIClient:_onUITrace(false)
+	
+	NetEvents:Send('WaypointEditor:TraceToggle', {
+		Enabled = false
+	})
 
 	local firstWaypoint = self.customTrace:GetFirst()
 
@@ -1110,11 +1115,14 @@ function ClientNodeEditor:_onClearTrace()
 	self.customTraceTimer = -1
 	self.customTraceIndex = #g_NodeCollection:GetPaths()+1
 	self.customTraceDistance = 0
-	self.customTrace:Clear()
-	g_FunBotUIClient:_onUITrace(false)
-	g_FunBotUIClient:_onUITraceIndex(self.customTraceIndex)
-	g_FunBotUIClient:_onUITraceWaypoints(#self.customTrace:Get())
-	g_FunBotUIClient:_onUITraceWaypointsDistance(self.customTraceDistance)
+	self.customTrace:Clear();
+	
+	NetEvents:Send('WaypointEditor:TraceToggle', {
+		Enabled		= false,
+		TraceIndex	= self.customTraceIndex,
+		Waypoints	= #self.customTrace:Get(),
+		Distance	= self.customTraceDistance
+	});
 
 	self:Print('Custom Trace Cleared')
 end
@@ -1243,7 +1251,7 @@ function ClientNodeEditor:_onCommoRoseAction(action, hit)
 
 	if (action == 'Hide') then
 		self.commoRoseActive = false
-		g_FunBotUIClient:_onUICommonRose('false')
+		--g_FunBotUIClient:_onUICommonRose('false')
 		return 
 	end
 
@@ -1619,8 +1627,13 @@ function ClientNodeEditor:_onEngineUpdate(delta, simDelta)
 					end
 
 					self.customTraceDistance = self.customTraceDistance + lastDistance
-					g_FunBotUIClient:_onUITraceWaypointsDistance(self.customTraceDistance)
-					g_FunBotUIClient:_onUITraceWaypoints(#self.customTrace:Get())
+					NetEvents:Send('WaypointEditor:TraceToggle', {
+						Waypoints	= #self.customTrace:Get(),
+						Distance	= self.customTraceDistance
+					});
+					
+					--g_FunBotUIClient:_onUITraceWaypointsDistance(self.customTraceDistance)
+					--g_FunBotUIClient:_onUITraceWaypoints(#self.customTrace:Get())
 				end
 			else
 				-- collection is empty, stop the timer
