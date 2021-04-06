@@ -16,6 +16,7 @@ function BotSpawner:__init()
 	self._firstSpawnDelay = FIRST_SPAWN_DELAY;
 	self._updateActive = false;
 	self._spawnSets = {}
+	self._kickPlayers = {}
 
 	Events:Subscribe('UpdateManager:Update', self, self._onUpdate)
 	Events:Subscribe('Bot:RespawnBot', self, self._onRespawnBot)
@@ -272,7 +273,10 @@ function BotSpawner:_onPlayerJoining(name)
 			print("first player - spawn bots")
 		end
 		self:onLevelLoaded()
-	else
+	end
+	-- detect BOT-Names
+	if string.find(name, BOT_TOKEN) == 1 then --check if name starts with bot-token
+		table.insert(self._kickPlayers, name)
 		if BotManager:getBotByName(name) ~= nil then
 			table.insert(g_Globals.ignoreBotNames, name);
 			BotManager:destroyBot(name)
@@ -327,6 +331,23 @@ function BotSpawner:_onUpdate(dt, pass)
 				--garbage-collection of unwanted bots
 				BotManager:destroyDisabledBots();
 				BotManager:freshnTables();
+			end
+		end
+	end
+
+	--kick players named after bots
+	if #self._kickPlayers > 0 then
+		for index,playerName in pairs(self._kickPlayers) do
+			local player = PlayerManager:GetPlayerByName(playerName)
+			if player ~= nil then
+				player:Kick("You used a BOT-Name. Please use a real name on Fun-Bot-Servers...")
+				for index,name in pairs(g_Globals.ignoreBotNames) do
+					if name == playerName then
+						table.remove(g_Globals.ignoreBotNames, index)
+					end
+				end
+				table.remove(self._kickPlayers, index)
+				break;
 			end
 		end
 	end

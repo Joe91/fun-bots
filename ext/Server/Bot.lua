@@ -848,7 +848,7 @@ function Bot:_updateShooting()
 							local targetTimeValue = Config.botFireModeDuration - 0.5;
 							if ((self._shootModeTimer >= targetTimeValue) and (self._shootModeTimer < (targetTimeValue + StaticConfig.botUpdateCycle)) and not self._grenadeActive) or Config.botWeapon == "Grenade" then
 								-- should be triggered only once per fireMode
-								if MathUtils:GetRandomInt(0,100) < 30 then
+								if MathUtils:GetRandomInt(1,100) <= 30 then
 									if self.grenade ~= nil and currentDistance < 35 then
 										self._grenadeActive = true;
 									end

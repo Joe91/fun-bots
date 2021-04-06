@@ -2,7 +2,7 @@
  
 ## [Unreleased - 1.7.X.X] - 2021-03-XX
  
-[Download](https://github.com/Joe91/fun-bots/archive/V1.7.0.15.zip)  
+[Download](https://github.com/Joe91/fun-bots/archive/V1.7.0.16.zip)  
 The Smart Node update
 
 - Conquest supported
@@ -45,7 +45,10 @@ The Smart Node update
 - deleting paths works now
 - Improved logic for conquest and Rush
 - fixed crashes if players use real botnames...
+- kick players with bot-names
 - native support for Civilianizer-Mod
+- fixed wrong weapon-slot
+- zombies now use all colors and kits by default
 
 
 ## [Unreleased - 1.6.2.1] - 2021-02-28
