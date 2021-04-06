@@ -23,9 +23,10 @@ The Smart Node update
 - Rush supported
 	- Metro
 	- Damavand Peak
-	- Bazaar - Tanks to MrDonPotato!!
-	- Seinne Crossing - Tanks to MrDonPotato!!
-	- Kharg Island - Tanks to MrDonPotato!!
+	- Bazaar - Thanks to MrDonPotato!!
+	- Seinne Crossing - Thanks to MrDonPotato!!
+	- Kharg Island - Thanks to MrDonPotato!!
+	- Noshar Canals - Thanks to MrDonPotato !!
 - BFLAG supported (only a first version, not that usable yet)
 	- Bazaar small
 - Bots switch to Pistol or Sidearm (Rockets) if needed
