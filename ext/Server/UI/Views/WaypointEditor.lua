@@ -6,12 +6,18 @@ function WaypointEditor:__init(core)
 end
 
 function WaypointEditor:Show(player)
+	Config.debugTracePaths = true;
+	NetEvents:SendTo('UI_ClientNodeEditor_Enabled', player, Config.debugTracePaths);
+			
 	self.view:Show(player);
 	self:Deactivate(player);
 	self.view:GetCore():GetView('BotEditor'):Hide(player);
 end
 
 function WaypointEditor:Hide(player)
+	Config.debugTracePaths = false;
+	NetEvents:SendTo('UI_ClientNodeEditor_Enabled', player, Config.debugTracePaths);
+	
 	self.view:Hide(player);
 	
 	if PermissionManager:HasPermission(player, 'UserInterface.BotEditor') then
@@ -88,24 +94,28 @@ function WaypointEditor:InitializeComponent()
 		view:SetIcon('Assets/Icons/View.svg');
 		view:AddItem(MenuSeparator('General'));
 		
-		view:AddItem(MenuItem('Debug-Text', 'debug_text', function(player)
-			print('debug_text Executed');
+		view:AddItem(MenuItem('Debug-Paths', 'debug_paths', function(player)
+			Config.debugTracePaths = not Config.debugTracePaths;
+			NetEvents:SendTo('UI_ClientNodeEditor_Enabled', player, Config.debugTracePaths);
 		end));
+		
+		--view:AddItem(MenuItem('Debug-Text', 'debug_text', function(player)
+		--	print('debug_text Executed');
+		--	Config.drawWaypointIDs = not Config.drawWaypointIDs;
+		--end));
 		
 		view:AddItem(MenuSeparator('Waypoints'));
 		
-		view:AddItem(MenuItem('Dots', 'dots', function(player)
-			print('dots Executed');
-		end));
+		--view:AddItem(MenuItem('Dots', 'dots', function(player)
+		--	print('dots Executed');
+		--end));
 		
 		view:AddItem(MenuItem('Lines', 'lines', function(player)
-			print('lines Executed');
-			Config.drawWaypointLines = true;
+			Config.drawWaypointLines = not Config.drawWaypointLines;
 		end));
 		
 		view:AddItem(MenuItem('Labels', 'labels', function(player)
-			print('labels Executed');
-			Config.drawWaypointIDs = true;
+			Config.drawWaypointIDs = not Config.drawWaypointIDs;
 		end));
 		
 	navigation:AddItem(view, 'UserInterface.WaypointEditor.View');
@@ -171,6 +181,9 @@ function WaypointEditor:InitializeComponent()
 	input_trace_index:Disable();
 	
 	input_trace_index:AddArrow(Position.Left, '❰', function(player)
+		-- Hide the old path
+		NetEvents:SendTo('NodeCollection:HidePath', player, self.trace_index);
+		
 		self.trace_index = self.trace_index - 1;
 		
 		if (self.trace_index < 0) then
@@ -182,6 +195,9 @@ function WaypointEditor:InitializeComponent()
 				self.trace_index = lastNode.PathIndex;
 			end
 		end
+		
+		-- Show the new path
+		NetEvents:SendTo('NodeCollection:ShowPath', player, self.trace_index);
 		
 		input_trace_index:SetValue(self.trace_index);
 		
@@ -199,12 +215,18 @@ function WaypointEditor:InitializeComponent()
 	end);
 	
 	input_trace_index:AddArrow(Position.Right, '❱', function(player)
+		-- Hide the old path
+		NetEvents:SendTo('NodeCollection:HidePath', player, self.trace_index);
+		
 		self.trace_index	= self.trace_index + 1;
 		local lastNode		= g_NodeCollection:GetLast();
 		
 		if lastNode == nil or self.trace_index > lastNode.PathIndex then
 			self.trace_index = 0;
 		end
+		
+		-- Show the new path
+		NetEvents:SendTo('NodeCollection:ShowPath', player, self.trace_index);
 		
 		input_trace_index:SetValue(self.trace_index);
 		
