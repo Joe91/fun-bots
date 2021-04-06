@@ -68,7 +68,6 @@ function Bot:__init(player)
 	self._onSwitch = false;
 	self._actionActive = false;
 	self._reviveActive = false;
-	self._deployActive = false;
 	self._grenadeActive	= false;
 	self._c4Active = false;
 
@@ -226,7 +225,6 @@ function Bot:resetVars()
 	self._meleeActive 			= false;
 	self._actionActive 			= false;
 	self._reviveActive 			= false;
-	self._deployActive 			= false;
 	self._grenadeActive			= false;
 	self._c4Active 				= false;
 	self._weaponToUse 			= "Primary";
@@ -360,7 +358,6 @@ function Bot:resetSpawnVars()
 	self._onSwitch 				= false;
 	self._actionActive 			= false;
 	self._reviveActive 			= false;
-	self._deployActive 			= false;
 	self._grenadeActive			= false;
 	self._c4Active 				= false;
 	self._objective 			= ''; --reset objective on spawn, as an other spawn-point might have chosen...
@@ -666,6 +663,7 @@ function Bot:_updateShooting()
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 1);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon6, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon5, 0);
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon4, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon3, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
@@ -680,6 +678,7 @@ function Bot:_updateShooting()
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon6, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon5, 1);
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon4, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon3, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
@@ -689,11 +688,12 @@ function Bot:_updateShooting()
 					else
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon5, 0);
 					end
-				elseif self._deployActive or (self._weaponToUse == "Gadget1" and Config.botWeapon == "Auto") or Config.botWeapon == "Gadget1" then
-					if self.player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_2 then
+				elseif (self._weaponToUse == "Gadget1" and Config.botWeapon == "Auto") or Config.botWeapon == "Gadget1" then
+					if self.player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_2 and self.player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_4 then
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon6, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon5, 0);
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon4, 1);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon3, 1);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
@@ -702,12 +702,14 @@ function Bot:_updateShooting()
 						self._shotTimer = -Config.botFirstShotDelay;
 					else
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon3, 0);
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon4, 0);
 					end
 				elseif self._grenadeActive or (self._weaponToUse == "Grenade" and Config.botWeapon == "Auto") or Config.botWeapon == "Grenade" then
 					if self.player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_6 then
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon6, 1);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon5, 0);
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon4, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon3, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
@@ -722,6 +724,7 @@ function Bot:_updateShooting()
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon6, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon5, 0);
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon4, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon3, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 1);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
@@ -736,6 +739,7 @@ function Bot:_updateShooting()
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon7, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon6, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon5, 0);
+						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon4, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon3, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 1);
@@ -752,7 +756,6 @@ function Bot:_updateShooting()
 		if self._shootPlayer ~= nil and self._shootPlayer.soldier ~= nil then
 			if self._shootModeTimer < Config.botFireModeDuration or (Config.zombieMode and self._shootModeTimer < (Config.botFireModeDuration * 4)) then
 				local currentDistance = self._shootPlayer.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans);
-				self._deployActive = false;
 				if not self._c4Active then
 					self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 1); --does not work.
 				end
@@ -947,7 +950,6 @@ function Bot:_updateShooting()
 				self._lastShootPlayer	= nil;
 			end
 		elseif self._reviveActive and self._shootPlayer ~= nil then
-			self._deployActive = false;
 			if self._shootPlayer.corpse ~= nil then  -- revive
 				self.player.input:SetLevel(EntryInputActionEnum.EIAReload, 0);
 				self._shootModeTimer	= self._shootModeTimer + StaticConfig.botUpdateCycle;
@@ -984,14 +986,6 @@ function Bot:_updateShooting()
 				self._shootPlayer		= nil;
 				self._reviveActive		= false;
 			end
-
-		elseif self._deployActive then --deploy bag
-			self._deployTimer = self._deployTimer + StaticConfig.botUpdateCycle;
-			self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 1);
-			if self._deployTimer > 1 then
-				self._deployActive = false;
-				self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
-			end
 		else
 			self.player.input:SetLevel(EntryInputActionEnum.EIAZoom, 0);
 			self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
@@ -1020,7 +1014,9 @@ function Bot:_updateShooting()
 						self._deployTimer = self._deployTimer + StaticConfig.botUpdateCycle;
 						if self._deployTimer > Config.deployCycle then
 							self._deployTimer = 0;
-							self._deployActive = true;
+						end
+						if self._deployTimer < 0.7 then
+							self._weaponToUse = "Gadget1"
 						end
 					end
 				end
@@ -1264,7 +1260,7 @@ function Bot:_updateMovement()
 						self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0);
-						if not self._deployActive and not self._grenadeActive then
+						if not self._grenadeActive then
 							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0.0);
 						end
 					end
