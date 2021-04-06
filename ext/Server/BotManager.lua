@@ -31,7 +31,6 @@ function BotManager:__init()
 	--Events:Subscribe('Soldier:HealthAction', self, self._onHealthAction)	-- use this for more options on revive. Not needed yet
 	--Events:Subscribe('GunSway:Update', self, self._onGunSway)
 	Events:Subscribe('Player:Destroyed', self, self._onPlayerDestroyed)
-
 end
 
 function BotManager:_onPlayerDestroyed(player)
@@ -102,7 +101,7 @@ end
 
 function BotManager:findNextBotName()
 	for i = 1, MAX_NUMBER_OF_BOTS do
-		local name = BotNames[i]
+		local name = BOT_TOKEN..BotNames[i]
 		local skipName = false;
 		for _,ignoreName in pairs(g_Globals.ignoreBotNames) do
 			if name == ignoreName then
