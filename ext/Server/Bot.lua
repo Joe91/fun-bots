@@ -1133,10 +1133,14 @@ function Bot:_updateMovement()
 
 				-- execute Action if needed
 				if self._actionActive then
-					if self._actionTimer == point.Data.Action.time then
-						for _,input in pairs(point.Data.Action.inputs) do
-							self.player.input:SetLevel(input, 1)
+					if point.Data ~= nil and point.Data.Action ~= nil then
+						if self._actionTimer == point.Data.Action.time then
+							for _,input in pairs(point.Data.Action.inputs) do
+								self.player.input:SetLevel(input, 1)
+							end
 						end
+					else
+						self._actionActive = false;
 					end
 
 					self._actionTimer = self._actionTimer - StaticConfig.botUpdateCycle;
