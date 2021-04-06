@@ -124,7 +124,7 @@ end
 function NodeCollection:Register(waypoint)
 
 	if (self.hiddenPaths[waypoint.PathIndex] == nil) then
-		self.hiddenPaths[waypoint.PathIndex] = false
+		self.hiddenPaths[waypoint.PathIndex] = true
 	end
 	if (self.waypointsByPathIndex[waypoint.PathIndex] == nil) then
 		self.waypointsByPathIndex[waypoint.PathIndex] = {}
