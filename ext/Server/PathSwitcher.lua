@@ -149,6 +149,17 @@ function PathSwitcher:getNewPath(botname, point, objective)
 					State = newPathStatus,
 					Base = newBasePath
 				})
+			else
+				if countOld == 1 and countNew == 1 and objective ~= "" and currentPathFirst.Data.Objectives[1] ~= objective and
+				currentPathFirst.Data.Objectives[1] == pathNode.Data.Objectives[1] then
+					--path has same objective. Maybe a switch can help to find the new one
+					table.insert(paths, {
+						Priority = 0,
+						Point = newPoint,
+						State = newPathStatus,
+						Base = newBasePath
+					})
+				end
 			end
 		end
 	end
