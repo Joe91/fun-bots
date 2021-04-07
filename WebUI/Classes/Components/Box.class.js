@@ -131,34 +131,36 @@ class Box extends Component {
 			return;
 		}
 		
-		let ratio			= this.ScalingFactor();
-		this.canvas.width	= this.image.width * ratio;
-		this.canvas.height	= this.image.height * ratio;
-		this.position		+= this.speed;
+		try {
+			let ratio			= this.ScalingFactor();
+			this.canvas.width	= this.image.width * ratio;
+			this.canvas.height	= this.image.height * ratio;
+			this.position		+= this.speed;
 
-		if (this.position < this.space || this.position + this.space > this.canvas.width) {
-			this.speed = this.speed * -1;
-		}
-		
-		this.context.save();
-		this.context.beginPath();
-		this.context.fillStyle	= this.GetColor();
-		this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
-		this.context.globalCompositeOperation = 'destination-in';
-		this.context.drawImage(this.background, 0, 0, this.canvas.width, this.canvas.height);
-		this.context.closePath();
-		
-		this.context.save();
-		this.context.beginPath();
-		this.context.fillStyle	= this.GetColor();
-		this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
-		this.context.globalCompositeOperation = 'destination-in';
-		this.context.drawImage(this.image, -this.position, 0, this.canvas.width * 1.9, this.canvas.height);
-		this.context.closePath();
-		this.context.restore();
-		this.context.globalCompositeOperation = 'source-over';
-		
-		this.element.style.backgroundImage = 'url(' + this.canvas.toDataURL() + ')';
+			if (this.position < this.space || this.position + this.space > this.canvas.width) {
+				this.speed = this.speed * -1;
+			}
+			
+			this.context.save();
+			this.context.beginPath();
+			this.context.fillStyle	= this.GetColor();
+			this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
+			this.context.globalCompositeOperation = 'destination-in';
+			this.context.drawImage(this.background, 0, 0, this.canvas.width, this.canvas.height);
+			this.context.closePath();
+			
+			this.context.save();
+			this.context.beginPath();
+			this.context.fillStyle	= this.GetColor();
+			this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
+			this.context.globalCompositeOperation = 'destination-in';
+			this.context.drawImage(this.image, -this.position, 0, this.canvas.width * 1.9, this.canvas.height);
+			this.context.closePath();
+			this.context.restore();
+			this.context.globalCompositeOperation = 'source-over';
+			
+			this.element.style.backgroundImage = 'url(' + this.canvas.toDataURL() + ')';
+		} catch(e) {}
 	}
 	
 	OnClick(event) {		

@@ -8,6 +8,7 @@ function MenuItem:__init(title, name, callback, shortcut)
 	self.icon		= nil;
 	self.items		= {};
 	self.inputs		= {};
+	self.checkboxes	= {};
 	self.permission	= nil;
 end
 
@@ -63,6 +64,14 @@ end
 
 function MenuItem:HasInputs()
 	return #self.inputs >= 1;
+end
+
+function MenuItem:GetCheckBoxes()
+	return self.checkboxes;
+end
+
+function MenuItem:HasCheckBoxes()
+	return #self.checkboxes >= 1;
 end
 
 -- Title
@@ -136,6 +145,26 @@ function MenuItem:HasShortcut()
 	return (self.shortcut ~= nil);
 end
 
+-- CheckBox
+function MenuItem:AddCheckBox(position, checkbox)
+	if (checkbox == nil or checkbox['__class'] == nil) then
+		-- Bad Item
+		return self;
+	end
+	
+	if (checkbox:__class() ~= 'CheckBox') then
+		-- Exception: Only Menu, Separator (-) or MenuItem
+		return self;
+	end
+	
+	table.insert(self.checkboxes, {
+		Position	= position,
+		CheckBox	= checkbox
+	});
+	
+	return self;
+end
+
 -- Input
 function MenuItem:AddInput(position, input)
 	if (input == nil or input['__class'] == nil) then
@@ -157,9 +186,10 @@ function MenuItem:AddInput(position, input)
 end
 
 function MenuItem:Serialize(player)
-	local items		= {};
-	local inputs	= {};
-	local callback	= nil;
+	local items			= {};
+	local inputs		= {};
+	local checkboxes	= {};
+	local callback		= nil;
 	
 	if (type(self.callback) == 'function') then
 		callback	= 'MenuItem$' .. self.name;
@@ -196,6 +226,14 @@ function MenuItem:Serialize(player)
 		});
 	end
 	
+	for _, data in pairs(self.checkboxes) do
+		table.insert(checkboxes, {
+			Type		= data.CheckBox:__class(),
+			Data		= data.CheckBox:Serialize(),
+			Position	= data.Position
+		});
+	end
+	
 	if (#items >= 1) then
 		return {
 			Title		= self.title,
@@ -213,6 +251,7 @@ function MenuItem:Serialize(player)
 		Callback	= callback,
 		Shortcut	= self.shortcut,
 		Inputs		= inputs,
+		CheckBoxes	= checkboxes,
 		Permission	= self.permission
 	};
 end

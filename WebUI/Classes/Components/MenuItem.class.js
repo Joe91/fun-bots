@@ -10,6 +10,7 @@ class MenuItem extends Component {
 	link		= null;
 	items		= [];
 	inputs		= [];
+	checkboxes	= [];
 	
 	constructor(data) {
 		super();
@@ -22,6 +23,46 @@ class MenuItem extends Component {
 		
 		this.element	= document.createElement('li');
 		this.container	= document.createElement('ul');
+		
+		if(typeof(data.CheckBoxes) != 'undefined' && data.CheckBoxes.length >= 1) {
+			data.CheckBoxes.forEach((properties) => {
+				let checkbox = new CheckBox(properties.Data.Name, properties.Data.IsChecked);
+				
+				if(typeof(checkbox.InitializeComponent) != 'undefined') {
+					checkbox.InitializeComponent();
+				}
+				
+				if(typeof(properties.Data.Disabled) != 'undefined') {
+					if(properties.Data.Disabled) {
+						checkbox.Disable();
+					} else {
+						checkbox.Enable();
+					}
+				}
+				
+				checkbox = new Proxy(checkbox, {
+					set: function Setter(target, key, value) {
+						if(Array.isArray(value) || value instanceof Object) {
+							target[key][value.Name] = value.Value;
+						} else {
+							target[key] = value;
+						}
+						
+						target.Repaint();
+						return true;
+					}
+				});
+				
+				if(typeof(properties.Position) != 'undefined') {
+					checkbox.Attributes = {
+						Name: 	'Position',
+						Value:	properties.Position
+					};
+				}
+				
+				this.checkboxes.push(checkbox);
+			});
+		}
 		
 		if(typeof(data.Inputs) != 'undefined' && data.Inputs.length >= 1) {
 			data.Inputs.forEach((properties) => {
@@ -110,6 +151,14 @@ class MenuItem extends Component {
 			this.link.dataset.key = this.shortcut;
 		}
 		
+		if(this.checkboxes != null && this.checkboxes.length >= 1) {
+			this.checkboxes.forEach((checkbox) => {
+				if(checkbox.Attributes.Position == Position.Left) {
+					this.link.appendChild(checkbox.GetElement());
+				}
+			});
+		}
+		
 		if(this.inputs != null && this.inputs.length >= 1) {
 			this.inputs.forEach((input) => {
 				if(input.Attributes.Position == Position.Left) {
@@ -124,6 +173,14 @@ class MenuItem extends Component {
 			this.inputs.forEach((input) => {
 				if(input.Attributes.Position == Position.Right) {
 					this.link.appendChild(input.GetElement());
+				}
+			});
+		}
+		
+		if(this.checkboxes != null && this.checkboxes.length >= 1) {
+			this.checkboxes.forEach((checkbox) => {
+				if(checkbox.Attributes.Position == Position.Right) {
+					this.link.appendChild(checkbox.GetElement());
 				}
 			});
 		}
@@ -179,6 +236,14 @@ class MenuItem extends Component {
 			this.inputs.forEach((input) => {
 				if(event.target.closest('[data-id="' + input.GetID() + '"]') != null && typeof(input.OnClick) != 'undefined') {
 					input.OnClick(event);
+				}
+			});
+		}
+		
+		if(this.checkboxes != null && this.checkboxes.length >= 1) {
+			this.checkboxes.forEach((checkbox) => {
+				if(event.target.closest('[data-id="' + checkbox.GetID() + '"]') != null && typeof(checkbox.OnClick) != 'undefined') {
+					checkbox.OnClick(event);
 				}
 			});
 		}

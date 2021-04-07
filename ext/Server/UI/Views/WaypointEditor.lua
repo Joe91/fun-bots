@@ -175,13 +175,32 @@ function WaypointEditor:InitializeComponent()
 	local view = MenuItem('View', 'view');
 		view:SetIcon('Assets/Icons/View.svg');
 		
+		local checkbox_lines	= CheckBox('view_lines', Config.drawWaypointLines);
+		local checkbox_labels	= CheckBox('view_labels', Config.drawWaypointIDs);
+		
 		view:AddItem(MenuItem('Lines', 'lines', function(player)
 			Config.drawWaypointLines = not Config.drawWaypointLines;
-		end));
+			
+			checkbox_lines:SetChecked(Config.drawWaypointLines);
+			
+			NetEvents:SendTo('UI', player, 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
+				Type		= checkbox_lines:__class(),
+				Name		= checkbox_lines:GetName(),
+				IsChecked	= checkbox_lines:IsChecked()
+			}));
+		end):AddCheckBox(Position.Left, checkbox_lines));
 		
 		view:AddItem(MenuItem('Labels', 'labels', function(player)
 			Config.drawWaypointIDs = not Config.drawWaypointIDs;
-		end));
+			
+			checkbox_labels:SetChecked(Config.drawWaypointIDs);
+			
+			NetEvents:SendTo('UI', player, 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
+				Type		= checkbox_labels:__class(),
+				Name		= checkbox_labels:GetName(),
+				IsChecked	= checkbox_labels:IsChecked()
+			}));
+		end):AddCheckBox(Position.Left, checkbox_labels));
 		
 	navigation:AddItem(view, 'UserInterface.WaypointEditor.View');
 	

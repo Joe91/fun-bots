@@ -14,6 +14,7 @@ function UI:__init()
 	-- Components that will be loaded
 	self.boot	= {
 		'Input',
+		'CheckBox',
 		'Logo',
 		'Menu',
 		'View',
@@ -27,6 +28,10 @@ function UI:__init()
 	self.load	= {
 		'BotEditor',
 		'WaypointEditor'
+	};
+	
+	self.dialogs = {
+		'Settings'
 	};
 	
 	-- Do not modify here
@@ -73,6 +78,16 @@ function UI:__boot()
 			print('[UI] ERROR: Can\'t load View: ' .. view .. ' (' .. try .. ')');
 		else
 			print('[UI] View "' .. view .. '" was loaded.');
+		end
+	end
+	
+	for _, dialog in pairs(self.dialogs) do
+		local try = requireExists('UI/Dialogs/' .. dialog);
+		
+		if (try ~= true) then
+			print('[UI] ERROR: Can\'t load Dialog: ' .. dialog .. ' (' .. try .. ')');
+		else
+			print('[UI] Dialog "' .. dialog .. '" was loaded.');
 		end
 	end
 end

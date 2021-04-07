@@ -141,6 +141,12 @@ class View extends Component {
 			});
 		}
 		
+		if(typeof(component.checkboxes) != 'undefined') {
+			component.checkboxes.forEach((checkbox) => {
+				this.UpdateComponent(checkbox, data);
+			});
+		}
+		
 		if(typeof(component.GetValue) != 'undefined') {
 			this.UpdateComponent(component.GetValue(), data);
 		}
@@ -149,6 +155,8 @@ class View extends Component {
 			component.SetValue(data.Value);
 		} else if(component instanceof Input && data.Type == 'Input' && component.GetName() == data.Name) {
 			component.SetValue(data.Value);
+		} else if(component instanceof CheckBox && data.Type == 'CheckBox' && component.GetName() == data.Name) {
+			component.SetChecked(data.IsChecked);
 		} else if(component instanceof MenuItem && data.Type == 'MenuItem' && component.GetName() == data.Name) {
 			component.SetTitle(data.Text);
 			component.SetIcon(data.Icon);
