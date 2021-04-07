@@ -19,6 +19,8 @@ The Smart Node update
 	- Railroad (small) Thanks to RekkieSA!!
 	- Pipeline (small) Thanks to RekkieSA!!
 	- Shield (small) Thanks to RekkieSA!!
+	- Valley (small) Thanks to RekkieSA!!
+	- Flats (small) Thanks to RekkieSA!!
 	- Metro (large)
 - Rush supported
 	- Metro
