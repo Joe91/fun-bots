@@ -1096,10 +1096,10 @@ function Bot:_updateMovement()
 		elseif self.activeMoveMode == 5 then
 			self._attackModeMoveTimer = 0;
 
-			-- get next point
-			local activePointIndex = self:_getWayIndex(self._currentWayPoint)
-
 			if g_NodeCollection:Get(1, self._pathIndex) ~= nil then -- check for valid point
+				-- get next point
+				local activePointIndex = self:_getWayIndex(self._currentWayPoint)
+
 				local point				= nil;
 				local nextPoint			= nil;
 				local pointIncrement	= 1;
@@ -1414,6 +1414,10 @@ function Bot:_updateMovement()
 							self._currentWayPoint	= activePointIndex + 1;
 						end
 					end
+				end
+			else -- no point: do nothing
+				for i = 0, 36 do
+					self.player.input:SetLevel(i, 0);
 				end
 			end
 

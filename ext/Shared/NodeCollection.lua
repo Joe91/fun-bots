@@ -1230,7 +1230,7 @@ function NodeCollection:ObjectiveDirection(waypoint, objective)
 	local direction = 'Next'
 	local currentWaypoint = waypoint
 
-	while currentWaypoint[direction] do
+	while currentWaypoint and currentWaypoint[direction] do
 
 		if (currentWaypoint[direction].PathIndex > waypoint.PathIndex) then
 			-- hit the last node in the path, reset start and reverse direction
