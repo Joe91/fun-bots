@@ -27,6 +27,7 @@ The Smart Node update
 	- Damavand Peak
 	- Theran Highway
 	- Bazaar - Thanks to MrDonPotato!!
+	- Firestorm - Thanks to MrDonPotato!!
 	- Seinne Crossing - Thanks to MrDonPotato!!
 	- Kharg Island - Thanks to MrDonPotato!!
 	- Noshar Canals - Thanks to MrDonPotato !!

@@ -27,7 +27,7 @@ The following Maps are official supported right now with waypoints/traces:
 |   ![MP_003](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_003.jpg?raw=true) 	|   `MP_003`	| **Teheran Highway** | `TDM`, `TDM QC`,`Rush`, `Conquest Small` |
 |   ![MP_007](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_007.jpg?raw=true) 	|   `MP_007`	| **Caspian Border** | `TDM`, `TDM QC`, `Rush`, `Conquest Small + Large` |
 |   ![MP_011](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_011.jpg?raw=true) 	|   `MP_011`	| **Seine Crossing** | `TDM`, `TDM QC`, `Rush`, `Conquest Small + Large` |
-|   ![MP_012](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_012.jpg?raw=true) 	|   `MP_012`	| **Operation Firestorm** | `TDM`, `TDM QC`, `Conquest Small + Large`  |
+|   ![MP_012](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_012.jpg?raw=true) 	|   `MP_012`	| **Operation Firestorm** | `TDM`, `TDM QC`, `Rush`, `Conquest Small + Large`  |
 |   ![MP_013](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_013.jpg?raw=true) 	|   `MP_013`	| **Damavand Peak** | `TDM`, `TDM QC`, `Rush`, `Conquest Small` |
 |   ![MP_017](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_017.jpg?raw=true) 	|   `MP_017`	| **Noshahr Canals** | `TDM`, `TDM QC`, `Rush`, `Conquest Small` |
 |   ![MP_018](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_018.jpg?raw=true) 	|   `MP_018`	| **Kharg Island** | `TDM`, `TDM QC`, `Rush`, `Conquest Small + Large` |
