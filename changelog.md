@@ -32,6 +32,7 @@ The Smart Node update
 	- Kharg Island - Thanks to MrDonPotato!!
 	- Noshar Canals - Thanks to MrDonPotato !!
 	- Caspian Border - Thanks to MrDonPotato !!
+	- Strike - Thanks to MrDonPotato !!
 - BFLAG supported (only a first version, not that usable yet)
 	- Bazaar small
 - Bots switch to Pistol or Sidearm (Rockets) if needed
