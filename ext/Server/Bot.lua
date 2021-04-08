@@ -730,7 +730,7 @@ function Bot:_updateShooting()
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
 						self.activeWeapon = self.pistol;
-						self._shotTimer = 0;
+						self._shotTimer = -Config.botFirstShotDelay; -- TODO: maybe a little less or more?
 					else
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
 					end
