@@ -282,6 +282,12 @@ function GameDirector:getSpawnPath(team, squad, onlyBase)
 	for _,objective in pairs(self.AllObjectives) do
 		local allObjectives = g_NodeCollection:GetKnownOjectives();
 		local pathsWithObjective = allObjectives[objective.name]
+
+		if pathsWithObjective == nil then
+			-- can only happen if the collection was cleared. So don't spawn in this case
+			return 0 , 0;
+		end
+
 		for _,path in pairs(pathsWithObjective) do
 			if not pathsDone[path] then
 				local node = g_NodeCollection:Get(1, path)

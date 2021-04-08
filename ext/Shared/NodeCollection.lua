@@ -915,9 +915,12 @@ function NodeCollection:Load(levelName, gameMode)
 	self.gameMode = gameMode or self.gameMode
 
 	if g_Globals.isTdm or g_Globals.isGm or g_Globals.isScavenger then
-		self.gameMode = 'TeamDeathMatch0';
+		self.gameMode = 'TeamDeathMatch0'; -- paths are compatible
 	end
 	self.mapName = self.levelName .. '_' .. self.gameMode
+	if self.mapName == "MP_Subway_ConquestSmall0" then
+		self.mapName = "MP_Subway_ConquestLarge0"; --paths are the same
+	end
 	if Debug.Shared.NODECOLLECTION then
 		print('NodeCollection:Load: '..self.mapName)
 	end
@@ -1230,7 +1233,7 @@ function NodeCollection:ObjectiveDirection(waypoint, objective)
 	local direction = 'Next'
 	local currentWaypoint = waypoint
 
-	while currentWaypoint[direction] do
+	while currentWaypoint and currentWaypoint[direction] do
 
 		if (currentWaypoint[direction].PathIndex > waypoint.PathIndex) then
 			-- hit the last node in the path, reset start and reverse direction

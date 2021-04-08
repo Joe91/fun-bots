@@ -2,7 +2,7 @@
  
 ## [Unreleased - 1.7.X.X] - 2021-04-XX
  
-[Download](https://github.com/Joe91/fun-bots/archive/V1.7.0.17.zip)  
+[Download](https://github.com/Joe91/fun-bots/archive/V1.7.0.18.zip)  
 The Smart Node update
 
 - Conquest supported
@@ -25,7 +25,9 @@ The Smart Node update
 - Rush supported
 	- Metro
 	- Damavand Peak
+	- Theran Highway
 	- Bazaar - Thanks to MrDonPotato!!
+	- Firestorm - Thanks to MrDonPotato!!
 	- Seinne Crossing - Thanks to MrDonPotato!!
 	- Kharg Island - Thanks to MrDonPotato!!
 	- Noshar Canals - Thanks to MrDonPotato !!
