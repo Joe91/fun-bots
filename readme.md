@@ -24,14 +24,14 @@ The following Maps are official supported right now with waypoints/traces:
 |   	|   Internal Name	|   Name	|   Supported Types	|
 |---	|---	|---	|---	|
 |   ![MP_001](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_001.jpg?raw=true) 	|   `MP_001`	| **Grand Bazaar** | `TDM`, `TDM QC`, `Rush`, `Conquest Small + Large` |
-|   ![MP_003](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_003.jpg?raw=true) 	|   `MP_003`	| **Teheran Highway** | `TDM`, `TDM QC`, `Conquest Small` |
+|   ![MP_003](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_003.jpg?raw=true) 	|   `MP_003`	| **Teheran Highway** | `TDM`, `TDM QC`,`Rush`, `Conquest Small` |
 |   ![MP_007](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_007.jpg?raw=true) 	|   `MP_007`	| **Caspian Border** | `TDM`, `TDM QC`, `Rush`, `Conquest Small + Large` |
 |   ![MP_011](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_011.jpg?raw=true) 	|   `MP_011`	| **Seine Crossing** | `TDM`, `TDM QC`, `Rush`, `Conquest Small + Large` |
 |   ![MP_012](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_012.jpg?raw=true) 	|   `MP_012`	| **Operation Firestorm** | `TDM`, `TDM QC`, `Conquest Small + Large`  |
 |   ![MP_013](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_013.jpg?raw=true) 	|   `MP_013`	| **Damavand Peak** | `TDM`, `TDM QC`, `Rush`, `Conquest Small` |
 |   ![MP_017](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_017.jpg?raw=true) 	|   `MP_017`	| **Noshahr Canals** | `TDM`, `TDM QC`, `Rush`, `Conquest Small` |
 |   ![MP_018](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_018.jpg?raw=true) 	|   `MP_018`	| **Kharg Island** | `TDM`, `TDM QC`, `Rush`, `Conquest Small + Large` |
-|   ![MP_Subway](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_subway.jpg?raw=true) 	|   `MP_Subway`	| **Operation Metro** | `TDM`, `TDM QC`, `Conquest Large`, `Rush` |
+|   ![MP_Subway](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_subway.jpg?raw=true) 	|   `MP_Subway`	| **Operation Metro** | `TDM`, `TDM QC`, `Rush`, `Conquest Small + Large`|
 |   ![XP1_001](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp1_001.jpg?raw=true) 	|   `XP1_001`	| **Strike at Karkand** | `TDM`, `TDM QC`, `Assault` |
 |   ![XP1_002](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp1_002.jpg?raw=true) 	|   `XP1_002`	| **Gulf of Oman** | `TDM`, `TDM QC`, `Conquest Small` |
 |   ![XP1_003](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp1_003.jpg?raw=true) 	|   `XP1_003`	| **Sharqi Peninsula** | `TDM`, `TDM QC` |
