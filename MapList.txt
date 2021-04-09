@@ -1,0 +1,101 @@
+XP5_003 CaptureTheFlag0 1 #Kiasar Railroad - CTF
+XP1_001 ConquestAssaultSmall0 1 #Strike at Karkand - Assault
+MP_001 ConquestLarge0 1 #Grand Bazaar - CQ Large
+MP_007 ConquestLarge0 1 #Caspian Border - CQ Large
+MP_011 ConquestLarge0 1 #Seine Crossing - CQ Large
+MP_012 ConquestLarge0 1 #Operation Firestorm - CQ Large
+MP_018 ConquestLarge0 1 #Kharg Island - CQ Large
+MP_Subway ConquestLarge0 1 #Operation Metro - CQ Large
+MP_001 ConquestSmall0 1 #Grand Bazaar - CQ Small
+MP_003 ConquestSmall0 1 #Teheran Highway - CQ Small
+MP_007 ConquestSmall0 1 #Caspian Border - CQ Small
+MP_011 ConquestSmall0 1 #Seine Crossing - CQ Small
+MP_012 ConquestSmall0 1 #Operation Firestorm - CQ Small
+MP_013 ConquestSmall0 1 #Damavand Peak - CQ Small
+MP_017 ConquestSmall0 1 #Noshahr Canals - CQ Small
+MP_018 ConquestSmall0 1 #Kharg Island - CQ Small
+MP_Subway ConquestSmall0 1 #Operation Metro - CQ Small
+XP1_002 ConquestSmall0 1 #Gulf of Oman - CQ Small
+XP3_Desert ConquestSmall0 1 #Bandar Desert - CQ Small
+XP3_Shield ConquestSmall0 1 #Armored Shield - CQ Small
+XP3_Valley ConquestSmall0 1 #Death Valley - CQ Small
+XP5_001 ConquestSmall0 1 #Operation Riverside - CQ Small
+XP5_002 ConquestSmall0 1 #Nebandan Flats - CQ Small
+XP5_003 ConquestSmall0 1 #Kiasar Railroad - CQ Small
+XP5_004 ConquestSmall0 1 #Sabalan Pipeline - CQ Small
+XP2_Factory Domination0 1 #Scrapmetal - CQ Dom
+XP2_Office Domination0 1 #Operation 925 - CQ Dom
+XP2_Skybar Domination0 1 #Ziba Tower - CQ Dom
+XP2_Palace Domination0 1 #Donya Fortress - CQ Dom
+XP2_Factory GunMaster0 1 #Scrapmetal - GM
+XP2_Office GunMaster0 1 #Operation 925 - GM
+XP2_Skybar GunMaster0 1 #Ziba Tower - GM
+XP2_Palace GunMaster0 1 #Donya Fortress - GM
+XP4_FD GunMaster0 1 #Markaz Monolith - GM
+XP4_Rubble GunMaster0 1 #Talah Market - GM
+XP4_Quake GunMaster0 1 #Epicenter - GM
+XP4_Parl GunMaster0 1 #Azadi Palace - GM
+MP_001 RushLarge0 1 #Grand Bazaar - Rush
+MP_003 RushLarge0 1 #Teheran Highway - Rush
+MP_007 RushLarge0 1 #Caspian Border - Rush
+MP_011 RushLarge0 1 #Seine Crossing - Rush
+MP_012 RushLarge0 1 #Operation Firestorm - Rush
+MP_013 RushLarge0 1 #Damavand Peak - Rush
+MP_017 RushLarge0 1 #Noshahr Canals - Rush
+MP_018 RushLarge0 1 #Kharg Island - Rush
+MP_Subway RushLarge0 1 #Operation Metro - Rush
+XP1_001 RushLarge0 1 #Strike at Karkand - Rush
+MP_001 TeamDeathMatch0 1 #Grand Bazaar - TDM
+MP_003 TeamDeathMatch0 1 #Teheran Highway - TDM
+MP_007 TeamDeathMatch0 1 #Caspian Border - TDM
+MP_011 TeamDeathMatch0 1 #Seine Crossing - TDM
+MP_012 TeamDeathMatch0 1 #Operation Firestorm - TDM
+MP_013 TeamDeathMatch0 1 #Damavand Peak - TDM
+MP_017 TeamDeathMatch0 1 #Noshahr Canals - TDM
+MP_018 TeamDeathMatch0 1 #Kharg Island - TDM
+MP_Subway TeamDeathMatch0 1 #Operation Metro - TDM
+XP1_001 TeamDeathMatch0 1 #Strike at Karkand - TDM
+XP1_002 TeamDeathMatch0 1 #Gulf of Oman - TDM
+XP1_003 TeamDeathMatch0 1 #Sharqi Peninsula - TDM
+XP1_004 TeamDeathMatch0 1 #Wake Island - TDM
+XP3_Alborz TeamDeathMatch0 1 #Alborz Mountains - TDM
+XP3_Desert TeamDeathMatch0 1 #Bandar Desert - TDM
+XP3_Shield TeamDeathMatch0 1 #Armored Shield - TDM
+XP3_Valley TeamDeathMatch0 1 #Death Valley - TDM
+XP4_FD TeamDeathMatch0 1 #Markaz Monolith - TDM
+XP4_Rubble TeamDeathMatch0 1 #Talah Market - TDM
+XP4_Quake TeamDeathMatch0 1 #Epicenter - TDM
+XP4_Parl TeamDeathMatch0 1 #Azadi Palace - TDM
+XP5_001 TeamDeathMatch0 1 #Operation Riverside - TDM
+XP5_002 TeamDeathMatch0 1 #Nebandan Flats - TDM
+XP5_003 TeamDeathMatch0 1 #Kiasar Railroad - TDM
+XP5_004 TeamDeathMatch0 1 #Sabalan Pipeline - TDM
+MP_001 TeamDeathMatchC0 1 #Grand Bazaar - TDM CQ
+MP_003 TeamDeathMatchC0 1 #Teheran Highway - TDM CQ
+MP_007 TeamDeathMatchC0 1 #Caspian Border - TDM CQ
+MP_011 TeamDeathMatchC0 1 #Seine Crossing - TDM CQ
+MP_012 TeamDeathMatchC0 1 #Operation Firestorm - TDM CQ
+MP_013 TeamDeathMatchC0 1 #Damavand Peak - TDM CQ
+MP_017 TeamDeathMatchC0 1 #Noshahr Canals - TDM CQ
+MP_018 TeamDeathMatchC0 1 #Kharg Island - TDM CQ
+MP_Subway TeamDeathMatchC0 1 #Operation Metro - TDM CQ
+XP1_001 TeamDeathMatchC0 1 #Strike at Karkand - TDM CQ
+XP1_002 TeamDeathMatchC0 1 #Gulf of Oman - TDM CQ
+XP1_003 TeamDeathMatchC0 1 #Sharqi Peninsula - TDM CQ
+XP1_004 TeamDeathMatchC0 1 #Wake Island - TDM CQ
+XP2_Factory TeamDeathMatchC0 1 #Scrapmetal - TDM CQ
+XP2_Office TeamDeathMatchC0 1 #Operation 925 - TDM CQ
+XP2_Skybar TeamDeathMatchC0 1 #Ziba Tower - TDM CQ
+XP2_Palace TeamDeathMatchC0 1 #Donya Fortress - TDM CQ
+XP3_Alborz TeamDeathMatchC0 1 #Alborz Mountains - TDM CQ
+XP3_Desert TeamDeathMatchC0 1 #Bandar Desert - TDM CQ
+XP3_Shield TeamDeathMatchC0 1 #Armored Shield - TDM CQ
+XP3_Valley TeamDeathMatchC0 1 #Death Valley - TDM CQ
+XP4_FD TeamDeathMatchC0 1 #Markaz Monolith - TDM CQ
+XP4_Rubble TeamDeathMatchC0 1 #Talah Market - TDM CQ
+XP4_Quake TeamDeathMatchC0 1 #Epicenter - TDM CQ
+XP4_Parl TeamDeathMatchC0 1 #Azadi Palace - TDM CQ
+XP5_001 TeamDeathMatchC0 1 #Operation Riverside - TDM CQ
+XP5_002 TeamDeathMatchC0 1 #Nebandan Flats - TDM CQ
+XP5_003 TeamDeathMatchC0 1 #Kiasar Railroad - TDM CQ
+XP5_004 TeamDeathMatchC0 1 #Sabalan Pipeline - TDM CQ
