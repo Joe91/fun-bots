@@ -14,6 +14,7 @@ function UI:__init()
 	-- Components that will be loaded
 	self.boot	= {
 		'Input',
+		'Button',
 		'CheckBox',
 		'Logo',
 		'Menu',
@@ -30,13 +31,14 @@ function UI:__init()
 		'WaypointEditor'
 	};
 	
-	self.dialogs = {
+	self.popups = {
 		'Settings'
 	};
 	
 	-- Do not modify here
 	_G.Callbacks	= {};
 	self.views		= {};
+	self.dialogs	= {};
 	self.booted		= 0;
 	self.loaded		= 0;
 	
@@ -50,6 +52,14 @@ end
 function UI:GetView(name)
 	if (self.views[name] ~= nil) then
 		return self.views[name];
+	end
+	
+	return nil;
+end
+
+function UI:GetDialog(name)
+	if (self.dialogs[name] ~= nil) then
+		return self.dialogs[name];
 	end
 	
 	return nil;
@@ -81,13 +91,23 @@ function UI:__boot()
 		end
 	end
 	
-	for _, dialog in pairs(self.dialogs) do
+	for _, dialog in pairs(self.popups) do
 		local try = requireExists('UI/Dialogs/' .. dialog);
 		
 		if (try ~= true) then
 			print('[UI] ERROR: Can\'t load Dialog: ' .. dialog .. ' (' .. try .. ')');
 		else
 			print('[UI] Dialog "' .. dialog .. '" was loaded.');
+			
+			if (_G[dialog] ~= nil) then
+				local instance = _G[dialog]();
+				
+				if (instance['InitializeComponent'] ~= nil) then
+					instance:InitializeComponent();
+				end
+				
+				self.dialogs[dialog] = instance;
+			end
 		end
 	end
 end
