@@ -7,7 +7,6 @@ function BotEditor:__init(core)
 	self.view		= View(core, 'BotEditor');
 	self.bots		= 1;
 	self.team		= 1;
-	self.settings	= Settings();
 end
 
 function BotEditor:Show(player)
@@ -216,7 +215,7 @@ function BotEditor:InitializeComponent()
 	
 	-- Settings
 	navigation:AddItem(MenuItem('Settings', 'settings', function(player)
-		self.settings:Open(self.view, player);
+		self.view:GetCore():GetDialog('Settings'):Open(self.view, player);
 	end, 'F10'):SetIcon('Assets/Icons/Settings.svg'), 'UserInterface.Settings');
 	
 	-- Exit
