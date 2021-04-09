@@ -70,21 +70,24 @@ end
 
 function View:Push(player, component)
 	local attributes = {};
-			
+	
 	if (component['GetAttributes'] ~= nil) then
 		attributes = component:GetAttributes();
 	end
+	
+	local serialized = component:Serialize(player);
+	print(serialized);
 
 	if (#attributes >= 1) then
 		NetEvents:SendTo('UI', player, 'VIEW', self.name, 'PUSH', {
 			Type 		= component:__class(),
-			Data 		= component:Serialize(player),
+			Data 		= serialized,
 			Attributes	= attributes
 		});
 	else
 		NetEvents:SendTo('UI', player, 'VIEW', self.name, 'PUSH', {
 			Type 		= component:__class(),
-			Data 		= component:Serialize(player)
+			Data 		= serialized
 		});
 	end
 end
