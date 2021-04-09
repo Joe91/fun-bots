@@ -1,9 +1,14 @@
 class('Dialog');
 
-function Dialog:__init(title)
+function Dialog:__init(name, title)
+	self.name		= name or nil;
 	self.title		= title or nil;
 	self.buttons	= {};
 	self.content	= nil;
+end
+
+function Dialog:GetName()
+	return self.name;
 end
 
 function Dialog:__class()
@@ -39,10 +44,20 @@ function Dialog:SetContent(content)
 end
 
 function Dialog:Serialize(player)
+	local buttons = {};
+	
+	for _, button in pairs(self.buttons) do
+		table.insert(buttons, {
+			Type		= button:__class(),
+			Data		= button:Serialize()
+		});
+	end
+	
 	return {
+		Name	= self.name,
 		Title	= self.title,
 		Content = self.content,
-		Buttons	= self.buttons
+		Buttons	= buttons
 	};
 end
 

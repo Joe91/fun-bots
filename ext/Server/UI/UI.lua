@@ -41,6 +41,7 @@ function UI:__init()
 	self.dialogs	= {};
 	self.booted		= 0;
 	self.loaded		= 0;
+	self.inited		= 0;
 	
 	self.events = {
 		ModuleLoaded	= Events:Subscribe('Extension:Loaded', self, self.__boot),
@@ -98,21 +99,28 @@ function UI:__boot()
 			print('[UI] ERROR: Can\'t load Dialog: ' .. dialog .. ' (' .. try .. ')');
 		else
 			print('[UI] Dialog "' .. dialog .. '" was loaded.');
-			
-			if (_G[dialog] ~= nil) then
-				local instance = _G[dialog]();
-				
-				if (instance['InitializeComponent'] ~= nil) then
-					instance:InitializeComponent();
-				end
-				
-				self.dialogs[dialog] = instance;
-			end
 		end
 	end
 end
 
 function UI:__update()
+	for _, dialog in pairs(self.popups) do
+		if (self.dialogs[dialog] == nil) then
+			if (_G[dialog] ~= nil) then
+				local instance = _G[dialog]();
+				
+				if (instance ~= nil) then
+					if (instance['InitializeComponent'] ~= nil) then
+						instance:InitializeComponent();
+					end
+					
+					self.dialogs[dialog]	= instance;
+					self.inited				= self.inited + 1;
+				end
+			end
+		end
+	end
+	
 	for _, view in pairs(self.load) do
 		if (self.views[view] == nil) then
 			if (_G[view] ~= nil) then
@@ -131,8 +139,8 @@ function UI:__update()
 			end
 		end
 	end
-
-	if (self.booted == #self.boot and #self.load == self.loaded) then
+	
+	if (self.booted == #self.boot and #self.load == self.loaded and #self.popups == self.inited) then
 		self.events.EngineUpdate:Unsubscribe();
 	end
 end
@@ -179,6 +187,50 @@ function UI:__action(player, type, destination, action, data)
 			
 			view:Call(player, element, name);
 		end
+	end
+end
+
+function UI:Send(component, receiver, action, object)
+	local kind			= nil;
+	local destination	= nil;
+	local data			= nil;
+	
+			print('String: ' .. tostring(object))
+			
+			if object ~= nil then
+				print('Type: ' .. tostring(type(object)))
+			end
+			
+			print('JSON: ' .. tostring(json.encode(object)))
+			
+			print(g_Utilities:dump(object, true, 5));
+			
+			
+	if component:__class() == 'View' then
+		kind		= 'VIEW';
+		destination	= component:GetName();
+	else
+		print('[UI] ERROR on Send: Unknown/Unimplemented Component "' .. component:__class() .. '".');
+		print(debug.traceback())
+		return;
+	end
+	
+	if object ~= nil then
+		data, error = json.encode(object);
+		
+		if (data == nil) then
+			print('[UI] Bad JSON: ' .. tostring(error) .. ', ' .. tostring(object));
+			print(debug.traceback())
+			return;
+		end
+	end
+	
+	if receiver == nil then
+		NetEvents:BroadcastLocal('UI', kind, destination, action, data);
+		print('[UI] Broadcast (' .. tostring(kind) .. ' - ' .. tostring(destination) .. ') ~> ' .. tostring(action) .. ' ~> ' .. tostring(data));
+	else
+		NetEvents:SendToLocal('UI', receiver, kind, destination, action, data);
+		print('[UI] Send to ' .. tostring(receiver.name) .. ' (' .. tostring(kind) .. ' - ' .. tostring(destination) .. ') ~> ' .. tostring(action) .. ' ~> ' .. tostring(data));
 	end
 end
 

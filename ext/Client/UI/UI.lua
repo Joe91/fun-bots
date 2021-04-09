@@ -49,7 +49,19 @@ function UI:__local(string)
 	NetEvents:Send('UI', type, destination, action, data);
 end
 
-function UI:__action(type, destination, action, data)
+function UI:__action(type, destination, action, string)
+	local data = nil;
+	
+	if string ~= nil then
+		data, error = json.decode(string);
+		
+		if (data == nil) then
+			print('[UI] Bad JSON: ' .. tostring(error) .. ', ' .. tostring(string));
+			return;
+		end
+	end
+	
+	
 	print('[UI][Client] Action { Type=' .. tostring(type) .. ', Destination=' .. tostring(destination) ..', Action=' .. tostring(action) .. ', Data=' .. json.encode(data) .. '}');
 	
 	if action == 'ACTIVATE' then

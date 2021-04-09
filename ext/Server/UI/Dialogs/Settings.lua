@@ -1,13 +1,15 @@
 class('Settings')
 
 function Settings:__init()
-	self.dialog = nil;
+	self.dialog = Dialog('settings', 'Settings');
+end
+
+function Settings:__class()
+	return 'Settings';
 end
 
 function Settings:InitializeComponent()
 	print('Init Settings');
-	
-	self.dialog = Dialog('Settings');
 	
 	-- Add Menu
 	
@@ -31,7 +33,11 @@ function Settings:InitializeComponent()
 	-- Add Content
 		-- Add Tabs
 		
-		print(self.dialog:Serialize());
+	print(g_Utilities:dump(self.dialog, true, 1));
+end
+
+function Settings:Serialize(player)
+	return self.dialog:Serialize(player);
 end
 
 function Settings:Open(view, player)

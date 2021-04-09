@@ -62,9 +62,7 @@ function View:CallbackModify(destination)
 end
 
 function View:Show(player)
-	local serialized = self:CallbackModify(self:Serialize(player));
-	print(serialized);	
-	NetEvents:SendTo('UI', player, 'VIEW', self.name, 'SHOW', serialized);
+	self:GetCore():Send(self, player, 'SHOW', self:CallbackModify(self:Serialize(player)));
 	self.visible	= true;
 end
 
@@ -76,16 +74,15 @@ function View:Push(player, component)
 	end
 	
 	local serialized = component:Serialize(player);
-	print(serialized);
 
 	if (#attributes >= 1) then
-		NetEvents:SendTo('UI', player, 'VIEW', self.name, 'PUSH', {
+		self:GetCore():Send(self, player, 'PUSH', {
 			Type 		= component:__class(),
 			Data 		= serialized,
 			Attributes	= attributes
 		});
 	else
-		NetEvents:SendTo('UI', player, 'VIEW', self.name, 'PUSH', {
+		self:GetCore():Send(self, player, 'PUSH', {
 			Type 		= component:__class(),
 			Data 		= serialized
 		});
@@ -93,7 +90,7 @@ function View:Push(player, component)
 end
 
 function View:Hide(player)
-	NetEvents:SendTo('UI', player, 'VIEW', self.name, 'HIDE');
+	self:GetCore():Send(self, player, 'HIDE');
 	self.visible	= false;
 end
 
@@ -112,17 +109,19 @@ end
 function View:SubCall(player, element, name, component)	
 	if (component:__class() == element and component['HasItems'] == nil and component['FireCallback'] ~= nil and component['GetName'] ~= nil and component:GetName() == name) then
 		print('FireCallback ' .. name);
-		
 		component:FireCallback(player);
+		
 	elseif (component['HasItems'] ~= nil and component:HasItems()) then
 		for _, item in pairs(component:GetItems()) do
 			if (item:__class() == element) then
 				if (item['GetName'] ~= nil and item:GetName() == name and item['FireCallback'] ~= nil) then
 					print('Sub-FireCallback ' .. name);
 					item:FireCallback(player);
+					
 				elseif (item['Name'] ~= nil and item.Name == element) then
 					print('Callback-Trigger ' .. name);
 					item:Callback(player);
+					
 				else
 					self:SubCall(player, element, name, item);
 				end
@@ -145,11 +144,11 @@ function View:Call(player, element, name)
 end
 
 function View:Activate(player)
-	NetEvents:SendTo('UI', player, 'VIEW', self.name, 'ACTIVATE');
+	self:GetCore():Send(self, player, 'ACTIVATE');
 end
 
 function View:Deactivate(player)
-	NetEvents:SendTo('UI', player, 'VIEW', self.name, 'DEACTIVATE');
+	self:GetCore():Send(self, player, 'DEACTIVATE');
 end
 
 function View:Serialize(player)
