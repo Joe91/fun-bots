@@ -335,6 +335,21 @@ function RCONCommands:__init()
 				return { 'OK' };
 			end)
 		},
+
+		-- Kick Bot
+		KICKBOT	= {
+			Name		= 'funbots.kickBot',
+			Parameters	= { 'Name' },
+			Callback	= (function(command, args)
+				local name	= args[1];
+				if name == nil then
+					return {'ERROR', 'Name needed.'};
+				end
+				BotManager:destroyBot(name);
+				
+				return { 'OK' };
+			end)
+		},
 		
 		-- Kill All
 		KILLALL	= {
