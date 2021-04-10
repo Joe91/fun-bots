@@ -50,10 +50,10 @@ class UserInterface {
 	}
 	
 	Handle(packet) {
-		if(window.location.href == 'webui://fun-bots/') {
+		//if(window.location.href == 'webui://fun-bots/') {
 			console.info(packet);
 			console.warn(JSON.stringify(packet, 0, 1));
-		}
+		//}
 		
 		let type			= packet.Type || null;
 		let destination		= packet.Destination || null;

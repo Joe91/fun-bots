@@ -59,6 +59,11 @@ class Component {
 		Object.keys(this.attributes).forEach((name) => {
 			let attribute = this.attributes[name];
 			
+			if(typeof(attribute) == 'undefined') {
+				console.warn('Attribute is undefined:', name, this.attributes);
+				return;
+			}
+			
 			switch(name) {
 				case 'Position':
 					let position = (typeof(attribute.Type) != 'undefined' ? attribute.Type : attribute);

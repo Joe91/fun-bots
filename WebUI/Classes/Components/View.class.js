@@ -91,6 +91,15 @@ class View extends Component {
 				case 'Alert':
 					component = new Alert(data.Data.Color, data.Data.Text, data.Data.Delay);
 				break;
+				case 'Dialog':
+					component = new Dialog(data.Data.Name, data.Data.Title);
+					
+					component.SetButtons(data.Data.Buttons);
+					
+					if(typeof(data.Data.Content) !== 'undefined') {
+						component.SetContent(data.Data.Content);
+					}
+				break;
 			}
 		}
 		
