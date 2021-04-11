@@ -226,12 +226,24 @@ function WaypointEditor:InitializeComponent()
 	end):SetIcon('Assets/Icons/SpawnBotWay.svg'), 'UserInterface.WaypointEditor.SpawnBot');
 	
 	tools:AddItem(MenuItem('Clear Trace', 'trace_clear', function(player)
-		NetEvents:SendToLocal('ClientNodeEditor:ClearTrace', player);
+		local confirmation = self.view:GetCore():GetDialog('Confirmation');
+		confirmation:SetTitle('Clear Trace - Confirmation');
+		confirmation:SetContent('Do you really want to clear the actual Trace #' .. self.trace_index .. '?');
+		confirmation:SetYes(function(player)
+			NetEvents:SendToLocal('ClientNodeEditor:ClearTrace', player);
+		end);
+		confirmation:Open(self.view, player);
 	end):SetIcon('Assets/Icons/Clear.svg'), 'UserInterface.WaypointEditor.TraceClear');
 	
 	tools:AddItem(MenuItem('Reset all Traces', 'trace_reset_all', function(player)
-		g_NodeCollection:Clear();
-		NetEvents:BroadcastLocal('NodeCollection:Clear');
+		local confirmation = self.view:GetCore():GetDialog('Confirmation');
+		confirmation:SetTitle('Reset all Traces- Confirmation');
+		confirmation:SetContent('Do you really want to reset all Traces?');
+		confirmation:SetYes(function(player)
+			g_NodeCollection:Clear();
+			NetEvents:BroadcastLocal('NodeCollection:Clear');
+		end);
+		confirmation:Open(self.view, player);
 	end):SetIcon('Assets/Icons/Trash.svg'), 'UserInterface.WaypointEditor.TraceReset');
 	
 	navigation:AddItem(tools);

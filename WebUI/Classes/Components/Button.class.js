@@ -13,10 +13,19 @@ class Button extends Component {
 	
 	InitializeComponent() {
 		super.InitializeComponent();
+		
+		this.innerHTML = this.text;
 	}
 	
 	Repaint() {
 		super.Repaint();
+		
+		this.innerHTML = this.text;
+	}
+	
+	OnClick(event, view) {
+		WebUI.Call('DispatchEventLocal', 'UI', JSON.stringify([ 'VIEW', view.GetName(), 'CALL', 'Button$' + this.name ]));
+		event.preventDefault();
 	}
 }
 

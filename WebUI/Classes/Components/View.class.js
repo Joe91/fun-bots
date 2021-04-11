@@ -74,10 +74,10 @@ class View extends Component {
 		if(typeof(data.Type) != 'undefined') {
 			switch(data.Type) {
 				case 'Alert':
-					component = new Alert(data.Data.Color, data.Data.Text, data.Data.Delay);
+					component = new Alert(this, data.Data.Color, data.Data.Text, data.Data.Delay);
 				break;
 				case 'Dialog':
-					component = new Dialog(data.Data.Name, data.Data.Title);
+					component = new Dialog(this, data.Data.Name, data.Data.Title);
 					
 					component.SetButtons(data.Data.Buttons);
 					

@@ -39,6 +39,10 @@ function Dialog:AddButton(button, position, permission)
 	table.insert(self.buttons, button);
 end
 
+function Dialog:SetTitle(title)
+	self.title = title;
+end
+
 function Dialog:SetContent(content)
 	self.content = content;
 end

@@ -32,7 +32,8 @@ function UI:__init()
 	};
 	
 	self.popups = {
-		'Settings'
+		'Settings',
+		'Confirmation'
 	};
 	
 	-- Do not modify here

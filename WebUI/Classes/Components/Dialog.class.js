@@ -1,15 +1,18 @@
 'use strict';
 
 class Dialog extends Component {
+	view	= null;
 	name	= null;
 	title	= null;
 	header	= null;
 	content	= null;
 	footer	= null;
+	buttons	= [];
 	
-	constructor(name, title) {
+	constructor(view, name, title) {
 		super();
 		
+		this.view		= view || null;
 		this.name		= name || null;
 		this.title		= title || null;
 		
@@ -40,12 +43,20 @@ class Dialog extends Component {
 	SetButtons(buttons) {
 		buttons.forEach((entry) => {
 			let button = new Button(entry.Data.Name, entry.Data.Title);
-			console.log(entry);
-			
+			button.InitializeComponent();
+			this.buttons.push(button);
 			this.footer.appendChild(button);
 		});
 		
 		this.Repaint();
+	}
+	
+	OnClick(event) {
+		this.buttons.forEach((component) => {
+			if(event.target.closest('[data-id="' + component.GetID() + '"]') != null && typeof(component.OnClick) != 'undefined') {		
+				component.OnClick(event, this.view);
+			}
+		});
 	}
 }
 

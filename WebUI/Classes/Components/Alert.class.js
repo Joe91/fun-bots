@@ -1,12 +1,15 @@
 'use strict';
 
 class Alert extends Box {
+	view	= null;
 	color	= null;
 	text	= null;
 	delay	= null;
 	
-	constructor(color, text, delay) {
+	constructor(view, color, text, delay) {
 		super(color);
+		
+		this.view		= view || null;
 		this.text		= text || null;
 		this.delay		= delay || null;
 		

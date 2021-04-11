@@ -16,6 +16,10 @@ function Button:GetPermission()
 	return self.permission;
 end
 
+function Button:SetCallback(callback)
+	self.callback = callback;
+end
+
 function Button:BindPermission(permission)
 	self.permission = permission;
 end

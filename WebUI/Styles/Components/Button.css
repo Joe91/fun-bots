@@ -1,4 +1,4 @@
-button {
+ui-button {
 	padding: 5px 15px;
 	min-width: 100px;
 	margin: 0 1px;
@@ -13,6 +13,6 @@ button {
 	background: linear-gradient(180deg, var(--color_button_default_from) 0%, var(--color_button_default_to) 100%);
 }
 
-button:hover {
+ui-button:hover {
 	background: linear-gradient(180deg, var(--color_button_hover_from) 0%, var(--color_button_hover_to) 100%);
 }
