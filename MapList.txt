@@ -45,6 +45,7 @@ MP_017 RushLarge0 1 #Noshahr Canals - Rush
 MP_018 RushLarge0 1 #Kharg Island - Rush
 MP_Subway RushLarge0 1 #Operation Metro - Rush
 XP1_001 RushLarge0 1 #Strike at Karkand - Rush
+XP1_002 RushLarge0 1 #Gulf of Oman - Rush
 MP_001 TeamDeathMatch0 1 #Grand Bazaar - TDM
 MP_003 TeamDeathMatch0 1 #Teheran Highway - TDM
 MP_007 TeamDeathMatch0 1 #Caspian Border - TDM

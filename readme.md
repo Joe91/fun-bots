@@ -33,7 +33,7 @@ The following Maps are official supported right now with waypoints/traces:
 |   ![MP_018](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_018.jpg?raw=true) 	|   `MP_018`	| **Kharg Island** | `TDM`, `TDM CQ`, `Rush`, `CQ Small`, `CQ Large` |
 |   ![MP_Subway](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/mp_subway.jpg?raw=true) 	|   `MP_Subway`	| **Operation Metro** | `TDM`, `TDM CQ`, `Rush`, `CQ Small`, `CQ Large`|
 |   ![XP1_001](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp1_001.jpg?raw=true) 	|   `XP1_001`	| **Strike at Karkand** | `TDM`, `TDM CQ`, `Rush`, `Assault` |
-|   ![XP1_002](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp1_002.jpg?raw=true) 	|   `XP1_002`	| **Gulf of Oman** | `TDM`, `TDM CQ`, `CQ Small` |
+|   ![XP1_002](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp1_002.jpg?raw=true) 	|   `XP1_002`	| **Gulf of Oman** | `TDM`, `TDM CQ`, `Rush`, `CQ Small` |
 |   ![XP1_003](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp1_003.jpg?raw=true) 	|   `XP1_003`	| **Sharqi Peninsula** | `TDM`, `TDM CQ` |
 |   ![XP1_004](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp1_004.jpg?raw=true) 	|   `XP1_004`	| **Wake Island** | `TDM`, `TDM CQ` |
 |   ![XP2_Factory](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp2_factory.jpg?raw=true) 	|   `XP2_Factory`	| **Scrapmetal** |`TDM CQ`, `GM`, `CQ Dom` |
