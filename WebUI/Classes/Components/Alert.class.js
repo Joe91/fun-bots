@@ -9,10 +9,9 @@ class Alert extends Box {
 		super(color);
 		this.text		= text || null;
 		this.delay		= delay || null;
-		this.element	= document.createElement('ui-alert');
 		
 		this.SetColor(color);
-	};
+	}
 	
 	InitializeComponent() {
 		super.InitializeComponent();
@@ -23,6 +22,8 @@ class Alert extends Box {
 	Repaint() {
 		super.Repaint();
 		
-		this.element.dataset.text = this.text;
+		this.dataset.text = this.text;
 	}
 }
+
+customElements.define('ui-alert', Alert);

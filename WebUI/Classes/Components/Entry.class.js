@@ -13,13 +13,13 @@ class Entry extends Component {
 		this.name			= name || null;
 		this.text			= text || null;
 		this.value			= value || null;
-		this.element		= document.createElement('ui-entry');
 		this.element_text	= document.createElement('ui-text');
 		this.element_value	= document.createElement('ui-value');
-	};
+	}
 	
 	SetValue(value) {
 		this.value = value;
+		this.Repaint();
 	}
 	
 	GetValue() {
@@ -29,10 +29,10 @@ class Entry extends Component {
 	InitializeComponent() {
 		super.InitializeComponent();
 		
-		this.element.appendChild(this.element_text);
-		this.element.appendChild(this.element_value);
+		this.appendChild(this.element_text);
+		this.appendChild(this.element_value);
 		
-		this.element.dataset.name		= this.name;
+		this.dataset.name		= this.name;
 		this.element_text.innerHTML		= this.text;
 		
 		if(typeof(this.value) == 'string') {
@@ -44,7 +44,7 @@ class Entry extends Component {
 				this.value.Arrows.forEach((arrow) => {
 					input.SetArrow(arrow.Name, arrow.Position, arrow.Character);
 					
-					this.element.dataset.arrows = true;
+					this.dataset.arrows = true;
 				});
 			}
 			
@@ -60,21 +60,8 @@ class Entry extends Component {
 				}
 			}
 			
-			input = new Proxy(input, {
-				set: function Setter(target, key, value) {
-					if(Array.isArray(value) || value instanceof Object) {
-						target[key][value.Name] = value.Value;
-					} else {
-						target[key] = value;
-					}
-					
-					target.Repaint();
-					return true;
-				}
-			});
-			
 			this.value = input;
-			this.element_value.appendChild(input.GetElement());
+			this.element_value.appendChild(input);
 		}
 	}
 	
@@ -107,3 +94,5 @@ class Entry extends Component {
 		}
 	}
 }
+
+customElements.define('ui-entry', Entry);

@@ -12,22 +12,22 @@ class Input extends Component {
 		this.name			= name || null;
 		this.value			= value || null;
 		this.input			= document.createElement('input');
-		this.element		= document.createElement('ui-input');
 		this.input.name		= this.name;
 		this.input.value	= this.value;
-	};
+	}
 	
 	Enable() {
 		this.input.disabled = false;
+		this.Repaint();
 	}
 	
 	Disable() {
 		this.input.disabled = true;
+		this.Repaint();
 	}
 	
 	SetValue(value) {
 		this.value = value;
-		
 		this.Repaint();
 	}
 	
@@ -36,15 +36,15 @@ class Input extends Component {
 		
 		this.arrows.forEach((arrow) => {
 			if(arrow.GetPosition() == Position.Left) {
-				this.element.appendChild(arrow.GetElement());
+				this.appendChild(arrow);
 			}
 		});
 		
-		this.element.appendChild(this.input);
+		this.appendChild(this.input);
 		
 		this.arrows.forEach((arrow) => {
 			if(arrow.GetPosition() == Position.Right) {
-				this.element.appendChild(arrow.GetElement());
+				this.appendChild(arrow);
 			}
 		});
 	}
@@ -73,5 +73,8 @@ class Input extends Component {
 		let arrow = new Arrow(name, position, character);
 		arrow.InitializeComponent();
 		this.arrows.push(arrow);
+		this.Repaint();
 	}
 }
+
+customElements.define('ui-input', Input);

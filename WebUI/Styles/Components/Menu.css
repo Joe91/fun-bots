@@ -5,22 +5,24 @@ ui-menu {
     flex-direction: column-reverse;
 }
 
-ui-menu ul {
-	list-style: none;	
+ui-menu ui-menuwrapper {
+	display: block;
 }
 
-ui-menu ul:not([class]) {
+ui-menu ui-menuwrapper:not([class]) {
 	list-style: none;
 	display: flex;
 	justify-content: flex-end;
 }
 
-ui-menu ul li {
+ui-menu ui-menuwrapper ui-item {
 	flex: 0 auto;
+	display: list-item;
+    text-align: -webkit-match-parent;
 	position: relative;
 }
 
-ui-menu ul:not([class]) li {
+ui-menu ui-menuwrapper:not([class]) ui-item {
 	display: flex;
 	position: relative;
 	color: var(--color_text);
@@ -33,7 +35,7 @@ ui-menu ul:not([class]) li {
 	text-transform: uppercase;
 	margin: 0 1px;
 }
-ui-menu ul li a[data-key]::after {
+ui-menu ui-menuwrapper ui-item ui-link[data-key]::after {
 	content: attr(data-key);
 	color: var(--color_text);
 	text-shadow: 0 0 1px var(--color_text_shadow);
@@ -44,35 +46,35 @@ ui-menu ul li a[data-key]::after {
 	right: 2px;
 }
 
-ui-menu ul:not([class]) li a {
+ui-menu ui-menuwrapper:not([class]) ui-item ui-link {
 	display: flex;
 	padding: 3px 15px;
 	flex: 1 0 auto;
 }
 
-ui-menu ul li a[data-key] {
+ui-menu ui-menuwrapper ui-item ui-link[data-key] {
 	padding: 3px 20px 3px 15px;
 }
 
-ui-menu ul:not([class]) li a {
+ui-menu ui-menuwrapper:not([class]) ui-item ui-link {
 	background: linear-gradient(rgba(41,56,63,0.8), rgba(55, 64, 68, 0.8));	
 }
 
-ui-menu ul:not([class]) li a:hover {
+ui-menu ui-menuwrapper:not([class]) ui-item ui-link:hover {
 	background: linear-gradient(rgba(64, 84, 96, 0.82), rgb(62, 82, 94));
 }
 
-ui-menu ul:not([class]) li a:active {
+ui-menu ui-menuwrapper:not([class]) ui-item ui-link:active {
 	color: var(--color_text_hover);
 	text-shadow: 0 0 6px var(--color_text_hover_shadow);
 	background: linear-gradient(#ffffff, #909090d1);
 }
 
-ui-menu ul:not([class]) li a * {
+ui-menu ui-menuwrapper:not([class]) ui-item ui-link * {
 	flex: 1 0 auto;
 }
 
-ui-menu ul li a[data-icon]::before {
+ui-menu ui-menuwrapper ui-item ui-link[data-icon]::before {
 	content: "";
 	align-self: center;
 	flex: 0 auto;
@@ -85,7 +87,7 @@ ui-menu ul li a[data-icon]::before {
 	margin: 0 5px 0 -5px;
 }
 
-ui-menu ul li ul.submenu {
+ui-menu ui-menuwrapper ui-item ui-menuwrapper.submenu {
 	padding: 2px 0 0 0;
     margin: 33px 0 0 0px;
     position: absolute;
@@ -97,15 +99,15 @@ ui-menu ul li ul.submenu {
     overflow: hidden;
 }
 
-ui-menu ul li:hover ul.submenu {
+ui-menu ui-menuwrapper ui-item:hover ui-menuwrapper.submenu {
 	display: flex;
 }
 
-ui-view[data-activated="false"] ui-menu ul li:hover ul.submenu {
+ui-view[data-activated="false"] ui-menu ui-menuwrapper ui-item:hover ui-menuwrapper.submenu {
 	display: none !important;
 }
 
-ui-menu ul li ul.submenu li {
+ui-menu ui-menuwrapper ui-item ui-menuwrapper.submenu ui-item {
 	display: flex;
 	flex: 1 0 auto;
 	position: relative;
@@ -114,7 +116,7 @@ ui-menu ul li ul.submenu li {
 	text-shadow: 0 0 6px var(--color_text_shadow);
 }
 
-ui-menu ul li ul.submenu li a {
+ui-menu ui-menuwrapper ui-item ui-menuwrapper.submenu ui-item ui-link {
 	display: flex;
 	min-width: 200px;
 	padding: 5px 15px;
@@ -123,12 +125,12 @@ ui-menu ul li ul.submenu li a {
 	flex: 1 0 auto;
 }
 
-ui-menu ul li ul.submenu li a[data-key]::after {
+ui-menu ui-menuwrapper ui-item ui-menuwrapper.submenu ui-item ui-link[data-key]::after {
 	bottom: 3px;
 	right: 5px;
 }
 
-ui-menu ul li ul.submenu li a ui-language {
+ui-menu ui-menuwrapper ui-item ui-menuwrapper.submenu ui-item ui-link ui-language {
 	flex: 1 0 auto;
 	display: block;
 	text-align: left;
@@ -136,17 +138,17 @@ ui-menu ul li ul.submenu li a ui-language {
 	font-size: 16px;
 }
 
-ui-menu ul li ul.submenu li[data-arrows="true"] a {
+ui-menu ui-menuwrapper ui-item ui-menuwrapper.submenu ui-item[data-arrows="true"] ui-link {
 	padding: 5px 25px;	
 }
 
-ui-menu ul li ul.submenu li a ui-input {
+ui-menu ui-menuwrapper ui-item ui-menuwrapper.submenu ui-item ui-link ui-input {
 	flex: 0 0 auto;
 	display: flex;
 	margin: 0 0 0 -15px;
 }
 
-ui-menu ul li ui-separator {
+ui-menu ui-menuwrapper ui-item ui-separator {
 	min-height: 1px;
 	flex: 1 0 auto;
 	display: block;
@@ -157,7 +159,7 @@ ui-menu ul li ui-separator {
 	background: rgba(255, 255, 255, 0.1);
 }
 
-ui-menu ul:not([class]) li:hover ui-separator {
+ui-menu ui-menuwrapper:not([class]) ui-item:hover ui-separator {
 	background: linear-gradient(rgba(41,56,63,0.8), rgba(55, 64, 68, 0.8));
 }
 

@@ -3,17 +3,15 @@
 class View extends Component {
 	name		= null;
 	components	= [];
-	element		= null;
 	
 	constructor(name) {
 		super();
 		
 		this.name		= name || null;
-		this.element	= document.createElement('ui-view');
 	}	
 	
 	InitializeComponent(data) {
-		this.element.innerHTML = '';
+		this.innerHTML = '';
 		
 		if(typeof(data.Name) != 'undefined') {
 			this.name = data.Name;
@@ -42,21 +40,8 @@ class View extends Component {
 				if(component != null) {
 					if(typeof(component.InitializeComponent) != 'undefined') {
 						component.InitializeComponent();
-						this.element.appendChild(component.GetElement());
+						this.appendChild(component);
 					}
-					
-					component = new Proxy(component, {
-						set: function Setter(target, key, value) {
-							if(Array.isArray(value) || value instanceof Object) {
-								target[key][value.Name] = value.Value;
-							} else {
-								target[key] = value;
-							}
-							
-							target.Repaint();
-							return true;
-						}
-					});
 					
 					if(typeof(properties.Attributes) != 'undefined' && properties.Attributes.length > 0) {
 						properties.Attributes.forEach(function OnAttribute(attribute) {
@@ -74,7 +59,7 @@ class View extends Component {
 			});
 		}
 		
-		document.querySelector('body').appendChild(this.element);
+		document.querySelector('body').appendChild(this);
 	}
 	
 	Update(data) {
@@ -106,21 +91,8 @@ class View extends Component {
 		if(component != null) {
 			if(typeof(component.InitializeComponent) != 'undefined') {
 				component.InitializeComponent();
-				this.element.appendChild(component.GetElement());
+				this.appendChild(component);
 			}
-			
-			component = new Proxy(component, {
-				set: function Setter(target, key, value) {
-					if(Array.isArray(value) || value instanceof Object) {
-						target[key][value.Name] = value.Value;
-					} else {
-						target[key] = value;
-					}
-					
-					target.Repaint();
-					return true;
-				}
-			});
 			
 			if(typeof(data.Attributes) != 'undefined' && data.Attributes.length > 0) {
 				data.Attributes.forEach(function OnAttribute(attribute) {
@@ -170,6 +142,10 @@ class View extends Component {
 			component.SetTitle(data.Text);
 			component.SetIcon(data.Icon);
 		}
+		
+		if(typeof(component.Repaint) !== 'undefined') {
+			component.Repaint();
+		}
 	}
 	
 	OnClick(event) {
@@ -180,3 +156,5 @@ class View extends Component {
 		});
 	}
 };
+
+customElements.define('ui-view', View);

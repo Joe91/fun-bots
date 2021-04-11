@@ -13,33 +13,40 @@ class Dialog extends Component {
 		this.name		= name || null;
 		this.title		= title || null;
 		
-		this.element	= document.createElement('ui-dialog');
 		this.header		= document.createElement('ui-header');
 		this.content	= document.createElement('ui-content');
 		this.footer		= document.createElement('ui-footer');
-	};
+	}
 	
 	InitializeComponent() {
 		super.InitializeComponent();
 		
 		// Header
 		this.header.innerHTML	= this.title;
-		this.element.appendChild(this.header);
+		this.appendChild(this.header);
 		
 		// Content
-		this.element.appendChild(this.content);
+		this.appendChild(this.content);
 		
 		// Footer
-		this.element.appendChild(this.footer);
+		this.appendChild(this.footer);
 	}
 	
 	SetContent(content) {
 		this.content.innerHTML = content;
+		this.Repaint();
 	}
 	
 	SetButtons(buttons) {
-		buttons.forEach(function(entry) {
+		buttons.forEach((entry) => {
+			let button = new Button(entry.Data.Name, entry.Data.Title);
 			console.log(entry);
+			
+			this.footer.appendChild(button);
 		});
+		
+		this.Repaint();
 	}
 }
+
+customElements.define('ui-dialog', Dialog);

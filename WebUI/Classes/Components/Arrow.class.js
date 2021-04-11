@@ -11,15 +11,13 @@ class Arrow extends Component {
 		this.name		= name || null;
 		this.position	= position || null;
 		this.character	= character || null;
-		
-		this.element	= document.createElement('ui-arrow');
-	};
+	}
 	
 	InitializeComponent() {
 		super.InitializeComponent();
 		
-		this.element.dataset.position	= this.position;
-		this.element.innerHTML			= this.character;
+		this.dataset.position	= this.position;
+		this.innerHTML			= this.character;
 	}
 	
 	GetPosition() {
@@ -29,7 +27,7 @@ class Arrow extends Component {
 	Repaint() {
 		super.Repaint();
 		
-		this.element.innerHTML = this.character;
+		this.innerHTML = this.character;
 	}
 	
 	OnClick(event) {
@@ -37,3 +35,5 @@ class Arrow extends Component {
 		event.preventDefault();
 	}
 }
+
+customElements.define('ui-arrow', Arrow);

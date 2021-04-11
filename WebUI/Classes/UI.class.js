@@ -1,7 +1,7 @@
 'use strict';
 
 class UserInterface {
-	views = {};
+	views		= {};
 	
 	constructor() {
 		if(typeof(window.identifier) == 'undefined') {
@@ -50,10 +50,10 @@ class UserInterface {
 	}
 	
 	Handle(packet) {
-		//if(window.location.href == 'webui://fun-bots/') {
+		if(window.location.href == 'webui://fun-bots/') {
 			console.info(packet);
 			console.warn(JSON.stringify(packet, 0, 1));
-		//}
+		}
 		
 		let type			= packet.Type || null;
 		let destination		= packet.Destination || null;
@@ -87,7 +87,7 @@ class UserInterface {
 						view.Deactivate();
 					break;
 					case 'UPDATE':
-						view.Update(JSON.parse(data));
+						view.Update(data);
 					break;
 					case 'PUSH':
 						view.Push(data);

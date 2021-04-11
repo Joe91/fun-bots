@@ -25,26 +25,6 @@ input:disabled {
     border-color: transparent;
 }
 
-button {
-	display: inline-block;
-	position: relative;
-	padding: 5px 15px;
-	min-width: 120px;
-	margin: 0 1px;
-	color: #EAf7FF;
-	text-shadow: 0 0 6px #BCE4FF;
-	cursor: pointer;
-	font-weight: 900;
-	font-size: 18px;
-	text-align: center;
-	text-transform: uppercase;
-	background: linear-gradient(180deg, rgba(41, 57, 67, 0.9) 0%, rgba(41, 57, 67, 0.5) 100%);
-}
-
-button:hover {
-	background: linear-gradient(180deg, rgba(84, 134, 168, 0.9) 0%, rgba(84, 134, 168, 0.9) 100%);	
-}
-
 ::-webkit-scrollbar {
  	display: none;
 }

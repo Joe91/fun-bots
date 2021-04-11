@@ -18,8 +18,7 @@ class Box extends Component {
 		this.image			= new Image();
 		this.background		= new Image();
 		this.canvas			= document.createElement('canvas');
-		this.element		= document.createElement('ui-box');
-	};
+	}
 	
 	get Items() {
 		return this.items;
@@ -42,35 +41,25 @@ class Box extends Component {
 			if(component != null) {
 				if(typeof(component.InitializeComponent) != 'undefined') {
 					component.InitializeComponent();
-					this.element.appendChild(component.GetElement());
+					this.appendChild(component);
 				}
 				
 				if(typeof(item.Data.Items) != 'undefined') {
 					component.Items	= item.Data.Items;
 				}
 				
-				component = new Proxy(component, {
-					set: function Setter(target, key, value) {
-						if(Array.isArray(value) || value instanceof Object) {
-							target[key][value.Name] = value.Value;
-						} else {
-							target[key] = value;
-						}
-						
-						target.Repaint();
-						return true;
-					}
-				});
-				
 				this.items.push(component);
 			} else {
 				console.warn('Unknown Component: ', properties);
 			}
 		});
+		
+		this.Repaint();
 	}
 	
 	SetColor(color) {
 		this.color = color;
+		this.Repaint();
 	}
 	
 	GetPosition() {
@@ -159,7 +148,7 @@ class Box extends Component {
 			this.context.restore();
 			this.context.globalCompositeOperation = 'source-over';
 			
-			this.element.style.backgroundImage = 'url(' + this.canvas.toDataURL() + ')';
+			this.style.backgroundImage = 'url(' + this.canvas.toDataURL() + ')';
 		} catch(e) {}
 	}
 	
@@ -171,3 +160,5 @@ class Box extends Component {
 		});
 	}
 }
+
+customElements.define('ui-box', Box);

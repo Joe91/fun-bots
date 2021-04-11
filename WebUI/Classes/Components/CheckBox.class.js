@@ -12,18 +12,21 @@ class CheckBox extends Component {
 		this.name			= name || null;
 		this.checked		= checked || null;
 		this.input			= document.createElement('input');
-		this.element		= document.createElement('ui-checkbox');
 		this.mark			= document.createElement('ui-mark');
 		this.input.name		= this.name;
 		this.input.checked	= this.checked;
-	};
+	}
 	
 	Enable() {
 		this.input.disabled = false;
+		
+		this.Repaint();
 	}
 	
 	Disable() {
 		this.input.disabled = true;
+		
+		this.Repaint();
 	}
 	
 	IsChecked() {
@@ -41,8 +44,8 @@ class CheckBox extends Component {
 		
 		this.input.type = 'checkbox';
 		
-		this.element.appendChild(this.input);
-		this.element.appendChild(this.mark);
+		this.appendChild(this.input);
+		this.appendChild(this.mark);
 	}
 	
 	Repaint() {
@@ -51,3 +54,5 @@ class CheckBox extends Component {
 		this.input.checked = this.checked;
 	}
 }
+
+customElements.define('ui-checkbox', CheckBox);

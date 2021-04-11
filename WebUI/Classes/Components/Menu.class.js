@@ -7,14 +7,13 @@ class Menu extends Component {
 	constructor(title, subtitle) {
 		super();
 		
-		this.element	= document.createElement('ui-menu');
-		this.container	= document.createElement('ul');
-	};
+		this.container	= document.createElement('ui-menuwrapper');
+	}
 	
 	InitializeComponent() {
 		super.InitializeComponent();
 		
-		this.element.appendChild(this.container);		
+		this.appendChild(this.container);		
 	}
 	
 	get Items() {
@@ -33,7 +32,7 @@ class Menu extends Component {
 			switch(item.Type) {
 				case 'Menu':
 					component	= new Menu();
-					destination	= this.element;
+					destination	= this;
 				break;
 				case 'MenuItem':
 					component	= new MenuItem(item.Data);
@@ -44,31 +43,20 @@ class Menu extends Component {
 			if(component != null) {
 				if(typeof(component.InitializeComponent) != 'undefined') {
 					component.InitializeComponent();
-					destination.appendChild(component.GetElement());
+					destination.appendChild(component);
 				}
 					
 				if(typeof(item.Data.Items) != 'undefined') {
 					component.Items	= item.Data.Items;
 				}
 				
-				component = new Proxy(component, {
-					set: function Setter(target, key, value) {
-						if(Array.isArray(value) || value instanceof Object) {
-							target[key][value.Name] = value.Value;
-						} else {
-							target[key] = value;
-						}
-						
-						target.Repaint();
-						return true;
-					}
-				});
-				
 				this.items.push(component);
 			} else {
 				console.warn('Unknown Component: ', properties);
 			}
-		});			
+		});
+
+		this.Repaint();		
 	}
 	
 	Repaint() {
@@ -91,3 +79,5 @@ class Menu extends Component {
 		});
 	}
 }
+
+customElements.define('ui-menu', Menu);

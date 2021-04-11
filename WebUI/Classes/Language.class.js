@@ -1,5 +1,7 @@
+'use strict';
+
 class I18N {
-	CreateNode(target, string) {
+	CreateNode(string) {
 		let node			= document.createElement('ui-language');
 		node.dataset.lang	= string;
 		node.innerHTML		= string;

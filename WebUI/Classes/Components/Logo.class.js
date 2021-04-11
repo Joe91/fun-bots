@@ -10,19 +10,18 @@ class Logo extends Component {
 		
 		this.title		= title || null;
 		this.subtitle	= subtitle || null;
-		this.element	= document.createElement('ui-logo');
-	};
+	}
 	
 	InitializeComponent() {
 		super.InitializeComponent();
 		
 		this.subelements.title				= document.createElement('span');
 		this.subelements.title.innerHTML	= this.title;
-		this.element.appendChild(this.subelements.title);
+		this.appendChild(this.subelements.title);
 		
 		this.subelements.subtitle			= document.createElement('sub');
 		this.subelements.subtitle.innerHTML	= this.subtitle;
-		this.element.appendChild(this.subelements.subtitle);
+		this.appendChild(this.subelements.subtitle);
 	}
 	
 	Repaint() {
@@ -37,3 +36,5 @@ class Logo extends Component {
 		}
 	}
 }
+
+customElements.define('ui-logo', Logo);

@@ -8,9 +8,8 @@ class MenuSeparator extends Component {
 		super();
 		
 		this.title		= title || null;
-		this.element	= document.createElement('li');
-		this.container	= document.createElement('ui-separator');
-	};
+		this.container	= document.createElement('ui-label');
+	}
 	
 	InitializeComponent() {
 		super.InitializeComponent();
@@ -19,7 +18,7 @@ class MenuSeparator extends Component {
 			this.container.innerHTML	= this.title;
 		}
 		
-		this.element.appendChild(this.container);
+		this.appendChild(this.container);
 	}
 	
 	Repaint() {
@@ -30,3 +29,5 @@ class MenuSeparator extends Component {
 		}
 	}
 }
+
+customElements.define('ui-separator', MenuSeparator);

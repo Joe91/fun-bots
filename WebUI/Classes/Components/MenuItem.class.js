@@ -20,9 +20,8 @@ class MenuItem extends Component {
 		this.icon		= data.Icon || null;
 		this.callback	= data.Callback || null;
 		this.shortcut	= data.Shortcut || null;
-		
-		this.element	= document.createElement('li');
-		this.container	= document.createElement('ul');
+		this.container	= document.createElement('ui-menuwrapper');
+		this.link		= new Link();
 		
 		if(typeof(data.CheckBoxes) != 'undefined' && data.CheckBoxes.length >= 1) {
 			data.CheckBoxes.forEach((properties) => {
@@ -39,19 +38,6 @@ class MenuItem extends Component {
 						checkbox.Enable();
 					}
 				}
-				
-				checkbox = new Proxy(checkbox, {
-					set: function Setter(target, key, value) {
-						if(Array.isArray(value) || value instanceof Object) {
-							target[key][value.Name] = value.Value;
-						} else {
-							target[key] = value;
-						}
-						
-						target.Repaint();
-						return true;
-					}
-				});
 				
 				if(typeof(properties.Position) != 'undefined') {
 					checkbox.Attributes = {
@@ -72,7 +58,7 @@ class MenuItem extends Component {
 					properties.Data.Arrows.forEach((arrow) => {
 						input.SetArrow(arrow.Name, arrow.Position, arrow.Character);
 						
-						this.element.dataset.arrows = true;
+						this.dataset.arrows = true;
 					});
 				}
 				
@@ -87,19 +73,6 @@ class MenuItem extends Component {
 						input.Enable();
 					}
 				}
-				
-				input = new Proxy(input, {
-					set: function Setter(target, key, value) {
-						if(Array.isArray(value) || value instanceof Object) {
-							target[key][value.Name] = value.Value;
-						} else {
-							target[key] = value;
-						}
-						
-						target.Repaint();
-						return true;
-					}
-				});
 				
 				if(typeof(properties.Position) != 'undefined') {
 					input.Attributes = {
@@ -118,7 +91,7 @@ class MenuItem extends Component {
 			this.callback = this.callback.split(':');
 			this.callback.shift();
 		}
-	};
+	}
 	
 	SetTitle(title) {
 		this.title = title;
@@ -139,7 +112,7 @@ class MenuItem extends Component {
 	InitializeComponent() {
 		super.InitializeComponent();
 		
-		this.link = document.createElement('a');
+		this.appendChild(this.link);
 		
 		if(this.icon != null) {
 			this.link.dataset.icon = this.icon;
@@ -154,7 +127,7 @@ class MenuItem extends Component {
 		if(this.checkboxes != null && this.checkboxes.length >= 1) {
 			this.checkboxes.forEach((checkbox) => {
 				if(checkbox.Attributes.Position == Position.Left) {
-					this.link.appendChild(checkbox.GetElement());
+					this.link.appendChild(checkbox);
 				}
 			});
 		}
@@ -162,17 +135,15 @@ class MenuItem extends Component {
 		if(this.inputs != null && this.inputs.length >= 1) {
 			this.inputs.forEach((input) => {
 				if(input.Attributes.Position == Position.Left) {
-					this.link.appendChild(input.GetElement());
+					this.link.appendChild(input);
 				}
 			});
 		}
 		
-		this.link.appendChild(Language.CreateNode(this.link, this.title));
-		
 		if(this.inputs != null && this.inputs.length >= 1) {
 			this.inputs.forEach((input) => {
 				if(input.Attributes.Position == Position.Right) {
-					this.link.appendChild(input.GetElement());
+					this.link.appendChild(input);
 				}
 			});
 		}
@@ -180,17 +151,17 @@ class MenuItem extends Component {
 		if(this.checkboxes != null && this.checkboxes.length >= 1) {
 			this.checkboxes.forEach((checkbox) => {
 				if(checkbox.Attributes.Position == Position.Right) {
-					this.link.appendChild(checkbox.GetElement());
+					this.link.appendChild(checkbox);
 				}
 			});
 		}
 		
-		this.element.appendChild(this.link);
+		this.link.appendChild(Language.CreateNode(this.title));
 	}
 	
 	set Items(data) {
 		if(data.length >= 1) {
-			this.element.appendChild(this.container);
+			this.appendChild(this.container);
 		}
 		
 		data.forEach((item) => {
@@ -208,27 +179,16 @@ class MenuItem extends Component {
 			if(component != null) {
 				if(typeof(component.InitializeComponent) != 'undefined') {
 					component.InitializeComponent();
-					this.container.appendChild(component.GetElement());
+					this.container.appendChild(component);
 				}
-				
-				component = new Proxy(component, {
-					set: function Setter(target, key, value) {
-						if(Array.isArray(value) || value instanceof Object) {
-							target[key][value.Name] = value.Value;
-						} else {
-							target[key] = value;
-						}
-						
-						target.Repaint();
-						return true;
-					}
-				});
 				
 				this.items.push(component);
 			} else {
 				console.warn('Unknown Component: ', item.Type);
 			}
 		});
+		
+		this.Repaint();
 	}
 	
 	OnClick(event) {
@@ -279,6 +239,8 @@ class MenuItem extends Component {
 		
 		Language.RemoveNode(this.link);
 		
-		this.link.appendChild(Language.CreateNode(this.link, this.title));
+		this.link.appendChild(Language.CreateNode(this.title));
 	}
 }
+
+customElements.define('ui-item', MenuItem);

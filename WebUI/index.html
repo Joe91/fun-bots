@@ -15,6 +15,7 @@
 		<link rel="stylesheet" type="text/css" href="Styles/Components/Component.css" />
 		<link rel="stylesheet" type="text/css" href="Styles/Components/Alert.css" />
 		<link rel="stylesheet" type="text/css" href="Styles/Components/Box.css" />
+		<link rel="stylesheet" type="text/css" href="Styles/Components/Button.css" />
 		<link rel="stylesheet" type="text/css" href="Styles/Components/Dialog.css" />
 	</head>
 	<body>
@@ -24,6 +25,8 @@
 		<script src="Classes/Constants/Position.js"></script>
 		<script src="Classes/Components/Component.class.js"></script>
 		<script src="Classes/Components/Entry.class.js"></script>
+		<script src="Classes/Components/Link.class.js"></script>
+		<script src="Classes/Components/Button.class.js"></script>
 		<script src="Classes/Components/Box.class.js"></script>
 		<script src="Classes/Components/Dialog.class.js"></script>
 		<script src="Classes/Components/Alert.class.js"></script>
@@ -40,6 +43,7 @@
 			if(window.location.href != 'webui://fun-bots/') {
 				document.querySelector('body').style.background = 'url(debug.png)';
 				document.querySelector('body').style.backgroundSize = 'cover';
+				
 				
 				UI.Handle(
 				{
@@ -308,59 +312,15 @@
 			
 				);
 			
-				
-				UI.Handle(
-				
-				{
- "Type": "VIEW",
- "Destination": "BotEditor",
- "Action": "PUSH",
- "Data": {
-  "Type": "Dialog",
-  "Data": {
-   "Buttons": [
-    {
-     "Type": "Button",
-     "Data": {
-      "Name": "button_settings_cancel",
-      "Disabled": false,
-      "Title": "Cancel"
-     }
-    },
-    {
-     "Type": "Button",
-     "Data": {
-      "Name": "button_settings_restore",
-      "Disabled": false,
-      "Title": "Restore all to Default",
-      "Permission": "Settings.Restore"
-     }
-    },
-    {
-     "Type": "Button",
-     "Data": {
-      "Name": "button_settings_save_temporarily",
-      "Disabled": false,
-      "Title": "Save Temporarily",
-      "Permission": "Settings.Save"
-     }
-    },
-    {
-     "Type": "Button",
-     "Data": {
-      "Name": "button_settings_save",
-      "Disabled": false,
-      "Title": "Save",
-      "Permission": "Settings.Save"
-     }
-    }
-   ],
-   "Title": "Settings",
-   "Name": "settings"
-  }
- }
-}
-				);
+			
+			
+			
+			
+			
+			
+			
+			
+			
 			
 			}
 		</script>
