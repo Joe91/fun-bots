@@ -123,18 +123,11 @@ end
 
 function Bot:_updateInputs()
 	for i = 0, 36 do
-		if self.activeInputs[i] == nil then
-			self.activeInputs[i] = {
-				value = 0,
-				reset = false
-			}
-		end
 		if self.activeInputs[i].reset then
 			self.player.input:SetLevel(i, 0)
 			self.activeInputs[i].value = 0
 			self.activeInputs[i].reset = false
 		elseif self.activeInputs[i].value ~= 0 then
-
 			self.player.input:SetLevel(i, self.activeInputs[i].value)
 			self.activeInputs[i].reset = true
 		end
@@ -399,8 +392,11 @@ function Bot:resetSpawnVars()
 	self._weaponToUse 			= "Primary";
 
 	-- reset all input-vars
-	self.activeInputs = {};
 	for i = 0, 36 do
+		self.activeInputs[i] = {
+			value = 0,
+			reset = false
+		};
 		self.player.input:SetLevel(i, 0);
 	end
 end
@@ -1142,7 +1138,7 @@ function Bot:_updateMovement()
 						
 						elseif self._actionTimer == point.Data.Action.time then
 							for _,input in pairs(point.Data.Action.inputs) do
-								self.player.input:SetLevel(input, 1)
+								self:_setInput(input, 1)
 							end
 						end
 					else
@@ -1151,10 +1147,6 @@ function Bot:_updateMovement()
 
 					self._actionTimer = self._actionTimer - StaticConfig.botUpdateCycle;
 					if self._actionTimer <= 0 then
-						-- reset active inputs
-						for i = 0, 36 do
-							self.player.input:SetLevel(i, 0);
-						end
 						self._actionActive = false;
 					end
 
@@ -1316,12 +1308,6 @@ function Bot:_updateMovement()
 									if action.pitch ~= nil then
 										self._targetPitch = action.pitch;
 									end
-
-									-- reset all inputs
-									for i = 0, 36 do
-										self.player.input:SetLevel(i, 0);
-									end
-
 									return --DONT DO ANYTHING ELSE ANYMORE
 								end
 							end
@@ -1404,10 +1390,7 @@ function Bot:_updateMovement()
 						end
 					end
 				end
-			else -- no point: do nothing
-				for i = 0, 36 do
-					self.player.input:SetLevel(i, 0);
-				end
+			--else -- no point: do nothing
 			end
 
 		-- Shoot MoveMode
