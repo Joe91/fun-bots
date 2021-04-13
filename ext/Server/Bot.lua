@@ -190,7 +190,7 @@ function Bot:shootAt(player, ignoreYaw)
 			return false;
 		end
 	end
-	
+
 	return false
 end
 
@@ -567,11 +567,10 @@ function Bot:_updateYaw()
 	if absDeltaYaw < inkrement then
 		if inVehicle then
 			print("no correction")
-			self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
-		else
-			self.player.input.authoritativeAimingYaw	= self._targetYaw;
-			self.player.input.authoritativeAimingPitch	= self._targetPitch;
+			self.player.input:SetLevel(EntryInputActionEnum.EIAYaw, 0.0)
 		end
+		self.player.input.authoritativeAimingYaw	= self._targetYaw;
+		self.player.input.authoritativeAimingPitch	= self._targetPitch;
 		return;
 	end
 
@@ -589,16 +588,15 @@ function Bot:_updateYaw()
 
 	if inVehicle then
 		if inkrement > 0 then
-			self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 1.0);
+			self.player.input:SetLevel(EntryInputActionEnum.EIAYaw, 1.0)
 			print("left")
 		else
-			self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, -1.0);
+			self.player.input:SetLevel(EntryInputActionEnum.EIAYaw, -1.0)
 			print("right")
 		end
-	else
-		self.player.input.authoritativeAimingYaw	= tempYaw
-		self.player.input.authoritativeAimingPitch	= self._targetPitch;
 	end
+	self.player.input.authoritativeAimingYaw	= tempYaw
+	self.player.input.authoritativeAimingPitch	= self._targetPitch;
 end
 
 function Bot:_findOutVehicleType(player)
@@ -1249,7 +1247,7 @@ function Bot:_updateMovement()
 					self._nextTargetPoint = nextPoint;
 
 
-					if math.abs(currentWayPontDistance - self._lastWayDistance) < 0.02 or self._obstaceSequenceTimer ~= 0 then
+					if (math.abs(currentWayPontDistance - self._lastWayDistance) < 0.02 or self._obstaceSequenceTimer ~= 0) then
 						-- try to get around obstacle
 						self.activeSpeedValue = 4; --always try to stand
 
@@ -1323,9 +1321,7 @@ function Bot:_updateMovement()
 						self._meleeActive = false;
 						self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
-						if self.player.attachedControllable == nil then
-							self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
-						end
+						self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0);
 						if not self._grenadeActive then
 							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0.0);

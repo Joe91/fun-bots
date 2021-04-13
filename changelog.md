@@ -57,6 +57,7 @@ The Smart Node update
 - native support for Civilianizer-Mod
 - fixed wrong weapon-slot
 - zombies now use all colors and kits by default
+- export of a maplist
 
 
 ## [Unreleased - 1.6.2.1] - 2021-02-28
