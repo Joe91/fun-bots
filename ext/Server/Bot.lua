@@ -513,6 +513,7 @@ function Bot:_updateYaw()
 	if self._meleeActive then
 		return;
 	end
+	local inVehicle = (self.player.attachedControllable ~= nil)
 	
 	if self._targetPoint ~= nil and self._shootPlayer == nil and self.player.soldier ~= nil then
 		if self.player.soldier.worldTransform.trans:Distance(self._targetPoint.Position) < 0.2 then
@@ -542,7 +543,17 @@ function Bot:_updateYaw()
 		end
 	end
 
-	local deltaYaw = self.player.input.authoritativeAimingYaw - self._targetYaw;
+	local deltaYaw = 0
+	if inVehicle then
+		local pos = self.player.attachedControllable.transform.forward
+		--print(pos)
+		local atanDzDx	= math.atan(pos.z, pos.x);
+		local yaw		= (atanDzDx > math.pi / 2) and (atanDzDx - math.pi / 2) or (atanDzDx + 3 * math.pi / 2);
+		--print(yaw)
+		deltaYaw = yaw - self._targetYaw;
+	else
+		deltaYaw = self.player.input.authoritativeAimingYaw - self._targetYaw;
+	end
 	
 	if deltaYaw > math.pi then
 		deltaYaw = deltaYaw - 2*math.pi
@@ -554,8 +565,13 @@ function Bot:_updateYaw()
 	local inkrement 	= g_Globals.yawPerFrame;
 	
 	if absDeltaYaw < inkrement then
-		self.player.input.authoritativeAimingYaw	= self._targetYaw;
-		self.player.input.authoritativeAimingPitch	= self._targetPitch;
+		if inVehicle then
+			print("no correction")
+			self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
+		else
+			self.player.input.authoritativeAimingYaw	= self._targetYaw;
+			self.player.input.authoritativeAimingPitch	= self._targetPitch;
+		end
 		return;
 	end
 
@@ -570,9 +586,19 @@ function Bot:_updateYaw()
 	elseif tempYaw < 0.0 then
 		tempYaw = tempYaw + (math.pi * 2);
 	end
-	
-	self.player.input.authoritativeAimingYaw	= tempYaw
-	self.player.input.authoritativeAimingPitch	= self._targetPitch;
+
+	if inVehicle then
+		if inkrement > 0 then
+			self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 1.0);
+			print("left")
+		else
+			self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, -1.0);
+			print("right")
+		end
+	else
+		self.player.input.authoritativeAimingYaw	= tempYaw
+		self.player.input.authoritativeAimingPitch	= self._targetPitch;
+	end
 end
 
 function Bot:_findOutVehicleType(player)
@@ -1145,7 +1171,29 @@ function Bot:_updateMovement()
 				-- execute Action if needed
 				if self._actionActive then
 					if point.Data ~= nil and point.Data.Action ~= nil then
-						if self._actionTimer == point.Data.Action.time then
+						if point.Data.Action.type == "vehicle" then
+							local iterator = EntityManager:GetIterator("ServerVehicleEntity")
+							local vehicleEntity = iterator:Next()
+							
+							while vehicleEntity ~= nil do
+								local tempEntity = ControllableEntity(vehicleEntity)
+								local position = tempEntity.transform.trans
+								if position:Distance(self.player.soldier.worldTransform.trans) < 5 then
+									print(tempEntity.entryCount)
+									for i = 0, tempEntity.entryCount - 1 do
+										if tempEntity:GetPlayerInEntry(i) == nil then
+											self.player:EnterVehicle(vehicleEntity, 0)
+											self._actionActive = false;
+											break
+										end
+									end
+									break
+								end
+								vehicleEntity = iterator:Next()
+							end
+							self._actionActive = false;
+						
+						elseif self._actionTimer == point.Data.Action.time then
 							for _,input in pairs(point.Data.Action.inputs) do
 								self.player.input:SetLevel(input, 1)
 							end
@@ -1165,6 +1213,8 @@ function Bot:_updateMovement()
 
 					if self._actionActive then
 						return --DONT EXECUTE ANYTHING ELSE
+					else
+						point = nextPoint;
 					end
 				end
 
@@ -1273,7 +1323,9 @@ function Bot:_updateMovement()
 						self._meleeActive = false;
 						self.player.input:SetLevel(EntryInputActionEnum.EIAQuicktimeJumpClimb, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIAJump, 0);
-						self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
+						if self.player.attachedControllable == nil then
+							self.player.input:SetLevel(EntryInputActionEnum.EIAStrafe, 0.0);
+						end
 						self.player.input:SetLevel(EntryInputActionEnum.EIAMeleeAttack, 0);
 						if not self._grenadeActive then
 							self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0.0);
@@ -1444,7 +1496,7 @@ function Bot:_updateMovement()
 				end
 			end
 			--crouch moving (only mode with modified gun)
-			if self.activeWeapon.type == "Sniper" and not self.knifeMode then
+			if self.activeWeapon.type == "Sniper" and not self.knifeMode or self.player.attachedControllable ~= nil then --don't move while shooting in a vehicle
 				if self._attackMode == 2 then
 					if self.player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Crouch then
 						self.player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Crouch, true, true);
