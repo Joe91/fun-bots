@@ -260,7 +260,7 @@ function GameDirector:checkForExecution(point, team)
 			if mcom ~= nil then
 				local objective = self:getObjectiveObject(mcom);
 				if objective ~= nil then
-					if objective.active then
+					if objective.active and not objective.destroyed then
 						if team == TeamId.Team1 and objective.team == TeamId.TeamNeutral then
 							execute = true;	--Attacking Team
 						elseif team == TeamId.Team2 and objective.isAttacked then
@@ -269,6 +269,8 @@ function GameDirector:checkForExecution(point, team)
 					end
 				end
 			end
+		else
+			execute = true;
 		end
 	end
 	return execute;
@@ -499,8 +501,8 @@ end
 function GameDirector:_useSubobjective(botTeam, objectiveName)
 	local use = false;
 	local objective = self:getObjectiveObject(objectiveName);
-	if objective ~= nil then
-		if objective.active then
+	if objective ~= nil and objective.subObjective then
+		if objective.active and not objective.destroyed then
 			if botTeam == TeamId.Team1 and objective.team == TeamId.TeamNeutral then
 				use = true;	--Attacking Team
 			elseif botTeam == TeamId.Team2 and objective.isAttacked then
