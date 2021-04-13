@@ -60,6 +60,7 @@ Config = {
 	botsThrowGrenades = true,		-- Bots throw grenades
 	botsDeploy = true,				-- Bots deploy ammo and medkits
 	deployCycle	= 50,				-- time between deployment of bots
+	botWorseningSkill = 0.3,		-- variation of the skill of a single bot. the higher, the worse the bots can get compared to the original settings
 
 	-- traces
 	debugTracePaths = false,		-- Shows the trace line and search area from Commo Rose selection

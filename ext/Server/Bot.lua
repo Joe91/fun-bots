@@ -37,7 +37,7 @@ function Bot:__init(player)
 	self._wayWaitYawTimer = 0;
 	self._obstaceSequenceTimer = 0;
 	self._stuckTimer = 0;
-	self._shotTimer = -Config.botFirstShotDelay;
+	self._shotTimer = 0;
 	self._shootModeTimer = 0;
 	self._reloadTimer = 0;
 	self._deployTimer = 0;
@@ -80,6 +80,7 @@ function Bot:__init(player)
 	self._knifeWayPositions = {};
 	self._lastTargetTrans = Vec3();
 	self._lastShootPlayer = nil;
+	self._skill = 0.0;
 
 	--simple movement
 	self._botSpeed = 0;
@@ -176,7 +177,8 @@ function Bot:shootAt(player, ignoreYaw)
 				self._lastShootPlayer 		= nil;
 				self._lastTargetTrans 		= player.soldier.worldTransform.trans:Clone();
 				self._knifeWayPositions 	= {};
-				
+				self._shotTimer				= - (Config.botFirstShotDelay + math.random()*self._skill)
+
 				if self.knifeMode then
 					table.insert(self._knifeWayPositions, self._lastTargetTrans);
 				end
@@ -212,7 +214,7 @@ function Bot:resetVars()
 	self._shootPlayerName		= "";
 	self._lastShootPlayer		= nil;
 	self._invertPathDirection	= false;
-	self._shotTimer				= -Config.botFirstShotDelay;
+	self._shotTimer				= 0;
 	self._updateTimer			= 0;
 	self._aimUpdateTimer		= 0; --timer sync
 	self._targetPoint			= nil;
@@ -345,8 +347,10 @@ function Bot:resetSpawnVars()
 	self._attackModeMoveTimer	= 0;
 	self._attackMode 			= 0;
 	self._shootWayPoints		= {};
+	self._skill					= math.random()*Config.botWorseningSkill
+	print("assigned Skill "..tostring(self._skill).." to "..self.name)
 
-	self._shotTimer				= -Config.botFirstShotDelay;
+	self._shotTimer				= 0;
 	self._updateTimer			= 0;
 	self._aimUpdateTimer		= 0; --timer sync
 	self._stuckTimer			= 0;
@@ -429,12 +433,16 @@ function Bot:_updateAiming()
 		local fullPositionTarget	=  self._shootPlayer.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(self._shootPlayer, true);
 		local fullPositionBot		= self.player.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(self.player, false);
 		local grenadePith			= 0.0;
+		local distanceToPlayer		= 0.0;
 
 		if not self.knifeMode then
-			local distanceToPlayer	= fullPositionTarget:Distance(fullPositionBot);
+			distanceToPlayer	= fullPositionTarget:Distance(fullPositionBot);
 			--calculate how long the distance is --> time to travel
 			local factorForMovement = 0.0
 			if self.activeWeapon.type == "Grenade" then
+				if distanceToPlayer < 5 then
+					distanceToPlayer = 5 -- don't throw them too close..
+				end
 				local angle =  math.asin((distanceToPlayer * self.activeWeapon.bulletDrop)/(self.activeWeapon.bulletSpeed*self.activeWeapon.bulletSpeed));
 				if angle ~= angle then	--NAN check
 					grenadePith = (math.pi / 4)
@@ -461,6 +469,9 @@ function Bot:_updateAiming()
 		local dy		= fullPositionTarget.y + targetMovement.y + pitchCorrection - fullPositionBot.y;
 		local atanDzDx	= math.atan(dz, dx);
 		local yaw		= (atanDzDx > math.pi / 2) and (atanDzDx - math.pi / 2) or (atanDzDx + 3 * math.pi / 2);
+		-- worsen yaw depending on bot-skill
+		local worseningValue = (math.random()*self._skill/distanceToPlayer); -- value scaled in offset in 1m
+		yaw = yaw + worseningValue;
 
 		--calculate pitch
 		local pitch = 0;
@@ -470,6 +481,8 @@ function Bot:_updateAiming()
 			local distance	= math.sqrt(dz ^ 2 + dx ^ 2);
 			pitch	= math.atan(dy, distance);
 		end
+		-- worsen yaw depending on bot-skill
+		pitch = pitch + worseningValue;
 
 		self._targetPitch	= pitch;
 		self._targetYaw		= yaw;
@@ -684,7 +697,7 @@ function Bot:_updateShooting()
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
 						self.activeWeapon = self.gadget2;
-						self._shotTimer = -Config.botFirstShotDelay;
+						self._shotTimer = - (Config.botFirstShotDelay + math.random()*self._skill);
 					else
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon5, 0);
 					end
@@ -699,7 +712,7 @@ function Bot:_updateShooting()
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
 						self.activeWeapon = self.gadget1;
-						self._shotTimer = -Config.botFirstShotDelay;
+						self._shotTimer = - (Config.botFirstShotDelay + math.random()*self._skill);
 					else
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon3, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon4, 0);
@@ -715,7 +728,7 @@ function Bot:_updateShooting()
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
 						self.activeWeapon = self.grenade;
-						self._shotTimer = -Config.botFirstShotDelay;
+						self._shotTimer = - (Config.botFirstShotDelay + math.random()*self._skill);
 					else
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon6, 0);
 					end
@@ -730,7 +743,7 @@ function Bot:_updateShooting()
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon1, 0);
 						self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
 						self.activeWeapon = self.pistol;
-						self._shotTimer = -Config.botFirstShotDelay/2; -- TODO: maybe a little less or more?
+						self._shotTimer = - (Config.botFirstShotDelay + math.random()*self._skill)/2; -- TODO: maybe a little less or more?
 					else
 						self.player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 0);
 					end
@@ -882,7 +895,7 @@ function Bot:_updateShooting()
 				--shooting sequence
 				if self.activeWeapon ~= nil then
 					if self.knifeMode then
-						self._shotTimer	= -Config.botFirstShotDelay;
+						-- nothing to do
 					elseif self._c4Active then
 						if self.player.soldier.weaponsComponent.currentWeapon.secondaryAmmo > 0 then
 							if self._shotTimer >= (self.activeWeapon.fireCycle + self.activeWeapon.pauseCycle) then
@@ -942,7 +955,6 @@ function Bot:_updateShooting()
 				self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
 				self._targetPitch 		= 0.0;
 				self._weaponToUse 		= "Primary";
-				self._shotTimer			= -Config.botFirstShotDelay;
 				self._shootPlayerName	= "";
 				self._shootPlayer		= nil;
 				self._grenadeActive 	= false;
@@ -982,7 +994,6 @@ function Bot:_updateShooting()
 			else
 				self.player.input:SetLevel(EntryInputActionEnum.EIAFire, 0);
 				self._weaponToUse 		= "Primary"
-				self._shotTimer			= -Config.botFirstShotDelay;
 				self._shootPlayer		= nil;
 				self._reviveActive		= false;
 			end

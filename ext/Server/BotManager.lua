@@ -30,6 +30,7 @@ function BotManager:__init()
 	Hooks:Install('Soldier:Damage', 100, self, self._onSoldierDamage)
 	--Events:Subscribe('Soldier:HealthAction', self, self._onHealthAction)	-- use this for more options on revive. Not needed yet
 	--Events:Subscribe('GunSway:Update', self, self._onGunSway)
+	--Events:Subscribe('GunSway:UpdateRecoil', self, self._onGunSway)
 	Events:Subscribe('Player:Destroyed', self, self._onPlayerDestroyed)
 end
 
