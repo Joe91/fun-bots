@@ -1194,6 +1194,13 @@ function Bot:_updateMovement()
 					if (math.abs(currentWayPontDistance - self._lastWayDistance) < 0.02 or self._obstaceSequenceTimer ~= 0) then
 						-- try to get around obstacle
 						self.activeSpeedValue = 4; --always try to stand
+						if self.inVehicle then
+							if self._obstacleRetryCounter == 0 then
+								self.activeSpeedValue = -1;
+							else
+								self.activeSpeedValue = 1;
+							end
+						end
 
 						if self._obstaceSequenceTimer == 0 then --step 0
 
@@ -1203,13 +1210,15 @@ function Bot:_updateMovement()
 							self._obstacleRetryCounter = self._obstacleRetryCounter + 1;
 						
 						elseif self._obstaceSequenceTimer > 1.0 then --step 3
-							if self._obstacleRetryCounter == 0 then
-								self._meleeActive = true;
-								self:_setInput(EntryInputActionEnum.EIASelectWeapon7, 1);
-								self:_setInput(EntryInputActionEnum.EIAQuicktimeFastMelee, 1);
-								self:_setInput(EntryInputActionEnum.EIAMeleeAttack, 1);
-							else
-								self:_setInput(EntryInputActionEnum.EIAFire, 1);
+							if not self.inVehicle then
+								if self._obstacleRetryCounter == 0 then
+									self._meleeActive = true;
+									self:_setInput(EntryInputActionEnum.EIASelectWeapon7, 1);
+									self:_setInput(EntryInputActionEnum.EIAQuicktimeFastMelee, 1);
+									self:_setInput(EntryInputActionEnum.EIAMeleeAttack, 1);
+								else
+									self:_setInput(EntryInputActionEnum.EIAFire, 1);
+								end
 							end
 							
 						elseif self._obstaceSequenceTimer > 0.4 then --step 2
@@ -1244,7 +1253,7 @@ function Bot:_updateMovement()
 							end
 						end
 
-						if self._stuckTimer > 15 then
+						if self._stuckTimer > 15 and not self.inVehicle then -- don't kill bots in vehicles
 							self.player.soldier:Kill()
 							
 							if Debug.Server.BOT then
@@ -1491,26 +1500,43 @@ function Bot:_updateMovement()
 		if additionalMovementPossible then
 			local speedVal = 0;
 
-			if self.activeMoveMode > 0 then
-				if self.activeSpeedValue == 1 then
-					speedVal = 1.0;
-
-					if self.player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Prone then
-						self.player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Prone, true, true);
+			if self.inVehicle then
+				if self.player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Stand then
+					self.player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Stand, true, true);
+				end
+				if self.activeMoveMode > 0 then
+					if self.activeSpeedValue == 1 then
+						speedVal = 0.5;
+					elseif self.activeSpeedValue == 2 then
+						speedVal = 0.75;
+					elseif self.activeSpeedValue >= 3 then
+						speedVal = 1.0;
+					elseif self.activeSpeedValue < 0 then
+						speedVal = -0.7;
 					end
+				end
+			else
+				if self.activeMoveMode > 0 then
+					if self.activeSpeedValue == 1 then
+						speedVal = 1.0;
 
-				elseif self.activeSpeedValue == 2 then
-					speedVal = 1.0;
+						if self.player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Prone then
+							self.player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Prone, true, true);
+						end
 
-					if self.player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Crouch then
-						self.player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Crouch, true, true);
-					end
+					elseif self.activeSpeedValue == 2 then
+						speedVal = 1.0;
 
-				elseif self.activeSpeedValue >= 3 then
-					speedVal = 1.0;
+						if self.player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Crouch then
+							self.player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Crouch, true, true);
+						end
 
-					if self.player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Stand then
-						self.player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Stand, true, true);
+					elseif self.activeSpeedValue >= 3 then
+						speedVal = 1.0;
+
+						if self.player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Stand then
+							self.player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Stand, true, true);
+						end
 					end
 				end
 			end
@@ -1518,12 +1544,16 @@ function Bot:_updateMovement()
 			-- do not reduce speed if sprinting
 			if speedVal > 0 and self._shootPlayer ~= nil and self._shootPlayer.soldier ~= nil and self.activeSpeedValue <= 3 then
 				speedVal = speedVal * Config.speedFactorAttack;
+
 			end
 
 			-- movent speed
 			if self.player.alive then
 				if self.activeSpeedValue <= 3 then
 					self:_setInput(EntryInputActionEnum.EIAThrottle, speedVal * Config.speedFactor);
+					if self.activeSpeedValue == 0 and self.inVehicle then
+						self:_setInput(EntryInputActionEnum.EIABrake, 1);
+					end
 				else
 					self:_setInput(EntryInputActionEnum.EIAThrottle, 1);
 					self:_setInput(EntryInputActionEnum.EIASprint, speedVal * Config.speedFactor);
