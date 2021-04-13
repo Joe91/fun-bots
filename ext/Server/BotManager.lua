@@ -330,10 +330,6 @@ function BotManager:_checkForBotBotAttack()
 			-- search only opposing team
 			for _, bot2 in pairs(self._botsByTeam[opposingTeam]) do
 
-				if (bot2.player == nil) then
-					--print(tostring(bot2.name)..' has no player')
-				end
-
 				-- make sure it's living and has no target
 				if (bot2 ~= nil and bot2.player ~= nil and bot2.player.alive and not self._botCheckState[bot2.player.name]) then
 
@@ -347,8 +343,9 @@ function BotManager:_checkForBotBotAttack()
 								-- check this bot view. Let one client do it
 								local pos1 = bot.player.soldier.worldTransform.trans:Clone()
 								local pos2 = bot2.player.soldier.worldTransform.trans:Clone()
+								local inVehicle =  (bot.player.attachedControllable ~= nil or bot2.player.attachedControllable ~= nil)
 
-								NetEvents:SendUnreliableToLocal('CheckBotBotAttack', players[playerIndex], pos1, pos2, bot.player.name, bot2.player.name)
+								NetEvents:SendUnreliableToLocal('CheckBotBotAttack', players[playerIndex], pos1, pos2, bot.player.name, bot2.player.name, inVehicle)
 								raycasts = raycasts + 1
 								nextPlayerIndex = playerIndex + 1;
 								break

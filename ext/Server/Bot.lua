@@ -538,6 +538,9 @@ function Bot:_updateAiming()
 end
 
 function Bot:_updateYaw()
+	if self.inVehicle and self.player.attachedControllable == nil then
+		self.inVehicle = false;
+	end
 	if self._meleeActive then
 		return;
 	end
@@ -1278,7 +1281,9 @@ function Bot:_updateMovement()
 					end
 
 					local targetDistanceSpeed = Config.targetDistanceWayPoint;
-					if self.activeSpeedValue == 4 then
+					if self.inVehicle  then
+						targetDistanceSpeed = targetDistanceSpeed * 6;
+					elseif self.activeSpeedValue == 4 then
 						targetDistanceSpeed = targetDistanceSpeed * 1.5;
 					elseif self.activeSpeedValue == 2 then
 						targetDistanceSpeed = targetDistanceSpeed * 0.7;
@@ -1287,7 +1292,7 @@ function Bot:_updateMovement()
 					end
 
 					--check for reached target
-					if distanceFromTarget <= targetDistanceSpeed and heightDistance <= StaticConfig.targetHeightDistanceWayPoint then
+					if (distanceFromTarget <= targetDistanceSpeed and heightDistance <= StaticConfig.targetHeightDistanceWayPoint) then
 						if not noStuckReset then
 							self._stuckTimer = 0;
 						end
@@ -1405,7 +1410,7 @@ function Bot:_updateMovement()
 				end
 			end
 			--crouch moving (only mode with modified gun)
-			if self.activeWeapon.type == "Sniper" and not self.knifeMode or self.inVehicle then --don't move while shooting in a vehicle
+			if (self.activeWeapon.type == "Sniper" and not self.knifeMode) or self.inVehicle then --don't move while shooting in a vehicle
 				if self._attackMode == 2 then
 					if self.player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Crouch then
 						self.player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Crouch, true, true);
@@ -1538,7 +1543,7 @@ function Bot:_setActiveVars()
 
 	self.activeMoveMode		= self._moveMode;
 	self.activeSpeedValue	= self._botSpeed;
-	if self.player.attachedControllable ~= nil and not g_Globals.isTdm then
+	if self.player.attachedControllable ~= nil then
 		self.inVehicle = true;
 	else
 		self.inVehicle = false;
