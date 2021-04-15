@@ -2,7 +2,7 @@
  
 ## [Unreleased - 1.7.X.X] - 2021-04-XX
  
-[Download](https://github.com/Joe91/fun-bots/archive/V1.7.0.18.zip)  
+[Download](https://github.com/Joe91/fun-bots/archive/V1.7.0.19.zip)  
 The Smart Node update
 
 - Conquest supported
@@ -57,6 +57,8 @@ The Smart Node update
 - native support for Civilianizer-Mod
 - fixed wrong weapon-slot
 - zombies now use all colors and kits by default
+- preparation for driving vehicles
+- rework of input-system (more fail-safe now)
 - export of a maplist
 
 
