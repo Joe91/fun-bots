@@ -463,7 +463,7 @@ function Bot:_updateAiming()
 		local grenadePith			= 0.0;
 		local distanceToPlayer		= 0.0;
 
-		if not self.knifeMode then
+		if not self.knifeMode and not self.inVehicle then
 			distanceToPlayer	= fullPositionTarget:Distance(fullPositionBot);
 			--calculate how long the distance is --> time to travel
 			local factorForMovement = 0.0
@@ -541,10 +541,12 @@ function Bot:_updateYaw()
 	if self.inVehicle and self.player.attachedControllable == nil then
 		self.inVehicle = false;
 	end
+	local attackAiming = true;
 	if self._meleeActive then
 		return;
 	end
 	if self._targetPoint ~= nil and self._shootPlayer == nil and self.player.soldier ~= nil then
+		attackAiming = false;
 		if self.player.soldier.worldTransform.trans:Distance(self._targetPoint.Position) < 0.2 then
 			self._targetPoint = self._nextTargetPoint;
 		end
@@ -616,9 +618,9 @@ function Bot:_updateYaw()
 
 	if self.inVehicle then
 		if inkrement > 0 then --TODO: steer in smaller values
-			self.player.input:SetLevel(EntryInputActionEnum.EIAYaw, 1.0)
+			self.player.input:SetLevel(EntryInputActionEnum.EIAYaw, 0.8)
 		else
-			self.player.input:SetLevel(EntryInputActionEnum.EIAYaw, -1.0)
+			self.player.input:SetLevel(EntryInputActionEnum.EIAYaw, -0.8)
 		end
 	end
 	self.player.input.authoritativeAimingYaw	= tempYaw
@@ -865,7 +867,7 @@ function Bot:_updateShooting()
 				end
 
 				--trace way back
-				if self.activeWeapon ~= nil and self.activeWeapon.type ~= "Sniper" or self.knifeMode then
+				if (self.activeWeapon ~= nil and self.activeWeapon.type ~= "Sniper" and not self.inVehicle) or self.knifeMode then
 					if self._shootTraceTimer > StaticConfig.traceDeltaShooting then
 						--create a Trace to find way back
 						self._shootTraceTimer 	= 0;
@@ -1512,7 +1514,7 @@ function Bot:_updateMovement()
 					elseif self.activeSpeedValue >= 3 then
 						speedVal = 1.0;
 					elseif self.activeSpeedValue < 0 then
-						speedVal = -0.7;
+						speedVal = -1.0;
 					end
 				end
 			else
@@ -1550,10 +1552,16 @@ function Bot:_updateMovement()
 			-- movent speed
 			if self.player.alive then
 				if self.activeSpeedValue <= 3 then
-					self:_setInput(EntryInputActionEnum.EIAThrottle, speedVal * Config.speedFactor);
-					if self.activeSpeedValue == 0 and self.inVehicle then
-						self:_setInput(EntryInputActionEnum.EIABrake, 1);
+					if self.inVehicle then
+						if self.activeSpeedValue < 0 then
+							self:_setInput(EntryInputActionEnum.EIABrake, speedVal);
+						else
+							self:_setInput(EntryInputActionEnum.EIAThrottle, speedVal);
+						end
+					else
+						self:_setInput(EntryInputActionEnum.EIAThrottle, speedVal * Config.speedFactor);
 					end
+					
 				else
 					self:_setInput(EntryInputActionEnum.EIAThrottle, 1);
 					self:_setInput(EntryInputActionEnum.EIASprint, speedVal * Config.speedFactor);

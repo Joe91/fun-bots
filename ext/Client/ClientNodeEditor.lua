@@ -1643,24 +1643,46 @@ function ClientNodeEditor:_onEngineUpdate(delta, simDelta)
 						local speed = 0; -- 0 = wait, 1 = prone ... (4 Bits)
 						local extra = 0; -- 0 = nothing, 1 = jump ... (4 Bits)
 
-						if self.player.input:GetLevel(EntryInputActionEnum.EIAThrottle) > 0 then --record only if moving
-							if self.player.soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
-								speed = 1;
-							elseif self.player.soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
-								speed = 2;
-							else
+						if self.player.attachedControllable ~= nil then
+							local speedInput = math.abs(self.player.input:GetLevel(EntryInputActionEnum.EIAThrottle))
+							if speedInput > 0 then
 								speed = 3;
-
 								if self.player.input:GetLevel(EntryInputActionEnum.EIASprint) == 1 then
 									speed = 4;
 								end
+							elseif speedInput == 0 then
+								if self.player.attachedControllable.velocity.magnitude > 0 then
+									print(self.player.attachedControllable.velocity.magnitude)
+									speed = 2;
+								end
 							end
 
-							if self.player.input:GetLevel(EntryInputActionEnum.EIAJump) == 1 then
-								extra = 1;
+							if self.player.input:GetLevel(EntryInputActionEnum.EIABrake) > 0 then
+								speed = 1;
 							end
 
 							self.customTrace:SetInput(speed, extra, 0)
+
+						else
+							if self.player.input:GetLevel(EntryInputActionEnum.EIAThrottle) > 0 then --record only if moving
+								if self.player.soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
+									speed = 1;
+								elseif self.player.soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
+									speed = 2;
+								else
+									speed = 3;
+
+									if self.player.input:GetLevel(EntryInputActionEnum.EIASprint) == 1 then
+										speed = 4;
+									end
+								end
+
+								if self.player.input:GetLevel(EntryInputActionEnum.EIAJump) == 1 then
+									extra = 1;
+								end
+
+								self.customTrace:SetInput(speed, extra, 0)
+							end
 						end
 
 					-- secondary weapon, increase wait timer
