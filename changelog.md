@@ -58,6 +58,7 @@ The Smart Node update
 - fixed wrong weapon-slot
 - zombies now use all colors and kits by default
 - preparation for driving vehicles
+- randomize skill of each bot a little
 - rework of input-system (more fail-safe now)
 - export of a maplist
 
