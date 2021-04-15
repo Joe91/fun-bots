@@ -372,7 +372,7 @@ function Bot:resetSpawnVars()
 	self._attackMode 			= 0;
 	self._shootWayPoints		= {};
 	self._skill					= math.random()*Config.botWorseningSkill
-	print("assigned Skill "..tostring(self._skill).." to "..self.name)
+	--print("assigned Skill "..tostring(self._skill).." to "..self.name)
 
 	self._shotTimer				= 0;
 	self._updateTimer			= 0;
@@ -1141,7 +1141,7 @@ function Bot:_updateMovement()
 							end
 							self._actionActive = false;
 						
-						elseif self._actionTimer == point.Data.Action.time then
+						elseif self._actionTimer <= point.Data.Action.time then
 							for _,input in pairs(point.Data.Action.inputs) do
 								self:_setInput(input, 1)
 							end
