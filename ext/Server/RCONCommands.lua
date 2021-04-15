@@ -382,7 +382,7 @@ function RCONCommands:__init()
 				end
 
 				local amount	= tonumber(value);
-				local t			= TeamId.Neutral;
+				local t			= TeamId.TeamNeutral;
 
 				if team == "Team1" then
 					t = TeamId.Team1;

@@ -10,7 +10,7 @@ Config = {
 	zombieMode = false,				-- Zombie Bot Mode
 
 	--difficluty
-	botAimWorsening = 0.6,			-- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy).
+	botAimWorsening = 0.5,			-- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy).
 	botSniperAimWorsening = 0.2,	-- see botAimWorsening, only for Sniper-rifles
 	damageFactorAssault = 0.3,		-- origninal Damage from bots gets multiplied by this
 	damageFactorCarabine = 0.3,		-- origninal Damage from bots gets multiplied by this
@@ -60,6 +60,7 @@ Config = {
 	botsThrowGrenades = true,		-- Bots throw grenades
 	botsDeploy = true,				-- Bots deploy ammo and medkits
 	deployCycle	= 50,				-- time between deployment of bots
+	botWorseningSkill = 0.3,		-- variation of the skill of a single bot. the higher, the worse the bots can get compared to the original settings
 
 	-- traces
 	debugTracePaths = false,		-- Shows the trace line and search area from Commo Rose selection
@@ -69,7 +70,7 @@ Config = {
 	drawWaypointIDs = true,			-- Draw waypoint IDs
 	textRange = 3,					-- Set how far away waypoint text is visible (meters)
 	debugSelectionRaytraces = false,-- Shows the trace line and search area from Commo Rose selection
-	traceDelta = 0.3,					-- update intervall of trace
+	traceDelta = 0.2,				-- update intervall of trace
 
 	-- advanced
 	distanceForDirectAttack = 5,	-- if that close, the bot can hear you

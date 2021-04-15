@@ -206,6 +206,7 @@ function ClientNodeEditor:RegisterEvents()
 	Console:Register('SetMetadata', '<string|Data> - Set Metadata for waypoint, Must be valid JSON string', self, self._onSetMetadata)
 	Console:Register('AddObjective', '<string|Objective> - Add an objective to a path', self, self._onAddObjective)
 	Console:Register('AddMcom', 'Add an MCOM Arm/Disarm-Action to a point', self, self._onAddMcom)
+	Console:Register('AddVehicle', 'Add a vehicle a bot can use', self, self._onAddVehicle)
 	Console:Register('RemoveObjective', '<string|Objective> - Remove an objective from a path', self, self._onRemoveObjective)
 	Console:Register('ProcessMetadata', 'Process waypoint metadata starting with selected nodes or all nodes', self, self._onProcessMetadata)
 	Console:Register('RecalculateIndexes', 'Recalculate Indexes starting with selected nodes or all nodes', self, self._onRecalculateIndexes)
@@ -866,8 +867,8 @@ function ClientNodeEditor:_onAddMcom(args)
 	end
 
 	local selection = g_NodeCollection:GetSelected()
-	if (#selection < 1) then
-		self:Print('Must select at least one node')
+	if (#selection ~= 1) then
+		self:Print('Must select one node')
 		return false
 	end
 
@@ -878,6 +879,40 @@ function ClientNodeEditor:_onAddMcom(args)
 			type = "mcom",
 			inputs = {EntryInputActionEnum.EIAInteract},
 			time = 6.0,
+			yaw = self.player.input.authoritativeAimingYaw,
+			pitch = self.player.input.authoritativeAimingPitch
+		}
+		selection[i].Data.Action = action;
+		self:Print('Updated Waypoint: %s', selection[i].ID)
+	end
+	return true
+end
+
+function ClientNodeEditor:_onAddVehicle(args)
+	self.commoRoseActive = false
+
+	if self:IsSavingOrLoading() then
+		return false
+	end
+
+	if (self.player == nil or self.player.soldier == nil) then
+		self:Print('Player must be alive')
+		return false
+	end
+
+	local selection = g_NodeCollection:GetSelected()
+	if (#selection ~= 1) then
+		self:Print('Must select one node')
+		return false
+	end
+
+	self:Print('Updating %d Possible Waypoints', (#selection))
+
+	for i=1, #selection do
+		local action = {
+			type = "vehicle",
+			inputs = {EntryInputActionEnum.EIAInteract},
+			time = 0.5,
 			yaw = self.player.input.authoritativeAimingYaw,
 			pitch = self.player.input.authoritativeAimingPitch
 		}
@@ -1608,24 +1643,46 @@ function ClientNodeEditor:_onEngineUpdate(delta, simDelta)
 						local speed = 0; -- 0 = wait, 1 = prone ... (4 Bits)
 						local extra = 0; -- 0 = nothing, 1 = jump ... (4 Bits)
 
-						if self.player.input:GetLevel(EntryInputActionEnum.EIAThrottle) > 0 then --record only if moving
-							if self.player.soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
-								speed = 1;
-							elseif self.player.soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
-								speed = 2;
-							else
+						if self.player.attachedControllable ~= nil then
+							local speedInput = math.abs(self.player.input:GetLevel(EntryInputActionEnum.EIAThrottle))
+							if speedInput > 0 then
 								speed = 3;
-
 								if self.player.input:GetLevel(EntryInputActionEnum.EIASprint) == 1 then
 									speed = 4;
 								end
+							elseif speedInput == 0 then
+								if self.player.attachedControllable.velocity.magnitude > 0 then
+									print(self.player.attachedControllable.velocity.magnitude)
+									speed = 2;
+								end
 							end
 
-							if self.player.input:GetLevel(EntryInputActionEnum.EIAJump) == 1 then
-								extra = 1;
+							if self.player.input:GetLevel(EntryInputActionEnum.EIABrake) > 0 then
+								speed = 1;
 							end
 
 							self.customTrace:SetInput(speed, extra, 0)
+
+						else
+							if self.player.input:GetLevel(EntryInputActionEnum.EIAThrottle) > 0 then --record only if moving
+								if self.player.soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
+									speed = 1;
+								elseif self.player.soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
+									speed = 2;
+								else
+									speed = 3;
+
+									if self.player.input:GetLevel(EntryInputActionEnum.EIASprint) == 1 then
+										speed = 4;
+									end
+								end
+
+								if self.player.input:GetLevel(EntryInputActionEnum.EIAJump) == 1 then
+									extra = 1;
+								end
+
+								self.customTrace:SetInput(speed, extra, 0)
+							end
 						end
 
 					-- secondary weapon, increase wait timer

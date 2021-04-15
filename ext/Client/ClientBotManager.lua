@@ -158,11 +158,16 @@ function ClientBotManager:_onUpdate(p_Delta, p_Pass)
 	end
 end
 
-function ClientBotManager:_checkForBotBotAttack(pos1, pos2, name1, name2)
+function ClientBotManager:_checkForBotBotAttack(pos1, pos2, name1, name2, inVehicle)
 	--check for clear view to startpoint
 	local startPos 	= Vec3(pos1.x, pos1.y + 1.0, pos1.z);
 	local endPos 	= Vec3(pos2.x, pos2.y + 1.0, pos2.z);
-	local raycast	= RaycastManager:Raycast(startPos, endPos, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.IsAsyncRaycast);
+	local raycast = nil
+	if inVehicle then
+		raycast	= RaycastManager:Raycast(startPos, endPos, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckPhantoms | RayCastFlags.DontCheckGroup | RayCastFlags.IsAsyncRaycast)
+	else
+		raycast	= RaycastManager:Raycast(startPos, endPos, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.IsAsyncRaycast);
+	end
 
 	if (raycast == nil or raycast.rigidBody == nil) then
 		NetEvents:SendLocal("BotShootAtBot", name1, name2);
