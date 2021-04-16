@@ -845,7 +845,7 @@ function Bot:_updateShooting()
 						self._weaponToUse = "Knife"
 					else
 						if not self._grenadeActive and self.player.soldier.weaponsComponent.weapons[1] ~= nil then
-							if self.player.soldier.weaponsComponent.weapons[1].primaryAmmo == 0 then
+							if self.player.soldier.weaponsComponent.weapons[1].primaryAmmo == 0 and currentDistance <= Config.maxShootDistancePistol then
 								self._weaponToUse = "Pistol"
 							else
 								self._weaponToUse = "Primary"

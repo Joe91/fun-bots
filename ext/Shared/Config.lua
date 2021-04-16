@@ -51,6 +51,7 @@ Config = {
 	fovForShooting = 245,			-- Degrees of FOV of Bot
 	maxRaycastDistance = 150,		-- meters bots start shooting at player
 	maxShootDistanceNoSniper = 70,	-- meters a bot (not sniper) start shooting at player
+	maxShootDistancePistol = 30,	-- only in auto-weapon-mode, the distance until a bot switches to pistol if his magazine is empty.
 	botAttackMode = "Random",		-- Mode the Bots attack with. Random, Crouch or Stand
 	shootBackIfHit = true,			-- bot shoots back, if hit
 	botsAttackBots = true,			-- bots attack bots from other team
