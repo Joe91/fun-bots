@@ -85,12 +85,30 @@ class MenuItem extends Component {
 			});
 		}
 		
+		if(typeof(data.Disabled) != 'undefined') {
+			if(data.Disabled) {
+				this.Disable();
+			} else {
+				this.Enable();
+			}
+		} else {
+			this.Enable();
+		}
+		
 		this.container.classList.add('submenu');
 		
 		if(this.callback != null && this.callback.indexOf(':')) {
 			this.callback = this.callback.split(':');
 			this.callback.shift();
 		}
+	}
+	
+	Disable() {
+		this.dataset.disabled = true;
+	}
+	
+	Enable() {
+		this.dataset.disabled = false;		
 	}
 	
 	SetTitle(title) {
@@ -192,6 +210,13 @@ class MenuItem extends Component {
 	}
 	
 	OnClick(event) {
+		console.log(this, this.dataset.disabled);
+		if(this.dataset.disabled == true) {
+			console.log('MenuItem is disabled!');
+			event.preventDefault();
+			return;
+		}
+		
 		if(this.inputs != null && this.inputs.length >= 1) {
 			this.inputs.forEach((input) => {
 				if(event.target.closest('[data-id="' + input.GetID() + '"]') != null && typeof(input.OnClick) != 'undefined') {

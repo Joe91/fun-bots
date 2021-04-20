@@ -233,7 +233,7 @@ function WaypointEditor:InitializeComponent()
 			NetEvents:SendToLocal('ClientNodeEditor:ClearTrace', player);
 		end);
 		confirmation:Open(self.view, player);
-	end):SetIcon('Assets/Icons/Clear.svg'), 'UserInterface.WaypointEditor.TraceClear');
+	end):Disable():SetIcon('Assets/Icons/Clear.svg'), 'UserInterface.WaypointEditor.TraceClear');
 	
 	tools:AddItem(MenuItem('Reset all Traces', 'trace_reset_all', function(player)
 		local confirmation = self.view:GetCore():GetDialog('Confirmation');
@@ -277,6 +277,12 @@ function WaypointEditor:InitializeComponent()
 			end
 		end
 		
+		NetEvents:SendTo('UI', player, 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
+			Type		= 'MenuItem',
+			Name		= 'trace_clear',
+			Disabled	= (self.trace_index == 0)
+		}));
+		
 		input_trace_index:SetValue(self.trace_index);
 		self:UpdateNewPath(player);
 	end);
@@ -291,6 +297,12 @@ function WaypointEditor:InitializeComponent()
 		if lastNode == nil or self.trace_index > lastNode.PathIndex then
 			self.trace_index = 0;
 		end
+		
+		NetEvents:SendTo('UI', player, 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
+			Type		= 'MenuItem',
+			Name		= 'trace_clear',
+			Disabled	= (self.trace_index == 0)
+		}));
 		
 		input_trace_index:SetValue(self.trace_index);
 		self:UpdateNewPath(player);

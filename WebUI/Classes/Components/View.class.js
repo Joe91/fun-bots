@@ -139,8 +139,21 @@ class View extends Component {
 		} else if(component instanceof CheckBox && data.Type == 'CheckBox' && component.GetName() == data.Name) {
 			component.SetChecked(data.IsChecked);
 		} else if(component instanceof MenuItem && data.Type == 'MenuItem' && component.GetName() == data.Name) {
-			component.SetTitle(data.Text);
-			component.SetIcon(data.Icon);
+			if(typeof(data.Text) !== 'undefined') {
+				component.SetTitle(data.Text);
+			}
+			
+			if(typeof(data.Icon) !== 'undefined') {
+				component.SetIcon(data.Icon);
+			}
+			
+			if(typeof(data.Disabled) !== 'undefined') {
+				if(data.Disabled) {
+					component.Disable();
+				} else {
+					component.Enable();
+				}
+			}
 		}
 		
 		if(typeof(component.Repaint) !== 'undefined') {

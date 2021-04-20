@@ -36,7 +36,8 @@ class Dialog extends Component {
 	}
 	
 	SetContent(content) {
-		this.content.innerHTML = content;
+		this.content.innerHTML		= content;
+		this.content.dataset.simple	= true;
 		this.Repaint();
 	}
 	

@@ -5,6 +5,7 @@ function MenuItem:__init(title, name, callback, shortcut)
 	self.name		= name or nil;
 	self.callback	= callback or nil;
 	self.shortcut	= shortcut or nil;
+	self.disabled	= false;
 	self.icon		= nil;
 	self.items		= {};
 	self.inputs		= {};
@@ -96,6 +97,19 @@ function MenuItem:SetName(name)
 	return self;
 end
 
+-- Enable / Disabled
+function MenuItem:Enable()
+	self.disabled = false;
+	
+	return self;
+end
+
+function MenuItem:Disable()
+	self.disabled = true;
+	
+	return self;
+end
+
 -- Callback
 function MenuItem:GetCallback()
 	return self.callback;
@@ -108,6 +122,11 @@ function MenuItem:SetCallback(callback)
 end
 
 function MenuItem:FireCallback(player)
+	--if (self.disabled) then
+	--	print('MenuItem ' .. self.name .. ' is disabled.');
+	--	return;
+	--end
+	
 	if (self.callback == nil) then
 		print('MenuItem ' .. self.name .. ' has no Callback.');
 		return;
@@ -240,6 +259,7 @@ function MenuItem:Serialize(player)
 			Name		= self.name,
 			Icon		= self.icon,
 			Items		= items,
+			Disabled	= self.disabled,
 			Permission	= self.permission
 		};
 	end
@@ -252,6 +272,7 @@ function MenuItem:Serialize(player)
 		Shortcut	= self.shortcut,
 		Inputs		= inputs,
 		CheckBoxes	= checkboxes,
+		Disabled	= self.disabled,
 		Permission	= self.permission
 	};
 end

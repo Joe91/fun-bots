@@ -22,6 +22,11 @@ ui-menu ui-menuwrapper ui-item {
 	position: relative;
 }
 
+ui-menu ui-menuwrapper ui-item[data-disabled="true"] {
+	opacity: 0.8;
+	filter: grayscale(1);
+}
+
 ui-menu ui-menuwrapper:not([class]) ui-item {
 	display: flex;
 	position: relative;
