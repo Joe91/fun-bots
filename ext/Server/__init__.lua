@@ -56,7 +56,7 @@ function FunBotServer:_onExtensionLoaded()
 		if Debug.Server.INFO then
 			print(level .. '_' .. gameMode .. ' reloaded')
 		end
-		
+
 		if (level ~= nil and gameMode~= nil) then
 			self:_onLevelLoaded(level, gameMode)
 		end

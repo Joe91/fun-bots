@@ -30,7 +30,7 @@ function SettingsManager:__init()
 	}, {
 		'PRIMARY KEY("Key")'
 	})
-	
+
 	--Database:query('CREATE UNIQUE INDEX USKey ON FB_Settings(Key)')
 end
 
@@ -39,28 +39,28 @@ function SettingsManager:onLoad()
 	if Config.language == nil then
 		Config.language = DatabaseField.NULL
 	end
-	
+
 	if Config.settingsPassword == nil then
 		Config.settingsPassword = DatabaseField.NULL
 	end
-	
+
 	-- get Values from Config.lua
-	for name, value in pairs(Config) do		
+	for name, value in pairs(Config) do
 		-- Check SQL if Config.lua has changed
 		local single = Database:single('SELECT * FROM `FB_Config_Trace` WHERE `Key`=\'' .. name .. '\' LIMIT 1')
-	
+
 		-- If not exists, create
 		if single == nil then
 			--if Debug.Server.SETTINGS then
 			--print('SettingsManager: ADD (' .. name .. ' = ' .. tostring(value) .. ')')
 			--end
-			
+
 			Database:insert('FB_Config_Trace', {
 				Key		= name,
 				Value	= value,
 				Time	= Database:now()
 			})
-			
+
 			--Database:insert('FB_Settings', {
 			--	Key		= name,
 			--	Value	= DatabaseField.NULL,
@@ -70,11 +70,11 @@ function SettingsManager:onLoad()
 		-- If exists update Settings, if newer
 		else
 			local old = single.Value
-			
+
 			if old == nil then
 				old = DatabaseField.NULL
 			end
-			
+
 			-- @ToDo check Time / Timestamp, if newer
 			if tostring(value) == tostring(old) then
 				--if Debug.Server.SETTINGS then
@@ -84,7 +84,7 @@ function SettingsManager:onLoad()
 				--if Debug.Server.SETTINGS then
 				--print('SettingsManager: UPDATE (' .. name .. ' = ' .. tostring(value) .. ', Old = ' .. tostring(old) .. ')')
 				--end
-				
+
 				-- if changed, update SETTINGS SQL
 				Database:update('FB_Config_Trace', {
 					Key		= name,
@@ -94,11 +94,11 @@ function SettingsManager:onLoad()
 			end
 		end
 	end
-    
+
 	if Debug.Server.SETTINGS then
 		print('Start migrating of Settings/Config...')
 	end
-	
+
 	-- Load Settings
 	local settings = Database:fetch([[SELECT
 											`Settings`.`Key`,
@@ -138,12 +138,12 @@ function SettingsManager:onLoad()
 			end
 		end
 	end
-	
+
 	-- revert Fix nil values on config
 	if Config.language == DatabaseField.NULL then
 		Config.language = nil
 	end
-	
+
 	if Config.settingsPassword == DatabaseField.NULL then
 		Config.settingsPassword = nil
 	end
@@ -154,11 +154,11 @@ function SettingsManager:update(name, value, temporary, batch)
 		if value == nil then
 			value = DatabaseField.NULL
 		end
-		
+
 		-- Use old deprecated querys
 		if batch == false then
 			local single = Database:single('SELECT * FROM `FB_Settings` WHERE `Key`=\'' .. name .. '\' LIMIT 1')
-		
+
 			-- If not exists, create
 			if single == nil then
 				Database:insert('FB_Settings', {
@@ -173,7 +173,7 @@ function SettingsManager:update(name, value, temporary, batch)
 					Time	= Database:now()
 				}, 'Key')
 			end
-		
+
 		-- Use new querys
 		else
 			Database:batchQuery('FB_Settings', {
@@ -182,12 +182,12 @@ function SettingsManager:update(name, value, temporary, batch)
 				Time	= Database:now()
 			}, 'Key')
 		end
-			
+
 		if value == DatabaseField.NULL then
 			value = nil
 		end
 	end
-		
+
 	Config[name] = value
 end
 

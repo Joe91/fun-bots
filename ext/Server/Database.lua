@@ -3,7 +3,7 @@ class('Database')
 require('__shared/ArrayMap')
 local batches	= ArrayMap()
 local batched	= ''
-	
+
 DatabaseField = {
 	NULL		= '{::DB:NULL::}',
 	ID			= '{::DB:ID::}',
@@ -15,7 +15,7 @@ DatabaseField = {
 	PrimaryText	= '{::DB:TEXT:PRIMARY::}',
 }
 
-function Database:__init()	
+function Database:__init()
 	self.lastError	= nil
 end
 
@@ -50,13 +50,13 @@ end
 function Database:createTable(tableName, definitions, names, additional)
 	local entries		= ArrayMap()
 	local additionals	= ArrayMap()
-	
+
 	for index, value in ipairs(definitions) do
 		local name = names[index]
 
 		if value == DatabaseField.Text then
 			entries:add(name .. ' TEXT')
-			
+
 		elseif value == DatabaseField.PrimaryText then
 			entries:add(name .. ' TEXT UNIQUE')
 
@@ -71,7 +71,7 @@ function Database:createTable(tableName, definitions, names, additional)
 
 		end
 	end
-	
+
 	if additional ~= nil then
 		for index, value in pairs(additional) do
 			entries:add(value)
@@ -79,7 +79,7 @@ function Database:createTable(tableName, definitions, names, additional)
 		end
 	end
 
-	return self:query('CREATE TABLE IF NOT EXISTS ' .. tableName .. ' (' .. entries:join(', ') .. ')')	
+	return self:query('CREATE TABLE IF NOT EXISTS ' .. tableName .. ' (' .. entries:join(', ') .. ')')
 end
 
 function Database:single(query)
@@ -88,7 +88,7 @@ function Database:single(query)
 	if results == nil then
 		return nil
 	end
-	
+
 	return results[1]
 end
 
@@ -105,38 +105,38 @@ end
 function Database:update(tableName, parameters, where)
 	local fields	= ArrayMap()
 	local found		= nil
-	
+
 	for name, value in pairs(parameters) do
 		if value == nil then
 			value = 'NULL'
-		
+
 		elseif value == self:now() then
 			value = 'CURRENT_TIMESTAMP'
 
 		elseif value == DatabaseField.NULL then
 			value = 'NULL'
-			
+
 		elseif tostring(value) == 'true' or value == true then
 			value = '\'true\''
-			
+
 		elseif tostring(value) == 'false' or value == false then
 			value = '\'false\''
-			
+
 		else
 			value = '\'' .. tostring(value) .. '\''
 		end
-		
+
 		if where == name then
 			found = value
 		end
-		
+
 		fields:add(' `' .. name .. '`=' .. value .. '')
 	end
 
 	if Debug.Server.DATABASE then
 		print('UPDATE `' .. tableName .. '` SET ' .. fields:join(',') .. ' WHERE `' .. where .. '`=' .. found)
 	end
-	
+
 	return self:query('UPDATE `' .. tableName .. '` SET ' .. fields:join(', ') .. ' WHERE `' .. where .. '`=\'' .. found .. '\'')
 end
 
@@ -158,7 +158,7 @@ function Database:batchQuery(tableName, parameters, where)
 		if value == nil then
 			values:add('NULL')
 			value = 'NULL'
-		
+
 		elseif value == self:now() then
 			values:add('CURRENT_TIMESTAMP')
 			value = 'CURRENT_TIMESTAMP'
@@ -166,24 +166,24 @@ function Database:batchQuery(tableName, parameters, where)
 		elseif value == DatabaseField.NULL then
 			values:add('NULL')
 			value = 'NULL'
-			
+
 		elseif tostring(value) == 'true' or value == true then
 			values:add('\'true\'')
 			value = '\'true\''
-			
+
 		elseif tostring(value) == 'false' or value == false then
 			values:add('\'false\'')
 			value = '\'false\''
-			
+
 		else
 			values:add('\'' .. tostring(value) .. '\'')
 			value = tostring(value)
 		end
-		
+
 		if where == name then
 			found = value
 		end
-		
+
 		if where ~= name then
 			fields:add('`' .. name .. '`=' .. value .. '')
 		end
@@ -216,19 +216,19 @@ function Database:insert(tableName, parameters)
 
 		if value == nil then
 			values:add('NULL')
-		
+
 		elseif value == self:now() then
 			values:add('CURRENT_TIMESTAMP')
 
 		elseif value == DatabaseField.NULL then
 			values:add('NULL')
-			
+
 		elseif tostring(value) == 'true' or value == true then
 			values:add('\'true\'')
-			
+
 		elseif tostring(value) == 'false' or value == false then
 			values:add('\'false\'')
-			
+
 		else
 			values:add('\'' .. tostring(value) .. '\'')
 		end

@@ -719,7 +719,7 @@ function BotSpawner:RushSpawn(p_Bot)
 end
 
 function BotSpawner:ConquestSpawn(p_Bot)
-	local s_Event = ServerPlayerEvent("Spawn", p_Bot.player, true, false, false, false, false, false, p_Bot.player.teamId)	
+	local s_Event = ServerPlayerEvent("Spawn", p_Bot.player, true, false, false, false, false, false, p_Bot.player.teamId)
 	local s_BestSpawnPoint = self:FindAttackedSpawnPoint(p_Bot.player.teamId)
 	if s_BestSpawnPoint == nil then
 		s_BestSpawnPoint = self:FindFarestSpawnPoint(p_Bot.player.teamId)

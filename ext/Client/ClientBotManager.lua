@@ -15,7 +15,7 @@ function ClientBotManager:__init()
 	Events:Subscribe('Level:Destroy', self, self.onExtensionUnload)
 	NetEvents:Subscribe('WriteClientSettings', self, self._onWriteClientSettings)
 	NetEvents:Subscribe('CheckBotBotAttack', self, self._checkForBotBotAttack)
-	
+
 	if not USE_REAL_DAMAGE then
 		Hooks:Install('BulletEntity:Collision', 200, self, self._onBulletCollision)
 	end
@@ -45,11 +45,11 @@ function ClientBotManager:_onWriteClientSettings(newConfig, updateWeaponSets)
 	for key, value in pairs(newConfig) do
 		Config[key] = value
 	end
-	
+
 	if Debug.Client.INFO then
 		print("write settings")
 	end
-	
+
 	if updateWeaponSets then
 		WeaponList:updateWeaponList()
 	end
@@ -128,7 +128,7 @@ function ClientBotManager:_onUpdate(p_Delta, p_Pass)
 
 							NetEvents:SendLocal("BotShootAtPlayer", bot.name, ignoreYaw)
 						end
-						
+
 						return --only one raycast per cycle
 					end
 				end
@@ -157,7 +157,7 @@ function ClientBotManager:_onUpdate(p_Delta, p_Pass)
 						local raycast	= RaycastManager:Raycast(playerPosition, target, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.IsAsyncRaycast)
 
 						if (raycast == nil or raycast.rigidBody == nil) then
-							-- we found a valid bot in Sight (either no hit, or player-hit). Signal Server with players							
+							-- we found a valid bot in Sight (either no hit, or player-hit). Signal Server with players
 							NetEvents:SendLocal("BotRevivePlayer", bot.name)
 						end
 						return --only one raycast per cycle
@@ -197,11 +197,11 @@ function ClientBotManager:_onBulletCollision(hook, entity, hit, shooter)
 				if (dx < 1 and dz < 1 and dy < 2 and dy > 0) then --included bodyhight
 					local isHeadshot	= false
 					local camaraHeight	= Utilities:getTargetHeight(player.soldier, false)
-					
+
 					if dy < camaraHeight + 0.3 and dy > camaraHeight - 0.10 then
 						isHeadshot = true
 					end
-					
+
 					NetEvents:SendLocal('ClientDamagePlayer', shooter.name, false, isHeadshot)
 				end
 			end

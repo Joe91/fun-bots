@@ -3,7 +3,7 @@ class 'EbxEditUtils'
 function EbxEditUtils:__init()
 
 	self.LuaReserverdWords = {
-		"and", "break", "do", "else", "elseif", 
+		"and", "break", "do", "else", "elseif",
 		"end", "false", "for", "function", "goto", "if",
 		"in", "local", "nil", "not", "or",
 		"repeat", "return", "then", "true", "until", "while"
@@ -59,7 +59,7 @@ function EbxEditUtils:GetWritableContainer(instance, containerPath)
 
 		if (not valid) then
 			return workingInstance, valid
-		else 
+		else
 			workingInstance = workingInstance[propertyName]
 			if (i == #workingPath) then
 
@@ -92,7 +92,7 @@ function EbxEditUtils:GetWritableProperty(instance, propertyPath)
 		workingInstance, propertyName, valid = self:CheckInstancePropertyExists(workingInstance, workingPath[i])
 		if (not valid) then
 			return workingInstance, propertyName, valid
-		else 
+		else
 
 			-- we've reached a value
 			if (type(workingInstance[propertyName]) == 'string' or
@@ -227,7 +227,7 @@ function EbxEditUtils:FormatMemberName(memberName)
 			outputName = outputName..memberName:sub(i,i)
 			continue = true
 		end
-		
+
 		if (i < memberLength-1 and (self:StringIsLower(memberName:sub(i+1,i+1)) or self:StringIsDigit(memberName:sub(i+1,i+1))) and not continue) then
 
 			foundLower = true
@@ -288,7 +288,7 @@ function EbxEditUtils:dump(o)
 			print("nil")
 		end
 	end
-	
+
 	if (type(o) == 'table') then
 		local s = '{ '
 		for k,v in pairs(o) do

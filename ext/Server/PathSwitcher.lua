@@ -179,7 +179,7 @@ function PathSwitcher:getNewPath(botname, point, objective)
 	--print('Highest Priority -> '..highestPriority)
 	--print('#paths -> '..(#paths))
 	--end
-	
+
 	if (#validPaths == 0) then
 		return false
 	end
@@ -206,11 +206,11 @@ function PathSwitcher:getNewPath(botname, point, objective)
 				end
 				return false
 			end
-			
+
 			--if Debug.Server.PATH then
 			--print('found multiple higher priority validPaths | Priority: ( '..currentPriority..' | '..highestPriority..' )')
 			--end
-			
+
 			return true, randomPath.Point
 		end
 
@@ -220,10 +220,10 @@ function PathSwitcher:getNewPath(botname, point, objective)
 				if Debug.Server.PATH then
 					print('[B] validPaths['..randIndex..'] was nil : '..g_Utilities:dump(validPaths, true, 2))
 				end
-				
+
 				return false
 			end
-			
+
 			--if Debug.Server.PATH then
 			--print('chose to switch at random ('..randNum..' >= '..chance..') | Priority: ( '..currentPriority..' | '..randomPath.Priority..' )')
 			--end

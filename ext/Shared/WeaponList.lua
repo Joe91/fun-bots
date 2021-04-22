@@ -137,7 +137,7 @@ function WeaponList:__init()
 	--Carabines
 	weapon = Weapon('A91', '', {'Kobra', 'Silencer', 'Weapons/Common/NoPrimaryAccessory'}, 'Carabine')
 	table.insert(self._weapons, weapon)
-	
+
 	weapon = Weapon('ACR', 'XP2', {'Kobra', 'Silencer', 'Weapons/Common/NoPrimaryAccessory'}, 'Carabine')
 	table.insert(self._weapons, weapon)
 
@@ -243,10 +243,10 @@ function WeaponList:__init()
 
 	weapon = Weapon('HK417', 'XP2', {'Ballistic_Scope', 'TargetPointer', 'Weapons/Common/NoPrimaryAccessory'}, 'Sniper')
 	table.insert(self._weapons, weapon)
-	
+
 	weapon = Weapon('MK11', '', {'Ballistic_scope', 'TargetPointer', 'Weapons/Common/NoPrimaryAccessory'}, 'Sniper')
 	table.insert(self._weapons, weapon)
-	
+
 	weapon = Weapon('SKS_LongRange', '', {'PK-AS', 'Foregrip', 'Target_Pointer'}, 'Sniper', 'Weapons/SKS/U_SKS')
 	table.insert(self._weapons, weapon)
 
@@ -334,7 +334,7 @@ function WeaponList:__init()
 	weapon = Weapon('RPG7', '', {}, 'Rocket')		-- only rockets supported for engineers right now
 	table.insert(self._weapons, weapon)
 
-	weapon = Weapon('Repairtool', '', {}, 'Torch', 'Weapons/Gadgets/Repairtool/U_Repairtool')	
+	weapon = Weapon('Repairtool', '', {}, 'Torch', 'Weapons/Gadgets/Repairtool/U_Repairtool')
 	table.insert(self._weapons, weapon)
 
 	weapon = Weapon('Defib', '', {}, 'Defibrillator', 'Weapons/Gadgets/Defibrillator/U_Defib')

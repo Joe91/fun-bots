@@ -126,7 +126,7 @@ function ChatCommands:execute(parts, player)
 		if Debug.Server.COMMAND then
 			print('difficulty set to ' .. Config.botAimWorsening .. '. Please restart round or level to take effect')
 		end
-		
+
 	elseif parts[1] == '!shootback' then
 		if tonumber(parts[2]) == 0 then
 			Config.shootBackIfHit = false

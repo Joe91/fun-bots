@@ -142,7 +142,7 @@ function NodeEditor:_onInit(player, save)
 	local staleNodes = 0
 	local nodesToCheck = g_NodeCollection:Get()
 	self:Print('Nodes Received: %d', #nodesToCheck)
-	
+
 	for i=1, #nodesToCheck do
 
 		local waypoint = nodesToCheck[i]
@@ -153,9 +153,9 @@ function NodeEditor:_onInit(player, save)
 			staleNodes = staleNodes+1
 		end
 	end
-	
+
 	self:Print('Stale Nodes: %d', staleNodes)
-	
+
 	if (save) then
 		g_NodeCollection:Save()
 	end
@@ -168,13 +168,13 @@ function NodeEditor:_onWarpTo(player, vec3Position)
 	end
 
 	self:Print('Teleporting %s to %s', player.name, tostring(vec3Position))
-	
+
 	player.soldier:SetPosition(vec3Position)
 end
 
 function NodeEditor:_onSetBotVision(player, enabled)
 	self:Print('Player -> BotVision [%s]: %s', player.name, enabled)
-	
+
 	if (enabled) then
 		self.botVision[player.name] = {
 			Player = player,
@@ -247,7 +247,7 @@ function NodeEditor:_onEngineUpdate(deltaTime, simulationDeltaTime)
 					end
 					if (sendStatus.Index >= #sendStatus.Nodes) then
 						self:Print('Finished sending waypoints to %s', sendStatus.Player.name)
-						
+
 						table.remove(self.playersReceivingNodes, i)
 						NetEvents:SendToLocal('ClientNodeEditor:Init', sendStatus.Player)
 						break
@@ -264,7 +264,7 @@ end
 -- load waypoints from sql
 function NodeEditor:onLevelLoaded(levelName, gameMode)
 	self:Print('Level Load: %s %s', levelName, gameMode)
-	
+
 	g_NodeCollection:Load(levelName, gameMode)
 
 	local counter = 0

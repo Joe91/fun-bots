@@ -123,7 +123,7 @@ function GameDirector:_onMcomArmed(player)
 	if Debug.Server.GAMEDIRECTOR then
 		print("mcom armed by "..player.name)
 	end
-	
+
 	local objective = self:_translateObjective(player.soldier.worldTransform.trans)
 	if self.ArmedMcoms[player.name] == nil then
 		self.ArmedMcoms[player.name] = {}
@@ -159,13 +159,13 @@ function GameDirector:_onMcomDestroyed(player)
 	if Debug.Server.GAMEDIRECTOR then
 		print("mcom destroyed by "..player.name)
 	end
-	
+
 	local objective = ''
 	if self.ArmedMcoms[player.name] ~= nil then
 		objective = self.ArmedMcoms[player.name][1]
 		table.remove(self.ArmedMcoms[player.name], 1)
 	end
-	
+
 	self.McomCounter = self.McomCounter + 1
 	self:_updateObjective(objective, {
 		team = TeamId.TeamNeutral,--player.teamId,
@@ -442,7 +442,7 @@ function GameDirector:_onCapture(capturePoint)
 		print('GameDirector:_onCapture: '..objectiveName)
 		print('self.CurrentAssignedCount: '..g_Utilities:dump(objective.assigned, true))
 	end
-	
+
 	for botTeam, bots in pairs(self.BotsByTeam) do
 		for i=1, #bots do
 			if (bots[i]:getObjective() == objective.name and objective.team == botTeam) then
@@ -604,7 +604,6 @@ function GameDirector:_onUpdate(delta)
 		end
 
 
-		
 		-- check objective statuses
 		for botTeam, bots in pairs(self.BotsByTeam) do
 			for _,objective in pairs(self.AllObjectives) do
@@ -684,4 +683,5 @@ end
 if (g_GameDirector == nil) then
 	g_GameDirector = GameDirector()
 end
+
 return g_GameDirector

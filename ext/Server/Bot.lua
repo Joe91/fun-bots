@@ -206,7 +206,7 @@ function Bot:shootAt(player, ignoreYaw)
 				if self.knifeMode then
 					table.insert(self._knifeWayPositions, self._lastTargetTrans)
 				end
-				
+
 				return true
 			end
 		else
@@ -422,7 +422,7 @@ end
 
 function Bot:kill()
 	self:resetVars()
-	
+
 	if self.player.alive then
 		self.player.soldier:Kill()
 	end
@@ -551,14 +551,14 @@ function Bot:_updateYaw()
 		if self.player.soldier.worldTransform.trans:Distance(self._targetPoint.Position) < 0.2 then
 			self._targetPoint = self._nextTargetPoint
 		end
-		
+
 		local dy		= self._targetPoint.Position.z - self.player.soldier.worldTransform.trans.z
 		local dx		= self._targetPoint.Position.x - self.player.soldier.worldTransform.trans.x
 		local atanDzDx	= math.atan(dy, dx)
 		local yaw		= (atanDzDx > math.pi / 2) and (atanDzDx - math.pi / 2) or (atanDzDx + 3 * math.pi / 2)
 		self._targetYaw = yaw
 	end
-	
+
 	if self.knifeMode then
 		if self._shootPlayer ~= nil and self.player.soldier ~= nil then
 			if #self._knifeWayPositions > 0 then
@@ -567,7 +567,7 @@ function Bot:_updateYaw()
 				local atanDzDx	= math.atan(dy, dx)
 				local yaw		= (atanDzDx > math.pi / 2) and (atanDzDx - math.pi / 2) or (atanDzDx + 3 * math.pi / 2)
 				self._targetYaw = yaw
-				
+
 				if self.player.soldier.worldTransform.trans:Distance(self._knifeWayPositions[1]) < 1.5 then
 					table.remove(self._knifeWayPositions, 1)
 				end
@@ -586,7 +586,7 @@ function Bot:_updateYaw()
 	else
 		deltaYaw = self.player.input.authoritativeAimingYaw - self._targetYaw
 	end
-	
+
 	if deltaYaw > math.pi then
 		deltaYaw = deltaYaw - 2*math.pi
 	elseif deltaYaw < -math.pi then
@@ -595,7 +595,7 @@ function Bot:_updateYaw()
 
 	local absDeltaYaw	= math.abs(deltaYaw)
 	local inkrement 	= g_Globals.yawPerFrame
-	
+
 	if absDeltaYaw < inkrement then
 		if self.inVehicle then
 			self.player.input:SetLevel(EntryInputActionEnum.EIAYaw, 0.0)
@@ -608,9 +608,9 @@ function Bot:_updateYaw()
 	if deltaYaw > 0  then
 		inkrement = -inkrement
 	end
-	
+
 	local tempYaw = self.player.input.authoritativeAimingYaw + inkrement
-	
+
 	if tempYaw >= (math.pi * 2) then
 		tempYaw = tempYaw - (math.pi * 2)
 	elseif tempYaw < 0.0 then
@@ -634,7 +634,7 @@ function Bot:_findOutVehicleType(player)
 		local vehicleName = VehicleTable[VehicleEntityData(player.attachedControllable.data).controllableType:gsub(".+/.+/","")]
 		--print(vehicleName)
 		-- Tank
-		if vehicleName == "[LAV-25]" or 
+		if vehicleName == "[LAV-25]" or
 		vehicleName == "[SPRUT-SD]" or
 		vehicleName == "[BMP-2M]" or
 		vehicleName == "[M1 ABRAMS]" or
@@ -646,7 +646,7 @@ function Bot:_findOutVehicleType(player)
 		end
 
 		-- light Vehicle
-		if vehicleName == "[AAV-7A1 AMTRAC]" or 
+		if vehicleName == "[AAV-7A1 AMTRAC]" or
 		vehicleName == "[9K22 TUNGUSKA-M]" or
 
 		vehicleName == "[GAZ-3937 VODNIK]" or
@@ -664,7 +664,7 @@ function Bot:_findOutVehicleType(player)
 		end
 
 		-- Air vehicles
-		if vehicleName == "[A-10 THUNDERBOLT]" or 
+		if vehicleName == "[A-10 THUNDERBOLT]" or
 		vehicleName == "[AH-1Z VIPER]" or
 		vehicleName == "[AH-6J LITTLE BIRD]" or
 		vehicleName == "[F/A-18E SUPER HORNET]" or
@@ -785,12 +785,12 @@ function Bot:_updateShooting()
 				if Config.meleeAttackIfClose and not self._meleeActive and self._meleeCooldownTimer <= 0 and self._shootPlayer.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans) < 2 then
 					self._meleeActive = true
 					self.activeWeapon = self.knife
-					
+
 					self:_setInput(EntryInputActionEnum.EIASelectWeapon7, 1)
 					self:_setInput(EntryInputActionEnum.EIAQuicktimeFastMelee, 1)
 					self:_setInput(EntryInputActionEnum.EIAMeleeAttack, 1)
 					self._meleeCooldownTimer = Config.meleeAttackCoolDown
-					
+
 					if not USE_REAL_DAMAGE then
 						Events:DispatchLocal("ServerDamagePlayer", self._shootPlayer.name, self.player.name, true)
 					end
@@ -954,7 +954,7 @@ function Bot:_updateShooting()
 				if self._shootPlayer.corpse.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans) < 3 then
 					self:_setInput(EntryInputActionEnum.EIAFire, 1)
 				end
-				
+
 				--trace way back
 				if self._shootTraceTimer > StaticConfig.traceDeltaShooting then
 					--create a Trace to find way back
@@ -1123,7 +1123,7 @@ function Bot:_updateMovement()
 						if point.Data.Action.type == "vehicle" then
 							local iterator = EntityManager:GetIterator("ServerVehicleEntity")
 							local vehicleEntity = iterator:Next()
-							
+
 							while vehicleEntity ~= nil do
 								local tempEntity = ControllableEntity(vehicleEntity)
 								local position = tempEntity.transform.trans
@@ -1141,7 +1141,7 @@ function Bot:_updateMovement()
 								vehicleEntity = iterator:Next()
 							end
 							self._actionActive = false
-						
+
 						elseif self._actionTimer <= point.Data.Action.time then
 							for _,input in pairs(point.Data.Action.inputs) do
 								self:_setInput(input, 1)
@@ -1211,7 +1211,7 @@ function Bot:_updateMovement()
 							self._obstaceSequenceTimer = 0
 							self._meleeActive = false
 							self._obstacleRetryCounter = self._obstacleRetryCounter + 1
-						
+
 						elseif self._obstaceSequenceTimer > 1.0 then --step 3
 							if not self.inVehicle then
 								if self._obstacleRetryCounter == 0 then
@@ -1223,7 +1223,7 @@ function Bot:_updateMovement()
 									self:_setInput(EntryInputActionEnum.EIAFire, 1)
 								end
 							end
-							
+
 						elseif self._obstaceSequenceTimer > 0.4 then --step 2
 							self._targetPitch		= 0.0
 							if (MathUtils:GetRandomInt(0,1) == 1) then
@@ -1238,7 +1238,7 @@ function Bot:_updateMovement()
 						end
 
 						self._obstaceSequenceTimer = self._obstaceSequenceTimer + StaticConfig.botUpdateCycle
-						self._stuckTimer = self._stuckTimer + StaticConfig.botUpdateCycle 
+						self._stuckTimer = self._stuckTimer + StaticConfig.botUpdateCycle
 
 						if self._obstacleRetryCounter >= 2 then --try next waypoint
 							self._obstacleRetryCounter	= 0
@@ -1258,11 +1258,11 @@ function Bot:_updateMovement()
 
 						if self._stuckTimer > 15 and not self.inVehicle then -- don't kill bots in vehicles
 							self.player.soldier:Kill()
-							
+
 							if Debug.Server.BOT then
 								print(self.player.name.." got stuck. Kill")
 							end
-							
+
 							return
 						end
 					else
@@ -1341,7 +1341,7 @@ function Bot:_updateMovement()
 									-- 'best' direction for objective on switch
 									local direction = g_NodeCollection:ObjectiveDirection(newWaypoint, self._objective)
 									self._invertPathDirection = (direction == 'Previous')
-								else 
+								else
 									-- random path direction on switch
 									self._invertPathDirection = MathUtils:GetRandomInt(1,2) == 1
 								end
@@ -1562,7 +1562,7 @@ function Bot:_updateMovement()
 					else
 						self:_setInput(EntryInputActionEnum.EIAThrottle, speedVal * Config.speedFactor)
 					end
-					
+
 				else
 					self:_setInput(EntryInputActionEnum.EIAThrottle, 1)
 					self:_setInput(EntryInputActionEnum.EIASprint, speedVal * Config.speedFactor)
@@ -1587,7 +1587,7 @@ function Bot:_setActiveVars()
 	else
 		self.inVehicle = false
 	end
-	
+
 	if Config.botWeapon == "Knife" or Config.zombieMode then
 		self.knifeMode = true
 	else

@@ -76,7 +76,7 @@ function BotManager:configGlobals()
 	maxPlayers = tonumber(maxPlayers[2])
 	if maxPlayers ~= nil and maxPlayers > 0 then
 		Globals.maxPlayers = maxPlayers
-		
+
 		if Debug.Server.BOT then
 			print("there are "..maxPlayers.." slots on this server")
 		end
@@ -540,7 +540,7 @@ function BotManager:_onLevelDestroy()
 	if Debug.Server.INFO then
 		print("destroyLevel")
 	end
-	
+
 	self:resetAllBots()
 	self._activePlayers = {}
 	self._initDone = false
@@ -644,7 +644,7 @@ function BotManager:killAll(amount, teamId)
 	for _, bot in pairs(botTable) do
 
 		bot:kill()
-		
+
 		amount = amount - 1
 		if amount <= 0 then
 			return
@@ -668,7 +668,7 @@ function BotManager:destroyAll(amount, teamId, force)
 		else
 			table.insert(self._botsToDestroy, bot.name)
 		end
-		
+
 		amount = amount - 1
 		if amount <= 0 then
 			return

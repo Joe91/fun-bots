@@ -9,10 +9,10 @@ Language = require('__shared/Language')
 
 function FunBotUIClient:__init()
 	self._views = UIViews()
-	
+
 	if Config.disableUserInterface ~= true then
 		Events:Subscribe('Client:UpdateInput', self, self._onUpdateInput)
-		
+
 		NetEvents:Subscribe('UI_Password_Protection', self, self._onUIPasswordProtection)
 		NetEvents:Subscribe('UI_Request_Password', self, self._onUIRequestPassword)
 		NetEvents:Subscribe('UI_Request_Password_Error', self, self._onUIRequestPasswordError)
@@ -28,7 +28,7 @@ function FunBotUIClient:__init()
 		Events:Subscribe('UI_Save_Settings', self, self._onUISaveSettings)
 		NetEvents:Subscribe('UI_Change_Language', self, self._onUIChangeLanguage)
 		Events:Subscribe('UI_Change_Language', self, self._onUIChangeLanguage)
-		
+
 		NetEvents:Subscribe('UI_Waypoints_Editor', self, self._onUIWaypointsEditor)
 		Events:Subscribe('UI_Waypoints_Editor', self, self._onUIWaypointsEditor)
 		NetEvents:Subscribe('UI_Trace', self, self._onUITrace)
@@ -37,7 +37,7 @@ function FunBotUIClient:__init()
 		Events:Subscribe('UI_Trace_Index', self, self._onUITraceIndex)
 		NetEvents:Subscribe('UI_Trace_Waypoints', self, self._onUITraceWaypoints)
 		Events:Subscribe('UI_Trace_Waypoints', self, self._onUITraceWaypoints)
-		
+
 		self._views:setLanguage(Config.language)
 	end
 end
@@ -47,7 +47,7 @@ function FunBotUIClient:_onUIToggle()
 	if Config.disableUserInterface == true then
 		return
 	end
-	
+
 	if Debug.Client.UI then
 		print('UIClient: UI_Toggle')
 	end
@@ -68,7 +68,7 @@ function FunBotUIClient:_onUICommonRose(data)
 		self._views:blur()
 		return
 	end
-	
+
 	self._views:execute('BotEditor.setCommonRose(\'' .. json.encode(data) .. '\')')
 	self._views:focus()
 end
@@ -81,23 +81,23 @@ function FunBotUIClient:_onUIWaypointsEditor(state)
 	if Config.disableUserInterface == true then
 		return
 	end
-	
+
 	if state == false then
 		if Debug.Client.UI then
 			print('UIClient: close UI_Waypoints_Editor')
 		end
-		
+
 		self._views:hide('waypoint_toolbar')
 		self._views:show('toolbar')
 		Config.debugTracePaths = false
 		NetEvents:Send('UI_CommoRose_Enabled', false)
 		return
 	end
-	
+
 	if Debug.Client.UI then
 		print('UIClient: open UI_Waypoints_Editor')
 	end
-	
+
 	Config.debugTracePaths = true
 	NetEvents:Send('UI_CommoRose_Enabled', true)
 	g_ClientNodeEditor:_onSetEnabled(true)
@@ -110,7 +110,7 @@ function FunBotUIClient:_onUITraceIndex(index)
 	if Config.disableUserInterface == true then
 		return
 	end
-	
+
 	self._views:execute('BotEditor.updateTraceIndex(' .. tostring(index) .. ')')
 end
 
@@ -118,7 +118,7 @@ function FunBotUIClient:_onUITraceWaypoints(count)
 	if Config.disableUserInterface == true then
 		return
 	end
-	
+
 	self._views:execute('BotEditor.updateTraceWaypoints(' .. tostring(count) .. ')')
 end
 
@@ -126,7 +126,7 @@ function FunBotUIClient:_onUITraceWaypointsDistance(distance)
 	if Config.disableUserInterface == true then
 		return
 	end
-	
+
 	self._views:execute('BotEditor.updateTraceWaypointsDistance(' .. string.format('%4.2f', distance) .. ')')
 end
 
@@ -134,7 +134,7 @@ function FunBotUIClient:_onUITrace(state)
 	if Config.disableUserInterface == true then
 		return
 	end
-	
+
 	self._views:execute('BotEditor.toggleTraceRun(' .. tostring(state) .. ')')
 	self._views:disable()
 end
@@ -143,12 +143,12 @@ function FunBotUIClient:_onUISettings(data)
 	if Config.disableUserInterface == true then
 		return
 	end
-	
+
 	if data == false then
 		if Debug.Client.UI then
 			print('UIClient: close UI_Settings')
 		end
-		
+
 		self._views:hide('settings')
 		--self._views:blur()
 		return
@@ -157,7 +157,7 @@ function FunBotUIClient:_onUISettings(data)
 	if Debug.Client.UI then
 		print('UIClient: UI_Settings (' .. json.encode(data) .. ')')
 	end
-	
+
 	local settings = UISettings()
 
 	-- Samples
@@ -261,7 +261,7 @@ function FunBotUIClient:_onUIChangeLanguage(language)
 	if Config.disableUserInterface == true then
 		return
 	end
-	
+
 	self._views:setLanguage(language)
 end
 
@@ -269,11 +269,11 @@ function FunBotUIClient:_onUISaveSettings(data)
 	if Config.disableUserInterface == true then
 		return
 	end
-	
+
 	if Debug.Client.UI then
 		print('UIClient: UI_Save_Settings (' .. data .. ')')
 	end
-	
+
 	NetEvents:Send('UI_Request_Save_Settings', data)
 end
 
@@ -281,11 +281,11 @@ function FunBotUIClient:_onBotEditorEvent(data)
 	if Config.disableUserInterface == true then
 		return
 	end
-	
+
 	if Debug.Client.UI then
 		print('UIClient: BotEditor (' .. data .. ')')
 	end
-	
+
 	-- Redirect to Server
 	NetEvents:Send('BotEditor', data)
 end
@@ -294,7 +294,7 @@ function FunBotUIClient:_onUIShowToolbar(data)
 	if Config.disableUserInterface == true then
 		return
 	end
-	
+
 	if Debug.Client.UI then
 		print('UIClient: UI_Show_Toolbar (' .. tostring(data) .. ')')
 	end
@@ -312,11 +312,11 @@ function FunBotUIClient:_onUIPasswordProtection(data)
 	if Config.disableUserInterface == true then
 		return
 	end
-	
+
 	if Debug.Client.UI then
 		print('UIClient: UI_Password_Protection (' .. tostring(data) .. ')')
 	end
-	
+
 	if (data == 'true') then
 		self._views:show('password_protection')
 		self._views:focus()
@@ -330,11 +330,11 @@ function FunBotUIClient:_onUIRequestPasswordError(data)
 	if Config.disableUserInterface == true then
 		return
 	end
-	
+
 	if Debug.Client.UI then
 		print('UIClient: UI_Request_Password_Error')
 	end
-	
+
 	self._views:error('password', data)
 end
 
@@ -342,11 +342,11 @@ function FunBotUIClient:_onUIRequestPassword(data)
 	if Config.disableUserInterface == true then
 		return
 	end
-	
+
 	if Debug.Client.UI then
 		print('UIClient: UI_Request_Password (' .. tostring(data) .. ')')
 	end
-	
+
 	if (data == 'true') then
 		self._views:show('password')
 		self._views:focus()
@@ -360,11 +360,11 @@ function FunBotUIClient:_onUISendPassword(data)
 	if Config.disableUserInterface == true then
 		return
 	end
-	
+
 	if Debug.Client.UI then
 		print('UIClient: UI_Send_Password (' .. data .. ')')
 	end
-	
+
 	NetEvents:Send('UI_Request_Open', data)
 end
 
@@ -372,12 +372,12 @@ function FunBotUIClient:_onUpdateInput(data)
 	if Config.disableUserInterface == true then
 		return
 	end
-		
+
 	if InputManager:WentKeyDown(InputDeviceKeys.IDK_F12) then
 		if Debug.Client.UI then
 			print('Client send: UI_Request_Open')
 		end
-				
+
 		-- This request can use for UI-Toggle
 		NetEvents:Send('UI_Request_Open')
 	end

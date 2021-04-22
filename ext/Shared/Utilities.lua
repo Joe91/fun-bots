@@ -9,7 +9,7 @@ end
 function Utilities:getCameraPos(player, isTarget)
 	local returnVec = Vec3(0,0,0)
 	local cameraVec = player.input.authoritativeCameraPosition:Clone()
-	
+
 	if cameraVec.z ~= 0 then
 		returnVec = player.soldier.worldTransform.forward* cameraVec.z + player.soldier.worldTransform.left * cameraVec.x + player.soldier.worldTransform.up * cameraVec.y
 		--print(returnVec)
@@ -36,7 +36,7 @@ function Utilities:getCameraPos(player, isTarget)
 	else
 		returnVec = Vec3(0.03 ,self:getTargetHeight(player.soldier, isTarget), 0.03)
 	end
-	
+
 	return returnVec
 end
 
@@ -45,31 +45,31 @@ function Utilities:getTargetHeight(soldier, isTarget)
 
 	if not isTarget then
 		camereaHight = 1.6 --bot.soldier.pose == CharacterPoseType.CharacterPoseType_Stand
-		
+
 		if soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
 			camereaHight = 0.3
 		elseif soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
 			camereaHight = 1.0
 		end
-		
+
 	elseif isTarget and Config.aimForHead then
 		camereaHight = 1.50 --bot.soldier.pose == CharacterPoseType.CharacterPoseType_Stand
-		
+
 		if soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
 			camereaHight = 0.25
 		elseif soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
 			camereaHight = 1
 		end
-		
+
 	else --aim a little lower
 		camereaHight = 1.1 --bot.soldier.pose == CharacterPoseType.CharacterPoseType_Stand - reduce by 0.5
-		
+
 		if soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
 			camereaHight = 0.2 -- reduce by 0.1
 		elseif soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
 			camereaHight = 0.7 -- reduce by 0.3
 		end
-		
+
 	end
 
 	return camereaHight
@@ -95,7 +95,7 @@ function Utilities:getEnumName(enum, value)
 			return k
 		end
 	end
-	
+
 	return nil
 end
 
@@ -104,8 +104,8 @@ end
 function Utilities:mergeKeys(originalTable, newData)
    for k,v in pairs(newData) do
       originalTable[k] = v
-   end 
- 
+   end
+
    return originalTable
 end
 
@@ -121,7 +121,7 @@ function Utilities:dump(o, format, maxLevels, level)
 	local newline			= ''
 	maxLevels				= maxLevels or -1
 	level					= level or 1
-	
+
 	if format then
 		tablevel			= string.rep("\t", level)
 		tablevellessone		= string.rep("\t", math.max(level-1, 0))
@@ -131,19 +131,19 @@ function Utilities:dump(o, format, maxLevels, level)
 	if o == nil then
 		return 'nil'
 	end
-	
+
 	if type(o) == 'table' or tostring(o):starts('sol.VEXTRefArray') or tostring(o):starts('sol.VEXTArray') then
 		if (maxLevels == -1 or level <= maxLevels) then
 			local s = tostring(o) .. ' -> { ' .. newline
-			
+
 			for k,v in pairs(o) do
 				if type(k) ~= 'number' then
 					k = '"'..k..'"'
 				end
-				
+
 				s = s .. tablevel .. '['..k..'] = ' .. g_Utilities:dump(v, format, maxLevels, level+1) .. ',' .. newline
 			end
-			
+
 			return s .. tablevellessone .. '}'
 		else
 			return '{ '.. tostring(o) .. ' }'
@@ -201,9 +201,9 @@ function requireExists(module)
     local function reference(module)
         require(module)
     end
-	
+
     res = pcall(reference, module)
-	
+
     if not(res) then
         -- Not found.
     end

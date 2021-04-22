@@ -54,7 +54,7 @@ function WeaponModification:__init()
 				gunSway.dispersionAngle = gunSwayData.stand.zoom.baseValue.minAngle
 			elseif soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
 				gunSway.dispersionAngle = gunSwayData.crouch.zoom.baseValue.minAngle
-				
+
 			elseif soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
 				gunSway.dispersionAngle = gunSwayData.prone.zoom.baseValue.minAngle
 			else
@@ -122,7 +122,7 @@ function WeaponModification:ModifyAllWeapons(aimWorseningNormal, aimWorseningSni
 	if Debug.Server.MODIFICATIONS then
 		print(#self.m_WeaponInstances .. ' loaded weapons to modify')
 	end
-	
+
 	for i, weaponInstance in pairs(self.m_WeaponInstances) do
 		self:_ModifyWeapon(weaponInstance , i, aimWorseningNormal, aimWorseningSniper)
 	end
@@ -292,7 +292,7 @@ function WeaponModification:_MakeWritable(p_Instance)
 		if Debug.Server.MODIFICATIONS then
 			print('The instance ' .. tostring(p_Instance.instanceGuid) .. ' was modified, even though its lazyloaded')
 		end
-		
+
 		return
 	end
 
@@ -301,7 +301,7 @@ function WeaponModification:_MakeWritable(p_Instance)
 		if Debug.Server.MODIFICATIONS then
 			print('The instance ' .. p_Instance.typeInfo.name .. ' is not a DataContainer, it\'s a Structure')
 		end
-		
+
 		return s_Instance
 	end
 
