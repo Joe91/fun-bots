@@ -291,7 +291,13 @@ end
 function BotManager:_checkForBotBotAttack()
 
 	-- not enough on either team and no players to use
-	if (#self._botsByTeam[2] < 1 or #self._botsByTeam[3] < 1) then
+	local teamsWithPlayers = 0;
+	for i = 1, g_Globals.nrOfTeams do
+		if #self._botsByTeam[i+1] > 0 then
+			teamsWithPlayers = teamsWithPlayers + 1;
+		end
+	end
+	if teamsWithPlayers < 2 then
 		return
 	end
 
@@ -320,7 +326,7 @@ function BotManager:_checkForBotBotAttack()
 			end
 			for _,opposingTeam in pairs(opposingTeams) do
 				-- search only opposing team
-				for _, bot2 in pairs(self._botsByTeam[opposingTeam]) do
+				for _, bot2 in pairs(self._botsByTeam[opposingTeam+1]) do
 
 					-- make sure it's living and has no target
 					if (bot2 ~= nil and bot2.player ~= nil and bot2.player.alive and not self._botCheckState[bot2.player.name]) then
