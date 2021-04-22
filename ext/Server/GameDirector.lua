@@ -276,6 +276,25 @@ function GameDirector:checkForExecution(point, team)
 	return execute;
 end
 
+function GameDirector:findClosestPath(trans)
+	local closestPath = nil
+	local paths = g_NodeCollection:GetPaths();
+	if paths ~= nil then
+		local closestDistance = nil
+		for index,waypoints in pairs(paths) do
+			if closestDistance == nil then
+				waypoints[1].Position:Distance(trans);
+				closestPath = index;
+			else
+				if waypoints[1].Position:Distance(trans) < closestDistance then
+					closestPath = index;
+				end
+			end
+		end
+	end
+	return closestPath;
+end
+
 function GameDirector:getSpawnPath(team, squad, onlyBase)
 	local possibleObjectives = {}
 	local possibleBases = {}
