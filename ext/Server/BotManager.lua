@@ -314,42 +314,43 @@ function BotManager:_checkForBotBotAttack()
 		-- bot has player, is alive, and hasn't found that special someone yet
 		if (bot ~= nil and bot.player and bot.player.alive and not self._botCheckState[bot.player.name]) then
 
-			local opposingTeam = 1
-			if (bot.player.teamId == TeamId.Team1) then
-				opposingTeam = TeamId.Team2 + 1
-			else
-				opposingTeam = TeamId.Team1 + 1
+			local opposingTeams = {}
+			for t = 1, g_Globals.nrOfTeams do
+				if bot.player.teamId ~= t then
+					table.insert(opposingTeams, t);
+				end
 			end
+			for _,opposingTeam in pairs(opposingTeams) do
+				-- search only opposing team
+				for _, bot2 in pairs(self._botsByTeam[opposingTeam]) do
 
-			-- search only opposing team
-			for _, bot2 in pairs(self._botsByTeam[opposingTeam]) do
+					-- make sure it's living and has no target
+					if (bot2 ~= nil and bot2.player ~= nil and bot2.player.alive and not self._botCheckState[bot2.player.name]) then
 
-				-- make sure it's living and has no target
-				if (bot2 ~= nil and bot2.player ~= nil and bot2.player.alive and not self._botCheckState[bot2.player.name]) then
+						local distance = bot.player.soldier.worldTransform.trans:Distance(bot2.player.soldier.worldTransform.trans)
+						if distance <= Config.maxBotAttackBotDistance then
 
-					local distance = bot.player.soldier.worldTransform.trans:Distance(bot2.player.soldier.worldTransform.trans)
-					if distance <= Config.maxBotAttackBotDistance then
+							-- choose a player at random, try until an active player is found
+							for playerIndex = nextPlayerIndex, playerCount do
+								if self._activePlayers[players[playerIndex].name] then
 
-						-- choose a player at random, try until an active player is found
-						for playerIndex = nextPlayerIndex, playerCount do
-							if self._activePlayers[players[playerIndex].name] then
+									-- check this bot view. Let one client do it
+									local pos1 = bot.player.soldier.worldTransform.trans:Clone()
+									local pos2 = bot2.player.soldier.worldTransform.trans:Clone()
+									local inVehicle =  (bot.player.attachedControllable ~= nil or bot2.player.attachedControllable ~= nil)
 
-								-- check this bot view. Let one client do it
-								local pos1 = bot.player.soldier.worldTransform.trans:Clone()
-								local pos2 = bot2.player.soldier.worldTransform.trans:Clone()
-								local inVehicle =  (bot.player.attachedControllable ~= nil or bot2.player.attachedControllable ~= nil)
-
-								NetEvents:SendUnreliableToLocal('CheckBotBotAttack', players[playerIndex], pos1, pos2, bot.player.name, bot2.player.name, inVehicle)
-								raycasts = raycasts + 1
-								nextPlayerIndex = playerIndex + 1;
-								break
+									NetEvents:SendUnreliableToLocal('CheckBotBotAttack', players[playerIndex], pos1, pos2, bot.player.name, bot2.player.name, inVehicle)
+									raycasts = raycasts + 1
+									nextPlayerIndex = playerIndex + 1;
+									break
+								end
 							end
-						end
 
-						if (raycasts >= playerCount) then
-							-- leave the function early for this cycle
-							self._lastBotCheckIndex = i+1
-							return
+							if (raycasts >= playerCount) then
+								-- leave the function early for this cycle
+								self._lastBotCheckIndex = i+1
+								return
+							end
 						end
 					end
 				end

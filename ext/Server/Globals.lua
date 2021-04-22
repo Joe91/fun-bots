@@ -12,6 +12,7 @@ function Globals:__init()
 	self.isGm				= false;
 	self.isConquest			= false;
 	self.isAssault			= false;
+	self.nrOfTeams			= 0;
 	self.maxPlayers			= 0;
 	self.respawnDelay		= 0;
 	self.isInputAllowed		= false;

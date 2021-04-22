@@ -77,25 +77,18 @@ function ClientBotManager:_onUpdate(p_Delta, p_Pass)
 
 		if self.player.soldier ~= nil then  -- alive. Check for enemy bots
 
-			local team			= 0;
-			
-			if (self.player.teamId == TeamId.Team1) then
-				team = TeamId.Team2;
-			else
-				team = TeamId.Team1;
-			end
-			
-			local enemyPlayers = PlayerManager:GetPlayersByTeam(team);
-			
-			if (self._lastIndex >= #enemyPlayers) then
+			-- TODO: find a faster solution that works for SDM as well!
+			local team = self.player.teamId;
+			local allPlayers = PlayerManager:GetPlayers();
+			if (self._lastIndex >= #allPlayers) then
 				self._lastIndex = 1;
 			end
 
-			for i = self._lastIndex, #enemyPlayers do
-				local bot = enemyPlayers[i];
+			for i = self._lastIndex, #allPlayers do
+				local bot = allPlayers[i];
 
 				-- valid player and is bot
-				if (bot ~= nil and bot.onlineId == 0 and bot.soldier ~= nil) then
+				if (bot ~= nil and bot.onlineId == 0 and bot.soldier ~= nil and bot.teamId ~= team) then
 
 					-- check for clear view
 					local playerPosition = ClientUtils:GetCameraTransform().trans:Clone(); --player.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(player, false);

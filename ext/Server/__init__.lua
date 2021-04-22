@@ -180,12 +180,14 @@ function FunBotServer:_onLevelLoaded(levelName, gameMode)
         s_Entity = s_EntityIterator:Next()
     end
 
+	Globals.nrOfTeams = 2;
 	if gameMode == 'TeamDeathMatchC0' or gameMode == 'TeamDeathMatch0' then
 		Globals.isTdm = true;
 	else
 		Globals.isTdm = false;
 	end
 	if gameMode == 'SquadDeathMatch0' then
+		Globals.nrOfTeams = 4;
 		Globals.isSdm = true;
 	else
 		Globals.isSdm = false;
