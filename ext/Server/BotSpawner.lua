@@ -330,7 +330,6 @@ function BotSpawner:_onUpdate(dt, pass)
 				local pathIndex = g_GameDirector:findClosestPath(trans);
 				bot:setVarsWay(nil, true, pathIndex, 1, false);
 				table.remove(self._botsWithoutPath, index);
-				print("spawned")
 				local soldierCustomization = nil
 				local soldierKit = nil
 				local appearance = nil

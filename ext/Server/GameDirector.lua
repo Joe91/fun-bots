@@ -281,13 +281,15 @@ function GameDirector:findClosestPath(trans)
 	local paths = g_NodeCollection:GetPaths();
 	if paths ~= nil then
 		local closestDistance = nil
-		for index,waypoints in pairs(paths) do
+		for _,waypoints in pairs(paths) do
+			local newDistance = waypoints[1].Position:Distance(trans)
 			if closestDistance == nil then
-				waypoints[1].Position:Distance(trans);
-				closestPath = index;
+				closestDistance = newDistance;
+				closestPath = waypoints[1].PathIndex;
 			else
-				if waypoints[1].Position:Distance(trans) < closestDistance then
-					closestPath = index;
+				if newDistance < closestDistance then
+					closestDistance = newDistance;
+					closestPath = waypoints[1].PathIndex;
 				end
 			end
 		end
