@@ -36,6 +36,8 @@ The Smart Node update
 	- Gulf of Oman - Thanks to MrDonPotato!!
 - BFLAG supported (only a first version, not that usable yet)
 	- Bazaar small
+- Squad-DM supported
+	- on all maps thanks to GaryTheNoTrashCougar!!!
 - Bots switch to Pistol or Sidearm (Rockets) if needed
 - Bots revive dead players
 - Bots deply Ammobag and medkit from time to time

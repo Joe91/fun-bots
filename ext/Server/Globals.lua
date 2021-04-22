@@ -6,6 +6,7 @@ function Globals:__init()
 	self.yawPerFrame 		= 0.0;
 
 	self.isTdm				= false;
+	self.isSdm				= false;
 	self.isScavenger		= false;
 	self.isRush				= false;
 	self.isGm				= false;

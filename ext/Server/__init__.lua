@@ -185,6 +185,11 @@ function FunBotServer:_onLevelLoaded(levelName, gameMode)
 	else
 		Globals.isTdm = false;
 	end
+	if gameMode == 'SquadDeathMatch0' then
+		Globals.isSdm = true;
+	else
+		Globals.isSdm = false;
+	end
 	if gameMode == 'GunMaster0' then
 		Globals.isGm = true;
 	else
