@@ -45,24 +45,22 @@ function BotManager:getBotTeam()
 		return Config.botTeam;
 	end
 	local botTeam;
-	local countPlayersTeam1 = 0;
-	local countPlayersTeam2 = 0;
-	local players = PlayerManager:GetPlayers()
-	for i = 1, PlayerManager:GetPlayerCount() do
-		if Utilities:isBot(players[i]) == false then
-			if players[i].teamId == TeamId.Team1 then
-				countPlayersTeam1 = countPlayersTeam1 + 1;
-			else
-				countPlayersTeam2 = countPlayersTeam2 + 1;
+	local countPlayers = {}
+	for i = 1, g_Globals.nrOfTeams do
+		countPlayers[i] = 0;
+		local players = PlayerManager:GetPlayersByTeam(i);
+		for i = 1, #players do
+			if Utilities:isBot(players[i]) == false then
+				countPlayers[i] = countPlayers[i] + 1;
 			end
 		end
 	end
 
-	-- init global Vars
-	if countPlayersTeam2 > countPlayersTeam1 then
-		botTeam = TeamId.Team1;
-	else -- if countPlayersTeam1 > countPlayersTeam2 then  --default case
-		botTeam = TeamId.Team2;
+	local lowestPlayerCount = 128
+	for i = 1, g_Globals.nrOfTeams do
+		if countPlayers[i] < lowestPlayerCount then
+			botTeam = i;
+		end
 	end
 
 	return botTeam;

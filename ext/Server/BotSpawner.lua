@@ -30,10 +30,13 @@ function BotSpawner:_onTeamChange(player, team, squad)
 	if Config.botTeam ~= TeamId.TeamNeutral then
 		if player ~= nil then
 			if player.onlineId ~= 0 then -- no bot
-				local playerTeam = TeamId.Team1
-				if Config.botTeam == TeamId.Team1 then
-					playerTeam = TeamId.Team2;
+				local playerTeams = {}
+				for i = 1, g_Globals.nrOfTeams do
+					if Config.botTeam ~= i then
+						table.insert(playerTeams, i)
+					end
 				end
+				local playerTeam = playerTeams[MathUtils:GetRandomInt(1, #playerTeams)]
 				if player ~= nil and team ~= nil and (team ~= playerTeam) then
 					player.teamId = playerTeam;
 					ChatManager:SendMessage(Language:I18N('CANT_JOIN_BOT_TEAM', player), player);
@@ -704,7 +707,7 @@ function BotSpawner:getKitApperanceCustomization(team, kit, color, primary, pist
 	meleeWeapon.weapon = SoldierWeaponUnlockAsset(knifeWeapon)
 	meleeWeapon.slot = WeaponSlot.WeaponSlot_7
 
-	if team == TeamId.Team1 then -- US
+	if team % 2 == 1 then -- US
 		if kit == "Assault" then --assault
 			appearance = self:_findAppearance('Us', 'Assault', color)
 			soldierKit = self:_findKit('US', 'Assault')
