@@ -1,4 +1,4 @@
-class('GameDirector');
+class('GameDirector')
 
 require('Globals')
 require('__shared/NodeCollection')
@@ -14,8 +14,8 @@ function GameDirector:__init()
 	self.AllObjectives = {}
 	self.Translations = {}
 
-	self.McomCounter = 0;
-	self.OnlyOneMcom = false;
+	self.McomCounter = 0
+	self.OnlyOneMcom = false
 	self.RushAttackingBase = ''
 	self.ArmedMcoms = {}
 
@@ -38,7 +38,7 @@ function GameDirector:onLevelLoaded()
 	self.Translations = {}
 
 	if g_Globals.isRush then
-		self.McomCounter = 0;
+		self.McomCounter = 0
 		self.ArmedMcoms = {}
 
 		local mcomIterator = EntityManager:GetIterator("EventSplitterEntity")
@@ -81,7 +81,7 @@ function GameDirector:initObjectives()
 			assigned = {}
 		}
 		if string.find(objectiveName:lower(), "base") ~= nil then
-			objective.isBase = true;
+			objective.isBase = true
 			if string.find(objectiveName:lower(), "us") ~= nil then
 				objective.team = TeamId.Team1
 			else
@@ -104,7 +104,7 @@ function GameDirector:_initFlagTeams()
 		local entity = it:Next()
 		while entity ~= nil do
 			local flagEntity = CapturePointEntity(entity)
-			local objectiveName = self:_translateObjective(flagEntity.transform.trans, flagEntity.name);
+			local objectiveName = self:_translateObjective(flagEntity.transform.trans, flagEntity.name)
 			if objectiveName ~= "" then
 				local objective = self:getObjectiveObject(objectiveName)
 				if not objective.isBase then
@@ -124,7 +124,7 @@ function GameDirector:_onMcomArmed(player)
 		print("mcom armed by "..player.name)
 	end
 	
-	local objective = self:_translateObjective(player.soldier.worldTransform.trans);
+	local objective = self:_translateObjective(player.soldier.worldTransform.trans)
 	if self.ArmedMcoms[player.name] == nil then
 		self.ArmedMcoms[player.name] = {}
 	end
@@ -137,14 +137,14 @@ function GameDirector:_onMcomArmed(player)
 end
 
 function GameDirector:_onMcomDisarmed(player)
-	local objective = self:_translateObjective(player.soldier.worldTransform.trans);
+	local objective = self:_translateObjective(player.soldier.worldTransform.trans)
 	-- remove information of armed mcom
 	for playerMcom,mcomsOfPlayer in pairs(self.ArmedMcoms) do
 		if mcomsOfPlayer ~= nil and #mcomsOfPlayer > 0 then
 			for i,mcomName in pairs(mcomsOfPlayer) do
 				if mcomName == objective then
 					table.remove(self.ArmedMcoms[playerMcom], i)
-					break;
+					break
 				end
 			end
 		end
@@ -160,19 +160,19 @@ function GameDirector:_onMcomDestroyed(player)
 		print("mcom destroyed by "..player.name)
 	end
 	
-	local objective = '';
+	local objective = ''
 	if self.ArmedMcoms[player.name] ~= nil then
 		objective = self.ArmedMcoms[player.name][1]
 		table.remove(self.ArmedMcoms[player.name], 1)
 	end
 	
-	self.McomCounter = self.McomCounter + 1;
+	self.McomCounter = self.McomCounter + 1
 	self:_updateObjective(objective, {
 		team = TeamId.TeamNeutral,--player.teamId,
 		isAttacked = false,
 		destroyed = true
 	})
-	local subObjective = self:getSubObjectiveFromObj(objective);
+	local subObjective = self:getSubObjectiveFromObj(objective)
 	local topObjective = self:getObjectiveFromSubObj(objective)
 	if topObjective ~= nil then
 		self:_updateObjective(topObjective, {
@@ -184,7 +184,7 @@ function GameDirector:_onMcomDestroyed(player)
 			destroyed = true
 		})
 	end
-	self:_updateValidObjectives();
+	self:_updateValidObjectives()
 end
 
 function GameDirector:_updateValidObjectives()
@@ -193,108 +193,108 @@ function GameDirector:_updateValidObjectives()
 	end
 
 	if (self.McomCounter % 2) == 0 then
-		self.OnlyOneMcom = false;
-		local baseIndex = 0;
-		local mcomIndexes = {0, 0};
+		self.OnlyOneMcom = false
+		local baseIndex = 0
+		local mcomIndexes = {0, 0}
 		if self.McomCounter < 2 then
-			baseIndex = 1;
-			mcomIndexes = {1, 2};
+			baseIndex = 1
+			mcomIndexes = {1, 2}
 		elseif self.McomCounter < 4 then
-			baseIndex = 2;
-			mcomIndexes = {3, 4};
+			baseIndex = 2
+			mcomIndexes = {3, 4}
 		elseif self.McomCounter < 6 then
-			baseIndex = 3;
-			mcomIndexes = {5, 6};
+			baseIndex = 3
+			mcomIndexes = {5, 6}
 		elseif self.McomCounter < 8 then
-			baseIndex = 4;
-			mcomIndexes = {7, 8};
+			baseIndex = 4
+			mcomIndexes = {7, 8}
 		elseif self.McomCounter < 10 then
-			baseIndex = 5;
-			mcomIndexes = {9, 10};
+			baseIndex = 5
+			mcomIndexes = {9, 10}
 		else
-			baseIndex = 6;
-			mcomIndexes = {11, 12};
+			baseIndex = 6
+			mcomIndexes = {11, 12}
 		end
 
 		for _,objective in pairs(self.AllObjectives) do
 			local fields = objective.name:split(" ")
-			local active = false;
-			local subObjective = false;
+			local active = false
+			local subObjective = false
 			if not objective.isBase and not objective.isSpawnPath then
 				if #fields > 1 then
 					local index = tonumber(fields[2])
 					for _,targetIndex in pairs(mcomIndexes) do
 						if index == targetIndex then
-							active = true;
+							active = true
 						end
 					end
 					if #fields > 2 then -- "mcom N interact"
-						subObjective = true;
+						subObjective = true
 					end
 				end
 			else
 				if #fields > 2 then
 					local index = tonumber(fields[3])
 					if index == baseIndex then
-						active = true;
+						active = true
 					end
 					if index == baseIndex - 1 then
-						self.RushAttackingBase = objective.name;
+						self.RushAttackingBase = objective.name
 					end
 				end
 			end
-			objective.active = active;
-			objective.subObjective = subObjective;
+			objective.active = active
+			objective.subObjective = subObjective
 		end
 	else
-		self.OnlyOneMcom = true;
+		self.OnlyOneMcom = true
 	end
 end
 
 function GameDirector:checkForExecution(point, team)
-	local execute = false;
+	local execute = false
 	if point.Data.Action ~= nil then
-		local action = point.Data.Action;
+		local action = point.Data.Action
 		if action.type == "mcom" then
 			local mcom = self:_translateObjective(point.Position)
 			if mcom ~= nil then
-				local objective = self:getObjectiveObject(mcom);
+				local objective = self:getObjectiveObject(mcom)
 				if objective ~= nil then
 					if objective.active and not objective.destroyed then
 						if team == TeamId.Team1 and objective.team == TeamId.TeamNeutral then
-							execute = true;	--Attacking Team
+							execute = true	--Attacking Team
 						elseif team == TeamId.Team2 and objective.isAttacked then
-							execute = true;	--Defending Team
+							execute = true	--Defending Team
 						end
 					end
 				end
 			end
 		else
-			execute = true;
+			execute = true
 		end
 	end
-	return execute;
+	return execute
 end
 
 function GameDirector:findClosestPath(trans)
 	local closestPath = nil
-	local paths = g_NodeCollection:GetPaths();
+	local paths = g_NodeCollection:GetPaths()
 	if paths ~= nil then
 		local closestDistance = nil
 		for _,waypoints in pairs(paths) do
 			local newDistance = waypoints[1].Position:Distance(trans)
 			if closestDistance == nil then
-				closestDistance = newDistance;
-				closestPath = waypoints[1].PathIndex;
+				closestDistance = newDistance
+				closestPath = waypoints[1].PathIndex
 			else
 				if newDistance < closestDistance then
-					closestDistance = newDistance;
-					closestPath = waypoints[1].PathIndex;
+					closestDistance = newDistance
+					closestPath = waypoints[1].PathIndex
 				end
 			end
 		end
 	end
-	return closestPath;
+	return closestPath
 end
 
 function GameDirector:getSpawnPath(team, squad, onlyBase)
@@ -303,12 +303,12 @@ function GameDirector:getSpawnPath(team, squad, onlyBase)
 	local rushConvertedBases = {}
 	local pathsDone = {}
 	for _,objective in pairs(self.AllObjectives) do
-		local allObjectives = g_NodeCollection:GetKnownOjectives();
+		local allObjectives = g_NodeCollection:GetKnownOjectives()
 		local pathsWithObjective = allObjectives[objective.name]
 
 		if pathsWithObjective == nil then
 			-- can only happen if the collection was cleared. So don't spawn in this case
-			return 0 , 0;
+			return 0 , 0
 		end
 
 		for _,path in pairs(pathsWithObjective) do
@@ -327,35 +327,35 @@ function GameDirector:getSpawnPath(team, squad, onlyBase)
 						end
 					end
 				end
-				pathsDone[path] = true;
+				pathsDone[path] = true
 			end
 		end
 	end
 	if #possibleObjectives > 0 then
-		local tempObj = possibleObjectives[MathUtils:GetRandomInt(1, #possibleObjectives)];
+		local tempObj = possibleObjectives[MathUtils:GetRandomInt(1, #possibleObjectives)]
 		local availableSpawnPaths = nil
 		for _,objective in pairs(self.AllObjectives) do
 			if objective.isSpawnPath and string.find(objective.name, tempObj.name) ~= nil then
-				availableSpawnPaths = objective.name;
-				break;
+				availableSpawnPaths = objective.name
+				break
 			end
 		end
 		-- check for spawn objectives
 		if availableSpawnPaths ~= nil then
-			local allObjectives = g_NodeCollection:GetKnownOjectives();
+			local allObjectives = g_NodeCollection:GetKnownOjectives()
 			local pathsWithObjective = allObjectives[availableSpawnPaths]
-			return pathsWithObjective[MathUtils:GetRandomInt(1, #pathsWithObjective)], 1;
+			return pathsWithObjective[MathUtils:GetRandomInt(1, #pathsWithObjective)], 1
 		else
-			return tempObj.path, MathUtils:GetRandomInt(1, #g_NodeCollection:Get(nil, tempObj.path));
+			return tempObj.path, MathUtils:GetRandomInt(1, #g_NodeCollection:Get(nil, tempObj.path))
 		end
 	elseif #possibleBases > 0 then
 		local pathIndex = possibleBases[MathUtils:GetRandomInt(1, #possibleBases)]
-		return pathIndex, MathUtils:GetRandomInt(1, #g_NodeCollection:Get(nil, pathIndex));
+		return pathIndex, MathUtils:GetRandomInt(1, #g_NodeCollection:Get(nil, pathIndex))
 	elseif #rushConvertedBases > 0 then
 		local pathIndex = rushConvertedBases[MathUtils:GetRandomInt(1, #rushConvertedBases)]
-		return pathIndex, MathUtils:GetRandomInt(1, #g_NodeCollection:Get(nil, pathIndex));
+		return pathIndex, MathUtils:GetRandomInt(1, #g_NodeCollection:Get(nil, pathIndex))
 	else
-		return 0 , 0;
+		return 0 , 0
 	end
 end
 
@@ -363,32 +363,32 @@ function GameDirector:_updateObjective(name, data)
 	for _,objective in pairs(self.AllObjectives) do
 		if objective.name == name then
 			for key, value in pairs(data) do
-				objective[key] = value;
+				objective[key] = value
 			end
-			break;
+			break
 		end
 	end
 end
 
 function GameDirector:_getDistanceFromObjective(objective, position)
-	local distance = 0;
-	local allObjectives = g_NodeCollection:GetKnownOjectives();
-	local paths = allObjectives[objective];
+	local distance = 0
+	local allObjectives = g_NodeCollection:GetKnownOjectives()
+	local paths = allObjectives[objective]
 	for _,path in pairs(paths) do
 		local node = g_NodeCollection:Get(1, path)
 		if node ~= nil and node.Data.Objectives ~= nil then
 			if #node.Data.Objectives == 1 then
 				distance = position:Distance(node.Position)
-				break;
+				break
 			end
 		end
 	end
-	return distance;
+	return distance
 end
 
 function GameDirector:_translateObjective(positon, name)
 	if name == nil or self.Translations[name] == nil then
-		local allObjectives = g_NodeCollection:GetKnownOjectives();
+		local allObjectives = g_NodeCollection:GetKnownOjectives()
 		local pathsDone = {}
 		local closestObjective = ""
 		local closestDistance = nil
@@ -398,36 +398,36 @@ function GameDirector:_translateObjective(positon, name)
 					local node = g_NodeCollection:Get(1, path)
 					if node ~= nil and node.Data.Objectives ~= nil then
 						if #node.Data.Objectives == 1 then --possible objective
-							local valid = true;
+							local valid = true
 							local tempObj = self:getObjectiveObject(objective)
 							if tempObj ~= nil and tempObj.isSpawnPath then -- or tempObj.isBase
-								valid = false;
+								valid = false
 							end
 							if valid then
 								local distance = positon:Distance(node.Position)
 								if closestDistance == nil or closestDistance > distance then
-									closestObjective = objective;
-									closestDistance = distance;
+									closestObjective = objective
+									closestDistance = distance
 								end
 							end
 						end
 					end
-					pathsDone[path] = true;
+					pathsDone[path] = true
 				end
 			end
 		end
 		if name ~= nil then
-			self.Translations[name] = closestObjective;
+			self.Translations[name] = closestObjective
 		end
-		return closestObjective;
+		return closestObjective
 	else
-		return self.Translations[name];
+		return self.Translations[name]
 	end
 end
 
 function GameDirector:_onCapture(capturePoint)
 	local flagEntity = CapturePointEntity(capturePoint)
-	local objectiveName = self:_translateObjective(flagEntity.transform.trans, flagEntity.name);
+	local objectiveName = self:_translateObjective(flagEntity.transform.trans, flagEntity.name)
 	self:_updateObjective(objectiveName, {
 		team = flagEntity.team,
 		isAttacked = flagEntity.isAttacked
@@ -466,34 +466,34 @@ function GameDirector:getObjectiveObject(name)
 end
 
 function GameDirector:isBasePath(ObjectiveNames)
-	local isBase = false;
+	local isBase = false
 	for _,name in pairs(ObjectiveNames) do
 		local objective = self:getObjectiveObject(name)
 		if objective ~= nil and objective.isBase then
-			isBase = true;
-			break;
+			isBase = true
+			break
 		end
 	end
-	return isBase;
+	return isBase
 end
 
 -- 0 = all inactive
 -- 1 = partly inactive
 -- 2 = all active
 function GameDirector:getEnableSateOfPath(ObjectiveNamesOfPath)
-	local activeCount = 0;
+	local activeCount = 0
 	for _,name in pairs(ObjectiveNamesOfPath) do
 		local objective = self:getObjectiveObject(name)
 		if objective ~= nil and objective.active then
-			activeCount = activeCount + 1;
+			activeCount = activeCount + 1
 		end
 	end
 	if activeCount == 0 then
-		return 0;
+		return 0
 	elseif activeCount < #ObjectiveNamesOfPath then
-		return 1;
+		return 1
 	else
-		return 2;
+		return 2
 	end
 end
 
@@ -520,23 +520,23 @@ function GameDirector:getObjectiveFromSubObj(subObjective)
 end
 
 function GameDirector:_useSubobjective(botTeam, objectiveName)
-	local use = false;
-	local objective = self:getObjectiveObject(objectiveName);
+	local use = false
+	local objective = self:getObjectiveObject(objectiveName)
 	if objective ~= nil and objective.subObjective then
 		if objective.active and not objective.destroyed then
 			if botTeam == TeamId.Team1 and objective.team == TeamId.TeamNeutral then
-				use = true;	--Attacking Team
+				use = true	--Attacking Team
 			elseif botTeam == TeamId.Team2 and objective.isAttacked then
-				use = true;	--Defending Team
+				use = true	--Defending Team
 			end
 		end
 	end
-	return use;
+	return use
 end
 
 function GameDirector:_onLost(capturePoint)
 	local flagEntity = CapturePointEntity(capturePoint)
-	local objectiveName = self:_translateObjective(flagEntity.transform.trans, flagEntity.name);
+	local objectiveName = self:_translateObjective(flagEntity.transform.trans, flagEntity.name)
 	self:_updateObjective(objectiveName, {
 		team = TeamId.TeamNeutral, --flagEntity.team
 		isAttacked = flagEntity.isAttacked
@@ -549,7 +549,7 @@ end
 
 function GameDirector:_onPlayerEnterCapturePoint(player, capturePoint)
 	local flagEntity = CapturePointEntity(capturePoint)
-	local objectiveName = self:_translateObjective(flagEntity.transform.trans, flagEntity.name);
+	local objectiveName = self:_translateObjective(flagEntity.transform.trans, flagEntity.name)
 	self:_updateObjective(objectiveName, {
 		isAttacked = flagEntity.isAttacked  --		team = flagEntity.team,
 	})
@@ -588,17 +588,17 @@ function GameDirector:_onUpdate(delta)
 		local maxAssings = {0,0}
 		for i = 1, 2 do
 			if self.BotsByTeam[i] ~= nil then
-				maxAssings[i] = math.floor(#self.BotsByTeam[i] / 2);
+				maxAssings[i] = math.floor(#self.BotsByTeam[i] / 2)
 				if (#self.BotsByTeam[i] % 2) == 1 then
-					maxAssings[i] = maxAssings[i] + 1;
+					maxAssings[i] = maxAssings[i] + 1
 				end
 			end
 			if maxAssings[i] > self.MaxAssignedLimit then
-				maxAssings[i] = self.MaxAssignedLimit;
+				maxAssings[i] = self.MaxAssignedLimit
 			end
 			if self.OnlyOneMcom then
 				if self.BotsByTeam[i] ~= nil then
-					maxAssings[i] = #self.BotsByTeam[i];
+					maxAssings[i] = #self.BotsByTeam[i]
 				end
 			end
 		end
@@ -608,7 +608,7 @@ function GameDirector:_onUpdate(delta)
 		-- check objective statuses
 		for botTeam, bots in pairs(self.BotsByTeam) do
 			for _,objective in pairs(self.AllObjectives) do
-				objective.assigned[botTeam] = 0;
+				objective.assigned[botTeam] = 0
 			end
 		end
 
@@ -617,8 +617,8 @@ function GameDirector:_onUpdate(delta)
 				if bot:getObjective() == '' then
 					if bot.player.alive then
 						-- find closest objective for bot
-						local closestDistance = nil;
-						local closestObjective = nil;
+						local closestDistance = nil
+						local closestObjective = nil
 						for _,objective in pairs(self.AllObjectives) do
 							if not objective.subObjective then
 								if not objective.isBase and objective.active and not objective.destroyed then
@@ -626,7 +626,7 @@ function GameDirector:_onUpdate(delta)
 										if objective.assigned[botTeam] < maxAssings[botTeam] then
 											local distance = self:_getDistanceFromObjective(objective.name, bot.player.soldier.worldTransform.trans)
 											if closestDistance == nil or closestDistance > distance then
-												closestDistance = distance;
+												closestDistance = distance
 												closestObjective = objective.name
 											end
 										end
@@ -655,7 +655,7 @@ function GameDirector:_onUpdate(delta)
 						end
 					end
 					if objective.isBase or not objective.active or objective.destroyed or objective.team == botTeam then
-						bot:setObjective();
+						bot:setObjective()
 					end
 				end
 			end
@@ -668,17 +668,17 @@ function GameDirector:useSubobjective(botname, objective)
 	if tempObjective ~= nil and tempObjective.subObjective then -- is valid getSubObjective
 		if tempObjective.active and not tempObjective.destroyed then
 			local bot = g_BotManager:getBotByName(botname)
-			local botTeam = bot.player.teamId;
+			local botTeam = bot.player.teamId
 			if self:_useSubobjective(botTeam, objective) then
 				if tempObjective.assigned[botTeam] < 2 then
 					tempObjective.assigned[botTeam] = tempObjective.assigned[botTeam] + 1
 					bot:setObjective(objective)
-					return true;
+					return true
 				end
 			end
 		end
 	end
-	return false;
+	return false
 end
 
 if (g_GameDirector == nil) then

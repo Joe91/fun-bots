@@ -1,6 +1,6 @@
-MAX_NUMBER_OF_BOTS	= 64;			-- maximum bots that can be spawned
-USE_REAL_DAMAGE 	= true;			-- with real damage, the hitboxes are a bit buggy
-BOT_TOKEN			= "BOT_";		-- token Bots are marked with
+MAX_NUMBER_OF_BOTS	= 64			-- maximum bots that can be spawned
+USE_REAL_DAMAGE 	= true			-- with real damage, the hitboxes are a bit buggy
+BOT_TOKEN			= "BOT_"		-- token Bots are marked with
 
 SpawnMethod = {
 	SpawnSoldierAt = 0,
@@ -107,13 +107,13 @@ Config = {
 	respawnWayBots = true,			-- bots on paths respawn if killed
 
 	-- UI settings & language options
-	disableUserInterface = false,	-- if true, the complete UI will be disabled (not available in the UI ;-) )
+	disableUserInterface = false,	-- if true, the complete UI will be disabled (not available in the UI -) )
 	disableChatCommands = true,	 	-- if true, no chat commands can be used
 	disableRCONCommands = true,	 	-- if true, no RCON commands can be used
 	traceUsageAllowed = true,		-- if false, no traces can be recorded, deleted or saved
 	settingsPassword = "fun",		-- if nil, disable it. Otherwise use a String with your password
 	language = nil, --"de_DE",		-- de_DE as sample (default is english, when language file doesnt exists)
-};
+}
 
 --don't change these values unless you know what you do
 StaticConfig = {
@@ -123,4 +123,4 @@ StaticConfig = {
 	botUpdateCycle = 0.1,				-- update-intervall of bots
 	botAimUpdateCycle = 0.05,			-- = 3 frames at 60 Hz
 	targetHeightDistanceWayPoint = 1.5	-- distance the bots have to reach in height to continue with next Waypoint
-};
+}

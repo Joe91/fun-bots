@@ -1,18 +1,18 @@
-class('PathSwitcher');
+class('PathSwitcher')
 require('__shared/NodeCollection')
 require('GameDirector')
 require('Globals')
 
 function PathSwitcher:__init()
-	self.dummyData = 0;
+	self.dummyData = 0
 	self.killYourselfCounter = {}
 end
 
 function PathSwitcher:getNewPath(botname, point, objective)
 	-- check if on base, or on path away from base. In this case: change path
-	local onBasePath = false;
-	local currentPathFirst = g_NodeCollection:GetFirst(point.PathIndex);
-	local currentPathStatus = 0;
+	local onBasePath = false
+	local currentPathFirst = g_NodeCollection:GetFirst(point.PathIndex)
+	local currentPathStatus = 0
 	if currentPathFirst.Data ~= nil and currentPathFirst.Data.Objectives ~= nil then
 		currentPathStatus = g_GameDirector:getEnableSateOfPath(currentPathFirst.Data.Objectives)
 		onBasePath = g_GameDirector:isBasePath(currentPathFirst.Data.Objectives)
@@ -27,7 +27,7 @@ function PathSwitcher:getNewPath(botname, point, objective)
 			self.killYourselfCounter[botname] = 0
 		end
 		if currentPathStatus == 0 then
-			self.killYourselfCounter[botname] = self.killYourselfCounter[botname] + 1;
+			self.killYourselfCounter[botname] = self.killYourselfCounter[botname] + 1
 		else
 			self.killYourselfCounter[botname] = 0
 		end
@@ -73,7 +73,7 @@ function PathSwitcher:getNewPath(botname, point, objective)
 			-- check for possible subObjective
 			if ((#pathNode.Data.Objectives == 1 ) and (newPoint.ID ~= point.ID)) then
 				if (g_GameDirector:useSubobjective(botname, pathNode.Data.Objectives[1]) == true) then
-					return true, newPoint;
+					return true, newPoint
 				end
 			end
 
@@ -122,24 +122,24 @@ function PathSwitcher:getNewPath(botname, point, objective)
 
 		-- check for base-Path or inactive path
 		if (newPoint.ID ~= point.ID) then
-			local switchAnyways = false;
+			local switchAnyways = false
 			local countOld = #(currentPathFirst.Data.Objectives or {})
 			local countNew = #(pathNode.Data.Objectives or {})
 
 			if onBasePath then -- if on base path, check for objective count.
 				if not newBasePath and newPathStatus == 2 then
-					switchAnyways = true;
+					switchAnyways = true
 				elseif newBasePath then
 					if countOld == 1 and countNew > 1 and newPathStatus == 2 then
-						switchAnyways = true;
+						switchAnyways = true
 					end
 				end
 			end
 			if (newPathStatus > currentPathStatus) then
-				switchAnyways = true;
+				switchAnyways = true
 			end
 			if newPathStatus == 0 and currentPathStatus == 0 and countOld > countNew and not newBasePath then
-				switchAnyways = true;
+				switchAnyways = true
 			end
 			if switchAnyways then
 				if (highestPriority < 3) then highestPriority = 3 end
@@ -243,7 +243,7 @@ end
 
 -- Singleton.
 if g_PathSwitcher == nil then
-	g_PathSwitcher = PathSwitcher();
+	g_PathSwitcher = PathSwitcher()
 end
 
-return g_PathSwitcher;
+return g_PathSwitcher

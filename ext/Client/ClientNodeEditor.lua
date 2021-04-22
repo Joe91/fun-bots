@@ -1,6 +1,6 @@
 class "ClientNodeEditor"
 
-require('__shared/Config');
+require('__shared/Config')
 require('__shared/NodeCollection')
 
 function ClientNodeEditor:__init()
@@ -882,7 +882,7 @@ function ClientNodeEditor:_onAddMcom(args)
 			yaw = self.player.input.authoritativeAimingYaw,
 			pitch = self.player.input.authoritativeAimingPitch
 		}
-		selection[i].Data.Action = action;
+		selection[i].Data.Action = action
 		self:Print('Updated Waypoint: %s', selection[i].ID)
 	end
 	return true
@@ -916,7 +916,7 @@ function ClientNodeEditor:_onAddVehicle(args)
 			yaw = self.player.input.authoritativeAimingYaw,
 			pitch = self.player.input.authoritativeAimingPitch
 		}
-		selection[i].Data.Action = action;
+		selection[i].Data.Action = action
 		self:Print('Updated Waypoint: %s', selection[i].ID)
 	end
 	return true
@@ -1093,13 +1093,13 @@ end
 -- ############################################
 
 function ClientNodeEditor:_getNewIndex()
-	local nextIndex = 0;
-	local allPaths = g_NodeCollection:GetPaths();
+	local nextIndex = 0
+	local allPaths = g_NodeCollection:GetPaths()
 	for pathIndex, points in pairs(allPaths) do
 		if pathIndex - nextIndex > 1 then
-			return nextIndex + 1; -- gap in traces
+			return nextIndex + 1 -- gap in traces
 		end
-		nextIndex = pathIndex;
+		nextIndex = pathIndex
 	end
 	return nextIndex + 1 -- increment index
 end
@@ -1136,7 +1136,7 @@ function ClientNodeEditor:_onEndTrace()
 	if (firstWaypoint) then
 		local startPos 	= firstWaypoint.Position + Vec3.up
 		local endPos 	= self.customTrace:GetLast().Position + Vec3.up
-		local raycast	= RaycastManager:Raycast(startPos, endPos, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll | RayCastFlags.CheckDetailMesh | RayCastFlags.IsAsyncRaycast);
+		local raycast	= RaycastManager:Raycast(startPos, endPos, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll | RayCastFlags.CheckDetailMesh | RayCastFlags.IsAsyncRaycast)
 
 		self.customTrace:ClearSelection()
 		self.customTrace:Select(firstWaypoint)
@@ -1640,25 +1640,25 @@ function ClientNodeEditor:_onEngineUpdate(delta, simDelta)
 						self.customTrace:ClearSelection()
 						self.customTrace:Select(newWaypoint)
 
-						local speed = 0; -- 0 = wait, 1 = prone ... (4 Bits)
-						local extra = 0; -- 0 = nothing, 1 = jump ... (4 Bits)
+						local speed = 0 -- 0 = wait, 1 = prone ... (4 Bits)
+						local extra = 0 -- 0 = nothing, 1 = jump ... (4 Bits)
 
 						if self.player.attachedControllable ~= nil then
 							local speedInput = math.abs(self.player.input:GetLevel(EntryInputActionEnum.EIAThrottle))
 							if speedInput > 0 then
-								speed = 3;
+								speed = 3
 								if self.player.input:GetLevel(EntryInputActionEnum.EIASprint) == 1 then
-									speed = 4;
+									speed = 4
 								end
 							elseif speedInput == 0 then
 								if self.player.attachedControllable.velocity.magnitude > 0 then
 									print(self.player.attachedControllable.velocity.magnitude)
-									speed = 2;
+									speed = 2
 								end
 							end
 
 							if self.player.input:GetLevel(EntryInputActionEnum.EIABrake) > 0 then
-								speed = 1;
+								speed = 1
 							end
 
 							self.customTrace:SetInput(speed, extra, 0)
@@ -1666,19 +1666,19 @@ function ClientNodeEditor:_onEngineUpdate(delta, simDelta)
 						else
 							if self.player.input:GetLevel(EntryInputActionEnum.EIAThrottle) > 0 then --record only if moving
 								if self.player.soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
-									speed = 1;
+									speed = 1
 								elseif self.player.soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
-									speed = 2;
+									speed = 2
 								else
-									speed = 3;
+									speed = 3
 
 									if self.player.input:GetLevel(EntryInputActionEnum.EIASprint) == 1 then
-										speed = 4;
+										speed = 4
 									end
 								end
 
 								if self.player.input:GetLevel(EntryInputActionEnum.EIAJump) == 1 then
-									extra = 1;
+									extra = 1
 								end
 
 								self.customTrace:SetInput(speed, extra, 0)

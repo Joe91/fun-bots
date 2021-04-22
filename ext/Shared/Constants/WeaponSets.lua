@@ -7,4 +7,4 @@ WeaponSets = {
 	'Class_Shotgun',
 	'Class_PDW_Shotgun',
 	'PDW_Shotgun'
-};
+}

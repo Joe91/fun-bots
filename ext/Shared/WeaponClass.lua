@@ -1,23 +1,23 @@
-class('Weapon');
+class('Weapon')
 
 function Weapon:__init(name, extension, unlocks, type, fullResource)
-	self.name		= name;
-	self.extension	= extension;
-	self.unlocks 	= unlocks;
-	self.type		= type;
-	self.fullResource = fullResource;
+	self.name		= name
+	self.extension	= extension
+	self.unlocks 	= unlocks
+	self.type		= type
+	self.fullResource = fullResource
 
-	self.damage		= 0;
-    self.endDamage = 0;
-    self.damageFalloffStartDistance	= 0;
-    self.damageFalloffEndDistance 	= 0;
-	self.bulletSpeed= 0;
-	self.bulletDrop = 0;
-	self.fireCycle	= 0;
-	self.pauseCycle	= 0;
-	self.reload		= 0;
-	self.delayed	= false;
-	self.needvalues	= true;
+	self.damage		= 0
+    self.endDamage = 0
+    self.damageFalloffStartDistance	= 0
+    self.damageFalloffEndDistance 	= 0
+	self.bulletSpeed= 0
+	self.bulletDrop = 0
+	self.fireCycle	= 0
+	self.pauseCycle	= 0
+	self.reload		= 0
+	self.delayed	= false
+	self.needvalues	= true
 end
 
 function Weapon:learnStatsValues()
@@ -66,8 +66,8 @@ function Weapon:learnStatsValues()
 
 	-- stats depending on weapon-type
 	local aiDataString = tostring(aiData.name)
-	local fireDuration = 0;
-	local firePause = 0;
+	local fireDuration = 0
+	local firePause = 0
 	local delayedShot = false
 	if Debug.Shared.MODIFICATIONS then
 		print(self.name)
@@ -152,9 +152,9 @@ function Weapon:learnStatsValues()
 	end
 
 	self.damage 		= bulletData.startDamage
-	self.endDamage 		= bulletData.endDamage;
-    self.damageFalloffStartDistance	= bulletData.damageFalloffStartDistance;
-	self.damageFalloffEndDistance 	= bulletData.damageFalloffStartDistance;
+	self.endDamage 		= bulletData.endDamage
+    self.damageFalloffStartDistance	= bulletData.damageFalloffStartDistance
+	self.damageFalloffEndDistance 	= bulletData.damageFalloffStartDistance
 	self.bulletSpeed 	= fireData.shot.initialSpeed.z
 	self.bulletDrop 	= (bulletData.gravity or 0) * -1
 	self.fireCycle 		= fireDuration --aiData.minBurstCoolDownTime
@@ -174,13 +174,13 @@ function Weapon:getResourcePath(unlock)
 				return unlock
 			end
 
-			unl = "_"..unlock;
+			unl = "_"..unlock
 		end
 		if self.extension ~= '' then
 			ext = self.extension.."_"
 		end
 
-		return	"Weapons/"..ext..self.name.."/U_"..self.name..unl;
+		return	"Weapons/"..ext..self.name.."/U_"..self.name..unl
 	else
 		if unlock ~= nil then
 
@@ -188,18 +188,18 @@ function Weapon:getResourcePath(unlock)
 				return unlock
 			end
 
-			unl = "_"..unlock;
+			unl = "_"..unlock
 		end
-		return self.fullResource..unl;
+		return self.fullResource..unl
 	end
 end
 
 function Weapon:getAllAttachements()
 	local attachmentList = {}
 	for _, attachment in pairs(self.unlocks) do
-		table.insert(attachmentList, self:getResourcePath(attachment));
+		table.insert(attachmentList, self:getResourcePath(attachment))
 	end
-	return attachmentList;
+	return attachmentList
 end
 
-return Weapon;
+return Weapon

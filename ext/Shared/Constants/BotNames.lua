@@ -132,4 +132,4 @@ BotNames = {
 	'Bizzi',
 	'Major',
 	'Joe'
-};
+}

@@ -915,11 +915,11 @@ function NodeCollection:Load(levelName, gameMode)
 	self.gameMode = gameMode or self.gameMode
 
 	if g_Globals.isTdm or g_Globals.isGm or g_Globals.isScavenger then
-		self.gameMode = 'TeamDeathMatch0'; -- paths are compatible
+		self.gameMode = 'TeamDeathMatch0' -- paths are compatible
 	end
 	self.mapName = self.levelName .. '_' .. self.gameMode
 	if self.mapName == "MP_Subway_ConquestSmall0" then
-		self.mapName = "MP_Subway_ConquestLarge0"; --paths are the same
+		self.mapName = "MP_Subway_ConquestLarge0" --paths are the same
 	end
 	if Debug.Shared.NODECOLLECTION then
 		print('NodeCollection:Load: '..self.mapName)
@@ -1011,7 +1011,7 @@ function NodeCollection:Load(levelName, gameMode)
 		print('NodeCollection:Load -> Paths: '..tostring(pathCount)..' | Waypoints: '..tostring(waypointCount))
 	end
 	
-	ChatManager:Yell(Language:I18N('Loaded %d paths with %d waypoints for map %s', pathCount, waypointCount, self.mapName), 5.5);
+	ChatManager:Yell(Language:I18N('Loaded %d paths with %d waypoints for map %s', pathCount, waypointCount, self.mapName), 5.5)
 end
 
 function NodeCollection:Save()
@@ -1025,7 +1025,7 @@ function NodeCollection:Save()
 
 	if not SQL:Query('DROP TABLE IF EXISTS '..self.mapName..'_table') then
 		if Debug.Shared.DATABASE then
-			print('Failed to reset table for map ['..self.mapName..']: '..SQL:Error());
+			print('Failed to reset table for map ['..self.mapName..']: '..SQL:Error())
 		end
 		
 		return
@@ -1150,10 +1150,10 @@ function NodeCollection:Save()
 		end
 	end
 
-	local queriesDone = 0;
+	local queriesDone = 0
 	local queriesTotal = #batchQueries
-	local batchSize = 1000;
-	local hasError = false;
+	local batchSize = 1000
+	local hasError = false
 	local insertQuery = 'INSERT INTO '..self.mapName..'_table (pathIndex, pointIndex, transX, transY, transZ, inputVar, data) VALUES '
 
 	while queriesTotal > queriesDone and not hasError do
@@ -1188,20 +1188,20 @@ function NodeCollection:Save()
 
 	if not results then
 		if Debug.Shared.DATABASE then
-			print('NodeCollection:Save -> Failed to double-check table entries for map ['..self.mapName..']: '..SQL:Error());
+			print('NodeCollection:Save -> Failed to double-check table entries for map ['..self.mapName..']: '..SQL:Error())
 		end
 		
 		ChatManager:Yell(Language:I18N('Failed to execute query: %s', SQL:Error()), 5.5)
 		return
 	end
 
-	SQL:Close();
+	SQL:Close()
 	
 	if Debug.Shared.NODECOLLECTION then
-		print('NodeCollection:Save -> Saved ['..queriesTotal..'] waypoints for map ['..self.mapName..']');
+		print('NodeCollection:Save -> Saved ['..queriesTotal..'] waypoints for map ['..self.mapName..']')
 	end
 	
-	ChatManager:Yell(Language:I18N('Saved %d paths with %d waypoints for map %s', pathCount, queriesTotal, self.mapName), 5.5);
+	ChatManager:Yell(Language:I18N('Saved %d paths with %d waypoints for map %s', pathCount, queriesTotal, self.mapName), 5.5)
 end
 
 -----------------------------

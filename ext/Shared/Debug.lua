@@ -28,4 +28,4 @@ Debug = {
 		DATABASE		= false,		-- Debug Database-Operations
 		MODIFICATIONS	= false			-- Debug some Modifications
 	}
-};
+}

@@ -1,13 +1,13 @@
-class 'UISettings';
+class 'UISettings'
 
-require('__shared/ArrayMap');
+require('__shared/ArrayMap')
 
 function UISettings:__init()
-	self._properties = ArrayMap();
+	self._properties = ArrayMap()
 end
 
 function UISettings:getProperties()
-	return self._properties;
+	return self._properties
 end
 
 function UISettings:add(category, types, name, title, value, default, description)
@@ -19,7 +19,7 @@ function UISettings:add(category, types, name, title, value, default, descriptio
 		value		= value,
 		default		= default,
 		description = description
-	});
+	})
 end
 
 function UISettings:addList(category, name, title, list, value, default, description)
@@ -32,15 +32,15 @@ function UISettings:addList(category, name, title, list, value, default, descrip
 		value		= value,
 		default		= default,
 		description	= description
-	});
+	})
 end
 
 function UISettings:getJSON()
 	if self._properties ~= nil then
-		return json.encode(self._properties:getEntries());
+		return json.encode(self._properties:getEntries())
 	end
 
-	return '{}';
+	return '{}'
 end
 
-return UISettings;
+return UISettings

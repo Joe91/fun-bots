@@ -6,4 +6,4 @@ BotWeapons = {
 	'Gadget2',
 	'Gadget1',
 	'Grenade'
-};
+}

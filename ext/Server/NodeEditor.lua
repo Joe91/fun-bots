@@ -288,10 +288,10 @@ function NodeEditor:_onUIRequestSaveSettings(player, data)
 	end
 
 	if (Config.settingsPassword ~= nil and g_FunBotUIServer:_isAuthenticated(player.accountGuid) ~= true) then
-		return;
+		return
 	end
 
-	local request = json.decode(data);
+	local request = json.decode(data)
 
 	if (request.debugTracePaths) then
 		-- enabled, send them a fresh list
