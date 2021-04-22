@@ -330,7 +330,7 @@ function BotSpawner:_onUpdate(dt, pass)
 				local pathIndex = g_GameDirector:findClosestPath(trans);
 				bot:setVarsWay(nil, true, pathIndex, 1, false);
 				table.remove(self._botsWithoutPath, index);
-				self:spawnBot(bot, bot.player.soldier.transform, true);
+				--self:spawnBot(bot, bot.player.soldier.transform, true);
 				break;
 			end
 		end
@@ -554,7 +554,7 @@ function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, inde
 			if s_Bot == nil then
 				return
 			end
-			--self:SelectLoadout(s_Bot)
+			self:SelectLoadout(s_Bot)
 			self:TriggerSpawn(s_Bot)
 			table.insert(self._botsWithoutPath, s_Bot)
 			return
