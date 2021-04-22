@@ -414,7 +414,8 @@ function Bot:clearPlayer(player)
 		self._lastShootPlayer = nil;
 	end
 
-	if self._shootPlayerName == player.name then
+	local currentShootPlayer = PlayerManager:GetPlayerByName(self._shootPlayerName);
+	if currentShootPlayer == player then
 		self._shootPlayerName = "";
 	end
 end

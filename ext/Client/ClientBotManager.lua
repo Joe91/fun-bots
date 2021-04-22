@@ -9,9 +9,10 @@ function ClientBotManager:__init()
 	self._raycastTimer	= 0;
 	self._lastIndex		= 1;
 	self.player			= nil
+	self.readyToUpdate	= false;
 
 	Events:Subscribe('UpdateManager:Update', self, self._onUpdate);
-	Events:Subscribe('Level:Destroy', self, self.onExtensionUnload)
+	Events:Subscribe('Level:Destroy', self, self.onExtensionUnload);
 	NetEvents:Subscribe('WriteClientSettings', self, self._onWriteClientSettings);
 	NetEvents:Subscribe('CheckBotBotAttack', self, self._checkForBotBotAttack);
 	
@@ -24,15 +25,19 @@ function ClientBotManager:onExtensionUnload()
 	self._raycastTimer	= 0;
 	self._lastIndex		= 1;
 	self.player			= nil
+	self.readyToUpdate	= false;
 end
 
 function ClientBotManager:onEngineMessage(p_Message)
 	if (p_Message.type == MessageType.ClientLevelFinalizedMessage) then
 		NetEvents:SendLocal('RequestClientSettings');
-		
+		self.readyToUpdate	= true;
 		if Debug.Client.INFO then
 			print("level loaded on Client")
 		end
+	end
+	if (p_Message.type == MessageType.ClientConnectionUnloadLevelMessage) or (p_Message.type == MessageType.ClientCharacterLocalPlayerDeletedMessage) then
+		self:onExtensionUnload();
 	end
 end
 
@@ -53,7 +58,7 @@ function ClientBotManager:_onWriteClientSettings(newConfig, updateWeaponSets)
 end
 
 function ClientBotManager:_onUpdate(p_Delta, p_Pass)
-	if (p_Pass ~= UpdatePass.UpdatePass_PreFrame) then
+	if (p_Pass ~= UpdatePass.UpdatePass_PreFrame or not self.readyToUpdate) then
 		return
 	end
 

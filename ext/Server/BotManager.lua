@@ -31,15 +31,9 @@ function BotManager:__init()
 	--Events:Subscribe('Soldier:HealthAction', self, self._onHealthAction)	-- use this for more options on revive. Not needed yet
 	--Events:Subscribe('GunSway:Update', self, self._onGunSway)
 	--Events:Subscribe('GunSway:UpdateRecoil', self, self._onGunSway)
-	Events:Subscribe('Player:Destroyed', self, self._onPlayerDestroyed)
-end
-
-function BotManager:_onPlayerDestroyed(player)
-	if not Utilities:isBot(player) then
-		if (player ~= nil) then
-			self:onPlayerLeft(player)
-		end
-	end
+	--Events:Subscribe('Player:Destroyed', self, self._onPlayerDestroyed) -- Player left is called first, so use this one instead
+	Events:Subscribe('Player:Left', self, self._onPlayerLeft);
+	--Events:Subscribe('Engine:Message', self, self._onEngineMessage); -- maybe us this later
 end
 
 function BotManager:registerActivePlayer(player)
@@ -369,10 +363,12 @@ function BotManager:_checkForBotBotAttack()
 	self._botCheckState = {}
 end
 
-function BotManager:onPlayerLeft(player)
+function BotManager:_onPlayerLeft(player)
 	--remove all references of player
-	for _, bot in pairs(self._bots) do
-		bot:clearPlayer(player)
+	if player ~= nil then
+		for _, bot in pairs(self._bots) do
+			bot:clearPlayer(player)
+		end
 	end
 end
 
