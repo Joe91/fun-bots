@@ -63,6 +63,12 @@ function BotSpawner:updateBotAmountAndTeam()
 	-- find all needed vars
 	local playerCount = BotManager:getPlayerCount();
 	local botCount = BotManager:getActiveBotCount();
+	local nrOfTeams = 0;
+	if g_Globals.isSdm then
+		nrOfTeams = 4;
+	else
+		nrOfTeams = 2;
+	end
 
 	-- kill and destroy bots, if no player left
 	if (playerCount == 0) then
@@ -75,6 +81,153 @@ function BotSpawner:updateBotAmountAndTeam()
 		return
 	end
 
+	local botTeam = BotManager:getBotTeam();
+	local countPlayers = {}
+	local teamCount = {}
+	local countBots = {}
+	local targetTeamCount = {}
+	for i=1, nrOfTeams do
+		countPlayers[i] = 0;
+		countBots[i] = 0;
+		targetTeamCount[i] = 0;
+		local tempPlayers = PlayerManager:GetPlayersByTeam(i);
+		teamCount[i] = #tempPlayers
+		for _,player in pairs(tempPlayers) do
+			if Utilities:isBot(player) then
+				countBots[i] = countBots[i] + 1;
+			else
+				countPlayers[i] = countPlayers[i] + 1;
+			end
+		end
+	end
+
+	-- KEEP PLAYERCOUNT
+	if g_Globals.spawnMode == 'keep_playercount' then
+		for i=1, nrOfTeams do
+			targetTeamCount[i] = Config.initNumberOfBots;
+		end
+		if Config.spawnInBothTeams then
+			for i=1, nrOfTeams do
+				targetTeamCount[i] = math.floor(Config.initNumberOfBots/nrOfTeams);
+			end
+		else
+			for i=1, nrOfTeams do
+				if botTeam ~= i then
+					targetTeamCount[i] = 0;
+				end
+			end
+		end
+
+		for i=1, nrOfTeams do
+			if teamCount[i] < targetTeamCount[i] then
+				self:spawnWayBots(nil, targetTeamCount[i]-teamCount[i], true, 0, 0, i);
+			elseif teamCount[i] > targetTeamCount[i] and botCount[i] > 0 then
+				BotManager:killAll(teamCount[i]-targetTeamCount[i], i)
+			end
+		end
+
+	-- BALANCED teams
+	elseif g_Globals.spawnMode == 'balanced_teams' then
+		local maxPlayersInOneTeam = 0;
+		for i=1, nrOfTeams do
+			if countPlayers[i] > maxPlayersInOneTeam then
+				maxPlayersInOneTeam = countPlayers[i]
+			end
+		end
+		local targetCount = Config.initNumberOfBots + ((maxPlayersInOneTeam-1) * Config.newBotsPerNewPlayer)
+		-- TODO: limit in SDM
+		for i=1, nrOfTeams do
+			targetTeamCount[i] = targetCount;
+		end
+
+		for i=1, nrOfTeams do
+			if teamCount[i] < targetTeamCount[i] then
+				self:spawnWayBots(nil, targetTeamCount[i]-teamCount[i], true, 0, 0, i);
+			elseif teamCount[i] > targetTeamCount[i] then
+				BotManager:killAll(teamCount[i]-targetTeamCount[i], i)
+			end
+		end
+	-- INCREMENT WITH PLAYER
+	elseif g_Globals.spawnMode == 'increment_with_players' then
+		if Config.spawnInBothTeams then
+			for i=1, nrOfTeams do
+				targetTeamCount[i] = 0;
+				for j = 1, nrOfTeams do
+					if i ~= j then
+						if (countPlayers[j]) > 0 then
+							targetTeamCount[i] =  Config.initNumberOfBots + ((countPlayers[j]-1) * Config.newBotsPerNewPlayer)
+							break; --TODO: only use first team. Write algo for SDM as well
+						end
+					end
+				end
+			end
+
+			for i=1, nrOfTeams do
+				if teamCount[i] < targetTeamCount[i] then
+					self:spawnWayBots(nil, targetTeamCount[i]-teamCount[i], true, 0, 0, i);
+				elseif teamCount[i] > targetTeamCount[i] and botCount[i] > 0 then
+					BotManager:killAll(teamCount[i]-targetTeamCount[i], i)
+				end
+			end
+
+		else
+			-- check for bots in wrong team
+			for i=1, nrOfTeams do
+				if i ~= botTeam and botCount[i] > 0 then
+					BotManager:killAll(nil, i)
+				end
+			end
+
+			local targetBotCount = Config.initNumberOfBots + ((playerCount-1) * Config.newBotsPerNewPlayer)
+			local amountToSpawn = targetBotCount - botCount;
+			if amountToSpawn > 0 then
+				self._botSpawnTimer = -5.0
+				self:spawnWayBots(nil, amountToSpawn, true, 0, 0, botTeam);
+			end
+			if amountToSpawn < 0 then
+				BotManager:killAll(-amountToSpawn)
+			end
+		end
+
+	-- FIXED NUMBER TO SPAWN
+	elseif g_Globals.spawnMode == 'fixed_number' then
+		if Config.spawnInBothTeams then
+			local amoutPerTeam = math.floor(Config.initNumberOfBots/nrOfTeams);
+
+			for i=1, nrOfTeams do
+				if teamCount[i] < amoutPerTeam then
+					self:spawnWayBots(nil, amoutPerTeam-teamCount[i], true, 0, 0, i);
+				elseif teamCount[i] > amoutPerTeam and botCount[i] > 0 then
+					BotManager:killAll(teamCount[i]-amoutPerTeam, i)
+				end
+			end
+		else
+			-- check for bots in wrong team
+			for i=1, nrOfTeams do
+				if i ~= botTeam and botCount[i] > 0 then
+					BotManager:killAll(nil, i)
+				end
+			end
+
+			local targetBotCount = Config.initNumberOfBots
+			local amountToSpawn = targetBotCount - botCount;
+			if amountToSpawn > 0 then
+				self._botSpawnTimer = -5.0
+				self:spawnWayBots(nil, amountToSpawn, true, 0, 0, botTeam);
+			end
+			if amountToSpawn < 0 then
+				BotManager:killAll(-amountToSpawn)
+			end
+		end
+	elseif g_Globals.spawnMode == 'manual' then
+		if self._firstSpawnInLevel then
+			for i=1, nrOfTeams do
+				self:spawnWayBots(nil, teamCount[i] - countPlayers[i], true, 0, 0, i);
+			end
+		end
+	end
+
+	--[[
 	local countPlayersTeam1 = 0;
 	local countPlayersTeam2 = 0;
 	local botTeam = BotManager:getBotTeam();
@@ -91,7 +244,7 @@ function BotSpawner:updateBotAmountAndTeam()
 	local botCountTeam1 = BotManager:getActiveBotCount(TeamId.Team1);
 	local botCountTeam2 = BotManager:getActiveBotCount(TeamId.Team2);
 	local team1Count = countPlayersTeam1 + botCountTeam1;
-	local team2Count = countPlayersTeam2 + botCountTeam2;
+	local team2Count = countPlayersTeam2 + botCountTeam2; 
 
 	-- KEEP PLAYERCOUNT
 	if g_Globals.spawnMode == 'keep_playercount' then
@@ -256,7 +409,7 @@ function BotSpawner:updateBotAmountAndTeam()
 			self:spawnWayBots(nil, team2TempCount, true, 0, 0, TeamId.Team2);
 			self:spawnWayBots(nil, team1TempCount, true, 0, 0, TeamId.Team1);
 		end
-	end
+	end--]]
 end
 
 function BotSpawner:_onLevelDestroy()
@@ -527,12 +680,16 @@ end
 
 
 function BotSpawner:getSquad(team)  --TODO: create a more advanced algorithm?
-	for i = 1, SquadId.SquadIdCount - 1 do --for i = 9, SquadId.SquadIdCount - 1 do -- first 8 squads for real players
-		if TeamSquadManager:GetSquadPlayerCount(team, i) < 4 then
-			return i
+	if g_Globals.isSdm then
+		return team;
+	else
+		for i = 1, SquadId.SquadIdCount - 1 do --for i = 9, SquadId.SquadIdCount - 1 do -- first 8 squads for real players
+			if TeamSquadManager:GetSquadPlayerCount(team, i) < 4 then
+				return i;
+			end
 		end
 	end
-	return 0
+	return 0;
 end
 
 function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, indexOnPath, existingBot, forcedTeam)

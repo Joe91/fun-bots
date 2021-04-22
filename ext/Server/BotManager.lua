@@ -8,7 +8,7 @@ local Utilities = require('__shared/Utilities');
 function BotManager:__init()
 	self._bots = {}
 	self._botsByName = {}
-	self._botsByTeam = {{}, {}, {}} -- neutral, team1, team2
+	self._botsByTeam = {{}, {}, {}, {}, {}} -- neutral, team1, team2, team3, team4
 	self._botInputs = {}
 	self._shooterBots = {}
 	self._activePlayers = {}
@@ -688,7 +688,7 @@ function BotManager:destroyPlayerBots(player)
 end
 
 function BotManager:freshnTables()
-	local newTeamsTable = {{},{},{}}
+	local newTeamsTable = {{},{},{},{},{}}
 	local newBotTable = {}
 	local newBotbyNameTable = {}
 
