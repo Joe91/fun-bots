@@ -2,7 +2,7 @@
  
 ## [Unreleased - 1.7.X.X] - 2021-04-XX
  
-[Download](https://github.com/Joe91/fun-bots/archive/V1.7.0.19.zip)  
+[Download](https://github.com/Joe91/fun-bots/archive/V1.7.0.20.zip)  
 The Smart Node update
 
 - Conquest supported
