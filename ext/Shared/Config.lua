@@ -2,6 +2,11 @@ MAX_NUMBER_OF_BOTS	= 64;			-- maximum bots that can be spawned
 USE_REAL_DAMAGE 	= true;			-- with real damage, the hitboxes are a bit buggy
 BOT_TOKEN			= "BOT_";		-- token Bots are marked with
 
+SpawnMethod = {
+	SpawnSoldierAt = 0,
+	Spawn = 1,
+}
+
 Config = {
 	--global
 	botWeapon = "Auto",			-- Select the weapon the bots use
@@ -22,6 +27,7 @@ Config = {
 	damageFactorKnife = 1.5,		-- origninal Damage from bots gets multiplied by this
 
 	--spawn
+	spawnMethod = SpawnMethod.SpawnSoldierAt,	-- method the bots spawn with
 	spawnMode = 'balanced_teams',	-- mode the bots spawn with
 	spawnInBothTeams = true,		-- Bots spawn in both teams
 	initNumberOfBots = 6,			-- bots for spawnmode

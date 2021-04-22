@@ -17,6 +17,7 @@ function BotSpawner:__init()
 	self._updateActive = false;
 	self._spawnSets = {}
 	self._kickPlayers = {}
+	self._botsWithoutPath = {}
 
 	Events:Subscribe('UpdateManager:Update', self, self._onUpdate)
 	Events:Subscribe('Bot:RespawnBot', self, self._onRespawnBot)
@@ -531,7 +532,16 @@ function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, inde
 	end
 	local inverseDirection = false;
 	if name ~= nil or isRespawn then
-
+		if Config.spawnMethod == SpawnMethod.Spawn then
+			local s_Bot = self:GetBot(existingBot, name, team, squad)
+			if s_Bot == nil then
+				return
+			end
+			self:SelectLoadout(s_Bot)
+			self:TriggerSpawn(s_Bot)
+			table.insert(self._botsWithoutPath, s_Bot)
+			return
+		end
 		-- find a spawnpoint
 		if useRandomWay or activeWayIndex == nil or activeWayIndex == 0 then
 			spawnPoint = self:_getSpawnPoint(team, squad);
@@ -556,7 +566,7 @@ function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, inde
 			indexOnPath = 1;
 		end
 		transform.trans = spawnPoint.Position
-		
+
 		if isRespawn then
 			existingBot:setVarsWay(player, useRandomWay, activeWayIndex, indexOnPath, inverseDirection)
 			self:spawnBot(existingBot, transform, false)
@@ -573,6 +583,191 @@ function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, inde
 				self:spawnBot(bot, transform, true)
 			end
 		end
+	end
+end
+
+function BotSpawner:GetBot(p_ExistingBot, p_Name, p_TeamId, p_SquadId)
+	if p_ExistingBot ~= nil then
+		return p_ExistingBot
+	else
+		local s_Bot = BotManager:createBot(p_Name, p_TeamId, p_SquadId)
+		if s_Bot == nil then
+			print("[BotSpawner] Error - Failed to create bot")
+			return nil
+		end
+		if (TeamSquadManager:GetSquadPlayerCount(p_TeamId, p_SquadId) == 1) then
+			s_Bot.player:SetSquadLeader(true, false)
+		end
+		return s_Bot
+	end
+end
+
+function BotSpawner:SelectLoadout(p_Bot)
+	if p_Bot.player.selectedKit == nil then
+		-- SoldierBlueprint
+		p_Bot.player.selectedKit = ResourceManager:SearchForInstanceByGuid(Guid('261E43BF-259B-41D2-BF3B-9AE4DDA96AD2'))
+	end
+	-- TODO: do it properly
+	local s_SoldierKit = ResourceManager:SearchForInstanceByGuid(Guid('47949491-F672-4CD6-998A-101B7740F919'))
+	local s_SoldierPersistance = ResourceManager:SearchForInstanceByGuid(Guid('23CFF61F-F1E2-4306-AECE-2819E35484D2'))
+	p_Bot.player:SelectUnlockAssets(s_SoldierKit, {s_SoldierPersistance})
+	p_Bot.player:SelectWeapon(WeaponSlot.WeaponSlot_0, ResourceManager:SearchForInstanceByGuid(Guid('A7278B05-8D76-4A40-B65D-4414490F6886')), {})
+end
+
+function BotSpawner:TriggerSpawn(p_Bot)
+	local s_CurrentGameMode = SharedUtils:GetCurrentGameMode()
+	if s_CurrentGameMode:match("DeathMatch") or
+	s_CurrentGameMode:match("Domination") or
+	s_CurrentGameMode:match("GunMaster") or
+	s_CurrentGameMode:match("Scavenger") or
+	s_CurrentGameMode:match("TankSuperiority") or
+	s_CurrentGameMode:match("CaptureTheFlag") then
+		self:DeathMatchSpawn(p_Bot)
+	elseif s_CurrentGameMode:match("Rush") then
+		-- seems to be the same as DeathMatchSpawn
+		-- but it has vehicles
+		self:RushSpawn(p_Bot)
+	elseif s_CurrentGameMode:match("Conquest") then
+		-- event + target spawn ("ID_H_US_B", "_ID_H_US_HQ", etc.)
+		self:ConquestSpawn(p_Bot)
+	end
+end
+
+function BotSpawner:DeathMatchSpawn(p_Bot)
+	local s_Event = ServerPlayerEvent("Spawn", p_Bot.player, true, false, false, false, false, false, p_Bot.player.teamId)
+	local s_EntityIterator = EntityManager:GetIterator("ServerCharacterSpawnEntity")
+	local s_Entity = s_EntityIterator:Next()
+	while s_Entity do
+		if s_Entity.data:Is('CharacterSpawnReferenceObjectData') then
+			if CharacterSpawnReferenceObjectData(s_Entity.data).team == p_Bot.player.teamId then
+				s_Entity:FireEvent(s_Event)
+				return
+			end
+		end
+		s_Entity = s_EntityIterator:Next()
+	end
+end
+
+function BotSpawner:RushSpawn(p_Bot)
+	local s_Event = ServerPlayerEvent("Spawn", p_Bot.player, true, false, false, false, false, false, p_Bot.player.teamId)
+	local s_EntityIterator = EntityManager:GetIterator("ServerCharacterSpawnEntity")
+	local s_Entity = s_EntityIterator:Next()
+	while s_Entity do
+		if s_Entity.data:Is('CharacterSpawnReferenceObjectData') then
+			if CharacterSpawnReferenceObjectData(s_Entity.data).team == p_Bot.player.teamId then
+				-- skip if it is a vehiclespawn
+				for i, l_Entity in pairs(s_Entity.bus.entities) do
+					if l_Entity:Is("ServerVehicleSpawnEntity") then
+						goto skip
+					end
+				end
+				s_Entity:FireEvent(s_Event)
+				return
+			end
+		end
+		::skip::
+		s_Entity = s_EntityIterator:Next()
+	end
+end
+
+function BotSpawner:ConquestSpawn(p_Bot)
+	local s_Event = ServerPlayerEvent("Spawn", p_Bot.player, true, false, false, false, false, false, p_Bot.player.teamId)	
+	local s_BestSpawnPoint = self:FindAttackedSpawnPoint(p_Bot.player.teamId)
+	if s_BestSpawnPoint == nil then
+		s_BestSpawnPoint = self:FindFarestSpawnPoint(p_Bot.player.teamId)
+	end
+	if s_BestSpawnPoint == nil then
+		print("[BotSpawner] Error - No valid spawn point found")
+		return
+	end
+	s_BestSpawnPoint:FireEvent(s_Event)
+end
+
+function BotSpawner:FindAttackedSpawnPoint(p_TeamId)
+	local s_BestSpawnPoint = nil
+	local s_LowestFlagLocation = 1
+	local s_EntityIterator = EntityManager:GetIterator("ServerCapturePointEntity")
+	local s_Entity = s_EntityIterator:Next()
+	while s_Entity do
+		s_Entity = CapturePointEntity(s_Entity)
+		if s_Entity.team ~= p_TeamId then
+			goto endOfLoop
+		end
+		for i, l_Entity in pairs(s_Entity.bus.entities) do
+			if l_Entity:Is('ServerCharacterSpawnEntity') then
+				if CharacterSpawnReferenceObjectData(l_Entity.data).team == p_TeamId
+				or CharacterSpawnReferenceObjectData(l_Entity.data).team == 0 then
+					if s_Entity.isFlagMoving and s_Entity.isControlled then
+						if s_BestSpawnPoint == nil then
+							s_BestSpawnPoint = l_Entity
+							s_LowestFlagLocation = s_Entity.flagLocation
+						elseif s_Entity.flagLocation < s_LowestFlagLocation then
+							s_BestSpawnPoint = l_Entity
+							s_LowestFlagLocation = s_Entity.flagLocation
+						end
+					end
+					goto endOfLoop
+				end
+			end
+		end
+		::endOfLoop::
+		s_Entity = s_EntityIterator:Next()
+	end
+	return s_BestSpawnPoint
+end
+
+function BotSpawner:FindFarestSpawnPoint(p_TeamId)
+	local s_BestSpawnPoint = nil
+	local s_HighestDistance = 0
+	local s_BaseLocation = self:GetBaseLocation(p_TeamId)
+	local s_EntityIterator = EntityManager:GetIterator("ServerCapturePointEntity")
+	local s_Entity = s_EntityIterator:Next()
+	while s_Entity do
+		s_Entity = CapturePointEntity(s_Entity)
+		if s_Entity.team ~= p_TeamId then
+			goto endOfLoop
+		end
+		for i, l_Entity in pairs(s_Entity.bus.entities) do
+			if l_Entity:Is('ServerCharacterSpawnEntity') then
+				if CharacterSpawnReferenceObjectData(l_Entity.data).team == p_TeamId
+				or CharacterSpawnReferenceObjectData(l_Entity.data).team == 0 then
+					if s_Entity.isControlled then
+						if s_BestSpawnPoint == nil then
+							s_BestSpawnPoint = l_Entity
+							s_HighestDistance = s_BaseLocation:Distance(s_Entity.transform.trans)
+						elseif s_HighestDistance < s_BaseLocation:Distance(s_Entity.transform.trans) then
+							s_BestSpawnPoint = l_Entity
+							s_HighestDistance = s_BaseLocation:Distance(s_Entity.transform.trans)
+						end
+					end
+					goto endOfLoop
+				end
+			end
+		end
+		::endOfLoop::
+		s_Entity = s_EntityIterator:Next()
+	end
+	return s_BestSpawnPoint
+end
+
+function BotSpawner:GetBaseLocation(p_TeamId)
+	local s_EntityIterator = EntityManager:GetIterator("ServerCapturePointEntity")
+	local s_Entity = s_EntityIterator:Next()
+	while s_Entity do
+		s_Entity = CapturePointEntity(s_Entity)
+		if s_Entity.team ~= p_TeamId then
+			goto endOfLoop
+		end
+		for i, l_Entity in pairs(s_Entity.bus.entities) do
+			if l_Entity:Is('ServerCharacterSpawnEntity') then
+				if CharacterSpawnReferenceObjectData(l_Entity.data).team == 0 then
+					return s_Entity.transform.trans
+				end
+				goto endOfLoop
+			end
+		end
+		::endOfLoop::
+		s_Entity = s_EntityIterator:Next()
 	end
 end
 
