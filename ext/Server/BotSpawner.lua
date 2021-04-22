@@ -494,7 +494,7 @@ function BotSpawner:getSquad(team)  --TODO: create a more advanced algorithm?
 		if team % 2 == 1 then
 			return 1;
 		else
-			return 0;
+			return 0;  --TODO: only needed because of Vext-Bug
 		end
 	else
 		for i = 1, SquadId.SquadIdCount - 1 do --for i = 9, SquadId.SquadIdCount - 1 do -- first 8 squads for real players
