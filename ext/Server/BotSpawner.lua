@@ -331,7 +331,15 @@ function BotSpawner:_onUpdate(dt, pass)
 				bot:setVarsWay(nil, true, pathIndex, 1, false);
 				table.remove(self._botsWithoutPath, index);
 				print("spawned")
-				--self:spawnBot(bot, bot.player.soldier.transform, true);
+				local soldierCustomization = nil
+				local soldierKit = nil
+				local appearance = nil
+				soldierKit, appearance, soldierCustomization = self:getKitApperanceCustomization(bot.player.teamId, bot.kit, bot.color, bot.primary, bot.pistol, bot.knife, bot.gadget1, bot.gadget2, bot.grenade)
+				bot.player:SelectUnlockAssets(soldierKit, appearance)
+				bot.player.soldier:ApplyCustomization(soldierCustomization)
+				self:_modifyWeapon(bot.player.soldier)
+				-- for Civilianizer-mod:
+				Events:Dispatch('Bot:SoldierEntity', bot.player.soldier)
 				break;
 			end
 		end
@@ -555,8 +563,7 @@ function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, inde
 			if s_Bot == nil then
 				return
 			end
-			s_Bot:resetSpawnVars()
-			self:SelectLoadout(s_Bot)
+			self:SelectLoadout(s_Bot, true)
 			self:TriggerSpawn(s_Bot)
 			table.insert(self._botsWithoutPath, s_Bot)
 			return
@@ -621,7 +628,30 @@ function BotSpawner:GetBot(p_ExistingBot, p_Name, p_TeamId, p_SquadId)
 	end
 end
 
-function BotSpawner:SelectLoadout(p_Bot)
+function BotSpawner:SelectLoadout(p_Bot, setKit)
+	local writeNewKit = (setKit or Config.botNewLoadoutOnSpawn)
+	if not writeNewKit and (p_Bot.color == "" or p_Bot.kit == "" or p_Bot.activeWeapon == nil) then
+		writeNewKit = true;
+	end
+	local botColor = Config.botColor
+	local botKit = Config.botKit
+
+	if writeNewKit then
+		if botColor == "RANDOM_COLOR" then
+			botColor = BotColors[MathUtils:GetRandomInt(2, #BotColors)]
+		end
+		if botKit == "RANDOM_KIT" then
+			botKit = self:_getSpawnBotKit();
+		end
+		p_Bot.color = botColor
+		p_Bot.kit = botKit
+	else
+		botColor = p_Bot.color
+		botKit = p_Bot.kit
+	end
+
+	p_Bot:resetSpawnVars()
+	self:setBotWeapons(p_Bot, botKit, writeNewKit)
 	if p_Bot.player.selectedKit == nil then
 		-- SoldierBlueprint
 		p_Bot.player.selectedKit = ResourceManager:SearchForInstanceByGuid(Guid('261E43BF-259B-41D2-BF3B-9AE4DDA96AD2'))
