@@ -326,7 +326,7 @@ function BotSpawner:_onUpdate(p_DeltaTime, p_UpdatePass)
 				local soldierKit = nil
 				local appearance = nil
 				soldierKit, appearance, soldierCustomization = self:getKitApperanceCustomization(bot.player.teamId, bot.kit, bot.color, bot.primary, bot.pistol, bot.knife, bot.gadget1, bot.gadget2, bot.grenade)
-				bot.player:SelectUnlockAssets(soldierKit, appearance)
+				bot.player:SelectUnlockAssets(soldierKit, {appearance})
 				bot.player.soldier:ApplyCustomization(soldierCustomization)
 				self:_modifyWeapon(bot.player.soldier)
 				-- for Civilianizer-mod:
