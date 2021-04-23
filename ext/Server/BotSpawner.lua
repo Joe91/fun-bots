@@ -313,25 +313,28 @@ function BotSpawner:_onUpdate(p_DeltaTime, p_UpdatePass)
 
 	if #self._botsWithoutPath > 0 then
 		for index, bot in pairs(self._botsWithoutPath) do
-			if bot == nil then
+			if bot == nil or bot.player == nil then
 				table.remove(self._botsWithoutPath, index)
 				break
 			end
 			if bot.player.soldier ~= nil then
 				local trans = bot.player.soldier.worldTransform.trans:Clone()
-				local pathIndex = g_GameDirector:findClosestPath(trans)
-				bot:setVarsWay(nil, true, pathIndex, 1, false)
-				table.remove(self._botsWithoutPath, index)
-				local soldierCustomization = nil
-				local soldierKit = nil
-				local appearance = nil
-				soldierKit, appearance, soldierCustomization = self:getKitApperanceCustomization(bot.player.teamId, bot.kit, bot.color, bot.primary, bot.pistol, bot.knife, bot.gadget1, bot.gadget2, bot.grenade)
-				bot.player:SelectUnlockAssets(soldierKit, {appearance})
-				bot.player.soldier:ApplyCustomization(soldierCustomization)
-				self:_modifyWeapon(bot.player.soldier)
-				-- for Civilianizer-mod:
-				Events:Dispatch('Bot:SoldierEntity', bot.player.soldier)
-				break
+				--local node = g_NodeCollection:Find(trans, 5);
+				local node = g_GameDirector:findClosestPath(trans)
+				if node ~= nil then
+					bot:setVarsWay(nil, true, node.PathIndex, node.PointIndex, false)
+					table.remove(self._botsWithoutPath, index)
+					local soldierCustomization = nil
+					local soldierKit = nil
+					local appearance = nil
+					soldierKit, appearance, soldierCustomization = self:getKitApperanceCustomization(bot.player.teamId, bot.kit, bot.color, bot.primary, bot.pistol, bot.knife, bot.gadget1, bot.gadget2, bot.grenade)
+					bot.player:SelectUnlockAssets(soldierKit, {appearance})
+					bot.player.soldier:ApplyCustomization(soldierCustomization)
+					self:_modifyWeapon(bot.player.soldier)
+					-- for Civilianizer-mod:
+					Events:Dispatch('Bot:SoldierEntity', bot.player.soldier)
+					break
+				end
 			end
 		end
 	end
