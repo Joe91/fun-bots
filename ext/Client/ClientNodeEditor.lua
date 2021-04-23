@@ -1,6 +1,6 @@
 class "ClientNodeEditor"
 
-require('__shared/Config');
+require('__shared/Config')
 require('__shared/NodeCollection')
 
 function ClientNodeEditor:__init()
@@ -8,8 +8,8 @@ function ClientNodeEditor:__init()
 	self.player = nil
 	self.playerPos = nil
 
-	self.enabled = Config.debugTracePaths
-	self.disableUserInterface = Config.disableUserInterface
+	self.enabled = Config.DebugTracePaths
+	self.disableUserInterface = Config.DisableUserInterface
 
 	self.commoRoseEnabled = false
 	self.commoRosePressed = false
@@ -38,7 +38,7 @@ function ClientNodeEditor:__init()
 	self.customTrace = nil
 	self.customTraceIndex = nil
 	self.customTraceTimer = -1
-	self.customTraceDelay = Config.traceDelta
+	self.customTraceDelay = Config.TraceDelta
 	self.customTraceDistance = 0
 	self.customTraceSaving = false
 
@@ -308,11 +308,11 @@ function ClientNodeEditor:Print(...)
 	end
 end
 
-function ClientNodeEditor:_onSetEnabled(args)
+function ClientNodeEditor:_onSetEnabled(p_Args)
 
-	local enabled = args
-	if (type(args) == 'table') then
-		enabled = args[1]
+	local enabled = p_Args
+	if (type(p_Args) == 'table') then
+		enabled = p_Args[1]
 	end
 
 	enabled = (enabled == true or enabled == 'true' or enabled == '1')
@@ -330,11 +330,11 @@ function ClientNodeEditor:_onSetEnabled(args)
 	end
 end
 
-function ClientNodeEditor:_onSetCommoRoseEnabled(data)
+function ClientNodeEditor:_onSetCommoRoseEnabled(p_Args)
 
-	local enabled = args
-	if (type(args) == 'table') then
-		enabled = args[1]
+	local enabled = p_Args
+	if (type(p_Args) == 'table') then
+		enabled = p_Args[1]
 	end
 
 	enabled = (enabled == true or enabled == 'true' or enabled == '1')
@@ -342,13 +342,13 @@ function ClientNodeEditor:_onSetCommoRoseEnabled(data)
 	self.commoRoseEnabled = enabled
 end
 
-function ClientNodeEditor:_onUISettings(data)
-	if (data == false) then -- client closed settings
+function ClientNodeEditor:_onUISettings(p_Data)
+	if (p_Data == false) then -- client closed settings
 
-		self:_onSetEnabled(Config.debugTracePaths)
+		self:_onSetEnabled(Config.DebugTracePaths)
 
-		if (self.disableUserInterface ~= Config.disableUserInterface) then
-			self.disableUserInterface = Config.disableUserInterface
+		if (self.disableUserInterface ~= Config.DisableUserInterface) then
+			self.disableUserInterface = Config.DisableUserInterface
 			if (self.disableUserInterface) then
 				self:DeregisterEvents()
 			else
@@ -357,14 +357,14 @@ function ClientNodeEditor:_onUISettings(data)
 		end
 
 		self.helpTextLocation = Vec2.zero
-		self.customTraceDelay = Config.traceDelta
+		self.customTraceDelay = Config.TraceDelta
 	end
 end
 
 -- ########### commo rose top / middle / bottom
 -- ############################################
 
-function ClientNodeEditor:_onSaveNodes(args)
+function ClientNodeEditor:_onSaveNodes(p_Args)
 	self.commoRoseActive = false
 
 	if not self:IsSavingOrLoading() then
@@ -373,12 +373,12 @@ function ClientNodeEditor:_onSaveNodes(args)
 		NetEvents:Send('NodeEditor:ReceivingNodes', #g_NodeCollection:Get())
 		return true
 	end
-	
+
 	self:Print('Operation in progress, please wait...')
 	return false
 end
 
-function ClientNodeEditor:_onSelectNode(args)
+function ClientNodeEditor:_onSelectNode(p_Args)
 	self.commoRoseActive = false
 
 	if self:IsSavingOrLoading() then
@@ -389,7 +389,7 @@ function ClientNodeEditor:_onSelectNode(args)
 	return true
 end
 
-function ClientNodeEditor:_onLoadNodes(args)
+function ClientNodeEditor:_onLoadNodes(p_Args)
 	self.commoRoseActive = false
 
 	if not self:IsSavingOrLoading() then
@@ -398,7 +398,7 @@ function ClientNodeEditor:_onLoadNodes(args)
 		self:_onGetNodes()
 		return true
 	end
-	
+
 	self:Print('Operation in progress, please wait...')
 	return false
 end
@@ -406,7 +406,7 @@ end
 -- ####################### commo rose left side
 -- ############################################
 
-function ClientNodeEditor:_onRemoveNode(args)
+function ClientNodeEditor:_onRemoveNode(p_Args)
 	self.commoRoseActive = false
 
 	if self:IsSavingOrLoading() then
@@ -425,7 +425,7 @@ function ClientNodeEditor:_onUnlinkNode()
 
 	if self:IsSavingOrLoading() then
 		return false
-	end 
+	end
 
 	local result, message = g_NodeCollection:Unlink()
 	if not result then
@@ -434,12 +434,12 @@ function ClientNodeEditor:_onUnlinkNode()
 	return result
 end
 
-function ClientNodeEditor:_onMergeNode(args)
+function ClientNodeEditor:_onMergeNode(p_Args)
 	self.commoRoseActive = false
 
 	if self:IsSavingOrLoading() then
 		return false
-	end 
+	end
 
 	local result, message = g_NodeCollection:MergeSelection()
 	if not result then
@@ -453,8 +453,8 @@ function ClientNodeEditor:_onSelectPrevious()
 
 	if self:IsSavingOrLoading() then
 		return false
-	end 
-	
+	end
+
 	local selection = g_NodeCollection:GetSelected()
 	if (#selection > 0) then
 		if (selection[1].Previous ~= false) then
@@ -467,23 +467,23 @@ function ClientNodeEditor:_onSelectPrevious()
 	return false
 end
 
-function ClientNodeEditor:_onClearSelection(args)
+function ClientNodeEditor:_onClearSelection(p_Args)
 	self.commoRoseActive = false
 
 	if self:IsSavingOrLoading() then
 		return false
-	end 
+	end
 
-	g_NodeCollection:ClearSelection()	
+	g_NodeCollection:ClearSelection()
 	return true
 end
 
-function ClientNodeEditor:_onToggleMoveNode(args)
+function ClientNodeEditor:_onToggleMoveNode(p_Args)
 	self.commoRoseActive = false
 
 	if self:IsSavingOrLoading() then
 		return false
-	end 
+	end
 
 	if (self.editMode == 'move') then
 		self.editMode = 'none'
@@ -491,7 +491,7 @@ function ClientNodeEditor:_onToggleMoveNode(args)
 		self.editModeManualOffset = Vec3.zero
 
 		-- move was cancelled
-		if (args ~= nil and args == true) then
+		if (p_Args ~= nil and p_Args == true) then
 			self:Print('Move Cancelled')
 			local selection = g_NodeCollection:GetSelected()
 			for i=1, #selection do
@@ -528,7 +528,7 @@ function ClientNodeEditor:_onToggleMoveNode(args)
 			self:Print('Player must be alive')
 			return false
 		end
-			
+
 		local selection = g_NodeCollection:GetSelected()
 		if (#selection < 1) then
 			self:Print('Must select at least one node')
@@ -574,7 +574,7 @@ end
 -- ###################### commo rose right side
 -- ############################################
 
-function ClientNodeEditor:_onAddNode(args)
+function ClientNodeEditor:_onAddNode(p_Args)
 	self.commoRoseActive = false
 
 	if self:IsSavingOrLoading() then
@@ -615,7 +615,7 @@ function ClientNodeEditor:_onLinkNode()
 	return result
 end
 
-function ClientNodeEditor:_onSplitNode(args)
+function ClientNodeEditor:_onSplitNode(p_Args)
 	self.commoRoseActive = false
 
 	if self:IsSavingOrLoading() then
@@ -634,8 +634,8 @@ function ClientNodeEditor:_onSelectNext()
 
 	if self:IsSavingOrLoading() then
 		return false
-	end 
-	
+	end
+
 	local selection = g_NodeCollection:GetSelected()
 	if (#selection > 0) then
 		if (selection[1].Next ~= false) then
@@ -653,8 +653,8 @@ function ClientNodeEditor:_onSelectBetween()
 
 	if self:IsSavingOrLoading() then
 		return false
-	end 
-	
+	end
+
 	local selection = g_NodeCollection:GetSelected()
 	if (#selection < 1) then
 		self:Print('Must select more than one node')
@@ -675,14 +675,14 @@ function ClientNodeEditor:_onSelectBetween()
 	return true
 end
 
-function ClientNodeEditor:_onSetInputNode(args)
+function ClientNodeEditor:_onSetInputNode(p_Args)
 	self.commoRoseActive = false
 
 	if self:IsSavingOrLoading() then
 		return false
 	end
 
-	local result, message = g_NodeCollection:SetInput(args[1], args[2], args[3])
+	local result, message = g_NodeCollection:SetInput(p_Args[1], p_Args[2], p_Args[3])
 	if not result then
 		self:Print(message)
 	end
@@ -693,12 +693,12 @@ end
 -- ############################################
 
 
-function ClientNodeEditor:_onShowPath(args)
+function ClientNodeEditor:_onShowPath(p_Args)
 	self.commoRoseActive = false
 
-	local pathIndex = args
-	if (type(args) == 'table') then
-		pathIndex = args[1]
+	local pathIndex = p_Args
+	if (type(p_Args) == 'table') then
+		pathIndex = p_Args[1]
 	end
 
 	if (pathIndex ~= nil and pathIndex:lower() == 'all') then
@@ -709,20 +709,20 @@ function ClientNodeEditor:_onShowPath(args)
 	end
 
 	if (pathIndex ~= nil and tonumber(pathIndex) ~= nil) then
-		g_NodeCollection:ShowPath(tonumber(pathIndex))		
+		g_NodeCollection:ShowPath(tonumber(pathIndex))
 		return true
 	end
-	
-	self:Print('Use `all` or *<number|PathIndex>*')	
+
+	self:Print('Use `all` or *<number|PathIndex>*')
 	return false
 end
 
-function ClientNodeEditor:_onHidePath(args)
+function ClientNodeEditor:_onHidePath(p_Args)
 	self.commoRoseActive = false
 
-	local pathIndex = args
-	if (type(args) == 'table') then
-		pathIndex = args[1]
+	local pathIndex = p_Args
+	if (type(p_Args) == 'table') then
+		pathIndex = p_Args[1]
 	end
 
 	if (pathIndex ~= nil and pathIndex:lower() == 'all') then
@@ -733,15 +733,15 @@ function ClientNodeEditor:_onHidePath(args)
 	end
 
 	if (pathIndex ~= nil and tonumber(pathIndex) ~= nil) then
-		g_NodeCollection:HidePath(tonumber(pathIndex))		
+		g_NodeCollection:HidePath(tonumber(pathIndex))
 		return true
 	end
-	
-	self:Print('Use `all` or *<number|PathIndex>*')	
+
+	self:Print('Use `all` or *<number|PathIndex>*')
 	return false
 end
 
-function ClientNodeEditor:_onWarpTo(args)
+function ClientNodeEditor:_onWarpTo(p_Args)
 	self.commoRoseActive = false
 
 	if (self.player == nil or self.player.soldier == nil or not self.player.alive or not self.player.soldier.isAlive) then
@@ -749,32 +749,32 @@ function ClientNodeEditor:_onWarpTo(args)
 		return false
 	end
 
-	if (args == nil or #args == 0) then
-		self:Print('Must provide Waypoint ID')		
+	if (p_Args == nil or #p_Args == 0) then
+		self:Print('Must provide Waypoint ID')
 		return false
 	end
-	
-	local waypoint = g_NodeCollection:Get(args[1])
+
+	local waypoint = g_NodeCollection:Get(p_Args[1])
 
 	if (waypoint == nil) then
-		self:Print('Waypoint not found: %s', args[1])
+		self:Print('Waypoint not found: %s', p_Args[1])
 		return false
 	end
 
-	self:Print('Teleporting to Waypoint: %s (%s)', waypoint.ID, tostring(waypoint.Position))	
+	self:Print('Teleporting to Waypoint: %s (%s)', waypoint.ID, tostring(waypoint.Position))
 	NetEvents:Send('NodeEditor:WarpTo', waypoint.Position)
 end
 
-function ClientNodeEditor:_onSpawnAtWaypoint(args)
-	if (args == nil or #args == 0) then
-		self:Print('Must provide Waypoint ID')		
+function ClientNodeEditor:_onSpawnAtWaypoint(p_Args)
+	if (p_Args == nil or #p_Args == 0) then
+		self:Print('Must provide Waypoint ID')
 		return false
 	end
-	
-	local waypoint = g_NodeCollection:Get(args[1])
+
+	local waypoint = g_NodeCollection:Get(p_Args[1])
 
 	if (waypoint == nil) then
-		self:Print('Waypoint not found: %s', args[1])
+		self:Print('Waypoint not found: %s', p_Args[1])
 		return false
 	end
 
@@ -788,38 +788,38 @@ end
 -- ############################## Debug Methods
 -- ############################################
 
-function ClientNodeEditor:_onSetLastTraceSearchArea(data)
-	self.lastTraceSearchAreaPos = data[1]
-	self.lastTraceSearchAreaSize = data[2]
+function ClientNodeEditor:_onSetLastTraceSearchArea(p_Data)
+	self.lastTraceSearchAreaPos = p_Data[1]
+	self.lastTraceSearchAreaSize = p_Data[2]
 end
 
 -- NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', pathIndex, pointIndex, botPosition, color)
-function ClientNodeEditor:_onBotSelect(pathIndex, pointIndex, botPosition, isObstacleMode, color)
-	local waypoint = g_NodeCollection:Get(pointIndex, pathIndex)
+function ClientNodeEditor:_onBotSelect(p_PathIndex, p_PointIndex, p_BotPosition, p_IsObstacleMode, p_Color)
+	local waypoint = g_NodeCollection:Get(p_PointIndex, p_PathIndex)
 	if (waypoint ~= nil) then
 		self.botSelectedWaypoints[waypoint.ID] = {
 			Timer = 0.5,
-			Position = botPosition,
-			Obstacle = isObstacleMode,
-			Color = (color or 'White')
+			Position = p_BotPosition,
+			Obstacle = p_IsObstacleMode,
+			Color = (p_Color or 'White')
 		}
 	end
 end
 
-function ClientNodeEditor:_onShowRose(args)
+function ClientNodeEditor:_onShowRose(p_Args)
 	self.commoRoseEnabled = true
 	self.commoRoseActive = true
 	self:_onCommoRoseAction('Show')
 	return true
 end
 
-function ClientNodeEditor:_onHideRose(args)
+function ClientNodeEditor:_onHideRose(p_Args)
 	self.commoRoseActive = false
 	self:_onCommoRoseAction('Hide')
 	return true
 end
 
-function ClientNodeEditor:_onDumpNodes(args)
+function ClientNodeEditor:_onDumpNodes(p_Args)
 
 	local selection = g_NodeCollection:GetSelected()
 
@@ -830,21 +830,21 @@ function ClientNodeEditor:_onDumpNodes(args)
 	for i=1, #selection do
 		self:Print(g_Utilities:dump(selection[i], true, 1))
 	end
-	
+
 	self:Print('Dumped [%d] Nodes!', #selection)
 	return true
 end
 
-function ClientNodeEditor:_onSetMetadata(args)
+function ClientNodeEditor:_onSetMetadata(p_Args)
 	self.commoRoseActive = false
 
 	if self:IsSavingOrLoading() then
 		return false
 	end
 
-	local data = table.concat(args or {}, ' ')
+	local data = table.concat(p_Args or {}, ' ')
 	self:Print('Set Metadata (data): %s', g_Utilities:dump(data, true))
-	
+
 	local result, message = g_NodeCollection:UpdateMetadata(data)
 	if (result ~= false) then
 		g_NodeCollection:ProcessMetadata(result)
@@ -854,7 +854,7 @@ function ClientNodeEditor:_onSetMetadata(args)
 	return result
 end
 
-function ClientNodeEditor:_onAddMcom(args)
+function ClientNodeEditor:_onAddMcom(p_Args)
 	self.commoRoseActive = false
 
 	if self:IsSavingOrLoading() then
@@ -882,13 +882,13 @@ function ClientNodeEditor:_onAddMcom(args)
 			yaw = self.player.input.authoritativeAimingYaw,
 			pitch = self.player.input.authoritativeAimingPitch
 		}
-		selection[i].Data.Action = action;
+		selection[i].Data.Action = action
 		self:Print('Updated Waypoint: %s', selection[i].ID)
 	end
 	return true
 end
 
-function ClientNodeEditor:_onAddVehicle(args)
+function ClientNodeEditor:_onAddVehicle(p_Args)
 	self.commoRoseActive = false
 
 	if self:IsSavingOrLoading() then
@@ -916,22 +916,22 @@ function ClientNodeEditor:_onAddVehicle(args)
 			yaw = self.player.input.authoritativeAimingYaw,
 			pitch = self.player.input.authoritativeAimingPitch
 		}
-		selection[i].Data.Action = action;
+		selection[i].Data.Action = action
 		self:Print('Updated Waypoint: %s', selection[i].ID)
 	end
 	return true
 end
 
-function ClientNodeEditor:_onAddObjective(args)
+function ClientNodeEditor:_onAddObjective(p_Args)
 	self.commoRoseActive = false
 
 	if self:IsSavingOrLoading() then
 		return false
 	end
 
-	local data = table.concat(args or {}, ' ')
+	local data = table.concat(p_Args or {}, ' ')
 	self:Print('Add Objective (data): %s', g_Utilities:dump(data, true))
-	
+
 	local selection = g_NodeCollection:GetSelected()
 	if (#selection < 1) then
 		self:Print('Must select at least one node')
@@ -967,16 +967,16 @@ function ClientNodeEditor:_onAddObjective(args)
 	return true
 end
 
-function ClientNodeEditor:_onRemoveObjective(args)
+function ClientNodeEditor:_onRemoveObjective(p_Args)
 	self.commoRoseActive = false
 
 	if self:IsSavingOrLoading() then
 		return false
 	end
 
-	local data = table.concat(args or {}, ' ')
+	local data = table.concat(p_Args or {}, ' ')
 	self:Print('Remove Objective (data): %s', g_Utilities:dump(data, true))
-	
+
 	local selection = g_NodeCollection:GetSelected()
 	if (#selection < 1) then
 		self:Print('Must select at least one node')
@@ -1008,7 +1008,7 @@ function ClientNodeEditor:_onRemoveObjective(args)
 	return true
 end
 
-function ClientNodeEditor:_onRecalculateIndexes(args)
+function ClientNodeEditor:_onRecalculateIndexes(p_Args)
 	self.commoRoseActive = false
 
 	if self:IsSavingOrLoading() then
@@ -1025,7 +1025,7 @@ function ClientNodeEditor:_onRecalculateIndexes(args)
 	return true
 end
 
-function ClientNodeEditor:_onProcessMetadata(args)
+function ClientNodeEditor:_onProcessMetadata(p_Args)
 	self.commoRoseActive = false
 
 	if self:IsSavingOrLoading() then
@@ -1042,31 +1042,31 @@ function ClientNodeEditor:_onProcessMetadata(args)
 	return true
 end
 
-function ClientNodeEditor:_onSetBotVision(args)
-	self.botVisionEnabled = (args ~= nil and (args[1] == '1' or args[1] == 'true'))
+function ClientNodeEditor:_onSetBotVision(p_Args)
+	self.botVisionEnabled = (p_Args ~= nil and (p_Args[1] == '1' or p_Args[1] == 'true'))
 
 	self:Print('BotVision: %s', self.botVisionEnabled)
-	
+
 	NetEvents:Send('NodeEditor:SetBotVision', self.botVisionEnabled)
 	if (self.botVisionEnabled) then
 		-- unload our current cache
-		self:_onUnload(args)
+		self:_onUnload(p_Args)
 		-- enable the timer before we are ready to receive
 		self.nodeReceiveTimer = 0
 	end
 end
 
 
-function ClientNodeEditor:_onObjectiveDirection(args)
+function ClientNodeEditor:_onObjectiveDirection(p_Args)
 	self.commoRoseActive = false
 
 	if self:IsSavingOrLoading() then
 		return false
 	end
 
-	local data = table.concat(args or {}, ' ')
+	local data = table.concat(p_Args or {}, ' ')
 	self:Print('Objective Direction (data): %s', g_Utilities:dump(data, true))
-	
+
 	local selection = g_NodeCollection:GetSelected()
 	if (#selection < 1) then
 		self:Print('Must select at least one node')
@@ -1076,14 +1076,14 @@ function ClientNodeEditor:_onObjectiveDirection(args)
 	local direction, bestPreviousWaypoint = g_NodeCollection:ObjectiveDirection(selection[1], data)
 
 	self:Print('Direction: %s', direction)
-	
+
 	if (bestPreviousWaypoint ~= nil) then
 		self:Print('Best Previous Waypoint: %s', bestPreviousWaypoint.ID)
 	end
 	return true
 end
 
-function ClientNodeEditor:_onGetKnownOjectives(args)
+function ClientNodeEditor:_onGetKnownOjectives(p_Args)
 	self.commoRoseActive = false
 	self:Print('Known Objectives -> '..g_Utilities:dump(g_NodeCollection:GetKnownOjectives(), true))
 	return true
@@ -1093,13 +1093,13 @@ end
 -- ############################################
 
 function ClientNodeEditor:_getNewIndex()
-	local nextIndex = 0;
-	local allPaths = g_NodeCollection:GetPaths();
+	local nextIndex = 0
+	local allPaths = g_NodeCollection:GetPaths()
 	for pathIndex, points in pairs(allPaths) do
 		if pathIndex - nextIndex > 1 then
-			return nextIndex + 1; -- gap in traces
+			return nextIndex + 1 -- gap in traces
 		end
-		nextIndex = pathIndex;
+		nextIndex = pathIndex
 	end
 	return nextIndex + 1 -- increment index
 end
@@ -1120,7 +1120,7 @@ function ClientNodeEditor:_onStartTrace()
 	self.customTrace:Select(firstWaypoint)
 
 	self:Print('Custom Trace Started')
-	
+
 	g_FunBotUIClient:_onUITrace(true)
 	g_FunBotUIClient:_onUITraceIndex(self.customTraceIndex)
 	g_FunBotUIClient:_onUITraceWaypoints(#self.customTrace:Get())
@@ -1136,7 +1136,7 @@ function ClientNodeEditor:_onEndTrace()
 	if (firstWaypoint) then
 		local startPos 	= firstWaypoint.Position + Vec3.up
 		local endPos 	= self.customTrace:GetLast().Position + Vec3.up
-		local raycast	= RaycastManager:Raycast(startPos, endPos, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll | RayCastFlags.CheckDetailMesh | RayCastFlags.IsAsyncRaycast);
+		local raycast	= RaycastManager:Raycast(startPos, endPos, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll | RayCastFlags.CheckDetailMesh | RayCastFlags.IsAsyncRaycast)
 
 		self.customTrace:ClearSelection()
 		self.customTrace:Select(firstWaypoint)
@@ -1166,7 +1166,7 @@ function ClientNodeEditor:_onClearTrace()
 	self:Print('Custom Trace Cleared')
 end
 
-function ClientNodeEditor:_onSaveTrace(pathIndex)
+function ClientNodeEditor:_onSaveTrace(p_PathIndex)
 	self.commoRoseActive = false
 
 	if self:IsSavingOrLoading() then
@@ -1174,8 +1174,8 @@ function ClientNodeEditor:_onSaveTrace(pathIndex)
 		return false
 	end
 
-	if (type(pathIndex) == 'table') then
-		pathIndex = pathIndex[1]
+	if (type(p_PathIndex) == 'table') then
+		p_PathIndex = p_PathIndex[1]
 	end
 
 	if (self.customTrace == nil) then
@@ -1186,7 +1186,7 @@ function ClientNodeEditor:_onSaveTrace(pathIndex)
 	self.nodeOperation = 'Custom Trace'
 
 	local pathCount = #g_NodeCollection:GetPaths()
-	pathIndex = tonumber(pathIndex) or self:_getNewIndex()
+	p_PathIndex = tonumber(p_PathIndex) or self:_getNewIndex()
 	local currentWaypoint = self.customTrace:GetFirst()
 	local referrenceWaypoint = nil
 	local direction = 'Next'
@@ -1200,7 +1200,7 @@ function ClientNodeEditor:_onSaveTrace(pathIndex)
 	end
 
 	-- remove existing path and replace with current
-	if (pathIndex == 1) then
+	if (p_PathIndex == 1) then
 
 		if (pathCount == 1) then
 			referrenceWaypoint = g_NodeCollection:GetFirst()
@@ -1208,27 +1208,27 @@ function ClientNodeEditor:_onSaveTrace(pathIndex)
 			-- get first node of 2nd path, we'll InsertBefore the new nodes
 			referrenceWaypoint = g_NodeCollection:GetFirst(2)
 			currentWaypoint = self.customTrace:GetLast()
-			direction = 'Previous' 
+			direction = 'Previous'
 		end
 
-	-- pathIndex is between 2 and #g_NodeCollection:GetPaths()
+	-- p_PathIndex is between 2 and #g_NodeCollection:GetPaths()
 	-- get the node before the start of the specified path, if the path is existing
-	elseif (pathIndex <= pathCount) then
-		if #g_NodeCollection:Get(nil, pathIndex) > 0 then
+	elseif (p_PathIndex <= pathCount) then
+		if #g_NodeCollection:Get(nil, p_PathIndex) > 0 then
 			print("path exists")
-			referrenceWaypoint = g_NodeCollection:GetFirst(pathIndex).Previous
+			referrenceWaypoint = g_NodeCollection:GetFirst(p_PathIndex).Previous
 		else
 			referrenceWaypoint = g_NodeCollection:GetLast()
 		end
 
-	-- pathIndex == last path index, append all nodes to end of collection
-	elseif (pathIndex > pathCount) then
+	-- p_PathIndex == last path index, append all nodes to end of collection
+	elseif (p_PathIndex > pathCount) then
 		referrenceWaypoint = g_NodeCollection:GetLast()
 	end
 
 	-- we might have a path to delete
-	if (pathIndex > 0 and pathIndex <= pathCount) then
-		local pathWaypoints = g_NodeCollection:Get(nil, pathIndex)
+	if (p_PathIndex > 0 and p_PathIndex <= pathCount) then
+		local pathWaypoints = g_NodeCollection:Get(nil, p_PathIndex)
 		if #pathWaypoints > 0 then
 			for i=1, #pathWaypoints do
 				g_NodeCollection:Remove(pathWaypoints[i])
@@ -1239,7 +1239,7 @@ function ClientNodeEditor:_onSaveTrace(pathIndex)
 	-- merge custom trace into main node collection
 	while currentWaypoint do
 
-		currentWaypoint.PathIndex = pathIndex
+		currentWaypoint.PathIndex = p_PathIndex
 
 		local newWaypoint = g_NodeCollection:Create(currentWaypoint)
 
@@ -1254,54 +1254,54 @@ function ClientNodeEditor:_onSaveTrace(pathIndex)
 	end
 
 	self.customTrace:Clear()
-	self:Print('Custom Trace Saved to Path: %d', pathIndex)
+	self:Print('Custom Trace Saved to Path: %d', p_PathIndex)
 	self.nodeOperation = ''
 end
 
 -- ##################################### Events
 -- ############################################
 
-function ClientNodeEditor:_onLevelLoaded(levelName, gameMode)
-	self.enabled = Config.debugTracePaths
+function ClientNodeEditor:_onLevelLoaded(p_LevelName, p_GameMode)
+	self.enabled = Config.DebugTracePaths
 	if (self.enabled) then
 		self.nodeReceiveTimer = 0 -- enable the timer for receiving nodes
 	end
 end
 
-function ClientNodeEditor:_onPlayerDeleted(player)
-	if (self.player ~= nil and player ~= nil and self.player.name == player.name) then
+function ClientNodeEditor:_onPlayerDeleted(p_Player)
+	if (self.player ~= nil and p_Player ~= nil and self.player.name == p_Player.name) then
 		self:_onUnload()
 	end
 end
 
-function ClientNodeEditor:_onUnload(args)
+function ClientNodeEditor:_onUnload(p_Args)
 	self.player = nil
 	self.nodeReceiveProgress = 0
 	self.nodeReceiveExpected = 0
-	if (args ~= nil) then
-		if (type(args) == 'table') then
-			self.nodeReceiveExpected = tonumber(args[1]) or 0
+	if (p_Args ~= nil) then
+		if (type(p_Args) == 'table') then
+			self.nodeReceiveExpected = tonumber(p_Args[1]) or 0
 		else
-			self.nodeReceiveExpected = tonumber(args) or 0
+			self.nodeReceiveExpected = tonumber(p_Args) or 0
 		end
 	end
 
-	self:Print('Unload, Expecting Waypoints: %s', g_Utilities:dump(args))
-	
+	self:Print('Unload, Expecting Waypoints: %s', g_Utilities:dump(p_Args))
+
 	g_NodeCollection:Clear()
 	g_NodeCollection:DeregisterEvents()
 end
 
-function ClientNodeEditor:_onCommoRoseAction(action, hit)
-	self:Print('Commo Rose -> %s', action)
+function ClientNodeEditor:_onCommoRoseAction(p_Action, p_Hit)
+	self:Print('Commo Rose -> %s', p_Action)
 
-	if (action == 'Hide') then
+	if (p_Action == 'Hide') then
 		self.commoRoseActive = false
 		g_FunBotUIClient:_onUICommonRose('false')
-		return 
+		return
 	end
 
-	if (action == 'Show') then
+	if (p_Action == 'Show') then
 		self.commoRoseActive = false -- disabled for now
 
 		local center = { Action = 'UI_CommoRose_Action_Select', Label = Language:I18N('Select') }
@@ -1335,7 +1335,7 @@ function ClientNodeEditor:_onCommoRoseAction(action, hit)
 		return
 	end
 
-	if (action == 'Select') then
+	if (p_Action == 'Select') then
 
 		local hit = self:Raycast()
 		if (hit == nil) then
@@ -1352,7 +1352,7 @@ function ClientNodeEditor:_onCommoRoseAction(action, hit)
 		end
 
 		-- we found one, let's toggle its selected state
-		if (hitPoint ~= nil) then 
+		if (hitPoint ~= nil) then
 			local isSelected = g_NodeCollection:IsSelected(hitPoint)
 
 			if (isSelected) then
@@ -1368,19 +1368,19 @@ function ClientNodeEditor:_onCommoRoseAction(action, hit)
 	end
 end
 
-function ClientNodeEditor:_onUIPushScreen(hook, screen, priority, parentGraph, stateNodeGuid)
-	if (self.enabled and self.commoRoseEnabled and screen ~= nil and UIScreenAsset(screen).name == 'UI/Flow/Screen/CommRoseScreen') then
+function ClientNodeEditor:_onUIPushScreen(p_HookCtx, p_Screen, p_Priority, p_ParentGraph, p_StateNodeGuid)
+	if (self.enabled and self.commoRoseEnabled and p_Screen ~= nil and UIScreenAsset(p_Screen).name == 'UI/Flow/Screen/CommRoseScreen') then
 		self:Print('Blocked vanilla commo rose')
-		hook:Return(nil)
+		p_HookCtx:Return()
 		return
 	end
-	hook:Pass(screen, priority, parentGraph, stateNodeGuid)
+	p_HookCtx:Pass(p_Screen, p_Priority, p_ParentGraph, p_StateNodeGuid)
 end
 
 -- ############################## Update Events
 -- ############################################
 
-function ClientNodeEditor:_onUpdateInput(player, delta)
+function ClientNodeEditor:_onUpdateInput(p_Player, p_Delta)
 	if (not self.enabled) then
 		return
 	end
@@ -1550,11 +1550,11 @@ function ClientNodeEditor:_onUpdateInput(player, delta)
 	end
 end
 
-function ClientNodeEditor:_onEngineUpdate(delta, simDelta)
+function ClientNodeEditor:_onEngineUpdate(p_Delta, p_SimDelta)
 	if (self.nodeSendTimer >= 0 and #self.nodesToSend > 0) then
 
 		self.debugEntries['nodeSendProgress'] = self.nodeSendProgress..'/'..(#self.nodesToSend)
-		self.nodeSendTimer = self.nodeSendTimer + delta
+		self.nodeSendTimer = self.nodeSendTimer + p_Delta
 
 		if (self.nodeSendTimer > self.nodeSendDelay) then
 
@@ -1590,11 +1590,11 @@ function ClientNodeEditor:_onEngineUpdate(delta, simDelta)
 	end
 
 	if (self.nodeReceiveTimer >= 0) then
-		self.nodeReceiveTimer = self.nodeReceiveTimer + delta
+		self.nodeReceiveTimer = self.nodeReceiveTimer + p_Delta
 
 		-- timer for receiving node payload
 		if (self.nodeReceiveTimer > self.nodeReceiveDelay) then
-			self:Print('Ready to receive waypoints')			
+			self:Print('Ready to receive waypoints')
 			NetEvents:Send('NodeEditor:SendNodes')
 			self.nodeReceiveTimer = -1
 		end
@@ -1608,7 +1608,7 @@ function ClientNodeEditor:_onEngineUpdate(delta, simDelta)
 
 		if (self.commoRosePressed and self.commoRoseTimer >= 0) then
 
-			self.commoRoseTimer = self.commoRoseTimer + delta
+			self.commoRoseTimer = self.commoRoseTimer + p_Delta
 
 			if (self.commoRoseTimer > self.commoRoseDelay) then
 				self.commoRoseTimer = -1
@@ -1619,7 +1619,7 @@ function ClientNodeEditor:_onEngineUpdate(delta, simDelta)
 	end
 
 	if (self.customTraceTimer >= 0 and self.player ~= nil and self.player.soldier ~= nil) then
-		self.customTraceTimer = self.customTraceTimer + delta
+		self.customTraceTimer = self.customTraceTimer + p_Delta
 
 		if (self.customTraceTimer > self.customTraceDelay) then
 
@@ -1640,25 +1640,25 @@ function ClientNodeEditor:_onEngineUpdate(delta, simDelta)
 						self.customTrace:ClearSelection()
 						self.customTrace:Select(newWaypoint)
 
-						local speed = 0; -- 0 = wait, 1 = prone ... (4 Bits)
-						local extra = 0; -- 0 = nothing, 1 = jump ... (4 Bits)
+						local speed = 0 -- 0 = wait, 1 = prone ... (4 Bits)
+						local extra = 0 -- 0 = nothing, 1 = jump ... (4 Bits)
 
 						if self.player.attachedControllable ~= nil then
 							local speedInput = math.abs(self.player.input:GetLevel(EntryInputActionEnum.EIAThrottle))
 							if speedInput > 0 then
-								speed = 3;
+								speed = 3
 								if self.player.input:GetLevel(EntryInputActionEnum.EIASprint) == 1 then
-									speed = 4;
+									speed = 4
 								end
 							elseif speedInput == 0 then
 								if self.player.attachedControllable.velocity.magnitude > 0 then
 									print(self.player.attachedControllable.velocity.magnitude)
-									speed = 2;
+									speed = 2
 								end
 							end
 
 							if self.player.input:GetLevel(EntryInputActionEnum.EIABrake) > 0 then
-								speed = 1;
+								speed = 1
 							end
 
 							self.customTrace:SetInput(speed, extra, 0)
@@ -1666,19 +1666,19 @@ function ClientNodeEditor:_onEngineUpdate(delta, simDelta)
 						else
 							if self.player.input:GetLevel(EntryInputActionEnum.EIAThrottle) > 0 then --record only if moving
 								if self.player.soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
-									speed = 1;
+									speed = 1
 								elseif self.player.soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
-									speed = 2;
+									speed = 2
 								else
-									speed = 3;
+									speed = 3
 
 									if self.player.input:GetLevel(EntryInputActionEnum.EIASprint) == 1 then
-										speed = 4;
+										speed = 4
 									end
 								end
 
 								if self.player.input:GetLevel(EntryInputActionEnum.EIAJump) == 1 then
-									extra = 1;
+									extra = 1
 								end
 
 								self.customTrace:SetInput(speed, extra, 0)
@@ -1691,7 +1691,7 @@ function ClientNodeEditor:_onEngineUpdate(delta, simDelta)
 						local lastWaypoint = self.customTrace:GetLast()
 						self.customTrace:ClearSelection()
 						self.customTrace:Select(lastWaypoint)
-						self.customTrace:SetInput(lastWaypoint.SpeedMode, lastWaypoint.ExtraMode, lastWaypoint.OptValue + delta)
+						self.customTrace:SetInput(lastWaypoint.SpeedMode, lastWaypoint.ExtraMode, lastWaypoint.OptValue + p_Delta)
 					end
 
 					self.customTraceDistance = self.customTraceDistance + lastDistance
@@ -1712,7 +1712,7 @@ function ClientNodeEditor:_onEngineUpdate(delta, simDelta)
 		if (data.Timer < 0) then
 			self.botSelectedWaypoints[waypointID] = nil
 		else
-			data.Timer = data.Timer - delta
+			data.Timer = data.Timer - p_Delta
 			botwpcount = botwpcount + 1
 		end
 	end
@@ -1720,10 +1720,10 @@ function ClientNodeEditor:_onEngineUpdate(delta, simDelta)
 	self.debugEntries['botSelectedWaypoints'] = botwpcount
 end
 
-function ClientNodeEditor:_onUpdateManagerUpdate(delta, pass)
+function ClientNodeEditor:_onUpdateManagerUpdate(p_Delta, p_Pass)
 
 	-- Only do math on presimulation UpdatePass, don't bother if debugging is off
-	if not self.enabled or pass ~= UpdatePass.UpdatePass_PreSim then
+	if not self.enabled or p_Pass ~= UpdatePass.UpdatePass_PreSim then
 		return
 	end
 
@@ -1751,7 +1751,7 @@ function ClientNodeEditor:_onUpdateManagerUpdate(delta, pass)
 							self.editRayHitStart = hit.position
 							self.editRayHitCurrent = hit.position
 							self.editRayHitRelative = Vec3.zero
-						else 
+						else
 							self.editRayHitCurrent = hit.position
 							self.editRayHitRelative = self.editRayHitCurrent - self.editRayHitStart
 						end
@@ -1779,7 +1779,7 @@ function ClientNodeEditor:_onUpdateManagerUpdate(delta, pass)
 									adjustedPosition = self.playerPos + self.editModeManualOffset
 								else
 									adjustedPosition = self.editRayHitCurrent + self.editModeManualOffset
-								end 
+								end
 
 								g_NodeCollection:Update(pathWaypoints[i], {
 									Position = adjustedPosition
@@ -1816,7 +1816,7 @@ function ClientNodeEditor:_onUpdateManagerUpdate(delta, pass)
     			if (players[p].soldier ~= nil and self.player.teamId ~= players[p].teamId) then
 
     				local ray = RaycastManager:Raycast(self.playerPos+Vec3.up, (players[p].soldier.worldTransform.trans+Vec3.up), RayCastFlags.CheckDetailMesh | RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.IsAsyncRaycast)
-    				
+
 					local posData = {
 						Visible = (ray == nil or ray.rigidBody == nil),
 						Alive = players[p].soldier.alive
@@ -1857,7 +1857,7 @@ function ClientNodeEditor:_onUIDrawHud()
 				end
 
 				local color = self.colors.Text
-				
+
 				if (not v.Alive) then
 					color = self.colors[1].Line
 				else
@@ -1891,7 +1891,7 @@ function ClientNodeEditor:_onUIDrawHud()
 	end
 
 	--DebugRenderer:DrawText2D(20, 400, debugText, self.colors.Text, 1)
-	
+
 
 	-- draw help info
 	local helpText = ''
@@ -1983,25 +1983,25 @@ function ClientNodeEditor:_onUIDrawHud()
 	end
 end
 
-function ClientNodeEditor:_drawNode(waypoint, isTracePath)
-	local isSelected = not isTracePath and g_NodeCollection:IsSelected(waypoint)
-	local qualityAtRange = g_NodeCollection:InRange(waypoint, self.playerPos, Config.lineRange)
+function ClientNodeEditor:_drawNode(p_Waypoint, p_IsTracePath)
+	local isSelected = not p_IsTracePath and g_NodeCollection:IsSelected(p_Waypoint)
+	local qualityAtRange = g_NodeCollection:InRange(p_Waypoint, self.playerPos, Config.LineRange)
 
 	-- setup node color information
 	local color = self.colors.Orphan
-	if (waypoint.Previous ~= false and waypoint.Next ~= false) then
+	if (p_Waypoint.Previous ~= false and p_Waypoint.Next ~= false) then
 
 		-- happens after the 20th path
-		if (self.colors[waypoint.PathIndex] == nil) then
+		if (self.colors[p_Waypoint.PathIndex] == nil) then
 			local r, g, b = (math.random(20, 100) / 100), (math.random(20, 100) / 100), (math.random(20, 100) / 100)
-			self.colors[waypoint.PathIndex] = {
+			self.colors[p_Waypoint.PathIndex] = {
 				Node = Vec4(r, g, b, 0.25),
 				Line = Vec4(r, g, b, 1),
 			}
 		end
-		color = self.colors[waypoint.PathIndex]
+		color = self.colors[p_Waypoint.PathIndex]
 	end
-	if (isTracePath) then
+	if (p_IsTracePath) then
 		color = {
 			Node = self.colors.White,
 			Line = self.colors.White,
@@ -2009,89 +2009,89 @@ function ClientNodeEditor:_drawNode(waypoint, isTracePath)
 	end
 
 	-- draw the node for the waypoint itself
-	if (g_NodeCollection:InRange(waypoint, self.playerPos, Config.waypointRange)) then
-		DebugRenderer:DrawSphere(waypoint.Position, 0.05, color.Node, false, (not qualityAtRange))
+	if (g_NodeCollection:InRange(p_Waypoint, self.playerPos, Config.WaypointRange)) then
+		DebugRenderer:DrawSphere(p_Waypoint.Position, 0.05, color.Node, false, (not qualityAtRange))
 	end
 
 	-- if bot has selected draw it
-	if (not isTracePath and self.botSelectedWaypoints[waypoint.ID] ~= nil) then
-		local selectData = self.botSelectedWaypoints[waypoint.ID]
+	if (not p_IsTracePath and self.botSelectedWaypoints[p_Waypoint.ID] ~= nil) then
+		local selectData = self.botSelectedWaypoints[p_Waypoint.ID]
 		if (selectData.Obstacle) then
-			DebugRenderer:DrawLine(selectData.Position + (Vec3.up * 1.2), waypoint.Position, self.colors.Red, self.colors.Red)
+			DebugRenderer:DrawLine(selectData.Position + (Vec3.up * 1.2), p_Waypoint.Position, self.colors.Red, self.colors.Red)
 		else
-			DebugRenderer:DrawLine(selectData.Position + (Vec3.up * 1.2), waypoint.Position, self.colors[selectData.Color], self.colors[selectData.Color])
+			DebugRenderer:DrawLine(selectData.Position + (Vec3.up * 1.2), p_Waypoint.Position, self.colors[selectData.Color], self.colors[selectData.Color])
 		end
 	end
 
 	-- if selected draw bigger node and transform helper
-	if (not isTracePath and isSelected and g_NodeCollection:InRange(waypoint, self.playerPos, Config.waypointRange)) then
+	if (not p_IsTracePath and isSelected and g_NodeCollection:InRange(p_Waypoint, self.playerPos, Config.WaypointRange)) then
 		-- node selection indicator
-		DebugRenderer:DrawSphere(waypoint.Position, 0.08,  color.Node, false, (not qualityAtRange))
+		DebugRenderer:DrawSphere(p_Waypoint.Position, 0.08,  color.Node, false, (not qualityAtRange))
 
 		-- transform marker
-		DebugRenderer:DrawLine(waypoint.Position, waypoint.Position + (Vec3.up), self.colors.Red, self.colors.Red)
-		DebugRenderer:DrawLine(waypoint.Position, waypoint.Position + (Vec3.right * 0.5), self.colors.Green, self.colors.Green)
-		DebugRenderer:DrawLine(waypoint.Position, waypoint.Position + (Vec3.forward * 0.5), self.colors.Blue, self.colors.Blue)
+		DebugRenderer:DrawLine(p_Waypoint.Position, p_Waypoint.Position + (Vec3.up), self.colors.Red, self.colors.Red)
+		DebugRenderer:DrawLine(p_Waypoint.Position, p_Waypoint.Position + (Vec3.right * 0.5), self.colors.Green, self.colors.Green)
+		DebugRenderer:DrawLine(p_Waypoint.Position, p_Waypoint.Position + (Vec3.forward * 0.5), self.colors.Blue, self.colors.Blue)
 	end
 
 	-- draw connection lines
-	if (Config.drawWaypointLines and g_NodeCollection:InRange(waypoint, self.playerPos, Config.lineRange)) then
+	if (Config.DrawWaypointLines and g_NodeCollection:InRange(p_Waypoint, self.playerPos, Config.LineRange)) then
 		-- try to find a previous node and draw a line to it
-		if (waypoint.Previous and type(waypoint.Previous) == 'string') then
-			waypoint.Previous = g_NodeCollection:Get(waypoint.Previous)
+		if (p_Waypoint.Previous and type(p_Waypoint.Previous) == 'string') then
+			p_Waypoint.Previous = g_NodeCollection:Get(p_Waypoint.Previous)
 		end
 
-		if (waypoint.Previous) then
-			if (waypoint.PathIndex ~= waypoint.Previous.PathIndex) then
+		if (p_Waypoint.Previous) then
+			if (p_Waypoint.PathIndex ~= p_Waypoint.Previous.PathIndex) then
 				-- draw a white line between nodes on separate paths
-				-- DebugRenderer:DrawLine(waypoint.Previous.Position, waypoint.Position, self.colors.White, self.colors.White)
+				-- DebugRenderer:DrawLine(p_Waypoint.Previous.Position, p_Waypoint.Position, self.colors.White, self.colors.White)
 			else
 				-- draw fading line between nodes on same path
-				DebugRenderer:DrawLine(waypoint.Previous.Position, waypoint.Position, color.Line, color.Line)
+				DebugRenderer:DrawLine(p_Waypoint.Previous.Position, p_Waypoint.Position, color.Line, color.Line)
 			end
 		end
-		if (waypoint.Data and waypoint.Data.LinkMode ~= nil and waypoint.Data.Links ~= nil) then
-			for i=1, #waypoint.Data.Links do
-				local linkedWaypoint = g_NodeCollection:Get(waypoint.Data.Links[i])
+		if (p_Waypoint.Data and p_Waypoint.Data.LinkMode ~= nil and p_Waypoint.Data.Links ~= nil) then
+			for i=1, #p_Waypoint.Data.Links do
+				local linkedWaypoint = g_NodeCollection:Get(p_Waypoint.Data.Links[i])
 				if (linkedWaypoint ~= nil) then
 					-- draw lines between linked nodes
-					DebugRenderer:DrawLine(linkedWaypoint.Position, waypoint.Position, self.colors.Purple, self.colors.Purple)
+					DebugRenderer:DrawLine(linkedWaypoint.Position, p_Waypoint.Position, self.colors.Purple, self.colors.Purple)
 				end
 			end
 		end
 	end
 
 	-- draw debugging text
-	if (Config.drawWaypointIDs and g_NodeCollection:InRange(waypoint, self.playerPos, Config.textRange)) then
+	if (Config.DrawWaypointIDs and g_NodeCollection:InRange(p_Waypoint, self.playerPos, Config.TextRange)) then
 		if (isSelected) then
 			-- don't try to precalc this value like with the distance, another memory leak crash awaits you
-			local screenPos = ClientUtils:WorldToScreen(waypoint.Position + Vec3.up)
+			local screenPos = ClientUtils:WorldToScreen(p_Waypoint.Position + Vec3.up)
 			if (screenPos ~= nil) then
 
-				local previousNode = tostring(waypoint.Previous)
-				local nextNode = tostring(waypoint.Next)
-				local pathNode = g_NodeCollection:GetFirst(waypoint.PathIndex)
+				local previousNode = tostring(p_Waypoint.Previous)
+				local nextNode = tostring(p_Waypoint.Next)
+				local pathNode = g_NodeCollection:GetFirst(p_Waypoint.PathIndex)
 
-				if (type(waypoint.Previous) == 'table') then
-					previousNode = waypoint.Previous.ID
+				if (type(p_Waypoint.Previous) == 'table') then
+					previousNode = p_Waypoint.Previous.ID
 				end
-				if (type(waypoint.Next) == 'table') then
-					nextNode = waypoint.Next.ID
+				if (type(p_Waypoint.Next) == 'table') then
+					nextNode = p_Waypoint.Next.ID
 				end
 
 				local speedMode = 'N/A'
-				if (waypoint.SpeedMode == 0) then speedMode = 'Wait' end
-				if (waypoint.SpeedMode == 1) then speedMode = 'Prone' end
-				if (waypoint.SpeedMode == 2) then speedMode = 'Crouch' end
-				if (waypoint.SpeedMode == 3) then speedMode = 'Walk' end
-				if (waypoint.SpeedMode == 4) then speedMode = 'Sprint' end
+				if (p_Waypoint.SpeedMode == 0) then speedMode = 'Wait' end
+				if (p_Waypoint.SpeedMode == 1) then speedMode = 'Prone' end
+				if (p_Waypoint.SpeedMode == 2) then speedMode = 'Crouch' end
+				if (p_Waypoint.SpeedMode == 3) then speedMode = 'Walk' end
+				if (p_Waypoint.SpeedMode == 4) then speedMode = 'Sprint' end
 
 				local extraMode = 'N/A'
-				if (waypoint.ExtraMode == 1) then extraMode = 'Jump' end
+				if (p_Waypoint.ExtraMode == 1) then extraMode = 'Jump' end
 
 				local optionValue = 'N/A'
-				if (waypoint.SpeedMode == 0) then 
-					optionValue = tostring(waypoint.OptValue)..' Seconds'
+				if (p_Waypoint.SpeedMode == 0) then
+					optionValue = tostring(p_Waypoint.OptValue)..' Seconds'
 				end
 
 				local pathMode = 'Loops'
@@ -2102,24 +2102,24 @@ function ClientNodeEditor:_drawNode(waypoint, isTracePath)
 				end
 
 				local text = ''
-				text = text..string.format("(%s)Pevious [ %s ] Next(%s)\n", previousNode, waypoint.ID, nextNode)
-				text = text..string.format("Index[%d]\n", waypoint.Index)
-				text = text..string.format("Path[%d][%d] (%s)\n", waypoint.PathIndex, waypoint.PointIndex, pathMode)
+				text = text..string.format("(%s)Pevious [ %s ] Next(%s)\n", previousNode, p_Waypoint.ID, nextNode)
+				text = text..string.format("Index[%d]\n", p_Waypoint.Index)
+				text = text..string.format("Path[%d][%d] (%s)\n", p_Waypoint.PathIndex, p_Waypoint.PointIndex, pathMode)
 				text = text..string.format("Path Objectives: %s\n", g_Utilities:dump(pathNode.Data.Objectives, false))
-				text = text..string.format("InputVar: %d\n", waypoint.InputVar)
-				text = text..string.format("SpeedMode: %s (%d)\n", speedMode, waypoint.SpeedMode)
-				text = text..string.format("ExtraMode: %s (%d)\n", extraMode, waypoint.ExtraMode)
-				text = text..string.format("OptValue: %s (%d)\n", optionValue, waypoint.OptValue)
-				text = text..'Data: '..g_Utilities:dump(waypoint.Data, true)
+				text = text..string.format("InputVar: %d\n", p_Waypoint.InputVar)
+				text = text..string.format("SpeedMode: %s (%d)\n", speedMode, p_Waypoint.SpeedMode)
+				text = text..string.format("ExtraMode: %s (%d)\n", extraMode, p_Waypoint.ExtraMode)
+				text = text..string.format("OptValue: %s (%d)\n", optionValue, p_Waypoint.OptValue)
+				text = text..'Data: '..g_Utilities:dump(p_Waypoint.Data, true)
 
 				DebugRenderer:DrawText2D(screenPos.x, screenPos.y, text, self.colors.Text, 1.2)
 			end
 			screenPos = nil
 		else
 			-- don't try to precalc this value like with the distance, another memory leak crash awaits you
-			local screenPos = ClientUtils:WorldToScreen(waypoint.Position + (Vec3.up * 0.05))
+			local screenPos = ClientUtils:WorldToScreen(p_Waypoint.Position + (Vec3.up * 0.05))
 			if (screenPos ~= nil) then
-				DebugRenderer:DrawText2D(screenPos.x, screenPos.y, tostring(waypoint.ID), self.colors.Text, 1)
+				DebugRenderer:DrawText2D(screenPos.x, screenPos.y, tostring(p_Waypoint.ID), self.colors.Text, 1)
 				screenPos = nil
 			end
 		end
@@ -2131,22 +2131,22 @@ end
 
 -- request a fresh node list from the server
 -- or server has told us be ready to receive
-function ClientNodeEditor:_onGetNodes(args)
-	self:Print('Getting Nodes: %s', tostring(args))
-	
+function ClientNodeEditor:_onGetNodes(p_Args)
+	self:Print('Getting Nodes: %s', tostring(p_Args))
+
 	-- unload our current cache
-	self:_onUnload(args)
+	self:_onUnload(p_Args)
 	-- enable the timer before we are ready to receive
 	self.nodeReceiveTimer = 0
 	return true
 end
 
 -- server is ready to receive our nodes
-function ClientNodeEditor:_onSendNodes(args)
+function ClientNodeEditor:_onSendNodes(p_Args)
 
 	self.nodesToSend = g_NodeCollection:Get()
 	self:Print('Sending Nodes: %d', #self.nodesToSend)
-	
+
 	if (self.nodesToSend == nil or #self.nodesToSend < 1) then
 		self:Print('Client has 0 Nodes, Cancelling Send!')
 		return false
@@ -2156,8 +2156,8 @@ function ClientNodeEditor:_onSendNodes(args)
 	end
 end
 
-function ClientNodeEditor:_onServerCreateNode(data)
-	g_NodeCollection:Create(data, true)
+function ClientNodeEditor:_onServerCreateNode(p_Data)
+	g_NodeCollection:Create(p_Data, true)
 	self.nodeReceiveProgress = self.nodeReceiveProgress + 1
 	self.debugEntries['nodeReceiveProgress'] = self.nodeReceiveProgress..'/'..(self.nodeReceiveExpected)
 end
@@ -2174,7 +2174,7 @@ function ClientNodeEditor:_onInit()
 	local staleNodes = 0
 
 	self:Print('Receved Nodes: %d', #waypoints)
-	
+
 	for i=1, #waypoints do
 
 		local waypoint = waypoints[i]
@@ -2194,11 +2194,11 @@ function ClientNodeEditor:_onInit()
 end
 
 -- stolen't https://github.com/EmulatorNexus/VEXT-Samples/blob/80cddf7864a2cdcaccb9efa810e65fae1baeac78/no-headglitch-raycast/ext/Client/__init__.lua
-function ClientNodeEditor:Raycast(maxDistance, useAsync)
+function ClientNodeEditor:Raycast(p_MaxDistance, p_UseAsync)
 	if self.player == nil then
 		return
 	end
-	maxDistance = maxDistance or 100
+	p_MaxDistance = p_MaxDistance or 100
 
 	-- We get the camera transform, from which we will start the raycast. We get the direction from the forward vector. Camera transform
 	-- is inverted, so we have to invert this vector.
@@ -2213,20 +2213,20 @@ function ClientNodeEditor:Raycast(maxDistance, useAsync)
 
 	-- We get the raycast end transform with the calculated direction and the max distance.
 	local castEnd = Vec3(
-		transform.trans.x + (direction.x * maxDistance),
-		transform.trans.y + (direction.y * maxDistance),
-		transform.trans.z + (direction.z * maxDistance))
+		transform.trans.x + (direction.x * p_MaxDistance),
+		transform.trans.y + (direction.y * p_MaxDistance),
+		transform.trans.z + (direction.z * p_MaxDistance))
 
 	-- Perform raycast, returns a RayCastHit object.
 
 	local flags = RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll | RayCastFlags.CheckDetailMesh
-	if (useAsync) then
+	if (p_UseAsync) then
 		flags = flags | RayCastFlags.IsAsyncRaycast
 	end
 
 	local raycastHit = RaycastManager:Raycast(castStart, castEnd, flags)
 
-	return raycastHit	
+	return raycastHit
 end
 
 if (g_ClientNodeEditor == nil) then

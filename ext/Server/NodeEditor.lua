@@ -43,10 +43,10 @@ function NodeEditor:Print(...)
 	end
 end
 
-function NodeEditor:_onPlayerKilled(player, inflictor, position, weapon, isRoadKill, isHeadShot, wasVictimInReviveState, info)
-    if (player ~= nil and self.botVision[player.name] ~= nil) then
-    	self.botVision[player.name] = {
-			Player = player,
+function NodeEditor:_onPlayerKilled(p_Player, p_Inflictor, p_Position, p_Weapon, p_IsRoadKill, p_IsHeadShot, p_wasVictimInReviveState, p_Info)
+    if (p_Player ~= nil and self.botVision[p_Player.name] ~= nil) then
+    	self.botVision[p_Player.name] = {
+			Player = p_Player,
 			Current = 0,
 			Delay = 0,
 			Speed = 0.5,
@@ -55,10 +55,10 @@ function NodeEditor:_onPlayerKilled(player, inflictor, position, weapon, isRoadK
     end
 end
 
-function NodeEditor:_onPlayerRespawn(player)
-	if (self.botVision[player.name] ~= nil) then
-		self.botVision[player.name] = {
-			Player = player,
+function NodeEditor:_onPlayerRespawn(p_Player)
+	if (self.botVision[p_Player.name] ~= nil) then
+		self.botVision[p_Player.name] = {
+			Player = p_Player,
 			Current = 0,
 			Delay = 1,
 			Speed = 0.5,
@@ -67,36 +67,36 @@ function NodeEditor:_onPlayerRespawn(player)
 	end
 end
 
-function NodeEditor:_onPlayerDestroyed(player)
-	self:_stopSendingNodes(player)
+function NodeEditor:_onPlayerDestroyed(p_Player)
+	self:_stopSendingNodes(p_Player)
 end
 
-function NodeEditor:_onPlayerLeft(player)
-	self:_stopSendingNodes(player)
+function NodeEditor:_onPlayerLeft(p_Player)
+	self:_stopSendingNodes(p_Player)
 end
 
-function NodeEditor:_onLevelDestroy(args)
-	g_NodeCollection:Clear(args)
+function NodeEditor:_onLevelDestroy(p_Args)
+	g_NodeCollection:Clear(p_Args)
 	g_NodeCollection:DeregisterEvents()
 end
 
 -- player has requested node collection to be sent
-function NodeEditor:_onRequestNodes(player)
+function NodeEditor:_onRequestNodes(p_Player)
 	-- tell client to clear their list and how many to expect
-	NetEvents:SendToLocal('ClientNodeEditor:ReceivingNodes', player, #g_NodeCollection:Get())
+	NetEvents:SendToLocal('ClientNodeEditor:ReceivingNodes', p_Player, #g_NodeCollection:Get())
 end
 
 -- player has indicated they are ready to receive nodes
-function NodeEditor:_onSendNodes(player)
+function NodeEditor:_onSendNodes(p_Player)
 	local nodes = g_NodeCollection:Get()
-	table.insert(self.playersReceivingNodes, {Player = player, Index = 1, Nodes = nodes, BatchSendDelay = 0})
+	table.insert(self.playersReceivingNodes, {Player = p_Player, Index = 1, Nodes = nodes, BatchSendDelay = 0})
 	self.batchSendTimer = 0
-	self:Print('Sending %d waypoints to %s', #nodes, player.name)
+	self:Print('Sending %d waypoints to %s', #nodes, p_Player.name)
 end
 
-function NodeEditor:_stopSendingNodes(player)
+function NodeEditor:_stopSendingNodes(p_Player)
 	for i = 1, #self.playersReceivingNodes do
-		if (self.playersReceivingNodes[i].Player.name == player.name) then
+		if (self.playersReceivingNodes[i].Player.name == p_Player.name) then
 			table.remove(self.playersReceivingNodes, i)
 			break
 		end
@@ -104,35 +104,35 @@ function NodeEditor:_stopSendingNodes(player)
 end
 
 -- player has indicated they are ready to send nodes to the server
-function NodeEditor:_onReceiveNodes(player, nodeCount)
+function NodeEditor:_onReceiveNodes(p_Player, p_NodeCount)
 
-	if (Config.settingsPassword ~= nil and g_FunBotUIServer:_isAuthenticated(player.accountGuid) ~= true) then
-		self:Print('%s has no permissions for Waypoint-Editor.', player.name)
+	if (Config.SettingsPassword ~= nil and g_FunBotUIServer:_isAuthenticated(p_Player.accountGuid) ~= true) then
+		self:Print('%s has no permissions for Waypoint-Editor.', p_Player.name)
 		return
 	end
 
 	g_NodeCollection:Clear()
-	self.playerSendingNodes = player
+	self.playerSendingNodes = p_Player
 	self.nodeReceiveTimer = 0
-	self:Print('Receiving %d waypoints from %s', nodeCount, player.name)
+	self:Print('Receiving %d waypoints from %s', p_NodeCount, p_Player.name)
 end
 
 -- player is sending a single node over
-function NodeEditor:_onCreate(player, data)
+function NodeEditor:_onCreate(p_Player, p_Data)
 
-	if (Config.settingsPassword ~= nil and g_FunBotUIServer:_isAuthenticated(player.accountGuid) ~= true) then
-		self:Print('%s has no permissions for Waypoint-Editor.', player.name)
+	if (Config.SettingsPassword ~= nil and g_FunBotUIServer:_isAuthenticated(p_Player.accountGuid) ~= true) then
+		self:Print('%s has no permissions for Waypoint-Editor.', p_Player.name)
 		return
 	end
 
-	g_NodeCollection:Create(data, true)
+	g_NodeCollection:Create(p_Data, true)
 end
 
 -- node payload has finished sending, setup events and calc indexes
-function NodeEditor:_onInit(player, save)
+function NodeEditor:_onInit(p_Player, p_Save)
 
-	if (Config.settingsPassword ~= nil and g_FunBotUIServer:_isAuthenticated(player.accountGuid) ~= true) then
-		self:Print('%s has no permissions for Waypoint-Editor.', player.name)
+	if (Config.SettingsPassword ~= nil and g_FunBotUIServer:_isAuthenticated(p_Player.accountGuid) ~= true) then
+		self:Print('%s has no permissions for Waypoint-Editor.', p_Player.name)
 		return
 	end
 
@@ -142,7 +142,7 @@ function NodeEditor:_onInit(player, save)
 	local staleNodes = 0
 	local nodesToCheck = g_NodeCollection:Get()
 	self:Print('Nodes Received: %d', #nodesToCheck)
-	
+
 	for i=1, #nodesToCheck do
 
 		local waypoint = nodesToCheck[i]
@@ -153,47 +153,47 @@ function NodeEditor:_onInit(player, save)
 			staleNodes = staleNodes+1
 		end
 	end
-	
+
 	self:Print('Stale Nodes: %d', staleNodes)
-	
-	if (save) then
+
+	if (p_Save) then
 		g_NodeCollection:Save()
 	end
 end
 
-function NodeEditor:_onWarpTo(player, vec3Position)
+function NodeEditor:_onWarpTo(p_Player, p_Vec3Position)
 
-	if (player == nil or not player.alive or player.soldier == nil or not player.soldier.isAlive) then
+	if (p_Player == nil or not p_Player.alive or p_Player.soldier == nil or not p_Player.soldier.isAlive) then
 		return
 	end
 
-	self:Print('Teleporting %s to %s', player.name, tostring(vec3Position))
-	
-	player.soldier:SetPosition(vec3Position)
+	self:Print('Teleporting %s to %s', p_Player.name, tostring(p_Vec3Position))
+
+	p_Player.soldier:SetPosition(p_Vec3Position)
 end
 
-function NodeEditor:_onSetBotVision(player, enabled)
-	self:Print('Player -> BotVision [%s]: %s', player.name, enabled)
-	
-	if (enabled) then
-		self.botVision[player.name] = {
-			Player = player,
+function NodeEditor:_onSetBotVision(p_Player, p_Enabled)
+	self:Print('Player -> BotVision [%s]: %s', p_Player.name, p_Enabled)
+
+	if (p_Enabled) then
+		self.botVision[p_Player.name] = {
+			Player = p_Player,
 			Current = 0,
 			Delay = 1,
 			Speed = 0.5,
-			State = enabled
+			State = p_Enabled
 		}
 	else
-		player:Fade(0.5, false)
-		self.botVision[player.name] = nil
+		p_Player:Fade(0.5, false)
+		self.botVision[p_Player.name] = nil
 	end
 end
 
-function NodeEditor:_onEngineUpdate(deltaTime, simulationDeltaTime)
+function NodeEditor:_onEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 
 	for playerName, timeData in pairs(self.botVision) do
 		if (type(timeData) == 'table') then
-			timeData.Current = timeData.Current + deltaTime
+			timeData.Current = timeData.Current + p_DeltaTime
 
 			if (timeData.Current >= timeData.Delay) then
 				self:Print('Player -> Fade [%s]: %s', timeData.Player.name, timeData.State)
@@ -208,7 +208,7 @@ function NodeEditor:_onEngineUpdate(deltaTime, simulationDeltaTime)
 
 	-- receiving nodes from player takes priority over sending
 	if (self.nodeReceiveTimer >= 0 and self.playerSendingNodes ~= nil) then
-		self.nodeReceiveTimer = self.nodeReceiveTimer + deltaTime
+		self.nodeReceiveTimer = self.nodeReceiveTimer + p_DeltaTime
 
 		if (self.nodeReceiveTimer >= self.nodeReceiveDelay) then
 			NetEvents:SendToLocal('ClientNodeEditor:SendNodes', self.playerSendingNodes, #g_NodeCollection:Get())
@@ -218,7 +218,7 @@ function NodeEditor:_onEngineUpdate(deltaTime, simulationDeltaTime)
 
 		-- only do sending if not receiving
 		if (self.batchSendTimer >= 0 and #self.playersReceivingNodes > 0) then
-			self.batchSendTimer = self.batchSendTimer + deltaTime
+			self.batchSendTimer = self.batchSendTimer + p_DeltaTime
 
 			for i = 1, #self.playersReceivingNodes do
 				local sendStatus = self.playersReceivingNodes[i]
@@ -247,7 +247,7 @@ function NodeEditor:_onEngineUpdate(deltaTime, simulationDeltaTime)
 					end
 					if (sendStatus.Index >= #sendStatus.Nodes) then
 						self:Print('Finished sending waypoints to %s', sendStatus.Player.name)
-						
+
 						table.remove(self.playersReceivingNodes, i)
 						NetEvents:SendToLocal('ClientNodeEditor:Init', sendStatus.Player)
 						break
@@ -262,10 +262,10 @@ function NodeEditor:_onEngineUpdate(deltaTime, simulationDeltaTime)
 end
 
 -- load waypoints from sql
-function NodeEditor:onLevelLoaded(levelName, gameMode)
-	self:Print('Level Load: %s %s', levelName, gameMode)
-	
-	g_NodeCollection:Load(levelName, gameMode)
+function NodeEditor:onLevelLoaded(p_LevelName, p_GameMode)
+	self:Print('Level Load: %s %s', p_LevelName, p_GameMode)
+
+	g_NodeCollection:Load(p_LevelName, p_GameMode)
 
 	local counter = 0
 	local waypoints = g_NodeCollection:Get()
@@ -282,24 +282,24 @@ function NodeEditor:onLevelLoaded(levelName, gameMode)
 	self:Print('Load -> Stale Nodes: %d', counter)
 end
 
-function NodeEditor:_onUIRequestSaveSettings(player, data)
-	if Config.disableUserInterface == true then
+function NodeEditor:_onUIRequestSaveSettings(p_Player, p_Data)
+	if Config.DisableUserInterface == true then
 		return
 	end
 
-	if (Config.settingsPassword ~= nil and g_FunBotUIServer:_isAuthenticated(player.accountGuid) ~= true) then
-		return;
+	if (Config.SettingsPassword ~= nil and g_FunBotUIServer:_isAuthenticated(p_Player.accountGuid) ~= true) then
+		return
 	end
 
-	local request = json.decode(data);
+	local request = json.decode(p_Data)
 
 	if (request.debugTracePaths) then
 		-- enabled, send them a fresh list
-		self:_onRequestNodes(player)
+		self:_onRequestNodes(p_Player)
 	else
 		-- disabled, delete the client's list
-		NetEvents:SendToLocal('NodeEditor:Clear', player)
-		NetEvents:SendToLocal('NodeEditor:ClientInit', player)
+		NetEvents:SendToLocal('NodeEditor:Clear', p_Player)
+		NetEvents:SendToLocal('NodeEditor:ClientInit', p_Player)
 	end
 end
 

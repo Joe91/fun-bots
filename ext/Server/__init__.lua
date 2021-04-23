@@ -1,71 +1,71 @@
-class('FunBotServer');
+class('FunBotServer')
 
-require('__shared/Debug');
-require('__shared/Config');
-require('__shared/Constants/BotColors');
-require('__shared/Constants/BotNames');
-require('__shared/Constants/BotKits');
-require('__shared/Constants/BotNames');
-require('__shared/Constants/BotWeapons');
-require('__shared/Constants/WeaponSets');
-require('__shared/Constants/BotAttackModes');
-require('__shared/Constants/SpawnModes');
-require('__shared/Utilities');
+require('__shared/Debug')
+require('__shared/Config')
+require('__shared/Constants/BotColors')
+require('__shared/Constants/BotNames')
+require('__shared/Constants/BotKits')
+require('__shared/Constants/BotNames')
+require('__shared/Constants/BotWeapons')
+require('__shared/Constants/WeaponSets')
+require('__shared/Constants/BotAttackModes')
+require('__shared/Constants/SpawnModes')
+require('__shared/Utilities')
 
-require('NodeEditor');
-require('GameDirector');
-require('WeaponModification');
+require('NodeEditor')
+require('GameDirector')
+require('WeaponModification')
 
-Language					= require('__shared/Language');
-local SettingsManager		= require('SettingsManager');
-local BotManager			= require('BotManager');
-local BotSpawner			= require('BotSpawner');
-local WeaponList			= require('__shared/WeaponList');
-local ChatCommands			= require('ChatCommands');
-local RCONCommands			= require('RCONCommands');
-local FunBotUIServer		= require('UIServer');
-local Globals 				= require('Globals');
+Language					= require('__shared/Language')
+local SettingsManager		= require('SettingsManager')
+local BotManager			= require('BotManager')
+local BotSpawner			= require('BotSpawner')
+local WeaponList			= require('__shared/WeaponList')
+local ChatCommands			= require('ChatCommands')
+local RCONCommands			= require('RCONCommands')
+local FunBotUIServer		= require('UIServer')
+require('Globals')
 
-local playerKilledDelay 	= 0;
+local playerKilledDelay 	= 0
 
 function FunBotServer:__init()
-	Language:loadLanguage(Config.language);
+	Language:loadLanguage(Config.Language)
 
-	Events:Subscribe('Level:Loaded', self, self._onLevelLoaded);
-	Events:Subscribe('Player:Chat', self, self._onChat);
-	Events:Subscribe('Extension:Unloading', self, self._onExtensionUnload);
-	Events:Subscribe('Extension:Loaded', self, self._onExtensionLoaded);
+	Events:Subscribe('Level:Loaded', self, self._onLevelLoaded)
+	Events:Subscribe('Player:Chat', self, self._onChat)
+	Events:Subscribe('Extension:Unloading', self, self._onExtensionUnload)
+	Events:Subscribe('Extension:Loaded', self, self._onExtensionLoaded)
 	Events:Subscribe('Partition:Loaded', self, self._onPartitionLoaded)
-	NetEvents:Subscribe('RequestClientSettings', self, self._onRequestClientSettings);
+	NetEvents:Subscribe('RequestClientSettings', self, self._onRequestClientSettings)
 end
 
 function FunBotServer:_onExtensionUnload()
-	BotManager:destroyAll(nil, nil, true);
+	BotManager:destroyAll(nil, nil, true)
 end
 
 function FunBotServer:_onExtensionLoaded()
-	SettingsManager:onLoad();
+	SettingsManager:onLoad()
 
-	local fullLevelPath = SharedUtils:GetLevelName();
+	local fullLevelPath = SharedUtils:GetLevelName()
 
 	if (fullLevelPath ~= nil) then
-		fullLevelPath	= fullLevelPath:split('/');
-		local level		= fullLevelPath[#fullLevelPath];
-		local gameMode	= SharedUtils:GetCurrentGameMode();
+		fullLevelPath	= fullLevelPath:split('/')
+		local level		= fullLevelPath[#fullLevelPath]
+		local gameMode	= SharedUtils:GetCurrentGameMode()
 
 		if Debug.Server.INFO then
-			print(level .. '_' .. gameMode .. ' reloaded');
+			print(level .. '_' .. gameMode .. ' reloaded')
 		end
-		
+
 		if (level ~= nil and gameMode~= nil) then
-			self:_onLevelLoaded(level, gameMode);
+			self:_onLevelLoaded(level, gameMode)
 		end
 	end
 end
 
-function FunBotServer:_onPartitionLoaded(partition)
-	g_WeaponModification:OnPartitionLoaded(partition);
-	for _, instance in pairs(partition.instances) do
+function FunBotServer:_onPartitionLoaded(p_Partition)
+	g_WeaponModification:OnPartitionLoaded(p_Partition)
+	for _, instance in pairs(p_Partition.instances) do
 		if USE_REAL_DAMAGE then
 			if instance:Is("SyncedGameSettings") then
 				instance = SyncedGameSettings(instance)
@@ -99,61 +99,61 @@ function FunBotServer:_onPartitionLoaded(partition)
 	end
 end
 
-function FunBotServer:_onRequestClientSettings(player)
-	NetEvents:SendToLocal('WriteClientSettings', player, Config, true);
-	BotManager:registerActivePlayer(player)
+function FunBotServer:_onRequestClientSettings(p_Player)
+	NetEvents:SendToLocal('WriteClientSettings', p_Player, Config, true)
+	BotManager:registerActivePlayer(p_Player)
 end
 
-function FunBotServer:_onLevelLoaded(levelName, gameMode)
+function FunBotServer:_onLevelLoaded(p_LevelName, p_GameMode)
 	local customGameMode = ServerUtils:GetCustomGameModeName()
 	if customGameMode ~= nil then
-		gameMode = customGameMode
+		p_GameMode = customGameMode
 	end
-	g_WeaponModification:ModifyAllWeapons(Config.botAimWorsening, Config.botSniperAimWorsening);
-	WeaponList:onLevelLoaded();
+	g_WeaponModification:ModifyAllWeapons(Config.BotAimWorsening, Config.BotSniperAimWorsening)
+	WeaponList:onLevelLoaded()
 
 	if Debug.Server.INFO then
-		print('level ' .. levelName .. ' loaded...');
+		print('level ' .. p_LevelName .. ' loaded...')
 	end
 
 	--get RespawnDelay
 	local rconResponseTable = RCON:SendCommand('vars.playerRespawnTime')
     local respawnTimeModifier = tonumber(rconResponseTable[2]) / 100
 	if playerKilledDelay > 0 and respawnTimeModifier ~= nil then
-		Globals.respawnDelay = playerKilledDelay * respawnTimeModifier
+		Globals.RespawnDelay = playerKilledDelay * respawnTimeModifier
 	else
-		Globals.respawnDelay = 10.0;
+		Globals.RespawnDelay = 10.0
 	end
 
 	-- prepare some more Globals
-	Globals.ignoreBotNames = {}
+	Globals.IgnoreBotNames = {}
 
 	-- detect special mods:
 	rconResponseTable = RCON:SendCommand('Modlist.ListRunning')
-	local noPreroundFound = false;
-	local civilianizerFound = false;
+	local noPreroundFound = false
+	local civilianizerFound = false
 	for i = 2, #rconResponseTable do
-		local mod = rconResponseTable[i];
+		local mod = rconResponseTable[i]
 		if string.find(mod:lower(), "preround") ~= nil then
-			noPreroundFound = true;
+			noPreroundFound = true
 		end
 		if string.find(mod:lower(), "civilianizer") ~= nil then
-			civilianizerFound = true;
+			civilianizerFound = true
 		end
 	end
 	if civilianizerFound then
-		Globals.removeKitVisuals = true;
+		Globals.RemoveKitVisuals = true
 	else
-		Globals.removeKitVisuals = false;
+		Globals.RemoveKitVisuals = false
 	end
 	if noPreroundFound then
-		Globals.isInputRestrictionDisabled = true;
+		Globals.IsInputRestrictionDisabled = true
 	else
-		Globals.isInputRestrictionDisabled = false;
+		Globals.IsInputRestrictionDisabled = false
 	end
 
 	-- disable inputs on start of round
-	Globals.isInputAllowed = true
+	Globals.IsInputAllowed = true
 
     local s_EntityIterator = EntityManager:GetIterator("ServerInputRestrictionEntity")
     local s_Entity = s_EntityIterator:Next()
@@ -168,11 +168,11 @@ function FunBotServer:_onLevelLoaded(levelName, gameMode)
         s_Entity.data.instanceGuid == Guid('A40B08B7-D781-487A-8D0C-2E1B911C1949') then -- sqdm
         -- rip CTF
             s_Entity:RegisterEventCallback(function(entity, event)
-                if not Globals.isInputRestrictionDisabled then
-                    if event.eventId == MathUtils:FNVHash("Activate") and Globals.isInputAllowed then
-                        Globals.isInputAllowed = false
-                    elseif event.eventId == MathUtils:FNVHash("Deactivate") and not Globals.isInputAllowed then
-                        Globals.isInputAllowed = true
+                if not Globals.IsInputRestrictionDisabled then
+                    if event.eventId == MathUtils:FNVHash("Activate") and Globals.IsInputAllowed then
+                        Globals.IsInputAllowed = false
+                    elseif event.eventId == MathUtils:FNVHash("Deactivate") and not Globals.IsInputAllowed then
+                        Globals.IsInputAllowed = true
                     end
                 end
             end)
@@ -180,70 +180,70 @@ function FunBotServer:_onLevelLoaded(levelName, gameMode)
         s_Entity = s_EntityIterator:Next()
     end
 
-	Globals.nrOfTeams = 2;
-	if gameMode == 'TeamDeathMatchC0' or gameMode == 'TeamDeathMatch0' then
-		Globals.isTdm = true;
+	Globals.NrOfTeams = 2
+	if p_GameMode == 'TeamDeathMatchC0' or p_GameMode == 'TeamDeathMatch0' then
+		Globals.IsTdm = true
 	else
-		Globals.isTdm = false;
+		Globals.IsTdm = false
 	end
-	if gameMode == 'SquadDeathMatch0' then
-		Globals.nrOfTeams = 4;
-		Globals.isSdm = true;
+	if p_GameMode == 'SquadDeathMatch0' then
+		Globals.NrOfTeams = 4
+		Globals.IsSdm = true
 	else
-		Globals.isSdm = false;
+		Globals.IsSdm = false
 	end
-	if gameMode == 'GunMaster0' then
-		Globals.isGm = true;
+	if p_GameMode == 'GunMaster0' then
+		Globals.IsGm = true
 	else
-		Globals.isGm = false;
+		Globals.IsGm = false
 	end
-	if gameMode == 'Scavenger0' then
-		Globals.isScavenger = true;
+	if p_GameMode == 'Scavenger0' then
+		Globals.IsScavenger = true
 	else
-		Globals.isScavenger = false;
-	end
-
-	if gameMode == 'ConquestLarge0' or
-	gameMode == 'ConquestSmall0' or
-	gameMode == 'ConquestAssaultLarge0' or
-	gameMode == 'ConquestAssaultSmall0' or
-	gameMode == 'ConquestAssaultSmall1' or
-	gameMode == 'BFLAG'then
-		Globals.isConquest = true;
-	else
-		Globals.isConquest = false;
+		Globals.IsScavenger = false
 	end
 
-	if gameMode == 'ConquestAssaultLarge0' or
-	gameMode == 'ConquestAssaultSmall0' or
-	gameMode == 'ConquestAssaultSmall1' then
-		Globals.isAssault = true;
+	if p_GameMode == 'ConquestLarge0' or
+	p_GameMode == 'ConquestSmall0' or
+	p_GameMode == 'ConquestAssaultLarge0' or
+	p_GameMode == 'ConquestAssaultSmall0' or
+	p_GameMode == 'ConquestAssaultSmall1' or
+	p_GameMode == 'BFLAG'then
+		Globals.IsConquest = true
 	else
-		Globals.isAssault = false;
+		Globals.IsConquest = false
 	end
 
-	if gameMode == 'RushLarge0' then
-		Globals.isRush = true;
+	if p_GameMode == 'ConquestAssaultLarge0' or
+	p_GameMode == 'ConquestAssaultSmall0' or
+	p_GameMode == 'ConquestAssaultSmall1' then
+		Globals.IsAssault = true
 	else
-		Globals.isRush = false;
+		Globals.IsAssault = false
 	end
 
-	g_NodeEditor:onLevelLoaded(levelName, gameMode)
+	if p_GameMode == 'RushLarge0' then
+		Globals.IsRush = true
+	else
+		Globals.IsRush = false
+	end
+
+	g_NodeEditor:onLevelLoaded(p_LevelName, p_GameMode)
 	g_GameDirector:onLevelLoaded()
 	g_GameDirector:initObjectives()
 	BotSpawner:onLevelLoaded()
 	NetEvents:BroadcastUnreliableLocal('WriteClientSettings', Config, true)
 end
 
-function FunBotServer:_onChat(player, recipientMask, message)
-	local messageParts = string.lower(message):split(' ');
+function FunBotServer:_onChat(p_Player, p_RecipientMask, p_Message)
+	local messageParts = string.lower(p_Message):split(' ')
 
-	ChatCommands:execute(messageParts, player);
+	ChatCommands:execute(messageParts, p_Player)
 end
 
 -- Singleton.
 if g_FunBotServer == nil then
-	g_FunBotServer = FunBotServer();
+	g_FunBotServer = FunBotServer()
 end
 
-return g_FunBotServer;
+return g_FunBotServer

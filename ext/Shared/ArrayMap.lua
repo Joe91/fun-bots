@@ -1,61 +1,61 @@
-class 'ArrayMap';
+class 'ArrayMap'
 
 function ArrayMap:__init()
-	self._entries = {};
+	self._entries = {}
 end
 
-function ArrayMap:add(value)
-	table.insert(self._entries, value);
+function ArrayMap:add(p_Value)
+	table.insert(self._entries, p_Value)
 end
 
-function ArrayMap:deleteByIndex(index)
-	table.remove(self._entries, index);
+function ArrayMap:deleteByIndex(p_Index)
+	table.remove(self._entries, p_Index)
 end
 
-function ArrayMap:exists(value)
-	local index = {};
+function ArrayMap:exists(p_Value)
+	local index = {}
 
 	for key, data in pairs(self._entries) do
-		index[data] = key;
+		index[data] = key
 	end
 
-	if index[value] ~= nil then
-		return true;
+	if index[p_Value] ~= nil then
+		return true
 	end
 
-	return false;
+	return false
 end
 
-function ArrayMap:delete(value)
-	local index = {};
+function ArrayMap:delete(p_Value)
+	local index = {}
 
 	for key, data in pairs(self._entries) do
-		index[data] = key;
+		index[data] = key
 	end
 
-	if index[value] ~= nil then
-		self:deleteByIndex(index[value]);
+	if index[p_Value] ~= nil then
+		self:deleteByIndex(index[p_Value])
 	end
 end
 
 function ArrayMap:isEmpty()
-	return self:count() == 0;
+	return self:count() == 0
 end
 
 function ArrayMap:count()
-	return #self._entries;
+	return #self._entries
 end
 
 function ArrayMap:getEntries()
-	return self._entries;
+	return self._entries
 end
 
-function ArrayMap:join(character)
-	return table.concat(self._entries, character);
+function ArrayMap:join(p_Character)
+	return table.concat(self._entries, p_Character)
 end
 
 function ArrayMap:_tostring()
-	return '[ArrayList Count=' .. self:count() .. ', ' .. json.encode(self._entries) .. ']';
+	return '[ArrayList Count=' .. self:count() .. ', ' .. json.encode(self._entries) .. ']'
 end
 
-return ArrayMap;
+return ArrayMap
