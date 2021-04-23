@@ -140,6 +140,9 @@ function PathSwitcher:getNewPath(p_BotName, p_Point, p_Objective)
 			if newPathStatus == 0 and currentPathStatus == 0 and countOld > countNew and not newBasePath then
 				switchAnyways = true
 			end
+			if countOld == 0 and countNew > 0 then
+				switchAnyways = true
+			end
 			if switchAnyways then
 				if (highestPriority < 3) then highestPriority = 3 end
 				table.insert(paths, {
@@ -167,7 +170,7 @@ function PathSwitcher:getNewPath(p_BotName, p_Point, p_Objective)
 	local validPaths = {}
 	for i=1, #paths do
 		if (paths[i].Priority >= highestPriority and paths[i].State >= currentPathStatus) then
-			if(onBasePath or (not onBasePath and paths[i].Base == false)) then
+			if(onBasePath or (not onBasePath and paths[i].Base == false) or currentPathStatus == 0) then
 				table.insert(validPaths, paths[i])
 			end
 		end
