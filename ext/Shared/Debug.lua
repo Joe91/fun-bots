@@ -1,6 +1,6 @@
 Debug = {
 	Globals = {
-		UPDATE			= false,		-- Debug the Updater
+		UPDATE			= false			-- Debug the Updater
 	},
 	Server = {
 		INFO			= false,		-- Global Informations
@@ -28,4 +28,4 @@ Debug = {
 		DATABASE		= false,		-- Debug Database-Operations
 		MODIFICATIONS	= false			-- Debug some Modifications
 	}
-};
+}

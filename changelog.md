@@ -2,7 +2,7 @@
  
 ## [Unreleased - 1.7.X.X] - 2021-04-XX
  
-[Download](https://github.com/Joe91/fun-bots/archive/V1.7.0.19.zip)  
+[Download](https://github.com/Joe91/fun-bots/archive/V1.7.0.20.zip)  
 The Smart Node update
 
 - Conquest supported
@@ -36,6 +36,8 @@ The Smart Node update
 	- Gulf of Oman - Thanks to MrDonPotato!!
 - BFLAG supported (only a first version, not that usable yet)
 	- Bazaar small
+- Squad-DM supported
+	- on all maps thanks to GaryTheNoTrashCougar!!!
 - Bots switch to Pistol or Sidearm (Rockets) if needed
 - Bots revive dead players
 - Bots deply Ammobag and medkit from time to time
@@ -58,8 +60,9 @@ The Smart Node update
 - fixed wrong weapon-slot
 - zombies now use all colors and kits by default
 - preparation for driving vehicles
-- randomize skill of each bot a little
+- randomize skill of each bot a little (if wanted)
 - rework of input-system (more fail-safe now)
+- limit distance on which a bot switches to pistol
 - export of a maplist
 
 

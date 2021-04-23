@@ -2,12 +2,13 @@ import re
 import operator
 # All GameModes
 # 				  "TDM", "TDM CQ", "Rush", "CQ Small", "CQ Large", "Assault", "Assault 2", "Assault Large" "GM", "CQ Dom", "Scavanger", "CTF"
-GameModesToUse = ["TDM", "TDM CQ", "Rush", "CQ Small", "CQ Large", "Assault", "Assault 2", "Assault Large" "GM", "CQ Dom", "Scavanger", "CTF"]
+GameModesToUse = ["TDM", "SDM", "TDM CQ", "Rush", "CQ Small", "CQ Large", "Assault", "Assault 2", "Assault Large" "GM", "CQ Dom", "Scavanger", "CTF"]
 RoundsToUse = 1
 AddComment = True # True or False
 
 GameModeTranslations = {
 	"TDM": "TeamDeathMatch0",
+	"SDM": "SquadDeathMatch0",
 	"TDM CQ": "TeamDeathMatchC0",
 	"Rush": "RushLarge0",
 	"CQ Small": "ConquestSmall0",

@@ -30,6 +30,10 @@ After that
 	- Bases: "base us" / "base ru"
 	- Flags: "A", "B", "C",..
 
+Advanced:
+- If you want to create separated spawn-paths for a flag, just label them like this:
+	"A spawn" is a spawn-path for A. A bot will always spawn on the first node of a spawn-path
+
 
 ## Creating Rush-Paths
 For Rush things get a little more complex.

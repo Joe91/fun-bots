@@ -13,4 +13,4 @@ BotColors = {
 	'Jungle',		--11
 	'Navy',			--12
 	'Wood01'		--13
-};
+}

@@ -1,185 +1,185 @@
-local code = 'cn_CN'; -- Add/replace the xx_XX here with your language code (like de_DE, en_US, or other)!
+local code = 'cn_CN' -- Add/replace the xx_XX here with your language code (like de_DE, en_US, or other)!
 
-Language:add(code, "Exiting Node Move Mode", "退出路径点移动模式");
-Language:add(code, "Must select at least one waypoint", "必须至少选择一个路径点");
-Language:add(code, "Entering Node Move Mode", "进入路径点移动模式");
-Language:add(code, "Player not alive", "玩家没有活着");
-Language:add(code, "Not Implemented Yet", "尚未实现");
-Language:add(code, "Success", "成功");
-Language:add(code, "Select", "选择");
-Language:add(code, "Finish", "完成");
-Language:add(code, "Connect", "连接");
-Language:add(code, "Save", "保存");
-Language:add(code, "Load", "加载");
-Language:add(code, "Merge", "合并");
-Language:add(code, "Move", "移动");
-Language:add(code, "Delete", "删除");
-Language:add(code, "Split", "拆分");
-Language:add(code, "Set Input", "设置输入");
-Language:add(code, "Create", "创建");
-Language:add(code, "Bot Weapon", "BOT武器");
-Language:add(code, "Select the weapon the bots use", "选择BOT使用的武器");
-Language:add(code, "Bot Attack Mode", "BOT攻击模式");
-Language:add(code, "Mode the Bots attack with. Crouch or Stand", "设置BOT攻击模式,蹲下或站立");
-Language:add(code, "Bot Kit", "BOT兵种");
-Language:add(code, "The Kit a bots spawns with.", "BOT出生选择的兵种");
-Language:add(code, "Bot Color", "BOT主武器皮肤");
-Language:add(code, "The Kit-Color a bots spawns with.", "BOT生成时的枪械皮肤");
-Language:add(code, "Aim Worsening", "BOT瞄准精度");
-Language:add(code, "0 = hard, 1 (or higher) = easy", "0 = 难, 1 (或者更高) = 容易");
-Language:add(code, "Aim Worsening Sniper", "狙击手瞄准精度");
-Language:add(code, "Aim for Head", "BOT是否瞄准头部");
-Language:add(code, "Bots aim for the head. If false for the body", "BOT瞄准头部,如果为false则瞄准身体");
-Language:add(code, "Factor for HeadShot", "BOT爆头的几率");
-Language:add(code, "Factor for damage if Bot does a headshot", "Bot爆头的伤害几率");
-Language:add(code, "Factor for Assault-Weapon-Damage", "BOT攻击性武器伤害倍率");
-Language:add(code, "Origninal Damage from bots gets multiplied by this", "BOT攻击性武器伤害乘以此");
-Language:add(code, "Factor for Carabine-Weapon-Damage", "BOT卡宾枪伤害倍率");
-Language:add(code, "Factor for PDW-Weapon-Damage", "BOT冲锋枪伤害倍率");
-Language:add(code, "Factor for LMG-Weapon-Damage", "BOT机枪伤害倍率");
-Language:add(code, "Factor for Sniper-Weapon-Damage", "BOT狙击伤害倍率");
-Language:add(code, "Factor for Shotgun-Weapon-Damage", "BOT霰弹枪伤害倍率");
-Language:add(code, "Factor for Pistol-Weapon-Damage", "BOT手枪伤害倍率");
-Language:add(code, "Factor for Knife-Weapon-Damage", "BOT近战武器伤害倍率");
-Language:add(code, "Spawn in both teams", "在两个队伍中生成");
-Language:add(code, "Bots spawn in both teams", "BOT在两个队伍中同时生成");
-Language:add(code, "Only spawn with players", "有玩家时才生成");
-Language:add(code, "Bots only spawn if at least one Player is on the server", "只有当服务器上至少有一个玩家时，BOT才会生成");
-Language:add(code, "Spawn Mode", "生成模式");
-Language:add(code, "Mode the bots spawn with", "BOT以该模式生成");
-Language:add(code, "Number of Bots for Spawn-Mode", "Spawn模式的机器人数量");
-Language:add(code, "Bots for the spawnmode", "Spawn模式的BOT");
-Language:add(code, "Number Bots on new Player", "在新玩家加入时,增加的BOT数量");
-Language:add(code, "number to increase Bots, when new players join, if mode is selected", "如果选择该模式,则在新玩家加入时，增加BOT的数量");
-Language:add(code, "Keep one Player-Slot", "保留一个玩家位");
-Language:add(code, "always keep one slot for new Players to join", "始终保留一个空位,供新玩家加入");
-Language:add(code, "Respawn Delay", "重生延迟");
-Language:add(code, "time till bots respawn, if respawn enabled", "机器人重生延迟的时间（如果启用了BOT重生）");
-Language:add(code, "Default Bot Team", "默认BOT队伍");
-Language:add(code, "default bot team 1 = US, 2 = RU", "默认1代表美军，2代表俄军");
-Language:add(code, "Respawn Bots", "重新生成BOT");
-Language:add(code, "Bots on paths respawn if killed on startup", "如果在开始时被杀死，则此路径上的BOT会重新生成");
-Language:add(code, "New Loadout on Spawn", "在生成时重新加载");
-Language:add(code, "bots get a new kit and color, if they respawn", "如果BOT重新生成，它会获得新的装备和枪皮肤");
-Language:add(code, "Max Assault Bots", "突击装备BOT最大数量");
-Language:add(code, "maximum number of Bots with Assault Kit. -1 = unlimited", "带有突击装备的机器人的最大数量。-1=无限");
-Language:add(code, "Max Engineer Bots", "工程装备BOT最大数量");
-Language:add(code, "maximum number of Bots with Engineer Kit. -1 = unlimited", "带有工程装备的机器人的最大数量。-1=无限");
-Language:add(code, "Max Support Bots", "支援装备BOT最大数量");
-Language:add(code, "maximum number of Bots with Support Kit. -1 = unlimited", "带有支援装备的机器人的最大数量。-1=无限");
-Language:add(code, "Max Recon Bots", "侦查装备BOT最大数量");
-Language:add(code, "maximum number of Bots with Recon Kit. -1 = unlimited", "带有侦查装备的机器人的最大数量。-1=无限");
-Language:add(code, "Distance to Spawn Bots", "生成BOT的距离");
-Language:add(code, "distance to spawn Bots away from players", "生成BOT到玩家的距离");
-Language:add(code, "Reduce Distance on Fail", "减少失败时的距离");
-Language:add(code, "reduce distance if not possible", "尽可能减少距离");
-Language:add(code, "Height to Spawn Bots", "生成BOT的高度");
-Language:add(code, "distance vertically, Bots should spawn away, if closer than distance", "垂直距离");
-Language:add(code, "Max Retrys on Distance", "最大距离的尝试");
-Language:add(code, "try this often to spawn a bot away from players", "经常尝试生成一个BOT远离玩家");
-Language:add(code, "Random Weapon", "随机武器");
-Language:add(code, "use a random weapon out of the class list", "BOT使用随机武器");
-Language:add(code, "Bot Pistol", "手枪武器");
-Language:add(code, "Pistol of Bots", "选择BOT使用的手枪武器");
-Language:add(code, "Bot Knife", "近战武器");
-Language:add(code, "Knife of Bots", "BOT使用的近战武器");
-Language:add(code, "Weapon Assault", "突击兵武器");
-Language:add(code, "Weapon of Assault class", "突击兵使用的武器");
-Language:add(code, "Weapon Engineer", "工程兵武器");
-Language:add(code, "Weapon of Engineer class", "工程兵使用的武器");
-Language:add(code, "Weapon Support", "支援兵武器");
-Language:add(code, "Weapon of Support class", "支援兵使用的武器");
-Language:add(code, "Weapon Recon", "侦察兵武器");
-Language:add(code, "Weapon of Recon class", "侦察兵使用的武器");
-Language:add(code, "Weaponset of Assault", "突击兵武器装备");
-Language:add(code, "Weaponset of Assault class", "突击兵使用的武器装备");
-Language:add(code, "Weaponset Engineer", "工程兵武器装备");
-Language:add(code, "Weaponset of Engineer class", "工程兵使用的武器装备");
-Language:add(code, "Weaponset Support", "支援兵武器装备");
-Language:add(code, "Weaponset of Support class", "支援兵使用的武器装备");
-Language:add(code, "Weaponset Recon", "侦察兵武器装备");
-Language:add(code, "Weaponset of Recon class", "侦察兵使用的武器装备");
-Language:add(code, "Bot FOV", "BOT视野");
-Language:add(code, "The Field Of View of the bots, where they can detect a player", "BOT的视野，可以在此视野中检测玩家");
-Language:add(code, "Attack if Hit", "BOT还击");
-Language:add(code, "Bots imidiatly attack player, if shot by it", "如果BOT被击中，会立刻还击");
-Language:add(code, "View Distance Bots", "视野距离");
-Language:add(code, "The maximum distance a bots starts shooting at a player", "BOT向玩家射击的最大距离");
-Language:add(code, "Direct Attack Distance", "直接攻击距离");
-Language:add(code, "When this close to a bot, he starts attacking", "在此距离接近BOT时，BOT开始攻击");
-Language:add(code, "Attack with Melee", "近战攻击");
-Language:add(code, "Bots attack the playe with the knife, if close", "BOT用刀攻击玩家");
-Language:add(code, "Bots can kill themself", "BOT可以自杀 ");
-Language:add(code, "If false, Bots take no fall or Frag damage", "如果为false,则BOT不会受到摔落造成的伤害 ");
-Language:add(code, "Bots Attack Bots", "BOT攻击BOT");
-Language:add(code, "Bots attack bots from other team", "BOT会攻击敌方BOT");
-Language:add(code, "Distance Bot Bot attack", "Bot攻击BOT的距离");
-Language:add(code, "The maximum distance a Bot attacks an other Bot", "BOT攻击另一个BOT的最大攻击距离");
-Language:add(code, "Attack with Melee", "BOT近战攻击");
-Language:add(code, "Bots attack the playe with the knife, if close", "如果接近,BOT会用刀攻击玩家");
-Language:add(code, "Attack other players", "攻击其他玩家");
-Language:add(code, "Bots on paths attack player by default", "默认BOT在路径上攻击玩家");
-Language:add(code, "Melee Cooldown", "近战冷却");
-Language:add(code, "the time a Bot waits before attacking with melee again", "BOT近战攻击的冷却时间");
-Language:add(code, "Allow Jump while shooting", "BOT允许在射击时跳跃");
-Language:add(code, "Bots jump over obstacles while shooting", "BOT射击时可以跳过障碍物");
-Language:add(code, "Allow Jump while moving", "BOT移动时允许跳跃");
-Language:add(code, "Bots jump while moving. If false, only on obstacles!", "BOT在移动时跳跃");
-Language:add(code, "Overwrite Speed-Mode", "修改移动姿态");
-Language:add(code, "0 = no overwrite. 1 = prone, 2 = crouch, 3 = walk, 4 = run", "0 = 无修改,1 = 趴下,2 = 蹲下,3 = 步行,4 = 跑步");
-Language:add(code, "Overwrite Attack-Speed-Mode", "修改攻击姿态");
-Language:add(code, "!!Affects Aiming!!! 0 = no overwrite. 1 = prone, 2 = crouch (good aim), 3 = walk, 4 = run", "!!影响瞄准!!!0 = 无修改,1 = 趴下,2 = 蹲下,3 = 步行,4 = 跑步");
-Language:add(code, "Speed Reduction", "降低速度");
-Language:add(code, "reduces the movementspeed. 1 = normal, 0.1 = slow", "降低移动速度,1 = 正常,0.1 = 慢速");
-Language:add(code, "Speed Reduction Attack", "降低攻击时的移动速度");
-Language:add(code, "reduces the movementspeed while attacking. 1 = normal, 0.1 = slow.", "降低攻击时的移动速度,1 = 正常,0.1 = 慢速");
-Language:add(code, "Debug Trace Paths", "调试路径");
-Language:add(code, "Enable Trace Path Editing and Visualizations", "启用可视化路径编辑");
-Language:add(code, "Waypoint Range", "路径点显示范围");
-Language:add(code, "Set how far away waypoints are visible (meters)", "设置路径点可见距离(米)");
-Language:add(code, "Draw Waypoint Lines", "绘制路径线");
-Language:add(code, "Draw waypoint connection Lines", "绘制路径点连接线");
-Language:add(code, "Line Range", "路径线显示范围");
-Language:add(code, "Set how far away waypoint lines are visible (meters)", "设置路径线可见距离(米)");
-Language:add(code, "Draw Waypoint IDs", "绘制路径点ID");
-Language:add(code, "Draw waypoint IDs", "绘制路径点ID");
-Language:add(code, "Text Range", "文本显示范围");
-Language:add(code, "Set how far away waypoint text is visible (meters)", "设置路径点文本可见距离(米)");
-Language:add(code, "Debug Selection Raytraces", "调试选择Raytraces");
-Language:add(code, "Shows the last trace line and search area from Commo Rose selection", "显示Commo Rose选择中最后一条路径线和搜索区域");
-Language:add(code, "First Shot Delay", "第一枪延迟");
-Language:add(code, "delay for first shot", "第一枪时的延迟");
-Language:add(code, "Min Time Shoot", "最短射击时间");
-Language:add(code, "the minimum time a Bot shoots at one player", "Bot向一名玩家射击的最短时间");
-Language:add(code, "the minimum time a Bot tries to shoot a player", "Bot尝试射击玩家的最短时间");
-Language:add(code, "Maximum Degree per Sec", "每一秒最大角度");
-Language:add(code, "in Degree. Maximum Rotaion-Movement of a Bot per second.", "BOT每秒最大旋转角度");
-Language:add(code, "Target Distance Way-Point", "目标路径点距离");
-Language:add(code, "distance the bots have to reach to continue with next Waypoint.", "BOT必须达到该距离才能继续前往下一个路径点");
-Language:add(code, "Disable Chat Commands", "禁用聊天命令");
-Language:add(code, "if true, no chat commands can be used", "如果为true，则不能使用聊天命令");
-Language:add(code, "Allow Trace Usage", "允许使用路径");
-Language:add(code, "if false, no traces can be recorded, deleted or saved", "如果为false，则无法记录，删除或保存任何路径");
-Language:add(code, "Language", "语言");
-Language:add(code, "Select the language of this mod", "选择此Mod的语言");
-Language:add(code, "Password", "密码");
-Language:add(code, "Password protection of these Mod", "此Mod的保护密码");
-Language:add(code, "Trace %d started", "路径 %d 已开始");
-Language:add(code, "Trace done", "路径完成");
-Language:add(code, "Clearing Trace %d", "清除路径 %d");
-Language:add(code, "Clearing all traces", "清除所有路径");
-Language:add(code, "Trying to save paths check console...", "尝试保存路径,请检查控制台...");
-Language:add(code, "Failed to execute query: %s", "无法执行查询：%s");
-Language:add(code, "The waypoint list has been saved", "路径点列表已保存");
-Language:add(code, "You are not permitted to change Bots. Please press F12 for authenticate!", "您无权更改BOT设置,请按F12键进行身份验证!");
-Language:add(code, "Bot respawn activated!", "BOT重生启用!");
-Language:add(code, "Bot respawn deactivated!", "BOT重生停用!");
-Language:add(code, "Bots will attack!", "BOT会攻击!");
-Language:add(code, "Bots will not attack!", "BOT不会攻击!");
-Language:add(code, "%s is currently not implemented.","%s 目前尚未实现");
-Language:add(code, "The Bot-Editor is not protected by an password!", "此BOT编辑器不受密码保护!");
-Language:add(code, "Please authenticate with password!", "请使用密码进行身份验证!");
-Language:add(code, "Successfully authenticated.", "验证成功");
-Language:add(code, "The password you entered is not correct!", "您输入的密码不正确!");
-Language:add(code, "Settings has been saved temporarily.", "设置已被临时保存");
-Language:add(code, "Settings has been saved.", "设置已保存");
+Language:add(code, "Exiting Node Move Mode", "退出路径点移动模式")
+Language:add(code, "Must select at least one waypoint", "必须至少选择一个路径点")
+Language:add(code, "Entering Node Move Mode", "进入路径点移动模式")
+Language:add(code, "Player not alive", "玩家没有活着")
+Language:add(code, "Not Implemented Yet", "尚未实现")
+Language:add(code, "Success", "成功")
+Language:add(code, "Select", "选择")
+Language:add(code, "Finish", "完成")
+Language:add(code, "Connect", "连接")
+Language:add(code, "Save", "保存")
+Language:add(code, "Load", "加载")
+Language:add(code, "Merge", "合并")
+Language:add(code, "Move", "移动")
+Language:add(code, "Delete", "删除")
+Language:add(code, "Split", "拆分")
+Language:add(code, "Set Input", "设置输入")
+Language:add(code, "Create", "创建")
+Language:add(code, "Bot Weapon", "BOT武器")
+Language:add(code, "Select the weapon the bots use", "选择BOT使用的武器")
+Language:add(code, "Bot Attack Mode", "BOT攻击模式")
+Language:add(code, "Mode the Bots attack with. Crouch or Stand", "设置BOT攻击模式,蹲下或站立")
+Language:add(code, "Bot Kit", "BOT兵种")
+Language:add(code, "The Kit a bots spawns with.", "BOT出生选择的兵种")
+Language:add(code, "Bot Color", "BOT主武器皮肤")
+Language:add(code, "The Kit-Color a bots spawns with.", "BOT生成时的枪械皮肤")
+Language:add(code, "Aim Worsening", "BOT瞄准精度")
+Language:add(code, "0 = hard, 1 (or higher) = easy", "0 = 难, 1 (或者更高) = 容易")
+Language:add(code, "Aim Worsening Sniper", "狙击手瞄准精度")
+Language:add(code, "Aim for Head", "BOT是否瞄准头部")
+Language:add(code, "Bots aim for the head. If false for the body", "BOT瞄准头部,如果为false则瞄准身体")
+Language:add(code, "Factor for HeadShot", "BOT爆头的几率")
+Language:add(code, "Factor for damage if Bot does a headshot", "Bot爆头的伤害几率")
+Language:add(code, "Factor for Assault-Weapon-Damage", "BOT攻击性武器伤害倍率")
+Language:add(code, "Origninal Damage from bots gets multiplied by this", "BOT攻击性武器伤害乘以此")
+Language:add(code, "Factor for Carabine-Weapon-Damage", "BOT卡宾枪伤害倍率")
+Language:add(code, "Factor for PDW-Weapon-Damage", "BOT冲锋枪伤害倍率")
+Language:add(code, "Factor for LMG-Weapon-Damage", "BOT机枪伤害倍率")
+Language:add(code, "Factor for Sniper-Weapon-Damage", "BOT狙击伤害倍率")
+Language:add(code, "Factor for Shotgun-Weapon-Damage", "BOT霰弹枪伤害倍率")
+Language:add(code, "Factor for Pistol-Weapon-Damage", "BOT手枪伤害倍率")
+Language:add(code, "Factor for Knife-Weapon-Damage", "BOT近战武器伤害倍率")
+Language:add(code, "Spawn in both teams", "在两个队伍中生成")
+Language:add(code, "Bots spawn in both teams", "BOT在两个队伍中同时生成")
+Language:add(code, "Only spawn with players", "有玩家时才生成")
+Language:add(code, "Bots only spawn if at least one Player is on the server", "只有当服务器上至少有一个玩家时，BOT才会生成")
+Language:add(code, "Spawn Mode", "生成模式")
+Language:add(code, "Mode the bots spawn with", "BOT以该模式生成")
+Language:add(code, "Number of Bots for Spawn-Mode", "Spawn模式的机器人数量")
+Language:add(code, "Bots for the spawnmode", "Spawn模式的BOT")
+Language:add(code, "Number Bots on new Player", "在新玩家加入时,增加的BOT数量")
+Language:add(code, "number to increase Bots, when new players join, if mode is selected", "如果选择该模式,则在新玩家加入时，增加BOT的数量")
+Language:add(code, "Keep one Player-Slot", "保留一个玩家位")
+Language:add(code, "always keep one slot for new Players to join", "始终保留一个空位,供新玩家加入")
+Language:add(code, "Respawn Delay", "重生延迟")
+Language:add(code, "time till bots respawn, if respawn enabled", "机器人重生延迟的时间（如果启用了BOT重生）")
+Language:add(code, "Default Bot Team", "默认BOT队伍")
+Language:add(code, "default bot team 1 = US, 2 = RU", "默认1代表美军，2代表俄军")
+Language:add(code, "Respawn Bots", "重新生成BOT")
+Language:add(code, "Bots on paths respawn if killed on startup", "如果在开始时被杀死，则此路径上的BOT会重新生成")
+Language:add(code, "New Loadout on Spawn", "在生成时重新加载")
+Language:add(code, "bots get a new kit and color, if they respawn", "如果BOT重新生成，它会获得新的装备和枪皮肤")
+Language:add(code, "Max Assault Bots", "突击装备BOT最大数量")
+Language:add(code, "maximum number of Bots with Assault Kit. -1 = unlimited", "带有突击装备的机器人的最大数量。-1=无限")
+Language:add(code, "Max Engineer Bots", "工程装备BOT最大数量")
+Language:add(code, "maximum number of Bots with Engineer Kit. -1 = unlimited", "带有工程装备的机器人的最大数量。-1=无限")
+Language:add(code, "Max Support Bots", "支援装备BOT最大数量")
+Language:add(code, "maximum number of Bots with Support Kit. -1 = unlimited", "带有支援装备的机器人的最大数量。-1=无限")
+Language:add(code, "Max Recon Bots", "侦查装备BOT最大数量")
+Language:add(code, "maximum number of Bots with Recon Kit. -1 = unlimited", "带有侦查装备的机器人的最大数量。-1=无限")
+Language:add(code, "Distance to Spawn Bots", "生成BOT的距离")
+Language:add(code, "distance to spawn Bots away from players", "生成BOT到玩家的距离")
+Language:add(code, "Reduce Distance on Fail", "减少失败时的距离")
+Language:add(code, "reduce distance if not possible", "尽可能减少距离")
+Language:add(code, "Height to Spawn Bots", "生成BOT的高度")
+Language:add(code, "distance vertically, Bots should spawn away, if closer than distance", "垂直距离")
+Language:add(code, "Max Retrys on Distance", "最大距离的尝试")
+Language:add(code, "try this often to spawn a bot away from players", "经常尝试生成一个BOT远离玩家")
+Language:add(code, "Random Weapon", "随机武器")
+Language:add(code, "use a random weapon out of the class list", "BOT使用随机武器")
+Language:add(code, "Bot Pistol", "手枪武器")
+Language:add(code, "Pistol of Bots", "选择BOT使用的手枪武器")
+Language:add(code, "Bot Knife", "近战武器")
+Language:add(code, "Knife of Bots", "BOT使用的近战武器")
+Language:add(code, "Weapon Assault", "突击兵武器")
+Language:add(code, "Weapon of Assault class", "突击兵使用的武器")
+Language:add(code, "Weapon Engineer", "工程兵武器")
+Language:add(code, "Weapon of Engineer class", "工程兵使用的武器")
+Language:add(code, "Weapon Support", "支援兵武器")
+Language:add(code, "Weapon of Support class", "支援兵使用的武器")
+Language:add(code, "Weapon Recon", "侦察兵武器")
+Language:add(code, "Weapon of Recon class", "侦察兵使用的武器")
+Language:add(code, "Weaponset of Assault", "突击兵武器装备")
+Language:add(code, "Weaponset of Assault class", "突击兵使用的武器装备")
+Language:add(code, "Weaponset Engineer", "工程兵武器装备")
+Language:add(code, "Weaponset of Engineer class", "工程兵使用的武器装备")
+Language:add(code, "Weaponset Support", "支援兵武器装备")
+Language:add(code, "Weaponset of Support class", "支援兵使用的武器装备")
+Language:add(code, "Weaponset Recon", "侦察兵武器装备")
+Language:add(code, "Weaponset of Recon class", "侦察兵使用的武器装备")
+Language:add(code, "Bot FOV", "BOT视野")
+Language:add(code, "The Field Of View of the bots, where they can detect a player", "BOT的视野，可以在此视野中检测玩家")
+Language:add(code, "Attack if Hit", "BOT还击")
+Language:add(code, "Bots imidiatly attack player, if shot by it", "如果BOT被击中，会立刻还击")
+Language:add(code, "View Distance Bots", "视野距离")
+Language:add(code, "The maximum distance a bots starts shooting at a player", "BOT向玩家射击的最大距离")
+Language:add(code, "Direct Attack Distance", "直接攻击距离")
+Language:add(code, "When this close to a bot, he starts attacking", "在此距离接近BOT时，BOT开始攻击")
+Language:add(code, "Attack with Melee", "近战攻击")
+Language:add(code, "Bots attack the playe with the knife, if close", "BOT用刀攻击玩家")
+Language:add(code, "Bots can kill themself", "BOT可以自杀 ")
+Language:add(code, "If false, Bots take no fall or Frag damage", "如果为false,则BOT不会受到摔落造成的伤害 ")
+Language:add(code, "Bots Attack Bots", "BOT攻击BOT")
+Language:add(code, "Bots attack bots from other team", "BOT会攻击敌方BOT")
+Language:add(code, "Distance Bot Bot attack", "Bot攻击BOT的距离")
+Language:add(code, "The maximum distance a Bot attacks an other Bot", "BOT攻击另一个BOT的最大攻击距离")
+Language:add(code, "Attack with Melee", "BOT近战攻击")
+Language:add(code, "Bots attack the playe with the knife, if close", "如果接近,BOT会用刀攻击玩家")
+Language:add(code, "Attack other players", "攻击其他玩家")
+Language:add(code, "Bots on paths attack player by default", "默认BOT在路径上攻击玩家")
+Language:add(code, "Melee Cooldown", "近战冷却")
+Language:add(code, "the time a Bot waits before attacking with melee again", "BOT近战攻击的冷却时间")
+Language:add(code, "Allow Jump while shooting", "BOT允许在射击时跳跃")
+Language:add(code, "Bots jump over obstacles while shooting", "BOT射击时可以跳过障碍物")
+Language:add(code, "Allow Jump while moving", "BOT移动时允许跳跃")
+Language:add(code, "Bots jump while moving. If false, only on obstacles!", "BOT在移动时跳跃")
+Language:add(code, "Overwrite Speed-Mode", "修改移动姿态")
+Language:add(code, "0 = no overwrite. 1 = prone, 2 = crouch, 3 = walk, 4 = run", "0 = 无修改,1 = 趴下,2 = 蹲下,3 = 步行,4 = 跑步")
+Language:add(code, "Overwrite Attack-Speed-Mode", "修改攻击姿态")
+Language:add(code, "!!Affects Aiming!!! 0 = no overwrite. 1 = prone, 2 = crouch (good aim), 3 = walk, 4 = run", "!!影响瞄准!!!0 = 无修改,1 = 趴下,2 = 蹲下,3 = 步行,4 = 跑步")
+Language:add(code, "Speed Reduction", "降低速度")
+Language:add(code, "reduces the movementspeed. 1 = normal, 0.1 = slow", "降低移动速度,1 = 正常,0.1 = 慢速")
+Language:add(code, "Speed Reduction Attack", "降低攻击时的移动速度")
+Language:add(code, "reduces the movementspeed while attacking. 1 = normal, 0.1 = slow.", "降低攻击时的移动速度,1 = 正常,0.1 = 慢速")
+Language:add(code, "Debug Trace Paths", "调试路径")
+Language:add(code, "Enable Trace Path Editing and Visualizations", "启用可视化路径编辑")
+Language:add(code, "Waypoint Range", "路径点显示范围")
+Language:add(code, "Set how far away waypoints are visible (meters)", "设置路径点可见距离(米)")
+Language:add(code, "Draw Waypoint Lines", "绘制路径线")
+Language:add(code, "Draw waypoint connection Lines", "绘制路径点连接线")
+Language:add(code, "Line Range", "路径线显示范围")
+Language:add(code, "Set how far away waypoint lines are visible (meters)", "设置路径线可见距离(米)")
+Language:add(code, "Draw Waypoint IDs", "绘制路径点ID")
+Language:add(code, "Draw waypoint IDs", "绘制路径点ID")
+Language:add(code, "Text Range", "文本显示范围")
+Language:add(code, "Set how far away waypoint text is visible (meters)", "设置路径点文本可见距离(米)")
+Language:add(code, "Debug Selection Raytraces", "调试选择Raytraces")
+Language:add(code, "Shows the last trace line and search area from Commo Rose selection", "显示Commo Rose选择中最后一条路径线和搜索区域")
+Language:add(code, "First Shot Delay", "第一枪延迟")
+Language:add(code, "delay for first shot", "第一枪时的延迟")
+Language:add(code, "Min Time Shoot", "最短射击时间")
+Language:add(code, "the minimum time a Bot shoots at one player", "Bot向一名玩家射击的最短时间")
+Language:add(code, "the minimum time a Bot tries to shoot a player", "Bot尝试射击玩家的最短时间")
+Language:add(code, "Maximum Degree per Sec", "每一秒最大角度")
+Language:add(code, "in Degree. Maximum Rotaion-Movement of a Bot per second.", "BOT每秒最大旋转角度")
+Language:add(code, "Target Distance Way-Point", "目标路径点距离")
+Language:add(code, "distance the bots have to reach to continue with next Waypoint.", "BOT必须达到该距离才能继续前往下一个路径点")
+Language:add(code, "Disable Chat Commands", "禁用聊天命令")
+Language:add(code, "if true, no chat commands can be used", "如果为true，则不能使用聊天命令")
+Language:add(code, "Allow Trace Usage", "允许使用路径")
+Language:add(code, "if false, no traces can be recorded, deleted or saved", "如果为false，则无法记录，删除或保存任何路径")
+Language:add(code, "Language", "语言")
+Language:add(code, "Select the language of this mod", "选择此Mod的语言")
+Language:add(code, "Password", "密码")
+Language:add(code, "Password protection of these Mod", "此Mod的保护密码")
+Language:add(code, "Trace %d started", "路径 %d 已开始")
+Language:add(code, "Trace done", "路径完成")
+Language:add(code, "Clearing Trace %d", "清除路径 %d")
+Language:add(code, "Clearing all traces", "清除所有路径")
+Language:add(code, "Trying to save paths check console...", "尝试保存路径,请检查控制台...")
+Language:add(code, "Failed to execute query: %s", "无法执行查询：%s")
+Language:add(code, "The waypoint list has been saved", "路径点列表已保存")
+Language:add(code, "You are not permitted to change Bots. Please press F12 for authenticate!", "您无权更改BOT设置,请按F12键进行身份验证!")
+Language:add(code, "Bot respawn activated!", "BOT重生启用!")
+Language:add(code, "Bot respawn deactivated!", "BOT重生停用!")
+Language:add(code, "Bots will attack!", "BOT会攻击!")
+Language:add(code, "Bots will not attack!", "BOT不会攻击!")
+Language:add(code, "%s is currently not implemented.","%s 目前尚未实现")
+Language:add(code, "The Bot-Editor is not protected by an password!", "此BOT编辑器不受密码保护!")
+Language:add(code, "Please authenticate with password!", "请使用密码进行身份验证!")
+Language:add(code, "Successfully authenticated.", "验证成功")
+Language:add(code, "The password you entered is not correct!", "您输入的密码不正确!")
+Language:add(code, "Settings has been saved temporarily.", "设置已被临时保存")
+Language:add(code, "Settings has been saved.", "设置已保存")

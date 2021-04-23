@@ -46,6 +46,35 @@ MP_018 RushLarge0 1 #Kharg Island - Rush
 MP_Subway RushLarge0 1 #Operation Metro - Rush
 XP1_001 RushLarge0 1 #Strike at Karkand - Rush
 XP1_002 RushLarge0 1 #Gulf of Oman - Rush
+MP_001 SquadDeathMatch0 1 #Grand Bazaar - SDM
+MP_003 SquadDeathMatch0 1 #Teheran Highway - SDM
+MP_007 SquadDeathMatch0 1 #Caspian Border - SDM
+MP_011 SquadDeathMatch0 1 #Seine Crossing - SDM
+MP_012 SquadDeathMatch0 1 #Operation Firestorm - SDM
+MP_013 SquadDeathMatch0 1 #Damavand Peak - SDM
+MP_017 SquadDeathMatch0 1 #Noshahr Canals - SDM
+MP_018 SquadDeathMatch0 1 #Kharg Island - SDM
+MP_Subway SquadDeathMatch0 1 #Operation Metro - SDM
+XP1_001 SquadDeathMatch0 1 #Strike at Karkand - SDM
+XP1_002 SquadDeathMatch0 1 #Gulf of Oman - SDM
+XP1_003 SquadDeathMatch0 1 #Sharqi Peninsula - SDM
+XP1_004 SquadDeathMatch0 1 #Wake Island - SDM
+XP2_Factory SquadDeathMatch0 1 #Scrapmetal - SDM
+XP2_Office SquadDeathMatch0 1 #Operation 925 - SDM
+XP2_Skybar SquadDeathMatch0 1 #Ziba Tower - SDM
+XP2_Palace SquadDeathMatch0 1 #Donya Fortress - SDM
+XP3_Alborz SquadDeathMatch0 1 #Alborz Mountains - SDM
+XP3_Desert SquadDeathMatch0 1 #Bandar Desert - SDM
+XP3_Shield SquadDeathMatch0 1 #Armored Shield - SDM
+XP3_Valley SquadDeathMatch0 1 #Death Valley - SDM
+XP4_FD SquadDeathMatch0 1 #Markaz Monolith - SDM
+XP4_Rubble SquadDeathMatch0 1 #Talah Market - SDM
+XP4_Quake SquadDeathMatch0 1 #Epicenter - SDM
+XP4_Parl SquadDeathMatch0 1 #Azadi Palace - SDM
+XP5_001 SquadDeathMatch0 1 #Operation Riverside - SDM
+XP5_002 SquadDeathMatch0 1 #Nebandan Flats - SDM
+XP5_003 SquadDeathMatch0 1 #Kiasar Railroad - SDM
+XP5_004 SquadDeathMatch0 1 #Sabalan Pipeline - SDM
 MP_001 TeamDeathMatch0 1 #Grand Bazaar - TDM
 MP_003 TeamDeathMatch0 1 #Teheran Highway - TDM
 MP_007 TeamDeathMatch0 1 #Caspian Border - TDM
