@@ -19,7 +19,7 @@ end
 function UIViews:_onExtensionLoaded()
 	WebUI:Init()
 	WebUI:Show()
-	self:setLanguage(Config.language)
+	self:setLanguage(Config.Language)
 	self:disable()
 end
 

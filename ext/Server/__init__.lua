@@ -29,7 +29,7 @@ local Globals 				= require('Globals')
 local playerKilledDelay 	= 0
 
 function FunBotServer:__init()
-	Language:loadLanguage(Config.language)
+	Language:loadLanguage(Config.Language)
 
 	Events:Subscribe('Level:Loaded', self, self._onLevelLoaded)
 	Events:Subscribe('Player:Chat', self, self._onChat)
@@ -109,7 +109,7 @@ function FunBotServer:_onLevelLoaded(levelName, gameMode)
 	if customGameMode ~= nil then
 		gameMode = customGameMode
 	end
-	g_WeaponModification:ModifyAllWeapons(Config.botAimWorsening, Config.botSniperAimWorsening)
+	g_WeaponModification:ModifyAllWeapons(Config.BotAimWorsening, Config.BotSniperAimWorsening)
 	WeaponList:onLevelLoaded()
 
 	if Debug.Server.INFO then

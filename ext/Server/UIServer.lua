@@ -16,7 +16,7 @@ function FunBotUIServer:__init()
 	self._webui			= 0
 	self._authenticated	= ArrayMap()
 
-	if Config.disableUserInterface ~= true then
+	if Config.DisableUserInterface ~= true then
 		Events:Subscribe('Player:Left', self, self._onPlayerLeft)
 		NetEvents:Subscribe('UI_Request_Open', self, self._onUIRequestOpen)
 		NetEvents:Subscribe('UI_Request_Save_Settings', self, self._onUIRequestSaveSettings)
@@ -27,7 +27,7 @@ function FunBotUIServer:__init()
 end
 
 function FunBotUIServer:_onBotEditorEvent(player, data)
-	if Config.disableUserInterface == true then
+	if Config.DisableUserInterface == true then
 		return
 	end
 
@@ -35,7 +35,7 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 		print('UIServer: BotEditor (' .. tostring(data) .. ')')
 	end
 
-	if (Config.settingsPassword ~= nil and self:_isAuthenticated(player.accountGuid) ~= true) then
+	if (Config.SettingsPassword ~= nil and self:_isAuthenticated(player.accountGuid) ~= true) then
 			if Debug.Server.UI then
 				print(player.name .. ' has no permissions for Bot-Editor.')
 			end
@@ -48,8 +48,8 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 
 	-- Settings
 	if request.action == 'request_settings' then
-		if Config.language == nil then
-			Config.language = 'en_US'
+		if Config.Language == nil then
+			Config.Language = 'en_US'
 		end
 
 		-- request.opened
@@ -159,7 +159,7 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 end
 
 function FunBotUIServer:_onPlayerLeft(player)
-	if Config.disableUserInterface == true then
+	if Config.DisableUserInterface == true then
 		return
 	end
 
@@ -168,7 +168,7 @@ function FunBotUIServer:_onPlayerLeft(player)
 end
 
 function FunBotUIServer:_onUIRequestSaveSettings(player, data)
-	if Config.disableUserInterface == true then
+	if Config.DisableUserInterface == true then
 		return
 	end
 
@@ -176,7 +176,7 @@ function FunBotUIServer:_onUIRequestSaveSettings(player, data)
 		print(player.name .. ' requesting to save settings.')
 	end
 
-	if (Config.settingsPassword ~= nil and self:_isAuthenticated(player.accountGuid) ~= true) then
+	if (Config.SettingsPassword ~= nil and self:_isAuthenticated(player.accountGuid) ~= true) then
 		if Debug.Server.UI then
 			print(player.name .. ' has no permissions for Bot-Editor.')
 		end
@@ -191,11 +191,11 @@ function FunBotUIServer:_onUIRequestSaveSettings(player, data)
 end
 
 function FunBotUIServer:_onUIRequestCommonRoseShow(player, data)
-	if Config.disableUserInterface == true then
+	if Config.DisableUserInterface == true then
 		return
 	end
 
-	if (Config.settingsPassword ~= nil and self:_isAuthenticated(player.accountGuid) ~= true) then
+	if (Config.SettingsPassword ~= nil and self:_isAuthenticated(player.accountGuid) ~= true) then
 		if Debug.Server.UI then
 			print(player.name .. ' has no permissions for Waypoint-Editor.')
 		end
@@ -251,11 +251,11 @@ function FunBotUIServer:_onUIRequestCommonRoseShow(player, data)
 end
 
 function FunBotUIServer:_onUIRequestCommonRoseHide(player, data)
-	if Config.disableUserInterface == true then
+	if Config.DisableUserInterface == true then
 		return
 	end
 
-	if (Config.settingsPassword ~= nil and self:_isAuthenticated(player.accountGuid) ~= true) then
+	if (Config.SettingsPassword ~= nil and self:_isAuthenticated(player.accountGuid) ~= true) then
 		if Debug.Server.UI then
 			print(player.name .. ' has no permissions for Waypoint-Editor.')
 		end
@@ -271,7 +271,7 @@ function FunBotUIServer:_onUIRequestCommonRoseHide(player, data)
 end
 
 function FunBotUIServer:_onUIRequestOpen(player, data)
-	if Config.disableUserInterface == true then
+	if Config.DisableUserInterface == true then
 		return
 	end
 
@@ -279,8 +279,8 @@ function FunBotUIServer:_onUIRequestOpen(player, data)
 		print(player.name .. ' requesting open Bot-Editor.')
 	end
 
-	if (Config.settingsPassword == nil or self:_isAuthenticated(player.accountGuid)) then
-		if (Config.settingsPassword == nil) then
+	if (Config.SettingsPassword == nil or self:_isAuthenticated(player.accountGuid)) then
+		if (Config.SettingsPassword == nil) then
 			ChatManager:Yell(Language:I18N('The Bot-Editor is not protected by an password!'), 2.5)
 			NetEvents:SendTo('UI_Password_Protection', player, 'true')
 		end
@@ -307,7 +307,7 @@ function FunBotUIServer:_onUIRequestOpen(player, data)
 					print(player.name .. ' has entered following Password: ' .. form.password)
 				end
 
-				if (form.password == Config.settingsPassword) then
+				if (form.password == Config.SettingsPassword) then
 					self._authenticated:add(tostring(player.accountGuid))
 					if Debug.Server.UI then
 						print('accountGuid: ' .. tostring(player.accountGuid))
@@ -336,7 +336,7 @@ function FunBotUIServer:_onUIRequestOpen(player, data)
 end
 
 function FunBotUIServer:_isAuthenticated(guid)
-	if Config.disableUserInterface == true then
+	if Config.DisableUserInterface == true then
 		return false
 	end
 
@@ -404,7 +404,7 @@ function FunBotUIServer:_writeSingleSettingList(name, request, list, temporary, 
 end
 
 function FunBotUIServer:_writeSettings(player, request)
-	if Config.disableUserInterface == true then
+	if Config.DisableUserInterface == true then
 		return
 	end
 
@@ -511,7 +511,7 @@ function FunBotUIServer:_writeSettings(player, request)
 	-- expert
 	self:_writeSingleSetting('botFirstShotDelay', request, 'number', temporary, batched, 0, 5)
 	self:_writeSingleSetting('botFireModeDuration', request, 'number', temporary, batched, 0, 60)
-	self:_writeSingleSetting('botMinTimeShootAtPlayer', request, 'number', temporary, batched, 0, Config.botFireModeDuration)
+	self:_writeSingleSetting('botMinTimeShootAtPlayer', request, 'number', temporary, batched, 0, Config.BotFireModeDuration)
 	if self:_writeSingleSetting('maximunYawPerSec', request, 'number', temporary, batched, 3, 1000) then calcYawPerFrame = true end
 	self:_writeSingleSetting('targetDistanceWayPoint', request, 'number', temporary, batched, 0, 10)
 
@@ -536,7 +536,7 @@ function FunBotUIServer:_writeSettings(player, request)
 			request.settingsPassword = nil
 		end
 
-		if Config.settingsPassword == nil and request.settingsPassword ~= nil then
+		if Config.SettingsPassword == nil and request.settingsPassword ~= nil then
 			ChatManager:Yell(Language:I18N('You can\'t change the password, if it\'s never set!'), 2.5)
 		else
 			if request.settingsPassword ~= nil and request.settingsPassword ~= "" then
@@ -562,7 +562,7 @@ function FunBotUIServer:_writeSettings(player, request)
 
 	-- update Weapons if needed
 	if updateWeapons then
-		WeaponModification:ModifyAllWeapons(Config.botAimWorsening, Config.botSniperAimWorsening)
+		WeaponModification:ModifyAllWeapons(Config.BotAimWorsening, Config.BotSniperAimWorsening)
 	end
 
 	if updateWeaponSets then
@@ -576,7 +576,7 @@ function FunBotUIServer:_writeSettings(player, request)
 	NetEvents:BroadcastLocal('WriteClientSettings', Config, updateWeaponSets)
 
 	if updateBotTeamAndNumber then
-		Globals.spawnMode		= Config.spawnMode
+		Globals.spawnMode		= Config.SpawnMode
 		BotSpawner:updateBotAmountAndTeam()
 	end
 	-- @ToDo create Error Array and dont hide if has values

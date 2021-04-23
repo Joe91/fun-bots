@@ -36,12 +36,12 @@ end
 
 function SettingsManager:onLoad()
 	-- Fix nil values on config
-	if Config.language == nil then
-		Config.language = DatabaseField.NULL
+	if Config.Language == nil then
+		Config.Language = DatabaseField.NULL
 	end
 
-	if Config.settingsPassword == nil then
-		Config.settingsPassword = DatabaseField.NULL
+	if Config.SettingsPassword == nil then
+		Config.SettingsPassword = DatabaseField.NULL
 	end
 
 	-- get Values from Config.lua
@@ -140,12 +140,12 @@ function SettingsManager:onLoad()
 	end
 
 	-- revert Fix nil values on config
-	if Config.language == DatabaseField.NULL then
-		Config.language = nil
+	if Config.Language == DatabaseField.NULL then
+		Config.Language = nil
 	end
 
-	if Config.settingsPassword == DatabaseField.NULL then
-		Config.settingsPassword = nil
+	if Config.SettingsPassword == DatabaseField.NULL then
+		Config.SettingsPassword = nil
 	end
 end
 

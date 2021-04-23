@@ -28,12 +28,12 @@ function BotSpawner:__init()
 end
 
 function BotSpawner:_onTeamChange(player, team, squad)
-	if Config.botTeam ~= TeamId.TeamNeutral then
+	if Config.BotTeam ~= TeamId.TeamNeutral then
 		if player ~= nil then
 			if player.onlineId ~= 0 then -- no bot
 				local playerTeams = {}
 				for i = 1, g_Globals.nrOfTeams do
-					if Config.botTeam ~= i then
+					if Config.BotTeam ~= i then
 						table.insert(playerTeams, i)
 					end
 				end
@@ -49,7 +49,7 @@ end
 
 function BotSpawner:updateBotAmountAndTeam()
 	-- keep Slot for next player
-	if Config.keepOneSlotForPlayers then
+	if Config.KeepOneSlotForPlayers then
 		local playerlimt = g_Globals.maxPlayers - 1
 		local amoutToDestroy = PlayerManager:GetPlayerCount() - playerlimt
 		if amoutToDestroy > 0 then
@@ -102,11 +102,11 @@ function BotSpawner:updateBotAmountAndTeam()
 	-- KEEP PLAYERCOUNT
 	if g_Globals.spawnMode == 'keep_playercount' then
 		for i=1, g_Globals.nrOfTeams do
-			targetTeamCount[i] = Config.initNumberOfBots
+			targetTeamCount[i] = Config.InitNumberOfBots
 		end
-		if Config.spawnInBothTeams then
+		if Config.SpawnInBothTeams then
 			for i=1, g_Globals.nrOfTeams do
-				targetTeamCount[i] = math.floor(Config.initNumberOfBots/g_Globals.nrOfTeams)
+				targetTeamCount[i] = math.floor(Config.InitNumberOfBots/g_Globals.nrOfTeams)
 			end
 		else
 			for i=1, g_Globals.nrOfTeams do
@@ -132,7 +132,7 @@ function BotSpawner:updateBotAmountAndTeam()
 				maxPlayersInOneTeam = countPlayers[i]
 			end
 		end
-		local targetCount = Config.initNumberOfBots + ((maxPlayersInOneTeam-1) * Config.newBotsPerNewPlayer)
+		local targetCount = Config.InitNumberOfBots + ((maxPlayersInOneTeam-1) * Config.NewBotsPerNewPlayer)
 		-- TODO: limit in SDM
 		for i=1, g_Globals.nrOfTeams do
 			targetTeamCount[i] = targetCount
@@ -147,13 +147,13 @@ function BotSpawner:updateBotAmountAndTeam()
 		end
 	-- INCREMENT WITH PLAYER
 	elseif g_Globals.spawnMode == 'increment_with_players' then
-		if Config.spawnInBothTeams then
+		if Config.SpawnInBothTeams then
 			for i=1, g_Globals.nrOfTeams do
 				targetTeamCount[i] = 0
 				for j = 1, g_Globals.nrOfTeams do
 					if i ~= j then
 						if (countPlayers[j]) > 0 then
-							targetTeamCount[i] =  Config.initNumberOfBots + ((countPlayers[j]-1) * Config.newBotsPerNewPlayer)
+							targetTeamCount[i] =  Config.InitNumberOfBots + ((countPlayers[j]-1) * Config.NewBotsPerNewPlayer)
 							break --TODO: only use first team. Write algo for SDM as well
 						end
 					end
@@ -176,7 +176,7 @@ function BotSpawner:updateBotAmountAndTeam()
 				end
 			end
 
-			local targetBotCount = Config.initNumberOfBots + ((playerCount-1) * Config.newBotsPerNewPlayer)
+			local targetBotCount = Config.InitNumberOfBots + ((playerCount-1) * Config.NewBotsPerNewPlayer)
 			local amountToSpawn = targetBotCount - botCount
 			if amountToSpawn > 0 then
 				self._botSpawnTimer = -5.0
@@ -189,8 +189,8 @@ function BotSpawner:updateBotAmountAndTeam()
 
 	-- FIXED NUMBER TO SPAWN
 	elseif g_Globals.spawnMode == 'fixed_number' then
-		if Config.spawnInBothTeams then
-			local amoutPerTeam = math.floor(Config.initNumberOfBots/g_Globals.nrOfTeams)
+		if Config.SpawnInBothTeams then
+			local amoutPerTeam = math.floor(Config.InitNumberOfBots/g_Globals.nrOfTeams)
 
 			for i=1, g_Globals.nrOfTeams do
 				if teamCount[i] < amoutPerTeam then
@@ -207,7 +207,7 @@ function BotSpawner:updateBotAmountAndTeam()
 				end
 			end
 
-			local targetBotCount = Config.initNumberOfBots
+			local targetBotCount = Config.InitNumberOfBots
 			local amountToSpawn = targetBotCount - botCount
 			if amountToSpawn > 0 then
 				self._botSpawnTimer = -5.0
@@ -430,8 +430,8 @@ function BotSpawner:_getSpawnPoint(team, squad)
 
 	local targetNode = nil
 	local validPointFound = false
-	local targetDistance = Config.distanceToSpawnBots
-	local retryCounter = Config.maxTrysToSpawnAtDistance
+	local targetDistance = Config.DistanceToSpawnBots
+	local retryCounter = Config.MaxTrysToSpawnAtDistance
 	local maximumTrys = 100
 	local trysDone = 0
 
@@ -493,7 +493,7 @@ function BotSpawner:_getSpawnPoint(team, squad)
 					if team == nil or team ~= tempPlayer.teamId then
 						local distance = tempPlayer.soldier.worldTransform.trans:Distance(spawnPoint)
 						local heightDiff = math.abs(tempPlayer.soldier.worldTransform.trans.y - spawnPoint.y)
-						if distance < targetDistance and heightDiff < Config.heightDistanceToSpawn then
+						if distance < targetDistance and heightDiff < Config.HeightDistanceToSpawn then
 							playerNearby = true
 							break
 						end
@@ -503,8 +503,8 @@ function BotSpawner:_getSpawnPoint(team, squad)
 			retryCounter = retryCounter - 1
 			trysDone = trysDone + 1
 			if retryCounter == 0 then
-				retryCounter = Config.maxTrysToSpawnAtDistance
-				targetDistance = targetDistance - Config.distanceToSpawnReduction
+				retryCounter = Config.MaxTrysToSpawnAtDistance
+				targetDistance = targetDistance - Config.DistanceToSpawnReduction
 				if targetDistance < 0 then
 					targetDistance = 0
 				end
@@ -557,7 +557,7 @@ function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, inde
 	end
 	local inverseDirection = false
 	if name ~= nil or isRespawn then
-		if Config.spawnMethod == SpawnMethod.Spawn then
+		if Config.SpawnMethod == SpawnMethod.Spawn then
 			local s_Bot = self:GetBot(existingBot, name, team, squad)
 			if s_Bot == nil then
 				return
@@ -628,12 +628,12 @@ function BotSpawner:GetBot(p_ExistingBot, p_Name, p_TeamId, p_SquadId)
 end
 
 function BotSpawner:SelectLoadout(p_Bot, setKit)
-	local writeNewKit = (setKit or Config.botNewLoadoutOnSpawn)
+	local writeNewKit = (setKit or Config.BotNewLoadoutOnSpawn)
 	if not writeNewKit and (p_Bot.color == "" or p_Bot.kit == "" or p_Bot.activeWeapon == nil) then
 		writeNewKit = true
 	end
-	local botColor = Config.botColor
-	local botKit = Config.botKit
+	local botColor = Config.BotColor
+	local botKit = Config.BotKit
 
 	if writeNewKit then
 		if botColor == "RANDOM_COLOR" then
@@ -826,7 +826,7 @@ function BotSpawner:spawnWayBots(player, amount, useRandomWay, activeWayIndex, i
 
 	-- check for amount available
 	local playerlimt = g_Globals.maxPlayers
-	if Config.keepOneSlotForPlayers then
+	if Config.KeepOneSlotForPlayers then
 		playerlimt = playerlimt - 1
 	end
 
@@ -980,7 +980,7 @@ function BotSpawner:getKitApperanceCustomization(team, kit, color, primary, pist
 		end
 	end
 
-	if Config.zombieMode then
+	if Config.ZombieMode then
 		soldierCustomization.activeSlot = WeaponSlot.WeaponSlot_7
 		soldierCustomization.weapons:add(meleeWeapon)
 	else
@@ -1022,35 +1022,35 @@ function BotSpawner:_getSpawnBotKit()
 	--find out, if possible
 	local kitCount = BotManager:getKitCount(botKit)
 	if botKit == "Assault" then
-		if Config.maxAssaultBots >= 0 and kitCount >= Config.maxAssaultBots then
+		if Config.MaxAssaultBots >= 0 and kitCount >= Config.MaxAssaultBots then
 			changeKit = true
 		end
 	elseif botKit == "Engineer" then
-		if Config.maxEngineerBots >= 0 and kitCount >= Config.maxEngineerBots then
+		if Config.MaxEngineerBots >= 0 and kitCount >= Config.MaxEngineerBots then
 			changeKit = true
 		end
 	elseif botKit == "Support" then
-		if Config.maxSupportBots >= 0 and kitCount >= Config.maxSupportBots then
+		if Config.MaxSupportBots >= 0 and kitCount >= Config.MaxSupportBots then
 			changeKit = true
 		end
 	else -- botKit == "Support"
-		if Config.maxReconBots >= 0 and kitCount >= Config.maxReconBots then
+		if Config.MaxReconBots >= 0 and kitCount >= Config.MaxReconBots then
 			changeKit = true
 		end
 	end
 
 	if changeKit then
 		local availableKitList = {}
-		if (Config.maxAssaultBots == -1) or (BotManager:getKitCount("Assault") < Config.maxAssaultBots) then
+		if (Config.MaxAssaultBots == -1) or (BotManager:getKitCount("Assault") < Config.MaxAssaultBots) then
 			table.insert(availableKitList, "Assault")
 		end
-		if (Config.maxEngineerBots == -1) or (BotManager:getKitCount("Engineer") < Config.maxEngineerBots) then
+		if (Config.MaxEngineerBots == -1) or (BotManager:getKitCount("Engineer") < Config.MaxEngineerBots) then
 			table.insert(availableKitList, "Engineer")
 		end
-		if (Config.maxSupportBots == -1) or (BotManager:getKitCount("Support") < Config.maxSupportBots) then
+		if (Config.MaxSupportBots == -1) or (BotManager:getKitCount("Support") < Config.MaxSupportBots) then
 			table.insert(availableKitList, "Support")
 		end
-		if(Config.maxReconBots == -1) or (BotManager:getKitCount("Recon") < Config.maxReconBots) then
+		if(Config.MaxReconBots == -1) or (BotManager:getKitCount("Recon") < Config.MaxReconBots) then
 			table.insert(availableKitList, "Recon")
 		end
 
@@ -1065,8 +1065,8 @@ end
 function BotSpawner:setBotWeapons(bot, botKit, newWeapons)
 	if newWeapons then
 		if botKit == "Assault" then
-			local weapon = Config.assaultWeapon
-			if Config.useRandomWeapon then
+			local weapon = Config.AssaultWeapon
+			if Config.UseRandomWeapon then
 				weapon = AssaultPrimary[MathUtils:GetRandomInt(1, #AssaultPrimary)]
 			end
 			bot.primary = WeaponList:getWeapon(weapon)
@@ -1076,8 +1076,8 @@ function BotSpawner:setBotWeapons(bot, botKit, newWeapons)
 			bot.grenade = WeaponList:getWeapon(AssaultGrenade[MathUtils:GetRandomInt(1, #AssaultGrenade)])
 			bot.knife = WeaponList:getWeapon(AssaultKnife[MathUtils:GetRandomInt(1, #AssaultKnife)])
 		elseif botKit == "Engineer" then
-			local weapon = Config.engineerWeapon
-			if Config.useRandomWeapon then
+			local weapon = Config.EngineerWeapon
+			if Config.UseRandomWeapon then
 				weapon = EngineerPrimary[MathUtils:GetRandomInt(1, #EngineerPrimary)]
 			end
 			bot.primary = WeaponList:getWeapon(weapon)
@@ -1087,8 +1087,8 @@ function BotSpawner:setBotWeapons(bot, botKit, newWeapons)
 			bot.grenade = WeaponList:getWeapon(EngineerGrenade[MathUtils:GetRandomInt(1, #EngineerGrenade)])
 			bot.knife = WeaponList:getWeapon(EngineerKnife[MathUtils:GetRandomInt(1, #EngineerKnife)])
 		elseif botKit == "Support" then
-			local weapon = Config.supportWeapon
-			if Config.useRandomWeapon then
+			local weapon = Config.SupportWeapon
+			if Config.UseRandomWeapon then
 				weapon = SupportPrimary[MathUtils:GetRandomInt(1, #SupportPrimary)]
 			end
 			bot.primary = WeaponList:getWeapon(weapon)
@@ -1098,8 +1098,8 @@ function BotSpawner:setBotWeapons(bot, botKit, newWeapons)
 			bot.grenade = WeaponList:getWeapon(SupportGrenade[MathUtils:GetRandomInt(1, #SupportGrenade)])
 			bot.knife = WeaponList:getWeapon(SupportKnife[MathUtils:GetRandomInt(1, #SupportKnife)])
 		else
-			local weapon = Config.reconWeapon
-			if Config.useRandomWeapon then
+			local weapon = Config.ReconWeapon
+			if Config.UseRandomWeapon then
 				weapon = ReconPrimary[MathUtils:GetRandomInt(1, #ReconPrimary)]
 			end
 			bot.primary = WeaponList:getWeapon(weapon)
@@ -1111,15 +1111,15 @@ function BotSpawner:setBotWeapons(bot, botKit, newWeapons)
 		end
 	end
 
-	if Config.botWeapon == "Primary" or Config.botWeapon == "Auto" then
+	if Config.BotWeapon == "Primary" or Config.BotWeapon == "Auto" then
 		bot.activeWeapon = bot.primary
-	elseif Config.botWeapon == "Pistol" then
+	elseif Config.BotWeapon == "Pistol" then
 		bot.activeWeapon = bot.pistol
-	elseif Config.botWeapon == "Gadget2" then
+	elseif Config.BotWeapon == "Gadget2" then
 		bot.activeWeapon = bot.gadget2
-	elseif Config.botWeapon == "Gadget1" then
+	elseif Config.BotWeapon == "Gadget1" then
 		bot.activeWeapon = bot.gadget1
-	elseif Config.botWeapon == "Grenade" then
+	elseif Config.BotWeapon == "Grenade" then
 		bot.activeWeapon = bot.grenade
 	else
 		bot.activeWeapon = bot.knife
@@ -1127,12 +1127,12 @@ function BotSpawner:setBotWeapons(bot, botKit, newWeapons)
 end
 
 function BotSpawner:spawnBot(bot, trans, setKit)
-	local writeNewKit = (setKit or Config.botNewLoadoutOnSpawn)
+	local writeNewKit = (setKit or Config.BotNewLoadoutOnSpawn)
 	if not writeNewKit and (bot.color == "" or bot.kit == "" or bot.activeWeapon == nil) then
 		writeNewKit = true
 	end
-	local botColor = Config.botColor
-	local botKit = Config.botKit
+	local botColor = Config.BotColor
+	local botKit = Config.BotKit
 
 	if writeNewKit then
 		if botColor == "RANDOM_COLOR" then

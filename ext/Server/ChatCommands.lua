@@ -8,7 +8,7 @@ local BotSpawner	= require('BotSpawner')
 local Globals 		= require('Globals')
 
 function ChatCommands:execute(parts, player)
-	if player == nil or Config.disableChatCommands == true then
+	if player == nil or Config.DisableChatCommands == true then
 		return
 	end
 
@@ -110,35 +110,35 @@ function ChatCommands:execute(parts, player)
 		local kitNumber = tonumber(parts[2]) or 1
 
 		if kitNumber <= 4 and kitNumber >= 0 then
-			Config.botKit = BotKits[kitNumber]
+			Config.BotKit = BotKits[kitNumber]
 		end
 
 	elseif parts[1] == '!setbotcolor' then
 		local botColor = tonumber(parts[2]) or 1
 
 		if botColor <= #BotColors and botColor >= 0 then
-			Config.botColor = BotColors[botColor]
+			Config.BotColor = BotColors[botColor]
 		end
 
 	elseif parts[1] == '!setaim' then
-		Config.botAimWorsening = tonumber(parts[2]) or 0.5
-		--self:_modifyWeapons(Config.botAimWorsening) --causes lag. Instead restart round
+		Config.BotAimWorsening = tonumber(parts[2]) or 0.5
+		--self:_modifyWeapons(Config.BotAimWorsening) --causes lag. Instead restart round
 		if Debug.Server.COMMAND then
-			print('difficulty set to ' .. Config.botAimWorsening .. '. Please restart round or level to take effect')
+			print('difficulty set to ' .. Config.BotAimWorsening .. '. Please restart round or level to take effect')
 		end
 
 	elseif parts[1] == '!shootback' then
 		if tonumber(parts[2]) == 0 then
-			Config.shootBackIfHit = false
+			Config.ShootBackIfHit = false
 		else
-			Config.shootBackIfHit = true
+			Config.ShootBackIfHit = true
 		end
 
 	elseif parts[1] == '!attackmelee' then
 		if tonumber(parts[2]) == 0 then
-			Config.meleeAttackIfClose = false
+			Config.MeleeAttackIfClose = false
 		else
-			Config.meleeAttackIfClose = true
+			Config.MeleeAttackIfClose = true
 		end
 
 	-- reset everything

@@ -8,7 +8,7 @@ local Globals 		= require('Globals')
 
 
 function RCONCommands:__init()
-	if Config.disableRCONCommands then
+	if Config.DisableRCONCommands then
 		return
 	end
 
@@ -236,7 +236,7 @@ function RCONCommands:__init()
 						print('[RCON] call WeaponModification:ModifyAllWeapons()')
 					end
 
-					WeaponModification:ModifyAllWeapons(Config.botAimWorsening, Config.botSniperAimWorsening)
+					WeaponModification:ModifyAllWeapons(Config.BotAimWorsening, Config.BotSniperAimWorsening)
 				end
 
 				NetEvents:BroadcastLocal('WriteClientSettings', Config, updateWeaponSets)
@@ -262,7 +262,7 @@ function RCONCommands:__init()
 						print('[RCON] call BotSpawner:updateBotAmountAndTeam()')
 					end
 
-					Globals.spawnMode = Config.spawnMode
+					Globals.spawnMode = Config.SpawnMode
 					BotSpawner:updateBotAmountAndTeam()
 				end
 

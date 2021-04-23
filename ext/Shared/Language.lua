@@ -6,8 +6,8 @@ function Language:__init()
 	self._translations	= {}
 	self._language		= 'en_US'
 
-	if Config ~= nil and Config.language ~= nil then
-		self:loadLanguage(Config.language)
+	if Config ~= nil and Config.Language ~= nil then
+		self:loadLanguage(Config.Language)
 	end
 end
 

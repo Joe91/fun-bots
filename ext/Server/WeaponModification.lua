@@ -37,7 +37,7 @@ function WeaponModification:__init()
 	self.m_stand_recoilIncShotMax	= {}
 	self.m_stand_recoilDecrease	= {}
 
-	--self.crouch = (Config.botAttackMode == "Crouch")
+	--self.crouch = (Config.BotAttackMode == "Crouch")
 	--[[local isBot = {}
 	isBot["voteban_flash"] = true
 	Events:Subscribe('GunSway:Update', function(gunSway, weapon, weaponFiring, deltaTime)

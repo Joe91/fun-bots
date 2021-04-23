@@ -8,8 +8,8 @@ function ClientNodeEditor:__init()
 	self.player = nil
 	self.playerPos = nil
 
-	self.enabled = Config.debugTracePaths
-	self.disableUserInterface = Config.disableUserInterface
+	self.enabled = Config.DebugTracePaths
+	self.disableUserInterface = Config.DisableUserInterface
 
 	self.commoRoseEnabled = false
 	self.commoRosePressed = false
@@ -38,7 +38,7 @@ function ClientNodeEditor:__init()
 	self.customTrace = nil
 	self.customTraceIndex = nil
 	self.customTraceTimer = -1
-	self.customTraceDelay = Config.traceDelta
+	self.customTraceDelay = Config.TraceDelta
 	self.customTraceDistance = 0
 	self.customTraceSaving = false
 
@@ -345,10 +345,10 @@ end
 function ClientNodeEditor:_onUISettings(data)
 	if (data == false) then -- client closed settings
 
-		self:_onSetEnabled(Config.debugTracePaths)
+		self:_onSetEnabled(Config.DebugTracePaths)
 
-		if (self.disableUserInterface ~= Config.disableUserInterface) then
-			self.disableUserInterface = Config.disableUserInterface
+		if (self.disableUserInterface ~= Config.DisableUserInterface) then
+			self.disableUserInterface = Config.DisableUserInterface
 			if (self.disableUserInterface) then
 				self:DeregisterEvents()
 			else
@@ -357,7 +357,7 @@ function ClientNodeEditor:_onUISettings(data)
 		end
 
 		self.helpTextLocation = Vec2.zero
-		self.customTraceDelay = Config.traceDelta
+		self.customTraceDelay = Config.TraceDelta
 	end
 end
 
@@ -1262,7 +1262,7 @@ end
 -- ############################################
 
 function ClientNodeEditor:_onLevelLoaded(levelName, gameMode)
-	self.enabled = Config.debugTracePaths
+	self.enabled = Config.DebugTracePaths
 	if (self.enabled) then
 		self.nodeReceiveTimer = 0 -- enable the timer for receiving nodes
 	end
@@ -1985,7 +1985,7 @@ end
 
 function ClientNodeEditor:_drawNode(waypoint, isTracePath)
 	local isSelected = not isTracePath and g_NodeCollection:IsSelected(waypoint)
-	local qualityAtRange = g_NodeCollection:InRange(waypoint, self.playerPos, Config.lineRange)
+	local qualityAtRange = g_NodeCollection:InRange(waypoint, self.playerPos, Config.LineRange)
 
 	-- setup node color information
 	local color = self.colors.Orphan
@@ -2009,7 +2009,7 @@ function ClientNodeEditor:_drawNode(waypoint, isTracePath)
 	end
 
 	-- draw the node for the waypoint itself
-	if (g_NodeCollection:InRange(waypoint, self.playerPos, Config.waypointRange)) then
+	if (g_NodeCollection:InRange(waypoint, self.playerPos, Config.WaypointRange)) then
 		DebugRenderer:DrawSphere(waypoint.Position, 0.05, color.Node, false, (not qualityAtRange))
 	end
 
@@ -2024,7 +2024,7 @@ function ClientNodeEditor:_drawNode(waypoint, isTracePath)
 	end
 
 	-- if selected draw bigger node and transform helper
-	if (not isTracePath and isSelected and g_NodeCollection:InRange(waypoint, self.playerPos, Config.waypointRange)) then
+	if (not isTracePath and isSelected and g_NodeCollection:InRange(waypoint, self.playerPos, Config.WaypointRange)) then
 		-- node selection indicator
 		DebugRenderer:DrawSphere(waypoint.Position, 0.08,  color.Node, false, (not qualityAtRange))
 
@@ -2035,7 +2035,7 @@ function ClientNodeEditor:_drawNode(waypoint, isTracePath)
 	end
 
 	-- draw connection lines
-	if (Config.drawWaypointLines and g_NodeCollection:InRange(waypoint, self.playerPos, Config.lineRange)) then
+	if (Config.DrawWaypointLines and g_NodeCollection:InRange(waypoint, self.playerPos, Config.LineRange)) then
 		-- try to find a previous node and draw a line to it
 		if (waypoint.Previous and type(waypoint.Previous) == 'string') then
 			waypoint.Previous = g_NodeCollection:Get(waypoint.Previous)
@@ -2062,7 +2062,7 @@ function ClientNodeEditor:_drawNode(waypoint, isTracePath)
 	end
 
 	-- draw debugging text
-	if (Config.drawWaypointIDs and g_NodeCollection:InRange(waypoint, self.playerPos, Config.textRange)) then
+	if (Config.DrawWaypointIDs and g_NodeCollection:InRange(waypoint, self.playerPos, Config.TextRange)) then
 		if (isSelected) then
 			-- don't try to precalc this value like with the distance, another memory leak crash awaits you
 			local screenPos = ClientUtils:WorldToScreen(waypoint.Position + Vec3.up)

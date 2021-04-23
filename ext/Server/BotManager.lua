@@ -41,8 +41,8 @@ function BotManager:registerActivePlayer(player)
 end
 
 function BotManager:getBotTeam()
-	if Config.botTeam ~= TeamId.TeamNeutral then
-		return Config.botTeam
+	if Config.BotTeam ~= TeamId.TeamNeutral then
+		return Config.BotTeam
 	end
 	local botTeam
 	local countPlayers = {}
@@ -67,9 +67,9 @@ function BotManager:getBotTeam()
 end
 
 function BotManager:configGlobals()
-	Globals.respawnWayBots 	= Config.respawnWayBots
-	Globals.attackWayBots 	= Config.attackWayBots
-	Globals.spawnMode		= Config.spawnMode
+	Globals.respawnWayBots 	= Config.RespawnWayBots
+	Globals.attackWayBots 	= Config.AttackWayBots
+	Globals.spawnMode		= Config.SpawnMode
 	Globals.yawPerFrame 	= self:calcYawPerFrame()
 	--self:killAll()
 	local maxPlayers = RCON:SendCommand('vars.maxPlayers')
@@ -88,7 +88,7 @@ end
 
 function BotManager:calcYawPerFrame()
 	local dt = 1.0/SharedUtils:GetTickrate()
-	local degreePerDt = Config.maximunYawPerSec * dt
+	local degreePerDt = Config.MaximunYawPerSec * dt
 	return (degreePerDt / 360.0) * 2 * math.pi
 end
 
@@ -219,8 +219,8 @@ function BotManager:_onUpdate(dt, pass)
 		bot:onUpdate(dt)
 	end
 
-	if Config.botsAttackBots and self._initDone then
-		if self._botAttackBotTimer >= StaticConfig.botAttackBotCheckInterval then
+	if Config.BotsAttackBots and self._initDone then
+		if self._botAttackBotTimer >= StaticConfig.BotAttackBotCheckInterval then
 			self._botAttackBotTimer = 0
 			self:_checkForBotBotAttack()
 		end
@@ -332,7 +332,7 @@ function BotManager:_checkForBotBotAttack()
 					if (bot2 ~= nil and bot2.player ~= nil and bot2.player.alive and not self._botCheckState[bot2.player.name]) then
 
 						local distance = bot.player.soldier.worldTransform.trans:Distance(bot2.player.soldier.worldTransform.trans)
-						if distance <= Config.maxBotAttackBotDistance then
+						if distance <= Config.MaxBotAttackBotDistance then
 
 							-- choose a player at random, try until an active player is found
 							for playerIndex = nextPlayerIndex, playerCount do
@@ -382,21 +382,21 @@ function BotManager:_getDamageValue(damage, bot, soldier, fake)
 	local damageFactor = 1.0
 
 	if bot.activeWeapon.type == "Shotgun" then
-		damageFactor = Config.damageFactorShotgun
+		damageFactor = Config.DamageFactorShotgun
 	elseif bot.activeWeapon.type == "Assault" then
-		damageFactor = Config.damageFactorAssault
+		damageFactor = Config.DamageFactorAssault
 	elseif bot.activeWeapon.type == "Carabine" then
-		damageFactor = Config.damageFactorCarabine
+		damageFactor = Config.DamageFactorCarabine
 	elseif bot.activeWeapon.type == "PDW" then
-		damageFactor = Config.damageFactorPDW
+		damageFactor = Config.DamageFactorPDW
 	elseif bot.activeWeapon.type == "LMG" then
-		damageFactor = Config.damageFactorLMG
+		damageFactor = Config.DamageFactorLMG
 	elseif bot.activeWeapon.type == "Sniper" then
-		damageFactor = Config.damageFactorSniper
+		damageFactor = Config.DamageFactorSniper
 	elseif bot.activeWeapon.type == "Pistol" then
-		damageFactor = Config.damageFactorPistol
+		damageFactor = Config.DamageFactorPistol
 	elseif bot.activeWeapon.type == "Knife" then
-		damageFactor = Config.damageFactorKnife
+		damageFactor = Config.DamageFactorKnife
 	end
 
 	if not fake then -- frag mode
@@ -413,12 +413,12 @@ function BotManager:_getDamageValue(damage, bot, soldier, fake)
 				resultDamage = bot.activeWeapon.damage - (relativePosion * (bot.activeWeapon.damage-bot.activeWeapon.endDamage))
 			end
 			if damage == 2 then
-				resultDamage = resultDamage * Config.headShotFactorBots
+				resultDamage = resultDamage * Config.HeadShotFactorBots
 			end
 
 			resultDamage = resultDamage * damageFactor
 		elseif damage == 3 then --melee
-			resultDamage = bot.knife.damage * Config.damageFactorKnife
+			resultDamage = bot.knife.damage * Config.DamageFactorKnife
 		end
 	end
 	return resultDamage
@@ -433,12 +433,12 @@ function BotManager:_onSoldierDamage(hook, soldier, info, giverInfo)
 	local soldierIsBot = Utilities:isBot(soldier.player)
 	if soldierIsBot and giverInfo.giver ~= nil then
 		--detect if we need to shoot back
-		if Config.shootBackIfHit and info.damage > 0 then
+		if Config.ShootBackIfHit and info.damage > 0 then
 			self:_onShootAt(giverInfo.giver, soldier.player.name, true)
 		end
 
 		-- prevent bots from killing themselves. Bad bot, no suicide.
-		if not Config.botCanKillHimself and soldier.player == giverInfo.giver then
+		if not Config.BotCanKillHimself and soldier.player == giverInfo.giver then
 			info.damage = 0
 		end
 	end
@@ -565,7 +565,7 @@ function BotManager:createBot(name, team, squad)
 
 	-- check for max-players
 	local playerlimt = Globals.maxPlayers
-	if Config.keepOneSlotForPlayers then
+	if Config.KeepOneSlotForPlayers then
 		playerlimt = playerlimt - 1
 	end
 	if playerlimt <=  PlayerManager:GetPlayerCount() then

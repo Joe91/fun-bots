@@ -72,7 +72,7 @@ function ClientBotManager:_onUpdate(p_Delta, p_Pass)
 
 	self._raycastTimer = self._raycastTimer + p_Delta
 
-	if (self._raycastTimer >= StaticConfig.raycastInterval) then
+	if (self._raycastTimer >= StaticConfig.RaycastInterval) then
 		self._raycastTimer	= 0
 
 		if self.player.soldier ~= nil then  -- alive. Check for enemy bots
@@ -109,7 +109,7 @@ function ClientBotManager:_onUpdate(p_Delta, p_Pass)
 					local target	= bot.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(bot, false)
 					local distance	= playerPosition:Distance(bot.soldier.worldTransform.trans)
 
-					if (distance < Config.maxRaycastDistance) then
+					if (distance < Config.MaxRaycastDistance) then
 						self._lastIndex	= self._lastIndex+1
 						local raycast = nil
 						if self.player.inVehicle then
@@ -122,7 +122,7 @@ function ClientBotManager:_onUpdate(p_Delta, p_Pass)
 							-- we found a valid bot in Sight (either no hit, or player-hit). Signal Server with players
 							local ignoreYaw = false
 
-							if (distance < Config.distanceForDirectAttack) then
+							if (distance < Config.DistanceForDirectAttack) then
 								ignoreYaw = true --shoot, because you are near
 							end
 

@@ -15,7 +15,7 @@ function Utilities:getCameraPos(player, isTarget)
 		--print(returnVec)
 
 		if isTarget then
-			if Config.aimForHead then
+			if Config.AimForHead then
 				if player.soldier.pose == CharacterPoseType.CharacterPoseType_Stand then
 					returnVec.y = returnVec.y - 0.1
 				elseif player.soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
@@ -52,7 +52,7 @@ function Utilities:getTargetHeight(soldier, isTarget)
 			camereaHight = 1.0
 		end
 
-	elseif isTarget and Config.aimForHead then
+	elseif isTarget and Config.AimForHead then
 		camereaHight = 1.50 --bot.soldier.pose == CharacterPoseType.CharacterPoseType_Stand
 
 		if soldier.pose == CharacterPoseType.CharacterPoseType_Prone then

@@ -106,7 +106,7 @@ end
 -- player has indicated they are ready to send nodes to the server
 function NodeEditor:_onReceiveNodes(player, nodeCount)
 
-	if (Config.settingsPassword ~= nil and g_FunBotUIServer:_isAuthenticated(player.accountGuid) ~= true) then
+	if (Config.SettingsPassword ~= nil and g_FunBotUIServer:_isAuthenticated(player.accountGuid) ~= true) then
 		self:Print('%s has no permissions for Waypoint-Editor.', player.name)
 		return
 	end
@@ -120,7 +120,7 @@ end
 -- player is sending a single node over
 function NodeEditor:_onCreate(player, data)
 
-	if (Config.settingsPassword ~= nil and g_FunBotUIServer:_isAuthenticated(player.accountGuid) ~= true) then
+	if (Config.SettingsPassword ~= nil and g_FunBotUIServer:_isAuthenticated(player.accountGuid) ~= true) then
 		self:Print('%s has no permissions for Waypoint-Editor.', player.name)
 		return
 	end
@@ -131,7 +131,7 @@ end
 -- node payload has finished sending, setup events and calc indexes
 function NodeEditor:_onInit(player, save)
 
-	if (Config.settingsPassword ~= nil and g_FunBotUIServer:_isAuthenticated(player.accountGuid) ~= true) then
+	if (Config.SettingsPassword ~= nil and g_FunBotUIServer:_isAuthenticated(player.accountGuid) ~= true) then
 		self:Print('%s has no permissions for Waypoint-Editor.', player.name)
 		return
 	end
@@ -283,11 +283,11 @@ function NodeEditor:onLevelLoaded(levelName, gameMode)
 end
 
 function NodeEditor:_onUIRequestSaveSettings(player, data)
-	if Config.disableUserInterface == true then
+	if Config.DisableUserInterface == true then
 		return
 	end
 
-	if (Config.settingsPassword ~= nil and g_FunBotUIServer:_isAuthenticated(player.accountGuid) ~= true) then
+	if (Config.SettingsPassword ~= nil and g_FunBotUIServer:_isAuthenticated(player.accountGuid) ~= true) then
 		return
 	end
 

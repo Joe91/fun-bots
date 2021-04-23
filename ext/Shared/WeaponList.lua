@@ -395,22 +395,22 @@ function WeaponList:_useWeaponType(class, type, name)
 	local isClassWeapon = false
 	local weaponSet = ""
 	if class == "Assault" then
-		weaponSet = Config.assaultWeaponSet
+		weaponSet = Config.AssaultWeaponSet
 		if type == "Assault" then
 			isClassWeapon = true
 		end
 	elseif class == "Engineer" then
-		weaponSet = Config.engineerWeaponSet
+		weaponSet = Config.EngineerWeaponSet
 		if type == "Carabine" then
 			isClassWeapon = true
 		end
 	elseif class == "Support" then
-		weaponSet = Config.supportWeaponSet
+		weaponSet = Config.SupportWeaponSet
 		if type == "LMG" then
 			isClassWeapon = true
 		end
 	else --if class == "Recon" then
-		weaponSet = Config.reconWeaponSet
+		weaponSet = Config.ReconWeaponSet
 		if type == "Sniper" then
 			isClassWeapon = true
 		end

@@ -10,7 +10,7 @@ Language = require('__shared/Language')
 function FunBotUIClient:__init()
 	self._views = UIViews()
 
-	if Config.disableUserInterface ~= true then
+	if Config.DisableUserInterface ~= true then
 		Events:Subscribe('Client:UpdateInput', self, self._onUpdateInput)
 
 		NetEvents:Subscribe('UI_Password_Protection', self, self._onUIPasswordProtection)
@@ -38,13 +38,13 @@ function FunBotUIClient:__init()
 		NetEvents:Subscribe('UI_Trace_Waypoints', self, self._onUITraceWaypoints)
 		Events:Subscribe('UI_Trace_Waypoints', self, self._onUITraceWaypoints)
 
-		self._views:setLanguage(Config.language)
+		self._views:setLanguage(Config.Language)
 	end
 end
 
 -- Events
 function FunBotUIClient:_onUIToggle()
-	if Config.disableUserInterface == true then
+	if Config.DisableUserInterface == true then
 		return
 	end
 
@@ -78,7 +78,7 @@ function FunBotUIClient:_onSetOperationControls(data)
 end
 
 function FunBotUIClient:_onUIWaypointsEditor(state)
-	if Config.disableUserInterface == true then
+	if Config.DisableUserInterface == true then
 		return
 	end
 
@@ -89,7 +89,7 @@ function FunBotUIClient:_onUIWaypointsEditor(state)
 
 		self._views:hide('waypoint_toolbar')
 		self._views:show('toolbar')
-		Config.debugTracePaths = false
+		Config.DebugTracePaths = false
 		NetEvents:Send('UI_CommoRose_Enabled', false)
 		return
 	end
@@ -98,7 +98,7 @@ function FunBotUIClient:_onUIWaypointsEditor(state)
 		print('UIClient: open UI_Waypoints_Editor')
 	end
 
-	Config.debugTracePaths = true
+	Config.DebugTracePaths = true
 	NetEvents:Send('UI_CommoRose_Enabled', true)
 	g_ClientNodeEditor:_onSetEnabled(true)
 	self._views:show('waypoint_toolbar')
@@ -107,7 +107,7 @@ function FunBotUIClient:_onUIWaypointsEditor(state)
 end
 
 function FunBotUIClient:_onUITraceIndex(index)
-	if Config.disableUserInterface == true then
+	if Config.DisableUserInterface == true then
 		return
 	end
 
@@ -115,7 +115,7 @@ function FunBotUIClient:_onUITraceIndex(index)
 end
 
 function FunBotUIClient:_onUITraceWaypoints(count)
-	if Config.disableUserInterface == true then
+	if Config.DisableUserInterface == true then
 		return
 	end
 
@@ -123,7 +123,7 @@ function FunBotUIClient:_onUITraceWaypoints(count)
 end
 
 function FunBotUIClient:_onUITraceWaypointsDistance(distance)
-	if Config.disableUserInterface == true then
+	if Config.DisableUserInterface == true then
 		return
 	end
 
@@ -131,7 +131,7 @@ function FunBotUIClient:_onUITraceWaypointsDistance(distance)
 end
 
 function FunBotUIClient:_onUITrace(state)
-	if Config.disableUserInterface == true then
+	if Config.DisableUserInterface == true then
 		return
 	end
 
@@ -140,7 +140,7 @@ function FunBotUIClient:_onUITrace(state)
 end
 
 function FunBotUIClient:_onUISettings(data)
-	if Config.disableUserInterface == true then
+	if Config.DisableUserInterface == true then
 		return
 	end
 
@@ -258,7 +258,7 @@ function FunBotUIClient:_onUISettings(data)
 end
 
 function FunBotUIClient:_onUIChangeLanguage(language)
-	if Config.disableUserInterface == true then
+	if Config.DisableUserInterface == true then
 		return
 	end
 
@@ -266,7 +266,7 @@ function FunBotUIClient:_onUIChangeLanguage(language)
 end
 
 function FunBotUIClient:_onUISaveSettings(data)
-	if Config.disableUserInterface == true then
+	if Config.DisableUserInterface == true then
 		return
 	end
 
@@ -278,7 +278,7 @@ function FunBotUIClient:_onUISaveSettings(data)
 end
 
 function FunBotUIClient:_onBotEditorEvent(data)
-	if Config.disableUserInterface == true then
+	if Config.DisableUserInterface == true then
 		return
 	end
 
@@ -291,7 +291,7 @@ function FunBotUIClient:_onBotEditorEvent(data)
 end
 
 function FunBotUIClient:_onUIShowToolbar(data)
-	if Config.disableUserInterface == true then
+	if Config.DisableUserInterface == true then
 		return
 	end
 
@@ -309,7 +309,7 @@ function FunBotUIClient:_onUIShowToolbar(data)
 end
 
 function FunBotUIClient:_onUIPasswordProtection(data)
-	if Config.disableUserInterface == true then
+	if Config.DisableUserInterface == true then
 		return
 	end
 
@@ -327,7 +327,7 @@ function FunBotUIClient:_onUIPasswordProtection(data)
 end
 
 function FunBotUIClient:_onUIRequestPasswordError(data)
-	if Config.disableUserInterface == true then
+	if Config.DisableUserInterface == true then
 		return
 	end
 
@@ -339,7 +339,7 @@ function FunBotUIClient:_onUIRequestPasswordError(data)
 end
 
 function FunBotUIClient:_onUIRequestPassword(data)
-	if Config.disableUserInterface == true then
+	if Config.DisableUserInterface == true then
 		return
 	end
 
@@ -357,7 +357,7 @@ function FunBotUIClient:_onUIRequestPassword(data)
 end
 
 function FunBotUIClient:_onUISendPassword(data)
-	if Config.disableUserInterface == true then
+	if Config.DisableUserInterface == true then
 		return
 	end
 
@@ -369,7 +369,7 @@ function FunBotUIClient:_onUISendPassword(data)
 end
 
 function FunBotUIClient:_onUpdateInput(data)
-	if Config.disableUserInterface == true then
+	if Config.DisableUserInterface == true then
 		return
 	end
 
