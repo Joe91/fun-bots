@@ -10,7 +10,9 @@ require('__shared/Constants/BotWeapons')
 require('__shared/Constants/WeaponSets')
 require('__shared/Constants/BotAttackModes')
 require('__shared/Constants/SpawnModes')
+require ('__shared/Utils/Logger')
 
+local m_Logger = Logger("FunBotClient", true)
 
 local m_Language = require('__shared/Language')
 local m_FunBotUIClient = require('UIClient')

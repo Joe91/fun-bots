@@ -10,7 +10,10 @@ require('__shared/Constants/BotWeapons')
 require('__shared/Constants/WeaponSets')
 require('__shared/Constants/BotAttackModes')
 require('__shared/Constants/SpawnModes')
+require ('__shared/Utils/Logger')
 require('Globals')
+
+local m_Logger = Logger("FunBotServer", true)
 
 require('__shared/Utilities')
 
@@ -29,6 +32,7 @@ local m_GameDirector = require('GameDirector')
 local playerKilledDelay 	= 0
 
 function FunBotServer:__init()
+	m_Logger:Write("Test")
 	m_Language:loadLanguage(Config.Language)
 
 	Events:Subscribe('Level:Loaded', self, self._onLevelLoaded)
