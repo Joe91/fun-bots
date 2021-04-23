@@ -420,105 +420,105 @@ function FunBotUIServer:_writeSettings(p_Player, p_Request)
 	end
 
 	--global settings
-	self:_writeSingleSettingList('botWeapon', p_Request, BotWeapons, temporary, batched)
-	self:_writeSingleSettingList('botAttackMode', p_Request, BotAttackModes, temporary, batched)
-	self:_writeSingleSettingList('botKit', p_Request, BotKits, temporary, batched)
-	self:_writeSingleSettingList('botColor', p_Request, BotColors, temporary, batched)
-	self:_writeSingleSetting('zombieMode', p_Request, 'bool', temporary, batched)
+	self:_writeSingleSettingList('BotWeapon', p_Request, BotWeapons, temporary, batched)
+	self:_writeSingleSettingList('BotAttackMode', p_Request, BotAttackModes, temporary, batched)
+	self:_writeSingleSettingList('BotKit', p_Request, BotKits, temporary, batched)
+	self:_writeSingleSettingList('BotColor', p_Request, BotColors, temporary, batched)
+	self:_writeSingleSetting('ZombieMode', p_Request, 'bool', temporary, batched)
 
 	-- difficluty
-	if self:_writeSingleSetting('botAimWorsening', p_Request, 'number', temporary, batched, 0, 10) then updateWeapons = true end
-	if self:_writeSingleSetting('botSniperAimWorsening', p_Request, 'number', temporary, batched, 0, 10) then	updateWeapons = true end
-	self:_writeSingleSetting('aimForHead', p_Request, 'bool', temporary, batched)
-	self:_writeSingleSetting('headShotFactorBots', p_Request, 'number', temporary, batched, 0)
-	self:_writeSingleSetting('damageFactorAssault', p_Request, 'number', temporary, batched, 0)
-	self:_writeSingleSetting('damageFactorCarabine', p_Request, 'number', temporary, batched, 0)
-	self:_writeSingleSetting('damageFactorLMG', p_Request, 'number', temporary, batched, 0)
-	self:_writeSingleSetting('damageFactorPDW', p_Request, 'number', temporary, batched, 0)
-	self:_writeSingleSetting('damageFactorSniper', p_Request, 'number', temporary, batched, 0)
-	self:_writeSingleSetting('damageFactorShotgun', p_Request, 'number', temporary, batched, 0)
-	self:_writeSingleSetting('damageFactorPistol', p_Request, 'number', temporary, batched, 0)
-	self:_writeSingleSetting('damageFactorKnife', p_Request, 'number', temporary, batched, 0)
+	if self:_writeSingleSetting('BotAimWorsening', p_Request, 'number', temporary, batched, 0, 10) then updateWeapons = true end
+	if self:_writeSingleSetting('BotSniperAimWorsening', p_Request, 'number', temporary, batched, 0, 10) then	updateWeapons = true end
+	self:_writeSingleSetting('AimForHead', p_Request, 'bool', temporary, batched)
+	self:_writeSingleSetting('HeadShotFactorBots', p_Request, 'number', temporary, batched, 0)
+	self:_writeSingleSetting('DamageFactorAssault', p_Request, 'number', temporary, batched, 0)
+	self:_writeSingleSetting('DamageFactorCarabine', p_Request, 'number', temporary, batched, 0)
+	self:_writeSingleSetting('DamageFactorLMG', p_Request, 'number', temporary, batched, 0)
+	self:_writeSingleSetting('DamageFactorPDW', p_Request, 'number', temporary, batched, 0)
+	self:_writeSingleSetting('DamageFactorSniper', p_Request, 'number', temporary, batched, 0)
+	self:_writeSingleSetting('DamageFactorShotgun', p_Request, 'number', temporary, batched, 0)
+	self:_writeSingleSetting('DamageFactorPistol', p_Request, 'number', temporary, batched, 0)
+	self:_writeSingleSetting('DamageFactorKnife', p_Request, 'number', temporary, batched, 0)
 
 	-- advanced
-	self:_writeSingleSetting('fovForShooting', p_Request, 'number', temporary, batched, 0, 360)
-	self:_writeSingleSetting('shootBackIfHit', p_Request, 'bool', temporary, batched)
-	self:_writeSingleSetting('maxRaycastDistance', p_Request, 'number', temporary, batched, 0, 500)
-	self:_writeSingleSetting('maxShootDistanceNoSniper', p_Request, 'number', temporary, batched, 0, 500)
-	self:_writeSingleSetting('distanceForDirectAttack', p_Request, 'number', temporary, batched, 0, 15)
-	self:_writeSingleSetting('botsAttackBots', p_Request, 'bool', temporary, batched)
-	self:_writeSingleSetting('maxBotAttackBotDistance', p_Request, 'number', temporary, batched, 0, 100)
+	self:_writeSingleSetting('FovForShooting', p_Request, 'number', temporary, batched, 0, 360)
+	self:_writeSingleSetting('ShootBackIfHit', p_Request, 'bool', temporary, batched)
+	self:_writeSingleSetting('MaxRaycastDistance', p_Request, 'number', temporary, batched, 0, 500)
+	self:_writeSingleSetting('MaxShootDistanceNoSniper', p_Request, 'number', temporary, batched, 0, 500)
+	self:_writeSingleSetting('DistanceForDirectAttack', p_Request, 'number', temporary, batched, 0, 15)
+	self:_writeSingleSetting('BotsAttackBots', p_Request, 'bool', temporary, batched)
+	self:_writeSingleSetting('MaxBotAttackBotDistance', p_Request, 'number', temporary, batched, 0, 100)
 
-	self:_writeSingleSetting('meleeAttackIfClose', p_Request, 'bool', temporary, batched)
-	self:_writeSingleSetting('botCanKillHimself', p_Request, 'bool', temporary, batched)
-	self:_writeSingleSetting('attackWayBots', p_Request, 'bool', temporary, batched)
+	self:_writeSingleSetting('MeleeAttackIfClose', p_Request, 'bool', temporary, batched)
+	self:_writeSingleSetting('BotCanKillHimself', p_Request, 'bool', temporary, batched)
+	self:_writeSingleSetting('AttackWayBots', p_Request, 'bool', temporary, batched)
 
-	self:_writeSingleSetting('meleeAttackCoolDown', p_Request, 'number', temporary, batched, 0, 10)
-	self:_writeSingleSetting('jumpWhileShooting', p_Request, 'bool', temporary, batched)
-	self:_writeSingleSetting('jumpWhileMoving', p_Request, 'bool', temporary, batched)
+	self:_writeSingleSetting('MeleeAttackCoolDown', p_Request, 'number', temporary, batched, 0, 10)
+	self:_writeSingleSetting('JumpWhileShooting', p_Request, 'bool', temporary, batched)
+	self:_writeSingleSetting('JumpWhileMoving', p_Request, 'bool', temporary, batched)
 
-	self:_writeSingleSetting('overWriteBotSpeedMode', p_Request, 'number', temporary, batched, 0, 5)
-	self:_writeSingleSetting('overWriteBotAttackMode', p_Request, 'number', temporary, batched, 0, 5)
+	self:_writeSingleSetting('OverWriteBotSpeedMode', p_Request, 'number', temporary, batched, 0, 5)
+	self:_writeSingleSetting('OverWriteBotAttackMode', p_Request, 'number', temporary, batched, 0, 5)
 
-	self:_writeSingleSetting('speedFactor', p_Request, 'number', temporary, batched, 0, 2)
-	self:_writeSingleSetting('speedFactorAttack', p_Request, 'number', temporary, batched, 0, 2)
+	self:_writeSingleSetting('SpeedFactor', p_Request, 'number', temporary, batched, 0, 2)
+	self:_writeSingleSetting('SpeedFactorAttack', p_Request, 'number', temporary, batched, 0, 2)
 
 	--spawnning
-	if self:_writeSingleSettingList('spawnMode', p_Request, SpawnModes, temporary, batched) then updateBotTeamAndNumber = true end
-	if self:_writeSingleSetting('spawnInBothTeams', p_Request, 'bool', temporary, batched) then updateBotTeamAndNumber = true end
-	if self:_writeSingleSetting('initNumberOfBots', p_Request, 'number', temporary, batched, 0, MAX_NUMBER_OF_BOTS) then updateBotTeamAndNumber = true end
-	if self:_writeSingleSetting('newBotsPerNewPlayer', p_Request, 'number', temporary, batched, 0, 20) then updateBotTeamAndNumber = true end
-	if self:_writeSingleSetting('keepOneSlotForPlayers', p_Request, 'bool', temporary, batched) then updateBotTeamAndNumber = true end
-	self:_writeSingleSetting('spawnDelayBots', p_Request, 'number', temporary, batched, 0, 60)
-	self:_writeSingleSetting('botTeam', p_Request, 'team', temporary, batched)
-	self:_writeSingleSetting('respawnWayBots', p_Request, 'bool', temporary, batched)
-	self:_writeSingleSetting('botNewLoadoutOnSpawn', p_Request, 'bool', temporary, batched)
+	if self:_writeSingleSettingList('SpawnMode', p_Request, SpawnModes, temporary, batched) then updateBotTeamAndNumber = true end
+	if self:_writeSingleSetting('SpawnInBothTeams', p_Request, 'bool', temporary, batched) then updateBotTeamAndNumber = true end
+	if self:_writeSingleSetting('InitNumberOfBots', p_Request, 'number', temporary, batched, 0, MAX_NUMBER_OF_BOTS) then updateBotTeamAndNumber = true end
+	if self:_writeSingleSetting('NewBotsPerNewPlayer', p_Request, 'number', temporary, batched, 0, 20) then updateBotTeamAndNumber = true end
+	if self:_writeSingleSetting('KeepOneSlotForPlayers', p_Request, 'bool', temporary, batched) then updateBotTeamAndNumber = true end
+	self:_writeSingleSetting('SpawnDelayBots', p_Request, 'number', temporary, batched, 0, 60)
+	self:_writeSingleSetting('BotTeam', p_Request, 'team', temporary, batched)
+	self:_writeSingleSetting('RespawnWayBots', p_Request, 'bool', temporary, batched)
+	self:_writeSingleSetting('BotNewLoadoutOnSpawn', p_Request, 'bool', temporary, batched)
 
-	self:_writeSingleSetting('maxAssaultBots', p_Request, 'number', temporary, batched, -1, MAX_NUMBER_OF_BOTS)
-	self:_writeSingleSetting('maxEngineerBots', p_Request, 'number', temporary, batched, -1, MAX_NUMBER_OF_BOTS)
-	self:_writeSingleSetting('maxSupportBots', p_Request, 'number', temporary, batched, -1, MAX_NUMBER_OF_BOTS)
-	self:_writeSingleSetting('maxReconBots', p_Request, 'number', temporary, batched, -1, MAX_NUMBER_OF_BOTS)
+	self:_writeSingleSetting('MaxAssaultBots', p_Request, 'number', temporary, batched, -1, MAX_NUMBER_OF_BOTS)
+	self:_writeSingleSetting('MaxEngineerBots', p_Request, 'number', temporary, batched, -1, MAX_NUMBER_OF_BOTS)
+	self:_writeSingleSetting('MaxSupportBots', p_Request, 'number', temporary, batched, -1, MAX_NUMBER_OF_BOTS)
+	self:_writeSingleSetting('MaxReconBots', p_Request, 'number', temporary, batched, -1, MAX_NUMBER_OF_BOTS)
 
-	self:_writeSingleSetting('distanceToSpawnBots', p_Request, 'number', temporary, batched, 0, 100)
-	self:_writeSingleSetting('heightDistanceToSpawn', p_Request, 'number', temporary, batched, 0, 20)
-	self:_writeSingleSetting('distanceToSpawnReduction', p_Request, 'number', temporary, batched, 0, 100)
-	self:_writeSingleSetting('maxTrysToSpawnAtDistance', p_Request, 'number', temporary, batched, 0, 20)
+	self:_writeSingleSetting('DistanceToSpawnBots', p_Request, 'number', temporary, batched, 0, 100)
+	self:_writeSingleSetting('HeightDistanceToSpawn', p_Request, 'number', temporary, batched, 0, 20)
+	self:_writeSingleSetting('DistanceToSpawnReduction', p_Request, 'number', temporary, batched, 0, 100)
+	self:_writeSingleSetting('MaxTrysToSpawnAtDistance', p_Request, 'number', temporary, batched, 0, 20)
 
 	-- weapons
-	self:_writeSingleSetting('useRandomWeapon', p_Request, 'bool', temporary, batched)
-	self:_writeSingleSettingList('pistol', p_Request, PistoWeapons, temporary, batched)
-	self:_writeSingleSettingList('knife', p_Request, KnifeWeapons, temporary, batched)
-	self:_writeSingleSettingList('assaultWeapon', p_Request, AssaultPrimary, temporary, batched)
-	self:_writeSingleSettingList('engineerWeapon', p_Request, EngineerPrimary, temporary, batched)
-	self:_writeSingleSettingList('supportWeapon', p_Request, SupportPrimary, temporary, batched)
-	self:_writeSingleSettingList('reconWeapon', p_Request, ReconPrimary, temporary, batched)
+	self:_writeSingleSetting('UseRandomWeapon', p_Request, 'bool', temporary, batched)
+	self:_writeSingleSettingList('Pistol', p_Request, PistoWeapons, temporary, batched)
+	self:_writeSingleSettingList('Knife', p_Request, KnifeWeapons, temporary, batched)
+	self:_writeSingleSettingList('AssaultWeapon', p_Request, AssaultPrimary, temporary, batched)
+	self:_writeSingleSettingList('EngineerWeapon', p_Request, EngineerPrimary, temporary, batched)
+	self:_writeSingleSettingList('SupportWeapon', p_Request, SupportPrimary, temporary, batched)
+	self:_writeSingleSettingList('ReconWeapon', p_Request, ReconPrimary, temporary, batched)
 
 	-- trace
-	self:_writeSingleSetting('debugTracePaths', p_Request, 'bool', temporary, batched)
-	self:_writeSingleSetting('waypointRange', p_Request, 'number', temporary, batched, 0, 1000)
-	self:_writeSingleSetting('drawWaypointLines', p_Request, 'bool', temporary, batched)
-	self:_writeSingleSetting('lineRange', p_Request, 'number', temporary, batched, 0, 1000)
-	self:_writeSingleSetting('drawWaypointIDs', p_Request, 'bool', temporary, batched)
-	self:_writeSingleSetting('textRange', p_Request, 'number', temporary, batched, 0, 1000)
-	self:_writeSingleSetting('debugSelectionRaytraces', p_Request, 'bool', temporary, batched)
-	self:_writeSingleSetting('traceDelta', p_Request, 'number', temporary, batched, 0, 10)
+	self:_writeSingleSetting('DebugTracePaths', p_Request, 'bool', temporary, batched)
+	self:_writeSingleSetting('WaypointRange', p_Request, 'number', temporary, batched, 0, 1000)
+	self:_writeSingleSetting('DrawWaypointLines', p_Request, 'bool', temporary, batched)
+	self:_writeSingleSetting('LineRange', p_Request, 'number', temporary, batched, 0, 1000)
+	self:_writeSingleSetting('DrawWaypointIDs', p_Request, 'bool', temporary, batched)
+	self:_writeSingleSetting('TextRange', p_Request, 'number', temporary, batched, 0, 1000)
+	self:_writeSingleSetting('DebugSelectionRaytraces', p_Request, 'bool', temporary, batched)
+	self:_writeSingleSetting('TraceDelta', p_Request, 'number', temporary, batched, 0, 10)
 
-	if self:_writeSingleSettingList('assaultWeaponSet', p_Request, WeaponSets, temporary, batched) then updateWeaponSets = true end
-	if self:_writeSingleSettingList('engineerWeaponSet', p_Request, WeaponSets, temporary, batched) then updateWeaponSets = true end
-	if self:_writeSingleSettingList('supportWeaponSet', p_Request, WeaponSets, temporary, batched) then updateWeaponSets = true end
-	if self:_writeSingleSettingList('reconWeaponSet', p_Request, WeaponSets, temporary, batched) then updateWeaponSets = true end
+	if self:_writeSingleSettingList('AssaultWeaponSet', p_Request, WeaponSets, temporary, batched) then updateWeaponSets = true end
+	if self:_writeSingleSettingList('EngineerWeaponSet', p_Request, WeaponSets, temporary, batched) then updateWeaponSets = true end
+	if self:_writeSingleSettingList('SupportWeaponSet', p_Request, WeaponSets, temporary, batched) then updateWeaponSets = true end
+	if self:_writeSingleSettingList('ReconWeaponSet', p_Request, WeaponSets, temporary, batched) then updateWeaponSets = true end
 
 	-- expert
-	self:_writeSingleSetting('botFirstShotDelay', p_Request, 'number', temporary, batched, 0, 5)
-	self:_writeSingleSetting('botFireModeDuration', p_Request, 'number', temporary, batched, 0, 60)
-	self:_writeSingleSetting('botMinTimeShootAtPlayer', p_Request, 'number', temporary, batched, 0, Config.BotFireModeDuration)
-	if self:_writeSingleSetting('maximunYawPerSec', p_Request, 'number', temporary, batched, 3, 1000) then calcYawPerFrame = true end
-	self:_writeSingleSetting('targetDistanceWayPoint', p_Request, 'number', temporary, batched, 0, 10)
+	self:_writeSingleSetting('BotFirstShotDelay', p_Request, 'number', temporary, batched, 0, 5)
+	self:_writeSingleSetting('BotFireModeDuration', p_Request, 'number', temporary, batched, 0, 60)
+	self:_writeSingleSetting('BotMinTimeShootAtPlayer', p_Request, 'number', temporary, batched, 0, Config.BotFireModeDuration)
+	if self:_writeSingleSetting('MaximunYawPerSec', p_Request, 'number', temporary, batched, 3, 1000) then calcYawPerFrame = true end
+	self:_writeSingleSetting('TargetDistanceWayPoint', p_Request, 'number', temporary, batched, 0, 10)
 
 
 	-- Other
-	self:_writeSingleSetting('disableChatCommands', p_Request, 'bool', temporary, batched)
-	self:_writeSingleSetting('traceUsageAllowed', p_Request, 'bool', temporary, batched)
+	self:_writeSingleSetting('DisableChatCommands', p_Request, 'bool', temporary, batched)
+	self:_writeSingleSetting('TraceUsageAllowed', p_Request, 'bool', temporary, batched)
 
 	--UI
 	if p_Request.language ~= nil then
@@ -544,7 +544,7 @@ function FunBotUIServer:_writeSettings(p_Player, p_Request)
 					p_Request.settingsPassword = DatabaseField.NULL
 				end
 
-				m_SettingsManager:update('settingsPassword', p_Request.settingsPassword, temporary, batched)
+				m_SettingsManager:update('SettingsPassword', p_Request.settingsPassword, temporary, batched)
 			end
 		end
 	end

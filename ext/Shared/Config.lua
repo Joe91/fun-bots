@@ -27,7 +27,7 @@ Config = {
 	DamageFactorKnife = 1.5,		-- original Damage from bots gets multiplied by this
 
 	-- spawn
-	SpawnMethod = SpawnMethod.Spawn,	-- method the bots spawn with
+	SpawnMethod = SpawnMethod.SpawnSoldierAt,	-- method the bots spawn with
 	SpawnMode = 'balanced_teams',	-- mode the bots spawn with
 	SpawnInBothTeams = true,		-- Bots spawn in both teams
 	InitNumberOfBots = 6,			-- bots for spawnmode

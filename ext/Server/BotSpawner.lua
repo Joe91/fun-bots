@@ -111,7 +111,7 @@ function BotSpawner:updateBotAmountAndTeam()
 		for i=1, Globals.NrOfTeams do
 			if teamCount[i] < targetTeamCount[i] then
 				self:spawnWayBots(nil, targetTeamCount[i]-teamCount[i], true, 0, 0, i)
-			elseif teamCount[i] > targetTeamCount[i] and botCount[i] > 0 then
+			elseif teamCount[i] > targetTeamCount[i] and countBots[i] > 0 then
 				m_BotManager:killAll(teamCount[i]-targetTeamCount[i], i)
 			end
 		end
@@ -155,7 +155,7 @@ function BotSpawner:updateBotAmountAndTeam()
 			for i=1, Globals.NrOfTeams do
 				if teamCount[i] < targetTeamCount[i] then
 					self:spawnWayBots(nil, targetTeamCount[i]-teamCount[i], true, 0, 0, i)
-				elseif teamCount[i] > targetTeamCount[i] and botCount[i] > 0 then
+				elseif teamCount[i] > targetTeamCount[i] and countBots[i] > 0 then
 					m_BotManager:killAll(teamCount[i]-targetTeamCount[i], i)
 				end
 			end
@@ -163,7 +163,7 @@ function BotSpawner:updateBotAmountAndTeam()
 		else
 			-- check for bots in wrong team
 			for i=1, Globals.NrOfTeams do
-				if i ~= botTeam and botCount[i] > 0 then
+				if i ~= botTeam and countBots[i] > 0 then
 					m_BotManager:killAll(nil, i)
 				end
 			end
@@ -187,14 +187,14 @@ function BotSpawner:updateBotAmountAndTeam()
 			for i=1, Globals.NrOfTeams do
 				if teamCount[i] < amoutPerTeam then
 					self:spawnWayBots(nil, amoutPerTeam-teamCount[i], true, 0, 0, i)
-				elseif teamCount[i] > amoutPerTeam and botCount[i] > 0 then
+				elseif teamCount[i] > amoutPerTeam and countBots[i] > 0 then
 					m_BotManager:killAll(teamCount[i]-amoutPerTeam, i)
 				end
 			end
 		else
 			-- check for bots in wrong team
 			for i=1, Globals.NrOfTeams do
-				if i ~= botTeam and botCount[i] > 0 then
+				if i ~= botTeam and countBots[i] > 0 then
 					m_BotManager:killAll(nil, i)
 				end
 			end
