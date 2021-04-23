@@ -1,6 +1,6 @@
 class "NodeCollection"
 
-require('__shared/Utilities.lua')
+local m_Utilities = require('__shared/Utilities.lua')
 requireExists('Globals')
 
 function NodeCollection:__init(p_DisableServerEvents)
@@ -453,12 +453,12 @@ function NodeCollection:_processWaypointMetadata(p_Waypoint)
 end
 
 function NodeCollection:Update(p_Waypoint, p_Data)
-	g_Utilities:mergeKeys(p_Waypoint, p_Data)
+	m_Utilities:mergeKeys(p_Waypoint, p_Data)
 end
 
 function NodeCollection:UpdateMetadata(p_Data)
 	if Debug.Shared.NODECOLLECTION then
-		print('[A] NodeCollection:UpdateMetadata -> p_Data: '..g_Utilities:dump(p_Data, true))
+		print('[A] NodeCollection:UpdateMetadata -> p_Data: '..m_Utilities:dump(p_Data, true))
 	end
 
 	local selection = self:GetSelected()
@@ -472,12 +472,12 @@ function NodeCollection:UpdateMetadata(p_Data)
 	end
 
 	if Debug.Shared.NODECOLLECTION then
-		print('[B] NodeCollection:UpdateMetadata -> p_Data: '..g_Utilities:dump(p_Data, true))
+		print('[B] NodeCollection:UpdateMetadata -> p_Data: '..m_Utilities:dump(p_Data, true))
 	end
 
 	for i=1, #selection do
 		self:Update(selection[i], {
-			Data = g_Utilities:mergeKeys(selection[i].Data, p_Data)
+			Data = m_Utilities:mergeKeys(selection[i].Data, p_Data)
 		})
 	end
 	return true, 'Success'
@@ -589,7 +589,7 @@ function NodeCollection:Unlink(p_Waypoints, p_LinkID, p_OneWay)
 
 	-- update waypoint's Data table, remove linking info if necessary
 	if Debug.Shared.NODECOLLECTION then
-		print('newLinks -> '..g_Utilities:dump(newLinks, true))
+		print('newLinks -> '..m_Utilities:dump(newLinks, true))
 	end
 
 	if (#newLinks > 0) then
@@ -1111,8 +1111,8 @@ function NodeCollection:Save()
 				if (jsonData == nil) then
 					if Debug.Shared.NODECOLLECTION then
 						print('WARNING! Waypoint ['..waypoint.ID..'] data could not encode: '..tostring(encodeError))
-						print('waypoint -> '..g_Utilities:dump(waypoint, true, 1))
-						print('waypointData -> '..g_Utilities:dump(waypointData, true))
+						print('waypoint -> '..m_Utilities:dump(waypoint, true, 1))
+						print('waypointData -> '..m_Utilities:dump(waypointData, true))
 					end
 				end
 
@@ -1146,7 +1146,7 @@ function NodeCollection:Save()
 	if (#disconnects > 2) then
 		if Debug.Shared.NODECOLLECTION then
 			print('WARNING! More than two disconnected nodes were found!')
-			print(g_Utilities:dump(disconnects, true, 2))
+			print(m_Utilities:dump(disconnects, true, 2))
 		end
 	end
 

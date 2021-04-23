@@ -1,6 +1,6 @@
 class('GameDirector')
 
-require('__shared/NodeCollection')
+local m_NodeCollection = require('__shared/NodeCollection')
 
 function GameDirector:__init()
 	self.UpdateLast = -1
@@ -54,7 +54,7 @@ end
 
 function GameDirector:initObjectives()
 	self.AllObjectives = {}
-	for objectiveName,_ in pairs(g_NodeCollection:GetKnownOjectives()) do
+	for objectiveName,_ in pairs(m_NodeCollection:GetKnownOjectives()) do
 		local objective = {
 			name = objectiveName,
 			team = TeamId.TeamNeutral,
@@ -264,7 +264,7 @@ end
 
 function GameDirector:findClosestPath(p_Trans)
 	local closestPathNode = nil
-	local paths = g_NodeCollection:GetPaths()
+	local paths = m_NodeCollection:GetPaths()
 	if paths ~= nil then
 		local closestDistance = nil
 		for _,waypoints in pairs(paths) do
@@ -289,7 +289,7 @@ function GameDirector:getSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 	local rushConvertedBases = {}
 	local pathsDone = {}
 	for _,objective in pairs(self.AllObjectives) do
-		local allObjectives = g_NodeCollection:GetKnownOjectives()
+		local allObjectives = m_NodeCollection:GetKnownOjectives()
 		local pathsWithObjective = allObjectives[objective.name]
 
 		if pathsWithObjective == nil then
@@ -299,7 +299,7 @@ function GameDirector:getSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 
 		for _,path in pairs(pathsWithObjective) do
 			if not pathsDone[path] then
-				local node = g_NodeCollection:Get(1, path)
+				local node = m_NodeCollection:Get(1, path)
 				if node ~= nil and node.Data.Objectives ~= nil then
 					if #node.Data.Objectives == 1 then --possible path
 						if objective.team == p_TeamId and objective.active then
@@ -328,18 +328,18 @@ function GameDirector:getSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 		end
 		-- check for spawn objectives
 		if availableSpawnPaths ~= nil then
-			local allObjectives = g_NodeCollection:GetKnownOjectives()
+			local allObjectives = m_NodeCollection:GetKnownOjectives()
 			local pathsWithObjective = allObjectives[availableSpawnPaths]
 			return pathsWithObjective[MathUtils:GetRandomInt(1, #pathsWithObjective)], 1
 		else
-			return tempObj.path, MathUtils:GetRandomInt(1, #g_NodeCollection:Get(nil, tempObj.path))
+			return tempObj.path, MathUtils:GetRandomInt(1, #m_NodeCollection:Get(nil, tempObj.path))
 		end
 	elseif #possibleBases > 0 then
 		local pathIndex = possibleBases[MathUtils:GetRandomInt(1, #possibleBases)]
-		return pathIndex, MathUtils:GetRandomInt(1, #g_NodeCollection:Get(nil, pathIndex))
+		return pathIndex, MathUtils:GetRandomInt(1, #m_NodeCollection:Get(nil, pathIndex))
 	elseif #rushConvertedBases > 0 then
 		local pathIndex = rushConvertedBases[MathUtils:GetRandomInt(1, #rushConvertedBases)]
-		return pathIndex, MathUtils:GetRandomInt(1, #g_NodeCollection:Get(nil, pathIndex))
+		return pathIndex, MathUtils:GetRandomInt(1, #m_NodeCollection:Get(nil, pathIndex))
 	else
 		return 0 , 0
 	end
@@ -358,10 +358,10 @@ end
 
 function GameDirector:_getDistanceFromObjective(p_Objective, p_Position)
 	local distance = 0
-	local allObjectives = g_NodeCollection:GetKnownOjectives()
+	local allObjectives = m_NodeCollection:GetKnownOjectives()
 	local paths = allObjectives[p_Objective]
 	for _,path in pairs(paths) do
-		local node = g_NodeCollection:Get(1, path)
+		local node = m_NodeCollection:Get(1, path)
 		if node ~= nil and node.Data.Objectives ~= nil then
 			if #node.Data.Objectives == 1 then
 				distance = p_Position:Distance(node.Position)
@@ -374,14 +374,14 @@ end
 
 function GameDirector:_translateObjective(p_Position, p_Name)
 	if p_Name == nil or self.Translations[p_Name] == nil then
-		local allObjectives = g_NodeCollection:GetKnownOjectives()
+		local allObjectives = m_NodeCollection:GetKnownOjectives()
 		local pathsDone = {}
 		local closestObjective = ""
 		local closestDistance = nil
 		for objective, paths in pairs(allObjectives) do
 			for _,path in pairs(paths) do
 				if not pathsDone[path] then
-					local node = g_NodeCollection:Get(1, path)
+					local node = m_NodeCollection:Get(1, path)
 					if node ~= nil and node.Data.Objectives ~= nil then
 						if #node.Data.Objectives == 1 then --possible objective
 							local valid = true

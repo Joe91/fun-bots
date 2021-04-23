@@ -2,8 +2,8 @@ class('RCONCommands')
 
 require('__shared/Config')
 
-local BotManager	= require('BotManager')
-local BotSpawner	= require('BotSpawner')
+local m_BotManager = require('BotManager')
+local m_BotSpawner = require('BotSpawner')
 
 
 function RCONCommands:__init()
@@ -250,19 +250,19 @@ function RCONCommands:__init()
 
 				if calcYawPerFrame then
 					if Debug.Server.RCON then
-						print('[RCON] call BotManager:calcYawPerFrame()')
+						print('[RCON] call m_BotManager:calcYawPerFrame()')
 					end
 
-					Globals.YawPerFrame = BotManager:calcYawPerFrame()
+					Globals.YawPerFrame = m_BotManager:calcYawPerFrame()
 				end
 
 				if updateBotTeamAndNumber then
 					if Debug.Server.RCON then
-						print('[RCON] call BotSpawner:updateBotAmountAndTeam()')
+						print('[RCON] call m_BotSpawner:updateBotAmountAndTeam()')
 					end
 
 					Globals.SpawnMode = Config.SpawnMode
-					BotSpawner:updateBotAmountAndTeam()
+					m_BotSpawner:updateBotAmountAndTeam()
 				end
 
 				if Debug.Server.RCON then
@@ -329,7 +329,7 @@ function RCONCommands:__init()
 		KICKALLL	= {
 			Name		= 'funbots.kickAll',
 			Callback	= (function(p_Command, p_Args)
-				BotManager:destroyAll()
+				m_BotManager:destroyAll()
 
 				return { 'OK' }
 			end)
@@ -344,7 +344,7 @@ function RCONCommands:__init()
 				if name == nil then
 					return {'ERROR', 'Name needed.'}
 				end
-				BotManager:destroyBot(name)
+				m_BotManager:destroyBot(name)
 
 				return { 'OK' }
 			end)
@@ -354,7 +354,7 @@ function RCONCommands:__init()
 		KILLALL	= {
 			Name		= 'funbots.killAll',
 			Callback	= (function(p_Command, p_Args)
-				BotManager:killAll()
+				m_BotManager:killAll()
 
 				return { 'OK' }
 			end)
@@ -389,7 +389,7 @@ function RCONCommands:__init()
 					t = TeamId.Team2
 				end
 
-				BotSpawner:spawnWayBots(nil, amount, true, nil, nil, t)
+				m_BotSpawner:spawnWayBots(nil, amount, true, nil, nil, t)
 
 				return {'OK'}
 			end)

@@ -1,6 +1,7 @@
 class('PathSwitcher')
-require('__shared/NodeCollection')
-require('GameDirector')
+
+local m_NodeCollection = require('__shared/NodeCollection')
+local m_GameDirector = require('GameDirector')
 
 function PathSwitcher:__init()
 	self.dummyData = 0
@@ -10,11 +11,11 @@ end
 function PathSwitcher:getNewPath(p_BotName, p_Point, p_Objective)
 	-- check if on base, or on path away from base. In this case: change path
 	local onBasePath = false
-	local currentPathFirst = g_NodeCollection:GetFirst(p_Point.PathIndex)
+	local currentPathFirst = m_NodeCollection:GetFirst(p_Point.PathIndex)
 	local currentPathStatus = 0
 	if currentPathFirst.Data ~= nil and currentPathFirst.Data.Objectives ~= nil then
-		currentPathStatus = g_GameDirector:getEnableSateOfPath(currentPathFirst.Data.Objectives)
-		onBasePath = g_GameDirector:isBasePath(currentPathFirst.Data.Objectives)
+		currentPathStatus = m_GameDirector:getEnableSateOfPath(currentPathFirst.Data.Objectives)
+		onBasePath = m_GameDirector:isBasePath(currentPathFirst.Data.Objectives)
 	end
 
 	if p_Point.Data == nil or p_Point.Data.Links == nil or #p_Point.Data.Links < 1 then
@@ -54,7 +55,7 @@ function PathSwitcher:getNewPath(p_BotName, p_Point, p_Objective)
 	local possiblePaths = {}
 	table.insert(possiblePaths, p_Point) -- include our current path
 	for i=1, #p_Point.Data.Links do
-		local newPoint = g_NodeCollection:Get(p_Point.Data.Links[i])
+		local newPoint = m_NodeCollection:Get(p_Point.Data.Links[i])
 		if (newPoint ~= nil) then
 			table.insert(possiblePaths, newPoint)
 		end
@@ -63,15 +64,15 @@ function PathSwitcher:getNewPath(p_BotName, p_Point, p_Objective)
 	-- loop through each possible path
 	for i=1, #possiblePaths do
 		local newPoint = possiblePaths[i]
-		local pathNode = g_NodeCollection:GetFirst(newPoint.PathIndex)
-		local newPathStatus = g_GameDirector:getEnableSateOfPath(pathNode.Data.Objectives or {})
-		local newBasePath = g_GameDirector:isBasePath(pathNode.Data.Objectives or {})
+		local pathNode = m_NodeCollection:GetFirst(newPoint.PathIndex)
+		local newPathStatus = m_GameDirector:getEnableSateOfPath(pathNode.Data.Objectives or {})
+		local newBasePath = m_GameDirector:isBasePath(pathNode.Data.Objectives or {})
 
 		-- this path has listed objectives
 		if (pathNode.Data.Objectives ~= nil and p_Objective ~= '') then
 			-- check for possible subObjective
 			if ((#pathNode.Data.Objectives == 1 ) and (newPoint.ID ~= p_Point.ID)) then
-				if (g_GameDirector:useSubobjective(p_BotName, pathNode.Data.Objectives[1]) == true) then
+				if (m_GameDirector:useSubobjective(p_BotName, pathNode.Data.Objectives[1]) == true) then
 					return true, newPoint
 				end
 			end

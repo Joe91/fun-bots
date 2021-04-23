@@ -2,8 +2,9 @@ class 'FunBotUIServer'
 
 require('__shared/ArrayMap')
 require('__shared/Config')
-require('__shared/NodeCollection')
-require('SettingsManager')
+
+local m_NodeCollection = require('__shared/NodeCollection')
+local m_SettingsManager = require('SettingsManager')
 
 Language					= require('__shared/Language')
 local BotManager			= require('BotManager')
@@ -129,21 +130,21 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		NetEvents:SendToLocal('ClientNodeEditor:ClearTrace', p_Player)
 
 	elseif request.action == 'trace_reset_all' then
-		g_NodeCollection:Clear()
+		m_NodeCollection:Clear()
 		NetEvents:BroadcastLocal('NodeCollection:Clear')
 
 	elseif request.action == 'waypoints_client_load' then
-		local expectedAmount = g_NodeCollection:Get()
+		local expectedAmount = m_NodeCollection:Get()
 		NetEvents:SendToLocal('ClientNodeEditor:ReceiveNodes', p_Player, (#expectedAmount))
 
 	elseif request.action == 'waypoints_client_save' then
 		NetEvents:SendToLocal('ClientNodeEditor:SaveNodes', p_Player)
 
 	elseif request.action == 'waypoints_server_load' then
-		g_NodeCollection:Load()
+		m_NodeCollection:Load()
 
 	elseif request.action == 'waypoints_server_save' then
-		g_NodeCollection:Save()
+		m_NodeCollection:Save()
 
 	-- Waypoints-Editor
 	elseif request.action == 'request_waypoints_editor' then
@@ -354,14 +355,14 @@ function FunBotUIServer:_writeSingleSetting(p_Name, p_Request, p_Type, p_Tempora
 			if newValue ~= Config[p_Name] then
 				changed = true
 			end
-			SettingsManager:update(p_Name, newValue, p_Temporary, p_Batched)
+			m_SettingsManager:update(p_Name, newValue, p_Temporary, p_Batched)
 		end
 	elseif p_Type == "number" then
 		if p_Request[p_Name] ~= nil then
 			local tempValue = tonumber(p_Request[p_Name])
 			if (p_Min == nil or tempValue >= p_Min) and (p_Max == nil or tempValue <= p_Max) then
 				if math.abs(tempValue - Config[p_Name]) > 0.001 then --only update on change
-					SettingsManager:update(p_Name, tempValue, p_Temporary, p_Batched)
+					m_SettingsManager:update(p_Name, tempValue, p_Temporary, p_Batched)
 					changed = true
 				end
 			end
@@ -373,11 +374,11 @@ function FunBotUIServer:_writeSingleSetting(p_Name, p_Request, p_Type, p_Tempora
 				changed = true
 			end
 			if tempValue == 0 then
-				SettingsManager:update(p_Name, TeamId.TeamNeutral, p_Temporary, p_Batched)
+				m_SettingsManager:update(p_Name, TeamId.TeamNeutral, p_Temporary, p_Batched)
 			elseif tempValue == 1 then
-				SettingsManager:update(p_Name, TeamId.Team1, p_Temporary, p_Batched)
+				m_SettingsManager:update(p_Name, TeamId.Team1, p_Temporary, p_Batched)
 			elseif tempValue == 2 then
-				SettingsManager:update(p_Name, TeamId.Team2, p_Temporary, p_Batched)
+				m_SettingsManager:update(p_Name, TeamId.Team2, p_Temporary, p_Batched)
 			end
 		end
 	end
@@ -394,7 +395,7 @@ function FunBotUIServer:_writeSingleSettingList(p_Name, p_Request, p_List, p_Tem
 				if tempString ~= Config[p_Name] then
 					changed = true
 				end
-				SettingsManager:update(p_Name, tempString, p_Temporary, p_Batched)
+				m_SettingsManager:update(p_Name, tempString, p_Temporary, p_Batched)
 				break
 			end
 		end
@@ -526,7 +527,7 @@ function FunBotUIServer:_writeSettings(p_Player, p_Request)
 		end
 
 		NetEvents:SendTo('UI_Change_Language', p_Player, p_Request.language)
-		SettingsManager:update('language', p_Request.language, temporary, batched)
+		m_SettingsManager:update('language', p_Request.language, temporary, batched)
 		Language:loadLanguage(p_Request.language)
 	end
 
@@ -543,7 +544,7 @@ function FunBotUIServer:_writeSettings(p_Player, p_Request)
 					p_Request.settingsPassword = DatabaseField.NULL
 				end
 
-				SettingsManager:update('settingsPassword', p_Request.settingsPassword, temporary, batched)
+				m_SettingsManager:update('settingsPassword', p_Request.settingsPassword, temporary, batched)
 			end
 		end
 	end
