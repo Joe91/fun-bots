@@ -708,9 +708,9 @@ function Bot:_ceckForVehicleAttack(p_Type, p_Distance)
 	elseif p_Type == 2 and p_Distance < 35 then
 		attackMode = 2	-- attack with grenade
 	end
-	if self.gadget2.p_Type == "Rocket" then
+	if self.gadget2.type == "Rocket" then
 		attackMode = 3		-- always use rocket if possible
-	elseif self.gadget2.p_Type == "C4" and p_Distance < 25 then
+	elseif self.gadget2.type == "C4" and p_Distance < 25 then
 		if p_Type ~= 3 then -- no air vehicles
 			attackMode = 4	-- always use c4 if possible
 		end
