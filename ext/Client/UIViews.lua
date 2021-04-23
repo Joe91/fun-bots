@@ -4,20 +4,23 @@ require('__shared/ArrayMap')
 
 function UIViews:__init()
 	self._views = ArrayMap()
+
+	Events:Subscribe('Extension:Loaded', self, self._onExtensionLoaded)
+	Events:Subscribe('Extension:Unloading', self, self._onExtensionUnload)
 	--Events:Subscribe('UI_Close', self, self._onUIClose)
 end
 
 -- Events
-function UIViews:OnExtensionLoaded()
+function UIViews:_onExtensionUnload()
+	self:disable()
+	WebUI:Hide()
+end
+
+function UIViews:_onExtensionLoaded()
 	WebUI:Init()
 	WebUI:Show()
 	self:setLanguage(Config.Language)
 	self:disable()
-end
-
-function UIViews:OnExtensionUnloading()
-	self:disable()
-	WebUI:Hide()
 end
 
 function UIViews:_onUIClose(p_Name)

@@ -1,20 +1,34 @@
 class('ClientBotManager')
 
-local m_WeaponList = require('__shared/WeaponList')
-local m_Utilities = require('__shared/Utilities')
+require('__shared/Config')
+
+local WeaponList			= require('__shared/WeaponList')
+local Utilities 			= require('__shared/Utilities')
 
 function ClientBotManager:__init()
-	self:RegisterVars()
+	self._raycastTimer	= 0
+	self._lastIndex		= 1
+	self.player			= nil
+	self.readyToUpdate	= false
+
+	Events:Subscribe('UpdateManager:Update', self, self._onUpdate)
+	Events:Subscribe('Level:Destroy', self, self.onExtensionUnload)
+	NetEvents:Subscribe('WriteClientSettings', self, self._onWriteClientSettings)
+	NetEvents:Subscribe('CheckBotBotAttack', self, self._checkForBotBotAttack)
+
+	if not USE_REAL_DAMAGE then
+		Hooks:Install('BulletEntity:Collision', 200, self, self._onBulletCollision)
+	end
 end
 
-function ClientBotManager:RegisterVars()
+function ClientBotManager:onExtensionUnload()
 	self._raycastTimer	= 0
 	self._lastIndex		= 1
 	self.player			= nil
 	self.readyToUpdate	= false
 end
 
-function ClientBotManager:OnEngineMessage(p_Message)
+function ClientBotManager:onEngineMessage(p_Message)
 	if (p_Message.type == MessageType.ClientLevelFinalizedMessage) then
 		NetEvents:SendLocal('RequestClientSettings')
 		self.readyToUpdate	= true
@@ -23,12 +37,28 @@ function ClientBotManager:OnEngineMessage(p_Message)
 		end
 	end
 	if (p_Message.type == MessageType.ClientConnectionUnloadLevelMessage) or (p_Message.type == MessageType.ClientCharacterLocalPlayerDeletedMessage) then
-		self:RegisterVars()
+		self:onExtensionUnload()
 	end
 end
 
-function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
-	if (p_UpdatePass ~= UpdatePass.UpdatePass_PreFrame or not self.readyToUpdate) then
+function ClientBotManager:_onWriteClientSettings(newConfig, updateWeaponSets)
+	for key, value in pairs(newConfig) do
+		Config[key] = value
+	end
+
+	if Debug.Client.INFO then
+		print("write settings")
+	end
+
+	if updateWeaponSets then
+		WeaponList:updateWeaponList()
+	end
+
+	self.player = PlayerManager:GetLocalPlayer()
+end
+
+function ClientBotManager:_onUpdate(p_Delta, p_Pass)
+	if (p_Pass ~= UpdatePass.UpdatePass_PreFrame or not self.readyToUpdate) then
 		return
 	end
 
@@ -40,7 +70,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 		return
 	end
 
-	self._raycastTimer = self._raycastTimer + p_DeltaTime
+	self._raycastTimer = self._raycastTimer + p_Delta
 
 	if (self._raycastTimer >= StaticConfig.RaycastInterval) then
 		self._raycastTimer	= 0
@@ -73,10 +103,10 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 				if (bot ~= nil and bot.onlineId == 0 and bot.soldier ~= nil) then
 
 					-- check for clear view
-					local playerPosition = ClientUtils:GetCameraTransform().trans:Clone() --player.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(player, false)
+					local playerPosition = ClientUtils:GetCameraTransform().trans:Clone() --player.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(player, false)
 
 					-- find direction of Bot
-					local target	= bot.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(bot, false)
+					local target	= bot.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(bot, false)
 					local distance	= playerPosition:Distance(bot.soldier.worldTransform.trans)
 
 					if (distance < Config.MaxRaycastDistance) then
@@ -119,7 +149,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 					local playerPosition = self.player.corpse.worldTransform.trans:Clone() + Vec3(0, 1, 0)
 
 					-- find direction of Bot
-					local target	= bot.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(bot, false)
+					local target	= bot.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(bot, false)
 					local distance	= playerPosition:Distance(bot.soldier.worldTransform.trans)
 
 					if (distance < 35) then  -- TODO: use config var for this
@@ -138,31 +168,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	end
 end
 
-function ClientBotManager:OnExtensionUnloading()
-	self:RegisterVars()
-end
-
-function ClientBotManager:OnLevelDestroy()
-	self:RegisterVars()
-end
-
-function ClientBotManager:OnWriteClientSettings(p_NewConfig, p_UpdateWeaponSets)
-	for key, value in pairs(p_NewConfig) do
-		Config[key] = value
-	end
-
-	if Debug.Client.INFO then
-		print("write settings")
-	end
-
-	if p_UpdateWeaponSets then
-		m_WeaponList:updateWeaponList()
-	end
-
-	self.player = PlayerManager:GetLocalPlayer()
-end
-
-function ClientBotManager:CheckForBotBotAttack(p_StartPos, p_EndPos, p_ShooterBotName, p_BotName, p_InVehicle)
+function ClientBotManager:_checkForBotBotAttack(p_StartPos, p_EndPos, p_ShooterBotName, p_BotName, p_InVehicle)
 	--check for clear view to startpoint
 	local startPos 	= Vec3(p_StartPos.x, p_StartPos.y + 1.0, p_StartPos.z)
 	local endPos 	= Vec3(p_EndPos.x, p_EndPos.y + 1.0, p_EndPos.z)
@@ -178,9 +184,9 @@ function ClientBotManager:CheckForBotBotAttack(p_StartPos, p_EndPos, p_ShooterBo
 	end
 end
 
-function ClientBotManager:OnBulletEntityCollision(p_HookCtx, p_Entity, p_Hit, p_Shooter)
+function ClientBotManager:_onBulletCollision(p_HookCtx, p_Entity, p_Hit, p_Shooter)
 	if (p_Hit.rigidBody.typeInfo.name == 'CharacterPhysicsEntity') then
-		if m_Utilities:isBot(p_Shooter) then
+		if Utilities:isBot(p_Shooter) then
 			local player = PlayerManager:GetLocalPlayer()
 
 			if (player.soldier ~= nil) then
@@ -190,7 +196,7 @@ function ClientBotManager:OnBulletEntityCollision(p_HookCtx, p_Entity, p_Hit, p_
 
 				if (dx < 1 and dz < 1 and dy < 2 and dy > 0) then --included bodyhight
 					local isHeadshot	= false
-					local camaraHeight	= m_Utilities:getTargetHeight(player.soldier, false)
+					local camaraHeight	= Utilities:getTargetHeight(player.soldier, false)
 
 					if dy < camaraHeight + 0.3 and dy > camaraHeight - 0.10 then
 						isHeadshot = true
@@ -203,6 +209,7 @@ function ClientBotManager:OnBulletEntityCollision(p_HookCtx, p_Entity, p_Hit, p_
 	end
 end
 
+-- Singleton.
 if g_ClientBotManager == nil then
 	g_ClientBotManager = ClientBotManager()
 end
