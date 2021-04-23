@@ -118,19 +118,19 @@ function WeaponModification:OnPartitionLoaded(p_Partition)
 	end
 end
 
-function WeaponModification:ModifyAllWeapons(aimWorseningNormal, aimWorseningSniper)
+function WeaponModification:ModifyAllWeapons(p_AimWorseningNormal, p_AimWorseningSniper)
 	if Debug.Server.MODIFICATIONS then
 		print(#self.m_WeaponInstances .. ' loaded weapons to modify')
 	end
 
 	for i, weaponInstance in pairs(self.m_WeaponInstances) do
-		self:_ModifyWeapon(weaponInstance , i, aimWorseningNormal, aimWorseningSniper)
+		self:_ModifyWeapon(weaponInstance , i, p_AimWorseningNormal, p_AimWorseningSniper)
 	end
 
 	self.m_alreadyLoaded = true
 end
 
-function WeaponModification:_ModifyWeapon(p_SoldierWeaponData, index, aimWorseningNormal, aimWorseningSniper)
+function WeaponModification:_ModifyWeapon(p_SoldierWeaponData, p_Index, p_AimWorseningNormal, p_AimWorseningSniper)
 	local s_SoldierWeaponData	= self:_MakeWritable(p_SoldierWeaponData)
 	local s_WeaponFiringData	= self:_MakeWritable(s_SoldierWeaponData.weaponFiring)
 
@@ -138,7 +138,7 @@ function WeaponModification:_ModifyWeapon(p_SoldierWeaponData, index, aimWorseni
 		return
 	end
 
-	local botAimWorsening = aimWorseningNormal
+	local botAimWorsening = p_AimWorseningNormal
 	local isReconWeapon = false
 	-- check for sniper rifles:
 	--https://docs.veniceunleashed.net/vext/ref/fb/weaponclassenum/ and EBX-Dumb
@@ -147,7 +147,7 @@ function WeaponModification:_ModifyWeapon(p_SoldierWeaponData, index, aimWorseni
 	local nameOfAiData = tostring(aiData.name)
 	if string.find(nameOfAiData ,"Handheld_sni_AI_Weapon") ~= nil
 	or string.find(nameOfAiData ,"Handheld_snisemi_AI_Weapon") ~= nil then
-		botAimWorsening = aimWorseningSniper
+		botAimWorsening = p_AimWorseningSniper
 		isReconWeapon = true
 	end
 	local recoilFactor = botAimWorsening
@@ -166,51 +166,51 @@ function WeaponModification:_ModifyWeapon(p_SoldierWeaponData, index, aimWorseni
 			local s_MovingValue = GunSwayDispersionData(s_CrouchNoZoom.moving)
 
 			if s_MovingValue ~= nil then
-				if self.m_maxAngles[index] == nil then
-					self.m_minAngles[index] = s_MovingValue.minAngle
-					self.m_maxAngles[index] = s_MovingValue.maxAngle
-					self.m_incPerShot[index] = s_MovingValue.increasePerShot
+				if self.m_maxAngles[p_Index] == nil then
+					self.m_minAngles[p_Index] = s_MovingValue.minAngle
+					self.m_maxAngles[p_Index] = s_MovingValue.maxAngle
+					self.m_incPerShot[p_Index] = s_MovingValue.increasePerShot
 				end
 
-				s_MovingValue.minAngle 			= self.m_minAngles[index] * botAimWorsening/3
-				s_MovingValue.maxAngle 			= self.m_maxAngles[index] * botAimWorsening
-				s_MovingValue.increasePerShot 	= self.m_incPerShot[index] * botAimWorsening
+				s_MovingValue.minAngle 			= self.m_minAngles[p_Index] * botAimWorsening/3
+				s_MovingValue.maxAngle 			= self.m_maxAngles[p_Index] * botAimWorsening
+				s_MovingValue.increasePerShot 	= self.m_incPerShot[p_Index] * botAimWorsening
 				--decreasePerSecond 	float
 			end
 
 			local s_RecoilData = GunSwayRecoilData(s_CrouchNoZoom.recoil)
 
 			if s_RecoilData ~= nil then
-				if self.m_maxRecoilPitch[index] == nil then
-					self.m_maxRecoilPitch[index] = s_RecoilData.recoilAmplitudeMax
-					self.m_recoilIncShot[index] = s_RecoilData.recoilAmplitudeIncPerShot
-					self.m_maxRecoilYaw[index] = s_RecoilData.horizontalRecoilAmplitudeMax
-					self.m_recoilIncShotMin[index] = s_RecoilData.horizontalRecoilAmplitudeIncPerShotMin
-					self.m_recoilIncShotMax[index] = s_RecoilData.horizontalRecoilAmplitudeIncPerShotMax
-					self.m_recoilDecrease[index] = s_RecoilData.recoilAmplitudeDecreaseFactor
+				if self.m_maxRecoilPitch[p_Index] == nil then
+					self.m_maxRecoilPitch[p_Index] = s_RecoilData.recoilAmplitudeMax
+					self.m_recoilIncShot[p_Index] = s_RecoilData.recoilAmplitudeIncPerShot
+					self.m_maxRecoilYaw[p_Index] = s_RecoilData.horizontalRecoilAmplitudeMax
+					self.m_recoilIncShotMin[p_Index] = s_RecoilData.horizontalRecoilAmplitudeIncPerShotMin
+					self.m_recoilIncShotMax[p_Index] = s_RecoilData.horizontalRecoilAmplitudeIncPerShotMax
+					self.m_recoilDecrease[p_Index] = s_RecoilData.recoilAmplitudeDecreaseFactor
 				end
 
-				s_RecoilData.recoilAmplitudeMax 			= self.m_maxRecoilPitch[index] * recoilFactor
-				s_RecoilData.recoilAmplitudeIncPerShot		= self.m_recoilIncShot[index] * recoilFactor/2
-				s_RecoilData.horizontalRecoilAmplitudeMax 	= self.m_maxRecoilYaw[index] * recoilFactor
-				s_RecoilData.horizontalRecoilAmplitudeIncPerShotMin = self.m_recoilIncShotMin[index] * recoilFactor/3
-				s_RecoilData.horizontalRecoilAmplitudeIncPerShotMax = self.m_recoilIncShotMax[index] * recoilFactor
-				--s_RecoilData.recoilAmplitudeDecreaseFactor 	= self.m_recoilDecrease[index] * (1/(recoilFactor + 0.0001))
+				s_RecoilData.recoilAmplitudeMax 			= self.m_maxRecoilPitch[p_Index] * recoilFactor
+				s_RecoilData.recoilAmplitudeIncPerShot		= self.m_recoilIncShot[p_Index] * recoilFactor/2
+				s_RecoilData.horizontalRecoilAmplitudeMax 	= self.m_maxRecoilYaw[p_Index] * recoilFactor
+				s_RecoilData.horizontalRecoilAmplitudeIncPerShotMin = self.m_recoilIncShotMin[p_Index] * recoilFactor/3
+				s_RecoilData.horizontalRecoilAmplitudeIncPerShotMax = self.m_recoilIncShotMax[p_Index] * recoilFactor
+				--s_RecoilData.recoilAmplitudeDecreaseFactor 	= self.m_recoilDecrease[p_Index] * (1/(recoilFactor + 0.0001))
 			end
 
 			--if isReconWeapon then --only for recon in standing as well.
 			local s_StandingValue = GunSwayDispersionData(s_CrouchNoZoom.baseValue)
 
 			if s_MovingValue ~= nil then
-				if self.m_maxAnglesStand[index] == nil then
-					self.m_minAnglesStand[index] = s_StandingValue.minAngle
-					self.m_maxAnglesStand[index] = s_StandingValue.maxAngle
-					self.m_incPerShotStand[index] = s_StandingValue.increasePerShot
+				if self.m_maxAnglesStand[p_Index] == nil then
+					self.m_minAnglesStand[p_Index] = s_StandingValue.minAngle
+					self.m_maxAnglesStand[p_Index] = s_StandingValue.maxAngle
+					self.m_incPerShotStand[p_Index] = s_StandingValue.increasePerShot
 				end
 
-				s_StandingValue.minAngle 			= self.m_minAnglesStand[index] * botAimWorsening/3
-				s_StandingValue.maxAngle 			= self.m_maxAnglesStand[index] * botAimWorsening
-				s_StandingValue.increasePerShot 	= self.m_incPerShotStand[index] * botAimWorsening
+				s_StandingValue.minAngle 			= self.m_minAnglesStand[p_Index] * botAimWorsening/3
+				s_StandingValue.maxAngle 			= self.m_maxAnglesStand[p_Index] * botAimWorsening
+				s_StandingValue.increasePerShot 	= self.m_incPerShotStand[p_Index] * botAimWorsening
 				--decreasePerSecond 	float
 			end
 			--end
@@ -228,51 +228,51 @@ function WeaponModification:_ModifyWeapon(p_SoldierWeaponData, index, aimWorseni
 			local s_MovingValue = GunSwayDispersionData(s_StandNoZoom.moving)
 
 			if s_MovingValue ~= nil then
-				if self.m_stand_maxAngles[index] == nil then
-					self.m_stand_minAngles[index] = s_MovingValue.minAngle
-					self.m_stand_maxAngles[index] = s_MovingValue.maxAngle
-					self.m_stand_incPerShot[index] = s_MovingValue.increasePerShot
+				if self.m_stand_maxAngles[p_Index] == nil then
+					self.m_stand_minAngles[p_Index] = s_MovingValue.minAngle
+					self.m_stand_maxAngles[p_Index] = s_MovingValue.maxAngle
+					self.m_stand_incPerShot[p_Index] = s_MovingValue.increasePerShot
 				end
 
-				s_MovingValue.minAngle 			= self.m_stand_minAngles[index] * botAimWorsening/3
-				s_MovingValue.maxAngle 			= self.m_stand_maxAngles[index] * botAimWorsening
-				s_MovingValue.increasePerShot 	= self.m_stand_incPerShot[index] * botAimWorsening
+				s_MovingValue.minAngle 			= self.m_stand_minAngles[p_Index] * botAimWorsening/3
+				s_MovingValue.maxAngle 			= self.m_stand_maxAngles[p_Index] * botAimWorsening
+				s_MovingValue.increasePerShot 	= self.m_stand_incPerShot[p_Index] * botAimWorsening
 				--decreasePerSecond 	float
 			end
 
 			local s_RecoilData = GunSwayRecoilData(s_StandNoZoom.recoil)
 
 			if s_RecoilData ~= nil then
-				if self.m_stand_maxRecoilPitch[index] == nil then
-					self.m_stand_maxRecoilPitch[index] = s_RecoilData.recoilAmplitudeMax
-					self.m_stand_recoilIncShot[index] = s_RecoilData.recoilAmplitudeIncPerShot
-					self.m_stand_maxRecoilYaw[index] = s_RecoilData.horizontalRecoilAmplitudeMax
-					self.m_stand_recoilIncShotMin[index] = s_RecoilData.horizontalRecoilAmplitudeIncPerShotMin
-					self.m_stand_recoilIncShotMax[index] = s_RecoilData.horizontalRecoilAmplitudeIncPerShotMax
-					self.m_stand_recoilDecrease[index] = s_RecoilData.recoilAmplitudeDecreaseFactor
+				if self.m_stand_maxRecoilPitch[p_Index] == nil then
+					self.m_stand_maxRecoilPitch[p_Index] = s_RecoilData.recoilAmplitudeMax
+					self.m_stand_recoilIncShot[p_Index] = s_RecoilData.recoilAmplitudeIncPerShot
+					self.m_stand_maxRecoilYaw[p_Index] = s_RecoilData.horizontalRecoilAmplitudeMax
+					self.m_stand_recoilIncShotMin[p_Index] = s_RecoilData.horizontalRecoilAmplitudeIncPerShotMin
+					self.m_stand_recoilIncShotMax[p_Index] = s_RecoilData.horizontalRecoilAmplitudeIncPerShotMax
+					self.m_stand_recoilDecrease[p_Index] = s_RecoilData.recoilAmplitudeDecreaseFactor
 				end
 
-				s_RecoilData.recoilAmplitudeMax 			= self.m_stand_maxRecoilPitch[index] * recoilFactor
-				s_RecoilData.recoilAmplitudeIncPerShot		= self.m_stand_recoilIncShot[index] * recoilFactor/2
-				s_RecoilData.horizontalRecoilAmplitudeMax 	= self.m_stand_maxRecoilYaw[index] * recoilFactor
-				s_RecoilData.horizontalRecoilAmplitudeIncPerShotMin = self.m_stand_recoilIncShotMin[index] * botAimWorsening/3
-				s_RecoilData.horizontalRecoilAmplitudeIncPerShotMax = self.m_stand_recoilIncShotMax[index] * recoilFactor
-				--s_RecoilData.recoilAmplitudeDecreaseFactor 	= self.m_stand_recoilDecrease[index] * (1/(recoilFactor + 0.0001))
+				s_RecoilData.recoilAmplitudeMax 			= self.m_stand_maxRecoilPitch[p_Index] * recoilFactor
+				s_RecoilData.recoilAmplitudeIncPerShot		= self.m_stand_recoilIncShot[p_Index] * recoilFactor/2
+				s_RecoilData.horizontalRecoilAmplitudeMax 	= self.m_stand_maxRecoilYaw[p_Index] * recoilFactor
+				s_RecoilData.horizontalRecoilAmplitudeIncPerShotMin = self.m_stand_recoilIncShotMin[p_Index] * botAimWorsening/3
+				s_RecoilData.horizontalRecoilAmplitudeIncPerShotMax = self.m_stand_recoilIncShotMax[p_Index] * recoilFactor
+				--s_RecoilData.recoilAmplitudeDecreaseFactor 	= self.m_stand_recoilDecrease[p_Index] * (1/(recoilFactor + 0.0001))
 			end
 
 			--if isReconWeapon then --only for recon in standing as well.
 			local s_StandingValue = GunSwayDispersionData(s_StandNoZoom.baseValue)
 
 			if s_MovingValue ~= nil then
-				if self.m_stand_maxAnglesStand[index] == nil then
-					self.m_stand_minAnglesStand[index] = s_StandingValue.minAngle
-					self.m_stand_maxAnglesStand[index] = s_StandingValue.maxAngle
-					self.m_stand_incPerShotStand[index] = s_StandingValue.increasePerShot
+				if self.m_stand_maxAnglesStand[p_Index] == nil then
+					self.m_stand_minAnglesStand[p_Index] = s_StandingValue.minAngle
+					self.m_stand_maxAnglesStand[p_Index] = s_StandingValue.maxAngle
+					self.m_stand_incPerShotStand[p_Index] = s_StandingValue.increasePerShot
 				end
 
-				s_StandingValue.minAngle 			= self.m_stand_minAnglesStand[index] * botAimWorsening/3
-				s_StandingValue.maxAngle 			= self.m_stand_maxAnglesStand[index] * botAimWorsening
-				s_StandingValue.increasePerShot 	= self.m_stand_incPerShotStand[index] * botAimWorsening
+				s_StandingValue.minAngle 			= self.m_stand_minAnglesStand[p_Index] * botAimWorsening/3
+				s_StandingValue.maxAngle 			= self.m_stand_maxAnglesStand[p_Index] * botAimWorsening
+				s_StandingValue.increasePerShot 	= self.m_stand_incPerShotStand[p_Index] * botAimWorsening
 				--decreasePerSecond 	float
 			end
 			--end

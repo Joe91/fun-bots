@@ -149,27 +149,27 @@ function SettingsManager:onLoad()
 	end
 end
 
-function SettingsManager:update(name, value, temporary, batch)
-	if temporary ~= true then
-		if value == nil then
-			value = DatabaseField.NULL
+function SettingsManager:update(p_Name, p_Value, p_Temporary, p_Batch)
+	if p_Temporary ~= true then
+		if p_Value == nil then
+			p_Value = DatabaseField.NULL
 		end
 
 		-- Use old deprecated querys
-		if batch == false then
-			local single = Database:single('SELECT * FROM `FB_Settings` WHERE `Key`=\'' .. name .. '\' LIMIT 1')
+		if p_Batch == false then
+			local single = Database:single('SELECT * FROM `FB_Settings` WHERE `Key`=\'' .. p_Name .. '\' LIMIT 1')
 
 			-- If not exists, create
 			if single == nil then
 				Database:insert('FB_Settings', {
-					Key		= name,
-					Value	= value,
+					Key		= p_Name,
+					Value	= p_Value,
 					Time	= Database:now()
 				})
 			else
 				Database:update('FB_Settings', {
-					Key		= name,
-					Value	= value,
+					Key		= p_Name,
+					Value	= p_Value,
 					Time	= Database:now()
 				}, 'Key')
 			end
@@ -177,18 +177,18 @@ function SettingsManager:update(name, value, temporary, batch)
 		-- Use new querys
 		else
 			Database:batchQuery('FB_Settings', {
-				Key		= name,
-				Value	= value,
+				Key		= p_Name,
+				Value	= p_Value,
 				Time	= Database:now()
 			}, 'Key')
 		end
 
-		if value == DatabaseField.NULL then
-			value = nil
+		if p_Value == DatabaseField.NULL then
+			p_Value = nil
 		end
 	end
 
-	Config[name] = value
+	Config[p_Name] = p_Value
 end
 
 -- Singleton.

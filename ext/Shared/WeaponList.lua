@@ -364,24 +364,24 @@ function WeaponList:__init()
 	self:updateWeaponList()
 end
 
-function WeaponList:_isCustomWeapon(class, name)
+function WeaponList:_isCustomWeapon(p_Class, p_Name)
 	local customWeaponList = nil
 	local isCustomWeapon = false
-	if class == "Assault" then
+	if p_Class == "Assault" then
 		customWeaponList = CustomWeaponsAssault
-	elseif class == "Engineer" then
+	elseif p_Class == "Engineer" then
 		customWeaponList = CustomWeaponsEngineer
-	elseif class == "Support" then
+	elseif p_Class == "Support" then
 		customWeaponList = CustomWeaponsSupport
-	elseif class == "Recon" then
+	elseif p_Class == "Recon" then
 		customWeaponList = CustomWeaponsRecon
 	-- use thhis function for pistols as well
-	elseif class == "Pistol" then
+	elseif p_Class == "Pistol" then
 		customWeaponList = CustomWeaponsPistols
 	end
 
 	for _,customName in pairs(customWeaponList) do
-		if (customName == name) then
+		if (customName == p_Name) then
 			isCustomWeapon = true
 			break
 		end
@@ -390,51 +390,51 @@ function WeaponList:_isCustomWeapon(class, name)
 	return isCustomWeapon
 end
 
-function WeaponList:_useWeaponType(class, type, name)
+function WeaponList:_useWeaponType(p_Class, p_Type, p_Name)
 	local useThisWeapon = false
 	local isClassWeapon = false
 	local weaponSet = ""
-	if class == "Assault" then
+	if p_Class == "Assault" then
 		weaponSet = Config.AssaultWeaponSet
-		if type == "Assault" then
+		if p_Type == "Assault" then
 			isClassWeapon = true
 		end
-	elseif class == "Engineer" then
+	elseif p_Class == "Engineer" then
 		weaponSet = Config.EngineerWeaponSet
-		if type == "Carabine" then
+		if p_Type == "Carabine" then
 			isClassWeapon = true
 		end
-	elseif class == "Support" then
+	elseif p_Class == "Support" then
 		weaponSet = Config.SupportWeaponSet
-		if type == "LMG" then
+		if p_Type == "LMG" then
 			isClassWeapon = true
 		end
-	else --if class == "Recon" then
+	else --if p_Class == "Recon" then
 		weaponSet = Config.ReconWeaponSet
-		if type == "Sniper" then
+		if p_Type == "Sniper" then
 			isClassWeapon = true
 		end
 	end
 
 	-- check for custom-weapon
 	if weaponSet == "Custom" then
-		useThisWeapon = self:_isCustomWeapon(class, name)
-	else -- check for other classes
-		if type == "PDW" then
+		useThisWeapon = self:_isCustomWeapon(p_Class, p_Name)
+	else -- check for other p_Classes
+		if p_Type == "PDW" then
 			if weaponSet == "PDW" or
 			weaponSet == "Class_PDW" or
 			weaponSet == "Class_PDW_Shotgun" or
 			weaponSet == "PDW_Shotgun" then
 				useThisWeapon = true
 			end
-		elseif type == "Shotgun" then
+		elseif p_Type == "Shotgun" then
 			if weaponSet == "Shotgun" or
 			weaponSet == "Class_Shotgun" or
 			weaponSet == "Class_PDW_Shotgun" or
 			weaponSet == "PDW_Shotgun" then
 				useThisWeapon = true
 			end
-		elseif type == "Assault" or type == "Carabine" or type == "LMG" or type == "Sniper" then
+		elseif p_Type == "Assault" or p_Type == "Carabine" or p_Type == "LMG" or p_Type == "Sniper" then
 			if weaponSet == "Class" or
 			weaponSet == "Class_Shotgun" or
 			weaponSet == "Class_PDW_Shotgun" or
@@ -444,8 +444,8 @@ function WeaponList:_useWeaponType(class, type, name)
 				end
 			end
 		else
-			-- for all other weapons - use class-list
-			useThisWeapon = self:_isCustomWeapon(class, name)
+			-- for all other weapons - use p_Class-list
+			useThisWeapon = self:_isCustomWeapon(p_Class, p_Name)
 		end
 	end
 	return useThisWeapon
@@ -554,10 +554,10 @@ function WeaponList:updateWeaponList()
 	end
 end
 
-function WeaponList:getWeapon(name)
+function WeaponList:getWeapon(p_Name)
 	local retWeapon = nil
 	for _, weapon in pairs(self._weapons) do
-		if weapon.name == name then
+		if weapon.name == p_Name then
 			retWeapon = weapon
 			break
 		end
@@ -565,7 +565,7 @@ function WeaponList:getWeapon(name)
 
 	if (retWeapon == nil) then
 		if Debug.Shared.MODIFICATIONS then
-			print('Warning! Weapon not found: '..tostring(name))
+			print('Warning! Weapon not found: '..tostring(p_Name))
 		end
 	end
 

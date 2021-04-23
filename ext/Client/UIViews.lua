@@ -23,8 +23,8 @@ function UIViews:_onExtensionLoaded()
 	self:disable()
 end
 
-function UIViews:_onUIClose(name)
-	-- @ToDo name of closing view
+function UIViews:_onUIClose(p_Name)
+	-- @ToDo p_Name of closing view
 	--if self:isVisible() and self._views:isEmpty() then
 	--	self:close()
 	--end
@@ -71,41 +71,41 @@ function UIViews:blur()
 end
 
 -- Execute
-function UIViews:execute(script)
-	WebUI:ExecuteJS(script)
+function UIViews:execute(p_Script)
+	WebUI:ExecuteJS(p_Script)
 end
 
 -- Change language
-function UIViews:setLanguage(name)
-	if name ~= nil then
-		WebUI:ExecuteJS('BotEditor.loadLanguage(\'' .. name .. '\')')
+function UIViews:setLanguage(p_Name)
+	if p_Name ~= nil then
+		WebUI:ExecuteJS('BotEditor.loadLanguage(\'' .. p_Name .. '\')')
 	end
 end
 
 -- Show an view
-function UIViews:show(name)
-	if self._views:exists(name) then
-		self._views:delete(name)
+function UIViews:show(p_Name)
+	if self._views:exists(p_Name) then
+		self._views:delete(p_Name)
 	end
 
-	self._views:add(name)
-	WebUI:ExecuteJS('BotEditor.show(\'' .. name .. '\')')
+	self._views:add(p_Name)
+	WebUI:ExecuteJS('BotEditor.show(\'' .. p_Name .. '\')')
 	--self:_handleViewManagement()
 end
 
 -- Hide an view
-function UIViews:hide(name)
-	if self._views:exists(name) then
-		self._views:delete(name)
+function UIViews:hide(p_Name)
+	if self._views:exists(p_Name) then
+		self._views:delete(p_Name)
 	end
 
-	WebUI:ExecuteJS('BotEditor.hide(\'' .. name .. '\')')
+	WebUI:ExecuteJS('BotEditor.hide(\'' .. p_Name .. '\')')
 	--self:_handleViewManagement()
 end
 
 -- Send an error to the specified view
-function UIViews:error(name, text)
-	WebUI:ExecuteJS('BotEditor.error(\'' .. name .. '\', \'' .. text .. '\')')
+function UIViews:error(p_Name, p_Text)
+	WebUI:ExecuteJS('BotEditor.error(\'' .. p_Name .. '\', \'' .. p_Text .. '\')')
 end
 
 -- Handle WebUI when view-stack is empty

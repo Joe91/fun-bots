@@ -6,86 +6,86 @@ require('__shared/NodeCollection')
 local BotManager	= require('BotManager')
 local BotSpawner	= require('BotSpawner')
 
-function ChatCommands:execute(parts, player)
-	if player == nil or Config.DisableChatCommands == true then
+function ChatCommands:execute(p_Parts, p_Player)
+	if p_Player == nil or Config.DisableChatCommands == true then
 		return
 	end
 
-	if parts[1] == '!row' then
-		if tonumber(parts[2]) == nil then
+	if p_Parts[1] == '!row' then
+		if tonumber(p_Parts[2]) == nil then
 			return
 		end
 
-		local length	= tonumber(parts[2])
-		local spacing	= tonumber(parts[3]) or 2
+		local length	= tonumber(p_Parts[2])
+		local spacing	= tonumber(p_Parts[3]) or 2
 
-		BotSpawner:spawnBotRow(player, length, spacing)
+		BotSpawner:spawnBotRow(p_Player, length, spacing)
 
-	elseif parts[1] == '!tower' then
-		if tonumber(parts[2]) == nil then
+	elseif p_Parts[1] == '!tower' then
+		if tonumber(p_Parts[2]) == nil then
 			return
 		end
 
-		local height = tonumber(parts[2])
-		BotSpawner:spawnBotTower(player, height)
+		local height = tonumber(p_Parts[2])
+		BotSpawner:spawnBotTower(p_Player, height)
 
-	elseif parts[1] == '!grid' then
-		if tonumber(parts[2]) == nil then
+	elseif p_Parts[1] == '!grid' then
+		if tonumber(p_Parts[2]) == nil then
 			return
 		end
 
-		local rows		= tonumber(parts[2])
-		local columns	= tonumber(parts[3]) or tonumber(parts[2])
-		local spacing	= tonumber(parts[4]) or 2
+		local rows		= tonumber(p_Parts[2])
+		local columns	= tonumber(p_Parts[3]) or tonumber(p_Parts[2])
+		local spacing	= tonumber(p_Parts[4]) or 2
 
-		BotSpawner:spawnBotGrid(player, rows, columns, spacing)
+		BotSpawner:spawnBotGrid(p_Player, rows, columns, spacing)
 
 	-- static mode commands
-	elseif parts[1] == '!mimic' then
-		BotManager:setStaticOption(player, 'mode', 3)
+	elseif p_Parts[1] == '!mimic' then
+		BotManager:setStaticOption(p_Player, 'mode', 3)
 
-	elseif parts[1] == '!mirror' then
-		BotManager:setStaticOption(player, 'mode', 4)
+	elseif p_Parts[1] == '!mirror' then
+		BotManager:setStaticOption(p_Player, 'mode', 4)
 
-	elseif parts[1] == '!static' then
-		BotManager:setStaticOption(player, 'mode', 0)
+	elseif p_Parts[1] == '!static' then
+		BotManager:setStaticOption(p_Player, 'mode', 0)
 
 	-- moving bots spawning
-	elseif parts[1] == '!spawnline' then
-		if tonumber(parts[2]) == nil then
+	elseif p_Parts[1] == '!spawnline' then
+		if tonumber(p_Parts[2]) == nil then
 			return
 		end
 
-		local amount	= tonumber(parts[2])
-		local spacing	= tonumber(parts[3]) or 2
+		local amount	= tonumber(p_Parts[2])
+		local spacing	= tonumber(p_Parts[3]) or 2
 
-		BotSpawner:spawnLineBots(player, amount, spacing)
+		BotSpawner:spawnLineBots(p_Player, amount, spacing)
 
-	elseif parts[1] == '!spawnway' then
-		if tonumber(parts[2]) == nil then
+	elseif p_Parts[1] == '!spawnway' then
+		if tonumber(p_Parts[2]) == nil then
 			return
 		end
 
-		local amount = tonumber(parts[2]) or 1
-		local activeWayIndex = tonumber(parts[3]) or 1
+		local amount = tonumber(p_Parts[2]) or 1
+		local activeWayIndex = tonumber(p_Parts[3]) or 1
 		activeWayIndex = math.min(math.max(activeWayIndex, 1), #g_NodeCollection:GetPaths())
 
-		BotSpawner:spawnWayBots(player, amount, false, activeWayIndex)
+		BotSpawner:spawnWayBots(p_Player, amount, false, activeWayIndex)
 
-	elseif parts[1] == '!spawnbots' then
-		if tonumber(parts[2]) == nil then
+	elseif p_Parts[1] == '!spawnbots' then
+		if tonumber(p_Parts[2]) == nil then
 			return
 		end
 
-		local amount = tonumber(parts[2])
+		local amount = tonumber(p_Parts[2])
 
-		BotSpawner:spawnWayBots(player, amount, true)
+		BotSpawner:spawnWayBots(p_Player, amount, true)
 
 	-- respawn moving bots
-	elseif parts[1] == '!respawn' then
+	elseif p_Parts[1] == '!respawn' then
 		local respawning = true
 
-		if tonumber(parts[2]) == 0 then
+		if tonumber(p_Parts[2]) == 0 then
 			respawning = false
 		end
 
@@ -93,10 +93,10 @@ function ChatCommands:execute(parts, player)
 
 		BotManager:setOptionForAll('respawn', respawning)
 
-	elseif parts[1] == '!shoot' then
+	elseif p_Parts[1] == '!shoot' then
 		local shooting = true
 
-		if tonumber(parts[2]) == 0 then
+		if tonumber(p_Parts[2]) == 0 then
 			shooting = false
 		end
 
@@ -105,62 +105,62 @@ function ChatCommands:execute(parts, player)
 		BotManager:setOptionForAll('shoot', shooting)
 
 	-- spawn team settings
-	elseif parts[1] == '!setbotkit' then
-		local kitNumber = tonumber(parts[2]) or 1
+	elseif p_Parts[1] == '!setbotkit' then
+		local kitNumber = tonumber(p_Parts[2]) or 1
 
 		if kitNumber <= 4 and kitNumber >= 0 then
 			Config.BotKit = BotKits[kitNumber]
 		end
 
-	elseif parts[1] == '!setbotcolor' then
-		local botColor = tonumber(parts[2]) or 1
+	elseif p_Parts[1] == '!setbotcolor' then
+		local botColor = tonumber(p_Parts[2]) or 1
 
 		if botColor <= #BotColors and botColor >= 0 then
 			Config.BotColor = BotColors[botColor]
 		end
 
-	elseif parts[1] == '!setaim' then
-		Config.BotAimWorsening = tonumber(parts[2]) or 0.5
+	elseif p_Parts[1] == '!setaim' then
+		Config.BotAimWorsening = tonumber(p_Parts[2]) or 0.5
 		--self:_modifyWeapons(Config.BotAimWorsening) --causes lag. Instead restart round
 		if Debug.Server.COMMAND then
 			print('difficulty set to ' .. Config.BotAimWorsening .. '. Please restart round or level to take effect')
 		end
 
-	elseif parts[1] == '!shootback' then
-		if tonumber(parts[2]) == 0 then
+	elseif p_Parts[1] == '!shootback' then
+		if tonumber(p_Parts[2]) == 0 then
 			Config.ShootBackIfHit = false
 		else
 			Config.ShootBackIfHit = true
 		end
 
-	elseif parts[1] == '!attackmelee' then
-		if tonumber(parts[2]) == 0 then
+	elseif p_Parts[1] == '!attackmelee' then
+		if tonumber(p_Parts[2]) == 0 then
 			Config.MeleeAttackIfClose = false
 		else
 			Config.MeleeAttackIfClose = true
 		end
 
 	-- reset everything
-	elseif parts[1] == '!stopall' then
+	elseif p_Parts[1] == '!stopall' then
 		BotManager:setOptionForAll('shoot', false)
 		BotManager:setOptionForAll('respawning', false)
 		BotManager:setOptionForAll('moveMode', 0)
 
-	elseif parts[1] == '!stop' then
-		BotManager:setOptionForPlayer(player, 'shoot', false)
-		BotManager:setOptionForPlayer(player, 'respawning', false)
-		BotManager:setOptionForPlayer(player, 'moveMode', 0)
+	elseif p_Parts[1] == '!stop' then
+		BotManager:setOptionForPlayer(p_Player, 'shoot', false)
+		BotManager:setOptionForPlayer(p_Player, 'respawning', false)
+		BotManager:setOptionForPlayer(p_Player, 'moveMode', 0)
 
-	elseif parts[1] == '!kickplayer' then
-		BotManager:destroyPlayerBots(player)
+	elseif p_Parts[1] == '!kickp_Player' then
+		BotManager:destroyPlayerBots(p_Player)
 
-	elseif parts[1] == '!kick' then
-		local amount = tonumber(parts[2]) or 1
+	elseif p_Parts[1] == '!kick' then
+		local amount = tonumber(p_Parts[2]) or 1
 
 		BotManager:destroyAll(amount)
 
-	elseif parts[1] == '!kickteam' then
-		local teamToKick = tonumber(parts[2]) or 1
+	elseif p_Parts[1] == '!kickteam' then
+		local teamToKick = tonumber(p_Parts[2]) or 1
 
 		if teamToKick < 1 or teamToKick > 2 then
 			return
@@ -170,47 +170,47 @@ function ChatCommands:execute(parts, player)
 
 		BotManager:destroyAll(nil, teamId)
 
-	elseif parts[1] == '!kickall' then
+	elseif p_Parts[1] == '!kickall' then
 		BotManager:destroyAll()
 
-	elseif parts[1] == '!kill' then
-		BotManager:killPlayerBots(player)
+	elseif p_Parts[1] == '!kill' then
+		BotManager:killPlayerBots(p_Player)
 
-	elseif parts[1] == '!killall' then
+	elseif p_Parts[1] == '!killall' then
 		BotManager:killAll()
 
 	-- waypoint stuff
-	elseif parts[1] == '!getnodes' then
-		NetEvents:SendToLocal('ClientNodeEditor:ReceiveNodes', player, #g_NodeCollection:Get())
+	elseif p_Parts[1] == '!getnodes' then
+		NetEvents:SendToLocal('ClientNodeEditor:ReceiveNodes', p_Player, #g_NodeCollection:Get())
 
-	elseif parts[1] == '!sendnodes' then
-		NetEvents:SendToLocal('ClientNodeEditor:SaveNodes', player)
+	elseif p_Parts[1] == '!sendnodes' then
+		NetEvents:SendToLocal('ClientNodeEditor:SaveNodes', p_Player)
 
-	elseif parts[1] == '!trace' then
-		NetEvents:SendToLocal('ClientNodeEditor:StartTrace', player)
+	elseif p_Parts[1] == '!trace' then
+		NetEvents:SendToLocal('ClientNodeEditor:StartTrace', p_Player)
 
-	elseif parts[1] == '!tracedone' then
-		NetEvents:SendToLocal('ClientNodeEditor:EndTrace', player)
+	elseif p_Parts[1] == '!tracedone' then
+		NetEvents:SendToLocal('ClientNodeEditor:EndTrace', p_Player)
 
 
-	elseif parts[1] == '!cleartrace' then
-		NetEvents:SendToLocal('ClientNodeEditor:ClearTrace', player)
+	elseif p_Parts[1] == '!cleartrace' then
+		NetEvents:SendToLocal('ClientNodeEditor:ClearTrace', p_Player)
 
-	elseif parts[1] == '!clearalltraces' then
+	elseif p_Parts[1] == '!clearalltraces' then
 		g_NodeCollection:Clear()
 		NetEvents:SendLocal('NodeCollection:Clear')
 
-	elseif parts[1] == '!printtrans' then
+	elseif p_Parts[1] == '!printtrans' then
 		print('!printtrans')
 		ChatManager:Yell('!printtrans check server console', 2.5)
-		print(player.soldier.worldTransform)
-		print(player.soldier.worldTransform.trans.x)
-		print(player.soldier.worldTransform.trans.y)
-		print(player.soldier.worldTransform.trans.z)
+		print(p_Player.soldier.worldTransform)
+		print(p_Player.soldier.worldTransform.trans.x)
+		print(p_Player.soldier.worldTransform.trans.y)
+		print(p_Player.soldier.worldTransform.trans.z)
 
-	elseif parts[1] == '!tracesave' then
-		local traceIndex = tonumber(parts[2]) or 0
-		NetEvents:SendToLocal('ClientNodeEditor:SaveTrace', player, traceIndex)
+	elseif p_Parts[1] == '!tracesave' then
+		local traceIndex = tonumber(p_Parts[2]) or 0
+		NetEvents:SendToLocal('ClientNodeEditor:SaveTrace', p_Player, traceIndex)
 	end
 end
 

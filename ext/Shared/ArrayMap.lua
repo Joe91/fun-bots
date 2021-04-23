@@ -4,37 +4,37 @@ function ArrayMap:__init()
 	self._entries = {}
 end
 
-function ArrayMap:add(value)
-	table.insert(self._entries, value)
+function ArrayMap:add(p_Value)
+	table.insert(self._entries, p_Value)
 end
 
-function ArrayMap:deleteByIndex(index)
-	table.remove(self._entries, index)
+function ArrayMap:deleteByIndex(p_Index)
+	table.remove(self._entries, p_Index)
 end
 
-function ArrayMap:exists(value)
+function ArrayMap:exists(p_Value)
 	local index = {}
 
 	for key, data in pairs(self._entries) do
 		index[data] = key
 	end
 
-	if index[value] ~= nil then
+	if index[p_Value] ~= nil then
 		return true
 	end
 
 	return false
 end
 
-function ArrayMap:delete(value)
+function ArrayMap:delete(p_Value)
 	local index = {}
 
 	for key, data in pairs(self._entries) do
 		index[data] = key
 	end
 
-	if index[value] ~= nil then
-		self:deleteByIndex(index[value])
+	if index[p_Value] ~= nil then
+		self:deleteByIndex(index[p_Value])
 	end
 end
 
@@ -50,8 +50,8 @@ function ArrayMap:getEntries()
 	return self._entries
 end
 
-function ArrayMap:join(character)
-	return table.concat(self._entries, character)
+function ArrayMap:join(p_Character)
+	return table.concat(self._entries, p_Character)
 end
 
 function ArrayMap:_tostring()

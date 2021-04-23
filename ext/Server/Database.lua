@@ -31,10 +31,10 @@ function Database:getError()
 	return SQL:Error()
 end
 
-function Database:query(query, parameters)
+function Database:query(p_Query, p_Parameters)
 	SQL:Open()
-	-- @ToDo build query with given parameters
-	local result = SQL:Query(query)
+	-- @ToDo build p_Query with given p_Parameters
+	local result = SQL:Query(p_Query)
 
 	if not result then
 		self.lastError = 'Failed to execute query: ' .. self:getError()
@@ -47,12 +47,12 @@ function Database:query(query, parameters)
 	return result
 end
 
-function Database:createTable(tableName, definitions, names, additional)
+function Database:createTable(p_TableName, p_Definitions, p_Names, p_Additional)
 	local entries		= ArrayMap()
 	local additionals	= ArrayMap()
 
-	for index, value in ipairs(definitions) do
-		local name = names[index]
+	for index, value in ipairs(p_Definitions) do
+		local name = p_Names[index]
 
 		if value == DatabaseField.Text then
 			entries:add(name .. ' TEXT')
@@ -72,18 +72,18 @@ function Database:createTable(tableName, definitions, names, additional)
 		end
 	end
 
-	if additional ~= nil then
-		for index, value in pairs(additional) do
+	if p_Additional ~= nil then
+		for index, value in pairs(p_Additional) do
 			entries:add(value)
-			additionals:add(value)
+			p_Additionals:add(value)
 		end
 	end
 
-	return self:query('CREATE TABLE IF NOT EXISTS ' .. tableName .. ' (' .. entries:join(', ') .. ')')
+	return self:query('CREATE TABLE IF NOT EXISTS ' .. p_TableName .. ' (' .. entries:join(', ') .. ')')
 end
 
-function Database:single(query)
-	local results = self:query(query)
+function Database:single(p_Query)
+	local results = self:query(p_Query)
 
 	if results == nil then
 		return nil
@@ -92,21 +92,21 @@ function Database:single(query)
 	return results[1]
 end
 
-function Database:count(query, parameters)
-	local results = self:query(query, parameters)
+function Database:count(p_Query, p_Parameters)
+	local results = self:query(p_Query, p_Parameters)
 
 	return #results
 end
 
-function Database:fetch(query)
-	return self:query(query)
+function Database:fetch(p_Query)
+	return self:query(p_Query)
 end
 
-function Database:update(tableName, parameters, where)
+function Database:update(p_TableName, p_Parameters, p_Where)
 	local fields	= ArrayMap()
 	local found		= nil
 
-	for name, value in pairs(parameters) do
+	for name, value in pairs(p_Parameters) do
 		if value == nil then
 			value = 'NULL'
 
@@ -126,7 +126,7 @@ function Database:update(tableName, parameters, where)
 			value = '\'' .. tostring(value) .. '\''
 		end
 
-		if where == name then
+		if p_Where == name then
 			found = value
 		end
 
@@ -134,10 +134,10 @@ function Database:update(tableName, parameters, where)
 	end
 
 	if Debug.Server.DATABASE then
-		print('UPDATE `' .. tableName .. '` SET ' .. fields:join(',') .. ' WHERE `' .. where .. '`=' .. found)
+		print('UPDATE `' .. p_TableName .. '` SET ' .. fields:join(',') .. ' WHERE `' .. p_Where .. '`=' .. found)
 	end
 
-	return self:query('UPDATE `' .. tableName .. '` SET ' .. fields:join(', ') .. ' WHERE `' .. where .. '`=\'' .. found .. '\'')
+	return self:query('UPDATE `' .. p_TableName .. '` SET ' .. fields:join(', ') .. ' WHERE `' .. p_Where .. '`=\'' .. found .. '\'')
 end
 
 function Database:executeBatch()
@@ -146,13 +146,13 @@ function Database:executeBatch()
 	print(self:getError())
 end
 
-function Database:batchQuery(tableName, parameters, where)
+function Database:batchQuery(p_TableName, p_Parameters, p_Where)
 	local names		= ArrayMap()
 	local values	= ArrayMap()
 	local fields	= ArrayMap()
 	local found		= nil
 
-	for name, value in pairs(parameters) do
+	for name, value in pairs(p_Parameters) do
 		names:add('`' .. name .. '`')
 
 		if value == nil then
@@ -180,38 +180,38 @@ function Database:batchQuery(tableName, parameters, where)
 			value = tostring(value)
 		end
 
-		if where == name then
+		if p_Where == name then
 			found = value
 		end
 
-		if where ~= name then
+		if p_Where ~= name then
 			fields:add('`' .. name .. '`=' .. value .. '')
 		end
 	end
 
-	--batches:add('UPDATE `' .. tableName .. '` SET ' .. fields:join(', ') .. ' WHERE `' .. where .. '`=\'' .. found .. '\'')
-	--batches:add('INSERT OR REPLACE INTO ' .. tableName .. ' (' .. names:join(', ') .. ') VALUES (' .. values:join(', ') .. ')')
-	batched = 'INSERT INTO ' .. tableName .. ' (' .. names:join(', ') .. ') VALUES '
+	--batches:add('UPDATE `' .. p_TableName .. '` SET ' .. fields:join(', ') .. ' WHERE `' .. p_Where .. '`=\'' .. found .. '\'')
+	--batches:add('INSERT OR REPLACE INTO ' .. p_TableName .. ' (' .. names:join(', ') .. ') VALUES (' .. values:join(', ') .. ')')
+	batched = 'INSERT INTO ' .. p_TableName .. ' (' .. names:join(', ') .. ') VALUES '
 	batches:add('(' .. values:join(', ') .. ')')
 
 	return true
 end
 
-function Database:delete(tableName, parameters)
+function Database:delete(p_TableName, p_Parameters)
 	local where		= ArrayMap()
 
-	for name, value in pairs(parameters) do
+	for name, value in pairs(p_Parameters) do
 		where:add('`' .. name .. '`=\'' ..value .. '\'')
 	end
 
-	return self:query('DELETE FROM ' .. tableName .. ' WHERE ' .. where:join(' AND '))
+	return self:query('DELETE FROM ' .. p_TableName .. ' WHERE ' .. where:join(' AND '))
 end
 
-function Database:insert(tableName, parameters)
+function Database:insert(p_TableName, p_Parameters)
 	local names		= ArrayMap()
 	local values	= ArrayMap()
 
-	for name, value in pairs(parameters) do
+	for name, value in pairs(p_Parameters) do
 		names:add('`' .. name .. '`')
 
 		if value == nil then
@@ -234,7 +234,7 @@ function Database:insert(tableName, parameters)
 		end
 	end
 
-	self:query('INSERT INTO ' .. tableName .. ' (' .. names:join(', ') .. ') VALUES (' .. values:join(', ') .. ')')
+	self:query('INSERT INTO ' .. p_TableName .. ' (' .. names:join(', ') .. ') VALUES (' .. values:join(', ') .. ')')
 
 	return SQL:LastInsertId()
 end

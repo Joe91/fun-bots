@@ -1,11 +1,11 @@
 class('Weapon')
 
-function Weapon:__init(name, extension, unlocks, type, fullResource)
-	self.name		= name
-	self.extension	= extension
-	self.unlocks 	= unlocks
-	self.type		= type
-	self.fullResource = fullResource
+function Weapon:__init(p_Name, p_Extension, p_Unlocks, p_Type, p_FullResource)
+	self.name		= p_Name
+	self.extension	= p_Extension
+	self.unlocks 	= p_Unlocks
+	self.type		= p_Type
+	self.fullResource = p_FullResource
 
 	self.damage		= 0
     self.endDamage = 0
@@ -164,17 +164,17 @@ function Weapon:learnStatsValues()
 	self.needvalues 	= false
 end
 
-function Weapon:getResourcePath(unlock)
+function Weapon:getResourcePath(p_Unlock)
 	local unl = ""
 	if self.fullResource == nil then
 		local ext = ""
-		if unlock ~= nil then
+		if p_Unlock ~= nil then
 
-			if (string.starts(unlock, 'Weapons/')) then
-				return unlock
+			if (string.starts(p_Unlock, 'Weapons/')) then
+				return p_Unlock
 			end
 
-			unl = "_"..unlock
+			unl = "_"..p_Unlock
 		end
 		if self.extension ~= '' then
 			ext = self.extension.."_"
@@ -182,13 +182,13 @@ function Weapon:getResourcePath(unlock)
 
 		return	"Weapons/"..ext..self.name.."/U_"..self.name..unl
 	else
-		if unlock ~= nil then
+		if p_Unlock ~= nil then
 
-			if (string.starts(unlock, 'Weapons/')) then
-				return unlock
+			if (string.starts(p_Unlock, 'Weapons/')) then
+				return p_Unlock
 			end
 
-			unl = "_"..unlock
+			unl = "_"..p_Unlock
 		end
 		return self.fullResource..unl
 	end

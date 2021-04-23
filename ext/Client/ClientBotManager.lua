@@ -168,31 +168,31 @@ function ClientBotManager:_onUpdate(p_Delta, p_Pass)
 	end
 end
 
-function ClientBotManager:_checkForBotBotAttack(pos1, pos2, name1, name2, inVehicle)
+function ClientBotManager:_checkForBotBotAttack(p_StartPos, p_EndPos, p_ShooterBotName, p_BotName, p_InVehicle)
 	--check for clear view to startpoint
-	local startPos 	= Vec3(pos1.x, pos1.y + 1.0, pos1.z)
-	local endPos 	= Vec3(pos2.x, pos2.y + 1.0, pos2.z)
+	local startPos 	= Vec3(p_StartPos.x, p_StartPos.y + 1.0, p_StartPos.z)
+	local endPos 	= Vec3(p_EndPos.x, p_EndPos.y + 1.0, p_EndPos.z)
 	local raycast = nil
-	if inVehicle then
+	if p_InVehicle then
 		raycast	= RaycastManager:Raycast(startPos, endPos, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckPhantoms | RayCastFlags.DontCheckGroup | RayCastFlags.IsAsyncRaycast)
 	else
 		raycast	= RaycastManager:Raycast(startPos, endPos, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.IsAsyncRaycast)
 	end
 
 	if (raycast == nil or raycast.rigidBody == nil) then
-		NetEvents:SendLocal("BotShootAtBot", name1, name2)
+		NetEvents:SendLocal("BotShootAtBot", p_ShooterBotName, p_BotName)
 	end
 end
 
-function ClientBotManager:_onBulletCollision(hook, entity, hit, shooter)
-	if (hit.rigidBody.typeInfo.name == 'CharacterPhysicsEntity') then
-		if Utilities:isBot(shooter) then
+function ClientBotManager:_onBulletCollision(p_HookCtx, p_Entity, p_Hit, p_Shooter)
+	if (p_Hit.rigidBody.typeInfo.name == 'CharacterPhysicsEntity') then
+		if Utilities:isBot(p_Shooter) then
 			local player = PlayerManager:GetLocalPlayer()
 
 			if (player.soldier ~= nil) then
-				local dx	= math.abs(player.soldier.worldTransform.trans.x - hit.position.x)
-				local dz	= math.abs(player.soldier.worldTransform.trans.z - hit.position.z)
-				local dy	= hit.position.y - player.soldier.worldTransform.trans.y --player y is on ground. Hit must be higher to be valid
+				local dx	= math.abs(player.soldier.worldTransform.trans.x - p_Hit.position.x)
+				local dz	= math.abs(player.soldier.worldTransform.trans.z - p_Hit.position.z)
+				local dy	= p_Hit.position.y - player.soldier.worldTransform.trans.y --player y is on ground. Hit must be higher to be valid
 
 				if (dx < 1 and dz < 1 and dy < 2 and dy > 0) then --included bodyhight
 					local isHeadshot	= false
@@ -202,7 +202,7 @@ function ClientBotManager:_onBulletCollision(hook, entity, hit, shooter)
 						isHeadshot = true
 					end
 
-					NetEvents:SendLocal('ClientDamagePlayer', shooter.name, false, isHeadshot)
+					NetEvents:SendLocal('ClientDamagePlayer', p_Shooter.name, false, isHeadshot)
 				end
 			end
 		end

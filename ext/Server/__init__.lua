@@ -63,9 +63,9 @@ function FunBotServer:_onExtensionLoaded()
 	end
 end
 
-function FunBotServer:_onPartitionLoaded(partition)
-	g_WeaponModification:OnPartitionLoaded(partition)
-	for _, instance in pairs(partition.instances) do
+function FunBotServer:_onPartitionLoaded(p_Partition)
+	g_WeaponModification:OnPartitionLoaded(p_Partition)
+	for _, instance in pairs(p_Partition.instances) do
 		if USE_REAL_DAMAGE then
 			if instance:Is("SyncedGameSettings") then
 				instance = SyncedGameSettings(instance)
@@ -99,21 +99,21 @@ function FunBotServer:_onPartitionLoaded(partition)
 	end
 end
 
-function FunBotServer:_onRequestClientSettings(player)
-	NetEvents:SendToLocal('WriteClientSettings', player, Config, true)
-	BotManager:registerActivePlayer(player)
+function FunBotServer:_onRequestClientSettings(p_Player)
+	NetEvents:SendToLocal('WriteClientSettings', p_Player, Config, true)
+	BotManager:registerActivePlayer(p_Player)
 end
 
-function FunBotServer:_onLevelLoaded(levelName, gameMode)
+function FunBotServer:_onLevelLoaded(p_LevelName, p_GameMode)
 	local customGameMode = ServerUtils:GetCustomGameModeName()
 	if customGameMode ~= nil then
-		gameMode = customGameMode
+		p_GameMode = customGameMode
 	end
 	g_WeaponModification:ModifyAllWeapons(Config.BotAimWorsening, Config.BotSniperAimWorsening)
 	WeaponList:onLevelLoaded()
 
 	if Debug.Server.INFO then
-		print('level ' .. levelName .. ' loaded...')
+		print('level ' .. p_LevelName .. ' loaded...')
 	end
 
 	--get RespawnDelay
@@ -181,64 +181,64 @@ function FunBotServer:_onLevelLoaded(levelName, gameMode)
     end
 
 	Globals.NrOfTeams = 2
-	if gameMode == 'TeamDeathMatchC0' or gameMode == 'TeamDeathMatch0' then
+	if p_GameMode == 'TeamDeathMatchC0' or p_GameMode == 'TeamDeathMatch0' then
 		Globals.IsTdm = true
 	else
 		Globals.IsTdm = false
 	end
-	if gameMode == 'SquadDeathMatch0' then
+	if p_GameMode == 'SquadDeathMatch0' then
 		Globals.NrOfTeams = 4
 		Globals.IsSdm = true
 	else
 		Globals.IsSdm = false
 	end
-	if gameMode == 'GunMaster0' then
+	if p_GameMode == 'GunMaster0' then
 		Globals.IsGm = true
 	else
 		Globals.IsGm = false
 	end
-	if gameMode == 'Scavenger0' then
+	if p_GameMode == 'Scavenger0' then
 		Globals.IsScavenger = true
 	else
 		Globals.IsScavenger = false
 	end
 
-	if gameMode == 'ConquestLarge0' or
-	gameMode == 'ConquestSmall0' or
-	gameMode == 'ConquestAssaultLarge0' or
-	gameMode == 'ConquestAssaultSmall0' or
-	gameMode == 'ConquestAssaultSmall1' or
-	gameMode == 'BFLAG'then
+	if p_GameMode == 'ConquestLarge0' or
+	p_GameMode == 'ConquestSmall0' or
+	p_GameMode == 'ConquestAssaultLarge0' or
+	p_GameMode == 'ConquestAssaultSmall0' or
+	p_GameMode == 'ConquestAssaultSmall1' or
+	p_GameMode == 'BFLAG'then
 		Globals.IsConquest = true
 	else
 		Globals.IsConquest = false
 	end
 
-	if gameMode == 'ConquestAssaultLarge0' or
-	gameMode == 'ConquestAssaultSmall0' or
-	gameMode == 'ConquestAssaultSmall1' then
+	if p_GameMode == 'ConquestAssaultLarge0' or
+	p_GameMode == 'ConquestAssaultSmall0' or
+	p_GameMode == 'ConquestAssaultSmall1' then
 		Globals.IsAssault = true
 	else
 		Globals.IsAssault = false
 	end
 
-	if gameMode == 'RushLarge0' then
+	if p_GameMode == 'RushLarge0' then
 		Globals.IsRush = true
 	else
 		Globals.IsRush = false
 	end
 
-	g_NodeEditor:onLevelLoaded(levelName, gameMode)
+	g_NodeEditor:onLevelLoaded(p_LevelName, p_GameMode)
 	g_GameDirector:onLevelLoaded()
 	g_GameDirector:initObjectives()
 	BotSpawner:onLevelLoaded()
 	NetEvents:BroadcastUnreliableLocal('WriteClientSettings', Config, true)
 end
 
-function FunBotServer:_onChat(player, recipientMask, message)
-	local messageParts = string.lower(message):split(' ')
+function FunBotServer:_onChat(p_Player, p_RecipientMask, p_Message)
+	local messageParts = string.lower(p_Message):split(' ')
 
-	ChatCommands:execute(messageParts, player)
+	ChatCommands:execute(messageParts, p_Player)
 end
 
 -- Singleton.

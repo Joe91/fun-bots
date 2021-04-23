@@ -15,10 +15,10 @@ function RCONCommands:__init()
 		-- Get Config
 		GET_CONFIG	= {
 			Name		= 'funbots.config',
-			Callback	= (function(command, args)
+			Callback	= (function(p_Command, p_Args)
 				if Debug.Server.RCON then
 					print('[RCON] call funbots.config')
-					print(json.encode(args))
+					print(json.encode(p_Args))
 				end
 
 				return {
@@ -37,10 +37,10 @@ function RCONCommands:__init()
 		SET_CONFIG	= {
 			Name		= 'funbots.set.config',
 			Parameters	= { 'Name', 'Value' },
-			Callback	= (function(command, args)
+			Callback	= (function(p_Command, p_Args)
 				if Debug.Server.RCON then
 					print('[RCON] call funbots.set.config')
-					print(json.encode(args))
+					print(json.encode(p_Args))
 				end
 
 				local old	= {
@@ -53,8 +53,8 @@ function RCONCommands:__init()
 					Value	= nil
 				}
 
-				local name	= args[1]
-				local value	= args[2]
+				local name	= p_Args[1]
+				local value	= p_Args[2]
 
 				if name == nil then
 					return {'ERROR', 'Needing <Name>.'}
@@ -278,7 +278,7 @@ function RCONCommands:__init()
 		-- Clear/Reset Botnames
 		CLEAR_BOTNAMES	= {
 			Name		= 'funbots.clear.BotNames',
-			Callback	= (function(command, args)
+			Callback	= (function(p_Command, p_Args)
 				BotNames = {}
 
 				return { 'OK' }
@@ -289,8 +289,8 @@ function RCONCommands:__init()
 		ADD_BOTNAMES	= {
 			Name		= 'funbots.add.BotNames',
 			Parameters	= { 'String' },
-			Callback	= (function(command, args)
-				local value	= args[1]
+			Callback	= (function(p_Command, p_Args)
+				local value	= p_Args[1]
 
 				if value == nil then
 					return {'ERROR', 'Needing <String>.'}
@@ -306,8 +306,8 @@ function RCONCommands:__init()
 		REPLACE_BOTNAMES	= {
 			Name		= 'funbots.replace.BotNames',
 			Parameters	= { 'JSONArray' },
-			Callback	= (function(command, args)
-				local value	= args[1]
+			Callback	= (function(p_Command, p_Args)
+				local value	= p_Args[1]
 
 				if value == nil then
 					return {'ERROR', 'Needing <JSONArray>.'}
@@ -328,7 +328,7 @@ function RCONCommands:__init()
 		-- Kick All
 		KICKALLL	= {
 			Name		= 'funbots.kickAll',
-			Callback	= (function(command, args)
+			Callback	= (function(p_Command, p_Args)
 				BotManager:destroyAll()
 
 				return { 'OK' }
@@ -339,8 +339,8 @@ function RCONCommands:__init()
 		KICKBOT	= {
 			Name		= 'funbots.kickBot',
 			Parameters	= { 'Name' },
-			Callback	= (function(command, args)
-				local name	= args[1]
+			Callback	= (function(p_Command, p_Args)
+				local name	= p_Args[1]
 				if name == nil then
 					return {'ERROR', 'Name needed.'}
 				end
@@ -353,7 +353,7 @@ function RCONCommands:__init()
 		-- Kill All
 		KILLALL	= {
 			Name		= 'funbots.killAll',
-			Callback	= (function(command, args)
+			Callback	= (function(p_Command, p_Args)
 				BotManager:killAll()
 
 				return { 'OK' }
@@ -364,9 +364,9 @@ function RCONCommands:__init()
 		SPAWN	= {
 			Name		= 'funbots.spawn',
 			Parameters	= { 'Amount', 'Team' },
-			Callback	= (function(command, args)
-				local value	= args[1]
-				local team	= args[2]
+			Callback	= (function(p_Command, p_Args)
+				local value	= p_Args[1]
+				local team	= p_Args[2]
 
 				if value == nil then
 					return {'ERROR', 'Needing Spawn amount.'}
@@ -396,7 +396,7 @@ function RCONCommands:__init()
 		}
 	}
 
-	self:createCommand('funbots', (function(command, args)
+	self:createCommand('funbots', (function(p_Command, p_Args)
 		local result = {}
 
 		table.insert(result, 'OK')
@@ -425,9 +425,9 @@ function RCONCommands:create()
 	end
 end
 
-function RCONCommands:createCommand(name, callback)
-	RCON:RegisterCommand(name, RemoteCommandFlag.RequiresLogin, function(command, args, loggedIn)
-		return callback(command, args)
+function RCONCommands:createCommand(p_Name, p_Callback)
+	RCON:RegisterCommand(p_Name, RemoteCommandFlag.RequiresLogin, function(p_Command, p_Args, p_LoggedIn)
+		return p_Callback(p_Command, p_Args)
 	end)
 end
 

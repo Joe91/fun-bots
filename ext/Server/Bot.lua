@@ -7,11 +7,11 @@ require('PathSwitcher')
 
 local Utilities = require('__shared/Utilities')
 
-function Bot:__init(player)
+function Bot:__init(p_Player)
 	--Player Object
-	self.player = player
-	self.name = player.name
-	self.id = player.id
+	self.player = p_Player
+	self.name = p_Player.name
+	self.id = p_Player.id
 
 	--common settings
 	self._spawnMode = 0
@@ -90,13 +90,13 @@ function Bot:__init(player)
 	self._spawnTransform = LinearTransform()
 end
 
-function Bot:onUpdate(dt)
+function Bot:onUpdate(p_DeltaTime)
 	if self.player.soldier ~= nil then
 		self.player.soldier:SingleStepEntry(self.player.controlledEntryId)
 	end
 
 	if Globals.IsInputAllowed then
-		self._updateTimer		= self._updateTimer + dt
+		self._updateTimer		= self._updateTimer + p_DeltaTime
 
 		self:_updateYaw()
 
@@ -113,9 +113,9 @@ function Bot:onUpdate(dt)
 	end
 end
 
-function Bot:_setInput(input, value)
-	self.activeInputs[input] = {
-	 	value = value,
+function Bot:_setInput(p_Input, p_Value)
+	self.activeInputs[p_Input] = {
+	 	value = p_Value,
 		reset = false
 	}
 end
@@ -134,33 +134,33 @@ function Bot:_updateInputs()
 end
 
 --public functions
-function Bot:revive(player)
-	if self.kit == "Assault" and player.corpse ~= nil then
+function Bot:revive(p_Player)
+	if self.kit == "Assault" and p_Player.corpse ~= nil then
 		if Config.BotsRevive then
 			self._reviveActive = true
 			self._shootPlayer = nil
-			self._shootPlayerName = player.name
+			self._shootPlayerName = p_Player.name
 		end
 	end
 end
 
-function Bot:shootAt(player, ignoreYaw)
+function Bot:shootAt(p_Player, p_IgnoreYaw)
 	if self._actionActive or self._reviveActive or self._grenadeActive then
 		return false
 	end
 
 	-- don't shoot at teammates
-	if self.player.teamId == player.teamId then
+	if self.player.teamId == p_Player.teamId then
 		return false
 	end
 
-	if player.soldier == nil or self.player.soldier == nil then
+	if p_Player.soldier == nil or self.player.soldier == nil then
 		return false
 	end
 
 	-- don't shoot if too far away
-	local distance = player.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans)
-	if not ignoreYaw then
+	local distance = p_Player.soldier.worldTransform.trans:Distance(self.player.soldier.worldTransform.trans)
+	if not p_IgnoreYaw then
 
 		if self.activeWeapon.type ~= "Sniper" and distance > Config.MaxShootDistanceNoSniper then
 			return false
@@ -168,7 +168,7 @@ function Bot:shootAt(player, ignoreYaw)
 	end
 
 	-- check for vehicles
-	local type = self:_findOutVehicleType(player)
+	local type = self:_findOutVehicleType(p_Player)
 	if type ~= 0 and self:_ceckForVehicleAttack(type, distance) == 0 then
 		return false
 	end
@@ -176,10 +176,10 @@ function Bot:shootAt(player, ignoreYaw)
 	local dYaw		= 0
 	local fovHalf	= 0
 
-	if not ignoreYaw then
+	if not p_IgnoreYaw then
 		local oldYaw	= self.player.input.authoritativeAimingYaw
-		local dy		= player.soldier.worldTransform.trans.z - self.player.soldier.worldTransform.trans.z
-		local dx		= player.soldier.worldTransform.trans.x - self.player.soldier.worldTransform.trans.x
+		local dy		= p_Player.soldier.worldTransform.trans.z - self.player.soldier.worldTransform.trans.z
+		local dx		= p_Player.soldier.worldTransform.trans.x - self.player.soldier.worldTransform.trans.x
 		local yaw		= (math.atan(dy, dx) > math.pi / 2) and (math.atan(dy, dx) - math.pi / 2) or (math.atan(dy, dx) + 3 * math.pi / 2)
 
 		dYaw			= math.abs(oldYaw-yaw)
@@ -191,14 +191,14 @@ function Bot:shootAt(player, ignoreYaw)
 		fovHalf = Config.FovForShooting / 360 * math.pi
 	end
 
-	if dYaw < fovHalf or ignoreYaw then
+	if dYaw < fovHalf or p_IgnoreYaw then
 		if self._shoot then
 			if self._shootPlayer == nil or self._shootModeTimer > Config.BotMinTimeShootAtPlayer or (self.knifeMode and self._shootModeTimer > (Config.BotMinTimeShootAtPlayer/2)) then
 				self._shootModeTimer		= 0
-				self._shootPlayerName		= player.name
+				self._shootPlayerName		= p_Player.name
 				self._shootPlayer			= nil
 				self._lastShootPlayer 		= nil
-				self._lastTargetTrans 		= player.soldier.worldTransform.trans:Clone()
+				self._lastTargetTrans 		= p_Player.soldier.worldTransform.trans:Clone()
 				self._knifeWayPositions 	= {}
 				self._shotTimer				= - (Config.BotFirstShotDelay + math.random()*self._skill)
 
@@ -255,47 +255,47 @@ function Bot:resetVars()
 	self._weaponToUse 			= "Primary"
 end
 
-function Bot:setVarsStatic(player)
+function Bot:setVarsStatic(p_Player)
 	self._spawnMode		= 0
 	self._moveMode		= 0
 	self._pathIndex		= 0
 	self._respawning	= false
 	self._shoot			= false
-	self._targetPlayer	= player
+	self._targetPlayer	= p_Player
 end
 
-function Bot:setVarsSimpleMovement(player, spawnMode, transform)
-	self._spawnMode		= spawnMode
+function Bot:setVarsSimpleMovement(p_Player, p_SpawnMode, p_Transform)
+	self._spawnMode		= p_SpawnMode
 	self._moveMode		= 2
 	self._botSpeed		= 3
 	self._pathIndex		= 0
 	self._respawning	= false
 	self._shoot			= false
-	self._targetPlayer	= player
+	self._targetPlayer	= p_Player
 
-	if transform ~= nil then
-		self._spawnTransform = transform
+	if p_Transform ~= nil then
+		self._spawnTransform = p_Transform
 	end
 end
 
-function Bot:setVarsWay(player, useRandomWay, pathIndex, currentWayPoint, inverseDirection)
-	if useRandomWay then
+function Bot:setVarsWay(p_Player, p_UseRandomWay, p_PathIndex, p_CurrentWayPoint, p_InverseDirection)
+	if p_UseRandomWay then
 		self._spawnMode		= 5
 		self._targetPlayer	= nil
 		self._shoot			= Globals.AttackWayBots
 		self._respawning	= Globals.RespawnWayBots
 	else
 		self._spawnMode		= 4
-		self._targetPlayer	= player
+		self._targetPlayer	= p_Player
 		self._shoot			= false
 		self._respawning	= false
 	end
 
 	self._botSpeed				= 3
 	self._moveMode				= 5
-	self._pathIndex				= pathIndex
-	self._currentWayPoint		= currentWayPoint
-	self._invertPathDirection	= inverseDirection
+	self._pathIndex				= p_PathIndex
+	self._currentWayPoint		= p_CurrentWayPoint
+	self._invertPathDirection	= p_InverseDirection
 end
 
 function Bot:isStaticMovement()
@@ -306,27 +306,27 @@ function Bot:isStaticMovement()
 	end
 end
 
-function Bot:setMoveMode(moveMode)
-	self._moveMode = moveMode
+function Bot:setMoveMode(p_MoveMode)
+	self._moveMode = p_MoveMode
 end
 
-function Bot:setRespawn(respawn)
-	self._respawning = respawn
+function Bot:setRespawn(p_Respawn)
+	self._respawning = p_Respawn
 end
 
-function Bot:setShoot(shoot)
-	self._shoot = shoot
+function Bot:setShoot(p_Shoot)
+	self._shoot = p_Shoot
 end
 
-function Bot:setSpeed(speed)
-	self._botSpeed = speed
+function Bot:setSpeed(p_Speed)
+	self._botSpeed = p_Speed
 end
 
-function Bot:setObjective(objective)
-	self._objective = objective or ''
+function Bot:setObjective(p_Objective)
+	self._objective = p_Objective or ''
 end
 
-function Bot:getObjective(objective)
+function Bot:getObjective(p_Objective)
 	return self._objective
 end
 
@@ -400,21 +400,21 @@ function Bot:resetSpawnVars()
 	end
 end
 
-function Bot:clearPlayer(player)
-	if self._shootPlayer == player then
+function Bot:clearPlayer(p_Player)
+	if self._shootPlayer == p_Player then
 		self._shootPlayer = nil
 	end
 
-	if self._targetPlayer == player then
+	if self._targetPlayer == p_Player then
 		self._targetPlayer = nil
 	end
 
-	if self._lastShootPlayer == player then
+	if self._lastShootPlayer == p_Player then
 		self._lastShootPlayer = nil
 	end
 
 	local currentShootPlayer = PlayerManager:GetPlayerByName(self._shootPlayerName)
-	if currentShootPlayer == player then
+	if currentShootPlayer == p_Player then
 		self._shootPlayerName = ""
 	end
 end
@@ -627,10 +627,10 @@ function Bot:_updateYaw()
 	self.player.input.authoritativeAimingPitch	= self._targetPitch
 end
 
-function Bot:_findOutVehicleType(player)
+function Bot:_findOutVehicleType(p_Player)
 	local type = 0 -- no vehicle
-	if player.attachedControllable ~= nil then
-		local vehicleName = VehicleTable[VehicleEntityData(player.attachedControllable.data).controllableType:gsub(".+/.+/","")]
+	if p_Player.attachedControllable ~= nil then
+		local vehicleName = VehicleTable[VehicleEntityData(p_Player.attachedControllable.data).controllableType:gsub(".+/.+/","")]
 		--print(vehicleName)
 		-- Tank
 		if vehicleName == "[LAV-25]" or
@@ -699,19 +699,19 @@ function Bot:_findOutVehicleType(player)
 	return type
 end
 
-function Bot:_ceckForVehicleAttack(type, distance)
+function Bot:_ceckForVehicleAttack(p_Type, p_Distance)
 	local attackMode = 0 -- no attack
-	if type == 4 and distance < Config.MaxRaycastDistance then
+	if p_Type == 4 and p_Distance < Config.MaxRaycastDistance then
 		attackMode = 1 -- attack with rifle
-	elseif type == 3 and distance < Config.MaxRaycastDistance then
+	elseif p_Type == 3 and p_Distance < Config.MaxRaycastDistance then
 		attackMode = 1 -- attack with rifle
-	elseif type == 2 and distance < 35 then
+	elseif p_Type == 2 and p_Distance < 35 then
 		attackMode = 2	-- attack with grenade
 	end
-	if self.gadget2.type == "Rocket" then
+	if self.gadget2.p_Type == "Rocket" then
 		attackMode = 3		-- always use rocket if possible
-	elseif self.gadget2.type == "C4" and distance < 25 then
-		if type ~= 3 then -- no air vehicles
+	elseif self.gadget2.p_Type == "C4" and p_Distance < 25 then
+		if p_Type ~= 3 then -- no air vehicles
 			attackMode = 4	-- always use c4 if possible
 		end
 	end
@@ -1010,13 +1010,13 @@ function Bot:_updateShooting()
 	end
 end
 
-function Bot:_getWayIndex(currentWayPoint)
+function Bot:_getWayIndex(p_CurrentWayPoint)
 	local activePointIndex = 1
 
-	if currentWayPoint == nil then
-		currentWayPoint = activePointIndex
+	if p_CurrentWayPoint == nil then
+		p_CurrentWayPoint = activePointIndex
 	else
-		activePointIndex = currentWayPoint
+		activePointIndex = p_CurrentWayPoint
 
 		-- direction handling
 		local countOfPoints = #g_NodeCollection:Get(nil, self._pathIndex)
@@ -1594,28 +1594,28 @@ function Bot:_setActiveVars()
 	end
 end
 
-function Bot:_getCameraHight(soldier, isTarget)
-	local camereaHight = 0
+function Bot:_getCameraHight(p_Soldier, p_IsTarget)
+	local cameraHeight = 0
 
-	if not isTarget then
-		camereaHight = 1.6 --bot.soldier.pose == CharacterPoseType.CharacterPoseType_Stand
+	if not p_IsTarget then
+		cameraHeight = 1.6 --bot.soldier.pose == CharacterPoseType.CharacterPoseType_Stand
 
-		if soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
-			camereaHight = 0.3
-		elseif soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
-			camereaHight = 1.0
+		if p_Soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
+			cameraHeight = 0.3
+		elseif p_Soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
+			cameraHeight = 1.0
 		end
 	else
-		camereaHight = 1.3 --bot.soldier.pose == CharacterPoseType.CharacterPoseType_Stand - reduce by 0.3
+		cameraHeight = 1.3 --bot.soldier.pose == CharacterPoseType.CharacterPoseType_Stand - reduce by 0.3
 
-		if soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
-			camereaHight = 0.3 -- don't reduce
-		elseif soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
-			camereaHight = 0.8 -- reduce by 0.2
+		if p_Soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
+			cameraHeight = 0.3 -- don't reduce
+		elseif p_Soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
+			cameraHeight = 0.8 -- reduce by 0.2
 		end
 	end
 
-	return camereaHight
+	return cameraHeight
 end
 
 return Bot
