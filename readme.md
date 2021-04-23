@@ -123,3 +123,7 @@ With each commit, the language files are rebuildet.
 ### SPECIAL THANKS TO:
 - RekkieSA
 - MrDonPotato
+- GaryTheNoTrashCougar
+- FlashHit
+- MajorVictory
+- Bizzi

@@ -17,19 +17,6 @@ function GameDirector:__init()
 	self.OnlyOneMcom = false
 	self.RushAttackingBase = ''
 	self.ArmedMcoms = {}
-
-	Events:Subscribe('CapturePoint:Lost', self, self._onLost)
-	Events:Subscribe('CapturePoint:Captured', self, self._onCapture)
-	Events:Subscribe('Player:EnteredCapturePoint', self, self._onPlayerEnterCapturePoint)
-
-	Events:Subscribe('Server:RoundOver', self, self._onRoundOver)
-	Events:Subscribe('Server:RoundReset', self, self._onRoundReset)
-
-	Events:Subscribe('Engine:Update', self, self._onUpdate)
-
-	Events:Subscribe('MCOM:Armed', self, self._onMcomArmed)
-	Events:Subscribe('MCOM:Disarmed', self, self._onMcomDisarmed)
-	Events:Subscribe('MCOM:Destroyed', self, self._onMcomDestroyed)
 end
 
 function GameDirector:onLevelLoaded()
@@ -276,7 +263,7 @@ function GameDirector:checkForExecution(p_Point, p_TeamId)
 end
 
 function GameDirector:findClosestPath(p_Trans)
-	local closestPath = nil
+	local closestPathNode = nil
 	local paths = g_NodeCollection:GetPaths()
 	if paths ~= nil then
 		local closestDistance = nil
@@ -284,16 +271,16 @@ function GameDirector:findClosestPath(p_Trans)
 			local newDistance = waypoints[1].Position:Distance(p_Trans)
 			if closestDistance == nil then
 				closestDistance = newDistance
-				closestPath = waypoints[1].PathIndex
+				closestPathNode = waypoints[1]
 			else
 				if newDistance < closestDistance then
 					closestDistance = newDistance
-					closestPath = waypoints[1].PathIndex
+					closestPathNode = waypoints[1]
 				end
 			end
 		end
 	end
-	return closestPath
+	return closestPathNode
 end
 
 function GameDirector:getSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)

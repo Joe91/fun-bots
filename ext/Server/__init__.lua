@@ -13,7 +13,6 @@ require('__shared/Constants/SpawnModes')
 require('__shared/Utilities')
 
 require('NodeEditor')
-require('GameDirector')
 require('WeaponModification')
 
 Language					= require('__shared/Language')
@@ -24,6 +23,7 @@ local WeaponList			= require('__shared/WeaponList')
 local ChatCommands			= require('ChatCommands')
 local RCONCommands			= require('RCONCommands')
 local FunBotUIServer		= require('UIServer')
+local GameDirector			= require('GameDirector')
 require('Globals')
 
 local playerKilledDelay 	= 0
@@ -37,6 +37,41 @@ function FunBotServer:__init()
 	Events:Subscribe('Extension:Loaded', self, self._onExtensionLoaded)
 	Events:Subscribe('Partition:Loaded', self, self._onPartitionLoaded)
 	NetEvents:Subscribe('RequestClientSettings', self, self._onRequestClientSettings)
+
+	-- BotManager
+	Events:Subscribe('UpdateManager:Update', BotManager, BotManager._onUpdate)
+	Events:Subscribe('Level:Destroy', BotManager, BotManager._onLevelDestroy)
+	NetEvents:Subscribe('BotShootAtPlayer', BotManager, BotManager._onShootAt)
+	NetEvents:Subscribe('BotRevivePlayer', BotManager, BotManager._onRevivePlayer)
+	NetEvents:Subscribe('BotShootAtBot', BotManager, BotManager._onBotShootAtBot)
+	Events:Subscribe('ServerDamagePlayer', BotManager, BotManager._onServerDamagePlayer) 	--only triggered on false damage
+	NetEvents:Subscribe('ClientDamagePlayer', BotManager, BotManager._onDamagePlayer)   	--only triggered on false damage
+	Hooks:Install('Soldier:Damage', 100, BotManager, BotManager._onSoldierDamage)
+	--Events:Subscribe('Soldier:HealthAction', BotManager, BotManager._onHealthAction)	-- use this for more options on revive. Not needed yet
+	--Events:Subscribe('GunSway:Update', BotManager, BotManager._onGunSway)
+	--Events:Subscribe('GunSway:UpdateRecoil', BotManager, BotManager._onGunSway)
+	--Events:Subscribe('Player:Destroyed', BotManager, BotManager._onPlayerDestroyed) -- Player left is called first, so use this one instead
+	Events:Subscribe('Player:Left', BotManager, BotManager._onPlayerLeft)
+	--Events:Subscribe('Engine:Message', BotManager, BotManager._onEngineMessage) -- maybe us this later
+
+	-- BotSpawner
+	Events:Subscribe('UpdateManager:Update', BotSpawner, BotSpawner._onUpdate)
+	Events:Subscribe('Bot:RespawnBot', BotSpawner, BotSpawner._onRespawnBot)
+	Events:Subscribe('Level:Destroy', BotSpawner, BotSpawner._onLevelDestroy)
+	Events:Subscribe('Player:KitPickup', BotSpawner, BotSpawner._onKitPickup)
+	Events:Subscribe('Player:Joining', BotSpawner, BotSpawner._onPlayerJoining)
+	Events:Subscribe('Player:TeamChange', BotSpawner, BotSpawner._onTeamChange)
+
+	-- GameDirector
+	Events:Subscribe('CapturePoint:Lost', GameDirector, GameDirector._onLost)
+	Events:Subscribe('CapturePoint:Captured', GameDirector, GameDirector._onCapture)
+	Events:Subscribe('Player:EnteredCapturePoint', GameDirector, GameDirector._onPlayerEnterCapturePoint)
+	Events:Subscribe('Server:RoundOver', GameDirector, GameDirector._onRoundOver)
+	Events:Subscribe('Server:RoundReset', GameDirector, GameDirector._onRoundReset)
+	Events:Subscribe('Engine:Update', GameDirector, GameDirector._onUpdate)
+	Events:Subscribe('MCOM:Armed', GameDirector, GameDirector._onMcomArmed)
+	Events:Subscribe('MCOM:Disarmed', GameDirector, GameDirector._onMcomDisarmed)
+	Events:Subscribe('MCOM:Destroyed', GameDirector, GameDirector._onMcomDestroyed)
 end
 
 function FunBotServer:_onExtensionUnload()

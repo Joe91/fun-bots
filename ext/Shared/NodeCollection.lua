@@ -914,7 +914,7 @@ function NodeCollection:Load(p_LevelName, p_GameMode)
 	self.levelName = p_LevelName or self.levelName
 	self.gameMode = p_GameMode or self.gameMode
 
-	if g_Globals.isTdm or g_Globals.isGm or g_Globals.isScavenger then
+	if Globals.isTdm or Globals.isGm or Globals.isScavenger then
 		self.gameMode = 'TeamDeathMatch0' -- paths are compatible
 	end
 	self.mapName = self.levelName .. '_' .. self.gameMode
@@ -1002,9 +1002,9 @@ function NodeCollection:Load(p_LevelName, p_GameMode)
 	self:ProcessMetadata()
 
 	-- we're on the server
-	--if (g_Globals ~= nil) then
-		--g_Globals.wayPoints = self.waypointsByPathIndex
-		--g_Globals.activeTraceIndexes = pathCount
+	--if (Globals ~= nil) then
+		--Globals.wayPoints = self.waypointsByPathIndex
+		--Globals.activeTraceIndexes = pathCount
 	--end
 
 	if Debug.Shared.NODECOLLECTION then
