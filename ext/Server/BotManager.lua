@@ -2,7 +2,6 @@ class('BotManager')
 
 require('Bot')
 
-local Globals 	= require('Globals')
 local Utilities = require('__shared/Utilities')
 
 function BotManager:__init()
@@ -46,7 +45,7 @@ function BotManager:getBotTeam()
 	end
 	local botTeam
 	local countPlayers = {}
-	for i = 1, g_Globals.nrOfTeams do
+	for i = 1, Globals.NrOfTeams do
 		countPlayers[i] = 0
 		local players = PlayerManager:GetPlayersByTeam(i)
 		for i = 1, #players do
@@ -57,7 +56,7 @@ function BotManager:getBotTeam()
 	end
 
 	local lowestPlayerCount = 128
-	for i = 1, g_Globals.nrOfTeams do
+	for i = 1, Globals.NrOfTeams do
 		if countPlayers[i] < lowestPlayerCount then
 			botTeam = i
 		end
@@ -67,21 +66,21 @@ function BotManager:getBotTeam()
 end
 
 function BotManager:configGlobals()
-	Globals.respawnWayBots 	= Config.RespawnWayBots
-	Globals.attackWayBots 	= Config.AttackWayBots
-	Globals.spawnMode		= Config.SpawnMode
-	Globals.yawPerFrame 	= self:calcYawPerFrame()
+	Globals.RespawnWayBots 	= Config.RespawnWayBots
+	Globals.AttackWayBots 	= Config.AttackWayBots
+	Globals.SpawnMode		= Config.SpawnMode
+	Globals.YawPerFrame 	= self:calcYawPerFrame()
 	--self:killAll()
 	local maxPlayers = RCON:SendCommand('vars.maxPlayers')
 	maxPlayers = tonumber(maxPlayers[2])
 	if maxPlayers ~= nil and maxPlayers > 0 then
-		Globals.maxPlayers = maxPlayers
+		Globals.MaxPlayers = maxPlayers
 
 		if Debug.Server.BOT then
 			print("there are "..maxPlayers.." slots on this server")
 		end
 	else
-		Globals.maxPlayers = MAX_NUMBER_OF_BOTS --only fallback
+		Globals.MaxPlayers = MAX_NUMBER_OF_BOTS --only fallback
 	end
 	self._initDone = true
 end
@@ -96,7 +95,7 @@ function BotManager:findNextBotName()
 	for i = 1, MAX_NUMBER_OF_BOTS do
 		local name = BOT_TOKEN..BotNames[i]
 		local skipName = false
-		for _,ignoreName in pairs(g_Globals.ignoreBotNames) do
+		for _,ignoreName in pairs(Globals.IgnoreBotNames) do
 			if name == ignoreName then
 				skipName = true
 				break
@@ -292,7 +291,7 @@ function BotManager:_checkForBotBotAttack()
 
 	-- not enough on either team and no players to use
 	local teamsWithPlayers = 0
-	for i = 1, g_Globals.nrOfTeams do
+	for i = 1, Globals.NrOfTeams do
 		if #self._botsByTeam[i+1] > 0 then
 			teamsWithPlayers = teamsWithPlayers + 1
 		end
@@ -319,7 +318,7 @@ function BotManager:_checkForBotBotAttack()
 		if (bot ~= nil and bot.player and bot.player.alive and not self._botCheckState[bot.player.name]) then
 
 			local opposingTeams = {}
-			for t = 1, g_Globals.nrOfTeams do
+			for t = 1, Globals.NrOfTeams do
 				if bot.player.teamId ~= t then
 					table.insert(opposingTeams, t)
 				end
@@ -455,7 +454,7 @@ function BotManager:_onSoldierDamage(hook, soldier, info, giverInfo)
 				info.direction = soldier.worldTransform.trans - bot.player.soldier.worldTransform.trans
 				info.origin = bot.player.soldier.worldTransform.trans
 				if (soldier.health - info.damage) <= 0 then
-					if Globals.isTdm then
+					if Globals.IsTdm then
 						local enemyTeam = TeamId.Team1
 						if soldier.player.teamId == TeamId.Team1 then
 							enemyTeam = TeamId.Team2
@@ -564,7 +563,7 @@ function BotManager:createBot(name, team, squad)
 	end
 
 	-- check for max-players
-	local playerlimt = Globals.maxPlayers
+	local playerlimt = Globals.MaxPlayers
 	if Config.KeepOneSlotForPlayers then
 		playerlimt = playerlimt - 1
 	end

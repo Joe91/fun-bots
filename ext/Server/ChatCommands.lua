@@ -5,7 +5,6 @@ require('__shared/NodeCollection')
 
 local BotManager	= require('BotManager')
 local BotSpawner	= require('BotSpawner')
-local Globals 		= require('Globals')
 
 function ChatCommands:execute(parts, player)
 	if player == nil or Config.DisableChatCommands == true then
@@ -90,7 +89,7 @@ function ChatCommands:execute(parts, player)
 			respawning = false
 		end
 
-		Globals.respawnWayBots = respawning
+		Globals.RespawnWayBots = respawning
 
 		BotManager:setOptionForAll('respawn', respawning)
 
@@ -101,7 +100,7 @@ function ChatCommands:execute(parts, player)
 			shooting = false
 		end
 
-		Globals.attackWayBots = shooting
+		Globals.AttackWayBots = shooting
 
 		BotManager:setOptionForAll('shoot', shooting)
 

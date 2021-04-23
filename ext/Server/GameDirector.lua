@@ -1,6 +1,5 @@
 class('GameDirector')
 
-require('Globals')
 require('__shared/NodeCollection')
 
 function GameDirector:__init()
@@ -37,7 +36,7 @@ function GameDirector:onLevelLoaded()
 	self.AllObjectives = {}
 	self.Translations = {}
 
-	if g_Globals.isRush then
+	if Globals.IsRush then
 		self.McomCounter = 0
 		self.ArmedMcoms = {}
 
@@ -99,7 +98,7 @@ function GameDirector:initObjectives()
 end
 
 function GameDirector:_initFlagTeams()
-	if g_Globals.isConquest then --valid for all Conquest-types
+	if Globals.IsConquest then --valid for all Conquest-types
 		local it = EntityManager:GetIterator('ServerCapturePointEntity')
 		local entity = it:Next()
 		while entity ~= nil do
@@ -188,7 +187,7 @@ function GameDirector:_onMcomDestroyed(player)
 end
 
 function GameDirector:_updateValidObjectives()
-	if g_Globals.isConquest then -- nothing to do in conquest
+	if Globals.IsConquest then -- nothing to do in conquest
 		return
 	end
 

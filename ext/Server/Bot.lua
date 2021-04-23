@@ -3,7 +3,6 @@ class('Bot')
 require('__shared/Config')
 require('__shared/NodeCollection')
 require('__shared/Constants/VehicleNames')
-require('Globals')
 require('PathSwitcher')
 
 local Utilities = require('__shared/Utilities')
@@ -96,7 +95,7 @@ function Bot:onUpdate(dt)
 		self.player.soldier:SingleStepEntry(self.player.controlledEntryId)
 	end
 
-	if g_Globals.isInputAllowed then
+	if Globals.IsInputAllowed then
 		self._updateTimer		= self._updateTimer + dt
 
 		self:_updateYaw()
@@ -223,8 +222,8 @@ function Bot:setVarsDefault()
 	self._moveMode		= 5
 	self._botSpeed		= 3
 	self._pathIndex		= 1
-	self._respawning	= g_Globals.respawnWayBots
-	self._shoot			= g_Globals.attackWayBots
+	self._respawning	= Globals.RespawnWayBots
+	self._shoot			= Globals.AttackWayBots
 end
 
 function Bot:resetVars()
@@ -283,8 +282,8 @@ function Bot:setVarsWay(player, useRandomWay, pathIndex, currentWayPoint, invers
 	if useRandomWay then
 		self._spawnMode		= 5
 		self._targetPlayer	= nil
-		self._shoot			= g_Globals.attackWayBots
-		self._respawning	= g_Globals.respawnWayBots
+		self._shoot			= Globals.AttackWayBots
+		self._respawning	= Globals.RespawnWayBots
 	else
 		self._spawnMode		= 4
 		self._targetPlayer	= player
@@ -440,7 +439,7 @@ end
 function Bot:_updateRespwawn()
 	if self._respawning and self.player.soldier == nil and self._spawnMode > 0 then
 		-- wait for respawn-delay gone
-		if self._spawnDelayTimer < g_Globals.respawnDelay then
+		if self._spawnDelayTimer < Globals.RespawnDelay then
 			self._spawnDelayTimer = self._spawnDelayTimer + StaticConfig.BotUpdateCycle
 		else
 			Events:DispatchLocal('Bot:RespawnBot', self.name)
@@ -594,7 +593,7 @@ function Bot:_updateYaw()
 	end
 
 	local absDeltaYaw	= math.abs(deltaYaw)
-	local inkrement 	= g_Globals.yawPerFrame
+	local inkrement 	= Globals.YawPerFrame
 
 	if absDeltaYaw < inkrement then
 		if self.inVehicle then
@@ -1247,7 +1246,7 @@ function Bot:_updateMovement()
 							heightDistance				= 0
 							noStuckReset				= true
 							pointIncrement				= MathUtils:GetRandomInt(-3,7) -- go 5 points further
-							--if g_Globals.isConquest or g_Globals.isRush then  --TODO: only invert path, if its not a connecting path
+							--if Globals.IsConquest or Globals.IsRush then  --TODO: only invert path, if its not a connecting path
 							--	self._invertPathDirection	= (MathUtils:GetRandomInt(0,100) < 40)
 							--end
 							-- experimental

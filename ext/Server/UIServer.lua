@@ -10,7 +10,6 @@ local BotManager			= require('BotManager')
 local BotSpawner			= require('BotSpawner')
 local WeaponModification	= require('WeaponModification')
 local WeaponList			= require('__shared/WeaponList')
-local Globals 				= require('Globals')
 
 function FunBotUIServer:__init()
 	self._webui			= 0
@@ -59,7 +58,7 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 	elseif request.action == 'bot_spawn_default' then
 		local amount = tonumber(request.value)
 		local team = player.teamId
-		Globals.spawnMode		= "manual"
+		Globals.SpawnMode		= "manual"
 		if team == TeamId.Team1 then
 			BotSpawner:spawnWayBots(player, amount, true, 0, 0, TeamId.Team2)
 		else
@@ -68,22 +67,22 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 
 	elseif request.action == 'bot_spawn_friend' then
 		local amount = tonumber(request.value)
-		Globals.spawnMode		= "manual"
+		Globals.SpawnMode		= "manual"
 		BotSpawner:spawnWayBots(player, amount, true, 0, 0, player.teamId)
 
 	elseif request.action == 'bot_spawn_path' then --todo: whats the difference? make a function to spawn bots on a fixed way instead?
 		local amount		= 1
 		local indexOnPath	= tonumber(request.pointindex) or 1
 		local index			= tonumber(request.value)
-		Globals.spawnMode	= "manual"
+		Globals.SpawnMode	= "manual"
 		BotSpawner:spawnWayBots(player, amount, false, index, indexOnPath)
 
 	elseif request.action == 'bot_kick_all' then
-		Globals.spawnMode	= "manual"
+		Globals.SpawnMode	= "manual"
 		BotManager:destroyAll()
 
 	elseif request.action == 'bot_kick_team' then
-		Globals.spawnMode	= "manual"
+		Globals.SpawnMode	= "manual"
 		local teamNumber = tonumber(request.value)
 		if teamNumber == 1 then
 			BotManager:destroyAll(nil, TeamId.Team1)
@@ -92,12 +91,12 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 		end
 
 	elseif request.action == 'bot_kill_all' then
-		Globals.spawnMode	= "manual"
+		Globals.SpawnMode	= "manual"
 		BotManager:killAll()
 
 	elseif request.action == 'bot_respawn' then  --toggle this function
-		local respawning		= not Globals.respawnWayBots
-		Globals.respawnWayBots	= respawning
+		local respawning		= not Globals.RespawnWayBots
+		Globals.RespawnWayBots	= respawning
 		BotManager:setOptionForAll('respawn', respawning)
 		if respawning then
 			ChatManager:Yell(Language:I18N('Bot respawn activated!', request.action), 2.5)
@@ -106,8 +105,8 @@ function FunBotUIServer:_onBotEditorEvent(player, data)
 		end
 
 	elseif request.action == 'bot_attack' then  --toggle this function
-		local attack			= not Globals.attackWayBots
-		Globals.attackWayBots	= attack
+		local attack			= not Globals.AttackWayBots
+		Globals.AttackWayBots	= attack
 		BotManager:setOptionForAll('shoot', attack)
 		if attack then
 			ChatManager:Yell(Language:I18N('Bots will attack!', request.action), 2.5)
@@ -570,13 +569,13 @@ function FunBotUIServer:_writeSettings(player, request)
 	end
 
 	if calcYawPerFrame then
-		Globals.yawPerFrame = BotManager:calcYawPerFrame()
+		Globals.YawPerFrame = BotManager:calcYawPerFrame()
 	end
 
 	NetEvents:BroadcastLocal('WriteClientSettings', Config, updateWeaponSets)
 
 	if updateBotTeamAndNumber then
-		Globals.spawnMode		= Config.SpawnMode
+		Globals.SpawnMode		= Config.SpawnMode
 		BotSpawner:updateBotAmountAndTeam()
 	end
 	-- @ToDo create Error Array and dont hide if has values

@@ -1,6 +1,5 @@
 class('BotSpawner')
 
-require('Globals')
 require('SpawnSet')
 require('__shared/NodeCollection')
 
@@ -32,7 +31,7 @@ function BotSpawner:_onTeamChange(player, team, squad)
 		if player ~= nil then
 			if player.onlineId ~= 0 then -- no bot
 				local playerTeams = {}
-				for i = 1, g_Globals.nrOfTeams do
+				for i = 1, Globals.NrOfTeams do
 					if Config.BotTeam ~= i then
 						table.insert(playerTeams, i)
 					end
@@ -50,7 +49,7 @@ end
 function BotSpawner:updateBotAmountAndTeam()
 	-- keep Slot for next player
 	if Config.KeepOneSlotForPlayers then
-		local playerlimt = g_Globals.maxPlayers - 1
+		local playerlimt = Globals.MaxPlayers - 1
 		local amoutToDestroy = PlayerManager:GetPlayerCount() - playerlimt
 		if amoutToDestroy > 0 then
 			BotManager:destroyAll(amoutToDestroy)
@@ -84,7 +83,7 @@ function BotSpawner:updateBotAmountAndTeam()
 	local teamCount = {}
 	local countBots = {}
 	local targetTeamCount = {}
-	for i=1, g_Globals.nrOfTeams do
+	for i=1, Globals.NrOfTeams do
 		countPlayers[i] = 0
 		countBots[i] = 0
 		targetTeamCount[i] = 0
@@ -100,23 +99,23 @@ function BotSpawner:updateBotAmountAndTeam()
 	end
 
 	-- KEEP PLAYERCOUNT
-	if g_Globals.spawnMode == 'keep_playercount' then
-		for i=1, g_Globals.nrOfTeams do
+	if Globals.SpawnMode == 'keep_playercount' then
+		for i=1, Globals.NrOfTeams do
 			targetTeamCount[i] = Config.InitNumberOfBots
 		end
 		if Config.SpawnInBothTeams then
-			for i=1, g_Globals.nrOfTeams do
-				targetTeamCount[i] = math.floor(Config.InitNumberOfBots/g_Globals.nrOfTeams)
+			for i=1, Globals.NrOfTeams do
+				targetTeamCount[i] = math.floor(Config.InitNumberOfBots/Globals.NrOfTeams)
 			end
 		else
-			for i=1, g_Globals.nrOfTeams do
+			for i=1, Globals.NrOfTeams do
 				if botTeam ~= i then
 					targetTeamCount[i] = 0
 				end
 			end
 		end
 
-		for i=1, g_Globals.nrOfTeams do
+		for i=1, Globals.NrOfTeams do
 			if teamCount[i] < targetTeamCount[i] then
 				self:spawnWayBots(nil, targetTeamCount[i]-teamCount[i], true, 0, 0, i)
 			elseif teamCount[i] > targetTeamCount[i] and botCount[i] > 0 then
@@ -125,20 +124,20 @@ function BotSpawner:updateBotAmountAndTeam()
 		end
 
 	-- BALANCED teams
-	elseif g_Globals.spawnMode == 'balanced_teams' then
+	elseif Globals.SpawnMode == 'balanced_teams' then
 		local maxPlayersInOneTeam = 0
-		for i=1, g_Globals.nrOfTeams do
+		for i=1, Globals.NrOfTeams do
 			if countPlayers[i] > maxPlayersInOneTeam then
 				maxPlayersInOneTeam = countPlayers[i]
 			end
 		end
 		local targetCount = Config.InitNumberOfBots + ((maxPlayersInOneTeam-1) * Config.NewBotsPerNewPlayer)
 		-- TODO: limit in SDM
-		for i=1, g_Globals.nrOfTeams do
+		for i=1, Globals.NrOfTeams do
 			targetTeamCount[i] = targetCount
 		end
 
-		for i=1, g_Globals.nrOfTeams do
+		for i=1, Globals.NrOfTeams do
 			if teamCount[i] < targetTeamCount[i] then
 				self:spawnWayBots(nil, targetTeamCount[i]-teamCount[i], true, 0, 0, i)
 			elseif teamCount[i] > targetTeamCount[i] then
@@ -146,11 +145,11 @@ function BotSpawner:updateBotAmountAndTeam()
 			end
 		end
 	-- INCREMENT WITH PLAYER
-	elseif g_Globals.spawnMode == 'increment_with_players' then
+	elseif Globals.SpawnMode == 'increment_with_players' then
 		if Config.SpawnInBothTeams then
-			for i=1, g_Globals.nrOfTeams do
+			for i=1, Globals.NrOfTeams do
 				targetTeamCount[i] = 0
-				for j = 1, g_Globals.nrOfTeams do
+				for j = 1, Globals.NrOfTeams do
 					if i ~= j then
 						if (countPlayers[j]) > 0 then
 							targetTeamCount[i] =  Config.InitNumberOfBots + ((countPlayers[j]-1) * Config.NewBotsPerNewPlayer)
@@ -160,7 +159,7 @@ function BotSpawner:updateBotAmountAndTeam()
 				end
 			end
 
-			for i=1, g_Globals.nrOfTeams do
+			for i=1, Globals.NrOfTeams do
 				if teamCount[i] < targetTeamCount[i] then
 					self:spawnWayBots(nil, targetTeamCount[i]-teamCount[i], true, 0, 0, i)
 				elseif teamCount[i] > targetTeamCount[i] and botCount[i] > 0 then
@@ -170,7 +169,7 @@ function BotSpawner:updateBotAmountAndTeam()
 
 		else
 			-- check for bots in wrong team
-			for i=1, g_Globals.nrOfTeams do
+			for i=1, Globals.NrOfTeams do
 				if i ~= botTeam and botCount[i] > 0 then
 					BotManager:killAll(nil, i)
 				end
@@ -188,11 +187,11 @@ function BotSpawner:updateBotAmountAndTeam()
 		end
 
 	-- FIXED NUMBER TO SPAWN
-	elseif g_Globals.spawnMode == 'fixed_number' then
+	elseif Globals.SpawnMode == 'fixed_number' then
 		if Config.SpawnInBothTeams then
-			local amoutPerTeam = math.floor(Config.InitNumberOfBots/g_Globals.nrOfTeams)
+			local amoutPerTeam = math.floor(Config.InitNumberOfBots/Globals.NrOfTeams)
 
-			for i=1, g_Globals.nrOfTeams do
+			for i=1, Globals.NrOfTeams do
 				if teamCount[i] < amoutPerTeam then
 					self:spawnWayBots(nil, amoutPerTeam-teamCount[i], true, 0, 0, i)
 				elseif teamCount[i] > amoutPerTeam and botCount[i] > 0 then
@@ -201,7 +200,7 @@ function BotSpawner:updateBotAmountAndTeam()
 			end
 		else
 			-- check for bots in wrong team
-			for i=1, g_Globals.nrOfTeams do
+			for i=1, Globals.NrOfTeams do
 				if i ~= botTeam and botCount[i] > 0 then
 					BotManager:killAll(nil, i)
 				end
@@ -217,9 +216,9 @@ function BotSpawner:updateBotAmountAndTeam()
 				BotManager:killAll(-amountToSpawn)
 			end
 		end
-	elseif g_Globals.spawnMode == 'manual' then
+	elseif Globals.SpawnMode == 'manual' then
 		if self._firstSpawnInLevel then
-			for i=1, g_Globals.nrOfTeams do
+			for i=1, Globals.NrOfTeams do
 				self:spawnWayBots(nil, teamCount[i] - countPlayers[i], true, 0, 0, i)
 			end
 		end
@@ -245,7 +244,7 @@ function BotSpawner:_onPlayerJoining(name)
 	if string.find(name, BOT_TOKEN) == 1 then --check if name starts with bot-token
 		table.insert(self._kickPlayers, name)
 		if BotManager:getBotByName(name) ~= nil then
-			table.insert(g_Globals.ignoreBotNames, name)
+			table.insert(Globals.IgnoreBotNames, name)
 			BotManager:destroyBot(name)
 		end
 	end
@@ -294,7 +293,7 @@ function BotSpawner:_onUpdate(dt, pass)
 	else
 		if self._updateActive then
 			self._updateActive = false
-			if g_Globals.spawnMode ~= 'manual' then
+			if Globals.SpawnMode ~= 'manual' then
 				--garbage-collection of unwanted bots
 				BotManager:destroyDisabledBots()
 				BotManager:freshnTables()
@@ -308,9 +307,9 @@ function BotSpawner:_onUpdate(dt, pass)
 			local player = PlayerManager:GetPlayerByName(playerName)
 			if player ~= nil then
 				player:Kick("You used a BOT-Name. Please use a real name on Fun-Bot-Servers...")
-				for index,name in pairs(g_Globals.ignoreBotNames) do
+				for index,name in pairs(Globals.IgnoreBotNames) do
 					if name == playerName then
-						table.remove(g_Globals.ignoreBotNames, index)
+						table.remove(Globals.IgnoreBotNames, index)
 					end
 				end
 				table.remove(self._kickPlayers, index)
@@ -437,7 +436,7 @@ function BotSpawner:_getSpawnPoint(team, squad)
 
 	-- CONQUEST
 	-- spawn at base, squad-mate, captured flag
-	if g_Globals.isConquest then
+	if Globals.IsConquest then
 		activeWayIndex, indexOnPath = g_GameDirector:getSpawnPath(team, squad, false)
 
 		if activeWayIndex == 0 then
@@ -453,7 +452,7 @@ function BotSpawner:_getSpawnPoint(team, squad)
 
 	-- RUSH
 	-- spawn at base (of zone) or squad-mate
-	elseif g_Globals.isRush then
+	elseif Globals.IsRush then
 		activeWayIndex, indexOnPath = g_GameDirector:getSpawnPath(team, squad, true)
 
 		if activeWayIndex == 0 then
@@ -519,7 +518,7 @@ end
 
 
 function BotSpawner:getSquad(team)  --TODO: create a more advanced algorithm?
-	if g_Globals.isSdm then
+	if Globals.IsSdm then
 		if team % 2 == 1 then
 			return 1
 		else
@@ -825,7 +824,7 @@ function BotSpawner:spawnWayBots(player, amount, useRandomWay, activeWayIndex, i
 	end
 
 	-- check for amount available
-	local playerlimt = g_Globals.maxPlayers
+	local playerlimt = Globals.MaxPlayers
 	if Config.KeepOneSlotForPlayers then
 		playerlimt = playerlimt - 1
 	end
@@ -1165,7 +1164,7 @@ function BotSpawner:spawnBot(bot, trans, setKit)
 
 	-- And then spawn the bot. This will create and return a new SoldierEntity object.
 	-- for Civilianizer-Mod
-	if g_Globals.removeKitVisuals then
+	if Globals.RemoveKitVisuals then
 		BotManager:spawnBot(bot, transform, CharacterPoseType.CharacterPoseType_Stand, soldierBlueprint, soldierKit, {})
 	else
 		BotManager:spawnBot(bot, transform, CharacterPoseType.CharacterPoseType_Stand, soldierBlueprint, soldierKit, { appearance })

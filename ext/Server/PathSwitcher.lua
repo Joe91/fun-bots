@@ -1,7 +1,6 @@
 class('PathSwitcher')
 require('__shared/NodeCollection')
 require('GameDirector')
-require('Globals')
 
 function PathSwitcher:__init()
 	self.dummyData = 0
@@ -22,7 +21,7 @@ function PathSwitcher:getNewPath(botname, point, objective)
 		return false
 	end
 
-	if g_Globals.isRush then
+	if Globals.IsRush then
 		if self.killYourselfCounter[botname] == nil then
 			self.killYourselfCounter[botname] = 0
 		end

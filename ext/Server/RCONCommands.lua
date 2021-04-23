@@ -4,7 +4,6 @@ require('__shared/Config')
 
 local BotManager	= require('BotManager')
 local BotSpawner	= require('BotSpawner')
-local Globals 		= require('Globals')
 
 
 function RCONCommands:__init()
@@ -254,7 +253,7 @@ function RCONCommands:__init()
 						print('[RCON] call BotManager:calcYawPerFrame()')
 					end
 
-					Globals.yawPerFrame = BotManager:calcYawPerFrame()
+					Globals.YawPerFrame = BotManager:calcYawPerFrame()
 				end
 
 				if updateBotTeamAndNumber then
@@ -262,7 +261,7 @@ function RCONCommands:__init()
 						print('[RCON] call BotSpawner:updateBotAmountAndTeam()')
 					end
 
-					Globals.spawnMode = Config.SpawnMode
+					Globals.SpawnMode = Config.SpawnMode
 					BotSpawner:updateBotAmountAndTeam()
 				end
 
