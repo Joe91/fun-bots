@@ -88,14 +88,7 @@ function ClientNodeEditor:__init()
 	self.botVistionCrosshair = nil
 
 	self.debugEntries = {}
-	self.pushScreenHook = nil
 	self.eventsReady = false
-
-	-- ('UI_ClientNodeEditor_Enabled', <Bool|Enabled>)
-	NetEvents:Subscribe('UI_ClientNodeEditor_Enabled', self, self._onSetEnabled)
-
-	-- listens to UI settings for changes
-	NetEvents:Subscribe('UI_Settings', self, self._onUISettings)
 
 	self:RegisterEvents()
 end
@@ -153,22 +146,6 @@ function ClientNodeEditor:RegisterEvents()
 	NetEvents:Subscribe('ClientNodeEditor:ClearTrace', self, self._onClearTrace)
 	NetEvents:Subscribe('ClientNodeEditor:SaveTrace', self, self._onSaveTrace)
 
-	-- load/destroy events
-	Events:Subscribe('Level:Loaded', self, self._onLevelLoaded)
-	Events:Subscribe('Player:Deleted', self, self._onPlayerDeleted)
-	Events:Subscribe('Level:Destroy', self, self._onUnload)
-
-	-- keypresses
-	Events:Subscribe('Client:UpdateInput', self, self._onUpdateInput)
-	-- node send/receiver logic
-	Events:Subscribe('UpdateManager:Update', self, self._onUpdateManagerUpdate)
-	-- math for draw event
-	Events:Subscribe('Engine:Update', self, self._onEngineUpdate)
-	-- draw nodes and info
-	Events:Subscribe('UI:DrawHud', self, self._onUIDrawHud)
-
-	self.pushScreenHook = Hooks:Install('UI:PushScreen', 1, self, self._onUIPushScreen)
-
 	-- UI Commands as Console commands
 
 	Console:Register('Save', 'Send waypoints to server for saving to file', self, self._onSaveNodes)
@@ -200,7 +177,7 @@ function ClientNodeEditor:RegisterEvents()
 	Console:Register('SaveTrace', '<number|PathIndex> Merge new trace with current waypoints', self, self._onSaveTrace)
 
 	-- debugging commands, not meant for UI
-	Console:Register('Enabled', 'Enable / Disable the waypoint editor', self, self._onSetEnabled)
+	Console:Register('Enabled', 'Enable / Disable the waypoint editor', self, self.OnSetEnabled)
 	Console:Register('CommoRoseEnabled', 'Enable / Disable the waypoint editor Commo Rose', self, self._onSetCommoRoseEnabled)
 	Console:Register('CommoRoseShow', 'Show custom Commo Rose', self, self._onShowRose)
 	Console:Register('CommoRoseHide', 'Hide custom Commo Rose', self, self._onHideRose)
@@ -309,7 +286,7 @@ function ClientNodeEditor:Print(...)
 	end
 end
 
-function ClientNodeEditor:_onSetEnabled(p_Args)
+function ClientNodeEditor:OnSetEnabled(p_Args)
 
 	local enabled = p_Args
 	if (type(p_Args) == 'table') then
@@ -343,10 +320,10 @@ function ClientNodeEditor:_onSetCommoRoseEnabled(p_Args)
 	self.commoRoseEnabled = enabled
 end
 
-function ClientNodeEditor:_onUISettings(p_Data)
+function ClientNodeEditor:OnUISettings(p_Data)
 	if (p_Data == false) then -- client closed settings
 
-		self:_onSetEnabled(Config.DebugTracePaths)
+		self:OnSetEnabled(Config.DebugTracePaths)
 
 		if (self.disableUserInterface ~= Config.DisableUserInterface) then
 			self.disableUserInterface = Config.DisableUserInterface
@@ -1262,17 +1239,21 @@ end
 -- ##################################### Events
 -- ############################################
 
-function ClientNodeEditor:_onLevelLoaded(p_LevelName, p_GameMode)
+function ClientNodeEditor:OnLevelLoaded(p_LevelName, p_GameMode)
 	self.enabled = Config.DebugTracePaths
 	if (self.enabled) then
 		self.nodeReceiveTimer = 0 -- enable the timer for receiving nodes
 	end
 end
 
-function ClientNodeEditor:_onPlayerDeleted(p_Player)
+function ClientNodeEditor:OnPlayerDeleted(p_Player)
 	if (self.player ~= nil and p_Player ~= nil and self.player.name == p_Player.name) then
 		self:_onUnload()
 	end
+end
+
+function ClientNodeEditor:OnLevelDestroy()
+	self:_onUnload()
 end
 
 function ClientNodeEditor:_onUnload(p_Args)
@@ -1369,7 +1350,7 @@ function ClientNodeEditor:_onCommoRoseAction(p_Action, p_Hit)
 	end
 end
 
-function ClientNodeEditor:_onUIPushScreen(p_HookCtx, p_Screen, p_Priority, p_ParentGraph, p_StateNodeGuid)
+function ClientNodeEditor:OnUIPushScreen(p_HookCtx, p_Screen, p_Priority, p_ParentGraph, p_StateNodeGuid)
 	if (self.enabled and self.commoRoseEnabled and p_Screen ~= nil and UIScreenAsset(p_Screen).name == 'UI/Flow/Screen/CommRoseScreen') then
 		self:Print('Blocked vanilla commo rose')
 		p_HookCtx:Return()
@@ -1381,7 +1362,7 @@ end
 -- ############################## Update Events
 -- ############################################
 
-function ClientNodeEditor:_onUpdateInput(p_Player, p_Delta)
+function ClientNodeEditor:OnClientUpdateInput(p_DeltaTime)
 	if (not self.enabled) then
 		return
 	end
@@ -1551,11 +1532,11 @@ function ClientNodeEditor:_onUpdateInput(p_Player, p_Delta)
 	end
 end
 
-function ClientNodeEditor:_onEngineUpdate(p_Delta, p_SimDelta)
+function ClientNodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 	if (self.nodeSendTimer >= 0 and #self.nodesToSend > 0) then
 
 		self.debugEntries['nodeSendProgress'] = self.nodeSendProgress..'/'..(#self.nodesToSend)
-		self.nodeSendTimer = self.nodeSendTimer + p_Delta
+		self.nodeSendTimer = self.nodeSendTimer + p_DeltaTime
 
 		if (self.nodeSendTimer > self.nodeSendDelay) then
 
@@ -1591,7 +1572,7 @@ function ClientNodeEditor:_onEngineUpdate(p_Delta, p_SimDelta)
 	end
 
 	if (self.nodeReceiveTimer >= 0) then
-		self.nodeReceiveTimer = self.nodeReceiveTimer + p_Delta
+		self.nodeReceiveTimer = self.nodeReceiveTimer + p_DeltaTime
 
 		-- timer for receiving node payload
 		if (self.nodeReceiveTimer > self.nodeReceiveDelay) then
@@ -1609,7 +1590,7 @@ function ClientNodeEditor:_onEngineUpdate(p_Delta, p_SimDelta)
 
 		if (self.commoRosePressed and self.commoRoseTimer >= 0) then
 
-			self.commoRoseTimer = self.commoRoseTimer + p_Delta
+			self.commoRoseTimer = self.commoRoseTimer + p_DeltaTime
 
 			if (self.commoRoseTimer > self.commoRoseDelay) then
 				self.commoRoseTimer = -1
@@ -1620,7 +1601,7 @@ function ClientNodeEditor:_onEngineUpdate(p_Delta, p_SimDelta)
 	end
 
 	if (self.customTraceTimer >= 0 and self.player ~= nil and self.player.soldier ~= nil) then
-		self.customTraceTimer = self.customTraceTimer + p_Delta
+		self.customTraceTimer = self.customTraceTimer + p_DeltaTime
 
 		if (self.customTraceTimer > self.customTraceDelay) then
 
@@ -1692,7 +1673,7 @@ function ClientNodeEditor:_onEngineUpdate(p_Delta, p_SimDelta)
 						local lastWaypoint = self.customTrace:GetLast()
 						self.customTrace:ClearSelection()
 						self.customTrace:Select(lastWaypoint)
-						self.customTrace:SetInput(lastWaypoint.SpeedMode, lastWaypoint.ExtraMode, lastWaypoint.OptValue + p_Delta)
+						self.customTrace:SetInput(lastWaypoint.SpeedMode, lastWaypoint.ExtraMode, lastWaypoint.OptValue + p_DeltaTime)
 					end
 
 					self.customTraceDistance = self.customTraceDistance + lastDistance
@@ -1713,7 +1694,7 @@ function ClientNodeEditor:_onEngineUpdate(p_Delta, p_SimDelta)
 		if (data.Timer < 0) then
 			self.botSelectedWaypoints[waypointID] = nil
 		else
-			data.Timer = data.Timer - p_Delta
+			data.Timer = data.Timer - p_DeltaTime
 			botwpcount = botwpcount + 1
 		end
 	end
@@ -1721,10 +1702,10 @@ function ClientNodeEditor:_onEngineUpdate(p_Delta, p_SimDelta)
 	self.debugEntries['botSelectedWaypoints'] = botwpcount
 end
 
-function ClientNodeEditor:_onUpdateManagerUpdate(p_Delta, p_Pass)
+function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 	-- Only do math on presimulation UpdatePass, don't bother if debugging is off
-	if not self.enabled or p_Pass ~= UpdatePass.UpdatePass_PreSim then
+	if not self.enabled or p_UpdatePass ~= UpdatePass.UpdatePass_PreSim then
 		return
 	end
 
@@ -1834,7 +1815,7 @@ function ClientNodeEditor:_onUpdateManagerUpdate(p_Delta, p_Pass)
     end
 end
 
-function ClientNodeEditor:_onUIDrawHud()
+function ClientNodeEditor:OnUIDrawHud()
 
 	if (self.botVisionEnabled) then
 
@@ -2230,7 +2211,7 @@ function ClientNodeEditor:Raycast(p_MaxDistance, p_UseAsync)
 	return raycastHit
 end
 
-if (g_ClientNodeEditor == nil) then
+if g_ClientNodeEditor == nil then
 	g_ClientNodeEditor = ClientNodeEditor()
 end
 

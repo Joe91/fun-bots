@@ -10,8 +10,6 @@ function FunBotUIClient:__init()
 	self._views = UIViews()
 
 	if Config.DisableUserInterface ~= true then
-		Events:Subscribe('Client:UpdateInput', self, self._onUpdateInput)
-
 		NetEvents:Subscribe('UI_Password_Protection', self, self._onUIPasswordProtection)
 		NetEvents:Subscribe('UI_Request_Password', self, self._onUIRequestPassword)
 		NetEvents:Subscribe('UI_Request_Password_Error', self, self._onUIRequestPasswordError)
@@ -367,7 +365,7 @@ function FunBotUIClient:_onUISendPassword(p_Data)
 	NetEvents:Send('UI_Request_Open', p_Data)
 end
 
-function FunBotUIClient:_onUpdateInput(p_Data)
+function FunBotUIClient:OnClientUpdateInput(p_DeltaTime)
 	if Config.DisableUserInterface == true then
 		return
 	end
@@ -382,7 +380,15 @@ function FunBotUIClient:_onUpdateInput(p_Data)
 	end
 end
 
-if (g_FunBotUIClient == nil) then
+function FunBotUIClient:OnExtensionLoaded()
+	self._views:OnExtensionLoaded()
+end
+
+function FunBotUIClient:OnExtensionUnloading()
+	self._views:OnExtensionUnloading()
+end
+
+if g_FunBotUIClient == nil then
 	g_FunBotUIClient = FunBotUIClient()
 end
 
