@@ -18,21 +18,6 @@ function BotManager:__init()
 	self._pendingAcceptRevives = {}
 	self._lastBotCheckIndex = 1
 	self._initDone = false
-
-	Events:Subscribe('UpdateManager:Update', self, self._onUpdate)
-	Events:Subscribe('Level:Destroy', self, self._onLevelDestroy)
-	NetEvents:Subscribe('BotShootAtPlayer', self, self._onShootAt)
-	NetEvents:Subscribe('BotRevivePlayer', self, self._onRevivePlayer)
-	NetEvents:Subscribe('BotShootAtBot', self, self._onBotShootAtBot)
-	Events:Subscribe('ServerDamagePlayer', self, self._onServerDamagePlayer) 	--only triggered on false damage
-	NetEvents:Subscribe('ClientDamagePlayer', self, self._onDamagePlayer)   	--only triggered on false damage
-	Hooks:Install('Soldier:Damage', 100, self, self._onSoldierDamage)
-	--Events:Subscribe('Soldier:HealthAction', self, self._onHealthAction)	-- use this for more options on revive. Not needed yet
-	--Events:Subscribe('GunSway:Update', self, self._onGunSway)
-	--Events:Subscribe('GunSway:UpdateRecoil', self, self._onGunSway)
-	--Events:Subscribe('Player:Destroyed', self, self._onPlayerDestroyed) -- Player left is called first, so use this one instead
-	Events:Subscribe('Player:Left', self, self._onPlayerLeft)
-	--Events:Subscribe('Engine:Message', self, self._onEngineMessage) -- maybe us this later
 end
 
 function BotManager:registerActivePlayer(p_Player)

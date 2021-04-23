@@ -37,6 +37,21 @@ function FunBotServer:__init()
 	Events:Subscribe('Extension:Loaded', self, self._onExtensionLoaded)
 	Events:Subscribe('Partition:Loaded', self, self._onPartitionLoaded)
 	NetEvents:Subscribe('RequestClientSettings', self, self._onRequestClientSettings)
+
+	Events:Subscribe('UpdateManager:Update', BotManager, BotManager._onUpdate)
+	Events:Subscribe('Level:Destroy', BotManager, BotManager._onLevelDestroy)
+	NetEvents:Subscribe('BotShootAtPlayer', BotManager, BotManager._onShootAt)
+	NetEvents:Subscribe('BotRevivePlayer', BotManager, BotManager._onRevivePlayer)
+	NetEvents:Subscribe('BotShootAtBot', BotManager, BotManager._onBotShootAtBot)
+	Events:Subscribe('ServerDamagePlayer', BotManager, BotManager._onServerDamagePlayer) 	--only triggered on false damage
+	NetEvents:Subscribe('ClientDamagePlayer', BotManager, BotManager._onDamagePlayer)   	--only triggered on false damage
+	Hooks:Install('Soldier:Damage', 100, BotManager, BotManager._onSoldierDamage)
+	--Events:Subscribe('Soldier:HealthAction', BotManager, BotManager._onHealthAction)	-- use this for more options on revive. Not needed yet
+	--Events:Subscribe('GunSway:Update', BotManager, BotManager._onGunSway)
+	--Events:Subscribe('GunSway:UpdateRecoil', BotManager, BotManager._onGunSway)
+	--Events:Subscribe('Player:Destroyed', BotManager, BotManager._onPlayerDestroyed) -- Player left is called first, so use this one instead
+	Events:Subscribe('Player:Left', BotManager, BotManager._onPlayerLeft)
+	--Events:Subscribe('Engine:Message', BotManager, BotManager._onEngineMessage) -- maybe us this later
 end
 
 function FunBotServer:_onExtensionUnload()

@@ -75,7 +75,7 @@ function Database:createTable(p_TableName, p_Definitions, p_Names, p_Additional)
 	if p_Additional ~= nil then
 		for index, value in pairs(p_Additional) do
 			entries:add(value)
-			p_Additionals:add(value)
+			additionals:add(value)
 		end
 	end
 
