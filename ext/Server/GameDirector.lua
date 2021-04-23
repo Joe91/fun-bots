@@ -17,19 +17,6 @@ function GameDirector:__init()
 	self.OnlyOneMcom = false
 	self.RushAttackingBase = ''
 	self.ArmedMcoms = {}
-
-	Events:Subscribe('CapturePoint:Lost', self, self._onLost)
-	Events:Subscribe('CapturePoint:Captured', self, self._onCapture)
-	Events:Subscribe('Player:EnteredCapturePoint', self, self._onPlayerEnterCapturePoint)
-
-	Events:Subscribe('Server:RoundOver', self, self._onRoundOver)
-	Events:Subscribe('Server:RoundReset', self, self._onRoundReset)
-
-	Events:Subscribe('Engine:Update', self, self._onUpdate)
-
-	Events:Subscribe('MCOM:Armed', self, self._onMcomArmed)
-	Events:Subscribe('MCOM:Disarmed', self, self._onMcomDisarmed)
-	Events:Subscribe('MCOM:Destroyed', self, self._onMcomDestroyed)
 end
 
 function GameDirector:onLevelLoaded()

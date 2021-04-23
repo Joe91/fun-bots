@@ -17,13 +17,6 @@ function BotSpawner:__init()
 	self._spawnSets = {}
 	self._kickPlayers = {}
 	self._botsWithoutPath = {}
-
-	Events:Subscribe('UpdateManager:Update', self, self._onUpdate)
-	Events:Subscribe('Bot:RespawnBot', self, self._onRespawnBot)
-	Events:Subscribe('Level:Destroy', self, self._onLevelDestroy)
-	Events:Subscribe('Player:KitPickup', self, self._onKitPickup)
-	Events:Subscribe('Player:Joining', self, self._onPlayerJoining)
-	Events:Subscribe('Player:TeamChange', self, self._onTeamChange)
 end
 
 function BotSpawner:_onTeamChange(p_Player, p_TeamId, p_SquadId)
