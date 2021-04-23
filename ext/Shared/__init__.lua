@@ -5,7 +5,7 @@ require('__shared/Version')
 require('__shared/WeaponList')
 require('__shared/EbxEditUtils')
 
-Language					= require('__shared/Language')
+local m_Language = require('__shared/Language')
 
 function FunBotShared:__init()
 	Events:Subscribe('Extension:Loaded', self, self.OnUpdateCheck)

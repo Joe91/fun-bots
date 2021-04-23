@@ -12,26 +12,25 @@ require('__shared/Constants/SpawnModes')
 
 require('ClientNodeEditor')
 
-Language					= require('__shared/Language')
-local FunBotUIClient		= require('UIClient')
-local ClientBotManager		= require('ClientBotManager')
+local m_Language = require('__shared/Language')
+local m_FunBotUIClient = require('UIClient')
+local m_ClientBotManager = require('ClientBotManager')
 
 function FunBotClient:__init()
-	Language:loadLanguage(Config.Language)
+	m_Language:loadLanguage(Config.Language)
 	Events:Subscribe('Extension:Unloading', self, self._onExtensionUnload)
 	Events:Subscribe('Engine:Message', self, self._onEngineMessage)
 end
 
 function FunBotClient:_onExtensionUnload()
-	ClientBotManager:onExtensionUnload()
+	m_ClientBotManager:onExtensionUnload()
 end
 
 function FunBotClient:_onEngineMessage(p_Message)
-	ClientBotManager:onEngineMessage(p_Message)
+	m_ClientBotManager:onEngineMessage(p_Message)
 end
 
--- Singleton.
-if (g_FunBotClient == nil) then
+if g_FunBotClient == nil then
 	g_FunBotClient = FunBotClient()
 end
 

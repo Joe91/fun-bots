@@ -2,11 +2,12 @@ class('SettingsManager')
 
 require('__shared/ArrayMap')
 require('__shared/Config')
-require('Database')
+
+local m_Database = require('Database')
 
 function SettingsManager:__init()
 	-- Create Config-Trace
-	Database:createTable('FB_Config_Trace', {
+	m_Database:createTable('FB_Config_Trace', {
 		DatabaseField.PrimaryText,
 		DatabaseField.Text,
 		DatabaseField.Time
@@ -19,7 +20,7 @@ function SettingsManager:__init()
 	})
 
 	-- Create Settings
-	Database:createTable('FB_Settings', {
+	m_Database:createTable('FB_Settings', {
 		DatabaseField.PrimaryText,
 		DatabaseField.Text,
 		DatabaseField.Time
@@ -31,7 +32,7 @@ function SettingsManager:__init()
 		'PRIMARY KEY("Key")'
 	})
 
-	--Database:query('CREATE UNIQUE INDEX USKey ON FB_Settings(Key)')
+	--m_Database:query('CREATE UNIQUE INDEX USKey ON FB_Settings(Key)')
 end
 
 function SettingsManager:onLoad()
@@ -47,7 +48,7 @@ function SettingsManager:onLoad()
 	-- get Values from Config.lua
 	for name, value in pairs(Config) do
 		-- Check SQL if Config.lua has changed
-		local single = Database:single('SELECT * FROM `FB_Config_Trace` WHERE `Key`=\'' .. name .. '\' LIMIT 1')
+		local single = m_Database:single('SELECT * FROM `FB_Config_Trace` WHERE `Key`=\'' .. name .. '\' LIMIT 1')
 
 		-- If not exists, create
 		if single == nil then
@@ -55,13 +56,13 @@ function SettingsManager:onLoad()
 			--print('SettingsManager: ADD (' .. name .. ' = ' .. tostring(value) .. ')')
 			--end
 
-			Database:insert('FB_Config_Trace', {
+			m_Database:insert('FB_Config_Trace', {
 				Key		= name,
 				Value	= value,
-				Time	= Database:now()
+				Time	= m_Database:now()
 			})
 
-			--Database:insert('FB_Settings', {
+			--m_Database:insert('FB_Settings', {
 			--	Key		= name,
 			--	Value	= DatabaseField.NULL,
 			--	Time	= DatabaseField.NULL
@@ -86,10 +87,10 @@ function SettingsManager:onLoad()
 				--end
 
 				-- if changed, update SETTINGS SQL
-				Database:update('FB_Config_Trace', {
+				m_Database:update('FB_Config_Trace', {
 					Key		= name,
 					Value	= value,
-					Time	= Database:now()
+					Time	= m_Database:now()
 				}, 'Key')
 			end
 		end
@@ -100,7 +101,7 @@ function SettingsManager:onLoad()
 	end
 
 	-- Load Settings
-	local settings = Database:fetch([[SELECT
+	local settings = m_Database:fetch([[SELECT
 											`Settings`.`Key`,
 											CASE WHEN
 												`Config`.`Key` IS NULL
@@ -157,29 +158,29 @@ function SettingsManager:update(p_Name, p_Value, p_Temporary, p_Batch)
 
 		-- Use old deprecated querys
 		if p_Batch == false then
-			local single = Database:single('SELECT * FROM `FB_Settings` WHERE `Key`=\'' .. p_Name .. '\' LIMIT 1')
+			local single = m_Database:single('SELECT * FROM `FB_Settings` WHERE `Key`=\'' .. p_Name .. '\' LIMIT 1')
 
 			-- If not exists, create
 			if single == nil then
-				Database:insert('FB_Settings', {
+				m_Database:insert('FB_Settings', {
 					Key		= p_Name,
 					Value	= p_Value,
-					Time	= Database:now()
+					Time	= m_Database:now()
 				})
 			else
-				Database:update('FB_Settings', {
+				m_Database:update('FB_Settings', {
 					Key		= p_Name,
 					Value	= p_Value,
-					Time	= Database:now()
+					Time	= m_Database:now()
 				}, 'Key')
 			end
 
 		-- Use new querys
 		else
-			Database:batchQuery('FB_Settings', {
+			m_Database:batchQuery('FB_Settings', {
 				Key		= p_Name,
 				Value	= p_Value,
-				Time	= Database:now()
+				Time	= m_Database:now()
 			}, 'Key')
 		end
 

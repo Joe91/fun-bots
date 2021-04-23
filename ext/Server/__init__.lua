@@ -10,26 +10,26 @@ require('__shared/Constants/BotWeapons')
 require('__shared/Constants/WeaponSets')
 require('__shared/Constants/BotAttackModes')
 require('__shared/Constants/SpawnModes')
+require('Globals')
+
 require('__shared/Utilities')
 
-require('NodeEditor')
-require('WeaponModification')
-
-Language					= require('__shared/Language')
-local SettingsManager		= require('SettingsManager')
-local BotManager			= require('BotManager')
-local BotSpawner			= require('BotSpawner')
-local WeaponList			= require('__shared/WeaponList')
-local ChatCommands			= require('ChatCommands')
-local RCONCommands			= require('RCONCommands')
-local FunBotUIServer		= require('UIServer')
-local GameDirector			= require('GameDirector')
-require('Globals')
+local m_NodeEditor = require('NodeEditor')
+local m_WeaponModification = require('WeaponModification')
+local m_Language = require('__shared/Language')
+local m_SettingsManager = require('SettingsManager')
+local m_BotManager = require('BotManager')
+local m_BotSpawner = require('BotSpawner')
+local m_WeaponList = require('__shared/WeaponList')
+local m_ChatCommands = require('ChatCommands')
+local m_RCONCommands = require('RCONCommands')
+local m_FunBotUIServer = require('UIServer')
+local m_GameDirector = require('GameDirector')
 
 local playerKilledDelay 	= 0
 
 function FunBotServer:__init()
-	Language:loadLanguage(Config.Language)
+	m_Language:loadLanguage(Config.Language)
 
 	Events:Subscribe('Level:Loaded', self, self._onLevelLoaded)
 	Events:Subscribe('Player:Chat', self, self._onChat)
@@ -39,47 +39,47 @@ function FunBotServer:__init()
 	NetEvents:Subscribe('RequestClientSettings', self, self._onRequestClientSettings)
 
 	-- BotManager
-	Events:Subscribe('UpdateManager:Update', BotManager, BotManager._onUpdate)
-	Events:Subscribe('Level:Destroy', BotManager, BotManager._onLevelDestroy)
-	NetEvents:Subscribe('BotShootAtPlayer', BotManager, BotManager._onShootAt)
-	NetEvents:Subscribe('BotRevivePlayer', BotManager, BotManager._onRevivePlayer)
-	NetEvents:Subscribe('BotShootAtBot', BotManager, BotManager._onBotShootAtBot)
-	Events:Subscribe('ServerDamagePlayer', BotManager, BotManager._onServerDamagePlayer) 	--only triggered on false damage
-	NetEvents:Subscribe('ClientDamagePlayer', BotManager, BotManager._onDamagePlayer)   	--only triggered on false damage
-	Hooks:Install('Soldier:Damage', 100, BotManager, BotManager._onSoldierDamage)
-	--Events:Subscribe('Soldier:HealthAction', BotManager, BotManager._onHealthAction)	-- use this for more options on revive. Not needed yet
-	--Events:Subscribe('GunSway:Update', BotManager, BotManager._onGunSway)
-	--Events:Subscribe('GunSway:UpdateRecoil', BotManager, BotManager._onGunSway)
-	--Events:Subscribe('Player:Destroyed', BotManager, BotManager._onPlayerDestroyed) -- Player left is called first, so use this one instead
-	Events:Subscribe('Player:Left', BotManager, BotManager._onPlayerLeft)
-	--Events:Subscribe('Engine:Message', BotManager, BotManager._onEngineMessage) -- maybe us this later
+	Events:Subscribe('UpdateManager:Update', m_BotManager, m_BotManager._onUpdate)
+	Events:Subscribe('Level:Destroy', m_BotManager, m_BotManager._onLevelDestroy)
+	NetEvents:Subscribe('BotShootAtPlayer', m_BotManager, m_BotManager._onShootAt)
+	NetEvents:Subscribe('BotRevivePlayer', m_BotManager, m_BotManager._onRevivePlayer)
+	NetEvents:Subscribe('BotShootAtBot', m_BotManager, m_BotManager._onBotShootAtBot)
+	Events:Subscribe('ServerDamagePlayer', m_BotManager, m_BotManager._onServerDamagePlayer) 	--only triggered on false damage
+	NetEvents:Subscribe('ClientDamagePlayer', m_BotManager, m_BotManager._onDamagePlayer)   	--only triggered on false damage
+	Hooks:Install('Soldier:Damage', 100, m_BotManager, m_BotManager._onSoldierDamage)
+	--Events:Subscribe('Soldier:HealthAction', m_BotManager, m_BotManager._onHealthAction)	-- use this for more options on revive. Not needed yet
+	--Events:Subscribe('GunSway:Update', m_BotManager, m_BotManager._onGunSway)
+	--Events:Subscribe('GunSway:UpdateRecoil', m_BotManager, m_BotManager._onGunSway)
+	--Events:Subscribe('Player:Destroyed', m_BotManager, m_BotManager._onPlayerDestroyed) -- Player left is called first, so use this one instead
+	Events:Subscribe('Player:Left', m_BotManager, m_BotManager._onPlayerLeft)
+	--Events:Subscribe('Engine:Message', m_BotManager, m_BotManager._onEngineMessage) -- maybe us this later
 
 	-- BotSpawner
-	Events:Subscribe('UpdateManager:Update', BotSpawner, BotSpawner._onUpdate)
-	Events:Subscribe('Bot:RespawnBot', BotSpawner, BotSpawner._onRespawnBot)
-	Events:Subscribe('Level:Destroy', BotSpawner, BotSpawner._onLevelDestroy)
-	Events:Subscribe('Player:KitPickup', BotSpawner, BotSpawner._onKitPickup)
-	Events:Subscribe('Player:Joining', BotSpawner, BotSpawner._onPlayerJoining)
-	Events:Subscribe('Player:TeamChange', BotSpawner, BotSpawner._onTeamChange)
+	Events:Subscribe('UpdateManager:Update', m_BotSpawner, m_BotSpawner._onUpdate)
+	Events:Subscribe('Bot:RespawnBot', m_BotSpawner, m_BotSpawner._onRespawnBot)
+	Events:Subscribe('Level:Destroy', m_BotSpawner, m_BotSpawner._onLevelDestroy)
+	Events:Subscribe('Player:KitPickup', m_BotSpawner, m_BotSpawner._onKitPickup)
+	Events:Subscribe('Player:Joining', m_BotSpawner, m_BotSpawner._onPlayerJoining)
+	Events:Subscribe('Player:TeamChange', m_BotSpawner, m_BotSpawner._onTeamChange)
 
 	-- GameDirector
-	Events:Subscribe('CapturePoint:Lost', GameDirector, GameDirector._onLost)
-	Events:Subscribe('CapturePoint:Captured', GameDirector, GameDirector._onCapture)
-	Events:Subscribe('Player:EnteredCapturePoint', GameDirector, GameDirector._onPlayerEnterCapturePoint)
-	Events:Subscribe('Server:RoundOver', GameDirector, GameDirector._onRoundOver)
-	Events:Subscribe('Server:RoundReset', GameDirector, GameDirector._onRoundReset)
-	Events:Subscribe('Engine:Update', GameDirector, GameDirector._onUpdate)
-	Events:Subscribe('MCOM:Armed', GameDirector, GameDirector._onMcomArmed)
-	Events:Subscribe('MCOM:Disarmed', GameDirector, GameDirector._onMcomDisarmed)
-	Events:Subscribe('MCOM:Destroyed', GameDirector, GameDirector._onMcomDestroyed)
+	Events:Subscribe('CapturePoint:Lost', m_GameDirector, m_GameDirector._onLost)
+	Events:Subscribe('CapturePoint:Captured', m_GameDirector, m_GameDirector._onCapture)
+	Events:Subscribe('Player:EnteredCapturePoint', m_GameDirector, m_GameDirector._onPlayerEnterCapturePoint)
+	Events:Subscribe('Server:RoundOver', m_GameDirector, m_GameDirector._onRoundOver)
+	Events:Subscribe('Server:RoundReset', m_GameDirector, m_GameDirector._onRoundReset)
+	Events:Subscribe('Engine:Update', m_GameDirector, m_GameDirector._onUpdate)
+	Events:Subscribe('MCOM:Armed', m_GameDirector, m_GameDirector._onMcomArmed)
+	Events:Subscribe('MCOM:Disarmed', m_GameDirector, m_GameDirector._onMcomDisarmed)
+	Events:Subscribe('MCOM:Destroyed', m_GameDirector, m_GameDirector._onMcomDestroyed)
 end
 
 function FunBotServer:_onExtensionUnload()
-	BotManager:destroyAll(nil, nil, true)
+	m_BotManager:destroyAll(nil, nil, true)
 end
 
 function FunBotServer:_onExtensionLoaded()
-	SettingsManager:onLoad()
+	m_SettingsManager:onLoad()
 
 	local fullLevelPath = SharedUtils:GetLevelName()
 
@@ -99,7 +99,7 @@ function FunBotServer:_onExtensionLoaded()
 end
 
 function FunBotServer:_onPartitionLoaded(p_Partition)
-	g_WeaponModification:OnPartitionLoaded(p_Partition)
+	m_WeaponModification:OnPartitionLoaded(p_Partition)
 	for _, instance in pairs(p_Partition.instances) do
 		if USE_REAL_DAMAGE then
 			if instance:Is("SyncedGameSettings") then
@@ -136,7 +136,7 @@ end
 
 function FunBotServer:_onRequestClientSettings(p_Player)
 	NetEvents:SendToLocal('WriteClientSettings', p_Player, Config, true)
-	BotManager:registerActivePlayer(p_Player)
+	m_BotManager:registerActivePlayer(p_Player)
 end
 
 function FunBotServer:_onLevelLoaded(p_LevelName, p_GameMode)
@@ -144,8 +144,8 @@ function FunBotServer:_onLevelLoaded(p_LevelName, p_GameMode)
 	if customGameMode ~= nil then
 		p_GameMode = customGameMode
 	end
-	g_WeaponModification:ModifyAllWeapons(Config.BotAimWorsening, Config.BotSniperAimWorsening)
-	WeaponList:onLevelLoaded()
+	m_WeaponModification:ModifyAllWeapons(Config.BotAimWorsening, Config.BotSniperAimWorsening)
+	m_WeaponList:onLevelLoaded()
 
 	if Debug.Server.INFO then
 		print('level ' .. p_LevelName .. ' loaded...')
@@ -263,17 +263,17 @@ function FunBotServer:_onLevelLoaded(p_LevelName, p_GameMode)
 		Globals.IsRush = false
 	end
 
-	g_NodeEditor:onLevelLoaded(p_LevelName, p_GameMode)
-	g_GameDirector:onLevelLoaded()
-	g_GameDirector:initObjectives()
-	BotSpawner:onLevelLoaded()
+	m_NodeEditor:onLevelLoaded(p_LevelName, p_GameMode)
+	m_GameDirector:onLevelLoaded()
+	m_GameDirector:initObjectives()
+	m_BotSpawner:onLevelLoaded()
 	NetEvents:BroadcastUnreliableLocal('WriteClientSettings', Config, true)
 end
 
 function FunBotServer:_onChat(p_Player, p_RecipientMask, p_Message)
 	local messageParts = string.lower(p_Message):split(' ')
 
-	ChatCommands:execute(messageParts, p_Player)
+	m_ChatCommands:execute(messageParts, p_Player)
 end
 
 -- Singleton.

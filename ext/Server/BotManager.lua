@@ -2,7 +2,7 @@ class('BotManager')
 
 require('Bot')
 
-local Utilities = require('__shared/Utilities')
+local m_Utilities = require('__shared/Utilities')
 
 function BotManager:__init()
 	self._bots = {}
@@ -34,7 +34,7 @@ function BotManager:getBotTeam()
 		countPlayers[i] = 0
 		local players = PlayerManager:GetPlayersByTeam(i)
 		for i = 1, #players do
-			if Utilities:isBot(players[i]) == false then
+			if m_Utilities:isBot(players[i]) == false then
 				countPlayers[i] = countPlayers[i] + 1
 			end
 		end
@@ -127,7 +127,7 @@ function BotManager:getPlayers()
 	local players = {}
 
 	for i=1, #allPlayers do
-		if not Utilities:isBot(allPlayers[i]) then
+		if not m_Utilities:isBot(allPlayers[i]) then
 			table.insert(players, allPlayers[i])
 		end
 	end
@@ -236,7 +236,7 @@ end
 function BotManager:_onHealthAction(p_Soldier, p_Action)
 	if p_Action == HealthStateAction.OnRevive then --7
 		if p_Soldier.player ~= nil then
-			if Utilities:isBot(p_Soldier.player.name) then
+			if m_Utilities:isBot(p_Soldier.player.name) then
 				table.insert(self._pendingAcceptRevives, p_Soldier.player.name)
 			end
 		end
@@ -414,7 +414,7 @@ function BotManager:_onSoldierDamage(p_HookCtx, p_Soldier, p_Info, p_GiverInfo)
 		return
 	end
 
-	local soldierIsBot = Utilities:isBot(p_Soldier.player)
+	local soldierIsBot = m_Utilities:isBot(p_Soldier.player)
 	if soldierIsBot and p_GiverInfo.giver ~= nil then
 		--detect if we need to shoot back
 		if Config.ShootBackIfHit and p_Info.damage > 0 then

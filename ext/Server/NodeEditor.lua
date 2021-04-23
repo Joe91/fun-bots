@@ -1,7 +1,7 @@
 class "NodeEditor"
 
-require('UIServer')
-require('__shared/NodeCollection')
+local m_ServerUI = require('UIServer')
+local m_NodeCollection = require('__shared/NodeCollection')
 
 function NodeEditor:__init()
 	self:RegisterEvents()
@@ -76,19 +76,19 @@ function NodeEditor:_onPlayerLeft(p_Player)
 end
 
 function NodeEditor:_onLevelDestroy(p_Args)
-	g_NodeCollection:Clear(p_Args)
-	g_NodeCollection:DeregisterEvents()
+	m_NodeCollection:Clear(p_Args)
+	m_NodeCollection:DeregisterEvents()
 end
 
 -- player has requested node collection to be sent
 function NodeEditor:_onRequestNodes(p_Player)
 	-- tell client to clear their list and how many to expect
-	NetEvents:SendToLocal('ClientNodeEditor:ReceivingNodes', p_Player, #g_NodeCollection:Get())
+	NetEvents:SendToLocal('ClientNodeEditor:ReceivingNodes', p_Player, #m_NodeCollection:Get())
 end
 
 -- player has indicated they are ready to receive nodes
 function NodeEditor:_onSendNodes(p_Player)
-	local nodes = g_NodeCollection:Get()
+	local nodes = m_NodeCollection:Get()
 	table.insert(self.playersReceivingNodes, {Player = p_Player, Index = 1, Nodes = nodes, BatchSendDelay = 0})
 	self.batchSendTimer = 0
 	self:Print('Sending %d waypoints to %s', #nodes, p_Player.name)
@@ -106,12 +106,12 @@ end
 -- player has indicated they are ready to send nodes to the server
 function NodeEditor:_onReceiveNodes(p_Player, p_NodeCount)
 
-	if (Config.SettingsPassword ~= nil and g_FunBotUIServer:_isAuthenticated(p_Player.accountGuid) ~= true) then
+	if (Config.SettingsPassword ~= nil and m_ServerUI:_isAuthenticated(p_Player.accountGuid) ~= true) then
 		self:Print('%s has no permissions for Waypoint-Editor.', p_Player.name)
 		return
 	end
 
-	g_NodeCollection:Clear()
+	m_NodeCollection:Clear()
 	self.playerSendingNodes = p_Player
 	self.nodeReceiveTimer = 0
 	self:Print('Receiving %d waypoints from %s', p_NodeCount, p_Player.name)
@@ -120,27 +120,27 @@ end
 -- player is sending a single node over
 function NodeEditor:_onCreate(p_Player, p_Data)
 
-	if (Config.SettingsPassword ~= nil and g_FunBotUIServer:_isAuthenticated(p_Player.accountGuid) ~= true) then
+	if (Config.SettingsPassword ~= nil and m_ServerUI:_isAuthenticated(p_Player.accountGuid) ~= true) then
 		self:Print('%s has no permissions for Waypoint-Editor.', p_Player.name)
 		return
 	end
 
-	g_NodeCollection:Create(p_Data, true)
+	m_NodeCollection:Create(p_Data, true)
 end
 
 -- node payload has finished sending, setup events and calc indexes
 function NodeEditor:_onInit(p_Player, p_Save)
 
-	if (Config.SettingsPassword ~= nil and g_FunBotUIServer:_isAuthenticated(p_Player.accountGuid) ~= true) then
+	if (Config.SettingsPassword ~= nil and m_ServerUI:_isAuthenticated(p_Player.accountGuid) ~= true) then
 		self:Print('%s has no permissions for Waypoint-Editor.', p_Player.name)
 		return
 	end
 
-	g_NodeCollection:RecalculateIndexes()
-	g_NodeCollection:ProcessMetadata()
+	m_NodeCollection:RecalculateIndexes()
+	m_NodeCollection:ProcessMetadata()
 
 	local staleNodes = 0
-	local nodesToCheck = g_NodeCollection:Get()
+	local nodesToCheck = m_NodeCollection:Get()
 	self:Print('Nodes Received: %d', #nodesToCheck)
 
 	for i=1, #nodesToCheck do
@@ -157,7 +157,7 @@ function NodeEditor:_onInit(p_Player, p_Save)
 	self:Print('Stale Nodes: %d', staleNodes)
 
 	if (p_Save) then
-		g_NodeCollection:Save()
+		m_NodeCollection:Save()
 	end
 end
 
@@ -211,7 +211,7 @@ function NodeEditor:_onEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 		self.nodeReceiveTimer = self.nodeReceiveTimer + p_DeltaTime
 
 		if (self.nodeReceiveTimer >= self.nodeReceiveDelay) then
-			NetEvents:SendToLocal('ClientNodeEditor:SendNodes', self.playerSendingNodes, #g_NodeCollection:Get())
+			NetEvents:SendToLocal('ClientNodeEditor:SendNodes', self.playerSendingNodes, #m_NodeCollection:Get())
 			self.nodeReceiveTimer = -1
 		end
 	else
@@ -265,10 +265,10 @@ end
 function NodeEditor:onLevelLoaded(p_LevelName, p_GameMode)
 	self:Print('Level Load: %s %s', p_LevelName, p_GameMode)
 
-	g_NodeCollection:Load(p_LevelName, p_GameMode)
+	m_NodeCollection:Load(p_LevelName, p_GameMode)
 
 	local counter = 0
-	local waypoints = g_NodeCollection:Get()
+	local waypoints = m_NodeCollection:Get()
 	for i=1, #waypoints do
 
 		local waypoint = waypoints[i]
@@ -287,7 +287,7 @@ function NodeEditor:_onUIRequestSaveSettings(p_Player, p_Data)
 		return
 	end
 
-	if (Config.SettingsPassword ~= nil and g_FunBotUIServer:_isAuthenticated(p_Player.accountGuid) ~= true) then
+	if (Config.SettingsPassword ~= nil and m_ServerUI:_isAuthenticated(p_Player.accountGuid) ~= true) then
 		return
 	end
 

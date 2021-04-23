@@ -2,8 +2,8 @@ class('ClientBotManager')
 
 require('__shared/Config')
 
-local WeaponList			= require('__shared/WeaponList')
-local Utilities 			= require('__shared/Utilities')
+local m_WeaponList = require('__shared/WeaponList')
+local m_Utilities = require('__shared/Utilities')
 
 function ClientBotManager:__init()
 	self._raycastTimer	= 0
@@ -51,7 +51,7 @@ function ClientBotManager:_onWriteClientSettings(newConfig, updateWeaponSets)
 	end
 
 	if updateWeaponSets then
-		WeaponList:updateWeaponList()
+		m_WeaponList:updateWeaponList()
 	end
 
 	self.player = PlayerManager:GetLocalPlayer()
@@ -103,10 +103,10 @@ function ClientBotManager:_onUpdate(p_Delta, p_Pass)
 				if (bot ~= nil and bot.onlineId == 0 and bot.soldier ~= nil) then
 
 					-- check for clear view
-					local playerPosition = ClientUtils:GetCameraTransform().trans:Clone() --player.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(player, false)
+					local playerPosition = ClientUtils:GetCameraTransform().trans:Clone() --player.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(player, false)
 
 					-- find direction of Bot
-					local target	= bot.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(bot, false)
+					local target	= bot.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(bot, false)
 					local distance	= playerPosition:Distance(bot.soldier.worldTransform.trans)
 
 					if (distance < Config.MaxRaycastDistance) then
@@ -149,7 +149,7 @@ function ClientBotManager:_onUpdate(p_Delta, p_Pass)
 					local playerPosition = self.player.corpse.worldTransform.trans:Clone() + Vec3(0, 1, 0)
 
 					-- find direction of Bot
-					local target	= bot.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(bot, false)
+					local target	= bot.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(bot, false)
 					local distance	= playerPosition:Distance(bot.soldier.worldTransform.trans)
 
 					if (distance < 35) then  -- TODO: use config var for this
@@ -186,7 +186,7 @@ end
 
 function ClientBotManager:_onBulletCollision(p_HookCtx, p_Entity, p_Hit, p_Shooter)
 	if (p_Hit.rigidBody.typeInfo.name == 'CharacterPhysicsEntity') then
-		if Utilities:isBot(p_Shooter) then
+		if m_Utilities:isBot(p_Shooter) then
 			local player = PlayerManager:GetLocalPlayer()
 
 			if (player.soldier ~= nil) then
@@ -196,7 +196,7 @@ function ClientBotManager:_onBulletCollision(p_HookCtx, p_Entity, p_Hit, p_Shoot
 
 				if (dx < 1 and dz < 1 and dy < 2 and dy > 0) then --included bodyhight
 					local isHeadshot	= false
-					local camaraHeight	= Utilities:getTargetHeight(player.soldier, false)
+					local camaraHeight	= m_Utilities:getTargetHeight(player.soldier, false)
 
 					if dy < camaraHeight + 0.3 and dy > camaraHeight - 0.10 then
 						isHeadshot = true
@@ -209,7 +209,6 @@ function ClientBotManager:_onBulletCollision(p_HookCtx, p_Entity, p_Hit, p_Shoot
 	end
 end
 
--- Singleton.
 if g_ClientBotManager == nil then
 	g_ClientBotManager = ClientBotManager()
 end

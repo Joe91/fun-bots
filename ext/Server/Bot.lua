@@ -1,11 +1,11 @@
 class('Bot')
 
 require('__shared/Config')
-require('__shared/NodeCollection')
 require('__shared/Constants/VehicleNames')
-require('PathSwitcher')
 
-local Utilities = require('__shared/Utilities')
+local m_NodeCollection = require('__shared/NodeCollection')
+local m_PathSwitcher = require('PathSwitcher')
+local m_Utilities = require('__shared/Utilities')
 
 function Bot:__init(p_Player)
 	--Player Object
@@ -458,8 +458,8 @@ function Bot:_updateAiming()
 		--interpolate player movement
 		local targetMovement		= Vec3.zero
 		local pitchCorrection		= 0.0
-		local fullPositionTarget	=  self._shootPlayer.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(self._shootPlayer, true)
-		local fullPositionBot		= self.player.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(self.player, false)
+		local fullPositionTarget	=  self._shootPlayer.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(self._shootPlayer, true)
+		local fullPositionBot		= self.player.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(self.player, false)
 		local grenadePith			= 0.0
 		local distanceToPlayer		= 0.0
 
@@ -519,7 +519,7 @@ function Bot:_updateAiming()
 			return
 		end
 		local positionTarget	=  self._shootPlayer.corpse.worldTransform.trans:Clone()
-		local positionBot		= self.player.soldier.worldTransform.trans:Clone() + Utilities:getCameraPos(self.player, false)
+		local positionBot		= self.player.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(self.player, false)
 
 		local dz		= positionTarget.z - positionBot.z
 		local dx		= positionTarget.x - positionBot.x
@@ -1019,8 +1019,8 @@ function Bot:_getWayIndex(p_CurrentWayPoint)
 		activePointIndex = p_CurrentWayPoint
 
 		-- direction handling
-		local countOfPoints = #g_NodeCollection:Get(nil, self._pathIndex)
-		local firstPoint =  g_NodeCollection:GetFirst(self._pathIndex)
+		local countOfPoints = #m_NodeCollection:Get(nil, self._pathIndex)
+		local firstPoint =  m_NodeCollection:GetFirst(self._pathIndex)
 		if activePointIndex > countOfPoints then
 			if firstPoint.OptValue == 0xFF then --inversion needed
 				activePointIndex			= countOfPoints
@@ -1081,7 +1081,7 @@ function Bot:_updateMovement()
 		elseif self.activeMoveMode == 5 then
 			self._attackModeMoveTimer = 0
 
-			if g_NodeCollection:Get(1, self._pathIndex) ~= nil then -- check for valid point
+			if m_NodeCollection:Get(1, self._pathIndex) ~= nil then -- check for valid point
 				-- get next point
 				local activePointIndex = self:_getWayIndex(self._currentWayPoint)
 
@@ -1095,21 +1095,21 @@ function Bot:_updateMovement()
 					point 				= self._shootWayPoints[#self._shootWayPoints]
 					nextPoint 			= self._shootWayPoints[#self._shootWayPoints - 1]
 					if nextPoint == nil then
-						nextPoint = g_NodeCollection:Get(activePointIndex, self._pathIndex)
+						nextPoint = m_NodeCollection:Get(activePointIndex, self._pathIndex)
 						if Config.DebugTracePaths then
 							NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', self._pathIndex, activePointIndex, self.player.soldier.worldTransform.trans, (self._obstaceSequenceTimer > 0), "Blue")
 						end
 					end
 					useShootWayPoint	= true
 				else
-					point = g_NodeCollection:Get(activePointIndex, self._pathIndex)
+					point = m_NodeCollection:Get(activePointIndex, self._pathIndex)
 					if not self._invertPathDirection then
-						nextPoint 		= g_NodeCollection:Get(self:_getWayIndex(self._currentWayPoint + 1), self._pathIndex)
+						nextPoint 		= m_NodeCollection:Get(self:_getWayIndex(self._currentWayPoint + 1), self._pathIndex)
 						if Config.DebugTracePaths then
 							NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', self._pathIndex, self:_getWayIndex(self._currentWayPoint + 1), self.player.soldier.worldTransform.trans, (self._obstaceSequenceTimer > 0), "Green")
 						end
 					else
-						nextPoint 		= g_NodeCollection:Get(self:_getWayIndex(self._currentWayPoint - 1), self._pathIndex)
+						nextPoint 		= m_NodeCollection:Get(self:_getWayIndex(self._currentWayPoint - 1), self._pathIndex)
 						if Config.DebugTracePaths then
 							NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', self._pathIndex, self:_getWayIndex(self._currentWayPoint - 1), self.player.soldier.worldTransform.trans, (self._obstaceSequenceTimer > 0), "Green")
 						end
@@ -1277,8 +1277,8 @@ function Bot:_updateMovement()
 							local timeForwardBackwardJumpDetection = 1.1 -- 1.5 s ahead and back
 							local jumpValid = false
 							for i = 1, math.floor(timeForwardBackwardJumpDetection/Config.TraceDelta) do
-								local pointBefore = g_NodeCollection:Get(activePointIndex - i, self._pathIndex)
-								local pointAfter = g_NodeCollection:Get(activePointIndex + i, self._pathIndex)
+								local pointBefore = m_NodeCollection:Get(activePointIndex - i, self._pathIndex)
+								local pointAfter = m_NodeCollection:Get(activePointIndex + i, self._pathIndex)
 								if (pointBefore ~= nil and pointBefore.ExtraMode == 1) or (pointAfter ~= nil and pointAfter.ExtraMode == 1) then
 									jumpValid = true
 									break
@@ -1330,7 +1330,7 @@ function Bot:_updateMovement()
 							-- CHECK FOR PATH-SWITCHES
 							local newWaypoint = nil
 							local switchPath = false
-							switchPath, newWaypoint = g_PathSwitcher:getNewPath(self.name, point, self._objective)
+							switchPath, newWaypoint = m_PathSwitcher:getNewPath(self.name, point, self._objective)
 							if not self.player.alive then
 								return
 							end
@@ -1338,7 +1338,7 @@ function Bot:_updateMovement()
 							if switchPath == true and not self._onSwitch then
 								if (self._objective ~= '') then
 									-- 'best' direction for objective on switch
-									local direction = g_NodeCollection:ObjectiveDirection(newWaypoint, self._objective)
+									local direction = m_NodeCollection:ObjectiveDirection(newWaypoint, self._objective)
 									self._invertPathDirection = (direction == 'Previous')
 								else
 									-- random path direction on switch
