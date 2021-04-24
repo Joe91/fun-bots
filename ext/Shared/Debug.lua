@@ -27,5 +27,9 @@ Debug = {
 		NODECOLLECTION	= false,		-- Debug NodeCollection
 		DATABASE		= false,		-- Debug Database-Operations
 		MODIFICATIONS	= false			-- Debug some Modifications
+	},
+	Logger = {
+		ENABLED = true,
+		PRINTALL = true
 	}
 }

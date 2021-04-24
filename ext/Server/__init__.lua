@@ -1,5 +1,6 @@
 class('FunBotServer')
 
+require('__shared/Version')
 require('__shared/Debug')
 require('__shared/Config')
 require('__shared/Constants/BotColors')
@@ -10,7 +11,10 @@ require('__shared/Constants/BotWeapons')
 require('__shared/Constants/WeaponSets')
 require('__shared/Constants/BotAttackModes')
 require('__shared/Constants/SpawnModes')
+require ('__shared/Utils/Logger')
 require('Globals')
+
+local m_Logger = Logger("FunBotServer", true)
 
 require('__shared/Utilities')
 
@@ -29,11 +33,12 @@ local m_GameDirector = require('GameDirector')
 local playerKilledDelay 	= 0
 
 function FunBotServer:__init()
+	m_Logger:Write("Test")
 	m_Language:loadLanguage(Config.Language)
-
+	Events:Subscribe('Engine:Init', self, self.OnEngineInit)
 	Events:Subscribe('Level:Loaded', self, self._onLevelLoaded)
 	Events:Subscribe('Player:Chat', self, self._onChat)
-	Events:Subscribe('Extension:Unloading', self, self._onExtensionUnload)
+	Events:Subscribe('Extension:Unloading', self, self._onExtensionUnloading)
 	Events:Subscribe('Extension:Loaded', self, self._onExtensionLoaded)
 	Events:Subscribe('Partition:Loaded', self, self._onPartitionLoaded)
 	NetEvents:Subscribe('RequestClientSettings', self, self._onRequestClientSettings)
@@ -74,7 +79,11 @@ function FunBotServer:__init()
 	Events:Subscribe('MCOM:Destroyed', m_GameDirector, m_GameDirector._onMcomDestroyed)
 end
 
-function FunBotServer:_onExtensionUnload()
+function FunBotServer:OnEngineInit()
+	require('UpdateCheck')
+end
+
+function FunBotServer:_onExtensionUnloading()
 	m_BotManager:destroyAll(nil, nil, true)
 end
 
