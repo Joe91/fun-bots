@@ -7,6 +7,7 @@
 		<link rel="stylesheet" type="text/css" href="Fonts/Venice.css" />
 		<link rel="stylesheet" type="text/css" href="Styles/Global.css" />
 		<link rel="stylesheet" type="text/css" href="Styles/Components/Logo.css" />
+		<link rel="stylesheet" type="text/css" href="Styles/Components/Text.css" />
 		<link rel="stylesheet" type="text/css" href="Styles/Components/CheckBox.css" />
 		<link rel="stylesheet" type="text/css" href="Styles/Components/Input.css" />
 		<link rel="stylesheet" type="text/css" href="Styles/Components/Entry.css" />
@@ -24,6 +25,7 @@
 		<script src="Classes/Constants/Color.js"></script>
 		<script src="Classes/Constants/Position.js"></script>
 		<script src="Classes/Components/Component.class.js"></script>
+		<script src="Classes/Components/Text.class.js"></script>
 		<script src="Classes/Components/Entry.class.js"></script>
 		<script src="Classes/Components/Link.class.js"></script>
 		<script src="Classes/Components/Button.class.js"></script>
@@ -45,193 +47,256 @@
 				document.querySelector('body').style.backgroundSize = 'cover';
 				
 				
-				UI.Handle(
-				{
- "Destination": "WaypointEditor",
+			UI.Handle(
+			{
+ "Type": "VIEW",
  "Data": {
-  "Name": "WaypointEditor",
   "Components": [
    {
+    "Type": "Box",
     "Attributes": [
      {
-      "Name": "Position",
       "Value": {
+       "Type": 1,
        "Position": {
         "Left": 20,
         "Top": 180
-       },
-       "Type": 1
-      }
+       }
+      },
+      "Name": "Position"
      }
     ],
-    "Type": "Box",
     "Data": {
+     "Items": {},
      "Color": 1,
-     "Hidden": true,
-     "Items": {}
+     "Hidden": true
     }
    },
    {
+    "Type": "Logo",
     "Attributes": [
      {
-      "Name": "Position",
       "Value": {
+       "Type": 1,
        "Position": {
         "Left": 20,
         "Top": 20
-       },
-       "Type": 1
-      }
+       }
+      },
+      "Name": "Position"
      }
     ],
-    "Type": "Logo",
     "Data": {
      "Subtitle": "fun-bots",
      "Title": "Waypoint-Editor"
     }
    },
    {
+    "Type": "Menu",
     "Attributes": [
      {
-      "Name": "Position",
       "Value": {
+       "Type": 1,
        "Position": {
-        "Right": 20,
-        "Top": 20
-       },
-       "Type": 1
-      }
+        "Top": 20,
+        "Right": 20
+       }
+      },
+      "Name": "Position"
      }
     ],
-    "Type": "Menu",
     "Data": {
      "Items": [
       {
        "Type": "MenuItem",
        "Data": {
-        "Name": "client",
-        "Items": [
-         {
-          "Type": "MenuItem",
-          "Data": {
-           "Name": "waypoints_client_load",
-           "Callback": "UI:VIEW:WaypointEditor:ACTION:MenuItem$waypoints_client_load",
-           "Title": "Load",
-           "CheckBoxes": {},
-           "Inputs": {},
-           "Icon": "Assets/Icons/Reload.svg"
-          }
-         },
-         {
-          "Type": "MenuItem",
-          "Data": {
-           "Name": "waypoints_client_save",
-           "Callback": "UI:VIEW:WaypointEditor:ACTION:MenuItem$waypoints_client_save",
-           "Title": "Save",
-           "CheckBoxes": {},
-           "Inputs": {},
-           "Icon": "Assets/Icons/Save.svg"
-          }
-         }
-        ],
-        "Title": "Client",
         "Permission": "UserInterface.WaypointEditor.Nodes.Client",
-        "Icon": "Assets/Icons/Client.svg"
-       }
-      },
-      {
-       "Type": "MenuItem",
-       "Data": {
-        "Name": "server",
+        "Icon": "Assets/Icons/Client.svg",
+        "Disabled": false,
+        "Title": "Client",
         "Items": [
          {
           "Type": "MenuItem",
           "Data": {
-           "Name": "waypoints_server_load",
-           "Callback": "UI:VIEW:WaypointEditor:ACTION:MenuItem$waypoints_server_load",
+           "CheckBoxes": {},
+           "Icon": "Assets/Icons/Reload.svg",
+           "Inputs": {},
+           "Disabled": false,
            "Title": "Load",
-           "CheckBoxes": {},
-           "Inputs": {},
-           "Icon": "Assets/Icons/Reload.svg"
+           "Callback": "UI:VIEW:WaypointEditor:ACTION:MenuItem$waypoints_client_load",
+           "Name": "waypoints_client_load"
           }
          },
          {
           "Type": "MenuItem",
           "Data": {
-           "Name": "waypoints_server_save",
-           "Callback": "UI:VIEW:WaypointEditor:ACTION:MenuItem$waypoints_server_save",
-           "Title": "Save",
            "CheckBoxes": {},
+           "Icon": "Assets/Icons/Save.svg",
            "Inputs": {},
-           "Icon": "Assets/Icons/Save.svg"
+           "Disabled": false,
+           "Title": "Save",
+           "Callback": "UI:VIEW:WaypointEditor:ACTION:MenuItem$waypoints_client_save",
+           "Name": "waypoints_client_save"
           }
          }
         ],
-        "Title": "Server",
-        "Permission": "UserInterface.WaypointEditor.Nodes.Server",
-        "Icon": "Assets/Icons/Server.svg"
+        "Name": "client"
        }
       },
       {
        "Type": "MenuItem",
        "Data": {
-        "Name": "view",
+        "Permission": "UserInterface.WaypointEditor.Nodes.Server",
+        "Icon": "Assets/Icons/Server.svg",
+        "Disabled": false,
+        "Title": "Server",
         "Items": [
          {
           "Type": "MenuItem",
           "Data": {
-           "Name": "lines",
-           "Callback": "UI:VIEW:WaypointEditor:ACTION:MenuItem$lines",
-           "Title": "Lines",
-           "CheckBoxes": [
-            {
-             "Position": 100,
-             "Type": "CheckBox",
-             "Data": {
-              "Name": "view_lines",
-              "Disabled": false,
-              "IsChecked": true
-             }
-            }
-           ],
-           "Inputs": {}
+           "CheckBoxes": {},
+           "Icon": "Assets/Icons/Reload.svg",
+           "Inputs": {},
+           "Disabled": false,
+           "Title": "Load",
+           "Callback": "UI:VIEW:WaypointEditor:ACTION:MenuItem$waypoints_server_load",
+           "Name": "waypoints_server_load"
           }
          },
          {
           "Type": "MenuItem",
           "Data": {
-           "Name": "labels",
-           "Callback": "UI:VIEW:WaypointEditor:ACTION:MenuItem$labels",
-           "Title": "Labels",
-           "CheckBoxes": [
-            {
-             "Position": 100,
-             "Type": "CheckBox",
-             "Data": {
-              "Name": "view_labels",
-              "Disabled": false,
-              "IsChecked": true
-             }
-            }
-           ],
-           "Inputs": {}
+           "CheckBoxes": {},
+           "Icon": "Assets/Icons/Save.svg",
+           "Inputs": {},
+           "Disabled": false,
+           "Title": "Save",
+           "Callback": "UI:VIEW:WaypointEditor:ACTION:MenuItem$waypoints_server_save",
+           "Name": "waypoints_server_save"
           }
          }
         ],
-        "Title": "View",
-        "Permission": "UserInterface.WaypointEditor.View",
-        "Icon": "Assets/Icons/View.svg"
+        "Name": "server"
        }
       },
       {
        "Type": "MenuItem",
        "Data": {
-        "Name": "back",
-        "Shortcut": "F12",
-        "Title": "Back",
+        "Permission": "UserInterface.WaypointEditor.View",
+        "Icon": "Assets/Icons/View.svg",
+        "Disabled": false,
+        "Title": "View",
+        "Items": [
+         {
+          "Type": "MenuSeparator",
+          "Data": {
+           "Title": "Editor"
+          }
+         },
+         {
+          "Type": "MenuItem",
+          "Data": {
+           "CheckBoxes": [
+            {
+             "Type": "CheckBox",
+             "Position": 100,
+             "Data": {
+              "IsChecked": true,
+              "Disabled": false,
+              "Name": "view_lines"
+             }
+            }
+           ],
+           "Inputs": {},
+           "Disabled": false,
+           "Title": "Lines",
+           "Callback": "UI:VIEW:WaypointEditor:ACTION:MenuItem$lines",
+           "Name": "lines"
+          }
+         },
+         {
+          "Type": "MenuItem",
+          "Data": {
+           "CheckBoxes": [
+            {
+             "Type": "CheckBox",
+             "Position": 100,
+             "Data": {
+              "IsChecked": true,
+              "Disabled": false,
+              "Name": "view_labels"
+             }
+            }
+           ],
+           "Inputs": {},
+           "Disabled": false,
+           "Title": "Labels",
+           "Callback": "UI:VIEW:WaypointEditor:ACTION:MenuItem$labels",
+           "Name": "labels"
+          }
+         },
+         {
+          "Type": "MenuSeparator",
+          "Data": {
+           "Title": "User Interface"
+          }
+         },
+         {
+          "Type": "MenuItem",
+          "Data": {
+           "CheckBoxes": [
+            {
+             "Type": "CheckBox",
+             "Position": 100,
+             "Data": {
+              "IsChecked": true,
+              "Disabled": false,
+              "Name": "view_interaction"
+             }
+            }
+           ],
+           "Inputs": {},
+           "Disabled": false,
+           "Title": "Interaction Info",
+           "Callback": "UI:VIEW:WaypointEditor:ACTION:MenuItem$interaction_information",
+           "Name": "interaction_information"
+          }
+         },
+         {
+          "Type": "MenuItem",
+          "Data": {
+           "CheckBoxes": [
+            {
+             "Type": "CheckBox",
+             "Position": 100,
+             "Data": {
+              "IsChecked": true,
+              "Disabled": false,
+              "Name": "view_shortcuts"
+             }
+            }
+           ],
+           "Inputs": {},
+           "Disabled": false,
+           "Title": "Quick Shortcuts",
+           "Callback": "UI:VIEW:WaypointEditor:ACTION:MenuItem$quick_shortcuts",
+           "Name": "quick_shortcuts"
+          }
+         }
+        ],
+        "Name": "view"
+       }
+      },
+      {
+       "Type": "MenuItem",
+       "Data": {
         "CheckBoxes": {},
         "Callback": "UI:VIEW:WaypointEditor:HIDE",
-        "Inputs": {}
+        "Inputs": {},
+        "Disabled": false,
+        "Title": "Back",
+        "Shortcut": "F12",
+        "Name": "back"
        }
       },
       {
@@ -241,62 +306,66 @@
          {
           "Type": "MenuItem",
           "Data": {
-           "Name": "trace_toggle",
-           "Callback": "UI:VIEW:WaypointEditor:ACTION:MenuItem$trace_toggle",
-           "Title": "Start Trace",
-           "Inputs": {},
-           "CheckBoxes": {},
            "Permission": "UserInterface.WaypointEditor.Tracing",
-           "Icon": "Assets/Icons/Start.svg"
+           "Icon": "Assets/Icons/Start.svg",
+           "CheckBoxes": {},
+           "Inputs": {},
+           "Disabled": false,
+           "Title": "Start Trace",
+           "Callback": "UI:VIEW:WaypointEditor:ACTION:MenuItem$trace_toggle",
+           "Name": "trace_toggle"
           }
          },
          {
           "Type": "MenuItem",
           "Data": {
-           "Name": "trace_save",
-           "Callback": "UI:VIEW:WaypointEditor:ACTION:MenuItem$trace_save",
-           "Title": "Save Trace",
-           "Inputs": {},
-           "CheckBoxes": {},
            "Permission": "UserInterface.WaypointEditor.TraceSaving",
-           "Icon": "Assets/Icons/Save.svg"
+           "Icon": "Assets/Icons/Save.svg",
+           "CheckBoxes": {},
+           "Inputs": {},
+           "Disabled": false,
+           "Title": "Save Trace",
+           "Callback": "UI:VIEW:WaypointEditor:ACTION:MenuItem$trace_save",
+           "Name": "trace_save"
           }
          },
          {
           "Type": "MenuItem",
           "Data": {
-           "Name": "bot_spawn_path",
-           "Callback": "UI:VIEW:WaypointEditor:ACTION:MenuItem$bot_spawn_path",
-           "Title": "Spawn Bot on Way",
-           "Inputs": {},
-           "CheckBoxes": {},
            "Permission": "UserInterface.WaypointEditor.SpawnBot",
-           "Icon": "Assets/Icons/SpawnBotWay.svg"
+           "Icon": "Assets/Icons/SpawnBotWay.svg",
+           "CheckBoxes": {},
+           "Inputs": {},
+           "Disabled": false,
+           "Title": "Spawn Bot on Way",
+           "Callback": "UI:VIEW:WaypointEditor:ACTION:MenuItem$bot_spawn_path",
+           "Name": "bot_spawn_path"
           }
          },
          {
           "Type": "MenuItem",
           "Data": {
-           "Name": "trace_clear",
-           "Callback": "UI:VIEW:WaypointEditor:ACTION:MenuItem$trace_clear",
-           "Title": "Clear Trace",
-           "Inputs": {},
-           "CheckBoxes": {},
-		   "Disabled": true,
            "Permission": "UserInterface.WaypointEditor.TraceClear",
-           "Icon": "Assets/Icons/Clear.svg"
+           "Icon": "Assets/Icons/Clear.svg",
+           "CheckBoxes": {},
+           "Inputs": {},
+           "Disabled": true,
+           "Title": "Clear Trace",
+           "Callback": "UI:VIEW:WaypointEditor:ACTION:MenuItem$trace_clear",
+           "Name": "trace_clear"
           }
          },
          {
           "Type": "MenuItem",
           "Data": {
-           "Name": "trace_reset_all",
-           "Callback": "UI:VIEW:WaypointEditor:ACTION:MenuItem$trace_reset_all",
-           "Title": "Reset all Traces",
-           "Inputs": {},
-           "CheckBoxes": {},
            "Permission": "UserInterface.WaypointEditor.TraceReset",
-           "Icon": "Assets/Icons/Trash.svg"
+           "Icon": "Assets/Icons/Trash.svg",
+           "CheckBoxes": {},
+           "Inputs": {},
+           "Disabled": false,
+           "Title": "Reset all Traces",
+           "Callback": "UI:VIEW:WaypointEditor:ACTION:MenuItem$trace_reset_all",
+           "Name": "trace_reset_all"
           }
          }
         ]
@@ -306,113 +375,113 @@
     }
    },
    {
+    "Type": "Box",
     "Attributes": [
      {
-      "Name": "Position",
       "Value": {
+       "Type": 1,
        "Position": {
         "Left": 15,
         "Top": 75
-       },
-       "Type": 1
-      }
+       }
+      },
+      "Name": "Position"
      }
     ],
-    "Type": "Box",
     "Data": {
-     "Color": 2,
-     "Hidden": false,
      "Items": [
       {
        "Type": "Entry",
        "Data": {
-        "Name": "trace_index",
         "Text": "Current Trace Index",
         "Value": {
-         "Name": "trace_index",
-         "Type": 1,
-         "Disabled": true,
          "Value": 0,
+         "Type": 1,
+         "Name": "trace_index",
+         "Disabled": true,
          "Arrows": [
           {
-           "Name": "Arrow#6",
-           "Callback": "UI:VIEW:WaypointEditor:CALL:Arrow$Arrow#6",
-           "Type": "Arrow",
            "Character": "❰",
-           "Position": 100
+           "Position": 100,
+           "Type": "Arrow",
+           "Callback": "UI:VIEW:WaypointEditor:CALL:Arrow$Arrow#6",
+           "Name": "Arrow#6"
           },
           {
-           "Name": "Arrow#7",
-           "Callback": "UI:VIEW:WaypointEditor:CALL:Arrow$Arrow#7",
-           "Type": "Arrow",
            "Character": "❱",
-           "Position": 101
+           "Position": 101,
+           "Type": "Arrow",
+           "Callback": "UI:VIEW:WaypointEditor:CALL:Arrow$Arrow#7",
+           "Name": "Arrow#7"
           }
          ]
-        }
+        },
+        "Name": "trace_index"
        }
       },
       {
        "Type": "Entry",
        "Data": {
-        "Name": "trace_waypoints",
         "Text": "Waypoints",
-        "Value": "0"
+        "Value": "0",
+        "Name": "trace_waypoints"
        }
       },
       {
        "Type": "Entry",
        "Data": {
-        "Name": "trace_distance",
         "Text": "Total Distance",
-        "Value": "0 m"
+        "Value": "0 m",
+        "Name": "trace_distance"
        }
       }
-     ]
+     ],
+     "Color": 2,
+     "Hidden": false
     }
+   },
+   {
+    "Type": "Text",
+    "Data": {
+     "Icon": "Assets/Keys/Q.svg",
+     "Disabled": false,
+     "Name": "interaction_information",
+     "Text": "Press for interaction with the Editor"
+    },
+    "Attributes": [
+     {
+      "Name": "Position",
+      "Value": {
+       "Type": 207
+      }
+     }
+    ]
    }
-  ]
+  ],
+  "Name": "WaypointEditor"
  },
- "Type": "VIEW",
+ "Destination": "WaypointEditor",
  "Action": "SHOW"
-}
-				);
-			
-			
+});
 			
 			
 			UI.Handle({
- "Destination": "WaypointEditor",
- "Data": {
-  "Type": "Dialog",
-  "Data": {
-   "Name": "confirmation",
-   "Content": "Do you really want to clear the actual Trace #0?",
-   "Buttons": [
-    {
-     "Type": "Button",
-     "Data": {
-      "Name": "button_confirmation_no",
-      "Disabled": false,
-      "Title": "No"
-     }
-    },
-    {
-     "Type": "Button",
-     "Data": {
-      "Name": "button_confirmation_yes",
-      "Disabled": false,
-      "Title": "Yes"
-     }
-    }
-   ],
-   "Title": "Clear Trace - Confirmation"
-  }
- },
- "Type": "VIEW",
- "Action": "PUSH"
-});
+				"Type": "VIEW",
+				"Destination": "WaypointEditor",
+				"Action": "DEACTIVATE"
+			});
 			
+			
+			UI.Handle({
+ "Data": {
+  "Disabled": true,
+  "Name": "interaction_information",
+  "Type": "Text"
+ },
+ "Destination": "WaypointEditor",
+ "Action": "UPDATE",
+ "Type": "VIEW"
+});
 			
 			
 			

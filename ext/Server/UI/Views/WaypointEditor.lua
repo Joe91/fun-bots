@@ -1,9 +1,11 @@
 class('WaypointEditor');
 
 function WaypointEditor:__init(core)
-	self.view 			= View(core, 'WaypointEditor');
-	self.trace_index	= 0;
-	self.tracing		= false;
+	self.view 						= View(core, 'WaypointEditor');
+	self.trace_index				= 0;
+	self.tracing					= false;
+	self.interaction_information	= true;
+	self.quick_shortcuts			= true;
 	
 	NetEvents:Subscribe('WaypointEditor:TraceToggle', self, function(userData, player, data)
 		if data.Enabled ~= nil then
@@ -175,8 +177,12 @@ function WaypointEditor:InitializeComponent()
 	local view = MenuItem('View', 'view');
 		view:SetIcon('Assets/Icons/View.svg');
 		
-		local checkbox_lines	= CheckBox('view_lines', Config.drawWaypointLines);
-		local checkbox_labels	= CheckBox('view_labels', Config.drawWaypointIDs);
+		local checkbox_lines		= CheckBox('view_lines', Config.drawWaypointLines);
+		local checkbox_labels		= CheckBox('view_labels', Config.drawWaypointIDs);
+		local checkbox_interaction	= CheckBox('view_interaction', self.interaction_information);
+		local checkbox_shortcuts	= CheckBox('view_shortcuts', self.quick_shortcuts);
+		
+		view:AddItem(MenuSeparator('Editor'));
 		
 		view:AddItem(MenuItem('Lines', 'lines', function(player)
 			Config.drawWaypointLines = not Config.drawWaypointLines;
@@ -201,6 +207,40 @@ function WaypointEditor:InitializeComponent()
 				IsChecked	= checkbox_labels:IsChecked()
 			}));
 		end):AddCheckBox(Position.Left, checkbox_labels));
+		
+		view:AddItem(MenuSeparator('User Interface'));
+		
+		view:AddItem(MenuItem('Interaction Info', 'interaction_information', function(player)
+			self.interaction_information = not self.interaction_information;
+			
+			checkbox_interaction:SetChecked(self.interaction_information);
+			
+			NetEvents:SendTo('UI', player, 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
+				Type		= checkbox_interaction:__class(),
+				Name		= checkbox_interaction:GetName(),
+				IsChecked	= checkbox_interaction:IsChecked()
+			}));
+			
+			NetEvents:SendTo('UI', player, 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
+				Type		= 'Text',
+				Name		= 'interaction_information',
+				Disabled	= not checkbox_interaction:IsChecked()
+			}));
+		end):AddCheckBox(Position.Left, checkbox_interaction));
+		
+		view:AddItem(MenuItem('Quick Shortcuts', 'quick_shortcuts', function(player)
+			self.quick_shortcuts = not self.quick_shortcuts;
+			
+			checkbox_shortcuts:SetChecked(self.quick_shortcuts);
+			
+			NetEvents:SendTo('UI', player, 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
+				Type		= checkbox_shortcuts:__class(),
+				Name		= checkbox_shortcuts:GetName(),
+				IsChecked	= checkbox_shortcuts:IsChecked()
+			}));
+			
+			-- Show or hide Numpad
+		end):AddCheckBox(Position.Left, checkbox_shortcuts));
 		
 	navigation:AddItem(view, 'UserInterface.WaypointEditor.View');
 	
@@ -313,6 +353,8 @@ function WaypointEditor:InitializeComponent()
 	status:AddItem(Entry('trace_distance', 'Total Distance', '0 m'));
 	
 	self.view:AddComponent(status);
+	
+	self.view:AddComponent(Text('interaction_information', 'Press for interaction with the Editor'):SetPosition(Position.Bottom_Center):SetIcon('Assets/Keys/Q.svg'));
 end
 
 return WaypointEditor;

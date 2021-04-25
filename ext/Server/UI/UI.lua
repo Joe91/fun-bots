@@ -14,6 +14,7 @@ function UI:__init()
 	-- Components that will be loaded
 	self.boot	= {
 		'Input',
+		'Text',
 		'Button',
 		'CheckBox',
 		'Logo',

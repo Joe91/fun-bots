@@ -23,6 +23,13 @@ class View extends Component {
 				
 				if(typeof(properties.Type) != 'undefined') {
 					switch(properties.Type) {
+						case 'Text':
+							component		= new Text(properties.Data.Name, properties.Data.Text);
+							
+							if(typeof(properties.Data.Icon) != 'undefined') {
+								component.SetIcon(properties.Data.Icon);
+							}
+						break;
 						case 'Logo':
 							component		= new Logo(properties.Data.Title, properties.Data.Subtitle);
 						break;
@@ -138,6 +145,14 @@ class View extends Component {
 			component.SetValue(data.Value);
 		} else if(component instanceof CheckBox && data.Type == 'CheckBox' && component.GetName() == data.Name) {
 			component.SetChecked(data.IsChecked);
+		} else if(component instanceof Text && data.Type == 'Text' && component.GetName() == data.Name) {
+			if(typeof(data.Disabled) !== 'undefined') {
+				if(data.Disabled) {
+					component.Disable();
+				} else {
+					component.Enable();
+				}
+			}
 		} else if(component instanceof MenuItem && data.Type == 'MenuItem' && component.GetName() == data.Name) {
 			if(typeof(data.Text) !== 'undefined') {
 				component.SetTitle(data.Text);
