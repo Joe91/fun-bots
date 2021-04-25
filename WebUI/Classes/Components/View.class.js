@@ -30,6 +30,10 @@ class View extends Component {
 								component.SetIcon(properties.Data.Icon);
 							}
 						break;
+						case 'QuickShortcut':
+							console.error(properties);
+							component		= new QuickShortcut(properties.Data.Name);
+						break;
 						case 'Logo':
 							component		= new Logo(properties.Data.Title, properties.Data.Subtitle);
 						break;
@@ -145,6 +149,14 @@ class View extends Component {
 			component.SetValue(data.Value);
 		} else if(component instanceof CheckBox && data.Type == 'CheckBox' && component.GetName() == data.Name) {
 			component.SetChecked(data.IsChecked);
+		} else if(component instanceof QuickShortcut && data.Type == 'QuickShortcut' && component.GetName() == data.Name) {
+			if(typeof(data.Disabled) !== 'undefined') {
+				if(data.Disabled) {
+					component.Disable();
+				} else {
+					component.Enable();
+				}
+			}
 		} else if(component instanceof Text && data.Type == 'Text' && component.GetName() == data.Name) {
 			if(typeof(data.Disabled) !== 'undefined') {
 				if(data.Disabled) {

@@ -1,0 +1,12 @@
+ui-quickshortcut {
+	color: var(--color_text);
+	text-shadow: 0 0 6px var(--color_text_shadow);
+	font-weight: 900;
+	font-size: 16px;
+	text-align: center;
+	text-transform: uppercase;
+}
+
+ui-quickshortcut[data-disabled="true"] {
+	display: none;
+}

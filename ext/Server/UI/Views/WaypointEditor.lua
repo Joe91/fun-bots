@@ -5,7 +5,7 @@ function WaypointEditor:__init(core)
 	self.trace_index				= 0;
 	self.tracing					= false;
 	self.interaction_information	= true;
-	self.quick_shortcuts			= true;
+	self.quick_shortcuts			= QuickShortcut('trace_controls');
 	
 	NetEvents:Subscribe('WaypointEditor:TraceToggle', self, function(userData, player, data)
 		if data.Enabled ~= nil then
@@ -121,12 +121,28 @@ function WaypointEditor:GetName()
 end
 
 function WaypointEditor:InitializeComponent()
+	self.quick_shortcuts:SetPosition(Position.Center_Right);
+	self.quick_shortcuts:AddNumpad(Numpad.K1, 'Remove');
+	self.quick_shortcuts:AddNumpad(Numpad.K2, 'Unlink');
+	self.quick_shortcuts:AddNumpad(Numpad.K3, 'Add');
+	self.quick_shortcuts:AddNumpad(Numpad.K4, 'Move');
+	self.quick_shortcuts:AddNumpad(Numpad.K5, 'Select');
+	self.quick_shortcuts:AddNumpad(Numpad.K6, 'Input');
+	self.quick_shortcuts:AddNumpad(Numpad.K7, 'Merge');
+	self.quick_shortcuts:AddNumpad(Numpad.K8, 'Link');
+	self.quick_shortcuts:AddNumpad(Numpad.K9, 'Split');
+	self.quick_shortcuts:AddHelp(InputDeviceKeys.IDK_F12, 'Settings');
+	self.quick_shortcuts:AddHelp(InputDeviceKeys.IDK_Q, 'Quick Select');
+	self.quick_shortcuts:AddHelp(InputDeviceKeys.IDK_Backspace, 'Clear Select');
+	self.quick_shortcuts:AddHelp(InputDeviceKeys.IDK_Insert, 'Spawn Bot');
+	
+	
 	local recording = Box(Color.Red);
 	recording:SetPosition(Position.Absolute, {
 		Top		= 180,
 		Left	= 20
 	});
-			
+	
 	self.view:AddComponent(recording);
 	recording:Hide();
 	
@@ -180,7 +196,7 @@ function WaypointEditor:InitializeComponent()
 		local checkbox_lines		= CheckBox('view_lines', Config.drawWaypointLines);
 		local checkbox_labels		= CheckBox('view_labels', Config.drawWaypointIDs);
 		local checkbox_interaction	= CheckBox('view_interaction', self.interaction_information);
-		local checkbox_shortcuts	= CheckBox('view_shortcuts', self.quick_shortcuts);
+		local checkbox_shortcuts	= CheckBox('view_shortcuts', self.quick_shortcuts:IsEnabled());
 		
 		view:AddItem(MenuSeparator('Editor'));
 		
@@ -229,9 +245,13 @@ function WaypointEditor:InitializeComponent()
 		end):AddCheckBox(Position.Left, checkbox_interaction));
 		
 		view:AddItem(MenuItem('Quick Shortcuts', 'quick_shortcuts', function(player)
-			self.quick_shortcuts = not self.quick_shortcuts;
+			if self.quick_shortcuts:IsEnabled() then
+				self.quick_shortcuts:Disable()
+			else
+				self.quick_shortcuts:Enable()
+			end
 			
-			checkbox_shortcuts:SetChecked(self.quick_shortcuts);
+			checkbox_shortcuts:SetChecked(self.quick_shortcuts:IsEnabled());
 			
 			NetEvents:SendTo('UI', player, 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
 				Type		= checkbox_shortcuts:__class(),
@@ -239,7 +259,11 @@ function WaypointEditor:InitializeComponent()
 				IsChecked	= checkbox_shortcuts:IsChecked()
 			}));
 			
-			-- Show or hide Numpad
+			NetEvents:SendTo('UI', player, 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
+				Type		= self.quick_shortcuts:__class(),
+				Name		= self.quick_shortcuts:GetName(),
+				Disabled	= not self.quick_shortcuts:IsEnabled()
+			}));
 		end):AddCheckBox(Position.Left, checkbox_shortcuts));
 		
 	navigation:AddItem(view, 'UserInterface.WaypointEditor.View');
@@ -354,6 +378,7 @@ function WaypointEditor:InitializeComponent()
 	
 	self.view:AddComponent(status);
 	
+	self.view:AddComponent(self.quick_shortcuts);
 	self.view:AddComponent(Text('interaction_information', 'Press for interaction with the Editor'):SetPosition(Position.Bottom_Center):SetIcon('Assets/Keys/Q.svg'));
 end
 
