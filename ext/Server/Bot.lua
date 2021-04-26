@@ -1142,8 +1142,8 @@ function Bot:_updateMovement()
 							self._ActionActive = false
 
 						elseif self._ActionTimer <= s_Point.Data.Action.time then
-							for _,input in pairs(s_Point.Data.Action.inputs) do
-								self:_setInput(input, 1)
+							for _, l_Input in pairs(s_Point.Data.Action.inputs) do
+								self:_setInput(l_Input, 1)
 							end
 						end
 					else
