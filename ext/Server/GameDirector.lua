@@ -252,9 +252,9 @@ function GameDirector:checkForExecution(p_Point, p_TeamId)
 				if objective ~= nil then
 					if objective.active and not objective.destroyed then
 						if p_TeamId == TeamId.Team1 and objective.team == TeamId.TeamNeutral then
-							execute = true	--Attacking Team
+							execute = true --Attacking Team
 						elseif p_TeamId == TeamId.Team2 and objective.isAttacked then
-							execute = true	--Defending Team
+							execute = true --Defending Team
 						end
 					end
 				end
@@ -515,9 +515,9 @@ function GameDirector:_useSubobjective(p_BotTeam, p_ObjectiveName)
 	if objective ~= nil and objective.subObjective then
 		if objective.active and not objective.destroyed then
 			if p_BotTeam == TeamId.Team1 and objective.team == TeamId.TeamNeutral then
-				use = true	--Attacking Team
+				use = true --Attacking Team
 			elseif p_BotTeam == TeamId.Team2 and objective.isAttacked then
-				use = true	--Defending Team
+				use = true --Defending Team
 			end
 		end
 	end
@@ -541,7 +541,7 @@ function GameDirector:_onPlayerEnterCapturePoint(p_Player, p_CapturePoint)
 	local flagEntity = CapturePointEntity(p_CapturePoint)
 	local objectiveName = self:_translateObjective(flagEntity.transform.trans, flagEntity.name)
 	self:_updateObjective(objectiveName, {
-		isAttacked = flagEntity.isAttacked  --		team = flagEntity.team,
+		isAttacked = flagEntity.isAttacked  -- team = flagEntity.team,
 	})
 end
 
@@ -670,7 +670,7 @@ function GameDirector:useSubobjective(p_BotName, p_Objective)
 	return false
 end
 
-if (g_GameDirector == nil) then
+if g_GameDirector == nil then
 	g_GameDirector = GameDirector()
 end
 

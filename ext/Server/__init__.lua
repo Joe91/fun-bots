@@ -30,7 +30,7 @@ local m_RCONCommands = require('RCONCommands')
 local m_FunBotUIServer = require('UIServer')
 local m_GameDirector = require('GameDirector')
 
-local playerKilledDelay 	= 0
+local playerKilledDelay = 0
 
 function FunBotServer:__init()
 	m_Logger:Write("Test")
@@ -93,9 +93,9 @@ function FunBotServer:_onExtensionLoaded()
 	local fullLevelPath = SharedUtils:GetLevelName()
 
 	if (fullLevelPath ~= nil) then
-		fullLevelPath	= fullLevelPath:split('/')
-		local level		= fullLevelPath[#fullLevelPath]
-		local gameMode	= SharedUtils:GetCurrentGameMode()
+		fullLevelPath = fullLevelPath:split('/')
+		local level = fullLevelPath[#fullLevelPath]
+		local gameMode = SharedUtils:GetCurrentGameMode()
 
 		if Debug.Server.INFO then
 			print(level .. '_' .. gameMode .. ' reloaded')
@@ -285,7 +285,6 @@ function FunBotServer:_onChat(p_Player, p_RecipientMask, p_Message)
 	m_ChatCommands:execute(messageParts, p_Player)
 end
 
--- Singleton.
 if g_FunBotServer == nil then
 	g_FunBotServer = FunBotServer()
 end

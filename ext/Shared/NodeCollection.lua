@@ -89,19 +89,19 @@ function NodeCollection:Create(p_Data, p_Authoritative)
 	-- setup defaults for a blank node
 	local waypoint = {
 		ID = string.format('p_%d', newIndex), -- new generated id for internal storage
-		OriginalID = nil,					-- original id from database
-		Index = newIndex, 					-- new generated id in numerical form
+		OriginalID = nil, -- original id from database
+		Index = newIndex, -- new generated id in numerical form
 		Position = Vec3(0,0,0),
-		PathIndex = 1, 						-- Path #
-		PointIndex = 1, 					-- index inside parent path
-		InputVar = inputVar, 				-- raw input value
-		SpeedMode = inputVar & 0xF,			-- 0 = wait, 1 = prone, 2 = crouch, 3 = walk, 4 run
-		ExtraMode = (inputVar >> 4) & 0xF,	--
+		PathIndex = 1, -- Path #
+		PointIndex = 1, -- index inside parent path
+		InputVar = inputVar, -- raw input value
+		SpeedMode = inputVar & 0xF, -- 0 = wait, 1 = prone, 2 = crouch, 3 = walk, 4 run
+		ExtraMode = (inputVar >> 4) & 0xF,
 		OptValue = (inputVar >> 8) & 0xFF,
 		Data = {},
-		Distance = nil,						-- current distance to player
-		Updated = false,					-- if true, needs to be sent to server for saving
-		Previous = false,						-- tree navigation
+		Distance = nil, -- current distance to player
+		Updated = false, -- if true, needs to be sent to server for saving
+		Previous = false, -- tree navigation
 		Next = false
 	}
 
@@ -1407,7 +1407,7 @@ function NodeCollection:Print(...)
 	end
 end
 
-if (g_NodeCollection == nil) then
+if g_NodeCollection == nil then
 	g_NodeCollection = NodeCollection()
 end
 

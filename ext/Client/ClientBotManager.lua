@@ -48,7 +48,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 		return
 	end
 
-	self.m_RaycastTimer	= 0
+	self.m_RaycastTimer = 0
 
 	if self.m_Player.soldier ~= nil then  -- alive. Check for enemy bots
 

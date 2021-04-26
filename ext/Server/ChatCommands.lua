@@ -3,8 +3,8 @@ class('ChatCommands')
 require('__shared/Config')
 local m_NodeCollection = require('__shared/NodeCollection')
 
-local m_BotManager	= require('BotManager')
-local m_BotSpawner	= require('BotSpawner')
+local m_BotManager = require('BotManager')
+local m_BotSpawner = require('BotSpawner')
 
 function ChatCommands:execute(p_Parts, p_Player)
 	if p_Player == nil or Config.DisableChatCommands == true then
@@ -16,8 +16,8 @@ function ChatCommands:execute(p_Parts, p_Player)
 			return
 		end
 
-		local length	= tonumber(p_Parts[2])
-		local spacing	= tonumber(p_Parts[3]) or 2
+		local length = tonumber(p_Parts[2])
+		local spacing = tonumber(p_Parts[3]) or 2
 
 		m_BotSpawner:spawnBotRow(p_Player, length, spacing)
 
@@ -34,9 +34,9 @@ function ChatCommands:execute(p_Parts, p_Player)
 			return
 		end
 
-		local rows		= tonumber(p_Parts[2])
-		local columns	= tonumber(p_Parts[3]) or tonumber(p_Parts[2])
-		local spacing	= tonumber(p_Parts[4]) or 2
+		local rows = tonumber(p_Parts[2])
+		local columns = tonumber(p_Parts[3]) or tonumber(p_Parts[2])
+		local spacing = tonumber(p_Parts[4]) or 2
 
 		m_BotSpawner:spawnBotGrid(p_Player, rows, columns, spacing)
 
@@ -56,8 +56,8 @@ function ChatCommands:execute(p_Parts, p_Player)
 			return
 		end
 
-		local amount	= tonumber(p_Parts[2])
-		local spacing	= tonumber(p_Parts[3]) or 2
+		local amount = tonumber(p_Parts[2])
+		local spacing = tonumber(p_Parts[3]) or 2
 
 		m_BotSpawner:spawnLineBots(p_Player, amount, spacing)
 
@@ -214,7 +214,6 @@ function ChatCommands:execute(p_Parts, p_Player)
 	end
 end
 
--- Singleton.
 if g_ChatCommands == nil then
 	g_ChatCommands = ChatCommands()
 end

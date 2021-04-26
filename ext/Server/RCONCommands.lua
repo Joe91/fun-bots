@@ -11,11 +11,11 @@ function RCONCommands:__init()
 		return
 	end
 
-	self.commands	= {
+	self.commands = {
 		-- Get Config
-		GET_CONFIG	= {
-			Name		= 'funbots.config',
-			Callback	= (function(p_Command, p_Args)
+		GET_CONFIG = {
+			Name = 'funbots.config',
+			Callback = (function(p_Command, p_Args)
 				if Debug.Server.RCON then
 					print('[RCON] call funbots.config')
 					print(json.encode(p_Args))
@@ -24,37 +24,37 @@ function RCONCommands:__init()
 				return {
 					'OK',
 					json.encode({
-						MAX_NUMBER_OF_BOTS	= MAX_NUMBER_OF_BOTS,
-						USE_REAL_DAMAGE		= USE_REAL_DAMAGE,
-						Config				= Config,
-						StaticConfig		= StaticConfig
+						MAX_NUMBER_OF_BOTS = MAX_NUMBER_OF_BOTS,
+						USE_REAL_DAMAGE = USE_REAL_DAMAGE,
+						Config = Config,
+						StaticConfig = StaticConfig
 					})
 				}
 			end)
 		},
 
 		-- Set Config
-		SET_CONFIG	= {
-			Name		= 'funbots.set.config',
-			Parameters	= { 'Name', 'Value' },
-			Callback	= (function(p_Command, p_Args)
+		SET_CONFIG = {
+			Name = 'funbots.set.config',
+			Parameters = { 'Name', 'Value' },
+			Callback = (function(p_Command, p_Args)
 				if Debug.Server.RCON then
 					print('[RCON] call funbots.set.config')
 					print(json.encode(p_Args))
 				end
 
-				local old	= {
-					Name	= nil,
-					Value	= nil
+				local old = {
+					Name = nil,
+					Value = nil
 				}
 
-				local new	= {
-					Name	= nil,
-					Value	= nil
+				local new = {
+					Name = nil,
+					Value = nil
 				}
 
-				local name	= p_Args[1]
-				local value	= p_Args[2]
+				local name = p_Args[1]
+				local value = p_Args[2]
 
 				if name == nil then
 					return {'ERROR', 'Needing <Name>.'}
@@ -66,11 +66,11 @@ function RCONCommands:__init()
 
 				-- Constants
 				if name == 'MAX_NUMBER_OF_BOTS' then
-					old.Name			= name
-					old.Value			= MAX_NUMBER_OF_BOTS
-					MAX_NUMBER_OF_BOTS	= tonumber(value)
-					new.Name			= name
-					new.Value			= MAX_NUMBER_OF_BOTS
+					old.Name = name
+					old.Value = MAX_NUMBER_OF_BOTS
+					MAX_NUMBER_OF_BOTS = tonumber(value)
+					new.Name = name
+					new.Value = MAX_NUMBER_OF_BOTS
 
 				elseif name == 'USE_REAL_DAMAGE' then
 					local new_value = false
@@ -79,11 +79,11 @@ function RCONCommands:__init()
 						new_value = true
 					end
 
-					old.Name			= name
-					old.Value			= USE_REAL_DAMAGE
-					USE_REAL_DAMAGE		= new_value
-					new.Name			= name
-					new.Value			= USE_REAL_DAMAGE
+					old.Name = name
+					old.Value = USE_REAL_DAMAGE
+					USE_REAL_DAMAGE = new_value
+					new.Name = name
+					new.Value = USE_REAL_DAMAGE
 				else
 					-- Config
 					if Config[name] ~= nil then
@@ -104,8 +104,8 @@ function RCONCommands:__init()
 						end
 
 
-						old.Name	= 'Config.' .. name
-						old.Value	= Config[name]
+						old.Name = 'Config.' .. name
+						old.Value = Config[name]
 
 						if type == 'boolean' then
 							local new_value = false
@@ -114,19 +114,19 @@ function RCONCommands:__init()
 								new_value = true
 							end
 
-							Config[name]	= new_value
-							new.Name		= 'Config.' .. name
-							new.Value		= Config[name]
+							Config[name] = new_value
+							new.Name = 'Config.' .. name
+							new.Value = Config[name]
 
 						elseif type == 'string' then
-							Config[name]	= tostring(value)
-							new.Name		= 'Config.' .. name
-							new.Value		= Config[name]
+							Config[name] = tostring(value)
+							new.Name = 'Config.' .. name
+							new.Value = Config[name]
 
 						elseif type == 'number' then
-							Config[name]	= tonumber(value)
-							new.Name		= 'Config.' .. name
-							new.Value		= Config[name]
+							Config[name] = tonumber(value)
+							new.Name = 'Config.' .. name
+							new.Value = Config[name]
 
 						else
 							print('Unknown Config property-Type: ' .. name .. ' -> ' .. type)
@@ -135,8 +135,8 @@ function RCONCommands:__init()
 						local test = tostring(StaticConfig[name])
 						local type = 'nil'
 
-						old.Name	= 'StaticConfig.' .. name
-						old.Value	= StaticConfig[name]
+						old.Name = 'StaticConfig.' .. name
+						old.Value = StaticConfig[name]
 
 						-- Boolean
 						if (test == 'true' or test == 'false') then
@@ -158,19 +158,19 @@ function RCONCommands:__init()
 								new_value = true
 							end
 
-							StaticConfig[name]	= new_value
-							new.Name			= 'StaticConfig.' .. name
-							new.Value			= StaticConfig[name]
+							StaticConfig[name] = new_value
+							new.Name = 'StaticConfig.' .. name
+							new.Value = StaticConfig[name]
 
 						elseif type == 'string' then
-							StaticConfig[name]	= tostring(value)
-							new.Name			= 'StaticConfig.' .. name
-							new.Value			= StaticConfig[name]
+							StaticConfig[name] = tostring(value)
+							new.Name = 'StaticConfig.' .. name
+							new.Value = StaticConfig[name]
 
 						elseif type == 'number' then
-							StaticConfig[name]	= tonumber(value)
-							new.Name			= 'StaticConfig.' .. name
-							new.Value			= StaticConfig[name]
+							StaticConfig[name] = tonumber(value)
+							new.Name = 'StaticConfig.' .. name
+							new.Value = StaticConfig[name]
 
 						else
 							print('Unknown Config property-Type: ' .. name .. ' -> ' .. type)
@@ -276,9 +276,9 @@ function RCONCommands:__init()
 		},
 
 		-- Clear/Reset Botnames
-		CLEAR_BOTNAMES	= {
-			Name		= 'funbots.clear.BotNames',
-			Callback	= (function(p_Command, p_Args)
+		CLEAR_BOTNAMES = {
+			Name = 'funbots.clear.BotNames',
+			Callback = (function(p_Command, p_Args)
 				BotNames = {}
 
 				return { 'OK' }
@@ -286,11 +286,11 @@ function RCONCommands:__init()
 		},
 
 		-- Add BotName
-		ADD_BOTNAMES	= {
-			Name		= 'funbots.add.BotNames',
-			Parameters	= { 'String' },
-			Callback	= (function(p_Command, p_Args)
-				local value	= p_Args[1]
+		ADD_BOTNAMES = {
+			Name = 'funbots.add.BotNames',
+			Parameters = { 'String' },
+			Callback = (function(p_Command, p_Args)
+				local value = p_Args[1]
 
 				if value == nil then
 					return {'ERROR', 'Needing <String>.'}
@@ -303,11 +303,11 @@ function RCONCommands:__init()
 		},
 
 		-- Replace BotName
-		REPLACE_BOTNAMES	= {
-			Name		= 'funbots.replace.BotNames',
-			Parameters	= { 'JSONArray' },
-			Callback	= (function(p_Command, p_Args)
-				local value	= p_Args[1]
+		REPLACE_BOTNAMES = {
+			Name = 'funbots.replace.BotNames',
+			Parameters = { 'JSONArray' },
+			Callback = (function(p_Command, p_Args)
+				local value = p_Args[1]
 
 				if value == nil then
 					return {'ERROR', 'Needing <JSONArray>.'}
@@ -326,9 +326,9 @@ function RCONCommands:__init()
 		},
 
 		-- Kick All
-		KICKALLL	= {
-			Name		= 'funbots.kickAll',
-			Callback	= (function(p_Command, p_Args)
+		KICKALLL = {
+			Name = 'funbots.kickAll',
+			Callback = (function(p_Command, p_Args)
 				m_BotManager:destroyAll()
 
 				return { 'OK' }
@@ -336,11 +336,11 @@ function RCONCommands:__init()
 		},
 
 		-- Kick Bot
-		KICKBOT	= {
-			Name		= 'funbots.kickBot',
-			Parameters	= { 'Name' },
-			Callback	= (function(p_Command, p_Args)
-				local name	= p_Args[1]
+		KICKBOT = {
+			Name = 'funbots.kickBot',
+			Parameters = { 'Name' },
+			Callback = (function(p_Command, p_Args)
+				local name = p_Args[1]
 				if name == nil then
 					return {'ERROR', 'Name needed.'}
 				end
@@ -351,9 +351,9 @@ function RCONCommands:__init()
 		},
 
 		-- Kill All
-		KILLALL	= {
-			Name		= 'funbots.killAll',
-			Callback	= (function(p_Command, p_Args)
+		KILLALL = {
+			Name = 'funbots.killAll',
+			Callback = (function(p_Command, p_Args)
 				m_BotManager:killAll()
 
 				return { 'OK' }
@@ -361,12 +361,12 @@ function RCONCommands:__init()
 		},
 
 		-- Spawn <Amount> <Team>
-		SPAWN	= {
-			Name		= 'funbots.spawn',
-			Parameters	= { 'Amount', 'Team' },
-			Callback	= (function(p_Command, p_Args)
-				local value	= p_Args[1]
-				local team	= p_Args[2]
+		SPAWN = {
+			Name = 'funbots.spawn',
+			Parameters = { 'Amount', 'Team' },
+			Callback = (function(p_Command, p_Args)
+				local value = p_Args[1]
+				local team = p_Args[2]
 
 				if value == nil then
 					return {'ERROR', 'Needing Spawn amount.'}
@@ -380,8 +380,8 @@ function RCONCommands:__init()
 					return {'ERROR', 'Needing Spawn amount.'}
 				end
 
-				local amount	= tonumber(value)
-				local t			= TeamId.TeamNeutral
+				local amount = tonumber(value)
+				local t = TeamId.TeamNeutral
 
 				if team == "Team1" then
 					t = TeamId.Team1
@@ -431,7 +431,6 @@ function RCONCommands:createCommand(p_Name, p_Callback)
 	end)
 end
 
--- Singleton.
 if g_RCONCommands == nil then
 	g_RCONCommands = RCONCommands()
 end

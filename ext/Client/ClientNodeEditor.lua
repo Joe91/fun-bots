@@ -1112,9 +1112,9 @@ function ClientNodeEditor:_onEndTrace()
 	local firstWaypoint = self.customTrace:GetFirst()
 
 	if (firstWaypoint) then
-		local startPos 	= firstWaypoint.Position + Vec3.up
-		local endPos 	= self.customTrace:GetLast().Position + Vec3.up
-		local raycast	= RaycastManager:Raycast(startPos, endPos, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll | RayCastFlags.CheckDetailMesh | RayCastFlags.IsAsyncRaycast)
+		local startPos = firstWaypoint.Position + Vec3.up
+		local endPos = self.customTrace:GetLast().Position + Vec3.up
+		local raycast = RaycastManager:Raycast(startPos, endPos, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll | RayCastFlags.CheckDetailMesh | RayCastFlags.IsAsyncRaycast)
 
 		self.customTrace:ClearSelection()
 		self.customTrace:Select(firstWaypoint)
@@ -1782,13 +1782,13 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 				local cy = math.floor(windowSize.y / 2.0 + 0.5)
 
 				self.botVistionCrosshair = {
-					Vec2(cx - 9, cy - 1),	Vec2(cx + 8, cy - 1),
-					Vec2(cx - 10, cy),		Vec2(cx + 9, cy),
-					Vec2(cx - 9, cy + 1),	Vec2(cx + 8, cy + 1),
+					Vec2(cx - 9, cy - 1), Vec2(cx + 8, cy - 1),
+					Vec2(cx - 10, cy), Vec2(cx + 9, cy),
+					Vec2(cx - 9, cy + 1), Vec2(cx + 8, cy + 1),
 
-					Vec2(cx - 1, cy - 9),	Vec2(cx - 1, cy + 8),
-					Vec2(cx,	 cy - 10),	Vec2(cx,	 cy + 9),
-					Vec2(cx + 1, cy - 9),	Vec2(cx + 1, cy + 8)
+					Vec2(cx - 1, cy - 9), Vec2(cx - 1, cy + 8),
+					Vec2(cx, cy - 10), Vec2(cx, cy + 9),
+					Vec2(cx + 1, cy - 9), Vec2(cx + 1, cy + 8)
 				}
     		end
 
@@ -1821,12 +1821,12 @@ function ClientNodeEditor:OnUIDrawHud()
 
 		if(self.botVistionCrosshair ~= nil) then
 			-- all this for a simple + in the middle of the screen
-			DebugRenderer:DrawLine2D(self.botVistionCrosshair[1],	self.botVistionCrosshair[2],	self.colors.Text)
-			DebugRenderer:DrawLine2D(self.botVistionCrosshair[3],	self.botVistionCrosshair[4],	self.colors.Text)
-			DebugRenderer:DrawLine2D(self.botVistionCrosshair[5],	self.botVistionCrosshair[6],	self.colors.Text)
-			DebugRenderer:DrawLine2D(self.botVistionCrosshair[7],	self.botVistionCrosshair[8],	self.colors.Text)
-			DebugRenderer:DrawLine2D(self.botVistionCrosshair[9],	self.botVistionCrosshair[10],	self.colors.Text)
-			DebugRenderer:DrawLine2D(self.botVistionCrosshair[11],	self.botVistionCrosshair[12],	self.colors.Text)
+			DebugRenderer:DrawLine2D(self.botVistionCrosshair[1], self.botVistionCrosshair[2], self.colors.Text)
+			DebugRenderer:DrawLine2D(self.botVistionCrosshair[3], self.botVistionCrosshair[4], self.colors.Text)
+			DebugRenderer:DrawLine2D(self.botVistionCrosshair[5], self.botVistionCrosshair[6], self.colors.Text)
+			DebugRenderer:DrawLine2D(self.botVistionCrosshair[7], self.botVistionCrosshair[8], self.colors.Text)
+			DebugRenderer:DrawLine2D(self.botVistionCrosshair[9], self.botVistionCrosshair[10], self.colors.Text)
+			DebugRenderer:DrawLine2D(self.botVistionCrosshair[11], self.botVistionCrosshair[12], self.colors.Text)
 		end
 
 		for k,v in pairs(self.botVisionPlayers) do

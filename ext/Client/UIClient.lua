@@ -52,10 +52,10 @@ function FunBotUIClient:_onUIToggle()
 	self._views:execute('BotEditor.Hide()')
 	self._views:disable()
 	--if self._views:isVisible() then
-	--	self._views:close()
+		--self._views:close()
 	--else
-	--	self._views:open()
-	--	self._views:focus()
+		--self._views:open()
+		--self._views:focus()
 	--end
 end
 

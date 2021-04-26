@@ -23,7 +23,7 @@ end
 function UIViews:_onUIClose(p_Name)
 	-- @ToDo p_Name of closing view
 	--if self:isVisible() and self._views:isEmpty() then
-	--	self:close()
+		--self:close()
 	--end
 end
 
@@ -35,9 +35,9 @@ end
 
 -- Close the complete WebUI
 --function UIViews:close()
---	WebUI:Hide()
---	self:disable()
---	self._webui = 0
+	--WebUI:Hide()
+	--self:disable()
+	--self._webui = 0
 --end
 
 -- Enable Mouse/Keyboard actions
@@ -54,7 +54,7 @@ end
 
 -- Check if WebUI is visible
 --function UIViews:isVisible()
---	return self._webui ~= 0
+	--return self._webui ~= 0
 --end
 
 function UIViews:focus()
@@ -108,9 +108,9 @@ end
 -- Handle WebUI when view-stack is empty
 --function UIViews:_handleViewManagement()
 	--if self._views:isEmpty() then
-	--	self:close()
+		--self:close()
 	--else
-	--	self:open()
+		--self:open()
 	--end
 --end
 
