@@ -2,6 +2,7 @@ class('PathSwitcher')
 
 local m_NodeCollection = require('__shared/NodeCollection')
 local m_GameDirector = require('GameDirector')
+local m_Logger = Logger("PathSwitcher", Debug.Server.PATH)
 
 function PathSwitcher:__init()
 	self.dummyData = 0
@@ -36,9 +37,7 @@ function PathSwitcher:getNewPath(p_BotName, p_Point, p_Objective)
 			if bot ~= nil and bot.soldier ~= nil then
 				bot.soldier:Kill()
 				self.killYourselfCounter[p_BotName] = 0
-				if Debug.Server.PATH then
-					print("kill "..p_BotName.." because of inactivity on wrong paths")
-				end
+				m_Logger:Write("kill "..p_BotName.." because of inactivity on wrong paths")
 				return false
 			end
 		end
@@ -177,20 +176,16 @@ function PathSwitcher:getNewPath(p_BotName, p_Point, p_Objective)
 		end
 	end
 
-	--if Debug.Server.PATH then
-	--print('Trimmed Priority List -> '..g_Utilities:dump(paths, true, 2))
-	--print('Highest Priority -> '..highestPriority)
-	--print('#paths -> '..(#paths))
-	--end
+	--m_Logger:Write('Trimmed Priority List -> '..g_Utilities:dump(paths, true, 2))
+	--m_Logger:Write('Highest Priority -> '..highestPriority)
+	--m_Logger:Write('#paths -> '..(#paths))
 
 	if (#validPaths == 0) then
 		return false
 	end
 
 	if (#validPaths == 1 and currentPriority < validPaths[1].Priority) then
-		--if Debug.Server.PATH then
-		--print('found single higher priority path ( '..currentPriority..' | '..validPaths[1].Priority..' )')
-		--end
+		--m_Logger:Write('found single higher priority path ( '..currentPriority..' | '..validPaths[1].Priority..' )')
 		return true, validPaths[1].Point
 	end
 
@@ -204,15 +199,11 @@ function PathSwitcher:getNewPath(p_BotName, p_Point, p_Objective)
 		if currentPriority < highestPriority then
 			local randomPath = validPaths[randIndex]
 			if randomPath == nil then
-				if Debug.Server.PATH then
-					print('[A] validPaths['..randIndex..'] was nil : '..g_Utilities:dump(validPaths, true, 2))
-				end
+				m_Logger:Write('[A] validPaths['..randIndex..'] was nil : '..g_Utilities:dump(validPaths, true, 2))
 				return false
 			end
 
-			--if Debug.Server.PATH then
-			--print('found multiple higher priority validPaths | Priority: ( '..currentPriority..' | '..highestPriority..' )')
-			--end
+			m_Logger:Write('found multiple higher priority validPaths | Priority: ( '..currentPriority..' | '..highestPriority..' )')
 
 			return true, randomPath.Point
 		end
@@ -220,25 +211,19 @@ function PathSwitcher:getNewPath(p_BotName, p_Point, p_Objective)
 		if randNum <= chance then
 			local randomPath = validPaths[randIndex]
 			if randomPath == nil then
-				if Debug.Server.PATH then
-					print('[B] validPaths['..randIndex..'] was nil : '..g_Utilities:dump(validPaths, true, 2))
-				end
+				m_Logger:Write('[B] validPaths['..randIndex..'] was nil : '..g_Utilities:dump(validPaths, true, 2))
 
 				return false
 			end
 
-			--if Debug.Server.PATH then
-			--print('chose to switch at random ('..randNum..' >= '..chance..') | Priority: ( '..currentPriority..' | '..randomPath.Priority..' )')
-			--end
+			--m_Logger:Write('chose to switch at random ('..randNum..' >= '..chance..') | Priority: ( '..currentPriority..' | '..randomPath.Priority..' )')
 			return true, randomPath.Point
 		end
 	elseif linkMode == 1 then -- some other kind of switching decision
 		-- etc...
 	end
 
-	--if Debug.Server.PATH then
-	--print('dont change')
-	--end
+	--m_Logger:Write('dont change')
 	return false
 end
 

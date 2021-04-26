@@ -1,6 +1,7 @@
 class('GameDirector')
 
 local m_NodeCollection = require('__shared/NodeCollection')
+local m_Logger = Logger("GameDirector", Debug.Server.GAMEDIRECTOR)
 
 function GameDirector:__init()
 	self.UpdateLast = -1
@@ -110,9 +111,7 @@ function GameDirector:_initFlagTeams()
 end
 
 function GameDirector:_onMcomArmed(p_Player)
-	if Debug.Server.GAMEDIRECTOR then
-		print("mcom armed by "..p_Player.name)
-	end
+	m_Logger:Write("mcom armed by "..p_Player.name)
 
 	local objective = self:_translateObjective(p_Player.soldier.worldTransform.trans)
 	if self.ArmedMcoms[p_Player.name] == nil then
@@ -146,9 +145,7 @@ function GameDirector:_onMcomDisarmed(p_Player)
 end
 
 function GameDirector:_onMcomDestroyed(p_Player)
-	if Debug.Server.GAMEDIRECTOR then
-		print("mcom destroyed by "..p_Player.name)
-	end
+	m_Logger:Write("mcom destroyed by "..p_Player.name)
 
 	local objective = ''
 	if self.ArmedMcoms[p_Player.name] ~= nil then
@@ -428,17 +425,13 @@ function GameDirector:_onCapture(p_CapturePoint)
 		return
 	end
 
-	if Debug.Server.GAMEDIRECTOR then
-		print('GameDirector:_onCapture: '..objectiveName)
-		print('self.CurrentAssignedCount: '..g_Utilities:dump(objective.assigned, true))
-	end
+	m_Logger:Write('GameDirector:_onCapture: '..objectiveName)
+	m_Logger:Write('self.CurrentAssignedCount: '..g_Utilities:dump(objective.assigned, true))
 
 	for botTeam, bots in pairs(self.BotsByTeam) do
 		for i=1, #bots do
 			if (bots[i]:getObjective() == objective.name and objective.team == botTeam) then
-				if Debug.Server.GAMEDIRECTOR then
-					print('Bot completed objective: '..bots[i].name..' (team: '..botTeam..') -> '..objective.name)
-				end
+				m_Logger:Write('Bot completed objective: '..bots[i].name..' (team: '..botTeam..') -> '..objective.name)
 
 				bots[i]:setObjective()
 				objective.assigned[botTeam] = math.max(objective.assigned[botTeam] - 1, 0)
@@ -532,9 +525,7 @@ function GameDirector:_onLost(p_CapturePoint)
 		isAttacked = flagEntity.isAttacked
 	})
 
-	if Debug.Server.GAMEDIRECTOR then
-		print('GameDirector:_onLost: '..objectiveName)
-	end
+	m_Logger:Write('GameDirector:_onLost: '..objectiveName)
 end
 
 function GameDirector:_onPlayerEnterCapturePoint(p_Player, p_CapturePoint)
