@@ -1,6 +1,17 @@
 # Changelog
+
+## [Unreleased - 1.7.1.X] - 2021-04-XX
+[Download](https://github.com/Joe91/fun-bots/archive/V1.7.1.0.zip)  
+the refactoring update
+
+- limit distance on which a bot switches to pistol
+- Squad-DM supported
+	- on all maps thanks to GaryTheNoTrashCougar!!!
+- implement new optional spawn-system
+- lots of refactoring
+- more steps in direction vehicle support
  
-## [Unreleased - 1.7.X.X] - 2021-04-XX
+## [Unreleased - 1.7.0.X] - 2021-04-XX
  
 [Download](https://github.com/Joe91/fun-bots/archive/V1.7.0.19.zip)  
 The Smart Node update
@@ -60,7 +71,6 @@ The Smart Node update
 - preparation for driving vehicles
 - randomize skill of each bot a little (if wanted)
 - rework of input-system (more fail-safe now)
-- limit distance on which a bot switches to pistol
 - export of a maplist
 
 

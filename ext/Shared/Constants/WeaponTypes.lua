@@ -8,4 +8,4 @@ WeaponTypes = {
 	'PDW',
 	'Sniper',
 	'Rocket'
-};
+}
