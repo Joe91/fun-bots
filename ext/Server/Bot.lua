@@ -547,7 +547,8 @@ function Bot:_updateYaw()
 	end
 	if self._TargetPoint ~= nil and self._ShootPlayer == nil and self.m_Player.soldier ~= nil then
 		s_AttackAiming = false
-		if self.m_Player.soldier.worldTransform.trans:Distance(self._TargetPoint.Position) < 0.2 then
+		local s_Distance = self.m_Player.soldier.worldTransform.trans:Distance(self._TargetPoint.Position)
+		if s_Distance < 0.2 or (self.m_InVehicle and s_Distance < 1) then
 			self._TargetPoint = self._NextTargetPoint
 		end
 
@@ -617,6 +618,26 @@ function Bot:_updateYaw()
 	end
 
 	if self.m_InVehicle then
+		if s_AbsDeltaYaw > math.pi / 4 then
+			if s_Increment > 0 then
+				self.player.input:SetLevel(EntryInputActionEnum.EIAYaw, 1)
+			else
+				self.player.input:SetLevel(EntryInputActionEnum.EIAYaw, -1)
+			end
+		else
+			if self.player.input:GetLevel(EntryInputActionEnum.EIAYaw) == 0 then
+				if s_Increment > 0 then
+					self.player.input:SetLevel(EntryInputActionEnum.EIAYaw, 1)
+				else
+					self.player.input:SetLevel(EntryInputActionEnum.EIAYaw, -1)
+				end
+			else
+				self.player.input:SetLevel(EntryInputActionEnum.EIAYaw, 0) --toggle the steering, to be more presicely. Every second Cycle TODO: maybe add counter for it?
+			end
+		end
+
+
+
 		if s_Increment > 0 then --TODO: steer in smaller values
 			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, 0.8)
 		else
