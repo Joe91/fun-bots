@@ -6,6 +6,8 @@ local m_NodeCollection = require('__shared/NodeCollection')
 local m_BotManager = require('BotManager')
 local m_WeaponList = require('__shared/WeaponList')
 local m_Utilities = require('__shared/Utilities')
+local m_Logger = Logger("BotSpawner", Debug.Server.BOT)
+
 local FIRST_SPAWN_DELAY = 3.0 -- needs to be big enough to register the inputActiveEvents. 1 is too small
 
 function BotSpawner:__init()
@@ -258,9 +260,7 @@ end
 
 function BotSpawner:_onPlayerJoining(p_Name)
 	if m_BotManager:getPlayerCount() == 0 then
-		if Debug.Server.BOT then
-			print("first player - spawn bots")
-		end
+		m_Logger:Write("first player - spawn bots")
 		self:onLevelLoaded()
 	end
 	-- detect BOT-Names
@@ -274,9 +274,7 @@ function BotSpawner:_onPlayerJoining(p_Name)
 end
 
 function BotSpawner:onLevelLoaded()
-	if Debug.Server.BOT then
-		print("on level loaded on spawner")
-	end
+	m_Logger:Write("on level loaded on spawner")
 	self._firstSpawnInLevel = true
 	self._playerUpdateTimer = 0
 	self._firstSpawnDelay = FIRST_SPAWN_DELAY
@@ -467,9 +465,7 @@ function BotSpawner:_getSpawnPoint(p_TeamId, p_SquadId)
 
 		if activeWayIndex == 0 then
 			-- something went wrong. use random path
-			if Debug.Server.BOT then
-				print("no base or capturepoint found to spawn")
-			end
+			m_Logger:Write("no base or capturepoint found to spawn")
 			return
 		end
 
@@ -483,9 +479,7 @@ function BotSpawner:_getSpawnPoint(p_TeamId, p_SquadId)
 
 		if activeWayIndex == 0 then
 			-- something went wrong. use random path
-			if Debug.Server.BOT then
-				print("no base found to spawn")
-			end
+			m_Logger:Write("no base found to spawn")
 			return
 		end
 
@@ -642,7 +636,7 @@ function BotSpawner:GetBot(p_ExistingBot, p_Name, p_TeamId, p_SquadId)
 	else
 		local s_Bot = m_BotManager:createBot(p_Name, p_TeamId, p_SquadId)
 		if s_Bot == nil then
-			print("[BotSpawner] Error - Failed to create bot")
+			m_Logger:Error("Failed to create bot")
 			return nil
 		end
 		if (TeamSquadManager:GetSquadPlayerCount(p_TeamId, p_SquadId) == 1) then
@@ -750,7 +744,7 @@ function BotSpawner:ConquestSpawn(p_Bot)
 		s_BestSpawnPoint = self:FindFarestSpawnPoint(p_Bot.m_Player.teamId)
 	end
 	if s_BestSpawnPoint == nil then
-		print("[BotSpawner] Error - No valid spawn point found")
+		m_Logger:Error("No valid spawn point found")
 		return
 	end
 	s_BestSpawnPoint:FireEvent(s_Event)
@@ -921,7 +915,7 @@ function BotSpawner:_setAttachments(p_UnlockWeapon, p_Attachments)
 		local asset = ResourceManager:SearchForDataContainer(attachment)
 		if (asset == nil) then
 			if Debug.Server.BOT then
-				print('Warning! Attachment invalid ['..tostring(p_UnlockWeapon.weapon.name)..']: '..tostring(attachment))
+				m_Logger:Warning('Attachment invalid ['..tostring(p_UnlockWeapon.weapon.name)..']: '..tostring(attachment))
 			end
 		else
 			p_UnlockWeapon.unlockAssets:add(UnlockAsset(asset))

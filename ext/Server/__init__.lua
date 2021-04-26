@@ -14,7 +14,7 @@ require('__shared/Constants/SpawnModes')
 require ('__shared/Utils/Logger')
 require('Globals')
 
-local m_Logger = Logger("FunBotServer", true)
+local m_Logger = Logger("FunBotServer", Debug.Server.INFO)
 
 require('__shared/Utilities')
 
@@ -33,7 +33,6 @@ local m_GameDirector = require('GameDirector')
 local playerKilledDelay = 0
 
 function FunBotServer:__init()
-	m_Logger:Write("Test")
 	m_Language:loadLanguage(Config.Language)
 	Events:Subscribe('Engine:Init', self, self.OnEngineInit)
 	Events:Subscribe('Level:Loaded', self, self._onLevelLoaded)
@@ -97,9 +96,7 @@ function FunBotServer:_onExtensionLoaded()
 		local level = fullLevelPath[#fullLevelPath]
 		local gameMode = SharedUtils:GetCurrentGameMode()
 
-		if Debug.Server.INFO then
-			print(level .. '_' .. gameMode .. ' reloaded')
-		end
+		m_Logger:Write(level .. '_' .. gameMode .. ' reloaded')
 
 		if (level ~= nil and gameMode~= nil) then
 			self:_onLevelLoaded(level, gameMode)
@@ -156,9 +153,7 @@ function FunBotServer:_onLevelLoaded(p_LevelName, p_GameMode)
 	m_WeaponModification:ModifyAllWeapons(Config.BotAimWorsening, Config.BotSniperAimWorsening)
 	m_WeaponList:onLevelLoaded()
 
-	if Debug.Server.INFO then
-		print('level ' .. p_LevelName .. ' loaded...')
-	end
+	m_Logger:Write('level ' .. p_LevelName .. ' loaded...')
 
 	--get RespawnDelay
 	local rconResponseTable = RCON:SendCommand('vars.playerRespawnTime')

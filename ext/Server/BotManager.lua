@@ -3,6 +3,7 @@ class('BotManager')
 require('Bot')
 
 local m_Utilities = require('__shared/Utilities')
+local m_Logger = Logger("BotManager", Debug.Server.BOT)
 
 function BotManager:__init()
 	self._bots = {}
@@ -61,9 +62,7 @@ function BotManager:configGlobals()
 	if maxPlayers ~= nil and maxPlayers > 0 then
 		Globals.MaxPlayers = maxPlayers
 
-		if Debug.Server.BOT then
-			print("there are "..maxPlayers.." slots on this server")
-		end
+		m_Logger:Write("there are "..maxPlayers.." slots on this server")
 	else
 		Globals.MaxPlayers = MAX_NUMBER_OF_BOTS --only fallback
 	end
@@ -553,18 +552,14 @@ function BotManager:createBot(p_Name, p_TeamId, p_SquadId)
 		playerlimt = playerlimt - 1
 	end
 	if playerlimt <=  PlayerManager:GetPlayerCount() then
-		if Debug.Server.BOT then
-			print("playerlimit reached")
-		end
+		m_Logger:Write("playerlimit reached")
 		return
 	end
 
 	-- Create a player for this bot.
 	local botPlayer = PlayerManager:CreatePlayer(p_Name, p_TeamId, p_SquadId)
 	if botPlayer == nil then
-		if Debug.Server.BOT then
-			print("cant create more players on this team")
-		end
+		m_Logger:Write("cant create more players on this team")
 		return
 	end
 
