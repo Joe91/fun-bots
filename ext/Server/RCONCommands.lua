@@ -1,440 +1,438 @@
-class('RCONCommands');
+class('RCONCommands')
 
-require('__shared/Config');
+require('__shared/Config')
 
-local BotManager	= require('BotManager');
-local BotSpawner	= require('BotSpawner');
-local Globals 		= require('Globals');
+local m_BotManager = require('BotManager')
+local m_BotSpawner = require('BotSpawner')
 
 
 function RCONCommands:__init()
-	if Config.disableRCONCommands then
-		return;
+	if Config.DisableRCONCommands then
+		return
 	end
-	
-	self.commands	= {
+
+	self.commands = {
 		-- Get Config
-		GET_CONFIG	= {
-			Name		= 'funbots.config',
-			Callback	= (function(command, args);
+		GET_CONFIG = {
+			Name = 'funbots.config',
+			Callback = (function(p_Command, p_Args)
 				if Debug.Server.RCON then
-					print('[RCON] call funbots.config');
-					print(json.encode(args));
+					print('[RCON] call funbots.config')
+					print(json.encode(p_Args))
 				end
-				
+
 				return {
 					'OK',
 					json.encode({
-						MAX_NUMBER_OF_BOTS	= MAX_NUMBER_OF_BOTS,
-						USE_REAL_DAMAGE		= USE_REAL_DAMAGE,
-						Config				= Config,
-						StaticConfig		= StaticConfig
+						MAX_NUMBER_OF_BOTS = MAX_NUMBER_OF_BOTS,
+						USE_REAL_DAMAGE = USE_REAL_DAMAGE,
+						Config = Config,
+						StaticConfig = StaticConfig
 					})
-				};
+				}
 			end)
 		},
-		
+
 		-- Set Config
-		SET_CONFIG	= {
-			Name		= 'funbots.set.config',
-			Parameters	= { 'Name', 'Value' },
-			Callback	= (function(command, args);
+		SET_CONFIG = {
+			Name = 'funbots.set.config',
+			Parameters = { 'Name', 'Value' },
+			Callback = (function(p_Command, p_Args)
 				if Debug.Server.RCON then
-					print('[RCON] call funbots.set.config');
-					print(json.encode(args));
+					print('[RCON] call funbots.set.config')
+					print(json.encode(p_Args))
 				end
-				
-				local old	= {
-					Name	= nil,
-					Value	= nil
-				};
-				
-				local new	= {
-					Name	= nil,
-					Value	= nil
-				};
-				
-				local name	= args[1];
-				local value	= args[2];
-				
+
+				local old = {
+					Name = nil,
+					Value = nil
+				}
+
+				local new = {
+					Name = nil,
+					Value = nil
+				}
+
+				local name = p_Args[1]
+				local value = p_Args[2]
+
 				if name == nil then
-					return {'ERROR', 'Needing <Name>.'};
+					return {'ERROR', 'Needing <Name>.'}
 				end
-				
+
 				if value == nil then
-					return {'ERROR', 'Needing <Value>.'};
+					return {'ERROR', 'Needing <Value>.'}
 				end
-				
+
 				-- Constants
 				if name == 'MAX_NUMBER_OF_BOTS' then
-					old.Name			= name;
-					old.Value			= MAX_NUMBER_OF_BOTS;
-					MAX_NUMBER_OF_BOTS	= tonumber(value);
-					new.Name			= name;
-					new.Value			= MAX_NUMBER_OF_BOTS;
-					
+					old.Name = name
+					old.Value = MAX_NUMBER_OF_BOTS
+					MAX_NUMBER_OF_BOTS = tonumber(value)
+					new.Name = name
+					new.Value = MAX_NUMBER_OF_BOTS
+
 				elseif name == 'USE_REAL_DAMAGE' then
-					local new_value = false;
-					
+					local new_value = false
+
 					if value == true or value == '1' or value == 'true' or value == 'True' or value == 'TRUE' then
-						new_value = true;
+						new_value = true
 					end
-					
-					old.Name			= name;
-					old.Value			= USE_REAL_DAMAGE;
-					USE_REAL_DAMAGE		= new_value;
-					new.Name			= name;
-					new.Value			= USE_REAL_DAMAGE;
+
+					old.Name = name
+					old.Value = USE_REAL_DAMAGE
+					USE_REAL_DAMAGE = new_value
+					new.Name = name
+					new.Value = USE_REAL_DAMAGE
 				else
 					-- Config
 					if Config[name] ~= nil then
-						local test = tostring(Config[name]);
-						local type = 'nil';
-						
+						local test = tostring(Config[name])
+						local type = 'nil'
+
 						-- Boolean
 						if (test == 'true' or test == 'false') then
-							type = 'boolean';
-							
+							type = 'boolean'
+
 						-- String
 						elseif (test == Config[name]) then
-							type = 'string';
-							
+							type = 'string'
+
 						-- Number
 						elseif (tonumber(test) == Config[name]) then
-							type = 'number';
+							type = 'number'
 						end
-						
-							
-						old.Name	= 'Config.' .. name;
-						old.Value	= Config[name];
-						
+
+
+						old.Name = 'Config.' .. name
+						old.Value = Config[name]
+
 						if type == 'boolean' then
-							local new_value = false;
-					
+							local new_value = false
+
 							if value == true or value == '1' or value == 'true' or value == 'True' or value == 'TRUE' then
-								new_value = true;
+								new_value = true
 							end
-							
-							Config[name]	= new_value;
-							new.Name		= 'Config.' .. name;
-							new.Value		= Config[name];
-							
+
+							Config[name] = new_value
+							new.Name = 'Config.' .. name
+							new.Value = Config[name]
+
 						elseif type == 'string' then
-							Config[name]	= tostring(value);
-							new.Name		= 'Config.' .. name;
-							new.Value		= Config[name];
-							
+							Config[name] = tostring(value)
+							new.Name = 'Config.' .. name
+							new.Value = Config[name]
+
 						elseif type == 'number' then
-							Config[name]	= tonumber(value);
-							new.Name		= 'Config.' .. name;
-							new.Value		= Config[name];
-							
+							Config[name] = tonumber(value)
+							new.Name = 'Config.' .. name
+							new.Value = Config[name]
+
 						else
-							print('Unknown Config property-Type: ' .. name .. ' -> ' .. type);
+							print('Unknown Config property-Type: ' .. name .. ' -> ' .. type)
 						end
 					elseif StaticConfig[name] ~= nil then
-						local test = tostring(StaticConfig[name]);
-						local type = 'nil';
-						
-						old.Name	= 'StaticConfig.' .. name;
-						old.Value	= StaticConfig[name];
-						
+						local test = tostring(StaticConfig[name])
+						local type = 'nil'
+
+						old.Name = 'StaticConfig.' .. name
+						old.Value = StaticConfig[name]
+
 						-- Boolean
 						if (test == 'true' or test == 'false') then
-							type = 'boolean';
-							
+							type = 'boolean'
+
 						-- String
 						elseif (test == StaticConfig[name]) then
-							type = 'string';
-							
+							type = 'string'
+
 						-- Number
 						elseif (tonumber(test) == StaticConfig[name]) then
-							type = 'number';
+							type = 'number'
 						end
-						
+
 						if type == 'boolean' then
-							local new_value = false;
-					
+							local new_value = false
+
 							if value == true or value == '1' or value == 'true' or value == 'True' or value == 'TRUE' then
-								new_value = true;
+								new_value = true
 							end
-							
-							StaticConfig[name]	= new_value;
-							new.Name			= 'StaticConfig.' .. name;
-							new.Value			= StaticConfig[name];
-							
+
+							StaticConfig[name] = new_value
+							new.Name = 'StaticConfig.' .. name
+							new.Value = StaticConfig[name]
+
 						elseif type == 'string' then
-							StaticConfig[name]	= tostring(value);
-							new.Name			= 'StaticConfig.' .. name;
-							new.Value			= StaticConfig[name];
-							
+							StaticConfig[name] = tostring(value)
+							new.Name = 'StaticConfig.' .. name
+							new.Value = StaticConfig[name]
+
 						elseif type == 'number' then
-							StaticConfig[name]	= tonumber(value);
-							new.Name			= 'StaticConfig.' .. name;
-							new.Value			= StaticConfig[name];
-							
+							StaticConfig[name] = tonumber(value)
+							new.Name = 'StaticConfig.' .. name
+							new.Value = StaticConfig[name]
+
 						else
-							print('Unknown Config property-Type: ' .. name .. ' -> ' .. type);
+							print('Unknown Config property-Type: ' .. name .. ' -> ' .. type)
 						end
 					else
-						print('Unknown Config property: ' .. name);
+						print('Unknown Config property: ' .. name)
 					end
 				end
-				
+
 				-- Update some things
-				local updateBotTeamAndNumber = false;
-				local updateWeaponSets = false;
-				local updateWeapons = false;
-				local calcYawPerFrame = false;
-				
+				local updateBotTeamAndNumber = false
+				local updateWeaponSets = false
+				local updateWeapons = false
+				local calcYawPerFrame = false
+
 				if name == 'botAimWorsening' then
-					updateWeapons = true;
+					updateWeapons = true
 				end
-				
+
 				if name == 'botSniperAimWorsening' then
-					updateWeapons = true;
+					updateWeapons = true
 				end
-				
+
 				if name == 'spawnMode' then
-					updateBotTeamAndNumber = true;
+					updateBotTeamAndNumber = true
 				end
-				
+
 				if name == 'spawnInBothTeams' then
-					updateBotTeamAndNumber = true;
+					updateBotTeamAndNumber = true
 				end
-				
+
 				if name == 'initNumberOfBots' then
-					updateBotTeamAndNumber = true;
+					updateBotTeamAndNumber = true
 				end
-				
+
 				if name == 'newBotsPerNewPlayer' then
-					updateBotTeamAndNumber = true;
+					updateBotTeamAndNumber = true
 				end
-				
+
 				if name == 'keepOneSlotForPlayers' then
-					updateBotTeamAndNumber = true;
+					updateBotTeamAndNumber = true
 				end
-				
+
 				if name == 'assaultWeaponSet' then
-					updateWeaponSets = true;
+					updateWeaponSets = true
 				end
-				
+
 				if name == 'engineerWeaponSet' then
-					updateWeaponSets = true;
+					updateWeaponSets = true
 				end
-				
+
 				if name == 'supportWeaponSet' then
-					updateWeaponSets = true;
+					updateWeaponSets = true
 				end
-				
+
 				if name == 'reconWeaponSet' then
-					updateWeaponSets = true;
+					updateWeaponSets = true
 				end
-				
+
 				if updateWeapons then
 					if Debug.Server.RCON then
-						print('[RCON] call WeaponModification:ModifyAllWeapons()');
+						print('[RCON] call WeaponModification:ModifyAllWeapons()')
 					end
-					
-					WeaponModification:ModifyAllWeapons(Config.botAimWorsening, Config.botSniperAimWorsening);
+
+					WeaponModification:ModifyAllWeapons(Config.BotAimWorsening, Config.BotSniperAimWorsening)
 				end
-				
-				NetEvents:BroadcastLocal('WriteClientSettings', Config, updateWeaponSets);
-				
+
+				NetEvents:BroadcastLocal('WriteClientSettings', Config, updateWeaponSets)
+
 				if updateWeaponSets then
 					if Debug.Server.RCON then
-						print('[RCON] call WeaponList:updateWeaponList()');
+						print('[RCON] call WeaponList:updateWeaponList()')
 					end
-					
+
 					WeaponList:updateWeaponList()
 				end
-				
+
 				if calcYawPerFrame then
 					if Debug.Server.RCON then
-						print('[RCON] call BotManager:calcYawPerFrame()');
+						print('[RCON] call m_BotManager:calcYawPerFrame()')
 					end
-					
-					Globals.yawPerFrame = BotManager:calcYawPerFrame();
+
+					Globals.YawPerFrame = m_BotManager:calcYawPerFrame()
 				end
-				
+
 				if updateBotTeamAndNumber then
 					if Debug.Server.RCON then
-						print('[RCON] call BotSpawner:updateBotAmountAndTeam()');
+						print('[RCON] call m_BotSpawner:updateBotAmountAndTeam()')
 					end
-					
-					Globals.spawnMode = Config.spawnMode;
-					BotSpawner:updateBotAmountAndTeam();
+
+					Globals.SpawnMode = Config.SpawnMode
+					m_BotSpawner:updateBotAmountAndTeam()
 				end
-				
+
 				if Debug.Server.RCON then
-					print('[RCON] Config Result');
-					print('[RCON] ' .. old.Name .. ' = ' .. tostring(old.Value));
-					print('[RCON] ' .. new.Name .. ' = ' .. tostring(new.Value));
+					print('[RCON] Config Result')
+					print('[RCON] ' .. old.Name .. ' = ' .. tostring(old.Value))
+					print('[RCON] ' .. new.Name .. ' = ' .. tostring(new.Value))
 				end
-				
-				return { 'OK', old.Name .. ' = ' .. tostring(old.Value), new.Name .. ' = ' .. tostring(new.Value) };
+
+				return { 'OK', old.Name .. ' = ' .. tostring(old.Value), new.Name .. ' = ' .. tostring(new.Value) }
 			end)
 		},
-		
+
 		-- Clear/Reset Botnames
-		CLEAR_BOTNAMES	= {
-			Name		= 'funbots.clear.BotNames',
-			Callback	= (function(command, args);
-				BotNames = {};
-				
-				return { 'OK' };
+		CLEAR_BOTNAMES = {
+			Name = 'funbots.clear.BotNames',
+			Callback = (function(p_Command, p_Args)
+				BotNames = {}
+
+				return { 'OK' }
 			end)
 		},
-		
+
 		-- Add BotName
-		ADD_BOTNAMES	= {
-			Name		= 'funbots.add.BotNames',
-			Parameters	= { 'String' },
-			Callback	= (function(command, args);
-				local value	= args[1];
-				
+		ADD_BOTNAMES = {
+			Name = 'funbots.add.BotNames',
+			Parameters = { 'String' },
+			Callback = (function(p_Command, p_Args)
+				local value = p_Args[1]
+
 				if value == nil then
-					return {'ERROR', 'Needing <String>.'};
+					return {'ERROR', 'Needing <String>.'}
 				end
-				
-				table.insert(BotNames, value);
-				
-				return { 'OK' };
+
+				table.insert(BotNames, value)
+
+				return { 'OK' }
 			end)
 		},
-		
+
 		-- Replace BotName
-		REPLACE_BOTNAMES	= {
-			Name		= 'funbots.replace.BotNames',
-			Parameters	= { 'JSONArray' },
-			Callback	= (function(command, args);
-				local value	= args[1];
-				
+		REPLACE_BOTNAMES = {
+			Name = 'funbots.replace.BotNames',
+			Parameters = { 'JSONArray' },
+			Callback = (function(p_Command, p_Args)
+				local value = p_Args[1]
+
 				if value == nil then
-					return {'ERROR', 'Needing <JSONArray>.'};
+					return {'ERROR', 'Needing <JSONArray>.'}
 				end
-				
-				local result = json.decode(value);
-				
+
+				local result = json.decode(value)
+
 				if result == nil then
-					return {'ERROR', 'Needing <JSONArray>.'};
+					return {'ERROR', 'Needing <JSONArray>.'}
 				end
-				
-				BotNames = result;
-				
-				return { 'OK' };
+
+				BotNames = result
+
+				return { 'OK' }
 			end)
 		},
-		
+
 		-- Kick All
-		KICKALLL	= {
-			Name		= 'funbots.kickAll',
-			Callback	= (function(command, args)
-				BotManager:destroyAll();
-				
-				return { 'OK' };
+		KICKALLL = {
+			Name = 'funbots.kickAll',
+			Callback = (function(p_Command, p_Args)
+				m_BotManager:destroyAll()
+
+				return { 'OK' }
 			end)
 		},
 
 		-- Kick Bot
-		KICKBOT	= {
-			Name		= 'funbots.kickBot',
-			Parameters	= { 'Name' },
-			Callback	= (function(command, args)
-				local name	= args[1];
+		KICKBOT = {
+			Name = 'funbots.kickBot',
+			Parameters = { 'Name' },
+			Callback = (function(p_Command, p_Args)
+				local name = p_Args[1]
 				if name == nil then
-					return {'ERROR', 'Name needed.'};
+					return {'ERROR', 'Name needed.'}
 				end
-				BotManager:destroyBot(name);
-				
-				return { 'OK' };
+				m_BotManager:destroyBot(name)
+
+				return { 'OK' }
 			end)
 		},
-		
+
 		-- Kill All
-		KILLALL	= {
-			Name		= 'funbots.killAll',
-			Callback	= (function(command, args)
-				BotManager:killAll();
-				
-				return { 'OK' };
+		KILLALL = {
+			Name = 'funbots.killAll',
+			Callback = (function(p_Command, p_Args)
+				m_BotManager:killAll()
+
+				return { 'OK' }
 			end)
 		},
-		
+
 		-- Spawn <Amount> <Team>
-		SPAWN	= {
-			Name		= 'funbots.spawn',
-			Parameters	= { 'Amount', 'Team' },
-			Callback	= (function(command, args)
-				local value	= args[1];
-				local team	= args[2];
-				
+		SPAWN = {
+			Name = 'funbots.spawn',
+			Parameters = { 'Amount', 'Team' },
+			Callback = (function(p_Command, p_Args)
+				local value = p_Args[1]
+				local team = p_Args[2]
+
 				if value == nil then
-					return {'ERROR', 'Needing Spawn amount.'};
-				end
-				
-				if team == nil then
-					return {'ERROR', 'Needing Team.'};
-				end
-				
-				if tonumber(value) == nil then
-					return {'ERROR', 'Needing Spawn amount.'};
+					return {'ERROR', 'Needing Spawn amount.'}
 				end
 
-				local amount	= tonumber(value);
-				local t			= TeamId.TeamNeutral;
+				if team == nil then
+					return {'ERROR', 'Needing Team.'}
+				end
+
+				if tonumber(value) == nil then
+					return {'ERROR', 'Needing Spawn amount.'}
+				end
+
+				local amount = tonumber(value)
+				local t = TeamId.TeamNeutral
 
 				if team == "Team1" then
-					t = TeamId.Team1;
+					t = TeamId.Team1
 				elseif team == "Team2" then
-					t = TeamId.Team2;
+					t = TeamId.Team2
 				end
-				
-				BotSpawner:spawnWayBots(nil, amount, true, nil, nil, t);
-				
-				return {'OK'};
+
+				m_BotSpawner:spawnWayBots(nil, amount, true, nil, nil, t)
+
+				return {'OK'}
 			end)
 		}
-	};
-	
-	self:createCommand('funbots', (function(command, args)
-		local result = {};
-		
-		table.insert(result, 'OK');
-		
+	}
+
+	self:createCommand('funbots', (function(p_Command, p_Args)
+		local result = {}
+
+		table.insert(result, 'OK')
+
 		for index, command in pairs(self.commands) do
-			local the_command = command.Name;
-			
+			local the_command = command.Name
+
 			if command.Parameters ~= nil then
 				for _, parameter in pairs(command.Parameters) do
-					the_command = the_command .. ' <' .. parameter .. '>';
+					the_command = the_command .. ' <' .. parameter .. '>'
 				end
 			end
-			
-			table.insert(result, the_command);
+
+			table.insert(result, the_command)
 		end
-		
-		return result;
-	end));
-	
-	self:create();
+
+		return result
+	end))
+
+	self:create()
 end
 
 function RCONCommands:create()
 	for index, command in pairs(self.commands) do
-		self:createCommand(command.Name, command.Callback);
+		self:createCommand(command.Name, command.Callback)
 	end
 end
 
-function RCONCommands:createCommand(name, callback)
-	RCON:RegisterCommand(name, RemoteCommandFlag.RequiresLogin, function(command, args, loggedIn)
-		return callback(command, args);
-	end);
+function RCONCommands:createCommand(p_Name, p_Callback)
+	RCON:RegisterCommand(p_Name, RemoteCommandFlag.RequiresLogin, function(p_Command, p_Args, p_LoggedIn)
+		return p_Callback(p_Command, p_Args)
+	end)
 end
 
--- Singleton.
 if g_RCONCommands == nil then
-	g_RCONCommands = RCONCommands();
+	g_RCONCommands = RCONCommands()
 end
 
-return g_RCONCommands;
+return g_RCONCommands
