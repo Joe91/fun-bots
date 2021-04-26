@@ -42,10 +42,10 @@ end
 function BotSpawner:updateBotAmountAndTeam()
 	-- keep Slot for next player
 	if Config.KeepOneSlotForPlayers then
-		local playerlimt = Globals.MaxPlayers - 1
-		local amoutToDestroy = PlayerManager:GetPlayerCount() - playerlimt
-		if amoutToDestroy > 0 then
-			m_BotManager:destroyAll(amoutToDestroy)
+		local s_PlayerLimit = Globals.MaxPlayers - 1
+		local s_AmountToDestroy = PlayerManager:GetPlayerCount() - s_PlayerLimit
+		if s_AmountToDestroy > 0 then
+			m_BotManager:destroyAll(s_AmountToDestroy)
 		end
 	end
 
@@ -57,12 +57,18 @@ function BotSpawner:updateBotAmountAndTeam()
 	end
 
 	-- find all needed vars
-	local playerCount = m_BotManager:getPlayerCount()
-	local botCount = m_BotManager:getActiveBotCount()
+	local s_PlayerCount = m_BotManager:getPlayerCount()
+	local s_BotCount = m_BotManager:getActiveBotCount()
+	local s_MaxBotsPerTeam = 0
+	if Globals.IsSdm then
+		s_MaxBotsPerTeam = Config.MaxBotsPerTeamSdm
+	else
+		s_MaxBotsPerTeam = Config.MaxBotsPerTeamDefault
+	end
 
 	-- kill and destroy bots, if no player left
-	if (playerCount == 0) then
-		if botCount > 0 then
+	if (s_PlayerCount == 0) then
+		if s_BotCount > 0 then
 			m_BotManager:killAll()
 			self._updateActive = true
 		else
@@ -71,22 +77,22 @@ function BotSpawner:updateBotAmountAndTeam()
 		return
 	end
 
-	local botTeam = m_BotManager:getBotTeam()
-	local countPlayers = {}
-	local teamCount = {}
-	local countBots = {}
-	local targetTeamCount = {}
+	local s_BotTeam = m_BotManager:getBotTeam()
+	local s_CountPlayers = {}
+	local s_TeamCount = {}
+	local s_CountBots = {}
+	local s_TargetTeamCount = {}
 	for i=1, Globals.NrOfTeams do
-		countPlayers[i] = 0
-		countBots[i] = 0
-		targetTeamCount[i] = 0
+		s_CountPlayers[i] = 0
+		s_CountBots[i] = 0
+		s_TargetTeamCount[i] = 0
 		local tempPlayers = PlayerManager:GetPlayersByTeam(i)
-		teamCount[i] = #tempPlayers
+		s_TeamCount[i] = #tempPlayers
 		for _,player in pairs(tempPlayers) do
 			if m_Utilities:isBot(player) then
-				countBots[i] = countBots[i] + 1
+				s_CountBots[i] = s_CountBots[i] + 1
 			else
-				countPlayers[i] = countPlayers[i] + 1
+				s_CountPlayers[i] = s_CountPlayers[i] + 1
 			end
 		end
 	end
@@ -94,88 +100,106 @@ function BotSpawner:updateBotAmountAndTeam()
 	-- KEEP PLAYERCOUNT
 	if Globals.SpawnMode == 'keep_playercount' then
 		for i=1, Globals.NrOfTeams do
-			targetTeamCount[i] = Config.InitNumberOfBots
+			s_TargetTeamCount[i] = Config.InitNumberOfBots
 		end
 		if Config.SpawnInBothTeams then
 			for i=1, Globals.NrOfTeams do
-				targetTeamCount[i] = math.floor(Config.InitNumberOfBots/Globals.NrOfTeams)
+				s_TargetTeamCount[i] = math.floor(Config.InitNumberOfBots/Globals.NrOfTeams)
 			end
 		else
 			for i=1, Globals.NrOfTeams do
-				if botTeam ~= i then
-					targetTeamCount[i] = 0
+				if s_BotTeam ~= i then
+					s_TargetTeamCount[i] = 0
 				end
+			end
+		end
+		--limit team count
+		for i=1, Globals.NrOfTeams do
+			if s_TargetTeamCount[i] > s_MaxBotsPerTeam then
+				s_TargetTeamCount[i] = s_MaxBotsPerTeam
 			end
 		end
 
 		for i=1, Globals.NrOfTeams do
-			if teamCount[i] < targetTeamCount[i] then
-				self:spawnWayBots(nil, targetTeamCount[i]-teamCount[i], true, 0, 0, i)
-			elseif teamCount[i] > targetTeamCount[i] and countBots[i] > 0 then
-				m_BotManager:killAll(teamCount[i]-targetTeamCount[i], i)
+			if s_TeamCount[i] < s_TargetTeamCount[i] then
+				self:spawnWayBots(nil, s_TargetTeamCount[i]-s_TeamCount[i], true, 0, 0, i)
+			elseif s_TeamCount[i] > s_TargetTeamCount[i] and s_CountBots[i] > 0 then
+				m_BotManager:killAll(s_TeamCount[i]-s_TargetTeamCount[i], i)
 			end
 		end
 
 	-- BALANCED teams
 	elseif Globals.SpawnMode == 'balanced_teams' then
-		local maxPlayersInOneTeam = 0
+		local s_maxPlayersInOneTeam = 0
 		for i=1, Globals.NrOfTeams do
-			if countPlayers[i] > maxPlayersInOneTeam then
-				maxPlayersInOneTeam = countPlayers[i]
+			if s_CountPlayers[i] > s_maxPlayersInOneTeam then
+				s_maxPlayersInOneTeam = s_CountPlayers[i]
 			end
 		end
-		local targetCount = Config.InitNumberOfBots + ((maxPlayersInOneTeam-1) * Config.NewBotsPerNewPlayer)
-		-- TODO: limit in SDM
+		local targetCount = Config.InitNumberOfBots + ((s_maxPlayersInOneTeam-1) * Config.NewBotsPerNewPlayer)
 		for i=1, Globals.NrOfTeams do
-			targetTeamCount[i] = targetCount
+			s_TargetTeamCount[i] = targetCount
+			if s_TargetTeamCount[i] > s_MaxBotsPerTeam then
+				s_TargetTeamCount[i] = s_MaxBotsPerTeam
+			end
 		end
 
 		for i=1, Globals.NrOfTeams do
-			if teamCount[i] < targetTeamCount[i] then
-				self:spawnWayBots(nil, targetTeamCount[i]-teamCount[i], true, 0, 0, i)
-			elseif teamCount[i] > targetTeamCount[i] then
-				m_BotManager:killAll(teamCount[i]-targetTeamCount[i], i)
+			if s_TeamCount[i] < s_TargetTeamCount[i] then
+				self:spawnWayBots(nil, s_TargetTeamCount[i]-s_TeamCount[i], true, 0, 0, i)
+			elseif s_TeamCount[i] > s_TargetTeamCount[i] then
+				m_BotManager:killAll(s_TeamCount[i]-s_TargetTeamCount[i], i)
 			end
 		end
 	-- INCREMENT WITH PLAYER
 	elseif Globals.SpawnMode == 'increment_with_players' then
 		if Config.SpawnInBothTeams then
 			for i=1, Globals.NrOfTeams do
-				targetTeamCount[i] = 0
-				for j = 1, Globals.NrOfTeams do
-					if i ~= j then
-						if (countPlayers[j]) > 0 then
-							targetTeamCount[i] =  Config.InitNumberOfBots + ((countPlayers[j]-1) * Config.NewBotsPerNewPlayer)
-							break --TODO: only use first team. Write algo for SDM as well
+				s_TargetTeamCount[i] = 0
+				if (s_CountPlayers[i]) > 0 then
+					for j = 1, Globals.NrOfTeams do
+						if i ~= j then
+							local s_tempCount = Config.InitNumberOfBots + ((s_CountPlayers[i]-1) * Config.NewBotsPerNewPlayer)
+							if s_tempCount > s_TargetTeamCount[j] then
+								s_TargetTeamCount[j] = s_tempCount
+							end
 						end
 					end
 				end
 			end
-
+			-- limit team count
 			for i=1, Globals.NrOfTeams do
-				if teamCount[i] < targetTeamCount[i] then
-					self:spawnWayBots(nil, targetTeamCount[i]-teamCount[i], true, 0, 0, i)
-				elseif teamCount[i] > targetTeamCount[i] and countBots[i] > 0 then
-					m_BotManager:killAll(teamCount[i]-targetTeamCount[i], i)
+				if s_TargetTeamCount[i] > s_MaxBotsPerTeam then
+					s_TargetTeamCount[i] = s_MaxBotsPerTeam
+				end
+			end
+			for i=1, Globals.NrOfTeams do
+				if s_TeamCount[i] < s_TargetTeamCount[i] then
+					self:spawnWayBots(nil, s_TargetTeamCount[i]-s_TeamCount[i], true, 0, 0, i)
+				elseif s_TeamCount[i] > s_TargetTeamCount[i] and s_CountBots[i] > 0 then
+					m_BotManager:killAll(s_TeamCount[i]-s_TargetTeamCount[i], i)
 				end
 			end
 
 		else
 			-- check for bots in wrong team
 			for i=1, Globals.NrOfTeams do
-				if i ~= botTeam and countBots[i] > 0 then
+				if i ~= s_BotTeam and s_CountBots[i] > 0 then
 					m_BotManager:killAll(nil, i)
 				end
 			end
 
-			local targetBotCount = Config.InitNumberOfBots + ((playerCount-1) * Config.NewBotsPerNewPlayer)
-			local amountToSpawn = targetBotCount - botCount
-			if amountToSpawn > 0 then
-				self._botSpawnTimer = -5.0
-				self:spawnWayBots(nil, amountToSpawn, true, 0, 0, botTeam)
+			local s_TargetBotCount = Config.InitNumberOfBots + ((s_PlayerCount-1) * Config.NewBotsPerNewPlayer)
+			if s_TargetBotCount > s_MaxBotsPerTeam then
+				s_TargetBotCount = s_MaxBotsPerTeam
 			end
-			if amountToSpawn < 0 then
-				m_BotManager:killAll(-amountToSpawn)
+			local s_AmountToSpawn = s_TargetBotCount - s_BotCount
+			if s_AmountToSpawn > 0 then
+				self._botSpawnTimer = -5.0
+				self:spawnWayBots(nil, s_AmountToSpawn, true, 0, 0, s_BotTeam)
+			end
+			if s_AmountToSpawn < 0 then
+				m_BotManager:killAll(-s_AmountToSpawn)
 			end
 		end
 
@@ -183,36 +207,42 @@ function BotSpawner:updateBotAmountAndTeam()
 	elseif Globals.SpawnMode == 'fixed_number' then
 		if Config.SpawnInBothTeams then
 			local amoutPerTeam = math.floor(Config.InitNumberOfBots/Globals.NrOfTeams)
+			if amoutPerTeam > s_MaxBotsPerTeam then
+				amoutPerTeam = s_MaxBotsPerTeam
+			end
 
 			for i=1, Globals.NrOfTeams do
-				if teamCount[i] < amoutPerTeam then
-					self:spawnWayBots(nil, amoutPerTeam-teamCount[i], true, 0, 0, i)
-				elseif teamCount[i] > amoutPerTeam and countBots[i] > 0 then
-					m_BotManager:killAll(teamCount[i]-amoutPerTeam, i)
+				if s_TeamCount[i] < amoutPerTeam then
+					self:spawnWayBots(nil, amoutPerTeam-s_TeamCount[i], true, 0, 0, i)
+				elseif s_TeamCount[i] > amoutPerTeam and s_CountBots[i] > 0 then
+					m_BotManager:killAll(s_TeamCount[i]-amoutPerTeam, i)
 				end
 			end
 		else
 			-- check for bots in wrong team
 			for i=1, Globals.NrOfTeams do
-				if i ~= botTeam and countBots[i] > 0 then
+				if i ~= s_BotTeam and s_CountBots[i] > 0 then
 					m_BotManager:killAll(nil, i)
 				end
 			end
 
-			local targetBotCount = Config.InitNumberOfBots
-			local amountToSpawn = targetBotCount - botCount
-			if amountToSpawn > 0 then
-				self._botSpawnTimer = -5.0
-				self:spawnWayBots(nil, amountToSpawn, true, 0, 0, botTeam)
+			local s_TargetBotCount = Config.InitNumberOfBots
+			if s_TargetBotCount > s_MaxBotsPerTeam then
+				s_TargetBotCount = s_MaxBotsPerTeam
 			end
-			if amountToSpawn < 0 then
-				m_BotManager:killAll(-amountToSpawn)
+			local s_AmountToSpawn = s_TargetBotCount - s_BotCount
+			if s_AmountToSpawn > 0 then
+				self._botSpawnTimer = -5.0
+				self:spawnWayBots(nil, s_AmountToSpawn, true, 0, 0, s_BotTeam)
+			end
+			if s_AmountToSpawn < 0 then
+				m_BotManager:killAll(-s_AmountToSpawn)
 			end
 		end
 	elseif Globals.SpawnMode == 'manual' then
 		if self._firstSpawnInLevel then
 			for i=1, Globals.NrOfTeams do
-				self:spawnWayBots(nil, teamCount[i] - countPlayers[i], true, 0, 0, i)
+				self:spawnWayBots(nil, s_TeamCount[i] - s_CountPlayers[i], true, 0, 0, i)
 			end
 		end
 	end
@@ -820,13 +850,13 @@ function BotSpawner:spawnWayBots(p_Player, p_Amount, p_UseRandomWay, p_ActiveWay
 	end
 
 	-- check for amount available
-	local playerlimt = Globals.MaxPlayers
+	local s_PlayerLimit = Globals.MaxPlayers
 	if Config.KeepOneSlotForPlayers then
-		playerlimt = playerlimt - 1
+		s_PlayerLimit = s_PlayerLimit - 1
 	end
 
 	local incactiveBots = m_BotManager:getBotCount() - m_BotManager:getActiveBotCount()
-	local slotsLeft = playerlimt - (PlayerManager:GetPlayerCount() - incactiveBots)
+	local slotsLeft = s_PlayerLimit - (PlayerManager:GetPlayerCount() - incactiveBots)
 	if p_Amount > slotsLeft then
 		p_Amount = slotsLeft
 	end
