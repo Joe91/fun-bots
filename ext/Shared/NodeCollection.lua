@@ -1,7 +1,7 @@
 class "NodeCollection"
 
 local m_Utilities = require('__shared/Utilities.lua')
-local m_Logger = Logger("NodeCollection", Debug.Server.NODECOLLECTION)
+local m_Logger = Logger("NodeCollection", Debug.Shared.NODECOLLECTION)
 
 requireExists('Globals')
 

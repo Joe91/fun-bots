@@ -1,7 +1,7 @@
 class('WeaponModification')
 
 require('__shared/Config')
-local m_Logger = Logger("WeaponModification", Debug.Server.MODIFICATIONS)
+local m_Logger = Logger("WeaponModification", Debug.Shared.MODIFICATIONS)
 
 
 function WeaponModification:__init()

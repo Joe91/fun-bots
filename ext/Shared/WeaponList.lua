@@ -7,7 +7,7 @@ require('__shared/WeaponLists/CustomWeaponsEngineer')
 require('__shared/WeaponLists/CustomWeaponsRecon')
 require('__shared/WeaponLists/CustomWeaponsSupport')
 
-local m_Logger = Logger("WeaponList", Debug.Server.MODIFICATIONS)
+local m_Logger = Logger("WeaponList", Debug.Shared.MODIFICATIONS)
 
 -- create globals
 AllWeapons = {}

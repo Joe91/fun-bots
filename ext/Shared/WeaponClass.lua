@@ -1,6 +1,6 @@
 class('Weapon')
 
-local m_Logger = Logger("Weapon", Debug.Server.MODIFICATIONS)
+local m_Logger = Logger("Weapon", Debug.Shared.MODIFICATIONS)
 
 function Weapon:__init(p_Name, p_Extension, p_Unlocks, p_Type, p_FullResource)
 	self.name = p_Name
@@ -109,6 +109,11 @@ function Weapon:learnStatsValues()
 		delayedShot = true
 	elseif string.find(aiDataString, "_hgr_") ~= nil then
 		m_Logger:Write("Grenade")
+		fireDuration = 0.2
+		firePause = 0.2
+		delayedShot = false
+	elseif self.name == "Repairtool" or self.name == "Claymore" or self.name == "C4" or self.name == "Tug" or self.name == "Beacon" then
+		m_Logger:Write("other stuff")
 		fireDuration = 0.2
 		firePause = 0.2
 		delayedShot = false

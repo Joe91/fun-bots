@@ -30,6 +30,6 @@ Debug = {
 	},
 	Logger = {
 		ENABLED = true,
-		PRINTALL = true
+		PRINTALL = false
 	}
 }
