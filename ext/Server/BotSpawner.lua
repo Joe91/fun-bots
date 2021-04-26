@@ -95,6 +95,9 @@ function BotSpawner:updateBotAmountAndTeam()
 				s_CountBots[i] = s_CountBots[i] + 1
 			else
 				s_CountPlayers[i] = s_CountPlayers[i] + 1
+				if Globals.IsSdm then	-- TODO: Only needed because of VEXT-Bug
+					player.squadId = 1
+				end
 			end
 		end
 	end
@@ -539,11 +542,7 @@ end
 
 function BotSpawner:getSquad(p_TeamId)  --TODO: create a more advanced algorithm?
 	if Globals.IsSdm then
-		if p_TeamId % 2 == 1 then
-			return 1
-		else
-			return 0  --TODO: only needed because of Vext-Bug
-		end
+		return 1
 	else
 		for i = 1, SquadId.SquadIdCount - 1 do --for i = 9, SquadId.SquadIdCount - 1 do -- first 8 squads for real players
 			if TeamSquadManager:GetSquadPlayerCount(p_TeamId, i) < 4 then

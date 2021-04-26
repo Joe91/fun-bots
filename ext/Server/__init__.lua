@@ -40,7 +40,6 @@ function FunBotServer:__init()
 	Events:Subscribe('Extension:Unloading', self, self._onExtensionUnloading)
 	Events:Subscribe('Extension:Loaded', self, self._onExtensionLoaded)
 	Events:Subscribe('Partition:Loaded', self, self._onPartitionLoaded)
-	
 
 	Events:Subscribe('UpdateManager:Update', self, self.OnUpdate)
 	Events:Subscribe('Level:Destroy', self, self.OnLevelDestroy)
@@ -52,7 +51,7 @@ function FunBotServer:__init()
 	Events:Subscribe('MCOM:Disarmed', self, self.OnMcomDisarmed)
 	Events:Subscribe('MCOM:Destroyed', self, self.OnMcomDestroyed)
 	Events:Subscribe('Player:EnteredCapturePoint', self, self.OnPlayerEnterCapturePoint)
-	Events:Subscribe('Engine:Update', self, self.OnUpdate)
+	Events:Subscribe('Engine:Update', self, self.OnEngineUpdate)
 
 	Hooks:Install('Soldier:Damage', 100, self, self.OnSoldierDamage)
 
@@ -77,16 +76,16 @@ end
 
 function FunBotServer:OnUpdate(p_DeltaTime, p_UpdatePass)
 	m_BotManager:OnUpdate(p_DeltaTime, p_UpdatePass)
-	m_BotSpawner.OnUpdate(p_DeltaTime, p_UpdatePass);
+	m_BotSpawner:OnUpdate(p_DeltaTime, p_UpdatePass)
 end
 
-function FunBotServer:OnUpdate(p_DeltaTime)
-	m_GameDirector:OnUpdate(p_DeltaTime)
+function FunBotServer:OnEngineUpdate(p_DeltaTime)
+	m_GameDirector:OnEngineUpdate(p_DeltaTime)
 end
 
 function FunBotServer:OnLevelDestroy()
 	m_BotManager:OnLevelDestroy()
-	m_BotSpawner.OnLevelDestroy();
+	m_BotSpawner:OnLevelDestroy()
 end
 
 function FunBotServer:OnRoundOver(p_RoundTime, p_WinningTeam)

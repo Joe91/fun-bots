@@ -545,7 +545,7 @@ function GameDirector:OnRoundReset(p_RoundTime, p_WinningTeam)
 	self.UpdateLast = 0
 end
 
-function GameDirector:OnUpdate(p_DeltaTime)
+function GameDirector:OnEngineUpdate(p_DeltaTime)
 	if (self.UpdateLast >= 0) then
 		self.UpdateLast = self.UpdateLast + p_DeltaTime
 	end

@@ -312,9 +312,9 @@ function BotManager:_checkForBotBotAttack()
 				for _, bot2 in pairs(self._botsByTeam[opposingTeam+1]) do
 
 					-- make sure it's living and has no target
-					if (bot2 ~= nil and bot2.player ~= nil and bot2.player.alive and not self._botCheckState[bot2.player.name]) then
+					if (bot2 ~= nil and bot2.m_Player ~= nil and bot2.m_Player.alive and not self._botCheckState[bot2.m_Player.name]) then
 
-						local distance = bot.m_Player.soldier.worldTransform.trans:Distance(bot2.player.soldier.worldTransform.trans)
+						local distance = bot.m_Player.soldier.worldTransform.trans:Distance(bot2.m_Player.soldier.worldTransform.trans)
 						if distance <= Config.MaxBotAttackBotDistance then
 
 							-- choose a player at random, try until an active player is found
@@ -323,10 +323,10 @@ function BotManager:_checkForBotBotAttack()
 
 									-- check this bot view. Let one client do it
 									local pos1 = bot.m_Player.soldier.worldTransform.trans:Clone()
-									local pos2 = bot2.player.soldier.worldTransform.trans:Clone()
-									local inVehicle =  (bot.m_Player.attachedControllable ~= nil or bot2.player.attachedControllable ~= nil)
+									local pos2 = bot2.m_Player.soldier.worldTransform.trans:Clone()
+									local inVehicle =  (bot.m_Player.attachedControllable ~= nil or bot2.m_Player.attachedControllable ~= nil)
 
-									NetEvents:SendUnreliableToLocal('CheckBotBotAttack', players[playerIndex], pos1, pos2, bot.m_Player.name, bot2.player.name, inVehicle)
+									NetEvents:SendUnreliableToLocal('CheckBotBotAttack', players[playerIndex], pos1, pos2, bot.m_Player.name, bot2.m_Player.name, inVehicle)
 									raycasts = raycasts + 1
 									nextPlayerIndex = playerIndex + 1
 									break
@@ -417,7 +417,7 @@ function BotManager:OnSoldierDamage(p_HookCtx, p_Soldier, p_Info, p_GiverInfo)
 	if soldierIsBot and p_GiverInfo.giver ~= nil then
 		--detect if we need to shoot back
 		if Config.ShootBackIfHit and p_Info.damage > 0 then
-			self:_onShootAt(p_GiverInfo.giver, p_Soldier.player.name, true)
+			self:OnShootAt(p_GiverInfo.giver, p_Soldier.player.name, true)
 		end
 
 		-- prevent bots from killing themselves. Bad bot, no suicide.
@@ -507,15 +507,15 @@ end
 function BotManager:OnBotShootAtBot(p_Player, p_BotName1, p_BotName2)
 	local bot1 = self:getBotByName(p_BotName1)
 	local bot2 = self:getBotByName(p_BotName2)
-	if bot1 == nil or bot1.player == nil or  bot2 == nil or bot2.player == nil then
+	if bot1 == nil or bot1.m_Player == nil or  bot2 == nil or bot2.m_Player == nil then
 		return
 	end
-	if bot1:shootAt(bot2.player, false) or bot2:shootAt(bot1.player, false) then
-		self._botCheckState[bot1.player.name] = bot2.player.name
-		self._botCheckState[bot2.player.name] = bot1.player.name
+	if bot1:shootAt(bot2.m_Player, false) or bot2:shootAt(bot1.m_Player, false) then
+		self._botCheckState[bot1.m_Player.name] = bot2.m_Player.name
+		self._botCheckState[bot2.m_Player.name] = bot1.m_Player.name
 	else
-		self._botCheckState[bot1.player.name] = nil
-		self._botCheckState[bot2.player.name] = nil
+		self._botCheckState[bot1.m_Player.name] = nil
+		self._botCheckState[bot2.m_Player.name] = nil
 	end
 end
 
