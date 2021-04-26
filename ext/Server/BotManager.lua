@@ -193,7 +193,7 @@ function BotManager:setOptionForPlayer(p_Player, p_Option, p_Value)
 	end
 end
 
-function BotManager:_onUpdate(p_DeltaTime, p_UpdatePass)
+function BotManager:OnUpdate(p_DeltaTime, p_UpdatePass)
 	if p_UpdatePass ~= UpdatePass.UpdatePass_PostFrame then
 		return
 	end
@@ -351,7 +351,7 @@ function BotManager:_checkForBotBotAttack()
 	self._botCheckState = {}
 end
 
-function BotManager:_onPlayerLeft(p_Player)
+function BotManager:OnPlayerLeft(p_Player)
 	--remove all references of player
 	if p_Player ~= nil then
 		for _, bot in pairs(self._bots) do
@@ -407,7 +407,7 @@ function BotManager:_getDamageValue(p_Damage, p_Bot, p_Soldier, p_Fake)
 	return resultDamage
 end
 
-function BotManager:_onSoldierDamage(p_HookCtx, p_Soldier, p_Info, p_GiverInfo)
+function BotManager:OnSoldierDamage(p_HookCtx, p_Soldier, p_Info, p_GiverInfo)
 	-- soldier -> soldier damage only
 	if p_Soldier.player == nil then
 		return
@@ -459,14 +459,14 @@ function BotManager:_onSoldierDamage(p_HookCtx, p_Soldier, p_Info, p_GiverInfo)
 	p_HookCtx:Pass(p_Soldier, p_Info, p_GiverInfo)
 end
 
-function BotManager:_onServerDamagePlayer(p_PlayerName, p_ShooterName, p_MeleeAttack)
+function BotManager:OnServerDamagePlayer(p_PlayerName, p_ShooterName, p_MeleeAttack)
 	local player = PlayerManager:GetPlayerByName(p_PlayerName)
 	if player ~= nil then
-		self:_onDamagePlayer(player, p_ShooterName, p_MeleeAttack, false)
+		self:OnDamagePlayer(player, p_ShooterName, p_MeleeAttack, false)
 	end
 end
 
-function BotManager:_onDamagePlayer(p_Player, p_ShooterName, p_MeleeAttack, p_IsHeadShot)
+function BotManager:OnDamagePlayer(p_Player, p_ShooterName, p_MeleeAttack, p_IsHeadShot)
 	local bot = self:getBotByName(p_ShooterName)
 	if not p_Player.alive or bot == nil then
 		return
@@ -488,7 +488,7 @@ function BotManager:_onDamagePlayer(p_Player, p_ShooterName, p_MeleeAttack, p_Is
 	end
 end
 
-function BotManager:_onShootAt(p_Player, p_BotName, p_IgnoreYaw)
+function BotManager:OnShootAt(p_Player, p_BotName, p_IgnoreYaw)
 	local bot = self:getBotByName(p_BotName)
 	if bot == nil or bot.m_Player == nil or bot.m_Player.soldier == nil or p_Player == nil then
 		return
@@ -496,7 +496,7 @@ function BotManager:_onShootAt(p_Player, p_BotName, p_IgnoreYaw)
 	bot:shootAt(p_Player, p_IgnoreYaw)
 end
 
-function BotManager:_onRevivePlayer(p_Player, p_BotName)
+function BotManager:OnRevivePlayer(p_Player, p_BotName)
 	local bot = self:getBotByName(p_BotName)
 	if bot == nil or bot.m_Player == nil or bot.m_Player.soldier == nil or p_Player == nil then
 		return
@@ -504,7 +504,7 @@ function BotManager:_onRevivePlayer(p_Player, p_BotName)
 	bot:revive(p_Player)
 end
 
-function BotManager:_onBotShootAtBot(p_Player, p_BotName1, p_BotName2)
+function BotManager:OnBotShootAtBot(p_Player, p_BotName1, p_BotName2)
 	local bot1 = self:getBotByName(p_BotName1)
 	local bot2 = self:getBotByName(p_BotName2)
 	if bot1 == nil or bot1.player == nil or  bot2 == nil or bot2.player == nil then
@@ -519,7 +519,7 @@ function BotManager:_onBotShootAtBot(p_Player, p_BotName1, p_BotName2)
 	end
 end
 
-function BotManager:_onLevelDestroy()
+function BotManager:OnLevelDestroy()
 	m_Logger:Write("destroyLevel")
 
 	self:resetAllBots()

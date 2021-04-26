@@ -110,7 +110,7 @@ function GameDirector:_initFlagTeams()
 	end
 end
 
-function GameDirector:_onMcomArmed(p_Player)
+function GameDirector:OnMcomArmed(p_Player)
 	m_Logger:Write("mcom armed by "..p_Player.name)
 
 	local objective = self:_translateObjective(p_Player.soldier.worldTransform.trans)
@@ -125,7 +125,7 @@ function GameDirector:_onMcomArmed(p_Player)
 	})
 end
 
-function GameDirector:_onMcomDisarmed(p_Player)
+function GameDirector:OnMcomDisarmed(p_Player)
 	local objective = self:_translateObjective(p_Player.soldier.worldTransform.trans)
 	-- remove information of armed mcom
 	for playerMcom,mcomsOfPlayer in pairs(self.ArmedMcoms) do
@@ -144,7 +144,7 @@ function GameDirector:_onMcomDisarmed(p_Player)
 	})
 end
 
-function GameDirector:_onMcomDestroyed(p_Player)
+function GameDirector:OnMcomDestroyed(p_Player)
 	m_Logger:Write("mcom destroyed by "..p_Player.name)
 
 	local objective = ''
@@ -412,7 +412,7 @@ function GameDirector:_translateObjective(p_Position, p_Name)
 	end
 end
 
-function GameDirector:_onCapture(p_CapturePoint)
+function GameDirector:OnCapturePointCapture(p_CapturePoint)
 	local flagEntity = CapturePointEntity(p_CapturePoint)
 	local objectiveName = self:_translateObjective(flagEntity.transform.trans, flagEntity.name)
 	self:_updateObjective(objectiveName, {
@@ -517,7 +517,7 @@ function GameDirector:_useSubobjective(p_BotTeam, p_ObjectiveName)
 	return use
 end
 
-function GameDirector:_onLost(p_CapturePoint)
+function GameDirector:OnCapturePointLost(p_CapturePoint)
 	local flagEntity = CapturePointEntity(p_CapturePoint)
 	local objectiveName = self:_translateObjective(flagEntity.transform.trans, flagEntity.name)
 	self:_updateObjective(objectiveName, {
@@ -528,7 +528,7 @@ function GameDirector:_onLost(p_CapturePoint)
 	m_Logger:Write('GameDirector:_onLost: '..objectiveName)
 end
 
-function GameDirector:_onPlayerEnterCapturePoint(p_Player, p_CapturePoint)
+function GameDirector:OnPlayerEnterCapturePoint(p_Player, p_CapturePoint)
 	local flagEntity = CapturePointEntity(p_CapturePoint)
 	local objectiveName = self:_translateObjective(flagEntity.transform.trans, flagEntity.name)
 	self:_updateObjective(objectiveName, {
@@ -536,16 +536,16 @@ function GameDirector:_onPlayerEnterCapturePoint(p_Player, p_CapturePoint)
 	})
 end
 
-function GameDirector:_onRoundOver(p_RoundTime, p_WinningTeam)
+function GameDirector:OnRoundOver(p_RoundTime, p_WinningTeam)
 	self.UpdateLast = -1
 end
 
-function GameDirector:_onRoundReset(p_RoundTime, p_WinningTeam)
+function GameDirector:OnRoundReset(p_RoundTime, p_WinningTeam)
 	self.AllObjectives = {}
 	self.UpdateLast = 0
 end
 
-function GameDirector:_onUpdate(p_DeltaTime)
+function GameDirector:OnUpdate(p_DeltaTime)
 	if (self.UpdateLast >= 0) then
 		self.UpdateLast = self.UpdateLast + p_DeltaTime
 	end

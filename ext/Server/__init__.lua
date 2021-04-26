@@ -40,43 +40,132 @@ function FunBotServer:__init()
 	Events:Subscribe('Extension:Unloading', self, self._onExtensionUnloading)
 	Events:Subscribe('Extension:Loaded', self, self._onExtensionLoaded)
 	Events:Subscribe('Partition:Loaded', self, self._onPartitionLoaded)
-	NetEvents:Subscribe('RequestClientSettings', self, self._onRequestClientSettings)
+	
 
-	-- BotManager
-	Events:Subscribe('UpdateManager:Update', m_BotManager, m_BotManager._onUpdate)
-	Events:Subscribe('Level:Destroy', m_BotManager, m_BotManager._onLevelDestroy)
-	NetEvents:Subscribe('BotShootAtPlayer', m_BotManager, m_BotManager._onShootAt)
-	NetEvents:Subscribe('BotRevivePlayer', m_BotManager, m_BotManager._onRevivePlayer)
-	NetEvents:Subscribe('BotShootAtBot', m_BotManager, m_BotManager._onBotShootAtBot)
-	Events:Subscribe('ServerDamagePlayer', m_BotManager, m_BotManager._onServerDamagePlayer) 	--only triggered on false damage
-	NetEvents:Subscribe('ClientDamagePlayer', m_BotManager, m_BotManager._onDamagePlayer)   	--only triggered on false damage
-	Hooks:Install('Soldier:Damage', 100, m_BotManager, m_BotManager._onSoldierDamage)
+	Events:Subscribe('UpdateManager:Update', self, self.OnUpdate)
+	Events:Subscribe('Level:Destroy', self, self.OnLevelDestroy)
+	Events:Subscribe('Server:RoundOver', self, self.OnRoundOver)
+	Events:Subscribe('Server:RoundReset', self, self.OnRoundReset)
+	Events:Subscribe('CapturePoint:Lost', self, self.OnCapturePointLost)
+	Events:Subscribe('CapturePoint:Captured', self, self.OnCapturePointCapture)
+	Events:Subscribe('MCOM:Armed', self, self.OnMcomArmed)
+	Events:Subscribe('MCOM:Disarmed', self, self.OnMcomDisarmed)
+	Events:Subscribe('MCOM:Destroyed', self, self.OnMcomDestroyed)
+	Events:Subscribe('Player:EnteredCapturePoint', self, self.OnPlayerEnterCapturePoint)
+	Events:Subscribe('Engine:Update', self, self.OnUpdate)
+
+	Hooks:Install('Soldier:Damage', 100, self, self.OnSoldierDamage)
+
+	NetEvents:Subscribe('Client:RequestSettings', self, self._onRequestClientSettings)
+	NetEvents:Subscribe('Bot:ShootAtPlayer', self, self.OnShootAt)
+	NetEvents:Subscribe('Bot:RevivePlayer', self, self.OnRevivePlayer)
+	NetEvents:Subscribe('Bot:ShootAtBot', self, self.OnBotShootAtBot)
+	NetEvents:Subscribe('Client:DamagePlayer', self, self.OnDamagePlayer)   	--only triggered on false damage
+	Events:Subscribe('Server:DamagePlayer', self, self.OnServerDamagePlayer) 	--only triggered on false damage
+	Events:Subscribe('Player:Left', self, self.OnPlayerLeft)
+	Events:Subscribe('Bot:RespawnBot', self, self.OnRespawnBot)
+	Events:Subscribe('Player:KitPickup', self, self.OnKitPickup)
+	Events:Subscribe('Player:Joining', self, self.OnPlayerJoining)
+	Events:Subscribe('Player:TeamChange', self, self.OnTeamChange)
+
 	--Events:Subscribe('Soldier:HealthAction', m_BotManager, m_BotManager._onHealthAction)	-- use this for more options on revive. Not needed yet
 	--Events:Subscribe('GunSway:Update', m_BotManager, m_BotManager._onGunSway)
 	--Events:Subscribe('GunSway:UpdateRecoil', m_BotManager, m_BotManager._onGunSway)
 	--Events:Subscribe('Player:Destroyed', m_BotManager, m_BotManager._onPlayerDestroyed) -- Player left is called first, so use this one instead
-	Events:Subscribe('Player:Left', m_BotManager, m_BotManager._onPlayerLeft)
 	--Events:Subscribe('Engine:Message', m_BotManager, m_BotManager._onEngineMessage) -- maybe us this later
-
-	-- BotSpawner
-	Events:Subscribe('UpdateManager:Update', m_BotSpawner, m_BotSpawner._onUpdate)
-	Events:Subscribe('Bot:RespawnBot', m_BotSpawner, m_BotSpawner._onRespawnBot)
-	Events:Subscribe('Level:Destroy', m_BotSpawner, m_BotSpawner._onLevelDestroy)
-	Events:Subscribe('Player:KitPickup', m_BotSpawner, m_BotSpawner._onKitPickup)
-	Events:Subscribe('Player:Joining', m_BotSpawner, m_BotSpawner._onPlayerJoining)
-	Events:Subscribe('Player:TeamChange', m_BotSpawner, m_BotSpawner._onTeamChange)
-
-	-- GameDirector
-	Events:Subscribe('CapturePoint:Lost', m_GameDirector, m_GameDirector._onLost)
-	Events:Subscribe('CapturePoint:Captured', m_GameDirector, m_GameDirector._onCapture)
-	Events:Subscribe('Player:EnteredCapturePoint', m_GameDirector, m_GameDirector._onPlayerEnterCapturePoint)
-	Events:Subscribe('Server:RoundOver', m_GameDirector, m_GameDirector._onRoundOver)
-	Events:Subscribe('Server:RoundReset', m_GameDirector, m_GameDirector._onRoundReset)
-	Events:Subscribe('Engine:Update', m_GameDirector, m_GameDirector._onUpdate)
-	Events:Subscribe('MCOM:Armed', m_GameDirector, m_GameDirector._onMcomArmed)
-	Events:Subscribe('MCOM:Disarmed', m_GameDirector, m_GameDirector._onMcomDisarmed)
-	Events:Subscribe('MCOM:Destroyed', m_GameDirector, m_GameDirector._onMcomDestroyed)
 end
+
+function FunBotServer:OnUpdate(p_DeltaTime, p_UpdatePass)
+	m_BotManager:OnUpdate(p_DeltaTime, p_UpdatePass)
+	m_BotSpawner.OnUpdate(p_DeltaTime, p_UpdatePass);
+end
+
+function FunBotServer:OnUpdate(p_DeltaTime)
+	m_GameDirector:OnUpdate(p_DeltaTime)
+end
+
+function FunBotServer:OnLevelDestroy()
+	m_BotManager:OnLevelDestroy()
+	m_BotSpawner.OnLevelDestroy();
+end
+
+function FunBotServer:OnRoundOver(p_RoundTime, p_WinningTeam)
+	m_GameDirector:OnRoundOver(p_RoundTime, p_WinningTeam)
+end
+
+function FunBotServer:OnRoundReset(p_RoundTime, p_WinningTeam)
+	m_GameDirector:OnRoundReset(p_RoundTime, p_WinningTeam)
+end
+
+function FunBotServer:OnCapturePointLost(p_CapturePoint)
+	m_GameDirector:OnCapturePointLost(p_CapturePoint)
+end
+
+function FunBotServer:OnCapturePointCapture(p_CapturePoint)
+	m_GameDirector:OnCapturePointCapture(p_CapturePoint)
+end
+
+function FunBotServer:OnMcomArmed(p_Player)
+	m_GameDirector:OnMcomArmed(p_Player)
+end
+
+function FunBotServer:OnMcomDisarmed(p_Player)
+	m_GameDirector:OnMcomDisarmed(p_Player)
+end
+
+function FunBotServer:OnMcomDestroyed(p_Player)
+	m_GameDirector:OnMcomDestroyed(p_Player)
+end
+
+function FunBotServer:OnPlayerEnterCapturePoint(p_Player, p_CapturePoint)
+	m_GameDirector:OnPlayerEnterCapturePoint(p_Player, p_CapturePoint)
+end
+
+function FunBotServer:OnSoldierDamage(p_HookCtx, p_Soldier, p_Info, p_GiverInfo)
+	m_BotManager:OnSoldierDamage(p_HookCtx, p_Soldier, p_Info, p_GiverInfo)
+end
+
+function FunBotServer:OnShootAt(p_Player, p_BotName, p_IgnoreYaw)
+	m_BotManager:OnShootAt(p_Player, p_BotName, p_IgnoreYaw)
+end
+
+function FunBotServer:OnRevivePlayer(p_Player, p_BotName)
+	m_BotManager:OnRevivePlayer(p_Player, p_BotName)
+end
+
+function FunBotServer:OnBotShootAtBot(p_Player, p_BotName1, p_BotName2)
+	m_BotManager:OnBotShootAtBot(p_Player, p_BotName1, p_BotName2)
+end
+
+function FunBotServer:OnDamagePlayer(p_Player, p_ShooterName, p_MeleeAttack, p_IsHeadShot)
+	m_BotManager:OnDamagePlayer(p_Player, p_ShooterName, p_MeleeAttack, p_IsHeadShot)
+end
+
+function FunBotServer:OnServerDamagePlayer(p_PlayerName, p_ShooterName, p_MeleeAttack)
+	m_BotManager:OnServerDamagePlayer(p_PlayerName, p_ShooterName, p_MeleeAttack)
+end
+
+function FunBotServer:OnPlayerLeft(p_Player)
+	m_BotManager:OnPlayerLeft(p_Player)
+end
+
+function FunBotServer:OnRespawnBot(p_BotName)
+	m_BotSpawner:OnRespawnBot(p_BotName)
+end
+
+function FunBotServer:OnKitPickup(p_Player, p_NewCustomization)
+	m_BotSpawner:OnKitPickup(p_Player, p_NewCustomization)
+end
+
+function FunBotServer:OnPlayerJoining(p_Name)
+	m_BotSpawner:OnPlayerJoining(p_Name)
+end
+
+function FunBotServer:OnTeamChange(p_Player, p_TeamId, p_SquadId)
+	m_BotSpawner:OnTeamChange(p_Player, p_TeamId, p_SquadId)
+end
+
+
 
 function FunBotServer:OnEngineInit()
 	require('UpdateCheck')
@@ -270,7 +359,7 @@ function FunBotServer:_onLevelLoaded(p_LevelName, p_GameMode)
 	m_NodeEditor:onLevelLoaded(p_LevelName, p_GameMode)
 	m_GameDirector:onLevelLoaded()
 	m_GameDirector:initObjectives()
-	m_BotSpawner:onLevelLoaded()
+	m_BotSpawner:OnLevelLoaded()
 	NetEvents:BroadcastUnreliableLocal('WriteClientSettings', Config, true)
 end
 

@@ -21,7 +21,7 @@ function BotSpawner:__init()
 	self._botsWithoutPath = {}
 end
 
-function BotSpawner:_onTeamChange(p_Player, p_TeamId, p_SquadId)
+function BotSpawner:OnTeamChange(p_Player, p_TeamId, p_SquadId)
 	if Config.BotTeam ~= TeamId.TeamNeutral then
 		if p_Player ~= nil then
 			if p_Player.onlineId ~= 0 then -- no bot
@@ -250,7 +250,7 @@ function BotSpawner:updateBotAmountAndTeam()
 	end
 end
 
-function BotSpawner:_onLevelDestroy()
+function BotSpawner:OnLevelDestroy()
 	self._spawnSets = {}
 	self._updateActive = false
 	self._firstSpawnInLevel = true
@@ -258,10 +258,10 @@ function BotSpawner:_onLevelDestroy()
 	self._playerUpdateTimer = 0
 end
 
-function BotSpawner:_onPlayerJoining(p_Name)
+function BotSpawner:OnPlayerJoining(p_Name)
 	if m_BotManager:getPlayerCount() == 0 then
 		m_Logger:Write("first player - spawn bots")
-		self:onLevelLoaded()
+		self:OnLevelLoaded()
 	end
 	-- detect BOT-Names
 	if string.find(p_Name, BOT_TOKEN) == 1 then --check if name starts with bot-token
@@ -273,14 +273,14 @@ function BotSpawner:_onPlayerJoining(p_Name)
 	end
 end
 
-function BotSpawner:onLevelLoaded()
+function BotSpawner:OnLevelLoaded()
 	m_Logger:Write("on level loaded on spawner")
 	self._firstSpawnInLevel = true
 	self._playerUpdateTimer = 0
 	self._firstSpawnDelay = FIRST_SPAWN_DELAY
 end
 
-function BotSpawner:_onUpdate(p_DeltaTime, p_UpdatePass)
+function BotSpawner:OnUpdate(p_DeltaTime, p_UpdatePass)
 	if p_UpdatePass ~= UpdatePass.UpdatePass_PostFrame then
 		return
 	end
@@ -368,7 +368,7 @@ function BotSpawner:_onUpdate(p_DeltaTime, p_UpdatePass)
 	end
 end
 
-function BotSpawner:_onRespawnBot(p_BotName)
+function BotSpawner:OnRespawnBot(p_BotName)
 	local bot = m_BotManager:getBotByName(p_BotName)
 	local spawnMode = bot:getSpawnMode()
 
@@ -1014,7 +1014,7 @@ function BotSpawner:getKitApperanceCustomization(p_TeamId, p_Kit, p_Color, p_Pri
 	return soldierKit, appearance, soldierCustomization
 end
 
-function BotSpawner:_onKitPickup(p_Player, p_NewCustomization)
+function BotSpawner:OnKitPickup(p_Player, p_NewCustomization)
 	if p_Player.soldier ~= nil then
 		if p_Player.soldier.weaponsComponent.weapons[1] ~= nil then
 			p_Player.soldier.weaponsComponent.weapons[1].secondaryAmmo = 182

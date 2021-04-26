@@ -809,7 +809,7 @@ function Bot:_updateShooting()
 					self._MeleeCooldownTimer = Config.MeleeAttackCoolDown
 
 					if not USE_REAL_DAMAGE then
-						Events:DispatchLocal("ServerDamagePlayer", self._ShootPlayer.name, self.m_Player.name, true)
+						Events:DispatchLocal("Server:DamagePlayer", self._ShootPlayer.name, self.m_Player.name, true)
 					end
 				else
 					if self._MeleeCooldownTimer < 0 then
