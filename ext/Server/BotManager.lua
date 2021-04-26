@@ -520,9 +520,7 @@ function BotManager:_onBotShootAtBot(p_Player, p_BotName1, p_BotName2)
 end
 
 function BotManager:_onLevelDestroy()
-	if Debug.Server.INFO then
-		print("destroyLevel")
-	end
+	m_Logger:Write("destroyLevel")
 
 	self:resetAllBots()
 	self._activePlayers = {}
@@ -536,7 +534,7 @@ end
 
 function BotManager:createBot(p_Name, p_TeamId, p_SquadId)
 
-	--print('botsByTeam['..#self._botsByTeam[2]..'|'..#self._botsByTeam[3]..']')
+	--m_Logger:Write('botsByTeam['..#self._botsByTeam[2]..'|'..#self._botsByTeam[3]..']')
 
 	local bot = self:getBotByName(p_Name)
 	if bot ~= nil then
