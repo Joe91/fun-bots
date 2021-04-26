@@ -328,10 +328,10 @@ function WeaponList:__init()
 
 	---------------------------
 	-- Sidearms
-	weapon = Weapon('SMAW', '', {}, 'Rocket')		-- only rockets supported for engineers right now
+	weapon = Weapon('SMAW', '', {}, 'Rocket') -- only rockets supported for engineers right now
 	table.insert(self._weapons, weapon)
 
-	weapon = Weapon('RPG7', '', {}, 'Rocket')		-- only rockets supported for engineers right now
+	weapon = Weapon('RPG7', '', {}, 'Rocket') -- only rockets supported for engineers right now
 	table.insert(self._weapons, weapon)
 
 	weapon = Weapon('Repairtool', '', {}, 'Torch', 'Weapons/Gadgets/Repairtool/U_Repairtool')
@@ -580,8 +580,7 @@ function WeaponList:onLevelLoaded()
 	end
 end
 
-
-if (g_WeaponList == nil) then
+if g_WeaponList == nil then
 	g_WeaponList = WeaponList()
 end
 

@@ -27,23 +27,27 @@ function GameDirector:onLevelLoaded()
 		self.McomCounter = 0
 		self.ArmedMcoms = {}
 
-		local mcomIterator = EntityManager:GetIterator("EventSplitterEntity")
-		local mcomEntity = mcomIterator:Next()
-
-		while mcomEntity do
-			mcomEntity = Entity(mcomEntity)
-			mcomEntity:RegisterEventCallback(function(ent, entityEvent)
-				if ent.data.instanceGuid == Guid("87E78B77-78F9-4DE0-82FF-904CDC2F7D03") then
-					Events:Dispatch('MCOM:Armed', entityEvent.player)
-				end
-				if ent.data.instanceGuid == Guid("74B7AD6D-8EB5-40B1-BB53-C0CFB956048E") then
-					Events:Dispatch('MCOM:Disarmed', entityEvent.player)
-				end
-				if ent.data.instanceGuid == Guid("70B36E2F-0B6F-40EC-870B-1748239A63A8") then
-					Events:Dispatch('MCOM:Destroyed', entityEvent.player)
-				end
-			end)
-			mcomEntity = mcomIterator:Next()
+		local s_Iterator = EntityManager:GetIterator("EventSplitterEntity")
+		local s_Entity = s_Iterator:Next()
+		while s_Entity do
+			if s_Entity.data == nil then
+				goto continue_entity_loop
+			end
+			if s_Entity.data.instanceGuid == Guid("87E78B77-78F9-4DE0-82FF-904CDC2F7D03") then
+				s_Entity:RegisterEventCallback(function(p_Entity, p_EntityEvent)
+					Events:Dispatch('MCOM:Armed', p_EntityEvent.player)
+				end)
+			elseif s_Entity.data.instanceGuid == Guid("74B7AD6D-8EB5-40B1-BB53-C0CFB956048E") then
+				s_Entity:RegisterEventCallback(function(p_Entity, p_EntityEvent)
+					Events:Dispatch('MCOM:Disarmed', p_EntityEvent.player)
+				end)
+			elseif s_Entity.data.instanceGuid == Guid("70B36E2F-0B6F-40EC-870B-1748239A63A8") then
+				s_Entity:RegisterEventCallback(function(p_Entity, p_EntityEvent)
+					Events:Dispatch('MCOM:Destroyed', p_EntityEvent.player)
+				end)
+			end
+			::continue_entity_loop::
+			s_Entity = s_Iterator:Next()
 		end
 	end
 
@@ -248,9 +252,9 @@ function GameDirector:checkForExecution(p_Point, p_TeamId)
 				if objective ~= nil then
 					if objective.active and not objective.destroyed then
 						if p_TeamId == TeamId.Team1 and objective.team == TeamId.TeamNeutral then
-							execute = true	--Attacking Team
+							execute = true --Attacking Team
 						elseif p_TeamId == TeamId.Team2 and objective.isAttacked then
-							execute = true	--Defending Team
+							execute = true --Defending Team
 						end
 					end
 				end
@@ -511,9 +515,9 @@ function GameDirector:_useSubobjective(p_BotTeam, p_ObjectiveName)
 	if objective ~= nil and objective.subObjective then
 		if objective.active and not objective.destroyed then
 			if p_BotTeam == TeamId.Team1 and objective.team == TeamId.TeamNeutral then
-				use = true	--Attacking Team
+				use = true --Attacking Team
 			elseif p_BotTeam == TeamId.Team2 and objective.isAttacked then
-				use = true	--Defending Team
+				use = true --Defending Team
 			end
 		end
 	end
@@ -537,7 +541,7 @@ function GameDirector:_onPlayerEnterCapturePoint(p_Player, p_CapturePoint)
 	local flagEntity = CapturePointEntity(p_CapturePoint)
 	local objectiveName = self:_translateObjective(flagEntity.transform.trans, flagEntity.name)
 	self:_updateObjective(objectiveName, {
-		isAttacked = flagEntity.isAttacked  --		team = flagEntity.team,
+		isAttacked = flagEntity.isAttacked  -- team = flagEntity.team,
 	})
 end
 
@@ -666,7 +670,7 @@ function GameDirector:useSubobjective(p_BotName, p_Objective)
 	return false
 end
 
-if (g_GameDirector == nil) then
+if g_GameDirector == nil then
 	g_GameDirector = GameDirector()
 end
 

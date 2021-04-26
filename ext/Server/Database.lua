@@ -1,22 +1,22 @@
 class('Database')
 
 require('__shared/ArrayMap')
-local batches	= ArrayMap()
-local batched	= ''
+local batches = ArrayMap()
+local batched = ''
 
 DatabaseField = {
-	NULL		= '{::DB:NULL::}',
-	ID			= '{::DB:ID::}',
-	Text		= '{::DB:TEXT::}',
-	Time		= '{::DB:TIME::}',
-	Integer		= '{::DB:INTEGER::}',
-	Float		= '{::DB:FLOAT::}',
-	Boolean		= '{::DB:BOOLEAN::}',
-	PrimaryText	= '{::DB:TEXT:PRIMARY::}',
+	NULL = '{::DB:NULL::}',
+	ID = '{::DB:ID::}',
+	Text = '{::DB:TEXT::}',
+	Time = '{::DB:TIME::}',
+	Integer = '{::DB:INTEGER::}',
+	Float = '{::DB:FLOAT::}',
+	Boolean = '{::DB:BOOLEAN::}',
+	PrimaryText = '{::DB:TEXT:PRIMARY::}',
 }
 
 function Database:__init()
-	self.lastError	= nil
+	self.lastError = nil
 end
 
 function Database:getLastError()
@@ -48,8 +48,8 @@ function Database:query(p_Query, p_Parameters)
 end
 
 function Database:createTable(p_TableName, p_Definitions, p_Names, p_Additional)
-	local entries		= ArrayMap()
-	local additionals	= ArrayMap()
+	local entries = ArrayMap()
+	local additionals = ArrayMap()
 
 	for index, value in ipairs(p_Definitions) do
 		local name = p_Names[index]
@@ -103,8 +103,8 @@ function Database:fetch(p_Query)
 end
 
 function Database:update(p_TableName, p_Parameters, p_Where)
-	local fields	= ArrayMap()
-	local found		= nil
+	local fields = ArrayMap()
+	local found = nil
 
 	for name, value in pairs(p_Parameters) do
 		if value == nil then
@@ -147,10 +147,10 @@ function Database:executeBatch()
 end
 
 function Database:batchQuery(p_TableName, p_Parameters, p_Where)
-	local names		= ArrayMap()
-	local values	= ArrayMap()
-	local fields	= ArrayMap()
-	local found		= nil
+	local names = ArrayMap()
+	local values = ArrayMap()
+	local fields = ArrayMap()
+	local found = nil
 
 	for name, value in pairs(p_Parameters) do
 		names:add('`' .. name .. '`')
@@ -198,7 +198,7 @@ function Database:batchQuery(p_TableName, p_Parameters, p_Where)
 end
 
 function Database:delete(p_TableName, p_Parameters)
-	local where		= ArrayMap()
+	local where = ArrayMap()
 
 	for name, value in pairs(p_Parameters) do
 		where:add('`' .. name .. '`=\'' ..value .. '\'')
@@ -208,8 +208,8 @@ function Database:delete(p_TableName, p_Parameters)
 end
 
 function Database:insert(p_TableName, p_Parameters)
-	local names		= ArrayMap()
-	local values	= ArrayMap()
+	local names = ArrayMap()
+	local values = ArrayMap()
 
 	for name, value in pairs(p_Parameters) do
 		names:add('`' .. name .. '`')
@@ -239,7 +239,6 @@ function Database:insert(p_TableName, p_Parameters)
 	return SQL:LastInsertId()
 end
 
--- Singleton.
 if g_Database == nil then
 	g_Database = Database()
 end

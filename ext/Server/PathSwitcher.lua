@@ -242,7 +242,6 @@ function PathSwitcher:getNewPath(p_BotName, p_Point, p_Objective)
 	return false
 end
 
--- Singleton.
 if g_PathSwitcher == nil then
 	g_PathSwitcher = PathSwitcher()
 end

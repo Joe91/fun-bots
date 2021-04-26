@@ -301,7 +301,7 @@ function EbxEditUtils:dump(p)
 	end
 end
 
-if (g_EbxEditUtils == nil) then
+if g_EbxEditUtils == nil then
 	g_EbxEditUtils = EbxEditUtils()
 end
 

@@ -66,7 +66,7 @@ Config = {
 	BotsRevive = true,				-- Bots revive other players
 	BotsThrowGrenades = true,		-- Bots throw grenades
 	BotsDeploy = true,				-- Bots deploy ammo and medkits
-	DeployCycle	= 50,				-- time between deployment of bots
+	DeployCycle = 50,				-- time between deployment of bots
 	BotWorseningSkill = 0.3,		-- variation of the skill of a single bot. the higher, the worse the bots can get compared to the original settings
 
 	-- traces
@@ -98,7 +98,7 @@ Config = {
 	MaximunYawPerSec = 450,			-- in Degree. Rotaion-Movement per second.
 	TargetDistanceWayPoint = 0.8,	-- distance the bots have to reach to continue with next Waypoint
 	KeepOneSlotForPlayers = true,	-- always keep one slot for new Players to join
-	DistanceToSpawnBots	= 30,		-- distance to spawn Bots away from players
+	DistanceToSpawnBots = 30,		-- distance to spawn Bots away from players
 	HeightDistanceToSpawn = 2.5,	-- distance vertically, Bots should spawn away, if closer than distance
 	DistanceToSpawnReduction = 5,	-- reduce distance if not possible
 	MaxTrysToSpawnAtDistance = 3,	-- try this often to spawn a bot away from players
@@ -108,8 +108,8 @@ Config = {
 
 	-- UI settings & language options
 	DisableUserInterface = false,	-- if true, the complete UI will be disabled (not available in the UI -) )
-	DisableChatCommands = true,	 	-- if true, no chat commands can be used
-	DisableRCONCommands = true,	 	-- if true, no RCON commands can be used
+	DisableChatCommands = true,		-- if true, no chat commands can be used
+	DisableRCONCommands = true,		-- if true, no RCON commands can be used
 	TraceUsageAllowed = true,		-- if false, no traces can be recorded, deleted or saved
 	SettingsPassword = "fun",		-- if nil, disable it. Otherwise use a String with your password
 	Language = nil --"de_DE"		-- de_DE as sample (default is english, when language file doesnt exists)

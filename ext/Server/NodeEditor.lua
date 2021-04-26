@@ -303,7 +303,7 @@ function NodeEditor:_onUIRequestSaveSettings(p_Player, p_Data)
 	end
 end
 
-if (g_NodeEditor == nil) then
+if g_NodeEditor == nil then
 	g_NodeEditor = NodeEditor()
 end
 

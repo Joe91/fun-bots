@@ -102,11 +102,11 @@ end
 -- do not use on numerically indexed tables, only tables with string keys
 -- this is shallow merge, does not recurse deeper than one p_Level
 function Utilities:mergeKeys(p_OriginalTable, p_NewData)
-   for k,v in pairs(p_NewData) do
-	p_OriginalTable[k] = v
-   end
+	for k,v in pairs(p_NewData) do
+		p_OriginalTable[k] = v
+	end
 
-   return p_OriginalTable
+	return p_OriginalTable
 end
 
 
@@ -116,16 +116,16 @@ end
 -- <int|level> | Current recursion level
 -- returns <string> | a string representation of the object
 function Utilities:dump(o, p_Format, p_MaxLevels, p_Level)
-	local tablevel			= ''
-	local tablevellessone	= ''
-	local newline			= ''
-	p_MaxLevels				= p_MaxLevels or -1
-	p_Level					= p_Level or 1
+	local tablevel = ''
+	local tablevellessone = ''
+	local newline = ''
+	p_MaxLevels = p_MaxLevels or -1
+	p_Level = p_Level or 1
 
 	if p_Format then
-		tablevel			= string.rep("\t", p_Level)
-		tablevellessone		= string.rep("\t", math.max(p_Level-1, 0))
-		newline				= "\n"
+		tablevel = string.rep("\t", p_Level)
+		tablevellessone = string.rep("\t", math.max(p_Level-1, 0))
+		newline = "\n"
 	end
 
 	if o == nil then
@@ -189,8 +189,8 @@ function string:isDigit(p_Value)
 end
 
 function string:split(sep)
-	local sep, fields	= sep or ':', {}
-	local pattern		= string.format("([^%s]+)", sep)
+	local sep, fields = sep or ':', {}
+	local pattern = string.format("([^%s]+)", sep)
 
 	self:gsub(pattern, function(c) fields[#fields + 1] = c end)
 
@@ -209,7 +209,6 @@ function requireExists(module)
     end
 end
 
--- Singleton.
 if g_Utilities == nil then
 	g_Utilities = Utilities()
 end

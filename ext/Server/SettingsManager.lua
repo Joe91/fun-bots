@@ -57,15 +57,15 @@ function SettingsManager:onLoad()
 			--end
 
 			m_Database:insert('FB_Config_Trace', {
-				Key		= name,
-				Value	= value,
-				Time	= m_Database:now()
+				Key = name,
+				Value = value,
+				Time = m_Database:now()
 			})
 
 			--m_Database:insert('FB_Settings', {
-			--	Key		= name,
-			--	Value	= DatabaseField.NULL,
-			--	Time	= DatabaseField.NULL
+				--Key = name,
+				--Value = DatabaseField.NULL,
+				--Time = DatabaseField.NULL
 			--})
 
 		-- If exists update Settings, if newer
@@ -88,9 +88,9 @@ function SettingsManager:onLoad()
 
 				-- if changed, update SETTINGS SQL
 				m_Database:update('FB_Config_Trace', {
-					Key		= name,
-					Value	= value,
-					Time	= m_Database:now()
+					Key = name,
+					Value = value,
+					Time = m_Database:now()
 				}, 'Key')
 			end
 		end
@@ -163,24 +163,24 @@ function SettingsManager:update(p_Name, p_Value, p_Temporary, p_Batch)
 			-- If not exists, create
 			if single == nil then
 				m_Database:insert('FB_Settings', {
-					Key		= p_Name,
-					Value	= p_Value,
-					Time	= m_Database:now()
+					Key = p_Name,
+					Value = p_Value,
+					Time = m_Database:now()
 				})
 			else
 				m_Database:update('FB_Settings', {
-					Key		= p_Name,
-					Value	= p_Value,
-					Time	= m_Database:now()
+					Key = p_Name,
+					Value = p_Value,
+					Time = m_Database:now()
 				}, 'Key')
 			end
 
 		-- Use new querys
 		else
 			m_Database:batchQuery('FB_Settings', {
-				Key		= p_Name,
-				Value	= p_Value,
-				Time	= m_Database:now()
+				Key = p_Name,
+				Value = p_Value,
+				Time = m_Database:now()
 			}, 'Key')
 		end
 
@@ -192,7 +192,6 @@ function SettingsManager:update(p_Name, p_Value, p_Temporary, p_Batch)
 	Config[p_Name] = p_Value
 end
 
--- Singleton.
 if g_Settings == nil then
 	g_Settings = SettingsManager()
 end

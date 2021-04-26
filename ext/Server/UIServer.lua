@@ -6,15 +6,15 @@ require('__shared/Config')
 local m_NodeCollection = require('__shared/NodeCollection')
 local m_SettingsManager = require('SettingsManager')
 
-Language					= require('__shared/Language')
-local BotManager			= require('BotManager')
-local BotSpawner			= require('BotSpawner')
-local WeaponModification	= require('WeaponModification')
-local WeaponList			= require('__shared/WeaponList')
+Language = require('__shared/Language')
+local BotManager = require('BotManager')
+local BotSpawner = require('BotSpawner')
+local WeaponModification = require('WeaponModification')
+local WeaponList = require('__shared/WeaponList')
 
 function FunBotUIServer:__init()
-	self._webui			= 0
-	self._authenticated	= ArrayMap()
+	self._webui = 0
+	self._authenticated = ArrayMap()
 
 	if Config.DisableUserInterface ~= true then
 		Events:Subscribe('Player:Left', self, self._onPlayerLeft)
@@ -59,7 +59,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 	elseif request.action == 'bot_spawn_default' then
 		local amount = tonumber(request.value)
 		local team = p_Player.teamId
-		Globals.SpawnMode		= "manual"
+		Globals.SpawnMode = "manual"
 		if team == TeamId.Team1 then
 			BotSpawner:spawnWayBots(p_Player, amount, true, 0, 0, TeamId.Team2)
 		else
@@ -68,22 +68,22 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 
 	elseif request.action == 'bot_spawn_friend' then
 		local amount = tonumber(request.value)
-		Globals.SpawnMode		= "manual"
+		Globals.SpawnMode = "manual"
 		BotSpawner:spawnWayBots(p_Player, amount, true, 0, 0, p_Player.teamId)
 
 	elseif request.action == 'bot_spawn_path' then --todo: whats the difference? make a function to spawn bots on a fixed way instead?
-		local amount		= 1
-		local indexOnPath	= tonumber(request.pointindex) or 1
-		local index			= tonumber(request.value)
-		Globals.SpawnMode	= "manual"
+		local amount = 1
+		local indexOnPath = tonumber(request.pointindex) or 1
+		local index = tonumber(request.value)
+		Globals.SpawnMode = "manual"
 		BotSpawner:spawnWayBots(p_Player, amount, false, index, indexOnPath)
 
 	elseif request.action == 'bot_kick_all' then
-		Globals.SpawnMode	= "manual"
+		Globals.SpawnMode = "manual"
 		BotManager:destroyAll()
 
 	elseif request.action == 'bot_kick_team' then
-		Globals.SpawnMode	= "manual"
+		Globals.SpawnMode = "manual"
 		local teamNumber = tonumber(request.value)
 		if teamNumber == 1 then
 			BotManager:destroyAll(nil, TeamId.Team1)
@@ -92,12 +92,12 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		end
 
 	elseif request.action == 'bot_kill_all' then
-		Globals.SpawnMode	= "manual"
+		Globals.SpawnMode = "manual"
 		BotManager:killAll()
 
 	elseif request.action == 'bot_respawn' then  --toggle this function
-		local respawning		= not Globals.RespawnWayBots
-		Globals.RespawnWayBots	= respawning
+		local respawning = not Globals.RespawnWayBots
+		Globals.RespawnWayBots = respawning
 		BotManager:setOptionForAll('respawn', respawning)
 		if respawning then
 			ChatManager:Yell(Language:I18N('Bot respawn activated!', request.action), 2.5)
@@ -106,8 +106,8 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		end
 
 	elseif request.action == 'bot_attack' then  --toggle this function
-		local attack			= not Globals.AttackWayBots
-		Globals.AttackWayBots	= attack
+		local attack = not Globals.AttackWayBots
+		Globals.AttackWayBots = attack
 		BotManager:setOptionForAll('shoot', attack)
 		if attack then
 			ChatManager:Yell(Language:I18N('Bots will attack!', request.action), 2.5)
@@ -209,43 +209,43 @@ function FunBotUIServer:_onUIRequestCommonRoseShow(p_Player, p_Data)
 
 	NetEvents:SendTo('UI_CommonRose', p_Player, {
 		Top = {
-			Action	= 'cr_save',
-			Label	= Language:I18N('Save'),
-			Confirm	= true
+			Action = 'cr_save',
+			Label = Language:I18N('Save'),
+			Confirm = true
 		},
 		Left = {
 			{
-				Action	= 'cr_merge',
-				Label	= Language:I18N('Merge')
+				Action = 'cr_merge',
+				Label = Language:I18N('Merge')
 			}, {
-				Action	= 'cr_move',
-				Label	= Language:I18N('Move')
+				Action = 'cr_move',
+				Label = Language:I18N('Move')
 			}, {
-				Action	= 'cr_delete',
-				Label	= Language:I18N('Delete')
+				Action = 'cr_delete',
+				Label = Language:I18N('Delete')
 			}
 		},
 		Center = {
-			Action	= 'cr_select',
-			Label	= Language:I18N('Select') -- or "Unselect"
+			Action = 'cr_select',
+			Label = Language:I18N('Select') -- or "Unselect"
 		},
 		Right = {
 			{
-				Action	= 'cr_split',
-				Label	= Language:I18N('Split')
+				Action = 'cr_split',
+				Label = Language:I18N('Split')
 			}, {
-				Action	= 'cr_set_input',
-				Label	= Language:I18N('Set Input'),
-				Confirm	= true
+				Action = 'cr_set_input',
+				Label = Language:I18N('Set Input'),
+				Confirm = true
 			}, {
-				Action	= 'cr_create',
-				Label	= Language:I18N('Create')
+				Action = 'cr_create',
+				Label = Language:I18N('Create')
 			}
 		},
 		Bottom = {
-			Action	= 'cr_load',
-			Label	= Language:I18N('Load'),
-			Confirm	= true
+			Action = 'cr_load',
+			Label = Language:I18N('Load'),
+			Confirm = true
 		}
 	})
 end
@@ -408,12 +408,12 @@ function FunBotUIServer:_writeSettings(p_Player, p_Request)
 		return
 	end
 
-	local temporary					= false
-	local updateWeapons				= false
-	local updateBotTeamAndNumber	= false
-	local updateWeaponSets			= false
-	local calcYawPerFrame			= false
-	local batched					= true
+	local temporary = false
+	local updateWeapons = false
+	local updateBotTeamAndNumber = false
+	local updateWeaponSets = false
+	local calcYawPerFrame = false
+	local batched = true
 
 	if p_Request.subaction ~= nil then
 		temporary = (p_Request.subaction == 'temp')
@@ -576,14 +576,14 @@ function FunBotUIServer:_writeSettings(p_Player, p_Request)
 	NetEvents:BroadcastLocal('WriteClientSettings', Config, updateWeaponSets)
 
 	if updateBotTeamAndNumber then
-		Globals.SpawnMode		= Config.SpawnMode
+		Globals.SpawnMode = Config.SpawnMode
 		BotSpawner:updateBotAmountAndTeam()
 	end
 	-- @ToDo create Error Array and dont hide if has values
 	NetEvents:SendTo('UI_Settings', p_Player, false)
 end
 
-if (g_FunBotUIServer == nil) then
+if g_FunBotUIServer == nil then
 	g_FunBotUIServer = FunBotUIServer()
 end
 
