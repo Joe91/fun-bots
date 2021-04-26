@@ -2,6 +2,7 @@ class('ClientBotManager')
 
 local m_WeaponList = require('__shared/WeaponList')
 local m_Utilities = require('__shared/Utilities')
+local m_Logger = Logger("ClientBotManager", Debug.Client.INFO)
 
 function ClientBotManager:__init()
 	self:RegisterVars()
@@ -22,9 +23,7 @@ function ClientBotManager:OnEngineMessage(p_Message)
 	if p_Message.type == MessageType.ClientLevelFinalizedMessage then
 		NetEvents:SendLocal('RequestClientSettings')
 		self.m_ReadyToUpdate = true
-		if Debug.Client.INFO then
-			print("level loaded on Client")
-		end
+		m_Logger:Write("level loaded on Client")
 	end
 	if p_Message.type == MessageType.ClientConnectionUnloadLevelMessage or p_Message.type == MessageType.ClientCharacterLocalPlayerDeletedMessage then
 		self:RegisterVars()
@@ -151,9 +150,7 @@ function ClientBotManager:OnWriteClientSettings(p_NewConfig, p_UpdateWeaponSets)
 		Config[l_Key] = l_Value
 	end
 
-	if Debug.Client.INFO then
-		print("write settings")
-	end
+	m_Logger:Write("write settings")
 
 	if p_UpdateWeaponSets then
 		m_WeaponList:updateWeaponList()

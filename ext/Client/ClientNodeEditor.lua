@@ -3,6 +3,7 @@ class "ClientNodeEditor"
 require('__shared/Config')
 
 local m_NodeCollection = require('__shared/NodeCollection')
+local m_Logger = Logger("ClientNodeEditor", Debug.Client.NODEEDITOR)
 
 function ClientNodeEditor:__init()
 	-- caching values for drawing performance
@@ -198,7 +199,7 @@ function ClientNodeEditor:RegisterEvents()
 	Console:Register('BotVision', '*<boolean|Enabled>* Lets you see what the bots see [Experimental]', self, self._onSetBotVision)
 
 	self.eventsReady = true
-	self:Print('Register Events')
+	self:Log('Register Events')
 end
 
 -- used when the UI is disabled
@@ -273,17 +274,15 @@ function ClientNodeEditor:DeregisterEvents()
 
 	Console:Deregister('BotVision')
 	self.eventsReady = false
-	self:Print('Deregister Events')
+	self:Log('Deregister Events')
 end
 
 function ClientNodeEditor:IsSavingOrLoading()
 	return (self.nodeSendTimer > -1 or self.nodeReceiveTimer > -1 or self.nodeOperation ~= '')
 end
 
-function ClientNodeEditor:Print(...)
-	if Debug.Client.NODEEDITOR then
-		print('ClientNodeEditor: ' .. Language:I18N(...))
-	end
+function ClientNodeEditor:Log(...)
+	m_Logger:Write('ClientNodeEditor: ' .. Language:I18N(...))
 end
 
 function ClientNodeEditor:OnSetEnabled(p_Args)
@@ -346,13 +345,13 @@ function ClientNodeEditor:_onSaveNodes(p_Args)
 	self.commoRoseActive = false
 
 	if not self:IsSavingOrLoading() then
-		self:Print('Initiating Save...')
+		self:Log('Initiating Save...')
 		self.nodeOperation = 'Client Save'
 		NetEvents:Send('NodeEditor:ReceivingNodes', #m_NodeCollection:Get())
 		return true
 	end
 
-	self:Print('Operation in progress, please wait...')
+	self:Log('Operation in progress, please wait...')
 	return false
 end
 
@@ -371,13 +370,13 @@ function ClientNodeEditor:_onLoadNodes(p_Args)
 	self.commoRoseActive = false
 
 	if not self:IsSavingOrLoading() then
-		self:Print('Initiating Load...')
+		self:Log('Initiating Load...')
 		self.nodeOperation = 'Client Load'
 		self:_onGetNodes()
 		return true
 	end
 
-	self:Print('Operation in progress, please wait...')
+	self:Log('Operation in progress, please wait...')
 	return false
 end
 
@@ -393,7 +392,7 @@ function ClientNodeEditor:_onRemoveNode(p_Args)
 
 	local result, message = m_NodeCollection:Remove()
 	if not result then
-		self:Print(message)
+		self:Log(message)
 	end
 	return result
 end
@@ -407,7 +406,7 @@ function ClientNodeEditor:_onUnlinkNode()
 
 	local result, message = m_NodeCollection:Unlink()
 	if not result then
-		self:Print(message)
+		self:Log(message)
 	end
 	return result
 end
@@ -421,7 +420,7 @@ function ClientNodeEditor:_onMergeNode(p_Args)
 
 	local result, message = m_NodeCollection:MergeSelection()
 	if not result then
-		self:Print(message)
+		self:Log(message)
 	end
 	return result
 end
@@ -440,7 +439,7 @@ function ClientNodeEditor:_onSelectPrevious()
 			return true
 		end
 	else
-		self:Print('Must select at least one node')
+		self:Log('Must select at least one node')
 	end
 	return false
 end
@@ -470,7 +469,7 @@ function ClientNodeEditor:_onToggleMoveNode(p_Args)
 
 		-- move was cancelled
 		if (p_Args ~= nil and p_Args == true) then
-			self:Print('Move Cancelled')
+			self:Log('Move Cancelled')
 			local selection = m_NodeCollection:GetSelected()
 			for i=1, #selection do
 				m_NodeCollection:Update(selection[i], {
@@ -499,17 +498,17 @@ function ClientNodeEditor:_onToggleMoveNode(p_Args)
 			}
 		})
 
-		self:Print('Edit Mode: %s', self.editMode)
+		self:Log('Edit Mode: %s', self.editMode)
 		return true
 	else
 		if (self.player == nil or self.player.soldier == nil) then
-			self:Print('Player must be alive')
+			self:Log('Player must be alive')
 			return false
 		end
 
 		local selection = m_NodeCollection:GetSelected()
 		if (#selection < 1) then
-			self:Print('Must select at least one node')
+			self:Log('Must select at least one node')
 			return false
 		end
 
@@ -543,7 +542,7 @@ function ClientNodeEditor:_onToggleMoveNode(p_Args)
 			}
 		})
 
-		self:Print('Edit Mode: %s', self.editMode)
+		self:Log('Edit Mode: %s', self.editMode)
 		return true
 	end
 	return false
@@ -561,7 +560,7 @@ function ClientNodeEditor:_onAddNode(p_Args)
 
 	local result, message = m_NodeCollection:Add()
 	if not result then
-		self:Print(message)
+		self:Log(message)
 		return false
 	end
 
@@ -588,7 +587,7 @@ function ClientNodeEditor:_onLinkNode()
 
 	local result, message = m_NodeCollection:Link()
 	if not result then
-		self:Print(message)
+		self:Log(message)
 	end
 	return result
 end
@@ -602,7 +601,7 @@ function ClientNodeEditor:_onSplitNode(p_Args)
 
 	local result, message = m_NodeCollection:SplitSelection()
 	if not result then
-		self:Print(message)
+		self:Log(message)
 	end
 	return result
 end
@@ -621,7 +620,7 @@ function ClientNodeEditor:_onSelectNext()
 			return true
 		end
 	else
-		self:Print('Must select at least one node')
+		self:Log('Must select at least one node')
 	end
 	return false
 end
@@ -635,7 +634,7 @@ function ClientNodeEditor:_onSelectBetween()
 
 	local selection = m_NodeCollection:GetSelected()
 	if (#selection < 1) then
-		self:Print('Must select more than one node')
+		self:Log('Must select more than one node')
 		return false
 	end
 
@@ -662,7 +661,7 @@ function ClientNodeEditor:_onSetInputNode(p_Args)
 
 	local result, message = m_NodeCollection:SetInput(p_Args[1], p_Args[2], p_Args[3])
 	if not result then
-		self:Print(message)
+		self:Log(message)
 	end
 	return result
 end
@@ -691,7 +690,7 @@ function ClientNodeEditor:_onShowPath(p_Args)
 		return true
 	end
 
-	self:Print('Use `all` or *<number|PathIndex>*')
+	self:Log('Use `all` or *<number|PathIndex>*')
 	return false
 end
 
@@ -715,7 +714,7 @@ function ClientNodeEditor:_onHidePath(p_Args)
 		return true
 	end
 
-	self:Print('Use `all` or *<number|PathIndex>*')
+	self:Log('Use `all` or *<number|PathIndex>*')
 	return false
 end
 
@@ -723,36 +722,36 @@ function ClientNodeEditor:_onWarpTo(p_Args)
 	self.commoRoseActive = false
 
 	if (self.player == nil or self.player.soldier == nil or not self.player.alive or not self.player.soldier.isAlive) then
-		self:Print('Player must be alive')
+		self:Log('Player must be alive')
 		return false
 	end
 
 	if (p_Args == nil or #p_Args == 0) then
-		self:Print('Must provide Waypoint ID')
+		self:Log('Must provide Waypoint ID')
 		return false
 	end
 
 	local waypoint = m_NodeCollection:Get(p_Args[1])
 
 	if (waypoint == nil) then
-		self:Print('Waypoint not found: %s', p_Args[1])
+		self:Log('Waypoint not found: %s', p_Args[1])
 		return false
 	end
 
-	self:Print('Teleporting to Waypoint: %s (%s)', waypoint.ID, tostring(waypoint.Position))
+	self:Log('Teleporting to Waypoint: %s (%s)', waypoint.ID, tostring(waypoint.Position))
 	NetEvents:Send('NodeEditor:WarpTo', waypoint.Position)
 end
 
 function ClientNodeEditor:_onSpawnAtWaypoint(p_Args)
 	if (p_Args == nil or #p_Args == 0) then
-		self:Print('Must provide Waypoint ID')
+		self:Log('Must provide Waypoint ID')
 		return false
 	end
 
 	local waypoint = m_NodeCollection:Get(p_Args[1])
 
 	if (waypoint == nil) then
-		self:Print('Waypoint not found: %s', p_Args[1])
+		self:Log('Waypoint not found: %s', p_Args[1])
 		return false
 	end
 
@@ -806,10 +805,10 @@ function ClientNodeEditor:_onDumpNodes(p_Args)
 	end
 
 	for i=1, #selection do
-		self:Print(g_Utilities:dump(selection[i], true, 1))
+		self:Log(g_Utilities:dump(selection[i], true, 1))
 	end
 
-	self:Print('Dumped [%d] Nodes!', #selection)
+	self:Log('Dumped [%d] Nodes!', #selection)
 	return true
 end
 
@@ -821,13 +820,13 @@ function ClientNodeEditor:_onSetMetadata(p_Args)
 	end
 
 	local data = table.concat(p_Args or {}, ' ')
-	self:Print('Set Metadata (data): %s', g_Utilities:dump(data, true))
+	self:Log('Set Metadata (data): %s', g_Utilities:dump(data, true))
 
 	local result, message = m_NodeCollection:UpdateMetadata(data)
 	if (result ~= false) then
 		m_NodeCollection:ProcessMetadata(result)
 	else
-		self:Print(message)
+		self:Log(message)
 	end
 	return result
 end
@@ -840,17 +839,17 @@ function ClientNodeEditor:_onAddMcom(p_Args)
 	end
 
 	if (self.player == nil or self.player.soldier == nil) then
-		self:Print('Player must be alive')
+		self:Log('Player must be alive')
 		return false
 	end
 
 	local selection = m_NodeCollection:GetSelected()
 	if (#selection ~= 1) then
-		self:Print('Must select one node')
+		self:Log('Must select one node')
 		return false
 	end
 
-	self:Print('Updating %d Possible Waypoints', (#selection))
+	self:Log('Updating %d Possible Waypoints', (#selection))
 
 	for i=1, #selection do
 		local action = {
@@ -861,7 +860,7 @@ function ClientNodeEditor:_onAddMcom(p_Args)
 			pitch = self.player.input.authoritativeAimingPitch
 		}
 		selection[i].Data.Action = action
-		self:Print('Updated Waypoint: %s', selection[i].ID)
+		self:Log('Updated Waypoint: %s', selection[i].ID)
 	end
 	return true
 end
@@ -874,17 +873,17 @@ function ClientNodeEditor:_onAddVehicle(p_Args)
 	end
 
 	if (self.player == nil or self.player.soldier == nil) then
-		self:Print('Player must be alive')
+		self:Log('Player must be alive')
 		return false
 	end
 
 	local selection = m_NodeCollection:GetSelected()
 	if (#selection ~= 1) then
-		self:Print('Must select one node')
+		self:Log('Must select one node')
 		return false
 	end
 
-	self:Print('Updating %d Possible Waypoints', (#selection))
+	self:Log('Updating %d Possible Waypoints', (#selection))
 
 	for i=1, #selection do
 		local action = {
@@ -895,7 +894,7 @@ function ClientNodeEditor:_onAddVehicle(p_Args)
 			pitch = self.player.input.authoritativeAimingPitch
 		}
 		selection[i].Data.Action = action
-		self:Print('Updated Waypoint: %s', selection[i].ID)
+		self:Log('Updated Waypoint: %s', selection[i].ID)
 	end
 	return true
 end
@@ -908,16 +907,16 @@ function ClientNodeEditor:_onAddObjective(p_Args)
 	end
 
 	local data = table.concat(p_Args or {}, ' ')
-	self:Print('Add Objective (data): %s', g_Utilities:dump(data, true))
+	self:Log('Add Objective (data): %s', g_Utilities:dump(data, true))
 
 	local selection = m_NodeCollection:GetSelected()
 	if (#selection < 1) then
-		self:Print('Must select at least one node')
+		self:Log('Must select at least one node')
 		return false
 	end
 
 	local donePaths = {}
-	self:Print('Updating %d Possible Waypoints', (#selection))
+	self:Log('Updating %d Possible Waypoints', (#selection))
 
 	for i=1, #selection do
 		local waypoint = m_NodeCollection:GetFirst(selection[i].PathIndex)
@@ -938,7 +937,7 @@ function ClientNodeEditor:_onAddObjective(p_Args)
 			if (not inTable) then
 				table.insert(objectives, data)
 				waypoint.Data.Objectives = objectives
-				self:Print('Updated Waypoint: %s', waypoint.ID)
+				self:Log('Updated Waypoint: %s', waypoint.ID)
 			end
 		end
 	end
@@ -953,16 +952,16 @@ function ClientNodeEditor:_onRemoveObjective(p_Args)
 	end
 
 	local data = table.concat(p_Args or {}, ' ')
-	self:Print('Remove Objective (data): %s', g_Utilities:dump(data, true))
+	self:Log('Remove Objective (data): %s', g_Utilities:dump(data, true))
 
 	local selection = m_NodeCollection:GetSelected()
 	if (#selection < 1) then
-		self:Print('Must select at least one node')
+		self:Log('Must select at least one node')
 		return false
 	end
 
 	local donePaths = {}
-	self:Print('Updating %d Possible Waypoints', (#selection))
+	self:Log('Updating %d Possible Waypoints', (#selection))
 
 	for i=1, #selection do
 		local waypoint = m_NodeCollection:GetFirst(selection[i].PathIndex)
@@ -980,7 +979,7 @@ function ClientNodeEditor:_onRemoveObjective(p_Args)
 			end
 
 			waypoint.Data.Objectives = newObjectives
-			self:Print('Updated Waypoint: %s', waypoint.ID)
+			self:Log('Updated Waypoint: %s', waypoint.ID)
 		end
 	end
 	return true
@@ -1023,7 +1022,7 @@ end
 function ClientNodeEditor:_onSetBotVision(p_Args)
 	self.botVisionEnabled = (p_Args ~= nil and (p_Args[1] == '1' or p_Args[1] == 'true'))
 
-	self:Print('BotVision: %s', self.botVisionEnabled)
+	self:Log('BotVision: %s', self.botVisionEnabled)
 
 	NetEvents:Send('NodeEditor:SetBotVision', self.botVisionEnabled)
 	if (self.botVisionEnabled) then
@@ -1043,27 +1042,27 @@ function ClientNodeEditor:_onObjectiveDirection(p_Args)
 	end
 
 	local data = table.concat(p_Args or {}, ' ')
-	self:Print('Objective Direction (data): %s', g_Utilities:dump(data, true))
+	self:Log('Objective Direction (data): %s', g_Utilities:dump(data, true))
 
 	local selection = m_NodeCollection:GetSelected()
 	if (#selection < 1) then
-		self:Print('Must select at least one node')
+		self:Log('Must select at least one node')
 		return false
 	end
 
 	local direction, bestPreviousWaypoint = m_NodeCollection:ObjectiveDirection(selection[1], data)
 
-	self:Print('Direction: %s', direction)
+	self:Log('Direction: %s', direction)
 
 	if (bestPreviousWaypoint ~= nil) then
-		self:Print('Best Previous Waypoint: %s', bestPreviousWaypoint.ID)
+		self:Log('Best Previous Waypoint: %s', bestPreviousWaypoint.ID)
 	end
 	return true
 end
 
 function ClientNodeEditor:_onGetKnownOjectives(p_Args)
 	self.commoRoseActive = false
-	self:Print('Known Objectives -> '..g_Utilities:dump(m_NodeCollection:GetKnownOjectives(), true))
+	self:Log('Known Objectives -> '..g_Utilities:dump(m_NodeCollection:GetKnownOjectives(), true))
 	return true
 end
 
@@ -1097,7 +1096,7 @@ function ClientNodeEditor:_onStartTrace()
 	self.customTrace:ClearSelection()
 	self.customTrace:Select(firstWaypoint)
 
-	self:Print('Custom Trace Started')
+	self:Log('Custom Trace Started')
 
 	g_FunBotUIClient:_onUITrace(true)
 	g_FunBotUIClient:_onUITraceIndex(self.customTraceIndex)
@@ -1128,7 +1127,7 @@ function ClientNodeEditor:_onEndTrace()
 		self.customTrace:ClearSelection()
 	end
 
-	self:Print('Custom Trace Ended')
+	self:Log('Custom Trace Ended')
 end
 
 function ClientNodeEditor:_onClearTrace()
@@ -1141,14 +1140,14 @@ function ClientNodeEditor:_onClearTrace()
 	g_FunBotUIClient:_onUITraceWaypoints(#self.customTrace:Get())
 	g_FunBotUIClient:_onUITraceWaypointsDistance(self.customTraceDistance)
 
-	self:Print('Custom Trace Cleared')
+	self:Log('Custom Trace Cleared')
 end
 
 function ClientNodeEditor:_onSaveTrace(p_PathIndex)
 	self.commoRoseActive = false
 
 	if self:IsSavingOrLoading() then
-		self:Print('Operation in progress, please wait...')
+		self:Log('Operation in progress, please wait...')
 		return false
 	end
 
@@ -1157,7 +1156,7 @@ function ClientNodeEditor:_onSaveTrace(p_PathIndex)
 	end
 
 	if (self.customTrace == nil) then
-		self:Print('Custom Trace is empty')
+		self:Log('Custom Trace is empty')
 		return false
 	end
 
@@ -1193,7 +1192,6 @@ function ClientNodeEditor:_onSaveTrace(p_PathIndex)
 	-- get the node before the start of the specified path, if the path is existing
 	elseif (p_PathIndex <= pathCount) then
 		if #m_NodeCollection:Get(nil, p_PathIndex) > 0 then
-			print("path exists")
 			referrenceWaypoint = m_NodeCollection:GetFirst(p_PathIndex).Previous
 		else
 			referrenceWaypoint = m_NodeCollection:GetLast()
@@ -1232,7 +1230,7 @@ function ClientNodeEditor:_onSaveTrace(p_PathIndex)
 	end
 
 	self.customTrace:Clear()
-	self:Print('Custom Trace Saved to Path: %d', p_PathIndex)
+	self:Log('Custom Trace Saved to Path: %d', p_PathIndex)
 	self.nodeOperation = ''
 end
 
@@ -1268,14 +1266,14 @@ function ClientNodeEditor:_onUnload(p_Args)
 		end
 	end
 
-	self:Print('Unload, Expecting Waypoints: %s', g_Utilities:dump(p_Args))
+	self:Log('Unload, Expecting Waypoints: %s', g_Utilities:dump(p_Args))
 
 	m_NodeCollection:Clear()
 	m_NodeCollection:DeregisterEvents()
 end
 
 function ClientNodeEditor:_onCommoRoseAction(p_Action, p_Hit)
-	self:Print('Commo Rose -> %s', p_Action)
+	self:Log('Commo Rose -> %s', p_Action)
 
 	if (p_Action == 'Hide') then
 		self.commoRoseActive = false
@@ -1338,11 +1336,11 @@ function ClientNodeEditor:_onCommoRoseAction(p_Action, p_Hit)
 			local isSelected = m_NodeCollection:IsSelected(hitPoint)
 
 			if (isSelected) then
-				self:Print('Deselect -> %s', hitPoint.ID)
+				self:Log('Deselect -> %s', hitPoint.ID)
 				m_NodeCollection:Deselect(hitPoint)
 				return
 			else
-				self:Print('Select -> %s', hitPoint.ID)
+				self:Log('Select -> %s', hitPoint.ID)
 				m_NodeCollection:Select(hitPoint)
 				return
 			end
@@ -1352,7 +1350,7 @@ end
 
 function ClientNodeEditor:OnUIPushScreen(p_HookCtx, p_Screen, p_Priority, p_ParentGraph, p_StateNodeGuid)
 	if (self.enabled and self.commoRoseEnabled and p_Screen ~= nil and UIScreenAsset(p_Screen).name == 'UI/Flow/Screen/CommRoseScreen') then
-		self:Print('Blocked vanilla commo rose')
+		self:Log('Blocked vanilla commo rose')
 		p_HookCtx:Return()
 		return
 	end
@@ -1566,7 +1564,7 @@ function ClientNodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 				self.nodeSendProgress = 1
 				self.nodeOperation = ''
 				NetEvents:Send('NodeEditor:Init', true)
-				self:Print('Finished sending waypoints to server')
+				self:Log('Finished sending waypoints to server')
 			end
 		end
 	end
@@ -1576,7 +1574,7 @@ function ClientNodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 
 		-- timer for receiving node payload
 		if (self.nodeReceiveTimer > self.nodeReceiveDelay) then
-			self:Print('Ready to receive waypoints')
+			self:Log('Ready to receive waypoints')
 			NetEvents:Send('NodeEditor:SendNodes')
 			self.nodeReceiveTimer = -1
 		end
@@ -1634,7 +1632,6 @@ function ClientNodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 								end
 							elseif speedInput == 0 then
 								if self.player.attachedControllable.velocity.magnitude > 0 then
-									print(self.player.attachedControllable.velocity.magnitude)
 									speed = 2
 								end
 							end
@@ -2114,7 +2111,7 @@ end
 -- request a fresh node list from the server
 -- or server has told us be ready to receive
 function ClientNodeEditor:_onGetNodes(p_Args)
-	self:Print('Getting Nodes: %s', tostring(p_Args))
+	self:Log('Getting Nodes: %s', tostring(p_Args))
 
 	-- unload our current cache
 	self:_onUnload(p_Args)
@@ -2127,10 +2124,10 @@ end
 function ClientNodeEditor:_onSendNodes(p_Args)
 
 	self.nodesToSend = m_NodeCollection:Get()
-	self:Print('Sending Nodes: %d', #self.nodesToSend)
+	self:Log('Sending Nodes: %d', #self.nodesToSend)
 
 	if (self.nodesToSend == nil or #self.nodesToSend < 1) then
-		self:Print('Client has 0 Nodes, Cancelling Send!')
+		self:Log('Client has 0 Nodes, Cancelling Send!')
 		return false
 	else
 		self.nodeSendTimer = 0
@@ -2155,7 +2152,7 @@ function ClientNodeEditor:_onInit()
 
 	local staleNodes = 0
 
-	self:Print('Receved Nodes: %d', #waypoints)
+	self:Log('Receved Nodes: %d', #waypoints)
 
 	for i=1, #waypoints do
 
@@ -2169,7 +2166,7 @@ function ClientNodeEditor:_onInit()
 	end
 
 	if (staleNodes > 0) then
-		self:Print('Warning! Stale Nodes: %d', staleNodes)
+		self:Log('Warning! Stale Nodes: %d', staleNodes)
 	end
 
 	self.nodeOperation = ''
