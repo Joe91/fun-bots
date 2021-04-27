@@ -47,13 +47,13 @@ function FunBotServer:OnExtensionLoaded()
 	self:RegisterEvents()
 	self:RegisterHooks()
 	self:RegisterCustomEvents()
+	self:RegisterCallbacks()
 	self:OnModReloaded()
 end
 
 function FunBotServer:RegisterEvents()
 	Events:Subscribe('Extension:Unloading', self, self.OnExtensionUnloading)
 
-	Events:Subscribe('Partition:Loaded', self, self.OnPartitionLoaded)
 	Events:Subscribe('Engine:Update', self, self.OnEngineUpdate)
 	Events:Subscribe('UpdateManager:Update', self, self.OnUpdateManagerUpdate)
 
@@ -96,47 +96,64 @@ function FunBotServer:RegisterCustomEvents()
 	NetEvents:Subscribe('Client:RequestSettings', self, self.OnRequestClientSettings)
 end
 
+function FunBotServer:RegisterCallbacks()
+	-- Use server-sided bulletdamage
+	ResourceManager:RegisterInstanceLoadHandler(Guid('C4DCACFF-ED8F-BC87-F647-0BC8ACE0D9B4'), Guid('818334B3-CEA6-FC3F-B524-4A0FED28CA35'), self, self.OnServerSettingsCallback)
+	ResourceManager:RegisterInstanceLoadHandler(Guid('C4DCACFF-ED8F-BC87-F647-0BC8ACE0D9B4'), Guid('B983148D-4B2B-1CDA-D8A0-407789610202'), self, self.OnSyncedGameSettingsCallback)
+
+	-- Conquest
+	ResourceManager:RegisterInstanceLoadHandler(Guid('0C342A8C-BCDE-11E0-8467-9159D6ACA94C'), Guid('0093213A-2BA5-4B27-979C-8C0B6DBE38CE'), self, self.OnAutoTeamEntityDataCallback)
+	ResourceManager:RegisterInstanceLoadHandler(Guid('0C342A8C-BCDE-11E0-8467-9159D6ACA94C'), Guid('4CD461D1-A9D5-4A1B-A88D-D72AF01FB82D'), self, self.OnHumanPlayerEntityDataCallback)
+	-- Domination
+	ResourceManager:RegisterInstanceLoadHandler(Guid('9E2ED50A-C01C-49BA-B3BE-9940BD4C5A08'), Guid('D9F43E4E-CDB1-4BE5-8C28-80CC6F860090'), self, self.OnAutoTeamEntityDataCallback)
+	ResourceManager:RegisterInstanceLoadHandler(Guid('9E2ED50A-C01C-49BA-B3BE-9940BD4C5A08'), Guid('D90027CC-5A84-4BEB-8622-497E3DAEFA37'), self, self.OnHumanPlayerEntityDataCallback)
+	-- Rush
+	ResourceManager:RegisterInstanceLoadHandler(Guid('56364B35-5D80-4874-9D74-CCF829D579D9'), Guid('015C301E-D440-4A25-9F2A-5AA59F6CDDCD'), self, self.OnAutoTeamEntityDataCallback)
+	ResourceManager:RegisterInstanceLoadHandler(Guid('56364B35-5D80-4874-9D74-CCF829D579D9'), Guid('896A2B3B-DC2B-46C6-A288-1A4149C2790C'), self, self.OnHumanPlayerEntityDataCallback)
+	-- Full CTF Prototype
+	ResourceManager:RegisterInstanceLoadHandler(Guid('DF2A507F-0CB2-4430-B854-26589870B52C'), Guid('C2A37490-3663-4633-B9AD-7FB04B898A34'), self, self.OnAutoTeamEntityDataCallback)
+	ResourceManager:RegisterInstanceLoadHandler(Guid('DF2A507F-0CB2-4430-B854-26589870B52C'), Guid('0DB61706-1F91-43F4-8898-13DA716E3E9E'), self, self.OnHumanPlayerEntityDataCallback)
+	-- Full GunMaster
+	ResourceManager:RegisterInstanceLoadHandler(Guid('F71EE45B-1BB0-4442-A46D-5B079A722230'), Guid('9C396851-78ED-49B9-8F24-FC6A8E2AF7A9'), self, self.OnAutoTeamEntityDataCallback)
+	ResourceManager:RegisterInstanceLoadHandler(Guid('F71EE45B-1BB0-4442-A46D-5B079A722230'), Guid('4F65C8D9-EE5F-4CAB-BC97-A4DB3D7B528A'), self, self.OnHumanPlayerEntityDataCallback)
+	-- Full GunMaster XP4
+	ResourceManager:RegisterInstanceLoadHandler(Guid('F58C83A7-C753-4360-A9C0-4E44C79836F8'), Guid('58019F0F-3CDA-48EA-BAAE-A776D4395BCF'), self, self.OnAutoTeamEntityDataCallback)
+	ResourceManager:RegisterInstanceLoadHandler(Guid('F58C83A7-C753-4360-A9C0-4E44C79836F8'), Guid('BF4E6675-DC22-4156-A978-C504C6A0B342'), self, self.OnHumanPlayerEntityDataCallback)
+	-- Full SquadDeathmatch
+	ResourceManager:RegisterInstanceLoadHandler(Guid('A2074F27-7D1F-11E0-B283-C22E2A7B7393'), Guid('5C01FD39-C10C-4D4B-ABDB-724B1EA54815'), self, self.OnAutoTeamEntityDataCallback)
+	ResourceManager:RegisterInstanceLoadHandler(Guid('A2074F27-7D1F-11E0-B283-C22E2A7B7393'), Guid('99CFF247-8F58-489E-BB66-1FAEC6FDA8A9'), self, self.OnHumanPlayerEntityDataCallback)
+	-- Full SquadDeathmatch NoVehicles
+	ResourceManager:RegisterInstanceLoadHandler(Guid('1341E76F-293C-4091-AF99-05DFA3B73CF3'), Guid('C94EC3CF-FCCB-462C-83E1-8CA70A3A525A'), self, self.OnAutoTeamEntityDataCallback)
+	ResourceManager:RegisterInstanceLoadHandler(Guid('1341E76F-293C-4091-AF99-05DFA3B73CF3'), Guid('43C71D6D-9972-4A8C-BD74-677972E49F4E'), self, self.OnHumanPlayerEntityDataCallback)
+	-- Full SquadDeathmatch XP4
+	ResourceManager:RegisterInstanceLoadHandler(Guid('7B941CFA-9955-461B-8390-0789AD9AA1A5'), Guid('FA2B2A7D-25C0-4B9B-BF2E-AF363F853F68'), self, self.OnAutoTeamEntityDataCallback)
+	ResourceManager:RegisterInstanceLoadHandler(Guid('7B941CFA-9955-461B-8390-0789AD9AA1A5'), Guid('FF4D8BD7-7D79-499D-AA2B-18865FB01200'), self, self.OnHumanPlayerEntityDataCallback)
+	-- Full TeamDeathmatch
+	ResourceManager:RegisterInstanceLoadHandler(Guid('FAD987C1-7D2A-11E0-B283-C22E2A7B7393'), Guid('6E2D7A9F-67A8-4827-B261-0025C6559F7B'), self, self.OnAutoTeamEntityDataCallback)
+	ResourceManager:RegisterInstanceLoadHandler(Guid('FAD987C1-7D2A-11E0-B283-C22E2A7B7393'), Guid('742EAB4B-FFCB-4201-ADAC-1D4BC20E6831'), self, self.OnHumanPlayerEntityDataCallback)
+	-- Full TeamDeathmatch XP4
+	ResourceManager:RegisterInstanceLoadHandler(Guid('676C0FD7-EA75-4F5D-8764-BB076F6F3E11'), Guid('CC76229D-95EE-4B52-822B-BE222EED803B'), self, self.OnAutoTeamEntityDataCallback)
+	ResourceManager:RegisterInstanceLoadHandler(Guid('676C0FD7-EA75-4F5D-8764-BB076F6F3E11'), Guid('4B797B64-6CDC-41F3-963D-DE22517EC4B5'), self, self.OnHumanPlayerEntityDataCallback)
+	-- Coop
+	-- ResourceManager:RegisterInstanceLoadHandler(Guid('945CAF0E-B0F2-11DF-91B7-DD34EE95ED77'), Guid('77B694D1-046A-4A33-A5F2-4C667DB51D27'), self, self.OnHumanPlayerEntityDataCallback)
+	-- SP
+	-- ResourceManager:RegisterInstanceLoadHandler(Guid('9C2FFA19-B419-11DF-A7E7-B3A3B68B4D14'), Guid('7B7F0014-13B6-4387-AE94-1E61548AB6D3'), self, self.OnHumanPlayerEntityDataCallback)
+	-- FrontEnd
+	-- ResourceManager:RegisterInstanceLoadHandler(Guid('6EA4B5DA-DE3A-4808-A85C-FCA07B2AFB04'), Guid('8BD2E753-9B37-426A-8AA8-1685C8E2744D'), self, self.OnHumanPlayerEntityDataCallback)
+	-- TutorialMP Sandbox
+	-- ResourceManager:RegisterInstanceLoadHandler(Guid('CC083805-FAC2-4940-9D8E-45C232C005E3'), Guid('592D94FC-68F7-413E-8B61-0ACEC4FD7D0D'), self, self.OnHumanPlayerEntityDataCallback)
+	-- TutorialMP
+	-- ResourceManager:RegisterInstanceLoadHandler(Guid('8517D561-0AED-4C58-A634-5D069A8E1BA2'), Guid('502DA681-116F-494C-AFBD-DC02522A14B4'), self, self.OnHumanPlayerEntityDataCallback)
+	-- TutorialMP ShootHouse
+	-- ResourceManager:RegisterInstanceLoadHandler(Guid('53C55F5E-C5CF-4B60-A455-445739D99501'), Guid('F4B49F70-BE94-4792-95E6-09A5F3F932F4'), self, self.OnHumanPlayerEntityDataCallback)
+end
+
 -- =============================================
 -- Events
 -- =============================================
 
 function FunBotServer:OnExtensionUnloading()
 	m_BotManager:destroyAll(nil, nil, true)
-end
-
-function FunBotServer:OnPartitionLoaded(p_Partition)
-	m_WeaponModification:OnPartitionLoaded(p_Partition)
-	for _, l_Instance in pairs(p_Partition.instances) do
-		if USE_REAL_DAMAGE then
-			if l_Instance:Is("SyncedGameSettings") then
-				l_Instance = SyncedGameSettings(l_Instance)
-				l_Instance:MakeWritable()
-				l_Instance.allowClientSideDamageArbitration = false
-			end
-			if l_Instance:Is("ServerSettings") then
-				l_Instance = ServerSettings(l_Instance)
-				l_Instance:MakeWritable()
-				--l_Instance.drawActivePhysicsObjects = true --doesn't matter
-				--l_Instance.isSoldierAnimationEnabled = true --doesn't matter
-				--l_Instance.isSoldierDetailedCollisionEnabled = true --doesn't matter
-				l_Instance.isRenderDamageEvents = true
-			end
-		end
-		if l_Instance:Is("HumanPlayerEntityData") then
-			l_Instance = HumanPlayerEntityData(l_Instance)
-			self.m_PlayerKilledDelay =  l_Instance.playerKilledDelay
-		end
-		if l_Instance:Is("AutoTeamEntityData") then
-			l_Instance = AutoTeamEntityData(l_Instance)
-			l_Instance:MakeWritable()
-			l_Instance.rotateTeamOnNewRound = false
-			l_Instance.teamAssignMode = TeamAssignMode.TamOneTeam
-			l_Instance.playerCountNeededToAutoBalance = 127
-			l_Instance.teamDifferenceToAutoBalance = 127
-			l_Instance.autoBalance = false
-			l_Instance.forceIntoSquad = true
-		end
-	end
 end
 
 function FunBotServer:OnEngineUpdate(p_DeltaTime)
@@ -284,6 +301,46 @@ end
 function FunBotServer:OnRequestClientSettings(p_Player)
 	NetEvents:SendToLocal('WriteClientSettings', p_Player, Config, true)
 	m_BotManager:registerActivePlayer(p_Player)
+end
+
+-- =============================================
+-- Register Callbacks
+-- =============================================
+
+function FunBotServer:OnServerSettingsCallback(p_Instance)
+	p_Instance = ServerSettings(p_Instance)
+	p_Instance:MakeWritable()
+	if USE_REAL_DAMAGE then
+		p_Instance.isRenderDamageEvents = true
+	else
+		p_Instance.isRenderDamageEvents = false
+	end
+end
+
+function FunBotServer:OnSyncedGameSettingsCallback(p_Instance)
+	p_Instance = SyncedGameSettings(p_Instance)
+	p_Instance:MakeWritable()
+	if USE_REAL_DAMAGE then
+		p_Instance.allowClientSideDamageArbitration = false
+	else
+		p_Instance.allowClientSideDamageArbitration = true
+	end
+end
+
+function FunBotServer:OnAutoTeamEntityDataCallback(p_Instance)
+	p_Instance = AutoTeamEntityData(p_Instance)
+	p_Instance:MakeWritable()
+	p_Instance.rotateTeamOnNewRound = false
+	p_Instance.teamAssignMode = TeamAssignMode.TamOneTeam
+	p_Instance.playerCountNeededToAutoBalance = 127
+	p_Instance.teamDifferenceToAutoBalance = 127
+	p_Instance.autoBalance = false
+	p_Instance.forceIntoSquad = true
+end
+
+function FunBotServer:OnHumanPlayerEntityDataCallback(p_Instance)
+	p_Instance = HumanPlayerEntityData(p_Instance)
+	self.m_PlayerKilledDelay =  p_Instance.playerKilledDelay
 end
 
 -- =============================================
