@@ -221,9 +221,9 @@ function BotManager:OnUpdate(p_DeltaTime, p_UpdatePass)
 	-- accept revives
 	for i, botname in pairs(self._pendingAcceptRevives) do
 		local botPlayer = self:getBotByName(botname)
-		if botPlayer ~= nil and botPlayer.player.soldier ~= nil then
-			if botPlayer.player.soldier.health == 20 then
-				botPlayer.player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Stand, true, true)
+		if botPlayer ~= nil and botPlayer.m_Player.soldier ~= nil then
+			if botPlayer.m_Player.soldier.health == 20 then
+				botPlayer.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Stand, true, true)
 				self._pendingAcceptRevives[i] = nil
 			end
 		else

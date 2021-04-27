@@ -557,12 +557,12 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 		local botList = g_BotManager:getBots()
 		self.BotsByTeam = {}
 		for i=1, #botList do
-			if not botList[i]:isInactive() and botList[i].player ~= nil then
-				if (self.BotsByTeam[botList[i].player.teamId] == nil) then
-					self.BotsByTeam[botList[i].player.teamId] = {}
+			if not botList[i]:isInactive() and botList[i].m_Player ~= nil then
+				if (self.BotsByTeam[botList[i].m_Player.teamId] == nil) then
+					self.BotsByTeam[botList[i].m_Player.teamId] = {}
 				end
 
-				table.insert(self.BotsByTeam[botList[i].player.teamId], botList[i])
+				table.insert(self.BotsByTeam[botList[i].m_Player.teamId], botList[i])
 			end
 		end
 
@@ -595,7 +595,7 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 		for botTeam, bots in pairs(self.BotsByTeam) do
 			for _,bot in pairs(bots) do
 				if bot:getObjective() == '' then
-					if bot.player.alive then
+					if bot.m_Player.alive then
 						-- find closest objective for bot
 						local closestDistance = nil
 						local closestObjective = nil
@@ -604,7 +604,7 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 								if not objective.isBase and objective.active and not objective.destroyed then
 									if objective.team ~= botTeam then
 										if objective.assigned[botTeam] < maxAssings[botTeam] then
-											local distance = self:_getDistanceFromObjective(objective.name, bot.player.soldier.worldTransform.trans)
+											local distance = self:_getDistanceFromObjective(objective.name, bot.m_Player.soldier.worldTransform.trans)
 											if closestDistance == nil or closestDistance > distance then
 												closestDistance = distance
 												closestObjective = objective.name
@@ -648,7 +648,7 @@ function GameDirector:useSubobjective(p_BotName, p_Objective)
 	if tempObjective ~= nil and tempObjective.subObjective then -- is valid getSubObjective
 		if tempObjective.active and not tempObjective.destroyed then
 			local bot = g_BotManager:getBotByName(p_BotName)
-			local botTeam = bot.player.teamId
+			local botTeam = bot.m_Player.teamId
 			if self:_useSubobjective(botTeam, p_Objective) then
 				if tempObjective.assigned[botTeam] < 2 then
 					tempObjective.assigned[botTeam] = tempObjective.assigned[botTeam] + 1
