@@ -548,7 +548,7 @@ function Bot:_updateYaw()
 	if self._TargetPoint ~= nil and self._ShootPlayer == nil and self.m_Player.soldier ~= nil then
 		s_AttackAiming = false
 		local s_Distance = self.m_Player.soldier.worldTransform.trans:Distance(self._TargetPoint.Position)
-		if s_Distance < 0.2 or (self.m_InVehicle and s_Distance < 1) then
+		if s_Distance < 0.2 or (self.m_InVehicle and s_Distance < 3.0) then
 			self._TargetPoint = self._NextTargetPoint
 		end
 
@@ -616,22 +616,21 @@ function Bot:_updateYaw()
 	end
 
 	if self.m_InVehicle then
-		if s_AbsDeltaYaw > math.pi / 8 then
-			if s_Increment > 0 then
-				self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, 1)
-			else
-				self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, -1)
-			end
+		local s_YawValue = 0;
+		if self.m_ActiveSpeedValue < 0 then
+			s_YawValue = -1.0
 		else
-			-- if self.m_Player.input:GetLevel(EntryInputActionEnum.EIAYaw) == 0 then
-				if s_Increment > 0 then
-					self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, 0.5)
-				else
-					self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, -0.5)
-				end
-			-- else
-				-- self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, 0) --toggle the steering, to be more presicely. Every second Cycle TODO: maybe add counter for it?
-			-- end
+			s_YawValue = 1.0
+		end
+
+		if s_AbsDeltaYaw > math.pi / 8 then
+			s_YawValue = s_YawValue * 0.5
+		end
+
+		if s_Increment > 0 then
+			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, s_YawValue)
+		else
+			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, -s_YawValue)
 		end
 	end
 	self.m_Player.input.authoritativeAimingYaw = s_TempYaw
@@ -784,9 +783,10 @@ function Bot:_updateShooting()
 				if not self._GrenadeActive then
 					self._ShootModeTimer = self._ShootModeTimer + StaticConfig.BotUpdateCycle
 				end
-				self.m_ActiveMoveMode = 9 -- movement-mode : attack
 				if self._C4Active then
 					self.m_ActiveMoveMode = 8 -- movement-mode : C4 / revive
+				else
+					self.m_ActiveMoveMode = 9 -- movement-mode : attack
 				end
 				self._ReloadTimer = 0 -- reset reloading
 
