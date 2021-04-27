@@ -1,6 +1,8 @@
 class('WeaponModification')
 
 require('__shared/Config')
+local m_Logger = Logger("WeaponModification", Debug.Shared.MODIFICATIONS)
+
 
 function WeaponModification:__init()
 	self.m_alreadyLoaded = false
@@ -119,9 +121,7 @@ function WeaponModification:OnPartitionLoaded(p_Partition)
 end
 
 function WeaponModification:ModifyAllWeapons(p_AimWorseningNormal, p_AimWorseningSniper)
-	if Debug.Server.MODIFICATIONS then
-		print(#self.m_WeaponInstances .. ' loaded weapons to modify')
-	end
+	m_Logger:Write(#self.m_WeaponInstances .. ' loaded weapons to modify')
 
 	for i, weaponInstance in pairs(self.m_WeaponInstances) do
 		self:_ModifyWeapon(weaponInstance , i, p_AimWorseningNormal, p_AimWorseningSniper)
@@ -289,18 +289,14 @@ function WeaponModification:_MakeWritable(p_Instance)
 	local s_Instance = _G[p_Instance.typeInfo.name](p_Instance)
 
 	if p_Instance.isLazyLoaded == true then
-		if Debug.Server.MODIFICATIONS then
-			print('The instance ' .. tostring(p_Instance.instanceGuid) .. ' was modified, even though its lazyloaded')
-		end
+		m_Logger:Write('The instance ' .. tostring(p_Instance.instanceGuid) .. ' was modified, even though its lazyloaded')
 
 		return
 	end
 
 	if p_Instance.isReadOnly == nil then
 		-- If .isReadOnly is nil it means that its not a DataContainer, it's a Structure. We return it casted
-		if Debug.Server.MODIFICATIONS then
-			print('The instance ' .. p_Instance.typeInfo.name .. ' is not a DataContainer, it\'s a Structure')
-		end
+		m_Logger:Write('The instance ' .. p_Instance.typeInfo.name .. ' is not a DataContainer, it\'s a Structure')
 
 		return s_Instance
 	end

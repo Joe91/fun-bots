@@ -3,6 +3,7 @@ class('BotManager')
 require('Bot')
 
 local m_Utilities = require('__shared/Utilities')
+local m_Logger = Logger("BotManager", Debug.Server.BOT)
 
 function BotManager:__init()
 	self._bots = {}
@@ -61,9 +62,7 @@ function BotManager:configGlobals()
 	if maxPlayers ~= nil and maxPlayers > 0 then
 		Globals.MaxPlayers = maxPlayers
 
-		if Debug.Server.BOT then
-			print("there are "..maxPlayers.." slots on this server")
-		end
+		m_Logger:Write("there are "..maxPlayers.." slots on this server")
 	else
 		Globals.MaxPlayers = MAX_NUMBER_OF_BOTS --only fallback
 	end
@@ -194,7 +193,7 @@ function BotManager:setOptionForPlayer(p_Player, p_Option, p_Value)
 	end
 end
 
-function BotManager:_onUpdate(p_DeltaTime, p_UpdatePass)
+function BotManager:OnUpdate(p_DeltaTime, p_UpdatePass)
 	if p_UpdatePass ~= UpdatePass.UpdatePass_PostFrame then
 		return
 	end
@@ -222,9 +221,9 @@ function BotManager:_onUpdate(p_DeltaTime, p_UpdatePass)
 	-- accept revives
 	for i, botname in pairs(self._pendingAcceptRevives) do
 		local botPlayer = self:getBotByName(botname)
-		if botPlayer ~= nil and botPlayer.player.soldier ~= nil then
-			if botPlayer.player.soldier.health == 20 then
-				botPlayer.player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Stand, true, true)
+		if botPlayer ~= nil and botPlayer.m_Player.soldier ~= nil then
+			if botPlayer.m_Player.soldier.health == 20 then
+				botPlayer.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Stand, true, true)
 				self._pendingAcceptRevives[i] = nil
 			end
 		else
@@ -313,9 +312,9 @@ function BotManager:_checkForBotBotAttack()
 				for _, bot2 in pairs(self._botsByTeam[opposingTeam+1]) do
 
 					-- make sure it's living and has no target
-					if (bot2 ~= nil and bot2.player ~= nil and bot2.player.alive and not self._botCheckState[bot2.player.name]) then
+					if (bot2 ~= nil and bot2.m_Player ~= nil and bot2.m_Player.alive and not self._botCheckState[bot2.m_Player.name]) then
 
-						local distance = bot.m_Player.soldier.worldTransform.trans:Distance(bot2.player.soldier.worldTransform.trans)
+						local distance = bot.m_Player.soldier.worldTransform.trans:Distance(bot2.m_Player.soldier.worldTransform.trans)
 						if distance <= Config.MaxBotAttackBotDistance then
 
 							-- choose a player at random, try until an active player is found
@@ -324,10 +323,10 @@ function BotManager:_checkForBotBotAttack()
 
 									-- check this bot view. Let one client do it
 									local pos1 = bot.m_Player.soldier.worldTransform.trans:Clone()
-									local pos2 = bot2.player.soldier.worldTransform.trans:Clone()
-									local inVehicle =  (bot.m_Player.attachedControllable ~= nil or bot2.player.attachedControllable ~= nil)
+									local pos2 = bot2.m_Player.soldier.worldTransform.trans:Clone()
+									local inVehicle =  (bot.m_Player.attachedControllable ~= nil or bot2.m_Player.attachedControllable ~= nil)
 
-									NetEvents:SendUnreliableToLocal('CheckBotBotAttack', players[playerIndex], pos1, pos2, bot.m_Player.name, bot2.player.name, inVehicle)
+									NetEvents:SendUnreliableToLocal('CheckBotBotAttack', players[playerIndex], pos1, pos2, bot.m_Player.name, bot2.m_Player.name, inVehicle)
 									raycasts = raycasts + 1
 									nextPlayerIndex = playerIndex + 1
 									break
@@ -352,7 +351,7 @@ function BotManager:_checkForBotBotAttack()
 	self._botCheckState = {}
 end
 
-function BotManager:_onPlayerLeft(p_Player)
+function BotManager:OnPlayerLeft(p_Player)
 	--remove all references of player
 	if p_Player ~= nil then
 		for _, bot in pairs(self._bots) do
@@ -408,7 +407,7 @@ function BotManager:_getDamageValue(p_Damage, p_Bot, p_Soldier, p_Fake)
 	return resultDamage
 end
 
-function BotManager:_onSoldierDamage(p_HookCtx, p_Soldier, p_Info, p_GiverInfo)
+function BotManager:OnSoldierDamage(p_HookCtx, p_Soldier, p_Info, p_GiverInfo)
 	-- soldier -> soldier damage only
 	if p_Soldier.player == nil then
 		return
@@ -418,7 +417,7 @@ function BotManager:_onSoldierDamage(p_HookCtx, p_Soldier, p_Info, p_GiverInfo)
 	if soldierIsBot and p_GiverInfo.giver ~= nil then
 		--detect if we need to shoot back
 		if Config.ShootBackIfHit and p_Info.damage > 0 then
-			self:_onShootAt(p_GiverInfo.giver, p_Soldier.player.name, true)
+			self:OnShootAt(p_GiverInfo.giver, p_Soldier.player.name, true)
 		end
 
 		-- prevent bots from killing themselves. Bad bot, no suicide.
@@ -460,14 +459,14 @@ function BotManager:_onSoldierDamage(p_HookCtx, p_Soldier, p_Info, p_GiverInfo)
 	p_HookCtx:Pass(p_Soldier, p_Info, p_GiverInfo)
 end
 
-function BotManager:_onServerDamagePlayer(p_PlayerName, p_ShooterName, p_MeleeAttack)
+function BotManager:OnServerDamagePlayer(p_PlayerName, p_ShooterName, p_MeleeAttack)
 	local player = PlayerManager:GetPlayerByName(p_PlayerName)
 	if player ~= nil then
-		self:_onDamagePlayer(player, p_ShooterName, p_MeleeAttack, false)
+		self:OnDamagePlayer(player, p_ShooterName, p_MeleeAttack, false)
 	end
 end
 
-function BotManager:_onDamagePlayer(p_Player, p_ShooterName, p_MeleeAttack, p_IsHeadShot)
+function BotManager:OnDamagePlayer(p_Player, p_ShooterName, p_MeleeAttack, p_IsHeadShot)
 	local bot = self:getBotByName(p_ShooterName)
 	if not p_Player.alive or bot == nil then
 		return
@@ -489,7 +488,7 @@ function BotManager:_onDamagePlayer(p_Player, p_ShooterName, p_MeleeAttack, p_Is
 	end
 end
 
-function BotManager:_onShootAt(p_Player, p_BotName, p_IgnoreYaw)
+function BotManager:OnShootAt(p_Player, p_BotName, p_IgnoreYaw)
 	local bot = self:getBotByName(p_BotName)
 	if bot == nil or bot.m_Player == nil or bot.m_Player.soldier == nil or p_Player == nil then
 		return
@@ -497,7 +496,7 @@ function BotManager:_onShootAt(p_Player, p_BotName, p_IgnoreYaw)
 	bot:shootAt(p_Player, p_IgnoreYaw)
 end
 
-function BotManager:_onRevivePlayer(p_Player, p_BotName)
+function BotManager:OnRevivePlayer(p_Player, p_BotName)
 	local bot = self:getBotByName(p_BotName)
 	if bot == nil or bot.m_Player == nil or bot.m_Player.soldier == nil or p_Player == nil then
 		return
@@ -505,25 +504,23 @@ function BotManager:_onRevivePlayer(p_Player, p_BotName)
 	bot:revive(p_Player)
 end
 
-function BotManager:_onBotShootAtBot(p_Player, p_BotName1, p_BotName2)
+function BotManager:OnBotShootAtBot(p_Player, p_BotName1, p_BotName2)
 	local bot1 = self:getBotByName(p_BotName1)
 	local bot2 = self:getBotByName(p_BotName2)
-	if bot1 == nil or bot1.player == nil or  bot2 == nil or bot2.player == nil then
+	if bot1 == nil or bot1.m_Player == nil or  bot2 == nil or bot2.m_Player == nil then
 		return
 	end
-	if bot1:shootAt(bot2.player, false) or bot2:shootAt(bot1.player, false) then
-		self._botCheckState[bot1.player.name] = bot2.player.name
-		self._botCheckState[bot2.player.name] = bot1.player.name
+	if bot1:shootAt(bot2.m_Player, false) or bot2:shootAt(bot1.m_Player, false) then
+		self._botCheckState[bot1.m_Player.name] = bot2.m_Player.name
+		self._botCheckState[bot2.m_Player.name] = bot1.m_Player.name
 	else
-		self._botCheckState[bot1.player.name] = nil
-		self._botCheckState[bot2.player.name] = nil
+		self._botCheckState[bot1.m_Player.name] = nil
+		self._botCheckState[bot2.m_Player.name] = nil
 	end
 end
 
-function BotManager:_onLevelDestroy()
-	if Debug.Server.INFO then
-		print("destroyLevel")
-	end
+function BotManager:OnLevelDestroy()
+	m_Logger:Write("destroyLevel")
 
 	self:resetAllBots()
 	self._activePlayers = {}
@@ -537,7 +534,7 @@ end
 
 function BotManager:createBot(p_Name, p_TeamId, p_SquadId)
 
-	--print('botsByTeam['..#self._botsByTeam[2]..'|'..#self._botsByTeam[3]..']')
+	--m_Logger:Write('botsByTeam['..#self._botsByTeam[2]..'|'..#self._botsByTeam[3]..']')
 
 	local bot = self:getBotByName(p_Name)
 	if bot ~= nil then
@@ -553,18 +550,14 @@ function BotManager:createBot(p_Name, p_TeamId, p_SquadId)
 		playerlimt = playerlimt - 1
 	end
 	if playerlimt <=  PlayerManager:GetPlayerCount() then
-		if Debug.Server.BOT then
-			print("playerlimit reached")
-		end
+		m_Logger:Write("playerlimit reached")
 		return
 	end
 
 	-- Create a player for this bot.
 	local botPlayer = PlayerManager:CreatePlayer(p_Name, p_TeamId, p_SquadId)
 	if botPlayer == nil then
-		if Debug.Server.BOT then
-			print("cant create more players on this team")
-		end
+		m_Logger:Write("cant create more players on this team")
 		return
 	end
 

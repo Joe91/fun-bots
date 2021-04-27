@@ -6,6 +6,7 @@ require('__shared/Constants/VehicleNames')
 local m_NodeCollection = require('__shared/NodeCollection')
 local m_PathSwitcher = require('PathSwitcher')
 local m_Utilities = require('__shared/Utilities')
+local m_Logger = Logger("Bot", Debug.Server.BOT)
 
 function Bot:__init(p_Player)
 	--Player Object
@@ -371,7 +372,6 @@ function Bot:resetSpawnVars()
 	self._AttackMode = 0
 	self._ShootWayPoints = {}
 	self._Skill = math.random()*Config.BotWorseningSkill
-	--print("assigned Skill "..tostring(self._Skill).." to "..self.m_Name)
 
 	self._ShotTimer = 0
 	self._UpdateTimer = 0
@@ -547,7 +547,8 @@ function Bot:_updateYaw()
 	end
 	if self._TargetPoint ~= nil and self._ShootPlayer == nil and self.m_Player.soldier ~= nil then
 		s_AttackAiming = false
-		if self.m_Player.soldier.worldTransform.trans:Distance(self._TargetPoint.Position) < 0.2 then
+		local s_Distance = self.m_Player.soldier.worldTransform.trans:Distance(self._TargetPoint.Position)
+		if s_Distance < 0.2 or (self.m_InVehicle and s_Distance < 1) then
 			self._TargetPoint = self._NextTargetPoint
 		end
 
@@ -577,10 +578,8 @@ function Bot:_updateYaw()
 	local s_DeltaYaw = 0
 	if self.m_InVehicle then
 		local s_Pos = self.m_Player.attachedControllable.transform.forward
-		--print(s_Pos)
 		local s_AtanDzDx = math.atan(s_Pos.z, s_Pos.x)
 		local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
-		--print(s_Yaw)
 		s_DeltaYaw = s_Yaw - self._TargetYaw
 	else
 		s_DeltaYaw = self.m_Player.input.authoritativeAimingYaw - self._TargetYaw
@@ -617,6 +616,26 @@ function Bot:_updateYaw()
 	end
 
 	if self.m_InVehicle then
+		if s_AbsDeltaYaw > math.pi / 4 then
+			if s_Increment > 0 then
+				self.player.input:SetLevel(EntryInputActionEnum.EIAYaw, 1)
+			else
+				self.player.input:SetLevel(EntryInputActionEnum.EIAYaw, -1)
+			end
+		else
+			if self.player.input:GetLevel(EntryInputActionEnum.EIAYaw) == 0 then
+				if s_Increment > 0 then
+					self.player.input:SetLevel(EntryInputActionEnum.EIAYaw, 1)
+				else
+					self.player.input:SetLevel(EntryInputActionEnum.EIAYaw, -1)
+				end
+			else
+				self.player.input:SetLevel(EntryInputActionEnum.EIAYaw, 0) --toggle the steering, to be more presicely. Every second Cycle TODO: maybe add counter for it?
+			end
+		end
+
+
+
 		if s_Increment > 0 then --TODO: steer in smaller values
 			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, 0.8)
 		else
@@ -631,7 +650,6 @@ function Bot:_findOutVehicleType(p_Player)
 	local s_VehicleType = 0 -- no vehicle
 	if p_Player.attachedControllable ~= nil then
 		local s_VehicleName = VehicleTable[VehicleEntityData(p_Player.attachedControllable.data).controllableType:gsub(".+/.+/","")]
-		--print(s_VehicleName)
 		-- Tank
 		if s_VehicleName == "[LAV-25]" or
 		s_VehicleName == "[SPRUT-SD]" or
@@ -791,7 +809,7 @@ function Bot:_updateShooting()
 					self._MeleeCooldownTimer = Config.MeleeAttackCoolDown
 
 					if not USE_REAL_DAMAGE then
-						Events:DispatchLocal("ServerDamagePlayer", self._ShootPlayer.name, self.m_Player.name, true)
+						Events:DispatchLocal("Server:DamagePlayer", self._ShootPlayer.name, self.m_Player.name, true)
 					end
 				else
 					if self._MeleeCooldownTimer < 0 then
@@ -1127,7 +1145,6 @@ function Bot:_updateMovement()
 								s_Entity = ControllableEntity(s_Entity)
 								local s_Position = s_Entity.transform.trans
 								if s_Position:Distance(self.m_Player.soldier.worldTransform.trans) < 5 then
-									print(s_Entity.entryCount)
 									for i = 0, s_Entity.entryCount - 1 do
 										if s_Entity:GetPlayerInEntry(i) == nil then
 											self.m_Player:EnterVehicle(s_Entity, 0)
@@ -1258,9 +1275,7 @@ function Bot:_updateMovement()
 						if self._StuckTimer > 15 and not self.m_InVehicle then -- don't kill bots in vehicles
 							self.m_Player.soldier:Kill()
 
-							if Debug.Server.BOT then
-								print(self.m_Player.name.." got stuck. Kill")
-							end
+							m_Logger:Write(self.m_Player.name.." got stuck. Kill")
 
 							return
 						end

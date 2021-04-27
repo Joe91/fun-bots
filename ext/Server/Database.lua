@@ -3,6 +3,7 @@ class('Database')
 require('__shared/ArrayMap')
 local batches = ArrayMap()
 local batched = ''
+local m_Logger = Logger("Database", Debug.Server.DATABASE)
 
 DatabaseField = {
 	NULL = '{::DB:NULL::}',
@@ -133,9 +134,7 @@ function Database:update(p_TableName, p_Parameters, p_Where)
 		fields:add(' `' .. name .. '`=' .. value .. '')
 	end
 
-	if Debug.Server.DATABASE then
-		print('UPDATE `' .. p_TableName .. '` SET ' .. fields:join(',') .. ' WHERE `' .. p_Where .. '`=' .. found)
-	end
+	m_Logger:Write('UPDATE `' .. p_TableName .. '` SET ' .. fields:join(',') .. ' WHERE `' .. p_Where .. '`=' .. found)
 
 	return self:query('UPDATE `' .. p_TableName .. '` SET ' .. fields:join(', ') .. ' WHERE `' .. p_Where .. '`=\'' .. found .. '\'')
 end
@@ -143,7 +142,7 @@ end
 function Database:executeBatch()
 	self:query('DELETE FROM `FB_Settings`')
 	self:query(batched .. batches:join(', '))
-	print(self:getError())
+	m_Logger:Error(self:getError())
 end
 
 function Database:batchQuery(p_TableName, p_Parameters, p_Where)

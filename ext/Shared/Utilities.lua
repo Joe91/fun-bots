@@ -12,7 +12,6 @@ function Utilities:getCameraPos(p_Player, p_IsTarget)
 
 	if cameraVec.z ~= 0 then
 		returnVec = p_Player.soldier.worldTransform.forward* cameraVec.z + p_Player.soldier.worldTransform.left * cameraVec.x + p_Player.soldier.worldTransform.up * cameraVec.y
-		--print(returnVec)
 
 		if p_IsTarget then
 			if Config.AimForHead then

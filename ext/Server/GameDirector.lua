@@ -1,6 +1,7 @@
 class('GameDirector')
 
 local m_NodeCollection = require('__shared/NodeCollection')
+local m_Logger = Logger("GameDirector", Debug.Server.GAMEDIRECTOR)
 
 function GameDirector:__init()
 	self.UpdateLast = -1
@@ -109,10 +110,8 @@ function GameDirector:_initFlagTeams()
 	end
 end
 
-function GameDirector:_onMcomArmed(p_Player)
-	if Debug.Server.GAMEDIRECTOR then
-		print("mcom armed by "..p_Player.name)
-	end
+function GameDirector:OnMcomArmed(p_Player)
+	m_Logger:Write("mcom armed by "..p_Player.name)
 
 	local objective = self:_translateObjective(p_Player.soldier.worldTransform.trans)
 	if self.ArmedMcoms[p_Player.name] == nil then
@@ -126,7 +125,7 @@ function GameDirector:_onMcomArmed(p_Player)
 	})
 end
 
-function GameDirector:_onMcomDisarmed(p_Player)
+function GameDirector:OnMcomDisarmed(p_Player)
 	local objective = self:_translateObjective(p_Player.soldier.worldTransform.trans)
 	-- remove information of armed mcom
 	for playerMcom,mcomsOfPlayer in pairs(self.ArmedMcoms) do
@@ -145,10 +144,8 @@ function GameDirector:_onMcomDisarmed(p_Player)
 	})
 end
 
-function GameDirector:_onMcomDestroyed(p_Player)
-	if Debug.Server.GAMEDIRECTOR then
-		print("mcom destroyed by "..p_Player.name)
-	end
+function GameDirector:OnMcomDestroyed(p_Player)
+	m_Logger:Write("mcom destroyed by "..p_Player.name)
 
 	local objective = ''
 	if self.ArmedMcoms[p_Player.name] ~= nil then
@@ -415,7 +412,7 @@ function GameDirector:_translateObjective(p_Position, p_Name)
 	end
 end
 
-function GameDirector:_onCapture(p_CapturePoint)
+function GameDirector:OnCapturePointCapture(p_CapturePoint)
 	local flagEntity = CapturePointEntity(p_CapturePoint)
 	local objectiveName = self:_translateObjective(flagEntity.transform.trans, flagEntity.name)
 	self:_updateObjective(objectiveName, {
@@ -428,17 +425,13 @@ function GameDirector:_onCapture(p_CapturePoint)
 		return
 	end
 
-	if Debug.Server.GAMEDIRECTOR then
-		print('GameDirector:_onCapture: '..objectiveName)
-		print('self.CurrentAssignedCount: '..g_Utilities:dump(objective.assigned, true))
-	end
+	m_Logger:Write('GameDirector:_onCapture: '..objectiveName)
+	m_Logger:Write('self.CurrentAssignedCount: '..g_Utilities:dump(objective.assigned, true))
 
 	for botTeam, bots in pairs(self.BotsByTeam) do
 		for i=1, #bots do
 			if (bots[i]:getObjective() == objective.name and objective.team == botTeam) then
-				if Debug.Server.GAMEDIRECTOR then
-					print('Bot completed objective: '..bots[i].name..' (team: '..botTeam..') -> '..objective.name)
-				end
+				m_Logger:Write('Bot completed objective: '..bots[i].name..' (team: '..botTeam..') -> '..objective.name)
 
 				bots[i]:setObjective()
 				objective.assigned[botTeam] = math.max(objective.assigned[botTeam] - 1, 0)
@@ -524,7 +517,7 @@ function GameDirector:_useSubobjective(p_BotTeam, p_ObjectiveName)
 	return use
 end
 
-function GameDirector:_onLost(p_CapturePoint)
+function GameDirector:OnCapturePointLost(p_CapturePoint)
 	local flagEntity = CapturePointEntity(p_CapturePoint)
 	local objectiveName = self:_translateObjective(flagEntity.transform.trans, flagEntity.name)
 	self:_updateObjective(objectiveName, {
@@ -532,12 +525,10 @@ function GameDirector:_onLost(p_CapturePoint)
 		isAttacked = flagEntity.isAttacked
 	})
 
-	if Debug.Server.GAMEDIRECTOR then
-		print('GameDirector:_onLost: '..objectiveName)
-	end
+	m_Logger:Write('GameDirector:_onLost: '..objectiveName)
 end
 
-function GameDirector:_onPlayerEnterCapturePoint(p_Player, p_CapturePoint)
+function GameDirector:OnPlayerEnterCapturePoint(p_Player, p_CapturePoint)
 	local flagEntity = CapturePointEntity(p_CapturePoint)
 	local objectiveName = self:_translateObjective(flagEntity.transform.trans, flagEntity.name)
 	self:_updateObjective(objectiveName, {
@@ -545,16 +536,16 @@ function GameDirector:_onPlayerEnterCapturePoint(p_Player, p_CapturePoint)
 	})
 end
 
-function GameDirector:_onRoundOver(p_RoundTime, p_WinningTeam)
+function GameDirector:OnRoundOver(p_RoundTime, p_WinningTeam)
 	self.UpdateLast = -1
 end
 
-function GameDirector:_onRoundReset(p_RoundTime, p_WinningTeam)
+function GameDirector:OnRoundReset(p_RoundTime, p_WinningTeam)
 	self.AllObjectives = {}
 	self.UpdateLast = 0
 end
 
-function GameDirector:_onUpdate(p_DeltaTime)
+function GameDirector:OnEngineUpdate(p_DeltaTime)
 	if (self.UpdateLast >= 0) then
 		self.UpdateLast = self.UpdateLast + p_DeltaTime
 	end
@@ -566,12 +557,12 @@ function GameDirector:_onUpdate(p_DeltaTime)
 		local botList = g_BotManager:getBots()
 		self.BotsByTeam = {}
 		for i=1, #botList do
-			if not botList[i]:isInactive() and botList[i].player ~= nil then
-				if (self.BotsByTeam[botList[i].player.teamId] == nil) then
-					self.BotsByTeam[botList[i].player.teamId] = {}
+			if not botList[i]:isInactive() and botList[i].m_Player ~= nil then
+				if (self.BotsByTeam[botList[i].m_Player.teamId] == nil) then
+					self.BotsByTeam[botList[i].m_Player.teamId] = {}
 				end
 
-				table.insert(self.BotsByTeam[botList[i].player.teamId], botList[i])
+				table.insert(self.BotsByTeam[botList[i].m_Player.teamId], botList[i])
 			end
 		end
 
@@ -604,7 +595,7 @@ function GameDirector:_onUpdate(p_DeltaTime)
 		for botTeam, bots in pairs(self.BotsByTeam) do
 			for _,bot in pairs(bots) do
 				if bot:getObjective() == '' then
-					if bot.player.alive then
+					if bot.m_Player.alive then
 						-- find closest objective for bot
 						local closestDistance = nil
 						local closestObjective = nil
@@ -613,7 +604,7 @@ function GameDirector:_onUpdate(p_DeltaTime)
 								if not objective.isBase and objective.active and not objective.destroyed then
 									if objective.team ~= botTeam then
 										if objective.assigned[botTeam] < maxAssings[botTeam] then
-											local distance = self:_getDistanceFromObjective(objective.name, bot.player.soldier.worldTransform.trans)
+											local distance = self:_getDistanceFromObjective(objective.name, bot.m_Player.soldier.worldTransform.trans)
 											if closestDistance == nil or closestDistance > distance then
 												closestDistance = distance
 												closestObjective = objective.name
@@ -657,7 +648,7 @@ function GameDirector:useSubobjective(p_BotName, p_Objective)
 	if tempObjective ~= nil and tempObjective.subObjective then -- is valid getSubObjective
 		if tempObjective.active and not tempObjective.destroyed then
 			local bot = g_BotManager:getBotByName(p_BotName)
-			local botTeam = bot.player.teamId
+			local botTeam = bot.m_Player.teamId
 			if self:_useSubobjective(botTeam, p_Objective) then
 				if tempObjective.assigned[botTeam] < 2 then
 					tempObjective.assigned[botTeam] = tempObjective.assigned[botTeam] + 1

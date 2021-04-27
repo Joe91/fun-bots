@@ -1,6 +1,8 @@
 class "NodeCollection"
 
 local m_Utilities = require('__shared/Utilities.lua')
+local m_Logger = Logger("NodeCollection", Debug.Shared.NODECOLLECTION)
+
 requireExists('Globals')
 
 function NodeCollection:__init(p_DisableServerEvents)
@@ -157,18 +159,14 @@ function NodeCollection:Register(p_Waypoint)
 	if (#self.waypoints ~= p_Waypoint.Index) then
 		local diff = p_Waypoint.Index - #self.waypoints
 
-		if Debug.Shared.NODECOLLECTION then
-			print('Warning, New Node Index does not match: p_Waypoint.Index:'..tostring(p_Waypoint.Index)..' | #self.waypoints:'..tostring(#self.waypoints)..' | '.. tostring(diff))
-		end
+		m_Logger:Warning('New Node Index does not match: p_Waypoint.Index:'..tostring(p_Waypoint.Index)..' | #self.waypoints:'..tostring(#self.waypoints)..' | '.. tostring(diff))
 	end
 
 	table.insert(self.waypointsByPathIndex[p_Waypoint.PathIndex], p_Waypoint)
 	if (#self.waypointsByPathIndex[p_Waypoint.PathIndex] ~= p_Waypoint.PointIndex) then
 		local diff = p_Waypoint.PointIndex - #self.waypointsByPathIndex[p_Waypoint.PathIndex]
 
-		if Debug.Shared.NODECOLLECTION then
-			print('Warning, New Node PointIndex does not match: p_Waypoint.PointIndex: '..tostring(p_Waypoint.PointIndex)..' | #self.waypointsByPathIndex['..p_Waypoint.PathIndex..']: '..tostring(#self.waypointsByPathIndex[p_Waypoint.PathIndex])..' | '.. tostring(diff))
-		end
+		m_Logger:Warning('New Node PointIndex does not match: p_Waypoint.PointIndex: '..tostring(p_Waypoint.PointIndex)..' | #self.waypointsByPathIndex['..p_Waypoint.PathIndex..']: '..tostring(#self.waypointsByPathIndex[p_Waypoint.PathIndex])..' | '.. tostring(diff))
 	end
 	self.waypointsByID[p_Waypoint.ID] = p_Waypoint
 
@@ -232,9 +230,7 @@ function NodeCollection:Remove(p_Waypoint)
 		return true, 'Success'
 	end
 
-	if Debug.Shared.NODECOLLECTION then
-		print('Removing: '..tostring(p_Waypoint.ID))
-	end
+	m_Logger:Write('Removing: '..tostring(p_Waypoint.ID))
 
 	-- update connections, no more middle-man
 	if (p_Waypoint.Previous) then
@@ -306,9 +302,7 @@ function NodeCollection:InsertBefore(p_ReferrenceWaypoint, p_Waypoint)
 end
 
 function NodeCollection:RecalculateIndexes(p_Waypoint)
-	if Debug.Shared.NODECOLLECTION then
-		print('NodeCollection:RecalculateIndexes Starting...')
-	end
+	m_Logger:Write('RecalculateIndexes Starting...')
 
 	local counter = 0
 
@@ -331,9 +325,7 @@ function NodeCollection:RecalculateIndexes(p_Waypoint)
 		end
 	end
 
-	if Debug.Shared.NODECOLLECTION then
-		print('NodeCollection:RecalculateIndexes Finished! ['..tostring(counter)..']')
-	end
+	m_Logger:Write('RecalculateIndexes Finished! ['..tostring(counter)..']')
 end
 
 function NodeCollection:_processWaypointRecalc(p_Waypoint)
@@ -379,9 +371,7 @@ function NodeCollection:_processWaypointRecalc(p_Waypoint)
 end
 
 function NodeCollection:ProcessMetadata(p_Waypoint)
-	if Debug.Shared.NODECOLLECTION then
-		print('NodeCollection:ProcessMetadata Starting...')
-	end
+	m_Logger:Write('ProcessMetadata Starting...')
 
 	local counter = 0
 
@@ -395,9 +385,7 @@ function NodeCollection:ProcessMetadata(p_Waypoint)
 		counter = counter + 1
 	end
 
-	if Debug.Shared.NODECOLLECTION then
-		print('NodeCollection:ProcessMetadata Finished! ['..tostring(counter)..']')
-	end
+	m_Logger:Write('ProcessMetadata Finished! ['..tostring(counter)..']')
 end
 
 function NodeCollection:_processWaypointMetadata(p_Waypoint)
@@ -457,9 +445,7 @@ function NodeCollection:Update(p_Waypoint, p_Data)
 end
 
 function NodeCollection:UpdateMetadata(p_Data)
-	if Debug.Shared.NODECOLLECTION then
-		print('[A] NodeCollection:UpdateMetadata -> p_Data: '..m_Utilities:dump(p_Data, true))
-	end
+	m_Logger:Write('[A] NodeCollection:UpdateMetadata -> p_Data: '..m_Utilities:dump(p_Data, true))
 
 	local selection = self:GetSelected()
 	if (#selection < 1) then
@@ -471,9 +457,7 @@ function NodeCollection:UpdateMetadata(p_Data)
 		p_Data, errorMsg = json.decode(p_Data) or {}
 	end
 
-	if Debug.Shared.NODECOLLECTION then
-		print('[B] NodeCollection:UpdateMetadata -> p_Data: '..m_Utilities:dump(p_Data, true))
-	end
+	m_Logger:Write('[B] NodeCollection:UpdateMetadata -> p_Data: '..m_Utilities:dump(p_Data, true))
 
 	for i=1, #selection do
 		self:Update(selection[i], {
@@ -588,9 +572,7 @@ function NodeCollection:Unlink(p_Waypoints, p_LinkID, p_OneWay)
 	end
 
 	-- update waypoint's Data table, remove linking info if necessary
-	if Debug.Shared.NODECOLLECTION then
-		print('newLinks -> '..m_Utilities:dump(newLinks, true))
-	end
+	m_Logger:Write('newLinks -> '..m_Utilities:dump(newLinks, true))
 
 	if (#newLinks > 0) then
 		self:Update(selection.Data, {
@@ -723,9 +705,7 @@ function NodeCollection:GetPaths()
 end
 
 function NodeCollection:Clear()
-	if Debug.Shared.NODECOLLECTION then
-		print('NodeCollection:Clear')
-	end
+	m_Logger:Write('NodeCollection:Clear')
 
 	for i=1, #self.waypoints do
 		self.waypoints[i].Next = nil
@@ -921,9 +901,7 @@ function NodeCollection:Load(p_LevelName, p_GameMode)
 	if self.mapName == "MP_Subway_ConquestSmall0" then
 		self.mapName = "MP_Subway_ConquestLarge0" --paths are the same
 	end
-	if Debug.Shared.NODECOLLECTION then
-		print('NodeCollection:Load: '..self.mapName)
-	end
+	m_Logger:Write('Load: '..self.mapName)
 
 	if not SQL:Open() then
 		return
@@ -943,10 +921,7 @@ function NodeCollection:Load(p_LevelName, p_GameMode)
 	]]
 
 	if not SQL:Query(query) then
-		if Debug.Shared.DATABASE then
-			print('Failed to create table for map ['..self.mapName..']: '..SQL:Error())
-		end
-
+		m_Logger:Error('Failed to create table for map ['..self.mapName..']: '..SQL:Error())
 		return
 	end
 
@@ -955,10 +930,7 @@ function NodeCollection:Load(p_LevelName, p_GameMode)
 	local results = SQL:Query('SELECT * FROM '..self.mapName..'_table ORDER BY `pathIndex`, `pointIndex` ASC')
 
 	if not results then
-		if Debug.Shared.DATABASE then
-			print('Failed to retrieve waypoints for map ['..self.mapName..']: '..SQL:Error())
-		end
-
+		m_Logger:Error('Failed to retrieve waypoints for map ['..self.mapName..']: '..SQL:Error())
 		return
 	end
 
@@ -1007,27 +979,19 @@ function NodeCollection:Load(p_LevelName, p_GameMode)
 		--Globals.activeTraceIndexes = pathCount
 	--end
 
-	if Debug.Shared.NODECOLLECTION then
-		print('NodeCollection:Load -> Paths: '..tostring(pathCount)..' | Waypoints: '..tostring(waypointCount))
-	end
+	m_Logger:Write('Load -> Paths: '..tostring(pathCount)..' | Waypoints: '..tostring(waypointCount))
 
 	ChatManager:Yell(Language:I18N('Loaded %d paths with %d waypoints for map %s', pathCount, waypointCount, self.mapName), 5.5)
 end
 
 function NodeCollection:Save()
 	if not SQL:Open() then
-		if Debug.Shared.DATABASE then
-			print('Could not open database')
-		end
-
+		m_Logger:Error('Could not open database')
 		return
 	end
 
 	if not SQL:Query('DROP TABLE IF EXISTS '..self.mapName..'_table') then
-		if Debug.Shared.DATABASE then
-			print('Failed to reset table for map ['..self.mapName..']: '..SQL:Error())
-		end
-
+		m_Logger:Error('Failed to reset table for map ['..self.mapName..']: '..SQL:Error())
 		return
 	end
 
@@ -1045,10 +1009,7 @@ function NodeCollection:Save()
 	]]
 
 	if not SQL:Query(query) then
-		if Debug.Shared.DATABASE then
-			print('Failed to create table for map ['..self.mapName..']: '..SQL:Error())
-		end
-
+		m_Logger:Error('Failed to create table for map ['..self.mapName..']: '..SQL:Error())
 		return
 	end
 
@@ -1063,9 +1024,7 @@ function NodeCollection:Save()
 
 	local batchQueries = {}
 
-	if Debug.Shared.NODECOLLECTION then
-		print('NodeCollection:Save -> Processing: '..(waypointCount))
-	end
+	m_Logger:Write('NodeCollection:Save -> Processing: '..(waypointCount))
 
 	for _,waypoint in pairs(self.waypoints) do
 
@@ -1109,11 +1068,9 @@ function NodeCollection:Save()
 			if (waypointData ~= nil and type(waypointData) == 'table') then
 				local jsonData, encodeError = json.encode(waypointData)
 				if (jsonData == nil) then
-					if Debug.Shared.NODECOLLECTION then
-						print('WARNING! Waypoint ['..waypoint.ID..'] data could not encode: '..tostring(encodeError))
-						print('waypoint -> '..m_Utilities:dump(waypoint, true, 1))
-						print('waypointData -> '..m_Utilities:dump(waypointData, true))
-					end
+					m_Logger:Warning('Waypoint ['..waypoint.ID..'] data could not encode: '..tostring(encodeError))
+					m_Logger:Warning('waypoint -> '..m_Utilities:dump(waypoint, true, 1))
+					m_Logger:Warning('waypointData -> '..m_Utilities:dump(waypointData, true))
 				end
 
 				if (jsonData ~= '{}') then
@@ -1137,17 +1094,13 @@ function NodeCollection:Save()
 		end
 	end
 
-	if Debug.Shared.NODECOLLECTION then
-		print('NodeCollection:Save -> Waypoints to write: '..(#batchQueries))
-		print('NodeCollection:Save -> Orphans: '..(#orphans)..' (Removed)')
-		print('NodeCollection:Save -> Disconnected: '..(#disconnects)..' (Expected: 2)')
-	end
+	m_Logger:Write('Save -> Waypoints to write: '..(#batchQueries))
+	m_Logger:Write('Save -> Orphans: '..(#orphans)..' (Removed)')
+	m_Logger:Write('Save -> Disconnected: '..(#disconnects)..' (Expected: 2)')
 
 	if (#disconnects > 2) then
-		if Debug.Shared.NODECOLLECTION then
-			print('WARNING! More than two disconnected nodes were found!')
-			print(m_Utilities:dump(disconnects, true, 2))
-		end
+		m_Logger:Warning('WARNING! More than two disconnected nodes were found!')
+		m_Logger:Warning(m_Utilities:dump(disconnects, true, 2))
 	end
 
 	local queriesDone = 0
@@ -1173,10 +1126,7 @@ function NodeCollection:Save()
 		end
 
 		if not SQL:Query(insertQuery..values) then
-			if Debug.Shared.DATABASE then
-				print('NodeCollection:Save -> Batch query failed ['..queriesDone..']: ' .. SQL:Error())
-			end
-
+			m_Logger:Write('Save -> Batch query failed ['..queriesDone..']: ' .. SQL:Error())
 			return
 		end
 
@@ -1187,20 +1137,14 @@ function NodeCollection:Save()
 	local results = SQL:Query('SELECT * FROM '..self.mapName..'_table')
 
 	if not results then
-		if Debug.Shared.DATABASE then
-			print('NodeCollection:Save -> Failed to double-check table entries for map ['..self.mapName..']: '..SQL:Error())
-		end
-
+		m_Logger:Error('NodeCollection:Save -> Failed to double-check table entries for map ['..self.mapName..']: '..SQL:Error())
 		ChatManager:Yell(Language:I18N('Failed to execute query: %s', SQL:Error()), 5.5)
 		return
 	end
 
 	SQL:Close()
 
-	if Debug.Shared.NODECOLLECTION then
-		print('NodeCollection:Save -> Saved ['..queriesTotal..'] waypoints for map ['..self.mapName..']')
-	end
-
+	m_Logger:Write('Save -> Saved ['..queriesTotal..'] waypoints for map ['..self.mapName..']')
 	ChatManager:Yell(Language:I18N('Saved %d paths with %d waypoints for map %s', pathCount, queriesTotal, self.mapName), 5.5)
 end
 
@@ -1361,8 +1305,8 @@ function NodeCollection:FindAlongTrace(p_Vec3Start, p_Vec3End, p_Granularity, p_
 		p_Tolerance = 0.2
 	end
 
-	self:Print('NodeCollection:FindAlongTrace - p_Granularity: '..tostring(p_Granularity))
-	self:Print('NodeCollection:FindAlongTrace - p_Tolerance: '..tostring(p_Tolerance))
+	self:Log('NodeCollection:FindAlongTrace - p_Granularity: '..tostring(p_Granularity))
+	self:Log('NodeCollection:FindAlongTrace - p_Tolerance: '..tostring(p_Tolerance))
 
 	local distance = math.min(math.max(p_Vec3Start:Distance(p_Vec3End), 0.05), 10)
 
@@ -1378,8 +1322,8 @@ function NodeCollection:FindAlongTrace(p_Vec3Start, p_Vec3End, p_Granularity, p_
 	local searchWaypoints = self:FindAll(searchAreaPos, searchAreaSize)
 	local testPos = p_Vec3Start:Clone()
 
-	self:Print('distance: '..tostring(distance))
-	self:Print('searchWaypoints: '..tostring(#searchWaypoints))
+	self:Log('distance: '..tostring(distance))
+	self:Log('searchWaypoints: '..tostring(#searchWaypoints))
 
 	if (#searchWaypoints == 1) then
 		return searchWaypoints[1]
@@ -1391,7 +1335,7 @@ function NodeCollection:FindAlongTrace(p_Vec3Start, p_Vec3End, p_Granularity, p_
 	while #searchWaypoints > 0 and distance > p_Granularity and distance > 0 do
 		for _,waypoint in pairs(searchWaypoints) do
 			if (waypoint ~= nil and self:IsPathVisible(waypoint.PathIndex) and waypoint.Position ~= nil and waypoint.Position:Distance(testPos) <= p_Tolerance) then
-				self:Print('NodeCollection:FindAlongTrace -> Found: '..waypoint.ID)
+				self:Log('NodeCollection:FindAlongTrace -> Found: '..waypoint.ID)
 				return waypoint
 			end
 		end
@@ -1401,10 +1345,8 @@ function NodeCollection:FindAlongTrace(p_Vec3Start, p_Vec3End, p_Granularity, p_
 	return nil
 end
 
-function NodeCollection:Print(...)
-	if Debug.Shared.NODECOLLECTION then
-		print('NodeCollection: ' .. Language:I18N(...))
-	end
+function NodeCollection:Log(...)
+	m_Logger:Write(Language:I18N(...))
 end
 
 if g_NodeCollection == nil then
