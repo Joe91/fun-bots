@@ -616,30 +616,22 @@ function Bot:_updateYaw()
 	end
 
 	if self.m_InVehicle then
-		if s_AbsDeltaYaw > math.pi / 4 then
+		if s_AbsDeltaYaw > math.pi / 8 then
 			if s_Increment > 0 then
 				self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, 1)
 			else
 				self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, -1)
 			end
 		else
-			if self.m_Player.input:GetLevel(EntryInputActionEnum.EIAYaw) == 0 then
+			-- if self.m_Player.input:GetLevel(EntryInputActionEnum.EIAYaw) == 0 then
 				if s_Increment > 0 then
-					self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, 1)
+					self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, 0.5)
 				else
-					self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, -1)
+					self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, -0.5)
 				end
-			else
-				self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, 0) --toggle the steering, to be more presicely. Every second Cycle TODO: maybe add counter for it?
-			end
-		end
-
-
-
-		if s_Increment > 0 then --TODO: steer in smaller values
-			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, 0.8)
-		else
-			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, -0.8)
+			-- else
+				-- self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, 0) --toggle the steering, to be more presicely. Every second Cycle TODO: maybe add counter for it?
+			-- end
 		end
 	end
 	self.m_Player.input.authoritativeAimingYaw = s_TempYaw
@@ -1152,6 +1144,8 @@ function Bot:_updateMovement()
 											local s_Node = g_GameDirector:findClosestPath(s_Position, true)
 											if s_Node ~= nil then
 												-- switch to vehicle
+												s_Point = s_Node
+												s_NextPoint = s_Node
 												self._InvertPathDirection = false
 												self._PathIndex = s_Node.PathIndex
 												self._CurrentWayPoint = s_Node.PointIndex
@@ -1315,7 +1309,7 @@ function Bot:_updateMovement()
 
 					local s_TargetDistanceSpeed = Config.TargetDistanceWayPoint
 					if self.m_InVehicle  then
-						s_TargetDistanceSpeed = s_TargetDistanceSpeed * 6
+						s_TargetDistanceSpeed = s_TargetDistanceSpeed * 5
 					elseif self.m_ActiveSpeedValue == 4 then
 						s_TargetDistanceSpeed = s_TargetDistanceSpeed * 1.5
 					elseif self.m_ActiveSpeedValue == 2 then
@@ -1530,13 +1524,13 @@ function Bot:_updateMovement()
 				end
 				if self.m_ActiveMoveMode > 0 then
 					if self.m_ActiveSpeedValue == 1 then
-						s_SpeedVal = 0.5
+						s_SpeedVal = 0.25
 					elseif self.m_ActiveSpeedValue == 2 then
-						s_SpeedVal = 0.75
+						s_SpeedVal = 0.35
 					elseif self.m_ActiveSpeedValue >= 3 then
-						s_SpeedVal = 1.0
+						s_SpeedVal = 0.5
 					elseif self.m_ActiveSpeedValue < 0 then
-						s_SpeedVal = -1.0
+						s_SpeedVal = -0.5
 					end
 				end
 			else
@@ -1576,7 +1570,7 @@ function Bot:_updateMovement()
 				if self.m_ActiveSpeedValue <= 3 then
 					if self.m_InVehicle then
 						if self.m_ActiveSpeedValue < 0 then
-							self:_setInput(EntryInputActionEnum.EIABrake, s_SpeedVal)
+							self:_setInput(EntryInputActionEnum.EIABrake, -s_SpeedVal)
 						else
 							self:_setInput(EntryInputActionEnum.EIAThrottle, s_SpeedVal)
 						end

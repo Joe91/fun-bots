@@ -439,7 +439,7 @@ function GameDirector:OnCapturePointCapture(p_CapturePoint)
 	for botTeam, bots in pairs(self.BotsByTeam) do
 		for i=1, #bots do
 			if (bots[i]:getObjective() == objective.name and objective.team == botTeam) then
-				m_Logger:Write('Bot completed objective: '..bots[i].name..' (team: '..botTeam..') -> '..objective.name)
+				m_Logger:Write('Bot completed objective: '..bots[i].m_Name..' (team: '..botTeam..') -> '..objective.name)
 
 				bots[i]:setObjective()
 				objective.assigned[botTeam] = math.max(objective.assigned[botTeam] - 1, 0)
