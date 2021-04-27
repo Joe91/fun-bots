@@ -1271,7 +1271,7 @@ function Bot:_updateMovement()
 							--end
 							-- experimental
 							if s_PointIncrement == 0 then -- we can't have this
-								s_PointIncrement = 2 --go backwards and try again
+								s_PointIncrement = -2 --go backwards and try again
 							end
 						end
 
