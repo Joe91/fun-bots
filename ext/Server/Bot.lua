@@ -75,6 +75,8 @@ function Bot:__init(p_Player)
 	self._GrenadeActive = false
 	self._C4Active = false
 
+	self._VehicleEntity = nil
+
 	--shooting
 	self._Shoot = false
 	self._ShootPlayer = nil
@@ -1166,7 +1168,15 @@ function Bot:_updateMovement()
 								if s_Position:Distance(self.m_Player.soldier.worldTransform.trans) < 5 then
 									for i = 0, s_Entity.entryCount - 1 do
 										if s_Entity:GetPlayerInEntry(i) == nil then
-											self.m_Player:EnterVehicle(s_Entity, 0)
+											self.m_Player:EnterVehicle(s_Entity, i)
+											
+											self._VehicleEntity = s_Entity.physicsEntityBase
+											print(self._VehicleEntity.partCount)
+											for i = 0, self._VehicleEntity.partCount -1 do
+												local s_TransForm = self._VehicleEntity:GetPartTransform(i):ToLinearTransform()
+												print(s_TransForm)
+											end
+
 											self._ActionActive = false
 											local s_Node = g_GameDirector:findClosestPath(s_Position, true)
 											if s_Node ~= nil then
