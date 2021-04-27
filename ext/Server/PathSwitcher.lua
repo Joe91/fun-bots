@@ -71,7 +71,10 @@ function PathSwitcher:getNewPath(p_BotName, p_Point, p_Objective)
 		if (pathNode.Data.Objectives ~= nil and p_Objective ~= '') then
 			-- check for possible subObjective
 			if ((#pathNode.Data.Objectives == 1 ) and (newPoint.ID ~= p_Point.ID)) then
-				if (m_GameDirector:useSubobjective(p_BotName, pathNode.Data.Objectives[1]) == true) then
+				if m_GameDirector:useSubobjective(p_BotName, pathNode.Data.Objectives[1]) == true then
+					return true, newPoint
+				end
+				if m_GameDirector:useVehicle(p_BotName, pathNode.Data.Objectives[1]) == true then
 					return true, newPoint
 				end
 			end

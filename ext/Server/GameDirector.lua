@@ -66,6 +66,7 @@ function GameDirector:initObjectives()
 			isAttacked = false,
 			isBase = false,
 			isSpawnPath = false,
+			isEnterVehiclePath = false,
 			destroyed = false,
 			active = true,
 			subObjective = false,
@@ -82,6 +83,9 @@ function GameDirector:initObjectives()
 		if string.find(objectiveName:lower(), "spawn") ~= nil then
 			objective.isSpawnPath = true
 			objective.active = false
+		end
+		if string.find(objectiveName:lower(), "vehicle") ~= nil then
+			objective.isEnterVehiclePath = true
 		end
 		table.insert(self.AllObjectives, objective)
 	end
@@ -207,31 +211,33 @@ function GameDirector:_updateValidObjectives()
 			local fields = objective.name:split(" ")
 			local active = false
 			local subObjective = false
-			if not objective.isBase and not objective.isSpawnPath then
-				if #fields > 1 then
-					local index = tonumber(fields[2])
-					for _,targetIndex in pairs(mcomIndexes) do
-						if index == targetIndex then
-							active = true
+			if not objective.isSpawnPath and not objective.isEnterVehiclePath then
+				if not objective.isBase then
+					if #fields > 1 then
+						local index = tonumber(fields[2])
+						for _,targetIndex in pairs(mcomIndexes) do
+							if index == targetIndex then
+								active = true
+							end
+						end
+						if #fields > 2 then -- "mcom N interact"
+							subObjective = true
 						end
 					end
-					if #fields > 2 then -- "mcom N interact"
-						subObjective = true
+				else
+					if #fields > 2 then
+						local index = tonumber(fields[3])
+						if index == baseIndex then
+							active = true
+						end
+						if index == baseIndex - 1 then
+							self.RushAttackingBase = objective.name
+						end
 					end
 				end
-			else
-				if #fields > 2 then
-					local index = tonumber(fields[3])
-					if index == baseIndex then
-						active = true
-					end
-					if index == baseIndex - 1 then
-						self.RushAttackingBase = objective.name
-					end
-				end
+				objective.active = active
+				objective.subObjective = subObjective
 			end
-			objective.active = active
-			objective.subObjective = subObjective
 		end
 	else
 		self.OnlyOneMcom = true
@@ -387,7 +393,7 @@ function GameDirector:_translateObjective(p_Position, p_Name)
 						if #node.Data.Objectives == 1 then --possible objective
 							local valid = true
 							local tempObj = self:getObjectiveObject(objective)
-							if tempObj ~= nil and tempObj.isSpawnPath then -- or tempObj.isBase
+							if tempObj ~= nil and (tempObj.isSpawnPath or tempObj.isEnterVehiclePath) then -- or tempObj.isBase
 								valid = false
 							end
 							if valid then
@@ -641,6 +647,18 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 			end
 		end
 	end
+end
+
+function GameDirector:useVehicle(p_BotName, p_Objective)
+	local tempObjective = self:getObjectiveObject(p_Objective)
+	if tempObjective ~= nil and tempObjective.active and tempObjective.isEnterVehiclePath then
+		local bot = g_BotManager:getBotByName(p_BotName)
+		bot:setObjective(p_Objective)
+		tempObjective.active = false --TODO: enable again if destroyed
+		print("enter vehicle")
+		return true
+	end
+	return false
 end
 
 function GameDirector:useSubobjective(p_BotName, p_Objective)
