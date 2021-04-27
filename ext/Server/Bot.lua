@@ -623,9 +623,9 @@ function Bot:_updateYaw()
 			s_YawValue = 1.0
 		end
 
-		if s_AbsDeltaYaw > math.pi / 8 then
-			s_YawValue = s_YawValue * 0.5
-		end
+		-- if s_AbsDeltaYaw > math.pi / 8 then
+			--s_YawValue = s_YawValue * 0.5
+		-- end
 
 		if s_Increment > 0 then
 			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, s_YawValue)
