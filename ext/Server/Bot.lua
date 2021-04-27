@@ -579,10 +579,15 @@ function Bot:_updateYaw()
 
 	local s_DeltaYaw = 0
 	if self.m_InVehicle then
-		local s_Pos = self.m_Player.attachedControllable.transform.forward
-		local s_AtanDzDx = math.atan(s_Pos.z, s_Pos.x)
-		local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
-		s_DeltaYaw = s_Yaw - self._TargetYaw
+		if not s_AttackAiming then
+			local s_Pos = self.m_Player.attachedControllable.transform.forward
+			local s_AtanDzDx = math.atan(s_Pos.z, s_Pos.x)
+			local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
+			s_DeltaYaw = s_Yaw - self._TargetYaw
+		else
+			--TODO FIXME: Find reference for Position of Gun
+			s_DeltaYaw = self.m_Player.input.authoritativeAimingYaw - self._TargetYaw
+		end
 	else
 		s_DeltaYaw = self.m_Player.input.authoritativeAimingYaw - self._TargetYaw
 	end
@@ -598,10 +603,15 @@ function Bot:_updateYaw()
 
 	if s_AbsDeltaYaw < s_Increment then
 		if self.m_InVehicle then
-			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, 0.0)
+			if not s_AttackAiming then
+				self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, 0.0)
+			else
+				self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, 0.0)
+			end
+		else
+			self.m_Player.input.authoritativeAimingYaw = self._TargetYaw
+			self.m_Player.input.authoritativeAimingPitch = self._TargetPitch
 		end
-		self.m_Player.input.authoritativeAimingYaw = self._TargetYaw
-		self.m_Player.input.authoritativeAimingPitch = self._TargetPitch
 		return
 	end
 
@@ -617,7 +627,7 @@ function Bot:_updateYaw()
 		s_TempYaw = s_TempYaw + (math.pi * 2)
 	end
 
-	if self.m_InVehicle and not s_AttackAiming then
+	if self.m_InVehicle then
 		local s_YawValue = 0;
 		if self.m_ActiveSpeedValue < 0 then
 			s_YawValue = -1.0
@@ -629,19 +639,34 @@ function Bot:_updateYaw()
 			--s_YawValue = s_YawValue * 0.5
 		-- end
 
-		if s_Increment > 0 then
-			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, s_YawValue)
+		-- try to move head
+		--self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, 1)
+		--self.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, 1)
+
+		
+		if not s_AttackAiming then
+			if s_Increment > 0 then
+				self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, s_YawValue)
+			else
+				self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, -s_YawValue)
+			end
 		else
-			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, -s_YawValue)
+			if s_Increment > 0 then
+				self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, s_YawValue)
+			else
+				self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, -s_YawValue)
+			end
 		end
+	else
+		self.m_Player.input.authoritativeAimingYaw = s_TempYaw
+		self.m_Player.input.authoritativeAimingPitch = self._TargetPitch
 	end
-	self.m_Player.input.authoritativeAimingYaw = s_TempYaw
-	self.m_Player.input.authoritativeAimingPitch = self._TargetPitch
+	
 end
 
 function Bot:_findOutVehicleType(p_Player)
 	local s_VehicleType = 0 -- no vehicle
-	if p_Player.attachedControllable ~= nil then
+	if p_Player.attachedControllable ~= nil and not p_Player.attachedControllable:Is("SoldierEntity") then
 		local s_VehicleName = VehicleTable[VehicleEntityData(p_Player.attachedControllable.data).controllableType:gsub(".+/.+/","")]
 		-- Tank
 		if s_VehicleName == "[LAV-25]" or
@@ -1356,7 +1381,7 @@ function Bot:_updateMovement()
 							if s_SwitchPath == true and not self._OnSwitch then
 								if (self._Objective ~= '') then
 									-- 'best' direction for objective on switch
-									local s_Direction = m_NodeCollection:ObjectiveDirection(s_NewWaypoint, self._Objective)
+									local s_Direction = m_NodeCollection:ObjectiveDirection(s_NewWaypoint, self._Objective, self.m_InVehicle)
 									self._InvertPathDirection = (s_Direction == 'Previous')
 								else
 									-- random path direction on switch
@@ -1532,7 +1557,7 @@ function Bot:_updateMovement()
 					elseif self.m_ActiveSpeedValue >= 3 then
 						s_SpeedVal = 0.5
 					elseif self.m_ActiveSpeedValue < 0 then
-						s_SpeedVal = -0.5
+						s_SpeedVal = -0.4
 					end
 				end
 			else
@@ -1605,7 +1630,7 @@ function Bot:_setActiveVars()
 
 	self.m_ActiveMoveMode = self._MoveMode
 	self.m_ActiveSpeedValue = self._BotSpeed
-	if self.m_Player.attachedControllable ~= nil then
+	if self.m_Player.attachedControllable ~= nil and not self.m_Player.attachedControllable:Is("SoldierEntity") then
 		self.m_InVehicle = true
 	else
 		self.m_InVehicle = false
