@@ -283,7 +283,7 @@ function BotSpawner:OnLevelLoaded()
 	self._firstSpawnDelay = FIRST_SPAWN_DELAY
 end
 
-function BotSpawner:OnUpdate(p_DeltaTime, p_UpdatePass)
+function BotSpawner:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	if p_UpdatePass ~= UpdatePass.UpdatePass_PostFrame then
 		return
 	end

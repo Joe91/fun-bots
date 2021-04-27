@@ -464,7 +464,7 @@ function GameDirector:_translateObjective(p_Position, p_Name)
 	end
 end
 
-function GameDirector:OnCapturePointCapture(p_CapturePoint)
+function GameDirector:OnCapturePointCaptured(p_CapturePoint)
 	local flagEntity = CapturePointEntity(p_CapturePoint)
 	local objectiveName = self:_translateObjective(flagEntity.transform.trans, flagEntity.name)
 	self:_updateObjective(objectiveName, {
@@ -580,7 +580,7 @@ function GameDirector:OnCapturePointLost(p_CapturePoint)
 	m_Logger:Write('GameDirector:_onLost: '..objectiveName)
 end
 
-function GameDirector:OnPlayerEnterCapturePoint(p_Player, p_CapturePoint)
+function GameDirector:OnPlayerEnteredCapturePoint(p_Player, p_CapturePoint)
 	local flagEntity = CapturePointEntity(p_CapturePoint)
 	local objectiveName = self:_translateObjective(flagEntity.transform.trans, flagEntity.name)
 	self:_updateObjective(objectiveName, {

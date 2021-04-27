@@ -30,44 +30,50 @@ local m_RCONCommands = require('RCONCommands')
 local m_FunBotUIServer = require('UIServer')
 local m_GameDirector = require('GameDirector')
 
-local playerKilledDelay = 0
 
 function FunBotServer:__init()
-	m_Language:loadLanguage(Config.Language)
+	self.m_PlayerKilledDelay = 0
 	Events:Subscribe('Engine:Init', self, self.OnEngineInit)
-	Events:Subscribe('Level:Loaded', self, self._onLevelLoaded)
-	Events:Subscribe('Player:Chat', self, self._onChat)
-	Events:Subscribe('Extension:Unloading', self, self._onExtensionUnloading)
-	Events:Subscribe('Extension:Loaded', self, self._onExtensionLoaded)
-	Events:Subscribe('Partition:Loaded', self, self._onPartitionLoaded)
+	Events:Subscribe('Extension:Loaded', self, self.OnExtensionLoaded)
+end
 
-	Events:Subscribe('UpdateManager:Update', self, self.OnUpdate)
+function FunBotServer:OnEngineInit()
+	require('UpdateCheck')
+end
+
+function FunBotServer:OnExtensionLoaded()
+	m_Language:loadLanguage(Config.Language)
+	m_SettingsManager:onLoad()
+	self:RegisterEvents()
+	self:RegisterHooks()
+	self:RegisterCustomEvents()
+	self:OnModReloaded()
+end
+
+function FunBotServer:RegisterEvents()
+	Events:Subscribe('Extension:Unloading', self, self.OnExtensionUnloading)
+
+	Events:Subscribe('Partition:Loaded', self, self.OnPartitionLoaded)
+	Events:Subscribe('Engine:Update', self, self.OnEngineUpdate)
+	Events:Subscribe('UpdateManager:Update', self, self.OnUpdateManagerUpdate)
+
+	Events:Subscribe('Level:Loaded', self, self.OnLevelLoaded)
 	Events:Subscribe('Level:Destroy', self, self.OnLevelDestroy)
 	Events:Subscribe('Server:RoundOver', self, self.OnRoundOver)
 	Events:Subscribe('Server:RoundReset', self, self.OnRoundReset)
+
+	Events:Subscribe('Player:Joining', self, self.OnPlayerJoining)
+	Events:Subscribe('Player:TeamChange', self, self.OnTeamChange)
+	Events:Subscribe('Player:KitPickup', self, self.OnKitPickup)
+	Events:Subscribe('Player:Chat', self, self.OnPlayerChat)
+	Events:Subscribe('Player:Left', self, self.OnPlayerLeft)
+
 	Events:Subscribe('CapturePoint:Lost', self, self.OnCapturePointLost)
-	Events:Subscribe('CapturePoint:Captured', self, self.OnCapturePointCapture)
+	Events:Subscribe('CapturePoint:Captured', self, self.OnCapturePointCaptured)
+	Events:Subscribe('Player:EnteredCapturePoint', self, self.OnPlayerEnteredCapturePoint)
 	Events:Subscribe('MCOM:Armed', self, self.OnMcomArmed)
 	Events:Subscribe('MCOM:Disarmed', self, self.OnMcomDisarmed)
 	Events:Subscribe('MCOM:Destroyed', self, self.OnMcomDestroyed)
-	Events:Subscribe('Player:EnteredCapturePoint', self, self.OnPlayerEnterCapturePoint)
-	Events:Subscribe('Engine:Update', self, self.OnEngineUpdate)
-	Events:Subscribe('Vehicle:SpawnDone', self, self.OnVehicleSpawnDone)
-	Events:Subscribe('Vehicle:Enter', self, self.OnVehicleEnter)
-
-	Hooks:Install('Soldier:Damage', 100, self, self.OnSoldierDamage)
-
-	NetEvents:Subscribe('Client:RequestSettings', self, self._onRequestClientSettings)
-	NetEvents:Subscribe('Bot:ShootAtPlayer', self, self.OnShootAt)
-	NetEvents:Subscribe('Bot:RevivePlayer', self, self.OnRevivePlayer)
-	NetEvents:Subscribe('Bot:ShootAtBot', self, self.OnBotShootAtBot)
-	NetEvents:Subscribe('Client:DamagePlayer', self, self.OnDamagePlayer)   	--only triggered on false damage
-	Events:Subscribe('Server:DamagePlayer', self, self.OnServerDamagePlayer) 	--only triggered on false damage
-	Events:Subscribe('Player:Left', self, self.OnPlayerLeft)
-	Events:Subscribe('Bot:RespawnBot', self, self.OnRespawnBot)
-	Events:Subscribe('Player:KitPickup', self, self.OnKitPickup)
-	Events:Subscribe('Player:Joining', self, self.OnPlayerJoining)
-	Events:Subscribe('Player:TeamChange', self, self.OnTeamChange)
 
 	--Events:Subscribe('Soldier:HealthAction', m_BotManager, m_BotManager._onHealthAction)	-- use this for more options on revive. Not needed yet
 	--Events:Subscribe('GunSway:Update', m_BotManager, m_BotManager._onGunSway)
@@ -76,13 +82,97 @@ function FunBotServer:__init()
 	--Events:Subscribe('Engine:Message', m_BotManager, m_BotManager._onEngineMessage) -- maybe us this later
 end
 
-function FunBotServer:OnUpdate(p_DeltaTime, p_UpdatePass)
-	m_BotManager:OnUpdate(p_DeltaTime, p_UpdatePass)
-	m_BotSpawner:OnUpdate(p_DeltaTime, p_UpdatePass)
+function FunBotServer:RegisterHooks()
+	Hooks:Install('Soldier:Damage', 100, self, self.OnSoldierDamage)
+end
+
+function FunBotServer:RegisterCustomEvents()
+	NetEvents:Subscribe('Bot:ShootAtPlayer', self, self.OnShootAt)
+	NetEvents:Subscribe('Bot:RevivePlayer', self, self.OnRevivePlayer)
+	NetEvents:Subscribe('Bot:ShootAtBot', self, self.OnBotShootAtBot)
+	NetEvents:Subscribe('Client:DamagePlayer', self, self.OnDamagePlayer) --only triggered on false damage
+	Events:Subscribe('Server:DamagePlayer', self, self.OnServerDamagePlayer) --only triggered on false damage
+	Events:Subscribe('Bot:RespawnBot', self, self.OnRespawnBot)
+	NetEvents:Subscribe('Client:RequestSettings', self, self.OnRequestClientSettings)
+end
+
+-- =============================================
+-- Events
+-- =============================================
+
+function FunBotServer:OnExtensionUnloading()
+	m_BotManager:destroyAll(nil, nil, true)
+end
+
+function FunBotServer:OnPartitionLoaded(p_Partition)
+	m_WeaponModification:OnPartitionLoaded(p_Partition)
+	for _, l_Instance in pairs(p_Partition.instances) do
+		if USE_REAL_DAMAGE then
+			if l_Instance:Is("SyncedGameSettings") then
+				l_Instance = SyncedGameSettings(l_Instance)
+				l_Instance:MakeWritable()
+				l_Instance.allowClientSideDamageArbitration = false
+			end
+			if l_Instance:Is("ServerSettings") then
+				l_Instance = ServerSettings(l_Instance)
+				l_Instance:MakeWritable()
+				--l_Instance.drawActivePhysicsObjects = true --doesn't matter
+				--l_Instance.isSoldierAnimationEnabled = true --doesn't matter
+				--l_Instance.isSoldierDetailedCollisionEnabled = true --doesn't matter
+				l_Instance.isRenderDamageEvents = true
+			end
+		end
+		if l_Instance:Is("HumanPlayerEntityData") then
+			l_Instance = HumanPlayerEntityData(l_Instance)
+			self.m_PlayerKilledDelay =  l_Instance.playerKilledDelay
+		end
+		if l_Instance:Is("AutoTeamEntityData") then
+			l_Instance = AutoTeamEntityData(l_Instance)
+			l_Instance:MakeWritable()
+			l_Instance.rotateTeamOnNewRound = false
+			l_Instance.teamAssignMode = TeamAssignMode.TamOneTeam
+			l_Instance.playerCountNeededToAutoBalance = 127
+			l_Instance.teamDifferenceToAutoBalance = 127
+			l_Instance.autoBalance = false
+			l_Instance.forceIntoSquad = true
+		end
+	end
 end
 
 function FunBotServer:OnEngineUpdate(p_DeltaTime)
 	m_GameDirector:OnEngineUpdate(p_DeltaTime)
+end
+
+function FunBotServer:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
+	m_BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
+	m_BotSpawner:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
+end
+
+-- =============================================
+	-- Level Events
+-- =============================================
+
+function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode)
+	local s_GameMode = ServerUtils:GetCustomGameModeName()
+	if s_GameMode == nil then
+		s_GameMode = p_GameMode
+	end
+	m_WeaponModification:ModifyAllWeapons(Config.BotAimWorsening, Config.BotSniperAimWorsening)
+	m_WeaponList:onLevelLoaded()
+
+	m_Logger:Write('OnLevelLoaded: ' .. p_LevelName .. ' ' .. s_GameMode)
+
+	self:SetRespawnDelay()
+	Globals.IgnoreBotNames = {}
+	self:DetectSpecialMods()
+	self:RegisterInputRestrictionEventCallbacks()
+	self:SetGameMode(s_GameMode)
+
+	m_NodeEditor:onLevelLoaded(p_LevelName, s_GameMode)
+	m_GameDirector:onLevelLoaded()
+	m_GameDirector:initObjectives()
+	m_BotSpawner:OnLevelLoaded()
+	NetEvents:BroadcastUnreliableLocal('WriteClientSettings', Config, true)
 end
 
 function FunBotServer:OnLevelDestroy()
@@ -98,13 +188,50 @@ function FunBotServer:OnRoundReset(p_RoundTime, p_WinningTeam)
 	m_GameDirector:OnRoundReset(p_RoundTime, p_WinningTeam)
 end
 
+-- =============================================
+	-- Player Events
+-- =============================================
+
+function FunBotServer:OnPlayerJoining(p_Name)
+	m_BotSpawner:OnPlayerJoining(p_Name)
+end
+
+function FunBotServer:OnTeamChange(p_Player, p_TeamId, p_SquadId)
+	m_BotSpawner:OnTeamChange(p_Player, p_TeamId, p_SquadId)
+end
+
+function FunBotServer:OnKitPickup(p_Player, p_NewCustomization)
+	m_BotSpawner:OnKitPickup(p_Player, p_NewCustomization)
+end
+
+function FunBotServer:OnPlayerChat(p_Player, p_RecipientMask, p_Message)
+	local s_MessageParts = string.lower(p_Message):split(' ')
+	m_ChatCommands:execute(s_MessageParts, p_Player)
+end
+
+function FunBotServer:OnPlayerLeft(p_Player)
+	m_BotManager:OnPlayerLeft(p_Player)
+end
+
+-- =============================================
+	-- CapturePoint Events
+-- =============================================
+
 function FunBotServer:OnCapturePointLost(p_CapturePoint)
 	m_GameDirector:OnCapturePointLost(p_CapturePoint)
 end
 
-function FunBotServer:OnCapturePointCapture(p_CapturePoint)
-	m_GameDirector:OnCapturePointCapture(p_CapturePoint)
+function FunBotServer:OnCapturePointCaptured(p_CapturePoint)
+	m_GameDirector:OnCapturePointCaptured(p_CapturePoint)
 end
+
+function FunBotServer:OnPlayerEnteredCapturePoint(p_Player, p_CapturePoint)
+	m_GameDirector:OnPlayerEnteredCapturePoint(p_Player, p_CapturePoint)
+end
+
+-- =============================================
+	-- MCOM Events
+-- =============================================
 
 function FunBotServer:OnMcomArmed(p_Player)
 	m_GameDirector:OnMcomArmed(p_Player)
@@ -118,21 +245,17 @@ function FunBotServer:OnMcomDestroyed(p_Player)
 	m_GameDirector:OnMcomDestroyed(p_Player)
 end
 
-function FunBotServer:OnPlayerEnterCapturePoint(p_Player, p_CapturePoint)
-	m_GameDirector:OnPlayerEnterCapturePoint(p_Player, p_CapturePoint)
-end
-
-function FunBotServer:OnVehicleSpawnDone(p_VehicleEntiy)
-	m_GameDirector:OnVehicleSpawnDone(p_VehicleEntiy)
-end
-
-function FunBotServer:OnVehicleEnter(p_VehicleEntiy, p_Player)
-	m_GameDirector:OnVehicleEnter(p_VehicleEntiy, p_Player)
-end
+-- =============================================
+-- Hooks
+-- =============================================
 
 function FunBotServer:OnSoldierDamage(p_HookCtx, p_Soldier, p_Info, p_GiverInfo)
 	m_BotManager:OnSoldierDamage(p_HookCtx, p_Soldier, p_Info, p_GiverInfo)
 end
+
+-- =============================================
+-- Custom Events
+-- =============================================
 
 function FunBotServer:OnShootAt(p_Player, p_BotName, p_IgnoreYaw)
 	m_BotManager:OnShootAt(p_Player, p_BotName, p_IgnoreYaw)
@@ -154,143 +277,65 @@ function FunBotServer:OnServerDamagePlayer(p_PlayerName, p_ShooterName, p_MeleeA
 	m_BotManager:OnServerDamagePlayer(p_PlayerName, p_ShooterName, p_MeleeAttack)
 end
 
-function FunBotServer:OnPlayerLeft(p_Player)
-	m_BotManager:OnPlayerLeft(p_Player)
-end
-
 function FunBotServer:OnRespawnBot(p_BotName)
 	m_BotSpawner:OnRespawnBot(p_BotName)
 end
 
-function FunBotServer:OnKitPickup(p_Player, p_NewCustomization)
-	m_BotSpawner:OnKitPickup(p_Player, p_NewCustomization)
-end
-
-function FunBotServer:OnPlayerJoining(p_Name)
-	m_BotSpawner:OnPlayerJoining(p_Name)
-end
-
-function FunBotServer:OnTeamChange(p_Player, p_TeamId, p_SquadId)
-	m_BotSpawner:OnTeamChange(p_Player, p_TeamId, p_SquadId)
-end
-
-
-
-function FunBotServer:OnEngineInit()
-	require('UpdateCheck')
-end
-
-function FunBotServer:_onExtensionUnloading()
-	m_BotManager:destroyAll(nil, nil, true)
-end
-
-function FunBotServer:_onExtensionLoaded()
-	m_SettingsManager:onLoad()
-
-	local fullLevelPath = SharedUtils:GetLevelName()
-
-	if (fullLevelPath ~= nil) then
-		fullLevelPath = fullLevelPath:split('/')
-		local level = fullLevelPath[#fullLevelPath]
-		local gameMode = SharedUtils:GetCurrentGameMode()
-
-		m_Logger:Write(level .. '_' .. gameMode .. ' reloaded')
-
-		if (level ~= nil and gameMode~= nil) then
-			self:_onLevelLoaded(level, gameMode)
-		end
-	end
-end
-
-function FunBotServer:_onPartitionLoaded(p_Partition)
-	m_WeaponModification:OnPartitionLoaded(p_Partition)
-	for _, instance in pairs(p_Partition.instances) do
-		if USE_REAL_DAMAGE then
-			if instance:Is("SyncedGameSettings") then
-				instance = SyncedGameSettings(instance)
-				instance:MakeWritable()
-				instance.allowClientSideDamageArbitration = false
-			end
-			if instance:Is("ServerSettings") then
-				instance = ServerSettings(instance)
-				instance:MakeWritable()
-				--instance.drawActivePhysicsObjects = true --doesn't matter
-				--instance.isSoldierAnimationEnabled = true --doesn't matter
-				--instance.isSoldierDetailedCollisionEnabled = true --doesn't matter
-				instance.isRenderDamageEvents = true
-			end
-			if instance:Is("HumanPlayerEntityData") then
-				instance = HumanPlayerEntityData(instance)
-				playerKilledDelay =  instance.playerKilledDelay
-			end
-			if instance:Is("AutoTeamEntityData") then
-				instance = AutoTeamEntityData(instance)
-				instance:MakeWritable()
-				--autoTeamData.enabled = false
-				instance.rotateTeamOnNewRound = false
-				instance.teamAssignMode = TeamAssignMode.TamOneTeam
-				instance.playerCountNeededToAutoBalance = 127
-				instance.teamDifferenceToAutoBalance = 127
-				instance.autoBalance = false
-				instance.forceIntoSquad = true
-			end
-		end
-	end
-end
-
-function FunBotServer:_onRequestClientSettings(p_Player)
+function FunBotServer:OnRequestClientSettings(p_Player)
 	NetEvents:SendToLocal('WriteClientSettings', p_Player, Config, true)
 	m_BotManager:registerActivePlayer(p_Player)
 end
 
-function FunBotServer:_onLevelLoaded(p_LevelName, p_GameMode)
-	local customGameMode = ServerUtils:GetCustomGameModeName()
-	if customGameMode ~= nil then
-		p_GameMode = customGameMode
+-- =============================================
+-- Functions
+-- =============================================
+
+function FunBotServer:OnModReloaded()
+	local s_FullLevelPath = SharedUtils:GetLevelName()
+	if s_FullLevelPath == nil then
+		return
 	end
-	m_WeaponModification:ModifyAllWeapons(Config.BotAimWorsening, Config.BotSniperAimWorsening)
-	m_WeaponList:onLevelLoaded()
+	s_FullLevelPath = s_FullLevelPath:split('/')
+	local s_Level = s_FullLevelPath[#s_FullLevelPath]
+	local s_GameMode = SharedUtils:GetCurrentGameMode()
+	m_Logger:Write(s_Level .. '_' .. s_GameMode .. ' reloaded')
+	if s_Level ~= nil and s_GameMode ~= nil then
+		self:OnLevelLoaded(s_Level, s_GameMode)
+	end
+end
 
-	m_Logger:Write('level ' .. p_LevelName .. ' loaded...')
-
-	--get RespawnDelay
-	local rconResponseTable = RCON:SendCommand('vars.playerRespawnTime')
-    local respawnTimeModifier = tonumber(rconResponseTable[2]) / 100
-	if playerKilledDelay > 0 and respawnTimeModifier ~= nil then
-		Globals.RespawnDelay = playerKilledDelay * respawnTimeModifier
+function FunBotServer:SetRespawnDelay()
+	local s_RconResponseTable = RCON:SendCommand('vars.playerRespawnTime')
+    local s_RespawnTimeModifier = tonumber(s_RconResponseTable[2]) / 100
+	if self.m_PlayerKilledDelay > 0 and s_RespawnTimeModifier ~= nil then
+		Globals.RespawnDelay = self.m_PlayerKilledDelay * s_RespawnTimeModifier
 	else
 		Globals.RespawnDelay = 10.0
 	end
+end
 
-	-- prepare some more Globals
-	Globals.IgnoreBotNames = {}
-
-	-- detect special mods:
-	rconResponseTable = RCON:SendCommand('Modlist.ListRunning')
-	local noPreroundFound = false
-	local civilianizerFound = false
-	for i = 2, #rconResponseTable do
-		local mod = rconResponseTable[i]
-		if string.find(mod:lower(), "preround") ~= nil then
-			noPreroundFound = true
+function FunBotServer:DetectSpecialMods()
+	local s_RconResponseTable = RCON:SendCommand('modlist.ListRunning')
+	Globals.IsInputRestrictionDisabled = false
+	Globals.RemoveKitVisuals = false
+	for i = 2, #s_RconResponseTable do
+		local s_ModName = s_RconResponseTable[i]
+		if string.find(s_ModName:lower(), "preround") ~= nil then
+			Globals.IsInputRestrictionDisabled = true
 		end
-		if string.find(mod:lower(), "civilianizer") ~= nil then
-			civilianizerFound = true
+		if string.find(s_ModName:lower(), "civilianizer") ~= nil then
+			Globals.RemoveKitVisuals = true
 		end
 	end
-	if civilianizerFound then
-		Globals.RemoveKitVisuals = true
-	else
-		Globals.RemoveKitVisuals = false
-	end
-	if noPreroundFound then
-		Globals.IsInputRestrictionDisabled = true
-	else
-		Globals.IsInputRestrictionDisabled = false
-	end
+end
 
+function FunBotServer:RegisterInputRestrictionEventCallbacks()
 	-- disable inputs on start of round
 	Globals.IsInputAllowed = true
+
+	if Globals.IsInputRestrictionDisabled then
+		return
+	end
 
     local s_EntityIterator = EntityManager:GetIterator("ServerInputRestrictionEntity")
     local s_Entity = s_EntityIterator:Next()
@@ -304,19 +349,19 @@ function FunBotServer:_onLevelLoaded(p_LevelName, p_GameMode)
         s_Entity.data.instanceGuid == Guid('AAF90FE3-D1CA-4CFE-84F3-66C6146AD96F') or -- gunmaster
         s_Entity.data.instanceGuid == Guid('A40B08B7-D781-487A-8D0C-2E1B911C1949') then -- sqdm
         -- rip CTF
-            s_Entity:RegisterEventCallback(function(entity, event)
-                if not Globals.IsInputRestrictionDisabled then
-                    if event.eventId == MathUtils:FNVHash("Activate") and Globals.IsInputAllowed then
-                        Globals.IsInputAllowed = false
-                    elseif event.eventId == MathUtils:FNVHash("Deactivate") and not Globals.IsInputAllowed then
-                        Globals.IsInputAllowed = true
-                    end
-                end
+            s_Entity:RegisterEventCallback(function(p_Entity, p_Event)
+				if p_Event.eventId == MathUtils:FNVHash("Activate") and Globals.IsInputAllowed then
+					Globals.IsInputAllowed = false
+				elseif p_Event.eventId == MathUtils:FNVHash("Deactivate") and not Globals.IsInputAllowed then
+					Globals.IsInputAllowed = true
+				end
             end)
         end
         s_Entity = s_EntityIterator:Next()
     end
+end
 
+function FunBotServer:SetGameMode(p_GameMode)
 	Globals.NrOfTeams = 2
 	if p_GameMode == 'TeamDeathMatchC0' or p_GameMode == 'TeamDeathMatch0' then
 		Globals.IsTdm = true
@@ -364,18 +409,6 @@ function FunBotServer:_onLevelLoaded(p_LevelName, p_GameMode)
 	else
 		Globals.IsRush = false
 	end
-
-	m_NodeEditor:onLevelLoaded(p_LevelName, p_GameMode)
-	m_GameDirector:onLevelLoaded()
-	m_GameDirector:initObjectives()
-	m_BotSpawner:OnLevelLoaded()
-	NetEvents:BroadcastUnreliableLocal('WriteClientSettings', Config, true)
-end
-
-function FunBotServer:_onChat(p_Player, p_RecipientMask, p_Message)
-	local messageParts = string.lower(p_Message):split(' ')
-
-	m_ChatCommands:execute(messageParts, p_Player)
 end
 
 if g_FunBotServer == nil then
