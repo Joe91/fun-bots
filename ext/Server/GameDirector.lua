@@ -86,6 +86,7 @@ function GameDirector:initObjectives()
 		end
 		if string.find(objectiveName:lower(), "vehicle") ~= nil then
 			objective.isEnterVehiclePath = true
+			objective.active = false
 		end
 		table.insert(self.AllObjectives, objective)
 	end
@@ -271,12 +272,14 @@ end
 
 function GameDirector:OnVehicleEnter(p_VehicleEntiy, p_Player)
 	if not Utilities:isBot(p_Player) then
-		self:_SetVehicleObjectiveState(p_VehicleEntiy.transform.trans, false)
+		local s_Entity = ControllableEntity(p_VehicleEntiy)
+		self:_SetVehicleObjectiveState(s_Entity.transform.trans, false)
 	end
 end
 
 function GameDirector:OnVehicleSpawnDone(p_VehicleEntiy)
-	self:_SetVehicleObjectiveState(p_VehicleEntiy.transform.trans, true)
+	local s_Entity = ControllableEntity(p_VehicleEntiy)
+	self:_SetVehicleObjectiveState(s_Entity.transform.trans, true)
 end
 
 function GameDirector:_SetVehicleObjectiveState(p_Position, p_Value)
