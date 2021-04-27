@@ -97,7 +97,7 @@ function FunBotUIClient:_onUIWaypointsEditor(p_State)
 
 	Config.DebugTracePaths = true
 	NetEvents:Send('UI_CommoRose_Enabled', true)
-	g_ClientNodeEditor:_onSetEnabled(true)
+	g_ClientNodeEditor:OnSetEnabled(true)
 	self._views:show('waypoint_toolbar')
 	self._views:hide('toolbar')
 	self._views:disable()

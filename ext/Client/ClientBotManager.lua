@@ -2,6 +2,7 @@ class('ClientBotManager')
 
 local m_WeaponList = require('__shared/WeaponList')
 local m_Utilities = require('__shared/Utilities')
+local m_Logger = Logger("ClientBotManager", Debug.Client.INFO)
 
 function ClientBotManager:__init()
 	self:RegisterVars()
@@ -20,11 +21,9 @@ end
 
 function ClientBotManager:OnEngineMessage(p_Message)
 	if p_Message.type == MessageType.ClientLevelFinalizedMessage then
-		NetEvents:SendLocal('RequestClientSettings')
+		NetEvents:SendLocal('Client:RequestSettings')
 		self.m_ReadyToUpdate = true
-		if Debug.Client.INFO then
-			print("level loaded on Client")
-		end
+		m_Logger:Write("level loaded on Client")
 	end
 	if p_Message.type == MessageType.ClientConnectionUnloadLevelMessage or p_Message.type == MessageType.ClientCharacterLocalPlayerDeletedMessage then
 		self:RegisterVars()
@@ -92,7 +91,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 						s_IgnoreYaw = true -- shoot, because you are near
 					end
 
-					NetEvents:SendLocal("BotShootAtPlayer", s_Bot.name, s_IgnoreYaw)
+					NetEvents:SendLocal("Bot:ShootAtPlayer", s_Bot.name, s_IgnoreYaw)
 				end
 
 				return --only one raycast per cycle
@@ -125,7 +124,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 				if s_Raycast == nil or s_Raycast.rigidBody == nil then
 					-- we found a valid bot in Sight (either no hit, or player-hit). Signal Server with players
-					NetEvents:SendLocal("BotRevivePlayer", s_Bot.name)
+					NetEvents:SendLocal("Bot:RevivePlayer", s_Bot.name)
 				end
 				return -- only one raycast per cycle
 			end
@@ -151,9 +150,7 @@ function ClientBotManager:OnWriteClientSettings(p_NewConfig, p_UpdateWeaponSets)
 		Config[l_Key] = l_Value
 	end
 
-	if Debug.Client.INFO then
-		print("write settings")
-	end
+	m_Logger:Write("write settings")
 
 	if p_UpdateWeaponSets then
 		m_WeaponList:updateWeaponList()
@@ -174,7 +171,7 @@ function ClientBotManager:CheckForBotBotAttack(p_StartPos, p_EndPos, p_ShooterBo
 	end
 
 	if s_Raycast == nil or s_Raycast.rigidBody == nil then
-		NetEvents:SendLocal("BotShootAtBot", p_ShooterBotName, p_BotName)
+		NetEvents:SendLocal("Bot:ShootAtBot", p_ShooterBotName, p_BotName)
 	end
 end
 
@@ -206,7 +203,7 @@ function ClientBotManager:OnBulletEntityCollision(p_HookCtx, p_Entity, p_Hit, p_
 			s_IsHeadshot = true
 		end
 
-		NetEvents:SendLocal('ClientDamagePlayer', p_Shooter.name, false, s_IsHeadshot)
+		NetEvents:SendLocal('Client:DamagePlayer', p_Shooter.name, false, s_IsHeadshot)
 	end
 end
 

@@ -1,8 +1,19 @@
 # Changelog
+
+## [Unreleased - 1.7.1.X] - 2021-04-XX
+[Download](https://github.com/Joe91/fun-bots/archive/V1.7.1.2.zip)  
+the refactoring update
+
+- limit distance on which a bot switches to pistol
+- Squad-DM supported
+	- on all maps thanks to GaryTheNoTrashCougar!!!
+- implement new optional spawn-system
+- lots of refactoring
+- more steps in direction vehicle support
  
-## [Unreleased - 1.7.X.X] - 2021-04-XX
+## [Unreleased - 1.7.0.X] - 2021-04-XX
  
-[Download](https://github.com/Joe91/fun-bots/archive/V1.7.0.20.zip)  
+[Download](https://github.com/Joe91/fun-bots/archive/V1.7.0.19.zip)  
 The Smart Node update
 
 - Conquest supported
@@ -36,8 +47,6 @@ The Smart Node update
 	- Gulf of Oman - Thanks to MrDonPotato!!
 - BFLAG supported (only a first version, not that usable yet)
 	- Bazaar small
-- Squad-DM supported
-	- on all maps thanks to GaryTheNoTrashCougar!!!
 - Bots switch to Pistol or Sidearm (Rockets) if needed
 - Bots revive dead players
 - Bots deply Ammobag and medkit from time to time
@@ -62,7 +71,6 @@ The Smart Node update
 - preparation for driving vehicles
 - randomize skill of each bot a little (if wanted)
 - rework of input-system (more fail-safe now)
-- limit distance on which a bot switches to pistol
 - export of a maplist
 
 

@@ -34,6 +34,8 @@ Config = {
 	NewBotsPerNewPlayer = 2,		-- number to increase Bots, when new players join
 	SpawnDelayBots = 10.0,			-- time till bots spawn on levelstart -- OBSOLETE
 	BotTeam = TeamId.TeamNeutral, 	-- default bot team (0 = neutral / auto, 1 = US, 2 = RU) TeamId.Team2
+	MaxBotsPerTeamDefault = 32,		-- max number of bots in one team
+	MaxBotsPerTeamSdm	= 5,		-- max number of bots in one team in Squad-Death-Match
 	BotNewLoadoutOnSpawn = true,	-- bots get a new kit and color, if they respawn
 	MaxAssaultBots = -1,			-- maximum number of Bots with Assault Kit
 	MaxEngineerBots = -1,			-- maximum number of Bots with Engineer Kit

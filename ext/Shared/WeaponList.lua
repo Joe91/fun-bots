@@ -7,6 +7,8 @@ require('__shared/WeaponLists/CustomWeaponsEngineer')
 require('__shared/WeaponLists/CustomWeaponsRecon')
 require('__shared/WeaponLists/CustomWeaponsSupport')
 
+local m_Logger = Logger("WeaponList", Debug.Shared.MODIFICATIONS)
+
 -- create globals
 AllWeapons = {}
 KnifeWeapons = {}
@@ -564,9 +566,7 @@ function WeaponList:getWeapon(p_Name)
 	end
 
 	if (retWeapon == nil) then
-		if Debug.Shared.MODIFICATIONS then
-			print('Warning! Weapon not found: '..tostring(p_Name))
-		end
+		m_Logger:Warning('Weapon not found: '..tostring(p_Name))
 	end
 
 	return retWeapon

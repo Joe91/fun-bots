@@ -2,6 +2,7 @@ class "NodeEditor"
 
 local m_ServerUI = require('UIServer')
 local m_NodeCollection = require('__shared/NodeCollection')
+local m_Logger = Logger("NodeEditor", Debug.Server.NODEEDITOR)
 
 function NodeEditor:__init()
 	self:RegisterEvents()
@@ -37,10 +38,8 @@ function NodeEditor:RegisterEvents()
 	Events:Subscribe('Player:Killed', self, self._onPlayerKilled)
 end
 
-function NodeEditor:Print(...)
-	if Debug.Server.NODEEDITOR then
-		print('NodeEditor: ' .. Language:I18N(...))
-	end
+function NodeEditor:Log(...)
+	m_Logger:Write(Language:I18N(...))
 end
 
 function NodeEditor:_onPlayerKilled(p_Player, p_Inflictor, p_Position, p_Weapon, p_IsRoadKill, p_IsHeadShot, p_wasVictimInReviveState, p_Info)
@@ -91,7 +90,7 @@ function NodeEditor:_onSendNodes(p_Player)
 	local nodes = m_NodeCollection:Get()
 	table.insert(self.playersReceivingNodes, {Player = p_Player, Index = 1, Nodes = nodes, BatchSendDelay = 0})
 	self.batchSendTimer = 0
-	self:Print('Sending %d waypoints to %s', #nodes, p_Player.name)
+	self:Log('Sending %d waypoints to %s', #nodes, p_Player.name)
 end
 
 function NodeEditor:_stopSendingNodes(p_Player)
@@ -107,21 +106,21 @@ end
 function NodeEditor:_onReceiveNodes(p_Player, p_NodeCount)
 
 	if (Config.SettingsPassword ~= nil and m_ServerUI:_isAuthenticated(p_Player.accountGuid) ~= true) then
-		self:Print('%s has no permissions for Waypoint-Editor.', p_Player.name)
+		self:Log('%s has no permissions for Waypoint-Editor.', p_Player.name)
 		return
 	end
 
 	m_NodeCollection:Clear()
 	self.playerSendingNodes = p_Player
 	self.nodeReceiveTimer = 0
-	self:Print('Receiving %d waypoints from %s', p_NodeCount, p_Player.name)
+	self:Log('Receiving %d waypoints from %s', p_NodeCount, p_Player.name)
 end
 
 -- player is sending a single node over
 function NodeEditor:_onCreate(p_Player, p_Data)
 
 	if (Config.SettingsPassword ~= nil and m_ServerUI:_isAuthenticated(p_Player.accountGuid) ~= true) then
-		self:Print('%s has no permissions for Waypoint-Editor.', p_Player.name)
+		self:Log('%s has no permissions for Waypoint-Editor.', p_Player.name)
 		return
 	end
 
@@ -132,7 +131,7 @@ end
 function NodeEditor:_onInit(p_Player, p_Save)
 
 	if (Config.SettingsPassword ~= nil and m_ServerUI:_isAuthenticated(p_Player.accountGuid) ~= true) then
-		self:Print('%s has no permissions for Waypoint-Editor.', p_Player.name)
+		self:Log('%s has no permissions for Waypoint-Editor.', p_Player.name)
 		return
 	end
 
@@ -141,7 +140,7 @@ function NodeEditor:_onInit(p_Player, p_Save)
 
 	local staleNodes = 0
 	local nodesToCheck = m_NodeCollection:Get()
-	self:Print('Nodes Received: %d', #nodesToCheck)
+	self:Log('Nodes Received: %d', #nodesToCheck)
 
 	for i=1, #nodesToCheck do
 
@@ -154,7 +153,7 @@ function NodeEditor:_onInit(p_Player, p_Save)
 		end
 	end
 
-	self:Print('Stale Nodes: %d', staleNodes)
+	self:Log('Stale Nodes: %d', staleNodes)
 
 	if (p_Save) then
 		m_NodeCollection:Save()
@@ -167,13 +166,13 @@ function NodeEditor:_onWarpTo(p_Player, p_Vec3Position)
 		return
 	end
 
-	self:Print('Teleporting %s to %s', p_Player.name, tostring(p_Vec3Position))
+	self:Log('Teleporting %s to %s', p_Player.name, tostring(p_Vec3Position))
 
 	p_Player.soldier:SetPosition(p_Vec3Position)
 end
 
 function NodeEditor:_onSetBotVision(p_Player, p_Enabled)
-	self:Print('Player -> BotVision [%s]: %s', p_Player.name, p_Enabled)
+	self:Log('Player -> BotVision [%s]: %s', p_Player.name, p_Enabled)
 
 	if (p_Enabled) then
 		self.botVision[p_Player.name] = {
@@ -196,7 +195,7 @@ function NodeEditor:_onEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 			timeData.Current = timeData.Current + p_DeltaTime
 
 			if (timeData.Current >= timeData.Delay) then
-				self:Print('Player -> Fade [%s]: %s', timeData.Player.name, timeData.State)
+				self:Log('Player -> Fade [%s]: %s', timeData.Player.name, timeData.State)
 
 				timeData.Player:Fade(timeData.Speed, timeData.State)
 				self.botVision[playerName] = true
@@ -246,7 +245,7 @@ function NodeEditor:_onEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 						end
 					end
 					if (sendStatus.Index >= #sendStatus.Nodes) then
-						self:Print('Finished sending waypoints to %s', sendStatus.Player.name)
+						self:Log('Finished sending waypoints to %s', sendStatus.Player.name)
 
 						table.remove(self.playersReceivingNodes, i)
 						NetEvents:SendToLocal('ClientNodeEditor:Init', sendStatus.Player)
@@ -263,7 +262,7 @@ end
 
 -- load waypoints from sql
 function NodeEditor:onLevelLoaded(p_LevelName, p_GameMode)
-	self:Print('Level Load: %s %s', p_LevelName, p_GameMode)
+	self:Log('Level Load: %s %s', p_LevelName, p_GameMode)
 
 	m_NodeCollection:Load(p_LevelName, p_GameMode)
 
@@ -279,7 +278,7 @@ function NodeEditor:onLevelLoaded(p_LevelName, p_GameMode)
 			counter = counter+1
 		end
 	end
-	self:Print('Load -> Stale Nodes: %d', counter)
+	self:Log('Load -> Stale Nodes: %d', counter)
 end
 
 function NodeEditor:_onUIRequestSaveSettings(p_Player, p_Data)
