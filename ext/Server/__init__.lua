@@ -74,6 +74,8 @@ function FunBotServer:RegisterEvents()
 	Events:Subscribe('MCOM:Armed', self, self.OnMcomArmed)
 	Events:Subscribe('MCOM:Disarmed', self, self.OnMcomDisarmed)
 	Events:Subscribe('MCOM:Destroyed', self, self.OnMcomDestroyed)
+	Events:Subscribe('Vehicle:SpawnDone', self, self.OnVehicleSpawnDone)
+	Events:Subscribe('Vehicle:Enter', self, self.OnVehicleEnter)
 
 	--Events:Subscribe('Soldier:HealthAction', m_BotManager, m_BotManager._onHealthAction)	-- use this for more options on revive. Not needed yet
 	--Events:Subscribe('GunSway:Update', m_BotManager, m_BotManager._onGunSway)
@@ -227,6 +229,18 @@ end
 
 function FunBotServer:OnPlayerEnteredCapturePoint(p_Player, p_CapturePoint)
 	m_GameDirector:OnPlayerEnteredCapturePoint(p_Player, p_CapturePoint)
+end
+
+-- =============================================
+	-- Vehicle Events
+-- =============================================
+
+function FunBotServer:OnVehicleSpawnDone(p_VehicleEntiy)
+	m_GameDirector:OnVehicleSpawnDone(p_VehicleEntiy)
+end
+
+function FunBotServer:OnVehicleEnter(p_VehicleEntiy, p_Player)
+	m_GameDirector:OnVehicleEnter(p_VehicleEntiy, p_Player)
 end
 
 -- =============================================
