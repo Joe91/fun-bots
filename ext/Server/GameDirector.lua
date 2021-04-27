@@ -412,7 +412,7 @@ function GameDirector:_translateObjective(p_Position, p_Name)
 	end
 end
 
-function GameDirector:OnCapturePointCapture(p_CapturePoint)
+function GameDirector:OnCapturePointCaptured(p_CapturePoint)
 	local flagEntity = CapturePointEntity(p_CapturePoint)
 	local objectiveName = self:_translateObjective(flagEntity.transform.trans, flagEntity.name)
 	self:_updateObjective(objectiveName, {
@@ -431,7 +431,7 @@ function GameDirector:OnCapturePointCapture(p_CapturePoint)
 	for botTeam, bots in pairs(self.BotsByTeam) do
 		for i=1, #bots do
 			if (bots[i]:getObjective() == objective.name and objective.team == botTeam) then
-				m_Logger:Write('Bot completed objective: '..bots[i].name..' (team: '..botTeam..') -> '..objective.name)
+				m_Logger:Write('Bot completed objective: '..bots[i].m_Name..' (team: '..botTeam..') -> '..objective.name)
 
 				bots[i]:setObjective()
 				objective.assigned[botTeam] = math.max(objective.assigned[botTeam] - 1, 0)
@@ -528,7 +528,7 @@ function GameDirector:OnCapturePointLost(p_CapturePoint)
 	m_Logger:Write('GameDirector:_onLost: '..objectiveName)
 end
 
-function GameDirector:OnPlayerEnterCapturePoint(p_Player, p_CapturePoint)
+function GameDirector:OnPlayerEnteredCapturePoint(p_Player, p_CapturePoint)
 	local flagEntity = CapturePointEntity(p_CapturePoint)
 	local objectiveName = self:_translateObjective(flagEntity.transform.trans, flagEntity.name)
 	self:_updateObjective(objectiveName, {

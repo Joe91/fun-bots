@@ -193,7 +193,7 @@ function BotManager:setOptionForPlayer(p_Player, p_Option, p_Value)
 	end
 end
 
-function BotManager:OnUpdate(p_DeltaTime, p_UpdatePass)
+function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	if p_UpdatePass ~= UpdatePass.UpdatePass_PostFrame then
 		return
 	end
