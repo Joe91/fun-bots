@@ -1159,8 +1159,12 @@ function ClientNodeEditor:_onEndTrace()
 	if (firstWaypoint) then
 		local startPos = firstWaypoint.Position + Vec3.up
 		local endPos = self.customTrace:GetLast().Position + Vec3.up
-		local raycast = RaycastManager:Raycast(startPos, endPos, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll | RayCastFlags.CheckDetailMesh | RayCastFlags.IsAsyncRaycast)
-
+		local raycast = nil
+		if self.player.attachedControllable ~= nil then
+			raycast = RaycastManager:Raycast(startPos, endPos, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll | RayCastFlags.CheckDetailMesh | RayCastFlags.DontCheckPhantoms | RayCastFlags.DontCheckGroup | RayCastFlags.IsAsyncRaycast)
+		else
+			raycast = RaycastManager:Raycast(startPos, endPos, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll | RayCastFlags.CheckDetailMesh | RayCastFlags.IsAsyncRaycast)
+		end
 		self.customTrace:ClearSelection()
 		self.customTrace:Select(firstWaypoint)
 		if (raycast == nil or raycast.rigidBody == nil) then
