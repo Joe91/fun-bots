@@ -309,8 +309,6 @@ function GameDirector:_SetVehicleObjectiveState(p_Position, p_Value)
 		end
 		if s_ClosestVehicleEnterObjective ~= nil and s_ClosestDistance < 5 then
 			s_ClosestVehicleEnterObjective.active = p_Value
-			print("updated vehicle spawn-path")
-			print("new value = "..tostring(p_Value))
 		end
 	end
 end
@@ -702,8 +700,7 @@ function GameDirector:useVehicle(p_BotName, p_Objective)
 	if tempObjective ~= nil and tempObjective.active and tempObjective.isEnterVehiclePath then
 		local bot = g_BotManager:getBotByName(p_BotName)
 		bot:setObjective(p_Objective)
-		tempObjective.active = false --TODO: enable again if destroyed
-		print("enter vehicle")
+		tempObjective.active = false
 		return true
 	end
 	return false

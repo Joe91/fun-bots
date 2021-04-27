@@ -1681,9 +1681,7 @@ function ClientNodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 									speed = 4
 								end
 							elseif speedInput == 0 then
-								if self.player.attachedControllable.velocity.magnitude > 0 then
-									speed = 2
-								end
+								speed = 2
 							end
 
 							if self.player.input:GetLevel(EntryInputActionEnum.EIABrake) > 0 then

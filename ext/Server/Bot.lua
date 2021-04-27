@@ -45,6 +45,7 @@ function Bot:__init(p_Player)
 	self._MeleeCooldownTimer = 0
 	self._ShootTraceTimer = 0
 	self._ActionTimer = 0
+	self._BrakeTimer = 0
 
 	--shared movement vars
 	self.m_ActiveMoveMode = 0
@@ -367,6 +368,7 @@ function Bot:resetSpawnVars()
 	self._MeleeCooldownTimer = 0
 	self._ShootTraceTimer = 0
 	self._ReloadTimer = 0
+	self._BrakeTimer = 0
 	self._DeployTimer = MathUtils:GetRandomInt(1, Config.DeployCycle)
 	self._AttackModeMoveTimer = 0
 	self._AttackMode = 0
@@ -1263,7 +1265,7 @@ function Bot:_updateMovement()
 							s_DistanceFromTarget = 0
 							s_HeightDistance = 0
 							s_NoStuckReset = true
-							s_PointIncrement = MathUtils:GetRandomInt(-3,7) -- go 5 points further
+							s_PointIncrement = MathUtils:GetRandomInt(-5,5) -- go 5 points further
 							--if Globals.IsConquest or Globals.IsRush then  --TODO: only invert path, if its not a connecting path
 								--self._InvertPathDirection = (MathUtils:GetRandomInt(0,100) < 40)
 							--end
@@ -1562,7 +1564,6 @@ function Bot:_updateMovement()
 			-- do not reduce speed if sprinting
 			if s_SpeedVal > 0 and self._ShootPlayer ~= nil and self._ShootPlayer.soldier ~= nil and self.m_ActiveSpeedValue <= 3 then
 				s_SpeedVal = s_SpeedVal * Config.SpeedFactorAttack
-
 			end
 
 			-- movent speed
@@ -1570,9 +1571,16 @@ function Bot:_updateMovement()
 				if self.m_ActiveSpeedValue <= 3 then
 					if self.m_InVehicle then
 						if self.m_ActiveSpeedValue < 0 then
+							self._BrakeTimer = 0
 							self:_setInput(EntryInputActionEnum.EIABrake, -s_SpeedVal)
-						else
+						elseif self.m_ActiveSpeedValue > 0 then
+							self._BrakeTimer = 0
 							self:_setInput(EntryInputActionEnum.EIAThrottle, s_SpeedVal)
+						else
+							if self._BrakeTimer < 0.7 then
+								self:_setInput(EntryInputActionEnum.EIABrake, 1)
+							end
+							self._BrakeTimer = self._BrakeTimer + StaticConfig.BotUpdateCycle
 						end
 					else
 						self:_setInput(EntryInputActionEnum.EIAThrottle, s_SpeedVal * Config.SpeedFactor)
