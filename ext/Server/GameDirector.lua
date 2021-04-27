@@ -269,20 +269,22 @@ function GameDirector:checkForExecution(p_Point, p_TeamId)
 	return execute
 end
 
-function GameDirector:findClosestPath(p_Trans)
+function GameDirector:findClosestPath(p_Trans, p_VehiclePath)
 	local closestPathNode = nil
 	local paths = m_NodeCollection:GetPaths()
 	if paths ~= nil then
 		local closestDistance = nil
 		for _,waypoints in pairs(paths) do
-			local newDistance = waypoints[1].Position:Distance(p_Trans)
-			if closestDistance == nil then
-				closestDistance = newDistance
-				closestPathNode = waypoints[1]
-			else
-				if newDistance < closestDistance then
+			if (p_VehiclePath and waypoints[1].Data.Vehicles ~= nil) or not p_VehiclePath then
+				local newDistance = waypoints[1].Position:Distance(p_Trans)
+				if closestDistance == nil then
 					closestDistance = newDistance
 					closestPathNode = waypoints[1]
+				else
+					if newDistance < closestDistance then
+						closestDistance = newDistance
+						closestPathNode = waypoints[1]
+					end
 				end
 			end
 		end

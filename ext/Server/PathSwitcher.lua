@@ -9,7 +9,7 @@ function PathSwitcher:__init()
 	self.killYourselfCounter = {}
 end
 
-function PathSwitcher:getNewPath(p_BotName, p_Point, p_Objective)
+function PathSwitcher:getNewPath(p_BotName, p_Point, p_Objective, p_InVehicle)
 	-- check if on base, or on path away from base. In this case: change path
 	local onBasePath = false
 	local currentPathFirst = m_NodeCollection:GetFirst(p_Point.PathIndex)
@@ -23,7 +23,7 @@ function PathSwitcher:getNewPath(p_BotName, p_Point, p_Objective)
 		return false
 	end
 
-	if Globals.IsRush then
+	if Globals.IsRush and not p_InVehicle then
 		if self.killYourselfCounter[p_BotName] == nil then
 			self.killYourselfCounter[p_BotName] = 0
 		end
@@ -56,7 +56,14 @@ function PathSwitcher:getNewPath(p_BotName, p_Point, p_Objective)
 	for i=1, #p_Point.Data.Links do
 		local newPoint = m_NodeCollection:Get(p_Point.Data.Links[i])
 		if (newPoint ~= nil) then
-			table.insert(possiblePaths, newPoint)
+			if not p_InVehicle then
+				table.insert(possiblePaths, newPoint)
+			else
+				local s_PathNode = m_NodeCollection:GetFirst(newPoint.PathIndex)
+				if s_PathNode.Data.Vehicles ~= nil and #s_PathNode.Data.Vehicles > 0 then  --TODO: check for vehicle-Type later
+					table.insert(possiblePaths, newPoint)
+				end
+			end
 		end
 	end
 

@@ -618,19 +618,19 @@ function Bot:_updateYaw()
 	if self.m_InVehicle then
 		if s_AbsDeltaYaw > math.pi / 4 then
 			if s_Increment > 0 then
-				self.player.input:SetLevel(EntryInputActionEnum.EIAYaw, 1)
+				self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, 1)
 			else
-				self.player.input:SetLevel(EntryInputActionEnum.EIAYaw, -1)
+				self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, -1)
 			end
 		else
-			if self.player.input:GetLevel(EntryInputActionEnum.EIAYaw) == 0 then
+			if self.m_Player.input:GetLevel(EntryInputActionEnum.EIAYaw) == 0 then
 				if s_Increment > 0 then
-					self.player.input:SetLevel(EntryInputActionEnum.EIAYaw, 1)
+					self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, 1)
 				else
-					self.player.input:SetLevel(EntryInputActionEnum.EIAYaw, -1)
+					self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, -1)
 				end
 			else
-				self.player.input:SetLevel(EntryInputActionEnum.EIAYaw, 0) --toggle the steering, to be more presicely. Every second Cycle TODO: maybe add counter for it?
+				self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, 0) --toggle the steering, to be more presicely. Every second Cycle TODO: maybe add counter for it?
 			end
 		end
 
@@ -1149,6 +1149,13 @@ function Bot:_updateMovement()
 										if s_Entity:GetPlayerInEntry(i) == nil then
 											self.m_Player:EnterVehicle(s_Entity, 0)
 											self._ActionActive = false
+											local s_Node = g_GameDirector:findClosestPath(s_Position, true)
+											if s_Node ~= nil then
+												-- switch to vehicle
+												self._InvertPathDirection = false
+												self._PathIndex = s_Node.PathIndex
+												self._CurrentWayPoint = s_Node.PointIndex
+											end
 											break
 										end
 									end
@@ -1345,7 +1352,7 @@ function Bot:_updateMovement()
 							-- CHECK FOR PATH-SWITCHES
 							local s_NewWaypoint = nil
 							local s_SwitchPath = false
-							s_SwitchPath, s_NewWaypoint = m_PathSwitcher:getNewPath(self.m_Name, s_Point, self._Objective)
+							s_SwitchPath, s_NewWaypoint = m_PathSwitcher:getNewPath(self.m_Name, s_Point, self._Objective, self.m_InVehicle)
 							if not self.m_Player.alive then
 								return
 							end
