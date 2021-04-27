@@ -615,7 +615,7 @@ function Bot:_updateYaw()
 		s_TempYaw = s_TempYaw + (math.pi * 2)
 	end
 
-	if self.m_InVehicle then
+	if self.m_InVehicle and not s_AttackAiming then
 		local s_YawValue = 0;
 		if self.m_ActiveSpeedValue < 0 then
 			s_YawValue = -1.0

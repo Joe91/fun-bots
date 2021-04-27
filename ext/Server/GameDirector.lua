@@ -269,6 +269,49 @@ function GameDirector:checkForExecution(p_Point, p_TeamId)
 	return execute
 end
 
+function GameDirector:OnVehicleEnter(p_VehicleEntiy, p_Player)
+	if not Utilities:isBot(p_Player) then
+		self:_SetVehicleObjectiveState(p_VehicleEntiy.transform.trans, false)
+	end
+end
+
+function GameDirector:OnVehicleSpawnDone(p_VehicleEntiy)
+	self:_SetVehicleObjectiveState(p_VehicleEntiy.transform.trans, true)
+end
+
+function GameDirector:_SetVehicleObjectiveState(p_Position, p_Value)
+	local s_Paths = m_NodeCollection:GetPaths()
+	if s_Paths ~= nil then
+		local s_ClosestDistance = nil
+		local s_ClosestVehicleEnterObjective = nil
+		for _,waypoints in pairs(s_Paths) do
+			if waypoints[1].Data.Objectives ~= nil and #waypoints[1].Data.Objectives == 1 then
+				local s_ObjectiveObject = self:getObjectiveObject(waypoints[1].Data.Objectives[1])
+				if s_ObjectiveObject ~= nil and s_ObjectiveObject.active ~= p_Value and s_ObjectiveObject.isEnterVehiclePath then  -- only check disabled objectives
+					-- check position of first and last node
+					local s_FirstNode = waypoints[1]
+					local s_LastNode = waypoints[#waypoints]
+					local s_TempDistanceFirst = s_FirstNode.Position:Distance(p_Position)
+					local s_TempDistanceLast = s_LastNode.Position:Distance(p_Position)
+					local s_CloserDistance = s_TempDistanceFirst
+					if s_TempDistanceLast < s_TempDistanceFirst then
+						s_CloserDistance = s_TempDistanceLast
+					end
+					if s_ClosestDistance == nil or s_CloserDistance < s_ClosestDistance then
+						s_ClosestDistance = s_CloserDistance
+						s_ClosestVehicleEnterObjective = s_ObjectiveObject
+					end 
+				end
+			end
+		end
+		if s_ClosestVehicleEnterObjective ~= nil and s_ClosestDistance < 5 then
+			s_ClosestVehicleEnterObjective.active = p_Value
+			print("updated vehicle spawn-path")
+			print("new value = "..tostring(p_Value))
+		end
+	end
+end
+
 function GameDirector:findClosestPath(p_Trans, p_VehiclePath)
 	local closestPathNode = nil
 	local paths = m_NodeCollection:GetPaths()

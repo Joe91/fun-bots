@@ -52,6 +52,8 @@ function FunBotServer:__init()
 	Events:Subscribe('MCOM:Destroyed', self, self.OnMcomDestroyed)
 	Events:Subscribe('Player:EnteredCapturePoint', self, self.OnPlayerEnterCapturePoint)
 	Events:Subscribe('Engine:Update', self, self.OnEngineUpdate)
+	Events:Subscribe('Vehicle:SpawnDone', self, self.OnVehicleSpawnDone)
+	Events:Subscribe('Vehicle:Enter', self, self.OnVehicleEnter)
 
 	Hooks:Install('Soldier:Damage', 100, self, self.OnSoldierDamage)
 
@@ -118,6 +120,14 @@ end
 
 function FunBotServer:OnPlayerEnterCapturePoint(p_Player, p_CapturePoint)
 	m_GameDirector:OnPlayerEnterCapturePoint(p_Player, p_CapturePoint)
+end
+
+function FunBotServer:OnVehicleSpawnDone(p_VehicleEntiy)
+	m_GameDirector:OnVehicleSpawnDone(p_VehicleEntiy)
+end
+
+function FunBotServer:OnVehicleEnter(p_VehicleEntiy, p_Player)
+	m_GameDirector:OnVehicleEnter(p_VehicleEntiy, p_Player)
 end
 
 function FunBotServer:OnSoldierDamage(p_HookCtx, p_Soldier, p_Info, p_GiverInfo)
