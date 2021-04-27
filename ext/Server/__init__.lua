@@ -54,6 +54,7 @@ end
 function FunBotServer:RegisterEvents()
 	Events:Subscribe('Extension:Unloading', self, self.OnExtensionUnloading)
 
+	Events:Subscribe('Partition:Loaded', self, self.OnPartitionLoaded)
 	Events:Subscribe('Engine:Update', self, self.OnEngineUpdate)
 	Events:Subscribe('UpdateManager:Update', self, self.OnUpdateManagerUpdate)
 
@@ -154,6 +155,10 @@ end
 
 function FunBotServer:OnExtensionUnloading()
 	m_BotManager:destroyAll(nil, nil, true)
+end
+
+function FunBotServer:OnPartitionLoaded(p_Partition)
+	m_WeaponModification:OnPartitionLoaded(p_Partition)
 end
 
 function FunBotServer:OnEngineUpdate(p_DeltaTime)
