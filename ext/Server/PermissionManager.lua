@@ -150,6 +150,10 @@ function PermissionManager:ExtendPermissions(permissions)
 end
 
 function PermissionManager:Exists(name)
+	if name == '*' then
+		return true;
+	end
+	
 	for _, permission in pairs(Permissions) do	
 		if permission:lower() == name:lower() then
 			return true;
