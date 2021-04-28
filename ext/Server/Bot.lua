@@ -75,7 +75,10 @@ function Bot:__init(p_Player)
 	self._GrenadeActive = false
 	self._C4Active = false
 
+	-- vehicle stuff
 	self._VehicleEntity = nil
+	self._VehicleMovableId = nil
+	self._VehicleMovableTransform = nil
 
 	--shooting
 	self._Shoot = false
@@ -465,10 +468,9 @@ function Bot:_updateAiming()
 		local s_FullPositionTarget = self._ShootPlayer.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(self._ShootPlayer, true)
 		local s_FullPositionBot = self.m_Player.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(self.m_Player, false)
 		local s_GrenadePitch = 0.0
-		local s_DistanceToPlayer = 0.0
+		local s_DistanceToPlayer = s_FullPositionTarget:Distance(s_FullPositionBot)
 
 		if not self.m_KnifeMode and not self.m_InVehicle then
-			s_DistanceToPlayer = s_FullPositionTarget:Distance(s_FullPositionBot)
 			--calculate how long the distance is --> time to travel
 			local s_FactorForMovement = 0.0
 			if self.m_ActiveWeapon.type == "Grenade" then
@@ -581,15 +583,19 @@ function Bot:_updateYaw()
 
 	local s_DeltaYaw = 0
 	if self.m_InVehicle then
+		local s_Pos = nil
 		if not s_AttackAiming then
-			local s_Pos = self.m_Player.attachedControllable.transform.forward
+			s_Pos = self.m_Player.attachedControllable.transform.forward
 			local s_AtanDzDx = math.atan(s_Pos.z, s_Pos.x)
 			local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
 			s_DeltaYaw = s_Yaw - self._TargetYaw
 		else
-			--TODO FIXME: Find reference for Position of Gun
-			s_DeltaYaw = self.m_Player.input.authoritativeAimingYaw - self._TargetYaw
+			s_Pos = self.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(self._VehicleMovableId):ToLinearTransform().forward
+			local s_AtanDzDx = math.atan(s_Pos.z, s_Pos.x)
+			local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
+			s_DeltaYaw = s_Yaw - self._TargetYaw
 		end
+
 	else
 		s_DeltaYaw = self.m_Player.input.authoritativeAimingYaw - self._TargetYaw
 	end
@@ -608,7 +614,14 @@ function Bot:_updateYaw()
 			if not s_AttackAiming then
 				self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, 0.0)
 			else
-				self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, 0.0)
+				self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, 0.0)
+				if s_Increment > 0 then
+					self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, 0.2)
+				elseif s_Increment < 0 then
+					self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, -0.2)
+				else
+					self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, 0.0)
+				end
 			end
 		else
 			self.m_Player.input.authoritativeAimingYaw = self._TargetYaw
@@ -631,10 +644,14 @@ function Bot:_updateYaw()
 
 	if self.m_InVehicle then
 		local s_YawValue = 0;
-		if self.m_ActiveSpeedValue < 0 then
-			s_YawValue = -1.0
-		else
+		if s_AttackAiming then
 			s_YawValue = 1.0
+		else
+			if self.m_ActiveSpeedValue < 0 then
+				s_YawValue = -1.0
+			else
+				s_YawValue = 1.0
+			end
 		end
 
 		-- if s_AbsDeltaYaw > math.pi / 8 then
@@ -642,17 +659,18 @@ function Bot:_updateYaw()
 		-- end
 
 		-- try to move head
-		--self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, 1)
 		--self.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, 1)
 
 		
 		if not s_AttackAiming then
+			self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, 0.0)
 			if s_Increment > 0 then
 				self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, s_YawValue)
 			else
 				self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, -s_YawValue)
 			end
 		else
+			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, 0.0)
 			if s_Increment > 0 then
 				self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, s_YawValue)
 			else
@@ -663,7 +681,6 @@ function Bot:_updateYaw()
 		self.m_Player.input.authoritativeAimingYaw = s_TempYaw
 		self.m_Player.input.authoritativeAimingPitch = self._TargetPitch
 	end
-	
 end
 
 function Bot:_findOutVehicleType(p_Player)
@@ -1172,10 +1189,19 @@ function Bot:_updateMovement()
 											
 											self._VehicleEntity = s_Entity.physicsEntityBase
 											print(self._VehicleEntity.partCount)
-											for i = 0, self._VehicleEntity.partCount -1 do
-												local s_TransForm = self._VehicleEntity:GetPartTransform(i):ToLinearTransform()
-												print(s_TransForm)
+											for i = 0, self._VehicleEntity.partCount - 1 do
+												if self.m_Player.controlledControllable.physicsEntityBase:GetPart(i) ~= nil and self.m_Player.controlledControllable.physicsEntityBase:GetPart(i):Is("ServerChildComponent") then
+													print(i)
+													local s_QuatTransform = self.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(i)
+													if s_QuatTransform == nil then
+														return
+													end
+													self._VehicleMovableTransform = s_QuatTransform
+													self._VehicleMovableId = i
+													break
+												end
 											end
+
 
 											self._ActionActive = false
 											local s_Node = g_GameDirector:findClosestPath(s_Position, true)
