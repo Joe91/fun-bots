@@ -1268,10 +1268,12 @@ function Bot:_updateMovement()
 											if s_Node ~= nil then
 												-- switch to vehicle
 												s_Point = s_Node
-												s_NextPoint = s_Node
 												self._InvertPathDirection = false
 												self._PathIndex = s_Node.PathIndex
 												self._CurrentWayPoint = s_Node.PointIndex
+												s_NextPoint = m_NodeCollection:Get(self:_getWayIndex(self._CurrentWayPoint + 1), self._PathIndex)
+												self._LastWayDistance = 1000
+
 											end
 											break
 										end
