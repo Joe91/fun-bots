@@ -283,7 +283,7 @@ function BotSpawner:OnLevelLoaded()
 	self._firstSpawnDelay = FIRST_SPAWN_DELAY
 end
 
-function BotSpawner:OnUpdate(p_DeltaTime, p_UpdatePass)
+function BotSpawner:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	if p_UpdatePass ~= UpdatePass.UpdatePass_PostFrame then
 		return
 	end
@@ -351,7 +351,7 @@ function BotSpawner:OnUpdate(p_DeltaTime, p_UpdatePass)
 			if bot.m_Player.soldier ~= nil then
 				local trans = bot.m_Player.soldier.worldTransform.trans:Clone()
 				--local node = m_NodeCollection:Find(trans, 5);
-				local node = g_GameDirector:findClosestPath(trans)
+				local node = g_GameDirector:findClosestPath(trans, false)
 				if node ~= nil then
 					bot:setVarsWay(nil, true, node.PathIndex, node.PointIndex, false)
 					table.remove(self._botsWithoutPath, index)

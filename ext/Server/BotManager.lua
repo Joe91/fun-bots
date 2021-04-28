@@ -34,8 +34,8 @@ function BotManager:getBotTeam()
 	for i = 1, Globals.NrOfTeams do
 		countPlayers[i] = 0
 		local players = PlayerManager:GetPlayersByTeam(i)
-		for i = 1, #players do
-			if m_Utilities:isBot(players[i]) == false then
+		for j = 1, #players do
+			if not m_Utilities:isBot(players[j]) then
 				countPlayers[i] = countPlayers[i] + 1
 			end
 		end
@@ -193,7 +193,7 @@ function BotManager:setOptionForPlayer(p_Player, p_Option, p_Value)
 	end
 end
 
-function BotManager:OnUpdate(p_DeltaTime, p_UpdatePass)
+function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	if p_UpdatePass ~= UpdatePass.UpdatePass_PostFrame then
 		return
 	end

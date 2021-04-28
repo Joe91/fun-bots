@@ -186,6 +186,7 @@ function ClientNodeEditor:RegisterEvents()
 	Console:Register('AddObjective', '<string|Objective> - Add an objective to a path', self, self._onAddObjective)
 	Console:Register('AddMcom', 'Add an MCOM Arm/Disarm-Action to a point', self, self._onAddMcom)
 	Console:Register('AddVehicle', 'Add a vehicle a bot can use', self, self._onAddVehicle)
+	Console:Register('AddVehiclePath', '<string|Type> Add vehicle-usage to a path. Types = land, water, air', self, self._onAddVehiclePath)
 	Console:Register('RemoveObjective', '<string|Objective> - Remove an objective from a path', self, self._onRemoveObjective)
 	Console:Register('ProcessMetadata', 'Process waypoint metadata starting with selected nodes or all nodes', self, self._onProcessMetadata)
 	Console:Register('RecalculateIndexes', 'Recalculate Indexes starting with selected nodes or all nodes', self, self._onRecalculateIndexes)
@@ -899,6 +900,51 @@ function ClientNodeEditor:_onAddVehicle(p_Args)
 	return true
 end
 
+function ClientNodeEditor:_onAddVehiclePath(p_Args)
+	self.commoRoseActive = false
+
+	if self:IsSavingOrLoading() then
+		return false
+	end
+
+	local data = table.concat(p_Args or {"land"}, ' ')
+	self:Log('Add Vehicle (type): %s', g_Utilities:dump(data, true))
+
+	local selection = m_NodeCollection:GetSelected()
+	if (#selection < 1) then
+		self:Log('Must select at least one node')
+		return false
+	end
+
+	local donePaths = {}
+	self:Log('Updating %d Possible Waypoints', (#selection))
+
+	for i=1, #selection do
+		local waypoint = m_NodeCollection:GetFirst(selection[i].PathIndex)
+
+		if (not donePaths[waypoint.PathIndex]) then
+			donePaths[waypoint.PathIndex] = true
+
+			local vehicles = waypoint.Data.Vehicles or {}
+			local inTable = false
+
+			for i=1, #vehicles do
+				if (vehicles[i] == data) then
+					inTable = true
+					break
+				end
+			end
+
+			if (not inTable) then
+				table.insert(vehicles, data)
+				waypoint.Data.Vehicles = vehicles
+				self:Log('Updated Waypoint: %s', waypoint.ID)
+			end
+		end
+	end
+	return true
+end
+
 function ClientNodeEditor:_onAddObjective(p_Args)
 	self.commoRoseActive = false
 
@@ -1113,8 +1159,12 @@ function ClientNodeEditor:_onEndTrace()
 	if (firstWaypoint) then
 		local startPos = firstWaypoint.Position + Vec3.up
 		local endPos = self.customTrace:GetLast().Position + Vec3.up
-		local raycast = RaycastManager:Raycast(startPos, endPos, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll | RayCastFlags.CheckDetailMesh | RayCastFlags.IsAsyncRaycast)
-
+		local raycast = nil
+		if self.player.attachedControllable ~= nil then
+			raycast = RaycastManager:Raycast(startPos, endPos, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll | RayCastFlags.CheckDetailMesh | RayCastFlags.DontCheckPhantoms | RayCastFlags.DontCheckGroup | RayCastFlags.IsAsyncRaycast)
+		else
+			raycast = RaycastManager:Raycast(startPos, endPos, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll | RayCastFlags.CheckDetailMesh | RayCastFlags.IsAsyncRaycast)
+		end
 		self.customTrace:ClearSelection()
 		self.customTrace:Select(firstWaypoint)
 		if (raycast == nil or raycast.rigidBody == nil) then
@@ -1631,9 +1681,7 @@ function ClientNodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 									speed = 4
 								end
 							elseif speedInput == 0 then
-								if self.player.attachedControllable.velocity.magnitude > 0 then
-									speed = 2
-								end
+								speed = 2
 							end
 
 							if self.player.input:GetLevel(EntryInputActionEnum.EIABrake) > 0 then
