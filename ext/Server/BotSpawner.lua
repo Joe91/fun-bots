@@ -311,7 +311,7 @@ function BotSpawner:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 		if self._BotSpawnTimer > 0.2 then --time to wait between spawn. 0.2 works
 			self._BotSpawnTimer = 0
 			local s_SpawnSet = table.remove(self._SpawnSets)
-			self:_spawnSigleWayBot(s_SpawnSet.playerVarOfBot, s_SpawnSet.useRandomWay, s_SpawnSet.activeWayIndex, s_SpawnSet.indexOnPath, nil, s_SpawnSet.team)
+			self:_spawnSigleWayBot(s_SpawnSet.m_PlayerVarOfBot, s_SpawnSet.m_UseRandomWay, s_SpawnSet.m_ActiveWayIndex, s_SpawnSet.m_IndexOnPath, nil, s_SpawnSet.m_Team)
 		end
 		self._BotSpawnTimer = self._BotSpawnTimer + p_DeltaTime
 	else
@@ -866,11 +866,11 @@ function BotSpawner:spawnWayBots(p_Player, p_Amount, p_UseRandomWay, p_ActiveWay
 
 	for i = 1, p_Amount do
 		local s_SpawnSet = SpawnSet()
-		s_SpawnSet.playerVarOfBot = nil
-		s_SpawnSet.useRandomWay = p_UseRandomWay
-		s_SpawnSet.activeWayIndex = p_ActiveWayIndex
-		s_SpawnSet.indexOnPath = p_IndexOnPath
-		s_SpawnSet.team = p_TeamId
+		s_SpawnSet.m_PlayerVarOfBot = nil
+		s_SpawnSet.m_UseRandomWay = p_UseRandomWay
+		s_SpawnSet.m_ActiveWayIndex = p_ActiveWayIndex
+		s_SpawnSet.m_IndexOnPath = p_IndexOnPath
+		s_SpawnSet.m_Team = p_TeamId
 		table.insert(self._SpawnSets, s_SpawnSet)
 	end
 end
