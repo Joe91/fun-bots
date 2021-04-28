@@ -751,7 +751,7 @@ end
 
 function BotSpawner:FindAttackedSpawnPoint(p_TeamId)
 	local s_BestSpawnPoint = nil
-	local s_LowestFlagLocation = 1
+	local s_LowestFlagLocation = 100.0
 	local s_EntityIterator = EntityManager:GetIterator("ServerCapturePointEntity")
 	local s_Entity = s_EntityIterator:Next()
 	while s_Entity do
