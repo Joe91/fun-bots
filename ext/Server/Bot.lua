@@ -582,6 +582,7 @@ function Bot:_updateYaw()
 	end
 
 	local s_DeltaYaw = 0
+	local s_DeltaPitch = 0
 	if self.m_InVehicle then
 		local s_Pos = nil
 		if not s_AttackAiming then
@@ -593,6 +594,8 @@ function Bot:_updateYaw()
 			s_Pos = self.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(self._VehicleMovableId):ToLinearTransform().forward
 			local s_AtanDzDx = math.atan(s_Pos.z, s_Pos.x)
 			local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
+			local s_Pitch = math.atan(s_Pos.y, 1.0)
+			s_DeltaPitch = s_Pitch - self._TargetPitch
 			s_DeltaYaw = s_Yaw - self._TargetYaw
 		end
 
@@ -608,6 +611,19 @@ function Bot:_updateYaw()
 
 	local s_AbsDeltaYaw = math.abs(s_DeltaYaw)
 	local s_Increment = Globals.YawPerFrame
+
+	if self.m_InVehicle and s_AttackAiming then
+		local s_Value = 1.0
+		if math.abs(s_DeltaPitch) < 0.05 then -- 3°
+			s_Value = 0.2
+		end
+
+		if s_DeltaPitch > 0 then
+			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, -s_Value)
+		else
+			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, s_Value)
+		end
+	end
 
 	if s_AbsDeltaYaw < s_Increment then
 		if self.m_InVehicle then
@@ -657,9 +673,6 @@ function Bot:_updateYaw()
 		-- if s_AbsDeltaYaw > math.pi / 8 then
 			--s_YawValue = s_YawValue * 0.5
 		-- end
-
-		-- try to move head
-		--self.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, 1)
 
 		
 		if not s_AttackAiming then
