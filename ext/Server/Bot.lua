@@ -467,26 +467,38 @@ function Bot:_updateAiming()
 		local s_PitchCorrection = 0.0
 		local s_FullPositionTarget = self._ShootPlayer.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(self._ShootPlayer, true)
 		local s_FullPositionBot = self.m_Player.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(self.m_Player, false)
+		if self.m_InVehicle then --TODO: calculate height of gun of vehicle
+			s_FullPositionBot = s_FullPositionBot + Vec3(0.0, 1.5, 0.0)  -- bot in vehicle is higher
+		end
 		local s_GrenadePitch = 0.0
+		--calculate how long the distance is --> time to travel
 		local s_DistanceToPlayer = s_FullPositionTarget:Distance(s_FullPositionBot)
 
-		if not self.m_KnifeMode and not self.m_InVehicle then
-			--calculate how long the distance is --> time to travel
+		if not self.m_KnifeMode then
 			local s_FactorForMovement = 0.0
+			local s_Drop = 0.0
+			local s_Speed = 0.0
+			if self.m_InVehicle then
+				s_Drop = 9.81
+				s_Speed = 350
+			else
+				s_Drop = self.m_ActiveWeapon.bulletDrop
+				s_Speed = self.m_ActiveWeapon.bulletSpeed
+			end
 			if self.m_ActiveWeapon.type == "Grenade" then
 				if s_DistanceToPlayer < 5 then
 					s_DistanceToPlayer = 5 -- don't throw them too close..
 				end
-				local s_Angle = math.asin((s_DistanceToPlayer * self.m_ActiveWeapon.bulletDrop)/(self.m_ActiveWeapon.bulletSpeed*self.m_ActiveWeapon.bulletSpeed))
+				local s_Angle = math.asin((s_DistanceToPlayer * s_Drop)/(s_Speed*s_Speed))
 				if s_Angle ~= s_Angle then --NAN check
 					s_GrenadePitch = (math.pi / 4)
 				else
 					s_GrenadePitch = (math.pi / 2) - (s_Angle / 2)
 				end
 			else
-				local s_TimeToTravel = (s_DistanceToPlayer / self.m_ActiveWeapon.bulletSpeed)
+				local s_TimeToTravel = (s_DistanceToPlayer / s_Speed)
 				s_FactorForMovement = (s_TimeToTravel) / self._UpdateTimer
-				s_PitchCorrection = 0.5 * s_TimeToTravel * s_TimeToTravel * self.m_ActiveWeapon.bulletDrop
+				s_PitchCorrection = 0.5 * s_TimeToTravel * s_TimeToTravel * s_Drop
 			end
 
 			if self._LastShootPlayer == self._ShootPlayer then
@@ -1201,10 +1213,8 @@ function Bot:_updateMovement()
 											self.m_Player:EnterVehicle(s_Entity, i)
 											
 											self._VehicleEntity = s_Entity.physicsEntityBase
-											print(self._VehicleEntity.partCount)
 											for i = 0, self._VehicleEntity.partCount - 1 do
 												if self.m_Player.controlledControllable.physicsEntityBase:GetPart(i) ~= nil and self.m_Player.controlledControllable.physicsEntityBase:GetPart(i):Is("ServerChildComponent") then
-													print(i)
 													local s_QuatTransform = self.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(i)
 													if s_QuatTransform == nil then
 														return
@@ -1214,7 +1224,6 @@ function Bot:_updateMovement()
 													break
 												end
 											end
-
 
 											self._ActionActive = false
 											local s_Node = g_GameDirector:findClosestPath(s_Position, true)
