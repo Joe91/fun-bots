@@ -66,8 +66,11 @@ function FunBotServer:RegisterEvents()
 	Events:Subscribe('Player:Joining', self, self.OnPlayerJoining)
 	Events:Subscribe('Player:TeamChange', self, self.OnTeamChange)
 	Events:Subscribe('Player:KitPickup', self, self.OnKitPickup)
+	Events:Subscribe('Player:Respawn', self, self.OnPlayerRespawn)
+	Events:Subscribe('Player:Killed', self, self.OnPlayerKilled)
 	Events:Subscribe('Player:Chat', self, self.OnPlayerChat)
 	Events:Subscribe('Player:Left', self, self.OnPlayerLeft)
+	Events:Subscribe('Player:Destroyed', self, self.OnPlayerDestroyed)
 
 	Events:Subscribe('CapturePoint:Lost', self, self.OnCapturePointLost)
 	Events:Subscribe('CapturePoint:Captured', self, self.OnCapturePointCaptured)
@@ -97,6 +100,7 @@ function FunBotServer:RegisterCustomEvents()
 	Events:Subscribe('Server:DamagePlayer', self, self.OnServerDamagePlayer) --only triggered on false damage
 	Events:Subscribe('Bot:RespawnBot', self, self.OnRespawnBot)
 	NetEvents:Subscribe('Client:RequestSettings', self, self.OnRequestClientSettings)
+	m_NodeEditor:RegisterCustomEvents()
 end
 
 function FunBotServer:RegisterCallbacks()
@@ -163,8 +167,9 @@ function FunBotServer:OnPartitionLoaded(p_Partition)
 	m_WeaponModification:OnPartitionLoaded(p_Partition)
 end
 
-function FunBotServer:OnEngineUpdate(p_DeltaTime)
+function FunBotServer:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 	m_GameDirector:OnEngineUpdate(p_DeltaTime)
+	m_NodeEditor:OnEngineUpdate(p_DeltaTime)
 end
 
 function FunBotServer:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
@@ -192,7 +197,7 @@ function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode)
 	self:RegisterInputRestrictionEventCallbacks()
 	self:SetGameMode(s_GameMode)
 
-	m_NodeEditor:onLevelLoaded(p_LevelName, s_GameMode)
+	m_NodeEditor:OnLevelLoaded(p_LevelName, s_GameMode)
 	m_GameDirector:onLevelLoaded()
 	m_GameDirector:initObjectives()
 	m_BotSpawner:OnLevelLoaded()
@@ -202,6 +207,7 @@ end
 function FunBotServer:OnLevelDestroy()
 	m_BotManager:OnLevelDestroy()
 	m_BotSpawner:OnLevelDestroy()
+	m_NodeEditor:OnLevelDestroy()
 end
 
 function FunBotServer:OnRoundOver(p_RoundTime, p_WinningTeam)
@@ -228,6 +234,14 @@ function FunBotServer:OnKitPickup(p_Player, p_NewCustomization)
 	m_BotSpawner:OnKitPickup(p_Player, p_NewCustomization)
 end
 
+function FunBotServer:OnPlayerRespawn(p_Player)
+	m_NodeEditor:OnPlayerRespawn(p_Player)
+end
+
+function FunBotServer:OnPlayerKilled(p_Player, p_Inflictor, p_Position, p_Weapon, p_IsRoadKill, p_IsHeadShot, p_WasVictimInReviveState, p_Info)
+	m_NodeEditor:OnPlayerKilled(p_Player)
+end
+
 function FunBotServer:OnPlayerChat(p_Player, p_RecipientMask, p_Message)
 	local s_MessageParts = string.lower(p_Message):split(' ')
 	m_ChatCommands:execute(s_MessageParts, p_Player)
@@ -235,6 +249,11 @@ end
 
 function FunBotServer:OnPlayerLeft(p_Player)
 	m_BotManager:OnPlayerLeft(p_Player)
+	m_NodeEditor:OnPlayerLeft(p_Player)
+end
+
+function FunBotServer:OnPlayerDestroyed(p_Player)
+	m_NodeEditor:OnPlayerDestroyed(p_Player)
 end
 
 -- =============================================

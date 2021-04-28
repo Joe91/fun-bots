@@ -1249,16 +1249,15 @@ function Bot:_updateMovement()
 									for i = 0, s_Entity.entryCount - 1 do
 										if s_Entity:GetPlayerInEntry(i) == nil then
 											self.m_Player:EnterVehicle(s_Entity, i)
-											
 											self._VehicleEntity = s_Entity.physicsEntityBase
-											for i = 0, self._VehicleEntity.partCount - 1 do
-												if self.m_Player.controlledControllable.physicsEntityBase:GetPart(i) ~= nil and self.m_Player.controlledControllable.physicsEntityBase:GetPart(i):Is("ServerChildComponent") then
-													local s_QuatTransform = self.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(i)
+											for j = 0, self._VehicleEntity.partCount - 1 do
+												if self.m_Player.controlledControllable.physicsEntityBase:GetPart(j) ~= nil and self.m_Player.controlledControllable.physicsEntityBase:GetPart(j):Is("ServerChildComponent") then
+													local s_QuatTransform = self.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(j)
 													if s_QuatTransform == nil then
 														return
 													end
 													self._VehicleMovableTransform = s_QuatTransform
-													self._VehicleMovableId = i
+													self._VehicleMovableId = j
 													break
 												end
 											end
@@ -1273,7 +1272,6 @@ function Bot:_updateMovement()
 												self._CurrentWayPoint = s_Node.PointIndex
 												s_NextPoint = m_NodeCollection:Get(self:_getWayIndex(self._CurrentWayPoint + 1), self._PathIndex)
 												self._LastWayDistance = 1000
-
 											end
 											break
 										end
