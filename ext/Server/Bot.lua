@@ -1469,7 +1469,7 @@ function Bot:_updateMovement()
 							-- CHECK FOR PATH-SWITCHES
 							local s_NewWaypoint = nil
 							local s_SwitchPath = false
-							s_SwitchPath, s_NewWaypoint = m_PathSwitcher:getNewPath(self.m_Name, s_Point, self._Objective, self.m_InVehicle)
+							s_SwitchPath, s_NewWaypoint = m_PathSwitcher:GetNewPath(self.m_Name, s_Point, self._Objective, self.m_InVehicle)
 							if not self.m_Player.alive then
 								return
 							end
