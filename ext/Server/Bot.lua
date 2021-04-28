@@ -78,6 +78,8 @@ function Bot:__init(p_Player)
 	-- vehicle stuff
 	self._VehicleEntity = nil
 	self._VehicleMovableId = nil
+	self._LastVehicleYaw = 0.0
+	self._VehicleDirBackPositive = false
 	self._VehicleMovableTransform = nil
 
 	--shooting
@@ -595,6 +597,8 @@ function Bot:_updateYaw()
 
 	local s_DeltaYaw = 0
 	local s_DeltaPitch = 0
+	local s_CorrectGunYaw = false
+
 	if self.m_InVehicle then
 		local s_Pos = nil
 		if not s_AttackAiming then
@@ -602,6 +606,13 @@ function Bot:_updateYaw()
 			local s_AtanDzDx = math.atan(s_Pos.z, s_Pos.x)
 			local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
 			s_DeltaYaw = s_Yaw - self._TargetYaw
+			local s_DiffPos = s_Pos - self.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(self._VehicleMovableId):ToLinearTransform().forward
+			-- prepare for moving gun back
+			self._LastVehicleYaw = s_Yaw
+			if s_DiffPos.x > 0.1 or s_DiffPos.z > 0.1 then
+				s_CorrectGunYaw = true
+			end
+
 		else
 			s_Pos = self.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(self._VehicleMovableId):ToLinearTransform().forward
 			local s_AtanDzDx = math.atan(s_Pos.z, s_Pos.x)
@@ -609,6 +620,19 @@ function Bot:_updateYaw()
 			local s_Pitch = math.atan(s_Pos.y, 1.0)
 			s_DeltaPitch = s_Pitch - self._TargetPitch
 			s_DeltaYaw = s_Yaw - self._TargetYaw
+
+			--detect direction for moving gun back
+			local s_GunDeltaYaw = s_Yaw - self._LastVehicleYaw
+			if s_GunDeltaYaw > math.pi then
+				s_GunDeltaYaw = s_GunDeltaYaw - 2*math.pi
+			elseif s_GunDeltaYaw < -math.pi then
+				s_GunDeltaYaw = s_GunDeltaYaw + 2*math.pi
+			end
+			if s_GunDeltaYaw > 0 then
+				self._VehicleDirBackPositive = false
+			else
+				self._VehicleDirBackPositive = true
+			end
 		end
 
 	else
@@ -641,6 +665,15 @@ function Bot:_updateYaw()
 		if self.m_InVehicle then
 			if not s_AttackAiming then
 				self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, 0.0)
+				if s_CorrectGunYaw then
+					if self._VehicleDirBackPositive then
+						self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, 1)
+					else
+						self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, -1)
+					end
+				else
+					self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, 0)
+				end
 			else
 				self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, 0.0)
 				if s_Increment > 0 then
@@ -682,13 +715,18 @@ function Bot:_updateYaw()
 			end
 		end
 
-		-- if s_AbsDeltaYaw > math.pi / 8 then
-			--s_YawValue = s_YawValue * 0.5
-		-- end
 
-		
 		if not s_AttackAiming then
-			self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, 0.0)
+			if s_CorrectGunYaw then
+				if self._VehicleDirBackPositive then
+					self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, 1)
+				else
+					self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, -1)
+				end
+			else
+				self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, 0)
+			end
+
 			if s_Increment > 0 then
 				self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, s_YawValue)
 			else
