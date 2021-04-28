@@ -34,8 +34,8 @@ function BotManager:getBotTeam()
 	for i = 1, Globals.NrOfTeams do
 		countPlayers[i] = 0
 		local players = PlayerManager:GetPlayersByTeam(i)
-		for i = 1, #players do
-			if m_Utilities:isBot(players[i]) == false then
+		for j = 1, #players do
+			if not m_Utilities:isBot(players[j]) then
 				countPlayers[i] = countPlayers[i] + 1
 			end
 		end

@@ -1169,7 +1169,7 @@ end
 -- discover in which direction an objective is from a given waypoint
 -- returns <Direction>, <BestWaypoint>
 -- <Direction> will be either 'Next' or 'Previous'
-function NodeCollection:ObjectiveDirection(p_Waypoint, p_Objective)
+function NodeCollection:ObjectiveDirection(p_Waypoint, p_Objective, p_InVehicle)
 
 	local bestDirection = nil
 	local bestWaypoint = nil
@@ -1216,8 +1216,12 @@ function NodeCollection:ObjectiveDirection(p_Waypoint, p_Objective)
 	end
 
 	if (bestDirection == nil) then
-		local directions = {'Next','Previous'}
-		bestDirection = directions[MathUtils:GetRandomInt(1, 2)]
+		if not p_InVehicle then
+			local directions = {'Next','Previous'}
+			bestDirection = directions[MathUtils:GetRandomInt(1, 2)]
+		else
+			bestDirection = 'Next'
+		end
 	end
 
 	return bestDirection, bestWaypoint

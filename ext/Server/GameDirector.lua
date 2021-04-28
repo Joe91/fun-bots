@@ -66,6 +66,7 @@ function GameDirector:initObjectives()
 			isAttacked = false,
 			isBase = false,
 			isSpawnPath = false,
+			isEnterVehiclePath = false,
 			destroyed = false,
 			active = true,
 			subObjective = false,
@@ -81,6 +82,10 @@ function GameDirector:initObjectives()
 		end
 		if string.find(objectiveName:lower(), "spawn") ~= nil then
 			objective.isSpawnPath = true
+			objective.active = false
+		end
+		if string.find(objectiveName:lower(), "vehicle") ~= nil then
+			objective.isEnterVehiclePath = true
 			objective.active = false
 		end
 		table.insert(self.AllObjectives, objective)
@@ -207,31 +212,33 @@ function GameDirector:_updateValidObjectives()
 			local fields = objective.name:split(" ")
 			local active = false
 			local subObjective = false
-			if not objective.isBase and not objective.isSpawnPath then
-				if #fields > 1 then
-					local index = tonumber(fields[2])
-					for _,targetIndex in pairs(mcomIndexes) do
-						if index == targetIndex then
-							active = true
+			if not objective.isSpawnPath and not objective.isEnterVehiclePath then
+				if not objective.isBase then
+					if #fields > 1 then
+						local index = tonumber(fields[2])
+						for _,targetIndex in pairs(mcomIndexes) do
+							if index == targetIndex then
+								active = true
+							end
+						end
+						if #fields > 2 then -- "mcom N interact"
+							subObjective = true
 						end
 					end
-					if #fields > 2 then -- "mcom N interact"
-						subObjective = true
+				else
+					if #fields > 2 then
+						local index = tonumber(fields[3])
+						if index == baseIndex then
+							active = true
+						end
+						if index == baseIndex - 1 then
+							self.RushAttackingBase = objective.name
+						end
 					end
 				end
-			else
-				if #fields > 2 then
-					local index = tonumber(fields[3])
-					if index == baseIndex then
-						active = true
-					end
-					if index == baseIndex - 1 then
-						self.RushAttackingBase = objective.name
-					end
-				end
+				objective.active = active
+				objective.subObjective = subObjective
 			end
-			objective.active = active
-			objective.subObjective = subObjective
 		end
 	else
 		self.OnlyOneMcom = true
@@ -263,20 +270,65 @@ function GameDirector:checkForExecution(p_Point, p_TeamId)
 	return execute
 end
 
-function GameDirector:findClosestPath(p_Trans)
+function GameDirector:OnVehicleEnter(p_VehicleEntiy, p_Player)
+	if not Utilities:isBot(p_Player) then
+		local s_Entity = ControllableEntity(p_VehicleEntiy)
+		self:_SetVehicleObjectiveState(s_Entity.transform.trans, false)
+	end
+end
+
+function GameDirector:OnVehicleSpawnDone(p_VehicleEntiy)
+	local s_Entity = ControllableEntity(p_VehicleEntiy)
+	self:_SetVehicleObjectiveState(s_Entity.transform.trans, true)
+end
+
+function GameDirector:_SetVehicleObjectiveState(p_Position, p_Value)
+	local s_Paths = m_NodeCollection:GetPaths()
+	if s_Paths ~= nil then
+		local s_ClosestDistance = nil
+		local s_ClosestVehicleEnterObjective = nil
+		for _,waypoints in pairs(s_Paths) do
+			if waypoints[1].Data.Objectives ~= nil and #waypoints[1].Data.Objectives == 1 then
+				local s_ObjectiveObject = self:getObjectiveObject(waypoints[1].Data.Objectives[1])
+				if s_ObjectiveObject ~= nil and s_ObjectiveObject.active ~= p_Value and s_ObjectiveObject.isEnterVehiclePath then  -- only check disabled objectives
+					-- check position of first and last node
+					local s_FirstNode = waypoints[1]
+					local s_LastNode = waypoints[#waypoints]
+					local s_TempDistanceFirst = s_FirstNode.Position:Distance(p_Position)
+					local s_TempDistanceLast = s_LastNode.Position:Distance(p_Position)
+					local s_CloserDistance = s_TempDistanceFirst
+					if s_TempDistanceLast < s_TempDistanceFirst then
+						s_CloserDistance = s_TempDistanceLast
+					end
+					if s_ClosestDistance == nil or s_CloserDistance < s_ClosestDistance then
+						s_ClosestDistance = s_CloserDistance
+						s_ClosestVehicleEnterObjective = s_ObjectiveObject
+					end 
+				end
+			end
+		end
+		if s_ClosestVehicleEnterObjective ~= nil and s_ClosestDistance < 5 then
+			s_ClosestVehicleEnterObjective.active = p_Value
+		end
+	end
+end
+
+function GameDirector:findClosestPath(p_Trans, p_VehiclePath)
 	local closestPathNode = nil
 	local paths = m_NodeCollection:GetPaths()
 	if paths ~= nil then
 		local closestDistance = nil
 		for _,waypoints in pairs(paths) do
-			local newDistance = waypoints[1].Position:Distance(p_Trans)
-			if closestDistance == nil then
-				closestDistance = newDistance
-				closestPathNode = waypoints[1]
-			else
-				if newDistance < closestDistance then
+			if (p_VehiclePath and waypoints[1].Data.Vehicles ~= nil) or not p_VehiclePath then
+				local newDistance = waypoints[1].Position:Distance(p_Trans)
+				if closestDistance == nil then
 					closestDistance = newDistance
 					closestPathNode = waypoints[1]
+				else
+					if newDistance < closestDistance then
+						closestDistance = newDistance
+						closestPathNode = waypoints[1]
+					end
 				end
 			end
 		end
@@ -387,7 +439,7 @@ function GameDirector:_translateObjective(p_Position, p_Name)
 						if #node.Data.Objectives == 1 then --possible objective
 							local valid = true
 							local tempObj = self:getObjectiveObject(objective)
-							if tempObj ~= nil and tempObj.isSpawnPath then -- or tempObj.isBase
+							if tempObj ~= nil and (tempObj.isSpawnPath or tempObj.isEnterVehiclePath) then -- or tempObj.isBase
 								valid = false
 							end
 							if valid then
@@ -641,6 +693,17 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 			end
 		end
 	end
+end
+
+function GameDirector:useVehicle(p_BotName, p_Objective)
+	local tempObjective = self:getObjectiveObject(p_Objective)
+	if tempObjective ~= nil and tempObjective.active and tempObjective.isEnterVehiclePath then
+		local bot = g_BotManager:getBotByName(p_BotName)
+		bot:setObjective(p_Objective)
+		tempObjective.active = false
+		return true
+	end
+	return false
 end
 
 function GameDirector:useSubobjective(p_BotName, p_Objective)

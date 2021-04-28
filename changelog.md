@@ -1,7 +1,7 @@
 # Changelog
 
 ## [Unreleased - 1.7.1.X] - 2021-04-XX
-[Download](https://github.com/Joe91/fun-bots/archive/V1.7.1.2.zip)  
+[Download](https://github.com/Joe91/fun-bots/archive/V1.7.1.3.zip)  
 the refactoring update
 
 - limit distance on which a bot switches to pistol
