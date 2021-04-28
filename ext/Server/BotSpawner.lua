@@ -740,7 +740,7 @@ function BotSpawner:ConquestSpawn(p_Bot)
 	local s_Event = ServerPlayerEvent("Spawn", p_Bot.m_Player, true, false, false, false, false, false, p_Bot.m_Player.teamId)
 	local s_BestSpawnPoint = self:FindAttackedSpawnPoint(p_Bot.m_Player.teamId)
 	if s_BestSpawnPoint == nil then
-		s_BestSpawnPoint = self:FindFarestSpawnPoint(p_Bot.m_Player.teamId)
+		s_BestSpawnPoint = self:FindClosestSpawnPoint(p_Bot.m_Player.teamId)
 	end
 	if s_BestSpawnPoint == nil then
 		m_Logger:Error("No valid spawn point found")
@@ -782,10 +782,11 @@ function BotSpawner:FindAttackedSpawnPoint(p_TeamId)
 	return s_BestSpawnPoint
 end
 
-function BotSpawner:FindFarestSpawnPoint(p_TeamId)
+function BotSpawner:FindClosestSpawnPoint(p_TeamId)
 	local s_BestSpawnPoint = nil
-	local s_HighestDistance = 0
-	local s_BaseLocation = self:GetBaseLocation(p_TeamId)
+	local s_ClosestDistance = 0
+	-- Enemy and Neutralized CapturePoints
+	local s_TargetLocation = self:GetTargetLocation(p_TeamId)
 	local s_EntityIterator = EntityManager:GetIterator("ServerCapturePointEntity")
 	local s_Entity = s_EntityIterator:Next()
 	while s_Entity do
@@ -793,17 +794,21 @@ function BotSpawner:FindFarestSpawnPoint(p_TeamId)
 		if s_Entity.team ~= p_TeamId then
 			goto endOfLoop
 		end
-		for i, l_Entity in pairs(s_Entity.bus.entities) do
+		for _, l_Entity in pairs(s_Entity.bus.entities) do
 			if l_Entity:Is('ServerCharacterSpawnEntity') then
 				if CharacterSpawnReferenceObjectData(l_Entity.data).team == p_TeamId
 				or CharacterSpawnReferenceObjectData(l_Entity.data).team == 0 then
 					if s_Entity.isControlled then
 						if s_BestSpawnPoint == nil then
 							s_BestSpawnPoint = l_Entity
-							s_HighestDistance = s_BaseLocation:Distance(s_Entity.transform.trans)
-						elseif s_HighestDistance < s_BaseLocation:Distance(s_Entity.transform.trans) then
+							-- for the case that the enemies have no place to spawn
+							if s_TargetLocation == nil then
+								return s_BestSpawnPoint
+							end
+							s_ClosestDistance = s_TargetLocation:Distance(s_Entity.transform.trans)
+						elseif s_ClosestDistance > s_TargetLocation:Distance(s_Entity.transform.trans) then
 							s_BestSpawnPoint = l_Entity
-							s_HighestDistance = s_BaseLocation:Distance(s_Entity.transform.trans)
+							s_ClosestDistance = s_TargetLocation:Distance(s_Entity.transform.trans)
 						end
 					end
 					goto endOfLoop
@@ -816,17 +821,20 @@ function BotSpawner:FindFarestSpawnPoint(p_TeamId)
 	return s_BestSpawnPoint
 end
 
-function BotSpawner:GetBaseLocation(p_TeamId)
+function BotSpawner:GetTargetLocation(p_TeamId)
+	local s_TargetLocation = nil
 	local s_EntityIterator = EntityManager:GetIterator("ServerCapturePointEntity")
 	local s_Entity = s_EntityIterator:Next()
 	while s_Entity do
 		s_Entity = CapturePointEntity(s_Entity)
-		if s_Entity.team ~= p_TeamId then
+		if s_Entity.team == p_TeamId then
 			goto endOfLoop
 		end
 		for i, l_Entity in pairs(s_Entity.bus.entities) do
 			if l_Entity:Is('ServerCharacterSpawnEntity') then
 				if CharacterSpawnReferenceObjectData(l_Entity.data).team == 0 then
+					s_TargetLocation = s_Entity.transform.trans
+				else
 					return s_Entity.transform.trans
 				end
 				goto endOfLoop
@@ -835,6 +843,8 @@ function BotSpawner:GetBaseLocation(p_TeamId)
 		::endOfLoop::
 		s_Entity = s_EntityIterator:Next()
 	end
+	-- return enemy base location (or nil) if all capture points captured by bot team already
+	return s_TargetLocation
 end
 
 function BotSpawner:spawnWayBots(p_Player, p_Amount, p_UseRandomWay, p_ActiveWayIndex, p_IndexOnPath, p_TeamId)
