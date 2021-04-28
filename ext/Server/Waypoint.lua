@@ -1,11 +1,11 @@
 class('WayPoint')
 
 function WayPoint:__init()
-	self.trans = Vec3()
-	self.speedMode = 0
-	self.extraMode = 0
-	self.optValue = 0
-	self.data = {}
+	self.m_Trans = Vec3()
+	self.m_SpeedMode = 0
+	self.m_ExtraMode = 0
+	self.m_OptValue = 0
+	self.m_Data = {}
 end
 
 return WayPoint
