@@ -763,7 +763,7 @@ function BotSpawner:FindAttackedSpawnPoint(p_TeamId)
 			if l_Entity:Is('ServerCharacterSpawnEntity') then
 				if CharacterSpawnReferenceObjectData(l_Entity.data).team == p_TeamId
 				or CharacterSpawnReferenceObjectData(l_Entity.data).team == 0 then
-					if s_Entity.isFlagMoving and s_Entity.isControlled then
+					if s_Entity.flagLocation < 100.0 and s_Entity.isControlled then
 						if s_BestSpawnPoint == nil then
 							s_BestSpawnPoint = l_Entity
 							s_LowestFlagLocation = s_Entity.flagLocation
