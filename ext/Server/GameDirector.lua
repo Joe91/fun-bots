@@ -163,7 +163,7 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 					if l_Objective.subObjective then
 						goto continue_inner_inner_loop
 					end
-					if l_Objective.isBase or not l_Objective.active or l_Objective.destroyed then
+					if l_Objective.isBase or not l_Objective.active or l_Objective.destroyed or l_Objective.isEnterVehiclePath then
 						goto continue_inner_inner_loop
 					end
 					if l_Objective.team == l_BotTeam then
@@ -181,9 +181,14 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 				if s_ClosestObjective ~= nil then
 					local s_Objective = self:_GetObjectiveObject(s_ClosestObjective)
 					l_Bot:setObjective(s_ClosestObjective)
+					m_Logger:Write("Team "..tostring(l_BotTeam).." with "..l_Bot.m_Name.." gets this objective: "..s_ClosestObjective)
 					s_Objective.assigned[l_BotTeam] = s_Objective.assigned[l_BotTeam] + 1
 				end
 			else
+				if not l_Bot.m_Player.alive then
+					l_Bot:setObjective() -- reset objective on death
+					goto continue_inner_loop
+				end
 				local s_Objective = self:_GetObjectiveObject(l_Bot:getObjective())
 				local s_ParentObjective = self:_GetObjectiveFromSubObj(s_Objective.name)
 				s_Objective.assigned[l_BotTeam] = s_Objective.assigned[l_BotTeam] + 1
@@ -701,7 +706,7 @@ function GameDirector:_TranslateObjective(p_Position, p_Name)
 	local s_ClosestDistance = nil
 	for l_Objective, l_Paths in pairs(s_AllObjectives) do
 		for _, l_Path in pairs(l_Paths) do
-			if not s_PathsDone[l_Path] then
+			if s_PathsDone[l_Path] then
 				goto continue_paths_loop
 			end
 			local s_Node = m_NodeCollection:Get(1, l_Path)
