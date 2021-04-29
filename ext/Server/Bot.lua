@@ -1313,7 +1313,7 @@ function Bot:_updateMovement()
 						end
 						self.m_ActiveSpeedValue = self._ZombieSpeedValue
 					end
-					if Config.OverWriteBotSpeedMode > 0 then
+					if Config.OverWriteBotSpeedMode > 0 and not self.m_InVehicle then
 						self.m_ActiveSpeedValue = Config.OverWriteBotSpeedMode
 					end
 					local s_DifferenceY = s_Point.Position.z - self.m_Player.soldier.worldTransform.trans.z
@@ -1649,11 +1649,11 @@ function Bot:_updateMovement()
 					if self.m_ActiveSpeedValue == 1 then
 						s_SpeedVal = 0.25
 					elseif self.m_ActiveSpeedValue == 2 then
-						s_SpeedVal = 0.35
-					elseif self.m_ActiveSpeedValue >= 3 then
 						s_SpeedVal = 0.5
+					elseif self.m_ActiveSpeedValue >= 3 then
+						s_SpeedVal = 0.8
 					elseif self.m_ActiveSpeedValue < 0 then
-						s_SpeedVal = -0.4
+						s_SpeedVal = -0.7
 					end
 				end
 			else
