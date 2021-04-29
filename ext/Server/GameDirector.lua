@@ -95,9 +95,10 @@ end
 function GameDirector:OnCapturePointLost(p_CapturePoint)
 	p_CapturePoint = CapturePointEntity(p_CapturePoint)
 	local s_ObjectiveName = self:_TranslateObjective(p_CapturePoint.transform.trans, p_CapturePoint.name)
+	local s_IsAttacked = p_CapturePoint.flagLocation < 100.0 and p_CapturePoint.isControlled
 	self:_UpdateObjective(s_ObjectiveName, {
 		team = TeamId.TeamNeutral, --p_CapturePoint.team
-		isAttacked = p_CapturePoint.isAttacked
+		isAttacked = s_IsAttacked
 	})
 
 	m_Logger:Write('GameDirector:_onLost: ' .. s_ObjectiveName)
@@ -354,7 +355,23 @@ function GameDirector:FindClosestPath(p_Trans, p_VehiclePath)
 end
 
 function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
+	-- find referece-objective
+	local s_ReferenceObjective = nil
+	for _, l_ReferenceObjective in pairs(self.m_AllObjectives) do
+		if not l_ReferenceObjective.isEnterVehiclePath and not l_ReferenceObjective.IsBasePath and not l_ReferenceObjective.isSpawnPath then
+			if l_ReferenceObjective.team == TeamId.TeamNeutral then
+				s_ReferenceObjective = l_ReferenceObjective
+				break
+			elseif l_ReferenceObjective.team ~= p_TeamId then
+				s_ReferenceObjective = l_ReferenceObjective
+			end
+		end
+	end
+
 	local s_PossibleObjectives = {}
+	local s_AttackedObjectives = {}
+	local s_ClosestObjective = nil
+	local s_ClosestDistance = nil
 	local s_PossibleBases = {}
 	local s_RushConvertedBases = {}
 	local s_PathsDone = {}
@@ -380,7 +397,18 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 				if l_Objective.isBase then
 					table.insert(s_PossibleBases, l_Path)
 				elseif not p_OnlyBase then
-					table.insert(s_PossibleObjectives, {name = l_Objective.name, path = l_Path})
+					if l_Objective.isAttacked then
+						table.insert(s_AttackedObjectives, {name = l_Objective.name, path = l_Path})
+					else
+						table.insert(s_PossibleObjectives, {name = l_Objective.name, path = l_Path})
+					end
+					if s_ReferenceObjective ~= nil and s_ReferenceObjective.position ~= nil and l_Objective.position ~= nil then
+						local s_DistanceToRef = s_ReferenceObjective.position:Distance(l_Objective.position)
+						if s_ClosestDistance == nil or s_DistanceToRef < s_ClosestDistance then
+							s_ClosestDistance = s_DistanceToRef
+							s_ClosestObjective = {name = l_Objective.name, path = l_Path}
+						end
+					end
 				end
 			elseif l_Objective.team ~= p_TeamId and l_Objective.isBase and not l_Objective.active and l_Objective.name == self.m_RushAttackingBase then --rush attacking team
 				table.insert(s_RushConvertedBases, l_Path)
@@ -389,24 +417,17 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 			::continue_paths_loop::
 		end
 	end
-	if #s_PossibleObjectives > 0 then
-		local s_TempObject = s_PossibleObjectives[MathUtils:GetRandomInt(1, #s_PossibleObjectives)]
-		local s_AvailableSpawnPaths = nil
-		for _, l_Objective in pairs(self.m_AllObjectives) do
-			if l_Objective.isSpawnPath and string.find(l_Objective.name, s_TempObject.name) ~= nil then
-				s_AvailableSpawnPaths = l_Objective.name
-				break
-			end
-		end
-		-- check for spawn objectives
-		if s_AvailableSpawnPaths ~= nil then
-			local s_AllObjectives = m_NodeCollection:GetKnownOjectives()
-			local s_PathsWithObjective = s_AllObjectives[s_AvailableSpawnPaths]
-			return s_PathsWithObjective[MathUtils:GetRandomInt(1, #s_PathsWithObjective)], 1
-		else
-			return s_TempObject.path, MathUtils:GetRandomInt(1, #m_NodeCollection:Get(nil, s_TempObject.path))
-		end
+	if #s_AttackedObjectives > 0 then
+		m_Logger:Write("spawn at attaced objective")
+		return self:GetSpawnPathOfObjectives(s_AttackedObjectives)
+	elseif s_ClosestObjective ~= nil then
+		m_Logger:Write("spwawn at closest objective")
+		return self:GetSpawnPathOfObjectives({s_ClosestObjective})
+	elseif #s_PossibleObjectives > 0 then
+		m_Logger:Write("spwawn at random objective")
+		return self:GetSpawnPathOfObjectives(s_PossibleObjectives)
 	elseif #s_PossibleBases > 0 then
+		m_Logger:Write("spwawn at base")
 		local s_PathIndex = s_PossibleBases[MathUtils:GetRandomInt(1, #s_PossibleBases)]
 		return s_PathIndex, MathUtils:GetRandomInt(1, #m_NodeCollection:Get(nil, s_PathIndex))
 	elseif #s_RushConvertedBases > 0 then
@@ -414,6 +435,25 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 		return s_PathIndex, MathUtils:GetRandomInt(1, #m_NodeCollection:Get(nil, s_PathIndex))
 	else
 		return 0, 0
+	end
+end
+
+function GameDirector:GetSpawnPathOfObjectives(p_PossibleObjectives)
+	local s_TempObject = p_PossibleObjectives[MathUtils:GetRandomInt(1, #p_PossibleObjectives)]
+	local s_AvailableSpawnPaths = nil
+	for _, l_Objective in pairs(self.m_AllObjectives) do
+		if l_Objective.isSpawnPath and string.find(l_Objective.name, s_TempObject.name) ~= nil then
+			s_AvailableSpawnPaths = l_Objective.name
+			break
+		end
+	end
+	-- check for spawn objectives
+	if s_AvailableSpawnPaths ~= nil then
+		local s_AllObjectives = m_NodeCollection:GetKnownOjectives()
+		local s_PathsWithObjective = s_AllObjectives[s_AvailableSpawnPaths]
+		return s_PathsWithObjective[MathUtils:GetRandomInt(1, #s_PathsWithObjective)], 1
+	else
+		return s_TempObject.path, MathUtils:GetRandomInt(1, #m_NodeCollection:Get(nil, s_TempObject.path))
 	end
 end
 
@@ -517,6 +557,7 @@ function GameDirector:_InitObjectives()
 		local s_Objective = {
 			name = l_ObjectiveName,
 			team = TeamId.TeamNeutral,
+			position = nil,
 			isAttacked = false,
 			isBase = false,
 			isSpawnPath = false,
@@ -722,7 +763,7 @@ function GameDirector:_TranslateObjective(p_Position, p_Name)
 			if s_TempObject == nil or (not s_TempObject.isSpawnPath and not s_TempObject.isEnterVehiclePath) then -- or not s_TempObject.isBase
 				local s_Distance = p_Position:Distance(s_Node.Position)
 				if s_ClosestDistance == nil or s_ClosestDistance > s_Distance then
-					s_ClosestObjective = l_Objective
+					s_ClosestObjective = s_TempObject
 					s_ClosestDistance = s_Distance
 				end
 			end
@@ -731,9 +772,10 @@ function GameDirector:_TranslateObjective(p_Position, p_Name)
 		end
 	end
 	if p_Name ~= nil then
-		self.m_Translations[p_Name] = s_ClosestObjective
+		self.m_Translations[p_Name] = s_ClosestObjective.name
+		s_ClosestObjective.position = p_Position
 	end
-	return s_ClosestObjective
+	return s_ClosestObjective.name
 end
 
 function GameDirector:_GetObjectiveObject(p_Name)
