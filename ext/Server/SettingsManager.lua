@@ -46,50 +46,50 @@ function SettingsManager:onLoad()
 	end
 
 	-- get Values from Config.lua
-	for name, value in pairs(Config) do
+	for l_Name, l_Value in pairs(Config) do
 		-- Check SQL if Config.lua has changed
-		local single = m_Database:single('SELECT * FROM `FB_Config_Trace` WHERE `Key`=\'' .. name .. '\' LIMIT 1')
+		local s_Single = m_Database:single('SELECT * FROM `FB_Config_Trace` WHERE `Key`=\'' .. l_Name .. '\' LIMIT 1')
 
 		-- If not exists, create
-		if single == nil then
+		if s_Single == nil then
 			--if Debug.Server.SETTINGS then
-			--print('SettingsManager: ADD (' .. name .. ' = ' .. tostring(value) .. ')')
+			--print('SettingsManager: ADD (' .. l_Name .. ' = ' .. tostring(l_Value) .. ')')
 			--end
 
 			m_Database:insert('FB_Config_Trace', {
-				Key = name,
-				Value = value,
+				Key = l_Name,
+				Value = l_Value,
 				Time = m_Database:now()
 			})
 
 			--m_Database:insert('FB_Settings', {
-				--Key = name,
+				--Key = l_Name,
 				--Value = DatabaseField.NULL,
 				--Time = DatabaseField.NULL
 			--})
 
 		-- If exists update Settings, if newer
 		else
-			local old = single.Value
+			local s_Old = s_Single.Value
 
-			if old == nil then
-				old = DatabaseField.NULL
+			if s_Old == nil then
+				s_Old = DatabaseField.NULL
 			end
 
 			-- @ToDo check Time / Timestamp, if newer
-			if tostring(value) == tostring(old) then
+			if tostring(l_Value) == tostring(s_Old) then
 				--if Debug.Server.SETTINGS then
-				--print('SettingsManager: SKIP (' .. name .. ' = ' .. tostring(value) .. ', NOT MODIFIED)')
+				--print('SettingsManager: SKIP (' .. l_Name .. ' = ' .. tostring(l_Value) .. ', NOT MODIFIED)')
 				--end
 			else
 				--if Debug.Server.SETTINGS then
-				--print('SettingsManager: UPDATE (' .. name .. ' = ' .. tostring(value) .. ', Old = ' .. tostring(old) .. ')')
+				--print('SettingsManager: UPDATE (' .. l_Name .. ' = ' .. tostring(l_Value) .. ', Old = ' .. tostring(s_Old) .. ')')
 				--end
 
 				-- if changed, update SETTINGS SQL
 				m_Database:update('FB_Config_Trace', {
-					Key = name,
-					Value = value,
+					Key = l_Name,
+					Value = l_Value,
 					Time = m_Database:now()
 				}, 'Key')
 			end
@@ -101,7 +101,7 @@ function SettingsManager:onLoad()
 	end
 
 	-- Load Settings
-	local settings = m_Database:fetch([[SELECT
+	local s_Settings = m_Database:fetch([[SELECT
 											`Settings`.`Key`,
 											CASE WHEN
 												`Config`.`Key` IS NULL
@@ -120,21 +120,21 @@ function SettingsManager:onLoad()
 										AND
 											`Config`.`Time` > `Settings`.`Time`]])
 
-	if settings ~= nil then
-		for name, value in pairs(settings) do
+	if s_Settings ~= nil then
+		for l_Name, l_Value in pairs(s_Settings) do
 			--if Debug.Server.SETTINGS then
-			--print('Updating Config Variable: ' .. tostring(value.Key) .. ' = ' .. tostring(value.Value) .. ' (' .. tostring(value.Time) .. ')')
+			--print('Updating Config Variable: ' .. tostring(l_Value.Key) .. ' = ' .. tostring(l_Value.Value) .. ' (' .. tostring(l_Value.Time) .. ')')
 			--end
-			local tempValue = tonumber(value.Value)
-			if tempValue then --number?
-				Config[value.Key] = tempValue
+			local s_TempValue = tonumber(l_Value.Value)
+			if s_TempValue then --number?
+				Config[l_Value.Key] = s_TempValue
 			else --string
-				if value.Value == 'true' then
-					Config[value.Key] = true
-				elseif value.Value == 'false' then
-					Config[value.Key] = false
+				if l_Value.Value == 'true' then
+					Config[l_Value.Key] = true
+				elseif l_Value.Value == 'false' then
+					Config[l_Value.Key] = false
 				else
-					Config[value.Key] = value.Value
+					Config[l_Value.Key] = l_Value.Value
 				end
 			end
 		end
@@ -158,10 +158,10 @@ function SettingsManager:update(p_Name, p_Value, p_Temporary, p_Batch)
 
 		-- Use old deprecated querys
 		if p_Batch == false then
-			local single = m_Database:single('SELECT * FROM `FB_Settings` WHERE `Key`=\'' .. p_Name .. '\' LIMIT 1')
+			local s_Single = m_Database:single('SELECT * FROM `FB_Settings` WHERE `Key`=\'' .. p_Name .. '\' LIMIT 1')
 
 			-- If not exists, create
-			if single == nil then
+			if s_Single == nil then
 				m_Database:insert('FB_Settings', {
 					Key = p_Name,
 					Value = p_Value,

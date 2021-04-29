@@ -1,8 +1,8 @@
 class('Database')
 
 require('__shared/ArrayMap')
-local batches = ArrayMap()
-local batched = ''
+local m_Batches = ArrayMap()
+local m_Batched = ''
 local m_Logger = Logger("Database", Debug.Server.DATABASE)
 
 DatabaseField = {
@@ -17,11 +17,11 @@ DatabaseField = {
 }
 
 function Database:__init()
-	self.lastError = nil
+	self.m_LastError = nil
 end
 
 function Database:getLastError()
-	return self.lastError
+	return self.m_LastError
 end
 
 function Database:now()
@@ -35,68 +35,68 @@ end
 function Database:query(p_Query, p_Parameters)
 	SQL:Open()
 	-- @ToDo build p_Query with given p_Parameters
-	local result = SQL:Query(p_Query)
+	local s_Result = SQL:Query(p_Query)
 
-	if not result then
-		self.lastError = 'Failed to execute query: ' .. self:getError()
+	if not s_Result then
+		self.m_LastError = 'Failed to execute query: ' .. self:getError()
 		SQL:Close()
 		return nil
 	end
 
 	SQL:Close()
 
-	return result
+	return s_Result
 end
 
 function Database:createTable(p_TableName, p_Definitions, p_Names, p_Additional)
-	local entries = ArrayMap()
-	local additionals = ArrayMap()
+	local s_Entries = ArrayMap()
+	local s_Additionals = ArrayMap()
 
-	for index, value in ipairs(p_Definitions) do
-		local name = p_Names[index]
+	for i, l_Value in ipairs(p_Definitions) do
+		local s_Name = p_Names[i]
 
-		if value == DatabaseField.Text then
-			entries:add(name .. ' TEXT')
+		if l_Value == DatabaseField.Text then
+			s_Entries:add(s_Name .. ' TEXT')
 
-		elseif value == DatabaseField.PrimaryText then
-			entries:add(name .. ' TEXT UNIQUE')
+		elseif l_Value == DatabaseField.PrimaryText then
+			s_Entries:add(s_Name .. ' TEXT UNIQUE')
 
-		elseif value == DatabaseField.Integer then
-			entries:add(name .. ' INTEGER')
+		elseif l_Value == DatabaseField.Integer then
+			s_Entries:add(s_Name .. ' INTEGER')
 
-		elseif value == DatabaseField.Float then
-			entries:add(name .. ' FLOAT')
+		elseif l_Value == DatabaseField.Float then
+			s_Entries:add(s_Name .. ' FLOAT')
 
-		elseif value == DatabaseField.Time then
-			entries:add(name .. ' DATETIME')
+		elseif l_Value == DatabaseField.Time then
+			s_Entries:add(s_Name .. ' DATETIME')
 
 		end
 	end
 
 	if p_Additional ~= nil then
-		for index, value in pairs(p_Additional) do
-			entries:add(value)
-			additionals:add(value)
+		for _, l_Value in pairs(p_Additional) do
+			s_Entries:add(l_Value)
+			s_Additionals:add(l_Value)
 		end
 	end
 
-	return self:query('CREATE TABLE IF NOT EXISTS ' .. p_TableName .. ' (' .. entries:join(', ') .. ')')
+	return self:query('CREATE TABLE IF NOT EXISTS ' .. p_TableName .. ' (' .. s_Entries:join(', ') .. ')')
 end
 
 function Database:single(p_Query)
-	local results = self:query(p_Query)
+	local s_Results = self:query(p_Query)
 
-	if results == nil then
+	if s_Results == nil then
 		return nil
 	end
 
-	return results[1]
+	return s_Results[1]
 end
 
 function Database:count(p_Query, p_Parameters)
-	local results = self:query(p_Query, p_Parameters)
+	local s_Results = self:query(p_Query, p_Parameters)
 
-	return #results
+	return #s_Results
 end
 
 function Database:fetch(p_Query)
@@ -104,136 +104,136 @@ function Database:fetch(p_Query)
 end
 
 function Database:update(p_TableName, p_Parameters, p_Where)
-	local fields = ArrayMap()
-	local found = nil
+	local s_Fields = ArrayMap()
+	local s_Found = nil
 
-	for name, value in pairs(p_Parameters) do
-		if value == nil then
-			value = 'NULL'
+	for l_Name, l_Value in pairs(p_Parameters) do
+		if l_Value == nil then
+			l_Value = 'NULL'
 
-		elseif value == self:now() then
-			value = 'CURRENT_TIMESTAMP'
+		elseif l_Value == self:now() then
+			l_Value = 'CURRENT_TIMESTAMP'
 
-		elseif value == DatabaseField.NULL then
-			value = 'NULL'
+		elseif l_Value == DatabaseField.NULL then
+			l_Value = 'NULL'
 
-		elseif tostring(value) == 'true' or value == true then
-			value = '\'true\''
+		elseif tostring(l_Value) == 'true' or l_Value == true then
+			l_Value = '\'true\''
 
-		elseif tostring(value) == 'false' or value == false then
-			value = '\'false\''
+		elseif tostring(l_Value) == 'false' or l_Value == false then
+			l_Value = '\'false\''
 
 		else
-			value = '\'' .. tostring(value) .. '\''
+			l_Value = '\'' .. tostring(l_Value) .. '\''
 		end
 
-		if p_Where == name then
-			found = value
+		if p_Where == l_Name then
+			s_Found = l_Value
 		end
 
-		fields:add(' `' .. name .. '`=' .. value .. '')
+		s_Fields:add(' `' .. l_Name .. '`=' .. l_Value .. '')
 	end
 
-	m_Logger:Write('UPDATE `' .. p_TableName .. '` SET ' .. fields:join(',') .. ' WHERE `' .. p_Where .. '`=' .. found)
+	m_Logger:Write('UPDATE `' .. p_TableName .. '` SET ' .. s_Fields:join(',') .. ' WHERE `' .. p_Where .. '`=' .. s_Found)
 
-	return self:query('UPDATE `' .. p_TableName .. '` SET ' .. fields:join(', ') .. ' WHERE `' .. p_Where .. '`=\'' .. found .. '\'')
+	return self:query('UPDATE `' .. p_TableName .. '` SET ' .. s_Fields:join(', ') .. ' WHERE `' .. p_Where .. '`=\'' .. s_Found .. '\'')
 end
 
 function Database:executeBatch()
 	self:query('DELETE FROM `FB_Settings`')
-	self:query(batched .. batches:join(', '))
+	self:query(m_Batched .. m_Batches:join(', '))
 	m_Logger:Error(self:getError())
 end
 
 function Database:batchQuery(p_TableName, p_Parameters, p_Where)
-	local names = ArrayMap()
-	local values = ArrayMap()
-	local fields = ArrayMap()
-	local found = nil
+	local s_Names = ArrayMap()
+	local s_Values = ArrayMap()
+	local s_Fields = ArrayMap()
+	local s_Found = nil
 
-	for name, value in pairs(p_Parameters) do
-		names:add('`' .. name .. '`')
+	for l_Name, l_Value in pairs(p_Parameters) do
+		s_Names:add('`' .. l_Name .. '`')
 
-		if value == nil then
-			values:add('NULL')
-			value = 'NULL'
+		if l_Value == nil then
+			s_Values:add('NULL')
+			l_Value = 'NULL'
 
-		elseif value == self:now() then
-			values:add('CURRENT_TIMESTAMP')
-			value = 'CURRENT_TIMESTAMP'
+		elseif l_Value == self:now() then
+			s_Values:add('CURRENT_TIMESTAMP')
+			l_Value = 'CURRENT_TIMESTAMP'
 
-		elseif value == DatabaseField.NULL then
-			values:add('NULL')
-			value = 'NULL'
+		elseif l_Value == DatabaseField.NULL then
+			s_Values:add('NULL')
+			l_Value = 'NULL'
 
-		elseif tostring(value) == 'true' or value == true then
-			values:add('\'true\'')
-			value = '\'true\''
+		elseif tostring(l_Value) == 'true' or l_Value == true then
+			s_Values:add('\'true\'')
+			l_Value = '\'true\''
 
-		elseif tostring(value) == 'false' or value == false then
-			values:add('\'false\'')
-			value = '\'false\''
+		elseif tostring(l_Value) == 'false' or l_Value == false then
+			s_Values:add('\'false\'')
+			l_Value = '\'false\''
 
 		else
-			values:add('\'' .. tostring(value) .. '\'')
-			value = tostring(value)
+			s_Values:add('\'' .. tostring(l_Value) .. '\'')
+			l_Value = tostring(l_Value)
 		end
 
-		if p_Where == name then
-			found = value
+		if p_Where == l_Name then
+			s_Found = l_Value
 		end
 
-		if p_Where ~= name then
-			fields:add('`' .. name .. '`=' .. value .. '')
+		if p_Where ~= l_Name then
+			s_Fields:add('`' .. l_Name .. '`=' .. l_Value .. '')
 		end
 	end
 
-	--batches:add('UPDATE `' .. p_TableName .. '` SET ' .. fields:join(', ') .. ' WHERE `' .. p_Where .. '`=\'' .. found .. '\'')
-	--batches:add('INSERT OR REPLACE INTO ' .. p_TableName .. ' (' .. names:join(', ') .. ') VALUES (' .. values:join(', ') .. ')')
-	batched = 'INSERT INTO ' .. p_TableName .. ' (' .. names:join(', ') .. ') VALUES '
-	batches:add('(' .. values:join(', ') .. ')')
+	--m_Batches:add('UPDATE `' .. p_TableName .. '` SET ' .. s_Fields:join(', ') .. ' WHERE `' .. p_Where .. '`=\'' .. s_Found .. '\'')
+	--m_Batches:add('INSERT OR REPLACE INTO ' .. p_TableName .. ' (' .. s_Names:join(', ') .. ') VALUES (' .. s_Values:join(', ') .. ')')
+	m_Batched = 'INSERT INTO ' .. p_TableName .. ' (' .. s_Names:join(', ') .. ') VALUES '
+	m_Batches:add('(' .. s_Values:join(', ') .. ')')
 
 	return true
 end
 
 function Database:delete(p_TableName, p_Parameters)
-	local where = ArrayMap()
+	local s_Where = ArrayMap()
 
-	for name, value in pairs(p_Parameters) do
-		where:add('`' .. name .. '`=\'' ..value .. '\'')
+	for l_Name, l_Value in pairs(p_Parameters) do
+		s_Where:add('`' .. l_Name .. '`=\'' ..l_Value .. '\'')
 	end
 
-	return self:query('DELETE FROM ' .. p_TableName .. ' WHERE ' .. where:join(' AND '))
+	return self:query('DELETE FROM ' .. p_TableName .. ' WHERE ' .. s_Where:join(' AND '))
 end
 
 function Database:insert(p_TableName, p_Parameters)
-	local names = ArrayMap()
-	local values = ArrayMap()
+	local s_Names = ArrayMap()
+	local s_Values = ArrayMap()
 
-	for name, value in pairs(p_Parameters) do
-		names:add('`' .. name .. '`')
+	for l_Name, l_Value in pairs(p_Parameters) do
+		s_Names:add('`' .. l_Name .. '`')
 
-		if value == nil then
-			values:add('NULL')
+		if l_Value == nil then
+			s_Values:add('NULL')
 
-		elseif value == self:now() then
-			values:add('CURRENT_TIMESTAMP')
+		elseif l_Value == self:now() then
+			s_Values:add('CURRENT_TIMESTAMP')
 
-		elseif value == DatabaseField.NULL then
-			values:add('NULL')
+		elseif l_Value == DatabaseField.NULL then
+			s_Values:add('NULL')
 
-		elseif tostring(value) == 'true' or value == true then
-			values:add('\'true\'')
+		elseif tostring(l_Value) == 'true' or l_Value == true then
+			s_Values:add('\'true\'')
 
-		elseif tostring(value) == 'false' or value == false then
-			values:add('\'false\'')
+		elseif tostring(l_Value) == 'false' or l_Value == false then
+			s_Values:add('\'false\'')
 
 		else
-			values:add('\'' .. tostring(value) .. '\'')
+			s_Values:add('\'' .. tostring(l_Value) .. '\'')
 		end
 	end
 
-	self:query('INSERT INTO ' .. p_TableName .. ' (' .. names:join(', ') .. ') VALUES (' .. values:join(', ') .. ')')
+	self:query('INSERT INTO ' .. p_TableName .. ' (' .. s_Names:join(', ') .. ') VALUES (' .. s_Values:join(', ') .. ')')
 
 	return SQL:LastInsertId()
 end

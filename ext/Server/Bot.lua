@@ -1249,29 +1249,29 @@ function Bot:_updateMovement()
 									for i = 0, s_Entity.entryCount - 1 do
 										if s_Entity:GetPlayerInEntry(i) == nil then
 											self.m_Player:EnterVehicle(s_Entity, i)
-											
 											self._VehicleEntity = s_Entity.physicsEntityBase
-											for i = 0, self._VehicleEntity.partCount - 1 do
-												if self.m_Player.controlledControllable.physicsEntityBase:GetPart(i) ~= nil and self.m_Player.controlledControllable.physicsEntityBase:GetPart(i):Is("ServerChildComponent") then
-													local s_QuatTransform = self.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(i)
+											for j = 0, self._VehicleEntity.partCount - 1 do
+												if self.m_Player.controlledControllable.physicsEntityBase:GetPart(j) ~= nil and self.m_Player.controlledControllable.physicsEntityBase:GetPart(j):Is("ServerChildComponent") then
+													local s_QuatTransform = self.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(j)
 													if s_QuatTransform == nil then
 														return
 													end
 													self._VehicleMovableTransform = s_QuatTransform
-													self._VehicleMovableId = i
+													self._VehicleMovableId = j
 													break
 												end
 											end
 
 											self._ActionActive = false
-											local s_Node = g_GameDirector:findClosestPath(s_Position, true)
+											local s_Node = g_GameDirector:FindClosestPath(s_Position, true)
 											if s_Node ~= nil then
 												-- switch to vehicle
 												s_Point = s_Node
-												s_NextPoint = s_Node
 												self._InvertPathDirection = false
 												self._PathIndex = s_Node.PathIndex
 												self._CurrentWayPoint = s_Node.PointIndex
+												s_NextPoint = m_NodeCollection:Get(self:_getWayIndex(self._CurrentWayPoint + 1), self._PathIndex)
+												self._LastWayDistance = 1000
 											end
 											break
 										end
@@ -1450,7 +1450,7 @@ function Bot:_updateMovement()
 							-- CHECK FOR ACTION
 							if s_Point.Data.Action ~= nil then
 								local s_Action = s_Point.Data.Action
-								if g_GameDirector:checkForExecution(s_Point, self.m_Player.teamId) then
+								if g_GameDirector:CheckForExecution(s_Point, self.m_Player.teamId) then
 									self._ActionActive = true
 									if s_Action.time ~= nil then
 										self._ActionTimer = s_Action.time
@@ -1469,7 +1469,7 @@ function Bot:_updateMovement()
 							-- CHECK FOR PATH-SWITCHES
 							local s_NewWaypoint = nil
 							local s_SwitchPath = false
-							s_SwitchPath, s_NewWaypoint = m_PathSwitcher:getNewPath(self.m_Name, s_Point, self._Objective, self.m_InVehicle)
+							s_SwitchPath, s_NewWaypoint = m_PathSwitcher:GetNewPath(self.m_Name, s_Point, self._Objective, self.m_InVehicle)
 							if not self.m_Player.alive then
 								return
 							end
