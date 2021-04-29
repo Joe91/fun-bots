@@ -74,14 +74,18 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle)
 		local s_NewPathStatus = m_GameDirector:GetEnableStateOfPath(s_PathNode.Data.Objectives or {})
 		local s_NewBasePath = m_GameDirector:IsBasePath(s_PathNode.Data.Objectives or {})
 
+		-- check for vehicle usage
+		if s_PathNode.Data.Objectives ~= nil and #s_PathNode.Data.Objectives == 1 and s_NewPoint.ID ~= p_Point.ID then
+			if m_GameDirector:UseVehicle(p_BotName, s_PathNode.Data.Objectives[1]) == true then
+				return true, s_NewPoint
+			end
+		end
+
 		-- this path has listed objectives
 		if s_PathNode.Data.Objectives ~= nil and p_Objective ~= '' then
 			-- check for possible subObjective
 			if #s_PathNode.Data.Objectives == 1 and s_NewPoint.ID ~= p_Point.ID then
 				if m_GameDirector:UseSubobjective(p_BotName, s_PathNode.Data.Objectives[1]) == true then
-					return true, s_NewPoint
-				end
-				if m_GameDirector:UseVehicle(p_BotName, s_PathNode.Data.Objectives[1]) == true then
 					return true, s_NewPoint
 				end
 			end

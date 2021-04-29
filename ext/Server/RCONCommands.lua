@@ -384,9 +384,25 @@ function RCONCommands:__init()
 				local t = TeamId.TeamNeutral
 
 				if team == "Team1" then
-					t = TeamId.Team1
+					t = TeamId.Team1;
 				elseif team == "Team2" then
-					t = TeamId.Team2
+					t = TeamId.Team2;
+				elseif team == "Team3" then
+					t = TeamId.Team3;
+				elseif team == "Team4" then
+					t = TeamId.Team4;
+				elseif team == "Team5" then
+					t = TeamId.Team5;
+				elseif team == "Team6" then
+					t = TeamId.Team6;
+				elseif team == "Team7" then
+					t = TeamId.Team7;
+				elseif team == "Team8" then
+					t = TeamId.Team8;
+				elseif team == "Team9" then
+					t = TeamId.Team9;
+				elseif team == "Team0" then
+					t = TeamId.Team0;
 				end
 
 				m_BotSpawner:spawnWayBots(nil, amount, true, nil, nil, t)
