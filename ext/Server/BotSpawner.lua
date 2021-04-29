@@ -351,7 +351,7 @@ function BotSpawner:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 			if l_Bot.m_Player.soldier ~= nil then
 				local s_Position = l_Bot.m_Player.soldier.worldTransform.trans:Clone()
 				--local s_Node = m_NodeCollection:Find(s_Position, 5);
-				local s_Node = g_GameDirector:findClosestPath(s_Position, false)
+				local s_Node = g_GameDirector:FindClosestPath(s_Position, false)
 				if s_Node ~= nil then
 					l_Bot:setVarsWay(nil, true, s_Node.PathIndex, s_Node.PointIndex, false)
 					table.remove(self._BotsWithoutPath, i)
@@ -464,7 +464,7 @@ function BotSpawner:_getSpawnPoint(p_TeamId, p_SquadId)
 	-- CONQUEST
 	-- spawn at base, squad-mate, captured flag
 	if Globals.IsConquest then
-		s_ActiveWayIndex, s_IndexOnPath = g_GameDirector:getSpawnPath(p_TeamId, p_SquadId, false)
+		s_ActiveWayIndex, s_IndexOnPath = g_GameDirector:GetSpawnPath(p_TeamId, p_SquadId, false)
 
 		if s_ActiveWayIndex == 0 then
 			-- something went wrong. use random path
@@ -478,7 +478,7 @@ function BotSpawner:_getSpawnPoint(p_TeamId, p_SquadId)
 	-- RUSH
 	-- spawn at base (of zone) or squad-mate
 	elseif Globals.IsRush then
-		s_ActiveWayIndex, s_IndexOnPath = g_GameDirector:getSpawnPath(p_TeamId, p_SquadId, true)
+		s_ActiveWayIndex, s_IndexOnPath = g_GameDirector:GetSpawnPath(p_TeamId, p_SquadId, true)
 
 		if s_ActiveWayIndex == 0 then
 			-- something went wrong. use random path

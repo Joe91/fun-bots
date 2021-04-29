@@ -198,8 +198,7 @@ function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode)
 	self:SetGameMode(s_GameMode)
 
 	m_NodeEditor:OnLevelLoaded(p_LevelName, s_GameMode)
-	m_GameDirector:onLevelLoaded()
-	m_GameDirector:initObjectives()
+	m_GameDirector:OnLevelLoaded()
 	m_BotSpawner:OnLevelLoaded()
 	NetEvents:BroadcastUnreliableLocal('WriteClientSettings', Config, true)
 end

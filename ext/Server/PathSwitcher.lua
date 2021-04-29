@@ -15,8 +15,8 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle)
 	local s_CurrentPathFirst = m_NodeCollection:GetFirst(p_Point.PathIndex)
 	local s_CurrentPathStatus = 0
 	if s_CurrentPathFirst.Data ~= nil and s_CurrentPathFirst.Data.Objectives ~= nil then
-		s_CurrentPathStatus = m_GameDirector:getEnableSateOfPath(s_CurrentPathFirst.Data.Objectives)
-		s_OnBasePath = m_GameDirector:isBasePath(s_CurrentPathFirst.Data.Objectives)
+		s_CurrentPathStatus = m_GameDirector:GetEnableStateOfPath(s_CurrentPathFirst.Data.Objectives)
+		s_OnBasePath = m_GameDirector:IsBasePath(s_CurrentPathFirst.Data.Objectives)
 	end
 
 	if p_Point.Data == nil or p_Point.Data.Links == nil or #p_Point.Data.Links < 1 then
@@ -71,17 +71,17 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle)
 	for i = 1, #s_PossiblePaths do
 		local s_NewPoint = s_PossiblePaths[i]
 		local s_PathNode = m_NodeCollection:GetFirst(s_NewPoint.PathIndex)
-		local s_NewPathStatus = m_GameDirector:getEnableSateOfPath(s_PathNode.Data.Objectives or {})
-		local s_NewBasePath = m_GameDirector:isBasePath(s_PathNode.Data.Objectives or {})
+		local s_NewPathStatus = m_GameDirector:GetEnableStateOfPath(s_PathNode.Data.Objectives or {})
+		local s_NewBasePath = m_GameDirector:IsBasePath(s_PathNode.Data.Objectives or {})
 
 		-- this path has listed objectives
 		if s_PathNode.Data.Objectives ~= nil and p_Objective ~= '' then
 			-- check for possible subObjective
 			if #s_PathNode.Data.Objectives == 1 and s_NewPoint.ID ~= p_Point.ID then
-				if m_GameDirector:useSubobjective(p_BotName, s_PathNode.Data.Objectives[1]) == true then
+				if m_GameDirector:UseSubobjective(p_BotName, s_PathNode.Data.Objectives[1]) == true then
 					return true, s_NewPoint
 				end
-				if m_GameDirector:useVehicle(p_BotName, s_PathNode.Data.Objectives[1]) == true then
+				if m_GameDirector:UseVehicle(p_BotName, s_PathNode.Data.Objectives[1]) == true then
 					return true, s_NewPoint
 				end
 			end

@@ -1263,7 +1263,7 @@ function Bot:_updateMovement()
 											end
 
 											self._ActionActive = false
-											local s_Node = g_GameDirector:findClosestPath(s_Position, true)
+											local s_Node = g_GameDirector:FindClosestPath(s_Position, true)
 											if s_Node ~= nil then
 												-- switch to vehicle
 												s_Point = s_Node
@@ -1450,7 +1450,7 @@ function Bot:_updateMovement()
 							-- CHECK FOR ACTION
 							if s_Point.Data.Action ~= nil then
 								local s_Action = s_Point.Data.Action
-								if g_GameDirector:checkForExecution(s_Point, self.m_Player.teamId) then
+								if g_GameDirector:CheckForExecution(s_Point, self.m_Player.teamId) then
 									self._ActionActive = true
 									if s_Action.time ~= nil then
 										self._ActionTimer = s_Action.time
