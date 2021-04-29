@@ -723,7 +723,7 @@ function GameDirector:_UpdateObjective(p_Name, p_Data)
 end
 
 function GameDirector:_GetDistanceFromObjective(p_Objective, p_Position)
-	local s_Distance =  math.huge
+	local s_Distance = math.huge
 	if p_Objective == '' then
 		return s_Distance
 	end
