@@ -1171,6 +1171,10 @@ end
 -- <Direction> will be either 'Next' or 'Previous'
 function NodeCollection:ObjectiveDirection(p_Waypoint, p_Objective, p_InVehicle)
 
+	if p_Objective == '' then
+		return 'Next', nil
+	end
+
 	local bestDirection = nil
 	local bestWaypoint = nil
 

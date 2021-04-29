@@ -5,30 +5,30 @@ local function CheckVersion()
 		print('Checking for Updates...')
 	end
 
-	local response = Net:GetHTTP('https://api.github.com/repos/Joe91/fun-bots/releases?per_page=1')
-	local json = json.decode(response.body)
+	local s_Response = Net:GetHTTP('https://api.github.com/repos/Joe91/fun-bots/releases?per_page=1')
+	local s_JSON = json.decode(s_Response.body)
 
-	if json == nil or json[1] == nil then
+	if s_JSON == nil or s_JSON[1] == nil then
 		if Debug.Globals.UPDATE then
 			print('Can\'t fetch the latest Version from GitHub.')
 		end
-	elseif 'V' .. VERSION ~= json[1].name then
-		local isOlderVersion = false
-		local currentV = VERSION:split('.')
-		local latestV = json[1].name:sub(2):split('.')
+	elseif 'V' .. VERSION ~= s_JSON[1].name then
+		local s_IsOlderVersion = false
+		local s_CurrentVersion = VERSION:split('.')
+		local s_LatestVersion = s_JSON[1].name:sub(2):split('.')
 
-		for i = 1, #currentV do
-			if (currentV[i] ~= latestV[i]) then
-				isOlderVersion = (currentV[i] < latestV[i])
+		for i = 1, #s_CurrentVersion do
+			if s_CurrentVersion[i] ~= s_LatestVersion[i] then
+				s_IsOlderVersion = (s_CurrentVersion[i] < s_LatestVersion[i])
 				break
 			end
 		end
 
-		if (isOlderVersion) then
+		if s_IsOlderVersion then
 			print('++++++++++++++++++++++++++++++++++++++++++++++++++')
 			print('New version available!')
 			print('Installed Version: V' .. VERSION)
-			print('Online Version: ' .. json[1].name)
+			print('Online Version: ' .. s_JSON[1].name)
 			print('++++++++++++++++++++++++++++++++++++++++++++++++++')
 		elseif Debug.Globals.UPDATE then
 			print('You have already the newest version installed.')
