@@ -153,14 +153,14 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 	for l_BotTeam, l_Bots in pairs(self.m_BotsByTeam) do
 		for _, l_Bot in pairs(l_Bots) do
 			if l_Bot:getObjective() == '' then
-				if l_Bot.m_Player.alive then
+				if not l_Bot.m_Player.alive then
 					goto continue_inner_loop
 				end
 				-- find closest objective for bot
 				local s_ClosestDistance = nil
 				local s_ClosestObjective = nil
 				for _, l_Objective in pairs(self.m_AllObjectives) do
-					if not l_Objective.subObjective then
+					if l_Objective.subObjective then
 						goto continue_inner_inner_loop
 					end
 					if l_Objective.isBase or not l_Objective.active or l_Objective.destroyed then
@@ -446,8 +446,6 @@ end
 function GameDirector:UseVehicle(p_BotName, p_Objective)
 	local s_TempObjective = self:_GetObjectiveObject(p_Objective)
 	if s_TempObjective ~= nil and s_TempObjective.active and s_TempObjective.isEnterVehiclePath then
-		local s_Bot = g_BotManager:getBotByName(p_BotName)
-		s_Bot:setObjective(p_Objective)
 		s_TempObjective.active = false
 		return true
 	end
