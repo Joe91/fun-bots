@@ -38,7 +38,7 @@ function BotSpawner:OnTeamChange(p_Player, p_TeamId, p_SquadId)
 				end
 			end
 		end
-    end
+	end
 end
 
 function BotSpawner:updateBotAmountAndTeam()

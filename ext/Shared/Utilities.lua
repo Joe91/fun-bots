@@ -7,7 +7,7 @@ function Utilities:__init()
 end
 
 function Utilities:getCameraPos(p_Player, p_IsTarget)
-	local returnVec = Vec3(0,0,0)
+	local returnVec = Vec3(0, 0, 0)
 	local cameraVec = p_Player.input.authoritativeCameraPosition:Clone()
 
 	if cameraVec.z ~= 0 then
@@ -180,11 +180,11 @@ function table:has(p_Value)
 end
 
 function string:isLower(p_Value)
-     return string:lower() == string
+	 return string:lower() == string
 end
 
 function string:isDigit(p_Value)
-     return tonumber(string) ~= nil
+	 return tonumber(string) ~= nil
 end
 
 function string:split(sep)
@@ -197,15 +197,15 @@ function string:split(sep)
 end
 
 function requireExists(module)
-    local function reference(module)
-        require(module)
-    end
+	local function reference(module)
+		require(module)
+	end
 
-    res = pcall(reference, module)
+	res = pcall(reference, module)
 
-    if not(res) then
-        -- Not found.
-    end
+	if not(res) then
+		-- Not found.
+	end
 end
 
 if g_Utilities == nil then

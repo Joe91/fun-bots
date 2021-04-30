@@ -76,9 +76,9 @@ function NodeEditor:OnPlayerRespawn(p_Player)
 end
 
 function NodeEditor:OnPlayerKilled(p_Player)
-    if p_Player == nil or self.m_BotVision[p_Player.name] == nil then
-    	return
-    end
+	if p_Player == nil or self.m_BotVision[p_Player.name] == nil then
+		return
+	end
 	self.m_BotVision[p_Player.name] = {
 		Player = p_Player,
 		Current = 0,
