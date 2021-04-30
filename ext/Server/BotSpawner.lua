@@ -80,7 +80,7 @@ function BotSpawner:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 		if self._BotSpawnTimer > 0.2 then --time to wait between spawn. 0.2 works
 			self._BotSpawnTimer = 0
 			local s_SpawnSet = table.remove(self._SpawnSets)
-			self:_spawnSigleWayBot(s_SpawnSet.m_PlayerVarOfBot, s_SpawnSet.m_UseRandomWay, s_SpawnSet.m_ActiveWayIndex, s_SpawnSet.m_IndexOnPath, nil, s_SpawnSet.m_Team)
+			self:_SpawnSingleWayBot(s_SpawnSet.m_PlayerVarOfBot, s_SpawnSet.m_UseRandomWay, s_SpawnSet.m_ActiveWayIndex, s_SpawnSet.m_IndexOnPath, nil, s_SpawnSet.m_Team)
 		end
 		self._BotSpawnTimer = self._BotSpawnTimer + p_DeltaTime
 	else
@@ -206,10 +206,10 @@ function BotSpawner:OnRespawnBot(p_BotName)
 	elseif s_SpawnMode == 4 then --fixed Way
 		local s_WayIndex = s_Bot:getWayIndex()
 		local s_RandIndex = MathUtils:GetRandomInt(1, #m_NodeCollection:Get(nil, s_WayIndex))
-		self:_spawnSigleWayBot(nil, false, s_WayIndex, s_RandIndex, s_Bot)
+		self:_SpawnSingleWayBot(nil, false, s_WayIndex, s_RandIndex, s_Bot)
 
 	elseif s_SpawnMode == 5 then --random Way
-		self:_spawnSigleWayBot(nil, true, 0, 0, s_Bot)
+		self:_SpawnSingleWayBot(nil, true, 0, 0, s_Bot)
 	end
 end
 
