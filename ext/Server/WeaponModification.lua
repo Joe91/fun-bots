@@ -6,34 +6,6 @@ local m_Logger = Logger("WeaponModification", Debug.Shared.MODIFICATIONS)
 
 function WeaponModification:__init()
 	self:RegisterVars()
-
-	--self.m_Crouch = (Config.BotAttackMode == "Crouch")
-	--[[
-	local s_IsBot = {}
-	s_IsBot["voteban_flash"] = true
-	Events:Subscribe('GunSway:Update', function(p_GunSway, p_Weapon, p_WeaponFiring, p_DeltaTime)
-		if p_Weapon == nil then
-			return
-		end
-		local soldier = SoldierEntity(p_Weapon.bus.parent.entities[26])
-		if soldier == nil or soldier.player == nil then
-			return
-		end
-		if s_IsBot[soldier.player.name] ~= nil then
-			local p_GunSwayData = GunSwayData(p_GunSway.data)
-			if soldier.pose == CharacterPoseType.CharacterPoseType_Stand then
-				p_GunSway.dispersionAngle = p_GunSwayData.stand.zoom.baseValue.minAngle
-			elseif soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
-				p_GunSway.dispersionAngle = p_GunSwayData.crouch.zoom.baseValue.minAngle
-
-			elseif soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
-				p_GunSway.dispersionAngle = p_GunSwayData.prone.zoom.baseValue.minAngle
-			else
-				return
-			end
-		end
-	end)
-	--]]
 end
 
 function WeaponModification:RegisterVars()
@@ -86,7 +58,7 @@ function WeaponModification:OnPartitionLoaded(p_Partition)
 				return
 			end
 			if self.m_AlreadyLoaded then
-				self:_resetAll()
+				self:RegisterVars()  --reset all vars
 			end
 			table.insert(self.m_WeaponInstances, p_Instance)
 			return
