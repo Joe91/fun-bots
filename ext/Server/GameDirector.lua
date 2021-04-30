@@ -130,7 +130,7 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 	for i = 1, Globals.NrOfTeams do
 		s_MaxAssigns[i] = 0
 		if self.m_BotsByTeam[i] ~= nil then
-			s_MaxAssigns[i] = math.floor((#self.m_BotsByTeam[i] / Globals.NrOfTeams)+1)
+			s_MaxAssigns[i] = math.floor((#self.m_BotsByTeam[i] / Globals.NrOfTeams) + 1)
 			if (#self.m_BotsByTeam[i] % 2) == 1 then
 				s_MaxAssigns[i] = s_MaxAssigns[i] + 1
 			end
@@ -723,7 +723,7 @@ function GameDirector:_UpdateObjective(p_Name, p_Data)
 end
 
 function GameDirector:_GetDistanceFromObjective(p_Objective, p_Position)
-	local s_Distance =  math.huge
+	local s_Distance = math.huge
 	if p_Objective == '' then
 		return s_Distance
 	end
