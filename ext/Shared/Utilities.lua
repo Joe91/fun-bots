@@ -170,21 +170,21 @@ function Utilities:dump(o, p_Format, p_MaxLevels, p_Level)
 	end
 end
 
-function table:has(p_Value)
-	for i=1, #self do
-		if (self[i] == p_Value) then
+function Utilities:has(object, value)
+	for i=1, #object do
+		if (object[i] == value) then
 			return true
 		end
 	end
 	return false
 end
 
-function string:isLower(p_Value)
-     return string:lower() == string
+function string:isLower(value)
+	return str:lower() == value
 end
 
-function string:isDigit(p_Value)
-     return tonumber(string) ~= nil
+function string:isDigit(value)
+	return tonumber(value) ~= nil
 end
 
 function string:split(sep)
@@ -199,13 +199,16 @@ end
 function requireExists(module)
     local function reference(module)
         require(module)
+		return true
     end
 
-    res = pcall(reference, module)
+    local status, error = pcall(reference, module)
 
-    if not(res) then
-        -- Not found.
+    if not(status) then
+		return error
     end
+
+	return status
 end
 
 if g_Utilities == nil then
