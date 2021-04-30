@@ -1,6 +1,6 @@
 class('BotSpawner')
 
-require('SpawnSet')
+require('Model/SpawnSet')
 
 local m_NodeCollection = require('__shared/NodeCollection')
 local m_BotManager = require('BotManager')

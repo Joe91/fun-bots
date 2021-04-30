@@ -409,6 +409,97 @@ function RCONCommands:__init()
 
 				return {'OK'}
 			end)
+		},
+
+		-- Permissions <Player> <PermissionName>
+		PERMISSIONS = {
+			Name		= 'funbots.Permissions',
+			Parameters	= { 'PlayerName', 'PermissionName' },
+			Callback	= (function(command, args)
+				local name			= args[1]
+				local permission	= args[2]
+
+				-- Revoke ALL Permissions
+				if permission ~= nil then
+					if permission == '!' then
+						local permissions	= PermissionManager:GetPermissions(name)
+						local result		= {'OK', 'REVOKED'}
+
+						if permissions ~= nil and #permissions >= 1 then
+							for key, value in pairs(permissions) do
+								table.insert(result, PermissionManager:GetCorrectName(value))
+							end
+						end
+
+						if PermissionManager:RevokeAll(name) then
+							return result
+						else
+							return {'ERROR', 'Can\'r revoke all Permissions from "' .. name .. '".'}
+						end
+
+					-- Revoke SPECIFIC Permission
+					elseif permission:sub(1, 1) == '!' then
+						permission = permission:sub(2)
+
+						if PermissionManager:Exists(permission) == false then
+							return {'ERROR', 'Unknown Permission:', permission}
+						end
+
+						if PermissionManager:Revoke(name, permission) then
+							return {'OK', 'REVOKED'}
+						else
+							return {'ERROR', 'Can\'r revoke the Permission "' .. PermissionManager:GetCorrectName(permission) .. '" for "' .. name .. '".'}
+						end
+					end
+				end
+
+				if name == nil then
+					local all = PermissionManager:GetAll()
+
+					if all ~= nil and #all >= 1 then
+						local result = {'OK', 'LIST'}
+
+						for key, value in pairs(all) do
+							table.insert(result, PermissionManager:GetCorrectName(value))
+						end
+
+						return result
+					end
+
+					return {'ERROR', 'Needing PlayerName.'}
+				end
+
+				local player = PlayerManager:GetPlayerByName(name)
+
+				if player == nil then
+					player = PlayerManager:GetPlayerByGuid(Guid(name))
+
+					if player == nil then
+						return {'ERROR', 'Unknown PlayerName "' .. name .. '".'}
+					end
+				end
+
+				if permission == nil then
+					local result		= { 'LIST', player.name, tostring(player.guid) }
+					local permissions	= PermissionManager:GetPermissions(name)
+
+					if permissions ~= nil then
+						for name, value in pairs(permissions) do
+							table.insert(result, PermissionManager:GetCorrectName(value))
+						end
+					end
+
+					return result
+				end
+
+				if PermissionManager:Exists(permission) == false then
+					return {'ERROR', 'Unknown Permission:', permission}
+				end
+				
+				PermissionManager:AddPermission(player.name, permission)
+				
+				return {'OK'}
+			end)
 		}
 	}
 

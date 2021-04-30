@@ -1,6 +1,6 @@
 class "NodeEditor"
 
-local m_ServerUI = require('UIServer')
+-- local m_ServerUI = require('UIServer')
 local m_NodeCollection = require('__shared/NodeCollection')
 local m_Logger = Logger("NodeEditor", Debug.Server.NODEEDITOR)
 
@@ -22,7 +22,7 @@ function NodeEditor:RegisterCustomEvents()
 	NetEvents:Subscribe('NodeEditor:Create', self, self.OnCreate)
 	NetEvents:Subscribe('NodeEditor:Init', self, self.OnInit)
 	NetEvents:Subscribe('NodeEditor:WarpTo', self, self.OnWarpTo)
-	NetEvents:Subscribe('UI_Request_Save_Settings', self, self.OnUIRequestSaveSettings)
+	-- NetEvents:Subscribe('UI_Request_Save_Settings', self, self.OnUIRequestSaveSettings)
 	NetEvents:Subscribe('NodeEditor:SetBotVision', self, self.OnSetBotVision)
 end
 

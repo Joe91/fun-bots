@@ -57,4 +57,4 @@ Permissions = {
 	
 	-- Settings
 	'UserInterface.Settings'
-};
+}

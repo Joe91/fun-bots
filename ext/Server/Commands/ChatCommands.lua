@@ -11,6 +11,16 @@ function ChatCommands:execute(p_Parts, p_Player)
 		return
 	end
 
+	if p_Parts[1] == '!permissions' then
+		local s_Permissions	= PermissionManager:GetPermissions(p_Player)
+		
+		if permissions == nil then
+			ChatManager:SendMessage('You have no active permissions (GUID: ' .. tostring(p_Player.guid) .. ').', p_Player);
+		else
+			ChatManager:SendMessage('You have following permissions (GUID: ' .. tostring(p_Player.guid) .. '):', p_Player);
+			ChatManager:SendMessage(table.concat(p_Player, ', '), p_Player);
+		end
+
 	if p_Parts[1] == '!row' then
 		if tonumber(p_Parts[2]) == nil then
 			return
