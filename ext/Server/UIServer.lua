@@ -61,22 +61,22 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		local team = p_Player.teamId
 		Globals.SpawnMode = "manual"
 		if team == TeamId.Team1 then
-			BotSpawner:spawnWayBots(p_Player, amount, true, 0, 0, TeamId.Team2)
+			BotSpawner:SpawnWayBots(p_Player, amount, true, 0, 0, TeamId.Team2)
 		else
-			BotSpawner:spawnWayBots(p_Player, amount, true, 0, 0, TeamId.Team1)
+			BotSpawner:SpawnWayBots(p_Player, amount, true, 0, 0, TeamId.Team1)
 		end
 
 	elseif request.action == 'bot_spawn_friend' then
 		local amount = tonumber(request.value)
 		Globals.SpawnMode = "manual"
-		BotSpawner:spawnWayBots(p_Player, amount, true, 0, 0, p_Player.teamId)
+		BotSpawner:SpawnWayBots(p_Player, amount, true, 0, 0, p_Player.teamId)
 
 	elseif request.action == 'bot_spawn_path' then --todo: whats the difference? make a function to spawn bots on a fixed way instead?
 		local amount = 1
 		local indexOnPath = tonumber(request.pointindex) or 1
 		local index = tonumber(request.value)
 		Globals.SpawnMode = "manual"
-		BotSpawner:spawnWayBots(p_Player, amount, false, index, indexOnPath)
+		BotSpawner:SpawnWayBots(p_Player, amount, false, index, indexOnPath)
 
 	elseif request.action == 'bot_kick_all' then
 		Globals.SpawnMode = "manual"
@@ -577,7 +577,7 @@ function FunBotUIServer:_writeSettings(p_Player, p_Request)
 
 	if updateBotTeamAndNumber then
 		Globals.SpawnMode = Config.SpawnMode
-		BotSpawner:updateBotAmountAndTeam()
+		BotSpawner:UpdateBotAmountAndTeam()
 	end
 	-- @ToDo create Error Array and dont hide if has values
 	NetEvents:SendTo('UI_Settings', p_Player, false)

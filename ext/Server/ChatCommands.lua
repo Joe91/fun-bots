@@ -19,7 +19,7 @@ function ChatCommands:execute(p_Parts, p_Player)
 		local s_Length = tonumber(p_Parts[2])
 		local s_Spacing = tonumber(p_Parts[3]) or 2
 
-		m_BotSpawner:spawnBotRow(p_Player, s_Length, s_Spacing)
+		m_BotSpawner:SpawnBotRow(p_Player, s_Length, s_Spacing)
 
 	elseif p_Parts[1] == '!tower' then
 		if tonumber(p_Parts[2]) == nil then
@@ -27,7 +27,7 @@ function ChatCommands:execute(p_Parts, p_Player)
 		end
 
 		local s_Height = tonumber(p_Parts[2])
-		m_BotSpawner:spawnBotTower(p_Player, s_Height)
+		m_BotSpawner:SpawnBotTower(p_Player, s_Height)
 
 	elseif p_Parts[1] == '!grid' then
 		if tonumber(p_Parts[2]) == nil then
@@ -38,7 +38,7 @@ function ChatCommands:execute(p_Parts, p_Player)
 		local s_Columns = tonumber(p_Parts[3]) or tonumber(p_Parts[2])
 		local s_Spacing = tonumber(p_Parts[4]) or 2
 
-		m_BotSpawner:spawnBotGrid(p_Player, s_Rows, s_Columns, s_Spacing)
+		m_BotSpawner:SpawnBotGrid(p_Player, s_Rows, s_Columns, s_Spacing)
 
 	-- static mode commands
 	elseif p_Parts[1] == '!mimic' then
@@ -59,7 +59,7 @@ function ChatCommands:execute(p_Parts, p_Player)
 		local s_Amount = tonumber(p_Parts[2])
 		local s_Spacing = tonumber(p_Parts[3]) or 2
 
-		m_BotSpawner:spawnLineBots(p_Player, s_Amount, s_Spacing)
+		m_BotSpawner:SpawnLineBots(p_Player, s_Amount, s_Spacing)
 
 	elseif p_Parts[1] == '!spawnway' then
 		if tonumber(p_Parts[2]) == nil then
@@ -70,7 +70,7 @@ function ChatCommands:execute(p_Parts, p_Player)
 		local s_ActiveWayIndex = tonumber(p_Parts[3]) or 1
 		s_ActiveWayIndex = math.min(math.max(s_ActiveWayIndex, 1), #m_NodeCollection:GetPaths())
 
-		m_BotSpawner:spawnWayBots(p_Player, s_Amount, false, s_ActiveWayIndex)
+		m_BotSpawner:SpawnWayBots(p_Player, s_Amount, false, s_ActiveWayIndex)
 
 	elseif p_Parts[1] == '!spawnbots' then
 		if tonumber(p_Parts[2]) == nil then
@@ -79,7 +79,7 @@ function ChatCommands:execute(p_Parts, p_Player)
 
 		local s_Amount = tonumber(p_Parts[2])
 
-		m_BotSpawner:spawnWayBots(p_Player, s_Amount, true)
+		m_BotSpawner:SpawnWayBots(p_Player, s_Amount, true)
 
 	-- respawn moving bots
 	elseif p_Parts[1] == '!respawn' then
