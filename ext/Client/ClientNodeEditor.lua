@@ -101,28 +101,28 @@ function ClientNodeEditor:RegisterEvents()
 
 	-- enable/disable events
 	-- ('UI_CommoRose_Enabled', <Bool|Enabled>) -- true == block the BF3 commo rose
-	NetEvents:Subscribe('UI_CommoRose_Enabled', self, self._onSetCommoRoseEnabled)
+	-- NetEvents:Subscribe('UI_CommoRose_Enabled', self, self._onSetCommoRoseEnabled)
 
 	-- selection-based events, no arguments required
-	NetEvents:Subscribe('UI_CommoRose_Action_Save', self, self._onSaveNodes)
-	NetEvents:Subscribe('UI_CommoRose_Action_Select', self, self._onSelectNode)
-	NetEvents:Subscribe('UI_CommoRose_Action_Load', self, self._onLoadNodes)
+	-- NetEvents:Subscribe('UI_CommoRose_Action_Save', self, self._onSaveNodes)
+	-- NetEvents:Subscribe('UI_CommoRose_Action_Select', self, self._onSelectNode)
+	-- NetEvents:Subscribe('UI_CommoRose_Action_Load', self, self._onLoadNodes)
 
 	-- Commo Rose left buttons
-	NetEvents:Subscribe('UI_CommoRose_Action_Remove', self, self._onRemoveNode)
-	NetEvents:Subscribe('UI_CommoRose_Action_Unlink', self, self._onUnlinkNode)
-	NetEvents:Subscribe('UI_CommoRose_Action_Merge', self, self._onMergeNode)
-	NetEvents:Subscribe('UI_CommoRose_Action_SelectPrevious', self, self._onSelectPrevious)
-	NetEvents:Subscribe('UI_CommoRose_Action_ClearSelections', self, self._onClearSelection)
-	NetEvents:Subscribe('UI_CommoRose_Action_Move', self, self._onToggleMoveNode)
+	-- NetEvents:Subscribe('UI_CommoRose_Action_Remove', self, self._onRemoveNode)
+	-- NetEvents:Subscribe('UI_CommoRose_Action_Unlink', self, self._onUnlinkNode)
+	-- NetEvents:Subscribe('UI_CommoRose_Action_Merge', self, self._onMergeNode)
+	-- NetEvents:Subscribe('UI_CommoRose_Action_SelectPrevious', self, self._onSelectPrevious)
+	-- NetEvents:Subscribe('UI_CommoRose_Action_ClearSelections', self, self._onClearSelection)
+	-- NetEvents:Subscribe('UI_CommoRose_Action_Move', self, self._onToggleMoveNode)
 
 	-- Commor Rose right buttons
-	NetEvents:Subscribe('UI_CommoRose_Action_Add', self, self._onAddNode)
-	NetEvents:Subscribe('UI_CommoRose_Action_Link', self, self._onLinkNode)
-	NetEvents:Subscribe('UI_CommoRose_Action_Split', self, self._onSplitNode)
-	NetEvents:Subscribe('UI_CommoRose_Action_SelectNext', self, self._onSelectNext)
-	NetEvents:Subscribe('UI_CommoRose_Action_SelectBetween', self, self._onSelectBetween)
-	NetEvents:Subscribe('UI_CommoRose_Action_SetInput', self, self._onSetInputNode)
+	-- NetEvents:Subscribe('UI_CommoRose_Action_Add', self, self._onAddNode)
+	-- NetEvents:Subscribe('UI_CommoRose_Action_Link', self, self._onLinkNode)
+	-- NetEvents:Subscribe('UI_CommoRose_Action_Split', self, self._onSplitNode)
+	-- NetEvents:Subscribe('UI_CommoRose_Action_SelectNext', self, self._onSelectNext)
+	-- NetEvents:Subscribe('UI_CommoRose_Action_SelectBetween', self, self._onSelectBetween)
+	-- NetEvents:Subscribe('UI_CommoRose_Action_SetInput', self, self._onSetInputNode)
 
 	-- must provide arguments
 	-- ('UI_ClientNodeEditor_Trace_Show', <Int|PathIndex>)
@@ -212,23 +212,23 @@ function ClientNodeEditor:DeregisterEvents()
 	NetEvents:Unsubscribe('ClientNodeEditor:Create')
 	NetEvents:Unsubscribe('ClientNodeEditor:Init')
 
-	NetEvents:Unsubscribe('UI_CommoRose_Action_Save')
-	NetEvents:Unsubscribe('UI_CommoRose_Action_Select')
-	NetEvents:Unsubscribe('UI_CommoRose_Action_Load')
+	-- NetEvents:Unsubscribe('UI_CommoRose_Action_Save')
+	-- NetEvents:Unsubscribe('UI_CommoRose_Action_Select')
+	-- NetEvents:Unsubscribe('UI_CommoRose_Action_Load')
 
-	NetEvents:Unsubscribe('UI_CommoRose_Action_Remove')
-	NetEvents:Unsubscribe('UI_CommoRose_Action_Unlink')
-	NetEvents:Unsubscribe('UI_CommoRose_Action_Merge')
-	NetEvents:Unsubscribe('UI_CommoRose_Action_SelectPrevious')
-	NetEvents:Unsubscribe('UI_CommoRose_Action_ClearSelections')
-	NetEvents:Unsubscribe('UI_CommoRose_Action_Move')
+	-- NetEvents:Unsubscribe('UI_CommoRose_Action_Remove')
+	-- NetEvents:Unsubscribe('UI_CommoRose_Action_Unlink')
+	-- NetEvents:Unsubscribe('UI_CommoRose_Action_Merge')
+	-- NetEvents:Unsubscribe('UI_CommoRose_Action_SelectPrevious')
+	-- NetEvents:Unsubscribe('UI_CommoRose_Action_ClearSelections')
+	-- NetEvents:Unsubscribe('UI_CommoRose_Action_Move')
 
-	NetEvents:Unsubscribe('UI_CommoRose_Action_Add')
-	NetEvents:Unsubscribe('UI_CommoRose_Action_Link')
-	NetEvents:Unsubscribe('UI_CommoRose_Action_Split')
-	NetEvents:Unsubscribe('UI_CommoRose_Action_SelectNext')
-	NetEvents:Unsubscribe('UI_CommoRose_Action_SelectBetween')
-	NetEvents:Unsubscribe('UI_CommoRose_Action_SetInput')
+	-- NetEvents:Unsubscribe('UI_CommoRose_Action_Add')
+	-- NetEvents:Unsubscribe('UI_CommoRose_Action_Link')
+	-- NetEvents:Unsubscribe('UI_CommoRose_Action_Split')
+	-- NetEvents:Unsubscribe('UI_CommoRose_Action_SelectNext')
+	-- NetEvents:Unsubscribe('UI_CommoRose_Action_SelectBetween')
+	-- NetEvents:Unsubscribe('UI_CommoRose_Action_SetInput')
 
 	Events:Unsubscribe('Player:Deleted')
 	Events:Unsubscribe('Level:Destroy')
@@ -479,25 +479,25 @@ function ClientNodeEditor:_onToggleMoveNode(p_Args)
 			end
 		end
 
-		g_FunBotUIClient:_onSetOperationControls({
-			Numpad = {
-				{Grid = 'K1', Key = '1', Name = 'Remove'},
-				{Grid = 'K2', Key = '2', Name = 'Unlink'},
-				{Grid = 'K3', Key = '3', Name = 'Add'},
-				{Grid = 'K4', Key = '4', Name = 'Move'},
-				{Grid = 'K5', Key = '5', Name = 'Select'},
-				{Grid = 'K6', Key = '6', Name = 'Input'},
-				{Grid = 'K7', Key = '7', Name = 'Merge'},
-				{Grid = 'K8', Key = '8', Name = 'Link'},
-				{Grid = 'K9', Key = '9', Name = 'Split'},
-			},
-			Other = {
-				{Key = 'F12', Name = 'Settings'},
-				{Key = 'Q', Name = 'Quick Select'},
-				{Key = 'BS', Name = 'Clear Select'},
-				{Key = 'INS', Name = 'Spawn Bot'},
-			}
-		})
+		-- g_FunBotUIClient:_onSetOperationControls({
+		-- 	Numpad = {
+		-- 		{Grid = 'K1', Key = '1', Name = 'Remove'},
+		-- 		{Grid = 'K2', Key = '2', Name = 'Unlink'},
+		-- 		{Grid = 'K3', Key = '3', Name = 'Add'},
+		-- 		{Grid = 'K4', Key = '4', Name = 'Move'},
+		-- 		{Grid = 'K5', Key = '5', Name = 'Select'},
+		-- 		{Grid = 'K6', Key = '6', Name = 'Input'},
+		-- 		{Grid = 'K7', Key = '7', Name = 'Merge'},
+		-- 		{Grid = 'K8', Key = '8', Name = 'Link'},
+		-- 		{Grid = 'K9', Key = '9', Name = 'Split'},
+		-- 	},
+		-- 	Other = {
+		-- 		{Key = 'F12', Name = 'Settings'},
+		-- 		{Key = 'Q', Name = 'Quick Select'},
+		-- 		{Key = 'BS', Name = 'Clear Select'},
+		-- 		{Key = 'INS', Name = 'Spawn Bot'},
+		-- 	}
+		-- })
 
 		self:Log('Edit Mode: %s', self.editMode)
 		return true
@@ -522,26 +522,26 @@ function ClientNodeEditor:_onToggleMoveNode(p_Args)
 		self.editMode = 'move'
 		self.editModeManualOffset = Vec3.zero
 
-		g_FunBotUIClient:_onSetOperationControls({
-			Numpad = {
-				{Grid = 'K1', Key = '1', Name = 'Mode'},
-				{Grid = 'K2', Key = '2', Name = 'Back'},
-				{Grid = 'K3', Key = '3', Name = 'Down'},
-				{Grid = 'K4', Key = '4', Name = 'Left'},
-				{Grid = 'K5', Key = '5', Name = 'Finish'},
-				{Grid = 'K6', Key = '6', Name = 'Right'},
-				{Grid = 'K7', Key = '7', Name = 'Reset'},
-				{Grid = 'K8', Key = '8', Name = 'Forward'},
-				{Grid = 'K9', Key = '9', Name = 'Up'},
-			},
-			Other = {
-				{Key = 'F12', Name = 'Settings'},
-				{Key = 'Q', Name = 'Finish Move'},
-				{Key = 'BS', Name = 'Cancel Move'},
-				{Key = 'KP_PLUS', Name = 'Speed +'},
-				{Key = 'KP_MINUS', Name = 'Speed -'},
-			}
-		})
+		-- g_FunBotUIClient:_onSetOperationControls({
+		-- 	Numpad = {
+		-- 		{Grid = 'K1', Key = '1', Name = 'Mode'},
+		-- 		{Grid = 'K2', Key = '2', Name = 'Back'},
+		-- 		{Grid = 'K3', Key = '3', Name = 'Down'},
+		-- 		{Grid = 'K4', Key = '4', Name = 'Left'},
+		-- 		{Grid = 'K5', Key = '5', Name = 'Finish'},
+		-- 		{Grid = 'K6', Key = '6', Name = 'Right'},
+		-- 		{Grid = 'K7', Key = '7', Name = 'Reset'},
+		-- 		{Grid = 'K8', Key = '8', Name = 'Forward'},
+		-- 		{Grid = 'K9', Key = '9', Name = 'Up'},
+		-- 	},
+		-- 	Other = {
+		-- 		{Key = 'F12', Name = 'Settings'},
+		-- 		{Key = 'Q', Name = 'Finish Move'},
+		-- 		{Key = 'BS', Name = 'Cancel Move'},
+		-- 		{Key = 'KP_PLUS', Name = 'Speed +'},
+		-- 		{Key = 'KP_MINUS', Name = 'Speed -'},
+		-- 	}
+		-- })
 
 		self:Log('Edit Mode: %s', self.editMode)
 		return true
@@ -1144,15 +1144,19 @@ function ClientNodeEditor:_onStartTrace()
 
 	self:Log('Custom Trace Started')
 
-	g_FunBotUIClient:_onUITrace(true)
-	g_FunBotUIClient:_onUITraceIndex(self.customTraceIndex)
-	g_FunBotUIClient:_onUITraceWaypoints(#self.customTrace:Get())
-	g_FunBotUIClient:_onUITraceWaypointsDistance(self.customTraceDistance)
+	NetEvents:Send('WaypointEditor:TraceToggle', {
+		Enabled		= true,
+		TraceIndex	= self.customTraceIndex,
+		Distance	= self.customTraceDistance,
+		Waypoints	= #self.customTrace:Get()
+	})
 end
 
 function ClientNodeEditor:_onEndTrace()
 	self.customTraceTimer = -1
-	g_FunBotUIClient:_onUITrace(false)
+	NetEvents:Send('WaypointEditor:TraceToggle', {
+		Enabled = false
+	})
 
 	local firstWaypoint = self.customTrace:GetFirst()
 
@@ -1185,10 +1189,12 @@ function ClientNodeEditor:_onClearTrace()
 	self.customTraceIndex = self:_getNewIndex()
 	self.customTraceDistance = 0
 	self.customTrace:Clear()
-	g_FunBotUIClient:_onUITrace(false)
-	g_FunBotUIClient:_onUITraceIndex(self.customTraceIndex)
-	g_FunBotUIClient:_onUITraceWaypoints(#self.customTrace:Get())
-	g_FunBotUIClient:_onUITraceWaypointsDistance(self.customTraceDistance)
+	NetEvents:Send('WaypointEditor:TraceToggle', {
+		Enabled		= false,
+		TraceIndex	= self.customTraceIndex,
+		Waypoints	= #self.customTrace:Get(),
+		Distance	= self.customTraceDistance
+	})
 
 	self:Log('Custom Trace Cleared')
 end
@@ -1327,7 +1333,7 @@ function ClientNodeEditor:_onCommoRoseAction(p_Action, p_Hit)
 
 	if (p_Action == 'Hide') then
 		self.commoRoseActive = false
-		g_FunBotUIClient:_onUICommonRose('false')
+		-- g_FunBotUIClient:_onUICommonRose('false')
 		return
 	end
 
@@ -1722,8 +1728,12 @@ function ClientNodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 					end
 
 					self.customTraceDistance = self.customTraceDistance + lastDistance
-					g_FunBotUIClient:_onUITraceWaypointsDistance(self.customTraceDistance)
-					g_FunBotUIClient:_onUITraceWaypoints(#self.customTrace:Get())
+					NetEvents:Send('WaypointEditor:TraceToggle', {
+						Waypoints	= #self.customTrace:Get(),
+						Distance	= self.customTraceDistance
+					})
+					--g_FunBotUIClient:_onUITraceWaypointsDistance(self.customTraceDistance)
+					--g_FunBotUIClient:_onUITraceWaypoints(#self.customTrace:Get())
 				end
 			else
 				-- collection is empty, stop the timer

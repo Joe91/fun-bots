@@ -14,20 +14,20 @@ require ('__shared/Utils/Logger')
 
 local m_Logger = Logger("FunBotClient", true)
 
-local m_Language = require('__shared/Language')
-local m_FunBotUIClient = require('UIClient')
+--local m_Language = require('__shared/Language')
 local m_ClientBotManager = require('ClientBotManager')
 local m_ClientNodeEditor = require('ClientNodeEditor')
+local m_ClientUi = require('UI/UI');
+
 
 function FunBotClient:__init()
 	Events:Subscribe('Extension:Loaded', self, self.OnExtensionLoaded)
 end
 
 function FunBotClient:OnExtensionLoaded()
-	m_Language:loadLanguage(Config.Language)
+	--m_Language:loadLanguage(Config.Language)
 	self:RegisterEvents()
 	self:RegisterHooks()
-	m_FunBotUIClient:OnExtensionLoaded()
 end
 
 function FunBotClient:RegisterEvents()
