@@ -1,0 +1,21 @@
+ui-input {
+	display: flex;
+}
+
+ui-input ui-arrow {
+	flex: 0 auto;
+    padding: 0px 5px;
+    text-align: center;
+}
+
+ui-input input {
+	flex: 30px auto;
+	max-width: 30px;
+	text-align: center;
+	vertical-align: middle;
+	align-self: center;
+	font-size: 16px;
+	background: rgba(255, 255, 255, 0.1);
+	border: 1px solid rgba(255, 255, 255, 0.5);
+	color: rgba(255, 255, 255, 0.5);
+}

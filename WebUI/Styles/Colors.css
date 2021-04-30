@@ -1,0 +1,16 @@
+:root {
+	--color_white:					#FFFFFF;
+	--color_text:					#EAf7FF;
+	--color_text_shadow:			#BCE4FF;
+	--color_text_hover:				#000000;
+	--color_text_hover_shadow:		#000000;
+	--color_warning_from:			rgba(247,130, 16, 0.9);
+	--color_warning_to:				rgba(247,130, 16, 0.4);
+	--color_container_background:	rgba(0, 0, 0, 0.8);
+	--color_button_default_from:	rgba(41, 57, 67, 0.9);
+	--color_button_default_to:		rgba(41, 57, 67, 0.5);
+	--color_button_hover_from:		rgba(84, 134, 168, 0.7);
+	--color_button_hover_to:		rgba(84, 134, 168, 0.4);
+	--color_button_active_from:		rgba(230, 235, 240, 0.98);
+	--color_button_active_to:		rgba(190, 205, 215, 0.95);
+}
