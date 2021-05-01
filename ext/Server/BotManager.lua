@@ -239,7 +239,7 @@ function BotManager:_onHealthAction(p_Soldier, p_Action)
 				table.insert(self._PendingAcceptRevives, p_Soldier.player.name)
 			end
 		end
-    end
+	end
 end
 
 function BotManager:_onGunSway(p_GunSway, p_Weapon, p_WeaponFiring, p_DeltaTime)

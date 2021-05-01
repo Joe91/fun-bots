@@ -7,7 +7,7 @@ function Utilities:__init()
 end
 
 function Utilities:getCameraPos(p_Player, p_IsTarget)
-	local returnVec = Vec3(0,0,0)
+	local returnVec = Vec3(0, 0, 0)
 	local cameraVec = p_Player.input.authoritativeCameraPosition:Clone()
 
 	if cameraVec.z ~= 0 then
@@ -170,21 +170,21 @@ function Utilities:dump(o, p_Format, p_MaxLevels, p_Level)
 	end
 end
 
-function Utilities:has(object, value)
-	for i=1, #object do
-		if (object[i] == value) then
+function Utilities:has(p_Object, p_Value)
+	for i=1, #p_Object do
+		if (p_Object[i] == p_Value) then
 			return true
 		end
 	end
 	return false
 end
 
-function string:isLower(value)
-	return str:lower() == value
+function string:isLower(p_Value)
+     return string:lower() == string
 end
 
-function string:isDigit(value)
-	return tonumber(value) ~= nil
+function string:isDigit(p_Value)
+     return tonumber(p_Value) ~= nil
 end
 
 function string:split(sep)
@@ -197,12 +197,12 @@ function string:split(sep)
 end
 
 function requireExists(module)
-    local function reference(module)
-        require(module)
+    local function reference(p_Module)
+        require(p_Module)
 		return true
     end
 
-    local status, error = pcall(reference, module)
+    local status, error = pcall(reference, p_Module)
 
     if not(status) then
 		return error

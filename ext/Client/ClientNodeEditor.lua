@@ -1377,7 +1377,7 @@ function ClientNodeEditor:_onCommoRoseAction(p_Action, p_Hit)
 		if (hit == nil) then
 			return
 		end
-	    local hitPoint = m_NodeCollection:Find(hit.position)
+		local hitPoint = m_NodeCollection:Find(hit.position)
 
 		-- nothing found at hit location, try a raytracing check
 		if (hitPoint == nil and self.player ~= nil and self.player ~= nil) then
@@ -1830,9 +1830,9 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 		if (self.botVisionEnabled) then
 
-    		-- bot vision crosshair lines, generate once only
-    		if (self.botVistionCrosshair == nil) then
-    			local windowSize = ClientUtils:GetWindowSize()
+			-- bot vision crosshair lines, generate once only
+			if (self.botVistionCrosshair == nil) then
+				local windowSize = ClientUtils:GetWindowSize()
 				local cx = math.floor(windowSize.x / 2.0 + 0.5)
 				local cy = math.floor(windowSize.y / 2.0 + 0.5)
 
@@ -1845,14 +1845,14 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 					Vec2(cx, cy - 10), Vec2(cx, cy + 9),
 					Vec2(cx + 1, cy - 9), Vec2(cx + 1, cy + 8)
 				}
-    		end
+			end
 
-    		-- check vision from player to "enemies", only update position if visible
-    		local players = PlayerManager:GetPlayers()
-    		for p=1, #players do
-    			if (players[p].soldier ~= nil and self.player.teamId ~= players[p].teamId) then
+			-- check vision from player to "enemies", only update position if visible
+			local players = PlayerManager:GetPlayers()
+			for p=1, #players do
+				if (players[p].soldier ~= nil and self.player.teamId ~= players[p].teamId) then
 
-    				local ray = RaycastManager:Raycast(self.playerPos+Vec3.up, (players[p].soldier.worldTransform.trans+Vec3.up), RayCastFlags.CheckDetailMesh | RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.IsAsyncRaycast)
+					local ray = RaycastManager:Raycast(self.playerPos+Vec3.up, (players[p].soldier.worldTransform.trans+Vec3.up), RayCastFlags.CheckDetailMesh | RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.IsAsyncRaycast)
 
 					local posData = {
 						Visible = (ray == nil or ray.rigidBody == nil),
@@ -1864,10 +1864,10 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 					end
 
 					self.botVisionPlayers[players[p].name] = posData
-    			end
-    		end
-    	end
-    end
+				end
+			end
+		end
+	end
 end
 
 function ClientNodeEditor:OnUIDrawHud()
@@ -1945,13 +1945,13 @@ function ClientNodeEditor:OnUIDrawHud()
 		helpText = helpText..'|   1   |   2   |   3   |'.."\n"
 		helpText = helpText..'|Remove |Unlink |  Add  |'.."\n"
 		helpText = helpText..'+-------+-------+-------+'.."\n"
-		helpText = helpText..'                         '.."\n"
-		helpText = helpText..'      [F12] - Settings   '.."\n"
-		helpText = helpText..'     [Spot] - Quick Select'.."\n"
+		helpText = helpText..'						 '.."\n"
+		helpText = helpText..'	  [F12] - Settings   '.."\n"
+		helpText = helpText..'	 [Spot] - Quick Select'.."\n"
 		helpText = helpText..'[Backspace] - Clear Select'.."\n"
 		helpText = helpText..'   [Insert] - Spawn Bot  '.."\n"
-		helpText = helpText..'       [F9] - Save Nodes '.."\n"
-		helpText = helpText..'      [F11] - Load Nodes '.."\n"
+		helpText = helpText..'	   [F9] - Save Nodes '.."\n"
+		helpText = helpText..'	  [F11] - Load Nodes '.."\n"
 
 	elseif (self.editMode == 'move') then
 
@@ -1967,7 +1967,7 @@ function ClientNodeEditor:OnUIDrawHud()
 		helpText = helpText..'| Mode  | Back  | Down  |'.."\n"
 		helpText = helpText..'+-------+-------+-------+'.."\n"
 		helpText = helpText..string.format('|X %+04.2f | Y %+04.2f|', self.editModeManualOffset.x, self.editModeManualOffset.y).."\n"
-		helpText = helpText..string.format('|      Z %+04.2f       |', self.editModeManualOffset.z).."\n"
+		helpText = helpText..string.format('|	  Z %+04.2f	   |', self.editModeManualOffset.z).."\n"
 		helpText = helpText..'+-----------------------+'.."\n"
 		helpText = helpText..' Nudge Speed: '..tostring(self.editModeManualSpeed).."\n"
 		if (self.editPositionMode == 'relative') then
@@ -1977,9 +1977,9 @@ function ClientNodeEditor:OnUIDrawHud()
 		else
 		helpText = helpText..'   Move Mode: Absolute   '.."\n"
 		end
-		helpText = helpText..'                         '.."\n"
-		helpText = helpText..'      [F12] - Settings    '.."\n"
-		helpText = helpText..'     [Spot] - Finish Move '.."\n"
+		helpText = helpText..'						 '.."\n"
+		helpText = helpText..'	  [F12] - Settings	'.."\n"
+		helpText = helpText..'	 [Spot] - Finish Move '.."\n"
 		helpText = helpText..'[Backspace] - Cancel Move '.."\n"
 		helpText = helpText..' [Numpad +] - Nudge Speed +'.."\n"
 		helpText = helpText..' [Numpad -] - Nudge Speed -'.."\n"

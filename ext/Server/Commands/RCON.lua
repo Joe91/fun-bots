@@ -258,11 +258,11 @@ function RCONCommands:__init()
 
 				if updateBotTeamAndNumber then
 					if Debug.Server.RCON then
-						print('[RCON] call m_BotSpawner:updateBotAmountAndTeam()')
+						print('[RCON] call m_BotSpawner:UpdateBotAmountAndTeam()')
 					end
 
 					Globals.SpawnMode = Config.SpawnMode
-					m_BotSpawner:updateBotAmountAndTeam()
+					m_BotSpawner:UpdateBotAmountAndTeam()
 				end
 
 				if Debug.Server.RCON then
@@ -405,7 +405,7 @@ function RCONCommands:__init()
 					t = TeamId.Team0
 				end
 
-				m_BotSpawner:spawnWayBots(nil, amount, true, nil, nil, t)
+				m_BotSpawner:SpawnWayBots(nil, amount, true, nil, nil, t)
 
 				return {'OK'}
 			end)
