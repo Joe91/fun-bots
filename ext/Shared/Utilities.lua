@@ -180,7 +180,7 @@ function table:has(p_Object, p_Value)
 end
 
 function string:isLower(p_Value)
-     return string:lower() == string
+     return p_Value:lower() == p_Value
 end
 
 function string:isDigit(p_Value)
