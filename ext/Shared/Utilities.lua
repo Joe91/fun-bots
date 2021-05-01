@@ -170,7 +170,7 @@ function Utilities:dump(o, p_Format, p_MaxLevels, p_Level)
 	end
 end
 
-function table:has(p_Object, p_Value)
+function Utilities:has(p_Object, p_Value)
 	for i=1, #p_Object do
 		if (p_Object[i] == p_Value) then
 			return true
