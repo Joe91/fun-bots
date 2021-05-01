@@ -3,5 +3,7 @@ BotWeapons = {
 	'Primary',
 	'Pistol',
 	'Knife',
-	'Sidearm'
-};
+	'Gadget2',
+	'Gadget1',
+	'Grenade'
+}

@@ -29,3 +29,41 @@ After that
 - Naming of objectives (all without "):
 	- Bases: "base us" / "base ru"
 	- Flags: "A", "B", "C",..
+
+Advanced:
+- If you want to create separated spawn-paths for a flag, just label them like this:
+	"A spawn" is a spawn-path for A. A bot will always spawn on the first node of a spawn-path
+
+
+## Creating Rush-Paths
+For Rush things get a little more complex.
+First the easy ones:
+- you need a base path for every defender-base (attacker-bases are the defender base from one index before, if no own base is defined)
+- you need paths around each mcom (not directly at, but around)
+- you need very short paths directly on the mcomcs
+- you need paths from every attacker-base to the mcoms
+- you need paths connecting the mcomcs of the current stage
+- you need paths from the mcoms to the next mcoms (after they are destroyed)
+
+### Some special things
+Naming of the objectives:
+You need to use correct indexes:
+- mcoms start with index 1 up to the last mcom.
+	- "mcom 1", "mcom 2", "mcom 3", ...
+- bases start with definding Base 1:
+	- "base ru 1", "base ru 2", "base ru 3",
+	- "base ru 0" == "base us 1"
+	- no need to create attacking bases
+- the paths directly at the mcoms have to be labeled like this:
+	- path on mcom 1: "mcom 1 interact" and so on...
+
+### Vehicle Paths
+- Record a path to enter a vehicle with the Objective: "vehicle <UniqueName>"
+- Add a Vehicle at the end of the path to the vehicle (Console "AddVehicle")
+- Enter the vehicle and record a path from there
+- Mark all paths of the vehicle as vehicle paths (Console "AddVehiclePath land")
+- assign objectives
+
+### needed commands
+addObjective <name of objective> (adds a label to a path. Just select one point of a path)
+addMcom (adds the MCOM-Interaction to one point - Select the point, stand on it and look at the MCOM, then execute this command)

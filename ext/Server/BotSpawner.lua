@@ -1,585 +1,1132 @@
-class('BotSpawner');
+class('BotSpawner')
 
-require('Model/Globals');
 require('Model/SpawnSet')
-require('__shared/NodeCollection')
 
-local BotManager	= require('BotManager');
-local WeaponList	= require('__shared/WeaponList');
-local Utilities 	= require('__shared/Utilities')
+local m_NodeCollection = require('__shared/NodeCollection')
+local m_BotManager = require('BotManager')
+local m_WeaponList = require('__shared/WeaponList')
+local m_Utilities = require('__shared/Utilities')
+local m_Logger = Logger("BotSpawner", Debug.Server.BOT)
+
+local FIRST_SPAWN_DELAY = 3.0 -- needs to be big enough to register the inputActiveEvents. 1 is too small
 
 function BotSpawner:__init()
-	self._botSpawnTimer = 0
-	self._firstSpawnInLevel = true;
-	self._firstSpawnDelay = 5;
-	self._updateActive = false;
-	self._spawnSets = {}
-
-	Events:Subscribe('UpdateManager:Update', self, self._onUpdate)
-	Events:Subscribe('Bot:RespawnBot', self, self._onRespawnBot)
-	Events:Subscribe('Level:Destroy', self, self._onLevelDestroy)
-	Events:Subscribe('Player:KitPickup', self, self._onKitPickup)
-	Events:Subscribe('Player:Joining', self, self._onPlayerJoining)
-	Events:Subscribe('Player:Left', self, self._onPlayerLeft)
-	Events:Subscribe('Player:Respawn', self, self._onPlayerRespawn)
+	self:RegisterVars()
 end
 
-function BotSpawner:updateBotAmountAndTeam()
+function BotSpawner:RegisterVars()
+	self._BotSpawnTimer = 0
+	self._PlayerUpdateTimer = 0
+	self._FirstSpawnInLevel = true
+	self._FirstSpawnDelay = FIRST_SPAWN_DELAY
+	self._UpdateActive = false
+	self._SpawnSets = {}
+	self._KickPlayers = {}
+	self._BotsWithoutPath = {}
+end
+
+-- =============================================
+-- Events
+-- =============================================
+
+-- =============================================
+	-- Level Events
+-- =============================================
+
+function BotSpawner:OnLevelLoaded()
+	m_Logger:Write("on level loaded on spawner")
+	self._FirstSpawnInLevel = true
+	self._PlayerUpdateTimer = 0
+	self._FirstSpawnDelay = FIRST_SPAWN_DELAY
+end
+
+function BotSpawner:OnLevelDestroy()
+	self._SpawnSets = {}
+	self._UpdateActive = false
+	self._FirstSpawnInLevel = true
+	self._FirstSpawnDelay = FIRST_SPAWN_DELAY
+	self._PlayerUpdateTimer = 0
+end
+
+-- =============================================
+	-- Update Events
+-- =============================================
+
+function BotSpawner:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
+	if p_UpdatePass ~= UpdatePass.UpdatePass_PostFrame then
+		return
+	end
+
+	if self._FirstSpawnInLevel then
+		if self._FirstSpawnDelay <= 0 then
+			if m_BotManager:getPlayerCount() > 0 then
+				m_BotManager:configGlobals()
+				self:UpdateBotAmountAndTeam()
+				self._PlayerUpdateTimer = 0
+				self._FirstSpawnInLevel = false
+			end
+		else
+			self._FirstSpawnDelay = self._FirstSpawnDelay - p_DeltaTime
+		end
+	else
+		self._PlayerUpdateTimer = self._PlayerUpdateTimer + p_DeltaTime
+		if self._PlayerUpdateTimer > 2 then
+			self._PlayerUpdateTimer = 0
+			self:UpdateBotAmountAndTeam()
+		end
+	end
+
+	if #self._SpawnSets > 0 then
+		if self._BotSpawnTimer > 0.2 then --time to wait between spawn. 0.2 works
+			self._BotSpawnTimer = 0
+			local s_SpawnSet = table.remove(self._SpawnSets)
+			self:_SpawnSingleWayBot(s_SpawnSet.m_PlayerVarOfBot, s_SpawnSet.m_UseRandomWay, s_SpawnSet.m_ActiveWayIndex, s_SpawnSet.m_IndexOnPath, nil, s_SpawnSet.m_Team)
+		end
+		self._BotSpawnTimer = self._BotSpawnTimer + p_DeltaTime
+	else
+		if self._UpdateActive then
+			self._UpdateActive = false
+			if Globals.SpawnMode ~= 'manual' then
+				--garbage-collection of unwanted bots
+				m_BotManager:destroyDisabledBots()
+				m_BotManager:freshnTables()
+			end
+		end
+	end
+
+	--kick players named after bots
+	if #self._KickPlayers > 0 then
+		for i, l_PlayerNameToKick in pairs(self._KickPlayers) do
+			local s_PlayerToKick = PlayerManager:GetPlayerByName(l_PlayerNameToKick)
+			if s_PlayerToKick ~= nil then
+				s_PlayerToKick:Kick("You used a BOT-Name. Please use a real name on Fun-Bot-Servers...")
+				for j, l_BotNameToIgnore in pairs(Globals.IgnoreBotNames) do
+					if l_BotNameToIgnore == l_PlayerNameToKick then
+						table.remove(Globals.IgnoreBotNames, j)
+					end
+				end
+				table.remove(self._KickPlayers, i)
+				break
+			end
+		end
+	end
+
+	if #self._BotsWithoutPath > 0 then
+		for i, l_Bot in pairs(self._BotsWithoutPath) do
+			if l_Bot == nil or l_Bot.m_Player == nil then
+				table.remove(self._BotsWithoutPath, i)
+				break
+			end
+			if l_Bot.m_Player.soldier ~= nil then
+				local s_Position = l_Bot.m_Player.soldier.worldTransform.trans:Clone()
+				--local s_Node = m_NodeCollection:Find(s_Position, 5);
+				local s_Node = g_GameDirector:FindClosestPath(s_Position, false)
+				if s_Node ~= nil then
+					l_Bot:setVarsWay(nil, true, s_Node.PathIndex, s_Node.PointIndex, false)
+					table.remove(self._BotsWithoutPath, i)
+					local s_SoldierCustomization = nil
+					local s_SoldierKit = nil
+					local s_Appearance = nil
+					s_SoldierKit, s_Appearance, s_SoldierCustomization = self:_GetKitAppearanceCustomization(l_Bot.m_Player.teamId, l_Bot.m_Kit, l_Bot.m_Color, l_Bot.m_Primary, l_Bot.m_Pistol, l_Bot.m_Knife, l_Bot.m_PrimaryGadget, l_Bot.m_SecondaryGadget, l_Bot.m_Grenade)
+					l_Bot.m_Player:SelectUnlockAssets(s_SoldierKit, {s_Appearance})
+					l_Bot.m_Player.soldier:ApplyCustomization(s_SoldierCustomization)
+					self:_ModifyWeapon(l_Bot.m_Player.soldier)
+					-- for Civilianizer-mod:
+					Events:Dispatch('Bot:SoldierEntity', l_Bot.m_Player.soldier)
+					break
+				end
+			end
+		end
+	end
+end
+
+-- =============================================
+	-- Player Events
+-- =============================================
+
+function BotSpawner:OnPlayerJoining(p_Name)
+	if m_BotManager:getPlayerCount() == 0 then
+		m_Logger:Write("first player - spawn bots")
+		self:OnLevelLoaded()
+	end
+	-- detect BOT-Names
+	if string.find(p_Name, BOT_TOKEN) == 1 then --check if name starts with bot-token
+		table.insert(self._KickPlayers, p_Name)
+		if m_BotManager:getBotByName(p_Name) ~= nil then
+			table.insert(Globals.IgnoreBotNames, p_Name)
+			m_BotManager:destroyBot(p_Name)
+		end
+	end
+end
+
+function BotSpawner:OnTeamChange(p_Player, p_TeamId, p_SquadId)
+	if Config.BotTeam ~= TeamId.TeamNeutral then
+		if p_Player ~= nil then
+			if p_Player.onlineId ~= 0 then -- no bot
+				local s_PlayerTeams = {}
+				for i = 1, Globals.NrOfTeams do
+					if Config.BotTeam ~= i then
+						table.insert(s_PlayerTeams, i)
+					end
+				end
+				local s_PlayerTeam = s_PlayerTeams[MathUtils:GetRandomInt(1, #s_PlayerTeams)]
+				if p_Player ~= nil and p_TeamId ~= nil and (p_TeamId ~= s_PlayerTeam) then
+					p_Player.teamId = s_PlayerTeam
+					ChatManager:SendMessage(Language:I18N('CANT_JOIN_BOT_TEAM', p_Player), p_Player)
+				end
+			end
+		end
+	end
+end
+
+function BotSpawner:OnKitPickup(p_Player, p_NewCustomization)
+	if p_Player.soldier ~= nil then
+		if p_Player.soldier.weaponsComponent.weapons[1] ~= nil then
+			p_Player.soldier.weaponsComponent.weapons[1].secondaryAmmo = 182
+		end
+		if p_Player.soldier.weaponsComponent.weapons[2] ~= nil then
+			p_Player.soldier.weaponsComponent.weapons[2].secondaryAmmo = 58
+		end
+	end
+end
+
+-- =============================================
+	-- Custom Bot Respawn Event
+-- =============================================
+
+function BotSpawner:OnRespawnBot(p_BotName)
+	local s_Bot = m_BotManager:getBotByName(p_BotName)
+	local s_SpawnMode = s_Bot:getSpawnMode()
+
+	if s_SpawnMode == 2 then --spawnInLine
+		local s_Transform = LinearTransform()
+		s_Transform = s_Bot:getSpawnTransform()
+		self:_SpawnBot(s_Bot, s_Transform, false)
+
+	elseif s_SpawnMode == 4 then --fixed Way
+		local s_WayIndex = s_Bot:getWayIndex()
+		local s_RandIndex = MathUtils:GetRandomInt(1, #m_NodeCollection:Get(nil, s_WayIndex))
+		self:_SpawnSingleWayBot(nil, false, s_WayIndex, s_RandIndex, s_Bot)
+
+	elseif s_SpawnMode == 5 then --random Way
+		self:_SpawnSingleWayBot(nil, true, 0, 0, s_Bot)
+	end
+end
+
+-- =============================================
+-- Functions
+-- =============================================
+
+-- =============================================
+-- Public Functions
+-- =============================================
+
+function BotSpawner:UpdateBotAmountAndTeam()
 	-- keep Slot for next player
-	if Config.keepOneSlotForPlayers then
-		local playerlimt = g_Globals.maxPlayers - 1
-		local amoutToDestroy = PlayerManager:GetPlayerCount() - playerlimt
-		if amoutToDestroy > 0 then
-			BotManager:destroyAll(amoutToDestroy)
+	if Config.KeepOneSlotForPlayers then
+		local s_PlayerLimit = Globals.MaxPlayers - 1
+		local s_AmountToDestroy = PlayerManager:GetPlayerCount() - s_PlayerLimit
+		if s_AmountToDestroy > 0 then
+			m_BotManager:destroyAll(s_AmountToDestroy)
 		end
 	end
 
 	-- if update active do nothing
-	if self._updateActive then
+	if self._UpdateActive then
 		return
 	else
-		self._updateActive = true;
+		self._UpdateActive = true
 	end
 
 	-- find all needed vars
-	local playerCount = BotManager:getPlayerCount();
-	local botCount = BotManager:getActiveBotCount();
-	local countPlayersTeam1 = 0;
-	local countPlayersTeam2 = 0;
-	local botTeam = BotManager:getBotTeam();
-	local players = PlayerManager:GetPlayers()
-	for i = 1, PlayerManager:GetPlayerCount() do
-		if BotManager:getBotByName(players[i].name) == nil then
-			if players[i].teamId == TeamId.Team1 then
-				countPlayersTeam1 = countPlayersTeam1 + 1;
+	local s_PlayerCount = m_BotManager:getPlayerCount()
+	local s_BotCount = m_BotManager:getActiveBotCount()
+	local s_MaxBotsPerTeam = 0
+	if Globals.IsSdm then
+		s_MaxBotsPerTeam = Config.MaxBotsPerTeamSdm
+	else
+		s_MaxBotsPerTeam = Config.MaxBotsPerTeamDefault
+	end
+
+	-- kill and destroy bots, if no player left
+	if s_PlayerCount == 0 then
+		if s_BotCount > 0 then
+			m_BotManager:killAll()
+			self._UpdateActive = true
+		else
+			self._UpdateActive = false
+		end
+		return
+	end
+
+	local s_BotTeam = m_BotManager:getBotTeam()
+	local s_CountPlayers = {}
+	local s_TeamCount = {}
+	local s_CountBots = {}
+	local s_TargetTeamCount = {}
+	for i = 1, Globals.NrOfTeams do
+		s_CountPlayers[i] = 0
+		s_CountBots[i] = 0
+		s_TargetTeamCount[i] = 0
+		local s_TempPlayers = PlayerManager:GetPlayersByTeam(i)
+		s_TeamCount[i] = #s_TempPlayers
+		for _, l_Player in pairs(s_TempPlayers) do
+			if m_Utilities:isBot(l_Player) then
+				s_CountBots[i] = s_CountBots[i] + 1
 			else
-				countPlayersTeam2 = countPlayersTeam2 + 1;
+				s_CountPlayers[i] = s_CountPlayers[i] + 1
+				if Globals.IsSdm then	-- TODO: Only needed because of VEXT-Bug
+					l_Player.squadId = 1
+				end
 			end
 		end
 	end
-	local botCountTeam1 = BotManager:getActiveBotCount(TeamId.Team1);
-	local botCountTeam2 = BotManager:getActiveBotCount(TeamId.Team2);
-	local team1Count = countPlayersTeam1 + botCountTeam1;
-	local team2Count = countPlayersTeam2 + botCountTeam2;
 
 	-- KEEP PLAYERCOUNT
-	if g_Globals.spawnMode == 'keep_playercount' then
-		local targetTeam1 = Config.initNumberOfBots;
-		local targetTeam2 = Config.initNumberOfBots;
-		if Config.spawnInBothTeams then
-			targetTeam1 = math.floor(Config.initNumberOfBots/2);
-			targetTeam2 = math.floor(Config.initNumberOfBots/2);
+	if Globals.SpawnMode == 'keep_playercount' then
+		for i = 1, Globals.NrOfTeams do
+			s_TargetTeamCount[i] = Config.InitNumberOfBots
+		end
+		if Config.SpawnInBothTeams then
+			for i = 1, Globals.NrOfTeams do
+				s_TargetTeamCount[i] = math.floor(Config.InitNumberOfBots / Globals.NrOfTeams)
+			end
 		else
-			if botTeam == TeamId.Team1 then
-				targetTeam2 = 0;
-			else
-				targetTeam1 = 0;
+			for i = 1, Globals.NrOfTeams do
+				if s_BotTeam ~= i then
+					s_TargetTeamCount[i] = 0
+				end
+			end
+		end
+		--limit team count
+		for i = 1, Globals.NrOfTeams do
+			if s_TargetTeamCount[i] > s_MaxBotsPerTeam then
+				s_TargetTeamCount[i] = s_MaxBotsPerTeam
 			end
 		end
 
-		if team1Count < targetTeam1 then
-			self:spawnWayBots(nil, targetTeam1-team1Count, true, 0, 0, TeamId.Team1);
-		end
-		if team2Count < targetTeam2 then
-			self:spawnWayBots(nil, targetTeam2-team2Count, true, 0, 0, TeamId.Team2);
-		end
-
-		if botCount > 0 then
-			if team1Count > targetTeam1 then
-				BotManager:killAll(team1Count-targetTeam1, TeamId.Team1)
-			end
-			if team2Count > targetTeam2 then
-				BotManager:killAll(team2Count-targetTeam2, TeamId.Team2)
+		for i = 1, Globals.NrOfTeams do
+			if s_TeamCount[i] < s_TargetTeamCount[i] then
+				self:SpawnWayBots(nil, s_TargetTeamCount[i] - s_TeamCount[i], true, 0, 0, i)
+			elseif s_TeamCount[i] > s_TargetTeamCount[i] and s_CountBots[i] > 0 then
+				m_BotManager:killAll(s_TeamCount[i] - s_TargetTeamCount[i], i)
 			end
 		end
 
 	-- BALANCED teams
-	elseif g_Globals.spawnMode == 'balanced_teams' then
-		local targetBotCountTeam1 = 0;
-		local targetBotCountTeam2 = 0;
-
-		if countPlayersTeam1 > 0 then
-			targetBotCountTeam2 = Config.initNumberOfBots + ((countPlayersTeam1-1) * Config.newBotsPerNewPlayer)
+	elseif Globals.SpawnMode == 'balanced_teams' then
+		local s_maxPlayersInOneTeam = 0
+		for i = 1, Globals.NrOfTeams do
+			if s_CountPlayers[i] > s_maxPlayersInOneTeam then
+				s_maxPlayersInOneTeam = s_CountPlayers[i]
+			end
 		end
-		if countPlayersTeam2 > 0 then
-			targetBotCountTeam1 = Config.initNumberOfBots + ((countPlayersTeam2-1) * Config.newBotsPerNewPlayer)
-		end
-
-		local targetTeam1 = countPlayersTeam1 + targetBotCountTeam1
-		local targetTeam2 = countPlayersTeam2 + targetBotCountTeam2
-		if targetTeam1 > targetTeam2 then
-			targetTeam2 = targetTeam1;
-		elseif targetTeam2 > targetTeam1 then
-			targetTeam1 = targetTeam2;
-		end
-		targetTeam1 = targetTeam1 - countPlayersTeam1;
-		targetTeam2 = targetTeam2 - countPlayersTeam2;
-
-		local amountToSpawnTeam1 = targetTeam1 - botCountTeam1;
-		local amountToSpawnTeam2 = targetTeam2 - botCountTeam2;
-
-		if amountToSpawnTeam1 > 0 then
-			self:spawnWayBots(nil, amountToSpawnTeam1, true, 0, 0, TeamId.Team1);
-		end
-		if amountToSpawnTeam2 > 0 then
-			self:spawnWayBots(nil, amountToSpawnTeam2, true, 0, 0, TeamId.Team2);
-		end
-		if amountToSpawnTeam1 < 0 then
-			BotManager:killAll(-amountToSpawnTeam1, TeamId.Team1)
-		end
-		if amountToSpawnTeam2 < 0 then
-			BotManager:killAll(-amountToSpawnTeam2, TeamId.Team2)
+		local targetCount = Config.InitNumberOfBots + ((s_maxPlayersInOneTeam - 1) * Config.NewBotsPerNewPlayer)
+		for i = 1, Globals.NrOfTeams do
+			s_TargetTeamCount[i] = targetCount
+			if s_TargetTeamCount[i] > s_MaxBotsPerTeam then
+				s_TargetTeamCount[i] = s_MaxBotsPerTeam
+			end
 		end
 
+		for i = 1, Globals.NrOfTeams do
+			if s_TeamCount[i] < s_TargetTeamCount[i] then
+				self:SpawnWayBots(nil, s_TargetTeamCount[i] - s_TeamCount[i], true, 0, 0, i)
+			elseif s_TeamCount[i] > s_TargetTeamCount[i] then
+				m_BotManager:killAll(s_TeamCount[i] - s_TargetTeamCount[i], i)
+			end
+		end
 	-- INCREMENT WITH PLAYER
-	elseif g_Globals.spawnMode == 'increment_with_players' then
-		if Config.spawnInBothTeams then
-			local targetBotCountTeam1 = 0;
-			local targetBotCountTeam2 = 0;
-
-			if countPlayersTeam1 > 0 then
-				targetBotCountTeam2 = Config.initNumberOfBots + ((countPlayersTeam1-1) * Config.newBotsPerNewPlayer)
+	elseif Globals.SpawnMode == 'increment_with_players' then
+		if Config.SpawnInBothTeams then
+			for i = 1, Globals.NrOfTeams do
+				s_TargetTeamCount[i] = 0
+				if s_CountPlayers[i] > 0 then
+					for j = 1, Globals.NrOfTeams do
+						if i ~= j then
+							local s_TempCount = Config.InitNumberOfBots + ((s_CountPlayers[i] - 1) * Config.NewBotsPerNewPlayer)
+							if s_TempCount > s_TargetTeamCount[j] then
+								s_TargetTeamCount[j] = s_TempCount
+							end
+						end
+					end
+				end
 			end
-			if countPlayersTeam2 > 0 then
-				targetBotCountTeam1 = Config.initNumberOfBots + ((countPlayersTeam2-1) * Config.newBotsPerNewPlayer)
+			-- limit team count
+			for i = 1, Globals.NrOfTeams do
+				if s_TargetTeamCount[i] > s_MaxBotsPerTeam then
+					s_TargetTeamCount[i] = s_MaxBotsPerTeam
+				end
 			end
-			local amountToSpawnTeam1 = targetBotCountTeam1 - botCountTeam1;
-			local amountToSpawnTeam2 = targetBotCountTeam2 - botCountTeam2;
-
-			if amountToSpawnTeam1 > 0 then
-				self:spawnWayBots(nil, amountToSpawnTeam1, true, 0, 0, TeamId.Team1);
-			end
-			if amountToSpawnTeam2 > 0 then
-				self:spawnWayBots(nil, amountToSpawnTeam2, true, 0, 0, TeamId.Team2);
-			end
-			if amountToSpawnTeam1 < 0 then
-				BotManager:killAll(-amountToSpawnTeam1, TeamId.Team1)
-			end
-			if amountToSpawnTeam2 < 0 then
-				BotManager:killAll(-amountToSpawnTeam2, TeamId.Team2)
+			for i = 1, Globals.NrOfTeams do
+				if s_TeamCount[i] < s_TargetTeamCount[i] then
+					self:SpawnWayBots(nil, s_TargetTeamCount[i] - s_TeamCount[i], true, 0, 0, i)
+				elseif s_TeamCount[i] > s_TargetTeamCount[i] and s_CountBots[i] > 0 then
+					m_BotManager:killAll(s_TeamCount[i] - s_TargetTeamCount[i], i)
+				end
 			end
 
 		else
 			-- check for bots in wrong team
-			if botTeam == TeamId.Team1 and botCountTeam2 > 0 then
-				BotManager:killAll(nil, TeamId.Team2)
-			elseif botTeam == TeamId.Team2 and botCountTeam1 > 0 then
-				BotManager:killAll(nil, TeamId.Team1)
+			for i = 1, Globals.NrOfTeams do
+				if i ~= s_BotTeam and s_CountBots[i] > 0 then
+					m_BotManager:killAll(nil, i)
+				end
 			end
 
-			local targetBotCount = Config.initNumberOfBots + ((playerCount-1) * Config.newBotsPerNewPlayer)
-			local amountToSpawn = targetBotCount - botCount;
-			if amountToSpawn > 0 then
-				self._botSpawnTimer = -5.0
-				self:spawnWayBots(nil, amountToSpawn, true, 0, 0, botTeam);
+			local s_TargetBotCount = Config.InitNumberOfBots + ((s_PlayerCount - 1) * Config.NewBotsPerNewPlayer)
+			if s_TargetBotCount > s_MaxBotsPerTeam then
+				s_TargetBotCount = s_MaxBotsPerTeam
 			end
-			if amountToSpawn < 0 then
-				BotManager:killAll(-amountToSpawn)
+			local s_AmountToSpawn = s_TargetBotCount - s_BotCount
+			if s_AmountToSpawn > 0 then
+				self._BotSpawnTimer = -5.0
+				self:SpawnWayBots(nil, s_AmountToSpawn, true, 0, 0, s_BotTeam)
+			end
+			if s_AmountToSpawn < 0 then
+				m_BotManager:killAll(-s_AmountToSpawn)
 			end
 		end
 
 	-- FIXED NUMBER TO SPAWN
-	elseif g_Globals.spawnMode == 'fixed_number' then
-		if Config.spawnInBothTeams then
-			local amoutPerTeam = math.floor(Config.initNumberOfBots/2);
-			-- check for too many bots in one team
-			if botCountTeam2 > amoutPerTeam then
-				BotManager:killAll(botCountTeam2-amoutPerTeam, TeamId.Team2)
-			end
-			if botCountTeam1 > amoutPerTeam then
-				BotManager:killAll(botCountTeam1-amoutPerTeam, TeamId.Team1)
+	elseif Globals.SpawnMode == 'fixed_number' then
+		if Config.SpawnInBothTeams then
+			local s_AmountPerTeam = math.floor(Config.InitNumberOfBots/Globals.NrOfTeams)
+			if s_AmountPerTeam > s_MaxBotsPerTeam then
+				s_AmountPerTeam = s_MaxBotsPerTeam
 			end
 
-			if botCountTeam2 < amoutPerTeam then
-				self:spawnWayBots(nil, amoutPerTeam - botCountTeam2, true, 0, 0, TeamId.Team2);
-			end
-			if botCountTeam1 < amoutPerTeam then
-				self:spawnWayBots(nil, amoutPerTeam - botCountTeam1, true, 0, 0, TeamId.Team1);
+			for i = 1, Globals.NrOfTeams do
+				if s_TeamCount[i] < s_AmountPerTeam then
+					self:SpawnWayBots(nil, s_AmountPerTeam - s_TeamCount[i], true, 0, 0, i)
+				elseif s_TeamCount[i] > s_AmountPerTeam and s_CountBots[i] > 0 then
+					m_BotManager:killAll(s_TeamCount[i] - s_AmountPerTeam, i)
+				end
 			end
 		else
 			-- check for bots in wrong team
-			if botTeam == TeamId.Team1 and botCountTeam2 > 0 then
-				BotManager:killAll(nil, TeamId.Team2)
-			elseif botTeam == TeamId.Team2 and botCountTeam1 > 0 then
-				BotManager:killAll(nil, TeamId.Team1)
-			end
-
-			if botTeam == TeamId.Team1 then
-				if Config.initNumberOfBots > botCountTeam1 then
-					self:spawnWayBots(nil, Config.initNumberOfBots-botCountTeam1, true, 0, 0, TeamId.Team1);
-				end
-			else
-				if Config.initNumberOfBots > botCountTeam2 then
-					self:spawnWayBots(nil, Config.initNumberOfBots-botCountTeam2, true, 0, 0, TeamId.Team2);
+			for i = 1, Globals.NrOfTeams do
+				if i ~= s_BotTeam and s_CountBots[i] > 0 then
+					m_BotManager:killAll(nil, i)
 				end
 			end
+
+			local s_TargetBotCount = Config.InitNumberOfBots
+			if s_TargetBotCount > s_MaxBotsPerTeam then
+				s_TargetBotCount = s_MaxBotsPerTeam
+			end
+			local s_AmountToSpawn = s_TargetBotCount - s_BotCount
+			if s_AmountToSpawn > 0 then
+				self._BotSpawnTimer = -5.0
+				self:SpawnWayBots(nil, s_AmountToSpawn, true, 0, 0, s_BotTeam)
+			end
+			if s_AmountToSpawn < 0 then
+				m_BotManager:killAll(-s_AmountToSpawn)
+			end
 		end
-	elseif g_Globals.spawnMode == 'manual' then
-		if self._firstSpawnInLevel then
-			local team1TempCount = #PlayerManager:GetPlayersByTeam(TeamId.Team1) - countPlayersTeam1;
-			local team2TempCount = #PlayerManager:GetPlayersByTeam(TeamId.Team2) - countPlayersTeam2;
-			self:spawnWayBots(nil, team2TempCount, true, 0, 0, TeamId.Team2);
-			self:spawnWayBots(nil, team1TempCount, true, 0, 0, TeamId.Team1);
+	elseif Globals.SpawnMode == 'manual' then
+		if self._FirstSpawnInLevel then
+			for i = 1, Globals.NrOfTeams do
+				self:SpawnWayBots(nil, s_TeamCount[i] - s_CountPlayers[i], true, 0, 0, i)
+			end
 		end
 	end
 end
 
-function BotSpawner:_onPlayerRespawn(player)
-	if not Utilities:isBot(player) then
-		if not self._firstSpawnInLevel then
-			self:updateBotAmountAndTeam();
+function BotSpawner:GetBot(p_ExistingBot, p_Name, p_TeamId, p_SquadId)
+	if p_ExistingBot ~= nil then
+		return p_ExistingBot
+	else
+		local s_Bot = m_BotManager:createBot(p_Name, p_TeamId, p_SquadId)
+		if s_Bot == nil then
+			m_Logger:Error("Failed to create bot")
+			return nil
+		end
+		if (TeamSquadManager:GetSquadPlayerCount(p_TeamId, p_SquadId) == 1) then
+			s_Bot.m_Player:SetSquadLeader(true, false)
+		end
+		return s_Bot
+	end
+end
+
+-- =============================================
+	-- Spawn Bots in Row / Tower / Grid / Line
+-- =============================================
+
+function BotSpawner:SpawnBotRow(p_Player, p_Length, p_Spacing)
+	for i = 1, p_Length do
+		local s_Name = m_BotManager:findNextBotName()
+		if s_Name ~= nil then
+			local s_Transform = LinearTransform()
+			s_Transform.trans = p_Player.soldier.worldTransform.trans + (p_Player.soldier.worldTransform.forward * i * p_Spacing)
+			local s_Bot = m_BotManager:createBot(s_Name, m_BotManager:getBotTeam(), SquadId.SquadNone)
+			s_Bot:setVarsStatic(p_Player)
+			self:_SpawnBot(s_Bot, s_Transform, true)
 		end
 	end
 end
 
-function BotSpawner:_onLevelDestroy()
-	self._spawnSets = {}
-	self._updateActive = false;
-	self._firstSpawnInLevel = true;
-	self._firstSpawnDelay 	= 5;
-end
-
-function BotSpawner:_onPlayerJoining()
-	if BotManager:getPlayerCount() == 0 then
-		if Debug.Server.BOT then
-			print("first player - spawn bots")
+function BotSpawner:SpawnBotTower(p_Player, p_Height)
+	for i = 1, p_Height do
+		local s_Name = m_BotManager:findNextBotName()
+		if s_Name ~= nil then
+			local s_Yaw = p_Player.input.authoritativeAimingYaw
+			local s_Transform = LinearTransform()
+			s_Transform.trans.x = p_Player.soldier.worldTransform.trans.x + (math.cos(s_Yaw + (math.pi / 2)))
+			s_Transform.trans.y = p_Player.soldier.worldTransform.trans.y + ((i - 1) * 1.8)
+			s_Transform.trans.z = p_Player.soldier.worldTransform.trans.z + (math.sin(s_Yaw + (math.pi / 2)))
+			local s_Bot = m_BotManager:createBot(s_Name, m_BotManager:getBotTeam(), SquadId.SquadNone)
+			s_Bot:setVarsStatic(p_Player)
+			self:_SpawnBot(s_Bot, s_Transform, true)
 		end
-		self:onLevelLoaded()
 	end
 end
 
-function BotSpawner:_onPlayerLeft(player)
-	BotManager:onPlayerLeft(player)
-	--remove all references of player
-	if BotManager:getPlayerCount() == 1 then
-		if Debug.Server.BOT then
-			print("no player left - kick all bots")
+function BotSpawner:SpawnBotGrid(p_Player, p_Rows, p_Columns, p_Spacing)
+	for i = 1, p_Rows do
+		for j = 1, p_Columns do
+			local s_Name = m_BotManager:findNextBotName()
+			if s_Name ~= nil then
+				local s_Yaw = p_Player.input.authoritativeAimingYaw
+				local s_Transform = LinearTransform()
+				s_Transform.trans.x = p_Player.soldier.worldTransform.trans.x + (i * math.cos(s_Yaw + (math.pi / 2)) * p_Spacing) + ((j - 1) * math.cos(s_Yaw) * p_Spacing)
+				s_Transform.trans.y = p_Player.soldier.worldTransform.trans.y
+				s_Transform.trans.z = p_Player.soldier.worldTransform.trans.z + (i * math.sin(s_Yaw + (math.pi / 2)) * p_Spacing) + ((j - 1) * math.sin(s_Yaw) * p_Spacing)
+				local s_Bot = m_BotManager:createBot(s_Name, m_BotManager:getBotTeam(), SquadId.SquadNone)
+				s_Bot:setVarsStatic(p_Player)
+				self:_SpawnBot(s_Bot, s_Transform, true)
+			end
 		end
-		BotManager:destroyAll();
 	end
 end
 
-function BotSpawner:onLevelLoaded()
-	if Debug.Server.BOT then
-		print("on level loaded on spawner")
+function BotSpawner:SpawnLineBots(p_Player, p_Amount, p_Spacing)
+	 for i = 1, p_Amount do
+		local s_Name = m_BotManager:findNextBotName()
+		if s_Name ~= nil then
+			local s_Transform = LinearTransform()
+			s_Transform.trans = p_Player.soldier.worldTransform.trans + (p_Player.soldier.worldTransform.forward * i * p_Spacing)
+			local s_Bot = m_BotManager:createBot(s_Name, m_BotManager:getBotTeam(), SquadId.SquadNone)
+			s_Bot:setVarsSimpleMovement(p_Player, 2, s_Transform)
+			self:_SpawnBot(s_Bot, s_Transform, true)
+		end
 	end
-	self._firstSpawnInLevel = true;
-	self._firstSpawnDelay 	= 5;
 end
 
-function BotSpawner:_onUpdate(dt, pass)
-	if pass ~= UpdatePass.UpdatePass_PostFrame then
+function BotSpawner:SpawnWayBots(p_Player, p_Amount, p_UseRandomWay, p_ActiveWayIndex, p_IndexOnPath, p_TeamId)
+	if #m_NodeCollection:GetPaths() <= 0 then
 		return
 	end
 
-	if self._firstSpawnInLevel then
-		if self._firstSpawnDelay <= 0 then
-			if BotManager:getPlayerCount() > 0 then
-				BotManager:configGlobals()
-				self:updateBotAmountAndTeam();
-				self._firstSpawnInLevel = false;
-			end
-		else
-			self._firstSpawnDelay = self._firstSpawnDelay - dt;
-		end
+	-- check for amount available
+	local s_PlayerLimit = Globals.MaxPlayers
+	if Config.KeepOneSlotForPlayers then
+		s_PlayerLimit = s_PlayerLimit - 1
 	end
 
-	if #self._spawnSets > 0 then
-		if self._botSpawnTimer > 0.2 then	--time to wait between spawn. 0.2 works
-			self._botSpawnTimer = 0
-			local spawnSet = table.remove(self._spawnSets);
-			self:_spawnSigleWayBot(spawnSet.playerVarOfBot, spawnSet.useRandomWay, spawnSet.activeWayIndex, spawnSet.indexOnPath, nil, spawnSet.team)
+	local s_InactiveBots = m_BotManager:getBotCount() - m_BotManager:getActiveBotCount()
+	local s_SlotsLeft = s_PlayerLimit - (PlayerManager:GetPlayerCount() - s_InactiveBots)
+	if p_Amount > s_SlotsLeft then
+		p_Amount = s_SlotsLeft
+	end
+
+	for i = 1, p_Amount do
+		local s_SpawnSet = SpawnSet()
+		s_SpawnSet.m_PlayerVarOfBot = nil
+		s_SpawnSet.m_UseRandomWay = p_UseRandomWay
+		s_SpawnSet.m_ActiveWayIndex = p_ActiveWayIndex
+		s_SpawnSet.m_IndexOnPath = p_IndexOnPath
+		s_SpawnSet.m_Team = p_TeamId
+		table.insert(self._SpawnSets, s_SpawnSet)
+	end
+end
+
+-- =============================================
+-- Private Functions
+-- =============================================
+
+-- =============================================
+	-- New Spawn Method
+-- =============================================
+
+function BotSpawner:_SelectLoadout(p_Bot, p_SetKit)
+	local s_WriteNewKit = (p_SetKit or Config.BotNewLoadoutOnSpawn)
+	if not s_WriteNewKit and (p_Bot.m_Color == "" or p_Bot.m_Kit == "" or p_Bot.m_ActiveWeapon == nil) then
+		s_WriteNewKit = true
+	end
+	local s_BotColor = Config.BotColor
+	local s_BotKit = Config.BotKit
+
+	if s_WriteNewKit then
+		if s_BotColor == "RANDOM_COLOR" then
+			s_BotColor = BotColors[MathUtils:GetRandomInt(2, #BotColors)]
 		end
-		self._botSpawnTimer = self._botSpawnTimer + dt
+		if s_BotKit == "RANDOM_KIT" then
+			s_BotKit = self:_GetSpawnBotKit()
+		end
+		p_Bot.m_Color = s_BotColor
+		p_Bot.m_Kit = s_BotKit
 	else
-		if self._updateActive then
-			self._updateActive = false;
-			--garbage-collection of unwanted bots
-			BotManager:destroyDisabledBots();
+		s_BotColor = p_Bot.m_Color
+		s_BotKit = p_Bot.m_Kit
+	end
+
+	p_Bot:resetSpawnVars()
+	self:_SetBotWeapons(p_Bot, s_BotKit, s_WriteNewKit)
+	if p_Bot.m_Player.selectedKit == nil then
+		-- SoldierBlueprint
+		p_Bot.m_Player.selectedKit = ResourceManager:SearchForInstanceByGuid(Guid('261E43BF-259B-41D2-BF3B-9AE4DDA96AD2'))
+	end
+	-- TODO: do it properly
+	local s_SoldierKit = ResourceManager:SearchForInstanceByGuid(Guid('47949491-F672-4CD6-998A-101B7740F919'))
+	local s_SoldierPersistance = ResourceManager:SearchForInstanceByGuid(Guid('23CFF61F-F1E2-4306-AECE-2819E35484D2'))
+	p_Bot.m_Player:SelectUnlockAssets(s_SoldierKit, {s_SoldierPersistance})
+	p_Bot.m_Player:SelectWeapon(WeaponSlot.WeaponSlot_0, ResourceManager:SearchForInstanceByGuid(Guid('A7278B05-8D76-4A40-B65D-4414490F6886')), {})
+end
+
+function BotSpawner:_TriggerSpawn(p_Bot)
+	local s_CurrentGameMode = SharedUtils:GetCurrentGameMode()
+	if s_CurrentGameMode:match("DeathMatch") or
+	s_CurrentGameMode:match("Domination") or
+	s_CurrentGameMode:match("GunMaster") or
+	s_CurrentGameMode:match("Scavenger") or
+	s_CurrentGameMode:match("TankSuperiority") or
+	s_CurrentGameMode:match("CaptureTheFlag") then
+		self:_DeathMatchSpawn(p_Bot)
+	elseif s_CurrentGameMode:match("Rush") then
+		-- seems to be the same as DeathMatchSpawn
+		-- but it has vehicles
+		self:_RushSpawn(p_Bot)
+	elseif s_CurrentGameMode:match("Conquest") then
+		-- event + target spawn ("ID_H_US_B", "_ID_H_US_HQ", etc.)
+		self:_ConquestSpawn(p_Bot)
+	end
+end
+
+function BotSpawner:_DeathMatchSpawn(p_Bot)
+	local s_Event = ServerPlayerEvent("Spawn", p_Bot.m_Player, true, false, false, false, false, false, p_Bot.m_Player.teamId)
+	local s_EntityIterator = EntityManager:GetIterator("ServerCharacterSpawnEntity")
+	local s_Entity = s_EntityIterator:Next()
+	while s_Entity do
+		if s_Entity.data:Is('CharacterSpawnReferenceObjectData') then
+			if CharacterSpawnReferenceObjectData(s_Entity.data).team == p_Bot.m_Player.teamId then
+				s_Entity:FireEvent(s_Event)
+				return
+			end
 		end
+		s_Entity = s_EntityIterator:Next()
 	end
 end
 
-function BotSpawner:_onRespawnBot(botname)
-	local bot = BotManager:getBotByName(botname)
-	local spawnMode = bot:getSpawnMode();
-
-	if spawnMode == 2 then --spawnInLine
-		local transform = LinearTransform();
-		transform = bot:getSpawnTransform();
-		self:spawnBot(bot, transform, false);
-
-	elseif spawnMode == 4 then	--fixed Way
-		local wayIndex 		= bot:getWayIndex();
-		local randIndex 	= MathUtils:GetRandomInt(1, #g_NodeCollection:Get(nil, wayIndex));
-		self:_spawnSigleWayBot(nil, false, wayIndex, randIndex, bot)
-
-	elseif spawnMode == 5 then --random Way
-		self:_spawnSigleWayBot(nil, true, 0, 0, bot)
-	end
-end
-
-function BotSpawner:spawnBotRow(player, length, spacing)
-	for i = 1, length do
-		local name = BotManager:findNextBotName()
-		if name ~= nil then
-			local transform = LinearTransform()
-			transform.trans = player.soldier.worldTransform.trans + (player.soldier.worldTransform.forward * i * spacing)
-			local bot = BotManager:createBot(name, BotManager:getBotTeam(), SquadId.SquadNone)
-			bot:setVarsStatic(player)
-			self:spawnBot(bot, transform, true)
+function BotSpawner:_RushSpawn(p_Bot)
+	local s_Event = ServerPlayerEvent("Spawn", p_Bot.m_Player, true, false, false, false, false, false, p_Bot.m_Player.teamId)
+	local s_EntityIterator = EntityManager:GetIterator("ServerCharacterSpawnEntity")
+	local s_Entity = s_EntityIterator:Next()
+	while s_Entity do
+		if s_Entity.data:Is('CharacterSpawnReferenceObjectData') then
+			if CharacterSpawnReferenceObjectData(s_Entity.data).team == p_Bot.m_Player.teamId then
+				-- skip if it is a vehiclespawn
+				for i, l_Entity in pairs(s_Entity.bus.entities) do
+					if l_Entity:Is("ServerVehicleSpawnEntity") then
+						goto skip
+					end
+				end
+				s_Entity:FireEvent(s_Event)
+				return
+			end
 		end
+		::skip::
+		s_Entity = s_EntityIterator:Next()
 	end
 end
 
-function BotSpawner:spawnBotTower(player, height)
-	for i = 1, height do
-		local name = BotManager:findNextBotName()
-		if name ~= nil then
-			local yaw = player.input.authoritativeAimingYaw
-			local transform = LinearTransform()
-			transform.trans.x = player.soldier.worldTransform.trans.x + (math.cos(yaw + (math.pi / 2)))
-			transform.trans.y = player.soldier.worldTransform.trans.y + ((i - 1) * 1.8)
-			transform.trans.z = player.soldier.worldTransform.trans.z + (math.sin(yaw + (math.pi / 2)))
-			local bot = BotManager:createBot(name, BotManager:getBotTeam(), SquadId.SquadNone)
-			bot:setVarsStatic(player)
-			self:spawnBot(bot, transform, true)
+function BotSpawner:_ConquestSpawn(p_Bot)
+	local s_Event = ServerPlayerEvent("Spawn", p_Bot.m_Player, true, false, false, false, false, false, p_Bot.m_Player.teamId)
+	local s_BestSpawnPoint = self:_FindAttackedSpawnPoint(p_Bot.m_Player.teamId)
+	if s_BestSpawnPoint == nil then
+		s_BestSpawnPoint = self:_FindClosestSpawnPoint(p_Bot.m_Player.teamId)
+	end
+	if s_BestSpawnPoint == nil then
+		m_Logger:Error("No valid spawn point found")
+		return
+	end
+	s_BestSpawnPoint:FireEvent(s_Event)
+end
+
+function BotSpawner:_FindAttackedSpawnPoint(p_TeamId)
+	local s_BestSpawnPoint = nil
+	local s_LowestFlagLocation = 100.0
+	local s_EntityIterator = EntityManager:GetIterator("ServerCapturePointEntity")
+	local s_Entity = s_EntityIterator:Next()
+	while s_Entity do
+		s_Entity = CapturePointEntity(s_Entity)
+		if s_Entity.team ~= p_TeamId then
+			goto endOfLoop
 		end
+		for i, l_Entity in pairs(s_Entity.bus.entities) do
+			if l_Entity:Is('ServerCharacterSpawnEntity') then
+				if CharacterSpawnReferenceObjectData(l_Entity.data).team == p_TeamId
+				or CharacterSpawnReferenceObjectData(l_Entity.data).team == 0 then
+					if s_Entity.flagLocation < 100.0 and s_Entity.isControlled then
+						if s_BestSpawnPoint == nil then
+							s_BestSpawnPoint = l_Entity
+							s_LowestFlagLocation = s_Entity.flagLocation
+						elseif s_Entity.flagLocation < s_LowestFlagLocation then
+							s_BestSpawnPoint = l_Entity
+							s_LowestFlagLocation = s_Entity.flagLocation
+						end
+					end
+					goto endOfLoop
+				end
+			end
+		end
+		::endOfLoop::
+		s_Entity = s_EntityIterator:Next()
 	end
+	return s_BestSpawnPoint
 end
 
-function BotSpawner:spawnBotGrid(player, rows, columns, spacing)
-	for i = 1, rows do
-		for j = 1, columns do
-			local name = BotManager:findNextBotName()
-			if name ~= nil then
-				local yaw = player.input.authoritativeAimingYaw
-				local transform = LinearTransform()
-				transform.trans.x = player.soldier.worldTransform.trans.x + (i * math.cos(yaw + (math.pi / 2)) * spacing) + ((j - 1) * math.cos(yaw) * spacing)
-				transform.trans.y = player.soldier.worldTransform.trans.y
-				transform.trans.z = player.soldier.worldTransform.trans.z + (i * math.sin(yaw + (math.pi / 2)) * spacing) + ((j - 1) * math.sin(yaw) * spacing)
-				local bot = BotManager:createBot(name, BotManager:getBotTeam(), SquadId.SquadNone)
-				bot:setVarsStatic(player)
-				self:spawnBot(bot, transform, true)
+function BotSpawner:_FindClosestSpawnPoint(p_TeamId)
+	local s_BestSpawnPoint = nil
+	local s_ClosestDistance = 0
+	-- Enemy and Neutralized CapturePoints
+	local s_TargetLocation = self:_FindTargetLocation(p_TeamId)
+	local s_EntityIterator = EntityManager:GetIterator("ServerCapturePointEntity")
+	local s_Entity = s_EntityIterator:Next()
+	while s_Entity do
+		s_Entity = CapturePointEntity(s_Entity)
+		if s_Entity.team ~= p_TeamId then
+			goto endOfLoop
+		end
+		for _, l_Entity in pairs(s_Entity.bus.entities) do
+			if l_Entity:Is('ServerCharacterSpawnEntity') then
+				if CharacterSpawnReferenceObjectData(l_Entity.data).team == p_TeamId
+				or CharacterSpawnReferenceObjectData(l_Entity.data).team == 0 then
+					if s_Entity.isControlled then
+						if s_BestSpawnPoint == nil then
+							s_BestSpawnPoint = l_Entity
+							-- for the case that the enemies have no place to spawn
+							if s_TargetLocation == nil then
+								return s_BestSpawnPoint
+							end
+							s_ClosestDistance = s_TargetLocation:Distance(s_Entity.transform.trans)
+						elseif s_ClosestDistance > s_TargetLocation:Distance(s_Entity.transform.trans) then
+							s_BestSpawnPoint = l_Entity
+							s_ClosestDistance = s_TargetLocation:Distance(s_Entity.transform.trans)
+						end
+					end
+					goto endOfLoop
+				end
+			end
+		end
+		::endOfLoop::
+		s_Entity = s_EntityIterator:Next()
+	end
+	return s_BestSpawnPoint
+end
+
+function BotSpawner:_FindTargetLocation(p_TeamId)
+	local s_TargetLocation = nil
+	local s_EntityIterator = EntityManager:GetIterator("ServerCapturePointEntity")
+	local s_Entity = s_EntityIterator:Next()
+	while s_Entity do
+		s_Entity = CapturePointEntity(s_Entity)
+		if s_Entity.team == p_TeamId then
+			goto endOfLoop
+		end
+		for i, l_Entity in pairs(s_Entity.bus.entities) do
+			if l_Entity:Is('ServerCharacterSpawnEntity') then
+				if CharacterSpawnReferenceObjectData(l_Entity.data).team == 0 then
+					s_TargetLocation = s_Entity.transform.trans
+				else
+					return s_Entity.transform.trans
+				end
+				goto endOfLoop
+			end
+		end
+		::endOfLoop::
+		s_Entity = s_EntityIterator:Next()
+	end
+	-- return enemy base location (or nil) if all capture points captured by bot team already
+	return s_TargetLocation
+end
+
+-- =============================================
+	-- Some more Functions
+-- =============================================
+
+function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayIndex, p_IndexOnPath, p_ExistingBot, p_ForcedTeam)
+	local s_SpawnPoint = nil
+	local s_IsRespawn = false
+	local s_Name = nil
+	if p_ExistingBot ~= nil then
+		s_IsRespawn = true
+	else
+		s_Name = m_BotManager:findNextBotName()
+	end
+	local s_TeamId = p_ForcedTeam
+	local s_SquadId = SquadId.SquadNone
+	if s_TeamId == nil then
+		s_TeamId = m_BotManager:getBotTeam()
+	end
+	if s_IsRespawn then
+		s_TeamId = p_ExistingBot.m_Player.teamId
+		s_SquadId = p_ExistingBot.m_Player.squadId
+	else
+		s_SquadId = self:_GetSquadToJoin(s_TeamId)
+	end
+	local s_InverseDirection = false
+	if s_Name ~= nil or s_IsRespawn then
+		if Config.SpawnMethod == SpawnMethod.Spawn then
+			local s_Bot = self:GetBot(p_ExistingBot, s_Name, s_TeamId, s_SquadId)
+			if s_Bot == nil then
+				return
+			end
+			self:_SelectLoadout(s_Bot, true)
+			self:_TriggerSpawn(s_Bot)
+			table.insert(self._BotsWithoutPath, s_Bot)
+			return
+		end
+		-- find a spawnpoint
+		if p_UseRandomWay or p_ActiveWayIndex == nil or p_ActiveWayIndex == 0 then
+			s_SpawnPoint = self:_GetSpawnPoint(s_TeamId, s_SquadId)
+		else
+			s_SpawnPoint = m_NodeCollection:Get(p_IndexOnPath, p_ActiveWayIndex)
+		end
+
+		if s_SpawnPoint == nil then
+			return
+		else
+			p_IndexOnPath = s_SpawnPoint.PointIndex
+			p_ActiveWayIndex = s_SpawnPoint.PathIndex
+		end
+
+		--find out direction, if path has a return point
+		if m_NodeCollection:Get(1, p_ActiveWayIndex).OptValue == 0xFF then
+			s_InverseDirection = (MathUtils:GetRandomInt(0, 1) == 1)
+		end
+
+		local s_Transform = LinearTransform()
+		if p_IndexOnPath == nil or p_IndexOnPath == 0 then
+			p_IndexOnPath = 1
+		end
+		s_Transform.trans = s_SpawnPoint.Position
+
+		if s_IsRespawn then
+			p_ExistingBot:setVarsWay(p_Player, p_UseRandomWay, p_ActiveWayIndex, p_IndexOnPath, s_InverseDirection)
+			self:_SpawnBot(p_ExistingBot, s_Transform, false)
+		else
+			local s_Bot = m_BotManager:createBot(s_Name, s_TeamId, s_SquadId)
+
+			if s_Bot ~= nil then
+				-- check for first one in squad
+				if (TeamSquadManager:GetSquadPlayerCount(s_TeamId, s_SquadId) == 1) then
+					s_Bot.m_Player:SetSquadLeader(true, false)  -- not private
+				end
+
+				s_Bot:setVarsWay(p_Player, p_UseRandomWay, p_ActiveWayIndex, p_IndexOnPath, s_InverseDirection)
+				self:_SpawnBot(s_Bot, s_Transform, true)
 			end
 		end
 	end
 end
 
-function BotSpawner:spawnLineBots(player, amount, spacing)
-	 for i = 1, amount do
-		local name = BotManager:findNextBotName()
-		if name ~= nil then
-			local transform = LinearTransform()
-			transform.trans = player.soldier.worldTransform.trans + (player.soldier.worldTransform.forward * i * spacing)
-			local bot = BotManager:createBot(name, BotManager:getBotTeam(), SquadId.SquadNone)
-			bot:setVarsSimpleMovement(player, 2, transform)
-			self:spawnBot(bot, transform, true)
-		end
+function BotSpawner:_SpawnBot(p_Bot, p_Trans, p_SetKit)
+	local s_WriteNewKit = (p_SetKit or Config.BotNewLoadoutOnSpawn)
+	if not s_WriteNewKit and (p_Bot.m_Color == "" or p_Bot.m_Kit == "" or p_Bot.m_ActiveWeapon == nil) then
+		s_WriteNewKit = true
 	end
+	local s_BotColor = Config.BotColor
+	local s_BotKit = Config.BotKit
+
+	if s_WriteNewKit then
+		if s_BotColor == "RANDOM_COLOR" then
+			s_BotColor = BotColors[MathUtils:GetRandomInt(2, #BotColors)]
+		end
+		if s_BotKit == "RANDOM_KIT" then
+			s_BotKit = self:_GetSpawnBotKit()
+		end
+		p_Bot.m_Color = s_BotColor
+		p_Bot.m_Kit = s_BotKit
+	else
+		s_BotColor = p_Bot.m_Color
+		s_BotKit = p_Bot.m_Kit
+	end
+
+	self:_SetBotWeapons(p_Bot, s_BotKit, s_WriteNewKit)
+
+	p_Bot:resetSpawnVars()
+
+	-- create kit and appearance
+	local s_SoldierBlueprint = ResourceManager:SearchForDataContainer('Characters/Soldiers/MpSoldier')
+	local s_SoldierCustomization = nil
+	local s_SoldierKit = nil
+	local s_Appearance = nil
+	s_SoldierKit, s_Appearance, s_SoldierCustomization = self:_GetKitAppearanceCustomization(p_Bot.m_Player.teamId, s_BotKit, s_BotColor, p_Bot.m_Primary, p_Bot.m_Pistol, p_Bot.m_Knife, p_Bot.m_PrimaryGadget, p_Bot.m_SecondaryGadget, p_Bot.m_Grenade)
+
+	-- Create the transform of where to spawn the bot at.
+	local s_Transform = LinearTransform()
+	s_Transform = p_Trans
+
+	-- And then spawn the bot. This will create and return a new SoldierEntity object.
+	-- for Civilianizer-Mod
+	if Globals.RemoveKitVisuals then
+		m_BotManager:spawnBot(p_Bot, s_Transform, CharacterPoseType.CharacterPoseType_Stand, s_SoldierBlueprint, s_SoldierKit, {})
+	else
+		m_BotManager:spawnBot(p_Bot, s_Transform, CharacterPoseType.CharacterPoseType_Stand, s_SoldierBlueprint, s_SoldierKit, { s_Appearance })
+	end
+	p_Bot.m_Player.soldier:ApplyCustomization(s_SoldierCustomization)
+	self:_ModifyWeapon(p_Bot.m_Player.soldier)
+
+	-- for Civilianizer-mod:
+	Events:Dispatch('Bot:SoldierEntity', p_Bot.m_Player.soldier)
 end
 
-function BotSpawner:_getSpawnPoint(team, squad)
-	local activeWayIndex = 0;
-	local indexOnPath = 0;
+function BotSpawner:_GetSpawnPoint(p_TeamId, p_SquadId)
+	local s_ActiveWayIndex = 0
+	local s_IndexOnPath = 0
 
-	local targetNode = nil
-	local validPointFound = false;
-	local targetDistance = Config.distanceToSpawnBots;
-	local retryCounter = Config.maxTrysToSpawnAtDistance;
-	local maximumTrys = 100;
-	local trysDone = 0;
+	local s_TargetNode = nil
+	local s_ValidPointFound = false
+	local s_TargetDistance = Config.DistanceToSpawnBots
+	local s_RetryCounter = Config.MaxTrysToSpawnAtDistance
+	local s_MaximumTrys = 100
+	local s_TrysDone = 0
 
 	-- CONQUEST
 	-- spawn at base, squad-mate, captured flag
-	if g_Globals.isConquest then
-		activeWayIndex = g_GameDirector:getSpawnPath(team, squad, false)
+	if Globals.IsConquest then
+		s_ActiveWayIndex, s_IndexOnPath = g_GameDirector:GetSpawnPath(p_TeamId, p_SquadId, false)
 
-		if activeWayIndex == 0 then
+		if s_ActiveWayIndex == 0 then
 			-- something went wrong. use random path
-			if Debug.Server.BOT then
-				print("no base or capturepoint found to spawn")
-			end
-			activeWayIndex = MathUtils:GetRandomInt(1, #g_NodeCollection:GetPaths())
+			m_Logger:Write("no base or capturepoint found to spawn")
+			return
 		end
-		indexOnPath = MathUtils:GetRandomInt(1, #g_NodeCollection:Get(nil, activeWayIndex))
 
-		targetNode = g_NodeCollection:Get(indexOnPath, activeWayIndex)
+		s_TargetNode = m_NodeCollection:Get(s_IndexOnPath, s_ActiveWayIndex)
 
 
 	-- RUSH
 	-- spawn at base (of zone) or squad-mate
-	elseif g_Globals.isRush then
-		activeWayIndex = g_GameDirector:getSpawnPath(team, squad, true)
+	elseif Globals.IsRush then
+		s_ActiveWayIndex, s_IndexOnPath = g_GameDirector:GetSpawnPath(p_TeamId, p_SquadId, true)
 
-		if activeWayIndex == 0 then
+		if s_ActiveWayIndex == 0 then
 			-- something went wrong. use random path
-			if Debug.Server.BOT then
-				print("no base found to spawn")
-			end
-			activeWayIndex = MathUtils:GetRandomInt(1, #g_NodeCollection:GetPaths())
+			m_Logger:Write("no base found to spawn")
+			return
 		end
-		indexOnPath = MathUtils:GetRandomInt(1, #g_NodeCollection:Get(nil, activeWayIndex))
 
-		targetNode = g_NodeCollection:Get(indexOnPath, activeWayIndex)
+		s_TargetNode = m_NodeCollection:Get(s_IndexOnPath, s_ActiveWayIndex)
 
 
 	-- TDM / GM / SCAVANGER
 	-- spawn away from other team
 	else
-		while not validPointFound and trysDone < maximumTrys do
+		while not s_ValidPointFound and s_TrysDone < s_MaximumTrys do
 			-- get new point
-			activeWayIndex = MathUtils:GetRandomInt(1, #g_NodeCollection:GetPaths())
-			if activeWayIndex == 0 then
+			s_ActiveWayIndex = MathUtils:GetRandomInt(1, #m_NodeCollection:GetPaths())
+			if s_ActiveWayIndex == 0 then
 				return
 			end
-			indexOnPath = MathUtils:GetRandomInt(1, #g_NodeCollection:Get(nil, activeWayIndex))
-			if g_NodeCollection:Get(1, activeWayIndex) == nil then
+			s_IndexOnPath = MathUtils:GetRandomInt(1, #m_NodeCollection:Get(nil, s_ActiveWayIndex))
+			if m_NodeCollection:Get(1, s_ActiveWayIndex) == nil then
 				return
 			end
 
-			targetNode = g_NodeCollection:Get(indexOnPath, activeWayIndex)
-			local spawnPoint = targetNode.Position
+			s_TargetNode = m_NodeCollection:Get(s_IndexOnPath, s_ActiveWayIndex)
+			local s_SpawnPoint = s_TargetNode.Position
 
 			--check for nearby player
-			local playerNearby = false;
-			local players = PlayerManager:GetPlayers()
+			local s_PlayerNearby = false
+			local s_Players = PlayerManager:GetPlayers()
 			for i = 1, PlayerManager:GetPlayerCount() do
-				local tempPlayer = players[i];
-				if tempPlayer.alive then
-					if team == nil or team ~= tempPlayer.teamId then
-						local distance = tempPlayer.soldier.worldTransform.trans:Distance(spawnPoint)
-						local heightDiff = math.abs(tempPlayer.soldier.worldTransform.trans.y - spawnPoint.y)
-						if distance < targetDistance and heightDiff < Config.heightDistanceToSpawn then
-							playerNearby = true;
-							break;
+				local s_TempPlayer = s_Players[i]
+				if s_TempPlayer.alive then
+					if p_TeamId == nil or p_TeamId ~= s_TempPlayer.teamId then
+						local s_Distance = s_TempPlayer.soldier.worldTransform.trans:Distance(s_SpawnPoint)
+						local s_HeightDiff = math.abs(s_TempPlayer.soldier.worldTransform.trans.y - s_SpawnPoint.y)
+						if s_Distance < s_TargetDistance and s_HeightDiff < Config.HeightDistanceToSpawn then
+							s_PlayerNearby = true
+							break
 						end
 					end
 				end
 			end
-			retryCounter = retryCounter - 1;
-			trysDone = trysDone + 1;
-			if retryCounter == 0 then
-				retryCounter = Config.maxTrysToSpawnAtDistance;
-				targetDistance = targetDistance - Config.distanceToSpawnReduction;
-				if targetDistance < 0 then
-					targetDistance = 0
+			s_RetryCounter = s_RetryCounter - 1
+			s_TrysDone = s_TrysDone + 1
+			if s_RetryCounter == 0 then
+				s_RetryCounter = Config.MaxTrysToSpawnAtDistance
+				s_TargetDistance = s_TargetDistance - Config.DistanceToSpawnReduction
+				if s_TargetDistance < 0 then
+					s_TargetDistance = 0
 				end
 			end
-			if not playerNearby then
-				validPointFound = true;
+			if not s_PlayerNearby then
+				s_ValidPointFound = true
 			end
 		end
 	end
-	return targetNode
+	return s_TargetNode
 end
 
-
-function BotSpawner:getSquad(team)  --TODO: create a more advanced algorithm?
-	for i = 1, SquadId.SquadIdCount - 1 do --for i = 9, SquadId.SquadIdCount - 1 do -- first 8 squads for real players
-		if TeamSquadManager:GetSquadPlayerCount(team, i) < 4 then
-			return i
+function BotSpawner:_GetSquadToJoin(p_TeamId)  -- TODO: create a more advanced algorithm?
+	if Globals.IsSdm then
+		return 1
+	else
+		for i = 1, SquadId.SquadIdCount - 1 do -- for i = 9, SquadId.SquadIdCount - 1 do -- first 8 squads for real players
+			if TeamSquadManager:GetSquadPlayerCount(p_TeamId, i) < 4 then
+				return i
+			end
 		end
 	end
 	return 0
 end
 
-function BotSpawner:_spawnSigleWayBot(player, useRandomWay, activeWayIndex, indexOnPath, existingBot, forcedTeam)
-	local spawnPoint = nil
-	local isRespawn = false;
-	local name = nil;
-	if existingBot ~= nil then
-		isRespawn = true;
+function BotSpawner:_GetKitAppearanceCustomization(p_TeamId, p_Kit, p_Color, p_Primary, p_Pistol, p_Knife, p_Gadget1, p_Gadget2, p_Grenade)
+	-- Create the loadouts
+	local s_SoldierKit = nil
+	local s_Appearance = nil
+	local s_SoldierCustomization = CustomizeSoldierData()
+
+	local s_PistolWeapon = ResourceManager:SearchForDataContainer(p_Pistol:getResourcePath())
+	local s_KnifeWeapon = ResourceManager:SearchForDataContainer(p_Knife:getResourcePath())
+	local s_Gadget1Weapon = ResourceManager:SearchForDataContainer(p_Gadget1:getResourcePath())
+	local s_Gadget2Weapon = ResourceManager:SearchForDataContainer(p_Gadget2:getResourcePath())
+	local s_GrenadeWeapon = ResourceManager:SearchForDataContainer(p_Grenade:getResourcePath())
+
+	s_SoldierCustomization.activeSlot = WeaponSlot.WeaponSlot_0
+	s_SoldierCustomization.removeAllExistingWeapons = true
+
+	local s_PrimaryWeapon = UnlockWeaponAndSlot()
+	s_PrimaryWeapon.slot = WeaponSlot.WeaponSlot_0
+
+	local s_PrimaryWeaponResource = ResourceManager:SearchForDataContainer(p_Primary:getResourcePath())
+	s_PrimaryWeapon.weapon = SoldierWeaponUnlockAsset(s_PrimaryWeaponResource)
+	self:_SetAttachments(s_PrimaryWeapon, p_Primary:getAllAttachements())
+
+	local s_PrimaryGadget = UnlockWeaponAndSlot()
+	s_PrimaryGadget.weapon = SoldierWeaponUnlockAsset(s_Gadget1Weapon)
+	if p_Kit == "Assault" or p_Kit == "Support" then
+		s_PrimaryGadget.slot = WeaponSlot.WeaponSlot_4
 	else
-		name = BotManager:findNextBotName()
+		s_PrimaryGadget.slot = WeaponSlot.WeaponSlot_2
 	end
-	local team = forcedTeam;
-	local squad = SquadId.SquadNone
-	if team == nil then
-		team = BotManager:getBotTeam();
+
+	local s_SecondaryGadget = UnlockWeaponAndSlot()
+	s_SecondaryGadget.weapon = SoldierWeaponUnlockAsset(s_Gadget2Weapon)
+	s_SecondaryGadget.slot = WeaponSlot.WeaponSlot_5
+
+	local s_Grenade = UnlockWeaponAndSlot()
+	s_Grenade.weapon = SoldierWeaponUnlockAsset(s_GrenadeWeapon)
+	s_Grenade.slot = WeaponSlot.WeaponSlot_6
+
+	local s_SecondaryWeapon = UnlockWeaponAndSlot()
+	s_SecondaryWeapon.weapon = SoldierWeaponUnlockAsset(s_PistolWeapon)
+	s_SecondaryWeapon.slot = WeaponSlot.WeaponSlot_1
+
+	local s_Knife = UnlockWeaponAndSlot()
+	s_Knife.weapon = SoldierWeaponUnlockAsset(s_KnifeWeapon)
+	s_Knife.slot = WeaponSlot.WeaponSlot_7
+
+	if p_TeamId % 2 == 1 then -- US
+		if p_Kit == "Assault" then --assault
+			s_Appearance = self:_FindAppearance('Us', 'Assault', p_Color)
+			s_SoldierKit = self:_FindKit('US', 'Assault')
+		elseif p_Kit == "Engineer" then --engineer
+			s_Appearance = self:_FindAppearance('Us', 'Engi', p_Color)
+			s_SoldierKit = self:_FindKit('US', 'Engineer')
+		elseif p_Kit == "Support" then --support
+			s_Appearance = self:_FindAppearance('Us', 'Support', p_Color)
+			s_SoldierKit = self:_FindKit('US', 'Support')
+		else --recon
+			s_Appearance = self:_FindAppearance('Us', 'Recon', p_Color)
+			s_SoldierKit = self:_FindKit('US', 'Recon')
+		end
+	else -- RU
+		if p_Kit == "Assault" then --assault
+			s_Appearance = self:_FindAppearance('RU', 'Assault', p_Color)
+			s_SoldierKit = self:_FindKit('RU', 'Assault')
+		elseif p_Kit == "Engineer" then --engineer
+			s_Appearance = self:_FindAppearance('RU', 'Engi', p_Color)
+			s_SoldierKit = self:_FindKit('RU', 'Engineer')
+		elseif p_Kit == "Support" then --support
+			s_Appearance = self:_FindAppearance('RU', 'Support', p_Color)
+			s_SoldierKit = self:_FindKit('RU', 'Support')
+		else --recon
+			s_Appearance = self:_FindAppearance('RU', 'Recon', p_Color)
+			s_SoldierKit = self:_FindKit('RU', 'Recon')
+		end
 	end
-	if isRespawn then
-		team = existingBot.player.teamId;
-		squad = existingBot.player.squadId;
+
+	if Config.ZombieMode then
+		s_SoldierCustomization.activeSlot = WeaponSlot.WeaponSlot_7
+		s_SoldierCustomization.weapons:add(s_Knife)
 	else
-		squad = self:getSquad(team)
+		s_SoldierCustomization.weapons:add(s_PrimaryWeapon)
+		s_SoldierCustomization.weapons:add(s_SecondaryWeapon)
+		s_SoldierCustomization.weapons:add(s_PrimaryGadget)
+		s_SoldierCustomization.weapons:add(s_SecondaryGadget)
+		s_SoldierCustomization.weapons:add(s_Grenade)
+		s_SoldierCustomization.weapons:add(s_Knife)
 	end
-	local inverseDirection = false;
-	if name ~= nil or isRespawn then
 
-		-- find a spawnpoint
-		if useRandomWay or activeWayIndex == nil or activeWayIndex == 0 then
-			spawnPoint = self:_getSpawnPoint(team, squad);
-		else
-			spawnPoint = g_NodeCollection:Get(indexOnPath, activeWayIndex)
-		end
-
-		if spawnPoint == nil then
-			return
-		else
-			indexOnPath = spawnPoint.PointIndex;
-			activeWayIndex = spawnPoint.PathIndex;
-		end
-
-		--find out direction, if path has a return point
-		if g_NodeCollection:Get(1, activeWayIndex).OptValue == 0xFF then
-			inverseDirection = (MathUtils:GetRandomInt(0,1) == 1);
-		end
-
-		local transform = LinearTransform()
-		if indexOnPath == nil or indexOnPath == 0 then
-			indexOnPath = 1;
-		end
-		transform.trans = spawnPoint.Position
-		
-		if isRespawn then
-			existingBot:setVarsWay(player, useRandomWay, activeWayIndex, indexOnPath, inverseDirection)
-			self:spawnBot(existingBot, transform, false)
-		else
-			local bot = BotManager:createBot(name, team, squad)
-	
-			if bot ~= nil then
-				bot:setVarsWay(player, useRandomWay, activeWayIndex, indexOnPath, inverseDirection)
-				self:spawnBot(bot, transform, true)
-			end
-		end
-	end
+	return s_SoldierKit, s_Appearance, s_SoldierCustomization
 end
 
-function BotSpawner:spawnWayBots(player, amount, useRandomWay, activeWayIndex, indexOnPath, teamId)
-	if #g_NodeCollection:GetPaths() <= 0 then
-		return
+function BotSpawner:_GetSpawnBotKit()
+	local s_BotKit = BotKits[MathUtils:GetRandomInt(2, #BotKits)]
+	local s_ChangeKit = false
+	--find out, if possible
+	local s_KitCount = m_BotManager:getKitCount(s_BotKit)
+	if s_BotKit == "Assault" then
+		if Config.MaxAssaultBots >= 0 and s_KitCount >= Config.MaxAssaultBots then
+			s_ChangeKit = true
+		end
+	elseif s_BotKit == "Engineer" then
+		if Config.MaxEngineerBots >= 0 and s_KitCount >= Config.MaxEngineerBots then
+			s_ChangeKit = true
+		end
+	elseif s_BotKit == "Support" then
+		if Config.MaxSupportBots >= 0 and s_KitCount >= Config.MaxSupportBots then
+			s_ChangeKit = true
+		end
+	else -- s_BotKit == "Recon"
+		if Config.MaxReconBots >= 0 and s_KitCount >= Config.MaxReconBots then
+			s_ChangeKit = true
+		end
 	end
 
-	-- check for amount available
-	local playerlimt = g_Globals.maxPlayers;
-	if Config.keepOneSlotForPlayers then
-		playerlimt = playerlimt - 1
+	if s_ChangeKit then
+		local s_AvailableKitList = {}
+		if (Config.MaxAssaultBots == -1) or (m_BotManager:getKitCount("Assault") < Config.MaxAssaultBots) then
+			table.insert(s_AvailableKitList, "Assault")
+		end
+		if (Config.MaxEngineerBots == -1) or (m_BotManager:getKitCount("Engineer") < Config.MaxEngineerBots) then
+			table.insert(s_AvailableKitList, "Engineer")
+		end
+		if (Config.MaxSupportBots == -1) or (m_BotManager:getKitCount("Support") < Config.MaxSupportBots) then
+			table.insert(s_AvailableKitList, "Support")
+		end
+		if(Config.MaxReconBots == -1) or (m_BotManager:getKitCount("Recon") < Config.MaxReconBots) then
+			table.insert(s_AvailableKitList, "Recon")
+		end
+
+		if #s_AvailableKitList > 0 then
+			s_BotKit = s_AvailableKitList[MathUtils:GetRandomInt(1, #s_AvailableKitList)]
+		end
 	end
 
-	local incactiveBots = BotManager:getBotCount() - BotManager:getActiveBotCount()
-	local slotsLeft = playerlimt - (PlayerManager:GetPlayerCount() - incactiveBots);
-	if amount > slotsLeft then
-		amount = slotsLeft;
-	end
-
-	for i = 1, amount do
-		local spawnSet = SpawnSet()
-		spawnSet.playerVarOfBot 	= nil;
-		spawnSet.useRandomWay 		= useRandomWay;
-		spawnSet.activeWayIndex 	= activeWayIndex;
-		spawnSet.indexOnPath 		= indexOnPath;
-		spawnSet.team				= teamId;
-		table.insert(self._spawnSets, spawnSet)
-	end
+	return s_BotKit
 end
 
 -- Tries to find first available kit
 -- @param teamName string Values: 'US', 'RU'
 -- @param kitName string Values: 'Assault', 'Engineer', 'Support', 'Recon'
-function BotSpawner:_findKit(teamName, kitName)
+function BotSpawner:_FindKit(p_TeamName, p_KitName)
 
-	local gameModeKits = {
+	local s_GameModeKits = {
 		'', -- Standard
 		'_GM', --Gun Master on XP2 Maps
 		'_GM_XP4', -- Gun Master on XP4 Maps
@@ -587,331 +1134,124 @@ function BotSpawner:_findKit(teamName, kitName)
 		'_XP4_SCV' -- Scavenger on XP4 Maps
 	}
 
-	for kitType=1, #gameModeKits do
-		local properKitName = string.lower(kitName)
-		properKitName = properKitName:gsub("%a", string.upper, 1)
+	for l_KitType = 1, #s_GameModeKits do
+		local s_ProperKitName = string.lower(p_KitName)
+		s_ProperKitName = s_ProperKitName:gsub("%a", string.upper, 1)
 
-		local fullKitName = string.upper(teamName)..properKitName..gameModeKits[kitType]
-		local kit = ResourceManager:SearchForDataContainer('Gameplay/Kits/'..fullKitName)
-		if kit ~= nil then
-			return kit
+		local s_FullKitName = string.upper(p_TeamName) .. s_ProperKitName .. s_GameModeKits[l_KitType]
+		local s_Kit = ResourceManager:SearchForDataContainer('Gameplay/Kits/' .. s_FullKitName)
+		if s_Kit ~= nil then
+			return s_Kit
 		end
 	end
 
 	return
 end
 
-function BotSpawner:_findAppearance(teamName, kitName, color)
-	local gameModeAppearances = {
+function BotSpawner:_FindAppearance(p_TeamName, p_KitName, p_Color)
+	local s_GameModeAppearances = {
 		'MP/', -- Standard
 		'MP_XP4/', --Gun Master on XP2 Maps
 	}
-	--'Persistence/Unlocks/Soldiers/Visual/MP[or:MP_XP4]/Us/MP_US_Assault_Appearance_'..color
-	for _, gameMode in pairs(gameModeAppearances) do
-		local appearanceString = gameMode..teamName..'/MP_'..string.upper(teamName)..'_'..kitName..'_Appearance_'..color
-		local appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/'..appearanceString)
-		if appearance ~= nil then
-			return appearance
+	--'Persistence/Unlocks/Soldiers/Visual/MP[or:MP_XP4]/Us/MP_US_Assault_Appearance_'..p_Color
+	for _, l_GameMode in pairs(s_GameModeAppearances) do
+		local s_AppearanceString = l_GameMode .. p_TeamName .. '/MP_' .. string.upper(p_TeamName) .. '_' .. p_KitName .. '_Appearance_' .. p_Color
+		local s_Appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/'..s_AppearanceString)
+		if s_Appearance ~= nil then
+			return s_Appearance
 		end
 	end
 
 	return
 end
 
-function BotSpawner:_setAttachments(unlockWeapon, attachments)
-	for _, attachment in pairs(attachments) do
-		local asset = ResourceManager:SearchForDataContainer(attachment)
-		if (asset == nil) then
+function BotSpawner:_SetAttachments(p_UnlockWeapon, p_Attachments)
+	for _, l_Attachment in pairs(p_Attachments) do
+		local s_Asset = ResourceManager:SearchForDataContainer(l_Attachment)
+		if s_Asset == nil then
 			if Debug.Server.BOT then
-				print('Warning! Attachment invalid ['..tostring(unlockWeapon.weapon.name)..']: '..tostring(attachment))
+				m_Logger:Warning('Attachment invalid [' .. tostring(p_UnlockWeapon.weapon.name) .. ']: ' .. tostring(l_Attachment))
 			end
 		else
-			unlockWeapon.unlockAssets:add(UnlockAsset(asset))
+			p_UnlockWeapon.unlockAssets:add(UnlockAsset(s_Asset))
 		end
 	end
 end
 
-function BotSpawner:getKitApperanceCustomization(team, kit, color, primary, pistol, knife, sidearm)
-	-- Create the loadouts
-	local soldierKit = nil
-	local appearance = nil
-	local sideArmWeapon = nil
-	local soldierCustomization = CustomizeSoldierData()
-
-	local pistolWeapon = ResourceManager:SearchForDataContainer(pistol:getResourcePath())
-	local knifeWeapon = ResourceManager:SearchForDataContainer(knife:getResourcePath())
-	if sidearm ~= nil then
-		sideArmWeapon = ResourceManager:SearchForDataContainer(sidearm:getResourcePath())
-	end
-	local grenadeWeapon = ResourceManager:SearchForDataContainer('Weapons/M67/U_M67')
-
-	soldierCustomization.activeSlot = WeaponSlot.WeaponSlot_0
-	soldierCustomization.removeAllExistingWeapons = true
-
-	local primaryWeapon = UnlockWeaponAndSlot()
-	primaryWeapon.slot = WeaponSlot.WeaponSlot_0
-
-	local primaryWeaponResource = ResourceManager:SearchForDataContainer(primary:getResourcePath())
-	primaryWeapon.weapon = SoldierWeaponUnlockAsset(primaryWeaponResource)
-	self:_setAttachments(primaryWeapon, primary:getAllAttachements())
-
-	local gadget01 = UnlockWeaponAndSlot()
-	gadget01.slot = WeaponSlot.WeaponSlot_2
-
-	local gadget02 = UnlockWeaponAndSlot()
-	gadget02.slot = WeaponSlot.WeaponSlot_5
-
-	local thrownWeapon = UnlockWeaponAndSlot()
-	thrownWeapon.weapon = SoldierWeaponUnlockAsset(grenadeWeapon)
-	thrownWeapon.slot = WeaponSlot.WeaponSlot_6
-
-	local secondaryWeapon = UnlockWeaponAndSlot()
-	secondaryWeapon.weapon = SoldierWeaponUnlockAsset(pistolWeapon)
-	secondaryWeapon.slot = WeaponSlot.WeaponSlot_1
-
-	local meleeWeapon = UnlockWeaponAndSlot()
-	meleeWeapon.weapon = SoldierWeaponUnlockAsset(knifeWeapon)
-	meleeWeapon.slot = WeaponSlot.WeaponSlot_7
-
-
-	if kit == "Assault" then
-		gadget01.weapon = SoldierWeaponUnlockAsset(ResourceManager:SearchForDataContainer('Weapons/Gadgets/Medicbag/U_Medkit'))
-		gadget02.weapon = SoldierWeaponUnlockAsset(ResourceManager:SearchForDataContainer('Weapons/Gadgets/Defibrillator/U_Defib'))
-
-	elseif kit == "Engineer" then --engineer
-		gadget01.weapon = SoldierWeaponUnlockAsset(ResourceManager:SearchForDataContainer('Weapons/Gadgets/Repairtool/U_Repairtool'))
-		gadget02.weapon = SoldierWeaponUnlockAsset(ResourceManager:SearchForDataContainer('Weapons/SMAW/U_SMAW'))
-
-	elseif kit == "Support" then --support
-		gadget01.weapon = SoldierWeaponUnlockAsset(ResourceManager:SearchForDataContainer('Weapons/Gadgets/Ammobag/U_Ammobag'))
-		gadget02.weapon = SoldierWeaponUnlockAsset(ResourceManager:SearchForDataContainer('Weapons/Gadgets/Claymore/U_Claymore'))
-
-	else	--"Recon"
-		gadget01.weapon = SoldierWeaponUnlockAsset(ResourceManager:SearchForDataContainer('Weapons/Gadgets/T-UGS/U_UGS'))
-		gadget02.weapon = SoldierWeaponUnlockAsset(ResourceManager:SearchForDataContainer('Weapons/Gadgets/RadioBeacon/U_RadioBeacon'))
-	end
-
-	-- overwrite sidearm if available
-	if sideArmWeapon ~= nil then
-		if Debug.Server.BOT then
-			print("overwrite sidearm")
-		end
-		gadget02.weapon = SoldierWeaponUnlockAsset(sideArmWeapon)
-	end
-
-	if Config.zombieMode then
-		kit = "Engineer";
-		color = "Ninja";
-	end
-
-	if team == TeamId.Team1 then -- US
-		if kit == "Assault" then --assault
-			appearance = self:_findAppearance('Us', 'Assault', color)
-			soldierKit = self:_findKit('US', 'Assault')
-		elseif kit == "Engineer" then --engineer
-			appearance = self:_findAppearance('Us', 'Engi', color)
-			soldierKit = self:_findKit('US', 'Engineer')
-		elseif kit == "Support" then --support
-			appearance = self:_findAppearance('Us', 'Support', color)
-			soldierKit = self:_findKit('US', 'Support')
-		else	--recon
-			appearance = self:_findAppearance('Us', 'Recon', color)
-			soldierKit = self:_findKit('US', 'Recon')
-		end
-	else -- RU
-		if kit == "Assault" then --assault
-			appearance = self:_findAppearance('RU', 'Assault', color)
-			soldierKit = self:_findKit('RU', 'Assault')
-		elseif kit == "Engineer" then --engineer
-			appearance = self:_findAppearance('RU', 'Engi', color)
-			soldierKit = self:_findKit('RU', 'Engineer')
-		elseif kit == "Support" then --support
-			appearance = self:_findAppearance('RU', 'Support', color)
-			soldierKit = self:_findKit('RU', 'Support')
-		else	--recon
-			appearance = self:_findAppearance('RU', 'Recon', color)
-			soldierKit = self:_findKit('RU', 'Recon')
-		end
-	end
-
-	if Config.zombieMode then
-		soldierCustomization.activeSlot = WeaponSlot.WeaponSlot_7
-		soldierCustomization.weapons:add(meleeWeapon)
-	else
-		soldierCustomization.weapons:add(primaryWeapon)
-		soldierCustomization.weapons:add(secondaryWeapon)
-		soldierCustomization.weapons:add(gadget01)
-		soldierCustomization.weapons:add(gadget02)
-		soldierCustomization.weapons:add(thrownWeapon)
-		soldierCustomization.weapons:add(meleeWeapon)
-	end
-
-	return soldierKit, appearance, soldierCustomization
-end
-
-function BotSpawner:_onKitPickup(player, newCustomization)
-	if player.soldier ~= nil then
-		if player.soldier.weaponsComponent.weapons[1] ~= nil then
-			player.soldier.weaponsComponent.weapons[1].secondaryAmmo = 182;
-		end
-		if player.soldier.weaponsComponent.weapons[2] ~= nil then
-			player.soldier.weaponsComponent.weapons[2].secondaryAmmo = 58;
-		end
-	end
-end
-
-function BotSpawner:_modifyWeapon(soldier)
-	--soldier.weaponsComponent.currentWeapon.secondaryAmmo = 9999;
-	if soldier.weaponsComponent.weapons[1] ~= nil then
-		soldier.weaponsComponent.weapons[1].secondaryAmmo = 9999;
-	end
-	if soldier.weaponsComponent.weapons[2] ~= nil then
-		soldier.weaponsComponent.weapons[2].secondaryAmmo = 9999;
-	end
-end
-
-function BotSpawner:_getSpawnBotKit()
-	local botKit = BotKits[MathUtils:GetRandomInt(2, #BotKits)];
-	local changeKit = false;
-	--find out, if possible
-	local kitCount = BotManager:getKitCount(botKit);
-	if botKit == "Assault" then
-		if Config.maxAssaultBots >= 0 and kitCount >= Config.maxAssaultBots then
-			changeKit = true;
-		end
-	elseif botKit == "Engineer" then
-		if Config.maxEngineerBots >= 0 and kitCount >= Config.maxEngineerBots then
-			changeKit = true;
-		end
-	elseif botKit == "Support" then
-		if Config.maxSupportBots >= 0 and kitCount >= Config.maxSupportBots then
-			changeKit = true;
-		end
-	else -- botKit == "Support"
-		if Config.maxReconBots >= 0 and kitCount >= Config.maxReconBots then
-			changeKit = true;
-		end
-	end
-
-	if changeKit then
-		local availableKitList = {};
-		if (Config.maxAssaultBots == -1) or (BotManager:getKitCount("Assault") < Config.maxAssaultBots) then
-			table.insert(availableKitList, "Assault")
-		end
-		if (Config.maxEngineerBots == -1) or (BotManager:getKitCount("Engineer") < Config.maxEngineerBots) then
-			table.insert(availableKitList, "Engineer")
-		end
-		if (Config.maxSupportBots == -1) or (BotManager:getKitCount("Support") < Config.maxSupportBots) then
-			table.insert(availableKitList, "Support")
-		end
-		if(Config.maxReconBots == -1) or (BotManager:getKitCount("Recon") < Config.maxReconBots) then
-			table.insert(availableKitList, "Recon")
-		end
-
-		if #availableKitList > 0 then
-			botKit = availableKitList[MathUtils:GetRandomInt(1, #availableKitList)];
-		end
-	end
-
-	return botKit
-end
-
-function BotSpawner:setBotWeapons(bot, botKit, newWeapons)
-	if newWeapons then
-		bot.sidearm = nil;
-		if botKit == "Assault" then
-			local weapon = Config.assaultWeapon;
-			if Config.useRandomWeapon then
-				weapon = WeaponsAssault[MathUtils:GetRandomInt(1, #WeaponsAssault)]
+function BotSpawner:_SetBotWeapons(p_Bot, p_BotKit, p_NewWeapons)
+	if p_NewWeapons then
+		if p_BotKit == "Assault" then
+			local s_Weapon = Config.AssaultWeapon
+			if Config.UseRandomWeapon then
+				s_Weapon = AssaultPrimary[MathUtils:GetRandomInt(1, #AssaultPrimary)]
 			end
-			bot.primary = WeaponList:getWeapon(weapon)
-		elseif botKit == "Engineer" then
-			local weapon = Config.engineerWeapon;
-			if Config.useRandomWeapon then
-				weapon = WeaponsEngineer[MathUtils:GetRandomInt(1, #WeaponsEngineer)]
+			p_Bot.m_Primary = m_WeaponList:getWeapon(s_Weapon)
+			p_Bot.m_SecondaryGadget = m_WeaponList:getWeapon(AssaultGadget2[MathUtils:GetRandomInt(1, #AssaultGadget2)])
+			p_Bot.m_PrimaryGadget = m_WeaponList:getWeapon(AssaultGadget1[MathUtils:GetRandomInt(1, #AssaultGadget1)])
+			p_Bot.m_Pistol = m_WeaponList:getWeapon(AssaultPistol[MathUtils:GetRandomInt(1, #AssaultPistol)])
+			p_Bot.m_Grenade = m_WeaponList:getWeapon(AssaultGrenade[MathUtils:GetRandomInt(1, #AssaultGrenade)])
+			p_Bot.m_Knife = m_WeaponList:getWeapon(AssaultKnife[MathUtils:GetRandomInt(1, #AssaultKnife)])
+		elseif p_BotKit == "Engineer" then
+			local s_Weapon = Config.EngineerWeapon
+			if Config.UseRandomWeapon then
+				s_Weapon = EngineerPrimary[MathUtils:GetRandomInt(1, #EngineerPrimary)]
 			end
-			local sidearmWeapon = SidearmsEngineer[MathUtils:GetRandomInt(1, #SidearmsEngineer)]
-			bot.primary = WeaponList:getWeapon(weapon)
-			bot.sidearm = WeaponList:getWeapon(sidearmWeapon)
-		elseif botKit == "Support" then
-			local weapon = Config.supportWeapon;
-			if Config.useRandomWeapon then
-				weapon = WeaponsSupport[MathUtils:GetRandomInt(1, #WeaponsSupport)]
+			p_Bot.m_Primary = m_WeaponList:getWeapon(s_Weapon)
+			p_Bot.m_SecondaryGadget = m_WeaponList:getWeapon(EngineerGadget2[MathUtils:GetRandomInt(1, #EngineerGadget2)])
+			p_Bot.m_PrimaryGadget = m_WeaponList:getWeapon(EngineerGadget1[MathUtils:GetRandomInt(1, #EngineerGadget1)])
+			p_Bot.m_Pistol = m_WeaponList:getWeapon(EngineerPistol[MathUtils:GetRandomInt(1, #EngineerPistol)])
+			p_Bot.m_Grenade = m_WeaponList:getWeapon(EngineerGrenade[MathUtils:GetRandomInt(1, #EngineerGrenade)])
+			p_Bot.m_Knife = m_WeaponList:getWeapon(EngineerKnife[MathUtils:GetRandomInt(1, #EngineerKnife)])
+		elseif p_BotKit == "Support" then
+			local s_Weapon = Config.SupportWeapon
+			if Config.UseRandomWeapon then
+				s_Weapon = SupportPrimary[MathUtils:GetRandomInt(1, #SupportPrimary)]
 			end
-			bot.primary = WeaponList:getWeapon(weapon)
+			p_Bot.m_Primary = m_WeaponList:getWeapon(s_Weapon)
+			p_Bot.m_SecondaryGadget = m_WeaponList:getWeapon(SupportGadget2[MathUtils:GetRandomInt(1, #SupportGadget2)])
+			p_Bot.m_PrimaryGadget = m_WeaponList:getWeapon(SupportGadget1[MathUtils:GetRandomInt(1, #SupportGadget1)])
+			p_Bot.m_Pistol = m_WeaponList:getWeapon(SupportPistol[MathUtils:GetRandomInt(1, #SupportPistol)])
+			p_Bot.m_Grenade = m_WeaponList:getWeapon(SupportGrenade[MathUtils:GetRandomInt(1, #SupportGrenade)])
+			p_Bot.m_Knife = m_WeaponList:getWeapon(SupportKnife[MathUtils:GetRandomInt(1, #SupportKnife)])
 		else
-			local weapon = Config.reconWeapon;
-			if Config.useRandomWeapon then
-				weapon = WeaponsRecon[MathUtils:GetRandomInt(1, #WeaponsRecon)]
+			local s_Weapon = Config.ReconWeapon
+			if Config.UseRandomWeapon then
+				s_Weapon = ReconPrimary[MathUtils:GetRandomInt(1, #ReconPrimary)]
 			end
-			bot.primary = WeaponList:getWeapon(weapon)
+			p_Bot.m_Primary = m_WeaponList:getWeapon(s_Weapon)
+			p_Bot.m_SecondaryGadget = m_WeaponList:getWeapon(ReconGadget2[MathUtils:GetRandomInt(1, #ReconGadget2)])
+			p_Bot.m_PrimaryGadget = m_WeaponList:getWeapon(ReconGadget1[MathUtils:GetRandomInt(1, #ReconGadget1)])
+			p_Bot.m_Pistol = m_WeaponList:getWeapon(ReconPistol[MathUtils:GetRandomInt(1, #ReconPistol)])
+			p_Bot.m_Grenade = m_WeaponList:getWeapon(ReconGrenade[MathUtils:GetRandomInt(1, #ReconGrenade)])
+			p_Bot.m_Knife = m_WeaponList:getWeapon(ReconKnife[MathUtils:GetRandomInt(1, #ReconKnife)])
 		end
-		local knife = Config.knife;
-		local pistol = Config.pistol
-		if Config.useRandomWeapon then
-			knife = KnifeWeapons[MathUtils:GetRandomInt(1, #KnifeWeapons)]
-			pistol = PistoWeapons[MathUtils:GetRandomInt(1, #PistoWeapons)]
-		end
-		bot.pistol = WeaponList:getWeapon(pistol)
-		bot.knife = WeaponList:getWeapon(knife)
 	end
 
-	if Config.botWeapon == "Primary" or Config.botWeapon == "Auto" then
-		bot.activeWeapon = bot.primary;
-	elseif Config.botWeapon == "Pistol" then
-		bot.activeWeapon = bot.pistol;
-	elseif Config.botWeapon == "Sidearm" then
-		bot.activeWeapon = bot.sidearm;
+	if Config.BotWeapon == "Primary" or Config.BotWeapon == "Auto" then
+		p_Bot.m_ActiveWeapon = p_Bot.m_Primary
+	elseif Config.BotWeapon == "Pistol" then
+		p_Bot.m_ActiveWeapon = p_Bot.m_Pistol
+	elseif Config.BotWeapon == "Gadget2" then
+		p_Bot.m_ActiveWeapon = p_Bot.m_SecondaryGadget
+	elseif Config.BotWeapon == "Gadget1" then
+		p_Bot.m_ActiveWeapon = p_Bot.m_PrimaryGadget
+	elseif Config.BotWeapon == "Grenade" then
+		p_Bot.m_ActiveWeapon = p_Bot.m_Grenade
 	else
-		bot.activeWeapon = bot.knife;
+		p_Bot.m_ActiveWeapon = p_Bot.m_Knife
 	end
 end
 
-function BotSpawner:spawnBot(bot, trans, setKit)
-	local writeNewKit = (setKit or Config.botNewLoadoutOnSpawn)
-	if not writeNewKit and (bot.color == "" or bot.kit == "" or bot.activeWeapon == nil) then
-		writeNewKit = true;
+function BotSpawner:_ModifyWeapon(p_Soldier)
+	--p_Soldier.weaponsComponent.currentWeapon.secondaryAmmo = 9999
+	if p_Soldier.weaponsComponent.weapons[1] ~= nil then
+		p_Soldier.weaponsComponent.weapons[1].secondaryAmmo = 9999
 	end
-	local botColor = Config.botColor
-	local botKit = Config.botKit
-
-	if writeNewKit then
-		if botColor == "RANDOM_COLOR" then
-			botColor = BotColors[MathUtils:GetRandomInt(2, #BotColors)]
-		end
-		if botKit == "RANDOM_KIT" then
-			botKit = self:_getSpawnBotKit();
-		end
-		bot.color = botColor
-		bot.kit = botKit
-	else
-		botColor = bot.color
-		botKit = bot.kit
+	if p_Soldier.weaponsComponent.weapons[2] ~= nil then
+		p_Soldier.weaponsComponent.weapons[2].secondaryAmmo = 9999
 	end
-
-	self:setBotWeapons(bot, botKit, writeNewKit)
-
-	bot:resetSpawnVars()
-
-	-- create kit and appearance
-	local soldierBlueprint = ResourceManager:SearchForDataContainer('Characters/Soldiers/MpSoldier')
-	local soldierCustomization = nil
-	local soldierKit = nil
-	local appearance = nil
-	soldierKit, appearance, soldierCustomization = self:getKitApperanceCustomization(bot.player.teamId, botKit, botColor, bot.primary, bot.pistol, bot.knife, bot.sidearm)
-
-	-- Create the transform of where to spawn the bot at.
-	local transform = LinearTransform()
-	transform = trans
-
-	-- And then spawn the bot. This will create and return a new SoldierEntity object.
-	BotManager:spawnBot(bot, transform, CharacterPoseType.CharacterPoseType_Stand, soldierBlueprint, soldierKit, { appearance })
-	bot.player.soldier:ApplyCustomization(soldierCustomization)
-	self:_modifyWeapon(bot.player.soldier)
 end
 
-
--- Singleton.
 if g_BotSpawner == nil then
 	g_BotSpawner = BotSpawner()
 end

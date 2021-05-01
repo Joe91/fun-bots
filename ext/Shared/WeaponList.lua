@@ -1,439 +1,587 @@
-class('WeaponList');
+class('WeaponList')
 
-require('__shared/WeaponClass');
-require('__shared/Config');
+require('__shared/WeaponClass')
+require('__shared/Config')
+require('__shared/WeaponLists/CustomWeaponsAssault')
+require('__shared/WeaponLists/CustomWeaponsEngineer')
+require('__shared/WeaponLists/CustomWeaponsRecon')
+require('__shared/WeaponLists/CustomWeaponsSupport')
+
+local m_Logger = Logger("WeaponList", Debug.Shared.MODIFICATIONS)
 
 -- create globals
 AllWeapons = {}
 KnifeWeapons = {}
 PistoWeapons = {}
-WeaponsAssault = {}
-WeaponsEngineer = {}
-WeaponsRecon = {}
-WeaponsSupport = {}
+
+AssaultPrimary = {}
+AssaultPistol = {}
+AssaultKnife = {}
+AssaultGadget1 = {}
+AssaultGadget2 = {}
+AssaultGrenade = {}
+EngineerPrimary = {}
+EngineerPistol = {}
+EngineerKnife = {}
+EngineerGadget1 = {}
+EngineerGadget2 = {}
+EngineerGrenade = {}
+SupportPrimary = {}
+SupportPistol = {}
+SupportKnife = {}
+SupportGadget1 = {}
+SupportGadget2 = {}
+SupportGrenade = {}
+ReconPrimary = {}
+ReconPistol = {}
+ReconKnife = {}
+ReconGadget1 = {}
+ReconGadget2 = {}
+ReconGrenade = {}
 
 function WeaponList:__init()
-	self._weapons = {};
-
+	self._weapons = {}
 	local weapon = nil
 
 	---------------------------
 	-- shotguns
 	weapon = Weapon('DAO-12', '', {'Weapons/Common/12gBuckshot', 'Kobra', 'TargetPointer'}, 'Shotgun')
-	table.insert(self._weapons, weapon);
+	table.insert(self._weapons, weapon)
 
 	weapon = Weapon('Jackhammer', 'XP1', {'Weapons/Common/12gBuckshot', 'Kobra', 'TargetPointer'}, 'Shotgun')
-	table.insert(self._weapons, weapon);
+	table.insert(self._weapons, weapon)
 
 	weapon = Weapon('Saiga20', '', {'Weapons/Common/12gBuckshot', 'Kobra', 'Silencer'}, 'Shotgun', 'Weapons/SAIGA20K/U_SAIGA_20K')
-	table.insert(self._weapons, weapon);
+	table.insert(self._weapons, weapon)
 
-	weapon = Weapon('SPAS12', 'XP2', {'Slug', 'Kobra'}, 'Shotgun')   --TODO: Get Damage-Values and Speed of other ammo
-	table.insert(self._weapons, weapon);
+	weapon = Weapon('SPAS12', 'XP2', {'Slug', 'Kobra', 'Weapons/Common/NoPrimaryAccessory'}, 'Shotgun')   --TODO: Get Damage-Values and Speed of other ammo
+	table.insert(self._weapons, weapon)
 
-	weapon = Weapon('USAS-12', '', {'Weapons/Common/12gBuckshot', 'ExtendedMag'}, 'Shotgun')
-	table.insert(self._weapons, weapon);
+	weapon = Weapon('USAS-12', '', {'Weapons/Common/12gBuckshot', 'ExtendedMag', 'Weapons/Common/NoOptics'}, 'Shotgun')
+	table.insert(self._weapons, weapon)
 
-	weapon = Weapon('M1014', '', {'Weapons/Common/12gBuckshot', 'ExtendedMag'}, 'Shotgun')
-	table.insert(self._weapons, weapon);
+	weapon = Weapon('M1014', '', {'Weapons/Common/12gBuckshot', 'ExtendedMag', 'Weapons/Common/NoOptics'}, 'Shotgun')
+	table.insert(self._weapons, weapon)
 
-	weapon = Weapon('870M', '', {'Weapons/Remington870/U_870_Slug', 'Weapons/Remington870/U_870_ExtendedMag'}, 'Shotgun', 'Weapons/Remington870/U_870')
-	table.insert(self._weapons, weapon);
+	weapon = Weapon('870M', '', {'Weapons/Remington870/U_870_Slug', 'Weapons/Remington870/U_870_ExtendedMag', 'Weapons/Common/NoOptics'}, 'Shotgun', 'Weapons/Remington870/U_870')
+	table.insert(self._weapons, weapon)
 
 	---------------------------
 	--assault
-	weapon = Weapon('AEK971', '', {'Kobra'}, 'Assault')
-	table.insert(self._weapons, weapon);
+	weapon = Weapon('AEK971', '', {'Kobra', 'Weapons/Common/NoSecondaryAccessory', 'Weapons/Common/NoSecondaryRail'}, 'Assault')
+	table.insert(self._weapons, weapon)
 
-	weapon = Weapon('AN94', '', {'Kobra', 'Foregrip'}, 'Assault')
-	table.insert(self._weapons, weapon);
+	weapon = Weapon('AN94', '', {'Kobra', 'Foregrip', 'Flashsuppressor'}, 'Assault')
+	table.insert(self._weapons, weapon)
 
-	weapon = Weapon('AK74M', '', {'Kobra'}, 'Assault')
-	table.insert(self._weapons, weapon);
+	weapon = Weapon('AK74M', '', {'Kobra', 'Weapons/Common/NoSecondaryAccessory', 'Weapons/Common/NoSecondaryRail'}, 'Assault')
+	table.insert(self._weapons, weapon)
 
-	weapon = Weapon('SteyrAug', 'XP2', {'Kobra', 'Foregrip'},'Assault')
-	table.insert(self._weapons, weapon);
+	weapon = Weapon('SteyrAug', 'XP2', {'Kobra', 'Foregrip', 'Weapons/Common/NoSecondaryAccessory'},'Assault')
+	table.insert(self._weapons, weapon)
 
-	weapon = Weapon('F2000', '', {'Kobra', 'Foregrip'},'Assault')
-	table.insert(self._weapons, weapon);
+	weapon = Weapon('F2000', '', {'Kobra', 'Foregrip', 'Weapons/Common/NoSecondaryAccessory'},'Assault')
+	table.insert(self._weapons, weapon)
 
-	weapon = Weapon('FAMAS', 'XP1', {'Kobra', 'Foregrip'}, 'Assault')
-	table.insert(self._weapons, weapon);
+	weapon = Weapon('FAMAS', 'XP1', {'Kobra', 'Foregrip', 'Weapons/Common/NoSecondaryAccessory'}, 'Assault')
+	table.insert(self._weapons, weapon)
 
 	weapon = Weapon('G3A3', '', {'Kobra', 'Target_Pointer', 'Foregrip'}, 'Assault')
-	table.insert(self._weapons, weapon);
+	table.insert(self._weapons, weapon)
 
-	weapon = Weapon('KH2002', '', {'Kobra', 'Foregrip'}, 'Assault')
-	table.insert(self._weapons, weapon);
+	weapon = Weapon('KH2002', '', {'Kobra', 'Foregrip', 'Weapons/Common/NoSecondaryAccessory'}, 'Assault')
+	table.insert(self._weapons, weapon)
 
-	weapon = Weapon('L85A2', 'XP1', {'Kobra', 'FlashSuppressor'},'Assault')
-	table.insert(self._weapons, weapon);
+	weapon = Weapon('L85A2', 'XP1', {'Kobra', 'FlashSuppressor', 'Weapons/Common/NoSecondaryRail'},'Assault')
+	table.insert(self._weapons, weapon)
 
-	weapon = Weapon('M16A4', '', {'Kobra'}, 'Assault')
-	table.insert(self._weapons, weapon);
+	weapon = Weapon('M16A4', '', {'Kobra', 'Weapons/Common/NoSecondaryAccessory', 'Weapons/Common/NoSecondaryRail'}, 'Assault')
+	table.insert(self._weapons, weapon)
 
-	weapon = Weapon('M416', '', {'Kobra'},'Assault')
-	table.insert(self._weapons, weapon);
+	weapon = Weapon('M416', '', {'Kobra', 'Weapons/Common/NoSecondaryAccessory', 'Weapons/Common/NoSecondaryRail'},'Assault')
+	table.insert(self._weapons, weapon)
 
-	weapon = Weapon('SCAR-L', 'XP2', {'Kobra', 'Foregrip'},'Assault')
-	table.insert(self._weapons, weapon);
+	weapon = Weapon('SCAR-L', 'XP2', {'Kobra', 'Foregrip', 'Weapons/Common/NoSecondaryAccessory'},'Assault')
+	table.insert(self._weapons, weapon)
 
 
 	---------------------------
 	-- PDW --------------------
-	weapon = Weapon('ASVal', '', {'Kobra', 'ExtendedMag'}, 'PDW')
-	table.insert(self._weapons, weapon);
+	weapon = Weapon('ASVal', '', {'Kobra', 'ExtendedMag', 'Weapons/Common/NoSecondaryAccessory'}, 'PDW')
+	table.insert(self._weapons, weapon)
 
-	weapon = Weapon('MP7', '', {'Kobra', 'ExtendedMag'}, 'PDW')
-	table.insert(self._weapons, weapon);
+	weapon = Weapon('MP7', '', {'Kobra', 'ExtendedMag', 'Weapons/Common/NoPrimaryAccessory'}, 'PDW')
+	table.insert(self._weapons, weapon)
 
-	weapon = Weapon('P90', '', {'Kobra'}, 'PDW')
-	table.insert(self._weapons, weapon);
+	weapon = Weapon('P90', '', {'Kobra', 'Weapons/Common/NoPrimaryAccessory', 'Weapons/Common/NoSecondaryAccessory'}, 'PDW')
+	table.insert(self._weapons, weapon)
 
-	weapon = Weapon('PP-19', 'XP1', {'IRNV', 'Silencer', 'TargetPointer'}, 'PDW')
-	table.insert(self._weapons, weapon);
+	weapon = Weapon('PP-19', 'XP1', {'IRNV', 'Silencer', 'TargetPointer', 'Weapons/Common/DefaultCamo'}, 'PDW')
+	table.insert(self._weapons, weapon)
 
-	weapon = Weapon('PP2000', '', {'Kobra'}, 'PDW')
-	table.insert(self._weapons, weapon);
+	weapon = Weapon('PP2000', '', {'Kobra', 'Weapons/Common/NoPrimaryAccessory', 'Weapons/Common/NoSecondaryAccessory'}, 'PDW')
+	table.insert(self._weapons, weapon)
 
-	weapon = Weapon('UMP45', '', {'Kobra', 'Flashlight'}, 'PDW')
-	table.insert(self._weapons, weapon);
+	weapon = Weapon('UMP45', '', {'Kobra', 'Weapons/Common/NoSecondaryAccessory', 'Flashlight', 'Weapons/Common/DefaultCamo'}, 'PDW')
+	table.insert(self._weapons, weapon)
 
-	weapon = Weapon('MP5K', 'XP2', {'Kobra', 'Flashlight'}, 'PDW')
-	table.insert(self._weapons, weapon);
+	weapon = Weapon('MP5K', 'XP2', {'Kobra', 'Weapons/Common/NoSecondaryAccessory', 'Flashlight'}, 'PDW')
+	table.insert(self._weapons, weapon)
 
-	weapon = Weapon('MagpulPDR', '', {'Kobra', 'Flashsuppressor'}, 'PDW')
-	table.insert(self._weapons, weapon);
+	weapon = Weapon('MagpulPDR', '', {'Kobra', 'Flashsuppressor', 'Weapons/Common/NoPrimaryAccessory'}, 'PDW')
+	table.insert(self._weapons, weapon)
 
 	weapon = Weapon('Crossbow', '', {}, 'PDW', 'Weapons/XP4_Crossbow_Prototype/U_Crossbow_Scoped_Cobra')
-	table.insert(self._weapons, weapon);
+	table.insert(self._weapons, weapon)
 
 
 	---------------------------
 	--Carabines
-	weapon = Weapon('A91', '', {'Kobra', 'Silencer'}, 'Carabine')
-	table.insert(self._weapons, weapon);
-	
-	weapon = Weapon('ACR', 'XP2', {'Kobra', 'Silencer'}, 'Carabine')
-	table.insert(self._weapons, weapon);
-
-	weapon = Weapon('AKS74u', '', {'Kobra', 'Silencer'}, 'Carabine')
-	table.insert(self._weapons, weapon);
-
-	weapon = Weapon('G36C', '', {'Kobra', 'Silencer'}, 'Carabine')
-	table.insert(self._weapons, weapon);
-
-	weapon = Weapon('HK53', 'XP1', {'Kobra', 'Silencer'}, 'Carabine')
-	table.insert(self._weapons, weapon);
-
-	weapon = Weapon('M4A1', '', {'Kobra', 'Silencer'}, 'Carabine')
-	table.insert(self._weapons, weapon);
-
-	weapon = Weapon('MTAR', 'XP2', {'Kobra', 'Silencer', 'Foregrip'}, 'Carabine')
-	table.insert(self._weapons, weapon);
-
-	weapon = Weapon('QBZ-95B', 'XP1', {'Kobra', 'Silencer'}, 'Carabine')
-	table.insert(self._weapons, weapon);
-
-	weapon = Weapon('SCAR-H', '', {'Kobra', 'Silencer'}, 'Carabine')
-	table.insert(self._weapons, weapon);
-
-	weapon = Weapon('SG553LB', '', {'Kobra', 'Silencer'}, 'Carabine')
-	table.insert(self._weapons, weapon);
-
-	---------------------------
-	-- Sidearms
-	weapon = Weapon('SMAW', '', {}, 'Rocket')
+	weapon = Weapon('A91', '', {'Kobra', 'Silencer', 'Weapons/Common/NoPrimaryAccessory'}, 'Carabine')
 	table.insert(self._weapons, weapon)
 
-	weapon = Weapon('RPG7', '', {}, 'Rocket')
+	weapon = Weapon('ACR', 'XP2', {'Kobra', 'Silencer', 'Weapons/Common/NoPrimaryAccessory'}, 'Carabine')
+	table.insert(self._weapons, weapon)
+
+	weapon = Weapon('AKS74u', '', {'Kobra', 'Silencer', 'Weapons/Common/NoPrimaryAccessory'}, 'Carabine')
+	table.insert(self._weapons, weapon)
+
+	weapon = Weapon('G36C', '', {'Kobra', 'Silencer', 'Weapons/Common/NoPrimaryAccessory'}, 'Carabine')
+	table.insert(self._weapons, weapon)
+
+	weapon = Weapon('HK53', 'XP1', {'Kobra', 'Silencer', 'Weapons/Common/NoPrimaryAccessory'}, 'Carabine')
+	table.insert(self._weapons, weapon)
+
+	weapon = Weapon('M4A1', '', {'Kobra', 'Silencer', 'Weapons/Common/NoPrimaryAccessory'}, 'Carabine')
+	table.insert(self._weapons, weapon)
+
+	weapon = Weapon('MTAR', 'XP2', {'Kobra', 'Silencer', 'Foregrip'}, 'Carabine')
+	table.insert(self._weapons, weapon)
+
+	weapon = Weapon('QBZ-95B', 'XP1', {'Kobra', 'Silencer', 'Weapons/Common/NoPrimaryAccessory'}, 'Carabine')
+	table.insert(self._weapons, weapon)
+
+	weapon = Weapon('SCAR-H', '', {'Kobra', 'Silencer', 'Weapons/Common/NoPrimaryAccessory'}, 'Carabine')
+	table.insert(self._weapons, weapon)
+
+	weapon = Weapon('SG553LB', '', {'Kobra', 'Silencer', 'Weapons/Common/NoPrimaryAccessory'}, 'Carabine')
 	table.insert(self._weapons, weapon)
 
 	---------------------------
 	--LMG
 	weapon = Weapon('L86', 'XP2', {'EOTech', 'ExtendedMag', 'Foregrip'},'LMG')
-	table.insert(self._weapons, weapon);
+	table.insert(self._weapons, weapon)
 
 	weapon = Weapon('LSAT', 'XP2', {'EOTech', 'ExtendedMag', 'Foregrip'},'LMG')
-	table.insert(self._weapons, weapon);
+	table.insert(self._weapons, weapon)
 
-	weapon = Weapon('M249', '', {'Eotech', 'TargetPointer'},'LMG')
-	table.insert(self._weapons, weapon);
+	weapon = Weapon('M249', '', {'Eotech', 'TargetPointer', 'Weapons/Common/NoPrimaryAccessory'},'LMG')
+	table.insert(self._weapons, weapon)
 
-	weapon = Weapon('M27IAR', '', {'Eotech', 'ExtendedMag'},'LMG')
-	table.insert(self._weapons, weapon);
+	weapon = Weapon('M27IAR', '', {'Eotech', 'ExtendedMag', 'Weapons/Common/NoPrimaryAccessory'},'LMG')
+	table.insert(self._weapons, weapon)
 
 	weapon = Weapon('M60', '', {'Ballistic_scope', 'Foregrip', 'TargetPointer'}, 'LMG')
-	table.insert(self._weapons, weapon);
+	table.insert(self._weapons, weapon)
 
 	weapon = Weapon('MG36', 'XP1', {'Ballistic_scope', 'Foregrip', 'ExtendedMag'}, 'LMG')
-	table.insert(self._weapons, weapon);
+	table.insert(self._weapons, weapon)
 
-	weapon = Weapon('Pecheneg', '', {'EOTech', 'Target_Pointer'},'LMG')
-	table.insert(self._weapons, weapon);
+	weapon = Weapon('Pecheneg', '', {'EOTech', 'Target_Pointer', 'Weapons/Common/NoPrimaryAccessory'},'LMG')
+	table.insert(self._weapons, weapon)
 
-	weapon = Weapon('QBB-95', 'XP1', {'EOTech', 'Foregrip'},'LMG')
-	table.insert(self._weapons, weapon);
+	weapon = Weapon('QBB-95', 'XP1', {'EOTech', 'Foregrip', 'Weapons/Common/NoSecondaryAccessory'},'LMG')
+	table.insert(self._weapons, weapon)
 
 	weapon = Weapon('Type88', '', {'EOTech', 'ExtendedMag', 'Foregrip'},'LMG')
-	table.insert(self._weapons, weapon);
+	table.insert(self._weapons, weapon)
 
 	weapon = Weapon('RPK', '', {'Weapons/RPK/U_RPK_Kobra', 'Weapons/RPK/U_RPK_ExtendedMag', 'Weapons/RPK/U_RPK_Foregrip'},'LMG', 'Weapons/RPK/U_RPK-74M')
-	table.insert(self._weapons, weapon);
+	table.insert(self._weapons, weapon)
 
-	weapon = Weapon('M240', '', {'Eotech', 'TargetPointer'}, 'LMG')
-	table.insert(self._weapons, weapon);
+	weapon = Weapon('M240', '', {'Eotech', 'TargetPointer', 'Weapons/Common/NoPrimaryAccessory'}, 'LMG')
+	table.insert(self._weapons, weapon)
 
 	---------------------------
 	-- Sniper
-	weapon = Weapon('JNG90_6x', 'XP2', {'Rifle_Scope', 'StraightPull', 'Target_Pointer'}, 'Sniper', 'Weapons/XP2_JNG90/U_JNG90')
-	table.insert(self._weapons, weapon);
+	weapon = Weapon('JNG90_6x', 'XP2', {'Rifle_Scope', 'StraightPull', 'Target_Pointer', 'Weapons/Common/DefaultCamo'}, 'Sniper', 'Weapons/XP2_JNG90/U_JNG90')
+	table.insert(self._weapons, weapon)
 
-	weapon = Weapon('JNG90_IRNV', 'XP2', {'IRNV', 'Silencer', 'StraightPull'}, 'Sniper', 'Weapons/XP2_JNG90/U_JNG90')
-	table.insert(self._weapons, weapon);
+	weapon = Weapon('JNG90_IRNV', 'XP2', {'IRNV', 'Silencer', 'StraightPull', 'Weapons/Common/DefaultCamo'}, 'Sniper', 'Weapons/XP2_JNG90/U_JNG90')
+	table.insert(self._weapons, weapon)
 
-	weapon = Weapon('JNG90_Balllistic', 'XP2', {'Ballistic_Scope', 'Bipod', 'Flash_Suppressor'}, 'Sniper', 'Weapons/XP2_JNG90/U_JNG90')
-	table.insert(self._weapons, weapon);
+	weapon = Weapon('JNG90_Balllistic', 'XP2', {'Ballistic_Scope', 'Bipod', 'Flash_Suppressor', 'Weapons/Common/DefaultCamo'}, 'Sniper', 'Weapons/XP2_JNG90/U_JNG90')
+	table.insert(self._weapons, weapon)
 
-	weapon = Weapon('L96_Balllistic', 'XP1', {'Ballistic_20xScope', 'Bipod', 'FlashSuppressor'}, 'Sniper', 'Weapons/XP1_L96/U_L96')
-	table.insert(self._weapons, weapon);
+	weapon = Weapon('L96_Balllistic', 'XP1', {'Ballistic_20xScope', 'Bipod', 'FlashSuppressor', 'Weapons/Common/DefaultCamo'}, 'Sniper', 'Weapons/XP1_L96/U_L96')
+	table.insert(self._weapons, weapon)
 
-	weapon = Weapon('L96_6x', 'XP1', {'Rifle_6xScope', 'StraightPull', 'TargetPointer'}, 'Sniper', 'Weapons/XP1_L96/U_L96')
-	table.insert(self._weapons, weapon);
+	weapon = Weapon('L96_6x', 'XP1', {'Rifle_6xScope', 'StraightPull', 'TargetPointer', 'Weapons/Common/DefaultCamo'}, 'Sniper', 'Weapons/XP1_L96/U_L96')
+	table.insert(self._weapons, weapon)
 
-	weapon = Weapon('L96_IRNV', 'XP1', {'IRNV', 'Silencer', 'StraightPull'}, 'Sniper', 'Weapons/XP1_L96/U_L96')
-	table.insert(self._weapons, weapon);
+	weapon = Weapon('L96_IRNV', 'XP1', {'IRNV', 'Silencer', 'StraightPull', 'Weapons/Common/DefaultCamo'}, 'Sniper', 'Weapons/XP1_L96/U_L96')
+	table.insert(self._weapons, weapon)
 
-	weapon = Weapon('M39EBR', '', {'Ballistic_scope', 'Target_pointer'}, 'Sniper')
-	table.insert(self._weapons, weapon);
+	weapon = Weapon('M39EBR', '', {'Ballistic_scope', 'Target_pointer', 'Weapons/Common/NoPrimaryAccessory', 'Weapons/Common/DefaultCamo'}, 'Sniper')
+	table.insert(self._weapons, weapon)
 
 	weapon = Weapon('M98B_Balllistic', '', {'Ballistic_Scope', 'Bipod', 'Flash_Suppressor'}, 'Sniper', 'Weapons/Model98B/U_M98B')
-	table.insert(self._weapons, weapon);
+	table.insert(self._weapons, weapon)
 
 	weapon = Weapon('M98B_6x', '', {'Rifle_Scope', 'StraightPull', 'Target_Pointer'}, 'Sniper', 'Weapons/Model98B/U_M98B')
-	table.insert(self._weapons, weapon);
+	table.insert(self._weapons, weapon)
 
 	weapon = Weapon('M98B_IRNV', '', {'IRNV', 'Silencer', 'StraightPull'}, 'Sniper', 'Weapons/Model98B/U_M98B')
-	table.insert(self._weapons, weapon);
+	table.insert(self._weapons, weapon)
 
 	weapon = Weapon('M40A5_Balllistic', '', {'Ballistic_Scope', 'Bipod', 'Flash_Suppressor'}, 'Sniper', 'Weapons/M40A5/U_M40A5')
-	table.insert(self._weapons, weapon);
+	table.insert(self._weapons, weapon)
 
 	weapon = Weapon('M40A5_6x', '', {'Rifle_Scope', 'StraightPull', 'Target_Pointer'}, 'Sniper', 'Weapons/M40A5/U_M40A5')
-	table.insert(self._weapons, weapon);
+	table.insert(self._weapons, weapon)
 
 	weapon = Weapon('M40A5_IRNV', '', {'IRNV', 'Silencer', 'StraightPull'}, 'Sniper', 'Weapons/M40A5/U_M40A5')
-	table.insert(self._weapons, weapon);
+	table.insert(self._weapons, weapon)
 
-	weapon = Weapon('HK417', 'XP2', {'Ballistic_Scope', 'TargetPointer'}, 'Sniper')
-	table.insert(self._weapons, weapon);
-	
-	weapon = Weapon('MK11', '', {'Ballistic_scope', 'TargetPointer'}, 'Sniper')
-	table.insert(self._weapons, weapon);
-	
-	weapon = Weapon('SKS_LongRange', '', {'PK-AS', 'Foregrip'}, 'Sniper', 'Weapons/SKS/U_SKS')
-	table.insert(self._weapons, weapon);
+	weapon = Weapon('HK417', 'XP2', {'Ballistic_Scope', 'TargetPointer', 'Weapons/Common/NoPrimaryAccessory'}, 'Sniper')
+	table.insert(self._weapons, weapon)
+
+	weapon = Weapon('MK11', '', {'Ballistic_scope', 'TargetPointer', 'Weapons/Common/NoPrimaryAccessory'}, 'Sniper')
+	table.insert(self._weapons, weapon)
+
+	weapon = Weapon('SKS_LongRange', '', {'PK-AS', 'Foregrip', 'Target_Pointer'}, 'Sniper', 'Weapons/SKS/U_SKS')
+	table.insert(self._weapons, weapon)
 
 	weapon = Weapon('SKS_Tryhard', '', {'Kobra', 'Foregrip', 'Target_Pointer'}, 'Sniper', 'Weapons/SKS/U_SKS')
-	table.insert(self._weapons, weapon);
+	table.insert(self._weapons, weapon)
 
 	weapon = Weapon('SKS_IRNV', '', {'IRNV', 'Foregrip', 'Silencer'}, 'Sniper', 'Weapons/SKS/U_SKS')
-	table.insert(self._weapons, weapon);
+	table.insert(self._weapons, weapon)
 
-	weapon = Weapon('SV98', '', {'Ballistic_scope', 'StraightPull'}, 'Sniper')
-	table.insert(self._weapons, weapon);
+	weapon = Weapon('SV98', '', {'Ballistic_scope', 'StraightPull', 'Weapons/Common/NoSecondaryAccessory'}, 'Sniper')
+	table.insert(self._weapons, weapon)
 
 	weapon = Weapon('SVD_LongRange', '', {'PK-AS', 'Foregrip', 'FlashSuppressor'}, 'Sniper', 'Weapons/SVD/U_SVD')
-	table.insert(self._weapons, weapon);
+	table.insert(self._weapons, weapon)
 
 	weapon = Weapon('SVD_Tryhard', '', {'Kobra', 'Foregrip', 'Target_Pointer'}, 'Sniper', 'Weapons/SVD/U_SVD')
-	table.insert(self._weapons, weapon);
+	table.insert(self._weapons, weapon)
 
 	weapon = Weapon('SVD_IRNV', '', {'IRNV', 'Foregrip', 'Silencer'}, 'Sniper', 'Weapons/SVD/U_SVD')
-	table.insert(self._weapons, weapon);
+	table.insert(self._weapons, weapon)
 
 
 	---------------------------
 	-- pistols
 	weapon = Weapon('Glock17', '', {}, 'Pistol')
-	table.insert(self._weapons, weapon);
+	table.insert(self._weapons, weapon)
 
 	weapon = Weapon('Glock17_Silenced', '', {}, 'Pistol', 'Weapons/Glock17/U_Glock17_Silenced')
-	table.insert(self._weapons, weapon);
+	table.insert(self._weapons, weapon)
 
 	weapon = Weapon('Glock18', '', {}, 'Pistol')
-	table.insert(self._weapons, weapon);
+	table.insert(self._weapons, weapon)
 
 	weapon = Weapon('Glock18_Silenced', '', {}, 'Pistol', 'Weapons/Glock18/U_Glock18_Silenced')
-	table.insert(self._weapons, weapon);
+	table.insert(self._weapons, weapon)
 
 	weapon = Weapon('M1911_Lit', '', {}, 'Pistol', 'Weapons/M1911/U_M1911_Lit')
-	table.insert(self._weapons, weapon);
+	table.insert(self._weapons, weapon)
 
 	weapon = Weapon('M1911_Silenced', '', {},'Pistol', 'Weapons/M1911/U_M1911_Silenced')
-	table.insert(self._weapons, weapon);
+	table.insert(self._weapons, weapon)
 
 	weapon = Weapon('M1911_Tactical', '', {}, 'Pistol', 'Weapons/M1911/U_M1911_Tactical')
-	table.insert(self._weapons, weapon);
+	table.insert(self._weapons, weapon)
 
 	weapon = Weapon('M9', '', {}, 'Pistol', 'Weapons/M9/U_M9')
-	table.insert(self._weapons, weapon);
+	table.insert(self._weapons, weapon)
 
 	weapon = Weapon('M9_Silenced', '', {},'Pistol', 'Weapons/M9/U_M9_Silenced')
-	table.insert(self._weapons, weapon);
+	table.insert(self._weapons, weapon)
 
 	weapon = Weapon('M9_Tactical', '', {}, 'Pistol', 'Weapons/M9/U_M9_TacticalLight')
-	table.insert(self._weapons, weapon);
+	table.insert(self._weapons, weapon)
 
 	weapon = Weapon('M93R', '', {}, 'Pistol')
-	table.insert(self._weapons, weapon);
+	table.insert(self._weapons, weapon)
 
 	weapon = Weapon('MP412Rex', '', {}, 'Pistol')
-	table.insert(self._weapons, weapon);
+	table.insert(self._weapons, weapon)
 
 	weapon = Weapon('Taurus44', '', {}, 'Pistol')
-	table.insert(self._weapons, weapon);
+	table.insert(self._weapons, weapon)
 
 	weapon = Weapon('MP443', '', {}, 'Pistol', 'Weapons/MP443/U_MP443')
-	table.insert(self._weapons, weapon);
+	table.insert(self._weapons, weapon)
 
 	weapon = Weapon('MP443_Tactical', '', {}, 'Pistol', 'Weapons/MP443/U_MP443_TacticalLight')
-	table.insert(self._weapons, weapon);
+	table.insert(self._weapons, weapon)
 
 	weapon = Weapon('MP443_Silenced', '', {}, 'Pistol', 'Weapons/MP443/U_MP443_Silenced')
-	table.insert(self._weapons, weapon);
+	table.insert(self._weapons, weapon)
 
 	-- knifes
 	weapon = Weapon('Razor', '', {}, 'Knife', 'Weapons/XP2_Knife_RazorBlade/U_Knife_Razor')
-	table.insert(self._weapons, weapon);
+	table.insert(self._weapons, weapon)
 
 	weapon = Weapon('Knife', '', {}, 'Knife')
-	table.insert(self._weapons, weapon);
+	table.insert(self._weapons, weapon)
 
-	self:updateWeaponList();
+	---------------------------
+	-- Sidearms
+	weapon = Weapon('SMAW', '', {}, 'Rocket') -- only rockets supported for engineers right now
+	table.insert(self._weapons, weapon)
+
+	weapon = Weapon('RPG7', '', {}, 'Rocket') -- only rockets supported for engineers right now
+	table.insert(self._weapons, weapon)
+
+	weapon = Weapon('Repairtool', '', {}, 'Torch', 'Weapons/Gadgets/Repairtool/U_Repairtool')
+	table.insert(self._weapons, weapon)
+
+	weapon = Weapon('Defib', '', {}, 'Defibrillator', 'Weapons/Gadgets/Defibrillator/U_Defib')
+	table.insert(self._weapons, weapon)
+
+	weapon = Weapon('Medkit', '', {}, 'Medkit', 'Weapons/Gadgets/Medicbag/U_Medkit')
+	table.insert(self._weapons, weapon)
+
+	weapon = Weapon('Ammobag', '', {}, 'Ammobag', 'Weapons/Gadgets/Ammobag/U_Ammobag')
+	table.insert(self._weapons, weapon)
+
+	weapon = Weapon('Claymore', '', {}, 'Claymore', 'Weapons/Gadgets/Claymore/U_Claymore')
+	table.insert(self._weapons, weapon)
+
+	weapon = Weapon('C4', '', {}, 'C4', 'Weapons/Gadgets/C4/U_C4')
+	table.insert(self._weapons, weapon)
+
+	weapon = Weapon('Tug', '', {}, 'Tug', 'Weapons/Gadgets/T-UGS/U_UGS')
+	table.insert(self._weapons, weapon)
+
+	weapon = Weapon('Beacon', '', {}, 'Beacon', 'Weapons/Gadgets/RadioBeacon/U_RadioBeacon')
+	table.insert(self._weapons, weapon)
+
+	weapon = Weapon('M67', '', {}, 'Grenade')
+	table.insert(self._weapons, weapon)
+
+	self:updateWeaponList()
 end
 
-function WeaponList:_useWeaponType(class, type)
-	local useThisWeapon = false;
-	local isClassWeapon = false;
+function WeaponList:_isCustomWeapon(p_Class, p_Name)
+	local customWeaponList = nil
+	local isCustomWeapon = false
+	if p_Class == "Assault" then
+		customWeaponList = CustomWeaponsAssault
+	elseif p_Class == "Engineer" then
+		customWeaponList = CustomWeaponsEngineer
+	elseif p_Class == "Support" then
+		customWeaponList = CustomWeaponsSupport
+	elseif p_Class == "Recon" then
+		customWeaponList = CustomWeaponsRecon
+	-- use thhis function for pistols as well
+	elseif p_Class == "Pistol" then
+		customWeaponList = CustomWeaponsPistols
+	end
+
+	for _,customName in pairs(customWeaponList) do
+		if (customName == p_Name) then
+			isCustomWeapon = true
+			break
+		end
+	end
+
+	return isCustomWeapon
+end
+
+function WeaponList:_useWeaponType(p_Class, p_Type, p_Name)
+	local useThisWeapon = false
+	local isClassWeapon = false
 	local weaponSet = ""
-	if class == "Assault" then
-		weaponSet = Config.assaultWeaponSet;
-		if type == "Assault" then
-			isClassWeapon = true;
+	if p_Class == "Assault" then
+		weaponSet = Config.AssaultWeaponSet
+		if p_Type == "Assault" then
+			isClassWeapon = true
 		end
-	elseif class == "Engineer" then
-		weaponSet = Config.engineerWeaponSet;
-		if type == "Carabine" then
-			isClassWeapon = true;
+	elseif p_Class == "Engineer" then
+		weaponSet = Config.EngineerWeaponSet
+		if p_Type == "Carabine" then
+			isClassWeapon = true
 		end
-	elseif class == "Support" then
-		weaponSet = Config.supportWeaponSet;
-		if type == "LMG" then
-			isClassWeapon = true;
+	elseif p_Class == "Support" then
+		weaponSet = Config.SupportWeaponSet
+		if p_Type == "LMG" then
+			isClassWeapon = true
 		end
-	else --if class == "Recon" then
-		weaponSet = Config.reconWeaponSet;
-		if type == "Sniper" then
-			isClassWeapon = true;
+	else --if p_Class == "Recon" then
+		weaponSet = Config.ReconWeaponSet
+		if p_Type == "Sniper" then
+			isClassWeapon = true
 		end
 	end
-	if type == "PDW" then
-		if weaponSet == "PDW" or
-		weaponSet == "Class_PDW" or
-		weaponSet == "Class_PDW_Shotgun" or
-		weaponSet == "PDW_Shotgun" then
-			useThisWeapon = true;
-		end
-	elseif type == "Shotgun" then
-		if weaponSet == "Shotgun" or
-		weaponSet == "Class_Shotgun" or
-		weaponSet == "Class_PDW_Shotgun" or
-		weaponSet == "PDW_Shotgun" then
-			useThisWeapon = true;
-		end
-	else
-		if weaponSet == "Class" or
-		weaponSet == "Class_Shotgun" or
-		weaponSet == "Class_PDW_Shotgun" or
-		weaponSet == "Class_PDW" then
-			if isClassWeapon then
-				useThisWeapon = true;
+
+	-- check for custom-weapon
+	if weaponSet == "Custom" then
+		useThisWeapon = self:_isCustomWeapon(p_Class, p_Name)
+	else -- check for other p_Classes
+		if p_Type == "PDW" then
+			if weaponSet == "PDW" or
+			weaponSet == "Class_PDW" or
+			weaponSet == "Class_PDW_Shotgun" or
+			weaponSet == "PDW_Shotgun" then
+				useThisWeapon = true
 			end
+		elseif p_Type == "Shotgun" then
+			if weaponSet == "Shotgun" or
+			weaponSet == "Class_Shotgun" or
+			weaponSet == "Class_PDW_Shotgun" or
+			weaponSet == "PDW_Shotgun" then
+				useThisWeapon = true
+			end
+		elseif p_Type == "Assault" or p_Type == "Carabine" or p_Type == "LMG" or p_Type == "Sniper" then
+			if weaponSet == "Class" or
+			weaponSet == "Class_Shotgun" or
+			weaponSet == "Class_PDW_Shotgun" or
+			weaponSet == "Class_PDW" then
+				if isClassWeapon then
+					useThisWeapon = true
+				end
+			end
+		else
+			-- for all other weapons - use p_Class-list
+			useThisWeapon = self:_isCustomWeapon(p_Class, p_Name)
 		end
 	end
-	return useThisWeapon;
+	return useThisWeapon
 end
 
 function WeaponList:updateWeaponList()
 	AllWeapons = {}
 	KnifeWeapons = {}
 	PistoWeapons = {}
-	WeaponsAssault = {}
-	WeaponsEngineer = {}
-	WeaponsRecon = {}
-	WeaponsSupport = {}
-	SidearmsEngineer = {}
+
+	AssaultPrimary = {}
+	AssaultPistol = {}
+	AssaultKnife = {}
+	AssaultGadget1 = {}
+	AssaultGadget2 = {}
+	AssaultGrenade = {}
+	EngineerPrimary = {}
+	EngineerPistol = {}
+	EngineerKnife = {}
+	EngineerGadget1 = {}
+	EngineerGadget2 = {}
+	EngineerGrenade = {}
+	SupportPrimary = {}
+	SupportPistol = {}
+	SupportKnife = {}
+	SupportGadget1 = {}
+	SupportGadget2 = {}
+	SupportGrenade = {}
+	ReconPrimary = {}
+	ReconPistol = {}
+	ReconKnife = {}
+	ReconGadget1 = {}
+	ReconGadget2 = {}
+	ReconGrenade = {}
 
 	for i=1, #self._weapons do
 		local wep = self._weapons[i]
 		table.insert(AllWeapons, wep.name)
-
 		if (wep.type == 'Knife') then
 			table.insert(KnifeWeapons, wep.name)
-
 		elseif (wep.type == 'Pistol') then
 			table.insert(PistoWeapons, wep.name)
+		end
 
-		elseif (wep.type == "Rocket") then
-			table.insert(SidearmsEngineer,  wep.name)
 
-		else --'PDW' 'Shotgun' 'Assault' 'Carabine' 'LMG' 'Sniper'
-			if self:_useWeaponType("Assault", wep.type) then
-				table.insert(WeaponsAssault, wep.name)
+		if self:_useWeaponType("Assault", wep.type, wep.name) then
+			if (wep.type == 'Knife') then
+				table.insert(AssaultKnife, wep.name)
+			elseif (wep.type == 'Pistol') then
+				table.insert(AssaultPistol, wep.name)
+			elseif (wep.type == 'Grenade') then
+				table.insert(AssaultGrenade, wep.name)
+			elseif (wep.type == "Medkit") then
+				table.insert(AssaultGadget1,  wep.name)
+			elseif (wep.type == "Defibrillator") then
+				table.insert(AssaultGadget2,  wep.name)
+			else
+				table.insert(AssaultPrimary, wep.name)
 			end
-			if self:_useWeaponType("Engineer", wep.type) then
-				table.insert(WeaponsEngineer, wep.name)
+		end
+		if self:_useWeaponType("Engineer", wep.type, wep.name) then
+			if (wep.type == 'Knife') then
+				table.insert(EngineerKnife, wep.name)
+			elseif (wep.type == 'Pistol') then
+				table.insert(EngineerPistol, wep.name)
+			elseif (wep.type == 'Grenade') then
+				table.insert(EngineerGrenade, wep.name)
+			elseif (wep.type == "Torch") then
+				table.insert(EngineerGadget1,  wep.name)
+			elseif (wep.type == "Rocket") then
+				table.insert(EngineerGadget2,  wep.name)
+			else
+				table.insert(EngineerPrimary, wep.name)
 			end
-			if self:_useWeaponType("Support", wep.type) then
-				table.insert(WeaponsSupport, wep.name)
+		end
+		if self:_useWeaponType("Support", wep.type, wep.name) then
+			if (wep.type == 'Knife') then
+				table.insert(SupportKnife, wep.name)
+			elseif (wep.type == 'Pistol') then
+				table.insert(SupportPistol, wep.name)
+			elseif (wep.type == 'Grenade') then
+				table.insert(SupportGrenade, wep.name)
+			elseif (wep.type == "Ammobag") then
+				table.insert(SupportGadget1,  wep.name)
+			elseif (wep.type == "Claymore") or (wep.type == "C4") then
+				table.insert(SupportGadget2,  wep.name)
+			else
+				table.insert(SupportPrimary, wep.name)
 			end
-			if self:_useWeaponType("Recon", wep.type) then
-				table.insert(WeaponsRecon, wep.name)
+		end
+		if self:_useWeaponType("Recon", wep.type, wep.name) then
+			if (wep.type == 'Knife') then
+				table.insert(ReconKnife, wep.name)
+			elseif (wep.type == 'Pistol') then
+				table.insert(ReconPistol, wep.name)
+			elseif (wep.type == 'Grenade') then
+				table.insert(ReconGrenade, wep.name)
+			elseif (wep.type == "Tug") then
+				table.insert(ReconGadget1,  wep.name)
+			elseif (wep.type == "Beacon") then
+				table.insert(ReconGadget2,  wep.name)
+			else
+				table.insert(ReconPrimary, wep.name)
 			end
 		end
 	end
 end
 
-function WeaponList:getWeapon(name)
-	local retWeapon = nil;
+function WeaponList:getWeapon(p_Name)
+	local retWeapon = nil
 	for _, weapon in pairs(self._weapons) do
-		if weapon.name == name then
-			retWeapon = weapon;
-			break;
+		if weapon.name == p_Name then
+			retWeapon = weapon
+			break
 		end
 	end
 
 	if (retWeapon == nil) then
-		if Debug.Shared.MODIFICATIONS then
-			print('Warning! Weapon not found: '..tostring(name))
-		end
+		m_Logger:Warning('Weapon not found: '..tostring(p_Name))
 	end
 
-	return retWeapon;
+	return retWeapon
 end
 
 function WeaponList:onLevelLoaded()
 	for _, weapon in pairs(self._weapons) do
 		if weapon.needvalues then
-			weapon:learnStatsValues();
+			weapon:learnStatsValues()
 		end
 	end
 end
 
-
-if (g_WeaponList == nil) then
-	g_WeaponList = WeaponList();
+if g_WeaponList == nil then
+	g_WeaponList = WeaponList()
 end
 
-return g_WeaponList;
+return g_WeaponList

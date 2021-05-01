@@ -1,2 +1,2 @@
-VERSION	= '1.7.0.4';
-BRANCH	= 'master';
+VERSION = '1.7.1.4'
+BRANCH = 'master'

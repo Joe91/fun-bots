@@ -4,4 +4,4 @@ BotKits = {
 	'Engineer',
 	'Support',
 	'Recon'
-};
+}
