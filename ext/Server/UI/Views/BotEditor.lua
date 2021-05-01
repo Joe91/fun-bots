@@ -102,12 +102,12 @@ function BotEditor:InitializeComponent()
 		
 		-- Submenu
 		local bot_spawn_default = MenuItem('Spawn Enemy Bots', 'bot_spawn_default', function(player)
-			Globals.spawnMode	= 'manual'
+			Globals.SpawnMode	= 'manual'
 			
 			if player.teamId == TeamId.Team1 then
-				m_BotSpawner:pawnWayBots(player, self.bots, true, 0, 0, TeamId.Team2)
+				m_BotSpawner:SpawnWayBots(player, self.bots, true, 0, 0, TeamId.Team2)
 			else
-				m_BotSpawner:spawnWayBots(player, self.bots, true, 0, 0, TeamId.Team1)
+				m_BotSpawner:SpawnWayBots(player, self.bots, true, 0, 0, TeamId.Team1)
 			end
 		end, 'F2')
 		
@@ -115,9 +115,9 @@ function BotEditor:InitializeComponent()
 		bots:AddItem(bot_spawn_default, 'UserInterface.BotEditor.SpawnEnemy')
 		
 		local bot_spawn_friend = MenuItem('Spawn Friend Bots', 'bot_spawn_friend', function(player)
-			Globals.spawnMode	= 'manual'
+			Globals.SpawnMode	= 'manual'
 			
-			m_BotSpawner:spawnWayBots(player, self.bots, true, 0, 0, player.teamId)
+			m_BotSpawner:SpawnWayBots(player, self.bots, true, 0, 0, player.teamId)
 		end)
 		
 		bot_spawn_friend:AddInput(Position.Left, input_bots)
@@ -126,7 +126,7 @@ function BotEditor:InitializeComponent()
 		bots:AddItem(MenuSeparator())
 		
 		bots:AddItem(MenuItem('Kick All', 'bot_kick_all', function(player)
-			Globals.spawnMode	= 'manual'
+			Globals.SpawnMode	= 'manual'
 			
 			m_BotManager:destroyAll()
 		end, 'F3'), 'UserInterface.BotEditor.KickAll')
@@ -136,7 +136,7 @@ function BotEditor:InitializeComponent()
 		input_team:Disable()
 		
 		local bot_kick_team	= MenuItem('Kick Team', 'bot_kick_team', function(player)
-			Globals.spawnMode	= 'manual'
+			Globals.SpawnMode	= 'manual'
 			
 			m_BotManager:destroyAll(nil, self.team)
 		end)
@@ -177,7 +177,7 @@ function BotEditor:InitializeComponent()
 		bots:AddItem(bot_kick_team, 'UserInterface.BotEditor.KickTeam')
 		
 		bots:AddItem(MenuItem('Kill All', 'bot_kill_all', function(player)
-			Globals.spawnMode	= 'manual'
+			Globals.SpawnMode	= 'manual'
 			
 			m_BotManager:killAll()
 		end, 'F4'), 'UserInterface.BotEditor.KillAll')
@@ -185,8 +185,8 @@ function BotEditor:InitializeComponent()
 		bots:AddItem(MenuSeparator())
 		
 		bots:AddItem(MenuItem('Toggle Respawn', 'bot_respawn', function(player)
-			local respawning		= not Globals.respawnWayBots
-			Globals.respawnWayBots	= respawning
+			local respawning		= not Globals.RespawnWayBots
+			Globals.RespawnWayBots	= respawning
 			m_BotManager:setOptionForAll('respawn', respawning)
 			
 			if respawning then
@@ -197,8 +197,8 @@ function BotEditor:InitializeComponent()
 		end), 'UserInterface.BotEditor.ToggleRespawn')
 		
 		bots:AddItem(MenuItem('Toggle Attack', 'bot_attack', function(player)
-			local attack			= not Globals.attackWayBots
-			Globals.attackWayBots	= attack
+			local attack			= not Globals.AttackWayBots
+			Globals.AttackWayBots	= attack
 			m_BotManager:setOptionForAll('shoot', attack)
 			
 			if attack then
