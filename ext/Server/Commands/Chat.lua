@@ -15,16 +15,16 @@ function ChatCommands:execute(p_Parts, p_Player)
 		local s_Permissions	= PermissionManager:GetPermissions(p_Player)
 		
 		if permissions == nil then
-			ChatManager:SendMessage('You have no active permissions (GUID: ' .. tostring(p_Player.guid) .. ').', p_Player);
+			ChatManager:SendMessage('You have no active permissions (GUID: ' .. tostring(p_Player.guid) .. ').', p_Player)
 		else
-			ChatManager:SendMessage('You have following permissions (GUID: ' .. tostring(p_Player.guid) .. '):', p_Player);
-			ChatManager:SendMessage(table.concat(p_Player, ', '), p_Player);
+			ChatManager:SendMessage('You have following permissions (GUID: ' .. tostring(p_Player.guid) .. '):', p_Player)
+			ChatManager:SendMessage(table.concat(s_Permissions, ', '), p_Player)
 		end
 
 	if p_Parts[1] == '!row' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Row') == false then
-			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Row).', p_Player);
-			return;
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Row).', p_Player)
+			return
 		end
 
 		if tonumber(p_Parts[2]) == nil then
@@ -37,8 +37,8 @@ function ChatCommands:execute(p_Parts, p_Player)
 		m_BotSpawner:spawnBotRow(p_Player, s_Length, s_Spacing)
 
 	elseif p_Parts[1] == '!tower' then
-		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Row') == false then
-			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Row).', p_Player)
+		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Tower') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Tower).', p_Player)
 			return
 		end
 
@@ -50,8 +50,8 @@ function ChatCommands:execute(p_Parts, p_Player)
 		m_BotSpawner:spawnBotTower(p_Player, s_Height)
 
 	elseif p_Parts[1] == '!grid' then
-		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Row') == false then
-			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Row).', p_Player)
+		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Grid') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Grid).', p_Player)
 			return
 		end
 
@@ -67,24 +67,24 @@ function ChatCommands:execute(p_Parts, p_Player)
 
 	-- static mode commands
 	elseif p_Parts[1] == '!mimic' then
-		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Row') == false then
-			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Row).', p_Player)
+		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Mimic') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Mimic).', p_Player)
 			return
 		end
 
 		m_BotManager:setStaticOption(p_Player, 'mode', 3)
 
 	elseif p_Parts[1] == '!mirror' then
-		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Row') == false then
-			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Row).', p_Player)
+		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Mirror') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Mirror).', p_Player)
 			return
 		end
 
 		m_BotManager:setStaticOption(p_Player, 'mode', 4)
 
 	elseif p_Parts[1] == '!static' then
-		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Row') == false then
-			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Row).', p_Player)
+		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Static') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Static).', p_Player)
 			return
 		end
 
@@ -92,8 +92,8 @@ function ChatCommands:execute(p_Parts, p_Player)
 
 	-- moving bots spawning
 	elseif p_Parts[1] == '!spawnline' then
-		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Row') == false then
-			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Row).', p_Player)
+		if PermissionManager:HasPermission(p_Player, 'ChatCommands.SpawnLine') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.SpawnLine).', p_Player)
 			return
 		end
 
@@ -107,8 +107,8 @@ function ChatCommands:execute(p_Parts, p_Player)
 		m_BotSpawner:spawnLineBots(p_Player, s_Amount, s_Spacing)
 
 	elseif p_Parts[1] == '!spawnway' then
-		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Row') == false then
-			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Row).', p_Player)
+		if PermissionManager:HasPermission(p_Player, 'ChatCommands.SpawnWay') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.SpawnWay).', p_Player)
 			return
 		end
 
@@ -123,8 +123,8 @@ function ChatCommands:execute(p_Parts, p_Player)
 		m_BotSpawner:spawnWayBots(p_Player, s_Amount, false, s_ActiveWayIndex)
 
 	elseif p_Parts[1] == '!spawnbots' then
-		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Row') == false then
-			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Row).', p_Player)
+		if PermissionManager:HasPermission(p_Player, 'ChatCommands.SpawnBots') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.SpawnBots).', p_Player)
 			return
 		end
 
@@ -138,8 +138,8 @@ function ChatCommands:execute(p_Parts, p_Player)
 
 	-- respawn moving bots
 	elseif p_Parts[1] == '!respawn' then
-		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Row') == false then
-			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Row).', p_Player)
+		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Respawn') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Respawn).', p_Player)
 			return
 		end
 
@@ -154,8 +154,8 @@ function ChatCommands:execute(p_Parts, p_Player)
 		m_BotManager:setOptionForAll('respawn', s_Respawning)
 
 	elseif p_Parts[1] == '!shoot' then
-		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Row') == false then
-			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Row).', p_Player)
+		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Shoot') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Shoot).', p_Player)
 			return
 		end
 
@@ -171,8 +171,8 @@ function ChatCommands:execute(p_Parts, p_Player)
 
 	-- spawn team settings
 	elseif p_Parts[1] == '!setbotkit' then
-		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Row') == false then
-			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Row).', p_Player)
+		if PermissionManager:HasPermission(p_Player, 'ChatCommands.SetBotKit') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.SetBotKit).', p_Player)
 			return
 		end
 
@@ -183,8 +183,8 @@ function ChatCommands:execute(p_Parts, p_Player)
 		end
 
 	elseif p_Parts[1] == '!setbotcolor' then
-		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Row') == false then
-			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Row).', p_Player)
+		if PermissionManager:HasPermission(p_Player, 'ChatCommands.SetBotColor') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.SetBotColor).', p_Player)
 			return
 		end
 
@@ -195,8 +195,8 @@ function ChatCommands:execute(p_Parts, p_Player)
 		end
 
 	elseif p_Parts[1] == '!setaim' then
-		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Row') == false then
-			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Row).', p_Player)
+		if PermissionManager:HasPermission(p_Player, 'ChatCommands.SetAim') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.SetAim).', p_Player)
 			return
 		end
 
@@ -207,8 +207,8 @@ function ChatCommands:execute(p_Parts, p_Player)
 		end
 
 	elseif p_Parts[1] == '!shootback' then
-		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Row') == false then
-			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Row).', p_Player)
+		if PermissionManager:HasPermission(p_Player, 'ChatCommands.ShootBack') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.ShootBack).', p_Player)
 			return
 		end
 
@@ -219,8 +219,8 @@ function ChatCommands:execute(p_Parts, p_Player)
 		end
 
 	elseif p_Parts[1] == '!attackmelee' then
-		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Row') == false then
-			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Row).', p_Player)
+		if PermissionManager:HasPermission(p_Player, 'ChatCommands.AttackMelee') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.AttackMelee).', p_Player)
 			return
 		end
 
@@ -232,8 +232,8 @@ function ChatCommands:execute(p_Parts, p_Player)
 
 	-- reset everything
 	elseif p_Parts[1] == '!stopall' then
-		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Row') == false then
-			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Row).', p_Player)
+		if PermissionManager:HasPermission(p_Player, 'ChatCommands.StopAll') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.StopAll).', p_Player)
 			return
 		end
 
@@ -242,8 +242,8 @@ function ChatCommands:execute(p_Parts, p_Player)
 		m_BotManager:setOptionForAll('moveMode', 0)
 
 	elseif p_Parts[1] == '!stop' then
-		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Row') == false then
-			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Row).', p_Player)
+		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Stop') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Stop).', p_Player)
 			return
 		end
 
@@ -252,16 +252,16 @@ function ChatCommands:execute(p_Parts, p_Player)
 		m_BotManager:setOptionForPlayer(p_Player, 'moveMode', 0)
 
 	elseif p_Parts[1] == '!kickp_Player' then
-		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Row') == false then
-			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Row).', p_Player)
+		if PermissionManager:HasPermission(p_Player, 'ChatCommands.KickPlayer') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.KickPlayer).', p_Player)
 			return
 		end
 
 		m_BotManager:destroyPlayerBots(p_Player)
 
 	elseif p_Parts[1] == '!kick' then
-		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Row') == false then
-			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Row).', p_Player)
+		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Kick') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Kick).', p_Player)
 			return
 		end
 
@@ -270,8 +270,8 @@ function ChatCommands:execute(p_Parts, p_Player)
 		m_BotManager:destroyAll(s_Amount)
 
 	elseif p_Parts[1] == '!kickteam' then
-		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Row') == false then
-			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Row).', p_Player)
+		if PermissionManager:HasPermission(p_Player, 'ChatCommands.KickTeam') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.KickTeam).', p_Player)
 			return
 		end
 
@@ -286,24 +286,24 @@ function ChatCommands:execute(p_Parts, p_Player)
 		m_BotManager:destroyAll(nil, s_TeamId)
 
 	elseif p_Parts[1] == '!kickall' then
-		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Row') == false then
-			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Row).', p_Player)
+		if PermissionManager:HasPermission(p_Player, 'ChatCommands.KickAll') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.KickAll).', p_Player)
 			return
 		end
 
 		m_BotManager:destroyAll()
 
 	elseif p_Parts[1] == '!kill' then
-		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Row') == false then
-			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Row).', p_Player)
+		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Kill') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Kill).', p_Player)
 			return
 		end
 
 		m_BotManager:killPlayerBots(p_Player)
 
 	elseif p_Parts[1] == '!killall' then
-		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Row') == false then
-			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Row).', p_Player)
+		if PermissionManager:HasPermission(p_Player, 'ChatCommands.KillAll') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.KillAll).', p_Player)
 			return
 		end
 
@@ -311,48 +311,48 @@ function ChatCommands:execute(p_Parts, p_Player)
 
 	-- waypoint stuff
 	elseif p_Parts[1] == '!getnodes' then
-		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Row') == false then
-			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Row).', p_Player)
+		if PermissionManager:HasPermission(p_Player, 'ChatCommands.GetNodes') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.GetNodes).', p_Player)
 			return
 		end
 
 		NetEvents:SendToLocal('ClientNodeEditor:ReceiveNodes', p_Player, #m_NodeCollection:Get())
 
 	elseif p_Parts[1] == '!sendnodes' then
-		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Row') == false then
-			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Row).', p_Player)
+		if PermissionManager:HasPermission(p_Player, 'ChatCommands.SendNodes') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.SendNodes).', p_Player)
 			return
 		end
 
 		NetEvents:SendToLocal('ClientNodeEditor:SaveNodes', p_Player)
 
 	elseif p_Parts[1] == '!trace' then
-		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Row') == false then
-			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Row).', p_Player)
+		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Trace') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Trace).', p_Player)
 			return
 		end
 
 		NetEvents:SendToLocal('ClientNodeEditor:StartTrace', p_Player)
 
 	elseif p_Parts[1] == '!tracedone' then
-		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Row') == false then
-			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Row).', p_Player)
+		if PermissionManager:HasPermission(p_Player, 'ChatCommands.TraceDone') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.TraceDone).', p_Player)
 			return
 		end
 
 		NetEvents:SendToLocal('ClientNodeEditor:EndTrace', p_Player)
 
 	elseif p_Parts[1] == '!cleartrace' then
-		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Row') == false then
-			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Row).', p_Player)
+		if PermissionManager:HasPermission(p_Player, 'ChatCommands.ClearTrace') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.ClearTrace).', p_Player)
 			return
 		end
 
 		NetEvents:SendToLocal('ClientNodeEditor:ClearTrace', p_Player)
 
 	elseif p_Parts[1] == '!clearalltraces' then
-		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Row') == false then
-			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Row).', p_Player)
+		if PermissionManager:HasPermission(p_Player, 'ChatCommands.ClearAllTraces') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.ClearAllTraces).', p_Player)
 			return
 		end
 
@@ -360,8 +360,8 @@ function ChatCommands:execute(p_Parts, p_Player)
 		NetEvents:SendLocal('NodeCollection:Clear')
 
 	elseif p_Parts[1] == '!printtrans' then
-		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Row') == false then
-			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Row).', p_Player)
+		if PermissionManager:HasPermission(p_Player, 'ChatCommands.PrintTransform') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.PrintTransform).', p_Player)
 			return
 		end
 
@@ -373,8 +373,8 @@ function ChatCommands:execute(p_Parts, p_Player)
 		print(p_Player.soldier.worldTransform.trans.z)
 
 	elseif p_Parts[1] == '!tracesave' then
-		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Row') == false then
-			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Row).', p_Player)
+		if PermissionManager:HasPermission(p_Player, 'ChatCommands.TraceSave') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.TraceSave).', p_Player)
 			return
 		end
 
