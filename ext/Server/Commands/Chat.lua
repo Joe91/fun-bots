@@ -21,7 +21,7 @@ function ChatCommands:execute(p_Parts, p_Player)
 			ChatManager:SendMessage(table.concat(s_Permissions, ', '), p_Player)
 		end
 
-	if p_Parts[1] == '!row' then
+	elseif p_Parts[1] == '!row' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Row') == false then
 			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Row).', p_Player)
 			return

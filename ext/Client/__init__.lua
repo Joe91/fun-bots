@@ -69,7 +69,6 @@ end
 
 function FunBotClient:OnExtensionUnloading()
 	m_ClientBotManager:OnExtensionUnloading()
-	m_FunBotUIClient:OnExtensionUnloading()
 end
 
 function FunBotClient:OnLevelDestroy()
