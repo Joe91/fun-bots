@@ -1,5 +1,7 @@
 class('UI');
 
+local m_Logger = Logger("UI", Debug.Server.UI)
+
 require('UI/Constants/Type');
 require('UI/Constants/Position');
 require('UI/Constants/Color');
@@ -8,7 +10,7 @@ require('UI/Constants/Numpad');
 function UI:__init()
 	-- Disable WebInterface
 	if Config.disableUserInterface == true then
-		print('[UI] UserInterface is disabled by Configuration.');
+		m_Logger:Write('UserInterface is disabled by Configuration.');
 		return;
 	end
 	
@@ -71,16 +73,16 @@ function UI:GetDialog(name)
 end
 
 function UI:__boot()
-	print('[UI] Booting...');
+	m_Logger:Write('Booting...');
 	
 	-- Load all required Components
 	for _, component in pairs(self.boot) do
 		local try = requireExists('UI/Components/' .. component);
 		
 		if (try ~= true) then
-			print('[UI] ERROR: Can\'t load Component: ' .. component .. ' (' .. try .. ')');
+			m_Logger:Error('Can\'t load Component: ' .. component .. ' (' .. try .. ')');
 		else
-			print('[UI] Component "' .. component .. '" was loaded.');
+			m_Logger:Write('Component "' .. component .. '" was loaded.');
 			self.booted = self.booted + 1;
 		end
 	end
@@ -90,9 +92,9 @@ function UI:__boot()
 		local try = requireExists('UI/Views/' .. view);
 		
 		if (try ~= true) then
-			print('[UI] ERROR: Can\'t load View: ' .. view .. ' (' .. try .. ')');
+			m_Logger:Error('Can\'t load View: ' .. view .. ' (' .. try .. ')');
 		else
-			print('[UI] View "' .. view .. '" was loaded.');
+			m_Logger:Write('View "' .. view .. '" was loaded.');
 		end
 	end
 	
@@ -100,9 +102,9 @@ function UI:__boot()
 		local try = requireExists('UI/Dialogs/' .. dialog);
 		
 		if (try ~= true) then
-			print('[UI] ERROR: Can\'t load Dialog: ' .. dialog .. ' (' .. try .. ')');
+			m_Logger:Error('Can\'t load Dialog: ' .. dialog .. ' (' .. try .. ')');
 		else
-			print('[UI] Dialog "' .. dialog .. '" was loaded.');
+			m_Logger:Write('Dialog "' .. dialog .. '" was loaded.');
 		end
 	end
 end
@@ -151,13 +153,13 @@ end
 
 -- All UI Actions will be handled here
 function UI:__action(player, type, destination, action, data)
-	print('[UI] Action { Type=' .. tostring(type) .. ', Destination=' .. tostring(destination) ..', Action=' .. tostring(action) .. ', Data=' .. json.encode(data) .. '}');
+	m_Logger:Write('Action { Type=' .. tostring(type) .. ', Destination=' .. tostring(destination) ..', Action=' .. tostring(action) .. ', Data=' .. json.encode(data) .. '}');
 	
 	if (type == 'VIEW') then
 		local view = self.views[destination];
 		
 		if (view == nil) then
-			print('[UI] The View "' .. destination .. '" doesn\'t exists.');
+			m_Logger:Write('The View "' .. destination .. '" doesn\'t exists.');
 			return;
 		end
 		
@@ -199,23 +201,23 @@ function UI:Send(component, receiver, action, object)
 	local destination	= nil;
 	local data			= nil;
 	
-			print('String: ' .. tostring(object))
+	m_Logger:Write('String: ' .. tostring(object))
 			
-			if object ~= nil then
-				print('Type: ' .. tostring(type(object)))
-			end
-			
-			print('JSON: ' .. tostring(json.encode(object)))
-			
-			print(g_Utilities:dump(object, true, 5));
+	if object ~= nil then
+		m_Logger:Write('Type: ' .. tostring(type(object)))
+	end
+	
+	m_Logger:Write('JSON: ' .. tostring(json.encode(object)))
+	
+	m_Logger:Write(g_Utilities:dump(object, true, 5));
 			
 			
 	if component:__class() == 'View' then
 		kind		= 'VIEW';
 		destination	= component:GetName();
 	else
-		print('[UI] ERROR on Send: Unknown/Unimplemented Component "' .. component:__class() .. '".');
-		print(debug.traceback())
+		m_Logger:Error('on Send: Unknown/Unimplemented Component "' .. component:__class() .. '".');
+		m_Logger:Write(debug.traceback())
 		return;
 	end
 	
@@ -223,18 +225,18 @@ function UI:Send(component, receiver, action, object)
 		data, error = json.encode(object);
 		
 		if (data == nil) then
-			print('[UI] Bad JSON: ' .. tostring(error) .. ', ' .. tostring(object));
-			print(debug.traceback())
+			m_Logger:Error('Bad JSON: ' .. tostring(error) .. ', ' .. tostring(object));
+			m_Logger:Write(debug.traceback())
 			return;
 		end
 	end
 	
 	if receiver == nil then
 		NetEvents:BroadcastLocal('UI', kind, destination, action, data);
-		print('[UI] Broadcast (' .. tostring(kind) .. ' - ' .. tostring(destination) .. ') ~> ' .. tostring(action) .. ' ~> ' .. tostring(data));
+		m_Logger:Write('Broadcast (' .. tostring(kind) .. ' - ' .. tostring(destination) .. ') ~> ' .. tostring(action) .. ' ~> ' .. tostring(data));
 	else
 		NetEvents:SendToLocal('UI', receiver, kind, destination, action, data);
-		print('[UI] Send to ' .. tostring(receiver.name) .. ' (' .. tostring(kind) .. ' - ' .. tostring(destination) .. ') ~> ' .. tostring(action) .. ' ~> ' .. tostring(data));
+		m_Logger:Write('Send to ' .. tostring(receiver.name) .. ' (' .. tostring(kind) .. ' - ' .. tostring(destination) .. ') ~> ' .. tostring(action) .. ' ~> ' .. tostring(data));
 	end
 end
 

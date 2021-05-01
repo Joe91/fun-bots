@@ -1,5 +1,7 @@
 class('PermissionManager')
 
+local m_Logger = Logger("PermissionManager", Debug.Server.PERMISSIONS)
+
 function PermissionManager:__init()
 	self.permissions	= {}
 	self.guid_players	= {}
@@ -9,7 +11,7 @@ function PermissionManager:__init()
 end
 
 function PermissionManager:__boot()
-	print('[PermissionManager] Booting...')
+	m_Logger:Write('Booting...')
 	
 	-- Create Permissions
 	Database:createTable('FB_Permissions', {
@@ -28,11 +30,11 @@ function PermissionManager:__boot()
 	local permissions = Database:fetch('SELECT * FROM `FB_Permissions`')
 	
 	if permissions == nil then
-		print('[PermissionManager] Currently no Permissions exists, skipping...')
+		m_Logger:Write('Currently no Permissions exists, skipping...')
 		return
 	end
 	
-	print('[PermissionManager] Loading ' .. #permissions .. ' permissions.')
+	m_Logger:Write('Loading ' .. #permissions .. ' permissions.')
 	
 	for name, value in pairs(permissions) do
 		if self.guid_players[value.PlayerName] == nil then
@@ -40,10 +42,10 @@ function PermissionManager:__boot()
 		end
 		
 		if self.permissions[value.GUID] == nil then
-			print('[PermissionManager] ' .. value.GUID .. ' (' .. value.PlayerName .. ') ~> ' .. PermissionManager:GetCorrectName(value.Value))
+			m_Logger:Write(value.GUID .. ' (' .. value.PlayerName .. ') ~> ' .. PermissionManager:GetCorrectName(value.Value))
 			self.permissions[value.GUID] = { PermissionManager:GetCorrectName(value.Value) }
 		elseif Utilities:has(self.permissions[value.GUID], value.Value) == false then
-			print('[PermissionManager] ' .. value.GUID .. ' (' .. value.PlayerName .. ') ~> ' .. PermissionManager:GetCorrectName(value.Value))
+			m_Logger:Write(value.GUID .. ' (' .. value.PlayerName .. ') ~> ' .. PermissionManager:GetCorrectName(value.Value))
 			table.insert(self.permissions[value.GUID], PermissionManager:GetCorrectName(value.Value))
 		end
 	end

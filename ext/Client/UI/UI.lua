@@ -1,5 +1,7 @@
 class('UI')
 
+local m_Logger = Logger("UiClient", Debug.Client.UI)
+
 function UI:__init()
 	self.WaypointEditor = false
 	Events:Subscribe('Extension:Loaded', self, self.__boot)
@@ -36,7 +38,7 @@ function UI:__local(string)
 	local data, error = json.decode(string)
 
 	if (data == nil) then
-		print('[UI] Bad JSON: ' .. tostring(error) .. ', ' .. tostring(string))
+		m_Logger:Error('[UI] Bad JSON: ' .. tostring(error) .. ', ' .. tostring(string))
 		return
 	end
 
@@ -45,7 +47,7 @@ function UI:__local(string)
 	local action		= data[3]
 	local data			= data[4]
 
-	print('[UI][Client] LocalAction { Type=' .. tostring(type) .. ', Destination=' .. tostring(destination) ..', Action=' .. tostring(action) .. ', Data=' .. json.encode(data) .. '}')
+	m_Logger:Write('[UI][Client] LocalAction { Type=' .. tostring(type) .. ', Destination=' .. tostring(destination) ..', Action=' .. tostring(action) .. ', Data=' .. json.encode(data) .. '}')
 	NetEvents:Send('UI', type, destination, action, data)
 end
 
@@ -56,13 +58,13 @@ function UI:__action(type, destination, action, string)
 		data, error = json.decode(string)
 
 		if (data == nil) then
-			print('[UI] Bad JSON: ' .. tostring(error) .. ', ' .. tostring(string))
+			m_Logger:Error('[UI] Bad JSON: ' .. tostring(error) .. ', ' .. tostring(string))
 			return
 		end
 	end
 
 
-	print('[UI][Client] Action { Type=' .. tostring(type) .. ', Destination=' .. tostring(destination) ..', Action=' .. tostring(action) .. ', Data=' .. json.encode(data) .. '}')
+	m_Logger:Write('[UI][Client] Action { Type=' .. tostring(type) .. ', Destination=' .. tostring(destination) ..', Action=' .. tostring(action) .. ', Data=' .. json.encode(data) .. '}')
 
 	if action == 'ACTIVATE' then
 		WebUI:EnableMouse()
