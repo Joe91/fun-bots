@@ -31,7 +31,7 @@ local m_ChatCommands = require('Commands/Chat')
 local m_RCONCommands = require('Commands/RCON')
 -- local m_FunBotUIServer = require('UIServer')
 local m_GameDirector = require('GameDirector')
-local m_PermissionManager = require('PermissionManager')
+PermissionManager = require('PermissionManager');
 
 
 function FunBotServer:__init()
