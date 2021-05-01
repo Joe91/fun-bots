@@ -2,277 +2,556 @@
 <html>
 	<head>
 		<meta charset="utf-8" />
-		<link rel="stylesheet" href="css/Icons.css" />
-		<link rel="stylesheet" href="css/Globals.css" />
-		<link rel="stylesheet" href="css/Forms.css" />
-		<link rel="stylesheet" href="css/View.css" />
-		<link rel="stylesheet" href="css/Views/PasswordProtection.css" />
-		<link rel="stylesheet" href="css/Views/Dialog.css" />
-		<link rel="stylesheet" href="css/Views/Toolbar.css" />
-		<link rel="stylesheet" href="css/Views/SettingsTabs.css" />
-		<link rel="stylesheet" href="css/Views/Settings.css" />
-		<link rel="stylesheet" href="css/Views/WaypointEditor/WaypointToolbar.css" />
-		<link rel="stylesheet" href="css/Views/WaypointEditor/CommonRose.css" />
-		<link rel="stylesheet" href="css/Views/WaypointEditor/Key.css" />
-		<link rel="stylesheet" href="css/Views/WaypointEditor/Help.css" />
+		<link rel="stylesheet" type="text/css" href="Styles/Colors.css" />
+		<link rel="stylesheet" type="text/css" href="Fonts/Purista.css" />
+		<link rel="stylesheet" type="text/css" href="Fonts/Venice.css" />
+		<link rel="stylesheet" type="text/css" href="Styles/Global.css" />
+		<link rel="stylesheet" type="text/css" href="Styles/Components/Logo.css" />
+		<link rel="stylesheet" type="text/css" href="Styles/Components/Text.css" />
+		<link rel="stylesheet" type="text/css" href="Styles/Components/CheckBox.css" />
+		<link rel="stylesheet" type="text/css" href="Styles/Components/Input.css" />
+		<link rel="stylesheet" type="text/css" href="Styles/Components/Entry.css" />
+		<link rel="stylesheet" type="text/css" href="Styles/Components/View.css" />
+		<link rel="stylesheet" type="text/css" href="Styles/Components/Menu.css" />
+		<link rel="stylesheet" type="text/css" href="Styles/Components/Component.css" />
+		<link rel="stylesheet" type="text/css" href="Styles/Components/Alert.css" />
+		<link rel="stylesheet" type="text/css" href="Styles/Components/Box.css" />
+		<link rel="stylesheet" type="text/css" href="Styles/Components/Button.css" />
+		<link rel="stylesheet" type="text/css" href="Styles/Components/Dialog.css" />
+		<link rel="stylesheet" type="text/css" href="Styles/Components/QuickShortcut.css" />
 	</head>
 	<body>
-		<!-- Warning: Password Protection -->
-		<ui-view data-name="password_protection">
-			<strong><span data-lang="WARNING:">WARNING:</span></strong>
-			<span data-lang="The Bot-Editor is not protected by an password. Other players can change all the settings!">The Bot-Editor is not protected by an password. Other players can change all the settings!</span>
-		</ui-view>
-
-		<!-- Toolbar -->
-		<ui-view data-name="toolbar" data-type="toolbar">
-			<ui-logo>
-				Bot-Editor<sub>fun-bots</sub>
-			</ui-logo>
-			<ui-menu>
-				<ul class="main">
-					<li>
-						<a><span data-lang="Bots">Bots</span></a>
-						<ul>
-							<li data-action="bot_spawn_default"><a data-key="F2"><input type="number" name="bots" value="1" /> <span data-lang="Spawn Enemy Bots">Spawn Enemy Bots</span></a></li>
-							<li data-action="bot_spawn_friend"><a ><input type="number" name="bots_friend" value="1" /> <span data-lang="Spawn Friend Bots">Spawn Friend Bots</span></a></li>
-							<li data-action="bot_kick_all"><a data-key="F3"><span data-lang="Kick All">Kick All</span></a></li>
-							<li data-action="bot_kick_team"><a><input type="number" name="team" value="1" /><span data-lang="Kick Team">Kick Team</span></a></li>
-							<li data-action="bot_kill_all"><a data-key="F4"><span data-lang="Kill All">Kill All</span></a></li>
-							<li data-action="bot_respawn"><a><span data-lang="Toggle Respawn">Toggle Respawn</span></a></li>
-							<li data-action="bot_attack"><a><span data-lang="Toggle Attack">Toggle Attack</span></a></li>
-						</ul>
-					</li>
-					<li data-action="request_waypoints_editor"><a><span data-lang="Waypoint-Editor">Waypoints-Editor</span></a></li>
-					<li data-action="request_settings"><a data-key="F10"><span data-lang="Settings">Settings</span></a></li>
-					<li data-action="exit"><a data-key="F12"><span data-lang="Exit">Exit</span></a></li>
-				</ul>
-			</ui-menu>
-		</ui-view>
-		
-		<!-- Waypoint-Editor -->
-		<ui-view data-name="waypoint_toolbar" data-type="toolbar">
-			<ui-logo>
-				Waypoints-Editor<sub>fun-bots</sub>
-			</ui-logo>
-			<ui-menu data-name="waypoints">
-				<ul class="main">
-					<li data-action="waypoints_client_load"><a><i data-name="client_load"></i> <span data-lang="[Client] Load">[Client] Load</span></a></li>
-					<li data-action="waypoints_client_save"><a><i data-name="client_save"></i> <span data-lang="[Client] Save">[Client] Save</span></a></li>
-					<li data-action="waypoints_server_load"><a data-key="F11"><i data-name="server_load"></i> <span data-lang="[Server] Load">[Server] Load</span></a></li>
-					<li data-action="waypoints_server_save"><a data-key="F9"><i data-name="server_save"></i> <span data-lang="[Server] Save">[Server] Save</span></a></li>
-					<li>
-						<a><span data-lang="View">View</span></a>
-						<ul>
-							<li class="header">General</li>
-							<li data-action=""><a><ui-checkbox data-name="debug_text"></ui-checkbox> <span data-lang="Debug-Text">Debug-Text</span></a></li>
-							<li class="header">Waypoints</li>
-							<li data-action=""><a><ui-checkbox data-checked="true" data-name="dots"></ui-checkbox> <span data-lang="Dots">Dots</span></a></li>
-							<li data-action=""><a><ui-checkbox data-name="lines"></ui-checkbox> <span data-lang="Lines">Lines</span></a></li>
-							<li data-action=""><a><ui-checkbox data-name="labels"></ui-checkbox> <span data-lang="Labels">Labels</span></a></li>
-						</ul>
-					</li>
-					<li data-action="back"><a><span data-lang="Back">Back</span></a></li>
-				</ul>
-				<ui-menu>
-					<ul class="main">
-						<li data-action="trace_start"><a data-key="F5"><i data-name="start"></i> <span data-lang="Start Trace">Start Trace</span></a></li>
-						<li data-action="trace_save"><a><i data-name="save"></i> <span data-lang="Save Trace">Save Trace</span></a></li>
-						<li data-action="bot_spawn_path"><a><i data-name="spawn_bot_way"></i> <span data-lang="Spawn Bot on Way">Spawn Bot on Way</span></a></li>
-						<li data-action="trace_clear"><a data-key="F7"><i data-name="clear"></i> <span data-lang="Clear Trace">Clear Trace</span></a></li>
-						<li data-action="trace_reset_all"><a data-key="F8"><i data-name="trash"></i> <span data-lang="Reset all Traces">Reset all Traces</span></a></li>
-					</ul>
-				</ui-menu>
-			</ui-menu>
+		<script src="Classes/Language.class.js"></script>
+		<script src="Classes/Constants/InputDeviceKeys.js"></script>
+		<script src="Classes/Constants/Color.js"></script>
+		<script src="Classes/Constants/Position.js"></script>
+		<script src="Classes/Components/Component.class.js"></script>
+		<script src="Classes/Components/Text.class.js"></script>
+		<script src="Classes/Components/Entry.class.js"></script>
+		<script src="Classes/Components/QuickShortcut.class.js"></script>
+		<script src="Classes/Components/Link.class.js"></script>
+		<script src="Classes/Components/Button.class.js"></script>
+		<script src="Classes/Components/Box.class.js"></script>
+		<script src="Classes/Components/Dialog.class.js"></script>
+		<script src="Classes/Components/Alert.class.js"></script>
+		<script src="Classes/Components/Menu.class.js"></script>
+		<script src="Classes/Components/CheckBox.class.js"></script>
+		<script src="Classes/Components/Input.class.js"></script>
+		<script src="Classes/Components/Arrow.class.js"></script>
+		<script src="Classes/Components/MenuItem.class.js"></script>
+		<script src="Classes/Components/MenuSeparator.class.js"></script>
+		<script src="Classes/Components/Logo.class.js"></script>
+		<script src="Classes/Components/View.class.js"></script>
+		<script src="Classes/UI.class.js"></script>
+		<script>
+			if(window.location.href != 'webui://fun-bots/') {
+				document.querySelector('body').style.background = 'url(debug.png)';
+				document.querySelector('body').style.backgroundSize = 'cover';
+				
+				
+			UI.Handle(
+			{
+ "Destination": "WaypointEditor",
+ "Data": {
+  "Components": [
+   {
+    "Type": "Box",
+    "Attributes": [
+     {
+      "Value": {
+       "Position": {
+        "Top": 180,
+        "Left": 20
+       },
+       "Type": 1
+      },
+      "Name": "Position"
+     }
+    ],
+    "Data": {
+     "Hidden": true,
+     "Items": {},
+     "Color": 1
+    }
+   },
+   {
+    "Type": "Logo",
+    "Attributes": [
+     {
+      "Value": {
+       "Position": {
+        "Top": 20,
+        "Left": 20
+       },
+       "Type": 1
+      },
+      "Name": "Position"
+     }
+    ],
+    "Data": {
+     "Subtitle": "fun-bots",
+     "Title": "Waypoint-Editor"
+    }
+   },
+   {
+    "Type": "Menu",
+    "Attributes": [
+     {
+      "Value": {
+       "Position": {
+        "Top": 20,
+        "Right": 20
+       },
+       "Type": 1
+      },
+      "Name": "Position"
+     }
+    ],
+    "Data": {
+     "Items": [
+      {
+       "Type": "MenuItem",
+       "Data": {
+        "Title": "Client",
+        "Disabled": false,
+        "Items": [
+         {
+          "Type": "MenuItem",
+          "Data": {
+           "Title": "Load",
+           "Disabled": false,
+           "Inputs": {},
+           "Callback": "UI:VIEW:WaypointEditor:ACTION:MenuItem$waypoints_client_load",
+           "Name": "waypoints_client_load",
+           "Icon": "Assets/Icons/Reload.svg",
+           "CheckBoxes": {}
+          }
+         },
+         {
+          "Type": "MenuItem",
+          "Data": {
+           "Title": "Save",
+           "Disabled": false,
+           "Inputs": {},
+           "Callback": "UI:VIEW:WaypointEditor:ACTION:MenuItem$waypoints_client_save",
+           "Name": "waypoints_client_save",
+           "Icon": "Assets/Icons/Save.svg",
+           "CheckBoxes": {}
+          }
+         }
+        ],
+        "Name": "client",
+        "Icon": "Assets/Icons/Client.svg",
+        "Permission": "UserInterface.WaypointEditor.Nodes.Client"
+       }
+      },
+      {
+       "Type": "MenuItem",
+       "Data": {
+        "Title": "Server",
+        "Disabled": false,
+        "Items": [
+         {
+          "Type": "MenuItem",
+          "Data": {
+           "Title": "Load",
+           "Disabled": false,
+           "Inputs": {},
+           "Callback": "UI:VIEW:WaypointEditor:ACTION:MenuItem$waypoints_server_load",
+           "Name": "waypoints_server_load",
+           "Icon": "Assets/Icons/Reload.svg",
+           "CheckBoxes": {}
+          }
+         },
+         {
+          "Type": "MenuItem",
+          "Data": {
+           "Title": "Save",
+           "Disabled": false,
+           "Inputs": {},
+           "Callback": "UI:VIEW:WaypointEditor:ACTION:MenuItem$waypoints_server_save",
+           "Name": "waypoints_server_save",
+           "Icon": "Assets/Icons/Save.svg",
+           "CheckBoxes": {}
+          }
+         }
+        ],
+        "Name": "server",
+        "Icon": "Assets/Icons/Server.svg",
+        "Permission": "UserInterface.WaypointEditor.Nodes.Server"
+       }
+      },
+      {
+       "Type": "MenuItem",
+       "Data": {
+        "Title": "View",
+        "Disabled": false,
+        "Items": [
+         {
+          "Type": "MenuSeparator",
+          "Data": {
+           "Title": "Editor"
+          }
+         },
+         {
+          "Type": "MenuItem",
+          "Data": {
+           "Title": "Lines",
+           "Disabled": false,
+           "Inputs": {},
+           "Name": "lines",
+           "Callback": "UI:VIEW:WaypointEditor:ACTION:MenuItem$lines",
+           "CheckBoxes": [
+            {
+             "Position": 100,
+             "Type": "CheckBox",
+             "Data": {
+              "Name": "view_lines",
+              "IsChecked": true,
+              "Disabled": false
+             }
+            }
+           ]
+          }
+         },
+         {
+          "Type": "MenuItem",
+          "Data": {
+           "Title": "Labels",
+           "Disabled": false,
+           "Inputs": {},
+           "Name": "labels",
+           "Callback": "UI:VIEW:WaypointEditor:ACTION:MenuItem$labels",
+           "CheckBoxes": [
+            {
+             "Position": 100,
+             "Type": "CheckBox",
+             "Data": {
+              "Name": "view_labels",
+              "IsChecked": true,
+              "Disabled": false
+             }
+            }
+           ]
+          }
+         },
+         {
+          "Type": "MenuSeparator",
+          "Data": {
+           "Title": "User Interface"
+          }
+         },
+         {
+          "Type": "MenuItem",
+          "Data": {
+           "Title": "Interaction Info",
+           "Disabled": false,
+           "Inputs": {},
+           "Name": "interaction_information",
+           "Callback": "UI:VIEW:WaypointEditor:ACTION:MenuItem$interaction_information",
+           "CheckBoxes": [
+            {
+             "Position": 100,
+             "Type": "CheckBox",
+             "Data": {
+              "Name": "view_interaction",
+              "IsChecked": true,
+              "Disabled": false
+             }
+            }
+           ]
+          }
+         },
+         {
+          "Type": "MenuItem",
+          "Data": {
+           "Title": "Quick Shortcuts",
+           "Disabled": false,
+           "Inputs": {},
+           "Name": "quick_shortcuts",
+           "Callback": "UI:VIEW:WaypointEditor:ACTION:MenuItem$quick_shortcuts",
+           "CheckBoxes": [
+            {
+             "Position": 100,
+             "Type": "CheckBox",
+             "Data": {
+              "Name": "view_shortcuts",
+              "IsChecked": true,
+              "Disabled": false
+             }
+            }
+           ]
+          }
+         }
+        ],
+        "Name": "view",
+        "Icon": "Assets/Icons/View.svg",
+        "Permission": "UserInterface.WaypointEditor.View"
+       }
+      },
+      {
+       "Type": "MenuItem",
+       "Data": {
+        "Title": "Back",
+        "Disabled": false,
+        "Inputs": {},
+        "Callback": "UI:VIEW:WaypointEditor:HIDE",
+        "Name": "back",
+        "Shortcut": "F12",
+        "CheckBoxes": {}
+       }
+      },
+      {
+       "Type": "Menu",
+       "Data": {
+        "Items": [
+         {
+          "Type": "MenuItem",
+          "Data": {
+           "Permission": "UserInterface.WaypointEditor.Tracing",
+           "Title": "Start Trace",
+           "Disabled": false,
+           "Inputs": {},
+           "Callback": "UI:VIEW:WaypointEditor:ACTION:MenuItem$trace_toggle",
+           "Name": "trace_toggle",
+           "Icon": "Assets/Icons/Start.svg",
+           "CheckBoxes": {}
+          }
+         },
+         {
+          "Type": "MenuItem",
+          "Data": {
+           "Permission": "UserInterface.WaypointEditor.TraceSaving",
+           "Title": "Save Trace",
+           "Disabled": false,
+           "Inputs": {},
+           "Callback": "UI:VIEW:WaypointEditor:ACTION:MenuItem$trace_save",
+           "Name": "trace_save",
+           "Icon": "Assets/Icons/Save.svg",
+           "CheckBoxes": {}
+          }
+         },
+         {
+          "Type": "MenuItem",
+          "Data": {
+           "Permission": "UserInterface.WaypointEditor.SpawnBot",
+           "Title": "Spawn Bot on Way",
+           "Disabled": false,
+           "Inputs": {},
+           "Callback": "UI:VIEW:WaypointEditor:ACTION:MenuItem$bot_spawn_path",
+           "Name": "bot_spawn_path",
+           "Icon": "Assets/Icons/SpawnBotWay.svg",
+           "CheckBoxes": {}
+          }
+         },
+         {
+          "Type": "MenuItem",
+          "Data": {
+           "Permission": "UserInterface.WaypointEditor.TraceClear",
+           "Title": "Clear Trace",
+           "Disabled": true,
+           "Inputs": {},
+           "Callback": "UI:VIEW:WaypointEditor:ACTION:MenuItem$trace_clear",
+           "Name": "trace_clear",
+           "Icon": "Assets/Icons/Clear.svg",
+           "CheckBoxes": {}
+          }
+         },
+         {
+          "Type": "MenuItem",
+          "Data": {
+           "Permission": "UserInterface.WaypointEditor.TraceReset",
+           "Title": "Reset all Traces",
+           "Disabled": false,
+           "Inputs": {},
+           "Callback": "UI:VIEW:WaypointEditor:ACTION:MenuItem$trace_reset_all",
+           "Name": "trace_reset_all",
+           "Icon": "Assets/Icons/Trash.svg",
+           "CheckBoxes": {}
+          }
+         }
+        ]
+       }
+      }
+     ]
+    }
+   },
+   {
+    "Type": "Box",
+    "Attributes": [
+     {
+      "Value": {
+       "Position": {
+        "Top": 75,
+        "Left": 15
+       },
+       "Type": 1
+      },
+      "Name": "Position"
+     }
+    ],
+    "Data": {
+     "Hidden": false,
+     "Items": [
+      {
+       "Type": "Entry",
+       "Data": {
+        "Name": "trace_index",
+        "Value": {
+         "Disabled": true,
+         "Arrows": [
+          {
+           "Position": 100,
+           "Callback": "UI:VIEW:WaypointEditor:CALL:Arrow$Arrow#6",
+           "Name": "Arrow#6",
+           "Type": "Arrow",
+           "Character": "❰"
+          },
+          {
+           "Position": 101,
+           "Callback": "UI:VIEW:WaypointEditor:CALL:Arrow$Arrow#7",
+           "Name": "Arrow#7",
+           "Type": "Arrow",
+           "Character": "❱"
+          }
+         ],
+         "Name": "trace_index",
+         "Type": 1,
+         "Value": 0
+        },
+        "Text": "Current Trace Index"
+       }
+      },
+      {
+       "Type": "Entry",
+       "Data": {
+        "Name": "trace_waypoints",
+        "Value": "0",
+        "Text": "Waypoints"
+       }
+      },
+      {
+       "Type": "Entry",
+       "Data": {
+        "Name": "trace_distance",
+        "Value": "0 m",
+        "Text": "Total Distance"
+       }
+      }
+     ],
+     "Color": 2
+    }
+   },
+   {
+    "Type": "QuickShortcut",
+    "Attributes": [
+     {
+      "Value": {
+       "Type": 205
+      },
+      "Name": "Position"
+     }
+    ],
+    "Data": {
+     "Help": [
+      {
+       "Key": 88,
+       "Text": "Settings"
+      },
+      {
+       "Key": 16,
+       "Text": "Quick Select"
+      },
+      {
+       "Key": 14,
+       "Text": "Clear Select"
+      },
+      {
+       "Key": 210,
+       "Text": "Spawn Bot"
+      }
+     ],
+     "Name": "trace_controls",
+     "Disabled": false,
+     "Numpad": [
+      {
+       "Key": "K1",
+       "Text": "Remove"
+      },
+      {
+       "Key": "K2",
+       "Text": "Unlink"
+      },
+      {
+       "Key": "K3",
+       "Text": "Add"
+      },
+      {
+       "Key": "K4",
+       "Text": "Move"
+      },
+      {
+       "Key": "K5",
+       "Text": "Select"
+      },
+      {
+       "Key": "K6",
+       "Text": "Input"
+      },
+      {
+       "Key": "K7",
+       "Text": "Merge"
+      },
+      {
+       "Key": "K8",
+       "Text": "Link"
+      },
+      {
+       "Key": "K9",
+       "Text": "Split"
+      }
+     ]
+    }
+   },
+   {
+    "Type": "Text",
+    "Attributes": [
+     {
+      "Value": {
+       "Type": 207
+      },
+      "Name": "Position"
+     }
+    ],
+    "Data": {
+     "Icon": "Assets/Keys/Q.svg",
+     "Name": "interaction_information",
+     "Disabled": false,
+     "Text": "Press for interaction with the Editor"
+    }
+   }
+  ],
+  "Name": "WaypointEditor"
+ },
+ "Type": "VIEW",
+ "Action": "SHOW"
+});
 			
-			<ui-box data-name="info">
-				<ui-entry>
-					<label data-lang="Current Trace Index">Current Trace Index</label>
-					<ui-container>
-						<ui-arrow data-direction="left"></ui-arrow>
-						<input type="number" name="trace_index" value="0" />
-						<ui-arrow data-direction="right"></ui-arrow>
-					</ui-container>
-				</ui-entry>
-				<ui-entry>
-					<label data-lang="Waypoints">Waypoints</label>
-					<ui-value data-name="waypoints">0</ui-value>
-				</ui-entry>
-				<ui-entry>
-					<label data-lang="Total Distance">Total Distance</label>
-					<ui-value data-name="distance" data-prefix=" m">0</ui-value>
-				</ui-entry>
-			</ui-box>
-			
-			<ui-box data-name="record" data-color="red" dataset-show="false">
-				Recording...
-			</ui-box>
-			
-			<ui-help data-name="numpad">
-				<p data-lang="Node Operation Controls">Node Operation Controls</p>
-				<ui-entry data-grid="K7">
-					<ui-key data-name="7"></ui-key>
-					<span data-lang="Merge">Merge</span>
-				</ui-entry>
-				<ui-entry data-grid="K8">
-					<ui-key data-name="8"></ui-key>
-					<span data-lang="Link">Link</span>
-				</ui-entry>
-				<ui-entry data-grid="K9">
-					<ui-key data-name="9"></ui-key>
-					<span data-lang="Split">Split</span>
-				</ui-entry>
-				<ui-entry data-grid="K4">
-					<ui-key data-name="4"></ui-key>
-					<span data-lang="Move">Move</span>
-				</ui-entry>
-				<ui-entry data-grid="K5">
-					<ui-key data-name="5"></ui-key>
-					<span data-lang="Select">Select</span>
-				</ui-entry>
-				<ui-entry data-grid="K6">
-					<ui-key data-name="6"></ui-key>
-					<span data-lang="Input">Input</span>
-				</ui-entry>
-				<ui-entry data-grid="K1">
-					<ui-key data-name="1"></ui-key>
-					<span data-lang="Remove">Remove</span>
-				</ui-entry>
-				<ui-entry data-grid="K2">
-					<ui-key data-name="2"></ui-key>
-					<span data-lang="Unlink">Unlink</span>
-				</ui-entry>
-				<ui-entry data-grid="K3">
-					<ui-key data-name="3"></ui-key>
-					<span data-lang="Add">Add</span>
-				</ui-entry>
-				<ui-entry data-grid="Other">
-					<ui-entry>
-						<ui-key data-name="F12"></ui-key>
-						<span data-lang="Settings">Settings</span>
-					</ui-entry>
-					<ui-entry>
-						<ui-key data-name="T"></ui-key>
-						<span data-lang="Select">Select</span>
-					</ui-entry>
-					<ui-entry>
-						<ui-key data-name="BS"></ui-key>
-						<span data-lang="Clear Select">Clear Select</span>
-					</ui-entry>
-					<ui-entry>
-						<ui-key data-name="INS"></ui-key>
-						<span data-lang="Settings">Spawn Bot</span>
-					</ui-entry>
-				</ui-entry>
-			</ui-help>
-			
-			<ui-help data-name="interaction">
-				<ui-key data-name="Q"></ui-key> <span data-lang="Press for Interaction with the Editor">Press for Interaction with the Editor</span>
-			</ui-help>
-		</ui-view>
-		
-		<!-- CommonRose -->
-		<ui-view data-name="commorose" data-type="commorose">
-			<a><ui-top><span></span></ui-top></a>
-			<ui-horizontal>
-				<ul class="left"></ul>
-				<ui-hexagon></ui-hexagon>
-				<ul class="right"></ul>
-			</ui-horizontal>
-			<a><ui-bottom><span></span></ui-bottom></a>
-		</ui-view>
-
-		<!-- Authentication -->
-		<ui-view data-name="password" data-type="dialog">
-			<ui-header>
-				<span data-lang="Enter password">Enter password</span>
-			</ui-header>
-			<ui-content data-type="form" data-action="UI_Send_Password">
-				<p><span data-lang="Please enter the password to open the Bot-Editor.">Please enter the password to open the Bot-Editor.</span></p>
-				<ui-error></ui-error>
-				<input type="password" name="password" value="" />
-			</ui-content>
-			<ui-buttons>
-				<button data-action="close"><span data-lang="Cancel">Cancel</span></button>
-				<button data-action="submit"><span data-lang="OK">OK</span></button>
-			</ui-buttons>
-		</ui-view>
-
-		<!-- Settings -->
-		<ui-view data-name="settings" data-type="dialog">
-			<ui-header>
-				<span data-lang="Settings">Settings</span>
-			</ui-header>
-			<ui-content data-type="form" data-action="UI_Save_Settings">
-				<ui-tabs>
-					<input checked="checked" id="GLOBAL" type="radio" name="tabs" />
-					<input id="DIFFICULTY" type="radio" name="tabs" />
-					<input id="SPAWN" type="radio" name="tabs" />
-					<input id="WEAPONS" type="radio" name="tabs" />
-					<input id="BEHAVIOUR" type="radio" name="tabs" />
-					<input id="TRACE" type="radio" name="tabs" />
-					<input id="ADVANCED" type="radio" name="tabs" />
-					<input id="EXPERT" type="radio" name="tabs" />
-					<input id="OTHER" type="radio" name="tabs" />
-
-					<nav>
-						<ul class="main">
-							<li>
-								<label for="GLOBAL"><span data-lang="General">General</span></label>
-							</li>
-							<li>
-								<label for="DIFFICULTY"><span data-lang="Difficulty">Difficulty</span></label>
-							</li>
-							<li>
-								<label for="SPAWN"><span data-lang="Spawn">Spawn</span></label>
-							</li>
-							<li>
-								<label for="WEAPONS"><span data-lang="Weapons">Weapons</span></label>
-							</li>
-							<li>
-								<label for="BEHAVIOUR"><span data-lang="Behaviour">Behaviour</span></label>
-							</li>
-							<li>
-								<label for="TRACE"><span data-lang="Trace">Trace</span></label>
-							</li>
-							<li>
-								<label for="ADVANCED"><span data-lang="Advanced">Advanced</span></label>
-							</li>
-							<li>
-								<label for="EXPERT"><span data-lang="Expert">Expert</span></label>
-							</li>
-							<li>
-								<label for="OTHER"><span data-lang="Other">Other</span></label>
-							</li>
-						</ul>
-					</nav>
-
-					<figure>
-						<ui-tab class="GLOBAL"></ui-tab>
-						<ui-tab class="DIFFICULTY"></ui-tab>
-						<ui-tab class="SPAWN"></ui-tab>
-						<ui-tab class="WEAPONS"></ui-tab>
-						<ui-tab class="BEHAVIOUR"></ui-tab>
-						<ui-tab class="TRACE"></ui-tab>
-						<ui-tab class="ADVANCED"></ui-tab>
-						<ui-tab class="EXPERT"></ui-tab>
-						<ui-tab class="OTHER"></ui-tab>
-					</figure>
-				</ui-tabs>
-
-				<ui-description></ui-description>
-			</ui-content>
-			<ui-buttons>
-				<button data-action="close"><span data-lang="Cancel">Cancel</span></button>
-				<button data-action="restore"><span data-lang="Restore all to Default">Restore all to Default</span></button>
-				<ui-spacer></ui-spacer>
-				<button data-action="submit_temp"><span data-lang="Save temporarily">Save temporarily</span></button>
-				<button data-action="submit"><span data-lang="Save">Save</span></button>
-			</ui-buttons>
-		</ui-view>
-
-		<script src="classes/Utils.js"></script>
-		<script src="classes/Constants.js"></script>
-		<script src="classes/EntryElement.js"></script>
-		<script src="classes/BotEditor.js"></script>
+			let check = true;
+			setInterval(function() {
+				check = !check;
+				UI.Handle({
+ "Destination": "WaypointEditor",
+ "Data": {
+  "Name": "trace_controls",
+  "Disabled": check,
+  "Type": "QuickShortcut"
+ },
+ "Type": "VIEW",
+ "Action": "UPDATE"
+});
+			}, 2000);
+			}
+		</script>
 	</body>
 </html>

@@ -126,7 +126,7 @@ end
 function NodeCollection:Register(p_Waypoint)
 
 	if (self.hiddenPaths[p_Waypoint.PathIndex] == nil) then
-		self.hiddenPaths[p_Waypoint.PathIndex] = false
+		self.hiddenPaths[p_Waypoint.PathIndex] = true
 	end
 	if (self.waypointsByPathIndex[p_Waypoint.PathIndex] == nil) then
 		self.waypointsByPathIndex[p_Waypoint.PathIndex] = {}
@@ -1198,7 +1198,7 @@ function NodeCollection:ObjectiveDirection(p_Waypoint, p_Objective, p_InVehicle)
 					local link = self:Get(linkID)
 					local pathWaypoint = self:GetFirst(link.PathIndex)
 
-					if (pathWaypoint ~= nil and pathWaypoint.Data.Objectives ~= nil and table.has(pathWaypoint.Data.Objectives, p_Objective)) then
+					if (pathWaypoint ~= nil and pathWaypoint.Data.Objectives ~= nil and m_Utilities:has(pathWaypoint.Data.Objectives, p_Objective)) then
 
 						-- highest priority path found, return now
 						if (#pathWaypoint.Data.Objectives == 1) then

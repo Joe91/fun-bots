@@ -1,0 +1,16 @@
+ui-view[data-activated="false"] {
+	opacity: 1 !important;
+	animation: none !important;
+}
+
+ui-view[data-activated="false"] ui-logo,
+ui-view[data-activated="false"] ui-menu,
+ui-view[data-activated="false"] ui-box,
+ui-view[data-activated="false"] ui-text {
+	opacity: 0.3;
+}
+
+ui-view[data-activated="false"] ui-menu ui-menu {
+	opacity: 1;
+}
+

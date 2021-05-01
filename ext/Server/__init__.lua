@@ -12,7 +12,9 @@ require('__shared/Constants/WeaponSets')
 require('__shared/Constants/BotAttackModes')
 require('__shared/Constants/SpawnModes')
 require ('__shared/Utils/Logger')
-require('Globals')
+require('Model/Globals')
+require('UI/UI')
+require('Constants/Permissions')
 
 local m_Logger = Logger("FunBotServer", Debug.Server.INFO)
 
@@ -25,10 +27,11 @@ local m_SettingsManager = require('SettingsManager')
 local m_BotManager = require('BotManager')
 local m_BotSpawner = require('BotSpawner')
 local m_WeaponList = require('__shared/WeaponList')
-local m_ChatCommands = require('ChatCommands')
-local m_RCONCommands = require('RCONCommands')
-local m_FunBotUIServer = require('UIServer')
+local m_ChatCommands = require('Commands/Chat')
+local m_RCONCommands = require('Commands/RCON')
+-- local m_FunBotUIServer = require('UIServer')
 local m_GameDirector = require('GameDirector')
+PermissionManager = require('PermissionManager');
 
 
 function FunBotServer:__init()
@@ -400,7 +403,7 @@ end
 
 function FunBotServer:SetRespawnDelay()
 	local s_RconResponseTable = RCON:SendCommand('vars.playerRespawnTime')
-    local s_RespawnTimeModifier = tonumber(s_RconResponseTable[2]) / 100
+	local s_RespawnTimeModifier = tonumber(s_RconResponseTable[2]) / 100
 	if self.m_PlayerKilledDelay > 0 and s_RespawnTimeModifier ~= nil then
 		Globals.RespawnDelay = self.m_PlayerKilledDelay * s_RespawnTimeModifier
 	else
@@ -431,28 +434,28 @@ function FunBotServer:RegisterInputRestrictionEventCallbacks()
 		return
 	end
 
-    local s_EntityIterator = EntityManager:GetIterator("ServerInputRestrictionEntity")
-    local s_Entity = s_EntityIterator:Next()
+	local s_EntityIterator = EntityManager:GetIterator("ServerInputRestrictionEntity")
+	local s_Entity = s_EntityIterator:Next()
 
-    while s_Entity do
-        s_Entity = Entity(s_Entity)
-        if s_Entity.data.instanceGuid == Guid('E8C37E6A-0C8B-4F97-ABDD-28715376BD2D') or -- cq / cq assault / tank- / air superiority
-        s_Entity.data.instanceGuid == Guid('6F42FBE3-428A-463A-9014-AA0C6E09DA64') or -- tdm
-        s_Entity.data.instanceGuid == Guid('9EDC59FB-5821-4A37-A739-FE867F251000') or -- rush / sq rush
-        s_Entity.data.instanceGuid == Guid('BF4003AC-4B85-46DC-8975-E6682815204D') or -- domination / scavenger
-        s_Entity.data.instanceGuid == Guid('AAF90FE3-D1CA-4CFE-84F3-66C6146AD96F') or -- gunmaster
-        s_Entity.data.instanceGuid == Guid('A40B08B7-D781-487A-8D0C-2E1B911C1949') then -- sqdm
-        -- rip CTF
-            s_Entity:RegisterEventCallback(function(p_Entity, p_Event)
+	while s_Entity do
+		s_Entity = Entity(s_Entity)
+		if s_Entity.data.instanceGuid == Guid('E8C37E6A-0C8B-4F97-ABDD-28715376BD2D') or -- cq / cq assault / tank- / air superiority
+		s_Entity.data.instanceGuid == Guid('6F42FBE3-428A-463A-9014-AA0C6E09DA64') or -- tdm
+		s_Entity.data.instanceGuid == Guid('9EDC59FB-5821-4A37-A739-FE867F251000') or -- rush / sq rush
+		s_Entity.data.instanceGuid == Guid('BF4003AC-4B85-46DC-8975-E6682815204D') or -- domination / scavenger
+		s_Entity.data.instanceGuid == Guid('AAF90FE3-D1CA-4CFE-84F3-66C6146AD96F') or -- gunmaster
+		s_Entity.data.instanceGuid == Guid('A40B08B7-D781-487A-8D0C-2E1B911C1949') then -- sqdm
+		-- rip CTF
+			s_Entity:RegisterEventCallback(function(p_Entity, p_Event)
 				if p_Event.eventId == MathUtils:FNVHash("Activate") and Globals.IsInputAllowed then
 					Globals.IsInputAllowed = false
 				elseif p_Event.eventId == MathUtils:FNVHash("Deactivate") and not Globals.IsInputAllowed then
 					Globals.IsInputAllowed = true
 				end
-            end)
-        end
-        s_Entity = s_EntityIterator:Next()
-    end
+			end)
+		end
+		s_Entity = s_EntityIterator:Next()
+	end
 end
 
 function FunBotServer:SetGameMode(p_GameMode)
