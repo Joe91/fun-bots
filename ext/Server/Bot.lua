@@ -1250,17 +1250,23 @@ function Bot:_updateMovement()
 										if s_Entity:GetPlayerInEntry(i) == nil then
 											self.m_Player:EnterVehicle(s_Entity, i)
 											self._VehicleEntity = s_Entity.physicsEntityBase
-											for j = 0, self._VehicleEntity.partCount - 1 do
-												if self.m_Player.controlledControllable.physicsEntityBase:GetPart(j) ~= nil and self.m_Player.controlledControllable.physicsEntityBase:GetPart(j):Is("ServerChildComponent") then
-													local s_QuatTransform = self.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(j)
-													if s_QuatTransform == nil then
-														return
-													end
-													self._VehicleMovableTransform = s_QuatTransform
-													self._VehicleMovableId = j
-													break
-												end
+											local type = self:_findOutVehicleType(self.m_Player)
+											if type == 1 then
+												self._VehicleMovableId = 25
+											elseif type == 2 then
+												self._VehicleMovableId = 10
 											end
+											-- for j = 0, self._VehicleEntity.partCount - 1 do
+											-- 	if self.m_Player.controlledControllable.physicsEntityBase:GetPart(j) ~= nil and self.m_Player.controlledControllable.physicsEntityBase:GetPart(j):Is("ServerChildComponent") then
+											-- 		local s_QuatTransform = self.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(j)
+											-- 		if s_QuatTransform == nil then
+											-- 			return
+											-- 		end
+											-- 		self._VehicleMovableTransform = s_QuatTransform
+											-- 		self._VehicleMovableId = j
+											-- 		break
+											-- 	end
+											-- end
 
 											self._ActionActive = false
 											local s_Node = g_GameDirector:FindClosestPath(s_Position, true)
