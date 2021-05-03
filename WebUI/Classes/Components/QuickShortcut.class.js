@@ -2,15 +2,19 @@
 
 class QuickShortcut extends Component {
 	name		= null;
+	help		= null;
 	
 	constructor(name) {
 		super();
-		
+
+		this.help		= document.createElement('ui-help');
 		this.name		= name || null;
 	}
 	
 	InitializeComponent() {
 		super.InitializeComponent();
+		
+		this.appendChild(this.help);
 	}
 	
 	Enable() {
@@ -23,6 +27,20 @@ class QuickShortcut extends Component {
 		this.dataset.disabled = true;
 		
 		this.Repaint();
+	}
+	
+	AddHelp(key, text) {
+		let entry			= document.createElement('ui-entry');
+		entry.innerHTML		= text;
+		entry.dataset.key	= key;
+		this.help.appendChild(entry);
+	}
+	
+	AddNumpad(key, text) {
+		let entry			= document.createElement('ui-key');
+		entry.dataset.text	= text;
+		entry.dataset.key	= key;
+		this.appendChild(entry);
 	}
 	
 	CreateIconStyle() {

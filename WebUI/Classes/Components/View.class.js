@@ -31,8 +31,15 @@ class View extends Component {
 							}
 						break;
 						case 'QuickShortcut':
-							console.error(properties);
 							component		= new QuickShortcut(properties.Data.Name);
+							
+							properties.Data.Help.forEach(function(help) {
+								component.AddHelp(help.Key, help.Text);
+							});
+
+							properties.Data.Numpad.forEach(function(entry) {
+								component.AddNumpad(entry.Key, entry.Text);
+							});
 						break;
 						case 'Logo':
 							component		= new Logo(properties.Data.Title, properties.Data.Subtitle);
