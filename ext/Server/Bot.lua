@@ -203,7 +203,7 @@ function Bot:shootAt(p_Player, p_IgnoreYaw)
 
 	if s_DifferenceYaw < s_FovHalf or p_IgnoreYaw then
 		if self._Shoot then
-			if self._ShootPlayer == nil or self._ShootModeTimer > Config.BotMinTimeShootAtPlayer or (self.m_KnifeMode and self._ShootModeTimer > (Config.BotMinTimeShootAtPlayer/2)) then
+			if self._ShootPlayer == nil or (self.m_InVehicle and (self._ShootModeTimer > Config.BotMinTimeShootAtPlayer * 2)) or (not self.m_InVehicle and (self._ShootModeTimer > Config.BotMinTimeShootAtPlayer)) or (self.m_KnifeMode and self._ShootModeTimer > (Config.BotMinTimeShootAtPlayer/2)) then
 				self._ShootModeTimer = 0
 				self._ShootPlayerName = p_Player.name
 				self._ShootPlayer = nil
@@ -1265,22 +1265,19 @@ function Bot:_updateMovement()
 											self.m_Player:EnterVehicle(s_Entity, i)
 											self._VehicleEntity = s_Entity.physicsEntityBase
 											local type = self:_findOutVehicleType(self.m_Player)
-											if type == 1 then
-												self._VehicleMovableId = 25
-											elseif type == 2 then
-												self._VehicleMovableId = 10
+
+											for j = 0, self._VehicleEntity.partCount - 1 do
+												if self.m_Player.controlledControllable.physicsEntityBase:GetPart(j) ~= nil and self.m_Player.controlledControllable.physicsEntityBase:GetPart(j):Is("ServerChildComponent") then
+													local s_QuatTransform = self.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(j)
+													if s_QuatTransform == nil then
+														return
+													end
+													self._VehicleMovableTransform = s_QuatTransform
+													self._VehicleMovableId = j
+													print(j)
+													break
+												end
 											end
-											-- for j = 0, self._VehicleEntity.partCount - 1 do
-											-- 	if self.m_Player.controlledControllable.physicsEntityBase:GetPart(j) ~= nil and self.m_Player.controlledControllable.physicsEntityBase:GetPart(j):Is("ServerChildComponent") then
-											-- 		local s_QuatTransform = self.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(j)
-											-- 		if s_QuatTransform == nil then
-											-- 			return
-											-- 		end
-											-- 		self._VehicleMovableTransform = s_QuatTransform
-											-- 		self._VehicleMovableId = j
-											-- 		break
-											-- 	end
-											-- end
 
 											self._ActionActive = false
 											local s_Node = g_GameDirector:FindClosestPath(s_Position, true)
