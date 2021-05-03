@@ -179,6 +179,14 @@ function Utilities:has(p_Object, p_Value)
 	return false
 end
 
+function table:has(p_Value)
+	for i=1, #self do
+		if (self[i] == p_Value) then
+			return true
+		end
+	end
+end
+
 function string:isLower(p_Value)
      return p_Value:lower() == p_Value
 end
