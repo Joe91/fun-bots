@@ -536,22 +536,7 @@
  "Type": "VIEW",
  "Action": "SHOW"
 });
-			
-			let check = true;
-			setInterval(function() {
-				check = !check;
-				UI.Handle({
- "Destination": "WaypointEditor",
- "Data": {
-  "Name": "trace_controls",
-  "Disabled": check,
-  "Type": "QuickShortcut"
- },
- "Type": "VIEW",
- "Action": "UPDATE"
-});
-			}, 2000);
-			}
-		</script>
+}
+	</script>
 	</body>
 </html>
