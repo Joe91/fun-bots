@@ -79,6 +79,7 @@ function Bot:__init(p_Player)
 	self._VehicleEntity = nil
 	self._VehicleMovableId = nil
 	self._LastVehicleYaw = 0.0
+	self._VehicleReadyToShoot = false
 	self._VehicleDirBackPositive = false
 	self._VehicleMovableTransform = nil
 
@@ -209,6 +210,7 @@ function Bot:shootAt(p_Player, p_IgnoreYaw)
 				self._LastShootPlayer = nil
 				self._LastTargetTrans = p_Player.soldier.worldTransform.trans:Clone()
 				self._KnifeWayPositions = {}
+				self._VehicleReadyToShoot = false
 				self._ShotTimer = - (Config.BotFirstShotDelay + math.random()*self._Skill)
 
 				if self.m_KnifeMode then
@@ -470,7 +472,7 @@ function Bot:_updateAiming()
 		local s_FullPositionTarget = self._ShootPlayer.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(self._ShootPlayer, true)
 		local s_FullPositionBot = self.m_Player.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(self.m_Player, false)
 		if self.m_InVehicle then --TODO: calculate height of gun of vehicle
-			s_FullPositionBot = s_FullPositionBot + Vec3(0.0, 1.5, 0.0)  -- bot in vehicle is higher
+			s_FullPositionBot = s_FullPositionBot + Vec3(0.0, 1.0, 0.0)  -- bot in vehicle is higher
 		end
 		local s_GrenadePitch = 0.0
 		--calculate how long the distance is --> time to travel
@@ -661,6 +663,10 @@ function Bot:_updateYaw()
 		end
 	end
 
+	if self.m_InVehicle then
+		self.m_Player.input.authoritativeAimingYaw = self._TargetYaw --alsways set yaw to let the FOV work
+	end
+
 	if s_AbsDeltaYaw < s_Increment then
 		if self.m_InVehicle then
 			if not s_AttackAiming then
@@ -675,11 +681,12 @@ function Bot:_updateYaw()
 					self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, 0)
 				end
 			else
+				self._VehicleReadyToShoot = true
 				self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, 0.0)
 				if s_Increment > 0 then
-					self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, 0.2)
+					self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, 0.5)
 				elseif s_Increment < 0 then
-					self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, -0.2)
+					self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, -0.5)
 				else
 					self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, 0.0)
 				end
@@ -975,7 +982,7 @@ function Bot:_updateShooting()
 							local s_TargetTimeValue = Config.BotFireModeDuration - 0.5
 							if ((self._ShootModeTimer >= s_TargetTimeValue) and (self._ShootModeTimer < (s_TargetTimeValue + StaticConfig.BotUpdateCycle)) and not self._GrenadeActive) or Config.BotWeapon == "Grenade" then
 								-- should be triggered only once per fireMode
-								if MathUtils:GetRandomInt(1,100) <= 30 then
+								if MathUtils:GetRandomInt(1,100) <= 40 then
 									if self.m_Grenade ~= nil and s_CurrentDistance < 35 then
 										self._GrenadeActive = true
 									end
@@ -1040,11 +1047,15 @@ function Bot:_updateShooting()
 						if self._ShotTimer >= 0 then
 							if self.m_ActiveWeapon.delayed == false then
 								if self._ShotTimer <= self.m_ActiveWeapon.fireCycle and not self._MeleeActive then
-									self:_setInput(EntryInputActionEnum.EIAFire, 1)
+									if not self.m_InVehicle or (self.m_InVehicle and self._VehicleReadyToShoot) then
+										self:_setInput(EntryInputActionEnum.EIAFire, 1)
+									end
 								end
 							else --start with pause Cycle
 								if self._ShotTimer >= self.m_ActiveWeapon.pauseCycle and not self._MeleeActive then
-									self:_setInput(EntryInputActionEnum.EIAFire, 1)
+									if not self.m_InVehicle or (self.m_InVehicle and self._VehicleReadyToShoot) then
+										self:_setInput(EntryInputActionEnum.EIAFire, 1)
+									end
 								end
 							end
 						end
