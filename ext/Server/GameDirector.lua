@@ -417,6 +417,16 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 			::continue_paths_loop::
 		end
 	end
+
+	-- spawn in base from time to time to get a vehicle
+	-- TODO: do this dependant of vehicle available
+	if not p_OnlyBase and #s_PossibleBases > 0 and MathUtils:GetRandomInt(0, 100) < 10 then
+		m_Logger:Write("spwawn at base because of randomness")
+		local s_PathIndex = s_PossibleBases[MathUtils:GetRandomInt(1, #s_PossibleBases)]
+		return s_PathIndex, MathUtils:GetRandomInt(1, #m_NodeCollection:Get(nil, s_PathIndex))
+	end
+
+	-- spawn in order of priority
 	if #s_AttackedObjectives > 0 then
 		m_Logger:Write("spawn at attaced objective")
 		return self:GetSpawnPathOfObjectives(s_AttackedObjectives)
