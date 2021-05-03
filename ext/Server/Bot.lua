@@ -77,7 +77,10 @@ function Bot:__init(p_Player)
 
 	-- vehicle stuff
 	self._VehicleEntity = nil
+	self._AllMovableIds = {}
 	self._VehicleMovableId = nil
+	self._IdDetected = false
+	self._DetectionTimer = 0.0
 	self._LastVehicleYaw = 0.0
 	self._VehicleReadyToShoot = false
 	self._VehicleDirBackPositive = false
@@ -108,7 +111,7 @@ function Bot:onUpdate(p_DeltaTime)
 	if Globals.IsInputAllowed then
 		self._UpdateTimer = self._UpdateTimer + p_DeltaTime
 
-		self:_updateYaw()
+		self:_updateYaw(p_DeltaTime)
 
 		if self._UpdateTimer > StaticConfig.BotUpdateCycle then
 			self:_setActiveVars()
@@ -559,7 +562,7 @@ function Bot:_updateAiming()
 	end
 end
 
-function Bot:_updateYaw()
+function Bot:_updateYaw(p_DeltaTime)
 	if self.m_InVehicle and self.m_Player.attachedControllable == nil then
 		self.m_InVehicle = false
 	end
@@ -608,11 +611,41 @@ function Bot:_updateYaw()
 			local s_AtanDzDx = math.atan(s_Pos.z, s_Pos.x)
 			local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
 			s_DeltaYaw = s_Yaw - self._TargetYaw
-			local s_DiffPos = s_Pos - self.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(self._VehicleMovableId):ToLinearTransform().forward
-			-- prepare for moving gun back
-			self._LastVehicleYaw = s_Yaw
-			if s_DiffPos.x > 0.1 or s_DiffPos.z > 0.1 then
-				s_CorrectGunYaw = true
+			-- detect ID if needed
+			if not self._IdDetected then
+				-- move gun up
+				self.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, 1)
+				-- get pitch of gun
+				self._DetectionTimer = self._DetectionTimer + p_DeltaTime
+				if self._DetectionTimer > 0.5 then
+					self._DetectionTimer = 0.0
+					local s_DeltaTrans = self.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(self._VehicleMovableId):ToLinearTransform().forward - s_Pos
+					if s_DeltaTrans.y > 0.2 then
+						self._IdDetected = true
+						m_Logger:Write("id found "..tostring(self._VehicleMovableId))
+					else
+						local s_Updated = false
+						for _,l_Id in pairs(self._AllMovableIds) do
+							if l_Id > self._VehicleMovableId then
+								self._VehicleMovableId = l_Id
+								m_Logger:Write("inkremt to id "..tostring(l_Id))
+								s_Updated = true
+								break
+							end
+						end
+						if not s_Updated then
+							self._VehicleMovableId = self._AllMovableIds[1]
+						end
+					end
+				end
+
+			else
+				local s_DiffPos = s_Pos - self.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(self._VehicleMovableId):ToLinearTransform().forward
+				-- prepare for moving gun back
+				self._LastVehicleYaw = s_Yaw
+				if math.abs(s_DiffPos.x) > 0.15 or math.abs(s_DiffPos.z) > 0.15 then
+					s_CorrectGunYaw = true
+				end
 			end
 
 		else
@@ -687,9 +720,9 @@ function Bot:_updateYaw()
 			else
 				self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, 0.0)
 				if s_Increment > 0 then
-					self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, 0.5)
+					self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, 0.2)
 				elseif s_Increment < 0 then
-					self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, -0.5)
+					self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, -0.2)
 				else
 					self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, 0.0)
 				end
@@ -1264,8 +1297,6 @@ function Bot:_updateMovement()
 										if s_Entity:GetPlayerInEntry(i) == nil then
 											self.m_Player:EnterVehicle(s_Entity, i)
 											self._VehicleEntity = s_Entity.physicsEntityBase
-											local type = self:_findOutVehicleType(self.m_Player)
-
 											for j = 0, self._VehicleEntity.partCount - 1 do
 												if self.m_Player.controlledControllable.physicsEntityBase:GetPart(j) ~= nil and self.m_Player.controlledControllable.physicsEntityBase:GetPart(j):Is("ServerChildComponent") then
 													local s_QuatTransform = self.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(j)
@@ -1273,11 +1304,13 @@ function Bot:_updateMovement()
 														return
 													end
 													self._VehicleMovableTransform = s_QuatTransform
-													self._VehicleMovableId = j
-													print(j)
-													break
+													table.insert(self._AllMovableIds, j)
 												end
 											end
+											-- id detection
+											self._VehicleMovableId = self._AllMovableIds[1] -- start with first ID
+											self._IdDetected = false
+											self._DetectionTimer = -0.2
 
 											self._ActionActive = false
 											local s_Node = g_GameDirector:FindClosestPath(s_Position, true)
@@ -1320,6 +1353,10 @@ function Bot:_updateMovement()
 					end
 				end
 
+				if self.m_InVehicle and not self._IdDetected then
+					return
+				end
+
 				if (s_Point.SpeedMode) > 0 then -- movement
 					self._WayWaitTimer = 0
 					self._WayWaitYawTimer = 0
@@ -1350,7 +1387,6 @@ function Bot:_updateMovement()
 					self._TargetPoint = s_Point
 					self._NextTargetPoint = s_NextPoint
 
-
 					if (math.abs(s_CurrentWayPointDistance - self._LastWayDistance) < 0.02 or self._ObstaceSequenceTimer ~= 0) then
 						-- try to get around obstacle
 						self.m_ActiveSpeedValue = 4 --always try to stand
@@ -1358,7 +1394,7 @@ function Bot:_updateMovement()
 							if self._ObstacleRetryCounter == 0 then
 								self.m_ActiveSpeedValue = -1
 							else
-								self.m_ActiveSpeedValue = 1
+								self.m_ActiveSpeedValue = 2
 							end
 						end
 
@@ -1667,8 +1703,10 @@ function Bot:_updateMovement()
 						s_SpeedVal = 0.25
 					elseif self.m_ActiveSpeedValue == 2 then
 						s_SpeedVal = 0.5
-					elseif self.m_ActiveSpeedValue >= 3 then
+					elseif self.m_ActiveSpeedValue == 3 then
 						s_SpeedVal = 0.8
+					elseif self.m_ActiveSpeedValue >= 4 then
+						s_SpeedVal = 1
 					elseif self.m_ActiveSpeedValue < 0 then
 						s_SpeedVal = -0.7
 					end
@@ -1706,27 +1744,30 @@ function Bot:_updateMovement()
 
 			-- movent speed
 			if self.m_Player.alive then
-				if self.m_ActiveSpeedValue <= 3 then
-					if self.m_InVehicle then
+				if self.m_InVehicle then
+					if self._IdDetected then
 						if self.m_ActiveSpeedValue < 0 then
 							self._BrakeTimer = 0
 							self:_setInput(EntryInputActionEnum.EIABrake, -s_SpeedVal)
 						elseif self.m_ActiveSpeedValue > 0 then
 							self._BrakeTimer = 0
 							self:_setInput(EntryInputActionEnum.EIAThrottle, s_SpeedVal)
+							-- TODO: add sprinting to vehicles?
 						else
 							if self._BrakeTimer < 0.7 then
 								self:_setInput(EntryInputActionEnum.EIABrake, 1)
 							end
 							self._BrakeTimer = self._BrakeTimer + StaticConfig.BotUpdateCycle
 						end
-					else
-						self:_setInput(EntryInputActionEnum.EIAThrottle, s_SpeedVal * Config.SpeedFactor)
 					end
 
 				else
-					self:_setInput(EntryInputActionEnum.EIAThrottle, 1)
-					self:_setInput(EntryInputActionEnum.EIASprint, s_SpeedVal * Config.SpeedFactor)
+					if self.m_ActiveSpeedValue <= 3 then
+						self:_setInput(EntryInputActionEnum.EIAThrottle, s_SpeedVal * Config.SpeedFactor)
+					else
+						self:_setInput(EntryInputActionEnum.EIAThrottle, 1)
+						self:_setInput(EntryInputActionEnum.EIASprint, s_SpeedVal * Config.SpeedFactor)
+					end
 				end
 			end
 		end
