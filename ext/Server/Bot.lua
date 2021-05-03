@@ -695,7 +695,7 @@ function Bot:_updateYaw(p_DeltaTime)
 			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, s_Value)
 		end
 
-		if s_AbsDeltaYaw < 0.05 then
+		if s_AbsDeltaYaw < 0.1 then
 			self._VehicleReadyToShoot = true
 		end
 	end
