@@ -9,3 +9,7 @@ ui-box {
 	display: flex;
 	flex-direction: column;
 }
+
+ui-box[data-hidden="true"] {
+	display: none;
+}

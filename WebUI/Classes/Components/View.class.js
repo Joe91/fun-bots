@@ -62,6 +62,15 @@ class View extends Component {
 							};
 						});
 					}
+					
+					// Has enable/disable & checkbox
+					if(typeof(properties.Data.Hidden) != 'undefined') {
+						if(properties.Data.Hidden) {
+							component.Hide();
+						} else {
+							component.Show();
+						}
+					}
 				
 					this.components.push(component);
 				} else {

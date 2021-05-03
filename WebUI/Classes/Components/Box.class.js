@@ -18,6 +18,15 @@ class Box extends Component {
 		this.image			= new Image();
 		this.background		= new Image();
 		this.canvas			= document.createElement('canvas');
+		this.hidden			= false;
+	}
+	
+	Hide() {
+		this.dataset.hidden = true;
+	}
+	
+	Show() {
+		this.dataset.hidden = false;
 	}
 	
 	get Items() {
