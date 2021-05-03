@@ -58,11 +58,11 @@ You need to use correct indexes:
 	- path on mcom 1: "mcom 1 interact" and so on...
 
 ### Vehicle Paths
-- Record a path to enter a vehicle with the Objective: "vehicle <UniqueName>"
+- Record a path to enter a vehicle with the Objective: "vehicle UniqueName"
 - Add a Vehicle at the end of the path to the vehicle (Console "AddVehicle")
 - Enter the vehicle and record a path from there
 - Mark all paths of the vehicle as vehicle paths (Console "AddVehiclePath land")
-- assign objectives
+- assign objectives as usual
 
 ### needed commands
 addObjective <name of objective> (adds a label to a path. Just select one point of a path)
