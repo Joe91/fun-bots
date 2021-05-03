@@ -661,6 +661,10 @@ function Bot:_updateYaw()
 		else
 			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, s_Value)
 		end
+
+		if s_AbsDeltaYaw < 0.05 then
+			self._VehicleReadyToShoot = true
+		end
 	end
 
 	if self.m_InVehicle then
@@ -681,7 +685,6 @@ function Bot:_updateYaw()
 					self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, 0)
 				end
 			else
-				self._VehicleReadyToShoot = true
 				self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, 0.0)
 				if s_Increment > 0 then
 					self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, 0.5)
