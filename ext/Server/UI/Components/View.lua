@@ -66,6 +66,13 @@ function View:Show(player)
 	self.visible	= true;
 end
 
+function View:Remove(player, component)
+	self:GetCore():Send(self, player, 'REMOVE', {
+		Type 		= component:__class(),
+		Name 		= component:GetName()
+	});
+end
+
 function View:Push(player, component)
 	local attributes = {};
 	

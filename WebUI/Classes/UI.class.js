@@ -92,6 +92,9 @@ class UserInterface {
 					case 'PUSH':
 						view.Push(data);
 					break;
+					case 'REMOVE':
+						view.Remove(data);
+					break;
 					default:
 						console.warn('Unknown Action:', action);
 					break;

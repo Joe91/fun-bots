@@ -95,6 +95,30 @@ class View extends Component {
 		});
 	}
 	
+	Remove(data) {
+		let component = null;
+		
+		if(typeof(data.Type) != 'undefined') {
+			switch(data.Type) {
+				case 'Dialog':
+					component = document.querySelectorAll('ui-dialog');
+				break;
+			}
+		}
+		
+		if(component != null) {
+			this.components.forEach(function(element) {
+				[].map.call(component, function(node) {
+					if(node == element) {
+						element.parentNode.removeChild(element);
+					}
+				});
+			});
+		} else {
+			console.warn('Unknown Component: ', data.Type);
+		}
+	}
+	
 	Push(data) {
 		let component = null;
 		
