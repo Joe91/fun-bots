@@ -1,7 +1,20 @@
 # Changelog
 
-## [Unreleased - 1.7.1.X] - 2021-04-XX
-[Download](https://github.com/Joe91/fun-bots/archive/V1.7.1.4.zip)  
+## [Unreleased - 2.0.0.X] - 2021-05-XX
+[Download](https://github.com/Joe91/fun-bots/archive/V2.0.0.0.zip)
+The Release-Candidate
+
+- First maps with vehicle-support for testing
+	- Kharg Island Conquest Small
+	- Bazar Conquest Small
+- Competely new UI (not fully functional yet, but getting closer)
+- New Permission-System (see link in readme: https://github.com/Joe91/fun-bots/wiki/Permissions)
+- Enhanced Gamplay Logic of the Bots in Conquest
+- Lots of refactoring
+
+
+## [Unreleased - 1.7.1.X] - 2021-05-XX
+[Download](https://github.com/Joe91/fun-bots/archive/V1.7.1.5.zip)  
 the refactoring update
 
 - limit distance on which a bot switches to pistol
@@ -13,6 +26,7 @@ the refactoring update
 - improvement in game-logic of bots
 - improved spawning in conquest
 - more refactoring
+- little fix for a server-crash
  
 ## [Unreleased - 1.7.0.X] - 2021-04-XX
  
