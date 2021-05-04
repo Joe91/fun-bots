@@ -293,7 +293,7 @@ function WaypointEditor:InitializeComponent()
 	end):SetIcon('Assets/Icons/Start.svg'), 'UserInterface.WaypointEditor.Tracing')
 	
 	tools:AddItem(MenuItem('Save Trace', 'trace_save', function(player)
-		NetEvents:SendToLocal('ClientNodeEditor:SaveTrace', player, tonumber(0))
+		NetEvents:SendToLocal('ClientNodeEditor:SaveTrace', player)
 	end):SetIcon('Assets/Icons/Save.svg'), 'UserInterface.WaypointEditor.TraceSaving')
 	
 	tools:AddItem(MenuItem('Spawn Bot on Way', 'bot_spawn_path', function(player)
