@@ -27,3 +27,15 @@ ui-view[data-activated="false"] ui-text {
 ui-view[data-activated="true"] ui-text {
 	opacity: 0.3 !important;
 }
+
+ui-box ui-text {
+	flex: 1 0 auto;
+	display: flex;
+	margin: -10px -10px;
+}
+
+ui-box ui-text[data-icon]::before {
+    width: 22px;
+    height: 22px;
+    background-size: 22px 22px;
+}

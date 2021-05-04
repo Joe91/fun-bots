@@ -49,7 +49,7 @@ class View extends Component {
 							component.Items	= properties.Data.Items;
 						break;
 						case 'Box':
-							component		= new Box(properties.Data.Color);
+							component		= new Box(properties.Data.Name, properties.Data.Color);
 							component.Items	= properties.Data.Items;
 						break;
 					}
@@ -185,6 +185,14 @@ class View extends Component {
 		
 		if(component instanceof Entry && data.Type == 'Entry' && component.GetName() == data.Name) {
 			component.SetValue(data.Value);
+		} else if(component instanceof Box && data.Type == 'Box' && component.GetName() == data.Name) {
+			if(typeof(data.Hidden) !== 'undefined') {
+				if(data.Hidden) {
+					component.Hide();
+				} else {
+					component.Show();
+				}
+			}
 		} else if(component instanceof Input && data.Type == 'Input' && component.GetName() == data.Name) {
 			component.SetValue(data.Value);
 		} else if(component instanceof CheckBox && data.Type == 'CheckBox' && component.GetName() == data.Name) {
