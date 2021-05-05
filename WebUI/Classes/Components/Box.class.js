@@ -1,6 +1,7 @@
 'use strict';
 
 class Box extends Component {
+	name		= null;
 	color		= null;
 	canvas		= null;
 	context 	= null;
@@ -11,9 +12,10 @@ class Box extends Component {
 	position	= this.space;
 	items		= [];
 	
-	constructor(color) {
+	constructor(name, color) {
 		super();
 		
+		this.name			= name || null;
 		this.color			= color || null;
 		this.image			= new Image();
 		this.background		= new Image();
@@ -44,6 +46,13 @@ class Box extends Component {
 			switch(item.Type) {
 				case 'Entry':
 					component	= new Entry(item.Data.Name, item.Data.Text, item.Data.Value);
+				break;
+				case 'Text':
+					component	= new Text(item.Data.Name, item.Data.Text);
+					
+					if(typeof(item.Data.Icon) != 'undefined') {
+						component.SetIcon(item.Data.Icon);
+					}
 				break;
 			}
 			

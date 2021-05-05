@@ -37,6 +37,8 @@ function WaypointEditor:__init(core)
 		end
 
 		if self.tracing then
+			self.recording:Show()
+			
 			NetEvents:SendToLocal('UI', player, 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
 				Type	= 'MenuItem',
 				Name	= 'trace_toggle',
@@ -44,6 +46,8 @@ function WaypointEditor:__init(core)
 				Icon	= 'Assets/Icons/Stop.svg'
 			}))
 		else
+			self.recording:Hide()
+			
 			NetEvents:SendToLocal('UI', player, 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
 				Type	= 'MenuItem',
 				Name	= 'trace_toggle',
@@ -51,6 +55,12 @@ function WaypointEditor:__init(core)
 				Icon	= 'Assets/Icons/Start.svg'
 			}))
 		end
+			
+		NetEvents:SendToLocal('UI', player, 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
+			Type	= self.recording:__class(),
+			Name	= self.recording:GetName(),
+			Hidden	= self.recording:IsHidden()
+		}))
 	end)
 end
 
@@ -137,14 +147,15 @@ function WaypointEditor:InitializeComponent()
 	self.quick_shortcuts:AddHelp(InputDeviceKeys.IDK_Insert, 'Spawn Bot')
 
 
-	local recording = Box(Color.Red)
-	recording:SetPosition(Position.Absolute, {
-		Top		= 180,
-		Left	= 20
+	self.recording = Box(Color.Red)
+	self.recording:SetPosition(Position.Absolute, {
+		Top		= 182,
+		Left	= 16
 	})
 
-	self.view:AddComponent(recording)
-	recording:Hide()
+	self.recording:AddItem(Text('recording_text', 'Recording...'):SetIcon('Assets/Icons/Stop.svg'))
+	self.view:AddComponent(self.recording)
+	self.recording:Hide()
 
 	-- Logo
 	local logo = Logo('Waypoint-Editor', 'fun-bots')

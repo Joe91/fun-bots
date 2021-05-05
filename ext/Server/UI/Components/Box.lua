@@ -1,14 +1,25 @@
 class('Box');
 
 function Box:__init(color)
+	if (_G['BoxID'] == nil) then
+		_G['BoxID'] = 1;
+	end
+	
+	_G['BoxID']		= _G['BoxID'] + 1;
+	
 	self.attributes	= {};
 	self.items		= {};
+	self.name		= 'Box#' .. _G['BoxID'];
 	self.color		= color or Color.White;
 	self.hidden		= false;
 end
 
 function Box:__class()
 	return 'Box';
+end
+
+function Box:GetName()
+	return self.name;
 end
 
 function Box:HasItems()
@@ -25,12 +36,16 @@ function Box:AddItem(item)
 		return;
 	end
 	
-	if (item:__class() ~= 'Entry') then
+	if (item:__class() ~= 'Entry' and item:__class() ~= 'Text') then
 		-- Exception: Only Menu, MenuSeparator (-) or MenuItem
 		return;
 	end
 	
 	table.insert(self.items, item);
+end
+
+function Box:IsHidden()
+	return self.hidden;
 end
 
 function Box:Hide()
@@ -67,6 +82,7 @@ function Box:Serialize()
 	
 	return {
 		Color	= self.color,
+		Name	= self.name,
 		Items	= items,
 		Hidden	= self.hidden
 	};
