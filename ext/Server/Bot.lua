@@ -522,9 +522,6 @@ function Bot:_updateAiming()
 		local s_DifferenceY = s_FullPositionTarget.y + s_TargetMovement.y + s_PitchCorrection - s_FullPositionBot.y
 		local s_AtanDzDx = math.atan(s_DifferenceZ, s_DifferenceX)
 		local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
-		-- worsen yaw depending on bot-skill
-		local s_WorseningValue = (math.random()*self._Skill/s_DistanceToPlayer) -- value scaled in offset in 1m
-		s_Yaw = s_Yaw + s_WorseningValue
 
 		--calculate pitch
 		local s_Pitch = 0
@@ -534,8 +531,13 @@ function Bot:_updateAiming()
 			local s_Distance = math.sqrt(s_DifferenceZ ^ 2 + s_DifferenceX ^ 2)
 			s_Pitch = math.atan(s_DifferenceY, s_Distance)
 		end
-		-- worsen yaw depending on bot-skill
-		s_Pitch = s_Pitch + s_WorseningValue
+
+		-- worsen yaw and pitch depending on bot-skill
+		if not self.m_InVehicle then
+			local s_WorseningValue = (math.random()*self._Skill/s_DistanceToPlayer) -- value scaled in offset in 1m
+			s_Yaw = s_Yaw + s_WorseningValue
+			s_Pitch = s_Pitch + s_WorseningValue
+		end
 
 		self._TargetPitch = s_Pitch
 		self._TargetYaw = s_Yaw
@@ -696,7 +698,7 @@ function Bot:_updateYaw(p_DeltaTime)
 			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, s_Value)
 		end
 
-		if s_AbsDeltaYaw < 0.05 then
+		if s_AbsDeltaYaw < 0.1 then
 			self._VehicleReadyToShoot = true
 		end
 	end
@@ -1079,10 +1081,10 @@ function Bot:_updateShooting()
 						end
 					else
 						if self.m_InVehicle then
-							if self._ShotTimer >= (0.4) then
+							if self._ShotTimer >= (0.6) then
 								self._ShotTimer = 0
 							end
-							if self._ShotTimer <= 0.2 and self._VehicleReadyToShoot then
+							if self._ShotTimer >= 0.3 and self._VehicleReadyToShoot then
 								self:_setInput(EntryInputActionEnum.EIAFire, 1)
 							end
 						else

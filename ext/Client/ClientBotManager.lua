@@ -77,7 +77,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 			if s_Distance < Config.MaxRaycastDistance then
 				self.m_LastIndex = self.m_LastIndex + 1
 				local s_Raycast = nil
-				if self.m_Player.inVehicle then
+				if self.m_Player.inVehicle or s_Bot.inVehicle then
 					-- TODO: Some Vehicles are detected as objects of type Group. Find a better solution
 					s_Raycast = RaycastManager:Raycast(s_PlayerPosition, s_Target, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckPhantoms | RayCastFlags.DontCheckGroup | RayCastFlags.IsAsyncRaycast)
 				else
