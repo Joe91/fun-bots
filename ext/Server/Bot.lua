@@ -640,6 +640,7 @@ function Bot:_updateYaw(p_DeltaTime)
 				end
 
 			else
+				self.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, 0)
 				local s_DiffPos = s_Pos - self.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(self._VehicleMovableId):ToLinearTransform().forward
 				-- prepare for moving gun back
 				self._LastVehicleYaw = s_Yaw
@@ -695,7 +696,7 @@ function Bot:_updateYaw(p_DeltaTime)
 			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, s_Value)
 		end
 
-		if s_AbsDeltaYaw < 0.1 then
+		if s_AbsDeltaYaw < 0.05 then
 			self._VehicleReadyToShoot = true
 		end
 	end
@@ -1077,19 +1078,24 @@ function Bot:_updateShooting()
 						end
 						end
 					else
-						if self._ShotTimer >= (self.m_ActiveWeapon.fireCycle + self.m_ActiveWeapon.pauseCycle) then
-							self._ShotTimer = 0
-						end
-						if self._ShotTimer >= 0 then
-							if self.m_ActiveWeapon.delayed == false then
-								if self._ShotTimer <= self.m_ActiveWeapon.fireCycle and not self._MeleeActive then
-									if not self.m_InVehicle or (self.m_InVehicle and self._VehicleReadyToShoot) then
+						if self.m_InVehicle then
+							if self._ShotTimer >= (0.4) then
+								self._ShotTimer = 0
+							end
+							if self._ShotTimer <= 0.2 and self._VehicleReadyToShoot then
+								self:_setInput(EntryInputActionEnum.EIAFire, 1)
+							end
+						else
+							if self._ShotTimer >= (self.m_ActiveWeapon.fireCycle + self.m_ActiveWeapon.pauseCycle) then
+								self._ShotTimer = 0
+							end
+							if self._ShotTimer >= 0 then
+								if self.m_ActiveWeapon.delayed == false then
+									if self._ShotTimer <= self.m_ActiveWeapon.fireCycle and not self._MeleeActive then
 										self:_setInput(EntryInputActionEnum.EIAFire, 1)
 									end
-								end
-							else --start with pause Cycle
-								if self._ShotTimer >= self.m_ActiveWeapon.pauseCycle and not self._MeleeActive then
-									if not self.m_InVehicle or (self.m_InVehicle and self._VehicleReadyToShoot) then
+								else --start with pause Cycle
+									if self._ShotTimer >= self.m_ActiveWeapon.pauseCycle and not self._MeleeActive then
 										self:_setInput(EntryInputActionEnum.EIAFire, 1)
 									end
 								end

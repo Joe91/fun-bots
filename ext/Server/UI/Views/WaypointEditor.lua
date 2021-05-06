@@ -338,7 +338,7 @@ function WaypointEditor:InitializeComponent()
 	
 	input_trace_index:AddArrow(Position.Left, '❰', function(player)
 		-- Hide the old path
-		NetEvents:SendToLocal('NodeCollection:HidePath', player, self.trace_index)
+		--NetEvents:SendToLocal('NodeCollection:HidePath', player, self.trace_index)
 		
 		self.trace_index = self.trace_index - 1
 		
