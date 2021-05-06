@@ -879,6 +879,9 @@ function Bot:_ceckForVehicleAttack(p_VehicleType, p_Distance)
 			s_AttackMode = 4 -- always use c4 if possible
 		end
 	end
+	if self.m_InVehicle then
+		s_AttackMode = 1 -- attack with main-weapon
+	end
 	return s_AttackMode
 end
 
@@ -977,7 +980,6 @@ function Bot:_updateShooting()
 					end
 				end
 
-				-- target in vehicle - use gadget 2 if rocket --TODO: don't shoot with other classes
 				local s_VehicleType = self:_findOutVehicleType(self._ShootPlayer)
 				if s_VehicleType ~= 0 then
 					local s_AttackMode = self:_ceckForVehicleAttack(s_VehicleType, s_CurrentDistance)
@@ -993,7 +995,7 @@ function Bot:_updateShooting()
 							self._WeaponToUse = "Gadget2"
 							self._C4Active = true
 						elseif s_AttackMode == 1 then
-							-- TODO: doble code is not nice
+							-- TODO: double code is not nice
 							if not self._GrenadeActive and self.m_Player.soldier.weaponsComponent.weapons[1] ~= nil then
 								if self.m_Player.soldier.weaponsComponent.weapons[1].primaryAmmo == 0 then
 									self._WeaponToUse = "Pistol"
@@ -1017,7 +1019,7 @@ function Bot:_updateShooting()
 							end
 						end
 						-- use grenade from time to time
-						if Config.BotsThrowGrenades then
+						if Config.BotsThrowGrenades and not self.m_InVehicle then
 							local s_TargetTimeValue = Config.BotFireModeDuration - 0.5
 							if ((self._ShootModeTimer >= s_TargetTimeValue) and (self._ShootModeTimer < (s_TargetTimeValue + StaticConfig.BotUpdateCycle)) and not self._GrenadeActive) or Config.BotWeapon == "Grenade" then
 								-- should be triggered only once per fireMode
