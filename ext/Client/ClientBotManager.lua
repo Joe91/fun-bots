@@ -103,6 +103,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 			::continue_enemy_loop::
 		end
 	elseif self.m_Player.corpse ~= nil then -- dead. check for revive botsAttackBots
+		self.m_AliveTimer = 0.5
 		local s_TeamMates = PlayerManager:GetPlayersByTeam(self.m_Player.teamId)
 		if self.m_LastIndex >= #s_TeamMates then
 			self.m_LastIndex = 1
