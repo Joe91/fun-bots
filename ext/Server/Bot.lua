@@ -89,6 +89,7 @@ function Bot:__init(p_Player)
 	--shooting
 	self._Shoot = false
 	self._ShootPlayer = nil
+	self._ShootPlayerVehicleType = 0
 	self._ShootPlayerName = ""
 	self._WeaponToUse = "Primary"
 	self._ShootWayPoints = {}
@@ -171,8 +172,16 @@ function Bot:shootAt(p_Player, p_IgnoreYaw)
 		return false
 	end
 
+	-- check for vehicles
+	local s_Type = self:_findOutVehicleType(p_Player)
+
 	-- don't shoot if too far away
-	local s_Distance = p_Player.soldier.worldTransform.trans:Distance(self.m_Player.soldier.worldTransform.trans)
+	local s_Distance = 0
+	if s_Type == 5 then
+		s_Distance = p_Player.controlledControllable.transform.trans:Distance(self.m_Player.soldier.worldTransform.trans)
+	else
+		s_Distance = p_Player.soldier.worldTransform.trans:Distance(self.m_Player.soldier.worldTransform.trans)
+	end
 	if not p_IgnoreYaw then
 
 		if self.m_ActiveWeapon.type ~= "Sniper" and s_Distance > Config.MaxShootDistanceNoSniper then
@@ -180,11 +189,10 @@ function Bot:shootAt(p_Player, p_IgnoreYaw)
 		end
 	end
 
-	-- check for vehicles
-	local s_Type = self:_findOutVehicleType(p_Player)
 	if s_Type ~= 0 and self:_ceckForVehicleAttack(s_Type, s_Distance) == 0 then
 		return false
 	end
+	self._ShootPlayerVehicleType = s_Type
 
 	local s_DifferenceYaw = 0
 	local s_FovHalf = 0
@@ -472,7 +480,12 @@ function Bot:_updateAiming()
 		--interpolate player movement
 		local s_TargetMovement = Vec3.zero
 		local s_PitchCorrection = 0.0
-		local s_FullPositionTarget = self._ShootPlayer.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(self._ShootPlayer, true)
+		local s_FullPositionTarget = nil
+		if self._ShootPlayerVehicleType == 5 then
+			s_FullPositionTarget = self._ShootPlayer.controlledControllable.transform.trans:Clone()
+		else
+			s_FullPositionTarget = self._ShootPlayer.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(self._ShootPlayer, true)
+		end
 		local s_FullPositionBot = self.m_Player.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(self.m_Player, false)
 		if self.m_InVehicle then --TODO: calculate height of gun of vehicle
 			s_FullPositionBot = s_FullPositionBot + Vec3(0.0, 1.0, 0.0)  -- bot in vehicle is higher
@@ -541,7 +554,8 @@ function Bot:_updateAiming()
 
 		self._TargetPitch = s_Pitch
 		self._TargetYaw = s_Yaw
-	else
+
+	else  -- revive active
 		if (self._ShootPlayer.corpse == nil) then
 			return
 		end
@@ -565,7 +579,7 @@ function Bot:_updateAiming()
 end
 
 function Bot:_updateYaw(p_DeltaTime)
-	if self.m_InVehicle and self.m_Player.attachedControllable == nil then
+	if self.m_InVehicle and self.m_Player.controlledControllable == nil then
 		self.m_InVehicle = false
 	end
 	local s_AttackAiming = true
@@ -609,7 +623,7 @@ function Bot:_updateYaw(p_DeltaTime)
 	if self.m_InVehicle then
 		local s_Pos = nil
 		if not s_AttackAiming then
-			s_Pos = self.m_Player.attachedControllable.transform.forward
+			s_Pos = self.m_Player.controlledControllable.transform.forward
 			local s_AtanDzDx = math.atan(s_Pos.z, s_Pos.x)
 			local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
 			s_DeltaYaw = s_Yaw - self._TargetYaw
@@ -797,8 +811,8 @@ end
 
 function Bot:_findOutVehicleType(p_Player)
 	local s_VehicleType = 0 -- no vehicle
-	if p_Player.attachedControllable ~= nil and not p_Player.attachedControllable:Is("SoldierEntity") then
-		local s_VehicleName = VehicleTable[VehicleEntityData(p_Player.attachedControllable.data).controllableType:gsub(".+/.+/","")]
+	if p_Player.controlledControllable ~= nil and not p_Player.controlledControllable:Is("ServerSoldierEntity") then
+		local s_VehicleName = VehicleTable[VehicleEntityData(p_Player.controlledControllable.data).controllableType:gsub(".+/.+/","")]
 		-- Tank
 		if s_VehicleName == "[LAV-25]" or
 		s_VehicleName == "[SPRUT-SD]" or
@@ -814,7 +828,6 @@ function Bot:_findOutVehicleType(p_Player)
 		-- light Vehicle
 		if s_VehicleName == "[AAV-7A1 AMTRAC]" or
 		s_VehicleName == "[9K22 TUNGUSKA-M]" or
-
 		s_VehicleName == "[GAZ-3937 VODNIK]" or
 		s_VehicleName == "[LAV-AD]"  or
 		s_VehicleName == "[M1114 HMMWV]" or
@@ -862,24 +875,35 @@ function Bot:_findOutVehicleType(p_Player)
 		then
 			s_VehicleType = 4
 		end
+
+		if s_VehicleName == "[EOD BOT]" or
+		s_VehicleName == "[MAV]"
+		then
+			s_VehicleType = 5
+		end
 	end
 	return s_VehicleType
 end
 
 function Bot:_ceckForVehicleAttack(p_VehicleType, p_Distance)
 	local s_AttackMode = 0 -- no attack
-	if p_VehicleType == 4 and p_Distance < Config.MaxRaycastDistance then
+	if p_VehicleType == 5 then
+		s_AttackMode = 1 -- attack with rifle
+	elseif p_VehicleType == 4 and p_Distance < Config.MaxRaycastDistance then
 		s_AttackMode = 1 -- attack with rifle
 	elseif p_VehicleType == 3 and p_Distance < Config.MaxRaycastDistance then
 		s_AttackMode = 1 -- attack with rifle
 	elseif p_VehicleType == 2 and p_Distance < 35 then
 		s_AttackMode = 2 -- attack with grenade
 	end
-	if self.m_SecondaryGadget.type == "Rocket" then
-		s_AttackMode = 3 -- always use rocket if possible
-	elseif self.m_SecondaryGadget.type == "C4" and p_Distance < 25 then
-		if p_VehicleType ~= 3 then -- no air vehicles
-			s_AttackMode = 4 -- always use c4 if possible
+
+	if p_VehicleType ~= 5 then -- MAV or EOD always with rifle
+		if self.m_SecondaryGadget.type == "Rocket" then
+			s_AttackMode = 3 -- always use rocket if possible
+		elseif self.m_SecondaryGadget.type == "C4" and p_Distance < 25 then
+			if p_VehicleType == 1 or p_VehicleType == 2 or p_VehicleType == 4 then -- no air vehicles
+				s_AttackMode = 4 -- always use c4 if possible
+			end
 		end
 	end
 	if self.m_InVehicle then
@@ -983,9 +1007,8 @@ function Bot:_updateShooting()
 					end
 				end
 
-				local s_VehicleType = self:_findOutVehicleType(self._ShootPlayer)
-				if s_VehicleType ~= 0 then
-					local s_AttackMode = self:_ceckForVehicleAttack(s_VehicleType, s_CurrentDistance)
+				if self._ShootPlayerVehicleType ~= 0 then
+					local s_AttackMode = self:_ceckForVehicleAttack(self._ShootPlayerVehicleType, s_CurrentDistance)
 					if s_AttackMode > 0 then
 						if s_AttackMode == 2 then -- grenade
 							self._GrenadeActive = true
@@ -1797,7 +1820,7 @@ function Bot:_setActiveVars()
 
 	self.m_ActiveMoveMode = self._MoveMode
 	self.m_ActiveSpeedValue = self._BotSpeed
-	if self.m_Player.attachedControllable ~= nil and not self.m_Player.attachedControllable:Is("SoldierEntity") then
+	if self.m_Player.controlledControllable ~= nil and not self.m_Player.controlledControllable:Is("ServerSoldierEntity") then
 		self.m_InVehicle = true
 	else
 		self.m_InVehicle = false
