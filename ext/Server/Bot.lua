@@ -697,18 +697,11 @@ function Bot:_updateYaw(p_DeltaTime)
 		else
 			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, s_Value)
 		end
-
-		if s_AbsDeltaYaw < 0.1 then
-			self._VehicleReadyToShoot = true
-		end
 	end
 
 	if self.m_InVehicle then
 		self.m_Player.input.authoritativeAimingYaw = self._TargetYaw --alsways set yaw to let the FOV work
-	end
-
-	if s_AbsDeltaYaw < s_Increment then
-		if self.m_InVehicle then
+		if s_AbsDeltaYaw < 0.1 then
 			if not s_AttackAiming then
 				self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, 0.0)
 				if s_CorrectGunYaw then
@@ -721,20 +714,25 @@ function Bot:_updateYaw(p_DeltaTime)
 					self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, 0)
 				end
 			else
+				self._VehicleReadyToShoot = true
+
 				self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, 0.0)
 				if s_Increment > 0 then
-					self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, 0.6)
+					self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, s_AbsDeltaYaw*4)
 				elseif s_Increment < 0 then
-					self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, -0.6)
+					self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, -s_AbsDeltaYaw*4)
 				else
 					self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, 0.0)
 				end
 			end
-		else
+			return
+		end
+	else
+		if s_AbsDeltaYaw < s_Increment then
 			self.m_Player.input.authoritativeAimingYaw = self._TargetYaw
 			self.m_Player.input.authoritativeAimingPitch = self._TargetPitch
+			return
 		end
-		return
 	end
 
 	if s_DeltaYaw > 0  then

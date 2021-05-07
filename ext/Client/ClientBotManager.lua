@@ -77,12 +77,9 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 			if s_Distance < Config.MaxRaycastDistance then
 				self.m_LastIndex = self.m_LastIndex + 1
 				local s_Raycast = nil
-				if self.m_Player.inVehicle or s_Bot.inVehicle then
-					-- TODO: Some Vehicles are detected as objects of type Group. Find a better solution
-					s_Raycast = RaycastManager:Raycast(s_PlayerPosition, s_Target, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckPhantoms | RayCastFlags.DontCheckGroup | RayCastFlags.IsAsyncRaycast)
-				else
-					s_Raycast = RaycastManager:Raycast(s_PlayerPosition, s_Target, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.IsAsyncRaycast)
-				end
+				
+				s_Raycast = RaycastManager:Raycast(s_PlayerPosition, s_Target, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.IsAsyncRaycast)
+				
 				if s_Raycast == nil or s_Raycast.rigidBody == nil then
 					-- we found a valid bot in Sight (either no hit, or player-hit). Signal Server with players
 					local s_IgnoreYaw = false
@@ -90,8 +87,10 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 					if s_Distance < Config.DistanceForDirectAttack then
 						s_IgnoreYaw = true -- shoot, because you are near
 					end
-
 					NetEvents:SendLocal("Bot:ShootAtPlayer", s_Bot.name, s_IgnoreYaw)
+
+				elseif (self.m_Player.inVehicle or s_Bot.inVehicle) and s_Raycast.rigidBody:Is("DynamicPhysicsEntity") then
+					NetEvents:SendLocal("Bot:ShootAtPlayer", s_Bot.name, false) -- always check yaw in vehicle
 				end
 
 				return --only one raycast per cycle
@@ -163,14 +162,12 @@ function ClientBotManager:CheckForBotBotAttack(p_StartPos, p_EndPos, p_ShooterBo
 	--check for clear view to startpoint
 	local s_StartPos = Vec3(p_StartPos.x, p_StartPos.y + 1.0, p_StartPos.z)
 	local s_EndPos = Vec3(p_EndPos.x, p_EndPos.y + 1.0, p_EndPos.z)
-	local s_Raycast = nil
-	if p_InVehicle then
-		s_Raycast = RaycastManager:Raycast(s_StartPos, s_EndPos, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckPhantoms | RayCastFlags.DontCheckGroup | RayCastFlags.IsAsyncRaycast)
-	else
-		s_Raycast = RaycastManager:Raycast(s_StartPos, s_EndPos, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.IsAsyncRaycast)
-	end
+
+	local s_Raycast = RaycastManager:Raycast(s_StartPos, s_EndPos, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.IsAsyncRaycast)
 
 	if s_Raycast == nil or s_Raycast.rigidBody == nil then
+		NetEvents:SendLocal("Bot:ShootAtBot", p_ShooterBotName, p_BotName)
+	elseif p_InVehicle and s_Raycast.rigidBody:Is("DynamicPhysicsEntity") then
 		NetEvents:SendLocal("Bot:ShootAtBot", p_ShooterBotName, p_BotName)
 	end
 end
