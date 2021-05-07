@@ -1708,8 +1708,8 @@ function Bot:_updateMovement()
 			end
 			local s_Jump = true
 			if self._ShootPlayer ~= nil and self._ShootPlayer.corpse ~= nil then
-				if self.m_Player.soldier.worldTransform.trans:Distance(self._ShootPlayer.corpse.worldTransform.trans) < 1 then
-					self.m_ActiveSpeedValue = 0
+				if self.m_Player.soldier.worldTransform.trans:Distance(self._ShootPlayer.corpse.worldTransform.trans) < 2 then
+					self.m_ActiveSpeedValue = 2
 					s_Jump = false
 				end
 			end
