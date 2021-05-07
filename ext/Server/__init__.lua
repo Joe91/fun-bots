@@ -199,6 +199,7 @@ function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode)
 	self:DetectSpecialMods()
 	self:RegisterInputRestrictionEventCallbacks()
 	self:SetGameMode(s_GameMode)
+	self:SetMaxBotsPerTeam(p_GameMode)
 
 	m_NodeEditor:OnLevelLoaded(p_LevelName, s_GameMode)
 	m_GameDirector:OnLevelLoaded()
@@ -455,6 +456,36 @@ function FunBotServer:RegisterInputRestrictionEventCallbacks()
 			end)
 		end
 		s_Entity = s_EntityIterator:Next()
+	end
+end
+
+function FunBotServer:SetMaxBotsPerTeam(p_GameMode)
+	if p_GameMode == 'TeamDeathMatchC0' then
+		Globals.MaxBotsPerTeam = Config.MaxBotsPerTeamTdmc
+	elseif p_GameMode == 'TeamDeathMatch0' then
+		Globals.MaxBotsPerTeam = Config.MaxBotsPerTeamTdm
+	elseif p_GameMode == 'SquadDeathMatch0' then
+		Globals.MaxBotsPerTeam = Config.MaxBotsPerTeamSdm
+	elseif p_GameMode == 'GunMaster0' then
+		Globals.MaxBotsPerTeam = Config.MaxBotsPerTeamGm
+	elseif p_GameMode == 'Scavenger0' then
+		Globals.MaxBotsPerTeam = Config.MaxBotsPerTeamS
+	elseif p_GameMode == 'ConquestLarge0' then
+		Globals.MaxBotsPerTeam = Config.MaxBotsPerTeamCl
+	elseif p_GameMode == 'ConquestSmall0' or p_GameMode == 'BFLAG' then
+		Globals.MaxBotsPerTeam = Config.MaxBotsPerTeamCs
+	elseif p_GameMode == 'ConquestAssaultLarge0' then
+		Globals.MaxBotsPerTeam = Config.MaxBotsPerTeamCal
+	elseif p_GameMode == 'ConquestAssaultSmall0' or p_GameMode == 'ConquestAssaultSmall1' then
+		Globals.MaxBotsPerTeam = Config.MaxBotsPerTeamCas
+	elseif p_GameMode == 'RushLarge0' then
+		Globals.MaxBotsPerTeam = Config.MaxBotsPerTeamRl
+	elseif p_GameMode == 'Domination0' then
+		Globals.MaxBotsPerTeam = Config.MaxBotsPerTeamD
+	elseif p_GameMode == 'CaptureTheFlag0' then
+		Globals.MaxBotsPerTeam = Config.MaxBotsPerTeamCtf
+	else
+		Globals.MaxBotsPerTeam = Config.MaxBotsPerTeamDefault
 	end
 end
 

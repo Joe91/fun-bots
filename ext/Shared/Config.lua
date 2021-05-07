@@ -34,8 +34,24 @@ Config = {
 	NewBotsPerNewPlayer = 2,		-- number to increase Bots, when new players join
 	SpawnDelayBots = 10.0,			-- time till bots spawn on levelstart -- OBSOLETE
 	BotTeam = TeamId.TeamNeutral, 	-- default bot team (0 = neutral / auto, 1 = US, 2 = RU) TeamId.Team2
+
 	MaxBotsPerTeamDefault = 32,		-- max number of bots in one team
-	MaxBotsPerTeamSdm	= 5,		-- max number of bots in one team in Squad-Death-Match
+	MaxBotsPerTeamTdm = 24,			-- max number of bots in one team in Team-Death-Match
+    MaxBotsPerTeamTdmc = 8,			-- max number of bots in one team in Team-Death-Match-CQ
+	MaxBotsPerTeamSdm = 5,			-- max number of bots in one team in Squad-Death-Match
+    MaxBotsPerTeamCl = 32,			-- max number of bots in one team in Conquest-Large
+    MaxBotsPerTeamCs = 16,			-- max number of bots in one team in Conquest-Small
+    MaxBotsPerTeamCal = 32,			-- max number of bots in one team in Conquest-Assault-Large
+    MaxBotsPerTeamCas = 16,			-- max number of bots in one team in Conquest-Assault-Small
+    MaxBotsPerTeamRl = 24,			-- max number of bots in one team in Rush-Large
+	MaxBotsPerTeamCtf = 24,			-- max number of bots in one team in Capture-The-Flag
+    MaxBotsPerTeamD = 24,			-- max number of bots in one team in Domination
+    MaxBotsPerTeamGm = 8,			-- max number of bots in one team in Gun-Master
+	MaxBotsPerTeamS = 16,			-- max number of bots in one team in Scavenger
+    -- MaxBotsPerTeamTs = 24,			-- max number of bots in one team in Tank-Superiority
+    -- MaxBotsPerTeamAs = 24,			-- max number of bots in one team in Air-Superiority
+	-- MaxBotsPerTeamSr = 4,			-- max number of bots in one team in Squad-Rush
+
 	BotNewLoadoutOnSpawn = true,	-- bots get a new kit and color, if they respawn
 	MaxAssaultBots = -1,			-- maximum number of Bots with Assault Kit
 	MaxEngineerBots = -1,			-- maximum number of Bots with Engineer Kit

@@ -235,12 +235,6 @@ function BotSpawner:UpdateBotAmountAndTeam()
 	-- find all needed vars
 	local s_PlayerCount = m_BotManager:getPlayerCount()
 	local s_BotCount = m_BotManager:getActiveBotCount()
-	local s_MaxBotsPerTeam = 0
-	if Globals.IsSdm then
-		s_MaxBotsPerTeam = Config.MaxBotsPerTeamSdm
-	else
-		s_MaxBotsPerTeam = Config.MaxBotsPerTeamDefault
-	end
 
 	-- kill and destroy bots, if no player left
 	if s_PlayerCount == 0 then
@@ -294,8 +288,8 @@ function BotSpawner:UpdateBotAmountAndTeam()
 		end
 		--limit team count
 		for i = 1, Globals.NrOfTeams do
-			if s_TargetTeamCount[i] > s_MaxBotsPerTeam then
-				s_TargetTeamCount[i] = s_MaxBotsPerTeam
+			if s_TargetTeamCount[i] > Globals.MaxBotsPerTeam then
+				s_TargetTeamCount[i] = Globals.MaxBotsPerTeam
 			end
 		end
 
@@ -318,8 +312,8 @@ function BotSpawner:UpdateBotAmountAndTeam()
 		local targetCount = Config.InitNumberOfBots + ((s_maxPlayersInOneTeam - 1) * Config.NewBotsPerNewPlayer)
 		for i = 1, Globals.NrOfTeams do
 			s_TargetTeamCount[i] = targetCount
-			if s_TargetTeamCount[i] > s_MaxBotsPerTeam then
-				s_TargetTeamCount[i] = s_MaxBotsPerTeam
+			if s_TargetTeamCount[i] > Globals.MaxBotsPerTeam then
+				s_TargetTeamCount[i] = Globals.MaxBotsPerTeam
 			end
 		end
 
@@ -348,8 +342,8 @@ function BotSpawner:UpdateBotAmountAndTeam()
 			end
 			-- limit team count
 			for i = 1, Globals.NrOfTeams do
-				if s_TargetTeamCount[i] > s_MaxBotsPerTeam then
-					s_TargetTeamCount[i] = s_MaxBotsPerTeam
+				if s_TargetTeamCount[i] > Globals.MaxBotsPerTeam then
+					s_TargetTeamCount[i] = Globals.MaxBotsPerTeam
 				end
 			end
 			for i = 1, Globals.NrOfTeams do
@@ -369,8 +363,8 @@ function BotSpawner:UpdateBotAmountAndTeam()
 			end
 
 			local s_TargetBotCount = Config.InitNumberOfBots + ((s_PlayerCount - 1) * Config.NewBotsPerNewPlayer)
-			if s_TargetBotCount > s_MaxBotsPerTeam then
-				s_TargetBotCount = s_MaxBotsPerTeam
+			if s_TargetBotCount > Globals.MaxBotsPerTeam then
+				s_TargetBotCount = Globals.MaxBotsPerTeam
 			end
 			local s_AmountToSpawn = s_TargetBotCount - s_BotCount
 			if s_AmountToSpawn > 0 then
@@ -386,8 +380,8 @@ function BotSpawner:UpdateBotAmountAndTeam()
 	elseif Globals.SpawnMode == 'fixed_number' then
 		if Config.SpawnInBothTeams then
 			local s_AmountPerTeam = math.floor(Config.InitNumberOfBots/Globals.NrOfTeams)
-			if s_AmountPerTeam > s_MaxBotsPerTeam then
-				s_AmountPerTeam = s_MaxBotsPerTeam
+			if s_AmountPerTeam > Globals.MaxBotsPerTeam then
+				s_AmountPerTeam = Globals.MaxBotsPerTeam
 			end
 
 			for i = 1, Globals.NrOfTeams do
@@ -406,8 +400,8 @@ function BotSpawner:UpdateBotAmountAndTeam()
 			end
 
 			local s_TargetBotCount = Config.InitNumberOfBots
-			if s_TargetBotCount > s_MaxBotsPerTeam then
-				s_TargetBotCount = s_MaxBotsPerTeam
+			if s_TargetBotCount > Globals.MaxBotsPerTeam then
+				s_TargetBotCount = Globals.MaxBotsPerTeam
 			end
 			local s_AmountToSpawn = s_TargetBotCount - s_BotCount
 			if s_AmountToSpawn > 0 then
