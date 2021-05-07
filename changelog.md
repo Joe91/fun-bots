@@ -10,6 +10,7 @@ The Release-Candidate
 - Competely new UI (not fully functional yet, but getting closer)
 - New Permission-System (see link in readme: https://github.com/Joe91/fun-bots/wiki/Permissions)
 - Enhanced Gamplay Logic of the Bots in Conquest
+- Bots now attack MAVs and EOD-Bots
 - Lots of refactoring
 
 
