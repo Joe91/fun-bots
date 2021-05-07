@@ -10,6 +10,7 @@ end
 
 function ClientBotManager:RegisterVars()
 	self.m_RaycastTimer = 0
+	self.m_AliveTimer = 0
 	self.m_LastIndex = 1
 	self.m_Player = nil
 	self.m_ReadyToUpdate = false
@@ -50,6 +51,10 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	self.m_RaycastTimer = 0
 
 	if self.m_Player.soldier ~= nil then  -- alive. Check for enemy bots
+		if self.m_AliveTimer < 1.0 then -- wait 2s (spawn-protection)
+			self.m_AliveTimer = self.m_AliveTimer + p_DeltaTime
+			return
+		end
 
 		local s_EnemyPlayers = {}
 		local s_AllPlayers = PlayerManager:GetPlayers()
@@ -129,6 +134,8 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 			end
 			::continue_teamMate_loop::
 		end
+	else
+		self.m_AliveTimer = 0
 	end
 end
 
