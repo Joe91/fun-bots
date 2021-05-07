@@ -487,7 +487,7 @@ function Bot:_updateAiming()
 			local s_Speed = 0.0
 			if self.m_InVehicle then
 				s_Drop = 9.81
-				s_Speed = 350
+				s_Speed = 250
 			else
 				s_Drop = self.m_ActiveWeapon.bulletDrop
 				s_Speed = self.m_ActiveWeapon.bulletSpeed
@@ -703,7 +703,12 @@ function Bot:_updateYaw(p_DeltaTime)
 		self.m_Player.input.authoritativeAimingYaw = self._TargetYaw --alsways set yaw to let the FOV work
 		if s_AbsDeltaYaw < 0.1 then
 			if not s_AttackAiming then
-				self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, 0.0)
+				if self.m_ActiveSpeedValue < 0 then
+					self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, s_DeltaYaw*5)
+				else
+					self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, -s_DeltaYaw*5)
+				end
+
 				if s_CorrectGunYaw then
 					if self._VehicleDirBackPositive then
 						self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, 1)
@@ -718,9 +723,9 @@ function Bot:_updateYaw(p_DeltaTime)
 
 				self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, 0.0)
 				if s_Increment > 0 then
-					self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, s_AbsDeltaYaw*4)
+					self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, s_AbsDeltaYaw*5)
 				elseif s_Increment < 0 then
-					self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, -s_AbsDeltaYaw*4)
+					self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, -s_AbsDeltaYaw*5)
 				else
 					self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, 0.0)
 				end
