@@ -59,12 +59,10 @@ function BotSpawner:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 	if self._FirstSpawnInLevel then
 		if self._FirstSpawnDelay <= 0 then
-			if m_BotManager:getPlayerCount() > 0 then
-				m_BotManager:configGlobals()
-				self:UpdateBotAmountAndTeam()
-				self._PlayerUpdateTimer = 0
-				self._FirstSpawnInLevel = false
-			end
+			m_BotManager:configGlobals()
+			self:UpdateBotAmountAndTeam()
+			self._PlayerUpdateTimer = 0
+			self._FirstSpawnInLevel = false
 		else
 			self._FirstSpawnDelay = self._FirstSpawnDelay - p_DeltaTime
 		end
@@ -145,10 +143,6 @@ end
 -- =============================================
 
 function BotSpawner:OnPlayerJoining(p_Name)
-	if m_BotManager:getPlayerCount() == 0 then
-		m_Logger:Write("first player - spawn bots")
-		self:OnLevelLoaded()
-	end
 	-- detect BOT-Names
 	if string.find(p_Name, BOT_TOKEN) == 1 then --check if name starts with bot-token
 		table.insert(self._KickPlayers, p_Name)
