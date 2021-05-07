@@ -723,9 +723,9 @@ function Bot:_updateYaw(p_DeltaTime)
 			else
 				self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, 0.0)
 				if s_Increment > 0 then
-					self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, 0.2)
+					self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, 0.6)
 				elseif s_Increment < 0 then
-					self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, -0.2)
+					self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, -0.6)
 				else
 					self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, 0.0)
 				end
