@@ -115,18 +115,18 @@ end
 
 function View:SubCall(player, element, name, component)	
 	if (component:__class() == element and component['HasItems'] == nil and component['FireCallback'] ~= nil and component['GetName'] ~= nil and component:GetName() == name) then
-		print('FireCallback ' .. name);
+		--print('FireCallback ' .. name);
 		component:FireCallback(player);
 		
 	elseif (component['HasItems'] ~= nil and component:HasItems()) then
 		for _, item in pairs(component:GetItems()) do
 			if (item:__class() == element) then
 				if (item['GetName'] ~= nil and item:GetName() == name and item['FireCallback'] ~= nil) then
-					print('Sub-FireCallback ' .. name);
+					--print('Sub-FireCallback ' .. name);
 					item:FireCallback(player);
 					
 				elseif (item['Name'] ~= nil and item.Name == element) then
-					print('Callback-Trigger ' .. name);
+					--print('Callback-Trigger ' .. name);
 					item:Callback(player);
 					
 				else

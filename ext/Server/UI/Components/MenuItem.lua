@@ -128,12 +128,12 @@ function MenuItem:FireCallback(player)
 	--end
 	
 	if (self.callback == nil) then
-		print('MenuItem ' .. self.name .. ' has no Callback.');
+		--print('MenuItem ' .. self.name .. ' has no Callback.');
 		return;
 	end
 	
 	if (type(self.callback) == 'string') then
-		print('MenuItem ' .. self.name .. ' has an reference Callback.');
+		--print('MenuItem ' .. self.name .. ' has an reference Callback.');
 		return;
 	end;
 	

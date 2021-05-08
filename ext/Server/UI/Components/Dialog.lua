@@ -34,8 +34,6 @@ function Dialog:AddButton(button, position, permission)
 		button:BindPermission(permission);
 	end
 	
-	print(button:Serialize());
-	
 	table.insert(self.buttons, button);
 end
 

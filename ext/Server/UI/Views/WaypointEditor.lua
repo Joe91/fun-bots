@@ -298,14 +298,19 @@ function WaypointEditor:InitializeComponent()
 	
 	tools:AddItem(MenuItem('Spawn Bot on Way', 'bot_spawn_path', function(player)
 		print('bot_spawn_path Executed')
+		-- @ToDo
 	end):SetIcon('Assets/Icons/SpawnBotWay.svg'), 'UserInterface.WaypointEditor.SpawnBot')
 	
 	tools:AddItem(MenuItem('Clear Trace', 'trace_clear', function(player)
 		local confirmation = self.view:GetCore():GetDialog('Confirmation')
 		confirmation:SetTitle('Clear Trace - Confirmation')
 		confirmation:SetContent('Do you really want to clear the actual Trace #' .. self.trace_index .. '?')
+		confirmation:SetNo(function(player)
+			confirmation:Hide(self.view, player);
+		end)
 		confirmation:SetYes(function(player)
 			NetEvents:SendToLocal('ClientNodeEditor:ClearTrace', player)
+			confirmation:Hide(self.view, player);
 		end)
 		confirmation:Open(self.view, player)
 	end):Disable():SetIcon('Assets/Icons/Clear.svg'), 'UserInterface.WaypointEditor.TraceClear')
@@ -314,9 +319,13 @@ function WaypointEditor:InitializeComponent()
 		local confirmation = self.view:GetCore():GetDialog('Confirmation')
 		confirmation:SetTitle('Reset all Traces- Confirmation')
 		confirmation:SetContent('Do you really want to reset all Traces?')
+		confirmation:SetNo(function(player)
+			confirmation:Hide(self.view, player);
+		end)
 		confirmation:SetYes(function(player)
 			g_NodeCollection:Clear()
 			NetEvents:BroadcastLocal('NodeCollection:Clear')
+			confirmation:Hide(self.view, player);
 		end)
 		confirmation:Open(self.view, player)
 	end):SetIcon('Assets/Icons/Trash.svg'), 'UserInterface.WaypointEditor.TraceReset')
