@@ -178,8 +178,11 @@ function PermissionManager:GetCorrectName(name)
 end
 
 function PermissionManager:HasPermission(name, permission)
-	local permissions = self:GetPermissions(name)
+	if Config.IgnorePermissions then
+		return true
+	end
 	
+	local permissions = self:GetPermissions(name)
 	if permissions == nil then
 		return false
 	end

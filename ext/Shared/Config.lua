@@ -128,7 +128,7 @@ Config = {
 	DisableUserInterface = false,	-- if true, the complete UI will be disabled (not available in the UI -) )
 	DisableChatCommands = false,		-- if true, no chat commands can be used
 	DisableRCONCommands = false,		-- if true, no RCON commands can be used
-	TraceUsageAllowed = true,		-- if false, no traces can be recorded, deleted or saved
+	IgnorePermissions = false,		-- if true, all permissions are ignored --> everyone can do everything
 	Language = nil --"de_DE"		-- de_DE as sample (default is english, when language file doesnt exists)
 }
 
