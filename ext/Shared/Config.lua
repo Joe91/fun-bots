@@ -8,10 +8,10 @@ SpawnMethod = {
 }
 
 Config = {
-	-- global
+	-- general
 	BotWeapon = "Auto",				-- Select the weapon the bots use
-	BotKit = "RANDOM_KIT",			-- see BotKits
-	BotColor = "RANDOM_COLOR",		-- see BotColors
+	BotKit = "RANDOM_KIT",			-- The Kit of the Bots
+	BotColor = "RANDOM_COLOR",		-- The Color of the Bots
 	ZombieMode = false,				-- Zombie Bot Mode
 
 	-- difficluty
