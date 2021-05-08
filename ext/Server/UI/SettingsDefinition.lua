@@ -231,6 +231,55 @@ SettingsDefinition = {
 			Default		= 0,
 			Category	= SettingsDefinition.Categorys.SPAWN
 		},
+		{
+			Name		= "BotNewLoadoutOnSpawn",
+			Text 		= "New Loadout on Spawn",
+			Type		= Type.Boolean,
+			Value		= Config.BotNewLoadoutOnSpawn,
+			Description	= "bots get a new kit and color, if they respawn",
+			Default		= true,
+			Category	= SettingsDefinition.Categorys.SPAWN
+		},
+		{
+			Name		= "MaxAssaultBots",
+			Text 		= "Max Assault Bots",
+			Type		= Type.Integer,
+			Value		= Config.MaxAssaultBots,
+			Description	= "maximum number of Bots with Assault Kit. -1 = no limit",
+			Reference	= Range(-1.00, 128.00),
+			Default		= -1,
+			Category	= SettingsDefinition.Categorys.SPAWN
+		},
+		{
+			Name		= "MaxEngineerBots",
+			Text 		= "Max Engineer Bots",
+			Type		= Type.Integer,
+			Value		= Config.MaxEngineerBots,
+			Description	= "maximum number of Bots with Engineer Kit. -1 = no limit",
+			Reference	= Range(-1.00, 128.00),
+			Default		= -1,
+			Category	= SettingsDefinition.Categorys.SPAWN
+		},
+		{
+			Name		= "MaxSupportBots",
+			Text 		= "Max Support Bots",
+			Type		= Type.Integer,
+			Value		= Config.MaxSupportBots,
+			Description	= "maximum number of Bots with Support Kit. -1 = no limit",
+			Reference	= Range(-1.00, 128.00),
+			Default		= -1,
+			Category	= SettingsDefinition.Categorys.SPAWN
+		},
+		{
+			Name		= "MaxReconBots",
+			Text 		= "Max Support Bots",
+			Type		= Type.Integer,
+			Value		= Config.MaxReconBots,
+			Description	= "maximum number of Bots with Recon Kit. -1 = no limit",
+			Reference	= Range(-1.00, 128.00),
+			Default		= -1,
+			Category	= SettingsDefinition.Categorys.SPAWN
+		},
 
 	-- spawn-limits
 		{

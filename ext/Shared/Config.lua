@@ -33,6 +33,11 @@ Config = {
 	InitNumberOfBots = 6,			-- bots for spawnmode
 	NewBotsPerNewPlayer = 2,		-- number to increase Bots, when new players join
 	BotTeam = TeamId.TeamNeutral, 	-- default bot team (0 = neutral / auto, 1 = US, 2 = RU) TeamId.Team2
+	BotNewLoadoutOnSpawn = true,	-- bots get a new kit and color, if they respawn
+	MaxAssaultBots = -1,			-- maximum number of Bots with Assault Kit. -1 = no Limit
+	MaxEngineerBots = -1,			-- maximum number of Bots with Engineer Kit. -1 = no Limit
+	MaxSupportBots = -1,			-- maximum number of Bots with Support Kit. -1 = no Limit
+	MaxReconBots = -1,				-- maximum number of Bots with Recon Kit. -1 = no Limit
 
 	-- spawn-limits
 	MaxBotsPerTeamDefault = 32,		-- max number of bots in one team
@@ -51,12 +56,6 @@ Config = {
     -- MaxBotsPerTeamTs = 24,			-- max number of bots in one team in Tank-Superiority
     -- MaxBotsPerTeamAs = 24,			-- max number of bots in one team in Air-Superiority
 	-- MaxBotsPerTeamSr = 4,			-- max number of bots in one team in Squad-Rush
-
-	BotNewLoadoutOnSpawn = true,	-- bots get a new kit and color, if they respawn
-	MaxAssaultBots = -1,			-- maximum number of Bots with Assault Kit
-	MaxEngineerBots = -1,			-- maximum number of Bots with Engineer Kit
-	MaxSupportBots = -1,			-- maximum number of Bots with Support Kit
-	MaxReconBots = -1,				-- maximum number of Bots with Recon Kit
 
 	-- weapons
 	UseRandomWeapon = true,			-- use a random weapon out of the class list
