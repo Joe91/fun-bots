@@ -1749,9 +1749,9 @@ function Bot:_updateMovement()
 					elseif self.m_ActiveSpeedValue == 2 then
 						s_SpeedVal = 0.5
 					elseif self.m_ActiveSpeedValue == 3 then
-						s_SpeedVal = 0.7
+						s_SpeedVal = 0.8
 					elseif self.m_ActiveSpeedValue >= 4 then
-						s_SpeedVal = 1
+						s_SpeedVal = 1.0
 					elseif self.m_ActiveSpeedValue < 0 then
 						s_SpeedVal = -0.7
 					end
@@ -1797,7 +1797,9 @@ function Bot:_updateMovement()
 						elseif self.m_ActiveSpeedValue > 0 then
 							self._BrakeTimer = 0
 							self:_setInput(EntryInputActionEnum.EIAThrottle, s_SpeedVal)
-							-- TODO: add sprinting to vehicles?
+							-- if self.m_ActiveSpeedValue >= 4 then
+							-- 	self:_setInput(EntryInputActionEnum.EIASprint, 1)
+							-- end
 						else
 							if self._BrakeTimer < 0.7 then
 								self:_setInput(EntryInputActionEnum.EIABrake, 1)
