@@ -25,8 +25,11 @@ end
 
 function UI:OnUpdateInput(data)
 	if InputManager:WentKeyDown(InputDeviceKeys.IDK_F12) then
+		if self.WaypointEditor then
+			NetEvents:Send('UI', 'VIEW', 'WaypointEditor', 'HIDE')
+		end
+		
 		NetEvents:Send('UI', 'VIEW', 'BotEditor', 'TOGGLE')
-		NetEvents:Send('UI', 'VIEW', 'WaypointEditor', 'HIDE')
 	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_Q) and self.WaypointEditor then
 		self:__local(json.encode({ 'VIEW', 'WaypointEditor', 'ACTIVATE' }))
 	elseif InputManager:WentKeyUp(InputDeviceKeys.IDK_Q) and self.WaypointEditor then
