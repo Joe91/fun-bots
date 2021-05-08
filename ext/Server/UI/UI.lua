@@ -65,8 +65,19 @@ function UI:GetView(name)
 end
 
 function UI:GetDialog(name)
-	if (self.dialogs[name] ~= nil) then
-		return self.dialogs[name];
+	local reference = self.dialogs[name];
+	local instance	= nil;
+	
+	if (reference ~= nil) then
+		instance = reference();
+		
+		if instance ~= nil then
+			if (instance['InitializeComponent'] ~= nil) then
+				instance:InitializeComponent();
+			end
+
+			return instance;
+		end
 	end
 	
 	return nil;
@@ -113,13 +124,9 @@ function UI:__update()
 	for _, dialog in pairs(self.popups) do
 		if (self.dialogs[dialog] == nil) then
 			if (_G[dialog] ~= nil) then
-				local instance = _G[dialog]();
+				local instance = _G[dialog];
 				
 				if (instance ~= nil) then
-					if (instance['InitializeComponent'] ~= nil) then
-						instance:InitializeComponent();
-					end
-					
 					self.dialogs[dialog]	= instance;
 					self.inited				= self.inited + 1;
 				end
@@ -201,17 +208,6 @@ function UI:Send(component, receiver, action, object)
 	local destination	= nil;
 	local data			= nil;
 	
-	m_Logger:Write('String: ' .. tostring(object))
-			
-	if object ~= nil then
-		m_Logger:Write('Type: ' .. tostring(type(object)))
-	end
-	
-	m_Logger:Write('JSON: ' .. tostring(json.encode(object)))
-	
-	m_Logger:Write(g_Utilities:dump(object, true, 5));
-			
-			
 	if component:__class() == 'View' then
 		kind		= 'VIEW';
 		destination	= component:GetName();

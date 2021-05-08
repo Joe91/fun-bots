@@ -27,16 +27,10 @@ function Confirmation:SetNo(callback)
 end
 
 function Confirmation:InitializeComponent()
-	self.button_yes = Button('button_confirmation_no', 'No', function(player)
-		print('[Settings] Button NO');
-	end);
-	
+	self.button_yes = Button('button_confirmation_yes', 'Yes');
 	self.dialog:AddButton(self.button_yes, Position.Left);
 	
-	self.button_no = Button('button_confirmation_yes', 'Yes', function(player)
-		print('[Settings] Button YES');
-	end);
-	
+	self.button_no = Button('button_confirmation_no', 'No');
 	self.dialog:AddButton(self.button_no, Position.Right);
 end
 
@@ -46,6 +40,10 @@ end
 
 function Confirmation:Open(view, player)
 	view:Push(player, self.dialog);
+end
+
+function Confirmation:Hide(view, player)
+	view:Remove(player, self.dialog);
 end
 
 return Confirmation;

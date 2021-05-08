@@ -43,8 +43,8 @@
 		<script src="Classes/Components/Logo.class.js"></script>
 		<script src="Classes/Components/View.class.js"></script>
 		<script src="Classes/UI.class.js"></script>
-		<!-- <script>
-			if(window.location.href != 'webui://fun-bots/') {
+		<script>
+			if(window.location.href.indexOf('file://') != -1) {
 				document.querySelector('body').style.background = 'url(debug.png)';
 				document.querySelector('body').style.backgroundSize = 'cover';
 				
@@ -537,6 +537,6 @@
  "Action": "SHOW"
 });
 }
-	</script> -->
+	</script>
 	</body>
 </html>

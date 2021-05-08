@@ -365,8 +365,8 @@ function RCONCommands:__init()
 			Name = 'funbots.spawn',
 			Parameters = { 'Amount', 'Team' },
 			Callback = (function(p_Command, p_Args)
-				local value = p_Args[1]
-				local team = p_Args[2]
+				local value	= p_Args[1]
+				local team	= p_Args[2]
 
 				if value == nil then
 					return {'ERROR', 'Needing Spawn amount.'}
@@ -381,31 +381,12 @@ function RCONCommands:__init()
 				end
 
 				local amount = tonumber(value)
-				local t = TeamId.TeamNeutral
-
-				if team == "Team1" then
-					t = TeamId.Team1
-				elseif team == "Team2" then
-					t = TeamId.Team2
-				elseif team == "Team3" then
-					t = TeamId.Team3
-				elseif team == "Team4" then
-					t = TeamId.Team4
-				elseif team == "Team5" then
-					t = TeamId.Team5
-				elseif team == "Team6" then
-					t = TeamId.Team6
-				elseif team == "Team7" then
-					t = TeamId.Team7
-				elseif team == "Team8" then
-					t = TeamId.Team8
-				elseif team == "Team9" then
-					t = TeamId.Team9
-				elseif team == "Team0" then
-					t = TeamId.Team0
+				
+				if TeamId[team] == nil then
+					return {'ERROR', 'Unknown Team: TeamId.' .. team }
 				end
-
-				m_BotSpawner:SpawnWayBots(nil, amount, true, nil, nil, t)
+				
+				m_BotSpawner:SpawnWayBots(nil, amount, true, nil, nil, TeamId[team])
 
 				return {'OK'}
 			end)
