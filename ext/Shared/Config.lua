@@ -17,6 +17,7 @@ Config = {
 	-- difficluty
 	BotAimWorsening = 0.5,			-- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy).
 	BotSniperAimWorsening = 0.2,	-- see botAimWorsening, only for Sniper-rifles
+	BotWorseningSkill = 0.3,		-- variation of the skill of a single bot. the higher, the worse the bots can get compared to the original settings
 	DamageFactorAssault = 0.3,		-- original Damage from bots gets multiplied by this
 	DamageFactorCarabine = 0.3,		-- original Damage from bots gets multiplied by this
 	DamageFactorLMG = 0.3,			-- original Damage from bots gets multiplied by this
@@ -27,14 +28,13 @@ Config = {
 	DamageFactorKnife = 1.5,		-- original Damage from bots gets multiplied by this
 
 	-- spawn
-	SpawnMethod = SpawnMethod.SpawnSoldierAt,	-- method the bots spawn with
 	SpawnMode = 'balanced_teams',	-- mode the bots spawn with
 	SpawnInBothTeams = true,		-- Bots spawn in both teams
 	InitNumberOfBots = 6,			-- bots for spawnmode
 	NewBotsPerNewPlayer = 2,		-- number to increase Bots, when new players join
-	SpawnDelayBots = 10.0,			-- time till bots spawn on levelstart -- OBSOLETE
 	BotTeam = TeamId.TeamNeutral, 	-- default bot team (0 = neutral / auto, 1 = US, 2 = RU) TeamId.Team2
 
+	-- spawn-limits
 	MaxBotsPerTeamDefault = 32,		-- max number of bots in one team
 	MaxBotsPerTeamTdm = 24,			-- max number of bots in one team in Team-Death-Match
     MaxBotsPerTeamTdmc = 8,			-- max number of bots in one team in Team-Death-Match-CQ
@@ -85,7 +85,6 @@ Config = {
 	BotsThrowGrenades = true,		-- Bots throw grenades
 	BotsDeploy = true,				-- Bots deploy ammo and medkits
 	DeployCycle = 50,				-- time between deployment of bots
-	BotWorseningSkill = 0.3,		-- variation of the skill of a single bot. the higher, the worse the bots can get compared to the original settings
 
 	-- traces
 	DebugTracePaths = false,		-- Shows the trace line and search area from Commo Rose selection
@@ -123,6 +122,7 @@ Config = {
 	HeadShotFactorBots = 1.5,		-- factor for damage if headshot
 	AttackWayBots = true,			-- bots on paths attack player
 	RespawnWayBots = true,			-- bots on paths respawn if killed
+	SpawnMethod = SpawnMethod.SpawnSoldierAt,	-- method the bots spawn with. Careful, not supported on most of the maps!!
 
 	-- UI settings & language options
 	DisableUserInterface = false,	-- if true, the complete UI will be disabled (not available in the UI -) )
