@@ -25,6 +25,12 @@ end
 
 function BotEditor:Toggle(player)
 	self.view:Toggle(player)
+	
+	if (self.view:IsVisible()) then
+		self.view:Activate(player)
+	else
+		self.view:Deactivate(player)
+	end
 end
 
 function BotEditor:Activate(player)
