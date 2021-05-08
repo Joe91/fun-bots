@@ -83,6 +83,7 @@ function Bot:__init(p_Player)
 	self._DetectionTimer = 0.0
 	self._LastVehicleYaw = 0.0
 	self._VehicleReadyToShoot = false
+	self._FullVehicleSteering = false
 	self._VehicleDirBackPositive = false
 	self._VehicleMovableTransform = nil
 
@@ -716,6 +717,7 @@ function Bot:_updateYaw(p_DeltaTime)
 	if self.m_InVehicle then
 		self.m_Player.input.authoritativeAimingYaw = self._TargetYaw --alsways set yaw to let the FOV work
 		if s_AbsDeltaYaw < 0.1 then
+			self._FullVehicleSteering = false
 			if not s_AttackAiming then
 				if self.m_ActiveSpeedValue < 0 then
 					self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, s_DeltaYaw*5)
@@ -778,8 +780,8 @@ function Bot:_updateYaw(p_DeltaTime)
 			end
 		end
 
-
 		if not s_AttackAiming then
+			self._FullVehicleSteering = true
 			if s_CorrectGunYaw then
 				if self._VehicleDirBackPositive then
 					self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, 1)
@@ -796,6 +798,7 @@ function Bot:_updateYaw(p_DeltaTime)
 				self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, -s_YawValue)
 			end
 		else
+			self._FullVehicleSteering = false
 			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, 0.0)
 			if s_Increment > 0 then
 				self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, s_YawValue)
@@ -1430,7 +1433,7 @@ function Bot:_updateMovement()
 							if self._ObstacleRetryCounter == 0 then
 								self.m_ActiveSpeedValue = -1
 							else
-								self.m_ActiveSpeedValue = 2
+								self.m_ActiveSpeedValue = 3
 							end
 						end
 
@@ -1735,12 +1738,18 @@ function Bot:_updateMovement()
 					self.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Stand, true, true)
 				end
 				if self.m_ActiveMoveMode > 0 then
+					-- limit speed if full steering active
+					if self._FullVehicleSteering and self.m_ActiveSpeedValue >= 3 then
+						self.m_ActiveSpeedValue = 2
+					end
+
+					-- normal values
 					if self.m_ActiveSpeedValue == 1 then
 						s_SpeedVal = 0.25
 					elseif self.m_ActiveSpeedValue == 2 then
 						s_SpeedVal = 0.5
 					elseif self.m_ActiveSpeedValue == 3 then
-						s_SpeedVal = 0.8
+						s_SpeedVal = 0.7
 					elseif self.m_ActiveSpeedValue >= 4 then
 						s_SpeedVal = 1
 					elseif self.m_ActiveSpeedValue < 0 then
