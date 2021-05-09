@@ -1,11 +1,6 @@
 USE_REAL_DAMAGE = true				-- with real damage, the hitboxes are a bit buggy
 BOT_TOKEN = "BOT_"					-- token Bots are marked with
 
-SpawnMethod = {
-	SpawnSoldierAt = 0,
-	Spawn = 1
-}
-
 Config = {
 	-- general
 	BotWeapon = "Auto",				-- Select the weapon the bots use
@@ -58,27 +53,27 @@ Config = {
 
 	-- weapons
 	UseRandomWeapon = true,			-- use a random weapon out of the class list
-	AssaultWeapon = "M416",		-- weapon of Assault class
+	AssaultWeaponSet = "Custom",	-- weaponset of Assault class
+	EngineerWeaponSet = "Custom",	-- weaponset of Engineer class
+	SupportWeaponSet = "Custom",	-- weaponset of Support class
+	ReconWeaponSet = "Custom",		-- weaponset of Recon class
+	AssaultWeapon = "M416",			-- weapon of Assault class
 	EngineerWeapon = "M4A1",		-- weapon of Engineer class
 	SupportWeapon = "M249",			-- weapon of Support class
 	ReconWeapon = "L96_6x",			-- weapon of Recon class
 	Pistol = "MP412Rex",			-- Bot pistol
 	Knife = "Razor",				-- Bot knife
-	AssaultWeaponSet = "Custom",	-- weaponset of Assault class
-	EngineerWeaponSet = "Custom",	-- weaponset of Engineer class
-	SupportWeaponSet = "Custom",	-- weaponset of Support class
-	ReconWeaponSet = "Custom",		-- weaponset of Recon class
 
 	-- behaviour
 	FovForShooting = 245,			-- Degrees of FOV of Bot
 	MaxRaycastDistance = 150,		-- meters bots start shooting at player
 	MaxShootDistanceNoSniper = 70,	-- meters a bot (not sniper) start shooting at player
 	MaxShootDistancePistol = 30,	-- only in auto-weapon-mode, the distance until a bot switches to pistol if his magazine is empty.
-	BotAttackMode = "Random",		-- Mode the Bots attack with. Random, Crouch or Stand
+	BotAttackMode = BotAttackModes.Random,		-- Mode the Bots attack with. Random, Crouch or Stand
 	ShootBackIfHit = true,			-- bot shoots back, if hit
 	BotsAttackBots = true,			-- bots attack bots from other team
 	MeleeAttackIfClose = true,		-- bot attacks with melee if close
-	BotCanKillHimself = false,		-- if a bot is that close he will attack, even if not in FOV
+	BotCanKillHimself = false,		-- bot takes falldamage or explosion-damage from onw frags
 	BotsRevive = true,				-- Bots revive other players
 	BotsThrowGrenades = true,		-- Bots throw grenades
 	BotsDeploy = true,				-- Bots deploy ammo and medkits
@@ -92,7 +87,7 @@ Config = {
 	DrawWaypointIDs = true,			-- Draw waypoint IDs
 	TextRange = 3,					-- Set how far away waypoint text is visible (meters)
 	DebugSelectionRaytraces = false,-- Shows the trace line and search area from Commo Rose selection
-	TraceDelta = 0.2,				-- update intervall of trace
+	TraceDelta = 0.3,				-- update intervall of trace
 
 	-- advanced
 	DistanceForDirectAttack = 5,	-- if that close, the bot can hear you

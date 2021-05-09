@@ -1643,9 +1643,9 @@ function Bot:_updateMovement()
 		-- Shoot MoveMode
 		elseif self.m_ActiveMoveMode == 9 then
 			if self._AttackMode == 0 then
-				if Config.BotAttackMode == "Crouch" then
+				if Config.BotAttackMode == BotAttackModes.Crouch then
 					self._AttackMode = 2
-				elseif Config.BotAttackMode == "Stand" then
+				elseif Config.BotAttackMode == BotAttackModes.Stand then
 					self._AttackMode = 3
 				else -- random
 					self._AttackMode = MathUtils:GetRandomInt(2, 3)

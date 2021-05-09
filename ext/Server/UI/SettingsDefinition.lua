@@ -4,7 +4,7 @@ SettingsDefinition = {
 		DIFFICULTY = "Difficulty",
 		SPAWN = "Spawn",
 		SPAWNLIMITS = "Spawnlimits",
-		BOTS	= "BOTS",
+		BEHAVIOUR = "Behaviour",
 		OTHER	= "Other"
 	},
 
@@ -411,6 +411,132 @@ SettingsDefinition = {
 			Reference	= Range(0.00, 128.00),
 			Default		= 12,
 			Category	= SettingsDefinition.Categorys.SPAWNLIMITS
+		},
+
+
+		-- Bot behaviour
+		{
+			Name		= "FovForShooting",
+			Text 		= "FOV of Bots",
+			Type		= Type.Integer,
+			Value		= Config.FovForShooting,
+			Description	= "Degrees of FOV of Bot",
+			Reference	= Range(0.00, 360.00),
+			Default		= 245,
+			Category	= SettingsDefinition.Categorys.BEHAVIOUR
+		},
+		{
+			Name		= "MaxRaycastDistance",
+			Text 		= "Max Raycast Distance",
+			Type		= Type.Integer,
+			Value		= Config.MaxRaycastDistance,
+			Description	= "meters bots start shooting at player",
+			Reference	= Range(1.00, 1500.00),
+			Default		= 150,
+			Category	= SettingsDefinition.Categorys.BEHAVIOUR
+		},
+		{
+			Name		= "MaxShootDistanceNoSniper",
+			Text 		= "Max Shoot-Distance No Sniper",
+			Type		= Type.Integer,
+			Value		= Config.MaxShootDistanceNoSniper,
+			Description	= "meters a bot (not sniper) start shooting at player",
+			Reference	= Range(1.00, 1500.00),
+			Default		= 70,
+			Category	= SettingsDefinition.Categorys.BEHAVIOUR
+		},
+		{
+			Name		= "MaxShootDistancePistol",
+			Text 		= "Max Shoot-Distance Pistol",
+			Type		= Type.Integer,
+			Value		= Config.MaxShootDistancePistol,
+			Description	= "only in auto-weapon-mode, the distance until a bot switches to pistol if his magazine is empty",
+			Reference	= Range(1.00, 1500.00),
+			Default		= 30,
+			Category	= SettingsDefinition.Categorys.BEHAVIOUR
+		},
+		{
+			Name		= "BotAttackMode",
+			Text 		= "Bot Attack Mode",
+			Type		= Type.Enum,
+			Value		= Config.BotAttackMode,
+			Description	= "Mode the Bots attack with. Random, Crouch or Stand",
+			Reference	= BotAttackModes,
+			Default		= BotAttackModes.Random,
+			Category	= SettingsDefinition.Categorys.BEHAVIOUR
+		},
+		{
+			Name		= "ShootBackIfHit",
+			Text 		= "Shoot Back if Hit",
+			Type		= Type.Boolean,
+			Value		= Config.ShootBackIfHit,
+			Description	= "bot shoots back, if hit",
+			Default		= true,
+			Category	= SettingsDefinition.Categorys.BEHAVIOUR
+		},
+		{
+			Name		= "BotsAttackBots",
+			Text 		= "Bots Attack Bots",
+			Type		= Type.Boolean,
+			Value		= Config.BotsAttackBots,
+			Description	= "bots attack bots from other team",
+			Default		= true,
+			Category	= SettingsDefinition.Categorys.BEHAVIOUR
+		},
+		{
+			Name		= "MeleeAttackIfClose",
+			Text 		= "Melee Attack If Close",
+			Type		= Type.Boolean,
+			Value		= Config.MeleeAttackIfClose,
+			Description	= "bot attacks with melee if close",
+			Default		= true,
+			Category	= SettingsDefinition.Categorys.BEHAVIOUR
+		},
+		{
+			Name		= "BotCanKillHimself",
+			Text 		= "Bots can kill themself",
+			Type		= Type.Boolean,
+			Value		= Config.BotCanKillHimself,
+			Description	= "bot takes falldamage or explosion-damage from onw frags",
+			Default		= false,
+			Category	= SettingsDefinition.Categorys.BEHAVIOUR
+		},
+		{
+			Name		= "BotsRevive",
+			Text 		= "Bots revive players",
+			Type		= Type.Boolean,
+			Value		= Config.BotsRevive,
+			Description	= "Bots revive other players",
+			Default		= true,
+			Category	= SettingsDefinition.Categorys.BEHAVIOUR
+		},
+		{
+			Name		= "BotsThrowGrenades",
+			Text 		= "Bots throw grenades",
+			Type		= Type.Boolean,
+			Value		= Config.BotsThrowGrenades,
+			Description	= "Bots throw grenades",
+			Default		= true,
+			Category	= SettingsDefinition.Categorys.BEHAVIOUR
+		},
+		{
+			Name		= "BotsDeploy",
+			Text 		= "Bots deploy bags",
+			Type		= Type.Boolean,
+			Value		= Config.BotsDeploy,
+			Description	= "Bots deploy ammo and medkits",
+			Default		= true,
+			Category	= SettingsDefinition.Categorys.BEHAVIOUR
+		},
+		{
+			Name		= "DeployCycle",
+			Text 		= "Deploy Cycle",
+			Type		= Type.Integer,
+			Value		= Config.DeployCycle,
+			Description	= "time between deployment of bots in seconds",
+			Reference	= Range(1.00, 600.00),
+			Default		= 50,
+			Category	= SettingsDefinition.Categorys.BEHAVIOUR
 		}
 	}
 }
