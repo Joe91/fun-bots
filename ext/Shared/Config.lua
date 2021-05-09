@@ -4,7 +4,7 @@ BOT_TOKEN = "BOT_"					-- token Bots are marked with
 Config = {
 	-- general
 	BotWeapon = BotWeapons.Auto,	-- Select the weapon the bots use
-	BotKit = "RANDOM_KIT",			-- The Kit of the Bots
+	BotKit = BotKits.RANDOM_KIT,			-- The Kit of the Bots
 	BotColor = "RANDOM_COLOR",		-- The Color of the Bots
 	ZombieMode = false,				-- Zombie Bot Mode
 
@@ -52,11 +52,11 @@ Config = {
 	-- MaxBotsPerTeamSr = 4,			-- max number of bots in one team in Squad-Rush
 
 	-- weapons
-	UseRandomWeapon = true,			-- use a random weapon out of the class list
-	AssaultWeaponSet = "Custom",	-- weaponset of Assault class
-	EngineerWeaponSet = "Custom",	-- weaponset of Engineer class
-	SupportWeaponSet = "Custom",	-- weaponset of Support class
-	ReconWeaponSet = "Custom",		-- weaponset of Recon class
+	UseRandomWeapon = true,			-- use a random weapon out of the weapon set
+	AssaultWeaponSet = WeaponSets.Custom,	-- weaponset of Assault class
+	EngineerWeaponSet = WeaponSets.Custom,	-- weaponset of Engineer class
+	SupportWeaponSet = WeaponSets.Custom,	-- weaponset of Support class
+	ReconWeaponSet = WeaponSets.Custom,		-- weaponset of Recon class
 	AssaultWeapon = "M416",			-- weapon of Assault class
 	EngineerWeapon = "M4A1",		-- weapon of Engineer class
 	SupportWeapon = "M249",			-- weapon of Support class

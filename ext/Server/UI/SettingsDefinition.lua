@@ -23,11 +23,11 @@ SettingsDefinition = {
 		{
 			Name		= "BotKit",
 			Text 		= "Bot Kit",
-			Type		= Type.Table,
+			Type		= Type.Enum,
 			Value		= Config.BotKit,
 			Reference	= BotKits,
 			Description	= "The Kit of the Bots",
-			Default		= "RANDOM_KIT",
+			Default		= BotKits.RANDOM_KIT,
 			Category	= SettingsDefinition.Categorys.GENERAL
 		},
 		{

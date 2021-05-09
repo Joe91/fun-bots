@@ -150,7 +150,7 @@ end
 
 --public functions
 function Bot:revive(p_Player)
-	if self.m_Kit == "Assault" and p_Player.corpse ~= nil then
+	if self.m_Kit == BotKits.Assault and p_Player.corpse ~= nil then
 		if Config.BotsRevive then
 			self._ReviveActive = true
 			self._ShootPlayer = nil
@@ -1199,7 +1199,7 @@ function Bot:_updateShooting()
 
 			-- deploy from time to time
 			if Config.BotsDeploy then
-				if self.m_Kit == "Support" or self.m_Kit == "Assault" then
+				if self.m_Kit == BotKits.Support or self.m_Kit == BotKits.Assault then
 					if self.m_PrimaryGadget.type == WeaponTypes.Ammobag or self.m_PrimaryGadget.type == WeaponTypes.Medkit then
 						self._DeployTimer = self._DeployTimer + StaticConfig.BotUpdateCycle
 						if self._DeployTimer > Config.DeployCycle then

@@ -486,7 +486,7 @@ function WeaponList:updateWeaponList()
 	for i=1, #self._weapons do
 		local wep = self._weapons[i]
 		table.insert(AllWeapons, wep.name)
-		if (wep.type == 'Knife') then
+		if (wep.type == WeaponTypes.Knife) then
 			table.insert(KnifeWeapons, wep.name)
 		elseif (wep.type == WeaponTypes.Pistol) then
 			table.insert(PistoWeapons, wep.name)
@@ -494,60 +494,60 @@ function WeaponList:updateWeaponList()
 
 
 		if self:_useWeaponType("Assault", wep.type, wep.name) then
-			if (wep.type == 'Knife') then
+			if (wep.type == WeaponTypes.Knife) then
 				table.insert(AssaultKnife, wep.name)
 			elseif (wep.type == WeaponTypes.Pistol) then
 				table.insert(AssaultPistol, wep.name)
-			elseif (wep.type == 'Grenade') then
+			elseif (wep.type == WeaponTypes.Grenade) then
 				table.insert(AssaultGrenade, wep.name)
-			elseif (wep.type == "Medkit") then
+			elseif (wep.type == WeaponTypes.Medkit) then
 				table.insert(AssaultGadget1,  wep.name)
-			elseif (wep.type == "Defibrillator") then
+			elseif (wep.type == WeaponTypes.Defibrillator) then
 				table.insert(AssaultGadget2,  wep.name)
 			else
 				table.insert(AssaultPrimary, wep.name)
 			end
 		end
 		if self:_useWeaponType("Engineer", wep.type, wep.name) then
-			if (wep.type == 'Knife') then
+			if (wep.type == WeaponTypes.Knife) then
 				table.insert(EngineerKnife, wep.name)
 			elseif (wep.type == WeaponTypes.Pistol) then
 				table.insert(EngineerPistol, wep.name)
-			elseif (wep.type == 'Grenade') then
+			elseif (wep.type == WeaponTypes.Grenade) then
 				table.insert(EngineerGrenade, wep.name)
-			elseif (wep.type == "Torch") then
+			elseif (wep.type == WeaponTypes.Torch) then
 				table.insert(EngineerGadget1,  wep.name)
-			elseif (wep.type == "Rocket") then
+			elseif (wep.type == WeaponTypes.Rocket) then
 				table.insert(EngineerGadget2,  wep.name)
 			else
 				table.insert(EngineerPrimary, wep.name)
 			end
 		end
 		if self:_useWeaponType("Support", wep.type, wep.name) then
-			if (wep.type == 'Knife') then
+			if (wep.type == WeaponTypes.Knife) then
 				table.insert(SupportKnife, wep.name)
 			elseif (wep.type == WeaponTypes.Pistol) then
 				table.insert(SupportPistol, wep.name)
-			elseif (wep.type == 'Grenade') then
+			elseif (wep.type == WeaponTypes.Grenade) then
 				table.insert(SupportGrenade, wep.name)
-			elseif (wep.type == "Ammobag") then
+			elseif (wep.type == WeaponTypes.Ammobag) then
 				table.insert(SupportGadget1,  wep.name)
-			elseif (wep.type == "Claymore") or (wep.type == "C4") then
+			elseif (wep.type == WeaponTypes.Claymore) or (wep.type == WeaponTypes.C4) then
 				table.insert(SupportGadget2,  wep.name)
 			else
 				table.insert(SupportPrimary, wep.name)
 			end
 		end
 		if self:_useWeaponType("Recon", wep.type, wep.name) then
-			if (wep.type == 'Knife') then
+			if (wep.type == WeaponTypes.Knife) then
 				table.insert(ReconKnife, wep.name)
 			elseif (wep.type == WeaponTypes.Pistol) then
 				table.insert(ReconPistol, wep.name)
-			elseif (wep.type == 'Grenade') then
+			elseif (wep.type == WeaponTypes.Grenade) then
 				table.insert(ReconGrenade, wep.name)
-			elseif (wep.type == "Tug") then
+			elseif (wep.type == WeaponTypes.Tugs) then
 				table.insert(ReconGadget1,  wep.name)
-			elseif (wep.type == "Beacon") then
+			elseif (wep.type == WeaponTypes.Beacon) then
 				table.insert(ReconGadget2,  wep.name)
 			else
 				table.insert(ReconPrimary, wep.name)

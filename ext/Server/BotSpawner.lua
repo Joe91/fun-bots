@@ -549,7 +549,7 @@ function BotSpawner:_SelectLoadout(p_Bot, p_SetKit)
 		if s_BotColor == "RANDOM_COLOR" then
 			s_BotColor = BotColors[MathUtils:GetRandomInt(2, #BotColors)]
 		end
-		if s_BotKit == "RANDOM_KIT" then
+		if s_BotKit == BotKits.RANDOM_KIT then
 			s_BotKit = self:_GetSpawnBotKit()
 		end
 		p_Bot.m_Color = s_BotColor
@@ -831,7 +831,7 @@ function BotSpawner:_SpawnBot(p_Bot, p_Trans, p_SetKit)
 		if s_BotColor == "RANDOM_COLOR" then
 			s_BotColor = BotColors[MathUtils:GetRandomInt(2, #BotColors)]
 		end
-		if s_BotKit == "RANDOM_KIT" then
+		if s_BotKit == BotKits.RANDOM_KIT then
 			s_BotKit = self:_GetSpawnBotKit()
 		end
 		p_Bot.m_Color = s_BotColor
@@ -996,7 +996,7 @@ function BotSpawner:_GetKitAppearanceCustomization(p_TeamId, p_Kit, p_Color, p_P
 
 	local s_PrimaryGadget = UnlockWeaponAndSlot()
 	s_PrimaryGadget.weapon = SoldierWeaponUnlockAsset(s_Gadget1Weapon)
-	if p_Kit == "Assault" or p_Kit == "Support" then
+	if p_Kit == BotKits.Assault or p_Kit == BotKits.Support then
 		s_PrimaryGadget.slot = WeaponSlot.WeaponSlot_4
 	else
 		s_PrimaryGadget.slot = WeaponSlot.WeaponSlot_2
@@ -1019,13 +1019,13 @@ function BotSpawner:_GetKitAppearanceCustomization(p_TeamId, p_Kit, p_Color, p_P
 	s_Knife.slot = WeaponSlot.WeaponSlot_7
 
 	if p_TeamId % 2 == 1 then -- US
-		if p_Kit == "Assault" then --assault
+		if p_Kit == BotKits.Assault then --assault
 			s_Appearance = self:_FindAppearance('Us', 'Assault', p_Color)
 			s_SoldierKit = self:_FindKit('US', 'Assault')
-		elseif p_Kit == "Engineer" then --engineer
+		elseif p_Kit == BotKits.Engineer then --engineer
 			s_Appearance = self:_FindAppearance('Us', 'Engi', p_Color)
 			s_SoldierKit = self:_FindKit('US', 'Engineer')
-		elseif p_Kit == "Support" then --support
+		elseif p_Kit == BotKits.Support then --support
 			s_Appearance = self:_FindAppearance('Us', 'Support', p_Color)
 			s_SoldierKit = self:_FindKit('US', 'Support')
 		else --recon
@@ -1033,13 +1033,13 @@ function BotSpawner:_GetKitAppearanceCustomization(p_TeamId, p_Kit, p_Color, p_P
 			s_SoldierKit = self:_FindKit('US', 'Recon')
 		end
 	else -- RU
-		if p_Kit == "Assault" then --assault
+		if p_Kit == BotKits.Assault then --assault
 			s_Appearance = self:_FindAppearance('RU', 'Assault', p_Color)
 			s_SoldierKit = self:_FindKit('RU', 'Assault')
-		elseif p_Kit == "Engineer" then --engineer
+		elseif p_Kit == BotKits.Engineer then --engineer
 			s_Appearance = self:_FindAppearance('RU', 'Engi', p_Color)
 			s_SoldierKit = self:_FindKit('RU', 'Engineer')
-		elseif p_Kit == "Support" then --support
+		elseif p_Kit == BotKits.Support then --support
 			s_Appearance = self:_FindAppearance('RU', 'Support', p_Color)
 			s_SoldierKit = self:_FindKit('RU', 'Support')
 		else --recon
@@ -1064,23 +1064,23 @@ function BotSpawner:_GetKitAppearanceCustomization(p_TeamId, p_Kit, p_Color, p_P
 end
 
 function BotSpawner:_GetSpawnBotKit()
-	local s_BotKit = BotKits[MathUtils:GetRandomInt(2, #BotKits)]
+	local s_BotKit = MathUtils:GetRandomInt(1, #BotKits -1)
 	local s_ChangeKit = false
 	--find out, if possible
 	local s_KitCount = m_BotManager:getKitCount(s_BotKit)
-	if s_BotKit == "Assault" then
+	if s_BotKit == BotKits.Assault then
 		if Config.MaxAssaultBots >= 0 and s_KitCount >= Config.MaxAssaultBots then
 			s_ChangeKit = true
 		end
-	elseif s_BotKit == "Engineer" then
+	elseif s_BotKit == BotKits.Engineer then
 		if Config.MaxEngineerBots >= 0 and s_KitCount >= Config.MaxEngineerBots then
 			s_ChangeKit = true
 		end
-	elseif s_BotKit == "Support" then
+	elseif s_BotKit == BotKits.Support then
 		if Config.MaxSupportBots >= 0 and s_KitCount >= Config.MaxSupportBots then
 			s_ChangeKit = true
 		end
-	else -- s_BotKit == "Recon"
+	else -- s_BotKit == BotKits.Recon
 		if Config.MaxReconBots >= 0 and s_KitCount >= Config.MaxReconBots then
 			s_ChangeKit = true
 		end
@@ -1088,17 +1088,17 @@ function BotSpawner:_GetSpawnBotKit()
 
 	if s_ChangeKit then
 		local s_AvailableKitList = {}
-		if (Config.MaxAssaultBots == -1) or (m_BotManager:getKitCount("Assault") < Config.MaxAssaultBots) then
-			table.insert(s_AvailableKitList, "Assault")
+		if (Config.MaxAssaultBots == -1) or (m_BotManager:getKitCount(BotKits.Assault) < Config.MaxAssaultBots) then
+			table.insert(s_AvailableKitList, BotKits.Assault)
 		end
-		if (Config.MaxEngineerBots == -1) or (m_BotManager:getKitCount("Engineer") < Config.MaxEngineerBots) then
-			table.insert(s_AvailableKitList, "Engineer")
+		if (Config.MaxEngineerBots == -1) or (m_BotManager:getKitCount(BotKits.Engineer) < Config.MaxEngineerBots) then
+			table.insert(s_AvailableKitList, BotKits.Engineer)
 		end
-		if (Config.MaxSupportBots == -1) or (m_BotManager:getKitCount("Support") < Config.MaxSupportBots) then
-			table.insert(s_AvailableKitList, "Support")
+		if (Config.MaxSupportBots == -1) or (m_BotManager:getKitCount(BotKits.Support) < Config.MaxSupportBots) then
+			table.insert(s_AvailableKitList, BotKits.Support)
 		end
-		if(Config.MaxReconBots == -1) or (m_BotManager:getKitCount("Recon") < Config.MaxReconBots) then
-			table.insert(s_AvailableKitList, "Recon")
+		if(Config.MaxReconBots == -1) or (m_BotManager:getKitCount(BotKits.Recon) < Config.MaxReconBots) then
+			table.insert(s_AvailableKitList, BotKits.Recon)
 		end
 
 		if #s_AvailableKitList > 0 then
@@ -1168,7 +1168,7 @@ end
 
 function BotSpawner:_SetBotWeapons(p_Bot, p_BotKit, p_NewWeapons)
 	if p_NewWeapons then
-		if p_BotKit == "Assault" then
+		if p_BotKit == BotKits.Assault then
 			local s_Weapon = Config.AssaultWeapon
 			if Config.UseRandomWeapon then
 				s_Weapon = AssaultPrimary[MathUtils:GetRandomInt(1, #AssaultPrimary)]
@@ -1179,7 +1179,7 @@ function BotSpawner:_SetBotWeapons(p_Bot, p_BotKit, p_NewWeapons)
 			p_Bot.m_Pistol = m_WeaponList:getWeapon(AssaultPistol[MathUtils:GetRandomInt(1, #AssaultPistol)])
 			p_Bot.m_Grenade = m_WeaponList:getWeapon(AssaultGrenade[MathUtils:GetRandomInt(1, #AssaultGrenade)])
 			p_Bot.m_Knife = m_WeaponList:getWeapon(AssaultKnife[MathUtils:GetRandomInt(1, #AssaultKnife)])
-		elseif p_BotKit == "Engineer" then
+		elseif p_BotKit == BotKits.Engineer then
 			local s_Weapon = Config.EngineerWeapon
 			if Config.UseRandomWeapon then
 				s_Weapon = EngineerPrimary[MathUtils:GetRandomInt(1, #EngineerPrimary)]
@@ -1190,7 +1190,7 @@ function BotSpawner:_SetBotWeapons(p_Bot, p_BotKit, p_NewWeapons)
 			p_Bot.m_Pistol = m_WeaponList:getWeapon(EngineerPistol[MathUtils:GetRandomInt(1, #EngineerPistol)])
 			p_Bot.m_Grenade = m_WeaponList:getWeapon(EngineerGrenade[MathUtils:GetRandomInt(1, #EngineerGrenade)])
 			p_Bot.m_Knife = m_WeaponList:getWeapon(EngineerKnife[MathUtils:GetRandomInt(1, #EngineerKnife)])
-		elseif p_BotKit == "Support" then
+		elseif p_BotKit == BotKits.Support then
 			local s_Weapon = Config.SupportWeapon
 			if Config.UseRandomWeapon then
 				s_Weapon = SupportPrimary[MathUtils:GetRandomInt(1, #SupportPrimary)]
