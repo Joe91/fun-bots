@@ -271,7 +271,7 @@ function BotSpawner:UpdateBotAmountAndTeam()
 	end
 
 	-- KEEP PLAYERCOUNT
-	if Globals.SpawnMode == 'keep_playercount' then
+	if Globals.SpawnMode == SpawnModes.keep_playercount then
 		for i = 1, Globals.NrOfTeams do
 			s_TargetTeamCount[i] = Config.InitNumberOfBots
 		end
@@ -302,7 +302,7 @@ function BotSpawner:UpdateBotAmountAndTeam()
 		end
 
 	-- BALANCED teams
-	elseif Globals.SpawnMode == 'balanced_teams' then
+	elseif Globals.SpawnMode == SpawnModes.balanced_teams then
 		local s_maxPlayersInOneTeam = 0
 		for i = 1, Globals.NrOfTeams do
 			if s_CountPlayers[i] > s_maxPlayersInOneTeam then
@@ -325,7 +325,7 @@ function BotSpawner:UpdateBotAmountAndTeam()
 			end
 		end
 	-- INCREMENT WITH PLAYER
-	elseif Globals.SpawnMode == 'increment_with_players' then
+	elseif Globals.SpawnMode == SpawnModes.increment_with_players then
 		if Config.SpawnInBothTeams then
 			for i = 1, Globals.NrOfTeams do
 				s_TargetTeamCount[i] = 0
@@ -377,7 +377,7 @@ function BotSpawner:UpdateBotAmountAndTeam()
 		end
 
 	-- FIXED NUMBER TO SPAWN
-	elseif Globals.SpawnMode == 'fixed_number' then
+	elseif Globals.SpawnMode == SpawnModes.fixed_number then
 		if Config.SpawnInBothTeams then
 			local s_AmountPerTeam = math.floor(Config.InitNumberOfBots/Globals.NrOfTeams)
 			if s_AmountPerTeam > Globals.MaxBotsPerTeam then
@@ -412,7 +412,7 @@ function BotSpawner:UpdateBotAmountAndTeam()
 				m_BotManager:killAll(-s_AmountToSpawn)
 			end
 		end
-	elseif Globals.SpawnMode == 'manual' then
+	elseif Globals.SpawnMode == SpawnModes.manual then
 		if self._FirstSpawnInLevel then
 			for i = 1, Globals.NrOfTeams do
 				self:SpawnWayBots(nil, s_TeamCount[i] - s_CountPlayers[i], true, 0, 0, i)
@@ -1215,15 +1215,15 @@ function BotSpawner:_SetBotWeapons(p_Bot, p_BotKit, p_NewWeapons)
 		end
 	end
 
-	if Config.BotWeapon == "Primary" or Config.BotWeapon == "Auto" then
+	if Config.BotWeapon == BotWeapons.Priamry or Config.BotWeapon == BotWeapons.Auto then
 		p_Bot.m_ActiveWeapon = p_Bot.m_Primary
-	elseif Config.BotWeapon == "Pistol" then
+	elseif Config.BotWeapon == BotWeapons.Pistol then
 		p_Bot.m_ActiveWeapon = p_Bot.m_Pistol
-	elseif Config.BotWeapon == "Gadget2" then
+	elseif Config.BotWeapon == BotWeapons.Gadget2 then
 		p_Bot.m_ActiveWeapon = p_Bot.m_SecondaryGadget
-	elseif Config.BotWeapon == "Gadget1" then
+	elseif Config.BotWeapon == BotWeapons.Gadget1 then
 		p_Bot.m_ActiveWeapon = p_Bot.m_PrimaryGadget
-	elseif Config.BotWeapon == "Grenade" then
+	elseif Config.BotWeapon == BotWeapons.Grenade then
 		p_Bot.m_ActiveWeapon = p_Bot.m_Grenade
 	else
 		p_Bot.m_ActiveWeapon = p_Bot.m_Knife

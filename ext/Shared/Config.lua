@@ -3,7 +3,7 @@ BOT_TOKEN = "BOT_"					-- token Bots are marked with
 
 Config = {
 	-- general
-	BotWeapon = "Auto",				-- Select the weapon the bots use
+	BotWeapon = BotWeapons.Auto,	-- Select the weapon the bots use
 	BotKit = "RANDOM_KIT",			-- The Kit of the Bots
 	BotColor = "RANDOM_COLOR",		-- The Color of the Bots
 	ZombieMode = false,				-- Zombie Bot Mode
@@ -22,7 +22,7 @@ Config = {
 	DamageFactorKnife = 1.5,		-- original Damage from bots gets multiplied by this
 
 	-- spawn
-	SpawnMode = 'balanced_teams',	-- mode the bots spawn with
+	SpawnMode = SpawnModes.balanced_teams,	-- mode the bots spawn with
 	SpawnInBothTeams = true,		-- Bots spawn in both teams
 	InitNumberOfBots = 6,			-- bots for spawnmode
 	NewBotsPerNewPlayer = 2,		-- number to increase Bots, when new players join

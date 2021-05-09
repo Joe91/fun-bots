@@ -23,21 +23,21 @@ SettingsDefinition = {
 		{
 			Name		= "BotKit",
 			Text 		= "Bot Kit",
-			Type		= Type.Enum,
+			Type		= Type.Table,
 			Value		= Config.BotKit,
 			Reference	= BotKits,
 			Description	= "The Kit of the Bots",
-			Default		= BotKits.RANDOM_KIT,
+			Default		= "RANDOM_KIT",
 			Category	= SettingsDefinition.Categorys.GENERAL
 		},
 		{
 			Name		= "BotColor",
 			Text 		= "Bot Color",
-			Type		= Type.Enum,
+			Type		= Type.Table,
 			Reference	= BotColors,
 			Value		= Config.BotColor,
 			Description	= "The Color of the Bots",
-			Default		= BotColors.RANDOM_COLOR,
+			Default		= "RANDOM_COLOR",
 			Category	= SettingsDefinition.Categorys.GENERAL
 		},
 		{
