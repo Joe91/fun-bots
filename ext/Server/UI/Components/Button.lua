@@ -1,3 +1,9 @@
+--[[
+	@class: Button
+	@extends: Component
+	
+	Creates an button
+]]
 class('Button');
 
 function Button:__init(name, title, callback)

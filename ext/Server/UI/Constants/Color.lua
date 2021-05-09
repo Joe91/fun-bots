@@ -1,3 +1,11 @@
+--[[
+	@enum: Color
+	@value: White
+	@value: Red
+	@value: Blue
+	@value: Green
+	@value: Yellow
+]]
 Color = {
 	White	= 0,
 	Red		= 1,

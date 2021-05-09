@@ -1,13 +1,26 @@
+--[[
+	@class: Settings
+	@extends: Dialog
+]]
 class('Settings')
 
+--[[
+	@method: __init
+]]
 function Settings:__init()
 	self.dialog = Dialog('settings', 'Settings');
 end
 
+--[[
+	@method: __class
+]]
 function Settings:__class()
 	return 'Settings';
 end
 
+--[[
+	@method: InitializeComponent
+]]
 function Settings:InitializeComponent()
 	print('Init Settings');
 	
@@ -36,10 +49,16 @@ function Settings:InitializeComponent()
 	print(g_Utilities:dump(self.dialog, true, 1));
 end
 
+--[[
+	@method: Serialize
+]]
 function Settings:Serialize(player)
 	return self.dialog:Serialize(player);
 end
 
+--[[
+	@method: Open
+]]
 function Settings:Open(view, player)
 	view:Push(player, self.dialog);
 end

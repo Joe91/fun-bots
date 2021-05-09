@@ -1,4 +1,10 @@
+--[[
+	@property: SettingsDefinition
+]]
 SettingsDefinition = {
+	--[[
+		@property: Categorys
+	]]
 	Categorys = {
 		GENERAL	= "General",
 		DIFFICULTY = "Difficulty",
@@ -8,6 +14,9 @@ SettingsDefinition = {
 		OTHER	= "Other"
 	},
 
+	--[[
+		@property: Elements
+	]]
 	Elements = {
 		-- General
 		{

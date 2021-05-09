@@ -1,5 +1,12 @@
+--[[
+	@class: WaypointEditor
+	@extends: View
+]]
 class('WaypointEditor')
 
+--[[
+	@method: __init
+]]
 function WaypointEditor:__init(core)
 	self.view 						= View(core, 'WaypointEditor')
 	self.trace_index				= 0
@@ -64,6 +71,9 @@ function WaypointEditor:__init(core)
 	end)
 end
 
+--[[
+	@method: Show
+]]
 function WaypointEditor:Show(player)
 	Config.debugTracePaths = true
 	NetEvents:SendToLocal('UI_ClientNodeEditor_Enabled', player, Config.debugTracePaths)
@@ -72,6 +82,9 @@ function WaypointEditor:Show(player)
 	self.view:GetCore():GetView('BotEditor'):Hide(player)
 end
 
+--[[
+	@method: Hide
+]]
 function WaypointEditor:Hide(player)
 	Config.debugTracePaths = false
 	NetEvents:SendToLocal('UI_ClientNodeEditor_Enabled', player, Config.debugTracePaths)
@@ -83,6 +96,9 @@ function WaypointEditor:Hide(player)
 	end
 end
 
+--[[
+	@method: UpdateNewPath
+]]
 function WaypointEditor:UpdateNewPath(player)
 	local nodes		= g_NodeCollection:Get(nil, self.trace_index)
 	local distance	= 0
@@ -110,26 +126,44 @@ function WaypointEditor:UpdateNewPath(player)
 	}))
 end
 
+--[[
+	@method: Activate
+]]
 function WaypointEditor:Activate(player)
 	self.view:Activate(player)
 end
 
+--[[
+	@method: Deactivate
+]]
 function WaypointEditor:Deactivate(player)
 	self.view:Deactivate(player)
 end
 
+--[[
+	@method: Toggle
+]]
 function WaypointEditor:Toggle(player)
 	self.view:Toggle(player)
 end
 
+--[[
+	@method: Call
+]]
 function WaypointEditor:Call(player, element, name)
 	self.view:Call(player, element, name)
 end
 
+--[[
+	@method: GetName
+]]
 function WaypointEditor:GetName()
 	return self.view:GetName()
 end
 
+--[[
+	@method: InitializeComponent
+]]
 function WaypointEditor:InitializeComponent()
 	self.quick_shortcuts:SetPosition(Position.Center_Right)
 	self.quick_shortcuts:AddNumpad(Numpad.K1, 'Remove')
