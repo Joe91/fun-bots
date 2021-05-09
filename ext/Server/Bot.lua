@@ -185,7 +185,7 @@ function Bot:shootAt(p_Player, p_IgnoreYaw)
 	end
 	if not p_IgnoreYaw then
 
-		if self.m_ActiveWeapon.type ~= "Sniper" and s_Distance > Config.MaxShootDistanceNoSniper then
+		if self.m_ActiveWeapon.type ~= WeaponTypes.Sniper and s_Distance > Config.MaxShootDistanceNoSniper then
 			return false
 		end
 	end
@@ -506,7 +506,7 @@ function Bot:_updateAiming()
 				s_Drop = self.m_ActiveWeapon.bulletDrop
 				s_Speed = self.m_ActiveWeapon.bulletSpeed
 			end
-			if self.m_ActiveWeapon.type == BotWeapons.Grenade then
+			if self.m_ActiveWeapon.type == WeaponTypes.Grenade then
 				if s_DistanceToPlayer < 5 then
 					s_DistanceToPlayer = 5 -- don't throw them too close..
 				end
@@ -539,7 +539,7 @@ function Bot:_updateAiming()
 
 		--calculate pitch
 		local s_Pitch = 0
-		if self.m_ActiveWeapon.type == BotWeapons.Grenade then
+		if self.m_ActiveWeapon.type == WeaponTypes.Grenade then
 			s_Pitch = s_GrenadePitch
 		else
 			local s_Distance = math.sqrt(s_DifferenceZ ^ 2 + s_DifferenceX ^ 2)
@@ -901,9 +901,9 @@ function Bot:_ceckForVehicleAttack(p_VehicleType, p_Distance)
 	end
 
 	if p_VehicleType ~= 5 then -- MAV or EOD always with rifle
-		if self.m_SecondaryGadget.type == "Rocket" then
+		if self.m_SecondaryGadget.type == WeaponTypes.Rocket then
 			s_AttackMode = 3 -- always use rocket if possible
-		elseif self.m_SecondaryGadget.type == "C4" and p_Distance < 25 then
+		elseif self.m_SecondaryGadget.type == WeaponTypes.C4 and p_Distance < 25 then
 			if p_VehicleType == 1 or p_VehicleType == 2 or p_VehicleType == 4 then -- no air vehicles
 				s_AttackMode = 4 -- always use c4 if possible
 			end
@@ -1063,7 +1063,7 @@ function Bot:_updateShooting()
 				end
 
 				--trace way back
-				if (self.m_ActiveWeapon ~= nil and self.m_ActiveWeapon.type ~= "Sniper" and not self.m_InVehicle) or self.m_KnifeMode then
+				if (self.m_ActiveWeapon ~= nil and self.m_ActiveWeapon.type ~= WeaponTypes.Sniper and not self.m_InVehicle) or self.m_KnifeMode then
 					if self._ShootTraceTimer > StaticConfig.TraceDeltaShooting then
 						--create a Trace to find way back
 						self._ShootTraceTimer = 0
@@ -1200,7 +1200,7 @@ function Bot:_updateShooting()
 			-- deploy from time to time
 			if Config.BotsDeploy then
 				if self.m_Kit == "Support" or self.m_Kit == "Assault" then
-					if self.m_PrimaryGadget.type == "Ammobag" or self.m_PrimaryGadget.type == "Medkit" then
+					if self.m_PrimaryGadget.type == WeaponTypes.Ammobag or self.m_PrimaryGadget.type == WeaponTypes.Medkit then
 						self._DeployTimer = self._DeployTimer + StaticConfig.BotUpdateCycle
 						if self._DeployTimer > Config.DeployCycle then
 							self._DeployTimer = 0
@@ -1652,7 +1652,7 @@ function Bot:_updateMovement()
 				end
 			end
 			--crouch moving (only mode with modified gun)
-			if (self.m_ActiveWeapon.type == "Sniper" and not self.m_KnifeMode) or self.m_InVehicle then --don't move while shooting in a vehicle
+			if (self.m_ActiveWeapon.type == WeaponTypes.Sniper and not self.m_KnifeMode) or self.m_InVehicle then --don't move while shooting in a vehicle
 				if self._AttackMode == 2 then
 					if self.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Crouch then
 						self.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Crouch, true, true)

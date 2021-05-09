@@ -112,7 +112,7 @@ function Weapon:learnStatsValues()
 		fireDuration = 0.2
 		firePause = 0.2
 		delayedShot = false
-	elseif self.name == "Repairtool" or self.name == "Claymore" or self.name == "C4" or self.name == "Tug" or self.name == "Beacon" then
+	elseif self.type == WeaponTypes.Repairtool or self.type == WeaponTypes.Claymore or self.type == WeaponTypes.C4 or self.type == WeaponTypes.Tugs or self.type == WeaponTypes.Beacon then
 		m_Logger:Write("other stuff")
 		fireDuration = 0.2
 		firePause = 0.2
