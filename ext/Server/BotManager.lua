@@ -64,7 +64,8 @@ function BotManager:configGlobals()
 
 		m_Logger:Write("there are ".. s_MaxPlayers .." slots on this server")
 	else
-		Globals.MaxPlayers = MAX_NUMBER_OF_BOTS -- only fallback
+		Globals.MaxPlayers = 127 -- only fallback. Should not happens
+		m_Logger:Error("No Playercount found")
 	end
 	self._InitDone = true
 end
@@ -76,8 +77,8 @@ function BotManager:calcYawPerFrame()
 end
 
 function BotManager:findNextBotName()
-	for i = 1, MAX_NUMBER_OF_BOTS do
-		local s_Name = BOT_TOKEN .. BotNames[i]
+	for _,name in pairs(Botnames) do
+		local s_Name = BOT_TOKEN .. name
 		local s_SkipName = false
 		for _, l_IgnoreName in pairs(Globals.IgnoreBotNames) do
 			if s_Name == l_IgnoreName then
