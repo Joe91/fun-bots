@@ -12,15 +12,15 @@ Debug = {
 		PATH = false,				-- Debug the PathSwitcher
 		SETTINGS = false,			-- Debug the Settings-Migrator
 		TRACE = false,				-- Debug the TraceManager
-		UI = true,					-- Debug all UI things
-		PERMISSIONS = true,			-- Debug all Permission things
+		UI = false,					-- Debug all UI things
+		PERMISSIONS = false,			-- Debug all Permission things
 		MODIFICATIONS = false,		-- Debug some Modifications
 		RCON = false				-- Debug some RCON Commands
 	},
 	Client = {
 		INFO = false,				-- Global Informations
 		NODEEDITOR = false,			-- Debug the NodeEditor
-		UI = true					-- Debug all UI things
+		UI = false					-- Debug all UI things
 	},
 	Shared = {
 		EBX = false,				-- Debug EBX-Utils
