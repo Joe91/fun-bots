@@ -5,7 +5,7 @@ Config = {
 	-- general
 	BotWeapon = BotWeapons.Auto,	-- Select the weapon the bots use
 	BotKit = BotKits.RANDOM_KIT,			-- The Kit of the Bots
-	BotColor = "RANDOM_COLOR",		-- The Color of the Bots
+	BotColor = BotColors.RANDOM_COLOR,		-- The Color of the Bots
 	ZombieMode = false,				-- Zombie Bot Mode
 
 	-- difficluty

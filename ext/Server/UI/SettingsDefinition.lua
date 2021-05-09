@@ -37,7 +37,7 @@ SettingsDefinition = {
 			Reference	= BotColors,
 			Value		= Config.BotColor,
 			Description	= "The Color of the Bots",
-			Default		= "RANDOM_COLOR",
+			Default		= BotColors.RANDOM_COLOR,
 			Category	= SettingsDefinition.Categorys.GENERAL
 		},
 		{

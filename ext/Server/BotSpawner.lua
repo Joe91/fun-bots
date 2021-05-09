@@ -539,15 +539,15 @@ end
 
 function BotSpawner:_SelectLoadout(p_Bot, p_SetKit)
 	local s_WriteNewKit = (p_SetKit or Config.BotNewLoadoutOnSpawn)
-	if not s_WriteNewKit and (p_Bot.m_Color == "" or p_Bot.m_Kit == "" or p_Bot.m_ActiveWeapon == nil) then
+	if not s_WriteNewKit and (p_Bot.m_Color == nil or p_Bot.m_Kit == nil or p_Bot.m_ActiveWeapon == nil) then
 		s_WriteNewKit = true
 	end
 	local s_BotColor = Config.BotColor
 	local s_BotKit = Config.BotKit
 
 	if s_WriteNewKit then
-		if s_BotColor == "RANDOM_COLOR" then
-			s_BotColor = BotColors[MathUtils:GetRandomInt(2, #BotColors)]
+		if s_BotColor == BotColors.RANDOM_COLOR then
+			s_BotColor = MathUtils:GetRandomInt(1, #BotColors -1)
 		end
 		if s_BotKit == BotKits.RANDOM_KIT then
 			s_BotKit = self:_GetSpawnBotKit()
@@ -821,15 +821,15 @@ end
 
 function BotSpawner:_SpawnBot(p_Bot, p_Trans, p_SetKit)
 	local s_WriteNewKit = (p_SetKit or Config.BotNewLoadoutOnSpawn)
-	if not s_WriteNewKit and (p_Bot.m_Color == "" or p_Bot.m_Kit == "" or p_Bot.m_ActiveWeapon == nil) then
+	if not s_WriteNewKit and (p_Bot.m_Color == nil or p_Bot.m_Kit == nil or p_Bot.m_ActiveWeapon == nil) then
 		s_WriteNewKit = true
 	end
 	local s_BotColor = Config.BotColor
 	local s_BotKit = Config.BotKit
 
 	if s_WriteNewKit then
-		if s_BotColor == "RANDOM_COLOR" then
-			s_BotColor = BotColors[MathUtils:GetRandomInt(2, #BotColors)]
+		if s_BotColor == BotColors.RANDOM_COLOR then
+			s_BotColor = MathUtils:GetRandomInt(1, #BotColors -1)
 		end
 		if s_BotKit == BotKits.RANDOM_KIT then
 			s_BotKit = self:_GetSpawnBotKit()
@@ -1018,32 +1018,41 @@ function BotSpawner:_GetKitAppearanceCustomization(p_TeamId, p_Kit, p_Color, p_P
 	s_Knife.weapon = SoldierWeaponUnlockAsset(s_KnifeWeapon)
 	s_Knife.slot = WeaponSlot.WeaponSlot_7
 
+	local s_ColorString = ""
+	for key,value in pairs(BotColors) do
+		if value == p_Color then
+			s_ColorString = key
+			print(key)
+			break
+		end
+	end
+
 	if p_TeamId % 2 == 1 then -- US
 		if p_Kit == BotKits.Assault then --assault
-			s_Appearance = self:_FindAppearance('Us', 'Assault', p_Color)
+			s_Appearance = self:_FindAppearance('Us', 'Assault', s_ColorString)
 			s_SoldierKit = self:_FindKit('US', 'Assault')
 		elseif p_Kit == BotKits.Engineer then --engineer
-			s_Appearance = self:_FindAppearance('Us', 'Engi', p_Color)
+			s_Appearance = self:_FindAppearance('Us', 'Engi', s_ColorString)
 			s_SoldierKit = self:_FindKit('US', 'Engineer')
 		elseif p_Kit == BotKits.Support then --support
-			s_Appearance = self:_FindAppearance('Us', 'Support', p_Color)
+			s_Appearance = self:_FindAppearance('Us', 'Support', s_ColorString)
 			s_SoldierKit = self:_FindKit('US', 'Support')
 		else --recon
-			s_Appearance = self:_FindAppearance('Us', 'Recon', p_Color)
+			s_Appearance = self:_FindAppearance('Us', 'Recon', s_ColorString)
 			s_SoldierKit = self:_FindKit('US', 'Recon')
 		end
 	else -- RU
 		if p_Kit == BotKits.Assault then --assault
-			s_Appearance = self:_FindAppearance('RU', 'Assault', p_Color)
+			s_Appearance = self:_FindAppearance('RU', 'Assault', s_ColorString)
 			s_SoldierKit = self:_FindKit('RU', 'Assault')
 		elseif p_Kit == BotKits.Engineer then --engineer
-			s_Appearance = self:_FindAppearance('RU', 'Engi', p_Color)
+			s_Appearance = self:_FindAppearance('RU', 'Engi', s_ColorString)
 			s_SoldierKit = self:_FindKit('RU', 'Engineer')
 		elseif p_Kit == BotKits.Support then --support
-			s_Appearance = self:_FindAppearance('RU', 'Support', p_Color)
+			s_Appearance = self:_FindAppearance('RU', 'Support', s_ColorString)
 			s_SoldierKit = self:_FindKit('RU', 'Support')
 		else --recon
-			s_Appearance = self:_FindAppearance('RU', 'Recon', p_Color)
+			s_Appearance = self:_FindAppearance('RU', 'Recon', s_ColorString)
 			s_SoldierKit = self:_FindKit('RU', 'Recon')
 		end
 	end
@@ -1136,14 +1145,14 @@ function BotSpawner:_FindKit(p_TeamName, p_KitName)
 	return
 end
 
-function BotSpawner:_FindAppearance(p_TeamName, p_KitName, p_Color)
+function BotSpawner:_FindAppearance(p_TeamName, p_KitName, p_ColorName)
 	local s_GameModeAppearances = {
 		'MP/', -- Standard
 		'MP_XP4/', --Gun Master on XP2 Maps
 	}
-	--'Persistence/Unlocks/Soldiers/Visual/MP[or:MP_XP4]/Us/MP_US_Assault_Appearance_'..p_Color
+	--'Persistence/Unlocks/Soldiers/Visual/MP[or:MP_XP4]/Us/MP_US_Assault_Appearance_'..p_ColorName
 	for _, l_GameMode in pairs(s_GameModeAppearances) do
-		local s_AppearanceString = l_GameMode .. p_TeamName .. '/MP_' .. string.upper(p_TeamName) .. '_' .. p_KitName .. '_Appearance_' .. p_Color
+		local s_AppearanceString = l_GameMode .. p_TeamName .. '/MP_' .. string.upper(p_TeamName) .. '_' .. p_KitName .. '_Appearance_' .. p_ColorName
 		local s_Appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/'..s_AppearanceString)
 		if s_Appearance ~= nil then
 			return s_Appearance

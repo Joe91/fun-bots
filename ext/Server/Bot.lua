@@ -17,8 +17,8 @@ function Bot:__init(p_Player)
 	--common settings
 	self._SpawnMode = 0
 	self._MoveMode = 0
-	self.m_Kit = ""
-	self.m_Color = ""
+	self.m_Kit = nil
+	self.m_Color = nil
 	self.m_ActiveWeapon = nil
 	self.m_Primary = nil
 	self.m_Pistol = nil
@@ -501,7 +501,7 @@ function Bot:_updateAiming()
 			local s_Speed = 0.0
 			if self.m_InVehicle then
 				s_Drop = 9.81
-				s_Speed = 250
+				s_Speed = 350
 			else
 				s_Drop = self.m_ActiveWeapon.bulletDrop
 				s_Speed = self.m_ActiveWeapon.bulletSpeed
@@ -518,6 +518,9 @@ function Bot:_updateAiming()
 				end
 			else
 				local s_TimeToTravel = (s_DistanceToPlayer / s_Speed)
+				if self.m_InVehicle then
+					s_TimeToTravel = s_TimeToTravel + 0.2 -- TODO: FIXME find right delay and find out why this is needed!!
+				end
 				s_FactorForMovement = (s_TimeToTravel) / self._UpdateTimer
 				s_PitchCorrection = 0.5 * s_TimeToTravel * s_TimeToTravel * s_Drop
 			end
