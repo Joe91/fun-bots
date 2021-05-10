@@ -547,7 +547,7 @@ function BotSpawner:_SelectLoadout(p_Bot, p_SetKit)
 
 	if s_WriteNewKit then
 		if s_BotColor == BotColors.RANDOM_COLOR then
-			s_BotColor = MathUtils:GetRandomInt(1, #BotColors -1)
+			s_BotColor = MathUtils:GetRandomInt(1, 13)
 		end
 		if s_BotKit == BotKits.RANDOM_KIT then
 			s_BotKit = self:_GetSpawnBotKit()
@@ -829,7 +829,7 @@ function BotSpawner:_SpawnBot(p_Bot, p_Trans, p_SetKit)
 
 	if s_WriteNewKit then
 		if s_BotColor == BotColors.RANDOM_COLOR then
-			s_BotColor = MathUtils:GetRandomInt(1, #BotColors -1)
+			s_BotColor = MathUtils:GetRandomInt(1, 13) -- color enum goes from 1 to 13
 		end
 		if s_BotKit == BotKits.RANDOM_KIT then
 			s_BotKit = self:_GetSpawnBotKit()
@@ -1022,7 +1022,6 @@ function BotSpawner:_GetKitAppearanceCustomization(p_TeamId, p_Kit, p_Color, p_P
 	for key,value in pairs(BotColors) do
 		if value == p_Color then
 			s_ColorString = key
-			print(key)
 			break
 		end
 	end
@@ -1073,7 +1072,7 @@ function BotSpawner:_GetKitAppearanceCustomization(p_TeamId, p_Kit, p_Color, p_P
 end
 
 function BotSpawner:_GetSpawnBotKit()
-	local s_BotKit = MathUtils:GetRandomInt(1, #BotKits -1)
+	local s_BotKit = MathUtils:GetRandomInt(1, 4) -- Kit enum goes from 1 to 4
 	local s_ChangeKit = false
 	--find out, if possible
 	local s_KitCount = m_BotManager:getKitCount(s_BotKit)
