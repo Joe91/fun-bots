@@ -11,6 +11,7 @@ The Release-Candidate
 - New Permission-System (see link in readme: https://github.com/Joe91/fun-bots/wiki/Permissions)
 - Enhanced Gamplay Logic of the Bots in Conquest
 - Bots now attack MAVs and EOD-Bots
+- Fixed missing input-restrictions on some maptypes and game-modes
 - Lots of refactoring
 
 

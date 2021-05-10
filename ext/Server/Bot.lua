@@ -518,11 +518,11 @@ function Bot:_updateAiming()
 				end
 			else
 				local s_TimeToTravel = (s_DistanceToPlayer / s_Speed)
+				s_PitchCorrection = 0.5 * s_TimeToTravel * s_TimeToTravel * s_Drop
 				if self.m_InVehicle then
-					s_TimeToTravel = s_TimeToTravel + 0.2 -- TODO: FIXME find right delay and find out why this is needed!!
+					s_TimeToTravel = s_TimeToTravel + 0.5 -- TODO: FIXME find right delay and find out why this is needed!!
 				end
 				s_FactorForMovement = (s_TimeToTravel) / self._UpdateTimer
-				s_PitchCorrection = 0.5 * s_TimeToTravel * s_TimeToTravel * s_Drop
 			end
 
 			if self._LastShootPlayer == self._ShootPlayer then
@@ -664,7 +664,7 @@ function Bot:_updateYaw(p_DeltaTime)
 				local s_DiffPos = s_Pos - self.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(self._VehicleMovableId):ToLinearTransform().forward
 				-- prepare for moving gun back
 				self._LastVehicleYaw = s_Yaw
-				if math.abs(s_DiffPos.x) > 0.15 or math.abs(s_DiffPos.z) > 0.15 then
+				if math.abs(s_DiffPos.x) > 0.05 or math.abs(s_DiffPos.z) > 0.05 then
 					s_CorrectGunYaw = true
 				end
 			end
