@@ -2,6 +2,7 @@ class('WeaponList')
 
 require('__shared/WeaponClass')
 require('__shared/Config')
+require('__shared/Constants/WeaponTypes')
 require('__shared/WeaponLists/CustomWeaponsAssault')
 require('__shared/WeaponLists/CustomWeaponsEngineer')
 require('__shared/WeaponLists/CustomWeaponsRecon')
@@ -369,17 +370,14 @@ end
 function WeaponList:_isCustomWeapon(p_Class, p_Name)
 	local customWeaponList = nil
 	local isCustomWeapon = false
-	if p_Class == "Assault" then
+	if p_Class == BotKits.Assault then
 		customWeaponList = CustomWeaponsAssault
-	elseif p_Class == "Engineer" then
+	elseif p_Class == BotKits.Engineer then
 		customWeaponList = CustomWeaponsEngineer
-	elseif p_Class == "Support" then
+	elseif p_Class == BotKits.Support then
 		customWeaponList = CustomWeaponsSupport
-	elseif p_Class == "Recon" then
+	elseif p_Class == BotKits.Recon then
 		customWeaponList = CustomWeaponsRecon
-	-- use thhis function for pistols as well
-	elseif p_Class == "Pistol" then
-		customWeaponList = CustomWeaponsPistols
 	end
 
 	for _,customName in pairs(customWeaponList) do
@@ -396,22 +394,22 @@ function WeaponList:_useWeaponType(p_Class, p_Type, p_Name)
 	local useThisWeapon = false
 	local isClassWeapon = false
 	local weaponSet = ""
-	if p_Class == "Assault" then
+	if p_Class == BotKits.Assault then
 		weaponSet = Config.AssaultWeaponSet
 		if p_Type == WeaponTypes.Assault then
 			isClassWeapon = true
 		end
-	elseif p_Class == "Engineer" then
+	elseif p_Class ==  BotKits.Engineer then
 		weaponSet = Config.EngineerWeaponSet
 		if p_Type == WeaponTypes.Carabine then
 			isClassWeapon = true
 		end
-	elseif p_Class == "Support" then
+	elseif p_Class ==  BotKits.Support then
 		weaponSet = Config.SupportWeaponSet
 		if p_Type == WeaponTypes.LMG then
 			isClassWeapon = true
 		end
-	else --if p_Class == "Recon" then
+	else --if p_Class ==  BotKits.Recon then
 		weaponSet = Config.ReconWeaponSet
 		if p_Type == WeaponTypes.Sniper then
 			isClassWeapon = true
@@ -419,7 +417,7 @@ function WeaponList:_useWeaponType(p_Class, p_Type, p_Name)
 	end
 
 	-- check for custom-weapon
-	if weaponSet == "Custom" then
+	if weaponSet == WeaponSets.Custom then
 		useThisWeapon = self:_isCustomWeapon(p_Class, p_Name)
 	else -- check for other p_Classes
 		if p_Type == WeaponTypes.PDW then
@@ -492,8 +490,7 @@ function WeaponList:updateWeaponList()
 			table.insert(PistoWeapons, wep.name)
 		end
 
-
-		if self:_useWeaponType("Assault", wep.type, wep.name) then
+		if self:_useWeaponType(BotKits.Assault, wep.type, wep.name) then
 			if (wep.type == WeaponTypes.Knife) then
 				table.insert(AssaultKnife, wep.name)
 			elseif (wep.type == WeaponTypes.Pistol) then
@@ -508,7 +505,7 @@ function WeaponList:updateWeaponList()
 				table.insert(AssaultPrimary, wep.name)
 			end
 		end
-		if self:_useWeaponType("Engineer", wep.type, wep.name) then
+		if self:_useWeaponType(BotKits.Engineer, wep.type, wep.name) then
 			if (wep.type == WeaponTypes.Knife) then
 				table.insert(EngineerKnife, wep.name)
 			elseif (wep.type == WeaponTypes.Pistol) then
@@ -523,7 +520,7 @@ function WeaponList:updateWeaponList()
 				table.insert(EngineerPrimary, wep.name)
 			end
 		end
-		if self:_useWeaponType("Support", wep.type, wep.name) then
+		if self:_useWeaponType(BotKits.Support, wep.type, wep.name) then
 			if (wep.type == WeaponTypes.Knife) then
 				table.insert(SupportKnife, wep.name)
 			elseif (wep.type == WeaponTypes.Pistol) then
@@ -538,7 +535,7 @@ function WeaponList:updateWeaponList()
 				table.insert(SupportPrimary, wep.name)
 			end
 		end
-		if self:_useWeaponType("Recon", wep.type, wep.name) then
+		if self:_useWeaponType(BotKits.Recon, wep.type, wep.name) then
 			if (wep.type == WeaponTypes.Knife) then
 				table.insert(ReconKnife, wep.name)
 			elseif (wep.type == WeaponTypes.Pistol) then
