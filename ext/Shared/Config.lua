@@ -47,22 +47,6 @@ Config = {
     MaxBotsPerTeamD = 24,			-- max number of bots in one team in Domination
     MaxBotsPerTeamGm = 8,			-- max number of bots in one team in Gun-Master
 	MaxBotsPerTeamS = 16,			-- max number of bots in one team in Scavenger
-    -- MaxBotsPerTeamTs = 24,			-- max number of bots in one team in Tank-Superiority
-    -- MaxBotsPerTeamAs = 24,			-- max number of bots in one team in Air-Superiority
-	-- MaxBotsPerTeamSr = 4,			-- max number of bots in one team in Squad-Rush
-
-	-- weapons
-	UseRandomWeapon = true,			-- use a random weapon out of the weapon set
-	AssaultWeaponSet = WeaponSets.Custom,	-- weaponset of Assault class
-	EngineerWeaponSet = WeaponSets.Custom,	-- weaponset of Engineer class
-	SupportWeaponSet = WeaponSets.Custom,	-- weaponset of Support class
-	ReconWeaponSet = WeaponSets.Custom,		-- weaponset of Recon class
-	AssaultWeapon = "M416",			-- weapon of Assault class
-	EngineerWeapon = "M4A1",		-- weapon of Engineer class
-	SupportWeapon = "M249",			-- weapon of Support class
-	ReconWeapon = "L96_6x",			-- weapon of Recon class
-	Pistol = "MP412Rex",			-- Bot pistol
-	Knife = "Razor",				-- Bot knife
 
 	-- behaviour
 	FovForShooting = 245,			-- Degrees of FOV of Bot
@@ -78,6 +62,19 @@ Config = {
 	BotsThrowGrenades = true,		-- Bots throw grenades
 	BotsDeploy = true,				-- Bots deploy ammo and medkits
 	DeployCycle = 50,				-- time between deployment of bots
+
+	-- weapons
+	UseRandomWeapon = true,			-- use a random weapon out of the weapon set
+	AssaultWeaponSet = WeaponSets.Custom,	-- weaponset of Assault class
+	EngineerWeaponSet = WeaponSets.Custom,	-- weaponset of Engineer class
+	SupportWeaponSet = WeaponSets.Custom,	-- weaponset of Support class
+	ReconWeaponSet = WeaponSets.Custom,		-- weaponset of Recon class
+	AssaultWeapon = "M416",			-- weapon of Assault class
+	EngineerWeapon = "M4A1",		-- weapon of Engineer class
+	SupportWeapon = "M249",			-- weapon of Support class
+	ReconWeapon = "L96_6x",			-- weapon of Recon class
+	Pistol = "MP412Rex",			-- Bot pistol
+	Knife = "Razor",				-- Bot knife
 
 	-- traces
 	DebugTracePaths = false,		-- Shows the trace line and search area from Commo Rose selection
