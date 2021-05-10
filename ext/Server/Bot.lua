@@ -17,8 +17,8 @@ function Bot:__init(p_Player)
 	--common settings
 	self._SpawnMode = 0
 	self._MoveMode = 0
-	self.m_Kit = ""
-	self.m_Color = ""
+	self.m_Kit = nil
+	self.m_Color = nil
 	self.m_ActiveWeapon = nil
 	self.m_Primary = nil
 	self.m_Pistol = nil
@@ -92,7 +92,7 @@ function Bot:__init(p_Player)
 	self._ShootPlayer = nil
 	self._ShootPlayerVehicleType = 0
 	self._ShootPlayerName = ""
-	self._WeaponToUse = "Primary"
+	self._WeaponToUse = BotWeapons.Primary
 	self._ShootWayPoints = {}
 	self._KnifeWayPositions = {}
 	self._LastTargetTrans = Vec3()
@@ -150,7 +150,7 @@ end
 
 --public functions
 function Bot:revive(p_Player)
-	if self.m_Kit == "Assault" and p_Player.corpse ~= nil then
+	if self.m_Kit == BotKits.Assault and p_Player.corpse ~= nil then
 		if Config.BotsRevive then
 			self._ReviveActive = true
 			self._ShootPlayer = nil
@@ -185,7 +185,7 @@ function Bot:shootAt(p_Player, p_IgnoreYaw)
 	end
 	if not p_IgnoreYaw then
 
-		if self.m_ActiveWeapon.type ~= "Sniper" and s_Distance > Config.MaxShootDistanceNoSniper then
+		if self.m_ActiveWeapon.type ~= WeaponTypes.Sniper and s_Distance > Config.MaxShootDistanceNoSniper then
 			return false
 		end
 	end
@@ -275,7 +275,7 @@ function Bot:resetVars()
 	self._ReviveActive = false
 	self._GrenadeActive = false
 	self._C4Active = false
-	self._WeaponToUse = "Primary"
+	self._WeaponToUse = BotWeapons.Primary
 end
 
 function Bot:setVarsStatic(p_Player)
@@ -411,7 +411,7 @@ function Bot:resetSpawnVars()
 	self._GrenadeActive = false
 	self._C4Active = false
 	self._Objective = '' --reset objective on spawn, as an other spawn-point might have chosen...
-	self._WeaponToUse = "Primary"
+	self._WeaponToUse = BotWeapons.Primary
 
 	-- reset all input-vars
 	for i = 0, 36 do
@@ -501,12 +501,12 @@ function Bot:_updateAiming()
 			local s_Speed = 0.0
 			if self.m_InVehicle then
 				s_Drop = 9.81
-				s_Speed = 250
+				s_Speed = 350
 			else
 				s_Drop = self.m_ActiveWeapon.bulletDrop
 				s_Speed = self.m_ActiveWeapon.bulletSpeed
 			end
-			if self.m_ActiveWeapon.type == "Grenade" then
+			if self.m_ActiveWeapon.type == WeaponTypes.Grenade then
 				if s_DistanceToPlayer < 5 then
 					s_DistanceToPlayer = 5 -- don't throw them too close..
 				end
@@ -518,6 +518,9 @@ function Bot:_updateAiming()
 				end
 			else
 				local s_TimeToTravel = (s_DistanceToPlayer / s_Speed)
+				if self.m_InVehicle then
+					s_TimeToTravel = s_TimeToTravel + 0.2 -- TODO: FIXME find right delay and find out why this is needed!!
+				end
 				s_FactorForMovement = (s_TimeToTravel) / self._UpdateTimer
 				s_PitchCorrection = 0.5 * s_TimeToTravel * s_TimeToTravel * s_Drop
 			end
@@ -539,7 +542,7 @@ function Bot:_updateAiming()
 
 		--calculate pitch
 		local s_Pitch = 0
-		if self.m_ActiveWeapon.type == "Grenade" then
+		if self.m_ActiveWeapon.type == WeaponTypes.Grenade then
 			s_Pitch = s_GrenadePitch
 		else
 			local s_Distance = math.sqrt(s_DifferenceZ ^ 2 + s_DifferenceX ^ 2)
@@ -901,9 +904,9 @@ function Bot:_ceckForVehicleAttack(p_VehicleType, p_Distance)
 	end
 
 	if p_VehicleType ~= 5 then -- MAV or EOD always with rifle
-		if self.m_SecondaryGadget.type == "Rocket" then
+		if self.m_SecondaryGadget.type == WeaponTypes.Rocket then
 			s_AttackMode = 3 -- always use rocket if possible
-		elseif self.m_SecondaryGadget.type == "C4" and p_Distance < 25 then
+		elseif self.m_SecondaryGadget.type == WeaponTypes.C4 and p_Distance < 25 then
 			if p_VehicleType == 1 or p_VehicleType == 2 or p_VehicleType == 4 then -- no air vehicles
 				s_AttackMode = 4 -- always use c4 if possible
 			end
@@ -926,33 +929,33 @@ function Bot:_updateShooting()
 						self.m_ActiveWeapon = self.m_Knife
 						self._ShotTimer = 0
 					end
-				elseif self._ReviveActive or (self._WeaponToUse == "Gadget2" and Config.BotWeapon == "Auto") or Config.BotWeapon == "Gadget2" then
+				elseif self._ReviveActive or (self._WeaponToUse == BotWeapons.Gadget2 and Config.BotWeapon == BotWeapons.Auto) or Config.BotWeapon == BotWeapons.Gadget2 then
 					if self.m_Player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_5 then
 						self:_setInput(EntryInputActionEnum.EIASelectWeapon5, 1)
 						self.m_ActiveWeapon = self.m_SecondaryGadget
 						self._ShotTimer = - (Config.BotFirstShotDelay + math.random()*self._Skill)
 					end
-				elseif (self._WeaponToUse == "Gadget1" and Config.BotWeapon == "Auto") or Config.BotWeapon == "Gadget1" then
+				elseif (self._WeaponToUse == BotWeapons.Gadget1 and Config.BotWeapon == BotWeapons.Auto) or Config.BotWeapon == BotWeapons.Gadget1 then
 					if self.m_Player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_2 and self.m_Player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_4 then
 						self:_setInput(EntryInputActionEnum.EIASelectWeapon4, 1)
 						self:_setInput(EntryInputActionEnum.EIASelectWeapon3, 1)
 						self.m_ActiveWeapon = self.m_PrimaryGadget
 						self._ShotTimer = - (Config.BotFirstShotDelay + math.random()*self._Skill)
 					end
-				elseif self._GrenadeActive or (self._WeaponToUse == "Grenade" and Config.BotWeapon == "Auto") or Config.BotWeapon == "Grenade" then
+				elseif self._GrenadeActive or (self._WeaponToUse == BotWeapons.Grenade and Config.BotWeapon == BotWeapons.Auto) or Config.BotWeapon == BotWeapons.Grenade then
 					if self.m_Player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_6 then
 						self:_setInput(EntryInputActionEnum.EIASelectWeapon6, 1)
 						self.m_ActiveWeapon = self.m_Grenade
 						self._ShotTimer = - (Config.BotFirstShotDelay + math.random()*self._Skill)
 					end
-				elseif (self._WeaponToUse == "Pistol" and Config.BotWeapon == "Auto") or Config.BotWeapon == "Pistol" then
+				elseif (self._WeaponToUse == BotWeapons.Pistol and Config.BotWeapon == BotWeapons.Auto) or Config.BotWeapon == BotWeapons.Pistol then
 					if self.m_Player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_1 then
 						self.m_Player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 1)
 						self:_setInput(EntryInputActionEnum.EIASelectWeapon2, 1)
 						self.m_ActiveWeapon = self.m_Pistol
 						self._ShotTimer = - (Config.BotFirstShotDelay + math.random()*self._Skill)/2 -- TODO: maybe a little less or more?
 					end
-				elseif (self._WeaponToUse == "Primary" and Config.BotWeapon == "Auto") or Config.BotWeapon == "Primary" then
+				elseif (self._WeaponToUse == BotWeapons.Primary and Config.BotWeapon == BotWeapons.Auto) or Config.BotWeapon == BotWeapons.Primary then
 					if self.m_Player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_0 then
 						self:_setInput(EntryInputActionEnum.EIASelectWeapon1, 1)
 						self.m_ActiveWeapon = self.m_Primary
@@ -1016,20 +1019,20 @@ function Bot:_updateShooting()
 						if s_AttackMode == 2 then -- grenade
 							self._GrenadeActive = true
 						elseif s_AttackMode == 3 then -- rocket
-							self._WeaponToUse = "Gadget2"
+							self._WeaponToUse = BotWeapons.Gadget2
 							if self.m_Player.soldier.weaponsComponent.currentWeapon.secondaryAmmo <= 2 then
 								self.m_Player.soldier.weaponsComponent.currentWeapon.secondaryAmmo = self.m_Player.soldier.weaponsComponent.currentWeapon.secondaryAmmo + 3
 							end
 						elseif s_AttackMode == 4 then -- C4
-							self._WeaponToUse = "Gadget2"
+							self._WeaponToUse = BotWeapons.Gadget2
 							self._C4Active = true
 						elseif s_AttackMode == 1 then
 							-- TODO: double code is not nice
 							if not self._GrenadeActive and self.m_Player.soldier.weaponsComponent.weapons[1] ~= nil then
 								if self.m_Player.soldier.weaponsComponent.weapons[1].primaryAmmo == 0 then
-									self._WeaponToUse = "Pistol"
+									self._WeaponToUse = BotWeapons.Pistol
 								else
-									self._WeaponToUse = "Primary"
+									self._WeaponToUse = BotWeapons.Primary
 								end
 							end
 						end
@@ -1038,19 +1041,19 @@ function Bot:_updateShooting()
 					end
 				else
 					if self.m_KnifeMode or self._MeleeActive then
-						self._WeaponToUse = "Knife"
+						self._WeaponToUse = BotWeapons.Knife
 					else
 						if not self._GrenadeActive and self.m_Player.soldier.weaponsComponent.weapons[1] ~= nil then
 							if self.m_Player.soldier.weaponsComponent.weapons[1].primaryAmmo == 0 and s_CurrentDistance <= Config.MaxShootDistancePistol then
-								self._WeaponToUse = "Pistol"
+								self._WeaponToUse = BotWeapons.Pistol
 							else
-								self._WeaponToUse = "Primary"
+								self._WeaponToUse = BotWeapons.Primary
 							end
 						end
 						-- use grenade from time to time
 						if Config.BotsThrowGrenades and not self.m_InVehicle then
 							local s_TargetTimeValue = Config.BotFireModeDuration - 0.5
-							if ((self._ShootModeTimer >= s_TargetTimeValue) and (self._ShootModeTimer < (s_TargetTimeValue + StaticConfig.BotUpdateCycle)) and not self._GrenadeActive) or Config.BotWeapon == "Grenade" then
+							if ((self._ShootModeTimer >= s_TargetTimeValue) and (self._ShootModeTimer < (s_TargetTimeValue + StaticConfig.BotUpdateCycle)) and not self._GrenadeActive) or Config.BotWeapon == BotWeapons.Grenade then
 								-- should be triggered only once per fireMode
 								if MathUtils:GetRandomInt(1,100) <= 40 then
 									if self.m_Grenade ~= nil and s_CurrentDistance < 35 then
@@ -1063,7 +1066,7 @@ function Bot:_updateShooting()
 				end
 
 				--trace way back
-				if (self.m_ActiveWeapon ~= nil and self.m_ActiveWeapon.type ~= "Sniper" and not self.m_InVehicle) or self.m_KnifeMode then
+				if (self.m_ActiveWeapon ~= nil and self.m_ActiveWeapon.type ~= WeaponTypes.Sniper and not self.m_InVehicle) or self.m_KnifeMode then
 					if self._ShootTraceTimer > StaticConfig.TraceDeltaShooting then
 						--create a Trace to find way back
 						self._ShootTraceTimer = 0
@@ -1141,7 +1144,7 @@ function Bot:_updateShooting()
 
 			else
 				self._TargetPitch = 0.0
-				self._WeaponToUse = "Primary"
+				self._WeaponToUse = BotWeapons.Primary
 				self._ShootPlayerName = ""
 				self._ShootPlayer = nil
 				self._GrenadeActive = false
@@ -1178,12 +1181,12 @@ function Bot:_updateShooting()
 				end
 				self._ShootTraceTimer = self._ShootTraceTimer + StaticConfig.BotUpdateCycle
 			else
-				self._WeaponToUse = "Primary"
+				self._WeaponToUse = BotWeapons.Primary
 				self._ShootPlayer = nil
 				self._ReviveActive = false
 			end
 		else
-			self._WeaponToUse = "Primary"
+			self._WeaponToUse = BotWeapons.Primary
 			self._GrenadeActive = false
 			self._C4Active = false
 			self._ShootPlayer = nil
@@ -1199,14 +1202,14 @@ function Bot:_updateShooting()
 
 			-- deploy from time to time
 			if Config.BotsDeploy then
-				if self.m_Kit == "Support" or self.m_Kit == "Assault" then
-					if self.m_PrimaryGadget.type == "Ammobag" or self.m_PrimaryGadget.type == "Medkit" then
+				if self.m_Kit == BotKits.Support or self.m_Kit == BotKits.Assault then
+					if self.m_PrimaryGadget.type == WeaponTypes.Ammobag or self.m_PrimaryGadget.type == WeaponTypes.Medkit then
 						self._DeployTimer = self._DeployTimer + StaticConfig.BotUpdateCycle
 						if self._DeployTimer > Config.DeployCycle then
 							self._DeployTimer = 0
 						end
 						if self._DeployTimer < 0.7 then
-							self._WeaponToUse = "Gadget1"
+							self._WeaponToUse = BotWeapons.Gadget1
 						end
 					end
 				end
@@ -1643,16 +1646,16 @@ function Bot:_updateMovement()
 		-- Shoot MoveMode
 		elseif self.m_ActiveMoveMode == 9 then
 			if self._AttackMode == 0 then
-				if Config.BotAttackMode == "Crouch" then
+				if Config.BotAttackMode == BotAttackModes.Crouch then
 					self._AttackMode = 2
-				elseif Config.BotAttackMode == "Stand" then
+				elseif Config.BotAttackMode == BotAttackModes.Stand then
 					self._AttackMode = 3
 				else -- random
 					self._AttackMode = MathUtils:GetRandomInt(2, 3)
 				end
 			end
 			--crouch moving (only mode with modified gun)
-			if (self.m_ActiveWeapon.type == "Sniper" and not self.m_KnifeMode) or self.m_InVehicle then --don't move while shooting in a vehicle
+			if (self.m_ActiveWeapon.type == WeaponTypes.Sniper and not self.m_KnifeMode) or self.m_InVehicle then --don't move while shooting in a vehicle
 				if self._AttackMode == 2 then
 					if self.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Crouch then
 						self.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Crouch, true, true)
@@ -1837,7 +1840,7 @@ function Bot:_setActiveVars()
 		self.m_InVehicle = false
 	end
 
-	if Config.BotWeapon == "Knife" or Config.ZombieMode then
+	if Config.BotWeapon == BotWeapons.Knife or Config.ZombieMode then
 		self.m_KnifeMode = true
 	else
 		self.m_KnifeMode = false

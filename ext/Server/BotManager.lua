@@ -64,7 +64,8 @@ function BotManager:configGlobals()
 
 		m_Logger:Write("there are ".. s_MaxPlayers .." slots on this server")
 	else
-		Globals.MaxPlayers = MAX_NUMBER_OF_BOTS -- only fallback
+		Globals.MaxPlayers = 127 -- only fallback. Should not happens
+		m_Logger:Error("No Playercount found")
 	end
 	self._InitDone = true
 end
@@ -76,8 +77,8 @@ function BotManager:calcYawPerFrame()
 end
 
 function BotManager:findNextBotName()
-	for i = 1, MAX_NUMBER_OF_BOTS do
-		local s_Name = BOT_TOKEN .. BotNames[i]
+	for _,name in pairs(BotNames) do
+		local s_Name = BOT_TOKEN .. name
 		local s_SkipName = false
 		for _, l_IgnoreName in pairs(Globals.IgnoreBotNames) do
 			if s_Name == l_IgnoreName then
@@ -364,21 +365,21 @@ function BotManager:_getDamageValue(p_Damage, p_Bot, p_Soldier, p_Fake)
 	local s_ResultDamage = 0
 	local s_DamageFactor = 1.0
 
-	if p_Bot.m_ActiveWeapon.type == "Shotgun" then
+	if p_Bot.m_ActiveWeapon.type == WeaponTypes.Shotgun then
 		s_DamageFactor = Config.DamageFactorShotgun
-	elseif p_Bot.m_ActiveWeapon.type == "Assault" then
+	elseif p_Bot.m_ActiveWeapon.type == WeaponTypes.Assault then
 		s_DamageFactor = Config.DamageFactorAssault
-	elseif p_Bot.m_ActiveWeapon.type == "Carabine" then
+	elseif p_Bot.m_ActiveWeapon.type == WeaponTypes.Carabine then
 		s_DamageFactor = Config.DamageFactorCarabine
-	elseif p_Bot.m_ActiveWeapon.type == "PDW" then
+	elseif p_Bot.m_ActiveWeapon.type == WeaponTypes.PDW then
 		s_DamageFactor = Config.DamageFactorPDW
-	elseif p_Bot.m_ActiveWeapon.type == "LMG" then
+	elseif p_Bot.m_ActiveWeapon.type == WeaponTypes.LMG then
 		s_DamageFactor = Config.DamageFactorLMG
-	elseif p_Bot.m_ActiveWeapon.type == "Sniper" then
+	elseif p_Bot.m_ActiveWeapon.type == WeaponTypes.Sniper then
 		s_DamageFactor = Config.DamageFactorSniper
-	elseif p_Bot.m_ActiveWeapon.type == "Pistol" then
+	elseif p_Bot.m_ActiveWeapon.type == WeaponTypes.Pistol then
 		s_DamageFactor = Config.DamageFactorPistol
-	elseif p_Bot.m_ActiveWeapon.type == "Knife" then
+	elseif p_Bot.m_ActiveWeapon.type == WeaponTypes.Knife then
 		s_DamageFactor = Config.DamageFactorKnife
 	end
 
