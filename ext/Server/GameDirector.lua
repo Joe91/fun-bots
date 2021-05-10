@@ -757,7 +757,7 @@ function GameDirector:_TranslateObjective(p_Position, p_Name)
 	end
 	local s_AllObjectives = m_NodeCollection:GetKnownOjectives()
 	local s_PathsDone = {}
-	local s_ClosestObjective = ""
+	local s_ClosestObjective = nil
 	local s_ClosestDistance = nil
 	for l_Objective, l_Paths in pairs(s_AllObjectives) do
 		for _, l_Path in pairs(l_Paths) do
@@ -781,11 +781,15 @@ function GameDirector:_TranslateObjective(p_Position, p_Name)
 			::continue_paths_loop::
 		end
 	end
-	if p_Name ~= nil then
+	if p_Name ~= nil and s_ClosestObjective ~= nil then
 		self.m_Translations[p_Name] = s_ClosestObjective.name
 		s_ClosestObjective.position = p_Position
 	end
-	return s_ClosestObjective.name
+	if s_ClosestObjective ~= nil then
+		return s_ClosestObjective.name
+	else
+		return ""
+	end
 end
 
 function GameDirector:_GetObjectiveObject(p_Name)
