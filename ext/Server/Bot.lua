@@ -15,8 +15,8 @@ function Bot:__init(p_Player)
 	self.m_Id = p_Player.id
 
 	--common settings
-	self._SpawnMode = 0
-	self._MoveMode = 0
+	self._SpawnMode = BotSpawnModes.NoRespawn
+	self._MoveMode = BotMoveModes.Standstill
 	self.m_Kit = nil
 	self.m_Color = nil
 	self.m_ActiveWeapon = nil
@@ -48,7 +48,7 @@ function Bot:__init(p_Player)
 	self._BrakeTimer = 0
 
 	--shared movement vars
-	self.m_ActiveMoveMode = 0
+	self.m_ActiveMoveMode = BotMoveModes.Standstill
 	self.m_ActiveSpeedValue = 0
 	self.m_KnifeMode = false
 	self.m_InVehicle = false
@@ -241,8 +241,8 @@ function Bot:shootAt(p_Player, p_IgnoreYaw)
 end
 
 function Bot:setVarsDefault()
-	self._SpawnMode = 5
-	self._MoveMode = 5
+	self._SpawnMode = BotSpawnModes.RespawnRandomPath
+	self._MoveMode = BotMoveModes.Paths
 	self._BotSpeed = 3
 	self._PathIndex = 1
 	self._Respawning = Globals.RespawnWayBots
@@ -250,8 +250,8 @@ function Bot:setVarsDefault()
 end
 
 function Bot:resetVars()
-	self._SpawnMode = 0
-	self._MoveMode = 0
+	self._SpawnMode = BotSpawnModes.NoRespawn
+	self._MoveMode = BotMoveModes.Standstill
 	self._PathIndex = 0
 	self._Respawning = false
 	self._Shoot = false
@@ -279,50 +279,36 @@ function Bot:resetVars()
 end
 
 function Bot:setVarsStatic(p_Player)
-	self._SpawnMode = 0
-	self._MoveMode = 0
+	self._SpawnMode = BotSpawnModes.NoRespawn
+	self._MoveMode = BotMoveModes.Standstill
 	self._PathIndex = 0
 	self._Respawning = false
 	self._Shoot = false
 	self._TargetPlayer = p_Player
-end
-
-function Bot:setVarsSimpleMovement(p_Player, p_SpawnMode, p_Transform)
-	self._SpawnMode = p_SpawnMode
-	self._MoveMode = 2
-	self._BotSpeed = 3
-	self._PathIndex = 0
-	self._Respawning = false
-	self._Shoot = false
-	self._TargetPlayer = p_Player
-
-	if p_Transform ~= nil then
-		self._SpawnTransform = p_Transform
-	end
 end
 
 function Bot:setVarsWay(p_Player, p_UseRandomWay, p_PathIndex, p_CurrentWayPoint, p_InverseDirection)
 	if p_UseRandomWay then
-		self._SpawnMode = 5
+		self._SpawnMode = BotSpawnModes.RespawnRandomPath
 		self._TargetPlayer = nil
 		self._Shoot = Globals.AttackWayBots
 		self._Respawning = Globals.RespawnWayBots
 	else
-		self._SpawnMode = 4
+		self._SpawnMode = BotSpawnModes.RespawnFixedPath
 		self._TargetPlayer = p_Player
 		self._Shoot = false
 		self._Respawning = false
 	end
 
 	self._BotSpeed = 3
-	self._MoveMode = 5
+	self._MoveMode = BotMoveModes.Paths
 	self._PathIndex = p_PathIndex
 	self._CurrentWayPoint = p_CurrentWayPoint
 	self._InvertPathDirection = p_InverseDirection
 end
 
 function Bot:isStaticMovement()
-	if self._MoveMode == 0 or self._MoveMode == 3 or self._MoveMode == 4 then
+	if self._MoveMode == BotMoveModes.Standstill or self._MoveMode == BotMoveModes.Mirror or self._MoveMode == BotMoveModes.Mimic then
 		return true
 	else
 		return false
@@ -370,7 +356,7 @@ function Bot:getTargetPlayer()
 end
 
 function Bot:isInactive()
-	if self.m_Player.alive or self._SpawnMode ~= 0 then
+	if self.m_Player.alive or self._SpawnMode ~= BotSpawnModes.NoRespawn then
 		return false
 	else
 		return true
@@ -460,7 +446,7 @@ end
 
 -- private functions
 function Bot:_updateRespwawn()
-	if self._Respawning and self.m_Player.soldier == nil and self._SpawnMode > 0 then
+	if self._Respawning and self.m_Player.soldier == nil and self._SpawnMode ~= BotSpawnModes.NoRespawn then
 		-- wait for respawn-delay gone
 		if self._SpawnDelayTimer < Globals.RespawnDelay then
 			self._SpawnDelayTimer = self._SpawnDelayTimer + StaticConfig.BotUpdateCycle
@@ -975,9 +961,9 @@ function Bot:_updateShooting()
 					self._ShootModeTimer = self._ShootModeTimer + StaticConfig.BotUpdateCycle
 				end
 				if self._C4Active then
-					self.m_ActiveMoveMode = 8 -- movement-mode : C4 / revive
+					self.m_ActiveMoveMode = BotMoveModes.ReviveC4 -- movement-mode : C4 / revive
 				else
-					self.m_ActiveMoveMode = 9 -- movement-mode : attack
+					self.m_ActiveMoveMode = BotMoveModes.Shooting -- movement-mode : attack
 				end
 				self._ReloadTimer = 0 -- reset reloading
 
@@ -1154,7 +1140,7 @@ function Bot:_updateShooting()
 		elseif self._ReviveActive and self._ShootPlayer ~= nil then
 			if self._ShootPlayer.corpse ~= nil then  -- revive
 				self._ShootModeTimer = self._ShootModeTimer + StaticConfig.BotUpdateCycle
-				self.m_ActiveMoveMode = 8 -- movement-mode : revive
+				self.m_ActiveMoveMode = BotMoveModes.ReviveC4 -- movement-mode : revive
 				self._ReloadTimer = 0 -- reset reloading
 
 				--check for revive if close
@@ -1253,18 +1239,8 @@ function Bot:_updateMovement()
 	local s_AdditionalMovementPossible = true
 
 	if self.m_Player.alive then
-		-- pointing
-		if self.m_ActiveMoveMode == 2 and self._TargetPlayer ~= nil then
-			if self._TargetPlayer.soldier ~= nil then
-				local s_DifferenceY = self._TargetPlayer.soldier.worldTransform.trans.z - self.m_Player.soldier.worldTransform.trans.z
-				local s_DifferenceX = self._TargetPlayer.soldier.worldTransform.trans.x - self.m_Player.soldier.worldTransform.trans.x
-				local s_AtanDzDx = math.atan(s_DifferenceY, s_DifferenceX)
-				local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
-				self._TargetYaw = s_Yaw
-			end
-
 		-- mimicking
-		elseif self.m_ActiveMoveMode == 3 and self._TargetPlayer ~= nil then
+		if self.m_ActiveMoveMode == BotMoveModes.Mimic and self._TargetPlayer ~= nil then
 			s_AdditionalMovementPossible = false
 
 			for i = 0, 36 do
@@ -1275,7 +1251,7 @@ function Bot:_updateMovement()
 			self._TargetPitch = self._TargetPlayer.input.authoritativeAimingPitch
 
 		-- mirroring
-		elseif self.m_ActiveMoveMode == 4 and self._TargetPlayer ~= nil then
+		elseif self.m_ActiveMoveMode == BotMoveModes.Mirror and self._TargetPlayer ~= nil then
 			s_AdditionalMovementPossible = false
 
 			for i = 0, 36 do
@@ -1286,7 +1262,7 @@ function Bot:_updateMovement()
 			self._TargetPitch = self._TargetPlayer.input.authoritativeAimingPitch
 
 		-- move along points
-		elseif self.m_ActiveMoveMode == 5 then
+		elseif self.m_ActiveMoveMode == BotMoveModes.Paths then
 			self._AttackModeMoveTimer = 0
 
 			if m_NodeCollection:Get(1, self._PathIndex) ~= nil then -- check for valid point
@@ -1644,7 +1620,7 @@ function Bot:_updateMovement()
 			end
 
 		-- Shoot MoveMode
-		elseif self.m_ActiveMoveMode == 9 then
+		elseif self.m_ActiveMoveMode == BotMoveModes.Shooting then
 			if self._AttackMode == 0 then
 				if Config.BotAttackMode == BotAttackModes.Crouch then
 					self._AttackMode = 2
@@ -1707,7 +1683,7 @@ function Bot:_updateMovement()
 				self._AttackModeMoveTimer = self._AttackModeMoveTimer + StaticConfig.BotUpdateCycle
 			end
 
-		elseif self.m_ActiveMoveMode == 8 then  -- Revive Move Mode / C4 Mode
+		elseif self.m_ActiveMoveMode == BotMoveModes.ReviveC4 then  -- Revive Move Mode / C4 Mode
 			self.m_ActiveSpeedValue = 4 --run to player
 			if self.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Stand then
 				self.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Stand, true, true)
@@ -1740,7 +1716,7 @@ function Bot:_updateMovement()
 				if self.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Stand then
 					self.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Stand, true, true)
 				end
-				if self.m_ActiveMoveMode > 0 then
+				if self.m_ActiveMoveMode ~= BotMoveModes.Standstill then
 					-- limit speed if full steering active
 					if self._FullVehicleSteering and self.m_ActiveSpeedValue >= 3 then
 						self.m_ActiveSpeedValue = 2
@@ -1760,7 +1736,7 @@ function Bot:_updateMovement()
 					end
 				end
 			else
-				if self.m_ActiveMoveMode > 0 then
+				if self.m_ActiveMoveMode ~= BotMoveModes.Standstill then
 					if self.m_ActiveSpeedValue == 1 then
 						s_SpeedVal = 1.0
 

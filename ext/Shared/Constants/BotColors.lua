@@ -12,5 +12,6 @@ BotColors = {
 	Green = 10,
 	Jungle = 11,
 	Navy = 12,
-	Wood01 = 13
+	Wood01 = 13,
+	Count = 14
 }

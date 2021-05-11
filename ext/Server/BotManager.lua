@@ -90,7 +90,7 @@ function BotManager:findNextBotName()
 			local s_Bot = self:getBotByName(s_Name)
 			if s_Bot == nil and PlayerManager:GetPlayerByName(s_Name) == nil then
 				return s_Name
-			elseif s_Bot ~= nil and s_Bot.m_Player.soldier == nil and s_Bot:getSpawnMode() < 4 then
+			elseif s_Bot ~= nil and s_Bot.m_Player.soldier == nil and s_Bot:getSpawnMode() ~= BotSpawnModes.RespawnRandomPath then
 				return s_Name
 			end
 		end

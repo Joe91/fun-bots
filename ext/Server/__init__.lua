@@ -17,6 +17,7 @@ require ('__shared/Utils/Logger')
 require('Model/Globals')
 require('UI/UI')
 require('Constants/Permissions')
+require('Constants/BotEnums')
 
 local m_Logger = Logger("FunBotServer", Debug.Server.INFO)
 

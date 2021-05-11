@@ -3,5 +3,6 @@ BotKits = {
 	Assault = 1,
 	Engineer = 2,
 	Support = 3,
-	Recon = 4
+	Recon = 4,
+	Count = 5
 }

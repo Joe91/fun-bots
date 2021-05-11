@@ -192,17 +192,12 @@ function BotSpawner:OnRespawnBot(p_BotName)
 	local s_Bot = m_BotManager:getBotByName(p_BotName)
 	local s_SpawnMode = s_Bot:getSpawnMode()
 
-	if s_SpawnMode == 2 then --spawnInLine
-		local s_Transform = LinearTransform()
-		s_Transform = s_Bot:getSpawnTransform()
-		self:_SpawnBot(s_Bot, s_Transform, false)
-
-	elseif s_SpawnMode == 4 then --fixed Way
+	if s_SpawnMode == BotSpawnModes.RespawnFixedPath then --fixed Way
 		local s_WayIndex = s_Bot:getWayIndex()
 		local s_RandIndex = MathUtils:GetRandomInt(1, #m_NodeCollection:Get(nil, s_WayIndex))
 		self:_SpawnSingleWayBot(nil, false, s_WayIndex, s_RandIndex, s_Bot)
 
-	elseif s_SpawnMode == 5 then --random Way
+	elseif s_SpawnMode == BotSpawnModes.RespawnRandomPath then --random Way
 		self:_SpawnSingleWayBot(nil, true, 0, 0, s_Bot)
 	end
 end
@@ -488,19 +483,6 @@ function BotSpawner:SpawnBotGrid(p_Player, p_Rows, p_Columns, p_Spacing)
 	end
 end
 
-function BotSpawner:SpawnLineBots(p_Player, p_Amount, p_Spacing)
-	 for i = 1, p_Amount do
-		local s_Name = m_BotManager:findNextBotName()
-		if s_Name ~= nil then
-			local s_Transform = LinearTransform()
-			s_Transform.trans = p_Player.soldier.worldTransform.trans + (p_Player.soldier.worldTransform.forward * i * p_Spacing)
-			local s_Bot = m_BotManager:createBot(s_Name, m_BotManager:getBotTeam(), SquadId.SquadNone)
-			s_Bot:setVarsSimpleMovement(p_Player, 2, s_Transform)
-			self:_SpawnBot(s_Bot, s_Transform, true)
-		end
-	end
-end
-
 function BotSpawner:SpawnWayBots(p_Player, p_Amount, p_UseRandomWay, p_ActiveWayIndex, p_IndexOnPath, p_TeamId)
 	if #m_NodeCollection:GetPaths() <= 0 then
 		return
@@ -547,7 +529,7 @@ function BotSpawner:_SelectLoadout(p_Bot, p_SetKit)
 
 	if s_WriteNewKit then
 		if s_BotColor == BotColors.RANDOM_COLOR then
-			s_BotColor = MathUtils:GetRandomInt(1, 13)
+			s_BotColor = MathUtils:GetRandomInt(1, BotColors.Count-1)  -- color enum goes from 1 to 13
 		end
 		if s_BotKit == BotKits.RANDOM_KIT then
 			s_BotKit = self:_GetSpawnBotKit()
@@ -829,7 +811,7 @@ function BotSpawner:_SpawnBot(p_Bot, p_Trans, p_SetKit)
 
 	if s_WriteNewKit then
 		if s_BotColor == BotColors.RANDOM_COLOR then
-			s_BotColor = MathUtils:GetRandomInt(1, 13) -- color enum goes from 1 to 13
+			s_BotColor = MathUtils:GetRandomInt(1, BotColors.Count-1) -- color enum goes from 1 to 13
 		end
 		if s_BotKit == BotKits.RANDOM_KIT then
 			s_BotKit = self:_GetSpawnBotKit()
@@ -1072,7 +1054,7 @@ function BotSpawner:_GetKitAppearanceCustomization(p_TeamId, p_Kit, p_Color, p_P
 end
 
 function BotSpawner:_GetSpawnBotKit()
-	local s_BotKit = MathUtils:GetRandomInt(1, 4) -- Kit enum goes from 1 to 4
+	local s_BotKit = MathUtils:GetRandomInt(1, BotKits.Count-1) -- Kit enum goes from 1 to 4
 	local s_ChangeKit = false
 	--find out, if possible
 	local s_KitCount = m_BotManager:getKitCount(s_BotKit)
