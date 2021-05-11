@@ -84,7 +84,7 @@ function BotSpawner:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	else
 		if self._UpdateActive then
 			self._UpdateActive = false
-			if Globals.SpawnMode ~= 'manual' then
+			if Globals.SpawnMode ~= SpawnModes.manual then
 				--garbage-collection of unwanted bots
 				m_BotManager:destroyDisabledBots()
 				m_BotManager:freshnTables()
@@ -233,8 +233,8 @@ function BotSpawner:UpdateBotAmountAndTeam()
 
 	-- kill and destroy bots, if no player left
 	if s_PlayerCount == 0 then
-		if s_BotCount > 0 then
-			m_BotManager:killAll()
+		if s_BotCount > 0 or self._FirstSpawnInLevel then
+			m_BotManager:killAll() --trigger once
 			self._UpdateActive = true
 		else
 			self._UpdateActive = false
@@ -249,14 +249,12 @@ function BotSpawner:UpdateBotAmountAndTeam()
 	local s_TargetTeamCount = {}
 	for i = 1, Globals.NrOfTeams do
 		s_CountPlayers[i] = 0
-		s_CountBots[i] = 0
+		s_CountBots[i] = m_BotManager:getActiveBotCount(i)
 		s_TargetTeamCount[i] = 0
 		local s_TempPlayers = PlayerManager:GetPlayersByTeam(i)
 		s_TeamCount[i] = #s_TempPlayers
 		for _, l_Player in pairs(s_TempPlayers) do
-			if m_Utilities:isBot(l_Player) then
-				s_CountBots[i] = s_CountBots[i] + 1
-			else
+			if not m_Utilities:isBot(l_Player) then
 				s_CountPlayers[i] = s_CountPlayers[i] + 1
 				if Globals.IsSdm then	-- TODO: Only needed because of VEXT-Bug
 					l_Player.squadId = 1

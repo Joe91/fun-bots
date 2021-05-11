@@ -479,6 +479,7 @@ function GameDirector:IsBasePath(p_ObjectiveNames)
 	return s_IsBase
 end
 
+-- -1 = destroyed objective
 -- 0 = all inactive
 -- 1 = partly inactive
 -- 2 = all active
@@ -486,8 +487,12 @@ function GameDirector:GetEnableStateOfPath(p_ObjectiveNamesOfPath)
 	local s_ActiveCount = 0
 	for _, l_ObjectiveName in pairs(p_ObjectiveNamesOfPath) do
 		local s_Objective = self:_GetObjectiveObject(l_ObjectiveName)
-		if s_Objective ~= nil and s_Objective.active then
-			s_ActiveCount = s_ActiveCount + 1
+		if s_Objective ~= nil then
+			if s_Objective.destroyed and #p_ObjectiveNamesOfPath == 1 and s_Objective.subObjective then
+				return -1 -- path of a destroyed mcom
+			elseif s_Objective.active then
+				s_ActiveCount = s_ActiveCount + 1
+			end
 		end
 	end
 	if s_ActiveCount == 0 then

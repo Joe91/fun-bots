@@ -72,7 +72,7 @@ function ChatCommands:execute(p_Parts, p_Player)
 			return
 		end
 
-		m_BotManager:setStaticOption(p_Player, 'mode', 3)
+		m_BotManager:setStaticOption(p_Player, 'mode', BotMoveModes.Mimic)
 
 	elseif p_Parts[1] == '!mirror' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Mirror') == false then
@@ -80,7 +80,7 @@ function ChatCommands:execute(p_Parts, p_Player)
 			return
 		end
 
-		m_BotManager:setStaticOption(p_Player, 'mode', 4)
+		m_BotManager:setStaticOption(p_Player, 'mode', BotMoveModes.Mirror)
 
 	elseif p_Parts[1] == '!static' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Static') == false then
@@ -88,7 +88,7 @@ function ChatCommands:execute(p_Parts, p_Player)
 			return
 		end
 
-		m_BotManager:setStaticOption(p_Player, 'mode', 0)
+		m_BotManager:setStaticOption(p_Player, 'mode', BotMoveModes.Standstill)
 
 	elseif p_Parts[1] == '!spawnway' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands.SpawnWay') == false then
