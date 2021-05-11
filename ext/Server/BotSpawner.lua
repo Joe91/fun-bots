@@ -252,7 +252,6 @@ function BotSpawner:UpdateBotAmountAndTeam()
 		s_CountBots[i] = m_BotManager:getActiveBotCount(i)
 		s_TargetTeamCount[i] = 0
 		local s_TempPlayers = PlayerManager:GetPlayersByTeam(i)
-		s_TeamCount[i] = #s_TempPlayers
 		for _, l_Player in pairs(s_TempPlayers) do
 			if not m_Utilities:isBot(l_Player) then
 				s_CountPlayers[i] = s_CountPlayers[i] + 1
@@ -261,6 +260,7 @@ function BotSpawner:UpdateBotAmountAndTeam()
 				end
 			end
 		end
+		s_TeamCount[i] = s_CountBots[i] + s_CountPlayers[i]
 	end
 
 	-- KEEP PLAYERCOUNT
