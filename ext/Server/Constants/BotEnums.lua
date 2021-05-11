@@ -12,3 +12,20 @@ BotSpawnModes = {
 	RespawnFixedPath = 4,
 	RespawnRandomPath = 5
 }
+
+VehicleTypes = {
+	NoVehicle = 0,
+	Tank = 1,
+	LightVehicle = 2,
+	AirVehicle = 3,
+	NoArmorVehicle = 4,
+	MavBot = 5
+}
+
+VehicleAttackModes = {
+	NoAttack = 0,
+	AttackWithRifle = 1,
+	AttackWithNade = 2,
+	AttackWithRocket = 3,
+	AttackWithC4 = 4
+}

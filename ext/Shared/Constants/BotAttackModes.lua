@@ -1,5 +1,5 @@
 BotAttackModes = {
-	Random = 0,
-	Crouch = 1,
-	Stand = 2
+	RandomNotSet = 0,
+	Crouch = 2,
+	Stand = 3
 }

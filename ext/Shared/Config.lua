@@ -53,7 +53,7 @@ Config = {
 	MaxRaycastDistance = 150,		-- meters bots start shooting at player
 	MaxShootDistanceNoSniper = 70,	-- meters a bot (not sniper) start shooting at player
 	MaxShootDistancePistol = 30,	-- only in auto-weapon-mode, the distance until a bot switches to pistol if his magazine is empty.
-	BotAttackMode = BotAttackModes.Random,		-- Mode the Bots attack with. Random, Crouch or Stand
+	BotAttackMode = BotAttackModes.RandomNotSet,		-- Mode the Bots attack with. Random, Crouch or Stand
 	ShootBackIfHit = true,			-- bot shoots back, if hit
 	BotsAttackBots = true,			-- bots attack bots from other team
 	MeleeAttackIfClose = true,		-- bot attacks with melee if close
@@ -93,8 +93,8 @@ Config = {
 	AimForHead = false,				-- bots aim for the head
 	JumpWhileShooting = true,		-- bots jump over obstacles while shooting if needed
 	JumpWhileMoving = true,			-- bots jump while moving. If false, only on obstacles!
-	OverWriteBotSpeedMode = 0,		-- 0 = no overwrite. 1 = prone, 2 = crouch, 3 = walk, 4 = run
-	OverWriteBotAttackMode = 0,		-- Affects Aiming!!! 0 = no overwrite. 1 = prone, 2 = crouch (good aim), 3 = walk (good aim), 4 = run
+	OverWriteBotSpeedMode = BotMoveSpeeds.NoMovement,		-- 0 = no overwrite. 1 = prone, 2 = crouch, 3 = walk, 4 = run
+	OverWriteBotAttackMode = BotMoveSpeeds.NoMovement,		-- Affects Aiming!!! 0 = no overwrite. 1 = prone, 2 = crouch (good aim), 3 = walk (good aim), 4 = run
 	SpeedFactor = 1.0,				-- reduces the movementspeed. 1 = normal, 0 = standing.
 	SpeedFactorAttack = 0.6,		-- reduces the movementspeed while attacking. 1 = normal, 0 = standing.
 

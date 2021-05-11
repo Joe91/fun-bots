@@ -466,7 +466,7 @@ SettingsDefinition = {
 			Value		= Config.BotAttackMode,
 			Description	= "Mode the Bots attack with. Random, Crouch or Stand",
 			Reference	= BotAttackModes,
-			Default		= BotAttackModes.Random,
+			Default		= BotAttackModes.RandomNotSet,
 			Category	= SettingsDefinition.Categorys.BEHAVIOUR
 		},
 		{
@@ -793,21 +793,21 @@ SettingsDefinition = {
 		{
 			Name		= "OverWriteBotSpeedMode",
 			Text 		= "Overwrite speed mode",
-			Type		= Type.Integer,
+			Type		= Type.Enum,
 			Value		= Config.OverWriteBotSpeedMode,
 			Description	= "0 = no overwrite. 1 = prone, 2 = crouch, 3 = walk, 4 = run",
-			Reference	= Range(0.00, 4.00),
-			Default		= 0,
+			Reference	= BotMoveSpeeds,
+			Default		= BotMoveSpeeds.NoMovement,
 			Category	= SettingsDefinition.Categorys.ADVANCED
 		},
 		{
 			Name		= "OverWriteBotAttackMode",
 			Text 		= "Overwrite attack speed mode",
-			Type		= Type.Integer,
+			Type		= Type.Enum,
 			Value		= Config.OverWriteBotAttackMode,
 			Description	= "Affects Aiming!!! 0 = no overwrite. 1 = prone, 2 = crouch (good aim), 3 = walk (good aim), 4 = run",
-			Reference	= Range(0.00, 4.00),
-			Default		= 0,
+			Reference	= BotMoveSpeeds,
+			Default		= BotMoveSpeeds.NoMovement,
 			Category	= SettingsDefinition.Categorys.ADVANCED
 		},
 		{
