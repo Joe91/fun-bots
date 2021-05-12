@@ -8,7 +8,7 @@ local m_WeaponList = require('__shared/WeaponList')
 local m_Utilities = require('__shared/Utilities')
 local m_Logger = Logger("BotSpawner", Debug.Server.BOT)
 
-local FIRST_SPAWN_DELAY = 3.0 -- needs to be big enough to register the inputActiveEvents. 1 is too small
+local FIRST_SPAWN_DELAY = 5.0 -- needs to be big enough to register the inputActiveEvents. 1 is too small
 
 function BotSpawner:__init()
 	self:RegisterVars()
@@ -43,9 +43,8 @@ function BotSpawner:OnLevelLoaded(p_Round)
 	(Config.TeamSwitchMode == TeamSwitcheModes.AlwaysSwitchTeams) then
 		m_Logger:Write("switch teams")
 		self:_SwitchTeams()
-		self._LastRound = p_Round
 	end
-
+	self._LastRound = p_Round
 end
 
 function BotSpawner:OnLevelDestroy()
