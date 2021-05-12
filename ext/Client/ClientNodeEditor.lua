@@ -1380,7 +1380,7 @@ function ClientNodeEditor:_onCommoRoseAction(p_Action, p_Hit)
 		local hitPoint = m_NodeCollection:Find(hit.position)
 
 		-- nothing found at hit location, try a raytracing check
-		if (hitPoint == nil and self.player ~= nil and self.player ~= nil) then
+		if (hitPoint == nil and self.player ~= nil and self.player.soldier ~= nil) then
 			local playerCamPos = self.player.soldier.worldTransform.trans + self.player.input.authoritativeCameraPosition
 			hitPoint = m_NodeCollection:FindAlongTrace(playerCamPos, hit.position)
 			self.lastTraceStart = playerCamPos
