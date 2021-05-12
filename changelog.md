@@ -1,5 +1,22 @@
 # Changelog
 
+## [Unreleased - 2.0.0.X] - 2021-05-XX
+[Download](https://github.com/Joe91/fun-bots/archive/V2.0.0.0.zip)
+The Release-Candidate
+
+- First maps with vehicle-support for testing
+	- Kharg Island Conquest Small
+	- Bazar Conquest Small
+- Competely new UI (not fully functional yet, but getting closer)
+- New Permission-System (see link in readme: https://github.com/Joe91/fun-bots/wiki/Permissions)
+- Enhanced Gamplay Logic of the Bots in Conquest
+- Bots now attack MAVs and EOD-Bots
+- Fixed missing input-restrictions on some maptypes and game-modes
+- Fixes in BotSpawner and Respawning
+- Added Team-Switch option for Round Two or always
+- Lots of refactoring
+
+
 ## [Unreleased - 1.7.1.X] - 2021-05-XX
 [Download](https://github.com/Joe91/fun-bots/archive/V1.7.1.5.zip)  
 the refactoring update

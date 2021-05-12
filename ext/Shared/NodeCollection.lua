@@ -3,8 +3,6 @@ class "NodeCollection"
 local m_Utilities = require('__shared/Utilities.lua')
 local m_Logger = Logger("NodeCollection", Debug.Shared.NODECOLLECTION)
 
-requireExists('Globals')
-
 function NodeCollection:__init(p_DisableServerEvents)
 	self:InitTables()
 	if (p_DisableServerEvents == nil or not p_DisableServerEvents) then
@@ -894,13 +892,8 @@ function NodeCollection:Load(p_LevelName, p_GameMode)
 	self.levelName = p_LevelName or self.levelName
 	self.gameMode = p_GameMode or self.gameMode
 
-	if Globals.isTdm or Globals.isGm or Globals.isScavenger then
-		self.gameMode = 'TeamDeathMatch0' -- paths are compatible
-	end
 	self.mapName = self.levelName .. '_' .. self.gameMode
-	if self.mapName == "MP_Subway_ConquestSmall0" then
-		self.mapName = "MP_Subway_ConquestLarge0" --paths are the same
-	end
+
 	m_Logger:Write('Load: '..self.mapName)
 
 	if not SQL:Open() then

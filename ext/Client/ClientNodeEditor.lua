@@ -101,28 +101,28 @@ function ClientNodeEditor:RegisterEvents()
 
 	-- enable/disable events
 	-- ('UI_CommoRose_Enabled', <Bool|Enabled>) -- true == block the BF3 commo rose
-	NetEvents:Subscribe('UI_CommoRose_Enabled', self, self._onSetCommoRoseEnabled)
+	-- NetEvents:Subscribe('UI_CommoRose_Enabled', self, self._onSetCommoRoseEnabled)
 
 	-- selection-based events, no arguments required
-	NetEvents:Subscribe('UI_CommoRose_Action_Save', self, self._onSaveNodes)
-	NetEvents:Subscribe('UI_CommoRose_Action_Select', self, self._onSelectNode)
-	NetEvents:Subscribe('UI_CommoRose_Action_Load', self, self._onLoadNodes)
+	-- NetEvents:Subscribe('UI_CommoRose_Action_Save', self, self._onSaveNodes)
+	-- NetEvents:Subscribe('UI_CommoRose_Action_Select', self, self._onSelectNode)
+	-- NetEvents:Subscribe('UI_CommoRose_Action_Load', self, self._onLoadNodes)
 
 	-- Commo Rose left buttons
-	NetEvents:Subscribe('UI_CommoRose_Action_Remove', self, self._onRemoveNode)
-	NetEvents:Subscribe('UI_CommoRose_Action_Unlink', self, self._onUnlinkNode)
-	NetEvents:Subscribe('UI_CommoRose_Action_Merge', self, self._onMergeNode)
-	NetEvents:Subscribe('UI_CommoRose_Action_SelectPrevious', self, self._onSelectPrevious)
-	NetEvents:Subscribe('UI_CommoRose_Action_ClearSelections', self, self._onClearSelection)
-	NetEvents:Subscribe('UI_CommoRose_Action_Move', self, self._onToggleMoveNode)
+	-- NetEvents:Subscribe('UI_CommoRose_Action_Remove', self, self._onRemoveNode)
+	-- NetEvents:Subscribe('UI_CommoRose_Action_Unlink', self, self._onUnlinkNode)
+	-- NetEvents:Subscribe('UI_CommoRose_Action_Merge', self, self._onMergeNode)
+	-- NetEvents:Subscribe('UI_CommoRose_Action_SelectPrevious', self, self._onSelectPrevious)
+	-- NetEvents:Subscribe('UI_CommoRose_Action_ClearSelections', self, self._onClearSelection)
+	-- NetEvents:Subscribe('UI_CommoRose_Action_Move', self, self._onToggleMoveNode)
 
 	-- Commor Rose right buttons
-	NetEvents:Subscribe('UI_CommoRose_Action_Add', self, self._onAddNode)
-	NetEvents:Subscribe('UI_CommoRose_Action_Link', self, self._onLinkNode)
-	NetEvents:Subscribe('UI_CommoRose_Action_Split', self, self._onSplitNode)
-	NetEvents:Subscribe('UI_CommoRose_Action_SelectNext', self, self._onSelectNext)
-	NetEvents:Subscribe('UI_CommoRose_Action_SelectBetween', self, self._onSelectBetween)
-	NetEvents:Subscribe('UI_CommoRose_Action_SetInput', self, self._onSetInputNode)
+	-- NetEvents:Subscribe('UI_CommoRose_Action_Add', self, self._onAddNode)
+	-- NetEvents:Subscribe('UI_CommoRose_Action_Link', self, self._onLinkNode)
+	-- NetEvents:Subscribe('UI_CommoRose_Action_Split', self, self._onSplitNode)
+	-- NetEvents:Subscribe('UI_CommoRose_Action_SelectNext', self, self._onSelectNext)
+	-- NetEvents:Subscribe('UI_CommoRose_Action_SelectBetween', self, self._onSelectBetween)
+	-- NetEvents:Subscribe('UI_CommoRose_Action_SetInput', self, self._onSetInputNode)
 
 	-- must provide arguments
 	-- ('UI_ClientNodeEditor_Trace_Show', <Int|PathIndex>)
@@ -212,23 +212,23 @@ function ClientNodeEditor:DeregisterEvents()
 	NetEvents:Unsubscribe('ClientNodeEditor:Create')
 	NetEvents:Unsubscribe('ClientNodeEditor:Init')
 
-	NetEvents:Unsubscribe('UI_CommoRose_Action_Save')
-	NetEvents:Unsubscribe('UI_CommoRose_Action_Select')
-	NetEvents:Unsubscribe('UI_CommoRose_Action_Load')
+	-- NetEvents:Unsubscribe('UI_CommoRose_Action_Save')
+	-- NetEvents:Unsubscribe('UI_CommoRose_Action_Select')
+	-- NetEvents:Unsubscribe('UI_CommoRose_Action_Load')
 
-	NetEvents:Unsubscribe('UI_CommoRose_Action_Remove')
-	NetEvents:Unsubscribe('UI_CommoRose_Action_Unlink')
-	NetEvents:Unsubscribe('UI_CommoRose_Action_Merge')
-	NetEvents:Unsubscribe('UI_CommoRose_Action_SelectPrevious')
-	NetEvents:Unsubscribe('UI_CommoRose_Action_ClearSelections')
-	NetEvents:Unsubscribe('UI_CommoRose_Action_Move')
+	-- NetEvents:Unsubscribe('UI_CommoRose_Action_Remove')
+	-- NetEvents:Unsubscribe('UI_CommoRose_Action_Unlink')
+	-- NetEvents:Unsubscribe('UI_CommoRose_Action_Merge')
+	-- NetEvents:Unsubscribe('UI_CommoRose_Action_SelectPrevious')
+	-- NetEvents:Unsubscribe('UI_CommoRose_Action_ClearSelections')
+	-- NetEvents:Unsubscribe('UI_CommoRose_Action_Move')
 
-	NetEvents:Unsubscribe('UI_CommoRose_Action_Add')
-	NetEvents:Unsubscribe('UI_CommoRose_Action_Link')
-	NetEvents:Unsubscribe('UI_CommoRose_Action_Split')
-	NetEvents:Unsubscribe('UI_CommoRose_Action_SelectNext')
-	NetEvents:Unsubscribe('UI_CommoRose_Action_SelectBetween')
-	NetEvents:Unsubscribe('UI_CommoRose_Action_SetInput')
+	-- NetEvents:Unsubscribe('UI_CommoRose_Action_Add')
+	-- NetEvents:Unsubscribe('UI_CommoRose_Action_Link')
+	-- NetEvents:Unsubscribe('UI_CommoRose_Action_Split')
+	-- NetEvents:Unsubscribe('UI_CommoRose_Action_SelectNext')
+	-- NetEvents:Unsubscribe('UI_CommoRose_Action_SelectBetween')
+	-- NetEvents:Unsubscribe('UI_CommoRose_Action_SetInput')
 
 	Events:Unsubscribe('Player:Deleted')
 	Events:Unsubscribe('Level:Destroy')
@@ -479,25 +479,25 @@ function ClientNodeEditor:_onToggleMoveNode(p_Args)
 			end
 		end
 
-		g_FunBotUIClient:_onSetOperationControls({
-			Numpad = {
-				{Grid = 'K1', Key = '1', Name = 'Remove'},
-				{Grid = 'K2', Key = '2', Name = 'Unlink'},
-				{Grid = 'K3', Key = '3', Name = 'Add'},
-				{Grid = 'K4', Key = '4', Name = 'Move'},
-				{Grid = 'K5', Key = '5', Name = 'Select'},
-				{Grid = 'K6', Key = '6', Name = 'Input'},
-				{Grid = 'K7', Key = '7', Name = 'Merge'},
-				{Grid = 'K8', Key = '8', Name = 'Link'},
-				{Grid = 'K9', Key = '9', Name = 'Split'},
-			},
-			Other = {
-				{Key = 'F12', Name = 'Settings'},
-				{Key = 'Q', Name = 'Quick Select'},
-				{Key = 'BS', Name = 'Clear Select'},
-				{Key = 'INS', Name = 'Spawn Bot'},
-			}
-		})
+		-- g_FunBotUIClient:_onSetOperationControls({
+		-- 	Numpad = {
+		-- 		{Grid = 'K1', Key = '1', Name = 'Remove'},
+		-- 		{Grid = 'K2', Key = '2', Name = 'Unlink'},
+		-- 		{Grid = 'K3', Key = '3', Name = 'Add'},
+		-- 		{Grid = 'K4', Key = '4', Name = 'Move'},
+		-- 		{Grid = 'K5', Key = '5', Name = 'Select'},
+		-- 		{Grid = 'K6', Key = '6', Name = 'Input'},
+		-- 		{Grid = 'K7', Key = '7', Name = 'Merge'},
+		-- 		{Grid = 'K8', Key = '8', Name = 'Link'},
+		-- 		{Grid = 'K9', Key = '9', Name = 'Split'},
+		-- 	},
+		-- 	Other = {
+		-- 		{Key = 'F12', Name = 'Settings'},
+		-- 		{Key = 'Q', Name = 'Quick Select'},
+		-- 		{Key = 'BS', Name = 'Clear Select'},
+		-- 		{Key = 'INS', Name = 'Spawn Bot'},
+		-- 	}
+		-- })
 
 		self:Log('Edit Mode: %s', self.editMode)
 		return true
@@ -522,26 +522,26 @@ function ClientNodeEditor:_onToggleMoveNode(p_Args)
 		self.editMode = 'move'
 		self.editModeManualOffset = Vec3.zero
 
-		g_FunBotUIClient:_onSetOperationControls({
-			Numpad = {
-				{Grid = 'K1', Key = '1', Name = 'Mode'},
-				{Grid = 'K2', Key = '2', Name = 'Back'},
-				{Grid = 'K3', Key = '3', Name = 'Down'},
-				{Grid = 'K4', Key = '4', Name = 'Left'},
-				{Grid = 'K5', Key = '5', Name = 'Finish'},
-				{Grid = 'K6', Key = '6', Name = 'Right'},
-				{Grid = 'K7', Key = '7', Name = 'Reset'},
-				{Grid = 'K8', Key = '8', Name = 'Forward'},
-				{Grid = 'K9', Key = '9', Name = 'Up'},
-			},
-			Other = {
-				{Key = 'F12', Name = 'Settings'},
-				{Key = 'Q', Name = 'Finish Move'},
-				{Key = 'BS', Name = 'Cancel Move'},
-				{Key = 'KP_PLUS', Name = 'Speed +'},
-				{Key = 'KP_MINUS', Name = 'Speed -'},
-			}
-		})
+		-- g_FunBotUIClient:_onSetOperationControls({
+		-- 	Numpad = {
+		-- 		{Grid = 'K1', Key = '1', Name = 'Mode'},
+		-- 		{Grid = 'K2', Key = '2', Name = 'Back'},
+		-- 		{Grid = 'K3', Key = '3', Name = 'Down'},
+		-- 		{Grid = 'K4', Key = '4', Name = 'Left'},
+		-- 		{Grid = 'K5', Key = '5', Name = 'Finish'},
+		-- 		{Grid = 'K6', Key = '6', Name = 'Right'},
+		-- 		{Grid = 'K7', Key = '7', Name = 'Reset'},
+		-- 		{Grid = 'K8', Key = '8', Name = 'Forward'},
+		-- 		{Grid = 'K9', Key = '9', Name = 'Up'},
+		-- 	},
+		-- 	Other = {
+		-- 		{Key = 'F12', Name = 'Settings'},
+		-- 		{Key = 'Q', Name = 'Finish Move'},
+		-- 		{Key = 'BS', Name = 'Cancel Move'},
+		-- 		{Key = 'KP_PLUS', Name = 'Speed +'},
+		-- 		{Key = 'KP_MINUS', Name = 'Speed -'},
+		-- 	}
+		-- })
 
 		self:Log('Edit Mode: %s', self.editMode)
 		return true
@@ -1144,15 +1144,19 @@ function ClientNodeEditor:_onStartTrace()
 
 	self:Log('Custom Trace Started')
 
-	g_FunBotUIClient:_onUITrace(true)
-	g_FunBotUIClient:_onUITraceIndex(self.customTraceIndex)
-	g_FunBotUIClient:_onUITraceWaypoints(#self.customTrace:Get())
-	g_FunBotUIClient:_onUITraceWaypointsDistance(self.customTraceDistance)
+	NetEvents:Send('WaypointEditor:TraceToggle', {
+		Enabled		= true,
+		TraceIndex	= self.customTraceIndex,
+		Distance	= self.customTraceDistance,
+		Waypoints	= #self.customTrace:Get()
+	})
 end
 
 function ClientNodeEditor:_onEndTrace()
 	self.customTraceTimer = -1
-	g_FunBotUIClient:_onUITrace(false)
+	NetEvents:Send('WaypointEditor:TraceToggle', {
+		Enabled = false
+	})
 
 	local firstWaypoint = self.customTrace:GetFirst()
 
@@ -1185,10 +1189,12 @@ function ClientNodeEditor:_onClearTrace()
 	self.customTraceIndex = self:_getNewIndex()
 	self.customTraceDistance = 0
 	self.customTrace:Clear()
-	g_FunBotUIClient:_onUITrace(false)
-	g_FunBotUIClient:_onUITraceIndex(self.customTraceIndex)
-	g_FunBotUIClient:_onUITraceWaypoints(#self.customTrace:Get())
-	g_FunBotUIClient:_onUITraceWaypointsDistance(self.customTraceDistance)
+	NetEvents:Send('WaypointEditor:TraceToggle', {
+		Enabled		= false,
+		TraceIndex	= self.customTraceIndex,
+		Waypoints	= #self.customTrace:Get(),
+		Distance	= self.customTraceDistance
+	})
 
 	self:Log('Custom Trace Cleared')
 end
@@ -1327,7 +1333,7 @@ function ClientNodeEditor:_onCommoRoseAction(p_Action, p_Hit)
 
 	if (p_Action == 'Hide') then
 		self.commoRoseActive = false
-		g_FunBotUIClient:_onUICommonRose('false')
+		-- g_FunBotUIClient:_onUICommonRose('false')
 		return
 	end
 
@@ -1371,10 +1377,10 @@ function ClientNodeEditor:_onCommoRoseAction(p_Action, p_Hit)
 		if (hit == nil) then
 			return
 		end
-	    local hitPoint = m_NodeCollection:Find(hit.position)
+		local hitPoint = m_NodeCollection:Find(hit.position)
 
 		-- nothing found at hit location, try a raytracing check
-		if (hitPoint == nil and self.player ~= nil and self.player ~= nil) then
+		if (hitPoint == nil and self.player ~= nil and self.player.soldier ~= nil) then
 			local playerCamPos = self.player.soldier.worldTransform.trans + self.player.input.authoritativeCameraPosition
 			hitPoint = m_NodeCollection:FindAlongTrace(playerCamPos, hit.position)
 			self.lastTraceStart = playerCamPos
@@ -1670,22 +1676,22 @@ function ClientNodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 						self.customTrace:ClearSelection()
 						self.customTrace:Select(newWaypoint)
 
-						local speed = 0 -- 0 = wait, 1 = prone ... (4 Bits)
+						local speed = BotMoveSpeeds.NoMovement -- 0 = wait, 1 = prone ... (4 Bits)
 						local extra = 0 -- 0 = nothing, 1 = jump ... (4 Bits)
 
 						if self.player.attachedControllable ~= nil then
 							local speedInput = math.abs(self.player.input:GetLevel(EntryInputActionEnum.EIAThrottle))
 							if speedInput > 0 then
-								speed = 3
+								speed = BotMoveSpeeds.Normal
 								if self.player.input:GetLevel(EntryInputActionEnum.EIASprint) == 1 then
-									speed = 4
+									speed = BotMoveSpeeds.Sprint
 								end
 							elseif speedInput == 0 then
-								speed = 2
+								speed = BotMoveSpeeds.SlowCrouch
 							end
 
 							if self.player.input:GetLevel(EntryInputActionEnum.EIABrake) > 0 then
-								speed = 1
+								speed = BotMoveSpeeds.VerySlowProne
 							end
 
 							self.customTrace:SetInput(speed, extra, 0)
@@ -1693,14 +1699,14 @@ function ClientNodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 						else
 							if self.player.input:GetLevel(EntryInputActionEnum.EIAThrottle) > 0 then --record only if moving
 								if self.player.soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
-									speed = 1
+									speed = BotMoveSpeeds.VerySlowProne
 								elseif self.player.soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
-									speed = 2
+									speed = BotMoveSpeeds.SlowCrouch
 								else
-									speed = 3
+									speed = BotMoveSpeeds.Normal
 
 									if self.player.input:GetLevel(EntryInputActionEnum.EIASprint) == 1 then
-										speed = 4
+										speed = BotMoveSpeeds.Sprint
 									end
 								end
 
@@ -1722,8 +1728,12 @@ function ClientNodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 					end
 
 					self.customTraceDistance = self.customTraceDistance + lastDistance
-					g_FunBotUIClient:_onUITraceWaypointsDistance(self.customTraceDistance)
-					g_FunBotUIClient:_onUITraceWaypoints(#self.customTrace:Get())
+					NetEvents:Send('WaypointEditor:TraceToggle', {
+						Waypoints	= #self.customTrace:Get(),
+						Distance	= self.customTraceDistance
+					})
+					--g_FunBotUIClient:_onUITraceWaypointsDistance(self.customTraceDistance)
+					--g_FunBotUIClient:_onUITraceWaypoints(#self.customTrace:Get())
 				end
 			else
 				-- collection is empty, stop the timer
@@ -1820,9 +1830,9 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 		if (self.botVisionEnabled) then
 
-    		-- bot vision crosshair lines, generate once only
-    		if (self.botVistionCrosshair == nil) then
-    			local windowSize = ClientUtils:GetWindowSize()
+			-- bot vision crosshair lines, generate once only
+			if (self.botVistionCrosshair == nil) then
+				local windowSize = ClientUtils:GetWindowSize()
 				local cx = math.floor(windowSize.x / 2.0 + 0.5)
 				local cy = math.floor(windowSize.y / 2.0 + 0.5)
 
@@ -1835,14 +1845,14 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 					Vec2(cx, cy - 10), Vec2(cx, cy + 9),
 					Vec2(cx + 1, cy - 9), Vec2(cx + 1, cy + 8)
 				}
-    		end
+			end
 
-    		-- check vision from player to "enemies", only update position if visible
-    		local players = PlayerManager:GetPlayers()
-    		for p=1, #players do
-    			if (players[p].soldier ~= nil and self.player.teamId ~= players[p].teamId) then
+			-- check vision from player to "enemies", only update position if visible
+			local players = PlayerManager:GetPlayers()
+			for p=1, #players do
+				if (players[p].soldier ~= nil and self.player.teamId ~= players[p].teamId) then
 
-    				local ray = RaycastManager:Raycast(self.playerPos+Vec3.up, (players[p].soldier.worldTransform.trans+Vec3.up), RayCastFlags.CheckDetailMesh | RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.IsAsyncRaycast)
+					local ray = RaycastManager:Raycast(self.playerPos+Vec3.up, (players[p].soldier.worldTransform.trans+Vec3.up), RayCastFlags.CheckDetailMesh | RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.IsAsyncRaycast)
 
 					local posData = {
 						Visible = (ray == nil or ray.rigidBody == nil),
@@ -1854,10 +1864,10 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 					end
 
 					self.botVisionPlayers[players[p].name] = posData
-    			end
-    		end
-    	end
-    end
+				end
+			end
+		end
+	end
 end
 
 function ClientNodeEditor:OnUIDrawHud()
@@ -1935,13 +1945,13 @@ function ClientNodeEditor:OnUIDrawHud()
 		helpText = helpText..'|   1   |   2   |   3   |'.."\n"
 		helpText = helpText..'|Remove |Unlink |  Add  |'.."\n"
 		helpText = helpText..'+-------+-------+-------+'.."\n"
-		helpText = helpText..'                         '.."\n"
-		helpText = helpText..'      [F12] - Settings   '.."\n"
-		helpText = helpText..'     [Spot] - Quick Select'.."\n"
+		helpText = helpText..'						 '.."\n"
+		helpText = helpText..'	  [F12] - Settings   '.."\n"
+		helpText = helpText..'	 [Spot] - Quick Select'.."\n"
 		helpText = helpText..'[Backspace] - Clear Select'.."\n"
 		helpText = helpText..'   [Insert] - Spawn Bot  '.."\n"
-		helpText = helpText..'       [F9] - Save Nodes '.."\n"
-		helpText = helpText..'      [F11] - Load Nodes '.."\n"
+		helpText = helpText..'	   [F9] - Save Nodes '.."\n"
+		helpText = helpText..'	  [F11] - Load Nodes '.."\n"
 
 	elseif (self.editMode == 'move') then
 
@@ -1957,7 +1967,7 @@ function ClientNodeEditor:OnUIDrawHud()
 		helpText = helpText..'| Mode  | Back  | Down  |'.."\n"
 		helpText = helpText..'+-------+-------+-------+'.."\n"
 		helpText = helpText..string.format('|X %+04.2f | Y %+04.2f|', self.editModeManualOffset.x, self.editModeManualOffset.y).."\n"
-		helpText = helpText..string.format('|      Z %+04.2f       |', self.editModeManualOffset.z).."\n"
+		helpText = helpText..string.format('|	  Z %+04.2f	   |', self.editModeManualOffset.z).."\n"
 		helpText = helpText..'+-----------------------+'.."\n"
 		helpText = helpText..' Nudge Speed: '..tostring(self.editModeManualSpeed).."\n"
 		if (self.editPositionMode == 'relative') then
@@ -1967,9 +1977,9 @@ function ClientNodeEditor:OnUIDrawHud()
 		else
 		helpText = helpText..'   Move Mode: Absolute   '.."\n"
 		end
-		helpText = helpText..'                         '.."\n"
-		helpText = helpText..'      [F12] - Settings    '.."\n"
-		helpText = helpText..'     [Spot] - Finish Move '.."\n"
+		helpText = helpText..'						 '.."\n"
+		helpText = helpText..'	  [F12] - Settings	'.."\n"
+		helpText = helpText..'	 [Spot] - Finish Move '.."\n"
 		helpText = helpText..'[Backspace] - Cancel Move '.."\n"
 		helpText = helpText..' [Numpad +] - Nudge Speed +'.."\n"
 		helpText = helpText..' [Numpad -] - Nudge Speed -'.."\n"
@@ -2133,6 +2143,7 @@ function ClientNodeEditor:_drawNode(p_Waypoint, p_IsTracePath)
 				text = text..string.format("Index[%d]\n", p_Waypoint.Index)
 				text = text..string.format("Path[%d][%d] (%s)\n", p_Waypoint.PathIndex, p_Waypoint.PointIndex, pathMode)
 				text = text..string.format("Path Objectives: %s\n", g_Utilities:dump(pathNode.Data.Objectives, false))
+				text = text..string.format("Vehicles: %s\n", g_Utilities:dump(pathNode.Data.Vehicles, false))
 				text = text..string.format("InputVar: %d\n", p_Waypoint.InputVar)
 				text = text..string.format("SpeedMode: %s (%d)\n", speedMode, p_Waypoint.SpeedMode)
 				text = text..string.format("ExtraMode: %s (%d)\n", extraMode, p_Waypoint.ExtraMode)

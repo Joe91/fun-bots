@@ -1,0 +1,39 @@
+[data-id="10"] ul {
+	display: block !important;
+}
+
+ui-checkbox {
+    flex: 16px 0 !important;
+	position: relative;
+}
+
+ui-checkbox ui-mark {
+	position: relative;
+    margin: -2px 10px 0 0;
+	display: inline-block;
+    width: 16px;
+    height: 16px;
+    background: var(--color_button_default_from);
+	line-height: 23px;
+    font-size: 11px;
+}
+
+ui-checkbox ui-mark:after {
+	content: "";
+	position: absolute;
+	transform: translate(-50%, -50%);
+	left: 50%;
+	top: 50%;
+}
+
+ui-checkbox input {
+	display: none;
+}
+
+ui-checkbox input:checked + ui-mark {
+    background: var(--color_button_hover_from);
+}
+
+ui-checkbox input:checked + ui-mark:after {
+	content: "✔";
+}

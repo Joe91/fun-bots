@@ -18,6 +18,10 @@ AI for TDM-bots with some functions:
 This mod was inspired by the mod [BotSpawn](https://github.com/J4nssent/VU-Mods/tree/master/BotSpawn "Original Mod by Jassent") by [Jassent](https://github.com/J4nssent "Jassent").
 It provids lots of ways to play and mess with bots. Also with multible Players at once.
 
+### Other Important Links:
+[How to Trace](https://github.com/Joe91/fun-bots/blob/master/traces.md)   
+[New Permission-System](https://github.com/Joe91/fun-bots/wiki/Permissions)
+
 ### :world_map: Supported Maps
 The following Maps are official supported right now with waypoints/traces:
 
