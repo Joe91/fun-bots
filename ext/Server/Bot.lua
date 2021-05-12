@@ -445,13 +445,18 @@ end
 
 -- private functions
 function Bot:_updateRespwawn()
-	if self._Respawning and self.m_Player.soldier == nil and self._SpawnMode ~= BotSpawnModes.NoRespawn then
+	if not self._Respawning or self._SpawnMode == BotSpawnModes.NoRespawn then
+		return
+	end
+	if self.m_Player.soldier == nil then
 		-- wait for respawn-delay gone
 		if self._SpawnDelayTimer < Globals.RespawnDelay then
 			self._SpawnDelayTimer = self._SpawnDelayTimer + StaticConfig.BotUpdateCycle
 		else
 			Events:DispatchLocal('Bot:RespawnBot', self.m_Name)
 		end
+	else
+		self._SpawnDelayTimer = 0 -- reset Timer if player is alive
 	end
 end
 
