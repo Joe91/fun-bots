@@ -14,6 +14,7 @@ require('__shared/Constants/BotAttackModes')
 require('__shared/Constants/BotMoveSpeeds')
 require('__shared/Constants/SpawnModes')
 require('__shared/Constants/SpawnMethods')
+require('__shared/Constants/TeamSwitchModes')
 require ('__shared/Utils/Logger')
 require('Model/Globals')
 require('UI/UI')
@@ -188,7 +189,7 @@ end
 	-- Level Events
 -- =============================================
 
-function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode)
+function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPerMap)
 	local s_GameMode = ServerUtils:GetCustomGameModeName()
 	if s_GameMode == nil then
 		s_GameMode = p_GameMode
@@ -207,7 +208,7 @@ function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode)
 
 	m_NodeEditor:OnLevelLoaded(p_LevelName, s_GameMode)
 	m_GameDirector:OnLevelLoaded()
-	m_BotSpawner:OnLevelLoaded()
+	m_BotSpawner:OnLevelLoaded(p_Round)
 	NetEvents:BroadcastUnreliableLocal('WriteClientSettings', Config, true)
 end
 

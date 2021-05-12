@@ -13,6 +13,7 @@ require('__shared/Constants/BotAttackModes')
 require('__shared/Constants/BotMoveSpeeds')
 require('__shared/Constants/SpawnModes')
 require('__shared/Constants/SpawnMethods')
+require('__shared/Constants/TeamSwitchModes')
 require ('__shared/Utils/Logger')
 
 local m_Logger = Logger("FunBotClient", true)

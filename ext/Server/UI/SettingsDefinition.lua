@@ -187,6 +187,16 @@ SettingsDefinition = {
 			Category	= SettingsDefinition.Categorys.SPAWN
 		},
 		{
+			Name		= "TeamSwitchMode",
+			Text 		= "Team Switch Mode",
+			Type		= Type.Enum,
+			Value		= Config.TeamSwitchMode,
+			Description	= "Mode to switch the team",
+			Reference	= TeamSwitcheModes,
+			Default		= TeamSwitcheModes.SwitchForRoundTwo,
+			Category	= SettingsDefinition.Categorys.SPAWN
+		},
+		{
 			Name		= "SpawnInBothTeams",
 			Text 		= "Spawn Bots in all teams",
 			Type		= Type.Boolean,

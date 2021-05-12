@@ -16,6 +16,7 @@ end
 
 function BotSpawner:RegisterVars()
 	self._BotSpawnTimer = 0
+	self._LastRound = 0
 	self._PlayerUpdateTimer = 0
 	self._FirstSpawnInLevel = true
 	self._FirstSpawnDelay = FIRST_SPAWN_DELAY
@@ -33,11 +34,18 @@ end
 	-- Level Events
 -- =============================================
 
-function BotSpawner:OnLevelLoaded()
+function BotSpawner:OnLevelLoaded(p_Round)
 	m_Logger:Write("on level loaded on spawner")
 	self._FirstSpawnInLevel = true
 	self._PlayerUpdateTimer = 0
 	self._FirstSpawnDelay = FIRST_SPAWN_DELAY
+	if (Congif.TeamSwitchMode == TeamSwitcheModes.SwitchForRoundTwo and p_Round ~= self._LastRound) or
+	(Congif.TeamSwitchMode == TeamSwitcheModes.AlwaysSwitchTeams) then
+		m_Logger:Write("switch teams")
+		self:_SwitchTeams()
+		self._LastRound = p_Round
+	end
+
 end
 
 function BotSpawner:OnLevelDestroy()
@@ -1225,6 +1233,20 @@ function BotSpawner:_ModifyWeapon(p_Soldier)
 	end
 	if p_Soldier.weaponsComponent.weapons[2] ~= nil then
 		p_Soldier.weaponsComponent.weapons[2].secondaryAmmo = 9999
+	end
+end
+
+function BotSpawner:_SwitchTeams()
+	local s_players = PlayerManager:GetPlayers()
+	for _,l_player in pairs(s_players) do
+		local s_oldTeam = l_player.teamId
+		if s_oldTeam ~= TeamId.TeamNeutral then
+			local s_newTeam = ((s_oldTeam + 1) % Globals.NrOfTeams)
+			if s_newTeam == 0 then
+				s_newTeam = Globals.NrOfTeams
+			end
+			l_player.teamId = s_newTeam
+		end
 	end
 end
 
