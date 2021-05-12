@@ -12,6 +12,8 @@ The Release-Candidate
 - Enhanced Gamplay Logic of the Bots in Conquest
 - Bots now attack MAVs and EOD-Bots
 - Fixed missing input-restrictions on some maptypes and game-modes
+- Fixes in BotSpawner and Respawning
+- Added Team-Switch option for Round Two or always
 - Lots of refactoring
 
 
