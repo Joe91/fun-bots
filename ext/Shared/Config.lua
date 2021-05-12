@@ -27,6 +27,7 @@ Config = {
 	SpawnInBothTeams = true,		-- Bots spawn in both teams
 	InitNumberOfBots = 6,			-- bots for spawnmode
 	NewBotsPerNewPlayer = 2,		-- number to increase Bots, when new players join
+	FactorPlayerTeamCount = 0.8,	-- reduce playerteam in balanced_teams or fixed_number mode
 	BotTeam = TeamId.TeamNeutral, 	-- default bot team (0 = neutral / auto, 1 = US, 2 = RU) TeamId.Team2
 	BotNewLoadoutOnSpawn = true,	-- bots get a new kit and color, if they respawn
 	MaxAssaultBots = -1,			-- maximum number of Bots with Assault Kit. -1 = no Limit

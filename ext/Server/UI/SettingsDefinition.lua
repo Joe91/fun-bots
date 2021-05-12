@@ -226,13 +226,13 @@ SettingsDefinition = {
 			Category	= SettingsDefinition.Categorys.SPAWN
 		},
 		{
-			Name		= "NewBotsPerNewPlayer",
-			Text 		= "New Bots per Player",
-			Type		= Type.Integer,
-			Value		= Config.NewBotsPerNewPlayer,
-			Description	= "number to increase Bots, when new players join",
-			Reference	= Range(0.00, 128.00),
-			Default		= 2,
+			Name		= "FactorPlayerTeamCount",
+			Text 		= "Factor Player Team Count",
+			Type		= Type.Float,
+			Value		= Config.FactorPlayerTeamCount,
+			Description	= "reduce playerteam in balanced_teams or fixed_number mode",
+			Reference	= Range(0.00, 1.00),
+			Default		= 0.8,
 			Category	= SettingsDefinition.Categorys.SPAWN
 		},
 		{
