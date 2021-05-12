@@ -39,8 +39,8 @@ function BotSpawner:OnLevelLoaded(p_Round)
 	self._FirstSpawnInLevel = true
 	self._PlayerUpdateTimer = 0
 	self._FirstSpawnDelay = FIRST_SPAWN_DELAY
-	if (Congif.TeamSwitchMode == TeamSwitcheModes.SwitchForRoundTwo and p_Round ~= self._LastRound) or
-	(Congif.TeamSwitchMode == TeamSwitcheModes.AlwaysSwitchTeams) then
+	if (Config.TeamSwitchMode == TeamSwitcheModes.SwitchForRoundTwo and p_Round ~= self._LastRound) or
+	(Config.TeamSwitchMode == TeamSwitcheModes.AlwaysSwitchTeams) then
 		m_Logger:Write("switch teams")
 		self:_SwitchTeams()
 		self._LastRound = p_Round
