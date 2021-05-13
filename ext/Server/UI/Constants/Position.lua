@@ -1,3 +1,22 @@
+--[[
+	@enum: Position
+	@value: Relative
+	@value: Absolute
+	@value: Fixed
+	
+	@value: Left
+	@value: Right
+	
+	@value: Top_Left
+	@value: Top_Center
+	@value: Top_Right
+	@value: Center_Left
+	@value: Center
+	@value: Center_Right
+	@value: Bottom_Left
+	@value: Bottom_Center
+	@value: Bottom_Right
+]]
 Position = {
 	Relative		= 0,
 	Absolute		= 1,

@@ -1,5 +1,12 @@
+--[[
+	@class: MenuItem
+	@extends: Component
+]]
 class('MenuItem');
 
+--[[
+	@method: __init
+]]
 function MenuItem:__init(title, name, callback, shortcut)
 	self.title		= title or nil;
 	self.name		= name or nil;
@@ -13,18 +20,30 @@ function MenuItem:__init(title, name, callback, shortcut)
 	self.permission	= nil;
 end
 
+--[[
+	@method: __class
+]]
 function MenuItem:__class()
 	return 'MenuItem';
 end
 
+--[[
+	@method: BindPermission
+]]
 function MenuItem:BindPermission(permission)
 	self.permission = permission;
 end
 
+--[[
+	@method: GetPermission
+]]
 function MenuItem:GetPermission()
 	return self.permission;
 end
 
+--[[
+	@method: AddItem
+]]
 function MenuItem:AddItem(item, permission)
 	if (item == nil or item['__class'] == nil) then
 		-- Bad Item
@@ -45,82 +64,126 @@ function MenuItem:AddItem(item, permission)
 	return self;
 end
 
+--[[
+	@method: SetIcon
+]]
 function MenuItem:SetIcon(file)
 	self.icon = file;
 	
 	return self;
 end
 
+--[[
+	@method: GetItems
+]]
 function MenuItem:GetItems()
 	return self.items;
 end
 
+--[[
+	@method: HasItems
+]]
 function MenuItem:HasItems()
 	return #self.items >= 1;
 end
 
+--[[
+	@method: GetInputs
+]]
 function MenuItem:GetInputs()
 	return self.inputs;
 end
 
+--[[
+	@method: HasInputs
+]]
 function MenuItem:HasInputs()
 	return #self.inputs >= 1;
 end
 
+--[[
+	@method: GetCheckBoxes
+]]
 function MenuItem:GetCheckBoxes()
 	return self.checkboxes;
 end
 
+--[[
+	@method: HasCheckBoxes
+]]
 function MenuItem:HasCheckBoxes()
 	return #self.checkboxes >= 1;
 end
 
--- Title
+--[[
+	@method: GetTitle
+]]
 function MenuItem:GetTitle()
 	return self.title;
 end
 
+--[[
+	@method: SetTitle
+]]
 function MenuItem:SetTitle(title)
 	self.title = title;
 	
 	return self;
 end
 
--- Name
+--[[
+	@method: GetName
+]]
 function MenuItem:GetName()
 	return self.name;
 end
 
+--[[
+	@method: SetName
+]]
 function MenuItem:SetName(name)
 	self.name = name;
 	
 	return self;
 end
 
--- Enable / Disabled
+--[[
+	@method: Enable
+]]
 function MenuItem:Enable()
 	self.disabled = false;
 	
 	return self;
 end
 
+--[[
+	@method: Disable
+]]
 function MenuItem:Disable()
 	self.disabled = true;
 	
 	return self;
 end
 
--- Callback
+--[[
+	@method: GetCallback
+]]
 function MenuItem:GetCallback()
 	return self.callback;
 end
 
+--[[
+	@method: SetCallback
+]]
 function MenuItem:SetCallback(callback)
 	self.callback = callback;
 	
 	return self;
 end
 
+--[[
+	@method: FireCallback
+]]
 function MenuItem:FireCallback(player)
 	--if (self.disabled) then
 	--	print('MenuItem ' .. self.name .. ' is disabled.');
@@ -149,22 +212,32 @@ function MenuItem:FireCallback(player)
 	return self;
 end
 
--- Shortcut
+--[[
+	@method: GetShortcut
+]]
 function MenuItem:GetShortcut()
 	return self.shortcut;
 end
 
+--[[
+	@method: SetShortcut
+]]
 function MenuItem:SetShortcut(shortcut)
 	self.shortcut = shortcut;
 	
 	return self;
 end
 
+--[[
+	@method: HasShortcut
+]]
 function MenuItem:HasShortcut()
 	return (self.shortcut ~= nil);
 end
 
--- CheckBox
+--[[
+	@method: AddCheckBox
+]]
 function MenuItem:AddCheckBox(position, checkbox)
 	if (checkbox == nil or checkbox['__class'] == nil) then
 		-- Bad Item
@@ -184,7 +257,9 @@ function MenuItem:AddCheckBox(position, checkbox)
 	return self;
 end
 
--- Input
+--[[
+	@method: AddInput
+]]
 function MenuItem:AddInput(position, input)
 	if (input == nil or input['__class'] == nil) then
 		-- Bad Item
@@ -204,6 +279,9 @@ function MenuItem:AddInput(position, input)
 	return self;
 end
 
+--[[
+	@method: Serialize
+]]
 function MenuItem:Serialize(player)
 	local items			= {};
 	local inputs		= {};

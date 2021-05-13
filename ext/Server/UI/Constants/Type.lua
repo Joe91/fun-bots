@@ -1,3 +1,13 @@
+--[[
+	@enum: Type
+	@value: Text
+	@value: Integer
+	@value: Float
+	@value: String
+	@value: List
+	@value: Enum
+	@value: Boolean
+]]
 Type = {
 	Text		= 0,
 	Integer		= 1,

@@ -1,4 +1,10 @@
+--[[
+	@property: SettingsDefinition
+]]
 SettingsDefinition = {
+	--[[
+		@property: Categorys
+	]]
 	Categorys = {
 		GENERAL	= "General",
 		DIFFICULTY = "Difficulty",
@@ -12,6 +18,9 @@ SettingsDefinition = {
 		OTHER	= "Other"
 	},
 
+	--[[
+		@property: Elements
+	]]
 	Elements = {
 		-- General
 		{
@@ -22,7 +31,7 @@ SettingsDefinition = {
 			Reference	= BotWeapons,
 			Description	= "Select the weapon the bots use",
 			Default		= BotWeapons.Auto,
-			Category	= SettingsDefinition.Categorys.GENERAL
+			Category	= "GENERAL"
 		},
 		{
 			Name		= "BotKit",
@@ -32,7 +41,7 @@ SettingsDefinition = {
 			Reference	= BotKits,
 			Description	= "The Kit of the Bots",
 			Default		= BotKits.RANDOM_KIT,
-			Category	= SettingsDefinition.Categorys.GENERAL
+			Category	= "GENERAL"
 		},
 		{
 			Name		= "BotColor",
@@ -42,7 +51,7 @@ SettingsDefinition = {
 			Value		= Config.BotColor,
 			Description	= "The Color of the Bots",
 			Default		= BotColors.RANDOM_COLOR,
-			Category	= SettingsDefinition.Categorys.GENERAL
+			Category	= "GENERAL"
 		},
 		{
 			Name		= "ZombieMode",
@@ -50,7 +59,7 @@ SettingsDefinition = {
 			Value		= Config.ZombieMode,
 			Description	= "Zombie Bot Mode",
 			Default		= false,
-			Category	= SettingsDefinition.Categorys.GENERAL
+			Category	= "GENERAL"
 		},
 
 		-- Difficulty
@@ -62,7 +71,7 @@ SettingsDefinition = {
 			Description	= "make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy).",
 			Reference	= Range(0.00, 10.00, 0,05),
 			Default		= 0.5,
-			Category	= SettingsDefinition.Categorys.DIFFICULTY
+			Category	= "DIFFICULTY"
 		},
 		{
 			Name		= "BotSniperAimWorsening",
@@ -72,7 +81,7 @@ SettingsDefinition = {
 			Description	= "see botAimWorsening, only for Sniper-rifles",
 			Reference	= Range(0.00, 10.00, 0,05),
 			Default		= 0.2,
-			Category	= SettingsDefinition.Categorys.DIFFICULTY
+			Category	= "DIFFICULTY"
 		},
 		{
 			Name		= "BotWorseningSkill",
@@ -82,7 +91,7 @@ SettingsDefinition = {
 			Description	= "variation of the skill of a single bot. the higher, the worse the bots can get compared to the original settings",
 			Reference	= Range(0.00, 0.50, 0,05),
 			Default		= 0.25,
-			Category	= SettingsDefinition.Categorys.DIFFICULTY
+			Category	= "DIFFICULTY"
 		},
 		{
 			Name		= "DamageFactorAssault",
@@ -92,7 +101,7 @@ SettingsDefinition = {
 			Description	= "original Damage from bots gets multiplied by this",
 			Reference	= Range(0.00, 2.00, 0,10),
 			Default		= 0.5,
-			Category	= SettingsDefinition.Categorys.DIFFICULTY
+			Category	= "DIFFICULTY"
 		},
 		{
 			Name		= "DamageFactorCarabine",
@@ -102,7 +111,7 @@ SettingsDefinition = {
 			Description	= "original Damage from bots gets multiplied by this",
 			Reference	= Range(0.00, 2.00, 0,10),
 			Default		= 0.5,
-			Category	= SettingsDefinition.Categorys.DIFFICULTY
+			Category	= "DIFFICULTY"
 		},
 		{
 			Name		= "DamageFactorLMG",
@@ -112,7 +121,7 @@ SettingsDefinition = {
 			Description	= "original Damage from bots gets multiplied by this",
 			Reference	= Range(0.00, 2.00, 0,10),
 			Default		= 0.5,
-			Category	= SettingsDefinition.Categorys.DIFFICULTY
+			Category	= "DIFFICULTY"
 		},
 		{
 			Name		= "DamageFactorPDW",
@@ -122,7 +131,7 @@ SettingsDefinition = {
 			Description	= "original Damage from bots gets multiplied by this",
 			Reference	= Range(0.00, 2.00, 0,10),
 			Default		= 0.5,
-			Category	= SettingsDefinition.Categorys.DIFFICULTY
+			Category	= "DIFFICULTY"
 		},
 		{
 			Name		= "DamageFactorPDW",
@@ -132,7 +141,7 @@ SettingsDefinition = {
 			Description	= "original Damage from bots gets multiplied by this",
 			Reference	= Range(0.00, 2.00, 0,10),
 			Default		= 0.5,
-			Category	= SettingsDefinition.Categorys.DIFFICULTY
+			Category	= "DIFFICULTY"
 		},
 		{
 			Name		= "DamageFactorSniper",
@@ -142,7 +151,7 @@ SettingsDefinition = {
 			Description	= "original Damage from bots gets multiplied by this",
 			Reference	= Range(0.00, 2.00, 0,10),
 			Default		= 0.8,
-			Category	= SettingsDefinition.Categorys.DIFFICULTY
+			Category	= "DIFFICULTY"
 		},
 		{
 			Name		= "DamageFactorShotgun",
@@ -152,7 +161,7 @@ SettingsDefinition = {
 			Description	= "original Damage from bots gets multiplied by this",
 			Reference	= Range(0.00, 2.00, 0,10),
 			Default		= 0.8,
-			Category	= SettingsDefinition.Categorys.DIFFICULTY
+			Category	= "DIFFICULTY"
 		},
 		{
 			Name		= "DamageFactorPistol",
@@ -162,7 +171,7 @@ SettingsDefinition = {
 			Description	= "original Damage from bots gets multiplied by this",
 			Reference	= Range(0.00, 2.00, 0,10),
 			Default		= 0.7,
-			Category	= SettingsDefinition.Categorys.DIFFICULTY
+			Category	= "DIFFICULTY"
 		},
 		{
 			Name		= "DamageFactorKnife",
@@ -172,7 +181,7 @@ SettingsDefinition = {
 			Description	= "original Damage from bots gets multiplied by this",
 			Reference	= Range(0.00, 2.00, 0,10),
 			Default		= 1.5,
-			Category	= SettingsDefinition.Categorys.DIFFICULTY
+			Category	= "DIFFICULTY"
 		},
 
 		-- Spawn
@@ -184,7 +193,7 @@ SettingsDefinition = {
 			Description	= "mode the bots spawn with",
 			Reference	= SpawnModes,
 			Default		= SpawnModes.balanced_teams,
-			Category	= SettingsDefinition.Categorys.SPAWN
+			Category	= "SPAWN"
 		},
 		{
 			Name		= "TeamSwitchMode",
@@ -203,7 +212,7 @@ SettingsDefinition = {
 			Value		= Config.SpawnInBothTeams,
 			Description	= "Bots spawn in both teams",
 			Default		= true,
-			Category	= SettingsDefinition.Categorys.SPAWN
+			Category	= "SPAWN"
 		},
 		{
 			Name		= "InitNumberOfBots",
@@ -213,7 +222,7 @@ SettingsDefinition = {
 			Description	= "bots for spawnmode",
 			Reference	= Range(0.00, 128.00, 1.0),
 			Default		= 6,
-			Category	= SettingsDefinition.Categorys.SPAWN
+			Category	= "SPAWN"
 		},
 		{
 			Name		= "NewBotsPerNewPlayer",
@@ -223,7 +232,7 @@ SettingsDefinition = {
 			Description	= "number to increase Bots, when new players join",
 			Reference	= Range(0.00, 128.00, 1.0),
 			Default		= 2,
-			Category	= SettingsDefinition.Categorys.SPAWN
+			Category	= "SPAWN"
 		},
 		{
 			Name		= "FactorPlayerTeamCount",
@@ -233,7 +242,7 @@ SettingsDefinition = {
 			Description	= "reduce playerteam in balanced_teams or fixed_number mode",
 			Reference	= Range(0.00, 1.00, 0.05),
 			Default		= 0.8,
-			Category	= SettingsDefinition.Categorys.SPAWN
+			Category	= "SPAWN"
 		},
 		{
 			Name		= "BotTeam",
@@ -243,7 +252,7 @@ SettingsDefinition = {
 			Description	= "default bot team (0 = neutral / auto, 1 = US, 2 = RU) TeamId.Team2",
 			Reference	= Range(0.00, 4.00, 1.0),
 			Default		= 0,
-			Category	= SettingsDefinition.Categorys.SPAWN
+			Category	= "SPAWN"
 		},
 		{
 			Name		= "BotNewLoadoutOnSpawn",
@@ -252,7 +261,7 @@ SettingsDefinition = {
 			Value		= Config.BotNewLoadoutOnSpawn,
 			Description	= "bots get a new kit and color, if they respawn",
 			Default		= true,
-			Category	= SettingsDefinition.Categorys.SPAWN
+			Category	= "SPAWN"
 		},
 		{
 			Name		= "MaxAssaultBots",
@@ -262,7 +271,7 @@ SettingsDefinition = {
 			Description	= "maximum number of Bots with Assault Kit. -1 = no limit",
 			Reference	= Range(-1.00, 128.00, 1.0),
 			Default		= -1,
-			Category	= SettingsDefinition.Categorys.SPAWN
+			Category	= "SPAWN"
 		},
 		{
 			Name		= "MaxEngineerBots",
@@ -272,7 +281,7 @@ SettingsDefinition = {
 			Description	= "maximum number of Bots with Engineer Kit. -1 = no limit",
 			Reference	= Range(-1.00, 128.00, 1.0),
 			Default		= -1,
-			Category	= SettingsDefinition.Categorys.SPAWN
+			Category	= "SPAWN"
 		},
 		{
 			Name		= "MaxSupportBots",
@@ -282,7 +291,7 @@ SettingsDefinition = {
 			Description	= "maximum number of Bots with Support Kit. -1 = no limit",
 			Reference	= Range(-1.00, 128.00, 1.0),
 			Default		= -1,
-			Category	= SettingsDefinition.Categorys.SPAWN
+			Category	= "SPAWN"
 		},
 		{
 			Name		= "MaxReconBots",
@@ -292,10 +301,10 @@ SettingsDefinition = {
 			Description	= "maximum number of Bots with Recon Kit. -1 = no limit",
 			Reference	= Range(-1.00, 128.00, 1.0),
 			Default		= -1,
-			Category	= SettingsDefinition.Categorys.SPAWN
+			Category	= "SPAWN"
 		},
 
-	-- spawn-limits
+	-- Spawn limits
 		{
 			Name		= "MaxBotsPerTeamDefault",
 			Text 		= "Max Bots Per Team (default)",
@@ -304,7 +313,7 @@ SettingsDefinition = {
 			Description	= "max number of bots in one team, if no other mode fits",
 			Reference	= Range(0.00, 128.00, 1.0),
 			Default		= 32,
-			Category	= SettingsDefinition.Categorys.SPAWNLIMITS
+			Category	= "SPAWNLIMITS"
 		},
 		{
 			Name		= "MaxBotsPerTeamTdm",
@@ -314,7 +323,7 @@ SettingsDefinition = {
 			Description	= "max number of bots in one team for TDM",
 			Reference	= Range(0.00, 128.00, 1.0),
 			Default		= 32,
-			Category	= SettingsDefinition.Categorys.SPAWNLIMITS
+			Category	= "SPAWNLIMITS"
 		},
 		{
 			Name		= "MaxBotsPerTeamTdmc",
@@ -324,7 +333,7 @@ SettingsDefinition = {
 			Description	= "max number of bots in one team for TDM-CQ",
 			Reference	= Range(0.00, 128.00, 1.0),
 			Default		= 8,
-			Category	= SettingsDefinition.Categorys.SPAWNLIMITS
+			Category	= "SPAWNLIMITS"
 		},
 		{
 			Name		= "MaxBotsPerTeamSdm",
@@ -334,7 +343,7 @@ SettingsDefinition = {
 			Description	= "max number of bots in one team for Squad-DM",
 			Reference	= Range(0.00, 128.00, 1.0),
 			Default		= 5,
-			Category	= SettingsDefinition.Categorys.SPAWNLIMITS
+			Category	= "SPAWNLIMITS"
 		},
 		{
 			Name		= "MaxBotsPerTeamCl",
@@ -344,7 +353,7 @@ SettingsDefinition = {
 			Description	= "max number of bots in one team for CQ-Large",
 			Reference	= Range(0.00, 128.00, 1.0),
 			Default		= 32,
-			Category	= SettingsDefinition.Categorys.SPAWNLIMITS
+			Category	= "SPAWNLIMITS"
 		},
 		{
 			Name		= "MaxBotsPerTeamCs",
@@ -354,7 +363,7 @@ SettingsDefinition = {
 			Description	= "max number of bots in one team for CQ-Small",
 			Reference	= Range(0.00, 128.00, 1.0),
 			Default		= 16,
-			Category	= SettingsDefinition.Categorys.SPAWNLIMITS
+			Category	= "SPAWNLIMITS"
 		},
 		{
 			Name		= "MaxBotsPerTeamCal",
@@ -364,7 +373,7 @@ SettingsDefinition = {
 			Description	= "max number of bots in one team for CQ-Assault-Large",
 			Reference	= Range(0.00, 128.00, 1.0),
 			Default		= 32,
-			Category	= SettingsDefinition.Categorys.SPAWNLIMITS
+			Category	= "SPAWNLIMITS"
 		},
 		{
 			Name		= "MaxBotsPerTeamCas",
@@ -374,7 +383,7 @@ SettingsDefinition = {
 			Description	= "max number of bots in one team for CQ-Assault-Small",
 			Reference	= Range(0.00, 128.00, 1.0),
 			Default		= 16,
-			Category	= SettingsDefinition.Categorys.SPAWNLIMITS
+			Category	= "SPAWNLIMITS"
 		},
 		{
 			Name		= "MaxBotsPerTeamRl",
@@ -384,7 +393,7 @@ SettingsDefinition = {
 			Description	= "max number of bots in one team for Rush",
 			Reference	= Range(0.00, 128.00, 1.0),
 			Default		= 24,
-			Category	= SettingsDefinition.Categorys.SPAWNLIMITS
+			Category	= "SPAWNLIMITS"
 		},
 		{
 			Name		= "MaxBotsPerTeamCtf",
@@ -394,7 +403,7 @@ SettingsDefinition = {
 			Description	= "max number of bots in one team for CTF",
 			Reference	= Range(0.00, 128.00, 1.0),
 			Default		= 24,
-			Category	= SettingsDefinition.Categorys.SPAWNLIMITS
+			Category	= "SPAWNLIMITS"
 		},
 		{
 			Name		= "MaxBotsPerTeamD",
@@ -404,7 +413,7 @@ SettingsDefinition = {
 			Description	= "max number of bots in one team for Domination",
 			Reference	= Range(0.00, 128.00, 1.0),
 			Default		= 12,
-			Category	= SettingsDefinition.Categorys.SPAWNLIMITS
+			Category	= "SPAWNLIMITS"
 		},
 		{
 			Name		= "MaxBotsPerTeamGm",
@@ -414,7 +423,7 @@ SettingsDefinition = {
 			Description	= "max number of bots in one team for Gunmaster",
 			Reference	= Range(0.00, 128.00, 1.0),
 			Default		= 12,
-			Category	= SettingsDefinition.Categorys.SPAWNLIMITS
+			Category	= "SPAWNLIMITS"
 		},
 		{
 			Name		= "MaxBotsPerTeamS",
@@ -424,9 +433,8 @@ SettingsDefinition = {
 			Description	= "max number of bots in one team for Scavenger",
 			Reference	= Range(0.00, 128.00, 1.0),
 			Default		= 12,
-			Category	= SettingsDefinition.Categorys.SPAWNLIMITS
+      Category	= "SPAWNLIMITS"
 		},
-
 
 		-- Bot behaviour
 		{
@@ -437,7 +445,7 @@ SettingsDefinition = {
 			Description	= "Degrees of FOV of Bot",
 			Reference	= Range(0.00, 360.00, 1.0),
 			Default		= 245,
-			Category	= SettingsDefinition.Categorys.BEHAVIOUR
+			Category	= "BEHAVIOUR"
 		},
 		{
 			Name		= "MaxRaycastDistance",
@@ -447,7 +455,7 @@ SettingsDefinition = {
 			Description	= "meters bots start shooting at player",
 			Reference	= Range(1.00, 1500.00, 5.0),
 			Default		= 150,
-			Category	= SettingsDefinition.Categorys.BEHAVIOUR
+			Category	= "BEHAVIOUR"
 		},
 		{
 			Name		= "MaxShootDistanceNoSniper",
@@ -457,7 +465,7 @@ SettingsDefinition = {
 			Description	= "meters a bot (not sniper) start shooting at player",
 			Reference	= Range(1.00, 1500.00, 5.0),
 			Default		= 70,
-			Category	= SettingsDefinition.Categorys.BEHAVIOUR
+			Category	="BEHAVIOUR"
 		},
 		{
 			Name		= "MaxShootDistancePistol",
@@ -467,7 +475,7 @@ SettingsDefinition = {
 			Description	= "only in auto-weapon-mode, the distance until a bot switches to pistol if his magazine is empty",
 			Reference	= Range(1.00, 1500.00, 5.0),
 			Default		= 30,
-			Category	= SettingsDefinition.Categorys.BEHAVIOUR
+			Category	= "BEHAVIOUR"
 		},
 		{
 			Name		= "BotAttackMode",
@@ -477,7 +485,7 @@ SettingsDefinition = {
 			Description	= "Mode the Bots attack with. Random, Crouch or Stand",
 			Reference	= BotAttackModes,
 			Default		= BotAttackModes.RandomNotSet,
-			Category	= SettingsDefinition.Categorys.BEHAVIOUR
+			Category	= "BEHAVIOUR"
 		},
 		{
 			Name		= "ShootBackIfHit",
@@ -486,7 +494,7 @@ SettingsDefinition = {
 			Value		= Config.ShootBackIfHit,
 			Description	= "bot shoots back, if hit",
 			Default		= true,
-			Category	= SettingsDefinition.Categorys.BEHAVIOUR
+			Category	= "BEHAVIOUR"
 		},
 		{
 			Name		= "BotsAttackBots",
@@ -495,7 +503,7 @@ SettingsDefinition = {
 			Value		= Config.BotsAttackBots,
 			Description	= "bots attack bots from other team",
 			Default		= true,
-			Category	= SettingsDefinition.Categorys.BEHAVIOUR
+			Category	= "BEHAVIOUR"
 		},
 		{
 			Name		= "MeleeAttackIfClose",
@@ -504,7 +512,7 @@ SettingsDefinition = {
 			Value		= Config.MeleeAttackIfClose,
 			Description	= "bot attacks with melee if close",
 			Default		= true,
-			Category	= SettingsDefinition.Categorys.BEHAVIOUR
+			Category	= "BEHAVIOUR"
 		},
 		{
 			Name		= "BotCanKillHimself",
@@ -513,7 +521,7 @@ SettingsDefinition = {
 			Value		= Config.BotCanKillHimself,
 			Description	= "bot takes falldamage or explosion-damage from onw frags",
 			Default		= false,
-			Category	= SettingsDefinition.Categorys.BEHAVIOUR
+			Category	= "BEHAVIOUR"
 		},
 		{
 			Name		= "BotsRevive",
@@ -522,7 +530,7 @@ SettingsDefinition = {
 			Value		= Config.BotsRevive,
 			Description	= "Bots revive other players",
 			Default		= true,
-			Category	= SettingsDefinition.Categorys.BEHAVIOUR
+			Category	= "BEHAVIOUR"
 		},
 		{
 			Name		= "BotsThrowGrenades",
@@ -531,7 +539,7 @@ SettingsDefinition = {
 			Value		= Config.BotsThrowGrenades,
 			Description	= "Bots throw grenades",
 			Default		= true,
-			Category	= SettingsDefinition.Categorys.BEHAVIOUR
+			Category	= "BEHAVIOUR"
 		},
 		{
 			Name		= "BotsDeploy",
@@ -540,7 +548,7 @@ SettingsDefinition = {
 			Value		= Config.BotsDeploy,
 			Description	= "Bots deploy ammo and medkits",
 			Default		= true,
-			Category	= SettingsDefinition.Categorys.BEHAVIOUR
+			Category	= "BEHAVIOUR"
 		},
 		{
 			Name		= "DeployCycle",
@@ -550,10 +558,10 @@ SettingsDefinition = {
 			Description	= "time between deployment of bots in seconds",
 			Reference	= Range(1.00, 600.00, 5.0),
 			Default		= 50,
-			Category	= SettingsDefinition.Categorys.BEHAVIOUR
+			Category	= "BEHAVIOUR"
 		},
 
-		-- weapons
+		-- Weapons
 		{
 			Name		= "UseRandomWeapon",
 			Text 		= "Random Weapon usage",
@@ -561,7 +569,7 @@ SettingsDefinition = {
 			Value		= Config.UseRandomWeapon,
 			Description	= "use a random weapon out of the weapon set",
 			Default		= true,
-			Category	= SettingsDefinition.Categorys.WEAPONS
+			Category	= "WEAPONS"
 		},
 		{
 			Name		= "AssaultWeaponSet",
@@ -571,7 +579,7 @@ SettingsDefinition = {
 			Description	= "weaponset of Assault class. Custom uses the Shared/WeaponLists",
 			Reference	= WeaponSets,
 			Default		= WeaponSets.Custom,
-			Category	= SettingsDefinition.Categorys.WEAPONS
+			Category	= "WEAPONS"
 		},
 		{
 			Name		= "EngineerWeaponSet",
@@ -581,7 +589,7 @@ SettingsDefinition = {
 			Description	= "weaponset of Engineer class. Custom uses the Shared/WeaponLists",
 			Reference	= WeaponSets,
 			Default		= WeaponSets.Custom,
-			Category	= SettingsDefinition.Categorys.WEAPONS
+			Category	= "WEAPONS"
 		},
 		{
 			Name		= "SupportWeaponSet",
@@ -591,7 +599,7 @@ SettingsDefinition = {
 			Description	= "weaponset of Support class. Custom uses the Shared/WeaponLists",
 			Reference	= WeaponSets,
 			Default		= WeaponSets.Custom,
-			Category	= SettingsDefinition.Categorys.WEAPONS
+			Category	= "WEAPONS"
 		},
 		{
 			Name		= "ReconWeaponSet",
@@ -601,7 +609,7 @@ SettingsDefinition = {
 			Description	= "weaponset of Recon class. Custom uses the Shared/WeaponLists",
 			Reference	= WeaponSets,
 			Default		= WeaponSets.Custom,
-			Category	= SettingsDefinition.Categorys.WEAPONS
+			Category	= "WEAPONS"
 		},
 		{
 			Name		= "AssaultWeapon",
@@ -611,7 +619,7 @@ SettingsDefinition = {
 			Description	= "primary weapon of Assault class, if random-weapon == false",
 			Reference	= AssaultPrimary,
 			Default		= AssaultPrimary[1],
-			Category	= SettingsDefinition.Categorys.WEAPONS
+			Category	= "WEAPONS"
 		},
 		{
 			Name		= "EngineerWeapon",
@@ -621,7 +629,7 @@ SettingsDefinition = {
 			Description	= "primary weapon of Engineer class, if random-weapon == false",
 			Reference	= EngineerPrimary,
 			Default		= EngineerPrimary[1],
-			Category	= SettingsDefinition.Categorys.WEAPONS
+			Category	= "WEAPONS"
 		},
 		{
 			Name		= "SupportWeapon",
@@ -631,7 +639,7 @@ SettingsDefinition = {
 			Description	= "primary weapon of Support class, if random-weapon == false",
 			Reference	= SupportPrimary,
 			Default		= SupportPrimary[1],
-			Category	= SettingsDefinition.Categorys.WEAPONS
+			Category	= "WEAPONS"
 		},
 		{
 			Name		= "ReconWeapon",
@@ -641,7 +649,7 @@ SettingsDefinition = {
 			Description	= "primary weapon of Recon class, if random-weapon == false",
 			Reference	= ReconPrimary,
 			Default		= ReconPrimary[1],
-			Category	= SettingsDefinition.Categorys.WEAPONS
+			Category	= "WEAPONS"
 		},
 		{
 			Name		= "Pistol",
@@ -651,7 +659,7 @@ SettingsDefinition = {
 			Description	= "Pistol of Bots, if random-weapon == false",
 			Reference	= PistoWeapons,
 			Default		= PistoWeapons[1],
-			Category	= SettingsDefinition.Categorys.WEAPONS
+			Category	= "WEAPONS"
 		},
 		{
 			Name		= "Knife",
@@ -661,10 +669,10 @@ SettingsDefinition = {
 			Description	= "Knife of Bots, if random-weapon == false",
 			Reference	= KnifeWeapons,
 			Default		= KnifeWeapons[1],
-			Category	= SettingsDefinition.Categorys.WEAPONS
+			Category	= "WEAPONS"
 		},
 
-		-- traces
+		-- Traces
 		{
 			Name		= "DebugTracePaths",
 			Text 		= "Debug Trace Paths",
@@ -672,7 +680,7 @@ SettingsDefinition = {
 			Value		= Config.DebugTracePaths,
 			Description	= "Shows the trace line and search area from Commo Rose selection",
 			Default		= false,
-			Category	= SettingsDefinition.Categorys.TRACE
+			Category	= "TRACE"
 		},
 		{
 			Name		= "WaypointRange",
@@ -682,7 +690,7 @@ SettingsDefinition = {
 			Description	= "Set how far away waypoints are visible (meters)",
 			Reference	= Range(1.00, 1000.00, 1.0),
 			Default		= 100,
-			Category	= SettingsDefinition.Categorys.TRACE
+			Category	= "TRACE"
 		},
 		{
 			Name		= "DrawWaypointLines",
@@ -691,7 +699,7 @@ SettingsDefinition = {
 			Value		= Config.DrawWaypointLines,
 			Description	= "Draw waypoint connection Lines",
 			Default		= true,
-			Category	= SettingsDefinition.Categorys.TRACE
+			Category	= "TRACE"
 		},
 		{
 			Name		= "LineRange",
@@ -701,7 +709,7 @@ SettingsDefinition = {
 			Description	= "Set how far away waypoint lines are visible (meters)",
 			Reference	= Range(1.00, 1000.00, 1.0),
 			Default		= 15,
-			Category	= SettingsDefinition.Categorys.TRACE
+			Category	= "TRACE"
 		},
 		{
 			Name		= "DrawWaypointIDs",
@@ -710,7 +718,7 @@ SettingsDefinition = {
 			Value		= Config.DrawWaypointIDs,
 			Description	= "Draw waypoint IDs",
 			Default		= true,
-			Category	= SettingsDefinition.Categorys.TRACE
+			Category	= "TRACE"
 		},
 		{
 			Name		= "TextRange",
@@ -720,7 +728,7 @@ SettingsDefinition = {
 			Description	= "Set how far away waypoint text is visible (meters)",
 			Reference	= Range(1.00, 1000.00, 1.0),
 			Default		= 3,
-			Category	= SettingsDefinition.Categorys.TRACE
+			Category	= "TRACE"
 		},
 		{
 			Name		= "DebugSelectionRaytraces",
@@ -729,7 +737,7 @@ SettingsDefinition = {
 			Value		= Config.DebugSelectionRaytraces,
 			Description	= "Shows the trace line and search area from Commo Rose selection",
 			Default		= false,
-			Category	= SettingsDefinition.Categorys.TRACE
+			Category	= "TRACE"
 		},
 		{
 			Name		= "TraceDelta",
@@ -739,10 +747,10 @@ SettingsDefinition = {
 			Description	= "update intervall of trace",
 			Reference	= Range(0.10, 10.00, 0.1),
 			Default		= 0.3,
-			Category	= SettingsDefinition.Categorys.TRACE
+			Category	= "TRACE"
 		},
 
-		-- advanced
+		-- Advanced properties
 		{
 			Name		= "DistanceForDirectAttack",
 			Text 		= "Distance for direct attack",
@@ -751,7 +759,7 @@ SettingsDefinition = {
 			Description	= "if that close, the bot can hear you",
 			Reference	= Range(0.00, 1000.00, 1.0),
 			Default		= 5,
-			Category	= SettingsDefinition.Categorys.ADVANCED
+			Category	= "ADVANCED"
 		},
 		{
 			Name		= "MaxBotAttackBotDistance",
@@ -761,7 +769,7 @@ SettingsDefinition = {
 			Description	= "meters a bot attacks an other bot",
 			Reference	= Range(0.00, 1000.00, 5.0),
 			Default		= 30,
-			Category	= SettingsDefinition.Categorys.ADVANCED
+			Category	= "ADVANCED"
 		},
 		{
 			Name		= "MeleeAttackCoolDown",
@@ -771,7 +779,7 @@ SettingsDefinition = {
 			Description	= "the time a bot waits before attacking with melee again",
 			Reference	= Range(0.00, 60.00, 0.5),
 			Default		= 3.0,
-			Category	= SettingsDefinition.Categorys.ADVANCED
+			Category	= "ADVANCED"
 		},
 		{
 			Name		= "AimForHead",
@@ -780,7 +788,7 @@ SettingsDefinition = {
 			Value		= Config.AimForHead,
 			Description	= "bots aim for the head. More an experimental config",
 			Default		= false,
-			Category	= SettingsDefinition.Categorys.ADVANCED
+			Category	= "ADVANCED"
 		},
 		{
 			Name		= "JumpWhileShooting",
@@ -789,7 +797,7 @@ SettingsDefinition = {
 			Value		= Config.JumpWhileShooting,
 			Description	= "bots jump over obstacles while shooting if needed",
 			Default		= true,
-			Category	= SettingsDefinition.Categorys.ADVANCED
+			Category	= "ADVANCED"
 		},
 		{
 			Name		= "JumpWhileMoving",
@@ -798,7 +806,7 @@ SettingsDefinition = {
 			Value		= Config.JumpWhileMoving,
 			Description	= "bots jump while moving. If false, only on obstacles!",
 			Default		= true,
-			Category	= SettingsDefinition.Categorys.ADVANCED
+			Category	= "ADVANCED"
 		},
 		{
 			Name		= "OverWriteBotSpeedMode",
@@ -808,7 +816,7 @@ SettingsDefinition = {
 			Description	= "0 = no overwrite. 1 = prone, 2 = crouch, 3 = walk, 4 = run",
 			Reference	= BotMoveSpeeds,
 			Default		= BotMoveSpeeds.NoMovement,
-			Category	= SettingsDefinition.Categorys.ADVANCED
+			Category	= "ADVANCED"
 		},
 		{
 			Name		= "OverWriteBotAttackMode",
@@ -818,7 +826,7 @@ SettingsDefinition = {
 			Description	= "Affects Aiming!!! 0 = no overwrite. 1 = prone, 2 = crouch (good aim), 3 = walk (good aim), 4 = run",
 			Reference	= BotMoveSpeeds,
 			Default		= BotMoveSpeeds.NoMovement,
-			Category	= SettingsDefinition.Categorys.ADVANCED
+			Category	= "ADVANCED"
 		},
 		{
 			Name		= "SpeedFactor",
@@ -828,7 +836,7 @@ SettingsDefinition = {
 			Description	= "reduces the movementspeed. 1 = normal, 0 = standing.",
 			Reference	= Range(0.00, 1.00, 0.10),
 			Default		= 1.0,
-			Category	= SettingsDefinition.Categorys.ADVANCED
+			Category	= "ADVANCED"
 		},
 		{
 			Name		= "SpeedFactorAttack",
@@ -838,10 +846,10 @@ SettingsDefinition = {
 			Description	= "reduces the movementspeed while attacking. 1 = normal, 0 = standing.",
 			Reference	= Range(0.00, 1.00, 0.10),
 			Default		= 0.6,
-			Category	= SettingsDefinition.Categorys.ADVANCED
+			Category	= "ADVANCED"
 		},
 
-		-- expert
+		-- Expert Properties
 		{
 			Name		= "BotFirstShotDelay",
 			Text 		= "Bot first shot delay",
@@ -850,7 +858,7 @@ SettingsDefinition = {
 			Description	= "delay for first shot. If too small, there will be great spread in first cycle because its not kompensated jet.",
 			Reference	= Range(0.00, 10.00, 0.10),
 			Default		= 0.35,
-			Category	= SettingsDefinition.Categorys.EXPERT
+			Category	= "EXPERT"
 		},
 		{
 			Name		= "BotMinTimeShootAtPlayer",
@@ -860,7 +868,7 @@ SettingsDefinition = {
 			Description	= "the minimum time a bot shoots at one player",
 			Reference	= Range(0.00, 60.00, 0.5),
 			Default		= 2.0,
-			Category	= SettingsDefinition.Categorys.EXPERT
+			Category	= "EXPERT"
 		},
 		{
 			Name		= "BotFireModeDuration",
@@ -870,7 +878,7 @@ SettingsDefinition = {
 			Description	= "the minimum time a bot tries to shoot a player",
 			Reference	= Range(0.00, 60.00, 0.5),
 			Default		= 5.0,
-			Category	= SettingsDefinition.Categorys.EXPERT
+			Category	= "EXPERT"
 		},
 		{
 			Name		= "MaximunYawPerSec",
@@ -880,7 +888,7 @@ SettingsDefinition = {
 			Description	= "in Degree. Rotaion-Movement per second.",
 			Reference	= Range(0.00, 1080.00, 5.0),
 			Default		= 450,
-			Category	= SettingsDefinition.Categorys.EXPERT
+			Category	= "EXPERT"
 		},
 		{
 			Name		= "TargetDistanceWayPoint",
@@ -890,7 +898,7 @@ SettingsDefinition = {
 			Description	= "distance the bots have to reach to continue with next Waypoint",
 			Reference	= Range(0.00, 100.00, 0.10),
 			Default		= 0.8,
-			Category	= SettingsDefinition.Categorys.EXPERT
+			Category	= "EXPERT"
 		},
 		{
 			Name		= "KeepOneSlotForPlayers",
@@ -899,7 +907,7 @@ SettingsDefinition = {
 			Value		= Config.KeepOneSlotForPlayers,
 			Description	= "always keep one slot for new Players to join",
 			Default		= true,
-			Category	= SettingsDefinition.Categorys.EXPERT
+			Category	= "EXPERT"
 		},
 		{
 			Name		= "DistanceToSpawnBots",
@@ -909,7 +917,7 @@ SettingsDefinition = {
 			Description	= "distance to spawn Bots away from players.",
 			Reference	= Range(0.00, 100.00, 5.0),
 			Default		= 30,
-			Category	= SettingsDefinition.Categorys.EXPERT
+			Category	= "EXPERT"
 		},
 		{
 			Name		= "HeightDistanceToSpawn",
@@ -919,7 +927,7 @@ SettingsDefinition = {
 			Description	= "distance vertically, Bots should spawn away, if closer than distance.",
 			Reference	= Range(0.00, 100.00, 0.10),
 			Default		= 2.8,
-			Category	= SettingsDefinition.Categorys.EXPERT
+			Category	= "EXPERT"
 		},
 		{
 			Name		= "DistanceToSpawnReduction",
@@ -929,7 +937,7 @@ SettingsDefinition = {
 			Description	= "reduce distance if not possible.",
 			Reference	= Range(0.00, 100.00, 1.0),
 			Default		= 5,
-			Category	= SettingsDefinition.Categorys.EXPERT
+			Category	= "EXPERT"
 		},
 		{
 			Name		= "MaxTrysToSpawnAtDistance",
@@ -939,7 +947,7 @@ SettingsDefinition = {
 			Description	= "try this often to spawn a bot away from players",
 			Reference	= Range(0.00, 100.00, 1.0),
 			Default		= 3,
-			Category	= SettingsDefinition.Categorys.EXPERT
+			Category	= "EXPERT"
 		},
 		{
 			Name		= "HeadShotFactorBots",
@@ -949,7 +957,7 @@ SettingsDefinition = {
 			Description	= "factor for damage if headshot (only in Fake-mode)",
 			Reference	= Range(0.00, 10.00, 0.1),
 			Default		= 1.5,
-			Category	= SettingsDefinition.Categorys.EXPERT
+			Category	= "EXPERT"
 		},
 		{
 			Name		= "AttackWayBots",
@@ -958,7 +966,7 @@ SettingsDefinition = {
 			Value		= Config.AttackWayBots,
 			Description	= "bots on paths attack player",
 			Default		= true,
-			Category	= SettingsDefinition.Categorys.EXPERT
+			Category	= "EXPERT"
 		},
 		{
 			Name		= "RespawnWayBots",
@@ -967,7 +975,7 @@ SettingsDefinition = {
 			Value		= Config.RespawnWayBots,
 			Description	= "bots on paths respawn if killed",
 			Default		= true,
-			Category	= SettingsDefinition.Categorys.EXPERT
+			Category	= "EXPERT"
 		},
 		{
 			Name		= "SpawnMethod",
@@ -977,10 +985,10 @@ SettingsDefinition = {
 			Description	= "method the bots spawn with. Careful, not supported on most of the maps!!",
 			Reference	= SpawnMethod,
 			Default		= SpawnMethod.SpawnSoldierAt,
-			Category	= SettingsDefinition.Categorys.EXPERT
+			Category	= "EXPERT"
 		},
 
-		-- other
+		-- Other Stuff
 		{
 			Name		= "DisableUserInterface",
 			Text 		= "disable UI",
@@ -988,7 +996,7 @@ SettingsDefinition = {
 			Value		= Config.DisableUserInterface,
 			Description	= "if true, the complete UI will be disabled (not available in the UI -) )",
 			Default		= false,
-			Category	= SettingsDefinition.Categorys.OTHER
+			Category	= "OTHER"
 		},
 		{
 			Name		= "DisableChatCommands",
@@ -997,7 +1005,7 @@ SettingsDefinition = {
 			Value		= Config.DisableChatCommands,
 			Description	= "if true, no chat commands can be used",
 			Default		= false,
-			Category	= SettingsDefinition.Categorys.OTHER
+			Category	= "OTHER"
 		},
 		{
 			Name		= "DisableRCONCommands",
@@ -1006,7 +1014,7 @@ SettingsDefinition = {
 			Value		= Config.DisableRCONCommands,
 			Description	= "if true, no RCON commands can be used",
 			Default		= false,
-			Category	= SettingsDefinition.Categorys.OTHER
+			Category	= "OTHER"
 		},
 		{
 			Name		= "IgnorePermissions",
@@ -1015,7 +1023,7 @@ SettingsDefinition = {
 			Value		= Config.IgnorePermissions,
 			Description	= "if true, all permissions are ignored --> everyone can do everything",
 			Default		= false,
-			Category	= SettingsDefinition.Categorys.OTHER
+			Category	= "OTHER"
 		},
 		{
 			Name		= "Language",
@@ -1024,7 +1032,7 @@ SettingsDefinition = {
 			Value		= Config.Language,
 			Description	= "de_DE as sample (default is english, when language file doesnt exists)",
 			Default		= nil,
-			Category	= SettingsDefinition.Categorys.OTHER
+			Category	= "OTHER"
 		}
 	}
 }

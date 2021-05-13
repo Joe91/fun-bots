@@ -1,3 +1,6 @@
+--[[
+	@class: UI
+]]
 class('UI');
 
 local m_Logger = Logger("UI", Debug.Server.UI)
@@ -6,7 +9,17 @@ require('UI/Constants/Type');
 require('UI/Constants/Position');
 require('UI/Constants/Color');
 require('UI/Constants/Numpad');
+require('UI/Types/Category');
+require('UI/Types/Range');
+require('UI/Types/Option');
+require('UI/Types/ValueType');
+require('UI/SettingsDefinition');
 
+--[[
+	@method: __init
+	
+	Initialization of the UI component
+]]
 function UI:__init()
 	-- Disable WebInterface
 	if Config.disableUserInterface == true then
@@ -14,7 +27,11 @@ function UI:__init()
 		return;
 	end
 	
-	-- Components that will be loaded
+	--[[
+		@variable: boot
+		
+		Components to be loaded. If new components are to be added, they are described here.
+	]]
 	self.boot	= {
 		'QuickShortcut',
 		'Input',
@@ -30,12 +47,21 @@ function UI:__init()
 		'Box'
 	};
 	
-	-- Views that will be loaded
+	--[[
+		@variable: load
+		
+		Views to be loaded. If new views are to be added, they are described here.
+	]]
 	self.load	= {
 		'BotEditor',
 		'WaypointEditor'
 	};
 	
+	--[[
+		@variable: popups
+		
+		Popups to be loaded. If new popups are to be added, they are described here.
+	]]
 	self.popups = {
 		'Settings',
 		'Confirmation'
@@ -56,6 +82,13 @@ function UI:__init()
 	};
 end
 
+--[[
+	@method: GetView
+	@parameter: name:string | Name of the view to get
+	@return: View | nil
+	
+	Fetches an initialized view from the cache
+]]
 function UI:GetView(name)
 	if (self.views[name] ~= nil) then
 		return self.views[name];
@@ -64,7 +97,14 @@ function UI:GetView(name)
 	return nil;
 end
 
-function UI:GetDialog(name)
+--[[
+	@method: GetDialog
+	@parameter: name:string | Name of the dialog to get
+	@return: Dialog | nil
+	
+	Fetches an initialized dialog from the cache
+]]
+function UI:GetDialog(name, view)
 	local reference = self.dialogs[name];
 	local instance	= nil;
 	
@@ -73,7 +113,7 @@ function UI:GetDialog(name)
 		
 		if instance ~= nil then
 			if (instance['InitializeComponent'] ~= nil) then
-				instance:InitializeComponent();
+				instance:InitializeComponent(view);
 			end
 
 			return instance;
@@ -83,6 +123,11 @@ function UI:GetDialog(name)
 	return nil;
 end
 
+--[[
+	@method: __boot
+	
+	All UI components were booted here.
+]]
 function UI:__boot()
 	m_Logger:Write('Booting...');
 	
@@ -120,6 +165,11 @@ function UI:__boot()
 	end
 end
 
+--[[
+	@method: __update
+	
+	This method checks whether all components have been loaded at runtime.
+]]
 function UI:__update()
 	for _, dialog in pairs(self.popups) do
 		if (self.dialogs[dialog] == nil) then
@@ -158,7 +208,16 @@ function UI:__update()
 	end
 end
 
--- All UI Actions will be handled here
+--[[
+	@method: __action
+	@parameter: player:Player | The player object that performs the action
+	@parameter: type:string | The component type for the target
+	@parameter: destination:string | The target for which the action is intended 
+	@parameter: action:string | The action performed by the player
+	@parameter: data:table | The data to be used in the action
+	
+	All UI Actions will be handled here.
+]]
 function UI:__action(player, type, destination, action, data)
 	m_Logger:Write('Action { Type=' .. tostring(type) .. ', Destination=' .. tostring(destination) ..', Action=' .. tostring(action) .. ', Data=' .. json.encode(data) .. '}');
 	
@@ -203,6 +262,13 @@ function UI:__action(player, type, destination, action, data)
 	end
 end
 
+--[[
+	@method: Send
+	@parameter: component:string | The component to be addressed in the action
+	@parameter: receiver:Player | The recipient who is to receive the action
+	@parameter: action:string | The action to be performed at the recipient
+	@parameter: object:table | The data to be used in the action
+]]
 function UI:Send(component, receiver, action, object)
 	local kind			= nil;
 	local destination	= nil;

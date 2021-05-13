@@ -1,14 +1,24 @@
+--[[
+	@class: BotEditor
+	@extends: View
+]]
 class('BotEditor')
 
 local m_BotSpawner = require('BotSpawner')
 local m_BotManager = require('BotManager')
 
+--[[
+	@method: __init
+]]
 function BotEditor:__init(core)
 	self.view		= View(core, 'BotEditor')
 	self.bots		= 1
 	self.team		= 1
 end
 
+--[[
+	@method: Show
+]]
 function BotEditor:Show(player)
 	if PermissionManager:HasPermission(player, 'UserInterface.' .. self:GetName()) == false then
 		return
@@ -18,11 +28,17 @@ function BotEditor:Show(player)
 	self.view:Activate(player)
 end
 
+--[[
+	@method: Hide
+]]
 function BotEditor:Hide(player)
 	self.view:Hide(player)
 	self.view:Deactivate(player)
 end
 
+--[[
+	@method: Toggle
+]]
 function BotEditor:Toggle(player)
 	self.view:Toggle(player)
 	
@@ -33,23 +49,39 @@ function BotEditor:Toggle(player)
 	end
 end
 
+--[[
+	@method: Activate
+]]
 function BotEditor:Activate(player)
 	self.view:Activate(player)
 end
 
+--[[
+	@method: Deactivate
+]]
 function BotEditor:Deactivate(player)
 	self.view:Deactivate(player)
 end
 
+--[[
+	@method: Call
+]]
 function BotEditor:Call(player, element, name)
 	self.view:Call(player, element, name)
 end
 
+--[[
+	@method: GetName
+]]
 function BotEditor:GetName()
 	return self.view:GetName()
 end
 
--- Here you can add/remove some Components from the Bot-Editor View
+--[[
+	@method: InitializeComponent
+	
+	Here you can add/remove some Components from the Bot-Editor View
+]]
 function BotEditor:InitializeComponent()
 	-- Logo
 	local logo = Logo('Bot-Editor', 'fun-bots')
@@ -221,7 +253,7 @@ function BotEditor:InitializeComponent()
 	
 	-- Settings
 	navigation:AddItem(MenuItem('Settings', 'settings', function(player)
-		self.view:GetCore():GetDialog('Settings'):Open(self.view, player)
+		self.view:GetCore():GetDialog('Settings', self.view):Open(self.view, player)
 	end, 'F10'):SetIcon('Assets/Icons/Settings.svg'), 'UserInterface.Settings')
 	
 	-- Exit
