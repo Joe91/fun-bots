@@ -203,7 +203,7 @@ SettingsDefinition = {
 			Description	= "Mode to switch the team",
 			Reference	= TeamSwitcheModes,
 			Default		= TeamSwitcheModes.SwitchForRoundTwo,
-			Category	= SettingsDefinition.Categorys.SPAWN
+			Category	= "SPAWN"
 		},
 		{
 			Name		= "SpawnInBothTeams",
