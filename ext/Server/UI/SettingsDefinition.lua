@@ -60,7 +60,7 @@ SettingsDefinition = {
 			Type		= Type.Float,
 			Value		= Config.BotAimWorsening,
 			Description	= "make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy).",
-			Reference	= Range(0.00, 10.00),
+			Reference	= Range(0.00, 10.00, 0,05),
 			Default		= 0.5,
 			Category	= SettingsDefinition.Categorys.DIFFICULTY
 		},
@@ -70,7 +70,7 @@ SettingsDefinition = {
 			Type		= Type.Float,
 			Value		= Config.BotSniperAimWorsening,
 			Description	= "see botAimWorsening, only for Sniper-rifles",
-			Reference	= Range(0.00, 10.00),
+			Reference	= Range(0.00, 10.00, 0,05),
 			Default		= 0.2,
 			Category	= SettingsDefinition.Categorys.DIFFICULTY
 		},
@@ -80,7 +80,7 @@ SettingsDefinition = {
 			Type		= Type.Float,
 			Value		= Config.BotWorseningSkill,
 			Description	= "variation of the skill of a single bot. the higher, the worse the bots can get compared to the original settings",
-			Reference	= Range(0.00, 0.50),
+			Reference	= Range(0.00, 0.50, 0,05),
 			Default		= 0.25,
 			Category	= SettingsDefinition.Categorys.DIFFICULTY
 		},
@@ -90,7 +90,7 @@ SettingsDefinition = {
 			Type		= Type.Float,
 			Value		= Config.DamageFactorAssault,
 			Description	= "original Damage from bots gets multiplied by this",
-			Reference	= Range(0.00, 2.00),
+			Reference	= Range(0.00, 2.00, 0,10),
 			Default		= 0.5,
 			Category	= SettingsDefinition.Categorys.DIFFICULTY
 		},
@@ -100,7 +100,7 @@ SettingsDefinition = {
 			Type		= Type.Float,
 			Value		= Config.DamageFactorCarabine,
 			Description	= "original Damage from bots gets multiplied by this",
-			Reference	= Range(0.00, 2.00),
+			Reference	= Range(0.00, 2.00, 0,10),
 			Default		= 0.5,
 			Category	= SettingsDefinition.Categorys.DIFFICULTY
 		},
@@ -110,7 +110,7 @@ SettingsDefinition = {
 			Type		= Type.Float,
 			Value		= Config.DamageFactorLMG,
 			Description	= "original Damage from bots gets multiplied by this",
-			Reference	= Range(0.00, 2.00),
+			Reference	= Range(0.00, 2.00, 0,10),
 			Default		= 0.5,
 			Category	= SettingsDefinition.Categorys.DIFFICULTY
 		},
@@ -120,7 +120,7 @@ SettingsDefinition = {
 			Type		= Type.Float,
 			Value		= Config.DamageFactorPDW,
 			Description	= "original Damage from bots gets multiplied by this",
-			Reference	= Range(0.00, 2.00),
+			Reference	= Range(0.00, 2.00, 0,10),
 			Default		= 0.5,
 			Category	= SettingsDefinition.Categorys.DIFFICULTY
 		},
@@ -130,7 +130,7 @@ SettingsDefinition = {
 			Type		= Type.Float,
 			Value		= Config.DamageFactorPDW,
 			Description	= "original Damage from bots gets multiplied by this",
-			Reference	= Range(0.00, 2.00),
+			Reference	= Range(0.00, 2.00, 0,10),
 			Default		= 0.5,
 			Category	= SettingsDefinition.Categorys.DIFFICULTY
 		},
@@ -140,7 +140,7 @@ SettingsDefinition = {
 			Type		= Type.Float,
 			Value		= Config.DamageFactorSniper,
 			Description	= "original Damage from bots gets multiplied by this",
-			Reference	= Range(0.00, 2.00),
+			Reference	= Range(0.00, 2.00, 0,10),
 			Default		= 0.8,
 			Category	= SettingsDefinition.Categorys.DIFFICULTY
 		},
@@ -150,7 +150,7 @@ SettingsDefinition = {
 			Type		= Type.Float,
 			Value		= Config.DamageFactorShotgun,
 			Description	= "original Damage from bots gets multiplied by this",
-			Reference	= Range(0.00, 2.00),
+			Reference	= Range(0.00, 2.00, 0,10),
 			Default		= 0.8,
 			Category	= SettingsDefinition.Categorys.DIFFICULTY
 		},
@@ -160,7 +160,7 @@ SettingsDefinition = {
 			Type		= Type.Float,
 			Value		= Config.DamageFactorPistol,
 			Description	= "original Damage from bots gets multiplied by this",
-			Reference	= Range(0.00, 2.00),
+			Reference	= Range(0.00, 2.00, 0,10),
 			Default		= 0.7,
 			Category	= SettingsDefinition.Categorys.DIFFICULTY
 		},
@@ -170,7 +170,7 @@ SettingsDefinition = {
 			Type		= Type.Float,
 			Value		= Config.DamageFactorKnife,
 			Description	= "original Damage from bots gets multiplied by this",
-			Reference	= Range(0.00, 2.00),
+			Reference	= Range(0.00, 2.00, 0,10),
 			Default		= 1.5,
 			Category	= SettingsDefinition.Categorys.DIFFICULTY
 		},
@@ -211,7 +211,7 @@ SettingsDefinition = {
 			Type		= Type.Integer,
 			Value		= Config.InitNumberOfBots,
 			Description	= "bots for spawnmode",
-			Reference	= Range(0.00, 128.00),
+			Reference	= Range(0.00, 128.00, 1.0),
 			Default		= 6,
 			Category	= SettingsDefinition.Categorys.SPAWN
 		},
@@ -221,7 +221,7 @@ SettingsDefinition = {
 			Type		= Type.Integer,
 			Value		= Config.NewBotsPerNewPlayer,
 			Description	= "number to increase Bots, when new players join",
-			Reference	= Range(0.00, 128.00),
+			Reference	= Range(0.00, 128.00, 1.0),
 			Default		= 2,
 			Category	= SettingsDefinition.Categorys.SPAWN
 		},
@@ -231,7 +231,7 @@ SettingsDefinition = {
 			Type		= Type.Float,
 			Value		= Config.FactorPlayerTeamCount,
 			Description	= "reduce playerteam in balanced_teams or fixed_number mode",
-			Reference	= Range(0.00, 1.00),
+			Reference	= Range(0.00, 1.00, 0.05),
 			Default		= 0.8,
 			Category	= SettingsDefinition.Categorys.SPAWN
 		},
@@ -241,7 +241,7 @@ SettingsDefinition = {
 			Type		= Type.Integer,
 			Value		= Config.BotTeam,
 			Description	= "default bot team (0 = neutral / auto, 1 = US, 2 = RU) TeamId.Team2",
-			Reference	= Range(0.00, 4.00),
+			Reference	= Range(0.00, 4.00, 1.0),
 			Default		= 0,
 			Category	= SettingsDefinition.Categorys.SPAWN
 		},
@@ -260,7 +260,7 @@ SettingsDefinition = {
 			Type		= Type.Integer,
 			Value		= Config.MaxAssaultBots,
 			Description	= "maximum number of Bots with Assault Kit. -1 = no limit",
-			Reference	= Range(-1.00, 128.00),
+			Reference	= Range(-1.00, 128.00, 1.0),
 			Default		= -1,
 			Category	= SettingsDefinition.Categorys.SPAWN
 		},
@@ -270,7 +270,7 @@ SettingsDefinition = {
 			Type		= Type.Integer,
 			Value		= Config.MaxEngineerBots,
 			Description	= "maximum number of Bots with Engineer Kit. -1 = no limit",
-			Reference	= Range(-1.00, 128.00),
+			Reference	= Range(-1.00, 128.00, 1.0),
 			Default		= -1,
 			Category	= SettingsDefinition.Categorys.SPAWN
 		},
@@ -280,7 +280,7 @@ SettingsDefinition = {
 			Type		= Type.Integer,
 			Value		= Config.MaxSupportBots,
 			Description	= "maximum number of Bots with Support Kit. -1 = no limit",
-			Reference	= Range(-1.00, 128.00),
+			Reference	= Range(-1.00, 128.00, 1.0),
 			Default		= -1,
 			Category	= SettingsDefinition.Categorys.SPAWN
 		},
@@ -290,7 +290,7 @@ SettingsDefinition = {
 			Type		= Type.Integer,
 			Value		= Config.MaxReconBots,
 			Description	= "maximum number of Bots with Recon Kit. -1 = no limit",
-			Reference	= Range(-1.00, 128.00),
+			Reference	= Range(-1.00, 128.00, 1.0),
 			Default		= -1,
 			Category	= SettingsDefinition.Categorys.SPAWN
 		},
@@ -302,7 +302,7 @@ SettingsDefinition = {
 			Type		= Type.Integer,
 			Value		= Config.MaxBotsPerTeamDefault,
 			Description	= "max number of bots in one team, if no other mode fits",
-			Reference	= Range(0.00, 128.00),
+			Reference	= Range(0.00, 128.00, 1.0),
 			Default		= 32,
 			Category	= SettingsDefinition.Categorys.SPAWNLIMITS
 		},
@@ -312,7 +312,7 @@ SettingsDefinition = {
 			Type		= Type.Integer,
 			Value		= Config.MaxBotsPerTeamTdm,
 			Description	= "max number of bots in one team for TDM",
-			Reference	= Range(0.00, 128.00),
+			Reference	= Range(0.00, 128.00, 1.0),
 			Default		= 32,
 			Category	= SettingsDefinition.Categorys.SPAWNLIMITS
 		},
@@ -322,7 +322,7 @@ SettingsDefinition = {
 			Type		= Type.Integer,
 			Value		= Config.MaxBotsPerTeamTdmc,
 			Description	= "max number of bots in one team for TDM-CQ",
-			Reference	= Range(0.00, 128.00),
+			Reference	= Range(0.00, 128.00, 1.0),
 			Default		= 8,
 			Category	= SettingsDefinition.Categorys.SPAWNLIMITS
 		},
@@ -332,7 +332,7 @@ SettingsDefinition = {
 			Type		= Type.Integer,
 			Value		= Config.MaxBotsPerTeamSdm,
 			Description	= "max number of bots in one team for Squad-DM",
-			Reference	= Range(0.00, 128.00),
+			Reference	= Range(0.00, 128.00, 1.0),
 			Default		= 5,
 			Category	= SettingsDefinition.Categorys.SPAWNLIMITS
 		},
@@ -342,7 +342,7 @@ SettingsDefinition = {
 			Type		= Type.Integer,
 			Value		= Config.MaxBotsPerTeamCl,
 			Description	= "max number of bots in one team for CQ-Large",
-			Reference	= Range(0.00, 128.00),
+			Reference	= Range(0.00, 128.00, 1.0),
 			Default		= 32,
 			Category	= SettingsDefinition.Categorys.SPAWNLIMITS
 		},
@@ -352,7 +352,7 @@ SettingsDefinition = {
 			Type		= Type.Integer,
 			Value		= Config.MaxBotsPerTeamCs,
 			Description	= "max number of bots in one team for CQ-Small",
-			Reference	= Range(0.00, 128.00),
+			Reference	= Range(0.00, 128.00, 1.0),
 			Default		= 16,
 			Category	= SettingsDefinition.Categorys.SPAWNLIMITS
 		},
@@ -362,7 +362,7 @@ SettingsDefinition = {
 			Type		= Type.Integer,
 			Value		= Config.MaxBotsPerTeamCal,
 			Description	= "max number of bots in one team for CQ-Assault-Large",
-			Reference	= Range(0.00, 128.00),
+			Reference	= Range(0.00, 128.00, 1.0),
 			Default		= 32,
 			Category	= SettingsDefinition.Categorys.SPAWNLIMITS
 		},
@@ -372,7 +372,7 @@ SettingsDefinition = {
 			Type		= Type.Integer,
 			Value		= Config.MaxBotsPerTeamCas,
 			Description	= "max number of bots in one team for CQ-Assault-Small",
-			Reference	= Range(0.00, 128.00),
+			Reference	= Range(0.00, 128.00, 1.0),
 			Default		= 16,
 			Category	= SettingsDefinition.Categorys.SPAWNLIMITS
 		},
@@ -382,7 +382,7 @@ SettingsDefinition = {
 			Type		= Type.Integer,
 			Value		= Config.MaxBotsPerTeamRl,
 			Description	= "max number of bots in one team for Rush",
-			Reference	= Range(0.00, 128.00),
+			Reference	= Range(0.00, 128.00, 1.0),
 			Default		= 24,
 			Category	= SettingsDefinition.Categorys.SPAWNLIMITS
 		},
@@ -392,7 +392,7 @@ SettingsDefinition = {
 			Type		= Type.Integer,
 			Value		= Config.MaxBotsPerTeamCtf,
 			Description	= "max number of bots in one team for CTF",
-			Reference	= Range(0.00, 128.00),
+			Reference	= Range(0.00, 128.00, 1.0),
 			Default		= 24,
 			Category	= SettingsDefinition.Categorys.SPAWNLIMITS
 		},
@@ -402,7 +402,7 @@ SettingsDefinition = {
 			Type		= Type.Integer,
 			Value		= Config.MaxBotsPerTeamD,
 			Description	= "max number of bots in one team for Domination",
-			Reference	= Range(0.00, 128.00),
+			Reference	= Range(0.00, 128.00, 1.0),
 			Default		= 12,
 			Category	= SettingsDefinition.Categorys.SPAWNLIMITS
 		},
@@ -412,7 +412,7 @@ SettingsDefinition = {
 			Type		= Type.Integer,
 			Value		= Config.MaxBotsPerTeamGm,
 			Description	= "max number of bots in one team for Gunmaster",
-			Reference	= Range(0.00, 128.00),
+			Reference	= Range(0.00, 128.00, 1.0),
 			Default		= 12,
 			Category	= SettingsDefinition.Categorys.SPAWNLIMITS
 		},
@@ -422,7 +422,7 @@ SettingsDefinition = {
 			Type		= Type.Integer,
 			Value		= Config.MaxBotsPerTeamS,
 			Description	= "max number of bots in one team for Scavenger",
-			Reference	= Range(0.00, 128.00),
+			Reference	= Range(0.00, 128.00, 1.0),
 			Default		= 12,
 			Category	= SettingsDefinition.Categorys.SPAWNLIMITS
 		},
@@ -435,7 +435,7 @@ SettingsDefinition = {
 			Type		= Type.Integer,
 			Value		= Config.FovForShooting,
 			Description	= "Degrees of FOV of Bot",
-			Reference	= Range(0.00, 360.00),
+			Reference	= Range(0.00, 360.00, 1.0),
 			Default		= 245,
 			Category	= SettingsDefinition.Categorys.BEHAVIOUR
 		},
@@ -445,7 +445,7 @@ SettingsDefinition = {
 			Type		= Type.Integer,
 			Value		= Config.MaxRaycastDistance,
 			Description	= "meters bots start shooting at player",
-			Reference	= Range(1.00, 1500.00),
+			Reference	= Range(1.00, 1500.00, 5.0),
 			Default		= 150,
 			Category	= SettingsDefinition.Categorys.BEHAVIOUR
 		},
@@ -455,7 +455,7 @@ SettingsDefinition = {
 			Type		= Type.Integer,
 			Value		= Config.MaxShootDistanceNoSniper,
 			Description	= "meters a bot (not sniper) start shooting at player",
-			Reference	= Range(1.00, 1500.00),
+			Reference	= Range(1.00, 1500.00, 5.0),
 			Default		= 70,
 			Category	= SettingsDefinition.Categorys.BEHAVIOUR
 		},
@@ -465,7 +465,7 @@ SettingsDefinition = {
 			Type		= Type.Integer,
 			Value		= Config.MaxShootDistancePistol,
 			Description	= "only in auto-weapon-mode, the distance until a bot switches to pistol if his magazine is empty",
-			Reference	= Range(1.00, 1500.00),
+			Reference	= Range(1.00, 1500.00, 5.0),
 			Default		= 30,
 			Category	= SettingsDefinition.Categorys.BEHAVIOUR
 		},
@@ -548,7 +548,7 @@ SettingsDefinition = {
 			Type		= Type.Integer,
 			Value		= Config.DeployCycle,
 			Description	= "time between deployment of bots in seconds",
-			Reference	= Range(1.00, 600.00),
+			Reference	= Range(1.00, 600.00, 5.0),
 			Default		= 50,
 			Category	= SettingsDefinition.Categorys.BEHAVIOUR
 		},
@@ -680,7 +680,7 @@ SettingsDefinition = {
 			Type		= Type.Integer,
 			Value		= Config.WaypointRange,
 			Description	= "Set how far away waypoints are visible (meters)",
-			Reference	= Range(1.00, 1000.00),
+			Reference	= Range(1.00, 1000.00, 1.0),
 			Default		= 100,
 			Category	= SettingsDefinition.Categorys.TRACE
 		},
@@ -699,7 +699,7 @@ SettingsDefinition = {
 			Type		= Type.Integer,
 			Value		= Config.LineRange,
 			Description	= "Set how far away waypoint lines are visible (meters)",
-			Reference	= Range(1.00, 1000.00),
+			Reference	= Range(1.00, 1000.00, 1.0),
 			Default		= 15,
 			Category	= SettingsDefinition.Categorys.TRACE
 		},
@@ -718,7 +718,7 @@ SettingsDefinition = {
 			Type		= Type.Integer,
 			Value		= Config.TextRange,
 			Description	= "Set how far away waypoint text is visible (meters)",
-			Reference	= Range(1.00, 1000.00),
+			Reference	= Range(1.00, 1000.00, 1.0),
 			Default		= 3,
 			Category	= SettingsDefinition.Categorys.TRACE
 		},
@@ -737,7 +737,7 @@ SettingsDefinition = {
 			Type		= Type.Float,
 			Value		= Config.TraceDelta,
 			Description	= "update intervall of trace",
-			Reference	= Range(0.10, 10.00),
+			Reference	= Range(0.10, 10.00, 0.1),
 			Default		= 0.3,
 			Category	= SettingsDefinition.Categorys.TRACE
 		},
@@ -749,7 +749,7 @@ SettingsDefinition = {
 			Type		= Type.Integer,
 			Value		= Config.DistanceForDirectAttack,
 			Description	= "if that close, the bot can hear you",
-			Reference	= Range(0.00, 1000.00),
+			Reference	= Range(0.00, 1000.00, 1.0),
 			Default		= 5,
 			Category	= SettingsDefinition.Categorys.ADVANCED
 		},
@@ -759,7 +759,7 @@ SettingsDefinition = {
 			Type		= Type.Integer,
 			Value		= Config.MaxBotAttackBotDistance,
 			Description	= "meters a bot attacks an other bot",
-			Reference	= Range(0.00, 1000.00),
+			Reference	= Range(0.00, 1000.00, 5.0),
 			Default		= 30,
 			Category	= SettingsDefinition.Categorys.ADVANCED
 		},
@@ -769,7 +769,7 @@ SettingsDefinition = {
 			Type		= Type.Float,
 			Value		= Config.MeleeAttackCoolDown,
 			Description	= "the time a bot waits before attacking with melee again",
-			Reference	= Range(0.00, 60.00),
+			Reference	= Range(0.00, 60.00, 0.5),
 			Default		= 3.0,
 			Category	= SettingsDefinition.Categorys.ADVANCED
 		},
@@ -826,7 +826,7 @@ SettingsDefinition = {
 			Type		= Type.Float,
 			Value		= Config.SpeedFactor,
 			Description	= "reduces the movementspeed. 1 = normal, 0 = standing.",
-			Reference	= Range(0.00, 60.00),
+			Reference	= Range(0.00, 1.00, 0.10),
 			Default		= 1.0,
 			Category	= SettingsDefinition.Categorys.ADVANCED
 		},
@@ -836,7 +836,7 @@ SettingsDefinition = {
 			Type		= Type.Float,
 			Value		= Config.SpeedFactorAttack,
 			Description	= "reduces the movementspeed while attacking. 1 = normal, 0 = standing.",
-			Reference	= Range(0.00, 60.00),
+			Reference	= Range(0.00, 1.00, 0.10),
 			Default		= 0.6,
 			Category	= SettingsDefinition.Categorys.ADVANCED
 		},
@@ -848,7 +848,7 @@ SettingsDefinition = {
 			Type		= Type.Float,
 			Value		= Config.BotFirstShotDelay,
 			Description	= "delay for first shot. If too small, there will be great spread in first cycle because its not kompensated jet.",
-			Reference	= Range(0.00, 10.00),
+			Reference	= Range(0.00, 10.00, 0.10),
 			Default		= 0.35,
 			Category	= SettingsDefinition.Categorys.EXPERT
 		},
@@ -858,7 +858,7 @@ SettingsDefinition = {
 			Type		= Type.Float,
 			Value		= Config.BotMinTimeShootAtPlayer,
 			Description	= "the minimum time a bot shoots at one player",
-			Reference	= Range(0.00, 60.00),
+			Reference	= Range(0.00, 60.00, 0.5),
 			Default		= 2.0,
 			Category	= SettingsDefinition.Categorys.EXPERT
 		},
@@ -868,7 +868,7 @@ SettingsDefinition = {
 			Type		= Type.Float,
 			Value		= Config.BotFireModeDuration,
 			Description	= "the minimum time a bot tries to shoot a player",
-			Reference	= Range(0.00, 60.00),
+			Reference	= Range(0.00, 60.00, 0.5),
 			Default		= 5.0,
 			Category	= SettingsDefinition.Categorys.EXPERT
 		},
@@ -878,7 +878,7 @@ SettingsDefinition = {
 			Type		= Type.Integer,
 			Value		= Config.MaximunYawPerSec,
 			Description	= "in Degree. Rotaion-Movement per second.",
-			Reference	= Range(0.00, 1080.00),
+			Reference	= Range(0.00, 1080.00, 5.0),
 			Default		= 450,
 			Category	= SettingsDefinition.Categorys.EXPERT
 		},
@@ -888,7 +888,7 @@ SettingsDefinition = {
 			Type		= Type.Float,
 			Value		= Config.TargetDistanceWayPoint,
 			Description	= "distance the bots have to reach to continue with next Waypoint",
-			Reference	= Range(0.00, 100.00),
+			Reference	= Range(0.00, 100.00, 0.10),
 			Default		= 0.8,
 			Category	= SettingsDefinition.Categorys.EXPERT
 		},
@@ -907,7 +907,7 @@ SettingsDefinition = {
 			Type		= Type.Integer,
 			Value		= Config.DistanceToSpawnBots,
 			Description	= "distance to spawn Bots away from players.",
-			Reference	= Range(0.00, 100.00),
+			Reference	= Range(0.00, 100.00, 5.0),
 			Default		= 30,
 			Category	= SettingsDefinition.Categorys.EXPERT
 		},
@@ -917,7 +917,7 @@ SettingsDefinition = {
 			Type		= Type.Float,
 			Value		= Config.HeightDistanceToSpawn,
 			Description	= "distance vertically, Bots should spawn away, if closer than distance.",
-			Reference	= Range(0.00, 100.00),
+			Reference	= Range(0.00, 100.00, 0.10),
 			Default		= 2.8,
 			Category	= SettingsDefinition.Categorys.EXPERT
 		},
@@ -927,7 +927,7 @@ SettingsDefinition = {
 			Type		= Type.Integer,
 			Value		= Config.DistanceToSpawnReduction,
 			Description	= "reduce distance if not possible.",
-			Reference	= Range(0.00, 100.00),
+			Reference	= Range(0.00, 100.00, 1.0),
 			Default		= 5,
 			Category	= SettingsDefinition.Categorys.EXPERT
 		},
@@ -937,7 +937,7 @@ SettingsDefinition = {
 			Type		= Type.Integer,
 			Value		= Config.MaxTrysToSpawnAtDistance,
 			Description	= "try this often to spawn a bot away from players",
-			Reference	= Range(0.00, 100.00),
+			Reference	= Range(0.00, 100.00, 1.0),
 			Default		= 3,
 			Category	= SettingsDefinition.Categorys.EXPERT
 		},
@@ -947,8 +947,8 @@ SettingsDefinition = {
 			Type		= Type.Float,
 			Value		= Config.HeadShotFactorBots,
 			Description	= "factor for damage if headshot (only in Fake-mode)",
-			Reference	= Range(0.00, 10.00),
-			Default		= 3,
+			Reference	= Range(0.00, 10.00, 0.1),
+			Default		= 1.5,
 			Category	= SettingsDefinition.Categorys.EXPERT
 		},
 		{
