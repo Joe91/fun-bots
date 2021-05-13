@@ -315,6 +315,9 @@ function BotSpawner:UpdateBotAmountAndTeam()
 			if s_TargetTeamCount[i] > Globals.MaxBotsPerTeam then
 				s_TargetTeamCount[i] = Globals.MaxBotsPerTeam
 			end
+			if Globals.NrOfTeams == 2 and i ~= s_BotTeam then
+				s_TargetTeamCount[i] = math.floor((s_TargetTeamCount[i] * Config.FactorPlayerTeamCount) + 0.5)
+			end
 		end
 
 		for i = 1, Globals.NrOfTeams do
@@ -324,6 +327,7 @@ function BotSpawner:UpdateBotAmountAndTeam()
 				m_BotManager:killAll(s_TeamCount[i] - s_TargetTeamCount[i], i)
 			end
 		end
+
 	-- INCREMENT WITH PLAYER
 	elseif Globals.SpawnMode == SpawnModes.increment_with_players then
 		if Config.SpawnInBothTeams then
@@ -379,16 +383,25 @@ function BotSpawner:UpdateBotAmountAndTeam()
 	-- FIXED NUMBER TO SPAWN
 	elseif Globals.SpawnMode == SpawnModes.fixed_number then
 		if Config.SpawnInBothTeams then
-			local s_AmountPerTeam = math.floor(Config.InitNumberOfBots/Globals.NrOfTeams)
-			if s_AmountPerTeam > Globals.MaxBotsPerTeam then
-				s_AmountPerTeam = Globals.MaxBotsPerTeam
+			for i = 1, Globals.NrOfTeams do
+				s_TargetTeamCount[i] = math.floor(Config.InitNumberOfBots/Globals.NrOfTeams)
+				if Globals.NrOfTeams == 2 then
+					if i ~= s_BotTeam then
+						s_TargetTeamCount[i] = math.floor((s_TargetTeamCount[i] * Config.FactorPlayerTeamCount) + 0.5)
+					else
+						s_TargetTeamCount[i] = math.floor((s_TargetTeamCount[i] * (2 - Config.FactorPlayerTeamCount)) + 0.5)
+					end
+				end
+				if s_TargetTeamCount[i] > Globals.MaxBotsPerTeam then
+					s_TargetTeamCount[i] = Globals.MaxBotsPerTeam
+				end
 			end
 
 			for i = 1, Globals.NrOfTeams do
-				if s_TeamCount[i] < s_AmountPerTeam then
-					self:SpawnWayBots(nil, s_AmountPerTeam - s_TeamCount[i], true, 0, 0, i)
-				elseif s_TeamCount[i] > s_AmountPerTeam and s_CountBots[i] > 0 then
-					m_BotManager:killAll(s_TeamCount[i] - s_AmountPerTeam, i)
+				if s_TeamCount[i] < s_TargetTeamCount[i] then
+					self:SpawnWayBots(nil, s_TargetTeamCount[i] - s_TeamCount[i], true, 0, 0, i)
+				elseif s_TeamCount[i] > s_TargetTeamCount[i] and s_CountBots[i] > 0 then
+					m_BotManager:killAll(s_TeamCount[i] - s_TargetTeamCount[i], i)
 				end
 			end
 		else
