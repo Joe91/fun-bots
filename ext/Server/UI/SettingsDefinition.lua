@@ -27,7 +27,7 @@ SettingsDefinition = {
 			Reference	= BotWeapons,
 			Description	= "Select the weapon the bots use",
 			Default		= BotWeapons.Auto,
-			Category	= SettingsDefinition.Categorys.GENERAL
+			Category	= "GENERAL"
 		},
 		{
 			Name		= "BotKit",
@@ -37,7 +37,7 @@ SettingsDefinition = {
 			Reference	= BotKits,
 			Description	= "The Kit of the Bots",
 			Default		= BotKits.RANDOM_KIT,
-			Category	= SettingsDefinition.Categorys.GENERAL
+			Category	= "GENERAL"
 		},
 		{
 			Name		= "BotColor",
@@ -47,7 +47,7 @@ SettingsDefinition = {
 			Value		= Config.BotColor,
 			Description	= "The Color of the Bots",
 			Default		= BotColors.RANDOM_COLOR,
-			Category	= SettingsDefinition.Categorys.GENERAL
+			Category	= "GENERAL"
 		},
 		{
 			Name		= "ZombieMode",
@@ -55,7 +55,7 @@ SettingsDefinition = {
 			Value		= Config.ZombieMode,
 			Description	= "Zombie Bot Mode",
 			Default		= false,
-			Category	= SettingsDefinition.Categorys.GENERAL
+			Category	= "GENERAL"
 		},
 
 		-- Difficulty
@@ -67,7 +67,7 @@ SettingsDefinition = {
 			Description	= "make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy).",
 			Reference	= Range(0.00, 10.00),
 			Default		= 0.5,
-			Category	= SettingsDefinition.Categorys.DIFFICULTY
+			Category	= "DIFFICULTY"
 		},
 		{
 			Name		= "BotSniperAimWorsening",
@@ -77,7 +77,7 @@ SettingsDefinition = {
 			Description	= "see botAimWorsening, only for Sniper-rifles",
 			Reference	= Range(0.00, 10.00),
 			Default		= 0.2,
-			Category	= SettingsDefinition.Categorys.DIFFICULTY
+			Category	= "DIFFICULTY"
 		},
 		{
 			Name		= "BotWorseningSkill",
@@ -87,7 +87,7 @@ SettingsDefinition = {
 			Description	= "variation of the skill of a single bot. the higher, the worse the bots can get compared to the original settings",
 			Reference	= Range(0.00, 0.50),
 			Default		= 0.25,
-			Category	= SettingsDefinition.Categorys.DIFFICULTY
+			Category	= "DIFFICULTY"
 		},
 		{
 			Name		= "DamageFactorAssault",
@@ -97,7 +97,7 @@ SettingsDefinition = {
 			Description	= "original Damage from bots gets multiplied by this",
 			Reference	= Range(0.00, 2.00),
 			Default		= 0.5,
-			Category	= SettingsDefinition.Categorys.DIFFICULTY
+			Category	= "DIFFICULTY"
 		},
 		{
 			Name		= "DamageFactorCarabine",
@@ -107,7 +107,7 @@ SettingsDefinition = {
 			Description	= "original Damage from bots gets multiplied by this",
 			Reference	= Range(0.00, 2.00),
 			Default		= 0.5,
-			Category	= SettingsDefinition.Categorys.DIFFICULTY
+			Category	= "DIFFICULTY"
 		},
 		{
 			Name		= "DamageFactorLMG",
@@ -117,7 +117,7 @@ SettingsDefinition = {
 			Description	= "original Damage from bots gets multiplied by this",
 			Reference	= Range(0.00, 2.00),
 			Default		= 0.5,
-			Category	= SettingsDefinition.Categorys.DIFFICULTY
+			Category	= "DIFFICULTY"
 		},
 		{
 			Name		= "DamageFactorPDW",
@@ -127,7 +127,7 @@ SettingsDefinition = {
 			Description	= "original Damage from bots gets multiplied by this",
 			Reference	= Range(0.00, 2.00),
 			Default		= 0.5,
-			Category	= SettingsDefinition.Categorys.DIFFICULTY
+			Category	= "DIFFICULTY"
 		},
 		{
 			Name		= "DamageFactorPDW",
@@ -137,7 +137,7 @@ SettingsDefinition = {
 			Description	= "original Damage from bots gets multiplied by this",
 			Reference	= Range(0.00, 2.00),
 			Default		= 0.5,
-			Category	= SettingsDefinition.Categorys.DIFFICULTY
+			Category	= "DIFFICULTY"
 		},
 		{
 			Name		= "DamageFactorSniper",
@@ -147,7 +147,7 @@ SettingsDefinition = {
 			Description	= "original Damage from bots gets multiplied by this",
 			Reference	= Range(0.00, 2.00),
 			Default		= 0.8,
-			Category	= SettingsDefinition.Categorys.DIFFICULTY
+			Category	= "DIFFICULTY"
 		},
 		{
 			Name		= "DamageFactorShotgun",
@@ -157,7 +157,7 @@ SettingsDefinition = {
 			Description	= "original Damage from bots gets multiplied by this",
 			Reference	= Range(0.00, 2.00),
 			Default		= 0.8,
-			Category	= SettingsDefinition.Categorys.DIFFICULTY
+			Category	= "DIFFICULTY"
 		},
 		{
 			Name		= "DamageFactorPistol",
@@ -167,7 +167,7 @@ SettingsDefinition = {
 			Description	= "original Damage from bots gets multiplied by this",
 			Reference	= Range(0.00, 2.00),
 			Default		= 0.7,
-			Category	= SettingsDefinition.Categorys.DIFFICULTY
+			Category	= "DIFFICULTY"
 		},
 		{
 			Name		= "DamageFactorKnife",
@@ -177,7 +177,7 @@ SettingsDefinition = {
 			Description	= "original Damage from bots gets multiplied by this",
 			Reference	= Range(0.00, 2.00),
 			Default		= 1.5,
-			Category	= SettingsDefinition.Categorys.DIFFICULTY
+			Category	= "DIFFICULTY"
 		},
 
 		-- Spawn
@@ -189,7 +189,7 @@ SettingsDefinition = {
 			Description	= "mode the bots spawn with",
 			Reference	= SpawnModes,
 			Default		= SpawnModes.balanced_teams,
-			Category	= SettingsDefinition.Categorys.SPAWN
+			Category	= "SPAWN"
 		},
 		{
 			Name		= "SpawnInBothTeams",
@@ -198,7 +198,7 @@ SettingsDefinition = {
 			Value		= Config.SpawnInBothTeams,
 			Description	= "Bots spawn in both teams",
 			Default		= true,
-			Category	= SettingsDefinition.Categorys.SPAWN
+			Category	= "SPAWN"
 		},
 		{
 			Name		= "InitNumberOfBots",
@@ -208,7 +208,7 @@ SettingsDefinition = {
 			Description	= "bots for spawnmode",
 			Reference	= Range(0.00, 128.00),
 			Default		= 6,
-			Category	= SettingsDefinition.Categorys.SPAWN
+			Category	= "SPAWN"
 		},
 		{
 			Name		= "NewBotsPerNewPlayer",
@@ -218,7 +218,7 @@ SettingsDefinition = {
 			Description	= "number to increase Bots, when new players join",
 			Reference	= Range(0.00, 128.00),
 			Default		= 2,
-			Category	= SettingsDefinition.Categorys.SPAWN
+			Category	= "SPAWN"
 		},
 		{
 			Name		= "NewBotsPerNewPlayer",
@@ -228,7 +228,7 @@ SettingsDefinition = {
 			Description	= "number to increase Bots, when new players join",
 			Reference	= Range(0.00, 128.00),
 			Default		= 2,
-			Category	= SettingsDefinition.Categorys.SPAWN
+			Category	= "SPAWN"
 		},
 		{
 			Name		= "BotTeam",
@@ -238,7 +238,7 @@ SettingsDefinition = {
 			Description	= "default bot team (0 = neutral / auto, 1 = US, 2 = RU) TeamId.Team2",
 			Reference	= Range(0.00, 4.00),
 			Default		= 0,
-			Category	= SettingsDefinition.Categorys.SPAWN
+			Category	= "SPAWN"
 		},
 		{
 			Name		= "BotNewLoadoutOnSpawn",
@@ -247,7 +247,7 @@ SettingsDefinition = {
 			Value		= Config.BotNewLoadoutOnSpawn,
 			Description	= "bots get a new kit and color, if they respawn",
 			Default		= true,
-			Category	= SettingsDefinition.Categorys.SPAWN
+			Category	= "SPAWN"
 		},
 		{
 			Name		= "MaxAssaultBots",
@@ -257,7 +257,7 @@ SettingsDefinition = {
 			Description	= "maximum number of Bots with Assault Kit. -1 = no limit",
 			Reference	= Range(-1.00, 128.00),
 			Default		= -1,
-			Category	= SettingsDefinition.Categorys.SPAWN
+			Category	= "SPAWN"
 		},
 		{
 			Name		= "MaxEngineerBots",
@@ -267,7 +267,7 @@ SettingsDefinition = {
 			Description	= "maximum number of Bots with Engineer Kit. -1 = no limit",
 			Reference	= Range(-1.00, 128.00),
 			Default		= -1,
-			Category	= SettingsDefinition.Categorys.SPAWN
+			Category	= "SPAWN"
 		},
 		{
 			Name		= "MaxSupportBots",
@@ -277,7 +277,7 @@ SettingsDefinition = {
 			Description	= "maximum number of Bots with Support Kit. -1 = no limit",
 			Reference	= Range(-1.00, 128.00),
 			Default		= -1,
-			Category	= SettingsDefinition.Categorys.SPAWN
+			Category	= "SPAWN"
 		},
 		{
 			Name		= "MaxReconBots",
@@ -287,7 +287,7 @@ SettingsDefinition = {
 			Description	= "maximum number of Bots with Recon Kit. -1 = no limit",
 			Reference	= Range(-1.00, 128.00),
 			Default		= -1,
-			Category	= SettingsDefinition.Categorys.SPAWN
+			Category	= "SPAWN"
 		},
 
 	-- spawn-limits
@@ -299,7 +299,7 @@ SettingsDefinition = {
 			Description	= "max number of bots in one team, if no other mode fits",
 			Reference	= Range(0.00, 128.00),
 			Default		= 32,
-			Category	= SettingsDefinition.Categorys.SPAWNLIMITS
+			Category	= "SPAWNLIMITS"
 		},
 		{
 			Name		= "MaxBotsPerTeamTdm",
@@ -309,7 +309,7 @@ SettingsDefinition = {
 			Description	= "max number of bots in one team for TDM",
 			Reference	= Range(0.00, 128.00),
 			Default		= 32,
-			Category	= SettingsDefinition.Categorys.SPAWNLIMITS
+			Category	= "SPAWNLIMITS"
 		},
 		{
 			Name		= "MaxBotsPerTeamTdmc",
@@ -319,7 +319,7 @@ SettingsDefinition = {
 			Description	= "max number of bots in one team for TDM-CQ",
 			Reference	= Range(0.00, 128.00),
 			Default		= 8,
-			Category	= SettingsDefinition.Categorys.SPAWNLIMITS
+			Category	= "SPAWNLIMITS"
 		},
 		{
 			Name		= "MaxBotsPerTeamSdm",
@@ -329,7 +329,7 @@ SettingsDefinition = {
 			Description	= "max number of bots in one team for Squad-DM",
 			Reference	= Range(0.00, 128.00),
 			Default		= 5,
-			Category	= SettingsDefinition.Categorys.SPAWNLIMITS
+			Category	= "SPAWNLIMITS"
 		},
 		{
 			Name		= "MaxBotsPerTeamCl",
@@ -339,7 +339,7 @@ SettingsDefinition = {
 			Description	= "max number of bots in one team for CQ-Large",
 			Reference	= Range(0.00, 128.00),
 			Default		= 32,
-			Category	= SettingsDefinition.Categorys.SPAWNLIMITS
+			Category	= "SPAWNLIMITS"
 		},
 		{
 			Name		= "MaxBotsPerTeamCs",
@@ -349,7 +349,7 @@ SettingsDefinition = {
 			Description	= "max number of bots in one team for CQ-Small",
 			Reference	= Range(0.00, 128.00),
 			Default		= 16,
-			Category	= SettingsDefinition.Categorys.SPAWNLIMITS
+			Category	= "SPAWNLIMITS"
 		},
 		{
 			Name		= "MaxBotsPerTeamCal",
@@ -359,7 +359,7 @@ SettingsDefinition = {
 			Description	= "max number of bots in one team for CQ-Assault-Large",
 			Reference	= Range(0.00, 128.00),
 			Default		= 32,
-			Category	= SettingsDefinition.Categorys.SPAWNLIMITS
+			Category	= "SPAWNLIMITS"
 		},
 		{
 			Name		= "MaxBotsPerTeamCas",
@@ -369,7 +369,7 @@ SettingsDefinition = {
 			Description	= "max number of bots in one team for CQ-Assault-Small",
 			Reference	= Range(0.00, 128.00),
 			Default		= 16,
-			Category	= SettingsDefinition.Categorys.SPAWNLIMITS
+			Category	= "SPAWNLIMITS"
 		},
 		{
 			Name		= "MaxBotsPerTeamRl",
@@ -379,7 +379,7 @@ SettingsDefinition = {
 			Description	= "max number of bots in one team for Rush",
 			Reference	= Range(0.00, 128.00),
 			Default		= 24,
-			Category	= SettingsDefinition.Categorys.SPAWNLIMITS
+			Category	= "SPAWNLIMITS"
 		},
 		{
 			Name		= "MaxBotsPerTeamCtf",
@@ -389,7 +389,7 @@ SettingsDefinition = {
 			Description	= "max number of bots in one team for CTF",
 			Reference	= Range(0.00, 128.00),
 			Default		= 24,
-			Category	= SettingsDefinition.Categorys.SPAWNLIMITS
+			Category	= "SPAWNLIMITS"
 		},
 		{
 			Name		= "MaxBotsPerTeamD",
@@ -399,7 +399,7 @@ SettingsDefinition = {
 			Description	= "max number of bots in one team for Domination",
 			Reference	= Range(0.00, 128.00),
 			Default		= 12,
-			Category	= SettingsDefinition.Categorys.SPAWNLIMITS
+			Category	= "SPAWNLIMITS"
 		},
 		{
 			Name		= "MaxBotsPerTeamGm",
@@ -409,7 +409,7 @@ SettingsDefinition = {
 			Description	= "max number of bots in one team for Gunmaster",
 			Reference	= Range(0.00, 128.00),
 			Default		= 12,
-			Category	= SettingsDefinition.Categorys.SPAWNLIMITS
+			Category	= "SPAWNLIMITS"
 		},
 		{
 			Name		= "MaxBotsPerTeamS",
@@ -419,7 +419,7 @@ SettingsDefinition = {
 			Description	= "max number of bots in one team for Scavenger",
 			Reference	= Range(0.00, 128.00),
 			Default		= 12,
-			Category	= SettingsDefinition.Categorys.SPAWNLIMITS
+			Category	= "SPAWNLIMITS"
 		}
 	}
 }

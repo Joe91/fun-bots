@@ -9,6 +9,11 @@ require('UI/Constants/Type');
 require('UI/Constants/Position');
 require('UI/Constants/Color');
 require('UI/Constants/Numpad');
+require('UI/Types/Category');
+require('UI/Types/Range');
+require('UI/Types/Option');
+require('UI/Types/ValueType');
+require('UI/SettingsDefinition');
 
 --[[
 	@method: __init
@@ -99,7 +104,7 @@ end
 	
 	Fetches an initialized dialog from the cache
 ]]
-function UI:GetDialog(name)
+function UI:GetDialog(name, view)
 	local reference = self.dialogs[name];
 	local instance	= nil;
 	
@@ -108,7 +113,7 @@ function UI:GetDialog(name)
 		
 		if instance ~= nil then
 			if (instance['InitializeComponent'] ~= nil) then
-				instance:InitializeComponent();
+				instance:InitializeComponent(view);
 			end
 
 			return instance;

@@ -6,9 +6,10 @@ class('Range')
 --[[
 	@method: __init
 ]]
-function Range:__init(min, max)
-	self.min = min or nil;
-	self.max = max or nil;
+function Range:__init(min, max, step)
+	self.min	= min or nil;
+	self.max	= max or nil;
+	self.step	= step or 1.0;
 end
 
 --[[
@@ -33,6 +34,13 @@ function Range:GetMax()
 end
 
 --[[
+	@method: GetStep
+]]
+function Range:GetStep()
+	return self.step;
+end
+
+--[[
 	@method: IsValid
 ]]
 function Range:IsValid(value)
@@ -44,8 +52,9 @@ end
 ]]
 function Range:Serialize()
 	return {
-		Min	= self.min,
-		Max = self.max
+		Min		= self.min,
+		Max		= self.max,
+		Step	= self.step
 	}
 end
 

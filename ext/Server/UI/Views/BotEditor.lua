@@ -253,7 +253,7 @@ function BotEditor:InitializeComponent()
 	
 	-- Settings
 	navigation:AddItem(MenuItem('Settings', 'settings', function(player)
-		self.view:GetCore():GetDialog('Settings'):Open(self.view, player)
+		self.view:GetCore():GetDialog('Settings', self.view):Open(self.view, player)
 	end, 'F10'):SetIcon('Assets/Icons/Settings.svg'), 'UserInterface.Settings')
 	
 	-- Exit
