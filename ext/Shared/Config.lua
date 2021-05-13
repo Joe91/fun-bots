@@ -1,23 +1,17 @@
-MAX_NUMBER_OF_BOTS = 64				-- maximum bots that can be spawned
 USE_REAL_DAMAGE = true				-- with real damage, the hitboxes are a bit buggy
 BOT_TOKEN = "BOT_"					-- token Bots are marked with
 
-SpawnMethod = {
-	SpawnSoldierAt = 0,
-	Spawn = 1
-}
-
 Config = {
 	-- general
-	BotWeapon = "Auto",				-- Select the weapon the bots use
-	BotKit = "RANDOM_KIT",			-- The Kit of the Bots
-	BotColor = "RANDOM_COLOR",		-- The Color of the Bots
+	BotWeapon = BotWeapons.Auto,	-- Select the weapon the bots use
+	BotKit = BotKits.RANDOM_KIT,			-- The Kit of the Bots
+	BotColor = BotColors.RANDOM_COLOR,		-- The Color of the Bots
 	ZombieMode = false,				-- Zombie Bot Mode
 
 	-- difficluty
 	BotAimWorsening = 0.5,			-- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy).
 	BotSniperAimWorsening = 0.2,	-- see botAimWorsening, only for Sniper-rifles
-	BotWorseningSkill = 0.3,		-- variation of the skill of a single bot. the higher, the worse the bots can get compared to the original settings
+	BotWorseningSkill = 0.25,		-- variation of the skill of a single bot. the higher, the worse the bots can get compared to the original settings
 	DamageFactorAssault = 0.3,		-- original Damage from bots gets multiplied by this
 	DamageFactorCarabine = 0.3,		-- original Damage from bots gets multiplied by this
 	DamageFactorLMG = 0.3,			-- original Damage from bots gets multiplied by this
@@ -28,10 +22,12 @@ Config = {
 	DamageFactorKnife = 1.5,		-- original Damage from bots gets multiplied by this
 
 	-- spawn
-	SpawnMode = 'balanced_teams',	-- mode the bots spawn with
+	SpawnMode = SpawnModes.balanced_teams,					-- mode the bots spawn with
+	TeamSwitchMode = TeamSwitcheModes.SwitchForRoundTwo,	-- Mode to switch the team
 	SpawnInBothTeams = true,		-- Bots spawn in both teams
 	InitNumberOfBots = 6,			-- bots for spawnmode
 	NewBotsPerNewPlayer = 2,		-- number to increase Bots, when new players join
+	FactorPlayerTeamCount = 0.8,	-- reduce playerteam in balanced_teams or fixed_number mode
 	BotTeam = TeamId.TeamNeutral, 	-- default bot team (0 = neutral / auto, 1 = US, 2 = RU) TeamId.Team2
 	BotNewLoadoutOnSpawn = true,	-- bots get a new kit and color, if they respawn
 	MaxAssaultBots = -1,			-- maximum number of Bots with Assault Kit. -1 = no Limit
@@ -53,37 +49,34 @@ Config = {
     MaxBotsPerTeamD = 24,			-- max number of bots in one team in Domination
     MaxBotsPerTeamGm = 8,			-- max number of bots in one team in Gun-Master
 	MaxBotsPerTeamS = 16,			-- max number of bots in one team in Scavenger
-    -- MaxBotsPerTeamTs = 24,			-- max number of bots in one team in Tank-Superiority
-    -- MaxBotsPerTeamAs = 24,			-- max number of bots in one team in Air-Superiority
-	-- MaxBotsPerTeamSr = 4,			-- max number of bots in one team in Squad-Rush
-
-	-- weapons
-	UseRandomWeapon = true,			-- use a random weapon out of the class list
-	AssaultWeapon = "M416",		-- weapon of Assault class
-	EngineerWeapon = "M4A1",		-- weapon of Engineer class
-	SupportWeapon = "M249",			-- weapon of Support class
-	ReconWeapon = "L96_6x",			-- weapon of Recon class
-	Pistol = "MP412Rex",			-- Bot pistol
-	Knife = "Razor",				-- Bot knife
-	AssaultWeaponSet = "Custom",	-- weaponset of Assault class
-	EngineerWeaponSet = "Custom",	-- weaponset of Engineer class
-	SupportWeaponSet = "Custom",	-- weaponset of Support class
-	ReconWeaponSet = "Custom",		-- weaponset of Recon class
 
 	-- behaviour
 	FovForShooting = 245,			-- Degrees of FOV of Bot
 	MaxRaycastDistance = 150,		-- meters bots start shooting at player
 	MaxShootDistanceNoSniper = 70,	-- meters a bot (not sniper) start shooting at player
 	MaxShootDistancePistol = 30,	-- only in auto-weapon-mode, the distance until a bot switches to pistol if his magazine is empty.
-	BotAttackMode = "Random",		-- Mode the Bots attack with. Random, Crouch or Stand
+	BotAttackMode = BotAttackModes.RandomNotSet,		-- Mode the Bots attack with. Random, Crouch or Stand
 	ShootBackIfHit = true,			-- bot shoots back, if hit
 	BotsAttackBots = true,			-- bots attack bots from other team
 	MeleeAttackIfClose = true,		-- bot attacks with melee if close
-	BotCanKillHimself = false,		-- if a bot is that close he will attack, even if not in FOV
+	BotCanKillHimself = false,		-- bot takes falldamage or explosion-damage from onw frags
 	BotsRevive = true,				-- Bots revive other players
 	BotsThrowGrenades = true,		-- Bots throw grenades
 	BotsDeploy = true,				-- Bots deploy ammo and medkits
 	DeployCycle = 50,				-- time between deployment of bots
+
+	-- weapons
+	UseRandomWeapon = true,			-- use a random weapon out of the weapon set
+	AssaultWeaponSet = WeaponSets.Custom,	-- weaponset of Assault class
+	EngineerWeaponSet = WeaponSets.Custom,	-- weaponset of Engineer class
+	SupportWeaponSet = WeaponSets.Custom,	-- weaponset of Support class
+	ReconWeaponSet = WeaponSets.Custom,		-- weaponset of Recon class
+	AssaultWeapon = "M416",			-- weapon of Assault class
+	EngineerWeapon = "M4A1",		-- weapon of Engineer class
+	SupportWeapon = "M249",			-- weapon of Support class
+	ReconWeapon = "L96_6x",			-- weapon of Recon class
+	Pistol = "MP412Rex",			-- Bot pistol
+	Knife = "Razor",				-- Bot knife
 
 	-- traces
 	DebugTracePaths = false,		-- Shows the trace line and search area from Commo Rose selection
@@ -93,7 +86,7 @@ Config = {
 	DrawWaypointIDs = true,			-- Draw waypoint IDs
 	TextRange = 3,					-- Set how far away waypoint text is visible (meters)
 	DebugSelectionRaytraces = false,-- Shows the trace line and search area from Commo Rose selection
-	TraceDelta = 0.2,				-- update intervall of trace
+	TraceDelta = 0.3,				-- update intervall of trace
 
 	-- advanced
 	DistanceForDirectAttack = 5,	-- if that close, the bot can hear you
@@ -102,8 +95,8 @@ Config = {
 	AimForHead = false,				-- bots aim for the head
 	JumpWhileShooting = true,		-- bots jump over obstacles while shooting if needed
 	JumpWhileMoving = true,			-- bots jump while moving. If false, only on obstacles!
-	OverWriteBotSpeedMode = 0,		-- 0 = no overwrite. 1 = prone, 2 = crouch, 3 = walk, 4 = run
-	OverWriteBotAttackMode = 0,		-- Affects Aiming!!! 0 = no overwrite. 1 = prone, 2 = crouch (good aim), 3 = walk (good aim), 4 = run
+	OverWriteBotSpeedMode = BotMoveSpeeds.NoMovement,		-- 0 = no overwrite. 1 = prone, 2 = crouch, 3 = walk, 4 = run
+	OverWriteBotAttackMode = BotMoveSpeeds.NoMovement,		-- Affects Aiming!!! 0 = no overwrite. 1 = prone, 2 = crouch (good aim), 3 = walk (good aim), 4 = run
 	SpeedFactor = 1.0,				-- reduces the movementspeed. 1 = normal, 0 = standing.
 	SpeedFactorAttack = 0.6,		-- reduces the movementspeed while attacking. 1 = normal, 0 = standing.
 

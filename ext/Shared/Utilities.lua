@@ -7,36 +7,7 @@ function Utilities:__init()
 end
 
 function Utilities:getCameraPos(p_Player, p_IsTarget)
-	local returnVec = Vec3(0, 0, 0)
-	local cameraVec = p_Player.input.authoritativeCameraPosition:Clone()
-
-	if cameraVec.z ~= 0 then
-		returnVec = p_Player.soldier.worldTransform.forward* cameraVec.z + p_Player.soldier.worldTransform.left * cameraVec.x + p_Player.soldier.worldTransform.up * cameraVec.y
-
-		if p_IsTarget then
-			if Config.AimForHead then
-				if p_Player.soldier.pose == CharacterPoseType.CharacterPoseType_Stand then
-					returnVec.y = returnVec.y - 0.1
-				elseif p_Player.soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
-					returnVec.y = returnVec.y - 0.05
-				else
-					returnVec.y = returnVec.y - 0.05
-				end
-			else
-				if p_Player.soldier.pose == CharacterPoseType.CharacterPoseType_Stand then
-					returnVec.y = returnVec.y - 0.5
-				elseif p_Player.soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
-					returnVec.y = returnVec.y - 0.3
-				else
-					returnVec.y = returnVec.y - 0.1
-				end
-			end
-		end
-	else
-		returnVec = Vec3(0.03 ,self:getTargetHeight(p_Player.soldier, p_IsTarget), 0.03)
-	end
-
-	return returnVec
+	return Vec3(0.00 ,self:getTargetHeight(p_Player.soldier, p_IsTarget), 0.00)
 end
 
 function Utilities:getTargetHeight(p_Soldier, p_IsTarget)

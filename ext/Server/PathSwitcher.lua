@@ -190,7 +190,7 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle)
 	local s_ValidPaths = {}
 	for i = 1, #s_Paths do
 		if s_Paths[i].Priority >= s_HighestPriority and s_Paths[i].State >= s_CurrentPathStatus then
-			if s_OnBasePath or (not s_OnBasePath and s_Paths[i].Base == false) or s_CurrentPathStatus == 0 then
+			if s_OnBasePath or (not s_OnBasePath and s_Paths[i].Base == false) or s_CurrentPathStatus <= 0 then
 				table.insert(s_ValidPaths, s_Paths[i])
 			end
 		end

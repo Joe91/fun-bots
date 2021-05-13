@@ -479,6 +479,7 @@ function GameDirector:IsBasePath(p_ObjectiveNames)
 	return s_IsBase
 end
 
+-- -1 = destroyed objective
 -- 0 = all inactive
 -- 1 = partly inactive
 -- 2 = all active
@@ -486,8 +487,12 @@ function GameDirector:GetEnableStateOfPath(p_ObjectiveNamesOfPath)
 	local s_ActiveCount = 0
 	for _, l_ObjectiveName in pairs(p_ObjectiveNamesOfPath) do
 		local s_Objective = self:_GetObjectiveObject(l_ObjectiveName)
-		if s_Objective ~= nil and s_Objective.active then
-			s_ActiveCount = s_ActiveCount + 1
+		if s_Objective ~= nil then
+			if s_Objective.destroyed and #p_ObjectiveNamesOfPath == 1 and s_Objective.subObjective then
+				return -1 -- path of a destroyed mcom
+			elseif s_Objective.active then
+				s_ActiveCount = s_ActiveCount + 1
+			end
 		end
 	end
 	if s_ActiveCount == 0 then
@@ -697,7 +702,7 @@ function GameDirector:_SetVehicleObjectiveState(p_Position, p_Value)
 	local s_ClosestDistance = nil
 	local s_ClosestVehicleEnterObjective = nil
 	for _, l_Waypoints in pairs(s_Paths) do
-		if l_Waypoints[1].Data.Objectives ~= nil and #l_Waypoints[1].Data.Objectives == 1 then
+		if l_Waypoints[1].Data ~= nil and l_Waypoints[1].Data.Objectives ~= nil and #l_Waypoints[1].Data.Objectives == 1 then
 			local s_ObjectiveObject = self:_GetObjectiveObject(l_Waypoints[1].Data.Objectives[1])
 			if s_ObjectiveObject ~= nil and s_ObjectiveObject.active ~= p_Value and s_ObjectiveObject.isEnterVehiclePath then  -- only check disabled objectives
 				-- check position of first and last node
@@ -757,7 +762,7 @@ function GameDirector:_TranslateObjective(p_Position, p_Name)
 	end
 	local s_AllObjectives = m_NodeCollection:GetKnownOjectives()
 	local s_PathsDone = {}
-	local s_ClosestObjective = ""
+	local s_ClosestObjective = nil
 	local s_ClosestDistance = nil
 	for l_Objective, l_Paths in pairs(s_AllObjectives) do
 		for _, l_Path in pairs(l_Paths) do
@@ -781,11 +786,15 @@ function GameDirector:_TranslateObjective(p_Position, p_Name)
 			::continue_paths_loop::
 		end
 	end
-	if p_Name ~= nil then
+	if p_Name ~= nil and s_ClosestObjective ~= nil then
 		self.m_Translations[p_Name] = s_ClosestObjective.name
 		s_ClosestObjective.position = p_Position
 	end
-	return s_ClosestObjective.name
+	if s_ClosestObjective ~= nil then
+		return s_ClosestObjective.name
+	else
+		return ""
+	end
 end
 
 function GameDirector:_GetObjectiveObject(p_Name)

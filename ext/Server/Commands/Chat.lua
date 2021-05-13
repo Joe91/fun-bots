@@ -72,7 +72,7 @@ function ChatCommands:execute(p_Parts, p_Player)
 			return
 		end
 
-		m_BotManager:setStaticOption(p_Player, 'mode', 3)
+		m_BotManager:setStaticOption(p_Player, 'mode', BotMoveModes.Mimic)
 
 	elseif p_Parts[1] == '!mirror' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Mirror') == false then
@@ -80,7 +80,7 @@ function ChatCommands:execute(p_Parts, p_Player)
 			return
 		end
 
-		m_BotManager:setStaticOption(p_Player, 'mode', 4)
+		m_BotManager:setStaticOption(p_Player, 'mode', BotMoveModes.Mirror)
 
 	elseif p_Parts[1] == '!static' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Static') == false then
@@ -88,23 +88,7 @@ function ChatCommands:execute(p_Parts, p_Player)
 			return
 		end
 
-		m_BotManager:setStaticOption(p_Player, 'mode', 0)
-
-	-- moving bots spawning
-	elseif p_Parts[1] == '!spawnline' then
-		if PermissionManager:HasPermission(p_Player, 'ChatCommands.SpawnLine') == false then
-			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.SpawnLine).', p_Player)
-			return
-		end
-
-		if tonumber(p_Parts[2]) == nil then
-			return
-		end
-
-		local s_Amount = tonumber(p_Parts[2])
-		local s_Spacing = tonumber(p_Parts[3]) or 2
-
-		m_BotSpawner:SpawnLineBots(p_Player, s_Amount, s_Spacing)
+		m_BotManager:setStaticOption(p_Player, 'mode', BotMoveModes.Standstill)
 
 	elseif p_Parts[1] == '!spawnway' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands.SpawnWay') == false then

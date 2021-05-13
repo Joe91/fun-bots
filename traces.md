@@ -63,6 +63,7 @@ You need to use correct indexes:
 - Enter the vehicle and record a path from there
 - Mark all paths of the vehicle as vehicle paths (Console "AddVehiclePath land")
 - assign objectives as usual
+- Keep vehivle-paths and normal paths separated from each other
 
 ### needed commands
 addObjective <name of objective> (adds a label to a path. Just select one point of a path)

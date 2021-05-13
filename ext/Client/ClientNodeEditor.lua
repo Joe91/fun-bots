@@ -1380,7 +1380,7 @@ function ClientNodeEditor:_onCommoRoseAction(p_Action, p_Hit)
 		local hitPoint = m_NodeCollection:Find(hit.position)
 
 		-- nothing found at hit location, try a raytracing check
-		if (hitPoint == nil and self.player ~= nil and self.player ~= nil) then
+		if (hitPoint == nil and self.player ~= nil and self.player.soldier ~= nil) then
 			local playerCamPos = self.player.soldier.worldTransform.trans + self.player.input.authoritativeCameraPosition
 			hitPoint = m_NodeCollection:FindAlongTrace(playerCamPos, hit.position)
 			self.lastTraceStart = playerCamPos
@@ -1676,22 +1676,22 @@ function ClientNodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 						self.customTrace:ClearSelection()
 						self.customTrace:Select(newWaypoint)
 
-						local speed = 0 -- 0 = wait, 1 = prone ... (4 Bits)
+						local speed = BotMoveSpeeds.NoMovement -- 0 = wait, 1 = prone ... (4 Bits)
 						local extra = 0 -- 0 = nothing, 1 = jump ... (4 Bits)
 
 						if self.player.attachedControllable ~= nil then
 							local speedInput = math.abs(self.player.input:GetLevel(EntryInputActionEnum.EIAThrottle))
 							if speedInput > 0 then
-								speed = 3
+								speed = BotMoveSpeeds.Normal
 								if self.player.input:GetLevel(EntryInputActionEnum.EIASprint) == 1 then
-									speed = 4
+									speed = BotMoveSpeeds.Sprint
 								end
 							elseif speedInput == 0 then
-								speed = 2
+								speed = BotMoveSpeeds.SlowCrouch
 							end
 
 							if self.player.input:GetLevel(EntryInputActionEnum.EIABrake) > 0 then
-								speed = 1
+								speed = BotMoveSpeeds.VerySlowProne
 							end
 
 							self.customTrace:SetInput(speed, extra, 0)
@@ -1699,14 +1699,14 @@ function ClientNodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 						else
 							if self.player.input:GetLevel(EntryInputActionEnum.EIAThrottle) > 0 then --record only if moving
 								if self.player.soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
-									speed = 1
+									speed = BotMoveSpeeds.VerySlowProne
 								elseif self.player.soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
-									speed = 2
+									speed = BotMoveSpeeds.SlowCrouch
 								else
-									speed = 3
+									speed = BotMoveSpeeds.Normal
 
 									if self.player.input:GetLevel(EntryInputActionEnum.EIASprint) == 1 then
-										speed = 4
+										speed = BotMoveSpeeds.Sprint
 									end
 								end
 
@@ -2143,6 +2143,7 @@ function ClientNodeEditor:_drawNode(p_Waypoint, p_IsTracePath)
 				text = text..string.format("Index[%d]\n", p_Waypoint.Index)
 				text = text..string.format("Path[%d][%d] (%s)\n", p_Waypoint.PathIndex, p_Waypoint.PointIndex, pathMode)
 				text = text..string.format("Path Objectives: %s\n", g_Utilities:dump(pathNode.Data.Objectives, false))
+				text = text..string.format("Vehicles: %s\n", g_Utilities:dump(pathNode.Data.Vehicles, false))
 				text = text..string.format("InputVar: %d\n", p_Waypoint.InputVar)
 				text = text..string.format("SpeedMode: %s (%d)\n", speedMode, p_Waypoint.SpeedMode)
 				text = text..string.format("ExtraMode: %s (%d)\n", extraMode, p_Waypoint.ExtraMode)
