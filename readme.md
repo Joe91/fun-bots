@@ -58,14 +58,14 @@ The following Maps are official supported right now with waypoints/traces:
 |   ![XP5_004](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp5_004.jpg?raw=true) 	|   `XP5_004`	| **Sabalan Pipeline** | `TDM`, `TDM CQ`, `SDM`, `CQ Small` |
 
  > Missing some `Maps` or `Game Modes`? 
- > Just press **F12** for the InGame-Menu and start a new Trace on your own `Map` or `Game Mode`!
+ > Just press <kbd>F12</kbd> for the InGame-Menu and start a new Trace on your own `Map` or `Game Mode`!
  > You can find detailed instructions in the [Wiki](https://github.com/Joe91/fun-bots/wiki).
  
 ### :gear: Configuration
 Many Settings can be changed InGame width an [Chat-Command](https://github.com/Joe91/fun-bots/wiki/Commands) or with our [Bot-Editor](https://github.com/Joe91/fun-bots/wiki/Bot-Editor).
  
 ### :computer_mouse: New User Interface
-Since the last version, even beginners can setup the bots. You only need to press the `F12` key to enter the [Bot-Editor](https://github.com/Joe91/fun-bots/wiki/Bot-Editor). In our [Bot-Editor](https://github.com/Joe91/fun-bots/wiki/Bot-Editor) all settings can be changed, which can also be changed via the `Config.lua` or a [Chat-Command](https://github.com/Joe91/fun-bots/wiki/Commands).
+Since the last version, even beginners can setup the bots. You only need to press the <kbd>F12</kbd> key to enter the [Bot-Editor](https://github.com/Joe91/fun-bots/wiki/Bot-Editor). In our [Bot-Editor](https://github.com/Joe91/fun-bots/wiki/Bot-Editor) all settings can be changed, which can also be changed via the `Config.lua` or a [Chat-Command](https://github.com/Joe91/fun-bots/wiki/Commands).
 
  > #### Bot-Menu
  > ![Bots](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Menu/Bots.png?raw=true)
