@@ -1,22 +1,17 @@
-MAX_NUMBER_OF_BOTS = 64				-- maximum bots that can be spawned
 USE_REAL_DAMAGE = true				-- with real damage, the hitboxes are a bit buggy
 BOT_TOKEN = "BOT_"					-- token Bots are marked with
 
-SpawnMethod = {
-	SpawnSoldierAt = 0,
-	Spawn = 1
-}
-
 Config = {
-	-- global
-	BotWeapon = "Auto",				-- Select the weapon the bots use
-	BotKit = "RANDOM_KIT",			-- see BotKits
-	BotColor = "RANDOM_COLOR",		-- see BotColors
+	-- general
+	BotWeapon = BotWeapons.Auto,	-- Select the weapon the bots use
+	BotKit = BotKits.RANDOM_KIT,			-- The Kit of the Bots
+	BotColor = BotColors.RANDOM_COLOR,		-- The Color of the Bots
 	ZombieMode = false,				-- Zombie Bot Mode
 
 	-- difficluty
 	BotAimWorsening = 0.5,			-- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy).
 	BotSniperAimWorsening = 0.2,	-- see botAimWorsening, only for Sniper-rifles
+	BotWorseningSkill = 0.25,		-- variation of the skill of a single bot. the higher, the worse the bots can get compared to the original settings
 	DamageFactorAssault = 0.3,		-- original Damage from bots gets multiplied by this
 	DamageFactorCarabine = 0.3,		-- original Damage from bots gets multiplied by this
 	DamageFactorLMG = 0.3,			-- original Damage from bots gets multiplied by this
@@ -27,49 +22,61 @@ Config = {
 	DamageFactorKnife = 1.5,		-- original Damage from bots gets multiplied by this
 
 	-- spawn
-	SpawnMethod = SpawnMethod.SpawnSoldierAt,	-- method the bots spawn with
-	SpawnMode = 'balanced_teams',	-- mode the bots spawn with
+	SpawnMode = SpawnModes.balanced_teams,					-- mode the bots spawn with
+	TeamSwitchMode = TeamSwitcheModes.SwitchForRoundTwo,	-- Mode to switch the team
 	SpawnInBothTeams = true,		-- Bots spawn in both teams
 	InitNumberOfBots = 6,			-- bots for spawnmode
 	NewBotsPerNewPlayer = 2,		-- number to increase Bots, when new players join
-	SpawnDelayBots = 10.0,			-- time till bots spawn on levelstart -- OBSOLETE
+	FactorPlayerTeamCount = 0.8,	-- reduce playerteam in balanced_teams or fixed_number mode
 	BotTeam = TeamId.TeamNeutral, 	-- default bot team (0 = neutral / auto, 1 = US, 2 = RU) TeamId.Team2
-	MaxBotsPerTeamDefault = 32,		-- max number of bots in one team
-	MaxBotsPerTeamSdm	= 5,		-- max number of bots in one team in Squad-Death-Match
 	BotNewLoadoutOnSpawn = true,	-- bots get a new kit and color, if they respawn
-	MaxAssaultBots = -1,			-- maximum number of Bots with Assault Kit
-	MaxEngineerBots = -1,			-- maximum number of Bots with Engineer Kit
-	MaxSupportBots = -1,			-- maximum number of Bots with Support Kit
-	MaxReconBots = -1,				-- maximum number of Bots with Recon Kit
+	MaxAssaultBots = -1,			-- maximum number of Bots with Assault Kit. -1 = no Limit
+	MaxEngineerBots = -1,			-- maximum number of Bots with Engineer Kit. -1 = no Limit
+	MaxSupportBots = -1,			-- maximum number of Bots with Support Kit. -1 = no Limit
+	MaxReconBots = -1,				-- maximum number of Bots with Recon Kit. -1 = no Limit
 
-	-- weapons
-	UseRandomWeapon = true,			-- use a random weapon out of the class list
-	AssaultWeapon = "M416",		-- weapon of Assault class
-	EngineerWeapon = "M4A1",		-- weapon of Engineer class
-	SupportWeapon = "M249",			-- weapon of Support class
-	ReconWeapon = "L96_6x",			-- weapon of Recon class
-	Pistol = "MP412Rex",			-- Bot pistol
-	Knife = "Razor",				-- Bot knife
-	AssaultWeaponSet = "Custom",	-- weaponset of Assault class
-	EngineerWeaponSet = "Custom",	-- weaponset of Engineer class
-	SupportWeaponSet = "Custom",	-- weaponset of Support class
-	ReconWeaponSet = "Custom",		-- weaponset of Recon class
+	-- spawn-limits
+	MaxBotsPerTeamDefault = 32,		-- max number of bots in one team
+	MaxBotsPerTeamTdm = 24,			-- max number of bots in one team in Team-Death-Match
+    MaxBotsPerTeamTdmc = 8,			-- max number of bots in one team in Team-Death-Match-CQ
+	MaxBotsPerTeamSdm = 5,			-- max number of bots in one team in Squad-Death-Match
+    MaxBotsPerTeamCl = 32,			-- max number of bots in one team in Conquest-Large
+    MaxBotsPerTeamCs = 16,			-- max number of bots in one team in Conquest-Small
+    MaxBotsPerTeamCal = 32,			-- max number of bots in one team in Conquest-Assault-Large
+    MaxBotsPerTeamCas = 16,			-- max number of bots in one team in Conquest-Assault-Small
+    MaxBotsPerTeamRl = 24,			-- max number of bots in one team in Rush-Large
+	MaxBotsPerTeamCtf = 24,			-- max number of bots in one team in Capture-The-Flag
+    MaxBotsPerTeamD = 24,			-- max number of bots in one team in Domination
+    MaxBotsPerTeamGm = 8,			-- max number of bots in one team in Gun-Master
+	MaxBotsPerTeamS = 16,			-- max number of bots in one team in Scavenger
 
 	-- behaviour
 	FovForShooting = 245,			-- Degrees of FOV of Bot
 	MaxRaycastDistance = 150,		-- meters bots start shooting at player
 	MaxShootDistanceNoSniper = 70,	-- meters a bot (not sniper) start shooting at player
 	MaxShootDistancePistol = 30,	-- only in auto-weapon-mode, the distance until a bot switches to pistol if his magazine is empty.
-	BotAttackMode = "Random",		-- Mode the Bots attack with. Random, Crouch or Stand
+	BotAttackMode = BotAttackModes.RandomNotSet,		-- Mode the Bots attack with. Random, Crouch or Stand
 	ShootBackIfHit = true,			-- bot shoots back, if hit
 	BotsAttackBots = true,			-- bots attack bots from other team
 	MeleeAttackIfClose = true,		-- bot attacks with melee if close
-	BotCanKillHimself = false,		-- if a bot is that close he will attack, even if not in FOV
+	BotCanKillHimself = false,		-- bot takes falldamage or explosion-damage from onw frags
 	BotsRevive = true,				-- Bots revive other players
 	BotsThrowGrenades = true,		-- Bots throw grenades
 	BotsDeploy = true,				-- Bots deploy ammo and medkits
 	DeployCycle = 50,				-- time between deployment of bots
-	BotWorseningSkill = 0.3,		-- variation of the skill of a single bot. the higher, the worse the bots can get compared to the original settings
+
+	-- weapons
+	UseRandomWeapon = true,			-- use a random weapon out of the weapon set
+	AssaultWeaponSet = WeaponSets.Custom,	-- weaponset of Assault class
+	EngineerWeaponSet = WeaponSets.Custom,	-- weaponset of Engineer class
+	SupportWeaponSet = WeaponSets.Custom,	-- weaponset of Support class
+	ReconWeaponSet = WeaponSets.Custom,		-- weaponset of Recon class
+	AssaultWeapon = "M416",			-- weapon of Assault class
+	EngineerWeapon = "M4A1",		-- weapon of Engineer class
+	SupportWeapon = "M249",			-- weapon of Support class
+	ReconWeapon = "L96_6x",			-- weapon of Recon class
+	Pistol = "MP412Rex",			-- Bot pistol
+	Knife = "Razor",				-- Bot knife
 
 	-- traces
 	DebugTracePaths = false,		-- Shows the trace line and search area from Commo Rose selection
@@ -79,7 +86,7 @@ Config = {
 	DrawWaypointIDs = true,			-- Draw waypoint IDs
 	TextRange = 3,					-- Set how far away waypoint text is visible (meters)
 	DebugSelectionRaytraces = false,-- Shows the trace line and search area from Commo Rose selection
-	TraceDelta = 0.2,				-- update intervall of trace
+	TraceDelta = 0.3,				-- update intervall of trace
 
 	-- advanced
 	DistanceForDirectAttack = 5,	-- if that close, the bot can hear you
@@ -88,8 +95,8 @@ Config = {
 	AimForHead = false,				-- bots aim for the head
 	JumpWhileShooting = true,		-- bots jump over obstacles while shooting if needed
 	JumpWhileMoving = true,			-- bots jump while moving. If false, only on obstacles!
-	OverWriteBotSpeedMode = 0,		-- 0 = no overwrite. 1 = prone, 2 = crouch, 3 = walk, 4 = run
-	OverWriteBotAttackMode = 0,		-- Affects Aiming!!! 0 = no overwrite. 1 = prone, 2 = crouch (good aim), 3 = walk (good aim), 4 = run
+	OverWriteBotSpeedMode = BotMoveSpeeds.NoMovement,		-- 0 = no overwrite. 1 = prone, 2 = crouch, 3 = walk, 4 = run
+	OverWriteBotAttackMode = BotMoveSpeeds.NoMovement,		-- Affects Aiming!!! 0 = no overwrite. 1 = prone, 2 = crouch (good aim), 3 = walk (good aim), 4 = run
 	SpeedFactor = 1.0,				-- reduces the movementspeed. 1 = normal, 0 = standing.
 	SpeedFactorAttack = 0.6,		-- reduces the movementspeed while attacking. 1 = normal, 0 = standing.
 
@@ -107,13 +114,13 @@ Config = {
 	HeadShotFactorBots = 1.5,		-- factor for damage if headshot
 	AttackWayBots = true,			-- bots on paths attack player
 	RespawnWayBots = true,			-- bots on paths respawn if killed
+	SpawnMethod = SpawnMethod.SpawnSoldierAt,	-- method the bots spawn with. Careful, not supported on most of the maps!!
 
 	-- UI settings & language options
 	DisableUserInterface = false,	-- if true, the complete UI will be disabled (not available in the UI -) )
-	DisableChatCommands = true,		-- if true, no chat commands can be used
-	DisableRCONCommands = true,		-- if true, no RCON commands can be used
-	TraceUsageAllowed = true,		-- if false, no traces can be recorded, deleted or saved
-	SettingsPassword = "fun",		-- if nil, disable it. Otherwise use a String with your password
+	DisableChatCommands = false,		-- if true, no chat commands can be used
+	DisableRCONCommands = false,		-- if true, no RCON commands can be used
+	IgnorePermissions = false,		-- if true, all permissions are ignored --> everyone can do everything
 	Language = nil --"de_DE"		-- de_DE as sample (default is english, when language file doesnt exists)
 }
 

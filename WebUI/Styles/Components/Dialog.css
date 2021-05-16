@@ -1,0 +1,38 @@
+ui-dialog {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+}
+
+ui-dialog ui-header {
+	display: block;
+	position: relative;
+	padding: 10px;
+	background: var(--color_warning_from);
+	text-transform: uppercase;
+	background: linear-gradient(180deg, var(--color_warning_from) 0%, var(--color_warning_to) 100%);
+}
+
+ui-dialog ui-content {
+	display: block;
+	position: relative;
+	background: rgba(0, 0, 0, 0.8);
+	padding: 0 0 5px 0;
+	color: var(--color_white);
+	text-shadow: 0 0 6px var(--color_text_shadow);
+	font-weight: 400;
+	font-size: 16px;
+}
+
+ui-dialog ui-content[data-simple="true"] {
+	padding: 5px 10px 5px 10px;
+}
+
+ui-dialog ui-footer {
+	display: flex;
+	position: relative;
+	background: var(--color_container_background);
+	padding: 10px;
+	text-align: center;
+}

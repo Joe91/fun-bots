@@ -9,10 +9,17 @@ require('__shared/Constants/BotKits')
 require('__shared/Constants/BotNames')
 require('__shared/Constants/BotWeapons')
 require('__shared/Constants/WeaponSets')
+require('__shared/Constants/WeaponTypes')
 require('__shared/Constants/BotAttackModes')
+require('__shared/Constants/BotMoveSpeeds')
 require('__shared/Constants/SpawnModes')
+require('__shared/Constants/SpawnMethods')
+require('__shared/Constants/TeamSwitchModes')
 require ('__shared/Utils/Logger')
-require('Globals')
+require('Model/Globals')
+require('UI/UI')
+require('Constants/Permissions')
+require('Constants/BotEnums')
 
 local m_Logger = Logger("FunBotServer", Debug.Server.INFO)
 
@@ -25,10 +32,11 @@ local m_SettingsManager = require('SettingsManager')
 local m_BotManager = require('BotManager')
 local m_BotSpawner = require('BotSpawner')
 local m_WeaponList = require('__shared/WeaponList')
-local m_ChatCommands = require('ChatCommands')
-local m_RCONCommands = require('RCONCommands')
-local m_FunBotUIServer = require('UIServer')
+local m_ChatCommands = require('Commands/Chat')
+local m_RCONCommands = require('Commands/RCON')
+-- local m_FunBotUIServer = require('UIServer')
 local m_GameDirector = require('GameDirector')
+PermissionManager = require('PermissionManager');
 
 
 function FunBotServer:__init()
@@ -181,7 +189,7 @@ end
 	-- Level Events
 -- =============================================
 
-function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode)
+function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPerMap)
 	local s_GameMode = ServerUtils:GetCustomGameModeName()
 	if s_GameMode == nil then
 		s_GameMode = p_GameMode
@@ -196,10 +204,11 @@ function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode)
 	self:DetectSpecialMods()
 	self:RegisterInputRestrictionEventCallbacks()
 	self:SetGameMode(s_GameMode)
+	self:SetMaxBotsPerTeam(p_GameMode)
 
 	m_NodeEditor:OnLevelLoaded(p_LevelName, s_GameMode)
 	m_GameDirector:OnLevelLoaded()
-	m_BotSpawner:OnLevelLoaded()
+	m_BotSpawner:OnLevelLoaded(p_Round)
 	NetEvents:BroadcastUnreliableLocal('WriteClientSettings', Config, true)
 end
 
@@ -437,10 +446,14 @@ function FunBotServer:RegisterInputRestrictionEventCallbacks()
 	while s_Entity do
 		s_Entity = Entity(s_Entity)
 		if s_Entity.data.instanceGuid == Guid('E8C37E6A-0C8B-4F97-ABDD-28715376BD2D') or -- cq / cq assault / tank- / air superiority
+		s_Entity.data.instanceGuid == Guid('593710B7-EDC4-4EDB-BE20-323E7B0CE023') or -- tdm XP4
 		s_Entity.data.instanceGuid == Guid('6F42FBE3-428A-463A-9014-AA0C6E09DA64') or -- tdm
 		s_Entity.data.instanceGuid == Guid('9EDC59FB-5821-4A37-A739-FE867F251000') or -- rush / sq rush
 		s_Entity.data.instanceGuid == Guid('BF4003AC-4B85-46DC-8975-E6682815204D') or -- domination / scavenger
+		s_Entity.data.instanceGuid == Guid('A0158B87-FA34-4ED2-B752-EBFC1A34B081') or -- gunmaster XP4
 		s_Entity.data.instanceGuid == Guid('AAF90FE3-D1CA-4CFE-84F3-66C6146AD96F') or -- gunmaster
+		s_Entity.data.instanceGuid == Guid('753BD81F-07AC-4140-B05C-24210E1DF3FA') or -- sqdm XP4
+		s_Entity.data.instanceGuid == Guid('CBFB0D7E-8561-4216-9AB2-99E14E9D18D0') or -- sqdm noVehicles
 		s_Entity.data.instanceGuid == Guid('A40B08B7-D781-487A-8D0C-2E1B911C1949') then -- sqdm
 		-- rip CTF
 			s_Entity:RegisterEventCallback(function(p_Entity, p_Event)
@@ -452,6 +465,36 @@ function FunBotServer:RegisterInputRestrictionEventCallbacks()
 			end)
 		end
 		s_Entity = s_EntityIterator:Next()
+	end
+end
+
+function FunBotServer:SetMaxBotsPerTeam(p_GameMode)
+	if p_GameMode == 'TeamDeathMatchC0' then
+		Globals.MaxBotsPerTeam = Config.MaxBotsPerTeamTdmc
+	elseif p_GameMode == 'TeamDeathMatch0' then
+		Globals.MaxBotsPerTeam = Config.MaxBotsPerTeamTdm
+	elseif p_GameMode == 'SquadDeathMatch0' then
+		Globals.MaxBotsPerTeam = Config.MaxBotsPerTeamSdm
+	elseif p_GameMode == 'GunMaster0' then
+		Globals.MaxBotsPerTeam = Config.MaxBotsPerTeamGm
+	elseif p_GameMode == 'Scavenger0' then
+		Globals.MaxBotsPerTeam = Config.MaxBotsPerTeamS
+	elseif p_GameMode == 'ConquestLarge0' then
+		Globals.MaxBotsPerTeam = Config.MaxBotsPerTeamCl
+	elseif p_GameMode == 'ConquestSmall0' or p_GameMode == 'BFLAG' then
+		Globals.MaxBotsPerTeam = Config.MaxBotsPerTeamCs
+	elseif p_GameMode == 'ConquestAssaultLarge0' then
+		Globals.MaxBotsPerTeam = Config.MaxBotsPerTeamCal
+	elseif p_GameMode == 'ConquestAssaultSmall0' or p_GameMode == 'ConquestAssaultSmall1' then
+		Globals.MaxBotsPerTeam = Config.MaxBotsPerTeamCas
+	elseif p_GameMode == 'RushLarge0' then
+		Globals.MaxBotsPerTeam = Config.MaxBotsPerTeamRl
+	elseif p_GameMode == 'Domination0' then
+		Globals.MaxBotsPerTeam = Config.MaxBotsPerTeamD
+	elseif p_GameMode == 'CaptureTheFlag0' then
+		Globals.MaxBotsPerTeam = Config.MaxBotsPerTeamCtf
+	else
+		Globals.MaxBotsPerTeam = Config.MaxBotsPerTeamDefault
 	end
 end
 

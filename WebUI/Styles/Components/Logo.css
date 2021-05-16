@@ -1,0 +1,15 @@
+ui-logo {
+	display: block;
+	color: var(--color_white);
+	text-shadow: 0 0 6px var(--color_text_shadow);
+	font-weight: 900;
+	font-size: 24px;
+}
+
+ui-logo sub {
+	color: var(--color_white);
+	font-weight: 400;
+	font-size: 12px;
+	display: inline-block;
+	transform: translate(-22px, -20px);
+}

@@ -8,26 +8,30 @@ require('__shared/Constants/BotKits')
 require('__shared/Constants/BotNames')
 require('__shared/Constants/BotWeapons')
 require('__shared/Constants/WeaponSets')
+require('__shared/Constants/WeaponTypes')
 require('__shared/Constants/BotAttackModes')
+require('__shared/Constants/BotMoveSpeeds')
 require('__shared/Constants/SpawnModes')
+require('__shared/Constants/SpawnMethods')
+require('__shared/Constants/TeamSwitchModes')
 require ('__shared/Utils/Logger')
 
 local m_Logger = Logger("FunBotClient", true)
 
-local m_Language = require('__shared/Language')
-local m_FunBotUIClient = require('UIClient')
+--local m_Language = require('__shared/Language')
 local m_ClientBotManager = require('ClientBotManager')
 local m_ClientNodeEditor = require('ClientNodeEditor')
+local m_ClientUi = require('UI/UI');
+
 
 function FunBotClient:__init()
 	Events:Subscribe('Extension:Loaded', self, self.OnExtensionLoaded)
 end
 
 function FunBotClient:OnExtensionLoaded()
-	m_Language:loadLanguage(Config.Language)
+	--m_Language:loadLanguage(Config.Language)
 	self:RegisterEvents()
 	self:RegisterHooks()
-	m_FunBotUIClient:OnExtensionLoaded()
 end
 
 function FunBotClient:RegisterEvents()
@@ -69,7 +73,6 @@ end
 
 function FunBotClient:OnExtensionUnloading()
 	m_ClientBotManager:OnExtensionUnloading()
-	m_FunBotUIClient:OnExtensionUnloading()
 end
 
 function FunBotClient:OnLevelDestroy()
@@ -87,7 +90,6 @@ end
 
 function FunBotClient:OnClientUpdateInput(p_DeltaTime)
 	m_ClientNodeEditor:OnClientUpdateInput(p_DeltaTime)
-	m_FunBotUIClient:OnClientUpdateInput(p_DeltaTime)
 end
 
 function FunBotClient:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)

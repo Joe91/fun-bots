@@ -1,6 +1,5 @@
 class "NodeEditor"
 
-local m_ServerUI = require('UIServer')
 local m_NodeCollection = require('__shared/NodeCollection')
 local m_Logger = Logger("NodeEditor", Debug.Server.NODEEDITOR)
 
@@ -22,7 +21,7 @@ function NodeEditor:RegisterCustomEvents()
 	NetEvents:Subscribe('NodeEditor:Create', self, self.OnCreate)
 	NetEvents:Subscribe('NodeEditor:Init', self, self.OnInit)
 	NetEvents:Subscribe('NodeEditor:WarpTo', self, self.OnWarpTo)
-	NetEvents:Subscribe('UI_Request_Save_Settings', self, self.OnUIRequestSaveSettings)
+	-- NetEvents:Subscribe('UI_Request_Save_Settings', self, self.OnUIRequestSaveSettings)
 	NetEvents:Subscribe('NodeEditor:SetBotVision', self, self.OnSetBotVision)
 end
 
@@ -36,6 +35,14 @@ end
 
 function NodeEditor:OnLevelLoaded(p_LevelName, p_GameMode)
 	self:Log('Level Load: %s %s', p_LevelName, p_GameMode)
+
+	-- convert mapnames if needed
+	if Globals.IsTdm or Globals.IsGm or Globals.IsScavenger then
+		p_GameMode = 'TeamDeathMatch0' -- paths are compatible
+	end
+	if p_LevelName == "MP_Subway" and p_GameMode == "ConquestSmall0" then
+		p_GameMode = "ConquestLarge0" --paths are the same
+	end
 
 	m_NodeCollection:Load(p_LevelName, p_GameMode)
 

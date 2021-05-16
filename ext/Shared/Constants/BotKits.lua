@@ -1,7 +1,8 @@
 BotKits = {
-	'RANDOM_KIT',
-	'Assault',
-	'Engineer',
-	'Support',
-	'Recon'
+	RANDOM_KIT = 0,
+	Assault = 1,
+	Engineer = 2,
+	Support = 3,
+	Recon = 4,
+	Count = 5
 }

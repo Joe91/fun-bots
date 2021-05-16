@@ -66,4 +66,6 @@ VehicleTable = { -- thanks to Bree_Arnold
 	["F35B"] = "[F-35]",
 	["SkidLoader"] = "[SKID LOADER]",
 	["Z-11w"] = "[Z-11W]",
+	["EODBot"] = "[EOD BOT]",
+	["MAV"] = "[MAV]",
 }

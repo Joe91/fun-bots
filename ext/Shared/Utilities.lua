@@ -7,36 +7,7 @@ function Utilities:__init()
 end
 
 function Utilities:getCameraPos(p_Player, p_IsTarget)
-	local returnVec = Vec3(0, 0, 0)
-	local cameraVec = p_Player.input.authoritativeCameraPosition:Clone()
-
-	if cameraVec.z ~= 0 then
-		returnVec = p_Player.soldier.worldTransform.forward* cameraVec.z + p_Player.soldier.worldTransform.left * cameraVec.x + p_Player.soldier.worldTransform.up * cameraVec.y
-
-		if p_IsTarget then
-			if Config.AimForHead then
-				if p_Player.soldier.pose == CharacterPoseType.CharacterPoseType_Stand then
-					returnVec.y = returnVec.y - 0.1
-				elseif p_Player.soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
-					returnVec.y = returnVec.y - 0.05
-				else
-					returnVec.y = returnVec.y - 0.05
-				end
-			else
-				if p_Player.soldier.pose == CharacterPoseType.CharacterPoseType_Stand then
-					returnVec.y = returnVec.y - 0.5
-				elseif p_Player.soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
-					returnVec.y = returnVec.y - 0.3
-				else
-					returnVec.y = returnVec.y - 0.1
-				end
-			end
-		end
-	else
-		returnVec = Vec3(0.03 ,self:getTargetHeight(p_Player.soldier, p_IsTarget), 0.03)
-	end
-
-	return returnVec
+	return Vec3(0.00 ,self:getTargetHeight(p_Player.soldier, p_IsTarget), 0.00)
 end
 
 function Utilities:getTargetHeight(p_Soldier, p_IsTarget)
@@ -170,21 +141,29 @@ function Utilities:dump(o, p_Format, p_MaxLevels, p_Level)
 	end
 end
 
-function table:has(p_Value)
-	for i=1, #self do
-		if (self[i] == p_Value) then
+function Utilities:has(p_Object, p_Value)
+	for i=1, #p_Object do
+		if (p_Object[i] == p_Value) then
 			return true
 		end
 	end
 	return false
 end
 
+function table:has(p_Value)
+	for i=1, #self do
+		if (self[i] == p_Value) then
+			return true
+		end
+	end
+end
+
 function string:isLower(p_Value)
-	 return string:lower() == string
+     return p_Value:lower() == p_Value
 end
 
 function string:isDigit(p_Value)
-	 return tonumber(string) ~= nil
+     return tonumber(p_Value) ~= nil
 end
 
 function string:split(sep)
@@ -196,16 +175,19 @@ function string:split(sep)
 	return fields
 end
 
-function requireExists(module)
-	local function reference(module)
-		require(module)
-	end
+function requireExists(p_Module)
+    local function reference(p_Module)
+        require(p_Module)
+		return true
+    end
 
-	res = pcall(reference, module)
+    local status, error = pcall(reference, p_Module)
 
-	if not(res) then
-		-- Not found.
-	end
+    if not(status) then
+		return error
+    end
+
+	return status
 end
 
 if g_Utilities == nil then
