@@ -1,4 +1,3 @@
-]]
 class('Settings')
 
 function Settings:__init()
