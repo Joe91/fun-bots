@@ -391,7 +391,7 @@ function BotManager:_getDamageValue(p_Damage, p_Bot, p_Soldier, p_Fake)
 			if s_Distance >= p_Bot.m_ActiveWeapon.damageFalloffEndDistance then
 				s_ResultDamage = p_Bot.m_ActiveWeapon.endDamage
 			elseif s_Distance <= p_Bot.m_ActiveWeapon.damageFalloffStartDistance then
-				s_ResultDamage =  p_Bot.m_ActiveWeapon.damage
+				s_ResultDamage = p_Bot.m_ActiveWeapon.damage
 			else -- extrapolate damage
 				local s_RelativePosition = (s_Distance - p_Bot.m_ActiveWeapon.damageFalloffStartDistance) / (p_Bot.m_ActiveWeapon.damageFalloffEndDistance - p_Bot.m_ActiveWeapon.damageFalloffStartDistance)
 				s_ResultDamage = p_Bot.m_ActiveWeapon.damage - (s_RelativePosition * (p_Bot.m_ActiveWeapon.damage - p_Bot.m_ActiveWeapon.endDamage))
@@ -508,7 +508,7 @@ end
 function BotManager:OnBotShootAtBot(p_Player, p_BotName1, p_BotName2)
 	local s_Bot1 = self:getBotByName(p_BotName1)
 	local s_Bot2 = self:getBotByName(p_BotName2)
-	if s_Bot1 == nil or s_Bot1.m_Player == nil or  s_Bot2 == nil or s_Bot2.m_Player == nil then
+	if s_Bot1 == nil or s_Bot1.m_Player == nil or s_Bot2 == nil or s_Bot2.m_Player == nil then
 		return
 	end
 	if s_Bot1:shootAt(s_Bot2.m_Player, false) or s_Bot2:shootAt(s_Bot1.m_Player, false) then
@@ -550,7 +550,7 @@ function BotManager:createBot(p_Name, p_TeamId, p_SquadId)
 	if Config.KeepOneSlotForPlayers then
 		s_PlayerLimit = s_PlayerLimit - 1
 	end
-	if s_PlayerLimit <=  PlayerManager:GetPlayerCount() then
+	if s_PlayerLimit <= PlayerManager:GetPlayerCount() then
 		m_Logger:Write("playerlimit reached")
 		return
 	end

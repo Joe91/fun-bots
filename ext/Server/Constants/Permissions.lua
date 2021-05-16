@@ -32,10 +32,10 @@ Permissions = {
 	'ChatCommands.ClearAllTraces',
 	'ChatCommands.PrintTransform',
 	'ChatCommands.TraceSave',
-	
+
 	-- UserInterface
 	'UserInterface',
-	
+
 	'UserInterface.BotEditor',
 	'UserInterface.BotEditor.SpawnEnemy',
 	'UserInterface.BotEditor.SpawnFriend',
@@ -44,7 +44,7 @@ Permissions = {
 	'UserInterface.BotEditor.KillAll',
 	'UserInterface.BotEditor.ToggleRespawn',
 	'UserInterface.BotEditor.ToggleAttack',
-	
+
 	'UserInterface.WaypointEditor',
 	'UserInterface.WaypointEditor.Nodes.Client',
 	'UserInterface.WaypointEditor.Nodes.Server',
@@ -54,7 +54,7 @@ Permissions = {
 	'UserInterface.WaypointEditor.SpawnBot',
 	'UserInterface.WaypointEditor.TraceClear',
 	'UserInterface.WaypointEditor.TraceReset',
-	
+
 	-- Settings
 	'UserInterface.Settings'
 }

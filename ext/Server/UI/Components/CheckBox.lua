@@ -1,74 +1,41 @@
---[[
-	@class: CheckBox
-	@extends: Component
-]]
-class('CheckBox');
+class('CheckBox')
 
---[[
-	@method: __init
-	@parameter: name:string
-	@parameter: checked:boolean
-]]
 function CheckBox:__init(name, checked)
-	self.name		= name or nil;
-	self.checked	= checked or false;
-	self.disabled	= false;
+	self.name = name or nil
+	self.checked = checked or false
+	self.disabled = false
 end
 
---[[
-	@method: __class
-	@returns: string
-]]
 function CheckBox:__class()
-	return 'CheckBox';
+	return 'CheckBox'
 end
 
---[[
-	@method: GetName
-	@returns: string
-]]
 function CheckBox:GetName()
-	return self.name;
+	return self.name
 end
 
---[[
-	@method: Enable
-]]
 function CheckBox:Enable()
-	self.disabled = false;
+	self.disabled = false
 end
 
---[[
-	@method: Disable
-]]
 function CheckBox:Disable()
-	self.disabled = true;
+	self.disabled = true
 end
 
---[[
-	@method: IsChecked
-]]
 function CheckBox:IsChecked()
-	return self.checked;
+	return self.checked
 end
 
---[[
-	@method: SetChecked
-	@parameter: checked:boolean
-]]
 function CheckBox:SetChecked(checked)
-	self.checked = checked;
+	self.checked = checked
 end
 
---[[
-	@method: Serialize
-]]
 function CheckBox:Serialize()
 	return {
-		Name		= self.name,
-		IsChecked	= self.checked,
-		Disabled	= self.disabled
-	};
+		Name = self.name,
+		IsChecked = self.checked,
+		Disabled = self.disabled
+	}
 end
 
-return CheckBox;
+return CheckBox

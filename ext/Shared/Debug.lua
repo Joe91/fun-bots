@@ -13,7 +13,7 @@ Debug = {
 		SETTINGS = false,			-- Debug the Settings-Migrator
 		TRACE = false,				-- Debug the TraceManager
 		UI = false,					-- Debug all UI things
-		PERMISSIONS = false,			-- Debug all Permission things
+		PERMISSIONS = false,		-- Debug all Permission things
 		MODIFICATIONS = false,		-- Debug some Modifications
 		RCON = false				-- Debug some RCON Commands
 	},

@@ -1,153 +1,110 @@
---[[
-	@class: View
-	@extends: Component
-]]
-class('View');
+class('View')
 
---[[
-	@method: __init
-]]
 function View:__init(core, name)
-	self.core		= core;
-	self.name		= name;
-	self.components = {};
-	self.visible	= false;
+	self.core = core
+	self.name = name
+	self.components = {}
+	self.visible = false
 end
 
---[[
-	@method: __class
-]]
 function View:__class()
-	return 'View';
+	return 'View'
 end
 
---[[
-	@method: GetCore
-]]
 function View:GetCore()
-	return self.core;
+	return self.core
 end
 
---[[
-	@method: GetName
-]]
 function View:GetName()
-	return self.name;
+	return self.name
 end
 
---[[
-	@method: AddComponent
-]]
 function View:AddComponent(component)
-	table.insert(self.components, component);
+	table.insert(self.components, component)
 end
 
---[[
-	@method: GetComponents
-]]
 function View:GetComponents()
-	return self.components;
+	return self.components
 end
 
---[[
-	@method: CallbackModify
-]]
 function View:CallbackModify(destination)
 	if (type(destination) ~= 'table') then
-		return destination;
+		return destination
 	end
-	
+
 	for name, value in pairs(destination) do
 		if (name == 'Callback') then
 			if(type(value) == 'function') then
-				local reference = '';
-				
+				local reference = ''
+
 				if (destination.Type ~= nil) then
-					reference = reference .. destination.Type;
+					reference = reference .. destination.Type
 				end
-				
+
 				if (destination.Type ~= nil and destination.Name ~= nil) then
-					reference = reference .. '$';
+					reference = reference .. '$'
 				end
-				
+
 				if (destination.Name ~= nil) then
-					reference = reference .. destination.Name;
+					reference = reference .. destination.Name
 				end
-				
-				destination[name] = 'UI:VIEW:' .. self.name .. ':CALL:' .. reference;
+
+				destination[name] = 'UI:VIEW:' .. self.name .. ':CALL:' .. reference
 			elseif (string.starts(value, 'UI:') == false) then
-				destination[name] = 'UI:VIEW:' .. self.name .. ':ACTION:' .. value;
+				destination[name] = 'UI:VIEW:' .. self.name .. ':ACTION:' .. value
 			end
 		else
-			value = self:CallbackModify(value);
+			value = self:CallbackModify(value)
 		end
 	end
-	
-	return destination; 
+
+	return destination
 end
 
---[[
-	@method: Show
-]]
 function View:Show(player)
-	self:GetCore():Send(self, player, 'SHOW', self:CallbackModify(self:Serialize(player)));
-	self.visible	= true;
+	self:GetCore():Send(self, player, 'SHOW', self:CallbackModify(self:Serialize(player)))
+	self.visible = true
 end
 
---[[
-	@method: Remove
-]]
 function View:Remove(player, component)
 	self:GetCore():Send(self, player, 'REMOVE', {
-		Type 		= component:__class(),
-		Name 		= component:GetName()
-	});
+		Type = component:__class(),
+		Name = component:GetName()
+	})
 end
 
---[[
-	@method: Push
-]]
 function View:Push(player, component)
-	local attributes = {};
-	
+	local attributes = {}
+
 	if (component['GetAttributes'] ~= nil) then
-		attributes = component:GetAttributes();
+		attributes = component:GetAttributes()
 	end
-	
-	local serialized = component:Serialize(player);
+
+	local serialized = component:Serialize(player)
 
 	if (#attributes >= 1) then
 		self:GetCore():Send(self, player, 'PUSH', {
-			Type 		= component:__class(),
-			Data 		= serialized,
-			Attributes	= attributes
-		});
+			Type = component:__class(),
+			Data = serialized,
+			Attributes = attributes
+		})
 	else
 		self:GetCore():Send(self, player, 'PUSH', {
-			Type 		= component:__class(),
-			Data 		= serialized
-		});
+			Type = component:__class(),
+			Data = serialized
+		})
 	end
 end
 
---[[
-	@method: Hide
-]]
 function View:Hide(player)
-	self:GetCore():Send(self, player, 'HIDE');
-	self.visible	= false;
+	self:GetCore():Send(self, player, 'HIDE')
+	self.visible = false
 end
 
---[[
-	@method: IsVisible
-]]
 function View:IsVisible()
-	return self.visible;
+	return self.visible
 end
 
---[[
-	@method: Toggle
-]]
 function View:Toggle(player)
 	if (self:IsVisible()) then
 		self:Hide(player)
@@ -156,94 +113,79 @@ function View:Toggle(player)
 	end
 end
 
---[[
-	@method: SubCall
-]]
-function View:SubCall(player, element, name, component)	
+function View:SubCall(player, element, name, component)
 	if (component:__class() == element and component['HasItems'] == nil and component['FireCallback'] ~= nil and component['GetName'] ~= nil and component:GetName() == name) then
-		--print('FireCallback ' .. name);
-		component:FireCallback(player);
-		
+		--print('FireCallback ' .. name)
+		component:FireCallback(player)
+
 	elseif (component['HasItems'] ~= nil and component:HasItems()) then
 		for _, item in pairs(component:GetItems()) do
 			if (item:__class() == element) then
 				if (item['GetName'] ~= nil and item:GetName() == name and item['FireCallback'] ~= nil) then
-					--print('Sub-FireCallback ' .. name);
-					item:FireCallback(player);
-					
+					--print('Sub-FireCallback ' .. name)
+					item:FireCallback(player)
+
 				elseif (item['Name'] ~= nil and item.Name == element) then
-					--print('Callback-Trigger ' .. name);
-					item:Callback(player);
-					
+					--print('Callback-Trigger ' .. name)
+					item:Callback(player)
+
 				else
-					self:SubCall(player, element, name, item);
+					self:SubCall(player, element, name, item)
 				end
 			else
-				self:SubCall(player, element, name, item);
+				self:SubCall(player, element, name, item)
 			end
 		end
 	end
 end
 
---[[
-	@method: Call
-]]
 function View:Call(player, element, name)
 	if (_G.Callbacks[name] ~= nil) then
-		_G.Callbacks[name](player);
-		return;
+		_G.Callbacks[name](player)
+		return
 	end
-	
+
 	for _, component in pairs(self.components) do
-		self:SubCall(player, element, name, component);
+		self:SubCall(player, element, name, component)
 	end
 end
 
---[[
-	@method: Activate
-]]
 function View:Activate(player)
-	self:GetCore():Send(self, player, 'ACTIVATE');
+	self:GetCore():Send(self, player, 'ACTIVATE')
 end
 
---[[
-	@method: Deactivate
-]]
 function View:Deactivate(player)
-	self:GetCore():Send(self, player, 'DEACTIVATE');
+	self:GetCore():Send(self, player, 'DEACTIVATE')
 end
 
---[[
-	@method: Serialize
-]]
 function View:Serialize(player)
-	local components = {};
-	
+	local components = {}
+
 	for _, component in pairs(self.components) do
-		local attributes = {};
-		
+		local attributes = {}
+
 		if (component['GetAttributes'] ~= nil) then
-			attributes = component:GetAttributes();
+			attributes = component:GetAttributes()
 		end
-		
+
 		if (#attributes >= 1) then
 			table.insert(components, {
-				Type 		= component:__class(),
-				Data 		= component:Serialize(player),
-				Attributes	= attributes
-			});
+				Type = component:__class(),
+				Data = component:Serialize(player),
+				Attributes = attributes
+			})
 		else
 			table.insert(components, {
-				Type 		= component:__class(),
-				Data 		= component:Serialize(player)
-			});
+				Type = component:__class(),
+				Data = component:Serialize(player)
+			})
 		end
 	end
-	
+
 	return {
-		Name		= self.name,
-		Components	= components
-	};
+		Name = self.name,
+		Components = components
+	}
 end
 
-return View;
+return View

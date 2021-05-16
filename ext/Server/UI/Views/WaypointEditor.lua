@@ -8,11 +8,11 @@ class('WaypointEditor')
 	@method: __init
 ]]
 function WaypointEditor:__init(core)
-	self.view 						= View(core, 'WaypointEditor')
-	self.trace_index				= 0
-	self.tracing					= false
-	self.interaction_information	= true
-	self.quick_shortcuts			= QuickShortcut('trace_controls')
+	self.view = View(core, 'WaypointEditor')
+	self.trace_index = 0
+	self.tracing = false
+	self.interaction_information = true
+	self.quick_shortcuts = QuickShortcut('trace_controls')
 
 	NetEvents:Subscribe('WaypointEditor:TraceToggle', self, function(userData, player, data)
 		if data.Enabled ~= nil then
@@ -21,52 +21,52 @@ function WaypointEditor:__init(core)
 
 		if data.Distance ~= nil then
 			NetEvents:SendToLocal('UI', player, 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
-				Type	= 'Entry',
-				Name	= 'trace_distance',
-				Value	= math.floor(data.Distance) .. ' m'
+				Type = 'Entry',
+				Name = 'trace_distance',
+				Value = math.floor(data.Distance) .. ' m'
 			}))
 		end
 
 		if data.Waypoints ~= nil then
 			NetEvents:SendToLocal('UI', player, 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
-				Type	= 'Entry',
-				Name	= 'trace_waypoints',
-				Value	= data.Waypoints
+				Type = 'Entry',
+				Name = 'trace_waypoints',
+				Value = data.Waypoints
 			}))
 		end
 
 		if data.TraceIndex ~= nil then
 			NetEvents:SendToLocal('UI', player, 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
-				Type	= 'Input',
-				Name	= 'trace_index',
-				Value	= data.TraceIndex
+				Type = 'Input',
+				Name = 'trace_index',
+				Value = data.TraceIndex
 			}))
 		end
 
 		if self.tracing then
 			self.recording:Show()
-			
+
 			NetEvents:SendToLocal('UI', player, 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
-				Type	= 'MenuItem',
-				Name	= 'trace_toggle',
-				Text	= 'Stop Trace',
-				Icon	= 'Assets/Icons/Stop.svg'
+				Type = 'MenuItem',
+				Name = 'trace_toggle',
+				Text = 'Stop Trace',
+				Icon = 'Assets/Icons/Stop.svg'
 			}))
 		else
 			self.recording:Hide()
-			
+
 			NetEvents:SendToLocal('UI', player, 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
-				Type	= 'MenuItem',
-				Name	= 'trace_toggle',
-				Text	= 'Start Trace',
-				Icon	= 'Assets/Icons/Start.svg'
+				Type = 'MenuItem',
+				Name = 'trace_toggle',
+				Text = 'Start Trace',
+				Icon = 'Assets/Icons/Start.svg'
 			}))
 		end
-			
+
 		NetEvents:SendToLocal('UI', player, 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
-			Type	= self.recording:__class(),
-			Name	= self.recording:GetName(),
-			Hidden	= self.recording:IsHidden()
+			Type = self.recording:__class(),
+			Name = self.recording:GetName(),
+			Hidden = self.recording:IsHidden()
 		}))
 	end)
 end
@@ -100,29 +100,29 @@ end
 	@method: UpdateNewPath
 ]]
 function WaypointEditor:UpdateNewPath(player)
-	local nodes		= g_NodeCollection:Get(nil, self.trace_index)
-	local distance	= 0
+	local nodes = g_NodeCollection:Get(nil, self.trace_index)
+	local distance = 0
 
 	-- Show the new path
 	NetEvents:SendToLocal('NodeCollection:ShowPath', player, self.trace_index)
 
 	NetEvents:SendToLocal('UI', player, 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
-		Type	= 'Input',
-		Name	= 'trace_index',
-		Value	= self.trace_index
+		Type = 'Input',
+		Name = 'trace_index',
+		Value = self.trace_index
 	}))
 
 	NetEvents:SendToLocal('UI', player, 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
-		Type	= 'Entry',
-		Name	= 'trace_waypoints',
-		Value	= #nodes
+		Type = 'Entry',
+		Name = 'trace_waypoints',
+		Value = #nodes
 	}))
 
 	-- @ToDo calculate distance of node collection
 	NetEvents:SendToLocal('UI', player, 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
-		Type	= 'Entry',
-		Name	= 'trace_distance',
-		Value	= distance .. ' m'
+		Type = 'Entry',
+		Name = 'trace_distance',
+		Value = distance .. ' m'
 	}))
 end
 
@@ -183,8 +183,8 @@ function WaypointEditor:InitializeComponent()
 
 	self.recording = Box(Color.Red)
 	self.recording:SetPosition(Position.Absolute, {
-		Top		= 182,
-		Left	= 16
+		Top = 182,
+		Left = 16
 	})
 
 	self.recording:AddItem(Text('recording_text', 'Recording...'):SetIcon('Assets/Icons/Stop.svg'))
@@ -194,8 +194,8 @@ function WaypointEditor:InitializeComponent()
 	-- Logo
 	local logo = Logo('Waypoint-Editor', 'fun-bots')
 	logo:SetPosition(Position.Absolute, {
-		Top		= 20,
-		Left	= 20
+		Top = 20,
+		Left = 20
 	})
 	self.view:AddComponent(logo)
 
@@ -203,8 +203,8 @@ function WaypointEditor:InitializeComponent()
 	local navigation = Menu()
 
 	navigation:SetPosition(Position.Absolute, {
-		Top		= 20,
-		Right	= 20
+		Top = 20,
+		Right = 20
 	})
 
 	-- Waypoints
@@ -238,10 +238,10 @@ function WaypointEditor:InitializeComponent()
 	local view = MenuItem('View', 'view')
 		view:SetIcon('Assets/Icons/View.svg')
 
-		local checkbox_lines		= CheckBox('view_lines', Config.drawWaypointLines)
-		local checkbox_labels		= CheckBox('view_labels', Config.drawWaypointIDs)
-		local checkbox_interaction	= CheckBox('view_interaction', self.interaction_information)
-		local checkbox_shortcuts	= CheckBox('view_shortcuts', self.quick_shortcuts:IsEnabled())
+		local checkbox_lines = CheckBox('view_lines', Config.drawWaypointLines)
+		local checkbox_labels = CheckBox('view_labels', Config.drawWaypointIDs)
+		local checkbox_interaction = CheckBox('view_interaction', self.interaction_information)
+		local checkbox_shortcuts = CheckBox('view_shortcuts', self.quick_shortcuts:IsEnabled())
 
 		view:AddItem(MenuSeparator('Editor'))
 
@@ -251,9 +251,9 @@ function WaypointEditor:InitializeComponent()
 			checkbox_lines:SetChecked(Config.drawWaypointLines)
 
 			NetEvents:SendTo('UI', player, 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
-				Type		= checkbox_lines:__class(),
-				Name		= checkbox_lines:GetName(),
-				IsChecked	= checkbox_lines:IsChecked()
+				Type = checkbox_lines:__class(),
+				Name = checkbox_lines:GetName(),
+				IsChecked = checkbox_lines:IsChecked()
 			}))
 		end):AddCheckBox(Position.Left, checkbox_lines))
 
@@ -263,9 +263,9 @@ function WaypointEditor:InitializeComponent()
 			checkbox_labels:SetChecked(Config.drawWaypointIDs)
 
 			NetEvents:SendTo('UI', player, 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
-				Type		= checkbox_labels:__class(),
-				Name		= checkbox_labels:GetName(),
-				IsChecked	= checkbox_labels:IsChecked()
+				Type = checkbox_labels:__class(),
+				Name = checkbox_labels:GetName(),
+				IsChecked = checkbox_labels:IsChecked()
 			}))
 		end):AddCheckBox(Position.Left, checkbox_labels))
 
@@ -277,161 +277,161 @@ function WaypointEditor:InitializeComponent()
 			checkbox_interaction:SetChecked(self.interaction_information)
 
 			NetEvents:SendTo('UI', player, 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
-				Type		= checkbox_interaction:__class(),
-				Name		= checkbox_interaction:GetName(),
-				IsChecked	= checkbox_interaction:IsChecked()
+				Type = checkbox_interaction:__class(),
+				Name = checkbox_interaction:GetName(),
+				IsChecked = checkbox_interaction:IsChecked()
 			}))
-			
+
 			NetEvents:SendTo('UI', player, 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
-				Type		= 'Text',
-				Name		= 'interaction_information',
-				Disabled	= not checkbox_interaction:IsChecked()
+				Type = 'Text',
+				Name = 'interaction_information',
+				Disabled = not checkbox_interaction:IsChecked()
 			}))
 		end):AddCheckBox(Position.Left, checkbox_interaction))
-		
+
 		view:AddItem(MenuItem('Quick Shortcuts', 'quick_shortcuts', function(player)
 			if self.quick_shortcuts:IsEnabled() then
 				self.quick_shortcuts:Disable()
 			else
 				self.quick_shortcuts:Enable()
 			end
-			
+
 			checkbox_shortcuts:SetChecked(self.quick_shortcuts:IsEnabled())
-			
+
 			NetEvents:SendTo('UI', player, 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
-				Type		= checkbox_shortcuts:__class(),
-				Name		= checkbox_shortcuts:GetName(),
-				IsChecked	= checkbox_shortcuts:IsChecked()
+				Type = checkbox_shortcuts:__class(),
+				Name = checkbox_shortcuts:GetName(),
+				IsChecked = checkbox_shortcuts:IsChecked()
 			}))
-			
+
 			NetEvents:SendTo('UI', player, 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
-				Type		= self.quick_shortcuts:__class(),
-				Name		= self.quick_shortcuts:GetName(),
-				Disabled	= not self.quick_shortcuts:IsEnabled()
+				Type = self.quick_shortcuts:__class(),
+				Name = self.quick_shortcuts:GetName(),
+				Disabled = not self.quick_shortcuts:IsEnabled()
 			}))
 		end):AddCheckBox(Position.Left, checkbox_shortcuts))
-		
+
 	navigation:AddItem(view, 'UserInterface.WaypointEditor.View')
-	
+
 	navigation:AddItem(MenuItem('Back', 'back', 'UI:VIEW:' .. self.view:GetName() .. ':HIDE', 'F12'))
-	
+
 	-- Tools-Menu
 	local tools = Menu()
-	
-	tools:AddItem(MenuItem('Start Trace', 'trace_toggle', function(player)		
+
+	tools:AddItem(MenuItem('Start Trace', 'trace_toggle', function(player)
 		if self.tracing then
 			NetEvents:SendToLocal('ClientNodeEditor:EndTrace', player)
 		else
 			NetEvents:SendToLocal('ClientNodeEditor:StartTrace', player)
 		end
 	end):SetIcon('Assets/Icons/Start.svg'), 'UserInterface.WaypointEditor.Tracing')
-	
+
 	tools:AddItem(MenuItem('Save Trace', 'trace_save', function(player)
 		NetEvents:SendToLocal('ClientNodeEditor:SaveTrace', player)
 	end):SetIcon('Assets/Icons/Save.svg'), 'UserInterface.WaypointEditor.TraceSaving')
-	
+
 	tools:AddItem(MenuItem('Spawn Bot on Way', 'bot_spawn_path', function(player)
 		print('bot_spawn_path Executed')
 		-- @ToDo
 	end):SetIcon('Assets/Icons/SpawnBotWay.svg'), 'UserInterface.WaypointEditor.SpawnBot')
-	
+
 	tools:AddItem(MenuItem('Clear Trace', 'trace_clear', function(player)
 		local confirmation = self.view:GetCore():GetDialog('Confirmation')
 		confirmation:SetTitle('Clear Trace - Confirmation')
 		confirmation:SetContent('Do you really want to clear the actual Trace #' .. self.trace_index .. '?')
 		confirmation:SetNo(function(player)
-			confirmation:Hide(self.view, player);
+			confirmation:Hide(self.view, player)
 		end)
 		confirmation:SetYes(function(player)
 			NetEvents:SendToLocal('ClientNodeEditor:ClearTrace', player)
-			confirmation:Hide(self.view, player);
+			confirmation:Hide(self.view, player)
 		end)
 		confirmation:Open(self.view, player)
 	end):Disable():SetIcon('Assets/Icons/Clear.svg'), 'UserInterface.WaypointEditor.TraceClear')
-	
+
 	tools:AddItem(MenuItem('Reset all Traces', 'trace_reset_all', function(player)
 		local confirmation = self.view:GetCore():GetDialog('Confirmation')
 		confirmation:SetTitle('Reset all Traces- Confirmation')
 		confirmation:SetContent('Do you really want to reset all Traces?')
 		confirmation:SetNo(function(player)
-			confirmation:Hide(self.view, player);
+			confirmation:Hide(self.view, player)
 		end)
 		confirmation:SetYes(function(player)
 			g_NodeCollection:Clear()
 			NetEvents:BroadcastLocal('NodeCollection:Clear')
-			confirmation:Hide(self.view, player);
+			confirmation:Hide(self.view, player)
 		end)
 		confirmation:Open(self.view, player)
 	end):SetIcon('Assets/Icons/Trash.svg'), 'UserInterface.WaypointEditor.TraceReset')
-	
+
 	navigation:AddItem(tools)
-	
+
 	self.view:AddComponent(navigation)
-	
+
 	local status = Box(Color.Blue)
-	
+
 	status:SetPosition(Position.Absolute, {
-		Top		= 75,
-		Left	= 15
+		Top = 75,
+		Left = 15
 	})
-	
+
 	local input_trace_index = Input(Type.Integer, 'trace_index', self.trace_index)
-		
+
 	input_trace_index:Disable()
-	
+
 	input_trace_index:AddArrow(Position.Left, '❰', function(player)
 		-- Hide the old path
 		--NetEvents:SendToLocal('NodeCollection:HidePath', player, self.trace_index)
-		
+
 		self.trace_index = self.trace_index - 1
-		
+
 		if (self.trace_index < 0) then
-			local lastNode		= g_NodeCollection:GetLast()
-			
+			local lastNode = g_NodeCollection:GetLast()
+
 			if lastNode == nil then
 				self.trace_index = 0
 			else
 				self.trace_index = lastNode.PathIndex
 			end
 		end
-		
+
 		NetEvents:SendTo('UI', player, 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
-			Type		= 'MenuItem',
-			Name		= 'trace_clear',
-			Disabled	= (self.trace_index == 0)
+			Type = 'MenuItem',
+			Name = 'trace_clear',
+			Disabled = (self.trace_index == 0)
 		}))
-		
+
 		input_trace_index:SetValue(self.trace_index)
 		self:UpdateNewPath(player)
 	end)
-	
+
 	input_trace_index:AddArrow(Position.Right, '❱', function(player)
 		-- Hide the old path
 		NetEvents:SendToLocal('NodeCollection:HidePath', player, self.trace_index)
-		
-		self.trace_index	= self.trace_index + 1
-		local lastNode		= g_NodeCollection:GetLast()
-		
+
+		self.trace_index = self.trace_index + 1
+		local lastNode = g_NodeCollection:GetLast()
+
 		if lastNode == nil or self.trace_index > lastNode.PathIndex then
 			self.trace_index = 0
 		end
-		
+
 		NetEvents:SendTo('UI', player, 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
-			Type		= 'MenuItem',
-			Name		= 'trace_clear',
-			Disabled	= (self.trace_index == 0)
+			Type = 'MenuItem',
+			Name = 'trace_clear',
+			Disabled = (self.trace_index == 0)
 		}))
-		
+
 		input_trace_index:SetValue(self.trace_index)
 		self:UpdateNewPath(player)
 	end)
-	
+
 	status:AddItem(Entry('trace_index', 'Current Trace Index', input_trace_index))
 	status:AddItem(Entry('trace_waypoints', 'Waypoints', '' .. #g_NodeCollection:Get(nil, self.trace_index)))
 	status:AddItem(Entry('trace_distance', 'Total Distance', '0 m'))
-	
+
 	self.view:AddComponent(status)
-	
+
 	self.view:AddComponent(self.quick_shortcuts)
 	self.view:AddComponent(Text('interaction_information', 'Press for interaction with the Editor'):SetPosition(Position.Bottom_Center):SetIcon('Assets/Keys/Q.svg'))
 end

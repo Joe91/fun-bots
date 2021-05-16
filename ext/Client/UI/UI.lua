@@ -28,7 +28,7 @@ function UI:OnUpdateInput(data)
 		if self.WaypointEditor then
 			NetEvents:Send('UI', 'VIEW', 'WaypointEditor', 'HIDE')
 		end
-		
+
 		NetEvents:Send('UI', 'VIEW', 'BotEditor', 'TOGGLE')
 	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_Q) and self.WaypointEditor then
 		self:__local(json.encode({ 'VIEW', 'WaypointEditor', 'ACTIVATE' }))
@@ -45,10 +45,10 @@ function UI:__local(string)
 		return
 	end
 
-	local type			= data[1]
-	local destination	= data[2]
-	local action		= data[3]
-	local data			= data[4]
+	local type = data[1]
+	local destination = data[2]
+	local action = data[3]
+	local data = data[4]
 
 	m_Logger:Write('[UI][Client] LocalAction { Type=' .. tostring(type) .. ', Destination=' .. tostring(destination) ..', Action=' .. tostring(action) .. ', Data=' .. json.encode(data) .. '}')
 	NetEvents:Send('UI', type, destination, action, data)
@@ -84,10 +84,10 @@ function UI:__action(type, destination, action, string)
 	end
 
 	WebUI:ExecuteJS('UI.Handle(' .. json.encode({
-		Type		= type,
-		Destination	= destination,
-		Action		= action,
-		Data		= data
+		Type = type,
+		Destination = destination,
+		Action = action,
+		Data = data
 	}) .. ')')
 end
 
