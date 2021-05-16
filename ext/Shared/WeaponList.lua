@@ -55,7 +55,7 @@ function WeaponList:__init()
 	weapon = Weapon('Saiga20', '', {'Weapons/Common/12gBuckshot', 'Kobra', 'Silencer'}, WeaponTypes.Shotgun, 'Weapons/SAIGA20K/U_SAIGA_20K')
 	table.insert(self._weapons, weapon)
 
-	weapon = Weapon('SPAS12', 'XP2', {'Slug', 'Kobra', 'Weapons/Common/NoPrimaryAccessory'}, WeaponTypes.Shotgun)   --TODO: Get Damage-Values and Speed of other ammo
+	weapon = Weapon('SPAS12', 'XP2', {'Slug', 'Kobra', 'Weapons/Common/NoPrimaryAccessory'}, WeaponTypes.Shotgun) --TODO: Get Damage-Values and Speed of other ammo
 	table.insert(self._weapons, weapon)
 
 	weapon = Weapon('USAS-12', '', {'Weapons/Common/12gBuckshot', 'ExtendedMag', 'Weapons/Common/NoOptics'}, WeaponTypes.Shotgun)
@@ -399,17 +399,17 @@ function WeaponList:_useWeaponType(p_Class, p_Type, p_Name)
 		if p_Type == WeaponTypes.Assault then
 			isClassWeapon = true
 		end
-	elseif p_Class ==  BotKits.Engineer then
+	elseif p_Class == BotKits.Engineer then
 		weaponSet = Config.EngineerWeaponSet
 		if p_Type == WeaponTypes.Carabine then
 			isClassWeapon = true
 		end
-	elseif p_Class ==  BotKits.Support then
+	elseif p_Class == BotKits.Support then
 		weaponSet = Config.SupportWeaponSet
 		if p_Type == WeaponTypes.LMG then
 			isClassWeapon = true
 		end
-	else --if p_Class ==  BotKits.Recon then
+	else --if p_Class == BotKits.Recon then
 		weaponSet = Config.ReconWeaponSet
 		if p_Type == WeaponTypes.Sniper then
 			isClassWeapon = true
@@ -428,17 +428,17 @@ function WeaponList:_useWeaponType(p_Class, p_Type, p_Name)
 				useThisWeapon = true
 			end
 		elseif p_Type == WeaponTypes.Shotgun then
-			if weaponSet ==  WeaponSets.Shotgun or
-			weaponSet ==  WeaponSets.Class_Shotgun or
-			weaponSet ==  WeaponSets.Class_PDW_Shotgun or
-			weaponSet ==  WeaponSets.PDW_Shotgun then
+			if weaponSet == WeaponSets.Shotgun or
+			weaponSet == WeaponSets.Class_Shotgun or
+			weaponSet == WeaponSets.Class_PDW_Shotgun or
+			weaponSet == WeaponSets.PDW_Shotgun then
 				useThisWeapon = true
 			end
 		elseif p_Type == WeaponTypes.Assault or p_Type == WeaponTypes.Carabine or p_Type == WeaponTypes.LMG or p_Type == WeaponTypes.Sniper then
-			if weaponSet ==  WeaponSets.Class or
-			weaponSet ==  WeaponSets.Class_Shotgun or
-			weaponSet ==  WeaponSets.Class_PDW_Shotgun or
-			weaponSet ==  WeaponSets.Class_PDW then
+			if weaponSet == WeaponSets.Class or
+			weaponSet == WeaponSets.Class_Shotgun or
+			weaponSet == WeaponSets.Class_PDW_Shotgun or
+			weaponSet == WeaponSets.Class_PDW then
 				if isClassWeapon then
 					useThisWeapon = true
 				end
@@ -498,9 +498,9 @@ function WeaponList:updateWeaponList()
 			elseif (wep.type == WeaponTypes.Grenade) then
 				table.insert(AssaultGrenade, wep.name)
 			elseif (wep.type == WeaponTypes.Medkit) then
-				table.insert(AssaultGadget1,  wep.name)
+				table.insert(AssaultGadget1, wep.name)
 			elseif (wep.type == WeaponTypes.Defibrillator) then
-				table.insert(AssaultGadget2,  wep.name)
+				table.insert(AssaultGadget2, wep.name)
 			else
 				table.insert(AssaultPrimary, wep.name)
 			end
@@ -513,9 +513,9 @@ function WeaponList:updateWeaponList()
 			elseif (wep.type == WeaponTypes.Grenade) then
 				table.insert(EngineerGrenade, wep.name)
 			elseif (wep.type == WeaponTypes.Torch) then
-				table.insert(EngineerGadget1,  wep.name)
+				table.insert(EngineerGadget1, wep.name)
 			elseif (wep.type == WeaponTypes.Rocket) then
-				table.insert(EngineerGadget2,  wep.name)
+				table.insert(EngineerGadget2, wep.name)
 			else
 				table.insert(EngineerPrimary, wep.name)
 			end
@@ -528,9 +528,9 @@ function WeaponList:updateWeaponList()
 			elseif (wep.type == WeaponTypes.Grenade) then
 				table.insert(SupportGrenade, wep.name)
 			elseif (wep.type == WeaponTypes.Ammobag) then
-				table.insert(SupportGadget1,  wep.name)
+				table.insert(SupportGadget1, wep.name)
 			elseif (wep.type == WeaponTypes.Claymore) or (wep.type == WeaponTypes.C4) then
-				table.insert(SupportGadget2,  wep.name)
+				table.insert(SupportGadget2, wep.name)
 			else
 				table.insert(SupportPrimary, wep.name)
 			end
@@ -543,9 +543,9 @@ function WeaponList:updateWeaponList()
 			elseif (wep.type == WeaponTypes.Grenade) then
 				table.insert(ReconGrenade, wep.name)
 			elseif (wep.type == WeaponTypes.Tugs) then
-				table.insert(ReconGadget1,  wep.name)
+				table.insert(ReconGadget1, wep.name)
 			elseif (wep.type == WeaponTypes.Beacon) then
-				table.insert(ReconGadget2,  wep.name)
+				table.insert(ReconGadget2, wep.name)
 			else
 				table.insert(ReconPrimary, wep.name)
 			end

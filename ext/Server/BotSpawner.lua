@@ -124,7 +124,7 @@ function BotSpawner:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 			end
 			if l_Bot.m_Player.soldier ~= nil then
 				local s_Position = l_Bot.m_Player.soldier.worldTransform.trans:Clone()
-				--local s_Node = m_NodeCollection:Find(s_Position, 5);
+				--local s_Node = m_NodeCollection:Find(s_Position, 5)
 				local s_Node = g_GameDirector:FindClosestPath(s_Position, false)
 				if s_Node ~= nil then
 					l_Bot:setVarsWay(nil, true, s_Node.PathIndex, s_Node.PointIndex, false)
@@ -262,7 +262,7 @@ function BotSpawner:UpdateBotAmountAndTeam()
 		for _, l_Player in pairs(s_TempPlayers) do
 			if not m_Utilities:isBot(l_Player) then
 				s_CountPlayers[i] = s_CountPlayers[i] + 1
-				if Globals.IsSdm then	-- TODO: Only needed because of VEXT-Bug
+				if Globals.IsSdm then -- TODO: Only needed because of VEXT-Bug
 					l_Player.squadId = 1
 				end
 			end
@@ -547,7 +547,7 @@ function BotSpawner:_SelectLoadout(p_Bot, p_SetKit)
 
 	if s_WriteNewKit then
 		if s_BotColor == BotColors.RANDOM_COLOR then
-			s_BotColor = MathUtils:GetRandomInt(1, BotColors.Count-1)  -- color enum goes from 1 to 13
+			s_BotColor = MathUtils:GetRandomInt(1, BotColors.Count-1) -- color enum goes from 1 to 13
 		end
 		if s_BotKit == BotKits.RANDOM_KIT then
 			s_BotKit = self:_GetSpawnBotKit()
@@ -809,7 +809,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 			if s_Bot ~= nil then
 				-- check for first one in squad
 				if (TeamSquadManager:GetSquadPlayerCount(s_TeamId, s_SquadId) == 1) then
-					s_Bot.m_Player:SetSquadLeader(true, false)  -- not private
+					s_Bot.m_Player:SetSquadLeader(true, false) -- not private
 				end
 
 				s_Bot:setVarsWay(p_Player, p_UseRandomWay, p_ActiveWayIndex, p_IndexOnPath, s_InverseDirection)
@@ -959,7 +959,7 @@ function BotSpawner:_GetSpawnPoint(p_TeamId, p_SquadId)
 	return s_TargetNode
 end
 
-function BotSpawner:_GetSquadToJoin(p_TeamId)  -- TODO: create a more advanced algorithm?
+function BotSpawner:_GetSquadToJoin(p_TeamId) -- TODO: create a more advanced algorithm?
 	if Globals.IsSdm then
 		return 1
 	else

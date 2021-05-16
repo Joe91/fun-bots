@@ -357,8 +357,8 @@ function RCONCommands:__init()
 			Name = 'funbots.spawn',
 			Parameters = { 'Amount', 'Team' },
 			Callback = (function(p_Command, p_Args)
-				local value	= p_Args[1]
-				local team	= p_Args[2]
+				local value = p_Args[1]
+				local team = p_Args[2]
 
 				if value == nil then
 					return {'ERROR', 'Needing Spawn amount.'}
@@ -373,11 +373,11 @@ function RCONCommands:__init()
 				end
 
 				local amount = tonumber(value)
-				
+
 				if TeamId[team] == nil then
 					return {'ERROR', 'Unknown Team: TeamId.' .. team }
 				end
-				
+
 				m_BotSpawner:SpawnWayBots(nil, amount, true, nil, nil, TeamId[team])
 
 				return {'OK'}
@@ -386,17 +386,17 @@ function RCONCommands:__init()
 
 		-- Permissions <Player> <PermissionName>
 		PERMISSIONS = {
-			Name		= 'funbots.Permissions',
-			Parameters	= { 'PlayerName', 'PermissionName' },
-			Callback	= (function(command, args)
-				local name			= args[1]
-				local permission	= args[2]
+			Name = 'funbots.Permissions',
+			Parameters = { 'PlayerName', 'PermissionName' },
+			Callback = (function(command, args)
+				local name = args[1]
+				local permission = args[2]
 
 				-- Revoke ALL Permissions
 				if permission ~= nil then
 					if permission == '!' then
-						local permissions	= PermissionManager:GetPermissions(name)
-						local result		= {'OK', 'REVOKED'}
+						local permissions = PermissionManager:GetPermissions(name)
+						local result = {'OK', 'REVOKED'}
 
 						if permissions ~= nil and #permissions >= 1 then
 							for key, value in pairs(permissions) do
@@ -453,8 +453,8 @@ function RCONCommands:__init()
 				end
 
 				if permission == nil then
-					local result		= { 'LIST', player.name, tostring(player.guid) }
-					local permissions	= PermissionManager:GetPermissions(name)
+					local result = { 'LIST', player.name, tostring(player.guid) }
+					local permissions = PermissionManager:GetPermissions(name)
 
 					if permissions ~= nil then
 						for name, value in pairs(permissions) do
@@ -468,9 +468,9 @@ function RCONCommands:__init()
 				if PermissionManager:Exists(permission) == false then
 					return {'ERROR', 'Unknown Permission:', permission}
 				end
-				
+
 				PermissionManager:AddPermission(player.name, permission)
-				
+
 				return {'OK'}
 			end)
 		}

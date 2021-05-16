@@ -480,23 +480,23 @@ function ClientNodeEditor:_onToggleMoveNode(p_Args)
 		end
 
 		-- g_FunBotUIClient:_onSetOperationControls({
-		-- 	Numpad = {
-		-- 		{Grid = 'K1', Key = '1', Name = 'Remove'},
-		-- 		{Grid = 'K2', Key = '2', Name = 'Unlink'},
-		-- 		{Grid = 'K3', Key = '3', Name = 'Add'},
-		-- 		{Grid = 'K4', Key = '4', Name = 'Move'},
-		-- 		{Grid = 'K5', Key = '5', Name = 'Select'},
-		-- 		{Grid = 'K6', Key = '6', Name = 'Input'},
-		-- 		{Grid = 'K7', Key = '7', Name = 'Merge'},
-		-- 		{Grid = 'K8', Key = '8', Name = 'Link'},
-		-- 		{Grid = 'K9', Key = '9', Name = 'Split'},
-		-- 	},
-		-- 	Other = {
-		-- 		{Key = 'F12', Name = 'Settings'},
-		-- 		{Key = 'Q', Name = 'Quick Select'},
-		-- 		{Key = 'BS', Name = 'Clear Select'},
-		-- 		{Key = 'INS', Name = 'Spawn Bot'},
-		-- 	}
+			-- Numpad = {
+				-- {Grid = 'K1', Key = '1', Name = 'Remove'},
+				-- {Grid = 'K2', Key = '2', Name = 'Unlink'},
+				-- {Grid = 'K3', Key = '3', Name = 'Add'},
+				-- {Grid = 'K4', Key = '4', Name = 'Move'},
+				-- {Grid = 'K5', Key = '5', Name = 'Select'},
+				-- {Grid = 'K6', Key = '6', Name = 'Input'},
+				-- {Grid = 'K7', Key = '7', Name = 'Merge'},
+				-- {Grid = 'K8', Key = '8', Name = 'Link'},
+				-- {Grid = 'K9', Key = '9', Name = 'Split'}
+			-- },
+			-- Other = {
+				-- {Key = 'F12', Name = 'Settings'},
+				-- {Key = 'Q', Name = 'Quick Select'},
+				-- {Key = 'BS', Name = 'Clear Select'},
+				-- {Key = 'INS', Name = 'Spawn Bot'}
+			-- }
 		-- })
 
 		self:Log('Edit Mode: %s', self.editMode)
@@ -523,24 +523,24 @@ function ClientNodeEditor:_onToggleMoveNode(p_Args)
 		self.editModeManualOffset = Vec3.zero
 
 		-- g_FunBotUIClient:_onSetOperationControls({
-		-- 	Numpad = {
-		-- 		{Grid = 'K1', Key = '1', Name = 'Mode'},
-		-- 		{Grid = 'K2', Key = '2', Name = 'Back'},
-		-- 		{Grid = 'K3', Key = '3', Name = 'Down'},
-		-- 		{Grid = 'K4', Key = '4', Name = 'Left'},
-		-- 		{Grid = 'K5', Key = '5', Name = 'Finish'},
-		-- 		{Grid = 'K6', Key = '6', Name = 'Right'},
-		-- 		{Grid = 'K7', Key = '7', Name = 'Reset'},
-		-- 		{Grid = 'K8', Key = '8', Name = 'Forward'},
-		-- 		{Grid = 'K9', Key = '9', Name = 'Up'},
-		-- 	},
-		-- 	Other = {
-		-- 		{Key = 'F12', Name = 'Settings'},
-		-- 		{Key = 'Q', Name = 'Finish Move'},
-		-- 		{Key = 'BS', Name = 'Cancel Move'},
-		-- 		{Key = 'KP_PLUS', Name = 'Speed +'},
-		-- 		{Key = 'KP_MINUS', Name = 'Speed -'},
-		-- 	}
+			-- Numpad = {
+				-- {Grid = 'K1', Key = '1', Name = 'Mode'},
+				-- {Grid = 'K2', Key = '2', Name = 'Back'},
+				-- {Grid = 'K3', Key = '3', Name = 'Down'},
+				-- {Grid = 'K4', Key = '4', Name = 'Left'},
+				-- {Grid = 'K5', Key = '5', Name = 'Finish'},
+				-- {Grid = 'K6', Key = '6', Name = 'Right'},
+				-- {Grid = 'K7', Key = '7', Name = 'Reset'},
+				-- {Grid = 'K8', Key = '8', Name = 'Forward'},
+				-- {Grid = 'K9', Key = '9', Name = 'Up'},
+			-- },
+			-- Other = {
+				-- {Key = 'F12', Name = 'Settings'},
+				-- {Key = 'Q', Name = 'Finish Move'},
+				-- {Key = 'BS', Name = 'Cancel Move'},
+				-- {Key = 'KP_PLUS', Name = 'Speed +'},
+				-- {Key = 'KP_MINUS', Name = 'Speed -'},
+			-- }
 		-- })
 
 		self:Log('Edit Mode: %s', self.editMode)
@@ -1145,10 +1145,10 @@ function ClientNodeEditor:_onStartTrace()
 	self:Log('Custom Trace Started')
 
 	NetEvents:Send('WaypointEditor:TraceToggle', {
-		Enabled		= true,
-		TraceIndex	= self.customTraceIndex,
-		Distance	= self.customTraceDistance,
-		Waypoints	= #self.customTrace:Get()
+		Enabled = true,
+		TraceIndex = self.customTraceIndex,
+		Distance = self.customTraceDistance,
+		Waypoints = #self.customTrace:Get()
 	})
 end
 
@@ -1190,10 +1190,10 @@ function ClientNodeEditor:_onClearTrace()
 	self.customTraceDistance = 0
 	self.customTrace:Clear()
 	NetEvents:Send('WaypointEditor:TraceToggle', {
-		Enabled		= false,
-		TraceIndex	= self.customTraceIndex,
-		Waypoints	= #self.customTrace:Get(),
-		Distance	= self.customTraceDistance
+		Enabled = false,
+		TraceIndex = self.customTraceIndex,
+		Waypoints = #self.customTrace:Get(),
+		Distance = self.customTraceDistance
 	})
 
 	self:Log('Custom Trace Cleared')
@@ -2063,7 +2063,7 @@ function ClientNodeEditor:_drawNode(p_Waypoint, p_IsTracePath)
 	-- if selected draw bigger node and transform helper
 	if (not p_IsTracePath and isSelected and m_NodeCollection:InRange(p_Waypoint, self.playerPos, Config.WaypointRange)) then
 		-- node selection indicator
-		DebugRenderer:DrawSphere(p_Waypoint.Position, 0.08,  color.Node, false, (not qualityAtRange))
+		DebugRenderer:DrawSphere(p_Waypoint.Position, 0.08, color.Node, false, (not qualityAtRange))
 
 		-- transform marker
 		DebugRenderer:DrawLine(p_Waypoint.Position, p_Waypoint.Position + (Vec3.up), self.colors.Red, self.colors.Red)

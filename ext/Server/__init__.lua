@@ -36,7 +36,7 @@ local m_ChatCommands = require('Commands/Chat')
 local m_RCONCommands = require('Commands/RCON')
 -- local m_FunBotUIServer = require('UIServer')
 local m_GameDirector = require('GameDirector')
-PermissionManager = require('PermissionManager');
+PermissionManager = require('PermissionManager')
 
 
 function FunBotServer:__init()
@@ -386,7 +386,7 @@ end
 
 function FunBotServer:OnHumanPlayerEntityDataCallback(p_Instance)
 	p_Instance = HumanPlayerEntityData(p_Instance)
-	self.m_PlayerKilledDelay =  p_Instance.playerKilledDelay
+	self.m_PlayerKilledDelay = p_Instance.playerKilledDelay
 end
 
 -- =============================================

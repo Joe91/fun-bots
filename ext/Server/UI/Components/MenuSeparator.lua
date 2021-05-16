@@ -1,30 +1,17 @@
---[[
-	@class: MenuSeparator
-	@extends: Component
-]]
-class('MenuSeparator');
+class('MenuSeparator')
 
---[[
-	@method: __init
-]]
 function MenuSeparator:__init(title)
-	self.title		= title or nil;
+	self.title = title or nil
 end
 
---[[
-	@method: __class
-]]
 function MenuSeparator:__class()
-	return 'MenuSeparator';
+	return 'MenuSeparator'
 end
 
---[[
-	@method: Serialize
-]]
 function MenuSeparator:Serialize()
 	return {
-		Title		= self.title
-	};
+		Title = self.title
+	}
 end
 
-return MenuSeparator;
+return MenuSeparator

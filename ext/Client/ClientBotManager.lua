@@ -50,7 +50,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 	self.m_RaycastTimer = 0
 
-	if self.m_Player.soldier ~= nil then  -- alive. Check for enemy bots
+	if self.m_Player.soldier ~= nil then -- alive. Check for enemy bots
 		if self.m_AliveTimer < 1.0 then -- wait 2s (spawn-protection)
 			self.m_AliveTimer = self.m_AliveTimer + p_DeltaTime
 			return
@@ -82,9 +82,9 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 			if s_Distance < Config.MaxRaycastDistance then
 				self.m_LastIndex = self.m_LastIndex + 1
 				local s_Raycast = nil
-				
+
 				s_Raycast = RaycastManager:Raycast(s_PlayerPosition, s_Target, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.IsAsyncRaycast)
-				
+
 				if s_Raycast == nil or s_Raycast.rigidBody == nil then
 					-- we found a valid bot in Sight (either no hit, or player-hit). Signal Server with players
 					local s_IgnoreYaw = false
@@ -123,7 +123,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 			local s_Target = s_Bot.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(s_Bot, false)
 			local s_Distance = s_PlayerPosition:Distance(s_Bot.soldier.worldTransform.trans)
 
-			if s_Distance < 35.0 then  -- TODO: use config var for this
+			if s_Distance < 35.0 then -- TODO: use config var for this
 				self.m_LastIndex = self.m_LastIndex + 1
 				local s_Raycast = RaycastManager:Raycast(s_PlayerPosition, s_Target, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.IsAsyncRaycast)
 

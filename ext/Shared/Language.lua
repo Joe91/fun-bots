@@ -54,7 +54,7 @@ end
 
 function Language:I18N(p_Input, ...)
 	local arguments = {}
-	local length	= select('#', ...)
+	local length = select('#', ...)
 
 	for index = 1, length do
 		arguments[#arguments + 1] = select(index, ...)

@@ -60,7 +60,7 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle)
 				table.insert(s_PossiblePaths, s_NewPoint)
 			else
 				local s_PathNode = m_NodeCollection:GetFirst(s_NewPoint.PathIndex)
-				if s_PathNode.Data.Vehicles ~= nil and #s_PathNode.Data.Vehicles > 0 then  --TODO: check for vehicle-Type later
+				if s_PathNode.Data.Vehicles ~= nil and #s_PathNode.Data.Vehicles > 0 then --TODO: check for vehicle-Type later
 					table.insert(s_PossiblePaths, s_NewPoint)
 				end
 			end

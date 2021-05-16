@@ -479,7 +479,7 @@ function Bot:_updateAiming()
 		end
 		local s_FullPositionBot = self.m_Player.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(self.m_Player, false)
 		if self.m_InVehicle then --TODO: calculate height of gun of vehicle
-			s_FullPositionBot = s_FullPositionBot + Vec3(0.0, 1.0, 0.0)  -- bot in vehicle is higher
+			s_FullPositionBot = s_FullPositionBot + Vec3(0.0, 1.0, 0.0) -- bot in vehicle is higher
 		end
 		local s_GrenadePitch = 0.0
 		--calculate how long the distance is --> time to travel
@@ -549,7 +549,7 @@ function Bot:_updateAiming()
 		self._TargetPitch = s_Pitch
 		self._TargetYaw = s_Yaw
 
-	else  -- revive active
+	else -- revive active
 		if (self._ShootPlayer.corpse == nil) then
 			return
 		end
@@ -749,7 +749,7 @@ function Bot:_updateYaw(p_DeltaTime)
 		end
 	end
 
-	if s_DeltaYaw > 0  then
+	if s_DeltaYaw > 0 then
 		s_Increment = -s_Increment
 	end
 
@@ -762,7 +762,7 @@ function Bot:_updateYaw(p_DeltaTime)
 	end
 
 	if self.m_InVehicle then
-		local s_YawValue = 0;
+		local s_YawValue = 0
 		if s_AttackAiming then
 			s_YawValue = 1.0
 		else
@@ -825,7 +825,7 @@ function Bot:_findOutVehicleType(p_Player)
 		if s_VehicleName == "[AAV-7A1 AMTRAC]" or
 		s_VehicleName == "[9K22 TUNGUSKA-M]" or
 		s_VehicleName == "[GAZ-3937 VODNIK]" or
-		s_VehicleName == "[LAV-AD]"  or
+		s_VehicleName == "[LAV-AD]" or
 		s_VehicleName == "[M1114 HMMWV]" or
 		s_VehicleName == "[HMMWV ASRAD]" or
 		s_VehicleName == "[GUNSHIP]" or
@@ -1142,7 +1142,7 @@ function Bot:_updateShooting()
 				self._LastShootPlayer = nil
 			end
 		elseif self._ReviveActive and self._ShootPlayer ~= nil then
-			if self._ShootPlayer.corpse ~= nil then  -- revive
+			if self._ShootPlayer.corpse ~= nil then -- revive
 				self._ShootModeTimer = self._ShootModeTimer + StaticConfig.BotUpdateCycle
 				self.m_ActiveMoveMode = BotMoveModes.ReviveC4 -- movement-mode : revive
 				self._ReloadTimer = 0 -- reset reloading
@@ -1218,7 +1218,7 @@ function Bot:_getWayIndex(p_CurrentWayPoint)
 
 		-- direction handling
 		local s_CountOfPoints = #m_NodeCollection:Get(nil, self._PathIndex)
-		local s_FirstPoint =  m_NodeCollection:GetFirst(self._PathIndex)
+		local s_FirstPoint = m_NodeCollection:GetFirst(self._PathIndex)
 		if s_ActivePointIndex > s_CountOfPoints then
 			if s_FirstPoint.OptValue == 0xFF then --inversion needed
 				s_ActivePointIndex = s_CountOfPoints
@@ -1385,7 +1385,7 @@ function Bot:_updateMovement()
 					self.m_ActiveSpeedValue = s_Point.SpeedMode --speed
 					if Config.ZombieMode then
 						if self._ZombieSpeedValue == BotMoveSpeeds.NoMovement then
-							if  MathUtils:GetRandomInt(0,1) == 1 then
+							if MathUtils:GetRandomInt(0,1) == 1 then
 								self._ZombieSpeedValue = BotMoveSpeeds.SlowCrouch
 							else
 								self._ZombieSpeedValue = BotMoveSpeeds.VerySlowProne
@@ -1466,7 +1466,7 @@ function Bot:_updateMovement()
 							s_HeightDistance = 0
 							s_NoStuckReset = true
 							s_PointIncrement = MathUtils:GetRandomInt(-5,5) -- go 5 points further
-							--if Globals.IsConquest or Globals.IsRush then  --TODO: only invert path, if its not a connecting path
+							--if Globals.IsConquest or Globals.IsRush then --TODO: only invert path, if its not a connecting path
 								--self._InvertPathDirection = (MathUtils:GetRandomInt(0,100) < 40)
 							--end
 							-- experimental
@@ -1510,7 +1510,7 @@ function Bot:_updateMovement()
 					end
 
 					local s_TargetDistanceSpeed = Config.TargetDistanceWayPoint
-					if self.m_InVehicle  then
+					if self.m_InVehicle then
 						s_TargetDistanceSpeed = s_TargetDistanceSpeed * 5
 					elseif self.m_ActiveSpeedValue == 4 then
 						s_TargetDistanceSpeed = s_TargetDistanceSpeed * 1.5
@@ -1693,7 +1693,7 @@ function Bot:_updateMovement()
 				self._AttackModeMoveTimer = self._AttackModeMoveTimer + StaticConfig.BotUpdateCycle
 			end
 
-		elseif self.m_ActiveMoveMode == BotMoveModes.ReviveC4 then  -- Revive Move Mode / C4 Mode
+		elseif self.m_ActiveMoveMode == BotMoveModes.ReviveC4 then -- Revive Move Mode / C4 Mode
 			self.m_ActiveSpeedValue = BotMoveSpeeds.Sprint --run to player
 			if self.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Stand then
 				self.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Stand, true, true)
@@ -1787,7 +1787,7 @@ function Bot:_updateMovement()
 							self._BrakeTimer = 0
 							self:_setInput(EntryInputActionEnum.EIAThrottle, s_SpeedVal)
 							-- if self.m_ActiveSpeedValue >= 4 then
-							-- 	self:_setInput(EntryInputActionEnum.EIASprint, 1)
+								-- self:_setInput(EntryInputActionEnum.EIASprint, 1)
 							-- end
 						else
 							if self._BrakeTimer < 0.7 then

@@ -159,11 +159,11 @@ function table:has(p_Value)
 end
 
 function string:isLower(p_Value)
-     return p_Value:lower() == p_Value
+	return p_Value:lower() == p_Value
 end
 
 function string:isDigit(p_Value)
-     return tonumber(p_Value) ~= nil
+	return tonumber(p_Value) ~= nil
 end
 
 function string:split(sep)
@@ -176,16 +176,16 @@ function string:split(sep)
 end
 
 function requireExists(p_Module)
-    local function reference(p_Module)
-        require(p_Module)
+	local function reference(p_Module)
+		require(p_Module)
 		return true
-    end
+	end
 
-    local status, error = pcall(reference, p_Module)
+	local status, error = pcall(reference, p_Module)
 
-    if not(status) then
+	if not(status) then
 		return error
-    end
+	end
 
 	return status
 end
