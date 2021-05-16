@@ -3,10 +3,10 @@
 	@value: Relative
 	@value: Absolute
 	@value: Fixed
-	
+
 	@value: Left
 	@value: Right
-	
+
 	@value: Top_Left
 	@value: Top_Center
 	@value: Top_Right

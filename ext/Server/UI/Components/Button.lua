@@ -1,3 +1,9 @@
+--[[
+	@class: Button
+	@extends: Component
+
+	Creates an button
+]]
 class('Button')
 
 function Button:__init(name, title, callback)
@@ -14,7 +20,7 @@ function Button:__init(name, title, callback)
 	self.disabled = false
 
 	if self.callback ~= nil then
-		_G.Callbacks['Button#' .. self.name .. self.id] = self.callback
+		_G.Callbacks['Button#' .. self.name .. self.id]	= self.callback
 	end
 end
 
@@ -32,7 +38,7 @@ end
 
 function Button:SetCallback(callback)
 	self.callback = callback
-	_G.Callbacks['Button#' .. self.name .. self.id] = self.callback
+	_G.Callbacks['Button#' .. self.name .. self.id]	= self.callback
 end
 
 function Button:BindPermission(permission)

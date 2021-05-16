@@ -1,5 +1,12 @@
+--[[
+	@class: View
+	@extends: Component
+]]
 class('View')
 
+--[[
+	@method: __init
+]]
 function View:__init(core, name)
 	self.core = core
 	self.name = name
@@ -7,26 +14,44 @@ function View:__init(core, name)
 	self.visible = false
 end
 
+--[[
+	@method: __class
+]]
 function View:__class()
 	return 'View'
 end
 
+--[[
+	@method: GetCore
+]]
 function View:GetCore()
 	return self.core
 end
 
+--[[
+	@method: GetName
+]]
 function View:GetName()
 	return self.name
 end
 
+--[[
+	@method: AddComponent
+]]
 function View:AddComponent(component)
 	table.insert(self.components, component)
 end
 
+--[[
+	@method: GetComponents
+]]
 function View:GetComponents()
 	return self.components
 end
 
+--[[
+	@method: CallbackModify
+]]
 function View:CallbackModify(destination)
 	if (type(destination) ~= 'table') then
 		return destination
@@ -61,11 +86,17 @@ function View:CallbackModify(destination)
 	return destination
 end
 
+--[[
+	@method: Show
+]]
 function View:Show(player)
 	self:GetCore():Send(self, player, 'SHOW', self:CallbackModify(self:Serialize(player)))
 	self.visible = true
 end
 
+--[[
+	@method: Remove
+]]
 function View:Remove(player, component)
 	self:GetCore():Send(self, player, 'REMOVE', {
 		Type = component:__class(),
@@ -73,6 +104,9 @@ function View:Remove(player, component)
 	})
 end
 
+--[[
+	@method: Push
+]]
 function View:Push(player, component)
 	local attributes = {}
 
@@ -96,15 +130,24 @@ function View:Push(player, component)
 	end
 end
 
+--[[
+	@method: Hide
+]]
 function View:Hide(player)
 	self:GetCore():Send(self, player, 'HIDE')
 	self.visible = false
 end
 
+--[[
+	@method: IsVisible
+]]
 function View:IsVisible()
 	return self.visible
 end
 
+--[[
+	@method: Toggle
+]]
 function View:Toggle(player)
 	if (self:IsVisible()) then
 		self:Hide(player)
@@ -113,7 +156,10 @@ function View:Toggle(player)
 	end
 end
 
-function View:SubCall(player, element, name, component)
+--[[
+	@method: SubCall
+]]
+function View:SubCall(player, element, name, component)	
 	if (component:__class() == element and component['HasItems'] == nil and component['FireCallback'] ~= nil and component['GetName'] ~= nil and component:GetName() == name) then
 		--print('FireCallback ' .. name)
 		component:FireCallback(player)
@@ -139,6 +185,9 @@ function View:SubCall(player, element, name, component)
 	end
 end
 
+--[[
+	@method: Call
+]]
 function View:Call(player, element, name)
 	if (_G.Callbacks[name] ~= nil) then
 		_G.Callbacks[name](player)
@@ -150,14 +199,23 @@ function View:Call(player, element, name)
 	end
 end
 
+--[[
+	@method: Activate
+]]
 function View:Activate(player)
 	self:GetCore():Send(self, player, 'ACTIVATE')
 end
 
+--[[
+	@method: Deactivate
+]]
 function View:Deactivate(player)
 	self:GetCore():Send(self, player, 'DEACTIVATE')
 end
 
+--[[
+	@method: Serialize
+]]
 function View:Serialize(player)
 	local components = {}
 

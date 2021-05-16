@@ -1,5 +1,12 @@
+--[[
+	@class: Dialog
+	@extends: Component
+]]
 class('Dialog')
 
+--[[
+	@method: __init
+]]
 function Dialog:__init(name, title)
 	self.name = name or nil
 	self.title = title or nil
@@ -7,14 +14,23 @@ function Dialog:__init(name, title)
 	self.content = nil
 end
 
+--[[
+	@method: GetName
+]]
 function Dialog:GetName()
 	return self.name
 end
 
+--[[
+	@method: __class
+]]
 function Dialog:__class()
 	return 'Dialog'
 end
 
+--[[
+	@method: AddButton
+]]
 function Dialog:AddButton(button, position, permission)
 	if (button == nil or button['__class'] == nil) then
 		-- Bad Item
@@ -37,14 +53,23 @@ function Dialog:AddButton(button, position, permission)
 	table.insert(self.buttons, button)
 end
 
+--[[
+	@method: SetTitle
+]]
 function Dialog:SetTitle(title)
 	self.title = title
 end
 
+--[[
+	@method: SetContent
+]]
 function Dialog:SetContent(content)
 	self.content = content
 end
 
+--[[
+	@method: Serialize
+]]
 function Dialog:Serialize(player)
 	local buttons = {}
 
