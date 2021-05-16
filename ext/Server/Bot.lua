@@ -654,7 +654,7 @@ function Bot:_updateYaw(p_DeltaTime)
 				local s_DiffPos = s_Pos - self.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(self._VehicleMovableId):ToLinearTransform().forward
 				-- prepare for moving gun back
 				self._LastVehicleYaw = s_Yaw
-				if math.abs(s_DiffPos.x) > 0.05 or math.abs(s_DiffPos.z) > 0.05 then
+				if math.abs(s_DiffPos.x) > 0.08 or math.abs(s_DiffPos.z) > 0.08 then
 					s_CorrectGunYaw = true
 				end
 			end
