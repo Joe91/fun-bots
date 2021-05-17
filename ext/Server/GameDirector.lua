@@ -847,4 +847,3 @@ if g_GameDirector == nil then
 end
 
 return g_GameDirector
- 
