@@ -25,7 +25,7 @@ function Settings:__init()
 		option:SetDefault(entry.Default)
 
 		if entry.Type == Type.List or entry.Type == Type.Enum or entry.Type == Type.Integer or entry.Type == Type.Float then
-			option:SetReference(entry.Reference)		
+			option:SetReference(entry.Reference)
 		end
 
 		if category == nil then

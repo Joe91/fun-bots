@@ -212,7 +212,7 @@ end
 	@method: __action
 	@parameter: player:Player | The player object that performs the action
 	@parameter: type:string | The component type for the target
-	@parameter: destination:string | The target for which the action is intended 
+	@parameter: destination:string | The target for which the action is intended
 	@parameter: action:string | The action performed by the player
 	@parameter: data:table | The data to be used in the action
 
@@ -276,7 +276,7 @@ function UI:Send(component, receiver, action, object)
 
 	if component:__class() == 'View' then
 		kind = 'VIEW'
-		destination	= component:GetName()
+		destination = component:GetName()
 	else
 		m_Logger:Error('on Send: Unknown/Unimplemented Component "' .. component:__class() .. '".')
 		m_Logger:Write(debug.traceback())
@@ -302,7 +302,6 @@ function UI:Send(component, receiver, action, object)
 	end
 end
 
--- Singleton.
 if g_UI == nil then
 	g_UI = UI()
 end

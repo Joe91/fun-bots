@@ -117,10 +117,10 @@ end
 ]]
 function Box:SetPosition(flag, position)
 	table.insert(self.attributes, {
-		Name		= 'Position',
-		Value		= {
-			Type		= flag,
-			Position	= position
+		Name = 'Position',
+		Value = {
+			Type = flag,
+			Position = position
 		}
 	})
 end
@@ -139,10 +139,10 @@ function Box:Serialize()
 	end
 
 	return {
-		Color	= self.color,
-		Name	= self.name,
-		Items	= items,
-		Hidden	= self.hidden
+		Color = self.color,
+		Name = self.name,
+		Items = items,
+		Hidden = self.hidden
 	}
 end
 

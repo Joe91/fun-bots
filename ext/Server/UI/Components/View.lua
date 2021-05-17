@@ -159,7 +159,7 @@ end
 --[[
 	@method: SubCall
 ]]
-function View:SubCall(player, element, name, component)	
+function View:SubCall(player, element, name, component)
 	if (component:__class() == element and component['HasItems'] == nil and component['FireCallback'] ~= nil and component['GetName'] ~= nil and component:GetName() == name) then
 		--print('FireCallback ' .. name)
 		component:FireCallback(player)

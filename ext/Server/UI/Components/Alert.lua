@@ -1,7 +1,7 @@
 --[[
 	@class: Alert
 	@extends: Component
-	
+
 	The Alert component can be used to send messages to a player's UI.
 ]]
 class('Alert')

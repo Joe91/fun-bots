@@ -1729,8 +1729,8 @@ function ClientNodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 
 					self.customTraceDistance = self.customTraceDistance + lastDistance
 					NetEvents:Send('WaypointEditor:TraceToggle', {
-						Waypoints	= #self.customTrace:Get(),
-						Distance	= self.customTraceDistance
+						Waypoints = #self.customTrace:Get(),
+						Distance = self.customTraceDistance
 					})
 					--g_FunBotUIClient:_onUITraceWaypointsDistance(self.customTraceDistance)
 					--g_FunBotUIClient:_onUITraceWaypoints(#self.customTrace:Get())

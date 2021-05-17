@@ -186,8 +186,8 @@ end
 ]]
 function MenuItem:FireCallback(player)
 	--if (self.disabled) then
-	--	print('MenuItem ' .. self.name .. ' is disabled.')
-	--	return
+		-- print('MenuItem ' .. self.name .. ' is disabled.')
+		-- return
 	--end
 
 	if (self.callback == nil) then
@@ -289,9 +289,9 @@ function MenuItem:Serialize(player)
 	local callback = nil
 
 	if (type(self.callback) == 'function') then
-		callback	= 'MenuItem$' .. self.name
+		callback = 'MenuItem$' .. self.name
 	else
-		callback	= self.callback
+		callback = self.callback
 	end
 
 	for _, item in pairs(self.items) do

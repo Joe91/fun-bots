@@ -173,7 +173,7 @@ function BotEditor:InitializeComponent()
 
 		input_team:Disable()
 
-		local bot_kick_team	= MenuItem('Kick Team', 'bot_kick_team', function(player)
+		local bot_kick_team = MenuItem('Kick Team', 'bot_kick_team', function(player)
 			Globals.SpawnMode = 'manual'
 
 			m_BotManager:destroyAll(nil, self.team)

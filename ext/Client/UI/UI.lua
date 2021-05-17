@@ -91,7 +91,7 @@ function UI:__action(type, destination, action, string)
 	}) .. ')')
 end
 
-if (g_UI == nil) then
+if g_UI == nil then
 	g_UI = UI()
 end
 
