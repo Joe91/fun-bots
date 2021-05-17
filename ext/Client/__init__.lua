@@ -21,7 +21,7 @@ local m_Logger = Logger("FunBotClient", true)
 --local m_Language = require('__shared/Language')
 local m_ClientBotManager = require('ClientBotManager')
 local m_ClientNodeEditor = require('ClientNodeEditor')
-require('UI/UI')
+local m_ClientUI = require('UI/UI')
 
 
 function FunBotClient:__init()
@@ -32,6 +32,7 @@ function FunBotClient:OnExtensionLoaded()
 	--m_Language:loadLanguage(Config.Language)
 	self:RegisterEvents()
 	self:RegisterHooks()
+	m_ClientUI:OnExtensionLoaded()
 end
 
 function FunBotClient:RegisterEvents()
@@ -73,6 +74,7 @@ end
 
 function FunBotClient:OnExtensionUnloading()
 	m_ClientBotManager:OnExtensionUnloading()
+	m_ClientUI:OnExtensionUnloading()
 end
 
 function FunBotClient:OnLevelDestroy()
@@ -90,6 +92,7 @@ end
 
 function FunBotClient:OnClientUpdateInput(p_DeltaTime)
 	m_ClientNodeEditor:OnClientUpdateInput(p_DeltaTime)
+	m_ClientUI:OnClientUpdateInput(p_DeltaTime)
 end
 
 function FunBotClient:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
