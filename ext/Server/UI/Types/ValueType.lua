@@ -7,10 +7,10 @@ class('ValueType')
 	@method: __init
 ]]
 function ValueType:__init()
-	self.type = nil
-	self.value = nil
-	self.default = nil
-	self.reference = nil
+	self.m_Type = nil
+	self.m_Value = nil
+	self.m_Default = nil
+	self.m_Reference = nil
 end
 
 --[[
@@ -24,56 +24,56 @@ end
 	@method: GetType
 ]]
 function ValueType:GetType()
-	return self.type
+	return self.m_Type
 end
 
 --[[
 	@method: SetType
 ]]
-function ValueType:SetType(type)
-	self.type = type
+function ValueType:SetType(p_Type)
+	self.m_Type = p_Type
 end
 
 --[[
 	@method: GetValue
 ]]
 function ValueType:GetValue()
-	return self.value
+	return self.m_Value
 end
 
 --[[
 	@method: SetValue
 ]]
-function ValueType:SetValue(value)
-	self.value = value
+function ValueType:SetValue(p_Value)
+	self.m_Value = p_Value
 end
 
 --[[
 	@method: GetDefault
 ]]
 function ValueType:GetDefault()
-	return self.default
+	return self.m_Default
 end
 
 --[[
 	@method: SetDefault
 ]]
-function ValueType:SetDefault(default)
-	self.default = default
+function ValueType:SetDefault(p_Default)
+	self.m_Default = p_Default
 end
 
 --[[
 	@method: GetReference
 ]]
 function ValueType:GetReference()
-	return self.reference
+	return self.m_Reference
 end
 
 --[[
 	@method: SetReference
 ]]
-function ValueType:SetReference(reference)
-	self.reference = reference
+function ValueType:SetReference(p_Reference)
+	self.m_Reference = p_Reference
 end
 
 --[[
@@ -81,10 +81,10 @@ end
 ]]
 function ValueType:Serialize()
 	return {
-		Type = self.type,
-		Value = self.value,
-		Default = self.default,
-		Reference = self.reference
+		Type = self.m_Type,
+		Value = self.m_Value,
+		Default = self.m_Default,
+		Reference = self.m_Reference
 	}
 end
 

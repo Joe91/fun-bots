@@ -10,18 +10,18 @@ class('Box')
 	@method: __init
 	@parameter: color:Color | The color of the box component
 ]]
-function Box:__init(color)
+function Box:__init(p_Color)
 	if (_G['BoxID'] == nil) then
 		_G['BoxID'] = 1
 	end
 
 	_G['BoxID'] = _G['BoxID'] + 1
 
-	self.attributes = {}
-	self.items = {}
-	self.name = 'Box#' .. _G['BoxID']
-	self.color = color or Color.White
-	self.hidden = false
+	self.m_Attributes = {}
+	self.m_Items = {}
+	self.m_Name = 'Box#' .. _G['BoxID']
+	self.m_Color = p_Color or Color.White
+	self.m_Hidden = false
 end
 
 --[[
@@ -36,7 +36,7 @@ end
 	@returns: string
 ]]
 function Box:GetName()
-	return self.name
+	return self.m_Name
 end
 
 --[[
@@ -46,7 +46,7 @@ end
 	Returns whether the box has components
 ]]
 function Box:HasItems()
-	return #self.items >= 1
+	return #self.m_Items >= 1
 end
 
 --[[
@@ -56,7 +56,7 @@ end
 	Returns the components of the box
 ]]
 function Box:GetItems()
-	return self.items
+	return self.m_Items
 end
 
 --[[
@@ -65,18 +65,18 @@ end
 
 	Fügt eine Komponente zur Box hinzu
 ]]
-function Box:AddItem(item)
-	if (item == nil or item['__class'] == nil) then
+function Box:AddItem(p_Item)
+	if (p_Item == nil or p_Item['__class'] == nil) then
 		-- Bad Item
 		return
 	end
 
-	if (item:__class() ~= 'Entry' and item:__class() ~= 'Text') then
+	if (p_Item:__class() ~= 'Entry' and p_Item:__class() ~= 'Text') then
 		-- Exception: Only Menu, MenuSeparator (-) or MenuItem
 		return
 	end
 
-	table.insert(self.items, item)
+	table.insert(self.m_Items, p_Item)
 end
 
 --[[
@@ -86,28 +86,28 @@ end
 	Checks if the box is visible or not
 ]]
 function Box:IsHidden()
-	return self.hidden
+	return self.m_Hidden
 end
 
 --[[
 	@method: Hide
 ]]
 function Box:Hide()
-	self.hidden = true
+	self.m_Hidden = true
 end
 
 --[[
 	@method: Show
 ]]
 function Box:Show()
-	self.hidden = false
+	self.m_Hidden = false
 end
 
 --[[
 	@method: GetAttributes
 ]]
 function Box:GetAttributes()
-	return self.attributes
+	return self.m_Attributes
 end
 
 --[[
@@ -115,12 +115,12 @@ end
 	@parameter: flag:Position
 	@parameter: position:mixed | Some data for the position
 ]]
-function Box:SetPosition(flag, position)
-	table.insert(self.attributes, {
+function Box:SetPosition(p_Flag, p_Position)
+	table.insert(self.m_Attributes, {
 		Name = 'Position',
 		Value = {
-			Type = flag,
-			Position = position
+			Type = p_Flag,
+			Position = p_Position
 		}
 	})
 end
@@ -129,20 +129,20 @@ end
 	@method: Serialize
 ]]
 function Box:Serialize()
-	local items = {}
+	local s_Items = {}
 
-	for _, item in pairs(self.items) do
-		table.insert(items, {
-			Type = item:__class(),
-			Data = item:Serialize()
+	for _, l_Item in pairs(self.m_Items) do
+		table.insert(s_Items, {
+			Type = l_Item:__class(),
+			Data = l_Item:Serialize()
 		})
 	end
 
 	return {
-		Color = self.color,
-		Name = self.name,
-		Items = items,
-		Hidden = self.hidden
+		Color = self.m_Color,
+		Name = self.m_Name,
+		Items = s_Items,
+		Hidden = self.m_Hidden
 	}
 end
 
