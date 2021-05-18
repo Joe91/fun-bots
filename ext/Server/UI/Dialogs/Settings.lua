@@ -8,30 +8,30 @@ class('Settings')
 	@method: __init
 ]]
 function Settings:__init()
-	self.dialog = Dialog('settings', 'Settings')
-	self.categories = {}
+	self.m_Dialog = Dialog('settings', 'Settings')
+	self.m_Categories = {}
 
 	-- Initialize Settings definitions
-	for name, title in pairs(SettingsDefinition.Categorys) do
-		table.insert(self.categories, Category(name, title))
+	for l_Name, l_Title in pairs(SettingsDefinition.Categorys) do
+		table.insert(self.m_Categories, Category(l_Name, l_Title))
 	end
 
-	for _, entry in pairs(SettingsDefinition.Elements) do
-		local option = Option(entry.Name, entry.Text, entry.Description)
-		local category = self:GetCategory(entry.Category)
+	for _, l_Entry in pairs(SettingsDefinition.Elements) do
+		local s_Option = Option(l_Entry.Name, l_Entry.Text, l_Entry.Description)
+		local s_Category = self:GetCategory(l_Entry.Category)
 
-		option:SetType(entry.Type)
-		option:SetValue(entry.Value)
-		option:SetDefault(entry.Default)
+		s_Option:SetType(l_Entry.Type)
+		s_Option:SetValue(l_Entry.Value)
+		s_Option:SetDefault(l_Entry.Default)
 
-		if entry.Type == Type.List or entry.Type == Type.Enum or entry.Type == Type.Integer or entry.Type == Type.Float then
-			option:SetReference(entry.Reference)		
+		if l_Entry.Type == Type.List or l_Entry.Type == Type.Enum or l_Entry.Type == Type.Integer or l_Entry.Type == Type.Float then
+			s_Option:SetReference(l_Entry.Reference)
 		end
 
-		if category == nil then
-			print('Unknown Category: ' .. entry.Category)
+		if s_Category == nil then
+			print('Unknown Category: ' .. l_Entry.Category)
 		else
-			category:AddOption(option)
+			s_Category:AddOption(s_Option)
 		end
 	end
 end
@@ -39,17 +39,17 @@ end
 --[[
 	@method: GetCategory
 ]]
-function Settings:GetCategory(name)
-	local result = nil
+function Settings:GetCategory(p_Name)
+	local s_Result = nil
 
-	for reference, category in pairs(self.categories) do
-		if category:GetName() == name or result ~= nil then
-			result = category
+	for l_Reference, l_Category in pairs(self.m_Categories) do
+		if l_Category:GetName() == p_Name or s_Result ~= nil then
+			s_Result = l_Category
 			break
 		end
 	end
 
-	return result
+	return s_Result
 end
 
 --[[
@@ -62,58 +62,58 @@ end
 --[[
 	@method: InitializeComponent
 ]]
-function Settings:InitializeComponent(view)
+function Settings:InitializeComponent(p_View)
 	-- Debug
-	for _, category in pairs(self.categories) do
-		print(g_Utilities:dump(category:Serialize(), true, 5))
+	for _, l_Category in pairs(self.m_Categories) do
+		print(g_Utilities:dump(l_Category:Serialize(), true, 5))
 	end
 
 	-- Add Menu
 
 	-- Add Buttons
-	self.dialog:AddButton(Button('button_settings_cancel', 'Cancel', function(player)
-		self:Hide(view, player)
+	self.m_Dialog:AddButton(Button('button_settings_cancel', 'Cancel', function(player)
+		self:Hide(p_View, player)
 	end), Position.Left)
 
-	self.dialog:AddButton(Button('button_settings_restore', 'Restore all to Default', function(player)
+	self.m_Dialog:AddButton(Button('button_settings_restore', 'Restore all to Default', function(player)
 		print('[Settings] Button Restore')
 	end), Position.Left, 'Settings.Restore')
 
-	self.dialog:AddButton(Button('button_settings_save_temporarily', 'Save Temporarily', function(player)
+	self.m_Dialog:AddButton(Button('button_settings_save_temporarily', 'Save Temporarily', function(player)
 		print('[Settings] Button Temporarily')
-		self:Hide(view, player)
+		self:Hide(p_View, player)
 	end), Position.Right, 'Settings.Save')
 
-	self.dialog:AddButton(Button('button_settings_save', 'Save', function(player)
+	self.m_Dialog:AddButton(Button('button_settings_save', 'Save', function(player)
 		print('[Settings] Button Save')
-		self:Hide(view, player)
+		self:Hide(p_View, player)
 	end), Position.Right, 'Settings.Save')
 
 	-- Add Content
 		-- Add Tabs
 
-	print(g_Utilities:dump(self.dialog, true, 1))
+	print(g_Utilities:dump(self.m_Dialog, true, 1))
 end
 
 --[[
 	@method: Serialize
 ]]
-function Settings:Serialize(player)
-	return self.dialog:Serialize(player)
+function Settings:Serialize(p_Player)
+	return self.m_Dialog:Serialize(p_Player)
 end
 
 --[[
 	@method: Open
 ]]
-function Settings:Open(view, player)
-	view:Push(player, self.dialog)
+function Settings:Open(p_View, p_Player)
+	p_View:Push(p_Player, self.m_Dialog)
 end
 
 --[[
 	@method: Hide
 ]]
-function Settings:Hide(view, player)
-	view:Remove(player, self.dialog)
+function Settings:Hide(p_View, p_Player)
+	p_View:Remove(p_Player, self.m_Dialog)
 end
 
 return Settings

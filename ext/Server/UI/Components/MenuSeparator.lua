@@ -7,8 +7,8 @@ class('MenuSeparator')
 --[[
 	@method: __init
 ]]
-function MenuSeparator:__init(title)
-	self.title = title or nil
+function MenuSeparator:__init(p_Title)
+	self.m_Title = p_Title or nil
 end
 
 --[[
@@ -23,7 +23,7 @@ end
 ]]
 function MenuSeparator:Serialize()
 	return {
-		Title = self.title
+		Title = self.m_Title
 	}
 end
 

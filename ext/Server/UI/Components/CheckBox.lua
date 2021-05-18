@@ -9,10 +9,10 @@ class('CheckBox')
 	@parameter: name:string
 	@parameter: checked:boolean
 ]]
-function CheckBox:__init(name, checked)
-	self.name = name or nil
-	self.checked = checked or false
-	self.disabled = false
+function CheckBox:__init(p_Name, p_Checked)
+	self.m_Name = p_Name or nil
+	self.m_Checked = p_Checked or false
+	self.m_Disabled = false
 end
 
 --[[
@@ -28,36 +28,36 @@ end
 	@returns: string
 ]]
 function CheckBox:GetName()
-	return self.name
+	return self.m_Name
 end
 
 --[[
 	@method: Enable
 ]]
 function CheckBox:Enable()
-	self.disabled = false
+	self.m_Disabled = false
 end
 
 --[[
 	@method: Disable
 ]]
 function CheckBox:Disable()
-	self.disabled = true
+	self.m_Disabled = true
 end
 
 --[[
 	@method: IsChecked
 ]]
 function CheckBox:IsChecked()
-	return self.checked
+	return self.m_Checked
 end
 
 --[[
 	@method: SetChecked
 	@parameter: checked:boolean
 ]]
-function CheckBox:SetChecked(checked)
-	self.checked = checked
+function CheckBox:SetChecked(p_Checked)
+	self.m_Checked = p_Checked
 end
 
 --[[
@@ -65,9 +65,9 @@ end
 ]]
 function CheckBox:Serialize()
 	return {
-		Name = self.name,
-		IsChecked = self.checked,
-		Disabled = self.disabled
+		Name = self.m_Name,
+		IsChecked = self.m_Checked,
+		Disabled = self.m_Disabled
 	}
 end
 

@@ -8,9 +8,9 @@ class('Confirmation')
 	@method: __init
 ]]
 function Confirmation:__init()
-	self.button_yes = nil
-	self.button_no = nil
-	self.dialog = Dialog('confirmation', 'Confirmation')
+	self.m_Button_Yes = nil
+	self.m_Button_No = nil
+	self.m_Dialog = Dialog('confirmation', 'Confirmation')
 end
 
 --[[
@@ -23,61 +23,61 @@ end
 --[[
 	@method: SetTitle
 ]]
-function Confirmation:SetTitle(title)
-	self.dialog:SetTitle(title)
+function Confirmation:SetTitle(p_Title)
+	self.m_Dialog:SetTitle(p_Title)
 end
 
 --[[
 	@method: SetContent
 ]]
-function Confirmation:SetContent(content)
-	self.dialog:SetContent(content)
+function Confirmation:SetContent(p_Content)
+	self.m_Dialog:SetContent(p_Content)
 end
 
 --[[
 	@method: SetYes
 ]]
-function Confirmation:SetYes(callback)
-	self.button_yes:SetCallback(callback)
+function Confirmation:SetYes(p_Callback)
+	self.m_Button_Yes:SetCallback(p_Callback)
 end
 
 --[[
 	@method: SetNo
 ]]
-function Confirmation:SetNo(callback)
-	self.button_no:SetCallback(callback)
+function Confirmation:SetNo(p_Callback)
+	self.m_Button_No:SetCallback(p_Callback)
 end
 
 --[[
 	@method: InitializeComponent
 ]]
 function Confirmation:InitializeComponent()
-	self.button_yes = Button('button_confirmation_yes', 'Yes')
-	self.dialog:AddButton(self.button_yes, Position.Left)
+	self.m_Button_Yes = Button('button_confirmation_yes', 'Yes')
+	self.m_Dialog:AddButton(self.m_Button_Yes, Position.Left)
 
-	self.button_no = Button('button_confirmation_no', 'No')
-	self.dialog:AddButton(self.button_no, Position.Right)
+	self.m_Button_No = Button('button_confirmation_no', 'No')
+	self.m_Dialog:AddButton(self.m_Button_No, Position.Right)
 end
 
 --[[
 	@method: Serialize
 ]]
-function Confirmation:Serialize(player)
-	return self.dialog:Serialize(player)
+function Confirmation:Serialize(p_Player)
+	return self.m_Dialog:Serialize(p_Player)
 end
 
 --[[
 	@method: Open
 ]]
-function Confirmation:Open(view, player)
-	view:Push(player, self.dialog)
+function Confirmation:Open(p_View, p_Player)
+	p_View:Push(p_Player, self.m_Dialog)
 end
 
 --[[
 	@method: Hide
 ]]
-function Confirmation:Hide(view, player)
-	view:Remove(player, self.dialog)
+function Confirmation:Hide(p_View, p_Player)
+	p_View:Remove(p_Player, self.m_Dialog)
 end
 
 return Confirmation

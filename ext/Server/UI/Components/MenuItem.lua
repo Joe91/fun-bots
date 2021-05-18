@@ -7,17 +7,17 @@ class('MenuItem')
 --[[
 	@method: __init
 ]]
-function MenuItem:__init(title, name, callback, shortcut)
-	self.title = title or nil
-	self.name = name or nil
-	self.callback = callback or nil
-	self.shortcut = shortcut or nil
-	self.disabled = false
-	self.icon = nil
-	self.items = {}
-	self.inputs = {}
-	self.checkboxes = {}
-	self.permission = nil
+function MenuItem:__init(p_Title, p_Name, p_Callback, p_Shortcut)
+	self.m_Title = p_Title or nil
+	self.m_Name = p_Name or nil
+	self.m_Callback = p_Callback or nil
+	self.m_Shortcut = p_Shortcut or nil
+	self.m_Disabled = false
+	self.m_Icon = nil
+	self.m_Items = {}
+	self.m_Inputs = {}
+	self.m_Checkboxes = {}
+	self.m_Permission = nil
 end
 
 --[[
@@ -30,36 +30,36 @@ end
 --[[
 	@method: BindPermission
 ]]
-function MenuItem:BindPermission(permission)
-	self.permission = permission
+function MenuItem:BindPermission(p_Permission)
+	self.m_Permission = p_Permission
 end
 
 --[[
 	@method: GetPermission
 ]]
 function MenuItem:GetPermission()
-	return self.permission
+	return self.m_Permission
 end
 
 --[[
 	@method: AddItem
 ]]
-function MenuItem:AddItem(item, permission)
-	if (item == nil or item['__class'] == nil) then
+function MenuItem:AddItem(p_Item, p_Permission)
+	if (p_Item == nil or p_Item['__class'] == nil) then
 		-- Bad Item
 		return self
 	end
 
-	if (item:__class() ~= 'MenuItem' and item:__class() ~= 'MenuSeparator') then
+	if (p_Item:__class() ~= 'MenuItem' and p_Item:__class() ~= 'MenuSeparator') then
 		-- Exception: Only Menu, MenuSeparator or MenuItem
 		return self
 	end
 
-	if permission ~= nil then
-		item:BindPermission(permission)
+	if p_Permission ~= nil then
+		p_Item:BindPermission(p_Permission)
 	end
 
-	table.insert(self.items, item)
+	table.insert(self.m_Items, p_Item)
 
 	return self
 end
@@ -67,8 +67,8 @@ end
 --[[
 	@method: SetIcon
 ]]
-function MenuItem:SetIcon(file)
-	self.icon = file
+function MenuItem:SetIcon(p_File)
+	self.m_Icon = p_File
 
 	return self
 end
@@ -77,56 +77,56 @@ end
 	@method: GetItems
 ]]
 function MenuItem:GetItems()
-	return self.items
+	return self.m_Items
 end
 
 --[[
 	@method: HasItems
 ]]
 function MenuItem:HasItems()
-	return #self.items >= 1
+	return #self.m_Items >= 1
 end
 
 --[[
 	@method: GetInputs
 ]]
 function MenuItem:GetInputs()
-	return self.inputs
+	return self.m_Inputs
 end
 
 --[[
 	@method: HasInputs
 ]]
 function MenuItem:HasInputs()
-	return #self.inputs >= 1
+	return #self.m_Inputs >= 1
 end
 
 --[[
 	@method: GetCheckBoxes
 ]]
 function MenuItem:GetCheckBoxes()
-	return self.checkboxes
+	return self.m_Checkboxes
 end
 
 --[[
 	@method: HasCheckBoxes
 ]]
 function MenuItem:HasCheckBoxes()
-	return #self.checkboxes >= 1
+	return #self.m_Checkboxes >= 1
 end
 
 --[[
 	@method: GetTitle
 ]]
 function MenuItem:GetTitle()
-	return self.title
+	return self.m_Title
 end
 
 --[[
 	@method: SetTitle
 ]]
-function MenuItem:SetTitle(title)
-	self.title = title
+function MenuItem:SetTitle(p_Title)
+	self.m_Title = p_Title
 
 	return self
 end
@@ -135,14 +135,14 @@ end
 	@method: GetName
 ]]
 function MenuItem:GetName()
-	return self.name
+	return self.m_Name
 end
 
 --[[
 	@method: SetName
 ]]
-function MenuItem:SetName(name)
-	self.name = name
+function MenuItem:SetName(p_Name)
+	self.m_Name = p_Name
 
 	return self
 end
@@ -151,7 +151,7 @@ end
 	@method: Enable
 ]]
 function MenuItem:Enable()
-	self.disabled = false
+	self.m_Disabled = false
 
 	return self
 end
@@ -160,7 +160,7 @@ end
 	@method: Disable
 ]]
 function MenuItem:Disable()
-	self.disabled = true
+	self.m_Disabled = true
 
 	return self
 end
@@ -169,14 +169,14 @@ end
 	@method: GetCallback
 ]]
 function MenuItem:GetCallback()
-	return self.callback
+	return self.m_Callback
 end
 
 --[[
 	@method: SetCallback
 ]]
-function MenuItem:SetCallback(callback)
-	self.callback = callback
+function MenuItem:SetCallback(p_Callback)
+	self.m_Callback = p_Callback
 
 	return self
 end
@@ -184,30 +184,30 @@ end
 --[[
 	@method: FireCallback
 ]]
-function MenuItem:FireCallback(player)
-	--if (self.disabled) then
-	--	print('MenuItem ' .. self.name .. ' is disabled.')
-	--	return
+function MenuItem:FireCallback(p_Player)
+	--if (self.m_Disabled) then
+		-- print('MenuItem ' .. self.m_Name .. ' is disabled.')
+		-- return
 	--end
 
-	if (self.callback == nil) then
-		--print('MenuItem ' .. self.name .. ' has no Callback.')
+	if (self.m_Callback == nil) then
+		--print('MenuItem ' .. self.m_Name .. ' has no Callback.')
 		return
 	end
 
-	if (type(self.callback) == 'string') then
-		--print('MenuItem ' .. self.name .. ' has an reference Callback.')
+	if (type(self.m_Callback) == 'string') then
+		--print('MenuItem ' .. self.m_Name .. ' has an reference Callback.')
 		return
 	end
 
-	if self.permission ~= nil then
-		if PermissionManager:HasPermission(player, self.permission) == false then
-			ChatManager:SendMessage('You have no permissions for this action (' .. self.permission .. ').', player)
+	if self.m_Permission ~= nil then
+		if PermissionManager:HasPermission(p_Player, self.m_Permission) == false then
+			ChatManager:SendMessage('You have no permissions for this action (' .. self.m_Permission .. ').', p_Player)
 			return self
 		end
 	end
 
-	self.callback(player)
+	self.m_Callback(p_Player)
 
 	return self
 end
@@ -216,14 +216,14 @@ end
 	@method: GetShortcut
 ]]
 function MenuItem:GetShortcut()
-	return self.shortcut
+	return self.m_Shortcut
 end
 
 --[[
 	@method: SetShortcut
 ]]
-function MenuItem:SetShortcut(shortcut)
-	self.shortcut = shortcut
+function MenuItem:SetShortcut(p_Shortcut)
+	self.m_Shortcut = p_Shortcut
 
 	return self
 end
@@ -232,26 +232,26 @@ end
 	@method: HasShortcut
 ]]
 function MenuItem:HasShortcut()
-	return (self.shortcut ~= nil)
+	return (self.m_Shortcut ~= nil)
 end
 
 --[[
 	@method: AddCheckBox
 ]]
-function MenuItem:AddCheckBox(position, checkbox)
-	if (checkbox == nil or checkbox['__class'] == nil) then
+function MenuItem:AddCheckBox(p_Position, p_Checkbox)
+	if (p_Checkbox == nil or p_Checkbox['__class'] == nil) then
 		-- Bad Item
 		return self
 	end
 
-	if (checkbox:__class() ~= 'CheckBox') then
+	if (p_Checkbox:__class() ~= 'CheckBox') then
 		-- Exception: Only Menu, Separator (-) or MenuItem
 		return self
 	end
 
-	table.insert(self.checkboxes, {
-		Position = position,
-		CheckBox = checkbox
+	table.insert(self.m_Checkboxes, {
+		Position = p_Position,
+		CheckBox = p_Checkbox
 	})
 
 	return self
@@ -260,20 +260,20 @@ end
 --[[
 	@method: AddInput
 ]]
-function MenuItem:AddInput(position, input)
-	if (input == nil or input['__class'] == nil) then
+function MenuItem:AddInput(p_Position, p_Input)
+	if (p_Input == nil or p_Input['__class'] == nil) then
 		-- Bad Item
 		return self
 	end
 
-	if (input:__class() ~= 'Input') then
+	if (p_Input:__class() ~= 'Input') then
 		-- Exception: Only Menu, Separator (-) or MenuItem
 		return self
 	end
 
-	table.insert(self.inputs, {
-		Position = position,
-		Input = input
+	table.insert(self.m_Inputs, {
+		Position = p_Position,
+		Input = p_Input
 	})
 
 	return self
@@ -282,76 +282,76 @@ end
 --[[
 	@method: Serialize
 ]]
-function MenuItem:Serialize(player)
-	local items = {}
-	local inputs = {}
-	local checkboxes = {}
-	local callback = nil
+function MenuItem:Serialize(p_Player)
+	local s_Items = {}
+	local s_Inputs = {}
+	local s_Checkboxes = {}
+	local s_Callback = nil
 
-	if (type(self.callback) == 'function') then
-		callback	= 'MenuItem$' .. self.name
+	if (type(self.m_Callback) == 'function') then
+		s_Callback = 'MenuItem$' .. self.m_Name
 	else
-		callback	= self.callback
+		s_Callback = self.m_Callback
 	end
 
-	for _, item in pairs(self.items) do
-		if item['GetPermission'] ~= nil then
-			if item:GetPermission() == nil then
-				table.insert(items, {
-					Type = item:__class(),
-					Data = item:Serialize(player)
+	for _, l_Item in pairs(self.m_Items) do
+		if l_Item['GetPermission'] ~= nil then
+			if l_Item:GetPermission() == nil then
+				table.insert(s_Items, {
+					Type = l_Item:__class(),
+					Data = l_Item:Serialize(p_Player)
 				})
-			elseif PermissionManager:HasPermission(player, item:GetPermission()) then
-				table.insert(items, {
-					Type = item:__class(),
-					Data = item:Serialize(player)
+			elseif PermissionManager:HasPermission(p_Player, l_Item:GetPermission()) then
+				table.insert(s_Items, {
+					Type = l_Item:__class(),
+					Data = l_Item:Serialize(p_Player)
 				})
 			end
 		else
-			table.insert(items, {
-				Type = item:__class(),
-				Data = item:Serialize(player)
+			table.insert(s_Items, {
+				Type = l_Item:__class(),
+				Data = l_Item:Serialize(p_Player)
 			})
 		end
 	end
 
-	for _, data in pairs(self.inputs) do
-		table.insert(inputs, {
-			Type = data.Input:__class(),
-			Data = data.Input:Serialize(),
-			Position = data.Position
+	for _, l_Data in pairs(self.m_Inputs) do
+		table.insert(s_Inputs, {
+			Type = l_Data.Input:__class(),
+			Data = l_Data.Input:Serialize(),
+			Position = l_Data.Position
 		})
 	end
 
-	for _, data in pairs(self.checkboxes) do
-		table.insert(checkboxes, {
-			Type = data.CheckBox:__class(),
-			Data = data.CheckBox:Serialize(),
-			Position = data.Position
+	for _, l_Data in pairs(self.m_Checkboxes) do
+		table.insert(s_Checkboxes, {
+			Type = l_Data.CheckBox:__class(),
+			Data = l_Data.CheckBox:Serialize(),
+			Position = l_Data.Position
 		})
 	end
 
-	if (#items >= 1) then
+	if (#s_Items >= 1) then
 		return {
-			Title = self.title,
-			Name = self.name,
-			Icon = self.icon,
-			Items = items,
-			Disabled = self.disabled,
-			Permission = self.permission
+			Title = self.m_Title,
+			Name = self.m_Name,
+			Icon = self.m_Icon,
+			Items = s_Items,
+			Disabled = self.m_Disabled,
+			Permission = self.m_Permission
 		}
 	end
 
 	return {
-		Title = self.title,
-		Name = self.name,
-		Icon = self.icon,
-		Callback = callback,
-		Shortcut = self.shortcut,
-		Inputs = inputs,
-		CheckBoxes = checkboxes,
-		Disabled = self.disabled,
-		Permission = self.permission
+		Title = self.m_Title,
+		Name = self.m_Name,
+		Icon = self.m_Icon,
+		Callback = s_Callback,
+		Shortcut = self.m_Shortcut,
+		Inputs = s_Inputs,
+		CheckBoxes = s_Checkboxes,
+		Disabled = self.m_Disabled,
+		Permission = self.m_Permission
 	}
 end
 
