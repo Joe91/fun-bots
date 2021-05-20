@@ -272,9 +272,6 @@ function BotSpawner:UpdateBotAmountAndTeam()
 
 	-- KEEP PLAYERCOUNT
 	if Globals.SpawnMode == SpawnModes.keep_playercount then
-		for i = 1, Globals.NrOfTeams do
-			s_TargetTeamCount[i] = Config.InitNumberOfBots
-		end
 		if Config.SpawnInBothTeams then
 			for i = 1, Globals.NrOfTeams do
 				s_TargetTeamCount[i] = math.floor(Config.InitNumberOfBots / Globals.NrOfTeams)
@@ -283,11 +280,20 @@ function BotSpawner:UpdateBotAmountAndTeam()
 			for i = 1, Globals.NrOfTeams do
 				if s_BotTeam ~= i then
 					s_TargetTeamCount[i] = 0
+				else
+					s_TargetTeamCount[i] = Config.InitNumberOfBots
 				end
 			end
 		end
 		--limit team count
 		for i = 1, Globals.NrOfTeams do
+			if Globals.NrOfTeams == 2 then
+				if i ~= s_BotTeam then
+					s_TargetTeamCount[i] = math.floor((s_TargetTeamCount[i] * Config.FactorPlayerTeamCount) + 0.5)
+				else
+					s_TargetTeamCount[i] = math.floor((s_TargetTeamCount[i] * (2 - Config.FactorPlayerTeamCount)) + 0.5)
+				end
+			end
 			if s_TargetTeamCount[i] > Globals.MaxBotsPerTeam then
 				s_TargetTeamCount[i] = Globals.MaxBotsPerTeam
 			end
@@ -504,6 +510,10 @@ end
 function BotSpawner:SpawnWayBots(p_Player, p_Amount, p_UseRandomWay, p_ActiveWayIndex, p_IndexOnPath, p_TeamId)
 	if #m_NodeCollection:GetPaths() <= 0 then
 		return
+	end
+
+	if p_Amount <= 0 then
+		m_Logger:Error("can't spawn zero or negative amount of bots")
 	end
 
 	-- check for amount available
