@@ -126,14 +126,44 @@ function Bot:onUpdate(p_DeltaTime)
 			self._UpdateTimer = 0
 		end
 	else
-		self._UpdateTimer = self._UpdateTimer + p_DeltaTime
-		self._SpawnProtectionTimer = self._SpawnProtectionTimer - p_DeltaTime
+		if self._SpawnProtectionTimer > 0 then
+			self._SpawnProtectionTimer = self._SpawnProtectionTimer - p_DeltaTime
+		else
+			self._SpawnProtectionTimer = 0
+		end
 		self:_updateYaw(p_DeltaTime)
+		self:_lookAround(p_DeltaTime)
+		self:_updateInputs()
+	end
+end
 
-		if self._UpdateTimer > StaticConfig.BotUpdateCycle then
-			self:_updateRespwawn()
-			self:_updateMovement()
-			self._UpdateTimer = 0
+function Bot:_lookAround(p_DeltaTime)
+	-- move around a little
+	local s_LastYawTimer = self._WayWaitYawTimer
+	self._WayWaitYawTimer = self._WayWaitYawTimer + p_DeltaTime
+	self.m_ActiveSpeedValue = 0
+	self._TargetPoint = nil
+
+	if self._WayWaitYawTimer > 6 then
+		self._WayWaitYawTimer = 0
+		self._TargetYaw = self._TargetYaw + 1.0 -- 60 ° rotation right
+		if self._TargetYaw > (math.pi * 2) then
+			self._TargetYaw = self._TargetYaw - (2 * math.pi)
+		end
+	elseif self._WayWaitYawTimer >= 4 and s_LastYawTimer < 4 then
+		self._TargetYaw = self._TargetYaw - 1.0 -- 60 ° rotation left
+		if self._TargetYaw < 0 then
+			self._TargetYaw = self._TargetYaw + (2 * math.pi)
+		end
+	elseif self._WayWaitYawTimer >= 3 and s_LastYawTimer < 3 then
+		self._TargetYaw = self._TargetYaw - 1.0 -- 60 ° rotation left
+		if self._TargetYaw < 0 then
+			self._TargetYaw = self._TargetYaw + (2 * math.pi)
+		end
+	elseif self._WayWaitYawTimer >= 1 and s_LastYawTimer < 1 then
+		self._TargetYaw = self._TargetYaw + 1.0 -- 60 ° rotation right
+		if self._TargetYaw > (math.pi * 2) then
+			self._TargetYaw = self._TargetYaw - (2 * math.pi)
 		end
 	end
 end
@@ -151,7 +181,7 @@ function Bot:_updateInputs()
 			self.m_Player.input:SetLevel(i, 0)
 			self.m_ActiveInputs[i].value = 0
 			self.m_ActiveInputs[i].reset = false
-		elseif self.m_ActiveInputs[i].value ~= 0 then
+		else
 			self.m_Player.input:SetLevel(i, self.m_ActiveInputs[i].value)
 			self.m_ActiveInputs[i].reset = true
 		end
@@ -397,7 +427,7 @@ function Bot:resetSpawnVars()
 	self._UpdateTimer = 0
 	self._AimUpdateTimer = 0 --timer sync
 	self._StuckTimer = 0
-	self._SpawnProtectionTimer = 0
+	self._SpawnProtectionTimer = 2.0
 	self._TargetPoint = nil
 	self._NextTargetPoint = nil
 	self._MeleeActive = false
@@ -467,7 +497,6 @@ function Bot:_updateRespwawn()
 			self._SpawnDelayTimer = self._SpawnDelayTimer + StaticConfig.BotUpdateCycle
 		else
 			Events:DispatchLocal('Bot:RespawnBot', self.m_Name)
-			self._SpawnProtectionTimer = 2.0
 		end
 	else
 		self._SpawnDelayTimer = 0 -- reset Timer if player is alive
@@ -1600,34 +1629,8 @@ function Bot:_updateMovement()
 					end
 				else -- wait mode
 					self._WayWaitTimer = self._WayWaitTimer + StaticConfig.BotUpdateCycle
-					local s_LastYawTimer = self._WayWaitYawTimer
-					self._WayWaitYawTimer = self._WayWaitYawTimer + StaticConfig.BotUpdateCycle
-					self.m_ActiveSpeedValue = 0
-					self._TargetPoint = nil
 
-					-- move around a little
-					if self._WayWaitYawTimer > 6 then
-						self._WayWaitYawTimer = 0
-						self._TargetYaw = self._TargetYaw + 1.0 -- 60 ° rotation right
-						if self._TargetYaw > (math.pi * 2) then
-							self._TargetYaw = self._TargetYaw - (2 * math.pi)
-						end
-					elseif self._WayWaitYawTimer >= 4 and s_LastYawTimer < 4 then
-						self._TargetYaw = self._TargetYaw - 1.0 -- 60 ° rotation left
-						if self._TargetYaw < 0 then
-							self._TargetYaw = self._TargetYaw + (2 * math.pi)
-						end
-					elseif self._WayWaitYawTimer >= 3 and s_LastYawTimer < 3 then
-						self._TargetYaw = self._TargetYaw - 1.0 -- 60 ° rotation left
-						if self._TargetYaw < 0 then
-							self._TargetYaw = self._TargetYaw + (2 * math.pi)
-						end
-					elseif self._WayWaitYawTimer >= 1 and s_LastYawTimer < 1 then
-						self._TargetYaw = self._TargetYaw + 1.0 -- 60 ° rotation right
-						if self._TargetYaw > (math.pi * 2) then
-							self._TargetYaw = self._TargetYaw - (2 * math.pi)
-						end
-					end
+					self:_lookAround(StaticConfig.BotUpdateCycle)
 
 					if self._WayWaitTimer > s_Point.OptValue then
 						self._WayWaitTimer = 0
