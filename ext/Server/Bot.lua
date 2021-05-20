@@ -45,6 +45,7 @@ function Bot:__init(p_Player)
 	self._ShootTraceTimer = 0
 	self._ActionTimer = 0
 	self._BrakeTimer = 0
+	self._SpawnProtectionTimer = 0
 
 	--shared movement vars
 	self.m_ActiveMoveMode = BotMoveModes.Standstill
@@ -109,7 +110,7 @@ function Bot:onUpdate(p_DeltaTime)
 		self.m_Player.soldier:SingleStepEntry(self.m_Player.controlledEntryId)
 	end
 
-	if Globals.IsInputAllowed then
+	if Globals.IsInputAllowed and self._SpawnProtectionTimer <= 0 then
 		self._UpdateTimer = self._UpdateTimer + p_DeltaTime
 
 		self:_updateYaw(p_DeltaTime)
@@ -124,12 +125,22 @@ function Bot:onUpdate(p_DeltaTime)
 			self:_updateInputs()
 			self._UpdateTimer = 0
 		end
+	else
+		self._UpdateTimer = self._UpdateTimer + p_DeltaTime
+		self._SpawnProtectionTimer = self._SpawnProtectionTimer - p_DeltaTime
+		self:_updateYaw(p_DeltaTime)
+
+		if self._UpdateTimer > StaticConfig.BotUpdateCycle then
+			self:_updateRespwawn()
+			self:_updateMovement()
+			self._UpdateTimer = 0
+		end
 	end
 end
 
 function Bot:_setInput(p_Input, p_Value)
 	self.m_ActiveInputs[p_Input] = {
-	 	value = p_Value,
+		value = p_Value,
 		reset = false
 	}
 end
@@ -268,6 +279,7 @@ function Bot:resetVars()
 	self._ShootWayPoints = {}
 	self._ZombieSpeedValue = BotMoveSpeeds.NoMovement
 	self._SpawnDelayTimer = 0
+	self._SpawnProtectionTimer = 0
 	self._Objective = ''
 	self._MeleeActive = false
 	self._ActionActive = false
@@ -385,6 +397,7 @@ function Bot:resetSpawnVars()
 	self._UpdateTimer = 0
 	self._AimUpdateTimer = 0 --timer sync
 	self._StuckTimer = 0
+	self._SpawnProtectionTimer = 0
 	self._TargetPoint = nil
 	self._NextTargetPoint = nil
 	self._MeleeActive = false
@@ -454,6 +467,7 @@ function Bot:_updateRespwawn()
 			self._SpawnDelayTimer = self._SpawnDelayTimer + StaticConfig.BotUpdateCycle
 		else
 			Events:DispatchLocal('Bot:RespawnBot', self.m_Name)
+			self._SpawnProtectionTimer = 2.0
 		end
 	else
 		self._SpawnDelayTimer = 0 -- reset Timer if player is alive
@@ -1465,7 +1479,7 @@ function Bot:_updateMovement()
 							s_DistanceFromTarget = 0
 							s_HeightDistance = 0
 							s_NoStuckReset = true
-							s_PointIncrement = MathUtils:GetRandomInt(-5,5) -- go 5 points further
+							s_PointIncrement = MathUtils:GetRandomInt(-4,6) -- go 5 points further
 							--if Globals.IsConquest or Globals.IsRush then --TODO: only invert path, if its not a connecting path
 								--self._InvertPathDirection = (MathUtils:GetRandomInt(0,100) < 40)
 							--end
