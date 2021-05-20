@@ -1,66 +1,91 @@
-class('Dialog');
+--[[
+	@class: Dialog
+	@extends: Component
+]]
+class('Dialog')
 
-function Dialog:__init(name, title)
-	self.name		= name or nil;
-	self.title		= title or nil;
-	self.buttons	= {};
-	self.content	= nil;
+--[[
+	@method: __init
+]]
+function Dialog:__init(p_Name, p_Title)
+	self.m_Name = p_Name or nil
+	self.m_Title = p_Title or nil
+	self.m_Buttons = {}
+	self.m_Content = nil
 end
 
+--[[
+	@method: GetName
+]]
 function Dialog:GetName()
-	return self.name;
+	return self.m_Name
 end
 
+--[[
+	@method: __class
+]]
 function Dialog:__class()
-	return 'Dialog';
+	return 'Dialog'
 end
 
-function Dialog:AddButton(button, position, permission)
-	if (button == nil or button['__class'] == nil) then
+--[[
+	@method: AddButton
+]]
+function Dialog:AddButton(p_Button, p_Position, p_Permission)
+	if (p_Button == nil or p_Button['__class'] == nil) then
 		-- Bad Item
-		return;
+		return
 	end
-	
-	if (button:__class() ~= 'Button') then
+
+	if (p_Button:__class() ~= 'Button') then
 		-- Exception: Only Button
-		return;
+		return
 	end
-	
-	if position ~= nil then
-	
+
+	if p_Position ~= nil then
+
 	end
-	
-	if permission ~= nil then
-		button:BindPermission(permission);
+
+	if p_Permission ~= nil then
+		p_Button:BindPermission(p_Permission)
 	end
-	
-	table.insert(self.buttons, button);
+
+	table.insert(self.m_Buttons, p_Button)
 end
 
-function Dialog:SetTitle(title)
-	self.title = title;
+--[[
+	@method: SetTitle
+]]
+function Dialog:SetTitle(p_Title)
+	self.m_Title = p_Title
 end
 
-function Dialog:SetContent(content)
-	self.content = content;
+--[[
+	@method: SetContent
+]]
+function Dialog:SetContent(p_Content)
+	self.m_Content = p_Content
 end
 
-function Dialog:Serialize(player)
-	local buttons = {};
-	
-	for _, button in pairs(self.buttons) do
-		table.insert(buttons, {
-			Type		= button:__class(),
-			Data		= button:Serialize()
-		});
+--[[
+	@method: Serialize
+]]
+function Dialog:Serialize()
+	local s_Buttons = {}
+
+	for _, l_Button in pairs(self.m_Buttons) do
+		table.insert(s_Buttons, {
+			Type = l_Button:__class(),
+			Data = l_Button:Serialize()
+		})
 	end
-	
+
 	return {
-		Name	= self.name,
-		Title	= self.title,
-		Content = self.content,
-		Buttons	= buttons
-	};
+		Name = self.m_Name,
+		Title = self.m_Title,
+		Content = self.m_Content,
+		Buttons = s_Buttons
+	}
 end
 
-return Dialog;
+return Dialog

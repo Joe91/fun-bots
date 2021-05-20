@@ -1,84 +1,112 @@
-class('Menu');
+--[[
+	@class: Menu
+	@extends: Component
+]]
+class('Menu')
 
-require('UI/Components/MenuItem');
-require('UI/Components/MenuSeparator');
+require('UI/Components/MenuItem')
+require('UI/Components/MenuSeparator')
 
+--[[
+	@method: __init
+]]
 function Menu:__init()
-	self.items		= {};
-	self.attributes	= {};
+	self.m_Items = {}
+	self.m_Attributes = {}
 end
 
+--[[
+	@method: __class
+]]
 function Menu:__class()
-	return 'Menu';
+	return 'Menu'
 end
 
+--[[
+	@method: GetAttributes
+]]
 function Menu:GetAttributes()
-	return self.attributes;
+	return self.m_Attributes
 end
 
-function Menu:AddItem(item, permission)
-	if (item == nil or item['__class'] == nil) then
+--[[
+	@method: AddItem
+]]
+function Menu:AddItem(p_Item, p_Permission)
+	if (p_Item == nil or p_Item['__class'] == nil) then
 		-- Bad Item
-		return;
+		return
 	end
-	
-	if (item:__class() ~= 'Menu' and item:__class() ~= 'MenuItem' and item:__class() ~= 'MenuSeparator') then
+
+	if (p_Item:__class() ~= 'Menu' and p_Item:__class() ~= 'MenuItem' and p_Item:__class() ~= 'MenuSeparator') then
 		-- Exception: Only Menu, MenuSeparator (-) or MenuItem
-		return;
+		return
 	end
-	
-	if permission ~= nil then
-		item:BindPermission(permission);
+
+	if p_Permission ~= nil then
+		p_Item:BindPermission(p_Permission)
 	end
-	
-	table.insert(self.items, item);
+
+	table.insert(self.m_Items, p_Item)
 end
 
-function Menu:SetPosition(flag, position)
-	table.insert(self.attributes, {
-		Name		= 'Position',
-		Value		= {
-			Type		= flag,
-			Position	= position
+--[[
+	@method: SetPosition
+]]
+function Menu:SetPosition(p_Flag, p_Position)
+	table.insert(self.m_Attributes, {
+		Name = 'Position',
+		Value = {
+			Type = p_Flag,
+			Position = p_Position
 		}
-	});
+	})
 end
 
+--[[
+	@method: HasItems
+]]
 function Menu:HasItems()
-	return #self.items >= 1;
+	return #self.m_Items >= 1
 end
 
+--[[
+	@method: GetItems
+]]
 function Menu:GetItems()
-	return self.items;
+	return self.m_Items
 end
 
-function Menu:Serialize(player)
-	local items = {};
-	
-	for _, item in pairs(self.items) do
-		if item['GetPermission'] ~= nil then
-			if item:GetPermission() == nil then
-				table.insert(items, {
-					Type = item:__class(),
-					Data = item:Serialize(player)
-				});
-			elseif PermissionManager:HasPermission(player, item:GetPermission()) then
-				table.insert(items, {
-					Type = item:__class(),
-					Data = item:Serialize(player)
-				});
+--[[
+	@method: Serialize
+]]
+function Menu:Serialize(p_Player)
+	local s_Items = {}
+
+	for _, l_Item in pairs(self.m_Items) do
+		if l_Item['GetPermission'] ~= nil then
+			if l_Item:GetPermission() == nil then
+				table.insert(s_Items, {
+					Type = l_Item:__class(),
+					Data = l_Item:Serialize(p_Player)
+				})
+			elseif PermissionManager:HasPermission(p_Player, l_Item:GetPermission()) then
+				table.insert(s_Items, {
+					Type = l_Item:__class(),
+					Data = l_Item:Serialize(p_Player)
+				})
 			end
 		else
-			table.insert(items, {
-				Type = item:__class(),
-				Data = item:Serialize(player)
-			});
+			table.insert(s_Items, {
+				Type = l_Item:__class(),
+				Data = l_Item:Serialize(p_Player)
+			})
 		end
 	end
-	
+
 	return {
-		Items		= items
-	};
+		Items = s_Items
+	}
 end
 
-return Menu;
+return Menu

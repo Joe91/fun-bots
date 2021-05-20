@@ -1,3 +1,15 @@
+--[[
+	@enum: Numpad
+	@value: K1
+	@value: K2
+	@value: K3
+	@value: K4
+	@value: K5
+	@value: K6
+	@value: K7
+	@value: K8
+	@value: K9
+]]
 Numpad = {
 	K1 = 'K1',
 	K2 = 'K2',
@@ -9,4 +21,4 @@ Numpad = {
 	K8 = 'K8',
 	K9 = 'K9',
 	K0 = 'K0',
-};
+}

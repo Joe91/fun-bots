@@ -14,6 +14,7 @@ The Release-Candidate
 - Fixed missing input-restrictions on some maptypes and game-modes
 - Fixes in BotSpawner and Respawning
 - Added Team-Switch option for Round Two or always
+- Bots stand still during spawn-protection
 - Lots of refactoring
 
 

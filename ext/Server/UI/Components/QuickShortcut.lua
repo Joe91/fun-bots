@@ -1,66 +1,100 @@
-class('QuickShortcut');
+--[[
+	@class: QuickShortcut
+	@extends: Component
+]]
+class('QuickShortcut')
 
-function QuickShortcut:__init(name)
-	self.name		= name or nil;
-	self.enabled	= true;
-	self.numpad		= {};
-	self.help		= {};
-	self.attributes	= {};
+--[[
+	@method: __init
+]]
+function QuickShortcut:__init(p_Name)
+	self.m_Name = p_Name or nil
+	self.m_Enabled = true
+	self.m_Numpad = {}
+	self.m_Help = {}
+	self.m_Attributes = {}
 end
 
+--[[
+	@method: __class
+]]
 function QuickShortcut:__class()
-	return 'QuickShortcut';
+	return 'QuickShortcut'
 end
 
+--[[
+	@method: GetAttributes
+]]
 function QuickShortcut:GetAttributes()
-	return self.attributes;
+	return self.m_Attributes
 end
 
-function QuickShortcut:SetPosition(flag, position)
-	table.insert(self.attributes, {
-		Name		= 'Position',
-		Value		= {
-			Type		= flag,
-			Position	= position
+--[[
+	@method: SetPosition
+]]
+function QuickShortcut:SetPosition(p_Flag, p_Position)
+	table.insert(self.m_Attributes, {
+		Name = 'Position',
+		Value = {
+			Type = p_Flag,
+			Position = p_Position
 		}
-	});
-	
-	return self;
+	})
+
+	return self
 end
 
+--[[
+	@method: IsEnabled
+]]
 function QuickShortcut:IsEnabled()
-	return self.enabled;
+	return self.m_Enabled
 end
 
+--[[
+	@method: Enable
+]]
 function QuickShortcut:Enable()
-	self.enabled = true;
+	self.m_Enabled = true
 end
 
+--[[
+	@method: Disable
+]]
 function QuickShortcut:Disable()
-	self.enabled = false;
+	self.m_Enabled = false
 end
 
-function QuickShortcut:AddNumpad(key, text)
-	table.insert(self.numpad, {
-		Key		= key,
-		Text	= text
-	});
+--[[
+	@method: AddNumpad
+]]
+function QuickShortcut:AddNumpad(p_Key, p_Text)
+	table.insert(self.m_Numpad, {
+		Key = p_Key,
+		Text = p_Text
+	})
 end
 
-function QuickShortcut:AddHelp(key, text)
-	table.insert(self.help, {
-		Key		= key,
-		Text	= text
-	});
+--[[
+	@method: AddHelp
+]]
+function QuickShortcut:AddHelp(p_Key, p_Text)
+	table.insert(self.m_Help, {
+		Key = p_Key,
+		Text = p_Text
+	})
 end
 
+--[[
+	@method: Serialize
+]]
 function QuickShortcut:Serialize()
 	return {
-		Name		= self.name,
-		Disabled	= not self.enabled,
-		Numpad		= self.numpad,
-		Help		= self.help
-	};
+		Name = self.m_Name,
+		Disabled = not self.m_Enabled,
+		Numpad = self.m_Numpad,
+		Help = self.m_Help
+	}
 end
 
-return QuickShortcut;
+return QuickShortcut

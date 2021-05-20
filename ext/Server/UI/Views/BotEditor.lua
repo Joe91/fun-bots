@@ -1,233 +1,265 @@
+--[[
+	@class: BotEditor
+	@extends: View
+]]
 class('BotEditor')
 
 local m_BotSpawner = require('BotSpawner')
 local m_BotManager = require('BotManager')
 
-function BotEditor:__init(core)
-	self.view		= View(core, 'BotEditor')
-	self.bots		= 1
-	self.team		= 1
+--[[
+	@method: __init
+]]
+function BotEditor:__init(p_Core)
+	self.m_View = View(p_Core, 'BotEditor')
+	self.m_Bots = 1
+	self.m_Team = 1
 end
 
-function BotEditor:Show(player)
-	if PermissionManager:HasPermission(player, 'UserInterface.' .. self:GetName()) == false then
+--[[
+	@method: Show
+]]
+function BotEditor:Show(p_Player)
+	if PermissionManager:HasPermission(p_Player, 'UserInterface.' .. self:GetName()) == false then
 		return
 	end
 
-	self.view:Show(player)
-	self.view:Activate(player)
+	self.m_View:Show(p_Player)
+	self.m_View:Activate(p_Player)
 end
 
-function BotEditor:Hide(player)
-	self.view:Hide(player)
-	self.view:Deactivate(player)
+--[[
+	@method: Hide
+]]
+function BotEditor:Hide(p_Player)
+	self.m_View:Hide(p_Player)
+	self.m_View:Deactivate(p_Player)
 end
 
-function BotEditor:Toggle(player)
-	self.view:Toggle(player)
-	
-	if (self.view:IsVisible()) then
-		self.view:Activate(player)
+--[[
+	@method: Toggle
+]]
+function BotEditor:Toggle(p_Player)
+	self.m_View:Toggle(p_Player)
+
+	if (self.m_View:IsVisible()) then
+		self.m_View:Activate(p_Player)
 	else
-		self.view:Deactivate(player)
+		self.m_View:Deactivate(p_Player)
 	end
 end
 
-function BotEditor:Activate(player)
-	self.view:Activate(player)
+--[[
+	@method: Activate
+]]
+function BotEditor:Activate(p_Player)
+	self.m_View:Activate(p_Player)
 end
 
-function BotEditor:Deactivate(player)
-	self.view:Deactivate(player)
+--[[
+	@method: Deactivate
+]]
+function BotEditor:Deactivate(p_Player)
+	self.m_View:Deactivate(p_Player)
 end
 
-function BotEditor:Call(player, element, name)
-	self.view:Call(player, element, name)
+--[[
+	@method: Call
+]]
+function BotEditor:Call(p_Player, p_Element, p_Name)
+	self.m_View:Call(p_Player, p_Element, p_Name)
 end
 
+--[[
+	@method: GetName
+]]
 function BotEditor:GetName()
-	return self.view:GetName()
+	return self.m_View:GetName()
 end
 
--- Here you can add/remove some Components from the Bot-Editor View
+--[[
+	@method: InitializeComponent
+
+	Here you can add/remove some Components from the Bot-Editor View
+]]
 function BotEditor:InitializeComponent()
 	-- Logo
-	local logo = Logo('Bot-Editor', 'fun-bots')
-	logo:SetPosition(Position.Absolute, {
-		Top		= 20,
-		Left	= 20
+	local s_Logo = Logo('Bot-Editor', 'fun-bots')
+	s_Logo:SetPosition(Position.Absolute, {
+		Top = 20,
+		Left = 20
 	})
-	self.view:AddComponent(logo)
+	self.m_View:AddComponent(s_Logo)
 
 	-- Menu
-	local navigation = Menu()
+	local s_Navigation = Menu()
 
-	navigation:SetPosition(Position.Absolute, {
-		Top		= 20,
-		Right	= 20
+	s_Navigation:SetPosition(Position.Absolute, {
+		Top = 20,
+		Right = 20
 	})
 
 	-- Bots
-	local bots = MenuItem('Bots', 'bots')
-	bots:SetIcon('Assets/Icons/Bot.svg')
-		local input_bots = Input(Type.Integer, 'bots', self.bots)
-		
-		input_bots:Disable()
-		
-		input_bots:AddArrow(Position.Left, '❰', function(player)
-			self.bots = self.bots - 1
-			
-			if (self.bots < 0) then
-				self.bots = 0
+	local s_Bots = MenuItem('Bots', 'bots')
+	s_Bots:SetIcon('Assets/Icons/Bot.svg')
+		local s_Input_Bots = Input(Type.Integer, 'bots', self.m_Bots)
+
+		s_Input_Bots:Disable()
+
+		s_Input_Bots:AddArrow(Position.Left, '❰', function(p_Player)
+			self.m_Bots = self.m_Bots - 1
+
+			if (self.m_Bots < 0) then
+				self.m_Bots = 0
 			end
-			
-			input_bots:SetValue(self.bots)
-			
-			NetEvents:SendTo('UI', player, 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
-				Type	= input_bots:__class(),
-				Name	= input_bots:GetName(),
-				Value	= input_bots:GetValue()
+
+			s_Input_Bots:SetValue(self.m_Bots)
+
+			NetEvents:SendTo('UI', p_Player, 'VIEW', self.m_View:GetName(), 'UPDATE', json.encode({
+				Type = s_Input_Bots:__class(),
+				Name = s_Input_Bots:GetName(),
+				Value = s_Input_Bots:GetValue()
 			}))
 		end)
-		
-		input_bots:AddArrow(Position.Right, '❱', function(player)
-			self.bots = self.bots + 1
-			
-			if (self.bots > 50) then
-				self.bots = 50
+
+		s_Input_Bots:AddArrow(Position.Right, '❱', function(p_Player)
+			self.m_Bots = self.m_Bots + 1
+
+			if (self.m_Bots > 50) then
+				self.m_Bots = 50
 			end
-			
-			input_bots:SetValue(self.bots)
-			
-			NetEvents:SendTo('UI', player, 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
-				Type	= input_bots:__class(),
-				Name	= input_bots:GetName(),
-				Value	= input_bots:GetValue()
+
+			s_Input_Bots:SetValue(self.m_Bots)
+
+			NetEvents:SendTo('UI', p_Player, 'VIEW', self.m_View:GetName(), 'UPDATE', json.encode({
+				Type = s_Input_Bots:__class(),
+				Name = s_Input_Bots:GetName(),
+				Value = s_Input_Bots:GetValue()
 			}))
 		end)
-		
+
 		-- Submenu
-		local bot_spawn_default = MenuItem('Spawn Enemy Bots', 'bot_spawn_default', function(player)
-			Globals.SpawnMode	= 'manual'
-			
-			if player.teamId == TeamId.Team1 then
-				m_BotSpawner:SpawnWayBots(player, self.bots, true, 0, 0, TeamId.Team2)
+		local s_Bot_Spawn_Default = MenuItem('Spawn Enemy Bots', 'bot_spawn_default', function(p_Player)
+			Globals.SpawnMode = 'manual'
+
+			if p_Player.teamId == TeamId.Team1 then
+				m_BotSpawner:SpawnWayBots(p_Player, self.m_Bots, true, 0, 0, TeamId.Team2)
 			else
-				m_BotSpawner:SpawnWayBots(player, self.bots, true, 0, 0, TeamId.Team1)
+				m_BotSpawner:SpawnWayBots(p_Player, self.m_Bots, true, 0, 0, TeamId.Team1)
 			end
 		end, 'F2')
-		
-		bot_spawn_default:AddInput(Position.Left, input_bots)
-		bots:AddItem(bot_spawn_default, 'UserInterface.BotEditor.SpawnEnemy')
-		
-		local bot_spawn_friend = MenuItem('Spawn Friend Bots', 'bot_spawn_friend', function(player)
-			Globals.SpawnMode	= 'manual'
-			
-			m_BotSpawner:SpawnWayBots(player, self.bots, true, 0, 0, player.teamId)
+
+		s_Bot_Spawn_Default:AddInput(Position.Left, s_Input_Bots)
+		s_Bots:AddItem(s_Bot_Spawn_Default, 'UserInterface.BotEditor.SpawnEnemy')
+
+		local s_Bot_Spawn_Friend = MenuItem('Spawn Friend Bots', 'bot_spawn_friend', function(p_Player)
+			Globals.SpawnMode = 'manual'
+
+			m_BotSpawner:SpawnWayBots(p_Player, self.m_Bots, true, 0, 0, p_Player.teamId)
 		end)
-		
-		bot_spawn_friend:AddInput(Position.Left, input_bots)
-		bots:AddItem(bot_spawn_friend, 'UserInterface.BotEditor.SpawnFriend')
-		
-		bots:AddItem(MenuSeparator())
-		
-		bots:AddItem(MenuItem('Kick All', 'bot_kick_all', function(player)
-			Globals.SpawnMode	= 'manual'
-			
+
+		s_Bot_Spawn_Friend:AddInput(Position.Left, s_Input_Bots)
+		s_Bots:AddItem(s_Bot_Spawn_Friend, 'UserInterface.BotEditor.SpawnFriend')
+
+		s_Bots:AddItem(MenuSeparator())
+
+		s_Bots:AddItem(MenuItem('Kick All', 'bot_kick_all', function(p_Player)
+			Globals.SpawnMode = 'manual'
+
 			m_BotManager:destroyAll()
 		end, 'F3'), 'UserInterface.BotEditor.KickAll')
-		
-		local input_team	= Input(Type.Integer, 'team', self.team)
-		
-		input_team:Disable()
-		
-		local bot_kick_team	= MenuItem('Kick Team', 'bot_kick_team', function(player)
-			Globals.SpawnMode	= 'manual'
-			
-			m_BotManager:destroyAll(nil, self.team)
+
+		local s_Input_Team = Input(Type.Integer, 'team', self.m_Team)
+
+		s_Input_Team:Disable()
+
+		local s_Bot_Kick_Team = MenuItem('Kick Team', 'bot_kick_team', function(p_Player)
+			Globals.SpawnMode = 'manual'
+
+			m_BotManager:destroyAll(nil, self.m_Team)
 		end)
-		
-		input_team:AddArrow(Position.Left, '❰', function(player)
-			self.team = self.team - 1
-			
-			if (self.team < TeamId.Team1) then
-				self.team = TeamId.TeamIdCount - 1
+
+		s_Input_Team:AddArrow(Position.Left, '❰', function(p_Player)
+			self.m_Team = self.m_Team - 1
+
+			if (self.m_Team < TeamId.Team1) then
+				self.m_Team = TeamId.TeamIdCount - 1
 			end
-			
-			input_team:SetValue(self.team)
-			
-			NetEvents:SendTo('UI', player, 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
-				Type	= input_team:__class(),
-				Name	= input_team:GetName(),
-				Value	= input_team:GetValue()
+
+			s_Input_Team:SetValue(self.m_Team)
+
+			NetEvents:SendTo('UI', p_Player, 'VIEW', self.m_View:GetName(), 'UPDATE', json.encode({
+				Type = s_Input_Team:__class(),
+				Name = s_Input_Team:GetName(),
+				Value = s_Input_Team:GetValue()
 			}))
 		end)
-		
-		input_team:AddArrow(Position.Right, '❱', function(player)
-			self.team = self.team + 1
-			
-			if (self.team >= TeamId.TeamIdCount) then
-				self.team = TeamId.Team1
+
+		s_Input_Team:AddArrow(Position.Right, '❱', function(p_Player)
+			self.m_Team = self.m_Team + 1
+
+			if (self.m_Team >= TeamId.TeamIdCount) then
+				self.m_Team = TeamId.Team1
 			end
-			
-			input_team:SetValue(self.team)
-			
-			NetEvents:SendTo('UI', player, 'VIEW', self.view:GetName(), 'UPDATE', json.encode({
-				Type	= input_team:__class(),
-				Name	= input_team:GetName(),
-				Value	= input_team:GetValue()
+
+			s_Input_Team:SetValue(self.m_Team)
+
+			NetEvents:SendTo('UI', p_Player, 'VIEW', self.m_View:GetName(), 'UPDATE', json.encode({
+				Type = s_Input_Team:__class(),
+				Name = s_Input_Team:GetName(),
+				Value = s_Input_Team:GetValue()
 			}))
 		end)
-		
-		bot_kick_team:AddInput(Position.Left, input_team)
-		bots:AddItem(bot_kick_team, 'UserInterface.BotEditor.KickTeam')
-		
-		bots:AddItem(MenuItem('Kill All', 'bot_kill_all', function(player)
-			Globals.SpawnMode	= 'manual'
-			
+
+		s_Bot_Kick_Team:AddInput(Position.Left, s_Input_Team)
+		s_Bots:AddItem(s_Bot_Kick_Team, 'UserInterface.BotEditor.KickTeam')
+
+		s_Bots:AddItem(MenuItem('Kill All', 'bot_kill_all', function(p_Player)
+			Globals.SpawnMode = 'manual'
+
 			m_BotManager:killAll()
 		end, 'F4'), 'UserInterface.BotEditor.KillAll')
-		
-		bots:AddItem(MenuSeparator())
-		
-		bots:AddItem(MenuItem('Toggle Respawn', 'bot_respawn', function(player)
-			local respawning		= not Globals.RespawnWayBots
-			Globals.RespawnWayBots	= respawning
-			m_BotManager:setOptionForAll('respawn', respawning)
-			
-			if respawning then
+
+		s_Bots:AddItem(MenuSeparator())
+
+		s_Bots:AddItem(MenuItem('Toggle Respawn', 'bot_respawn', function(p_Player)
+			local s_Respawning = not Globals.RespawnWayBots
+			Globals.RespawnWayBots = s_Respawning
+			m_BotManager:setOptionForAll('respawn', s_Respawning)
+
+			if s_Respawning then
 				ChatManager:Yell(Language:I18N('Bot respawn activated!'), 2.5)
 			else
 				ChatManager:Yell(Language:I18N('Bot respawn deactivated!'), 2.5)
 			end
 		end), 'UserInterface.BotEditor.ToggleRespawn')
-		
-		bots:AddItem(MenuItem('Toggle Attack', 'bot_attack', function(player)
-			local attack			= not Globals.AttackWayBots
-			Globals.AttackWayBots	= attack
-			m_BotManager:setOptionForAll('shoot', attack)
-			
-			if attack then
+
+		s_Bots:AddItem(MenuItem('Toggle Attack', 'bot_attack', function(p_Player)
+			local s_Attack = not Globals.AttackWayBots
+			Globals.AttackWayBots = s_Attack
+			m_BotManager:setOptionForAll('shoot', s_Attack)
+
+			if s_Attack then
 				ChatManager:Yell(Language:I18N('Bots will attack!'), 2.5)
 			else
 				ChatManager:Yell(Language:I18N('Bots will not attack!'), 2.5)
 			end
 		end), 'UserInterface.BotEditor.ToggleAttack')
-	
-	navigation:AddItem(bots)
-	
+
+	s_Navigation:AddItem(s_Bots)
+
 	-- Waypoint-Editor
-	navigation:AddItem(MenuItem('Waypoint-Editor', 'waypoint-editor', 'UI:VIEW:WaypointEditor:SHOW'):SetIcon('Assets/Icons/WaypointEditor.svg'), 'UserInterface.WaypointEditor')
-	
+	s_Navigation:AddItem(MenuItem('Waypoint-Editor', 'waypoint-editor', 'UI:VIEW:WaypointEditor:SHOW'):SetIcon('Assets/Icons/WaypointEditor.svg'), 'UserInterface.WaypointEditor')
+
 	-- Settings
-	navigation:AddItem(MenuItem('Settings', 'settings', function(player)
-		self.view:GetCore():GetDialog('Settings'):Open(self.view, player)
+	s_Navigation:AddItem(MenuItem('Settings', 'settings', function(player)
+		self.m_View:GetCore():GetDialog('Settings', self.m_View):Open(self.m_View, player)
 	end, 'F10'):SetIcon('Assets/Icons/Settings.svg'), 'UserInterface.Settings')
-	
+
 	-- Exit
-	navigation:AddItem(MenuItem('Exit', 'exit', 'UI:VIEW:' .. self.view:GetName() .. ':HIDE', 'F12'))
-	
-	self.view:AddComponent(navigation)
+	s_Navigation:AddItem(MenuItem('Exit', 'exit', 'UI:VIEW:' .. self.m_View:GetName() .. ':HIDE', 'F12'))
+
+	self.m_View:AddComponent(s_Navigation)
 end
 
 return BotEditor

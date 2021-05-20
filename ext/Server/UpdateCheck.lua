@@ -18,6 +18,10 @@ local function CheckVersion()
 		local s_LatestVersion = s_JSON[1].name:sub(2):split('.')
 
 		for i = 1, #s_CurrentVersion do
+			if s_CurrentVersion[i] == nil or s_LatestVersion[i] == nil then
+				print("failed to check")
+				break
+			end
 			if s_CurrentVersion[i] ~= s_LatestVersion[i] then
 				s_IsOlderVersion = (s_CurrentVersion[i] < s_LatestVersion[i])
 				break

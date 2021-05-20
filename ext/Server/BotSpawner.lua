@@ -124,7 +124,7 @@ function BotSpawner:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 			end
 			if l_Bot.m_Player.soldier ~= nil then
 				local s_Position = l_Bot.m_Player.soldier.worldTransform.trans:Clone()
-				--local s_Node = m_NodeCollection:Find(s_Position, 5);
+				--local s_Node = m_NodeCollection:Find(s_Position, 5)
 				local s_Node = g_GameDirector:FindClosestPath(s_Position, false)
 				if s_Node ~= nil then
 					l_Bot:setVarsWay(nil, true, s_Node.PathIndex, s_Node.PointIndex, false)
@@ -262,7 +262,7 @@ function BotSpawner:UpdateBotAmountAndTeam()
 		for _, l_Player in pairs(s_TempPlayers) do
 			if not m_Utilities:isBot(l_Player) then
 				s_CountPlayers[i] = s_CountPlayers[i] + 1
-				if Globals.IsSdm then	-- TODO: Only needed because of VEXT-Bug
+				if Globals.IsSdm then -- TODO: Only needed because of VEXT-Bug
 					l_Player.squadId = 1
 				end
 			end
@@ -272,9 +272,6 @@ function BotSpawner:UpdateBotAmountAndTeam()
 
 	-- KEEP PLAYERCOUNT
 	if Globals.SpawnMode == SpawnModes.keep_playercount then
-		for i = 1, Globals.NrOfTeams do
-			s_TargetTeamCount[i] = Config.InitNumberOfBots
-		end
 		if Config.SpawnInBothTeams then
 			for i = 1, Globals.NrOfTeams do
 				s_TargetTeamCount[i] = math.floor(Config.InitNumberOfBots / Globals.NrOfTeams)
@@ -283,11 +280,20 @@ function BotSpawner:UpdateBotAmountAndTeam()
 			for i = 1, Globals.NrOfTeams do
 				if s_BotTeam ~= i then
 					s_TargetTeamCount[i] = 0
+				else
+					s_TargetTeamCount[i] = Config.InitNumberOfBots
 				end
 			end
 		end
 		--limit team count
 		for i = 1, Globals.NrOfTeams do
+			if Globals.NrOfTeams == 2 then
+				if i ~= s_BotTeam then
+					s_TargetTeamCount[i] = math.floor((s_TargetTeamCount[i] * Config.FactorPlayerTeamCount) + 0.5)
+				else
+					s_TargetTeamCount[i] = math.floor((s_TargetTeamCount[i] * (2 - Config.FactorPlayerTeamCount)) + 0.5)
+				end
+			end
 			if s_TargetTeamCount[i] > Globals.MaxBotsPerTeam then
 				s_TargetTeamCount[i] = Globals.MaxBotsPerTeam
 			end
@@ -506,6 +512,10 @@ function BotSpawner:SpawnWayBots(p_Player, p_Amount, p_UseRandomWay, p_ActiveWay
 		return
 	end
 
+	if p_Amount <= 0 then
+		m_Logger:Error("can't spawn zero or negative amount of bots")
+	end
+
 	-- check for amount available
 	local s_PlayerLimit = Globals.MaxPlayers
 	if Config.KeepOneSlotForPlayers then
@@ -547,7 +557,7 @@ function BotSpawner:_SelectLoadout(p_Bot, p_SetKit)
 
 	if s_WriteNewKit then
 		if s_BotColor == BotColors.RANDOM_COLOR then
-			s_BotColor = MathUtils:GetRandomInt(1, BotColors.Count-1)  -- color enum goes from 1 to 13
+			s_BotColor = MathUtils:GetRandomInt(1, BotColors.Count-1) -- color enum goes from 1 to 13
 		end
 		if s_BotKit == BotKits.RANDOM_KIT then
 			s_BotKit = self:_GetSpawnBotKit()
@@ -809,7 +819,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 			if s_Bot ~= nil then
 				-- check for first one in squad
 				if (TeamSquadManager:GetSquadPlayerCount(s_TeamId, s_SquadId) == 1) then
-					s_Bot.m_Player:SetSquadLeader(true, false)  -- not private
+					s_Bot.m_Player:SetSquadLeader(true, false) -- not private
 				end
 
 				s_Bot:setVarsWay(p_Player, p_UseRandomWay, p_ActiveWayIndex, p_IndexOnPath, s_InverseDirection)
@@ -959,7 +969,7 @@ function BotSpawner:_GetSpawnPoint(p_TeamId, p_SquadId)
 	return s_TargetNode
 end
 
-function BotSpawner:_GetSquadToJoin(p_TeamId)  -- TODO: create a more advanced algorithm?
+function BotSpawner:_GetSquadToJoin(p_TeamId) -- TODO: create a more advanced algorithm?
 	if Globals.IsSdm then
 		return 1
 	else

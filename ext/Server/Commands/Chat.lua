@@ -12,9 +12,9 @@ function ChatCommands:execute(p_Parts, p_Player)
 	end
 
 	if p_Parts[1] == '!permissions' then
-		local s_Permissions	= PermissionManager:GetPermissions(p_Player)
-		
-		if permissions == nil then
+		local s_Permissions = PermissionManager:GetPermissions(p_Player)
+
+		if s_Permissions == nil then
 			ChatManager:SendMessage('You have no active permissions (GUID: ' .. tostring(p_Player.guid) .. ').', p_Player)
 		else
 			ChatManager:SendMessage('You have following permissions (GUID: ' .. tostring(p_Player.guid) .. '):', p_Player)

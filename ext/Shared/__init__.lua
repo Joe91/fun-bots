@@ -17,7 +17,7 @@ require('__shared/Constants/TeamSwitchModes')
 require('__shared/WeaponList')
 require('__shared/EbxEditUtils')
 
-local m_Logger = Logger("FunBotServer", true)
+local m_Logger = Logger("FunBotShared", true)
 local m_Language = require('__shared/Language')
 
 function FunBotShared:__init()

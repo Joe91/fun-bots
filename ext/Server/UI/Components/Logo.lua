@@ -1,34 +1,53 @@
-class('Logo');
+--[[
+	@class: Logo
+	@extends: Component
+]]
+class('Logo')
 
-function Logo:__init(title, subtitle)
-	self.title		= title or nil;
-	self.subtitle	= subtitle or nil;
-	self.attributes	= {};
+--[[
+	@method: __init
+]]
+function Logo:__init(p_Title, p_Subtitle)
+	self.m_Title = p_Title or nil
+	self.m_Subtitle = p_Subtitle or nil
+	self.m_Attributes = {}
 end
 
+--[[
+	@method: __class
+]]
 function Logo:__class()
-	return 'Logo';
+	return 'Logo'
 end
 
+--[[
+	@method: GetAttributes
+]]
 function Logo:GetAttributes()
-	return self.attributes;
+	return self.m_Attributes
 end
 
-function Logo:SetPosition(flag, position)
-	table.insert(self.attributes, {
-		Name		= 'Position',
-		Value		= {
-			Type		= flag,
-			Position	= position
+--[[
+	@method: SetPosition
+]]
+function Logo:SetPosition(p_Flag, p_Position)
+	table.insert(self.m_Attributes, {
+		Name = 'Position',
+		Value = {
+			Type = p_Flag,
+			Position = p_Position
 		}
-	});
+	})
 end
 
+--[[
+	@method: Serialize
+]]
 function Logo:Serialize()
 	return {
-		Title		= self.title,
-		Subtitle	= self.subtitle
-	};
+		Title = self.m_Title,
+		Subtitle = self.m_Subtitle
+	}
 end
 
-return Logo;
+return Logo

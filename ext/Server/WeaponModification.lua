@@ -58,7 +58,7 @@ function WeaponModification:OnPartitionLoaded(p_Partition)
 				return
 			end
 			if self.m_AlreadyLoaded then
-				self:RegisterVars()  --reset all vars
+				self:RegisterVars() --reset all vars
 			end
 			table.insert(self.m_WeaponInstances, p_Instance)
 			return
@@ -161,7 +161,7 @@ function WeaponModification:_ModifyWeapon(p_SoldierWeaponData, p_Index, p_AimWor
 				s_StandingValue.minAngle = self.m_MinAnglesStand[p_Index] * s_BotAimWorsening / 3
 				s_StandingValue.maxAngle = self.m_MaxAnglesStand[p_Index] * s_BotAimWorsening
 				s_StandingValue.increasePerShot = self.m_IncPerShotStand[p_Index] * s_BotAimWorsening
-				--decreasePerSecond 	float
+				--decreasePerSecond float
 			end
 			--end
 		end

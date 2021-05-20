@@ -11,7 +11,7 @@ function RCONCommands:__init()
 		return
 	end
 
-	self.commands = {
+	self.m_Commands = {
 		-- Get Config
 		GET_CONFIG = {
 			Name = 'funbots.config',
@@ -42,187 +42,187 @@ function RCONCommands:__init()
 					print(json.encode(p_Args))
 				end
 
-				local old = {
+				local s_Old = {
 					Name = nil,
 					Value = nil
 				}
 
-				local new = {
+				local s_New = {
 					Name = nil,
 					Value = nil
 				}
 
-				local name = p_Args[1]
-				local value = p_Args[2]
+				local s_Name = p_Args[1]
+				local s_Value = p_Args[2]
 
-				if name == nil then
+				if s_Name == nil then
 					return {'ERROR', 'Needing <Name>.'}
 				end
 
-				if value == nil then
+				if s_Value == nil then
 					return {'ERROR', 'Needing <Value>.'}
 				end
 
 				-- Constants
-				if name == 'USE_REAL_DAMAGE' then
-					local new_value = false
+				if s_Name == 'USE_REAL_DAMAGE' then
+					local s_New_Value = false
 
-					if value == true or value == '1' or value == 'true' or value == 'True' or value == 'TRUE' then
-						new_value = true
+					if s_Value == true or s_Value == '1' or s_Value == 'true' or s_Value == 'True' or s_Value == 'TRUE' then
+						s_New_Value = true
 					end
 
-					old.Name = name
-					old.Value = USE_REAL_DAMAGE
-					USE_REAL_DAMAGE = new_value
-					new.Name = name
-					new.Value = USE_REAL_DAMAGE
+					s_Old.Name = s_Name
+					s_Old.Value = USE_REAL_DAMAGE
+					USE_REAL_DAMAGE = s_New_Value
+					s_New.Name = s_Name
+					s_New.Value = USE_REAL_DAMAGE
 				else
 					-- Config
-					if Config[name] ~= nil then
-						local test = tostring(Config[name])
-						local type = 'nil'
+					if Config[s_Name] ~= nil then
+						local s_Test = tostring(Config[s_Name])
+						local s_Type = 'nil'
 
 						-- Boolean
-						if (test == 'true' or test == 'false') then
-							type = 'boolean'
+						if (s_Test == 'true' or s_Test == 'false') then
+							s_Type = 'boolean'
 
 						-- String
-						elseif (test == Config[name]) then
-							type = 'string'
+						elseif (s_Test == Config[s_Name]) then
+							s_Type = 'string'
 
 						-- Number
-						elseif (tonumber(test) == Config[name]) then
-							type = 'number'
+						elseif (tonumber(s_Test) == Config[s_Name]) then
+							s_Type = 'number'
 						end
 
 
-						old.Name = 'Config.' .. name
-						old.Value = Config[name]
+						s_Old.Name = 'Config.' .. s_Name
+						s_Old.Value = Config[s_Name]
 
-						if type == 'boolean' then
-							local new_value = false
+						if s_Type == 'boolean' then
+							local s_New_Value = false
 
-							if value == true or value == '1' or value == 'true' or value == 'True' or value == 'TRUE' then
-								new_value = true
+							if s_Value == true or s_Value == '1' or s_Value == 'true' or s_Value == 'True' or s_Value == 'TRUE' then
+								s_New_Value = true
 							end
 
-							Config[name] = new_value
-							new.Name = 'Config.' .. name
-							new.Value = Config[name]
+							Config[s_Name] = s_New_Value
+							s_New.Name = 'Config.' .. s_Name
+							s_New.Value = Config[s_Name]
 
-						elseif type == 'string' then
-							Config[name] = tostring(value)
-							new.Name = 'Config.' .. name
-							new.Value = Config[name]
+						elseif s_Type == 'string' then
+							Config[s_Name] = tostring(s_Value)
+							s_New.Name = 'Config.' .. s_Name
+							s_New.Value = Config[s_Name]
 
-						elseif type == 'number' then
-							Config[name] = tonumber(value)
-							new.Name = 'Config.' .. name
-							new.Value = Config[name]
+						elseif s_Type == 'number' then
+							Config[s_Name] = tonumber(s_Value)
+							s_New.Name = 'Config.' .. s_Name
+							s_New.Value = Config[s_Name]
 
 						else
-							print('Unknown Config property-Type: ' .. name .. ' -> ' .. type)
+							print('Unknown Config property-Type: ' .. s_Name .. ' -> ' .. s_Type)
 						end
-					elseif StaticConfig[name] ~= nil then
-						local test = tostring(StaticConfig[name])
-						local type = 'nil'
+					elseif StaticConfig[s_Name] ~= nil then
+						local s_Test = tostring(StaticConfig[s_Name])
+						local s_Type = 'nil'
 
-						old.Name = 'StaticConfig.' .. name
-						old.Value = StaticConfig[name]
+						s_Old.Name = 'StaticConfig.' .. s_Name
+						s_Old.Value = StaticConfig[s_Name]
 
 						-- Boolean
-						if (test == 'true' or test == 'false') then
-							type = 'boolean'
+						if (s_Test == 'true' or s_Test == 'false') then
+							s_Type = 'boolean'
 
 						-- String
-						elseif (test == StaticConfig[name]) then
-							type = 'string'
+						elseif (s_Test == StaticConfig[s_Name]) then
+							s_Type = 'string'
 
 						-- Number
-						elseif (tonumber(test) == StaticConfig[name]) then
-							type = 'number'
+						elseif (tonumber(s_Test) == StaticConfig[s_Name]) then
+							s_Type = 'number'
 						end
 
-						if type == 'boolean' then
-							local new_value = false
+						if s_Type == 'boolean' then
+							local s_New_Value = false
 
-							if value == true or value == '1' or value == 'true' or value == 'True' or value == 'TRUE' then
-								new_value = true
+							if s_Value == true or s_Value == '1' or s_Value == 'true' or s_Value == 'True' or s_Value == 'TRUE' then
+								s_New_Value = true
 							end
 
-							StaticConfig[name] = new_value
-							new.Name = 'StaticConfig.' .. name
-							new.Value = StaticConfig[name]
+							StaticConfig[s_Name] = s_New_Value
+							s_New.Name = 'StaticConfig.' .. s_Name
+							s_New.Value = StaticConfig[s_Name]
 
-						elseif type == 'string' then
-							StaticConfig[name] = tostring(value)
-							new.Name = 'StaticConfig.' .. name
-							new.Value = StaticConfig[name]
+						elseif s_Type == 'string' then
+							StaticConfig[s_Name] = tostring(s_Value)
+							s_New.Name = 'StaticConfig.' .. s_Name
+							s_New.Value = StaticConfig[s_Name]
 
-						elseif type == 'number' then
-							StaticConfig[name] = tonumber(value)
-							new.Name = 'StaticConfig.' .. name
-							new.Value = StaticConfig[name]
+						elseif s_Type == 'number' then
+							StaticConfig[s_Name] = tonumber(s_Value)
+							s_New.Name = 'StaticConfig.' .. s_Name
+							s_New.Value = StaticConfig[s_Name]
 
 						else
-							print('Unknown Config property-Type: ' .. name .. ' -> ' .. type)
+							print('Unknown Config property-Type: ' .. s_Name .. ' -> ' .. s_Type)
 						end
 					else
-						print('Unknown Config property: ' .. name)
+						print('Unknown Config property: ' .. s_Name)
 					end
 				end
 
 				-- Update some things
-				local updateBotTeamAndNumber = false
-				local updateWeaponSets = false
-				local updateWeapons = false
-				local calcYawPerFrame = false
+				local s_UpdateBotTeamAndNumber = false
+				local s_UpdateWeaponSets = false
+				local s_UpdateWeapons = false
+				local s_CalcYawPerFrame = false
 
-				if name == 'botAimWorsening' then
-					updateWeapons = true
+				if s_Name == 'botAimWorsening' then
+					s_UpdateWeapons = true
 				end
 
-				if name == 'botSniperAimWorsening' then
-					updateWeapons = true
+				if s_Name == 'botSniperAimWorsening' then
+					s_UpdateWeapons = true
 				end
 
-				if name == 'spawnMode' then
-					updateBotTeamAndNumber = true
+				if s_Name == 'spawnMode' then
+					s_UpdateBotTeamAndNumber = true
 				end
 
-				if name == 'spawnInBothTeams' then
-					updateBotTeamAndNumber = true
+				if s_Name == 'spawnInBothTeams' then
+					s_UpdateBotTeamAndNumber = true
 				end
 
-				if name == 'initNumberOfBots' then
-					updateBotTeamAndNumber = true
+				if s_Name == 'initNumberOfBots' then
+					s_UpdateBotTeamAndNumber = true
 				end
 
-				if name == 'newBotsPerNewPlayer' then
-					updateBotTeamAndNumber = true
+				if s_Name == 'newBotsPerNewPlayer' then
+					s_UpdateBotTeamAndNumber = true
 				end
 
-				if name == 'keepOneSlotForPlayers' then
-					updateBotTeamAndNumber = true
+				if s_Name == 'keepOneSlotForPlayers' then
+					s_UpdateBotTeamAndNumber = true
 				end
 
-				if name == 'assaultWeaponSet' then
-					updateWeaponSets = true
+				if s_Name == 'assaultWeaponSet' then
+					s_UpdateWeaponSets = true
 				end
 
-				if name == 'engineerWeaponSet' then
-					updateWeaponSets = true
+				if s_Name == 'engineerWeaponSet' then
+					s_UpdateWeaponSets = true
 				end
 
-				if name == 'supportWeaponSet' then
-					updateWeaponSets = true
+				if s_Name == 'supportWeaponSet' then
+					s_UpdateWeaponSets = true
 				end
 
-				if name == 'reconWeaponSet' then
-					updateWeaponSets = true
+				if s_Name == 'reconWeaponSet' then
+					s_UpdateWeaponSets = true
 				end
 
-				if updateWeapons then
+				if s_UpdateWeapons then
 					if Debug.Server.RCON then
 						print('[RCON] call WeaponModification:ModifyAllWeapons()')
 					end
@@ -230,9 +230,9 @@ function RCONCommands:__init()
 					WeaponModification:ModifyAllWeapons(Config.BotAimWorsening, Config.BotSniperAimWorsening)
 				end
 
-				NetEvents:BroadcastLocal('WriteClientSettings', Config, updateWeaponSets)
+				NetEvents:BroadcastLocal('WriteClientSettings', Config, s_UpdateWeaponSets)
 
-				if updateWeaponSets then
+				if s_UpdateWeaponSets then
 					if Debug.Server.RCON then
 						print('[RCON] call WeaponList:updateWeaponList()')
 					end
@@ -240,7 +240,7 @@ function RCONCommands:__init()
 					WeaponList:updateWeaponList()
 				end
 
-				if calcYawPerFrame then
+				if s_CalcYawPerFrame then
 					if Debug.Server.RCON then
 						print('[RCON] call m_BotManager:calcYawPerFrame()')
 					end
@@ -248,7 +248,7 @@ function RCONCommands:__init()
 					Globals.YawPerFrame = m_BotManager:calcYawPerFrame()
 				end
 
-				if updateBotTeamAndNumber then
+				if s_UpdateBotTeamAndNumber then
 					if Debug.Server.RCON then
 						print('[RCON] call m_BotSpawner:UpdateBotAmountAndTeam()')
 					end
@@ -259,11 +259,11 @@ function RCONCommands:__init()
 
 				if Debug.Server.RCON then
 					print('[RCON] Config Result')
-					print('[RCON] ' .. old.Name .. ' = ' .. tostring(old.Value))
-					print('[RCON] ' .. new.Name .. ' = ' .. tostring(new.Value))
+					print('[RCON] ' .. s_Old.Name .. ' = ' .. tostring(s_Old.Value))
+					print('[RCON] ' .. s_New.Name .. ' = ' .. tostring(s_New.Value))
 				end
 
-				return { 'OK', old.Name .. ' = ' .. tostring(old.Value), new.Name .. ' = ' .. tostring(new.Value) }
+				return { 'OK', s_Old.Name .. ' = ' .. tostring(s_Old.Value), s_New.Name .. ' = ' .. tostring(s_New.Value) }
 			end)
 		},
 
@@ -282,13 +282,13 @@ function RCONCommands:__init()
 			Name = 'funbots.add.BotNames',
 			Parameters = { 'String' },
 			Callback = (function(p_Command, p_Args)
-				local value = p_Args[1]
+				local s_Value = p_Args[1]
 
-				if value == nil then
+				if s_Value == nil then
 					return {'ERROR', 'Needing <String>.'}
 				end
 
-				table.insert(BotNames, value)
+				table.insert(BotNames, s_Value)
 
 				return { 'OK' }
 			end)
@@ -299,19 +299,19 @@ function RCONCommands:__init()
 			Name = 'funbots.replace.BotNames',
 			Parameters = { 'JSONArray' },
 			Callback = (function(p_Command, p_Args)
-				local value = p_Args[1]
+				local s_Value = p_Args[1]
 
-				if value == nil then
+				if s_Value == nil then
 					return {'ERROR', 'Needing <JSONArray>.'}
 				end
 
-				local result = json.decode(value)
+				local s_Result = json.decode(s_Value)
 
-				if result == nil then
+				if s_Result == nil then
 					return {'ERROR', 'Needing <JSONArray>.'}
 				end
 
-				BotNames = result
+				BotNames = s_Result
 
 				return { 'OK' }
 			end)
@@ -332,11 +332,11 @@ function RCONCommands:__init()
 			Name = 'funbots.kickBot',
 			Parameters = { 'Name' },
 			Callback = (function(p_Command, p_Args)
-				local name = p_Args[1]
-				if name == nil then
+				local s_Name = p_Args[1]
+				if s_Name == nil then
 					return {'ERROR', 'Name needed.'}
 				end
-				m_BotManager:destroyBot(name)
+				m_BotManager:destroyBot(s_Name)
 
 				return { 'OK' }
 			end)
@@ -357,28 +357,28 @@ function RCONCommands:__init()
 			Name = 'funbots.spawn',
 			Parameters = { 'Amount', 'Team' },
 			Callback = (function(p_Command, p_Args)
-				local value	= p_Args[1]
-				local team	= p_Args[2]
+				local s_Value = p_Args[1]
+				local s_Team = p_Args[2]
 
-				if value == nil then
+				if s_Value == nil then
 					return {'ERROR', 'Needing Spawn amount.'}
 				end
 
-				if team == nil then
+				if s_Team == nil then
 					return {'ERROR', 'Needing Team.'}
 				end
 
-				if tonumber(value) == nil then
+				if tonumber(s_Value) == nil then
 					return {'ERROR', 'Needing Spawn amount.'}
 				end
 
-				local amount = tonumber(value)
-				
-				if TeamId[team] == nil then
-					return {'ERROR', 'Unknown Team: TeamId.' .. team }
+				local s_Amount = tonumber(s_Value)
+
+				if TeamId[s_Team] == nil then
+					return {'ERROR', 'Unknown Team: TeamId.' .. s_Team }
 				end
-				
-				m_BotSpawner:SpawnWayBots(nil, amount, true, nil, nil, TeamId[team])
+
+				m_BotSpawner:SpawnWayBots(nil, s_Amount, true, nil, nil, TeamId[s_Team])
 
 				return {'OK'}
 			end)
@@ -386,122 +386,122 @@ function RCONCommands:__init()
 
 		-- Permissions <Player> <PermissionName>
 		PERMISSIONS = {
-			Name		= 'funbots.Permissions',
-			Parameters	= { 'PlayerName', 'PermissionName' },
-			Callback	= (function(command, args)
-				local name			= args[1]
-				local permission	= args[2]
+			Name = 'funbots.Permissions',
+			Parameters = { 'PlayerName', 'PermissionName' },
+			Callback = (function(command, args)
+				local s_Name = args[1]
+				local s_Permission = args[2]
 
 				-- Revoke ALL Permissions
-				if permission ~= nil then
-					if permission == '!' then
-						local permissions	= PermissionManager:GetPermissions(name)
-						local result		= {'OK', 'REVOKED'}
+				if s_Permission ~= nil then
+					if s_Permission == '!' then
+						local s_Permissions = PermissionManager:GetPermissions(s_Name)
+						local s_Result = {'OK', 'REVOKED'}
 
-						if permissions ~= nil and #permissions >= 1 then
-							for key, value in pairs(permissions) do
-								table.insert(result, PermissionManager:GetCorrectName(value))
+						if s_Permissions ~= nil and #s_Permissions >= 1 then
+							for l_Key, l_Value in pairs(s_Permissions) do
+								table.insert(s_Result, PermissionManager:GetCorrectName(l_Value))
 							end
 						end
 
-						if PermissionManager:RevokeAll(name) then
-							return result
+						if PermissionManager:RevokeAll(s_Name) then
+							return s_Result
 						else
-							return {'ERROR', 'Can\'r revoke all Permissions from "' .. name .. '".'}
+							return {'ERROR', 'Can\'r revoke all Permissions from "' .. s_Name .. '".'}
 						end
 
 					-- Revoke SPECIFIC Permission
-					elseif permission:sub(1, 1) == '!' then
-						permission = permission:sub(2)
+					elseif s_Permission:sub(1, 1) == '!' then
+						s_Permission = s_Permission:sub(2)
 
-						if PermissionManager:Exists(permission) == false then
-							return {'ERROR', 'Unknown Permission:', permission}
+						if PermissionManager:Exists(s_Permission) == false then
+							return {'ERROR', 'Unknown Permission:', s_Permission}
 						end
 
-						if PermissionManager:Revoke(name, permission) then
+						if PermissionManager:Revoke(s_Name, s_Permission) then
 							return {'OK', 'REVOKED'}
 						else
-							return {'ERROR', 'Can\'r revoke the Permission "' .. PermissionManager:GetCorrectName(permission) .. '" for "' .. name .. '".'}
+							return {'ERROR', 'Can\'r revoke the Permission "' .. PermissionManager:GetCorrectName(s_Permission) .. '" for "' .. s_Name .. '".'}
 						end
 					end
 				end
 
-				if name == nil then
-					local all = PermissionManager:GetAll()
+				if s_Name == nil then
+					local s_All = PermissionManager:GetAll()
 
-					if all ~= nil and #all >= 1 then
-						local result = {'OK', 'LIST'}
+					if s_All ~= nil and #s_All >= 1 then
+						local s_Result = {'OK', 'LIST'}
 
-						for key, value in pairs(all) do
-							table.insert(result, PermissionManager:GetCorrectName(value))
+						for l_Key, l_Value in pairs(s_All) do
+							table.insert(s_Result, PermissionManager:GetCorrectName(l_Value))
 						end
 
-						return result
+						return s_Result
 					end
 
 					return {'ERROR', 'Needing PlayerName.'}
 				end
 
-				local player = PlayerManager:GetPlayerByName(name)
+				local s_Player = PlayerManager:GetPlayerByName(s_Name)
 
-				if player == nil then
-					player = PlayerManager:GetPlayerByGuid(Guid(name))
+				if s_Player == nil then
+					s_Player = PlayerManager:GetPlayerByGuid(Guid(s_Name))
 
-					if player == nil then
-						return {'ERROR', 'Unknown PlayerName "' .. name .. '".'}
+					if s_Player == nil then
+						return {'ERROR', 'Unknown PlayerName "' .. s_Name .. '".'}
 					end
 				end
 
-				if permission == nil then
-					local result		= { 'LIST', player.name, tostring(player.guid) }
-					local permissions	= PermissionManager:GetPermissions(name)
+				if s_Permission == nil then
+					local s_Result = { 'LIST', s_Player.name, tostring(s_Player.guid) }
+					local s_Permissions = PermissionManager:GetPermissions(s_Name)
 
-					if permissions ~= nil then
-						for name, value in pairs(permissions) do
-							table.insert(result, PermissionManager:GetCorrectName(value))
+					if s_Permissions ~= nil then
+						for l_Name, l_Value in pairs(s_Permissions) do
+							table.insert(s_Result, PermissionManager:GetCorrectName(l_Value))
 						end
 					end
 
-					return result
+					return s_Result
 				end
 
-				if PermissionManager:Exists(permission) == false then
-					return {'ERROR', 'Unknown Permission:', permission}
+				if PermissionManager:Exists(s_Permission) == false then
+					return {'ERROR', 'Unknown Permission:', s_Permission}
 				end
-				
-				PermissionManager:AddPermission(player.name, permission)
-				
+
+				PermissionManager:AddPermission(s_Player.name, s_Permission)
+
 				return {'OK'}
 			end)
 		}
 	}
 
 	self:createCommand('funbots', (function(p_Command, p_Args)
-		local result = {}
+		local s_Result = {}
 
-		table.insert(result, 'OK')
+		table.insert(s_Result, 'OK')
 
-		for index, command in pairs(self.commands) do
-			local the_command = command.Name
+		for l_Index, l_Command in pairs(self.m_Commands) do
+			local s_Command = l_Command.Name
 
-			if command.Parameters ~= nil then
-				for _, parameter in pairs(command.Parameters) do
-					the_command = the_command .. ' <' .. parameter .. '>'
+			if l_Command.Parameters ~= nil then
+				for _, parameter in pairs(l_Command.Parameters) do
+					s_Command = s_Command .. ' <' .. parameter .. '>'
 				end
 			end
 
-			table.insert(result, the_command)
+			table.insert(s_Result, s_Command)
 		end
 
-		return result
+		return s_Result
 	end))
 
 	self:create()
 end
 
 function RCONCommands:create()
-	for index, command in pairs(self.commands) do
-		self:createCommand(command.Name, command.Callback)
+	for l_Index, l_Command in pairs(self.m_Commands) do
+		self:createCommand(l_Command.Name, l_Command.Callback)
 	end
 end
 

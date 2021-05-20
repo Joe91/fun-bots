@@ -704,7 +704,7 @@ function GameDirector:_SetVehicleObjectiveState(p_Position, p_Value)
 	for _, l_Waypoints in pairs(s_Paths) do
 		if l_Waypoints[1].Data ~= nil and l_Waypoints[1].Data.Objectives ~= nil and #l_Waypoints[1].Data.Objectives == 1 then
 			local s_ObjectiveObject = self:_GetObjectiveObject(l_Waypoints[1].Data.Objectives[1])
-			if s_ObjectiveObject ~= nil and s_ObjectiveObject.active ~= p_Value and s_ObjectiveObject.isEnterVehiclePath then  -- only check disabled objectives
+			if s_ObjectiveObject ~= nil and s_ObjectiveObject.active ~= p_Value and s_ObjectiveObject.isEnterVehiclePath then -- only check disabled objectives
 				-- check position of first and last node
 				local s_FirstNode = l_Waypoints[1]
 				local s_LastNode = l_Waypoints[#l_Waypoints]

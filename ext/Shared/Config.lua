@@ -38,16 +38,16 @@ Config = {
 	-- spawn-limits
 	MaxBotsPerTeamDefault = 32,		-- max number of bots in one team
 	MaxBotsPerTeamTdm = 24,			-- max number of bots in one team in Team-Death-Match
-    MaxBotsPerTeamTdmc = 8,			-- max number of bots in one team in Team-Death-Match-CQ
+	MaxBotsPerTeamTdmc = 8,			-- max number of bots in one team in Team-Death-Match-CQ
 	MaxBotsPerTeamSdm = 5,			-- max number of bots in one team in Squad-Death-Match
-    MaxBotsPerTeamCl = 32,			-- max number of bots in one team in Conquest-Large
-    MaxBotsPerTeamCs = 16,			-- max number of bots in one team in Conquest-Small
-    MaxBotsPerTeamCal = 32,			-- max number of bots in one team in Conquest-Assault-Large
-    MaxBotsPerTeamCas = 16,			-- max number of bots in one team in Conquest-Assault-Small
-    MaxBotsPerTeamRl = 24,			-- max number of bots in one team in Rush-Large
+	MaxBotsPerTeamCl = 32,			-- max number of bots in one team in Conquest-Large
+	MaxBotsPerTeamCs = 16,			-- max number of bots in one team in Conquest-Small
+	MaxBotsPerTeamCal = 32,			-- max number of bots in one team in Conquest-Assault-Large
+	MaxBotsPerTeamCas = 16,			-- max number of bots in one team in Conquest-Assault-Small
+	MaxBotsPerTeamRl = 24,			-- max number of bots in one team in Rush-Large
 	MaxBotsPerTeamCtf = 24,			-- max number of bots in one team in Capture-The-Flag
-    MaxBotsPerTeamD = 24,			-- max number of bots in one team in Domination
-    MaxBotsPerTeamGm = 8,			-- max number of bots in one team in Gun-Master
+	MaxBotsPerTeamD = 24,			-- max number of bots in one team in Domination
+	MaxBotsPerTeamGm = 8,			-- max number of bots in one team in Gun-Master
 	MaxBotsPerTeamS = 16,			-- max number of bots in one team in Scavenger
 
 	-- behaviour

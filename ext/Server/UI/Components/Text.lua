@@ -1,72 +1,109 @@
-class('Text');
+--[[
+	@class: Text
+	@extends: Component
+]]
+class('Text')
 
-function Text:__init(name, text)
-	self.name		= name or nil;
-	self.text		= text or nil;
-	self.icon		= nil;
-	self.disabled	= false;
-	self.attributes	= {};
+--[[
+	@method: __init
+]]
+function Text:__init(p_Name, p_Text)
+	self.m_Name = p_Name or nil
+	self.m_Text = p_Text or nil
+	self.m_Icon = nil
+	self.m_Disabled = false
+	self.m_Attributes = {}
 end
 
+--[[
+	@method: __class
+]]
 function Text:__class()
-	return 'Text';
+	return 'Text'
 end
 
+--[[
+	@method: GetAttributes
+]]
 function Text:GetAttributes()
-	return self.attributes;
+	return self.m_Attributes
 end
 
-function Text:SetPosition(flag, position)
-	table.insert(self.attributes, {
-		Name		= 'Position',
-		Value		= {
-			Type		= flag,
-			Position	= position
+--[[
+	@method: SetPosition
+]]
+function Text:SetPosition(p_Flag, p_Position)
+	table.insert(self.m_Attributes, {
+		Name = 'Position',
+		Value = {
+			Type = p_Flag,
+			Position = p_Position
 		}
-	});
-	
-	return self;
+	})
+
+	return self
 end
 
+--[[
+	@method: GetName
+]]
 function Text:GetName()
-	return self.name;
+	return self.m_Name
 end
 
+--[[
+	@method: GetText
+]]
 function Text:GetText()
-	return self.text;
+	return self.m_Text
 end
 
-function Text:SetText(text)
-	self.text = text;
-	
-	return self;
+--[[
+	@method: SetText
+]]
+function Text:SetText(p_Text)
+	self.m_Text = p_Text
+
+	return self
 end
 
+--[[
+	@method: Enable
+]]
 function Text:Enable()
-	self.disabled = false;
-	
-	return self;
+	self.m_Disabled = false
+
+	return self
 end
 
+--[[
+	@method: Disable
+]]
 function Text:Disable()
-	self.disabled = true;
-	
-	return self;
+	self.m_Disabled = true
+
+	return self
 end
 
-function Text:SetIcon(icon)
-	self.icon = icon;
-	
-	return self;
+--[[
+	@method: SetIcon
+]]
+function Text:SetIcon(p_Icon)
+	self.m_Icon = p_Icon
+
+	return self
 end
 
+--[[
+	@method: Serialize
+]]
 function Text:Serialize()
 	return {
-		Name		= self.name,
-		Text		= self.text,
-		Icon		= self.icon,
-		Disabled	= self.disabled
-	};
+		Name = self.m_Name,
+		Text = self.m_Text,
+		Icon = self.m_Icon,
+		Disabled = self.m_Disabled
+	}
 end
 
-return Text;
+return Text
