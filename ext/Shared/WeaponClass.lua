@@ -23,33 +23,36 @@ function Weapon:__init(p_Name, p_Extension, p_Unlocks, p_Type, p_FullResource)
 end
 
 function Weapon:learnStatsValues()
-	local success = false
-	local blueprint = nil
-	local fireData = nil
-	local aiData = nil
-	local bulletData = nil
+	local s_Success = false
+	local s_Blueprint = nil
+	local s_FireData = nil
+	local s_AiData = nil
+	local s_BulletData = nil
 
-	blueprint, success = g_EbxEditUtils:GetWritableInstance(self:getResourcePath())
+	s_Blueprint, s_Success = g_EbxEditUtils:GetWritableInstance(self:getResourcePath())
 
-	if (not success) then
+	if not s_Success then
 		m_Logger:Warning('No blueprint for: '..self.name)
 		return
 	end
 
-	fireData, success = g_EbxEditUtils:GetWritableContainer(blueprint, 'Weapon.Object.WeaponFiring.PrimaryFire')
-	if (not success) then
+	s_FireData, s_Success = g_EbxEditUtils:GetWritableContainer(s_Blueprint, 'Weapon.Object.WeaponFiring.PrimaryFire')
+
+	if not s_Success then
 		m_Logger:Warning('No fireData for: '..self.name)
 		return
 	end
 
-	aiData, success = g_EbxEditUtils:GetWritableContainer(blueprint, 'Weapon.Object.aiData')
-	if (not success) then
+	s_AiData, s_Success = g_EbxEditUtils:GetWritableContainer(s_Blueprint, 'Weapon.Object.aiData')
+
+	if not s_Success then
 		m_Logger:Warning('No aiData for: '..self.name)
 		return
 	end
 
-	bulletData, success = g_EbxEditUtils:GetWritableContainer(fireData, 'shot.ProjectileData')
-	if (not success) then
+	s_BulletData, s_Success = g_EbxEditUtils:GetWritableContainer(s_FireData, 'shot.ProjectileData')
+
+	if not s_Success then
 		m_Logger:Warning('No bulletData for: '..self.name)
 		return
 	end
@@ -57,122 +60,127 @@ function Weapon:learnStatsValues()
 	--m_Logger:Write(self.name..': '..tostring(aiData.name))
 
 	-- stats depending on weapon-type
-	local aiDataString = tostring(aiData.name)
-	local fireDuration = 0
-	local firePause = 0
-	local delayedShot = false
+	local s_AiDataString = tostring(s_AiData.name)
+	local s_FireDuration = 0
+	local s_FirePause = 0
+	local s_DelayedShot = false
 	m_Logger:Write(self.name)
-	if string.find(aiDataString, "_lmg_") ~= nil then
+
+	if string.find(s_AiDataString, "_lmg_") ~= nil then
 		m_Logger:Write("LMG")
-		fireDuration = 1.5
-		firePause = 0.5
-		delayedShot = true
-	elseif string.find(aiDataString, "_sni_") ~= nil then
+		s_FireDuration = 1.5
+		s_FirePause = 0.5
+		s_DelayedShot = true
+	elseif string.find(s_AiDataString, "_sni_") ~= nil then
 		m_Logger:Write("sniper")
-		fireDuration = 0.2
-		firePause = 0.5
-		delayedShot = true
-	elseif string.find(aiDataString, "_snisemi_") ~= nil then
+		s_FireDuration = 0.2
+		s_FirePause = 0.5
+		s_DelayedShot = true
+	elseif string.find(s_AiDataString, "_snisemi_") ~= nil then
 		m_Logger:Write("auto sniper")
-		fireDuration = 0.2
-		firePause = 0.2
-		delayedShot = true
-	elseif string.find(aiDataString, "_rif_") ~= nil then
+		s_FireDuration = 0.2
+		s_FirePause = 0.2
+		s_DelayedShot = true
+	elseif string.find(s_AiDataString, "_rif_") ~= nil then
 		m_Logger:Write("rifle")
-		fireDuration = 0.4
-		firePause = 0.4
-		delayedShot = false
-	elseif string.find(aiDataString, "_shg_") ~= nil then
+		s_FireDuration = 0.4
+		s_FirePause = 0.4
+		s_DelayedShot = false
+	elseif string.find(s_AiDataString, "_shg_") ~= nil then
 		m_Logger:Write("shotgun")
-		fireDuration = 0.2
-		firePause = 0.2
-		delayedShot = false
-	elseif string.find(aiDataString, "_smg_") ~= nil then
+		s_FireDuration = 0.2
+		s_FirePause = 0.2
+		s_DelayedShot = false
+	elseif string.find(s_AiDataString, "_smg_") ~= nil then
 		m_Logger:Write("PDW")
-		fireDuration = 0.3
-		firePause = 0.2
-		delayedShot = false
-	elseif string.find(aiDataString, "_hg_") ~= nil or string.find(self.name, "MP443") ~= nil then -- "MP443 has no ai data"
+		s_FireDuration = 0.3
+		s_FirePause = 0.2
+		s_DelayedShot = false
+	elseif string.find(s_AiDataString, "_hg_") ~= nil or string.find(self.name, "MP443") ~= nil then -- "MP443 has no ai data"
 		m_Logger:Write("pistol")
-		fireDuration = 0.2
-		firePause = 0.2
-		delayedShot = false
-	elseif string.find(aiDataString, "_kni_") ~= nil then
+		s_FireDuration = 0.2
+		s_FirePause = 0.2
+		s_DelayedShot = false
+	elseif string.find(s_AiDataString, "_kni_") ~= nil then
 		m_Logger:Write("knife")
-		fireDuration = 0.2
-		firePause = 0.2
-		delayedShot = false
-	elseif string.find(aiDataString, "_at_") ~= nil then
+		s_FireDuration = 0.2
+		s_FirePause = 0.2
+		s_DelayedShot = false
+	elseif string.find(s_AiDataString, "_at_") ~= nil then
 		m_Logger:Write("Rocket")
-		fireDuration = 0.2
-		firePause = 0.4
-		delayedShot = true
-	elseif string.find(aiDataString, "_hgr_") ~= nil then
+		s_FireDuration = 0.2
+		s_FirePause = 0.4
+		s_DelayedShot = true
+	elseif string.find(s_AiDataString, "_hgr_") ~= nil then
 		m_Logger:Write("Grenade")
-		fireDuration = 0.2
-		firePause = 0.2
-		delayedShot = false
+		s_FireDuration = 0.2
+		s_FirePause = 0.2
+		s_DelayedShot = false
 	elseif self.type == WeaponTypes.Torch or self.type == WeaponTypes.Claymore or self.type == WeaponTypes.C4 or self.type == WeaponTypes.Tugs or self.type == WeaponTypes.Beacon then
 		m_Logger:Write("other stuff")
-		fireDuration = 0.2
-		firePause = 0.2
-		delayedShot = false
+		s_FireDuration = 0.2
+		s_FirePause = 0.2
+		s_DelayedShot = false
 	else
-		m_Logger:Warning("No data found for "..self.name..': '..tostring(aiData.name))
-		fireDuration = 0.2
-		firePause = 0.2
-		delayedShot = false
+		m_Logger:Warning("No data found for "..self.name..': '..tostring(s_AiData.name))
+		s_FireDuration = 0.2
+		s_FirePause = 0.2
+		s_DelayedShot = false
 	end
 
-	self.damage = bulletData.startDamage
-	self.endDamage = bulletData.endDamage
-	self.damageFalloffStartDistance = bulletData.damageFalloffStartDistance
-	self.damageFalloffEndDistance = bulletData.damageFalloffStartDistance
-	self.bulletSpeed = fireData.shot.initialSpeed.z
-	self.bulletDrop = (bulletData.gravity or 0) * -1
-	self.fireCycle = fireDuration --aiData.minBurstCoolDownTime
-	self.pauseCycle = firePause --(aiData.maxBurstCoolDownTime + aiData.minBurstCoolDownTime) / 2
-	self.reload = math.floor(fireData.ammo.magazineCapacity * 0.2)
-	self.delayed = delayedShot
+	self.damage = s_BulletData.startDamage
+	self.endDamage = s_BulletData.endDamage
+	self.damageFalloffStartDistance = s_BulletData.damageFalloffStartDistance
+	self.damageFalloffEndDistance = s_BulletData.damageFalloffStartDistance
+	self.bulletSpeed = s_FireData.shot.initialSpeed.z
+	self.bulletDrop = (s_BulletData.gravity or 0) * -1
+	self.fireCycle = s_FireDuration --aiData.minBurstCoolDownTime
+	self.pauseCycle = s_FirePause --(aiData.maxBurstCoolDownTime + aiData.minBurstCoolDownTime) / 2
+	self.reload = math.floor(s_FireData.ammo.magazineCapacity * 0.2)
+	self.delayed = s_DelayedShot
 	self.needvalues = false
 end
 
 function Weapon:getResourcePath(p_Unlock)
-	local unl = ""
-	if self.fullResource == nil then
-		local ext = ""
-		if p_Unlock ~= nil then
+	local s_Unl = ""
 
-			if (string.starts(p_Unlock, 'Weapons/')) then
+	if self.fullResource == nil then
+		local s_Ext = ""
+
+		if p_Unlock ~= nil then
+			if string.starts(p_Unlock, 'Weapons/') then
 				return p_Unlock
 			end
 
-			unl = "_"..p_Unlock
-		end
-		if self.extension ~= '' then
-			ext = self.extension.."_"
+			s_Unl = "_"..p_Unlock
 		end
 
-		return "Weapons/"..ext..self.name.."/U_"..self.name..unl
+		if self.extension ~= '' then
+			s_Ext = self.extension.."_"
+		end
+
+		return "Weapons/"..s_Ext..self.name.."/U_"..self.name..s_Unl
 	else
 		if p_Unlock ~= nil then
-
-			if (string.starts(p_Unlock, 'Weapons/')) then
+			if string.starts(p_Unlock, 'Weapons/') then
 				return p_Unlock
 			end
 
-			unl = "_"..p_Unlock
+			s_Unl = "_"..p_Unlock
 		end
-		return self.fullResource..unl
+
+		return self.fullResource..s_Unl
 	end
 end
 
 function Weapon:getAllAttachements()
-	local attachmentList = {}
-	for _, attachment in pairs(self.unlocks) do
-		table.insert(attachmentList, self:getResourcePath(attachment))
+	local s_AttachmentList = {}
+
+	for _, l_Attachment in pairs(self.unlocks) do
+		table.insert(s_AttachmentList, self:getResourcePath(l_Attachment))
 	end
-	return attachmentList
+
+	return s_AttachmentList
 end
 
 return Weapon

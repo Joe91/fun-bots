@@ -16,65 +16,70 @@ end
 -- <status>: boolean true if valid, string with message if failed
 function EbxEditUtils:GetWritableInstance(p_ResourcePathOrGUIDOrContainer)
 
-	if (type(p_ResourcePathOrGUIDOrContainer) == 'userdata' and p_ResourcePathOrGUIDOrContainer.typeInfo ~= nil) then
-		local returnInstance = _G[p_ResourcePathOrGUIDOrContainer.typeInfo.name](p_ResourcePathOrGUIDOrContainer)
-		if (returnInstance.MakeWritable ~= nil) then
-			returnInstance:MakeWritable()
+	if type(p_ResourcePathOrGUIDOrContainer) == 'userdata' and p_ResourcePathOrGUIDOrContainer.typeInfo ~= nil then
+		local s_ReturnInstance = _G[p_ResourcePathOrGUIDOrContainer.typeInfo.name](p_ResourcePathOrGUIDOrContainer)
+
+		if s_ReturnInstance.MakeWritable ~= nil then
+			s_ReturnInstance:MakeWritable()
 		end
-		return returnInstance, true
+
+		return s_ReturnInstance, true
 	end
 
-	local instance = ResourceManager:SearchForDataContainer(p_ResourcePathOrGUIDOrContainer)
+	local s_Instance = ResourceManager:SearchForDataContainer(p_ResourcePathOrGUIDOrContainer)
 
-	if (instance == nil) then
-		instance = ResourceManager:SearchForInstanceByGuid(Guid(p_ResourcePathOrGUIDOrContainer))
-	end
-	if (instance == nil) then
-		instance = ResourceManager:FindDatabasePartition(Guid(p_ResourcePathOrGUIDOrContainer))
+	if s_Instance == nil then
+		s_Instance = ResourceManager:SearchForInstanceByGuid(Guid(p_ResourcePathOrGUIDOrContainer))
 	end
 
-	if (instance == nil) then
+	if s_Instance == nil then
+		s_Instance = ResourceManager:FindDatabasePartition(Guid(p_ResourcePathOrGUIDOrContainer))
+	end
+
+	if s_Instance == nil then
 		return nil, 'Could not find Data Container, Instance, or Partition'
 	end
 
-	local workingInstance = _G[instance.typeInfo.name](instance)
-	if (workingInstance.MakeWritable ~= nil) then
-		workingInstance:MakeWritable()
+	local s_WorkingInstance = _G[s_Instance.typeInfo.name](s_Instance)
+
+	if s_WorkingInstance.MakeWritable ~= nil then
+		s_WorkingInstance:MakeWritable()
 	end
-	return workingInstance, true
+
+	return s_WorkingInstance, true
 end
 
 -- returns three values <workingInstance>,<valid>
 -- <workingInstance>: the found instance as a typed object and made writable
 -- <valid>: the given values were valid
 function EbxEditUtils:GetWritableContainer(p_Instance, p_ContainerPath)
-	local propertyName = nil
-	local workingInstance = self:GetWritableInstance(p_Instance)
-	local workingPath = self:GetValidPath(p_ContainerPath)
-	local valid = false
+	local s_PropertyName = nil
+	local s_WorkingInstance = self:GetWritableInstance(p_Instance)
+	local s_WorkingPath = self:GetValidPath(p_ContainerPath)
+	local s_Valid = false
 
-	for i=1, #workingPath do
+	for i = 1, #s_WorkingPath do
+		s_WorkingInstance, s_PropertyName, s_Valid = self:CheckInstancePropertyExists(s_WorkingInstance, s_WorkingPath[i])
 
-		workingInstance, propertyName, valid = self:CheckInstancePropertyExists(workingInstance, workingPath[i])
-
-		if (not valid) then
-			return workingInstance, valid
+		if not s_Valid then
+			return s_WorkingInstance, s_Valid
 		else
-			workingInstance = workingInstance[propertyName]
-			if (i == #workingPath) then
+			s_WorkingInstance = s_WorkingInstance[s_PropertyName]
 
+			if i == #s_WorkingPath then
 				-- safety cast
-				workingInstance = _G[workingInstance.typeInfo.name](workingInstance)
+				s_WorkingInstance = _G[s_WorkingInstance.typeInfo.name](s_WorkingInstance)
 
-				if (workingInstance.MakeWritable ~= nil) then
-					workingInstance:MakeWritable()
+				if s_WorkingInstance.MakeWritable ~= nil then
+					s_WorkingInstance:MakeWritable()
 				end
 
-				return workingInstance, true
+				return s_WorkingInstance, true
 			end
 		end
 	end
-	return workingInstance, false
+
+	return s_WorkingInstance, false
 end
 
 -- returns three values <workingInstance>,<propertyName>,<valid>
@@ -82,62 +87,61 @@ end
 -- <propertyName>: the property name that works
 -- <valid>: the given values were valid
 function EbxEditUtils:GetWritableProperty(p_Instance, p_PropertyPath)
-	local propertyName = nil
-	local workingInstance = self:GetWritableInstance(p_Instance)
-	local workingPath = self:GetValidPath(p_PropertyPath)
-	local valid = false
+	local s_PropertyName = nil
+	local s_WorkingInstance = self:GetWritableInstance(p_Instance)
+	local s_WorkingPath = self:GetValidPath(p_PropertyPath)
+	local s_Valid = false
 
-	for i=1, #workingPath do
+	for i = 1, #s_WorkingPath do
+		s_WorkingInstance, s_PropertyName, s_Valid = self:CheckInstancePropertyExists(s_WorkingInstance, s_WorkingPath[i])
 
-		workingInstance, propertyName, valid = self:CheckInstancePropertyExists(workingInstance, workingPath[i])
-		if (not valid) then
-			return workingInstance, propertyName, valid
+		if not s_Valid then
+			return s_WorkingInstance, s_PropertyName, s_Valid
 		else
-
 			-- we've reached a value
-			if (type(workingInstance[propertyName]) == 'string' or
-				type(workingInstance[propertyName]) == 'number' or
-				type(workingInstance[propertyName]) == 'boolean' or
-				type(workingInstance[propertyName]) == 'nil') then
-
-				if (workingInstance.MakeWritable ~= nil) then
-					workingInstance:MakeWritable()
+			if type(s_WorkingInstance[s_PropertyName]) == 'string' or
+			type(s_WorkingInstance[s_PropertyName]) == 'number' or
+			type(s_WorkingInstance[s_PropertyName]) == 'boolean' or
+			type(s_WorkingInstance[s_PropertyName]) == 'nil' then
+				if s_WorkingInstance.MakeWritable ~= nil then
+					s_WorkingInstance:MakeWritable()
 				end
 
-				return workingInstance, propertyName, true
+				return s_WorkingInstance, s_PropertyName, true
 			end
 
-			workingInstance = workingInstance[propertyName]
+			s_WorkingInstance = s_WorkingInstance[s_PropertyName]
 		end
 	end
-	return workingInstance, propertyName, false
+
+	return s_WorkingInstance, s_PropertyName, false
 end
 
 function EbxEditUtils:CheckInstancePropertyExists(p_Instance, p_PropertyName)
-	if (p_Instance == nil or p_PropertyName == nil) then
+	if p_Instance == nil or p_PropertyName == nil then
 		return p_Instance, p_PropertyName, false
 	end
 
-	if (p_Instance[p_PropertyName] ~= nil) then -- try for property
+	if p_Instance[p_PropertyName] ~= nil then -- try for property
 		return p_Instance, p_PropertyName, true
 	end
 
-	if (tonumber(p_PropertyName) ~= nil) then -- simple lookup failed, maybe it's an array index
-		if (p_Instance[tonumber(p_PropertyName)] ~= nil) then -- try for property again
+	if tonumber(p_PropertyName) ~= nil then -- simple lookup failed, maybe it's an array index
+		if p_Instance[tonumber(p_PropertyName)] ~= nil then -- try for property again
 			return p_Instance, tonumber(p_PropertyName), true
 		end
 	end
 
-	local p_InstanceType = p_Instance.typeInfo.name -- get type
-	local workingInstance = _G[p_InstanceType](p_Instance) -- cast to type
+	local s_InstanceType = p_Instance.typeInfo.name -- get type
+	local s_WorkingInstance = _G[s_InstanceType](p_Instance) -- cast to type
 
-	if (workingInstance[p_PropertyName] ~= nil) then -- try for property again
-		return workingInstance, p_PropertyName, true
+	if s_WorkingInstance[p_PropertyName] ~= nil then -- try for property again
+		return s_WorkingInstance, p_PropertyName, true
 	end
 
-	if (tonumber(p_PropertyName) ~= nil) then -- still no, lets try array on the cast
-		if (workingInstance[tonumber(p_PropertyName)] ~= nil) then -- try for property again
-			return workingInstance, tonumber(p_PropertyName), true
+	if tonumber(p_PropertyName) ~= nil then -- still no, lets try array on the cast
+		if s_WorkingInstance[tonumber(p_PropertyName)] ~= nil then -- try for property again
+			return s_WorkingInstance, tonumber(p_PropertyName), true
 		end
 	end
 
@@ -148,119 +152,116 @@ end
 -- <value>: the validated value, with default applied if necessary
 -- <status>: boolean true if valid, string with message if failed
 function EbxEditUtils:ValidateValue(p_ArgValue, p_ArgParams)
-	local defaultValue = p_ArgParams.Default
+	local s_DefaultValue = p_ArgParams.Default
 
-	if (p_ArgValue == nil and p_ArgParams.IsOptional) then
-
-		return defaultValue, true
-
-	elseif (p_ArgParams.Type == 'number' or p_ArgParams.Type == 'float') then
-
-		if (p_ArgValue ~= nil and tonumber(p_ArgValue) == nil) then
-			return defaultValue, 'Must be a **'..p_ArgParams.Type..'**'
+	if p_ArgValue == nil and p_ArgParams.IsOptional then
+		return s_DefaultValue, true
+	elseif p_ArgParams.Type == 'number' or p_ArgParams.Type == 'float' then
+		if p_ArgValue ~= nil and tonumber(p_ArgValue) == nil then
+			return s_DefaultValue, 'Must be a **'..p_ArgParams.Type..'**'
 		end
-
-	elseif (p_ArgParams.Type == 'boolean') then
-
-		if (p_ArgValue ~= nil) then -- sorry this is ugly
-			if (p_ArgValue == '1' or p_ArgValue == '0' or
-				string.lower(p_ArgValue) == 'true' or string.lower(p_ArgValue) == 'false' or
-				string.lower(p_ArgValue) == 'y' or string.lower(p_ArgValue) == 'n') then
-
+	elseif p_ArgParams.Type == 'boolean' then
+		if p_ArgValue ~= nil then -- sorry this is ugly
+			if p_ArgValue == '1' or p_ArgValue == '0' or
+			string.lower(p_ArgValue) == 'true' or string.lower(p_ArgValue) == 'false' or
+			string.lower(p_ArgValue) == 'y' or string.lower(p_ArgValue) == 'n' then
 				-- the value still needs to be a string, but let's normalise it
-				local booltostring = tostring((p_ArgValue == '1' or string.lower(p_ArgValue) == 'true' or string.lower(p_ArgValue) == 'y'))
-				return (booltostring == 'true'), true
+				local s_BoolToString = tostring((p_ArgValue == '1' or string.lower(p_ArgValue) == 'true' or string.lower(p_ArgValue) == 'y'))
+				return (s_BoolToString == 'true'), true
 			end
 		end
 
-		return defaultValue, 'Not a valid **boolean**, use 1/0, true/false, or y/n'
-
-	elseif (p_ArgParams.Type == 'choices') then
-
-		for i=1, #p_ArgParams.Choices do
-			if (p_ArgValue ~= nil and p_ArgValue == p_ArgParams.Choices[i]) then
+		return s_DefaultValue, 'Not a valid **boolean**, use 1/0, true/false, or y/n'
+	elseif p_ArgParams.Type == 'choices' then
+		for i = 1, #p_ArgParams.Choices do
+			if p_ArgValue ~= nil and p_ArgValue == p_ArgParams.Choices[i] then
 				return p_ArgValue, true
 			end
 		end
 
-		local choices = ''
-		for i=1, p_ArgParams.Choices do
-			if (string.len(choices) > 0) then
-				choices = choices..', '
+		local s_Choices = ''
+
+		for i = 1, p_ArgParams.Choices do
+			if string.len(s_Choices) > 0 then
+				s_Choices = s_Choices..', '
 			end
-			choices = choices..'*'..p_ArgParams.Choices[i]..'*'
+
+			s_Choices = s_Choices..'*'..p_ArgParams.Choices[i]..'*'
 		end
 
-		return defaultValue, 'Not a valid **choice**, use: ['..choices..']'
-	elseif (p_ArgParams.Type == 'string') then
-		if (p_ArgValue == nil) then
-			return defaultValue, 'Must be a **string**'
+		return s_DefaultValue, 'Not a valid **choice**, use: ['..s_Choices..']'
+	elseif p_ArgParams.Type == 'string' then
+		if p_ArgValue == nil then
+			return s_DefaultValue, 'Must be a **string**'
 		end
 	end
+
 	return p_ArgValue, true
 end
 
 function EbxEditUtils:GetValidPath(p_PropertyPath)
-
-	if (type(p_PropertyPath) == 'string') then
+	if type(p_PropertyPath) == 'string' then
 		p_PropertyPath = self:StringSplit(p_PropertyPath, '\\.')
 	end
 
-	local result = {}
+	local s_Result = {}
 
-	for piece=1, #p_PropertyPath do
-		result[#result+1] = self:FormatMemberName(p_PropertyPath[piece])
+	for l_Piece = 1, #p_PropertyPath do
+		s_Result[#s_Result + 1] = self:FormatMemberName(p_PropertyPath[l_Piece])
 	end
-	return result
+
+	return s_Result
 end
 
 -- Adapted from the C# implementation used by VU provided by NoFaTe
 function EbxEditUtils:FormatMemberName(p_MemberName)
-	local outputName = ''
-	local foundLower = false
-	local memberLength = p_MemberName:len()
+	local s_OutputName = ''
+	local s_FoundLower = false
+	local s_MemberLength = p_MemberName:len()
 
-	for i=1, memberLength do
-		local continue = false -- dirty hack to give lua a 'continue' statement in loops
+	for i = 1, s_MemberLength do
+		local s_Continue = false -- dirty hack to give lua a 'continue' statement in loops
 
-		if (foundLower) then
-			outputName = outputName..p_MemberName:sub(i,i)
-			continue = true
+		if s_FoundLower then
+			s_OutputName = s_OutputName..p_MemberName:sub(i,i)
+			s_Continue = true
 		end
 
-		if (i < memberLength-1 and (self:StringIsLower(p_MemberName:sub(i+1,i+1)) or self:StringIsDigit(p_MemberName:sub(i+1,i+1))) and not continue) then
+		if i < s_MemberLength - 1 and (self:StringIsLower(p_MemberName:sub(i + 1, i + 1)) or self:StringIsDigit(p_MemberName:sub(i + 1, i + 1))) and not s_Continue then
+			s_FoundLower = true
 
-			foundLower = true
-
-			if (i > 1) then
-				outputName = outputName..p_MemberName:sub(i,i)
-				continue = true
+			if i > 1 then
+				s_OutputName = s_OutputName..p_MemberName:sub(i,i)
+				s_Continue = true
 			end
-
 		end
 
-		if (not continue) then
-			outputName = outputName..p_MemberName:sub(i,1):lower()
+		if not s_Continue then
+			s_OutputName = s_OutputName..p_MemberName:sub(i,1):lower()
+		end
+	end
+
+	for i = 1, #self.LuaReserverdWords do
+		if s_OutputName:lower() == self.LuaReserverdWords[i] then
+			s_OutputName = s_OutputName..'Value'
 		end
 	end
 
-	for i=1, #self.LuaReserverdWords do
-		if (outputName:lower() == self.LuaReserverdWords[i]) then
-			outputName = outputName..'Value'
-		end
-	end
-	return outputName
+	return s_OutputName
 end
 
 function EbxEditUtils:StringSplit(p_Value, p_Seperator)
-	if (p_Seperator == nil) then
+	if p_Seperator == nil then
 		p_Seperator = "%s"
 	end
-	local result = {}
-	for piece in string.gmatch(p_Value, "([^"..p_Seperator.."]+)") do
-		result[#result+1] = piece
+
+	local s_Result = {}
+
+	for l_Piece in string.gmatch(p_Value, "([^"..p_Seperator.."]+)") do
+		s_Result[#s_Result + 1] = l_Piece
 	end
-	return result
+
+	return s_Result
 end
 
 function EbxEditUtils:StringIsLower(p_Str)
@@ -272,29 +273,33 @@ function EbxEditUtils:StringIsDigit(p_Str)
 end
 
 function EbxEditUtils:getModuleState()
-	if (SharedUtils:IsClientModule() and SharedUtils:IsServerModule()) then
+	if SharedUtils:IsClientModule() and SharedUtils:IsServerModule() then
 		return 'Shared'
-	elseif (SharedUtils:IsClientModule() and not SharedUtils:IsServerModule()) then
+	elseif SharedUtils:IsClientModule() and not SharedUtils:IsServerModule() then
 		return 'Client'
-	elseif (not SharedUtils:IsClientModule() and SharedUtils:IsServerModule()) then
+	elseif not SharedUtils:IsClientModule() and SharedUtils:IsServerModule() then
 		return 'Server'
 	end
+
 	return 'Unkown'
 end
 
 function EbxEditUtils:dump(p)
-	if (p == nil) then
+	if p == nil then
 		if Debug.Shared.EBX then
 			print("nil")
 		end
 	end
 
-	if (type(p) == 'table') then
+	if type(p) == 'table' then
 		local s = '{ '
+
 		for k,v in pairs(p) do
 			if type(k) ~= 'number' then k = '"'..k..'"' end
+
 			s = s .. '['..k..'] = ' .. self:dump(v) .. ','
 		end
+
 		return s .. '} '
 	else
 		return tostring(p)

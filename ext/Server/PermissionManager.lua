@@ -70,7 +70,7 @@ function PermissionManager:GetPermissions(p_Name)
 		return nil
 	end
 
-	if (self.m_Permissions[tostring(s_Player.guid)] ~= nil) then
+	if self.m_Permissions[tostring(s_Player.guid)] ~= nil then
 		return self.m_Permissions[tostring(s_Player.guid)]
 	end
 
@@ -185,6 +185,7 @@ function PermissionManager:HasPermission(p_Name, p_Permission)
 	end
 
 	local s_Permissions = self:GetPermissions(p_Name)
+
 	if s_Permissions == nil then
 		return false
 	end
@@ -247,7 +248,7 @@ function PermissionManager:Revoke(p_Name, p_Permission)
 		return false
 	end
 
-	if (self.m_Permissions[tostring(p_Player.guid)] == nil) then
+	if self.m_Permissions[tostring(p_Player.guid)] == nil then
 		return false
 	end
 
@@ -291,7 +292,7 @@ function PermissionManager:RevokeAll(p_Name)
 		return false
 	end
 
-	if (self.m_Permissions[tostring(s_Player.guid)] == nil) then
+	if self.m_Permissions[tostring(s_Player.guid)] == nil then
 		return false
 	end
 
