@@ -51,15 +51,19 @@ function WeaponModification:OnPartitionLoaded(p_Partition)
 	if not p_Partition.primaryInstance:Is('SoldierWeaponBlueprint') then
 		return
 	end
+
 	for _, p_Instance in pairs(p_Partition.instances) do
 		if p_Instance ~= nil and p_Instance:Is('SoldierWeaponData') then
 			p_Instance = SoldierWeaponData(p_Instance)
+
 			if p_Instance.soldierWeaponBlueprint == nil then
 				return
 			end
+
 			if self.m_AlreadyLoaded then
 				self:RegisterVars() --reset all vars
 			end
+
 			table.insert(self.m_WeaponInstances, p_Instance)
 			return
 		end
@@ -95,11 +99,13 @@ function WeaponModification:_ModifyWeapon(p_SoldierWeaponData, p_Index, p_AimWor
 	local s_Class = s_SoldierWeaponData.weaponClass
 	local s_AiData = s_SoldierWeaponData.aiData
 	local s_NameOfAiData = tostring(s_AiData.name)
+
 	if string.find(s_NameOfAiData ,"Handheld_sni_AI_Weapon") ~= nil
 	or string.find(s_NameOfAiData ,"Handheld_snisemi_AI_Weapon") ~= nil then
 		s_BotAimWorsening = p_AimWorseningSniper
 		s_IsReconWeapon = true
 	end
+
 	local s_RecoilFactor = s_BotAimWorsening
 
 	local s_GunSwayData = self:_MakeWritable(s_WeaponFiringData.weaponSway)
@@ -167,6 +173,7 @@ function WeaponModification:_ModifyWeapon(p_SoldierWeaponData, p_Index, p_AimWor
 		end
 	end
 	--else
+
 	local s_Stand = GunSwayStandData(s_GunSwayData.stand)
 
 	if s_Stand ~= nil then

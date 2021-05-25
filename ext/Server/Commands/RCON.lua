@@ -95,7 +95,6 @@ function RCONCommands:__init()
 							s_Type = 'number'
 						end
 
-
 						s_Old.Name = 'Config.' .. s_Name
 						s_Old.Value = Config[s_Name]
 
@@ -109,17 +108,14 @@ function RCONCommands:__init()
 							Config[s_Name] = s_New_Value
 							s_New.Name = 'Config.' .. s_Name
 							s_New.Value = Config[s_Name]
-
 						elseif s_Type == 'string' then
 							Config[s_Name] = tostring(s_Value)
 							s_New.Name = 'Config.' .. s_Name
 							s_New.Value = Config[s_Name]
-
 						elseif s_Type == 'number' then
 							Config[s_Name] = tonumber(s_Value)
 							s_New.Name = 'Config.' .. s_Name
 							s_New.Value = Config[s_Name]
-
 						else
 							print('Unknown Config property-Type: ' .. s_Name .. ' -> ' .. s_Type)
 						end
@@ -153,17 +149,14 @@ function RCONCommands:__init()
 							StaticConfig[s_Name] = s_New_Value
 							s_New.Name = 'StaticConfig.' .. s_Name
 							s_New.Value = StaticConfig[s_Name]
-
 						elseif s_Type == 'string' then
 							StaticConfig[s_Name] = tostring(s_Value)
 							s_New.Name = 'StaticConfig.' .. s_Name
 							s_New.Value = StaticConfig[s_Name]
-
 						elseif s_Type == 'number' then
 							StaticConfig[s_Name] = tonumber(s_Value)
 							s_New.Name = 'StaticConfig.' .. s_Name
 							s_New.Value = StaticConfig[s_Name]
-
 						else
 							print('Unknown Config property-Type: ' .. s_Name .. ' -> ' .. s_Type)
 						end
@@ -333,9 +326,11 @@ function RCONCommands:__init()
 			Parameters = { 'Name' },
 			Callback = (function(p_Command, p_Args)
 				local s_Name = p_Args[1]
+
 				if s_Name == nil then
 					return {'ERROR', 'Name needed.'}
 				end
+
 				m_BotManager:destroyBot(s_Name)
 
 				return { 'OK' }
@@ -409,7 +404,6 @@ function RCONCommands:__init()
 						else
 							return {'ERROR', 'Can\'r revoke all Permissions from "' .. s_Name .. '".'}
 						end
-
 					-- Revoke SPECIFIC Permission
 					elseif s_Permission:sub(1, 1) == '!' then
 						s_Permission = s_Permission:sub(2)

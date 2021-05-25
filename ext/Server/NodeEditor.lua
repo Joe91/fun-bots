@@ -40,6 +40,7 @@ function NodeEditor:OnLevelLoaded(p_LevelName, p_GameMode)
 	if Globals.IsTdm or Globals.IsGm or Globals.IsScavenger then
 		p_GameMode = 'TeamDeathMatch0' -- paths are compatible
 	end
+
 	if p_LevelName == "MP_Subway" and p_GameMode == "ConquestSmall0" then
 		p_GameMode = "ConquestLarge0" --paths are the same
 	end
@@ -48,15 +49,19 @@ function NodeEditor:OnLevelLoaded(p_LevelName, p_GameMode)
 
 	local s_Counter = 0
 	local s_Waypoints = m_NodeCollection:Get()
+
 	for i = 1, #s_Waypoints do
 		local s_Waypoint = s_Waypoints[i]
+
 		if type(s_Waypoint.Next) == 'string' then
 			s_Counter = s_Counter + 1
 		end
+
 		if type(s_Waypoint.Previous) == 'string' then
 			s_Counter = s_Counter + 1
 		end
 	end
+
 	self:Log('Load -> Stale Nodes: %d', s_Counter)
 end
 
@@ -73,6 +78,7 @@ function NodeEditor:OnPlayerRespawn(p_Player)
 	if self.m_BotVision[p_Player.name] == nil then
 		return
 	end
+
 	self.m_BotVision[p_Player.name] = {
 		Player = p_Player,
 		Current = 0,
@@ -86,6 +92,7 @@ function NodeEditor:OnPlayerKilled(p_Player)
 	if p_Player == nil or self.m_BotVision[p_Player.name] == nil then
 		return
 	end
+
 	self.m_BotVision[p_Player.name] = {
 		Player = p_Player,
 		Current = 0,
@@ -111,6 +118,7 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 	for l_PlayerName, l_TimeData in pairs(self.m_BotVision) do
 		if type(l_TimeData) == 'table' then
 			l_TimeData.Current = l_TimeData.Current + p_DeltaTime
+
 			if l_TimeData.Current >= l_TimeData.Delay then
 				self:Log('Player -> Fade [%s]: %s', l_TimeData.Player.name, l_TimeData.State)
 				l_TimeData.Player:Fade(l_TimeData.Speed, l_TimeData.State)
@@ -123,24 +131,32 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 	-- receiving nodes from player takes priority over sending
 	if self.m_NodeReceiveTimer >= 0 and self.m_PlayerSendingNodes ~= nil then
 		self.m_NodeReceiveTimer = self.m_NodeReceiveTimer + p_DeltaTime
+
 		if self.m_NodeReceiveTimer >= self.m_NodeReceiveDelay then
 			NetEvents:SendToLocal('ClientNodeEditor:SendNodes', self.m_PlayerSendingNodes, #m_NodeCollection:Get())
 			self.m_NodeReceiveTimer = -1
 		end
+
 		return
 	end
+
 	-- only do sending if not receiving
 	if self.m_BatchSendTimer < 0 or #self.m_PlayersReceivingNodes == 0 then
 		return
 	end
+
 	self.m_BatchSendTimer = self.m_BatchSendTimer + p_DeltaTime
+
 	for i = 1, #self.m_PlayersReceivingNodes do
 		local s_SendStatus = self.m_PlayersReceivingNodes[i]
+
 		if self.m_BatchSendTimer > s_SendStatus.BatchSendDelay then
 			s_SendStatus.BatchSendDelay = s_SendStatus.BatchSendDelay + 0.02 -- milliseconds
 			local s_DoneThisBatch = 0
+
 			for j = s_SendStatus.Index, #s_SendStatus.Nodes do
 				local s_SendableNode = {}
+
 				for l_Key, l_Value in pairs(s_SendStatus.Nodes[j]) do
 					if (l_Key == 'Next' or l_Key == 'Previous') and type(l_Value) == 'table' then
 						s_SendableNode[l_Key] = l_Value.ID
@@ -148,9 +164,11 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 						s_SendableNode[l_Key] = l_Value
 					end
 				end
+
 				NetEvents:SendToLocal('ClientNodeEditor:Create', s_SendStatus.Player, s_SendableNode)
 				s_DoneThisBatch = s_DoneThisBatch + 1
 				s_SendStatus.Index = j + 1
+
 				if s_DoneThisBatch >= 30 then
 					break
 				end
@@ -163,6 +181,7 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 			end
 		end
 	end
+
 	if #self.m_PlayersReceivingNodes < 1 then
 		self.m_BatchSendTimer = -1
 	end
@@ -192,6 +211,7 @@ function NodeEditor:OnReceiveNodes(p_Player, p_NodeCount)
 		self:Log('%s has no permissions for Waypoint-Editor.', p_Player.name)
 		return
 	end
+
 	m_NodeCollection:Clear()
 	self.m_PlayerSendingNodes = p_Player
 	self.m_NodeReceiveTimer = 0
@@ -204,6 +224,7 @@ function NodeEditor:OnCreate(p_Player, p_Data)
 		self:Log('%s has no permissions for Waypoint-Editor.', p_Player.name)
 		return
 	end
+
 	m_NodeCollection:Create(p_Data, true)
 end
 
@@ -213,6 +234,7 @@ function NodeEditor:OnInit(p_Player, p_Save)
 		self:Log('%s has no permissions for Waypoint-Editor.', p_Player.name)
 		return
 	end
+
 	m_NodeCollection:RecalculateIndexes()
 	m_NodeCollection:ProcessMetadata()
 
@@ -222,15 +244,18 @@ function NodeEditor:OnInit(p_Player, p_Save)
 
 	for i = 1, #s_NodesToCheck do
 		local s_Waypoint = s_NodesToCheck[i]
+
 		if type(s_Waypoint.Next) == 'string' then
 			s_StaleNodes = s_StaleNodes + 1
 		end
+
 		if type(s_Waypoint.Previous) == 'string' then
 			s_StaleNodes = s_StaleNodes + 1
 		end
 	end
 
 	self:Log('Stale Nodes: %d', s_StaleNodes)
+
 	if p_Save then
 		m_NodeCollection:Save()
 	end
@@ -240,12 +265,14 @@ function NodeEditor:OnWarpTo(p_Player, p_Vec3Position)
 	if p_Player == nil or not p_Player.alive or p_Player.soldier == nil or not p_Player.soldier.isAlive then
 		return
 	end
+
 	self:Log('Teleporting %s to %s', p_Player.name, tostring(p_Vec3Position))
 	p_Player.soldier:SetPosition(p_Vec3Position)
 end
 
 function NodeEditor:OnSetBotVision(p_Player, p_Enabled)
 	self:Log('Player -> BotVision [%s]: %s', p_Player.name, p_Enabled)
+
 	if p_Enabled then
 		self.m_BotVision[p_Player.name] = {
 			Player = p_Player,
@@ -264,10 +291,13 @@ function NodeEditor:OnUIRequestSaveSettings(p_Player, p_Data)
 	if Config.DisableUserInterface == true then
 		return
 	end
+
 	if Config.SettingsPassword ~= nil and m_ServerUI:_isAuthenticated(p_Player.accountGuid) ~= true then
 		return
 	end
+
 	local s_Request = json.decode(p_Data)
+
 	if s_Request.debugTracePaths then
 		-- enabled, send them a fresh list
 		self:OnRequestNodes(p_Player)

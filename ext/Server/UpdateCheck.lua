@@ -22,6 +22,7 @@ local function CheckVersion()
 				print("failed to check")
 				break
 			end
+
 			if s_CurrentVersion[i] ~= s_LatestVersion[i] then
 				s_IsOlderVersion = (s_CurrentVersion[i] < s_LatestVersion[i])
 				break

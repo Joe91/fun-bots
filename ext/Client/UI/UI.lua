@@ -25,6 +25,7 @@ function UI:OnClientUpdateInput(p_DeltaTime)
 		if self.m_WaypointEditor then
 			NetEvents:Send('UI', 'VIEW', 'WaypointEditor', 'HIDE')
 		end
+
 		NetEvents:Send('UI', 'VIEW', 'BotEditor', 'TOGGLE')
 	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_Q) and self.m_WaypointEditor then
 		self:__local(json.encode({ 'VIEW', 'WaypointEditor', 'ACTIVATE' }))

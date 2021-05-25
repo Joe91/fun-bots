@@ -14,6 +14,7 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle)
 	local s_OnBasePath = false
 	local s_CurrentPathFirst = m_NodeCollection:GetFirst(p_Point.PathIndex)
 	local s_CurrentPathStatus = 0
+
 	if s_CurrentPathFirst.Data ~= nil and s_CurrentPathFirst.Data.Objectives ~= nil then
 		s_CurrentPathStatus = m_GameDirector:GetEnableStateOfPath(s_CurrentPathFirst.Data.Objectives)
 		s_OnBasePath = m_GameDirector:IsBasePath(s_CurrentPathFirst.Data.Objectives)
@@ -27,13 +28,16 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle)
 		if self.m_KillYourselfCounter[p_BotName] == nil then
 			self.m_KillYourselfCounter[p_BotName] = 0
 		end
+
 		if s_CurrentPathStatus == 0 then
 			self.m_KillYourselfCounter[p_BotName] = self.m_KillYourselfCounter[p_BotName] + 1
 		else
 			self.m_KillYourselfCounter[p_BotName] = 0
 		end
+
 		if self.m_KillYourselfCounter[p_BotName] > 20 then
 			local s_Bot = PlayerManager:GetPlayerByName(p_BotName)
+
 			if s_Bot ~= nil and s_Bot.soldier ~= nil then
 				s_Bot.soldier:Kill()
 				self.m_KillYourselfCounter[p_BotName] = 0
@@ -53,13 +57,16 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle)
 
 	local s_PossiblePaths = {}
 	table.insert(s_PossiblePaths, p_Point) -- include our current path
+
 	for i = 1, #p_Point.Data.Links do
 		local s_NewPoint = m_NodeCollection:Get(p_Point.Data.Links[i])
-		if (s_NewPoint ~= nil) then
+
+		if s_NewPoint ~= nil then
 			if not p_InVehicle then
 				table.insert(s_PossiblePaths, s_NewPoint)
 			else
 				local s_PathNode = m_NodeCollection:GetFirst(s_NewPoint.PathIndex)
+
 				if s_PathNode.Data.Vehicles ~= nil and #s_PathNode.Data.Vehicles > 0 then --TODO: check for vehicle-Type later
 					table.insert(s_PossiblePaths, s_NewPoint)
 				end
@@ -95,12 +102,14 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle)
 				if s_HighestPriority < 2 then
 					s_HighestPriority = 2
 				end
+
 				table.insert(s_Paths, {
 					Priority = 2,
 					Point = s_NewPoint,
 					State = s_NewPathStatus,
 					Base = s_NewBasePath
 				})
+
 				if s_NewPoint.ID == p_Point.ID then
 					s_CurrentPriority = 2
 				end
@@ -112,12 +121,14 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle)
 						if s_HighestPriority < 1 then
 							s_HighestPriority = 1
 						end
+
 						table.insert(s_Paths, {
 							Priority = 1,
 							Point = s_NewPoint,
 							State = s_NewPathStatus,
 							Base = s_NewBasePath
 						})
+
 						if s_NewPoint.ID == p_Point.ID then
 							s_CurrentPriority = 1
 						end
@@ -132,6 +143,7 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle)
 				State = s_NewPathStatus,
 				Base = s_NewBasePath
 			})
+
 			if s_NewPoint.ID == p_Point.ID then
 				s_CurrentPriority = 0
 			end
@@ -152,19 +164,24 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle)
 					end
 				end
 			end
+
 			if s_NewPathStatus > s_CurrentPathStatus then
 				s_SwitchAnyways = true
 			end
+
 			if s_NewPathStatus == 0 and s_CurrentPathStatus == 0 and s_CountOld > s_CountNew and not s_NewBasePath then
 				s_SwitchAnyways = true
 			end
+
 			if s_CountOld == 0 and s_CountNew > 0 then
 				s_SwitchAnyways = true
 			end
+
 			if s_SwitchAnyways then
 				if s_HighestPriority < 3 then
 					s_HighestPriority = 3
 				end
+
 				table.insert(s_Paths, {
 					Priority = 3,
 					Point = s_NewPoint,
@@ -188,6 +205,7 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle)
 
 	-- remove paths below our highest priority
 	local s_ValidPaths = {}
+
 	for i = 1, #s_Paths do
 		if s_Paths[i].Priority >= s_HighestPriority and s_Paths[i].State >= s_CurrentPathStatus then
 			if s_OnBasePath or (not s_OnBasePath and s_Paths[i].Base == false) or s_CurrentPathStatus <= 0 then
@@ -210,6 +228,7 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle)
 	end
 
 	local s_LinkMode = tonumber(p_Point.Data.LinkMode) or 0
+
 	if s_LinkMode == 0 then -- random path switch
 
 		local s_Chance = tonumber(p_Point.Data.LinkChance) or 40
@@ -218,6 +237,7 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle)
 
 		if s_CurrentPriority < s_HighestPriority then
 			local s_RandomPath = s_ValidPaths[s_RandomIndex]
+
 			if s_RandomPath == nil then
 				m_Logger:Write('[A] s_ValidPaths['..s_RandomIndex..'] was nil : '..g_Utilities:dump(s_ValidPaths, true, 2))
 				return false
@@ -230,6 +250,7 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle)
 
 		if s_RandomNumber <= s_Chance then
 			local s_RandomPath = s_ValidPaths[s_RandomIndex]
+
 			if s_RandomPath == nil then
 				m_Logger:Write('[B] s_ValidPaths['..s_RandomIndex..'] was nil : '..g_Utilities:dump(s_ValidPaths, true, 2))
 

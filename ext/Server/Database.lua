@@ -57,19 +57,14 @@ function Database:createTable(p_TableName, p_Definitions, p_Names, p_Additional)
 
 		if l_Value == DatabaseField.Text then
 			s_Entries:add(s_Name .. ' TEXT')
-
 		elseif l_Value == DatabaseField.PrimaryText then
 			s_Entries:add(s_Name .. ' TEXT UNIQUE')
-
 		elseif l_Value == DatabaseField.Integer then
 			s_Entries:add(s_Name .. ' INTEGER')
-
 		elseif l_Value == DatabaseField.Float then
 			s_Entries:add(s_Name .. ' FLOAT')
-
 		elseif l_Value == DatabaseField.Time then
 			s_Entries:add(s_Name .. ' DATETIME')
-
 		end
 	end
 
@@ -110,19 +105,14 @@ function Database:update(p_TableName, p_Parameters, p_Where)
 	for l_Name, l_Value in pairs(p_Parameters) do
 		if l_Value == nil then
 			l_Value = 'NULL'
-
 		elseif l_Value == self:now() then
 			l_Value = 'CURRENT_TIMESTAMP'
-
 		elseif l_Value == DatabaseField.NULL then
 			l_Value = 'NULL'
-
 		elseif tostring(l_Value) == 'true' or l_Value == true then
 			l_Value = '\'true\''
-
 		elseif tostring(l_Value) == 'false' or l_Value == false then
 			l_Value = '\'false\''
-
 		else
 			l_Value = '\'' .. tostring(l_Value) .. '\''
 		end
@@ -157,23 +147,18 @@ function Database:batchQuery(p_TableName, p_Parameters, p_Where)
 		if l_Value == nil then
 			s_Values:add('NULL')
 			l_Value = 'NULL'
-
 		elseif l_Value == self:now() then
 			s_Values:add('CURRENT_TIMESTAMP')
 			l_Value = 'CURRENT_TIMESTAMP'
-
 		elseif l_Value == DatabaseField.NULL then
 			s_Values:add('NULL')
 			l_Value = 'NULL'
-
 		elseif tostring(l_Value) == 'true' or l_Value == true then
 			s_Values:add('\'true\'')
 			l_Value = '\'true\''
-
 		elseif tostring(l_Value) == 'false' or l_Value == false then
 			s_Values:add('\'false\'')
 			l_Value = '\'false\''
-
 		else
 			s_Values:add('\'' .. tostring(l_Value) .. '\'')
 			l_Value = tostring(l_Value)
@@ -215,19 +200,14 @@ function Database:insert(p_TableName, p_Parameters)
 
 		if l_Value == nil then
 			s_Values:add('NULL')
-
 		elseif l_Value == self:now() then
 			s_Values:add('CURRENT_TIMESTAMP')
-
 		elseif l_Value == DatabaseField.NULL then
 			s_Values:add('NULL')
-
 		elseif tostring(l_Value) == 'true' or l_Value == true then
 			s_Values:add('\'true\'')
-
 		elseif tostring(l_Value) == 'false' or l_Value == false then
 			s_Values:add('\'false\'')
-
 		else
 			s_Values:add('\'' .. tostring(l_Value) .. '\'')
 		end

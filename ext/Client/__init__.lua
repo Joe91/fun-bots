@@ -56,6 +56,7 @@ function FunBotClient:RegisterHooks()
 	if not USE_REAL_DAMAGE then
 		Hooks:Install('BulletEntity:Collision', 200, self, self.OnBulletEntityCollision)
 	end
+
 	Hooks:Install('UI:PushScreen', 1, self, self.OnUIPushScreen)
 end
 

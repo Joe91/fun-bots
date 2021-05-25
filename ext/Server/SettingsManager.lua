@@ -126,6 +126,7 @@ function SettingsManager:onLoad()
 			--print('Updating Config Variable: ' .. tostring(l_Value.Key) .. ' = ' .. tostring(l_Value.Value) .. ' (' .. tostring(l_Value.Time) .. ')')
 			--end
 			local s_TempValue = tonumber(l_Value.Value)
+
 			if s_TempValue then --number?
 				Config[l_Value.Key] = s_TempValue
 			else --string
