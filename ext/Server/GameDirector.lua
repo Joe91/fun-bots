@@ -790,7 +790,7 @@ function GameDirector:_SetVehicleObjectiveState(p_Position, p_Value)
 	local s_ClosestVehicleEnterObjective = nil
 
 	for _, l_Waypoints in pairs(s_Paths) do
-		if l_Waypoints[1].Data ~= nil and l_Waypoints[1].Data.Objectives ~= nil and #l_Waypoints[1].Data.Objectives == 1 then
+		if l_Waypoints[1] ~= nil and l_Waypoints[1].Data ~= nil and l_Waypoints[1].Data.Objectives ~= nil and #l_Waypoints[1].Data.Objectives == 1 then
 			local s_ObjectiveObject = self:_GetObjectiveObject(l_Waypoints[1].Data.Objectives[1])
 
 			if s_ObjectiveObject ~= nil and s_ObjectiveObject.active ~= p_Value and s_ObjectiveObject.isEnterVehiclePath then -- only check disabled objectives
