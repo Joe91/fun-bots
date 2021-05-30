@@ -35,7 +35,7 @@ function SettingsManager:__init()
 	--m_Database:Query('CREATE UNIQUE INDEX USKey ON FB_Settings(Key)')
 end
 
-function SettingsManager:onLoad()
+function SettingsManager:OnExtensionLoaded()
 	-- Fix nil values on config
 	if Config.Language == nil then
 		Config.Language = DatabaseField.NULL
@@ -151,7 +151,8 @@ function SettingsManager:onLoad()
 	end
 end
 
-function SettingsManager:update(p_Name, p_Value, p_Temporary, p_Batch)
+-- this is unused
+function SettingsManager:Update(p_Name, p_Value, p_Temporary, p_Batch)
 	if p_Temporary ~= true then
 		if p_Value == nil then
 			p_Value = DatabaseField.NULL
