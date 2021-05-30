@@ -470,7 +470,7 @@ function RCONCommands:__init()
 		}
 	}
 
-	self:createCommand('funbots', (function(p_Command, p_Args)
+	self:_CreateCommand('funbots', (function(p_Command, p_Args)
 		local s_Result = {}
 
 		table.insert(s_Result, 'OK')
@@ -490,16 +490,16 @@ function RCONCommands:__init()
 		return s_Result
 	end))
 
-	self:create()
+	self:_Create()
 end
 
-function RCONCommands:create()
+function RCONCommands:_Create()
 	for l_Index, l_Command in pairs(self.m_Commands) do
-		self:createCommand(l_Command.Name, l_Command.Callback)
+		self:_CreateCommand(l_Command.Name, l_Command.Callback)
 	end
 end
 
-function RCONCommands:createCommand(p_Name, p_Callback)
+function RCONCommands:_CreateCommand(p_Name, p_Callback)
 	RCON:RegisterCommand(p_Name, RemoteCommandFlag.RequiresLogin, function(p_Command, p_Args, p_LoggedIn)
 		return p_Callback(p_Command, p_Args)
 	end)
