@@ -68,21 +68,21 @@ function ChatCommands:execute(p_Parts, p_Player)
 			return
 		end
 
-		m_BotManager:setStaticOption(p_Player, 'mode', BotMoveModes.Mimic)
+		m_BotManager:SetStaticOption(p_Player, 'mode', BotMoveModes.Mimic)
 	elseif p_Parts[1] == '!mirror' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Mirror') == false then
 			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Mirror).', p_Player)
 			return
 		end
 
-		m_BotManager:setStaticOption(p_Player, 'mode', BotMoveModes.Mirror)
+		m_BotManager:SetStaticOption(p_Player, 'mode', BotMoveModes.Mirror)
 	elseif p_Parts[1] == '!static' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Static') == false then
 			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Static).', p_Player)
 			return
 		end
 
-		m_BotManager:setStaticOption(p_Player, 'mode', BotMoveModes.Standstill)
+		m_BotManager:SetStaticOption(p_Player, 'mode', BotMoveModes.Standstill)
 	elseif p_Parts[1] == '!spawnway' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands.SpawnWay') == false then
 			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.SpawnWay).', p_Player)
@@ -126,7 +126,7 @@ function ChatCommands:execute(p_Parts, p_Player)
 
 		Globals.RespawnWayBots = s_Respawning
 
-		m_BotManager:setOptionForAll('respawn', s_Respawning)
+		m_BotManager:SetOptionForAll('respawn', s_Respawning)
 	elseif p_Parts[1] == '!shoot' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Shoot') == false then
 			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Shoot).', p_Player)
@@ -141,7 +141,7 @@ function ChatCommands:execute(p_Parts, p_Player)
 
 		Globals.AttackWayBots = s_Shooting
 
-		m_BotManager:setOptionForAll('shoot', s_Shooting)
+		m_BotManager:SetOptionForAll('shoot', s_Shooting)
 	-- spawn team settings
 	elseif p_Parts[1] == '!setbotkit' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands.SetBotKit') == false then
@@ -205,25 +205,25 @@ function ChatCommands:execute(p_Parts, p_Player)
 			return
 		end
 
-		m_BotManager:setOptionForAll('shoot', false)
-		m_BotManager:setOptionForAll('respawning', false)
-		m_BotManager:setOptionForAll('moveMode', 0)
+		m_BotManager:SetOptionForAll('shoot', false)
+		m_BotManager:SetOptionForAll('respawning', false)
+		m_BotManager:SetOptionForAll('moveMode', 0)
 	elseif p_Parts[1] == '!stop' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Stop') == false then
 			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Stop).', p_Player)
 			return
 		end
 
-		m_BotManager:setOptionForPlayer(p_Player, 'shoot', false)
-		m_BotManager:setOptionForPlayer(p_Player, 'respawning', false)
-		m_BotManager:setOptionForPlayer(p_Player, 'moveMode', 0)
+		m_BotManager:SetOptionForPlayer(p_Player, 'shoot', false)
+		m_BotManager:SetOptionForPlayer(p_Player, 'respawning', false)
+		m_BotManager:SetOptionForPlayer(p_Player, 'moveMode', 0)
 	elseif p_Parts[1] == '!kickp_Player' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands.KickPlayer') == false then
 			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.KickPlayer).', p_Player)
 			return
 		end
 
-		m_BotManager:destroyPlayerBots(p_Player)
+		m_BotManager:DestroyPlayerBots(p_Player)
 	elseif p_Parts[1] == '!kick' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Kick') == false then
 			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Kick).', p_Player)
@@ -232,7 +232,7 @@ function ChatCommands:execute(p_Parts, p_Player)
 
 		local s_Amount = tonumber(p_Parts[2]) or 1
 
-		m_BotManager:destroyAll(s_Amount)
+		m_BotManager:DestroyAll(s_Amount)
 	elseif p_Parts[1] == '!kickteam' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands.KickTeam') == false then
 			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.KickTeam).', p_Player)
@@ -247,28 +247,28 @@ function ChatCommands:execute(p_Parts, p_Player)
 
 		local s_TeamId = s_TeamToKick == 1 and TeamId.Team1 or TeamId.Team2
 
-		m_BotManager:destroyAll(nil, s_TeamId)
+		m_BotManager:DestroyAll(nil, s_TeamId)
 	elseif p_Parts[1] == '!kickall' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands.KickAll') == false then
 			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.KickAll).', p_Player)
 			return
 		end
 
-		m_BotManager:destroyAll()
+		m_BotManager:DestroyAll()
 	elseif p_Parts[1] == '!kill' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Kill') == false then
 			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Kill).', p_Player)
 			return
 		end
 
-		m_BotManager:killPlayerBots(p_Player)
+		m_BotManager:KillPlayerBots(p_Player)
 	elseif p_Parts[1] == '!killall' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands.KillAll') == false then
 			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.KillAll).', p_Player)
 			return
 		end
 
-		m_BotManager:killAll()
+		m_BotManager:KillAll()
 	-- waypoint stuff
 	elseif p_Parts[1] == '!getnodes' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands.GetNodes') == false then

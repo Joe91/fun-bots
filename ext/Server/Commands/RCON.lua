@@ -235,10 +235,10 @@ function RCONCommands:__init()
 
 				if s_CalcYawPerFrame then
 					if Debug.Server.RCON then
-						print('[RCON] call m_BotManager:calcYawPerFrame()')
+						print('[RCON] call m_BotManager:CalcYawPerFrame()')
 					end
 
-					Globals.YawPerFrame = m_BotManager:calcYawPerFrame()
+					Globals.YawPerFrame = m_BotManager:CalcYawPerFrame()
 				end
 
 				if s_UpdateBotTeamAndNumber then
@@ -314,7 +314,7 @@ function RCONCommands:__init()
 		KICKALLL = {
 			Name = 'funbots.kickAll',
 			Callback = (function(p_Command, p_Args)
-				m_BotManager:destroyAll()
+				m_BotManager:DestroyAll()
 
 				return { 'OK' }
 			end)
@@ -331,7 +331,7 @@ function RCONCommands:__init()
 					return {'ERROR', 'Name needed.'}
 				end
 
-				m_BotManager:destroyBot(s_Name)
+				m_BotManager:DestroyBot(s_Name)
 
 				return { 'OK' }
 			end)
@@ -341,7 +341,7 @@ function RCONCommands:__init()
 		KILLALL = {
 			Name = 'funbots.killAll',
 			Callback = (function(p_Command, p_Args)
-				m_BotManager:killAll()
+				m_BotManager:KillAll()
 
 				return { 'OK' }
 			end)

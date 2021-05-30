@@ -68,7 +68,7 @@ function BotSpawner:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 	if self._FirstSpawnInLevel then
 		if self._FirstSpawnDelay <= 0 then
-			m_BotManager:configGlobals()
+			m_BotManager:ConfigGlobals()
 			self:UpdateBotAmountAndTeam()
 			self._PlayerUpdateTimer = 0
 			self._FirstSpawnInLevel = false
@@ -98,8 +98,8 @@ function BotSpawner:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 			if Globals.SpawnMode ~= SpawnModes.manual then
 				--garbage-collection of unwanted bots
-				m_BotManager:destroyDisabledBots()
-				m_BotManager:freshnTables()
+				m_BotManager:DestroyDisabledBots()
+				m_BotManager:RefreshTables()
 			end
 		end
 	end
@@ -164,9 +164,9 @@ function BotSpawner:OnPlayerJoining(p_Name)
 	if string.find(p_Name, BOT_TOKEN) == 1 then --check if name starts with bot-token
 		table.insert(self._KickPlayers, p_Name)
 
-		if m_BotManager:getBotByName(p_Name) ~= nil then
+		if m_BotManager:GetBotByName(p_Name) ~= nil then
 			table.insert(Globals.IgnoreBotNames, p_Name)
-			m_BotManager:destroyBot(p_Name)
+			m_BotManager:DestroyBot(p_Name)
 		end
 	end
 end
@@ -211,7 +211,7 @@ end
 -- =============================================
 
 function BotSpawner:OnRespawnBot(p_BotName)
-	local s_Bot = m_BotManager:getBotByName(p_BotName)
+	local s_Bot = m_BotManager:GetBotByName(p_BotName)
 	local s_SpawnMode = s_Bot:GetSpawnMode()
 
 	if s_SpawnMode == BotSpawnModes.RespawnFixedPath then --fixed Way
@@ -238,7 +238,7 @@ function BotSpawner:UpdateBotAmountAndTeam()
 		local s_AmountToDestroy = PlayerManager:GetPlayerCount() - s_PlayerLimit
 
 		if s_AmountToDestroy > 0 then
-			m_BotManager:destroyAll(s_AmountToDestroy)
+			m_BotManager:DestroyAll(s_AmountToDestroy)
 		end
 	end
 
@@ -250,13 +250,13 @@ function BotSpawner:UpdateBotAmountAndTeam()
 	end
 
 	-- find all needed vars
-	local s_PlayerCount = m_BotManager:getPlayerCount()
-	local s_BotCount = m_BotManager:getActiveBotCount()
+	local s_PlayerCount = m_BotManager:GetPlayerCount()
+	local s_BotCount = m_BotManager:GetActiveBotCount()
 
 	-- kill and destroy bots, if no player left
 	if s_PlayerCount == 0 then
 		if s_BotCount > 0 or self._FirstSpawnInLevel then
-			m_BotManager:killAll() --trigger once
+			m_BotManager:KillAll() --trigger once
 			self._UpdateActive = true
 		else
 			self._UpdateActive = false
@@ -265,7 +265,7 @@ function BotSpawner:UpdateBotAmountAndTeam()
 		return
 	end
 
-	local s_BotTeam = m_BotManager:getBotTeam()
+	local s_BotTeam = m_BotManager:GetBotTeam()
 	local s_CountPlayers = {}
 	local s_TeamCount = {}
 	local s_CountBots = {}
@@ -273,7 +273,7 @@ function BotSpawner:UpdateBotAmountAndTeam()
 
 	for i = 1, Globals.NrOfTeams do
 		s_CountPlayers[i] = 0
-		s_CountBots[i] = m_BotManager:getActiveBotCount(i)
+		s_CountBots[i] = m_BotManager:GetActiveBotCount(i)
 		s_TargetTeamCount[i] = 0
 		local s_TempPlayers = PlayerManager:GetPlayersByTeam(i)
 
@@ -324,7 +324,7 @@ function BotSpawner:UpdateBotAmountAndTeam()
 			if s_TeamCount[i] < s_TargetTeamCount[i] then
 				self:SpawnWayBots(nil, s_TargetTeamCount[i] - s_TeamCount[i], true, 0, 0, i)
 			elseif s_TeamCount[i] > s_TargetTeamCount[i] and s_CountBots[i] > 0 then
-				m_BotManager:killAll(s_TeamCount[i] - s_TargetTeamCount[i], i)
+				m_BotManager:KillAll(s_TeamCount[i] - s_TargetTeamCount[i], i)
 			end
 		end
 	-- BALANCED teams
@@ -355,7 +355,7 @@ function BotSpawner:UpdateBotAmountAndTeam()
 			if s_TeamCount[i] < s_TargetTeamCount[i] then
 				self:SpawnWayBots(nil, s_TargetTeamCount[i] - s_TeamCount[i], true, 0, 0, i)
 			elseif s_TeamCount[i] > s_TargetTeamCount[i] then
-				m_BotManager:killAll(s_TeamCount[i] - s_TargetTeamCount[i], i)
+				m_BotManager:KillAll(s_TeamCount[i] - s_TargetTeamCount[i], i)
 			end
 		end
 
@@ -387,14 +387,14 @@ function BotSpawner:UpdateBotAmountAndTeam()
 				if s_TeamCount[i] < s_TargetTeamCount[i] then
 					self:SpawnWayBots(nil, s_TargetTeamCount[i] - s_TeamCount[i], true, 0, 0, i)
 				elseif s_TeamCount[i] > s_TargetTeamCount[i] and s_CountBots[i] > 0 then
-					m_BotManager:killAll(s_TeamCount[i] - s_TargetTeamCount[i], i)
+					m_BotManager:KillAll(s_TeamCount[i] - s_TargetTeamCount[i], i)
 				end
 			end
 		else
 			-- check for bots in wrong team
 			for i = 1, Globals.NrOfTeams do
 				if i ~= s_BotTeam and s_CountBots[i] > 0 then
-					m_BotManager:killAll(nil, i)
+					m_BotManager:KillAll(nil, i)
 				end
 			end
 
@@ -412,7 +412,7 @@ function BotSpawner:UpdateBotAmountAndTeam()
 			end
 
 			if s_AmountToSpawn < 0 then
-				m_BotManager:killAll(-s_AmountToSpawn)
+				m_BotManager:KillAll(-s_AmountToSpawn)
 			end
 		end
 	-- FIXED NUMBER TO SPAWN
@@ -437,14 +437,14 @@ function BotSpawner:UpdateBotAmountAndTeam()
 				if s_TeamCount[i] < s_TargetTeamCount[i] then
 					self:SpawnWayBots(nil, s_TargetTeamCount[i] - s_TeamCount[i], true, 0, 0, i)
 				elseif s_TeamCount[i] > s_TargetTeamCount[i] and s_CountBots[i] > 0 then
-					m_BotManager:killAll(s_TeamCount[i] - s_TargetTeamCount[i], i)
+					m_BotManager:KillAll(s_TeamCount[i] - s_TargetTeamCount[i], i)
 				end
 			end
 		else
 			-- check for bots in wrong team
 			for i = 1, Globals.NrOfTeams do
 				if i ~= s_BotTeam and s_CountBots[i] > 0 then
-					m_BotManager:killAll(nil, i)
+					m_BotManager:KillAll(nil, i)
 				end
 			end
 
@@ -462,7 +462,7 @@ function BotSpawner:UpdateBotAmountAndTeam()
 			end
 
 			if s_AmountToSpawn < 0 then
-				m_BotManager:killAll(-s_AmountToSpawn)
+				m_BotManager:KillAll(-s_AmountToSpawn)
 			end
 		end
 	elseif Globals.SpawnMode == SpawnModes.manual then
@@ -478,7 +478,7 @@ function BotSpawner:GetBot(p_ExistingBot, p_Name, p_TeamId, p_SquadId)
 	if p_ExistingBot ~= nil then
 		return p_ExistingBot
 	else
-		local s_Bot = m_BotManager:createBot(p_Name, p_TeamId, p_SquadId)
+		local s_Bot = m_BotManager:CreateBot(p_Name, p_TeamId, p_SquadId)
 
 		if s_Bot == nil then
 			m_Logger:Error("Failed to create bot")
@@ -499,12 +499,12 @@ end
 
 function BotSpawner:SpawnBotRow(p_Player, p_Length, p_Spacing)
 	for i = 1, p_Length do
-		local s_Name = m_BotManager:findNextBotName()
+		local s_Name = m_BotManager:FindNextBotName()
 
 		if s_Name ~= nil then
 			local s_Transform = LinearTransform()
 			s_Transform.trans = p_Player.soldier.worldTransform.trans + (p_Player.soldier.worldTransform.forward * i * p_Spacing)
-			local s_Bot = m_BotManager:createBot(s_Name, m_BotManager:getBotTeam(), SquadId.SquadNone)
+			local s_Bot = m_BotManager:CreateBot(s_Name, m_BotManager:GetBotTeam(), SquadId.SquadNone)
 			s_Bot:SetVarsStatic(p_Player)
 			self:_SpawnBot(s_Bot, s_Transform, true)
 		end
@@ -513,7 +513,7 @@ end
 
 function BotSpawner:SpawnBotTower(p_Player, p_Height)
 	for i = 1, p_Height do
-		local s_Name = m_BotManager:findNextBotName()
+		local s_Name = m_BotManager:FindNextBotName()
 
 		if s_Name ~= nil then
 			local s_Yaw = p_Player.input.authoritativeAimingYaw
@@ -521,7 +521,7 @@ function BotSpawner:SpawnBotTower(p_Player, p_Height)
 			s_Transform.trans.x = p_Player.soldier.worldTransform.trans.x + (math.cos(s_Yaw + (math.pi / 2)))
 			s_Transform.trans.y = p_Player.soldier.worldTransform.trans.y + ((i - 1) * 1.8)
 			s_Transform.trans.z = p_Player.soldier.worldTransform.trans.z + (math.sin(s_Yaw + (math.pi / 2)))
-			local s_Bot = m_BotManager:createBot(s_Name, m_BotManager:getBotTeam(), SquadId.SquadNone)
+			local s_Bot = m_BotManager:CreateBot(s_Name, m_BotManager:GetBotTeam(), SquadId.SquadNone)
 			s_Bot:SetVarsStatic(p_Player)
 			self:_SpawnBot(s_Bot, s_Transform, true)
 		end
@@ -531,7 +531,7 @@ end
 function BotSpawner:SpawnBotGrid(p_Player, p_Rows, p_Columns, p_Spacing)
 	for i = 1, p_Rows do
 		for j = 1, p_Columns do
-			local s_Name = m_BotManager:findNextBotName()
+			local s_Name = m_BotManager:FindNextBotName()
 
 			if s_Name ~= nil then
 				local s_Yaw = p_Player.input.authoritativeAimingYaw
@@ -539,7 +539,7 @@ function BotSpawner:SpawnBotGrid(p_Player, p_Rows, p_Columns, p_Spacing)
 				s_Transform.trans.x = p_Player.soldier.worldTransform.trans.x + (i * math.cos(s_Yaw + (math.pi / 2)) * p_Spacing) + ((j - 1) * math.cos(s_Yaw) * p_Spacing)
 				s_Transform.trans.y = p_Player.soldier.worldTransform.trans.y
 				s_Transform.trans.z = p_Player.soldier.worldTransform.trans.z + (i * math.sin(s_Yaw + (math.pi / 2)) * p_Spacing) + ((j - 1) * math.sin(s_Yaw) * p_Spacing)
-				local s_Bot = m_BotManager:createBot(s_Name, m_BotManager:getBotTeam(), SquadId.SquadNone)
+				local s_Bot = m_BotManager:CreateBot(s_Name, m_BotManager:GetBotTeam(), SquadId.SquadNone)
 				s_Bot:SetVarsStatic(p_Player)
 				self:_SpawnBot(s_Bot, s_Transform, true)
 			end
@@ -563,7 +563,7 @@ function BotSpawner:SpawnWayBots(p_Player, p_Amount, p_UseRandomWay, p_ActiveWay
 		s_PlayerLimit = s_PlayerLimit - 1
 	end
 
-	local s_InactiveBots = m_BotManager:getBotCount() - m_BotManager:getActiveBotCount()
+	local s_InactiveBots = m_BotManager:GetBotCount() - m_BotManager:GetActiveBotCount()
 	local s_SlotsLeft = s_PlayerLimit - (PlayerManager:GetPlayerCount() - s_InactiveBots)
 
 	if p_Amount > s_SlotsLeft then
@@ -838,14 +838,14 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 	if p_ExistingBot ~= nil then
 		s_IsRespawn = true
 	else
-		s_Name = m_BotManager:findNextBotName()
+		s_Name = m_BotManager:FindNextBotName()
 	end
 
 	local s_TeamId = p_ForcedTeam
 	local s_SquadId = SquadId.SquadNone
 
 	if s_TeamId == nil then
-		s_TeamId = m_BotManager:getBotTeam()
+		s_TeamId = m_BotManager:GetBotTeam()
 	end
 
 	if s_IsRespawn then
@@ -902,7 +902,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 			p_ExistingBot:SetVarsWay(p_Player, p_UseRandomWay, p_ActiveWayIndex, p_IndexOnPath, s_InverseDirection)
 			self:_SpawnBot(p_ExistingBot, s_Transform, false)
 		else
-			local s_Bot = m_BotManager:createBot(s_Name, s_TeamId, s_SquadId)
+			local s_Bot = m_BotManager:CreateBot(s_Name, s_TeamId, s_SquadId)
 
 			if s_Bot ~= nil then
 				-- check for first one in squad
@@ -961,9 +961,9 @@ function BotSpawner:_SpawnBot(p_Bot, p_Trans, p_SetKit)
 	-- And then spawn the bot. This will create and return a new SoldierEntity object.
 	-- for Civilianizer-Mod
 	if Globals.RemoveKitVisuals then
-		m_BotManager:spawnBot(p_Bot, s_Transform, CharacterPoseType.CharacterPoseType_Stand, s_SoldierBlueprint, s_SoldierKit, {})
+		m_BotManager:SpawnBot(p_Bot, s_Transform, CharacterPoseType.CharacterPoseType_Stand, s_SoldierBlueprint, s_SoldierKit, {})
 	else
-		m_BotManager:spawnBot(p_Bot, s_Transform, CharacterPoseType.CharacterPoseType_Stand, s_SoldierBlueprint, s_SoldierKit, { s_Appearance })
+		m_BotManager:SpawnBot(p_Bot, s_Transform, CharacterPoseType.CharacterPoseType_Stand, s_SoldierBlueprint, s_SoldierKit, { s_Appearance })
 	end
 
 	p_Bot.m_Player.soldier:ApplyCustomization(s_SoldierCustomization)
@@ -1188,7 +1188,7 @@ function BotSpawner:_GetSpawnBotKit()
 	local s_BotKit = MathUtils:GetRandomInt(1, BotKits.Count-1) -- Kit enum goes from 1 to 4
 	local s_ChangeKit = false
 	--find out, if possible
-	local s_KitCount = m_BotManager:getKitCount(s_BotKit)
+	local s_KitCount = m_BotManager:GetKitCount(s_BotKit)
 
 	if s_BotKit == BotKits.Assault then
 		if Config.MaxAssaultBots >= 0 and s_KitCount >= Config.MaxAssaultBots then
@@ -1211,19 +1211,19 @@ function BotSpawner:_GetSpawnBotKit()
 	if s_ChangeKit then
 		local s_AvailableKitList = {}
 
-		if (Config.MaxAssaultBots == -1) or (m_BotManager:getKitCount(BotKits.Assault) < Config.MaxAssaultBots) then
+		if (Config.MaxAssaultBots == -1) or (m_BotManager:GetKitCount(BotKits.Assault) < Config.MaxAssaultBots) then
 			table.insert(s_AvailableKitList, BotKits.Assault)
 		end
 
-		if (Config.MaxEngineerBots == -1) or (m_BotManager:getKitCount(BotKits.Engineer) < Config.MaxEngineerBots) then
+		if (Config.MaxEngineerBots == -1) or (m_BotManager:GetKitCount(BotKits.Engineer) < Config.MaxEngineerBots) then
 			table.insert(s_AvailableKitList, BotKits.Engineer)
 		end
 
-		if (Config.MaxSupportBots == -1) or (m_BotManager:getKitCount(BotKits.Support) < Config.MaxSupportBots) then
+		if (Config.MaxSupportBots == -1) or (m_BotManager:GetKitCount(BotKits.Support) < Config.MaxSupportBots) then
 			table.insert(s_AvailableKitList, BotKits.Support)
 		end
 
-		if(Config.MaxReconBots == -1) or (m_BotManager:getKitCount(BotKits.Recon) < Config.MaxReconBots) then
+		if(Config.MaxReconBots == -1) or (m_BotManager:GetKitCount(BotKits.Recon) < Config.MaxReconBots) then
 			table.insert(s_AvailableKitList, BotKits.Recon)
 		end
 

@@ -166,7 +166,7 @@ function BotEditor:InitializeComponent()
 		s_Bots:AddItem(MenuItem('Kick All', 'bot_kick_all', function(p_Player)
 			Globals.SpawnMode = 'manual'
 
-			m_BotManager:destroyAll()
+			m_BotManager:DestroyAll()
 		end, 'F3'), 'UserInterface.BotEditor.KickAll')
 
 		local s_Input_Team = Input(Type.Integer, 'team', self.m_Team)
@@ -176,7 +176,7 @@ function BotEditor:InitializeComponent()
 		local s_Bot_Kick_Team = MenuItem('Kick Team', 'bot_kick_team', function(p_Player)
 			Globals.SpawnMode = 'manual'
 
-			m_BotManager:destroyAll(nil, self.m_Team)
+			m_BotManager:DestroyAll(nil, self.m_Team)
 		end)
 
 		s_Input_Team:AddArrow(Position.Left, '❰', function(p_Player)
@@ -217,7 +217,7 @@ function BotEditor:InitializeComponent()
 		s_Bots:AddItem(MenuItem('Kill All', 'bot_kill_all', function(p_Player)
 			Globals.SpawnMode = 'manual'
 
-			m_BotManager:killAll()
+			m_BotManager:KillAll()
 		end, 'F4'), 'UserInterface.BotEditor.KillAll')
 
 		s_Bots:AddItem(MenuSeparator())
@@ -225,7 +225,7 @@ function BotEditor:InitializeComponent()
 		s_Bots:AddItem(MenuItem('Toggle Respawn', 'bot_respawn', function(p_Player)
 			local s_Respawning = not Globals.RespawnWayBots
 			Globals.RespawnWayBots = s_Respawning
-			m_BotManager:setOptionForAll('respawn', s_Respawning)
+			m_BotManager:SetOptionForAll('respawn', s_Respawning)
 
 			if s_Respawning then
 				ChatManager:Yell(Language:I18N('Bot respawn activated!'), 2.5)
@@ -237,7 +237,7 @@ function BotEditor:InitializeComponent()
 		s_Bots:AddItem(MenuItem('Toggle Attack', 'bot_attack', function(p_Player)
 			local s_Attack = not Globals.AttackWayBots
 			Globals.AttackWayBots = s_Attack
-			m_BotManager:setOptionForAll('shoot', s_Attack)
+			m_BotManager:SetOptionForAll('shoot', s_Attack)
 
 			if s_Attack then
 				ChatManager:Yell(Language:I18N('Bots will attack!'), 2.5)

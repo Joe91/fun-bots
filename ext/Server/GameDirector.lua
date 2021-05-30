@@ -117,7 +117,7 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 	self.m_UpdateLast = 0
 
 	--update bot -> team list
-	local s_BotList = g_BotManager:getBots()
+	local s_BotList = g_BotManager:GetBots()
 	self.m_BotsByTeam = {}
 
 	for i = 1, #s_BotList do
@@ -577,7 +577,7 @@ function GameDirector:UseSubobjective(p_BotName, p_Objective)
 
 	if s_TempObjective ~= nil and s_TempObjective.subObjective then -- is valid getSubObjective
 		if s_TempObjective.active and not s_TempObjective.destroyed then
-			local s_Bot = g_BotManager:getBotByName(p_BotName)
+			local s_Bot = g_BotManager:GetBotByName(p_BotName)
 			local s_BotTeam = s_Bot.m_Player.teamId
 
 			if self:_UseSubobjective(s_BotTeam, p_Objective) then
