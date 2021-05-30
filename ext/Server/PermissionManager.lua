@@ -1,6 +1,7 @@
 class('PermissionManager')
 
 local m_Logger = Logger("PermissionManager", Debug.Server.PERMISSIONS)
+local m_Database = require('Database')
 
 function PermissionManager:__init()
 	self.m_Permissions = {}
@@ -14,7 +15,7 @@ function PermissionManager:__boot()
 	m_Logger:Write('Booting...')
 
 	-- Create Permissions
-	Database:createTable('FB_Permissions', {
+	m_Database:CreateTable('FB_Permissions', {
 		DatabaseField.Text,
 		DatabaseField.Text,
 		DatabaseField.Text,
@@ -27,7 +28,7 @@ function PermissionManager:__boot()
 	})
 
 	-- Load all permissions
-	local s_Permissions = Database:fetch('SELECT * FROM `FB_Permissions`')
+	local s_Permissions = m_Database:Fetch('SELECT * FROM `FB_Permissions`')
 
 	if s_Permissions == nil then
 		m_Logger:Write('Currently no Permissions exists, skipping...')
@@ -100,15 +101,15 @@ function PermissionManager:AddPermission(p_Name, p_Permission)
 		table.insert(self.m_Permissions[tostring(s_Player.guid)], p_Permission)
 	end
 
-	local s_Single = Database:single('SELECT * FROM `FB_Permissions` WHERE `GUID`=\'' .. tostring(s_Player.guid) .. '\' AND `Value`=\'' .. p_Permission .. '\' LIMIT 1')
+	local s_Single = m_Database:Single('SELECT * FROM `FB_Permissions` WHERE `GUID`=\'' .. tostring(s_Player.guid) .. '\' AND `Value`=\'' .. p_Permission .. '\' LIMIT 1')
 
 	-- If not exists, create
 	if s_Single == nil then
-		Database:insert('FB_Permissions', {
+		m_Database:Insert('FB_Permissions', {
 			GUID = tostring(s_Player.guid),
 			PlayerName = s_Player.name,
 			Value = p_Permission,
-			Time = Database:now()
+			Time = m_Database:Now()
 		})
 	end
 end
@@ -260,7 +261,7 @@ function PermissionManager:Revoke(p_Name, p_Permission)
 
 	for i = 1, #s_Permissions do
 		if s_Permissions[i]:lower() == p_Permission:lower() then
-			Database:delete('FB_Permissions', {
+			m_Database:Delete('FB_Permissions', {
 				GUID = tostring(p_Player.guid),
 				Value = PermissionManager:GetCorrectName(s_Permissions[i])
 			})
@@ -298,7 +299,7 @@ function PermissionManager:RevokeAll(p_Name)
 
 	self.m_Permissions[tostring(s_Player.guid)] = {}
 
-	Database:delete('FB_Permissions', {
+	m_Database:Delete('FB_Permissions', {
 		GUID = tostring(s_Player.guid)
 	})
 
