@@ -252,7 +252,7 @@ end
 
 function FunBotServer:OnPlayerChat(p_Player, p_RecipientMask, p_Message)
 	local s_MessageParts = string.lower(p_Message):split(' ')
-	m_ChatCommands:execute(s_MessageParts, p_Player)
+	m_ChatCommands:Execute(s_MessageParts, p_Player)
 end
 
 function FunBotServer:OnPlayerLeft(p_Player)

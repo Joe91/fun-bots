@@ -6,7 +6,7 @@ local m_NodeCollection = require('__shared/NodeCollection')
 local m_BotManager = require('BotManager')
 local m_BotSpawner = require('BotSpawner')
 
-function ChatCommands:execute(p_Parts, p_Player)
+function ChatCommands:Execute(p_Parts, p_Player)
 	if p_Player == nil or Config.DisableChatCommands == true then
 		return
 	end
