@@ -137,7 +137,7 @@ function BotSpawner:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 				local s_Node = g_GameDirector:FindClosestPath(s_Position, false)
 
 				if s_Node ~= nil then
-					l_Bot:setVarsWay(nil, true, s_Node.PathIndex, s_Node.PointIndex, false)
+					l_Bot:SetVarsWay(nil, true, s_Node.PathIndex, s_Node.PointIndex, false)
 					table.remove(self._BotsWithoutPath, i)
 					local s_SoldierCustomization = nil
 					local s_SoldierKit = nil
@@ -212,10 +212,10 @@ end
 
 function BotSpawner:OnRespawnBot(p_BotName)
 	local s_Bot = m_BotManager:getBotByName(p_BotName)
-	local s_SpawnMode = s_Bot:getSpawnMode()
+	local s_SpawnMode = s_Bot:GetSpawnMode()
 
 	if s_SpawnMode == BotSpawnModes.RespawnFixedPath then --fixed Way
-		local s_WayIndex = s_Bot:getWayIndex()
+		local s_WayIndex = s_Bot:GetWayIndex()
 		local s_RandIndex = MathUtils:GetRandomInt(1, #m_NodeCollection:Get(nil, s_WayIndex))
 		self:_SpawnSingleWayBot(nil, false, s_WayIndex, s_RandIndex, s_Bot)
 	elseif s_SpawnMode == BotSpawnModes.RespawnRandomPath then --random Way
@@ -505,7 +505,7 @@ function BotSpawner:SpawnBotRow(p_Player, p_Length, p_Spacing)
 			local s_Transform = LinearTransform()
 			s_Transform.trans = p_Player.soldier.worldTransform.trans + (p_Player.soldier.worldTransform.forward * i * p_Spacing)
 			local s_Bot = m_BotManager:createBot(s_Name, m_BotManager:getBotTeam(), SquadId.SquadNone)
-			s_Bot:setVarsStatic(p_Player)
+			s_Bot:SetVarsStatic(p_Player)
 			self:_SpawnBot(s_Bot, s_Transform, true)
 		end
 	end
@@ -522,7 +522,7 @@ function BotSpawner:SpawnBotTower(p_Player, p_Height)
 			s_Transform.trans.y = p_Player.soldier.worldTransform.trans.y + ((i - 1) * 1.8)
 			s_Transform.trans.z = p_Player.soldier.worldTransform.trans.z + (math.sin(s_Yaw + (math.pi / 2)))
 			local s_Bot = m_BotManager:createBot(s_Name, m_BotManager:getBotTeam(), SquadId.SquadNone)
-			s_Bot:setVarsStatic(p_Player)
+			s_Bot:SetVarsStatic(p_Player)
 			self:_SpawnBot(s_Bot, s_Transform, true)
 		end
 	end
@@ -540,7 +540,7 @@ function BotSpawner:SpawnBotGrid(p_Player, p_Rows, p_Columns, p_Spacing)
 				s_Transform.trans.y = p_Player.soldier.worldTransform.trans.y
 				s_Transform.trans.z = p_Player.soldier.worldTransform.trans.z + (i * math.sin(s_Yaw + (math.pi / 2)) * p_Spacing) + ((j - 1) * math.sin(s_Yaw) * p_Spacing)
 				local s_Bot = m_BotManager:createBot(s_Name, m_BotManager:getBotTeam(), SquadId.SquadNone)
-				s_Bot:setVarsStatic(p_Player)
+				s_Bot:SetVarsStatic(p_Player)
 				self:_SpawnBot(s_Bot, s_Transform, true)
 			end
 		end
@@ -615,7 +615,7 @@ function BotSpawner:_SelectLoadout(p_Bot, p_SetKit)
 		s_BotKit = p_Bot.m_Kit
 	end
 
-	p_Bot:resetSpawnVars()
+	p_Bot:ResetSpawnVars()
 	self:_SetBotWeapons(p_Bot, s_BotKit, s_WriteNewKit)
 
 	if p_Bot.m_Player.selectedKit == nil then
@@ -899,7 +899,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 		s_Transform.trans = s_SpawnPoint.Position
 
 		if s_IsRespawn then
-			p_ExistingBot:setVarsWay(p_Player, p_UseRandomWay, p_ActiveWayIndex, p_IndexOnPath, s_InverseDirection)
+			p_ExistingBot:SetVarsWay(p_Player, p_UseRandomWay, p_ActiveWayIndex, p_IndexOnPath, s_InverseDirection)
 			self:_SpawnBot(p_ExistingBot, s_Transform, false)
 		else
 			local s_Bot = m_BotManager:createBot(s_Name, s_TeamId, s_SquadId)
@@ -910,7 +910,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 					s_Bot.m_Player:SetSquadLeader(true, false) -- not private
 				end
 
-				s_Bot:setVarsWay(p_Player, p_UseRandomWay, p_ActiveWayIndex, p_IndexOnPath, s_InverseDirection)
+				s_Bot:SetVarsWay(p_Player, p_UseRandomWay, p_ActiveWayIndex, p_IndexOnPath, s_InverseDirection)
 				self:_SpawnBot(s_Bot, s_Transform, true)
 			end
 		end
@@ -945,7 +945,7 @@ function BotSpawner:_SpawnBot(p_Bot, p_Trans, p_SetKit)
 
 	self:_SetBotWeapons(p_Bot, s_BotKit, s_WriteNewKit)
 
-	p_Bot:resetSpawnVars()
+	p_Bot:ResetSpawnVars()
 
 	-- create kit and appearance
 	local s_SoldierBlueprint = ResourceManager:SearchForDataContainer('Characters/Soldiers/MpSoldier')
@@ -1380,19 +1380,19 @@ function BotSpawner:_ModifyWeapon(p_Soldier)
 end
 
 function BotSpawner:_SwitchTeams()
-	local s_players = PlayerManager:GetPlayers()
+	local s_Players = PlayerManager:GetPlayers()
 
-	for _,l_player in pairs(s_players) do
-		local s_oldTeam = l_player.teamId
+	for _, l_Player in pairs(s_Players) do
+		local s_OldTeam = l_Player.teamId
 
-		if s_oldTeam ~= TeamId.TeamNeutral then
-			local s_newTeam = ((s_oldTeam + 1) % Globals.NrOfTeams)
+		if s_OldTeam ~= TeamId.TeamNeutral then
+			local s_NewTeam = ((s_OldTeam + 1) % Globals.NrOfTeams)
 
-			if s_newTeam == 0 then
-				s_newTeam = Globals.NrOfTeams
+			if s_NewTeam == 0 then
+				s_NewTeam = Globals.NrOfTeams
 			end
 
-			l_player.teamId = s_newTeam
+			l_Player.teamId = s_NewTeam
 		end
 	end
 end

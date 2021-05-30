@@ -99,7 +99,7 @@ function BotManager:findNextBotName()
 
 			if s_Bot == nil and PlayerManager:GetPlayerByName(s_Name) == nil then
 				return s_Name
-			elseif s_Bot ~= nil and s_Bot.m_Player.soldier == nil and s_Bot:getSpawnMode() ~= BotSpawnModes.RespawnRandomPath then
+			elseif s_Bot ~= nil and s_Bot.m_Player.soldier == nil and s_Bot:GetSpawnMode() ~= BotSpawnModes.RespawnRandomPath then
 				return s_Name
 			end
 		end
@@ -124,7 +124,7 @@ function BotManager:getActiveBotCount(p_TeamId)
 	local s_Count = 0
 
 	for _, l_Bot in pairs(self._Bots) do
-		if not l_Bot:isInactive() then
+		if not l_Bot:IsInactive() then
 			if p_TeamId == nil or l_Bot.m_Player.teamId == p_TeamId then
 				s_Count = s_Count + 1
 			end
@@ -165,18 +165,18 @@ end
 
 function BotManager:resetAllBots()
 	for _, l_Bot in pairs(self._Bots) do
-		l_Bot:resetVars()
+		l_Bot:ResetVars()
 	end
 end
 
 function BotManager:setStaticOption(p_Player, p_Option, p_Value)
 	for _, l_Bot in pairs(self._Bots) do
-		if l_Bot:getTargetPlayer() == p_Player then
-			if l_Bot:isStaticMovement() then
+		if l_Bot:GetTargetPlayer() == p_Player then
+			if l_Bot:IsStaticMovement() then
 				if p_Option == "mode" then
-					l_Bot:setMoveMode(p_Value)
+					l_Bot:SetMoveMode(p_Value)
 				elseif p_Option == "speed" then
-					l_Bot:setSpeed(p_Value)
+					l_Bot:SetSpeed(p_Value)
 				end
 			end
 		end
@@ -186,24 +186,24 @@ end
 function BotManager:setOptionForAll(p_Option, p_Value)
 	for _, l_Bot in pairs(self._Bots) do
 		if p_Option == "shoot" then
-			l_Bot:setShoot(p_Value)
+			l_Bot:SetShoot(p_Value)
 		elseif p_Option == "respawn" then
-			l_Bot:setRespawn(p_Value)
+			l_Bot:SetRespawn(p_Value)
 		elseif p_Option == "moveMode" then
-			l_Bot:setMoveMode(p_Value)
+			l_Bot:SetMoveMode(p_Value)
 		end
 	end
 end
 
 function BotManager:setOptionForPlayer(p_Player, p_Option, p_Value)
 	for _, l_Bot in pairs(self._Bots) do
-		if l_Bot:getTargetPlayer() == p_Player then
+		if l_Bot:GetTargetPlayer() == p_Player then
 			if p_Option == "shoot" then
-				l_Bot:setShoot(p_Value)
+				l_Bot:SetShoot(p_Value)
 			elseif p_Option == "respawn" then
-				l_Bot:setRespawn(p_Value)
+				l_Bot:SetRespawn(p_Value)
 			elseif p_Option == "moveMode" then
-				l_Bot:setMoveMode(p_Value)
+				l_Bot:SetMoveMode(p_Value)
 			end
 		end
 	end
@@ -215,7 +215,7 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	end
 
 	for _, l_Bot in pairs(self._Bots) do
-		l_Bot:onUpdate(p_DeltaTime)
+		l_Bot:OnUpdatePassPostFrame(p_DeltaTime)
 	end
 
 	if Config.BotsAttackBots and self._InitDone then
@@ -378,7 +378,7 @@ function BotManager:OnPlayerLeft(p_Player)
 	--remove all references of player
 	if p_Player ~= nil then
 		for _, l_Bot in pairs(self._Bots) do
-			l_Bot:clearPlayer(p_Player)
+			l_Bot:ClearPlayer(p_Player)
 		end
 	end
 end
@@ -533,7 +533,7 @@ function BotManager:OnShootAt(p_Player, p_BotName, p_IgnoreYaw)
 		return
 	end
 
-	s_Bot:shootAt(p_Player, p_IgnoreYaw)
+	s_Bot:ShootAt(p_Player, p_IgnoreYaw)
 end
 
 function BotManager:OnRevivePlayer(p_Player, p_BotName)
@@ -543,7 +543,7 @@ function BotManager:OnRevivePlayer(p_Player, p_BotName)
 		return
 	end
 
-	s_Bot:revive(p_Player)
+	s_Bot:Revive(p_Player)
 end
 
 function BotManager:OnBotShootAtBot(p_Player, p_BotName1, p_BotName2)
@@ -554,7 +554,7 @@ function BotManager:OnBotShootAtBot(p_Player, p_BotName1, p_BotName2)
 		return
 	end
 
-	if s_Bot1:shootAt(s_Bot2.m_Player, false) or s_Bot2:shootAt(s_Bot1.m_Player, false) then
+	if s_Bot1:ShootAt(s_Bot2.m_Player, false) or s_Bot2:ShootAt(s_Bot1.m_Player, false) then
 		self._BotCheckState[s_Bot1.m_Player.name] = s_Bot2.m_Player.name
 		self._BotCheckState[s_Bot2.m_Player.name] = s_Bot1.m_Player.name
 	else
@@ -584,7 +584,7 @@ function BotManager:createBot(p_Name, p_TeamId, p_SquadId)
 	if s_Bot ~= nil then
 		s_Bot.m_Player.teamId = p_TeamId
 		s_Bot.m_Player.squadId = p_SquadId
-		s_Bot:resetVars()
+		s_Bot:ResetVars()
 		return s_Bot
 	end
 
@@ -641,8 +641,8 @@ end
 
 function BotManager:killPlayerBots(p_Player)
 	for _, l_Bot in pairs(self._Bots) do
-		if l_Bot:getTargetPlayer() == p_Player then
-			l_Bot:resetVars()
+		if l_Bot:GetTargetPlayer() == p_Player then
+			l_Bot:ResetVars()
 
 			if l_Bot.m_Player.alive then
 				l_Bot.m_Player.soldier:Kill()
@@ -653,7 +653,7 @@ end
 
 function BotManager:resetAllBots()
 	for _, l_Bot in pairs(self._Bots) do
-		l_Bot:resetVars()
+		l_Bot:ResetVars()
 	end
 end
 
@@ -667,7 +667,7 @@ function BotManager:killAll(p_Amount, p_TeamId)
 	p_Amount = p_Amount or #s_BotTable
 
 	for _, l_Bot in pairs(s_BotTable) do
-		l_Bot:kill()
+		l_Bot:Kill()
 
 		p_Amount = p_Amount - 1
 
@@ -703,7 +703,7 @@ end
 
 function BotManager:destroyDisabledBots()
 	for _, l_Bot in pairs(self._Bots) do
-		if l_Bot:isInactive() then
+		if l_Bot:IsInactive() then
 			table.insert(self._BotsToDestroy, l_Bot.m_Name)
 		end
 	end
@@ -711,7 +711,7 @@ end
 
 function BotManager:destroyPlayerBots(p_Player)
 	for _, l_Bot in pairs(self._Bots) do
-		if l_Bot:getTargetPlayer() == p_Player then
+		if l_Bot:GetTargetPlayer() == p_Player then
 			table.insert(self._BotsToDestroy, l_Bot.m_Name)
 		end
 	end
@@ -753,7 +753,7 @@ function BotManager:destroyBot(p_Bot)
 			table.insert(s_NewTable, l_Bot)
 		end
 
-		l_Bot:clearPlayer(p_Bot.m_Player)
+		l_Bot:ClearPlayer(p_Bot.m_Player)
 	end
 
 	self._Bots = s_NewTable
@@ -770,7 +770,7 @@ function BotManager:destroyBot(p_Bot)
 	self._BotsByName[p_Bot.m_Name] = nil
 	self._BotInputs[p_Bot.m_Id] = nil
 
-	p_Bot:destroy()
+	p_Bot:Destroy()
 	p_Bot = nil
 end
 

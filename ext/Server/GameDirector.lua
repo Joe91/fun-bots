@@ -83,10 +83,10 @@ function GameDirector:OnCapturePointCaptured(p_CapturePoint)
 
 	for l_BotTeam, l_Bots in pairs(self.m_BotsByTeam) do
 		for i = 1, #l_Bots do
-			if l_Bots[i]:getObjective() == s_Objective.name and s_Objective.team == l_BotTeam then
+			if l_Bots[i]:GetObjective() == s_Objective.name and s_Objective.team == l_BotTeam then
 				m_Logger:Write('Bot completed objective: '..l_Bots[i].m_Name..' (team: '..l_BotTeam..') -> '..s_Objective.name)
 
-				l_Bots[i]:setObjective()
+				l_Bots[i]:SetObjective()
 				s_Objective.assigned[l_BotTeam] = math.max(s_Objective.assigned[l_BotTeam] - 1, 0)
 			end
 		end
@@ -121,7 +121,7 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 	self.m_BotsByTeam = {}
 
 	for i = 1, #s_BotList do
-		if not s_BotList[i]:isInactive() and s_BotList[i].m_Player ~= nil then
+		if not s_BotList[i]:IsInactive() and s_BotList[i].m_Player ~= nil then
 			if self.m_BotsByTeam[s_BotList[i].m_Player.teamId] == nil then
 				self.m_BotsByTeam[s_BotList[i].m_Player.teamId] = {}
 			end
@@ -163,7 +163,7 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 
 	for l_BotTeam, l_Bots in pairs(self.m_BotsByTeam) do
 		for _, l_Bot in pairs(l_Bots) do
-			if l_Bot:getObjective() == '' then
+			if l_Bot:GetObjective() == '' then
 				if not l_Bot.m_Player.alive then
 					goto continue_inner_loop
 				end
@@ -199,17 +199,17 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 
 				if s_ClosestObjective ~= nil then
 					local s_Objective = self:_GetObjectiveObject(s_ClosestObjective)
-					l_Bot:setObjective(s_ClosestObjective)
+					l_Bot:SetObjective(s_ClosestObjective)
 					m_Logger:Write("Team "..tostring(l_BotTeam).." with "..l_Bot.m_Name.." gets this objective: "..s_ClosestObjective)
 					s_Objective.assigned[l_BotTeam] = s_Objective.assigned[l_BotTeam] + 1
 				end
 			else
 				if not l_Bot.m_Player.alive then
-					l_Bot:setObjective() -- reset objective on death
+					l_Bot:SetObjective() -- reset objective on death
 					goto continue_inner_loop
 				end
 
-				local s_Objective = self:_GetObjectiveObject(l_Bot:getObjective())
+				local s_Objective = self:_GetObjectiveObject(l_Bot:GetObjective())
 				local s_ParentObjective = self:_GetObjectiveFromSubObj(s_Objective.name)
 				s_Objective.assigned[l_BotTeam] = s_Objective.assigned[l_BotTeam] + 1
 
@@ -221,13 +221,13 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 
 						-- check for leave of subObjective
 						if not self:_UseSubobjective(l_BotTeam, s_Objective.name) then
-							l_Bot:setObjective(s_ParentObjective)
+							l_Bot:SetObjective(s_ParentObjective)
 						end
 					end
 				end
 
 				if s_Objective.isBase or not s_Objective.active or s_Objective.destroyed or s_Objective.team == l_BotTeam then
-					l_Bot:setObjective()
+					l_Bot:SetObjective()
 				end
 			end
 
@@ -583,7 +583,7 @@ function GameDirector:UseSubobjective(p_BotName, p_Objective)
 			if self:_UseSubobjective(s_BotTeam, p_Objective) then
 				if s_TempObjective.assigned[s_BotTeam] < 2 then
 					s_TempObjective.assigned[s_BotTeam] = s_TempObjective.assigned[s_BotTeam] + 1
-					s_Bot:setObjective(p_Objective)
+					s_Bot:SetObjective(p_Objective)
 					return true
 				end
 			end
