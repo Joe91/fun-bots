@@ -51,7 +51,7 @@ end
 
 function FunBotServer:OnExtensionLoaded()
 	m_Language:loadLanguage(Config.Language)
-	m_SettingsManager:onLoad()
+	m_SettingsManager:OnExtensionLoaded()
 	self:RegisterEvents()
 	self:RegisterHooks()
 	self:RegisterCustomEvents()
@@ -89,11 +89,9 @@ function FunBotServer:RegisterEvents()
 	Events:Subscribe('Vehicle:SpawnDone', self, self.OnVehicleSpawnDone)
 	Events:Subscribe('Vehicle:Enter', self, self.OnVehicleEnter)
 
-	--Events:Subscribe('Soldier:HealthAction', m_BotManager, m_BotManager._onHealthAction)	-- use this for more options on revive. Not needed yet
-	--Events:Subscribe('GunSway:Update', m_BotManager, m_BotManager._onGunSway)
-	--Events:Subscribe('GunSway:UpdateRecoil', m_BotManager, m_BotManager._onGunSway)
-	--Events:Subscribe('Player:Destroyed', m_BotManager, m_BotManager._onPlayerDestroyed) -- Player left is called first, so use this one instead
-	--Events:Subscribe('Engine:Message', m_BotManager, m_BotManager._onEngineMessage) -- maybe us this later
+	--Events:Subscribe('Soldier:HealthAction', m_BotManager, m_BotManager.OnSoldierHealthAction)	-- use this for more options on revive. Not needed yet
+	--Events:Subscribe('GunSway:Update', m_BotManager, m_BotManager.OnGunSway)
+	--Events:Subscribe('GunSway:UpdateRecoil', m_BotManager, m_BotManager.OnGunSway)
 end
 
 function FunBotServer:RegisterHooks()
@@ -168,7 +166,7 @@ end
 -- =============================================
 
 function FunBotServer:OnExtensionUnloading()
-	m_BotManager:destroyAll(nil, nil, true)
+	m_BotManager:DestroyAll(nil, nil, true)
 end
 
 function FunBotServer:OnPartitionLoaded(p_Partition)
@@ -254,7 +252,7 @@ end
 
 function FunBotServer:OnPlayerChat(p_Player, p_RecipientMask, p_Message)
 	local s_MessageParts = string.lower(p_Message):split(' ')
-	m_ChatCommands:execute(s_MessageParts, p_Player)
+	m_ChatCommands:Execute(s_MessageParts, p_Player)
 end
 
 function FunBotServer:OnPlayerLeft(p_Player)
@@ -348,7 +346,7 @@ end
 
 function FunBotServer:OnRequestClientSettings(p_Player)
 	NetEvents:SendToLocal('WriteClientSettings', p_Player, Config, true)
-	m_BotManager:registerActivePlayer(p_Player)
+	m_BotManager:RegisterActivePlayer(p_Player)
 end
 
 -- =============================================

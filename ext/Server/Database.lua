@@ -20,25 +20,26 @@ function Database:__init()
 	self.m_LastError = nil
 end
 
-function Database:getLastError()
+-- this is unused
+function Database:GetLastError()
 	return self.m_LastError
 end
 
-function Database:now()
+function Database:Now()
 	return 'CURRENT_TIMESTAMP'
 end
 
-function Database:getError()
+function Database:GetError()
 	return SQL:Error()
 end
 
-function Database:query(p_Query, p_Parameters)
+function Database:Query(p_Query, p_Parameters)
 	SQL:Open()
 	-- @ToDo build p_Query with given p_Parameters
 	local s_Result = SQL:Query(p_Query)
 
 	if not s_Result then
-		self.m_LastError = 'Failed to execute query: ' .. self:getError()
+		self.m_LastError = 'Failed to execute query: ' .. self:GetError()
 		SQL:Close()
 		return nil
 	end
@@ -48,7 +49,7 @@ function Database:query(p_Query, p_Parameters)
 	return s_Result
 end
 
-function Database:createTable(p_TableName, p_Definitions, p_Names, p_Additional)
+function Database:CreateTable(p_TableName, p_Definitions, p_Names, p_Additional)
 	local s_Entries = ArrayMap()
 	local s_Additionals = ArrayMap()
 
@@ -75,11 +76,11 @@ function Database:createTable(p_TableName, p_Definitions, p_Names, p_Additional)
 		end
 	end
 
-	return self:query('CREATE TABLE IF NOT EXISTS ' .. p_TableName .. ' (' .. s_Entries:join(', ') .. ')')
+	return self:Query('CREATE TABLE IF NOT EXISTS ' .. p_TableName .. ' (' .. s_Entries:join(', ') .. ')')
 end
 
-function Database:single(p_Query)
-	local s_Results = self:query(p_Query)
+function Database:Single(p_Query)
+	local s_Results = self:Query(p_Query)
 
 	if s_Results == nil then
 		return nil
@@ -88,24 +89,25 @@ function Database:single(p_Query)
 	return s_Results[1]
 end
 
-function Database:count(p_Query, p_Parameters)
-	local s_Results = self:query(p_Query, p_Parameters)
+-- this is unused
+function Database:Count(p_Query, p_Parameters)
+	local s_Results = self:Query(p_Query, p_Parameters)
 
 	return #s_Results
 end
 
-function Database:fetch(p_Query)
-	return self:query(p_Query)
+function Database:Fetch(p_Query)
+	return self:Query(p_Query)
 end
 
-function Database:update(p_TableName, p_Parameters, p_Where)
+function Database:Update(p_TableName, p_Parameters, p_Where)
 	local s_Fields = ArrayMap()
 	local s_Found = nil
 
 	for l_Name, l_Value in pairs(p_Parameters) do
 		if l_Value == nil then
 			l_Value = 'NULL'
-		elseif l_Value == self:now() then
+		elseif l_Value == self:Now() then
 			l_Value = 'CURRENT_TIMESTAMP'
 		elseif l_Value == DatabaseField.NULL then
 			l_Value = 'NULL'
@@ -126,16 +128,17 @@ function Database:update(p_TableName, p_Parameters, p_Where)
 
 	m_Logger:Write('UPDATE `' .. p_TableName .. '` SET ' .. s_Fields:join(',') .. ' WHERE `' .. p_Where .. '`=' .. s_Found)
 
-	return self:query('UPDATE `' .. p_TableName .. '` SET ' .. s_Fields:join(', ') .. ' WHERE `' .. p_Where .. '`=\'' .. s_Found .. '\'')
+	return self:Query('UPDATE `' .. p_TableName .. '` SET ' .. s_Fields:join(', ') .. ' WHERE `' .. p_Where .. '`=\'' .. s_Found .. '\'')
 end
 
-function Database:executeBatch()
-	self:query('DELETE FROM `FB_Settings`')
-	self:query(m_Batched .. m_Batches:join(', '))
-	m_Logger:Error(self:getError())
+-- this is unused
+function Database:ExecuteBatch()
+	self:Query('DELETE FROM `FB_Settings`')
+	self:Query(m_Batched .. m_Batches:join(', '))
+	m_Logger:Error(self:GetError())
 end
 
-function Database:batchQuery(p_TableName, p_Parameters, p_Where)
+function Database:BatchQuery(p_TableName, p_Parameters, p_Where)
 	local s_Names = ArrayMap()
 	local s_Values = ArrayMap()
 	local s_Fields = ArrayMap()
@@ -147,7 +150,7 @@ function Database:batchQuery(p_TableName, p_Parameters, p_Where)
 		if l_Value == nil then
 			s_Values:add('NULL')
 			l_Value = 'NULL'
-		elseif l_Value == self:now() then
+		elseif l_Value == self:Now() then
 			s_Values:add('CURRENT_TIMESTAMP')
 			l_Value = 'CURRENT_TIMESTAMP'
 		elseif l_Value == DatabaseField.NULL then
@@ -181,17 +184,17 @@ function Database:batchQuery(p_TableName, p_Parameters, p_Where)
 	return true
 end
 
-function Database:delete(p_TableName, p_Parameters)
+function Database:Delete(p_TableName, p_Parameters)
 	local s_Where = ArrayMap()
 
 	for l_Name, l_Value in pairs(p_Parameters) do
 		s_Where:add('`' .. l_Name .. '`=\'' ..l_Value .. '\'')
 	end
 
-	return self:query('DELETE FROM ' .. p_TableName .. ' WHERE ' .. s_Where:join(' AND '))
+	return self:Query('DELETE FROM ' .. p_TableName .. ' WHERE ' .. s_Where:join(' AND '))
 end
 
-function Database:insert(p_TableName, p_Parameters)
+function Database:Insert(p_TableName, p_Parameters)
 	local s_Names = ArrayMap()
 	local s_Values = ArrayMap()
 
@@ -200,7 +203,7 @@ function Database:insert(p_TableName, p_Parameters)
 
 		if l_Value == nil then
 			s_Values:add('NULL')
-		elseif l_Value == self:now() then
+		elseif l_Value == self:Now() then
 			s_Values:add('CURRENT_TIMESTAMP')
 		elseif l_Value == DatabaseField.NULL then
 			s_Values:add('NULL')
@@ -213,7 +216,7 @@ function Database:insert(p_TableName, p_Parameters)
 		end
 	end
 
-	self:query('INSERT INTO ' .. p_TableName .. ' (' .. s_Names:join(', ') .. ') VALUES (' .. s_Values:join(', ') .. ')')
+	self:Query('INSERT INTO ' .. p_TableName .. ' (' .. s_Names:join(', ') .. ') VALUES (' .. s_Values:join(', ') .. ')')
 
 	return SQL:LastInsertId()
 end
