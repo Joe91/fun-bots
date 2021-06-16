@@ -20,6 +20,7 @@ function GameDirector:RegisterVars()
 
 	self.m_McomCounter = 0
 	self.m_OnlyOneMcom = false
+	self.m_waitForZone = false
 	self.m_RushAttackingBase = ''
 	self.m_ArmedMcoms = {}
 
@@ -36,7 +37,7 @@ end
 function GameDirector:OnLevelLoaded()
 	self.m_AllObjectives = {}
 	self.m_Translations = {}
-	self:_RegisterMcomEventCallbacks()
+	self:_RegisterRushEventCallbacks()
 	-- TODO, assign weights to each objective
 	self.m_UpdateLast = 0
 	self:_InitObjectives()
@@ -237,7 +238,7 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 end
 
 -- =============================================
-	-- MCOM Events
+	-- RUSH Events
 -- =============================================
 
 function GameDirector:OnMcomArmed(p_Player)
@@ -314,8 +315,8 @@ end
 
 
 function GameDirector:OnRushZoneDisabled(p_EntityId)
-	print("Zone disabled")
-	print(p_EntityId)
+	m_Logger:Write("Zone "..tostring(p_EntityId).." disabled")
+	self.m_waitForZone = false
 end
 
 -- =============================================
@@ -341,6 +342,11 @@ end
 -- =============================================
 -- Public Functions
 -- =============================================
+
+
+function GameDirector:IsWaitForZoneActive()
+	return self.m_waitForZone
+end
 
 function GameDirector:CheckForExecution(p_Point, p_TeamId)
 	if p_Point.Data.Action == nil then
@@ -567,7 +573,7 @@ function GameDirector:GetEnableStateOfPath(p_ObjectiveNamesOfPath)
 	end
 end
 
-function GameDirector:UseVehicle(p_BotName, p_Objective)
+function GameDirector:UseVehicle(p_BotTeam, p_Objective)
 	local s_TempObjective = self:_GetObjectiveObject(p_Objective)
 
 	if s_TempObjective ~= nil and s_TempObjective.active and s_TempObjective.isEnterVehiclePath then
@@ -578,19 +584,20 @@ function GameDirector:UseVehicle(p_BotName, p_Objective)
 	return false
 end
 
-function GameDirector:UseSubobjective(p_BotName, p_Objective)
+function GameDirector:UseSubobjective(p_BotName, p_BotTeam, p_Objective)
 	local s_TempObjective = self:_GetObjectiveObject(p_Objective)
 
 	if s_TempObjective ~= nil and s_TempObjective.subObjective then -- is valid getSubObjective
 		if s_TempObjective.active and not s_TempObjective.destroyed then
-			local s_Bot = g_BotManager:GetBotByName(p_BotName)
-			local s_BotTeam = s_Bot.m_Player.teamId
 
-			if self:_UseSubobjective(s_BotTeam, p_Objective) then
-				if s_TempObjective.assigned[s_BotTeam] < 2 then
-					s_TempObjective.assigned[s_BotTeam] = s_TempObjective.assigned[s_BotTeam] + 1
-					s_Bot:SetObjective(p_Objective)
-					return true
+			if self:_UseSubobjective(p_BotTeam, p_Objective) then
+				if s_TempObjective.assigned[p_BotTeam] < 2 then
+					s_TempObjective.assigned[p_BotTeam] = s_TempObjective.assigned[p_BotTeam] + 1
+					local s_Bot = g_BotManager:GetBotByName(p_BotName)
+					if s_Bot ~= nil then
+						s_Bot:SetObjective(p_Objective)
+						return true
+					end
 				end
 			end
 		end
@@ -603,7 +610,7 @@ end
 -- Private Functions
 -- =============================================
 
-function GameDirector:_RegisterMcomEventCallbacks()
+function GameDirector:_RegisterRushEventCallbacks()
 	if not Globals.IsRush then
 		return
 	end
@@ -734,6 +741,9 @@ function GameDirector:_UpdateValidObjectives()
 
 	if (self.m_McomCounter % 2) == 0 then
 		self.m_OnlyOneMcom = false
+		if self.m_McomCounter > 0 then
+			self.m_waitForZone = true
+		end
 		local s_BaseIndex = 0
 		local s_McomIndexes = {0, 0}
 
@@ -800,6 +810,7 @@ function GameDirector:_UpdateValidObjectives()
 		end
 	else
 		self.m_OnlyOneMcom = true
+		self.m_waitForZone = false --should not be needed
 	end
 end
 

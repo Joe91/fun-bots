@@ -1698,7 +1698,7 @@ function Bot:_UpdateMovement()
 							-- CHECK FOR PATH-SWITCHES
 							local s_NewWaypoint = nil
 							local s_SwitchPath = false
-							s_SwitchPath, s_NewWaypoint = m_PathSwitcher:GetNewPath(self.m_Name, s_Point, self._Objective, self.m_InVehicle)
+							s_SwitchPath, s_NewWaypoint = m_PathSwitcher:GetNewPath(self.m_Name, s_Point, self._Objective, self.m_InVehicle, self.m_Player.teamId)
 
 							if not self.m_Player.alive then
 								return

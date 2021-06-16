@@ -195,6 +195,12 @@ function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPe
 		s_GameMode = p_GameMode
 	end
 
+	-- randomize used names
+	for i = #BotNames, 2, -1 do
+		local j = math.random(i)
+		BotNames[i], BotNames[j] = BotNames[j], BotNames[i]
+	end
+
 	m_WeaponModification:ModifyAllWeapons(Config.BotAimWorsening, Config.BotSniperAimWorsening)
 	m_WeaponList:onLevelLoaded()
 
@@ -294,7 +300,7 @@ function FunBotServer:OnVehicleEnter(p_VehicleEntiy, p_Player)
 end
 
 -- =============================================
-	-- MCOM Events
+	-- Rush Events
 -- =============================================
 
 function FunBotServer:OnMcomArmed(p_Player)

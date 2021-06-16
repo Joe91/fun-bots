@@ -9,7 +9,7 @@ function PathSwitcher:__init()
 	self.m_KillYourselfCounter = {}
 end
 
-function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle)
+function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle, p_TeamId)
 	-- check if on base, or on path away from base. In this case: change path
 	local s_OnBasePath = false
 	local s_CurrentPathFirst = m_NodeCollection:GetFirst(p_Point.PathIndex)
@@ -24,25 +24,35 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle)
 		return false
 	end
 
-	if Globals.IsRush and not p_InVehicle then
-		if self.m_KillYourselfCounter[p_BotName] == nil then
-			self.m_KillYourselfCounter[p_BotName] = 0
+	if Globals.IsRush then
+		local s_WaitingForZone = false
+		if p_TeamId == TeamId.Team1 then  -- attacking team
+			s_WaitingForZone = m_GameDirector:IsWaitForZoneActive()
+		end
+		if s_WaitingForZone then
+			return false --don't switch
 		end
 
-		if s_CurrentPathStatus == 0 then
-			self.m_KillYourselfCounter[p_BotName] = self.m_KillYourselfCounter[p_BotName] + 1
-		else
-			self.m_KillYourselfCounter[p_BotName] = 0
-		end
-
-		if self.m_KillYourselfCounter[p_BotName] > 20 then
-			local s_Bot = PlayerManager:GetPlayerByName(p_BotName)
-
-			if s_Bot ~= nil and s_Bot.soldier ~= nil then
-				s_Bot.soldier:Kill()
+		if not p_InVehicle then
+			if self.m_KillYourselfCounter[p_BotName] == nil then
 				self.m_KillYourselfCounter[p_BotName] = 0
-				m_Logger:Write("kill "..p_BotName.." because of inactivity on wrong paths")
-				return false
+			end
+
+			if s_CurrentPathStatus == 0 then
+				self.m_KillYourselfCounter[p_BotName] = self.m_KillYourselfCounter[p_BotName] + 1
+			else
+				self.m_KillYourselfCounter[p_BotName] = 0
+			end
+
+			if self.m_KillYourselfCounter[p_BotName] > 20 then
+				local s_Bot = PlayerManager:GetPlayerByName(p_BotName)
+
+				if s_Bot ~= nil and s_Bot.soldier ~= nil then
+					s_Bot.soldier:Kill()
+					self.m_KillYourselfCounter[p_BotName] = 0
+					m_Logger:Write("kill "..p_BotName.." because of inactivity on wrong paths")
+					return false
+				end
 			end
 		end
 	end
@@ -83,7 +93,7 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle)
 
 		-- check for vehicle usage
 		if s_PathNode.Data.Objectives ~= nil and #s_PathNode.Data.Objectives == 1 and s_NewPoint.ID ~= p_Point.ID then
-			if m_GameDirector:UseVehicle(p_BotName, s_PathNode.Data.Objectives[1]) == true then
+			if m_GameDirector:UseVehicle(p_TeamId, s_PathNode.Data.Objectives[1]) == true then
 				return true, s_NewPoint
 			end
 		end
@@ -92,7 +102,7 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle)
 		if s_PathNode.Data.Objectives ~= nil and p_Objective ~= '' then
 			-- check for possible subObjective
 			if #s_PathNode.Data.Objectives == 1 and s_NewPoint.ID ~= p_Point.ID then
-				if m_GameDirector:UseSubobjective(p_BotName, s_PathNode.Data.Objectives[1]) == true then
+				if m_GameDirector:UseSubobjective(p_BotName, p_TeamId, s_PathNode.Data.Objectives[1]) == true then
 					return true, s_NewPoint
 				end
 			end
