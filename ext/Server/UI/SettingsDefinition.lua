@@ -303,6 +303,16 @@ SettingsDefinition = {
 			Default = -1,
 			Category = "SPAWN"
 		},
+		{
+			Name = "AdditionalBotSpawnDelay",
+			Text = "Additional Spawn Delay",
+			Type = Type.Float,
+			Value = Config.AdditionalBotSpawnDelay,
+			Description = "additional time a bot waits to respawn",
+			Reference = Range(0.0, 60.00, 0.5),
+			Default = 0.5,
+			Category = "SPAWN"
+		},
 
 	-- Spawn limits
 		{

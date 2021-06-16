@@ -34,6 +34,7 @@ Config = {
 	MaxEngineerBots = -1,			-- maximum number of Bots with Engineer Kit. -1 = no Limit
 	MaxSupportBots = -1,			-- maximum number of Bots with Support Kit. -1 = no Limit
 	MaxReconBots = -1,				-- maximum number of Bots with Recon Kit. -1 = no Limit
+	AdditionalBotSpawnDelay = 0.5,	-- additional time a bot waits to respawn
 
 	-- spawn-limits
 	MaxBotsPerTeamDefault = 32,		-- max number of bots in one team

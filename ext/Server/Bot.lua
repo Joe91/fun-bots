@@ -517,7 +517,7 @@ function Bot:_UpdateRespawn()
 
 	if self.m_Player.soldier == nil then
 		-- wait for respawn-delay gone
-		if self._SpawnDelayTimer < Globals.RespawnDelay then
+		if self._SpawnDelayTimer < (Globals.RespawnDelay + Config.AdditionalBotSpawnDelay) then
 			self._SpawnDelayTimer = self._SpawnDelayTimer + StaticConfig.BotUpdateCycle
 		else
 			Events:DispatchLocal('Bot:RespawnBot', self.m_Name)
