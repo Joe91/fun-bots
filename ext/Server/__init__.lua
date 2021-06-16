@@ -196,9 +196,11 @@ function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPe
 	end
 
 	-- randomize used names
-	for i = #BotNames, 2, -1 do
-		local j = math.random(i)
-		BotNames[i], BotNames[j] = BotNames[j], BotNames[i]
+	if Config.UseRandomNames then
+		for i = #BotNames, 2, -1 do
+			local j = math.random(i)
+			BotNames[i], BotNames[j] = BotNames[j], BotNames[i]
+		end
 	end
 
 	m_WeaponModification:ModifyAllWeapons(Config.BotAimWorsening, Config.BotSniperAimWorsening)

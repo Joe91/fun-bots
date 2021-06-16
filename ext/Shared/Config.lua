@@ -100,6 +100,7 @@ Config = {
 	OverWriteBotAttackMode = BotMoveSpeeds.NoMovement,		-- Affects Aiming!!! 0 = no overwrite. 1 = prone, 2 = crouch (good aim), 3 = walk (good aim), 4 = run
 	SpeedFactor = 1.0,				-- reduces the movementspeed. 1 = normal, 0 = standing.
 	SpeedFactorAttack = 0.6,		-- reduces the movementspeed while attacking. 1 = normal, 0 = standing.
+	UseRandomNames = false,			-- changes names of the bots. Experimental right now...
 
 	-- expert
 	BotFirstShotDelay = 0.35,		-- delay for first shot. If too small, there will be great spread in first cycle because its not kompensated jet.
