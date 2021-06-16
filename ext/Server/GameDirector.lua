@@ -312,6 +312,12 @@ function GameDirector:OnMcomDestroyed(p_Player)
 	self:_UpdateValidObjectives()
 end
 
+
+function GameDirector:OnRushZoneDisabled(p_EntityId)
+	print("Zone disabled")
+	print(p_EntityId)
+end
+
 -- =============================================
 	-- Vehicle Events
 -- =============================================
@@ -628,6 +634,24 @@ function GameDirector:_RegisterMcomEventCallbacks()
 		end
 
 		::continue_entity_loop::
+		s_Entity = s_Iterator:Next()
+	end
+
+	-- register Event for Zone
+	s_Iterator = EntityManager:GetIterator("ServerSyncedBoolEntity")
+	s_Entity = s_Iterator:Next()
+
+	while s_Entity do
+		s_Entity = Entity(s_Entity)
+
+		if s_Entity.data.instanceGuid == Guid("F8D564AC-9235-4141-B320-297BEA370FD8") then
+			s_Entity:RegisterEventCallback(function(p_Entity, p_EntityEvent)
+				if p_EntityEvent.eventId == MathUtils:FNVHash("SetTrue") then
+					Events:Dispatch('RUSH:ZoneDisabled', p_Entity.instanceId)
+				end
+			end)
+		end
+
 		s_Entity = s_Iterator:Next()
 	end
 end

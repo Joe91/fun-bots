@@ -86,6 +86,7 @@ function FunBotServer:RegisterEvents()
 	Events:Subscribe('MCOM:Armed', self, self.OnMcomArmed)
 	Events:Subscribe('MCOM:Disarmed', self, self.OnMcomDisarmed)
 	Events:Subscribe('MCOM:Destroyed', self, self.OnMcomDestroyed)
+	Events:Subscribe('RUSH:ZoneDisabled', self, self.OnRushZoneDisabled)
 	Events:Subscribe('Vehicle:SpawnDone', self, self.OnVehicleSpawnDone)
 	Events:Subscribe('Vehicle:Enter', self, self.OnVehicleEnter)
 
@@ -306,6 +307,10 @@ end
 
 function FunBotServer:OnMcomDestroyed(p_Player)
 	m_GameDirector:OnMcomDestroyed(p_Player)
+end
+
+function FunBotServer:OnRushZoneDisabled(p_EntityId)
+	m_GameDirector:OnRushZoneDisabled(p_EntityId)
 end
 
 -- =============================================
