@@ -13,13 +13,13 @@ function ArrayMap:deleteByIndex(p_Index)
 end
 
 function ArrayMap:exists(p_Value)
-	local index = {}
+	local s_Index = {}
 
-	for key, data in pairs(self._entries) do
-		index[data] = key
+	for l_Key, l_Data in pairs(self._entries) do
+		s_Index[l_Data] = l_Key
 	end
 
-	if index[p_Value] ~= nil then
+	if s_Index[p_Value] ~= nil then
 		return true
 	end
 
@@ -27,14 +27,14 @@ function ArrayMap:exists(p_Value)
 end
 
 function ArrayMap:delete(p_Value)
-	local index = {}
+	local s_Index = {}
 
-	for key, data in pairs(self._entries) do
-		index[data] = key
+	for l_Key, l_Data in pairs(self._entries) do
+		s_Index[l_Data] = l_Key
 	end
 
-	if index[p_Value] ~= nil then
-		self:deleteByIndex(index[p_Value])
+	if s_Index[p_Value] ~= nil then
+		self:deleteByIndex(s_Index[p_Value])
 	end
 end
 

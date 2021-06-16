@@ -26,6 +26,7 @@ function ClientBotManager:OnEngineMessage(p_Message)
 		self.m_ReadyToUpdate = true
 		m_Logger:Write("level loaded on Client")
 	end
+
 	if p_Message.type == MessageType.ClientConnectionUnloadLevelMessage or p_Message.type == MessageType.ClientCharacterLocalPlayerDeletedMessage then
 		self:RegisterVars()
 	end
@@ -35,9 +36,11 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	if p_UpdatePass ~= UpdatePass.UpdatePass_PreFrame or not self.m_ReadyToUpdate then
 		return
 	end
+
 	if self.m_Player == nil then
 		self.m_Player = PlayerManager:GetLocalPlayer()
 	end
+
 	if self.m_Player == nil then
 		return
 	end
@@ -58,16 +61,20 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 		local s_EnemyPlayers = {}
 		local s_AllPlayers = PlayerManager:GetPlayers()
+
 		for _, l_Player in pairs(s_AllPlayers) do
 			if l_Player.teamId ~= self.m_Player.teamId then
 				table.insert(s_EnemyPlayers, l_Player)
 			end
 		end
+
 		if self.m_LastIndex >= #s_EnemyPlayers then
 			self.m_LastIndex = 1
 		end
+
 		for i = self.m_LastIndex, #s_EnemyPlayers do
 			local s_Bot = s_EnemyPlayers[i]
+
 			if s_Bot == nil or s_Bot.onlineId ~= 0 or s_Bot.soldier == nil then
 				goto continue_enemy_loop
 			end
@@ -92,6 +99,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 					if s_Distance < Config.DistanceForDirectAttack then
 						s_IgnoreYaw = true -- shoot, because you are near
 					end
+
 					NetEvents:SendLocal("Bot:ShootAtPlayer", s_Bot.name, s_IgnoreYaw)
 
 				elseif (self.m_Player.inVehicle or s_Bot.inVehicle) and s_Raycast.rigidBody:Is("DynamicPhysicsEntity") then
@@ -100,11 +108,13 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 				return --only one raycast per cycle
 			end
+
 			::continue_enemy_loop::
 		end
 	elseif self.m_Player.corpse ~= nil then -- dead. check for revive botsAttackBots
 		self.m_AliveTimer = 0.5 --add a little delay
 		local s_TeamMates = PlayerManager:GetPlayersByTeam(self.m_Player.teamId)
+
 		if self.m_LastIndex >= #s_TeamMates then
 			self.m_LastIndex = 1
 		end
@@ -131,8 +141,10 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 					-- we found a valid bot in Sight (either no hit, or player-hit). Signal Server with players
 					NetEvents:SendLocal("Bot:RevivePlayer", s_Bot.name)
 				end
+
 				return -- only one raycast per cycle
 			end
+
 			::continue_teamMate_loop::
 		end
 	else
@@ -188,10 +200,13 @@ function ClientBotManager:OnBulletEntityCollision(p_HookCtx, p_Entity, p_Hit, p_
 	if p_Hit.rigidBody.typeInfo.name ~= 'CharacterPhysicsEntity' then
 		return
 	end
+
 	if not m_Utilities:isBot(p_Shooter) then
 		return
 	end
+
 	local s_LocalPlayer = PlayerManager:GetLocalPlayer()
+
 	if s_LocalPlayer == nil or s_LocalPlayer.soldier == nil then
 		return
 	end

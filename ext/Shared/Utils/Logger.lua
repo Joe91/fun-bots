@@ -12,8 +12,8 @@ function Logger:__init(p_ClassName, p_ActivateLogging)
 	end
 
 	-- print("Creating object with: "..p_ClassName..", "..tostring(p_ActivateLogging))
-	self.debug = p_ActivateLogging
-	self.className = p_ClassName
+	self.m_Debug = p_ActivateLogging
+	self.m_ClassName = p_ClassName
 end
 
 function Logger:Write(p_Message)
@@ -21,44 +21,44 @@ function Logger:Write(p_Message)
 		return
 	end
 
-	if Debug.Logger.PRINTALL == true and self.className ~= nil then
+	if Debug.Logger.PRINTALL == true and self.m_ClassName ~= nil then
 		goto continue
-
-	elseif self.debug == false or
-		 self.debug == nil or
-		 self.className == nil then
+	elseif self.m_Debug == false or
+		self.m_Debug == nil or
+		self.m_ClassName == nil then
 		return
 	end
 
 	::continue::
-	if(type(p_Message) == 'table') then
-		print("["..self.className.."]")
+
+	if type(p_Message) == 'table' then
+		print("["..self.m_ClassName.."]")
 		print(p_Message)
 	else
-		print("["..self.className.."] " .. tostring(p_Message))
+		print("["..self.m_ClassName.."] " .. tostring(p_Message))
 	end
 end
 
 function Logger:WriteTable(p_Table)
-	for key, value in pairs(p_Table) do
-		self:Write(tostring(key) .. " - " .. tostring(value))
+	for l_Key, l_Value in pairs(p_Table) do
+		self:Write(tostring(l_Key) .. " - " .. tostring(l_Value))
 	end
 end
 
 function Logger:Warning(p_Message)
-	if self.className == nil then
+	if self.m_ClassName == nil then
 		return
 	end
 
-	print("["..self.className.."] WARNING: " .. tostring(p_Message))
+	print("["..self.m_ClassName.."] WARNING: " .. tostring(p_Message))
 end
 
 function Logger:Error(p_Message)
-	if self.className == nil then
+	if self.m_ClassName == nil then
 		return
 	end
 
-	print("["..self.className.."] ERROR: " .. tostring(p_Message))
+	print("["..self.m_ClassName.."] ERROR: " .. tostring(p_Message))
 end
 
 return Logger

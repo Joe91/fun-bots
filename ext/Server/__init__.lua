@@ -51,7 +51,7 @@ end
 
 function FunBotServer:OnExtensionLoaded()
 	m_Language:loadLanguage(Config.Language)
-	m_SettingsManager:onLoad()
+	m_SettingsManager:OnExtensionLoaded()
 	self:RegisterEvents()
 	self:RegisterHooks()
 	self:RegisterCustomEvents()
@@ -86,14 +86,13 @@ function FunBotServer:RegisterEvents()
 	Events:Subscribe('MCOM:Armed', self, self.OnMcomArmed)
 	Events:Subscribe('MCOM:Disarmed', self, self.OnMcomDisarmed)
 	Events:Subscribe('MCOM:Destroyed', self, self.OnMcomDestroyed)
+	Events:Subscribe('RUSH:ZoneDisabled', self, self.OnRushZoneDisabled)
 	Events:Subscribe('Vehicle:SpawnDone', self, self.OnVehicleSpawnDone)
 	Events:Subscribe('Vehicle:Enter', self, self.OnVehicleEnter)
 
-	--Events:Subscribe('Soldier:HealthAction', m_BotManager, m_BotManager._onHealthAction)	-- use this for more options on revive. Not needed yet
-	--Events:Subscribe('GunSway:Update', m_BotManager, m_BotManager._onGunSway)
-	--Events:Subscribe('GunSway:UpdateRecoil', m_BotManager, m_BotManager._onGunSway)
-	--Events:Subscribe('Player:Destroyed', m_BotManager, m_BotManager._onPlayerDestroyed) -- Player left is called first, so use this one instead
-	--Events:Subscribe('Engine:Message', m_BotManager, m_BotManager._onEngineMessage) -- maybe us this later
+	--Events:Subscribe('Soldier:HealthAction', m_BotManager, m_BotManager.OnSoldierHealthAction)	-- use this for more options on revive. Not needed yet
+	--Events:Subscribe('GunSway:Update', m_BotManager, m_BotManager.OnGunSway)
+	--Events:Subscribe('GunSway:UpdateRecoil', m_BotManager, m_BotManager.OnGunSway)
 end
 
 function FunBotServer:RegisterHooks()
@@ -168,7 +167,7 @@ end
 -- =============================================
 
 function FunBotServer:OnExtensionUnloading()
-	m_BotManager:destroyAll(nil, nil, true)
+	m_BotManager:DestroyAll(nil, nil, true)
 end
 
 function FunBotServer:OnPartitionLoaded(p_Partition)
@@ -191,9 +190,19 @@ end
 
 function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPerMap)
 	local s_GameMode = ServerUtils:GetCustomGameModeName()
+
 	if s_GameMode == nil then
 		s_GameMode = p_GameMode
 	end
+
+	-- randomize used names
+	if Config.UseRandomNames then
+		for i = #BotNames, 2, -1 do
+			local j = math.random(i)
+			BotNames[i], BotNames[j] = BotNames[j], BotNames[i]
+		end
+	end
+
 	m_WeaponModification:ModifyAllWeapons(Config.BotAimWorsening, Config.BotSniperAimWorsening)
 	m_WeaponList:onLevelLoaded()
 
@@ -252,7 +261,7 @@ end
 
 function FunBotServer:OnPlayerChat(p_Player, p_RecipientMask, p_Message)
 	local s_MessageParts = string.lower(p_Message):split(' ')
-	m_ChatCommands:execute(s_MessageParts, p_Player)
+	m_ChatCommands:Execute(s_MessageParts, p_Player)
 end
 
 function FunBotServer:OnPlayerLeft(p_Player)
@@ -293,7 +302,7 @@ function FunBotServer:OnVehicleEnter(p_VehicleEntiy, p_Player)
 end
 
 -- =============================================
-	-- MCOM Events
+	-- Rush Events
 -- =============================================
 
 function FunBotServer:OnMcomArmed(p_Player)
@@ -306,6 +315,10 @@ end
 
 function FunBotServer:OnMcomDestroyed(p_Player)
 	m_GameDirector:OnMcomDestroyed(p_Player)
+end
+
+function FunBotServer:OnRushZoneDisabled(p_EntityId)
+	m_GameDirector:OnRushZoneDisabled(p_EntityId)
 end
 
 -- =============================================
@@ -346,7 +359,7 @@ end
 
 function FunBotServer:OnRequestClientSettings(p_Player)
 	NetEvents:SendToLocal('WriteClientSettings', p_Player, Config, true)
-	m_BotManager:registerActivePlayer(p_Player)
+	m_BotManager:RegisterActivePlayer(p_Player)
 end
 
 -- =============================================
@@ -356,6 +369,7 @@ end
 function FunBotServer:OnServerSettingsCallback(p_Instance)
 	p_Instance = ServerSettings(p_Instance)
 	p_Instance:MakeWritable()
+
 	if USE_REAL_DAMAGE then
 		p_Instance.isRenderDamageEvents = true
 	else
@@ -366,6 +380,7 @@ end
 function FunBotServer:OnSyncedGameSettingsCallback(p_Instance)
 	p_Instance = SyncedGameSettings(p_Instance)
 	p_Instance:MakeWritable()
+
 	if USE_REAL_DAMAGE then
 		p_Instance.allowClientSideDamageArbitration = false
 	else
@@ -395,13 +410,16 @@ end
 
 function FunBotServer:OnModReloaded()
 	local s_FullLevelPath = SharedUtils:GetLevelName()
+
 	if s_FullLevelPath == nil then
 		return
 	end
+
 	s_FullLevelPath = s_FullLevelPath:split('/')
 	local s_Level = s_FullLevelPath[#s_FullLevelPath]
 	local s_GameMode = SharedUtils:GetCurrentGameMode()
 	m_Logger:Write(s_Level .. '_' .. s_GameMode .. ' reloaded')
+
 	if s_Level ~= nil and s_GameMode ~= nil then
 		self:OnLevelLoaded(s_Level, s_GameMode)
 	end
@@ -410,6 +428,7 @@ end
 function FunBotServer:SetRespawnDelay()
 	local s_RconResponseTable = RCON:SendCommand('vars.playerRespawnTime')
 	local s_RespawnTimeModifier = tonumber(s_RconResponseTable[2]) / 100
+
 	if self.m_PlayerKilledDelay > 0 and s_RespawnTimeModifier ~= nil then
 		Globals.RespawnDelay = self.m_PlayerKilledDelay * s_RespawnTimeModifier
 	else
@@ -421,11 +440,14 @@ function FunBotServer:DetectSpecialMods()
 	local s_RconResponseTable = RCON:SendCommand('modlist.ListRunning')
 	Globals.IsInputRestrictionDisabled = false
 	Globals.RemoveKitVisuals = false
+
 	for i = 2, #s_RconResponseTable do
 		local s_ModName = s_RconResponseTable[i]
+
 		if string.find(s_ModName:lower(), "preround") ~= nil then
 			Globals.IsInputRestrictionDisabled = true
 		end
+
 		if string.find(s_ModName:lower(), "civilianizer") ~= nil then
 			Globals.RemoveKitVisuals = true
 		end
@@ -445,6 +467,7 @@ function FunBotServer:RegisterInputRestrictionEventCallbacks()
 
 	while s_Entity do
 		s_Entity = Entity(s_Entity)
+
 		if s_Entity.data.instanceGuid == Guid('E8C37E6A-0C8B-4F97-ABDD-28715376BD2D') or -- cq / cq assault / tank- / air superiority
 		s_Entity.data.instanceGuid == Guid('593710B7-EDC4-4EDB-BE20-323E7B0CE023') or -- tdm XP4
 		s_Entity.data.instanceGuid == Guid('6F42FBE3-428A-463A-9014-AA0C6E09DA64') or -- tdm
@@ -464,6 +487,7 @@ function FunBotServer:RegisterInputRestrictionEventCallbacks()
 				end
 			end)
 		end
+
 		s_Entity = s_EntityIterator:Next()
 	end
 end
@@ -505,17 +529,20 @@ function FunBotServer:SetGameMode(p_GameMode)
 	else
 		Globals.IsTdm = false
 	end
+
 	if p_GameMode == 'SquadDeathMatch0' then
 		Globals.NrOfTeams = 4
 		Globals.IsSdm = true
 	else
 		Globals.IsSdm = false
 	end
+
 	if p_GameMode == 'GunMaster0' then
 		Globals.IsGm = true
 	else
 		Globals.IsGm = false
 	end
+
 	if p_GameMode == 'Scavenger0' then
 		Globals.IsScavenger = true
 	else

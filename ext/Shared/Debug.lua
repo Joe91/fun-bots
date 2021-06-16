@@ -19,7 +19,7 @@ Debug = {
 	},
 	Client = {
 		INFO = false,				-- Global Informations
-		NODEEDITOR = false,			-- Debug the NodeEditor
+		NODEEDITOR = true,			-- Debug the NodeEditor
 		UI = false					-- Debug all UI things
 	},
 	Shared = {
