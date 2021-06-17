@@ -92,6 +92,7 @@ function Bot:__init(p_Player)
 	self._ShootPlayer = nil
 	self._ShootPlayerVehicleType = VehicleTypes.NoVehicle
 	self._ShootPlayerName = ""
+	self._DistanceToPlayer = 0.0
 	self._WeaponToUse = BotWeapons.Primary
 	self._ShootWayPoints = {}
 	self._KnifeWayPositions = {}
@@ -178,21 +179,21 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 	local s_Type = self:_FindOutVehicleType(p_Player)
 
 	-- don't shoot if too far away
-	local s_Distance = 0
+	self._DistanceToPlayer = 0
 
 	if s_Type == 5 then
-		s_Distance = p_Player.controlledControllable.transform.trans:Distance(self.m_Player.soldier.worldTransform.trans)
+		self._DistanceToPlayer = p_Player.controlledControllable.transform.trans:Distance(self.m_Player.soldier.worldTransform.trans)
 	else
-		s_Distance = p_Player.soldier.worldTransform.trans:Distance(self.m_Player.soldier.worldTransform.trans)
+		self._DistanceToPlayer = p_Player.soldier.worldTransform.trans:Distance(self.m_Player.soldier.worldTransform.trans)
 	end
 
 	if not p_IgnoreYaw then
-		if self.m_ActiveWeapon.type ~= WeaponTypes.Sniper and s_Distance > Config.MaxShootDistanceNoSniper then
+		if self.m_ActiveWeapon.type ~= WeaponTypes.Sniper and self._DistanceToPlayer > Config.MaxShootDistanceNoSniper then
 			return false
 		end
 	end
 
-	if s_Type ~= VehicleTypes.NoVehicle and self:_CheckForVehicleAttack(s_Type, s_Distance) == VehicleAttackModes.NoAttack then
+	if s_Type ~= VehicleTypes.NoVehicle and self:_CheckForVehicleAttack(s_Type, self._DistanceToPlayer) == VehicleAttackModes.NoAttack then
 		return false
 	end
 
@@ -226,7 +227,7 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 				self._LastTargetTrans = p_Player.soldier.worldTransform.trans:Clone()
 				self._KnifeWayPositions = {}
 				self._VehicleReadyToShoot = false
-				self._ShotTimer = - (Config.BotFirstShotDelay + math.random()*self._Skill)
+				self._ShotTimer = - self:GetFirstShotDelay(self._DistanceToPlayer) --(Config.BotFirstShotDelay + math.random()*self._Skill)
 
 				if self.m_KnifeMode then
 					table.insert(self._KnifeWayPositions, self._LastTargetTrans)
@@ -271,6 +272,16 @@ function Bot:ResetVars()
 	self._GrenadeActive = false
 	self._C4Active = false
 	self._WeaponToUse = BotWeapons.Primary
+end
+
+function Bot:GetFirstShotDelay(p_DistanceToTarget, p_ReducedTiming)
+	local s_Delay = (Config.BotFirstShotDelay + math.random()*self._Skill)
+	if p_ReducedTiming then
+		s_Delay = s_Delay * 0.6
+	end
+	-- slower reaction on greater distances. 100m = 1 extra second
+	s_Delay = s_Delay + (p_DistanceToTarget * 0.01)
+	return s_Delay
 end
 
 function Bot:SetVarsStatic(p_Player)
@@ -556,7 +567,7 @@ function Bot:_UpdateAiming()
 
 		local s_GrenadePitch = 0.0
 		--calculate how long the distance is --> time to travel
-		local s_DistanceToPlayer = s_FullPositionTarget:Distance(s_FullPositionBot)
+		self._DistanceToPlayer = s_FullPositionTarget:Distance(s_FullPositionBot)
 
 		if not self.m_KnifeMode then
 			local s_FactorForMovement = 0.0
@@ -572,11 +583,11 @@ function Bot:_UpdateAiming()
 			end
 
 			if self.m_ActiveWeapon.type == WeaponTypes.Grenade then
-				if s_DistanceToPlayer < 5 then
-					s_DistanceToPlayer = 5 -- don't throw them too close..
+				if self._DistanceToPlayer < 5 then
+					self._DistanceToPlayer = 5 -- don't throw them too close..
 				end
 
-				local s_Angle = math.asin((s_DistanceToPlayer * s_Drop)/(s_Speed*s_Speed))
+				local s_Angle = math.asin((self._DistanceToPlayer * s_Drop)/(s_Speed*s_Speed))
 
 				if s_Angle ~= s_Angle then --NAN check
 					s_GrenadePitch = (math.pi / 4)
@@ -584,7 +595,7 @@ function Bot:_UpdateAiming()
 					s_GrenadePitch = (math.pi / 2) - (s_Angle / 2)
 				end
 			else
-				local s_TimeToTravel = (s_DistanceToPlayer / s_Speed)
+				local s_TimeToTravel = (self._DistanceToPlayer / s_Speed)
 				s_PitchCorrection = 0.5 * s_TimeToTravel * s_TimeToTravel * s_Drop
 
 				if self.m_InVehicle then
@@ -621,7 +632,7 @@ function Bot:_UpdateAiming()
 
 		-- worsen yaw and pitch depending on bot-skill
 		if not self.m_InVehicle then
-			local s_WorseningValue = (math.random()*self._Skill/s_DistanceToPlayer) -- value scaled in offset in 1m
+			local s_WorseningValue = (math.random()*self._Skill/self._DistanceToPlayer) -- value scaled in offset in 1m
 			s_Yaw = s_Yaw + s_WorseningValue
 			s_Pitch = s_Pitch + s_WorseningValue
 		end
@@ -1027,27 +1038,27 @@ function Bot:_UpdateShooting()
 					if self.m_Player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_5 then
 						self:_SetInput(EntryInputActionEnum.EIASelectWeapon5, 1)
 						self.m_ActiveWeapon = self.m_SecondaryGadget
-						self._ShotTimer = - (Config.BotFirstShotDelay + math.random()*self._Skill)
+						self._ShotTimer = - self:GetFirstShotDelay(self._DistanceToPlayer) --(Config.BotFirstShotDelay + math.random()*self._Skill)
 					end
 				elseif (self._WeaponToUse == BotWeapons.Gadget1 and Config.BotWeapon == BotWeapons.Auto) or Config.BotWeapon == BotWeapons.Gadget1 then
 					if self.m_Player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_2 and self.m_Player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_4 then
 						self:_SetInput(EntryInputActionEnum.EIASelectWeapon4, 1)
 						self:_SetInput(EntryInputActionEnum.EIASelectWeapon3, 1)
 						self.m_ActiveWeapon = self.m_PrimaryGadget
-						self._ShotTimer = - (Config.BotFirstShotDelay + math.random()*self._Skill)
+						self._ShotTimer = - self:GetFirstShotDelay(self._DistanceToPlayer) --(Config.BotFirstShotDelay + math.random()*self._Skill)
 					end
 				elseif self._GrenadeActive or (self._WeaponToUse == BotWeapons.Grenade and Config.BotWeapon == BotWeapons.Auto) or Config.BotWeapon == BotWeapons.Grenade then
 					if self.m_Player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_6 then
 						self:_SetInput(EntryInputActionEnum.EIASelectWeapon6, 1)
 						self.m_ActiveWeapon = self.m_Grenade
-						self._ShotTimer = - (Config.BotFirstShotDelay + math.random()*self._Skill)
+						self._ShotTimer = - self:GetFirstShotDelay(self._DistanceToPlayer) --(Config.BotFirstShotDelay + math.random()*self._Skill)
 					end
 				elseif (self._WeaponToUse == BotWeapons.Pistol and Config.BotWeapon == BotWeapons.Auto) or Config.BotWeapon == BotWeapons.Pistol then
 					if self.m_Player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_1 then
 						self.m_Player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 1)
 						self:_SetInput(EntryInputActionEnum.EIASelectWeapon2, 1)
 						self.m_ActiveWeapon = self.m_Pistol
-						self._ShotTimer = - (Config.BotFirstShotDelay + math.random()*self._Skill)/2 -- TODO: maybe a little less or more?
+						self._ShotTimer = - self:GetFirstShotDelay(self._DistanceToPlayer, true)--(Config.BotFirstShotDelay + math.random()*self._Skill)/2 -- TODO: maybe a little less or more?
 					end
 				elseif (self._WeaponToUse == BotWeapons.Primary and Config.BotWeapon == BotWeapons.Auto) or Config.BotWeapon == BotWeapons.Primary then
 					if self.m_Player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_0 then
@@ -1061,8 +1072,6 @@ function Bot:_UpdateShooting()
 
 		if self._ShootPlayer ~= nil and self._ShootPlayer.soldier ~= nil then
 			if self._ShootModeTimer < Config.BotFireModeDuration or (Config.ZombieMode and self._ShootModeTimer < (Config.BotFireModeDuration * 4)) then
-				local s_CurrentDistance = self._ShootPlayer.soldier.worldTransform.trans:Distance(self.m_Player.soldier.worldTransform.trans)
-
 				if not self._C4Active then
 					self:_SetInput(EntryInputActionEnum.EIAZoom, 1)
 				end
@@ -1112,7 +1121,7 @@ function Bot:_UpdateShooting()
 				end
 
 				if self._ShootPlayerVehicleType ~= VehicleTypes.NoVehicle then
-					local s_AttackMode = self:_CheckForVehicleAttack(self._ShootPlayerVehicleType, s_CurrentDistance)
+					local s_AttackMode = self:_CheckForVehicleAttack(self._ShootPlayerVehicleType, self._DistanceToPlayer)
 
 					if s_AttackMode ~= VehicleAttackModes.NoAttack then
 						if s_AttackMode == VehicleAttackModes.AttackWithNade then -- grenade
@@ -1144,7 +1153,7 @@ function Bot:_UpdateShooting()
 						self._WeaponToUse = BotWeapons.Knife
 					else
 						if not self._GrenadeActive and self.m_Player.soldier.weaponsComponent.weapons[1] ~= nil then
-							if self.m_Player.soldier.weaponsComponent.weapons[1].primaryAmmo == 0 and s_CurrentDistance <= Config.MaxShootDistancePistol then
+							if self.m_Player.soldier.weaponsComponent.weapons[1].primaryAmmo == 0 and self._DistanceToPlayer <= Config.MaxShootDistancePistol then
 								self._WeaponToUse = BotWeapons.Pistol
 							else
 								self._WeaponToUse = BotWeapons.Primary
@@ -1157,7 +1166,7 @@ function Bot:_UpdateShooting()
 							if ((self._ShootModeTimer >= s_TargetTimeValue) and (self._ShootModeTimer < (s_TargetTimeValue + StaticConfig.BotUpdateCycle)) and not self._GrenadeActive) or Config.BotWeapon == BotWeapons.Grenade then
 								-- should be triggered only once per fireMode
 								if MathUtils:GetRandomInt(1,100) <= 40 then
-									if self.m_Grenade ~= nil and s_CurrentDistance < 35 then
+									if self.m_Grenade ~= nil and self._DistanceToPlayer < 35 then
 										self._GrenadeActive = true
 									end
 								end
@@ -1199,7 +1208,7 @@ function Bot:_UpdateShooting()
 								self._ShotTimer = 0
 							end
 
-							if s_CurrentDistance < 5 then
+							if self._DistanceToPlayer < 5 then
 								if self._ShotTimer >= self.m_ActiveWeapon.pauseCycle then
 									self:_SetInput(EntryInputActionEnum.EIAZoom, 1)
 								end
