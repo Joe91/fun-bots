@@ -103,7 +103,7 @@ Config = {
 	UseRandomNames = false,			-- changes names of the bots. Experimental right now...
 
 	-- expert
-	BotFirstShotDelay = 0.35,		-- delay for first shot. If too small, there will be great spread in first cycle because its not kompensated jet.
+	BotFirstShotDelay = 0.25,		-- delay for first shot. If too small, there will be great spread in first cycle because its not kompensated jet.
 	BotMinTimeShootAtPlayer = 2.0,	-- the minimum time a bot shoots at one player
 	BotFireModeDuration = 5.0,		-- the minimum time a bot tries to shoot a player
 	MaximunYawPerSec = 450,			-- in Degree. Rotaion-Movement per second.
@@ -120,6 +120,7 @@ Config = {
 
 	-- UI settings & language options
 	DisableUserInterface = false,	-- if true, the complete UI will be disabled (not available in the UI -) )
+	DisableNodeEditor = true,		-- including all console commands
 	DisableChatCommands = false,		-- if true, no chat commands can be used
 	DisableRCONCommands = false,		-- if true, no RCON commands can be used
 	IgnorePermissions = false,		-- if true, all permissions are ignored --> everyone can do everything
