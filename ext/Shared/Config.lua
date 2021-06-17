@@ -9,7 +9,7 @@ Config = {
 	ZombieMode = false,				-- Zombie Bot Mode
 
 	-- difficluty
-	BotAimWorsening = 0.5,			-- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy).
+	BotAimWorsening = 0.4,			-- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy).
 	BotSniperAimWorsening = 0.2,	-- see botAimWorsening, only for Sniper-rifles
 	BotWorseningSkill = 0.25,		-- variation of the skill of a single bot. the higher, the worse the bots can get compared to the original settings
 	DamageFactorAssault = 0.3,		-- original Damage from bots gets multiplied by this
@@ -120,7 +120,7 @@ Config = {
 
 	-- UI settings & language options
 	DisableUserInterface = false,	-- if true, the complete UI will be disabled (not available in the UI -) )
-	DisableNodeEditor = true,		-- including all console commands
+	DisableNodeEditor = false,		-- including all console commands
 	DisableChatCommands = false,		-- if true, no chat commands can be used
 	DisableRCONCommands = false,		-- if true, no RCON commands can be used
 	IgnorePermissions = false,		-- if true, all permissions are ignored --> everyone can do everything
