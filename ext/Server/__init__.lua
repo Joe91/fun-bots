@@ -6,7 +6,6 @@ require('__shared/Config')
 require('__shared/Constants/BotColors')
 require('__shared/Constants/BotNames')
 require('__shared/Constants/BotKits')
-require('__shared/Constants/BotNames')
 require('__shared/Constants/BotWeapons')
 require('__shared/Constants/WeaponSets')
 require('__shared/Constants/WeaponTypes')
@@ -56,6 +55,7 @@ function FunBotServer:OnExtensionLoaded()
 	self:RegisterHooks()
 	self:RegisterCustomEvents()
 	self:RegisterCallbacks()
+	self:ScambleBotNames() -- use random names at least once per start
 	self:OnModReloaded()
 end
 
@@ -197,10 +197,7 @@ function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPe
 
 	-- randomize used names
 	if Config.UseRandomNames then
-		for i = #BotNames, 2, -1 do
-			local j = math.random(i)
-			BotNames[i], BotNames[j] = BotNames[j], BotNames[i]
-		end
+		self:ScambleBotNames()
 	end
 
 	m_WeaponModification:ModifyAllWeapons(Config.BotAimWorsening, Config.BotSniperAimWorsening)
@@ -433,6 +430,13 @@ function FunBotServer:SetRespawnDelay()
 		Globals.RespawnDelay = self.m_PlayerKilledDelay * s_RespawnTimeModifier
 	else
 		Globals.RespawnDelay = 10.0
+	end
+end
+
+function FunBotServer:ScambleBotNames()
+	for i = #BotNames, 2, -1 do
+		local j = math.random(i)
+		BotNames[i], BotNames[j] = BotNames[j], BotNames[i]
 	end
 end
 
