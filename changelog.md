@@ -16,8 +16,11 @@ The Release-Candidate
 - Added Team-Switch option for Round Two or always
 - Bots stand still during spawn-protection
 - Lots of refactoring
-- new paths for Karkhand
+- new paths for Karkhand (thanks to run)
 - longer reaction-time on bigger distances
+- Additional Spawn-Delay of BOTs possible
+- More realistic loadouts (thanks to DuTcHrEaGaN)
+- More names and random-Bot-Name-Selection either on first start or on every round
 
 
 ## [Unreleased - 1.7.1.X] - 2021-05-XX
