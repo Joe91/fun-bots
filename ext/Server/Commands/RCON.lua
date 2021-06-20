@@ -501,7 +501,7 @@ function RCONCommands:CreateConfigCommands()
 
 			if p_Args == nil or #p_Args == 0 then
 				-- get var
-				return {'OK', 'value of var '.. s_VarName .. 'is '..tostring(Config[s_VarName])}
+				return {'OK', 'value of var '.. s_VarName .. ' is '..tostring(Config[s_VarName])}
 			elseif #p_Args == 1 then
 				-- set var
 				-- check type of var
