@@ -1,7 +1,7 @@
 # Changelog
 
 ## [Unreleased - 2.0.0.X] - 2021-05-XX
-[Download](https://github.com/Joe91/fun-bots/archive/V2.0.0.1.zip)
+[Download](https://github.com/Joe91/fun-bots/archive/V2.0.0.2.zip)
 The Release-Candidate
 
 - First maps with vehicle-support for testing
