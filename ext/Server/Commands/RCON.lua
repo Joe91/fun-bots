@@ -5,7 +5,6 @@ require('__shared/Config')
 local m_BotManager = require('BotManager')
 local m_BotSpawner = require('BotSpawner')
 
-
 function RCONCommands:__init()
 	if Config.DisableRCONCommands then
 		return
@@ -14,7 +13,7 @@ function RCONCommands:__init()
 	self.m_Commands = {
 		-- Get Config
 		GET_CONFIG = {
-			Name = 'funbots.config',
+			Name = 'funbots.get.config',
 			Callback = (function(p_Command, p_Args)
 				if Debug.Server.RCON then
 					print('[RCON] call funbots.config')
@@ -493,7 +492,38 @@ function RCONCommands:__init()
 	self:_Create()
 end
 
+function RCONCommands:CreateConfigCommands()
+	for key, value in pairs(Config) do
+		print('funbots.config.'..key)
+		RCON:RegisterCommand('funbots.config.'..key, RemoteCommandFlag.RequiresLogin, function(p_Command, p_Args, p_LoggedIn)
+			local s_values = p_Command:split(".")
+			local s_VarName = s_values[#s_values]
+
+			if p_Args == nil or #p_Args == 0 then
+				-- get var
+				return {'OK', 'value of var '.. s_VarName .. 'is '..tostring(Config[s_VarName])}
+			elseif #p_Args == 1 then
+				-- set var
+				-- check type of var
+				if type(Config[s_VarName]) == "string" then
+					Config[s_VarName] = p_Args[1]
+					return {'OK', 'set var '.. s_VarName ..' to '..tostring(Config[s_VarName])}
+				elseif type(Config[s_VarName]) == "number" then
+					Config[s_VarName] = tonumber(p_Args[1])
+					return {'OK', 'set var '.. s_VarName ..' to '..tostring(Config[s_VarName])}
+				elseif type(Config[s_VarName]) == "boolean" then
+					Config[s_VarName] = (p_Args[1]:lower() == 'true')
+					return {'OK', 'set var '.. s_VarName ..' to '..tostring(Config[s_VarName])}
+				else
+					return {'ERROR', 'invalid type'}
+				end
+			end
+		end)
+	end
+end
+
 function RCONCommands:_Create()
+	self:CreateConfigCommands()
 	for l_Index, l_Command in pairs(self.m_Commands) do
 		self:_CreateCommand(l_Command.Name, l_Command.Callback)
 	end
