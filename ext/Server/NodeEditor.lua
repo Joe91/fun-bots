@@ -45,6 +45,10 @@ function NodeEditor:OnLevelLoaded(p_LevelName, p_GameMode)
 		p_GameMode = "ConquestLarge0" --paths are the same
 	end
 
+	if p_LevelName == "XP4_Rubble" and p_GameMode == "ConquestAssaultLarge0" then
+		p_GameMode = "ConquestAssaultSmall0"
+	end
+
 	m_NodeCollection:Load(p_LevelName, p_GameMode)
 
 	local s_Counter = 0

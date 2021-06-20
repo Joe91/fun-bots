@@ -494,7 +494,6 @@ end
 
 function RCONCommands:CreateConfigCommands()
 	for key, value in pairs(Config) do
-		print('funbots.config.'..key)
 		RCON:RegisterCommand('funbots.config.'..key, RemoteCommandFlag.RequiresLogin, function(p_Command, p_Args, p_LoggedIn)
 			local s_values = p_Command:split(".")
 			local s_VarName = s_values[#s_values]
@@ -512,7 +511,7 @@ function RCONCommands:CreateConfigCommands()
 					Config[s_VarName] = tonumber(p_Args[1])
 					return {'OK', 'set var '.. s_VarName ..' to '..tostring(Config[s_VarName])}
 				elseif type(Config[s_VarName]) == "boolean" then
-					Config[s_VarName] = (p_Args[1]:lower() == 'true')
+					Config[s_VarName] = (p_Args ~= nil and (p_Args[1] == '1' or p_Args[1] == 'true'))
 					return {'OK', 'set var '.. s_VarName ..' to '..tostring(Config[s_VarName])}
 				else
 					return {'ERROR', 'invalid type'}
