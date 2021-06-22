@@ -1,15 +1,26 @@
 class('ConsoleCommands')
 
 function ConsoleCommands:__init()
-	for key, value in pairs(Config) do
-		
-		Console:Register('config.get.'..key, 'read this value', function(p_Args)
-			print(Config[key])
-		end)
-		Console:Register('config.set.'..key, 'write this value', function(p_Args)
-			print("not implemented yet")
-		end)
+	self._ConfigList = {}
+end
+
+function ConsoleCommands:OnRegisterConsoleCommands(p_ConfigList)
+	if #self._ConfigList == 0 then
+		for _, l_Item in pairs(p_ConfigList) do
+			Console:Register('config.get.'..l_Item.Name, 'read this value', function(p_Args)
+				print(Config[l_Item.Name])
+			end)
+			Console:Register('config.set.'..l_Item.Name, 'Default: '..tostring(l_Item.Default)..', '..l_Item.Description, function(p_Args)
+				NetEvents:SendLocal('ConsoleCommands:SetConfig', l_Item.Name, p_Args[1])
+			end)
+		end
+		self._ConfigList = p_ConfigList
 	end
+	-- TODO: Register SaveAllCommand
+end
+
+function ConsoleCommands:OnPrintResponse(p_Response)
+	print(p_Response)
 end
 
 if g_ConsoleCommands == nil then
