@@ -33,7 +33,6 @@ with open(settings_definition, "r") as inFile:
 
 		for setting in allSettings:
 			if setting["Category"] != lastCategory:
-				lastCategory = setting["Category"]
 				if lastCategory != None:
 					outFile.write("\n")
 				outFile.write("	--"+setting["Category"]+"\n")
