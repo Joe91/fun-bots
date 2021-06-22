@@ -187,7 +187,7 @@ function SettingsManager:SaveAll()
 	for l_Key, l_Value in pairs(Config) do
 		self:Update(l_Key, l_Value, false, true)
 	end
-	Database:executeBatch()
+	m_Database:ExecuteBatch()
 end
 
 function SettingsManager:RestoreDefault()
@@ -203,13 +203,15 @@ function SettingsManager:UpdateSetting(p_Name, p_Value)
 	local s_ConvertedValue = nil
 	for _, l_Item in pairs(SettingsDefinition.Elements) do
 		if l_Item.Name == p_Name then
-			print(l_Item)
 			if l_Item.Type == Type.Integer or l_Item.Type == Type.Float then
 				s_ConvertedValue = tonumber(p_Value)
+				-- check for Range
 			elseif l_Item.Type == Type.Boolean then
 				s_ConvertedValue = (p_Value == '1' or p_Value == "true")
 			elseif l_Item.Type == Type.String then
 				s_ConvertedValue = p_Value
+			else
+				-- TODO: implement enums and Lists.
 			end
 			s_UpdateFlag = l_Item.UpdateFlag
 			s_Valid = true
