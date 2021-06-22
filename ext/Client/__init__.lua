@@ -21,6 +21,7 @@ local m_Logger = Logger("FunBotClient", true)
 --local m_Language = require('__shared/Language')
 local m_ClientBotManager = require('ClientBotManager')
 local m_ClientNodeEditor = require('ClientNodeEditor')
+local m_ConsoleCommands = require('ConsoleCommands')
 local m_ClientUI = require('UI/UI')
 
 

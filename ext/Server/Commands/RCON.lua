@@ -4,6 +4,7 @@ require('__shared/Config')
 
 local m_BotManager = require('BotManager')
 local m_BotSpawner = require('BotSpawner')
+local m_SettingsManager = require('SettingsManager')
 
 function RCONCommands:__init()
 	if Config.DisableRCONCommands then
@@ -11,6 +12,26 @@ function RCONCommands:__init()
 	end
 
 	self.m_Commands = {
+		-- save config
+		CONFIG_SAVE = {
+			Name = 'funbots.saveall',
+			Callback = (function(p_Command, p_Args)
+				m_SettingsManager:SaveAll()
+
+				return { 'OK' }
+			end)
+		},
+
+		-- save config
+		CONFIG_RESET = {
+			Name = 'funbots.restore',
+			Callback = (function(p_Command, p_Args)
+				m_SettingsManager:RestoreDefault()
+
+				return { 'OK' }
+			end)
+		},
+
 		-- Get Config
 		GET_CONFIG = {
 			Name = 'funbots.get.config',
@@ -503,18 +524,11 @@ function RCONCommands:CreateConfigCommands()
 				return {'OK', 'value of var '.. s_VarName .. ' is '..tostring(Config[s_VarName])}
 			elseif #p_Args == 1 and  p_Args[1] ~= nil then
 				-- set var
-				-- check type of var
-				if type(Config[s_VarName]) == "string" then
-					Config[s_VarName] = p_Args[1]
-					return {'OK', 'set var '.. s_VarName ..' to '..tostring(Config[s_VarName])}
-				elseif type(Config[s_VarName]) == "number" then
-					Config[s_VarName] = tonumber(p_Args[1])
-					return {'OK', 'set var '.. s_VarName ..' to '..tostring(Config[s_VarName])}
-				elseif type(Config[s_VarName]) == "boolean" then
-					Config[s_VarName] = (p_Args[1] == '1' or p_Args[1] == 'true')
-					return {'OK', 'set var '.. s_VarName ..' to '..tostring(Config[s_VarName])}
+				local s_Result = m_SettingsManager:UpdateSetting(s_VarName, p_Args[1])
+				if s_Result then
+					return {'OK'}
 				else
-					return {'ERROR', 'invalid type'}
+					return {'ERROR', 'Not valid'}
 				end
 			end
 		end)
