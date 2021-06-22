@@ -76,7 +76,7 @@ SettingsDefinition = {
 			Description = "make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy).",
 			Reference = Range(0.00, 10.00, 0,05),
 			Default = 0.5,
-			UpdateFlag = UpdateFlag.None,
+			UpdateFlag = UpdateFlag.Weapons,
 			Category = "DIFFICULTY"
 		},
 		{
@@ -87,7 +87,7 @@ SettingsDefinition = {
 			Description = "see botAimWorsening, only for Sniper-rifles",
 			Reference = Range(0.00, 10.00, 0,05),
 			Default = 0.2,
-			UpdateFlag = UpdateFlag.None,
+			UpdateFlag = UpdateFlag.Weapons,
 			Category = "DIFFICULTY"
 		},
 		{
@@ -210,7 +210,7 @@ SettingsDefinition = {
 			Description = "mode the bots spawn with",
 			Reference = SpawnModes,
 			Default = SpawnModes.balanced_teams,
-			UpdateFlag = UpdateFlag.None,
+			UpdateFlag = UpdateFlag.AmountAndTeam,
 			Category = "SPAWN"
 		},
 		{
@@ -221,7 +221,7 @@ SettingsDefinition = {
 			Description = "Mode to switch the team",
 			Reference = TeamSwitcheModes,
 			Default = TeamSwitcheModes.SwitchForRoundTwo,
-			UpdateFlag = UpdateFlag.None,
+			UpdateFlag = UpdateFlag.AmountAndTeam,
 			Category = "SPAWN"
 		},
 		{
@@ -231,7 +231,7 @@ SettingsDefinition = {
 			Value = Config.SpawnInBothTeams,
 			Description = "Bots spawn in both teams",
 			Default = true,
-			UpdateFlag = UpdateFlag.None,
+			UpdateFlag = UpdateFlag.AmountAndTeam,
 			Category = "SPAWN"
 		},
 		{
@@ -242,7 +242,7 @@ SettingsDefinition = {
 			Description = "bots for spawnmode",
 			Reference = Range(0.00, 128.00, 1.0),
 			Default = 6,
-			UpdateFlag = UpdateFlag.None,
+			UpdateFlag = UpdateFlag.AmountAndTeam,
 			Category = "SPAWN"
 		},
 		{
@@ -253,7 +253,7 @@ SettingsDefinition = {
 			Description = "number to increase Bots, when new players join",
 			Reference = Range(0.00, 128.00, 1.0),
 			Default = 2,
-			UpdateFlag = UpdateFlag.None,
+			UpdateFlag = UpdateFlag.AmountAndTeam,
 			Category = "SPAWN"
 		},
 		{
@@ -264,7 +264,7 @@ SettingsDefinition = {
 			Description = "reduce playerteam in balanced_teams or fixed_number mode",
 			Reference = Range(0.00, 1.00, 0.05),
 			Default = 0.8,
-			UpdateFlag = UpdateFlag.None,
+			UpdateFlag = UpdateFlag.AmountAndTeam,
 			Category = "SPAWN"
 		},
 		{
@@ -275,7 +275,7 @@ SettingsDefinition = {
 			Description = "default bot team (0 = neutral / auto, 1 = US, 2 = RU) TeamId.Team2",
 			Reference = Range(0.00, 4.00, 1.0),
 			Default = 0,
-			UpdateFlag = UpdateFlag.None,
+			UpdateFlag = UpdateFlag.AmountAndTeam,
 			Category = "SPAWN"
 		},
 		{
@@ -646,7 +646,7 @@ SettingsDefinition = {
 			Description = "weaponset of Assault class. Custom uses the Shared/WeaponLists",
 			Reference = WeaponSets,
 			Default = WeaponSets.Custom,
-			UpdateFlag = UpdateFlag.None,
+			UpdateFlag = UpdateFlag.WeaponSets,
 			Category = "WEAPONS"
 		},
 		{
@@ -657,7 +657,7 @@ SettingsDefinition = {
 			Description = "weaponset of Engineer class. Custom uses the Shared/WeaponLists",
 			Reference = WeaponSets,
 			Default = WeaponSets.Custom,
-			UpdateFlag = UpdateFlag.None,
+			UpdateFlag = UpdateFlag.WeaponSets,
 			Category = "WEAPONS"
 		},
 		{
@@ -668,7 +668,7 @@ SettingsDefinition = {
 			Description = "weaponset of Support class. Custom uses the Shared/WeaponLists",
 			Reference = WeaponSets,
 			Default = WeaponSets.Custom,
-			UpdateFlag = UpdateFlag.None,
+			UpdateFlag = UpdateFlag.WeaponSets,
 			Category = "WEAPONS"
 		},
 		{
@@ -679,7 +679,7 @@ SettingsDefinition = {
 			Description = "weaponset of Recon class. Custom uses the Shared/WeaponLists",
 			Reference = WeaponSets,
 			Default = WeaponSets.Custom,
-			UpdateFlag = UpdateFlag.None,
+			UpdateFlag = UpdateFlag.WeaponSets,
 			Category = "WEAPONS"
 		},
 		{
@@ -986,7 +986,7 @@ SettingsDefinition = {
 			Description = "in Degree. Rotaion-Movement per second.",
 			Reference = Range(0.00, 1080.00, 5.0),
 			Default = 450,
-			UpdateFlag = UpdateFlag.None,
+			UpdateFlag = UpdateFlag.YawPerSec,
 			Category = "EXPERT"
 		},
 		{
@@ -1007,7 +1007,7 @@ SettingsDefinition = {
 			Value = Config.KeepOneSlotForPlayers,
 			Description = "always keep one slot for new Players to join",
 			Default = true,
-			UpdateFlag = UpdateFlag.None,
+			UpdateFlag = UpdateFlag.AmountAndTeam,
 			Category = "EXPERT"
 		},
 		{
