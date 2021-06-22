@@ -23,8 +23,12 @@ with open(settings_definition, "r") as inFile:
 				allSettings.append(setting)
 				numberOfSettings = numberOfSettings + 1
 				setting = {}
+	# add last setting
+	allSettings.append(setting)
+	numberOfSettings = numberOfSettings + 1
+	setting = {}
 	
-	with open("config_temp.lua", "w") as outFile:
+	with open("ext/shared/Config.lua", "w") as outFile:
 		lastCategory = None
 		outFile.write("USE_REAL_DAMAGE = true				-- with real damage, the hitboxes are a bit buggy\n")
 		outFile.write("BOT_TOKEN = \"BOT_\"					-- token Bots are marked with\n")
@@ -37,7 +41,7 @@ with open(settings_definition, "r") as inFile:
 					outFile.write("\n")
 				outFile.write("	--"+setting["Category"]+"\n")
 				lastCategory = setting["Category"]
-			outFile.write("	"+setting["Name"] + " = " + setting["Default"] + ",  --" + setting["Description"] + "\n")
+			outFile.write("	"+setting["Name"] + " = " + setting["Default"] + ",  -- " + setting["Description"] + "\n")
 	
 		outFile.write("}\n\n")
 		outFile.write("-- don't change these values unless you know what you do\n")

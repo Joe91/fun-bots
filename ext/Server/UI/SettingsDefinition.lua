@@ -932,6 +932,16 @@ SettingsDefinition = {
 			UpdateFlag = UpdateFlag.None,
 			Category = "ADVANCED"
 		},
+		{
+			Name = "UseRandomNames",
+			Text = "Use Random Names",
+			Type = Type.Boolean,
+			Value = Config.UseRandomNames,
+			Description = "changes names of the bots on every new round. Experimental right now...",
+			Default = false,
+			UpdateFlag = UpdateFlag.None,
+			Category = "ADVANCED"
+		},
 
 		-- Expert Properties
 		{
@@ -1093,6 +1103,16 @@ SettingsDefinition = {
 			Type = Type.Boolean,
 			Value = Config.DisableUserInterface,
 			Description = "if true, the complete UI will be disabled (not available in the UI -) )",
+			Default = false,
+			UpdateFlag = UpdateFlag.None,
+			Category = "OTHER"
+		},
+		{
+			Name = "DisableNodeEditor",
+			Text = "disable NodeEditor",
+			Type = Type.Boolean,
+			Value = Config.DisableNodeEditor,
+			Description = "if true, the Nodeeditor is not available, including all console commands",
 			Default = false,
 			UpdateFlag = UpdateFlag.None,
 			Category = "OTHER"
