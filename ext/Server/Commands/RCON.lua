@@ -501,7 +501,7 @@ function RCONCommands:CreateConfigCommands()
 			if p_Args == nil or #p_Args == 0 then
 				-- get var
 				return {'OK', 'value of var '.. s_VarName .. ' is '..tostring(Config[s_VarName])}
-			elseif #p_Args == 1 then
+			elseif #p_Args == 1 and  p_Args[1] ~= nil then
 				-- set var
 				-- check type of var
 				if type(Config[s_VarName]) == "string" then
@@ -511,7 +511,7 @@ function RCONCommands:CreateConfigCommands()
 					Config[s_VarName] = tonumber(p_Args[1])
 					return {'OK', 'set var '.. s_VarName ..' to '..tostring(Config[s_VarName])}
 				elseif type(Config[s_VarName]) == "boolean" then
-					Config[s_VarName] = (p_Args ~= nil and (p_Args[1] == '1' or p_Args[1] == 'true'))
+					Config[s_VarName] = (p_Args[1] == '1' or p_Args[1] == 'true')
 					return {'OK', 'set var '.. s_VarName ..' to '..tostring(Config[s_VarName])}
 				else
 					return {'ERROR', 'invalid type'}
