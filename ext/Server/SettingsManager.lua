@@ -206,15 +206,27 @@ function SettingsManager:UpdateSetting(p_Name, p_Value)
 			if l_Item.Type == Type.Integer or l_Item.Type == Type.Float then
 				s_ConvertedValue = tonumber(p_Value)
 				-- check for Range
+				if l_Item.Reference:GetMax() >= s_ConvertedValue and l_Item.Reference:GetMin() <= s_ConvertedValue then
+					s_Valid = true
+				end
 			elseif l_Item.Type == Type.Boolean then
 				s_ConvertedValue = (p_Value == '1' or p_Value == "true")
+				s_Valid = true
 			elseif l_Item.Type == Type.String then
 				s_ConvertedValue = p_Value
+				s_Valid = true
+			elseif l_Item.Type == Type.Enum then
+				s_ConvertedValue = tonumber(p_Value)
+				for l_Key, l_Value in pairs(l_Item.Reference) do
+					if s_ConvertedValue == l_Value then
+						s_Valid = true
+						break
+					end
+				end
 			else
-				-- TODO: implement enums and Lists.
+				-- TODO: implement Lists.
 			end
 			s_UpdateFlag = l_Item.UpdateFlag
-			s_Valid = true
 			break
 		end
 	end

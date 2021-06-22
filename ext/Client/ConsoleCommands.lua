@@ -7,7 +7,7 @@ function ConsoleCommands:__init()
 			print(Config[key])
 		end)
 		Console:Register('config.set.'..key, 'write this value', function(p_Args)
-			Config[key] = tostring(p_Args[1])
+			print("not implemented yet")
 		end)
 	end
 end
