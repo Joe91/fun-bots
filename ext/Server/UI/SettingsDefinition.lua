@@ -146,17 +146,6 @@ SettingsDefinition = {
 			Category = "DIFFICULTY"
 		},
 		{
-			Name = "DamageFactorPDW",
-			Text = "Damage Factor PDW",
-			Type = Type.Float,
-			Value = Config.DamageFactorPDW,
-			Description = "original Damage from bots gets multiplied by this",
-			Reference = Range(0.00, 2.00, 0,10),
-			Default = 0.5,
-			UpdateFlag = UpdateFlag.None,
-			Category = "DIFFICULTY"
-		},
-		{
 			Name = "DamageFactorSniper",
 			Text = "Damage Factor Sniper",
 			Type = Type.Float,
@@ -689,7 +678,7 @@ SettingsDefinition = {
 			Value = Config.AssaultWeapon,
 			Description = "primary weapon of Assault class, if random-weapon == false",
 			Reference = AssaultPrimary,
-			Default = AssaultPrimary[1],
+			Default = "M416",
 			UpdateFlag = UpdateFlag.None,
 			Category = "WEAPONS"
 		},
@@ -700,7 +689,7 @@ SettingsDefinition = {
 			Value = Config.EngineerWeapon,
 			Description = "primary weapon of Engineer class, if random-weapon == false",
 			Reference = EngineerPrimary,
-			Default = EngineerPrimary[1],
+			Default = "M4A1",
 			UpdateFlag = UpdateFlag.None,
 			Category = "WEAPONS"
 		},
@@ -711,7 +700,7 @@ SettingsDefinition = {
 			Value = Config.SupportWeapon,
 			Description = "primary weapon of Support class, if random-weapon == false",
 			Reference = SupportPrimary,
-			Default = SupportPrimary[1],
+			Default = "M249",
 			UpdateFlag = UpdateFlag.None,
 			Category = "WEAPONS"
 		},
@@ -722,7 +711,7 @@ SettingsDefinition = {
 			Value = Config.ReconWeapon,
 			Description = "primary weapon of Recon class, if random-weapon == false",
 			Reference = ReconPrimary,
-			Default = ReconPrimary[1],
+			Default = "L96",
 			UpdateFlag = UpdateFlag.None,
 			Category = "WEAPONS"
 		},
@@ -733,7 +722,7 @@ SettingsDefinition = {
 			Value = Config.Pistol,
 			Description = "Pistol of Bots, if random-weapon == false",
 			Reference = PistoWeapons,
-			Default = PistoWeapons[1],
+			Default = "MP412Rex",
 			UpdateFlag = UpdateFlag.None,
 			Category = "WEAPONS"
 		},
@@ -744,7 +733,7 @@ SettingsDefinition = {
 			Value = Config.Knife,
 			Description = "Knife of Bots, if random-weapon == false",
 			Reference = KnifeWeapons,
-			Default = KnifeWeapons[1],
+			Default = "Razor",
 			UpdateFlag = UpdateFlag.None,
 			Category = "WEAPONS"
 		},
