@@ -30,8 +30,8 @@ with open(settings_definition, "r") as inFile:
 	
 	with open("ext/shared/Config.lua", "w") as outFile:
 		lastCategory = None
-		outFile.write("USE_REAL_DAMAGE = true				-- with real damage, the hitboxes are a bit buggy\n")
-		outFile.write("BOT_TOKEN = \"BOT_\"					-- token Bots are marked with\n")
+		outFile.write("USE_REAL_DAMAGE = true					-- with real damage, the hitboxes are a bit buggy\n")
+		outFile.write("BOT_TOKEN = \"BOT_\"						-- token Bots are marked with\n")
 		outFile.write("\n")
 		outFile.write("Config = {\n")
 
@@ -41,7 +41,15 @@ with open(settings_definition, "r") as inFile:
 					outFile.write("\n")
 				outFile.write("	--"+setting["Category"]+"\n")
 				lastCategory = setting["Category"]
-			outFile.write("	"+setting["Name"] + " = " + setting["Default"] + ",  -- " + setting["Description"] + "\n")
+			tempString = "	"+setting["Name"] + " = " + setting["Default"] + ","
+			# calc tabs
+			width = len(tempString) + 3 #tab in the beginning
+			numberOfTabs = (44 - width) // 4
+			if ((44 - width) % 4) == 0:
+				numberOfTabs = numberOfTabs -1
+			if numberOfTabs <= 0:
+				numberOfTabs = 1
+			outFile.write(tempString + "	" * numberOfTabs +"-- " + setting["Description"] + "\n")
 	
 		outFile.write("}\n\n")
 		outFile.write("-- don't change these values unless you know what you do\n")
