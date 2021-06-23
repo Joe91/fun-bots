@@ -21,6 +21,31 @@ function Console:OnConsoleCommandSetConfig(p_Player, p_Name, p_Value)
 	NetEvents:SendToLocal('ConsoleCommands:PrintResponse', p_Player, s_Respone)
 end
 
+
+function Console:OnConsoleCommandRestore(p_Player, p_Args)
+	local s_Respone = ""
+	if PermissionManager:HasPermission(p_Player, 'UserInterface.Settings') == false then
+		s_Respone = "Missing Permissions"
+	else
+		m_SettingsManager:SaveAll()
+		s_Respone = "OK"
+	end
+	NetEvents:SendToLocal('ConsoleCommands:PrintResponse', p_Player, s_Respone)
+end
+
+function Console:OnConsoleCommandSaveAll(p_Player, p_Args)
+	local s_Respone = ""
+	if PermissionManager:HasPermission(p_Player, 'UserInterface.Settings') == false then
+		s_Respone = "Missing Permissions"
+	else
+		m_SettingsManager:RestoreDefault()
+		s_Respone = "OK"
+	end
+	NetEvents:SendToLocal('ConsoleCommands:PrintResponse', p_Player, s_Respone)
+end
+
+
+
 function Console:RegisterConsoleCommands(p_Player)
 	-- generate list out of Name, Default, Description
 	if PermissionManager:HasPermission(p_Player, 'UserInterface.Settings') == false then

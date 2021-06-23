@@ -16,7 +16,15 @@ function ConsoleCommands:OnRegisterConsoleCommands(p_ConfigList)
 		end
 		self._ConfigList = p_ConfigList
 	end
-	-- TODO: Register SaveAllCommand
+
+	Console:Register('config.saveall', 'save all values to database', function(p_Args)
+		NetEvents:SendLocal('ConsoleCommands:SaveAll', true)
+	end)
+
+	Console:Register('config.restore', 'restores default-values', function(p_Args)
+		NetEvents:SendLocal('ConsoleCommands:Restore', true)
+	end)
+
 end
 
 function ConsoleCommands:OnPrintResponse(p_Response)

@@ -109,6 +109,8 @@ function FunBotServer:RegisterCustomEvents()
 	Events:Subscribe('Bot:RespawnBot', self, self.OnRespawnBot)
 	NetEvents:Subscribe('Client:RequestSettings', self, self.OnRequestClientSettings)
 	NetEvents:Subscribe('ConsoleCommands:SetConfig', self, self.OnConsoleCommandSetConfig)
+	NetEvents:Subscribe('ConsoleCommands:SaveAll', self, self.OnConsoleCommandSaveAll)
+	NetEvents:Subscribe('ConsoleCommands:Restore', self, self.OnConsoleCommandRestore)
 	m_NodeEditor:RegisterCustomEvents()
 end
 
@@ -364,6 +366,14 @@ end
 
 function FunBotServer:OnConsoleCommandSetConfig(p_Player, p_Name, p_Value)
 	m_Console:OnConsoleCommandSetConfig(p_Player, p_Name, p_Value)
+end
+
+function FunBotServer:OnConsoleCommandSaveAll(p_Player, p_Args)
+	m_Console:OnConsoleCommandSaveAll(p_Player, p_Args)
+end
+
+function FunBotServer:OnConsoleCommandRestore(p_Player, p_Args)
+	m_Console:OnConsoleCommandRestore(p_Player, p_Args)
 end
 
 -- =============================================
