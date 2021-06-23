@@ -531,6 +531,7 @@ function Bot:_UpdateRespawn()
 		if self._SpawnDelayTimer < (Globals.RespawnDelay + Config.AdditionalBotSpawnDelay) then
 			self._SpawnDelayTimer = self._SpawnDelayTimer + StaticConfig.BotUpdateCycle
 		else
+			self._SpawnDelayTimer = 0 -- prevent triggering again.
 			Events:DispatchLocal('Bot:RespawnBot', self.m_Name)
 		end
 	else

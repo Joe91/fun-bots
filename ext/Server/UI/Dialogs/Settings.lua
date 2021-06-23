@@ -69,7 +69,7 @@ function Settings:InitializeComponent(p_View)
 	end
 
 	-- Add Menu
-	self.m_Dialog:SetContent("This feature is sadly not implemented right now. If you can help, just let me know...")
+	self.m_Dialog:SetContent("This feature is sadly not implemented right now. If you can help, just let me know... Just use the Console or RCON")
 
 	-- Add Buttons
 	self.m_Dialog:AddButton(Button('button_settings_cancel', 'Cancel', function(player)

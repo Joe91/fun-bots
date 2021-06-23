@@ -7,6 +7,7 @@ Globals = {
 	IsSdm = false,
 	IsScavenger = false,
 	IsRush = false,
+	IsSquadRush = false,
 	IsGm = false,
 	IsConquest = false,
 	IsAssault = false,
@@ -21,5 +22,5 @@ Globals = {
 
 	RespawnWayBots = false, --used for the runtime respawn
 	AttackWayBots = false, --used for the runtime attack
-	SpawnMode = "manual" --used for the runtime spawnmode
+	SpawnMode = SpawnModes.manual --used for the runtime spawnmode
 }

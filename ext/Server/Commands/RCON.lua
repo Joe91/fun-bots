@@ -4,7 +4,7 @@ require('__shared/Config')
 
 local m_BotManager = require('BotManager')
 local m_BotSpawner = require('BotSpawner')
-
+local m_SettingsManager = require('SettingsManager')
 
 function RCONCommands:__init()
 	if Config.DisableRCONCommands then
@@ -12,9 +12,29 @@ function RCONCommands:__init()
 	end
 
 	self.m_Commands = {
+		-- save config
+		CONFIG_SAVE = {
+			Name = 'funbots.saveall',
+			Callback = (function(p_Command, p_Args)
+				m_SettingsManager:SaveAll()
+
+				return { 'OK' }
+			end)
+		},
+
+		-- save config
+		CONFIG_RESET = {
+			Name = 'funbots.restore',
+			Callback = (function(p_Command, p_Args)
+				m_SettingsManager:RestoreDefault()
+
+				return { 'OK' }
+			end)
+		},
+
 		-- Get Config
 		GET_CONFIG = {
-			Name = 'funbots.config',
+			Name = 'funbots.get.config',
 			Callback = (function(p_Command, p_Args)
 				if Debug.Server.RCON then
 					print('[RCON] call funbots.config')
@@ -493,7 +513,30 @@ function RCONCommands:__init()
 	self:_Create()
 end
 
+function RCONCommands:CreateConfigCommands()
+	for key, value in pairs(Config) do
+		RCON:RegisterCommand('funbots.config.'..key, RemoteCommandFlag.RequiresLogin, function(p_Command, p_Args, p_LoggedIn)
+			local s_values = p_Command:split(".")
+			local s_VarName = s_values[#s_values]
+
+			if p_Args == nil or #p_Args == 0 then
+				-- get var
+				return {'OK', 'value of var '.. s_VarName .. ' is '..tostring(Config[s_VarName])}
+			elseif #p_Args == 1 and  p_Args[1] ~= nil then
+				-- set var
+				local s_Result = m_SettingsManager:UpdateSetting(s_VarName, p_Args[1])
+				if s_Result then
+					return {'OK'}
+				else
+					return {'ERROR', 'Not valid'}
+				end
+			end
+		end)
+	end
+end
+
 function RCONCommands:_Create()
+	self:CreateConfigCommands()
 	for l_Index, l_Command in pairs(self.m_Commands) do
 		self:_CreateCommand(l_Command.Name, l_Command.Callback)
 	end

@@ -1,6 +1,5 @@
 class('SettingsManager')
 
-require('__shared/ArrayMap')
 require('__shared/Config')
 
 local m_Database = require('Database')
@@ -40,11 +39,6 @@ function SettingsManager:OnExtensionLoaded()
 	if Config.Language == nil then
 		Config.Language = DatabaseField.NULL
 	end
-
-	if Config.SettingsPassword == nil then
-		Config.SettingsPassword = DatabaseField.NULL
-	end
-
 	-- get Values from Config.lua
 	for l_Name, l_Value in pairs(Config) do
 		-- Check SQL if Config.lua has changed
@@ -140,14 +134,9 @@ function SettingsManager:OnExtensionLoaded()
 			end
 		end
 	end
-
 	-- revert Fix nil values on config
 	if Config.Language == DatabaseField.NULL then
 		Config.Language = nil
-	end
-
-	if Config.SettingsPassword == DatabaseField.NULL then
-		Config.SettingsPassword = nil
 	end
 end
 
@@ -192,6 +181,75 @@ function SettingsManager:Update(p_Name, p_Value, p_Temporary, p_Batch)
 	end
 
 	Config[p_Name] = p_Value
+end
+
+function SettingsManager:SaveAll()
+	for l_Key, l_Value in pairs(Config) do
+		self:Update(l_Key, l_Value, false, true)
+	end
+	m_Database:ExecuteBatch()
+end
+
+function SettingsManager:RestoreDefault()
+	for _, l_Item in pairs(SettingsDefinition.Elements) do
+		Config[l_Item.Name] = l_Item.Default
+	end
+end
+
+function SettingsManager:UpdateSetting(p_Name, p_Value)
+	local s_Valid = false
+	local s_UpdateClientWeapons = false
+	local s_UpdateFlag = UpdateFlag.None
+	local s_ConvertedValue = nil
+	for _, l_Item in pairs(SettingsDefinition.Elements) do
+		if l_Item.Name == p_Name then
+			if l_Item.Type == Type.Integer or l_Item.Type == Type.Float then
+				s_ConvertedValue = tonumber(p_Value)
+				-- check for Range
+				if l_Item.Reference:GetMax() >= s_ConvertedValue and l_Item.Reference:GetMin() <= s_ConvertedValue then
+					s_Valid = true
+				end
+			elseif l_Item.Type == Type.Boolean then
+				s_ConvertedValue = (p_Value == '1' or p_Value == "true")
+				s_Valid = true
+			elseif l_Item.Type == Type.String then
+				s_ConvertedValue = p_Value
+				s_Valid = true
+			elseif l_Item.Type == Type.Enum then
+				s_ConvertedValue = tonumber(p_Value)
+				for l_Key, l_Value in pairs(l_Item.Reference) do
+					if s_ConvertedValue == l_Value then
+						s_Valid = true
+						break
+					end
+				end
+			else
+				-- TODO: implement Lists.
+			end
+			s_UpdateFlag = l_Item.UpdateFlag
+			break
+		end
+	end
+	if s_Valid then
+		self:Update(p_Name, s_ConvertedValue, true, false)
+
+		if s_UpdateFlag == UpdateFlag.WeaponSets then
+			WeaponList:updateWeaponList()
+			s_UpdateClientWeapons = true
+		elseif s_UpdateFlag == UpdateFlag.Weapons then
+			WeaponModification:ModifyAllWeapons(Config.BotAimWorsening, Config.BotSniperAimWorsening)
+		elseif s_UpdateFlag == UpdateFlag.YawPerSec then
+			Globals.YawPerFrame = BotManager:calcYawPerFrame()
+		elseif s_UpdateFlag == UpdateFlag.AmountAndTeam then
+			Globals.SpawnMode = Config.SpawnMode
+			BotSpawner:updateBotAmountAndTeam()
+		end
+
+		NetEvents:BroadcastLocal('WriteClientSettings', Config, s_UpdateClientWeapons)
+		return true
+	else
+		return false
+	end
 end
 
 if g_Settings == nil then

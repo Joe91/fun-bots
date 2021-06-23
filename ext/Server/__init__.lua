@@ -32,6 +32,7 @@ local m_BotManager = require('BotManager')
 local m_BotSpawner = require('BotSpawner')
 local m_WeaponList = require('__shared/WeaponList')
 local m_ChatCommands = require('Commands/Chat')
+local m_Console = require('Commands/Console')
 local m_RCONCommands = require('Commands/RCON')
 -- local m_FunBotUIServer = require('UIServer')
 local m_GameDirector = require('GameDirector')
@@ -107,6 +108,9 @@ function FunBotServer:RegisterCustomEvents()
 	Events:Subscribe('Server:DamagePlayer', self, self.OnServerDamagePlayer) --only triggered on false damage
 	Events:Subscribe('Bot:RespawnBot', self, self.OnRespawnBot)
 	NetEvents:Subscribe('Client:RequestSettings', self, self.OnRequestClientSettings)
+	NetEvents:Subscribe('ConsoleCommands:SetConfig', self, self.OnConsoleCommandSetConfig)
+	NetEvents:Subscribe('ConsoleCommands:SaveAll', self, self.OnConsoleCommandSaveAll)
+	NetEvents:Subscribe('ConsoleCommands:Restore', self, self.OnConsoleCommandRestore)
 	m_NodeEditor:RegisterCustomEvents()
 end
 
@@ -356,7 +360,20 @@ end
 
 function FunBotServer:OnRequestClientSettings(p_Player)
 	NetEvents:SendToLocal('WriteClientSettings', p_Player, Config, true)
+	m_Console:RegisterConsoleCommands(p_Player)
 	m_BotManager:RegisterActivePlayer(p_Player)
+end
+
+function FunBotServer:OnConsoleCommandSetConfig(p_Player, p_Name, p_Value)
+	m_Console:OnConsoleCommandSetConfig(p_Player, p_Name, p_Value)
+end
+
+function FunBotServer:OnConsoleCommandSaveAll(p_Player, p_Args)
+	m_Console:OnConsoleCommandSaveAll(p_Player, p_Args)
+end
+
+function FunBotServer:OnConsoleCommandRestore(p_Player, p_Args)
+	m_Console:OnConsoleCommandRestore(p_Player, p_Args)
 end
 
 -- =============================================
@@ -572,10 +589,17 @@ function FunBotServer:SetGameMode(p_GameMode)
 		Globals.IsAssault = false
 	end
 
-	if p_GameMode == 'RushLarge0' then
+	if p_GameMode == 'RushLarge0' or 
+	p_GameMode == 'SquadRush0' then
 		Globals.IsRush = true
 	else
 		Globals.IsRush = false
+	end
+
+	if p_GameMode == 'SquadRush0' then
+		Globals.IsSquadRush = true
+	else
+		Globals.IsSquadRush = false
 	end
 end
 

@@ -6,6 +6,7 @@ class('UI')
 local m_Logger = Logger("UI", Debug.Server.UI)
 
 require('UI/Constants/Type')
+require('UI/Constants/UpdateFlag')
 require('UI/Constants/Position')
 require('UI/Constants/Color')
 require('UI/Constants/Numpad')
