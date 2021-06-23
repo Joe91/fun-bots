@@ -7,6 +7,7 @@ Globals = {
 	IsSdm = false,
 	IsScavenger = false,
 	IsRush = false,
+	IsSquadRush = false,
 	IsGm = false,
 	IsConquest = false,
 	IsAssault = false,

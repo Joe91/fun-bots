@@ -739,34 +739,43 @@ function GameDirector:_UpdateValidObjectives()
 		return
 	end
 
-	if (self.m_McomCounter % 2) == 0 then
-		self.m_OnlyOneMcom = false
-		if self.m_McomCounter > 0 then
-			self.m_waitForZone = true
+	local s_ExecuteUpdate = false
+	local s_BaseIndex = 0
+	local s_McomIndexes = {}
+	if Globals.IsSquadRush then
+		s_ExecuteUpdate = true
+		s_BaseIndex = self.m_McomCounter
+		s_McomIndexes = {self.m_McomCounter}
+	elseif Globals.isRush then
+		if (self.m_McomCounter % 2) == 0 then
+			self.m_OnlyOneMcom = false
+			if self.m_McomCounter > 0 then
+				self.m_waitForZone = true
+			end
+			if self.m_McomCounter < 2 then
+				s_BaseIndex = 1
+				s_McomIndexes = {1, 2}
+			elseif self.m_McomCounter < 4 then
+				s_BaseIndex = 2
+				s_McomIndexes = {3, 4}
+			elseif self.m_McomCounter < 6 then
+				s_BaseIndex = 3
+				s_McomIndexes = {5, 6}
+			elseif self.m_McomCounter < 8 then
+				s_BaseIndex = 4
+				s_McomIndexes = {7, 8}
+			elseif self.m_McomCounter < 10 then
+				s_BaseIndex = 5
+				s_McomIndexes = {9, 10}
+			else
+				s_BaseIndex = 6
+				s_McomIndexes = {11, 12}
+			end
+			s_ExecuteUpdate = true
 		end
-		local s_BaseIndex = 0
-		local s_McomIndexes = {0, 0}
+	end
 
-		if self.m_McomCounter < 2 then
-			s_BaseIndex = 1
-			s_McomIndexes = {1, 2}
-		elseif self.m_McomCounter < 4 then
-			s_BaseIndex = 2
-			s_McomIndexes = {3, 4}
-		elseif self.m_McomCounter < 6 then
-			s_BaseIndex = 3
-			s_McomIndexes = {5, 6}
-		elseif self.m_McomCounter < 8 then
-			s_BaseIndex = 4
-			s_McomIndexes = {7, 8}
-		elseif self.m_McomCounter < 10 then
-			s_BaseIndex = 5
-			s_McomIndexes = {9, 10}
-		else
-			s_BaseIndex = 6
-			s_McomIndexes = {11, 12}
-		end
-
+	if s_ExecuteUpdate then
 		for _, l_Objective in pairs(self.m_AllObjectives) do
 			local s_Fields = l_Objective.name:split(" ")
 			local s_Active = false
