@@ -5,7 +5,7 @@ local function CheckVersion()
 		print('Checking for Updates...')
 	end
 
-	local s_Response = Net:GetHTTP('https://api.github.com/repos/Joe91/fun-bots/releases?per_page=1')
+	local s_Response = Net:GetHTTP('https://api.github.com/repos/Joe91/fun-bots/tags?per_page=1')
 	local s_JSON = json.decode(s_Response.body)
 
 	if s_JSON == nil or s_JSON[1] == nil then
