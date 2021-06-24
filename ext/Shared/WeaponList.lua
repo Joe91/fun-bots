@@ -48,22 +48,22 @@ function WeaponList:__init()
 	-- shotguns
 	s_Weapon = Weapon('DAO-12_Flechette', '', {'Weapons/DAO-12/U_DAO-12_Flechette', 'Kobra', 'ExtendedMag'}, WeaponTypes.Shotgun, 'Weapons/DAO-12/U_DAO-12')
 	table.insert(self._weapons, s_Weapon)
-	
+
 	s_Weapon = Weapon('DAO-12_Frag', '', {'Weapons/DAO-12/U_DAO-12_Frag', 'Kobra', 'ExtendedMag'}, WeaponTypes.Shotgun, 'Weapons/DAO-12/U_DAO-12')
 	table.insert(self._weapons, s_Weapon)
-	
-	s_Weapon = Weapon('DAO-12_Slug', '', {'Weapons/DAO-12/U_DAO-12_Slug', 'Kobra', 'ExtendedMag'}, WeaponTypes.Shotgun, 'Weapons/DAO-12/U_DAO-12')
+
+	s_Weapon = Weapon('DAO-12_Slug', '', {'Weapons/DAO-12/U_DAO-12_Slug', 'Kobra', 'TargetPointer'}, WeaponTypes.Shotgun, 'Weapons/DAO-12/U_DAO-12')
 	table.insert(self._weapons, s_Weapon)
-	
+
 	s_Weapon = Weapon('Jackhammer_Flechette', 'XP1', {'Weapons/XP1_Jackhammer/U_Jackhammer_Flechette', 'Kobra', 'ExtendedMag', 'Weapons/XP1_Jackhammer/U_JACKHAMMER_CAMO_1'}, WeaponTypes.Shotgun, 'Weapons/XP1_Jackhammer/U_Jackhammer')
 	table.insert(self._weapons, s_Weapon)
 
 	s_Weapon = Weapon('Jackhammer_Frag', 'XP1', {'Weapons/XP1_Jackhammer/U_Jackhammer_Frag', 'Kobra', 'ExtendedMag', 'Weapons/XP1_Jackhammer/U_JACKHAMMER_CAMO_2'}, WeaponTypes.Shotgun, 'Weapons/XP1_Jackhammer/U_Jackhammer')
 	table.insert(self._weapons, s_Weapon)
-	
-	s_Weapon = Weapon('Jackhammer_Slug', 'XP1', {'Weapons/XP1_Jackhammer/U_Jackhammer_Slug', 'Kobra', 'ExtendedMag', 'Weapons/XP1_Jackhammer/U_JACKHAMMER_CAMO_1'}, WeaponTypes.Shotgun, 'Weapons/XP1_Jackhammer/U_Jackhammer')
+
+	s_Weapon = Weapon('Jackhammer_Slug', 'XP1', {'Weapons/XP1_Jackhammer/U_Jackhammer_Slug', 'Kobra', 'TargetPointer', 'Weapons/XP1_Jackhammer/U_JACKHAMMER_CAMO_1'}, WeaponTypes.Shotgun, 'Weapons/XP1_Jackhammer/U_Jackhammer')
 	table.insert(self._weapons, s_Weapon)
-	
+
 	s_Weapon = Weapon('Saiga20_Flechette', '', {'Weapons/SAIGA20K/U_Saiga_20k_Flechette', 'Kobra', 'ExtendedMag'}, WeaponTypes.Shotgun, 'Weapons/SAIGA20K/U_SAIGA_20K')
 	table.insert(self._weapons, s_Weapon)
 
@@ -72,109 +72,109 @@ function WeaponList:__init()
 
 	s_Weapon = Weapon('Saiga20_Slug', '', {'Weapons/SAIGA20K/U_Saiga_20k_Slug', 'Kobra', 'ExtendedMag'}, WeaponTypes.Shotgun, 'Weapons/SAIGA20K/U_SAIGA_20K')
 	table.insert(self._weapons, s_Weapon)
-	
+
 	s_Weapon = Weapon('SPAS12_Flechette', 'XP2', {'Weapons/XP2_SPAS12/U_SPAS12_Flechette', 'Kobra', 'ExtendedMag'}, WeaponTypes.Shotgun, 'Weapons/XP2_SPAS12/U_SPAS12')
 	table.insert(self._weapons, s_Weapon)
-	
+
 	s_Weapon = Weapon('SPAS12_Frag', 'XP2', {'Weapons/XP2_SPAS12/U_SPAS12_Frag', 'Kobra', 'ExtendedMag'}, WeaponTypes.Shotgun, 'Weapons/XP2_SPAS12/U_SPAS12')
 	table.insert(self._weapons, s_Weapon)
-	
+
 	s_Weapon = Weapon('SPAS12_Slug', 'XP2', {'Weapons/XP2_SPAS12/U_SPAS12_Slug', 'Kobra', 'ExtendedMag'}, WeaponTypes.Shotgun, 'Weapons/XP2_SPAS12/U_SPAS12')--TODO: Get Damage-Values and Speed of other ammo
 	table.insert(self._weapons, s_Weapon)
-	
+
 	s_Weapon = Weapon('USAS-12_Flechette', '', {'Weapons/USAS-12/U_USAS-12_Flechette', 'ExtendedMag', 'Kobra'}, WeaponTypes.Shotgun, 'Weapons/USAS-12/U_USAS-12')
 	table.insert(self._weapons, s_Weapon)
 
 	s_Weapon = Weapon('USAS-12_Frag', '', {'Weapons/USAS-12/U_USAS-12_Frag', 'ExtendedMag', 'Kobra'}, WeaponTypes.Shotgun, 'Weapons/USAS-12/U_USAS-12')
 	table.insert(self._weapons, s_Weapon)
-	
+
 	s_Weapon = Weapon('USAS-12_Slug', '', {'Weapons/USAS-12/U_USAS-12_Slug', 'ExtendedMag', 'Kobra'}, WeaponTypes.Shotgun, 'Weapons/USAS-12/U_USAS-12')
 	table.insert(self._weapons, s_Weapon)
 
 	s_Weapon = Weapon('M1014_Flechette', '', {'Weapons/M1014/U_M1014_Flechette', 'ExtendedMag', 'RX01'}, WeaponTypes.Shotgun, 'Weapons/M1014/U_M1014')
 	table.insert(self._weapons, s_Weapon)
-	
+
 	s_Weapon = Weapon('M1014_Frag', '', {'Weapons/M1014/U_M1014_Frag', 'ExtendedMag', 'RX01'}, WeaponTypes.Shotgun, 'Weapons/M1014/U_M1014')
 	table.insert(self._weapons, s_Weapon)
-	
+
 	s_Weapon = Weapon('M1014_Slug', '', {'Weapons/M1014/U_M1014_Slug', 'ExtendedMag', 'RX01'}, WeaponTypes.Shotgun, 'Weapons/M1014/U_M1014')
 	table.insert(self._weapons, s_Weapon)
 
 	s_Weapon = Weapon('870M_Flechette', '', {'Weapons/Remington870/U_870_Flechette', 'ExtendedMag', 'RX01'}, WeaponTypes.Shotgun, 'Weapons/Remington870/U_870')
 	table.insert(self._weapons, s_Weapon)
-	
+
 	s_Weapon = Weapon('870M_Frag', '', {'Weapons/Remington870/U_870_Frag', 'ExtendedMag', 'RX01'}, WeaponTypes.Shotgun, 'Weapons/Remington870/U_870')
 	table.insert(self._weapons, s_Weapon)
-	
+
 	s_Weapon = Weapon('870M_Slug', '', {'Weapons/Remington870/U_870_Slug', 'ExtendedMag', 'RX01'}, WeaponTypes.Shotgun, 'Weapons/Remington870/U_870')
 	table.insert(self._weapons, s_Weapon)
 
 	---------------------------
 	--assault
-	s_Weapon = Weapon('AEK971_Kobra', '', {'Kobra', 'HeavyBarrel', 'Foregrip'}, WeaponTypes.Assault, 'Weapons/AEK971/U_AEK971')
+	s_Weapon = Weapon('AEK971_Kobra', '', {'Kobra', 'Weapons/Common/NoSecondaryRail', 'Flashsuppressor'}, WeaponTypes.Assault, 'Weapons/AEK971/U_AEK971')
 	table.insert(self._weapons, s_Weapon)
-	
+
 	s_Weapon = Weapon('AEK971_RX01', '', {'RX01', 'HeavyBarrel', 'Foregrip'}, WeaponTypes.Assault, 'Weapons/AEK971/U_AEK971')
 	table.insert(self._weapons, s_Weapon)
 
-	s_Weapon = Weapon('AN94_Kobra', '', {'Kobra', 'Foregrip', 'HeavyBarrel'}, WeaponTypes.Assault, 'Weapons/AN94/U_AN94')
+	s_Weapon = Weapon('AN94_Kobra', '', {'Kobra', 'Foregrip', 'Flashsuppressor'}, WeaponTypes.Assault, 'Weapons/AN94/U_AN94')
 	table.insert(self._weapons, s_Weapon)
-	
-	s_Weapon = Weapon('AN94_RX01', '', {'RX01', 'Foregrip', 'HeavyBarrel'}, WeaponTypes.Assault, 'Weapons/AN94/U_AN94')
+
+	s_Weapon = Weapon('AN94_RX01', '', {'RX01', 'HeavyBarrel', 'Foregrip'}, WeaponTypes.Assault, 'Weapons/AN94/U_AN94')
 	table.insert(self._weapons, s_Weapon)
 
 	s_Weapon = Weapon('AK74M_Kobra', '', {'Kobra', 'HeavyBarrel', 'Foregrip'}, WeaponTypes.Assault, 'Weapons/AK74M/U_AK74M')
 	table.insert(self._weapons, s_Weapon)
-	
-	s_Weapon = Weapon('AK74M_RX01', '', {'RX01', 'HeavyBarrel', 'Foregrip'}, WeaponTypes.Assault, 'Weapons/AK74M/U_AK74M')
+
+	s_Weapon = Weapon('AK74M_RX01', '', {'RX_01', 'HeavyBarrel', 'Foregrip'}, WeaponTypes.Assault, 'Weapons/AK74M/U_AK74M')
 	table.insert(self._weapons, s_Weapon)
 
-	s_Weapon = Weapon('SteyrAug_RX01', 'XP2', {'RX01', 'Foregrip', 'HeavyBarrel'},WeaponTypes.Assault, 'Weapons/XP2_SteyrAug/U_SteyrAug')
-	table.insert(self._weapons, s_Weapon)
-	
-	s_Weapon = Weapon('SteyrAug_Kobra', 'XP2', {'Kobra', 'Foregrip', 'HeavyBarrel'},WeaponTypes.Assault, 'Weapons/XP2_SteyrAug/U_SteyrAug')
+	s_Weapon = Weapon('SteyrAug_RX01', 'XP2', {'RX01', 'Foregrip', 'Heavy_Barrel'},WeaponTypes.Assault, 'Weapons/XP2_SteyrAug/U_SteyrAug')
 	table.insert(self._weapons, s_Weapon)
 
-	s_Weapon = Weapon('F2000_RX01', '', {'RX01', 'Foregrip', 'HeavyBarrel', 'Weapons/F2000/U_F2000_Camo_NWU'},WeaponTypes.Assault, 'Weapons/F2000/U_F2000')
+	s_Weapon = Weapon('SteyrAug_Kobra', 'XP2', {'Kobra', 'Foregrip', 'Heavy_Barrel'},WeaponTypes.Assault, 'Weapons/XP2_SteyrAug/U_SteyrAug')
 	table.insert(self._weapons, s_Weapon)
-	
-	s_Weapon = Weapon('F2000_Kobra', '', {'Kobra', 'Foregrip', 'HeavyBarrel', 'Weapons/F2000/U_F2000_Camo_PARTIZAN'},WeaponTypes.Assault, 'Weapons/F2000/U_F2000')
+
+	s_Weapon = Weapon('F2000_RX01', '', {'RX01', 'Foregrip', 'Heavy_Barrel', 'Weapons/F2000/U_F2000_Camo_NWU'},WeaponTypes.Assault, 'Weapons/F2000/U_F2000')
+	table.insert(self._weapons, s_Weapon)
+
+	s_Weapon = Weapon('F2000_Kobra', '', {'Kobra', 'Foregrip', 'Heavy_Barrel', 'Weapons/F2000/U_F2000_Camo_PARTIZAN'},WeaponTypes.Assault, 'Weapons/F2000/U_F2000')
 	table.insert(self._weapons, s_Weapon)
 
 	s_Weapon = Weapon('FAMAS_RX01', 'XP1', {'RX01', 'Foregrip', 'HeavyBarrel'}, WeaponTypes.Assault, 'Weapons/XP1_FAMAS/U_FAMAS')
 	table.insert(self._weapons, s_Weapon)
-	
+
 	s_Weapon = Weapon('FAMAS_Kobra', 'XP1', {'Kobra', 'Foregrip', 'HeavyBarrel'}, WeaponTypes.Assault, 'Weapons/XP1_FAMAS/U_FAMAS')
 	table.insert(self._weapons, s_Weapon)
 
-	s_Weapon = Weapon('G3A3_RX01', '', {'RX01', 'HeavyBarrel', 'Foregrip'}, WeaponTypes.Assault, 'Weapons/G3A3/U_G3A3')
+	s_Weapon = Weapon('G3A3_RX01', '', {'RX01', 'Target_Pointer', 'Foregrip'}, WeaponTypes.Assault, 'Weapons/G3A3/U_G3A3')
 	table.insert(self._weapons, s_Weapon)
 	
 	s_Weapon = Weapon('G3A3_Kobra', '', {'Kobra', 'HeavyBarrel', 'Foregrip'}, WeaponTypes.Assault, 'Weapons/G3A3/U_G3A3')
 	table.insert(self._weapons, s_Weapon)
 
-	s_Weapon = Weapon('KH2002_Kobra', '', {'Kobra', 'Foregrip', 'HeavyBarrel'}, WeaponTypes.Assault, 'Weapons/KH2002/U_KH2002')
+	s_Weapon = Weapon('KH2002_Kobra', '', {'Kobra', 'Foregrip', 'Heavy_Barrel'}, WeaponTypes.Assault, 'Weapons/KH2002/U_KH2002')
 	table.insert(self._weapons, s_Weapon)
 	
-	s_Weapon = Weapon('KH2002_RX01', '', {'RX01', 'Foregrip', 'HeavyBarrel'}, WeaponTypes.Assault, 'Weapons/KH2002/U_KH2002')
+	s_Weapon = Weapon('KH2002_RX01', '', {'RX01', 'Foregrip', 'Heavy_Barrel'}, WeaponTypes.Assault, 'Weapons/KH2002/U_KH2002')
 	table.insert(self._weapons, s_Weapon)
 
-	s_Weapon = Weapon('L85A2_RX01', 'XP1', {'RX01', 'HeavyBarrel', 'Foregrip', 'Weapons/XP1_L85A2/U_L85A2_CAMO_1'},WeaponTypes.Assault, 'Weapons/XP1_L85A2/U_L85A2')
+	s_Weapon = Weapon('L85A2_RX01', 'XP1', {'RX01', 'HeavyBarrel', 'ForeGrip', 'Weapons/XP1_L85A2/U_L85A2_CAMO_1'},WeaponTypes.Assault, 'Weapons/XP1_L85A2/U_L85A2')
 	table.insert(self._weapons, s_Weapon)
 	
-	s_Weapon = Weapon('L85A2_Kobra', 'XP1', {'Kobra', 'HeavyBarrel', 'Foregrip', 'Weapons/XP1_L85A2/U_L85A2_CAMO_2'},WeaponTypes.Assault, 'Weapons/XP1_L85A2/U_L85A2')
+	s_Weapon = Weapon('L85A2_Kobra', 'XP1', {'Kobra', 'HeavyBarrel', 'ForeGrip', 'Weapons/XP1_L85A2/U_L85A2_CAMO_2'},WeaponTypes.Assault, 'Weapons/XP1_L85A2/U_L85A2')
 	table.insert(self._weapons, s_Weapon)
 	
-	s_Weapon = Weapon('M16A4_RX01', '', {'RX01', 'HeavyBarrel', 'Foregrip'}, WeaponTypes.Assault, 'Weapons/M16A4/U_M16A4')
+	s_Weapon = Weapon('M16A4_RX01', '', {'RX01', 'HeavyBarrel', 'Weapons/Common/NoSecondaryRail'}, WeaponTypes.Assault, 'Weapons/M16A4/U_M16A4')
 	table.insert(self._weapons, s_Weapon)
 	
-	s_Weapon = Weapon('M16A4_Kobra', '', {'Kobra', 'HeavyBarrel', 'Foregrip'}, WeaponTypes.Assault, 'Weapons/M16A4/U_M16A4')
+	s_Weapon = Weapon('M16A4_Kobra', '', {'Kobra', 'HeavyBarrel', 'Weapons/Common/NoSecondaryRail'}, WeaponTypes.Assault, 'Weapons/M16A4/U_M16A4')
 	table.insert(self._weapons, s_Weapon)
 	
-	s_Weapon = Weapon('M16_Burst_RX01', '', {'RX01', 'HeavyBarrel', 'Foregrip'}, WeaponTypes.Assault, 'Weapons/M16A4/U_M16_Burst')
+	s_Weapon = Weapon('M16_Burst_RX01', '', {'Weapons/M16A4/U_M16A4_RX01', 'Weapons/M16A4/U_M16A4_HeavyBarrel', 'Weapons/M16A4/U_M16A4_Foregrip'}, WeaponTypes.Assault, 'Weapons/M16A4/U_M16_Burst')
 	table.insert(self._weapons, s_Weapon)
 	
-	s_Weapon = Weapon('M16_Burst_Kobra', '', {'Kobra', 'HeavyBarrel', 'Foregrip'}, WeaponTypes.Assault, 'Weapons/M16A4/U_M16_Burst')
+	s_Weapon = Weapon('M16_Burst_Kobra', '', {'Weapons/M16A4/U_M16A4_Kobra', 'Weapons/M16A4/U_M16A4_HeavyBarrel', 'Weapons/M16A4/U_M16A4_Foregrip'}, WeaponTypes.Assault, 'Weapons/M16A4/U_M16_Burst')
 	table.insert(self._weapons, s_Weapon)
 
 	s_Weapon = Weapon('M416_RX01', '', {'RX01', 'HeavyBarrel', 'Foregrip', 'Weapons/M416/U_M416_CAMO_1'},WeaponTypes.Assault, 'Weapons/M416/U_M416')
@@ -243,7 +243,7 @@ function WeaponList:__init()
 	s_Weapon = Weapon('Crossbow_Kobra', '', {}, WeaponTypes.PDW, 'Weapons/XP4_Crossbow_Prototype/U_Crossbow_Scoped_Cobra')
 	table.insert(self._weapons, s_Weapon)
 
-s_Weapon = Weapon('Crossbow_RifleScope', '', {}, WeaponTypes.PDW, 'Weapons/XP4_Crossbow_Prototype/U_Crossbow_Scoped_RifleScope')
+	s_Weapon = Weapon('Crossbow_RifleScope', '', {}, WeaponTypes.PDW, 'Weapons/XP4_Crossbow_Prototype/U_Crossbow_Scoped_RifleScope')
 	table.insert(self._weapons, s_Weapon)
 
 	---------------------------
