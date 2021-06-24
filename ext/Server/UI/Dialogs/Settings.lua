@@ -69,26 +69,34 @@ function Settings:InitializeComponent(p_View)
 	end
 
 	-- Add Menu
-	self.m_Dialog:SetContent("This feature is sadly not implemented right now. If you can help, just let me know... Just use the Console or RCON")
+	self.m_Dialog:SetContent(
+	[[This feature is sadly not implemented right now. If you can help, just let me know...  
+	 - Just use the Console or RCON.  
+	 - Console: fun-bots.config.get/set.VARNAME  
+	 - RCON: funbots.config.VARNAME opt: VALUE  ]])
 
-	-- Add Buttons
-	self.m_Dialog:AddButton(Button('button_settings_cancel', 'Cancel', function(player)
+	self.m_Dialog:AddButton(Button('button_settings_okay', 'O.K.', function(player)
 		self:Hide(p_View, player)
 	end), Position.Left)
 
-	self.m_Dialog:AddButton(Button('button_settings_restore', 'Restore all to Default', function(player)
-		print('[Settings] Button Restore')
-	end), Position.Left, 'Settings.Restore')
+	-- Add Buttons
+	-- self.m_Dialog:AddButton(Button('button_settings_cancel', 'Cancel', function(player)
+	-- 	self:Hide(p_View, player)
+	-- end), Position.Left)
 
-	self.m_Dialog:AddButton(Button('button_settings_save_temporarily', 'Save Temporarily', function(player)
-		print('[Settings] Button Temporarily')
-		self:Hide(p_View, player)
-	end), Position.Right, 'Settings.Save')
+	-- self.m_Dialog:AddButton(Button('button_settings_restore', 'Restore all to Default', function(player)
+	-- 	print('[Settings] Button Restore')
+	-- end), Position.Left, 'Settings.Restore')
 
-	self.m_Dialog:AddButton(Button('button_settings_save', 'Save', function(player)
-		print('[Settings] Button Save')
-		self:Hide(p_View, player)
-	end), Position.Right, 'Settings.Save')
+	-- self.m_Dialog:AddButton(Button('button_settings_save_temporarily', 'Save Temporarily', function(player)
+	-- 	print('[Settings] Button Temporarily')
+	-- 	self:Hide(p_View, player)
+	-- end), Position.Right, 'Settings.Save')
+
+	-- self.m_Dialog:AddButton(Button('button_settings_save', 'Save', function(player)
+	-- 	print('[Settings] Button Save')
+	-- 	self:Hide(p_View, player)
+	-- end), Position.Right, 'Settings.Save')
 
 	-- Add Content
 		-- Add Tabs

@@ -254,7 +254,7 @@ function BotEditor:InitializeComponent()
 	-- Settings
 	s_Navigation:AddItem(MenuItem('Settings', 'settings', function(player)
 		self.m_View:GetCore():GetDialog('Settings', self.m_View):Open(self.m_View, player)
-	end, 'F10'):SetIcon('Assets/Icons/Settings.svg'), 'UserInterface.Settings')
+	end, 'F10'):Disable():SetIcon('Assets/Icons/Settings.svg'), 'UserInterface.Settings')
 
 	-- Exit
 	s_Navigation:AddItem(MenuItem('Exit', 'exit', 'UI:VIEW:' .. self.m_View:GetName() .. ':HIDE', 'F12'))
