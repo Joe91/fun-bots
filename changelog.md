@@ -1,7 +1,7 @@
 # Changelog
 
 ## [Unreleased - 2.0.0.X] - 2021-05-XX
-[Download](https://github.com/Joe91/fun-bots/archive/V2.0.0.2.zip)
+[Download](https://github.com/Joe91/fun-bots/archive/V2.0.0.3.zip)
 The Release-Candidate
 
 - First maps with vehicle-support for testing
@@ -19,7 +19,8 @@ The Release-Candidate
 - new paths for Karkhand (thanks to run)
 - longer reaction-time on bigger distances
 - Additional Spawn-Delay of BOTs possible
-- More realistic loadouts (thanks to DuTcHrEaGaN)
+- Squad-Rush
+- More realistic loadouts and Map Thalah Market Squad-Rush and Assault (thanks to DuTcHrEaGaN)
 - More names and random-Bot-Name-Selection either on first start or on every round
 
 

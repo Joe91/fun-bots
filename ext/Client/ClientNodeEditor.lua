@@ -6,11 +6,6 @@ local m_NodeCollection = require('__shared/NodeCollection')
 local m_Logger = Logger("ClientNodeEditor", Debug.Client.NODEEDITOR)
 
 function ClientNodeEditor:__init()
-
-	if Config.DisableNodeEditor == true then
-		m_Logger:Write("NodeEditor is disabled")
-		return
-	end
 	-- caching values for drawing performance
 	self.m_Player = nil
 	self.m_PlayerPos = nil
@@ -95,6 +90,11 @@ function ClientNodeEditor:__init()
 
 	self.m_DebugEntries = {}
 	self.m_EventsReady = false
+
+	if Config.DisableNodeEditor == true then
+		m_Logger:Write("NodeEditor is disabled")
+		return
+	end
 
 	self:RegisterEvents()
 end
