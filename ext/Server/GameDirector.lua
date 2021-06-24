@@ -739,51 +739,26 @@ function GameDirector:_UpdateValidObjectives()
 		return
 	end
 
-	if (self.m_McomCounter % 2) == 0 then
-		self.m_OnlyOneMcom = false
+	if Globals.IsSquadRush then
 		if self.m_McomCounter > 0 then
 			self.m_waitForZone = true
 		end
-		local s_BaseIndex = 0
-		local s_McomIndexes = {0, 0}
-
-		if self.m_McomCounter < 2 then
-			s_BaseIndex = 1
-			s_McomIndexes = {1, 2}
-		elseif self.m_McomCounter < 4 then
-			s_BaseIndex = 2
-			s_McomIndexes = {3, 4}
-		elseif self.m_McomCounter < 6 then
-			s_BaseIndex = 3
-			s_McomIndexes = {5, 6}
-		elseif self.m_McomCounter < 8 then
-			s_BaseIndex = 4
-			s_McomIndexes = {7, 8}
-		elseif self.m_McomCounter < 10 then
-			s_BaseIndex = 5
-			s_McomIndexes = {9, 10}
-		else
-			s_BaseIndex = 6
-			s_McomIndexes = {11, 12}
-		end
-
+		local s_RushIndex = self.m_McomCounter + 1
 		for _, l_Objective in pairs(self.m_AllObjectives) do
 			local s_Fields = l_Objective.name:split(" ")
 			local s_Active = false
 			local s_SubObjective = false
 
 			if l_Objective.isSpawnPath or l_Objective.isEnterVehiclePath then
-				goto continue_objective_loop
+				goto continue_first_objective_loop
 			end
 
 			if not l_Objective.isBase then
 				if #s_Fields > 1 then
 					local s_Index = tonumber(s_Fields[2])
 
-					for _, l_TargetIndex in pairs(s_McomIndexes) do
-						if s_Index == l_TargetIndex then
-							s_Active = true
-						end
+					if s_Index == s_RushIndex then
+						s_Active = true
 					end
 
 					if #s_Fields > 2 then -- "mcom N interact"
@@ -794,11 +769,11 @@ function GameDirector:_UpdateValidObjectives()
 				if #s_Fields > 2 then
 					local s_Index = tonumber(s_Fields[3])
 
-					if s_Index == s_BaseIndex then
+					if s_Index == s_RushIndex then
 						s_Active = true
 					end
 
-					if s_Index == s_BaseIndex - 1 then
+					if s_Index == s_RushIndex - 1 then
 						self.m_RushAttackingBase = l_Objective.name
 					end
 				end
@@ -806,11 +781,83 @@ function GameDirector:_UpdateValidObjectives()
 
 			l_Objective.active = s_Active
 			l_Objective.subObjective = s_SubObjective
-			::continue_objective_loop::
+			::continue_first_objective_loop::
 		end
-	else
-		self.m_OnlyOneMcom = true
-		self.m_waitForZone = false --should not be needed
+
+	elseif Globals.IsRush then
+		if (self.m_McomCounter % 2) == 0 then
+			self.m_OnlyOneMcom = false
+			if self.m_McomCounter > 0 then
+				self.m_waitForZone = true
+			end
+			local s_BaseIndex = 0
+			local s_McomIndexes = {0, 0}
+
+			if self.m_McomCounter < 2 then
+				s_BaseIndex = 1
+				s_McomIndexes = {1, 2}
+			elseif self.m_McomCounter < 4 then
+				s_BaseIndex = 2
+				s_McomIndexes = {3, 4}
+			elseif self.m_McomCounter < 6 then
+				s_BaseIndex = 3
+				s_McomIndexes = {5, 6}
+			elseif self.m_McomCounter < 8 then
+				s_BaseIndex = 4
+				s_McomIndexes = {7, 8}
+			elseif self.m_McomCounter < 10 then
+				s_BaseIndex = 5
+				s_McomIndexes = {9, 10}
+			else
+				s_BaseIndex = 6
+				s_McomIndexes = {11, 12}
+			end
+
+			for _, l_Objective in pairs(self.m_AllObjectives) do
+				local s_Fields = l_Objective.name:split(" ")
+				local s_Active = false
+				local s_SubObjective = false
+
+				if l_Objective.isSpawnPath or l_Objective.isEnterVehiclePath then
+					goto continue_objective_loop
+				end
+
+				if not l_Objective.isBase then
+					if #s_Fields > 1 then
+						local s_Index = tonumber(s_Fields[2])
+
+						for _, l_TargetIndex in pairs(s_McomIndexes) do
+							if s_Index == l_TargetIndex then
+								s_Active = true
+							end
+						end
+
+						if #s_Fields > 2 then -- "mcom N interact"
+							s_SubObjective = true
+						end
+					end
+				else
+					if #s_Fields > 2 then
+						local s_Index = tonumber(s_Fields[3])
+
+						if s_Index == s_BaseIndex then
+							s_Active = true
+						end
+
+						if s_Index == s_BaseIndex - 1 then
+							self.m_RushAttackingBase = l_Objective.name
+						end
+					end
+				end
+
+				l_Objective.active = s_Active
+				l_Objective.subObjective = s_SubObjective
+				::continue_objective_loop::
+			end
+		else
+			self.m_OnlyOneMcom = true
+			self.m_waitForZone = false --should not be needed
+		end
 	end
 end
 
