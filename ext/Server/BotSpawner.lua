@@ -342,7 +342,7 @@ function BotSpawner:UpdateBotAmountAndTeam()
 			end
 		end
 
-		local targetCount = Config.InitNumberOfBots + ((s_maxPlayersInOneTeam - 1) * Config.NewBotsPerNewPlayer)
+		local targetCount = Config.InitNumberOfBots + math.floor(((s_maxPlayersInOneTeam - 1) * Config.NewBotsPerNewPlayer) + 0.5)
 
 		for i = 1, Globals.NrOfTeams do
 			s_TargetTeamCount[i] = targetCount
@@ -373,7 +373,7 @@ function BotSpawner:UpdateBotAmountAndTeam()
 				if s_CountPlayers[i] > 0 then
 					for j = 1, Globals.NrOfTeams do
 						if i ~= j then
-							local s_TempCount = Config.InitNumberOfBots + ((s_CountPlayers[i] - 1) * Config.NewBotsPerNewPlayer)
+							local s_TempCount = Config.InitNumberOfBots + math.floor(((s_CountPlayers[i] - 1) * Config.NewBotsPerNewPlayer) + 0.5)
 
 							if s_TempCount > s_TargetTeamCount[j] then
 								s_TargetTeamCount[j] = s_TempCount
@@ -403,7 +403,7 @@ function BotSpawner:UpdateBotAmountAndTeam()
 				end
 			end
 
-			local s_TargetBotCount = Config.InitNumberOfBots + ((s_PlayerCount - 1) * Config.NewBotsPerNewPlayer)
+			local s_TargetBotCount = Config.InitNumberOfBots + math.floor(((s_PlayerCount - 1) * Config.NewBotsPerNewPlayer) + 0.5)
 
 			if s_TargetBotCount > Globals.MaxBotsPerTeam then
 				s_TargetBotCount = Globals.MaxBotsPerTeam

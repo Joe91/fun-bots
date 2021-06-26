@@ -237,11 +237,11 @@ SettingsDefinition = {
 		{
 			Name = "NewBotsPerNewPlayer",
 			Text = "New Bots per Player",
-			Type = Type.Integer,
+			Type = Type.Float,
 			Value = Config.NewBotsPerNewPlayer,
 			Description = "number to increase Bots, when new players join",
 			Reference = Range(0.00, 128.00, 1.0),
-			Default = 2,
+			Default = 1.6,
 			UpdateFlag = UpdateFlag.AmountAndTeam,
 			Category = "SPAWN"
 		},
