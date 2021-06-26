@@ -3,6 +3,10 @@ class('SettingsManager')
 require('__shared/Config')
 
 local m_Database = require('Database')
+local m_BotManager = require('BotManager')
+local m_BotSpawner = require('BotSpawner')
+local m_WeaponModification = require('WeaponModification')
+local m_WeaponList = require('__shared/WeaponList')
 
 function SettingsManager:__init()
 	-- Create Config-Trace
@@ -234,15 +238,15 @@ function SettingsManager:UpdateSetting(p_Name, p_Value)
 		self:Update(p_Name, s_ConvertedValue, true, false)
 
 		if s_UpdateFlag == UpdateFlag.WeaponSets then
-			WeaponList:updateWeaponList()
+			m_WeaponList:updateWeaponList()
 			s_UpdateClientWeapons = true
 		elseif s_UpdateFlag == UpdateFlag.Weapons then
-			WeaponModification:ModifyAllWeapons(Config.BotAimWorsening, Config.BotSniperAimWorsening)
+			m_WeaponModification:ModifyAllWeapons(Config.BotAimWorsening, Config.BotSniperAimWorsening)
 		elseif s_UpdateFlag == UpdateFlag.YawPerSec then
-			Globals.YawPerFrame = BotManager:calcYawPerFrame()
+			Globals.YawPerFrame = m_BotManager:calcYawPerFrame()
 		elseif s_UpdateFlag == UpdateFlag.AmountAndTeam then
 			Globals.SpawnMode = Config.SpawnMode
-			BotSpawner:updateBotAmountAndTeam()
+			m_BotSpawner:UpdateBotAmountAndTeam()
 		end
 
 		NetEvents:BroadcastLocal('WriteClientSettings', Config, s_UpdateClientWeapons)

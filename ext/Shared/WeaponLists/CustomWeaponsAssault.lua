@@ -10,6 +10,7 @@ CustomWeaponsAssault = {
 	-- 'KH2002',
 	-- 'L85A2',
 	'M16A4',
+	'M16-Burst',
 	'M416',
 	-- 'SCAR-L',
 

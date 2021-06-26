@@ -9,8 +9,6 @@ function Console:OnConsoleCommandSetConfig(p_Player, p_Name, p_Value)
 	if PermissionManager:HasPermission(p_Player, 'UserInterface.Settings') == false then
 		s_Respone = "Missing Permissions"
 	else
-		print(p_Name)
-		print(p_Value)
 		local s_Result = m_SettingsManager:UpdateSetting(p_Name, p_Value)
 		if s_Result then
 			s_Respone = "OK"

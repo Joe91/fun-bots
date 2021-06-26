@@ -171,10 +171,10 @@ function WeaponList:__init()
 	s_Weapon = Weapon('M16A4_Kobra', '', {'Kobra', 'HeavyBarrel', 'Weapons/Common/NoSecondaryRail'}, WeaponTypes.Assault, 'Weapons/M16A4/U_M16A4')
 	table.insert(self._weapons, s_Weapon)
 	
-	s_Weapon = Weapon('M16_Burst_RX01', '', {'Weapons/M16A4/U_M16A4_RX01', 'Weapons/M16A4/U_M16A4_HeavyBarrel', 'Weapons/M16A4/U_M16A4_Foregrip'}, WeaponTypes.Assault, 'Weapons/M16A4/U_M16_Burst')
+	s_Weapon = Weapon('M16-Burst_RX01', '', {'Weapons/M16A4/U_M16A4_RX01', 'Weapons/M16A4/U_M16A4_HeavyBarrel', 'Weapons/M16A4/U_M16A4_Foregrip'}, WeaponTypes.Assault, 'Weapons/M16A4/U_M16_Burst')
 	table.insert(self._weapons, s_Weapon)
 	
-	s_Weapon = Weapon('M16_Burst_Kobra', '', {'Weapons/M16A4/U_M16A4_Kobra', 'Weapons/M16A4/U_M16A4_HeavyBarrel', 'Weapons/M16A4/U_M16A4_Foregrip'}, WeaponTypes.Assault, 'Weapons/M16A4/U_M16_Burst')
+	s_Weapon = Weapon('M16-Burst_Kobra', '', {'Weapons/M16A4/U_M16A4_Kobra', 'Weapons/M16A4/U_M16A4_HeavyBarrel', 'Weapons/M16A4/U_M16A4_Foregrip'}, WeaponTypes.Assault, 'Weapons/M16A4/U_M16_Burst')
 	table.insert(self._weapons, s_Weapon)
 
 	s_Weapon = Weapon('M416_RX01', '', {'RX01', 'HeavyBarrel', 'Foregrip', 'Weapons/M416/U_M416_CAMO_1'},WeaponTypes.Assault, 'Weapons/M416/U_M416')
