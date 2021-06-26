@@ -23,8 +23,8 @@ GameModeTranslations = {
 	"CTF": "CaptureTheFlag0"
 }
 
-inFile = "readme.md"
-outFile = "MapList.txt"
+inFile = "../readme.md"
+outFile = "../MapList.txt"
 triggerString = "|---	|---	|---	|---	|"
 
 mapItems = []

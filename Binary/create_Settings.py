@@ -1,5 +1,5 @@
-
-settings_definition = "ext/Server/UI/SettingsDefinition.lua"
+settings_definition = "../ext/Server/UI/SettingsDefinition.lua"
+config_file = "../ext/shared/Config.lua"
 
 
 with open(settings_definition, "r") as inFile:
@@ -26,9 +26,10 @@ with open(settings_definition, "r") as inFile:
 	# add last setting
 	allSettings.append(setting)
 	numberOfSettings = numberOfSettings + 1
+	print("import done")
 	setting = {}
 	
-	with open("ext/shared/Config.lua", "w") as outFile:
+	with open(config_file, "w") as outFile:
 		lastCategory = None
 		outFile.write("USE_REAL_DAMAGE = true					-- with real damage, the hitboxes are a bit buggy\n")
 		outFile.write("BOT_TOKEN = \"BOT_\"						-- token Bots are marked with\n")
@@ -61,5 +62,6 @@ with open(settings_definition, "r") as inFile:
 		outFile.write("	BotAimUpdateCycle = 0.05,			-- = 3 frames at 60 Hz\n")
 		outFile.write("	TargetHeightDistanceWayPoint = 1.5	-- distance the bots have to reach in height to continue with next Waypoint\n")
 		outFile.write("}\n")
+		print("write done")
 
 
