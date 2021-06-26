@@ -22,6 +22,7 @@ The Release-Candidate
 - Squad-Rush
 - More realistic loadouts and Map Thalah Market Squad-Rush and Assault (thanks to DuTcHrEaGaN)
 - More names and random-Bot-Name-Selection either on first start or on every round
+- fixed bug with Ticket-Count (thanks to HughesMDflyer4)
 
 
 ## [Unreleased - 1.7.1.X] - 2021-05-XX

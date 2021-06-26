@@ -10,6 +10,7 @@ Globals = {
 	IsSquadRush = false,
 	IsGm = false,
 	IsConquest = false,
+	IsDomination = false,
 	IsAssault = false,
 	NrOfTeams = 0,
 	MaxPlayers = 0,

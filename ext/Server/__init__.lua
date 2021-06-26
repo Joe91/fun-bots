@@ -589,6 +589,12 @@ function FunBotServer:SetGameMode(p_GameMode)
 		Globals.IsAssault = false
 	end
 
+	if p_GameMode == 'Domination0' then
+		Globals.IsDomination = true
+	else
+		Globals.IsDomination = false
+	end
+
 	if p_GameMode == 'RushLarge0' or 
 	p_GameMode == 'SquadRush0' then
 		Globals.IsRush = true

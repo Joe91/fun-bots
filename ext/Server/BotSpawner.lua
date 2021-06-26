@@ -221,6 +221,11 @@ function BotSpawner:OnRespawnBot(p_BotName)
 	elseif s_SpawnMode == BotSpawnModes.RespawnRandomPath then --random Way
 		self:_SpawnSingleWayBot(nil, true, 0, 0, s_Bot)
 	end
+
+	-- fix bug with not counting down the tickets (thanks to HughesMDflyer4)
+	if Globals.IsConquest or Globals.IsAssault or Globals.IsDomination then
+		TicketManager:SetTicketCount(s_Bot.m_Player.teamId, TicketManager:GetTicketCount(s_Bot.m_Player.teamId) - 1)
+	end
 end
 
 -- =============================================
