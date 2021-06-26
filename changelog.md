@@ -1,7 +1,7 @@
 # Changelog
 
 ## [Unreleased - 2.0.0.X] - 2021-05-XX
-[Download](https://github.com/Joe91/fun-bots/archive/V2.0.0.3.zip)
+[Download](https://github.com/Joe91/fun-bots/archive/V2.0.0.4.zip)
 The Release-Candidate
 
 - First maps with vehicle-support for testing
@@ -23,6 +23,11 @@ The Release-Candidate
 - More realistic loadouts and Map Thalah Market Squad-Rush and Assault (thanks to DuTcHrEaGaN)
 - More names and random-Bot-Name-Selection either on first start or on every round
 - fixed bug with Ticket-Count (thanks to HughesMDflyer4)
+- settings available with RCON and Console-Commands
+	- you can also write settings of fun-bots in the starup.txt of your server 
+		(for example: funbots.config.AdditionalBotSpawnDelay 1.0)
+	- you can acces every var in the console with fun-bots.config.set/get
+	- you can save all settings to the database by using the saveall commands
 
 
 ## [Unreleased - 1.7.1.X] - 2021-05-XX
