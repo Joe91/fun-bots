@@ -504,7 +504,7 @@ end
 function Bot:_SetInput(p_Input, p_Value)
 	self.m_ActiveInputs[p_Input] = {
 		value = p_Value,
-		reset = false
+		reset = p_Value == 0
 	}
 end
 
@@ -514,7 +514,7 @@ function Bot:_UpdateInputs()
 			self.m_Player.input:SetLevel(i, 0)
 			self.m_ActiveInputs[i].value = 0
 			self.m_ActiveInputs[i].reset = false
-		else
+		elseif self.m_ActiveInputs[i].value ~= 0 then
 			self.m_Player.input:SetLevel(i, self.m_ActiveInputs[i].value)
 			self.m_ActiveInputs[i].reset = true
 		end
@@ -1612,7 +1612,7 @@ function Bot:_UpdateMovement()
 							s_DistanceFromTarget = 0
 							s_HeightDistance = 0
 							s_NoStuckReset = true
-							s_PointIncrement = MathUtils:GetRandomInt(-4,6) -- go 5 points further
+							s_PointIncrement = MathUtils:GetRandomInt(-5,5) -- go 5 points further
 
 							--if Globals.IsConquest or Globals.IsRush then --TODO: only invert path, if its not a connecting path
 								--self._InvertPathDirection = (MathUtils:GetRandomInt(0,100) < 40)
