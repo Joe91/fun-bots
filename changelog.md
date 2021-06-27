@@ -1,7 +1,7 @@
 # Changelog
 
 ## [Unreleased - 2.0.0.X] - 2021-05-XX
-[Download](https://github.com/Joe91/fun-bots/archive/V2.0.0.4.zip)
+[Download](https://github.com/Joe91/fun-bots/archive/V2.0.0.5.zip)
 The Release-Candidate
 
 - First maps with vehicle-support for testing
@@ -21,7 +21,7 @@ The Release-Candidate
 	- new paths for Karkhand (thanks to run)
 	- Thalah Market Squad-Rush (thanks to DuTcHrEaGaN)
 	- Thalah Market Assault Small and Large (thanks to DuTcHrEaGaN)
-	- Markaz Monolith Conquest Small (thanks to DuTcHrEaGaN)
+	- Markaz Monolith Conquest Small and Large (thanks to DuTcHrEaGaN)
 - longer reaction-time on bigger distances
 - Additional Spawn-Delay of BOTs possible
 - More realistic loadouts (thanks to DuTcHrEaGaN)
@@ -32,6 +32,8 @@ The Release-Candidate
 		(for example: funbots.config.AdditionalBotSpawnDelay 1.0)
 	- you can acces every var in the console with fun-bots.config.set/get
 	- you can save all settings to the database by using the saveall commands
+- fixed a strange bug with steering of tanks not working anymore...
+-
 
 
 ## [Unreleased - 1.7.1.X] - 2021-05-XX
