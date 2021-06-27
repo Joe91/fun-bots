@@ -16,11 +16,15 @@ The Release-Candidate
 - Added Team-Switch option for Round Two or always
 - Bots stand still during spawn-protection
 - Lots of refactoring
-- new paths for Karkhand (thanks to run)
+- Squad-Rush as gamemode
+- New paths
+	- new paths for Karkhand (thanks to run)
+	- Thalah Market Squad-Rush (thanks to DuTcHrEaGaN)
+	- Thalah Market Assault Small and Large (thanks to DuTcHrEaGaN)
+	- Markaz Monolith Conquest Small (thanks to DuTcHrEaGaN)
 - longer reaction-time on bigger distances
 - Additional Spawn-Delay of BOTs possible
-- Squad-Rush
-- More realistic loadouts and Map Thalah Market Squad-Rush and Assault (thanks to DuTcHrEaGaN)
+- More realistic loadouts (thanks to DuTcHrEaGaN)
 - More names and random-Bot-Name-Selection either on first start or on every round
 - fixed bug with Ticket-Count (thanks to HughesMDflyer4)
 - settings available with RCON and Console-Commands
