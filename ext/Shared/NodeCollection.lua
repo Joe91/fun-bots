@@ -53,31 +53,6 @@ function NodeCollection:RegisterEvents()
 	NetEvents:Subscribe('NodeCollection:Load', self, self.Load)
 end
 
-function NodeCollection:DeregisterEvents()
-		-- Management
-	NetEvents:Unsubscribe('NodeCollection:Register')
-	NetEvents:Unsubscribe('NodeCollection:Remove')
-	NetEvents:Unsubscribe('NodeCollection:InsertAfter')
-	NetEvents:Unsubscribe('NodeCollection:InsertBefore')
-	NetEvents:Unsubscribe('NodeCollection:Update')
-	NetEvents:Unsubscribe('NodeCollection:SetInput')
-	NetEvents:Unsubscribe('NodeCollection:Merge')
-	NetEvents:Unsubscribe('NodeCollection:Split')
-
-	-- Selection
-	NetEvents:Unsubscribe('NodeCollection:Select')
-	NetEvents:Unsubscribe('NodeCollection:Deselect')
-	NetEvents:Unsubscribe('NodeCollection:ClearSelection')
-
-	-- Paths
-	NetEvents:Unsubscribe('NodeCollection:ShowPath')
-	NetEvents:Unsubscribe('NodeCollection:HidePath')
-
-	-- Save/Load
-	NetEvents:Unsubscribe('NodeCollection:Save')
-	NetEvents:Unsubscribe('NodeCollection:Load')
-end
-
 -----------------------------
 -- Management
 

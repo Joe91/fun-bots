@@ -34,7 +34,7 @@ The Release-Candidate
 	- you can acces every var in the console with fun-bots.config.set/get
 	- you can save all settings to the database by using the saveall commands
 - fixed a strange bug with steering of tanks not working anymore...
--
+- fixed bug with client-crash in Node-Editor
 
 
 ## [Unreleased - 1.7.1.X] - 2021-05-XX
