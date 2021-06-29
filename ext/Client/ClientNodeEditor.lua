@@ -283,7 +283,7 @@ function ClientNodeEditor:DeregisterEvents()
 end
 
 function ClientNodeEditor:IsSavingOrLoading()
-	return (self.m_NodeSendTimer > -1 or self.m_NodeReceiveTimer > -1 or self.m_NodeOperation ~= '')
+	return (self.m_NodeSendTimer > -1 or self.m_NodeReceiveTimer > -1 or self.m_NodeOperation ~= '' or not self.m_Enabled)
 end
 
 function ClientNodeEditor:Log(...)
