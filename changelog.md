@@ -21,6 +21,7 @@ The Release-Candidate
 	- new paths for Karkhand (thanks to run)
 	- Thalah Market Squad-Rush (thanks to DuTcHrEaGaN)
 	- Thalah Market Assault Small and Large (thanks to DuTcHrEaGaN)
+	- Epicenter Conquest Small (thanks to DuTcHrEaGaN)
 	- Markaz Monolith Conquest Small and Large (thanks to DuTcHrEaGaN)
 - longer reaction-time on bigger distances
 - Additional Spawn-Delay of BOTs possible
