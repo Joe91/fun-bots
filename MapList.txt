@@ -23,6 +23,7 @@ XP3_Desert ConquestSmall0 1 #Bandar Desert - CQ Small
 XP3_Shield ConquestSmall0 1 #Armored Shield - CQ Small
 XP3_Valley ConquestSmall0 1 #Death Valley - CQ Small
 XP4_FD ConquestSmall0 1 #Markaz Monolith - CQ Small
+XP4_Quake ConquestSmall0 1 #Epicenter - CQ Small
 XP5_001 ConquestSmall0 1 #Operation Riverside - CQ Small
 XP5_002 ConquestSmall0 1 #Nebandan Flats - CQ Small
 XP5_003 ConquestSmall0 1 #Kiasar Railroad - CQ Small
