@@ -332,9 +332,9 @@ function ClientNodeEditor:OnUISettings(p_Data)
 			self.m_DisableUserInterface = Config.DisableUserInterface
 
 			if self.m_DisableUserInterface then
-				self:DeregisterEvents()
+				-- self:DeregisterEvents()
 			else
-				self:RegisterEvents()
+				-- self:RegisterEvents()
 			end
 		end
 
@@ -1382,7 +1382,7 @@ function ClientNodeEditor:_onUnload(p_Args)
 	self:Log('Unload, Expecting Waypoints: %s', g_Utilities:dump(p_Args))
 
 	m_NodeCollection:Clear()
-	m_NodeCollection:DeregisterEvents()
+	--m_NodeCollection:DeregisterEvents()
 end
 
 function ClientNodeEditor:_onCommoRoseAction(p_Action, p_Hit)
@@ -2263,7 +2263,7 @@ end
 
 -- node payload has finished sending, setup events and calc indexes
 function ClientNodeEditor:_onInit()
-	m_NodeCollection:RegisterEvents()
+	--m_NodeCollection:RegisterEvents()
 	m_NodeCollection:RecalculateIndexes()
 	m_NodeCollection:ProcessMetadata()
 
