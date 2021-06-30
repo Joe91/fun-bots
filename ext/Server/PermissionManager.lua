@@ -2,6 +2,7 @@ class('PermissionManager')
 
 local m_Logger = Logger("PermissionManager", Debug.Server.PERMISSIONS)
 local m_Database = require('Database')
+local m_Console = require('Commands/Console')
 
 function PermissionManager:__init()
 	self.m_Permissions = {}
@@ -112,6 +113,9 @@ function PermissionManager:AddPermission(p_Name, p_Permission)
 			Time = m_Database:Now()
 		})
 	end
+
+	-- Register console-commands, if needed
+	m_Console:RegisterConsoleCommands(s_Player)
 end
 
 function PermissionManager:GetAll()

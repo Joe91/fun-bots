@@ -71,7 +71,6 @@ end
 
 function NodeEditor:OnLevelDestroy()
 	m_NodeCollection:Clear()
-	m_NodeCollection:DeregisterEvents()
 end
 
 -- =============================================

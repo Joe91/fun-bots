@@ -54,6 +54,7 @@ function FunBotClient:RegisterEvents()
 
 	NetEvents:Subscribe('ConsoleCommands:RegisterCommands', self, self.OnRegisterConsoleCommands)
 	NetEvents:Subscribe('ConsoleCommands:PrintResponse', self, self.OnPrintResponse)
+	NetEvents:Subscribe('ClientNodeEditor:RegisterEvents', self, self.OnRegisterNodeEditorEvents)
 end
 
 function FunBotClient:RegisterHooks()
@@ -130,6 +131,10 @@ end
 
 function FunBotClient:OnRegisterConsoleCommands(p_ConfigList)
 	m_ConsoleCommands:OnRegisterConsoleCommands(p_ConfigList)
+end
+
+function FunBotClient:OnRegisterNodeEditorEvents()
+	m_ClientNodeEditor:OnRegisterEvents()
 end
 
 function FunBotClient:OnPrintResponse(p_Response)

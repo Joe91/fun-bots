@@ -90,16 +90,9 @@ function ClientNodeEditor:__init()
 
 	self.m_DebugEntries = {}
 	self.m_EventsReady = false
-
-	if Config.DisableNodeEditor == true then
-		m_Logger:Write("NodeEditor is disabled")
-		return
-	end
-
-	self:RegisterEvents()
 end
 
-function ClientNodeEditor:RegisterEvents()
+function ClientNodeEditor:OnRegisterEvents()
 	-- simple check to make sure we don't reregister things if they are already done
 	if self.m_EventsReady then return end
 
@@ -207,83 +200,8 @@ function ClientNodeEditor:RegisterEvents()
 	self:Log('Register Events')
 end
 
--- used when the UI is disabled
-function ClientNodeEditor:DeregisterEvents()
-	NetEvents:Unsubscribe('ClientNodeEditor:SetLastTraceSearchArea')
-	NetEvents:Unsubscribe('ClientNodeEditor:BotSelect')
-	NetEvents:Unsubscribe('ClientNodeEditor:ReceiveNodes')
-	NetEvents:Unsubscribe('ClientNodeEditor:SendNodes')
-	NetEvents:Unsubscribe('ClientNodeEditor:Create')
-	NetEvents:Unsubscribe('ClientNodeEditor:Init')
-
-	-- NetEvents:Unsubscribe('UI_CommoRose_Action_Save')
-	-- NetEvents:Unsubscribe('UI_CommoRose_Action_Select')
-	-- NetEvents:Unsubscribe('UI_CommoRose_Action_Load')
-
-	-- NetEvents:Unsubscribe('UI_CommoRose_Action_Remove')
-	-- NetEvents:Unsubscribe('UI_CommoRose_Action_Unlink')
-	-- NetEvents:Unsubscribe('UI_CommoRose_Action_Merge')
-	-- NetEvents:Unsubscribe('UI_CommoRose_Action_SelectPrevious')
-	-- NetEvents:Unsubscribe('UI_CommoRose_Action_ClearSelections')
-	-- NetEvents:Unsubscribe('UI_CommoRose_Action_Move')
-
-	-- NetEvents:Unsubscribe('UI_CommoRose_Action_Add')
-	-- NetEvents:Unsubscribe('UI_CommoRose_Action_Link')
-	-- NetEvents:Unsubscribe('UI_CommoRose_Action_Split')
-	-- NetEvents:Unsubscribe('UI_CommoRose_Action_SelectNext')
-	-- NetEvents:Unsubscribe('UI_CommoRose_Action_SelectBetween')
-	-- NetEvents:Unsubscribe('UI_CommoRose_Action_SetInput')
-
-	Events:Unsubscribe('Player:Deleted')
-	Events:Unsubscribe('Level:Destroy')
-
-	Events:Unsubscribe('Client:UpdateInput')
-	Events:Unsubscribe('UpdateManager:Update')
-	Events:Unsubscribe('Engine:Update')
-	Events:Unsubscribe('UI:DrawHud')
-
-	Console:Deregister('Save')
-	Console:Deregister('Select')
-	Console:Deregister('Load')
-
-	Console:Deregister('Remove')
-	Console:Deregister('Unlink')
-	Console:Deregister('Merge')
-	Console:Deregister('SelectPrevious')
-	Console:Deregister('ClearSelection')
-	Console:Deregister('Move')
-
-	Console:Deregister('Add')
-	Console:Deregister('Link')
-	Console:Deregister('Split')
-	Console:Deregister('SelectNext')
-	Console:Deregister('SetInput')
-
-	Console:Deregister('TraceShow')
-	Console:Deregister('TraceHide')
-	Console:Deregister('WarpTo')
-	Console:Deregister('SpawnAtWaypoint')
-
-	Console:Deregister('Enabled')
-	Console:Deregister('CommoRoseEnabled')
-	Console:Deregister('SetMetadata')
-	Console:Deregister('AddObjective')
-	Console:Deregister('AddMcom')
-	Console:Deregister('RemoveObjective')
-	Console:Deregister('ProcessMetadata')
-	Console:Deregister('RecalculateIndexes')
-	Console:Deregister('ShowRose')
-	Console:Deregister('HideRose')
-	Console:Deregister('DumpNodes')
-	Console:Deregister('UnloadNodes')
-
-	Console:Deregister('BotVision')
-	self.m_EventsReady = false
-	self:Log('Deregister Events')
-end
-
 function ClientNodeEditor:IsSavingOrLoading()
-	return (self.m_NodeSendTimer > -1 or self.m_NodeReceiveTimer > -1 or self.m_NodeOperation ~= '')
+	return (self.m_NodeSendTimer > -1 or self.m_NodeReceiveTimer > -1 or self.m_NodeOperation ~= '' or not self.m_Enabled)
 end
 
 function ClientNodeEditor:Log(...)
@@ -327,16 +245,6 @@ end
 function ClientNodeEditor:OnUISettings(p_Data)
 	if p_Data == false then -- client closed settings
 		self:OnSetEnabled(Config.DebugTracePaths)
-
-		if self.m_DisableUserInterface ~= Config.DisableUserInterface then
-			self.m_DisableUserInterface = Config.DisableUserInterface
-
-			if self.m_DisableUserInterface then
-				self:DeregisterEvents()
-			else
-				self:RegisterEvents()
-			end
-		end
 
 		self.m_HelpTextLocation = Vec2.zero
 		self.m_CustomTraceDelay = Config.TraceDelta
@@ -1382,7 +1290,6 @@ function ClientNodeEditor:_onUnload(p_Args)
 	self:Log('Unload, Expecting Waypoints: %s', g_Utilities:dump(p_Args))
 
 	m_NodeCollection:Clear()
-	m_NodeCollection:DeregisterEvents()
 end
 
 function ClientNodeEditor:_onCommoRoseAction(p_Action, p_Hit)
@@ -2263,7 +2170,6 @@ end
 
 -- node payload has finished sending, setup events and calc indexes
 function ClientNodeEditor:_onInit()
-	m_NodeCollection:RegisterEvents()
 	m_NodeCollection:RecalculateIndexes()
 	m_NodeCollection:ProcessMetadata()
 
