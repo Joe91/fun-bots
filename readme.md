@@ -50,7 +50,7 @@ The following Maps are official supported right now with waypoints/traces:
 |   ![XP3_Valley](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp3_valley.jpg?raw=true) 	|   `XP3_Valley`	| **Death Valley** | `TDM`, `TDM CQ`, `SDM`, `CQ Small` |
 |   ![XP4_FD](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp4_fd.jpg?raw=true) 	|   `XP4_FD`	| **Markaz Monolith** | `TDM`, `TDM CQ`, `SDM`, `GM`, `CQ Small`, `CQ Large` |
 |   ![XP4_Rubble](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp4_rubble.jpg?raw=true) 	|   `XP4_Rubble`	| **Talah Market** | `TDM`, `TDM CQ`, `SDM`, `GM`, `Assault`, `Assault Large`, `SQ Rush` |
-|   ![XP4_Quake](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp4_quake.jpg?raw=true) 	|   `XP4_Quake`	| **Epicenter** | `TDM`, `TDM CQ`, `SDM`, `GM`, `CQ Small` |
+|   ![XP4_Quake](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp4_quake.jpg?raw=true) 	|   `XP4_Quake`	| **Epicenter** | `TDM`, `TDM CQ`, `SDM`, `GM`, `CQ Small`, `CQ Large` |
 |   ![XP4_Parl](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp4_parl.jpg?raw=true) 	|   `XP4_Parl`	| **Azadi Palace** | `TDM`, `TDM CQ`, `SDM`, `GM` |
 |   ![XP5_001](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp5_001.jpg?raw=true) 	|   `XP5_001`	| **Operation Riverside** | `TDM`, `TDM CQ`, `SDM`, `CQ Small` |
 |   ![XP5_002](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Maps/xp5_002.jpg?raw=true) 	|   `XP5_002`	| **Nebandan Flats** | `TDM`, `TDM CQ`, `SDM`, `CQ Small` |
