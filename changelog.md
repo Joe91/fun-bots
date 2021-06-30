@@ -1,7 +1,7 @@
 # Changelog
 
-## [Unreleased - 2.0.0.X] - 2021-05-XX
-[Download](https://github.com/Joe91/fun-bots/archive/V2.0.0.5.zip)
+## [Unreleased - 2.0.0.X] - 2021-06-XX
+[Download](https://github.com/Joe91/fun-bots/archive/V2.0.0.6.zip)
 The Release-Candidate
 
 - First maps with vehicle-support for testing
@@ -21,7 +21,7 @@ The Release-Candidate
 	- new paths for Karkhand (thanks to run)
 	- Thalah Market Squad-Rush (thanks to DuTcHrEaGaN)
 	- Thalah Market Assault Small and Large (thanks to DuTcHrEaGaN)
-	- Epicenter Conquest Small (thanks to DuTcHrEaGaN)
+	- Epicenter Conquest Small and Large (thanks to DuTcHrEaGaN)
 	- Markaz Monolith Conquest Small and Large (thanks to DuTcHrEaGaN)
 - longer reaction-time on bigger distances
 - Additional Spawn-Delay of BOTs possible
