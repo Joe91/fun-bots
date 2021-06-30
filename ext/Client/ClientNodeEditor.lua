@@ -90,16 +90,9 @@ function ClientNodeEditor:__init()
 
 	self.m_DebugEntries = {}
 	self.m_EventsReady = false
-
-	if Config.DisableNodeEditor == true then
-		m_Logger:Write("NodeEditor is disabled")
-		return
-	end
-
-	self:RegisterEvents()
 end
 
-function ClientNodeEditor:RegisterEvents()
+function ClientNodeEditor:OnRegisterEvents()
 	-- simple check to make sure we don't reregister things if they are already done
 	if self.m_EventsReady then return end
 

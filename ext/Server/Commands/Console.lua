@@ -48,13 +48,20 @@ function Console:RegisterConsoleCommands(p_Player)
 	-- generate list out of Name, Default, Description
 	if PermissionManager:HasPermission(p_Player, 'UserInterface.Settings') == false then
 		NetEvents:SendToLocal('ConsoleCommands:PrintResponse', p_Player, "No Commands registered because of missing permissions")
-		return
+	else
+		local s_CommandList = {}
+		for _, l_Item in pairs(SettingsDefinition.Elements) do
+			table.insert(s_CommandList, {Name = l_Item.Name, Default = l_Item.Default, Description = l_Item.Description})
+		end
+		NetEvents:SendToLocal('ConsoleCommands:RegisterCommands', p_Player, s_CommandList)
 	end
-	local s_CommandList = {}
-	for _, l_Item in pairs(SettingsDefinition.Elements) do
-		table.insert(s_CommandList, {Name = l_Item.Name, Default = l_Item.Default, Description = l_Item.Description})
+
+	-- register events for NodeEditor
+	if PermissionManager:HasPermission(p_Player, 'UserInterface.WaypointEditor') == false then
+		NetEvents:SendToLocal('ConsoleCommands:PrintResponse', p_Player, "No Nodeeditor-Commands registered because of missing permissions")
+	else
+		NetEvents:SendToLocal('ClientNodeEditor:RegisterEvents', p_Player)
 	end
-	NetEvents:SendToLocal('ConsoleCommands:RegisterCommands', p_Player, s_CommandList)
 end
 
 if g_Console == nil then

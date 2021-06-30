@@ -9,6 +9,7 @@ MP_012 ConquestLarge0 1 #Operation Firestorm - CQ Large
 MP_018 ConquestLarge0 1 #Kharg Island - CQ Large
 MP_Subway ConquestLarge0 1 #Operation Metro - CQ Large
 XP4_FD ConquestLarge0 1 #Markaz Monolith - CQ Large
+XP4_Quake ConquestLarge0 1 #Epicenter - CQ Large
 MP_001 ConquestSmall0 1 #Grand Bazaar - CQ Small
 MP_003 ConquestSmall0 1 #Teheran Highway - CQ Small
 MP_007 ConquestSmall0 1 #Caspian Border - CQ Small

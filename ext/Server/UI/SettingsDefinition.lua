@@ -1108,16 +1108,6 @@ SettingsDefinition = {
 			Category = "OTHER"
 		},
 		{
-			Name = "DisableNodeEditor",
-			Text = "disable NodeEditor",
-			Type = Type.Boolean,
-			Value = Config.DisableNodeEditor,
-			Description = "if true, the Nodeeditor is not available, including all console commands",
-			Default = false,
-			UpdateFlag = UpdateFlag.None,
-			Category = "OTHER"
-		},
-		{
 			Name = "DisableChatCommands",
 			Text = "disable chat-commands",
 			Type = Type.Boolean,
