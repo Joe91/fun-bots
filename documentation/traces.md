@@ -41,11 +41,11 @@ You should receive confirmation (yell) once it's saved.
    
 And you're done, that is the basic path you need for infantry. You can create multiple paths to same objectives as long as the start and end have an objective.
 
+![Tracing scheme](https://github.com/Firjens/fun-bots/blob/updated-traces/documentation/images/traces/TraceExampleA.png "A scheme showing how tracing works")
+
 **Notes:**
 - A path should always start, and end at an objective.
 - One path can link multiple flags, or even all flags. [Example](https://github.com/Firjens/fun-bots/blob/updated-traces/Screenshots/Menu/Traces/PathMultipleFlags.png)
-
-![Tracing scheme](https://github.com/Firjens/fun-bots/blob/updated-traces/documentation/images/traces/TraceExampleA.png "A scheme showing how tracing works")
 
 #### Advanced: create a separate spawn point
 You can create a separate spawn point by using the `A spawn` objective. Please note that a bot will always spawn on the first node of a spawn-path.
@@ -58,12 +58,18 @@ This will be available soon.
 ## Creating a land-vehicle path
 The following paths are used by bots for land vehicles.
 
-This will be available soon.
+1. Create a path from an objective to a nearby vehicle, the objective of this path should be `vehicle <uniqueName>`. At the end of the path when you are extremely close to the vehicle. Save the path and select the latest point of that path, open the Venice Unleashed console and enter `AddVehicle` whilst looking at the vehicle.
+2. Trace a path (we highly recommend having this separate from the infantry paths, as vehicles drive on roads and infantry are not supposed to walk on the roads) for the vehicle. Follow the same guidelines as for infantry paths.
+5. Save it (Go to `CLIENT` in the `WAYPOINT-EDITOR`, and click `SAVE`. Do the same for the `SERVER` button.)
+   You should receive confirmation (yell) once it's saved.
+   
+#### Implementation Ideas
+- You can make the vehicle path go around a certain location. Example is the current CL - Grand Bazaar map where the bots drive around the map. 
 
 ## Known bugs and issues
 This list contains all bugs and issues related to traces.
 
-No current confirmed issues related to traces are reported. If you find an issue, please [report it](https://github.com/Joe91/fun-bots/issues).
+No current confirmed issues related to traces are reported. If you find an issue, please [report them](https://github.com/Joe91/fun-bots/issues).
 
 # FAQ
 TBA.
