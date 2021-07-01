@@ -13,7 +13,7 @@ You can open the fun-bots settings menu using `F12` and clicking the `WAYPOINT-E
 
 You are greeted by a lot of [buttons and options](https://github.com/Firjens/fun-bots/blob/updated-traces/Screenshots/Menu/Traces/FullTraceMenuExample.png)
 
-[TBA]
+More information will be added later.
 
 #### Sharing your new traces with the community
 When you have created a new share or updated an existing path, and it's of good quality, you can share it with the rest of the community and add it to traces database included in fun-bots. Please see [TBA](/#) on how to share it.
@@ -72,7 +72,7 @@ This list contains all bugs and issues related to traces.
 No current confirmed issues related to traces are reported. If you find an issue, please [report them](https://github.com/Joe91/fun-bots/issues).
 
 # FAQ
-TBA.
+Information will be added here later.
 
 #### Q: I don't understand something, what should I do?
 You should ask the contributors, maintainers and developers before you are wasting too much time on something that does not work.
