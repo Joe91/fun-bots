@@ -17,6 +17,8 @@ When you have created a new share or updated an existing path, and it's of good 
 
 ## Creating an infantry path
 
+### Infantry paths for any Conquest or Assault gamemode
+- Paths should run around the flag
 
 ### Infantry path for Rush
 For Rush things get a little more complex.
@@ -38,9 +40,7 @@ The shorther the links are, the easier they are to understand and maintain.
 ## Known bugs and issues
 This list contains all bugs and issues related to traces.
 
-#### #82 - Black points are still visible after removing a waypoint. [Example](https://media.discordapp.net/attachments/860159569107615764/860167425962147870/unknown.png)
-This is a known visual bug and does not affect tracing in any way. This can be resolved by saving the trace and loading it again. See https://github.com/Joe91/fun-bots/issues/82
-
+No current confirmed issues related to traces are reported.
 
 # FAQ
 Some frequent asked questions here
@@ -48,5 +48,11 @@ Some frequent asked questions here
 #### Q: I don't understand something, what should I do?
 You should ask the contributors, maintainers and developers before you are wasting too much time on something that does not work.
 
+#### Q: Black points are still visible after removing a waypoint. [Example](https://media.discordapp.net/attachments/860159569107615764/860167425962147870/unknown.png)
+This is intended behavior. The black dots are orphaned nodes and get cleaned out on a save/load cycle. They are left in place so that they can still be interacted with in case of accidental removal.<sup>[1]</sup>
+
 #### Q: I can't erase a waypoint
 You cannot erase or modify traces that have not been saved, these traces will be colored white. You must save the waypoint, select the waypoint and then remove it.
+
+### Footnotes
+[Opened issue related to black points visible after removing them](https://github.com/Joe91/fun-bots/issues/82) <sup>[1]</sup>
