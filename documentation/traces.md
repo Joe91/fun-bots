@@ -10,7 +10,7 @@ In order to create a trace, you need to have a server running fun-bots (we recom
 
 You can open the fun-bots settings menu using `F12` and clicking the `WAYPOINT-EDITOR` button. [Example](https://github.com/Joe91/fun-bots/blob/master/Screenshots/Menu/Full.png)
 
-You are greeted by a lot of [buttons and options](https://github.com/Firjens/fun-bots/blob/master/Screenshots/Menu/Traces/FullTraceMenuExample.png)
+You are greeted by a lot of [buttons and options](https://github.com/Firjens/fun-bots/blob/updated-traces/Screenshots/Menu/Traces/FullTraceMenuExample.png)
 
 [TBA]
 
@@ -24,7 +24,7 @@ TBA
 The following paths are required to create a full map trace for any conquest or assault gamemode.
 
 1. Create a spawn point at the principal deploy points. (Red circle on the image below). This can be a strait line, a circle or anything else you want. Bots spawn on this path line. When your path is complete, save the trace.
-    1. We need to add the objective to this path. Select the waypoint using the waypoint-editor and pressing Q on any node (red dots), open the Venice Unleashed console whilst the waypoint is selected and enter `funbots.AddObjective <base us/base ru>` based on the deploy location. [Example](https://github.com/Firjens/fun-bots/blob/master/documentation/images/traces/DeployBaseAddObjExample.png) - [Success](https://github.com/Firjens/fun-bots/blob/master/documentation/images/traces/DeployBaseAddObjSuccess.png)
+    1. We need to add the objective to this path. Select the waypoint using the waypoint-editor and pressing Q on any node (red dots), open the Venice Unleashed console whilst the waypoint is selected and enter `funbots.AddObjective <base us/base ru>` based on the deploy location. [Example](https://github.com/Firjens/fun-bots/blob/updated-traces/documentation/images/traces/DeployBaseAddObjExample.png) - [Success](https://github.com/Firjens/fun-bots/blob/updated-traces/documentation/images/traces/DeployBaseAddObjSuccess.png)
 2. Create a path around flag A (Point A with a Green circle around it on the image below). Bots will spawn on this based on your fun-bots configuration.
    1. Just like the deployment point, we need to add the objective `A` to the path around the flag, do the exact same except instead of `<base us/base ru>`, enter `A` as objective.
 3. Create a path between the deployment point and the A flag.
@@ -32,7 +32,7 @@ The following paths are required to create a full map trace for any conquest or 
 4. You need to create a path around all other flags (flag B, C, D, etc.), just like in the 2nd example.
    1. Create a path between all other flags (Colored orange on the image below). Every flag should be connected to each-other.
 
-![Tracing scheme](https://github.com/Firjens/fun-bots/blob/master/documentation/images/traces/TraceExampleA.png "A scheme showing how tracing works")
+![Tracing scheme](https://github.com/Firjens/fun-bots/blob/updated-traces/documentation/images/traces/TraceExampleA.png "A scheme showing how tracing works")
 
 ### Infantry path for Rush
 For Rush things get a little more complex.
