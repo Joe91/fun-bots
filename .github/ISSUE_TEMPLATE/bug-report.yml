@@ -48,7 +48,7 @@ body:
       options:
         - label: I have tested and reproduced this bug without any other mods besides fun-bots.
           required: false
-        - label: ITest 13
+        - label: I have read the [contribution guidelines on reporting bugs](https://github.com/Joe91/fun-bots/blob/master/.github/CONTRIBUTING.md#reporting-a-bug).
           required: true  
         - label: Test
           required: true  
