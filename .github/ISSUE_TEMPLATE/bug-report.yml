@@ -44,11 +44,10 @@ body:
   - type: checkboxes
     id: terms
     attributes:
-      label: Code of Conduct
-      description: By submitting this issue, you agree to follow our [Code of Conduct](https://example.com)
+      label: I have checked the following...
       options:
-        - label: I agree to follow this project's Code of Conduct
-          required: true  
+        - label: I have tested and reproduced this bug without any other mods besides fun-bots.
+          required: false
         - label: ITest 13
           required: true  
         - label: Test
