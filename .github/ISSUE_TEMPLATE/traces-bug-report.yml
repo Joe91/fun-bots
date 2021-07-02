@@ -21,6 +21,7 @@ body:
       multiple: true
       options:
       - Infantry
+      - Infantry spawn-point
       - Land Vehicle
     validations:
       required: true
