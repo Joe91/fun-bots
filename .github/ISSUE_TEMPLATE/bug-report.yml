@@ -1,5 +1,5 @@
 name: Bug Report
-description: File a bug report. Please use the **Traces Bug Report** form for issues related to traces.
+description: Saw something that should not have happened? Report it as a bug report. Please use the 'Traces Bug Report' form for issues related to traces.
 labels: [bug]
 body:
   - type: markdown
