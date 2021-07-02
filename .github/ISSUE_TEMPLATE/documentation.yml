@@ -1,0 +1,26 @@
+name: Documentation
+description: Is something wrong on the wiki? Saw a typo somewhere? Create a documentation issue and we'll handle it from there.
+labels: [documentation]
+assignees:
+  - Firjens
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+  - type: input
+    id: location
+    attributes:
+      label: Location of the issue
+      description: How can we get in touch with you if we need more info?
+      placeholder: ex. github.com/Joe91/fun-bots/wiki/Permissions
+    validations:
+      required: false
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Also tell us, what did you expect to happen?
+      placeholder: Tell us what you see!
+    validations:
+      required: true
