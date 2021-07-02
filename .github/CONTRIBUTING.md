@@ -15,3 +15,9 @@ You can ask questions on [our Q&A discussion board](https://github.com/Joe_91/fu
 
 ## How can I contribute?
 This will be added soon ;-)
+
+## Opening an issue
+TBA
+
+### Reporting a bug
+TBA
