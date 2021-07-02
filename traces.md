@@ -1,52 +1,5 @@
-# What is a trace?
-
-
-# Creating an infantry path
-
-
-
-## Infantry path for Rush
-For Rush things get a little more complex.
-First the easy ones:
-- you need a base path for every defender-base (attacker-bases are the defender base from one index before, if no own base is defined)
-- you need paths around each mcom (not directly at, but around)
-- you need very short paths directly on the mcomcs
-- you need paths from every attacker-base to the mcoms
-- you need paths connecting the mcomcs of the current stage
-- you need paths from the mcoms to the next mcoms (after they are destroyed)
-
-
-# Creating a vehicle path
-TBA
-
-# Notes
-The shorther the links are, the easier they are to understand and maintain.
-
-## Known bugs and issues
-
-*Black points are still visible after removing a waypoint [Example](https://media.discordapp.net/attachments/860159569107615764/860167425962147870/unknown.png)*
-This is a known visual bug and does not affect tracing in any way. See https://github.com/Joe91/fun-bots/issues/82
-
-
-# FAQ
-*Q: I don't understand something, what should I do?*
-TBA
-
-*Q: I can't erase a waypoint*
-A: You cannot erase or modify traces that have not been saved, these traces will be white. You must save the waypoint, select the waypoint and then remove it.
-
-
-
-
-
-
-
-
-
-
-
-# Old content
-
+# How to trace
+ 
 ## current process
 - open waypoint-editor
 - start trace
@@ -85,6 +38,14 @@ Advanced:
 
 
 ## Creating Rush-Paths
+For Rush things get a little more complex.
+First the easy ones:
+- you need a base path for every defender-base (attacker-bases are the defender base from one index before, if no own base is defined)
+- you need paths around each mcom (not directly at, but around)
+- you need very short paths directly on the mcomcs
+- you need paths from every attacker-base to the mcoms
+- you need paths connecting the mcomcs of the current stage
+- you need paths from the mcoms to the next mcoms (after they are destroyed)
 
 ### Some special things
 Naming of the objectives:
