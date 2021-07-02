@@ -12,4 +12,4 @@ This project and everyone participating in it is governed by the [Code of Conduc
 You can ask questions on [our Q&A discussion board](https://github.com/Joe_91/fun-bots/discussions/categories/q-a) where the community chimes in with helpful advice if you have questions. Do not create an issue for questions.
 
 ## How can I contribute?
-TBA soon ;)
+This will be added soon ;-)
