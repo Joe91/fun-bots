@@ -1,5 +1,5 @@
-name: Documentation
-description: Is something wrong on the wiki? Saw a typo somewhere? Create a documentation issue and we'll handle it from there.
+name: Documentation Enhancement
+description: Is something wrong on the wiki? Saw a typo somewhere? Missing something? Create a documentation issue and we'll handle it from there.
 labels: [documentation]
 assignees:
   - Firjens
