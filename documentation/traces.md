@@ -16,10 +16,10 @@ You are greeted by a lot of [buttons and options](https://github.com/Firjens/fun
 More information will be added later.
 
 #### Sharing your new traces with the community
-When you have created a new share or updated an existing path, and it's of good quality, you can share it with the rest of the community and add it to traces database included in fun-bots. Please see [TBA](/#) on how to share it.
+When you have created a new share or updated an existing path, and it's of good quality, you can share it with the rest of the community and add it to traces database included in fun-bots. Please see [link coming soon](/#) on how to share it.
 
 ## Creating an infantry path
-Infantry paths are different for each gamemode.
+Infantry paths are different for each gamemode but all follow the same principle.
 
 ### Infantry paths for any Conquest or Assault gamemode
 The following paths are required to create a full map trace for any conquest or assault gamemode.
