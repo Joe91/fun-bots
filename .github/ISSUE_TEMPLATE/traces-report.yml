@@ -18,10 +18,10 @@ body:
     attributes:
       label: Trace type
       description: Which trace types are affected? Select all that apply.
+      multiple: true
       options:
       - Infantry
       - Land Vehicle
-    multiple: true
     validations:
       required: true
   - type: textarea
