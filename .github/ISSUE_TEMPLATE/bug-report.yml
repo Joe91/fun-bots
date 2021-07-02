@@ -50,5 +50,5 @@ body:
           required: false
         - label: I have read the [contribution guidelines on reporting bugs](https://github.com/Joe91/fun-bots/blob/master/.github/CONTRIBUTING.md#reporting-a-bug).
           required: true  
-        - label: Test
+        - label: I have read the [code of conduct](https://github.com/Joe91/fun-bots/blob/master/.github/CODE_OF_CONDUCT.md).
           required: true  
