@@ -1,0 +1,17 @@
+name: Enhancement Request
+description: I'd like to see an enhancement (improvement or change) to an existing feature.
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        It's always nice to hear your ideas to improve an existing feature. But before continuing, please check that we do not [have it already planned](https://github.com/Joe91/fun-bots/projects) or that it had already been suggested (use the issue search function).
+        
+        *Note:* Do not use this to ask for new traces. For issues with existing traces use the 'Trace bug report' category. Thank you.
+  - type: textarea
+    id: enhancement
+    attributes:
+      label: Enhancement
+      description: What feature should be improved? What would you like to see enhanced?
+    validations:
+      required: true

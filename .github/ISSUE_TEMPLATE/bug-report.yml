@@ -1,0 +1,37 @@
+name: Bug Report
+description: Saw something that should not have happened? Report it as a bug report. Please use the 'Traces Bug Report' form for issues related to traces.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report! Before posting be sure that it's not a duplicate of any previous posted issues by using the search function.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What happened what should not have happened? Please also tell us how we can reproduce it, the more information we have the faster and easier it is for us to fix this issue.
+      placeholder: Tell us what you see!
+    validations:
+      required: true
+  - type: textarea
+    id: what-was-expected
+    attributes:
+      label: What was expected?
+      description: What should have happened instead?
+      placeholder: What you should see instead.
+    validations:
+      required: true
+  - type: dropdown
+    id: version
+    attributes:
+      label: Version
+      description: What version of fun-bots does this issue occur on? Please note that we do not support old versions.
+      options:
+        - < 1.5.x
+        - 1.5.0.3 (Latest release)
+        - 1.6.x
+        - 1.7.x
+        - 2.0.0.x (Pre-Releases)
+    validations:
+      required: true

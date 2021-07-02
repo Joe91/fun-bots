@@ -1,0 +1,33 @@
+name: Traces Bug Report
+description: Did you notice an issue with the default traces?
+labels: [bug, traces]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this traces bug report! Please only report issues to existing traces. For any questions with custom traces, please [ask for help](https://github.com/Joe91/fun-bots/discussions).
+  - type: input
+    id: location
+    attributes:
+      label: Location
+      description: On which map(s) and gamemode(s) does this occur? Please also include exact locations such as coordinates or placements (ex. between flag A and the white car south of the flag).
+    validations:
+      required: true
+  - type: dropdown
+    id: type
+    attributes:
+      label: Trace type
+      description: Which trace types are affected? Select all that apply.
+      multiple: true
+      options:
+      - Infantry
+      - Land Vehicle
+    validations:
+      required: true
+  - type: textarea
+    id: issue
+    attributes:
+      label: What is the issue with the traces?
+      description: What happened that should not happen? What should have happened instead?
+    validations:
+      required: true
