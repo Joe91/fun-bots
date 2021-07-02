@@ -1,24 +1,33 @@
 name: Traces Bug Report
-description: Is there something wrong with the default traces? 
+description: Did you notice an issue with the default traces?
 labels: [bug, traces]
 body:
   - type: markdown
     attributes:
       value: |
         Thanks for taking the time to fill out this bug report!
-  - type: textarea
-    id: what-happened
+  - type: input
+    id: location
     attributes:
-      label: What happened?
-      description: What happened what should not have happened? Please also tell us how we can reproduce it. The more information the better.
-      placeholder: Tell us what you see!
+      label: Location
+      description: On which map(s) and gamemode(s) does this occur? Please also include exact locations such as coordinates or placements (ex. between flag A and the white car south of the flag)
+    validations:
+      required: true
+  - type: dropdown
+    id: type
+    attributes:
+      label: Trace type
+      description: Which trace types are affected? Select all that apply.
+      options:
+      - Infantry
+      - Land Vehicle
+    multiple: true
     validations:
       required: true
   - type: textarea
-    id: what-was-expected
+    id: issue
     attributes:
-      label: What was expected?
-      description: What did you expect to happen?
-      placeholder: What you should see instead.
+      label: What is the issue with the traces?
+      description: What happened that should not happen? What should have happened instead?
     validations:
       required: true
