@@ -60,7 +60,7 @@ The following paths are used by bots for land vehicles.
 
 1. Create a path from an objective to a nearby vehicle, the objective of this path should be `vehicle <uniqueName>`. At the end of the path when you are extremely close to the vehicle. Save the path and select the latest point of that path, open the Venice Unleashed console and enter `AddVehicle` whilst looking at the vehicle.
 2. Trace a path (we highly recommend having this separate from the infantry paths, as vehicles drive on roads and infantry are not supposed to walk on the roads) for the vehicle. Follow the same guidelines as for infantry paths.
-5. Save it (Go to `CLIENT` in the `WAYPOINT-EDITOR`, and click `SAVE`. Do the same for the `SERVER` button.)
+3. Save it (Go to `CLIENT` in the `WAYPOINT-EDITOR`, and click `SAVE`. Do the same for the `SERVER` button.)
    You should receive confirmation (yell) once it's saved.
    
 #### Implementation Ideas
@@ -72,10 +72,7 @@ This list contains all bugs and issues related to traces.
 No current confirmed issues related to traces are reported. If you find an issue, please [report them](https://github.com/Joe91/fun-bots/issues).
 
 # FAQ
-Information will be added here later.
-
-#### Q: I don't understand something, what should I do?
-You should ask the contributors, maintainers and developers before you are wasting too much time on something that does not work.
+Got a question? Don't panic, just read the [wiki](https://github.com/Joe91/fun-bots/wiki) and the FAQ below. If you are still not sure, just [ask us](https://github.com/Joe91/fun-bots/discussions/categories/q-a)!
 
 #### Q: Black points are still visible after removing a waypoint. [Example](https://media.discordapp.net/attachments/860159569107615764/860167425962147870/unknown.png)
 This is intended behavior. The black dots are orphaned nodes and get cleaned out on a save/load cycle. They are left in place so that they can still be interacted with in case of accidental removal.<sup>[1]</sup>
