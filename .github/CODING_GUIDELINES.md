@@ -1,17 +1,8 @@
+👍🎉 First off, thanks for taking the time to contribute! 🎉👍
 
-## 3. Development
+## 1.0 Coding conventions
 
-This section contains:
-
-* Development structures
-* Development processes / workflow
-* Coding conventions
-* Useful tools
-* Gotchas / tips and tricks learned over the years
-
-## 3.1 Coding conventions
-
-### 3.1.1 Lua
+### 1.1.0 Lua
 
 #### Structure:
 
@@ -112,11 +103,11 @@ This section contains:
   end
   ```
 
-### 3.1.2 WebUI
+### 1.1.1 WebUI
 
 TODO
 
-## 3.2 Productivity
+## 1.2 Productivity
 
 Debugging and testing can become time consuming, specially with LUA. There are some ways to reduce wasted time like
 loading times or finding the root of a problem.
@@ -143,4 +134,3 @@ mod, as RM takes longer to load and doesn't support fast loading maps like Ziba 
 
 There is no IntelliSense for VEXT, but some linting helps. A good IDE is IntelliJ IDEA with the EmmyLua plugin.
 We have keys for it, ask [Project Management](#project-management) for one if you are interested.
-
