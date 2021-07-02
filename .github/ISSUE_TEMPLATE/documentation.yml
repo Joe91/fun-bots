@@ -7,20 +7,19 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for taking the time to fill out this bug report!
+        Thanks for taking the time to fill out a documentation-related issue. We'd highly appreciate if for large documentation changes you'd create a [pull request](https://github.com/Joe91/fun-bots/pulls) as it can save us a lot of time.
   - type: input
     id: location
     attributes:
-      label: Location of the issue
-      description: How can we get in touch with you if we need more info?
+      label: Location
+      description: Which page(s) are affected and should be modified?
       placeholder: ex. github.com/Joe91/fun-bots/wiki/Permissions
     validations:
       required: false
   - type: textarea
-    id: what-happened
+    id: what-wrong
     attributes:
-      label: What happened?
-      description: Also tell us, what did you expect to happen?
-      placeholder: Tell us what you see!
+      label: What's wrong?
+      description: What's the issue and should be modified?
     validations:
       required: true
