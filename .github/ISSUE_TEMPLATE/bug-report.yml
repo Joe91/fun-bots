@@ -45,10 +45,9 @@ body:
     id: terms
     attributes:
       label: I have checked the following...
+      description: Before submitting this bug report, checkout the contributing guidelines and our code of conduct.
       options:
+        - label: I have read the [contribution guidelines on reporting bugs](https://github.com/Joe91/fun-bots/blob/master/.github/CONTRIBUTING.md#reporting-a-bug) and the [code of conduct](https://github.com/Joe91/fun-bots/blob/master/.github/CODE_OF_CONDUCT.md).
+          required: true
         - label: I have tested and reproduced this bug without any other mods besides fun-bots.
           required: false
-        - label: I have read the [contribution guidelines on reporting bugs](https://github.com/Joe91/fun-bots/blob/master/.github/CONTRIBUTING.md#reporting-a-bug).
-          required: true  
-        - label: I have read the [code of conduct](https://github.com/Joe91/fun-bots/blob/master/.github/CODE_OF_CONDUCT.md).
-          required: true  
