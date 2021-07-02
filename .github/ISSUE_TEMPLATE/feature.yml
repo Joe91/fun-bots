@@ -1,11 +1,11 @@
 name: Feature Request
-description: I'd like to see a new feature added to fun-bots
+description: I'd like to see a new feature added to fun-bots.
 labels: [feature]
 body:
   - type: markdown
     attributes:
       value: |
-        Awesome!
+        Great [TBA].
   - type: textarea
     id: what-happened
     attributes:
