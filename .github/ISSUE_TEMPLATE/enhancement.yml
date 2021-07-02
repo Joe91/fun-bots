@@ -15,3 +15,11 @@ body:
       description: What feature should be improved? What would you like to see enhanced?
     validations:
       required: true
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: I have checked the following...
+      description: Before submitting this enhancement issue, checkout the contributing guidelines and our code of conduct.
+      options:
+        - label: I have read the [contribution guidelines on reporting bugs](https://github.com/Joe91/fun-bots/blob/master/.github/CONTRIBUTING.md#reporting-a-bug) and the [code of conduct](https://github.com/Joe91/fun-bots/blob/master/.github/CODE_OF_CONDUCT.md).
+          required: true
