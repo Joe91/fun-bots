@@ -1,164 +1,42 @@
-# Changelog
+🥳 Welcome to the changelogs 🥳
+Thi[s document contains recent changes.
 
-## [Unreleased - 2.0.0.X] - 2021-06-XX
-[Download](https://github.com/Joe91/fun-bots/archive/V2.0.0.6.zip)
-The Release-Candidate
+#### Legend
+`+` is an addition
+`-` is a removal
+`*` is a change
+`!` is a bugfix
 
-- First maps with vehicle-support for testing
-	- Kharg Island Conquest Small
-	- Bazar Conquest Small
-- Competely new UI (not fully functional yet, but getting closer)
-- New Permission-System (see link in readme: https://github.com/Joe91/fun-bots/wiki/Permissions)
-- Enhanced Gamplay Logic of the Bots in Conquest
-- Bots now attack MAVs and EOD-Bots
-- Fixed missing input-restrictions on some maptypes and game-modes
-- Fixes in BotSpawner and Respawning
-- Added Team-Switch option for Round Two or always
-- Bots stand still during spawn-protection
-- Lots of refactoring
-- Squad-Rush as gamemode
-- New paths
-	- new paths for Karkhand (thanks to run)
-	- Thalah Market Squad-Rush (thanks to DuTcHrEaGaN)
-	- Thalah Market Assault Small and Large (thanks to DuTcHrEaGaN)
-	- Epicenter Conquest Small and Large (thanks to DuTcHrEaGaN)
-	- Markaz Monolith Conquest Small and Large (thanks to DuTcHrEaGaN)
-- longer reaction-time on bigger distances
-- Additional Spawn-Delay of BOTs possible
-- More realistic loadouts (thanks to DuTcHrEaGaN)
-- More names and random-Bot-Name-Selection either on first start or on every round
-- fixed bug with Ticket-Count (thanks to HughesMDflyer4)
-- settings available with RCON and Console-Commands
-	- you can also write settings of fun-bots in the starup.txt of your server 
-		(for example: funbots.config.AdditionalBotSpawnDelay 1.0)
-	- you can acces every var in the console with fun-bots.config.set/get
-	- you can save all settings to the database by using the saveall commands
-- fixed a strange bug with steering of tanks not working anymore...
-- fixed bug with client-crash in Node-Editor
+## `V2.1.0-RC1` (03-07-2021 - release candidate)
+This is a release candidate and may not be stable. [Download](https://github.com/Joe91/fun-bots/archive/V2.0.0.6.zip)
 
+`+` Added vehicle support (this is still testing) available on **Kharg Island (Conquest Small)** and **(Grand Bazaar (Conquest Small)**. Please report any issues related to vehicle traces [on our issue tracker](https://github.com/Joe91/fun-bots/issues). <br>
+`+` Added a complete new UI (not fully fonctional yet, but it'll be soon 😉)<br>
+`+` A new permission system, [more information](https://github.com/Joe91/fun-bots/wiki/Basic-Permissions)<br>
+`+` Bots can now attack MAVs and EOD-bots<br>
+`+` Added support for the `Squad Rush` gamemode<br>
+`+` Added an option to switch bot-teams for the 2nd round<br>
+`+` Added a configuration setting to increase the spawn delay for bots<br>
+`+` Added RCON Console commands<br>
+`*` Added more random bot names
+`*` Stability changes<br>
+`*` Enhanced gameplay logic for the bots in conquest gamemodes<br>
+`*` Bots now have a longer reaction time the further away the target is<br>
+`*` Bots now have a more realistic load-out (thanks to DuTcHrEaGaN)<br>
+`!` Fixed bots not waiting until the next zone becomes available in Rush ([#79](https://github.com/Joe91/fun-bots/issues/79))<br>
+`!` Fixed bots moving whilst the spawn countdown is still in progress<br>
+`!` Fixed missing input-restrictions on some maps and gamemodes<br>
+`!` Fixed an issue in bot spawning and respawning.<br>
+`!` Fixed an issue related to team ticket-count.<br>
+`!` Fixed an issue where tanks would no longer able to be controlled properly.<br>
+`!` General bug fixes.<br>
 
-## [Unreleased - 1.7.1.X] - 2021-05-XX
-[Download](https://github.com/Joe91/fun-bots/archive/V1.7.1.5.zip)  
-the refactoring update
+#### 🗺️ New traces are now also available!
+The following map(s) are now available!
 
-- limit distance on which a bot switches to pistol
-- Squad-DM supported
-	- on all maps thanks to GaryTheNoTrashCougar!!!
-- implement new optional spawn-system
-- lots of refactoring
-- more steps in direction vehicle support
-- improvement in game-logic of bots
-- improved spawning in conquest
-- more refactoring
-- little fix for a server-crash
- 
-## [Unreleased - 1.7.0.X] - 2021-04-XX
- 
-[Download](https://github.com/Joe91/fun-bots/archive/V1.7.0.19.zip)  
-The Smart Node update
-
-- Conquest supported
-	- Bazaar (small + large)
-	- Caspian Border (small + large) Thanks to RekkieSA!!
-	- Seine Crossing (small + large)
-	- Kharg Island (small + large) Thanks to RekkieSA!!
-	- Noshar Canals (small) Thanks to RekkieSA!!
-	- Damavand Peak (small) Thanks to RekkieSA!!
-	- Desert (small) Thanks to RekkieSA!!
-	- Theran Highway (small) Thanks to RekkieSA!!
-	- Firestorm (small + large) Thanks to RekkieSA!!
-	- Riverside (small) Thanks to RekkieSA!!
-	- Railroad (small) Thanks to RekkieSA!!
-	- Pipeline (small) Thanks to RekkieSA!!
-	- Shield (small) Thanks to RekkieSA!!
-	- Valley (small) Thanks to RekkieSA!!
-	- Flats (small) Thanks to RekkieSA!!
-	- Metro (large)
-- Rush supported
-	- Metro
-	- Damavand Peak
-	- Theran Highway
-	- Bazaar - Thanks to MrDonPotato!!
-	- Firestorm - Thanks to MrDonPotato!!
-	- Seinne Crossing - Thanks to MrDonPotato!!
-	- Kharg Island - Thanks to MrDonPotato!!
-	- Noshar Canals - Thanks to MrDonPotato !!
-	- Caspian Border - Thanks to MrDonPotato !!
-	- Strike - Thanks to MrDonPotato !!
-	- Gulf of Oman - Thanks to MrDonPotato!!
-- BFLAG supported (only a first version, not that usable yet)
-	- Bazaar small
-- Bots switch to Pistol or Sidearm (Rockets) if needed
-- Bots revive dead players
-- Bots deply Ammobag and medkit from time to time
-- Bots use Grenades form time to time
-- improved spawning
-- Bugfix spawning
-- Many fixes and Improvements thanks to Bree_Arnold!! including:
-	- Bots use the same spawn-delay as the players
-	- Bots don't move on round start
-- If Bots only in one team, players are kept in the other team
-- Shoot-Cycles adapted
-- custom-weapon-sets added (shared/WeaponLists). Active if you choose "Custom" as weapon class
-- fix incompatibility with No-PreRound (thanks to Bree_Arnold!)
-- Bots attack vehicles depending on their abilities and armor of the vehicle
-- deleting paths works now
-- Improved logic for conquest and Rush
-- fixed crashes if players use real botnames...
-- kick players with bot-names
-- native support for Civilianizer-Mod
-- fixed wrong weapon-slot
-- zombies now use all colors and kits by default
-- preparation for driving vehicles
-- randomize skill of each bot a little (if wanted)
-- rework of input-system (more fail-safe now)
-- export of a maplist
-
-
-## [Unreleased - 1.6.2.1] - 2021-02-28
- 
-[Download](https://github.com/Joe91/fun-bots/archive/V1.6.2.1.zip)  
-Big update of everything
-
-- Zombie-mode added
-- All weapons selectable
-- random weapon-selection
-- Support for Domination and Gunmaster
-- First Paths for Conquest Large (Thanks to R3trib)
-- Visible traces (WIP)
-- Preparation for smart nodes done (WIP)
-- Bot Vision
-- better following of paths
-- Bots attack bots
-- different spawn-modes
-- fix with some strange crashes
-- lots of bugfixes
-
-
-## [1.5.0.3] - 2021-02-07
-  
-[Download](https://github.com/Joe91/fun-bots/releases/download/V1.5.0.1/fun-bots.zip)  
-Full TDM Support release
- 
-- full support for all TDM or TDM CQ maps
-- Bots can now make real kills (THANK YOU SquarerFive!!!)
-- Selectable Weapons for different classes (See Weapons in the Settings-Menu)
-- Many more settings and new features and tweaks ;-)
-- lots of bugfixes
- 
-## [1.2.2.0] - 2021-01-30
-
-[Download](https://github.com/Joe91/fun-bots/releases/download/V1.2.2.0/fun-bots.zip)  
-Update release
- 
-- Shotgun - Mode: Shotguns with frag can make real kills
-- Adjustable Movementspeed and Mode for normal moving
-- Adjustable Movementspeed and Mode for attacking
-- Distance for direct Attack now only triggers with clear view (Raycast)
-- Some Fixes
- 
- 
-## [1.2.1.2] - 2021-01-28
-
-[Download](https://github.com/Joe91/fun-bots/releases/download/V1.2.1.2/fun-bots.zip)  
-First official release
+|  | Map name | New paths | 
+|---	|---	|---	|
+| ![image](https://user-images.githubusercontent.com/57008952/124316546-0a474980-db76-11eb-9a00-48a44d38de9d.png) | Strike at Karkand | Conquest Small (submitted by `run`) |
+| ![image](https://user-images.githubusercontent.com/57008952/124333571-e9422100-db94-11eb-828d-0acf519e303a.png) | Talah Market | Squad Rush (submitted by `DuTcHrEaGaN`)<br>Assault Small (submitted by `DuTcHrEaGaN`)<br>Assault Large (submitted by `DuTcHrEaGaN`) |
+| ![image](https://user-images.githubusercontent.com/57008952/124316901-98233480-db76-11eb-80bd-baf046552122.png) | Epicenter | Conquest Small (submitted by `DuTcHrEaGaN`)<br>Conquest Large (submitted by `DuTcHrEaGaN`) |
+| ![image](https://user-images.githubusercontent.com/57008952/124316859-8a6daf00-db76-11eb-95dd-0c8671338c1a.png) | Markaz Monolith | Conquest Small (submitted by `DuTcHrEaGaN`)<br>Conquest Large (submitted by `DuTcHrEaGaN`) |
