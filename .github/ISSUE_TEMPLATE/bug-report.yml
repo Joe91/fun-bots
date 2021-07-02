@@ -41,3 +41,11 @@ body:
       label: Server information
       description: What OS are you running? How much memory is available? What are your server hardware and software specs? Are you running any other mods?
       placeholder: I am running on Windows x... my server has 4 GB of memory.... I'm only running fun-bots... I have an Intel Pentium Gold G6400 running 4 GHz...
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our [Code of Conduct](https://example.com)
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true  
