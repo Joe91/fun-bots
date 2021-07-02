@@ -1,7 +1,7 @@
 {
 	"Name": "fun-bots",
 	"Authors": ["MajorVictory", "Bizzi","Joe-91"],
-	"Description": "AI-Bots for TDM",
+	"Description": "Awesome AI bots for your Battlefield server",
 	"URL": "https://github.com/Joe91/fun-bots",
 	"Version": "2.0.0.6",
 	"HasWebUI": true,
