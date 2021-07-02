@@ -35,3 +35,22 @@ body:
         - 2.0.0.x (Pre-Releases)
     validations:
       required: true
+  - type: textarea
+    id: server-info
+    attributes:
+      label: Server information
+      description: What OS are you running? How much memory is available? What are your server hardware and software specs? Are you running any other mods?
+      placeholder: I am running on Windows x... my server has 4 GB of memory.... I'm only running fun-bots... I have an Intel Pentium Gold G6400 running 4 GHz...
+  - type: checkbox
+    id: check
+    attributes:
+      label: I have checked the following...
+      description: Select the options which you've tried before posting an issue
+      options:
+        - label: I have tested and reproduced this bug without any other mods besides fun-bots.
+        - label: I have read the [contribution guidelines on reporting bugs](https://github.com/Joe91/fun-bots/blob/master/.github/CONTRIBUTING.md#reporting-a-bug).
+          required: true
+        - label: I have read the [code of conduct](https://github.com/Joe91/fun-bots/blob/master/.github/CODE_OF_CONDUCT.md).
+          required: true
+    validations:
+      required: true
