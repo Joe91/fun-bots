@@ -5,22 +5,11 @@ body:
   - type: markdown
     attributes:
       value: |
-        Great [TBA].
+        We always appreciate new ideas for fun-bots, but before posting a new feature idea, maybe we already have it planned? Check the [projects page](https://github.com/Joe91/fun-bots/projects) to see what has been already planned.
   - type: textarea
-    id: what-happened
+    id: feature
     attributes:
       label: Requested feature
-      description: Also tell us, what did you expect to happen?
-      placeholder: Tell us what you see!
-      value: "A bug happened!"
-    validations:
-      required: true
-  - type: textarea
-    id: use-case
-    attributes:
-      label: Requested feature
-      description: Also tell us, what did you expect to happen?
-      placeholder: Tell us what you see!
-      value: "A bug happened!"
+      description: What would you like to see added 
     validations:
       required: true
