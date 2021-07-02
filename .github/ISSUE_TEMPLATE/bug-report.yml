@@ -49,3 +49,7 @@ body:
       options:
         - label: I agree to follow this project's Code of Conduct
           required: true  
+        - label: ITest 13
+          required: true  
+        - label: Test
+          required: true  
