@@ -3,7 +3,7 @@
 	"Authors": ["MajorVictory", "Bizzi","Joe-91"],
 	"Description": "Awesome AI bots for your Battlefield server",
 	"URL": "https://github.com/Joe91/fun-bots",
-	"Version": "2.0.0.6",
+	"Version": "V2.1.0-RC1",
 	"HasWebUI": true,
 	"Tags": ["fun-bots"],
 	"HasVeniceEXT": true,
