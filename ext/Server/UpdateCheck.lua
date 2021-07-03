@@ -43,7 +43,7 @@ local function updateFinished(cycleId, success, update_available, update_url, up
 	UpdateStatus.URL_download = update_url
 
 	if update_data.relTimestamp ~= nil then
-		print('[ + ] A new version for fun-bots was released on ' .. os.date('%d-%m-%Y %H:%M', parseOffset(update_data.relTimestamp)) .. '!')
+		print('[ + ] A new version for fun-bots was released on ' .. os.date('%d-%m-%Y %H:%M', ParseOffset(update_data.relTimestamp)) .. '!')
 	else
 
 		print('[ + ] A new version for fun-bots is available!')
