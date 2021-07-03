@@ -227,7 +227,7 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 				self._LastTargetTrans = p_Player.soldier.worldTransform.trans:Clone()
 				self._KnifeWayPositions = {}
 				self._VehicleReadyToShoot = false
-				self._ShotTimer = - self:GetFirstShotDelay(self._DistanceToPlayer) --(Config.BotFirstShotDelay + math.random()*self._Skill)
+				self._ShotTimer = - self:GetFirstShotDelay(self._DistanceToPlayer)
 
 				if self.m_KnifeMode then
 					table.insert(self._KnifeWayPositions, self._LastTargetTrans)
@@ -634,6 +634,9 @@ function Bot:_UpdateAiming()
 		-- worsen yaw and pitch depending on bot-skill
 		if not self.m_InVehicle then
 			local s_WorseningValue = (math.random()*self._Skill/self._DistanceToPlayer) -- value scaled in offset in 1m
+			if self.m_ActiveWeapon.type == WeaponTypes.Sniper then
+				s_WorseningValue = s_WorseningValue/2
+			end
 			s_Yaw = s_Yaw + s_WorseningValue
 			s_Pitch = s_Pitch + s_WorseningValue
 		end
@@ -1039,27 +1042,27 @@ function Bot:_UpdateShooting()
 					if self.m_Player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_5 then
 						self:_SetInput(EntryInputActionEnum.EIASelectWeapon5, 1)
 						self.m_ActiveWeapon = self.m_SecondaryGadget
-						self._ShotTimer = - self:GetFirstShotDelay(self._DistanceToPlayer) --(Config.BotFirstShotDelay + math.random()*self._Skill)
+						self._ShotTimer = - self:GetFirstShotDelay(self._DistanceToPlayer)
 					end
 				elseif (self._WeaponToUse == BotWeapons.Gadget1 and Config.BotWeapon == BotWeapons.Auto) or Config.BotWeapon == BotWeapons.Gadget1 then
 					if self.m_Player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_2 and self.m_Player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_4 then
 						self:_SetInput(EntryInputActionEnum.EIASelectWeapon4, 1)
 						self:_SetInput(EntryInputActionEnum.EIASelectWeapon3, 1)
 						self.m_ActiveWeapon = self.m_PrimaryGadget
-						self._ShotTimer = - self:GetFirstShotDelay(self._DistanceToPlayer) --(Config.BotFirstShotDelay + math.random()*self._Skill)
+						self._ShotTimer = - self:GetFirstShotDelay(self._DistanceToPlayer)
 					end
 				elseif self._GrenadeActive or (self._WeaponToUse == BotWeapons.Grenade and Config.BotWeapon == BotWeapons.Auto) or Config.BotWeapon == BotWeapons.Grenade then
 					if self.m_Player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_6 then
 						self:_SetInput(EntryInputActionEnum.EIASelectWeapon6, 1)
 						self.m_ActiveWeapon = self.m_Grenade
-						self._ShotTimer = - self:GetFirstShotDelay(self._DistanceToPlayer) --(Config.BotFirstShotDelay + math.random()*self._Skill)
+						self._ShotTimer = - self:GetFirstShotDelay(self._DistanceToPlayer)
 					end
 				elseif (self._WeaponToUse == BotWeapons.Pistol and Config.BotWeapon == BotWeapons.Auto) or Config.BotWeapon == BotWeapons.Pistol then
 					if self.m_Player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_1 then
 						self.m_Player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 1)
 						self:_SetInput(EntryInputActionEnum.EIASelectWeapon2, 1)
 						self.m_ActiveWeapon = self.m_Pistol
-						self._ShotTimer = - self:GetFirstShotDelay(self._DistanceToPlayer, true)--(Config.BotFirstShotDelay + math.random()*self._Skill)/2 -- TODO: maybe a little less or more?
+						self._ShotTimer = - self:GetFirstShotDelay(self._DistanceToPlayer, true) -- TODO: maybe a little less or more?
 					end
 				elseif (self._WeaponToUse == BotWeapons.Primary and Config.BotWeapon == BotWeapons.Auto) or Config.BotWeapon == BotWeapons.Primary then
 					if self.m_Player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_0 then
