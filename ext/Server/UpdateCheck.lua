@@ -110,12 +110,12 @@ local function CheckVersion()
 
 	 -- Development builds (tags)
 	if (s_endpointType == 2) then
-		if Config.Version.Tag:gsub("V", "") == s_endpointJSON['tag_name']:gsub("V", "") then
+		if Config.Version.Tag:gsub("V", "") == s_endpointJSON[1]['name']:gsub("V", "") then
 			updateFinished(s_endpointType, true, false, nil, nil, nil)
 			do return end
 		end
 
-		updateFinished(s_endpointType, true, true, s_endpointJSON['html_url'], {tag = s_endpointJSON['tag_name'], relTimestamp = s_endpointJSON['published_at']}, nil)
+		updateFinished(s_endpointType, true, true, s_endpointJSON[1]['zipball_url'], {tag = s_endpointJSON[1]['name']}, nil)
 	end
 end
 

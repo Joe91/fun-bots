@@ -31,7 +31,7 @@ Config = {
 		-- RC - Release candidates (also known as pre-releases, snapshots, etc) are semi-tested releases.
 		-- DEV - Recommended only when testing fun-bots on a private development server.
 		-- 
-		ReleaseCycle = "STABLE" -- default: STABLE (recommended)
+		ReleaseCycle = "DEV" -- default: STABLE (recommended)
 	},
 
 	--GENERAL
@@ -159,8 +159,7 @@ Config = {
 
 	-- Version related (do not modify)
 	Version = {
-		Tag = 'V2.0.5-RC1', -- Do not modify this value!
-		VersionID = '45647582', -- Do not modify this value!
+		Tag = 'V2.1.0-RC1', -- Do not modify this value!
 	},
 }
 
