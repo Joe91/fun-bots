@@ -13,25 +13,37 @@ local ApiUrls = {
 	dev = 'https://api.github.com/repos/Joe91/fun-bots/tags?per_page=1'
 }
 
-
 local function updateFinished(cycleId, success, update_available, update_url, update_data, log)
+	-- Update the latest release date
+	UpdateStatus.check_timestamp_any = os.time(os.date("!*t"))
+
 	-- Check if the update was successfull
 	if not success then
 		print('[UPDATE] Failed to check for an update.') -- @ToDo: Move this to a logger
 		NetEvents:Broadcast("updateChecker:finished", false, false, nil) -- success (bool), available (bool), logs (table)
+
+		-- Update the hookable variables
+		UpdateStatus.available = 99
+
 		do return end
 	end
+
+	-- Update success timestamp
+	UpdateStatus.check_timestamp_success = os.time(os.date("!*t"))
 
 	-- Check if there is not an update available and that we are running the latest version
 	if not update_available then
 		print('[UPDATE] You are running the latest version') -- @ToDo: Move this to a logger
 		NetEvents:Broadcast("updateChecker:finished", false, true, nil)
+		UpdateStatus.available = 2
 		do return end
 	end
 
-	if update_data.relTimestamp ~= nil then
+	UpdateStatus.available = 1
+	UpdateStatus.URL_download = update_url
 
-		print('[ + ] A new version for fun-bots was released on ' .. string.format(parseOffset(update_data.relTimestamp)) .. '!')
+	if update_data.relTimestamp ~= nil then
+		print('[ + ] A new version for fun-bots was released on ' .. os.date('%d-%m-%Y %H:%M', parseOffset(update_data.relTimestamp)) .. '!')
 	else
 
 		print('[ + ] A new version for fun-bots is available!')
@@ -76,25 +88,35 @@ local function CheckVersion()
 	end
 
 	-- Parse JSON
-	local s_endpointJSON = json.decodes(s_endpointResponse.body)
+	local s_endpointJSON = json.decode(s_endpointResponse.body)
 
-	if s_endpointJSON == nil or s_endpointJSON[1] == nil then
+	if s_endpointJSON == nil then
 		updateFinished(s_endpointType, false, false, nil, nil, nil)
 		do return end
 	end
 
 	-- Response is different based on the cycle request
-	if (s_endpointType == 0) then -- Stable
+	-- @ToDo: Make the current version better as it currently checks strings. It should check an incremental value instead.
+
+ 	-- Stable and release candidates follow the same body
+	if (s_endpointType == 0) or (s_endpointType == 1) then
 		if Config.Version.Tag == s_endpointJSON['tag_name'] then
 			updateFinished(s_endpointType, true, false, nil, nil, nil)
 			do return end
 		end
 
-		updateFinished(s_endpointType, true, false, s_endpointJSON['html_url'], {tag = s_endpointJSON['tag_name'], relTimestamp = s_endpointJSON['published_at']}, nil)
+		updateFinished(s_endpointType, true, true, s_endpointJSON['html_url'], {tag = s_endpointJSON['tag_name'], relTimestamp = s_endpointJSON['published_at']}, nil)
 	end
 
+	 -- Development builds (tags)
+	if (s_endpointType == 2) then
+		if Config.Version.Tag:gsub("V", "") == s_endpointJSON['tag_name']:gsub("V", "") then
+			updateFinished(s_endpointType, true, false, nil, nil, nil)
+			do return end
+		end
 
-	-- @ToDo adding new update-info on WebUI
+		updateFinished(s_endpointType, true, true, s_endpointJSON['html_url'], {tag = s_endpointJSON['tag_name'], relTimestamp = s_endpointJSON['published_at']}, nil)
+	end
 end
 
 return CheckVersion()
