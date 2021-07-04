@@ -1,6 +1,6 @@
 name: Traces Bug Report
 description: Did you notice an issue with the default traces?
-labels: [bug, traces]
+labels: [bug, Scope: traces]
 body:
   - type: markdown
     attributes:
