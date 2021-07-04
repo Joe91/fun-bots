@@ -1,0 +1,16 @@
+name: 'Close stale issues and PRs'
+on:
+  schedule:
+    - cron: '30 1 * * *'
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@v3
+        with:
+          any-of-issue-labels: 'awaiting information' # Only close issues that have been awaiting information from the issues author.
+          stale-issue-message: 'This issue is stale because it has been open 14 days waiting on new information from the author with no activity. Remove stale label or comment or this will be closed in 3 days.'
+          close-issue-message: 'This issue was closed because it has been stalled for 3 days with no activity.'
+          days-before-issue-stale: 14
+          days-before-issue-close: 3
