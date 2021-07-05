@@ -1,3 +1,6 @@
 mod.db
 .vu
 .idea
+
+# Do not include automatic generated files
+ext/Shared/Config.lua
