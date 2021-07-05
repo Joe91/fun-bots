@@ -26,7 +26,7 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add -A
-          git commit -m "Regenerated configuration file" -a
+          git commit -m "Regenerated the configuration file" -m "This is an automatic commit to add an automatic regenerated configuration file." -a
           
       - name: push changes
         uses: ad-m/github-push-action@v0.6.0

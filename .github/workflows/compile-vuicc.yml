@@ -1,0 +1,28 @@
+name: 'Compile WebUI'
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: compile for source
+        shell: "cmd"
+        run: vuicc.exe "..\WebUI" "..\ui.vuic"
+        
+      - name: compile for clients
+        shell: "cmd"
+        run: ".funbots/workflow/ui_generator/vuicc.exe" "WebUI" "./ui.vuic"
+          
+      - name: commit files
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add -A
+          git commit -m "Regenerated the WebUI" -m "This is an automatic commit to add an automatic regenerated Venice Unleashed WebUI file." -a
+          
+      - name: push changes
+        uses: ad-m/github-push-action@v0.6.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }} 
