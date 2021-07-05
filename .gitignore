@@ -4,3 +4,4 @@ mod.db
 
 # Do not include automatic generated files
 ext/Shared/Config.lua
+ui.vuic
