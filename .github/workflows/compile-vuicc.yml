@@ -8,7 +8,7 @@ jobs:
     steps:
       - name: compile webUI
         shell: cmd
-        run: "\".funbots/workflow/ui_generator/vuicc.exe\" \"WebUI\" \"./ui.vuic\""
+        run: "\".funbots/workflow/ui_generator/vuicc.exe\" \"./WebUI/\" \"./ui.vuic\""
           
       - name: commit files
         run: |
