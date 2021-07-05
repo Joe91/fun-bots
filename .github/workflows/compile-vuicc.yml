@@ -9,17 +9,9 @@ jobs:
       - name: checkout repo content
         uses: actions/checkout@v2 # checkout the repository content to github runner
         
-      - name: testing
-        shell: pwsh
-        run: "cd \"WebUI\""
-        
-      - name: testing 2
-        shell: pwsh
-        run: "mkdir bruddah"
-        
       - name: compile webUI
         shell: pwsh
-        run: "\".funbots/workflow/ui_generator/vuicc.exe\" \"./WebUI/\" \"./ui.vuic\""
+        run: "\".funbots/workflow/ui_generator/vuicc.exe\" \"./WebUI\" \"./ui.vuic\""
           
       - name: commit files
         run: |
