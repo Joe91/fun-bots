@@ -8,14 +8,14 @@ jobs:
     steps:
       - name: compile webUI
         shell: cmd
-        run: dir
+        run: "\".funbots/workflow/ui_generator/vuicc.exe\" \"WebUI\" \"./ui.vuic\""
           
       - name: commit files
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add -A
-          git commit -m "Regenerated the WebUI" -m "This is an automatic commit to add an automatic regenerated Venice Unleashed WebUI file." -a
+          git commit -m "Regenerated VUI" -m his is an automatic commit to add an automatic regenerated Venice Unleashed WebUI file." -a
           
       - name: push changes
         uses: ad-m/github-push-action@v0.6.0
