@@ -1,6 +1,9 @@
 name: 'Configuration File Generator'
 
-on: [push]
+on:
+  push:
+    paths:
+      - '.funbots/workflow/conf_generator/config.json'
 
 jobs:
   build:
