@@ -7,15 +7,15 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: testing
-        shell: shell
+        shell: pwsh
         run: "cd \"WebUI\""
         
       - name: testing 2
-        shell: shell
+        shell: pwsh
         run: "mkdir bruddah"
         
       - name: compile webUI
-        shell: shell
+        shell: pwsh
         run: "\".funbots/workflow/ui_generator/vuicc.exe\" \"./WebUI/\" \"./ui.vuic\""
           
       - name: commit files
