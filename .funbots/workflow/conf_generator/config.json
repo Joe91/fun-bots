@@ -65,13 +65,46 @@
 			}
 		},
         {
-            "name": "BotAttackBotCheckInterval ",
+            "name": "BotAttackBotCheckInterval",
 			"type": "item",
 			"generate": true,
 			"description": null,
 			"data": {
 				"type": "float",
 				"default": "0.05",
+				"information": null
+			}
+		},
+        {
+            "name": "BotUpdateCycle",
+			"type": "item",
+			"generate": true,
+			"description": null,
+			"data": {
+				"type": "float",
+				"default": "0.1",
+				"information": null
+			}
+		},
+        {
+            "name": "BotAimUpdateCycle",
+			"type": "item",
+			"generate": true,
+			"description": null,
+			"data": {
+				"type": "float",
+				"default": "0.05",
+				"information": null
+			}
+		},
+        {
+            "name": "TargetHeightDistanceWayPoint",
+			"type": "item",
+			"generate": true,
+			"description": "Distance the bots have to reach in height to continue with next Waypoint",
+			"data": {
+				"type": "float",
+				"default": "1.5",
 				"information": null
 			}
 		}
