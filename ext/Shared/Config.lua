@@ -2,6 +2,30 @@ USE_REAL_DAMAGE = true					-- with real damage, the hitboxes are a bit buggy
 BOT_TOKEN = "BOT_"						-- token Bots are marked with
 
 Config = {
+	-- Debugging will show extra output, both in-game using the VU console and in the server console.
+	-- 0 = All messages. (All)
+	-- 1 = Highly detailed tracing messages. Produces the most voluminous output. (High)
+	-- 2 = Info - Informational messages that might make sense to end users and server administrators. (Info)
+	-- 3 = Potentially harmful situations of interest to end users or system managers that indicate potential problems. (Warn)
+	-- 4 = Error events of considerable importance that will prevent normal program execution, but might still allow the application to continue running. (Error)
+	-- 5 = Only critical errors and general output (Fatal)
+	DebugLevel = 4, -- default: 4 (recommended)
+
+	AutoUpdater = {
+		--
+		-- Enabling the auto updater will show you a notification when a new update for fun-bots is available for download.
+		-- Please note that we do not support outdated versions.
+		Enabled = true, -- default: true (recommended)
+	
+		--
+		-- Set the release cycle on which you want to receive update notifications.
+		-- STABLE (Recommended) - Stable releases recommended on public servers.
+		-- RC - Release candidates (also known as pre-releases, snapshots, etc) are semi-tested releases.
+		-- DEV - Recommended only when testing fun-bots on a private development server.
+		--
+		ReleaseCycle = "STABLE" -- default: STABLE (recommended)
+	},
+
 	--GENERAL
 	BotWeapon = BotWeapons.Auto,		-- Select the weapon the bots use
 	BotKit = BotKits.RANDOM_KIT,		-- The Kit of the Bots
@@ -124,6 +148,11 @@ Config = {
 	DisableRCONCommands = false,		-- if true, no RCON commands can be used
 	IgnorePermissions = false,			-- if true, all permissions are ignored --> everyone can do everything
 	Language = nil,						-- de_DE as sample (default is english, when language file doesnt exists)
+
+	-- Version related (do not modify)
+	Version = {
+		Tag = 'V2.1.0-RC1', -- Do not modify this value!
+	},
 }
 
 -- don't change these values unless you know what you do

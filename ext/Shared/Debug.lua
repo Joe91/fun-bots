@@ -1,3 +1,6 @@
+--
+-- SOON DEPRECATED - A better debugging system is currently in development by @Firjens
+--
 Debug = {
 	Globals = {
 		UPDATE = true				-- Debug the Updater

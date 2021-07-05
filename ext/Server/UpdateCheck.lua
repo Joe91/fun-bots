@@ -1,48 +1,122 @@
+--[[ Global update hook ]]--
+UpdateStatus = {
+	available = 0, -- 0 if no update has been checked for, 1 if an update is available, 2 if an update is NOT available, 99 for technical issues
+	URL_download = nil, -- URL to download the new update from
+	check_timestamp_success = 0, -- unix timestamp of the last successfull check
+	check_timestamp_any = 0 -- unix timestamp of the last check (either succesfull or unsuccessfull)
+}
+
+--[[ Auto updater check --]]
+local ApiUrls = {
+	stable = 'https://api.github.com/repos/Joe91/fun-bots/releases/latest?per_page=1',
+	pre_release = 'https://api.github.com/repos/Joe91/fun-bots/releases?per_page=1',
+	dev = 'https://api.github.com/repos/Joe91/fun-bots/tags?per_page=1'
+}
+
+local function updateFinished(cycleId, success, update_available, update_url, update_data, log)
+	-- Update the latest release date
+	UpdateStatus.check_timestamp_any = os.time(os.date("!*t"))
+
+	-- Check if the update was successfull
+	if not success then
+		print('[UPDATE] Failed to check for an update.') -- @ToDo: Move this to a logger
+
+		-- Update the hookable variables
+		UpdateStatus.available = 99
+
+		do return end
+	end
+
+	-- Update success timestamp
+	UpdateStatus.check_timestamp_success = os.time(os.date("!*t"))
+
+	-- Check if there is not an update available and that we are running the latest version
+	if not update_available then
+		print('[UPDATE] You are running the latest version') -- @ToDo: Move this to a logger
+		
+		-- Update the hookable variables
+		UpdateStatus.available = 2
+		do return end
+	end
+
+	UpdateStatus.available = 1
+	UpdateStatus.URL_download = update_url
+
+	if update_data.relTimestamp ~= nil then
+		print('[ + ] A new version for fun-bots was released on ' .. os.date('%d-%m-%Y %H:%M', ParseOffset(update_data.relTimestamp)) .. '!')
+	else
+
+		print('[ + ] A new version for fun-bots is available!')
+	end
+
+	print('[ + ] Upgrade from ' .. Config.Version.Tag .. ' to ' .. update_data.tag)
+	print('[ + ] Download: ' .. update_url)
+end
+
+-- Check for the latest version
 local function CheckVersion()
-	print('fun-bots ' .. VERSION .. ' (' .. BRANCH .. ')')
-
-	if Debug.Globals.UPDATE then
-		print('Checking for Updates...')
+	-- Check if the user has it enabled in configuration file
+	if not Config.AutoUpdater.Enabled then
+		print('[UPDATE] You disabled checking for new updates in your configuration file.')
+		do return end
 	end
 
-	local s_Response = Net:GetHTTP('https://api.github.com/repos/Joe91/fun-bots/tags?per_page=1')
-	local s_JSON = json.decode(s_Response.body)
+	print('[UPDATE] Checking for a newer version.')
+	
+	-- Get the appropriate URL for the API based on the user configurations input.
+	-- Default to the stable URL
+	local s_endpointURL = ApiUrls.stable -- Defaulting to the stable URL
+	local s_endpointType = 0 -- A number we can track so we know which type we used
 
-	if s_JSON == nil or s_JSON[1] == nil then
-		if Debug.Globals.UPDATE then
-			print('Can\'t fetch the latest Version from GitHub.')
-		end
-	elseif 'V' .. VERSION ~= s_JSON[1].name then
-		local s_IsOlderVersion = false
-		local s_CurrentVersion = VERSION:split('.')
-		local s_LatestVersion = s_JSON[1].name:sub(2):split('.')
-
-		for i = 1, #s_CurrentVersion do
-			if s_CurrentVersion[i] == nil or s_LatestVersion[i] == nil then
-				print("failed to check")
-				break
-			end
-
-			if s_CurrentVersion[i] ~= s_LatestVersion[i] then
-				s_IsOlderVersion = (s_CurrentVersion[i] < s_LatestVersion[i])
-				break
-			end
-		end
-
-		if s_IsOlderVersion then
-			print('++++++++++++++++++++++++++++++++++++++++++++++++++')
-			print('New version available!')
-			print('Installed Version: V' .. VERSION)
-			print('Online Version: ' .. s_JSON[1].name)
-			print('++++++++++++++++++++++++++++++++++++++++++++++++++')
-		elseif Debug.Globals.UPDATE then
-			print('You have already the newest version installed.')
-		end
-	elseif Debug.Globals.UPDATE then
-		print('You have already the newest version installed.')
+	if Config.AutoUpdater.ReleaseCycle == "RC" then -- Release Candidates (or pre-releases)
+		s_endpointURL = ApiUrls.pre_release
+		s_endpointType = 1
 	end
 
-	-- @ToDo adding new update-info on WebUI
+	if Config.AutoUpdater.ReleaseCycle == "DEV" then -- Development builds (Github tags)
+		s_endpointURL = ApiUrls.dev
+		s_endpointType = 2
+	end
+
+	-- Make a HTTP request to the REST API
+	local s_endpointResponse = Net:GetHTTP(s_endpointURL)
+
+	-- Check if response is not nil
+	if s_endpointResponse == nil then
+		updateFinished(s_endpointType, false, false, nil, nil, nil) -- TODO: Awaiting the debugging refactor to make a throwable error
+		do return end
+	end
+
+	-- Parse JSON
+	local s_endpointJSON = json.decode(s_endpointResponse.body)
+
+	if s_endpointJSON == nil then
+		updateFinished(s_endpointType, false, false, nil, nil, nil)
+		do return end
+	end
+
+	-- Response is different based on the cycle request
+	-- @ToDo: Make the current version better as it currently checks strings. It should check an incremental value instead.
+
+ 	-- Stable and release candidates follow the same body
+	if (s_endpointType == 0) or (s_endpointType == 1) then
+		if Config.Version.Tag == s_endpointJSON['tag_name'] then
+			updateFinished(s_endpointType, true, false, nil, nil, nil)
+			do return end
+		end
+
+		updateFinished(s_endpointType, true, true, s_endpointJSON['html_url'], {tag = s_endpointJSON['tag_name'], relTimestamp = s_endpointJSON['published_at']}, nil)
+	end
+
+	 -- Development builds (tags)
+	if (s_endpointType == 2) then
+		if Config.Version.Tag:gsub("V", "") == s_endpointJSON[1]['name']:gsub("V", "") then
+			updateFinished(s_endpointType, true, false, nil, nil, nil)
+			do return end
+		end
+
+		updateFinished(s_endpointType, true, true, s_endpointJSON[1]['zipball_url'], {tag = s_endpointJSON[1]['name']}, nil)
+	end
 end
 
 return CheckVersion()
