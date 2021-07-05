@@ -11,7 +11,7 @@ jobs:
         
       - name: compile webUI
         shell: pwsh
-        run: "\".funbots/workflow/ui_generator/vuicc.exe\" \"./WebUI\" \"./ui.vuic\""
+        run: ".funbots/workflow/ui_generator/vuicc.exe \"./WebUI\" \"./ui.vuic\""
           
       - name: commit files
         run: |
