@@ -8,7 +8,7 @@ jobs:
     steps:
       - name: testing
         shell: cmd
-        run: "cd \"./WebUI/\""
+        run: "cd \"WebUI\""
         
       - name: testing 2
         shell: cmd
