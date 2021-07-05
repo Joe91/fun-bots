@@ -1,0 +1,32 @@
+{
+    "Config": {
+		"type": "category",
+		"DebugLevel": {
+			"type": "item",
+			"generate": true,
+			"description": "Debugging will show extra output.",
+			"data": {
+				"type": "int",
+				"default": "4",
+				"information": null
+			}
+		},
+		"AutoUpdater": {
+			"type": "category",
+			"Enabled": {
+				"type": "item",
+				"generate": true,
+				"description": "E",
+				"data": {
+					"type": "bool",
+					"default": "true",
+					"information": null
+				}
+			}
+		}
+	},
+	"Tyrone591041": {
+		"type": "category",
+		"name": "bruh"
+	}
+}
