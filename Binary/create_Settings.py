@@ -28,13 +28,36 @@ with open(settings_definition, "r") as inFile:
 	numberOfSettings = numberOfSettings + 1
 	print("import done")
 	setting = {}
-	
+
 	with open(config_file, "w") as outFile:
 		lastCategory = None
 		outFile.write("USE_REAL_DAMAGE = true					-- with real damage, the hitboxes are a bit buggy\n")
 		outFile.write("BOT_TOKEN = \"BOT_\"						-- token Bots are marked with\n")
 		outFile.write("\n")
 		outFile.write("Config = {\n")
+		outFile.write("	-- Debugging will show extra output, both in-game using the VU console and in the server console.\n")
+		outFile.write("	-- 0 = All messages. (All)\n")
+		outFile.write("	-- 1 = Highly detailed tracing messages. Produces the most voluminous output. (High)\n")
+		outFile.write("	-- 2 = Info - Informational messages that might make sense to end users and server administrators. (Info)\n")
+		outFile.write("	-- 3 = Potentially harmful situations of interest to end users or system managers that indicate potential problems. (Warn)\n")
+		outFile.write("	-- 4 = Error events of considerable importance that will prevent normal program execution, but might still allow the application to continue running. (Error)\n")
+		outFile.write("	-- 5 = Only critical errors and general output (Fatal)\n")
+		outFile.write("	DebugLevel = 4, -- default: 4 (recommended)\n")
+		outFile.write("\n")
+		outFile.write("	AutoUpdater = {\n")
+		outFile.write("		--\n")
+		outFile.write("		-- Enabling the auto updater will show you a notification when a new update for fun-bots is available for download.\n")
+		outFile.write("		-- Please note that we do not support outdated versions.\n")
+		outFile.write("		Enabled = true, -- default: true (recommended)\n")
+		outFile.write("	\n")
+		outFile.write("		--\n")
+		outFile.write("		-- Set the release cycle on which you want to receive update notifications.\n")
+		outFile.write("		-- STABLE (Recommended) - Stable releases recommended on public servers.\n")
+		outFile.write("		-- RC - Release candidates (also known as pre-releases, snapshots, etc) are semi-tested releases.\n")
+		outFile.write("		-- DEV - Recommended only when testing fun-bots on a private development server.\n")
+		outFile.write("		--\n")
+		outFile.write("		ReleaseCycle = \"STABLE\" -- default: STABLE (recommended)\n")
+		outFile.write("	},\n\n")
 
 		for setting in allSettings:
 			if setting["Category"] != lastCategory:
@@ -51,7 +74,12 @@ with open(settings_definition, "r") as inFile:
 			if numberOfTabs <= 0:
 				numberOfTabs = 1
 			outFile.write(tempString + "	" * numberOfTabs +"-- " + setting["Description"] + "\n")
-	
+
+		outFile.write("\n")
+		outFile.write("	-- Version related (do not modify)\n")
+		outFile.write("	Version = {\n")
+		outFile.write("		Tag = 'V2.1.0-RC1', -- Do not modify this value!\n")
+		outFile.write("	},\n")
 		outFile.write("}\n\n")
 		outFile.write("-- don't change these values unless you know what you do\n")
 		outFile.write("StaticConfig = {\n")

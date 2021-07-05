@@ -1,14 +1,7 @@
---[[	
-Welcome to the fun-bots configuration file. This file allows you to fine-tune fun-bots to your taste.
-
-STOP! Need help? Check out the wiki first! https://github.com/Joe91/fun-bots/wiki/Basic-Configuration or ask us! https://github.com/Joe91/fun-bots/discussions/categories/q-a
---]]
-
 USE_REAL_DAMAGE = true					-- with real damage, the hitboxes are a bit buggy
 BOT_TOKEN = "BOT_"						-- token Bots are marked with
 
 Config = {
-
 	-- Debugging will show extra output, both in-game using the VU console and in the server console.
 	-- 0 = All messages. (All)
 	-- 1 = Highly detailed tracing messages. Produces the most voluminous output. (High)
@@ -22,16 +15,15 @@ Config = {
 		--
 		-- Enabling the auto updater will show you a notification when a new update for fun-bots is available for download.
 		-- Please note that we do not support outdated versions.
-		-- 
 		Enabled = true, -- default: true (recommended)
-		
+	
 		--
 		-- Set the release cycle on which you want to receive update notifications.
 		-- STABLE (Recommended) - Stable releases recommended on public servers.
 		-- RC - Release candidates (also known as pre-releases, snapshots, etc) are semi-tested releases.
 		-- DEV - Recommended only when testing fun-bots on a private development server.
-		-- 
-		ReleaseCycle = "DEV" -- default: STABLE (recommended)
+		--
+		ReleaseCycle = "STABLE" -- default: STABLE (recommended)
 	},
 
 	--GENERAL

@@ -20,7 +20,6 @@ local function updateFinished(cycleId, success, update_available, update_url, up
 	-- Check if the update was successfull
 	if not success then
 		print('[UPDATE] Failed to check for an update.') -- @ToDo: Move this to a logger
-		NetEvents:Broadcast("updateChecker:finished", false, false, nil) -- success (bool), available (bool), logs (table)
 
 		-- Update the hookable variables
 		UpdateStatus.available = 99
@@ -34,7 +33,8 @@ local function updateFinished(cycleId, success, update_available, update_url, up
 	-- Check if there is not an update available and that we are running the latest version
 	if not update_available then
 		print('[UPDATE] You are running the latest version') -- @ToDo: Move this to a logger
-		NetEvents:Broadcast("updateChecker:finished", false, true, nil)
+		
+		-- Update the hookable variables
 		UpdateStatus.available = 2
 		do return end
 	end
