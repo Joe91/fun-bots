@@ -6,6 +6,9 @@ jobs:
   build:
     runs-on: windows-latest
     steps:
+      - name: checkout repo content
+        uses: actions/checkout@v2 # checkout the repository content to github runner
+        
       - name: testing
         shell: pwsh
         run: "cd \"WebUI\""
