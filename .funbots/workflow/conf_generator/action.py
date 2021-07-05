@@ -17,7 +17,7 @@ import sys
 from datetime import datetime
 
 workflow_configuration_structure = "./.funbots/workflow/conf_generator/config.json"  # URL to the configuration file skeleton
-workflow_configuration_file = "./ext/shared/Config.lua"  # URL to the path to generate to
+workflow_configuration_file = "./ext/Shared/Config.lua"  # URL to the path to generate to
 
 print("Generating the fun-bots configuration file...")
 
