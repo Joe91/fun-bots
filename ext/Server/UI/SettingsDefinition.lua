@@ -860,10 +860,20 @@ SettingsDefinition = {
 		},
 		{
 			Name = "AimForHead",
-			Text = "Bots aim for head",
+			Text = "Bots without sniper aim for head",
 			Type = Type.Boolean,
 			Value = Config.AimForHead,
-			Description = "bots aim for the head. More an experimental config",
+			Description = "bots without sniper aim for the head. More an experimental config",
+			Default = false,
+			UpdateFlag = UpdateFlag.None,
+			Category = "ADVANCED"
+		},
+		{
+			Name = "AimForHeadSniper",
+			Text = "Bots with Sniper aim for head",
+			Type = Type.Boolean,
+			Value = Config.AimForHeadSniper,
+			Description = "bots with sniper aim for the head. More an experimental config",
 			Default = false,
 			UpdateFlag = UpdateFlag.None,
 			Category = "ADVANCED"

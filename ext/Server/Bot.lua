@@ -557,10 +557,16 @@ function Bot:_UpdateAiming()
 		if self._ShootPlayerVehicleType == VehicleTypes.MavBot then
 			s_FullPositionTarget = self._ShootPlayer.controlledControllable.transform.trans:Clone()
 		else
-			s_FullPositionTarget = self._ShootPlayer.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(self._ShootPlayer, true)
+			local s_AimForHead = false
+			if self.m_ActiveWeapon.Type == WeaponTypes.Sniper then
+				s_AimForHead = Config.AimForHeadSniper
+			else
+				s_AimForHead = Config.AimForHead
+			end
+			s_FullPositionTarget = self._ShootPlayer.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(self._ShootPlayer, true, s_AimForHead)
 		end
 
-		local s_FullPositionBot = self.m_Player.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(self.m_Player, false)
+		local s_FullPositionBot = self.m_Player.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(self.m_Player, false, false)
 
 		if self.m_InVehicle then --TODO: calculate height of gun of vehicle
 			s_FullPositionBot = s_FullPositionBot + Vec3(0.0, 1.0, 0.0) -- bot in vehicle is higher
@@ -650,7 +656,7 @@ function Bot:_UpdateAiming()
 		end
 
 		local s_PositionTarget = self._ShootPlayer.corpse.worldTransform.trans:Clone()
-		local s_PositionBot = self.m_Player.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(self.m_Player, false)
+		local s_PositionBot = self.m_Player.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(self.m_Player, false, false)
 
 		local s_DifferenceZ = s_PositionTarget.z - s_PositionBot.z
 		local s_DifferenceX = s_PositionTarget.x - s_PositionBot.x
