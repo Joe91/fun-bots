@@ -99,13 +99,22 @@ local function CheckVersion()
 	-- @ToDo: Make the current version better as it currently checks strings. It should check an incremental value instead.
 
  	-- Stable and release candidates follow the same body
-	if (s_EndpointType == 0) or (s_EndpointType == 1) then
+	if (s_EndpointType == 0) then
 		if Config.Version.Tag == s_EndpointJSON['tag_name'] then
 			UpdateFinished(s_EndpointType, true, false, nil, nil, nil)
 			do return end
 		end
 
 		UpdateFinished(s_EndpointType, true, true, s_EndpointJSON['html_url'], {tag = s_EndpointJSON['tag_name'], relTimestamp = s_EndpointJSON['published_at']}, nil)
+	end
+
+	if (s_EndpointType == 1) then
+		if Config.Version.Tag == s_EndpointJSON[1]['tag_name'] then
+			UpdateFinished(s_EndpointType, true, false, nil, nil, nil)
+			do return end
+		end
+
+		UpdateFinished(s_EndpointType, true, true, s_EndpointJSON[1]['html_url'], {tag = s_EndpointJSON[1]['tag_name'], relTimestamp = s_EndpointJSON[1]['published_at']}, nil)
 	end
 
 	 -- Development builds (tags)
