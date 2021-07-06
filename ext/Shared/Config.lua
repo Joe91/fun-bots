@@ -23,7 +23,7 @@ Config = {
 		-- RC - Release candidates (also known as pre-releases, snapshots, etc) are semi-tested releases.
 		-- DEV - Recommended only when testing fun-bots on a private development server.
 		--
-		ReleaseCycle = "STABLE" -- default: STABLE (recommended)
+		ReleaseCycle = "RC" -- default: RC (recommended)
 	},
 
 	--GENERAL
@@ -117,7 +117,8 @@ Config = {
 	DistanceForDirectAttack = 5,		-- if that close, the bot can hear you
 	MaxBotAttackBotDistance = 30,		-- meters a bot attacks an other bot
 	MeleeAttackCoolDown = 3.0,			-- the time a bot waits before attacking with melee again
-	AimForHead = false,					-- bots aim for the head. More an experimental config
+	AimForHead = false,					-- bots without sniper aim for the head. More an experimental config
+	AimForHeadSniper = false,			-- bots with sniper aim for the head. More an experimental config
 	JumpWhileShooting = true,			-- bots jump over obstacles while shooting if needed
 	JumpWhileMoving = true,				-- bots jump while moving. If false, only on obstacles!
 	OverWriteBotSpeedMode = BotMoveSpeeds.NoMovement,	-- 0 = no overwrite. 1 = prone, 2 = crouch, 3 = walk, 4 = run

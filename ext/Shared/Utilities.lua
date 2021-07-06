@@ -6,11 +6,11 @@ function Utilities:__init()
 	-- nothing to do
 end
 
-function Utilities:getCameraPos(p_Player, p_IsTarget)
-	return Vec3(0.00 ,self:getTargetHeight(p_Player.soldier, p_IsTarget), 0.00)
+function Utilities:getCameraPos(p_Player, p_IsTarget, p_AimForHead)
+	return Vec3(0.00 ,self:getTargetHeight(p_Player.soldier, p_IsTarget, p_AimForHead), 0.00)
 end
 
-function Utilities:getTargetHeight(p_Soldier, p_IsTarget)
+function Utilities:getTargetHeight(p_Soldier, p_IsTarget, p_AimForHead)
 	local s_CameraHeight = 0
 
 	if not p_IsTarget then
@@ -21,13 +21,13 @@ function Utilities:getTargetHeight(p_Soldier, p_IsTarget)
 		elseif p_Soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
 			s_CameraHeight = 1.0
 		end
-	elseif p_IsTarget and Config.AimForHead then
+	elseif p_IsTarget and p_AimForHead then
 		s_CameraHeight = 1.50 --bot.soldier.pose == CharacterPoseType.CharacterPoseType_Stand
 
 		if p_Soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
 			s_CameraHeight = 0.25
 		elseif p_Soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
-			s_CameraHeight = 1
+			s_CameraHeight = 1.0
 		end
 	else --aim a little lower
 		s_CameraHeight = 1.1 --bot.soldier.pose == CharacterPoseType.CharacterPoseType_Stand - reduce by 0.5

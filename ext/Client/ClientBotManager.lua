@@ -83,7 +83,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 			local s_PlayerPosition = ClientUtils:GetCameraTransform().trans:Clone() --player.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(player, false)
 
 			-- find direction of Bot
-			local s_Target = s_Bot.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(s_Bot, false)
+			local s_Target = s_Bot.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(s_Bot, false, false)
 			local s_Distance = s_PlayerPosition:Distance(s_Bot.soldier.worldTransform.trans)
 
 			if s_Distance < Config.MaxRaycastDistance then
@@ -130,7 +130,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 			local s_PlayerPosition = self.m_Player.corpse.worldTransform.trans:Clone() + Vec3(0.0, 1.0, 0.0)
 
 			-- find direction of Bot
-			local s_Target = s_Bot.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(s_Bot, false)
+			local s_Target = s_Bot.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(s_Bot, false, false)
 			local s_Distance = s_PlayerPosition:Distance(s_Bot.soldier.worldTransform.trans)
 
 			if s_Distance < 35.0 then -- TODO: use config var for this
@@ -217,7 +217,7 @@ function ClientBotManager:OnBulletEntityCollision(p_HookCtx, p_Entity, p_Hit, p_
 
 	if (dx < 1 and dz < 1 and dy < 2 and dy > 0) then -- included bodyheight
 		local s_IsHeadshot = false
-		local s_CameraHeight = m_Utilities:getTargetHeight(s_LocalPlayer.soldier, false)
+		local s_CameraHeight = m_Utilities:getTargetHeight(s_LocalPlayer.soldier, false, false)
 
 		if dy < s_CameraHeight + 0.3 and dy > s_CameraHeight - 0.10 then
 			s_IsHeadshot = true

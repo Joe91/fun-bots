@@ -56,7 +56,7 @@ with open(settings_definition, "r") as inFile:
 		outFile.write("		-- RC - Release candidates (also known as pre-releases, snapshots, etc) are semi-tested releases.\n")
 		outFile.write("		-- DEV - Recommended only when testing fun-bots on a private development server.\n")
 		outFile.write("		--\n")
-		outFile.write("		ReleaseCycle = \"STABLE\" -- default: STABLE (recommended)\n")
+		outFile.write("		ReleaseCycle = \"RC\" -- default: RC (recommended)\n")
 		outFile.write("	},\n\n")
 
 		for setting in allSettings:
