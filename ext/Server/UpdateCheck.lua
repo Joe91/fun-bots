@@ -13,12 +13,12 @@ local ApiUrls = {
 	dev = 'https://api.github.com/repos/Joe91/fun-bots/tags?per_page=1'
 }
 
-local function updateFinished(cycleId, success, update_available, update_url, update_data, log)
+local function UpdateFinished(p_CycleId, p_Success, p_UpdateAvailable, p_UpdateUrl, p_UpdateData, p_Log)
 	-- Update the latest release date
 	UpdateStatus.check_timestamp_any = os.time(os.date("!*t"))
 
 	-- Check if the update was successfull
-	if not success then
+	if not p_Success then
 		print('[UPDATE] Failed to check for an update.') -- @ToDo: Move this to a logger
 
 		-- Update the hookable variables
@@ -31,26 +31,26 @@ local function updateFinished(cycleId, success, update_available, update_url, up
 	UpdateStatus.check_timestamp_success = os.time(os.date("!*t"))
 
 	-- Check if there is not an update available and that we are running the latest version
-	if not update_available then
+	if not p_UpdateAvailable then
 		print('[UPDATE] You are running the latest version') -- @ToDo: Move this to a logger
-		
+
 		-- Update the hookable variables
 		UpdateStatus.available = 2
 		do return end
 	end
 
 	UpdateStatus.available = 1
-	UpdateStatus.URL_download = update_url
+	UpdateStatus.URL_download = p_UpdateUrl
 
-	if update_data.relTimestamp ~= nil then
-		print('[ + ] A new version for fun-bots was released on ' .. os.date('%d-%m-%Y %H:%M', ParseOffset(update_data.relTimestamp)) .. '!')
+	if p_UpdateData.relTimestamp ~= nil then
+		print('[ + ] A new version for fun-bots was released on ' .. os.date('%d-%m-%Y %H:%M', ParseOffset(p_UpdateData.relTimestamp)) .. '!')
 	else
 
 		print('[ + ] A new version for fun-bots is available!')
 	end
 
-	print('[ + ] Upgrade from ' .. Config.Version.Tag .. ' to ' .. update_data.tag)
-	print('[ + ] Download: ' .. update_url)
+	print('[ + ] Upgrade from ' .. Config.Version.Tag .. ' to ' .. p_UpdateData.tag)
+	print('[ + ] Download: ' .. p_UpdateUrl)
 end
 
 -- Check for the latest version
@@ -65,33 +65,33 @@ local function CheckVersion()
 	
 	-- Get the appropriate URL for the API based on the user configurations input.
 	-- Default to the stable URL
-	local s_endpointURL = ApiUrls.stable -- Defaulting to the stable URL
-	local s_endpointType = 0 -- A number we can track so we know which type we used
+	local s_EndpointURL = ApiUrls.stable -- Defaulting to the stable URL
+	local s_EndpointType = 0 -- A number we can track so we know which type we used
 
 	if Config.AutoUpdater.ReleaseCycle == "RC" then -- Release Candidates (or pre-releases)
-		s_endpointURL = ApiUrls.pre_release
-		s_endpointType = 1
+		s_EndpointURL = ApiUrls.pre_release
+		s_EndpointType = 1
 	end
 
 	if Config.AutoUpdater.ReleaseCycle == "DEV" then -- Development builds (Github tags)
-		s_endpointURL = ApiUrls.dev
-		s_endpointType = 2
+		s_EndpointURL = ApiUrls.dev
+		s_EndpointType = 2
 	end
 
 	-- Make a HTTP request to the REST API
-	local s_endpointResponse = Net:GetHTTP(s_endpointURL)
+	local s_endpointResponse = Net:GetHTTP(s_EndpointURL)
 
 	-- Check if response is not nil
 	if s_endpointResponse == nil then
-		updateFinished(s_endpointType, false, false, nil, nil, nil) -- TODO: Awaiting the debugging refactor to make a throwable error
+		UpdateFinished(s_EndpointType, false, false, nil, nil, nil) -- TODO: Awaiting the debugging refactor to make a throwable error
 		do return end
 	end
 
 	-- Parse JSON
-	local s_endpointJSON = json.decode(s_endpointResponse.body)
+	local s_EndpointJSON = json.decode(s_endpointResponse.body)
 
-	if s_endpointJSON == nil then
-		updateFinished(s_endpointType, false, false, nil, nil, nil)
+	if s_EndpointJSON == nil then
+		UpdateFinished(s_EndpointType, false, false, nil, nil, nil)
 		do return end
 	end
 
@@ -99,23 +99,23 @@ local function CheckVersion()
 	-- @ToDo: Make the current version better as it currently checks strings. It should check an incremental value instead.
 
  	-- Stable and release candidates follow the same body
-	if (s_endpointType == 0) or (s_endpointType == 1) then
-		if Config.Version.Tag == s_endpointJSON['tag_name'] then
-			updateFinished(s_endpointType, true, false, nil, nil, nil)
+	if (s_EndpointType == 0) or (s_EndpointType == 1) then
+		if Config.Version.Tag == s_EndpointJSON['tag_name'] then
+			UpdateFinished(s_EndpointType, true, false, nil, nil, nil)
 			do return end
 		end
 
-		updateFinished(s_endpointType, true, true, s_endpointJSON['html_url'], {tag = s_endpointJSON['tag_name'], relTimestamp = s_endpointJSON['published_at']}, nil)
+		UpdateFinished(s_EndpointType, true, true, s_EndpointJSON['html_url'], {tag = s_EndpointJSON['tag_name'], relTimestamp = s_EndpointJSON['published_at']}, nil)
 	end
 
 	 -- Development builds (tags)
-	if (s_endpointType == 2) then
-		if Config.Version.Tag:gsub("V", "") == s_endpointJSON[1]['name']:gsub("V", "") then
-			updateFinished(s_endpointType, true, false, nil, nil, nil)
+	if (s_EndpointType == 2) then
+		if Config.Version.Tag:gsub("V", "") == s_EndpointJSON[1]['name']:gsub("V", "") then
+			UpdateFinished(s_EndpointType, true, false, nil, nil, nil)
 			do return end
 		end
 
-		updateFinished(s_endpointType, true, true, s_endpointJSON[1]['zipball_url'], {tag = s_endpointJSON[1]['name']}, nil)
+		UpdateFinished(s_EndpointType, true, true, s_EndpointJSON[1]['zipball_url'], {tag = s_EndpointJSON[1]['name']}, nil)
 	end
 end
 

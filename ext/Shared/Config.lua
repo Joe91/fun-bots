@@ -23,7 +23,7 @@ Config = {
 		-- RC - Release candidates (also known as pre-releases, snapshots, etc) are semi-tested releases.
 		-- DEV - Recommended only when testing fun-bots on a private development server.
 		--
-		ReleaseCycle = "STABLE" -- default: STABLE (recommended)
+		ReleaseCycle = "RC" -- default: STABLE (recommended)
 	},
 
 	--GENERAL
