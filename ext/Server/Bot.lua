@@ -353,6 +353,10 @@ function Bot:GetWayIndex()
 	return self._PathIndex
 end
 
+function Bot:GetPointIndex()
+	return self._CurrentWayPoint
+end
+
 function Bot:GetTargetPlayer()
 	return self._TargetPlayer
 end

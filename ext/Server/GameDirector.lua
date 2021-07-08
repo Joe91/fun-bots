@@ -1,7 +1,11 @@
 class('GameDirector')
 
 local m_NodeCollection = require('__shared/NodeCollection')
+local m_Utilities = require('__shared/Utilities')
 local m_Logger = Logger("GameDirector", Debug.Server.GAMEDIRECTOR)
+
+local PROBABILITY_SQUADMATE_SPAWN = 80
+local PROBABILITY_BASE_SPAWN = 20
 
 function GameDirector:__init()
 	self:RegisterVars()
@@ -80,7 +84,7 @@ function GameDirector:OnCapturePointCaptured(p_CapturePoint)
 	end
 
 	m_Logger:Write('GameDirector:_onCapture: '..s_ObjectiveName)
-	m_Logger:Write('self.CurrentAssignedCount: '..g_Utilities:dump(s_Objective.assigned, true))
+	m_Logger:Write('self.CurrentAssignedCount: '..m_Utilities:dump(s_Objective.assigned, true))
 
 	for l_BotTeam, l_Bots in pairs(self.m_BotsByTeam) do
 		for i = 1, #l_Bots do
@@ -329,7 +333,7 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 end
 
 function GameDirector:OnVehicleEnter(p_Entity, p_Player)
-	if not Utilities:isBot(p_Player) then
+	if not m_Utilities:isBot(p_Player) then
 		p_Entity = ControllableEntity(p_Entity)
 		self:_SetVehicleObjectiveState(p_Entity.transform.trans, false)
 	end
@@ -410,6 +414,23 @@ function GameDirector:FindClosestPath(p_Trans, p_VehiclePath)
 end
 
 function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
+	-- check for spawn at squad-mate
+	local s_SquadMates = PlayerManager:GetPlayersBySquad(p_TeamId, p_SquadId)
+	for _,l_Player in pairs(s_SquadMates) do
+		if l_Player.soldier ~= nil and m_Utilities:isBot(l_Player) then
+			local s_SquadBot = g_BotManager:GetBotByName(l_Player.name)
+			if not s_SquadBot.m_InVehicle then
+				local s_WayIndex = s_SquadBot:GetWayIndex()
+				local s_PointIndex = s_SquadBot:GetPointIndex()
+				if MathUtils:GetRandomInt(1, 100) <= PROBABILITY_SQUADMATE_SPAWN then
+					return s_WayIndex, s_PointIndex
+				else
+					break
+				end
+			end
+		end
+	end
+
 	-- find referece-objective
 	local s_ReferenceObjective = nil
 
@@ -483,7 +504,7 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 
 	-- spawn in base from time to time to get a vehicle
 	-- TODO: do this dependant of vehicle available
-	if not p_OnlyBase and #s_PossibleBases > 0 and MathUtils:GetRandomInt(0, 100) < 10 then
+	if not p_OnlyBase and #s_PossibleBases > 0 and MathUtils:GetRandomInt(1, 100) <= PROBABILITY_BASE_SPAWN then
 		m_Logger:Write("spwawn at base because of randomness")
 		local s_PathIndex = s_PossibleBases[MathUtils:GetRandomInt(1, #s_PossibleBases)]
 		return s_PathIndex, MathUtils:GetRandomInt(1, #m_NodeCollection:Get(nil, s_PathIndex))
@@ -516,9 +537,16 @@ function GameDirector:GetSpawnPathOfObjectives(p_PossibleObjectives)
 	local s_AvailableSpawnPaths = nil
 
 	for _, l_Objective in pairs(self.m_AllObjectives) do
-		if l_Objective.isSpawnPath and string.find(l_Objective.name, s_TempObject.name) ~= nil then
-			s_AvailableSpawnPaths = l_Objective.name
-			break
+		if l_Objective.isSpawnPath then
+			for _,name in pairs(l_Objective.name:split(" ")) do
+				if name == s_TempObject.name then
+					s_AvailableSpawnPaths = l_Objective.name
+					break
+				end
+			end
+			if s_AvailableSpawnPaths ~= nil then
+				break
+			end
 		end
 	end
 	-- check for spawn objectives
