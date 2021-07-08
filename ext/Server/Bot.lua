@@ -161,6 +161,10 @@ function Bot:Revive(p_Player)
 	end
 end
 
+function Bot:EnterVehicleOfPlayer(p_Player)
+	-- TODO: fill with code
+end
+
 function Bot:ShootAt(p_Player, p_IgnoreYaw)
 	if self._ActionActive or self._ReviveActive or self._GrenadeActive then
 		return false
