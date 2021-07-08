@@ -18,8 +18,8 @@ The following version(s) are currently supported.
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 2.0.0.x     | :white_check_mark: |
-| 1.5.0.3     | :white_check_mark: |
+| 2.1.0     | :white_check_mark: |
+| 2.1.0     | :white_check_mark: |
 | < 2.0.0.x   | :x:                |
 
 ## Comments on this policy
