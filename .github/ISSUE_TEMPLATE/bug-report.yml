@@ -26,13 +26,11 @@ body:
     id: version
     attributes:
       label: Version
-      description: What version of fun-bots does this issue occur on? Please note that we do not support old versions.
+      description: What version of fun-bots does this issue occur on? Please note that we do not support old versions. Select the correct version.
       options:
-        - < 1.5.x
-        - 1.5.0.3 (Latest release)
-        - 1.6.x
-        - 1.7.x
-        - 2.0.0.x (Pre-Releases)
+        - 2.0.0.x (Deprecated version)
+        - 2.1.0 (Latest release)
+        - 2.1.x (Development builds)
     validations:
       required: true
   - type: textarea
