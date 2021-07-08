@@ -1,3 +1,5 @@
+[![Support Server](https://img.shields.io/discord/862736286774198322.svg?label=Discord&logo=Discord&colorB=7289da&style=for-the-badge)](https://discord.gg/K44VsQsKnx)
+
 Welcome to the fun-bots repository. This is a mod for [Venice Unleashed](https://veniceunleashed.net/) to bring highly configurable and intelligent virtual bots to your Battlefield 3 server.
 
 ### :robot: BEEP BOOP BEEP
