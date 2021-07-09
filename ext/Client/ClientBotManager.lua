@@ -14,7 +14,6 @@ function ClientBotManager:RegisterVars()
 	self.m_LastIndex = 1
 	self.m_Player = nil
 	self.m_ReadyToUpdate = false
-	self.m_LastCommoState = false
 end
 
 -- =============================================
@@ -22,11 +21,7 @@ end
 -- =============================================
 
 function ClientBotManager:OnClientUpdateInput(p_DeltaTime)
-	local s_Comm1 = InputManager:GetLevel(InputConceptIdentifiers.ConceptCommMenu1) > 0
-	local s_Comm2 = InputManager:GetLevel(InputConceptIdentifiers.ConceptCommMenu2) > 0
-	local s_Comm3 = InputManager:GetLevel(InputConceptIdentifiers.ConceptCommMenu3) > 0
-	local s_CommButtonDown = (s_Comm1 or s_Comm2 or s_Comm3)
-	if self.m_LastCommoState == true and s_CommButtonDown == false then
+	if InputManager:WentKeyDown(InputDeviceKeys.IDK_Q) then
 		--execute Vehicle Enter Detection here
 		if self.m_Player ~= nil and self.m_Player.inVehicle then
 			local s_Transform = ClientUtils:GetCameraTransform()
@@ -41,7 +36,7 @@ function ClientBotManager:OnClientUpdateInput(p_DeltaTime)
 			local s_Raycast = RaycastManager:Raycast(s_Transform.trans, s_CastPosition, RayCastFlags.DontCheckWater | RayCastFlags.IsAsyncRaycast)
 			if s_Raycast ~= nil and s_Raycast.rigidBody:Is("CharacterPhysicsEntity") then
 				-- find teammate at this position
-				for _,l_Player in pairs(PlayerManager:GetPlayersByTeam(PlayerManager:GetPlayersByTeam(self.m_Player.teamId))) do
+				for _,l_Player in pairs(PlayerManager:GetPlayersByTeam(self.m_Player.teamId)) do
 					if l_Player.soldier ~= nil and m_Utilities:isBot(l_Player) and l_Player.soldier.worldTransform.trans:Distance(s_Raycast.position) < 2 then
 						NetEvents:SendLocal('Client:RequestEnterVehicle', l_Player.name)
 						break
@@ -50,7 +45,6 @@ function ClientBotManager:OnClientUpdateInput(p_DeltaTime)
 			end
 		end
 	end
-	self.m_LastCommoState = s_CommButtonDown
 end
 
 function ClientBotManager:OnEngineMessage(p_Message)

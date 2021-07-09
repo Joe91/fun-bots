@@ -369,7 +369,6 @@ function FunBotServer:OnRequestEnterVehicle(p_Player, p_BotName)
 	m_BotManager:OnRequestEnterVehicle(p_Player, p_BotName)
 end
 
-
 function FunBotServer:OnConsoleCommandSetConfig(p_Player, p_Name, p_Value)
 	m_Console:OnConsoleCommandSetConfig(p_Player, p_Name, p_Value)
 end

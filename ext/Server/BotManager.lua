@@ -269,7 +269,7 @@ end
 
 function BotManager:OnRequestEnterVehicle(p_Player, p_BotName)
 	local s_Bot = self:GetBotByName(p_BotName)
-	if s_Bot ~= nil and s_Bot.soldier ~= nil then
+	if s_Bot ~= nil and s_Bot.m_Player.soldier ~= nil then
 		s_Bot:EnterVehicleOfPlayer(p_Player)
 	end
 end
