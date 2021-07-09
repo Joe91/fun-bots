@@ -1,11 +1,18 @@
 🥳 Welcome to the changelogs 🥳
-Thi[s document contains recent changes.
 
 #### Legend
 `+` is an addition
 `-` is a removal
 `*` is a change
 `!` is a bugfix
+
+#### `V2.2.0-dev1` (09-07-2021 - dev build)
+`+` Bots can now respawn on other bots on the same squad [#113](https://github.com/Joe91/fun-bots/issues/113)
+`!` Fixed a typo in WeaponList [#124](https://github.com/Joe91/fun-bots/issues/124)
+
+## `V2.1.0` (08-07-2021 - release)
+`+` Added configuration option: aim for head separated for snipers and normal bots ([#100](https://github.com/Joe91/fun-bots/issues/100))
+`+` New updating system allowing 3 different update flows
 
 ## `V2.1.0-RC1` (03-07-2021 - release candidate)
 This is a release candidate and may not be stable. [Download](https://github.com/Joe91/fun-bots/archive/V2.0.0.6.zip)
