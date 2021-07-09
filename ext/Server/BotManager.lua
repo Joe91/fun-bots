@@ -34,6 +34,31 @@ function BotManager:OnLevelDestroy()
 	--self:KillAll() -- this crashes when the server ended. do it on levelstart instead
 end
 
+function BotManager:OnPlayerRespawn(p_Player)
+	local s_Players = {}
+	local s_Iterator = EntityManager:GetIterator("ServerSoldierEntity")
+	local s_Entity = s_Iterator:Next()
+
+	print("check all soldiers")
+
+	while s_Entity ~= nil do
+		local s_Soldier = SoldierEntity(s_Entity)
+		local s_PlayerName = s_Soldier.player.name
+		if s_Players[s_PlayerName] ~= nil then
+			print("multiple soldiers at one player")
+			s_Soldier:Kill()
+			local s_Player = PlayerManager:GetPlayersByName(s_PlayerName)
+			if s_Player ~= nil then
+				s_Player.soldier:Kill()
+			end
+			print("tried to kill both of them")
+		else
+			s_Players[s_PlayerName] = true
+		end
+		s_Entity = s_Iterator:Next()
+	end
+end
+
 function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	if p_UpdatePass ~= UpdatePass.UpdatePass_PostFrame then
 		return
@@ -526,6 +551,13 @@ end
 function BotManager:SpawnBot(p_Bot, p_Transform, p_Pose, p_SoldierBp, p_Kit, p_Unlocks)
 	if p_Bot.m_Player.soldier ~= nil then
 		p_Bot.m_Player.soldier:Kill()
+		if p_Bot.m_Player.soldier ~= nil then
+			p_Bot.m_Player.soldier = nil
+		end
+	end
+
+	if p_Bot.m_Player.corpse ~= nil then
+		p_Bot.m_Player.corpse = nil
 	end
 
 	p_Bot.m_Player:SelectUnlockAssets(p_Kit, p_Unlocks)
