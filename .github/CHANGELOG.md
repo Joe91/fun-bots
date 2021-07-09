@@ -7,11 +7,11 @@
 `!` is a bugfix
 
 #### `V2.2.0-dev1` (09-07-2021 - dev build)
-`+` Bots can now respawn on other bots on the same squad [#113](https://github.com/Joe91/fun-bots/issues/113)
+`+` Bots can now respawn on other bots on the same squad [#113](https://github.com/Joe91/fun-bots/issues/113)<br>
 `!` Fixed a typo in WeaponList [#124](https://github.com/Joe91/fun-bots/issues/124)
 
 ## `V2.1.0` (08-07-2021 - release)
-`+` Added configuration option: aim for head separated for snipers and normal bots ([#100](https://github.com/Joe91/fun-bots/issues/100))
+`+` Added configuration option: aim for head separated for snipers and normal bots ([#100](https://github.com/Joe91/fun-bots/issues/100))<br>
 `+` New updating system allowing 3 different update flows
 
 ## `V2.1.0-RC1` (03-07-2021 - release candidate)
