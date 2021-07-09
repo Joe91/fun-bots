@@ -281,13 +281,13 @@ function WeaponList:__init()
 	s_Weapon = Weapon('M4A1_RX01', '', {'RX01', 'HeavyBarrel', 'Foregrip'}, WeaponTypes.Carabine, 'Weapons/M4A1/U_M4A1')
 	table.insert(self._weapons, s_Weapon)
 	
-	s_Weapon = Weapon('M4A1_Kobra', '', {'RX01', 'HeavyBarrel', 'Foregrip'}, WeaponTypes.Carabine, 'Weapons/M4A1/U_M4A1')
+	s_Weapon = Weapon('M4A1_Kobra', '', {'Kobra', 'HeavyBarrel', 'Foregrip'}, WeaponTypes.Carabine, 'Weapons/M4A1/U_M4A1')
 	table.insert(self._weapons, s_Weapon)
 
 	s_Weapon = Weapon('M4_RX01', '', {'RX01', 'HeavyBarrel', 'Foregrip'}, WeaponTypes.Carabine, 'Weapons/M4A1/U_M4')
 	table.insert(self._weapons, s_Weapon)
 	
-	s_Weapon = Weapon('M4_Kobra', '', {'RX01', 'HeavyBarrel', 'Foregrip'}, WeaponTypes.Carabine, 'Weapons/M4A1/U_M4')
+	s_Weapon = Weapon('M4_Kobra', '', {'Kobra', 'HeavyBarrel', 'Foregrip'}, WeaponTypes.Carabine, 'Weapons/M4A1/U_M4')
 	table.insert(self._weapons, s_Weapon)
 
 	s_Weapon = Weapon('MTAR_RX01', 'XP2', {'RX01', 'HeavyBarrel', 'Foregrip', 'Weapons/XP2_MTAR/U_MTAR_CAMO_1'}, WeaponTypes.Carabine, 'Weapons/XP2_MTAR/U_MTAR')
@@ -325,13 +325,13 @@ function WeaponList:__init()
 	s_Weapon = Weapon('LSAT_RX01', 'XP2', {'RX01', 'HeavyBarrel', 'Foregrip', 'Weapons/XP2_LSAT/U_LSAT_CAMO_1'},WeaponTypes.LMG, 'Weapons/XP2_LSAT/U_LSAT')
 	table.insert(self._weapons, s_Weapon)
 
-   s_Weapon = Weapon('LSAT_Kobra', 'XP2', {'Kobra', 'HeavyBarrel', 'Foregrip', 'Weapons/XP2_LSAT/U_LSAT_CAMO_2'},WeaponTypes.LMG, 'Weapons/XP2_LSAT/U_LSAT')
+	s_Weapon = Weapon('LSAT_Kobra', 'XP2', {'Kobra', 'HeavyBarrel', 'Foregrip', 'Weapons/XP2_LSAT/U_LSAT_CAMO_2'},WeaponTypes.LMG, 'Weapons/XP2_LSAT/U_LSAT')
 	table.insert(self._weapons, s_Weapon)
 
 	s_Weapon = Weapon('M249_RX01', '', {'RX01', 'ExtendedMag', 'Foregrip'},WeaponTypes.LMG, 'Weapons/M249/U_M249')
 	table.insert(self._weapons, s_Weapon)
 
-   s_Weapon = Weapon('M249_Kobra', '', {'Kobra', 'ExtendedMag', 'Foregrip'},WeaponTypes.LMG, 'Weapons/M249/U_M249')
+	s_Weapon = Weapon('M249_Kobra', '', {'Kobra', 'ExtendedMag', 'Foregrip'},WeaponTypes.LMG, 'Weapons/M249/U_M249')
 	table.insert(self._weapons, s_Weapon)
 
 	s_Weapon = Weapon('M27IAR_RX01', '', {'RX01', 'HeavyBarrel', 'Foregrip'},WeaponTypes.LMG, 'Weapons/M27IAR/U_M27IAR')
@@ -441,7 +441,7 @@ function WeaponList:__init()
 	s_Weapon = Weapon('HK417_EOTech', 'XP2', {'EOTech', 'Target_pointer', 'HeavyBarrel'}, WeaponTypes.Sniper, 'Weapons/XP2_HK417/U_HK417')
 	table.insert(self._weapons, s_Weapon)
 
-s_Weapon = Weapon('HK417_Acog', 'XP2', {'Acog', 'Target_pointer', 'HeavyBarrel'}, WeaponTypes.Sniper, 'Weapons/XP2_HK417/U_HK417')
+	s_Weapon = Weapon('HK417_Acog', 'XP2', {'Acog', 'Target_pointer', 'HeavyBarrel'}, WeaponTypes.Sniper, 'Weapons/XP2_HK417/U_HK417')
 	table.insert(self._weapons, s_Weapon)
 	
 	s_Weapon = Weapon('HK417_RifleScope', 'XP2', {'Rifle_Scope', 'Target_pointer', 'HeavyBarrel'}, WeaponTypes.Sniper, 'Weapons/XP2_HK417/U_HK417')
@@ -516,7 +516,7 @@ s_Weapon = Weapon('HK417_Acog', 'XP2', {'Acog', 'Target_pointer', 'HeavyBarrel'}
 	s_Weapon = Weapon('Taurus44', '', {}, WeaponTypes.Pistol, 'Weapons/Taurus44/U_Taurus44')
 	table.insert(self._weapons, s_Weapon)
 
-   s_Weapon = Weapon('Taurus44_Scoped', '', {}, WeaponTypes.Pistol, 'Weapons/Taurus44/U_Taurus44_Scoped')
+	s_Weapon = Weapon('Taurus44_Scoped', '', {}, WeaponTypes.Pistol, 'Weapons/Taurus44/U_Taurus44_Scoped')
 	table.insert(self._weapons, s_Weapon)
 
 	s_Weapon = Weapon('MP443', '', {}, WeaponTypes.Pistol, 'Weapons/MP443/U_MP443')
