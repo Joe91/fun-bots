@@ -332,6 +332,23 @@ function BotSpawner:UpdateBotAmountAndTeam()
 				m_BotManager:KillAll(s_TeamCount[i] - s_TargetTeamCount[i], i)
 			end
 		end
+
+		-- move players if needed
+		local s_MinTargetPlayersPerTeam = math.floor(s_PlayerCount / Globals.NrOfTeams)
+		for i = 1, Globals.NrOfTeams do
+			if s_PlayerCount[i] < s_MinTargetPlayersPerTeam then
+				for _,l_Player in pairs(PlayerManager:GetPlayers()) do
+					if l_Player.soldier == nil and l_Player.teamId ~= i then
+						l_Player.teamId = i
+						s_PlayerCount[i] = s_PlayerCount[i] + 1
+					end
+					if s_PlayerCount[i] >= s_MinTargetPlayersPerTeam then
+						break
+					end
+				end
+			end
+		end
+
 	-- BALANCED teams
 	elseif Globals.SpawnMode == SpawnModes.balanced_teams then
 		local s_maxPlayersInOneTeam = 0
