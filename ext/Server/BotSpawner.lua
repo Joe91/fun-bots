@@ -1358,7 +1358,7 @@ function BotSpawner:_SetBotWeapons(p_Bot, p_BotKit, p_NewWeapons)
 		end
 	end
 
-	if Config.BotWeapon == BotWeapons.Priamry or Config.BotWeapon == BotWeapons.Auto then
+	if Config.BotWeapon == BotWeapons.Primary or Config.BotWeapon == BotWeapons.Auto then
 		p_Bot.m_ActiveWeapon = p_Bot.m_Primary
 	elseif Config.BotWeapon == BotWeapons.Pistol then
 		p_Bot.m_ActiveWeapon = p_Bot.m_Pistol
