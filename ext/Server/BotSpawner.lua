@@ -339,8 +339,10 @@ function BotSpawner:UpdateBotAmountAndTeam()
 			if s_PlayerCount[i] < s_MinTargetPlayersPerTeam then
 				for _,l_Player in pairs(PlayerManager:GetPlayers()) do
 					if l_Player.soldier == nil and l_Player.teamId ~= i then
+						local s_OldTeam = l_Player.teamId
 						l_Player.teamId = i
 						s_PlayerCount[i] = s_PlayerCount[i] + 1
+						s_PlayerCount[s_OldTeam] = s_PlayerCount[s_OldTeam] - 1
 					end
 					if s_PlayerCount[i] >= s_MinTargetPlayersPerTeam then
 						break
