@@ -336,15 +336,15 @@ function BotSpawner:UpdateBotAmountAndTeam()
 		-- move players if needed
 		local s_MinTargetPlayersPerTeam = math.floor(s_PlayerCount / Globals.NrOfTeams)
 		for i = 1, Globals.NrOfTeams do
-			if s_PlayerCount[i] < s_MinTargetPlayersPerTeam then
+			if s_CountPlayers[i] < s_MinTargetPlayersPerTeam then
 				for _,l_Player in pairs(PlayerManager:GetPlayers()) do
 					if l_Player.soldier == nil and l_Player.teamId ~= i then
 						local s_OldTeam = l_Player.teamId
 						l_Player.teamId = i
-						s_PlayerCount[i] = s_PlayerCount[i] + 1
-						s_PlayerCount[s_OldTeam] = s_PlayerCount[s_OldTeam] - 1
+						s_CountPlayers[i] = s_CountPlayers[i] + 1
+						s_CountPlayers[s_OldTeam] = s_CountPlayers[s_OldTeam] - 1
 					end
-					if s_PlayerCount[i] >= s_MinTargetPlayersPerTeam then
+					if s_CountPlayers[i] >= s_MinTargetPlayersPerTeam then
 						break
 					end
 				end
