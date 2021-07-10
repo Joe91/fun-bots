@@ -91,6 +91,17 @@ SettingsDefinition = {
 			Category = "DIFFICULTY"
 		},
 		{
+			Name = "BotSupportAimWorsening",
+			Text = "Bot Aim Worsening of Support",
+			Type = Type.Float,
+			Value = Config.BotSupportAimWorsening,
+			Description = "see botAimWorsening, only for Support",
+			Reference = Range(0.00, 10.00, 0,05),
+			Default = 0.2,
+			UpdateFlag = UpdateFlag.Weapons,
+			Category = "DIFFICULTY"
+		},
+		{
 			Name = "BotWorseningSkill",
 			Text = "Bot Worsening Skill",
 			Type = Type.Float,
@@ -874,6 +885,16 @@ SettingsDefinition = {
 			Type = Type.Boolean,
 			Value = Config.AimForHeadSniper,
 			Description = "bots with sniper aim for the head. More an experimental config",
+			Default = false,
+			UpdateFlag = UpdateFlag.None,
+			Category = "ADVANCED"
+		},
+		{
+			Name = "AimForHeadSupport",
+			Text = "Bots with Support LMGs aim for head",
+			Type = Type.Boolean,
+			Value = Config.AimForHeadSupport,
+			Description = "bots with support LMGs aim for the head. More an experimental config",
 			Default = false,
 			UpdateFlag = UpdateFlag.None,
 			Category = "ADVANCED"
