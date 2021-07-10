@@ -665,9 +665,6 @@ function Bot:_UpdateAiming()
 		-- worsen yaw and pitch depending on bot-skill
 		if not self.m_InVehicle then
 			local s_WorseningValue = (math.random()*self._Skill/self._DistanceToPlayer) -- value scaled in offset in 1m
-			if self.m_ActiveWeapon.type == WeaponTypes.Sniper then
-				s_WorseningValue = s_WorseningValue/2
-			end
 			s_Yaw = s_Yaw + s_WorseningValue
 			s_Pitch = s_Pitch + s_WorseningValue
 		end
