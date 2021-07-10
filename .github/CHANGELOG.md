@@ -1,6 +1,10 @@
-🥳 Welcome to the changelogs for release **V2.2.0** 🥳
+[![Support Server](https://img.shields.io/discord/862736286774198322.svg?label=Discord&logo=Discord&colorB=7289da&style=for-the-badge)](https://discord.gg/K44VsQsKnx)
+![Image](https://img.shields.io/github/downloads/Joe91/fun-bots/total?style=for-the-badge)
+![Image](https://img.shields.io/github/stars/Joe91/fun-bots?style=for-the-badge)
 
-This is the changelog for the unreleased version.
+## 🥳 Welcome to the changelogs for release **V2.2.0** 🥳
+
+This is the changelog for the unreleased version. Don't forget to [join us on Discord](https://discord.gg/K44VsQsKnx)
 
 | Symbol  | Description |
 | ------------- | ------------- |
@@ -9,7 +13,7 @@ This is the changelog for the unreleased version.
 | !  | a bugfix  |
 | -  | a removal of a feature or enhancement  |
 
-# Changelog
+## Changelog
 This release contains a lot of small bug fixes and more QoL updates.
 
 `+` [#134](https://github.com/Joe91/fun-bots/pull/134) Added configuration option for `AimForHeadSupport` and `BotSupportAimWorsening`<br>
