@@ -242,8 +242,6 @@ function BotSpawner:CheckSoldiers()
 	local s_Iterator = EntityManager:GetIterator("ServerSoldierEntity")
 	local s_Entity = s_Iterator:Next()
 
-	print("check all soldiers")
-
 	while s_Entity ~= nil do
 		s_Entity = SoldierEntity(s_Entity)
 		if s_Entity.player == nil then

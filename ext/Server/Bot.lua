@@ -455,7 +455,12 @@ end
 function Bot:Destroy()
 	self:ResetVars()
 	self.m_Player.input = nil
-
+	if self.m_Player.soldier ~= nil then
+		self.m_Player.soldier:Destroy()
+	end
+	if self.m_Player.corpse ~= nil then
+		self.m_Player.corpse:Destroy()
+	end
 	PlayerManager:DeletePlayer(self.m_Player)
 	self.m_Player = nil
 end
