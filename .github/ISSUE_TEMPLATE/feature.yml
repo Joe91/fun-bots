@@ -10,7 +10,14 @@ body:
     id: feature
     attributes:
       label: Requested feature
-      description: What would you like to see added? In which situations would this be helpful?
+      description: What would you like to see added?
+    validations:
+      required: true
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use case
+      description: Explain in what situations this new feature can be used for, what does it improve or change? Give us an example?
     validations:
       required: true
   - type: checkboxes
