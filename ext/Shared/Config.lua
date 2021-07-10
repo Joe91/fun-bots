@@ -29,7 +29,7 @@ Config = {
 	--DIFFICULTY
 	BotAimWorsening = 0.5,				-- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy).
 	BotSniperAimWorsening = 0.2,		-- see botAimWorsening, only for Sniper-rifles
-	BotSupportAimWorsening = 0.2,		-- see botAimWorsening, only for Support.
+	BotSupportAimWorsening = 0.2,		-- see botAimWorsening, only for LMGs
 	BotWorseningSkill = 0.25,			-- variation of the skill of a single bot. the higher, the worse the bots can get compared to the original settings
 	DamageFactorAssault = 0.5,			-- original Damage from bots gets multiplied by this
 	DamageFactorCarabine = 0.5,			-- original Damage from bots gets multiplied by this
@@ -41,12 +41,12 @@ Config = {
 	DamageFactorKnife = 1.5,			-- original Damage from bots gets multiplied by this
 
 	--SPAWN
-	SpawnMode = SpawnModes.keep_playercount,	-- mode the bots spawn with
+	SpawnMode = SpawnModes.balanced_teams,	-- mode the bots spawn with
 	TeamSwitchMode = TeamSwitcheModes.SwitchForRoundTwo,	-- Mode to switch the team
 	SpawnInBothTeams = true,			-- Bots spawn in both teams
-	InitNumberOfBots = 20,				-- bots for spawnmode
+	InitNumberOfBots = 6,				-- bots for spawnmode
 	NewBotsPerNewPlayer = 1.6,			-- number to increase Bots, when new players join
-	FactorPlayerTeamCount = 1.0,		-- reduce playerteam in balanced_teams or fixed_number mode
+	FactorPlayerTeamCount = 0.8,		-- reduce playerteam in balanced_teams or fixed_number mode
 	BotTeam = 0,						-- default bot team (0 = neutral / auto, 1 = US, 2 = RU) TeamId.Team2
 	BotNewLoadoutOnSpawn = true,		-- bots get a new kit and color, if they respawn
 	MaxAssaultBots = -1,				-- maximum number of Bots with Assault Kit. -1 = no limit
