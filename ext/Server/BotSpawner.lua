@@ -81,7 +81,7 @@ function BotSpawner:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 		if self._PlayerUpdateTimer > 2 then
 			self._PlayerUpdateTimer = 0
 			self:UpdateBotAmountAndTeam()
-			self:CheckSoldiers()
+			--self:CheckSoldiers()
 		end
 	end
 
