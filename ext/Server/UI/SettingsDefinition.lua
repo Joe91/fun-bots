@@ -107,8 +107,19 @@ SettingsDefinition = {
 			Type = Type.Float,
 			Value = Config.BotWorseningSkill,
 			Description = "variation of the skill of a single bot. the higher, the worse the bots can get compared to the original settings",
-			Reference = Range(0.00, 0.50, 0,05),
+			Reference = Range(0.00, 1.00, 0,05),
 			Default = 0.25,
+			UpdateFlag = UpdateFlag.None,
+			Category = "DIFFICULTY"
+		},
+		{
+			Name = "BotSniperWorseningSkill",
+			Text = "Bot Sniper Worsening Skill",
+			Type = Type.Float,
+			Value = Config.BotSniperWorseningSkill,
+			Description = "see BotWorseningSkill - only for BOTs using sniper bolt-action rifles.",
+			Reference = Range(0.00, 3.00, 0,05),
+			Default = 0.50,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
