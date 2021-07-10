@@ -129,8 +129,8 @@ Config = {
 
 	--EXPERT
 	BotFirstShotDelay = 0.35,			-- delay for first shot. If too small, there will be great spread in first cycle because its not kompensated jet.
-	BotMinTimeShootAtPlayer = 2.0,		-- the minimum time a bot shoots at one player
-	BotFireModeDuration = 5.0,			-- the minimum time a bot tries to shoot a player
+	BotMinTimeShootAtPlayer = 2.0,		-- the minimum time a bot shoots at one player - recommended minimum 1.5, below this you will have issues.
+	BotFireModeDuration = 5.0,			-- the minimum time a bot tries to shoot a player - recommended minimum 3.0, below this you will have issues.
 	MaximunYawPerSec = 450,				-- in Degree. Rotaion-Movement per second.
 	TargetDistanceWayPoint = 0.8,		-- distance the bots have to reach to continue with next Waypoint
 	KeepOneSlotForPlayers = true,		-- always keep one slot for new Players to join
