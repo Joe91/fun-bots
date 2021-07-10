@@ -10,13 +10,13 @@ This is the changelog for the unreleased version. Don't forget to [join us on Di
 This release contains a lot of small bug fixes and more QoL updates.
 
 ### ⚙️ Exciting new features
-`+` [#134](https://github.com/Joe91/fun-bots/pull/134) Added configuration option for `AimForHeadSupport` and `BotSupportAimWorsening`<br>
-`+` [#132](https://github.com/Joe91/fun-bots/pull/132) Added extra notes to the configuration file<br>
-`+` [#113](https://github.com/Joe91/fun-bots/issues/113) Bots can now respawn on other bots on the same squad
+- [#134](https://github.com/Joe91/fun-bots/pull/134) Added configuration option for `AimForHeadSupport` and `BotSupportAimWorsening`<br>
+- [#132](https://github.com/Joe91/fun-bots/pull/132) Added extra notes to the configuration file<br>
+- [#113](https://github.com/Joe91/fun-bots/issues/113) Bots can now respawn on other bots on the same squad
 
 ### 📝 Changes and enhancements
-`*` [#137](https://github.com/Joe91/fun-bots/pull/137) Auto updater now follows a better release cycle <br>
-`*` The `mod.json` is updated
+- [#137](https://github.com/Joe91/fun-bots/pull/137) Auto updater now follows a better release cycle <br>
+- The `mod.json` is updated
 
 ### 🐛 Minor bug fixes
 - [#129](https://github.com/Joe91/fun-bots/pull/129) Fixed typo `BotWeapons.Priamry` in `BotSpawner.lua`<br>
