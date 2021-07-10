@@ -1,6 +1,5 @@
 class('FunBotServer')
 
-require('__shared/Version')
 require('__shared/Debug')
 require('__shared/Config')
 require('__shared/Constants/BotColors')

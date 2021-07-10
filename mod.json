@@ -8,6 +8,6 @@
 	"Tags": ["funbots", "fun-bots", "bots"],
 	"HasVeniceEXT": true,
 	"Dependencies": {
-		"veniceext": ">=1.0.8"
+		"veniceext": ">=1.1.0"
 	}
 }

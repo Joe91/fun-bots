@@ -12,18 +12,12 @@ Config = {
 	DebugLevel = 4, -- default: 4 (recommended)
 
 	AutoUpdater = {
-		--
 		-- Enabling the auto updater will show you a notification when a new update for fun-bots is available for download.
 		-- Please note that we do not support outdated versions.
 		Enabled = true, -- default: true (recommended)
-	
-		--
-		-- Set the release cycle on which you want to receive update notifications.
-		-- STABLE (Recommended) - Stable releases recommended on public servers.
-		-- RC - Release candidates (also known as pre-releases, snapshots, etc) are semi-tested releases.
-		-- DEV - Recommended only when testing fun-bots on a private development server.
-		--
-		ReleaseCycle = "RC" -- default: RC (recommended)
+
+		-- Do you want notifications when newer development builds are available?
+		DevBuilds = true,
 	},
 
 	--GENERAL
