@@ -564,6 +564,8 @@ function Bot:_UpdateAiming()
 			local s_AimForHead = false
 			if self.m_ActiveWeapon.Type == WeaponTypes.Sniper then
 				s_AimForHead = Config.AimForHeadSniper
+			elseif self.m_ActiveWeapon.Type == WeaponTypes.LMG then
+				s_AimForHead = Config.AimForHeadSupport
 			else
 				s_AimForHead = Config.AimForHead
 			end

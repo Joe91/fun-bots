@@ -35,6 +35,7 @@ Config = {
 	--DIFFICULTY
 	BotAimWorsening = 0.5,				-- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy).
 	BotSniperAimWorsening = 0.2,		-- see botAimWorsening, only for Sniper-rifles
+	BotSupportAimWorsening = 0.2,		-- see botAimWorsening, only for Support.
 	BotWorseningSkill = 0.25,			-- variation of the skill of a single bot. the higher, the worse the bots can get compared to the original settings
 	DamageFactorAssault = 0.5,			-- original Damage from bots gets multiplied by this
 	DamageFactorCarabine = 0.5,			-- original Damage from bots gets multiplied by this
@@ -119,6 +120,7 @@ Config = {
 	MeleeAttackCoolDown = 3.0,			-- the time a bot waits before attacking with melee again
 	AimForHead = false,					-- bots without sniper aim for the head. More an experimental config
 	AimForHeadSniper = false,			-- bots with sniper aim for the head. More an experimental config
+	AimForHeadSupport = false,			-- bots with support LMGs aim for the head. More an experimental config
 	JumpWhileShooting = true,			-- bots jump over obstacles while shooting if needed
 	JumpWhileMoving = true,				-- bots jump while moving. If false, only on obstacles!
 	OverWriteBotSpeedMode = BotMoveSpeeds.NoMovement,	-- 0 = no overwrite. 1 = prone, 2 = crouch, 3 = walk, 4 = run
