@@ -377,7 +377,9 @@ function BotSpawner:UpdateBotAmountAndTeam()
 						local s_OldTeam = l_Player.teamId
 						l_Player.teamId = i
 						s_CountPlayers[i] = s_CountPlayers[i] + 1
-						s_CountPlayers[s_OldTeam] = s_CountPlayers[s_OldTeam] - 1
+						if s_OldTeam ~= 0 then
+							s_CountPlayers[s_OldTeam] = s_CountPlayers[s_OldTeam] - 1
+						end
 					end
 					if s_CountPlayers[i] >= s_MinTargetPlayersPerTeam then
 						break
