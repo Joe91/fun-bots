@@ -37,6 +37,7 @@ Config = {
 	BotSniperAimWorsening = 0.2,		-- see botAimWorsening, only for Sniper-rifles
 	BotSupportAimWorsening = 0.2,		-- see botAimWorsening, only for Support.
 	BotWorseningSkill = 0.25,			-- variation of the skill of a single bot. the higher, the worse the bots can get compared to the original settings
+	BotSniperWorseningSkill = 0.50,		-- see BotWorseningSkill - only for BOTs using sniper bolt-action rifles.
 	DamageFactorAssault = 0.5,			-- original Damage from bots gets multiplied by this
 	DamageFactorCarabine = 0.5,			-- original Damage from bots gets multiplied by this
 	DamageFactorLMG = 0.5,				-- original Damage from bots gets multiplied by this
