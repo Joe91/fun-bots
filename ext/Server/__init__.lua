@@ -254,7 +254,6 @@ function FunBotServer:OnKitPickup(p_Player, p_NewCustomization)
 end
 
 function FunBotServer:OnPlayerRespawn(p_Player)
-	m_BotManager:OnPlayerRespawn(p_Player)
 	m_NodeEditor:OnPlayerRespawn(p_Player)
 end
 
