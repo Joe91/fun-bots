@@ -81,6 +81,7 @@ function BotSpawner:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 		if self._PlayerUpdateTimer > 2 then
 			self._PlayerUpdateTimer = 0
 			self:UpdateBotAmountAndTeam()
+			--self:CheckSoldiers()  -- not happening --> not the reason for the weapon-bug
 		end
 	end
 
@@ -236,6 +237,34 @@ end
 -- Public Functions
 -- =============================================
 
+-- leave that in there until we find out what really happens
+function BotSpawner:CheckSoldiers()
+	local s_Players = {}
+	local s_Iterator = EntityManager:GetIterator("ServerSoldierEntity")
+	local s_Entity = s_Iterator:Next()
+
+	while s_Entity ~= nil do
+		s_Entity = SoldierEntity(s_Entity)
+		if s_Entity.player ~= nil then
+			local s_PlayerName = s_Entity.player.name
+			if s_PlayerName ~= nil then
+				if s_Players[s_PlayerName] ~= nil then
+					print("multiple soldiers at one player")
+					s_Entity:Kill()
+					local s_Player = PlayerManager:GetPlayersByName(s_PlayerName)
+					if s_Player ~= nil then
+						s_Player.soldier:Kill()
+						s_Player.soldier:Destroy()
+					end
+					print("tried to kill both of them")
+				else
+					s_Players[s_PlayerName] = true
+				end
+			end
+		end
+		s_Entity = s_Iterator:Next()
+	end
+end
 function BotSpawner:UpdateBotAmountAndTeam()
 	-- keep Slot for next player
 	if Config.KeepOneSlotForPlayers then
@@ -332,6 +361,27 @@ function BotSpawner:UpdateBotAmountAndTeam()
 				m_BotManager:KillAll(s_TeamCount[i] - s_TargetTeamCount[i], i)
 			end
 		end
+
+		-- move players if needed
+		local s_MinTargetPlayersPerTeam = math.floor(s_PlayerCount / Globals.NrOfTeams) - 1 -- leave a diff of 1 or two players (even count: 1, uneven: 2)
+		for i = 1, Globals.NrOfTeams do
+			if s_CountPlayers[i] < s_MinTargetPlayersPerTeam then
+				for _,l_Player in pairs(PlayerManager:GetPlayers()) do
+					if l_Player.soldier == nil and l_Player.teamId ~= i then
+						local s_OldTeam = l_Player.teamId
+						l_Player.teamId = i
+						s_CountPlayers[i] = s_CountPlayers[i] + 1
+						if s_OldTeam ~= 0 then
+							s_CountPlayers[s_OldTeam] = s_CountPlayers[s_OldTeam] - 1
+						end
+					end
+					if s_CountPlayers[i] >= s_MinTargetPlayersPerTeam then
+						break
+					end
+				end
+			end
+		end
+
 	-- BALANCED teams
 	elseif Globals.SpawnMode == SpawnModes.balanced_teams then
 		local s_maxPlayersInOneTeam = 0

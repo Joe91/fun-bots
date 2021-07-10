@@ -107,6 +107,7 @@ function FunBotServer:RegisterCustomEvents()
 	Events:Subscribe('Server:DamagePlayer', self, self.OnServerDamagePlayer) --only triggered on false damage
 	Events:Subscribe('Bot:RespawnBot', self, self.OnRespawnBot)
 	NetEvents:Subscribe('Client:RequestSettings', self, self.OnRequestClientSettings)
+	NetEvents:Subscribe('Client:RequestEnterVehicle', self, self.OnRequestEnterVehicle)
 	NetEvents:Subscribe('ConsoleCommands:SetConfig', self, self.OnConsoleCommandSetConfig)
 	NetEvents:Subscribe('ConsoleCommands:SaveAll', self, self.OnConsoleCommandSaveAll)
 	NetEvents:Subscribe('ConsoleCommands:Restore', self, self.OnConsoleCommandRestore)
@@ -361,6 +362,10 @@ function FunBotServer:OnRequestClientSettings(p_Player)
 	NetEvents:SendToLocal('WriteClientSettings', p_Player, Config, true)
 	m_Console:RegisterConsoleCommands(p_Player)
 	m_BotManager:RegisterActivePlayer(p_Player)
+end
+
+function FunBotServer:OnRequestEnterVehicle(p_Player, p_BotName)
+	m_BotManager:OnRequestEnterVehicle(p_Player, p_BotName)
 end
 
 function FunBotServer:OnConsoleCommandSetConfig(p_Player, p_Name, p_Value)

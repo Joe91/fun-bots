@@ -99,6 +99,7 @@ end
 function FunBotClient:OnClientUpdateInput(p_DeltaTime)
 	m_ClientNodeEditor:OnClientUpdateInput(p_DeltaTime)
 	m_ClientUI:OnClientUpdateInput(p_DeltaTime)
+	m_ClientBotManager:OnClientUpdateInput(p_DeltaTime)
 end
 
 function FunBotClient:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
