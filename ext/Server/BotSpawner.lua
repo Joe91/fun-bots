@@ -238,6 +238,7 @@ end
 -- =============================================
 function BotSpawner:CheckSoldiers()
 	local s_Players = {}
+	local s_SoldierWithoutPlayerCount = 0
 	local s_Iterator = EntityManager:GetIterator("ServerSoldierEntity")
 	local s_Entity = s_Iterator:Next()
 
@@ -246,9 +247,9 @@ function BotSpawner:CheckSoldiers()
 	while s_Entity ~= nil do
 		s_Entity = SoldierEntity(s_Entity)
 		if s_Entity.player == nil then
-			print("soldier has no player")
+			s_SoldierWithoutPlayerCount = s_SoldierWithoutPlayerCount + 1
 			s_Entity:Kill()
-			s_Entity = nil
+			-- s_Entity:Destroy()
 		else
 			local s_PlayerName = s_Entity.player.name
 			if s_PlayerName ~= nil then
@@ -258,7 +259,7 @@ function BotSpawner:CheckSoldiers()
 					local s_Player = PlayerManager:GetPlayersByName(s_PlayerName)
 					if s_Player ~= nil then
 						s_Player.soldier:Kill()
-						s_Player.soldier = nil
+						s_Player.soldier:Destroy()
 					end
 					print("tried to kill both of them")
 				else
@@ -267,6 +268,9 @@ function BotSpawner:CheckSoldiers()
 			end
 		end
 		s_Entity = s_Iterator:Next()
+	end
+	if s_SoldierWithoutPlayerCount > 0 then
+		print(s_SoldierWithoutPlayerCount.." soldiers without players")
 	end
 end
 function BotSpawner:UpdateBotAmountAndTeam()

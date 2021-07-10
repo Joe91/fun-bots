@@ -525,7 +525,11 @@ end
 
 function BotManager:SpawnBot(p_Bot, p_Transform, p_Pose, p_SoldierBp, p_Kit, p_Unlocks)
 	if p_Bot.m_Player.soldier ~= nil then
-		p_Bot.m_Player.soldier:Kill()
+		p_Bot.m_Player.soldier:Destroy()
+	end
+
+	if p_Bot.m_Player.corpse ~= nil then
+		p_Bot.m_Player.corpse:Destroy()
 	end
 
 	p_Bot.m_Player:SelectUnlockAssets(p_Kit, p_Unlocks)
