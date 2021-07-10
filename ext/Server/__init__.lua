@@ -1,6 +1,5 @@
 class('FunBotServer')
 
-require('__shared/Version')
 require('__shared/Debug')
 require('__shared/Config')
 require('__shared/Constants/BotColors')
@@ -205,7 +204,7 @@ function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPe
 		self:ScambleBotNames()
 	end
 
-	m_WeaponModification:ModifyAllWeapons(Config.BotAimWorsening, Config.BotSniperAimWorsening)
+	m_WeaponModification:ModifyAllWeapons(Config.BotAimWorsening, Config.BotSniperAimWorsening, Config.BotSupportAimWorsening)
 	m_WeaponList:onLevelLoaded()
 
 	m_Logger:Write('OnLevelLoaded: ' .. p_LevelName .. ' ' .. s_GameMode)

@@ -6,12 +6,32 @@ body:
     attributes:
       value: |
         Thanks for taking the time to fill out this bug report! Before posting be sure that it's not a duplicate of any previous posted issues by using the search function.
+        Please note that we do not support outdated versions. Always use the latest stable release.
+  - type: dropdown
+    id: version
+    attributes:
+      label: Your fun-bots version
+      description: What version of fun-bots does this issue occur on? Please note that we do not support old versions. Select the correct version.
+      options:
+        - 2.2.0-RC (release candidates)
+        - 2.2.0 (stable release)
+        - 2.3.0-dev (development builds)
+    validations:
+      required: true
   - type: textarea
     id: what-happened
     attributes:
       label: What happened?
       description: What happened what should not have happened? Please also tell us how we can reproduce it, the more information we have the faster and easier it is for us to fix this issue.
       placeholder: Tell us what you see!
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: How can we reproduce and test it?
+      description: What is causing this issue? How can we reproduce it? If you have modified your configuration files, what did you modify?
+      placeholder: I did ... then I did ... and that's what caused ...
     validations:
       required: true
   - type: textarea
@@ -22,29 +42,21 @@ body:
       placeholder: What you should see instead.
     validations:
       required: true
-  - type: dropdown
-    id: version
-    attributes:
-      label: Version
-      description: What version of fun-bots does this issue occur on? Please note that we do not support old versions. Select the correct version.
-      options:
-        - 2.1.0 (stable release)
-        - 2.2.0-dev (development builds)
-    validations:
-      required: true
   - type: textarea
     id: server-info
     attributes:
-      label: Server information
-      description: What OS are you running? How much memory is available? What are your server hardware and software specs? Are you running any other mods?
+      label: Server information (if applicable)
+      description: What OS are you running? How much memory is available? What are your server hardware & software specs? Are you running any other mods?
       placeholder: I am running on Windows x... my server has 4 GB of memory.... I'm only running fun-bots... I have an Intel Pentium Gold G6400 running 4 GHz...
   - type: checkboxes
     id: terms
     attributes:
-      label: I have checked the following...
+      label: I have checked the following... (if applicable)
       description: Before submitting this bug report, checkout the contributing guidelines and our code of conduct.
       options:
         - label: I have read the [contribution guidelines on reporting bugs](https://github.com/Joe91/fun-bots/blob/master/.github/CONTRIBUTING.md#reporting-a-bug) and the [code of conduct](https://github.com/Joe91/fun-bots/blob/master/.github/CODE_OF_CONDUCT.md).
           required: true
         - label: I have tested and reproduced this bug without any other mods besides fun-bots.
+          required: false
+        - label: I have tested and reproduced this bug with the default fun-bots configuration file.
           required: false

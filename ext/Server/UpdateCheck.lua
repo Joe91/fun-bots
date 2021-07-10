@@ -9,7 +9,6 @@ UpdateStatus = {
 --[[ Auto updater check --]]
 local ApiUrls = {
 	stable = 'https://api.github.com/repos/Joe91/fun-bots/releases/latest?per_page=1',
-	pre_release = 'https://api.github.com/repos/Joe91/fun-bots/releases?per_page=1',
 	dev = 'https://api.github.com/repos/Joe91/fun-bots/tags?per_page=1'
 }
 
@@ -66,16 +65,10 @@ local function CheckVersion()
 	-- Get the appropriate URL for the API based on the user configurations input.
 	-- Default to the stable URL
 	local s_EndpointURL = ApiUrls.stable -- Defaulting to the stable URL
-	local s_EndpointType = 0 -- A number we can track so we know which type we used
 
-	if Config.AutoUpdater.ReleaseCycle == "RC" then -- Release Candidates (or pre-releases)
-		s_EndpointURL = ApiUrls.pre_release
-		s_EndpointType = 1
-	end
-
-	if Config.AutoUpdater.ReleaseCycle == "DEV" then -- Development builds (Github tags)
+	-- If development builds are enabled
+	if Config.AutoUpdater.DevBuilds then
 		s_EndpointURL = ApiUrls.dev
-		s_EndpointType = 2
 	end
 
 	-- Make a HTTP request to the REST API
@@ -83,7 +76,7 @@ local function CheckVersion()
 
 	-- Check if response is not nil
 	if s_endpointResponse == nil then
-		UpdateFinished(s_EndpointType, false, false, nil, nil, nil) -- TODO: Awaiting the debugging refactor to make a throwable error
+		UpdateFinished(Config.AutoUpdater.DevBuilds, false, false, nil, nil, nil) -- TODO: Awaiting the debugging refactor to make a throwable error
 		do return end
 	end
 
@@ -91,7 +84,7 @@ local function CheckVersion()
 	local s_EndpointJSON = json.decode(s_endpointResponse.body)
 
 	if s_EndpointJSON == nil then
-		UpdateFinished(s_EndpointType, false, false, nil, nil, nil)
+		UpdateFinished(Config.AutoUpdater.DevBuilds, false, false, nil, nil, nil)
 		do return end
 	end
 
@@ -99,33 +92,24 @@ local function CheckVersion()
 	-- @ToDo: Make the current version better as it currently checks strings. It should check an incremental value instead.
 
  	-- Stable and release candidates follow the same body
-	if (s_EndpointType == 0) then
+	if not Config.AutoUpdater.DevBuilds then
 		if Config.Version.Tag == s_EndpointJSON['tag_name'] then
-			UpdateFinished(s_EndpointType, true, false, nil, nil, nil)
+			UpdateFinished(Config.AutoUpdater.DevBuilds, true, false, nil, nil, nil)
 			do return end
 		end
 
-		UpdateFinished(s_EndpointType, true, true, s_EndpointJSON['html_url'], {tag = s_EndpointJSON['tag_name'], relTimestamp = s_EndpointJSON['published_at']}, nil)
+		UpdateFinished(Config.AutoUpdater.DevBuilds, true, true, s_EndpointJSON['html_url'], {tag = s_EndpointJSON['tag_name'], relTimestamp = s_EndpointJSON['published_at']}, nil)
+		do return end
 	end
 
-	if (s_EndpointType == 1) then
-		if Config.Version.Tag == s_EndpointJSON[1]['tag_name'] then
-			UpdateFinished(s_EndpointType, true, false, nil, nil, nil)
-			do return end
-		end
-
-		UpdateFinished(s_EndpointType, true, true, s_EndpointJSON[1]['html_url'], {tag = s_EndpointJSON[1]['tag_name'], relTimestamp = s_EndpointJSON[1]['published_at']}, nil)
+	-- Development builds
+	if Config.Version.Tag:gsub("V", "") == s_EndpointJSON[1]['name']:gsub("V", "") then
+		UpdateFinished(Config.AutoUpdater.DevBuilds, true, false, nil, nil, nil)
+		do return end
 	end
 
-	 -- Development builds (tags)
-	if (s_EndpointType == 2) then
-		if Config.Version.Tag:gsub("V", "") == s_EndpointJSON[1]['name']:gsub("V", "") then
-			UpdateFinished(s_EndpointType, true, false, nil, nil, nil)
-			do return end
-		end
+	UpdateFinished(true, true, true, s_EndpointJSON[1]['zipball_url'], {tag = s_EndpointJSON[1]['name']}, nil)
 
-		UpdateFinished(s_EndpointType, true, true, s_EndpointJSON[1]['zipball_url'], {tag = s_EndpointJSON[1]['name']}, nil)
-	end
 end
 
 return CheckVersion()

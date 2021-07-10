@@ -12,18 +12,12 @@ Config = {
 	DebugLevel = 4, -- default: 4 (recommended)
 
 	AutoUpdater = {
-		--
 		-- Enabling the auto updater will show you a notification when a new update for fun-bots is available for download.
 		-- Please note that we do not support outdated versions.
 		Enabled = true, -- default: true (recommended)
-	
-		--
-		-- Set the release cycle on which you want to receive update notifications.
-		-- STABLE (Recommended) - Stable releases recommended on public servers.
-		-- RC - Release candidates (also known as pre-releases, snapshots, etc) are semi-tested releases.
-		-- DEV - Recommended only when testing fun-bots on a private development server.
-		--
-		ReleaseCycle = "RC" -- default: RC (recommended)
+
+		-- Do you want notifications when newer development builds are available?
+		DevBuilds = true,
 	},
 
 	--GENERAL
@@ -35,6 +29,7 @@ Config = {
 	--DIFFICULTY
 	BotAimWorsening = 0.5,				-- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy).
 	BotSniperAimWorsening = 0.2,		-- see botAimWorsening, only for Sniper-rifles
+	BotSupportAimWorsening = 0.2,		-- see botAimWorsening, only for Support.
 	BotWorseningSkill = 0.25,			-- variation of the skill of a single bot. the higher, the worse the bots can get compared to the original settings
 	DamageFactorAssault = 0.5,			-- original Damage from bots gets multiplied by this
 	DamageFactorCarabine = 0.5,			-- original Damage from bots gets multiplied by this
@@ -119,6 +114,7 @@ Config = {
 	MeleeAttackCoolDown = 3.0,			-- the time a bot waits before attacking with melee again
 	AimForHead = false,					-- bots without sniper aim for the head. More an experimental config
 	AimForHeadSniper = false,			-- bots with sniper aim for the head. More an experimental config
+	AimForHeadSupport = false,			-- bots with support LMGs aim for the head. More an experimental config
 	JumpWhileShooting = true,			-- bots jump over obstacles while shooting if needed
 	JumpWhileMoving = true,				-- bots jump while moving. If false, only on obstacles!
 	OverWriteBotSpeedMode = BotMoveSpeeds.NoMovement,	-- 0 = no overwrite. 1 = prone, 2 = crouch, 3 = walk, 4 = run
@@ -129,8 +125,8 @@ Config = {
 
 	--EXPERT
 	BotFirstShotDelay = 0.35,			-- delay for first shot. If too small, there will be great spread in first cycle because its not kompensated jet.
-	BotMinTimeShootAtPlayer = 2.0,		-- the minimum time a bot shoots at one player
-	BotFireModeDuration = 5.0,			-- the minimum time a bot tries to shoot a player
+	BotMinTimeShootAtPlayer = 2.0,		-- the minimum time a bot shoots at one player - recommended minimum 1.5, below this you will have issues.
+	BotFireModeDuration = 5.0,			-- the minimum time a bot tries to shoot a player - recommended minimum 3.0, below this you will have issues.
 	MaximunYawPerSec = 450,				-- in Degree. Rotaion-Movement per second.
 	TargetDistanceWayPoint = 0.8,		-- distance the bots have to reach to continue with next Waypoint
 	KeepOneSlotForPlayers = true,		-- always keep one slot for new Players to join

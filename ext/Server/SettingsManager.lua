@@ -241,7 +241,7 @@ function SettingsManager:UpdateSetting(p_Name, p_Value)
 			m_WeaponList:updateWeaponList()
 			s_UpdateClientWeapons = true
 		elseif s_UpdateFlag == UpdateFlag.Weapons then
-			m_WeaponModification:ModifyAllWeapons(Config.BotAimWorsening, Config.BotSniperAimWorsening)
+			m_WeaponModification:ModifyAllWeapons(Config.BotAimWorsening, Config.BotSniperAimWorsening, Config.BotSupportAimWorsening)
 		elseif s_UpdateFlag == UpdateFlag.YawPerSec then
 			Globals.YawPerFrame = m_BotManager:calcYawPerFrame()
 		elseif s_UpdateFlag == UpdateFlag.AmountAndTeam then
