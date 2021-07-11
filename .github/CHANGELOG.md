@@ -4,10 +4,14 @@
 
 ## 🥳 Welcome to the changelogs for release **V2.2.0** 🥳
 
+
 This is the changelog for the unreleased version. Don't forget to [join us on Discord](https://discord.gg/K44VsQsKnx)
 
 ## Changelog
 This release contains a lot of small bug fixes and more QoL updates.
+
+### ⚠️ Minimum requirements change
+Version 2.2.0 of fun-bots now requires the dependency `VeniceEXT` version 1.1.0 or higher.
 
 ### ⚙️ Exciting new features
 - [#134](https://github.com/Joe91/fun-bots/pull/134) Added configuration option for `AimForHeadSupport` and `BotSupportAimWorsening`<br>
@@ -15,15 +19,15 @@ This release contains a lot of small bug fixes and more QoL updates.
 - [#113](https://github.com/Joe91/fun-bots/issues/113) Bots can now respawn on other bots on the same squad
 
 ### 📝 Changes and enhancements
-- [#136](https://github.com/Joe91/fun-bots/pull/136) Randomized BotWorseningSkill range and added assault aimForHead<br>
 - [#137](https://github.com/Joe91/fun-bots/pull/137) Auto updater now follows a better release cycle<br>
-- The `mod.json` is updated
+- [#136](https://github.com/Joe91/fun-bots/pull/136) Randomized BotWorseningSkill range and added assault aimForHead<br>
+- The `mod.json` is updatede<br>
 - Minor changes and enhancements
 
 ### 🐛 Minor bug fixes
 - [#129](https://github.com/Joe91/fun-bots/pull/129) Fixed typo `BotWeapons.Priamry` in `BotSpawner.lua`<br>
 - [#126](https://github.com/Joe91/fun-bots/pull/126) Fixed bot pistols not being randomized when configuration option `UseRandomWeapon` is true<br>
-- [#124](https://github.com/Joe91/fun-bots/pull/124) Fixed varous typos in WeaponList
+- [#124](https://github.com/Joe91/fun-bots/pull/124) Fixed varous typos in WeaponListe<br>
 - Minor stability and performance fixes
 
 ### 📖 Documentation update
