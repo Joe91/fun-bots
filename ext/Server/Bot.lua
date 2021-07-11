@@ -416,6 +416,7 @@ function Bot:ResetSpawnVars()
 	self._ReviveActive = false
 	self._EnterVehicleActice = false
 	self._GrenadeActive = false
+	self._TargetPitch = 0.0
 	self._C4Active = false
 	self._Objective = '' --reset objective on spawn, as an other spawn-point might have chosen...
 	self._WeaponToUse = BotWeapons.Primary
