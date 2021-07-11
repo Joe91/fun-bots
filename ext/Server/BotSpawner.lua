@@ -81,7 +81,6 @@ function BotSpawner:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 		if self._PlayerUpdateTimer > 2 then
 			self._PlayerUpdateTimer = 0
 			self:UpdateBotAmountAndTeam()
-			--self:CheckSoldiers()  -- not happening --> not the reason for the weapon-bug
 		end
 	end
 
@@ -237,34 +236,6 @@ end
 -- Public Functions
 -- =============================================
 
--- leave that in there until we find out what really happens
-function BotSpawner:CheckSoldiers()
-	local s_Players = {}
-	local s_Iterator = EntityManager:GetIterator("ServerSoldierEntity")
-	local s_Entity = s_Iterator:Next()
-
-	while s_Entity ~= nil do
-		s_Entity = SoldierEntity(s_Entity)
-		if s_Entity.player ~= nil then
-			local s_PlayerName = s_Entity.player.name
-			if s_PlayerName ~= nil then
-				if s_Players[s_PlayerName] ~= nil then
-					print("multiple soldiers at one player")
-					s_Entity:Kill()
-					local s_Player = PlayerManager:GetPlayersByName(s_PlayerName)
-					if s_Player ~= nil then
-						s_Player.soldier:Kill()
-						s_Player.soldier:Destroy()
-					end
-					print("tried to kill both of them")
-				else
-					s_Players[s_PlayerName] = true
-				end
-			end
-		end
-		s_Entity = s_Iterator:Next()
-	end
-end
 function BotSpawner:UpdateBotAmountAndTeam()
 	-- keep Slot for next player
 	if Config.KeepOneSlotForPlayers then
