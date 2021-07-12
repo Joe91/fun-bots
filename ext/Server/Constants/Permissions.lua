@@ -56,5 +56,8 @@ Permissions = {
 	'UserInterface.WaypointEditor.TraceReset',
 
 	-- Settings
-	'UserInterface.Settings'
+	'UserInterface.Settings',
+
+	-- Debugger
+	'Debug.BugReport'
 }
