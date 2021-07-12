@@ -238,12 +238,25 @@ function WaypointEditor:InitializeComponent()
 	local s_View = MenuItem('View', 'view')
 		s_View:SetIcon('Assets/Icons/View.svg')
 
+		local s_Checkbox_SpawnPoints = CheckBox('view_spawnpoints', Config.DrawSpawnPoints)
 		local s_Checkbox_Lines = CheckBox('view_lines', Config.DrawWaypointLines)
 		local s_Checkbox_Labels = CheckBox('view_labels', Config.DrawWaypointIDs)
 		local s_Checkbox_Interaction = CheckBox('view_interaction', self.m_Interaction_Information)
 		local s_Checkbox_Shortcuts = CheckBox('view_shortcuts', self.m_Quick_Shortcuts:IsEnabled())
 
 		s_View:AddItem(MenuSeparator('Editor'))
+
+		s_View:AddItem(MenuItem('Spawn-Points', 'spawnpoints', function(p_Player)
+			Config.DrawSpawnPoints = not Config.DrawSpawnPoints
+
+			s_Checkbox_SpawnPoints:SetChecked(Config.DrawSpawnPoints)
+
+			NetEvents:SendTo('UI', p_Player, 'VIEW', self.m_View:GetName(), 'UPDATE', json.encode({
+				Type = s_Checkbox_SpawnPoints:__class(),
+				Name = s_Checkbox_SpawnPoints:GetName(),
+				IsChecked = s_Checkbox_SpawnPoints:IsChecked()
+			}))
+		end):AddCheckBox(Position.Left, s_Checkbox_SpawnPoints))
 
 		s_View:AddItem(MenuItem('Lines', 'lines', function(p_Player)
 			Config.DrawWaypointLines = not Config.DrawWaypointLines

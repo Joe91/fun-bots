@@ -21,6 +21,7 @@ local m_Logger = Logger("FunBotClient", true)
 --local m_Language = require('__shared/Language')
 local m_ClientBotManager = require('ClientBotManager')
 local m_ClientNodeEditor = require('ClientNodeEditor')
+local m_ClientSpawnPointHelper = require('ClientSpawnPointHelper')
 local m_ConsoleCommands = require('ConsoleCommands')
 local m_ClientUI = require('UI/UI')
 
@@ -46,6 +47,7 @@ function FunBotClient:RegisterEvents()
 	Events:Subscribe('Client:UpdateInput', self, self.OnClientUpdateInput)
 	Events:Subscribe('Engine:Update', self, self.OnEngineUpdate)
 	Events:Subscribe('UI:DrawHud', self, self.OnUIDrawHud)
+	Events:Subscribe('Partition:Loaded', self, self.OnPartitionLoaded)
 
 	NetEvents:Subscribe('WriteClientSettings', self, self.OnWriteClientSettings)
 	NetEvents:Subscribe('CheckBotBotAttack', self, self.CheckForBotBotAttack)
@@ -76,6 +78,7 @@ end
 function FunBotClient:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	m_ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	m_ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
+	m_ClientSpawnPointHelper:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 end
 
 function FunBotClient:OnExtensionUnloading()
@@ -86,6 +89,7 @@ end
 function FunBotClient:OnLevelDestroy()
 	m_ClientBotManager:OnLevelDestroy()
 	m_ClientNodeEditor:OnLevelDestroy()
+	m_ClientSpawnPointHelper:OnLevelDestroy()
 end
 
 function FunBotClient:OnLevelLoaded(p_LevelName, p_GameMode)
@@ -100,6 +104,7 @@ function FunBotClient:OnClientUpdateInput(p_DeltaTime)
 	m_ClientNodeEditor:OnClientUpdateInput(p_DeltaTime)
 	m_ClientUI:OnClientUpdateInput(p_DeltaTime)
 	m_ClientBotManager:OnClientUpdateInput(p_DeltaTime)
+	m_ClientSpawnPointHelper:OnClientUpdateInput(p_DeltaTime)
 end
 
 function FunBotClient:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
@@ -108,6 +113,11 @@ end
 
 function FunBotClient:OnUIDrawHud()
 	m_ClientNodeEditor:OnUIDrawHud()
+	m_ClientSpawnPointHelper:OnUIDrawHud()
+end
+
+function FunBotClient:OnPartitionLoaded(p_Partition)
+	m_ClientSpawnPointHelper:OnPartitionLoaded(p_Partition)
 end
 
 -- =============================================

@@ -825,6 +825,27 @@ SettingsDefinition = {
 			Category = "TRACE"
 		},
 		{
+			Name = "DrawSpawnPoints",
+			Text = "Draw Spawn Points",
+			Type = Type.Boolean,
+			Value = Config.DrawSpawnPoints,
+			Description = "Draw Spawn Points",
+			Default = true,
+			UpdateFlag = UpdateFlag.None,
+			Category = "TRACE"
+		},
+		{
+			Name = "SpawnPointRange",
+			Text = "Range of Spawnpoints",
+			Type = Type.Integer,
+			Value = Config.SpawnPointRange,
+			Description = "Set how far away spawnpoints are visible (meters)",
+			Reference = Range(1.00, 1000.00, 1.0),
+			Default = 50,
+			UpdateFlag = UpdateFlag.None,
+			Category = "TRACE"
+		},
+		{
 			Name = "DebugSelectionRaytraces",
 			Text = "Debug Selection Raytraces",
 			Type = Type.Boolean,

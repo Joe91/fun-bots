@@ -111,6 +111,7 @@ function FunBotServer:RegisterCustomEvents()
 	NetEvents:Subscribe('ConsoleCommands:SetConfig', self, self.OnConsoleCommandSetConfig)
 	NetEvents:Subscribe('ConsoleCommands:SaveAll', self, self.OnConsoleCommandSaveAll)
 	NetEvents:Subscribe('ConsoleCommands:Restore', self, self.OnConsoleCommandRestore)
+	NetEvents:Subscribe("SpawnPointHelper:TeleportTo", self, self.OnTeleportTo)
 	m_NodeEditor:RegisterCustomEvents()
 end
 
@@ -378,6 +379,13 @@ end
 
 function FunBotServer:OnConsoleCommandRestore(p_Player, p_Args)
 	m_Console:OnConsoleCommandRestore(p_Player, p_Args)
+end
+
+function FunBotServer:OnTeleportTo(p_Player, p_Transform)
+	if p_Player == nil or p_Player.soldier == nil then
+		return
+	end
+	p_Player.soldier:SetTransform(p_Transform)
 end
 
 -- =============================================
