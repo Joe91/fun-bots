@@ -7,6 +7,7 @@ function ClientSpawnPointHelper:__init()
     self.m_SpawnPointTable = {}
 	self.m_MaxDistance = 100
 	self.m_RaycastPos = Vec3()
+	self.m_RaycastTimer = 0
 	self.m_SelectedSpawnPoint = nil
 end
 
@@ -120,6 +121,11 @@ function ClientSpawnPointHelper:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	end
 
 	if not Config.DrawSpawnPoints or not self.m_Enabled then
+		return
+	end
+
+	self.m_RaycastTimer = self.m_RaycastTimer + p_DeltaTime
+	if self.m_RaycastTimer < StaticConfig.RaycastInterval then
 		return
 	end
 
