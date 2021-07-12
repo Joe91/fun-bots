@@ -4,8 +4,6 @@ local ApiUrls = {
 }
 
 local function UpdateFinished(p_CycleId, p_Success, p_UpdateAvailable, p_UpdateUrl, p_UpdateData, p_Log)
-	print('[UPDATE] EA') -- @ToDo: Move this to a logger
-
 	-- Check if the update was successfull
 	if not p_Success then
 		print('[UPDATE] Failed to check for an update.') -- @ToDo: Move this to a logger
@@ -29,10 +27,9 @@ local function UpdateFinished(p_CycleId, p_Success, p_UpdateAvailable, p_UpdateU
 end
 
 -- Callback for updateCheck async request.
-local function updateCheckCB(status, body, headers)
+local function updateCheckCB(httpRequest)
 	-- Parse JSON
-	print(body.body)
-	local s_EndpointJSON = json.decode(body.body)
+	local s_EndpointJSON = json.decode(httpRequest.body)
 	if s_EndpointJSON == nil then
 		UpdateFinished(Config.AutoUpdater.DevBuilds, false, false, nil, nil, nil)
 		do return end
