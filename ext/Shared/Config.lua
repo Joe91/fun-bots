@@ -20,6 +20,17 @@ Config = {
 		DevBuilds = true,
 	},
 
+	Telemetry = {
+		-- Send information that allows us to improve the fun-bots project
+		AdvancedTelemetry = true,
+
+		-- Send an unique server UUID with each advanced telemetry request
+		ServerTelemetryUUID = true,
+
+		-- Remove data older than 14 days from our server
+		PurgeOldData = false,
+	},
+
 	--GENERAL
 	BotWeapon = BotWeapons.Auto,		-- Select the weapon the bots use
 	BotKit = BotKits.RANDOM_KIT,		-- The Kit of the Bots

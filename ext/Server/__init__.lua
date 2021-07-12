@@ -46,6 +46,7 @@ end
 
 function FunBotServer:OnEngineInit()
 	require('UpdateCheck')
+	require('Telemetry/Telemetry')
 end
 
 function FunBotServer:OnExtensionLoaded()
