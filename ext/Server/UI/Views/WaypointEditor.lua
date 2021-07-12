@@ -4,6 +4,7 @@
 ]]
 class('WaypointEditor')
 
+local m_SettingsManager = require('SettingsManager')
 --[[
 	@method: __init
 ]]
@@ -256,6 +257,7 @@ function WaypointEditor:InitializeComponent()
 				Name = s_Checkbox_SpawnPoints:GetName(),
 				IsChecked = s_Checkbox_SpawnPoints:IsChecked()
 			}))
+			m_SettingsManager:UpdateSetting('DrawSpawnPoints', tostring(Config.DrawSpawnPoints))
 		end):AddCheckBox(Position.Left, s_Checkbox_SpawnPoints))
 
 		s_View:AddItem(MenuItem('Lines', 'lines', function(p_Player)
@@ -268,6 +270,7 @@ function WaypointEditor:InitializeComponent()
 				Name = s_Checkbox_Lines:GetName(),
 				IsChecked = s_Checkbox_Lines:IsChecked()
 			}))
+			m_SettingsManager:UpdateSetting('DrawWaypointLines', tostring(Config.DrawWaypointLines))
 		end):AddCheckBox(Position.Left, s_Checkbox_Lines))
 
 		s_View:AddItem(MenuItem('Labels', 'labels', function(p_Player)
@@ -280,6 +283,7 @@ function WaypointEditor:InitializeComponent()
 				Name = s_Checkbox_Labels:GetName(),
 				IsChecked = s_Checkbox_Labels:IsChecked()
 			}))
+			m_SettingsManager:UpdateSetting('DrawWaypointIDs', tostring(Config.DrawWaypointIDs))
 		end):AddCheckBox(Position.Left, s_Checkbox_Labels))
 
 		s_View:AddItem(MenuSeparator('User Interface'))

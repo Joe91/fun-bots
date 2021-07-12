@@ -134,6 +134,7 @@ end
 
 function FunBotClient:OnUIClientNodeEditorEnabled(p_Args)
 	m_ClientNodeEditor:OnSetEnabled(p_Args)
+	m_ClientSpawnPointHelper:OnSetEnabled(p_Args)
 end
 
 function FunBotClient:OnUISettings(p_Data)

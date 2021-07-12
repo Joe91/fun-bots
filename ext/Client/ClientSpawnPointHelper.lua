@@ -1,15 +1,16 @@
-class 'SpawnPointHelper'
+class 'ClientSpawnPointHelper'
 
 require('__shared/Config')
 
-function SpawnPointHelper:__init()
+function ClientSpawnPointHelper:__init()
+	self.m_Enabled = false
     self.m_SpawnPointTable = {}
 	self.m_MaxDistance = 100
 	self.m_RaycastPos = Vec3()
 	self.m_SelectedSpawnPoint = nil
 end
 
-function SpawnPointHelper:OnPartitionLoaded(p_Partition)
+function ClientSpawnPointHelper:OnPartitionLoaded(p_Partition)
     for _, l_Instance in pairs(p_Partition.instances) do
         if l_Instance:Is("AlternateSpawnEntityData") then
             l_Instance = AlternateSpawnEntityData(l_Instance)
@@ -18,14 +19,24 @@ function SpawnPointHelper:OnPartitionLoaded(p_Partition)
     end
 end
 
-function SpawnPointHelper:OnLevelDestroy()
+function ClientSpawnPointHelper:OnLevelDestroy()
     self.m_SpawnPointTable = {}
 end
 
-function SpawnPointHelper:OnUIDrawHud()
+function ClientSpawnPointHelper:OnSetEnabled(p_Args)
+	local s_Enabled = p_Args
+
+	if type(p_Args) == 'table' then
+		s_Enabled = p_Args[1]
+	end
+
+	self.m_Enabled = (s_Enabled == true or s_Enabled == 'true' or s_Enabled == '1')
+end
+
+function ClientSpawnPointHelper:OnUIDrawHud()
 	self.m_SelectedSpawnPoint = nil
 
-	if not Config.DrawSpawnPoints then
+	if not Config.DrawSpawnPoints or not self.m_Enabled then
 		return
 	end
 
@@ -46,23 +57,23 @@ function SpawnPointHelper:OnUIDrawHud()
 	end
 end
 
-function SpawnPointHelper:OnClientUpdateInput(p_DeltaTime)
-	if not Config.DrawSpawnPoints then
+function ClientSpawnPointHelper:OnClientUpdateInput(p_DeltaTime)
+	if not Config.DrawSpawnPoints or not self.m_Enabled then
 		return
 	end
 
-	if InputManager:WentKeyDown(InputDeviceKeys.IDK_Q) and self.m_SelectedSpawnPoint ~= nil then
+	if InputManager:WentKeyDown(InputDeviceKeys.IDK_T) and self.m_SelectedSpawnPoint ~= nil then
 		local s_LocalPlayer = PlayerManager:GetLocalPlayer()
 
 		if s_LocalPlayer == nil or s_LocalPlayer.soldier == nil then
 			return
 		end
 
-		NetEvents:SendLocal("TeleportTo", self.m_SelectedSpawnPoint)
+		NetEvents:SendLocal("SpawnPointHelper:TeleportTo", self.m_SelectedSpawnPoint)
 	end
 end
 
-function SpawnPointHelper:DrawSpawnPoint(p_Transform)
+function ClientSpawnPointHelper:DrawSpawnPoint(p_Transform)
 	local s_Color = Vec4(1, 1, 1, 0.5)
 	local s_PointScreenPos = ClientUtils:WorldToScreen(p_Transform.trans)
 
@@ -88,7 +99,7 @@ function SpawnPointHelper:DrawSpawnPoint(p_Transform)
 end
 
 -- Returns a Vec3 thats offset in the direction of the linearTransform
-function SpawnPointHelper:GetForwardOffsetFromLT(p_Transform)
+function ClientSpawnPointHelper:GetForwardOffsetFromLT(p_Transform)
 
 	-- We get the direction from the forward vector
 	local s_Direction = p_Transform.forward
@@ -102,13 +113,13 @@ function SpawnPointHelper:GetForwardOffsetFromLT(p_Transform)
 end
 
 
-function SpawnPointHelper:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
+function ClientSpawnPointHelper:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	-- Only do raycast on presimulation UpdatePass
 	if p_UpdatePass ~= UpdatePass.UpdatePass_PreSim then
 		return
 	end
 
-	if not Config.DrawSpawnPoints then
+	if not Config.DrawSpawnPoints or not self.m_Enabled then
 		return
 	end
 
@@ -122,7 +133,7 @@ function SpawnPointHelper:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 end
 
 -- stolen't https://github.com/EmulatorNexus/VEXT-Samples/blob/80cddf7864a2cdcaccb9efa810e65fae1baeac78/no-headglitch-raycast/ext/Client/__init__.lua
-function SpawnPointHelper:Raycast()
+function ClientSpawnPointHelper:Raycast()
 
 	local s_LocalPlayer = PlayerManager:GetLocalPlayer()
 
@@ -153,6 +164,8 @@ function SpawnPointHelper:Raycast()
 	return s_RaycastHit
 end
 
-if g_SpawnPointHelper == nil then
-    g_SpawnPointHelper = SpawnPointHelper()
+if g_ClientSpawnPointHelper == nil then
+    g_ClientSpawnPointHelper = ClientSpawnPointHelper()
 end
+
+return g_ClientSpawnPointHelper
