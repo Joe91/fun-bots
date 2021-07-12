@@ -19,6 +19,7 @@ Version 2.2.0 of fun-bots now requires the dependency `VeniceEXT` version 1.1.0 
 - [#113](https://github.com/Joe91/fun-bots/issues/113) Bots can now respawn on other bots on the same squad
 
 ### 📝 Changes and enhancements
+- [#139](https://github.com/Joe91/fun-bots/pull/139) Update checker is now async<br>
 - [#137](https://github.com/Joe91/fun-bots/pull/137) Auto updater now follows a better release cycle<br>
 - [#136](https://github.com/Joe91/fun-bots/pull/136) Randomized BotWorseningSkill range and added assault aimForHead<br>
 - The `mod.json` is updatede<br>
