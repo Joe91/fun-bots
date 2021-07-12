@@ -778,7 +778,7 @@ SettingsDefinition = {
 			Value = Config.WaypointRange,
 			Description = "Set how far away waypoints are visible (meters)",
 			Reference = Range(1.00, 1000.00, 1.0),
-			Default = 100,
+			Default = 50,
 			UpdateFlag = UpdateFlag.None,
 			Category = "TRACE"
 		},
@@ -799,7 +799,7 @@ SettingsDefinition = {
 			Value = Config.LineRange,
 			Description = "Set how far away waypoint lines are visible (meters)",
 			Reference = Range(1.00, 1000.00, 1.0),
-			Default = 15,
+			Default = 12,
 			UpdateFlag = UpdateFlag.None,
 			Category = "TRACE"
 		},
@@ -830,7 +830,7 @@ SettingsDefinition = {
 			Type = Type.Boolean,
 			Value = Config.DrawSpawnPoints,
 			Description = "Draw Spawn Points",
-			Default = true,
+			Default = false,
 			UpdateFlag = UpdateFlag.None,
 			Category = "TRACE"
 		},
