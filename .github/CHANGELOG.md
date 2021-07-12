@@ -28,6 +28,8 @@ Version 2.2.0 of fun-bots now requires the dependency `VeniceEXT` version 1.1.0 
 - [#129](https://github.com/Joe91/fun-bots/pull/129) Fixed typo `BotWeapons.Priamry` in `BotSpawner.lua`<br>
 - [#126](https://github.com/Joe91/fun-bots/pull/126) Fixed bot pistols not being randomized when configuration option `UseRandomWeapon` is true<br>
 - [#124](https://github.com/Joe91/fun-bots/pull/124) Fixed varous typos in WeaponListe<br>
+- Fixed a bug where the pitch of bots aren't reset after a round ends or resets
+- Cleaned up unused code
 - Minor stability and performance fixes
 
 ### 📖 Documentation update
