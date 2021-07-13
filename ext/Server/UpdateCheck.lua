@@ -1,88 +1,35 @@
---[[ Global update hook ]]--
-UpdateStatus = {
-	available = 0, -- 0 if no update has been checked for, 1 if an update is available, 2 if an update is NOT available, 99 for technical issues
-	URL_download = nil, -- URL to download the new update from
-	check_timestamp_success = 0, -- unix timestamp of the last successfull check
-	check_timestamp_any = 0 -- unix timestamp of the last check (either succesfull or unsuccessfull)
-}
-
---[[ Auto updater check --]]
 local ApiUrls = {
 	stable = 'https://api.github.com/repos/Joe91/fun-bots/releases/latest?per_page=1',
 	dev = 'https://api.github.com/repos/Joe91/fun-bots/tags?per_page=1'
 }
 
 local function UpdateFinished(p_CycleId, p_Success, p_UpdateAvailable, p_UpdateUrl, p_UpdateData, p_Log)
-	-- Update the latest release date
-	UpdateStatus.check_timestamp_any = os.time(os.date("!*t"))
-
 	-- Check if the update was successfull
 	if not p_Success then
 		print('[UPDATE] Failed to check for an update.') -- @ToDo: Move this to a logger
-
-		-- Update the hookable variables
-		UpdateStatus.available = 99
-
 		do return end
 	end
-
-	-- Update success timestamp
-	UpdateStatus.check_timestamp_success = os.time(os.date("!*t"))
 
 	-- Check if there is not an update available and that we are running the latest version
 	if not p_UpdateAvailable then
 		print('[UPDATE] You are running the latest version') -- @ToDo: Move this to a logger
-
-		-- Update the hookable variables
-		UpdateStatus.available = 2
 		do return end
 	end
-
-	UpdateStatus.available = 1
-	UpdateStatus.URL_download = p_UpdateUrl
 
 	if p_UpdateData.relTimestamp ~= nil then
 		print('[ + ] A new version for fun-bots was released on ' .. os.date('%d-%m-%Y %H:%M', ParseOffset(p_UpdateData.relTimestamp)) .. '!')
 	else
-
 		print('[ + ] A new version for fun-bots is available!')
 	end
 
-	print('[ + ] Upgrade from ' .. Config.Version.Tag .. ' to ' .. p_UpdateData.tag)
+	print('[ + ] Upgrade to ' .. p_UpdateData.tag)
 	print('[ + ] Download: ' .. p_UpdateUrl)
 end
 
--- Check for the latest version
-local function CheckVersion()
-	-- Check if the user has it enabled in configuration file
-	if not Config.AutoUpdater.Enabled then
-		print('[UPDATE] You disabled checking for new updates in your configuration file.')
-		do return end
-	end
-
-	print('[UPDATE] Checking for a newer version.')
-	
-	-- Get the appropriate URL for the API based on the user configurations input.
-	-- Default to the stable URL
-	local s_EndpointURL = ApiUrls.stable -- Defaulting to the stable URL
-
-	-- If development builds are enabled
-	if Config.AutoUpdater.DevBuilds then
-		s_EndpointURL = ApiUrls.dev
-	end
-
-	-- Make a HTTP request to the REST API
-	local s_endpointResponse = Net:GetHTTP(s_EndpointURL)
-
-	-- Check if response is not nil
-	if s_endpointResponse == nil then
-		UpdateFinished(Config.AutoUpdater.DevBuilds, false, false, nil, nil, nil) -- TODO: Awaiting the debugging refactor to make a throwable error
-		do return end
-	end
-
+-- Callback for updateCheck async request.
+local function updateCheckCB(httpRequest)
 	-- Parse JSON
-	local s_EndpointJSON = json.decode(s_endpointResponse.body)
-
+	local s_EndpointJSON = json.decode(httpRequest.body)
 	if s_EndpointJSON == nil then
 		UpdateFinished(Config.AutoUpdater.DevBuilds, false, false, nil, nil, nil)
 		do return end
@@ -91,7 +38,7 @@ local function CheckVersion()
 	-- Response is different based on the cycle request
 	-- @ToDo: Make the current version better as it currently checks strings. It should check an incremental value instead.
 
- 	-- Stable and release candidates follow the same body
+	-- Stable and release candidates follow the same body
 	if not Config.AutoUpdater.DevBuilds then
 		if Config.Version.Tag == s_EndpointJSON['tag_name'] then
 			UpdateFinished(Config.AutoUpdater.DevBuilds, true, false, nil, nil, nil)
@@ -109,7 +56,21 @@ local function CheckVersion()
 	end
 
 	UpdateFinished(true, true, true, s_EndpointJSON[1]['zipball_url'], {tag = s_EndpointJSON[1]['name']}, nil)
-
 end
 
-return CheckVersion()
+-- Async check for newer updates
+-- Return: tba
+local function UpdateCheck()
+	-- Calculate the URL to get from.
+	local s_EndpointURL = ApiUrls.stable
+
+	-- If development builds are enabled, get latest tags
+	if Config.AutoUpdater.DevBuilds then
+		s_EndpointURL = ApiUrls.dev
+	end
+
+	print(s_EndpointURL)
+	Net:GetHTTPAsync(s_EndpointURL, updateCheckCB)
+end
+
+return UpdateCheck()
