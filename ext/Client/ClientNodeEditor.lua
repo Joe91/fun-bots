@@ -1688,7 +1688,7 @@ function ClientNodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 	end
 
 	--self:DrawDebugThings(p_DeltaTime)
-	self:DrawSomeNodes(150)
+	self:DrawSomeNodes(Config.NodesPerCycle)
 end
 
 function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
@@ -2143,7 +2143,7 @@ function ClientNodeEditor:_drawNode(p_Waypoint, p_IsTracePath)
 	end
 
 	-- draw debugging text
-	if Config.DrawWaypointIDs and m_NodeCollection:InRange(p_Waypoint, self.m_PlayerPos, Config.TextRange) then
+	if (Config.DrawWaypointIDs or s_IsSelected) and m_NodeCollection:InRange(p_Waypoint, self.m_PlayerPos, Config.TextRange) then
 		if s_IsSelected then
 			-- don't try to precalc this value like with the distance, another memory leak crash awaits you
 			local s_ScreenPos = ClientUtils:WorldToScreen(p_Waypoint.Position + Vec3.up)

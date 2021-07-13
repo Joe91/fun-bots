@@ -809,7 +809,7 @@ SettingsDefinition = {
 			Type = Type.Boolean,
 			Value = Config.DrawWaypointIDs,
 			Description = "Draw waypoint IDs",
-			Default = true,
+			Default = false,
 			UpdateFlag = UpdateFlag.None,
 			Category = "TRACE"
 		},
