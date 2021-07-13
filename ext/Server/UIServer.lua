@@ -17,7 +17,6 @@ function FunBotUIServer:__init()
 	self._authenticated = ArrayMap()
 
 	if Config.DisableUserInterface ~= true then
-		Events:Subscribe('Player:Left', self, self._onPlayerLeft)
 		NetEvents:Subscribe('UI_Request_Open', self, self._onUIRequestOpen)
 		NetEvents:Subscribe('UI_Request_Save_Settings', self, self._onUIRequestSaveSettings)
 		NetEvents:Subscribe('BotEditor', self, self._onBotEditorEvent)
@@ -154,15 +153,6 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 	end
 end
 
-function FunBotUIServer:_onPlayerLeft(p_Player)
-	if Config.DisableUserInterface == true then
-		return
-	end
-
-	-- @ToDo current fix for auth-check after rejoin, remove it later or make it as configuration!
-	self._authenticated:delete(tostring(p_Player.accountGuid))
-end
-
 function FunBotUIServer:_onUIRequestSaveSettings(p_Player, p_Data)
 	if Config.DisableUserInterface == true then
 		return
@@ -278,17 +268,6 @@ function FunBotUIServer:_onUIRequestOpen(p_Player, p_Data)
 	end
 end
 
-function FunBotUIServer:_isAuthenticated(p_Guid)
-	if Config.DisableUserInterface == true then
-		return false
-	end
-
-	if self._authenticated:isEmpty() then
-		return false
-	end
-
-	return self._authenticated:exists(tostring(p_Guid))
-end
 
 function FunBotUIServer:_writeSingleSetting(p_Name, p_Request, p_Type, p_Temporary, p_Batched, p_Min, p_Max)
 	local changed = false
