@@ -26,12 +26,17 @@ function Debugger:GenerateReport(p_Player)
         do return end
     end
 
-    -- Net:GetHTTPAsync(DEBUG_REPORT_URL .. DEBUG_ELIGIABLE_PATH .. "?uuid=" .. RCON:GetServerGuid(), Debugger:GenerateReportCallback())
+    -- @Todo: Figure out how to pass this variable with GenerateReportCallback
     pp = p_Player
-    Net:GetHTTPAsync("https://report.funbots.dev/api/precheck?uuid=a5bb3716-1768-4367-b1ba-6b6ab0b7fbb2", GenerateReportCallback)
+
+    local s_UUID = RCON:GetServerGuid().
+    print("UUID = " .. s_UUID)
+
+    Net:GetHTTPAsync(DEBUG_REPORT_URL .. DEBUG_ELIGIABLE_PATH .. "?uuid=" .. RCON:GetServerGuid(), GenerateReportCallback)
 end
 
 function GenerateReportCallback(httpRequest)
+    -- @Todo: Figure out how to pass this variable with GenerateReportCallback
     local p_Player = pp
 
     if httpRequest == nil then
@@ -58,13 +63,13 @@ end
 -- Generate the report
 function Debugger:CreateReport(p_Player)
     -- Generate POST data
-    local postData = {}
+    local postData = {config = json.encode(Config)}
+    print(postData)
 
-    -- Add config to POST
-    postData.insert("config", json.encode(Config))
+    local s_String = "config=" .. json.encode(Config) .. "&version=2.2.0" .. "author=" .. p_Player.name
 
     -- Send post data
-    Net:PostHTTPAsync("https://report.funbots.dev/api/submit?uuid=a5bb3716-1768-4367-b1ba-6b6ab0b7fbb2", postData.tostring, CreateReportCallback)
+    Net:PostHTTPAsync(DEBUG_REPORT_URL .. DEBUG_REPORT_URL .. "?uuid=" .. RCON:GetServerGuid(), json.encode(Config), CreateReportCallback)
 end
 
 function CreateReportCallback(httpRequest)
@@ -84,6 +89,5 @@ function Debugger:__init()
 
     return true
 end
-
 
 return Debugger:__init()
