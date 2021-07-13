@@ -70,6 +70,68 @@ function WaypointEditor:__init(p_Core)
 			Hidden = self.recording:IsHidden()
 		}))
 	end)
+
+    NetEvents:Subscribe('WaypointEditor:ChangeMode', self, function(p_UserData, p_Player, p_Mode, p_Params, p_Type)
+		Utilities:dump(p_UserData)
+        self.m_Quick_Shortcuts:ClearNumpad()
+        self.m_Quick_Shortcuts:ClearHelp()
+        if p_Mode == 'move' then
+            self.m_Quick_Shortcuts:AddNumpad(Numpad.K1, 'Mode')
+            self.m_Quick_Shortcuts:AddNumpad(Numpad.K2, 'Back')
+            self.m_Quick_Shortcuts:AddNumpad(Numpad.K3, 'Down')
+            self.m_Quick_Shortcuts:AddNumpad(Numpad.K4, 'Left')
+            self.m_Quick_Shortcuts:AddNumpad(Numpad.K5, 'Finish')
+            self.m_Quick_Shortcuts:AddNumpad(Numpad.K6, 'Right')
+            self.m_Quick_Shortcuts:AddNumpad(Numpad.K7, 'Reset')
+            self.m_Quick_Shortcuts:AddNumpad(Numpad.K8, 'Forward')
+            self.m_Quick_Shortcuts:AddNumpad(Numpad.K9, 'Up')
+            self.m_Quick_Shortcuts:AddHelp(InputDeviceKeys.IDK_F12, 'Settings')
+            self.m_Quick_Shortcuts:AddHelp(InputDeviceKeys.IDK_Q, 'Finish Move')
+            self.m_Quick_Shortcuts:AddHelp(InputDeviceKeys.IDK_Backspace, 'Cancel Move')
+            self.m_Quick_Shortcuts:AddHelp(InputDeviceKeys.IDK_Add, 'Nudge Speed +')
+            if p_Type == 'area' then
+                self.m_Quick_Shortcuts:AddHelp(InputDeviceKeys.IDK_T, 'Switch to Size')
+            end
+            self.m_Quick_Shortcuts:AddHelp(InputDeviceKeys.IDK_Subtract, 'Nudge Speed -')
+            if p_Params ~= nil then
+                self.m_Quick_Shortcuts:AddHelp('', 'Nudge Speed: '..p_Params[1])
+                self.m_Quick_Shortcuts:AddHelp('', 'Move Mode: '..p_Params[2])
+            end
+        elseif p_Mode == 'area' then
+            self.m_Quick_Shortcuts:AddNumpad(Numpad.K1, 'Node')
+            self.m_Quick_Shortcuts:AddNumpad(Numpad.K2, 'Shorter')
+            self.m_Quick_Shortcuts:AddNumpad(Numpad.K3, 'Smaller')
+            self.m_Quick_Shortcuts:AddNumpad(Numpad.K4, 'Thinner')
+            self.m_Quick_Shortcuts:AddNumpad(Numpad.K5, 'Finish')
+            self.m_Quick_Shortcuts:AddNumpad(Numpad.K6, 'Wider')
+            self.m_Quick_Shortcuts:AddNumpad(Numpad.K7, 'Reset')
+            self.m_Quick_Shortcuts:AddNumpad(Numpad.K8, 'Longer')
+            self.m_Quick_Shortcuts:AddNumpad(Numpad.K9, 'Bigger')
+            self.m_Quick_Shortcuts:AddHelp(InputDeviceKeys.IDK_F12, 'Settings')
+            self.m_Quick_Shortcuts:AddHelp(InputDeviceKeys.IDK_Q, 'Finish Editing')
+            self.m_Quick_Shortcuts:AddHelp(InputDeviceKeys.IDK_T, 'Switch to Move')
+            self.m_Quick_Shortcuts:AddHelp(InputDeviceKeys.IDK_Backspace, 'Cancel Editing')
+        else --if p_Mode == 'none' then
+            self.m_Quick_Shortcuts:AddNumpad(Numpad.K1, 'Remove')
+            self.m_Quick_Shortcuts:AddNumpad(Numpad.K2, 'Unlink')
+            self.m_Quick_Shortcuts:AddNumpad(Numpad.K3, 'Add Node')
+            self.m_Quick_Shortcuts:AddNumpad(Numpad.K4, 'Modify')
+            self.m_Quick_Shortcuts:AddNumpad(Numpad.K5, 'Select')
+            self.m_Quick_Shortcuts:AddNumpad(Numpad.K6, 'Add Area')
+            self.m_Quick_Shortcuts:AddNumpad(Numpad.K7, 'Merge')
+            self.m_Quick_Shortcuts:AddNumpad(Numpad.K8, 'Link')
+            self.m_Quick_Shortcuts:AddNumpad(Numpad.K9, 'Split')
+            self.m_Quick_Shortcuts:AddHelp(InputDeviceKeys.IDK_F12, 'Settings')
+            self.m_Quick_Shortcuts:AddHelp(InputDeviceKeys.IDK_Q, 'Quick Select')
+            self.m_Quick_Shortcuts:AddHelp(InputDeviceKeys.IDK_Backspace, 'Clear Select')
+            self.m_Quick_Shortcuts:AddHelp(InputDeviceKeys.IDK_Insert, 'Spawn Bot')
+        end
+        NetEvents:SendToLocal('UI', p_Player, 'VIEW', self.m_View:GetName(), 'UPDATE', json.encode({
+			Type = self.m_Quick_Shortcuts:__class(),
+            Name = self.m_Quick_Shortcuts:GetName(),
+            Disabled = not self.m_Quick_Shortcuts:IsEnabled()
+		}))
+    end)
 end
 
 --[[
@@ -424,7 +486,7 @@ function WaypointEditor:InitializeComponent()
 
 	s_Input_Trace_Index:AddArrow(Position.Right, '❱', function(p_Player)
 		-- Hide the old path
-		NetEvents:SendToLocal('NodeCollection:HidePath', p_Player, self.m_Trace_Index)
+		--NetEvents:SendToLocal('NodeCollection:HidePath', p_Player, self.m_Trace_Index)
 
 		self.m_Trace_Index = self.m_Trace_Index + 1
 		local s_LastNode = g_NodeCollection:GetLast()

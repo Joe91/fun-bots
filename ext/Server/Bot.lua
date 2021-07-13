@@ -1504,9 +1504,9 @@ function Bot:_UpdateMovement()
 					if s_NextPoint == nil then
 						s_NextPoint = m_NodeCollection:Get(s_ActivePointIndex, self._PathIndex)
 
-						if Config.DebugTracePaths then
+						--[[if Config.DebugTracePaths then
 							NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', self._PathIndex, s_ActivePointIndex, self.m_Player.soldier.worldTransform.trans, (self._ObstaceSequenceTimer > 0), "Blue")
-						end
+						end--]]
 					end
 
 					s_UseShootWayPoint = true
@@ -1516,15 +1516,15 @@ function Bot:_UpdateMovement()
 					if not self._InvertPathDirection then
 						s_NextPoint = m_NodeCollection:Get(self:_GetWayIndex(self._CurrentWayPoint + 1), self._PathIndex)
 
-						if Config.DebugTracePaths then
+						--[[if Config.DebugTracePaths then
 							NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', self._PathIndex, self:_GetWayIndex(self._CurrentWayPoint + 1), self.m_Player.soldier.worldTransform.trans, (self._ObstaceSequenceTimer > 0), "Green")
-						end
+						end--]]
 					else
 						s_NextPoint = m_NodeCollection:Get(self:_GetWayIndex(self._CurrentWayPoint - 1), self._PathIndex)
 
-						if Config.DebugTracePaths then
+						--[[if Config.DebugTracePaths then
 							NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', self._PathIndex, self:_GetWayIndex(self._CurrentWayPoint - 1), self.m_Player.soldier.worldTransform.trans, (self._ObstaceSequenceTimer > 0), "Green")
-						end
+						end--]]
 					end
 				end
 

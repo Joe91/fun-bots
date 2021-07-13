@@ -46,9 +46,15 @@ function ClientNodeEditor:__init()
     
     self.m_UpdateTimer = 0
     self.m_NodesToDraw = {}
+	self.m_NodesToDraw_temp = {}
     self.m_LinesToDraw = {}
+	self.m_LinesToDraw_temp = {}
     self.m_TextToDraw = {}
+	self.m_TextToDraw_temp = {}
     self.m_ObbToDraw = {}
+	self.m_ObbToDraw_temp = {}
+	self.m_lastDrawIndexPath = 0
+	self.m_lastDrawIndexNode = 0
 
 	self.m_NodeOperation = ''
 
@@ -1246,6 +1252,8 @@ function ClientNodeEditor:_onUnload(p_Args)
 	self.m_Player = nil
 	self.m_NodeReceiveProgress = 0
 	self.m_NodeReceiveExpected = 0
+	self.m_lastDrawIndexPath = 0
+	self.m_lastDrawIndexNode = 0
 
 	if p_Args ~= nil then
 		if type(p_Args) == 'table' then
@@ -1679,18 +1687,8 @@ function ClientNodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 		end
 	end
 
-	local s_Botwpcount = 0
-
-	for l_WaypointID, l_Data in pairs(self.m_BotSelectedWaypoints) do
-		if l_Data.Timer < 0 then
-			self.m_BotSelectedWaypoints[l_WaypointID] = nil
-		else
-			l_Data.Timer = l_Data.Timer - p_DeltaTime
-			s_Botwpcount = s_Botwpcount + 1
-		end
-	end
-
-	self.m_DebugEntries['botSelectedWaypoints'] = s_Botwpcount
+	--self:DrawDebugThings(p_DeltaTime)
+	self:DrawSomeNodes(150)
 end
 
 function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
@@ -1798,16 +1796,7 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 					self.m_BotVisionPlayers[s_Players[p].name] = s_PosData
 				end
 			end
-		end
-         -- reduce amount of calls
-        self.m_UpdateTimer = self.m_UpdateTimer + p_DeltaTime
-        if self.m_UpdateTimer < 0.2 then
-            return
-        end
-        self.m_UpdateTimer = 0
-        -- writes everything into one buffer
-        self:PrepareDrawing()
-        
+		end    
 	end
 end
 
@@ -1864,7 +1853,7 @@ function ClientNodeEditor:OnUIDrawHud()
     end
     for _,l_Text in pairs(self.m_TextToDraw) do
         -- draw text
-        DebugRenderer:DrawText2D(l_Text.x, l_Text.y, l_Text.color, l_Text.scale)
+        DebugRenderer:DrawText2D(l_Text.x, l_Text.y, l_Text.text, l_Text.color, l_Text.scale)
     end
     for _,l_Obb in pairs(self.m_ObbToDraw) do
         -- draw OBB
@@ -1873,7 +1862,7 @@ function ClientNodeEditor:OnUIDrawHud()
 end
 
 function ClientNodeEditor:DrawSphere(p_Position, p_Size, p_Color, p_RenderLines, p_SmallSizeSegmentDecrease)
-    table.insert(self.m_NodesToDraw, {
+    table.insert(self.m_NodesToDraw_temp, {
         pos = p_Position,
         radius = p_Size,
         color = p_Color,
@@ -1883,7 +1872,7 @@ function ClientNodeEditor:DrawSphere(p_Position, p_Size, p_Color, p_RenderLines,
 end
 
 function ClientNodeEditor:DrawLine(p_From, p_To, p_ColorFrom, p_ColorTo)
-    table.insert(self.m_LinesToDraw, {
+    table.insert(self.m_LinesToDraw_temp, {
         from = p_From,
         to = p_To,
         colorFrom = p_ColorFrom,
@@ -1892,16 +1881,17 @@ function ClientNodeEditor:DrawLine(p_From, p_To, p_ColorFrom, p_ColorTo)
 end
 
 function ClientNodeEditor:DrawText2D(p_X, p_Y, p_Text, p_Color, p_Scale)
-    table.insert(self.m_TextToDraw, {
+    table.insert(self.m_TextToDraw_temp, {
         x = p_X,
         y = p_Y,
+		text = p_Text,
         color = p_Color,
         scale = p_Scale
     })
 end
 
-function ClientNodeEditor:DrawOBB(p_Aab: , p_Transform, p_Color)
-    table.insert(self.m_ObbToDraw, {
+function ClientNodeEditor:DrawOBB(p_Aab, p_Transform, p_Color)
+    table.insert(self.m_ObbToDraw_temp, {
         aab = p_Aab,
         transform = p_Transform,
         color = p_Color
@@ -1909,13 +1899,22 @@ function ClientNodeEditor:DrawOBB(p_Aab: , p_Transform, p_Color)
 end
 
 
-function ClientNodeEditor:PrepareDrawing()
+function ClientNodeEditor:DrawDebugThings(p_DeltaTime)
+	-- Bot _onSelectNode
+	local s_Botwpcount = 0
+
+	for l_WaypointID, l_Data in pairs(self.m_BotSelectedWaypoints) do
+		if l_Data.Timer < 0 then
+			self.m_BotSelectedWaypoints[l_WaypointID] = nil
+		else
+			l_Data.Timer = l_Data.Timer - p_DeltaTime
+			s_Botwpcount = s_Botwpcount + 1
+		end
+	end
+	self.m_DebugEntries['botSelectedWaypoints'] = s_Botwpcount
+
     -- generic debug values
 	local s_DebugText = ''
-    self.m_NodesToDraw = {}
-    self.m_LinesToDraw = {}
-    self.m_TextToDraw = {}
-    self.m_ObbToDraw = {}
 
 	self.m_DebugEntries['commoRoseEnabled'] = self.m_CommoRoseEnabled
 	self.m_DebugEntries['commoRosePressed'] = self.m_CommoRosePressed
@@ -1992,21 +1991,43 @@ function ClientNodeEditor:PrepareDrawing()
 			self:DrawSphere(self.m_LastTraceSearchAreaPos, self.m_LastTraceSearchAreaSize, self.m_Colors.Ray.Node, false, false)
 		end
 	end
+end
 
+function ClientNodeEditor:DrawSomeNodes(p_NrOfNodes)
 	if self.m_PlayerPos == nil then
-		return
+		return false
 	end
-
+	local s_FirstPath = true
+	local s_Count = 0
+	
 	-- draw waypoints stored in main collection
 	local s_WaypointPaths = m_NodeCollection:GetPaths()
 
 	for l_Path, _ in pairs(s_WaypointPaths) do
-		if m_NodeCollection:IsPathVisible(l_Path) then
-			for l_Waypoint = 1, #s_WaypointPaths[l_Path] do
-				self:_drawNode(s_WaypointPaths[l_Path][l_Waypoint], false)
+		if l_Path >= self.m_lastDrawIndexPath then
+			if m_NodeCollection:IsPathVisible(l_Path) then
+				local s_startIndex = 1
+				if s_FirstPath then
+					s_startIndex = self.m_lastDrawIndexNode
+					if s_startIndex <= 0 then
+						s_startIndex = 1
+					end
+					s_FirstPath = false
+				end
+
+				for l_Waypoint = s_startIndex, #s_WaypointPaths[l_Path] do
+					self:_drawNode(s_WaypointPaths[l_Path][l_Waypoint], false)
+					s_Count = s_Count + 1
+					if s_Count >= p_NrOfNodes then
+						self.m_lastDrawIndexNode = l_Waypoint
+						self.m_lastDrawIndexPath = l_Path
+						return false
+					end
+				end
 			end
 		end
 	end
+	self.m_lastDrawIndexPath = 99999
 
 	-- draw waypoints for custom trace
 	if self.m_CustomTrace ~= nil then
@@ -2014,8 +2035,29 @@ function ClientNodeEditor:PrepareDrawing()
 
 		for i = 1, #s_CustomWaypoints do
 			self:_drawNode(s_CustomWaypoints[i], true)
+			s_Count = s_Count + 1
+			if s_Count >= p_NrOfNodes then
+				self.m_lastDrawIndexNode = i
+				return false
+			end
 		end
 	end
+	
+	-- copy tables
+	self.m_NodesToDraw = self.m_NodesToDraw_temp
+	self.m_NodesToDraw_temp = {}
+	self.m_LinesToDraw = self.m_LinesToDraw_temp
+	self.m_LinesToDraw_temp = {}
+	self.m_TextToDraw = self.m_TextToDraw_temp
+	self.m_TextToDraw_temp = {}
+	self.m_ObbToDraw = self.m_ObbToDraw_temp
+	self.m_ObbToDraw_temp = {}
+
+	-- reset vars
+	self.m_lastDrawIndexPath = 0
+	self.m_lastDrawIndexNode = 0
+
+	return true
 end
 
 function ClientNodeEditor:_drawNode(p_Waypoint, p_IsTracePath)
@@ -2051,14 +2093,14 @@ function ClientNodeEditor:_drawNode(p_Waypoint, p_IsTracePath)
 	end
 
 	-- if bot has selected draw it
-	if not p_IsTracePath and self.m_BotSelectedWaypoints[p_Waypoint.ID] ~= nil then
+	--[[if not p_IsTracePath and self.m_BotSelectedWaypoints[p_Waypoint.ID] ~= nil then
 		local s_SelectData = self.m_BotSelectedWaypoints[p_Waypoint.ID]
 		if s_SelectData.Obstacle then
 			self:DrawLine(s_SelectData.Position + (Vec3.up * 1.2), p_Waypoint.Position, self.m_Colors.Red, self.m_Colors.Red)
 		else
 			self:DrawLine(s_SelectData.Position + (Vec3.up * 1.2), p_Waypoint.Position, self.m_Colors[s_SelectData.Color], self.m_Colors[s_SelectData.Color])
 		end
-	end
+	end--]]
 
 	-- if selected draw bigger node and transform helper
 	if not p_IsTracePath and s_IsSelected and m_NodeCollection:InRange(p_Waypoint, self.m_PlayerPos, Config.WaypointRange) then

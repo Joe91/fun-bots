@@ -866,7 +866,17 @@ SettingsDefinition = {
 			UpdateFlag = UpdateFlag.None,
 			Category = "TRACE"
 		},
-
+		{
+			Name = "NodesPerCycle",
+			Text = "Nodes that are drawn per cycle",
+			Type = Type.Integer,
+			Value = Config.NodesPerCycle,
+			Description = "Set how many nodes get drawn per cycle. Affects performance",
+			Reference = Range(1.00, 10000.00, 1.0),
+			Default = 300,
+			UpdateFlag = UpdateFlag.None,
+			Category = "TRACE"
+		},
 		-- Advanced properties
 		{
 			Name = "DistanceForDirectAttack",
