@@ -30,6 +30,13 @@ function QuickShortcut:GetAttributes()
 end
 
 --[[
+	@method: GetName
+]]
+function QuickShortcut:GetName()
+    return self.m_Name
+end
+
+--[[
 	@method: SetPosition
 ]]
 function QuickShortcut:SetPosition(p_Flag, p_Position)
@@ -76,6 +83,13 @@ function QuickShortcut:AddNumpad(p_Key, p_Text)
 end
 
 --[[
+	@method: ClearNumpad
+]]
+function QuickShortcut:ClearNumpad()
+	self.m_Numpad = {}
+end
+
+--[[
 	@method: AddHelp
 ]]
 function QuickShortcut:AddHelp(p_Key, p_Text)
@@ -83,6 +97,13 @@ function QuickShortcut:AddHelp(p_Key, p_Text)
 		Key = p_Key,
 		Text = p_Text
 	})
+end
+
+--[[
+	@method: ClearHelp
+]]
+function QuickShortcut:ClearHelp()
+	self.m_Help = {}
 end
 
 --[[

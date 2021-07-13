@@ -778,7 +778,7 @@ SettingsDefinition = {
 			Value = Config.WaypointRange,
 			Description = "Set how far away waypoints are visible (meters)",
 			Reference = Range(1.00, 1000.00, 1.0),
-			Default = 100,
+			Default = 50,
 			UpdateFlag = UpdateFlag.None,
 			Category = "TRACE"
 		},
@@ -799,7 +799,7 @@ SettingsDefinition = {
 			Value = Config.LineRange,
 			Description = "Set how far away waypoint lines are visible (meters)",
 			Reference = Range(1.00, 1000.00, 1.0),
-			Default = 15,
+			Default = 12,
 			UpdateFlag = UpdateFlag.None,
 			Category = "TRACE"
 		},
@@ -809,7 +809,7 @@ SettingsDefinition = {
 			Type = Type.Boolean,
 			Value = Config.DrawWaypointIDs,
 			Description = "Draw waypoint IDs",
-			Default = true,
+			Default = false,
 			UpdateFlag = UpdateFlag.None,
 			Category = "TRACE"
 		},
@@ -821,6 +821,27 @@ SettingsDefinition = {
 			Description = "Set how far away waypoint text is visible (meters)",
 			Reference = Range(1.00, 1000.00, 1.0),
 			Default = 3,
+			UpdateFlag = UpdateFlag.None,
+			Category = "TRACE"
+		},
+		{
+			Name = "DrawSpawnPoints",
+			Text = "Draw Spawn Points",
+			Type = Type.Boolean,
+			Value = Config.DrawSpawnPoints,
+			Description = "Draw Spawn Points",
+			Default = false,
+			UpdateFlag = UpdateFlag.None,
+			Category = "TRACE"
+		},
+		{
+			Name = "SpawnPointRange",
+			Text = "Range of Spawnpoints",
+			Type = Type.Integer,
+			Value = Config.SpawnPointRange,
+			Description = "Set how far away spawnpoints are visible (meters)",
+			Reference = Range(1.00, 1000.00, 1.0),
+			Default = 50,
 			UpdateFlag = UpdateFlag.None,
 			Category = "TRACE"
 		},
@@ -845,7 +866,17 @@ SettingsDefinition = {
 			UpdateFlag = UpdateFlag.None,
 			Category = "TRACE"
 		},
-
+		{
+			Name = "NodesPerCycle",
+			Text = "Nodes that are drawn per cycle",
+			Type = Type.Integer,
+			Value = Config.NodesPerCycle,
+			Description = "Set how many nodes get drawn per cycle. Affects performance",
+			Reference = Range(1.00, 10000.00, 1.0),
+			Default = 300,
+			UpdateFlag = UpdateFlag.None,
+			Category = "TRACE"
+		},
 		-- Advanced properties
 		{
 			Name = "DistanceForDirectAttack",
