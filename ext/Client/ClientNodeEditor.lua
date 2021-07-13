@@ -413,7 +413,26 @@ function ClientNodeEditor:_onToggleMoveNode(p_Args)
 			end
 		end
 
-        NetEvents:SendLocal('WaypointEditor:ChangeMode', self.m_EditMode)
+		g_FunBotUIClient:_onSetOperationControls({
+			Numpad = {
+				{Grid = 'K1', Key = '1', Name = 'Remove'},
+				{Grid = 'K2', Key = '2', Name = 'Unlink'},
+				{Grid = 'K3', Key = '3', Name = 'Add'},
+				{Grid = 'K4', Key = '4', Name = 'Move'},
+				{Grid = 'K5', Key = '5', Name = 'Select'},
+				{Grid = 'K6', Key = '6', Name = 'Input'},
+				{Grid = 'K7', Key = '7', Name = 'Merge'},
+				{Grid = 'K8', Key = '8', Name = 'Link'},
+				{Grid = 'K9', Key = '9', Name = 'Split'}
+			},
+			Other = {
+				{Key = 'F12', Name = 'Settings'},
+				{Key = 'Q', Name = 'Quick Select'},
+				{Key = 'BS', Name = 'Clear Select'},
+				{Key = 'INS', Name = 'Spawn Bot'}
+			}
+		})
+
 		self:Log('Edit Mode: %s', self.m_EditMode)
 		return true
 	else
@@ -439,7 +458,27 @@ function ClientNodeEditor:_onToggleMoveNode(p_Args)
 		self.m_EditMode = 'move'
 		self.m_EditModeManualOffset = Vec3.zero
 
-        NetEvents:SendLocal('WaypointEditor:ChangeMode', self.m_EditMode, {tostring(self.m_EditModeManualSpeed), self.m_EditPositionMode})
+		g_FunBotUIClient:_onSetOperationControls({
+			Numpad = {
+				{Grid = 'K1', Key = '1', Name = 'Mode'},
+				{Grid = 'K2', Key = '2', Name = 'Back'},
+				{Grid = 'K3', Key = '3', Name = 'Down'},
+				{Grid = 'K4', Key = '4', Name = 'Left'},
+				{Grid = 'K5', Key = '5', Name = 'Finish'},
+				{Grid = 'K6', Key = '6', Name = 'Right'},
+				{Grid = 'K7', Key = '7', Name = 'Reset'},
+				{Grid = 'K8', Key = '8', Name = 'Forward'},
+				{Grid = 'K9', Key = '9', Name = 'Up'},
+			},
+			Other = {
+				{Key = 'F12', Name = 'Settings'},
+				{Key = 'Q', Name = 'Finish Move'},
+				{Key = 'BS', Name = 'Cancel Move'},
+				{Key = 'KP_PLUS', Name = 'Speed +'},
+				{Key = 'KP_MINUS', Name = 'Speed -'},
+			}
+		})
+
 		self:Log('Edit Mode: %s', self.m_EditMode)
 		return true
 	end
@@ -1419,13 +1458,11 @@ function ClientNodeEditor:OnClientUpdateInput(p_DeltaTime)
 
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Equals) or InputManager:WentKeyDown(InputDeviceKeys.IDK_Add) then
 			self.m_EditModeManualSpeed = math.min(self.m_EditModeManualSpeed + 0.05, 1)
-            NetEvents:SendLocal('WaypointEditor:ChangeMode', self.m_EditMode, {tostring(self.m_EditModeManualSpeed), self.m_EditPositionMode})
 			return
 		end
 
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Minus) or InputManager:WentKeyDown(InputDeviceKeys.IDK_Subtract) then
 			self.m_EditModeManualSpeed = math.max(self.m_EditModeManualSpeed - 0.05, 0.05)
-            NetEvents:SendLocal('WaypointEditor:ChangeMode', self.m_EditMode, {tostring(self.m_EditModeManualSpeed), self.m_EditPositionMode})
 			return
 		end
 
@@ -1442,7 +1479,7 @@ function ClientNodeEditor:OnClientUpdateInput(p_DeltaTime)
 			else
 				self.m_EditPositionMode = 'absolute'
 			end
-            NetEvents:SendLocal('WaypointEditor:ChangeMode', self.m_EditMode, {tostring(self.m_EditModeManualSpeed), self.m_EditPositionMode})
+
 			return
 		end
 
