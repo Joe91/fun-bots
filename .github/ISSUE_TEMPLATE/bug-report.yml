@@ -7,7 +7,6 @@ body:
       value: |
         Thanks for taking the time to fill out this bug report! Before posting be sure that it's not a duplicate of any previous posted issues by using the search function.
         Please note that we do not support outdated versions. Always use the latest stable release.
-
   - type: input
     id: bug-report-token
     attributes:
@@ -15,7 +14,7 @@ body:
       description: |
         Generate a bug report using the `!bugreport` command and enter the token or URL here.
         This is a **required** step to create the bug report.
-        Note: when reporting multiple bugs, use the same bug report token as long as you've made no changes to the server.
+        When reporting multiple bugs, use the same bug report token as long as you've made no changes to the server or configuration. You can only create two bug reports every 24 hours.
       placeholder: https://report.funbots.dev/7e1.....
     validations:
       required: true
