@@ -1,0 +1,72 @@
+ui-key[data-name] {
+	display: inline-block;
+	width: 48px;
+	height: 48px;
+	background-size: contain;
+	background-position: 50% 50%;
+	background-repeat: no-repeat;
+}
+
+ui-key[data-name="0"] {
+	background-image: url('../../../assets/key/0.svg');
+}
+
+ui-key[data-name="1"] {
+	background-image: url('../../../assets/key/1.svg');
+}
+
+ui-key[data-name="2"] {
+	background-image: url('../../../assets/key/2.svg');
+}
+
+ui-key[data-name="3"] {
+	background-image: url('../../../assets/key/3.svg');
+}
+
+ui-key[data-name="4"] {
+	background-image: url('../../../assets/key/4.svg');
+}
+
+ui-key[data-name="5"] {
+	background-image: url('../../../assets/key/5.svg');
+}
+
+ui-key[data-name="6"] {
+	background-image: url('../../../assets/key/6.svg');
+}
+
+ui-key[data-name="7"] {
+	background-image: url('../../../assets/key/7.svg');
+}
+
+ui-key[data-name="8"] {
+	background-image: url('../../../assets/key/8.svg');
+}
+
+ui-key[data-name="9"] {
+	background-image: url('../../../assets/key/9.svg');
+}
+
+ui-key[data-name="Q"] {
+	background-image: url('../../../assets/key/Q.svg');
+}
+
+ui-key[data-name="F12"] {
+	background-image: url('../../../assets/key/F12.svg');
+}
+
+ui-key[data-name="BS"] {
+	background-image: url('../../../assets/key/BS.svg');
+}
+
+ui-key[data-name="INS"] {
+	background-image: url('../../../assets/key/INS.svg');
+}
+
+ui-key[data-name="KP_PLUS"] {
+	background-image: url('../../../assets/key/KP_PLUS.svg');
+}
+
+ui-key[data-name="KP_MINUS"] {
+	background-image: url('../../../assets/key/KP_MINUS.svg');
+}
