@@ -1120,19 +1120,15 @@ function ClientNodeEditor:_onStartTrace()
 
 	self:Log('Custom Trace Started')
 
-	NetEvents:Send('WaypointEditor:TraceToggle', {
-		Enabled = true,
-		TraceIndex = self.m_CustomTraceIndex,
-		Distance = self.m_CustomTraceDistance,
-		Waypoints = #self.m_CustomTrace:Get()
-	})
+	g_FunBotUIClient:_onUITrace(true)
+	g_FunBotUIClient:_onUITraceIndex(self.m_CustomTraceIndex)
+	g_FunBotUIClient:_onUITraceWaypoints(#self.m_CustomTrace:Get())
+	g_FunBotUIClient:_onUITraceWaypointsDistance(self.m_CustomTraceDistance)
 end
 
 function ClientNodeEditor:_onEndTrace()
 	self.m_CustomTraceTimer = -1
-	NetEvents:Send('WaypointEditor:TraceToggle', {
-		Enabled = false
-	})
+	g_FunBotUIClient:_onUITrace(false)
 
 	local s_FirstWaypoint = self.m_CustomTrace:GetFirst()
 
@@ -1169,12 +1165,10 @@ function ClientNodeEditor:_onClearTrace()
 	self.m_CustomTraceIndex = self:_getNewIndex()
 	self.m_CustomTraceDistance = 0
 	self.m_CustomTrace:Clear()
-	NetEvents:Send('WaypointEditor:TraceToggle', {
-		Enabled = false,
-		TraceIndex = self.m_CustomTraceIndex,
-		Waypoints = #self.m_CustomTrace:Get(),
-		Distance = self.m_CustomTraceDistance
-	})
+	g_FunBotUIClient:_onUITrace(false)
+	g_FunBotUIClient:_onUITraceIndex(self.m_CustomTraceIndex)
+	g_FunBotUIClient:_onUITraceWaypoints(#self.m_CustomTrace:Get())
+	g_FunBotUIClient:_onUITraceWaypointsDistance(self.m_CustomTraceDistance)
 
 	self:Log('Custom Trace Cleared')
 end
@@ -1312,7 +1306,7 @@ function ClientNodeEditor:_onCommoRoseAction(p_Action, p_Hit)
 
 	if p_Action == 'Hide' then
 		self.m_CommoRoseActive = false
-		-- g_FunBotUIClient:_onUICommonRose('false')
+		g_FunBotUIClient:_onUICommonRose('false')
 		return
 	end
 
@@ -1708,12 +1702,8 @@ function ClientNodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 					end
 
 					self.m_CustomTraceDistance = self.m_CustomTraceDistance + s_LastDistance
-					NetEvents:Send('WaypointEditor:TraceToggle', {
-						Waypoints = #self.m_CustomTrace:Get(),
-						Distance = self.m_CustomTraceDistance
-					})
-					--g_FunBotUIClient:_onUITraceWaypointsDistance(self.customTraceDistance)
-					--g_FunBotUIClient:_onUITraceWaypoints(#self.customTrace:Get())
+					g_FunBotUIClient:_onUITraceWaypointsDistance(self.m_CustomTraceDistance)
+					g_FunBotUIClient:_onUITraceWaypoints(#self.m_CustomTrace:Get())
 				end
 			else
 				-- collection is empty, stop the timer
