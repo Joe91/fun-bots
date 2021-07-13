@@ -10,9 +10,6 @@ function FunBotUIClient:__init()
 	self._views = UIViews()
 
 	if Config.DisableUserInterface ~= true then
-		NetEvents:Subscribe('UI_Password_Protection', self, self._onUIPasswordProtection)
-		NetEvents:Subscribe('UI_Request_Password', self, self._onUIRequestPassword)
-		NetEvents:Subscribe('UI_Request_Password_Error', self, self._onUIRequestPasswordError)
 		NetEvents:Subscribe('UI_Toggle', self, self._onUIToggle)
 		Events:Subscribe('UI_Toggle', self, self._onUIToggle)
 		NetEvents:Subscribe('BotEditor', self, self._onBotEditorEvent)
@@ -300,54 +297,6 @@ function FunBotUIClient:_onUIShowToolbar(p_Data)
 		self._views:focus()
 	else
 		self._views:hide('toolbar')
-		self._views:blur()
-	end
-end
-
-function FunBotUIClient:_onUIPasswordProtection(p_Data)
-	if Config.DisableUserInterface == true then
-		return
-	end
-
-	if Debug.Client.UI then
-		print('UIClient: UI_Password_Protection (' .. tostring(p_Data) .. ')')
-	end
-
-	if (p_Data == 'true') then
-		self._views:show('password_protection')
-		self._views:focus()
-	else
-		self._views:hide('password_protection')
-		self._views:blur()
-	end
-end
-
-function FunBotUIClient:_onUIRequestPasswordError(p_Data)
-	if Config.DisableUserInterface == true then
-		return
-	end
-
-	if Debug.Client.UI then
-		print('UIClient: UI_Request_Password_Error')
-	end
-
-	self._views:error('password', p_Data)
-end
-
-function FunBotUIClient:_onUIRequestPassword(p_Data)
-	if Config.DisableUserInterface == true then
-		return
-	end
-
-	if Debug.Client.UI then
-		print('UIClient: UI_Request_Password (' .. tostring(p_Data) .. ')')
-	end
-
-	if (p_Data == 'true') then
-		self._views:show('password')
-		self._views:focus()
-	else
-		self._views:hide('password')
 		self._views:blur()
 	end
 end
