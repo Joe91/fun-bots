@@ -210,10 +210,10 @@ end
 
 -- player has indicated they are ready to send nodes to the server
 function NodeEditor:OnReceiveNodes(p_Player, p_NodeCount)
-	if Config.SettingsPassword ~= nil and m_ServerUI:_isAuthenticated(p_Player.accountGuid) ~= true then
-		self:Log('%s has no permissions for Waypoint-Editor.', p_Player.name)
+	if PermissionManager:HasPermission(p_Player, 'UserInterface.WaypointEditor') == false then
+		ChatManager:SendMessage('You have no permissions for this action.', p_Player)
 		return
-	end
+	end	
 
 	m_NodeCollection:Clear()
 	self.m_PlayerSendingNodes = p_Player
@@ -223,8 +223,8 @@ end
 
 -- player is sending a single node over
 function NodeEditor:OnCreate(p_Player, p_Data)
-	if Config.SettingsPassword ~= nil and m_ServerUI:_isAuthenticated(p_Player.accountGuid) ~= true then
-		self:Log('%s has no permissions for Waypoint-Editor.', p_Player.name)
+	if PermissionManager:HasPermission(p_Player, 'UserInterface.WaypointEditor') == false then
+		ChatManager:SendMessage('You have no permissions for this action.', p_Player)
 		return
 	end
 
@@ -233,8 +233,8 @@ end
 
 -- node payload has finished sending, setup events and calc indexes
 function NodeEditor:OnInit(p_Player, p_Save)
-	if Config.SettingsPassword ~= nil and m_ServerUI:_isAuthenticated(p_Player.accountGuid) ~= true then
-		self:Log('%s has no permissions for Waypoint-Editor.', p_Player.name)
+	if PermissionManager:HasPermission(p_Player, 'UserInterface.WaypointEditor') == false then
+		ChatManager:SendMessage('You have no permissions for this action.', p_Player)
 		return
 	end
 
@@ -295,7 +295,8 @@ function NodeEditor:OnUIRequestSaveSettings(p_Player, p_Data)
 		return
 	end
 
-	if Config.SettingsPassword ~= nil and m_ServerUI:_isAuthenticated(p_Player.accountGuid) ~= true then
+	if PermissionManager:HasPermission(p_Player, 'UserInterface.WaypointEditor') == false then
+		ChatManager:SendMessage('You have no permissions for this action.', p_Player)
 		return
 	end
 

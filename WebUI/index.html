@@ -181,22 +181,6 @@
 			<a><ui-bottom><span></span></ui-bottom></a>
 		</ui-view>
 
-		<!-- Authentication -->
-		<ui-view data-name="password" data-type="dialog">
-			<ui-header>
-				<span data-lang="Enter password">Enter password</span>
-			</ui-header>
-			<ui-content data-type="form" data-action="UI_Send_Password">
-				<p><span data-lang="Please enter the password to open the Bot-Editor.">Please enter the password to open the Bot-Editor.</span></p>
-				<ui-error></ui-error>
-				<input type="password" name="password" value="" />
-			</ui-content>
-			<ui-buttons>
-				<button data-action="close"><span data-lang="Cancel">Cancel</span></button>
-				<button data-action="submit"><span data-lang="OK">OK</span></button>
-			</ui-buttons>
-		</ui-view>
-
 		<!-- Settings -->
 		<ui-view data-name="settings" data-type="dialog">
 			<ui-header>

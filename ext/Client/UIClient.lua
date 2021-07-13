@@ -13,7 +13,6 @@ function FunBotUIClient:__init()
 		NetEvents:Subscribe('UI_Password_Protection', self, self._onUIPasswordProtection)
 		NetEvents:Subscribe('UI_Request_Password', self, self._onUIRequestPassword)
 		NetEvents:Subscribe('UI_Request_Password_Error', self, self._onUIRequestPasswordError)
-		Events:Subscribe('UI_Send_Password', self, self._onUISendPassword)
 		NetEvents:Subscribe('UI_Toggle', self, self._onUIToggle)
 		Events:Subscribe('UI_Toggle', self, self._onUIToggle)
 		NetEvents:Subscribe('BotEditor', self, self._onBotEditorEvent)
@@ -351,18 +350,6 @@ function FunBotUIClient:_onUIRequestPassword(p_Data)
 		self._views:hide('password')
 		self._views:blur()
 	end
-end
-
-function FunBotUIClient:_onUISendPassword(p_Data)
-	if Config.DisableUserInterface == true then
-		return
-	end
-
-	if Debug.Client.UI then
-		print('UIClient: UI_Send_Password (' .. p_Data .. ')')
-	end
-
-	NetEvents:Send('UI_Request_Open', p_Data)
 end
 
 function FunBotUIClient:OnClientUpdateInput(p_DeltaTime)

@@ -35,12 +35,8 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		print('UIServer: BotEditor (' .. tostring(p_Data) .. ')')
 	end
 
-	if (Config.SettingsPassword ~= nil and self:_isAuthenticated(p_Player.accountGuid) ~= true) then
-			if Debug.Server.UI then
-				print(p_Player.name .. ' has no permissions for Bot-Editor.')
-			end
-
-			ChatManager:Yell(Language:I18N('You are not permitted to change Bots. Please press F12 for authenticate!'), 2.5)
+	if PermissionManager:HasPermission(p_Player, 'UserInterface.BotEditor') == false then
+		ChatManager:SendMessage('You have no permissions for this action.', p_Player)
 		return
 	end
 
@@ -61,44 +57,44 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		local team = p_Player.teamId
 		Globals.SpawnMode = "manual"
 		if team == TeamId.Team1 then
-			BotSpawner:spawnWayBots(p_Player, amount, true, 0, 0, TeamId.Team2)
+			BotSpawner:SpawnWayBots(p_Player, amount, true, 0, 0, TeamId.Team2)
 		else
-			BotSpawner:spawnWayBots(p_Player, amount, true, 0, 0, TeamId.Team1)
+			BotSpawner:SpawnWayBots(p_Player, amount, true, 0, 0, TeamId.Team1)
 		end
 
 	elseif request.action == 'bot_spawn_friend' then
 		local amount = tonumber(request.value)
 		Globals.SpawnMode = "manual"
-		BotSpawner:spawnWayBots(p_Player, amount, true, 0, 0, p_Player.teamId)
+		BotSpawner:SpawnWayBots(p_Player, amount, true, 0, 0, p_Player.teamId)
 
 	elseif request.action == 'bot_spawn_path' then --todo: whats the difference? make a function to spawn bots on a fixed way instead?
 		local amount = 1
 		local indexOnPath = tonumber(request.pointindex) or 1
 		local index = tonumber(request.value)
 		Globals.SpawnMode = "manual"
-		BotSpawner:spawnWayBots(p_Player, amount, false, index, indexOnPath)
+		BotSpawner:SpawnWayBots(p_Player, amount, false, index, indexOnPath)
 
 	elseif request.action == 'bot_kick_all' then
 		Globals.SpawnMode = "manual"
-		BotManager:destroyAll()
+		BotManager:DestroyAll()
 
 	elseif request.action == 'bot_kick_team' then
 		Globals.SpawnMode = "manual"
 		local teamNumber = tonumber(request.value)
 		if teamNumber == 1 then
-			BotManager:destroyAll(nil, TeamId.Team1)
+			BotManager:DestroyAll(nil, TeamId.Team1)
 		elseif teamNumber == 2 then
-			BotManager:destroyAll(nil, TeamId.Team2)
+			BotManager:DestroyAll(nil, TeamId.Team2)
 		end
 
 	elseif request.action == 'bot_kill_all' then
 		Globals.SpawnMode = "manual"
-		BotManager:killAll()
+		BotManager:KillAll()
 
 	elseif request.action == 'bot_respawn' then  --toggle this function
 		local respawning = not Globals.RespawnWayBots
 		Globals.RespawnWayBots = respawning
-		BotManager:setOptionForAll('respawn', respawning)
+		BotManager:SetOptionForAll('respawn', respawning)
 		if respawning then
 			ChatManager:Yell(Language:I18N('Bot respawn activated!', request.action), 2.5)
 		else
@@ -108,7 +104,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 	elseif request.action == 'bot_attack' then  --toggle this function
 		local attack = not Globals.AttackWayBots
 		Globals.AttackWayBots = attack
-		BotManager:setOptionForAll('shoot', attack)
+		BotManager:SetOptionForAll('shoot', attack)
 		if attack then
 			ChatManager:Yell(Language:I18N('Bots will attack!', request.action), 2.5)
 		else
@@ -176,12 +172,8 @@ function FunBotUIServer:_onUIRequestSaveSettings(p_Player, p_Data)
 		print(p_Player.name .. ' requesting to save settings.')
 	end
 
-	if (Config.SettingsPassword ~= nil and self:_isAuthenticated(p_Player.accountGuid) ~= true) then
-		if Debug.Server.UI then
-			print(p_Player.name .. ' has no permissions for Bot-Editor.')
-		end
-
-		ChatManager:Yell(Language:I18N('You are not permitted to change Bots. Please press F12 for authenticate!'), 2.5)
+	if PermissionManager:HasPermission(p_Player, 'UserInterface.Settings') == false then
+		ChatManager:SendMessage('You have no permissions for this action.', p_Player)
 		return
 	end
 
@@ -195,11 +187,8 @@ function FunBotUIServer:_onUIRequestCommonRoseShow(p_Player, p_Data)
 		return
 	end
 
-	if (Config.SettingsPassword ~= nil and self:_isAuthenticated(p_Player.accountGuid) ~= true) then
-		if Debug.Server.UI then
-			print(p_Player.name .. ' has no permissions for Waypoint-Editor.')
-		end
-
+	if PermissionManager:HasPermission(p_Player, 'UserInterface.WaypointEditor') == false then
+		ChatManager:SendMessage('You have no permissions for this action.', p_Player)
 		return
 	end
 
@@ -255,11 +244,8 @@ function FunBotUIServer:_onUIRequestCommonRoseHide(p_Player, p_Data)
 		return
 	end
 
-	if (Config.SettingsPassword ~= nil and self:_isAuthenticated(p_Player.accountGuid) ~= true) then
-		if Debug.Server.UI then
-			print(p_Player.name .. ' has no permissions for Waypoint-Editor.')
-		end
-
+	if PermissionManager:HasPermission(p_Player, 'UserInterface.WaypointEditor') == false then
+		ChatManager:SendMessage('You have no permissions for this action.', p_Player)
 		return
 	end
 
@@ -279,11 +265,7 @@ function FunBotUIServer:_onUIRequestOpen(p_Player, p_Data)
 		print(p_Player.name .. ' requesting open Bot-Editor.')
 	end
 
-	if (Config.SettingsPassword == nil or self:_isAuthenticated(p_Player.accountGuid)) then
-		if (Config.SettingsPassword == nil) then
-			ChatManager:Yell(Language:I18N('The Bot-Editor is not protected by an password!'), 2.5)
-			NetEvents:SendTo('UI_Password_Protection', p_Player, 'true')
-		end
+	if PermissionManager:HasPermission(p_Player, 'UserInterface') then
 
 		if Debug.Server.UI then
 			print('Open Bot-Editor for ' .. p_Player.name .. '.')
@@ -292,46 +274,7 @@ function FunBotUIServer:_onUIRequestOpen(p_Player, p_Data)
 		NetEvents:SendTo('UI_Toggle', p_Player)
 		NetEvents:SendTo('UI_Show_Toolbar', p_Player, 'true')
 	else
-		if (p_Data == nil) then
-			if Debug.Server.UI then
-				print('Ask ' .. p_Player.name .. ' for Bot-Editor password.')
-			end
-
-			ChatManager:Yell(Language:I18N('Please authenticate with password!'), 2.5)
-			NetEvents:SendTo('UI_Request_Password', p_Player, 'true')
-		else
-			local form = json.decode(p_Data)
-
-			if (form.password ~= nil or form.password ~= '') then
-				if Debug.Server.UI then
-					print(p_Player.name .. ' has entered following Password: ' .. form.password)
-				end
-
-				if (form.password == Config.SettingsPassword) then
-					self._authenticated:add(tostring(p_Player.accountGuid))
-					if Debug.Server.UI then
-						print('accountGuid: ' .. tostring(p_Player.accountGuid))
-					end
-					ChatManager:Yell(Language:I18N('Successfully authenticated.'), 2.5)
-					NetEvents:SendTo('UI_Request_Password', p_Player, 'false')
-					NetEvents:SendTo('UI_Show_Toolbar', p_Player, 'true')
-				else
-					if Debug.Server.UI then
-						print(p_Player.name .. ' has entered a bad password.')
-					end
-
-					NetEvents:SendTo('UI_Request_Password_Error', p_Player, Language:I18N('The password you entered is not correct!'))
-					ChatManager:Yell('Bad password.', 2.5)
-				end
-			else
-				if Debug.Server.UI then
-					print(p_Player.name .. ' has entered an empty password.')
-				end
-
-				NetEvents:SendTo('UI_Request_Password_Error', p_Player, Language:I18N('The password you entered is not correct!'))
-				ChatManager:Yell('Please enter a password!', 2.5)
-			end
-		end
+		ChatManager:SendMessage('You have no permissions to open the UI', p_Player)
 	end
 end
 
@@ -529,24 +472,6 @@ function FunBotUIServer:_writeSettings(p_Player, p_Request)
 		NetEvents:SendTo('UI_Change_Language', p_Player, p_Request.language)
 		m_SettingsManager:update('language', p_Request.language, temporary, batched)
 		Language:loadLanguage(p_Request.language)
-	end
-
-	if p_Request.settingsPassword ~= nil then
-		if p_Request.settingsPassword == "" then
-			p_Request.settingsPassword = nil
-		end
-
-		if Config.SettingsPassword == nil and p_Request.settingsPassword ~= nil then
-			ChatManager:Yell(Language:I18N('You can\'t change the password, if it\'s never set!'), 2.5)
-		else
-			if p_Request.settingsPassword ~= nil and p_Request.settingsPassword ~= "" then
-				if p_Request.settingsPassword == "NULL" or p_Request.settingsPassword == "nil" then
-					p_Request.settingsPassword = DatabaseField.NULL
-				end
-
-				m_SettingsManager:update('SettingsPassword', p_Request.settingsPassword, temporary, batched)
-			end
-		end
 	end
 
 	-- Call batched process
