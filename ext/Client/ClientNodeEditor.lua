@@ -110,28 +110,28 @@ function ClientNodeEditor:OnRegisterEvents()
 
 	-- enable/disable events
 	-- ('UI_CommoRose_Enabled', <Bool|Enabled>) -- true == block the BF3 commo rose
-	-- NetEvents:Subscribe('UI_CommoRose_Enabled', self, self._onSetCommoRoseEnabled)
+	NetEvents:Subscribe('UI_CommoRose_Enabled', self, self._onSetCommoRoseEnabled)
 
 	-- selection-based events, no arguments required
-	-- NetEvents:Subscribe('UI_CommoRose_Action_Save', self, self._onSaveNodes)
-	-- NetEvents:Subscribe('UI_CommoRose_Action_Select', self, self._onSelectNode)
-	-- NetEvents:Subscribe('UI_CommoRose_Action_Load', self, self._onLoadNodes)
+	NetEvents:Subscribe('UI_CommoRose_Action_Save', self, self._onSaveNodes)
+	NetEvents:Subscribe('UI_CommoRose_Action_Select', self, self._onSelectNode)
+	NetEvents:Subscribe('UI_CommoRose_Action_Load', self, self._onLoadNodes)
 
 	-- Commo Rose left buttons
-	-- NetEvents:Subscribe('UI_CommoRose_Action_Remove', self, self._onRemoveNode)
-	-- NetEvents:Subscribe('UI_CommoRose_Action_Unlink', self, self._onUnlinkNode)
-	-- NetEvents:Subscribe('UI_CommoRose_Action_Merge', self, self._onMergeNode)
-	-- NetEvents:Subscribe('UI_CommoRose_Action_SelectPrevious', self, self._onSelectPrevious)
-	-- NetEvents:Subscribe('UI_CommoRose_Action_ClearSelections', self, self._onClearSelection)
-	-- NetEvents:Subscribe('UI_CommoRose_Action_Move', self, self._onToggleMoveNode)
+	NetEvents:Subscribe('UI_CommoRose_Action_Remove', self, self._onRemoveNode)
+	NetEvents:Subscribe('UI_CommoRose_Action_Unlink', self, self._onUnlinkNode)
+	NetEvents:Subscribe('UI_CommoRose_Action_Merge', self, self._onMergeNode)
+	NetEvents:Subscribe('UI_CommoRose_Action_SelectPrevious', self, self._onSelectPrevious)
+	NetEvents:Subscribe('UI_CommoRose_Action_ClearSelections', self, self._onClearSelection)
+	NetEvents:Subscribe('UI_CommoRose_Action_Move', self, self._onToggleMoveNode)
 
 	-- Commor Rose right buttons
-	-- NetEvents:Subscribe('UI_CommoRose_Action_Add', self, self._onAddNode)
-	-- NetEvents:Subscribe('UI_CommoRose_Action_Link', self, self._onLinkNode)
-	-- NetEvents:Subscribe('UI_CommoRose_Action_Split', self, self._onSplitNode)
-	-- NetEvents:Subscribe('UI_CommoRose_Action_SelectNext', self, self._onSelectNext)
-	-- NetEvents:Subscribe('UI_CommoRose_Action_SelectBetween', self, self._onSelectBetween)
-	-- NetEvents:Subscribe('UI_CommoRose_Action_SetInput', self, self._onSetInputNode)
+	NetEvents:Subscribe('UI_CommoRose_Action_Add', self, self._onAddNode)
+	NetEvents:Subscribe('UI_CommoRose_Action_Link', self, self._onLinkNode)
+	NetEvents:Subscribe('UI_CommoRose_Action_Split', self, self._onSplitNode)
+	NetEvents:Subscribe('UI_CommoRose_Action_SelectNext', self, self._onSelectNext)
+	NetEvents:Subscribe('UI_CommoRose_Action_SelectBetween', self, self._onSelectBetween)
+	NetEvents:Subscribe('UI_CommoRose_Action_SetInput', self, self._onSetInputNode)
 
 	-- must provide arguments
 	-- ('UI_ClientNodeEditor_Trace_Show', <Int|PathIndex>)
