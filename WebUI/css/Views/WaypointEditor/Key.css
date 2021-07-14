@@ -70,3 +70,11 @@ ui-key[data-name="KP_PLUS"] {
 ui-key[data-name="KP_MINUS"] {
 	background-image: url('../../../assets/key/KP_MINUS.svg');
 }
+
+ui-key[data-name="ALT"] {
+	background-image: url('../../../assets/key/ALT.svg');
+}
+
+ui-key[data-name="T"] {
+	background-image: url('../../../assets/key/T.svg');
+}

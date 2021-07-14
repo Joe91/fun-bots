@@ -841,7 +841,7 @@ SettingsDefinition = {
 			Value = Config.SpawnPointRange,
 			Description = "Set how far away spawnpoints are visible (meters)",
 			Reference = Range(1.00, 1000.00, 1.0),
-			Default = 50,
+			Default = 100,
 			UpdateFlag = UpdateFlag.None,
 			Category = "TRACE"
 		},

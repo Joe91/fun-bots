@@ -26,8 +26,8 @@ function FunBotUIClient:__init()
 
 		NetEvents:Subscribe('UI_Waypoints_Editor', self, self._onUIWaypointsEditor)
 		Events:Subscribe('UI_Waypoints_Editor', self, self._onUIWaypointsEditor)
-		NetEvents:Subscribe('UI_Waypoints_Enable', self, self._onUIWaypointsEditorEnable)
-		Events:Subscribe('UI_Waypoints_Enable', self, self._onUIWaypointsEditorEnable)
+		NetEvents:Subscribe('UI_Waypoints_Disable', self, self._onUIWaypointsEditorDisable)
+		Events:Subscribe('UI_Waypoints_Disable', self, self._onUIWaypointsEditorDisable)
 		NetEvents:Subscribe('UI_Trace', self, self._onUITrace)
 		Events:Subscribe('UI_Trace', self, self._onUITrace)
 		NetEvents:Subscribe('UI_Trace_Index', self, self._onUITraceIndex)
@@ -109,18 +109,9 @@ function FunBotUIClient:_onUIWaypointsEditor(p_State)
 	end
 end
 
-function FunBotUIClient:_onUIWaypointsEditorEnable(p_State)
-	print("triggered")
+function FunBotUIClient:_onUIWaypointsEditorDisable()
 	if self.m_InWaypointEditor then
-		if p_State == true then
-			self.m_LastWaypointEditorState = true
-			self._views:enable()
-			print("enable")
-		else
-			self.m_LastWaypointEditorState = false
-			self._views:disable()
-			print("disable")
-		end
+		self._views:disable()
 	end
 end
 
@@ -347,10 +338,10 @@ function FunBotUIClient:OnClientUpdateInput(p_DeltaTime)
 			NetEvents:Send('UI_Request_Open')
 		end
 		return
-	elseif InputManager:WentKeyUp(InputDeviceKeys.IDK_Q) and self.m_InWaypointEditor then
+	elseif InputManager:WentKeyUp(InputDeviceKeys.IDK_LeftAlt) and self.m_InWaypointEditor then
 		self._views:enable()
 		self.m_LastWaypointEditorState = true
-	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_Q) and self.m_InWaypointEditor then
+	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_LeftAlt) and self.m_InWaypointEditor then
 		self._views:disable()
 		self.m_LastWaypointEditorState = false
 	end

@@ -20,5 +20,8 @@ const InputDeviceKeys	= {
 	IDK_F9:		120,
 	IDK_F10:	121,
 	IDK_F11:	122,
-	IDK_F12:	123
+	IDK_F12:	123,
+	IDK_Q:		81,
+	IDK_T:		84,
+	IDK_ALT:	18
 };

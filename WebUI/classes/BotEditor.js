@@ -432,8 +432,8 @@ const BotEditor = (new function BotEditor() {
 	this.bindKeyUpEvents = function bindKeyUpEvents() {
 		document.body.addEventListener('keyup', function onMouseDown(event) {
 			switch(event.keyCode || event.which) {
-				case InputDeviceKeys.IDK_Q:
-					WebUI.Call('DispatchEventLocal', 'UI_Waypoints_Enable', false);
+				case InputDeviceKeys.IDK_ALT:
+					WebUI.Call('DispatchEventLocal', 'UI_Waypoints_Disable', false);
 				break;
 			}
 		}.bind(this));
@@ -522,9 +522,6 @@ const BotEditor = (new function BotEditor() {
 				/* Exit */
 				case InputDeviceKeys.IDK_F12:
 					WebUI.Call('DispatchEventLocal', 'UI_Toggle');
-				break;
-				case InputDeviceKeys.IDK_Q:
-					WebUI.Call('DispatchEventLocal', 'UI_Waypoints_Enable', false);
 				break;
 
 				/* Debug */

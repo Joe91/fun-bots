@@ -157,7 +157,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 	elseif request.action == 'request_waypoints_editor' then
 		NetEvents:SendTo('UI_Waypoints_Editor', p_Player, true)
 	elseif request.action == 'disable_waypoint_editor' then
-		NetEvents:SendTo('UI_Waypoints_Enable', p_Player, false)
+		NetEvents:SendTo('UI_Waypoints_Disable', p_Player)
 	elseif request.action == 'hide_waypoints_editor' then
 		NetEvents:SendTo('UI_Waypoints_Editor', p_Player, false)
 	else
