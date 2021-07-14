@@ -305,11 +305,31 @@ const BotEditor = (new function BotEditor() {
 						action:	'trace_show'
 					}));
 				break;
+				case 'waypoints_show_spawns':
+					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
+						action:	'waypoints_show_spawns',
+					}));
+				break;
+				case 'waypoints_show_lines':
+					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
+						action:	'waypoints_show_lines',
+					}));
+				break;
+				case 'waypoints_show_labels':
+					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
+						action:	'waypoints_show_labels',
+					}));
+				break;
 				
 				/* Waypoint-Editor */
 				case 'request_waypoints_editor':
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
 						action:	'request_waypoints_editor'
+					}));
+				break;
+				case 'continue':
+					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
+						action:	'disable_waypoint_editor'
 					}));
 				break;
 				case 'back':

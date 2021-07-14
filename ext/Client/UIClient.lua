@@ -8,6 +8,8 @@ local m_Language = require('__shared/Language')
 
 function FunBotUIClient:__init()
 	self._views = UIViews()
+	self.m_InWaypointEditor = false
+	self.m_LastWaypointEditorState = false
 
 	if Config.DisableUserInterface ~= true then
 		NetEvents:Subscribe('UI_Toggle', self, self._onUIToggle)
@@ -24,6 +26,7 @@ function FunBotUIClient:__init()
 
 		NetEvents:Subscribe('UI_Waypoints_Editor', self, self._onUIWaypointsEditor)
 		Events:Subscribe('UI_Waypoints_Editor', self, self._onUIWaypointsEditor)
+		NetEvents:Subscribe('UI_Waypoints_Enable', self, self._onUIWaypointsEditorEnable)
 		NetEvents:Subscribe('UI_Trace', self, self._onUITrace)
 		Events:Subscribe('UI_Trace', self, self._onUITrace)
 		NetEvents:Subscribe('UI_Trace_Index', self, self._onUITraceIndex)
@@ -83,20 +86,38 @@ function FunBotUIClient:_onUIWaypointsEditor(p_State)
 		self._views:hide('waypoint_toolbar')
 		self._views:show('toolbar')
 		Config.DebugTracePaths = false
+		self.m_InWaypointEditor = false
+		self.m_LastWaypointEditorState = false
 		NetEvents:Send('UI_CommoRose_Enabled', false)
-		return
-	end
+		g_ClientNodeEditor:OnSetEnabled(false)
+		g_ClientSpawnPointHelper:OnSetEnabled(false)
+	else
+		if Debug.Client.UI then
+			print('UIClient: open UI_Waypoints_Editor')
+		end
 
-	if Debug.Client.UI then
-		print('UIClient: open UI_Waypoints_Editor')
+		Config.DebugTracePaths = true
+		NetEvents:Send('UI_CommoRose_Enabled', true)
+		g_ClientNodeEditor:OnSetEnabled(true)
+		g_ClientSpawnPointHelper:OnSetEnabled(true)
+		self._views:show('waypoint_toolbar')
+		self._views:hide('toolbar')
+		self.m_InWaypointEditor = true
+		self.m_LastWaypointEditorState = false
+		self._views:disable()
 	end
+end
 
-	Config.DebugTracePaths = true
-	NetEvents:Send('UI_CommoRose_Enabled', true)
-	g_ClientNodeEditor:OnSetEnabled(true)
-	self._views:show('waypoint_toolbar')
-	self._views:hide('toolbar')
-	self._views:disable()
+function FunBotUIClient:_onUIWaypointsEditorEnable(p_State)
+	if self.m_InWaypointEditor then
+		if p_State then
+			self.m_LastWaypointEditorState = true
+			self._views:enable()
+		else
+			self.m_LastWaypointEditorState = false
+			self._views:disable()
+		end
+	end
 end
 
 function FunBotUIClient:_onUITraceIndex(p_Index)
@@ -243,8 +264,7 @@ function FunBotUIClient:_onUISettings(p_Data)
 	settings:add("OTHER", "Boolean", "DisableChatCommands", m_Language:I18N("Disable Chat Commands"), p_Data.DisableChatCommands, true, m_Language:I18N("if true, no chat commands can be used"))
 	settings:add("OTHER", "Boolean", "TraceUsageAllowed", m_Language:I18N("Allow Trace Usage"), p_Data.TraceUsageAllowed, true, m_Language:I18N("if false, no traces can be recorded, deleted or saved"))
 	settings:addList("OTHER", "Language", m_Language:I18N("Language"), { "de_DE", "cn_CN", "en_US" }, p_Data.Language, "en_US", m_Language:I18N("Select the language of this mod"))
-	settings:add("OTHER", "Password", "SettingsPassword", m_Language:I18N("Password"), p_Data.SettingsPassword, nil, m_Language:I18N("Password protection of these Mod"))
-
+	
 	self._views:execute('BotEditor.openSettings(\'' .. settings:getJSON() .. '\')')
 	self._views:show('settings')
 	self._views:focus()
@@ -310,9 +330,29 @@ function FunBotUIClient:OnClientUpdateInput(p_DeltaTime)
 		if Debug.Client.UI then
 			print('Client send: UI_Request_Open')
 		end
-
-		-- This request can use for UI-Toggle
-		NetEvents:Send('UI_Request_Open')
+		-- This request can be used for UI-Toggle
+		if self.m_InWaypointEditor then
+			if self.m_LastWaypointEditorState == false then
+				self._views:enable()
+				self.m_LastWaypointEditorState = true
+			else
+				self._views:disable()
+				self.m_LastWaypointEditorState = false
+			end
+		else
+			NetEvents:Send('UI_Request_Open')
+		end
+		return
+	end
+	if InputManager:WentKeyUp(InputDeviceKeys.IDK_Q) and self.m_InWaypointEditor then
+		print("enable")
+		self._views:enable()
+		self.m_LastWaypointEditorState = true
+	end
+	if InputManager:WentKeyDown(InputDeviceKeys.IDK_Q) and self.m_InWaypointEditor then
+		print("disable")
+		self._views:disable()
+		self.m_LastWaypointEditorState = false
 	end
 end
 

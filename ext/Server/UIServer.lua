@@ -141,12 +141,24 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 	elseif request.action == 'waypoints_server_save' then
 		m_NodeCollection:Save()
 
+	elseif request.action == 'waypoints_show_spawns' then
+		Config.DrawSpawnPoints = not Config.DrawSpawnPoints
+		NetEvents:SendToLocal('WriteClientSettings', p_Player, Config, false)
+
+	elseif request.action == 'waypoints_show_lines' then
+		Config.DrawWaypointLines = not Config.DrawWaypointLines
+		NetEvents:SendToLocal('WriteClientSettings', p_Player, Config, false)
+
+	elseif request.action == 'waypoints_show_labels' then
+		Config.DrawWaypointIDs = not Config.DrawWaypointIDs
+		NetEvents:SendToLocal('WriteClientSettings', p_Player, Config, false)
+
 	-- Waypoints-Editor
 	elseif request.action == 'request_waypoints_editor' then
-		-- @ToDo Create/check Permissions to use the Wapoints-Editor?
 		NetEvents:SendTo('UI_Waypoints_Editor', p_Player, true)
+	elseif request.action == 'disable_waypoint_editor' then
+		NetEvents:SendTo('UI_Waypoints_Enable', p_Player, false)
 	elseif request.action == 'hide_waypoints_editor' then
-		-- @ToDo Create/check Permissions to use the Wapoints-Editor?
 		NetEvents:SendTo('UI_Waypoints_Editor', p_Player, false)
 	else
 		ChatManager:Yell(Language:I18N('%s is currently not implemented.', request.action), 2.5)

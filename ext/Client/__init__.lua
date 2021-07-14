@@ -57,7 +57,6 @@ function FunBotClient:RegisterEvents()
 
 	NetEvents:Subscribe('WriteClientSettings', self, self.OnWriteClientSettings)
 	NetEvents:Subscribe('CheckBotBotAttack', self, self.CheckForBotBotAttack)
-	NetEvents:Subscribe('UI_ClientNodeEditor_Enabled', self, self.OnUIClientNodeEditorEnabled)
 	NetEvents:Subscribe('UI_Settings', self, self.OnUISettings)
 
 	NetEvents:Subscribe('ConsoleCommands:RegisterCommands', self, self.OnRegisterConsoleCommands)
@@ -108,9 +107,9 @@ end
 
 function FunBotClient:OnClientUpdateInput(p_DeltaTime)
 	m_ClientNodeEditor:OnClientUpdateInput(p_DeltaTime)
-	m_FunBotUIClient:OnClientUpdateInput(p_DeltaTime)
 	m_ClientBotManager:OnClientUpdateInput(p_DeltaTime)
 	m_ClientSpawnPointHelper:OnClientUpdateInput(p_DeltaTime)
+	m_FunBotUIClient:OnClientUpdateInput(p_DeltaTime)
 end
 
 function FunBotClient:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
@@ -136,11 +135,6 @@ end
 
 function FunBotClient:CheckForBotBotAttack(p_StartPos, p_EndPos, p_ShooterBotName, p_BotName, p_InVehicle)
 	m_ClientBotManager:CheckForBotBotAttack(p_StartPos, p_EndPos, p_ShooterBotName, p_BotName, p_InVehicle)
-end
-
-function FunBotClient:OnUIClientNodeEditorEnabled(p_Args)
-	m_ClientNodeEditor:OnSetEnabled(p_Args)
-	m_ClientSpawnPointHelper:OnSetEnabled(p_Args)
 end
 
 function FunBotClient:OnUISettings(p_Data)

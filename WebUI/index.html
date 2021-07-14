@@ -56,21 +56,30 @@
 			</ui-logo>
 			<ui-menu data-name="waypoints">
 				<ul class="main">
-					<li data-action="waypoints_client_load"><a><i data-name="client_load"></i> <span data-lang="[Client] Load">[Client] Load</span></a></li>
-					<li data-action="waypoints_client_save"><a><i data-name="client_save"></i> <span data-lang="[Client] Save">[Client] Save</span></a></li>
-					<li data-action="waypoints_server_load"><a data-key="F11"><i data-name="server_load"></i> <span data-lang="[Server] Load">[Server] Load</span></a></li>
-					<li data-action="waypoints_server_save"><a data-key="F9"><i data-name="server_save"></i> <span data-lang="[Server] Save">[Server] Save</span></a></li>
+					<li>
+						<a><span data-lang="[Client]">[Client]</span></a>
+						<ul>
+							<li data-action="waypoints_client_save"><a><span data-lang="Save">Save</span><i data-name="client_save"></i></a></li>
+							<li data-action="waypoints_client_load"><a><span data-lang="Load">Load</span><i data-name="client_load"></i></a></li>
+						</ul>
+					</li>
+					<li>
+						<a><span data-lang="[Server]">[Server]</span></a>
+						<ul>
+							<li data-action="waypoints_server_save"><a data-key="F9"><span data-lang="Save">Save</span><i data-name="server_save"></i> </a></li>
+							<li data-action="waypoints_server_load"><a data-key="F11"><span data-lang="Load">Load</span><i data-name="server_load"></i></a></li>
+						</ul>
+					</li>
 					<li>
 						<a><span data-lang="View">View</span></a>
 						<ul>
-							<li class="header">General</li>
-							<li data-action=""><a><ui-checkbox data-name="debug_text"></ui-checkbox> <span data-lang="Debug-Text">Debug-Text</span></a></li>
 							<li class="header">Waypoints</li>
-							<li data-action=""><a><ui-checkbox data-checked="true" data-name="dots"></ui-checkbox> <span data-lang="Dots">Dots</span></a></li>
-							<li data-action=""><a><ui-checkbox data-name="lines"></ui-checkbox> <span data-lang="Lines">Lines</span></a></li>
-							<li data-action=""><a><ui-checkbox data-name="labels"></ui-checkbox> <span data-lang="Labels">Labels</span></a></li>
+							<li data-action="waypoints_show_spawns"><a><i data-name="show_spawns"></i> <span data-lang="Toggle Spawns">Toggle Spawns</span></a></li>
+							<li data-action="waypoints_show_lines"><a><i  data-name="show_lines"></i> <span data-lang="Toggle Lines">Toggle Lines</span></a></li>
+							<li data-action="waypoints_show_labels"><a><i  data-name="show_labels"></i> <span data-lang="Toggle Labels">Toggle Labels</span></a></li>
 						</ul>
 					</li>
+					<li data-action="continue"><a><span data-lang="continue">continue</span></a></li>
 					<li data-action="back"><a><span data-lang="Back">Back</span></a></li>
 				</ul>
 				<ui-menu>

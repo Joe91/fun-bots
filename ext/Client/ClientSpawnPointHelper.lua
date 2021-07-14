@@ -128,6 +128,7 @@ function ClientSpawnPointHelper:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	if self.m_RaycastTimer < StaticConfig.RaycastInterval then
 		return
 	end
+	self.m_RaycastTimer = 0
 
 	local s_RaycastHit = self:Raycast()
 
