@@ -48,7 +48,7 @@ SettingsDefinition = {
 		{
 			Name = "BotColor",
 			Text = "Bot Color",
-			Type = Type.Table,
+			Type = Type.Enum,
 			Reference = BotColors,
 			Value = Config.BotColor,
 			Description = "The Color of the Bots",

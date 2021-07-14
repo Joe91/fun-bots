@@ -1,6 +1,7 @@
-#GLOBAL:checked ~ figure .GLOBAL,
+#GENERAL:checked ~ figure .GENERAL,
 #DIFFICULTY:checked ~ figure .DIFFICULTY,
 #SPAWN:checked ~ figure .SPAWN,
+#SPAWNLIMITS:checked ~ figure .SPAWNLIMITS,
 #WEAPONS:checked ~ figure .WEAPONS,
 #BEHAVIOUR:checked ~ figure .BEHAVIOUR,
 #TRACE:checked ~ figure .TRACE,
@@ -10,9 +11,10 @@
 	display: block;
 }
 
-#GLOBAL:checked ~ nav > ul > li label[for="GLOBAL"],
+#GENERAL:checked ~ nav > ul > li label[for="GENERAL"],
 #DIFFICULTY:checked ~ nav > ul > li label[for="DIFFICULTY"],
 #SPAWN:checked ~ nav > ul > li label[for="SPAWN"],
+#SPAWNLIMITS:checked ~ nav > ul > li label[for="SPAWNLIMITS"],
 #WEAPONS:checked ~ nav > ul > li label[for="WEAPONS"],
 #BEHAVIOUR:checked ~ nav > ul > li label[for="BEHAVIOUR"],
 #TRACE:checked ~ nav > ul > li label[for="TRACE"],
