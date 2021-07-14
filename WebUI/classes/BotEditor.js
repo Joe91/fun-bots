@@ -37,6 +37,7 @@ const BotEditor = (new function BotEditor() {
 		
 		this.bindMouseEvents();
 		this.bindKeyboardEvents();
+		this.bindKeyUpEvents();
 	};
 	
 	this.Hide = function Hide() {
@@ -428,7 +429,18 @@ const BotEditor = (new function BotEditor() {
 		}.bind(this));
 	};
 
+	this.bindKeyUpEvents = function bindKeyUpEvents() {
+		document.body.addEventListener('keyup', function onMouseDown(event) {
+			switch(event.keyCode || event.which) {
+				case InputDeviceKeys.IDK_Q:
+					WebUI.Call('DispatchEventLocal', 'UI_Waypoints_Enable', false);
+				break;
+			}
+		}.bind(this));
+	};
+
 	this.bindKeyboardEvents = function bindKeyboardEvents() {
+		
 		document.body.addEventListener('keydown', function onMouseDown(event) {
 			let count;
 
@@ -510,6 +522,9 @@ const BotEditor = (new function BotEditor() {
 				/* Exit */
 				case InputDeviceKeys.IDK_F12:
 					WebUI.Call('DispatchEventLocal', 'UI_Toggle');
+				break;
+				case InputDeviceKeys.IDK_Q:
+					WebUI.Call('DispatchEventLocal', 'UI_Waypoints_Enable', false);
 				break;
 
 				/* Debug */
