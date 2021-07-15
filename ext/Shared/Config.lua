@@ -56,6 +56,7 @@ Config = {
 
 	--BEHAVIOUR
 	FovForShooting = 245,				-- Degrees of FOV of Bot
+	FovVerticleForShooting = 90,		-- Degrees of FOV of Bot in verticle  direction
 	MaxRaycastDistance = 150,			-- meters bots start shooting at player
 	MaxShootDistanceNoSniper = 70,		-- meters a bot (not sniper) start shooting at player
 	MaxShootDistancePistol = 30,		-- only in auto-weapon-mode, the distance until a bot switches to pistol if his magazine is empty

@@ -207,14 +207,20 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 	self._ShootPlayerVehicleType = s_Type
 
 	local s_DifferenceYaw = 0
+	local s_Pitch = 0
 	local s_FovHalf = 0
+	local s_PitchHalf = 0
 
 	if not p_IgnoreYaw then
 		local s_OldYaw = self.m_Player.input.authoritativeAimingYaw
 		local s_DifferenceY = p_Player.soldier.worldTransform.trans.z - self.m_Player.soldier.worldTransform.trans.z
 		local s_DifferenceX = p_Player.soldier.worldTransform.trans.x - self.m_Player.soldier.worldTransform.trans.x
-		local s_Yaw = (math.atan(s_DifferenceY, s_DifferenceX) > math.pi / 2) and (math.atan(s_DifferenceY, s_DifferenceX) - math.pi / 2) or (math.atan(s_DifferenceY, s_DifferenceX) + 3 * math.pi / 2)
+		local s_DifferenceZ = p_Player.soldier.worldTransform.trans.y - self.m_Player.soldier.worldTransform.trans.y
+		local s_DistanceHoizontal = math.sqrt(s_DifferenceY^2 + s_DifferenceY^2)
+		local s_AtanYaw = math.atan(s_DifferenceY, s_DifferenceX)
+		local s_Yaw = (s_AtanYaw > math.pi / 2) and (s_AtanYaw - math.pi / 2) or (s_AtanYaw + 3 * math.pi / 2)
 
+		s_Pitch = math.abs(math.atan(s_DifferenceZ, s_DistanceHoizontal))
 		s_DifferenceYaw = math.abs(s_OldYaw - s_Yaw)
 
 		if s_DifferenceYaw > math.pi then
@@ -222,9 +228,10 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 		end
 
 		s_FovHalf = Config.FovForShooting / 360 * math.pi
+		s_PitchHalf = Config.FovVerticleForShooting / 360 * math.pi
 	end
 
-	if s_DifferenceYaw < s_FovHalf or p_IgnoreYaw then
+	if p_IgnoreYaw or (s_DifferenceYaw < s_FovHalf and s_Pitch < s_PitchHalf) then
 		if self._Shoot then
 			if self._ShootPlayer == nil or (self.m_InVehicle and (self._ShootModeTimer > Config.BotMinTimeShootAtPlayer * 2)) or (not self.m_InVehicle and (self._ShootModeTimer > Config.BotMinTimeShootAtPlayer)) or (self.m_KnifeMode and self._ShootModeTimer > (Config.BotMinTimeShootAtPlayer/2)) then
 				self._ShootModeTimer = 0

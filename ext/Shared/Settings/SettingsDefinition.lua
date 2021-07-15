@@ -513,6 +513,17 @@ SettingsDefinition = {
 			Category = "BEHAVIOUR"
 		},
 		{
+			Name = "FovVerticleForShooting",
+			Text = "FOV of Bots Verticle",
+			Type = Type.Integer,
+			Value = Config.FovVerticleForShooting,
+			Description = "Degrees of FOV of Bot in verticle  direction",
+			Reference = Range(0.00, 180.00, 1.0),
+			Default = 90,
+			UpdateFlag = UpdateFlag.None,
+			Category = "BEHAVIOUR"
+		},
+		{
 			Name = "MaxRaycastDistance",
 			Text = "Max Raycast Distance",
 			Type = Type.Integer,
