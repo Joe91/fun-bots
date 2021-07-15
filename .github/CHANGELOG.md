@@ -16,18 +16,21 @@ Version 2.2.0 of fun-bots now requires the dependency `VeniceEXT` version 1.1.0 
 ### ⚙️ Exciting new features
 - [#134](https://github.com/Joe91/fun-bots/pull/134) Added configuration option for `AimForHeadSupport` and `BotSupportAimWorsening`<br>
 - [#132](https://github.com/Joe91/fun-bots/pull/132) Added extra notes to the configuration file<br>
-- [#113](https://github.com/Joe91/fun-bots/issues/113) Bots can now respawn on other bots on the same squad
-- Experimental (only partly completed) Bots can enter your vehicle if you hit Q on them
-- UI Settings working again and some rework on the UI
+- [#113](https://github.com/Joe91/fun-bots/issues/113) Bots can now respawn on other bots on the same squad<br>
+- Experimental (only partly completed) Bots can enter your vehicle if you hit Q on them<br>
+- UI Settings working again and some rework on the UI<br>
 - Lots of performance improvement in the Waypoint-editor
+
+#### 🧪 Experimental: Bots entering vehicles
+With this release bots can now enter your vehicle! Any driver or passenger can request nearby bots to enter your vehicle if you press the `Q` button. This is still an experimental feature, please report any issues or feedback.
 
 ### 📝 Changes and enhancements
 - [#139](https://github.com/Joe91/fun-bots/pull/139) Update checker is now async<br>
 - [#137](https://github.com/Joe91/fun-bots/pull/137) Auto updater now follows a better release cycle<br>
 - [#136](https://github.com/Joe91/fun-bots/pull/136) Randomized BotWorseningSkill range and added assault aimForHead<br>
-- The `mod.json` is updatede<br>
-- Minor changes and enhancements
-- save of the settings should now work
+- The `mod.json` is updated<br>
+- Minor changes and enhancements<br>
+- Fixed saving settings in the `F12` settings menu
 
 ### 🐛 Minor bug fixes
 - [#129](https://github.com/Joe91/fun-bots/pull/129) Fixed typo `BotWeapons.Priamry` in `BotSpawner.lua`<br>
@@ -41,4 +44,4 @@ Version 2.2.0 of fun-bots now requires the dependency `VeniceEXT` version 1.1.0 
 - [#135](https://github.com/Joe91/fun-bots/pull/135) Updated Github issue forms to ask for more information depending on the request
 
 ## 💋 Thanks
-This will be added before the V2.2.0 release.
+Thanks to [SmartShots](https://github.com/SmartShots) for his contributions for this release, his minor but important bugfixes are able to be felt across all servers.
