@@ -4,6 +4,11 @@ local m_WeaponList = require('__shared/WeaponList')
 local m_Utilities = require('__shared/Utilities')
 local m_Logger = Logger("ClientBotManager", Debug.Client.INFO)
 
+local m_Count_Raycasts = 0
+local m_Count_Events = 0
+local m_Time_Gone_Raycasts = 0
+local m_Time_Gone_Events = 0
+
 function ClientBotManager:__init()
 	self:RegisterVars()
 end
@@ -73,6 +78,8 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	end
 
 	self.m_RaycastTimer = self.m_RaycastTimer + p_DeltaTime
+	m_Time_Gone_Raycasts = m_Time_Gone_Raycasts + p_DeltaTime
+	m_Time_Gone_Events = m_Time_Gone_Events + p_DeltaTime
 
 	if self.m_RaycastTimer < StaticConfig.RaycastInterval then
 		return
@@ -118,6 +125,12 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 				local s_Raycast = nil
 
 				s_Raycast = RaycastManager:Raycast(s_PlayerPosition, s_Target, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.IsAsyncRaycast)
+				m_Count_Raycasts = m_Count_Raycasts + 1
+				if m_Count_Raycasts >= 20 then
+					m_Count_Raycasts = 0
+					print("100 Raycasts done. Took "..m_Time_Gone_Raycasts.." s")
+					m_Time_Gone_Raycasts = 0
+				end
 
 				if s_Raycast == nil or s_Raycast.rigidBody == nil then
 					-- we found a valid bot in Sight (either no hit, or player-hit). Signal Server with players
@@ -128,6 +141,12 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 					end
 
 					NetEvents:SendLocal("Bot:ShootAtPlayer", s_Bot.name, s_IgnoreYaw)
+					m_Count_Events = m_Count_Events + 1
+					if m_Count_Events >= 20 then
+						m_Count_Events = 0
+						print("100 Events sent. Took "..m_Time_Gone_Events.." s")
+						m_Time_Gone_Events = 0
+					end
 
 				elseif (self.m_Player.inVehicle or s_Bot.inVehicle) and s_Raycast.rigidBody:Is("DynamicPhysicsEntity") then
 					NetEvents:SendLocal("Bot:ShootAtPlayer", s_Bot.name, false) -- always check yaw in vehicle
