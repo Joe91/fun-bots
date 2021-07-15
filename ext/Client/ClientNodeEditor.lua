@@ -43,8 +43,7 @@ function ClientNodeEditor:__init()
 	self.m_CustomTraceDelay = Config.TraceDelta
 	self.m_CustomTraceDistance = 0
 	self.m_CustomTraceSaving = false
-    
-	self.m_UpdateTimer = 0
+
 	self.m_RaycastTimer = 0
     self.m_NodesToDraw = {}
 	self.m_NodesToDraw_temp = {}
@@ -236,11 +235,11 @@ function ClientNodeEditor:OnSetEnabled(p_Args)
 		self.m_Enabled = s_Enabled
 		self.m_CommoRoseEnabled = s_Enabled
 
-		if self.m_Enabled then
-			self:_onUnload() -- clear local copy
-			self.m_NodeReceiveTimer = 0 -- enable the timer for receiving nodes
-		else
-			self:_onUnload()
+		if #m_NodeCollection:Get() == 0 then
+			if self.m_Enabled then
+				self:_onUnload() -- clear local copy
+				self.m_NodeReceiveTimer = 0 -- enable the timer for receiving nodes
+			end
 		end
 	end
 end
@@ -1290,6 +1289,17 @@ function ClientNodeEditor:_onUnload(p_Args)
 	self.m_NodeReceiveExpected = 0
 	self.m_lastDrawIndexPath = 0
 	self.m_lastDrawIndexNode = 0
+
+    self.m_NodesToDraw = {}
+	self.m_NodesToDraw_temp = {}
+    self.m_LinesToDraw = {}
+	self.m_LinesToDraw_temp = {}
+    self.m_TextToDraw = {}
+	self.m_TextToDraw_temp = {}
+	self.m_TextPosToDraw = {}
+	self.m_TextPosToDraw_temp = {}
+    self.m_ObbToDraw = {}
+	self.m_ObbToDraw_temp = {}
 
 	if p_Args ~= nil then
 		if type(p_Args) == 'table' then
