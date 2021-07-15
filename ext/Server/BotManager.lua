@@ -237,7 +237,7 @@ function BotManager:OnShootAt(p_Player, p_BotName, p_IgnoreYaw)
 		m_Events_Count[p_Player.name] = 0
 	end
 	m_Events_Count[p_Player.name] = m_Events_Count[p_Player.name] + 1
-	if m_Events_Count[p_Player.name] >= 10 then
+	if m_Events_Count[p_Player.name] >= 20 then
 		m_Events_Count[p_Player.name] = 0
 		print("20 Events recieved from "..p_Player.name)
 	end
