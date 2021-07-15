@@ -99,8 +99,8 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 			self.m_LastIndex = 1
 		end
 
-		for i = self.m_LastIndex, #s_EnemyPlayers do
-			local s_Bot = s_EnemyPlayers[i]
+		for i = 0, #s_EnemyPlayers - 1 do
+			local s_Bot = s_EnemyPlayers[(self.m_LastIndex + i) % #s_EnemyPlayers +1]
 
 			if s_Bot == nil or s_Bot.onlineId ~= 0 or s_Bot.soldier == nil then
 				goto continue_enemy_loop
