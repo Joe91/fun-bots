@@ -8,6 +8,8 @@ local m_Count_Raycasts = 0
 local m_Count_Events = 0
 local m_Time_Gone_Raycasts = 0
 local m_Time_Gone_Events = 0
+local m_Count_Updates = 0
+local m_Time_Gone_Updates = 0
 
 function ClientBotManager:__init()
 	self:RegisterVars()
@@ -93,14 +95,14 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 			return
 		end
 
-		local s_EnemyPlayers = {}
-		local s_AllPlayers = PlayerManager:GetPlayers()
+		local s_EnemyPlayers = PlayerManager:GetPlayers()
+		--local s_AllPlayers = PlayerManager:GetPlayers()
 
-		for _, l_Player in pairs(s_AllPlayers) do
-			if l_Player.teamId ~= self.m_Player.teamId then
-				table.insert(s_EnemyPlayers, l_Player)
-			end
-		end
+		--for _, l_Player in pairs(s_AllPlayers) do
+		--	if l_Player.teamId ~= self.m_Player.teamId then
+		--		table.insert(s_EnemyPlayers, l_Player)
+		--	end
+		--end
 
 		if self.m_LastIndex >= #s_EnemyPlayers then
 			self.m_LastIndex = 1
@@ -126,9 +128,9 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 				s_Raycast = RaycastManager:Raycast(s_PlayerPosition, s_Target, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.IsAsyncRaycast)
 				m_Count_Raycasts = m_Count_Raycasts + 1
-				if m_Count_Raycasts >= 20 then
+				if m_Count_Raycasts >= 10 then
 					m_Count_Raycasts = 0
-					print("20 Raycasts done. Took "..m_Time_Gone_Raycasts.." s")
+					print("10 Raycasts done. Took "..m_Time_Gone_Raycasts.." s")
 					m_Time_Gone_Raycasts = 0
 				end
 
@@ -142,9 +144,9 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 					NetEvents:SendLocal("Bot:ShootAtPlayer", s_Bot.name, s_IgnoreYaw)
 					m_Count_Events = m_Count_Events + 1
-					if m_Count_Events >= 20 then
+					if m_Count_Events >= 10 then
 						m_Count_Events = 0
-						print("20 Events sent. Took "..m_Time_Gone_Events.." s")
+						print("10 Events sent. Took "..m_Time_Gone_Events.." s")
 						m_Time_Gone_Events = 0
 					end
 
