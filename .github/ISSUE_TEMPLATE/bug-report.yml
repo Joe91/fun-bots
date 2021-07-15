@@ -42,6 +42,17 @@ body:
       placeholder: What you should see instead.
     validations:
       required: true
+  - type: dropdown
+    id: version
+    attributes:
+      label: Version
+      description: What version of fun-bots does this issue occur on? Please note that we do not support old versions. Select the correct version.
+      options:
+        - 2.1.0 (stable release)
+        - 2.2.0-RC1
+        - 2.3.0-dev
+    validations:
+      required: true
   - type: textarea
     id: server-info
     attributes:
