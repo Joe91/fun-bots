@@ -172,6 +172,7 @@ function FunBotUIClient:_onUISettings(p_Data)
 	-- Samples
 	-- add(<category>, <types>, <name>, <title>, <value>, <default>, <description>)
 	-- addList(<category>, <name>, <title>, <list>, <value>, <default>, <description>)
+
 	for _, l_Item in pairs(SettingsDefinition.Elements) do
 		local s_TypeString = ""
 		if l_Item.Type == Type.Enum then
@@ -199,6 +200,9 @@ function FunBotUIClient:_onUISettings(p_Data)
 			settings:add(l_Item.Category, s_TypeString, l_Item.Name, l_Item.Text, p_Data[l_Item.Name], l_Item.Default, l_Item.Description)
 		elseif l_Item.Type == Type.Boolean then
 			s_TypeString = "Boolean"
+			settings:add(l_Item.Category, s_TypeString, l_Item.Name, l_Item.Text, p_Data[l_Item.Name], l_Item.Default, l_Item.Description)
+		elseif l_Item.Type == Type.String then
+			s_TypeString = "Language"
 			settings:add(l_Item.Category, s_TypeString, l_Item.Name, l_Item.Text, p_Data[l_Item.Name], l_Item.Default, l_Item.Description)
 		end
 	end

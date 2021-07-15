@@ -280,63 +280,6 @@ function FunBotUIServer:_onUIRequestOpen(p_Player, p_Data)
 	end
 end
 
-
-function FunBotUIServer:_writeSingleSetting(p_Name, p_Request, p_Type, p_Temporary, p_Batched, p_Min, p_Max)
-	local changed = false
-	if p_Type == "bool" then
-		if p_Request[p_Name] ~= nil then
-			local newValue = (p_Request[p_Name] == true)
-			if newValue ~= Config[p_Name] then
-				changed = true
-			end
-			m_SettingsManager:update(p_Name, newValue, p_Temporary, p_Batched)
-		end
-	elseif p_Type == "number" then
-		if p_Request[p_Name] ~= nil then
-			local tempValue = tonumber(p_Request[p_Name])
-			if (p_Min == nil or tempValue >= p_Min) and (p_Max == nil or tempValue <= p_Max) then
-				if math.abs(tempValue - Config[p_Name]) > 0.001 then --only update on change
-					m_SettingsManager:update(p_Name, tempValue, p_Temporary, p_Batched)
-					changed = true
-				end
-			end
-		end
-	elseif p_Type == "team" then
-		if p_Request[p_Name] ~= nil then
-			local tempValue = tonumber(p_Request[p_Name])
-			if Config[p_Name] ~= tempValue then
-				changed = true
-			end
-			if tempValue == 0 then
-				m_SettingsManager:update(p_Name, TeamId.TeamNeutral, p_Temporary, p_Batched)
-			elseif tempValue == 1 then
-				m_SettingsManager:update(p_Name, TeamId.Team1, p_Temporary, p_Batched)
-			elseif tempValue == 2 then
-				m_SettingsManager:update(p_Name, TeamId.Team2, p_Temporary, p_Batched)
-			end
-		end
-	end
-	return changed
-end
-
-function FunBotUIServer:_writeSingleSettingList(p_Name, p_Request, p_List, p_Temporary, p_Batched)
-	local changed = false
-	if p_Request[p_Name] ~= nil then
-		local tempString = p_Request[p_Name]
-
-		for _, item in pairs(p_List) do
-			if tempString == item then
-				if tempString ~= Config[p_Name] then
-					changed = true
-				end
-				m_SettingsManager:update(p_Name, tempString, p_Temporary, p_Batched)
-				break
-			end
-		end
-	end
-	return changed
-end
-
 function FunBotUIServer:_writeSettings(p_Player, p_Request)
 	if Config.DisableUserInterface == true then
 		return
@@ -347,127 +290,92 @@ function FunBotUIServer:_writeSettings(p_Player, p_Request)
 	local updateBotTeamAndNumber = false
 	local updateWeaponSets = false
 	local calcYawPerFrame = false
+	local updateLanguage = false
+	local updateMaxBots = false
 	local batched = true
 
 	if p_Request.subaction ~= nil then
 		temporary = (p_Request.subaction == 'temp')
 	end
 
-	--global settings
-	self:_writeSingleSettingList('BotWeapon', p_Request, BotWeapons, temporary, batched)
-	self:_writeSingleSettingList('BotAttackMode', p_Request, BotAttackModes, temporary, batched)
-	self:_writeSingleSettingList('BotKit', p_Request, BotKits, temporary, batched)
-	self:_writeSingleSettingList('BotColor', p_Request, BotColors, temporary, batched)
-	self:_writeSingleSetting('ZombieMode', p_Request, 'bool', temporary, batched)
+	for _, l_Item in pairs(SettingsDefinition.Elements) do
+		-- validate requests
+		if p_Request[l_Item.Name] ~= nil then
+			local s_Changed = false
+			local s_Value = nil
+			if l_Item.Type == Type.Enum then
+				-- convert value back
+				for l_Key, l_Value in pairs(l_Item.Reference) do
+					if l_Key == p_Request[l_Item.Name] then
+						s_Value = l_Value
+						if s_Value ~= Config[l_Item.Name] then
+							s_Changed = true
+						end
+						break
+					end
+				end
 
-	-- difficluty
-	if self:_writeSingleSetting('BotAimWorsening', p_Request, 'number', temporary, batched, 0, 10) then updateWeapons = true end
-	if self:_writeSingleSetting('BotSniperAimWorsening', p_Request, 'number', temporary, batched, 0, 10) then	updateWeapons = true end
-	self:_writeSingleSetting('AimForHead', p_Request, 'bool', temporary, batched)
-	self:_writeSingleSetting('HeadShotFactorBots', p_Request, 'number', temporary, batched, 0)
-	self:_writeSingleSetting('DamageFactorAssault', p_Request, 'number', temporary, batched, 0)
-	self:_writeSingleSetting('DamageFactorCarabine', p_Request, 'number', temporary, batched, 0)
-	self:_writeSingleSetting('DamageFactorLMG', p_Request, 'number', temporary, batched, 0)
-	self:_writeSingleSetting('DamageFactorPDW', p_Request, 'number', temporary, batched, 0)
-	self:_writeSingleSetting('DamageFactorSniper', p_Request, 'number', temporary, batched, 0)
-	self:_writeSingleSetting('DamageFactorShotgun', p_Request, 'number', temporary, batched, 0)
-	self:_writeSingleSetting('DamageFactorPistol', p_Request, 'number', temporary, batched, 0)
-	self:_writeSingleSetting('DamageFactorKnife', p_Request, 'number', temporary, batched, 0)
+			elseif l_Item.Type == Type.Table then
+				for _, l_Value in pairs(l_Item.Reference) do
+					if l_Value == p_Request[l_Item.Name] then
+						s_Value = l_Value
+						if s_Value ~= Config[l_Item.Name] then
+							s_Changed = true
+						end
+						break
+					end
+				end
 
-	-- advanced
-	self:_writeSingleSetting('FovForShooting', p_Request, 'number', temporary, batched, 0, 360)
-	self:_writeSingleSetting('ShootBackIfHit', p_Request, 'bool', temporary, batched)
-	self:_writeSingleSetting('MaxRaycastDistance', p_Request, 'number', temporary, batched, 0, 500)
-	self:_writeSingleSetting('MaxShootDistanceNoSniper', p_Request, 'number', temporary, batched, 0, 500)
-	self:_writeSingleSetting('DistanceForDirectAttack', p_Request, 'number', temporary, batched, 0, 15)
-	self:_writeSingleSetting('BotsAttackBots', p_Request, 'bool', temporary, batched)
-	self:_writeSingleSetting('MaxBotAttackBotDistance', p_Request, 'number', temporary, batched, 0, 100)
+			elseif l_Item.Type == Type.Integer or l_Item.Type == Type.Float then
+				s_Value = tonumber(p_Request[l_Item.Name])
+				if l_Item.Reference:IsValid(s_Value) then
+					if math.abs(s_Value - Config[l_Item.Name]) > 0.001 then
+						s_Changed = true
+					end
+				end
 
-	self:_writeSingleSetting('MeleeAttackIfClose', p_Request, 'bool', temporary, batched)
-	self:_writeSingleSetting('BotCanKillHimself', p_Request, 'bool', temporary, batched)
-	self:_writeSingleSetting('AttackWayBots', p_Request, 'bool', temporary, batched)
+			elseif l_Item.Type == Type.Boolean then
+				s_Value = p_Request[l_Item.Name] == true
+				if s_Value ~= Config[l_Item.Name] then
+					s_Changed = true
+				end
 
-	self:_writeSingleSetting('MeleeAttackCoolDown', p_Request, 'number', temporary, batched, 0, 10)
-	self:_writeSingleSetting('JumpWhileShooting', p_Request, 'bool', temporary, batched)
-	self:_writeSingleSetting('JumpWhileMoving', p_Request, 'bool', temporary, batched)
+			elseif l_Item.Type == Type.String then
+				s_Value = p_Request[l_Item.Name]
+				if s_Value ~= Config[l_Item.Name] then
+					s_Changed = true
+				end
+			end
+			-- update and check for update flags
+			if s_Changed then
+				m_SettingsManager:Update(l_Item.Name, s_Value, temporary, batched)
 
-	self:_writeSingleSetting('OverWriteBotSpeedMode', p_Request, 'number', temporary, batched, 0, 5)
-	self:_writeSingleSetting('OverWriteBotAttackMode', p_Request, 'number', temporary, batched, 0, 5)
-
-	self:_writeSingleSetting('SpeedFactor', p_Request, 'number', temporary, batched, 0, 2)
-	self:_writeSingleSetting('SpeedFactorAttack', p_Request, 'number', temporary, batched, 0, 2)
-
-	--spawnning
-	if self:_writeSingleSettingList('SpawnMode', p_Request, SpawnModes, temporary, batched) then updateBotTeamAndNumber = true end
-	if self:_writeSingleSetting('SpawnInBothTeams', p_Request, 'bool', temporary, batched) then updateBotTeamAndNumber = true end
-	if self:_writeSingleSetting('InitNumberOfBots', p_Request, 'number', temporary, batched, 0, MAX_NUMBER_OF_BOTS) then updateBotTeamAndNumber = true end
-	if self:_writeSingleSetting('NewBotsPerNewPlayer', p_Request, 'number', temporary, batched, 0, 20) then updateBotTeamAndNumber = true end
-	if self:_writeSingleSetting('KeepOneSlotForPlayers', p_Request, 'bool', temporary, batched) then updateBotTeamAndNumber = true end
-	self:_writeSingleSetting('SpawnDelayBots', p_Request, 'number', temporary, batched, 0, 60)
-	self:_writeSingleSetting('BotTeam', p_Request, 'team', temporary, batched)
-	self:_writeSingleSetting('RespawnWayBots', p_Request, 'bool', temporary, batched)
-	self:_writeSingleSetting('BotNewLoadoutOnSpawn', p_Request, 'bool', temporary, batched)
-
-	self:_writeSingleSetting('MaxAssaultBots', p_Request, 'number', temporary, batched, -1, MAX_NUMBER_OF_BOTS)
-	self:_writeSingleSetting('MaxEngineerBots', p_Request, 'number', temporary, batched, -1, MAX_NUMBER_OF_BOTS)
-	self:_writeSingleSetting('MaxSupportBots', p_Request, 'number', temporary, batched, -1, MAX_NUMBER_OF_BOTS)
-	self:_writeSingleSetting('MaxReconBots', p_Request, 'number', temporary, batched, -1, MAX_NUMBER_OF_BOTS)
-
-	self:_writeSingleSetting('DistanceToSpawnBots', p_Request, 'number', temporary, batched, 0, 100)
-	self:_writeSingleSetting('HeightDistanceToSpawn', p_Request, 'number', temporary, batched, 0, 20)
-	self:_writeSingleSetting('DistanceToSpawnReduction', p_Request, 'number', temporary, batched, 0, 100)
-	self:_writeSingleSetting('MaxTrysToSpawnAtDistance', p_Request, 'number', temporary, batched, 0, 20)
-
-	-- weapons
-	self:_writeSingleSetting('UseRandomWeapon', p_Request, 'bool', temporary, batched)
-	self:_writeSingleSettingList('Pistol', p_Request, PistoWeapons, temporary, batched)
-	self:_writeSingleSettingList('Knife', p_Request, KnifeWeapons, temporary, batched)
-	self:_writeSingleSettingList('AssaultWeapon', p_Request, AssaultPrimary, temporary, batched)
-	self:_writeSingleSettingList('EngineerWeapon', p_Request, EngineerPrimary, temporary, batched)
-	self:_writeSingleSettingList('SupportWeapon', p_Request, SupportPrimary, temporary, batched)
-	self:_writeSingleSettingList('ReconWeapon', p_Request, ReconPrimary, temporary, batched)
-
-	-- trace
-	self:_writeSingleSetting('DebugTracePaths', p_Request, 'bool', temporary, batched)
-	self:_writeSingleSetting('WaypointRange', p_Request, 'number', temporary, batched, 0, 1000)
-	self:_writeSingleSetting('DrawWaypointLines', p_Request, 'bool', temporary, batched)
-	self:_writeSingleSetting('LineRange', p_Request, 'number', temporary, batched, 0, 1000)
-	self:_writeSingleSetting('DrawWaypointIDs', p_Request, 'bool', temporary, batched)
-	self:_writeSingleSetting('TextRange', p_Request, 'number', temporary, batched, 0, 1000)
-	self:_writeSingleSetting('DebugSelectionRaytraces', p_Request, 'bool', temporary, batched)
-	self:_writeSingleSetting('TraceDelta', p_Request, 'number', temporary, batched, 0, 10)
-
-	if self:_writeSingleSettingList('AssaultWeaponSet', p_Request, WeaponSets, temporary, batched) then updateWeaponSets = true end
-	if self:_writeSingleSettingList('EngineerWeaponSet', p_Request, WeaponSets, temporary, batched) then updateWeaponSets = true end
-	if self:_writeSingleSettingList('SupportWeaponSet', p_Request, WeaponSets, temporary, batched) then updateWeaponSets = true end
-	if self:_writeSingleSettingList('ReconWeaponSet', p_Request, WeaponSets, temporary, batched) then updateWeaponSets = true end
-
-	-- expert
-	self:_writeSingleSetting('BotFirstShotDelay', p_Request, 'number', temporary, batched, 0, 5)
-	self:_writeSingleSetting('BotFireModeDuration', p_Request, 'number', temporary, batched, 0, 60)
-	self:_writeSingleSetting('BotMinTimeShootAtPlayer', p_Request, 'number', temporary, batched, 0, Config.BotFireModeDuration)
-	if self:_writeSingleSetting('MaximunYawPerSec', p_Request, 'number', temporary, batched, 3, 1000) then calcYawPerFrame = true end
-	self:_writeSingleSetting('TargetDistanceWayPoint', p_Request, 'number', temporary, batched, 0, 10)
-
-
-	-- Other
-	self:_writeSingleSetting('DisableChatCommands', p_Request, 'bool', temporary, batched)
-	self:_writeSingleSetting('TraceUsageAllowed', p_Request, 'bool', temporary, batched)
+				if l_Item.UpdateFlag == UpdateFlag.WeaponSets then
+					updateWeaponSets = true
+				elseif l_Item.UpdateFlag == UpdateFlag.Weapons then
+					updateWeapons = true
+				elseif l_Item.UpdateFlag == UpdateFlag.YawPerSec then
+					calcYawPerFrame = true
+				elseif l_Item.UpdateFlag == UpdateFlag.AmountAndTeam then
+					updateBotTeamAndNumber = true
+				elseif l_Item.UpdateFlag == UpdateFlag.Language then
+					updateLanguage = true
+				elseif l_Item.UpdateFlag == UpdateFlag.MaxBots then
+					updateMaxBots = true
+				end
+			end
+		end
+	end
 
 	--UI
-	if p_Request.language ~= nil then
-		if Debug.Server.UI then
-			print('Lang changed to: ' .. p_Request.language)
-		end
-
+	if updateLanguage then
 		NetEvents:SendTo('UI_Change_Language', p_Player, p_Request.language)
-		m_SettingsManager:update('language', p_Request.language, temporary, batched)
 		Language:loadLanguage(p_Request.language)
 	end
 
 	-- Call batched process
 	if batched then
-		Database:executeBatch()
+		Database:ExecuteBatch()
 	end
 
 	if temporary then
@@ -487,6 +395,10 @@ function FunBotUIServer:_writeSettings(p_Player, p_Request)
 
 	if calcYawPerFrame then
 		Globals.YawPerFrame = BotManager:calcYawPerFrame()
+	end
+
+	if updateMaxBots then
+		g_FunBotServer:SetMaxBotsPerTeam(Globals.GameMode)
 	end
 
 	NetEvents:BroadcastLocal('WriteClientSettings', Config, updateWeaponSets)

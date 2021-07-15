@@ -364,7 +364,7 @@ SettingsDefinition = {
 			Description = "max number of bots in one team, if no other mode fits",
 			Reference = Range(0.00, 128.00, 1.0),
 			Default = 32,
-			UpdateFlag = UpdateFlag.None,
+			UpdateFlag = UpdateFlag.MaxBots,
 			Category = "SPAWNLIMITS"
 		},
 		{
@@ -375,7 +375,7 @@ SettingsDefinition = {
 			Description = "max number of bots in one team for TDM",
 			Reference = Range(0.00, 128.00, 1.0),
 			Default = 32,
-			UpdateFlag = UpdateFlag.None,
+			UpdateFlag = UpdateFlag.MaxBots,
 			Category = "SPAWNLIMITS"
 		},
 		{
@@ -386,7 +386,7 @@ SettingsDefinition = {
 			Description = "max number of bots in one team for TDM-CQ",
 			Reference = Range(0.00, 128.00, 1.0),
 			Default = 8,
-			UpdateFlag = UpdateFlag.None,
+			UpdateFlag = UpdateFlag.MaxBots,
 			Category = "SPAWNLIMITS"
 		},
 		{
@@ -397,7 +397,7 @@ SettingsDefinition = {
 			Description = "max number of bots in one team for Squad-DM",
 			Reference = Range(0.00, 128.00, 1.0),
 			Default = 5,
-			UpdateFlag = UpdateFlag.None,
+			UpdateFlag = UpdateFlag.MaxBots,
 			Category = "SPAWNLIMITS"
 		},
 		{
@@ -408,7 +408,7 @@ SettingsDefinition = {
 			Description = "max number of bots in one team for CQ-Large",
 			Reference = Range(0.00, 128.00, 1.0),
 			Default = 32,
-			UpdateFlag = UpdateFlag.None,
+			UpdateFlag = UpdateFlag.MaxBots,
 			Category = "SPAWNLIMITS"
 		},
 		{
@@ -419,7 +419,7 @@ SettingsDefinition = {
 			Description = "max number of bots in one team for CQ-Small",
 			Reference = Range(0.00, 128.00, 1.0),
 			Default = 16,
-			UpdateFlag = UpdateFlag.None,
+			UpdateFlag = UpdateFlag.MaxBots,
 			Category = "SPAWNLIMITS"
 		},
 		{
@@ -430,7 +430,7 @@ SettingsDefinition = {
 			Description = "max number of bots in one team for CQ-Assault-Large",
 			Reference = Range(0.00, 128.00, 1.0),
 			Default = 32,
-			UpdateFlag = UpdateFlag.None,
+			UpdateFlag = UpdateFlag.MaxBots,
 			Category = "SPAWNLIMITS"
 		},
 		{
@@ -441,7 +441,7 @@ SettingsDefinition = {
 			Description = "max number of bots in one team for CQ-Assault-Small",
 			Reference = Range(0.00, 128.00, 1.0),
 			Default = 16,
-			UpdateFlag = UpdateFlag.None,
+			UpdateFlag = UpdateFlag.MaxBots,
 			Category = "SPAWNLIMITS"
 		},
 		{
@@ -452,7 +452,7 @@ SettingsDefinition = {
 			Description = "max number of bots in one team for Rush",
 			Reference = Range(0.00, 128.00, 1.0),
 			Default = 24,
-			UpdateFlag = UpdateFlag.None,
+			UpdateFlag = UpdateFlag.MaxBots,
 			Category = "SPAWNLIMITS"
 		},
 		{
@@ -463,7 +463,7 @@ SettingsDefinition = {
 			Description = "max number of bots in one team for CTF",
 			Reference = Range(0.00, 128.00, 1.0),
 			Default = 24,
-			UpdateFlag = UpdateFlag.None,
+			UpdateFlag = UpdateFlag.MaxBots,
 			Category = "SPAWNLIMITS"
 		},
 		{
@@ -474,7 +474,7 @@ SettingsDefinition = {
 			Description = "max number of bots in one team for Domination",
 			Reference = Range(0.00, 128.00, 1.0),
 			Default = 12,
-			UpdateFlag = UpdateFlag.None,
+			UpdateFlag = UpdateFlag.MaxBots,
 			Category = "SPAWNLIMITS"
 		},
 		{
@@ -485,7 +485,7 @@ SettingsDefinition = {
 			Description = "max number of bots in one team for Gunmaster",
 			Reference = Range(0.00, 128.00, 1.0),
 			Default = 12,
-			UpdateFlag = UpdateFlag.None,
+			UpdateFlag = UpdateFlag.MaxBots,
 			Category = "SPAWNLIMITS"
 		},
 		{
@@ -496,7 +496,7 @@ SettingsDefinition = {
 			Description = "max number of bots in one team for Scavenger",
 			Reference = Range(0.00, 128.00, 1.0),
 			Default = 12,
-			UpdateFlag = UpdateFlag.None,
+			UpdateFlag = UpdateFlag.MaxBots,
 			Category = "SPAWNLIMITS"
 		},
 
@@ -1217,7 +1217,7 @@ SettingsDefinition = {
 			Value = Config.Language,
 			Description = "de_DE as sample (default is english, when language file doesnt exists)",
 			Default = nil,
-			UpdateFlag = UpdateFlag.None,
+			UpdateFlag = UpdateFlag.Language,
 			Category = "OTHER"
 		}
 	}

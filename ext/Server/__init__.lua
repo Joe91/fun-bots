@@ -200,6 +200,7 @@ end
 -- =============================================
 
 function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPerMap)
+	Globals.GameMode = p_GameMode
 	local s_GameMode = ServerUtils:GetCustomGameModeName()
 
 	if s_GameMode == nil then
