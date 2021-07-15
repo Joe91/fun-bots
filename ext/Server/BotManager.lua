@@ -5,6 +5,8 @@ require('Bot')
 local m_Utilities = require('__shared/Utilities')
 local m_Logger = Logger("BotManager", Debug.Server.BOT)
 
+local m_Events_Count = {}
+
 function BotManager:__init()
 	self._Bots = {}
 	self._BotsByName = {}
@@ -231,6 +233,14 @@ function BotManager:OnDamagePlayer(p_Player, p_ShooterName, p_MeleeAttack, p_IsH
 end
 
 function BotManager:OnShootAt(p_Player, p_BotName, p_IgnoreYaw)
+	if m_Events_Count[p_Player.name] == nil then
+		m_Events_Count[p_Player.name] = 0
+	end
+	m_Events_Count[p_Player.name] = m_Events_Count[p_Player.name] + 1
+	if m_Events_Count[p_Player.name] >= 10 then
+		m_Events_Count[p_Player.name] = 0
+		print("20 Events recieved from "..p_Player.name)
+	end
 	local s_Bot = self:GetBotByName(p_BotName)
 
 	if s_Bot == nil or s_Bot.m_Player == nil or s_Bot.m_Player.soldier == nil or p_Player == nil then

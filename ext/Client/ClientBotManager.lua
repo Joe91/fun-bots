@@ -126,9 +126,9 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 				s_Raycast = RaycastManager:Raycast(s_PlayerPosition, s_Target, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.IsAsyncRaycast)
 				m_Count_Raycasts = m_Count_Raycasts + 1
-				if m_Count_Raycasts >= 20 then
+				if m_Count_Raycasts >= 10 then
 					m_Count_Raycasts = 0
-					print("100 Raycasts done. Took "..m_Time_Gone_Raycasts.." s")
+					print("10 Raycasts done. Took "..m_Time_Gone_Raycasts.." s")
 					m_Time_Gone_Raycasts = 0
 				end
 
@@ -142,9 +142,9 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 					NetEvents:SendLocal("Bot:ShootAtPlayer", s_Bot.name, s_IgnoreYaw)
 					m_Count_Events = m_Count_Events + 1
-					if m_Count_Events >= 20 then
+					if m_Count_Events >= 10 then
 						m_Count_Events = 0
-						print("100 Events sent. Took "..m_Time_Gone_Events.." s")
+						print("10 Events sent. Took "..m_Time_Gone_Events.." s")
 						m_Time_Gone_Events = 0
 					end
 
