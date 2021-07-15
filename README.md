@@ -1,4 +1,7 @@
 [![Support Server](https://img.shields.io/discord/862736286774198322.svg?label=Discord&logo=Discord&colorB=7289da&style=for-the-badge)](https://discord.gg/K44VsQsKnx)
+[![Image](https://img.shields.io/github/v/release/Joe91/fun-bots?style=for-the-badge)](https://github.com/Joe91/fun-bots/releases)
+[![Image](https://img.shields.io/github/v/tag/Joe91/fun-bots?color=A60000&include_prereleases&label=Development%20Build&style=for-the-badge)](https://github.com/Joe91/fun-bots/tags)
+[![Image](https://img.shields.io/github/downloads/Joe91/fun-bots/total?style=for-the-badge)](https://github.com/Joe91/fun-bots/releases)
 
 Welcome to the fun-bots repository. This is a mod for [Venice Unleashed](https://veniceunleashed.net/) to bring highly configurable and intelligent virtual bots to your Battlefield 3 server.
 
@@ -28,4 +31,4 @@ A big thanks also goes out to the following people 💌
 A team works around-the-clock to offer you an amazing bot experience. Got a question about something? Don't hestitate to ask them for help!
 
 - [@Joe_91](https://github.com/Joe91), the current project maintainer and lead developer
-- [@Firjens](https://github.com/Joe91), the documenter (documentalist? document man? Is he a Marvel superhero?) and developer
+- [@Firjens](https://github.com/Firjens), the documenter (documentalist? document man? Is he a Marvel superhero?) and developer

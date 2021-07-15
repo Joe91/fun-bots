@@ -1,6 +1,5 @@
 class('FunBotServer')
 
-require('__shared/Version')
 require('__shared/Debug')
 require('__shared/Config')
 require('__shared/Constants/BotColors')
@@ -14,11 +13,16 @@ require('__shared/Constants/BotMoveSpeeds')
 require('__shared/Constants/SpawnModes')
 require('__shared/Constants/SpawnMethods')
 require('__shared/Constants/TeamSwitchModes')
-require ('__shared/Utils/Logger')
+require('__shared/Settings/Type')
+require('__shared/Settings/UpdateFlag')
+require('__shared/Settings/BotEnums')
+require('__shared/Settings/Range')
+require('__shared/Settings/SettingsDefinition')
+require('__shared/WeaponList')
+require('__shared/EbxEditUtils')
+require('__shared/Utils/Logger')
 require('Model/Globals')
-require('UI/UI')
 require('Constants/Permissions')
-require('Constants/BotEnums')
 
 local m_Logger = Logger("FunBotServer", Debug.Server.INFO)
 
@@ -34,6 +38,7 @@ local m_WeaponList = require('__shared/WeaponList')
 local m_ChatCommands = require('Commands/Chat')
 local m_Console = require('Commands/Console')
 local m_RCONCommands = require('Commands/RCON')
+local m_FunBotUIServer = require('UIServer')
 -- local m_FunBotUIServer = require('UIServer')
 local m_GameDirector = require('GameDirector')
 PermissionManager = require('PermissionManager')
@@ -108,9 +113,11 @@ function FunBotServer:RegisterCustomEvents()
 	Events:Subscribe('Server:DamagePlayer', self, self.OnServerDamagePlayer) --only triggered on false damage
 	Events:Subscribe('Bot:RespawnBot', self, self.OnRespawnBot)
 	NetEvents:Subscribe('Client:RequestSettings', self, self.OnRequestClientSettings)
+	NetEvents:Subscribe('Client:RequestEnterVehicle', self, self.OnRequestEnterVehicle)
 	NetEvents:Subscribe('ConsoleCommands:SetConfig', self, self.OnConsoleCommandSetConfig)
 	NetEvents:Subscribe('ConsoleCommands:SaveAll', self, self.OnConsoleCommandSaveAll)
 	NetEvents:Subscribe('ConsoleCommands:Restore', self, self.OnConsoleCommandRestore)
+	NetEvents:Subscribe("SpawnPointHelper:TeleportTo", self, self.OnTeleportTo)
 	m_NodeEditor:RegisterCustomEvents()
 end
 
@@ -193,6 +200,7 @@ end
 -- =============================================
 
 function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPerMap)
+	Globals.GameMode = p_GameMode
 	local s_GameMode = ServerUtils:GetCustomGameModeName()
 
 	if s_GameMode == nil then
@@ -204,7 +212,7 @@ function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPe
 		self:ScambleBotNames()
 	end
 
-	m_WeaponModification:ModifyAllWeapons(Config.BotAimWorsening, Config.BotSniperAimWorsening)
+	m_WeaponModification:ModifyAllWeapons(Config.BotAimWorsening, Config.BotSniperAimWorsening, Config.BotSupportAimWorsening)
 	m_WeaponList:onLevelLoaded()
 
 	m_Logger:Write('OnLevelLoaded: ' .. p_LevelName .. ' ' .. s_GameMode)
@@ -364,6 +372,10 @@ function FunBotServer:OnRequestClientSettings(p_Player)
 	m_BotManager:RegisterActivePlayer(p_Player)
 end
 
+function FunBotServer:OnRequestEnterVehicle(p_Player, p_BotName)
+	m_BotManager:OnRequestEnterVehicle(p_Player, p_BotName)
+end
+
 function FunBotServer:OnConsoleCommandSetConfig(p_Player, p_Name, p_Value)
 	m_Console:OnConsoleCommandSetConfig(p_Player, p_Name, p_Value)
 end
@@ -374,6 +386,13 @@ end
 
 function FunBotServer:OnConsoleCommandRestore(p_Player, p_Args)
 	m_Console:OnConsoleCommandRestore(p_Player, p_Args)
+end
+
+function FunBotServer:OnTeleportTo(p_Player, p_Transform)
+	if p_Player == nil or p_Player.soldier == nil then
+		return
+	end
+	p_Player.soldier:SetTransform(p_Transform)
 end
 
 -- =============================================

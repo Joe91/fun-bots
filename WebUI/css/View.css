@@ -1,0 +1,9 @@
+/* Views */
+ui-view {
+	display:	none;
+	position:	relative;
+}
+
+ui-view[data-show="true"] {
+	display: block;
+}

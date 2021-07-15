@@ -72,6 +72,7 @@ function Bot:__init(p_Player)
 	self._OnSwitch = false
 	self._ActionActive = false
 	self._ReviveActive = false
+	self._EnterVehicleActice = false
 	self._GrenadeActive = false
 	self._C4Active = false
 
@@ -161,8 +162,14 @@ function Bot:Revive(p_Player)
 	end
 end
 
+function Bot:EnterVehicleOfPlayer(p_Player)
+	self._EnterVehicleActice = true
+	self._ShootPlayer = nil
+	self._ShootPlayerName = p_Player.name
+end
+
 function Bot:ShootAt(p_Player, p_IgnoreYaw)
-	if self._ActionActive or self._ReviveActive or self._GrenadeActive then
+	if self._ActionActive or self._ReviveActive or self._EnterVehicleActice or self._GrenadeActive then
 		return false
 	end
 
@@ -269,6 +276,7 @@ function Bot:ResetVars()
 	self._MeleeActive = false
 	self._ActionActive = false
 	self._ReviveActive = false
+	self._EnterVehicleActice = false
 	self._GrenadeActive = false
 	self._C4Active = false
 	self._WeaponToUse = BotWeapons.Primary
@@ -386,7 +394,12 @@ function Bot:ResetSpawnVars()
 	self._AttackModeMoveTimer = 0
 	self._AttackMode = BotAttackModes.RandomNotSet
 	self._ShootWayPoints = {}
-	self._Skill = math.random()*Config.BotWorseningSkill
+
+	if self.m_ActiveWeapon.Type == WeaponTypes.Sniper then
+		self._Skill = math.random()*Config.BotSniperWorseningSkill
+	else
+		self._Skill = math.random()*Config.BotWorseningSkill
+	end
 
 	self._ShotTimer = 0
 	self._UpdateTimer = 0
@@ -401,7 +414,9 @@ function Bot:ResetSpawnVars()
 	self._OnSwitch = false
 	self._ActionActive = false
 	self._ReviveActive = false
+	self._EnterVehicleActice = false
 	self._GrenadeActive = false
+	self._TargetPitch = 0.0
 	self._C4Active = false
 	self._Objective = '' --reset objective on spawn, as an other spawn-point might have chosen...
 	self._WeaponToUse = BotWeapons.Primary
@@ -446,7 +461,12 @@ end
 function Bot:Destroy()
 	self:ResetVars()
 	self.m_Player.input = nil
-
+	if self.m_Player.soldier ~= nil then
+		self.m_Player.soldier:Destroy()
+	end
+	if self.m_Player.corpse ~= nil then
+		self.m_Player.corpse:Destroy()
+	end
 	PlayerManager:DeletePlayer(self.m_Player)
 	self.m_Player = nil
 end
@@ -564,6 +584,8 @@ function Bot:_UpdateAiming()
 			local s_AimForHead = false
 			if self.m_ActiveWeapon.Type == WeaponTypes.Sniper then
 				s_AimForHead = Config.AimForHeadSniper
+			elseif self.m_ActiveWeapon.Type == WeaponTypes.LMG then
+				s_AimForHead = Config.AimForHeadSupport
 			else
 				s_AimForHead = Config.AimForHead
 			end
@@ -644,9 +666,6 @@ function Bot:_UpdateAiming()
 		-- worsen yaw and pitch depending on bot-skill
 		if not self.m_InVehicle then
 			local s_WorseningValue = (math.random()*self._Skill/self._DistanceToPlayer) -- value scaled in offset in 1m
-			if self.m_ActiveWeapon.type == WeaponTypes.Sniper then
-				s_WorseningValue = s_WorseningValue/2
-			end
 			s_Yaw = s_Yaw + s_WorseningValue
 			s_Pitch = s_Pitch + s_WorseningValue
 		end
@@ -1084,7 +1103,7 @@ function Bot:_UpdateShooting()
 			end
 		end
 
-		if self._ShootPlayer ~= nil and self._ShootPlayer.soldier ~= nil then
+		if self._ShootPlayer ~= nil and self._ShootPlayer.soldier ~= nil and not self._EnterVehicleActice then
 			if self._ShootModeTimer < Config.BotFireModeDuration or (Config.ZombieMode and self._ShootModeTimer < (Config.BotFireModeDuration * 4)) then
 				if not self._C4Active then
 					self:_SetInput(EntryInputActionEnum.EIAZoom, 1)
@@ -1311,6 +1330,21 @@ function Bot:_UpdateShooting()
 				self._ShootPlayer = nil
 				self._ReviveActive = false
 			end
+		elseif self._EnterVehicleActice then
+			if self._ShootPlayer.soldier ~= nil then -- try to enter
+				self._ShootModeTimer = self._ShootModeTimer + StaticConfig.BotUpdateCycle
+				self.m_ActiveMoveMode = BotMoveModes.ReviveC4 -- movement-mode : revive
+
+				--check for enter of vehicle if close
+				if self._ShootPlayer.soldier.worldTransform.trans:Distance(self.m_Player.soldier.worldTransform.trans) < 5 then
+					self:_EnterVehicle()
+					self._ShootPlayer = nil
+					self._EnterVehicleActice = false
+				end
+			else
+				self._ShootPlayer = nil
+				self._EnterVehicleActice = false
+			end
 		else
 			self._WeaponToUse = BotWeapons.Primary
 			self._GrenadeActive = false
@@ -1345,6 +1379,49 @@ function Bot:_UpdateShooting()
 			end
 		end
 	end
+end
+
+function Bot:_EnterVehicle()
+	local s_Iterator = EntityManager:GetIterator("ServerVehicleEntity")
+	local s_Entity = s_Iterator:Next()
+
+	while s_Entity ~= nil do
+		s_Entity = ControllableEntity(s_Entity)
+		local s_Position = s_Entity.transform.trans
+
+		if s_Position:Distance(self.m_Player.soldier.worldTransform.trans) < 5 then
+			for i = 0, s_Entity.entryCount - 1 do
+				if s_Entity:GetPlayerInEntry(i) == nil then
+					self.m_Player:EnterVehicle(s_Entity, i)
+					self._VehicleEntity = s_Entity.physicsEntityBase
+
+					for j = 0, self._VehicleEntity.partCount - 1 do
+						if self.m_Player.controlledControllable.physicsEntityBase:GetPart(j) ~= nil and self.m_Player.controlledControllable.physicsEntityBase:GetPart(j):Is("ServerChildComponent") then
+							local s_QuatTransform = self.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(j)
+
+							if s_QuatTransform == nil then
+								return -1
+							end
+
+							self._VehicleMovableTransform = s_QuatTransform
+							table.insert(self._AllMovableIds, j)
+						end
+					end
+
+					-- id detection
+					self._VehicleMovableId = self._AllMovableIds[1] -- start with first ID
+					self._IdDetected = false
+					self._DetectionTimer = -0.2
+
+					return 0, s_Position -- everything fine
+				end
+			end
+			return -2 --no place left
+		end
+
+		s_Entity = s_Iterator:Next()
+	end
+	return -3 -- no vehicle found
 end
 
 function Bot:_GetWayIndex(p_CurrentWayPoint)
@@ -1427,9 +1504,9 @@ function Bot:_UpdateMovement()
 					if s_NextPoint == nil then
 						s_NextPoint = m_NodeCollection:Get(s_ActivePointIndex, self._PathIndex)
 
-						if Config.DebugTracePaths then
+						--[[if Config.DebugTracePaths then
 							NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', self._PathIndex, s_ActivePointIndex, self.m_Player.soldier.worldTransform.trans, (self._ObstaceSequenceTimer > 0), "Blue")
-						end
+						end--]]
 					end
 
 					s_UseShootWayPoint = true
@@ -1439,15 +1516,15 @@ function Bot:_UpdateMovement()
 					if not self._InvertPathDirection then
 						s_NextPoint = m_NodeCollection:Get(self:_GetWayIndex(self._CurrentWayPoint + 1), self._PathIndex)
 
-						if Config.DebugTracePaths then
+						--[[if Config.DebugTracePaths then
 							NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', self._PathIndex, self:_GetWayIndex(self._CurrentWayPoint + 1), self.m_Player.soldier.worldTransform.trans, (self._ObstaceSequenceTimer > 0), "Green")
-						end
+						end--]]
 					else
 						s_NextPoint = m_NodeCollection:Get(self:_GetWayIndex(self._CurrentWayPoint - 1), self._PathIndex)
 
-						if Config.DebugTracePaths then
+						--[[if Config.DebugTracePaths then
 							NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', self._PathIndex, self:_GetWayIndex(self._CurrentWayPoint - 1), self.m_Player.soldier.worldTransform.trans, (self._ObstaceSequenceTimer > 0), "Green")
-						end
+						end--]]
 					end
 				end
 
@@ -1455,58 +1532,23 @@ function Bot:_UpdateMovement()
 				if self._ActionActive then
 					if s_Point.Data ~= nil and s_Point.Data.Action ~= nil then
 						if s_Point.Data.Action.type == "vehicle" then
-							local s_Iterator = EntityManager:GetIterator("ServerVehicleEntity")
-							local s_Entity = s_Iterator:Next()
 
-							while s_Entity ~= nil do
-								s_Entity = ControllableEntity(s_Entity)
-								local s_Position = s_Entity.transform.trans
-
-								if s_Position:Distance(self.m_Player.soldier.worldTransform.trans) < 5 then
-									for i = 0, s_Entity.entryCount - 1 do
-										if s_Entity:GetPlayerInEntry(i) == nil then
-											self.m_Player:EnterVehicle(s_Entity, i)
-											self._VehicleEntity = s_Entity.physicsEntityBase
-
-											for j = 0, self._VehicleEntity.partCount - 1 do
-												if self.m_Player.controlledControllable.physicsEntityBase:GetPart(j) ~= nil and self.m_Player.controlledControllable.physicsEntityBase:GetPart(j):Is("ServerChildComponent") then
-													local s_QuatTransform = self.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(j)
-
-													if s_QuatTransform == nil then
-														return
-													end
-
-													self._VehicleMovableTransform = s_QuatTransform
-													table.insert(self._AllMovableIds, j)
-												end
-											end
-
-											-- id detection
-											self._VehicleMovableId = self._AllMovableIds[1] -- start with first ID
-											self._IdDetected = false
-											self._DetectionTimer = -0.2
-
-											self._ActionActive = false
-											local s_Node = g_GameDirector:FindClosestPath(s_Position, true)
-
-											if s_Node ~= nil then
-												-- switch to vehicle
-												s_Point = s_Node
-												self._InvertPathDirection = false
-												self._PathIndex = s_Node.PathIndex
-												self._CurrentWayPoint = s_Node.PointIndex
-												s_NextPoint = m_NodeCollection:Get(self:_GetWayIndex(self._CurrentWayPoint + 1), self._PathIndex)
-												self._LastWayDistance = 1000
-											end
-
-											break
-										end
-									end
-
-									break
+							local s_RetCode, s_Position = self:_EnterVehicle()
+							if s_RetCode == 0 then
+								self._ActionActive = false
+								local s_Node = g_GameDirector:FindClosestPath(s_Position, true)
+			
+								if s_Node ~= nil then
+									-- switch to vehicle
+									s_Point = s_Node
+									self._InvertPathDirection = false
+									self._PathIndex = s_Node.PathIndex
+									self._CurrentWayPoint = s_Node.PointIndex
+									s_NextPoint = m_NodeCollection:Get(self:_GetWayIndex(self._CurrentWayPoint + 1), self._PathIndex)
+									self._LastWayDistance = 1000
 								end
-
-								s_Entity = s_Iterator:Next()
+							elseif s_RetCode == -1 then
+								return
 							end
 
 							self._ActionActive = false

@@ -2,29 +2,6 @@ USE_REAL_DAMAGE = true					-- with real damage, the hitboxes are a bit buggy
 BOT_TOKEN = "BOT_"						-- token Bots are marked with
 
 Config = {
-	-- Debugging will show extra output, both in-game using the VU console and in the server console.
-	-- 0 = All messages. (All)
-	-- 1 = Highly detailed tracing messages. Produces the most voluminous output. (High)
-	-- 2 = Info - Informational messages that might make sense to end users and server administrators. (Info)
-	-- 3 = Potentially harmful situations of interest to end users or system managers that indicate potential problems. (Warn)
-	-- 4 = Error events of considerable importance that will prevent normal program execution, but might still allow the application to continue running. (Error)
-	-- 5 = Only critical errors and general output (Fatal)
-	DebugLevel = 4, -- default: 4 (recommended)
-
-	AutoUpdater = {
-		--
-		-- Enabling the auto updater will show you a notification when a new update for fun-bots is available for download.
-		-- Please note that we do not support outdated versions.
-		Enabled = true, -- default: true (recommended)
-	
-		--
-		-- Set the release cycle on which you want to receive update notifications.
-		-- STABLE (Recommended) - Stable releases recommended on public servers.
-		-- RC - Release candidates (also known as pre-releases, snapshots, etc) are semi-tested releases.
-		-- DEV - Recommended only when testing fun-bots on a private development server.
-		--
-		ReleaseCycle = "RC" -- default: RC (recommended)
-	},
 
 	--GENERAL
 	BotWeapon = BotWeapons.Auto,		-- Select the weapon the bots use
@@ -35,7 +12,9 @@ Config = {
 	--DIFFICULTY
 	BotAimWorsening = 0.5,				-- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy).
 	BotSniperAimWorsening = 0.2,		-- see botAimWorsening, only for Sniper-rifles
+	BotSupportAimWorsening = 0.2,		-- see botAimWorsening, only for LMGs
 	BotWorseningSkill = 0.25,			-- variation of the skill of a single bot. the higher, the worse the bots can get compared to the original settings
+	BotSniperWorseningSkill = 0.50,		-- see BotWorseningSkill - only for BOTs using sniper bolt-action rifles.
 	DamageFactorAssault = 0.5,			-- original Damage from bots gets multiplied by this
 	DamageFactorCarabine = 0.5,			-- original Damage from bots gets multiplied by this
 	DamageFactorLMG = 0.5,				-- original Damage from bots gets multiplied by this
@@ -109,9 +88,12 @@ Config = {
 	DrawWaypointLines = true,			-- Draw waypoint connection Lines
 	LineRange = 15,						-- Set how far away waypoint lines are visible (meters)
 	DrawWaypointIDs = true,				-- Draw waypoint IDs
-	TextRange = 3,						-- Set how far away waypoint text is visible (meters)
+	TextRange = 5,						-- Set how far away waypoint text is visible (meters)
+	DrawSpawnPoints = false,			-- Draw Spawn Points
+	SpawnPointRange = 100,				-- Set how far away spawnpoints are visible (meters)
 	DebugSelectionRaytraces = false,	-- Shows the trace line and search area from Commo Rose selection
 	TraceDelta = 0.3,					-- update intervall of trace
+	NodesPerCycle = 300,				-- Set how many nodes get drawn per cycle. Affects performance
 
 	--ADVANCED
 	DistanceForDirectAttack = 5,		-- if that close, the bot can hear you
@@ -119,6 +101,7 @@ Config = {
 	MeleeAttackCoolDown = 3.0,			-- the time a bot waits before attacking with melee again
 	AimForHead = false,					-- bots without sniper aim for the head. More an experimental config
 	AimForHeadSniper = false,			-- bots with sniper aim for the head. More an experimental config
+	AimForHeadSupport = false,			-- bots with support LMGs aim for the head. More an experimental config
 	JumpWhileShooting = true,			-- bots jump over obstacles while shooting if needed
 	JumpWhileMoving = true,				-- bots jump while moving. If false, only on obstacles!
 	OverWriteBotSpeedMode = BotMoveSpeeds.NoMovement,	-- 0 = no overwrite. 1 = prone, 2 = crouch, 3 = walk, 4 = run
@@ -129,8 +112,8 @@ Config = {
 
 	--EXPERT
 	BotFirstShotDelay = 0.35,			-- delay for first shot. If too small, there will be great spread in first cycle because its not kompensated jet.
-	BotMinTimeShootAtPlayer = 2.0,		-- the minimum time a bot shoots at one player
-	BotFireModeDuration = 5.0,			-- the minimum time a bot tries to shoot a player
+	BotMinTimeShootAtPlayer = 2.0,		-- the minimum time a bot shoots at one player - recommended minimum 1.5, below this you will have issues.
+	BotFireModeDuration = 5.0,			-- the minimum time a bot tries to shoot a player - recommended minimum 3.0, below this you will have issues.
 	MaximunYawPerSec = 450,				-- in Degree. Rotaion-Movement per second.
 	TargetDistanceWayPoint = 0.8,		-- distance the bots have to reach to continue with next Waypoint
 	KeepOneSlotForPlayers = true,		-- always keep one slot for new Players to join
@@ -149,11 +132,31 @@ Config = {
 	DisableRCONCommands = false,		-- if true, no RCON commands can be used
 	IgnorePermissions = false,			-- if true, all permissions are ignored --> everyone can do everything
 	Language = nil,						-- de_DE as sample (default is english, when language file doesnt exists)
+}
 
-	-- Version related (do not modify)
-	Version = {
-		Tag = 'V2.1.0', -- Do not modify this value!
+VersionConfig = {
+	-- Debugging will show extra output, both in-game using the VU console and in the server console.
+	-- 0 = All messages. (All)
+	-- 1 = Highly detailed tracing messages. Produces the most voluminous output. (High)
+	-- 2 = Info - Informational messages that might make sense to end users and server administrators. (Info)
+	-- 3 = Potentially harmful situations of interest to end users or system managers that indicate potential problems. (Warn)
+	-- 4 = Error events of considerable importance that will prevent normal program execution, but might still allow the application to continue running. (Error)
+	-- 5 = Only critical errors and general output (Fatal)
+	DebugLevel = 4, -- default: 4 (recommended)
+
+	AutoUpdater = {
+		-- Enabling the auto updater will show you a notification when a new update for fun-bots is available for download.
+		-- Please note that we do not support outdated versions.
+		Enabled = true, -- default: true (recommended)
+
+		-- Do you want notifications when newer development builds are available?
+		DevBuilds = true,
 	},
+
+		-- Version related (do not modify)
+	Version = {
+		Tag = 'V2.2.0-RC1' -- Do not modify this value!
+	}
 }
 
 -- don't change these values unless you know what you do

@@ -1,42 +1,47 @@
-🥳 Welcome to the changelogs 🥳
-Thi[s document contains recent changes.
+[![Support Server](https://img.shields.io/discord/862736286774198322.svg?label=Discord&logo=Discord&colorB=7289da&style=for-the-badge)](https://discord.gg/K44VsQsKnx)
+![Image](https://img.shields.io/github/downloads/Joe91/fun-bots/total?style=for-the-badge)
+![Image](https://img.shields.io/github/stars/Joe91/fun-bots?style=for-the-badge)
 
-#### Legend
-`+` is an addition
-`-` is a removal
-`*` is a change
-`!` is a bugfix
+## 🥳 Welcome to the changelogs for release **V2.2.0** 🥳
 
-## `V2.1.0-RC1` (03-07-2021 - release candidate)
-This is a release candidate and may not be stable. [Download](https://github.com/Joe91/fun-bots/archive/V2.0.0.6.zip)
 
-`+` Added vehicle support (this is still testing) available on **Kharg Island (Conquest Small)** and **(Grand Bazaar (Conquest Small)**. Please report any issues related to vehicle traces [on our issue tracker](https://github.com/Joe91/fun-bots/issues). <br>
-`+` Added a complete new UI (not fully fonctional yet, but it'll be soon 😉)<br>
-`+` A new permission system, [more information](https://github.com/Joe91/fun-bots/wiki/Basic-Permissions)<br>
-`+` Bots can now attack MAVs and EOD-bots<br>
-`+` Added support for the `Squad Rush` gamemode<br>
-`+` Added an option to switch bot-teams for the 2nd round<br>
-`+` Added a configuration setting to increase the spawn delay for bots<br>
-`+` Added RCON Console commands<br>
-`*` Added more random bot names
-`*` Stability changes<br>
-`*` Enhanced gameplay logic for the bots in conquest gamemodes<br>
-`*` Bots now have a longer reaction time the further away the target is<br>
-`*` Bots now have a more realistic load-out (thanks to DuTcHrEaGaN)<br>
-`!` Fixed bots not waiting until the next zone becomes available in Rush ([#79](https://github.com/Joe91/fun-bots/issues/79))<br>
-`!` Fixed bots moving whilst the spawn countdown is still in progress<br>
-`!` Fixed missing input-restrictions on some maps and gamemodes<br>
-`!` Fixed an issue in bot spawning and respawning.<br>
-`!` Fixed an issue related to team ticket-count.<br>
-`!` Fixed an issue where tanks would no longer able to be controlled properly.<br>
-`!` General bug fixes.<br>
+This is the changelog for the unreleased version. Don't forget to [join us on Discord](https://discord.gg/K44VsQsKnx)
 
-#### 🗺️ New traces are now also available!
-The following map(s) are now available!
+## Changelog
+This release contains a lot of small bug fixes and more QoL updates.
 
-|  | Map name | New paths | 
-|---	|---	|---	|
-| ![image](https://user-images.githubusercontent.com/57008952/124316546-0a474980-db76-11eb-9a00-48a44d38de9d.png) | Strike at Karkand | Conquest Small (submitted by `run`) |
-| ![image](https://user-images.githubusercontent.com/57008952/124333571-e9422100-db94-11eb-828d-0acf519e303a.png) | Talah Market | Squad Rush (submitted by `DuTcHrEaGaN`)<br>Assault Small (submitted by `DuTcHrEaGaN`)<br>Assault Large (submitted by `DuTcHrEaGaN`) |
-| ![image](https://user-images.githubusercontent.com/57008952/124316901-98233480-db76-11eb-80bd-baf046552122.png) | Epicenter | Conquest Small (submitted by `DuTcHrEaGaN`)<br>Conquest Large (submitted by `DuTcHrEaGaN`) |
-| ![image](https://user-images.githubusercontent.com/57008952/124316859-8a6daf00-db76-11eb-95dd-0c8671338c1a.png) | Markaz Monolith | Conquest Small (submitted by `DuTcHrEaGaN`)<br>Conquest Large (submitted by `DuTcHrEaGaN`) |
+### ⚠️ Minimum requirements change
+Version 2.2.0 of fun-bots now requires the dependency `VeniceEXT` version 1.1.0 or higher.
+
+### ⚙️ Exciting new features
+- [#134](https://github.com/Joe91/fun-bots/pull/134) Added configuration option for `AimForHeadSupport` and `BotSupportAimWorsening`<br>
+- [#132](https://github.com/Joe91/fun-bots/pull/132) Added extra notes to the configuration file<br>
+- [#113](https://github.com/Joe91/fun-bots/issues/113) Bots can now respawn on other bots on the same squad<br>
+- Experimental (only partly completed) Bots can enter your vehicle if you hit Q on them<br>
+- UI Settings working again and some rework on the UI<br>
+- Lots of performance improvement in the Waypoint-editor
+
+#### 🧪 Experimental: Bots entering vehicles
+With this release bots can now enter your vehicle! Any driver or passenger can request nearby bots to enter your vehicle if you press the `Q` button. This is still an experimental feature, please report any issues or feedback.
+
+### 📝 Changes and enhancements
+- [#139](https://github.com/Joe91/fun-bots/pull/139) Update checker is now async<br>
+- [#137](https://github.com/Joe91/fun-bots/pull/137) Auto updater now follows a better release cycle<br>
+- [#136](https://github.com/Joe91/fun-bots/pull/136) Randomized BotWorseningSkill range and added assault aimForHead<br>
+- The `mod.json` is updated<br>
+- Minor changes and enhancements<br>
+- Fixed saving settings in the `F12` settings menu
+
+### 🐛 Minor bug fixes
+- [#129](https://github.com/Joe91/fun-bots/pull/129) Fixed typo `BotWeapons.Priamry` in `BotSpawner.lua`<br>
+- [#126](https://github.com/Joe91/fun-bots/pull/126) Fixed bot pistols not being randomized when configuration option `UseRandomWeapon` is true<br>
+- [#124](https://github.com/Joe91/fun-bots/pull/124) Fixed varous typos in WeaponListe<br>
+- Fixed a bug where the pitch of bots aren't reset after a round ends or resets
+- Cleaned up unused code
+- Minor stability and performance fixes
+
+### 📖 Documentation update
+- [#135](https://github.com/Joe91/fun-bots/pull/135) Updated Github issue forms to ask for more information depending on the request
+
+## 💋 Thanks
+Thanks to [SmartShots](https://github.com/SmartShots) for his contributions for this release, his minor but important bugfixes are able to be felt across all servers.

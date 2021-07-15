@@ -20,6 +20,33 @@ end
 -- Events
 -- =============================================
 
+function ClientBotManager:OnClientUpdateInput(p_DeltaTime)
+	if InputManager:WentKeyDown(InputDeviceKeys.IDK_Q) then
+		--execute Vehicle Enter Detection here
+		if self.m_Player ~= nil and self.m_Player.inVehicle then
+			local s_Transform = ClientUtils:GetCameraTransform()
+			-- The freecam transform is inverted. Invert it back
+			local s_CameraForward = Vec3(s_Transform.forward.x * -1, s_Transform.forward.y * -1, s_Transform.forward.z * -1)
+
+			local s_MaxEnterDistance = 30
+			local s_CastPosition = Vec3(s_Transform.trans.x + (s_CameraForward.x * s_MaxEnterDistance),
+					s_Transform.trans.y + (s_CameraForward.y * s_MaxEnterDistance),
+					s_Transform.trans.z + (s_CameraForward.z * s_MaxEnterDistance))
+
+			local s_Raycast = RaycastManager:Raycast(s_Transform.trans, s_CastPosition, RayCastFlags.DontCheckWater | RayCastFlags.IsAsyncRaycast)
+			if s_Raycast ~= nil and s_Raycast.rigidBody:Is("CharacterPhysicsEntity") then
+				-- find teammate at this position
+				for _,l_Player in pairs(PlayerManager:GetPlayersByTeam(self.m_Player.teamId)) do
+					if l_Player.soldier ~= nil and m_Utilities:isBot(l_Player) and l_Player.soldier.worldTransform.trans:Distance(s_Raycast.position) < 2 then
+						NetEvents:SendLocal('Client:RequestEnterVehicle', l_Player.name)
+						break
+					end
+				end
+			end
+		end
+	end
+end
+
 function ClientBotManager:OnEngineMessage(p_Message)
 	if p_Message.type == MessageType.ClientLevelFinalizedMessage then
 		NetEvents:SendLocal('Client:RequestSettings')

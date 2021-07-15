@@ -5,7 +5,6 @@ require('__shared/Debug')
 require('__shared/Constants/BotColors')
 require('__shared/Constants/BotNames')
 require('__shared/Constants/BotKits')
-require('__shared/Constants/BotNames')
 require('__shared/Constants/BotWeapons')
 require('__shared/Constants/WeaponSets')
 require('__shared/Constants/WeaponTypes')
@@ -14,15 +13,23 @@ require('__shared/Constants/BotMoveSpeeds')
 require('__shared/Constants/SpawnModes')
 require('__shared/Constants/SpawnMethods')
 require('__shared/Constants/TeamSwitchModes')
-require ('__shared/Utils/Logger')
+require('__shared/Settings/Type')
+require('__shared/Settings/UpdateFlag')
+require('__shared/Settings/BotEnums')
+require('__shared/Settings/Range')
+require('__shared/Settings/SettingsDefinition')
+require('__shared/WeaponList')
+require('__shared/EbxEditUtils')
+require('__shared/Utils/Logger')
 
 local m_Logger = Logger("FunBotClient", true)
 
---local m_Language = require('__shared/Language')
 local m_ClientBotManager = require('ClientBotManager')
 local m_ClientNodeEditor = require('ClientNodeEditor')
+local m_ClientSpawnPointHelper = require('ClientSpawnPointHelper')
 local m_ConsoleCommands = require('ConsoleCommands')
-local m_ClientUI = require('UI/UI')
+local m_Language = require('__shared/Language')
+local m_FunBotUIClient = require('UIClient')
 
 
 function FunBotClient:__init()
@@ -33,7 +40,7 @@ function FunBotClient:OnExtensionLoaded()
 	--m_Language:loadLanguage(Config.Language)
 	self:RegisterEvents()
 	self:RegisterHooks()
-	m_ClientUI:OnExtensionLoaded()
+	m_FunBotUIClient:OnExtensionLoaded()
 end
 
 function FunBotClient:RegisterEvents()
@@ -46,10 +53,10 @@ function FunBotClient:RegisterEvents()
 	Events:Subscribe('Client:UpdateInput', self, self.OnClientUpdateInput)
 	Events:Subscribe('Engine:Update', self, self.OnEngineUpdate)
 	Events:Subscribe('UI:DrawHud', self, self.OnUIDrawHud)
+	Events:Subscribe('Partition:Loaded', self, self.OnPartitionLoaded)
 
 	NetEvents:Subscribe('WriteClientSettings', self, self.OnWriteClientSettings)
 	NetEvents:Subscribe('CheckBotBotAttack', self, self.CheckForBotBotAttack)
-	NetEvents:Subscribe('UI_ClientNodeEditor_Enabled', self, self.OnUIClientNodeEditorEnabled)
 	NetEvents:Subscribe('UI_Settings', self, self.OnUISettings)
 
 	NetEvents:Subscribe('ConsoleCommands:RegisterCommands', self, self.OnRegisterConsoleCommands)
@@ -76,16 +83,18 @@ end
 function FunBotClient:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	m_ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	m_ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
+	m_ClientSpawnPointHelper:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 end
 
 function FunBotClient:OnExtensionUnloading()
 	m_ClientBotManager:OnExtensionUnloading()
-	m_ClientUI:OnExtensionUnloading()
+	m_FunBotUIClient:OnExtensionUnloading()
 end
 
 function FunBotClient:OnLevelDestroy()
 	m_ClientBotManager:OnLevelDestroy()
 	m_ClientNodeEditor:OnLevelDestroy()
+	m_ClientSpawnPointHelper:OnLevelDestroy()
 end
 
 function FunBotClient:OnLevelLoaded(p_LevelName, p_GameMode)
@@ -98,7 +107,9 @@ end
 
 function FunBotClient:OnClientUpdateInput(p_DeltaTime)
 	m_ClientNodeEditor:OnClientUpdateInput(p_DeltaTime)
-	m_ClientUI:OnClientUpdateInput(p_DeltaTime)
+	m_ClientBotManager:OnClientUpdateInput(p_DeltaTime)
+	m_ClientSpawnPointHelper:OnClientUpdateInput(p_DeltaTime)
+	m_FunBotUIClient:OnClientUpdateInput(p_DeltaTime)
 end
 
 function FunBotClient:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
@@ -107,6 +118,11 @@ end
 
 function FunBotClient:OnUIDrawHud()
 	m_ClientNodeEditor:OnUIDrawHud()
+	m_ClientSpawnPointHelper:OnUIDrawHud()
+end
+
+function FunBotClient:OnPartitionLoaded(p_Partition)
+	m_ClientSpawnPointHelper:OnPartitionLoaded(p_Partition)
 end
 
 -- =============================================
@@ -119,10 +135,6 @@ end
 
 function FunBotClient:CheckForBotBotAttack(p_StartPos, p_EndPos, p_ShooterBotName, p_BotName, p_InVehicle)
 	m_ClientBotManager:CheckForBotBotAttack(p_StartPos, p_EndPos, p_ShooterBotName, p_BotName, p_InVehicle)
-end
-
-function FunBotClient:OnUIClientNodeEditorEnabled(p_Args)
-	m_ClientNodeEditor:OnSetEnabled(p_Args)
 end
 
 function FunBotClient:OnUISettings(p_Data)

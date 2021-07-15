@@ -199,6 +199,10 @@ function RCONCommands:__init()
 					s_UpdateWeapons = true
 				end
 
+				if s_Name == 'botSupportAimWorsening' then
+					s_UpdateWeapons = true
+				end
+
 				if s_Name == 'spawnMode' then
 					s_UpdateBotTeamAndNumber = true
 				end
@@ -240,7 +244,7 @@ function RCONCommands:__init()
 						print('[RCON] call WeaponModification:ModifyAllWeapons()')
 					end
 
-					WeaponModification:ModifyAllWeapons(Config.BotAimWorsening, Config.BotSniperAimWorsening)
+					WeaponModification:ModifyAllWeapons(Config.BotAimWorsening, Config.BotSniperAimWorsening, Config.BotSupportAimWorsening)
 				end
 
 				NetEvents:BroadcastLocal('WriteClientSettings', Config, s_UpdateWeaponSets)
