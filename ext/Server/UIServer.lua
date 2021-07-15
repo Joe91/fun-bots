@@ -303,11 +303,13 @@ function FunBotUIServer:_writeSettings(p_Player, p_Request)
 		if p_Request[l_Item.Name] ~= nil then
 			local s_Changed = false
 			local s_Value = nil
+			local s_Valid = false
 			if l_Item.Type == Type.Enum then
 				-- convert value back
 				for l_Key, l_Value in pairs(l_Item.Reference) do
-					if l_Key == p_Request[l_Item.Name] then
+					if l_Key == p_Request[l_Item.Name] and l_Key ~= "Count" then
 						s_Value = l_Value
+						s_Valid = true
 						if s_Value ~= Config[l_Item.Name] then
 							s_Changed = true
 						end
@@ -319,6 +321,7 @@ function FunBotUIServer:_writeSettings(p_Player, p_Request)
 				for _, l_Value in pairs(l_Item.Reference) do
 					if l_Value == p_Request[l_Item.Name] then
 						s_Value = l_Value
+						s_Valid = true
 						if s_Value ~= Config[l_Item.Name] then
 							s_Changed = true
 						end
@@ -329,6 +332,7 @@ function FunBotUIServer:_writeSettings(p_Player, p_Request)
 			elseif l_Item.Type == Type.Integer or l_Item.Type == Type.Float then
 				s_Value = tonumber(p_Request[l_Item.Name])
 				if l_Item.Reference:IsValid(s_Value) then
+					s_Valid = true
 					if math.abs(s_Value - Config[l_Item.Name]) > 0.001 then
 						s_Changed = true
 					end
@@ -336,20 +340,28 @@ function FunBotUIServer:_writeSettings(p_Player, p_Request)
 
 			elseif l_Item.Type == Type.Boolean then
 				s_Value = p_Request[l_Item.Name] == true
+				s_Valid = true
 				if s_Value ~= Config[l_Item.Name] then
 					s_Changed = true
 				end
 
 			elseif l_Item.Type == Type.String then
 				s_Value = p_Request[l_Item.Name]
+				s_Valid = true
 				if s_Value ~= Config[l_Item.Name] then
 					s_Changed = true
 				end
 			end
-			-- update and check for update flags
-			if s_Changed then
-				m_SettingsManager:Update(l_Item.Name, s_Value, temporary, batched)
 
+			-- update with value or with current Config. Update is needed to not loose Config Values
+			if s_Valid then
+				m_SettingsManager:Update(l_Item.Name, s_Value, temporary, batched)
+			else
+				m_SettingsManager:Update(l_Item.Name, Config[l_Item.Name], temporary, batched)
+			end
+
+			-- check for update flags
+			if s_Changed then
 				if l_Item.UpdateFlag == UpdateFlag.WeaponSets then
 					updateWeaponSets = true
 				elseif l_Item.UpdateFlag == UpdateFlag.Weapons then
@@ -394,7 +406,7 @@ function FunBotUIServer:_writeSettings(p_Player, p_Request)
 	end
 
 	if calcYawPerFrame then
-		Globals.YawPerFrame = BotManager:calcYawPerFrame()
+		Globals.YawPerFrame = BotManager:CalcYawPerFrame()
 	end
 
 	if updateMaxBots then
@@ -405,7 +417,7 @@ function FunBotUIServer:_writeSettings(p_Player, p_Request)
 
 	if updateBotTeamAndNumber then
 		Globals.SpawnMode = Config.SpawnMode
-		BotSpawner:updateBotAmountAndTeam()
+		BotSpawner:UpdateBotAmountAndTeam()
 	end
 	-- @ToDo create Error Array and dont hide if has values
 	NetEvents:SendTo('UI_Settings', p_Player, false)

@@ -2,6 +2,11 @@ USE_REAL_DAMAGE = true					-- with real damage, the hitboxes are a bit buggy
 BOT_TOKEN = "BOT_"						-- token Bots are marked with
 
 Config = {
+
+	--[[SETTINGS GET INSERTED HERE]]
+}
+
+VersionConfig = {
 	-- Debugging will show extra output, both in-game using the VU console and in the server console.
 	-- 0 = All messages. (All)
 	-- 1 = Highly detailed tracing messages. Produces the most voluminous output. (High)
@@ -20,12 +25,10 @@ Config = {
 		DevBuilds = true,
 	},
 
-	--[[SETTINGS GET INSERTED HERE]]
-
-	-- Version related (do not modify)
+		-- Version related (do not modify)
 	Version = {
-		Tag = 'V2.2.0', -- Do not modify this value!
-	},
+		Tag = 'V2.2.0' -- Do not modify this value!
+	}
 }
 
 -- don't change these values unless you know what you do

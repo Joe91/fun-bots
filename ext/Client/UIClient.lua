@@ -181,7 +181,9 @@ function FunBotUIClient:_onUISettings(p_Data)
 			local s_Default = ""
 			local s_Value = ""
 			for l_Key, l_Value in pairs(l_Item.Reference) do
-				table.insert(s_EnumTable, l_Key)
+				if l_Key ~= "Count" then
+					table.insert(s_EnumTable, l_Key)
+				end
 				if l_Value == p_Data[l_Item.Name] then
 					s_Value = l_Key
 				end
