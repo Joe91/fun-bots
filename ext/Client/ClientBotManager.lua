@@ -95,21 +95,21 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 			return
 		end
 
-		local s_EnemyPlayers = PlayerManager:GetPlayers()
-		--local s_AllPlayers = PlayerManager:GetPlayers()
+		local s_EnemyPlayers = {}
+		local s_AllPlayers = PlayerManager:GetPlayers()
 
-		--for _, l_Player in pairs(s_AllPlayers) do
-		--	if l_Player.teamId ~= self.m_Player.teamId then
-		--		table.insert(s_EnemyPlayers, l_Player)
-		--	end
-		--end
+		for _, l_Player in pairs(s_AllPlayers) do
+			if l_Player.teamId ~= self.m_Player.teamId then
+				table.insert(s_EnemyPlayers, l_Player)
+			end
+		end
 
 		if self.m_LastIndex >= #s_EnemyPlayers then
 			self.m_LastIndex = 1
 		end
 
-		for i = self.m_LastIndex, #s_EnemyPlayers do
-			local s_Bot = s_EnemyPlayers[i]
+		for i = 0, #s_EnemyPlayers - 1 do
+			local s_Bot = s_EnemyPlayers[(self.m_LastIndex + i) % #s_EnemyPlayers +1]
 
 			if s_Bot == nil or s_Bot.onlineId ~= 0 or s_Bot.soldier == nil then
 				goto continue_enemy_loop
