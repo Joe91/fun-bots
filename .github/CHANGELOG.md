@@ -20,6 +20,7 @@ Version 2.2.0 of fun-bots now requires the dependency `VeniceEXT` version 1.1.0 
 - Experimental (only partly completed) Bots can enter your vehicle if you hit Q on them<br>
 - UI Settings working again and some rework on the UI<br>
 - Lots of performance improvement in the Waypoint-editor
+- Spawn-Point view in Waypoint-Editor (press "T" to teleport)
 
 #### 🧪 Experimental: Bots entering vehicles
 With this release bots can now enter your vehicle! Any driver or passenger can request nearby bots to enter your vehicle if you press the `Q` button. This is still an experimental feature, please report any issues or feedback.
@@ -30,7 +31,8 @@ With this release bots can now enter your vehicle! Any driver or passenger can r
 - [#136](https://github.com/Joe91/fun-bots/pull/136) Randomized BotWorseningSkill range and added assault aimForHead<br>
 - The `mod.json` is updated<br>
 - Minor changes and enhancements<br>
-- Fixed saving settings in the `F12` settings menu
+- Fixed saving settings in the `F12` settings menu<br>
+- [#143](https://github.com/Joe91/fun-bots/pull/143) Bots ignored players<br>
 
 ### 🐛 Minor bug fixes
 - [#129](https://github.com/Joe91/fun-bots/pull/129) Fixed typo `BotWeapons.Priamry` in `BotSpawner.lua`<br>
