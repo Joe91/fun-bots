@@ -13,11 +13,16 @@ require('__shared/Constants/BotMoveSpeeds')
 require('__shared/Constants/SpawnModes')
 require('__shared/Constants/SpawnMethods')
 require('__shared/Constants/TeamSwitchModes')
-require ('__shared/Utils/Logger')
+require('__shared/Settings/Type')
+require('__shared/Settings/UpdateFlag')
+require('__shared/Settings/BotEnums')
+require('__shared/Settings/Range')
+require('__shared/Settings/SettingsDefinition')
+require('__shared/WeaponList')
+require('__shared/EbxEditUtils')
+require('__shared/Utils/Logger')
 require('Model/Globals')
-require('UI/UI')
 require('Constants/Permissions')
-require('Constants/BotEnums')
 
 local m_Logger = Logger("FunBotServer", Debug.Server.INFO)
 
@@ -33,6 +38,7 @@ local m_WeaponList = require('__shared/WeaponList')
 local m_ChatCommands = require('Commands/Chat')
 local m_Console = require('Commands/Console')
 local m_RCONCommands = require('Commands/RCON')
+local m_FunBotUIServer = require('UIServer')
 -- local m_FunBotUIServer = require('UIServer')
 local m_GameDirector = require('GameDirector')
 PermissionManager = require('PermissionManager')
@@ -194,6 +200,7 @@ end
 -- =============================================
 
 function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPerMap)
+	Globals.GameMode = p_GameMode
 	local s_GameMode = ServerUtils:GetCustomGameModeName()
 
 	if s_GameMode == nil then

@@ -44,13 +44,16 @@ function ClientNodeEditor:__init()
 	self.m_CustomTraceDistance = 0
 	self.m_CustomTraceSaving = false
     
-    self.m_UpdateTimer = 0
+	self.m_UpdateTimer = 0
+	self.m_RaycastTimer = 0
     self.m_NodesToDraw = {}
 	self.m_NodesToDraw_temp = {}
     self.m_LinesToDraw = {}
 	self.m_LinesToDraw_temp = {}
     self.m_TextToDraw = {}
 	self.m_TextToDraw_temp = {}
+	self.m_TextPosToDraw = {}
+	self.m_TextPosToDraw_temp = {}
     self.m_ObbToDraw = {}
 	self.m_ObbToDraw_temp = {}
 	self.m_lastDrawIndexPath = 0
@@ -110,28 +113,28 @@ function ClientNodeEditor:OnRegisterEvents()
 
 	-- enable/disable events
 	-- ('UI_CommoRose_Enabled', <Bool|Enabled>) -- true == block the BF3 commo rose
-	-- NetEvents:Subscribe('UI_CommoRose_Enabled', self, self._onSetCommoRoseEnabled)
+	NetEvents:Subscribe('UI_CommoRose_Enabled', self, self._onSetCommoRoseEnabled)
 
 	-- selection-based events, no arguments required
-	-- NetEvents:Subscribe('UI_CommoRose_Action_Save', self, self._onSaveNodes)
-	-- NetEvents:Subscribe('UI_CommoRose_Action_Select', self, self._onSelectNode)
-	-- NetEvents:Subscribe('UI_CommoRose_Action_Load', self, self._onLoadNodes)
+	NetEvents:Subscribe('UI_CommoRose_Action_Save', self, self._onSaveNodes)
+	NetEvents:Subscribe('UI_CommoRose_Action_Select', self, self._onSelectNode)
+	NetEvents:Subscribe('UI_CommoRose_Action_Load', self, self._onLoadNodes)
 
 	-- Commo Rose left buttons
-	-- NetEvents:Subscribe('UI_CommoRose_Action_Remove', self, self._onRemoveNode)
-	-- NetEvents:Subscribe('UI_CommoRose_Action_Unlink', self, self._onUnlinkNode)
-	-- NetEvents:Subscribe('UI_CommoRose_Action_Merge', self, self._onMergeNode)
-	-- NetEvents:Subscribe('UI_CommoRose_Action_SelectPrevious', self, self._onSelectPrevious)
-	-- NetEvents:Subscribe('UI_CommoRose_Action_ClearSelections', self, self._onClearSelection)
-	-- NetEvents:Subscribe('UI_CommoRose_Action_Move', self, self._onToggleMoveNode)
+	NetEvents:Subscribe('UI_CommoRose_Action_Remove', self, self._onRemoveNode)
+	NetEvents:Subscribe('UI_CommoRose_Action_Unlink', self, self._onUnlinkNode)
+	NetEvents:Subscribe('UI_CommoRose_Action_Merge', self, self._onMergeNode)
+	NetEvents:Subscribe('UI_CommoRose_Action_SelectPrevious', self, self._onSelectPrevious)
+	NetEvents:Subscribe('UI_CommoRose_Action_ClearSelections', self, self._onClearSelection)
+	NetEvents:Subscribe('UI_CommoRose_Action_Move', self, self._onToggleMoveNode)
 
 	-- Commor Rose right buttons
-	-- NetEvents:Subscribe('UI_CommoRose_Action_Add', self, self._onAddNode)
-	-- NetEvents:Subscribe('UI_CommoRose_Action_Link', self, self._onLinkNode)
-	-- NetEvents:Subscribe('UI_CommoRose_Action_Split', self, self._onSplitNode)
-	-- NetEvents:Subscribe('UI_CommoRose_Action_SelectNext', self, self._onSelectNext)
-	-- NetEvents:Subscribe('UI_CommoRose_Action_SelectBetween', self, self._onSelectBetween)
-	-- NetEvents:Subscribe('UI_CommoRose_Action_SetInput', self, self._onSetInputNode)
+	NetEvents:Subscribe('UI_CommoRose_Action_Add', self, self._onAddNode)
+	NetEvents:Subscribe('UI_CommoRose_Action_Link', self, self._onLinkNode)
+	NetEvents:Subscribe('UI_CommoRose_Action_Split', self, self._onSplitNode)
+	NetEvents:Subscribe('UI_CommoRose_Action_SelectNext', self, self._onSelectNext)
+	NetEvents:Subscribe('UI_CommoRose_Action_SelectBetween', self, self._onSelectBetween)
+	NetEvents:Subscribe('UI_CommoRose_Action_SetInput', self, self._onSetInputNode)
 
 	-- must provide arguments
 	-- ('UI_ClientNodeEditor_Trace_Show', <Int|PathIndex>)
@@ -413,7 +416,26 @@ function ClientNodeEditor:_onToggleMoveNode(p_Args)
 			end
 		end
 
-        NetEvents:SendLocal('WaypointEditor:ChangeMode', self.m_EditMode)
+		g_FunBotUIClient:_onSetOperationControls({
+			Numpad = {
+				{Grid = 'K1', Key = '1', Name = 'Remove'},
+				{Grid = 'K2', Key = '2', Name = 'Unlink'},
+				{Grid = 'K3', Key = '3', Name = 'Add'},
+				{Grid = 'K4', Key = '4', Name = 'Move'},
+				{Grid = 'K5', Key = '5', Name = 'Select'},
+				{Grid = 'K6', Key = '6', Name = 'Input'},
+				{Grid = 'K7', Key = '7', Name = 'Merge'},
+				{Grid = 'K8', Key = '8', Name = 'Link'},
+				{Grid = 'K9', Key = '9', Name = 'Split'}
+			},
+			Other = {
+				{Key = 'F12', Name = 'Settings'},
+				{Key = 'Q', Name = 'Quick Select'},
+				{Key = 'BS', Name = 'Clear Select'},
+				{Key = 'INS', Name = 'Spawn Bot'}
+			}
+		})
+
 		self:Log('Edit Mode: %s', self.m_EditMode)
 		return true
 	else
@@ -439,7 +461,27 @@ function ClientNodeEditor:_onToggleMoveNode(p_Args)
 		self.m_EditMode = 'move'
 		self.m_EditModeManualOffset = Vec3.zero
 
-        NetEvents:SendLocal('WaypointEditor:ChangeMode', self.m_EditMode, {tostring(self.m_EditModeManualSpeed), self.m_EditPositionMode})
+		g_FunBotUIClient:_onSetOperationControls({
+			Numpad = {
+				{Grid = 'K1', Key = '1', Name = 'Mode'},
+				{Grid = 'K2', Key = '2', Name = 'Back'},
+				{Grid = 'K3', Key = '3', Name = 'Down'},
+				{Grid = 'K4', Key = '4', Name = 'Left'},
+				{Grid = 'K5', Key = '5', Name = 'Finish'},
+				{Grid = 'K6', Key = '6', Name = 'Right'},
+				{Grid = 'K7', Key = '7', Name = 'Reset'},
+				{Grid = 'K8', Key = '8', Name = 'Forward'},
+				{Grid = 'K9', Key = '9', Name = 'Up'},
+			},
+			Other = {
+				{Key = 'F12', Name = 'Settings'},
+				{Key = 'Q', Name = 'Finish Move'},
+				{Key = 'BS', Name = 'Cancel Move'},
+				{Key = 'KP_PLUS', Name = 'Speed +'},
+				{Key = 'KP_MINUS', Name = 'Speed -'},
+			}
+		})
+
 		self:Log('Edit Mode: %s', self.m_EditMode)
 		return true
 	end
@@ -1081,19 +1123,15 @@ function ClientNodeEditor:_onStartTrace()
 
 	self:Log('Custom Trace Started')
 
-	NetEvents:Send('WaypointEditor:TraceToggle', {
-		Enabled = true,
-		TraceIndex = self.m_CustomTraceIndex,
-		Distance = self.m_CustomTraceDistance,
-		Waypoints = #self.m_CustomTrace:Get()
-	})
+	g_FunBotUIClient:_onUITrace(true)
+	g_FunBotUIClient:_onUITraceIndex(self.m_CustomTraceIndex)
+	g_FunBotUIClient:_onUITraceWaypoints(#self.m_CustomTrace:Get())
+	g_FunBotUIClient:_onUITraceWaypointsDistance(self.m_CustomTraceDistance)
 end
 
 function ClientNodeEditor:_onEndTrace()
 	self.m_CustomTraceTimer = -1
-	NetEvents:Send('WaypointEditor:TraceToggle', {
-		Enabled = false
-	})
+	g_FunBotUIClient:_onUITrace(false)
 
 	local s_FirstWaypoint = self.m_CustomTrace:GetFirst()
 
@@ -1130,12 +1168,10 @@ function ClientNodeEditor:_onClearTrace()
 	self.m_CustomTraceIndex = self:_getNewIndex()
 	self.m_CustomTraceDistance = 0
 	self.m_CustomTrace:Clear()
-	NetEvents:Send('WaypointEditor:TraceToggle', {
-		Enabled = false,
-		TraceIndex = self.m_CustomTraceIndex,
-		Waypoints = #self.m_CustomTrace:Get(),
-		Distance = self.m_CustomTraceDistance
-	})
+	g_FunBotUIClient:_onUITrace(false)
+	g_FunBotUIClient:_onUITraceIndex(self.m_CustomTraceIndex)
+	g_FunBotUIClient:_onUITraceWaypoints(#self.m_CustomTrace:Get())
+	g_FunBotUIClient:_onUITraceWaypointsDistance(self.m_CustomTraceDistance)
 
 	self:Log('Custom Trace Cleared')
 end
@@ -1273,7 +1309,7 @@ function ClientNodeEditor:_onCommoRoseAction(p_Action, p_Hit)
 
 	if p_Action == 'Hide' then
 		self.m_CommoRoseActive = false
-		-- g_FunBotUIClient:_onUICommonRose('false')
+		g_FunBotUIClient:_onUICommonRose('false')
 		return
 	end
 
@@ -1419,13 +1455,11 @@ function ClientNodeEditor:OnClientUpdateInput(p_DeltaTime)
 
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Equals) or InputManager:WentKeyDown(InputDeviceKeys.IDK_Add) then
 			self.m_EditModeManualSpeed = math.min(self.m_EditModeManualSpeed + 0.05, 1)
-            NetEvents:SendLocal('WaypointEditor:ChangeMode', self.m_EditMode, {tostring(self.m_EditModeManualSpeed), self.m_EditPositionMode})
 			return
 		end
 
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Minus) or InputManager:WentKeyDown(InputDeviceKeys.IDK_Subtract) then
 			self.m_EditModeManualSpeed = math.max(self.m_EditModeManualSpeed - 0.05, 0.05)
-            NetEvents:SendLocal('WaypointEditor:ChangeMode', self.m_EditMode, {tostring(self.m_EditModeManualSpeed), self.m_EditPositionMode})
 			return
 		end
 
@@ -1442,7 +1476,7 @@ function ClientNodeEditor:OnClientUpdateInput(p_DeltaTime)
 			else
 				self.m_EditPositionMode = 'absolute'
 			end
-            NetEvents:SendLocal('WaypointEditor:ChangeMode', self.m_EditMode, {tostring(self.m_EditModeManualSpeed), self.m_EditPositionMode})
+
 			return
 		end
 
@@ -1671,12 +1705,8 @@ function ClientNodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 					end
 
 					self.m_CustomTraceDistance = self.m_CustomTraceDistance + s_LastDistance
-					NetEvents:Send('WaypointEditor:TraceToggle', {
-						Waypoints = #self.m_CustomTrace:Get(),
-						Distance = self.m_CustomTraceDistance
-					})
-					--g_FunBotUIClient:_onUITraceWaypointsDistance(self.customTraceDistance)
-					--g_FunBotUIClient:_onUITraceWaypoints(#self.customTrace:Get())
+					g_FunBotUIClient:_onUITraceWaypointsDistance(self.m_CustomTraceDistance)
+					g_FunBotUIClient:_onUITraceWaypoints(#self.m_CustomTrace:Get())
 				end
 			else
 				-- collection is empty, stop the timer
@@ -1686,9 +1716,6 @@ function ClientNodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 			self.m_CustomTraceTimer = 0
 		end
 	end
-
-	--self:DrawDebugThings(p_DeltaTime)
-	self:DrawSomeNodes(Config.NodesPerCycle)
 end
 
 function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
@@ -1706,57 +1733,65 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	if self.m_Player ~= nil and self.m_Player.alive and self.m_Player.soldier ~= nil and self.m_Player.soldier.alive and self.m_Player.soldier.worldTransform ~= nil then
 		self.m_PlayerPos = self.m_Player.soldier.worldTransform.trans
 
+		self.m_RaycastTimer = self.m_RaycastTimer + p_DeltaTime
 		-- do not update node positions if saving or loading
 		if not self:IsSavingOrLoading() then
-			-- perform raycast to get where player is looking
-			if self.m_EditMode == 'move' then
-				local s_Selection = m_NodeCollection:GetSelected()
 
-				if #s_Selection > 0 then
-					--raycast to 4 meters
-					local s_Hit = self:Raycast(4)
+			if self.m_RaycastTimer >= StaticConfig.RaycastInterval then
+				self.m_RaycastTimer = 0
+			
+				-- perform raycast to get where player is looking
+				if self.m_EditMode == 'move' then
+					local s_Selection = m_NodeCollection:GetSelected()
 
-					if s_Hit ~= nil then
-						if self.editRayHitStart == nil then
-							self.editRayHitStart = s_Hit.position
-							self.editRayHitCurrent = s_Hit.position
-							self.editRayHitRelative = Vec3.zero
-						else
-							self.editRayHitCurrent = s_Hit.position
-							self.editRayHitRelative = self.editRayHitCurrent - self.editRayHitStart
+					if #s_Selection > 0 then
+						--raycast to 4 meters
+						local s_Hit = self:Raycast(4)
+
+						if s_Hit ~= nil then
+							if self.editRayHitStart == nil then
+								self.editRayHitStart = s_Hit.position
+								self.editRayHitCurrent = s_Hit.position
+								self.editRayHitRelative = Vec3.zero
+							else
+								self.editRayHitCurrent = s_Hit.position
+								self.editRayHitRelative = self.editRayHitCurrent - self.editRayHitStart
+							end
 						end
-					end
-				end
-			end
 
-			-- loop selected nodes and update positions
-			local s_NodePaths = m_NodeCollection:GetPaths()
+						-- loop selected nodes and update positions
+						local s_NodePaths = m_NodeCollection:GetPaths()
 
-			for l_Path, _ in pairs(s_NodePaths) do
-				if m_NodeCollection:IsPathVisible(l_Path) then
-					local s_PathWaypoints = s_NodePaths[l_Path]
+						for l_Path, _ in pairs(s_NodePaths) do
+							if m_NodeCollection:IsPathVisible(l_Path) then
+								local s_PathWaypoints = s_NodePaths[l_Path]
 
-					for i = 1, #s_PathWaypoints do
-						if self.m_EditMode == 'move' then
-							if m_NodeCollection:IsSelected(s_PathWaypoints[i]) then
-								local s_AdjustedPosition = self.editNodeStartPos[s_PathWaypoints[i].ID] + self.m_EditModeManualOffset
+								for i = 1, #s_PathWaypoints do
+									if m_NodeCollection:IsSelected(s_PathWaypoints[i]) then
+										local s_AdjustedPosition = self.editNodeStartPos[s_PathWaypoints[i].ID] + self.m_EditModeManualOffset
 
-								if self.m_EditPositionMode == 'relative' then
-									s_AdjustedPosition = s_AdjustedPosition + (self.editRayHitRelative or Vec3.zero)
-								elseif (self.m_EditPositionMode == 'standing') then
-									s_AdjustedPosition = self.m_PlayerPos + self.m_EditModeManualOffset
-								else
-									s_AdjustedPosition = self.editRayHitCurrent + self.m_EditModeManualOffset
+										if self.m_EditPositionMode == 'relative' then
+											s_AdjustedPosition = s_AdjustedPosition + (self.editRayHitRelative or Vec3.zero)
+										elseif (self.m_EditPositionMode == 'standing') then
+											s_AdjustedPosition = self.m_PlayerPos + self.m_EditModeManualOffset
+										else
+											s_AdjustedPosition = self.editRayHitCurrent + self.m_EditModeManualOffset
+										end
+
+										m_NodeCollection:Update(s_PathWaypoints[i], {
+											Position = s_AdjustedPosition
+										})
+									end
 								end
-
-								m_NodeCollection:Update(s_PathWaypoints[i], {
-									Position = s_AdjustedPosition
-								})
 							end
 						end
 					end
 				end
 			end
+			
+			-- prepare draw of nodes
+			--self:DrawDebugThings(p_DeltaTime)
+			self:DrawSomeNodes(Config.NodesPerCycle)
 		end
 
 		if self.m_BotVisionEnabled then
@@ -1854,7 +1889,13 @@ function ClientNodeEditor:OnUIDrawHud()
     for _,l_Text in pairs(self.m_TextToDraw) do
         -- draw text
         DebugRenderer:DrawText2D(l_Text.x, l_Text.y, l_Text.text, l_Text.color, l_Text.scale)
-    end
+	end
+	for _,l_TextPos in pairs(self.m_TextPosToDraw) do
+		local s_ScreenPos = ClientUtils:WorldToScreen(l_TextPos.pos)
+		if s_ScreenPos ~= nil then
+			DebugRenderer:DrawText2D(s_ScreenPos.x, s_ScreenPos.y, l_TextPos.text, l_TextPos.color, l_TextPos.scale)
+		end
+	end
     for _,l_Obb in pairs(self.m_ObbToDraw) do
         -- draw OBB
         DebugRenderer:DrawOBB(l_Obb.p_Aab, l_Obb.transform, l_Obb.color)
@@ -1883,7 +1924,16 @@ end
 function ClientNodeEditor:DrawText2D(p_X, p_Y, p_Text, p_Color, p_Scale)
     table.insert(self.m_TextToDraw_temp, {
         x = p_X,
-        y = p_Y,
+		y = p_Y,
+		text = p_Text,
+        color = p_Color,
+        scale = p_Scale
+    })
+end
+
+function ClientNodeEditor:DrawPosText2D(p_Pos, p_Text, p_Color, p_Scale)
+    table.insert(self.m_TextPosToDraw_temp, {
+        pos = p_Pos,
 		text = p_Text,
         color = p_Color,
         scale = p_Scale
@@ -2050,6 +2100,8 @@ function ClientNodeEditor:DrawSomeNodes(p_NrOfNodes)
 	self.m_LinesToDraw_temp = {}
 	self.m_TextToDraw = self.m_TextToDraw_temp
 	self.m_TextToDraw_temp = {}
+	self.m_TextPosToDraw = self.m_TextPosToDraw_temp
+	self.m_TextPosToDraw_temp = {}
 	self.m_ObbToDraw = self.m_ObbToDraw_temp
 	self.m_ObbToDraw_temp = {}
 
@@ -2143,79 +2195,68 @@ function ClientNodeEditor:_drawNode(p_Waypoint, p_IsTracePath)
 	end
 
 	-- draw debugging text
-	if (Config.DrawWaypointIDs or s_IsSelected) and m_NodeCollection:InRange(p_Waypoint, self.m_PlayerPos, Config.TextRange) then
+	if Config.DrawWaypointIDs and m_NodeCollection:InRange(p_Waypoint, self.m_PlayerPos, Config.TextRange) then
 		if s_IsSelected then
 			-- don't try to precalc this value like with the distance, another memory leak crash awaits you
-			local s_ScreenPos = ClientUtils:WorldToScreen(p_Waypoint.Position + Vec3.up)
+			local s_PreviousNode = tostring(p_Waypoint.Previous)
+			local s_NextNode = tostring(p_Waypoint.Next)
+			local s_PathNode = m_NodeCollection:GetFirst(p_Waypoint.PathIndex)
 
-			if s_ScreenPos ~= nil then
-				local s_PreviousNode = tostring(p_Waypoint.Previous)
-				local s_NextNode = tostring(p_Waypoint.Next)
-				local s_PathNode = m_NodeCollection:GetFirst(p_Waypoint.PathIndex)
-
-				if type(p_Waypoint.Previous) == 'table' then
-					s_PreviousNode = p_Waypoint.Previous.ID
-				end
-
-				if type(p_Waypoint.Next) == 'table' then
-					s_NextNode = p_Waypoint.Next.ID
-				end
-
-				local s_SpeedMode = 'N/A'
-
-				if p_Waypoint.SpeedMode == 0 then s_SpeedMode = 'Wait' end
-
-				if p_Waypoint.SpeedMode == 1 then s_SpeedMode = 'Prone' end
-
-				if p_Waypoint.SpeedMode == 2 then s_SpeedMode = 'Crouch' end
-
-				if p_Waypoint.SpeedMode == 3 then s_SpeedMode = 'Walk' end
-
-				if p_Waypoint.SpeedMode == 4 then s_SpeedMode = 'Sprint' end
-
-
-				local s_ExtraMode = 'N/A'
-
-				if p_Waypoint.ExtraMode == 1 then s_ExtraMode = 'Jump' end
-
-				local s_OptionValue = 'N/A'
-
-				if p_Waypoint.SpeedMode == 0 then
-					s_OptionValue = tostring(p_Waypoint.OptValue)..' Seconds'
-				end
-
-				local s_PathMode = 'Loops'
-
-				if s_PathNode then
-					if (s_PathNode.OptValue == 0XFF) then
-						s_PathMode = 'Reverses'
-					end
-				end
-
-				local s_Text = ''
-				s_Text = s_Text..string.format("(%s)Pevious [ %s ] Next(%s)\n", s_PreviousNode, p_Waypoint.ID, s_NextNode)
-				s_Text = s_Text..string.format("Index[%d]\n", p_Waypoint.Index)
-				s_Text = s_Text..string.format("Path[%d][%d] (%s)\n", p_Waypoint.PathIndex, p_Waypoint.PointIndex, s_PathMode)
-				s_Text = s_Text..string.format("Path Objectives: %s\n", g_Utilities:dump(s_PathNode.Data.Objectives, false))
-				s_Text = s_Text..string.format("Vehicles: %s\n", g_Utilities:dump(s_PathNode.Data.Vehicles, false))
-				s_Text = s_Text..string.format("InputVar: %d\n", p_Waypoint.InputVar)
-				s_Text = s_Text..string.format("SpeedMode: %s (%d)\n", s_SpeedMode, p_Waypoint.SpeedMode)
-				s_Text = s_Text..string.format("ExtraMode: %s (%d)\n", s_ExtraMode, p_Waypoint.ExtraMode)
-				s_Text = s_Text..string.format("OptValue: %s (%d)\n", s_OptionValue, p_Waypoint.OptValue)
-				s_Text = s_Text..'Data: '..g_Utilities:dump(p_Waypoint.Data, true)
-
-				self:DrawText2D(s_ScreenPos.x, s_ScreenPos.y, s_Text, self.m_Colors.Text, 1.2)
+			if type(p_Waypoint.Previous) == 'table' then
+				s_PreviousNode = p_Waypoint.Previous.ID
 			end
 
-			s_ScreenPos = nil
+			if type(p_Waypoint.Next) == 'table' then
+				s_NextNode = p_Waypoint.Next.ID
+			end
+
+			local s_SpeedMode = 'N/A'
+
+			if p_Waypoint.SpeedMode == 0 then s_SpeedMode = 'Wait' end
+
+			if p_Waypoint.SpeedMode == 1 then s_SpeedMode = 'Prone' end
+
+			if p_Waypoint.SpeedMode == 2 then s_SpeedMode = 'Crouch' end
+
+			if p_Waypoint.SpeedMode == 3 then s_SpeedMode = 'Walk' end
+
+			if p_Waypoint.SpeedMode == 4 then s_SpeedMode = 'Sprint' end
+
+
+			local s_ExtraMode = 'N/A'
+
+			if p_Waypoint.ExtraMode == 1 then s_ExtraMode = 'Jump' end
+
+			local s_OptionValue = 'N/A'
+
+			if p_Waypoint.SpeedMode == 0 then
+				s_OptionValue = tostring(p_Waypoint.OptValue)..' Seconds'
+			end
+
+			local s_PathMode = 'Loops'
+
+			if s_PathNode then
+				if (s_PathNode.OptValue == 0XFF) then
+					s_PathMode = 'Reverses'
+				end
+			end
+
+			local s_Text = ''
+			s_Text = s_Text..string.format("(%s)Pevious [ %s ] Next(%s)\n", s_PreviousNode, p_Waypoint.ID, s_NextNode)
+			s_Text = s_Text..string.format("Index[%d]\n", p_Waypoint.Index)
+			s_Text = s_Text..string.format("Path[%d][%d] (%s)\n", p_Waypoint.PathIndex, p_Waypoint.PointIndex, s_PathMode)
+			s_Text = s_Text..string.format("Path Objectives: %s\n", g_Utilities:dump(s_PathNode.Data.Objectives, false))
+			s_Text = s_Text..string.format("Vehicles: %s\n", g_Utilities:dump(s_PathNode.Data.Vehicles, false))
+			s_Text = s_Text..string.format("InputVar: %d\n", p_Waypoint.InputVar)
+			s_Text = s_Text..string.format("SpeedMode: %s (%d)\n", s_SpeedMode, p_Waypoint.SpeedMode)
+			s_Text = s_Text..string.format("ExtraMode: %s (%d)\n", s_ExtraMode, p_Waypoint.ExtraMode)
+			s_Text = s_Text..string.format("OptValue: %s (%d)\n", s_OptionValue, p_Waypoint.OptValue)
+			s_Text = s_Text..'Data: '..g_Utilities:dump(p_Waypoint.Data, true)
+
+			self:DrawPosText2D(p_Waypoint.Position + Vec3.up, s_Text, self.m_Colors.Text, 1.2)
 		else
 			-- don't try to precalc this value like with the distance, another memory leak crash awaits you
-			local s_ScreenPos = ClientUtils:WorldToScreen(p_Waypoint.Position + (Vec3.up * 0.05))
-
-			if s_ScreenPos ~= nil then
-				self:DrawText2D(s_ScreenPos.x, s_ScreenPos.y, tostring(p_Waypoint.ID), self.m_Colors.Text, 1)
-				s_ScreenPos = nil
-			end
+			self:DrawPosText2D(p_Waypoint.Position + (Vec3.up * 0.05), tostring(p_Waypoint.ID), self.m_Colors.Text, 1)
 		end
 	end
 end

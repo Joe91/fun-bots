@@ -31,7 +31,7 @@ local function updateCheckCB(httpRequest)
 	-- Parse JSON
 	local s_EndpointJSON = json.decode(httpRequest.body)
 	if s_EndpointJSON == nil then
-		UpdateFinished(Config.AutoUpdater.DevBuilds, false, false, nil, nil, nil)
+		UpdateFinished(VersionConfig.AutoUpdater.DevBuilds, false, false, nil, nil, nil)
 		do return end
 	end
 
@@ -39,19 +39,19 @@ local function updateCheckCB(httpRequest)
 	-- @ToDo: Make the current version better as it currently checks strings. It should check an incremental value instead.
 
 	-- Stable and release candidates follow the same body
-	if not Config.AutoUpdater.DevBuilds then
-		if Config.Version.Tag == s_EndpointJSON['tag_name'] then
-			UpdateFinished(Config.AutoUpdater.DevBuilds, true, false, nil, nil, nil)
+	if not VersionConfig.AutoUpdater.DevBuilds then
+		if VersionConfig.Version.Tag == s_EndpointJSON['tag_name'] then
+			UpdateFinished(VersionConfig.AutoUpdater.DevBuilds, true, false, nil, nil, nil)
 			do return end
 		end
 
-		UpdateFinished(Config.AutoUpdater.DevBuilds, true, true, s_EndpointJSON['html_url'], {tag = s_EndpointJSON['tag_name'], relTimestamp = s_EndpointJSON['published_at']}, nil)
+		UpdateFinished(VersionConfig.AutoUpdater.DevBuilds, true, true, s_EndpointJSON['html_url'], {tag = s_EndpointJSON['tag_name'], relTimestamp = s_EndpointJSON['published_at']}, nil)
 		do return end
 	end
 
 	-- Development builds
-	if Config.Version.Tag:gsub("V", "") == s_EndpointJSON[1]['name']:gsub("V", "") then
-		UpdateFinished(Config.AutoUpdater.DevBuilds, true, false, nil, nil, nil)
+	if VersionConfig.Version.Tag:gsub("V", "") == s_EndpointJSON[1]['name']:gsub("V", "") then
+		UpdateFinished(VersionConfig.AutoUpdater.DevBuilds, true, false, nil, nil, nil)
 		do return end
 	end
 
@@ -65,7 +65,7 @@ local function UpdateCheck()
 	local s_EndpointURL = ApiUrls.stable
 
 	-- If development builds are enabled, get latest tags
-	if Config.AutoUpdater.DevBuilds then
+	if VersionConfig.AutoUpdater.DevBuilds then
 		s_EndpointURL = ApiUrls.dev
 	end
 
