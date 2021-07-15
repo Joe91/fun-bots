@@ -1334,6 +1334,7 @@ function Bot:_UpdateShooting()
 				self._ShootTraceTimer = self._ShootTraceTimer + StaticConfig.BotUpdateCycle
 			else
 				self._WeaponToUse = BotWeapons.Primary
+				self._TargetPitch = 0.0
 				self._ShootPlayer = nil
 				self._ReviveActive = false
 			end
@@ -1345,10 +1346,12 @@ function Bot:_UpdateShooting()
 				--check for enter of vehicle if close
 				if self._ShootPlayer.soldier.worldTransform.trans:Distance(self.m_Player.soldier.worldTransform.trans) < 5 then
 					self:_EnterVehicle()
+					self._TargetPitch = 0.0
 					self._ShootPlayer = nil
 					self._EnterVehicleActice = false
 				end
 			else
+				self._TargetPitch = 0.0
 				self._ShootPlayer = nil
 				self._EnterVehicleActice = false
 			end
@@ -1361,6 +1364,9 @@ function Bot:_UpdateShooting()
 			self._ReviveActive = false
 			self._ShootModeTimer = 0
 			self._AttackMode = 0
+			if not self._ActionActive then
+				self._TargetPitch = 0.0
+			end
 
 			self._ReloadTimer = self._ReloadTimer + StaticConfig.BotUpdateCycle
 
