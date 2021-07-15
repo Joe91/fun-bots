@@ -17,6 +17,9 @@ Version 2.2.0 of fun-bots now requires the dependency `VeniceEXT` version 1.1.0 
 - [#134](https://github.com/Joe91/fun-bots/pull/134) Added configuration option for `AimForHeadSupport` and `BotSupportAimWorsening`<br>
 - [#132](https://github.com/Joe91/fun-bots/pull/132) Added extra notes to the configuration file<br>
 - [#113](https://github.com/Joe91/fun-bots/issues/113) Bots can now respawn on other bots on the same squad
+- Experimental (only partly completed) Bots can enter your vehicle if you hit Q on them
+- UI Settings working again and some rework on the UI
+- Lots of performance improvement in the Waypoint-editor
 
 ### 📝 Changes and enhancements
 - [#139](https://github.com/Joe91/fun-bots/pull/139) Update checker is now async<br>
@@ -24,6 +27,7 @@ Version 2.2.0 of fun-bots now requires the dependency `VeniceEXT` version 1.1.0 
 - [#136](https://github.com/Joe91/fun-bots/pull/136) Randomized BotWorseningSkill range and added assault aimForHead<br>
 - The `mod.json` is updatede<br>
 - Minor changes and enhancements
+- save of the settings should now work
 
 ### 🐛 Minor bug fixes
 - [#129](https://github.com/Joe91/fun-bots/pull/129) Fixed typo `BotWeapons.Priamry` in `BotSpawner.lua`<br>
