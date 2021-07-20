@@ -1572,7 +1572,7 @@ function ClientNodeEditor:OnClientUpdateInput(p_DeltaTime)
 		end
 
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Backspace) then
-			self:_onToggleMoveNode('none', true)
+			self:_onChangeEditMode('none', true)
 			return
 		end
 
