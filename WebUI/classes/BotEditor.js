@@ -217,13 +217,6 @@ const BotEditor = (new function BotEditor() {
 					}));
 					count.value = 1;
 				break;
-				case 'bot_spawn_path':
-					index = document.querySelector('[data-action="bot_spawn_path"] input[type="number"]');
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'bot_spawn_path',
-						value:	index.value
-					}));
-				break;
 				case 'bot_kick_all':
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
 						action:	'bot_kick_all'
