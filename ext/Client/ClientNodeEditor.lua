@@ -1696,7 +1696,7 @@ function ClientNodeEditor:OnClientUpdateInput(p_DeltaTime)
 			return
 		end
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad6) then
-			self:_onSetInputNode()
+			self:_onAddArea()
 			return
 		end
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad3) then

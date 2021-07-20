@@ -197,6 +197,23 @@ function NodeCollection:Add()
 	return false, 'Must select up to two waypoints'
 end
 
+function NodeCollection:AddArea()
+	local s_Selection = self:GetSelected()
+
+	if #s_Selection == 0 then
+		local s_LastWaypoint = s_Selection[#s_Selection]
+		local s_NewWaypoint = self:Create({
+			PathIndex = 2047,
+			PointIndex = s_LastWaypoint.PointIndex + 1,
+			Type = NodeTypes.Area
+		})
+		self:InsertAfter(s_LastWaypoint, s_NewWaypoint)
+		return s_NewWaypoint, 'Success'
+	end
+
+	return false, 'Must clear selection'
+end
+
 function NodeCollection:Remove(p_Waypoint)
 	-- batch operation on selections
 	if p_Waypoint == nil then
