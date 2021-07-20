@@ -33,6 +33,7 @@ function ClientNodeEditor:__init()
 	self.m_EditStartPos = nil
 	self.m_NodeStartPos = {}
 	self.m_EditModeManualOffset = Vec3.zero
+	self.m_EditModeAreaValue = Vec4.zero
 	self.m_EditModeManualSpeed = 0.05
 	self.m_EditPositionMode = 'relative'
 	self.m_HelpTextLocation = Vec2.zero
@@ -125,7 +126,7 @@ function ClientNodeEditor:OnRegisterEvents()
 	NetEvents:Subscribe('UI_CommoRose_Action_Merge', self, self._onMergeNode)
 	NetEvents:Subscribe('UI_CommoRose_Action_SelectPrevious', self, self._onSelectPrevious)
 	NetEvents:Subscribe('UI_CommoRose_Action_ClearSelections', self, self._onClearSelection)
-	NetEvents:Subscribe('UI_CommoRose_Action_Move', self, self._onToggleMoveNode)
+	NetEvents:Subscribe('UI_CommoRose_Action_Move', self, self._onChangeEditMode)
 
 	-- Commor Rose right buttons
 	NetEvents:Subscribe('UI_CommoRose_Action_Add', self, self._onAddNode)
@@ -169,7 +170,7 @@ function ClientNodeEditor:OnRegisterEvents()
 	Console:Register('Merge', 'Merge selected waypoints', self, self._onMergeNode)
 	Console:Register('SelectPrevious', 'Extend selection to previous waypoint', self, self._onSelectPrevious)
 	Console:Register('ClearSelection', 'Clear selection', self, self._onClearSelection)
-	Console:Register('Move', 'toggle move mode on selected waypoints', self, self._onToggleMoveNode)
+	Console:Register('Move', 'toggle move mode on selected waypoints', self, self._onChangeEditMode)
 
 	Console:Register('Add', 'Create a new waypoint after the selected one', self, self._onAddNode)
 	Console:Register('Link', 'Link two waypoints', self, self._onLinkNode)
@@ -390,16 +391,20 @@ function ClientNodeEditor:_onClearSelection(p_Args)
 	return true
 end
 
-function ClientNodeEditor:_onToggleMoveNode(p_Args)
+function ClientNodeEditor:_onChangeEditMode(p_Mode, p_Args)
 	self.m_CommoRoseActive = false
 
 	if self:IsSavingOrLoading() then
 		return false
 	end
 
-	if self.m_EditMode == 'move' then
+	if p_Mode == nil then
+		return
+	end
+
+	if p_Mode == 'none' then
 		self.m_EditMode = 'none'
-        
+
 		self.editRayHitStart = nil
 		self.m_EditModeManualOffset = Vec3.zero
 
@@ -422,7 +427,7 @@ function ClientNodeEditor:_onToggleMoveNode(p_Args)
 				{Grid = 'K3', Key = '3', Name = 'Add'},
 				{Grid = 'K4', Key = '4', Name = 'Move'},
 				{Grid = 'K5', Key = '5', Name = 'Select'},
-				{Grid = 'K6', Key = '6', Name = 'Input'},
+				{Grid = 'K6', Key = '6', Name = 'Area'},
 				{Grid = 'K7', Key = '7', Name = 'Merge'},
 				{Grid = 'K8', Key = '8', Name = 'Link'},
 				{Grid = 'K9', Key = '9', Name = 'Split'}
@@ -437,7 +442,7 @@ function ClientNodeEditor:_onToggleMoveNode(p_Args)
 
 		self:Log('Edit Mode: %s', self.m_EditMode)
 		return true
-	else
+	elseif p_Mode == 'move' then
 		if self.m_Player == nil or self.m_Player.soldier == nil then
 			self:Log('Player must be alive')
 			return false
@@ -468,7 +473,7 @@ function ClientNodeEditor:_onToggleMoveNode(p_Args)
 				{Grid = 'K4', Key = '4', Name = 'Left'},
 				{Grid = 'K5', Key = '5', Name = 'Finish'},
 				{Grid = 'K6', Key = '6', Name = 'Right'},
-				{Grid = 'K7', Key = '7', Name = 'Reset'},
+				{Grid = 'K7', Key = '7', Name = 'Switch Area'},
 				{Grid = 'K8', Key = '8', Name = 'Forward'},
 				{Grid = 'K9', Key = '9', Name = 'Up'},
 			},
@@ -478,6 +483,52 @@ function ClientNodeEditor:_onToggleMoveNode(p_Args)
 				{Key = 'BS', Name = 'Cancel Move'},
 				{Key = 'KP_PLUS', Name = 'Speed +'},
 				{Key = 'KP_MINUS', Name = 'Speed -'},
+			}
+		})
+
+		self:Log('Edit Mode: %s', self.m_EditMode)
+		return true
+	elseif p_Mode == 'area' then
+		if self.m_Player == nil or self.m_Player.soldier == nil then
+			self:Log('Player must be alive')
+			return false
+		end
+
+		local s_Selection = m_NodeCollection:GetSelected()
+
+		if #s_Selection < 1 then
+			self:Log('Must select at least one node')
+			return false
+		end
+
+		self.editNodeStartPos = {}
+
+		for i = 1, #s_Selection do
+			self.editNodeStartPos[i] = s_Selection[i].Position:Clone()
+			self.editNodeStartPos[s_Selection[i].ID] = s_Selection[i].Position:Clone()
+		end
+
+		self.m_EditMode = 'area'
+		self.m_EditModeManualOffset = Vec3.zero
+
+		g_FunBotUIClient:_onSetOperationControls({
+			Numpad = {
+				{Grid = 'K1', Key = '1', Name = '?'},
+				{Grid = 'K2', Key = '2', Name = 'Length -'},
+				{Grid = 'K3', Key = '3', Name = 'Height -'},
+				{Grid = 'K4', Key = '4', Name = 'Width -'},
+				{Grid = 'K5', Key = '5', Name = 'Finish'},
+				{Grid = 'K6', Key = '6', Name = 'Width +'},
+				{Grid = 'K7', Key = '7', Name = 'Switch Move'},
+				{Grid = 'K8', Key = '8', Name = 'Length +'},
+				{Grid = 'K9', Key = '9', Name = 'Height +'},
+			},
+			Other = {
+				{Key = 'F12', Name = 'Settings'},
+				{Key = 'Q', Name = 'Finish Area'},
+				{Key = 'BS', Name = 'Cancel Area'},
+				{Key = 'KP_PLUS', Name = 'Rotate +'},
+				{Key = 'KP_MINUS', Name = 'Rotate -'},
 			}
 		})
 
@@ -514,7 +565,36 @@ function ClientNodeEditor:_onAddNode(p_Args)
 		m_NodeCollection:ClearSelection()
 		m_NodeCollection:Select(s_Result)
 		self.m_EditPositionMode = 'absolute'
-		self:_onToggleMoveNode()
+		self:_onChangeEditMode('move')
+	end
+
+	return true
+end
+
+function ClientNodeEditor:_onAddArea(p_Args)
+	self.m_CommoRoseActive = false
+
+	if self:IsSavingOrLoading() then
+		return false
+	end
+
+	local s_Result, s_Message = m_NodeCollection:Add()
+
+	if not s_Result then
+		self:Log(s_Message)
+		return false
+	end
+
+	local s_Selection = m_NodeCollection:GetSelected()
+
+	-- if selected is 0 or 1, we created a new node
+	-- clear selection, select new node, change to move mode
+	-- otherwise we just connected two nodes, don't change selection
+	if s_Result ~= nil and #s_Selection <= 1 then
+		m_NodeCollection:ClearSelection()
+		m_NodeCollection:Select(s_Result)
+		self.m_EditPositionMode = 'absolute'
+		self:_onChangeEditMode('area')
 	end
 
 	return true
@@ -1423,7 +1503,7 @@ function ClientNodeEditor:OnClientUpdateInput(p_DeltaTime)
 		-- pressed and released without triggering commo rose
 		if self.m_CommoRosePressed and not s_CommButtonDown then
 			if self.m_EditMode == 'move' then
-				self:_onToggleMoveNode()
+				self:_onChangeMNode('none')
 			else
 				self:_onCommoRoseAction('Select')
 			end
@@ -1474,7 +1554,8 @@ function ClientNodeEditor:OnClientUpdateInput(p_DeltaTime)
 		end
 
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad7) then
-			self.m_EditModeManualOffset = Vec3.zero
+			-- TODO: Only if selection.type == area
+			self:_onChangeEditMode('area')
 			return
 		end
 
@@ -1491,21 +1572,96 @@ function ClientNodeEditor:OnClientUpdateInput(p_DeltaTime)
 		end
 
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Backspace) then
-			self:_onToggleMoveNode(true)
+			self:_onToggleMoveNode('none', true)
 			return
 		end
 
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad5) then
-			self:_onToggleMoveNode()
+			self:_onChangeEditMode('none')
 			return
 		end
-        
-        if InputManager:WentKeyDown(InputDeviceKeys.IDK_T) then
-            -- TODO: Not functional yet!
-            -- self:_onSwitchToArea()
-			-- NetEvents:SendLocal('WaypointEditor:ChangeMode', self.m_EditMode, {tostring(self.m_EditModeManualSpeed), self.m_EditPositionMode})
+
+	elseif self.m_EditMode == 'area' then
+		if InputManager:WentKeyDown(InputDeviceKeys.IDK_ArrowLeft) or InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad4) then
+			-- Width -
+			if self.m_EditModeAreaValue.x > 0.5 then
+				self.m_EditModeAreaValue.x = self.m_EditModeAreaValue.x - 0.25
+			else
+				self.m_EditModeAreaValue.x = 0.25
+			end
 			return
 		end
+
+		if InputManager:WentKeyDown(InputDeviceKeys.IDK_ArrowRight) or InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad6) then
+			-- Width +
+			self.m_EditModeAreaValue.x = self.m_EditModeAreaValue.x + 0.25
+			return
+		end
+
+		if InputManager:WentKeyDown(InputDeviceKeys.IDK_ArrowUp) or InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad8) then
+			-- Lenght +
+			self.m_EditModeAreaValue.y = self.m_EditModeAreaValue.y + 0.25
+			return
+		end
+
+		if InputManager:WentKeyDown(InputDeviceKeys.IDK_ArrowDown) or InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad2) then
+			-- Lenght -
+			if self.m_EditModeAreaValue.y > 0.5 then
+				self.m_EditModeAreaValue.y = self.m_EditModeAreaValue.y - 0.25
+			else
+				self.m_EditModeAreaValue.y = 0.25
+			end
+			return
+		end
+
+		if InputManager:WentKeyDown(InputDeviceKeys.IDK_PageUp) or InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad9) then
+			-- Height +
+			self.m_EditModeAreaValue.z = self.m_EditModeAreaValue.z + 0.25
+			return
+		end
+
+		if InputManager:WentKeyDown(InputDeviceKeys.IDK_PageDown) or InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad3) then
+			-- Height -
+			if self.m_EditModeAreaValue.z > 0.5 then
+				self.m_EditModeAreaValue.z = self.m_EditModeAreaValue.z - 0.25
+			else
+				self.m_EditModeAreaValue.z = 0.25
+			end
+			return
+		end
+
+		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Equals) or InputManager:WentKeyDown(InputDeviceKeys.IDK_Add) then
+			-- rotate +
+			self.m_EditModeAreaValue.w = self.m_EditModeAreaValue.w + 0.1 -- = 5,7°
+			return
+		end
+
+		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Minus) or InputManager:WentKeyDown(InputDeviceKeys.IDK_Subtract) then
+			-- rotate -
+			self.m_EditModeAreaValue.w = self.m_EditModeAreaValue.w - 0.1 -- = 5,7°
+			return
+		end
+
+		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad7) then
+			self:_onChangeEditMode('move')
+			return
+		end
+
+		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad1) then
+			-- not used yet
+			return
+		end
+
+		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Backspace) then
+			self:_onChangeEditMode('none', true)
+			return
+		end
+
+		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad5) then
+			self:_onChangeEditMode('none')
+			return
+		end
+
 	elseif self.m_EditMode == 'none' then
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad8) then
 			self:_onLinkNode()
@@ -1527,7 +1683,7 @@ function ClientNodeEditor:OnClientUpdateInput(p_DeltaTime)
 			return
 		end
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad4) then
-			self:_onToggleMoveNode()
+			self:_onChangeEditMode('move')
 			return
 		end
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad1) then

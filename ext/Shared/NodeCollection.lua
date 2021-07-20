@@ -73,6 +73,7 @@ function NodeCollection:Create(p_Data, p_Authoritative)
 		SpeedMode = s_InputVar & 0xF, -- 0 = wait, 1 = prone, 2 = crouch, 3 = walk, 4 run
 		ExtraMode = (s_InputVar >> 4) & 0xF,
 		OptValue = (s_InputVar >> 8) & 0xFF,
+		Type = NodeTypes.Node,
 		Data = {},
 		Distance = nil, -- current distance to player
 		Updated = false, -- if true, needs to be sent to server for saving
