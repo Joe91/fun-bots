@@ -384,6 +384,15 @@ function Bot:IsInactive()
 	end
 end
 
+function Bot:IsStuck()
+	if self._ObstaceSequenceTimer ~= 0 then
+		return true
+	else
+		return false
+	end
+end
+
+
 function Bot:ResetSpawnVars()
 	self._SpawnDelayTimer = 0
 	self._ObstaceSequenceTimer = 0
