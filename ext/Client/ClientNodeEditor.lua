@@ -1513,7 +1513,7 @@ function ClientNodeEditor:OnClientUpdateInput(p_DeltaTime)
 		-- pressed and released without triggering commo rose
 		if self.m_CommoRosePressed and not s_CommButtonDown then
 			if self.m_EditMode == 'move' then
-				self:_onChangeMNode('none')
+				self:_onChangeEditMode('none')
 			else
 				self:_onCommoRoseAction('Select')
 			end
