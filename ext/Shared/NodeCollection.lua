@@ -97,6 +97,10 @@ function NodeCollection:Create(p_Data, p_Authoritative)
 		end
 	end
 
+	if s_Waypoint.Data ~= nil and s_Waypoint.Data.Height ~= nil and s_Waypoint.Data.Width ~= nil and s_Waypoint.Length ~= nil then
+		s_Waypoint.Type = NodeTypes.Area
+	end
+
 	self:Register(s_Waypoint)
 	return s_Waypoint
 end

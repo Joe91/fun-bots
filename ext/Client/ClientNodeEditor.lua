@@ -597,14 +597,13 @@ function ClientNodeEditor:_onAddArea(p_Args)
 		end
 
 		-- clear selection, select new node, change to area mode
-		if s_Result ~= nil and #s_Selection <= 1 then
+		if s_Result ~= nil then
 			m_NodeCollection:ClearSelection()
 			m_NodeCollection:Select(s_Result)
 			self.m_EditPositionMode = 'absolute'
-			self:_onChangeEditMode('area')
+			self:_onChangeEditMode('move')
 		end
 	else
-		self.m_EditPositionMode = 'absolute'
 		self:_onChangeEditMode('area')
 	end
 
