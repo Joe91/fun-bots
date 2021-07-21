@@ -456,16 +456,19 @@ function ClientNodeEditor:_onChangeEditMode(p_Mode, p_Args)
 			return false
 		end
 
-		self.editNodeStartPos = {}
+		if self.m_EditMode == 'none' then
+			self.editNodeStartPos = {}
 
-		for i = 1, #s_Selection do
-			self.editNodeStartPos[i] = s_Selection[i].Position:Clone()
-			self.editNodeStartPos[s_Selection[i].ID] = s_Selection[i].Position:Clone()
+			for i = 1, #s_Selection do
+				self.editNodeStartPos[i] = s_Selection[i].Position:Clone()
+				self.editNodeStartPos[s_Selection[i].ID] = s_Selection[i].Position:Clone()
+			end
+			self.m_EditModeManualOffset = Vec3.zero
+			self.m_EditModeAreaValue = Vec4.zero
 		end
 
 		self.m_EditMode = 'move'
-		self.m_EditModeManualOffset = Vec3.zero
-		self.m_EditModeAreaValue = Vec4.zero
+
 
 		g_FunBotUIClient:_onSetOperationControls({
 			Numpad = {
@@ -503,16 +506,18 @@ function ClientNodeEditor:_onChangeEditMode(p_Mode, p_Args)
 			return false
 		end
 
-		self.editNodeStartPos = {}
+		if self.m_EditMode == 'none' then
+			self.editNodeStartPos = {}
 
-		for i = 1, #s_Selection do
-			self.editNodeStartPos[i] = s_Selection[i].Position:Clone()
-			self.editNodeStartPos[s_Selection[i].ID] = s_Selection[i].Position:Clone()
+			for i = 1, #s_Selection do
+				self.editNodeStartPos[i] = s_Selection[i].Position:Clone()
+				self.editNodeStartPos[s_Selection[i].ID] = s_Selection[i].Position:Clone()
+			end
+			self.m_EditModeManualOffset = Vec3.zero
+			self.m_EditModeAreaValue = Vec4.zero
 		end
 
 		self.m_EditMode = 'area'
-		self.m_EditModeManualOffset = Vec3.zero
-		self.m_EditModeAreaValue = Vec4.zero
 
 		g_FunBotUIClient:_onSetOperationControls({
 			Numpad = {
@@ -581,21 +586,24 @@ function ClientNodeEditor:_onAddArea(p_Args)
 		return false
 	end
 
-	local s_Result, s_Message = m_NodeCollection:AddArea()
-
-	if not s_Result then
-		self:Log(s_Message)
-		return false
-	end
-
 	local s_Selection = m_NodeCollection:GetSelected()
+	if #s_Selection == 0 then
 
-	-- if selected is 0 or 1, we created a new node
-	-- clear selection, select new node, change to move mode
-	-- otherwise we just connected two nodes, don't change selection
-	if s_Result ~= nil and #s_Selection <= 1 then
-		m_NodeCollection:ClearSelection()
-		m_NodeCollection:Select(s_Result)
+		local s_Result, s_Message = m_NodeCollection:AddArea()
+
+		if not s_Result then
+			self:Log(s_Message)
+			return false
+		end
+
+		-- clear selection, select new node, change to area mode
+		if s_Result ~= nil and #s_Selection <= 1 then
+			m_NodeCollection:ClearSelection()
+			m_NodeCollection:Select(s_Result)
+			self.m_EditPositionMode = 'absolute'
+			self:_onChangeEditMode('area')
+		end
+	else
 		self.m_EditPositionMode = 'absolute'
 		self:_onChangeEditMode('area')
 	end
@@ -2265,7 +2273,7 @@ function ClientNodeEditor:DrawSomeNodes(p_NrOfNodes)
 			end
 		end
 	end
-	self.m_lastDrawIndexPath = 99999
+	self.m_lastDrawIndexPath = 999999
 
 	-- draw waypoints for custom trace
 	if self.m_CustomTrace ~= nil then
@@ -2304,12 +2312,15 @@ function ClientNodeEditor:_drawArea(p_Waypoint)
 	local s_IsSelected = m_NodeCollection:IsSelected(p_Waypoint)
 
 	-- setup node color information
-	local s_Color = self.m_Colors.White
+	local s_Color = self.m_Colors.Blue
 
-	local s_AxisAlignedBox = AxisAlignedBox(Vec3(-p_Waypoint.Data.Width, -p_Waypoint.Data.Height, -p_Waypoint.Data.Length), Vec3(p_Waypoint.Data.Width, p_Waypoint.Data.Height, p_Waypoint.Data.Length))
-	local s_Transform = MathUtils:GetTransformFromYPR(p_Waypoint.Data.Yaw, 0.0, 0.0)
-	s_Transform.trans = p_Waypoint.Position
-	self:DrawOBB(s_AxisAlignedBox, s_Transform, s_Color)
+	if m_NodeCollection:InRange(p_Waypoint, self.m_PlayerPos, Config.AreaRange) then
+		local s_AxisAlignedBox = AxisAlignedBox(Vec3(-p_Waypoint.Data.Width, -p_Waypoint.Data.Height, -p_Waypoint.Data.Length), Vec3(p_Waypoint.Data.Width, p_Waypoint.Data.Height, p_Waypoint.Data.Length))
+		local s_Transform = MathUtils:GetTransformFromYPR(p_Waypoint.Data.Yaw, 0.0, 0.0)
+		s_Transform.trans = p_Waypoint.Position
+		self:DrawOBB(s_AxisAlignedBox, s_Transform, s_Color)
+		self:DrawSphere(p_Waypoint.Position, 0.05, s_Color, false, false)
+	end
 
 	-- draw debugging text
 	if Config.DrawWaypointIDs and m_NodeCollection:InRange(p_Waypoint, self.m_PlayerPos, Config.TextRange) then

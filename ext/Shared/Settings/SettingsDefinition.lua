@@ -794,6 +794,17 @@ SettingsDefinition = {
 			Category = "TRACE"
 		},
 		{
+			Name = "AreaRange",
+			Text = "Area Range",
+			Type = Type.Integer,
+			Value = Config.AreaRange,
+			Description = "Set how far away areas are visible (meters)",
+			Reference = Range(1.00, 1000.00, 1.0),
+			Default = 70,
+			UpdateFlag = UpdateFlag.None,
+			Category = "TRACE"
+		},		
+		{
 			Name = "DrawWaypointLines",
 			Text = "Draw Waypoint Lines",
 			Type = Type.Boolean,

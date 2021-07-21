@@ -86,6 +86,7 @@ Config = {
 	--TRACE
 	DebugTracePaths = false,			-- Shows the trace line and search area from Commo Rose selection
 	WaypointRange = 100,				-- Set how far away waypoints are visible (meters)
+	AreaRange = 70,						-- Set how far away areas are visible (meters)
 	DrawWaypointLines = true,			-- Draw waypoint connection Lines
 	LineRange = 15,						-- Set how far away waypoint lines are visible (meters)
 	DrawWaypointIDs = true,				-- Draw waypoint IDs
