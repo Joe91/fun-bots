@@ -97,7 +97,7 @@ function NodeCollection:Create(p_Data, p_Authoritative)
 		end
 	end
 
-	if s_Waypoint.Data ~= nil and s_Waypoint.Data.Height ~= nil and s_Waypoint.Data.Width ~= nil and s_Waypoint.Length ~= nil then
+	if s_Waypoint.Data ~= nil and s_Waypoint.Data.Height ~= nil and s_Waypoint.Data.Width ~= nil and s_Waypoint.Data.Length ~= nil then
 		s_Waypoint.Type = NodeTypes.Area
 	end
 
@@ -973,13 +973,15 @@ function NodeCollection:Load(p_LevelName, p_GameMode)
 
 	self:Clear()
 	local s_PathCount = 0
+	local s_LastPathIndex = -1
 	local s_WaypointCount = 0
 	local s_FirstWaypoint = nil
 	local s_LastWaypoint = nil
 
 	for _, l_Row in pairs(s_Results) do
-		if l_Row["pathIndex"] > s_PathCount then
-			s_PathCount = l_Row["pathIndex"]
+		if l_Row["pathIndex"] ~= s_LastPathIndex then
+			s_PathCount = s_PathCount + 1
+			s_LastPathIndex = l_Row["pathIndex"]
 		end
 
 		local s_Waypoint = {
@@ -1057,6 +1059,7 @@ function NodeCollection:Save()
 	local s_ChangedWaypoints = {}
 	local s_WaypointCount = #self.waypoints
 	local s_PathCount = 0
+	local s_LastPathIndex = -1
 	local s_WaypointsChanged = 0
 	local s_Orphans = {}
 	local s_Disconnects = {}
@@ -1118,8 +1121,9 @@ function NodeCollection:Save()
 				end
 			end
 
-			if l_Waypoint.PathIndex > s_PathCount then
-				s_PathCount = l_Waypoint.PathIndex
+			if l_Waypoint.PathIndex ~= s_LastPathIndex then
+				s_PathCount = s_PathCount + 1
+				s_LastPathIndex = l_Waypoint.PathIndex
 			end
 
 			table.insert(s_BatchQueries, '('..table.concat({
