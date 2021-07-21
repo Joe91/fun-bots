@@ -33,7 +33,7 @@ function ClientNodeEditor:__init()
 	self.m_EditStartPos = nil
 	self.m_NodeStartPos = {}
 	self.m_EditModeManualOffset = Vec3.zero
-	self.m_EditModeAreaValue = Vec4(3,5,2,0)
+	self.m_EditModeAreaValue = Vec4.zero
 	self.m_EditModeManualSpeed = 0.05
 	self.m_EditPositionMode = 'relative'
 	self.m_HelpTextLocation = Vec2.zero
@@ -407,7 +407,7 @@ function ClientNodeEditor:_onChangeEditMode(p_Mode, p_Args)
 
 		self.editRayHitStart = nil
 		self.m_EditModeManualOffset = Vec3.zero
-		self.m_EditModeAreaValue = Vec4(3,5,2,0)
+		self.m_EditModeAreaValue = Vec4.zero
 
 		-- move was cancelled
 		if p_Args ~= nil and p_Args == true then
@@ -458,13 +458,19 @@ function ClientNodeEditor:_onChangeEditMode(p_Mode, p_Args)
 
 		if self.m_EditMode == 'none' then
 			self.editNodeStartPos = {}
+			self.editAreaStartValues = {}
 
 			for i = 1, #s_Selection do
+				if s_Selection[i].Type == NodeTypes.Area then
+					local startVec = Vec4(s_Selection[i].Data.Width, s_Selection[i].Data.Length, s_Selection[i].Data.Height, s_Selection[i].Data.Yaw) 
+					self.editAreaStartValues[i] = startVec
+					self.editAreaStartValues[s_Selection[i].ID] = startVec
+				end
 				self.editNodeStartPos[i] = s_Selection[i].Position:Clone()
 				self.editNodeStartPos[s_Selection[i].ID] = s_Selection[i].Position:Clone()
 			end
 			self.m_EditModeManualOffset = Vec3.zero
-			self.m_EditModeAreaValue = Vec4(3,5,2,0)
+			self.m_EditModeAreaValue = Vec4.zero
 		end
 
 		self.m_EditMode = 'move'
@@ -508,13 +514,19 @@ function ClientNodeEditor:_onChangeEditMode(p_Mode, p_Args)
 
 		if self.m_EditMode == 'none' then
 			self.editNodeStartPos = {}
+			self.editAreaStartValues = {}
 
 			for i = 1, #s_Selection do
+				if s_Selection[i].Type == NodeTypes.Area then
+					local startVec = Vec4(s_Selection[i].Data.Width, s_Selection[i].Data.Length, s_Selection[i].Data.Height, s_Selection[i].Data.Yaw) 
+					self.editAreaStartValues[i] = startVec
+					self.editAreaStartValues[s_Selection[i].ID] = startVec
+				end
 				self.editNodeStartPos[i] = s_Selection[i].Position:Clone()
 				self.editNodeStartPos[s_Selection[i].ID] = s_Selection[i].Position:Clone()
 			end
 			self.m_EditModeManualOffset = Vec3.zero
-			self.m_EditModeAreaValue = Vec4(3,5,2,0)
+			self.m_EditModeAreaValue = Vec4.zero
 		end
 
 		self.m_EditMode = 'area'
@@ -1513,7 +1525,7 @@ function ClientNodeEditor:OnClientUpdateInput(p_DeltaTime)
 		-- pressed and released without triggering commo rose
 		if self.m_CommoRosePressed and not s_CommButtonDown then
 			if self.m_EditMode == 'move' then
-				self:_onChangeMNode('none')
+				self:_onChangeEditMode('none')
 			else
 				self:_onCommoRoseAction('Select')
 			end
@@ -1594,11 +1606,7 @@ function ClientNodeEditor:OnClientUpdateInput(p_DeltaTime)
 	elseif self.m_EditMode == 'area' then
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_ArrowLeft) or InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad4) then
 			-- Width -
-			if self.m_EditModeAreaValue.x > 0.5 then
-				self.m_EditModeAreaValue.x = self.m_EditModeAreaValue.x - 0.25
-			else
-				self.m_EditModeAreaValue.x = 0.25
-			end
+			self.m_EditModeAreaValue.x = self.m_EditModeAreaValue.x - 0.25
 			return
 		end
 
@@ -1616,11 +1624,7 @@ function ClientNodeEditor:OnClientUpdateInput(p_DeltaTime)
 
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_ArrowDown) or InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad2) then
 			-- Lengh -
-			if self.m_EditModeAreaValue.y > 0.5 then
-				self.m_EditModeAreaValue.y = self.m_EditModeAreaValue.y - 0.25
-			else
-				self.m_EditModeAreaValue.y = 0.25
-			end
+			self.m_EditModeAreaValue.y = self.m_EditModeAreaValue.y - 0.25
 			return
 		end
 
@@ -1632,29 +1636,19 @@ function ClientNodeEditor:OnClientUpdateInput(p_DeltaTime)
 
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_PageDown) or InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad3) then
 			-- Height -
-			if self.m_EditModeAreaValue.z > 0.5 then
-				self.m_EditModeAreaValue.z = self.m_EditModeAreaValue.z - 0.25
-			else
-				self.m_EditModeAreaValue.z = 0.25
-			end
+			self.m_EditModeAreaValue.z = self.m_EditModeAreaValue.z - 0.25
 			return
 		end
 
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Equals) or InputManager:WentKeyDown(InputDeviceKeys.IDK_Add) then
 			-- rotate +
 			self.m_EditModeAreaValue.w = self.m_EditModeAreaValue.w + 0.1 -- = 5,7°
-			if self.m_EditModeAreaValue.w > 2*math.pi then
-				self.m_EditModeAreaValue.w = self.m_EditModeAreaValue.w - 2*math.pi
-			end
 			return
 		end
 
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Minus) or InputManager:WentKeyDown(InputDeviceKeys.IDK_Subtract) then
 			-- rotate -
 			self.m_EditModeAreaValue.w = self.m_EditModeAreaValue.w - 0.1 -- = 5,7°
-			if self.m_EditModeAreaValue.w < 0 then
-				self.m_EditModeAreaValue.w = self.m_EditModeAreaValue.w + 2*math.pi
-			end
 			return
 		end
 
@@ -2214,10 +2208,32 @@ function ClientNodeEditor:UpdatePosAndSize(p_Waypoint)
 		})
 	elseif self.m_EditMode == 'area' then
 		if p_Waypoint.Type == NodeTypes.Area then
-			local newWidth = self.m_EditModeAreaValue.x
-			local newLength = self.m_EditModeAreaValue.y
-			local newHeight = self.m_EditModeAreaValue.z
-			local newYaw = self.m_EditModeAreaValue.w
+			local newWidth = self.m_EditModeAreaValue.x + self.editAreaStartValues[p_Waypoint.ID].x
+			if newWidth < 0.25 then
+				newWidth = 0.25
+				self.m_EditModeAreaValue.x = newWidth - self.editAreaStartValues[p_Waypoint.ID].x
+			end
+			local newLength = self.m_EditModeAreaValue.y + self.editAreaStartValues[p_Waypoint.ID].y
+			if newLength < 0.25 then
+				newLength = 0.25
+				self.m_EditModeAreaValue.y = newLength - self.editAreaStartValues[p_Waypoint.ID].y
+			end
+			local newHeight = self.m_EditModeAreaValue.z + self.editAreaStartValues[p_Waypoint.ID].z
+			if newHeight < 0.25 then
+				newHeight = 0.25
+				self.m_EditModeAreaValue.z = newHeight - self.editAreaStartValues[p_Waypoint.ID].z
+			end
+			local newYaw = self.m_EditModeAreaValue.w + self.editAreaStartValues[p_Waypoint.ID].w
+			if newYaw < 0 then
+				while newYaw < 0 do
+					newYaw = newYaw + (math.pi) *2
+				end
+			end
+			if newYaw > math.pi *2 then
+				while newYaw > math.pi *2 do
+					newYaw = newYaw - (math.pi) *2
+				end
+			end
 			p_Waypoint.Data.Width = newWidth
 			p_Waypoint.Data.Length = newLength
 			p_Waypoint.Data.Height = newHeight
