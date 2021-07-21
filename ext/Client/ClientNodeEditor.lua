@@ -33,7 +33,7 @@ function ClientNodeEditor:__init()
 	self.m_EditStartPos = nil
 	self.m_NodeStartPos = {}
 	self.m_EditModeManualOffset = Vec3.zero
-	self.m_EditModeAreaValue = Vec4.zero
+	self.m_EditModeAreaValue = Vec4(3,5,2,0)
 	self.m_EditModeManualSpeed = 0.05
 	self.m_EditPositionMode = 'relative'
 	self.m_HelpTextLocation = Vec2.zero
@@ -407,7 +407,7 @@ function ClientNodeEditor:_onChangeEditMode(p_Mode, p_Args)
 
 		self.editRayHitStart = nil
 		self.m_EditModeManualOffset = Vec3.zero
-		self.m_EditModeAreaValue = Vec4.zero
+		self.m_EditModeAreaValue = Vec4(3,5,2,0)
 
 		-- move was cancelled
 		if p_Args ~= nil and p_Args == true then
@@ -464,7 +464,7 @@ function ClientNodeEditor:_onChangeEditMode(p_Mode, p_Args)
 				self.editNodeStartPos[s_Selection[i].ID] = s_Selection[i].Position:Clone()
 			end
 			self.m_EditModeManualOffset = Vec3.zero
-			self.m_EditModeAreaValue = Vec4.zero
+			self.m_EditModeAreaValue = Vec4(3,5,2,0)
 		end
 
 		self.m_EditMode = 'move'
@@ -514,7 +514,7 @@ function ClientNodeEditor:_onChangeEditMode(p_Mode, p_Args)
 				self.editNodeStartPos[s_Selection[i].ID] = s_Selection[i].Position:Clone()
 			end
 			self.m_EditModeManualOffset = Vec3.zero
-			self.m_EditModeAreaValue = Vec4.zero
+			self.m_EditModeAreaValue = Vec4(3,5,2,0)
 		end
 
 		self.m_EditMode = 'area'
@@ -1610,13 +1610,13 @@ function ClientNodeEditor:OnClientUpdateInput(p_DeltaTime)
 		end
 
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_ArrowUp) or InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad8) then
-			-- Lenght +
+			-- Lengh +
 			self.m_EditModeAreaValue.y = self.m_EditModeAreaValue.y + 0.25
 			return
 		end
 
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_ArrowDown) or InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad2) then
-			-- Lenght -
+			-- Lengh -
 			if self.m_EditModeAreaValue.y > 0.5 then
 				self.m_EditModeAreaValue.y = self.m_EditModeAreaValue.y - 0.25
 			else
@@ -2054,7 +2054,7 @@ function ClientNodeEditor:OnUIDrawHud()
 	end
     for _,l_Obb in pairs(self.m_ObbToDraw) do
         -- draw OBB
-        DebugRenderer:DrawOBB(l_Obb.p_Aab, l_Obb.transform, l_Obb.color)
+        DebugRenderer:DrawOBB(l_Obb.aab, l_Obb.transform, l_Obb.color)
     end
 end
 
@@ -2200,33 +2200,33 @@ function ClientNodeEditor:DrawDebugThings(p_DeltaTime)
 end
 
 function ClientNodeEditor:UpdatePosAndSize(p_Waypoint)
+	if self.m_EditMode == 'move' then
 	local s_AdjustedPosition = self.editNodeStartPos[p_Waypoint.ID] + self.m_EditModeManualOffset
-
-	if self.m_EditPositionMode == 'relative' then
-		s_AdjustedPosition = s_AdjustedPosition + (self.editRayHitRelative or Vec3.zero)
-	elseif (self.m_EditPositionMode == 'standing') then
-		s_AdjustedPosition = self.m_PlayerPos + self.m_EditModeManualOffset
-	else
-		s_AdjustedPosition = self.editRayHitCurrent + self.m_EditModeManualOffset
-	end
-
-	m_NodeCollection:Update(p_Waypoint, {
-		Position = s_AdjustedPosition
-	})
-
-	if p_Waypoint.Type == NodeTypes.Area then
-		local newWidth = self.m_EditModeAreaValue.x
-		local newLenght = self.m_EditModeAreaValue.y
-		local newHeight = self.m_EditModeAreaValue.z
-		local newYaw = self.m_EditModeAreaValue.w
-		p_Waypoint.Data.Width = newWidth
-		p_Waypoint.Data.Length = newLenght
-		p_Waypoint.Data.Height = newHeight
-		p_Waypoint.Data.Yaw = newYaw
+		if self.m_EditPositionMode == 'relative' then
+			s_AdjustedPosition = s_AdjustedPosition + (self.editRayHitRelative or Vec3.zero)
+		elseif (self.m_EditPositionMode == 'standing') then
+			s_AdjustedPosition = self.m_PlayerPos + self.m_EditModeManualOffset
+		else
+			s_AdjustedPosition = self.editRayHitCurrent + self.m_EditModeManualOffset
+		end
 
 		m_NodeCollection:Update(p_Waypoint, {
-			Data = p_Waypoint.Data
+			Position = s_AdjustedPosition
 		})
+	elseif self.m_EditMode == 'area' then
+		if p_Waypoint.Type == NodeTypes.Area then
+			local newWidth = self.m_EditModeAreaValue.x
+			local newLength = self.m_EditModeAreaValue.y
+			local newHeight = self.m_EditModeAreaValue.z
+			local newYaw = self.m_EditModeAreaValue.w
+			p_Waypoint.Data.Width = newWidth
+			p_Waypoint.Data.Length = newLength
+			p_Waypoint.Data.Height = newHeight
+			p_Waypoint.Data.Yaw = newYaw
+			m_NodeCollection:Update(p_Waypoint, {
+				Data = p_Waypoint.Data
+			})
+		end
 	end
 end
 
@@ -2254,11 +2254,11 @@ function ClientNodeEditor:DrawSomeNodes(p_NrOfNodes)
 
 				for l_Waypoint = s_startIndex, #s_WaypointPaths[l_Path] do
 					-- check for changed position (edit-mode = move or area)
-					if m_NodeCollection:IsSelected(s_WaypointPaths[l_Path][l_Waypoint]) and (self.m_EditMode == 'move' or self.m_EditMode == 'are') then
+					if m_NodeCollection:IsSelected(s_WaypointPaths[l_Path][l_Waypoint]) and (self.m_EditMode == 'move' or self.m_EditMode == 'area') then
 						self:UpdatePosAndSize(s_WaypointPaths[l_Path][l_Waypoint])
 					end
 
-					if l_Waypoint.Type == NodeTypes.Area then
+					if s_WaypointPaths[l_Path][l_Waypoint].Type == NodeTypes.Area then
 						self:_drawArea(s_WaypointPaths[l_Path][l_Waypoint])
 					else
 						self:_drawNode(s_WaypointPaths[l_Path][l_Waypoint], false)
@@ -2315,8 +2315,9 @@ function ClientNodeEditor:_drawArea(p_Waypoint)
 	local s_Color = self.m_Colors.Blue
 
 	if m_NodeCollection:InRange(p_Waypoint, self.m_PlayerPos, Config.AreaRange) then
-		local s_AxisAlignedBox = AxisAlignedBox(Vec3(-p_Waypoint.Data.Width, -p_Waypoint.Data.Height, -p_Waypoint.Data.Length), Vec3(p_Waypoint.Data.Width, p_Waypoint.Data.Height, p_Waypoint.Data.Length))
+		local s_AxisAlignedBox = AxisAlignedBox(Vec3(-p_Waypoint.Data.Width/2, 0, -p_Waypoint.Data.Length/2), Vec3(p_Waypoint.Data.Width/2, p_Waypoint.Data.Height, p_Waypoint.Data.Length/2))
 		local s_Transform = MathUtils:GetTransformFromYPR(p_Waypoint.Data.Yaw, 0.0, 0.0)
+		-- local s_Transform = LinearTransform(Vec3(1, 0, 0), Vec3(0, 1, 0), Vec3(0, 0, 1),  p_Waypoint.Position),
 		s_Transform.trans = p_Waypoint.Position
 		self:DrawOBB(s_AxisAlignedBox, s_Transform, s_Color)
 		self:DrawSphere(p_Waypoint.Position, 0.05, s_Color, false, false)

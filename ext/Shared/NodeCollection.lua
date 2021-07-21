@@ -202,8 +202,9 @@ end
 function NodeCollection:AddArea()
 	local s_LastWaypoint = nil
 	local s_AreaPathNodes = self.waypointsByPathIndex[AREA_PATH_INDEX]
-	if #s_AreaPathNodes == 0 then
+	if s_AreaPathNodes == nil or #s_AreaPathNodes == 0 then
 		s_LastWaypoint = self.waypoints[#self.waypoints]
+		s_AreaPathNodes = {}
 	else
 		s_LastWaypoint = s_AreaPathNodes[#s_AreaPathNodes]
 	end
@@ -214,7 +215,7 @@ function NodeCollection:AddArea()
 		Type = NodeTypes.Area,
 		Data = {
 			Width = 3.0,
-			Lenght = 6.0,
+			Length = 6.0,
 			Height = 2.0,
 			Yaw = 0.0
 		}
