@@ -1,5 +1,7 @@
 class "NodeCollection"
 
+AREA_PATH_INDEX = 9999
+
 local m_Utilities = require('__shared/Utilities.lua')
 local m_Logger = Logger("NodeCollection", Debug.Shared.NODECOLLECTION)
 
@@ -198,20 +200,27 @@ function NodeCollection:Add()
 end
 
 function NodeCollection:AddArea()
-	local s_Selection = self:GetSelected()
-
-	if #s_Selection == 0 then
-		local s_LastWaypoint = s_Selection[#s_Selection]
-		local s_NewWaypoint = self:Create({
-			PathIndex = 2047,
-			PointIndex = s_LastWaypoint.PointIndex + 1,
-			Type = NodeTypes.Area
-		})
-		self:InsertAfter(s_LastWaypoint, s_NewWaypoint)
-		return s_NewWaypoint, 'Success'
+	local s_LastWaypoint = nil
+	local s_AreaPathNodes = self.waypointsByPathIndex[AREA_PATH_INDEX]
+	if #s_AreaPathNodes == 0 then
+		s_LastWaypoint = self.waypoints[#self.waypoints]
+	else
+		s_LastWaypoint = s_AreaPathNodes[#s_AreaPathNodes]
 	end
 
-	return false, 'Must clear selection'
+	local s_NewWaypoint = self:Create({
+		PathIndex = AREA_PATH_INDEX,
+		PointIndex = #s_AreaPathNodes + 1,
+		Type = NodeTypes.Area,
+		Data = {
+			Width = 3.0,
+			Lenght = 6.0,
+			Height = 2.0,
+			Yaw = 0.0
+		}
+	})
+	self:InsertAfter(s_LastWaypoint, s_NewWaypoint)
+	return s_NewWaypoint, 'Success'
 end
 
 function NodeCollection:Remove(p_Waypoint)

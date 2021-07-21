@@ -407,6 +407,7 @@ function ClientNodeEditor:_onChangeEditMode(p_Mode, p_Args)
 
 		self.editRayHitStart = nil
 		self.m_EditModeManualOffset = Vec3.zero
+		self.m_EditModeAreaValue = Vec4.zero
 
 		-- move was cancelled
 		if p_Args ~= nil and p_Args == true then
@@ -464,6 +465,7 @@ function ClientNodeEditor:_onChangeEditMode(p_Mode, p_Args)
 
 		self.m_EditMode = 'move'
 		self.m_EditModeManualOffset = Vec3.zero
+		self.m_EditModeAreaValue = Vec4.zero
 
 		g_FunBotUIClient:_onSetOperationControls({
 			Numpad = {
@@ -510,6 +512,7 @@ function ClientNodeEditor:_onChangeEditMode(p_Mode, p_Args)
 
 		self.m_EditMode = 'area'
 		self.m_EditModeManualOffset = Vec3.zero
+		self.m_EditModeAreaValue = Vec4.zero
 
 		g_FunBotUIClient:_onSetOperationControls({
 			Numpad = {
@@ -578,7 +581,7 @@ function ClientNodeEditor:_onAddArea(p_Args)
 		return false
 	end
 
-	local s_Result, s_Message = m_NodeCollection:Add()
+	local s_Result, s_Message = m_NodeCollection:AddArea()
 
 	if not s_Result then
 		self:Log(s_Message)
@@ -1633,12 +1636,18 @@ function ClientNodeEditor:OnClientUpdateInput(p_DeltaTime)
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Equals) or InputManager:WentKeyDown(InputDeviceKeys.IDK_Add) then
 			-- rotate +
 			self.m_EditModeAreaValue.w = self.m_EditModeAreaValue.w + 0.1 -- = 5,7°
+			if self.m_EditModeAreaValue.w > 2*math.pi then
+				self.m_EditModeAreaValue.w = self.m_EditModeAreaValue.w - 2*math.pi
+			end
 			return
 		end
 
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Minus) or InputManager:WentKeyDown(InputDeviceKeys.IDK_Subtract) then
 			-- rotate -
 			self.m_EditModeAreaValue.w = self.m_EditModeAreaValue.w - 0.1 -- = 5,7°
+			if self.m_EditModeAreaValue.w < 0 then
+				self.m_EditModeAreaValue.w = self.m_EditModeAreaValue.w + 2*math.pi
+			end
 			return
 		end
 
@@ -1907,7 +1916,7 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 				self.m_RaycastTimer = 0
 			
 				-- perform raycast to get where player is looking
-				if self.m_EditMode == 'move' then
+				if self.m_EditMode == 'move' or self.m_EditMode == 'area' then
 					local s_Selection = m_NodeCollection:GetSelected()
 
 					if #s_Selection > 0 then
@@ -1922,33 +1931,6 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 							else
 								self.editRayHitCurrent = s_Hit.position
 								self.editRayHitRelative = self.editRayHitCurrent - self.editRayHitStart
-							end
-						end
-
-						-- loop selected nodes and update positions
-						local s_NodePaths = m_NodeCollection:GetPaths()
-
-						for l_Path, _ in pairs(s_NodePaths) do
-							if m_NodeCollection:IsPathVisible(l_Path) then
-								local s_PathWaypoints = s_NodePaths[l_Path]
-
-								for i = 1, #s_PathWaypoints do
-									if m_NodeCollection:IsSelected(s_PathWaypoints[i]) then
-										local s_AdjustedPosition = self.editNodeStartPos[s_PathWaypoints[i].ID] + self.m_EditModeManualOffset
-
-										if self.m_EditPositionMode == 'relative' then
-											s_AdjustedPosition = s_AdjustedPosition + (self.editRayHitRelative or Vec3.zero)
-										elseif (self.m_EditPositionMode == 'standing') then
-											s_AdjustedPosition = self.m_PlayerPos + self.m_EditModeManualOffset
-										else
-											s_AdjustedPosition = self.editRayHitCurrent + self.m_EditModeManualOffset
-										end
-
-										m_NodeCollection:Update(s_PathWaypoints[i], {
-											Position = s_AdjustedPosition
-										})
-									end
-								end
 							end
 						end
 					end
@@ -2209,11 +2191,42 @@ function ClientNodeEditor:DrawDebugThings(p_DeltaTime)
 	end
 end
 
+function ClientNodeEditor:UpdatePosAndSize(p_Waypoint)
+	local s_AdjustedPosition = self.editNodeStartPos[p_Waypoint.ID] + self.m_EditModeManualOffset
+
+	if self.m_EditPositionMode == 'relative' then
+		s_AdjustedPosition = s_AdjustedPosition + (self.editRayHitRelative or Vec3.zero)
+	elseif (self.m_EditPositionMode == 'standing') then
+		s_AdjustedPosition = self.m_PlayerPos + self.m_EditModeManualOffset
+	else
+		s_AdjustedPosition = self.editRayHitCurrent + self.m_EditModeManualOffset
+	end
+
+	m_NodeCollection:Update(p_Waypoint, {
+		Position = s_AdjustedPosition
+	})
+
+	if p_Waypoint.Type == NodeTypes.Area then
+		local newWidth = self.m_EditModeAreaValue.x
+		local newLenght = self.m_EditModeAreaValue.y
+		local newHeight = self.m_EditModeAreaValue.z
+		local newYaw = self.m_EditModeAreaValue.w
+		p_Waypoint.Data.Width = newWidth
+		p_Waypoint.Data.Length = newLenght
+		p_Waypoint.Data.Height = newHeight
+		p_Waypoint.Data.Yaw = newYaw
+
+		m_NodeCollection:Update(p_Waypoint, {
+			Data = p_Waypoint.Data
+		})
+	end
+end
+
 function ClientNodeEditor:DrawSomeNodes(p_NrOfNodes)
 	if self.m_PlayerPos == nil then
 		return false
 	end
-	local s_FirstPath = true
+	local s_FirstPathInCycle = true
 	local s_Count = 0
 	
 	-- draw waypoints stored in main collection
@@ -2223,16 +2236,25 @@ function ClientNodeEditor:DrawSomeNodes(p_NrOfNodes)
 		if l_Path >= self.m_lastDrawIndexPath then
 			if m_NodeCollection:IsPathVisible(l_Path) then
 				local s_startIndex = 1
-				if s_FirstPath then
+				if s_FirstPathInCycle then
 					s_startIndex = self.m_lastDrawIndexNode
 					if s_startIndex <= 0 then
 						s_startIndex = 1
 					end
-					s_FirstPath = false
+					s_FirstPathInCycle = false
 				end
 
 				for l_Waypoint = s_startIndex, #s_WaypointPaths[l_Path] do
-					self:_drawNode(s_WaypointPaths[l_Path][l_Waypoint], false)
+					-- check for changed position (edit-mode = move or area)
+					if m_NodeCollection:IsSelected(s_WaypointPaths[l_Path][l_Waypoint]) and (self.m_EditMode == 'move' or self.m_EditMode == 'are') then
+						self:UpdatePosAndSize(s_WaypointPaths[l_Path][l_Waypoint])
+					end
+
+					if l_Waypoint.Type == NodeTypes.Area then
+						self:_drawArea(s_WaypointPaths[l_Path][l_Waypoint])
+					else
+						self:_drawNode(s_WaypointPaths[l_Path][l_Waypoint], false)
+					end
 					s_Count = s_Count + 1
 					if s_Count >= p_NrOfNodes then
 						self.m_lastDrawIndexNode = l_Waypoint
@@ -2276,6 +2298,37 @@ function ClientNodeEditor:DrawSomeNodes(p_NrOfNodes)
 	self.m_lastDrawIndexNode = 0
 
 	return true
+end
+
+function ClientNodeEditor:_drawArea(p_Waypoint)
+	local s_IsSelected = m_NodeCollection:IsSelected(p_Waypoint)
+
+	-- setup node color information
+	local s_Color = self.m_Colors.White
+
+	local s_AxisAlignedBox = AxisAlignedBox(Vec3(-p_Waypoint.Data.Width, -p_Waypoint.Data.Height, -p_Waypoint.Data.Length), Vec3(p_Waypoint.Data.Width, p_Waypoint.Data.Height, p_Waypoint.Data.Length))
+	local s_Transform = MathUtils:GetTransformFromYPR(p_Waypoint.Data.Yaw, 0.0, 0.0)
+	s_Transform.trans = p_Waypoint.Position
+	self:DrawOBB(s_AxisAlignedBox, s_Transform, s_Color)
+
+	-- draw debugging text
+	if Config.DrawWaypointIDs and m_NodeCollection:InRange(p_Waypoint, self.m_PlayerPos, Config.TextRange) then
+		if s_IsSelected then
+			-- don't try to precalc this value like with the distance, another memory leak crash awaits you
+			local s_PathNode = m_NodeCollection:GetFirst(p_Waypoint.PathIndex)
+
+			local s_Text = ''
+			s_Text = s_Text..string.format("Index[%d]\n", p_Waypoint.Index)
+			s_Text = s_Text..string.format("Area[%d] (%s)\n", p_Waypoint.PointIndex, s_PathMode)
+			s_Text = s_Text..string.format("Path Objectives: %s\n", g_Utilities:dump(s_PathNode.Data.Objectives, false))
+			s_Text = s_Text..'Data: '..g_Utilities:dump(p_Waypoint.Data, true)
+
+			self:DrawPosText2D(p_Waypoint.Position + Vec3.up, s_Text, self.m_Colors.Text, 1.2)
+		else
+			-- don't try to precalc this value like with the distance, another memory leak crash awaits you
+			self:DrawPosText2D(p_Waypoint.Position + (Vec3.up * 0.05), tostring(p_Waypoint.ID), self.m_Colors.Text, 1)
+		end
+	end
 end
 
 function ClientNodeEditor:_drawNode(p_Waypoint, p_IsTracePath)
