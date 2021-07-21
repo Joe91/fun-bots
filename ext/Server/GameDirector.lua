@@ -4,7 +4,7 @@ local m_NodeCollection = require('__shared/NodeCollection')
 local m_Utilities = require('__shared/Utilities')
 local m_Logger = Logger("GameDirector", Debug.Server.GAMEDIRECTOR)
 
-local PROBABILITY_SQUADMATE_SPAWN = 80
+local PROBABILITY_SQUADMATE_SPAWN = 60
 local PROBABILITY_BASE_SPAWN = 20
 
 function GameDirector:__init()
@@ -419,7 +419,7 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 	for _,l_Player in pairs(s_SquadMates) do
 		if l_Player.soldier ~= nil and m_Utilities:isBot(l_Player) then
 			local s_SquadBot = g_BotManager:GetBotByName(l_Player.name)
-			if not s_SquadBot.m_InVehicle then
+			if not s_SquadBot.m_InVehicle and not s_SquadBot:IsStuck() then
 				local s_WayIndex = s_SquadBot:GetWayIndex()
 				local s_PointIndex = s_SquadBot:GetPointIndex()
 				if MathUtils:GetRandomInt(1, 100) <= PROBABILITY_SQUADMATE_SPAWN then
