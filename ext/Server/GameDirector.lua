@@ -426,7 +426,7 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 				local s_PointIndex = s_SquadBot:GetPointIndex()
 				if MathUtils:GetRandomInt(1, 100) <= PROBABILITY_SQUADMATE_SPAWN then
 					m_Logger:Write("spawn at squad-mate")
-					return s_WayIndex, s_PointIndex
+					return s_WayIndex, s_PointIndex, s_SquadBot._InvertPathDirection -- use same direction
 				else
 					break
 				end
@@ -567,6 +567,17 @@ function GameDirector:GetSpawnPathOfObjectives(p_PossibleObjectives)
 	else
 		return s_TempObject.path, MathUtils:GetRandomInt(1, #m_NodeCollection:Get(nil, s_TempObject.path))
 	end
+end
+
+function GameDirector:IsOnObjectivePath(p_Path)
+	local s_CurrentPathFirst = m_NodeCollection:GetFirst(p_Path)
+
+	if s_CurrentPathFirst.Data ~= nil and s_CurrentPathFirst.Data.Objectives ~= nil then
+		if #s_CurrentPathFirst.Data.Objectives == 1 then
+			return true
+		end
+	end
+	return false
 end
 
 function GameDirector:IsBasePath(p_ObjectiveNames)

@@ -1074,7 +1074,7 @@ end
 
 function Bot:_UpdateShooting()
 	if self.m_Player.alive and self._Shoot then
-		--select weapon-slot TODO: keep button pressed or not?
+		--select weapon-slot
 		if not self._MeleeActive then
 			if self.m_Player.soldier.weaponsComponent ~= nil then
 				if self.m_KnifeMode then
@@ -1107,7 +1107,7 @@ function Bot:_UpdateShooting()
 						self.m_Player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 1)
 						self:_SetInput(EntryInputActionEnum.EIASelectWeapon2, 1)
 						self.m_ActiveWeapon = self.m_Pistol
-						self._ShotTimer = - self:GetFirstShotDelay(self._DistanceToPlayer, true) -- TODO: maybe a little less or more?
+						self._ShotTimer = - self:GetFirstShotDelay(self._DistanceToPlayer, true)
 					end
 				elseif (self._WeaponToUse == BotWeapons.Primary and Config.BotWeapon == BotWeapons.Auto) or Config.BotWeapon == BotWeapons.Primary then
 					if self.m_Player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_0 then
@@ -1630,7 +1630,7 @@ function Bot:_UpdateMovement()
 					local s_CurrentWayPointDistance = self.m_Player.soldier.worldTransform.trans:Distance(s_Point.Position)
 
 					if s_CurrentWayPointDistance > self._LastWayDistance + 0.02 and self._ObstaceSequenceTimer == 0 then
-						--TODO: skip one pooint?
+						--skip one pooint
 						s_DistanceFromTarget = 0
 						s_HeightDistance = 0
 					end
@@ -1691,9 +1691,11 @@ function Bot:_UpdateMovement()
 							s_NoStuckReset = true
 							s_PointIncrement = MathUtils:GetRandomInt(-5,5) -- go 5 points further
 
-							--if Globals.IsConquest or Globals.IsRush then --TODO: only invert path, if its not a connecting path
-								--self._InvertPathDirection = (MathUtils:GetRandomInt(0,100) < 40)
-							--end
+							if Globals.IsConquest or Globals.IsRush then
+								if g_GameDirector:IsOnObjectivePath(self._PathIndex) then
+									self._InvertPathDirection = (MathUtils:GetRandomInt(0,100) < 50)
+								end
+							end
 
 							-- experimental
 							if s_PointIncrement == 0 then -- we can't have this
