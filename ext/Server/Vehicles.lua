@@ -88,7 +88,7 @@ function Vehicles:CheckForVehicleAttack(p_VehicleType, p_Distance)
 		s_AttackMode = VehicleAttackModes.AttackWithRifle -- attack with rifle
 	elseif p_VehicleType == VehicleTypes.AirVehicle and p_Distance < Config.MaxRaycastDistance then
 		s_AttackMode = VehicleAttackModes.AttackWithRifle -- attack with rifle
-	elseif p_VehicleType == VehicleTypes.LightVehicle and p_Distance < 35 then
+	elseif (p_VehicleType == VehicleTypes.LightVehicle or p_VehicleType == VehicleTypes.AntiAir) and p_Distance < 35 then
 		s_AttackMode = VehicleAttackModes.AttackWithNade -- attack with grenade
 	end
 
