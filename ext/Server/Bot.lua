@@ -1,7 +1,6 @@
 class('Bot')
 
 require('__shared/Config')
-require('__shared/Constants/VehicleNames')
 
 local m_NodeCollection = require('__shared/NodeCollection')
 local m_PathSwitcher = require('PathSwitcher')
