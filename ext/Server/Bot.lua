@@ -193,7 +193,7 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 		self._DistanceToPlayer = p_Player.soldier.worldTransform.trans:Distance(self.m_Player.soldier.worldTransform.trans)
 	end
 
-	if not p_IgnoreYaw then
+	if not p_IgnoreYaw and not self.m_InVehicle then
 		if self.m_ActiveWeapon.type ~= WeaponTypes.Sniper and self._DistanceToPlayer > Config.MaxShootDistanceNoSniper then
 			return false
 		end
