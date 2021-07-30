@@ -17,7 +17,29 @@ function Vehicles:FindOutVehicleType(p_Player)
 	return s_VehicleType
 end
 
-function Vehicles:CheckForVehicleAttack(p_VehicleType, p_Distance)
+function Vehicles:GetVehilceName(p_Player)
+	if p_Player.controlledControllable ~= nil and not p_Player.controlledControllable:Is("ServerSoldierEntity") then
+		return VehicleEntityData(p_Player.controlledControllable.data).controllableType:gsub(".+/.+/","")
+	else
+		return nil
+	end
+end
+
+function Vehicles:GetPartIdForSeat(p_Player, p_Index)
+	local s_VehicleName = self:GetVehilceName(p_Player)
+	if s_VehicleName == nil then
+		return nil
+	end
+
+	local s_VehicleData = VehicleData[s_VehicleName]
+	if s_VehicleData ~= nil and s_VehicleData.Parts ~= nil then
+		return s_VehicleData.Parts[p_Index + 1]
+	else
+		return nil
+	end
+end
+
+function Vehicles:CheckForVehicleAttack(p_VehicleType, p_Distance, p_Gadget)
 	local s_AttackMode = VehicleAttackModes.NoAttack -- no attack
 
 	if p_VehicleType == VehicleTypes.MavBot then
@@ -31,9 +53,9 @@ function Vehicles:CheckForVehicleAttack(p_VehicleType, p_Distance)
 	end
 
 	if p_VehicleType ~= VehicleTypes.MavBot then -- MAV or EOD always with rifle
-		if self.m_SecondaryGadget.type == WeaponTypes.Rocket then
+		if p_Gadget ~= nil and p_Gadget.type == WeaponTypes.Rocket then
 			s_AttackMode = VehicleAttackModes.AttackWithRocket -- always use rocket if possible
-		elseif self.m_SecondaryGadget.type == WeaponTypes.C4 and p_Distance < 25 then
+		elseif p_Gadget ~= nil and p_Gadget.type == WeaponTypes.C4 and p_Distance < 25 then
 			if p_VehicleType ~= VehicleTypes.AirVehicle then -- no air vehicles
 				s_AttackMode = VehicleAttackModes.AttackWithC4 -- always use c4 if possible
 			end

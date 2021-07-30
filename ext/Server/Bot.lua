@@ -79,8 +79,6 @@ function Bot:__init(p_Player)
 	self._VehicleEntity = nil
 	self._AllMovableIds = {}
 	self._VehicleMovableId = nil
-	self._IdDetected = false
-	self._DetectionTimer = 0.0
 	self._LastVehicleYaw = 0.0
 	self._VehicleReadyToShoot = false
 	self._FullVehicleSteering = false
@@ -767,38 +765,7 @@ function Bot:_UpdateYaw(p_DeltaTime)
 			local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
 			s_DeltaYaw = s_Yaw - self._TargetYaw
 
-			-- detect ID if needed
-			if not self._IdDetected then
-				-- move gun up
-				self.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, 1)
-				-- get pitch of gun
-				self._DetectionTimer = self._DetectionTimer + p_DeltaTime
-
-				if self._DetectionTimer > 0.5 then
-					self._DetectionTimer = 0.0
-					local s_DeltaTrans = self.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(self._VehicleMovableId):ToLinearTransform().forward - s_Pos
-
-					if s_DeltaTrans.y > 0.2 then
-						self._IdDetected = true
-						m_Logger:Write("id found "..tostring(self._VehicleMovableId))
-					else
-						local s_Updated = false
-
-						for _,l_Id in pairs(self._AllMovableIds) do
-							if l_Id > self._VehicleMovableId then
-								self._VehicleMovableId = l_Id
-								m_Logger:Write("inkremt to id "..tostring(l_Id))
-								s_Updated = true
-								break
-							end
-						end
-
-						if not s_Updated then
-							self._VehicleMovableId = self._AllMovableIds[1]
-						end
-					end
-				end
-			else
+			if self._VehicleMovableId ~= nil then
 				self.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, 0)
 				local s_DiffPos = s_Pos - self.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(self._VehicleMovableId):ToLinearTransform().forward
 				-- prepare for moving gun back
@@ -809,26 +776,28 @@ function Bot:_UpdateYaw(p_DeltaTime)
 				end
 			end
 		else
-			s_Pos = self.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(self._VehicleMovableId):ToLinearTransform().forward
-			local s_AtanDzDx = math.atan(s_Pos.z, s_Pos.x)
-			local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
-			local s_Pitch = math.atan(s_Pos.y, 1.0)
-			s_DeltaPitch = s_Pitch - self._TargetPitch
-			s_DeltaYaw = s_Yaw - self._TargetYaw
+			if self._VehicleMovableId ~= nil then
+				s_Pos = self.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(self._VehicleMovableId):ToLinearTransform().forward
+				local s_AtanDzDx = math.atan(s_Pos.z, s_Pos.x)
+				local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
+				local s_Pitch = math.atan(s_Pos.y, 1.0)
+				s_DeltaPitch = s_Pitch - self._TargetPitch
+				s_DeltaYaw = s_Yaw - self._TargetYaw
 
-			--detect direction for moving gun back
-			local s_GunDeltaYaw = s_Yaw - self._LastVehicleYaw
+				--detect direction for moving gun back
+				local s_GunDeltaYaw = s_Yaw - self._LastVehicleYaw
 
-			if s_GunDeltaYaw > math.pi then
-				s_GunDeltaYaw = s_GunDeltaYaw - 2*math.pi
-			elseif s_GunDeltaYaw < -math.pi then
-				s_GunDeltaYaw = s_GunDeltaYaw + 2*math.pi
-			end
+				if s_GunDeltaYaw > math.pi then
+					s_GunDeltaYaw = s_GunDeltaYaw - 2*math.pi
+				elseif s_GunDeltaYaw < -math.pi then
+					s_GunDeltaYaw = s_GunDeltaYaw + 2*math.pi
+				end
 
-			if s_GunDeltaYaw > 0 then
-				self._VehicleDirBackPositive = false
-			else
-				self._VehicleDirBackPositive = true
+				if s_GunDeltaYaw > 0 then
+					self._VehicleDirBackPositive = false
+				else
+					self._VehicleDirBackPositive = true
+				end
 			end
 		end
 	else
@@ -1060,7 +1029,7 @@ function Bot:_UpdateShooting()
 				end
 
 				if self._ShootPlayerVehicleType ~= VehicleTypes.NoVehicle then
-					local s_AttackMode = g_Vehicles:CheckForVehicleAttack(self._ShootPlayerVehicleType, self._DistanceToPlayer)
+					local s_AttackMode = g_Vehicles:CheckForVehicleAttack(self._ShootPlayerVehicleType, self._DistanceToPlayer, self.m_SecondaryGadget)
 
 					if s_AttackMode ~= VehicleAttackModes.NoAttack then
 						if s_AttackMode == VehicleAttackModes.AttackWithNade then -- grenade
@@ -1320,10 +1289,8 @@ function Bot:_EnterVehicle()
 						end
 					end
 
-					-- id detection
-					self._VehicleMovableId = self._AllMovableIds[1] -- start with first ID
-					self._IdDetected = false
-					self._DetectionTimer = -0.2
+					-- get ID
+					self._VehicleMovableId = g_Vehicles:GetPartIdForSeat(self.m_Player, i)
 
 					return 0, s_Position -- everything fine
 				end
@@ -1484,10 +1451,6 @@ function Bot:_UpdateMovement()
 					else
 						s_Point = s_NextPoint
 					end
-				end
-
-				if self.m_InVehicle and not self._IdDetected then
-					return
 				end
 
 				if s_Point.SpeedMode ~= BotMoveSpeeds.NoMovement then -- movement
@@ -1890,23 +1853,21 @@ function Bot:_UpdateMovement()
 			-- movent speed
 			if self.m_Player.alive then
 				if self.m_InVehicle then
-					if self._IdDetected then
-						if self.m_ActiveSpeedValue == BotMoveSpeeds.Backwards then
-							self._BrakeTimer = 0
-							self:_SetInput(EntryInputActionEnum.EIABrake, -s_SpeedVal)
-						elseif self.m_ActiveSpeedValue ~= BotMoveSpeeds.NoMovement then
-							self._BrakeTimer = 0
-							self:_SetInput(EntryInputActionEnum.EIAThrottle, s_SpeedVal)
-							-- if self.m_ActiveSpeedValue >= 4 then
-								-- self:_setInput(EntryInputActionEnum.EIASprint, 1)
-							-- end
-						else
-							if self._BrakeTimer < 0.7 then
-								self:_SetInput(EntryInputActionEnum.EIABrake, 1)
-							end
-
-							self._BrakeTimer = self._BrakeTimer + StaticConfig.BotUpdateCycle
+					if self.m_ActiveSpeedValue == BotMoveSpeeds.Backwards then
+						self._BrakeTimer = 0
+						self:_SetInput(EntryInputActionEnum.EIABrake, -s_SpeedVal)
+					elseif self.m_ActiveSpeedValue ~= BotMoveSpeeds.NoMovement then
+						self._BrakeTimer = 0
+						self:_SetInput(EntryInputActionEnum.EIAThrottle, s_SpeedVal)
+						-- if self.m_ActiveSpeedValue >= 4 then
+							-- self:_setInput(EntryInputActionEnum.EIASprint, 1)
+						-- end
+					else
+						if self._BrakeTimer < 0.7 then
+							self:_SetInput(EntryInputActionEnum.EIABrake, 1)
 						end
+
+						self._BrakeTimer = self._BrakeTimer + StaticConfig.BotUpdateCycle
 					end
 				else
 					if self.m_ActiveSpeedValue ~= BotMoveSpeeds.Sprint then
