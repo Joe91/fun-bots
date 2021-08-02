@@ -1,11 +1,25 @@
 VehicleData = {
 
-	-- Name, Type, Parttransforms, Bullet-Speeds?
-	["M1Abrams"] = {Name = "[M1 ABRAMS]", Type =  VehicleTypes.Tank, Parts = {25, 12, nil}}, -- 25,26 -- 12 -- none
+	-- Name, Type, Parttransforms, Bullet-Speeds, Drop, Offset-Vec
+	["M1Abrams"] = {
+		Name = "[M1 ABRAMS]", 
+		Type =  VehicleTypes.Tank, 
+		Parts = {25, 12, nil},  -- 25,26 -- 12 -- none
+		Speed = {350, 350, 350}, 
+		Drop = {9.81, 9.81, 9.81}, 
+		Offset = {Vec3(0.0919998884201, -0.0385888814926, -1.02235937119), Vec3(0.00134825706482, 0.0728099346161, 0.929019987583), Vec3(0,0,0)}
+	},
 	["M1Abrams_AI_SP007"] = {Name = "[M1 ABRAMS]", Type =  VehicleTypes.Tank, Parts = {25, 12, nil}}, -- 25,26 -- 12 -- none
 	["M1Abrams_SP007"] = {Name = "[M1 ABRAMS]", Type =  VehicleTypes.Tank, Parts = {25, 12, nil}}, -- 25,26 -- 12 -- none
 	["M1Abrams_SP_Rail"] = {Name = "[M1 ABRAMS]", Type =  VehicleTypes.Tank, Parts = {25, 12, nil}}, -- 25,26 -- 12 -- none
-	["T90"] = {Name = "[T-90A]", Type =  VehicleTypes.Tank, Parts = {24, 41, nil}}, -- 24,25
+	["T90"] = {
+		Name = "[T-90A]", 
+		Type =  VehicleTypes.Tank,
+		Parts = {24, 41, nil},
+		Speed = {350, 350, 350}, 
+		Drop = {9.81, 9.81, 9.81}, 
+		Offset = {Vec3(0.0, 0.0, -2.91700434685), Vec3(0.0425717830658, 0.0713469982147, 1.42420208454), Vec3(0,0,0)}
+	}, -- 24,25
 	["T90_SP007"] = {Name = "[T-90A]", Type =  VehicleTypes.Tank, Parts = {24, 41, nil}}, -- 24,25
 	["T90_T55_SP007"] = {Name = "[T-90A]", Type =  VehicleTypes.Tank, Parts = {24, 41, nil}}, -- 24,25
 
@@ -14,15 +28,36 @@ VehicleData = {
 	["LAV25_Paradrop"] = {Name = "[LAV-25]", Type =  VehicleTypes.Tank, Parts = {10, 25, nil, nil, nil, nil}}, --10,19
 	["BMP2"] = {Name = "[BMP-2M]", Type =  VehicleTypes.Tank, Parts = {37, 49, nil, nil, nil, nil}}, --37,38
 	["BMP2_SP007"] = {Name = "[BMP-2M]", Type =  VehicleTypes.Tank, Parts = {37, 49, nil, nil, nil, nil}}, --37,38
-	
+
 	["2S25_SPRUT-SD"] = {Name = "[SPRUT-SD]", Type =  VehicleTypes.Tank, Parts = {}},
 	["M1128-Stryker"] = {Name = "[M1128]", Type =  VehicleTypes.Tank, Parts = {}},
 	["VanModified"] = {Name = "[RHINO]", Type =  VehicleTypes.Tank, Parts = {}},
 
 	-- AA Vehicle?
-	["LAV_AD"] = {Name = "[LAV-AD]", Type =  VehicleTypes.AntiAir, Parts = {1}}, -- 0,1,5
-	["9K22_Tunguska_M"] = {Name = "[9K22 TUNGUSKA-M]", Type =  VehicleTypes.LightVehicle, Parts = {35}},
-	["9K22_Tunguska_M_AI"] = {Name = "[9K22 TUNGUSKA-M]", Type =  VehicleTypes.LightVehicle, Parts = {35}},
+	["LAV_AD"] = {
+		Name = "[LAV-AD]", 
+		Type =  VehicleTypes.AntiAir, 
+		Parts = {1},
+		Speed = {350},
+		Drop = {0.0},
+		Offset = {Vec3(0.156301766634, 0.0423104763031, 1.64426028728)}
+	}, -- 0,1,5
+	["9K22_Tunguska_M"] = {
+		Name = "[9K22 TUNGUSKA-M]", 
+		Type =  VehicleTypes.LightVehicle, 
+		Parts = {35},
+		Speed = {350},
+		Drop = {0.0},
+		Offset = {Vec3(0,0,0)}
+	},
+	["9K22_Tunguska_M_AI"] = {
+		Name = "[9K22 TUNGUSKA-M]", 
+		Type =  VehicleTypes.LightVehicle, 
+		Parts = {35},
+		Speed = {350},
+		Drop = {0.0},
+		Offset = {Vec3(0,0,0)}
+	},
 
 	["VodnikPhoenix"] = {Name = "[VODNIK AA]", Type =  VehicleTypes.AntiAir, Parts = {}},
 	["AAV-7A1"] = {Name = "[AAV-7A1 AMTRAC]", Type =  VehicleTypes.AntiAir, Parts = {}},
