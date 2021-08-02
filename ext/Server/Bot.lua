@@ -19,6 +19,7 @@ function Bot:__init(p_Player)
 	self.m_Kit = nil
 	self.m_Color = nil
 	self.m_ActiveWeapon = nil
+	self.m_ActiveVehicle = nil
 	self.m_Primary = nil
 	self.m_Pistol = nil
 	self.m_PrimaryGadget = nil
@@ -621,8 +622,7 @@ function Bot:_UpdateAiming()
 			local s_Speed = 0.0
 
 			if self.m_InVehicle then
-				s_Drop = 9.81
-				s_Speed = 350
+				s_Speed, s_Drop = g_Vehicles:GetSpeedAndDrop(self.m_AvtiveVehicle, self.m_Player.controlledEntryId)
 			else
 				s_Drop = self.m_ActiveWeapon.bulletDrop
 				s_Speed = self.m_ActiveWeapon.bulletSpeed
@@ -1290,7 +1290,8 @@ function Bot:_EnterVehicle()
 					end
 
 					-- get ID
-					self._VehicleMovableId = g_Vehicles:GetPartIdForSeat(self.m_Player, i)
+					self.m_ActiveVehicle = g_Vehicles:GetVehicle(self.m_Player, i)
+					self._VehicleMovableId = g_Vehicles:GetPartIdForSeat(self.m_ActiveVehicle, i)
 
 					return 0, s_Position -- everything fine
 				end

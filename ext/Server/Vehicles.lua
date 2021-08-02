@@ -25,19 +25,36 @@ function Vehicles:GetVehilceName(p_Player)
 	end
 end
 
-function Vehicles:GetPartIdForSeat(p_Player, p_Index)
+function Vehicles:GetVehicle(p_Player, p_Index)
 	local s_VehicleName = self:GetVehilceName(p_Player)
 	if s_VehicleName == nil then
 		return nil
 	end
+	return VehicleData[s_VehicleName]
+end
 
-	local s_VehicleData = VehicleData[s_VehicleName]
-	if s_VehicleData ~= nil and s_VehicleData.Parts ~= nil then
-		return s_VehicleData.Parts[p_Index + 1]
+function Vehicles:GetPartIdForSeat(p_VehicleData, p_Index)
+	if p_VehicleData ~= nil and p_VehicleData.Parts ~= nil then
+		return p_VehicleData.Parts[p_Index + 1]
 	else
 		return nil
 	end
 end
+
+function Vehicles:GetSpeedAndDrop(p_VehicleData, p_Index)
+	local s_Drop = 9.81
+	local s_Speed = 350
+
+	if p_VehicleData ~= nil and p_VehicleData.Speed ~= nil then
+		s_Speed = p_VehicleData.Speed[p_Index + 1]
+	end
+	if p_VehicleData ~= nil and p_VehicleData.Drop ~= nil then
+		s_Drop = p_VehicleData.Drop[p_Index + 1]
+	end
+
+	return s_Speed, s_Drop
+end
+
 
 function Vehicles:CheckForVehicleAttack(p_VehicleType, p_Distance, p_Gadget)
 	local s_AttackMode = VehicleAttackModes.NoAttack -- no attack
