@@ -27,6 +27,7 @@ end
 
 function Vehicles:GetVehicle(p_Player, p_Index)
 	local s_VehicleName = self:GetVehilceName(p_Player)
+	print(s_VehicleName)
 	if s_VehicleName == nil then
 		return nil
 	end
@@ -43,6 +44,9 @@ end
 
 function Vehicles:GetSpeedAndDrop(p_VehicleData, p_Index)
 	local s_Drop = 9.81
+	if p_VehicleData ~= nil and p_VehicleData.Type == VehicleTypes.AntiAir then
+		s_Drop = 0.0
+	end
 	local s_Speed = 350
 
 	if p_VehicleData ~= nil and p_VehicleData.Speed ~= nil then
