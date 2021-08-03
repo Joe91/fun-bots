@@ -117,6 +117,10 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 				self.m_LastIndex = self.m_LastIndex + 1
 				local s_Raycast = nil
 
+				if self.m_Player.inVehicle then -- Start Raycast outside of vehicle?
+					s_PlayerPosition = s_PlayerPosition:MoveTowards(s_Target, 3.0)
+				end
+
 				s_Raycast = RaycastManager:Raycast(s_PlayerPosition, s_Target, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.IsAsyncRaycast)
 
 				if s_Raycast == nil or s_Raycast.rigidBody == nil then
@@ -129,7 +133,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 					NetEvents:SendLocal("Bot:ShootAtPlayer", s_Bot.name, s_IgnoreYaw)
 
-				elseif (self.m_Player.inVehicle or s_Bot.inVehicle) and s_Raycast.rigidBody:Is("DynamicPhysicsEntity") then
+				elseif s_Bot.inVehicle and s_Raycast.rigidBody:Is("DynamicPhysicsEntity") then
 					NetEvents:SendLocal("Bot:ShootAtPlayer", s_Bot.name, false) -- always check yaw in vehicle
 				end
 
