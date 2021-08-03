@@ -192,14 +192,16 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 		self._DistanceToPlayer = p_Player.soldier.worldTransform.trans:Distance(self.m_Player.soldier.worldTransform.trans)
 	end
 
-	if not p_IgnoreYaw and not self.m_InVehicle then
-		if self.m_ActiveWeapon.type ~= WeaponTypes.Sniper and self._DistanceToPlayer > Config.MaxShootDistanceNoSniper then
+	if not self.m_InVehicle then
+		if not p_IgnoreYaw  then
+			if self.m_ActiveWeapon.type ~= WeaponTypes.Sniper and self._DistanceToPlayer > Config.MaxShootDistanceNoSniper then
+				return false
+			end
+		end
+
+		if s_Type ~= VehicleTypes.NoVehicle and g_Vehicles:CheckForVehicleAttack(s_Type, self._DistanceToPlayer, self.m_SecondaryGadget) == VehicleAttackModes.NoAttack then
 			return false
 		end
-	end
-
-	if s_Type ~= VehicleTypes.NoVehicle and g_Vehicles:CheckForVehicleAttack(s_Type, self._DistanceToPlayer, self.m_SecondaryGadget) == VehicleAttackModes.NoAttack then
-		return false
 	end
 
 	self._ShootPlayerVehicleType = s_Type
@@ -840,7 +842,7 @@ function Bot:_UpdateYaw(p_DeltaTime)
 			self.esum = 0.0
 		end
 		self.esum = self.esum + s_DeltaYaw
-		local s_Output = 5 * s_DeltaYaw + 0.2 * self.esum
+		local s_Output = 5 * s_DeltaYaw + 0.3 * self.esum
 
 		if self.esum > 2 then
 			self.esum = 2
