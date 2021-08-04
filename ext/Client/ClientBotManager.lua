@@ -117,8 +117,15 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 				self.m_LastIndex = self.m_LastIndex + 1
 				local s_Raycast = nil
 
-				if self.m_Player.inVehicle then -- Start Raycast outside of vehicle?
-					s_PlayerPosition = s_PlayerPosition:MoveTowards(s_Target, 5.0)
+				if self.m_Player.inVehicle or s_Bot.inVehicle then
+					local s_DeltaPos = s_Target - s_PlayerPosition
+					s_DeltaPos = s_DeltaPos:Normalize()
+					if self.m_Player.inVehicle then -- Start Raycast outside of vehicle?
+						s_PlayerPosition = s_PlayerPosition + (s_DeltaPos * 5.0)
+					end
+					if s_Bot.inVehicle then
+						s_Target = s_Target - (s_DeltaPos * 5.0)
+					end
 				end
 
 				s_Raycast = RaycastManager:Raycast(s_PlayerPosition, s_Target, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.IsAsyncRaycast)
@@ -132,9 +139,6 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 					end
 
 					NetEvents:SendLocal("Bot:ShootAtPlayer", s_Bot.name, s_IgnoreYaw)
-
-				elseif s_Bot.inVehicle and s_Raycast.rigidBody:Is("DynamicPhysicsEntity") then
-					NetEvents:SendLocal("Bot:ShootAtPlayer", s_Bot.name, false) -- always check yaw in vehicle
 				end
 
 				return --only one raycast per cycle
@@ -214,11 +218,15 @@ function ClientBotManager:CheckForBotBotAttack(p_StartPos, p_EndPos, p_ShooterBo
 	local s_StartPos = Vec3(p_StartPos.x, p_StartPos.y + 1.0, p_StartPos.z)
 	local s_EndPos = Vec3(p_EndPos.x, p_EndPos.y + 1.0, p_EndPos.z)
 
-	if p_InVehicleShooter then
-		s_StartPos = s_StartPos:MoveTowards(s_EndPos, 5.0)
-	end
-	if p_InVehicleTarget then
-		s_EndPos = s_EndPos:MoveTowards(s_StartPos, 5.0)
+	if p_InVehicleTarget or p_InVehicleShooter then
+		local s_DeltaPos = p_EndPos - p_StartPos
+		s_DeltaPos = s_DeltaPos:Normalize()
+		if p_InVehicleShooter then
+			s_StartPos = s_StartPos + (s_DeltaPos * 5.0)
+		end
+		if p_InVehicleTarget then
+			s_EndPos = s_EndPos - (s_DeltaPos * 5.0)
+		end
 	end
 
 	local s_Raycast = RaycastManager:Raycast(s_StartPos, s_EndPos, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.IsAsyncRaycast)

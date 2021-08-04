@@ -1536,7 +1536,7 @@ function Bot:_UpdateMovement()
 							s_NoStuckReset = true
 							s_PointIncrement = MathUtils:GetRandomInt(-5,5) -- go 5 points further
 
-							if Globals.IsConquest or Globals.IsRush then
+							if (Globals.IsConquest or Globals.IsRush) and not self.m_InVehicle then
 								if g_GameDirector:IsOnObjectivePath(self._PathIndex) then
 									self._InvertPathDirection = (MathUtils:GetRandomInt(0,100) < 50)
 								end
