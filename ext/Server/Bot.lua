@@ -85,6 +85,9 @@ function Bot:__init(p_Player)
 	self._FullVehicleSteering = false
 	self._VehicleDirBackPositive = false
 	self._VehicleMovableTransform = nil
+	self._Esum_drive = 0.0
+	self._Esum_yaw = 0.0
+	self._Esum_pitch = 0.0
 
 	--shooting
 	self._Shoot = false
@@ -593,6 +596,13 @@ function Bot:_UpdateAiming()
 		local s_TargetMovement = Vec3.zero
 		local s_PitchCorrection = 0.0
 		local s_FullPositionTarget = nil
+		local s_FullPositionBot = nil
+
+		if self.m_InVehicle then
+			s_FullPositionBot = self.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(self._VehicleMovableId):ToLinearTransform().trans
+		else
+			s_FullPositionBot = self.m_Player.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(self.m_Player, false, false)
+		end
 
 		if self._ShootPlayerVehicleType == VehicleTypes.MavBot then
 			s_FullPositionTarget = self._ShootPlayer.controlledControllable.transform.trans:Clone()
@@ -605,20 +615,15 @@ function Bot:_UpdateAiming()
 			else
 				s_AimForHead = Config.AimForHead
 			end
-			if self.m_InVehicle and self.m_Player.controlledEntryId == 0 then
-				s_FullPositionTarget = self._ShootPlayer.soldier.worldTransform.trans:Clone() + Vec3(0, 0.2, 0)-- aim for the feet
+
+			s_FullPositionTarget = self._ShootPlayer.soldier.worldTransform.trans:Clone()
+			if self.m_InVehicle and self.m_Player.controlledEntryId == 0 and self._ShootPlayerVehicleType == VehicleTypes.NoVehicle and s_FullPositionTarget.y < s_FullPositionBot.y then
+				-- do nothing --> aim for the feet of the target
 			else
-				s_FullPositionTarget = self._ShootPlayer.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(self._ShootPlayer, true, s_AimForHead)
+				s_FullPositionTarget = s_FullPositionTarget + m_Utilities:getCameraPos(self._ShootPlayer, true, s_AimForHead)
 			end
 		end
 
-		local s_FullPositionBot = Vec3(0,0,0) 
-
-		if self.m_InVehicle then --TODO: calculate height of gun of vehicle
-			s_FullPositionBot = self.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(self._VehicleMovableId):ToLinearTransform().trans
-		else
-			s_FullPositionBot = self.m_Player.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(self.m_Player, false, false)
-		end
 
 		local s_GrenadePitch = 0.0
 		--calculate how long the distance is --> time to travel
@@ -822,33 +827,20 @@ function Bot:_UpdateYaw(p_DeltaTime)
 	local s_Increment = Globals.YawPerFrame
 
 	if self.m_InVehicle and s_AttackAiming then
-		local s_Value = 1.0
+		self._Esum_pitch = self._Esum_pitch + s_DeltaPitch
+		local s_Output = 5 * s_DeltaPitch + 0.1 * self._Esum_pitch
 
-		if math.abs(s_DeltaPitch) < 0.05 then -- 3°
-			s_Value = 0.2
+		if self._Esum_pitch > 2 then
+			self._Esum_pitch = 2
+		elseif self._Esum_pitch <-2 then
+			self._Esum_pitch = -2
 		end
 
-		if s_DeltaPitch > 0 then
-			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, -s_Value)
-		else
-			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, s_Value)
-		end
+		self.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, -s_Output)
 	end
 
 	if self.m_InVehicle then
 		self.m_Player.input.authoritativeAimingYaw = self._TargetYaw --alsways set yaw to let the FOV work
-
-		if self.esum == nil then
-			self.esum = 0.0
-		end
-		self.esum = self.esum + s_DeltaYaw
-		local s_Output = 5 * s_DeltaYaw + 0.3 * self.esum
-
-		if self.esum > 2 then
-			self.esum = 2
-		elseif self.esum <-2 then
-			self.esum = -2
-		end
 
 		if s_AbsDeltaYaw < 0.1 then
 			self._FullVehicleSteering = false
@@ -861,6 +853,18 @@ function Bot:_UpdateYaw(p_DeltaTime)
 		end
 
 		if not s_AttackAiming then
+			self._Esum_yaw = 0.0
+			self._Esum_pitch = 0.0
+			self._Esum_drive = self._Esum_drive + s_DeltaYaw
+			local s_Output = 5 * s_DeltaYaw + 0.05 * self._Esum_drive
+	
+			if self._Esum_drive > 5 then
+				self._Esum_drive = 5
+			elseif self._Esum_drive <-5 then
+				self._Esum_drive = -5
+			end
+
+
 			if self.m_ActiveSpeedValue == BotMoveSpeeds.Backwards then
 				self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, s_Output)
 			else
@@ -877,6 +881,16 @@ function Bot:_UpdateYaw(p_DeltaTime)
 				self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, 0)
 			end
 		else
+			self._Esum_drive = 0.0
+			self._Esum_yaw = self._Esum_yaw + s_DeltaYaw
+			local s_Output = 4 * s_DeltaYaw + 0.3 * self._Esum_yaw
+	
+			if self._Esum_yaw > 2 then
+				self._Esum_yaw = 2
+			elseif self._Esum_yaw <-2 then
+				self._Esum_yaw = -2
+			end
+
 			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, 0.0)
 			self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, -s_Output)
 		end

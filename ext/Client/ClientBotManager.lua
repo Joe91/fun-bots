@@ -225,8 +225,6 @@ function ClientBotManager:CheckForBotBotAttack(p_StartPos, p_EndPos, p_ShooterBo
 
 	if s_Raycast == nil or s_Raycast.rigidBody == nil then
 		NetEvents:SendLocal("Bot:ShootAtBot", p_ShooterBotName, p_BotName)
-	elseif (p_InVehicleTarget or p_InVehicleShooter) and s_Raycast.rigidBody:Is("DynamicPhysicsEntity") then
-		NetEvents:SendLocal("Bot:ShootAtBot", p_ShooterBotName, p_BotName)
 	end
 end
 

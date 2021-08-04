@@ -27,17 +27,17 @@ VehicleData = {
 		Name = "[LAV-25]", 
 		Type =  VehicleTypes.Tank, 
 		Parts = {10, 25, nil, nil, nil, nil}, 
-		Speed = {200, 610}, 
-		Drop = {9.81, 9.81, 9.81, 9.81, 9.81, 9.81}
+		Speed = {200, 610},
+		Drop = {4.9, 9.81, 9.81, 9.81, 9.81, 9.81}
 	}, --10,19
 	["LAV25_AI"] = {Name = "[LAV-25]", Type =  VehicleTypes.Tank, Parts = {10, 25, nil, nil, nil, nil}}, --10,19
 	["LAV25_Paradrop"] = {Name = "[LAV-25]", Type =  VehicleTypes.Tank, Parts = {10, 25, nil, nil, nil, nil}}, --10,19
 	["BMP2"] = {
-		Name = "[BMP-2M]", 
-		Type =  VehicleTypes.Tank, 
+		Name = "[BMP-2M]",
+		Type =  VehicleTypes.Tank,
 		Parts = {37, 49, nil, nil, nil, nil},
 		Speed = {200, 610},
-		Drop = {9.81, 9.81, 9.81, 9.81, 9.81, 9.81}
+		Drop = {4.9, 9.81, 9.81, 9.81, 9.81, 9.81}
 	}, --37,38
 	["BMP2_SP007"] = {Name = "[BMP-2M]", Type =  VehicleTypes.Tank, Parts = {37, 49, nil, nil, nil, nil}}, --37,38
 
