@@ -598,7 +598,7 @@ function Bot:_UpdateAiming()
 		local s_FullPositionTarget = nil
 		local s_FullPositionBot = nil
 
-		if self.m_InVehicle then
+		if self.m_InVehicle and self._VehicleMovableId ~= nil then
 			s_FullPositionBot = self.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(self._VehicleMovableId):ToLinearTransform().trans
 		else
 			s_FullPositionBot = self.m_Player.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(self.m_Player, false, false)
