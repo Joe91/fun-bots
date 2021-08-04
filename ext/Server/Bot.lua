@@ -202,7 +202,7 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 			end
 		end
 
-		if s_Type ~= VehicleTypes.NoVehicle and g_Vehicles:CheckForVehicleAttack(s_Type, self._DistanceToPlayer, self.m_SecondaryGadget) == VehicleAttackModes.NoAttack then
+		if s_Type ~= VehicleTypes.NoVehicle and g_Vehicles:CheckForVehicleAttack(s_Type, self._DistanceToPlayer, self.m_SecondaryGadget, self.m_InVehicle) == VehicleAttackModes.NoAttack then
 			return false
 		end
 	end
@@ -987,7 +987,7 @@ function Bot:_UpdateShooting()
 				self._ReloadTimer = 0 -- reset reloading
 
 				--check for melee attack
-				if Config.MeleeAttackIfClose and not self._MeleeActive and self._MeleeCooldownTimer <= 0 and self._ShootPlayer.soldier.worldTransform.trans:Distance(self.m_Player.soldier.worldTransform.trans) < 2 then
+				if not self.m_InVehicle and Config.MeleeAttackIfClose and not self._MeleeActive and self._MeleeCooldownTimer <= 0 and self._ShootPlayer.soldier.worldTransform.trans:Distance(self.m_Player.soldier.worldTransform.trans) < 2 then
 					self._MeleeActive = true
 					self.m_ActiveWeapon = self.m_Knife
 
@@ -1019,7 +1019,7 @@ function Bot:_UpdateShooting()
 				end
 
 				if self._ShootPlayerVehicleType ~= VehicleTypes.NoVehicle then
-					local s_AttackMode = g_Vehicles:CheckForVehicleAttack(self._ShootPlayerVehicleType, self._DistanceToPlayer, self.m_SecondaryGadget)
+					local s_AttackMode = g_Vehicles:CheckForVehicleAttack(self._ShootPlayerVehicleType, self._DistanceToPlayer, self.m_SecondaryGadget, self.m_InVehicle)
 
 					if s_AttackMode ~= VehicleAttackModes.NoAttack then
 						if s_AttackMode == VehicleAttackModes.AttackWithNade then -- grenade

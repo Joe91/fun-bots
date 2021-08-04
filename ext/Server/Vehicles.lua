@@ -60,7 +60,7 @@ function Vehicles:GetSpeedAndDrop(p_VehicleData, p_Index)
 end
 
 
-function Vehicles:CheckForVehicleAttack(p_VehicleType, p_Distance, p_Gadget)
+function Vehicles:CheckForVehicleAttack(p_VehicleType, p_Distance, p_Gadget, p_InVehicle)
 	local s_AttackMode = VehicleAttackModes.NoAttack -- no attack
 
 	if p_VehicleType == VehicleTypes.MavBot then
@@ -83,7 +83,7 @@ function Vehicles:CheckForVehicleAttack(p_VehicleType, p_Distance, p_Gadget)
 		end
 	end
 
-	if self.m_InVehicle then
+	if p_InVehicle then
 		s_AttackMode = VehicleAttackModes.AttackWithRifle -- attack with main-weapon
 	end
 
