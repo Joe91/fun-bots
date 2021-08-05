@@ -77,14 +77,11 @@ function Bot:__init(p_Player)
 	self._C4Active = false
 
 	-- vehicle stuff
-	self._VehicleEntity = nil
-	self._AllMovableIds = {}
 	self._VehicleMovableId = nil
 	self._LastVehicleYaw = 0.0
 	self._VehicleReadyToShoot = false
 	self._FullVehicleSteering = false
 	self._VehicleDirBackPositive = false
-	self._VehicleMovableTransform = nil
 	self._Esum_drive = 0.0
 	self._Esum_yaw = 0.0
 	self._Esum_pitch = 0.0
@@ -1264,20 +1261,7 @@ function Bot:_EnterVehicle()
 			for i = 0, s_Entity.entryCount - 1 do
 				if s_Entity:GetPlayerInEntry(i) == nil then
 					self.m_Player:EnterVehicle(s_Entity, i)
-					self._VehicleEntity = s_Entity.physicsEntityBase
-
-					for j = 0, self._VehicleEntity.partCount - 1 do
-						if self.m_Player.controlledControllable.physicsEntityBase:GetPart(j) ~= nil and self.m_Player.controlledControllable.physicsEntityBase:GetPart(j):Is("ServerChildComponent") then
-							local s_QuatTransform = self.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(j)
-
-							if s_QuatTransform == nil then
-								return -1
-							end
-
-							self._VehicleMovableTransform = s_QuatTransform
-							table.insert(self._AllMovableIds, j)
-						end
-					end
+					-- self._VehicleEntity = s_Entity.physicsEntityBase
 
 					-- get ID
 					self.m_ActiveVehicle = g_Vehicles:GetVehicle(self.m_Player, i)

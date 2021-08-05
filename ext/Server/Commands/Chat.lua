@@ -21,6 +21,10 @@ function ChatCommands:Execute(p_Parts, p_Player)
 			ChatManager:SendMessage(table.concat(s_Permissions, ', '), p_Player)
 		end
 	elseif p_Parts[1] == '!car' then
+		if PermissionManager:HasPermission(p_Player, 'ChatCommands') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands).', p_Player)
+			return
+		end
 		if p_Player.attachedControllable ~= nil then
 
 			local s_VehicleName = VehicleEntityData(p_Player.controlledControllable.data).controllableType:gsub(".+/.+/","")
@@ -34,12 +38,13 @@ function ChatCommands:Execute(p_Parts, p_Player)
 			s_VehicleEntity = p_Player.controlledControllable.physicsEntityBase
 
 			for j = 0, s_VehicleEntity.partCount - 1 do
-				if p_Player.controlledControllable.physicsEntityBase:GetPart(j) ~= nil and p_Player.controlledControllable.physicsEntityBase:GetPart(j):Is("ServerChildComponent") then
+				if p_Player.controlledControllable.physicsEntityBase:GetPart(j) ~= nil then --and p_Player.controlledControllable.physicsEntityBase:GetPart(j):Is("ServerChildComponent") then
 					local s_QuatTransform = p_Player.controlledControllable.physicsEntityBase:GetPartTransform(j)
 
 					if s_QuatTransform == nil then
 						return -1
 					end
+					print(p_Player.controlledControllable.physicsEntityBase:GetPart(j).typeInfo.name)
 					print("index: "..j)
 					print(s_QuatTransform:ToLinearTransform().forward - s_Pos)
 					table.insert(s_AllMovableIds, j)
