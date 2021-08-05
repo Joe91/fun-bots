@@ -35,6 +35,7 @@ With this release bots can now enter your vehicle! Any driver or passenger can r
 - Minor changes and enhancements<br>
 - Fixed saving settings in the `F12` settings menu<br>
 - [#143](https://github.com/Joe91/fun-bots/pull/143) Bots ignored players<br>
+- massive rework of vehicle aiming and driving and support for anti-air...
 
 ### 🐛 Minor bug fixes
 - [#129](https://github.com/Joe91/fun-bots/pull/129) Fixed typo `BotWeapons.Priamry` in `BotSpawner.lua`<br>
