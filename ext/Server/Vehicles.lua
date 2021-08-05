@@ -43,17 +43,20 @@ function Vehicles:GetPartIdForSeat(p_VehicleData, p_Index)
 end
 
 function Vehicles:GetSpeedAndDrop(p_VehicleData, p_Index)
-	local s_Drop = 9.81
-	if p_VehicleData ~= nil and p_VehicleData.Type == VehicleTypes.AntiAir then
-		s_Drop = 0.0
-	end
-	local s_Speed = 350
+	local s_Drop = nil
+	local s_Speed = nil
 
 	if p_VehicleData ~= nil and p_VehicleData.Speed ~= nil then
 		s_Speed = p_VehicleData.Speed[p_Index + 1]
 	end
 	if p_VehicleData ~= nil and p_VehicleData.Drop ~= nil then
 		s_Drop = p_VehicleData.Drop[p_Index + 1]
+	end
+	if s_Speed == nil then
+		s_Speed = 500
+	end
+	if s_Drop == nil then
+		s_Drop = 9.81
 	end
 
 	return s_Speed, s_Drop

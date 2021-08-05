@@ -27,7 +27,7 @@ VehicleData = {
 		Name = "[LAV-25]", 
 		Type =  VehicleTypes.Tank, 
 		Parts = {10, 25, nil, nil, nil, nil}, 
-		Speed = {200, 610},
+		Speed = {200, 610, 350, 350, 350, 350},
 		Drop = {4.9, 9.81, 9.81, 9.81, 9.81, 9.81}
 	}, --10,19
 	["LAV25_AI"] = {Name = "[LAV-25]", Type =  VehicleTypes.Tank, Parts = {10, 25, nil, nil, nil, nil}}, --10,19
@@ -36,10 +36,16 @@ VehicleData = {
 		Name = "[BMP-2M]",
 		Type =  VehicleTypes.Tank,
 		Parts = {37, 49, nil, nil, nil, nil},
-		Speed = {200, 610},
+		Speed = {200, 610, 350, 350, 350, 350},
 		Drop = {4.9, 9.81, 9.81, 9.81, 9.81, 9.81}
 	}, --37,38
-	["BMP2_SP007"] = {Name = "[BMP-2M]", Type =  VehicleTypes.Tank, Parts = {37, 49, nil, nil, nil, nil}}, --37,38
+	["BMP2_SP007"] = {
+		Name = "[BMP-2M]",
+		Type =  VehicleTypes.Tank,
+		Parts = {37, 49, nil, nil, nil, nil},
+		Speed = {200, 610, 350, 350, 350, 350},
+		Drop = {4.9, 9.81, 9.81, 9.81, 9.81, 9.81}
+	}, --37,38
 
 	["2S25_SPRUT-SD"] = {Name = "[SPRUT-SD]", Type =  VehicleTypes.Tank, Parts = {}},
 	["M1128-Stryker"] = {Name = "[M1128]", Type =  VehicleTypes.Tank, Parts = {}},
@@ -48,23 +54,23 @@ VehicleData = {
 	-- AA Vehicle?
 	["LAV_AD"] = {
 		Name = "[LAV-AD]", 
-		Type =  VehicleTypes.AntiAir, 
+		Type =  VehicleTypes.AntiAir,
 		Parts = {1},
 		Speed = {900},
 		Drop = {0.0},
 		Offset = {Vec3(0.156301766634, 0.0423104763031, 1.64426028728)}
 	}, -- 0,1,5
 	["9K22_Tunguska_M"] = {
-		Name = "[9K22 TUNGUSKA-M]", 
-		Type =  VehicleTypes.LightVehicle, 
+		Name = "[9K22 TUNGUSKA-M]",
+		Type =  VehicleTypes.LightVehicle,
 		Parts = {35},
 		Speed = {900},
 		Drop = {0.0},
 		Offset = {Vec3(0,0,0)}
 	},
 	["9K22_Tunguska_M_AI"] = {
-		Name = "[9K22 TUNGUSKA-M]", 
-		Type =  VehicleTypes.LightVehicle, 
+		Name = "[9K22 TUNGUSKA-M]",
+		Type =  VehicleTypes.LightVehicle,
 		Parts = {35},
 		Speed = {900},
 		Drop = {0.0},
