@@ -1274,7 +1274,7 @@ function Bot:_EnterVehicle()
 					-- get ID
 					self.m_ActiveVehicle = g_Vehicles:GetVehicle(self.m_Player, i)
 					self._VehicleMovableId = g_Vehicles:GetPartIdForSeat(self.m_ActiveVehicle, i)
-					print(self.m_ActiveVehicle)
+					m_Logger:Write(self.m_ActiveVehicle)
 
 					return 0, s_Position -- everything fine
 				end

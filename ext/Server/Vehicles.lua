@@ -1,6 +1,7 @@
 class("Vehicles")
 
 require('__shared/Constants/VehicleData')
+local m_Logger = Logger("Vehicles", Debug.Server.VEHICLES)
 
 function Vehicles:FindOutVehicleType(p_Player)
 	local s_VehicleType = VehicleTypes.NoVehicle -- no vehicle
@@ -27,7 +28,7 @@ end
 
 function Vehicles:GetVehicle(p_Player, p_Index)
 	local s_VehicleName = self:GetVehilceName(p_Player)
-	print(s_VehicleName)
+	m_Logger:Write("s_VehicleName")
 	if s_VehicleName == nil then
 		return nil
 	end
