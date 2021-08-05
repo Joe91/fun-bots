@@ -1120,12 +1120,20 @@ function Bot:_UpdateShooting()
 						end
 					else
 						if self.m_InVehicle then
-							if self._ShotTimer >= (0.6) then
-								self._ShotTimer = 0
-							end
-
-							if self._ShotTimer >= 0.3 and self._VehicleReadyToShoot then
-								self:_SetInput(EntryInputActionEnum.EIAFire, 1)
+							if self.m_ActiveVehicle.Type ~= nil and self.m_ActiveVehicle.Type == VehicleTypes.AntiAir then
+								if self._ShotTimer >= 5.0 then
+									self._ShotTimer = 0
+								end
+								if self._ShotTimer >= 1.0 and self._VehicleReadyToShoot then
+									self:_SetInput(EntryInputActionEnum.EIAFire, 1)
+								end
+							else
+								if self._ShotTimer >= 0.6 then
+									self._ShotTimer = 0
+								end
+								if self._ShotTimer >= 0.3 and self._VehicleReadyToShoot then
+									self:_SetInput(EntryInputActionEnum.EIAFire, 1)
+								end
 							end
 						else
 							if self._ShotTimer >= (self.m_ActiveWeapon.fireCycle + self.m_ActiveWeapon.pauseCycle) then
