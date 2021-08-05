@@ -730,9 +730,8 @@ function BotManager:_CheckForBotBotAttack()
 									-- check this bot view. Let one client do it
 									local s_BotPosition = s_Bot.m_Player.soldier.worldTransform.trans:Clone()
 									local l_BotPosition = l_Bot.m_Player.soldier.worldTransform.trans:Clone()
-									local s_InVehicle = (s_Bot.m_InVehicle or l_Bot.m_InVehicle)
 
-									NetEvents:SendUnreliableToLocal('CheckBotBotAttack', s_Players[l_PlayerIndex], s_BotPosition, l_BotPosition, s_Bot.m_Player.name, l_Bot.m_Player.name, s_InVehicle)
+									NetEvents:SendUnreliableToLocal('CheckBotBotAttack', s_Players[l_PlayerIndex], s_BotPosition, l_BotPosition, s_Bot.m_Player.name, l_Bot.m_Player.name, s_Bot.m_InVehicle, l_Bot.m_InVehicle)
 									s_Raycasts = s_Raycasts + 1
 									s_NextPlayerIndex = l_PlayerIndex + 1
 									break
