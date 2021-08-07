@@ -12,27 +12,28 @@ local DEBUG_SUBMIT_PATH = "/api/submit"
 
 local pp = nil
 
+local s_CheckURL = "https://report.funbots.dev/api/precheck?uuid=a5bb3716-1768-4367-b1ba-6b6ab0b7fbb2"
+
+function TestGetHTTPAsync()
+    Net:GetHTTPAsync(s_CheckURL, function(p_HttpResponse)
+        if p_HttpResponse == nil then
+            print("[TestGetHTTPAsync] p_HttpResponse == nil")
+        end
+
+        if p_HttpResponse.status ~= 200 then
+            print("[TestGetHTTPAsync] p_HttpResponse.status ~= 200")
+        end
+
+        local s_Json = json.decode(p_HttpResponse.body)
+
+        print("[TestGetHTTPAsync]")
+        print(s_Json)
+    end)
+end
+
 -- Generate a bug report and send it to the fun-bots bug report server
 function Debugger:GenerateReport(p_Player)
-    -- Before submitting a report, check if we are eligable to generate a bug report.
-    -- Uneligable servers are outdated servers or those who've made too many reports in the past hour.
-
-    ChatManager:Yell("Generating a new bug report...",  15.0, p_Player)
-    print("[DEBUG] " .. p_Player.name .. " is generating a new bug report.")
-
-    if RCON:GetServerGuid() == nil then
-        print("[DEBUG] Bug report failed: Server GUID is unknown or not set.")
-        ChatManager:Yell("Failed to create bug report. Server GUID unknown",  4.0, p_Player)
-        do return end
-    end
-
-    -- @Todo: Figure out how to pass this variable with GenerateReportCallback
-    pp = p_Player
-
-    local s_UUID = RCON:GetServerGuid().
-    print("UUID = " .. s_UUID)
-
-    Net:GetHTTPAsync(DEBUG_REPORT_URL .. DEBUG_ELIGIABLE_PATH .. "?uuid=" .. RCON:GetServerGuid(), GenerateReportCallback)
+   TestGetHTTPAsync();
 end
 
 function GenerateReportCallback(httpRequest)
