@@ -156,7 +156,7 @@ VersionConfig = {
 
 		-- Version related (do not modify)
 	Version = {
-		Tag = 'V2.2.0-RC1' -- Do not modify this value!
+		Tag = 'v2.2.0-dev6' -- Do not modify this value!
 	}
 }
 
