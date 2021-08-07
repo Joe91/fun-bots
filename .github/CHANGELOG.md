@@ -13,6 +13,10 @@ This release contains a lot of small bug fixes and more QoL updates.
 ### ⚠️ Minimum requirements change
 Version 2.2.0 of fun-bots now requires the dependency `VeniceEXT` version 1.1.0 or higher.
 
+### New or improved mpas
+- Firestorm CQ-Large-Vehicles (thanks to Gemini899)
+- Strike at Karkhand CQ-Assault-Small Vehicles (thanks to Gemini899)
+
 ### ⚙️ Exciting new features
 - [#134](https://github.com/Joe91/fun-bots/pull/134) Added configuration option for `AimForHeadSupport` and `BotSupportAimWorsening`<br>
 - [#132](https://github.com/Joe91/fun-bots/pull/132) Added extra notes to the configuration file<br>
