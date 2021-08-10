@@ -212,6 +212,11 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 	local s_FovHalf = 0
 	local s_PitchHalf = 0
 
+	-- if target is air-vehicle and bot is in AA --> ignore yaw
+	if self.m_InVehicle and s_Type == VehicleTypes.AirVehicle and self.m_ActiveVehicle.Type ~= nil and self.m_ActiveVehicle.Type == VehicleTypes.AntiAir then
+		p_IgnoreYaw = true
+	end
+
 	if not p_IgnoreYaw then
 		local s_OldYaw = self.m_Player.input.authoritativeAimingYaw
 		local s_DifferenceY = 0.0
