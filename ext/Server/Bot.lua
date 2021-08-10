@@ -1525,18 +1525,27 @@ function Bot:_UpdateMovement()
 							self._MeleeActive = false
 							s_DistanceFromTarget = 0
 							s_HeightDistance = 0
-							s_NoStuckReset = true
-							s_PointIncrement = MathUtils:GetRandomInt(-5,5) -- go 5 points further
 
-							if (Globals.IsConquest or Globals.IsRush) and not self.m_InVehicle then
-								if g_GameDirector:IsOnObjectivePath(self._PathIndex) then
-									self._InvertPathDirection = (MathUtils:GetRandomInt(0,100) < 50)
+							-- teleport to target
+							if MathUtils:GetRandomInt(0,100) <= 100 then
+								local s_Transform = self.m_Player.soldier.worldTransform:Clone()
+								s_Transform.trans = self._NextTargetPoint.Position
+								self.m_Player.soldier:SetTransform(s_Transform)
+							else
+
+								s_NoStuckReset = true
+								s_PointIncrement = MathUtils:GetRandomInt(-5,5) -- go 5 points further
+
+								if (Globals.IsConquest or Globals.IsRush) and not self.m_InVehicle then
+									if g_GameDirector:IsOnObjectivePath(self._PathIndex) then
+										self._InvertPathDirection = (MathUtils:GetRandomInt(0,100) < 50)
+									end
 								end
-							end
 
-							-- experimental
-							if s_PointIncrement == 0 then -- we can't have this
-								s_PointIncrement = -2 --go backwards and try again
+								-- experimental
+								if s_PointIncrement == 0 then -- we can't have this
+									s_PointIncrement = -2 --go backwards and try again
+								end
 							end
 						end
 
