@@ -195,16 +195,14 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 		self._DistanceToPlayer = p_Player.soldier.worldTransform.trans:Distance(self.m_Player.soldier.worldTransform.trans)
 	end
 
-	if not self.m_InVehicle then
-		if not p_IgnoreYaw  then
-			if self.m_ActiveWeapon.type ~= WeaponTypes.Sniper and self._DistanceToPlayer > Config.MaxShootDistanceNoSniper then
-				return false
-			end
-		end
-
-		if s_Type ~= VehicleTypes.NoVehicle and g_Vehicles:CheckForVehicleAttack(s_Type, self._DistanceToPlayer, self.m_SecondaryGadget, self.m_InVehicle) == VehicleAttackModes.NoAttack then
+	if not p_IgnoreYaw and not self.m_InVehicle then
+		if self.m_ActiveWeapon.type ~= WeaponTypes.Sniper and self._DistanceToPlayer > Config.MaxShootDistanceNoSniper then
 			return false
 		end
+	end
+
+	if s_Type ~= VehicleTypes.NoVehicle and g_Vehicles:CheckForVehicleAttack(s_Type, self._DistanceToPlayer, self.m_SecondaryGadget, self.m_InVehicle) == VehicleAttackModes.NoAttack then
+		return false
 	end
 
 	self._ShootPlayerVehicleType = s_Type
@@ -216,14 +214,30 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 
 	if not p_IgnoreYaw then
 		local s_OldYaw = self.m_Player.input.authoritativeAimingYaw
-		local s_DifferenceY = p_Player.soldier.worldTransform.trans.z - self.m_Player.soldier.worldTransform.trans.z
-		local s_DifferenceX = p_Player.soldier.worldTransform.trans.x - self.m_Player.soldier.worldTransform.trans.x
-		local s_DifferenceZ = p_Player.soldier.worldTransform.trans.y - self.m_Player.soldier.worldTransform.trans.y
-		local s_DistanceHoizontal = math.sqrt(s_DifferenceY^2 + s_DifferenceY^2)
+		local s_DifferenceY = 0.0
+		local s_DifferenceX = 0.0
+		local s_DifferenceZ = 0.0
+		if s_Type == VehicleTypes.MavBot then
+			s_DifferenceY = p_Player.controlledControllable.transform.trans.z - self.m_Player.soldier.worldTransform.trans.z
+			s_DifferenceX = p_Player.controlledControllable.transform.trans.x - self.m_Player.soldier.worldTransform.trans.x
+			s_DifferenceZ = p_Player.controlledControllable.transform.trans.y - self.m_Player.soldier.worldTransform.trans.y
+		else
+			s_DifferenceY = p_Player.soldier.worldTransform.trans.z - self.m_Player.soldier.worldTransform.trans.z
+			s_DifferenceX = p_Player.soldier.worldTransform.trans.x - self.m_Player.soldier.worldTransform.trans.x
+			s_DifferenceZ = p_Player.soldier.worldTransform.trans.y - self.m_Player.soldier.worldTransform.trans.y
+		end
+
 		local s_AtanYaw = math.atan(s_DifferenceY, s_DifferenceX)
 		local s_Yaw = (s_AtanYaw > math.pi / 2) and (s_AtanYaw - math.pi / 2) or (s_AtanYaw + 3 * math.pi / 2)
 
-		s_Pitch = math.abs(math.atan(s_DifferenceZ, s_DistanceHoizontal))
+		-- don't limit pitch FOV of AA
+		if self.m_InVehicle and self.m_ActiveVehicle.Type ~= nil and self.m_ActiveVehicle.Type == VehicleTypes.AntiAir then
+			s_Pitch = 0
+		else
+			local s_DistanceHoizontal = math.sqrt(s_DifferenceY^2 + s_DifferenceY^2)
+			s_Pitch = math.abs(math.atan(s_DifferenceZ, s_DistanceHoizontal))
+		end
+
 		s_DifferenceYaw = math.abs(s_OldYaw - s_Yaw)
 
 		if s_DifferenceYaw > math.pi then
@@ -236,7 +250,7 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 
 	if p_IgnoreYaw or (s_DifferenceYaw < s_FovHalf and s_Pitch < s_PitchHalf) then
 		if self._Shoot then
-			if self._ShootPlayer == nil or (self.m_InVehicle and (self._ShootModeTimer > Config.BotMinTimeShootAtPlayer * 2)) or (not self.m_InVehicle and (self._ShootModeTimer > Config.BotMinTimeShootAtPlayer)) or (self.m_KnifeMode and self._ShootModeTimer > (Config.BotMinTimeShootAtPlayer/2)) then
+			if self._ShootPlayer == nil or (self.m_InVehicle and (self._ShootModeTimer > Config.BotMinTimeShootAtPlayer * 1.5)) or (not self.m_InVehicle and (self._ShootModeTimer > Config.BotMinTimeShootAtPlayer)) or (self.m_KnifeMode and self._ShootModeTimer > (Config.BotMinTimeShootAtPlayer/2)) then
 				self._ShootModeTimer = 0
 				self._ShootPlayerName = p_Player.name
 				self._ShootPlayer = nil
@@ -1535,7 +1549,7 @@ function Bot:_UpdateMovement()
 							s_HeightDistance = 0
 
 							-- teleport to target
-							if MathUtils:GetRandomInt(0,100) <= PROBABILITY_TELEPORT_IF_STUCK then
+							if not self.m_InVehicle and (MathUtils:GetRandomInt(0,100) <= PROBABILITY_TELEPORT_IF_STUCK) then
 								local s_Transform = self.m_Player.soldier.worldTransform:Clone()
 								s_Transform.trans = self._NextTargetPoint.Position
 								self.m_Player.soldier:SetTransform(s_Transform)

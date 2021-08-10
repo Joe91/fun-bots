@@ -535,6 +535,17 @@ SettingsDefinition = {
 			Category = "BEHAVIOUR"
 		},
 		{
+			Name = "MaxRaycastDistanceVehicles",
+			Text = "Max Raycast Distance for Vehicles",
+			Type = Type.Integer,
+			Value = Config.MaxRaycastDistance,
+			Description = "meters bots in Vehicles start shooting at player",
+			Reference = Range(1.00, 1500.00, 5.0),
+			Default = 250,
+			UpdateFlag = UpdateFlag.None,
+			Category = "BEHAVIOUR"
+		},
+		{
 			Name = "MaxShootDistanceNoSniper",
 			Text = "Max Shoot-Distance No Sniper",
 			Type = Type.Integer,
