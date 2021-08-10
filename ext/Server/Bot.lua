@@ -1554,7 +1554,7 @@ function Bot:_UpdateMovement()
 							s_HeightDistance = 0
 
 							-- teleport to target
-							if not self.m_InVehicle and (MathUtils:GetRandomInt(0,100) <= PROBABILITY_TELEPORT_IF_STUCK) then
+							if not self.m_InVehicle and Config.TeleportIfStuck and (MathUtils:GetRandomInt(0,100) <= PROBABILITY_TELEPORT_IF_STUCK) then
 								local s_Transform = self.m_Player.soldier.worldTransform:Clone()
 								s_Transform.trans = self._NextTargetPoint.Position
 								self.m_Player.soldier:SetTransform(s_Transform)

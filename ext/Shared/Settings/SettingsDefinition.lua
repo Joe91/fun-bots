@@ -619,6 +619,16 @@ SettingsDefinition = {
 			Category = "BEHAVIOUR"
 		},
 		{
+			Name = "TeleportIfStuck",
+			Text = "Bots teleport them when stuck",
+			Type = Type.Boolean,
+			Value = Config.TeleportIfStuck,
+			Description = "bot teleport to their target if stuck",
+			Default = true,
+			UpdateFlag = UpdateFlag.None,
+			Category = "BEHAVIOUR"
+		},
+		{
 			Name = "BotsRevive",
 			Text = "Bots revive players",
 			Type = Type.Boolean,

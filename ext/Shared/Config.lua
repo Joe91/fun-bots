@@ -66,6 +66,7 @@ Config = {
 	BotsAttackBots = true,				-- bots attack bots from other team
 	MeleeAttackIfClose = true,			-- bot attacks with melee if close
 	BotCanKillHimself = false,			-- bot takes falldamage or explosion-damage from onw frags
+	TeleportIfStuck = true,				-- bot teleport to their target if stuck
 	BotsRevive = true,					-- Bots revive other players
 	BotsThrowGrenades = true,			-- Bots throw grenades
 	BotsDeploy = true,					-- Bots deploy ammo and medkits

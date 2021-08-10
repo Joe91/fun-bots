@@ -25,6 +25,8 @@ Version 2.2.0 of fun-bots now requires the dependency `VeniceEXT` version 1.1.0 
 - UI Settings working again and some rework on the UI<br>
 - Lots of performance improvement in the Waypoint-editor
 - Spawn-Point view in Waypoint-Editor (press "T" to teleport)
+- AA-aiming and vehicle-usage
+- Bots teleport if stuck. Let me know what you think about this ;-)
 
 #### 🧪 Experimental: Bots entering vehicles
 With this release bots can now enter your vehicle! Any driver or passenger can request nearby bots to enter your vehicle if you press the `Q` button. This is still an experimental feature, please report any issues or feedback.
