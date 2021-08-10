@@ -7,6 +7,8 @@ local m_PathSwitcher = require('PathSwitcher')
 local m_Utilities = require('__shared/Utilities')
 local m_Logger = Logger("Bot", Debug.Server.BOT)
 
+local PROBABILITY_TELEPORT_IF_STUCK = 80
+
 function Bot:__init(p_Player)
 	--Player Object
 	self.m_Player = p_Player
@@ -790,7 +792,7 @@ function Bot:_UpdateYaw(p_DeltaTime)
 				s_Pos = self.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(self._VehicleMovableId):ToLinearTransform().forward
 				local s_AtanDzDx = math.atan(s_Pos.z, s_Pos.x)
 				local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
-				local s_Pitch = math.atan(s_Pos.y, 1.0)
+				local s_Pitch = math.asin(s_Pos.y / 1.0)
 				s_DeltaPitch = s_Pitch - self._TargetPitch
 				s_DeltaYaw = s_Yaw - self._TargetYaw
 
@@ -1527,10 +1529,11 @@ function Bot:_UpdateMovement()
 							s_HeightDistance = 0
 
 							-- teleport to target
-							if MathUtils:GetRandomInt(0,100) <= 100 then
+							if MathUtils:GetRandomInt(0,100) <= PROBABILITY_TELEPORT_IF_STUCK then
 								local s_Transform = self.m_Player.soldier.worldTransform:Clone()
 								s_Transform.trans = self._NextTargetPoint.Position
 								self.m_Player.soldier:SetTransform(s_Transform)
+								m_Logger:Write("tepeported "..self.m_Player.name)
 							else
 
 								s_NoStuckReset = true
