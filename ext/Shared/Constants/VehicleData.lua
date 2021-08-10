@@ -53,13 +53,13 @@ VehicleData = {
 		Drop = {0.0}}, -- 0,1,5
 	["9K22_Tunguska_M"] = {
 		Name = "[9K22 TUNGUSKA-M]",
-		Type =  VehicleTypes.LightVehicle,
+		Type =  VehicleTypes.AntiAir,
 		Parts = {35},
 		Speed = {900},
 		Drop = {0.0}},
 	["9K22_Tunguska_M_AI"] = {
 		Name = "[9K22 TUNGUSKA-M]",
-		Type =  VehicleTypes.LightVehicle,
+		Type =  VehicleTypes.AntiAir,
 		Parts = {35},
 		Speed = {900},
 		Drop = {0.0}},
@@ -94,11 +94,11 @@ VehicleData = {
 	["F18_Wingman"] = {Name = "[F/A-18E SUPER HORNET]", Type =  VehicleTypes.AirVehicle, Parts = {}},
 	["Ka-60"] = {
 		Name = "[KA-60 KASATKA]", 
-		Type =  VehicleTypes.AirVehicle, 
+		Type =  VehicleTypes.AirVehicle,
 		Parts = {nil, 18, 15, nil, nil}},
 	["Mi28"] = {
 		Name = "[MI-28 HAVOC]", 
-		Type =  VehicleTypes.AirVehicle, 
+		Type =  VehicleTypes.AirVehicle,
 		Parts = {nil, 2}}, --2,6
 	["Su-25TM"] = {Name = "[SU-25TM FROGFOOT]", Type =  VehicleTypes.AirVehicle, Parts = {}},
 	["Su-35BM Flanker-E"] = {Name = "[SU-35BM FLANKER-E]", Type =  VehicleTypes.AirVehicle, Parts = {}},

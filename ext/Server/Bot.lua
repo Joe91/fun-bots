@@ -98,6 +98,7 @@ function Bot:__init(p_Player)
 	self._ShootWayPoints = {}
 	self._KnifeWayPositions = {}
 	self._LastTargetTrans = Vec3()
+	self._LastLastTargetTrans = Vec3()
 	self._LastShootPlayer = nil
 	self._Skill = 0.0
 
@@ -241,6 +242,7 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 				self._ShootPlayer = nil
 				self._LastShootPlayer = nil
 				self._LastTargetTrans = p_Player.soldier.worldTransform.trans:Clone()
+				self._LastLastTargetTrans = p_Player.soldier.worldTransform.trans:Clone()
 				self._KnifeWayPositions = {}
 				self._VehicleReadyToShoot = false
 				self._ShotTimer = - self:GetFirstShotDelay(self._DistanceToPlayer)
@@ -668,7 +670,9 @@ function Bot:_UpdateAiming()
 			end
 
 			self._LastShootPlayer = self._ShootPlayer
+			self._LastLastTargetTrans = self._LastTargetTrans
 			self._LastTargetTrans = s_FullPositionTarget
+
 		end
 
 		--calculate yaw and pitch
@@ -827,12 +831,12 @@ function Bot:_UpdateYaw(p_DeltaTime)
 
 	if self.m_InVehicle and s_AttackAiming then
 		self._Esum_pitch = self._Esum_pitch + s_DeltaPitch
-		local s_Output = 5 * s_DeltaPitch + 0.1 * self._Esum_pitch
+		local s_Output = 7 * s_DeltaPitch + 0.05 * self._Esum_pitch
 
-		if self._Esum_pitch > 2 then
-			self._Esum_pitch = 2
-		elseif self._Esum_pitch <-2 then
-			self._Esum_pitch = -2
+		if self._Esum_pitch > 5 then
+			self._Esum_pitch = 5
+		elseif self._Esum_pitch <-5 then
+			self._Esum_pitch = -5
 		end
 
 		self.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, -s_Output)
@@ -841,7 +845,7 @@ function Bot:_UpdateYaw(p_DeltaTime)
 	if self.m_InVehicle then
 		self.m_Player.input.authoritativeAimingYaw = self._TargetYaw --alsways set yaw to let the FOV work
 
-		if s_AbsDeltaYaw < 0.1 then
+		if s_AbsDeltaYaw < 0.10 then
 			self._FullVehicleSteering = false
 			if s_AttackAiming then
 				self._VehicleReadyToShoot = true
@@ -882,12 +886,12 @@ function Bot:_UpdateYaw(p_DeltaTime)
 		else
 			self._Esum_drive = 0.0
 			self._Esum_yaw = self._Esum_yaw + s_DeltaYaw
-			local s_Output = 4 * s_DeltaYaw + 0.3 * self._Esum_yaw
+			local s_Output = 7 * s_DeltaYaw + 0.05 * self._Esum_yaw
 	
-			if self._Esum_yaw > 2 then
-				self._Esum_yaw = 2
-			elseif self._Esum_yaw <-2 then
-				self._Esum_yaw = -2
+			if self._Esum_yaw > 5 then
+				self._Esum_yaw = 5
+			elseif self._Esum_yaw <-5 then
+				self._Esum_yaw = -5
 			end
 
 			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, 0.0)
@@ -968,7 +972,9 @@ function Bot:_UpdateShooting()
 		end
 
 		if self._ShootPlayer ~= nil and self._ShootPlayer.soldier ~= nil and not self._EnterVehicleActice then
-			if self._ShootModeTimer < Config.BotFireModeDuration or (Config.ZombieMode and self._ShootModeTimer < (Config.BotFireModeDuration * 4)) then
+			if (not self.m_InVehicle and self._ShootModeTimer < Config.BotFireModeDuration) or 
+				(self.m_InVehicle and self._ShootModeTimer < Config.BotFireModeDuration * 3) or
+				(Config.ZombieMode and self._ShootModeTimer < (Config.BotFireModeDuration * 4)) then
 				if not self._C4Active then
 					self:_SetInput(EntryInputActionEnum.EIAZoom, 1)
 				end
@@ -1126,7 +1132,7 @@ function Bot:_UpdateShooting()
 								if self._ShotTimer >= 5.0 then
 									self._ShotTimer = 0
 								end
-								if self._ShotTimer >= 1.0 and self._VehicleReadyToShoot then
+								if self._ShotTimer >= 0.5 and self._VehicleReadyToShoot then
 									self:_SetInput(EntryInputActionEnum.EIAFire, 1)
 								end
 							else
