@@ -13,6 +13,10 @@ This release contains a lot of small bug fixes and more QoL updates.
 ### ⚠️ Minimum requirements change
 Version 2.2.0 of fun-bots now requires the dependency `VeniceEXT` version 1.1.0 or higher.
 
+### New or improved mpas
+- Firestorm CQ-Large-Vehicles (thanks to Gemini899)
+- Strike at Karkhand CQ-Assault-Small Vehicles (thanks to Gemini899)
+
 ### ⚙️ Exciting new features
 - [#134](https://github.com/Joe91/fun-bots/pull/134) Added configuration option for `AimForHeadSupport` and `BotSupportAimWorsening`<br>
 - [#132](https://github.com/Joe91/fun-bots/pull/132) Added extra notes to the configuration file<br>
@@ -20,17 +24,24 @@ Version 2.2.0 of fun-bots now requires the dependency `VeniceEXT` version 1.1.0 
 - Experimental (only partly completed) Bots can enter your vehicle if you hit Q on them<br>
 - UI Settings working again and some rework on the UI<br>
 - Lots of performance improvement in the Waypoint-editor
+- Spawn-Point view in Waypoint-Editor (press "T" to teleport)
+- AA-aiming and vehicle-usage
+- Bots teleport if stuck. Let me know what you think about this ;-)
 
 #### 🧪 Experimental: Bots entering vehicles
 With this release bots can now enter your vehicle! Any driver or passenger can request nearby bots to enter your vehicle if you press the `Q` button. This is still an experimental feature, please report any issues or feedback.
 
 ### 📝 Changes and enhancements
+- [#141](https://github.com/Joe91/fun-bots/pull/141) Don't spawn at stuck squad-mates<br>
 - [#139](https://github.com/Joe91/fun-bots/pull/139) Update checker is now async<br>
 - [#137](https://github.com/Joe91/fun-bots/pull/137) Auto updater now follows a better release cycle<br>
 - [#136](https://github.com/Joe91/fun-bots/pull/136) Randomized BotWorseningSkill range and added assault aimForHead<br>
 - The `mod.json` is updated<br>
+- more randomness in spawning
 - Minor changes and enhancements<br>
-- Fixed saving settings in the `F12` settings menu
+- Fixed saving settings in the `F12` settings menu<br>
+- [#143](https://github.com/Joe91/fun-bots/pull/143) Bots ignored players<br>
+- massive rework of vehicle aiming and driving and support for anti-air...
 
 ### 🐛 Minor bug fixes
 - [#129](https://github.com/Joe91/fun-bots/pull/129) Fixed typo `BotWeapons.Priamry` in `BotSpawner.lua`<br>

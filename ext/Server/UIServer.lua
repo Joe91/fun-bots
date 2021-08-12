@@ -71,7 +71,11 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		local indexOnPath = tonumber(request.pointindex) or 1
 		local index = tonumber(request.value)
 		Globals.SpawnMode = "manual"
-		BotSpawner:SpawnWayBots(p_Player, amount, false, index, indexOnPath)
+		local s_TeamId = p_Player.teamId + 1
+		if s_TeamId > Globals.NrOfTeams then
+			s_TeamId = s_TeamId - Globals.NrOfTeams
+		end
+		BotSpawner:SpawnWayBots(p_Player, amount, false, index, indexOnPath, s_TeamId)
 
 	elseif request.action == 'bot_kick_all' then
 		Globals.SpawnMode = "manual"

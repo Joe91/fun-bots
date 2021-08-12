@@ -95,6 +95,7 @@ function FunBotClient:OnLevelDestroy()
 	m_ClientBotManager:OnLevelDestroy()
 	m_ClientNodeEditor:OnLevelDestroy()
 	m_ClientSpawnPointHelper:OnLevelDestroy()
+	collectgarbage()
 end
 
 function FunBotClient:OnLevelLoaded(p_LevelName, p_GameMode)

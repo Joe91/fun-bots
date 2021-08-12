@@ -7,6 +7,17 @@ body:
       value: |
         Thanks for taking the time to fill out this bug report! Before posting be sure that it's not a duplicate of any previous posted issues by using the search function.
         Please note that we do not support outdated versions. Always use the latest stable release.
+  - type: dropdown
+    id: version
+    attributes:
+      label: Your fun-bots version
+      description: What version of fun-bots does this issue occur on? Please note that we do not support old versions. Select the correct version.
+      options:
+        - 2.2.0-RC (release candidates)
+        - 2.2.0 (stable release)
+        - 2.3.0-dev (development builds)
+    validations:
+      required: true
   - type: textarea
     id: what-happened
     attributes:

@@ -16,10 +16,11 @@ BotSpawnModes = {
 VehicleTypes = {
 	NoVehicle = 0,
 	Tank = 1,
-	LightVehicle = 2,
-	AirVehicle = 3,
-	NoArmorVehicle = 4,
-	MavBot = 5
+	AntiAir = 2,
+	LightVehicle = 3,
+	AirVehicle = 4,
+	NoArmorVehicle = 5,
+	MavBot = 6
 }
 
 VehicleAttackModes = {

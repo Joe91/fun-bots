@@ -21,6 +21,7 @@ require('__shared/Settings/SettingsDefinition')
 require('__shared/WeaponList')
 require('__shared/EbxEditUtils')
 require('__shared/Utils/Logger')
+require('Vehicles')
 require('Model/Globals')
 require('Constants/Permissions')
 
@@ -234,6 +235,7 @@ function FunBotServer:OnLevelDestroy()
 	m_BotManager:OnLevelDestroy()
 	m_BotSpawner:OnLevelDestroy()
 	m_NodeEditor:OnLevelDestroy()
+	collectgarbage()
 end
 
 function FunBotServer:OnRoundOver(p_RoundTime, p_WinningTeam)

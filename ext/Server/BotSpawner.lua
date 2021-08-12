@@ -881,7 +881,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 		s_SquadId = self:_GetSquadToJoin(s_TeamId)
 	end
 
-	local s_InverseDirection = false
+	local s_InverseDirection = nil
 
 	if s_Name ~= nil or s_IsRespawn then
 		if Config.SpawnMethod == SpawnMethod.Spawn then
@@ -899,7 +899,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 
 		-- find a spawnpoint
 		if p_UseRandomWay or p_ActiveWayIndex == nil or p_ActiveWayIndex == 0 then
-			s_SpawnPoint = self:_GetSpawnPoint(s_TeamId, s_SquadId)
+			s_SpawnPoint, s_InverseDirection = self:_GetSpawnPoint(s_TeamId, s_SquadId)
 		else
 			s_SpawnPoint = m_NodeCollection:Get(p_IndexOnPath, p_ActiveWayIndex)
 		end
@@ -912,8 +912,12 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 		end
 
 		--find out direction, if path has a return point
-		if m_NodeCollection:Get(1, p_ActiveWayIndex).OptValue == 0xFF then
-			s_InverseDirection = (MathUtils:GetRandomInt(0, 1) == 1)
+		if s_InverseDirection == nil then
+			if m_NodeCollection:Get(1, p_ActiveWayIndex).OptValue == 0xFF then
+				s_InverseDirection = (MathUtils:GetRandomInt(0, 1) == 1)
+			else
+				s_InverseDirection = false
+			end
 		end
 
 		local s_Transform = LinearTransform()
@@ -1003,6 +1007,7 @@ function BotSpawner:_GetSpawnPoint(p_TeamId, p_SquadId)
 	local s_ActiveWayIndex = 0
 	local s_IndexOnPath = 0
 
+	local s_InvertDirection = nil
 	local s_TargetNode = nil
 	local s_ValidPointFound = false
 	local s_TargetDistance = Config.DistanceToSpawnBots
@@ -1013,7 +1018,7 @@ function BotSpawner:_GetSpawnPoint(p_TeamId, p_SquadId)
 	-- CONQUEST
 	-- spawn at base, squad-mate, captured flag
 	if Globals.IsConquest then
-		s_ActiveWayIndex, s_IndexOnPath = g_GameDirector:GetSpawnPath(p_TeamId, p_SquadId, false)
+		s_ActiveWayIndex, s_IndexOnPath, s_InvertDirection = g_GameDirector:GetSpawnPath(p_TeamId, p_SquadId, false)
 
 		if s_ActiveWayIndex == 0 then
 			-- something went wrong. use random path
@@ -1025,7 +1030,7 @@ function BotSpawner:_GetSpawnPoint(p_TeamId, p_SquadId)
 	-- RUSH
 	-- spawn at base (of zone) or squad-mate
 	elseif Globals.IsRush then
-		s_ActiveWayIndex, s_IndexOnPath = g_GameDirector:GetSpawnPath(p_TeamId, p_SquadId, true)
+		s_ActiveWayIndex, s_IndexOnPath, s_InvertDirection = g_GameDirector:GetSpawnPath(p_TeamId, p_SquadId, true)
 
 		if s_ActiveWayIndex == 0 then
 			-- something went wrong. use random path
@@ -1092,7 +1097,7 @@ function BotSpawner:_GetSpawnPoint(p_TeamId, p_SquadId)
 		end
 	end
 
-	return s_TargetNode
+	return s_TargetNode, s_InvertDirection
 end
 
 function BotSpawner:_GetSquadToJoin(p_TeamId) -- TODO: create a more advanced algorithm?

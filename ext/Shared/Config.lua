@@ -56,7 +56,9 @@ Config = {
 
 	--BEHAVIOUR
 	FovForShooting = 245,				-- Degrees of FOV of Bot
+	FovVerticleForShooting = 90,		-- Degrees of FOV of Bot in verticle  direction
 	MaxRaycastDistance = 150,			-- meters bots start shooting at player
+	MaxRaycastDistanceVehicles = 250,	-- meters bots in Vehicles start shooting at player
 	MaxShootDistanceNoSniper = 70,		-- meters a bot (not sniper) start shooting at player
 	MaxShootDistancePistol = 30,		-- only in auto-weapon-mode, the distance until a bot switches to pistol if his magazine is empty
 	BotAttackMode = BotAttackModes.RandomNotSet,	-- Mode the Bots attack with. Random, Crouch or Stand
@@ -64,6 +66,7 @@ Config = {
 	BotsAttackBots = true,				-- bots attack bots from other team
 	MeleeAttackIfClose = true,			-- bot attacks with melee if close
 	BotCanKillHimself = false,			-- bot takes falldamage or explosion-damage from onw frags
+	TeleportIfStuck = true,				-- bot teleport to their target if stuck
 	BotsRevive = true,					-- Bots revive other players
 	BotsThrowGrenades = true,			-- Bots throw grenades
 	BotsDeploy = true,					-- Bots deploy ammo and medkits
@@ -155,7 +158,7 @@ VersionConfig = {
 
 		-- Version related (do not modify)
 	Version = {
-		Tag = 'V2.2.0-RC1' -- Do not modify this value!
+		Tag = 'v2.2.0-dev6' -- Do not modify this value!
 	}
 }
 

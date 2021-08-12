@@ -4,8 +4,10 @@ local m_NodeCollection = require('__shared/NodeCollection')
 local m_Utilities = require('__shared/Utilities')
 local m_Logger = Logger("GameDirector", Debug.Server.GAMEDIRECTOR)
 
-local PROBABILITY_SQUADMATE_SPAWN = 80
-local PROBABILITY_BASE_SPAWN = 20
+local PROBABILITY_SQUADMATE_SPAWN = 60
+local PROBABILITY_CLOSEST_SPAWN = 80
+local PROBABILITY_ATTACKED_SPAWN = 80
+local PROBABILITY_BASE_SPAWN = 15
 
 function GameDirector:__init()
 	self:RegisterVars()
@@ -419,11 +421,12 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 	for _,l_Player in pairs(s_SquadMates) do
 		if l_Player.soldier ~= nil and m_Utilities:isBot(l_Player) then
 			local s_SquadBot = g_BotManager:GetBotByName(l_Player.name)
-			if not s_SquadBot.m_InVehicle then
+			if not s_SquadBot.m_InVehicle and not s_SquadBot:IsStuck() then
 				local s_WayIndex = s_SquadBot:GetWayIndex()
 				local s_PointIndex = s_SquadBot:GetPointIndex()
 				if MathUtils:GetRandomInt(1, 100) <= PROBABILITY_SQUADMATE_SPAWN then
-					return s_WayIndex, s_PointIndex
+					m_Logger:Write("spawn at squad-mate")
+					return s_WayIndex, s_PointIndex, s_SquadBot._InvertPathDirection -- use same direction
 				else
 					break
 				end
@@ -432,17 +435,25 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 	end
 
 	-- find referece-objective
-	local s_ReferenceObjective = nil
+	local s_ReferenceObjectivesNeutral = {}
+	local s_ReferenceObjectivesEnemy = {}
 
 	for _, l_ReferenceObjective in pairs(self.m_AllObjectives) do
 		if not l_ReferenceObjective.isEnterVehiclePath and not l_ReferenceObjective.IsBasePath and not l_ReferenceObjective.isSpawnPath then
 			if l_ReferenceObjective.team == TeamId.TeamNeutral then
-				s_ReferenceObjective = l_ReferenceObjective
+				table.insert(s_ReferenceObjectivesNeutral, l_ReferenceObjective)
 				break
 			elseif l_ReferenceObjective.team ~= p_TeamId then
-				s_ReferenceObjective = l_ReferenceObjective
+				table.insert(s_ReferenceObjectivesEnemy, l_ReferenceObjective)
 			end
 		end
+	end
+
+	local s_ReferenceObjective = nil
+	if #s_ReferenceObjectivesNeutral > 0 then
+		s_ReferenceObjective = s_ReferenceObjectivesNeutral[MathUtils:GetRandomInt(1, #s_ReferenceObjectivesNeutral)]
+	elseif #s_ReferenceObjectivesEnemy > 0 then
+		s_ReferenceObjective = s_ReferenceObjectivesEnemy[MathUtils:GetRandomInt(1, #s_ReferenceObjectivesEnemy)]
 	end
 
 	local s_PossibleObjectives = {}
@@ -480,9 +491,8 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 				elseif not p_OnlyBase then
 					if l_Objective.isAttacked then
 						table.insert(s_AttackedObjectives, {name = l_Objective.name, path = l_Path})
-					else
-						table.insert(s_PossibleObjectives, {name = l_Objective.name, path = l_Path})
 					end
+					table.insert(s_PossibleObjectives, {name = l_Objective.name, path = l_Path})
 
 					if s_ReferenceObjective ~= nil and s_ReferenceObjective.position ~= nil and l_Objective.position ~= nil then
 						local s_DistanceToRef = s_ReferenceObjective.position:Distance(l_Objective.position)
@@ -511,10 +521,10 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 	end
 
 	-- spawn in order of priority
-	if #s_AttackedObjectives > 0 then
+	if #s_AttackedObjectives > 0 and (MathUtils:GetRandomInt(1, 100) < PROBABILITY_ATTACKED_SPAWN) then
 		m_Logger:Write("spawn at attaced objective")
 		return self:GetSpawnPathOfObjectives(s_AttackedObjectives)
-	elseif s_ClosestObjective ~= nil then
+	elseif s_ClosestObjective ~= nil and (MathUtils:GetRandomInt(1, 100) < PROBABILITY_CLOSEST_SPAWN) then
 		m_Logger:Write("spwawn at closest objective")
 		return self:GetSpawnPathOfObjectives({s_ClosestObjective})
 	elseif #s_PossibleObjectives > 0 then
@@ -557,6 +567,17 @@ function GameDirector:GetSpawnPathOfObjectives(p_PossibleObjectives)
 	else
 		return s_TempObject.path, MathUtils:GetRandomInt(1, #m_NodeCollection:Get(nil, s_TempObject.path))
 	end
+end
+
+function GameDirector:IsOnObjectivePath(p_Path)
+	local s_CurrentPathFirst = m_NodeCollection:GetFirst(p_Path)
+
+	if s_CurrentPathFirst.Data ~= nil and s_CurrentPathFirst.Data.Objectives ~= nil then
+		if #s_CurrentPathFirst.Data.Objectives == 1 then
+			return true
+		end
+	end
+	return false
 end
 
 function GameDirector:IsBasePath(p_ObjectiveNames)
