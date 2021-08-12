@@ -235,6 +235,7 @@ function FunBotServer:OnLevelDestroy()
 	m_BotManager:OnLevelDestroy()
 	m_BotSpawner:OnLevelDestroy()
 	m_NodeEditor:OnLevelDestroy()
+	collectgarbage()
 end
 
 function FunBotServer:OnRoundOver(p_RoundTime, p_WinningTeam)
