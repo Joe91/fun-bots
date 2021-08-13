@@ -213,7 +213,7 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 	local s_PitchHalf = 0
 
 	-- if target is air-vehicle and bot is in AA --> ignore yaw
-	if self.m_InVehicle and s_Type == VehicleTypes.AirVehicle and self.m_ActiveVehicle ~= nil and self.m_ActiveVehicle.Type ~= nil and (self.m_ActiveVehicle.Type == VehicleTypes.AntiAir or self.m_ActiveVehicle.Type == VehicleTypes.StaticAntiAir) then
+	if self.m_InVehicle and s_Type == VehicleTypes.AirVehicle and self.m_ActiveVehicle ~= nil and self.m_ActiveVehicle.Type ~= nil and self.m_ActiveVehicle.Type == VehicleTypes.AntiAir then
 		p_IgnoreYaw = true
 	end
 
@@ -236,7 +236,7 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 		local s_Yaw = (s_AtanYaw > math.pi / 2) and (s_AtanYaw - math.pi / 2) or (s_AtanYaw + 3 * math.pi / 2)
 
 		-- don't limit pitch FOV of AA
-		if self.m_InVehicle and self.m_ActiveVehicle.Type ~= nil and (self.m_ActiveVehicle.Type == VehicleTypes.AntiAir or self.m_ActiveVehicle.Type == VehicleTypes.StaticAntiAir) then
+		if self.m_InVehicle and self.m_ActiveVehicle.Type ~= nil and self.m_ActiveVehicle.Type == VehicleTypes.AntiAir then
 			s_Pitch = 0
 		else
 			local s_DistanceHoizontal = math.sqrt(s_DifferenceY^2 + s_DifferenceY^2)
@@ -1143,7 +1143,7 @@ function Bot:_UpdateShooting()
 						end
 					else
 						if self.m_InVehicle then
-							if self.m_ActiveVehicle.Type ~= nil and (self.m_ActiveVehicle.Type == VehicleTypes.AntiAir or self.m_ActiveVehicle.Type == VehicleTypes.StaticAntiAir) then
+							if self.m_ActiveVehicle.Type ~= nil and self.m_ActiveVehicle.Type == VehicleTypes.AntiAir then
 								if self._ShotTimer >= 5.0 then
 									self._ShotTimer = 0
 								end
@@ -1376,10 +1376,6 @@ function Bot:_UpdateMovement()
 		-- move along points
 		elseif self.m_ActiveMoveMode == BotMoveModes.Paths then
 			self._AttackModeMoveTimer = 0
-
-			if self.m_ActiveVehicle ~= nil and self.m_ActiveVehicle.Type == VehicleTypes.StaticAntiAir then
-				return
-			end
 
 			if m_NodeCollection:Get(1, self._PathIndex) ~= nil then -- check for valid point
 				-- get next point

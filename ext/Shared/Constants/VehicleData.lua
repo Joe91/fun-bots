@@ -139,21 +139,21 @@ VehicleData = {
 	-- AA Stationary
 	["Centurion_C-RAM"] = {
 		Name = "[CENTURION_AA]",
-		Type =  VehicleTypes.StaticAntiAir,
+		Type =  VehicleTypes.AntiAir,
 		Parts = {3},
 		Speed = {900},
 		Drop = {0.0}
 	}, --1,3,4
 	["Centurion_C-RAM_Carrier"] = {
 		Name = "[CENTURION_AA]",
-		Type =  VehicleTypes.StaticAntiAir,
+		Type =  VehicleTypes.AntiAir,
 		Parts = {3},
 		Speed = {900},
 		Drop = {0.0}
 	}, --1,3,4
 	["Pantsir-S1"] = {
 		Name = "[PANTSIR_AA]",
-		Type =  VehicleTypes.StaticAntiAir,
+		Type =  VehicleTypes.AntiAir,
 		Parts = {1},
 		Speed = {900},
 		Drop = {0.0}
