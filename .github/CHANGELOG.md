@@ -16,6 +16,9 @@ Version 2.2.0 of fun-bots now requires the dependency `VeniceEXT` version 1.1.0 
 ### New or improved mpas
 - Firestorm CQ-Large-Vehicles (thanks to Gemini899)
 - Strike at Karkhand CQ-Assault-Small Vehicles (thanks to Gemini899)
+- Alborz Mountains CQ-Small (thanks to DuTcHrEaGaN)
+- Azadi Palace CQ-Small (thanks to DuTcHrEaGaN)
+- Sharqi Peninsula CQ-Large (thanks to xILENT)
 
 ### ⚙️ Exciting new features
 - [#134](https://github.com/Joe91/fun-bots/pull/134) Added configuration option for `AimForHeadSupport` and `BotSupportAimWorsening`<br>
@@ -54,5 +57,3 @@ With this release bots can now enter your vehicle! Any driver or passenger can r
 ### 📖 Documentation update
 - [#135](https://github.com/Joe91/fun-bots/pull/135) Updated Github issue forms to ask for more information depending on the request
 
-## 💋 Thanks
-Thanks to [SmartShots](https://github.com/SmartShots) for his contributions for this release, his minor but important bugfixes are able to be felt across all servers.
