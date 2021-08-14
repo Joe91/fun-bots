@@ -15,6 +15,7 @@ Version 2.2.0 of fun-bots now requires the dependency `VeniceEXT` version 1.1.0 
 
 ### New or improved mpas
 - Firestorm CQ-Large-Vehicles (thanks to Gemini899)
+- Caspian Border CQ-Large-Vehicles (thanks to Gemini899)
 - Strike at Karkhand CQ-Assault-Small Vehicles (thanks to Gemini899)
 - Alborz Mountains CQ-Small (thanks to DuTcHrEaGaN)
 - Azadi Palace CQ-Small (thanks to DuTcHrEaGaN)
