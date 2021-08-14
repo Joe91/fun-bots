@@ -195,8 +195,14 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 		self._DistanceToPlayer = p_Player.soldier.worldTransform.trans:Distance(self.m_Player.soldier.worldTransform.trans)
 	end
 
+	-- don't attack if too far away
 	if not p_IgnoreYaw and not self.m_InVehicle then
 		if self.m_ActiveWeapon.type ~= WeaponTypes.Sniper and self._DistanceToPlayer > Config.MaxShootDistanceNoSniper then
+			return false
+		end
+	end
+	if not p_IgnoreYaw and self.m_InVehicle then
+		if self.m_ActiveVehicle ~= nil and self.m_ActiveVehicle ~= VehicleTypes.AirVehicle and self._DistanceToPlayer > Config.MaxShootDistanceNoAntiAir then
 			return false
 		end
 	end

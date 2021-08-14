@@ -60,6 +60,7 @@ Config = {
 	MaxRaycastDistance = 150,			-- meters bots start shooting at player
 	MaxRaycastDistanceVehicles = 250,	-- meters bots in Vehicles start shooting at player
 	MaxShootDistanceNoSniper = 70,		-- meters a bot (not sniper) start shooting at player
+	MaxShootDistanceNoAntiAir = 150,	-- meters a vehicle (no Anti-Air) starts shooting at player
 	MaxShootDistancePistol = 30,		-- only in auto-weapon-mode, the distance until a bot switches to pistol if his magazine is empty
 	BotAttackMode = BotAttackModes.RandomNotSet,	-- Mode the Bots attack with. Random, Crouch or Stand
 	ShootBackIfHit = true,				-- bot shoots back, if hit
