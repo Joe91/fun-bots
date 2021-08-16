@@ -255,20 +255,8 @@ function BotSpawner:UpdateBotAmountAndTeam()
 	end
 
 	-- find all needed vars
-	local s_PlayerCount = m_BotManager:GetPlayerCount()
 	local s_BotCount = m_BotManager:GetActiveBotCount()
-
-	-- kill and destroy bots, if no player left
-	if s_PlayerCount == 0 then
-		if s_BotCount > 0 or self._FirstSpawnInLevel then
-			m_BotManager:KillAll() --trigger once
-			self._UpdateActive = true
-		else
-			self._UpdateActive = false
-		end
-
-		return
-	end
+	local s_PlayerCount = 0
 
 	local s_BotTeam = m_BotManager:GetBotTeam()
 	local s_CountPlayers = {}
@@ -293,7 +281,21 @@ function BotSpawner:UpdateBotAmountAndTeam()
 		end
 
 		s_TeamCount[i] = s_CountBots[i] + s_CountPlayers[i]
+		s_PlayerCount = s_PlayerCount + s_CountPlayers[i]
 	end
+
+	-- kill and destroy bots, if no player left
+	if s_PlayerCount == 0 then
+		if s_BotCount > 0 or self._FirstSpawnInLevel then
+			m_BotManager:KillAll() --trigger once
+			self._UpdateActive = true
+		else
+			self._UpdateActive = false
+		end
+
+		return
+	end
+
 
 	-- KEEP PLAYERCOUNT
 	if Globals.SpawnMode == SpawnModes.keep_playercount then
@@ -334,20 +336,23 @@ function BotSpawner:UpdateBotAmountAndTeam()
 		end
 
 		-- move players if needed
-		local s_MinTargetPlayersPerTeam = math.floor(s_PlayerCount / Globals.NrOfTeams) - 1 -- leave a diff of 1 or two players (even count: 1, uneven: 2)
-		for i = 1, Globals.NrOfTeams do
-			if s_CountPlayers[i] < s_MinTargetPlayersPerTeam then
-				for _,l_Player in pairs(PlayerManager:GetPlayers()) do
-					if l_Player.soldier == nil and l_Player.teamId ~= i then
-						local s_OldTeam = l_Player.teamId
-						l_Player.teamId = i
-						s_CountPlayers[i] = s_CountPlayers[i] + 1
-						if s_OldTeam ~= 0 then
-							s_CountPlayers[s_OldTeam] = s_CountPlayers[s_OldTeam] - 1
+		local s_AllowedDiff = 1 -- leave a diff of 1 or two players (even count: 1, uneven: 2)
+		if s_PlayerCount >= 6 then --use threshold
+			local s_MinTargetPlayersPerTeam = math.floor(s_PlayerCount / Globals.NrOfTeams) - s_AllowedDiff
+			for i = 1, Globals.NrOfTeams do
+				if s_CountPlayers[i] < s_MinTargetPlayersPerTeam then
+					for _,l_Player in pairs(PlayerManager:GetPlayers()) do
+						if l_Player.soldier == nil and l_Player.teamId ~= i then
+							local s_OldTeam = l_Player.teamId
+							l_Player.teamId = i
+							s_CountPlayers[i] = s_CountPlayers[i] + 1
+							if s_OldTeam ~= 0 then
+								s_CountPlayers[s_OldTeam] = s_CountPlayers[s_OldTeam] - 1
+							end
 						end
-					end
-					if s_CountPlayers[i] >= s_MinTargetPlayersPerTeam then
-						break
+						if s_CountPlayers[i] >= s_MinTargetPlayersPerTeam then
+							break
+						end
 					end
 				end
 			end
