@@ -909,6 +909,7 @@ function NodeCollection:Load(p_LevelName, p_GameMode)
 	m_Logger:Write('Load: '..self.mapName)
 
 	if not SQL:Open() then
+		m_Logger:Error('Failed to open SQL. '..SQL:Error())
 		return
 	end
 

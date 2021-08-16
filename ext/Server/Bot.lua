@@ -195,8 +195,14 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 		self._DistanceToPlayer = p_Player.soldier.worldTransform.trans:Distance(self.m_Player.soldier.worldTransform.trans)
 	end
 
+	-- don't attack if too far away
 	if not p_IgnoreYaw and not self.m_InVehicle then
 		if self.m_ActiveWeapon.type ~= WeaponTypes.Sniper and self._DistanceToPlayer > Config.MaxShootDistanceNoSniper then
+			return false
+		end
+	end
+	if not p_IgnoreYaw and self.m_InVehicle then
+		if self.m_ActiveVehicle ~= nil and self.m_ActiveVehicle ~= VehicleTypes.AirVehicle and self._DistanceToPlayer > Config.MaxShootDistanceNoAntiAir then
 			return false
 		end
 	end
@@ -213,7 +219,7 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 	local s_PitchHalf = 0
 
 	-- if target is air-vehicle and bot is in AA --> ignore yaw
-	if self.m_InVehicle and s_Type == VehicleTypes.AirVehicle and self.m_ActiveVehicle.Type ~= nil and self.m_ActiveVehicle.Type == VehicleTypes.AntiAir then
+	if self.m_InVehicle and s_Type == VehicleTypes.AirVehicle and self.m_ActiveVehicle ~= nil and self.m_ActiveVehicle.Type ~= nil and self.m_ActiveVehicle.Type == VehicleTypes.AntiAir then
 		p_IgnoreYaw = true
 	end
 
@@ -676,10 +682,6 @@ function Bot:_UpdateAiming()
 			else
 				local s_TimeToTravel = (self._DistanceToPlayer / s_Speed)
 				s_PitchCorrection = 0.5 * s_TimeToTravel * s_TimeToTravel * s_Drop
-
-				-- if self.m_InVehicle then
-				-- 	s_TimeToTravel = s_TimeToTravel -- + 0.5 -- TODO: FIXME find right delay and find out why this is needed!!
-				-- end
 
 				s_FactorForMovement = (s_TimeToTravel) / self._UpdateTimer
 			end
@@ -1225,6 +1227,7 @@ function Bot:_UpdateShooting()
 			else
 				self._WeaponToUse = BotWeapons.Primary
 				self._TargetPitch = 0.0
+				self._ShootPlayerName = ""
 				self._ShootPlayer = nil
 				self._ReviveActive = false
 			end
@@ -1237,11 +1240,13 @@ function Bot:_UpdateShooting()
 				if self._ShootPlayer.soldier.worldTransform.trans:Distance(self.m_Player.soldier.worldTransform.trans) < 5 then
 					self:_EnterVehicle()
 					self._TargetPitch = 0.0
+					self._ShootPlayerName = ""
 					self._ShootPlayer = nil
 					self._EnterVehicleActice = false
 				end
 			else
 				self._TargetPitch = 0.0
+				self._ShootPlayerName = ""
 				self._ShootPlayer = nil
 				self._EnterVehicleActice = false
 			end
@@ -1249,6 +1254,7 @@ function Bot:_UpdateShooting()
 			self._WeaponToUse = BotWeapons.Primary
 			self._GrenadeActive = false
 			self._C4Active = false
+			self._ShootPlayerName = ""
 			self._ShootPlayer = nil
 			self._LastShootPlayer = nil
 			self._ReviveActive = false

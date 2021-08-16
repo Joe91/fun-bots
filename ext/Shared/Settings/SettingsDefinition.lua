@@ -557,6 +557,17 @@ SettingsDefinition = {
 			Category ="BEHAVIOUR"
 		},
 		{
+			Name = "MaxShootDistanceNoAntiAir",
+			Text = "Max Shoot-Distance No Anti Air",
+			Type = Type.Integer,
+			Value = Config.MaxShootDistanceNoAntiAir,
+			Description = "meters a vehicle (no Anti-Air) starts shooting at player",
+			Reference = Range(1.00, 1500.00, 5.0),
+			Default = 150,
+			UpdateFlag = UpdateFlag.None,
+			Category ="BEHAVIOUR"
+		},
+		{
 			Name = "MaxShootDistancePistol",
 			Text = "Max Shoot-Distance Pistol",
 			Type = Type.Integer,
