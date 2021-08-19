@@ -121,10 +121,10 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 					local s_DeltaPos = s_Target - s_PlayerPosition
 					s_DeltaPos = s_DeltaPos:Normalize()
 					if self.m_Player.inVehicle then -- Start Raycast outside of vehicle?
-						s_PlayerPosition = s_PlayerPosition + (s_DeltaPos * 3.0)
+						s_PlayerPosition = s_PlayerPosition + (s_DeltaPos * 4.0)
 					end
 					if s_Bot.inVehicle then
-						s_Target = s_Target - (s_DeltaPos * 3.0)
+						s_Target = s_Target - (s_DeltaPos * 4.0)
 					end
 				end
 
@@ -222,10 +222,10 @@ function ClientBotManager:CheckForBotBotAttack(p_StartPos, p_EndPos, p_ShooterBo
 		local s_DeltaPos = p_EndPos - p_StartPos
 		s_DeltaPos = s_DeltaPos:Normalize()
 		if p_InVehicleShooter then
-			s_StartPos = s_StartPos + (s_DeltaPos * 3.0)
+			s_StartPos = s_StartPos + (s_DeltaPos * 4.0)
 		end
 		if p_InVehicleTarget then
-			s_EndPos = s_EndPos - (s_DeltaPos * 3.0)
+			s_EndPos = s_EndPos - (s_DeltaPos * 4.0)
 		end
 	end
 
