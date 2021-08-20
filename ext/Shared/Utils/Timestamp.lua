@@ -66,9 +66,10 @@ function ReadableTimetamp(p_Time, p_TimeUnit, p_Trim)
 	elseif p_TimeUnit == TimeUnits.HOURS then
 		return Trim(p_Trim, p_Time / 3600000) .. " Hours"
 	elseif p_TimeUnit == TimeUnits.MINUTES then
-		return Trim(p_Trim, p_Time / 86400000) .. " Minutes"
+		return Trim(p_Trim, p_Time / 60000.) .. " Minutes"
 	elseif p_TimeUnit == TimeUnits.SECONDS then
 		return Trim(p_Trim, p_Time / 1000) .. " Seconds"
+		
 	else
 		return Trim(p_Trim, p_Time) .. " Milliseconds"
 	end
