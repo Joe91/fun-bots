@@ -1,5 +1,7 @@
 name: 'Configuration File Generator'
 
+[ DISABLED: Not used (yet) ]
+
 on:
   push:
     paths:
