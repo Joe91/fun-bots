@@ -13,9 +13,9 @@ body:
       label: Bug report token
       description: |
         Generate a bug report using the `!bugreport` command and enter the token or URL here.
-        This is a **required** step to create the bug report.
-        When reporting multiple bugs, use the same bug report token as long as you've made no changes to the server or configuration. You can only create two bug reports every 24 hours.
-      placeholder: https://report.funbots.dev/7e1.....
+        This is a **required** step to create the bug report, any bug report without this token will be closed.
+        When reporting multiple bugs, use the same bug report token as long as you've made no changes to the server or configuration. You can only create 3 bug reports every 24 hours.
+      placeholder: https://report.funbots.dev/7e1...
     validations:
       required: true
   - type: textarea
