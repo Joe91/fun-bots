@@ -1,3 +1,6 @@
+--
+-- SOON DEPRECATED - A better debugging system is currently in development by @Firjens
+--
 Debug = {
 	Globals = {
 		UPDATE = true				-- Debug the Updater
@@ -8,6 +11,7 @@ Debug = {
 		COMMAND = false,			-- Debug Chat- & RCON Commands
 		DATABASE = false,			-- Debug Database-Operations
 		GAMEDIRECTOR = false,		-- Debug the GameDirector
+		VEHICLES = false,
 		NODEEDITOR = false,			-- Debug the NodeEditor
 		PATH = false,				-- Debug the PathSwitcher
 		SETTINGS = false,			-- Debug the Settings-Migrator

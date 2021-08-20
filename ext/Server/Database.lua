@@ -135,6 +135,9 @@ end
 function Database:ExecuteBatch()
 	self:Query('DELETE FROM `FB_Settings`')
 	self:Query(m_Batched .. m_Batches:join(', '))
+	m_Batched = ""
+	m_Batches:clear()
+
 	if self:GetError() ~= "" then
 		m_Logger:Error(self:GetError())
 	end

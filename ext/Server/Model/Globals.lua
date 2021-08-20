@@ -14,6 +14,7 @@ Globals = {
 	IsAssault = false,
 	NrOfTeams = 0,
 	MaxPlayers = 0,
+	GameMode = "",
 	MaxBotsPerTeam = 0,
 	RespawnDelay = 0,
 	IsInputAllowed = false,

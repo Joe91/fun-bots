@@ -5,6 +5,7 @@ local m_NodeCollection = require('__shared/NodeCollection')
 
 local m_BotManager = require('BotManager')
 local m_BotSpawner = require('BotSpawner')
+local m_Debug = require('Debug/Debugger')
 
 function ChatCommands:Execute(p_Parts, p_Player)
 	if p_Player == nil or Config.DisableChatCommands == true then
@@ -19,6 +20,37 @@ function ChatCommands:Execute(p_Parts, p_Player)
 		else
 			ChatManager:SendMessage('You have following permissions (GUID: ' .. tostring(p_Player.guid) .. '):', p_Player)
 			ChatManager:SendMessage(table.concat(s_Permissions, ', '), p_Player)
+		end
+	elseif p_Parts[1] == '!car' then
+		if PermissionManager:HasPermission(p_Player, 'ChatCommands') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands).', p_Player)
+			return
+		end
+		if p_Player.attachedControllable ~= nil then
+
+			local s_VehicleName = VehicleEntityData(p_Player.controlledControllable.data).controllableType:gsub(".+/.+/","")
+			local s_Pos = p_Player.controlledControllable.transform.forward
+			print(s_VehicleName)
+			local s_VehicleEntity
+			local s_AllMovableIds = {}
+
+			-- vehicle found
+			print(p_Player.controlledControllable.physicsEntityBase.partCount)
+			s_VehicleEntity = p_Player.controlledControllable.physicsEntityBase
+
+			for j = 0, s_VehicleEntity.partCount - 1 do
+				if p_Player.controlledControllable.physicsEntityBase:GetPart(j) ~= nil then --and p_Player.controlledControllable.physicsEntityBase:GetPart(j):Is("ServerChildComponent") then
+					local s_QuatTransform = p_Player.controlledControllable.physicsEntityBase:GetPartTransform(j)
+
+					if s_QuatTransform == nil then
+						return -1
+					end
+					print(p_Player.controlledControllable.physicsEntityBase:GetPart(j).typeInfo.name)
+					print("index: "..j)
+					print(s_QuatTransform:ToLinearTransform().forward - s_Pos)
+					table.insert(s_AllMovableIds, j)
+				end
+			end
 		end
 	elseif p_Parts[1] == '!row' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Row') == false then
@@ -173,9 +205,6 @@ function ChatCommands:Execute(p_Parts, p_Player)
 
 		Config.BotAimWorsening = tonumber(p_Parts[2]) or 0.5
 		--self:_modifyWeapons(Config.BotAimWorsening) --causes lag. Instead restart round
-		if Debug.Server.COMMAND then
-			print('difficulty set to ' .. Config.BotAimWorsening .. '. Please restart round or level to take effect')
-		end
 	elseif p_Parts[1] == '!shootback' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands.ShootBack') == false then
 			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.ShootBack).', p_Player)
@@ -333,6 +362,15 @@ function ChatCommands:Execute(p_Parts, p_Player)
 
 		local s_TraceIndex = tonumber(p_Parts[2]) or 0
 		NetEvents:SendToLocal('ClientNodeEditor:SaveTrace', p_Player, s_TraceIndex)
+
+	-- Debug: Generate debug report
+	elseif p_Parts[1] == '!bugreport' then
+		if PermissionManager:HasPermission(p_Player, 'Debug.BugReport') == false then
+			ChatManager:SendMessage('You have no permissions for this action (Debug.BugReport).', p_Player)
+			return
+		end
+
+		Debugger:GenerateReport(p_Player)
 	end
 end
 

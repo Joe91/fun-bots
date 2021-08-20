@@ -74,17 +74,17 @@ end
 -- Functions
 -- =============================================
 
-function WeaponModification:ModifyAllWeapons(p_AimWorseningNormal, p_AimWorseningSniper)
+function WeaponModification:ModifyAllWeapons(p_AimWorseningNormal, p_AimWorseningSniper, p_AimWorseningSupport)
 	m_Logger:Write(#self.m_WeaponInstances .. ' loaded weapons to modify')
 
 	for i, p_WeaponInstance in pairs(self.m_WeaponInstances) do
-		self:_ModifyWeapon(p_WeaponInstance , i, p_AimWorseningNormal, p_AimWorseningSniper)
+		self:_ModifyWeapon(p_WeaponInstance , i, p_AimWorseningNormal, p_AimWorseningSniper, p_AimWorseningSupport)
 	end
 
 	self.m_AlreadyLoaded = true
 end
 
-function WeaponModification:_ModifyWeapon(p_SoldierWeaponData, p_Index, p_AimWorseningNormal, p_AimWorseningSniper)
+function WeaponModification:_ModifyWeapon(p_SoldierWeaponData, p_Index, p_AimWorseningNormal, p_AimWorseningSniper, p_AimWorseningSupport)
 	local s_SoldierWeaponData = self:_MakeWritable(p_SoldierWeaponData)
 	local s_WeaponFiringData = self:_MakeWritable(s_SoldierWeaponData.weaponFiring)
 
@@ -93,7 +93,6 @@ function WeaponModification:_ModifyWeapon(p_SoldierWeaponData, p_Index, p_AimWor
 	end
 
 	local s_BotAimWorsening = p_AimWorseningNormal
-	local s_IsReconWeapon = false
 	-- check for sniper rifles:
 	--https://docs.veniceunleashed.net/vext/ref/fb/weaponclassenum/ and EBX-Dumb
 	local s_Class = s_SoldierWeaponData.weaponClass
@@ -103,7 +102,8 @@ function WeaponModification:_ModifyWeapon(p_SoldierWeaponData, p_Index, p_AimWor
 	if string.find(s_NameOfAiData ,"Handheld_sni_AI_Weapon") ~= nil
 	or string.find(s_NameOfAiData ,"Handheld_snisemi_AI_Weapon") ~= nil then
 		s_BotAimWorsening = p_AimWorseningSniper
-		s_IsReconWeapon = true
+	elseif string.find(s_NameOfAiData ,"Handheld_lmg_AI_Weapon") ~= nil then
+		s_BotAimWorsening = p_AimWorseningSupport
 	end
 
 	local s_RecoilFactor = s_BotAimWorsening
@@ -154,7 +154,6 @@ function WeaponModification:_ModifyWeapon(p_SoldierWeaponData, p_Index, p_AimWor
 				--s_RecoilData.recoilAmplitudeDecreaseFactor = self.m_RecoilDecrease[p_Index] * (1 / (s_RecoilFactor + 0.0001))
 			end
 
-			--if s_IsReconWeapon then --only for recon in standing as well.
 			local s_StandingValue = GunSwayDispersionData(s_CrouchNoZoom.baseValue)
 
 			if s_MovingValue ~= nil then
@@ -217,7 +216,6 @@ function WeaponModification:_ModifyWeapon(p_SoldierWeaponData, p_Index, p_AimWor
 				--s_RecoilData.recoilAmplitudeDecreaseFactor = self.m_Stand_RecoilDecrease[p_Index] * (1 / (s_RecoilFactor + 0.0001))
 			end
 
-			--if s_IsReconWeapon then --only for recon in standing as well.
 			local s_StandingValue = GunSwayDispersionData(s_StandNoZoom.baseValue)
 
 			if s_MovingValue ~= nil then

@@ -1,7 +1,12 @@
 class('FunBotShared')
 
 require('__shared/Debug')
+
+-- Load utils
 require('__shared/Utils/Logger')
+require('__shared/Utils/Timestamp')
+
+-- Load constants
 require('__shared/Constants/BotColors')
 require('__shared/Constants/BotNames')
 require('__shared/Constants/BotKits')

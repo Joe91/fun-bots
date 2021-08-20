@@ -20,6 +20,33 @@ end
 -- Events
 -- =============================================
 
+function ClientBotManager:OnClientUpdateInput(p_DeltaTime)
+	if InputManager:WentKeyDown(InputDeviceKeys.IDK_Q) then
+		--execute Vehicle Enter Detection here
+		if self.m_Player ~= nil and self.m_Player.inVehicle then
+			local s_Transform = ClientUtils:GetCameraTransform()
+			-- The freecam transform is inverted. Invert it back
+			local s_CameraForward = Vec3(s_Transform.forward.x * -1, s_Transform.forward.y * -1, s_Transform.forward.z * -1)
+
+			local s_MaxEnterDistance = 30
+			local s_CastPosition = Vec3(s_Transform.trans.x + (s_CameraForward.x * s_MaxEnterDistance),
+					s_Transform.trans.y + (s_CameraForward.y * s_MaxEnterDistance),
+					s_Transform.trans.z + (s_CameraForward.z * s_MaxEnterDistance))
+
+			local s_Raycast = RaycastManager:Raycast(s_Transform.trans, s_CastPosition, RayCastFlags.DontCheckWater | RayCastFlags.IsAsyncRaycast)
+			if s_Raycast ~= nil and s_Raycast.rigidBody:Is("CharacterPhysicsEntity") then
+				-- find teammate at this position
+				for _,l_Player in pairs(PlayerManager:GetPlayersByTeam(self.m_Player.teamId)) do
+					if l_Player.soldier ~= nil and m_Utilities:isBot(l_Player) and l_Player.soldier.worldTransform.trans:Distance(s_Raycast.position) < 2 then
+						NetEvents:SendLocal('Client:RequestEnterVehicle', l_Player.name)
+						break
+					end
+				end
+			end
+		end
+	end
+end
+
 function ClientBotManager:OnEngineMessage(p_Message)
 	if p_Message.type == MessageType.ClientLevelFinalizedMessage then
 		NetEvents:SendLocal('Client:RequestSettings')
@@ -72,8 +99,8 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 			self.m_LastIndex = 1
 		end
 
-		for i = self.m_LastIndex, #s_EnemyPlayers do
-			local s_Bot = s_EnemyPlayers[i]
+		for i = 0, #s_EnemyPlayers - 1 do
+			local s_Bot = s_EnemyPlayers[(self.m_LastIndex + i) % #s_EnemyPlayers +1]
 
 			if s_Bot == nil or s_Bot.onlineId ~= 0 or s_Bot.soldier == nil then
 				goto continue_enemy_loop
@@ -83,12 +110,23 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 			local s_PlayerPosition = ClientUtils:GetCameraTransform().trans:Clone() --player.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(player, false)
 
 			-- find direction of Bot
-			local s_Target = s_Bot.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(s_Bot, false)
+			local s_Target = s_Bot.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(s_Bot, false, false)
 			local s_Distance = s_PlayerPosition:Distance(s_Bot.soldier.worldTransform.trans)
 
-			if s_Distance < Config.MaxRaycastDistance then
+			if (s_Distance < Config.MaxRaycastDistance) or (s_Bot.inVehicle and Config.MaxRaycastDistanceVehicles) then
 				self.m_LastIndex = self.m_LastIndex + 1
 				local s_Raycast = nil
+
+				if self.m_Player.inVehicle or s_Bot.inVehicle then
+					local s_DeltaPos = s_Target - s_PlayerPosition
+					s_DeltaPos = s_DeltaPos:Normalize()
+					if self.m_Player.inVehicle then -- Start Raycast outside of vehicle?
+						s_PlayerPosition = s_PlayerPosition + (s_DeltaPos * 4.0)
+					end
+					if s_Bot.inVehicle then
+						s_Target = s_Target - (s_DeltaPos * 4.0)
+					end
+				end
 
 				s_Raycast = RaycastManager:Raycast(s_PlayerPosition, s_Target, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.IsAsyncRaycast)
 
@@ -101,9 +139,6 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 					end
 
 					NetEvents:SendLocal("Bot:ShootAtPlayer", s_Bot.name, s_IgnoreYaw)
-
-				elseif (self.m_Player.inVehicle or s_Bot.inVehicle) and s_Raycast.rigidBody:Is("DynamicPhysicsEntity") then
-					NetEvents:SendLocal("Bot:ShootAtPlayer", s_Bot.name, false) -- always check yaw in vehicle
 				end
 
 				return --only one raycast per cycle
@@ -130,7 +165,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 			local s_PlayerPosition = self.m_Player.corpse.worldTransform.trans:Clone() + Vec3(0.0, 1.0, 0.0)
 
 			-- find direction of Bot
-			local s_Target = s_Bot.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(s_Bot, false)
+			local s_Target = s_Bot.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(s_Bot, false, false)
 			local s_Distance = s_PlayerPosition:Distance(s_Bot.soldier.worldTransform.trans)
 
 			if s_Distance < 35.0 then -- TODO: use config var for this
@@ -178,16 +213,25 @@ function ClientBotManager:OnWriteClientSettings(p_NewConfig, p_UpdateWeaponSets)
 	self.m_Player = PlayerManager:GetLocalPlayer()
 end
 
-function ClientBotManager:CheckForBotBotAttack(p_StartPos, p_EndPos, p_ShooterBotName, p_BotName, p_InVehicle)
+function ClientBotManager:CheckForBotBotAttack(p_StartPos, p_EndPos, p_ShooterBotName, p_BotName, p_InVehicleShooter, p_InVehicleTarget)
 	--check for clear view to startpoint
 	local s_StartPos = Vec3(p_StartPos.x, p_StartPos.y + 1.0, p_StartPos.z)
 	local s_EndPos = Vec3(p_EndPos.x, p_EndPos.y + 1.0, p_EndPos.z)
 
+	if p_InVehicleTarget or p_InVehicleShooter then
+		local s_DeltaPos = p_EndPos - p_StartPos
+		s_DeltaPos = s_DeltaPos:Normalize()
+		if p_InVehicleShooter then
+			s_StartPos = s_StartPos + (s_DeltaPos * 4.0)
+		end
+		if p_InVehicleTarget then
+			s_EndPos = s_EndPos - (s_DeltaPos * 4.0)
+		end
+	end
+
 	local s_Raycast = RaycastManager:Raycast(s_StartPos, s_EndPos, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.IsAsyncRaycast)
 
 	if s_Raycast == nil or s_Raycast.rigidBody == nil then
-		NetEvents:SendLocal("Bot:ShootAtBot", p_ShooterBotName, p_BotName)
-	elseif p_InVehicle and s_Raycast.rigidBody:Is("DynamicPhysicsEntity") then
 		NetEvents:SendLocal("Bot:ShootAtBot", p_ShooterBotName, p_BotName)
 	end
 end
@@ -217,7 +261,7 @@ function ClientBotManager:OnBulletEntityCollision(p_HookCtx, p_Entity, p_Hit, p_
 
 	if (dx < 1 and dz < 1 and dy < 2 and dy > 0) then -- included bodyheight
 		local s_IsHeadshot = false
-		local s_CameraHeight = m_Utilities:getTargetHeight(s_LocalPlayer.soldier, false)
+		local s_CameraHeight = m_Utilities:getTargetHeight(s_LocalPlayer.soldier, false, false)
 
 		if dy < s_CameraHeight + 0.3 and dy > s_CameraHeight - 0.10 then
 			s_IsHeadshot = true

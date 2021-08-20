@@ -42,6 +42,10 @@ function ArrayMap:isEmpty()
 	return self:count() == 0
 end
 
+function ArrayMap:clear()
+	self._entries = {}
+end
+
 function ArrayMap:count()
 	return #self._entries
 end
