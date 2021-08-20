@@ -53,4 +53,3 @@ with open(settings_definition, "r") as inFile:
 				else:
 					outFile.write(line + "\n")
 		print("write done")
-

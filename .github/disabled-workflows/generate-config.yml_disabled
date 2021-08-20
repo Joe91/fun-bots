@@ -1,0 +1,40 @@
+name: 'Configuration File Generator'
+
+[ DISABLED: Not used (yet) ]
+
+on:
+  push:
+    paths:
+      - '.funbots/workflow/conf_generator/config.json'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout repo content
+        uses: actions/checkout@v2 # checkout the repository content to github runner
+
+      - name: setup python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9.0'
+          
+      - name: execute py script # run sj-gobierno.py to get the latest data
+        env: 
+          EMAIL_ADDRESS: ${{ secrets.EMAIL_ADDRESS }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          EMAIL_RECIPIENT: ${{ secrets.EMAIL_RECIPIENT }}
+        run: python .funbots/workflow/conf_generator/action.py
+          
+      - name: commit files
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add -A
+          git commit -m "Regenerated the configuration file" -m "This is an automatic commit to add an automatic regenerated configuration file." -a
+          
+      - name: push changes
+        uses: ad-m/github-push-action@v0.6.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }} 
