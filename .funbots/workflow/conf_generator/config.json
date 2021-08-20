@@ -1,0 +1,112 @@
+{
+    "Config": [
+        {
+            "name": "DebugLevel",
+			"type": "item",
+			"generate": true,
+			"description": "Debugging will show extra output, both in-game using the Venice Unleashed console and in the server console.\nThis option allows you to fine-tune the amount of information you need.\n0 - All messages\n1- Highly detailed tracing messages. Produces the most voluminous output. (High)\n2 - Informational messages that might make sense to end users and server administrators. (Info)\n3 - Potentially harmful situations of interest to end users or system managers that indicate potential problems. (Warn)\n4 = Error events of considerable importance that will prevent normal program execution, but might still allow the application to continue running. (Error)\n5 = Only critical errors and general output (Fatal)\nWe recommend keeping this high on production servers.",
+			"data": {
+				"type": "int",
+				"default": "4",
+				"information": null
+			}
+		},
+		{
+            "name": "AutoUpdater",
+			"type": "category",
+			"description": null,
+            "items": [
+                {
+                    "name": "Enabled",
+                    "type": "item",
+                    "generate": true,
+                    "description": "Receive a notification when a new update for fun-bots is available for download based on your release cycle selected below.",
+                    "data": {
+                        "type": "bool",
+                        "default": "true",
+                        "information": null
+                    }
+                },
+                {
+                    "name": "ReleaseCycle",
+                    "type": "item",
+                    "generate": true,
+                    "description": "Set the release cycle on which you want to receive update notifications.\nSTABLE (Recommended) - Info\nRC - Info\nDEV - Info",
+                    "data": {
+                        "type": "str",
+                        "default": "STABLE",
+                        "information": null
+                    }
+                }
+            ]
+        }
+    ],
+    "StaticConfig": [
+        {
+            "name": "TraceDeltaShooting",
+			"type": "item",
+			"generate": true,
+			"description": "Update interval of trace back to path the bots left for shooting",
+			"data": {
+				"type": "float",
+				"default": "0.4",
+				"information": null
+			}
+		},
+        {
+            "name": "RaycastInterval",
+			"type": "item",
+			"generate": true,
+			"description": "Time between client raycasts execution",
+			"data": {
+				"type": "float",
+				"default": "0.05",
+				"information": null
+			}
+		},
+        {
+            "name": "BotAttackBotCheckInterval",
+			"type": "item",
+			"generate": true,
+			"description": null,
+			"data": {
+				"type": "float",
+				"default": "0.05",
+				"information": null
+			}
+		},
+        {
+            "name": "BotUpdateCycle",
+			"type": "item",
+			"generate": true,
+			"description": null,
+			"data": {
+				"type": "float",
+				"default": "0.1",
+				"information": null
+			}
+		},
+        {
+            "name": "BotAimUpdateCycle",
+			"type": "item",
+			"generate": true,
+			"description": null,
+			"data": {
+				"type": "float",
+				"default": "0.05",
+				"information": null
+			}
+		},
+        {
+            "name": "TargetHeightDistanceWayPoint",
+			"type": "item",
+			"generate": true,
+			"description": "Distance the bots have to reach in height to continue with next Waypoint",
+			"data": {
+				"type": "float",
+				"default": "1.5",
+				"information": null
+			}
+		}
+    ]
+}
