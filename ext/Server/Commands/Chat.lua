@@ -5,7 +5,7 @@ local m_NodeCollection = require('__shared/NodeCollection')
 
 local m_BotManager = require('BotManager')
 local m_BotSpawner = require('BotSpawner')
-local m_Debug = require('Debug/Debugger')
+local m_Debug = require('Debug/BugReport')
 
 function ChatCommands:Execute(p_Parts, p_Player)
 	if p_Player == nil or Config.DisableChatCommands == true then
@@ -370,7 +370,7 @@ function ChatCommands:Execute(p_Parts, p_Player)
 			return
 		end
 
-		Debugger:GenerateReport(p_Player)
+		BugReport:GenerateReport(p_Player)
 	end
 end
 

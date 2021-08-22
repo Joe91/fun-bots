@@ -1,5 +1,9 @@
 class('FunBotServer')
 
+-- The registry should be loaded first before loading anything else.
+require('__shared/Registry/Registry')
+require('__shared/Registry/RegistryManager')
+
 require('__shared/Debug')
 require('__shared/Config')
 require('__shared/Constants/BotColors')
@@ -36,7 +40,7 @@ local m_SettingsManager = require('SettingsManager')
 local m_BotManager = require('BotManager')
 local m_BotSpawner = require('BotSpawner')
 local m_WeaponList = require('__shared/WeaponList')
-local m_Debugger = require('Debug/Debugger')
+local m_bugReport = require('Debug/BugReport')
 local m_ChatCommands = require('Commands/Chat')
 local m_Console = require('Commands/Console')
 local m_RCONCommands = require('Commands/RCON')

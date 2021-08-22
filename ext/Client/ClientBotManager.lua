@@ -74,7 +74,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 	self.m_RaycastTimer = self.m_RaycastTimer + p_DeltaTime
 
-	if self.m_RaycastTimer < StaticConfig.RaycastInterval then
+	if self.m_RaycastTimer < RegistryManager:Get(Registry.GAME_RAYCASTING.RAYCAST_INTERVAL, 0.05) then
 		return
 	end
 
