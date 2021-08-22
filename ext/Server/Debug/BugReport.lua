@@ -88,7 +88,7 @@ function BugReport:GenerateReport(p_Player)
         local s_ReportData = {
             config = Config,
             registry = Registry,
-            version = Registry:GetVersion(),
+            version = RegistryManager:GetUtil():GetVersion(),
             author_name = p_Player.name,
             author_guid = p_Player.guid,
             map_id = SharedUtils:GetLevelName(),
