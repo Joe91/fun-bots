@@ -122,7 +122,7 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 
 		self:_UpdateYaw(p_DeltaTime)
 
-		if self._UpdateTimer > RegistryManager:Get(Registry.BOT.BOT_UPDATE_CYCLE, 0.1) then
+		if self._UpdateTimer > RegistryManager:Get(Registry.BOT.BOT_UPDATE_CYCLE, 0.1, true) then
 			self:_SetActiveVars()
 			self:_UpdateRespawn()
 			self:_UpdateAiming()
@@ -598,7 +598,7 @@ function Bot:_UpdateRespawn()
 	if self.m_Player.soldier == nil then
 		-- wait for respawn-delay gone
 		if self._SpawnDelayTimer < (Globals.RespawnDelay + Config.AdditionalBotSpawnDelay) then
-			self._SpawnDelayTimer = self._SpawnDelayTimer + RegistryManager:Get(Registry.BOT.BOT_UPDATE_CYCLE, 0.1)
+			self._SpawnDelayTimer = self._SpawnDelayTimer + RegistryManager:Get(Registry.BOT.BOT_UPDATE_CYCLE, 0.1, true)
 		else
 			self._SpawnDelayTimer = 0 -- prevent triggering again.
 			Events:DispatchLocal('Bot:RespawnBot', self.m_Name)
@@ -1001,7 +1001,7 @@ function Bot:_UpdateShooting()
 				end
 
 				if not self._GrenadeActive then
-					self._ShootModeTimer = self._ShootModeTimer + RegistryManager:Get(Registry.BOT.BOT_UPDATE_CYCLE, 0.1)
+					self._ShootModeTimer = self._ShootModeTimer + RegistryManager:Get(Registry.BOT.BOT_UPDATE_CYCLE, 0.1, true)
 				end
 
 				if self._C4Active then
@@ -1029,7 +1029,7 @@ function Bot:_UpdateShooting()
 					if self._MeleeCooldownTimer < 0 then
 						self._MeleeCooldownTimer = 0
 					elseif self._MeleeCooldownTimer > 0 then
-						self._MeleeCooldownTimer = self._MeleeCooldownTimer - RegistryManager:Get(Registry.BOT.BOT_UPDATE_CYCLE, 0.1)
+						self._MeleeCooldownTimer = self._MeleeCooldownTimer - RegistryManager:Get(Registry.BOT.BOT_UPDATE_CYCLE, 0.1, true)
 						if self._MeleeCooldownTimer < (Config.MeleeAttackCoolDown - 0.8) then
 							self._MeleeActive = false
 						end
@@ -1087,7 +1087,7 @@ function Bot:_UpdateShooting()
 						if Config.BotsThrowGrenades and not self.m_InVehicle then
 							local s_TargetTimeValue = Config.BotFireModeDuration - 0.5
 
-							if ((self._ShootModeTimer >= s_TargetTimeValue) and (self._ShootModeTimer < (s_TargetTimeValue + RegistryManager:Get(Registry.BOT.BOT_UPDATE_CYCLE, 0.1))) and not self._GrenadeActive) or Config.BotWeapon == BotWeapons.Grenade then
+							if ((self._ShootModeTimer >= s_TargetTimeValue) and (self._ShootModeTimer < (s_TargetTimeValue + RegistryManager:Get(Registry.BOT.BOT_UPDATE_CYCLE, 0.1, true))) and not self._GrenadeActive) or Config.BotWeapon == BotWeapons.Grenade then
 								-- should be triggered only once per fireMode
 								if MathUtils:GetRandomInt(1,100) <= 40 then
 									if self.m_Grenade ~= nil and self._DistanceToPlayer < 35 then
@@ -1101,7 +1101,7 @@ function Bot:_UpdateShooting()
 
 				--trace way back
 				if (self.m_ActiveWeapon ~= nil and self.m_ActiveWeapon.type ~= WeaponTypes.Sniper and not self.m_InVehicle) or self.m_KnifeMode then
-					if self._ShootTraceTimer > RegistryManager:Get(Registry.GAME_RAYCASTING.TRACE_DELTA_SHOOTING, 0.4) then
+					if self._ShootTraceTimer > RegistryManager:Get(Registry.GAME_RAYCASTING.TRACE_DELTA_SHOOTING, 0.4, true) then
 						--create a Trace to find way back
 						self._ShootTraceTimer = 0
 						local s_Point = {
@@ -1119,7 +1119,7 @@ function Bot:_UpdateShooting()
 						end
 					end
 
-					self._ShootTraceTimer = self._ShootTraceTimer + RegistryManager:Get(Registry.BOT.BOT_UPDATE_CYCLE, 0.1)
+					self._ShootTraceTimer = self._ShootTraceTimer + RegistryManager:Get(Registry.BOT.BOT_UPDATE_CYCLE, 0.1, true)
 				end
 
 				--shooting sequence
@@ -1183,7 +1183,7 @@ function Bot:_UpdateShooting()
 						end
 					end
 
-					self._ShotTimer = self._ShotTimer + RegistryManager:Get(Registry.BOT.BOT_UPDATE_CYCLE, 0.1)
+					self._ShotTimer = self._ShotTimer + RegistryManager:Get(Registry.BOT.BOT_UPDATE_CYCLE, 0.1, true)
 				end
 			else
 				self._TargetPitch = 0.0
@@ -1196,7 +1196,7 @@ function Bot:_UpdateShooting()
 			end
 		elseif self._ReviveActive and self._ShootPlayer ~= nil then
 			if self._ShootPlayer.corpse ~= nil then -- revive
-				self._ShootModeTimer = self._ShootModeTimer + RegistryManager:Get(Registry.BOT.BOT_UPDATE_CYCLE, 0.1)
+				self._ShootModeTimer = self._ShootModeTimer + RegistryManager:Get(Registry.BOT.BOT_UPDATE_CYCLE, 0.1, true)
 				self.m_ActiveMoveMode = BotMoveModes.ReviveC4 -- movement-mode : revive
 				self._ReloadTimer = 0 -- reset reloading
 
@@ -1206,7 +1206,7 @@ function Bot:_UpdateShooting()
 				end
 
 				--trace way back
-				if self._ShootTraceTimer > RegistryManager:Get(Registry.GAME_RAYCASTING.TRACE_DELTA_SHOOTING, 0.4) then
+				if self._ShootTraceTimer > RegistryManager:Get(Registry.GAME_RAYCASTING.TRACE_DELTA_SHOOTING, 0.4, true) then
 					--create a Trace to find way back
 					self._ShootTraceTimer = 0
 					local s_Point = {
@@ -1223,7 +1223,7 @@ function Bot:_UpdateShooting()
 					end
 				end
 
-				self._ShootTraceTimer = self._ShootTraceTimer + RegistryManager:Get(Registry.BOT.BOT_UPDATE_CYCLE, 0.1)
+				self._ShootTraceTimer = self._ShootTraceTimer + RegistryManager:Get(Registry.BOT.BOT_UPDATE_CYCLE, 0.1, true)
 			else
 				self._WeaponToUse = BotWeapons.Primary
 				self._TargetPitch = 0.0
@@ -1233,7 +1233,7 @@ function Bot:_UpdateShooting()
 			end
 		elseif self._EnterVehicleActice then
 			if self._ShootPlayer.soldier ~= nil then -- try to enter
-				self._ShootModeTimer = self._ShootModeTimer + RegistryManager:Get(Registry.BOT.BOT_UPDATE_CYCLE, 0.1)
+				self._ShootModeTimer = self._ShootModeTimer + RegistryManager:Get(Registry.BOT.BOT_UPDATE_CYCLE, 0.1, true)
 				self.m_ActiveMoveMode = BotMoveModes.ReviveC4 -- movement-mode : revive
 
 				--check for enter of vehicle if close
@@ -1264,7 +1264,7 @@ function Bot:_UpdateShooting()
 				self._TargetPitch = 0.0
 			end
 
-			self._ReloadTimer = self._ReloadTimer + RegistryManager:Get(Registry.BOT.BOT_UPDATE_CYCLE, 0.1)
+			self._ReloadTimer = self._ReloadTimer + RegistryManager:Get(Registry.BOT.BOT_UPDATE_CYCLE, 0.1, true)
 
 			if self._ReloadTimer > 1.5 and self._ReloadTimer < 2.5 and self.m_Player.soldier.weaponsComponent.currentWeapon.primaryAmmo <= self.m_ActiveWeapon.reload then
 				self:_SetInput(EntryInputActionEnum.EIAReload, 1)
@@ -1274,7 +1274,7 @@ function Bot:_UpdateShooting()
 			if Config.BotsDeploy then
 				if self.m_Kit == BotKits.Support or self.m_Kit == BotKits.Assault then
 					if self.m_PrimaryGadget.type == WeaponTypes.Ammobag or self.m_PrimaryGadget.type == WeaponTypes.Medkit then
-						self._DeployTimer = self._DeployTimer + RegistryManager:Get(Registry.BOT.BOT_UPDATE_CYCLE, 0.1)
+						self._DeployTimer = self._DeployTimer + RegistryManager:Get(Registry.BOT.BOT_UPDATE_CYCLE, 0.1, true)
 
 						if self._DeployTimer > Config.DeployCycle then
 							self._DeployTimer = 0
@@ -1457,7 +1457,7 @@ function Bot:_UpdateMovement()
 						self._ActionActive = false
 					end
 
-					self._ActionTimer = self._ActionTimer - RegistryManager:Get(Registry.BOT.BOT_UPDATE_CYCLE, 0.1)
+					self._ActionTimer = self._ActionTimer - RegistryManager:Get(Registry.BOT.BOT_UPDATE_CYCLE, 0.1, true)
 
 					if self._ActionTimer <= 0 then
 						self._ActionActive = false
@@ -1550,8 +1550,8 @@ function Bot:_UpdateMovement()
 							self:_SetInput(EntryInputActionEnum.EIAJump, 1)
 						end
 
-						self._ObstaceSequenceTimer = self._ObstaceSequenceTimer + RegistryManager:Get(Registry.BOT.BOT_UPDATE_CYCLE, 0.1)
-						self._StuckTimer = self._StuckTimer + RegistryManager:Get(Registry.BOT.BOT_UPDATE_CYCLE, 0.1)
+						self._ObstaceSequenceTimer = self._ObstaceSequenceTimer + RegistryManager:Get(Registry.BOT.BOT_UPDATE_CYCLE, 0.1, true)
+						self._StuckTimer = self._StuckTimer + RegistryManager:Get(Registry.BOT.BOT_UPDATE_CYCLE, 0.1, true)
 
 						if self._ObstacleRetryCounter >= 2 then --try next waypoint
 							self._ObstacleRetryCounter = 0
@@ -1633,7 +1633,7 @@ function Bot:_UpdateMovement()
 					end
 
 					--check for reached target
-					if s_DistanceFromTarget <= s_TargetDistanceSpeed and s_HeightDistance <= RegistryManager:Get(Registry.BOT.TARGET_HEIGHT_DISTANCE_WAYPOINT, 1.5) then
+					if s_DistanceFromTarget <= s_TargetDistanceSpeed and s_HeightDistance <= RegistryManager:Get(Registry.BOT.TARGET_HEIGHT_DISTANCE_WAYPOINT, 1.5, true) then
 						if not s_NoStuckReset then
 							self._StuckTimer = 0
 						end
@@ -1706,9 +1706,9 @@ function Bot:_UpdateMovement()
 						self._LastWayDistance = 1000
 					end
 				else -- wait mode
-					self._WayWaitTimer = self._WayWaitTimer + RegistryManager:Get(Registry.BOT.BOT_UPDATE_CYCLE, 0.1)
+					self._WayWaitTimer = self._WayWaitTimer + RegistryManager:Get(Registry.BOT.BOT_UPDATE_CYCLE, 0.1, true)
 
-					self:_LookAround(RegistryManager:Get(Registry.BOT.BOT_UPDATE_CYCLE, 0.1))
+					self:_LookAround(RegistryManager:Get(Registry.BOT.BOT_UPDATE_CYCLE, 0.1, true))
 
 					if self._WayWaitTimer > s_Point.OptValue then
 						self._WayWaitTimer = 0
@@ -1751,7 +1751,7 @@ function Bot:_UpdateMovement()
 				self.m_ActiveSpeedValue = BotMoveSpeeds.NoMovement
 			else
 				local s_TargetTime = 5.0
-				local s_TargetCycles = math.floor(s_TargetTime / RegistryManager:Get(Registry.GAME_RAYCASTING.TRACE_DELTA_SHOOTING, 0.4))
+				local s_TargetCycles = math.floor(s_TargetTime / RegistryManager:Get(Registry.GAME_RAYCASTING.TRACE_DELTA_SHOOTING, 0.4, true))
 
 				if self.m_KnifeMode then --Knife Only Mode
 					s_TargetCycles = 1
@@ -1788,7 +1788,7 @@ function Bot:_UpdateMovement()
 					self:_SetInput(EntryInputActionEnum.EIAStrafe, 0.5 * Config.SpeedFactorAttack)
 				end
 
-				self._AttackModeMoveTimer = self._AttackModeMoveTimer + RegistryManager:Get(Registry.BOT.BOT_UPDATE_CYCLE, 0.1)
+				self._AttackModeMoveTimer = self._AttackModeMoveTimer + RegistryManager:Get(Registry.BOT.BOT_UPDATE_CYCLE, 0.1, true)
 			end
 
 		elseif self.m_ActiveMoveMode == BotMoveModes.ReviveC4 then -- Revive Move Mode / C4 Mode
@@ -1809,7 +1809,7 @@ function Bot:_UpdateMovement()
 
 			--TODO: obstacle detection
 			if s_Jump == true then
-				self._AttackModeMoveTimer = self._AttackModeMoveTimer + RegistryManager:Get(Registry.BOT.BOT_UPDATE_CYCLE, 0.1)
+				self._AttackModeMoveTimer = self._AttackModeMoveTimer + RegistryManager:Get(Registry.BOT.BOT_UPDATE_CYCLE, 0.1, true)
 
 				if self._AttackModeMoveTimer > 3 then
 					self._AttackModeMoveTimer = 0
@@ -1894,7 +1894,7 @@ function Bot:_UpdateMovement()
 							self:_SetInput(EntryInputActionEnum.EIABrake, 1)
 						end
 
-						self._BrakeTimer = self._BrakeTimer + RegistryManager:Get(Registry.BOT.BOT_UPDATE_CYCLE, 0.1)
+						self._BrakeTimer = self._BrakeTimer + RegistryManager:Get(Registry.BOT.BOT_UPDATE_CYCLE, 0.1, true)
 					end
 				else
 					if self.m_ActiveSpeedValue ~= BotMoveSpeeds.Sprint then

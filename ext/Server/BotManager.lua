@@ -44,7 +44,7 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	end
 
 	if Config.BotsAttackBots and self._InitDone then
-		if self._BotAttackBotTimer >= RegistryManager:Get(Registry.BOT.BOT_ATTACK_BOT_CHECK_INTERVAL, 0.05) then
+		if self._BotAttackBotTimer >= RegistryManager:Get(Registry.BOT.BOT_ATTACK_BOT_CHECK_INTERVAL, 0.05, true) then
 			self._BotAttackBotTimer = 0
 			self:_CheckForBotBotAttack()
 		end

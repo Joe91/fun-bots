@@ -34,6 +34,7 @@ end
 -- @param indispensable (bool) - If the variable does not exist but is indispensable, should a broken installation warning be shown?
 -- @return object - either the value of the variable or default
 -- @author Firjen <https://github.com/Firjens>
+-- @todo Add indispensable
 function RegistryManager:Get(variable, default, indispensable)
 	if variable == nil then
 		return default;

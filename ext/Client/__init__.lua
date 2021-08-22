@@ -41,6 +41,11 @@ function FunBotClient:OnExtensionLoaded()
 	self:RegisterEvents()
 	self:RegisterHooks()
 	m_FunBotUIClient:OnExtensionLoaded()
+
+	-- Announce the version in the client's console if enabled in the registry
+	if RegistryManager:Get(Registry.CLIENT_SHOW_VERSION_ON_JOIN, true, false) then
+		print("Server is running fun-bots version " .. RegistryManager:GetUtil():GetVersion())
+	end
 end
 
 function FunBotClient:RegisterEvents()
