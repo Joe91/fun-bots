@@ -6,11 +6,7 @@ class('BugReport')
 -- Do not change this without input from @Firjens (unless minor or text changes) to prevent unwanted behavior.
 -- @author Firjen
 -- @release V2.2.0 - 21/08/21
-
 local MODULE_NAME = "Bug Report"
-
--- The version used for API related things. The moment new features are required for debugging the REST API end-point will know that this is a newer or older version.
-local DEBUG_VERSION = 1
 
 -- The URL to the official reporting website.
 local DEBUG_REPORT_URL = "https://report.funbots.dev"
@@ -25,7 +21,7 @@ local DEBUG_SUBMIT_PATH = "/api/submit"
 local DEBUG_LAST_REPORT = 0
 
 -- Cooldown between bug reports in milliseconds. You are limited to a certain reports per 24 hours, and it's useless to create a new report when no major changes were made.
-local DEBUG_REPORT_COOLDOWN = 60*1000*3 -- 3 minutes cooldown
+local DEBUG_REPORT_COOLDOWN = 60*1000*5 -- 5 minutes cooldown
 
 -- This function is solely run by someone with permissions running the in-game !bugreport command.
 -- Param: p_Player - User who initiated the request
