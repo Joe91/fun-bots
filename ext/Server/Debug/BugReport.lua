@@ -129,7 +129,7 @@ function BugReport:GenerateReport(p_Player)
 function BugReport:__init()
     local s_start = SharedUtils:GetTimeMS()
 
-	print("[INIT] (Server) Enabled " .. MODULE_NAME .. " in " .. ReadableTimetamp(SharedUtils:GetTimeMS() - s_start, TimeUnits.FIT, 1))
+	print("Enabled \"" .. MODULE_NAME .. "\" in " .. ReadableTimetamp(SharedUtils:GetTimeMS() - s_start, TimeUnits.FIT, 1))
 end
 
 return BugReport:__init()

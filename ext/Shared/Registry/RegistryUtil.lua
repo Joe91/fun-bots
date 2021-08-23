@@ -11,7 +11,7 @@ local MODULE_NAME = "Registry Manager: Util"
 function RegistryUtil:__init()
     local s_start = SharedUtils:GetTimeMS()
 
-	print("Enabled " .. MODULE_NAME .. " in " .. ReadableTimetamp(SharedUtils:GetTimeMS() - s_start, TimeUnits.FIT, 1))
+	print("Enabled \"" .. MODULE_NAME .. "\" in " .. ReadableTimetamp(SharedUtils:GetTimeMS() - s_start, TimeUnits.FIT, 1))
 end
 
 -- Get the version of the current build as semantic

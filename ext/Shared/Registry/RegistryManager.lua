@@ -13,12 +13,10 @@ local m_registryUtil = nil
 
 function RegistryManager:__init()
     local s_start = SharedUtils:GetTimeMS()
-
-	print("Enabling " .. MODULE_NAME)
-
+	
 	m_registryUtil = require('__shared/Registry/RegistryUtil')
 
-	print("Enabled " .. MODULE_NAME .. " in " .. ReadableTimetamp(SharedUtils:GetTimeMS() - s_start, TimeUnits.FIT, 1))
+	print("Enabled \"" .. MODULE_NAME .. "\" in " .. ReadableTimetamp(SharedUtils:GetTimeMS() - s_start, TimeUnits.FIT, 1))
 end
 
 -- Get the Registry Util containing non-essential and non-core functions.
