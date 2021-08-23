@@ -533,7 +533,11 @@ function BotManager:SpawnBot(p_Bot, p_Transform, p_Pose, p_SoldierBp, p_Kit, p_U
 	end
 
 	p_Bot.m_Player:SelectUnlockAssets(p_Kit, p_Unlocks)
-	local s_BotSoldier = p_Bot.m_Player:CreateSoldier(p_SoldierBp, p_Transform)
+	local s_BotSoldier = p_Bot.m_Player:CreateSoldier(p_SoldierBp, p_Transform) -- Returns SoldierEntity
+
+	-- Customisation of health of bot
+	s_BotSoldier.maxHealth = Config.BotMaxHealth;
+
 	p_Bot.m_Player:SpawnSoldierAt(s_BotSoldier, p_Transform, p_Pose)
 	p_Bot.m_Player:AttachSoldier(s_BotSoldier)
 

@@ -37,6 +37,7 @@ Config = {
 	MaxSupportBots = -1,				-- maximum number of Bots with Support Kit. -1 = no limit
 	MaxReconBots = -1,					-- maximum number of Bots with Recon Kit. -1 = no limit
 	AdditionalBotSpawnDelay = 0.5,		-- additional time a bot waits to respawn
+	BotMaxHealth = 100.0, 				-- max health of bot (default 100.0)
 
 	--SPAWNLIMITS
 	MaxBotsPerTeamDefault = 32,			-- max number of bots in one team, if no other mode fits
