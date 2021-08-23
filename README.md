@@ -3,10 +3,10 @@
 [![Image](https://img.shields.io/github/v/tag/Joe91/fun-bots?color=A60000&include_prereleases&label=Development%20Build&style=for-the-badge)](https://github.com/Joe91/fun-bots/tags)
 [![Image](https://img.shields.io/github/downloads/Joe91/fun-bots/total?style=for-the-badge)](https://github.com/Joe91/fun-bots/releases)
 
-Welcome to the fun-bots repository. This is a mod for [Venice Unleashed](https://veniceunleashed.net/) to bring highly configurable and intelligent virtual bots to your Battlefield 3 server. [Want to see it in action?](vu://join/6422ca91-fd53-4afb-984f-12b1a5b3e9aa)
+Welcome to the fun-bots repository. This is a mod for [Venice Unleashed](https://veniceunleashed.net/) to bring highly configurable and intelligent virtual bots to your Battlefield 3 server. [Want to see it in action?](https://play.funbots.dev)
 
 ### :robot: BEEP BOOP BEEP
-The AI for the bots are extremely intelligent, up for a challenge or do you like it more casual? Don't believe us? [See this video 📹](https://www.youtube.com/watch?v=pg7O2VW70ZA) or view it live on [our community server](vu://join/6422ca91-fd53-4afb-984f-12b1a5b3e9aa)
+The AI for the bots are extremely intelligent, up for a challenge or do you like it more casual? Don't believe us? [See this video 📹](https://www.youtube.com/watch?v=pg7O2VW70ZA) or view it live on [our community server](https://play.funbots.dev)
 - Bots can walk around and shoot and attack enemy using grenades, RPGs and other weaponry. [Which maps are supported?](https://github.com/Joe91/fun-bots/wiki/Supported-maps) 🔫
 - Bots can ride in land vehicles ([early development](https://github.com/Joe91/fun-bots/projects/2))
 - Need something a bit more? [Create your own traces](https://github.com/Joe91/fun-bots/wiki/Traces) using an easy-to-use trace manager (press <kbd>F12</kbd> in a game)
