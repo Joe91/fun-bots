@@ -5,7 +5,6 @@ require('__shared/Registry/Registry')
 -- Utils for the registry, only use it for important and essential functions.
 -- @author Firjen
 -- @release V2.2.0 - 22/08/21
-
 local MODULE_NAME = "Registry Manager: Util"
 
 function RegistryUtil:__init()
@@ -14,7 +13,7 @@ function RegistryUtil:__init()
 	print("Enabled \"" .. MODULE_NAME .. "\" in " .. ReadableTimetamp(SharedUtils:GetTimeMS() - s_start, TimeUnits.FIT, 1))
 end
 
--- Get the version of the current build as semantic
+-- Get the version of the current build as in a semantic format.
 -- @return String - semantic version
 -- @author Firjen <https://github.com/Firjens>
 function RegistryUtil:GetVersion()
