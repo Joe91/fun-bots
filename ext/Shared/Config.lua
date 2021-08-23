@@ -2,7 +2,6 @@ USE_REAL_DAMAGE = true					-- with real damage, the hitboxes are a bit buggy
 BOT_TOKEN = "BOT_"						-- token Bots are marked with
 
 Config = {
-
 	--GENERAL
 	BotWeapon = BotWeapons.Auto,		-- Select the weapon the bots use
 	BotKit = BotKits.RANDOM_KIT,		-- The Kit of the Bots
@@ -113,6 +112,9 @@ Config = {
 	SpeedFactor = 1.0,					-- reduces the movementspeed. 1 = normal, 0 = standing.
 	SpeedFactorAttack = 0.6,			-- reduces the movementspeed while attacking. 1 = normal, 0 = standing.
 	UseRandomNames = false,				-- changes names of the bots on every new round. Experimental right now...
+
+	-- IN-GAME SETTINGS MANAGER
+	OpenSettingsKey = InputDeviceKeys.IDK_F12,
 
 	--EXPERT
 	BotFirstShotDelay = 0.35,			-- delay for first shot. If too small, there will be great spread in first cycle because its not kompensated jet.
