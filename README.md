@@ -3,10 +3,10 @@
 [![Image](https://img.shields.io/github/v/tag/Joe91/fun-bots?color=A60000&include_prereleases&label=Development%20Build&style=for-the-badge)](https://github.com/Joe91/fun-bots/tags)
 [![Image](https://img.shields.io/github/downloads/Joe91/fun-bots/total?style=for-the-badge)](https://github.com/Joe91/fun-bots/releases)
 
-Welcome to the fun-bots repository. This is a mod for [Venice Unleashed](https://veniceunleashed.net/) to bring highly configurable and intelligent virtual bots to your Battlefield 3 server.
+Welcome to the fun-bots repository. This is a mod for [Venice Unleashed](https://veniceunleashed.net/) to bring highly configurable and intelligent virtual bots to your Battlefield 3 server. [Want to see it in action?](vu://join/6422ca91-fd53-4afb-984f-12b1a5b3e9aa)
 
 ### :robot: BEEP BOOP BEEP
-The AI for the bots are extremely intelligent, up for a challenge or do you like it more casual? Don't believe us? [See this video 📹](https://www.youtube.com/watch?v=pg7O2VW70ZA)
+The AI for the bots are extremely intelligent, up for a challenge or do you like it more casual? Don't believe us? [See this video 📹](https://www.youtube.com/watch?v=pg7O2VW70ZA) or view it live on [our community server](vu://join/6422ca91-fd53-4afb-984f-12b1a5b3e9aa)
 - Bots can walk around and shoot and attack enemy using grenades, RPGs and other weaponry. [Which maps are supported?](https://github.com/Joe91/fun-bots/wiki/Supported-maps) 🔫
 - Bots can ride in land vehicles ([early development](https://github.com/Joe91/fun-bots/projects/2))
 - Need something a bit more? [Create your own traces](https://github.com/Joe91/fun-bots/wiki/Traces) using an easy-to-use trace manager (press <kbd>F12</kbd> in a game)
@@ -16,19 +16,20 @@ The AI for the bots are extremely intelligent, up for a challenge or do you like
 ### ⚙️ Download it now!
 [Download the latest version](https://github.com/Joe91/fun-bots/releases), or if you need some help, we have an [up-to-date tutorial on how to install fun-bots on your server](https://github.com/Joe91/fun-bots/wiki/basic-installation), or if you already have an installation of fun-bots and want to upgrade, just [click here](https://github.com/Joe91/fun-bots/wiki/upgrading) to see how to upgrade. [What has changed?](https://github.com/Joe91/fun-bots/blob/master/.github/CHANGELOG.md)
 
+### 👑 Meet the team!
+A team works around-the-clock to offer you an amazing bot experience. Got a question about something? Don't hestitate to ask them for help!
+
+- [@Joe91](https://github.com/Joe91), the current project maintainer and lead developer
+- [@Firjens](https://github.com/Firjens), the documenter (documentalist? document man? Is he a Marvel superhero?), project developer and the pipelines man
+- [@FlashHit](https://github.com/FlashHit), project developer and modding wizard
+- [@MajorVictory](https://github.com/MajorVictory), project developer
+- [@Sj0erd](https://github.com/Sj0erd), manager, housekeeper and receptionist of the community server and Discord server
+
 ### :smiling_face_with_three_hearts: LOTS OF LOVE!
 The fun-bots project was inspired by [BotSpawn](https://github.com/J4nssent/VU-Mods/tree/master/BotSpawn "Original Mod by Jassent") by [Jassent](https://github.com/J4nssent "Jassent"), this mod provides a lot of ways to play and mess with bots. But also a big thanks go to our awesome [contributors](https://github.com/Joe91/fun-bots/graphs/contributors) who spent a lot of their free time on this project.
 
 A big thanks also goes out to the following people 💌
-- RekkieSA
-- MrDonPotato
-- GaryTheNoTrashCougar
-- FlashHit
-- MajorVictory
-- Bizzi
-
-### 👑 Meet the team!
-A team works around-the-clock to offer you an amazing bot experience. Got a question about something? Don't hestitate to ask them for help!
-
-- [@Joe_91](https://github.com/Joe91), the current project maintainer and lead developer
-- [@Firjens](https://github.com/Firjens), the documenter (documentalist? document man? Is he a Marvel superhero?) and developer
+- [@RekkieSA](https://github.com/RekkieSA)
+- [@MrDonPotato](https://github.com/MrDonPotato)
+- [@GaryTheNoTrashCougar](https://github.com/GaryTheNoTrashCougar)
+- [@Bizarrus](https://github.com/Bizarrus) for his early contributions to the project
