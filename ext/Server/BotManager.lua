@@ -44,7 +44,7 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	end
 
 	if Config.BotsAttackBots and self._InitDone then
-		if self._BotAttackBotTimer >= StaticConfig.BotAttackBotCheckInterval then
+		if self._BotAttackBotTimer >= RegistryManager:Get(Registry.BOT.BOT_ATTACK_BOT_CHECK_INTERVAL, 0.05, true) then
 			self._BotAttackBotTimer = 0
 			self:_CheckForBotBotAttack()
 		end
@@ -533,7 +533,11 @@ function BotManager:SpawnBot(p_Bot, p_Transform, p_Pose, p_SoldierBp, p_Kit, p_U
 	end
 
 	p_Bot.m_Player:SelectUnlockAssets(p_Kit, p_Unlocks)
-	local s_BotSoldier = p_Bot.m_Player:CreateSoldier(p_SoldierBp, p_Transform)
+	local s_BotSoldier = p_Bot.m_Player:CreateSoldier(p_SoldierBp, p_Transform) -- Returns SoldierEntity
+
+	-- Customisation of health of bot
+	s_BotSoldier.maxHealth = Config.BotMaxHealth;
+
 	p_Bot.m_Player:SpawnSoldierAt(s_BotSoldier, p_Transform, p_Pose)
 	p_Bot.m_Player:AttachSoldier(s_BotSoldier)
 

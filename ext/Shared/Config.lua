@@ -2,7 +2,6 @@ USE_REAL_DAMAGE = true					-- with real damage, the hitboxes are a bit buggy
 BOT_TOKEN = "BOT_"						-- token Bots are marked with
 
 Config = {
-
 	--GENERAL
 	BotWeapon = BotWeapons.Auto,		-- Select the weapon the bots use
 	BotKit = BotKits.RANDOM_KIT,		-- The Kit of the Bots
@@ -38,6 +37,7 @@ Config = {
 	MaxSupportBots = -1,				-- maximum number of Bots with Support Kit. -1 = no limit
 	MaxReconBots = -1,					-- maximum number of Bots with Recon Kit. -1 = no limit
 	AdditionalBotSpawnDelay = 0.5,		-- additional time a bot waits to respawn
+	BotMaxHealth = 100.0, 				-- max health of bot (default 100.0)
 
 	--SPAWNLIMITS
 	MaxBotsPerTeamDefault = 32,			-- max number of bots in one team, if no other mode fits
@@ -114,6 +114,9 @@ Config = {
 	SpeedFactorAttack = 0.6,			-- reduces the movementspeed while attacking. 1 = normal, 0 = standing.
 	UseRandomNames = false,				-- changes names of the bots on every new round. Experimental right now...
 
+	-- IN-GAME SETTINGS MANAGER
+	OpenSettingsKey = InputDeviceKeys.IDK_F12,
+
 	--EXPERT
 	BotFirstShotDelay = 0.35,			-- delay for first shot. If too small, there will be great spread in first cycle because its not kompensated jet.
 	BotMinTimeShootAtPlayer = 2.0,		-- the minimum time a bot shoots at one player - recommended minimum 1.5, below this you will have issues.
@@ -134,7 +137,7 @@ Config = {
 	DisableUserInterface = false,		-- if true, the complete UI will be disabled (not available in the UI -) )
 	DisableChatCommands = false,		-- if true, no chat commands can be used
 	DisableRCONCommands = false,		-- if true, no RCON commands can be used
-	IgnorePermissions = false,			-- if true, all permissions are ignored --> everyone can do everything
+	IgnorePermissions = false,			-- if true, all permissions are ignored --> everyone can do everything @deprecated - Should be moved to the registry as soon as possible
 	Language = nil,						-- de_DE as sample (default is english, when language file doesnt exists)
 }
 
@@ -154,21 +157,6 @@ VersionConfig = {
 		Enabled = true, -- default: true (recommended)
 
 		-- Do you want notifications when newer development builds are available?
-		DevBuilds = true,
-	},
-
-		-- Version related (do not modify)
-	Version = {
-		Tag = 'v2.2.0-dev6' -- Do not modify this value!
+		DevBuilds = false,
 	}
-}
-
--- don't change these values unless you know what you do
-StaticConfig = {
-	TraceDeltaShooting = 0.4,			-- update intervall of trace back to path the bots left for shooting
-	RaycastInterval = 0.05,				-- update intervall of client raycasts
-	BotAttackBotCheckInterval = 0.05,	-- update intervall of client raycasts
-	BotUpdateCycle = 0.1,				-- update-intervall of bots
-	BotAimUpdateCycle = 0.05,			-- = 3 frames at 60 Hz
-	TargetHeightDistanceWayPoint = 1.5	-- distance the bots have to reach in height to continue with next Waypoint
 }

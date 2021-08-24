@@ -1,5 +1,5 @@
 name: Bug Report
-description: Saw something that should not have happened? Report it as a bug report. Please use the 'Traces Bug Report' form for issues related to traces.
+description: I saw something that should not have happened and I'd like to report it
 labels: [bug]
 body:
   - type: markdown
@@ -7,6 +7,7 @@ body:
       value: |
         Thanks for taking the time to fill out this bug report! Before posting be sure that it's not a duplicate of any previous posted issues by using the search function.
         Please note that we do not support outdated versions. Always use the latest stable release.
+        Do not use this form for reporting issues related to traces. Use the 'Report traces bug' form.
   - type: input
     id: bug-report-token
     attributes:
@@ -18,20 +19,28 @@ body:
       placeholder: https://report.funbots.dev/7e1...
     validations:
       required: true
+  - type: dropdown
+    id: category
+    attributes:
+      label: Scope
+      description: Select the most appropriate category.
+      options:
+        - Core
+        - General bot behavior
+        - Vehicle bot behavior
+        - Permission Manager
+        - Configuration and registry
+        - Telemetry
+        - WebUI
+        - Other
+    validations:
+      required: true
   - type: textarea
     id: what-happened
     attributes:
       label: What happened?
       description: What happened what should not have happened? Please also tell us how we can reproduce it, the more information we have the faster and easier it is for us to fix this issue.
       placeholder: Tell us what you see!
-    validations:
-      required: true
-  - type: textarea
-    id: reproduction
-    attributes:
-      label: How can we reproduce and test it?
-      description: What is causing this issue? How can we reproduce it? If you have modified your configuration files, what did you modify?
-      placeholder: I did ... then I did ... and that's what caused ...
     validations:
       required: true
   - type: textarea
@@ -42,15 +51,12 @@ body:
       placeholder: What you should see instead.
     validations:
       required: true
-  - type: dropdown
-    id: version
+  - type: textarea
+    id: reproduction
     attributes:
-      label: Version
-      description: What version of fun-bots does this issue occur on? Please note that we do not support old versions. Select the correct version.
-      options:
-        - 2.1.0 (stable release)
-        - 2.2.0-RC1
-        - 2.3.0-dev
+      label: How can we reproduce and test it?
+      description: What is causing this issue? How can we reproduce it? If you have modified your configuration files, what did you modify?
+      placeholder: I did ... then I did ... and that's what caused ...
     validations:
       required: true
   - type: textarea

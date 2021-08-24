@@ -1,10 +1,9 @@
 [![Support Server](https://img.shields.io/discord/862736286774198322.svg?label=Discord&logo=Discord&colorB=7289da&style=for-the-badge)](https://discord.gg/K44VsQsKnx)
+[![Support me on Patreon](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fshieldsio-patreon.vercel.app%2Fapi%3Fusername%3Dfunbots%26type%3Dpatrons&style=for-the-badge)](https://patreon.com/funbots)
 ![Image](https://img.shields.io/github/downloads/Joe91/fun-bots/total?style=for-the-badge)
 ![Image](https://img.shields.io/github/stars/Joe91/fun-bots?style=for-the-badge)
 
 ## 🥳 Welcome to the changelogs for release **V2.2.0** 🥳
-
-
 This is the changelog for the unreleased version. Don't forget to [join us on Discord](https://discord.gg/K44VsQsKnx)
 
 ## Changelog
@@ -12,6 +11,9 @@ This release contains a lot of small bug fixes and more QoL updates.
 
 ### ⚠️ Minimum requirements change
 Version 2.2.0 of fun-bots now requires the dependency `VeniceEXT` version 1.1.0 or higher.
+
+## Fun-bots public community server
+We now have a public fun-bots community server where you can play with the bots and the community on various maps. [Join the server.](vu://join/6422ca91-fd53-4afb-984f-12b1a5b3e9aa) 
 
 ### New or improved mpas
 - Firestorm CQ-Large-Vehicles (thanks to Gemini899)
@@ -32,6 +34,7 @@ Version 2.2.0 of fun-bots now requires the dependency `VeniceEXT` version 1.1.0 
 - Spawn-Point view in Waypoint-Editor (press "T" to teleport)
 - AA-aiming and vehicle-usage
 - Bots teleport if stuck. Let me know what you think about this ;-)
+- Added the `!bugreport` command in the game to generate a bug report. This is now a requirement for any bug report.
 
 #### 🧪 Experimental: Bots entering vehicles
 With this release bots can now enter your vehicle! Any driver or passenger can request nearby bots to enter your vehicle if you press the `Q` button. This is still an experimental feature, please report any issues or feedback.
@@ -46,7 +49,11 @@ With this release bots can now enter your vehicle! Any driver or passenger can r
 - Minor changes and enhancements<br>
 - Fixed saving settings in the `F12` settings menu<br>
 - [#143](https://github.com/Joe91/fun-bots/pull/143) Bots ignored players<br>
-- massive rework of vehicle aiming and driving and support for anti-air...
+- Rework on vehicle aiming and driving and initial support for anti-air
+- [#88](https://github.com/Joe91/fun-bots/issues/88) Allow custom keybind for settings menu (F12)<br>
+
+#### 🧪 Good bye static configuration, hello local registry
+With this release, static configuration is moved to their own registry file. The registry contains important variables that are required for the good-functioning of the mod.
 
 ### 🐛 Minor bug fixes
 - [#129](https://github.com/Joe91/fun-bots/pull/129) Fixed typo `BotWeapons.Priamry` in `BotSpawner.lua`<br>
@@ -58,4 +65,3 @@ With this release bots can now enter your vehicle! Any driver or passenger can r
 
 ### 📖 Documentation update
 - [#135](https://github.com/Joe91/fun-bots/pull/135) Updated Github issue forms to ask for more information depending on the request
-

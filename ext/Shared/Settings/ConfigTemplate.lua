@@ -23,20 +23,5 @@ VersionConfig = {
 
 		-- Do you want notifications when newer development builds are available?
 		DevBuilds = true,
-	},
-
-		-- Version related (do not modify)
-	Version = {
-		Tag = 'v2.2.0-dev6' -- Do not modify this value!
 	}
-}
-
--- don't change these values unless you know what you do
-StaticConfig = {
-	TraceDeltaShooting = 0.4,			-- update intervall of trace back to path the bots left for shooting
-	RaycastInterval = 0.05,				-- update intervall of client raycasts
-	BotAttackBotCheckInterval = 0.05,	-- update intervall of client raycasts
-	BotUpdateCycle = 0.1,				-- update-intervall of bots
-	BotAimUpdateCycle = 0.05,			-- = 3 frames at 60 Hz
-	TargetHeightDistanceWayPoint = 1.5	-- distance the bots have to reach in height to continue with next Waypoint
 }

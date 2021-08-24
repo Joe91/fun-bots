@@ -45,8 +45,7 @@ function RCONCommands:__init()
 					'OK',
 					json.encode({
 						USE_REAL_DAMAGE = USE_REAL_DAMAGE,
-						Config = Config,
-						StaticConfig = StaticConfig
+						Config = Config
 					})
 				}
 			end)
@@ -136,47 +135,6 @@ function RCONCommands:__init()
 							Config[s_Name] = tonumber(s_Value)
 							s_New.Name = 'Config.' .. s_Name
 							s_New.Value = Config[s_Name]
-						else
-							print('Unknown Config property-Type: ' .. s_Name .. ' -> ' .. s_Type)
-						end
-					elseif StaticConfig[s_Name] ~= nil then
-						local s_Test = tostring(StaticConfig[s_Name])
-						local s_Type = 'nil'
-
-						s_Old.Name = 'StaticConfig.' .. s_Name
-						s_Old.Value = StaticConfig[s_Name]
-
-						-- Boolean
-						if (s_Test == 'true' or s_Test == 'false') then
-							s_Type = 'boolean'
-
-						-- String
-						elseif (s_Test == StaticConfig[s_Name]) then
-							s_Type = 'string'
-
-						-- Number
-						elseif (tonumber(s_Test) == StaticConfig[s_Name]) then
-							s_Type = 'number'
-						end
-
-						if s_Type == 'boolean' then
-							local s_New_Value = false
-
-							if s_Value == true or s_Value == '1' or s_Value == 'true' or s_Value == 'True' or s_Value == 'TRUE' then
-								s_New_Value = true
-							end
-
-							StaticConfig[s_Name] = s_New_Value
-							s_New.Name = 'StaticConfig.' .. s_Name
-							s_New.Value = StaticConfig[s_Name]
-						elseif s_Type == 'string' then
-							StaticConfig[s_Name] = tostring(s_Value)
-							s_New.Name = 'StaticConfig.' .. s_Name
-							s_New.Value = StaticConfig[s_Name]
-						elseif s_Type == 'number' then
-							StaticConfig[s_Name] = tonumber(s_Value)
-							s_New.Name = 'StaticConfig.' .. s_Name
-							s_New.Value = StaticConfig[s_Name]
 						else
 							print('Unknown Config property-Type: ' .. s_Name .. ' -> ' .. s_Type)
 						end

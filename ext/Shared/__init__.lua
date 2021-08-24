@@ -21,9 +21,11 @@ require('__shared/Constants/SpawnMethods')
 require('__shared/Constants/TeamSwitchModes')
 require('__shared/WeaponList')
 require('__shared/EbxEditUtils')
+require('__shared/Registry/Registry')
 
 local m_Logger = Logger("FunBotShared", true)
 local m_Language = require('__shared/Language')
+local m_Registry = require('__shared/Registry/RegistryManager')
 
 function FunBotShared:__init()
 

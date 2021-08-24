@@ -1,5 +1,5 @@
 name: Documentation Enhancement
-description: Is something wrong on the wiki? Saw a typo somewhere? Missing something? Create a documentation issue and we'll handle it from there.
+description: I saw an issue (a typo, wrong or outdated information...) on the fun-bots wiki.
 labels: [documentation]
 assignees:
   - Firjens

@@ -40,7 +40,7 @@ local function updateCheckCB(httpRequest)
 
 	-- Stable and release candidates follow the same body
 	if not VersionConfig.AutoUpdater.DevBuilds then
-		if VersionConfig.Version.Tag == s_EndpointJSON['tag_name'] then
+		if "v" .. RegistryManager:GetUtil():GetVersion() == s_EndpointJSON['tag_name'] then
 			UpdateFinished(VersionConfig.AutoUpdater.DevBuilds, true, false, nil, nil, nil)
 			do return end
 		end
@@ -50,7 +50,7 @@ local function updateCheckCB(httpRequest)
 	end
 
 	-- Development builds
-	if VersionConfig.Version.Tag:gsub("V", "") == s_EndpointJSON[1]['name']:gsub("V", "") then
+	if RegistryManager:GetUtil():GetVersion() == s_EndpointJSON[1]['name']:gsub("V", "") then
 		UpdateFinished(VersionConfig.AutoUpdater.DevBuilds, true, false, nil, nil, nil)
 		do return end
 	end
@@ -61,6 +61,7 @@ end
 -- Async check for newer updates
 -- Return: tba
 local function UpdateCheck()
+
 	-- Calculate the URL to get from.
 	local s_EndpointURL = ApiUrls.stable
 
@@ -69,7 +70,6 @@ local function UpdateCheck()
 		s_EndpointURL = ApiUrls.dev
 	end
 
-	print(s_EndpointURL)
 	Net:GetHTTPAsync(s_EndpointURL, updateCheckCB)
 end
 
