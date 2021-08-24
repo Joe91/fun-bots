@@ -6,6 +6,8 @@
 
 Welcome to the fun-bots repository. This is a mod for [Venice Unleashed](https://veniceunleashed.net/) to bring highly configurable and intelligent virtual bots to your Battlefield 3 server. [Want to see it in action?](https://play.funbots.dev)
 
+Do you enjoy our work? Support us on [Patreon](https://patreon.com/funbots)
+
 ### :robot: BEEP BOOP BEEP
 The AI for the bots are extremely intelligent, up for a challenge or do you like it more casual? Don't believe us? [See this video 📹](https://www.youtube.com/watch?v=pg7O2VW70ZA) or view it live on [our community server](https://play.funbots.dev)
 - Bots can walk around and shoot and attack enemy using grenades, RPGs and other weaponry. [Which maps are supported?](https://github.com/Joe91/fun-bots/wiki/Supported-maps) 🔫
