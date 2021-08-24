@@ -13,14 +13,7 @@ You can report security bugs [here](https://github.com/Firjens/fun-bots/issues/n
 Report security bugs in 3rd party modules to the person or team maintaining that module.
 
 ## Supported Versions
-
-The following version(s) are currently supported.
-
-| Version | Supported          |
-| ------- | ------------------ |
-| < 2.1.0   | :x:                |
-| 2.1.0     | :x:                |
-| 2.2.0     | :white_check_mark: |
+We only support the latest stable release version.
 
 ## Comments on this policy
 If you have suggestions on how this process could be improved, please submit a pull request.
