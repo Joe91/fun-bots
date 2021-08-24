@@ -1,4 +1,5 @@
 [![Support Server](https://img.shields.io/discord/862736286774198322.svg?label=Discord&logo=Discord&colorB=7289da&style=for-the-badge)](https://discord.gg/K44VsQsKnx)
+[![Support me on Patreon](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fshieldsio-patreon.vercel.app%2Fapi%3Fusername%3Dfunbots%26type%3Dpatrons&style=for-the-badge)](https://patreon.com/funbots)
 [![Image](https://img.shields.io/github/v/release/Joe91/fun-bots?style=for-the-badge)](https://github.com/Joe91/fun-bots/releases)
 [![Image](https://img.shields.io/github/v/tag/Joe91/fun-bots?color=A60000&include_prereleases&label=Development%20Build&style=for-the-badge)](https://github.com/Joe91/fun-bots/tags)
 [![Image](https://img.shields.io/github/downloads/Joe91/fun-bots/total?style=for-the-badge)](https://github.com/Joe91/fun-bots/releases)
