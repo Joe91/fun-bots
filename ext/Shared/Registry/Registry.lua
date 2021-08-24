@@ -27,21 +27,21 @@ Registry = {
                 VERSION_MAJ = 2,
 
                 -- Minor version
-                VERSION_MIN = 2,
+                VERSION_MIN = 3,
 
                 -- Patch version
                 VERSION_PATCH = 0,
 
                 -- Additional label for pre-releases and build meta data
-                VERSION_LABEL = nil,
+                VERSION_LABEL = "dev1",
 
                 -- Numerical ID (int) of the current build.
                 -- Increase it upon a new release or release candidate, end-point servers require the correct version ID.
                 -- For a list of version ID's and their appropriate version name, see: https://repository.funbots.dev/
-                VERSION_ID = 0,
+                VERSION_ID = 1,
 
                 -- Current version type of this build
-                VERSION_TYPE = VersionType.Release
+                VERSION_TYPE = VersionType.DevBuild
         },
 
         -- Bot raycasting
