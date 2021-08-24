@@ -4,11 +4,6 @@ local m_NodeCollection = require('__shared/NodeCollection')
 local m_Utilities = require('__shared/Utilities')
 local m_Logger = Logger("GameDirector", Debug.Server.GAMEDIRECTOR)
 
-local PROBABILITY_SQUADMATE_SPAWN = 60
-local PROBABILITY_CLOSEST_SPAWN = 80
-local PROBABILITY_ATTACKED_SPAWN = 80
-local PROBABILITY_BASE_SPAWN = 15
-
 function GameDirector:__init()
 	self:RegisterVars()
 end
@@ -448,7 +443,7 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 			if not s_SquadBot.m_InVehicle and not s_SquadBot:IsStuck() then
 				local s_WayIndex = s_SquadBot:GetWayIndex()
 				local s_PointIndex = s_SquadBot:GetPointIndex()
-				if MathUtils:GetRandomInt(1, 100) <= PROBABILITY_SQUADMATE_SPAWN then
+				if MathUtils:GetRandomInt(1, 100) <= Registry.PROPABILITIES.PROBABILITY_SQUADMATE_SPAWN then
 					m_Logger:Write("spawn at squad-mate")
 					return s_WayIndex, s_PointIndex, s_SquadBot._InvertPathDirection -- use same direction
 				else
@@ -538,17 +533,17 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 
 	-- spawn in base from time to time to get a vehicle
 	-- TODO: do this dependant of vehicle available
-	if not p_OnlyBase and #s_PossibleBases > 0 and MathUtils:GetRandomInt(1, 100) <= PROBABILITY_BASE_SPAWN then
+	if not p_OnlyBase and #s_PossibleBases > 0 and MathUtils:GetRandomInt(1, 100) <= Registry.PROPABILITIES.PROBABILITY_BASE_SPAWN then
 		m_Logger:Write("spwawn at base because of randomness")
 		local s_PathIndex = s_PossibleBases[MathUtils:GetRandomInt(1, #s_PossibleBases)]
 		return s_PathIndex, MathUtils:GetRandomInt(1, #m_NodeCollection:Get(nil, s_PathIndex))
 	end
 
 	-- spawn in order of priority
-	if #s_AttackedObjectives > 0 and (MathUtils:GetRandomInt(1, 100) < PROBABILITY_ATTACKED_SPAWN) then
+	if #s_AttackedObjectives > 0 and (MathUtils:GetRandomInt(1, 100) < Registry.PROPABILITIES.PROBABILITY_ATTACKED_SPAWN) then
 		m_Logger:Write("spawn at attaced objective")
 		return self:GetSpawnPathOfObjectives(s_AttackedObjectives)
-	elseif s_ClosestObjective ~= nil and (MathUtils:GetRandomInt(1, 100) < PROBABILITY_CLOSEST_SPAWN) then
+	elseif s_ClosestObjective ~= nil and (MathUtils:GetRandomInt(1, 100) < Registry.PROPABILITIES.PROBABILITY_CLOSEST_SPAWN) then
 		m_Logger:Write("spwawn at closest objective")
 		return self:GetSpawnPathOfObjectives({s_ClosestObjective})
 	elseif #s_PossibleObjectives > 0 then

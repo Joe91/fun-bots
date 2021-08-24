@@ -8,8 +8,6 @@ local m_WeaponList = require('__shared/WeaponList')
 local m_Utilities = require('__shared/Utilities')
 local m_Logger = Logger("BotSpawner", Debug.Server.BOT)
 
-local FIRST_SPAWN_DELAY = 5.0 -- needs to be big enough to register the inputActiveEvents. 1 is too small
-
 function BotSpawner:__init()
 	self:RegisterVars()
 end
@@ -19,7 +17,7 @@ function BotSpawner:RegisterVars()
 	self._LastRound = 0
 	self._PlayerUpdateTimer = 0
 	self._FirstSpawnInLevel = true
-	self._FirstSpawnDelay = FIRST_SPAWN_DELAY
+	self._FirstSpawnDelay = Registry.TIMING.FIRST_SPAWN_DELAY
 	self._UpdateActive = false
 	self._SpawnSets = {}
 	self._KickPlayers = {}
@@ -38,7 +36,7 @@ function BotSpawner:OnLevelLoaded(p_Round)
 	m_Logger:Write("on level loaded on spawner")
 	self._FirstSpawnInLevel = true
 	self._PlayerUpdateTimer = 0
-	self._FirstSpawnDelay = FIRST_SPAWN_DELAY
+	self._FirstSpawnDelay = Registry.TIMING.FIRST_SPAWN_DELAY
 
 	if (Config.TeamSwitchMode == TeamSwitcheModes.SwitchForRoundTwo and p_Round ~= self._LastRound) or
 	(Config.TeamSwitchMode == TeamSwitcheModes.AlwaysSwitchTeams) then
@@ -53,7 +51,7 @@ function BotSpawner:OnLevelDestroy()
 	self._SpawnSets = {}
 	self._UpdateActive = false
 	self._FirstSpawnInLevel = true
-	self._FirstSpawnDelay = FIRST_SPAWN_DELAY
+	self._FirstSpawnDelay = Registry.TIMING.FIRST_SPAWN_DELAY
 	self._PlayerUpdateTimer = 0
 end
 
