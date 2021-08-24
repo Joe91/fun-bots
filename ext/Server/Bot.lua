@@ -1087,7 +1087,7 @@ function Bot:_UpdateShooting()
 
 							if ((self._ShootModeTimer >= s_TargetTimeValue) and (self._ShootModeTimer < (s_TargetTimeValue + Registry.BOT.BOT_UPDATE_CYCLE)) and not self._GrenadeActive) or Config.BotWeapon == BotWeapons.Grenade then
 								-- should be triggered only once per fireMode
-								if MathUtils:GetRandomInt(1,100) <= Registry.BOT.PROBABILITY_THROW_NADE then
+								if MathUtils:GetRandomInt(1,100) <= Registry.BOT.PROBABILITY_THROW_GRENADE then
 									if self.m_Grenade ~= nil and self._DistanceToPlayer < 35 then
 										self._GrenadeActive = true
 									end

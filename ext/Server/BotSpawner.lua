@@ -334,8 +334,8 @@ function BotSpawner:UpdateBotAmountAndTeam()
 		end
 
 		-- move players if needed
-		if s_PlayerCount >= Registry.BOT_SPAWN.BALACNE_THRESHOLD then --use threshold
-			local s_MinTargetPlayersPerTeam = math.floor(s_PlayerCount / Globals.NrOfTeams) - Registry.BOT_SPAWN.BALANCE_ALLOWED_DIFF
+		if s_PlayerCount >= Registry.BOT_TEAM_BALANCING.THRESHOLD then --use threshold
+			local s_MinTargetPlayersPerTeam = math.floor(s_PlayerCount / Globals.NrOfTeams) - Registry.BOT_TEAM_BALANCING.ALLOWED_DIFFERENCE
 			for i = 1, Globals.NrOfTeams do
 				if s_CountPlayers[i] < s_MinTargetPlayersPerTeam then
 					for _,l_Player in pairs(PlayerManager:GetPlayers()) do

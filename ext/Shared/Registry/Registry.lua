@@ -44,7 +44,7 @@ Registry = {
                 VERSION_TYPE = VersionType.DevBuild
         },
 
-        -- Bot raycasting
+        -- Variables related to raycasting
         GAME_RAYCASTING = {
                 -- Raycast Interval of client for different raycasts
                 RAYCAST_INTERVAL = 0.05,
@@ -64,25 +64,46 @@ Registry = {
                 -- - distance the bots have to reach in height to continue with next Waypoint
                 TARGET_HEIGHT_DISTANCE_WAYPOINT = 1.5,
 
-				PROBABILITY_TELEPORT_IF_STUCK = 80,
+                -- Chance that the bot will teleport when they are stuck.
+                PROBABILITY_TELEPORT_IF_STUCK = 80,
 
-				PROBABILITY_THROW_NADE = 55, -- throw nade, if end of attack-cylce
+                -- At the end of an attack cycle, chance of throwing a grenade.
+                PROBABILITY_THROW_GRENADE = 55,
 
-				PROBABILITY_CHANGE_DIRECTION_IF_STUCK = 50, -- only on rush and conquest on not-connecting paths
+                -- If the gamemode is Rush or Conquest, change direction if the bot is stuck on non-connecting paths.
+                PROBABILITY_CHANGE_DIRECTION_IF_STUCK = 50,
 
-				-- spawn propabilites. used in this order, if possible
-				PROBABILITY_SQUADMATE_SPAWN = 60,
-				PROBABILITY_CLOSEST_SPAWN = 80,
-				PROBABILITY_ATTACKED_SPAWN = 80,
-				PROBABILITY_BASE_SPAWN = 15,
-
-				-- Trace delta a bot uses to record his way back
-				TRACE_DELTA_SHOOTING = 0.4,
+                -- Trace delta a bot uses when they are off a trace path to find his way back to the best path
+                TRACE_DELTA_SHOOTING = 0.4,
         },
 
-		BOT_SPAWN = {
-			FIRST_SPAWN_DELAY = 5.0, -- needs to be big enough to register the inputActiveEvents. 1 is too small
-			BALACNE_THRESHOLD = 6, -- only for mode keep_playercount
-			BALANCE_ALLOWED_DIFF = 1, -- only for mode keep_playercount - leave a diff of 1 or two players (even count: 1, uneven: 2)
-		}
+        -- Bot team balancing
+        BOT_TEAM_BALANCING = {
+                -- Minimum amount of players required before balancing bots across teams
+                -- Note: Only for mode keep_playercount
+                THRESHOLD = 6, -- only for mode 
+
+                -- Maximum bot count difference between both teams (even count: 1, uneven: 2)
+                -- Note: Only for mode keep_playercount
+                ALLOWED_DIFFERENCE = 1,
+        },
+
+        -- Bot spawning
+        BOT_SPAWN = {
+                -- Time between a level loading and the first bot spawning
+                -- Note: Must be big enough to register inputActiveEvents (> 1.0)
+                FIRST_SPAWN_DELAY = 5.0,
+
+                -- Probability of a bot spawning on a member of the same squad.
+                PROBABILITY_SQUADMATE_SPAWN = 60,
+
+                -- Probability of a bot spawning on the closest spawn point
+                PROBABILITY_CLOSEST_SPAWN = 80,
+
+                -- Probability of a bot spawning on an attacked spawn point
+                PROBABILITY_ATTACKED_SPAWN = 80,
+
+                -- Probability of a bot spawning on their deployment base.
+                PROBABILITY_BASE_SPAWN = 15,
+        }
 }
