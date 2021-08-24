@@ -1,5 +1,5 @@
 name: Bug Report
-description: Saw something that should not have happened?
+description: I saw something that should not have happened and I'd like to report it
 labels: [bug]
 body:
   - type: markdown

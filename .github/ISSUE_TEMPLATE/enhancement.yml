@@ -8,6 +8,22 @@ body:
         It's always nice to hear your ideas to improve an existing feature. But before continuing, please check that we do not [have it already planned](https://github.com/Joe91/fun-bots/projects) or that it had already been suggested (use the issue search function).
         
         *Note:* Do not use this to ask for new traces. For issues with existing traces use the 'Trace bug report' category. Thank you.
+  - type: dropdown
+    id: category
+    attributes:
+      label: Scope
+      description: Select the most appropriate category.
+      options:
+        - Core
+        - General bot behavior
+        - Vehicle bot behavior
+        - Permission Manager
+        - Configuration and registry
+        - Telemetry
+        - WebUI
+        - Other
+    validations:
+      required: true
   - type: textarea
     id: enhancement
     attributes:
