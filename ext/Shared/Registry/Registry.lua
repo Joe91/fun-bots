@@ -46,7 +46,7 @@ Registry = {
 
         -- Bot raycasting
         GAME_RAYCASTING = {
-                -- Raycast Interval
+                -- Raycast Interval of client for different raycasts
                 RAYCAST_INTERVAL = 0.05,
         },
 
@@ -63,28 +63,26 @@ Registry = {
 
                 -- - distance the bots have to reach in height to continue with next Waypoint
                 TARGET_HEIGHT_DISTANCE_WAYPOINT = 1.5,
+
+				PROBABILITY_TELEPORT_IF_STUCK = 80,
+
+				PROBABILITY_THROW_NADE = 55, -- throw nade, if end of attack-cylce
+
+				PROBABILITY_CHANGE_DIRECTION_IF_STUCK = 50, -- only on rush and conquest on not-connecting paths
+
+				-- spawn propabilites. used in this order, if possible
+				PROBABILITY_SQUADMATE_SPAWN = 60,
+				PROBABILITY_CLOSEST_SPAWN = 80,
+				PROBABILITY_ATTACKED_SPAWN = 80,
+				PROBABILITY_BASE_SPAWN = 15,
+
+				-- Trace delta a bot uses to record his way back
+				TRACE_DELTA_SHOOTING = 0.4,
         },
 
-		TRACE = {
-			-- Trace delta shooting
-			TRACE_DELTA_SHOOTING = 0.4,
-		},
-
-		PROPABILITIES = {
-			PROBABILITY_TELEPORT_IF_STUCK = 80,
-
-			PROBABILITY_THROW_NADE = 55, -- throw nade, if end of attack-cylce
-
-			PROBABILITY_CHANGE_DIRECTION_IF_STUCK = 50, -- only on rush and conquest on not-connecting paths
-
-			-- spawn propabilites. used in this order, if possible
-			PROBABILITY_SQUADMATE_SPAWN = 60,
-			PROBABILITY_CLOSEST_SPAWN = 80,
-			PROBABILITY_ATTACKED_SPAWN = 80,
-			PROBABILITY_BASE_SPAWN = 15,
-		},
-
-		TIMING = {
-			FIRST_SPAWN_DELAY = 5.0 -- needs to be big enough to register the inputActiveEvents. 1 is too small
+		BOT_SPAWN = {
+			FIRST_SPAWN_DELAY = 5.0, -- needs to be big enough to register the inputActiveEvents. 1 is too small
+			BALACNE_THRESHOLD = 6, -- only for mode keep_playercount
+			BALANCE_ALLOWED_DIFF = 1, -- only for mode keep_playercount - leave a diff of 1 or two players (even count: 1, uneven: 2)
 		}
 }

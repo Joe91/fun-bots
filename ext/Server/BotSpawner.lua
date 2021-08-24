@@ -17,7 +17,7 @@ function BotSpawner:RegisterVars()
 	self._LastRound = 0
 	self._PlayerUpdateTimer = 0
 	self._FirstSpawnInLevel = true
-	self._FirstSpawnDelay = Registry.TIMING.FIRST_SPAWN_DELAY
+	self._FirstSpawnDelay = Registry.BOT_SPAWN.FIRST_SPAWN_DELAY
 	self._UpdateActive = false
 	self._SpawnSets = {}
 	self._KickPlayers = {}
@@ -36,7 +36,7 @@ function BotSpawner:OnLevelLoaded(p_Round)
 	m_Logger:Write("on level loaded on spawner")
 	self._FirstSpawnInLevel = true
 	self._PlayerUpdateTimer = 0
-	self._FirstSpawnDelay = Registry.TIMING.FIRST_SPAWN_DELAY
+	self._FirstSpawnDelay = Registry.BOT_SPAWN.FIRST_SPAWN_DELAY
 
 	if (Config.TeamSwitchMode == TeamSwitcheModes.SwitchForRoundTwo and p_Round ~= self._LastRound) or
 	(Config.TeamSwitchMode == TeamSwitcheModes.AlwaysSwitchTeams) then
@@ -51,7 +51,7 @@ function BotSpawner:OnLevelDestroy()
 	self._SpawnSets = {}
 	self._UpdateActive = false
 	self._FirstSpawnInLevel = true
-	self._FirstSpawnDelay = Registry.TIMING.FIRST_SPAWN_DELAY
+	self._FirstSpawnDelay = Registry.BOT_SPAWN.FIRST_SPAWN_DELAY
 	self._PlayerUpdateTimer = 0
 end
 
@@ -334,9 +334,8 @@ function BotSpawner:UpdateBotAmountAndTeam()
 		end
 
 		-- move players if needed
-		local s_AllowedDiff = 1 -- leave a diff of 1 or two players (even count: 1, uneven: 2)
-		if s_PlayerCount >= 6 then --use threshold
-			local s_MinTargetPlayersPerTeam = math.floor(s_PlayerCount / Globals.NrOfTeams) - s_AllowedDiff
+		if s_PlayerCount >= Registry.BOT_SPAWN.BALACNE_THRESHOLD then --use threshold
+			local s_MinTargetPlayersPerTeam = math.floor(s_PlayerCount / Globals.NrOfTeams) - Registry.BOT_SPAWN.BALANCE_ALLOWED_DIFF
 			for i = 1, Globals.NrOfTeams do
 				if s_CountPlayers[i] < s_MinTargetPlayersPerTeam then
 					for _,l_Player in pairs(PlayerManager:GetPlayers()) do

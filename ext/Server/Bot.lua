@@ -1087,7 +1087,7 @@ function Bot:_UpdateShooting()
 
 							if ((self._ShootModeTimer >= s_TargetTimeValue) and (self._ShootModeTimer < (s_TargetTimeValue + Registry.BOT.BOT_UPDATE_CYCLE)) and not self._GrenadeActive) or Config.BotWeapon == BotWeapons.Grenade then
 								-- should be triggered only once per fireMode
-								if MathUtils:GetRandomInt(1,100) <= Registry.PROPABILITIES.PROBABILITY_THROW_NADE then
+								if MathUtils:GetRandomInt(1,100) <= Registry.BOT.PROBABILITY_THROW_NADE then
 									if self.m_Grenade ~= nil and self._DistanceToPlayer < 35 then
 										self._GrenadeActive = true
 									end
@@ -1099,7 +1099,7 @@ function Bot:_UpdateShooting()
 
 				--trace way back
 				if (self.m_ActiveWeapon ~= nil and self.m_ActiveWeapon.type ~= WeaponTypes.Sniper and not self.m_InVehicle) or self.m_KnifeMode then
-					if self._ShootTraceTimer > Registry.TRACE.TRACE_DELTA_SHOOTING then
+					if self._ShootTraceTimer > Registry.BOT.TRACE_DELTA_SHOOTING then
 						--create a Trace to find way back
 						self._ShootTraceTimer = 0
 						local s_Point = {
@@ -1204,7 +1204,7 @@ function Bot:_UpdateShooting()
 				end
 
 				--trace way back
-				if self._ShootTraceTimer > Registry.TRACE.TRACE_DELTA_SHOOTING then
+				if self._ShootTraceTimer > Registry.BOT.TRACE_DELTA_SHOOTING then
 					--create a Trace to find way back
 					self._ShootTraceTimer = 0
 					local s_Point = {
@@ -1558,7 +1558,7 @@ function Bot:_UpdateMovement()
 							s_HeightDistance = 0
 
 							-- teleport to target
-							if not self.m_InVehicle and Config.TeleportIfStuck and (MathUtils:GetRandomInt(0,100) <= Registry.PROPABILITIES.PROBABILITY_TELEPORT_IF_STUCK) then
+							if not self.m_InVehicle and Config.TeleportIfStuck and (MathUtils:GetRandomInt(0,100) <= Registry.BOT.PROBABILITY_TELEPORT_IF_STUCK) then
 								local s_Transform = self.m_Player.soldier.worldTransform:Clone()
 								s_Transform.trans = self._NextTargetPoint.Position
 								self.m_Player.soldier:SetTransform(s_Transform)
@@ -1570,7 +1570,7 @@ function Bot:_UpdateMovement()
 
 								if (Globals.IsConquest or Globals.IsRush) and not self.m_InVehicle then
 									if g_GameDirector:IsOnObjectivePath(self._PathIndex) then
-										self._InvertPathDirection = (MathUtils:GetRandomInt(0,100) <= Registry.PROPABILITIES.PROBABILITY_CHANGE_DIRECTION_IF_STUCK)
+										self._InvertPathDirection = (MathUtils:GetRandomInt(0,100) <= Registry.BOT.PROBABILITY_CHANGE_DIRECTION_IF_STUCK)
 									end
 								end
 
@@ -1749,7 +1749,7 @@ function Bot:_UpdateMovement()
 				self.m_ActiveSpeedValue = BotMoveSpeeds.NoMovement
 			else
 				local s_TargetTime = 5.0
-				local s_TargetCycles = math.floor(s_TargetTime / Registry.TRACE.TRACE_DELTA_SHOOTING)
+				local s_TargetCycles = math.floor(s_TargetTime / Registry.BOT.TRACE_DELTA_SHOOTING)
 
 				if self.m_KnifeMode then --Knife Only Mode
 					s_TargetCycles = 1
