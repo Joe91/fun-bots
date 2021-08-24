@@ -157,6 +157,6 @@ VersionConfig = {
 		Enabled = true, -- default: true (recommended)
 
 		-- Do you want notifications when newer development builds are available?
-		DevBuilds = true,
+		DevBuilds = false,
 	}
 }
