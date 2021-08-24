@@ -248,9 +248,16 @@ end
 -- =============================================
 
 function GameDirector:OnMcomArmed(p_Player)
+	local s_Objective = ''
+	if p_Player ~= nil and p_Player.soldier ~= nil then
+		s_Objective = self:_TranslateObjective(p_Player.soldier.worldTransform.trans)
+	elseif p_Player ~= nil and p_Player.corpse ~= nil then
+		s_Objective = self:_TranslateObjective(p_Player.corpse.worldTransform.trans)
+	else
+		m_Logger:Error("Player invalid")
+		return
+	end
 	m_Logger:Write("mcom armed by "..p_Player.name)
-
-	local s_Objective = self:_TranslateObjective(p_Player.soldier.worldTransform.trans)
 
 	if self.m_ArmedMcoms[p_Player.name] == nil then
 		self.m_ArmedMcoms[p_Player.name] = {}
@@ -265,7 +272,16 @@ function GameDirector:OnMcomArmed(p_Player)
 end
 
 function GameDirector:OnMcomDisarmed(p_Player)
-	local s_Objective = self:_TranslateObjective(p_Player.soldier.worldTransform.trans)
+	local s_Objective = ''
+	if p_Player ~= nil and p_Player.soldier ~= nil then
+		s_Objective = self:_TranslateObjective(p_Player.soldier.worldTransform.trans)
+	elseif p_Player ~= nil and p_Player.corpse ~= nil then
+		s_Objective = self:_TranslateObjective(p_Player.corpse.worldTransform.trans)
+	else
+		m_Logger:Error("Player invalid")
+		return
+	end
+	m_Logger:Write("mcom disarmed by "..p_Player.name)
 
 	-- remove information of armed mcom
 	for l_PlayerName, l_McomsOfPlayer in pairs(self.m_ArmedMcoms) do
@@ -286,23 +302,33 @@ function GameDirector:OnMcomDisarmed(p_Player)
 end
 
 function GameDirector:OnMcomDestroyed(p_Player)
+	self.m_McomCounter = self.m_McomCounter + 1
+	self:_UpdateValidObjectives()
+
+	if p_Player == nil or p_Player.name == nil then
+		m_Logger:Error("Player invalid")
+		return
+	end
 	m_Logger:Write("mcom destroyed by "..p_Player.name)
 
 	local s_Objective = ''
+	local s_SubObjective = nil
+	local s_TopObjective = nil
 
 	if self.m_ArmedMcoms[p_Player.name] ~= nil then
 		s_Objective = self.m_ArmedMcoms[p_Player.name][1]
 		table.remove(self.m_ArmedMcoms[p_Player.name], 1)
 	end
 
-	self.m_McomCounter = self.m_McomCounter + 1
-	self:_UpdateObjective(s_Objective, {
-		team = TeamId.TeamNeutral,--p_Player.teamId,
-		isAttacked = false,
-		destroyed = true
-	})
-	local s_SubObjective = self:_GetSubObjectiveFromObj(s_Objective)
-	local s_TopObjective = self:_GetObjectiveFromSubObj(s_Objective)
+	if s_Objective ~= '' then
+		self:_UpdateObjective(s_Objective, {
+			team = TeamId.TeamNeutral,--p_Player.teamId,
+			isAttacked = false,
+			destroyed = true
+		})
+		s_SubObjective = self:_GetSubObjectiveFromObj(s_Objective)
+		s_TopObjective = self:_GetObjectiveFromSubObj(s_Objective)
+	end
 
 	if s_TopObjective ~= nil then
 		self:_UpdateObjective(s_TopObjective, {
@@ -315,8 +341,6 @@ function GameDirector:OnMcomDestroyed(p_Player)
 			destroyed = true
 		})
 	end
-
-	self:_UpdateValidObjectives()
 end
 
 
@@ -791,6 +815,7 @@ function GameDirector:_UpdateValidObjectives()
 	if Globals.IsSquadRush then
 		if self.m_McomCounter > 0 then
 			self.m_waitForZone = true
+			self.m_ArmedMcoms = {}
 		end
 		local s_RushIndex = self.m_McomCounter + 1
 		for _, l_Objective in pairs(self.m_AllObjectives) do
@@ -836,6 +861,7 @@ function GameDirector:_UpdateValidObjectives()
 	elseif Globals.IsRush then
 		if (self.m_McomCounter % 2) == 0 then
 			self.m_OnlyOneMcom = false
+			self.m_ArmedMcoms = {}
 			if self.m_McomCounter > 0 then
 				self.m_waitForZone = true
 			end
