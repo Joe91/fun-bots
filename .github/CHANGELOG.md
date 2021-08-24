@@ -1,10 +1,10 @@
-[![Support Server](https://img.shields.io/discord/862736286774198322.svg?label=Discord&logo=Discord&colorB=7289da&style=for-the-badge)](https://discord.gg/K44VsQsKnx)
+[![Support Server](https://img.shields.io/discord/862736286774198322.svg?label=Discord&logo=Discord&colorB=7289da&style=for-the-badge)](https://discord.funbots.dev)
 [![Support me on Patreon](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fshieldsio-patreon.vercel.app%2Fapi%3Fusername%3Dfunbots%26type%3Dpatrons&style=for-the-badge)](https://patreon.com/funbots)
 ![Image](https://img.shields.io/github/downloads/Joe91/fun-bots/total?style=for-the-badge)
 ![Image](https://img.shields.io/github/stars/Joe91/fun-bots?style=for-the-badge)
 
 ## 🥳 Welcome to the changelogs for release **V2.2.0** 🥳
-This is the changelog for the unreleased version. Don't forget to [join us on Discord](https://discord.gg/K44VsQsKnx)
+This is the changelog for the released V2.2.0 version. Don't forget to [join us on Discord](https://discord.funbots.dev)
 
 ## Changelog
 This release contains a lot of small bug fixes and more QoL updates.
@@ -13,9 +13,9 @@ This release contains a lot of small bug fixes and more QoL updates.
 Version 2.2.0 of fun-bots now requires the dependency `VeniceEXT` version 1.1.0 or higher.
 
 ## Fun-bots public community server
-We now have a public fun-bots community server where you can play with the bots and the community on various maps. [Join the server.](vu://join/6422ca91-fd53-4afb-984f-12b1a5b3e9aa) 
+We now have a public fun-bots community server where you can play with the bots and the community on various maps. [Join the server.](https://play.funbots.dev) 
 
-### New or improved mpas
+### New and improved maps
 - Firestorm CQ-Large-Vehicles (thanks to Gemini899)
 - Damavand Peak CQ-Large with vehicles (thanks to Gemini899)
 - Caspian Border CQ-Large-Vehicles (thanks to Gemini899)
