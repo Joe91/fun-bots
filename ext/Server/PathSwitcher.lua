@@ -95,8 +95,10 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle, p
 
 		-- check for vehicle usage
 		if s_PathNode.Data.Objectives ~= nil and #s_PathNode.Data.Objectives == 1 and s_NewPoint.ID ~= p_Point.ID then
-			if Config.UseVehicles and m_GameDirector:UseVehicle(p_TeamId, s_PathNode.Data.Objectives[1]) == true then
-				return true, s_NewPoint
+			if Config.UseVehicles then
+				if  m_GameDirector:UseVehicle(p_TeamId, s_PathNode.Data.Objectives[1]) == true then
+					return true, s_NewPoint
+				end
 			else
 				-- skip this node
 				goto skip
