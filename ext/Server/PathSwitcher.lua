@@ -1,5 +1,7 @@
 class('PathSwitcher')
 
+require('__shared/Config')
+
 local m_NodeCollection = require('__shared/NodeCollection')
 local m_GameDirector = require('GameDirector')
 local m_Logger = Logger("PathSwitcher", Debug.Server.PATH)
@@ -93,8 +95,11 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle, p
 
 		-- check for vehicle usage
 		if s_PathNode.Data.Objectives ~= nil and #s_PathNode.Data.Objectives == 1 and s_NewPoint.ID ~= p_Point.ID then
-			if m_GameDirector:UseVehicle(p_TeamId, s_PathNode.Data.Objectives[1]) == true then
+			if Config.UseVehicles and m_GameDirector:UseVehicle(p_TeamId, s_PathNode.Data.Objectives[1]) == true then
 				return true, s_NewPoint
+			else
+				-- skip this node
+				goto skip
 			end
 		end
 
@@ -211,6 +216,7 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle, p
 				end
 			end
 		end
+		::skip::
 	end
 
 	-- remove paths below our highest priority
