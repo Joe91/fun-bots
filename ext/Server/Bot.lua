@@ -1104,7 +1104,7 @@ function Bot:_UpdateShooting()
 				end
 
 				--trace way back
-				if (self.m_ActiveWeapon ~= nil and self.m_ActiveWeapon.type ~= WeaponTypes.Sniper and not self.m_InVehicle) or self.m_KnifeMode then
+				if (self.m_ActiveWeapon ~= nil and self.m_ActiveWeapon.type ~= WeaponTypes.Sniper and self.m_ActiveWeapon.type ~= WeaponTypes.Rocket and not self.m_InVehicle) or self.m_KnifeMode then
 					if self._ShootTraceTimer > Registry.BOT.TRACE_DELTA_SHOOTING then
 						--create a Trace to find way back
 						self._ShootTraceTimer = 0
@@ -1739,7 +1739,7 @@ function Bot:_UpdateMovement()
 			end
 
 			--crouch moving (only mode with modified gun)
-			if (self.m_ActiveWeapon.type == WeaponTypes.Sniper and not self.m_KnifeMode) or self.m_InVehicle then --don't move while shooting in a vehicle
+			if ((self.m_ActiveWeapon.type == WeaponTypes.Sniper or self.m_ActiveWeapon.type == WeaponTypes.Rocket) and not self.m_KnifeMode) or self.m_InVehicle then --don't move while shooting in a vehicle
 				if self._AttackMode == BotAttackModes.Crouch then
 					if self.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Crouch then
 						self.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Crouch, true, true)
