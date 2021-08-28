@@ -9,9 +9,13 @@ This is the changelog for the released V2.3.0 version. Don't forget to [join us 
 ## Changelog
 This release contains a lot of small bug fixes and more QoL updates.
 
-New settings for vehicle-usage
+* New settings for vehicle-usage
+* Added FOV-Settings for Vehicles
+* SMAWs don't move when shooting anymore
+* Rework Enter-Vehicle-System (preparation to let more bots enter one vehicle)
+* Regestry for some inner Values added
 
 ### New maps
-Theran Highway CQS (Vehicles) - thanks to Gemini899
-Seine Crossing CQS (Vehicles) - thanks to Gemini899
-Nebandan Flats CQS (Vehicles) - thanks to KrazyIvan777
+* Theran Highway CQS (Vehicles) - thanks to Gemini899
+* Seine Crossing CQS (Vehicles) - thanks to Gemini899
+* Nebandan Flats CQS (Vehicles) - thanks to KrazyIvan777
