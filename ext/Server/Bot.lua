@@ -240,13 +240,8 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 		local s_AtanYaw = math.atan(s_DifferenceY, s_DifferenceX)
 		local s_Yaw = (s_AtanYaw > math.pi / 2) and (s_AtanYaw - math.pi / 2) or (s_AtanYaw + 3 * math.pi / 2)
 
-		-- don't limit pitch FOV of AA
-		if self.m_InVehicle and m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.AntiAir) then
-			s_Pitch = 0
-		else
-			local s_DistanceHoizontal = math.sqrt(s_DifferenceY^2 + s_DifferenceY^2)
-			s_Pitch = math.abs(math.atan(s_DifferenceZ, s_DistanceHoizontal))
-		end
+		local s_DistanceHoizontal = math.sqrt(s_DifferenceY^2 + s_DifferenceY^2)
+		s_Pitch = math.abs(math.atan(s_DifferenceZ, s_DistanceHoizontal))
 
 		s_DifferenceYaw = math.abs(s_OldYaw - s_Yaw)
 
@@ -254,8 +249,18 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 			s_DifferenceYaw = math.pi * 2 - s_DifferenceYaw
 		end
 
-		s_FovHalf = Config.FovForShooting / 360 * math.pi
-		s_PitchHalf = Config.FovVerticleForShooting / 360 * math.pi
+		if self.m_InVehicle then
+			if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.AntiAir) then
+				s_FovHalf = Config.FovVehicleAAForShooting / 360 * math.pi
+				s_PitchHalf = Config.FovVerticleVehicleAAForShooting / 360 * math.pi
+			else
+				s_FovHalf = Config.FovVehicleForShooting / 360 * math.pi
+				s_PitchHalf = Config.FovVerticleVehicleForShooting / 360 * math.pi
+			end
+		else
+			s_FovHalf = Config.FovForShooting / 360 * math.pi
+			s_PitchHalf = Config.FovVerticleForShooting / 360 * math.pi
+		end
 	end
 
 	if p_IgnoreYaw or (s_DifferenceYaw < s_FovHalf and s_Pitch < s_PitchHalf) then

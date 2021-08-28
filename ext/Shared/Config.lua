@@ -74,8 +74,10 @@ Config = {
 
 	--VEHICLE
 	UseVehicles = true,					-- Bots use vehicles
-	FovVehicleForShooting = 180,		-- Degrees of FOV of Vehicles
+	FovVehicleForShooting = 180,		-- Degrees of FOV of Non AA - Vehicles
 	FovVerticleVehicleForShooting = 60,	-- Degrees of FOV of Non AA-Vehicles
+	FovVehicleAAForShooting = 360,		-- Degrees of FOV of AA - Vehicles
+	FovVerticleVehicleAAForShooting = 160,	-- Degrees of FOV of AA-Vehicles
 	MaxRaycastDistanceVehicles = 250,	-- meters bots in Vehicles start shooting at player
 	MaxShootDistanceNoAntiAir = 150,	-- meters a vehicle (no Anti-Air) starts shooting at player
 
