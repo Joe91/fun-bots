@@ -538,7 +538,7 @@ function Bot:_LookAround(p_DeltaTime)
 	-- move around a little
 	local s_LastYawTimer = self._WayWaitYawTimer
 	self._WayWaitYawTimer = self._WayWaitYawTimer + p_DeltaTime
-	self.m_ActiveSpeedValue = 0
+	self.m_ActiveSpeedValue = BotMoveSpeeds.NoMovement
 	self._TargetPoint = nil
 
 	if self._WayWaitYawTimer > 6 then
@@ -1509,13 +1509,13 @@ function Bot:_UpdateMovement()
 
 					if math.abs(s_CurrentWayPointDistance - self._LastWayDistance) < 0.02 or self._ObstaceSequenceTimer ~= 0 then
 						-- try to get around obstacle
-						self.m_ActiveSpeedValue = 4 --always try to stand
+						self.m_ActiveSpeedValue = BotMoveSpeeds.Sprint --always try to stand
 
 						if self.m_InVehicle then
 							if self._ObstacleRetryCounter == 0 then
-								self.m_ActiveSpeedValue = -1
+								self.m_ActiveSpeedValue = BotMoveSpeeds.Backwards
 							else
-								self.m_ActiveSpeedValue = 3
+								self.m_ActiveSpeedValue = BotMoveSpeeds.Sprint -- full throttle
 							end
 						end
 
@@ -1623,11 +1623,11 @@ function Bot:_UpdateMovement()
 
 					if self.m_InVehicle then
 						s_TargetDistanceSpeed = s_TargetDistanceSpeed * 5
-					elseif self.m_ActiveSpeedValue == 4 then
+					elseif self.m_ActiveSpeedValue == BotMoveSpeeds.Sprint then
 						s_TargetDistanceSpeed = s_TargetDistanceSpeed * 1.5
-					elseif self.m_ActiveSpeedValue == 2 then
+					elseif self.m_ActiveSpeedValue == BotMoveSpeeds.SlowCrouch then
 						s_TargetDistanceSpeed = s_TargetDistanceSpeed * 0.7
-					elseif self.m_ActiveSpeedValue == 1 then
+					elseif self.m_ActiveSpeedValue == BotMoveSpeeds.VerySlowProne then
 						s_TargetDistanceSpeed = s_TargetDistanceSpeed * 0.5
 					end
 
