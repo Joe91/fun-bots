@@ -8,3 +8,10 @@ This is the changelog for the released V2.3.0 version. Don't forget to [join us 
 
 ## Changelog
 This release contains a lot of small bug fixes and more QoL updates.
+
+New settings for vehicle-usage
+
+### New maps
+Theran Highway CQS (Vehicles) - thanks to Gemini899
+Seine Crossing CQS (Vehicles) - thanks to Gemini899
+Nebandan Flats CQS (Vehicles) - thanks to KrazyIvan777

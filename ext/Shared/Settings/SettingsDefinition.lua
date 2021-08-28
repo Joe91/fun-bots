@@ -680,7 +680,39 @@ SettingsDefinition = {
 			UpdateFlag = UpdateFlag.None,
 			Category = "BEHAVIOUR"
 		},
-
+		-- Vehicles behaviour
+		{
+			Name = "UseVehicles",
+			Text = "Use vehicles",
+			Type = Type.Boolean,
+			Value = Config.UseVehicles,
+			Description = "Bots use vehicles",
+			Default = true,
+			UpdateFlag = UpdateFlag.None,
+			Category = "VEHICLE"
+		},
+		{
+			Name = "FovVehicleForShooting",
+			Text = "FOV of Vehicles",
+			Type = Type.Integer,
+			Value = Config.FovForShooting,
+			Description = "Degrees of FOV of Vehicles",
+			Reference = Range(0.00, 360.00, 1.0),
+			Default = 180,
+			UpdateFlag = UpdateFlag.None,
+			Category = "VEHICLE"
+		},
+		{
+			Name = "FovVerticleVehicleForShooting",
+			Text = "FOV of Vehicles Verticle",
+			Type = Type.Integer,
+			Value = Config.FovVerticleForShooting,
+			Description = "Degrees of FOV of Non AA-Vehicles",
+			Reference = Range(0.00, 180.00, 1.0),
+			Default = 60,
+			UpdateFlag = UpdateFlag.None,
+			Category = "VEHICLE"
+		},
 		-- Weapons
 		{
 			Name = "UseRandomWeapon",

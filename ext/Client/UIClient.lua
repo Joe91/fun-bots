@@ -359,7 +359,7 @@ function FunBotUIClient:OnClientUpdateInput(p_DeltaTime)
 		return
 	end
 
-	if InputManager:WentKeyDown(Config.OpenSettingsKey) then
+	if InputManager:WentKeyDown(InputDeviceKeys.IDK_F12) then
 		if Debug.Client.UI then
 			print('Client send: UI_Request_Open')
 		end

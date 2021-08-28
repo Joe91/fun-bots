@@ -2,6 +2,7 @@ USE_REAL_DAMAGE = true					-- with real damage, the hitboxes are a bit buggy
 BOT_TOKEN = "BOT_"						-- token Bots are marked with
 
 Config = {
+
 	--GENERAL
 	BotWeapon = BotWeapons.Auto,		-- Select the weapon the bots use
 	BotKit = BotKits.RANDOM_KIT,		-- The Kit of the Bots
@@ -9,27 +10,27 @@ Config = {
 	ZombieMode = false,					-- Zombie Bot Mode
 
 	--DIFFICULTY
-	BotAimWorsening = 0.7,				-- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy).
-	BotSniperAimWorsening = 0.5,		-- see botAimWorsening, only for Sniper-rifles
-	BotSupportAimWorsening = 0.5,		-- see botAimWorsening, only for LMGs
-	BotWorseningSkill = 0.3,			-- variation of the skill of a single bot. the higher, the worse the bots can get compared to the original settings
-	BotSniperWorseningSkill = 0.7,		-- see BotWorseningSkill - only for BOTs using sniper bolt-action rifles.
+	BotAimWorsening = 0.5,				-- make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy).
+	BotSniperAimWorsening = 0.2,		-- see botAimWorsening, only for Sniper-rifles
+	BotSupportAimWorsening = 0.2,		-- see botAimWorsening, only for LMGs
+	BotWorseningSkill = 0.25,			-- variation of the skill of a single bot. the higher, the worse the bots can get compared to the original settings
+	BotSniperWorseningSkill = 0.50,		-- see BotWorseningSkill - only for BOTs using sniper bolt-action rifles.
 	DamageFactorAssault = 0.5,			-- original Damage from bots gets multiplied by this
 	DamageFactorCarabine = 0.5,			-- original Damage from bots gets multiplied by this
 	DamageFactorLMG = 0.5,				-- original Damage from bots gets multiplied by this
 	DamageFactorPDW = 0.5,				-- original Damage from bots gets multiplied by this
-	DamageFactorSniper = 0.5,			-- original Damage from bots gets multiplied by this
-	DamageFactorShotgun = 0.7,			-- original Damage from bots gets multiplied by this
-	DamageFactorPistol = 0.6,			-- original Damage from bots gets multiplied by this
+	DamageFactorSniper = 0.8,			-- original Damage from bots gets multiplied by this
+	DamageFactorShotgun = 0.8,			-- original Damage from bots gets multiplied by this
+	DamageFactorPistol = 0.7,			-- original Damage from bots gets multiplied by this
 	DamageFactorKnife = 1.5,			-- original Damage from bots gets multiplied by this
 
 	--SPAWN
 	SpawnMode = SpawnModes.balanced_teams,	-- mode the bots spawn with
 	TeamSwitchMode = TeamSwitcheModes.SwitchForRoundTwo,	-- Mode to switch the team
 	SpawnInBothTeams = true,			-- Bots spawn in both teams
-	InitNumberOfBots = 12,				-- bots for spawnmode
-	NewBotsPerNewPlayer = 1.0,			-- number to increase Bots, when new players join
-	FactorPlayerTeamCount = 1.0,		-- reduce playerteam in balanced_teams or fixed_number mode
+	InitNumberOfBots = 6,				-- bots for spawnmode
+	NewBotsPerNewPlayer = 1.6,			-- number to increase Bots, when new players join
+	FactorPlayerTeamCount = 0.8,		-- reduce playerteam in balanced_teams or fixed_number mode
 	BotTeam = 0,						-- default bot team (0 = neutral / auto, 1 = US, 2 = RU) TeamId.Team2
 	BotNewLoadoutOnSpawn = true,		-- bots get a new kit and color, if they respawn
 	MaxAssaultBots = -1,				-- maximum number of Bots with Assault Kit. -1 = no limit
@@ -37,7 +38,6 @@ Config = {
 	MaxSupportBots = -1,				-- maximum number of Bots with Support Kit. -1 = no limit
 	MaxReconBots = -1,					-- maximum number of Bots with Recon Kit. -1 = no limit
 	AdditionalBotSpawnDelay = 0.5,		-- additional time a bot waits to respawn
-	BotMaxHealth = 100.0, 				-- max health of bot (default 100.0)
 
 	--SPAWNLIMITS
 	MaxBotsPerTeamDefault = 32,			-- max number of bots in one team, if no other mode fits
@@ -72,6 +72,11 @@ Config = {
 	BotsThrowGrenades = true,			-- Bots throw grenades
 	BotsDeploy = true,					-- Bots deploy ammo and medkits
 	DeployCycle = 50,					-- time between deployment of bots in seconds
+
+	--VEHICLE
+	UseVehicles = true,					-- Bots use vehicles
+	FovVehicleForShooting = 180,		-- Degrees of FOV of Vehicles
+	FovVerticleVehicleForShooting = 60,	-- Degrees of FOV of Non AA-Vehicles
 
 	--WEAPONS
 	UseRandomWeapon = true,				-- use a random weapon out of the weapon set
@@ -114,9 +119,6 @@ Config = {
 	SpeedFactorAttack = 0.6,			-- reduces the movementspeed while attacking. 1 = normal, 0 = standing.
 	UseRandomNames = false,				-- changes names of the bots on every new round. Experimental right now...
 
-	-- IN-GAME SETTINGS MANAGER
-	OpenSettingsKey = InputDeviceKeys.IDK_F12,
-
 	--EXPERT
 	BotFirstShotDelay = 0.35,			-- delay for first shot. If too small, there will be great spread in first cycle because its not kompensated jet.
 	BotMinTimeShootAtPlayer = 2.0,		-- the minimum time a bot shoots at one player - recommended minimum 1.5, below this you will have issues.
@@ -137,7 +139,7 @@ Config = {
 	DisableUserInterface = false,		-- if true, the complete UI will be disabled (not available in the UI -) )
 	DisableChatCommands = false,		-- if true, no chat commands can be used
 	DisableRCONCommands = false,		-- if true, no RCON commands can be used
-	IgnorePermissions = false,			-- if true, all permissions are ignored --> everyone can do everything @deprecated - Should be moved to the registry as soon as possible
+	IgnorePermissions = false,			-- if true, all permissions are ignored --> everyone can do everything
 	Language = nil,						-- de_DE as sample (default is english, when language file doesnt exists)
 }
 
@@ -157,6 +159,6 @@ VersionConfig = {
 		Enabled = true, -- default: true (recommended)
 
 		-- Do you want notifications when newer development builds are available?
-		DevBuilds = false,
+		DevBuilds = true,
 	}
 }
