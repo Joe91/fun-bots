@@ -5,6 +5,7 @@ require('__shared/Config')
 local m_NodeCollection = require('__shared/NodeCollection')
 local m_PathSwitcher = require('PathSwitcher')
 local m_Utilities = require('__shared/Utilities')
+local m_Vehicles = require("Vehicles")
 local m_Logger = Logger("Bot", Debug.Server.BOT)
 
 function Bot:__init(p_Player)
@@ -182,7 +183,7 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 	end
 
 	-- check for vehicles
-	local s_Type = g_Vehicles:FindOutVehicleType(p_Player)
+	local s_Type = m_Vehicles:FindOutVehicleType(p_Player)
 
 	-- don't shoot if too far away
 	self._DistanceToPlayer = 0
@@ -200,12 +201,12 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 		end
 	end
 	if not p_IgnoreYaw and self.m_InVehicle then
-		if self.m_ActiveVehicle ~= nil and self.m_ActiveVehicle ~= VehicleTypes.AirVehicle and self._DistanceToPlayer > Config.MaxShootDistanceNoAntiAir then
+		if m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.AirVehicle) and self._DistanceToPlayer > Config.MaxShootDistanceNoAntiAir then
 			return false
 		end
 	end
 
-	if s_Type ~= VehicleTypes.NoVehicle and g_Vehicles:CheckForVehicleAttack(s_Type, self._DistanceToPlayer, self.m_SecondaryGadget, self.m_InVehicle) == VehicleAttackModes.NoAttack then
+	if s_Type ~= VehicleTypes.NoVehicle and m_Vehicles:CheckForVehicleAttack(s_Type, self._DistanceToPlayer, self.m_SecondaryGadget, self.m_InVehicle) == VehicleAttackModes.NoAttack then
 		return false
 	end
 
@@ -217,7 +218,7 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 	local s_PitchHalf = 0
 
 	-- if target is air-vehicle and bot is in AA --> ignore yaw
-	if self.m_InVehicle and s_Type == VehicleTypes.AirVehicle and self.m_ActiveVehicle ~= nil and self.m_ActiveVehicle.Type ~= nil and self.m_ActiveVehicle.Type == VehicleTypes.AntiAir then
+	if self.m_InVehicle and s_Type == VehicleTypes.AirVehicle and m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.AntiAir) then
 		p_IgnoreYaw = true
 	end
 
@@ -240,7 +241,7 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 		local s_Yaw = (s_AtanYaw > math.pi / 2) and (s_AtanYaw - math.pi / 2) or (s_AtanYaw + 3 * math.pi / 2)
 
 		-- don't limit pitch FOV of AA
-		if self.m_InVehicle and self.m_ActiveVehicle.Type ~= nil and self.m_ActiveVehicle.Type == VehicleTypes.AntiAir then
+		if self.m_InVehicle and m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.AntiAir) then
 			s_Pitch = 0
 		else
 			local s_DistanceHoizontal = math.sqrt(s_DifferenceY^2 + s_DifferenceY^2)
@@ -659,7 +660,7 @@ function Bot:_UpdateAiming()
 			local s_Speed = 0.0
 
 			if self.m_InVehicle then
-				s_Speed, s_Drop = g_Vehicles:GetSpeedAndDrop(self.m_ActiveVehicle, self.m_Player.controlledEntryId)
+				s_Speed, s_Drop = m_Vehicles:GetSpeedAndDrop(self.m_ActiveVehicle, self.m_Player.controlledEntryId)
 			else
 				s_Drop = self.m_ActiveWeapon.bulletDrop
 				s_Speed = self.m_ActiveWeapon.bulletSpeed
@@ -1043,7 +1044,7 @@ function Bot:_UpdateShooting()
 				end
 
 				if self._ShootPlayerVehicleType ~= VehicleTypes.NoVehicle then
-					local s_AttackMode = g_Vehicles:CheckForVehicleAttack(self._ShootPlayerVehicleType, self._DistanceToPlayer, self.m_SecondaryGadget, self.m_InVehicle)
+					local s_AttackMode = m_Vehicles:CheckForVehicleAttack(self._ShootPlayerVehicleType, self._DistanceToPlayer, self.m_SecondaryGadget, self.m_InVehicle)
 
 					if s_AttackMode ~= VehicleAttackModes.NoAttack then
 						if s_AttackMode == VehicleAttackModes.AttackWithNade then -- grenade
@@ -1147,7 +1148,7 @@ function Bot:_UpdateShooting()
 						end
 					else
 						if self.m_InVehicle then
-							if self.m_ActiveVehicle.Type ~= nil and self.m_ActiveVehicle.Type == VehicleTypes.AntiAir then
+							if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.AntiAir) then
 								if self._ShotTimer >= 5.0 then
 									self._ShotTimer = 0
 								end
@@ -1303,9 +1304,9 @@ function Bot:_EnterVehicle()
 					-- self._VehicleEntity = s_Entity.physicsEntityBase
 
 					-- get ID
-					self.m_ActiveVehicle = g_Vehicles:GetVehicle(self.m_Player, i)
-					self._VehicleMovableId = g_Vehicles:GetPartIdForSeat(self.m_ActiveVehicle, i)
-					m_Logger:Write(self.m_ActiveVehicle)
+					self.m_ActiveVehicle = m_Vehicles:GetVehicle(self.m_Player, i)
+					self._VehicleMovableId = m_Vehicles:GetPartIdForSeat(self.m_ActiveVehicle, i)
+					--m_Logger:Write(self.m_ActiveVehicle)
 
 					return 0, s_Position -- everything fine
 				end

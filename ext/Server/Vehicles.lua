@@ -43,6 +43,22 @@ function Vehicles:GetPartIdForSeat(p_VehicleData, p_Index)
 	end
 end
 
+function Vehicles:IsVehicleType(p_VehicleData, p_VehicleType)
+	if p_VehicleData ~= nil and p_VehicleData.Type ~= nil then
+		return p_VehicleData.Type == p_VehicleType
+	else
+		return false
+	end
+end
+
+function Vehicles:IsNotVehicleType(p_VehicleData, p_VehicleType)
+	if p_VehicleData ~= nil and p_VehicleData.Type ~= nil then
+		return p_VehicleData.Type ~= p_VehicleType
+	else
+		return false
+	end
+end
+
 function Vehicles:GetSpeedAndDrop(p_VehicleData, p_Index)
 	local s_Drop = nil
 	local s_Speed = nil
