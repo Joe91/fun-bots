@@ -1565,19 +1565,19 @@ function Bot:_UpdateMovement()
 								self.m_Player.soldier:SetTransform(s_Transform)
 								m_Logger:Write("tepeported "..self.m_Player.name)
 							else
-
 								s_NoStuckReset = true
-								s_PointIncrement = MathUtils:GetRandomInt(-5,5) -- go 5 points further
-
-								if (Globals.IsConquest or Globals.IsRush) and not self.m_InVehicle then
-									if g_GameDirector:IsOnObjectivePath(self._PathIndex) then
-										self._InvertPathDirection = (MathUtils:GetRandomInt(0,100) <= Registry.BOT.PROBABILITY_CHANGE_DIRECTION_IF_STUCK)
+								if not self.m_InVehicle then
+									s_PointIncrement = MathUtils:GetRandomInt(-5,5) -- go 5 points further
+									-- experimental
+									if s_PointIncrement == 0 then -- we can't have this
+										s_PointIncrement = -2 --go backwards and try again
 									end
-								end
 
-								-- experimental
-								if s_PointIncrement == 0 then -- we can't have this
-									s_PointIncrement = -2 --go backwards and try again
+									if (Globals.IsConquest or Globals.IsRush) then
+										if g_GameDirector:IsOnObjectivePath(self._PathIndex) then
+											self._InvertPathDirection = (MathUtils:GetRandomInt(0,100) <= Registry.BOT.PROBABILITY_CHANGE_DIRECTION_IF_STUCK)
+										end
+									end
 								end
 							end
 						end
@@ -1885,9 +1885,6 @@ function Bot:_UpdateMovement()
 					elseif self.m_ActiveSpeedValue ~= BotMoveSpeeds.NoMovement then
 						self._BrakeTimer = 0
 						self:_SetInput(EntryInputActionEnum.EIAThrottle, s_SpeedVal)
-						-- if self.m_ActiveSpeedValue >= 4 then
-							-- self:_setInput(EntryInputActionEnum.EIASprint, 1)
-						-- end
 					else
 						if self._BrakeTimer < 0.7 then
 							self:_SetInput(EntryInputActionEnum.EIABrake, 1)
