@@ -1427,25 +1427,23 @@ function Bot:_UpdateMovement()
 				if self._ActionActive then
 					if s_Point.Data ~= nil and s_Point.Data.Action ~= nil then
 						if s_Point.Data.Action.type == "vehicle" then
-
-							local s_RetCode, s_Position = self:_EnterVehicle()
-							if s_RetCode == 0 then
-								self._ActionActive = false
-								local s_Node = g_GameDirector:FindClosestPath(s_Position, true)
-			
-								if s_Node ~= nil then
-									-- switch to vehicle
-									s_Point = s_Node
-									self._InvertPathDirection = false
-									self._PathIndex = s_Node.PathIndex
-									self._CurrentWayPoint = s_Node.PointIndex
-									s_NextPoint = m_NodeCollection:Get(self:_GetWayIndex(self._CurrentWayPoint + 1), self._PathIndex)
-									self._LastWayDistance = 1000
+							if Config.UseVehicles then
+								local s_RetCode, s_Position = self:_EnterVehicle()
+								if s_RetCode == 0 then
+									self._ActionActive = false
+									local s_Node = g_GameDirector:FindClosestPath(s_Position, true)
+				
+									if s_Node ~= nil then
+										-- switch to vehicle
+										s_Point = s_Node
+										self._InvertPathDirection = false
+										self._PathIndex = s_Node.PathIndex
+										self._CurrentWayPoint = s_Node.PointIndex
+										s_NextPoint = m_NodeCollection:Get(self:_GetWayIndex(self._CurrentWayPoint + 1), self._PathIndex)
+										self._LastWayDistance = 1000
+									end
 								end
-							elseif s_RetCode == -1 then
-								return
 							end
-
 							self._ActionActive = false
 						elseif self._ActionTimer <= s_Point.Data.Action.time then
 							for _, l_Input in pairs(s_Point.Data.Action.inputs) do

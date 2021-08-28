@@ -380,31 +380,46 @@ function GameDirector:CheckForExecution(p_Point, p_TeamId)
 
 	local s_Action = p_Point.Data.Action
 
-	if s_Action.type ~= "mcom" then
+	if s_Action.type == "mcom" then
+
+		local s_Mcom = self:_TranslateObjective(p_Point.Position)
+
+		if s_Mcom == nil then
+			return false
+		end
+
+		local s_Objective = self:_GetObjectiveObject(s_Mcom)
+
+		if s_Objective == nil then
+			return false
+		end
+
+		if s_Objective.active and not s_Objective.destroyed then
+			if p_TeamId == TeamId.Team1 and s_Objective.team == TeamId.TeamNeutral then
+				return true -- Attacking Team
+			elseif p_TeamId == TeamId.Team2 and s_Objective.isAttacked then
+				return true -- Defending Team
+			end
+		end
+
+		return false
+
+	elseif s_Action.type == "vehicle" then
+		local s_CurrentPathFirst = m_NodeCollection:GetFirst(p_Point.PathIndex)
+		if s_CurrentPathFirst.Data.Objectives ~= nil and #s_CurrentPathFirst.Data.Objectives == 1 then
+			local s_TempObjective = self:_GetObjectiveObject(s_CurrentPathFirst.Data.Objectives[1])
+			if s_TempObjective ~= nil and s_TempObjective.active and s_TempObjective.isEnterVehiclePath then
+				s_TempObjective.active = false
+				return true
+			end
+		else
+			return false
+		end
+	else -- execute ACTION
 		return true
 	end
 
-	local s_Mcom = self:_TranslateObjective(p_Point.Position)
 
-	if s_Mcom == nil then
-		return false
-	end
-
-	local s_Objective = self:_GetObjectiveObject(s_Mcom)
-
-	if s_Objective == nil then
-		return false
-	end
-
-	if s_Objective.active and not s_Objective.destroyed then
-		if p_TeamId == TeamId.Team1 and s_Objective.team == TeamId.TeamNeutral then
-			return true -- Attacking Team
-		elseif p_TeamId == TeamId.Team2 and s_Objective.isAttacked then
-			return true -- Defending Team
-		end
-	end
-
-	return false
 end
 
 function GameDirector:FindClosestPath(p_Trans, p_VehiclePath)
@@ -645,7 +660,7 @@ function GameDirector:UseVehicle(p_BotTeam, p_Objective)
 	local s_TempObjective = self:_GetObjectiveObject(p_Objective)
 
 	if s_TempObjective ~= nil and s_TempObjective.active and s_TempObjective.isEnterVehiclePath then
-		s_TempObjective.active = false
+		--s_TempObjective.active = false
 		return true
 	end
 

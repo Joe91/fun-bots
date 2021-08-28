@@ -38,6 +38,7 @@ Config = {
 	MaxSupportBots = -1,				-- maximum number of Bots with Support Kit. -1 = no limit
 	MaxReconBots = -1,					-- maximum number of Bots with Recon Kit. -1 = no limit
 	AdditionalBotSpawnDelay = 0.5,		-- additional time a bot waits to respawn
+	BotMaxHealth = 100.0,				-- max health of bot (default 100.0)
 
 	--SPAWNLIMITS
 	MaxBotsPerTeamDefault = 32,			-- max number of bots in one team, if no other mode fits
@@ -58,9 +59,7 @@ Config = {
 	FovForShooting = 245,				-- Degrees of FOV of Bot
 	FovVerticleForShooting = 90,		-- Degrees of FOV of Bot in verticle  direction
 	MaxRaycastDistance = 150,			-- meters bots start shooting at player
-	MaxRaycastDistanceVehicles = 250,	-- meters bots in Vehicles start shooting at player
 	MaxShootDistanceNoSniper = 70,		-- meters a bot (not sniper) start shooting at player
-	MaxShootDistanceNoAntiAir = 150,	-- meters a vehicle (no Anti-Air) starts shooting at player
 	MaxShootDistancePistol = 30,		-- only in auto-weapon-mode, the distance until a bot switches to pistol if his magazine is empty
 	BotAttackMode = BotAttackModes.RandomNotSet,	-- Mode the Bots attack with. Random, Crouch or Stand
 	ShootBackIfHit = true,				-- bot shoots back, if hit
@@ -77,6 +76,8 @@ Config = {
 	UseVehicles = true,					-- Bots use vehicles
 	FovVehicleForShooting = 180,		-- Degrees of FOV of Vehicles
 	FovVerticleVehicleForShooting = 60,	-- Degrees of FOV of Non AA-Vehicles
+	MaxRaycastDistanceVehicles = 250,	-- meters bots in Vehicles start shooting at player
+	MaxShootDistanceNoAntiAir = 150,	-- meters a vehicle (no Anti-Air) starts shooting at player
 
 	--WEAPONS
 	UseRandomWeapon = true,				-- use a random weapon out of the weapon set

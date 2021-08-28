@@ -11,6 +11,7 @@ SettingsDefinition = {
 		SPAWN = "Spawn",
 		SPAWNLIMITS = "Spawnlimits",
 		BEHAVIOUR = "Behaviour",
+		VEHICLE = "Vehicle",
 		WEAPONS = "Weapons",
 		TRACE = "Trace",
 		ADVANCED = "Advanced",
@@ -354,6 +355,17 @@ SettingsDefinition = {
 			UpdateFlag = UpdateFlag.None,
 			Category = "SPAWN"
 		},
+		{
+			Name = "BotMaxHealth",
+			Text = "Bot Health at spawn",
+			Type = Type.Float,
+			Value = Config.BotMaxHealth,
+			Description = "max health of bot (default 100.0)",
+			Reference = Range(0.0, 1000.00, 1.0),
+			Default = 100.0,
+			UpdateFlag = UpdateFlag.None,
+			Category = "SPAWN"
+		},
 
 	-- Spawn limits
 		{
@@ -535,17 +547,6 @@ SettingsDefinition = {
 			Category = "BEHAVIOUR"
 		},
 		{
-			Name = "MaxRaycastDistanceVehicles",
-			Text = "Max Raycast Distance for Vehicles",
-			Type = Type.Integer,
-			Value = Config.MaxRaycastDistance,
-			Description = "meters bots in Vehicles start shooting at player",
-			Reference = Range(1.00, 1500.00, 5.0),
-			Default = 250,
-			UpdateFlag = UpdateFlag.None,
-			Category = "BEHAVIOUR"
-		},
-		{
 			Name = "MaxShootDistanceNoSniper",
 			Text = "Max Shoot-Distance No Sniper",
 			Type = Type.Integer,
@@ -553,17 +554,6 @@ SettingsDefinition = {
 			Description = "meters a bot (not sniper) start shooting at player",
 			Reference = Range(1.00, 1500.00, 5.0),
 			Default = 70,
-			UpdateFlag = UpdateFlag.None,
-			Category ="BEHAVIOUR"
-		},
-		{
-			Name = "MaxShootDistanceNoAntiAir",
-			Text = "Max Shoot-Distance No Anti Air",
-			Type = Type.Integer,
-			Value = Config.MaxShootDistanceNoAntiAir,
-			Description = "meters a vehicle (no Anti-Air) starts shooting at player",
-			Reference = Range(1.00, 1500.00, 5.0),
-			Default = 150,
 			UpdateFlag = UpdateFlag.None,
 			Category ="BEHAVIOUR"
 		},
@@ -712,6 +702,28 @@ SettingsDefinition = {
 			Default = 60,
 			UpdateFlag = UpdateFlag.None,
 			Category = "VEHICLE"
+		},
+		{
+			Name = "MaxRaycastDistanceVehicles",
+			Text = "Max Raycast Distance for Vehicles",
+			Type = Type.Integer,
+			Value = Config.MaxRaycastDistance,
+			Description = "meters bots in Vehicles start shooting at player",
+			Reference = Range(1.00, 1500.00, 5.0),
+			Default = 250,
+			UpdateFlag = UpdateFlag.None,
+			Category = "VEHICLE"
+		},
+		{
+			Name = "MaxShootDistanceNoAntiAir",
+			Text = "Max Shoot-Distance No Anti Air",
+			Type = Type.Integer,
+			Value = Config.MaxShootDistanceNoAntiAir,
+			Description = "meters a vehicle (no Anti-Air) starts shooting at player",
+			Reference = Range(1.00, 1500.00, 5.0),
+			Default = 150,
+			UpdateFlag = UpdateFlag.None,
+			Category ="VEHICLE"
 		},
 		-- Weapons
 		{
