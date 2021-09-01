@@ -13,6 +13,16 @@ BotSpawnModes = {
 	RespawnRandomPath = 5
 }
 
+BotAttackingModes = {
+	NoAttack = 0,
+	AttackWithRifle = 1,
+	AttackWithC4 = 2,
+	AttackWithKnife = 3,
+	AttackWithGrenade = 4,
+	RevivePlayer = 5,
+	EnterVehicleOfPlayer = 6
+}
+
 BotActionFlags = {
 	NoActionActive = 0,
 	MeleeActive = 1,
