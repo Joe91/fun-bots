@@ -47,19 +47,18 @@ function Bot:__init(p_Player)
 	self._ActionTimer = 0
 	self._BrakeTimer = 0
 	self._SpawnProtectionTimer = 0
+	self._SidewardsTimer = 0
 
 	--shared movement vars
 	self.m_ActiveMoveMode = BotMoveModes.Standstill
 	self.m_ActiveSpeedValue = BotMoveSpeeds.NoMovement
 	self.m_KnifeMode = false
 	self.m_InVehicle = false
-	self.m_NewInputs = {}
 	self.m_ActiveInputs = {}
 
 	-- sidwards movement
 	self.m_YawOffset = 0.0
 	self.m_StrafeValue = 0.0
-	self._SidewardsTimer = 0.0
 
 	--advanced movement
 	self._AttackMode = BotAttackModes.RandomNotSet
@@ -109,7 +108,6 @@ function Bot:__init(p_Player)
 	--simple movement
 	self._BotSpeed = BotMoveSpeeds.NoMovement
 	self._TargetPlayer = nil
-	self._SpawnTransform = LinearTransform()
 end
 
 -- =============================================
@@ -313,7 +311,6 @@ function Bot:ResetVars()
 	self._InvertPathDirection = false
 	self._ShotTimer = 0
 	self._UpdateTimer = 0
-	self._AimUpdateTimer = 0 --timer sync
 	self._TargetPoint = nil
 	self._NextTargetPoint = nil
 	self._KnifeWayPositions = {}
@@ -461,7 +458,6 @@ function Bot:ResetSpawnVars()
 
 	self._ShotTimer = 0
 	self._UpdateTimer = 0
-	self._AimUpdateTimer = 0 --timer sync
 	self._StuckTimer = 0
 	self._SpawnProtectionTimer = 2.0
 	self._TargetPoint = nil
@@ -527,21 +523,6 @@ function Bot:Destroy()
 	end
 	PlayerManager:DeletePlayer(self.m_Player)
 	self.m_Player = nil
-end
-
--- this is unused
-function Bot:SetVarsDefault()
-	self._SpawnMode = BotSpawnModes.RespawnRandomPath
-	self._MoveMode = BotMoveModes.Paths
-	self._BotSpeed = BotMoveSpeeds.Normal
-	self._PathIndex = 1
-	self._Respawning = Globals.RespawnWayBots
-	self._Shoot = Globals.AttackWayBots
-end
-
--- this is unused
-function Bot:GetSpawnTransform()
-	return self._SpawnTransform
 end
 
 -- =============================================
