@@ -660,6 +660,10 @@ function Bot:_UpdateRespawn()
 end
 
 function Bot:_UpdateAiming(p_DeltaTime)
+	if self._ShootPlayer == nil then
+		return
+	end
+
 	if self._ActiveAction ~= BotActionFlags.ReviveActive then
 		if not self._Shoot or self._ShootPlayer.soldier == nil or self.m_ActiveWeapon == nil then
 			return
