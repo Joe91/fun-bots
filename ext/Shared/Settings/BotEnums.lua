@@ -13,6 +13,16 @@ BotSpawnModes = {
 	RespawnRandomPath = 5
 }
 
+BotActionFlags = {
+	NoActionActive = 0,
+	MeleeActive = 1,
+	ActionActive = 2,
+	ReviveActive = 3,
+	EnterVehicleActice = 4,
+	GrenadeActive = 5,
+	C4Active = 6
+}
+
 VehicleTypes = {
 	NoVehicle = 0,
 	Tank = 1,

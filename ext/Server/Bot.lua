@@ -62,13 +62,13 @@ function Bot:__init(p_Player)
 
 	--advanced movement
 	self._AttackMode = BotAttackModes.RandomNotSet
+	self._ActiveAction = BotActionFlags.NoActionActive
 	self._CurrentWayPoint = nil
 	self._TargetYaw = 0
 	self._TargetPitch = 0
 	self._TargetPoint = nil
 	self._NextTargetPoint = nil
 	self._PathIndex = 0
-	self._MeleeActive = false
 	self._LastWayDistance = 0
 	self._InvertPathDirection = false
 	self._ObstacleRetryCounter = 0
@@ -126,6 +126,8 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 			self.m_InVehicle = false
 		end
 
+		if 
+
 		self:_UpdateAiming(p_DeltaTime)
 		self:_UpdateYaw(p_DeltaTime)
 
@@ -158,6 +160,16 @@ end
 -- =============================================
 -- Public Functions
 -- =============================================
+
+function Bot:ResetActionFlag(p_FlagValue)
+	if p_FlagValue == nil then
+		self._ActiveAction = BotActionFlags.NoActionActive
+	else
+		if self._ActiveAction == p_FlagValue then
+			self._ActiveAction = BotActionFlags.NoActionActive
+		end
+	end
+end
 
 function Bot:Revive(p_Player)
 	if self.m_Kit == BotKits.Assault and p_Player.corpse ~= nil then
@@ -301,6 +313,7 @@ end
 function Bot:ResetVars()
 	self._SpawnMode = BotSpawnModes.NoRespawn
 	self._MoveMode = BotMoveModes.Standstill
+	self._ActiveAction = BotActionFlags.NoActionActive
 	self._PathIndex = 0
 	self._Respawning = false
 	self._Shoot = false
@@ -319,7 +332,6 @@ function Bot:ResetVars()
 	self._SpawnDelayTimer = 0
 	self._SpawnProtectionTimer = 0
 	self._Objective = ''
-	self._MeleeActive = false
 	self._ActionActive = false
 	self._ReviveActive = false
 	self._EnterVehicleActice = false
@@ -462,7 +474,7 @@ function Bot:ResetSpawnVars()
 	self._SpawnProtectionTimer = 2.0
 	self._TargetPoint = nil
 	self._NextTargetPoint = nil
-	self._MeleeActive = false
+	self._ActiveAction = BotActionFlags.NoActionActive
 	self._KnifeWayPositions = {}
 	self._ZombieSpeedValue = BotMoveSpeeds.NoMovement
 	self._OnSwitch = false
@@ -744,7 +756,7 @@ end
 function Bot:_UpdateYaw(p_DeltaTime)
 	local s_AttackAiming = true
 
-	if self._MeleeActive then
+	if self._ActiveAction == BotActionFlags.MeleeActive then
 		return
 	end
 
@@ -941,7 +953,7 @@ end
 function Bot:_UpdateShooting()
 	if self.m_Player.alive and self._Shoot then
 		--select weapon-slot
-		if not self._MeleeActive then
+		if not self._ActiveAction ~= BotActionFlags.MeleeActive then
 			if self.m_Player.soldier.weaponsComponent ~= nil then
 				if self.m_KnifeMode then
 					if self.m_Player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_7 then
@@ -989,8 +1001,9 @@ function Bot:_UpdateShooting()
 			if (not self.m_InVehicle and self._ShootModeTimer < Config.BotFireModeDuration) or 
 				(self.m_InVehicle and self._ShootModeTimer < Config.BotFireModeDuration * 3) or
 				(Config.ZombieMode and self._ShootModeTimer < (Config.BotFireModeDuration * 4)) then
+
 				if not self._C4Active then
-					self:_SetInput(EntryInputActionEnum.EIAZoom, 1)
+					self:_SetInput(EntryInputActionEnum.EIAZoom, 1)  -- does not work yet :-/
 				end
 
 				if not self._GrenadeActive then
@@ -1006,8 +1019,8 @@ function Bot:_UpdateShooting()
 				self._ReloadTimer = 0 -- reset reloading
 
 				--check for melee attack
-				if not self.m_InVehicle and Config.MeleeAttackIfClose and not self._MeleeActive and self._MeleeCooldownTimer <= 0 and self._ShootPlayer.soldier.worldTransform.trans:Distance(self.m_Player.soldier.worldTransform.trans) < 2 then
-					self._MeleeActive = true
+				if not self.m_InVehicle and Config.MeleeAttackIfClose and self._ActiveAction == BotActionFlags.NoActionActive and self._MeleeCooldownTimer <= 0 and self._ShootPlayer.soldier.worldTransform.trans:Distance(self.m_Player.soldier.worldTransform.trans) < 2 then
+					self._ActiveAction = BotActionFlags.MeleeActive
 					self.m_ActiveWeapon = self.m_Knife
 
 					self:_SetInput(EntryInputActionEnum.EIASelectWeapon7, 1)
@@ -1024,7 +1037,7 @@ function Bot:_UpdateShooting()
 					elseif self._MeleeCooldownTimer > 0 then
 						self._MeleeCooldownTimer = self._MeleeCooldownTimer - Registry.BOT.BOT_UPDATE_CYCLE
 						if self._MeleeCooldownTimer < (Config.MeleeAttackCoolDown - 0.8) then
-							self._MeleeActive = false
+							self:ResetActionFlag(BotActionFlags.MeleeActive)
 						end
 					end
 				end
@@ -1066,7 +1079,7 @@ function Bot:_UpdateShooting()
 						self._ShootModeTimer = Config.BotFireModeDuration -- end attack
 					end
 				else
-					if self.m_KnifeMode or self._MeleeActive then
+					if self.m_KnifeMode or self._ActiveAction == BotActionFlags.MeleeActive then
 						self._WeaponToUse = BotWeapons.Knife
 					else
 						if not self._GrenadeActive and self.m_Player.soldier.weaponsComponent.weapons[1] ~= nil then
@@ -1162,13 +1175,13 @@ function Bot:_UpdateShooting()
 								self._ShotTimer = 0
 							end
 
-							if self._ShotTimer >= 0 then
+							if self._ShotTimer >= 0 and self._ActiveAction ~= BotActionFlags.MeleeActive then
 								if self.m_ActiveWeapon.delayed == false then
-									if self._ShotTimer <= self.m_ActiveWeapon.fireCycle and not self._MeleeActive then
+									if self._ShotTimer <= self.m_ActiveWeapon.fireCycle then
 										self:_SetInput(EntryInputActionEnum.EIAFire, 1)
 									end
 								else --start with pause Cycle
-									if self._ShotTimer >= self.m_ActiveWeapon.pauseCycle and not self._MeleeActive then
+									if self._ShotTimer >= self.m_ActiveWeapon.pauseCycle then
 										self:_SetInput(EntryInputActionEnum.EIAFire, 1)
 									end
 								end
@@ -1540,12 +1553,12 @@ function Bot:_UpdateMovement()
 
 						elseif self._ObstaceSequenceTimer > 2.4 then --step 4 - repeat afterwards
 							self._ObstaceSequenceTimer = 0
-							self._MeleeActive = false
+							self:ResetActionFlag(BotActionFlags.MeleeActive)
 							self._ObstacleRetryCounter = self._ObstacleRetryCounter + 1
 						elseif self._ObstaceSequenceTimer > 1.0 then --step 3
 							if not self.m_InVehicle then
 								if self._ObstacleRetryCounter == 0 then
-									self._MeleeActive = true
+									self._ActiveAction = BotActionFlags.MeleeActive
 									self:_SetInput(EntryInputActionEnum.EIASelectWeapon7, 1)
 									self:_SetInput(EntryInputActionEnum.EIAQuicktimeFastMelee, 1)
 									self:_SetInput(EntryInputActionEnum.EIAMeleeAttack, 1)
@@ -1571,7 +1584,7 @@ function Bot:_UpdateMovement()
 
 						if self._ObstacleRetryCounter >= 2 then --try next waypoint
 							self._ObstacleRetryCounter = 0
-							self._MeleeActive = false
+							self:ResetActionFlag(BotActionFlags.MeleeActive)
 							s_DistanceFromTarget = 0
 							s_HeightDistance = 0
 
@@ -1607,7 +1620,7 @@ function Bot:_UpdateMovement()
 							return
 						end
 					else
-						self._MeleeActive = false
+						self:ResetActionFlag(BotActionFlags.MeleeActive)
 					end
 
 					self._LastWayDistance = s_CurrentWayPointDistance
@@ -1718,7 +1731,7 @@ function Bot:_UpdateMovement()
 						end
 
 						self._ObstaceSequenceTimer = 0
-						self._MeleeActive = false
+						self:ResetActionFlag(BotActionFlags.MeleeActive)
 						self._LastWayDistance = 1000
 					end
 				else -- wait mode
