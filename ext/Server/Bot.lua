@@ -56,6 +56,11 @@ function Bot:__init(p_Player)
 	self.m_NewInputs = {}
 	self.m_ActiveInputs = {}
 
+	-- sidwards movement
+	self.m_YawOffset = 0.0
+	self.m_StrafeValue = 0.0
+	self._SidewardsTimer = 0.0
+
 	--advanced movement
 	self._AttackMode = BotAttackModes.RandomNotSet
 	self._CurrentWayPoint = nil
@@ -775,6 +780,9 @@ function Bot:_UpdateYaw(p_DeltaTime)
 		local s_AtanDzDx = math.atan(s_DifferenceY, s_DifferenceX)
 		local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
 		self._TargetYaw = s_Yaw
+		if not self.m_InVehicle then
+			self._TargetYaw = self._TargetYaw + self.m_YawOffset
+		end
 	end
 
 	if self.m_KnifeMode then
@@ -841,7 +849,7 @@ function Bot:_UpdateYaw(p_DeltaTime)
 				end
 			end
 		end
-	else
+	else -- infantery
 		s_DeltaYaw = self.m_Player.input.authoritativeAimingYaw - self._TargetYaw
 	end
 
@@ -1491,6 +1499,31 @@ function Bot:_UpdateMovement()
 
 					if Config.OverWriteBotSpeedMode ~= BotMoveSpeeds.NoMovement and not self.m_InVehicle then
 						self.m_ActiveSpeedValue = Config.OverWriteBotSpeedMode
+					end
+
+					-- sidwareds movement
+					if not self.m_InVehicle and Config.MoveSidewards then
+						if self._SidewardsTimer <= 0 then
+							if self.m_StrafeValue ~= 0 then
+								self._SidewardsTimer = MathUtils:GetRandom(Config.MinMoveCycle, Config.MaxStraigtCycle)
+								self.m_StrafeValue = 0
+								self.m_YawOffset = 0.0
+							else
+								self._SidewardsTimer = MathUtils:GetRandom(Config.MinMoveCycle, Config.MaxSideCycle)
+								if  MathUtils:GetRandomInt(0, 1) > 0 then-- random direction
+									self.m_StrafeValue = 1.0
+								else
+									self.m_StrafeValue = -1.0 
+								end
+								if self.m_ActiveSpeedValue == BotMoveSpeeds.Sprint then
+									self.m_YawOffset = 0.3927 * -self.m_StrafeValue
+								else
+									self.m_YawOffset = 0.7854 * -self.m_StrafeValue
+								end
+							end
+						end
+						self:_SetInput(EntryInputActionEnum.EIAStrafe, self.m_StrafeValue)
+						self._SidewardsTimer = self._SidewardsTimer - Registry.BOT.BOT_UPDATE_CYCLE
 					end
 
 					local s_DifferenceY = s_Point.Position.z - self.m_Player.soldier.worldTransform.trans.z

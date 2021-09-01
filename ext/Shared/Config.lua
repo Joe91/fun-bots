@@ -56,7 +56,7 @@ Config = {
 	MaxBotsPerTeamS = 12,				-- max number of bots in one team for Scavenger
 
 	--BEHAVIOUR
-	FovForShooting = 245,				-- Degrees of FOV of Bot
+	FovForShooting = 180,				-- Degrees of FOV of Bot
 	FovVerticleForShooting = 90,		-- Degrees of FOV of Bot in verticle  direction
 	MaxRaycastDistance = 150,			-- meters bots start shooting at player
 	MaxShootDistanceNoSniper = 70,		-- meters a bot (not sniper) start shooting at player
@@ -71,6 +71,10 @@ Config = {
 	BotsThrowGrenades = true,			-- Bots throw grenades
 	BotsDeploy = true,					-- Bots deploy ammo and medkits
 	DeployCycle = 50,					-- time between deployment of bots in seconds
+	MoveSidewards = true,				-- Bots move sidewards
+	MaxStraigtCycle = 10.0,				-- max time bots move straigt, before sidewares-movement (in sec)
+	MaxSideCycle = 5.0,					-- max time bots move sidewards, before straight-movement (in sec)
+	MinMoveCycle = 0.5,					-- min time bots move sidewards or staight before switching (in sec)
 
 	--VEHICLE
 	UseVehicles = true,					-- Bots use vehicles
