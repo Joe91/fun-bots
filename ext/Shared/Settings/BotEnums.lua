@@ -28,9 +28,10 @@ BotActionFlags = {
 	MeleeActive = 1,
 	ActionActive = 2,
 	ReviveActive = 3,
-	EnterVehicleActice = 4,
+	EnterVehicleActive = 4,
 	GrenadeActive = 5,
-	C4Active = 6
+	C4Active = 6,
+	OtherActionActive = 7
 }
 
 VehicleTypes = {

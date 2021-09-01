@@ -76,11 +76,6 @@ function Bot:__init(p_Player)
 	self._ZombieSpeedValue = BotMoveSpeeds.NoMovement
 	self._Objective = ''
 	self._OnSwitch = false
-	self._ActionActive = false
-	self._ReviveActive = false
-	self._EnterVehicleActice = false
-	self._GrenadeActive = false
-	self._C4Active = false
 
 	-- vehicle stuff
 	self._VehicleMovableId = nil
@@ -154,7 +149,9 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 				if self._UpdateTimer >= Registry.BOT.BOT_UPDATE_CYCLE then
 					if s_Attacking then
 						self:_UpdateAttacking()
-						if self._ReviveActive or self._EnterVehicleActice or self._C4Active then
+						if self._ActiveAction == BotActionFlags.ReviveActive or
+						self._ActiveAction == BotActionFlags.EnterVehicleActive or
+						self._ActiveAction == BotActionFlags.C4Active then
 							self:_UpdateMovementSprintToTarget()
 						else
 							self:_UpdateShootMovement()
@@ -216,7 +213,7 @@ end
 function Bot:Revive(p_Player)
 	if self.m_Kit == BotKits.Assault and p_Player.corpse ~= nil then
 		if Config.BotsRevive then
-			self._ReviveActive = true
+			self._ActiveAction = BotActionFlags.ReviveActive
 			self._ShootPlayer = nil
 			self._ShootPlayerName = p_Player.name
 		end
@@ -224,13 +221,17 @@ function Bot:Revive(p_Player)
 end
 
 function Bot:EnterVehicleOfPlayer(p_Player)
-	self._EnterVehicleActice = true
+	self._ActiveAction = BotActionFlags.EnterVehicleActive
 	self._ShootPlayer = nil
 	self._ShootPlayerName = p_Player.name
 end
 
 function Bot:ShootAt(p_Player, p_IgnoreYaw)
-	if self._ActionActive or self._ReviveActive or self._EnterVehicleActice or self._GrenadeActive then
+	if 
+	self._ActiveAction == BotActionFlags.OtherActionActive or
+	self._ActiveAction == BotActionFlags.ReviveActive or
+	self._ActiveAction == BotActionFlags.EnterVehicleActive or
+	self._ActiveAction == BotActionFlags.GrenadeActive then
 		return false
 	end
 
@@ -374,11 +375,7 @@ function Bot:ResetVars()
 	self._SpawnDelayTimer = 0
 	self._SpawnProtectionTimer = 0
 	self._Objective = ''
-	self._ActionActive = false
-	self._ReviveActive = false
-	self._EnterVehicleActice = false
 	self._GrenadeActive = false
-	self._C4Active = false
 	self._WeaponToUse = BotWeapons.Primary
 end
 
@@ -520,12 +517,8 @@ function Bot:ResetSpawnVars()
 	self._KnifeWayPositions = {}
 	self._ZombieSpeedValue = BotMoveSpeeds.NoMovement
 	self._OnSwitch = false
-	self._ActionActive = false
-	self._ReviveActive = false
-	self._EnterVehicleActice = false
 	self._GrenadeActive = false
 	self._TargetPitch = 0.0
-	self._C4Active = false
 	self._Objective = '' --reset objective on spawn, as an other spawn-point might have chosen...
 	self._WeaponToUse = BotWeapons.Primary
 
@@ -659,7 +652,7 @@ function Bot:_UpdateAiming(p_DeltaTime)
 		return
 	end
 
-	if not self._ReviveActive then
+	if self._ActiveAction ~= BotActionFlags.ReviveActive then
 		if not self._Shoot or self._ShootPlayer.soldier == nil or self.m_ActiveWeapon == nil then
 			return
 		end
@@ -1000,7 +993,7 @@ function Bot:_UpdateWeaponSelection()
 					self.m_ActiveWeapon = self.m_Knife
 					self._ShotTimer = 0
 				end
-			elseif self._ReviveActive or (self._WeaponToUse == BotWeapons.Gadget2 and Config.BotWeapon == BotWeapons.Auto) or Config.BotWeapon == BotWeapons.Gadget2 then
+			elseif self._ActiveAction == BotActionFlags.ReviveActive or (self._WeaponToUse == BotWeapons.Gadget2 and Config.BotWeapon == BotWeapons.Auto) or Config.BotWeapon == BotWeapons.Gadget2 then
 				if self.m_Player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_5 then
 					self:_SetInput(EntryInputActionEnum.EIASelectWeapon5, 1)
 					self.m_ActiveWeapon = self.m_SecondaryGadget
@@ -1039,16 +1032,16 @@ end
 
 function Bot:_UpdateDeployAndReload()
 	self._WeaponToUse = BotWeapons.Primary
+	self:ResetActionFlag(BotActionFlags.C4Active)
+	self:ResetActionFlag(BotActionFlags.ReviveActive)
+	self:ResetActionFlag(BotActionFlags.EnterVehicleActive)
 	self._GrenadeActive = false
-	self._C4Active = false
 	self._ShootPlayerName = ""
 	self._ShootPlayer = nil
-	self._EnterVehicleActice = false
 	self._LastShootPlayer = nil
-	self._ReviveActive = false
 	self._ShootModeTimer = 0
 	self._AttackMode = 0
-	if not self._ActionActive then
+	if self._ActiveAction ~= BotActionFlags.OtherActionActive then
 		self._TargetPitch = 0.0
 	end
 
@@ -1077,23 +1070,17 @@ function Bot:_UpdateDeployAndReload()
 end
 
 function Bot:_UpdateAttacking()
-	if self._ShootPlayer.soldier ~= nil and not self._EnterVehicleActice and self._Shoot then
+	if self._ShootPlayer.soldier ~= nil and self._ActiveAction ~= BotActionFlags.EnterVehicleActive and self._Shoot then
 		if (not self.m_InVehicle and self._ShootModeTimer < Config.BotFireModeDuration) or 
 			(self.m_InVehicle and self._ShootModeTimer < Config.BotFireModeDuration * 3) or
 			(Config.ZombieMode and self._ShootModeTimer < (Config.BotFireModeDuration * 4)) then
 
-			if not self._C4Active then
+			if self._ActiveAction ~= BotActionFlags.C4Active then
 				self:_SetInput(EntryInputActionEnum.EIAZoom, 1)  -- does not work yet :-/
 			end
 
 			if not self._GrenadeActive then
 				self._ShootModeTimer = self._ShootModeTimer + Registry.BOT.BOT_UPDATE_CYCLE
-			end
-
-			if self._C4Active then
-				self.m_ActiveMoveMode = BotMoveModes.ReviveC4 -- movement-mode : C4 / revive
-			else
-				self.m_ActiveMoveMode = BotMoveModes.Shooting -- movement-mode : attack
 			end
 
 			self._ReloadTimer = 0 -- reset reloading
@@ -1122,7 +1109,7 @@ function Bot:_UpdateAttacking()
 				end
 			end
 
-			if self._GrenadeActive then -- throw grenade
+			if self._ActiveAction == BotActionFlags.GrenadeActive then -- throw grenade
 				if self.m_Player.soldier.weaponsComponent.currentWeapon.secondaryAmmo <= 0 then
 					self.m_Player.soldier.weaponsComponent.currentWeapon.secondaryAmmo = self.m_Player.soldier.weaponsComponent.currentWeapon.secondaryAmmo + 1
 					self._GrenadeActive = false
@@ -1135,7 +1122,7 @@ function Bot:_UpdateAttacking()
 
 				if s_AttackMode ~= VehicleAttackModes.NoAttack then
 					if s_AttackMode == VehicleAttackModes.AttackWithNade then -- grenade
-						self._GrenadeActive = true
+						self._ActiveAction = BotActionFlags.GrenadeActive
 					elseif s_AttackMode == VehicleAttackModes.AttackWithRocket then -- rocket
 						self._WeaponToUse = BotWeapons.Gadget2
 
@@ -1144,7 +1131,7 @@ function Bot:_UpdateAttacking()
 						end
 					elseif s_AttackMode == VehicleAttackModes.AttackWithC4 then -- C4
 						self._WeaponToUse = BotWeapons.Gadget2
-						self._C4Active = true
+						self._ActiveAction = BotActionFlags.C4Active
 					elseif s_AttackMode == VehicleAttackModes.AttackWithRifle then
 						-- TODO: double code is not nice
 						if not self._GrenadeActive and self.m_Player.soldier.weaponsComponent.weapons[1] ~= nil then
@@ -1212,7 +1199,8 @@ function Bot:_UpdateAttacking()
 			if self.m_ActiveWeapon ~= nil then
 				if self.m_KnifeMode then
 					-- nothing to do
-				elseif self._C4Active then
+				-- C4 Handling
+				elseif self._ActiveAction == BotActionFlags.C4Active then
 					if self.m_Player.soldier.weaponsComponent.currentWeapon.secondaryAmmo > 0 then
 						if self._ShotTimer >= (self.m_ActiveWeapon.fireCycle + self.m_ActiveWeapon.pauseCycle) then
 							self._ShotTimer = 0
@@ -1229,7 +1217,7 @@ function Bot:_UpdateAttacking()
 							if self._ShotTimer >= ((self.m_ActiveWeapon.fireCycle * 2) + self.m_ActiveWeapon.pauseCycle) then
 								self:_SetInput(EntryInputActionEnum.EIAFire, 1)
 								self.m_Player.soldier.weaponsComponent.currentWeapon.secondaryAmmo = 4
-								self._C4Active = false
+								self:ResetActionFlag(BotActionFlags.C4Active)
 							end
 						end
 					end
@@ -1276,11 +1264,11 @@ function Bot:_UpdateAttacking()
 			self._WeaponToUse = BotWeapons.Primary
 			self._ShootPlayerName = ""
 			self._ShootPlayer = nil
-			self._GrenadeActive = false
-			self._C4Active = false
+			self:ResetActionFlag(BotActionFlags.C4Active)
+			self:ResetActionFlag(BotActionFlags.GrenadeActive)
 			self._LastShootPlayer = nil
 		end
-	elseif self._ReviveActive then
+	elseif self._ActiveAction == BotActionFlags.ReviveActive then
 		if self._ShootPlayer.corpse ~= nil then -- revive
 			self._ShootModeTimer = self._ShootModeTimer + Registry.BOT.BOT_UPDATE_CYCLE
 			self.m_ActiveMoveMode = BotMoveModes.ReviveC4 -- movement-mode : revive
@@ -1315,9 +1303,9 @@ function Bot:_UpdateAttacking()
 			self._TargetPitch = 0.0
 			self._ShootPlayerName = ""
 			self._ShootPlayer = nil
-			self._ReviveActive = false
+			self:ResetActionFlag(BotActionFlags.ReviveActive)
 		end
-	elseif self._EnterVehicleActice and self._ShootPlayer.soldier ~= nil then
+	elseif self._ActiveAction == BotActionFlags.EnterVehicleActive and self._ShootPlayer.soldier ~= nil then
 		self._ShootModeTimer = self._ShootModeTimer + Registry.BOT.BOT_UPDATE_CYCLE
 		self.m_ActiveMoveMode = BotMoveModes.ReviveC4 -- movement-mode : revive
 
@@ -1327,7 +1315,7 @@ function Bot:_UpdateAttacking()
 			self._TargetPitch = 0.0
 			self._ShootPlayerName = ""
 			self._ShootPlayer = nil
-			self._EnterVehicleActice = false
+			self:ResetActionFlag(BotActionFlags.EnterVehicleActive)
 		end
 	end
 end
@@ -1461,13 +1449,13 @@ function Bot:_UpdateNormalMovement()
 		end
 
 		-- execute Action if needed
-		if self._ActionActive then
+		if self._ActiveAction == BotActionFlags.OtherActionActive then
 			if s_Point.Data ~= nil and s_Point.Data.Action ~= nil then
 				if s_Point.Data.Action.type == "vehicle" then
 					if Config.UseVehicles then
 						local s_RetCode, s_Position = self:_EnterVehicle()
 						if s_RetCode == 0 then
-							self._ActionActive = false
+							self:ResetActionFlag(BotActionFlags.OtherActionActive)
 							local s_Node = g_GameDirector:FindClosestPath(s_Position, true)
 		
 							if s_Node ~= nil then
@@ -1481,23 +1469,23 @@ function Bot:_UpdateNormalMovement()
 							end
 						end
 					end
-					self._ActionActive = false
+					self:ResetActionFlag(BotActionFlags.OtherActionActive)
 				elseif self._ActionTimer <= s_Point.Data.Action.time then
 					for _, l_Input in pairs(s_Point.Data.Action.inputs) do
 						self:_SetInput(l_Input, 1)
 					end
 				end
 			else
-				self._ActionActive = false
+				self:ResetActionFlag(BotActionFlags.OtherActionActive)
 			end
 
 			self._ActionTimer = self._ActionTimer - Registry.BOT.BOT_UPDATE_CYCLE
 
 			if self._ActionTimer <= 0 then
-				self._ActionActive = false
+				self:ResetActionFlag(BotActionFlags.OtherActionActive)
 			end
 
-			if self._ActionActive then
+			if self._ActiveAction == BotActionFlags.OtherActionActive then
 				return --DONT EXECUTE ANYTHING ELSE
 			else
 				s_Point = s_NextPoint
@@ -1703,7 +1691,7 @@ function Bot:_UpdateNormalMovement()
 						local s_Action = s_Point.Data.Action
 
 						if g_GameDirector:CheckForExecution(s_Point, self.m_Player.teamId) then
-							self._ActionActive = true
+							self._ActiveAction = BotActionFlags.OtherActionActive
 
 							if s_Action.time ~= nil then
 								self._ActionTimer = s_Action.time
