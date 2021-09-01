@@ -147,6 +147,10 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 
 				-- sync slow code with fast code. Therefore execute the slow code first 
 				if self._UpdateTimer >= Registry.BOT.BOT_UPDATE_CYCLE then
+					-- common part
+					self:_UpdateWeaponSelection()
+
+					-- differ attacking
 					if s_Attacking then
 						self:_UpdateAttacking()
 						if self._ActiveAction == BotActionFlags.ReviveActive or
@@ -162,18 +166,27 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 					end
 					
 					-- common things
-					self:_UpdateWeaponSelection()
 					self:_UpdateSpeedOfMovement()
 					self:_UpdateInputs()
 					self._UpdateTimer = 0
 				end
 
 				-- fast code
-				self:_UpdateAiming(self._UpdateFastTimer)
-				self:_UpdateYaw(self._UpdateFastTimer)
+				if s_Attacking then
+					self:_UpdateAiming(self._UpdateFastTimer)
+				else
+					self:_UpdateTargetMovement()
+				end
+				-- very fast code
+				if self.m_InVehicle then
+					self:_UpdateYawVehicle(s_Attacking)
+				else
+					self:_UpdateYaw()
+				end
 
 				self._UpdateFastTimer = 0
 			end
+
 		else -- alive, but no inputs allowed yet --> look around
 			self._UpdateTimer = self._UpdateTimer + p_DeltaTime -- reusage of updateTimer
 			if self._UpdateTimer > Registry.BOT.BOT_UPDATE_CYCLE then
@@ -375,7 +388,6 @@ function Bot:ResetVars()
 	self._SpawnDelayTimer = 0
 	self._SpawnProtectionTimer = 0
 	self._Objective = ''
-	self._GrenadeActive = false
 	self._WeaponToUse = BotWeapons.Primary
 end
 
@@ -517,7 +529,6 @@ function Bot:ResetSpawnVars()
 	self._KnifeWayPositions = {}
 	self._ZombieSpeedValue = BotMoveSpeeds.NoMovement
 	self._OnSwitch = false
-	self._GrenadeActive = false
 	self._TargetPitch = 0.0
 	self._Objective = '' --reset objective on spawn, as an other spawn-point might have chosen...
 	self._WeaponToUse = BotWeapons.Primary
@@ -648,10 +659,6 @@ function Bot:_UpdateRespawn()
 end
 
 function Bot:_UpdateAiming(p_DeltaTime)
-	if not self.m_Player.alive or self._ShootPlayer == nil then
-		return
-	end
-
 	if self._ActiveAction ~= BotActionFlags.ReviveActive then
 		if not self._Shoot or self._ShootPlayer.soldier == nil or self.m_ActiveWeapon == nil then
 			return
@@ -732,13 +739,26 @@ function Bot:_UpdateAiming(p_DeltaTime)
 			self._LastShootPlayer = self._ShootPlayer
 			self._LastLastTargetTrans = self._LastTargetTrans
 			self._LastTargetTrans = s_FullPositionTarget
-
 		end
 
+		local s_DifferenceY = 0
+		local s_DifferenceX = 0
+		local s_DifferenceZ = 0
+
 		--calculate yaw and pitch
-		local s_DifferenceZ = s_FullPositionTarget.z + s_TargetMovement.z - s_FullPositionBot.z
-		local s_DifferenceX = s_FullPositionTarget.x + s_TargetMovement.x - s_FullPositionBot.x
-		local s_DifferenceY = s_FullPositionTarget.y + s_TargetMovement.y + s_PitchCorrection - s_FullPositionBot.y
+		if self.m_KnifeMode and #self._KnifeWayPositions > 0 then
+			s_DifferenceZ = self._KnifeWayPositions[1].z - self.m_Player.soldier.worldTransform.trans.z
+			s_DifferenceX = self._KnifeWayPositions[1].x - self.m_Player.soldier.worldTransform.trans.x
+
+			if self.m_Player.soldier.worldTransform.trans:Distance(self._KnifeWayPositions[1]) < 1.5 then
+				table.remove(self._KnifeWayPositions, 1)
+			end
+		else
+			s_DifferenceZ = s_FullPositionTarget.z + s_TargetMovement.z - s_FullPositionBot.z
+			s_DifferenceX = s_FullPositionTarget.x + s_TargetMovement.x - s_FullPositionBot.x
+			s_DifferenceY = s_FullPositionTarget.y + s_TargetMovement.y + s_PitchCorrection - s_FullPositionBot.y
+		end
+
 		local s_AtanDzDx = math.atan(s_DifferenceZ, s_DifferenceX)
 		local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
 
@@ -786,15 +806,8 @@ function Bot:_UpdateAiming(p_DeltaTime)
 	end
 end
 
-function Bot:_UpdateYaw(p_DeltaTime)
-	local s_AttackAiming = true
-
-	if self._ActiveAction == BotActionFlags.MeleeActive then
-		return
-	end
-
-	if self._TargetPoint ~= nil and self._ShootPlayer == nil and self.m_Player.soldier ~= nil then
-		s_AttackAiming = false
+function Bot:_UpdateTargetMovement()
+	if self._TargetPoint ~= nil then
 		local s_Distance = self.m_Player.soldier.worldTransform.trans:Distance(self._TargetPoint.Position)
 
 		if s_Distance < 0.2 or (self.m_InVehicle and s_Distance < 3.0) then
@@ -810,85 +823,58 @@ function Bot:_UpdateYaw(p_DeltaTime)
 			self._TargetYaw = self._TargetYaw + self.m_YawOffset
 		end
 	end
+end
 
-	if self.m_KnifeMode then
-		if self._ShootPlayer ~= nil and self.m_Player.soldier ~= nil then
-			if #self._KnifeWayPositions > 0 then
-				local s_DifferenceY = self._KnifeWayPositions[1].z - self.m_Player.soldier.worldTransform.trans.z
-				local s_DifferenceX = self._KnifeWayPositions[1].x - self.m_Player.soldier.worldTransform.trans.x
-				local s_AtanDzDx = math.atan(s_DifferenceY, s_DifferenceX)
-				local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
-				self._TargetYaw = s_Yaw
-
-				if self.m_Player.soldier.worldTransform.trans:Distance(self._KnifeWayPositions[1]) < 1.5 then
-					table.remove(self._KnifeWayPositions, 1)
-				end
-			end
-		end
-	end
-
+function Bot:_UpdateYawVehicle(p_Attacking)
 	local s_DeltaYaw = 0
 	local s_DeltaPitch = 0
 	local s_CorrectGunYaw = false
 
-	if self.m_InVehicle then
-		local s_Pos = nil
+	local s_Pos = nil
 
-		if not s_AttackAiming then
-			s_Pos = self.m_Player.controlledControllable.transform.forward
-			local s_AtanDzDx = math.atan(s_Pos.z, s_Pos.x)
-			local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
-			s_DeltaYaw = s_Yaw - self._TargetYaw
+	if not p_Attacking then
+		s_Pos = self.m_Player.controlledControllable.transform.forward
+		local s_AtanDzDx = math.atan(s_Pos.z, s_Pos.x)
+		local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
+		s_DeltaYaw = s_Yaw - self._TargetYaw
 
-			if self._VehicleMovableId ~= nil then
-				self.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, 0)
-				local s_DiffPos = s_Pos - self.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(self._VehicleMovableId):ToLinearTransform().forward
-				-- prepare for moving gun back
-				self._LastVehicleYaw = s_Yaw
+		if self._VehicleMovableId ~= nil then
+			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, 0)
+			local s_DiffPos = s_Pos - self.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(self._VehicleMovableId):ToLinearTransform().forward
+			-- prepare for moving gun back
+			self._LastVehicleYaw = s_Yaw
 
-				if math.abs(s_DiffPos.x) > 0.08 or math.abs(s_DiffPos.z) > 0.08 then
-					s_CorrectGunYaw = true
-				end
-			end
-		else
-			if self._VehicleMovableId ~= nil then
-				s_Pos = self.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(self._VehicleMovableId):ToLinearTransform().forward
-				local s_AtanDzDx = math.atan(s_Pos.z, s_Pos.x)
-				local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
-				local s_Pitch = math.asin(s_Pos.y / 1.0)
-				s_DeltaPitch = s_Pitch - self._TargetPitch
-				s_DeltaYaw = s_Yaw - self._TargetYaw
-
-				--detect direction for moving gun back
-				local s_GunDeltaYaw = s_Yaw - self._LastVehicleYaw
-
-				if s_GunDeltaYaw > math.pi then
-					s_GunDeltaYaw = s_GunDeltaYaw - 2*math.pi
-				elseif s_GunDeltaYaw < -math.pi then
-					s_GunDeltaYaw = s_GunDeltaYaw + 2*math.pi
-				end
-
-				if s_GunDeltaYaw > 0 then
-					self._VehicleDirBackPositive = false
-				else
-					self._VehicleDirBackPositive = true
-				end
+			if math.abs(s_DiffPos.x) > 0.08 or math.abs(s_DiffPos.z) > 0.08 then
+				s_CorrectGunYaw = true
 			end
 		end
-	else -- infantery
-		s_DeltaYaw = self.m_Player.input.authoritativeAimingYaw - self._TargetYaw
+	else
+		if self._VehicleMovableId ~= nil then
+			s_Pos = self.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(self._VehicleMovableId):ToLinearTransform().forward
+			local s_AtanDzDx = math.atan(s_Pos.z, s_Pos.x)
+			local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
+			local s_Pitch = math.asin(s_Pos.y / 1.0)
+			s_DeltaPitch = s_Pitch - self._TargetPitch
+			s_DeltaYaw = s_Yaw - self._TargetYaw
+
+			--detect direction for moving gun back
+			local s_GunDeltaYaw = s_Yaw - self._LastVehicleYaw
+
+			if s_GunDeltaYaw > math.pi then
+				s_GunDeltaYaw = s_GunDeltaYaw - 2*math.pi
+			elseif s_GunDeltaYaw < -math.pi then
+				s_GunDeltaYaw = s_GunDeltaYaw + 2*math.pi
+			end
+
+			if s_GunDeltaYaw > 0 then
+				self._VehicleDirBackPositive = false
+			else
+				self._VehicleDirBackPositive = true
+			end
+		end
 	end
 
-	if s_DeltaYaw > math.pi then
-		s_DeltaYaw = s_DeltaYaw - 2*math.pi
-	elseif s_DeltaYaw < -math.pi then
-		s_DeltaYaw = s_DeltaYaw + 2*math.pi
-	end
-
-	local s_AbsDeltaYaw = math.abs(s_DeltaYaw)
-	local s_Increment = Globals.YawPerFrame
-
-	if self.m_InVehicle and s_AttackAiming then
+	if p_Attacking then
 		self._Esum_pitch = self._Esum_pitch + s_DeltaPitch
 		local s_Output = 7 * s_DeltaPitch + 0.05 * self._Esum_pitch
 
@@ -901,69 +887,88 @@ function Bot:_UpdateYaw(p_DeltaTime)
 		self.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, -s_Output)
 	end
 
-	if self.m_InVehicle then
-		self.m_Player.input.authoritativeAimingYaw = self._TargetYaw --alsways set yaw to let the FOV work
+	if s_DeltaYaw > math.pi then
+		s_DeltaYaw = s_DeltaYaw - 2*math.pi
+	elseif s_DeltaYaw < -math.pi then
+		s_DeltaYaw = s_DeltaYaw + 2*math.pi
+	end
 
-		if s_AbsDeltaYaw < 0.10 then
-			self._FullVehicleSteering = false
-			if s_AttackAiming then
-				self._VehicleReadyToShoot = true
-			end
-		else
-			self._FullVehicleSteering = true
-			self._VehicleReadyToShoot = false
+	local s_AbsDeltaYaw = math.abs(s_DeltaYaw)
+
+	self.m_Player.input.authoritativeAimingYaw = self._TargetYaw --alsways set yaw to let the FOV work
+
+	if s_AbsDeltaYaw < 0.10 then
+		self._FullVehicleSteering = false
+		if p_Attacking then
+			self._VehicleReadyToShoot = true
 		end
-
-		if not s_AttackAiming then
-			self._Esum_yaw = 0.0
-			self._Esum_pitch = 0.0
-			self._Esum_drive = self._Esum_drive + s_DeltaYaw
-			local s_Output = 5 * s_DeltaYaw + 0.05 * self._Esum_drive
-	
-			if self._Esum_drive > 5 then
-				self._Esum_drive = 5
-			elseif self._Esum_drive <-5 then
-				self._Esum_drive = -5
-			end
-
-
-			if self.m_ActiveSpeedValue == BotMoveSpeeds.Backwards then
-				self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, s_Output)
-			else
-				self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, -s_Output)
-			end
-
-			if s_CorrectGunYaw then
-				if self._VehicleDirBackPositive then
-					self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, 1)
-				else
-					self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, -1)
-				end
-			else
-				self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, 0)
-			end
-		else
-			self._Esum_drive = 0.0
-			self._Esum_yaw = self._Esum_yaw + s_DeltaYaw
-			local s_Output = 7 * s_DeltaYaw + 0.05 * self._Esum_yaw
-	
-			if self._Esum_yaw > 5 then
-				self._Esum_yaw = 5
-			elseif self._Esum_yaw <-5 then
-				self._Esum_yaw = -5
-			end
-
-			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, 0.0)
-			self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, -s_Output)
-		end
-
-		return
 	else
-		if s_AbsDeltaYaw < s_Increment then
-			self.m_Player.input.authoritativeAimingYaw = self._TargetYaw
-			self.m_Player.input.authoritativeAimingPitch = self._TargetPitch
-			return
+		self._FullVehicleSteering = true
+		self._VehicleReadyToShoot = false
+	end
+
+	if not p_Attacking then
+		self._Esum_yaw = 0.0
+		self._Esum_pitch = 0.0
+		self._Esum_drive = self._Esum_drive + s_DeltaYaw
+		local s_Output = 5 * s_DeltaYaw + 0.05 * self._Esum_drive
+
+		if self._Esum_drive > 5 then
+			self._Esum_drive = 5
+		elseif self._Esum_drive <-5 then
+			self._Esum_drive = -5
 		end
+
+
+		if self.m_ActiveSpeedValue == BotMoveSpeeds.Backwards then
+			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, s_Output)
+		else
+			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, -s_Output)
+		end
+
+		if s_CorrectGunYaw then
+			if self._VehicleDirBackPositive then
+				self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, 1)
+			else
+				self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, -1)
+			end
+		else
+			self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, 0)
+		end
+	else
+		self._Esum_drive = 0.0
+		self._Esum_yaw = self._Esum_yaw + s_DeltaYaw
+		local s_Output = 7 * s_DeltaYaw + 0.05 * self._Esum_yaw
+
+		if self._Esum_yaw > 5 then
+			self._Esum_yaw = 5
+		elseif self._Esum_yaw <-5 then
+			self._Esum_yaw = -5
+		end
+
+		self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, 0.0)
+		self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, -s_Output)
+	end
+end
+
+function Bot:_UpdateYaw()
+	local s_DeltaYaw = 0
+	local s_DeltaPitch = 0
+	s_DeltaYaw = self.m_Player.input.authoritativeAimingYaw - self._TargetYaw
+
+	if s_DeltaYaw > math.pi then
+		s_DeltaYaw = s_DeltaYaw - 2*math.pi
+	elseif s_DeltaYaw < -math.pi then
+		s_DeltaYaw = s_DeltaYaw + 2*math.pi
+	end
+
+	local s_AbsDeltaYaw = math.abs(s_DeltaYaw)
+	local s_Increment = Globals.YawPerFrame
+
+	if s_AbsDeltaYaw < s_Increment then
+		self.m_Player.input.authoritativeAimingYaw = self._TargetYaw
+		self.m_Player.input.authoritativeAimingPitch = self._TargetPitch
+		return
 	end
 
 	if s_DeltaYaw > 0 then
@@ -1006,7 +1011,7 @@ function Bot:_UpdateWeaponSelection()
 					self.m_ActiveWeapon = self.m_PrimaryGadget
 					self._ShotTimer = - self:GetFirstShotDelay(self._DistanceToPlayer)
 				end
-			elseif self._GrenadeActive or (self._WeaponToUse == BotWeapons.Grenade and Config.BotWeapon == BotWeapons.Auto) or Config.BotWeapon == BotWeapons.Grenade then
+			elseif self._ActiveAction == BotActionFlags.GrenadeActive or (self._WeaponToUse == BotWeapons.Grenade and Config.BotWeapon == BotWeapons.Auto) or Config.BotWeapon == BotWeapons.Grenade then
 				if self.m_Player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_6 then
 					self:_SetInput(EntryInputActionEnum.EIASelectWeapon6, 1)
 					self.m_ActiveWeapon = self.m_Grenade
@@ -1035,7 +1040,7 @@ function Bot:_UpdateDeployAndReload()
 	self:ResetActionFlag(BotActionFlags.C4Active)
 	self:ResetActionFlag(BotActionFlags.ReviveActive)
 	self:ResetActionFlag(BotActionFlags.EnterVehicleActive)
-	self._GrenadeActive = false
+	self:ResetActionFlag(BotActionFlags.GrenadeActive)
 	self._ShootPlayerName = ""
 	self._ShootPlayer = nil
 	self._LastShootPlayer = nil
@@ -1079,14 +1084,14 @@ function Bot:_UpdateAttacking()
 				self:_SetInput(EntryInputActionEnum.EIAZoom, 1)  -- does not work yet :-/
 			end
 
-			if not self._GrenadeActive then
+			if self._ActiveAction ~= BotActionFlags.GrenadeActive then
 				self._ShootModeTimer = self._ShootModeTimer + Registry.BOT.BOT_UPDATE_CYCLE
 			end
 
 			self._ReloadTimer = 0 -- reset reloading
 
 			--check for melee attack
-			if not self.m_InVehicle and Config.MeleeAttackIfClose and self._ActiveAction == BotActionFlags.NoActionActive and self._MeleeCooldownTimer <= 0 and self._ShootPlayer.soldier.worldTransform.trans:Distance(self.m_Player.soldier.worldTransform.trans) < 2 then
+			if not self.m_InVehicle and Config.MeleeAttackIfClose and self._ActiveAction ~= BotActionFlags.MeleeActive and self._MeleeCooldownTimer <= 0 and self._ShootPlayer.soldier.worldTransform.trans:Distance(self.m_Player.soldier.worldTransform.trans) < 2 then
 				self._ActiveAction = BotActionFlags.MeleeActive
 				self.m_ActiveWeapon = self.m_Knife
 
@@ -1112,7 +1117,7 @@ function Bot:_UpdateAttacking()
 			if self._ActiveAction == BotActionFlags.GrenadeActive then -- throw grenade
 				if self.m_Player.soldier.weaponsComponent.currentWeapon.secondaryAmmo <= 0 then
 					self.m_Player.soldier.weaponsComponent.currentWeapon.secondaryAmmo = self.m_Player.soldier.weaponsComponent.currentWeapon.secondaryAmmo + 1
-					self._GrenadeActive = false
+					self:ResetActionFlag(BotActionFlags.GrenadeActive)
 					self._ShootModeTimer = Config.BotFireModeDuration
 				end
 			end
@@ -1134,7 +1139,7 @@ function Bot:_UpdateAttacking()
 						self._ActiveAction = BotActionFlags.C4Active
 					elseif s_AttackMode == VehicleAttackModes.AttackWithRifle then
 						-- TODO: double code is not nice
-						if not self._GrenadeActive and self.m_Player.soldier.weaponsComponent.weapons[1] ~= nil then
+						if self._ActiveAction ~= BotActionFlags.GrenadeActive and self.m_Player.soldier.weaponsComponent.weapons[1] ~= nil then
 							if self.m_Player.soldier.weaponsComponent.weapons[1].primaryAmmo == 0 then
 								self._WeaponToUse = BotWeapons.Pistol
 							else
@@ -1149,7 +1154,7 @@ function Bot:_UpdateAttacking()
 				if self.m_KnifeMode or self._ActiveAction == BotActionFlags.MeleeActive then
 					self._WeaponToUse = BotWeapons.Knife
 				else
-					if not self._GrenadeActive and self.m_Player.soldier.weaponsComponent.weapons[1] ~= nil then
+					if self._ActiveAction ~= BotActionFlags.GrenadeActive and self.m_Player.soldier.weaponsComponent.weapons[1] ~= nil then
 						if self.m_Player.soldier.weaponsComponent.weapons[1].primaryAmmo == 0 and self._DistanceToPlayer <= Config.MaxShootDistancePistol then
 							self._WeaponToUse = BotWeapons.Pistol
 						else
@@ -1160,11 +1165,11 @@ function Bot:_UpdateAttacking()
 					if Config.BotsThrowGrenades and not self.m_InVehicle then
 						local s_TargetTimeValue = Config.BotFireModeDuration - 0.5
 
-						if ((self._ShootModeTimer >= s_TargetTimeValue) and (self._ShootModeTimer < (s_TargetTimeValue + Registry.BOT.BOT_UPDATE_CYCLE)) and not self._GrenadeActive) or Config.BotWeapon == BotWeapons.Grenade then
+						if ((self._ShootModeTimer >= s_TargetTimeValue) and (self._ShootModeTimer < (s_TargetTimeValue + Registry.BOT.BOT_UPDATE_CYCLE)) and self._ActiveAction ~= BotActionFlags.GrenadeActive) or Config.BotWeapon == BotWeapons.Grenade then
 							-- should be triggered only once per fireMode
 							if MathUtils:GetRandomInt(1,100) <= Registry.BOT.PROBABILITY_THROW_GRENADE then
 								if self.m_Grenade ~= nil and self._DistanceToPlayer < 35 then
-									self._GrenadeActive = true
+									self._ActiveAction = BotActionFlags.GrenadeActive
 								end
 							end
 						end
