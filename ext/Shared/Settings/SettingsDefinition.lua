@@ -670,6 +670,50 @@ SettingsDefinition = {
 			UpdateFlag = UpdateFlag.None,
 			Category = "BEHAVIOUR"
 		},
+		{
+			Name = "MoveSidewards",
+			Text = "Move Sidewards",
+			Type = Type.Boolean,
+			Value = Config.MoveSidewards,
+			Description = "Bots move sidewards",
+			Default = true,
+			UpdateFlag = UpdateFlag.None,
+			Category = "BEHAVIOUR"
+		},
+		{
+			Name = "MaxStraigtCycle",
+			Text = "Max straight Cycle",
+			Type = Type.Float,
+			Value = Config.MaxStraigtCycle,
+			Description = "max time bots move straigt, before sidewares-movement (in sec)",
+			Reference = Range(1.00, 60.00, 1.0),
+			Default = 10.0,
+			UpdateFlag = UpdateFlag.None,
+			Category = "BEHAVIOUR"
+		},
+		{
+			Name = "MaxSideCycle",
+			Text = "Max Side Cycle",
+			Type = Type.Float,
+			Value = Config.MaxSideCycle,
+			Description = "max time bots move sidewards, before straight-movement (in sec)",
+			Reference = Range(1.00, 60.00, 1.0),
+			Default = 5.0,
+			UpdateFlag = UpdateFlag.None,
+			Category = "BEHAVIOUR"
+		},
+		{
+			Name = "MinMoveCycle",
+			Text = "min Move Cycle",
+			Type = Type.Float,
+			Value = Config.MinMoveCycle,
+			Description = "min time bots move sidewards or staight before switching (in sec)",
+			Reference = Range(0.30, 10.00, 0.5),
+			Default = 0.5,
+			UpdateFlag = UpdateFlag.None,
+			Category = "BEHAVIOUR"
+		},
+		
 		-- Vehicles behaviour
 		{
 			Name = "UseVehicles",
