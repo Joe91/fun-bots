@@ -135,7 +135,7 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 				if self:IsStaticMovement() then
 					self:_UpdateStaticMovement()
 					self:_UpdateInputs()
-					self:_UpdateYaw(self._UpdateFastTimer)
+					self:_UpdateYaw()
 					self._UpdateFastTimer = 0
 					return
 				end
@@ -177,14 +177,15 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 				else
 					self:_UpdateTargetMovement()
 				end
-				-- very fast code
 				if self.m_InVehicle then
 					self:_UpdateYawVehicle(s_Attacking)
-				else
-					self:_UpdateYaw()
 				end
-
 				self._UpdateFastTimer = 0
+			end
+
+			-- very fast code
+			if not self.m_InVehicle then
+				self:_UpdateYaw()
 			end
 
 		else -- alive, but no inputs allowed yet --> look around
@@ -196,7 +197,7 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 					self._SpawnProtectionTimer = 0
 				end
 
-				self:_UpdateYaw(Registry.BOT.BOT_UPDATE_CYCLE)
+				self:_UpdateYaw()
 				self:_LookAround(Registry.BOT.BOT_UPDATE_CYCLE)
 				self:_UpdateInputs()
 				self._UpdateTimer = 0
@@ -1322,6 +1323,10 @@ function Bot:_UpdateAttacking()
 			self._ShootPlayer = nil
 			self:ResetActionFlag(BotActionFlags.EnterVehicleActive)
 		end
+	elseif self._ShootPlayer.soldier == nil then -- reset if enemy is dead
+		self._ShootPlayerName = ""
+		self._ShootPlayer = nil
+		self._LastShootPlayer = nil
 	end
 end
 
