@@ -124,12 +124,16 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 	if Globals.IsInputAllowed and self._SpawnProtectionTimer <= 0 then
 		self._UpdateTimer = self._UpdateTimer + p_DeltaTime
 
+		if self.m_InVehicle and self.m_Player.controlledControllable == nil then
+			self.m_InVehicle = false
+		end
+
+		self:_UpdateAiming(p_DeltaTime)
 		self:_UpdateYaw(p_DeltaTime)
 
 		if self._UpdateTimer > Registry.BOT.BOT_UPDATE_CYCLE then
 			self:_SetActiveVars()
 			self:_UpdateRespawn()
-			self:_UpdateAiming()
 			self:_UpdateShooting()
 			self:_UpdateMovement()
 
@@ -617,7 +621,7 @@ function Bot:_UpdateRespawn()
 	end
 end
 
-function Bot:_UpdateAiming()
+function Bot:_UpdateAiming(p_DeltaTime)
 	if not self.m_Player.alive or self._ShootPlayer == nil then
 		return
 	end
@@ -692,7 +696,7 @@ function Bot:_UpdateAiming()
 				local s_TimeToTravel = (self._DistanceToPlayer / s_Speed)
 				s_PitchCorrection = 0.5 * s_TimeToTravel * s_TimeToTravel * s_Drop
 
-				s_FactorForMovement = (s_TimeToTravel) / self._UpdateTimer
+				s_FactorForMovement = (s_TimeToTravel) / p_DeltaTime
 			end
 
 			if self._LastShootPlayer == self._ShootPlayer then
@@ -757,10 +761,6 @@ function Bot:_UpdateAiming()
 end
 
 function Bot:_UpdateYaw(p_DeltaTime)
-	if self.m_InVehicle and self.m_Player.controlledControllable == nil then
-		self.m_InVehicle = false
-	end
-
 	local s_AttackAiming = true
 
 	if self._MeleeActive then
