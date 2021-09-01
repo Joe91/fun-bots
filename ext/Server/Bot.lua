@@ -778,11 +778,11 @@ function Bot:_UpdateYaw(p_DeltaTime)
 		local s_DifferenceY = self._TargetPoint.Position.z - self.m_Player.soldier.worldTransform.trans.z
 		local s_DifferenceX = self._TargetPoint.Position.x - self.m_Player.soldier.worldTransform.trans.x
 		local s_AtanDzDx = math.atan(s_DifferenceY, s_DifferenceX)
-		if not self.m_InVehicle then
-			s_AtanDzDx = s_AtanDzDx + self.m_YawOffset
-		end
 		local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
 		self._TargetYaw = s_Yaw
+		if not self.m_InVehicle then
+			self._TargetYaw = self._TargetYaw + self.m_YawOffset
+		end
 	end
 
 	if self.m_KnifeMode then
@@ -849,7 +849,7 @@ function Bot:_UpdateYaw(p_DeltaTime)
 				end
 			end
 		end
-	else
+	else -- infantery
 		s_DeltaYaw = self.m_Player.input.authoritativeAimingYaw - self._TargetYaw
 	end
 
@@ -1502,7 +1502,7 @@ function Bot:_UpdateMovement()
 					end
 
 					-- sidwareds movement
-					if not self.m_InVehicle and Coifig.MoveSidewards then
+					if not self.m_InVehicle and Config.MoveSidewards then
 						if self._SidewardsTimer <= 0 then
 							if self.m_StrafeValue ~= 0 then
 								self._SidewardsTimer = MathUtils:GetRandom(Config.MinMoveCycle, Config.MaxStraigtCycle)
@@ -1520,8 +1520,6 @@ function Bot:_UpdateMovement()
 								else
 									self.m_YawOffset = 0.7854 * -self.m_StrafeValue
 								end
-								print(self.m_StrafeValue)
-								print(self.m_YawOffset)
 							end
 						end
 						self:_SetInput(EntryInputActionEnum.EIAStrafe, self.m_StrafeValue)

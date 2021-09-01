@@ -520,7 +520,7 @@ SettingsDefinition = {
 			Value = Config.FovForShooting,
 			Description = "Degrees of FOV of Bot",
 			Reference = Range(0.00, 360.00, 1.0),
-			Default = 245,
+			Default = 180,
 			UpdateFlag = UpdateFlag.None,
 			Category = "BEHAVIOUR"
 		},

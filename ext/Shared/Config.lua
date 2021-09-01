@@ -56,7 +56,7 @@ Config = {
 	MaxBotsPerTeamS = 12,				-- max number of bots in one team for Scavenger
 
 	--BEHAVIOUR
-	FovForShooting = 245,				-- Degrees of FOV of Bot
+	FovForShooting = 180,				-- Degrees of FOV of Bot
 	FovVerticleForShooting = 90,		-- Degrees of FOV of Bot in verticle  direction
 	MaxRaycastDistance = 150,			-- meters bots start shooting at player
 	MaxShootDistanceNoSniper = 70,		-- meters a bot (not sniper) start shooting at player
