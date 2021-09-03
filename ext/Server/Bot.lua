@@ -308,7 +308,7 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 		end
 	end
 	if not p_IgnoreYaw and self.m_InVehicle then
-		if m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.AirVehicle) and self._DistanceToPlayer > Config.MaxShootDistanceNoAntiAir then
+		if m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) and m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) and self._DistanceToPlayer > Config.MaxShootDistanceNoAntiAir then
 			return false
 		end
 	end
@@ -325,7 +325,7 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 	local s_PitchHalf = 0
 
 	-- if target is air-vehicle and bot is in AA --> ignore yaw
-	if self.m_InVehicle and s_Type == VehicleTypes.AirVehicle and m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.AntiAir) then
+	if self.m_InVehicle and (s_Type == VehicleTypes.Chopper or s_Type == VehicleTypes.Plane) and m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.AntiAir) then
 		p_IgnoreYaw = true
 	end
 

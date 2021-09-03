@@ -39,7 +39,8 @@ VehicleTypes = {
 	Tank = 1,
 	AntiAir = 2,
 	LightVehicle = 3,
-	AirVehicle = 4,
+	Plane = 4,
+	Chopper = 5,
 	NoArmorVehicle = 5,
 	MavBot = 6
 }

@@ -47,8 +47,7 @@ VehicleData = {
 		Type =  VehicleTypes.Tank,
 		Parts = {11, nil, nil, nil},
 		Speed = {610, 350, 350, 350},
-		Drop = {9.81, 9.81, 9.81, 9.81}
-	},
+		Drop = {9.81, 9.81, 9.81, 9.81}},
 
 	-- AA Vehicle?
 	["LAV_AD"] = {
@@ -87,36 +86,39 @@ VehicleData = {
 	["AC130"] = {Name = "[GUNSHIP]", Type =  VehicleTypes.LightVehicle, Parts = {}},
 
 	-- Air vehicle
-	["A10_THUNDERBOLT"] = {Name = "[A-10 THUNDERBOLT]", Type =  VehicleTypes.AirVehicle, Parts = {}},
-	["A10_THUNDERBOLT_spjet"] = {Name = "[A-10 THUNDERBOLT]", Type =  VehicleTypes.AirVehicle, Parts = {}},
+	-- planes
+	["A10_THUNDERBOLT"] = {Name = "[A-10 THUNDERBOLT]", Type =  VehicleTypes.Plane, Parts = {}},
+	["A10_THUNDERBOLT_spjet"] = {Name = "[A-10 THUNDERBOLT]", Type =  VehicleTypes.Plane, Parts = {}},
+	["F16"] = {Name = "[F/A-18E SUPER HORNET]", Type =  VehicleTypes.Plane, Parts = {}},
+	["F18_Wingman"] = {Name = "[F/A-18E SUPER HORNET]", Type =  VehicleTypes.Plane, Parts = {}},
+	["Su-25TM"] = {Name = "[SU-25TM FROGFOOT]", Type =  VehicleTypes.Plane, Parts = {}},
+	["Su-35BM Flanker-E"] = {Name = "[SU-35BM FLANKER-E]", Type =  VehicleTypes.Plane, Parts = {}},
+	["Su37"] = {Name = "[SU-37]", Type =  VehicleTypes.Plane, Parts = {}},
+	["F35B"] = {Name = "[F-35]", Type =  VehicleTypes.Plane, Parts = {}},
+	-- choppers
 	["AH1Z"] = {
-		Name = "[AH-1Z VIPER]", 
-		Type =  VehicleTypes.AirVehicle, 
+		Name = "[AH-1Z VIPER]",
+		Type =  VehicleTypes.Chopper,
 		Parts = {nil, 1}}, --0,1,14
-	["AH1Z_coop"] = {Name = "[AH-1Z VIPER]", Type =  VehicleTypes.AirVehicle, Parts = {}},
-	["AH6_Littlebird"] = {Name = "[AH-6J LITTLE BIRD]", Type =  VehicleTypes.AirVehicle, Parts = {}},
-	["AH6_Littlebird_EQ"] = {Name = "[AH-6J LITTLE BIRD]", Type =  VehicleTypes.AirVehicle, Parts = {}},
-	["F16"] = {Name = "[F/A-18E SUPER HORNET]", Type =  VehicleTypes.AirVehicle, Parts = {}},
-	["F18_Wingman"] = {Name = "[F/A-18E SUPER HORNET]", Type =  VehicleTypes.AirVehicle, Parts = {}},
+	["AH1Z_coop"] = {Name = "[AH-1Z VIPER]", Type =  VehicleTypes.Chopper, Parts = {}},
+	["AH6_Littlebird"] = {Name = "[AH-6J LITTLE BIRD]", Type =  VehicleTypes.Chopper, Parts = {}},
+	["AH6_Littlebird_EQ"] = {Name = "[AH-6J LITTLE BIRD]", Type =  VehicleTypes.Chopper, Parts = {}},
 	["Ka-60"] = {
-		Name = "[KA-60 KASATKA]", 
-		Type =  VehicleTypes.AirVehicle,
+		Name = "[KA-60 KASATKA]",
+		Type =  VehicleTypes.Chopper,
 		Parts = {nil, 18, 15, nil, nil}},
 	["Mi28"] = {
-		Name = "[MI-28 HAVOC]", 
-		Type =  VehicleTypes.AirVehicle,
+		Name = "[MI-28 HAVOC]",
+		Type =  VehicleTypes.Chopper,
 		Parts = {nil, 2}}, --2,6
-	["Su-25TM"] = {Name = "[SU-25TM FROGFOOT]", Type =  VehicleTypes.AirVehicle, Parts = {}},
-	["Su-35BM Flanker-E"] = {Name = "[SU-35BM FLANKER-E]", Type =  VehicleTypes.AirVehicle, Parts = {}},
-	["Su37"] = {Name = "[SU-37]", Type =  VehicleTypes.AirVehicle, Parts = {}},
+
 	["Venom"] = {
-		Name = "[UH-1Y VENOM]", 
-		Type =  VehicleTypes.AirVehicle, 
+		Name = "[UH-1Y VENOM]",
+		Type =  VehicleTypes.Chopper,
 		Parts = {nil, 19, 16, nil, nil}},
-	["Venom_coop"] = {Name = "[UH-1Y VENOM]", Type =  VehicleTypes.AirVehicle, Parts = {}},
-	["Z-11w"] = {Name = "[Z-11W]", Type =  VehicleTypes.AirVehicle, Parts = {}},
-	["Wz11_SP_Paris"] = {Name = "[Z-11W]", Type =  VehicleTypes.AirVehicle, Parts = {}},
-	["F35B"] = {Name = "[F-35]", Type =  VehicleTypes.AirVehicle, Parts = {}},
+	["Venom_coop"] = {Name = "[UH-1Y VENOM]", Type =  VehicleTypes.Chopper, Parts = {}},
+	["Z-11w"] = {Name = "[Z-11W]", Type =  VehicleTypes.Chopper, Parts = {}},
+	["Wz11_SP_Paris"] = {Name = "[Z-11W]", Type =  VehicleTypes.Chopper, Parts = {}},
 
 	-- transport
 	["GrowlerITV"] = {Name = "[GROWLER ITV]", Type =  VehicleTypes.NoArmorVehicle, Parts = {nil, 47, nil}},
