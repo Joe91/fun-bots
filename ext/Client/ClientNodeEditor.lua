@@ -58,6 +58,8 @@ function ClientNodeEditor:__init()
 	self.m_lastDrawIndexPath = 0
 	self.m_lastDrawIndexNode = 0
 
+	self.m_ScanForNode = false
+
 	self.m_NodeOperation = ''
 
 	self.m_BotSelectedWaypoints = {}
@@ -197,6 +199,7 @@ function ClientNodeEditor:OnRegisterEvents()
 	Console:Register('AddObjective', '<string|Objective> - Add an objective to a path', self, self._onAddObjective)
 	Console:Register('AddMcom', 'Add an MCOM Arm/Disarm-Action to a point', self, self._onAddMcom)
 	Console:Register('AddVehicle', 'Add a vehicle a bot can use', self, self._onAddVehicle)
+	Console:Register('ExitVehicle', 'Add a point where a bot leaves the vehicle', self, self._onExitVehicle)
 	Console:Register('AddVehiclePath', '<string|Type> Add vehicle-usage to a path. Types = land, water, air', self, self._onAddVehiclePath)
 	Console:Register('RemoveObjective', '<string|Objective> - Remove an objective from a path', self, self._onRemoveObjective)
 	Console:Register('ProcessMetadata', 'Process waypoint metadata starting with selected nodes or all nodes', self, self._onProcessMetadata)
@@ -863,6 +866,40 @@ function ClientNodeEditor:_onAddVehicle(p_Args)
 	return true
 end
 
+function ClientNodeEditor:_onExitVehicle(p_Args)
+	self.m_CommoRoseActive = false
+
+	if self:IsSavingOrLoading() then
+		return false
+	end
+
+	if self.m_Player == nil or self.m_Player.soldier == nil then
+		self:Log('Player must be alive')
+		return false
+	end
+
+	local s_Selection = m_NodeCollection:GetSelected()
+
+	if #s_Selection ~= 1 then
+		self:Log('Must select one node')
+		return false
+	end
+
+	self:Log('Updating %d Possible Waypoints', (#s_Selection))
+
+	for i = 1, #s_Selection do
+		local action = {
+			type = "exit",
+			inputs = {EntryInputActionEnum.EIAInteract},
+			time = 0.5
+		}
+		s_Selection[i].Data.Action = action
+		self:Log('Updated Waypoint: %s', s_Selection[i].ID)
+	end
+
+	return true
+end
+
 function ClientNodeEditor:_onAddVehiclePath(p_Args)
 	self.m_CommoRoseActive = false
 
@@ -1362,6 +1399,7 @@ function ClientNodeEditor:_onCommoRoseAction(p_Action, p_Hit)
 		local s_Hit = self:Raycast()
 
 		if s_Hit == nil then
+			self.m_ScanForNode = true
 			return
 		end
 
@@ -2152,6 +2190,28 @@ function ClientNodeEditor:_drawNode(p_Waypoint, p_IsTracePath)
 	-- draw the node for the waypoint itself
 	if m_NodeCollection:InRange(p_Waypoint, self.m_PlayerPos, Config.WaypointRange) then
 		self:DrawSphere(p_Waypoint.Position, 0.05, s_Color.Node, false, (not s_QualityAtRange))
+
+		if self.m_ScanForNode then
+			local s_PointScreenPos = ClientUtils:WorldToScreen(p_Waypoint.Position)
+
+			-- Skip to the next point if this one isn't in view
+			if s_PointScreenPos ~= nil then
+				local s_Center = ClientUtils:GetWindowSize()/2
+				-- Select point if its close to the hitPosition
+				if s_Center:Distance(s_PointScreenPos) < 20 then
+					self.m_ScanForNode = false
+					if s_IsSelected then
+						self:Log('Deselect -> %s', p_Waypoint.ID)
+						m_NodeCollection:Deselect(p_Waypoint)
+						return
+					else
+						self:Log('Select -> %s', p_Waypoint.ID)
+						m_NodeCollection:Select(p_Waypoint)
+						return
+					end
+				end
+			end
+		end
 	end
 
 	-- if bot has selected draw it

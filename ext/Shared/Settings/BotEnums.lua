@@ -13,12 +13,34 @@ BotSpawnModes = {
 	RespawnRandomPath = 5
 }
 
+BotAttackingModes = {
+	NoAttack = 0,
+	AttackWithRifle = 1,
+	AttackWithC4 = 2,
+	AttackWithKnife = 3,
+	AttackWithGrenade = 4,
+	RevivePlayer = 5,
+	EnterVehicleOfPlayer = 6
+}
+
+BotActionFlags = {
+	NoActionActive = 0,
+	MeleeActive = 1,
+	ActionActive = 2,
+	ReviveActive = 3,
+	EnterVehicleActive = 4,
+	GrenadeActive = 5,
+	C4Active = 6,
+	OtherActionActive = 7
+}
+
 VehicleTypes = {
 	NoVehicle = 0,
 	Tank = 1,
 	AntiAir = 2,
 	LightVehicle = 3,
-	AirVehicle = 4,
+	Plane = 4,
+	Chopper = 5,
 	NoArmorVehicle = 5,
 	MavBot = 6
 }

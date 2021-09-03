@@ -55,11 +55,11 @@ Registry = {
                 -- Bot attack bot check interval
                 BOT_ATTACK_BOT_CHECK_INTERVAL = 0.05,
 
+				-- Update cycle fast
+                BOT_FAST_UPDATE_CYCLE = 0.03, -- equals 30 fps
+
                 -- Update cycle
                 BOT_UPDATE_CYCLE = 0.1,
-
-                -- = 3 frames at 60 Hz
-                BOT_AIM_UPDATE_INTERVAL = 0.05,
 
                 -- - distance the bots have to reach in height to continue with next Waypoint
                 TARGET_HEIGHT_DISTANCE_WAYPOINT = 1.5,
