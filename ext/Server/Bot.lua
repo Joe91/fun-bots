@@ -1615,7 +1615,7 @@ function Bot:_UpdateNormalMovementVehicle()
 				if s_Point.Data.Action.type == "exit" then
 					self.m_Player:_ExitVehicle(false, false)
 					self:ResetActionFlag(BotActionFlags.OtherActionActive)
-					local s_Node = g_GameDirector:FindClosestPath(s_Position, false)
+					local s_Node = g_GameDirector:FindClosestPath(self.m_Player.soldier.worldTransform.trans, false)
 
 					if s_Node ~= nil then
 						-- switch to vehicle
