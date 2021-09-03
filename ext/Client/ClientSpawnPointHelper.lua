@@ -21,6 +21,16 @@ function ClientSpawnPointHelper:OnLevelDestroy()
     self.m_SpawnPointTable = {}
 end
 
+function ClientSpawnPointHelper:OnSetEnabled(p_Args)
+	local s_Enabled = p_Args
+
+	if type(p_Args) == 'table' then
+		s_Enabled = p_Args[1]
+	end
+
+	self.m_Enabled = (s_Enabled == true or s_Enabled == 'true' or s_Enabled == '1')
+end
+
 function ClientSpawnPointHelper:OnUIDrawHud()
 	self.m_SelectedSpawnPoint = nil
 
