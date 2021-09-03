@@ -34,7 +34,6 @@ function ChatCommands:Execute(p_Parts, p_Player)
 			local s_Pos = p_Player.controlledControllable.transform.forward
 			print(s_VehicleName)
 			local s_VehicleEntity
-			local s_AllMovableIds = {}
 
 			-- vehicle found
 			print(p_Player.controlledControllable.physicsEntityBase.partCount)
@@ -50,7 +49,6 @@ function ChatCommands:Execute(p_Parts, p_Player)
 					print(p_Player.controlledControllable.physicsEntityBase:GetPart(j).typeInfo.name)
 					print("index: "..j)
 					print(s_QuatTransform:ToLinearTransform().forward - s_Pos)
-					table.insert(s_AllMovableIds, j)
 				end
 			end
 		end

@@ -42,7 +42,13 @@ VehicleData = {
 
 	["2S25_SPRUT-SD"] = {Name = "[SPRUT-SD]", Type =  VehicleTypes.Tank, Parts = {}},
 	["M1128-Stryker"] = {Name = "[M1128]", Type =  VehicleTypes.Tank, Parts = {}},
-	["VanModified"] = {Name = "[RHINO]", Type =  VehicleTypes.Tank, Parts = {}},
+	["VanModified"] = {
+		Name = "[RHINO]",
+		Type =  VehicleTypes.Tank,
+		Parts = {11, nil, nil, nil},
+		Speed = {610, 350, 350, 350},
+		Drop = {9.81, 9.81, 9.81, 9.81}
+	},
 
 	-- AA Vehicle?
 	["LAV_AD"] = {
