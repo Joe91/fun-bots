@@ -1612,7 +1612,21 @@ function Bot:_UpdateNormalMovementVehicle()
 		-- execute Action if needed
 		if self._ActiveAction == BotActionFlags.OtherActionActive then
 			if s_Point.Data ~= nil and s_Point.Data.Action ~= nil then
-				if self._ActionTimer <= s_Point.Data.Action.time then
+				if s_Point.Data.Action.type == "exit" then
+					self.m_Player:_ExitVehicle(false, false)
+					self:ResetActionFlag(BotActionFlags.OtherActionActive)
+					local s_Node = g_GameDirector:FindClosestPath(s_Position, false)
+
+					if s_Node ~= nil then
+						-- switch to vehicle
+						s_Point = s_Node
+						self._InvertPathDirection = false
+						self._PathIndex = s_Node.PathIndex
+						self._CurrentWayPoint = s_Node.PointIndex
+						s_NextPoint = m_NodeCollection:Get(self:_GetWayIndex(self._CurrentWayPoint + 1), self._PathIndex)
+						self._LastWayDistance = 1000
+					end
+				elseif self._ActionTimer <= s_Point.Data.Action.time then
 					for _, l_Input in pairs(s_Point.Data.Action.inputs) do
 						self:_SetInput(l_Input, 1)
 					end
@@ -1718,7 +1732,7 @@ function Bot:_UpdateNormalMovementVehicle()
 				if s_Point.Data.Action ~= nil then
 					local s_Action = s_Point.Data.Action
 
-					if g_GameDirector:CheckForExecution(s_Point, self.m_Player.teamId) then
+					if g_GameDirector:CheckForExecution(s_Point, self.m_Player.teamId, true) then
 						self._ActiveAction = BotActionFlags.OtherActionActive
 
 						if s_Action.time ~= nil then
@@ -2069,7 +2083,7 @@ function Bot:_UpdateNormalMovement()
 					if s_Point.Data.Action ~= nil then
 						local s_Action = s_Point.Data.Action
 
-						if g_GameDirector:CheckForExecution(s_Point, self.m_Player.teamId) then
+						if g_GameDirector:CheckForExecution(s_Point, self.m_Player.teamId, false) then
 							self._ActiveAction = BotActionFlags.OtherActionActive
 
 							if s_Action.time ~= nil then

@@ -373,7 +373,7 @@ function GameDirector:IsWaitForZoneActive()
 	return self.m_waitForZone
 end
 
-function GameDirector:CheckForExecution(p_Point, p_TeamId)
+function GameDirector:CheckForExecution(p_Point, p_TeamId, p_InVehicle)
 	if p_Point.Data.Action == nil then
 		return false
 	end
@@ -405,6 +405,9 @@ function GameDirector:CheckForExecution(p_Point, p_TeamId)
 		return false
 
 	elseif s_Action.type == "vehicle" then
+		if p_InVehicle then
+			return false
+		end
 		local s_CurrentPathFirst = m_NodeCollection:GetFirst(p_Point.PathIndex)
 		if s_CurrentPathFirst.Data.Objectives ~= nil and #s_CurrentPathFirst.Data.Objectives == 1 then
 			local s_TempObjective = self:_GetObjectiveObject(s_CurrentPathFirst.Data.Objectives[1])
@@ -412,6 +415,12 @@ function GameDirector:CheckForExecution(p_Point, p_TeamId)
 				s_TempObjective.active = false
 				return true
 			end
+		else
+			return false
+		end
+	elseif s_Action.type == "exit" then
+		if p_InVehicle then
+			return true
 		else
 			return false
 		end
