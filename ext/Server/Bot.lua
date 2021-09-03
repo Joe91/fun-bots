@@ -178,9 +178,6 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 					else
 						self:_UpdateTargetMovement()
 					end
-					if self.m_InVehicle then
-						self:_UpdateYawVehicle(s_Attacking)
-					end
 
 				else -- bot in vehicle
 					-- sync slow code with fast code. Therefore execute the slow code first 
@@ -1613,7 +1610,7 @@ function Bot:_UpdateNormalMovementVehicle()
 		if self._ActiveAction == BotActionFlags.OtherActionActive then
 			if s_Point.Data ~= nil and s_Point.Data.Action ~= nil then
 				if s_Point.Data.Action.type == "exit" then
-					self.m_Player:_ExitVehicle(false, false)
+					self.m_Player:ExitVehicle(false, false)
 					self:ResetActionFlag(BotActionFlags.OtherActionActive)
 					local s_Node = g_GameDirector:FindClosestPath(self.m_Player.soldier.worldTransform.trans, false)
 
