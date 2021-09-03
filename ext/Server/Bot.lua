@@ -1022,7 +1022,7 @@ function Bot:_UpdateYawVehicle(p_Attacking)
 
 	if not p_Attacking then
 		if  m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) then
-			if self._TargetPoint == nil or self.m_Player.controlledControllable == nil then
+			if self._TargetPoint == nil or self._NextTargetPoint == nil or self.m_Player.controlledControllable == nil then
 				return
 			end
 
@@ -1043,9 +1043,9 @@ function Bot:_UpdateYawVehicle(p_Attacking)
 			end
 
 			-- HEIGHT
-			local s_delta_Height = self._TargetPoint.Position.y - self.m_Player.controlledControllable.transform.trans.y
-			self._Esum_drv_height = self._Esum_drv_height + s_delta_Height
-			local s_Output_Throttle = 5 * s_delta_Height + 0.05 * self._Esum_drv_height
+			local s_Delta_Height = self._TargetPoint.Position.y - self.m_Player.controlledControllable.transform.trans.y
+			self._Esum_drv_height = self._Esum_drv_height + s_Delta_Height
+			local s_Output_Throttle = 5 * s_Delta_Height + 0.05 * self._Esum_drv_height
 
 			if self._Esum_drv_height > 1 then
 				self._Esum_drv_height = 1
@@ -1062,8 +1062,39 @@ function Bot:_UpdateYawVehicle(p_Attacking)
 			end
 
 			-- FOREWARD (depending on speed)
+			-- A: use distance horizontally between points for speed-value --> not that good for that
+			-- local DeltaX = self._NextTargetPoint.Position.x - self._TargetPoint.Position.x
+			-- local DeltaZ = self._NextTargetPoint.Position.z - self._TargetPoint.Position.z
+			-- local Distance = math.sqrt(DeltaX*DeltaX + DeltaZ*DeltaZ)
+			-- B: just fly with constant speed -->
+			local s_Tartget_Tilt = -0.35 -- = 20 °
+			local s_Current_Tilt = math.asin(self.m_Player.controlledControllable.transform.forward.y / 1.0)
+			local s_Delta_Tilt = s_Tartget_Tilt - s_Current_Tilt
 			
+			self._Esum_drv_speed = self._Esum_drv_speed + s_Delta_Tilt
+			local s_Output_Tilt = 5 * s_Delta_Tilt + 0.05 * self._Esum_drv_speed
 
+			if self._Esum_drv_speed > 1 then
+				self._Esum_drv_speed = 1
+			elseif self._Esum_drv_speed <-1 then
+				self._Esum_drv_speed = -1
+			end
+			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, -s_Output_Tilt)	
+			
+			-- ROLL (keep it zero)
+			-- TODO: in strom steering: Roll a little
+			local s_Tartget_Roll = 0.0 -- = 20 °
+			local s_Current_Roll = math.asin(self.m_Player.controlledControllable.transform.left.y / 1.0)
+			local s_Delta_Roll = s_Tartget_Roll - s_Current_Roll
+			self._Esum_drv_roll = self._Esum_drv_roll + s_Delta_Roll
+			local s_Output_Roll = 5 * s_Delta_Roll + 0.05 * self._Esum_drv_roll
+
+			if self._Esum_drv_roll > 1 then
+				self._Esum_drv_roll = 1
+			elseif self._Esum_drv_roll <-1 then
+				self._Esum_drv_roll = -1
+			end
+			self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, s_Output_Roll)	
 
 		else
 			self._Esum_att_yaw = 0.0
