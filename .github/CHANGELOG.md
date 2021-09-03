@@ -15,10 +15,11 @@ This release contains a lot of small bug fixes and more QoL updates.
 * SMAWs don't move when shooting anymore
 * Rework Enter-Vehicle-System (preparation to let more bots enter one vehicle)
 * Regestry for some inner Values added
-* Added Exit-Command for vehicles
+* Added Exit-Command for vehicles (#169)
 * Improved Code of Bot.lua to separate different Functions and for future functions
 * Added more vehicles
 * Selection of Nodes improved (under ground and above ground)
+* First steps of Chopper-support
 
 ### New maps
 * Theran Highway CQS (Vehicles) - thanks to Gemini899

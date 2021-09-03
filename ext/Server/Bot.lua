@@ -83,9 +83,14 @@ function Bot:__init(p_Player)
 	self._VehicleReadyToShoot = false
 	self._FullVehicleSteering = false
 	self._VehicleDirBackPositive = false
-	self._Esum_drive = 0.0
-	self._Esum_yaw = 0.0
-	self._Esum_pitch = 0.0
+	self._Esum_drv_yaw = 0.0
+	--chopper
+	self._Esum_drv_height = 0.0
+	self._Esum_drv_speed = 0.0
+	self._Esum_drv_roll = 0.0
+	--guns
+	self._Esum_att_yaw = 0.0
+	self._Esum_att_pitch = 0.0
 
 	--shooting
 	self._Shoot = false
@@ -983,13 +988,13 @@ function Bot:_UpdateYawVehicle(p_Attacking)
 	end
 
 	if p_Attacking then
-		self._Esum_pitch = self._Esum_pitch + s_DeltaPitch
-		local s_Output = 7 * s_DeltaPitch + 0.05 * self._Esum_pitch
+		self._Esum_att_pitch = self._Esum_att_pitch + s_DeltaPitch
+		local s_Output = 7 * s_DeltaPitch + 0.05 * self._Esum_att_pitch
 
-		if self._Esum_pitch > 5 then
-			self._Esum_pitch = 5
-		elseif self._Esum_pitch <-5 then
-			self._Esum_pitch = -5
+		if self._Esum_att_pitch > 5 then
+			self._Esum_att_pitch = 5
+		elseif self._Esum_att_pitch <-5 then
+			self._Esum_att_pitch = -5
 		end
 
 		self.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, -s_Output)
@@ -1016,42 +1021,88 @@ function Bot:_UpdateYawVehicle(p_Attacking)
 	end
 
 	if not p_Attacking then
-		self._Esum_yaw = 0.0
-		self._Esum_pitch = 0.0
-		self._Esum_drive = self._Esum_drive + s_DeltaYaw
-		local s_Output = 5 * s_DeltaYaw + 0.05 * self._Esum_drive
-
-		if self._Esum_drive > 5 then
-			self._Esum_drive = 5
-		elseif self._Esum_drive <-5 then
-			self._Esum_drive = -5
-		end
-
-
-		if self.m_ActiveSpeedValue == BotMoveSpeeds.Backwards then
-			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, s_Output)
-		else
-			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, -s_Output)
-		end
-
-		if s_CorrectGunYaw then
-			if self._VehicleDirBackPositive then
-				self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, 1)
-			else
-				self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, -1)
+		if  m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) then
+			if self._TargetPoint == nil or self.m_Player.controlledControllable == nil then
+				return
 			end
+
+			-- YAW
+			self._Esum_drv_yaw = self._Esum_drv_yaw + s_DeltaYaw
+			local s_Output_Yaw = 5 * s_DeltaYaw + 0.05 * self._Esum_drv_yaw
+
+			if self._Esum_drv_yaw > 5 then
+				self._Esum_drv_yaw = 5
+			elseif self._Esum_drv_yaw <-5 then
+				self._Esum_drv_yaw = -5
+			end
+
+			if self.m_ActiveSpeedValue == BotMoveSpeeds.Backwards then
+				self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, s_Output_Yaw)
+			else
+				self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, -s_Output_Yaw)
+			end
+
+			-- HEIGHT
+			local s_delta_Height = self._TargetPoint.Position.y - self.m_Player.controlledControllable.transform.trans.y
+			self._Esum_drv_height = self._Esum_drv_height + s_delta_Height
+			local s_Output_Throttle = 5 * s_delta_Height + 0.05 * self._Esum_drv_height
+
+			if self._Esum_drv_height > 1 then
+				self._Esum_drv_height = 1
+			elseif self._Esum_drv_height <-1 then
+				self._Esum_drv_height = -1
+			end
+
+			if s_Output_Throttle > 0 then
+				self.m_Player.input:SetLevel(EntryInputActionEnum.EIAThrottle, s_Output_Throttle)
+				self.m_Player.input:SetLevel(EntryInputActionEnum.EIABrake, 0.0)
+			else
+				self.m_Player.input:SetLevel(EntryInputActionEnum.EIAThrottle, 0.0)
+				self.m_Player.input:SetLevel(EntryInputActionEnum.EIABrake, -s_Output_Throttle)
+			end
+
+			-- FOREWARD (depending on speed)
+			
+
+
 		else
-			self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, 0)
+			self._Esum_att_yaw = 0.0
+			self._Esum_att_pitch = 0.0
+			self._Esum_drv_yaw = self._Esum_drv_yaw + s_DeltaYaw
+			local s_Output = 5 * s_DeltaYaw + 0.05 * self._Esum_drv_yaw
+
+			if self._Esum_drv_yaw > 5 then
+				self._Esum_drv_yaw = 5
+			elseif self._Esum_drv_yaw <-5 then
+				self._Esum_drv_yaw = -5
+			end
+
+
+			if self.m_ActiveSpeedValue == BotMoveSpeeds.Backwards then
+				self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, s_Output)
+			else
+				self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, -s_Output)
+			end
+
+			if s_CorrectGunYaw then
+				if self._VehicleDirBackPositive then
+					self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, 1)
+				else
+					self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, -1)
+				end
+			else
+				self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, 0)
+			end
 		end
 	else
-		self._Esum_drive = 0.0
-		self._Esum_yaw = self._Esum_yaw + s_DeltaYaw
-		local s_Output = 7 * s_DeltaYaw + 0.05 * self._Esum_yaw
+		self._Esum_drv_yaw = 0.0
+		self._Esum_att_yaw = self._Esum_att_yaw + s_DeltaYaw
+		local s_Output = 7 * s_DeltaYaw + 0.05 * self._Esum_att_yaw
 
-		if self._Esum_yaw > 5 then
-			self._Esum_yaw = 5
-		elseif self._Esum_yaw <-5 then
-			self._Esum_yaw = -5
+		if self._Esum_att_yaw > 5 then
+			self._Esum_att_yaw = 5
+		elseif self._Esum_att_yaw <-5 then
+			self._Esum_att_yaw = -5
 		end
 
 		self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, 0.0)
@@ -2265,51 +2316,66 @@ function Bot:_UpdateMovementSprintToTarget()
 end
 
 function Bot:_UpdateSpeedOfMovementVehicle()
-	-- additional movement
-	local s_SpeedVal = 0
-
-	if self.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Stand then
-		self.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Stand, true, true)
+	if self.m_Player.soldier == nil then
+		return
 	end
 
-	if self.m_ActiveMoveMode ~= BotMoveModes.Standstill then
-		-- limit speed if full steering active
-		if self._FullVehicleSteering and self.m_ActiveSpeedValue >= BotMoveSpeeds.Normal then
-			self.m_ActiveSpeedValue = BotMoveSpeeds.SlowCrouch
+	if  m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) then
+		-- TODO: solve this in yaw-function or here??
+		if self.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Stand then
+			self.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Stand, true, true)
 		end
-
-		-- normal values
-		if self.m_ActiveSpeedValue == BotMoveSpeeds.VerySlowProne then
-			s_SpeedVal = 0.25
-		elseif self.m_ActiveSpeedValue == BotMoveSpeeds.SlowCrouch then
-			s_SpeedVal = 0.5
-		elseif self.m_ActiveSpeedValue == BotMoveSpeeds.Normal then
-			s_SpeedVal = 0.8
-		elseif self.m_ActiveSpeedValue == BotMoveSpeeds.Sprint then
-			s_SpeedVal = 1.0
-		elseif self.m_ActiveSpeedValue == BotMoveSpeeds.Backwards then
-			s_SpeedVal = -0.7
-		end
-	end
-
-	-- movent speed
-	if self.m_ActiveSpeedValue == BotMoveSpeeds.Backwards then
-		self._BrakeTimer = 0
-		self:_SetInput(EntryInputActionEnum.EIABrake, -s_SpeedVal)
-	elseif self.m_ActiveSpeedValue ~= BotMoveSpeeds.NoMovement then
-		self._BrakeTimer = 0
-		self:_SetInput(EntryInputActionEnum.EIAThrottle, s_SpeedVal)
 	else
-		if self._BrakeTimer < 0.7 then
-			self:_SetInput(EntryInputActionEnum.EIABrake, 1)
+		-- additional movement
+		local s_SpeedVal = 0
+
+		if self.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Stand then
+			self.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Stand, true, true)
 		end
 
-		self._BrakeTimer = self._BrakeTimer + Registry.BOT.BOT_UPDATE_CYCLE
+		if self.m_ActiveMoveMode ~= BotMoveModes.Standstill then
+			-- limit speed if full steering active
+			if self._FullVehicleSteering and self.m_ActiveSpeedValue >= BotMoveSpeeds.Normal then
+				self.m_ActiveSpeedValue = BotMoveSpeeds.SlowCrouch
+			end
+
+			-- normal values
+			if self.m_ActiveSpeedValue == BotMoveSpeeds.VerySlowProne then
+				s_SpeedVal = 0.25
+			elseif self.m_ActiveSpeedValue == BotMoveSpeeds.SlowCrouch then
+				s_SpeedVal = 0.5
+			elseif self.m_ActiveSpeedValue == BotMoveSpeeds.Normal then
+				s_SpeedVal = 0.8
+			elseif self.m_ActiveSpeedValue == BotMoveSpeeds.Sprint then
+				s_SpeedVal = 1.0
+			elseif self.m_ActiveSpeedValue == BotMoveSpeeds.Backwards then
+				s_SpeedVal = -0.7
+			end
+		end
+
+		-- movent speed
+		if self.m_ActiveSpeedValue == BotMoveSpeeds.Backwards then
+			self._BrakeTimer = 0
+			self:_SetInput(EntryInputActionEnum.EIABrake, -s_SpeedVal)
+		elseif self.m_ActiveSpeedValue ~= BotMoveSpeeds.NoMovement then
+			self._BrakeTimer = 0
+			self:_SetInput(EntryInputActionEnum.EIAThrottle, s_SpeedVal)
+		else
+			if self._BrakeTimer < 0.7 then
+				self:_SetInput(EntryInputActionEnum.EIABrake, 1)
+			end
+
+			self._BrakeTimer = self._BrakeTimer + Registry.BOT.BOT_UPDATE_CYCLE
+		end
 	end
 end
 
 function Bot:_UpdateSpeedOfMovement()
 	-- additional movement
+	if self.m_Player.soldier == nil then
+		return
+	end
+
 	local s_SpeedVal = 0
 
 	if self.m_ActiveMoveMode ~= BotMoveModes.Standstill then
