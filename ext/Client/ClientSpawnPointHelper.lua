@@ -5,9 +5,6 @@ require('__shared/Config')
 function ClientSpawnPointHelper:__init()
 	self.m_Enabled = false
     self.m_SpawnPointTable = {}
-	self.m_MaxDistance = 100
-	self.m_RaycastPos = Vec3()
-	self.m_RaycastTimer = 0
 	self.m_SelectedSpawnPoint = nil
 end
 
@@ -22,16 +19,6 @@ end
 
 function ClientSpawnPointHelper:OnLevelDestroy()
     self.m_SpawnPointTable = {}
-end
-
-function ClientSpawnPointHelper:OnSetEnabled(p_Args)
-	local s_Enabled = p_Args
-
-	if type(p_Args) == 'table' then
-		s_Enabled = p_Args[1]
-	end
-
-	self.m_Enabled = (s_Enabled == true or s_Enabled == 'true' or s_Enabled == '1')
 end
 
 function ClientSpawnPointHelper:OnUIDrawHud()
@@ -111,64 +98,6 @@ function ClientSpawnPointHelper:GetForwardOffsetFromLT(p_Transform)
 		p_Transform.trans.z + (s_Direction.z * 0.4))
 
 	return s_Forward
-end
-
-
-function ClientSpawnPointHelper:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
-	-- Only do raycast on presimulation UpdatePass
-	if p_UpdatePass ~= UpdatePass.UpdatePass_PreSim then
-		return
-	end
-
-	if not Config.DrawSpawnPoints or not self.m_Enabled then
-		return
-	end
-
-	self.m_RaycastTimer = self.m_RaycastTimer + p_DeltaTime
-	if self.m_RaycastTimer < Registry.GAME_RAYCASTING.RAYCAST_INTERVAL then
-		return
-	end
-	self.m_RaycastTimer = 0
-
-	local s_RaycastHit = self:Raycast()
-
-	if s_RaycastHit == nil then
-		return
-	end
-
-	self.m_RaycastPos = s_RaycastHit.position
-end
-
--- stolen't https://github.com/EmulatorNexus/VEXT-Samples/blob/80cddf7864a2cdcaccb9efa810e65fae1baeac78/no-headglitch-raycast/ext/Client/__init__.lua
-function ClientSpawnPointHelper:Raycast()
-
-	local s_LocalPlayer = PlayerManager:GetLocalPlayer()
-
-	if s_LocalPlayer == nil then
-		return
-	end
-
-	-- We get the camera transform, from which we will start the raycast. We get the direction from the forward vector. Camera transform
-	-- is inverted, so we have to invert this vector.
-	local s_Transform = ClientUtils:GetCameraTransform()
-	local s_Direction = Vec3(-s_Transform.forward.x, -s_Transform.forward.y, -s_Transform.forward.z)
-
-	if s_Transform.trans == Vec3(0,0,0) then
-		return
-	end
-
-	local s_CastStart = s_Transform.trans
-
-	-- We get the raycast end transform with the calculated direction and the max distance.
-	local s_CastEnd = Vec3(
-		s_Transform.trans.x + (s_Direction.x * 100),
-		s_Transform.trans.y + (s_Direction.y * 100),
-		s_Transform.trans.z + (s_Direction.z * 100))
-
-	-- Perform raycast, returns a RayCastHit object.
-	local s_RaycastHit = RaycastManager:Raycast(s_CastStart, s_CastEnd, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll | RayCastFlags.CheckDetailMesh)
-
-	return s_RaycastHit
 end
 
 if g_ClientSpawnPointHelper == nil then

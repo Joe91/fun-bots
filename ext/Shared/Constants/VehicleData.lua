@@ -57,7 +57,7 @@ VehicleData = {
 		Name = "[RHINO]",
 		Type =  VehicleTypes.Tank,
 		Parts = {11, nil, nil, nil},
-		Speed = {610, 350, 350, 350},
+		Speed = {600, 350, 350, 350},
 		Drop = {9.81, 9.81, 9.81, 9.81}},
 
 	-- AA Vehicle?
