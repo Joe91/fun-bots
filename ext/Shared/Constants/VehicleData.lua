@@ -40,8 +40,19 @@ VehicleData = {
 		Speed = {200, 610, 350, 350, 350, 350},
 		Drop = {4.9, 9.81, 9.81, 9.81, 9.81, 9.81}}, --37,38
 
-	["2S25_SPRUT-SD"] = {Name = "[SPRUT-SD]", Type =  VehicleTypes.Tank, Parts = {}},
-	["M1128-Stryker"] = {Name = "[M1128]", Type =  VehicleTypes.Tank, Parts = {}},
+		--TODO: search real weapon-stats
+	["2S25_SPRUT-SD"] = {
+		Name = "[SPRUT-SD]", 
+		Type =  VehicleTypes.Tank,
+		Parts = {16, nil, nil, nil, nil},
+		Speed = {200, 350, 350, 350, 350},
+		Drop = {4.9, 9.81, 9.81, 9.81, 9.81}},
+	["M1128-Stryker"] = {
+		Name = "[M1128]",
+		Type =  VehicleTypes.Tank,
+		Parts = {26, nil, nil, nil, nil},
+		Speed = {200, 350, 350, 350, 350},
+		Drop = {4.9, 9.81, 9.81, 9.81, 9.81}},
 	["VanModified"] = {
 		Name = "[RHINO]",
 		Type =  VehicleTypes.Tank,
