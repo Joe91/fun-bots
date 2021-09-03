@@ -18,6 +18,7 @@ This release contains a lot of small bug fixes and more QoL updates.
 * Added Exit-Command for vehicles
 * Improved Code of Bot.lua to separate different Functions and for future functions
 * Added more vehicles
+* Selection of Nodes improved (under ground and above ground)
 
 ### New maps
 * Theran Highway CQS (Vehicles) - thanks to Gemini899
