@@ -22,6 +22,7 @@ This release contains a lot of small bug fixes and more QoL updates.
 * First Chopper-support
 * bots wait for more passengers
 * bots on guns now act independatnt of driver
+* example chopper-paths for caspian border cq-large
 
 ### New maps
 * Theran Highway CQS (Vehicles) - thanks to Gemini899
