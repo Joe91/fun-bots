@@ -19,7 +19,9 @@ This release contains a lot of small bug fixes and more QoL updates.
 * Improved Code of Bot.lua to separate different Functions and for future functions
 * Added more vehicles
 * Selection of Nodes improved (under ground and above ground)
-* First steps of Chopper-support
+* First Chopper-support
+* bots wait for more passengers
+* bots on guns now act independatnt of driver
 
 ### New maps
 * Theran Highway CQS (Vehicles) - thanks to Gemini899
