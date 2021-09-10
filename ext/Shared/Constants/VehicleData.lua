@@ -110,8 +110,15 @@ VehicleData = {
 	["AH1Z"] = {
 		Name = "[AH-1Z VIPER]",
 		Type =  VehicleTypes.Chopper,
-		Parts = {nil, 1}}, --0,1,14
-	["AH1Z_coop"] = {Name = "[AH-1Z VIPER]", Type =  VehicleTypes.Chopper, Parts = {}},
+		Parts = {nil, 1}, --0,1,14
+		Speed = {350, 600},
+		Drop = {9.81, 0.0}},
+	["AH1Z_coop"] = {
+		Name = "[AH-1Z VIPER]",
+		Type =  VehicleTypes.Chopper,
+		Parts = {nil, 1}, --0,1,14
+		Speed = {350, 600},
+		Drop = {9.81, 0.0}},
 	["AH6_Littlebird"] = {Name = "[AH-6J LITTLE BIRD]", Type =  VehicleTypes.Chopper, Parts = {}},
 	["AH6_Littlebird_EQ"] = {Name = "[AH-6J LITTLE BIRD]", Type =  VehicleTypes.Chopper, Parts = {}},
 	["Ka-60"] = {
@@ -121,13 +128,17 @@ VehicleData = {
 	["Mi28"] = {
 		Name = "[MI-28 HAVOC]",
 		Type =  VehicleTypes.Chopper,
-		Parts = {nil, 2}}, --2,6
-
+		Parts = {nil, 2}, --2,6},
+		Speed = {350, 600},
+		Drop = {9.81, 0.0}},
 	["Venom"] = {
 		Name = "[UH-1Y VENOM]",
 		Type =  VehicleTypes.Chopper,
 		Parts = {nil, 19, 16, nil, nil}},
-	["Venom_coop"] = {Name = "[UH-1Y VENOM]", Type =  VehicleTypes.Chopper, Parts = {}},
+	["Venom_coop"] = {
+		Name = "[UH-1Y VENOM]",
+		Type =  VehicleTypes.Chopper,
+		Parts = {nil, 19, 16, nil, nil}},
 	["Z-11w"] = {Name = "[Z-11W]", Type =  VehicleTypes.Chopper, Parts = {}},
 	["Wz11_SP_Paris"] = {Name = "[Z-11W]", Type =  VehicleTypes.Chopper, Parts = {}},
 

@@ -412,12 +412,11 @@ function GameDirector:CheckForExecution(p_Point, p_TeamId, p_InVehicle)
 		if s_CurrentPathFirst.Data.Objectives ~= nil and #s_CurrentPathFirst.Data.Objectives == 1 then
 			local s_TempObjective = self:_GetObjectiveObject(s_CurrentPathFirst.Data.Objectives[1])
 			if s_TempObjective ~= nil and s_TempObjective.active and s_TempObjective.isEnterVehiclePath then
-				s_TempObjective.active = false
 				return true
 			end
-		else
-			return false
 		end
+		return false
+
 	elseif s_Action.type == "exit" then
 		if p_InVehicle then
 			return true
@@ -427,8 +426,6 @@ function GameDirector:CheckForExecution(p_Point, p_TeamId, p_InVehicle)
 	else -- execute ACTION
 		return true
 	end
-
-
 end
 
 function GameDirector:FindClosestPath(p_Trans, p_VehiclePath)
