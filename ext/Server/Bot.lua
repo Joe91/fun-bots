@@ -1045,12 +1045,12 @@ function Bot:_UpdateYawVehicle(p_Attacking)
 			-- HEIGHT
 			local s_Delta_Height = self._TargetPoint.Position.y - self.m_Player.controlledControllable.transform.trans.y
 			self._Esum_drv_height = self._Esum_drv_height + s_Delta_Height
-			local s_Output_Throttle = 5 * s_Delta_Height + 0.05 * self._Esum_drv_height
+			local s_Output_Throttle = 0.25 * s_Delta_Height + 0.05 * self._Esum_drv_height
 
-			if self._Esum_drv_height > 1 then
-				self._Esum_drv_height = 1
-			elseif self._Esum_drv_height <-1 then
-				self._Esum_drv_height = -1
+			if self._Esum_drv_height > 5 then
+				self._Esum_drv_height = 5
+			elseif self._Esum_drv_height <-5 then
+				self._Esum_drv_height = -5
 			end
 
 			if s_Output_Throttle > 0 then
@@ -1074,25 +1074,33 @@ function Bot:_UpdateYawVehicle(p_Attacking)
 			self._Esum_drv_speed = self._Esum_drv_speed + s_Delta_Tilt
 			local s_Output_Tilt = 5 * s_Delta_Tilt + 0.05 * self._Esum_drv_speed
 
-			if self._Esum_drv_speed > 1 then
-				self._Esum_drv_speed = 1
-			elseif self._Esum_drv_speed <-1 then
-				self._Esum_drv_speed = -1
+			if self._Esum_drv_speed > 5 then
+				self._Esum_drv_speed = 5
+			elseif self._Esum_drv_speed <-5 then
+				self._Esum_drv_speed = -5
 			end
 			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, -s_Output_Tilt)	
 			
 			-- ROLL (keep it zero)
-			-- TODO: in strom steering: Roll a little
-			local s_Tartget_Roll = 0.0 -- = 20 °
+			local s_Tartget_Roll = 0.0
+			-- TODO: in strog steering: Roll a little
+			-- if self._FullVehicleSteering then
+			-- 	if s_AbsDeltaYaw > 0 then
+			-- 		s_Tartget_Roll = 0.1
+			-- 	else
+			-- 		s_Tartget_Roll = -0.1
+			-- 	end
+			-- end
+
 			local s_Current_Roll = math.asin(self.m_Player.controlledControllable.transform.left.y / 1.0)
 			local s_Delta_Roll = s_Tartget_Roll - s_Current_Roll
 			self._Esum_drv_roll = self._Esum_drv_roll + s_Delta_Roll
-			local s_Output_Roll = 5 * s_Delta_Roll + 0.05 * self._Esum_drv_roll
+			local s_Output_Roll = 10 * s_Delta_Roll + 0.05 * self._Esum_drv_roll
 
-			if self._Esum_drv_roll > 1 then
-				self._Esum_drv_roll = 1
-			elseif self._Esum_drv_roll <-1 then
-				self._Esum_drv_roll = -1
+			if self._Esum_drv_roll > 5 then
+				self._Esum_drv_roll = 5
+			elseif self._Esum_drv_roll <-5 then
+				self._Esum_drv_roll = -5
 			end
 			self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, s_Output_Roll)	
 
