@@ -289,6 +289,11 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 		return false
 	end
 
+	-- don't attack in chopper as driver
+	if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) and self.m_Player.controlledEntryId == 0 then
+		return false
+	end
+
 	-- don't shoot at teammates
 	if self.m_Player.teamId == p_Player.teamId then
 		return false
