@@ -1074,9 +1074,8 @@ function Bot:_UpdateYawVehicle(p_Attacking)
 		-- abort attacking if too steep or too low
 		if p_Attacking then
 			local s_PitchHalf = Config.FovVerticleChopperForShooting / 360 * math.pi
-			local s_HightOverTarget = 30 --TODO: self.m_Player.controlledControllable.transform.trans.y - self._ShootPlayer.soldier.worldtransform.trans.y
 
-			if math.abs(self._TargetPitch) > s_PitchHalf or (s_HightOverTarget < 20 and s_HightOverTarget > 0) then
+			if math.abs(self._TargetPitch) > s_PitchHalf then --TODO: abort if too close to ground. Do this with raycasts?
 				self:_AbortAttack()
 			end
 		end
