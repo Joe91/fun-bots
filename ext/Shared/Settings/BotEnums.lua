@@ -41,8 +41,8 @@ VehicleTypes = {
 	LightVehicle = 3,
 	Plane = 4,
 	Chopper = 5,
-	NoArmorVehicle = 5,
-	MavBot = 6
+	NoArmorVehicle = 6,
+	MavBot = 7
 }
 
 VehicleAttackModes = {

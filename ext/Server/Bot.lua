@@ -1062,6 +1062,9 @@ function Bot:_UpdateYawVehicle(p_Attacking)
 
 	-- chopper driver handling here
 	if self.m_Player.controlledEntryId == 0 and m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) then
+		if self._VehicleWaitTimer > 0 then
+			return
+		end
 		if not p_Attacking and (self._TargetPoint == nil or self._NextTargetPoint == nil) then
 			return
 		end
@@ -1692,6 +1695,7 @@ function Bot:_EnterVehicle()
 					--m_Logger:Write(self.m_ActiveVehicle)
 					if i == 0 then
 						self._VehicleWaitTimer = Config.VehicleWaitForPassengersTime
+						self._BrakeTimer = 10000
 					else
 						self._VehicleWaitTimer = 0
 						if i == s_Entity.entryCount - 1 then
@@ -1783,9 +1787,6 @@ function Bot:ExitVehicle()
 end
 
 function Bot:_UpdateNormalMovementVehicle()
-	-- move along points
-	self._AttackModeMoveTimer = 0
-
 	if self._VehicleWaitTimer > 0 then
 		self._VehicleWaitTimer = self._VehicleWaitTimer - Registry.BOT.BOT_UPDATE_CYCLE
 		if self._VehicleWaitTimer <= 0 then
@@ -1795,6 +1796,7 @@ function Bot:_UpdateNormalMovementVehicle()
 		end
 	end
 
+	-- move along points
 	if m_NodeCollection:Get(1, self._PathIndex) ~= nil then -- check for valid point
 		-- get next point
 		local s_ActivePointIndex = self:_GetWayIndex(self._CurrentWayPoint)
@@ -1802,7 +1804,6 @@ function Bot:_UpdateNormalMovementVehicle()
 		local s_Point = nil
 		local s_NextPoint = nil
 		local s_PointIncrement = 1
-		local s_NoStuckReset = false
 
 		s_Point = m_NodeCollection:Get(s_ActivePointIndex, self._PathIndex)
 
@@ -1829,19 +1830,6 @@ function Bot:_UpdateNormalMovementVehicle()
 					end
 					-- Exit Vehicle
 					self:ExitVehicle()
-
-					-- self.m_Player:ExitVehicle(false, false)
-					-- local s_Node = g_GameDirector:FindClosestPath(self.m_Player.soldier.worldTransform.trans, false)
-
-					-- if s_Node ~= nil then
-					-- 	-- switch to vehicle
-					-- 	s_Point = s_Node
-					-- 	self._InvertPathDirection = false
-					-- 	self._PathIndex = s_Node.PathIndex
-					-- 	self._CurrentWayPoint = s_Node.PointIndex
-					-- 	s_NextPoint = m_NodeCollection:Get(self:_GetWayIndex(self._CurrentWayPoint + 1), self._PathIndex)
-					-- 	self._LastWayDistance = 1000
-					-- end
 				elseif self._ActionTimer <= s_Point.Data.Action.time then
 					for _, l_Input in pairs(s_Point.Data.Action.inputs) do
 						self:_SetInput(l_Input, 1)
@@ -1890,38 +1878,23 @@ function Bot:_UpdateNormalMovementVehicle()
 			if math.abs(s_CurrentWayPointDistance - self._LastWayDistance) < 0.02 or self._ObstaceSequenceTimer ~= 0 then
 				-- try to get around obstacle
 				if self._ObstacleRetryCounter == 0 then
-					self.m_ActiveSpeedValue = BotMoveSpeeds.Backwards
-				else
 					self.m_ActiveSpeedValue = BotMoveSpeeds.Sprint -- full throttle
+				else
+					self.m_ActiveSpeedValue = BotMoveSpeeds.Backwards
 				end
 
-				if self._ObstaceSequenceTimer == 0 then --step 0
-
-				elseif self._ObstaceSequenceTimer > 2.4 then --step 4 - repeat afterwards
+				if self._ObstaceSequenceTimer > 3 then --step 4 - repeat afterwards
 					self._ObstaceSequenceTimer = 0
-					self:_ResetActionFlag(BotActionFlags.MeleeActive)
 					self._ObstacleRetryCounter = self._ObstacleRetryCounter + 1
-				elseif self._ObstaceSequenceTimer > 1.0 then --step 3
-				elseif self._ObstaceSequenceTimer > 0.4 then --step 2
-					self._TargetPitch = 0.0
-
-					if (MathUtils:GetRandomInt(0,1) == 1) then
-						self:_SetInput(EntryInputActionEnum.EIAStrafe, 1.0 * Config.SpeedFactor)
-					else
-						self:_SetInput(EntryInputActionEnum.EIAStrafe, -1.0 * Config.SpeedFactor)
-					end
-				elseif self._ObstaceSequenceTimer > 0.0 then --step 1
 				end
 
 				self._ObstaceSequenceTimer = self._ObstaceSequenceTimer + Registry.BOT.BOT_UPDATE_CYCLE
-				self._StuckTimer = self._StuckTimer + Registry.BOT.BOT_UPDATE_CYCLE
 
 				if self._ObstacleRetryCounter >= 2 then --try next waypoint
 					self._ObstacleRetryCounter = 0
 					s_DistanceFromTarget = 0
 					s_HeightDistance = 0
-
-					s_NoStuckReset = true
+					s_PointIncrement = 1
 				end
 			end
 
@@ -1940,9 +1913,6 @@ function Bot:_UpdateNormalMovementVehicle()
 
 			--check for reached target
 			if s_DistanceFromTarget <= s_TargetDistanceSpeed and s_HeightDistance <= Registry.BOT.TARGET_HEIGHT_DISTANCE_WAYPOINT then
-				if not s_NoStuckReset then
-					self._StuckTimer = 0
-				end
 
 				-- CHECK FOR ACTION
 				if s_Point.Data.Action ~= nil then
@@ -2523,7 +2493,7 @@ function Bot:_UpdateSpeedOfMovementVehicle()
 
 		-- movent speed
 		if self.m_ActiveSpeedValue == BotMoveSpeeds.Backwards then
-			self._BrakeTimer = 0
+			self._BrakeTimer = 10000
 			self:_SetInput(EntryInputActionEnum.EIABrake, -s_SpeedVal)
 		elseif self.m_ActiveSpeedValue ~= BotMoveSpeeds.NoMovement then
 			self._BrakeTimer = 0

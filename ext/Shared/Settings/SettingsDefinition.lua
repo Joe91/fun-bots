@@ -809,7 +809,7 @@ SettingsDefinition = {
 			Value = Config.VehicleWaitForPassengersTime,
 			Description = "seconds to wait for other passengers",
 			Reference = Range(0.50, 60.00, 0.5),
-			Default = 5.0,
+			Default = 7.0,
 			UpdateFlag = UpdateFlag.None,
 			Category ="VEHICLE"
 		},
