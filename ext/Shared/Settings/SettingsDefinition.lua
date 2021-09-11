@@ -748,6 +748,17 @@ SettingsDefinition = {
 			Category = "VEHICLE"
 		},
 		{
+			Name = "FovVerticleChopperForShooting",
+			Text = "FOV of Chopper Verticle",
+			Type = Type.Integer,
+			Value = Config.FovVerticleChopperForShooting,
+			Description = "Degrees of pitch a chopper attacks",
+			Reference = Range(0.00, 180.00, 1.0),
+			Default = 80,
+			UpdateFlag = UpdateFlag.None,
+			Category = "VEHICLE"
+		},
+		{
 			Name = "FovVehicleAAForShooting",
 			Text = "FOV of AA-Vehicles",
 			Type = Type.Integer,
@@ -788,6 +799,17 @@ SettingsDefinition = {
 			Description = "meters a vehicle (no Anti-Air) starts shooting at player",
 			Reference = Range(1.00, 1500.00, 5.0),
 			Default = 150,
+			UpdateFlag = UpdateFlag.None,
+			Category ="VEHICLE"
+		},
+		{
+			Name = "VehicleWaitForPassengersTime",
+			Text = "Time a vehicle driver waits for passengers",
+			Type = Type.Float,
+			Value = Config.VehicleWaitForPassengersTime,
+			Description = "seconds to wait for other passengers",
+			Reference = Range(0.50, 60.00, 0.5),
+			Default = 5.0,
 			UpdateFlag = UpdateFlag.None,
 			Category ="VEHICLE"
 		},

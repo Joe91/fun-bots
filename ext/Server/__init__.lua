@@ -118,6 +118,8 @@ function FunBotServer:RegisterCustomEvents()
 	NetEvents:Subscribe('Client:DamagePlayer', self, self.OnDamagePlayer) --only triggered on false damage
 	Events:Subscribe('Server:DamagePlayer', self, self.OnServerDamagePlayer) --only triggered on false damage
 	Events:Subscribe('Bot:RespawnBot', self, self.OnRespawnBot)
+	Events:Subscribe('Bot:AbortWait', self, self.OnBotAbortWait)
+	Events:Subscribe('Bot:ExitVehicle', self, self.OnBotExitVehicle)
 	NetEvents:Subscribe('Client:RequestSettings', self, self.OnRequestClientSettings)
 	NetEvents:Subscribe('Client:RequestEnterVehicle', self, self.OnRequestEnterVehicle)
 	NetEvents:Subscribe('ConsoleCommands:SetConfig', self, self.OnConsoleCommandSetConfig)
@@ -359,6 +361,14 @@ end
 
 function FunBotServer:OnBotShootAtBot(p_Player, p_BotName1, p_BotName2)
 	m_BotManager:OnBotShootAtBot(p_Player, p_BotName1, p_BotName2)
+end
+
+function FunBotServer:OnBotAbortWait(p_BotName)
+	m_BotManager:OnBotAbortWait(p_BotName)
+end
+
+function FunBotServer:OnBotExitVehicle(p_BotName)
+	m_BotManager:OnBotExitVehicle(p_BotName)
 end
 
 function FunBotServer:OnDamagePlayer(p_Player, p_ShooterName, p_MeleeAttack, p_IsHeadShot)

@@ -357,6 +357,14 @@ function GameDirector:OnVehicleEnter(p_Entity, p_Player)
 	if not m_Utilities:isBot(p_Player) then
 		p_Entity = ControllableEntity(p_Entity)
 		self:_SetVehicleObjectiveState(p_Entity.transform.trans, false)
+		if p_Player.controlledEntryId ~= 0 then
+			local s_Entity = p_Player.controlledControllable
+			local s_Driver = s_Entity:GetPlayerInEntry(0)
+			if s_Driver ~= nil then
+				Events:Dispatch("Bot:AbortWait", s_Driver.name)
+			end
+		end
+		self:_SetVehicleObjectiveState(p_Entity.transform.trans, false)
 	end
 end
 

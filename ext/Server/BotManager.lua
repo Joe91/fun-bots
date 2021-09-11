@@ -82,6 +82,21 @@ function BotManager:OnPlayerLeft(p_Player)
 		end
 	end
 end
+
+function BotManager:OnBotAbortWait(p_BotName)
+	local s_Bot = self:GetBotByName(p_BotName)
+	if s_Bot ~= nil then
+		s_Bot:ResetVehicleTimer()
+	end
+end
+
+function BotManager:OnBotExitVehicle(p_BotName)
+	local s_Bot = self:GetBotByName(p_BotName)
+	if s_Bot ~= nil then
+		s_Bot:ExitVehicle()
+	end
+end
+
 -- this is unused
 function BotManager:OnSoldierHealthAction(p_Soldier, p_Action)
 	if p_Action == HealthStateAction.OnRevive then -- 7

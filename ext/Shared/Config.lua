@@ -80,10 +80,12 @@ Config = {
 	UseVehicles = true,					-- Bots use vehicles
 	FovVehicleForShooting = 180,		-- Degrees of FOV of Non AA - Vehicles
 	FovVerticleVehicleForShooting = 60,	-- Degrees of FOV of Non AA-Vehicles
+	FovVerticleChopperForShooting = 80,	-- Degrees of pitch a chopper attacks
 	FovVehicleAAForShooting = 360,		-- Degrees of FOV of AA - Vehicles
 	FovVerticleVehicleAAForShooting = 160,	-- Degrees of FOV of AA-Vehicles
 	MaxRaycastDistanceVehicles = 250,	-- meters bots in Vehicles start shooting at player
 	MaxShootDistanceNoAntiAir = 150,	-- meters a vehicle (no Anti-Air) starts shooting at player
+	VehicleWaitForPassengersTime = 5.0,	-- seconds to wait for other passengers
 
 	--WEAPONS
 	UseRandomWeapon = true,				-- use a random weapon out of the weapon set

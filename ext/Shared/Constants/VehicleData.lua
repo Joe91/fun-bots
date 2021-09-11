@@ -144,12 +144,12 @@ VehicleData = {
 
 	-- transport
 	["GrowlerITV"] = {Name = "[GROWLER ITV]", Type =  VehicleTypes.NoArmorVehicle, Parts = {nil, 47, nil}},
+	["GrowlerITV_Valley"] = {Name = "[GROWLER ITV]", Type =  VehicleTypes.NoArmorVehicle, Parts = {nil, 47, nil}},
 	["VDV Buggy"] = {Name = "[VDV Buggy]", Type =  VehicleTypes.NoArmorVehicle, Parts = {nil, 13, nil}},
 
 	["CivilianCar_03_Vehicle"] = {Name = "[CIVILIAN CAR]", Type =  VehicleTypes.NoArmorVehicle, Parts = {}},
 	["CivilianCar_03_Vehicle_SPJet"] = {Name = "[CIVILIAN CAR]", Type =  VehicleTypes.NoArmorVehicle, Parts = {}},
 	["DeliveryVan_Vehicle"] = {Name = "[DELIVERY VAN]", Type =  VehicleTypes.NoArmorVehicle, Parts = {}},
-	["GrowlerITV_Valley"] = {Name = "[GROWLER ITV]", Type =  VehicleTypes.NoArmorVehicle, Parts = {}},
 	["Paris_SUV"] = {Name = "[SUV]", Type =  VehicleTypes.NoArmorVehicle, Parts = {}},
 	["Paris_SUV_Coop"] = {Name = "[SUV]", Type =  VehicleTypes.NoArmorVehicle, Parts = {}},
 	["Sniper_SUV"] = {Name = "[SUV]", Type =  VehicleTypes.NoArmorVehicle, Parts = {}},
