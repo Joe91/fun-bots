@@ -1074,9 +1074,9 @@ function Bot:_UpdateYawVehicle(p_Attacking)
 		-- abort attacking if too steep or too low
 		if p_Attacking then
 			local s_PitchHalf = Config.FovVerticleChopperForShooting / 360 * math.pi
-			local s_HightOverTarget = self.m_Player.controlledControllable.transform.trans.y - self._ShootPlayer.soldier.worldtransform.trans.y
+			local s_HightOverTarget = 30 --TODO: self.m_Player.controlledControllable.transform.trans.y - self._ShootPlayer.soldier.worldtransform.trans.y
 
-			if math.abs(self._TargetPitch) > s_PitchHalf or (s_HightOverTarget < 30 and s_HightOverTarget > 0) then
+			if math.abs(self._TargetPitch) > s_PitchHalf or (s_HightOverTarget < 20 and s_HightOverTarget > 0) then
 				self:_AbortAttack()
 			end
 		end
@@ -1125,7 +1125,7 @@ function Bot:_UpdateYawVehicle(p_Attacking)
 		
 		local s_Delta_Tilt = 0
 		if p_Attacking then
-			s_Delta_Tilt = s_DeltaPitch
+			s_Delta_Tilt = -s_DeltaPitch
 		else
 			local s_Tartget_Tilt = -0.35  -- = 20 °
 			local s_Current_Tilt = math.asin(self.m_Player.controlledControllable.transform.forward.y / 1.0)

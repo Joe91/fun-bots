@@ -111,14 +111,14 @@ VehicleData = {
 		Name = "[AH-1Z VIPER]",
 		Type =  VehicleTypes.Chopper,
 		Parts = {nil, 1}, --0,1,14
-		Speed = {350, 600},
-		Drop = {9.81, 0.0}},
+		Speed = {300, 600},
+		Drop = {0.0, 0.0}},
 	["AH1Z_coop"] = {
 		Name = "[AH-1Z VIPER]",
 		Type =  VehicleTypes.Chopper,
 		Parts = {nil, 1}, --0,1,14
-		Speed = {350, 600},
-		Drop = {9.81, 0.0}},
+		Speed = {300, 600},
+		Drop = {0.0, 0.0}},
 	["AH6_Littlebird"] = {Name = "[AH-6J LITTLE BIRD]", Type =  VehicleTypes.Chopper, Parts = {}},
 	["AH6_Littlebird_EQ"] = {Name = "[AH-6J LITTLE BIRD]", Type =  VehicleTypes.Chopper, Parts = {}},
 	["Ka-60"] = {
