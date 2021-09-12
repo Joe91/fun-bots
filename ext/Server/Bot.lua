@@ -294,7 +294,7 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 	-- don't attack as driver in some vehicles
 	if self.m_InVehicle and self.m_Player.controlledEntryId == 0 then
 		if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) and not Config.ChopperDriversAttack then
-			if self.m_Player.controlledControllable:GetPlayerInEntry(1) == nil then
+			if self.m_Player.controlledControllable:GetPlayerInEntry(1) ~= nil then
 				return false
 			end
 		end
