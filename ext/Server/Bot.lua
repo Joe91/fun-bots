@@ -287,9 +287,20 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 	if self.m_Player.teamId == p_Player.teamId then
 		return false
 	end
-
 	if p_Player.soldier == nil or self.m_Player.soldier == nil then
 		return false
+	end
+
+	-- don't attack as driver in some vehicles
+	if self.m_InVehicle and self.m_Player.controlledEntryId == 0 then
+		if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) and not Config.ChopperDriversAttack then
+			if self.m_Player.controlledControllable:GetPlayerInEntry(1) == nil then
+				return false
+			end
+		end
+		if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.NoArmorVehicle) then
+			return false
+		end
 	end
 
 	-- check for vehicles
@@ -770,6 +781,21 @@ function Bot:_UpdateAimingVehicle(p_DeltaTime)
 	self._TargetPitch = s_Pitch
 	self._TargetYaw = s_Yaw
 
+
+	-- abort attacking in chopper if too steep or too low
+	if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) and self.m_Player.controlledEntryId == 0 then
+		local s_PitchHalf = Config.FovVerticleChopperForShooting / 360 * math.pi
+		if math.abs(self._TargetPitch) > s_PitchHalf then
+			self:_AbortAttack()
+			return
+		end
+		if self._ShootPlayerVehicleType ~= VehicleTypes.Chopper and self._ShootPlayerVehicleType ~= VehicleTypes.Plane then
+			if s_DifferenceY > -20 and s_DifferenceY < 0 then -- too low to the ground
+				self:_AbortAttack()
+			end
+			return
+		end
+	end
 end
 
 function Bot:_UpdateAiming(p_DeltaTime)
@@ -1070,14 +1096,6 @@ function Bot:_UpdateYawVehicle(p_Attacking)
 		end
 		if self.m_Player.controlledControllable == nil then
 			return 
-		end
-		-- abort attacking if too steep or too low
-		if p_Attacking then
-			local s_PitchHalf = Config.FovVerticleChopperForShooting / 360 * math.pi
-
-			if math.abs(self._TargetPitch) > s_PitchHalf then --TODO: abort if too close to ground. Do this with raycasts?
-				self:_AbortAttack()
-			end
 		end
 
 		-- YAW
@@ -1694,7 +1712,7 @@ function Bot:_EnterVehicle()
 					--m_Logger:Write(self.m_ActiveVehicle)
 					if i == 0 then
 						self._VehicleWaitTimer = Config.VehicleWaitForPassengersTime
-						self._BrakeTimer = 10000
+						self._BrakeTimer = 0
 					else
 						self._VehicleWaitTimer = 0
 						if i == s_Entity.entryCount - 1 then
@@ -2492,17 +2510,16 @@ function Bot:_UpdateSpeedOfMovementVehicle()
 
 		-- movent speed
 		if self.m_ActiveSpeedValue == BotMoveSpeeds.Backwards then
-			self._BrakeTimer = 10000
 			self:_SetInput(EntryInputActionEnum.EIABrake, -s_SpeedVal)
 		elseif self.m_ActiveSpeedValue ~= BotMoveSpeeds.NoMovement then
-			self._BrakeTimer = 0
+			self._BrakeTimer = 0.7
 			self:_SetInput(EntryInputActionEnum.EIAThrottle, s_SpeedVal)
 		else
-			if self._BrakeTimer < 0.7 then
+			if self._BrakeTimer > 0.0 then
 				self:_SetInput(EntryInputActionEnum.EIABrake, 1)
 			end
 
-			self._BrakeTimer = self._BrakeTimer + Registry.BOT.BOT_UPDATE_CYCLE
+			self._BrakeTimer = self._BrakeTimer - Registry.BOT.BOT_UPDATE_CYCLE
 		end
 	end
 end

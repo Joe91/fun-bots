@@ -813,6 +813,16 @@ SettingsDefinition = {
 			UpdateFlag = UpdateFlag.None,
 			Category ="VEHICLE"
 		},
+		{
+			Name = "ChopperDriversAttack",
+			Text = "Choppers Attack",
+			Type = Type.Boolean,
+			Value = Config.ChopperDriversAttack,
+			Description = "if false choppers only attack without gunner on board",
+			Default = true,
+			UpdateFlag = UpdateFlag.None,
+			Category = "VEHICLE"
+		},
 		-- Weapons
 		{
 			Name = "UseRandomWeapon",
