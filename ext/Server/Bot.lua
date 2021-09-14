@@ -186,39 +186,43 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 					end
 
 				else -- bot in vehicle
-					-- sync slow code with fast code. Therefore execute the slow code first 
-					if self._UpdateTimer >= Registry.BOT.BOT_UPDATE_CYCLE then
-						-- common part
-						self:_UpdateWeaponSelectionVehicle()
+					if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.StationaryAA) then
+						self:_UpdateStationaryAAVehicle()
+					else
+						-- sync slow code with fast code. Therefore execute the slow code first
+						if self._UpdateTimer >= Registry.BOT.BOT_UPDATE_CYCLE then
+							-- common part
+							self:_UpdateWeaponSelectionVehicle()
 
-						-- differ attacking
+							-- differ attacking
+							if s_Attacking then
+								self:_UpdateAttackingVehicle()
+								self:_UpdateShootMovementVehicle()
+							else
+								self:_UpdateReloadVehicle()
+								if self.m_Player.controlledEntryId == 0 then -- only if driver
+									self:_UpdateNormalMovementVehicle()
+								end
+							end
+
+							-- common things
+							self:_UpdateSpeedOfMovementVehicle()
+							self:_UpdateInputs()
+							self._UpdateTimer = 0
+						end
+
+						-- fast code
 						if s_Attacking then
-							self:_UpdateAttackingVehicle()
-							self:_UpdateShootMovementVehicle()
+							self:_UpdateAimingVehicle(self._UpdateFastTimer)
 						else
-							self:_UpdateReloadVehicle()
 							if self.m_Player.controlledEntryId == 0 then -- only if driver
-								self:_UpdateNormalMovementVehicle()
+								self:_UpdateTargetMovementVehicle()
+							else
+								self:_UpdateVehicleLookAround(self._UpdateFastTimer)
 							end
 						end
-
-						-- common things
-						self:_UpdateSpeedOfMovementVehicle()
-						self:_UpdateInputs()
-						self._UpdateTimer = 0
+						self:_UpdateYawVehicle(s_Attacking)
 					end
-
-					-- fast code
-					if s_Attacking then
-						self:_UpdateAimingVehicle(self._UpdateFastTimer)
-					else
-						if self.m_Player.controlledEntryId == 0 then -- only if driver
-							self:_UpdateTargetMovementVehicle()
-						else
-							self:_UpdateVehicleLookAround(self._UpdateFastTimer)
-						end
-					end
-					self:_UpdateYawVehicle(s_Attacking)
 				end
 				self._UpdateFastTimer = 0
 			end
@@ -306,9 +310,13 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 	-- check for vehicles
 	local s_Type = m_Vehicles:FindOutVehicleType(p_Player)
 
+	-- don't shoot at stationary AA
+	if s_Type == VehicleTypes.StationaryAA then
+		return false
+	end
+
 	-- don't shoot if too far away
 	self._DistanceToPlayer = 0
-
 	if s_Type == VehicleTypes.MavBot then
 		self._DistanceToPlayer = p_Player.controlledControllable.transform.trans:Distance(self.m_Player.soldier.worldTransform.trans)
 	else
@@ -996,6 +1004,10 @@ function Bot:_UpdateVehicleLookAround(p_DeltaTime)
 			end
 		end
 	end
+end
+
+function Bot:_UpdateStationaryAAVehicle()
+	-- body
 end
 
 function Bot:_UpdateYawVehicle(p_Attacking)
