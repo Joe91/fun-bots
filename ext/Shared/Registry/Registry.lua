@@ -33,7 +33,7 @@ Registry = {
                 VERSION_PATCH = 0,
 
                 -- Additional label for pre-releases and build meta data
-                VERSION_LABEL = "dev3",
+                VERSION_LABEL = "dev4",
 
                 -- Numerical ID (int) of the current build.
                 -- Increase it upon a new release or release candidate, end-point servers require the correct version ID.

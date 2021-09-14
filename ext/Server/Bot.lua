@@ -1692,7 +1692,7 @@ function Bot:_UpdateAttackingVehicle()
 	end
 end
 
-function Bot:_EnterVehicle()
+function Bot:_EnterVehicle(p_Name)
 	local s_Iterator = EntityManager:GetIterator("ServerVehicleEntity")
 	local s_Entity = s_Iterator:Next()
 
@@ -1700,11 +1700,10 @@ function Bot:_EnterVehicle()
 		s_Entity = ControllableEntity(s_Entity)
 		local s_Position = s_Entity.transform.trans
 
-		if s_Position:Distance(self.m_Player.soldier.worldTransform.trans) < 5 then
+		if (p_Name == nil and s_Position:Distance(self.m_Player.soldier.worldTransform.trans) < 5) or (string.find(VehicleEntityData(s_Entity.data).controllableType, p_Name) ~= nil) then
 			for i = 0, s_Entity.entryCount - 1 do
 				if s_Entity:GetPlayerInEntry(i) == nil then
 					self.m_Player:EnterVehicle(s_Entity, i)
-					-- self._VehicleEntity = s_Entity.physicsEntityBase
 
 					-- get ID
 					self.m_ActiveVehicle = m_Vehicles:GetVehicle(self.m_Player, i)

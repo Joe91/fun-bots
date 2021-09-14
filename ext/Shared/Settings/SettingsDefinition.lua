@@ -819,6 +819,16 @@ SettingsDefinition = {
 			Type = Type.Boolean,
 			Value = Config.ChopperDriversAttack,
 			Description = "if false choppers only attack without gunner on board",
+			Default = false,
+			UpdateFlag = UpdateFlag.None,
+			Category = "VEHICLE"
+		},
+		{
+			Name = "AABots",
+			Text = "Activate Auto-AA",
+			Type = Type.Boolean,
+			Value = Config.AABots,
+			Description = "Enable Auto-AA by NyScorpy",
 			Default = true,
 			UpdateFlag = UpdateFlag.None,
 			Category = "VEHICLE"
