@@ -339,6 +339,13 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 		return false
 	end
 
+	-- if stationary AA onyl attack choppers and jets
+	if self.m_InVehicle and m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.AntiAir) then
+		if (s_Type ~= VehicleTypes.Chopper and s_Type ~= VehicleTypes.Plane)  then
+			return false
+		end
+	end
+
 	self._ShootPlayerVehicleType = s_Type
 
 	local s_DifferenceYaw = 0
