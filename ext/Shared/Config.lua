@@ -86,7 +86,7 @@ Config = {
 	MaxRaycastDistanceVehicles = 250,	-- meters bots in Vehicles start shooting at player
 	MaxShootDistanceNoAntiAir = 150,	-- meters a vehicle (no Anti-Air) starts shooting at player
 	VehicleWaitForPassengersTime = 7.0,	-- seconds to wait for other passengers
-	ChopperDriversAttack = true,		-- if true choppers will try to hit the targets
+	ChopperDriversAttack = true,		-- if false choppers only attack without gunner on board
 
 	--WEAPONS
 	UseRandomWeapon = true,				-- use a random weapon out of the weapon set

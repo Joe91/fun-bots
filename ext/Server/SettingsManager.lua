@@ -221,10 +221,22 @@ function SettingsManager:UpdateSetting(p_Name, p_Value)
 				s_Valid = true
 			elseif l_Item.Type == Type.Enum then
 				s_ConvertedValue = tonumber(p_Value)
-				for l_Key, l_Value in pairs(l_Item.Reference) do
-					if s_ConvertedValue == l_Value then
-						s_Valid = true
-						break
+				if s_ConvertedValue == nil and type(p_Value) == 'string' then -- check for enum-string
+					if type(p_Value) == 'string' then
+						for l_Key, l_Value in pairs(l_Item.Reference) do
+							if string.find(p_Value, l_Key) ~= nil then
+								s_ConvertedValue = l_Value
+								s_Valid = true
+								break
+							end
+						end
+					end
+				else
+					for l_Key, l_Value in pairs(l_Item.Reference) do
+						if s_ConvertedValue == l_Value then
+							s_Valid = true
+							break
+						end
 					end
 				end
 			else
