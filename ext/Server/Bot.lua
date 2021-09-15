@@ -310,9 +310,11 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 
 	-- don't attack as driver in some vehicles
 	if self.m_InVehicle and self.m_Player.controlledEntryId == 0 then
-		if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) and not Config.ChopperDriversAttack then
+		if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) then
 			if self.m_Player.controlledControllable:GetPlayerInEntry(1) ~= nil then
-				return false
+				if not Config.ChopperDriversAttack then
+					return false
+				end
 			end
 		end
 		if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.NoArmorVehicle) then
@@ -1752,8 +1754,7 @@ function Bot:_EnterVehicle(p_Name)
 	while s_Entity ~= nil do
 		s_Entity = ControllableEntity(s_Entity)
 		local s_Position = s_Entity.transform.trans
-
-		if (p_Name == nil and s_Position:Distance(self.m_Player.soldier.worldTransform.trans) < 5) or (string.find(VehicleEntityData(s_Entity.data).controllableType, p_Name) ~= nil) then
+		if (p_Name == nil and s_Position:Distance(self.m_Player.soldier.worldTransform.trans) < 5) or (p_Name ~= nil and (string.find(VehicleEntityData(s_Entity.data).controllableType, p_Name) ~= nil)) then
 			for i = 0, s_Entity.entryCount - 1 do
 				if s_Entity:GetPlayerInEntry(i) == nil then
 					self.m_Player:EnterVehicle(s_Entity, i)
@@ -1761,7 +1762,7 @@ function Bot:_EnterVehicle(p_Name)
 					-- get ID
 					self.m_ActiveVehicle = m_Vehicles:GetVehicle(self.m_Player, i)
 					self._VehicleMovableId = m_Vehicles:GetPartIdForSeat(self.m_ActiveVehicle, i)
-					--m_Logger:Write(self.m_ActiveVehicle)
+					m_Logger:Write(self.m_ActiveVehicle)
 					if i == 0 then
 						self._VehicleWaitTimer = Config.VehicleWaitForPassengersTime
 						self._BrakeTimer = 0

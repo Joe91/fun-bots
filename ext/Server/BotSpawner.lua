@@ -249,7 +249,7 @@ function BotSpawner:UpdateBotAmountAndTeam()
 
 	if Config.AABots and not self._AABotsSpawned then
 		for i = 1, Globals.NrOfTeams do
-			self:SpawnAABots(TeamId.Team1)
+			self:SpawnAABots(i)
 		end
 		self._AABotsSpawned = true
 	end
@@ -585,18 +585,19 @@ function BotSpawner:SpawnBotGrid(p_Player, p_Rows, p_Columns, p_Spacing)
 end
 
 function BotSpawner:SpawnAABots(p_TeamId)
-	local s_VehicleName
+	local s_VehicleName = nil
 	
 	if p_TeamId == TeamId.Team1 then
-		s_VehicleName = 'Centurion_C-RAM'
+		s_VehicleName = "Centurion"
 	elseif p_TeamId == TeamId.Team2 then
-		s_VehicleName = 'Pantsir-S1'
+		s_VehicleName = "Pantsir"
 	end
 
 	local s_Transform = LinearTransform()
 	local s_Name = m_BotManager:FindNextBotName()
 	local s_Bot = m_BotManager:CreateBot(s_Name, p_TeamId, SquadId.SquadNone)
 	if s_Bot ~= nil then
+		s_Bot:SetVarsWay(nil, true, 0, 0, false)
 		self:_SpawnBot(s_Bot, s_Transform, true)
 		s_Bot:_EnterVehicle(s_VehicleName)
 	end
