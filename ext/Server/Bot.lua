@@ -187,8 +187,20 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 					end
 
 				else -- bot in vehicle
+					-- sataionary AA needs separate handling
 					if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.StationaryAA) then
 						self:_UpdateStationaryAAVehicle(s_Attacking)
+						if self._UpdateTimer >= Registry.BOT.BOT_UPDATE_CYCLE then
+							-- common part
+							self:_UpdateWeaponSelectionVehicle()
+
+							-- differ attacking
+							if s_Attacking then
+								self:_UpdateAttackStationaryAAVehicle()
+							end
+							self:_UpdateInputs()
+							self._UpdateTimer = 0
+						end
 					else
 						-- sync slow code with fast code. Therefore execute the slow code first
 						if self._UpdateTimer >= Registry.BOT.BOT_UPDATE_CYCLE then
@@ -1031,6 +1043,12 @@ function Bot:_UpdateStationaryAAVehicle(p_Attacking)
 		self:_UpdateVehicleLookAround(Registry.BOT.BOT_FAST_UPDATE_CYCLE)
 	end
 	self:_UpdateYawVehicle(p_Attacking)
+end
+
+function Bot:_UpdateAttackStationaryAAVehicle()
+	if self._VehicleReadyToShoot then
+		self:_SetInput(EntryInputActionEnum.EIAFire, 1)
+	end
 end
 
 function Bot:_UpdateYawVehicle(p_Attacking)
