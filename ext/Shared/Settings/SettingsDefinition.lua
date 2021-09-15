@@ -833,6 +833,17 @@ SettingsDefinition = {
 			UpdateFlag = UpdateFlag.None,
 			Category = "VEHICLE"
 		},
+		{
+			Name = "MaxDistanceAABots",
+			Text = "Max Distance Auto-AA",
+			Type = Type.Integer,
+			Value = Config.MaxDistanceAABots,
+			Description = "Max Range of Stationary AA",
+			Reference = Range(50, 1500.00, 5),
+			Default = 700,
+			UpdateFlag = UpdateFlag.None,
+			Category = "VEHICLE"
+		},
 		-- Weapons
 		{
 			Name = "UseRandomWeapon",

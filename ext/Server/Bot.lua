@@ -6,6 +6,7 @@ local m_NodeCollection = require('__shared/NodeCollection')
 local m_PathSwitcher = require('PathSwitcher')
 local m_Utilities = require('__shared/Utilities')
 local m_Vehicles = require("Vehicles")
+local m_AirTargets = require("AirTargets")
 local m_Logger = Logger("Bot", Debug.Server.BOT)
 
 function Bot:__init(p_Player)
@@ -187,7 +188,7 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 
 				else -- bot in vehicle
 					if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.StationaryAA) then
-						self:_UpdateStationaryAAVehicle()
+						self:_UpdateStationaryAAVehicle(s_Attacking)
 					else
 						-- sync slow code with fast code. Therefore execute the slow code first
 						if self._UpdateTimer >= Registry.BOT.BOT_UPDATE_CYCLE then
@@ -305,6 +306,10 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 		if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.NoArmorVehicle) then
 			return false
 		end
+		-- if stationary AA targets get assigned in an other waay
+		if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.StationaryAA) then
+			return false
+		end
 	end
 
 	-- check for vehicles
@@ -337,13 +342,6 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 
 	if s_Type ~= VehicleTypes.NoVehicle and m_Vehicles:CheckForVehicleAttack(s_Type, self._DistanceToPlayer, self.m_SecondaryGadget, self.m_InVehicle) == VehicleAttackModes.NoAttack then
 		return false
-	end
-
-	-- if stationary AA onyl attack choppers and jets
-	if self.m_InVehicle and m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.AntiAir) then
-		if (s_Type ~= VehicleTypes.Chopper and s_Type ~= VehicleTypes.Plane)  then
-			return false
-		end
 	end
 
 	self._ShootPlayerVehicleType = s_Type
@@ -1013,8 +1011,26 @@ function Bot:_UpdateVehicleLookAround(p_DeltaTime)
 	end
 end
 
-function Bot:_UpdateStationaryAAVehicle()
-	-- body
+function Bot:_UpdateStationaryAAVehicle(p_Attacking)
+	-- get new target if needed
+	if self._DeployTimer > 1.0 then
+		local s_Target =  m_AirTargets:GetTarget(self.m_Player)
+		if s_Target ~= nil then
+			self._ShootPlayerName = s_Target.name
+		end
+		self._DeployTimer = 0
+	else
+		self._DeployTimer = self._DeployTimer + Registry.BOT.BOT_FAST_UPDATE_CYCLE
+	end
+
+	if p_Attacking then -- target available
+		-- aim at target
+		self:_UpdateAimingVehicle(Registry.BOT.BOT_FAST_UPDATE_CYCLE)
+	else
+		-- just look a little around
+		self:_UpdateVehicleLookAround(Registry.BOT.BOT_FAST_UPDATE_CYCLE)
+	end
+	self:_UpdateYawVehicle(p_Attacking)
 end
 
 function Bot:_UpdateYawVehicle(p_Attacking)
