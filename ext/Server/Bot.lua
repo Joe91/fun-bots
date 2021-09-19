@@ -103,9 +103,6 @@ function Bot:__init(p_Player)
 	self._WeaponToUse = BotWeapons.Primary
 	self._ShootWayPoints = {}
 	self._KnifeWayPositions = {}
-	self._LastTargetTrans = Vec3()
-	self._LastLastTargetTrans = Vec3()
-	self._LastShootPlayer = nil
 	self._Skill = 0.0
 
 	--simple movement
@@ -420,15 +417,12 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 				self._ShootModeTimer = 0
 				self._ShootPlayerName = p_Player.name
 				self._ShootPlayer = nil
-				self._LastShootPlayer = nil
-				self._LastTargetTrans = p_Player.soldier.worldTransform.trans:Clone()
-				self._LastLastTargetTrans = p_Player.soldier.worldTransform.trans:Clone()
 				self._KnifeWayPositions = {}
 				self._VehicleReadyToShoot = false
 				self._ShotTimer = - self:GetFirstShotDelay(self._DistanceToPlayer)
 
 				if self.m_KnifeMode then
-					table.insert(self._KnifeWayPositions, self._LastTargetTrans)
+					table.insert(self._KnifeWayPositions, p_Player.soldier.worldTransform.trans:Clone())
 				end
 
 				return true
@@ -452,7 +446,6 @@ function Bot:ResetVars()
 	self._TargetPlayer = nil
 	self._ShootPlayer = nil
 	self._ShootPlayerName = ""
-	self._LastShootPlayer = nil
 	self._InvertPathDirection = false
 	self._ShotTimer = 0
 	self._UpdateTimer = 0
@@ -577,7 +570,6 @@ function Bot:ResetSpawnVars()
 	self._ObstacleRetryCounter = 0
 	self._LastWayDistance = 1000
 	self._ShootPlayer = nil
-	self._LastShootPlayer = nil
 	self._ShootPlayerName = ""
 	self._ShootModeTimer = 0
 	self._MeleeCooldownTimer = 0
@@ -626,10 +618,6 @@ function Bot:ClearPlayer(p_Player)
 
 	if self._TargetPlayer == p_Player then
 		self._TargetPlayer = nil
-	end
-
-	if self._LastShootPlayer == p_Player then
-		self._LastShootPlayer = nil
 	end
 
 	local s_CurrentShootPlayer = PlayerManager:GetPlayerByName(self._ShootPlayerName)
@@ -758,6 +746,7 @@ function Bot:_UpdateAimingVehicle(p_DeltaTime)
 
 	if self._ShootPlayerVehicleType == VehicleTypes.MavBot then
 		s_FullPositionTarget = self._ShootPlayer.controlledControllable.transform.trans:Clone()
+		s_TargetMovement = PhysicsEntity(self.m_Player.controlledControllable).velocity
 	else
 		if self.m_Player.controlledEntryId == 0 and self._ShootPlayerVehicleType == VehicleTypes.NoVehicle and self._ShootPlayer.soldier.worldTransform.trans.y < s_FullPositionBot.y then
 			-- add nothing --> aim for the feet of the target
@@ -765,12 +754,12 @@ function Bot:_UpdateAimingVehicle(p_DeltaTime)
 		else
 			s_FullPositionTarget = self._ShootPlayer.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(self._ShootPlayer, true, false)
 		end
+		s_TargetMovement = PhysicsEntity(self._ShootPlayer.soldier).velocity
 	end
 
 	--calculate how long the distance is --> time to travel
 	self._DistanceToPlayer = s_FullPositionTarget:Distance(s_FullPositionBot)
 
-	local s_FactorForMovement = 0.0
 	local s_Drop = 0.0
 	local s_Speed = 0.0
 
@@ -779,15 +768,8 @@ function Bot:_UpdateAimingVehicle(p_DeltaTime)
 	local s_TimeToTravel = (self._DistanceToPlayer / s_Speed)
 	s_PitchCorrection = 0.5 * s_TimeToTravel * s_TimeToTravel * s_Drop
 
-	s_FactorForMovement = (s_TimeToTravel) / p_DeltaTime
+	s_TargetMovement = (s_TargetMovement * s_TimeToTravel)
 
-	if self._LastShootPlayer == self._ShootPlayer then
-		s_TargetMovement = (s_FullPositionTarget - self._LastTargetTrans) * s_FactorForMovement --movement in one dt
-	end
-
-	self._LastShootPlayer = self._ShootPlayer
-	self._LastLastTargetTrans = self._LastTargetTrans
-	self._LastTargetTrans = s_FullPositionTarget
 
 	local s_DifferenceY = 0
 	local s_DifferenceX = 0
@@ -825,7 +807,7 @@ function Bot:_UpdateAimingVehicle(p_DeltaTime)
 	end
 end
 
-function Bot:_UpdateAiming(p_DeltaTime)
+function Bot:_UpdateAiming()
 	if self._ShootPlayer == nil then
 		return
 	end
@@ -845,6 +827,7 @@ function Bot:_UpdateAiming(p_DeltaTime)
 
 		if self._ShootPlayerVehicleType == VehicleTypes.MavBot then
 			s_FullPositionTarget = self._ShootPlayer.controlledControllable.transform.trans:Clone()
+			s_TargetMovement = PhysicsEntity(self._ShootPlayer.controlledControllable).velocity
 		else
 			local s_AimForHead = false
 			if self.m_ActiveWeapon.Type == WeaponTypes.Sniper then
@@ -857,18 +840,17 @@ function Bot:_UpdateAiming(p_DeltaTime)
 
 			s_FullPositionTarget = self._ShootPlayer.soldier.worldTransform.trans:Clone()
 			s_FullPositionTarget = s_FullPositionTarget + m_Utilities:getCameraPos(self._ShootPlayer, true, s_AimForHead)
+			s_TargetMovement = PhysicsEntity(self._ShootPlayer.soldier).velocity
 		end
-
 
 		local s_GrenadePitch = 0.0
 		--calculate how long the distance is --> time to travel
 		self._DistanceToPlayer = s_FullPositionTarget:Distance(s_FullPositionBot)
 
 		if not self.m_KnifeMode then
-			local s_FactorForMovement = 0.0
 			local s_Drop = 0.0
 			local s_Speed = 0.0
-
+			local s_TimeToTravel = 0.0
 			s_Drop = self.m_ActiveWeapon.bulletDrop
 			s_Speed = self.m_ActiveWeapon.bulletSpeed
 
@@ -885,19 +867,12 @@ function Bot:_UpdateAiming(p_DeltaTime)
 					s_GrenadePitch = (math.pi / 2) - (s_Angle / 2)
 				end
 			else
-				local s_TimeToTravel = (self._DistanceToPlayer / s_Speed)
+				s_TimeToTravel = (self._DistanceToPlayer / s_Speed)
 				s_PitchCorrection = 0.5 * s_TimeToTravel * s_TimeToTravel * s_Drop
-
-				s_FactorForMovement = (s_TimeToTravel) / p_DeltaTime
 			end
 
-			if self._LastShootPlayer == self._ShootPlayer then
-				s_TargetMovement = (s_FullPositionTarget - self._LastTargetTrans) * s_FactorForMovement --movement in one dt
-			end
+			s_TargetMovement = (s_TargetMovement * s_TimeToTravel)
 
-			self._LastShootPlayer = self._ShootPlayer
-			self._LastLastTargetTrans = self._LastTargetTrans
-			self._LastTargetTrans = s_FullPositionTarget
 		end
 
 		local s_DifferenceY = 0
@@ -2624,7 +2599,6 @@ end
 function Bot:_AbortAttack()
 	self._ShootPlayerName = ""
 	self._ShootPlayer = nil
-	self._LastShootPlayer = nil
 	self._ShootModeTimer = 0
 	self._AttackMode = 0
 end
@@ -2644,7 +2618,6 @@ function Bot:_SetActiveVars()
 		self._ShootPlayer = PlayerManager:GetPlayerByName(self._ShootPlayerName)
 	else
 		self._ShootPlayer = nil
-		self._LastShootPlayer = nil
 	end
 
 	self.m_ActiveMoveMode = self._MoveMode
