@@ -722,6 +722,149 @@ function Bot:_UpdateRespawn()
 	end
 end
 
+function Bot:_UpdateAimingVehicleAdvanced()
+	if self._ShootPlayer == nil then
+		return
+	end
+
+	if not self._Shoot or self._ShootPlayer.soldier == nil then
+		return
+	end
+
+	--interpolate target-player movement
+	local s_TargetVelocity = Vec3.zero
+	local s_PitchCorrection = 0.0
+	local s_FullPositionTarget = nil
+	local s_FullPositionBot = nil
+
+	if self._VehicleMovableId ~= nil then
+		s_FullPositionBot = self.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(self._VehicleMovableId):ToLinearTransform().trans
+	else
+		-- TODO: adjust for chopper-drivers?
+		s_FullPositionBot = self.m_Player.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(self.m_Player, false, false)
+	end
+
+	if self._ShootPlayerVehicleType == VehicleTypes.MavBot then
+		s_FullPositionTarget = self._ShootPlayer.controlledControllable.transform.trans:Clone()
+	else
+		if self.m_Player.controlledEntryId == 0 and self._ShootPlayerVehicleType == VehicleTypes.NoVehicle and self._ShootPlayer.soldier.worldTransform.trans.y < s_FullPositionBot.y then
+			-- add nothing --> aim for the feet of the target
+			s_FullPositionTarget = self._ShootPlayer.soldier.worldTransform.trans:Clone()
+		else
+			s_FullPositionTarget = self._ShootPlayer.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(self._ShootPlayer, true, false)
+		end
+	end
+
+	if self._ShootPlayerVehicleType == VehicleTypes.NoVehicle then
+		s_TargetVelocity = self._ShootPlayer.soldier.velocity
+	else
+		s_TargetVelocity = self._ShootPlayer.controlledControllable.velocity
+	end
+
+	--calculate how long the distance is --> time to travel
+	local s_Drop = 0.0
+	local s_Speed = 0.0
+	local s_VectorBetween = s_FullPositionTarget - s_FullPositionBot
+	local s_NegVectorBetween = s_FullPositionBot - s_FullPositionTarget
+
+	s_Speed, s_Drop = m_Vehicles:GetSpeedAndDrop(self.m_ActiveVehicle, self.m_Player.controlledEntryId)
+
+
+
+
+	-- local P0 = s_FullPositionTarget
+    -- local V0 = s_TargetVelocity
+    -- local s0 = math.sqrt(V0.x^2 + V0.y^2 + V0.z^2)
+    -- local P1 = s_FullPositionBot
+    -- local s1 = s_Speed
+
+    -- local a = V0.x^2 + V0.y^2 + V0.z^2 - s1^2
+    -- local b = 2 * ((P0.x * V0.x) + (P0.y * V0.y) + (P0.z * V0.z) - (P1.x * V0.x) - (P1.y * V0.y) - (P1.z * V0.z))
+    -- local c = P0.x^2 + P0.y^2 + P0.z^2 + P1.x^2 + P1.y^2 + P1.z^2 - (2 * P1.x * P0.x) - (2 * P1.y * P0.y) - (2 * P1.z * P0.z)
+    
+    -- local t1 = (-b + math.sqrt(b^2 - (4 * a * c))) / (2 * a)
+    -- local t2 = (-b - math.sqrt(b^2 - (4 * a * c))) / (2 * a)
+    -- local t = 0
+
+    -- --if t1 is nan
+    -- if t1 ~= t1 then
+    --     t1 = 0
+    -- end
+
+    -- --if t2 is nan
+    -- if t2 ~= t2 then
+    --     t2 = 0
+    -- end
+    
+    -- if t1 > 0 and t2 > 0 then
+    --     if t1 < t2 then
+    --         t = t1
+    --     else
+    --         t = t2
+    --     end
+    -- elseif t1 > 0 and t2 < 0 then
+    --     t = t1
+    -- elseif t2 > 0 and t1 < 0 then
+    --     t = t2
+    -- end
+
+	-- local s_TimeToTravel = t
+    -- local s_AimAt = Vec3(P0.x + (V0.x * t), P0.y + (V0.y * t), P0.z + (V0.z * t))
+
+
+
+
+
+
+
+
+
+	local A = s_Speed * s_Speed - s_TargetVelocity:Dot(s_TargetVelocity)
+	local B = -2 * s_TargetVelocity:Dot(s_VectorBetween)   
+	local C = s_NegVectorBetween:Dot(s_VectorBetween)        
+	local s_TimeToTravel = (B + math.sqrt(B*B-4*A*C)) / (2*A); 
+	local s_AimAt = s_FullPositionTarget + (s_TargetVelocity * s_TimeToTravel)  
+
+	s_PitchCorrection = 0.5 * s_TimeToTravel * s_TimeToTravel * s_Drop
+
+	local s_DifferenceY = 0
+	local s_DifferenceX = 0
+	local s_DifferenceZ = 0
+
+	--calculate yaw and pitch
+	s_DifferenceZ = s_AimAt.z - s_FullPositionBot.z
+	s_DifferenceX = s_AimAt.x - s_FullPositionBot.x
+	s_DifferenceY = s_AimAt.y + s_PitchCorrection - s_FullPositionBot.y
+
+	local s_AtanDzDx = math.atan(s_DifferenceZ, s_DifferenceX)
+	local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
+
+	--calculate pitch
+	local s_Distance = math.sqrt(s_DifferenceZ ^ 2 + s_DifferenceX ^ 2)
+	local s_Pitch = math.atan(s_DifferenceY, s_Distance)
+
+	self._TargetPitch = s_Pitch
+	self._TargetYaw = s_Yaw
+
+
+	-- abort attacking in chopper if too steep or too low
+	if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) and self.m_Player.controlledEntryId == 0 then
+		local s_PitchHalf = Config.FovVerticleChopperForShooting / 360 * math.pi
+		if math.abs(self._TargetPitch) > s_PitchHalf then
+			self:_AbortAttack()
+			return
+		end
+		if self._ShootPlayerVehicleType ~= VehicleTypes.Chopper and self._ShootPlayerVehicleType ~= VehicleTypes.Plane then
+			if s_DifferenceY > -20 and s_DifferenceY < 0 then -- too low to the ground
+				self:_AbortAttack()
+			end
+			return
+		end
+	end
+end
+
+
+
 function Bot:_UpdateAimingVehicle(p_DeltaTime)
 	if self._ShootPlayer == nil then
 		return
@@ -746,7 +889,6 @@ function Bot:_UpdateAimingVehicle(p_DeltaTime)
 
 	if self._ShootPlayerVehicleType == VehicleTypes.MavBot then
 		s_FullPositionTarget = self._ShootPlayer.controlledControllable.transform.trans:Clone()
-		s_TargetMovement = PhysicsEntity(self.m_Player.controlledControllable).velocity
 	else
 		if self.m_Player.controlledEntryId == 0 and self._ShootPlayerVehicleType == VehicleTypes.NoVehicle and self._ShootPlayer.soldier.worldTransform.trans.y < s_FullPositionBot.y then
 			-- add nothing --> aim for the feet of the target
@@ -754,7 +896,12 @@ function Bot:_UpdateAimingVehicle(p_DeltaTime)
 		else
 			s_FullPositionTarget = self._ShootPlayer.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(self._ShootPlayer, true, false)
 		end
+	end
+
+	if self._ShootPlayerVehicleType == VehicleTypes.NoVehicle then
 		s_TargetMovement = PhysicsEntity(self._ShootPlayer.soldier).velocity
+	else
+		s_TargetMovement = PhysicsEntity(self._ShootPlayer.controlledControllable).velocity
 	end
 
 	--calculate how long the distance is --> time to travel
@@ -827,7 +974,6 @@ function Bot:_UpdateAiming()
 
 		if self._ShootPlayerVehicleType == VehicleTypes.MavBot then
 			s_FullPositionTarget = self._ShootPlayer.controlledControllable.transform.trans:Clone()
-			s_TargetMovement = PhysicsEntity(self._ShootPlayer.controlledControllable).velocity
 		else
 			local s_AimForHead = false
 			if self.m_ActiveWeapon.Type == WeaponTypes.Sniper then
@@ -840,7 +986,12 @@ function Bot:_UpdateAiming()
 
 			s_FullPositionTarget = self._ShootPlayer.soldier.worldTransform.trans:Clone()
 			s_FullPositionTarget = s_FullPositionTarget + m_Utilities:getCameraPos(self._ShootPlayer, true, s_AimForHead)
+		end
+
+		if self._ShootPlayerVehicleType == VehicleTypes.NoVehicle then
 			s_TargetMovement = PhysicsEntity(self._ShootPlayer.soldier).velocity
+		else
+			s_TargetMovement = PhysicsEntity(self._ShootPlayer.controlledControllable).velocity
 		end
 
 		local s_GrenadePitch = 0.0
@@ -1006,6 +1157,10 @@ function Bot:_UpdateStationaryAAVehicle(p_Attacking)
 		local s_Target =  m_AirTargets:GetTarget(self.m_Player)
 		if s_Target ~= nil then
 			self._ShootPlayerName = s_Target.name
+			self._ShootPlayer = PlayerManager:GetPlayerByName(self._ShootPlayerName)
+			self._ShootPlayerVehicleType = m_Vehicles:FindOutVehicleType(self._ShootPlayer)
+		else
+			self:_AbortAttack()
 		end
 		self._DeployTimer = 0
 	else
@@ -1014,7 +1169,8 @@ function Bot:_UpdateStationaryAAVehicle(p_Attacking)
 
 	if p_Attacking then -- target available
 		-- aim at target
-		self:_UpdateAimingVehicle(Registry.BOT.BOT_FAST_UPDATE_CYCLE)
+		self:_UpdateAimingVehicleAdvanced()
+		--self:_UpdateAimingVehicle(Registry.BOT.BOT_FAST_UPDATE_CYCLE)
 	else
 		-- just look a little around
 		self:_UpdateVehicleLookAround(Registry.BOT.BOT_FAST_UPDATE_CYCLE)
@@ -1272,7 +1428,7 @@ function Bot:_UpdateYawVehicle(p_Attacking)
 		-- yaw
 		self._Esum_drv_yaw = 0.0
 		self._Esum_att_yaw = self._Esum_att_yaw + s_DeltaYaw
-		local s_Output = 7 * s_DeltaYaw + 0.05 * self._Esum_att_yaw
+		local s_Output = 5 * s_DeltaYaw + 0.2 * self._Esum_att_yaw
 
 		if self._Esum_att_yaw > 5 then
 			self._Esum_att_yaw = 5
@@ -1280,17 +1436,29 @@ function Bot:_UpdateYawVehicle(p_Attacking)
 			self._Esum_att_yaw = -5
 		end
 
+		if s_Output > 1.0 then
+			s_Output = 1.0
+		elseif s_Output < -1.0 then
+			s_Output = -1.0
+		end
+
 		self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, 0.0)
 		self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, -s_Output)
 
 		-- pitch
 		self._Esum_att_pitch = self._Esum_att_pitch + s_DeltaPitch
-		local s_Output = 7 * s_DeltaPitch + 0.05 * self._Esum_att_pitch
+		local s_Output = 5 * s_DeltaPitch + 0.2 * self._Esum_att_pitch
 
 		if self._Esum_att_pitch > 5 then
 			self._Esum_att_pitch = 5
 		elseif self._Esum_att_pitch <-5 then
 			self._Esum_att_pitch = -5
+		end
+
+		if s_Output > 1.0 then
+			s_Output = 1.0
+		elseif s_Output < -1.0 then
+			s_Output = -1.0
 		end
 
 		self.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, -s_Output)
