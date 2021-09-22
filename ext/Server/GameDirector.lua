@@ -444,16 +444,18 @@ function GameDirector:FindClosestPath(p_Trans, p_VehiclePath)
 		local s_ClosestDistance = nil
 
 		for _, l_Waypoints in pairs(s_Paths) do
-			if (p_VehiclePath and l_Waypoints[1].Data.Vehicles ~= nil) or not p_VehiclePath then
-				local s_NewDistance = l_Waypoints[1].Position:Distance(p_Trans)
+			if l_Waypoints[1] ~= nil then
+				if (p_VehiclePath and l_Waypoints[1].Data ~= nil and l_Waypoints[1].Data.Vehicles ~= nil) or not p_VehiclePath then
+					local s_NewDistance = l_Waypoints[1].Position:Distance(p_Trans)
 
-				if s_ClosestDistance == nil then
-					s_ClosestDistance = s_NewDistance
-					s_ClosestPathNode = l_Waypoints[1]
-				else
-					if s_NewDistance < s_ClosestDistance then
+					if s_ClosestDistance == nil then
 						s_ClosestDistance = s_NewDistance
 						s_ClosestPathNode = l_Waypoints[1]
+					else
+						if s_NewDistance < s_ClosestDistance then
+							s_ClosestDistance = s_NewDistance
+							s_ClosestPathNode = l_Waypoints[1]
+						end
 					end
 				end
 			end
