@@ -819,7 +819,28 @@ SettingsDefinition = {
 			Type = Type.Boolean,
 			Value = Config.ChopperDriversAttack,
 			Description = "if false choppers only attack without gunner on board",
+			Default = false,
+			UpdateFlag = UpdateFlag.None,
+			Category = "VEHICLE"
+		},
+		{
+			Name = "AABots",
+			Text = "Activate Auto-AA",
+			Type = Type.Boolean,
+			Value = Config.AABots,
+			Description = "Enable Auto-AA by NyScorpy",
 			Default = true,
+			UpdateFlag = UpdateFlag.None,
+			Category = "VEHICLE"
+		},
+		{
+			Name = "MaxDistanceAABots",
+			Text = "Max Distance Auto-AA",
+			Type = Type.Integer,
+			Value = Config.MaxDistanceAABots,
+			Description = "Max Range of Stationary AA",
+			Reference = Range(50, 1500.00, 5),
+			Default = 700,
 			UpdateFlag = UpdateFlag.None,
 			Category = "VEHICLE"
 		},
