@@ -33,3 +33,5 @@ This release contains a lot of small bug fixes and more QoL updates.
 * Nebandan Flats CQS (Vehicles) - thanks to KrazyIvan777
 * Markaz Monolith CQS (Vehicles) - thanks to KrazyIvan777
 * Armored Shield CQS (Vehicles) - thanks to KrazyIvan777
+* Bandar Desert CQS (Vehicles) - thanks to KrazyIvan777
+* Alborz Mountains CQS (Vehicles) - thanks to KrazyIvan777
