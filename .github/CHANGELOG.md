@@ -26,6 +26,9 @@ This release contains a lot of small bug fixes and more QoL updates.
 * fixed bug with jeeps
 * first kind of attacking chopper pilot
 * exit of vehicle for all players
+* Added Core of Auto-AA - Mod (by NyScorpy) to make bots use the stationary AA 
+	* !!THANKS A LOT TO NyScorpy FOR LETTING ME USE HIS CODE!!!
+	* not done yet, but already usable with only a few settings
 
 ### New maps
 * Theran Highway CQS (Vehicles) - thanks to Gemini899
