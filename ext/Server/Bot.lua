@@ -772,58 +772,56 @@ function Bot:_UpdateAimingVehicleAdvanced()
 
 
 
-	-- local P0 = s_FullPositionTarget
-    -- local V0 = s_TargetVelocity
-    -- local s0 = math.sqrt(V0.x^2 + V0.y^2 + V0.z^2)
-    -- local P1 = s_FullPositionBot
-    -- local s1 = s_Speed
+	local P0 = s_FullPositionTarget
+    local V0 = s_TargetVelocity
+    local s0 = math.sqrt(V0.x^2 + V0.y^2 + V0.z^2)
+    local P1 = s_FullPositionBot
+    local s1 = s_Speed
 
-    -- local a = V0.x^2 + V0.y^2 + V0.z^2 - s1^2
-    -- local b = 2 * ((P0.x * V0.x) + (P0.y * V0.y) + (P0.z * V0.z) - (P1.x * V0.x) - (P1.y * V0.y) - (P1.z * V0.z))
-    -- local c = P0.x^2 + P0.y^2 + P0.z^2 + P1.x^2 + P1.y^2 + P1.z^2 - (2 * P1.x * P0.x) - (2 * P1.y * P0.y) - (2 * P1.z * P0.z)
+    local a = V0.x^2 + V0.y^2 + V0.z^2 - s1^2
+    local b = 2 * ((P0.x * V0.x) + (P0.y * V0.y) + (P0.z * V0.z) - (P1.x * V0.x) - (P1.y * V0.y) - (P1.z * V0.z))
+    local c = P0.x^2 + P0.y^2 + P0.z^2 + P1.x^2 + P1.y^2 + P1.z^2 - (2 * P1.x * P0.x) - (2 * P1.y * P0.y) - (2 * P1.z * P0.z)
     
-    -- local t1 = (-b + math.sqrt(b^2 - (4 * a * c))) / (2 * a)
-    -- local t2 = (-b - math.sqrt(b^2 - (4 * a * c))) / (2 * a)
-    -- local t = 0
+    local t1 = (-b + math.sqrt(b^2 - (4 * a * c))) / (2 * a)
+    local t2 = (-b - math.sqrt(b^2 - (4 * a * c))) / (2 * a)
+    local t = 0
 
-    -- --if t1 is nan
-    -- if t1 ~= t1 then
-    --     t1 = 0
-    -- end
+    --if t1 is nan
+    if t1 ~= t1 then
+        t1 = 0
+    end
 
-    -- --if t2 is nan
-    -- if t2 ~= t2 then
-    --     t2 = 0
-    -- end
+    --if t2 is nan
+    if t2 ~= t2 then
+        t2 = 0
+    end
     
-    -- if t1 > 0 and t2 > 0 then
-    --     if t1 < t2 then
-    --         t = t1
-    --     else
-    --         t = t2
-    --     end
-    -- elseif t1 > 0 and t2 < 0 then
-    --     t = t1
-    -- elseif t2 > 0 and t1 < 0 then
-    --     t = t2
-    -- end
+    if t1 > 0 and t2 > 0 then
+        if t1 < t2 then
+            t = t1
+        else
+            t = t2
+        end
+    elseif t1 > 0 and t2 < 0 then
+        t = t1
+    elseif t2 > 0 and t1 < 0 then
+        t = t2
+    end
 
-	-- local s_TimeToTravel = t
-    -- local s_AimAt = Vec3(P0.x + (V0.x * t), P0.y + (V0.y * t), P0.z + (V0.z * t))
-
-
-
-
-
-
+	local s_TimeToTravel = t
+    local s_AimAt = Vec3(P0.x + (V0.x * t), P0.y + (V0.y * t), P0.z + (V0.z * t))
 
 
 
 	local A = s_Speed * s_Speed - s_TargetVelocity:Dot(s_TargetVelocity)
 	local B = -2 * s_TargetVelocity:Dot(s_VectorBetween)   
 	local C = s_NegVectorBetween:Dot(s_VectorBetween)        
-	local s_TimeToTravel = (B + math.sqrt(B*B-4*A*C)) / (2*A); 
-	local s_AimAt = s_FullPositionTarget + (s_TargetVelocity * s_TimeToTravel)  
+	local s_TimeToTravel2 = (B + math.sqrt(B*B-4*A*C)) / (2*A); 
+	local s_AimAt2 = s_FullPositionTarget + (s_TargetVelocity * s_TimeToTravel2)
+
+	print(tostring(s_TimeToTravel2).." "..tostring(s_TimeToTravel))
+	print(s_AimAt)
+	print(s_AimAt2)
 
 	s_PitchCorrection = 0.5 * s_TimeToTravel * s_TimeToTravel * s_Drop
 
