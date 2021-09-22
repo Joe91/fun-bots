@@ -765,74 +765,35 @@ function Bot:_UpdateAimingVehicleAdvanced()
 	local s_Drop = 0.0
 	local s_Speed = 0.0
 	local s_VectorBetween = s_FullPositionTarget - s_FullPositionBot
-	local s_NegVectorBetween = s_FullPositionBot - s_FullPositionTarget
 
 	s_Speed, s_Drop = m_Vehicles:GetSpeedAndDrop(self.m_ActiveVehicle, self.m_Player.controlledEntryId)
 
+	local A = s_TargetVelocity:Dot(s_TargetVelocity) - s_Speed * s_Speed
+	local B = 2.0 * s_TargetVelocity:Dot(s_VectorBetween)   
+	local C = s_VectorBetween:Dot(s_VectorBetween)
+	local s_Determinant = math.sqrt(B*B-4*A*C)
+	local t1 = (-B + s_Determinant) / (2*A); 
+	local t2 = (-B - s_Determinant) / (2*A); 
+	local s_TimeToTravel = 0
+   
+    if t1 > 0  then
+		if t2 > 0 then
+			s_TimeToTravel = math.min(t1, t2)
+		else
+			s_TimeToTravel = t1
+		end
+	else
+		s_TimeToTravel = math.max(t2, 0.0)
+	end
 
-
-
-	local P0 = s_FullPositionTarget
-    local V0 = s_TargetVelocity
-    local s0 = math.sqrt(V0.x^2 + V0.y^2 + V0.z^2)
-    local P1 = s_FullPositionBot
-    local s1 = s_Speed
-
-    local a = V0.x^2 + V0.y^2 + V0.z^2 - s1^2
-    local b = 2 * ((P0.x * V0.x) + (P0.y * V0.y) + (P0.z * V0.z) - (P1.x * V0.x) - (P1.y * V0.y) - (P1.z * V0.z))
-    local c = P0.x^2 + P0.y^2 + P0.z^2 + P1.x^2 + P1.y^2 + P1.z^2 - (2 * P1.x * P0.x) - (2 * P1.y * P0.y) - (2 * P1.z * P0.z)
-    
-    local t1 = (-b + math.sqrt(b^2 - (4 * a * c))) / (2 * a)
-    local t2 = (-b - math.sqrt(b^2 - (4 * a * c))) / (2 * a)
-    local t = 0
-
-    --if t1 is nan
-    if t1 ~= t1 then
-        t1 = 0
-    end
-
-    --if t2 is nan
-    if t2 ~= t2 then
-        t2 = 0
-    end
-    
-    if t1 > 0 and t2 > 0 then
-        if t1 < t2 then
-            t = t1
-        else
-            t = t2
-        end
-    elseif t1 > 0 and t2 < 0 then
-        t = t1
-    elseif t2 > 0 and t1 < 0 then
-        t = t2
-    end
-
-	local s_TimeToTravel = t
-    local s_AimAt = Vec3(P0.x + (V0.x * t), P0.y + (V0.y * t), P0.z + (V0.z * t))
-
-
-
-	local A = s_Speed * s_Speed - s_TargetVelocity:Dot(s_TargetVelocity)
-	local B = -2 * s_TargetVelocity:Dot(s_VectorBetween)   
-	local C = s_NegVectorBetween:Dot(s_VectorBetween)        
-	local s_TimeToTravel2 = (B + math.sqrt(B*B-4*A*C)) / (2*A); 
-	local s_AimAt2 = s_FullPositionTarget + (s_TargetVelocity * s_TimeToTravel2)
-
-	print(tostring(s_TimeToTravel2).." "..tostring(s_TimeToTravel))
-	print(s_AimAt)
-	print(s_AimAt2)
+	local s_AimAt = s_FullPositionTarget + (s_TargetVelocity * s_TimeToTravel)
 
 	s_PitchCorrection = 0.5 * s_TimeToTravel * s_TimeToTravel * s_Drop
 
-	local s_DifferenceY = 0
-	local s_DifferenceX = 0
-	local s_DifferenceZ = 0
-
 	--calculate yaw and pitch
-	s_DifferenceZ = s_AimAt.z - s_FullPositionBot.z
-	s_DifferenceX = s_AimAt.x - s_FullPositionBot.x
-	s_DifferenceY = s_AimAt.y + s_PitchCorrection - s_FullPositionBot.y
+	local s_DifferenceZ = s_AimAt.z - s_FullPositionBot.z
+	local s_DifferenceX = s_AimAt.x - s_FullPositionBot.x
+	local s_DifferenceY = s_AimAt.y + s_PitchCorrection - s_FullPositionBot.y
 
 	local s_AtanDzDx = math.atan(s_DifferenceZ, s_DifferenceX)
 	local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
