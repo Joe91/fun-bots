@@ -252,6 +252,7 @@ end
 
 function FunBotServer:OnRoundOver(p_RoundTime, p_WinningTeam)
 	m_GameDirector:OnRoundOver(p_RoundTime, p_WinningTeam)
+	Globals.IsInputAllowed = false
 end
 
 function FunBotServer:OnRoundReset(p_RoundTime, p_WinningTeam)
