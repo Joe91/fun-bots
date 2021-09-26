@@ -682,7 +682,7 @@ end
 function ClientNodeEditor:_onWarpTo(p_Args)
 	self.m_CommoRoseActive = false
 
-	if self.m_Player == nil or self.m_Player.soldier == nil or not self.m_Player.alive or not self.m_Player.soldier.isAlive then
+	if self.m_Player == nil or self.m_Player.soldier == nil or self.m_Player.soldier == nil then
 		self:Log('Player must be alive')
 		return false
 	end
@@ -1778,7 +1778,7 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	end
 
 	-- doing this here and not in UI:DrawHud prevents a memory leak that crashes you in under a minute
-	if self.m_Player ~= nil and self.m_Player.alive and self.m_Player.soldier ~= nil and self.m_Player.soldier.alive and self.m_Player.soldier.worldTransform ~= nil then
+	if self.m_Player ~= nil and self.m_Player.soldier ~= nil and self.m_Player.soldier.worldTransform ~= nil then
 		self.m_PlayerPos = self.m_Player.soldier.worldTransform.trans
 
 		self.m_RaycastTimer = self.m_RaycastTimer + p_DeltaTime
@@ -1869,7 +1869,7 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 					local s_PosData = {
 						Visible = (s_Ray == nil or s_Ray.rigidBody == nil),
-						Alive = s_Players[p].soldier.alive
+						Alive = s_Players[p].soldier ~= nil
 					}
 
 					if s_PosData.Visible then
