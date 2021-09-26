@@ -119,7 +119,7 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 		self.m_Player.soldier:SingleStepEntry(self.m_Player.controlledEntryId)
 	end
 
-	if not self.m_Player.alive then -- player not alive
+	if self.m_Player.soldier == nil then -- player not alive
 		self._UpdateTimer = self._UpdateTimer + p_DeltaTime  -- reusage of updateTimer
 		if self._UpdateTimer > Registry.BOT.BOT_UPDATE_CYCLE then
 			self:_UpdateRespawn(Registry.BOT.BOT_UPDATE_CYCLE)
@@ -548,7 +548,7 @@ function Bot:GetTargetPlayer()
 end
 
 function Bot:IsInactive()
-	if self.m_Player.alive or self._SpawnMode ~= BotSpawnModes.NoRespawn then
+	if self.m_Player.soldier ~= nil or self._SpawnMode ~= BotSpawnModes.NoRespawn then
 		return false
 	else
 		return true
@@ -629,7 +629,7 @@ end
 function Bot:Kill()
 	self:ResetVars()
 
-	if self.m_Player.alive then
+	if self.m_Player.soldier ~= nil then
 		self.m_Player.soldier:Kill()
 	end
 end
@@ -706,7 +706,7 @@ function Bot:_UpdateInputs()
 	end
 end
 
-function Bot:_UpdateRespawn()
+function Bot:_UpdateRespawn(p_DeltaTime)
 	if not self._Respawning or self._SpawnMode == BotSpawnModes.NoRespawn then
 		return
 	end
@@ -714,7 +714,7 @@ function Bot:_UpdateRespawn()
 	if self.m_Player.soldier == nil then
 		-- wait for respawn-delay gone
 		if self._SpawnDelayTimer < (Globals.RespawnDelay + Config.AdditionalBotSpawnDelay) then
-			self._SpawnDelayTimer = self._SpawnDelayTimer + Registry.BOT.BOT_UPDATE_CYCLE
+			self._SpawnDelayTimer = self._SpawnDelayTimer + p_DeltaTime
 		else
 			self._SpawnDelayTimer = 0 -- prevent triggering again.
 			Events:DispatchLocal('Bot:RespawnBot', self.m_Name)
@@ -2116,7 +2116,7 @@ function Bot:_UpdateNormalMovementVehicle()
 				local s_SwitchPath = false
 				s_SwitchPath, s_NewWaypoint = m_PathSwitcher:GetNewPath(self.m_Name, s_Point, self._Objective, self.m_InVehicle, self.m_Player.teamId)
 
-				if not self.m_Player.alive then
+				if self.m_Player.soldier == nil then
 					return
 				end
 
@@ -2467,7 +2467,7 @@ function Bot:_UpdateNormalMovement()
 					local s_SwitchPath = false
 					s_SwitchPath, s_NewWaypoint = m_PathSwitcher:GetNewPath(self.m_Name, s_Point, self._Objective, self.m_InVehicle, self.m_Player.teamId)
 
-					if not self.m_Player.alive then
+					if self.m_Player.soldier == nil then
 						return
 					end
 

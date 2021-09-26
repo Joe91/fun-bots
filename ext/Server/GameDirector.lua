@@ -166,7 +166,7 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 	for l_BotTeam, l_Bots in pairs(self.m_BotsByTeam) do
 		for _, l_Bot in pairs(l_Bots) do
 			if l_Bot:GetObjective() == '' then
-				if not l_Bot.m_Player.alive then
+				if l_Bot.m_Player.soldier == nil then
 					goto continue_inner_loop
 				end
 
@@ -206,7 +206,7 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 					s_Objective.assigned[l_BotTeam] = s_Objective.assigned[l_BotTeam] + 1
 				end
 			else
-				if not l_Bot.m_Player.alive then
+				if l_Bot.m_Player.soldier == nil then
 					l_Bot:SetObjective() -- reset objective on death
 					goto continue_inner_loop
 				end
