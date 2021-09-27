@@ -194,6 +194,14 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle, p
 				s_SwitchAnyways = true
 			end
 
+			-- leave subobjective, if disabled
+			if Globals.IsRush then
+				local s_TopObjective = m_GameDirector:_GetObjectiveFromSubObj(p_Objective)
+				if s_TopObjective ~= nil and s_CurrentPathStatus == 0 and s_CountNew == 1 and s_TopObjective == s_PathNode.Data.Objectives[1] then
+					s_SwitchAnyways = true
+				end
+			end
+
 			if s_SwitchAnyways then
 				if s_HighestPriority < 3 then
 					s_HighestPriority = 3
