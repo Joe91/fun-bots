@@ -168,6 +168,9 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 						else
 							self:_UpdateDeployAndReload()
 							self:_UpdateNormalMovement()
+							if self.m_Player.soldier == nil then
+								return
+							end
 						end
 
 						-- common things
