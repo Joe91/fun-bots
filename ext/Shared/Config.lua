@@ -114,7 +114,7 @@ Config = {
 	SpawnPointRange = 100,				-- Set how far away spawnpoints are visible (meters)
 	DebugSelectionRaytraces = false,	-- Shows the trace line and search area from Commo Rose selection
 	TraceDelta = 0.3,					-- update intervall of trace
-	NodesPerCycle = 300,				-- Set how many nodes get drawn per cycle. Affects performance
+	NodesPerCycle = 100,				-- Set how many nodes get drawn per cycle. Affects performance
 
 	--ADVANCED
 	DistanceForDirectAttack = 5,		-- if that close, the bot can hear you

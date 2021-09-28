@@ -2076,7 +2076,11 @@ function Bot:_UpdateNormalMovementVehicle()
 					self._ObstacleRetryCounter = 0
 					s_DistanceFromTarget = 0
 					s_HeightDistance = 0
-					s_PointIncrement = 1
+					if MathUtils:GetRandomInt(0, 1) == 1 then
+						s_PointIncrement = 1
+					else
+						s_PointIncrement = -1
+					end
 				end
 			end
 

@@ -1079,7 +1079,7 @@ SettingsDefinition = {
 			Value = Config.NodesPerCycle,
 			Description = "Set how many nodes get drawn per cycle. Affects performance",
 			Reference = Range(1.00, 10000.00, 1.0),
-			Default = 300,
+			Default = 100,
 			UpdateFlag = UpdateFlag.None,
 			Category = "TRACE"
 		},
