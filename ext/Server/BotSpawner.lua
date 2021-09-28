@@ -247,7 +247,7 @@ function BotSpawner:UpdateBotAmountAndTeam()
 		end
 	end
 
-	if Config.AABots and not self._AABotsSpawned then
+	if Config.AABots and not self._AABotsSpawned and PlayerManager:GetPlayerCount() >= 3 then
 		for i = 1, Globals.NrOfTeams do
 			self:SpawnAABots(i)
 		end
@@ -591,6 +591,8 @@ function BotSpawner:SpawnAABots(p_TeamId)
 		s_VehicleName = "Centurion"
 	elseif p_TeamId == TeamId.Team2 then
 		s_VehicleName = "Pantsir"
+	else
+		return
 	end
 
 	local s_Transform = LinearTransform()

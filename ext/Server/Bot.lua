@@ -1102,12 +1102,14 @@ function Bot:_UpdateVehicleLookAround(p_DeltaTime)
 		elseif self._VehicleWaitTimer >= 6 then
 		elseif self._VehicleWaitTimer >= 3 then
 			self._TargetYaw = self._TargetYaw - 1.0 -- 60 ° rotation left
+			self._TargetPitch = 0.5
 
 			if self._TargetYaw < 0 then
 				self._TargetYaw = self._TargetYaw + (2 * math.pi)
 			end
 		elseif self._VehicleWaitTimer >= 0 then
 			self._TargetYaw = self._TargetYaw + 1.0 -- 60 ° rotation right
+			self._TargetPitch = -0.5
 
 			if self._TargetYaw > (math.pi * 2) then
 				self._TargetYaw = self._TargetYaw - (2 * math.pi)
@@ -1140,7 +1142,7 @@ function Bot:_UpdateStationaryAAVehicle(p_Attacking)
 		-- just look a little around
 		self:_UpdateVehicleLookAround(Registry.BOT.BOT_FAST_UPDATE_CYCLE)
 	end
-	self:_UpdateYawVehicle(p_Attacking)
+	self:_UpdateYawVehicle(true) --only gun --> therefore alsways gun-mode
 end
 
 function Bot:_UpdateAttackStationaryAAVehicle()
@@ -1407,8 +1409,14 @@ function Bot:_UpdateYawVehicle(p_Attacking)
 			s_Output = -1.0
 		end
 
-		self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, 0.0)
+		if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.StationaryAA) then
+			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, -s_Output) --doubles the output of stationary AA --> faster turret
+		else
+			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, 0)
+		end
 		self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, -s_Output)
+		-- self.m_Player.input:SetLevel(EntryInputActionEnum.EIACameraYaw, -s_Output)
+		
 
 		-- pitch
 		self._Esum_att_pitch = self._Esum_att_pitch + s_DeltaPitch
@@ -1427,6 +1435,7 @@ function Bot:_UpdateYawVehicle(p_Attacking)
 		end
 
 		self.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, -s_Output)
+		-- self.m_Player.input:SetLevel(EntryInputActionEnum.EIACameraPitch, -s_Output)
 	end
 end
 
