@@ -84,15 +84,45 @@ VehicleData = {
 	["AAV-7A1"] = {Name = "[AAV-7A1 AMTRAC]", Type =  VehicleTypes.AntiAir, Parts = {}},
 
 	-- light Vehicle? maybe also AA?
-	["HumveeArmored"] = {Name = "[M1114 HMMWV]", Type =  VehicleTypes.LightVehicle, Parts = {nil, 19, nil, nil}},
-	["Humvee"] = {Name = "[M1114 HMMWV]", Type =  VehicleTypes.LightVehicle, Parts = {nil, 19, nil, nil}},
-	["HumveeArmored_hmg"] = {Name = "[M1114 HMMWV]", Type =  VehicleTypes.LightVehicle, Parts = {nil, 19, nil, nil}},
-	["GAZ-3937_Vodnik"] = {Name = "[GAZ-3937 VODNIK]", Type =  VehicleTypes.LightVehicle, Parts = {nil, 23, nil, nil}},
-
+	["HumveeArmored"] = {
+		Name = "[M1114 HMMWV]", 
+		Type =  VehicleTypes.LightVehicle,
+		Parts = {nil, 19, nil, nil},
+		Speed = {300, 610, 300, 300},
+		Drop = {0.0, 9.81, 0.0, 0.0}},
+	["Humvee"] = {
+		Name = "[M1114 HMMWV]",
+		Type =  VehicleTypes.LightVehicle,
+		Parts = {nil, 19, nil, nil},
+		Speed = {300, 610, 300, 300},
+		Drop = {0.0, 9.81, 0.0, 0.0}},
+	["HumveeArmored_hmg"] = {
+		Name = "[M1114 HMMWV]",
+		Type =  VehicleTypes.LightVehicle,
+		Parts = {nil, 19, nil, nil},
+		Speed = {300, 610, 300, 300},
+		Drop = {0.0, 9.81, 0.0, 0.0}},
+	["GAZ-3937_Vodnik"] = {
+		Name = "[GAZ-3937 VODNIK]",
+		Type =  VehicleTypes.LightVehicle,
+		Parts = {nil, 23, nil, nil},
+		Speed = {300, 600, 300, 300},
+		Drop = {0.0, 9.81, 0.0, 0.0}},
 	["Humvee_ASRAD"] = {Name = "[HMMWV ASRAD]", Type =  VehicleTypes.LightVehicle, Parts = {}},
 	["HIMARS"] = {Name = "[M142]", Type =  VehicleTypes.LightVehicle, Parts = {}},
 	["BTR90"] = {Name = "[BTR-90]", Type =  VehicleTypes.LightVehicle, Parts = {}},
-	["VodnikModified_V2"] = {Name = "[BARSUK]", Type =  VehicleTypes.LightVehicle, Parts = {}},
+	["VodnikModified_V2"] = {
+		Name = "[BARSUK]",
+		Type =  VehicleTypes.LightVehicle,
+		Parts = {nil, 6, 16},
+		Speed = {300, 600, 80},
+		Drop = {0.0, 15, 7.0}},
+	["HumveeModified"] = {
+		Name = "[PHOENIX]",
+		Type =  VehicleTypes.LightVehicle,
+		Parts = {nil, 1, 18},
+		Speed = {300, 600, 80},
+		Drop = {0.0, 15, 7.0}},
 	["STAR_1466"] = {Name = "[BM-23]", Type =  VehicleTypes.LightVehicle, Parts = {}},
 	["AC130"] = {Name = "[GUNSHIP]", Type =  VehicleTypes.LightVehicle, Parts = {}},
 
@@ -143,10 +173,24 @@ VehicleData = {
 	["Wz11_SP_Paris"] = {Name = "[Z-11W]", Type =  VehicleTypes.Chopper, Parts = {}},
 
 	-- transport
-	["GrowlerITV"] = {Name = "[GROWLER ITV]", Type =  VehicleTypes.NoArmorVehicle, Parts = {nil, 47, nil}},
-	["GrowlerITV_Valley"] = {Name = "[GROWLER ITV]", Type =  VehicleTypes.NoArmorVehicle, Parts = {nil, 47, nil}},
-	["VDV Buggy"] = {Name = "[VDV Buggy]", Type =  VehicleTypes.NoArmorVehicle, Parts = {nil, 13, nil}},
-
+	["GrowlerITV"] = {
+		Name = "[GROWLER ITV]",
+		Type =  VehicleTypes.NoArmorVehicle,
+		Parts = {nil, 47, nil},
+		Speed = {300, 610, 300},
+		Drop = {0.0, 9.81, 0.0}},
+	["GrowlerITV_Valley"] = {
+		Name = "[GROWLER ITV]",
+		Type =  VehicleTypes.NoArmorVehicle,
+		Parts = {nil, 47, nil},
+		Speed = {300, 610, 300},
+		Drop = {0.0, 9.81, 0.0}},
+	["VDV Buggy"] = {
+		Name = "[VDV Buggy]",
+		Type =  VehicleTypes.NoArmorVehicle,
+		Parts = {nil, 13, nil},
+		Speed = {300, 610, 300},
+		Drop = {0.0, 9.81, 0.0}},
 	["CivilianCar_03_Vehicle"] = {Name = "[CIVILIAN CAR]", Type =  VehicleTypes.NoArmorVehicle, Parts = {}},
 	["CivilianCar_03_Vehicle_SPJet"] = {Name = "[CIVILIAN CAR]", Type =  VehicleTypes.NoArmorVehicle, Parts = {}},
 	["DeliveryVan_Vehicle"] = {Name = "[DELIVERY VAN]", Type =  VehicleTypes.NoArmorVehicle, Parts = {}},

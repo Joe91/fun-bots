@@ -320,6 +320,9 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 		if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.NoArmorVehicle) then
 			return false
 		end
+		if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.LightVehicle) then
+			return false
+		end
 		-- if stationary AA targets get assigned in an other waay
 		if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.StationaryAA) then
 			return false
