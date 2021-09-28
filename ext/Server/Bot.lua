@@ -1466,7 +1466,7 @@ end
 
 function Bot:_UpdateWeaponSelection()
 	--select weapon-slot
-	if not self._ActiveAction ~= BotActionFlags.MeleeActive then
+	if self._ActiveAction ~= BotActionFlags.MeleeActive then
 		if self.m_Player.soldier.weaponsComponent ~= nil then
 			if self.m_KnifeMode then
 				if self.m_Player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_7 then
@@ -1537,6 +1537,9 @@ function Bot:_UpdateReloadVehicle()
 end
 
 function Bot:_UpdateDeployAndReload()
+	if self._ActiveAction == BotActionFlags.MeleeActive then
+		return
+	end
 	self._WeaponToUse = BotWeapons.Primary
 	self:_ResetActionFlag(BotActionFlags.C4Active)
 	self:_ResetActionFlag(BotActionFlags.ReviveActive)
@@ -1605,6 +1608,7 @@ function Bot:_UpdateAttacking()
 					self._MeleeCooldownTimer = 0
 				elseif self._MeleeCooldownTimer > 0 then
 					self._MeleeCooldownTimer = self._MeleeCooldownTimer - Registry.BOT.BOT_UPDATE_CYCLE
+					self:_SetInput(EntryInputActionEnum.EIAFire, 1)
 					if self._MeleeCooldownTimer < (Config.MeleeAttackCoolDown - 0.8) then
 						self:_ResetActionFlag(BotActionFlags.MeleeActive)
 					end
@@ -2332,10 +2336,15 @@ function Bot:_UpdateNormalMovement()
 				elseif self._ObstaceSequenceTimer > 1.0 then --step 3
 					if not self.m_InVehicle then
 						if self._ObstacleRetryCounter == 0 then
-							self._ActiveAction = BotActionFlags.MeleeActive
-							self:_SetInput(EntryInputActionEnum.EIASelectWeapon7, 1)
-							self:_SetInput(EntryInputActionEnum.EIAQuicktimeFastMelee, 1)
-							self:_SetInput(EntryInputActionEnum.EIAMeleeAttack, 1)
+							if self._ActiveAction ~= BotActionFlags.MeleeActive then
+								self._ActiveAction = BotActionFlags.MeleeActive
+								self:_SetInput(EntryInputActionEnum.EIASelectWeapon7, 1)
+								self:_SetInput(EntryInputActionEnum.EIAQuicktimeFastMelee, 1)
+								self:_SetInput(EntryInputActionEnum.EIAMeleeAttack, 1)
+								self.m_ActiveWeapon = self.m_Knife
+							else
+								self:_SetInput(EntryInputActionEnum.EIAFire, 1)
+							end
 						else
 							self:_SetInput(EntryInputActionEnum.EIAFire, 1)
 						end
