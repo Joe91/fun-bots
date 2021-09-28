@@ -26,6 +26,9 @@ This release contains a lot of small bug fixes and more QoL updates.
 * fixed bug with jeeps
 * first kind of attacking chopper pilot
 * exit of vehicle for all players
+* fixed some bugs with the knife
+* fixed path bug with destroyed mcoms
+* Added more vehicles to the supported list
 * Added Core of Auto-AA - Mod (by NyScorpy) to make bots use the stationary AA 
 	* !!THANKS A LOT TO NyScorpy FOR LETTING ME USE HIS CODE!!!
 	* not done yet, but already usable with only a few settings
@@ -38,3 +41,6 @@ This release contains a lot of small bug fixes and more QoL updates.
 * Armored Shield CQS (Vehicles) - thanks to KrazyIvan777
 * Bandar Desert CQS (Vehicles) - thanks to KrazyIvan777
 * Alborz Mountains CQS (Vehicles) - thanks to KrazyIvan777
+* Grand Bazaar CQS (with Vehicles) - thanks to MeisterPeitsche
+* Seine Crossing CQS (with Vehicles) - thanks to MeisterPeitsche
+* Teheran Highway CQS (with Vehicles) - thanks to MeisterPeitsche
