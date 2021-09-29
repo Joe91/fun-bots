@@ -1,6 +1,7 @@
 class('Bot')
 
 require('__shared/Config')
+require('PidController')
 
 local m_NodeCollection = require('__shared/NodeCollection')
 local m_PathSwitcher = require('PathSwitcher')
@@ -85,14 +86,16 @@ function Bot:__init(p_Player)
 	self._VehicleReadyToShoot = false
 	self._FullVehicleSteering = false
 	self._VehicleDirBackPositive = false
-	self._Esum_drv_yaw = 0.0
-	--chopper
-	self._Esum_drv_height = 0.0
-	self._Esum_drv_speed = 0.0
-	self._Esum_drv_roll = 0.0
-	--guns
-	self._Esum_att_yaw = 0.0
-	self._Esum_att_pitch = 0.0
+	-- PID Controllers
+	-- normal driving
+	self._Pid_Drv_Yaw = PidController(5, 0.05, 0.2, 1.0)
+	-- chopper
+	self._Pid_Drv_Height = PidController(5, 0.05, 0.2, 1.0)
+	self._Pid_Drv_Speed = PidController(5, 0.05, 0.2, 1.0)
+	self._Pid_Drv_Roll = PidController(5, 0.05, 0.2, 1.0)
+	-- guns
+	self._Pid_Att_Yaw = PidController(7, 0.4, 0.2, 1.0)
+	self._Pid_Att_Pitch = PidController(7, 0.4, 0.2, 1.0)
 
 	--shooting
 	self._Shoot = false
@@ -1252,15 +1255,7 @@ function Bot:_UpdateYawVehicle(p_Attacking)
 		end
 
 		-- YAW
-		self._Esum_drv_yaw = self._Esum_drv_yaw + s_DeltaYaw
-		local s_Output_Yaw = 5 * s_DeltaYaw + 0.05 * self._Esum_drv_yaw
-
-		if self._Esum_drv_yaw > 5 then
-			self._Esum_drv_yaw = 5
-		elseif self._Esum_drv_yaw <-5 then
-			self._Esum_drv_yaw = -5
-		end
-
+		local s_Output_Yaw = self._Pid_Drv_Yaw:Update(s_DeltaYaw)
 		if self.m_ActiveSpeedValue == BotMoveSpeeds.Backwards then
 			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, s_Output_Yaw)
 		else
@@ -1269,15 +1264,7 @@ function Bot:_UpdateYawVehicle(p_Attacking)
 
 		-- HEIGHT
 		local s_Delta_Height = self._TargetPoint.Position.y - self.m_Player.controlledControllable.transform.trans.y
-		self._Esum_drv_height = self._Esum_drv_height + s_Delta_Height
-		local s_Output_Throttle = 0.25 * s_Delta_Height + 0.05 * self._Esum_drv_height
-
-		if self._Esum_drv_height > 5 then
-			self._Esum_drv_height = 5
-		elseif self._Esum_drv_height <-5 then
-			self._Esum_drv_height = -5
-		end
-
+		local s_Output_Throttle = self._Pid_Drv_Height:Update(s_Delta_Height)
 		if s_Output_Throttle > 0 then
 			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAThrottle, s_Output_Throttle)
 			self.m_Player.input:SetLevel(EntryInputActionEnum.EIABrake, 0.0)
@@ -1302,14 +1289,7 @@ function Bot:_UpdateYawVehicle(p_Attacking)
 			s_Delta_Tilt = s_Tartget_Tilt - s_Current_Tilt
 		end
 		
-		self._Esum_drv_speed = self._Esum_drv_speed + s_Delta_Tilt
-		local s_Output_Tilt = 5 * s_Delta_Tilt + 0.05 * self._Esum_drv_speed
-
-		if self._Esum_drv_speed > 5 then
-			self._Esum_drv_speed = 5
-		elseif self._Esum_drv_speed <-5 then
-			self._Esum_drv_speed = -5
-		end
+		local s_Output_Tilt = self._Pid_Drv_Speed:Update(s_Delta_Tilt)
 		self.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, -s_Output_Tilt)	
 		
 		-- ROLL (keep it zero)
@@ -1325,14 +1305,7 @@ function Bot:_UpdateYawVehicle(p_Attacking)
 
 		local s_Current_Roll = math.asin(self.m_Player.controlledControllable.transform.left.y / 1.0)
 		local s_Delta_Roll = s_Tartget_Roll - s_Current_Roll
-		self._Esum_drv_roll = self._Esum_drv_roll + s_Delta_Roll
-		local s_Output_Roll = 10 * s_Delta_Roll + 0.05 * self._Esum_drv_roll
-
-		if self._Esum_drv_roll > 5 then
-			self._Esum_drv_roll = 5
-		elseif self._Esum_drv_roll <-5 then
-			self._Esum_drv_roll = -5
-		end
+		local s_Output_Roll = self._Pid_Drv_Roll:Update(s_Delta_Roll)
 		self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, s_Output_Roll)
 
 		return -- don't do anything else
@@ -1340,17 +1313,7 @@ function Bot:_UpdateYawVehicle(p_Attacking)
 
 	if not p_Attacking then
 		if self.m_Player.controlledEntryId == 0 then -- driver
-			self._Esum_att_yaw = 0.0
-			self._Esum_att_pitch = 0.0
-			self._Esum_drv_yaw = self._Esum_drv_yaw + s_DeltaYaw
-			local s_Output = 5 * s_DeltaYaw + 0.05 * self._Esum_drv_yaw
-
-			if self._Esum_drv_yaw > 5 then
-				self._Esum_drv_yaw = 5
-			elseif self._Esum_drv_yaw <-5 then
-				self._Esum_drv_yaw = -5
-			end
-
+			local s_Output = self._Pid_Drv_Yaw:Update(s_DeltaYaw)
 
 			if self.m_ActiveSpeedValue == BotMoveSpeeds.Backwards then
 				self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, s_Output)
@@ -1369,45 +1332,16 @@ function Bot:_UpdateYawVehicle(p_Attacking)
 			end
 		else -- passenger
 			if self._VehicleMovableId ~= nil then
-				self._Esum_att_yaw = self._Esum_att_yaw + s_DeltaYaw
-				local s_Output = 7 * s_DeltaYaw + 0.05 * self._Esum_att_yaw
-
-				if self._Esum_att_yaw > 5 then
-					self._Esum_att_yaw = 5
-				elseif self._Esum_att_yaw <-5 then
-					self._Esum_att_yaw = -5
-				end
+				local s_Output = self._Pid_Att_Yaw:Update(s_DeltaYaw)
 				self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, -s_Output)
 
-				self._Esum_att_pitch = self._Esum_att_pitch + s_DeltaPitch
-				local s_Output = 7 * s_DeltaPitch + 0.05 * self._Esum_att_pitch
-
-				if self._Esum_att_pitch > 5 then
-					self._Esum_att_pitch = 5
-				elseif self._Esum_att_pitch <-5 then
-					self._Esum_att_pitch = -5
-				end
-
+				local s_Output = self._Pid_Att_Pitch:Update(s_DeltaPitch)
 				self.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, -s_Output)
 			end
 		end
 	else -- attacking
 		-- yaw
-		self._Esum_drv_yaw = 0.0
-		self._Esum_att_yaw = self._Esum_att_yaw + s_DeltaYaw
-		local s_Output = 5 * s_DeltaYaw + 0.2 * self._Esum_att_yaw
-
-		if self._Esum_att_yaw > 5 then
-			self._Esum_att_yaw = 5
-		elseif self._Esum_att_yaw <-5 then
-			self._Esum_att_yaw = -5
-		end
-
-		if s_Output > 1.0 then
-			s_Output = 1.0
-		elseif s_Output < -1.0 then
-			s_Output = -1.0
-		end
+		local s_Output = self._Pid_Att_Yaw:Update(s_DeltaYaw)
 
 		if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.StationaryAA) then
 			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, -s_Output) --doubles the output of stationary AA --> faster turret
@@ -1417,23 +1351,8 @@ function Bot:_UpdateYawVehicle(p_Attacking)
 		self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, -s_Output)
 		-- self.m_Player.input:SetLevel(EntryInputActionEnum.EIACameraYaw, -s_Output)
 		
-
 		-- pitch
-		self._Esum_att_pitch = self._Esum_att_pitch + s_DeltaPitch
-		local s_Output = 5 * s_DeltaPitch + 0.2 * self._Esum_att_pitch
-
-		if self._Esum_att_pitch > 5 then
-			self._Esum_att_pitch = 5
-		elseif self._Esum_att_pitch <-5 then
-			self._Esum_att_pitch = -5
-		end
-
-		if s_Output > 1.0 then
-			s_Output = 1.0
-		elseif s_Output < -1.0 then
-			s_Output = -1.0
-		end
-
+		local s_Output = self._Pid_Att_Pitch:Update(s_DeltaPitch)
 		self.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, -s_Output)
 		-- self.m_Player.input:SetLevel(EntryInputActionEnum.EIACameraPitch, -s_Output)
 	end
