@@ -27,6 +27,12 @@ VehicleData = {
 		Drop = {4.9, 9.81, 9.81, 9.81, 9.81, 9.81}}, --10,19
 	["LAV25_AI"] = {Name = "[LAV-25]", Type =  VehicleTypes.Tank, Parts = {10, 25, nil, nil, nil, nil}}, --10,19
 	["LAV25_Paradrop"] = {Name = "[LAV-25]", Type =  VehicleTypes.Tank, Parts = {10, 25, nil, nil, nil, nil}}, --10,19
+	["BTR90"] = {
+		Name = "[BTR-90]",
+		Type =  VehicleTypes.Tank,
+		Parts = {4, 29, nil, nil, nil, nil},
+		Speed = {200, 600, 350, 350, 350, 350},
+		Drop = {4.9, 9.81, 9.81, 9.81, 9.81, 9.81}},
 	["BMP2"] = {
 		Name = "[BMP-2M]",
 		Type =  VehicleTypes.Tank,
@@ -110,7 +116,6 @@ VehicleData = {
 		Drop = {0.0, 9.81, 0.0, 0.0}},
 	["Humvee_ASRAD"] = {Name = "[HMMWV ASRAD]", Type =  VehicleTypes.LightVehicle, Parts = {}},
 	["HIMARS"] = {Name = "[M142]", Type =  VehicleTypes.LightVehicle, Parts = {}},
-	["BTR90"] = {Name = "[BTR-90]", Type =  VehicleTypes.LightVehicle, Parts = {}},
 	["VodnikModified_V2"] = {
 		Name = "[BARSUK]",
 		Type =  VehicleTypes.LightVehicle,
@@ -197,6 +202,12 @@ VehicleData = {
 		Parts = {nil, 13, nil},
 		Speed = {300, 610, 300},
 		Drop = {0.0, 9.81, 0.0}},
+	["DPV"] = {
+		Name = "[DPV]", 
+		Type =  VehicleTypes.NoArmorVehicle,
+		Parts = {nil, 4, nil},
+		Speed = {300, 610, 600},
+		Drop = {0.0, 9.81, 15}},
 	["CivilianCar_03_Vehicle"] = {Name = "[CIVILIAN CAR]", Type =  VehicleTypes.NoArmorVehicle, Parts = {}},
 	["CivilianCar_03_Vehicle_SPJet"] = {Name = "[CIVILIAN CAR]", Type =  VehicleTypes.NoArmorVehicle, Parts = {}},
 	["DeliveryVan_Vehicle"] = {Name = "[DELIVERY VAN]", Type =  VehicleTypes.NoArmorVehicle, Parts = {}},
@@ -212,7 +223,6 @@ VehicleData = {
 	["QuadBike"] = {Name = "[QUAD BIKE]", Type =  VehicleTypes.NoArmorVehicle, Parts = {}},
 	["C130"] = {Name = "[GUNSHIP]", Type =  VehicleTypes.NoArmorVehicle, Parts = {}},
 	["KLR650"] = {Name = "[DIRTBIKE]", Type =  VehicleTypes.NoArmorVehicle, Parts = {}},
-	["DPV"] = {Name = "[DPV]", Type =  VehicleTypes.NoArmorVehicle, Parts = {}},
 	["SkidLoader"] = {Name = "[SKID LOADER]", Type =  VehicleTypes.NoArmorVehicle, Parts = {}},
 
 
