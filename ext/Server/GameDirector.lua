@@ -9,8 +9,7 @@ function GameDirector:__init()
 end
 
 function GameDirector:RegisterVars()
-	self.m_UpdateLast = -1
-	self.m_UpdateInterval = 1.5 -- seconds interval
+	self.m_UpdateTimer = -1
 
 	self.m_BotsByTeam = {}
 
@@ -40,17 +39,17 @@ function GameDirector:OnLevelLoaded()
 	self.m_Translations = {}
 	self:_RegisterRushEventCallbacks()
 	-- TODO, assign weights to each objective
-	self.m_UpdateLast = 0
+	self.m_UpdateTimer = 0
 	self:_InitObjectives()
 end
 
 function GameDirector:OnRoundOver(p_RoundTime, p_WinningTeam)
-	self.m_UpdateLast = -1
+	self.m_UpdateTimer = -1
 end
 
 function GameDirector:OnRoundReset(p_RoundTime, p_WinningTeam)
 	self.m_AllObjectives = {}
-	self.m_UpdateLast = 0
+	self.m_UpdateTimer = 0
 end
 
 -- =============================================
@@ -108,15 +107,21 @@ function GameDirector:OnCapturePointLost(p_CapturePoint)
 end
 
 function GameDirector:OnEngineUpdate(p_DeltaTime)
-	if self.m_UpdateLast >= 0 then
-		self.m_UpdateLast = self.m_UpdateLast + p_DeltaTime
+	if self.m_UpdateTimer >= 0 then
+		self.m_UpdateTimer = self.m_UpdateTimer + p_DeltaTime
 	end
 
-	if self.m_UpdateLast < self.m_UpdateInterval then
+	if self.m_UpdateTimer < Registry.GAME_DIRECTOR.UPDATE_OBJECTIVES_CYCLE then
 		return
 	end
 
-	self.m_UpdateLast = 0
+	if Globals.IsRush then
+		self:_UpdateTimersOfMcoms(self.m_UpdateTimer)
+	end
+
+	self.m_UpdateTimer = 0
+
+
 
 	--update bot -> team list
 	local s_BotList = g_BotManager:GetBots()
@@ -258,7 +263,7 @@ function GameDirector:OnMcomArmed(p_Player)
 		self.m_ArmedMcoms[p_Player.name] = {}
 	end
 
-	table.insert(self.m_ArmedMcoms[p_Player.name], s_Objective)
+	table.insert(self.m_ArmedMcoms[p_Player.name], {time = 0, objective = s_Objective})
 
 	self:_UpdateObjective(s_Objective, {
 		team = p_Player.teamId,
@@ -281,8 +286,8 @@ function GameDirector:OnMcomDisarmed(p_Player)
 	-- remove information of armed mcom
 	for l_PlayerName, l_McomsOfPlayer in pairs(self.m_ArmedMcoms) do
 		if l_McomsOfPlayer ~= nil and #l_McomsOfPlayer > 0 then
-			for i, l_McomName in pairs(l_McomsOfPlayer) do
-				if l_McomName == s_Objective then
+			for i, l_Mcoms in pairs(l_McomsOfPlayer) do
+				if l_Mcoms.objective == s_Objective then
 					table.remove(self.m_ArmedMcoms[l_PlayerName], i)
 					break
 				end
@@ -311,7 +316,7 @@ function GameDirector:OnMcomDestroyed(p_Player)
 	local s_TopObjective = nil
 
 	if self.m_ArmedMcoms[p_Player.name] ~= nil then
-		s_Objective = self.m_ArmedMcoms[p_Player.name][1]
+		s_Objective = self.m_ArmedMcoms[p_Player.name][1].objective -- always the first mcom explodes
 		table.remove(self.m_ArmedMcoms[p_Player.name], 1)
 	end
 
@@ -737,6 +742,11 @@ function GameDirector:_RegisterRushEventCallbacks()
 			s_Entity:RegisterEventCallback(function(p_Entity, p_EntityEvent)
 				Events:Dispatch('MCOM:Destroyed', p_EntityEvent.player)
 			end)
+		elseif s_Entity.data.instanceGuid == Guid("8FD8634B-8E64-46CE-B3F2-4A7C91201515") then
+			s_Entity:RegisterEventCallback(function(p_Entity, p_EntityEvent)
+				m_Logger:Error("Invalid call detected")
+				Events:Dispatch('MCOM:Destroyed', p_EntityEvent.player)
+			end)
 		end
 
 		::continue_entity_loop::
@@ -759,6 +769,21 @@ function GameDirector:_RegisterRushEventCallbacks()
 		end
 
 		s_Entity = s_Iterator:Next()
+	end
+end
+
+function GameDirector:_UpdateTimersOfMcoms(p_DeltaTime)
+	for l_PlayerName, l_McomsOfPlayer in pairs(self.m_ArmedMcoms) do
+		if l_McomsOfPlayer ~= nil and #l_McomsOfPlayer > 0 then
+			for _, l_Mcoms in pairs(l_McomsOfPlayer) do
+				l_Mcoms.time = l_Mcoms.time + p_DeltaTime
+				if l_Mcoms.time >= Registry.GAME_DIRECTOR.MCOMS_CHECK_CYCLE then
+					self:OnMcomDestroyed(PlayerManager:GetPlayerByName(l_PlayerName))
+					m_Logger:Error("MCOM was not triggerd. Destroy it manually")
+					break
+				end
+			end
+		end
 	end
 end
 
