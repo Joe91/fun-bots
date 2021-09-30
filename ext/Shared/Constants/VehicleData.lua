@@ -154,7 +154,9 @@ VehicleData = {
 	["Ka-60"] = {
 		Name = "[KA-60 KASATKA]",
 		Type =  VehicleTypes.Chopper,
-		Parts = {nil, 18, 15, nil, nil}},
+		Parts = {nil, 18, 15, nil, nil},
+		Speed = {350, 900, 900, 350, 350},
+		Drop = {9.81, 0.0, 0.0, 9.81, 9.81}},
 	["Mi28"] = {
 		Name = "[MI-28 HAVOC]",
 		Type =  VehicleTypes.Chopper,
@@ -164,11 +166,15 @@ VehicleData = {
 	["Venom"] = {
 		Name = "[UH-1Y VENOM]",
 		Type =  VehicleTypes.Chopper,
-		Parts = {nil, 19, 16, nil, nil}},
+		Parts = {nil, 19, 16, nil, nil},
+		Speed = {350, 900, 900, 350, 350},
+		Drop = {9.81, 0.0, 0.0, 9.81, 9.81}},
 	["Venom_coop"] = {
 		Name = "[UH-1Y VENOM]",
 		Type =  VehicleTypes.Chopper,
-		Parts = {nil, 19, 16, nil, nil}},
+		Parts = {nil, 19, 16, nil, nil},
+		Speed = {350, 900, 900, 350, 350},
+		Drop = {9.81, 0.0, 0.0, 9.81, 9.81}},
 	["Z-11w"] = {Name = "[Z-11W]", Type =  VehicleTypes.Chopper, Parts = {}},
 	["Wz11_SP_Paris"] = {Name = "[Z-11W]", Type =  VehicleTypes.Chopper, Parts = {}},
 

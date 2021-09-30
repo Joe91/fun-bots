@@ -26,6 +26,7 @@ function PidController:Update(p_Error)
 		self._Integral = self._Integral - s_IntegralInc
 	end
 
+	-- clear Integral on dir-change
 	if p_Error > 0 and self._Integral < 0 then
 		self._Integral = 0
 	elseif p_Error < 0 and self._Integral > 0 then
