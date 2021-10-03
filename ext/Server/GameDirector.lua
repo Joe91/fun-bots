@@ -254,7 +254,7 @@ function GameDirector:OnMcomArmed(p_Player)
 	elseif p_Player ~= nil and p_Player.corpse ~= nil then
 		s_Objective = self:_TranslateObjective(p_Player.corpse.worldTransform.trans)
 	else
-		m_Logger:Error("Player invalid")
+		m_Logger:Error("Player invalid - armed")
 		return
 	end
 	m_Logger:Write("mcom armed by "..p_Player.name)
@@ -263,7 +263,7 @@ function GameDirector:OnMcomArmed(p_Player)
 		self.m_ArmedMcoms[p_Player.name] = {}
 	end
 
-	table.insert(self.m_ArmedMcoms[p_Player.name], {time = 0, objective = s_Objective})
+	table.insert(self.m_ArmedMcoms[p_Player.name], {time = -self.m_UpdateTimer, objective = s_Objective}) --int timer with current time
 
 	self:_UpdateObjective(s_Objective, {
 		team = p_Player.teamId,
@@ -278,7 +278,7 @@ function GameDirector:OnMcomDisarmed(p_Player)
 	elseif p_Player ~= nil and p_Player.corpse ~= nil then
 		s_Objective = self:_TranslateObjective(p_Player.corpse.worldTransform.trans)
 	else
-		m_Logger:Error("Player invalid")
+		m_Logger:Error("Player invalid - disarmed")
 		return
 	end
 	m_Logger:Write("mcom disarmed by "..p_Player.name)
@@ -714,6 +714,23 @@ end
 -- Private Functions
 -- =============================================
 
+function GameDirector:_PrintAllMcoms()
+	print("print mcoms")
+	local s_Iterator = EntityManager:GetIterator("ServerCapturePointEntity")
+	local s_Entity = s_Iterator:Next()
+
+	while s_Entity do
+		-- print(s_Entity.typeInfo.name)
+		if s_Entity.data == nil then
+			goto continue_entity_loop
+		end
+		-- print(s_Entity.data.enabled)
+		-- print(s_Entity.data.transform)
+		::continue_entity_loop::
+		s_Entity = s_Iterator:Next()
+	end
+end
+
 function GameDirector:_RegisterRushEventCallbacks()
 	if not Globals.IsRush then
 		return
@@ -740,12 +757,7 @@ function GameDirector:_RegisterRushEventCallbacks()
 			end)
 		elseif s_Entity.data.instanceGuid == Guid("70B36E2F-0B6F-40EC-870B-1748239A63A8") then
 			s_Entity:RegisterEventCallback(function(p_Entity, p_EntityEvent)
-				Events:Dispatch('MCOM:Destroyed', p_EntityEvent.player)
-			end)
-		elseif s_Entity.data.instanceGuid == Guid("8FD8634B-8E64-46CE-B3F2-4A7C91201515") then
-			s_Entity:RegisterEventCallback(function(p_Entity, p_EntityEvent)
-				m_Logger:Error("Invalid call detected")
-				Events:Dispatch('MCOM:Destroyed', p_EntityEvent.player)
+				--Events:Dispatch('MCOM:Destroyed', p_EntityEvent.player)
 			end)
 		end
 
@@ -779,7 +791,7 @@ function GameDirector:_UpdateTimersOfMcoms(p_DeltaTime)
 				l_Mcoms.time = l_Mcoms.time + p_DeltaTime
 				if l_Mcoms.time >= Registry.GAME_DIRECTOR.MCOMS_CHECK_CYCLE then
 					self:OnMcomDestroyed(PlayerManager:GetPlayerByName(l_PlayerName))
-					m_Logger:Error("MCOM was not triggerd. Destroy it manually")
+					m_Logger:Write("MCOM was triggerd. Destroy it manually because of timer")
 					break
 				end
 			end

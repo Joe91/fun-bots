@@ -53,7 +53,7 @@ Registry = {
 		GAME_DIRECTOR = {
 				UPDATE_OBJECTIVES_CYCLE = 1.5,
 
-				MCOMS_CHECK_CYCLE = 30.0,
+				MCOMS_CHECK_CYCLE = 26.0,
 		},
 
         -- Bot related

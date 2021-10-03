@@ -32,6 +32,7 @@ This release contains a lot of small bug fixes and more QoL updates.
 * Added Core of Auto-AA - Mod (by NyScorpy) to make bots use the stationary AA 
 	* !!THANKS A LOT TO NyScorpy FOR LETTING ME USE HIS CODE!!!
 	* not done yet, but already usable with only a few settings
+* more failsave system for Rush-Mcoms
 
 ### New maps
 * Theran Highway CQS (Vehicles) - thanks to Gemini899
@@ -44,3 +45,6 @@ This release contains a lot of small bug fixes and more QoL updates.
 * Grand Bazaar CQS (with Vehicles) - thanks to MeisterPeitsche
 * Seine Crossing CQS (with Vehicles) - thanks to MeisterPeitsche
 * Teheran Highway CQS (with Vehicles) - thanks to MeisterPeitsche
+* Caspian Border CQS (with Vehicles) - thanks to MeisterPeitsche
+* Operation Firestorm CQS (with Vehicles) - thanks to MeisterPeitsche
+* Damavand Peak CQS (with Vehicles) - thanks to MeisterPeitsche
