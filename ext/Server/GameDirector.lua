@@ -22,7 +22,6 @@ function GameDirector:RegisterVars()
 	self.m_OnlyOneMcom = false
 	self.m_waitForZone = false
 	self.m_RushAttackingBase = ''
-	self.m_ArmedMcoms = {}
 
 end
 
@@ -116,7 +115,8 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 	end
 
 	if Globals.IsRush then
-		self:_UpdateTimersOfMcoms(self.m_UpdateTimer)
+		-- self:_UpdateTimersOfMcoms(self.m_UpdateTimer)
+		-- self:_PrintAllMcoms()
 	end
 
 	self.m_UpdateTimer = 0
@@ -259,12 +259,6 @@ function GameDirector:OnMcomArmed(p_Player)
 	end
 	m_Logger:Write("mcom armed by "..p_Player.name)
 
-	if self.m_ArmedMcoms[p_Player.name] == nil then
-		self.m_ArmedMcoms[p_Player.name] = {}
-	end
-
-	table.insert(self.m_ArmedMcoms[p_Player.name], {time = -self.m_UpdateTimer, objective = s_Objective}) --int timer with current time
-
 	self:_UpdateObjective(s_Objective, {
 		team = p_Player.teamId,
 		isAttacked = true
@@ -283,42 +277,23 @@ function GameDirector:OnMcomDisarmed(p_Player)
 	end
 	m_Logger:Write("mcom disarmed by "..p_Player.name)
 
-	-- remove information of armed mcom
-	for l_PlayerName, l_McomsOfPlayer in pairs(self.m_ArmedMcoms) do
-		if l_McomsOfPlayer ~= nil and #l_McomsOfPlayer > 0 then
-			for i, l_Mcoms in pairs(l_McomsOfPlayer) do
-				if l_Mcoms.objective == s_Objective then
-					table.remove(self.m_ArmedMcoms[l_PlayerName], i)
-					break
-				end
-			end
-		end
-	end
-
 	self:_UpdateObjective(s_Objective, {
 		team = TeamId.TeamNeutral,--p_Player.teamId,
 		isAttacked = false
 	})
 end
 
-function GameDirector:OnMcomDestroyed(p_Player)
+function GameDirector:OnMcomDestroyed(p_Position, p_Player)
+	local s_Objective = self:_TranslateObjective(p_Position)
 	self.m_McomCounter = self.m_McomCounter + 1
 	self:_UpdateValidObjectives()
 
-	if p_Player == nil or p_Player.name == nil then
-		m_Logger:Error("Player invalid")
-		return
-	end
+	print(s_Objective)
 	m_Logger:Write("mcom destroyed by "..p_Player.name)
 
-	local s_Objective = ''
 	local s_SubObjective = nil
 	local s_TopObjective = nil
 
-	if self.m_ArmedMcoms[p_Player.name] ~= nil then
-		s_Objective = self.m_ArmedMcoms[p_Player.name][1].objective -- always the first mcom explodes
-		table.remove(self.m_ArmedMcoms[p_Player.name], 1)
-	end
 
 	if s_Objective ~= '' then
 		self:_UpdateObjective(s_Objective, {
@@ -714,30 +689,12 @@ end
 -- Private Functions
 -- =============================================
 
-function GameDirector:_PrintAllMcoms()
-	print("print mcoms")
-	local s_Iterator = EntityManager:GetIterator("ServerCapturePointEntity")
-	local s_Entity = s_Iterator:Next()
-
-	while s_Entity do
-		-- print(s_Entity.typeInfo.name)
-		if s_Entity.data == nil then
-			goto continue_entity_loop
-		end
-		-- print(s_Entity.data.enabled)
-		-- print(s_Entity.data.transform)
-		::continue_entity_loop::
-		s_Entity = s_Iterator:Next()
-	end
-end
-
 function GameDirector:_RegisterRushEventCallbacks()
 	if not Globals.IsRush then
 		return
 	end
 
 	self.m_McomCounter = 0
-	self.m_ArmedMcoms = {}
 
 	local s_Iterator = EntityManager:GetIterator("EventSplitterEntity")
 	local s_Entity = s_Iterator:Next()
@@ -749,14 +706,17 @@ function GameDirector:_RegisterRushEventCallbacks()
 
 		if s_Entity.data.instanceGuid == Guid("87E78B77-78F9-4DE0-82FF-904CDC2F7D03") then
 			s_Entity:RegisterEventCallback(function(p_Entity, p_EntityEvent)
+				print("mcom armed")
 				Events:Dispatch('MCOM:Armed', p_EntityEvent.player)
 			end)
 		elseif s_Entity.data.instanceGuid == Guid("74B7AD6D-8EB5-40B1-BB53-C0CFB956048E") then
 			s_Entity:RegisterEventCallback(function(p_Entity, p_EntityEvent)
+				print("mcom disarmed")
 				Events:Dispatch('MCOM:Disarmed', p_EntityEvent.player)
 			end)
 		elseif s_Entity.data.instanceGuid == Guid("70B36E2F-0B6F-40EC-870B-1748239A63A8") then
 			s_Entity:RegisterEventCallback(function(p_Entity, p_EntityEvent)
+				print("mcom destroyed")
 				--Events:Dispatch('MCOM:Destroyed', p_EntityEvent.player)
 			end)
 		end
@@ -782,21 +742,104 @@ function GameDirector:_RegisterRushEventCallbacks()
 
 		s_Entity = s_Iterator:Next()
 	end
+
+
+	-- other MCOM-Events
+	-- local s_Iterator = EntityManager:GetIterator("ServerInteractionEntity")
+	local s_Iterator = EntityManager:GetIterator("ServerMapMarkerEntity")
+	local s_Entity = s_Iterator:Next()
+
+	while s_Entity do
+		s_Entity:RegisterEventCallback(self, self.OnMapMarker)
+		s_Entity = s_Iterator:Next()
+	end
+
+	-- -- stats trigger
+	-- local s_Iterator = EntityManager:GetIterator("ServerStatEventTriggerEntity")
+	-- local s_Entity = s_Iterator:Next()
+
+	-- while s_Entity do
+	-- 	s_Entity:RegisterEventCallback(self, self.OnStatTrigger)
+	-- 	s_Entity = s_Iterator:Next()
+	-- end
+	
+
+	
+	-- stats trigger
+	local s_Iterator = EntityManager:GetIterator("EventGateEntity")
+	local s_Entity = s_Iterator:Next()
+
+	while s_Entity do
+		if s_Entity.data.instanceId == Guid("F44A2BEA-A35C-4839-8A0F-9A89B84F35EB") then
+			print(s_Entity)
+			s_Entity:RegisterEventCallback(self, self.OnStatTrigger)
+		end
+		s_Entity = s_Iterator:Next()
+	end
+
+
+	local s_Iterator = EntityManager:GetIterator("ServerInteractionEntity")
+	--local s_Iterator = EntityManager:GetIterator("ServerMapMarkerEntity")
+	local s_Entity = s_Iterator:Next()
+
+	while s_Entity do
+		if  s_Entity.data.instanceGuid == Guid("2CEA23B6-76E9-4E7B-85E6-EE648F686E48") or s_Entity.data.instanceGuid ==  Guid("1768D76F-6DD0-4425-A898-32C851A4A476") then
+			s_Entity:RegisterEventCallback(self, self.OnInteraction)
+		end
+		s_Entity = s_Iterator:Next()
+	end
 end
 
-function GameDirector:_UpdateTimersOfMcoms(p_DeltaTime)
-	for l_PlayerName, l_McomsOfPlayer in pairs(self.m_ArmedMcoms) do
-		if l_McomsOfPlayer ~= nil and #l_McomsOfPlayer > 0 then
-			for _, l_Mcoms in pairs(l_McomsOfPlayer) do
-				l_Mcoms.time = l_Mcoms.time + p_DeltaTime
-				if l_Mcoms.time >= Registry.GAME_DIRECTOR.MCOMS_CHECK_CYCLE then
-					self:OnMcomDestroyed(PlayerManager:GetPlayerByName(l_PlayerName))
-					m_Logger:Write("MCOM was triggerd. Destroy it manually because of timer")
-					break
-				end
-			end
-		end
+function GameDirector:OnMapMarker(p_Entity, p_EntityEvent)
+	if p_EntityEvent.type == "ServerPlayerEvent" then
+		return
 	end
+	print(p_EntityEvent.type.." MARKER EVENT")
+	local s_GameEntity = GameEntity(p_Entity)
+	if p_EntityEvent.eventId == MathUtils:FNVHash("Disable") then
+		self:OnMcomDestroyed(s_GameEntity.transform.trans, p_EntityEvent.player)
+	end 
+end
+
+function GameDirector:OnStatTrigger(p_Entity, p_EntityEvent)
+	print(p_EntityEvent.type.." STATS EVENT")
+	local s_GameEntity = GameEntity(p_Entity)
+	if p_EntityEvent.eventId == MathUtils:FNVHash("Disable") then
+		self:OnMcomDestroyed(s_GameEntity.transform.trans, p_EntityEvent.player)
+	end 
+end
+
+function GameDirector:OnInteraction(p_Entity, p_EntityEvent)
+	if p_EntityEvent.type == "ServerPlayerEvent" then
+		return
+	end
+	print(p_EntityEvent.type.." INTERACTION")
+	local s_GameEntity = GameEntity(p_Entity)
+	local s_Objective = self:_TranslateObjective(s_GameEntity.transform.trans)
+	if p_EntityEvent.eventId == MathUtils:FNVHash("Enable") then
+		print(s_Objective.." ".."Enable")
+	elseif p_EntityEvent.eventId == MathUtils:FNVHash("Disable") then
+		print(s_Objective.." ".."Disable")
+	elseif p_EntityEvent.eventId == MathUtils:FNVHash("EnableFriendlyInteraction") then
+		print(s_Objective.." ".."EnableFriendlyInteraction")
+	elseif p_EntityEvent.eventId == MathUtils:FNVHash("DisableFriendlyInteraction") then
+		print(s_Objective.." ".."DisableFriendlyInteraction")
+	elseif p_EntityEvent.eventId == MathUtils:FNVHash("EnableEnemyInteraction") then
+		print(s_Objective.." ".."EnableEnemyInteraction")
+	elseif p_EntityEvent.eventId == MathUtils:FNVHash("DisableEnemyInteraction") then
+		print(s_Objective.." ".."DisableEnemyInteraction")
+	elseif p_EntityEvent.eventId == MathUtils:FNVHash("OnDisabledForEnemy") then
+		print(s_Objective.." ".."OnDisabledForEnemy")
+	elseif p_EntityEvent.eventId == MathUtils:FNVHash("OnEnabledForFriendly") then
+		print(s_Objective.." ".."OnEnabledForFriendly")
+	elseif p_EntityEvent.eventId == MathUtils:FNVHash("OnEnabledForEnemy") then
+		print(s_Objective.." ".."OnEnabledForEnemy")
+	elseif p_EntityEvent.eventId == MathUtils:FNVHash("OnDisabledForFriendly") then
+		print(s_Objective.." ".."OnDisabledForFriendly")
+	else
+		print(p_EntityEvent.eventId)
+	end
+	
 end
 
 function GameDirector:_InitObjectives()
@@ -878,7 +921,6 @@ function GameDirector:_UpdateValidObjectives()
 	if Globals.IsSquadRush then
 		if self.m_McomCounter > 0 then
 			self.m_waitForZone = true
-			self.m_ArmedMcoms = {}
 		end
 		local s_RushIndex = self.m_McomCounter + 1
 		for _, l_Objective in pairs(self.m_AllObjectives) do
@@ -924,7 +966,6 @@ function GameDirector:_UpdateValidObjectives()
 	elseif Globals.IsRush then
 		if (self.m_McomCounter % 2) == 0 then
 			self.m_OnlyOneMcom = false
-			self.m_ArmedMcoms = {}
 			if self.m_McomCounter > 0 then
 				self.m_waitForZone = true
 			end
