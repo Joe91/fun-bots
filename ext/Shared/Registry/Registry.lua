@@ -50,6 +50,12 @@ Registry = {
                 RAYCAST_INTERVAL = 0.05,
         },
 
+		GAME_DIRECTOR = {
+				UPDATE_OBJECTIVES_CYCLE = 1.5,
+
+				MCOMS_CHECK_CYCLE = 26.0,
+		},
+
         -- Bot related
         BOT = {
                 -- Bot attack bot check interval
