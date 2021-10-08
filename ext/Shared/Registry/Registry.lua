@@ -54,6 +54,8 @@ Registry = {
 				UPDATE_OBJECTIVES_CYCLE = 1.5,
 
 				MCOMS_CHECK_CYCLE = 26.0,
+
+				MAX_ASSIGNED_LIMIT = 8,
 		},
 
         -- Bot related
