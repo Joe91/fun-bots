@@ -115,8 +115,7 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 	end
 
 	if Globals.IsRush then
-		-- self:_UpdateTimersOfMcoms(self.m_UpdateTimer)
-		-- self:_PrintAllMcoms()
+		self:_UpdateTimersOfMcoms(self.m_UpdateTimer)
 	end
 
 	self.m_UpdateTimer = 0
@@ -247,62 +246,47 @@ end
 	-- RUSH Events
 -- =============================================
 
-function GameDirector:OnMcomArmed(p_Player)
-	local s_Objective = ''
-	if p_Player ~= nil and p_Player.soldier ~= nil then
-		s_Objective = self:_TranslateObjective(p_Player.soldier.worldTransform.trans)
-	elseif p_Player ~= nil and p_Player.corpse ~= nil then
-		s_Objective = self:_TranslateObjective(p_Player.corpse.worldTransform.trans)
-	else
-		m_Logger:Error("Player invalid - armed")
-		return
-	end
-	m_Logger:Write("mcom armed by "..p_Player.name)
+function GameDirector:OnMcomArmed(p_Objective)
+	m_Logger:Write(p_Objective.." armed")
 
-	self:_UpdateObjective(s_Objective, {
-		team = p_Player.teamId,
+	self:_UpdateObjective(p_Objective, {
+		team = TeamId.Team1,
 		isAttacked = true
 	})
+
+	-- TODO: set timer
 end
 
-function GameDirector:OnMcomDisarmed(p_Player)
-	local s_Objective = ''
-	if p_Player ~= nil and p_Player.soldier ~= nil then
-		s_Objective = self:_TranslateObjective(p_Player.soldier.worldTransform.trans)
-	elseif p_Player ~= nil and p_Player.corpse ~= nil then
-		s_Objective = self:_TranslateObjective(p_Player.corpse.worldTransform.trans)
-	else
-		m_Logger:Error("Player invalid - disarmed")
-		return
-	end
-	m_Logger:Write("mcom disarmed by "..p_Player.name)
+function GameDirector:OnMcomDisarmed(p_Objective)
+	m_Logger:Write(p_Objective.." disarmed")
 
-	self:_UpdateObjective(s_Objective, {
-		team = TeamId.TeamNeutral,--p_Player.teamId,
+	self:_UpdateObjective(p_Objective, {
+		team = TeamId.TeamNeutral,
 		isAttacked = false
 	})
+
+	-- TODO: reset timer
 end
 
-function GameDirector:OnMcomDestroyed(p_Position, p_Player)
-	local s_Objective = self:_TranslateObjective(p_Position)
+function GameDirector:OnMcomDestroyed(p_Objective)
 	self.m_McomCounter = self.m_McomCounter + 1
 	self:_UpdateValidObjectives()
 
-	print(s_Objective)
-	m_Logger:Write("mcom destroyed by "..p_Player.name)
+	print(p_Objective)
+	m_Logger:Write(p_Objective.." destroyed")
 
 	local s_SubObjective = nil
 	local s_TopObjective = nil
 
 
-	if s_Objective ~= '' then
-		self:_UpdateObjective(s_Objective, {
+	if p_Objective ~= '' then
+		self:_UpdateObjective(p_Objective, {
 			team = TeamId.TeamNeutral,--p_Player.teamId,
 			isAttacked = false,
 			destroyed = true
 		})
-		s_SubObjective = self:_GetSubObjectiveFromObj(s_Objective)
-		s_TopObjective = self:_GetObjectiveFromSubObj(s_Objective)
+		s_SubObjective = self:_GetSubObjectiveFromObj(p_Objective)
+		s_TopObjective = self:_GetObjectiveFromSubObj(p_Objective)
 	end
 
 	if s_TopObjective ~= nil then
@@ -707,12 +691,12 @@ function GameDirector:_RegisterRushEventCallbacks()
 		if s_Entity.data.instanceGuid == Guid("87E78B77-78F9-4DE0-82FF-904CDC2F7D03") then
 			s_Entity:RegisterEventCallback(function(p_Entity, p_EntityEvent)
 				print("mcom armed")
-				Events:Dispatch('MCOM:Armed', p_EntityEvent.player)
+				--Events:Dispatch('MCOM:Armed', p_EntityEvent.player)
 			end)
 		elseif s_Entity.data.instanceGuid == Guid("74B7AD6D-8EB5-40B1-BB53-C0CFB956048E") then
 			s_Entity:RegisterEventCallback(function(p_Entity, p_EntityEvent)
 				print("mcom disarmed")
-				Events:Dispatch('MCOM:Disarmed', p_EntityEvent.player)
+				--Events:Dispatch('MCOM:Disarmed', p_EntityEvent.player)
 			end)
 		elseif s_Entity.data.instanceGuid == Guid("70B36E2F-0B6F-40EC-870B-1748239A63A8") then
 			s_Entity:RegisterEventCallback(function(p_Entity, p_EntityEvent)
@@ -778,13 +762,20 @@ function GameDirector:_RegisterRushEventCallbacks()
 	end
 
 
+	-- most promissing so far!
 	local s_Iterator = EntityManager:GetIterator("ServerInteractionEntity")
-	--local s_Iterator = EntityManager:GetIterator("ServerMapMarkerEntity")
 	local s_Entity = s_Iterator:Next()
 
 	while s_Entity do
-		if  s_Entity.data.instanceGuid == Guid("2CEA23B6-76E9-4E7B-85E6-EE648F686E48") or s_Entity.data.instanceGuid ==  Guid("1768D76F-6DD0-4425-A898-32C851A4A476") then
-			s_Entity:RegisterEventCallback(self, self.OnInteraction)
+		if  s_Entity.data.instanceGuid == Guid("2CEA23B6-76E9-4E7B-85E6-EE648F686E48") then
+			s_Entity:RegisterEventCallback(self, self.OnInteractionDefend)
+			-- s_Entity:RegisterDestroyCallback(self, self.OnInteractionDestroy)
+			-- s_Entity:RegisterCreateCallback(self, self.OnInteractionCreate)
+		end
+		if s_Entity.data.instanceGuid ==  Guid("1768D76F-6DD0-4425-A898-32C851A4A476") then
+			s_Entity:RegisterEventCallback(self, self.OnInteractionAttack)
+			-- s_Entity:RegisterDestroyCallback(self, self.OnInteractionDestroy)
+			-- s_Entity:RegisterCreateCallback(self, self.OnInteractionCreate)
 		end
 		s_Entity = s_Iterator:Next()
 	end
@@ -809,17 +800,18 @@ function GameDirector:OnStatTrigger(p_Entity, p_EntityEvent)
 	end 
 end
 
-function GameDirector:OnInteraction(p_Entity, p_EntityEvent)
+function GameDirector:OnInteractionAttack(p_Entity, p_EntityEvent)
 	if p_EntityEvent.type == "ServerPlayerEvent" then
 		return
 	end
-	print(p_EntityEvent.type.." INTERACTION")
+	print(p_EntityEvent.type.." INTERACTION ATTACK")
 	local s_GameEntity = GameEntity(p_Entity)
 	local s_Objective = self:_TranslateObjective(s_GameEntity.transform.trans)
 	if p_EntityEvent.eventId == MathUtils:FNVHash("Enable") then
 		print(s_Objective.." ".."Enable")
 	elseif p_EntityEvent.eventId == MathUtils:FNVHash("Disable") then
-		print(s_Objective.." ".."Disable")
+		print(s_Objective.." ".."Disable --> MCOM ARMED")
+		self:OnMcomArmed(s_Objective)
 	elseif p_EntityEvent.eventId == MathUtils:FNVHash("EnableFriendlyInteraction") then
 		print(s_Objective.." ".."EnableFriendlyInteraction")
 	elseif p_EntityEvent.eventId == MathUtils:FNVHash("DisableFriendlyInteraction") then
@@ -839,7 +831,51 @@ function GameDirector:OnInteraction(p_Entity, p_EntityEvent)
 	else
 		print(p_EntityEvent.eventId)
 	end
-	
+end
+
+function GameDirector:OnInteractionDefend(p_Entity, p_EntityEvent)
+	if p_EntityEvent.type == "ServerPlayerEvent" then
+		return
+	end
+	print(p_EntityEvent.type.." INTERACTION DEFEND")
+	local s_GameEntity = GameEntity(p_Entity)
+	local s_Objective = self:_TranslateObjective(s_GameEntity.transform.trans)
+	if p_EntityEvent.eventId == MathUtils:FNVHash("Enable") then
+		print(s_Objective.." ".."Enable")
+	elseif p_EntityEvent.eventId == MathUtils:FNVHash("Disable") then
+		print(s_Objective.." ".."Disable --> MCOM DISARMED")
+		self:OnMcomDisarmed(s_Objective)
+	elseif p_EntityEvent.eventId == MathUtils:FNVHash("EnableFriendlyInteraction") then
+		print(s_Objective.." ".."EnableFriendlyInteraction")
+	elseif p_EntityEvent.eventId == MathUtils:FNVHash("DisableFriendlyInteraction") then
+		print(s_Objective.." ".."DisableFriendlyInteraction")
+	elseif p_EntityEvent.eventId == MathUtils:FNVHash("EnableEnemyInteraction") then
+		print(s_Objective.." ".."EnableEnemyInteraction")
+	elseif p_EntityEvent.eventId == MathUtils:FNVHash("DisableEnemyInteraction") then
+		print(s_Objective.." ".."DisableEnemyInteraction")
+	elseif p_EntityEvent.eventId == MathUtils:FNVHash("OnDisabledForEnemy") then
+		print(s_Objective.." ".."OnDisabledForEnemy")
+	elseif p_EntityEvent.eventId == MathUtils:FNVHash("OnEnabledForFriendly") then
+		print(s_Objective.." ".."OnEnabledForFriendly")
+	elseif p_EntityEvent.eventId == MathUtils:FNVHash("OnEnabledForEnemy") then
+		print(s_Objective.." ".."OnEnabledForEnemy")
+	elseif p_EntityEvent.eventId == MathUtils:FNVHash("OnDisabledForFriendly") then
+		print(s_Objective.." ".."OnDisabledForFriendly")
+	else
+		print(p_EntityEvent.eventId)
+	end
+end
+
+function GameDirector:OnInteractionCreate(p_Entity, p_Transform)
+	local s_GameEntity = GameEntity(p_Entity)
+	local s_Objective = self:_TranslateObjective(s_GameEntity.transform.trans)
+	print(s_Objective.." ".."Created")
+end
+
+function GameDirector:OnInteractionDestroy(p_Entity)
+	local s_GameEntity = GameEntity(p_Entity)
+	local s_Objective = self:_TranslateObjective(s_GameEntity.transform.trans)
+	print(s_Objective.." ".."desetroyed")
 end
 
 function GameDirector:_InitObjectives()
