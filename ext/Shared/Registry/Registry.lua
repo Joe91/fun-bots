@@ -55,6 +55,8 @@ Registry = {
 
 				MCOMS_CHECK_CYCLE = 26.0,
 
+				ZONE_CHECK_CYCLE = 26.0,
+
 				MAX_ASSIGNED_LIMIT = 8,
 		},
 

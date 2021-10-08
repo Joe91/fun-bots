@@ -20,6 +20,7 @@ function GameDirector:RegisterVars()
 	self.m_McomCounter = 0
 	self.m_OnlyOneMcom = false
 	self.m_waitForZone = false
+	self.m_ZoneTimer = 0
 	self.m_RushAttackingBase = ''
 
 end
@@ -114,6 +115,12 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 	end
 
 	if Globals.IsRush then
+		if self.m_WaitForZone then
+			self.m_ZoneTimer = self.m_ZoneTimer + self.m_UpdateTimer
+			if self.m_ZoneTimer >= Registry.GAME_DIRECTOR.ZONE_CHECK_CYCLE then
+				self.m_WaitForZone = false
+			end
+		end
 		self:_UpdateTimersOfMcoms(self.m_UpdateTimer)
 	end
 
@@ -247,6 +254,7 @@ end
 
 function GameDirector:OnMcomArmed(p_Objective)
 	m_Logger:Write(p_Objective.." armed")
+	print(p_Objective.." armed")
 
 	self:_UpdateObjective(p_Objective, {
 		team = TeamId.Team1,
@@ -258,6 +266,7 @@ end
 
 function GameDirector:OnMcomDisarmed(p_Objective)
 	m_Logger:Write(p_Objective.." disarmed")
+	print(p_Objective.." disarmed")
 
 	self:_UpdateObjective(p_Objective, {
 		team = TeamId.TeamNeutral,
@@ -271,9 +280,10 @@ function GameDirector:OnMcomDestroyed(p_Objective)
 	self.m_McomCounter = self.m_McomCounter + 1
 	self:_UpdateValidObjectives()
 
-	self.m_ArmedMcoms[p_Objective] = nil
-
 	m_Logger:Write(p_Objective.." destroyed")
+	print(p_Objective.." destroyed after "..tostring(self.m_ArmedMcoms[p_Objective]).." s")
+
+	self.m_ArmedMcoms[p_Objective] = nil
 
 	local s_SubObjective = nil
 	local s_TopObjective = nil
@@ -823,6 +833,7 @@ function GameDirector:_UpdateValidObjectives()
 	if Globals.IsSquadRush then
 		if self.m_McomCounter > 0 then
 			self.m_waitForZone = true
+			self.m_ZoneTimer = -self.m_UpdateTimer
 		end
 		local s_RushIndex = self.m_McomCounter + 1
 		for _, l_Objective in pairs(self.m_AllObjectives) do
@@ -870,6 +881,7 @@ function GameDirector:_UpdateValidObjectives()
 			self.m_OnlyOneMcom = false
 			if self.m_McomCounter > 0 then
 				self.m_waitForZone = true
+				self.m_ZoneTimer = -self.m_UpdateTimer
 			end
 			local s_BaseIndex = 0
 			local s_McomIndexes = {0, 0}
