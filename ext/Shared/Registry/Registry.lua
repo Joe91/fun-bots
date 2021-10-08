@@ -55,7 +55,7 @@ Registry = {
 
 				MCOMS_CHECK_CYCLE = 26.0,
 
-				ZONE_CHECK_CYCLE = 26.0,
+				ZONE_CHECK_CYCLE = 20.0, --Zone is 30 s. 10 Seconds without damage
 
 				MAX_ASSIGNED_LIMIT = 8,
 		},
