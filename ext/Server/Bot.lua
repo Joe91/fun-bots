@@ -1348,9 +1348,20 @@ function Bot:_UpdateYawVehicle(p_Attacking)
 			s_Delta_Tilt = -s_DeltaPitch
 		else
 			-- TODO: use angle between two nodes?
-			local s_Delta_Tilt = self._TargetPoint.Position.y - self.m_Player.controlledControllable.transform.trans.y
-			-- s_Current_Tilt = math.asin(self.m_Player.controlledControllable.transform.forward.y / 1.0)
-			--s_Delta_Tilt = s_Tartget_Tilt - s_Current_Tilt
+			local s_Current_Tilt = math.asin(self.m_Player.controlledControllable.transform.forward.y / 1.0)
+			local s_Delta_Height = self._TargetPoint.Position.y - self.m_Player.controlledControllable.transform.trans.y
+
+			local s_Tartget_Tilt = 0.0
+			local s_Abs_Delta_Height = math.abs(s_Delta_Height)
+			s_Tartget_Tilt = 0.35 * s_Abs_Delta_Height/30
+			if s_Tartget_Tilt > 0.35 then
+				s_Tartget_Tilt = 0.35
+			end
+			if s_Delta_Height < 0 then
+				s_Tartget_Tilt = -s_Tartget_Tilt
+			end
+
+			s_Delta_Tilt = s_Tartget_Tilt - s_Current_Tilt
 		end
 		
 		local s_Output_Tilt = self._Pid_Drv_Tilt:Update(s_Delta_Tilt)
