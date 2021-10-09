@@ -90,8 +90,8 @@ function Bot:__init(p_Player)
 	-- normal driving
 	self._Pid_Drv_Yaw = PidController(5, 0.05, 0.2, 1.0)
 	-- chopper
-	self._Pid_Drv_Height = PidController(5, 0.05, 0.2, 1.0)
-	self._Pid_Drv_Speed = PidController(5, 0.05, 0.2, 1.0)
+	self._Pid_Drv_Throttle = PidController(5, 0.05, 0.2, 1.0)
+	self._Pid_Drv_Tilt = PidController(5, 0.05, 0.2, 1.0)
 	self._Pid_Drv_Roll = PidController(5, 0.05, 0.2, 1.0)
 	-- guns
 	self._Pid_Att_Yaw = PidController(7, 0.4, 0.2, 1.0)
@@ -765,9 +765,9 @@ function Bot:_UpdateAimingVehicleAdvanced()
 	end
 
 	if self._ShootPlayerVehicleType == VehicleTypes.NoVehicle then
-		s_TargetVelocity = self._ShootPlayer.soldier.velocity
+		s_TargetVelocity = PhysicsEntity(self._ShootPlayer.soldier).velocity
 	else
-		s_TargetVelocity = self._ShootPlayer.controlledControllable.velocity
+		s_TargetVelocity = PhysicsEntity(self._ShootPlayer.controlledControllable).velocity
 	end
 
 	--calculate how long the distance is --> time to travel
@@ -1264,7 +1264,7 @@ function Bot:_UpdateYawVehicle(p_Attacking)
 
 		-- HEIGHT
 		local s_Delta_Height = self._TargetPoint.Position.y - self.m_Player.controlledControllable.transform.trans.y
-		local s_Output_Throttle = self._Pid_Drv_Height:Update(s_Delta_Height)
+		local s_Output_Throttle = self._Pid_Drv_Throttle:Update(s_Delta_Height)
 		if s_Output_Throttle > 0 then
 			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAThrottle, s_Output_Throttle)
 			self.m_Player.input:SetLevel(EntryInputActionEnum.EIABrake, 0.0)
@@ -1289,7 +1289,82 @@ function Bot:_UpdateYawVehicle(p_Attacking)
 			s_Delta_Tilt = s_Tartget_Tilt - s_Current_Tilt
 		end
 		
-		local s_Output_Tilt = self._Pid_Drv_Speed:Update(s_Delta_Tilt)
+		local s_Output_Tilt = self._Pid_Drv_Tilt:Update(s_Delta_Tilt)
+		self.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, -s_Output_Tilt)	
+		
+		-- ROLL (keep it zero)
+		local s_Tartget_Roll = 0.0
+		-- TODO: in strog steering: Roll a little
+		-- if self._FullVehicleSteering then
+		-- 	if s_AbsDeltaYaw > 0 then
+		-- 		s_Tartget_Roll = 0.1
+		-- 	else
+		-- 		s_Tartget_Roll = -0.1
+		-- 	end
+		-- end
+
+		local s_Current_Roll = math.asin(self.m_Player.controlledControllable.transform.left.y / 1.0)
+		local s_Delta_Roll = s_Tartget_Roll - s_Current_Roll
+		local s_Output_Roll = self._Pid_Drv_Roll:Update(s_Delta_Roll)
+		self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, s_Output_Roll)
+
+		return -- don't do anything else
+	
+	-- jet driver handling here
+	elseif self.m_Player.controlledEntryId == 0 and m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
+		if self._VehicleWaitTimer > 0 then
+			return
+		end
+		if not p_Attacking and (self._TargetPoint == nil or self._NextTargetPoint == nil) then
+			return
+		end
+		if self.m_Player.controlledControllable == nil then
+			return 
+		end
+
+		-- YAW
+		local s_Output_Yaw = self._Pid_Drv_Yaw:Update(s_DeltaYaw)
+		if self.m_ActiveSpeedValue == BotMoveSpeeds.Backwards then
+			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, s_Output_Yaw)
+		else
+			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, -s_Output_Yaw)
+		end
+
+		-- Throttle
+		-- target velocity == 313 km/h --> 86.9444 m/s
+		local s_Delta_Speed = 86.9444 - PhysicsEntity(self.m_Player.controlledControllable).velocity.magnitude
+		local s_Output_Throttle = self._Pid_Drv_Throttle:Update(s_Delta_Speed)
+		if s_Output_Throttle > 0 then
+			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAThrottle, s_Output_Throttle)
+			self.m_Player.input:SetLevel(EntryInputActionEnum.EIABrake, 0.0)
+		else
+			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAThrottle, 0.0)
+			self.m_Player.input:SetLevel(EntryInputActionEnum.EIABrake, -s_Output_Throttle)
+		end
+
+		
+		local s_Delta_Tilt = 0
+		if p_Attacking then
+			s_Delta_Tilt = -s_DeltaPitch
+		else
+			-- TODO: use angle between two nodes?
+			local s_Current_Tilt = math.asin(self.m_Player.controlledControllable.transform.forward.y / 1.0)
+			local s_Delta_Height = self._TargetPoint.Position.y - self.m_Player.controlledControllable.transform.trans.y
+
+			local s_Tartget_Tilt = 0.0
+			local s_Abs_Delta_Height = math.abs(s_Delta_Height)
+			s_Tartget_Tilt = 0.35 * s_Abs_Delta_Height/30
+			if s_Tartget_Tilt > 0.35 then
+				s_Tartget_Tilt = 0.35
+			end
+			if s_Delta_Height < 0 then
+				s_Tartget_Tilt = -s_Tartget_Tilt
+			end
+
+			s_Delta_Tilt = s_Tartget_Tilt - s_Current_Tilt
+		end
+		
+		local s_Output_Tilt = self._Pid_Drv_Tilt:Update(s_Delta_Tilt)
 		self.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, -s_Output_Tilt)	
 		
 		-- ROLL (keep it zero)
@@ -1794,7 +1869,8 @@ function Bot:_EnterVehicle(p_Name)
 	while s_Entity ~= nil do
 		s_Entity = ControllableEntity(s_Entity)
 		local s_Position = s_Entity.transform.trans
-		if (p_Name == nil and s_Position:Distance(self.m_Player.soldier.worldTransform.trans) < 5) or (p_Name ~= nil and (string.find(VehicleEntityData(s_Entity.data).controllableType, p_Name) ~= nil)) then
+		print(s_Position:Distance(self.m_Player.soldier.worldTransform.trans))
+		if (p_Name == nil and s_Position:Distance(self.m_Player.soldier.worldTransform.trans) < 10) or (p_Name ~= nil and (string.find(VehicleEntityData(s_Entity.data).controllableType, p_Name) ~= nil)) then
 			for i = 0, s_Entity.entryCount - 1 do
 				if s_Entity:GetPlayerInEntry(i) == nil then
 					self.m_Player:EnterVehicle(s_Entity, i)

@@ -988,7 +988,8 @@ function GameDirector:_SetVehicleObjectiveState(p_Position, p_Value)
 		end
 	end
 
-	if s_ClosestVehicleEnterObjective ~= nil and s_ClosestDistance < 5 then
+	print(s_ClosestDistance)
+	if s_ClosestVehicleEnterObjective ~= nil and s_ClosestDistance < 15 then
 		s_ClosestVehicleEnterObjective.active = p_Value
 	end
 end
