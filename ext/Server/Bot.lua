@@ -89,7 +89,7 @@ function Bot:__init(p_Player)
 	-- PID Controllers
 	-- normal driving
 	self._Pid_Drv_Yaw = PidController(5, 0.05, 0.2, 1.0)
-	-- chopper
+	-- chopper / plane
 	self._Pid_Drv_Throttle = PidController(5, 0.05, 0.2, 1.0)
 	self._Pid_Drv_Tilt = PidController(5, 0.05, 0.2, 1.0)
 	self._Pid_Drv_Roll = PidController(5, 0.05, 0.2, 1.0)
@@ -816,7 +816,7 @@ function Bot:_UpdateAimingVehicleAdvanced()
 
 
 	-- abort attacking in chopper if too steep or too low
-	if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) and self.m_Player.controlledEntryId == 0 then
+	if (m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) and self.m_Player.controlledEntryId == 0 ) or m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
 		local s_PitchHalf = Config.FovVerticleChopperForShooting / 360 * math.pi
 		if math.abs(self._TargetPitch) > s_PitchHalf then
 			self:_AbortAttack()
@@ -907,7 +907,7 @@ function Bot:_UpdateAimingVehicle(p_DeltaTime)
 
 
 	-- abort attacking in chopper if too steep or too low
-	if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) and self.m_Player.controlledEntryId == 0 then
+	if (m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) and self.m_Player.controlledEntryId == 0 ) or m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
 		local s_PitchHalf = Config.FovVerticleChopperForShooting / 360 * math.pi
 		if math.abs(self._TargetPitch) > s_PitchHalf then
 			self:_AbortAttack()
@@ -1211,7 +1211,7 @@ function Bot:_UpdateYawVehicle(p_Attacking)
 			else
 				self._VehicleDirBackPositive = true
 			end
-		elseif m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) and self.m_Player.controlledEntryId == 0 then
+		elseif (m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) and self.m_Player.controlledEntryId == 0 ) or m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
 			s_Pos = self.m_Player.controlledControllable.transform.forward
 			local s_AtanDzDx = math.atan(s_Pos.z, s_Pos.x)
 			local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
@@ -1311,7 +1311,7 @@ function Bot:_UpdateYawVehicle(p_Attacking)
 		return -- don't do anything else
 	
 	-- jet driver handling here
-	elseif self.m_Player.controlledEntryId == 0 and m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
+	elseif m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
 		if self._VehicleWaitTimer > 0 then
 			return
 		end
@@ -1322,13 +1322,75 @@ function Bot:_UpdateYawVehicle(p_Attacking)
 			return 
 		end
 
-		-- YAW
-		local s_Output_Yaw = self._Pid_Drv_Yaw:Update(s_DeltaYaw)
-		if self.m_ActiveSpeedValue == BotMoveSpeeds.Backwards then
-			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, s_Output_Yaw)
+
+		-- Calculat delta pitch
+		local s_Delta_Tilt = 0
+		if p_Attacking then
+			s_Delta_Tilt = -s_DeltaPitch
 		else
-			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, -s_Output_Yaw)
+			-- TODO: use angle between two nodes?
+			local s_Current_Tilt = math.asin(self.m_Player.controlledControllable.transform.forward.y / 1.0)
+			local s_Delta_Height = self._TargetPoint.Position.y - self.m_Player.controlledControllable.transform.trans.y
+
+			local s_Tartget_Tilt = 0.0
+			local s_Abs_Delta_Height = math.abs(s_Delta_Height)
+			s_Tartget_Tilt = 0.6 * s_Abs_Delta_Height/30 -- 45°=0.785 rad
+			if s_Tartget_Tilt > 0.35 then
+				s_Tartget_Tilt = 0.35
+			end
+			if s_Delta_Height < 0 then
+				s_Tartget_Tilt = -s_Tartget_Tilt
+			end
+
+			s_Delta_Tilt = s_Current_Tilt - s_Tartget_Tilt  -- inverted tilt
 		end
+
+		-- Caclulate angle for roll
+		local s_Target_Roll = 0
+		local s_AbsDeltaTilt = math.abs(s_Delta_Tilt)
+		local s_AbsDeltaYaw = math.abs(s_DeltaYaw)
+		if s_AbsDeltaTilt > 0.1 and s_AbsDeltaYaw > 0.1 then -- only use roll for angles >= 10 ° (= 0.17 rad)
+			s_Target_Roll = math.atan(-s_DeltaYaw, math.abs(s_Delta_Tilt))
+
+			if s_Target_Roll > 1.0 then -- 80° = 1.4 . 60° = 1.0
+				s_Target_Roll = 1.0
+			elseif  s_Target_Roll < -1.0 then
+				s_Target_Roll = -1.0
+			end 
+		elseif s_AbsDeltaYaw > 0.2 and s_AbsDeltaTilt < 0.1 then
+			if s_DeltaYaw > 0 then
+				s_Target_Roll = 1.0
+			else
+				s_Target_Roll = -1.0
+			end 
+		end
+
+
+		local s_Current_Roll = math.asin(self.m_Player.controlledControllable.transform.left.y / 1.0)
+		local s_Delta_Roll = s_Target_Roll - s_Current_Roll
+		local s_Output_Roll = self._Pid_Drv_Roll:Update(s_Delta_Roll)
+		self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, s_Output_Roll)
+
+		local s_Output_Tilt = self._Pid_Drv_Tilt:Update(s_Delta_Tilt)
+		local s_Output_Yaw = self._Pid_Drv_Yaw:Update(s_DeltaYaw)
+
+		-- transform yaw and pitch to outputs related to roll of jet
+		-- tilt component
+		local s_TransformedOutputTilt = math.cos(s_Current_Roll) * s_Output_Tilt + math.sin(s_Current_Roll) * s_Output_Yaw
+		-- print("Tilt transformed "..tostring(s_TransformedDeltaTilt))
+		local s_TransformedOutputYaw = math.cos(s_Current_Roll) * s_Output_Yaw - math.sin(s_Current_Roll) * s_Output_Tilt 
+		--print(s_TransformedDeltaYaw)
+		
+		self.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, s_TransformedOutputTilt)	
+
+		-- YAW
+		
+		if self.m_ActiveSpeedValue == BotMoveSpeeds.Backwards then
+			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, s_TransformedOutputYaw)
+		else
+			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, -s_TransformedOutputYaw)
+		end
+
 
 		-- Throttle
 		-- target velocity == 313 km/h --> 86.9444 m/s
@@ -1341,47 +1403,6 @@ function Bot:_UpdateYawVehicle(p_Attacking)
 			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAThrottle, 0.0)
 			self.m_Player.input:SetLevel(EntryInputActionEnum.EIABrake, -s_Output_Throttle)
 		end
-
-		
-		local s_Delta_Tilt = 0
-		if p_Attacking then
-			s_Delta_Tilt = -s_DeltaPitch
-		else
-			-- TODO: use angle between two nodes?
-			local s_Current_Tilt = math.asin(self.m_Player.controlledControllable.transform.forward.y / 1.0)
-			local s_Delta_Height = self._TargetPoint.Position.y - self.m_Player.controlledControllable.transform.trans.y
-
-			local s_Tartget_Tilt = 0.0
-			local s_Abs_Delta_Height = math.abs(s_Delta_Height)
-			s_Tartget_Tilt = 0.35 * s_Abs_Delta_Height/30
-			if s_Tartget_Tilt > 0.35 then
-				s_Tartget_Tilt = 0.35
-			end
-			if s_Delta_Height < 0 then
-				s_Tartget_Tilt = -s_Tartget_Tilt
-			end
-
-			s_Delta_Tilt = s_Tartget_Tilt - s_Current_Tilt
-		end
-		
-		local s_Output_Tilt = self._Pid_Drv_Tilt:Update(s_Delta_Tilt)
-		self.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, -s_Output_Tilt)	
-		
-		-- ROLL (keep it zero)
-		local s_Tartget_Roll = 0.0
-		-- TODO: in strog steering: Roll a little
-		-- if self._FullVehicleSteering then
-		-- 	if s_AbsDeltaYaw > 0 then
-		-- 		s_Tartget_Roll = 0.1
-		-- 	else
-		-- 		s_Tartget_Roll = -0.1
-		-- 	end
-		-- end
-
-		local s_Current_Roll = math.asin(self.m_Player.controlledControllable.transform.left.y / 1.0)
-		local s_Delta_Roll = s_Tartget_Roll - s_Current_Roll
-		local s_Output_Roll = self._Pid_Drv_Roll:Update(s_Delta_Roll)
-		self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, s_Output_Roll)
 
 		return -- don't do anything else
 	end
@@ -1869,7 +1890,6 @@ function Bot:_EnterVehicle(p_Name)
 	while s_Entity ~= nil do
 		s_Entity = ControllableEntity(s_Entity)
 		local s_Position = s_Entity.transform.trans
-		print(s_Position:Distance(self.m_Player.soldier.worldTransform.trans))
 		if (p_Name == nil and s_Position:Distance(self.m_Player.soldier.worldTransform.trans) < 10) or (p_Name ~= nil and (string.find(VehicleEntityData(s_Entity.data).controllableType, p_Name) ~= nil)) then
 			for i = 0, s_Entity.entryCount - 1 do
 				if s_Entity:GetPlayerInEntry(i) == nil then
@@ -2653,7 +2673,7 @@ function Bot:_UpdateSpeedOfMovementVehicle()
 		return
 	end
 
-	if  m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) then
+	if  m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) or m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
 		-- This is solved this in the yaw-function
 		if self.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Stand then
 			self.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Stand, true, true)
