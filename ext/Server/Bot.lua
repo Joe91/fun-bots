@@ -1335,9 +1335,10 @@ function Bot:_UpdateYawVehicle(p_Attacking)
 
 			local s_Tartget_Tilt = 0.0
 			local s_Abs_Delta_Height = math.abs(s_Delta_Height)
-			s_Tartget_Tilt = 0.6 * s_Abs_Delta_Height/20 -- 45°=0.785 rad
-			if s_Tartget_Tilt > 0.35 then
-				s_Tartget_Tilt = 0.35
+			s_Tartget_Tilt = 0.6 * s_Abs_Delta_Height/10 -- 45°=0.785 rad
+			local s_LimitTilt = 0.5
+			if s_Tartget_Tilt > s_LimitTilt then
+				s_Tartget_Tilt = s_LimitTilt
 			end
 			if s_Delta_Height < 0 then
 				s_Tartget_Tilt = -s_Tartget_Tilt
