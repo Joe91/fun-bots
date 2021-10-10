@@ -1325,11 +1325,15 @@ function Bot:_UpdateYawVehicle(p_Attacking)
 
 		-- Calculat delta pitch
 		local s_Delta_Tilt = 0
+		local s_Current_Tilt = math.asin(self.m_Player.controlledControllable.transform.forward.y / 1.0)
+
 		if p_Attacking then
 			s_Delta_Tilt = -s_DeltaPitch
 		else
 			-- TODO: use angle between two nodes?
-			local s_Current_Tilt = math.asin(self.m_Player.controlledControllable.transform.forward.y / 1.0)
+			
+			-- print("tilt: "..tostring(s_Current_Tilt))
+
 			local s_Delta_Height = self._TargetPoint.Position.y - self.m_Player.controlledControllable.transform.trans.y
 
 			local s_Tartget_Tilt = 0.0
@@ -1342,53 +1346,68 @@ function Bot:_UpdateYawVehicle(p_Attacking)
 				s_Tartget_Tilt = -s_Tartget_Tilt
 			end
 
-			s_Delta_Tilt = s_Current_Tilt - s_Tartget_Tilt  -- inverted tilt
+			s_Delta_Tilt = s_Tartget_Tilt - s_Current_Tilt -- inverted tilt
+			if s_Delta_Tilt > math.pi then
+				s_Delta_Tilt = s_Delta_Tilt - 2*math.pi
+			elseif s_Delta_Tilt < -math.pi then
+				s_Delta_Tilt = s_Delta_Tilt + 2*math.pi
+			end
 		end
 
 		-- Caclulate angle for roll
 		local s_Target_Roll = 0
-		local s_AbsDeltaTilt = math.abs(s_Delta_Tilt)
-		local s_AbsDeltaYaw = math.abs(s_DeltaYaw)
-		if s_AbsDeltaTilt > 0.1 and s_AbsDeltaYaw > 0.1 then -- only use roll for angles >= 10 ° (= 0.17 rad)
-			s_Target_Roll = math.atan(-s_DeltaYaw, math.abs(s_Delta_Tilt))
-
-			if s_Target_Roll > 1.0 then -- 80° = 1.4 . 60° = 1.0
-				s_Target_Roll = 1.0
-			elseif  s_Target_Roll < -1.0 then
-				s_Target_Roll = -1.0
-			end 
-		elseif s_AbsDeltaYaw > 0.2 and s_AbsDeltaTilt < 0.1 then
-			if s_DeltaYaw > 0 then
-				s_Target_Roll = 1.0
-			else
-				s_Target_Roll = -1.0
-			end 
+		s_Target_Roll = 1.57 * -s_DeltaYaw/1.0 --full roll on 60°
+		local s_LimitRoll = 1.57
+		if s_Target_Roll > s_LimitRoll then -- 80° = 1.4 . 60° = 1.0
+			s_Target_Roll = s_LimitRoll
+		elseif  s_Target_Roll < -s_LimitRoll then
+			s_Target_Roll = -s_LimitRoll
 		end
 
+		local s_Current_Roll = 0 
+		if self.m_Player.controlledControllable.transform.up.y > 0 then
+			local s_ProjectedY = self.m_Player.controlledControllable.transform.left.y / math.cos(s_Current_Tilt)
+			s_Current_Roll = math.asin(s_ProjectedY / 1.0)
+		elseif self.m_Player.controlledControllable.transform.up.y < 0 then
+			local s_ProjectedY = self.m_Player.controlledControllable.transform.up.y / math.cos(s_Current_Tilt)
+			s_Current_Roll = math.asin(s_ProjectedY / 1.0) - math.pi/2
+			if s_Current_Roll < -2* math.pi then
+				s_Current_Roll = s_Current_Roll + 2* math.pi
+			end
+		end
+		-- FIXME --> correct roll when tilt is != 0
+		-- print(s_Current_Roll)
 
-		local s_Current_Roll = math.asin(self.m_Player.controlledControllable.transform.left.y / 1.0)
 		local s_Delta_Roll = s_Target_Roll - s_Current_Roll
+		if s_Delta_Roll > math.pi then
+			s_Delta_Roll = s_Delta_Roll - 2*math.pi
+		elseif s_Delta_Roll < -math.pi then
+			s_Delta_Roll = s_Delta_Roll + 2*math.pi
+		end
 		local s_Output_Roll = self._Pid_Drv_Roll:Update(s_Delta_Roll)
 		self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, s_Output_Roll)
 
-		local s_Output_Tilt = self._Pid_Drv_Tilt:Update(s_Delta_Tilt)
-		local s_Output_Yaw = self._Pid_Drv_Yaw:Update(s_DeltaYaw)
+		-- trasform tilt and yaw to rotation of roll
+		local s_TransformedInputYaw = math.cos(s_Current_Roll) * s_DeltaYaw + math.sin(s_Current_Roll) * s_Delta_Tilt 
+		-- if s_Delta_Tilt > 0.35 then
+		-- 	s_Delta_Tilt = 0.35
+		-- elseif s_Delta_Tilt < -0.35 then
+		-- 	s_Delta_Tilt = -0.35
+		-- end
+		local s_TransformedInputTilt = math.cos(s_Current_Roll) * s_Delta_Tilt - math.sin(s_Current_Roll) * s_DeltaYaw
 
-		-- transform yaw and pitch to outputs related to roll of jet
-		-- tilt component
-		local s_TransformedOutputTilt = math.cos(s_Current_Roll) * s_Output_Tilt + math.sin(s_Current_Roll) * s_Output_Yaw
-		-- print("Tilt transformed "..tostring(s_TransformedDeltaTilt))
-		local s_TransformedOutputYaw = math.cos(s_Current_Roll) * s_Output_Yaw - math.sin(s_Current_Roll) * s_Output_Tilt 
-		--print(s_TransformedDeltaYaw)
-		
-		self.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, s_TransformedOutputTilt)	
+
+		local s_Output_Tilt = self._Pid_Drv_Tilt:Update(s_TransformedInputTilt)
+		local s_Output_Yaw = self._Pid_Drv_Yaw:Update(s_TransformedInputYaw)
+
+		-- TILT		
+		self.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, -s_Output_Tilt)	
 
 		-- YAW
-		
 		if self.m_ActiveSpeedValue == BotMoveSpeeds.Backwards then
-			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, s_TransformedOutputYaw)
+			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, s_Output_Yaw)
 		else
-			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, -s_TransformedOutputYaw)
+			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, -s_Output_Yaw)
 		end
 
 
