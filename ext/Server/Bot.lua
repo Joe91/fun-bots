@@ -1256,11 +1256,8 @@ function Bot:_UpdateYawVehicle(p_Attacking)
 
 		-- YAW
 		local s_Output_Yaw = self._Pid_Drv_Yaw:Update(s_DeltaYaw)
-		if self.m_ActiveSpeedValue == BotMoveSpeeds.Backwards then
-			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, s_Output_Yaw)
-		else
-			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, -s_Output_Yaw)
-		end
+		-- no backwards in chopper
+		self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, -s_Output_Yaw)
 
 		-- HEIGHT
 		local s_Delta_Height = self._TargetPoint.Position.y - self.m_Player.controlledControllable.transform.trans.y
@@ -1338,7 +1335,7 @@ function Bot:_UpdateYawVehicle(p_Attacking)
 
 			local s_Tartget_Tilt = 0.0
 			local s_Abs_Delta_Height = math.abs(s_Delta_Height)
-			s_Tartget_Tilt = 0.6 * s_Abs_Delta_Height/30 -- 45°=0.785 rad
+			s_Tartget_Tilt = 0.6 * s_Abs_Delta_Height/20 -- 45°=0.785 rad
 			if s_Tartget_Tilt > 0.35 then
 				s_Tartget_Tilt = 0.35
 			end
@@ -1375,7 +1372,6 @@ function Bot:_UpdateYawVehicle(p_Attacking)
 				s_Current_Roll = s_Current_Roll + 2* math.pi
 			end
 		end
-		-- FIXME --> correct roll when tilt is != 0
 		-- print(s_Current_Roll)
 
 		local s_Delta_Roll = s_Target_Roll - s_Current_Roll
@@ -1389,11 +1385,6 @@ function Bot:_UpdateYawVehicle(p_Attacking)
 
 		-- trasform tilt and yaw to rotation of roll
 		local s_TransformedInputYaw = math.cos(s_Current_Roll) * s_DeltaYaw + math.sin(s_Current_Roll) * s_Delta_Tilt 
-		-- if s_Delta_Tilt > 0.35 then
-		-- 	s_Delta_Tilt = 0.35
-		-- elseif s_Delta_Tilt < -0.35 then
-		-- 	s_Delta_Tilt = -0.35
-		-- end
 		local s_TransformedInputTilt = math.cos(s_Current_Roll) * s_Delta_Tilt - math.sin(s_Current_Roll) * s_DeltaYaw
 
 
@@ -1404,11 +1395,8 @@ function Bot:_UpdateYawVehicle(p_Attacking)
 		self.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, -s_Output_Tilt)	
 
 		-- YAW
-		if self.m_ActiveSpeedValue == BotMoveSpeeds.Backwards then
-			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, s_Output_Yaw)
-		else
-			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, -s_Output_Yaw)
-		end
+		-- no backwards in planes
+		self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, -s_Output_Yaw)
 
 
 		-- Throttle
@@ -2119,10 +2107,14 @@ function Bot:_UpdateNormalMovementVehicle()
 					self._ObstacleRetryCounter = 0
 					s_DistanceFromTarget = 0
 					s_HeightDistance = 0
-					if MathUtils:GetRandomInt(0, 1) == 1 then
+					if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) or m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
 						s_PointIncrement = 1
 					else
-						s_PointIncrement = -1
+						if MathUtils:GetRandomInt(0, 1) == 1 then
+							s_PointIncrement = 1
+						else
+							s_PointIncrement = -1
+						end
 					end
 				end
 			end
