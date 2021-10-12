@@ -33,6 +33,7 @@ This release contains a lot of small bug fixes and more QoL updates.
 	* !!THANKS A LOT TO NyScorpy FOR LETTING ME USE HIS CODE!!!
 	* not done yet, but already usable with only a few settings
 * more failsave system for Rush-Mcoms
+* first support for jets added
 
 ### New maps
 * Theran Highway CQS (Vehicles) - thanks to Gemini899
