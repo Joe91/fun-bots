@@ -157,10 +157,30 @@ VehicleData = {
 		Parts = {nil},
 		Speed = {900},
 		Drop = {0.0}},
-	["Su-25TM"] = {Name = "[SU-25TM FROGFOOT]", Type =  VehicleTypes.Plane, Parts = {}},
-	["Su-35BM Flanker-E"] = {Name = "[SU-35BM FLANKER-E]", Type =  VehicleTypes.Plane, Parts = {}},
-	["Su37"] = {Name = "[SU-37]", Type =  VehicleTypes.Plane, Parts = {}},
-	["F35B"] = {Name = "[F-35]", Type =  VehicleTypes.Plane, Parts = {}},
+	["Su-25TM"] = {
+		Name = "[SU-25TM FROGFOOT]",
+		Type =  VehicleTypes.Plane,
+		Parts = {nil},
+		Speed = {900},
+		Drop = {0.0}},
+	["Su-35BM Flanker-E"] = {
+		Name = "[SU-35BM FLANKER-E]",
+		Type =  VehicleTypes.Plane,
+		Parts = {nil},
+		Speed = {900},
+		Drop = {0.0}},
+	["Su37"] = {
+		Name = "[SU-37]",
+		Type =  VehicleTypes.Plane,
+		Parts = {nil},
+		Speed = {900},
+		Drop = {0.0}},
+	["F35B"] = {
+		Name = "[F-35]",
+		Type =  VehicleTypes.Plane,
+		Parts = {nil},
+		Speed = {900},
+		Drop = {0.0}},
 	-- choppers
 	["AH1Z"] = {
 		Name = "[AH-1Z VIPER]",
