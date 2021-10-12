@@ -355,7 +355,7 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 		end
 	end
 	if not p_IgnoreYaw and self.m_InVehicle then
-		if m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) and m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) and self._DistanceToPlayer > Config.MaxShootDistanceNoAntiAir then
+		if m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) and m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) and m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) and self._DistanceToPlayer > Config.MaxShootDistanceNoAntiAir then
 			return false
 		end
 	end
@@ -407,7 +407,7 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 			if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.AntiAir) then
 				s_FovHalf = Config.FovVehicleAAForShooting / 360 * math.pi
 				s_PitchHalf = Config.FovVerticleVehicleAAForShooting / 360 * math.pi
-			elseif m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) and self.m_Player.controlledEntryId == 0 then -- chopper as driver
+			elseif (m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) or m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane)) and self.m_Player.controlledEntryId == 0 then -- chopper as driver
 				s_FovHalf = Config.FovVehicleForShooting / 360 * math.pi
 				s_PitchHalf = Config.FovVerticleChopperForShooting / 360 * math.pi
 			else
@@ -1329,8 +1329,6 @@ function Bot:_UpdateYawVehicle(p_Attacking)
 		else
 			-- TODO: use angle between two nodes?
 			
-			-- print("tilt: "..tostring(s_Current_Tilt))
-
 			local s_Delta_Height = self._TargetPoint.Position.y - self.m_Player.controlledControllable.transform.trans.y
 
 			local s_Tartget_Tilt = 0.0

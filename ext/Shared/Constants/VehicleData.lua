@@ -133,10 +133,30 @@ VehicleData = {
 
 	-- Air vehicle
 	-- planes
-	["A10_THUNDERBOLT"] = {Name = "[A-10 THUNDERBOLT]", Type =  VehicleTypes.Plane, Parts = {}},
-	["A10_THUNDERBOLT_spjet"] = {Name = "[A-10 THUNDERBOLT]", Type =  VehicleTypes.Plane, Parts = {}},
-	["F16"] = {Name = "[F/A-18E SUPER HORNET]", Type =  VehicleTypes.Plane, Parts = {}},
-	["F18_Wingman"] = {Name = "[F/A-18E SUPER HORNET]", Type =  VehicleTypes.Plane, Parts = {}},
+	["A10_THUNDERBOLT"] = {
+		Name = "[A-10 THUNDERBOLT]",
+		Type =  VehicleTypes.Plane,
+		Parts = {nil},
+		Speed = {900},
+		Drop = {0.0}},
+	["A10_THUNDERBOLT_spjet"] = {
+		Name = "[A-10 THUNDERBOLT]",
+		Type =  VehicleTypes.Plane,
+		Parts = {nil},
+		Speed = {900},
+		Drop = {0.0}},
+	["F16"] = {
+		Name = "[F/A-18E SUPER HORNET]",
+		Type =  VehicleTypes.Plane,
+		Parts = {nil},
+		Speed = {900},
+		Drop = {0.0}},
+	["F18_Wingman"] = {
+		Name = "[F/A-18E SUPER HORNET]",
+		Type =  VehicleTypes.Plane,
+		Parts = {nil},
+		Speed = {900},
+		Drop = {0.0}},
 	["Su-25TM"] = {Name = "[SU-25TM FROGFOOT]", Type =  VehicleTypes.Plane, Parts = {}},
 	["Su-35BM Flanker-E"] = {Name = "[SU-35BM FLANKER-E]", Type =  VehicleTypes.Plane, Parts = {}},
 	["Su37"] = {Name = "[SU-37]", Type =  VehicleTypes.Plane, Parts = {}},
