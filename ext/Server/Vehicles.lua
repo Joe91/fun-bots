@@ -18,7 +18,7 @@ function Vehicles:FindOutVehicleType(p_Player)
 	return s_VehicleType
 end
 
-function Vehicles:GetVehilceName(p_Player)
+function Vehicles:GetVehicleName(p_Player)
 	if p_Player.controlledControllable ~= nil and not p_Player.controlledControllable:Is("ServerSoldierEntity") then
 		return VehicleEntityData(p_Player.controlledControllable.data).controllableType:gsub(".+/.+/","")
 	else
@@ -27,8 +27,19 @@ function Vehicles:GetVehilceName(p_Player)
 end
 
 function Vehicles:GetVehicle(p_Player, p_Index)
-	local s_VehicleName = self:GetVehilceName(p_Player)
+	local s_VehicleName = self:GetVehicleName(p_Player)
 	m_Logger:Write("s_VehicleName")
+	if s_VehicleName == nil then
+		return nil
+	end
+	return VehicleData[s_VehicleName]
+end
+
+function Vehicles:GetVehicleByEntity(p_Entity)
+	local s_VehicleName = nil
+	if p_Entity ~= nil then
+		s_VehicleName = VehicleEntityData(p_Entity.data).controllableType:gsub(".+/.+/","")
+	end
 	if s_VehicleName == nil then
 		return nil
 	end

@@ -144,13 +144,15 @@ VehicleData = {
 		Type =  VehicleTypes.Plane,
 		Parts = {nil},
 		Speed = {900},
-		Drop = {0.0}},
+		Drop = {0.0},
+		Team = 1},
 	["F16"] = {
 		Name = "[F/A-18E SUPER HORNET]",
 		Type =  VehicleTypes.Plane,
 		Parts = {nil},
 		Speed = {900},
-		Drop = {0.0}},
+		Drop = {0.0},
+		Team = 1},
 	["F18_Wingman"] = {
 		Name = "[F/A-18E SUPER HORNET]",
 		Type =  VehicleTypes.Plane,
@@ -272,21 +274,24 @@ VehicleData = {
 		Type =  VehicleTypes.StationaryAA,
 		Parts = {3},
 		Speed = {900},
-		Drop = {0.0}
+		Drop = {0.0},
+		Team = 1
 	}, --1,3,4
 	["Centurion_C-RAM_Carrier"] = {
 		Name = "[CENTURION_AA]",
 		Type =  VehicleTypes.StationaryAA,
 		Parts = {3},
 		Speed = {900},
-		Drop = {0.0}
+		Drop = {0.0},
+		Team = 1
 	}, --1,3,4
 	["Pantsir-S1"] = {
 		Name = "[PANTSIR_AA]",
 		Type =  VehicleTypes.StationaryAA,
 		Parts = {1},
 		Speed = {900},
-		Drop = {0.0}
+		Drop = {0.0},
+		Team = 2
 	}, --0,1
 
 	-- MAV / BOt
