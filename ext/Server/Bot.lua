@@ -1926,8 +1926,12 @@ function Bot:_EnterVehicle(p_Name)
 					self._VehicleMovableId = m_Vehicles:GetPartIdForSeat(self.m_ActiveVehicle, i)
 					m_Logger:Write(self.m_ActiveVehicle)
 					if i == 0 then
-						self._VehicleWaitTimer = Config.VehicleWaitForPassengersTime
-						self._BrakeTimer = 0
+						if i == s_Entity.entryCount - 1 then
+							self._VehicleWaitTimer = 0
+						else
+							self._VehicleWaitTimer = Config.VehicleWaitForPassengersTime
+							self._BrakeTimer = 0
+						end
 					else
 						self._VehicleWaitTimer = 0
 						if i == s_Entity.entryCount - 1 then
