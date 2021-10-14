@@ -1927,7 +1927,7 @@ function Bot:_EnterVehicle(p_Name)
 					m_Logger:Write(self.m_ActiveVehicle)
 					if i == 0 then
 						if i == s_Entity.entryCount - 1 then
-							self._VehicleWaitTimer = 0
+							self._VehicleWaitTimer = 1.0 -- always wait a short time to check for free start
 						else
 							self._VehicleWaitTimer = Config.VehicleWaitForPassengersTime
 							self._BrakeTimer = 0
@@ -2026,6 +2026,15 @@ function Bot:_UpdateNormalMovementVehicle()
 	if self._VehicleWaitTimer > 0 then
 		self._VehicleWaitTimer = self._VehicleWaitTimer - Registry.BOT.BOT_UPDATE_CYCLE
 		if self._VehicleWaitTimer <= 0 then
+			if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
+				-- check for other plane in front of bot
+				local s_IsInfront = false
+				-- TODO: add code here
+				if s_IsInfront then
+					self._VehicleWaitTimer = 5.0 -- one more cycle
+					return
+				end
+			end
 			g_GameDirector:_SetVehicleObjectiveState(self.m_Player.soldier.worldTransform.trans, false)
 		else
 			return
