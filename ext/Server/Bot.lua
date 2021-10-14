@@ -815,16 +815,26 @@ function Bot:_UpdateAimingVehicleAdvanced()
 	self._TargetYaw = s_Yaw
 
 
-	-- abort attacking in chopper if too steep or too low
+	-- abort attacking in chopper or jet if too steep or too low
 	if (m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) and self.m_Player.controlledEntryId == 0 ) or m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
 		local s_PitchHalf = Config.FovVerticleChopperForShooting / 360 * math.pi
 		if math.abs(self._TargetPitch) > s_PitchHalf then
 			self:_AbortAttack()
 			return
 		end
+		if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) and s_FullPositionBot:Distance(s_FullPositionTarget) < 40 then
+			self:_AbortAttack()
+		end
 		if self._ShootPlayerVehicleType ~= VehicleTypes.Chopper and self._ShootPlayerVehicleType ~= VehicleTypes.Plane then
-			if s_DifferenceY > -20 and s_DifferenceY < 0 then -- too low to the ground
-				self:_AbortAttack()
+			local s_DiffVertical = s_FullPositionTarget.y - s_FullPositionBot.y
+			if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) then
+				if s_DiffVertical > -20 then -- too low to the ground
+					self:_AbortAttack()
+				end
+			elseif m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
+				if s_DiffVertical > -50 then -- too low to the ground
+					self:_AbortAttack()
+				end
 			end
 			return
 		end
@@ -906,16 +916,26 @@ function Bot:_UpdateAimingVehicle(p_DeltaTime)
 	self._TargetYaw = s_Yaw
 
 
-	-- abort attacking in chopper if too steep or too low
+	-- abort attacking in chopper or jet if too steep or too low
 	if (m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) and self.m_Player.controlledEntryId == 0 ) or m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
 		local s_PitchHalf = Config.FovVerticleChopperForShooting / 360 * math.pi
 		if math.abs(self._TargetPitch) > s_PitchHalf then
 			self:_AbortAttack()
 			return
 		end
+		if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) and s_FullPositionBot:Distance(s_FullPositionTarget) < 40 then
+			self:_AbortAttack()
+		end
 		if self._ShootPlayerVehicleType ~= VehicleTypes.Chopper and self._ShootPlayerVehicleType ~= VehicleTypes.Plane then
-			if s_DifferenceY > -20 and s_DifferenceY < 0 then -- too low to the ground
-				self:_AbortAttack()
+			local s_DiffVertical = s_FullPositionTarget.y - s_FullPositionBot.y
+			if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) then
+				if s_DiffVertical > -20 then -- too low to the ground
+					self:_AbortAttack()
+				end
+			elseif m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
+				if s_DiffVertical > -50 then -- too low to the ground
+					self:_AbortAttack()
+				end
 			end
 			return
 		end
