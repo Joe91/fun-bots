@@ -1,7 +1,7 @@
 import sqlite3
 import os
 
-ignoreList = ["sqlite_sequence","FB_Permissions", "FB_Config", "FB_ConfigTrace"]
+ignoreList = ["sqlite_sequence","FB_Permissions", "FB_Config_Trace", "FB_Settings"]
 
 connection = sqlite3.connect("./../mod.db")
 cursor = connection.cursor()
