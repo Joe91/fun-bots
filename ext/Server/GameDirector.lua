@@ -25,7 +25,7 @@ function GameDirector:RegisterVars()
 	self.m_RushAttackingBase = ''
 
 	self.m_SpawnableStationaryAas = {}
-	self.m_SpawnableJets = {}
+	self.m_SpawnableVehicles = {}
 end
 
 -- =============================================
@@ -44,7 +44,7 @@ function GameDirector:OnLevelLoaded()
 	self.m_UpdateTimer = 0
 	self:_InitObjectives()
 	for i = 0, Globals.NrOfTeams do
-		self.m_SpawnableJets[i] = {}
+		self.m_SpawnableVehicles[i] = {}
 		self.m_SpawnableStationaryAas[i] = {}
 	end
 end
@@ -326,8 +326,8 @@ end
 	-- Vehicle Events
 -- =============================================
 
-function GameDirector:GetSpawnableJets(p_TeamId)
-	return self.m_SpawnableJets[p_TeamId]
+function GameDirector:GetSpawnableVehicle(p_TeamId)
+	return self.m_SpawnableVehicles[p_TeamId]
 end
 
 function GameDirector:GetStationaryAas(p_TeamId)
@@ -335,46 +335,45 @@ function GameDirector:GetStationaryAas(p_TeamId)
 end
 
 function GameDirector:OnVehicleSpawnDone(p_Entity)
-	p_Entity = ControllableEntity(p_Entity)
+	local s_Objective = self:_SetVehicleObjectiveState(p_Entity.transform.trans, true)
 
+	p_Entity = ControllableEntity(p_Entity)
 	local s_VehicleData = m_Vehicles:GetVehicleByEntity(p_Entity)
 	if s_VehicleData ~= nil then
-		local s_TeamId = s_VehicleData.Team
-		if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.Plane) then
+
+		if s_Objective ~= nil and s_Objective.isSpawnPath then
 			local s_Node = g_GameDirector:FindClosestPath(p_Entity.transform.trans, true)
 			if s_Node ~= nil and s_Node.Position:Distance(p_Entity.transform.trans) < 30 then
-				table.insert(self.m_SpawnableJets[s_TeamId], p_Entity)
-				print("insert Jet")
+				table.insert(self.m_SpawnableVehicles[s_Objective.team], p_Entity)
+				print("insert Spawnable Vehicle")
 			end
 		end
 		if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.StationaryAA) then
-			table.insert(self.m_SpawnableStationaryAas[s_TeamId], p_Entity)
+			table.insert(self.m_SpawnableStationaryAas[s_VehicleData.Team], p_Entity)
 			print("insert AA")
 		end
 	end
 
-	self:_SetVehicleObjectiveState(p_Entity.transform.trans, true)
+
 end
 
 function GameDirector:OnVehicleEnter(p_Entity, p_Player)
 	local s_VehicleData = m_Vehicles:GetVehicleByEntity(p_Entity)
 	if s_VehicleData ~= nil then
-		if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.Plane) then
-			for l_Index, l_Entity in pairs(self.m_SpawnableJets[p_Player.teamId]) do
-				if p_Entity == l_Entity then
-					table.remove(self.m_SpawnableJets[p_Player.teamId], l_Index)
-				end
-			end
-		end
 		if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.StationaryAA) then
 			for l_Index, l_Entity in pairs(self.m_SpawnableStationaryAas[p_Player.teamId]) do
 				if p_Entity == l_Entity then
 					table.remove(self.m_SpawnableStationaryAas[p_Player.teamId], l_Index)
 				end
 			end
+		else
+			for l_Index, l_Entity in pairs(self.m_SpawnableVehicles[p_Player.teamId]) do
+				if p_Entity == l_Entity then
+					table.remove(self.m_SpawnableVehicles[p_Player.teamId], l_Index)
+				end
+			end
 		end
 	end
-
 
 	if not m_Utilities:isBot(p_Player) then
 		p_Entity = ControllableEntity(p_Entity)
@@ -837,6 +836,11 @@ function GameDirector:_InitObjectives()
 		if string.find(l_ObjectiveName:lower(), "vehicle") ~= nil then
 			s_Objective.isEnterVehiclePath = true
 			s_Objective.active = false
+			if string.find(l_ObjectiveName:lower(), "us") ~= nil then
+				s_Objective.team = TeamId.Team1
+			else
+				s_Objective.team = TeamId.Team2
+			end
 		end
 
 		table.insert(self.m_AllObjectives, s_Objective)
@@ -1039,6 +1043,7 @@ function GameDirector:_SetVehicleObjectiveState(p_Position, p_Value)
 	if s_ClosestVehicleEnterObjective ~= nil and s_ClosestDistance < 15 then
 		s_ClosestVehicleEnterObjective.active = p_Value
 	end
+	return s_ClosestVehicleEnterObjective
 end
 
 function GameDirector:_UpdateObjective(p_Name, p_Data)

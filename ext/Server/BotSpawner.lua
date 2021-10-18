@@ -908,11 +908,11 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 			if type(s_SpawnPoint) == 'string' then
 				local s_SpawnEntity = nil
 				local s_Transform = LinearTransform()
-				if s_SpawnPoint == "SpawnInJet" then
-					local s_Jets = g_GameDirector:GetSpawnableJets(s_TeamId)
-					for _, l_Jet in pairs(s_Jets) do
-						if l_Jet ~= nil then
-							s_SpawnEntity = l_Jet
+				if s_SpawnPoint == "SpawnAtVehicle" then
+					local s_Vehicles = g_GameDirector:GetSpawnableVehicle(s_TeamId)
+					for _, l_Vehicle in pairs(s_Vehicles) do
+						if l_Vehicle ~= nil then
+							s_SpawnEntity = l_Vehicle
 							break
 						end
 					end
@@ -1063,8 +1063,8 @@ function BotSpawner:_GetSpawnPoint(p_TeamId, p_SquadId)
 	local s_TrysDone = 0
 
 
-	if #g_GameDirector:GetSpawnableJets(p_TeamId) > 0 then
-		return "SpawnInJet"
+	if #g_GameDirector:GetSpawnableVehicle(p_TeamId) > 0 then
+		return "SpawnAtVehicle"
 	end
 	if #g_GameDirector:GetStationaryAas(p_TeamId) > 0 then
 		return "SpawnInAa"
