@@ -335,7 +335,7 @@ SettingsDefinition = {
 		},
 		{
 			Name = "MaxReconBots",
-			Text = "Max Support Bots",
+			Text = "Max Recon Bots",
 			Type = Type.Integer,
 			Value = Config.MaxReconBots,
 			Description = "maximum number of Bots with Recon Kit. -1 = no limit",
@@ -840,7 +840,7 @@ SettingsDefinition = {
 			Value = Config.MaxDistanceAABots,
 			Description = "Max Range of Stationary AA",
 			Reference = Range(50, 1500.00, 5),
-			Default = 700,
+			Default = 250,
 			UpdateFlag = UpdateFlag.None,
 			Category = "VEHICLE"
 		},
@@ -1408,7 +1408,7 @@ SettingsDefinition = {
 		},
 		{
 			Name = "IgnorePermissions",
-			Text = "disable RCON-commands",
+			Text = "ignore Permissions",
 			Type = Type.Boolean,
 			Value = Config.IgnorePermissions,
 			Description = "if true, all permissions are ignored --> everyone can do everything",
