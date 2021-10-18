@@ -1391,7 +1391,6 @@ function Bot:_UpdateYawVehicle(p_Attacking)
 				s_Current_Roll = s_Current_Roll + 2* math.pi
 			end
 		end
-		-- print(s_Current_Roll)
 
 		local s_Delta_Roll = s_Target_Roll - s_Current_Roll
 		if s_Delta_Roll > math.pi then
@@ -2058,7 +2057,6 @@ function Bot:_UpdateNormalMovementVehicle()
 					end
 				end
 				if s_IsInfront then
-					print("in front")
 					self._VehicleWaitTimer = 5.0 -- one more cycle
 					return
 				end

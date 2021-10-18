@@ -345,12 +345,10 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 			local s_Node = g_GameDirector:FindClosestPath(p_Entity.transform.trans, true)
 			if s_Node ~= nil and s_Node.Position:Distance(p_Entity.transform.trans) < 30 then
 				table.insert(self.m_SpawnableVehicles[s_Objective.team], p_Entity)
-				print("insert Spawnable Vehicle")
 			end
 		end
 		if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.StationaryAA) then
 			table.insert(self.m_SpawnableStationaryAas[s_VehicleData.Team], p_Entity)
-			print("insert AA")
 		end
 	end
 end
