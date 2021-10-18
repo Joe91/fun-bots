@@ -931,6 +931,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 					p_ExistingBot:SetVarsWay(nil, true, 0, 0, false)
 					self:_SpawnBot(p_ExistingBot, s_Transform, false)
 					p_ExistingBot:_EnterVehicleEntity(s_SpawnEntity)
+					p_ExistingBot:FindVehiclePath(s_SpawnEntity.transform.trans)
 				else
 					local s_Bot = m_BotManager:CreateBot(s_Name, s_TeamId, s_SquadId)
 		
@@ -943,6 +944,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 						s_Bot:SetVarsWay(nil, true, 0, 0, false)
 						self:_SpawnBot(s_Bot, s_Transform, true)
 						s_Bot:_EnterVehicleEntity(s_SpawnEntity)
+						s_Bot:FindVehiclePath(s_SpawnEntity.transform.trans)
 					end
 				end
 				return
@@ -1063,10 +1065,10 @@ function BotSpawner:_GetSpawnPoint(p_TeamId, p_SquadId)
 	local s_TrysDone = 0
 
 
-	if #g_GameDirector:GetSpawnableVehicle(p_TeamId) > 0 then
+	if Config.UseVehicles and #g_GameDirector:GetSpawnableVehicle(p_TeamId) > 0 then
 		return "SpawnAtVehicle"
 	end
-	if #g_GameDirector:GetStationaryAas(p_TeamId) > 0 then
+	if Config.AABots and #g_GameDirector:GetStationaryAas(p_TeamId) > 0 then
 		return "SpawnInAa"
 	end
 

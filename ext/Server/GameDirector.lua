@@ -335,9 +335,9 @@ function GameDirector:GetStationaryAas(p_TeamId)
 end
 
 function GameDirector:OnVehicleSpawnDone(p_Entity)
-	local s_Objective = self:_SetVehicleObjectiveState(p_Entity.transform.trans, true)
-
 	p_Entity = ControllableEntity(p_Entity)
+
+	local s_Objective = self:_SetVehicleObjectiveState(p_Entity.transform.trans, true)	
 	local s_VehicleData = m_Vehicles:GetVehicleByEntity(p_Entity)
 	if s_VehicleData ~= nil then
 
@@ -353,8 +353,6 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 			print("insert AA")
 		end
 	end
-
-
 end
 
 function GameDirector:OnVehicleEnter(p_Entity, p_Player)

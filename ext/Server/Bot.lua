@@ -1909,6 +1909,17 @@ function Bot:_UpdateAttackingVehicle()
 	end
 end
 
+function Bot:FindVehiclePath(p_Position)
+	local s_Node = g_GameDirector:FindClosestPath(p_Position, true)
+	if s_Node ~= nil then
+		-- switch to vehicle
+		self._InvertPathDirection = false
+		self._PathIndex = s_Node.PathIndex
+		self._CurrentWayPoint = s_Node.PointIndex
+		self._LastWayDistance = 1000
+	end
+end
+
 function Bot:_EnterVehicleEntity(p_Entity)
 	if p_Entity ~= nil then
 		local s_Position = p_Entity.transform.trans
@@ -2037,7 +2048,7 @@ function Bot:_UpdateNormalMovementVehicle()
 			if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
 				-- check for other plane in front of bot
 				local s_IsInfront = false
-				for _, l_Jet in pairs(g_GameDirector:GetSpawnableJets(self.m_Player.teamId)) do
+				for _, l_Jet in pairs(g_GameDirector:GetSpawnableVehicle(self.m_Player.teamId)) do
 					local s_DistanceToJet = self.m_Player.controlledControllable.transform.trans:Distance(l_Jet.transform.trans)
 					if s_DistanceToJet < 30 then
 						local s_CompPos = self.m_Player.controlledControllable.transform.trans + self.m_Player.controlledControllable.transform.forward * s_DistanceToJet
@@ -2047,6 +2058,7 @@ function Bot:_UpdateNormalMovementVehicle()
 					end
 				end
 				if s_IsInfront then
+					print("in front")
 					self._VehicleWaitTimer = 5.0 -- one more cycle
 					return
 				end
