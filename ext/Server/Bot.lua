@@ -1909,6 +1909,56 @@ function Bot:_UpdateAttackingVehicle()
 	end
 end
 
+function Bot:FindVehiclePath(p_Position)
+	local s_Node = g_GameDirector:FindClosestPath(p_Position, true)
+	if s_Node ~= nil then
+		-- switch to vehicle
+		self._InvertPathDirection = false
+		self._PathIndex = s_Node.PathIndex
+		self._CurrentWayPoint = s_Node.PointIndex
+		self._LastWayDistance = 1000
+	end
+end
+
+function Bot:_EnterVehicleEntity(p_Entity)
+	if p_Entity ~= nil then
+		local s_Position = p_Entity.transform.trans
+	
+		for i = 0, p_Entity.entryCount - 1 do
+			if p_Entity:GetPlayerInEntry(i) == nil then
+				self.m_Player:EnterVehicle(p_Entity, i)
+
+				-- get ID
+				self.m_ActiveVehicle = m_Vehicles:GetVehicle(self.m_Player, i)
+				self._VehicleMovableId = m_Vehicles:GetPartIdForSeat(self.m_ActiveVehicle, i)
+				m_Logger:Write(self.m_ActiveVehicle)
+				if i == 0 then
+					if i == p_Entity.entryCount - 1 then
+						self._VehicleWaitTimer = 1.0 -- always wait a short time to check for free start
+					else
+						self._VehicleWaitTimer = Config.VehicleWaitForPassengersTime
+						self._BrakeTimer = 0
+					end
+				else
+					self._VehicleWaitTimer = 0
+					if i == p_Entity.entryCount - 1 then
+						-- last seat taken: Disable vehicle and abort wait for passengers:
+						local s_Driver = p_Entity:GetPlayerInEntry(0)
+						if s_Driver ~= nil then
+							Events:Dispatch('Bot:AbortWait', s_Driver.name)
+							g_GameDirector:_SetVehicleObjectiveState(p_Entity.transform.trans, false)
+						end
+					end
+				end
+
+				return 0, s_Position -- everything fine
+			end
+		end
+		--no place left
+		return -2 
+	end
+end
+
 function Bot:_EnterVehicle(p_Name)
 	local s_Iterator = EntityManager:GetIterator("ServerVehicleEntity")
 	local s_Entity = s_Iterator:Next()
@@ -1916,39 +1966,8 @@ function Bot:_EnterVehicle(p_Name)
 	while s_Entity ~= nil do
 		s_Entity = ControllableEntity(s_Entity)
 		local s_Position = s_Entity.transform.trans
-		if (p_Name == nil and s_Position:Distance(self.m_Player.soldier.worldTransform.trans) < 10) or (p_Name ~= nil and (string.find(VehicleEntityData(s_Entity.data).controllableType, p_Name) ~= nil)) then
-			for i = 0, s_Entity.entryCount - 1 do
-				if s_Entity:GetPlayerInEntry(i) == nil then
-					self.m_Player:EnterVehicle(s_Entity, i)
-
-					-- get ID
-					self.m_ActiveVehicle = m_Vehicles:GetVehicle(self.m_Player, i)
-					self._VehicleMovableId = m_Vehicles:GetPartIdForSeat(self.m_ActiveVehicle, i)
-					m_Logger:Write(self.m_ActiveVehicle)
-					if i == 0 then
-						if i == s_Entity.entryCount - 1 then
-							self._VehicleWaitTimer = 1.0 -- always wait a short time to check for free start
-						else
-							self._VehicleWaitTimer = Config.VehicleWaitForPassengersTime
-							self._BrakeTimer = 0
-						end
-					else
-						self._VehicleWaitTimer = 0
-						if i == s_Entity.entryCount - 1 then
-							-- last seat taken: Disable vehicle and abort wait for passengers:
-							local s_Driver = s_Entity:GetPlayerInEntry(0)
-							if s_Driver ~= nil then
-								Events:Dispatch('Bot:AbortWait', s_Driver.name)
-								g_GameDirector:_SetVehicleObjectiveState(s_Entity.transform.trans, false)
-							end
-						end
-					end
-
-					return 0, s_Position -- everything fine
-				end
-			end
-			--no place left
-			return -2 
+		if (s_Position:Distance(self.m_Player.soldier.worldTransform.trans) < 10) then
+			return self:_EnterVehicleEntity(s_Entity)
 		end
 
 		s_Entity = s_Iterator:Next()
@@ -2029,8 +2048,17 @@ function Bot:_UpdateNormalMovementVehicle()
 			if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
 				-- check for other plane in front of bot
 				local s_IsInfront = false
-				-- TODO: add code here
+				for _, l_Jet in pairs(g_GameDirector:GetSpawnableVehicle(self.m_Player.teamId)) do
+					local s_DistanceToJet = self.m_Player.controlledControllable.transform.trans:Distance(l_Jet.transform.trans)
+					if s_DistanceToJet < 30 then
+						local s_CompPos = self.m_Player.controlledControllable.transform.trans + self.m_Player.controlledControllable.transform.forward * s_DistanceToJet
+						if l_Jet.transform.trans:Distance(s_CompPos) < 10 then
+							s_IsInfront = true
+						end							
+					end
+				end
 				if s_IsInfront then
+					print("in front")
 					self._VehicleWaitTimer = 5.0 -- one more cycle
 					return
 				end

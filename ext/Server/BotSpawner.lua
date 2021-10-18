@@ -16,10 +16,10 @@ function BotSpawner:RegisterVars()
 	self._BotSpawnTimer = 0
 	self._LastRound = 0
 	self._PlayerUpdateTimer = 0
+	self._SpawnInObjectsTimer = 0
 	self._FirstSpawnInLevel = true
 	self._FirstSpawnDelay = Registry.BOT_SPAWN.FIRST_SPAWN_DELAY
 	self._UpdateActive = false
-	self._AABotsSpawned = false
 	self._SpawnSets = {}
 	self._KickPlayers = {}
 	self._BotsWithoutPath = {}
@@ -52,7 +52,6 @@ function BotSpawner:OnLevelDestroy()
 	self._SpawnSets = {}
 	self._UpdateActive = false
 	self._FirstSpawnInLevel = true
-	self._AABotsSpawned = false
 	self._FirstSpawnDelay = Registry.BOT_SPAWN.FIRST_SPAWN_DELAY
 	self._PlayerUpdateTimer = 0
 end
@@ -245,13 +244,6 @@ function BotSpawner:UpdateBotAmountAndTeam()
 		if s_AmountToDestroy > 0 then
 			m_BotManager:DestroyAll(s_AmountToDestroy)
 		end
-	end
-
-	if Config.AABots and not self._AABotsSpawned and PlayerManager:GetPlayerCount() >= 3 then
-		for i = 1, Globals.NrOfTeams do
-			self:SpawnAABots(i)
-		end
-		self._AABotsSpawned = true
 	end
 
 	-- if update active do nothing
@@ -584,26 +576,6 @@ function BotSpawner:SpawnBotGrid(p_Player, p_Rows, p_Columns, p_Spacing)
 	end
 end
 
-function BotSpawner:SpawnAABots(p_TeamId)
-	local s_VehicleName = nil
-	
-	if p_TeamId == TeamId.Team1 then
-		s_VehicleName = "Centurion"
-	elseif p_TeamId == TeamId.Team2 then
-		s_VehicleName = "Pantsir"
-	else
-		return
-	end
-
-	local s_Transform = LinearTransform()
-	local s_Name = m_BotManager:FindNextBotName()
-	local s_Bot = m_BotManager:CreateBot(s_Name, p_TeamId, SquadId.SquadNone)
-	if s_Bot ~= nil then
-		s_Bot:SetVarsWay(nil, true, 0, 0, false)
-		self:_SpawnBot(s_Bot, s_Transform, true)
-		s_Bot:_EnterVehicle(s_VehicleName)
-	end
-end
 
 function BotSpawner:SpawnWayBots(p_Player, p_Amount, p_UseRandomWay, p_ActiveWayIndex, p_IndexOnPath, p_TeamId)
 	if #m_NodeCollection:GetPaths() <= 0 then
@@ -932,6 +904,51 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 		-- find a spawnpoint
 		if p_UseRandomWay or p_ActiveWayIndex == nil or p_ActiveWayIndex == 0 then
 			s_SpawnPoint, s_InverseDirection = self:_GetSpawnPoint(s_TeamId, s_SquadId)
+			-- special spawn in vehicles
+			if type(s_SpawnPoint) == 'string' then
+				local s_SpawnEntity = nil
+				local s_Transform = LinearTransform()
+				if s_SpawnPoint == "SpawnAtVehicle" then
+					local s_Vehicles = g_GameDirector:GetSpawnableVehicle(s_TeamId)
+					for _, l_Vehicle in pairs(s_Vehicles) do
+						if l_Vehicle ~= nil then
+							s_SpawnEntity = l_Vehicle
+							break
+						end
+					end
+				elseif s_SpawnPoint == "SpawnInAa" then
+					local s_StationaryAas = g_GameDirector:GetStationaryAas(s_TeamId)
+					for _, l_Aa in pairs(s_StationaryAas) do
+						if l_Aa ~= nil then
+							s_SpawnEntity = l_Aa
+							break
+						end
+					end
+				end
+
+
+				if s_IsRespawn then
+					p_ExistingBot:SetVarsWay(nil, true, 0, 0, false)
+					self:_SpawnBot(p_ExistingBot, s_Transform, false)
+					p_ExistingBot:_EnterVehicleEntity(s_SpawnEntity)
+					p_ExistingBot:FindVehiclePath(s_SpawnEntity.transform.trans)
+				else
+					local s_Bot = m_BotManager:CreateBot(s_Name, s_TeamId, s_SquadId)
+		
+					if s_Bot ~= nil then
+						-- check for first one in squad
+						if (TeamSquadManager:GetSquadPlayerCount(s_TeamId, s_SquadId) == 1) then
+							s_Bot.m_Player:SetSquadLeader(true, false) -- not private
+						end
+		
+						s_Bot:SetVarsWay(nil, true, 0, 0, false)
+						self:_SpawnBot(s_Bot, s_Transform, true)
+						s_Bot:_EnterVehicleEntity(s_SpawnEntity)
+						s_Bot:FindVehiclePath(s_SpawnEntity.transform.trans)
+					end
+				end
+				return
+			end
 		else
 			s_SpawnPoint = m_NodeCollection:Get(p_IndexOnPath, p_ActiveWayIndex)
 		end
@@ -1046,6 +1063,14 @@ function BotSpawner:_GetSpawnPoint(p_TeamId, p_SquadId)
 	local s_RetryCounter = Config.MaxTrysToSpawnAtDistance
 	local s_MaximumTrys = 100
 	local s_TrysDone = 0
+
+
+	if Config.UseVehicles and #g_GameDirector:GetSpawnableVehicle(p_TeamId) > 0 then
+		return "SpawnAtVehicle"
+	end
+	if Config.AABots and #g_GameDirector:GetStationaryAas(p_TeamId) > 0 then
+		return "SpawnInAa"
+	end
 
 	-- CONQUEST
 	-- spawn at base, squad-mate, captured flag

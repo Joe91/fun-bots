@@ -2,6 +2,7 @@ class('GameDirector')
 
 local m_NodeCollection = require('__shared/NodeCollection')
 local m_Utilities = require('__shared/Utilities')
+local m_Vehicles = require("Vehicles")
 local m_Logger = Logger("GameDirector", Debug.Server.GAMEDIRECTOR)
 
 function GameDirector:__init()
@@ -23,6 +24,8 @@ function GameDirector:RegisterVars()
 	self.m_ZoneTimer = 0
 	self.m_RushAttackingBase = ''
 
+	self.m_SpawnableStationaryAas = {}
+	self.m_SpawnableVehicles = {}
 end
 
 -- =============================================
@@ -40,6 +43,10 @@ function GameDirector:OnLevelLoaded()
 	-- TODO, assign weights to each objective
 	self.m_UpdateTimer = 0
 	self:_InitObjectives()
+	for i = 0, Globals.NrOfTeams do
+		self.m_SpawnableVehicles[i] = {}
+		self.m_SpawnableStationaryAas[i] = {}
+	end
 end
 
 function GameDirector:OnRoundOver(p_RoundTime, p_WinningTeam)
@@ -254,7 +261,6 @@ end
 
 function GameDirector:OnMcomArmed(p_Objective)
 	m_Logger:Write(p_Objective.." armed")
-	print(p_Objective.." armed")
 
 	self:_UpdateObjective(p_Objective, {
 		team = TeamId.Team1,
@@ -266,7 +272,6 @@ end
 
 function GameDirector:OnMcomDisarmed(p_Objective)
 	m_Logger:Write(p_Objective.." disarmed")
-	print(p_Objective.." disarmed")
 
 	self:_UpdateObjective(p_Objective, {
 		team = TeamId.TeamNeutral,
@@ -280,8 +285,7 @@ function GameDirector:OnMcomDestroyed(p_Objective)
 	self.m_McomCounter = self.m_McomCounter + 1
 	self:_UpdateValidObjectives()
 
-	m_Logger:Write(p_Objective.." destroyed")
-	print(p_Objective.." destroyed after "..tostring(self.m_ArmedMcoms[p_Objective]).." s")
+	m_Logger:Write(p_Objective.." destroyed after "..tostring(self.m_ArmedMcoms[p_Objective]).." s")
 
 	self.m_ArmedMcoms[p_Objective] = nil
 
@@ -322,12 +326,53 @@ end
 	-- Vehicle Events
 -- =============================================
 
+function GameDirector:GetSpawnableVehicle(p_TeamId)
+	return self.m_SpawnableVehicles[p_TeamId]
+end
+
+function GameDirector:GetStationaryAas(p_TeamId)
+	return self.m_SpawnableStationaryAas[p_TeamId]
+end
+
 function GameDirector:OnVehicleSpawnDone(p_Entity)
 	p_Entity = ControllableEntity(p_Entity)
-	self:_SetVehicleObjectiveState(p_Entity.transform.trans, true)
+
+	local s_Objective = self:_SetVehicleObjectiveState(p_Entity.transform.trans, true)	
+	local s_VehicleData = m_Vehicles:GetVehicleByEntity(p_Entity)
+	if s_VehicleData ~= nil then
+
+		if s_Objective ~= nil and s_Objective.isSpawnPath then
+			local s_Node = g_GameDirector:FindClosestPath(p_Entity.transform.trans, true)
+			if s_Node ~= nil and s_Node.Position:Distance(p_Entity.transform.trans) < 30 then
+				table.insert(self.m_SpawnableVehicles[s_Objective.team], p_Entity)
+				print("insert Spawnable Vehicle")
+			end
+		end
+		if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.StationaryAA) then
+			table.insert(self.m_SpawnableStationaryAas[s_VehicleData.Team], p_Entity)
+			print("insert AA")
+		end
+	end
 end
 
 function GameDirector:OnVehicleEnter(p_Entity, p_Player)
+	local s_VehicleData = m_Vehicles:GetVehicleByEntity(p_Entity)
+	if s_VehicleData ~= nil then
+		if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.StationaryAA) then
+			for l_Index, l_Entity in pairs(self.m_SpawnableStationaryAas[p_Player.teamId]) do
+				if p_Entity == l_Entity then
+					table.remove(self.m_SpawnableStationaryAas[p_Player.teamId], l_Index)
+				end
+			end
+		else
+			for l_Index, l_Entity in pairs(self.m_SpawnableVehicles[p_Player.teamId]) do
+				if p_Entity == l_Entity then
+					table.remove(self.m_SpawnableVehicles[p_Player.teamId], l_Index)
+				end
+			end
+		end
+	end
+
 	if not m_Utilities:isBot(p_Player) then
 		p_Entity = ControllableEntity(p_Entity)
 		self:_SetVehicleObjectiveState(p_Entity.transform.trans, false)
@@ -789,6 +834,11 @@ function GameDirector:_InitObjectives()
 		if string.find(l_ObjectiveName:lower(), "vehicle") ~= nil then
 			s_Objective.isEnterVehiclePath = true
 			s_Objective.active = false
+			if string.find(l_ObjectiveName:lower(), "us") ~= nil then
+				s_Objective.team = TeamId.Team1
+			else
+				s_Objective.team = TeamId.Team2
+			end
 		end
 
 		table.insert(self.m_AllObjectives, s_Objective)
@@ -991,6 +1041,7 @@ function GameDirector:_SetVehicleObjectiveState(p_Position, p_Value)
 	if s_ClosestVehicleEnterObjective ~= nil and s_ClosestDistance < 15 then
 		s_ClosestVehicleEnterObjective.active = p_Value
 	end
+	return s_ClosestVehicleEnterObjective
 end
 
 function GameDirector:_UpdateObjective(p_Name, p_Data)
