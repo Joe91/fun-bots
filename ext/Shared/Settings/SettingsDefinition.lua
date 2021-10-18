@@ -840,7 +840,7 @@ SettingsDefinition = {
 			Value = Config.MaxDistanceAABots,
 			Description = "Max Range of Stationary AA",
 			Reference = Range(50, 1500.00, 5),
-			Default = 350,
+			Default = 250,
 			UpdateFlag = UpdateFlag.None,
 			Category = "VEHICLE"
 		},
