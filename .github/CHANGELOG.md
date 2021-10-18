@@ -35,6 +35,7 @@ This release contains a lot of small bug fixes and more QoL updates.
 * more failsave system for Rush-Mcoms
 * first support for jets added
 * Export / Import system for easy shareing of paths
+* Option to let bots spawn directly into some vehicles with the Objective: "vehicle spawn us ..."
 
 ### New maps
 * Theran Highway CQS (Vehicles) - thanks to Gemini899
