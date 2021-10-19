@@ -2,10 +2,19 @@ import sqlite3
 import os
 from os import walk
 
-connection = sqlite3.connect("./../mod.db")
+# use "auto-py-to-exe" to convert to exe files
+
+sourceFolder = ""
+connection = None
+if os.path.isfile("mod.db"):
+    sourceFolder = "mapfiles"
+    connection = sqlite3.connect("mod.db")
+else:
+    sourceFolder = "./../mapfiles"
+    connection = sqlite3.connect("./../mod.db")
 cursor = connection.cursor()
 
-filenames = next(walk("./../maplist"), (None, None, []))[2]  # [] if no file
+filenames = next(walk(sourceFolder), (None, None, []))[2]  # [] if no file
 
 for filename in filenames:
     tablename = filename.split(".")[0]+"_table"
@@ -24,7 +33,7 @@ for filename in filenames:
         )
     """
     cursor.execute(sql_instruction)
-    with open("./../maplist/" + filename, "r") as infile:
+    with open(sourceFolder + "/" + filename, "r") as infile:
         firstLine = None
         allNodeData = []
         for line in infile.readlines():
@@ -41,3 +50,4 @@ for filename in filenames:
         cursor.executemany('INSERT INTO ' + tablename + ' (pathIndex, pointIndex, transX, transY, transZ, inputVar, data) VALUES (?,?,?,?,?,?,?)', allNodeData)
         
 connection.commit()
+connection.close()

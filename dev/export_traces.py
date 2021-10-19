@@ -1,18 +1,29 @@
 import sqlite3
 import os
+import os
 
+
+# use "auto-py-to-exe" to convert to exe files
 ignoreList = ["sqlite_sequence","FB_Permissions", "FB_Config_Trace", "FB_Settings"]
 
-connection = sqlite3.connect("./../mod.db")
+destFolder = ""
+connection = None
+if os.path.isfile("mod.db"):
+    destFolder = "mapfiles"
+    connection = sqlite3.connect("mod.db")
+else:
+    destFolder = "./../mapfiles"
+    connection = sqlite3.connect("./../mod.db")
 cursor = connection.cursor()
+
 sql_instruction = """
     SELECT * FROM sqlite_master WHERE type='table'
 """
 cursor.execute(sql_instruction)
 content = cursor.fetchall()
 
-if not os.path.exists('./../maplist'):
-    os.makedirs('./../maplist')
+if not os.path.exists(destFolder):
+    os.makedirs(destFolder)
 for item in content:
     skip = False
     for ignoreItem in ignoreList:
@@ -26,7 +37,7 @@ for item in content:
     structure = cursor.execute("PRAGMA table_info('"+ item[1] + "')").fetchall()
 
     filename = item[1].replace("_table","")+".map"
-    with open("./../maplist/" + filename, "w") as outfile:
+    with open(destFolder + "/" + filename, "w") as outfile:
         header = []
         idsToRemove = False
         for collum in structure:
