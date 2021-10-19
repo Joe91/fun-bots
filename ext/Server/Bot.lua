@@ -2479,13 +2479,13 @@ function Bot:_UpdateNormalMovement()
 					s_HeightDistance = 0
 
 					-- teleport to target
+					s_NoStuckReset = true
 					if Config.TeleportIfStuck and (MathUtils:GetRandomInt(0,100) <= Registry.BOT.PROBABILITY_TELEPORT_IF_STUCK) then
 						local s_Transform = self.m_Player.soldier.worldTransform:Clone()
 						s_Transform.trans = self._NextTargetPoint.Position
 						self.m_Player.soldier:SetTransform(s_Transform)
 						m_Logger:Write("tepeported "..self.m_Player.name)
 					else
-						s_NoStuckReset = true
 						if not self.m_InVehicle then
 							s_PointIncrement = MathUtils:GetRandomInt(-5,5) -- go 5 points further
 							-- experimental
