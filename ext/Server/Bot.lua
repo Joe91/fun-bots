@@ -1962,14 +1962,22 @@ function Bot:_EnterVehicle(p_Name)
 	local s_Iterator = EntityManager:GetIterator("ServerVehicleEntity")
 	local s_Entity = s_Iterator:Next()
 
+	local s_ClosestEntity = nil
+	local s_ClosestDistance = nil
 	while s_Entity ~= nil do
 		s_Entity = ControllableEntity(s_Entity)
 		local s_Position = s_Entity.transform.trans
-		if (s_Position:Distance(self.m_Player.soldier.worldTransform.trans) < 10) then
-			return self:_EnterVehicleEntity(s_Entity)
+		local s_Distance = s_Position:Distance(self.m_Player.soldier.worldTransform.trans)
+		if (s_Distance) then
+			if s_ClosestDistance == nil or s_Distance < s_ClosestDistance then
+				s_ClosestEntity = s_Entity
+				s_ClosestDistance = s_Distance
+			end
 		end
-
 		s_Entity = s_Iterator:Next()
+	end
+	if s_ClosestEntity ~= nil then
+		return self:_EnterVehicleEntity(s_ClosestEntity)
 	end
 	return -3 -- no vehicle found
 end
