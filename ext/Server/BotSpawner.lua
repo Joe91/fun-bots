@@ -930,8 +930,11 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 				if s_IsRespawn then
 					p_ExistingBot:SetVarsWay(nil, true, 0, 0, false)
 					self:_SpawnBot(p_ExistingBot, s_Transform, false)
-					p_ExistingBot:_EnterVehicleEntity(s_SpawnEntity)
-					p_ExistingBot:FindVehiclePath(s_SpawnEntity.transform.trans)
+					if p_ExistingBot:_EnterVehicleEntity(s_SpawnEntity) ~= 0 then
+						p_ExistingBot:Kill()
+					else
+						p_ExistingBot:FindVehiclePath(s_SpawnEntity.transform.trans)
+					end
 				else
 					local s_Bot = m_BotManager:CreateBot(s_Name, s_TeamId, s_SquadId)
 		
@@ -943,8 +946,11 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 		
 						s_Bot:SetVarsWay(nil, true, 0, 0, false)
 						self:_SpawnBot(s_Bot, s_Transform, true)
-						s_Bot:_EnterVehicleEntity(s_SpawnEntity)
-						s_Bot:FindVehiclePath(s_SpawnEntity.transform.trans)
+						if s_Bot:_EnterVehicleEntity(s_SpawnEntity) ~= 0 then
+							s_Bot:Kill()
+						else
+							s_Bot:FindVehiclePath(s_SpawnEntity.transform.trans)
+						end
 					end
 				end
 				return

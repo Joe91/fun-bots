@@ -1933,7 +1933,7 @@ function Bot:_EnterVehicleEntity(p_Entity)
 				m_Logger:Write(self.m_ActiveVehicle)
 				if i == 0 then
 					if i == p_Entity.entryCount - 1 then
-						self._VehicleWaitTimer = 1.0 -- always wait a short time to check for free start
+						self._VehicleWaitTimer = 0.5 -- always wait a short time to check for free start
 						g_GameDirector:_SetVehicleObjectiveState(p_Entity.transform.trans, false)
 					else
 						self._VehicleWaitTimer = Config.VehicleWaitForPassengersTime
