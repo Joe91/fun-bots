@@ -552,7 +552,7 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 			end
 
 			-- possible path
-			if l_Objective.team == p_TeamId and l_Objective.active then
+			if l_Objective.team == p_TeamId and l_Objective.active and not l_Objective.isEnterVehiclePath then
 				if l_Objective.isBase then
 					table.insert(s_PossibleBases, l_Path)
 				elseif not p_OnlyBase then
@@ -614,7 +614,7 @@ function GameDirector:GetSpawnPathOfObjectives(p_PossibleObjectives)
 	local s_AvailableSpawnPaths = nil
 
 	for _, l_Objective in pairs(self.m_AllObjectives) do
-		if l_Objective.isSpawnPath then
+		if l_Objective.isSpawnPath and not l_Objective.isEnterVehiclePath then
 			for _,name in pairs(l_Objective.name:split(" ")) do
 				if name == s_TempObject.name then
 					s_AvailableSpawnPaths = l_Objective.name
