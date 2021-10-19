@@ -337,13 +337,13 @@ end
 function GameDirector:OnVehicleSpawnDone(p_Entity)
 	p_Entity = ControllableEntity(p_Entity)
 
-	local s_Objective = self:_SetVehicleObjectiveState(p_Entity.transform.trans, true)	
+	local s_Objective = self:_SetVehicleObjectiveState(p_Entity.transform.trans, true)
 	local s_VehicleData = m_Vehicles:GetVehicleByEntity(p_Entity)
 	if s_VehicleData ~= nil then
 
 		if s_Objective ~= nil and s_Objective.isSpawnPath then
 			local s_Node = g_GameDirector:FindClosestPath(p_Entity.transform.trans, true)
-			if s_Node ~= nil and s_Node.Position:Distance(p_Entity.transform.trans) < 30 then
+			if s_Node ~= nil and s_Node.Position:Distance(p_Entity.transform.trans) < 10 then
 				table.insert(self.m_SpawnableVehicles[s_Objective.team], p_Entity)
 			end
 		end
@@ -1009,7 +1009,7 @@ function GameDirector:_SetVehicleObjectiveState(p_Position, p_Value)
 		return
 	end
 
-	local s_ClosestDistance = nil
+	local s_ClosestDistance = 10
 	local s_ClosestVehicleEnterObjective = nil
 
 	for _, l_Waypoints in pairs(s_Paths) do
@@ -1028,7 +1028,7 @@ function GameDirector:_SetVehicleObjectiveState(p_Position, p_Value)
 					s_CloserDistance = s_TempDistanceLast
 				end
 
-				if s_ClosestDistance == nil or s_CloserDistance < s_ClosestDistance then
+				if s_CloserDistance < s_ClosestDistance then
 					s_ClosestDistance = s_CloserDistance
 					s_ClosestVehicleEnterObjective = s_ObjectiveObject
 				end
@@ -1036,7 +1036,7 @@ function GameDirector:_SetVehicleObjectiveState(p_Position, p_Value)
 		end
 	end
 
-	if s_ClosestVehicleEnterObjective ~= nil and s_ClosestDistance < 15 then
+	if s_ClosestVehicleEnterObjective ~= nil then
 		s_ClosestVehicleEnterObjective.active = p_Value
 	end
 	return s_ClosestVehicleEnterObjective
