@@ -9,38 +9,30 @@ This is the changelog for the released V2.3.0 version. Don't forget to [join us 
 ## Changelog
 This release contains a lot of small bug fixes and more QoL updates.
 
-### TODO: sort these things :-)
-* New settings for vehicle-usage
-* Added FOV-Settings for Vehicles
+### ⚙️ Exciting new features
 * Sidewared movement of bots (looking sidewareds while moving)
 * SMAWs don't move when shooting anymore
 * Rework Enter-Vehicle-System (preparation to let more bots enter one vehicle)
 * Regestry for some inner Values added
 * Added Exit-Command for vehicles (#169)
-* Improved Code of Bot.lua to separate different Functions and for future functions
-* Added more vehicles
-* Selection of Nodes improved (under ground and above ground)
-* First Chopper-support
-* bots wait for more passengers
-* bots on guns now act independatnt of driver
-* example chopper-paths for caspian border cq-large
-* fixed bug with jeeps
-* first kind of attacking chopper pilot
-* exit of vehicle for all players
-* fixed some bugs with the knife
-* fixed path bug with destroyed mcoms
-* Added more vehicles to the supported list
 * Added Core of Auto-AA - Mod (by NyScorpy) to make bots use the stationary AA 
 	* !!THANKS A LOT TO NyScorpy FOR LETTING ME USE HIS CODE!!!
-	* not done yet, but already usable with only a few settings
-* more failsave system for Rush-Mcoms
-* first support for jets added
-* Export / Import system for easy shareing of paths
 * Option to let bots spawn directly into some vehicles with the Objective: "vehicle spawn us ..."
-
-### ⚙️ Exciting new features
+* Support for Bots flying Choppers
+* Support for Bots flying Jets
+* Export / Import system for easy shareing of paths
+* Added more vehicles to the supported list
+* bots wait for more passengers
+* Selection of Nodes improved (under ground and above ground)
+* Improved Code of Bot.lua to separate different Functions and for future functions
 
 ### 🐛 Minor bug fixes
+* fixed bug with jeeps
+* more failsave system for Rush-Mcoms
+* fixed some bugs with the knife
+* fixed path bug with destroyed mcoms
+* New settings for vehicle-usage
+* Added FOV-Settings for Vehicles
 
 ### New maps
 * Theran Highway CQS (Vehicles) - thanks to Gemini899
@@ -60,3 +52,4 @@ This release contains a lot of small bug fixes and more QoL updates.
 * Gulf of Oman CQS (Jets) - thanks to KrazyIvan777
 
 ### 📖 Documentation update
+* nothing done on this front :-(
