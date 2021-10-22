@@ -52,7 +52,10 @@ for item in content:
         for line in table_content:
             outList = []
             for item in line:
-                outList.append(str(item))
+                if type(item) is float:
+                    outList.append(format(item, '.6f'))
+                else:
+                    outList.append(str(item))
             if len(outList) > 1 and idsToRemove:
                 outList.pop(0)
             outfile.write(";".join(outList) + "\n")
