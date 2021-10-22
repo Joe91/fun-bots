@@ -2804,6 +2804,10 @@ function Bot:_UpdateSpeedOfMovement()
 		return
 	end
 
+	if self._ActiveAction == BotActionFlags.OtherActionActive then
+		return
+	end
+
 	local s_SpeedVal = 0
 
 	if self.m_ActiveMoveMode ~= BotMoveModes.Standstill then
