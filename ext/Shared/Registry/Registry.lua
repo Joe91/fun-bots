@@ -41,7 +41,7 @@ Registry = {
                 VERSION_ID = 1,
 
                 -- Current version type of this build
-                VERSION_TYPE = VersionType.DevBuild
+                VERSION_TYPE = VersionType.Stable
         },
 
         -- Variables related to raycasting
