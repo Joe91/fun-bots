@@ -44,7 +44,7 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	end
 
 	if Config.BotsAttackBots and self._InitDone then
-		if self._BotAttackBotTimer >= RegistryManager:Get(Registry.BOT.BOT_ATTACK_BOT_CHECK_INTERVAL, 0.05, true) then
+		if self._BotAttackBotTimer >= Registry.BOT.BOT_ATTACK_BOT_CHECK_INTERVAL then
 			self._BotAttackBotTimer = 0
 			self:_CheckForBotBotAttack()
 		end
@@ -82,6 +82,21 @@ function BotManager:OnPlayerLeft(p_Player)
 		end
 	end
 end
+
+function BotManager:OnBotAbortWait(p_BotName)
+	local s_Bot = self:GetBotByName(p_BotName)
+	if s_Bot ~= nil then
+		s_Bot:ResetVehicleTimer()
+	end
+end
+
+function BotManager:OnBotExitVehicle(p_BotName)
+	local s_Bot = self:GetBotByName(p_BotName)
+	if s_Bot ~= nil then
+		s_Bot:ExitVehicle()
+	end
+end
+
 -- this is unused
 function BotManager:OnSoldierHealthAction(p_Soldier, p_Action)
 	if p_Action == HealthStateAction.OnRevive then -- 7
@@ -206,7 +221,7 @@ end
 function BotManager:OnDamagePlayer(p_Player, p_ShooterName, p_MeleeAttack, p_IsHeadShot)
 	local s_Bot = self:GetBotByName(p_ShooterName)
 
-	if not p_Player.alive or s_Bot == nil then
+	if p_Player.soldier == nil or s_Bot == nil then
 		return
 	end
 
@@ -549,7 +564,7 @@ function BotManager:KillPlayerBots(p_Player)
 		if l_Bot:GetTargetPlayer() == p_Player then
 			l_Bot:ResetVars()
 
-			if l_Bot.m_Player.alive then
+			if l_Bot.m_Player.soldier ~= nil then
 				l_Bot.m_Player.soldier:Kill()
 			end
 		end
@@ -711,7 +726,7 @@ function BotManager:_CheckForBotBotAttack()
 		local s_Bot = self._Bots[i]
 
 		-- bot has player, is alive, and hasn't found that special someone yet
-		if s_Bot ~= nil and s_Bot.m_Player and s_Bot.m_Player.alive and not self._BotCheckState[s_Bot.m_Player.name] then
+		if s_Bot ~= nil and s_Bot.m_Player and s_Bot.m_Player.soldier ~= nil and not self._BotCheckState[s_Bot.m_Player.name] then
 			local s_OpposingTeams = {}
 
 			for l_TeamId = 1, Globals.NrOfTeams do
@@ -724,7 +739,7 @@ function BotManager:_CheckForBotBotAttack()
 				-- search only opposing team
 				for _, l_Bot in pairs(self._BotsByTeam[s_OpposingTeam + 1]) do
 					-- make sure it's living and has no target
-					if (l_Bot ~= nil and l_Bot.m_Player ~= nil and l_Bot.m_Player.alive and not self._BotCheckState[l_Bot.m_Player.name]) then
+					if (l_Bot ~= nil and l_Bot.m_Player ~= nil and l_Bot.m_Player.soldier ~= nil and not self._BotCheckState[l_Bot.m_Player.name]) then
 						local s_Distance = s_Bot.m_Player.soldier.worldTransform.trans:Distance(l_Bot.m_Player.soldier.worldTransform.trans)
 
 						if s_Distance <= Config.MaxBotAttackBotDistance then

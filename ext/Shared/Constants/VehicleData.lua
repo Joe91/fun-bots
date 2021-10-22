@@ -27,6 +27,12 @@ VehicleData = {
 		Drop = {4.9, 9.81, 9.81, 9.81, 9.81, 9.81}}, --10,19
 	["LAV25_AI"] = {Name = "[LAV-25]", Type =  VehicleTypes.Tank, Parts = {10, 25, nil, nil, nil, nil}}, --10,19
 	["LAV25_Paradrop"] = {Name = "[LAV-25]", Type =  VehicleTypes.Tank, Parts = {10, 25, nil, nil, nil, nil}}, --10,19
+	["BTR90"] = {
+		Name = "[BTR-90]",
+		Type =  VehicleTypes.Tank,
+		Parts = {4, 29, nil, nil, nil, nil},
+		Speed = {200, 600, 350, 350, 350, 350},
+		Drop = {4.9, 9.81, 9.81, 9.81, 9.81, 9.81}},
 	["BMP2"] = {
 		Name = "[BMP-2M]",
 		Type =  VehicleTypes.Tank,
@@ -40,9 +46,25 @@ VehicleData = {
 		Speed = {200, 610, 350, 350, 350, 350},
 		Drop = {4.9, 9.81, 9.81, 9.81, 9.81, 9.81}}, --37,38
 
-	["2S25_SPRUT-SD"] = {Name = "[SPRUT-SD]", Type =  VehicleTypes.Tank, Parts = {}},
-	["M1128-Stryker"] = {Name = "[M1128]", Type =  VehicleTypes.Tank, Parts = {}},
-	["VanModified"] = {Name = "[RHINO]", Type =  VehicleTypes.Tank, Parts = {}},
+		--TODO: search real weapon-stats
+	["2S25_SPRUT-SD"] = {
+		Name = "[SPRUT-SD]", 
+		Type =  VehicleTypes.Tank,
+		Parts = {16, nil, nil, nil, nil},
+		Speed = {200, 350, 350, 350, 350},
+		Drop = {4.9, 9.81, 9.81, 9.81, 9.81}},
+	["M1128-Stryker"] = {
+		Name = "[M1128]",
+		Type =  VehicleTypes.Tank,
+		Parts = {26, nil, nil, nil, nil},
+		Speed = {200, 350, 350, 350, 350},
+		Drop = {4.9, 9.81, 9.81, 9.81, 9.81}},
+	["VanModified"] = {
+		Name = "[RHINO]",
+		Type =  VehicleTypes.Tank,
+		Parts = {11, nil, nil, nil},
+		Speed = {600, 350, 350, 350},
+		Drop = {9.81, 9.81, 9.81, 9.81}},
 
 	-- AA Vehicle?
 	["LAV_AD"] = {
@@ -68,58 +90,167 @@ VehicleData = {
 	["AAV-7A1"] = {Name = "[AAV-7A1 AMTRAC]", Type =  VehicleTypes.AntiAir, Parts = {}},
 
 	-- light Vehicle? maybe also AA?
-	["HumveeArmored"] = {Name = "[M1114 HMMWV]", Type =  VehicleTypes.LightVehicle, Parts = {nil, 19, nil, nil}},
-	["Humvee"] = {Name = "[M1114 HMMWV]", Type =  VehicleTypes.LightVehicle, Parts = {nil, 19, nil, nil}},
-	["HumveeArmored_hmg"] = {Name = "[M1114 HMMWV]", Type =  VehicleTypes.LightVehicle, Parts = {nil, 19, nil, nil}},
-	["GAZ-3937_Vodnik"] = {Name = "[GAZ-3937 VODNIK]", Type =  VehicleTypes.LightVehicle, Parts = {nil, 23, nil, nil}},
-
+	["HumveeArmored"] = {
+		Name = "[M1114 HMMWV]", 
+		Type =  VehicleTypes.LightVehicle,
+		Parts = {nil, 19, nil, nil},
+		Speed = {300, 610, 300, 300},
+		Drop = {0.0, 9.81, 0.0, 0.0}},
+	["Humvee"] = {
+		Name = "[M1114 HMMWV]",
+		Type =  VehicleTypes.LightVehicle,
+		Parts = {nil, 19, nil, nil},
+		Speed = {300, 610, 300, 300},
+		Drop = {0.0, 9.81, 0.0, 0.0}},
+	["HumveeArmored_hmg"] = {
+		Name = "[M1114 HMMWV]",
+		Type =  VehicleTypes.LightVehicle,
+		Parts = {nil, 19, nil, nil},
+		Speed = {300, 610, 300, 300},
+		Drop = {0.0, 9.81, 0.0, 0.0}},
+	["GAZ-3937_Vodnik"] = {
+		Name = "[GAZ-3937 VODNIK]",
+		Type =  VehicleTypes.LightVehicle,
+		Parts = {nil, 23, nil, nil},
+		Speed = {300, 600, 300, 300},
+		Drop = {0.0, 9.81, 0.0, 0.0}},
 	["Humvee_ASRAD"] = {Name = "[HMMWV ASRAD]", Type =  VehicleTypes.LightVehicle, Parts = {}},
 	["HIMARS"] = {Name = "[M142]", Type =  VehicleTypes.LightVehicle, Parts = {}},
-	["BTR90"] = {Name = "[BTR-90]", Type =  VehicleTypes.LightVehicle, Parts = {}},
-	["VodnikModified_V2"] = {Name = "[BARSUK]", Type =  VehicleTypes.LightVehicle, Parts = {}},
+	["VodnikModified_V2"] = {
+		Name = "[BARSUK]",
+		Type =  VehicleTypes.LightVehicle,
+		Parts = {nil, 6, 16},
+		Speed = {300, 600, 80},
+		Drop = {0.0, 15, 7.0}},
+	["HumveeModified"] = {
+		Name = "[PHOENIX]",
+		Type =  VehicleTypes.LightVehicle,
+		Parts = {nil, 1, 18},
+		Speed = {300, 600, 80},
+		Drop = {0.0, 15, 7.0}},
 	["STAR_1466"] = {Name = "[BM-23]", Type =  VehicleTypes.LightVehicle, Parts = {}},
 	["AC130"] = {Name = "[GUNSHIP]", Type =  VehicleTypes.LightVehicle, Parts = {}},
 
 	-- Air vehicle
-	["A10_THUNDERBOLT"] = {Name = "[A-10 THUNDERBOLT]", Type =  VehicleTypes.AirVehicle, Parts = {}},
-	["A10_THUNDERBOLT_spjet"] = {Name = "[A-10 THUNDERBOLT]", Type =  VehicleTypes.AirVehicle, Parts = {}},
+	-- planes
+	["A10_THUNDERBOLT"] = {
+		Name = "[A-10 THUNDERBOLT]",
+		Type =  VehicleTypes.Plane,
+		Parts = {nil},
+		Speed = {900},
+		Drop = {0.0}},
+	["A10_THUNDERBOLT_spjet"] = {
+		Name = "[A-10 THUNDERBOLT]",
+		Type =  VehicleTypes.Plane,
+		Parts = {nil},
+		Speed = {900},
+		Drop = {0.0}},
+	["F16"] = {
+		Name = "[F/A-18E SUPER HORNET]",
+		Type =  VehicleTypes.Plane,
+		Parts = {nil},
+		Speed = {900},
+		Drop = {0.0}},
+	["F18_Wingman"] = {
+		Name = "[F/A-18E SUPER HORNET]",
+		Type =  VehicleTypes.Plane,
+		Parts = {nil},
+		Speed = {900},
+		Drop = {0.0}},
+	["Su-25TM"] = {
+		Name = "[SU-25TM FROGFOOT]",
+		Type =  VehicleTypes.Plane,
+		Parts = {nil},
+		Speed = {900},
+		Drop = {0.0}},
+	["Su-35BM Flanker-E"] = {
+		Name = "[SU-35BM FLANKER-E]",
+		Type =  VehicleTypes.Plane,
+		Parts = {nil},
+		Speed = {900},
+		Drop = {0.0}},
+	["Su37"] = {
+		Name = "[SU-37]",
+		Type =  VehicleTypes.Plane,
+		Parts = {nil},
+		Speed = {900},
+		Drop = {0.0}},
+	["F35B"] = {
+		Name = "[F-35]",
+		Type =  VehicleTypes.Plane,
+		Parts = {nil},
+		Speed = {900},
+		Drop = {0.0}},
+	-- choppers
 	["AH1Z"] = {
-		Name = "[AH-1Z VIPER]", 
-		Type =  VehicleTypes.AirVehicle, 
-		Parts = {nil, 1}}, --0,1,14
-	["AH1Z_coop"] = {Name = "[AH-1Z VIPER]", Type =  VehicleTypes.AirVehicle, Parts = {}},
-	["AH6_Littlebird"] = {Name = "[AH-6J LITTLE BIRD]", Type =  VehicleTypes.AirVehicle, Parts = {}},
-	["AH6_Littlebird_EQ"] = {Name = "[AH-6J LITTLE BIRD]", Type =  VehicleTypes.AirVehicle, Parts = {}},
-	["F16"] = {Name = "[F/A-18E SUPER HORNET]", Type =  VehicleTypes.AirVehicle, Parts = {}},
-	["F18_Wingman"] = {Name = "[F/A-18E SUPER HORNET]", Type =  VehicleTypes.AirVehicle, Parts = {}},
+		Name = "[AH-1Z VIPER]",
+		Type =  VehicleTypes.Chopper,
+		Parts = {nil, 1}, --0,1,14
+		Speed = {300, 600},
+		Drop = {0.0, 0.0}},
+	["AH1Z_coop"] = {
+		Name = "[AH-1Z VIPER]",
+		Type =  VehicleTypes.Chopper,
+		Parts = {nil, 1}, --0,1,14
+		Speed = {300, 600},
+		Drop = {0.0, 0.0}},
+	["AH6_Littlebird"] = {Name = "[AH-6J LITTLE BIRD]", Type =  VehicleTypes.Chopper, Parts = {}},
+	["AH6_Littlebird_EQ"] = {Name = "[AH-6J LITTLE BIRD]", Type =  VehicleTypes.Chopper, Parts = {}},
 	["Ka-60"] = {
-		Name = "[KA-60 KASATKA]", 
-		Type =  VehicleTypes.AirVehicle,
-		Parts = {nil, 18, 15, nil, nil}},
+		Name = "[KA-60 KASATKA]",
+		Type =  VehicleTypes.Chopper,
+		Parts = {nil, 18, 15, nil, nil},
+		Speed = {350, 900, 900, 350, 350},
+		Drop = {9.81, 0.0, 0.0, 9.81, 9.81}},
 	["Mi28"] = {
-		Name = "[MI-28 HAVOC]", 
-		Type =  VehicleTypes.AirVehicle,
-		Parts = {nil, 2}}, --2,6
-	["Su-25TM"] = {Name = "[SU-25TM FROGFOOT]", Type =  VehicleTypes.AirVehicle, Parts = {}},
-	["Su-35BM Flanker-E"] = {Name = "[SU-35BM FLANKER-E]", Type =  VehicleTypes.AirVehicle, Parts = {}},
-	["Su37"] = {Name = "[SU-37]", Type =  VehicleTypes.AirVehicle, Parts = {}},
+		Name = "[MI-28 HAVOC]",
+		Type =  VehicleTypes.Chopper,
+		Parts = {nil, 2}, --2,6},
+		Speed = {350, 600},
+		Drop = {9.81, 0.0}},
 	["Venom"] = {
-		Name = "[UH-1Y VENOM]", 
-		Type =  VehicleTypes.AirVehicle, 
-		Parts = {nil, 19, 16, nil, nil}},
-	["Venom_coop"] = {Name = "[UH-1Y VENOM]", Type =  VehicleTypes.AirVehicle, Parts = {}},
-	["Z-11w"] = {Name = "[Z-11W]", Type =  VehicleTypes.AirVehicle, Parts = {}},
-	["Wz11_SP_Paris"] = {Name = "[Z-11W]", Type =  VehicleTypes.AirVehicle, Parts = {}},
-	["F35B"] = {Name = "[F-35]", Type =  VehicleTypes.AirVehicle, Parts = {}},
+		Name = "[UH-1Y VENOM]",
+		Type =  VehicleTypes.Chopper,
+		Parts = {nil, 19, 16, nil, nil},
+		Speed = {350, 900, 900, 350, 350},
+		Drop = {9.81, 0.0, 0.0, 9.81, 9.81}},
+	["Venom_coop"] = {
+		Name = "[UH-1Y VENOM]",
+		Type =  VehicleTypes.Chopper,
+		Parts = {nil, 19, 16, nil, nil},
+		Speed = {350, 900, 900, 350, 350},
+		Drop = {9.81, 0.0, 0.0, 9.81, 9.81}},
+	["Z-11w"] = {Name = "[Z-11W]", Type =  VehicleTypes.Chopper, Parts = {}},
+	["Wz11_SP_Paris"] = {Name = "[Z-11W]", Type =  VehicleTypes.Chopper, Parts = {}},
 
 	-- transport
-	["GrowlerITV"] = {Name = "[GROWLER ITV]", Type =  VehicleTypes.NoArmorVehicle, Parts = {nil, 47, nil}},
-	["VDV Buggy"] = {Name = "[VDV Buggy]", Type =  VehicleTypes.NoArmorVehicle, Parts = {nil, 13, nil}},
-
+	["GrowlerITV"] = {
+		Name = "[GROWLER ITV]",
+		Type =  VehicleTypes.NoArmorVehicle,
+		Parts = {nil, 47, nil},
+		Speed = {300, 610, 300},
+		Drop = {0.0, 9.81, 0.0}},
+	["GrowlerITV_Valley"] = {
+		Name = "[GROWLER ITV]",
+		Type =  VehicleTypes.NoArmorVehicle,
+		Parts = {nil, 47, nil},
+		Speed = {300, 610, 300},
+		Drop = {0.0, 9.81, 0.0}},
+	["VDV Buggy"] = {
+		Name = "[VDV Buggy]",
+		Type =  VehicleTypes.NoArmorVehicle,
+		Parts = {nil, 13, nil},
+		Speed = {300, 610, 300},
+		Drop = {0.0, 9.81, 0.0}},
+	["DPV"] = {
+		Name = "[DPV]", 
+		Type =  VehicleTypes.NoArmorVehicle,
+		Parts = {nil, 4, nil},
+		Speed = {300, 610, 600},
+		Drop = {0.0, 9.81, 15}},
 	["CivilianCar_03_Vehicle"] = {Name = "[CIVILIAN CAR]", Type =  VehicleTypes.NoArmorVehicle, Parts = {}},
 	["CivilianCar_03_Vehicle_SPJet"] = {Name = "[CIVILIAN CAR]", Type =  VehicleTypes.NoArmorVehicle, Parts = {}},
 	["DeliveryVan_Vehicle"] = {Name = "[DELIVERY VAN]", Type =  VehicleTypes.NoArmorVehicle, Parts = {}},
-	["GrowlerITV_Valley"] = {Name = "[GROWLER ITV]", Type =  VehicleTypes.NoArmorVehicle, Parts = {}},
 	["Paris_SUV"] = {Name = "[SUV]", Type =  VehicleTypes.NoArmorVehicle, Parts = {}},
 	["Paris_SUV_Coop"] = {Name = "[SUV]", Type =  VehicleTypes.NoArmorVehicle, Parts = {}},
 	["Sniper_SUV"] = {Name = "[SUV]", Type =  VehicleTypes.NoArmorVehicle, Parts = {}},
@@ -132,31 +263,33 @@ VehicleData = {
 	["QuadBike"] = {Name = "[QUAD BIKE]", Type =  VehicleTypes.NoArmorVehicle, Parts = {}},
 	["C130"] = {Name = "[GUNSHIP]", Type =  VehicleTypes.NoArmorVehicle, Parts = {}},
 	["KLR650"] = {Name = "[DIRTBIKE]", Type =  VehicleTypes.NoArmorVehicle, Parts = {}},
-	["DPV"] = {Name = "[DPV]", Type =  VehicleTypes.NoArmorVehicle, Parts = {}},
 	["SkidLoader"] = {Name = "[SKID LOADER]", Type =  VehicleTypes.NoArmorVehicle, Parts = {}},
 
 
 	-- AA Stationary
 	["Centurion_C-RAM"] = {
 		Name = "[CENTURION_AA]",
-		Type =  VehicleTypes.AntiAir,
+		Type =  VehicleTypes.StationaryAA,
 		Parts = {3},
 		Speed = {900},
-		Drop = {0.0}
+		Drop = {0.0},
+		Team = 1
 	}, --1,3,4
 	["Centurion_C-RAM_Carrier"] = {
 		Name = "[CENTURION_AA]",
-		Type =  VehicleTypes.AntiAir,
+		Type =  VehicleTypes.StationaryAA,
 		Parts = {3},
 		Speed = {900},
-		Drop = {0.0}
+		Drop = {0.0},
+		Team = 1
 	}, --1,3,4
 	["Pantsir-S1"] = {
 		Name = "[PANTSIR_AA]",
-		Type =  VehicleTypes.AntiAir,
+		Type =  VehicleTypes.StationaryAA,
 		Parts = {1},
 		Speed = {900},
-		Drop = {0.0}
+		Drop = {0.0},
+		Team = 2
 	}, --0,1
 
 	-- MAV / BOt

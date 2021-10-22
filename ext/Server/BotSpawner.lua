@@ -8,8 +8,6 @@ local m_WeaponList = require('__shared/WeaponList')
 local m_Utilities = require('__shared/Utilities')
 local m_Logger = Logger("BotSpawner", Debug.Server.BOT)
 
-local FIRST_SPAWN_DELAY = 5.0 -- needs to be big enough to register the inputActiveEvents. 1 is too small
-
 function BotSpawner:__init()
 	self:RegisterVars()
 end
@@ -18,8 +16,9 @@ function BotSpawner:RegisterVars()
 	self._BotSpawnTimer = 0
 	self._LastRound = 0
 	self._PlayerUpdateTimer = 0
+	self._SpawnInObjectsTimer = 0
 	self._FirstSpawnInLevel = true
-	self._FirstSpawnDelay = FIRST_SPAWN_DELAY
+	self._FirstSpawnDelay = Registry.BOT_SPAWN.FIRST_SPAWN_DELAY
 	self._UpdateActive = false
 	self._SpawnSets = {}
 	self._KickPlayers = {}
@@ -38,7 +37,7 @@ function BotSpawner:OnLevelLoaded(p_Round)
 	m_Logger:Write("on level loaded on spawner")
 	self._FirstSpawnInLevel = true
 	self._PlayerUpdateTimer = 0
-	self._FirstSpawnDelay = FIRST_SPAWN_DELAY
+	self._FirstSpawnDelay = Registry.BOT_SPAWN.FIRST_SPAWN_DELAY
 
 	if (Config.TeamSwitchMode == TeamSwitcheModes.SwitchForRoundTwo and p_Round ~= self._LastRound) or
 	(Config.TeamSwitchMode == TeamSwitcheModes.AlwaysSwitchTeams) then
@@ -53,7 +52,7 @@ function BotSpawner:OnLevelDestroy()
 	self._SpawnSets = {}
 	self._UpdateActive = false
 	self._FirstSpawnInLevel = true
-	self._FirstSpawnDelay = FIRST_SPAWN_DELAY
+	self._FirstSpawnDelay = Registry.BOT_SPAWN.FIRST_SPAWN_DELAY
 	self._PlayerUpdateTimer = 0
 end
 
@@ -336,9 +335,8 @@ function BotSpawner:UpdateBotAmountAndTeam()
 		end
 
 		-- move players if needed
-		local s_AllowedDiff = 1 -- leave a diff of 1 or two players (even count: 1, uneven: 2)
-		if s_PlayerCount >= 6 then --use threshold
-			local s_MinTargetPlayersPerTeam = math.floor(s_PlayerCount / Globals.NrOfTeams) - s_AllowedDiff
+		if s_PlayerCount >= Registry.BOT_TEAM_BALANCING.THRESHOLD then --use threshold
+			local s_MinTargetPlayersPerTeam = math.floor(s_PlayerCount / Globals.NrOfTeams) - Registry.BOT_TEAM_BALANCING.ALLOWED_DIFFERENCE
 			for i = 1, Globals.NrOfTeams do
 				if s_CountPlayers[i] < s_MinTargetPlayersPerTeam then
 					for _,l_Player in pairs(PlayerManager:GetPlayers()) do
@@ -577,6 +575,7 @@ function BotSpawner:SpawnBotGrid(p_Player, p_Rows, p_Columns, p_Spacing)
 		end
 	end
 end
+
 
 function BotSpawner:SpawnWayBots(p_Player, p_Amount, p_UseRandomWay, p_ActiveWayIndex, p_IndexOnPath, p_TeamId)
 	if #m_NodeCollection:GetPaths() <= 0 then
@@ -905,6 +904,57 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 		-- find a spawnpoint
 		if p_UseRandomWay or p_ActiveWayIndex == nil or p_ActiveWayIndex == 0 then
 			s_SpawnPoint, s_InverseDirection = self:_GetSpawnPoint(s_TeamId, s_SquadId)
+			-- special spawn in vehicles
+			if type(s_SpawnPoint) == 'string' then
+				local s_SpawnEntity = nil
+				local s_Transform = LinearTransform()
+				if s_SpawnPoint == "SpawnAtVehicle" then
+					local s_Vehicles = g_GameDirector:GetSpawnableVehicle(s_TeamId)
+					for _, l_Vehicle in pairs(s_Vehicles) do
+						if l_Vehicle ~= nil then
+							s_SpawnEntity = l_Vehicle
+							break
+						end
+					end
+				elseif s_SpawnPoint == "SpawnInAa" then
+					local s_StationaryAas = g_GameDirector:GetStationaryAas(s_TeamId)
+					for _, l_Aa in pairs(s_StationaryAas) do
+						if l_Aa ~= nil then
+							s_SpawnEntity = l_Aa
+							break
+						end
+					end
+				end
+
+
+				if s_IsRespawn then
+					p_ExistingBot:SetVarsWay(nil, true, 0, 0, false)
+					self:_SpawnBot(p_ExistingBot, s_Transform, false)
+					if p_ExistingBot:_EnterVehicleEntity(s_SpawnEntity) ~= 0 then
+						p_ExistingBot:Kill()
+					else
+						p_ExistingBot:FindVehiclePath(s_SpawnEntity.transform.trans)
+					end
+				else
+					local s_Bot = m_BotManager:CreateBot(s_Name, s_TeamId, s_SquadId)
+		
+					if s_Bot ~= nil then
+						-- check for first one in squad
+						if (TeamSquadManager:GetSquadPlayerCount(s_TeamId, s_SquadId) == 1) then
+							s_Bot.m_Player:SetSquadLeader(true, false) -- not private
+						end
+		
+						s_Bot:SetVarsWay(nil, true, 0, 0, false)
+						self:_SpawnBot(s_Bot, s_Transform, true)
+						if s_Bot:_EnterVehicleEntity(s_SpawnEntity) ~= 0 then
+							s_Bot:Kill()
+						else
+							s_Bot:FindVehiclePath(s_SpawnEntity.transform.trans)
+						end
+					end
+				end
+				return
+			end
 		else
 			s_SpawnPoint = m_NodeCollection:Get(p_IndexOnPath, p_ActiveWayIndex)
 		end
@@ -1020,6 +1070,14 @@ function BotSpawner:_GetSpawnPoint(p_TeamId, p_SquadId)
 	local s_MaximumTrys = 100
 	local s_TrysDone = 0
 
+
+	if Config.UseVehicles and #g_GameDirector:GetSpawnableVehicle(p_TeamId) > 0 then
+		return "SpawnAtVehicle"
+	end
+	if Config.AABots and #g_GameDirector:GetStationaryAas(p_TeamId) > 0 then
+		return "SpawnInAa"
+	end
+
 	-- CONQUEST
 	-- spawn at base, squad-mate, captured flag
 	if Globals.IsConquest then
@@ -1071,7 +1129,7 @@ function BotSpawner:_GetSpawnPoint(p_TeamId, p_SquadId)
 			for i = 1, PlayerManager:GetPlayerCount() do
 				local s_TempPlayer = s_Players[i]
 
-				if s_TempPlayer.alive then
+				if s_TempPlayer.soldier ~= nil then
 					if p_TeamId == nil or p_TeamId ~= s_TempPlayer.teamId then
 						local s_Distance = s_TempPlayer.soldier.worldTransform.trans:Distance(s_SpawnPoint)
 						local s_HeightDiff = math.abs(s_TempPlayer.soldier.worldTransform.trans.y - s_SpawnPoint.y)

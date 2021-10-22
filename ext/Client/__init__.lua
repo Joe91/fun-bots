@@ -43,7 +43,7 @@ function FunBotClient:OnExtensionLoaded()
 	m_FunBotUIClient:OnExtensionLoaded()
 
 	-- Announce the version in the client's console if enabled in the registry
-	if RegistryManager:Get(Registry.CLIENT_SHOW_VERSION_ON_JOIN, true, false) then
+	if Registry.CLIENT_SHOW_VERSION_ON_JOIN then
 		print("Server is running fun-bots version " .. RegistryManager:GetUtil():GetVersion())
 	end
 end
@@ -88,7 +88,6 @@ end
 function FunBotClient:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	m_ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	m_ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
-	m_ClientSpawnPointHelper:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 end
 
 function FunBotClient:OnExtensionUnloading()

@@ -11,6 +11,7 @@ SettingsDefinition = {
 		SPAWN = "Spawn",
 		SPAWNLIMITS = "Spawnlimits",
 		BEHAVIOUR = "Behaviour",
+		VEHICLE = "Vehicle",
 		WEAPONS = "Weapons",
 		TRACE = "Trace",
 		ADVANCED = "Advanced",
@@ -334,7 +335,7 @@ SettingsDefinition = {
 		},
 		{
 			Name = "MaxReconBots",
-			Text = "Max Support Bots",
+			Text = "Max Recon Bots",
 			Type = Type.Integer,
 			Value = Config.MaxReconBots,
 			Description = "maximum number of Bots with Recon Kit. -1 = no limit",
@@ -351,6 +352,17 @@ SettingsDefinition = {
 			Description = "additional time a bot waits to respawn",
 			Reference = Range(0.0, 60.00, 0.5),
 			Default = 0.5,
+			UpdateFlag = UpdateFlag.None,
+			Category = "SPAWN"
+		},
+		{
+			Name = "BotMaxHealth",
+			Text = "Bot Health at spawn",
+			Type = Type.Float,
+			Value = Config.BotMaxHealth,
+			Description = "max health of bot (default 100.0)",
+			Reference = Range(0.0, 1000.00, 1.0),
+			Default = 100.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "SPAWN"
 		},
@@ -508,7 +520,7 @@ SettingsDefinition = {
 			Value = Config.FovForShooting,
 			Description = "Degrees of FOV of Bot",
 			Reference = Range(0.00, 360.00, 1.0),
-			Default = 245,
+			Default = 180,
 			UpdateFlag = UpdateFlag.None,
 			Category = "BEHAVIOUR"
 		},
@@ -535,17 +547,6 @@ SettingsDefinition = {
 			Category = "BEHAVIOUR"
 		},
 		{
-			Name = "MaxRaycastDistanceVehicles",
-			Text = "Max Raycast Distance for Vehicles",
-			Type = Type.Integer,
-			Value = Config.MaxRaycastDistance,
-			Description = "meters bots in Vehicles start shooting at player",
-			Reference = Range(1.00, 1500.00, 5.0),
-			Default = 250,
-			UpdateFlag = UpdateFlag.None,
-			Category = "BEHAVIOUR"
-		},
-		{
 			Name = "MaxShootDistanceNoSniper",
 			Text = "Max Shoot-Distance No Sniper",
 			Type = Type.Integer,
@@ -553,17 +554,6 @@ SettingsDefinition = {
 			Description = "meters a bot (not sniper) start shooting at player",
 			Reference = Range(1.00, 1500.00, 5.0),
 			Default = 70,
-			UpdateFlag = UpdateFlag.None,
-			Category ="BEHAVIOUR"
-		},
-		{
-			Name = "MaxShootDistanceNoAntiAir",
-			Text = "Max Shoot-Distance No Anti Air",
-			Type = Type.Integer,
-			Value = Config.MaxShootDistanceNoAntiAir,
-			Description = "meters a vehicle (no Anti-Air) starts shooting at player",
-			Reference = Range(1.00, 1500.00, 5.0),
-			Default = 150,
 			UpdateFlag = UpdateFlag.None,
 			Category ="BEHAVIOUR"
 		},
@@ -680,7 +670,180 @@ SettingsDefinition = {
 			UpdateFlag = UpdateFlag.None,
 			Category = "BEHAVIOUR"
 		},
-
+		{
+			Name = "MoveSidewards",
+			Text = "Move Sidewards",
+			Type = Type.Boolean,
+			Value = Config.MoveSidewards,
+			Description = "Bots move sidewards",
+			Default = true,
+			UpdateFlag = UpdateFlag.None,
+			Category = "BEHAVIOUR"
+		},
+		{
+			Name = "MaxStraigtCycle",
+			Text = "Max straight Cycle",
+			Type = Type.Float,
+			Value = Config.MaxStraigtCycle,
+			Description = "max time bots move straigt, before sidewares-movement (in sec)",
+			Reference = Range(1.00, 60.00, 1.0),
+			Default = 10.0,
+			UpdateFlag = UpdateFlag.None,
+			Category = "BEHAVIOUR"
+		},
+		{
+			Name = "MaxSideCycle",
+			Text = "Max Side Cycle",
+			Type = Type.Float,
+			Value = Config.MaxSideCycle,
+			Description = "max time bots move sidewards, before straight-movement (in sec)",
+			Reference = Range(1.00, 60.00, 1.0),
+			Default = 5.0,
+			UpdateFlag = UpdateFlag.None,
+			Category = "BEHAVIOUR"
+		},
+		{
+			Name = "MinMoveCycle",
+			Text = "min Move Cycle",
+			Type = Type.Float,
+			Value = Config.MinMoveCycle,
+			Description = "min time bots move sidewards or staight before switching (in sec)",
+			Reference = Range(0.30, 10.00, 0.5),
+			Default = 0.5,
+			UpdateFlag = UpdateFlag.None,
+			Category = "BEHAVIOUR"
+		},
+		
+		-- Vehicles behaviour
+		{
+			Name = "UseVehicles",
+			Text = "Use vehicles",
+			Type = Type.Boolean,
+			Value = Config.UseVehicles,
+			Description = "Bots use vehicles",
+			Default = true,
+			UpdateFlag = UpdateFlag.None,
+			Category = "VEHICLE"
+		},
+		{
+			Name = "FovVehicleForShooting",
+			Text = "FOV of Vehicles",
+			Type = Type.Integer,
+			Value = Config.FovForShooting,
+			Description = "Degrees of FOV of Non AA - Vehicles",
+			Reference = Range(0.00, 360.00, 1.0),
+			Default = 180,
+			UpdateFlag = UpdateFlag.None,
+			Category = "VEHICLE"
+		},
+		{
+			Name = "FovVerticleVehicleForShooting",
+			Text = "FOV of Vehicles Verticle",
+			Type = Type.Integer,
+			Value = Config.FovVerticleVehicleForShooting,
+			Description = "Degrees of FOV of Non AA-Vehicles",
+			Reference = Range(0.00, 180.00, 1.0),
+			Default = 60,
+			UpdateFlag = UpdateFlag.None,
+			Category = "VEHICLE"
+		},
+		{
+			Name = "FovVerticleChopperForShooting",
+			Text = "FOV of Chopper Verticle",
+			Type = Type.Integer,
+			Value = Config.FovVerticleChopperForShooting,
+			Description = "Degrees of pitch a chopper attacks",
+			Reference = Range(0.00, 180.00, 1.0),
+			Default = 80,
+			UpdateFlag = UpdateFlag.None,
+			Category = "VEHICLE"
+		},
+		{
+			Name = "FovVehicleAAForShooting",
+			Text = "FOV of AA-Vehicles",
+			Type = Type.Integer,
+			Value = Config.FovVehicleAAForShooting,
+			Description = "Degrees of FOV of AA - Vehicles",
+			Reference = Range(0.00, 360.00, 1.0),
+			Default = 360,
+			UpdateFlag = UpdateFlag.None,
+			Category = "VEHICLE"
+		},
+		{
+			Name = "FovVerticleVehicleAAForShooting",
+			Text = "FOV of AA-Vehicles Verticle",
+			Type = Type.Integer,
+			Value = Config.FovVerticleVehicleAAForShooting,
+			Description = "Degrees of FOV of AA-Vehicles",
+			Reference = Range(0.00, 180.00, 1.0),
+			Default = 160,
+			UpdateFlag = UpdateFlag.None,
+			Category = "VEHICLE"
+		},
+		{
+			Name = "MaxRaycastDistanceVehicles",
+			Text = "Max Raycast Distance for Vehicles",
+			Type = Type.Integer,
+			Value = Config.MaxRaycastDistance,
+			Description = "meters bots in Vehicles start shooting at player",
+			Reference = Range(1.00, 1500.00, 5.0),
+			Default = 250,
+			UpdateFlag = UpdateFlag.None,
+			Category = "VEHICLE"
+		},
+		{
+			Name = "MaxShootDistanceNoAntiAir",
+			Text = "Max Shoot-Distance No Anti Air",
+			Type = Type.Integer,
+			Value = Config.MaxShootDistanceNoAntiAir,
+			Description = "meters a vehicle (no Anti-Air) starts shooting at player",
+			Reference = Range(1.00, 1500.00, 5.0),
+			Default = 150,
+			UpdateFlag = UpdateFlag.None,
+			Category ="VEHICLE"
+		},
+		{
+			Name = "VehicleWaitForPassengersTime",
+			Text = "Time a vehicle driver waits for passengers",
+			Type = Type.Float,
+			Value = Config.VehicleWaitForPassengersTime,
+			Description = "seconds to wait for other passengers",
+			Reference = Range(0.50, 60.00, 0.5),
+			Default = 7.0,
+			UpdateFlag = UpdateFlag.None,
+			Category ="VEHICLE"
+		},
+		{
+			Name = "ChopperDriversAttack",
+			Text = "Choppers Attack",
+			Type = Type.Boolean,
+			Value = Config.ChopperDriversAttack,
+			Description = "if false choppers only attack without gunner on board",
+			Default = false,
+			UpdateFlag = UpdateFlag.None,
+			Category = "VEHICLE"
+		},
+		{
+			Name = "AABots",
+			Text = "Activate Auto-AA",
+			Type = Type.Boolean,
+			Value = Config.AABots,
+			Description = "Enable Auto-AA by NyScorpy",
+			Default = true,
+			UpdateFlag = UpdateFlag.None,
+			Category = "VEHICLE"
+		},
+		{
+			Name = "MaxDistanceAABots",
+			Text = "Max Distance Auto-AA",
+			Type = Type.Integer,
+			Value = Config.MaxDistanceAABots,
+			Description = "Max Range of Stationary AA",
+			Reference = Range(50, 1500.00, 5),
+			Default = 250,
+			UpdateFlag = UpdateFlag.None,
+			Category = "VEHICLE"
+		},
 		-- Weapons
 		{
 			Name = "UseRandomWeapon",
@@ -916,7 +1079,7 @@ SettingsDefinition = {
 			Value = Config.NodesPerCycle,
 			Description = "Set how many nodes get drawn per cycle. Affects performance",
 			Reference = Range(1.00, 10000.00, 1.0),
-			Default = 300,
+			Default = 100,
 			UpdateFlag = UpdateFlag.None,
 			Category = "TRACE"
 		},
@@ -1245,7 +1408,7 @@ SettingsDefinition = {
 		},
 		{
 			Name = "IgnorePermissions",
-			Text = "disable RCON-commands",
+			Text = "ignore Permissions",
 			Type = Type.Boolean,
 			Value = Config.IgnorePermissions,
 			Description = "if true, all permissions are ignored --> everyone can do everything",

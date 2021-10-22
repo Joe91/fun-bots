@@ -2,6 +2,7 @@ USE_REAL_DAMAGE = true					-- with real damage, the hitboxes are a bit buggy
 BOT_TOKEN = "BOT_"						-- token Bots are marked with
 
 Config = {
+
 	--GENERAL
 	BotWeapon = BotWeapons.Auto,		-- Select the weapon the bots use
 	BotKit = BotKits.RANDOM_KIT,		-- The Kit of the Bots
@@ -37,7 +38,7 @@ Config = {
 	MaxSupportBots = -1,				-- maximum number of Bots with Support Kit. -1 = no limit
 	MaxReconBots = -1,					-- maximum number of Bots with Recon Kit. -1 = no limit
 	AdditionalBotSpawnDelay = 0.5,		-- additional time a bot waits to respawn
-	BotMaxHealth = 100.0, 				-- max health of bot (default 100.0)
+	BotMaxHealth = 100.0,				-- max health of bot (default 100.0)
 
 	--SPAWNLIMITS
 	MaxBotsPerTeamDefault = 32,			-- max number of bots in one team, if no other mode fits
@@ -55,12 +56,10 @@ Config = {
 	MaxBotsPerTeamS = 12,				-- max number of bots in one team for Scavenger
 
 	--BEHAVIOUR
-	FovForShooting = 245,				-- Degrees of FOV of Bot
+	FovForShooting = 180,				-- Degrees of FOV of Bot
 	FovVerticleForShooting = 90,		-- Degrees of FOV of Bot in verticle  direction
 	MaxRaycastDistance = 150,			-- meters bots start shooting at player
-	MaxRaycastDistanceVehicles = 250,	-- meters bots in Vehicles start shooting at player
 	MaxShootDistanceNoSniper = 70,		-- meters a bot (not sniper) start shooting at player
-	MaxShootDistanceNoAntiAir = 150,	-- meters a vehicle (no Anti-Air) starts shooting at player
 	MaxShootDistancePistol = 30,		-- only in auto-weapon-mode, the distance until a bot switches to pistol if his magazine is empty
 	BotAttackMode = BotAttackModes.RandomNotSet,	-- Mode the Bots attack with. Random, Crouch or Stand
 	ShootBackIfHit = true,				-- bot shoots back, if hit
@@ -72,6 +71,24 @@ Config = {
 	BotsThrowGrenades = true,			-- Bots throw grenades
 	BotsDeploy = true,					-- Bots deploy ammo and medkits
 	DeployCycle = 50,					-- time between deployment of bots in seconds
+	MoveSidewards = true,				-- Bots move sidewards
+	MaxStraigtCycle = 10.0,				-- max time bots move straigt, before sidewares-movement (in sec)
+	MaxSideCycle = 5.0,					-- max time bots move sidewards, before straight-movement (in sec)
+	MinMoveCycle = 0.5,					-- min time bots move sidewards or staight before switching (in sec)
+
+	--VEHICLE
+	UseVehicles = true,					-- Bots use vehicles
+	FovVehicleForShooting = 180,		-- Degrees of FOV of Non AA - Vehicles
+	FovVerticleVehicleForShooting = 60,	-- Degrees of FOV of Non AA-Vehicles
+	FovVerticleChopperForShooting = 80,	-- Degrees of pitch a chopper attacks
+	FovVehicleAAForShooting = 360,		-- Degrees of FOV of AA - Vehicles
+	FovVerticleVehicleAAForShooting = 160,	-- Degrees of FOV of AA-Vehicles
+	MaxRaycastDistanceVehicles = 250,	-- meters bots in Vehicles start shooting at player
+	MaxShootDistanceNoAntiAir = 150,	-- meters a vehicle (no Anti-Air) starts shooting at player
+	VehicleWaitForPassengersTime = 7.0,	-- seconds to wait for other passengers
+	ChopperDriversAttack = false,		-- if false choppers only attack without gunner on board
+	AABots = true,						-- Enable Auto-AA by NyScorpy
+	MaxDistanceAABots = 250,			-- Max Range of Stationary AA
 
 	--WEAPONS
 	UseRandomWeapon = true,				-- use a random weapon out of the weapon set
@@ -97,7 +114,7 @@ Config = {
 	SpawnPointRange = 100,				-- Set how far away spawnpoints are visible (meters)
 	DebugSelectionRaytraces = false,	-- Shows the trace line and search area from Commo Rose selection
 	TraceDelta = 0.3,					-- update intervall of trace
-	NodesPerCycle = 300,				-- Set how many nodes get drawn per cycle. Affects performance
+	NodesPerCycle = 100,				-- Set how many nodes get drawn per cycle. Affects performance
 
 	--ADVANCED
 	DistanceForDirectAttack = 5,		-- if that close, the bot can hear you
@@ -113,9 +130,6 @@ Config = {
 	SpeedFactor = 1.0,					-- reduces the movementspeed. 1 = normal, 0 = standing.
 	SpeedFactorAttack = 0.6,			-- reduces the movementspeed while attacking. 1 = normal, 0 = standing.
 	UseRandomNames = false,				-- changes names of the bots on every new round. Experimental right now...
-
-	-- IN-GAME SETTINGS MANAGER
-	OpenSettingsKey = InputDeviceKeys.IDK_F12,
 
 	--EXPERT
 	BotFirstShotDelay = 0.35,			-- delay for first shot. If too small, there will be great spread in first cycle because its not kompensated jet.
@@ -137,7 +151,7 @@ Config = {
 	DisableUserInterface = false,		-- if true, the complete UI will be disabled (not available in the UI -) )
 	DisableChatCommands = false,		-- if true, no chat commands can be used
 	DisableRCONCommands = false,		-- if true, no RCON commands can be used
-	IgnorePermissions = false,			-- if true, all permissions are ignored --> everyone can do everything @deprecated - Should be moved to the registry as soon as possible
+	IgnorePermissions = false,			-- if true, all permissions are ignored --> everyone can do everything
 	Language = nil,						-- de_DE as sample (default is english, when language file doesnt exists)
 }
 
@@ -157,6 +171,6 @@ VersionConfig = {
 		Enabled = true, -- default: true (recommended)
 
 		-- Do you want notifications when newer development builds are available?
-		DevBuilds = false,
+		DevBuilds = true,
 	}
 }

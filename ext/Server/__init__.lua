@@ -45,7 +45,7 @@ local m_ChatCommands = require('Commands/Chat')
 local m_Console = require('Commands/Console')
 local m_RCONCommands = require('Commands/RCON')
 local m_FunBotUIServer = require('UIServer')
--- local m_FunBotUIServer = require('UIServer')
+local m_AirTargets = require('AirTargets')
 local m_GameDirector = require('GameDirector')
 PermissionManager = require('PermissionManager')
 
@@ -101,6 +101,7 @@ function FunBotServer:RegisterEvents()
 	Events:Subscribe('RUSH:ZoneDisabled', self, self.OnRushZoneDisabled)
 	Events:Subscribe('Vehicle:SpawnDone', self, self.OnVehicleSpawnDone)
 	Events:Subscribe('Vehicle:Enter', self, self.OnVehicleEnter)
+	Events:Subscribe('Vehicle:Exit', self, self.OnVehicleExit)
 
 	--Events:Subscribe('Soldier:HealthAction', m_BotManager, m_BotManager.OnSoldierHealthAction)	-- use this for more options on revive. Not needed yet
 	--Events:Subscribe('GunSway:Update', m_BotManager, m_BotManager.OnGunSway)
@@ -118,6 +119,8 @@ function FunBotServer:RegisterCustomEvents()
 	NetEvents:Subscribe('Client:DamagePlayer', self, self.OnDamagePlayer) --only triggered on false damage
 	Events:Subscribe('Server:DamagePlayer', self, self.OnServerDamagePlayer) --only triggered on false damage
 	Events:Subscribe('Bot:RespawnBot', self, self.OnRespawnBot)
+	Events:Subscribe('Bot:AbortWait', self, self.OnBotAbortWait)
+	Events:Subscribe('Bot:ExitVehicle', self, self.OnBotExitVehicle)
 	NetEvents:Subscribe('Client:RequestSettings', self, self.OnRequestClientSettings)
 	NetEvents:Subscribe('Client:RequestEnterVehicle', self, self.OnRequestEnterVehicle)
 	NetEvents:Subscribe('ConsoleCommands:SetConfig', self, self.OnConsoleCommandSetConfig)
@@ -132,6 +135,8 @@ function FunBotServer:RegisterCallbacks()
 	ResourceManager:RegisterInstanceLoadHandler(Guid('C4DCACFF-ED8F-BC87-F647-0BC8ACE0D9B4'), Guid('818334B3-CEA6-FC3F-B524-4A0FED28CA35'), self, self.OnServerSettingsCallback)
 	ResourceManager:RegisterInstanceLoadHandler(Guid('C4DCACFF-ED8F-BC87-F647-0BC8ACE0D9B4'), Guid('B983148D-4B2B-1CDA-D8A0-407789610202'), self, self.OnSyncedGameSettingsCallback)
 
+	-- Modify stationary AA
+	ResourceManager:RegisterInstanceLoadHandler(Guid('15A6F4C7-1700-432B-95A7-D5DE8A058ED2'), Guid('465DA0A5-F57D-44CF-8383-7F7DC105973A'), self, self.OnStationaryAACallback)
 	-- Conquest
 	ResourceManager:RegisterInstanceLoadHandler(Guid('0C342A8C-BCDE-11E0-8467-9159D6ACA94C'), Guid('0093213A-2BA5-4B27-979C-8C0B6DBE38CE'), self, self.OnAutoTeamEntityDataCallback)
 	ResourceManager:RegisterInstanceLoadHandler(Guid('0C342A8C-BCDE-11E0-8467-9159D6ACA94C'), Guid('4CD461D1-A9D5-4A1B-A88D-D72AF01FB82D'), self, self.OnHumanPlayerEntityDataCallback)
@@ -232,6 +237,7 @@ function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPe
 
 	m_NodeEditor:OnLevelLoaded(p_LevelName, s_GameMode)
 	m_GameDirector:OnLevelLoaded()
+	m_AirTargets:OnLevelLoaded()
 	m_BotSpawner:OnLevelLoaded(p_Round)
 	NetEvents:BroadcastUnreliableLocal('WriteClientSettings', Config, true)
 end
@@ -240,11 +246,13 @@ function FunBotServer:OnLevelDestroy()
 	m_BotManager:OnLevelDestroy()
 	m_BotSpawner:OnLevelDestroy()
 	m_NodeEditor:OnLevelDestroy()
+	m_AirTargets:OnLevelDestroy()
 	collectgarbage()
 end
 
 function FunBotServer:OnRoundOver(p_RoundTime, p_WinningTeam)
 	m_GameDirector:OnRoundOver(p_RoundTime, p_WinningTeam)
+	Globals.IsInputAllowed = false
 end
 
 function FunBotServer:OnRoundReset(p_RoundTime, p_WinningTeam)
@@ -273,6 +281,7 @@ end
 
 function FunBotServer:OnPlayerKilled(p_Player, p_Inflictor, p_Position, p_Weapon, p_IsRoadKill, p_IsHeadShot, p_WasVictimInReviveState, p_Info)
 	m_NodeEditor:OnPlayerKilled(p_Player)
+	m_AirTargets:OnPlayerKilled(p_Player)
 end
 
 function FunBotServer:OnPlayerChat(p_Player, p_RecipientMask, p_Message)
@@ -287,6 +296,7 @@ end
 
 function FunBotServer:OnPlayerDestroyed(p_Player)
 	m_NodeEditor:OnPlayerDestroyed(p_Player)
+	m_AirTargets:OnPlayerDestroyed(p_Player)
 end
 
 -- =============================================
@@ -315,6 +325,11 @@ end
 
 function FunBotServer:OnVehicleEnter(p_VehicleEntiy, p_Player)
 	m_GameDirector:OnVehicleEnter(p_VehicleEntiy, p_Player)
+	m_AirTargets:OnVehicleEnter(p_VehicleEntiy, p_Player)
+end
+
+function FunBotServer:OnVehicleExit(p_VehicleEntiy, p_Player)
+	m_AirTargets:OnVehicleExit(p_VehicleEntiy, p_Player)
 end
 
 -- =============================================
@@ -359,6 +374,14 @@ end
 
 function FunBotServer:OnBotShootAtBot(p_Player, p_BotName1, p_BotName2)
 	m_BotManager:OnBotShootAtBot(p_Player, p_BotName1, p_BotName2)
+end
+
+function FunBotServer:OnBotAbortWait(p_BotName)
+	m_BotManager:OnBotAbortWait(p_BotName)
+end
+
+function FunBotServer:OnBotExitVehicle(p_BotName)
+	m_BotManager:OnBotExitVehicle(p_BotName)
 end
 
 function FunBotServer:OnDamagePlayer(p_Player, p_ShooterName, p_MeleeAttack, p_IsHeadShot)
@@ -426,6 +449,18 @@ function FunBotServer:OnSyncedGameSettingsCallback(p_Instance)
 	else
 		p_Instance.allowClientSideDamageArbitration = true
 	end
+end
+
+function FunBotServer:OnStationaryAACallback(p_Instance)
+	local p_FiringFunctionData = FiringFunctionData(p_Instance)
+	p_FiringFunctionData:MakeWritable()
+	p_FiringFunctionData.overHeat.heatPerBullet = 0.0001
+	p_FiringFunctionData.dispersion[1].minAngle = 0.2--Config.spreadMinAngle
+	p_FiringFunctionData.dispersion[1].maxAngle = 0.6--Config.spreadMaxAngle
+	--p_FiringFunctionData.shot.initialSpeed = Vec3(0, 0, Config.bulletSpeed)
+	--p_FiringFunctionData.shot.initialPosition = Vec3(0, 0, 35)
+	--p_FiringFunctionData.fireLogic.rateOfFire = Config.rateOfFire
+	--p_FiringFunctionData.fireLogic.clientFireRateMultiplier = Config.clientFireRateMultiplier
 end
 
 function FunBotServer:OnAutoTeamEntityDataCallback(p_Instance)
