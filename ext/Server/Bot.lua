@@ -1671,7 +1671,7 @@ function Bot:_UpdateAttacking()
 				if self.m_Player.soldier.weaponsComponent.currentWeapon.secondaryAmmo <= 0 then
 					self.m_Player.soldier.weaponsComponent.currentWeapon.secondaryAmmo = self.m_Player.soldier.weaponsComponent.currentWeapon.secondaryAmmo + 1
 					self:_ResetActionFlag(BotActionFlags.GrenadeActive)
-					self._ShootModeTimer = Config.BotFireModeDuration
+					self._ShootModeTimer = self._ShootModeTimer + 2* Registry.BOT.BOT_UPDATE_CYCLE
 				end
 			end
 
@@ -1716,12 +1716,15 @@ function Bot:_UpdateAttacking()
 					end
 					-- use grenade from time to time
 					if Config.BotsThrowGrenades then
-						local s_TargetTimeValue = Config.BotFireModeDuration - 0.5
+						local s_TargetTimeValue = 1.5
+						if Config.BotFireModeDuration < s_TargetTimeValue then
+							s_TargetTimeValue = Config.BotFireModeDuration - 0.5
+						end
 
-						if ((self._ShootModeTimer >= s_TargetTimeValue) and (self._ShootModeTimer < (s_TargetTimeValue + Registry.BOT.BOT_UPDATE_CYCLE)) and self._ActiveAction ~= BotActionFlags.GrenadeActive) or Config.BotWeapon == BotWeapons.Grenade then
+						if ((self._ShootModeTimer >= s_TargetTimeValue) and (self._ShootModeTimer <= (s_TargetTimeValue + Registry.BOT.BOT_UPDATE_CYCLE)) and self._ActiveAction ~= BotActionFlags.GrenadeActive) or Config.BotWeapon == BotWeapons.Grenade then
 							-- should be triggered only once per fireMode
 							if MathUtils:GetRandomInt(1,100) <= Registry.BOT.PROBABILITY_THROW_GRENADE then
-								if self.m_Grenade ~= nil and self._DistanceToPlayer < 35 then
+								if self.m_Grenade ~= nil and self._DistanceToPlayer < 40 then -- algorith only works for up to 35 m
 									self._ActiveAction = BotActionFlags.GrenadeActive
 								end
 							end
