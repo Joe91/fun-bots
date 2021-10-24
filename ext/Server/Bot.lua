@@ -1001,13 +1001,57 @@ function Bot:_UpdateAiming()
 					self._DistanceToPlayer = 5 -- don't throw them too close..
 				end
 
-				local s_Angle = math.asin((self._DistanceToPlayer * s_Drop)/(s_Speed*s_Speed))
-
-				if s_Angle ~= s_Angle then --NAN check
-					s_GrenadePitch = (math.pi / 4)
+				local s_LookUpValue = math.floor(self._DistanceToPlayer + 0.5)
+				local s_Angle = 0
+				if s_LookUpValue >= 23 then
+					s_Angle = 45
+				elseif s_LookUpValue >= 22 then
+					s_Angle = 53
+				elseif s_LookUpValue >= 21 then
+					s_Angle = 56
+				elseif s_LookUpValue >= 20 then
+					s_Angle = 59
+				elseif s_LookUpValue >= 19 then
+					s_Angle = 62
+				elseif s_LookUpValue >= 18 then
+					s_Angle = 64
+				elseif s_LookUpValue >= 17 then
+					s_Angle = 66
+				elseif s_LookUpValue >= 16 then
+					s_Angle = 68
+				elseif s_LookUpValue >= 15 then
+					s_Angle = 70
+				elseif s_LookUpValue >= 14 then
+					s_Angle = 71
+				elseif s_LookUpValue >= 13 then
+					s_Angle = 73
+				elseif s_LookUpValue >= 12 then
+					s_Angle = 74
+				elseif s_LookUpValue >= 11 then
+					s_Angle = 76
+				elseif s_LookUpValue >= 10 then
+					s_Angle = 77
+				elseif s_LookUpValue >= 9 then
+					s_Angle = 78
+				elseif s_LookUpValue >= 8 then
+					s_Angle = 79
+				elseif s_LookUpValue >= 7 then
+					s_Angle = 81
+				elseif s_LookUpValue >= 6 then
+					s_Angle = 82
+				elseif s_LookUpValue >= 5 then
+					s_Angle = 83
 				else
-					s_GrenadePitch = (math.pi / 2) - (s_Angle / 2)
+					s_Angle = 84
 				end
+
+				-- local s_Angle = math.asin((self._DistanceToPlayer * s_Drop)/(s_Speed*s_Speed))
+				-- if s_Angle ~= s_Angle then --NAN check
+				-- 	s_GrenadePitch = (math.pi / 4)
+				-- else
+				-- 	s_GrenadePitch = (math.pi / 2) - (s_Angle / 2)
+				-- end
+				s_GrenadePitch = s_Angle/360 * (2*math.pi)
 			else
 				s_TimeToTravel = (self._DistanceToPlayer / s_Speed)
 				s_PitchCorrection = 0.5 * s_TimeToTravel * s_TimeToTravel * s_Drop
@@ -1739,7 +1783,7 @@ function Bot:_UpdateAttacking()
 						self._ActiveAction ~= BotActionFlags.GrenadeActive) or Config.BotWeapon == BotWeapons.Grenade then
 							-- should be triggered only once per fireMode
 							if MathUtils:GetRandomInt(1,100) <= Registry.BOT.PROBABILITY_THROW_GRENADE then
-								if self.m_Grenade ~= nil and self._DistanceToPlayer < 40 then -- algorith only works for up to 35 m
+								if self.m_Grenade ~= nil and self._DistanceToPlayer < 27 then -- algorith only works for up to 22 m
 									self._ActiveAction = BotActionFlags.GrenadeActive
 								end
 							end
