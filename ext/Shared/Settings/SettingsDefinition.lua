@@ -564,7 +564,7 @@ SettingsDefinition = {
 			Value = Config.MaxShootDistancePistol,
 			Description = "only in auto-weapon-mode, the distance until a bot switches to pistol if his magazine is empty",
 			Reference = Range(1.00, 1500.00, 5.0),
-			Default = 30,
+			Default = 20,
 			UpdateFlag = UpdateFlag.None,
 			Category = "BEHAVIOUR"
 		},

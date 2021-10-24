@@ -422,7 +422,10 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 
 	if p_IgnoreYaw or (s_DifferenceYaw < s_FovHalf and s_Pitch < s_PitchHalf) then
 		if self._Shoot then
-			if self._ShootPlayer == nil or (self.m_InVehicle and (self._ShootModeTimer > Config.BotMinTimeShootAtPlayer * 1.5)) or (not self.m_InVehicle and (self._ShootModeTimer > Config.BotMinTimeShootAtPlayer)) or (self.m_KnifeMode and self._ShootModeTimer > (Config.BotMinTimeShootAtPlayer/2)) then
+			if self._ShootPlayer == nil or 
+			(self.m_InVehicle and (self._ShootModeTimer > Config.BotMinTimeShootAtPlayer * 1.5)) or
+			(not self.m_InVehicle and (self._ShootModeTimer > Config.BotMinTimeShootAtPlayer)) or
+			(self.m_KnifeMode and self._ShootModeTimer > (Config.BotMinTimeShootAtPlayer/2)) then
 				self._ShootModeTimer = 0
 				self._ShootPlayerName = p_Player.name
 				self._ShootPlayer = nil
@@ -1707,21 +1710,33 @@ function Bot:_UpdateAttacking()
 				if self.m_KnifeMode or self._ActiveAction == BotActionFlags.MeleeActive then
 					self._WeaponToUse = BotWeapons.Knife
 				else
-					if self._ActiveAction ~= BotActionFlags.GrenadeActive and self.m_Player.soldier.weaponsComponent.weapons[1] ~= nil then
-						if self.m_Player.soldier.weaponsComponent.weapons[1].primaryAmmo == 0 and self._DistanceToPlayer <= Config.MaxShootDistancePistol then
-							self._WeaponToUse = BotWeapons.Pistol
-						else
-							self._WeaponToUse = BotWeapons.Primary
+					if self._ActiveAction ~= BotActionFlags.GrenadeActive then
+						-- check to use pistol
+						if self.m_Player.soldier.weaponsComponent.weapons[1] ~= nil then
+							if self.m_Player.soldier.weaponsComponent.weapons[1].primaryAmmo == 0 and self._DistanceToPlayer <= Config.MaxShootDistancePistol then
+								self._WeaponToUse = BotWeapons.Pistol
+							else
+								if self.m_ActiveWeapon ~= nil and self.m_ActiveWeapon.type ~= WeaponTypes.Rocket then
+									
+									self._WeaponToUse = BotWeapons.Primary
+									-- check to use rocket	
+									if self._ShootModeTimer <= Registry.BOT.BOT_UPDATE_CYCLE + 0.001 and 
+									self.m_SecondaryGadget ~= nil and self.m_SecondaryGadget.type == WeaponTypes.Rocket and 
+									MathUtils:GetRandomInt(1, 100) <= Registry.BOT.PROBABILITY_SHOOT_ROCKET then
+										self._WeaponToUse = BotWeapons.Gadget2
+									end
+								end	
+							end
 						end
+						
 					end
 					-- use grenade from time to time
 					if Config.BotsThrowGrenades then
-						local s_TargetTimeValue = 1.5
-						if Config.BotFireModeDuration < s_TargetTimeValue then
-							s_TargetTimeValue = Config.BotFireModeDuration - 0.5
-						end
+						local s_TargetTimeValue = Config.BotMinTimeShootAtPlayer - Registry.BOT.BOT_UPDATE_CYCLE
 
-						if ((self._ShootModeTimer >= s_TargetTimeValue) and (self._ShootModeTimer <= (s_TargetTimeValue + Registry.BOT.BOT_UPDATE_CYCLE)) and self._ActiveAction ~= BotActionFlags.GrenadeActive) or Config.BotWeapon == BotWeapons.Grenade then
+						if ((self._ShootModeTimer >= s_TargetTimeValue - 0.001) and 
+						(self._ShootModeTimer <= (s_TargetTimeValue + Registry.BOT.BOT_UPDATE_CYCLE + 0.001)) and 
+						self._ActiveAction ~= BotActionFlags.GrenadeActive) or Config.BotWeapon == BotWeapons.Grenade then
 							-- should be triggered only once per fireMode
 							if MathUtils:GetRandomInt(1,100) <= Registry.BOT.PROBABILITY_THROW_GRENADE then
 								if self.m_Grenade ~= nil and self._DistanceToPlayer < 40 then -- algorith only works for up to 35 m
