@@ -87,7 +87,13 @@ VehicleData = {
 		Drop = {0.0}},
 
 	["VodnikPhoenix"] = {Name = "[VODNIK AA]", Type =  VehicleTypes.AntiAir, Parts = {}},
-	["AAV-7A1"] = {Name = "[AAV-7A1 AMTRAC]", Type =  VehicleTypes.AntiAir, Parts = {}},
+	["AAV-7A1"] = {
+		Name = "[AAV-7A1 AMTRAC]",
+		Type =  VehicleTypes.AntiAir,
+		Parts = {nil, 23, nil, nil, nil, nil},
+		Speed = {600, 80, 600, 600, 600, 600},
+		Drop = {9.81, 7.0, 9.81, 9.81, 9.81, 9.81}
+	},
 
 	-- light Vehicle? maybe also AA?
 	["HumveeArmored"] = {
