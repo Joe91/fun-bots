@@ -26,6 +26,7 @@ This release contains a lot of small bug fixes and more QoL updates.
 * Selection of Nodes improved (under ground and above ground)
 * Improved Code of Bot.lua to separate different Functions and for future functions
 * Improved Nade calculations (still far from perfect)
+* land-vehicles teleport if stuck
 
 ### 🐛 Minor bug fixes
 * fixed bug with jeeps

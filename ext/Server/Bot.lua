@@ -2216,7 +2216,7 @@ function Bot:_UpdateNormalMovementVehicle()
 
 			if math.abs(s_CurrentWayPointDistance - self._LastWayDistance) < 0.02 or self._ObstaceSequenceTimer ~= 0 then
 				-- try to get around obstacle
-				if self._ObstacleRetryCounter == 0 then
+				if self._ObstacleRetryCounter % 2 == 0 then
 					self.m_ActiveSpeedValue = BotMoveSpeeds.Sprint -- full throttle
 				else
 					self.m_ActiveSpeedValue = BotMoveSpeeds.Backwards
@@ -2229,7 +2229,7 @@ function Bot:_UpdateNormalMovementVehicle()
 
 				self._ObstaceSequenceTimer = self._ObstaceSequenceTimer + Registry.BOT.BOT_UPDATE_CYCLE
 
-				if self._ObstacleRetryCounter >= 2 then --try next waypoint
+				if self._ObstacleRetryCounter >= 4 then --try next waypoint
 					self._ObstacleRetryCounter = 0
 					s_DistanceFromTarget = 0
 					s_HeightDistance = 0
@@ -2242,8 +2242,7 @@ function Bot:_UpdateNormalMovementVehicle()
 						local s_Transform = self.m_Player.controlledControllable.transform:Clone()
 						s_Transform.trans = self._NextTargetPoint.Position
 						self.m_Player.controlledControllable.transform = s_Transform
-						m_Logger:Write("tepeported "..self.m_Player.name)
-						print("tepeported "..self.m_Player.name)
+						m_Logger:Write("tepeported in vehicle of "..self.m_Player.name)
 					else
 						if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) or m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
 							s_PointIncrement = 1
