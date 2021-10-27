@@ -1,3 +1,14 @@
+--[[ to extract vehicle-data you have to do the following steps:
+1. get the vehicle-name with the "!car" chat command
+2. go to the right vehicle in the txt dumb: "https://github.com/EmulatorNexus/Venice-EBX/tree/master/Vehicles"
+3. search for the correct weapon using the "WeaponFiring" tags. The name of the gun is directly below
+4. search for this navigate to the WeaponFiring file in the text-dumb
+5. search for the "InitialSpeed::Vec3". This is the bullet-speed.
+6. search for the "gravity" value. This is the bullet-drop.
+7. identify the moving part, by checking the vehicle components ("!car" chat command) and looking at the y koordinate in different positions.
+8. insert all data like shown below...
+--]]
+
 VehicleData = {
 
 	-- Name, Type, Parttransforms, Bullet-Speeds, Drop, Offset-Vec

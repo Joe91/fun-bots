@@ -25,6 +25,7 @@ This release contains a lot of small bug fixes and more QoL updates.
 * bots wait for more passengers
 * Selection of Nodes improved (under ground and above ground)
 * Improved Code of Bot.lua to separate different Functions and for future functions
+* Improved Nade calculations (still far from perfect)
 
 ### 🐛 Minor bug fixes
 * fixed bug with jeeps
