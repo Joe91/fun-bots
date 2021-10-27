@@ -59,6 +59,17 @@ function ClientBotManager:OnEngineMessage(p_Message)
 	end
 end
 
+function ClientBotManager:DoRaycast(p_Pos1, p_Pos2, p_MaxHits)
+	local s_RaycastFlags =  RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter
+	local s_MaterialFlags = MaterialFlags.MfPenetrable | MaterialFlags.MfClientDestructible | MaterialFlags.MfBashable | MaterialFlags.MfSeeThrough | MaterialFlags.MfNoCollisionResponse | MaterialFlags.MfNoCollisionResponseCombined
+	local s_RayHits = RaycastManager:CollisionRaycast(p_Pos1, p_Pos2, p_MaxHits, s_MaterialFlags, s_RaycastFlags)
+	if s_RayHits ~= nil and #s_RayHits < p_MaxHits then
+		return true
+	else
+		return false
+	end
+end
+
 function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	if p_UpdatePass ~= UpdatePass.UpdatePass_PreFrame or not self.m_ReadyToUpdate then
 		return
@@ -115,23 +126,17 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 			if (s_Distance < Config.MaxRaycastDistance) or (s_Bot.inVehicle and Config.MaxRaycastDistanceVehicles) then
 				self.m_LastIndex = self.m_LastIndex + 1
-				local s_Raycast = nil
 
-				if self.m_Player.inVehicle or s_Bot.inVehicle then
-					local s_DeltaPos = s_Target - s_PlayerPosition
-					s_DeltaPos = s_DeltaPos:Normalize()
-					if self.m_Player.inVehicle then -- Start Raycast outside of vehicle?
-						s_PlayerPosition = s_PlayerPosition + (s_DeltaPos * 4.0)
-					end
-					if s_Bot.inVehicle then
-						s_Target = s_Target - (s_DeltaPos * 4.0)
-					end
+				local s_HitCount = 1
+				if self.m_Player.inVehicle then
+					s_HitCount = s_HitCount + 1
+				end
+				if s_Bot.inVehicle then
+					s_HitCount = s_HitCount + 1
 				end
 
-				s_Raycast = RaycastManager:Raycast(s_PlayerPosition, s_Target, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.IsAsyncRaycast)
-
-				if s_Raycast == nil or s_Raycast.rigidBody == nil then
-					-- we found a valid bot in Sight (either no hit, or player-hit). Signal Server with players
+				if self:DoRaycast(s_PlayerPosition, s_Target, s_HitCount) then
+								-- we found a valid bot in Sight (either no hit, or player-hit). Signal Server with players
 					local s_IgnoreYaw = false
 
 					if s_Distance < Config.DistanceForDirectAttack then
@@ -170,9 +175,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 			if s_Distance < 35.0 then -- TODO: use config var for this
 				self.m_LastIndex = self.m_LastIndex + 1
-				local s_Raycast = RaycastManager:Raycast(s_PlayerPosition, s_Target, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.IsAsyncRaycast)
-
-				if s_Raycast == nil or s_Raycast.rigidBody == nil then
+				if self:DoRaycast(s_PlayerPosition, s_Target, 1) then
 					-- we found a valid bot in Sight (either no hit, or player-hit). Signal Server with players
 					NetEvents:SendLocal("Bot:RevivePlayer", s_Bot.name)
 				end
@@ -218,20 +221,15 @@ function ClientBotManager:CheckForBotBotAttack(p_StartPos, p_EndPos, p_ShooterBo
 	local s_StartPos = Vec3(p_StartPos.x, p_StartPos.y + 1.0, p_StartPos.z)
 	local s_EndPos = Vec3(p_EndPos.x, p_EndPos.y + 1.0, p_EndPos.z)
 
-	if p_InVehicleTarget or p_InVehicleShooter then
-		local s_DeltaPos = p_EndPos - p_StartPos
-		s_DeltaPos = s_DeltaPos:Normalize()
-		if p_InVehicleShooter then
-			s_StartPos = s_StartPos + (s_DeltaPos * 4.0)
-		end
-		if p_InVehicleTarget then
-			s_EndPos = s_EndPos - (s_DeltaPos * 4.0)
-		end
+	local s_HitCount = 1
+	if p_InVehicleTarget then
+		s_HitCount = s_HitCount + 1
+	end
+	if p_InVehicleShooter then
+		s_HitCount = s_HitCount + 1
 	end
 
-	local s_Raycast = RaycastManager:Raycast(s_StartPos, s_EndPos, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.IsAsyncRaycast)
-
-	if s_Raycast == nil or s_Raycast.rigidBody == nil then
+	if self:DoRaycast(s_StartPos, s_EndPos, s_HitCount) then
 		NetEvents:SendLocal("Bot:ShootAtBot", p_ShooterBotName, p_BotName)
 	end
 end
