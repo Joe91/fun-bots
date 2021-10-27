@@ -2233,13 +2233,26 @@ function Bot:_UpdateNormalMovementVehicle()
 					self._ObstacleRetryCounter = 0
 					s_DistanceFromTarget = 0
 					s_HeightDistance = 0
-					if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) or m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
-						s_PointIncrement = 1
+					
+					-- teleport if stuck
+					if Config.TeleportIfStuck and 
+					m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) and 
+					m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) and 
+					(MathUtils:GetRandomInt(0,100) <= Registry.BOT.PROBABILITY_TELEPORT_IF_STUCK_IN_VEHICLE) then
+						local s_Transform = self.m_Player.controlledControllable.transform:Clone()
+						s_Transform.trans = self._NextTargetPoint.Position
+						self.m_Player.controlledControllable.transform = s_Transform
+						m_Logger:Write("tepeported "..self.m_Player.name)
+						print("tepeported "..self.m_Player.name)
 					else
-						if MathUtils:GetRandomInt(0, 1) == 1 then
+						if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) or m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
 							s_PointIncrement = 1
 						else
-							s_PointIncrement = -1
+							if MathUtils:GetRandomInt(0, 1) == 1 then
+								s_PointIncrement = 1
+							else
+								s_PointIncrement = -1
+							end
 						end
 					end
 				end
