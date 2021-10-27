@@ -19,6 +19,9 @@ function BotManager:__init()
 	self._PendingAcceptRevives = {}
 	self._LastBotCheckIndex = 1
 	self._InitDone = false
+
+	self.dummyCnt = 0
+	self.dummyCnt2 = 0
 end
 
 -- =============================================
@@ -273,12 +276,11 @@ function BotManager:OnBotShootAtBot(p_Player, p_BotName1, p_BotName2)
 		return
 	end
 
-	if s_Bot1:ShootAt(s_Bot2.m_Player, false) or s_Bot2:ShootAt(s_Bot1.m_Player, false) then
+	if s_Bot1:ShootAt(s_Bot2.m_Player, false) then
 		self._BotCheckState[s_Bot1.m_Player.name] = s_Bot2.m_Player.name
+	end
+	if s_Bot2:ShootAt(s_Bot1.m_Player, false) then
 		self._BotCheckState[s_Bot2.m_Player.name] = s_Bot1.m_Player.name
-	else
-		self._BotCheckState[s_Bot1.m_Player.name] = nil
-		self._BotCheckState[s_Bot2.m_Player.name] = nil
 	end
 end
 
@@ -720,6 +722,7 @@ function BotManager:_CheckForBotBotAttack()
 	end
 
 	local s_Raycasts = 0
+	local s_RaycastPlayer  = 0
 	local s_NextPlayerIndex = 1
 
 	for i = self._LastBotCheckIndex, #self._Bots do
@@ -741,7 +744,7 @@ function BotManager:_CheckForBotBotAttack()
 					-- make sure it's living and has no target
 					if (l_Bot ~= nil and l_Bot.m_Player ~= nil and l_Bot.m_Player.soldier ~= nil and not self._BotCheckState[l_Bot.m_Player.name]) then
 						local s_Distance = s_Bot.m_Player.soldier.worldTransform.trans:Distance(l_Bot.m_Player.soldier.worldTransform.trans)
-
+						self.dummyCnt = self.dummyCnt + 1
 						if s_Distance <= Config.MaxBotAttackBotDistance then
 							-- choose a player at random, try until an active player is found
 							for l_PlayerIndex = s_NextPlayerIndex, s_PlayerCount do
@@ -752,14 +755,19 @@ function BotManager:_CheckForBotBotAttack()
 
 									NetEvents:SendUnreliableToLocal('CheckBotBotAttack', s_Players[l_PlayerIndex], s_BotPosition, l_BotPosition, s_Bot.m_Player.name, l_Bot.m_Player.name, s_Bot.m_InVehicle, l_Bot.m_InVehicle)
 									s_Raycasts = s_Raycasts + 1
-									s_NextPlayerIndex = l_PlayerIndex + 1
+									self.dummyCnt2 = self.dummyCnt2 + 1
+									s_RaycastPlayer = s_RaycastPlayer + 1
+									if s_RaycastPlayer >= Registry.BOT.MAX_RAYCASTS_PER_PLAYER_BOT_BOT then
+										s_NextPlayerIndex = l_PlayerIndex + 1
+										s_RaycastPlayer = 0
+									end
 									break
 								end
 							end
 
-							if s_Raycasts >= s_PlayerCount then
+							if s_Raycasts >= (s_PlayerCount*Registry.BOT.MAX_RAYCASTS_PER_PLAYER_BOT_BOT) then
 								-- leave the function early for this cycle
-								self._LastBotCheckIndex = i + 1
+								self._LastBotCheckIndex = i
 								return
 							end
 						end
@@ -773,6 +781,9 @@ function BotManager:_CheckForBotBotAttack()
 
 	-- should only reach here if every connection has been checked
 	-- clear the cache and start over
+	-- print("all bots done "..tostring(self.dummyCnt).." "..tostring(self.dummyCnt2))
+	self.dummyCnt = 0
+	self.dummyCnt2 = 0
 	self._LastBotCheckIndex = 1
 	self._BotCheckState = {}
 end
