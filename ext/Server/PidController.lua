@@ -9,6 +9,10 @@ function PidController:__init(p_Kp, p_Ki, p_Kd, p_Limit)
 	self._Limit = p_Limit
 end
 
+function PidController:Reset()
+	self._Integral = 0
+end
+
 function PidController:Update(p_Error)
 	local s_Proportional = self._Kp * p_Error
 	local s_Derivative = (p_Error - self._LastError) * self._kd

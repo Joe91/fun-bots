@@ -2217,12 +2217,17 @@ function Bot:_UpdateNormalMovementVehicle()
 			if math.abs(s_CurrentWayPointDistance - self._LastWayDistance) < 0.02 or self._ObstaceSequenceTimer ~= 0 then
 				-- try to get around obstacle
 				if self._ObstacleRetryCounter % 2 == 0 then
-					self.m_ActiveSpeedValue = BotMoveSpeeds.Sprint -- full throttle
+					if self._ObstaceSequenceTimer < 4 then
+						self.m_ActiveSpeedValue = BotMoveSpeeds.Sprint -- full throttle
+					end
 				else
-					self.m_ActiveSpeedValue = BotMoveSpeeds.Backwards
+					if self._ObstaceSequenceTimer < 2 then
+						self.m_ActiveSpeedValue = BotMoveSpeeds.Backwards
+					end
 				end
 
-				if self._ObstaceSequenceTimer > 3 then --step 4 - repeat afterwards
+				if (self.m_ActiveSpeedValue == BotMoveSpeeds.Backwards and self._ObstaceSequenceTimer > 3) or
+				(self.m_ActiveSpeedValue ~= BotMoveSpeeds.Backwards and self._ObstaceSequenceTimer > 5) then
 					self._ObstaceSequenceTimer = 0
 					self._ObstacleRetryCounter = self._ObstacleRetryCounter + 1
 				end
@@ -2231,23 +2236,25 @@ function Bot:_UpdateNormalMovementVehicle()
 
 				if self._ObstacleRetryCounter >= 4 then --try next waypoint
 					self._ObstacleRetryCounter = 0
+					
 					s_DistanceFromTarget = 0
 					s_HeightDistance = 0
-					
+
 					-- teleport if stuck
 					if Config.TeleportIfStuck and 
 					m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) and 
 					m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) and 
 					(MathUtils:GetRandomInt(0,100) <= Registry.BOT.PROBABILITY_TELEPORT_IF_STUCK_IN_VEHICLE) then
 						local s_Transform = self.m_Player.controlledControllable.transform:Clone()
-						s_Transform.trans = self._NextTargetPoint.Position
+						s_Transform.trans = self._TargetPoint.Position
+						s_Transform:LookAtTransform(self._TargetPoint.Position, self._NextTargetPoint.Position)
 						self.m_Player.controlledControllable.transform = s_Transform
 						m_Logger:Write("tepeported in vehicle of "..self.m_Player.name)
 					else
 						if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) or m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
 							s_PointIncrement = 1
 						else
-							if MathUtils:GetRandomInt(0, 1) == 1 then
+							if MathUtils:GetRandomInt(1, 2) == 1 then
 								s_PointIncrement = 1
 							else
 								s_PointIncrement = -1
@@ -2555,7 +2562,8 @@ function Bot:_UpdateNormalMovement()
 					s_NoStuckReset = true
 					if Config.TeleportIfStuck and (MathUtils:GetRandomInt(0,100) <= Registry.BOT.PROBABILITY_TELEPORT_IF_STUCK) then
 						local s_Transform = self.m_Player.soldier.worldTransform:Clone()
-						s_Transform.trans = self._NextTargetPoint.Position
+						s_Transform.trans = self._TargetPoint.Position
+						s_Transform:LookAtTransform(self._TargetPoint.Position, self._NextTargetPoint.Position)
 						self.m_Player.soldier:SetTransform(s_Transform)
 						m_Logger:Write("tepeported "..self.m_Player.name)
 					else
