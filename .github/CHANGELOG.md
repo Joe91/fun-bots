@@ -52,6 +52,9 @@ This release contains a lot of small bug fixes and more QoL updates.
 * Damavand Peak CQS (with Vehicles) - thanks to MeisterPeitsche
 * Operation Firestorm CQS (Jets) - thanks to KrazyIvan777
 * Gulf of Oman CQS (Jets) - thanks to KrazyIvan777
+* Noshahr Canals CQS update - thanks to KrazyIvan777 and MeisterPeitsche
+* Wake Island Assaullt Small (1+2) (infantery) - thanks to DuTcHrEaGaN
+* Wake Island Assault Large (infantery) - thanks to DuTcHrEaGaN
 
 ### 📖 Documentation update
 * nothing done on this front :-(
