@@ -3,10 +3,11 @@ class 'FunBotUIServer'
 require('__shared/ArrayMap')
 require('__shared/Config')
 
+Language = require('__shared/Language')
+
 local m_NodeCollection = require('__shared/NodeCollection')
 local m_SettingsManager = require('SettingsManager')
 
-Language = require('__shared/Language')
 local BotManager = require('BotManager')
 local BotSpawner = require('BotSpawner')
 local WeaponModification = require('WeaponModification')

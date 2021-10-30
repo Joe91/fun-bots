@@ -3,7 +3,7 @@ local code = 'de_DE' -- Add here your language code (like de_DE, en_US, or other
 Language:add(code, "Spawn in Same Team", "Im selben Team spawnen")
 Language:add(code, "If true, Bots spawn in the team of the player", "Wenn aktiviert, spawnen Bots im Team des Spielers")
 Language:add(code, "Select the weapon the bots use", "Wählt die Waffe, die die Bots verwenden")
-Language:add(code, "Bot Kit", "Bot Kit")
+Language:add(code, "Bot Kit", "Bot-Ausrüstung")
 Language:add(code, "The Kit a bots spawns with.", "Das Kit, mit dem ein Bots spawnt.")
 Language:add(code, "Bot Color", "Bot-Farbe")
 Language:add(code, "The Kit-Color a bots spawns with.", "Die Kit-Farbe, mit der ein Bots spawnt.")

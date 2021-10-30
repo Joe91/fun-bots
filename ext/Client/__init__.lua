@@ -37,7 +37,7 @@ function FunBotClient:__init()
 end
 
 function FunBotClient:OnExtensionLoaded()
-	--m_Language:loadLanguage(Config.Language)
+	m_Language:loadLanguage(Config.Language)
 	self:RegisterEvents()
 	self:RegisterHooks()
 	m_FunBotUIClient:OnExtensionLoaded()
