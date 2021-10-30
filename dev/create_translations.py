@@ -1,5 +1,8 @@
 settings_definition = "../ext/shared/Settings/SettingsDefinition.lua"
+index_html = "../WebUI/index.html"
+
 language_file = "../ext/shared/Languages/DEFAULT.lua"
+language_file_js = "../WebUI/languages/DEFAULT.js"
 
 # other files with Language content : Language:I18N(
 
@@ -60,3 +63,21 @@ with open(settings_definition, "r") as inFile:
 						if translation != "":
 							outFile.write("Language:add(code, \""+ translation + "\", \"\")\n")
 		print("write done")
+
+with open(index_html, "r") as inFileHtml:
+	allHtmlTranslations = []
+	for line in inFileHtml.read().splitlines():
+		if "data-lang=\"" in line:
+			translationHtml = line.split("data-lang=\"")[1].split("\"")[0]
+			allHtmlTranslations.append(translationHtml)
+	with open(language_file_js, "w") as outFileHtml:
+		outFileHtml.write("""Language['xx_XX'] /* Add/replace the xx_XX here with your language code (like de_DE, en_US, or other)! */ = {
+	"__LANGUAGE_INFO": {
+		"name": "English",
+		"author": "Unknown",
+		"version": "1.0.0"
+	},
+""")
+		for translation in allHtmlTranslations:
+			outFileHtml.write("	\""+ translation + "\": \"\",\n")
+		outFileHtml.write("};")
