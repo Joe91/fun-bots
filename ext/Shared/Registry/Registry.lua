@@ -33,7 +33,7 @@ Registry = {
                 VERSION_PATCH = 0,
 
                 -- Additional label for pre-releases and build meta data
-                VERSION_LABEL = "RC1",
+                VERSION_LABEL = "dev",
 
                 -- Numerical ID (int) of the current build.
                 -- Increase it upon a new release or release candidate, end-point servers require the correct version ID.
@@ -41,7 +41,7 @@ Registry = {
                 VERSION_ID = 1,
 
                 -- Current version type of this build
-                VERSION_TYPE = VersionType.Stable
+                VERSION_TYPE = VersionType.DevBuild
         },
 
         -- Variables related to raycasting
@@ -77,8 +77,14 @@ Registry = {
                 -- Chance that the bot will teleport when they are stuck.
                 PROBABILITY_TELEPORT_IF_STUCK = 80,
 
+				-- Chance that the bot will teleport when they are stuck in a vehicle.
+				PROBABILITY_TELEPORT_IF_STUCK_IN_VEHICLE = 20,
+
                 -- At the end of an attack cycle, chance of throwing a grenade.
-                PROBABILITY_THROW_GRENADE = 55,
+                PROBABILITY_THROW_GRENADE = 80,
+
+				-- the probabilty to use the rocket instead of the a primary
+				PROBABILITY_SHOOT_ROCKET = 33,
 
                 -- If the gamemode is Rush or Conquest, change direction if the bot is stuck on non-connecting paths.
                 PROBABILITY_CHANGE_DIRECTION_IF_STUCK = 50,

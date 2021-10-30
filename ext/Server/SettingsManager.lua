@@ -216,9 +216,6 @@ function SettingsManager:UpdateSetting(p_Name, p_Value)
 			elseif l_Item.Type == Type.Boolean then
 				s_ConvertedValue = (p_Value == '1' or p_Value == "true")
 				s_Valid = true
-			elseif l_Item.Type == Type.String then
-				s_ConvertedValue = p_Value
-				s_Valid = true
 			elseif l_Item.Type == Type.Enum then
 				s_ConvertedValue = tonumber(p_Value)
 				if s_ConvertedValue == nil and type(p_Value) == 'string' then -- check for enum-string
@@ -239,8 +236,16 @@ function SettingsManager:UpdateSetting(p_Name, p_Value)
 						end
 					end
 				end
-			else
-				-- TODO: implement Lists.
+			elseif l_Item.Type == Type.Table then
+				if type(p_Value) == 'string' then
+					for l_Key, l_Value in pairs(l_Item.Reference) do
+						if string.find(p_Value, l_Key) ~= nil then
+							s_ConvertedValue = l_Value
+							s_Valid = true
+							break
+						end
+					end
+				end
 			end
 			s_UpdateFlag = l_Item.UpdateFlag
 			break

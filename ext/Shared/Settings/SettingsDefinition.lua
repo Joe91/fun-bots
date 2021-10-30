@@ -564,7 +564,7 @@ SettingsDefinition = {
 			Value = Config.MaxShootDistancePistol,
 			Description = "only in auto-weapon-mode, the distance until a bot switches to pistol if his magazine is empty",
 			Reference = Range(1.00, 1500.00, 5.0),
-			Default = 30,
+			Default = 20,
 			UpdateFlag = UpdateFlag.None,
 			Category = "BEHAVIOUR"
 		},
@@ -1419,10 +1419,11 @@ SettingsDefinition = {
 		{
 			Name = "Language",
 			Text = "language",
-			Type = Type.String,
+			Type = Type.Table,
 			Value = Config.Language,
 			Description = "de_DE as sample (default is english, when language file doesnt exists)",
 			Default = nil,
+			Reference = Languages,
 			UpdateFlag = UpdateFlag.Language,
 			Category = "OTHER"
 		}

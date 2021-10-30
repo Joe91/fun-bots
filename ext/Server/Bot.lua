@@ -422,7 +422,10 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 
 	if p_IgnoreYaw or (s_DifferenceYaw < s_FovHalf and s_Pitch < s_PitchHalf) then
 		if self._Shoot then
-			if self._ShootPlayer == nil or (self.m_InVehicle and (self._ShootModeTimer > Config.BotMinTimeShootAtPlayer * 1.5)) or (not self.m_InVehicle and (self._ShootModeTimer > Config.BotMinTimeShootAtPlayer)) or (self.m_KnifeMode and self._ShootModeTimer > (Config.BotMinTimeShootAtPlayer/2)) then
+			if self._ShootPlayer == nil or 
+			(self.m_InVehicle and (self._ShootModeTimer > Config.BotMinTimeShootAtPlayer * 1.5)) or
+			(not self.m_InVehicle and (self._ShootModeTimer > Config.BotMinTimeShootAtPlayer)) or
+			(self.m_KnifeMode and self._ShootModeTimer > (Config.BotMinTimeShootAtPlayer/2)) then
 				self._ShootModeTimer = 0
 				self._ShootPlayerName = p_Player.name
 				self._ShootPlayer = nil
@@ -994,16 +997,59 @@ function Bot:_UpdateAiming()
 			s_Speed = self.m_ActiveWeapon.bulletSpeed
 
 			if self.m_ActiveWeapon.type == WeaponTypes.Grenade then
-				if self._DistanceToPlayer < 5 then
-					self._DistanceToPlayer = 5 -- don't throw them too close..
+				if self._DistanceToPlayer < 3 then
+					self._DistanceToPlayer = 3 -- don't throw them too close..
 				end
 
-				local s_Angle = math.asin((self._DistanceToPlayer * s_Drop)/(s_Speed*s_Speed))
-
-				if s_Angle ~= s_Angle then --NAN check
-					s_GrenadePitch = (math.pi / 4)
-				else
-					s_GrenadePitch = (math.pi / 2) - (s_Angle / 2)
+				if self._DistanceToPlayer > 24.5 then s_GrenadePitch = 0.7504915783575616
+				elseif self._DistanceToPlayer > 24.0 then s_GrenadePitch = 0.8569566627292158
+				elseif self._DistanceToPlayer > 23.5 then s_GrenadePitch = 0.9023352232810685
+				elseif self._DistanceToPlayer > 23.0 then s_GrenadePitch = 0.9372418083209549
+				elseif self._DistanceToPlayer > 22.5 then s_GrenadePitch = 0.9651670763528643
+				elseif self._DistanceToPlayer > 22.0 then s_GrenadePitch = 0.9913470151327791
+				elseif self._DistanceToPlayer > 21.5 then s_GrenadePitch = 1.0157816246606999
+				elseif self._DistanceToPlayer > 21.0 then s_GrenadePitch = 1.0367255756846316
+				elseif self._DistanceToPlayer > 20.5 then s_GrenadePitch = 1.0559241974565694
+				elseif self._DistanceToPlayer > 20.0 then s_GrenadePitch = 1.0751228192285072
+				elseif self._DistanceToPlayer > 19.5 then s_GrenadePitch = 1.0943214410004447
+				elseif self._DistanceToPlayer > 19.0 then s_GrenadePitch = 1.111774733520388
+				elseif self._DistanceToPlayer > 18.5 then s_GrenadePitch = 1.1274826967883367
+				elseif self._DistanceToPlayer > 18.0 then s_GrenadePitch = 1.143190660056286
+				elseif self._DistanceToPlayer > 17.5 then s_GrenadePitch = 1.1588986233242349
+				elseif self._DistanceToPlayer > 17.0 then s_GrenadePitch = 1.1746065865921838
+				elseif self._DistanceToPlayer > 16.5 then s_GrenadePitch = 1.1885692206081382
+				elseif self._DistanceToPlayer > 16.0 then s_GrenadePitch = 1.202531854624093
+				elseif self._DistanceToPlayer > 15.5 then s_GrenadePitch = 1.2164944886400477
+				elseif self._DistanceToPlayer > 15.0 then s_GrenadePitch = 1.2304571226560022
+				elseif self._DistanceToPlayer > 14.5 then s_GrenadePitch = 1.2426744274199626
+				elseif self._DistanceToPlayer > 14.0 then s_GrenadePitch = 1.2566370614359172
+				elseif self._DistanceToPlayer > 13.5 then s_GrenadePitch = 1.2688543661998775
+				elseif self._DistanceToPlayer > 13.0 then s_GrenadePitch = 1.281071670963838
+				elseif self._DistanceToPlayer > 12.5 then s_GrenadePitch = 1.293288975727798
+				elseif self._DistanceToPlayer > 12.0 then s_GrenadePitch = 1.3055062804917585
+				elseif self._DistanceToPlayer > 11.5 then s_GrenadePitch = 1.3177235852557188
+				elseif self._DistanceToPlayer > 11.0 then s_GrenadePitch = 1.3299408900196792
+				elseif self._DistanceToPlayer > 10.5 then s_GrenadePitch = 1.3421581947836394
+				elseif self._DistanceToPlayer > 10.0 then s_GrenadePitch = 1.3526301702956054
+				elseif self._DistanceToPlayer > 9.5 then s_GrenadePitch = 1.3648474750595656
+				elseif self._DistanceToPlayer > 9.0 then s_GrenadePitch = 1.377064779823526
+				elseif self._DistanceToPlayer > 8.5 then s_GrenadePitch = 1.387536755335492
+				elseif self._DistanceToPlayer > 8.0 then s_GrenadePitch = 1.3980087308474578
+				elseif self._DistanceToPlayer > 7.5 then s_GrenadePitch = 1.4102260356114182
+				elseif self._DistanceToPlayer > 7.0 then s_GrenadePitch = 1.4206980111233845
+				elseif self._DistanceToPlayer > 6.5 then s_GrenadePitch = 1.43116998663535
+				elseif self._DistanceToPlayer > 6.0 then s_GrenadePitch = 1.4433872913993104
+				elseif self._DistanceToPlayer > 5.5 then s_GrenadePitch = 1.4538592669112764
+				elseif self._DistanceToPlayer > 5.0 then s_GrenadePitch = 1.4643312424232426
+				elseif self._DistanceToPlayer > 4.5 then s_GrenadePitch = 1.4748032179352084
+				elseif self._DistanceToPlayer > 4.0 then s_GrenadePitch = 1.4852751934471744
+				elseif self._DistanceToPlayer > 3.5 then s_GrenadePitch = 1.4957471689591406
+				elseif self._DistanceToPlayer > 3.0 then s_GrenadePitch = 1.5079644737231006
+				elseif self._DistanceToPlayer > 2.5 then s_GrenadePitch = 1.5184364492350666
+				elseif self._DistanceToPlayer > 2.0 then s_GrenadePitch = 1.5289084247470324
+				elseif self._DistanceToPlayer > 1.5 then s_GrenadePitch = 1.5393804002589986
+				elseif self._DistanceToPlayer > 1.0 then s_GrenadePitch = 1.5498523757709646
+				elseif self._DistanceToPlayer > 0.5 then s_GrenadePitch = 1.5603243512829308
 				end
 			else
 				s_TimeToTravel = (self._DistanceToPlayer / s_Speed)
@@ -1671,7 +1717,7 @@ function Bot:_UpdateAttacking()
 				if self.m_Player.soldier.weaponsComponent.currentWeapon.secondaryAmmo <= 0 then
 					self.m_Player.soldier.weaponsComponent.currentWeapon.secondaryAmmo = self.m_Player.soldier.weaponsComponent.currentWeapon.secondaryAmmo + 1
 					self:_ResetActionFlag(BotActionFlags.GrenadeActive)
-					self._ShootModeTimer = Config.BotFireModeDuration
+					self._ShootModeTimer = self._ShootModeTimer + 2* Registry.BOT.BOT_UPDATE_CYCLE
 				end
 			end
 
@@ -1707,21 +1753,36 @@ function Bot:_UpdateAttacking()
 				if self.m_KnifeMode or self._ActiveAction == BotActionFlags.MeleeActive then
 					self._WeaponToUse = BotWeapons.Knife
 				else
-					if self._ActiveAction ~= BotActionFlags.GrenadeActive and self.m_Player.soldier.weaponsComponent.weapons[1] ~= nil then
-						if self.m_Player.soldier.weaponsComponent.weapons[1].primaryAmmo == 0 and self._DistanceToPlayer <= Config.MaxShootDistancePistol then
-							self._WeaponToUse = BotWeapons.Pistol
-						else
-							self._WeaponToUse = BotWeapons.Primary
+					if self._ActiveAction ~= BotActionFlags.GrenadeActive then
+						-- check to use pistol
+						if self.m_Player.soldier.weaponsComponent.weapons[1] ~= nil then
+							if self.m_Player.soldier.weaponsComponent.weapons[1].primaryAmmo == 0 and self._DistanceToPlayer <= Config.MaxShootDistancePistol then
+								self._WeaponToUse = BotWeapons.Pistol
+							else
+								if self.m_ActiveWeapon ~= nil and self.m_ActiveWeapon.type ~= WeaponTypes.Rocket then
+									
+									self._WeaponToUse = BotWeapons.Primary
+									-- check to use rocket	
+									if self._ShootModeTimer <= Registry.BOT.BOT_UPDATE_CYCLE + 0.001 and 
+									self.m_SecondaryGadget ~= nil and self.m_SecondaryGadget.type == WeaponTypes.Rocket and 
+									MathUtils:GetRandomInt(1, 100) <= Registry.BOT.PROBABILITY_SHOOT_ROCKET then
+										self._WeaponToUse = BotWeapons.Gadget2
+									end
+								end	
+							end
 						end
+						
 					end
 					-- use grenade from time to time
 					if Config.BotsThrowGrenades then
-						local s_TargetTimeValue = Config.BotFireModeDuration - 0.5
+						local s_TargetTimeValue = Config.BotMinTimeShootAtPlayer - Registry.BOT.BOT_UPDATE_CYCLE
 
-						if ((self._ShootModeTimer >= s_TargetTimeValue) and (self._ShootModeTimer < (s_TargetTimeValue + Registry.BOT.BOT_UPDATE_CYCLE)) and self._ActiveAction ~= BotActionFlags.GrenadeActive) or Config.BotWeapon == BotWeapons.Grenade then
+						if ((self._ShootModeTimer >= s_TargetTimeValue - 0.001) and 
+						(self._ShootModeTimer <= (s_TargetTimeValue + Registry.BOT.BOT_UPDATE_CYCLE + 0.001)) and 
+						self._ActiveAction ~= BotActionFlags.GrenadeActive) or Config.BotWeapon == BotWeapons.Grenade then
 							-- should be triggered only once per fireMode
 							if MathUtils:GetRandomInt(1,100) <= Registry.BOT.PROBABILITY_THROW_GRENADE then
-								if self.m_Grenade ~= nil and self._DistanceToPlayer < 35 then
+								if self.m_Grenade ~= nil and self._DistanceToPlayer < 27 then -- algorith only works for up to 22 m
 									self._ActiveAction = BotActionFlags.GrenadeActive
 								end
 							end
@@ -2155,30 +2216,49 @@ function Bot:_UpdateNormalMovementVehicle()
 
 			if math.abs(s_CurrentWayPointDistance - self._LastWayDistance) < 0.02 or self._ObstaceSequenceTimer ~= 0 then
 				-- try to get around obstacle
-				if self._ObstacleRetryCounter == 0 then
-					self.m_ActiveSpeedValue = BotMoveSpeeds.Sprint -- full throttle
+				if self._ObstacleRetryCounter % 2 == 0 then
+					if self._ObstaceSequenceTimer < 4 then
+						self.m_ActiveSpeedValue = BotMoveSpeeds.Sprint -- full throttle
+					end
 				else
-					self.m_ActiveSpeedValue = BotMoveSpeeds.Backwards
+					if self._ObstaceSequenceTimer < 2 then
+						self.m_ActiveSpeedValue = BotMoveSpeeds.Backwards
+					end
 				end
 
-				if self._ObstaceSequenceTimer > 3 then --step 4 - repeat afterwards
+				if (self.m_ActiveSpeedValue == BotMoveSpeeds.Backwards and self._ObstaceSequenceTimer > 3) or
+				(self.m_ActiveSpeedValue ~= BotMoveSpeeds.Backwards and self._ObstaceSequenceTimer > 5) then
 					self._ObstaceSequenceTimer = 0
 					self._ObstacleRetryCounter = self._ObstacleRetryCounter + 1
 				end
 
 				self._ObstaceSequenceTimer = self._ObstaceSequenceTimer + Registry.BOT.BOT_UPDATE_CYCLE
 
-				if self._ObstacleRetryCounter >= 2 then --try next waypoint
+				if self._ObstacleRetryCounter >= 4 then --try next waypoint
 					self._ObstacleRetryCounter = 0
+					
 					s_DistanceFromTarget = 0
 					s_HeightDistance = 0
-					if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) or m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
-						s_PointIncrement = 1
+
+					-- teleport if stuck
+					if Config.TeleportIfStuck and 
+					m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) and 
+					m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) and 
+					(MathUtils:GetRandomInt(0,100) <= Registry.BOT.PROBABILITY_TELEPORT_IF_STUCK_IN_VEHICLE) then
+						local s_Transform = self.m_Player.controlledControllable.transform:Clone()
+						s_Transform.trans = self._TargetPoint.Position
+						s_Transform:LookAtTransform(self._TargetPoint.Position, self._NextTargetPoint.Position)
+						self.m_Player.controlledControllable.transform = s_Transform
+						m_Logger:Write("tepeported in vehicle of "..self.m_Player.name)
 					else
-						if MathUtils:GetRandomInt(0, 1) == 1 then
+						if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) or m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
 							s_PointIncrement = 1
 						else
-							s_PointIncrement = -1
+							if MathUtils:GetRandomInt(1, 2) == 1 then
+								s_PointIncrement = 1
+							else
+								s_PointIncrement = -1
+							end
 						end
 					end
 				end
@@ -2482,7 +2562,8 @@ function Bot:_UpdateNormalMovement()
 					s_NoStuckReset = true
 					if Config.TeleportIfStuck and (MathUtils:GetRandomInt(0,100) <= Registry.BOT.PROBABILITY_TELEPORT_IF_STUCK) then
 						local s_Transform = self.m_Player.soldier.worldTransform:Clone()
-						s_Transform.trans = self._NextTargetPoint.Position
+						s_Transform.trans = self._TargetPoint.Position
+						s_Transform:LookAtTransform(self._TargetPoint.Position, self._NextTargetPoint.Position)
 						self.m_Player.soldier:SetTransform(s_Transform)
 						m_Logger:Write("tepeported "..self.m_Player.name)
 					else
