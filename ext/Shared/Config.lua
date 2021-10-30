@@ -152,7 +152,7 @@ Config = {
 	DisableChatCommands = false,		-- if true, no chat commands can be used
 	DisableRCONCommands = false,		-- if true, no RCON commands can be used
 	IgnorePermissions = false,			-- if true, all permissions are ignored --> everyone can do everything
-	Language = nil,						-- de_DE as sample (default is english, when language file doesnt exists)
+	Language = "de_DE",						-- de_DE as sample (default is english, when language file doesnt exists)
 }
 
 VersionConfig = {

@@ -191,21 +191,21 @@ function FunBotUIClient:_onUISettings(p_Data)
 					s_Default = l_Key
 				end
 			end
-			settings:addList(l_Item.Category, l_Item.Name, l_Item.Text, s_EnumTable, s_Value, s_Default, l_Item.Description)
+			settings:addList(l_Item.Category, l_Item.Name, m_Language:I18N(l_Item.Text), s_EnumTable, s_Value, s_Default, m_Language:I18N(l_Item.Description))
 		elseif l_Item.Type == Type.Table then
-			settings:addList(l_Item.Category, l_Item.Name, l_Item.Text, l_Item.Reference, p_Data[l_Item.Name], l_Item.Default, l_Item.Description)
+			settings:addList(l_Item.Category, l_Item.Name, m_Language:I18N(l_Item.Text), l_Item.Reference, p_Data[l_Item.Name], l_Item.Default, m_Language:I18N(l_Item.Description))
 		elseif l_Item.Type == Type.Integer then
 			s_TypeString = "Integer"
-			settings:add(l_Item.Category, s_TypeString, l_Item.Name, l_Item.Text, p_Data[l_Item.Name], l_Item.Default, l_Item.Description)
+			settings:add(l_Item.Category, s_TypeString, m_Language:I18N(l_Item.Name), l_Item.Text, p_Data[l_Item.Name], l_Item.Default, m_Language:I18N(l_Item.Description))
 		elseif l_Item.Type == Type.Float then
 			s_TypeString = "Float"
-			settings:add(l_Item.Category, s_TypeString, l_Item.Name, l_Item.Text, p_Data[l_Item.Name], l_Item.Default, l_Item.Description)
+			settings:add(l_Item.Category, s_TypeString, m_Language:I18N(l_Item.Name), l_Item.Text, p_Data[l_Item.Name], l_Item.Default, m_Language:I18N(l_Item.Description))
 		elseif l_Item.Type == Type.Boolean then
 			s_TypeString = "Boolean"
-			settings:add(l_Item.Category, s_TypeString, l_Item.Name, l_Item.Text, p_Data[l_Item.Name], l_Item.Default, l_Item.Description)
+			settings:add(l_Item.Category, s_TypeString, m_Language:I18N(l_Item.Name), l_Item.Text, p_Data[l_Item.Name], l_Item.Default, m_Language:I18N(l_Item.Description))
 		elseif l_Item.Type == Type.String then
 			s_TypeString = "Language"
-			settings:add(l_Item.Category, s_TypeString, l_Item.Name, l_Item.Text, p_Data[l_Item.Name], l_Item.Default, l_Item.Description)
+			settings:add(l_Item.Category, s_TypeString, m_Language:I18N(l_Item.Name), l_Item.Text, p_Data[l_Item.Name], l_Item.Default, m_Language:I18N(l_Item.Description))
 		end
 	end
 
