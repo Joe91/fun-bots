@@ -3,10 +3,11 @@ class 'FunBotUIServer'
 require('__shared/ArrayMap')
 require('__shared/Config')
 
+Language = require('__shared/Language')
+
 local m_NodeCollection = require('__shared/NodeCollection')
 local m_SettingsManager = require('SettingsManager')
 
-Language = require('__shared/Language')
 local BotManager = require('BotManager')
 local BotSpawner = require('BotSpawner')
 local WeaponModification = require('WeaponModification')
@@ -344,13 +345,6 @@ function FunBotUIServer:_writeSettings(p_Player, p_Request)
 
 			elseif l_Item.Type == Type.Boolean then
 				s_Value = p_Request[l_Item.Name] == true
-				s_Valid = true
-				if s_Value ~= Config[l_Item.Name] then
-					s_Changed = true
-				end
-
-			elseif l_Item.Type == Type.String then
-				s_Value = p_Request[l_Item.Name]
 				s_Valid = true
 				if s_Value ~= Config[l_Item.Name] then
 					s_Changed = true
