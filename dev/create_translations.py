@@ -69,7 +69,8 @@ with open(index_html, "r") as inFileHtml:
 	for line in inFileHtml.read().splitlines():
 		if "data-lang=\"" in line:
 			translationHtml = line.split("data-lang=\"")[1].split("\"")[0]
-			allHtmlTranslations.append(translationHtml)
+			if translationHtml not in allHtmlTranslations:
+				allHtmlTranslations.append(translationHtml)
 	with open(language_file_js, "w") as outFileHtml:
 		outFileHtml.write("""Language['xx_XX'] /* Add/replace the xx_XX here with your language code (like de_DE, en_US, or other)! */ = {
 	"__LANGUAGE_INFO": {
