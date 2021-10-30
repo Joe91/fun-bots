@@ -99,7 +99,10 @@ function FunBotClient:OnLevelDestroy()
 	m_ClientBotManager:OnLevelDestroy()
 	m_ClientNodeEditor:OnLevelDestroy()
 	m_ClientSpawnPointHelper:OnLevelDestroy()
-	collectgarbage()
+	-- !! garbage-collection on client causes crashes. So don't use this for now
+	-- local s_OldMemory = math.floor(collectgarbage("count")/1024)
+	-- collectgarbage('collect')
+	-- m_Logger:Write("*Collecting Garbage on Level Destroy: " .. math.floor(collectgarbage("count")/1024) .. " MB | Old Memory: " .. s_OldMemory .. " MB")
 end
 
 function FunBotClient:OnLevelLoaded(p_LevelName, p_GameMode)
