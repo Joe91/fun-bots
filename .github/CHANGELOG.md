@@ -35,6 +35,8 @@ This release contains a lot of small bug fixes and more QoL updates.
 * fixed path bug with destroyed mcoms
 * New settings for vehicle-usage
 * Added FOV-Settings for Vehicles
+* fixed Garbage-Collection on Server
+* fixed some vehicle-categories
 
 ### New maps
 * Theran Highway CQS (Vehicles) - thanks to Gemini899
@@ -55,6 +57,7 @@ This release contains a lot of small bug fixes and more QoL updates.
 * Noshahr Canals CQS update - thanks to KrazyIvan777 and MeisterPeitsche
 * Wake Island Assaullt Small (1+2) (infantery) - thanks to DuTcHrEaGaN
 * Wake Island Assault Large (infantery) - thanks to DuTcHrEaGaN
+* Wake Island Assault Large (Vehicles) - thanks to KrazyIvan777
 
 ### 📖 Documentation update
 * nothing done on this front :-(

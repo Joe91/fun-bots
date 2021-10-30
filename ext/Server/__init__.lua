@@ -247,7 +247,9 @@ function FunBotServer:OnLevelDestroy()
 	m_BotSpawner:OnLevelDestroy()
 	m_NodeEditor:OnLevelDestroy()
 	m_AirTargets:OnLevelDestroy()
-	collectgarbage()
+	local s_OldMemory = math.floor(collectgarbage("count")/1024)
+	collectgarbage('collect')
+	m_Logger:Write("*Collecting Garbage on Level Destroy: " .. math.floor(collectgarbage("count")/1024) .. " MB | Old Memory: " .. s_OldMemory .. " MB")
 end
 
 function FunBotServer:OnRoundOver(p_RoundTime, p_WinningTeam)
