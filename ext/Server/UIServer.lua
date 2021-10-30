@@ -349,13 +349,6 @@ function FunBotUIServer:_writeSettings(p_Player, p_Request)
 				if s_Value ~= Config[l_Item.Name] then
 					s_Changed = true
 				end
-
-			elseif l_Item.Type == Type.String then
-				s_Value = p_Request[l_Item.Name]
-				s_Valid = true
-				if s_Value ~= Config[l_Item.Name] then
-					s_Changed = true
-				end
 			end
 
 			-- update with value or with current Config. Update is needed to not loose Config Values
