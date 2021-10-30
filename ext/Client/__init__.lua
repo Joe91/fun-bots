@@ -58,6 +58,7 @@ function FunBotClient:RegisterEvents()
 	Events:Subscribe('Player:Deleted', self, self.OnPlayerDeleted)
 	Events:Subscribe('Client:UpdateInput', self, self.OnClientUpdateInput)
 	Events:Subscribe('Engine:Update', self, self.OnEngineUpdate)
+	Events:Subscribe('Player:Respawn', self, self.OnPlayerRespawn)
 	Events:Subscribe('UI:DrawHud', self, self.OnUIDrawHud)
 	Events:Subscribe('Partition:Loaded', self, self.OnPartitionLoaded)
 
@@ -86,6 +87,15 @@ function FunBotClient:OnEngineMessage(p_Message)
 	m_ClientBotManager:OnEngineMessage(p_Message)
 end
 
+function FunBotClient:OnPlayerRespawn(p_Player)
+    local s_LocalPlayer = PlayerManager:GetLocalPlayer()
+    if s_LocalPlayer ~= nil and p_Player == localPlayer then
+		local s_OldMemory = math.floor(collectgarbage("count")/1024)
+		collectgarbage('collect')
+		m_Logger:Write("*Collecting Garbage on Level Destroy: " .. math.floor(collectgarbage("count")/1024) .. " MB | Old Memory: " .. s_OldMemory .. " MB")
+    end
+end
+
 function FunBotClient:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	m_ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	m_ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
@@ -100,10 +110,6 @@ function FunBotClient:OnLevelDestroy()
 	m_ClientBotManager:OnLevelDestroy()
 	m_ClientNodeEditor:OnLevelDestroy()
 	m_ClientSpawnPointHelper:OnLevelDestroy()
-	-- !! garbage-collection on client causes crashes. So don't use this for now
-	-- local s_OldMemory = math.floor(collectgarbage("count")/1024)
-	-- collectgarbage('collect')
-	-- m_Logger:Write("*Collecting Garbage on Level Destroy: " .. math.floor(collectgarbage("count")/1024) .. " MB | Old Memory: " .. s_OldMemory .. " MB")
 end
 
 function FunBotClient:OnLevelLoaded(p_LevelName, p_GameMode)
