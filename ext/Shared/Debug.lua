@@ -28,7 +28,7 @@ Debug = {
 	},
 	Shared = {
 		EBX = false,				-- Debug EBX-Utils
-		LANGUAGE = true,			-- Debug Language
+		LANGUAGE = false,			-- Debug Language
 		NODECOLLECTION = false,		-- Debug NodeCollection
 		DATABASE = false,			-- Debug Database-Operations
 		MODIFICATIONS = false		-- Debug some Modifications
