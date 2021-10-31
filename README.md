@@ -3,7 +3,7 @@
 [![Image](https://img.shields.io/github/v/release/Joe91/fun-bots?style=for-the-badge)](https://github.com/Joe91/fun-bots/releases)
 [![Image](https://img.shields.io/github/v/tag/Joe91/fun-bots?color=A60000&include_prereleases&label=Dev%20Build&style=for-the-badge)](https://github.com/Joe91/fun-bots/tags)
 
-Welcome to the fun-bots repository. This is a mod for [Venice Unleashed](https://veniceunleashed.net/) to bring highly configurable and intelligent virtual bots to your Battlefield 3 server. [Want to see it in action?](https://play.funbots.dev)
+Welcome to the fun-bots repository. This is a mod for [Venice Unleashed](https://veniceunleashed.net/) to bring highly configurable and intelligent virtual bots to your Battlefield 3 server.
 
 Do you enjoy our work? Support us on [Patreon](https://patreon.com/funbots)
 
