@@ -43,6 +43,7 @@ This release contains a lot of small bug fixes and more QoL updates.
 * fixed some vehicle-categories
 * fixed bug in path-switching
 * fixed a bug in target-objective-finding
+* fixed some wrong objective-names on existing maps
 
 ### New maps
 * Theran Highway CQS (Vehicles) - thanks to Gemini899
