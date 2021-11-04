@@ -41,6 +41,8 @@ This release contains a lot of small bug fixes and more QoL updates.
 * Added FOV-Settings for Vehicles
 * fixed Garbage-Collection on Server
 * fixed some vehicle-categories
+* fixed bug in path-switching
+* fixed a bug in target-objective-finding
 
 ### New maps
 * Theran Highway CQS (Vehicles) - thanks to Gemini899
@@ -62,6 +64,8 @@ This release contains a lot of small bug fixes and more QoL updates.
 * Wake Island Assaullt Small (1+2) (infantery) - thanks to DuTcHrEaGaN
 * Wake Island Assault Large (infantery) - thanks to DuTcHrEaGaN
 * Wake Island Assault Large (Vehicles) - thanks to KrazyIvan777
+* Death Valley CQS (Vehicles) - thanks to KrazyIvan777
+* Riverside CQS (Vehicles) - thanks to KrazyIvan777
 
 ### 📖 Documentation update
 * nothing done on this front :-(

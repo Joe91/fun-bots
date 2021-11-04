@@ -506,7 +506,7 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 	local s_ReferenceObjectivesEnemy = {}
 
 	for _, l_ReferenceObjective in pairs(self.m_AllObjectives) do
-		if not l_ReferenceObjective.isEnterVehiclePath and not l_ReferenceObjective.IsBasePath and not l_ReferenceObjective.isSpawnPath then
+		if not l_ReferenceObjective.isEnterVehiclePath and not l_ReferenceObjective.isBase and not l_ReferenceObjective.isSpawnPath then
 			if l_ReferenceObjective.team == TeamId.TeamNeutral then
 				table.insert(s_ReferenceObjectivesNeutral, l_ReferenceObjective)
 				break
@@ -648,17 +648,14 @@ function GameDirector:IsOnObjectivePath(p_Path)
 end
 
 function GameDirector:IsBasePath(p_ObjectiveNames)
-	local s_IsBase = false
-
 	for _, l_ObjectiveName in pairs(p_ObjectiveNames) do
 		local s_Objective = self:_GetObjectiveObject(l_ObjectiveName)
 
 		if s_Objective ~= nil and s_Objective.isBase then
-			s_IsBase = true
-			break
+			return true
 		end
 	end
-	return s_IsBase
+	return false
 end
 
 -- -1 = destroyed objective

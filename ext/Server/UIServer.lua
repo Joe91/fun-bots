@@ -379,8 +379,8 @@ function FunBotUIServer:_writeSettings(p_Player, p_Request)
 
 	-- Language of UI
 	if updateLanguage then
-		NetEvents:SendTo('UI_Change_Language', p_Player, Config.Language)
 		Language:loadLanguage(Config.Language)
+		NetEvents:SendTo('UI_Change_Language', p_Player, Config.Language)
 	end
 
 	-- Call batched process

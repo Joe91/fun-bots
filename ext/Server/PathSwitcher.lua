@@ -99,9 +99,6 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle, p
 				if  m_GameDirector:UseVehicle(p_TeamId, s_PathNode.Data.Objectives[1]) == true then
 					return true, s_NewPoint
 				end
-			else
-				-- skip this node
-				goto skip
 			end
 		end
 
@@ -226,7 +223,6 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle, p
 				end
 			end
 		end
-		::skip::
 	end
 
 	-- remove paths below our highest priority
