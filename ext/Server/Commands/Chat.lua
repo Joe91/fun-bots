@@ -7,7 +7,7 @@ local m_BotManager = require('BotManager')
 local m_BotSpawner = require('BotSpawner')
 local m_Debug = require('Debug/BugReport')
 
--- @todo - Create a Permission Manager to merge permission check into a single function.
+local m_CarParts
 
 function ChatCommands:Execute(p_Parts, p_Player)
 	if p_Player == nil or Config.DisableChatCommands == true then
@@ -24,6 +24,38 @@ function ChatCommands:Execute(p_Parts, p_Player)
 			ChatManager:SendMessage(table.concat(s_Permissions, ', '), p_Player)
 		end
 	elseif p_Parts[1] == '!car' then
+		if PermissionManager:HasPermission(p_Player, 'ChatCommands') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands).', p_Player)
+			return
+		end
+		m_CarParts = {}
+		if p_Player.attachedControllable ~= nil then
+
+			local s_VehicleName = VehicleEntityData(p_Player.controlledControllable.data).controllableType:gsub(".+/.+/","")
+			local s_Pos = p_Player.controlledControllable.transform.forward
+			print(s_VehicleName)
+			local s_VehicleEntity
+
+			-- vehicle found
+			print(p_Player.controlledControllable.physicsEntityBase.partCount)
+			s_VehicleEntity = p_Player.controlledControllable.physicsEntityBase
+
+			for j = 0, s_VehicleEntity.partCount - 1 do
+				if p_Player.controlledControllable.physicsEntityBase:GetPart(j) ~= nil then --and p_Player.controlledControllable.physicsEntityBase:GetPart(j):Is("ServerChildComponent") then
+					local s_QuatTransform = p_Player.controlledControllable.physicsEntityBase:GetPartTransform(j)
+
+					if s_QuatTransform == nil then
+						return -1
+					end
+					print(p_Player.controlledControllable.physicsEntityBase:GetPart(j).typeInfo.name)
+					print("index: "..j)
+					local s_Direction = s_QuatTransform:ToLinearTransform().forward - s_Pos
+					print(s_Direction)
+					m_CarParts[j] = s_Direction
+				end
+			end
+		end
+	elseif p_Parts[1] == '!cardiff' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands') == false then
 			ChatManager:SendMessage('You have no permissions for this action (ChatCommands).', p_Player)
 			return
@@ -48,7 +80,10 @@ function ChatCommands:Execute(p_Parts, p_Player)
 					end
 					print(p_Player.controlledControllable.physicsEntityBase:GetPart(j).typeInfo.name)
 					print("index: "..j)
-					print(s_QuatTransform:ToLinearTransform().forward - s_Pos)
+					local s_Direction = s_QuatTransform:ToLinearTransform().forward - s_Pos
+					if m_CarParts[j] ~= nil then
+						print(s_Direction - m_CarParts[j])
+					end
 				end
 			end
 		end

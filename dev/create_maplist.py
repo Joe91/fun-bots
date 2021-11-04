@@ -8,7 +8,8 @@ import operator
 GameModesToUse = ["TDM", "SDM", "TDM CQ", "Rush", "SQ Rush", "CQ Small", "CQ Large", "Assault", "Assault 2", "Assault Large", "GM", "CQ Dom", "Scavanger", "CTF"]
 RoundsToUse = 1
 #AddComment = True # True or False
-
+MapsWithGunmaster = ["XP2", "XP4"]
+MapsWithoutTdmCq = ["XP2"]
 
 AllGameModes = ["TDM", "SDM", "TDM CQ", "Rush", "SQ Rush", "CQ Small", "CQ Large", "Assault", "Assault 2", "Assault Large", "GM", "CQ Dom", "Scavanger", "CTF"]
 GameModeTranslations = {
@@ -45,8 +46,24 @@ for filename in filenames:
             gameMode = mode
             break
     if gameMode != "" and gameMode in GameModesToUse:
-        tempTable = [mapname, translatedGamemode, str(RoundsToUse)]
-        mapItems.append(tempTable)
+        #find special modes for TDM-Paths
+        addTdm = True
+        if gameMode == "TDM":
+            for token in MapsWithGunmaster:
+                if token in mapname:
+                    tempTable = [mapname, "GunMaster0", str(RoundsToUse)]
+                    mapItems.append(tempTable)
+            for token in MapsWithoutTdmCq:
+                if token in mapname:
+                    addTdm = False
+            if addTdm:
+                tempTable = [mapname, translatedGamemode, str(RoundsToUse)]
+                mapItems.append(tempTable)
+            tempTable = [mapname, "TeamDeathMatchC0", str(RoundsToUse)]
+            mapItems.append(tempTable)
+        else:
+            tempTable = [mapname, translatedGamemode, str(RoundsToUse)]
+            mapItems.append(tempTable)
     
 
 #sort the list by gamemode

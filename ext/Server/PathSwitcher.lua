@@ -100,8 +100,9 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle, p
 					return true, s_NewPoint
 				end
 			else
-				-- skip this node
-				goto skip
+				if m_GameDirector:IsVehicleEnterPath(s_PathNode.Data.Objectives[1]) then
+					goto skip
+				end
 			end
 		end
 

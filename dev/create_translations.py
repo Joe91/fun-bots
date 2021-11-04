@@ -1,5 +1,9 @@
 settings_definition = "../ext/shared/Settings/SettingsDefinition.lua"
 index_html = "../WebUI/index.html"
+listOfJsTranslationFiles = [
+	"../WebUI/Classes/EntryElement.js",
+	"../WebUI/Classes/BotEditor.js"
+]
 
 language_file = "../ext/shared/Languages/DEFAULT.lua"
 language_file_js = "../WebUI/languages/DEFAULT.js"
@@ -71,6 +75,15 @@ with open(index_html, "r") as inFileHtml:
 			translationHtml = line.split("data-lang=\"")[1].split("\"")[0]
 			if translationHtml not in allHtmlTranslations:
 				allHtmlTranslations.append(translationHtml)
+	for fileName in listOfJsTranslationFiles:
+		with open(fileName, "r") as fileWithTranslation:
+			for line in fileWithTranslation.read().splitlines():
+				if "I18N('" in line:
+					translation = line.split("I18N('")[1]
+					translation = translation.split("'")[0]
+					if translation not in allHtmlTranslations:
+						allHtmlTranslations.append(translation)
+
 	with open(language_file_js, "w") as outFileHtml:
 		outFileHtml.write("""Language['xx_XX'] /* Add/replace the xx_XX here with your language code (like de_DE, en_US, or other)! */ = {
 	"__LANGUAGE_INFO": {

@@ -208,7 +208,7 @@ function ClientNodeEditor:OnRegisterEvents()
 	Console:Register('UnloadNodes', 'Clears and unloads all clientside nodes', self, self._onUnload)
 
 	Console:Register('ObjectiveDirection', 'Show best direction to given objective', self, self._onObjectiveDirection)
-	Console:Register('GetKnownOjectives', 'print all known objectives and associated paths', self, self._onGetKnownOjectives)
+	Console:Register('GetKnownObjectives', 'print all known objectives and associated paths', self, self._onGetKnownObjectives)
 
 
 	Console:Register('BotVision', '*<boolean|Enabled>* Lets you see what the bots see [Experimental]', self, self._onSetBotVision)
@@ -1117,9 +1117,9 @@ function ClientNodeEditor:_onObjectiveDirection(p_Args)
 	return true
 end
 
-function ClientNodeEditor:_onGetKnownOjectives(p_Args)
+function ClientNodeEditor:_onGetKnownObjectives(p_Args)
 	self.m_CommoRoseActive = false
-	self:Log('Known Objectives -> '..g_Utilities:dump(m_NodeCollection:GetKnownOjectives(), true))
+	self:Log('Known Objectives -> '..g_Utilities:dump(m_NodeCollection:GetKnownObjectives(), true))
 	return true
 end
 
