@@ -1,9 +1,10 @@
 local ApiUrls = {
-	stable = 'https://api.github.com/repos/Joe91/fun-bots/releases/latest?per_page=1',
+	release = 'https://api.github.com/repos/Joe91/fun-bots/releases/latest?per_page=1',
+	stable = 'https://api.github.com/repos/Joe91/fun-bots/releases?per_page=1',
 	dev = 'https://api.github.com/repos/Joe91/fun-bots/tags?per_page=1'
 }
 
-local function UpdateFinished(p_CycleId, p_Success, p_UpdateAvailable, p_UpdateUrl, p_UpdateData, p_Log)
+local function UpdateFinished(p_Success, p_UpdateAvailable, p_UpdateUrl, p_UpdateData, p_Log)
 	-- Check if the update was successfull
 	if not p_Success then
 		print('[UPDATE] Failed to check for an update.') -- @ToDo: Move this to a logger
@@ -31,7 +32,7 @@ local function updateCheckCB(httpRequest)
 	-- Parse JSON
 	local s_EndpointJSON = json.decode(httpRequest.body)
 	if s_EndpointJSON == nil then
-		UpdateFinished(VersionConfig.AutoUpdater.DevBuilds, false, false, nil, nil, nil)
+		UpdateFinished(false, false, nil, nil, nil)
 		do return end
 	end
 
@@ -39,23 +40,31 @@ local function updateCheckCB(httpRequest)
 	-- @ToDo: Make the current version better as it currently checks strings. It should check an incremental value instead.
 
 	-- Stable and release candidates follow the same body
-	if not VersionConfig.AutoUpdater.DevBuilds then
-		if "v" .. RegistryManager:GetUtil():GetVersion() == s_EndpointJSON['tag_name'] then
-			UpdateFinished(VersionConfig.AutoUpdater.DevBuilds, true, false, nil, nil, nil)
+	if Registry.VERSION.UPDATE_CHANNEL == VersionType.Release then
+		if "V" .. RegistryManager:GetUtil():GetVersion() == s_EndpointJSON['tag_name'] then
+			UpdateFinished(true, false, nil, nil, nil)
 			do return end
 		end
 
-		UpdateFinished(VersionConfig.AutoUpdater.DevBuilds, true, true, s_EndpointJSON['html_url'], {tag = s_EndpointJSON['tag_name'], relTimestamp = s_EndpointJSON['published_at']}, nil)
+		UpdateFinished(true, true, s_EndpointJSON['html_url'], {tag = s_EndpointJSON['tag_name'], relTimestamp = s_EndpointJSON['published_at']}, nil)
 		do return end
-	end
+	elseif Registry.VERSION.UPDATE_CHANNEL == VersionType.Stable then
+		if "V" .. RegistryManager:GetUtil():GetVersion() == s_EndpointJSON[1]['tag_name'] then
+			UpdateFinished(true, false, nil, nil, nil)
+			do return end
+		end
 
-	-- Development builds
-	if RegistryManager:GetUtil():GetVersion() == s_EndpointJSON[1]['name']:gsub("V", "") then
-		UpdateFinished(VersionConfig.AutoUpdater.DevBuilds, true, false, nil, nil, nil)
+		UpdateFinished(true, true, s_EndpointJSON[1]['html_url'], {tag = s_EndpointJSON[1]['tag_name'], relTimestamp = s_EndpointJSON[1]['published_at']}, nil)
 		do return end
-	end
+	else
+		-- Development builds
+		if RegistryManager:GetUtil():GetVersion() == s_EndpointJSON[1]['name']:gsub("v", "", 1) then
+			UpdateFinished(true, false, nil, nil, nil)
+			do return end
+		end
 
-	UpdateFinished(true, true, true, s_EndpointJSON[1]['zipball_url'], {tag = s_EndpointJSON[1]['name']}, nil)
+		UpdateFinished(true, true, s_EndpointJSON[1]['zipball_url'], {tag = s_EndpointJSON[1]['name']}, nil)
+	end
 end
 
 -- Async check for newer updates
@@ -63,11 +72,13 @@ end
 local function UpdateCheck()
 
 	-- Calculate the URL to get from.
-	local s_EndpointURL = ApiUrls.stable
+	local s_EndpointURL = ApiUrls.release
 
 	-- If development builds are enabled, get latest tags
-	if VersionConfig.AutoUpdater.DevBuilds then
+	if Registry.VERSION.UPDATE_CHANNEL == VersionType.DevBuild then
 		s_EndpointURL = ApiUrls.dev
+	elseif Registry.VERSION.UPDATE_CHANNEL == VersionType.Stable then
+		s_EndpointURL = ApiUrls.stable
 	end
 
 	Net:GetHTTPAsync(s_EndpointURL, updateCheckCB)
