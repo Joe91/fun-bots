@@ -27,7 +27,10 @@ This release contains a lot of small bug fixes and more QoL updates.
 * Improved Code of Bot.lua to separate different Functions and for future functions
 * Improved Nade calculations (still far from perfect)
 * land-vehicles teleport if stuck
-* Added Language-System again
+* Added Language-System again! You can now create your own translation
+	* fill out the file ext\Shared\Languages\DEFAULT.lua
+	* fill out the file WebUI\languages\DEFAULT.js 
+	* send those files to me and we will add your language to fun-bots
 
 ### 🐛 Minor bug fixes
 * fixed bug with jeeps

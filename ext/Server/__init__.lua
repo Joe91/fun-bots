@@ -62,8 +62,8 @@ function FunBotServer:OnEngineInit()
 end
 
 function FunBotServer:OnExtensionLoaded()
-	m_Language:loadLanguage(Config.Language)
 	m_SettingsManager:OnExtensionLoaded()
+	m_Language:loadLanguage(Config.Language)
 	self:RegisterEvents()
 	self:RegisterHooks()
 	self:RegisterCustomEvents()

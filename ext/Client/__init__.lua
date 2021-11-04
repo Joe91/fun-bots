@@ -35,13 +35,13 @@ local m_FunBotUIClient = require('UIClient')
 
 function FunBotClient:__init()
 	Events:Subscribe('Extension:Loaded', self, self.OnExtensionLoaded)
+	self._SettingsValid = false
 end
 
 function FunBotClient:OnExtensionLoaded()
-	m_Language:loadLanguage(Config.Language)
+	self._SettingsValid = false
 	self:RegisterEvents()
 	self:RegisterHooks()
-	m_FunBotUIClient:OnExtensionLoaded()
 
 	-- Announce the version in the client's console if enabled in the registry
 	if Registry.CLIENT_SHOW_VERSION_ON_JOIN then
@@ -146,6 +146,11 @@ end
 
 function FunBotClient:OnWriteClientSettings(p_NewConfig, p_UpdateWeaponSets)
 	m_ClientBotManager:OnWriteClientSettings(p_NewConfig, p_UpdateWeaponSets)
+	if not self._SettingsValid then
+		self._SettingsValid = true
+		m_Language:loadLanguage(Config.Language)
+		m_FunBotUIClient:OnExtensionLoaded()
+	end
 end
 
 function FunBotClient:CheckForBotBotAttack(p_StartPos, p_EndPos, p_ShooterBotName, p_BotName, p_InVehicle)

@@ -215,7 +215,7 @@ function FunBotUIClient:_onUIChangeLanguage(p_Language)
 	if Config.DisableUserInterface == true then
 		return
 	end
-
+	Language:loadLanguage(p_Language)
 	self._views:setLanguage(p_Language)
 end
 
