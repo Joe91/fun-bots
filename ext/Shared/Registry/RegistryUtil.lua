@@ -19,7 +19,7 @@ end
 function RegistryUtil:GetVersion()
 	-- If there is no label, we return the MAJ.MIN.PATCH, otherwise we need
 	-- to return the MAJ.MIN.PATCH-LABEL.
-	if Registry.VERSION.VERSION_LABEL == nil then
+	if Registry.VERSION.VERSION_LABEL == nil or Registry.VERSION.VERSION_LABEL == "" then
 		return Registry.VERSION.VERSION_MAJ .. "." .. Registry.VERSION.VERSION_MIN .. "." .. Registry.VERSION.VERSION_PATCH;
 	end
 

@@ -1,4 +1,4 @@
-👍🎉 First off, thanks for taking the time to contribute! 🎉👍
+First off, thanks for taking the time to contribute!
 
 ## 1.0 Coding conventions
 
