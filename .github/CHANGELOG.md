@@ -67,6 +67,7 @@ This release contains a lot of small bug fixes and more QoL updates. This Releas
 * Wake Island Assault Large (Vehicles) - thanks to KrazyIvan777
 * Death Valley CQS (Vehicles) - thanks to KrazyIvan777
 * Riverside CQS (Vehicles) - thanks to KrazyIvan777
+* Sharqi Peninsula Assault Day2 (infantery) - thanks to DuTcHrEaGaN
 
 ### Documentation update
 * nothing done on this front :-(
