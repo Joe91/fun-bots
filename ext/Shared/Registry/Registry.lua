@@ -24,7 +24,7 @@ Registry = {
 				-- Current version type of this build
 				VERSION_TYPE = VersionType.Stable,
 				-- The Version used for the Update-Check
-				UPDATE_CHANNEL = VersionType.Stable,
+				UPDATE_CHANNEL = VersionType.DevBuild,
 		},
 
 		-- Variables related to raycasting
