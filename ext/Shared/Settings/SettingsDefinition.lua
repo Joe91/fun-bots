@@ -1419,10 +1419,11 @@ SettingsDefinition = {
 		{
 			Name = "Language",
 			Text = "language",
-			Type = Type.String,
+			Type = Type.Table,
 			Value = Config.Language,
 			Description = "de_DE as sample (default is english, when language file doesnt exists)",
 			Default = nil,
+			Reference = Languages,
 			UpdateFlag = UpdateFlag.Language,
 			Category = "OTHER"
 		}

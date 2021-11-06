@@ -1236,7 +1236,7 @@ function NodeCollection:ObjectiveDirection(p_Waypoint, p_Objective, p_InVehicle)
 	return s_BestDirection, s_BestWaypoint
 end
 
-function NodeCollection:GetKnownOjectives()
+function NodeCollection:GetKnownObjectives()
 	local s_Objectives = {
 		--[<Objective Name>] = {<PathIndex 1>, <PathIndex 2>}
 	}
@@ -1244,14 +1244,14 @@ function NodeCollection:GetKnownOjectives()
 	for l_PathIndex, _ in pairs(self.waypointsByPathIndex) do
 		local s_PathWaypoint = self.waypointsByPathIndex[l_PathIndex][1]
 
-		if s_PathWaypoint ~= nil and s_PathWaypoint.Data.Objectives ~= nil then
-			for _, l_Objective in pairs(s_PathWaypoint.Data.Objectives) do
-				if s_Objectives[l_Objective] == nil then
-					s_Objectives[l_Objective] = {}
-				end
-
-				table.insert(s_Objectives[l_Objective], l_PathIndex)
+		-- only insert objectives that are objectives (on at least one path alone)
+		if s_PathWaypoint ~= nil and s_PathWaypoint.Data.Objectives ~= nil and #s_PathWaypoint.Data.Objectives == 1 then
+			local s_Objective = s_PathWaypoint.Data.Objectives[1]
+			if s_Objectives[s_Objective] == nil then
+				s_Objectives[s_Objective] = {}
 			end
+
+			table.insert(s_Objectives[s_Objective], l_PathIndex)
 		end
 	end
 

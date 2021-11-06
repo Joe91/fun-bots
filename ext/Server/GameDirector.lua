@@ -506,7 +506,7 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 	local s_ReferenceObjectivesEnemy = {}
 
 	for _, l_ReferenceObjective in pairs(self.m_AllObjectives) do
-		if not l_ReferenceObjective.isEnterVehiclePath and not l_ReferenceObjective.IsBasePath and not l_ReferenceObjective.isSpawnPath then
+		if not l_ReferenceObjective.isEnterVehiclePath and not l_ReferenceObjective.isBase and not l_ReferenceObjective.isSpawnPath then
 			if l_ReferenceObjective.team == TeamId.TeamNeutral then
 				table.insert(s_ReferenceObjectivesNeutral, l_ReferenceObjective)
 				break
@@ -532,7 +532,7 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 	local s_PathsDone = {}
 
 	for _, l_Objective in pairs(self.m_AllObjectives) do
-		local s_AllObjectives = m_NodeCollection:GetKnownOjectives()
+		local s_AllObjectives = m_NodeCollection:GetKnownObjectives()
 		local s_PathsWithObjective = s_AllObjectives[l_Objective.name]
 
 		if s_PathsWithObjective == nil then
@@ -628,7 +628,7 @@ function GameDirector:GetSpawnPathOfObjectives(p_PossibleObjectives)
 	end
 	-- check for spawn objectives
 	if s_AvailableSpawnPaths ~= nil then
-		local s_AllObjectives = m_NodeCollection:GetKnownOjectives()
+		local s_AllObjectives = m_NodeCollection:GetKnownObjectives()
 		local s_PathsWithObjective = s_AllObjectives[s_AvailableSpawnPaths]
 		return s_PathsWithObjective[MathUtils:GetRandomInt(1, #s_PathsWithObjective)], 1
 	else
@@ -648,17 +648,14 @@ function GameDirector:IsOnObjectivePath(p_Path)
 end
 
 function GameDirector:IsBasePath(p_ObjectiveNames)
-	local s_IsBase = false
-
 	for _, l_ObjectiveName in pairs(p_ObjectiveNames) do
 		local s_Objective = self:_GetObjectiveObject(l_ObjectiveName)
 
 		if s_Objective ~= nil and s_Objective.isBase then
-			s_IsBase = true
-			break
+			return true
 		end
 	end
-	return s_IsBase
+	return false
 end
 
 -- -1 = destroyed objective
@@ -697,6 +694,14 @@ function GameDirector:UseVehicle(p_BotTeam, p_Objective)
 		return true
 	end
 
+	return false
+end
+
+function GameDirector:IsVehicleEnterPath(p_Objective)
+	local s_TempObjective = self:_GetObjectiveObject(p_Objective)
+	if s_TempObjective ~= nil and s_TempObjective.isEnterVehiclePath then
+		return true
+	end
 	return false
 end
 
@@ -800,7 +805,7 @@ end
 function GameDirector:_InitObjectives()
 	self.m_AllObjectives = {}
 
-	for l_ObjectiveName, _ in pairs(m_NodeCollection:GetKnownOjectives()) do
+	for l_ObjectiveName, _ in pairs(m_NodeCollection:GetKnownObjectives()) do
 		local s_Objective = {
 			name = l_ObjectiveName,
 			team = TeamId.TeamNeutral,
@@ -1061,7 +1066,7 @@ function GameDirector:_GetDistanceFromObjective(p_Objective, p_Position)
 		return s_Distance
 	end
 
-	local s_AllObjectives = m_NodeCollection:GetKnownOjectives()
+	local s_AllObjectives = m_NodeCollection:GetKnownObjectives()
 	local s_Paths = s_AllObjectives[p_Objective]
 
 	for _, l_Path in pairs(s_Paths) do
@@ -1083,7 +1088,7 @@ function GameDirector:_TranslateObjective(p_Position, p_Name)
 		return self.m_Translations[p_Name]
 	end
 
-	local s_AllObjectives = m_NodeCollection:GetKnownOjectives()
+	local s_AllObjectives = m_NodeCollection:GetKnownObjectives()
 	local s_PathsDone = {}
 	local s_ClosestObjective = nil
 	local s_ClosestDistance = nil

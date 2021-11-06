@@ -3,10 +3,11 @@ class 'FunBotUIServer'
 require('__shared/ArrayMap')
 require('__shared/Config')
 
+Language = require('__shared/Language')
+
 local m_NodeCollection = require('__shared/NodeCollection')
 local m_SettingsManager = require('SettingsManager')
 
-Language = require('__shared/Language')
 local BotManager = require('BotManager')
 local BotSpawner = require('BotSpawner')
 local WeaponModification = require('WeaponModification')
@@ -348,13 +349,6 @@ function FunBotUIServer:_writeSettings(p_Player, p_Request)
 				if s_Value ~= Config[l_Item.Name] then
 					s_Changed = true
 				end
-
-			elseif l_Item.Type == Type.String then
-				s_Value = p_Request[l_Item.Name]
-				s_Valid = true
-				if s_Value ~= Config[l_Item.Name] then
-					s_Changed = true
-				end
 			end
 
 			-- update with value or with current Config. Update is needed to not loose Config Values
@@ -383,10 +377,10 @@ function FunBotUIServer:_writeSettings(p_Player, p_Request)
 		end
 	end
 
-	--UI
+	-- Language of UI
 	if updateLanguage then
-		NetEvents:SendTo('UI_Change_Language', p_Player, p_Request.language)
-		Language:loadLanguage(p_Request.language)
+		Language:loadLanguage(Config.Language)
+		NetEvents:SendTo('UI_Change_Language', p_Player, Config.Language)
 	end
 
 	-- Call batched process

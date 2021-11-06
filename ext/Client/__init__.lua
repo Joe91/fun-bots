@@ -13,6 +13,7 @@ require('__shared/Constants/BotMoveSpeeds')
 require('__shared/Constants/SpawnModes')
 require('__shared/Constants/SpawnMethods')
 require('__shared/Constants/TeamSwitchModes')
+require('__shared/Languages/Languages')
 require('__shared/Settings/Type')
 require('__shared/Settings/UpdateFlag')
 require('__shared/Settings/BotEnums')
@@ -34,13 +35,13 @@ local m_FunBotUIClient = require('UIClient')
 
 function FunBotClient:__init()
 	Events:Subscribe('Extension:Loaded', self, self.OnExtensionLoaded)
+	self._SettingsValid = false
 end
 
 function FunBotClient:OnExtensionLoaded()
-	--m_Language:loadLanguage(Config.Language)
+	self._SettingsValid = false
 	self:RegisterEvents()
 	self:RegisterHooks()
-	m_FunBotUIClient:OnExtensionLoaded()
 
 	-- Announce the version in the client's console if enabled in the registry
 	if Registry.CLIENT_SHOW_VERSION_ON_JOIN then
@@ -57,6 +58,7 @@ function FunBotClient:RegisterEvents()
 	Events:Subscribe('Player:Deleted', self, self.OnPlayerDeleted)
 	Events:Subscribe('Client:UpdateInput', self, self.OnClientUpdateInput)
 	Events:Subscribe('Engine:Update', self, self.OnEngineUpdate)
+	Events:Subscribe('Player:Respawn', self, self.OnPlayerRespawn)
 	Events:Subscribe('UI:DrawHud', self, self.OnUIDrawHud)
 	Events:Subscribe('Partition:Loaded', self, self.OnPartitionLoaded)
 
@@ -85,6 +87,15 @@ function FunBotClient:OnEngineMessage(p_Message)
 	m_ClientBotManager:OnEngineMessage(p_Message)
 end
 
+function FunBotClient:OnPlayerRespawn(p_Player)
+    local s_LocalPlayer = PlayerManager:GetLocalPlayer()
+    if s_LocalPlayer ~= nil and p_Player == localPlayer then
+		local s_OldMemory = math.floor(collectgarbage("count")/1024)
+		collectgarbage('collect')
+		m_Logger:Write("*Collecting Garbage on Level Destroy: " .. math.floor(collectgarbage("count")/1024) .. " MB | Old Memory: " .. s_OldMemory .. " MB")
+    end
+end
+
 function FunBotClient:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	m_ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	m_ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
@@ -99,7 +110,6 @@ function FunBotClient:OnLevelDestroy()
 	m_ClientBotManager:OnLevelDestroy()
 	m_ClientNodeEditor:OnLevelDestroy()
 	m_ClientSpawnPointHelper:OnLevelDestroy()
-	collectgarbage()
 end
 
 function FunBotClient:OnLevelLoaded(p_LevelName, p_GameMode)
@@ -136,6 +146,11 @@ end
 
 function FunBotClient:OnWriteClientSettings(p_NewConfig, p_UpdateWeaponSets)
 	m_ClientBotManager:OnWriteClientSettings(p_NewConfig, p_UpdateWeaponSets)
+	if not self._SettingsValid then
+		self._SettingsValid = true
+		m_Language:loadLanguage(Config.Language)
+		m_FunBotUIClient:OnExtensionLoaded()
+	end
 end
 
 function FunBotClient:CheckForBotBotAttack(p_StartPos, p_EndPos, p_ShooterBotName, p_BotName, p_InVehicle)
