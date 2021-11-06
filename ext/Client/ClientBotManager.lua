@@ -14,6 +14,8 @@ function ClientBotManager:RegisterVars()
 	self.m_LastIndex = 1
 	self.m_Player = nil
 	self.m_ReadyToUpdate = false
+	self.m_BotBotRaycastsToDo = {}
+	self.m_EnemyPlayers = {}
 end
 
 -- =============================================
@@ -21,6 +23,7 @@ end
 -- =============================================
 
 function ClientBotManager:OnClientUpdateInput(p_DeltaTime)
+	-- TODO: find a better solution for that!!!
 	if InputManager:WentKeyDown(InputDeviceKeys.IDK_Q) then
 		--execute Vehicle Enter Detection here
 		if self.m_Player ~= nil and self.m_Player.inVehicle then
@@ -28,7 +31,7 @@ function ClientBotManager:OnClientUpdateInput(p_DeltaTime)
 			-- The freecam transform is inverted. Invert it back
 			local s_CameraForward = Vec3(s_Transform.forward.x * -1, s_Transform.forward.y * -1, s_Transform.forward.z * -1)
 
-			local s_MaxEnterDistance = 30
+			local s_MaxEnterDistance = 50
 			local s_CastPosition = Vec3(s_Transform.trans.x + (s_CameraForward.x * s_MaxEnterDistance),
 					s_Transform.trans.y + (s_CameraForward.y * s_MaxEnterDistance),
 					s_Transform.trans.z + (s_CameraForward.z * s_MaxEnterDistance))
@@ -83,6 +86,21 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 		return
 	end
 
+	-- check bot-bot attack
+	if #self.m_BotBotRaycastsToDo > 0 then
+		local s_RaycastCheckEntry = self.m_BotBotRaycastsToDo[1]
+
+		if self:DoRaycast(s_RaycastCheckEntry.StartPos, s_RaycastCheckEntry.EndPos, s_RaycastCheckEntry.HitCount) then
+			NetEvents:SendLocal("Bot:ShootAtBot", s_RaycastCheckEntry.Shooter, s_RaycastCheckEntry.Target)
+		end
+		table.remove(self.m_BotBotRaycastsToDo, 1)
+	end
+
+	if #self.m_BotBotRaycastsToDo > Registry.BOT.MAX_RAYCASTS_PER_PLAYER_BOT_BOT then
+		m_Logger:Error("Too many entries!!")
+		self.m_BotBotRaycastsToDo = {}
+	end
+
 	self.m_RaycastTimer = self.m_RaycastTimer + p_DeltaTime
 
 	if self.m_RaycastTimer < Registry.GAME_RAYCASTING.RAYCAST_INTERVAL then
@@ -91,27 +109,29 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 	self.m_RaycastTimer = 0
 
+
 	if self.m_Player.soldier ~= nil then -- alive. Check for enemy bots
 		if self.m_AliveTimer < 1.0 then -- wait 2s (spawn-protection)
 			self.m_AliveTimer = self.m_AliveTimer + p_DeltaTime
 			return
 		end
 
-		local s_EnemyPlayers = {}
-		local s_AllPlayers = PlayerManager:GetPlayers()
+		if #self.m_EnemyPlayers == 0 then
+			local s_AllPlayers = PlayerManager:GetPlayers()
 
-		for _, l_Player in pairs(s_AllPlayers) do
-			if l_Player.teamId ~= self.m_Player.teamId then
-				table.insert(s_EnemyPlayers, l_Player)
+			for _, l_Player in pairs(s_AllPlayers) do
+				if l_Player.teamId ~= self.m_Player.teamId then
+					table.insert(self.m_EnemyPlayers, l_Player)
+				end
 			end
 		end
 
-		if self.m_LastIndex >= #s_EnemyPlayers then
+		if self.m_LastIndex >= #self.m_EnemyPlayers then
 			self.m_LastIndex = 1
 		end
 
-		for i = 0, #s_EnemyPlayers - 1 do
-			local s_Bot = s_EnemyPlayers[(self.m_LastIndex + i) % #s_EnemyPlayers +1]
+		for i = 0, #self.m_EnemyPlayers - 1 do
+			local s_Bot = self.m_EnemyPlayers[(self.m_LastIndex + i) % #self.m_EnemyPlayers +1]
 
 			if s_Bot == nil or s_Bot.onlineId ~= 0 or s_Bot.soldier == nil then
 				goto continue_enemy_loop
@@ -188,6 +208,9 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	else
 		self.m_AliveTimer = 0 --add a little delay after spawn
 	end
+
+	-- reset player-list after a full cycle
+	self.m_EnemyPlayers = {}
 end
 
 function ClientBotManager:OnExtensionUnloading()
@@ -229,9 +252,15 @@ function ClientBotManager:CheckForBotBotAttack(p_StartPos, p_EndPos, p_ShooterBo
 		s_HitCount = s_HitCount + 1
 	end
 
-	if self:DoRaycast(s_StartPos, s_EndPos, s_HitCount) then
-		NetEvents:SendLocal("Bot:ShootAtBot", p_ShooterBotName, p_BotName)
-	end
+	local s_RaycastCheckEntry = {
+		StartPos = s_StartPos,
+		EndPos = s_EndPos,
+		HitCount = s_HitCount,
+		Shooter = p_ShooterBotName,
+		Target = p_BotName
+	}
+
+	table.insert(self.m_BotBotRaycastsToDo, s_RaycastCheckEntry)
 end
 
 -- =============================================

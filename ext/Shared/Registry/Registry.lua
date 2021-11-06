@@ -30,7 +30,7 @@ Registry = {
 		-- Variables related to raycasting
 		GAME_RAYCASTING = {
 				-- Raycast Interval of client for different raycasts
-				RAYCAST_INTERVAL = 0.05,
+				RAYCAST_INTERVAL = 0.03,
 		},
 
 		GAME_DIRECTOR = {
@@ -50,9 +50,9 @@ Registry = {
 		-- Bot related
 		BOT = {
 				-- Bot attack bot check interval
-				BOT_ATTACK_BOT_CHECK_INTERVAL = 0.05,
+				BOT_ATTACK_BOT_CHECK_INTERVAL = 0.06,
 				-- Max Raycasts for Bot-Bot Attack per player and cycle
-				MAX_RAYCASTS_PER_PLAYER_BOT_BOT = 4,
+				MAX_RAYCASTS_PER_PLAYER_BOT_BOT = 2,
 				-- Update cycle fast
 				BOT_FAST_UPDATE_CYCLE = 0.03, -- equals 30 fps
 				-- Update cycle

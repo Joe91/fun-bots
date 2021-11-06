@@ -343,7 +343,7 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 
 		if s_Objective ~= nil and s_Objective.isSpawnPath then
 			local s_Node = g_GameDirector:FindClosestPath(p_Entity.transform.trans, true)
-			if s_Node ~= nil and s_Node.Position:Distance(p_Entity.transform.trans) < 10 then
+			if s_Node ~= nil and s_Node.Position:Distance(p_Entity.transform.trans) < Registry.VEHICLES.MIN_DISTANCE_VEHICLE_ENTER  then
 				table.insert(self.m_SpawnableVehicles[s_Objective.team], p_Entity)
 			end
 		end

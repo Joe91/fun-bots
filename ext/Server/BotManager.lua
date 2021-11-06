@@ -15,7 +15,10 @@ function BotManager:__init()
 	self._BotAttackBotTimer = 0
 	self._DestroyBotsTimer = 0
 	self._BotsToDestroy = {}
+
 	self._BotCheckState = {}
+	self._ConnectionCheckState = {}
+
 	self._PendingAcceptRevives = {}
 	self._LastBotCheckIndex = 1
 	self._InitDone = false
@@ -277,10 +280,10 @@ function BotManager:OnBotShootAtBot(p_Player, p_BotName1, p_BotName2)
 	end
 
 	if s_Bot1:ShootAt(s_Bot2.m_Player, false) then
-		self._BotCheckState[s_Bot1.m_Player.name] = s_Bot2.m_Player.name
+		self._BotCheckState[s_Bot1.m_Player.name] = true
 	end
 	if s_Bot2:ShootAt(s_Bot1.m_Player, false) then
-		self._BotCheckState[s_Bot2.m_Player.name] = s_Bot1.m_Player.name
+		self._BotCheckState[s_Bot2.m_Player.name] = true
 	end
 end
 
@@ -733,7 +736,7 @@ function BotManager:_CheckForBotBotAttack()
 			local s_OpposingTeams = {}
 
 			for l_TeamId = 1, Globals.NrOfTeams do
-				if s_Bot.m_Player.teamId ~= l_TeamId then
+				if (s_Bot.m_Player.teamId % 2) ~= (l_TeamId % 2) then
 					table.insert(s_OpposingTeams, l_TeamId)
 				end
 			end
@@ -741,11 +744,30 @@ function BotManager:_CheckForBotBotAttack()
 			for _, s_OpposingTeam in pairs(s_OpposingTeams) do
 				-- search only opposing team
 				for _, l_Bot in pairs(self._BotsByTeam[s_OpposingTeam + 1]) do
+					-- create connection-id
+					local s_ConnectionValue = ""
+					local s_Id1 = s_Bot.m_Player.id
+					local s_Id2 = l_Bot.m_Player.id
+					if s_Id1 > s_Id2 then
+						s_ConnectionValue = tostring(s_Id2).."-"..tostring(s_Id1)
+					else
+						s_ConnectionValue = tostring(s_Id1).."-"..tostring(s_Id2)
+					end
 					-- make sure it's living and has no target
-					if (l_Bot ~= nil and l_Bot.m_Player ~= nil and l_Bot.m_Player.soldier ~= nil and not self._BotCheckState[l_Bot.m_Player.name]) then
+					if (l_Bot ~= nil and l_Bot.m_Player ~= nil and l_Bot.m_Player.soldier ~= nil and not self._BotCheckState[l_Bot.m_Player.name]) and not self._ConnectionCheckState[s_ConnectionValue] then
+						-- connection has not been checked yet
+						self._ConnectionCheckState[s_ConnectionValue] = true
+
 						local s_Distance = s_Bot.m_Player.soldier.worldTransform.trans:Distance(l_Bot.m_Player.soldier.worldTransform.trans)
 						self.dummyCnt = self.dummyCnt + 1
-						if s_Distance <= Config.MaxBotAttackBotDistance then
+						local s_MaxDistance = 0
+						if s_Bot.m_InVehicle or l_Bot.m_InVehicle then
+							s_MaxDistance = Config.MaxRaycastDistanceVehicles
+						else
+							s_MaxDistance = Config.MaxRaycastDistance
+						end
+
+						if s_Distance <= s_MaxDistance then
 							-- choose a player at random, try until an active player is found
 							for l_PlayerIndex = s_NextPlayerIndex, s_PlayerCount do
 								if self._ActivePlayers[s_Players[l_PlayerIndex].name] then
@@ -761,14 +783,12 @@ function BotManager:_CheckForBotBotAttack()
 										s_NextPlayerIndex = l_PlayerIndex + 1
 										s_RaycastPlayer = 0
 									end
-									break
 								end
-							end
-
-							if s_Raycasts >= (s_PlayerCount*Registry.BOT.MAX_RAYCASTS_PER_PLAYER_BOT_BOT) then
-								-- leave the function early for this cycle
-								self._LastBotCheckIndex = i
-								return
+								if s_Raycasts >= (s_PlayerCount*Registry.BOT.MAX_RAYCASTS_PER_PLAYER_BOT_BOT) then
+									-- leave the function early for this cycle
+									self._LastBotCheckIndex = i
+									return
+								end
 							end
 						end
 					end
@@ -781,11 +801,12 @@ function BotManager:_CheckForBotBotAttack()
 
 	-- should only reach here if every connection has been checked
 	-- clear the cache and start over
-	-- print("all bots done "..tostring(self.dummyCnt).." "..tostring(self.dummyCnt2))
+	print("all bots done "..tostring(self.dummyCnt).." "..tostring(self.dummyCnt2))
 	self.dummyCnt = 0
 	self.dummyCnt2 = 0
 	self._LastBotCheckIndex = 1
 	self._BotCheckState = {}
+	self._ConnectionCheckState = {}
 end
 
 function BotManager:_GetDamageValue(p_Damage, p_Bot, p_Soldier, p_Fake)
