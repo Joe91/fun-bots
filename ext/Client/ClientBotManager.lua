@@ -64,7 +64,8 @@ end
 
 function ClientBotManager:DoRaycast(p_Pos1, p_Pos2, p_MaxHits)
 	local s_RaycastFlags =  RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter
-	local s_MaterialFlags = MaterialFlags.MfPenetrable | MaterialFlags.MfClientDestructible | MaterialFlags.MfBashable | MaterialFlags.MfSeeThrough | MaterialFlags.MfNoCollisionResponse | MaterialFlags.MfNoCollisionResponseCombined
+	local s_MaterialFlags = 0 --MaterialFlags.MfPenetrable | MaterialFlags.MfClientDestructible | MaterialFlags.MfBashable | MaterialFlags.MfSeeThrough | MaterialFlags.MfNoCollisionResponse | MaterialFlags.MfNoCollisionResponseCombined
+
 	local s_RayHits = RaycastManager:CollisionRaycast(p_Pos1, p_Pos2, p_MaxHits, s_MaterialFlags, s_RaycastFlags)
 	if s_RayHits ~= nil and #s_RayHits < p_MaxHits then
 		return true
@@ -78,14 +79,6 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 		return
 	end
 
-	if self.m_Player == nil then
-		self.m_Player = PlayerManager:GetLocalPlayer()
-	end
-
-	if self.m_Player == nil then
-		return
-	end
-
 	-- check bot-bot attack
 	if #self.m_BotBotRaycastsToDo > 0 then
 		local s_RaycastCheckEntry = self.m_BotBotRaycastsToDo[1]
@@ -95,11 +88,19 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 		end
 		table.remove(self.m_BotBotRaycastsToDo, 1)
 	end
-
 	if #self.m_BotBotRaycastsToDo > Registry.BOT.MAX_RAYCASTS_PER_PLAYER_BOT_BOT then
 		m_Logger:Error("Too many entries!!")
 		self.m_BotBotRaycastsToDo = {}
 	end
+
+	if self.m_Player == nil then
+		self.m_Player = PlayerManager:GetLocalPlayer()
+	end
+
+	if self.m_Player == nil then
+		return
+	end
+
 
 	self.m_RaycastTimer = self.m_RaycastTimer + p_DeltaTime
 
