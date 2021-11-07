@@ -16,13 +16,13 @@ Registry = {
 				-- Major version
 				VERSION_MAJ = 2,
 				-- Minor version
-				VERSION_MIN = 3,
+				VERSION_MIN = 4,
 				-- Patch version
 				VERSION_PATCH = 0,
 				-- Additional label for pre-releases and build meta data
-				VERSION_LABEL = "RC3",
+				VERSION_LABEL = "dev1",
 				-- Current version type of this build
-				VERSION_TYPE = VersionType.Stable,
+				VERSION_TYPE = VersionType.DevBuild,
 				-- The Version used for the Update-Check
 				UPDATE_CHANNEL = VersionType.DevBuild,
 		},

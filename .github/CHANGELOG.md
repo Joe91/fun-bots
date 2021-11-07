@@ -68,6 +68,7 @@ This release contains a lot of small bug fixes and more QoL updates. This Releas
 * Death Valley CQS (Vehicles) - thanks to KrazyIvan777
 * Riverside CQS (Vehicles) - thanks to KrazyIvan777
 * Sharqi Peninsula Assault Day2 (infantery) - thanks to DuTcHrEaGaN
+* Strike at Karkand Assault Large (all) - thanks to BOB
 
 ### Documentation update
 * nothing done on this front :-(

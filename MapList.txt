@@ -1,10 +1,12 @@
 XP5_003 CaptureTheFlag0 1
+XP1_001 ConquestAssaultLarge0 1
 XP1_003 ConquestAssaultLarge0 1
 XP1_004 ConquestAssaultLarge0 1
 XP1_001 ConquestAssaultSmall0 1
 XP1_003 ConquestAssaultSmall0 1
 XP1_004 ConquestAssaultSmall0 1
 XP4_Rubble ConquestAssaultSmall0 1
+XP1_003 ConquestAssaultSmall1 1
 XP1_004 ConquestAssaultSmall1 1
 MP_001 ConquestLarge0 1
 MP_007 ConquestLarge0 1
