@@ -38,6 +38,7 @@ function Bot:__init(p_Player)
 	self._SpawnDelayTimer = 0
 	self._WayWaitTimer = 0
 	self._VehicleWaitTimer = 0
+	self._VehicleTakeoffTimer = 0
 	self._WayWaitYawTimer = 0
 	self._ObstaceSequenceTimer = 0
 	self._StuckTimer = 0
@@ -320,6 +321,11 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 				end
 			end
 		end
+		if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
+			if self._VehicleTakeoffTimer > 0 then
+				return false
+			end
+		end
 		if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.NoArmorVehicle) then
 			return false
 		end
@@ -374,6 +380,20 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 	-- if target is air-vehicle and bot is in AA --> ignore yaw
 	if self.m_InVehicle and (s_Type == VehicleTypes.Chopper or s_Type == VehicleTypes.Plane) and m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.AntiAir) then
 		p_IgnoreYaw = true
+	end
+
+	-- don't attack if too close to ground in Plane
+	if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
+		if self._ShootPlayerVehicleType ~= VehicleTypes.Chopper or self._ShootPlayerVehicleType ~= VehicleTypes.Plane then
+			if (self.m_Player.soldier.worldTransform.trans.y - p_Player.soldier.worldTransform.trans.y) < Registry.VEHICLES.ABORT_ATTACK_HEIGHT_JET then
+				return false
+			end
+			if self._DistanceToPlayer < Registry.VEHICLES.ABORT_ATTACK_DISTANCE_JET then
+				return false
+			end
+		else
+			p_IgnoreYaw = true
+		end
 	end
 
 	if not p_IgnoreYaw then
@@ -825,17 +845,20 @@ function Bot:_UpdateAimingVehicleAdvanced()
 			self:_AbortAttack()
 			return
 		end
-		if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) and s_FullPositionBot:Distance(s_FullPositionTarget) < 40 then
+		if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) and s_FullPositionBot:Distance(s_FullPositionTarget) < Registry.VEHICLES.ABORT_ATTACK_AIR_DISTANCE_JET then
 			self:_AbortAttack()
 		end
 		if self._ShootPlayerVehicleType ~= VehicleTypes.Chopper and self._ShootPlayerVehicleType ~= VehicleTypes.Plane then
-			local s_DiffVertical = s_FullPositionTarget.y - s_FullPositionBot.y
+			local s_DiffVertical = s_FullPositionBot.y - s_FullPositionTarget.y 
 			if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) then
-				if s_DiffVertical > -20 then -- too low to the ground
+				if s_DiffVertical < Registry.VEHICLES.ABORT_ATTACK_HEIGHT_CHOPPER then -- too low to the ground
 					self:_AbortAttack()
 				end
 			elseif m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
-				if s_DiffVertical > -50 then -- too low to the ground
+				if s_DiffVertical < Registry.VEHICLES.ABORT_ATTACK_HEIGHT_JET then -- too low to the ground
+					self:_AbortAttack()
+				end
+				if self._DistanceToPlayer < Registry.VEHICLES.ABORT_ATTACK_DISTANCE_JET then
 					self:_AbortAttack()
 				end
 			end
@@ -926,17 +949,20 @@ function Bot:_UpdateAimingVehicle(p_DeltaTime)
 			self:_AbortAttack()
 			return
 		end
-		if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) and s_FullPositionBot:Distance(s_FullPositionTarget) < 40 then
+		if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) and s_FullPositionBot:Distance(s_FullPositionTarget) < Registry.VEHICLES.ABORT_ATTACK_AIR_DISTANCE_JET then
 			self:_AbortAttack()
 		end
 		if self._ShootPlayerVehicleType ~= VehicleTypes.Chopper and self._ShootPlayerVehicleType ~= VehicleTypes.Plane then
-			local s_DiffVertical = s_FullPositionTarget.y - s_FullPositionBot.y
+			local s_DiffVertical = s_FullPositionBot.y - s_FullPositionTarget.y 
 			if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) then
-				if s_DiffVertical > -20 then -- too low to the ground
+				if s_DiffVertical < Registry.VEHICLES.ABORT_ATTACK_HEIGHT_CHOPPER then -- too low to the ground
 					self:_AbortAttack()
 				end
 			elseif m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
-				if s_DiffVertical > -50 then -- too low to the ground
+				if s_DiffVertical < Registry.VEHICLES.ABORT_ATTACK_HEIGHT_JET then -- too low to the ground
+					self:_AbortAttack()
+				end
+				if self._DistanceToPlayer < Registry.VEHICLES.ABORT_ATTACK_DISTANCE_JET then
 					self:_AbortAttack()
 				end
 			end
@@ -1995,6 +2021,7 @@ function Bot:_EnterVehicleEntity(p_Entity)
 				if i == 0 then
 					if i == p_Entity.entryCount - 1 then
 						self._VehicleWaitTimer = 0.5 -- always wait a short time to check for free start
+						self._VehicleTakeoffTimer = Registry.VEHICLES.JET_TAKEOFF_TIME
 						g_GameDirector:_SetVehicleObjectiveState(p_Entity.transform.trans, false)
 					else
 						self._VehicleWaitTimer = Config.VehicleWaitForPassengersTime
@@ -2109,6 +2136,9 @@ function Bot:ExitVehicle()
 end
 
 function Bot:_UpdateNormalMovementVehicle()
+	if self._VehicleTakeoffTimer > 0 then
+		self._VehicleTakeoffTimer = self._VehicleTakeoffTimer - Registry.BOT.BOT_UPDATE_CYCLE
+	end
 	if self._VehicleWaitTimer > 0 then
 		self._VehicleWaitTimer = self._VehicleWaitTimer - Registry.BOT.BOT_UPDATE_CYCLE
 		if self._VehicleWaitTimer <= 0 then

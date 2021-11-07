@@ -1,7 +1,7 @@
 require('__shared/Constants/VersionType')
 
 --[[
-		<!> Modifications to this file should not be made unless you know what you are doing.
+        <!> Modifications to this file should not be made unless you know what you are doing.
 
 		Welcome to the fun-bots registry. This file contains config-like variables related to the mod, such as versions and API-related stuff,
 		but also important variables related to bots.
@@ -30,7 +30,7 @@ Registry = {
 		-- Variables related to raycasting
 		GAME_RAYCASTING = {
 				-- Raycast Interval of client for different raycasts
-				RAYCAST_INTERVAL = 0.05,
+				RAYCAST_INTERVAL = 0.03,
 		},
 
 		GAME_DIRECTOR = {
@@ -45,12 +45,24 @@ Registry = {
 
 		VEHICLES = {
 			MIN_DISTANCE_VEHICLE_ENTER = 10.0,
+
+			ABORT_ATTACK_HEIGHT_JET = 60,
+
+			ABORT_ATTACK_DISTANCE_JET = 150,
+
+			ABORT_ATTACK_AIR_DISTANCE_JET = 50,
+
+			ABORT_ATTACK_HEIGHT_CHOPPER = 20,
+
+			JET_TAKEOFF_TIME = 20,
 		},
 
 		-- Bot related
 		BOT = {
 				-- Bot attack bot check interval
-				BOT_ATTACK_BOT_CHECK_INTERVAL = 0.05,
+				BOT_ATTACK_BOT_CHECK_INTERVAL = 0.06,
+				-- Max Raycasts for Bot-Bot Attack per player and cycle
+				MAX_RAYCASTS_PER_PLAYER_BOT_BOT = 2,
 				-- Update cycle fast
 				BOT_FAST_UPDATE_CYCLE = 0.03, -- equals 30 fps
 				-- Update cycle

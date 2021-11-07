@@ -186,7 +186,7 @@ VehicleData = {
 	["AC130"] = {Name = "[GUNSHIP]", Type =  VehicleTypes.LightVehicle, Parts = {}},
 
 	-- Air vehicle
-	-- planes
+	-- Jets/Planes
 	["A10_THUNDERBOLT"] = {
 		Name = "[A-10 THUNDERBOLT]",
 		Type =  VehicleTypes.Plane,
