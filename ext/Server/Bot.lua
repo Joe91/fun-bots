@@ -2025,7 +2025,7 @@ function Bot:_EnterVehicle(p_Name)
 	local s_Entity = s_Iterator:Next()
 
 	local s_ClosestEntity = nil
-	local s_ClosestDistance = 10 -- at least 10 m 
+	local s_ClosestDistance = Registry.VEHICLES.MIN_DISTANCE_VEHICLE_ENTER 
 	while s_Entity ~= nil do
 		s_Entity = ControllableEntity(s_Entity)
 		local s_Position = s_Entity.transform.trans

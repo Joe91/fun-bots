@@ -1,5 +1,5 @@
 VersionType = {
-	Stable = 0,
-	PreRelease = 2,
-	DevBuild = 3
+	Release = 0,
+	Stable = 1,
+	DevBuild = 2
 }

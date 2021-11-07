@@ -3,13 +3,13 @@
 ![Image](https://img.shields.io/github/downloads/Joe91/fun-bots/total?style=for-the-badge)
 ![Image](https://img.shields.io/github/stars/Joe91/fun-bots?style=for-the-badge)
 
-## 🥳 Welcome to the changelogs for release **V2.3.0** 🥳
+## Welcome to the changelogs for release **V2.3.0**
 This is the changelog for the released V2.3.0 version. Don't forget to [join us on Discord](https://discord.funbots.dev)
 
 ## Changelog
-This release contains a lot of small bug fixes and more QoL updates.
+This release contains a lot of small bug fixes and more QoL updates. This Release supports all kind of vehicles
 
-### ⚙️ Exciting new features
+### New features
 * Sidewared movement of bots (looking sidewareds while moving)
 * SMAWs don't move when shooting anymore
 * Rework Enter-Vehicle-System (preparation to let more bots enter one vehicle)
@@ -32,7 +32,7 @@ This release contains a lot of small bug fixes and more QoL updates.
 	* fill out the file WebUI\languages\DEFAULT.js 
 	* send those files to me and we will add your language to fun-bots
 
-### 🐛 Minor bug fixes
+### Bug fixes
 * fixed bug with jeeps
 * more failsave system for Rush-Mcoms
 * fixed some bugs with the knife
@@ -67,6 +67,8 @@ This release contains a lot of small bug fixes and more QoL updates.
 * Wake Island Assault Large (Vehicles) - thanks to KrazyIvan777
 * Death Valley CQS (Vehicles) - thanks to KrazyIvan777
 * Riverside CQS (Vehicles) - thanks to KrazyIvan777
+* Sharqi Peninsula Assault Day2 (infantery) - thanks to DuTcHrEaGaN
+* Strike at Karkand Assault Large (all) - thanks to BOB
 
-### 📖 Documentation update
+### Documentation update
 * nothing done on this front :-(
