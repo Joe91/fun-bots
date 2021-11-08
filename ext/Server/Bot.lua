@@ -1724,7 +1724,7 @@ function Bot:_UpdateAttacking()
 				self:_SetInput(EntryInputActionEnum.EIAMeleeAttack, 1)
 				self._MeleeCooldownTimer = Config.MeleeAttackCoolDown
 
-				if not USE_REAL_DAMAGE then
+				if not Registry.COMMON.USE_REAL_DAMAGE then
 					Events:DispatchLocal("Server:DamagePlayer", self._ShootPlayer.name, self.m_Player.name, true)
 				end
 			else

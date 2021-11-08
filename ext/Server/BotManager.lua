@@ -365,7 +365,7 @@ end
 
 function BotManager:FindNextBotName()
 	for _, l_Name in pairs(BotNames) do
-		local s_Name = BOT_TOKEN .. l_Name
+		local s_Name = Registry.COMMON.BOT_TOKEN .. l_Name
 		local s_SkipName = false
 
 		for _, l_IgnoreName in pairs(Globals.IgnoreBotNames) do

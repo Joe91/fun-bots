@@ -44,7 +44,7 @@ function FunBotClient:OnExtensionLoaded()
 	self:RegisterHooks()
 
 	-- Announce the version in the client's console if enabled in the registry
-	if Registry.CLIENT_SHOW_VERSION_ON_JOIN then
+	if Registry.VERSION.CLIENT_SHOW_VERSION_ON_JOIN then
 		print("Server is running fun-bots version " .. RegistryManager:GetUtil():GetVersion())
 	end
 end
@@ -72,7 +72,7 @@ function FunBotClient:RegisterEvents()
 end
 
 function FunBotClient:RegisterHooks()
-	if not USE_REAL_DAMAGE then
+	if not Registry.COMMON.USE_REAL_DAMAGE then
 		Hooks:Install('BulletEntity:Collision', 200, self, self.OnBulletEntityCollision)
 	end
 

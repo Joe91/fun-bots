@@ -436,7 +436,7 @@ function FunBotServer:OnServerSettingsCallback(p_Instance)
 	p_Instance = ServerSettings(p_Instance)
 	p_Instance:MakeWritable()
 
-	if USE_REAL_DAMAGE then
+	if Registry.COMMON.USE_REAL_DAMAGE then
 		p_Instance.isRenderDamageEvents = true
 	else
 		p_Instance.isRenderDamageEvents = false
@@ -447,7 +447,7 @@ function FunBotServer:OnSyncedGameSettingsCallback(p_Instance)
 	p_Instance = SyncedGameSettings(p_Instance)
 	p_Instance:MakeWritable()
 
-	if USE_REAL_DAMAGE then
+	if Registry.COMMON.USE_REAL_DAMAGE then
 		p_Instance.allowClientSideDamageArbitration = false
 	else
 		p_Instance.allowClientSideDamageArbitration = true

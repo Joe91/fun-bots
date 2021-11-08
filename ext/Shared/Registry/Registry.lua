@@ -13,18 +13,27 @@ Registry = {
 		-- Variables related to the current build version, version and the type of version.
 		-- We use semantic versioning. Please see: https://semver.org
 		VERSION = {
-				-- Major version
-				VERSION_MAJ = 2,
-				-- Minor version
-				VERSION_MIN = 4,
-				-- Patch version
-				VERSION_PATCH = 0,
-				-- Additional label for pre-releases and build meta data
-				VERSION_LABEL = "dev1",
-				-- Current version type of this build
-				VERSION_TYPE = VersionType.DevBuild,
-				-- The Version used for the Update-Check
-				UPDATE_CHANNEL = VersionType.DevBuild,
+			-- Major version
+			VERSION_MAJ = 2,
+			-- Minor version
+			VERSION_MIN = 4,
+			-- Patch version
+			VERSION_PATCH = 0,
+			-- Additional label for pre-releases and build meta data
+			VERSION_LABEL = "dev1",
+			-- Current version type of this build
+			VERSION_TYPE = VersionType.DevBuild,
+			-- The Version used for the Update-Check
+			UPDATE_CHANNEL = VersionType.DevBuild,
+
+			CLIENT_SHOW_VERSION_ON_JOIN = false,
+		},
+
+		COMMON = {
+			-- token Bots are marked with. Can also be " "
+			BOT_TOKEN = "BOT_",
+			-- with real damage, the hitboxes are a bit buggy
+			USE_REAL_DAMAGE = true,
 		},
 
 		-- Variables related to raycasting

@@ -160,7 +160,7 @@ end
 
 function BotSpawner:OnPlayerJoining(p_Name)
 	-- detect BOT-Names
-	if string.find(p_Name, BOT_TOKEN) == 1 then --check if name starts with bot-token
+	if string.find(p_Name, Registry.COMMON.BOT_TOKEN) == 1 then --check if name starts with bot-token
 		table.insert(self._KickPlayers, p_Name)
 
 		if m_BotManager:GetBotByName(p_Name) ~= nil then

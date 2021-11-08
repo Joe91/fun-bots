@@ -44,7 +44,6 @@ function RCONCommands:__init()
 				return {
 					'OK',
 					json.encode({
-						USE_REAL_DAMAGE = USE_REAL_DAMAGE,
 						Config = Config
 					})
 				}
@@ -82,65 +81,51 @@ function RCONCommands:__init()
 					return {'ERROR', 'Needing <Value>.'}
 				end
 
-				-- Constants
-				if s_Name == 'USE_REAL_DAMAGE' then
-					local s_New_Value = false
 
-					if s_Value == true or s_Value == '1' or s_Value == 'true' or s_Value == 'True' or s_Value == 'TRUE' then
-						s_New_Value = true
+				-- Config
+				if Config[s_Name] ~= nil then
+					local s_Test = tostring(Config[s_Name])
+					local s_Type = 'nil'
+
+					-- Boolean
+					if (s_Test == 'true' or s_Test == 'false') then
+						s_Type = 'boolean'
+
+					-- String
+					elseif (s_Test == Config[s_Name]) then
+						s_Type = 'string'
+
+					-- Number
+					elseif (tonumber(s_Test) == Config[s_Name]) then
+						s_Type = 'number'
 					end
 
-					s_Old.Name = s_Name
-					s_Old.Value = USE_REAL_DAMAGE
-					USE_REAL_DAMAGE = s_New_Value
-					s_New.Name = s_Name
-					s_New.Value = USE_REAL_DAMAGE
-				else
-					-- Config
-					if Config[s_Name] ~= nil then
-						local s_Test = tostring(Config[s_Name])
-						local s_Type = 'nil'
+					s_Old.Name = 'Config.' .. s_Name
+					s_Old.Value = Config[s_Name]
 
-						-- Boolean
-						if (s_Test == 'true' or s_Test == 'false') then
-							s_Type = 'boolean'
+					if s_Type == 'boolean' then
+						local s_New_Value = false
 
-						-- String
-						elseif (s_Test == Config[s_Name]) then
-							s_Type = 'string'
-
-						-- Number
-						elseif (tonumber(s_Test) == Config[s_Name]) then
-							s_Type = 'number'
+						if s_Value == true or s_Value == '1' or s_Value == 'true' or s_Value == 'True' or s_Value == 'TRUE' then
+							s_New_Value = true
 						end
 
-						s_Old.Name = 'Config.' .. s_Name
-						s_Old.Value = Config[s_Name]
-
-						if s_Type == 'boolean' then
-							local s_New_Value = false
-
-							if s_Value == true or s_Value == '1' or s_Value == 'true' or s_Value == 'True' or s_Value == 'TRUE' then
-								s_New_Value = true
-							end
-
-							Config[s_Name] = s_New_Value
-							s_New.Name = 'Config.' .. s_Name
-							s_New.Value = Config[s_Name]
-						elseif s_Type == 'string' then
-							Config[s_Name] = tostring(s_Value)
-							s_New.Name = 'Config.' .. s_Name
-							s_New.Value = Config[s_Name]
-						elseif s_Type == 'number' then
-							Config[s_Name] = tonumber(s_Value)
-							s_New.Name = 'Config.' .. s_Name
-							s_New.Value = Config[s_Name]
-						else
-							print('Unknown Config property-Type: ' .. s_Name .. ' -> ' .. s_Type)
-						end
+						Config[s_Name] = s_New_Value
+						s_New.Name = 'Config.' .. s_Name
+						s_New.Value = Config[s_Name]
+					elseif s_Type == 'string' then
+						Config[s_Name] = tostring(s_Value)
+						s_New.Name = 'Config.' .. s_Name
+						s_New.Value = Config[s_Name]
+					elseif s_Type == 'number' then
+						Config[s_Name] = tonumber(s_Value)
+						s_New.Name = 'Config.' .. s_Name
+						s_New.Value = Config[s_Name]
 					else
-						print('Unknown Config property: ' .. s_Name)
+						print('Unknown Config property-Type: ' .. s_Name .. ' -> ' .. s_Type)
 					end
+				else
+					print('Unknown Config property: ' .. s_Name)
 				end
 
 				-- Update some things
