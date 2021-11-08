@@ -33,5 +33,5 @@ The following maps are currently supported.
 |   ![image](https://user-images.githubusercontent.com/57008952/124316976-b8eb8a00-db76-11eb-8207-addf58c94317.png) 	|   `XP5_003`	| **Kiasar Railroad** | `CTF` ,`CQ Small` ,`SDM` ,`TDM` ,`TDM CQ` |  |
 |   ![image](https://user-images.githubusercontent.com/57008952/124316988-bee16b00-db76-11eb-96f4-fc714fcf6fce.png) 	|   `XP5_004`	| **Sabalan Pipeline** | `CQ Small` ,`SDM` ,`TDM` ,`TDM CQ` |  |
 
-### :world_map: Help to expand the list
-We are still missing certain gamemodes on certain maps, help us expanding this list by [submitting new traces](https://github.com/Joe91/fun-bots/wiki).
+### Help to expand the list
+We are still missing certain gamemodes on certain maps, help us expanding this list by exporting your traces (with the export_traces.exe) and sending it to us on discort or on any other cahnnel.
