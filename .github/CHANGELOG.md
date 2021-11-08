@@ -23,4 +23,4 @@ This is the changelog for the released V2.4.0 version. Don't forget to [join us 
 * Gulf of Oman Conquest Large (all) - thanks to BOB
 
 ### Documentation update
-* the supported maps are now generated (file in this repository)
+* the supported maps are now generated ([this file](https://github.com/Joe91/fun-bots/Supported-maps.md) in this repository)
