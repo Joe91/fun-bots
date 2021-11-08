@@ -9,6 +9,14 @@ require('__shared/Constants/VersionType')
 		As such, modifications to these variables are not supported by the fun-bots development team. Changing them is not recommended.
 ]]
 Registry = {
+		COMMON = {
+			-- token Bots are marked with. Can also be " "
+			BOT_TOKEN = "BOT_",
+			-- with real damage, the hitboxes are a bit buggy
+			USE_REAL_DAMAGE = true,
+			-- collition-raycasts are only supporded by the dev-buidls of VU atm (VEXT 1.3.2 or greater)
+			USE_COLLITION_RAYCASTS = false,
+		},
 		-- Version and Release related variables
 		-- Variables related to the current build version, version and the type of version.
 		-- We use semantic versioning. Please see: https://semver.org
@@ -27,13 +35,6 @@ Registry = {
 			UPDATE_CHANNEL = VersionType.DevBuild,
 
 			CLIENT_SHOW_VERSION_ON_JOIN = false,
-		},
-
-		COMMON = {
-			-- token Bots are marked with. Can also be " "
-			BOT_TOKEN = "BOT_",
-			-- with real damage, the hitboxes are a bit buggy
-			USE_REAL_DAMAGE = true,
 		},
 
 		-- Variables related to raycasting

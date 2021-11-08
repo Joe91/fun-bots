@@ -62,15 +62,44 @@ function ClientBotManager:OnEngineMessage(p_Message)
 	end
 end
 
-function ClientBotManager:DoRaycast(p_Pos1, p_Pos2, p_MaxHits)
-	local s_RaycastFlags =  RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter
-	local s_MaterialFlags = 0 --MaterialFlags.MfPenetrable | MaterialFlags.MfClientDestructible | MaterialFlags.MfBashable | MaterialFlags.MfSeeThrough | MaterialFlags.MfNoCollisionResponse | MaterialFlags.MfNoCollisionResponseCombined
+function ClientBotManager:DoRaycast(p_Pos1, p_Pos2, p_InObjectPos1, p_InObjectPos2)
+	if Registry.COMMON.USE_COLLITION_RAYCASTS then
+		local s_MaxHits = 1
+		if p_InObjectPos1 then
+			s_MaxHits = s_MaxHits + 1
+		end
+		if p_InObjectPos2 then
+			s_MaxHits = s_MaxHits + 1
+		end
+		local s_RaycastFlags =  RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter
+		local s_MaterialFlags = 0 --MaterialFlags.MfPenetrable | MaterialFlags.MfClientDestructible | MaterialFlags.MfBashable | MaterialFlags.MfSeeThrough | MaterialFlags.MfNoCollisionResponse | MaterialFlags.MfNoCollisionResponseCombined
 
-	local s_RayHits = RaycastManager:CollisionRaycast(p_Pos1, p_Pos2, p_MaxHits, s_MaterialFlags, s_RaycastFlags)
-	if s_RayHits ~= nil and #s_RayHits < p_MaxHits then
-		return true
+		local s_RayHits = RaycastManager:CollisionRaycast(p_Pos1, p_Pos2, s_MaxHits, s_MaterialFlags, s_RaycastFlags)
+		if s_RayHits ~= nil and #s_RayHits < s_MaxHits then
+			return true
+		else
+			return false
+		end
 	else
-		return false
+		if p_InObjectPos1 or p_InObjectPos2 then
+			local s_DeltaPos = p_Pos2 - p_Pos1
+			s_DeltaPos = s_DeltaPos:Normalize()
+			if p_InObjectPos1 then -- Start Raycast outside of vehicle?
+				p_Pos1 = p_Pos1 + (s_DeltaPos * 4.0)
+			end
+			if p_InObjectPos2 then
+				p_Pos2 = p_Pos2 - (s_DeltaPos * 4.0)
+			end
+		end
+
+		local s_RaycastFlags =  RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.IsAsyncRaycast
+		local s_Raycast = RaycastManager:Raycast(p_Pos1, p_Pos2, s_RaycastFlags)
+
+		if s_Raycast == nil or s_Raycast.rigidBody == nil then
+			return true
+		else
+			return false
+		end
 	end
 end
 
@@ -83,7 +112,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	if #self.m_BotBotRaycastsToDo > 0 then
 		local s_RaycastCheckEntry = self.m_BotBotRaycastsToDo[1]
 
-		if self:DoRaycast(s_RaycastCheckEntry.StartPos, s_RaycastCheckEntry.EndPos, s_RaycastCheckEntry.HitCount) then
+		if self:DoRaycast(s_RaycastCheckEntry.StartPos, s_RaycastCheckEntry.EndPos, s_RaycastCheckEntry.StartPosInObj, s_RaycastCheckEntry.EndPosInObj) then
 			NetEvents:SendLocal("Bot:ShootAtBot", s_RaycastCheckEntry.Shooter, s_RaycastCheckEntry.Target)
 		end
 		table.remove(self.m_BotBotRaycastsToDo, 1)
@@ -148,15 +177,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 			if (s_Distance < Config.MaxRaycastDistance) or (s_Bot.inVehicle and Config.MaxRaycastDistanceVehicles) then
 				self.m_LastIndex = self.m_LastIndex + 1
 
-				local s_HitCount = 1
-				if self.m_Player.inVehicle then
-					s_HitCount = s_HitCount + 1
-				end
-				if s_Bot.inVehicle then
-					s_HitCount = s_HitCount + 1
-				end
-
-				if self:DoRaycast(s_PlayerPosition, s_Target, s_HitCount) then
+				if self:DoRaycast(s_PlayerPosition, s_Target, self.m_Player.inVehicle, s_Bot.inVehicle) then
 								-- we found a valid bot in Sight (either no hit, or player-hit). Signal Server with players
 					local s_IgnoreYaw = false
 
@@ -196,7 +217,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 			if s_Distance < 35.0 then -- TODO: use config var for this
 				self.m_LastIndex = self.m_LastIndex + 1
-				if self:DoRaycast(s_PlayerPosition, s_Target, 1) then
+				if self:DoRaycast(s_PlayerPosition, s_Target, false, false) then
 					-- we found a valid bot in Sight (either no hit, or player-hit). Signal Server with players
 					NetEvents:SendLocal("Bot:RevivePlayer", s_Bot.name)
 				end
@@ -245,18 +266,11 @@ function ClientBotManager:CheckForBotBotAttack(p_StartPos, p_EndPos, p_ShooterBo
 	local s_StartPos = Vec3(p_StartPos.x, p_StartPos.y + 1.0, p_StartPos.z)
 	local s_EndPos = Vec3(p_EndPos.x, p_EndPos.y + 1.0, p_EndPos.z)
 
-	local s_HitCount = 1
-	if p_InVehicleTarget then
-		s_HitCount = s_HitCount + 1
-	end
-	if p_InVehicleShooter then
-		s_HitCount = s_HitCount + 1
-	end
-
 	local s_RaycastCheckEntry = {
 		StartPos = s_StartPos,
 		EndPos = s_EndPos,
-		HitCount = s_HitCount,
+		StartPosInObj = p_InVehicleShooter,
+		EndPosInObj = p_InVehicleTarget,
 		Shooter = p_ShooterBotName,
 		Target = p_BotName
 	}
