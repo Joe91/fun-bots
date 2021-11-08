@@ -36,35 +36,35 @@ mapItems = []
 
 filenames = next(walk("./../mapfiles"), (None, None, []))[2]  # [] if no file
 for filename in filenames:
-    combinedName = filename.split(".")[0]
-    nameParts = combinedName.rsplit('_', 1)
-    mapname = nameParts[0]
-    translatedGamemode = nameParts[1]
-    gameMode = ""
-    for mode in AllGameModes:
-        if GameModeTranslations[mode] == translatedGamemode:
-            gameMode = mode
-            break
-    if gameMode != "" and gameMode in GameModesToUse:
-        #find special modes for TDM-Paths
-        addTdm = True
-        if gameMode == "TDM":
-            for token in MapsWithGunmaster:
-                if token in mapname:
-                    tempTable = [mapname, "GunMaster0", str(RoundsToUse)]
-                    mapItems.append(tempTable)
-            for token in MapsWithoutTdmCq:
-                if token in mapname:
-                    addTdm = False
-            if addTdm:
-                tempTable = [mapname, translatedGamemode, str(RoundsToUse)]
-                mapItems.append(tempTable)
-            tempTable = [mapname, "TeamDeathMatchC0", str(RoundsToUse)]
-            mapItems.append(tempTable)
-        else:
-            tempTable = [mapname, translatedGamemode, str(RoundsToUse)]
-            mapItems.append(tempTable)
-    
+	combinedName = filename.split(".")[0]
+	nameParts = combinedName.rsplit('_', 1)
+	mapname = nameParts[0]
+	translatedGamemode = nameParts[1]
+	gameMode = ""
+	for mode in AllGameModes:
+		if GameModeTranslations[mode] == translatedGamemode:
+			gameMode = mode
+			break
+	if gameMode != "" and gameMode in GameModesToUse:
+		#find special modes for TDM-Paths
+		addTdm = True
+		if gameMode == "TDM":
+			for token in MapsWithGunmaster:
+				if token in mapname:
+					tempTable = [mapname, "GunMaster0", str(RoundsToUse)]
+					mapItems.append(tempTable)
+			for token in MapsWithoutTdmCq:
+				if token in mapname:
+					addTdm = False
+			if addTdm:
+				tempTable = [mapname, translatedGamemode, str(RoundsToUse)]
+				mapItems.append(tempTable)
+			tempTable = [mapname, "TeamDeathMatchC0", str(RoundsToUse)]
+			mapItems.append(tempTable)
+		else:
+			tempTable = [mapname, translatedGamemode, str(RoundsToUse)]
+			mapItems.append(tempTable)
+	
 
 #sort the list by gamemode
 mapItems = sorted(mapItems, key=operator.itemgetter(2, 1))

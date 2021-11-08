@@ -1,0 +1,3 @@
+python create_maplist.py
+python update_supported_maps.py
+pause

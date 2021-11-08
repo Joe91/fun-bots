@@ -15,6 +15,7 @@ MP_012 ConquestLarge0 1
 MP_013 ConquestLarge0 1
 MP_018 ConquestLarge0 1
 MP_Subway ConquestLarge0 1
+XP1_002 ConquestLarge0 1
 XP3_Alborz ConquestLarge0 1
 XP3_Shield ConquestLarge0 1
 XP4_FD ConquestLarge0 1
