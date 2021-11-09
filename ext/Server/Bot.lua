@@ -1778,6 +1778,8 @@ function Bot:_UpdateAttacking()
 			else
 				if self.m_KnifeMode or self._ActiveAction == BotActionFlags.MeleeActive then
 					self._WeaponToUse = BotWeapons.Knife
+				elseif Globals.IsGm then
+					self._WeaponToUse = BotWeapons.Primary
 				else
 					if self._ActiveAction ~= BotActionFlags.GrenadeActive then
 						-- check to use pistol

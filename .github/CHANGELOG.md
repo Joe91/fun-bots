@@ -17,7 +17,7 @@ This is the changelog for the released V2.4.0 version. Don't forget to [join us 
 * Improved-Check-mechanisms of Bot on Bot attack
 
 ### Bug fixes
-* 
+* Fixed Bot-Behaviour in Gunmaster
 
 ### New maps
 * Gulf of Oman Conquest Large (all) - thanks to BOB
