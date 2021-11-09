@@ -21,6 +21,12 @@ This is the changelog for the released V2.4.0 version. Don't forget to [join us 
 
 ### New maps
 * Gulf of Oman Conquest Large (all) - thanks to BOB
+* Strike at Karkand Assault 2 - thanks to DuTcHrEaGaN
+
+### Updated maps
+* Sharqi Peninsula Assault update - thanks to KrazyInvan777 + Meisterpeitsche
+* Bandar Desert Conquest Small - thanks to MeisterPeitsche
+
 
 ### Documentation update
 * the supported maps are now generated ([this file](https://github.com/Joe91/fun-bots/blob/dev/Supported-maps.md) in this repository)
