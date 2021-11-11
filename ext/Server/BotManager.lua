@@ -23,6 +23,8 @@ function BotManager:__init()
 	self._LastBotCheckIndex = 1
 	self._InitDone = false
 
+	self._BotAttackBotCheckInterval = 0
+
 	self.dummyCnt = 0
 	self.dummyCnt2 = 0
 end
@@ -50,7 +52,7 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	end
 
 	if Config.BotsAttackBots and self._InitDone then
-		if self._BotAttackBotTimer >= Registry.BOT.BOT_ATTACK_BOT_CHECK_INTERVAL then
+		if self._BotAttackBotTimer >= self._BotAttackBotCheckInterval then
 			self._BotAttackBotTimer = 0
 			self:_CheckForBotBotAttack()
 		end
@@ -353,6 +355,9 @@ function BotManager:ConfigGlobals()
 		Globals.MaxPlayers = 127 -- only fallback. Should not happens
 		m_Logger:Error("No Playercount found")
 	end
+
+	local s_DeltaTime = 1.0/SharedUtils:GetTickrate()
+	self._BotAttackBotCheckInterval = (s_DeltaTime * (Registry.GAME_RAYCASTING.MAX_RAYCASTS_PER_PLAYER_BOT_BOT + 1)) + 0.01
 
 	self._InitDone = true
 end
@@ -779,12 +784,12 @@ function BotManager:_CheckForBotBotAttack()
 									s_Raycasts = s_Raycasts + 1
 									self.dummyCnt2 = self.dummyCnt2 + 1
 									s_RaycastPlayer = s_RaycastPlayer + 1
-									if s_RaycastPlayer >= Registry.BOT.MAX_RAYCASTS_PER_PLAYER_BOT_BOT then
+									if s_RaycastPlayer >= Registry.GAME_RAYCASTING.MAX_RAYCASTS_PER_PLAYER_BOT_BOT then
 										s_NextPlayerIndex = l_PlayerIndex + 1
 										s_RaycastPlayer = 0
 									end
 								end
-								if s_Raycasts >= (s_PlayerCount*Registry.BOT.MAX_RAYCASTS_PER_PLAYER_BOT_BOT) then
+								if s_Raycasts >= (s_PlayerCount*Registry.GAME_RAYCASTING.MAX_RAYCASTS_PER_PLAYER_BOT_BOT) then
 									-- leave the function early for this cycle
 									self._LastBotCheckIndex = i
 									return

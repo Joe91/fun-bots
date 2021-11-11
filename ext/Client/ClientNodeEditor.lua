@@ -1789,7 +1789,7 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 		-- do not update node positions if saving or loading
 		if not self:IsSavingOrLoading() then
 
-			if self.m_RaycastTimer >= Registry.GAME_RAYCASTING.RAYCAST_INTERVAL then
+			if self.m_RaycastTimer >= Registry.GAME_RAYCASTING.UPDATE_INTERVAL_NODEEDITOR then
 				self.m_RaycastTimer = 0
 			
 				-- perform raycast to get where player is looking

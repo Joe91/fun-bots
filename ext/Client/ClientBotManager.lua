@@ -9,7 +9,7 @@ function ClientBotManager:__init()
 end
 
 function ClientBotManager:RegisterVars()
-	self.m_RaycastTimer = 0
+	self.m_RaycastCounter = 0
 	self.m_AliveTimer = 0
 	self.m_LastIndex = 1
 	self.m_Player = nil
@@ -116,27 +116,26 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 		end
 		table.remove(self.m_BotBotRaycastsToDo, 1)
 	end
-	if #self.m_BotBotRaycastsToDo > Registry.BOT.MAX_RAYCASTS_PER_PLAYER_BOT_BOT then
+	if #self.m_BotBotRaycastsToDo > Registry.GAME_RAYCASTING.MAX_RAYCASTS_PER_PLAYER_BOT_BOT then
 		m_Logger:Warning("Too many entries to scan. Clear list!!")
 		self.m_BotBotRaycastsToDo = {}
 	end
 
 	if self.m_Player == nil then
 		self.m_Player = PlayerManager:GetLocalPlayer()
+		if self.m_Player == nil then
+			return
+		end
 	end
 
-	if self.m_Player == nil then
+
+	self.m_RaycastCounter = self.m_RaycastCounter + 1
+
+	if self.m_RaycastCounter < Registry.GAME_RAYCASTING.CHECK_COUNTER_FOR_ENEMYS then
 		return
 	end
 
-
-	self.m_RaycastTimer = self.m_RaycastTimer + p_DeltaTime
-
-	if self.m_RaycastTimer < Registry.GAME_RAYCASTING.RAYCAST_INTERVAL then
-		return
-	end
-
-	self.m_RaycastTimer = 0
+	self.m_RaycastCounter = 0
 
 
 	if self.m_Player.soldier ~= nil then -- alive. Check for enemy bots
