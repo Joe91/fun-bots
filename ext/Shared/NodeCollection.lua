@@ -711,8 +711,8 @@ function NodeCollection:Clear()
 	self.waypoints = {}
 	self.waypointsByID = {}
 
-	for i = 1, #self.waypointsByPathIndex do
-		self.waypointsByPathIndex[i] = {}
+	for l_PathIndex, _ in pairs(self.waypointsByPathIndex) do
+		self.waypointsByPathIndex[l_PathIndex] = {}
 	end
 
 	self.waypointsByPathIndex = {}

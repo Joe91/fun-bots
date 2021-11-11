@@ -70,7 +70,7 @@ Registry = {
 		-- Bot related
 		BOT = {
 				-- Bot attack bot check interval
-				BOT_ATTACK_BOT_CHECK_INTERVAL = 0.06,
+				BOT_ATTACK_BOT_CHECK_INTERVAL = 0.07,
 				-- Max Raycasts for Bot-Bot Attack per player and cycle
 				MAX_RAYCASTS_PER_PLAYER_BOT_BOT = 2,
 				-- Update cycle fast

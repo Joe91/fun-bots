@@ -15,7 +15,6 @@ function ClientBotManager:RegisterVars()
 	self.m_Player = nil
 	self.m_ReadyToUpdate = false
 	self.m_BotBotRaycastsToDo = {}
-	self.m_EnemyPlayers = {}
 end
 
 -- =============================================
@@ -118,7 +117,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 		table.remove(self.m_BotBotRaycastsToDo, 1)
 	end
 	if #self.m_BotBotRaycastsToDo > Registry.BOT.MAX_RAYCASTS_PER_PLAYER_BOT_BOT then
-		m_Logger:Error("Too many entries!!")
+		m_Logger:Warning("Too many entries to scan. Clear list!!")
 		self.m_BotBotRaycastsToDo = {}
 	end
 
@@ -146,22 +145,19 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 			return
 		end
 
-		if #self.m_EnemyPlayers == 0 then
-			local s_AllPlayers = PlayerManager:GetPlayers()
-
-			for _, l_Player in pairs(s_AllPlayers) do
-				if l_Player.teamId ~= self.m_Player.teamId then
-					table.insert(self.m_EnemyPlayers, l_Player)
-				end
+		local s_EnemyPlayers = {}
+		for _, l_Player in pairs(PlayerManager:GetPlayers()) do
+			if l_Player.teamId ~= self.m_Player.teamId then
+				table.insert(s_EnemyPlayers, l_Player)
 			end
 		end
 
-		if self.m_LastIndex >= #self.m_EnemyPlayers then
+		if self.m_LastIndex >= #s_EnemyPlayers then
 			self.m_LastIndex = 1
 		end
 
-		for i = 0, #self.m_EnemyPlayers - 1 do
-			local s_Bot = self.m_EnemyPlayers[(self.m_LastIndex + i) % #self.m_EnemyPlayers +1]
+		for i = 0, #s_EnemyPlayers - 1 do
+			local s_Bot = s_EnemyPlayers[(self.m_LastIndex + i) % #s_EnemyPlayers +1]
 
 			if s_Bot == nil or s_Bot.onlineId ~= 0 or s_Bot.soldier == nil then
 				goto continue_enemy_loop
@@ -230,9 +226,6 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	else
 		self.m_AliveTimer = 0 --add a little delay after spawn
 	end
-
-	-- reset player-list after a full cycle
-	self.m_EnemyPlayers = {}
 end
 
 function ClientBotManager:OnExtensionUnloading()

@@ -1130,15 +1130,19 @@ function ClientNodeEditor:_getNewIndex()
 	local s_NextIndex = 0
 	local s_AllPaths = m_NodeCollection:GetPaths()
 
+	local s_HighestIndex = 0
 	for l_PathIndex, l_Points in pairs(s_AllPaths) do
-		if l_PathIndex - s_NextIndex > 1 then
-			return s_NextIndex + 1 -- gap in traces
+		if l_PathIndex > s_HighestIndex then
+			s_HighestIndex = l_PathIndex
 		end
-
-		s_NextIndex = l_PathIndex
 	end
 
-	return s_NextIndex + 1 -- increment index
+	for i = 1, s_HighestIndex do
+		if s_AllPaths[i] == nil or s_AllPaths[i] == {} then	
+			return i
+		end
+	end
+	return s_HighestIndex + 1
 end
 
 function ClientNodeEditor:_onStartTrace()

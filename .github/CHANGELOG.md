@@ -19,6 +19,7 @@ This is the changelog for the released V2.4.0 version. Don't forget to [join us 
 
 ### Bug fixes
 * Fixed Bot-Behaviour in Gunmaster
+* Fixed strange behaviour in some cases with huge gaps in Nodeeditor
 
 ### New maps
 * Gulf of Oman Conquest Large (all) - thanks to BOB
