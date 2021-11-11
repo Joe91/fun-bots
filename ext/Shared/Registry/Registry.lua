@@ -37,6 +37,14 @@ Registry = {
 			CLIENT_SHOW_VERSION_ON_JOIN = false,
 		},
 
+		CLIENT = {
+			REVIVE_DISTANCE = 30.0,
+
+			MAX_CHECKS_PER_CYCLE = 7,
+
+			SPAWN_PROTECTION = 1.5,
+		},
+
 		-- Variables related to raycasting
 		GAME_RAYCASTING = {
 				-- Max Raycasts for Bot-Bot Attack per player and cycle.
