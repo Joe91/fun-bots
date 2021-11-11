@@ -15,6 +15,7 @@ This is the changelog for the released V2.4.0 version. Don't forget to [join us 
 * Cleanup of Config.lua (some stuff moved to the Registry.lua)
 * Preparation for new Raycast-methods
 * Improved-Check-mechanisms of Bot on Bot attack
+* prepare for Spanisch translations by Lukajo
 
 ### Bug fixes
 * Fixed Bot-Behaviour in Gunmaster
@@ -24,8 +25,7 @@ This is the changelog for the released V2.4.0 version. Don't forget to [join us 
 * Strike at Karkand Assault 2 - thanks to DuTcHrEaGaN
 
 ### Updated maps
-* Sharqi Peninsula Assault update - thanks to KrazyInvan777 + Meisterpeitsche
-* Bandar Desert Conquest Small - thanks to MeisterPeitsche
+* Lots and lots of Updated maps by MeisterPeitsche and KrazyIvan with massive work put into these maps!!!
 
 
 ### Documentation update

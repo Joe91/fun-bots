@@ -22,7 +22,7 @@ The following maps are currently supported.
 |   ![image](https://user-images.githubusercontent.com/57008952/124316714-51353f00-db76-11eb-829c-48c2526c0e18.png) 	|   `XP2_Palace`	| **Donya Fortress** | `CQ Dom` ,`GM` ,`SDM` ,`TDM CQ` |  |
 |   ![image](https://user-images.githubusercontent.com/57008952/124316739-5a261080-db76-11eb-8b84-e74d5b6ff6b3.png) 	|   `XP3_Alborz`	| **Alborz Mountains** | `CQ Large` ,`CQ Small` ,`SDM` ,`TDM` ,`TDM CQ` | `CQ Small` |
 |   ![image](https://user-images.githubusercontent.com/57008952/124316753-61e5b500-db76-11eb-977c-b78a172532e4.png) 	|   `XP3_Desert`	| **Bandar Desert** | `CQ Small` ,`SDM` ,`TDM` ,`TDM CQ` | `CQ Small` |
-|   ![image](https://user-images.githubusercontent.com/57008952/124316774-6b6f1d00-db76-11eb-9b92-4f4d526fe115.png) 	|   `XP3_Shield`	| **Armored Shield** | `CQ Large` ,`CQ Small` ,`SDM` ,`TDM` ,`TDM CQ` | `CQ Small` |
+|   ![image](https://user-images.githubusercontent.com/57008952/124316774-6b6f1d00-db76-11eb-9b92-4f4d526fe115.png) 	|   `XP3_Shield`	| **Armored Shield** | `CQ Large` ,`CQ Small` ,`SDM` ,`TDM` ,`TDM CQ` | `CQ Large` ,`CQ Small` |
 |   ![image](https://user-images.githubusercontent.com/57008952/124316795-74f88500-db76-11eb-8419-2a0cd57ca286.png) 	|   `XP3_Valley`	| **Death Valley** | `CQ Small` ,`SDM` ,`TDM` ,`TDM CQ` | `CQ Small` |
 |   ![image](https://user-images.githubusercontent.com/57008952/124316859-8a6daf00-db76-11eb-95dd-0c8671338c1a.png) 	|   `XP4_FD`	| **Markaz Monolith** | `CQ Large` ,`CQ Small` ,`GM` ,`SDM` ,`TDM` ,`TDM CQ` | `CQ Small` |
 |   ![image](https://user-images.githubusercontent.com/57008952/124316879-90fc2680-db76-11eb-9937-b1b9e7e7914b.png) 	|   `XP4_Rubble`	| **Talah Market** | `Assault` ,`GM` ,`SDM` ,`SQ Rush` ,`TDM` ,`TDM CQ` |  |
