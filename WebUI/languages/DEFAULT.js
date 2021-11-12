@@ -59,8 +59,6 @@ Language['xx_XX'] /* Add/replace the xx_XX here with your language code (like de
 	"Cancel": "",
 	"Restore all to Default": "",
 	"Save temporarily": "",
-	"Yes": "",
-	"No": "",
 	"Restore this value to Default": "",
 	"End Trace": "",
 };
