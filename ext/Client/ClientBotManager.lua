@@ -117,7 +117,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 		table.remove(self.m_BotBotRaycastsToDo, 1)
 	end
 	if #self.m_BotBotRaycastsToDo > Registry.GAME_RAYCASTING.MAX_RAYCASTS_PER_PLAYER_BOT_BOT then
-		m_Logger:Warning("Too many entries to scan. Clear list!!")
+		-- m_Logger:Warning("Too many entries to scan. Clear list!!")
 		self.m_BotBotRaycastsToDo = {}
 	end
 
