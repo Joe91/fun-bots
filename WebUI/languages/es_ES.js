@@ -2,7 +2,7 @@ Language['es_ES'] /* Add/replace the xx_XX here with your language code (like de
 	"__LANGUAGE_INFO": {
 		"name": "es_ES",
 		"author": "Lukajo",
-		"version": "0.7.0"
+		"version": "1.1.0"
 	},
 	"Bots": "Bots",
 	"Spawn Enemy Bots": "Spawnear Bots enemigos",
@@ -29,10 +29,10 @@ Language['es_ES'] /* Add/replace the xx_XX here with your language code (like de
 	"Save Trace": "Guardar Trazado",
 	"Clear Trace": "Borrar Trazado",
 	"Reset all Traces": "Borrar todos los Trazados",
-	"Current Trace Index": "Listado de Trazado Actuales",
+	"Current Trace Index": "Listado de Trazados Actuales",
 	"Waypoints": "Rutas",
 	"Total Distance": "Distancia Total",
-	"Node Operation Controls": "Operaciones de Control de Nodos",
+	"Node Operation Controls": "Controles de Operación de Nodos",
 	"Merge": "Combinar",
 	"Link": "Vincular",
 	"Split": "Separar",
@@ -52,7 +52,7 @@ Language['es_ES'] /* Add/replace the xx_XX here with your language code (like de
 	"Weapons": "Armas",
 	"Behaviour": "Conductas",
 	"Vehicle": "Vehículos",
-	"Trace": "Trazos",
+	"Trace": "Trazo",
 	"Advanced": "Avanzado",
 	"Expert": "Experto",
 	"Other": "Otro",

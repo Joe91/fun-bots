@@ -15,7 +15,7 @@ This is the changelog for the released V2.4.0 version. Don't forget to [join us 
 * Cleanup of Config.lua (some stuff moved to the Registry.lua)
 * Preparation for new Raycast-methods
 * Improved-Check-mechanisms of Bot on Bot attack
-* prepare for Spanisch translations by Lukajo
+* added Spanisch translations by Lukajo
 
 ### Bug fixes
 * Fixed Bot-Behaviour in Gunmaster
