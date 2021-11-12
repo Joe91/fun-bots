@@ -87,6 +87,7 @@ function Bot:__init(p_Player)
 	self._VehicleReadyToShoot = false
 	self._FullVehicleSteering = false
 	self._VehicleDirBackPositive = false
+	self._JetAbortAttackActive = false
 	-- PID Controllers
 	-- normal driving
 	self._Pid_Drv_Yaw = PidController(5, 0.05, 0.2, 1.0)
@@ -2140,7 +2141,21 @@ end
 function Bot:_UpdateNormalMovementVehicle()
 	if self._VehicleTakeoffTimer > 0 then
 		self._VehicleTakeoffTimer = self._VehicleTakeoffTimer - Registry.BOT.BOT_UPDATE_CYCLE
+		if self._JetAbortAttackActive then
+			local s_TargetPosition = self.m_Player.controlledControllable.transform.trans
+			local s_Forward = self.m_Player.controlledControllable.transform.forward
+			s_Forward.y = 0
+			s_Forward:Normalize()
+			s_TargetPosition = s_TargetPosition + (s_Forward*50)
+			s_TargetPosition.y = s_TargetPosition.y + 50
+			local s_Waypoint = {
+				Position = s_TargetPosition
+			}
+			self._TargetPoint = s_Waypoint
+			return
+		end
 	end
+	self._JetAbortAttackActive = false
 	if self._VehicleWaitTimer > 0 then
 		self._VehicleWaitTimer = self._VehicleWaitTimer - Registry.BOT.BOT_UPDATE_CYCLE
 		if self._VehicleWaitTimer <= 0 then
@@ -2960,6 +2975,13 @@ function Bot:_UpdateSpeedOfMovement()
 end
 
 function Bot:_AbortAttack()
+	if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) and self._ShootPlayerName ~= "" then
+		self._VehicleTakeoffTimer = Registry.VEHICLES.JET_ABORT_ATTACK_TIME
+		self._JetAbortAttackActive = true
+		self._Pid_Drv_Yaw:Reset()
+		self._Pid_Drv_Tilt:Reset()
+		self._Pid_Drv_Roll:Reset()
+	end
 	self._ShootPlayerName = ""
 	self._ShootPlayer = nil
 	self._ShootModeTimer = 0

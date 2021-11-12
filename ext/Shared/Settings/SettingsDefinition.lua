@@ -253,7 +253,7 @@ SettingsDefinition = {
 			Value = Config.InitNumberOfBots,
 			Description = "bots for spawnmode",
 			Reference = Range(0.00, 128.00, 1.0),
-			Default = 6,
+			Default = 8,
 			UpdateFlag = UpdateFlag.AmountAndTeam,
 			Category = "SPAWN"
 		},
@@ -275,7 +275,7 @@ SettingsDefinition = {
 			Value = Config.FactorPlayerTeamCount,
 			Description = "reduce playerteam in balanced_teams or fixed_number mode",
 			Reference = Range(0.00, 1.00, 0.05),
-			Default = 0.8,
+			Default = 1.0,
 			UpdateFlag = UpdateFlag.AmountAndTeam,
 			Category = "SPAWN"
 		},

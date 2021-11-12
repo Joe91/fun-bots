@@ -11,6 +11,7 @@ This is the changelog for the released V2.4.0 version. Don't forget to [join us 
 ### New features
 * Bots can now see the same distance as players
 * improved attacking of jets
+* improved abort attack of jets - less kamikaze ;-)
 * more vehicles supported
 * Cleanup of Config.lua (some stuff moved to the Registry.lua)
 * Preparation for new Raycast-methods
