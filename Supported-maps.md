@@ -1,5 +1,5 @@
-### :world_map: Supported Maps
-The following maps are currently supported.
+### Supported Maps
+The following maps are currently supported in this commit.
 
 |   	   	| Technical Name | Name | supported gamemodes |   supported gamemodes with Vehicles |
 |---	|---	|---	|---	|---	|
