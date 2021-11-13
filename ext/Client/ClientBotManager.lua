@@ -9,7 +9,7 @@ function ClientBotManager:__init()
 end
 
 function ClientBotManager:RegisterVars()
-	self.m_RaycastCounter = 0
+	self.m_RaycastTimer = 0
 	self.m_AliveTimer = 0
 	self.m_LastIndex = 0
 	self.m_Player = nil
@@ -107,17 +107,26 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 		return
 	end
 
+	self.m_RaycastTimer = self.m_RaycastTimer + p_DeltaTime
+	local s_SkipEnemyCheck = (self.m_RaycastTimer < Registry.GAME_RAYCASTING.RAYCAST_INTERVAL_ENEMY_CHECK)
+
 	-- check bot-bot attack
 	if #self.m_BotBotRaycastsToDo > 0 then
-		local s_RaycastCheckEntry = self.m_BotBotRaycastsToDo[1]
-
-		if self:DoRaycast(s_RaycastCheckEntry.StartPos, s_RaycastCheckEntry.EndPos, s_RaycastCheckEntry.StartPosInObj, s_RaycastCheckEntry.EndPosInObj) then
-			NetEvents:SendLocal("Bot:ShootAtBot", s_RaycastCheckEntry.Shooter, s_RaycastCheckEntry.Target)
+		local s_MaxRaycastsBotBot = Registry.GAME_RAYCASTING.MAX_RAYCASTS_PER_PLAYER_PER_CYCLE
+		if not s_SkipEnemyCheck then
+			s_MaxRaycastsBotBot = s_MaxRaycastsBotBot - 1
 		end
-		table.remove(self.m_BotBotRaycastsToDo, 1)
-	end
-	if #self.m_BotBotRaycastsToDo > Registry.GAME_RAYCASTING.MAX_RAYCASTS_PER_PLAYER_BOT_BOT then
-		-- m_Logger:Warning("Too many entries to scan. Clear list!!")
+		for i = 1, s_MaxRaycastsBotBot do
+			local s_RaycastCheckEntry = self.m_BotBotRaycastsToDo[i]
+			if s_RaycastCheckEntry ~= nil then
+				if self:DoRaycast(s_RaycastCheckEntry.StartPos, s_RaycastCheckEntry.EndPos, s_RaycastCheckEntry.StartPosInObj, s_RaycastCheckEntry.EndPosInObj) then
+					NetEvents:SendLocal("Bot:ShootAtBot", s_RaycastCheckEntry.Shooter, s_RaycastCheckEntry.Target)
+				end
+			end
+		end
+		if #self.m_BotBotRaycastsToDo > s_MaxRaycastsBotBot then
+			m_Logger:Warning("More Raycasts than doable")
+		end
 		self.m_BotBotRaycastsToDo = {}
 	end
 
@@ -128,14 +137,11 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 		end
 	end
 
-
-	self.m_RaycastCounter = self.m_RaycastCounter + 1
-
-	if self.m_RaycastCounter < Registry.GAME_RAYCASTING.CHECK_COUNTER_FOR_ENEMYS then
+	if s_SkipEnemyCheck then
 		return
 	end
 
-	self.m_RaycastCounter = 0
+	self.m_RaycastTimer = 0
 	local s_CheckCount = 0
 
 	if self.m_Player.soldier ~= nil then -- alive. Check for enemy bots
