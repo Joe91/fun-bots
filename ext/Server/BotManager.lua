@@ -720,7 +720,7 @@ function BotManager:_CheckForBotBotAttack()
 		for _,s_TempBot in pairs(self._Bots) do
 			if s_TempBot.m_InVehicle then
 				if s_TempBot.m_ActiveVehicle ~= nil and s_TempBot.m_ActiveVehicle.Type ~= VehicleTypes.StationaryAA then
-					table.insert(self._BotListBotBotVehicles, s_TempBot.m_Name)
+					table.insert(self._BotListBotBotInfantery, s_TempBot.m_Name)
 				end
 			else
 				table.insert(self._BotListBotBotInfantery, s_TempBot.m_Name)
@@ -737,7 +737,7 @@ function BotManager:_CheckForBotBotAttack()
 	end
 
 	local s_Raycasts = 0
-	local s_RaycastPlayer  = 0
+	local s_ChecksDone  = 0
 	local s_NextPlayerIndex = 1
 	local s_RaycastsOfPlayer = {}
 	for l_PlayerName,_ in pairs(self._ActivePlayers) do
@@ -775,6 +775,7 @@ function BotManager:_CheckForBotBotAttack()
 							-- check distance
 							local s_Distance = s_Bot.m_Player.soldier.worldTransform.trans:Distance(s_EnemyBot.m_Player.soldier.worldTransform.trans)
 							self.dummyCnt = self.dummyCnt + 1
+							s_ChecksDone = s_ChecksDone + 1
 							local s_MaxDistance = s_Bot:GetAttackDistance()
 							local s_MaxDistanceEnemyBot = s_EnemyBot:GetAttackDistance()
 							if s_MaxDistanceEnemyBot > s_MaxDistance then
@@ -795,6 +796,10 @@ function BotManager:_CheckForBotBotAttack()
 									end
 								end
 							end
+							if s_ChecksDone >= 100 then
+								self._LastBotCheckIndex = i
+								return
+							end
 						end
 					end
 				end
@@ -805,7 +810,9 @@ function BotManager:_CheckForBotBotAttack()
 
 	-- should only reach here if every connection has been checked
 	-- clear the cache and start over
-	print("all bots done "..tostring(self.dummyCnt).." "..tostring(self.dummyCnt2))
+	if (self.dummyCnt2 > 2) then
+		print("all bots done "..tostring(self.dummyCnt).." "..tostring(self.dummyCnt2))
+	end
 	self.dummyCnt = 0
 	self.dummyCnt2 = 0
 	self._LastBotCheckIndex = 1
