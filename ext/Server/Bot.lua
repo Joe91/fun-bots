@@ -105,6 +105,7 @@ function Bot:__init(p_Player)
 	self._ShootPlayerVehicleType = VehicleTypes.NoVehicle
 	self._ShootPlayerName = ""
 	self._DistanceToPlayer = 0.0
+	self.m_ReadyToAttack = false
 	self._WeaponToUse = BotWeapons.Primary
 	self._ShootWayPoints = {}
 	self._KnifeWayPositions = {}
@@ -296,12 +297,45 @@ function Bot:EnterVehicleOfPlayer(p_Player)
 	self._ShootPlayerName = p_Player.name
 end
 
-function Bot:ShootAt(p_Player, p_IgnoreYaw)
-	if 
+function Bot:IsReadyToAttack()
+	if
 	self._ActiveAction == BotActionFlags.OtherActionActive or
 	self._ActiveAction == BotActionFlags.ReviveActive or
 	self._ActiveAction == BotActionFlags.EnterVehicleActive or
 	self._ActiveAction == BotActionFlags.GrenadeActive then
+		return false
+	end
+	if self._ShootPlayer == nil or (self.m_InVehicle and (self._ShootModeTimer > Config.BotMinTimeShootAtPlayer * 2)) or
+		(not self.m_InVehicle and (self._ShootModeTimer > Config.BotMinTimeShootAtPlayer)) or
+		(self.m_KnifeMode and self._ShootModeTimer > (Config.BotMinTimeShootAtPlayer/2)) then
+		return true
+	else
+		return false
+	end
+end
+
+function Bot:GetAttackDistance()
+	local s_AttackDistance = 0.0
+	if not self.m_InVehicle then
+		if self.m_ActiveWeapon.type ~= WeaponTypes.Sniper then
+			s_AttackDistance = Config.MaxShootDistanceNoSniper
+		else
+			s_AttackDistance = Config.MaxRaycastDistance
+		end
+	else
+		if m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) and
+		m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) and
+		m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.AntiAir) then
+			s_AttackDistance = Config.MaxShootDistanceNoAntiAir
+		else
+			s_AttackDistance = Config.MaxRaycastDistanceVehicles
+		end
+	end
+	return s_AttackDistance
+end
+
+function Bot:ShootAt(p_Player, p_IgnoreYaw)
+	if not self:IsReadyToAttack() then
 		return false
 	end
 
@@ -355,16 +389,11 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 		self._DistanceToPlayer = p_Player.soldier.worldTransform.trans:Distance(self.m_Player.soldier.worldTransform.trans)
 	end
 
+	local s_AttackDistance = self:GetAttackDistance()
+
 	-- don't attack if too far away
-	if not p_IgnoreYaw and not self.m_InVehicle then
-		if self.m_ActiveWeapon.type ~= WeaponTypes.Sniper and self._DistanceToPlayer > Config.MaxShootDistanceNoSniper then
-			return false
-		end
-	end
-	if not p_IgnoreYaw and self.m_InVehicle then
-		if m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) and m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) and self._DistanceToPlayer > Config.MaxShootDistanceNoAntiAir then
-			return false
-		end
+	if not p_IgnoreYaw and self._DistanceToPlayer > s_AttackDistance then
+		return false
 	end
 
 	if s_Type ~= VehicleTypes.NoVehicle and m_Vehicles:CheckForVehicleAttack(s_Type, self._DistanceToPlayer, self.m_SecondaryGadget, self.m_InVehicle) == VehicleAttackModes.NoAttack then
@@ -443,23 +472,18 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 
 	if p_IgnoreYaw or (s_DifferenceYaw < s_FovHalf and s_Pitch < s_PitchHalf) then
 		if self._Shoot then
-			if self._ShootPlayer == nil or 
-			(self.m_InVehicle and (self._ShootModeTimer > Config.BotMinTimeShootAtPlayer * 1.5)) or
-			(not self.m_InVehicle and (self._ShootModeTimer > Config.BotMinTimeShootAtPlayer)) or
-			(self.m_KnifeMode and self._ShootModeTimer > (Config.BotMinTimeShootAtPlayer/2)) then
-				self._ShootModeTimer = 0
-				self._ShootPlayerName = p_Player.name
-				self._ShootPlayer = nil
-				self._KnifeWayPositions = {}
-				self._VehicleReadyToShoot = false
-				self._ShotTimer = - self:GetFirstShotDelay(self._DistanceToPlayer)
+			self._ShootModeTimer = 0
+			self._ShootPlayerName = p_Player.name
+			self._ShootPlayer = nil
+			self._KnifeWayPositions = {}
+			self._VehicleReadyToShoot = false
+			self._ShotTimer = - self:GetFirstShotDelay(self._DistanceToPlayer)
 
-				if self.m_KnifeMode then
-					table.insert(self._KnifeWayPositions, p_Player.soldier.worldTransform.trans:Clone())
-				end
-
-				return true
+			if self.m_KnifeMode then
+				table.insert(self._KnifeWayPositions, p_Player.soldier.worldTransform.trans:Clone())
 			end
+
+			return true
 		else
 			self._ShootModeTimer = Config.BotFireModeDuration
 			return false

@@ -16,11 +16,14 @@ function BotManager:__init()
 	self._DestroyBotsTimer = 0
 	self._BotsToDestroy = {}
 
+	self._BotListBotBotInfantery = {}
+	self._BotListBotBotVehicles = {}
 	self._BotCheckState = {}
 	self._ConnectionCheckState = {}
 
 	self._PendingAcceptRevives = {}
 	self._LastBotCheckIndex = 1
+	self._LastPlayerCheckIndex = 1
 	self._InitDone = false
 
 	self.dummyCnt = 0
@@ -705,89 +708,91 @@ end
 
 function BotManager:_CheckForBotBotAttack()
 	-- not enough on either team and no players to use
-	local s_TeamsWithPlayers = 0
+	local s_PlayerCount = 0
+  	for _ in pairs(self._ActivePlayers) do s_PlayerCount = s_PlayerCount + 1 end
+	if s_PlayerCount == 0 then
+		print("abort - too less players")
+		return
+	end
 
-	for i = 1, Globals.NrOfTeams do
-		if #self._BotsByTeam[i + 1] > 0 then
-			s_TeamsWithPlayers = s_TeamsWithPlayers + 1
+	-- create tables and scramble them
+	if 	#self._BotListBotBotInfantery == 0 and #self._BotListBotBotVehicles == 0 then
+		for _,s_TempBot in pairs(self._Bots) do
+			if s_TempBot.m_InVehicle then
+				if s_TempBot.m_ActiveVehicle ~= nil and s_TempBot.m_ActiveVehicle.Type ~= VehicleTypes.StationaryAA then
+					table.insert(self._BotListBotBotVehicles, s_TempBot.m_Name)
+				end
+			else
+				table.insert(self._BotListBotBotInfantery, s_TempBot.m_Name)
+			end
 		end
-	end
-
-	if s_TeamsWithPlayers < 2 then
-		return
-	end
-
-	local s_Players = self:GetPlayers()
-	local s_PlayerCount = #s_Players
-
-	if s_PlayerCount < 1 then
-		return
+		for i = #self._BotListBotBotInfantery, 2, -1 do
+			local j = math.random(i)
+			self._BotListBotBotInfantery[i], self._BotListBotBotInfantery[j] = self._BotListBotBotInfantery[j], self._BotListBotBotInfantery[i]
+		end
+		for i = #self._BotListBotBotVehicles, 2, -1 do
+			local j = math.random(i)
+			self._BotListBotBotVehicles[i], self._BotListBotBotVehicles[j] = self._BotListBotBotVehicles[j], self._BotListBotBotVehicles[i]
+		end
 	end
 
 	local s_Raycasts = 0
 	local s_RaycastPlayer  = 0
 	local s_NextPlayerIndex = 1
+	local s_RaycastsOfPlayer = {}
+	for l_PlayerName,_ in pairs(self._ActivePlayers) do
+		s_RaycastsOfPlayer[l_PlayerName] = 0
+	end
 
-	for i = self._LastBotCheckIndex, #self._Bots do
-		local s_Bot = self._Bots[i]
-
-		-- bot has player, is alive, and hasn't found that special someone yet
-		if s_Bot ~= nil and s_Bot.m_Player and s_Bot.m_Player.soldier ~= nil and not self._BotCheckState[s_Bot.m_Player.name] then
-			local s_OpposingTeams = {}
-
-			for l_TeamId = 1, Globals.NrOfTeams do
-				if (s_Bot.m_Player.teamId % 2) ~= (l_TeamId % 2) then
-					table.insert(s_OpposingTeams, l_TeamId)
-				end
-			end
-
-			for _, s_OpposingTeam in pairs(s_OpposingTeams) do
-				-- search only opposing team
-				for _, l_Bot in pairs(self._BotsByTeam[s_OpposingTeam + 1]) do
-					-- create connection-id
-					local s_ConnectionValue = ""
-					local s_Id1 = s_Bot.m_Player.id
-					local s_Id2 = l_Bot.m_Player.id
-					if s_Id1 > s_Id2 then
-						s_ConnectionValue = tostring(s_Id2).."-"..tostring(s_Id1)
-					else
-						s_ConnectionValue = tostring(s_Id1).."-"..tostring(s_Id2)
-					end
-					-- make sure it's living and has no target
-					if (l_Bot ~= nil and l_Bot.m_Player ~= nil and l_Bot.m_Player.soldier ~= nil and not self._BotCheckState[l_Bot.m_Player.name]) and not self._ConnectionCheckState[s_ConnectionValue] then
-						-- connection has not been checked yet
-						self._ConnectionCheckState[s_ConnectionValue] = true
-
-						local s_Distance = s_Bot.m_Player.soldier.worldTransform.trans:Distance(l_Bot.m_Player.soldier.worldTransform.trans)
-						self.dummyCnt = self.dummyCnt + 1
-						local s_MaxDistance = 0
-						if s_Bot.m_InVehicle or l_Bot.m_InVehicle then
-							s_MaxDistance = Config.MaxRaycastDistanceVehicles
+	for i = self._LastBotCheckIndex, #self._BotListBotBotInfantery do
+		-- body
+		local s_BotNameToCheck = self._BotListBotBotInfantery[i]
+		local s_Bot = self:GetBotByName(s_BotNameToCheck)
+		if s_Bot ~= nil and 
+		s_Bot.m_Player and 
+		s_Bot.m_Player.soldier ~= nil and
+		s_Bot:IsReadyToAttack() then
+			for _,l_BotName in pairs(self._BotListBotBotInfantery) do
+				if l_BotName ~= s_BotNameToCheck then
+					local s_EnemyBot = self:GetBotByName(l_BotName)
+					if s_EnemyBot ~= nil and 
+					s_EnemyBot.m_Player and 
+					s_EnemyBot.m_Player.soldier ~= nil and
+					s_EnemyBot.m_Player.teamId ~= s_Bot.m_Player.teamId and
+					s_EnemyBot:IsReadyToAttack() then
+						-- check connection-state
+						local s_ConnectionValue = ""
+						local s_Id1 = s_Bot.m_Player.id
+						local s_Id2 = s_EnemyBot.m_Player.id
+						if s_Id1 > s_Id2 then
+							s_ConnectionValue = tostring(s_Id2).."-"..tostring(s_Id1)
 						else
-							s_MaxDistance = Config.MaxRaycastDistance
+							s_ConnectionValue = tostring(s_Id1).."-"..tostring(s_Id2)
 						end
 
-						if s_Distance <= s_MaxDistance then
-							-- choose a player at random, try until an active player is found
-							for l_PlayerIndex = s_NextPlayerIndex, s_PlayerCount do
-								if self._ActivePlayers[s_Players[l_PlayerIndex].name] then
-									-- check this bot view. Let one client do it
-									local s_BotPosition = s_Bot.m_Player.soldier.worldTransform.trans:Clone()
-									local l_BotPosition = l_Bot.m_Player.soldier.worldTransform.trans:Clone()
-
-									NetEvents:SendUnreliableToLocal('CheckBotBotAttack', s_Players[l_PlayerIndex], s_BotPosition, l_BotPosition, s_Bot.m_Player.name, l_Bot.m_Player.name, s_Bot.m_InVehicle, l_Bot.m_InVehicle)
-									s_Raycasts = s_Raycasts + 1
-									self.dummyCnt2 = self.dummyCnt2 + 1
-									s_RaycastPlayer = s_RaycastPlayer + 1
-									if s_RaycastPlayer >= Registry.GAME_RAYCASTING.MAX_RAYCASTS_PER_PLAYER_BOT_BOT then
-										s_NextPlayerIndex = l_PlayerIndex + 1
-										s_RaycastPlayer = 0
+						if not self._ConnectionCheckState[s_ConnectionValue] then
+							self._ConnectionCheckState[s_ConnectionValue] = true
+							-- check distance
+							local s_Distance = s_Bot.m_Player.soldier.worldTransform.trans:Distance(s_EnemyBot.m_Player.soldier.worldTransform.trans)
+							self.dummyCnt = self.dummyCnt + 1
+							local s_MaxDistance = s_Bot:GetAttackDistance()
+							local s_MaxDistanceEnemyBot = s_EnemyBot:GetAttackDistance()
+							if s_MaxDistanceEnemyBot > s_MaxDistance then
+								s_MaxDistance = s_MaxDistanceEnemyBot
+							end
+							if s_Distance <=  s_MaxDistance then
+								for l_PlayerName,_ in pairs(self._ActivePlayers) do
+									local s_Player = PlayerManager:GetPlayerByName(l_PlayerName)
+									if s_Player ~= nil and s_RaycastsOfPlayer[l_PlayerName] < Registry.GAME_RAYCASTING.MAX_RAYCASTS_PER_PLAYER_BOT_BOT then
+										NetEvents:SendUnreliableToLocal('CheckBotBotAttack', s_Player, s_BotNameToCheck, l_BotName, s_Bot.m_InVehicle, s_EnemyBot.m_InVehicle)
+										s_Raycasts = s_Raycasts + 1
+										self.dummyCnt2 = self.dummyCnt2 + 1
 									end
-								end
-								if s_Raycasts >= (s_PlayerCount*Registry.GAME_RAYCASTING.MAX_RAYCASTS_PER_PLAYER_BOT_BOT) then
-									-- leave the function early for this cycle
-									self._LastBotCheckIndex = i
-									return
+									if s_Raycasts >= (s_PlayerCount*Registry.GAME_RAYCASTING.MAX_RAYCASTS_PER_PLAYER_BOT_BOT) then
+										-- leave the function early for this cycle
+										self._LastBotCheckIndex = i
+										return
+									end
 								end
 							end
 						end
@@ -795,18 +800,19 @@ function BotManager:_CheckForBotBotAttack()
 				end
 			end
 		end
-
 		self._LastBotCheckIndex = i
 	end
 
 	-- should only reach here if every connection has been checked
 	-- clear the cache and start over
-	-- print("all bots done "..tostring(self.dummyCnt).." "..tostring(self.dummyCnt2))
+	print("all bots done "..tostring(self.dummyCnt).." "..tostring(self.dummyCnt2))
 	self.dummyCnt = 0
 	self.dummyCnt2 = 0
 	self._LastBotCheckIndex = 1
 	self._BotCheckState = {}
 	self._ConnectionCheckState = {}
+	self._BotListBotBotInfantery = {}
+	self._BotListBotBotVehicles = {}
 end
 
 function BotManager:_GetDamageValue(p_Damage, p_Bot, p_Soldier, p_Fake)

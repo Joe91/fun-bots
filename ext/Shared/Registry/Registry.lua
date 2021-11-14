@@ -47,9 +47,9 @@ Registry = {
 
 		-- Variables related to raycasting
 		GAME_RAYCASTING = {
-			MAX_RAYCASTS_PER_PLAYER_PER_CYCLE = 3,
+			MAX_RAYCASTS_PER_PLAYER_PER_CYCLE = 5,
 			-- Max Raycasts for Bot-Bot Attack per player and cycle.
-			MAX_RAYCASTS_PER_PLAYER_BOT_BOT = 2,
+			MAX_RAYCASTS_PER_PLAYER_BOT_BOT = 4,
 
 			UPDATE_INTERVAL_NODEEDITOR = 0.03,
 			-- Raycast Interval of client for different raycasts

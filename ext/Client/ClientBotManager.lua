@@ -119,8 +119,16 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 		for i = 1, s_MaxRaycastsBotBot do
 			local s_RaycastCheckEntry = self.m_BotBotRaycastsToDo[i]
 			if s_RaycastCheckEntry ~= nil then
-				if self:DoRaycast(s_RaycastCheckEntry.StartPos, s_RaycastCheckEntry.EndPos, s_RaycastCheckEntry.StartPosInObj, s_RaycastCheckEntry.EndPosInObj) then
-					NetEvents:SendLocal("Bot:ShootAtBot", s_RaycastCheckEntry.Shooter, s_RaycastCheckEntry.Target)
+				local s_Bot1 = PlayerManager:GetPlayerByName(s_RaycastCheckEntry.Shooter)
+				local s_Bot2 = PlayerManager:GetPlayerByName(s_RaycastCheckEntry.Target)
+				if s_Bot1 ~= nil and s_Bot2 ~= nil and s_Bot1.soldier ~= nil and s_Bot2.soldier ~= nil then
+					local s_StartPos = s_Bot1.soldier.worldTransform.trans:Clone()
+					s_StartPos.y = s_StartPos.y + 1.2
+					local s_EndPos = s_Bot2.soldier.worldTransform.trans:Clone()
+					s_EndPos.y = s_EndPos.y + 1.2
+					if self:DoRaycast(s_StartPos, s_EndPos, s_RaycastCheckEntry.StartPosInObj, s_RaycastCheckEntry.EndPosInObj) then
+						NetEvents:SendLocal("Bot:ShootAtBot", s_RaycastCheckEntry.Shooter, s_RaycastCheckEntry.Target)
+					end
 				end
 			end
 		end
@@ -274,14 +282,9 @@ function ClientBotManager:OnWriteClientSettings(p_NewConfig, p_UpdateWeaponSets)
 	self.m_Player = PlayerManager:GetLocalPlayer()
 end
 
-function ClientBotManager:CheckForBotBotAttack(p_StartPos, p_EndPos, p_ShooterBotName, p_BotName, p_InVehicleShooter, p_InVehicleTarget)
+function ClientBotManager:CheckForBotBotAttack(p_ShooterBotName, p_BotName, p_InVehicleShooter, p_InVehicleTarget)
 	--check for clear view to startpoint
-	local s_StartPos = Vec3(p_StartPos.x, p_StartPos.y + 1.0, p_StartPos.z)
-	local s_EndPos = Vec3(p_EndPos.x, p_EndPos.y + 1.0, p_EndPos.z)
-
 	local s_RaycastCheckEntry = {
-		StartPos = s_StartPos,
-		EndPos = s_EndPos,
 		StartPosInObj = p_InVehicleShooter,
 		EndPosInObj = p_InVehicleTarget,
 		Shooter = p_ShooterBotName,
