@@ -16,7 +16,7 @@ function BotManager:__init()
 	self._DestroyBotsTimer = 0
 	self._BotsToDestroy = {}
 
-	self._BotListBotBotInfantery = {}
+	self._BotBotAttackList = {}
 	self._BotListBotBotVehicles = {}
 	self._BotCheckState = {}
 	self._ConnectionCheckState = {}
@@ -716,23 +716,19 @@ function BotManager:_CheckForBotBotAttack()
 	end
 
 	-- create tables and scramble them
-	if 	#self._BotListBotBotInfantery == 0 and #self._BotListBotBotVehicles == 0 then
+	if 	#self._BotBotAttackList == 0 then
 		for _,s_TempBot in pairs(self._Bots) do
 			if s_TempBot.m_InVehicle then
 				if s_TempBot.m_ActiveVehicle ~= nil and s_TempBot.m_ActiveVehicle.Type ~= VehicleTypes.StationaryAA then
-					table.insert(self._BotListBotBotInfantery, s_TempBot.m_Name)
+					table.insert(self._BotBotAttackList, s_TempBot.m_Name)
 				end
 			else
-				table.insert(self._BotListBotBotInfantery, s_TempBot.m_Name)
+				table.insert(self._BotBotAttackList, s_TempBot.m_Name)
 			end
 		end
-		for i = #self._BotListBotBotInfantery, 2, -1 do
+		for i = #self._BotBotAttackList, 2, -1 do
 			local j = math.random(i)
-			self._BotListBotBotInfantery[i], self._BotListBotBotInfantery[j] = self._BotListBotBotInfantery[j], self._BotListBotBotInfantery[i]
-		end
-		for i = #self._BotListBotBotVehicles, 2, -1 do
-			local j = math.random(i)
-			self._BotListBotBotVehicles[i], self._BotListBotBotVehicles[j] = self._BotListBotBotVehicles[j], self._BotListBotBotVehicles[i]
+			self._BotBotAttackList[i], self._BotBotAttackList[j] = self._BotBotAttackList[j], self._BotBotAttackList[i]
 		end
 	end
 
@@ -740,19 +736,20 @@ function BotManager:_CheckForBotBotAttack()
 	local s_ChecksDone  = 0
 	local s_NextPlayerIndex = 1
 	local s_RaycastsOfPlayer = {}
+	local s_TotalRaycastDistanceOfPlayer = 0
 	for l_PlayerName,_ in pairs(self._ActivePlayers) do
 		s_RaycastsOfPlayer[l_PlayerName] = 0
 	end
 
-	for i = self._LastBotCheckIndex, #self._BotListBotBotInfantery do
+	for i = self._LastBotCheckIndex, #self._BotBotAttackList do
 		-- body
-		local s_BotNameToCheck = self._BotListBotBotInfantery[i]
+		local s_BotNameToCheck = self._BotBotAttackList[i]
 		local s_Bot = self:GetBotByName(s_BotNameToCheck)
 		if s_Bot ~= nil and 
 		s_Bot.m_Player and 
 		s_Bot.m_Player.soldier ~= nil and
 		s_Bot:IsReadyToAttack() then
-			for _,l_BotName in pairs(self._BotListBotBotInfantery) do
+			for _,l_BotName in pairs(self._BotBotAttackList) do
 				if l_BotName ~= s_BotNameToCheck then
 					local s_EnemyBot = self:GetBotByName(l_BotName)
 					if s_EnemyBot ~= nil and 
@@ -787,16 +784,17 @@ function BotManager:_CheckForBotBotAttack()
 									if s_Player ~= nil and s_RaycastsOfPlayer[l_PlayerName] < Registry.GAME_RAYCASTING.MAX_RAYCASTS_PER_PLAYER_BOT_BOT then
 										NetEvents:SendUnreliableToLocal('CheckBotBotAttack', s_Player, s_BotNameToCheck, l_BotName, s_Bot.m_InVehicle, s_EnemyBot.m_InVehicle)
 										s_Raycasts = s_Raycasts + 1
+										s_TotalRaycastDistanceOfPlayer = s_TotalRaycastDistanceOfPlayer + s_Distance
 										self.dummyCnt2 = self.dummyCnt2 + 1
 									end
-									if s_Raycasts >= (s_PlayerCount*Registry.GAME_RAYCASTING.MAX_RAYCASTS_PER_PLAYER_BOT_BOT) then
+									if s_Raycasts >= (s_PlayerCount*Registry.GAME_RAYCASTING.MAX_RAYCASTS_PER_PLAYER_BOT_BOT) or s_TotalRaycastDistanceOfPlayer >= 500 then
 										-- leave the function early for this cycle
 										self._LastBotCheckIndex = i
 										return
 									end
 								end
 							end
-							if s_ChecksDone >= 100 then
+							if s_ChecksDone >= 30 then
 								self._LastBotCheckIndex = i
 								return
 							end
@@ -818,7 +816,7 @@ function BotManager:_CheckForBotBotAttack()
 	self._LastBotCheckIndex = 1
 	self._BotCheckState = {}
 	self._ConnectionCheckState = {}
-	self._BotListBotBotInfantery = {}
+	self._BotBotAttackList = {}
 	self._BotListBotBotVehicles = {}
 end
 
