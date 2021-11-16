@@ -21,13 +21,16 @@ This is the changelog for the released V2.4.0 version. Don't forget to [join us 
 ### Bug fixes
 * Fixed Bot-Behaviour in Gunmaster
 * Fixed strange behaviour in some cases with huge gaps in Nodeeditor
+* Bixed Bot-Bot-attack when both in vehicles
 
 ### New maps
 * Gulf of Oman Conquest Large (all) - thanks to BOB
 * Strike at Karkand Assault 2 - thanks to DuTcHrEaGaN
+* Kiasar Railroad Conquest Small Vehicles - thanks to KrazyIvan777
+* Sabalan Pipeline Conquest Small Vehicles - thanks to KrazyIvan777
 
 ### Updated maps
-* Lots and lots of Updated maps by MeisterPeitsche and KrazyIvan with massive work put into these maps!!!
+* Lots and lots of Updated maps by MeisterPeitsche and KrazyIvan777 with massive work put into these maps!!!
 
 
 ### Documentation update
