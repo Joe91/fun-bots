@@ -30,8 +30,8 @@ The following maps are currently supported in this commit.
 |   ![image](https://user-images.githubusercontent.com/57008952/124316914-a07b6f80-db76-11eb-82cb-2396a2828b76.png) 	|   `XP4_Parl`	| **Azadi Palace** | `CQ Large` ,`CQ Small` ,`GM` ,`SDM` ,`TDM` ,`TDM CQ` |  |
 |   ![image](https://user-images.githubusercontent.com/57008952/124316932-a83b1400-db76-11eb-99ad-926721cfbb09.png) 	|   `XP5_001`	| **Operation Riverside** | `CQ Small` ,`SDM` ,`TDM` ,`TDM CQ` | `CQ Small` |
 |   ![image](https://user-images.githubusercontent.com/57008952/124316951-aec98b80-db76-11eb-816d-140f9614359e.png) 	|   `XP5_002`	| **Nebandan Flats** | `CQ Small` ,`SDM` ,`TDM` ,`TDM CQ` | `CQ Small` |
-|   ![image](https://user-images.githubusercontent.com/57008952/124316976-b8eb8a00-db76-11eb-8207-addf58c94317.png) 	|   `XP5_003`	| **Kiasar Railroad** | `CTF` ,`CQ Small` ,`SDM` ,`TDM` ,`TDM CQ` |  |
-|   ![image](https://user-images.githubusercontent.com/57008952/124316988-bee16b00-db76-11eb-96f4-fc714fcf6fce.png) 	|   `XP5_004`	| **Sabalan Pipeline** | `CQ Small` ,`SDM` ,`TDM` ,`TDM CQ` |  |
+|   ![image](https://user-images.githubusercontent.com/57008952/124316976-b8eb8a00-db76-11eb-8207-addf58c94317.png) 	|   `XP5_003`	| **Kiasar Railroad** | `CTF` ,`CQ Small` ,`SDM` ,`TDM` ,`TDM CQ` | `CQ Small` |
+|   ![image](https://user-images.githubusercontent.com/57008952/124316988-bee16b00-db76-11eb-96f4-fc714fcf6fce.png) 	|   `XP5_004`	| **Sabalan Pipeline** | `CQ Small` ,`SDM` ,`TDM` ,`TDM CQ` | `CQ Small` |
 
 ### Help to expand the list
 We are still missing certain gamemodes on certain maps, help us expanding this list by exporting your traces (with the export_traces.exe) and sending it to us on discort or on any other cahnnel.
