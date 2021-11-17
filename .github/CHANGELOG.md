@@ -17,6 +17,7 @@ This is the changelog for the released V2.4.0 version. Don't forget to [join us 
 * Preparation for new Raycast-methods
 * Improved-Check-mechanisms of Bot on Bot attack
 * added Spanisch translations by Lukajo
+* Massive core-rework of Bot-Bot-Attack
 
 ### Bug fixes
 * Fixed Bot-Behaviour in Gunmaster
