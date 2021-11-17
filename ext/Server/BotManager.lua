@@ -371,15 +371,11 @@ function BotManager:ConfigGlobals()
 		m_Logger:Error("No Playercount found")
 	end
 
-	print(SharedUtils:GetTimeMS())
-
+	-- calculate Raycast per Player
 	local s_CycleTime = 1.0/SharedUtils:GetTickrate()
 	local s_FactorTicksUpdate = Registry.GAME_RAYCASTING.BOT_BOT_CHECK_INTERVAL / s_CycleTime
 	local s_RaycastsMax = s_FactorTicksUpdate * (Registry.GAME_RAYCASTING.MAX_RAYCASTS_PER_PLAYER_BOT_BOT)
-
-	self._RaycastsPerActivePlayer = math.floor(s_RaycastsMax - 0.5) -- round down
-	print(self._RaycastsPerActivePlayer)
-	print(SharedUtils:GetTimeMS())
+	self._RaycastsPerActivePlayer = math.floor(s_RaycastsMax - 0.1) -- always round down one
 
 	self._InitDone = true
 end
@@ -852,7 +848,7 @@ function BotManager:_CheckForBotBotAttack()
 
 	-- should only reach here if every connection has been checked
 	-- clear the cache and start over
-	if (self.dummyCnt2 > 2) then
+	if (self.dummyCnt2 > 5) then
 		print("all bots done "..tostring(self.dummyCnt).." "..tostring(self.dummyCnt2))
 	end
 	self.dummyCnt = 0
