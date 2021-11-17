@@ -103,7 +103,7 @@ function ClientBotManager:DoRaycast(p_Pos1, p_Pos2, p_InObjectPos1, p_InObjectPo
 end
 
 function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
-	if p_UpdatePass ~= UpdatePass.UpdatePass_PreFrame or not self.m_ReadyToUpdate then
+	if p_UpdatePass ~= UpdatePass.UpdatePass_PreSim or not self.m_ReadyToUpdate then --UpdatePass_PreSim  UpdatePass_PreFrame
 		return
 	end
 
@@ -116,26 +116,29 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 		if not s_SkipEnemyCheck then
 			s_MaxRaycastsBotBot = s_MaxRaycastsBotBot - 1
 		end
+		local s_RaycastEntriesDone = 0
 		for i = 1, s_MaxRaycastsBotBot do
-			local s_RaycastCheckEntry = self.m_BotBotRaycastsToDo[i]
-			if s_RaycastCheckEntry ~= nil then
-				local s_Bot1 = PlayerManager:GetPlayerByName(s_RaycastCheckEntry.Shooter)
-				local s_Bot2 = PlayerManager:GetPlayerByName(s_RaycastCheckEntry.Target)
+			if (#self.m_BotBotRaycastsToDo > 0) then
+				local s_RaycastCheckEntry = table.remove(self.m_BotBotRaycastsToDo, 1)
+				s_RaycastEntriesDone = s_RaycastEntriesDone + 1
+				local s_Bot1 = PlayerManager:GetPlayerByName(s_RaycastCheckEntry.Bot1)
+				local s_Bot2 = PlayerManager:GetPlayerByName(s_RaycastCheckEntry.Bot2)
 				if s_Bot1 ~= nil and s_Bot2 ~= nil and s_Bot1.soldier ~= nil and s_Bot2.soldier ~= nil then
 					local s_StartPos = s_Bot1.soldier.worldTransform.trans:Clone()
 					s_StartPos.y = s_StartPos.y + 1.2
 					local s_EndPos = s_Bot2.soldier.worldTransform.trans:Clone()
 					s_EndPos.y = s_EndPos.y + 1.2
-					if self:DoRaycast(s_StartPos, s_EndPos, s_RaycastCheckEntry.StartPosInObj, s_RaycastCheckEntry.EndPosInObj) then
-						NetEvents:SendLocal("Bot:ShootAtBot", s_RaycastCheckEntry.Shooter, s_RaycastCheckEntry.Target)
+					if self:DoRaycast(s_StartPos, s_EndPos, s_RaycastCheckEntry.Bot1InVehicle, s_RaycastCheckEntry.Bot2InVehicle) then
+						NetEvents:SendLocal("Bot:ShootAtBot", s_RaycastCheckEntry.Bot1, s_RaycastCheckEntry.Bot2)
 					end
 				end
 			end
 		end
-		if #self.m_BotBotRaycastsToDo > s_MaxRaycastsBotBot then
+		-- check for too many entries
+		if #self.m_BotBotRaycastsToDo > 20 then
 			m_Logger:Warning("More Raycasts than doable")
+			self.m_BotBotRaycastsToDo = {}
 		end
-		self.m_BotBotRaycastsToDo = {}
 	end
 
 	if self.m_Player == nil then
@@ -282,16 +285,10 @@ function ClientBotManager:OnWriteClientSettings(p_NewConfig, p_UpdateWeaponSets)
 	self.m_Player = PlayerManager:GetLocalPlayer()
 end
 
-function ClientBotManager:CheckForBotBotAttack(p_ShooterBotName, p_BotName, p_InVehicleShooter, p_InVehicleTarget)
-	--check for clear view to startpoint
-	local s_RaycastCheckEntry = {
-		StartPosInObj = p_InVehicleShooter,
-		EndPosInObj = p_InVehicleTarget,
-		Shooter = p_ShooterBotName,
-		Target = p_BotName
-	}
-
-	table.insert(self.m_BotBotRaycastsToDo, s_RaycastCheckEntry)
+function ClientBotManager:CheckForBotBotAttack(p_RaycastData)
+	for _, l_RaycastEntry in pairs(p_RaycastData) do
+		table.insert(self.m_BotBotRaycastsToDo, l_RaycastEntry)
+	end
 end
 
 -- =============================================

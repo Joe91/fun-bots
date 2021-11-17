@@ -40,7 +40,7 @@ Registry = {
 		CLIENT = {
 			REVIVE_DISTANCE = 30.0,
 
-			MAX_CHECKS_PER_CYCLE = 7,
+			MAX_CHECKS_PER_CYCLE = 10,
 
 			SPAWN_PROTECTION = 1.5,
 		},
@@ -48,14 +48,16 @@ Registry = {
 		-- Variables related to raycasting
 		GAME_RAYCASTING = {
 			MAX_RAYCASTS_PER_PLAYER_PER_CYCLE = 3,
-			-- Max Raycasts for Bot-Bot Attack per player and cycle.
+			-- Max Raycasts for Bot-Bot Attack per player and cycle. Needs to be smaller than max_raycats
 			MAX_RAYCASTS_PER_PLAYER_BOT_BOT = 2,
 
 			UPDATE_INTERVAL_NODEEDITOR = 0.03,
 			-- Raycast Interval of client for different raycasts
 			RAYCAST_INTERVAL_ENEMY_CHECK = 0.03,
 
-			BOT_BOT_CHECK_INTERVAL = 0.05
+			BOT_BOT_CHECK_INTERVAL = 0.05,
+
+			BOT_BOT_MAX_CHECKS = 30
 		},
 
 		GAME_DIRECTOR = {

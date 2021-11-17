@@ -153,8 +153,8 @@ function FunBotClient:OnWriteClientSettings(p_NewConfig, p_UpdateWeaponSets)
 	end
 end
 
-function FunBotClient:CheckForBotBotAttack(p_BotName1, p_BotName2, p_InVehicle1, p_InVehicle2)
-	m_ClientBotManager:CheckForBotBotAttack(p_BotName1, p_BotName2, p_InVehicle1, p_InVehicle2)
+function FunBotClient:CheckForBotBotAttack(p_RaycastData)
+	m_ClientBotManager:CheckForBotBotAttack(p_RaycastData)
 end
 
 function FunBotClient:OnUISettings(p_Data)
