@@ -22,6 +22,7 @@ XP3_Shield ConquestLarge0 1
 XP4_FD ConquestLarge0 1
 XP4_Parl ConquestLarge0 1
 XP4_Quake ConquestLarge0 1
+XP5_001 ConquestLarge0 1
 MP_001 ConquestSmall0 1
 MP_003 ConquestSmall0 1
 MP_007 ConquestSmall0 1
