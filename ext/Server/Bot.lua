@@ -2228,6 +2228,11 @@ function Bot:_UpdateNormalMovementVehicle()
 			if s_Point.Data ~= nil and s_Point.Data.Action ~= nil then
 				if s_Point.Data.Action.type == "exit" then
 					self:_ResetActionFlag(BotActionFlags.OtherActionActive)
+					local s_OnlyPassengers = false
+					if s_Point.Data.Action.onlyPassengers ~= nil and s_Point.Data.Action.onlyPassengers == true then
+						s_OnlyPassengers = true
+					end
+
 					-- let all other bots exit the vehicle
 					local s_VehicleEntity = self.m_Player.controlledControllable
 					if s_VehicleEntity ~= nil then
@@ -2239,7 +2244,9 @@ function Bot:_UpdateNormalMovementVehicle()
 						end
 					end
 					-- Exit Vehicle
-					self:ExitVehicle()
+					if not s_OnlyPassengers then
+						self:ExitVehicle()
+					end
 				elseif self._ActionTimer <= s_Point.Data.Action.time then
 					for _, l_Input in pairs(s_Point.Data.Action.inputs) do
 						self:_SetInput(l_Input, 1)

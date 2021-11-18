@@ -18,6 +18,9 @@ This is the changelog for the released V2.4.0 version. Don't forget to [join us 
 * Improved-Check-mechanisms of Bot on Bot attack
 * added Spanisch translations by Lukajo
 * Massive core-rework of Bot-Bot-Attack
+* Support for TankSuperiority
+* Extended "exit"-command for node-editor
+* Added "removeData"-command for node-editor
 
 ### Bug fixes
 * Fixed Bot-Behaviour in Gunmaster

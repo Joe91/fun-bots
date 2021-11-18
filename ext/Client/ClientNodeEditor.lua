@@ -199,9 +199,10 @@ function ClientNodeEditor:OnRegisterEvents()
 	Console:Register('AddObjective', '<string|Objective> - Add an objective to a path', self, self._onAddObjective)
 	Console:Register('AddMcom', 'Add an MCOM Arm/Disarm-Action to a point', self, self._onAddMcom)
 	Console:Register('AddVehicle', 'Add a vehicle a bot can use', self, self._onAddVehicle)
-	Console:Register('ExitVehicle', 'Add a point where a bot leaves the vehicle', self, self._onExitVehicle)
+	Console:Register('ExitVehicle', '<bool|OnlyPassengers> Add a point where all bots or only the passengers leaves the vehicle', self, self._onExitVehicle)
 	Console:Register('AddVehiclePath', '<string|Type> Add vehicle-usage to a path. Types = land, water, air', self, self._onAddVehiclePath)
 	Console:Register('RemoveObjective', '<string|Objective> - Remove an objective from a path', self, self._onRemoveObjective)
+	Console:Register('RemoveData', 'Remove all data of one or several nodes', self, self._onRemoveData)
 	Console:Register('ProcessMetadata', 'Process waypoint metadata starting with selected nodes or all nodes', self, self._onProcessMetadata)
 	Console:Register('RecalculateIndexes', 'Recalculate Indexes starting with selected nodes or all nodes', self, self._onRecalculateIndexes)
 	Console:Register('DumpNodes', 'Print selected nodes or all nodes to console', self, self._onDumpNodes)
@@ -885,11 +886,16 @@ function ClientNodeEditor:_onExitVehicle(p_Args)
 		return false
 	end
 
-	self:Log('Updating %d Possible Waypoints', (#s_Selection))
+	local s_Data = p_Args[1] or "false"
+	self:Log('Exit Vehicle (type): %s', g_Utilities:dump(s_Data, true))
+
+	local s_OnlyPassengers = not (s_Data:lower() == "false" or s_Data == "0")
+	print(s_OnlyPassengers)
 
 	for i = 1, #s_Selection do
 		local action = {
 			type = "exit",
+			onlyPassengers = s_OnlyPassengers,
 			inputs = {EntryInputActionEnum.EIAInteract},
 			time = 0.5
 		}
@@ -1032,6 +1038,35 @@ function ClientNodeEditor:_onRemoveObjective(p_Args)
 			s_Waypoint.Data.Objectives = s_NewObjectives
 			self:Log('Updated Waypoint: %s', s_Waypoint.ID)
 		end
+	end
+
+	return true
+end
+
+function ClientNodeEditor:_onRemoveData(p_Args)
+	self.m_CommoRoseActive = false
+
+	if self:IsSavingOrLoading() then
+		return false
+	end
+
+	if self.m_Player == nil or self.m_Player.soldier == nil then
+		self:Log('Player must be alive')
+		return false
+	end
+
+	local s_Selection = m_NodeCollection:GetSelected()
+
+	if #s_Selection < 1 then
+		self:Log('Must select at least one node')
+		return false
+	end
+
+	self:Log('Updating %d Possible Waypoints', (#s_Selection))
+
+	for i = 1, #s_Selection do
+		s_Selection[i].Data = {}
+		self:Log('Updated Waypoint: %s', s_Selection[i].ID)
 	end
 
 	return true

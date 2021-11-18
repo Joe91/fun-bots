@@ -590,7 +590,7 @@ function FunBotServer:SetMaxBotsPerTeam(p_GameMode)
 		Globals.MaxBotsPerTeam = Config.MaxBotsPerTeamS
 	elseif p_GameMode == 'ConquestLarge0' then
 		Globals.MaxBotsPerTeam = Config.MaxBotsPerTeamCl
-	elseif p_GameMode == 'ConquestSmall0' or p_GameMode == 'BFLAG' then
+	elseif p_GameMode == 'ConquestSmall0' or p_GameMode == 'TankSuperiority0' or p_GameMode == 'BFLAG' then
 		Globals.MaxBotsPerTeam = Config.MaxBotsPerTeamCs
 	elseif p_GameMode == 'ConquestAssaultLarge0' then
 		Globals.MaxBotsPerTeam = Config.MaxBotsPerTeamCal
