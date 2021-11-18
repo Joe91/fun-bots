@@ -1171,6 +1171,7 @@ function NodeCollection:Save()
 			end
 	
 			s_QueriesDone = s_QueriesDone + s_QueriesLeft
+			ChatManager:Yell(Language:I18N('Save in progress...'), 1)
 			coroutine.yield()
 		end
 	
