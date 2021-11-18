@@ -639,6 +639,7 @@ function FunBotServer:SetGameMode(p_GameMode)
 	p_GameMode == 'ConquestAssaultLarge0' or
 	p_GameMode == 'ConquestAssaultSmall0' or
 	p_GameMode == 'ConquestAssaultSmall1' or
+	p_GameMode == 'TankSuperiority0' or
 	p_GameMode == 'BFLAG'then
 		Globals.IsConquest = true
 	else
