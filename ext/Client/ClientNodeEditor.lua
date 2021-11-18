@@ -1689,7 +1689,7 @@ function ClientNodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 				self.m_NodeSendTimer = -1
 				self.m_NodeSendProgress = 1
 				self.m_NodeOperation = ''
-				NetEvents:Send('NodeEditor:Init', true)
+				NetEvents:Send('NodeEditor:Init', false)
 				self:Log('Finished sending waypoints to server')
 			end
 		end
