@@ -21,6 +21,7 @@ This is the changelog for the released V2.4.0 version. Don't forget to [join us 
 * Support for TankSuperiority
 * Extended "exit"-command for node-editor
 * Added "removeData"-command for node-editor
+* moved "save" to coroutine
 
 ### Bug fixes
 * Fixed Bot-Behaviour in Gunmaster
@@ -29,6 +30,7 @@ This is the changelog for the released V2.4.0 version. Don't forget to [join us 
 
 ### New maps
 * Gulf of Oman Conquest Large (all) - thanks to BOB
+* Sabalan Pipeline Conquest Large (all) - thanks to BOB
 * Strike at Karkand Assault 2 - thanks to DuTcHrEaGaN
 * Kiasar Railroad Conquest Small Vehicles - thanks to KrazyIvan777
 * Sabalan Pipeline Conquest Small Vehicles - thanks to KrazyIvan777

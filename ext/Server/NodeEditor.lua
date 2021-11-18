@@ -143,6 +143,11 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 		return
 	end
 
+	-- saving nodes before sending or recieving
+	if m_NodeCollection:IsSaveActive() then
+		m_NodeCollection:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
+	end
+
 	-- only do sending if not receiving
 	if self.m_BatchSendTimer < 0 or #self.m_PlayersReceivingNodes == 0 then
 		return
@@ -259,6 +264,8 @@ function NodeEditor:OnInit(p_Player, p_Save)
 
 	self:Log('Stale Nodes: %d', s_StaleNodes)
 
+	-- don't save when sent from client
+	ChatManager:Yell(Language:I18N('Server recieved %d nodes.', #s_NodesToCheck), 5.5)
 	if p_Save then
 		m_NodeCollection:Save()
 	end
