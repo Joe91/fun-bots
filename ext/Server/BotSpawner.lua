@@ -1130,7 +1130,7 @@ function BotSpawner:_GetSpawnPoint(p_TeamId, p_SquadId)
 				local s_TempPlayer = s_Players[i]
 
 				if s_TempPlayer.soldier ~= nil then
-					if p_TeamId == nil or p_TeamId ~= s_TempPlayer.teamId then
+					if p_TeamId == nil or (p_TeamId % 2) ~= (s_TempPlayer.teamId % 2) then
 						local s_Distance = s_TempPlayer.soldier.worldTransform.trans:Distance(s_SpawnPoint)
 						local s_HeightDiff = math.abs(s_TempPlayer.soldier.worldTransform.trans.y - s_SpawnPoint.y)
 

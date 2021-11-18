@@ -163,7 +163,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 		local s_EnemyPlayers = {}
 		for _, l_Player in pairs(PlayerManager:GetPlayers()) do
-			if l_Player.teamId ~= self.m_Player.teamId then
+			if (l_Player.teamId % 2) ~= (self.m_Player.teamId % 2) then
 				table.insert(s_EnemyPlayers, l_Player)
 			end
 		end

@@ -791,7 +791,7 @@ function BotManager:_CheckForBotBotAttack()
 					if s_EnemyBot ~= nil and 
 					s_EnemyBot.m_Player and 
 					s_EnemyBot.m_Player.soldier ~= nil and
-					s_EnemyBot.m_Player.teamId ~= s_Bot.m_Player.teamId and
+					(s_EnemyBot.m_Player.teamId %2) ~= (s_Bot.m_Player.teamId %2) and	
 					s_EnemyBot:IsReadyToAttack() then
 						-- check connection-state
 						local s_ConnectionValue = ""

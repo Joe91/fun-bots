@@ -1903,7 +1903,7 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 			local s_Players = PlayerManager:GetPlayers()
 
 			for p = 1, #s_Players do
-				if s_Players[p].soldier ~= nil and self.m_Player.teamId ~= s_Players[p].teamId then
+				if s_Players[p].soldier ~= nil and (self.m_Player.teamId % 2) ~= (s_Players[p].teamId % 2) then
 					local s_Ray = RaycastManager:Raycast(self.m_PlayerPos+Vec3.up, (s_Players[p].soldier.worldTransform.trans+Vec3.up), RayCastFlags.CheckDetailMesh | RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.IsAsyncRaycast)
 
 					local s_PosData = {
