@@ -1020,7 +1020,6 @@ end
 
 function NodeCollection:Save()
 	m_SaveNodeCollection = coroutine.create(function()
-		::__startover__::
 		if not SQL:Open() then
 			m_Logger:Error('Could not open database')
 			return
@@ -1048,6 +1047,9 @@ function NodeCollection:Save()
 			m_Logger:Error('Failed to create table for map ['..self.mapName..']: '..SQL:Error())
 			return
 		end
+
+		ChatManager:Yell(Language:I18N('Save in progress...'), 1)
+		coroutine.yield()
 	
 		--self.mapName
 	
@@ -1131,6 +1133,7 @@ function NodeCollection:Save()
 			end
 		end
 	
+		ChatManager:Yell(Language:I18N('Save in progress...'), 1)
 		coroutine.yield()
 	
 		m_Logger:Write('Save -> Waypoints to write: '..(#s_BatchQueries))
