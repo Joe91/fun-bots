@@ -132,10 +132,10 @@ function FunBotServer:RegisterCustomEvents()
 end
 
 function FunBotServer:RegisterCallbacks()
-	-- Use server-sided bulletdamage
+	-- Use server-sided bulletdamage and modify timeout
 	ResourceManager:RegisterInstanceLoadHandler(Guid('C4DCACFF-ED8F-BC87-F647-0BC8ACE0D9B4'), Guid('818334B3-CEA6-FC3F-B524-4A0FED28CA35'), self, self.OnServerSettingsCallback)
+	ResourceManager:RegisterInstanceLoadHandler(Guid('C4DCACFF-ED8F-BC87-F647-0BC8ACE0D9B4'), Guid('B479A8FA-67FF-8825-9421-B31DE95B551A'), self, self.OnModifyClientTimeoutSettings)
 	ResourceManager:RegisterInstanceLoadHandler(Guid('C4DCACFF-ED8F-BC87-F647-0BC8ACE0D9B4'), Guid('B983148D-4B2B-1CDA-D8A0-407789610202'), self, self.OnSyncedGameSettingsCallback)
-
 	-- Modify stationary AA
 	ResourceManager:RegisterInstanceLoadHandler(Guid('15A6F4C7-1700-432B-95A7-D5DE8A058ED2'), Guid('465DA0A5-F57D-44CF-8383-7F7DC105973A'), self, self.OnStationaryAACallback)
 	-- Conquest
@@ -441,6 +441,13 @@ function FunBotServer:OnServerSettingsCallback(p_Instance)
 	else
 		p_Instance.isRenderDamageEvents = false
 	end
+	p_Instance.loadingTimeout = Registry.COMMON.LOADING_TIMEOUT
+	p_Instance.ingameTimeout = Registry.COMMON.LOADING_TIMEOUT
+	p_Instance.timeoutTime = Registry.COMMON.LOADING_TIMEOUT
+	p_Instance.timeoutGame = false
+
+	m_Logger:Write("Changed ServerSettings")
+
 end
 
 function FunBotServer:OnSyncedGameSettingsCallback(p_Instance)
@@ -452,6 +459,17 @@ function FunBotServer:OnSyncedGameSettingsCallback(p_Instance)
 	else
 		p_Instance.allowClientSideDamageArbitration = true
 	end
+end
+
+
+function FunBotServer:OnModifyClientTimeoutSettings(p_Instance)
+	p_Instance = ClientSettings(p_Instance)
+	p_Instance:MakeWritable()
+
+	p_Instance.loadedTimeout = Registry.COMMON.LOADING_TIMEOUT
+	p_Instance.loadingTimeout = Registry.COMMON.LOADING_TIMEOUT
+	p_Instance.ingameTimeout = Registry.COMMON.LOADING_TIMEOUT
+	m_Logger:Write("Changed ClientSettings")
 end
 
 function FunBotServer:OnStationaryAACallback(p_Instance)

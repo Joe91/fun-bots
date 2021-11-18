@@ -16,6 +16,8 @@ Registry = {
 			USE_REAL_DAMAGE = true,
 			-- collition-raycasts are only supporded by the dev-buidls of VU atm (VEXT 1.3.2 or greater)
 			USE_COLLITION_RAYCASTS = false,
+			-- timeout to save or load maps
+			LOADING_TIMEOUT = 25,
 		},
 		-- Version and Release related variables
 		-- Variables related to the current build version, version and the type of version.
