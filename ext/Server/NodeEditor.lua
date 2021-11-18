@@ -265,6 +265,7 @@ function NodeEditor:OnInit(p_Player, p_Save)
 	self:Log('Stale Nodes: %d', s_StaleNodes)
 
 	-- don't save when sent from client
+	ChatManager:Yell(Language:I18N('Server recieved %d nodes.', #s_NodesToCheck), 5.5)
 	if p_Save then
 		m_NodeCollection:Save()
 	end
