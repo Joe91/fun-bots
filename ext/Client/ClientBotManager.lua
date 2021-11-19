@@ -136,7 +136,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 		end
 		-- check for too many entries
 		if #self.m_BotBotRaycastsToDo > 20 then
-			m_Logger:Warning("More Raycasts than doable")
+			m_Logger:Write("More Raycasts than doable")
 			self.m_BotBotRaycastsToDo = {}
 		end
 	end

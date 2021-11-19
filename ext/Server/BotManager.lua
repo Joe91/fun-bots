@@ -848,9 +848,10 @@ function BotManager:_CheckForBotBotAttack()
 
 	-- should only reach here if every connection has been checked
 	-- clear the cache and start over
-	if (self.dummyCnt2 > 5) then
-		print("all bots done "..tostring(self.dummyCnt).." "..tostring(self.dummyCnt2))
-	end
+	-- ONLY FOR DEBUGGING:
+	-- if (self.dummyCnt2 > 5) then
+	-- 	print("all bots done "..tostring(self.dummyCnt).." "..tostring(self.dummyCnt2))
+	-- end
 	self.dummyCnt = 0
 	self.dummyCnt2 = 0
 	self._LastBotCheckIndex = 1
