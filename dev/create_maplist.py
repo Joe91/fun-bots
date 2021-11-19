@@ -5,13 +5,13 @@ import re
 import operator
 # All GameModes
 # 				  "TDM", "TDM CQ", "Rush", "CQ Small", "CQ Large", "Assault", "Assault 2", "Assault Large" "GM", "CQ Dom", "Scavanger", "CTF"
-GameModesToUse = ["TDM", "SDM", "TDM CQ", "Rush", "SQ Rush", "CQ Small", "CQ Large", "Assault", "Assault 2", "Assault Large", "GM", "CQ Dom", "Scavanger", "CTF"]
+GameModesToUse = ["TDM", "SDM", "TDM CQ", "Rush", "SQ Rush", "CQ Small", "CQ Large", "Assault", "Assault 2", "Assault Large", "GM", "CQ Dom", "Scavanger", "CTF", "Tank Superiority"]
 RoundsToUse = 1
 #AddComment = True # True or False
 MapsWithGunmaster = ["XP2", "XP4"]
 MapsWithoutTdmCq = ["XP2"]
 
-AllGameModes = ["TDM", "SDM", "TDM CQ", "Rush", "SQ Rush", "CQ Small", "CQ Large", "Assault", "Assault 2", "Assault Large", "GM", "CQ Dom", "Scavanger", "CTF"]
+AllGameModes = ["TDM", "SDM", "TDM CQ", "Rush", "SQ Rush", "CQ Small", "CQ Large", "Assault", "Assault 2", "Assault Large", "GM", "CQ Dom", "Scavanger", "CTF", "Tank Superiority"]
 GameModeTranslations = {
 	"TDM": "TeamDeathMatch0",
 	"SDM": "SquadDeathMatch0",
@@ -26,7 +26,8 @@ GameModeTranslations = {
 	"GM": "GunMaster0",
 	"CQ Dom": "Domination0",
 	"Scavanger": "Scavenger0",
-	"CTF": "CaptureTheFlag0"
+	"CTF": "CaptureTheFlag0",
+	"Tank Superiority": "TankSuperiority0"
 }
 
 outFile = "./../MapList.txt"
