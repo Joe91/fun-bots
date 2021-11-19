@@ -163,7 +163,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 		local s_EnemyPlayers = {}
 		for _, l_Player in pairs(PlayerManager:GetPlayers()) do
-			if (l_Player.teamId % 2) ~= (self.m_Player.teamId % 2) and self.m_Player.teamId ~= 0 then  -- don't let bots attack spectators
+			if l_Player.teamId ~= self.m_Player.teamId and self.m_Player.teamId ~= 0 then  -- don't let bots attack spectators
 				table.insert(s_EnemyPlayers, l_Player)
 			end
 		end
