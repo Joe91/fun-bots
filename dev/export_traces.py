@@ -46,7 +46,7 @@ for item in content:
             header.pop(0)
             idsToRemove = True
         outfile.write(";".join(header) + "\n")
-        sql_anweistung = "SELECT * FROM " + item[1] + " ORDER BY 'pathIndex', 'pointIndex' ASC"
+        sql_anweistung = "SELECT * FROM " + item[1] + " ORDER BY pathIndex, pointIndex ASC"
         cursor.execute(sql_anweistung)
         table_content = cursor.fetchall()
         for line in table_content:

@@ -959,7 +959,7 @@ function NodeCollection:Load(p_LevelName, p_GameMode)
 
 
 	-- Fetch all rows from the table.
-	local s_Results = SQL:Query('SELECT * FROM '..self.mapName..'_table ORDER BY `pathIndex`, `pointIndex` ASC')
+	local s_Results = SQL:Query('SELECT * FROM '..self.mapName..'_table ORDER BY pathIndex, pointIndex ASC')
 
 	if not s_Results then
 		m_Logger:Error('Failed to retrieve waypoints for map ['..self.mapName..']: '..SQL:Error())

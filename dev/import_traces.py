@@ -34,12 +34,8 @@ for filename in filenames:
     """
     cursor.execute(sql_instruction)
     with open(sourceFolder + "/" + filename, "r") as infile:
-        firstLine = None
         allNodeData = []
-        for line in infile.readlines():
-            if firstLine == None:
-                firstLine = line
-                continue
+        for line in infile.readlines()[1:]:
             lineData = line.split(";")
             dataString = ""
             if len(lineData) >= 7:
