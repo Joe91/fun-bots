@@ -1318,6 +1318,8 @@ function ClientNodeEditor:_onSaveTrace(p_PathIndex)
 		end
 	end
 
+	collectgarbage('collect')
+
 	-- merge custom trace into main node collection
 	while s_CurrentWaypoint do
 		s_CurrentWaypoint.PathIndex = p_PathIndex
@@ -1334,6 +1336,7 @@ function ClientNodeEditor:_onSaveTrace(p_PathIndex)
 	end
 
 	self.m_CustomTrace:Clear()
+	collectgarbage('collect')
 	self:Log('Custom Trace Saved to Path: %d', p_PathIndex)
 	self.m_NodeOperation = ''
 end
@@ -2195,7 +2198,7 @@ function ClientNodeEditor:DrawSomeNodes(p_NrOfNodes)
 	-- reset vars
 	self.m_lastDrawIndexPath = 0
 	self.m_lastDrawIndexNode = 0
-
+	collectgarbage('collect')
 	return true
 end
 

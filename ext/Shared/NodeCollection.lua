@@ -1133,7 +1133,6 @@ function NodeCollection:Save()
 			end
 		end
 	
-		ChatManager:Yell(Language:I18N('Save in progress...'), 1)
 		coroutine.yield()
 	
 		m_Logger:Write('Save -> Waypoints to write: '..(#s_BatchQueries))
@@ -1174,7 +1173,6 @@ function NodeCollection:Save()
 			end
 	
 			s_QueriesDone = s_QueriesDone + s_QueriesLeft
-			ChatManager:Yell(Language:I18N('Save in progress...'), 1)
 			coroutine.yield()
 		end
 	
