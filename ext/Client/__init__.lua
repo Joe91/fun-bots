@@ -77,6 +77,8 @@ function FunBotClient:RegisterHooks()
 	end
 
 	Hooks:Install('UI:PushScreen', 1, self, self.OnUIPushScreen)
+
+	Hooks:Install('Input:PreUpdate', 100, self, self.OnInputPreUpdate)
 end
 
 -- =============================================
@@ -180,6 +182,11 @@ end
 function FunBotClient:OnBulletEntityCollision(p_HookCtx, p_Entity, p_Hit, p_Shooter)
 	m_ClientBotManager:OnBulletEntityCollision(p_HookCtx, p_Entity, p_Hit, p_Shooter)
 end
+
+function FunBotClient:OnInputPreUpdate(p_HookCtx, p_Cache, p_DeltaTime)
+	m_ClientBotManager:OnInputPreUpdate(p_HookCtx, p_Cache, p_DeltaTime)
+end
+
 
 function FunBotClient:OnUIPushScreen(p_HookCtx, p_Screen, p_Priority, p_ParentGraph, p_StateNodeGuid)
 	m_ClientNodeEditor:OnUIPushScreen(p_HookCtx, p_Screen, p_Priority, p_ParentGraph, p_StateNodeGuid)

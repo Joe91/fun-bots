@@ -15,6 +15,9 @@ function ClientBotManager:RegisterVars()
 	self.m_Player = nil
 	self.m_ReadyToUpdate = false
 	self.m_BotBotRaycastsToDo = {}
+
+	-- inputs for change of seats (1-8)
+	self.m_LastInputLevelsPos = {0,0,0,0,0,0,0,0}
 end
 
 -- =============================================
@@ -47,23 +50,18 @@ function ClientBotManager:OnClientUpdateInput(p_DeltaTime)
 			end
 		end
 	end
+end
+
+function ClientBotManager:OnInputPreUpdate(p_HookCtx, p_Cache, p_DeltaTime)
 	if self.m_Player ~= nil and self.m_Player.inVehicle then
-		if InputManager:WentKeyDown(InputDeviceKeys.IDK_F1) then-- if InputManager:WentDown(InputConceptIdentifiers.ConceptSelectPosition1) then
-			NetEvents:SendLocal('Client:RequestChangeVehicleSeat', 1)
-		elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_F2) then
-			NetEvents:SendLocal('Client:RequestChangeVehicleSeat', 2)
-		elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_F3) then
-			NetEvents:SendLocal('Client:RequestChangeVehicleSeat', 3)
-		elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_F4) then
-			NetEvents:SendLocal('Client:RequestChangeVehicleSeat', 4)
-		elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_F5) then
-			NetEvents:SendLocal('Client:RequestChangeVehicleSeat', 5)
-		elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_F6) then
-			NetEvents:SendLocal('Client:RequestChangeVehicleSeat', 6)
-		elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_F7) then
-			NetEvents:SendLocal('Client:RequestChangeVehicleSeat', 7)
-		elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_F8) then
-			NetEvents:SendLocal('Client:RequestChangeVehicleSeat', 8)
+		for i = 1, 8 do
+			local s_Varname = "ConceptSelectPosition"..tostring(i)
+			local s_LevelId = InputConceptIdentifiers[s_Varname]
+			local s_CurrentLevel = p_Cache:GetLevel(s_LevelId)
+			if self.m_LastInputLevelsPos[i] == 0 and s_CurrentLevel > 0 then
+				NetEvents:SendLocal('Client:RequestChangeVehicleSeat', i)
+			end
+			self.m_LastInputLevelsPos[i] = s_CurrentLevel
 		end
 	end
 end
