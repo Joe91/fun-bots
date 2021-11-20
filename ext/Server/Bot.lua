@@ -295,6 +295,7 @@ function Bot:EnterVehicleOfPlayer(p_Player)
 	self._ActiveAction = BotActionFlags.EnterVehicleActive
 	self._ShootPlayer = nil
 	self._ShootPlayerName = p_Player.name
+	self._ShootModeTimer = 0
 end
 
 function Bot:IsReadyToAttack()
@@ -1967,6 +1968,11 @@ function Bot:_UpdateAttacking()
 			self:_AbortAttack()
 			self:_ResetActionFlag(BotActionFlags.EnterVehicleActive)
 		end
+		if self._ShootModeTimer > 12 then -- abort this after some time
+			self._TargetPitch = 0.0
+			self:_AbortAttack()
+			self:_ResetActionFlag(BotActionFlags.EnterVehicleActive)
+		end
 	elseif self._ShootPlayer.soldier == nil then -- reset if enemy is dead
 		self:_AbortAttack()
 	end
@@ -2033,11 +2039,24 @@ function Bot:FindVehiclePath(p_Position)
 	end
 end
 
+function Bot:_UpdateVehicleMovableId()
+	self._VehicleMovableId = m_Vehicles:GetPartIdForSeat(self.m_ActiveVehicle, self.m_Player.controlledEntryId)
+	if self.m_Player.controlledEntryId == 0 then
+		self:FindVehiclePath(self.m_Player.soldier.worldTransform.trans)
+	end
+end
+
 function Bot:_EnterVehicleEntity(p_Entity)
 	if p_Entity ~= nil then
 		local s_Position = p_Entity.transform.trans
+
+		-- keep one seat free, if enough available
+		local s_MaxEntries = p_Entity.entryCount
+		if s_MaxEntries > 2 then
+			s_MaxEntries = s_MaxEntries -1
+		end
 	
-		for i = 0, p_Entity.entryCount - 1 do
+		for i = 0, s_MaxEntries - 1 do
 			if p_Entity:GetPlayerInEntry(i) == nil then
 				self.m_Player:EnterVehicle(p_Entity, i)
 
@@ -2046,7 +2065,7 @@ function Bot:_EnterVehicleEntity(p_Entity)
 				self._VehicleMovableId = m_Vehicles:GetPartIdForSeat(self.m_ActiveVehicle, i)
 				m_Logger:Write(self.m_ActiveVehicle)
 				if i == 0 then
-					if i == p_Entity.entryCount - 1 then
+					if i == s_MaxEntries - 1 then
 						self._VehicleWaitTimer = 0.5 -- always wait a short time to check for free start
 						self._VehicleTakeoffTimer = Registry.VEHICLES.JET_TAKEOFF_TIME
 						g_GameDirector:_SetVehicleObjectiveState(p_Entity.transform.trans, false)
@@ -2056,7 +2075,7 @@ function Bot:_EnterVehicleEntity(p_Entity)
 					end
 				else
 					self._VehicleWaitTimer = 0
-					if i == p_Entity.entryCount - 1 then
+					if i == s_MaxEntries - 1 then
 						-- last seat taken: Disable vehicle and abort wait for passengers:
 						local s_Driver = p_Entity:GetPlayerInEntry(0)
 						if s_Driver ~= nil then

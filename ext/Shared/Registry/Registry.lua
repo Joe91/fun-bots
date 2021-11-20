@@ -30,7 +30,7 @@ Registry = {
 			-- Patch version
 			VERSION_PATCH = 0,
 			-- Additional label for pre-releases and build meta data
-			VERSION_LABEL = "dev5",
+			VERSION_LABEL = "dev6",
 			-- Current version type of this build
 			VERSION_TYPE = VersionType.DevBuild,
 			-- The Version used for the Update-Check
@@ -126,7 +126,7 @@ Registry = {
 			-- Note: Must be big enough to register inputActiveEvents (> 1.0)
 			FIRST_SPAWN_DELAY = 5.0,
 			-- Probability of a bot spawning on a member of the same squad.
-			PROBABILITY_SQUADMATE_SPAWN = 60,
+			PROBABILITY_SQUADMATE_SPAWN = 40,
 			-- Probability of a bot spawning on the closest spawn point
 			PROBABILITY_CLOSEST_SPAWN = 80,
 			-- Probability of a bot spawning on an attacked spawn point

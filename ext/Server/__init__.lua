@@ -124,6 +124,7 @@ function FunBotServer:RegisterCustomEvents()
 	Events:Subscribe('Bot:ExitVehicle', self, self.OnBotExitVehicle)
 	NetEvents:Subscribe('Client:RequestSettings', self, self.OnRequestClientSettings)
 	NetEvents:Subscribe('Client:RequestEnterVehicle', self, self.OnRequestEnterVehicle)
+	NetEvents:Subscribe('Client:RequestChangeVehicleSeat', self, self.OnRequestChangeSeatVehicle)
 	NetEvents:Subscribe('ConsoleCommands:SetConfig', self, self.OnConsoleCommandSetConfig)
 	NetEvents:Subscribe('ConsoleCommands:SaveAll', self, self.OnConsoleCommandSaveAll)
 	NetEvents:Subscribe('ConsoleCommands:Restore', self, self.OnConsoleCommandRestore)
@@ -407,6 +408,10 @@ end
 
 function FunBotServer:OnRequestEnterVehicle(p_Player, p_BotName)
 	m_BotManager:OnRequestEnterVehicle(p_Player, p_BotName)
+end
+
+function FunBotServer:OnRequestChangeSeatVehicle(p_Player, p_SeatNumber)
+	m_BotManager:OnRequestChangeSeatVehicle(p_Player, p_SeatNumber)
 end
 
 function FunBotServer:OnConsoleCommandSetConfig(p_Player, p_Name, p_Value)

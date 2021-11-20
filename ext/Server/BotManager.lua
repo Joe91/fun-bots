@@ -303,6 +303,24 @@ function BotManager:OnRequestEnterVehicle(p_Player, p_BotName)
 	end
 end
 
+function BotManager:OnRequestChangeSeatVehicle(p_Player, p_SeatNumber)
+	local s_TargetEntryId = p_SeatNumber -1
+	local s_VehicleEntity = p_Player.controlledControllable
+	local s_CurrentEntryOfPlayer = p_Player.controlledEntryId
+	if s_CurrentEntryOfPlayer ~= s_TargetEntryId then
+		local s_PlayerInTargetSet = s_VehicleEntity:GetPlayerInEntry(s_TargetEntryId)
+		if s_PlayerInTargetSet ~= nil then
+			local s_Bot = self:GetBotByName(s_PlayerInTargetSet.name)
+			if s_Bot ~= nil then
+				s_Bot.m_Player:ExitVehicle(false, false)
+				p_Player:EnterVehicle(s_VehicleEntity, s_TargetEntryId)
+				s_Bot.m_Player:EnterVehicle(s_VehicleEntity, s_CurrentEntryOfPlayer)
+				s_Bot:_UpdateVehicleMovableId()
+			end
+		end
+	end
+end
+
 -- =============================================
 -- Functions
 -- =============================================

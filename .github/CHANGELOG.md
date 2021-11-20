@@ -23,11 +23,14 @@ This is the changelog for the released V2.4.0 version. Don't forget to [join us 
 * Added "removeData"-command for node-editor
 * moved "save" to coroutine
 * allow to export and import settings and permissions
+* Player can swap seats with bots in vehicle
 
 ### Bug fixes
 * Fixed Bot-Behaviour in Gunmaster
 * Fixed strange behaviour in some cases with huge gaps in Nodeeditor
 * Bixed Bot-Bot-attack when both in vehicles
+* Some more fixes in Nodeeditor
+* fixed some TDM-Maps
 
 ### New maps
 * Gulf of Oman Conquest Large (all) - thanks to BOB

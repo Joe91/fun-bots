@@ -35,7 +35,7 @@ function ClientBotManager:OnClientUpdateInput(p_DeltaTime)
 					s_Transform.trans.y + (s_CameraForward.y * s_MaxEnterDistance),
 					s_Transform.trans.z + (s_CameraForward.z * s_MaxEnterDistance))
 
-			local s_Raycast = RaycastManager:Raycast(s_Transform.trans, s_CastPosition, RayCastFlags.DontCheckWater | RayCastFlags.IsAsyncRaycast)
+			local s_Raycast = RaycastManager:Raycast((s_Transform.trans + (4*s_CameraForward)), s_CastPosition, RayCastFlags.DontCheckWater | RayCastFlags.IsAsyncRaycast)
 			if s_Raycast ~= nil and s_Raycast.rigidBody:Is("CharacterPhysicsEntity") then
 				-- find teammate at this position
 				for _,l_Player in pairs(PlayerManager:GetPlayersByTeam(self.m_Player.teamId)) do
@@ -45,6 +45,25 @@ function ClientBotManager:OnClientUpdateInput(p_DeltaTime)
 					end
 				end
 			end
+		end
+	end
+	if self.m_Player ~= nil and self.m_Player.inVehicle then
+		if InputManager:WentKeyDown(InputDeviceKeys.IDK_F1) then-- if InputManager:WentDown(InputConceptIdentifiers.ConceptSelectPosition1) then
+			NetEvents:SendLocal('Client:RequestChangeVehicleSeat', 1)
+		elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_F2) then
+			NetEvents:SendLocal('Client:RequestChangeVehicleSeat', 2)
+		elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_F3) then
+			NetEvents:SendLocal('Client:RequestChangeVehicleSeat', 3)
+		elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_F4) then
+			NetEvents:SendLocal('Client:RequestChangeVehicleSeat', 4)
+		elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_F5) then
+			NetEvents:SendLocal('Client:RequestChangeVehicleSeat', 5)
+		elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_F6) then
+			NetEvents:SendLocal('Client:RequestChangeVehicleSeat', 6)
+		elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_F7) then
+			NetEvents:SendLocal('Client:RequestChangeVehicleSeat', 7)
+		elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_F8) then
+			NetEvents:SendLocal('Client:RequestChangeVehicleSeat', 8)
 		end
 	end
 end
