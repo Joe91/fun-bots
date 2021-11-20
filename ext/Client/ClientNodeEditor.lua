@@ -1882,6 +1882,7 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 			-- prepare draw of nodes
 			--self:DrawDebugThings(p_DeltaTime)
 			self:DrawSomeNodes(Config.NodesPerCycle)
+			-- collectgarbage("step", 1000) 
 		end
 
 		if self.m_BotVisionEnabled then
@@ -2148,7 +2149,7 @@ function ClientNodeEditor:DrawSomeNodes(p_NrOfNodes)
 			if m_NodeCollection:IsPathVisible(l_Path) then
 				local s_startIndex = 1
 				if s_FirstPath then
-					s_startIndex = self.m_lastDrawIndexNode
+					s_startIndex = self.m_lastDrawIndexNode + 1
 					if s_startIndex <= 0 then
 						s_startIndex = 1
 					end
@@ -2158,7 +2159,7 @@ function ClientNodeEditor:DrawSomeNodes(p_NrOfNodes)
 				for l_Waypoint = s_startIndex, #s_WaypointPaths[l_Path] do
 					self:_drawNode(s_WaypointPaths[l_Path][l_Waypoint], false)
 					s_Count = s_Count + 1
-					if s_Count >= p_NrOfNodes then
+					if s_Count >= p_NrOfNodes and l_Waypoint < #s_WaypointPaths[l_Path] then
 						self.m_lastDrawIndexNode = l_Waypoint
 						self.m_lastDrawIndexPath = l_Path
 						return false
@@ -2167,16 +2168,19 @@ function ClientNodeEditor:DrawSomeNodes(p_NrOfNodes)
 			end
 		end
 	end
+	if self.m_lastDrawIndexPath ~= 99999 then
+		self.m_lastDrawIndexNode = 0
+	end
 	self.m_lastDrawIndexPath = 99999
 
 	-- draw waypoints for custom trace
 	if self.m_CustomTrace ~= nil then
 		local s_CustomWaypoints = self.m_CustomTrace:Get()
 
-		for i = 1, #s_CustomWaypoints do
+		for i = self.m_lastDrawIndexNode + 1, #s_CustomWaypoints do
 			self:_drawNode(s_CustomWaypoints[i], true)
 			s_Count = s_Count + 1
-			if s_Count >= p_NrOfNodes then
+			if s_Count >= p_NrOfNodes and i < #s_CustomWaypoints then
 				self.m_lastDrawIndexNode = i
 				return false
 			end
