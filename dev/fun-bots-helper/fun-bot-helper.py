@@ -35,7 +35,7 @@ def clear_paths():
 
 def clear_settings():
 	os.system("python ./tools/clear_settings.py"+ " " + relativePath)
-	print("paths cleared")
+	print("settings cleared")
 
 def create_settings_translations():
 	os.system("python ./tools/create_Settings.py"+ " " + relativePath)
@@ -47,7 +47,7 @@ def create_mapfiles():
 	os.system("python ./tools/update_supported_maps.py"+ " " + relativePath)
 
 def fix_maps():
-	#os.system("python ./tools/scan_for_invalid_objectives.py"+ " " + relativePath)
+	os.system("python ./tools/scan_for_invalid_objectives.py"+ " " + relativePath)
 	os.system("python ./tools/scan_for_invalid_nodes.py"+ " " + relativePath)
 # TODO: scan for invalid points in traces
 
