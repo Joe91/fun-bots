@@ -44,8 +44,8 @@ for filename in filenames:
 			nextPosY = float(items[3])
 			nextPosZ = float(items[4])
 
-			if lastPath == currentPath and nextPath == currentPath: # TODO scan for end and start as well
-				if (abs(lastPosX - posX)	> 100 or abs(lastPosY - posY) > 100 or abs(lastPosZ - posZ) > 100) and (abs(nextPosX - posX)	> 100 or abs(nextPosY - posY) > 100 or abs(nextPosZ - posZ) > 100):
+			if lastPath == currentPath and nextPath == currentPath: # Wrong in the middle
+				if (abs(lastPosX - posX) > 100 or abs(lastPosY - posY) > 100 or abs(lastPosZ - posZ) > 100) and (abs(nextPosX - posX) > 100 or abs(nextPosY - posY) > 100 or abs(nextPosZ - posZ) > 100):
 					print(filename)
 					print(items)
 					newPosX = lastPosX + (nextPosX - lastPosX)/2
@@ -57,6 +57,23 @@ for filename in filenames:
 					newLineContent = ";".join(currentitems)
 					print(newLineContent)
 					fileLines[i] = newLineContent
+			if lastPath == currentPath and nextPath != currentPath: # Wrong at the end
+				if (abs(lastPosX - posX) > 100 or abs(lastPosY - posY) > 100 or abs(lastPosZ - posZ) > 100):
+					currentitems[2] = format(lastPosX + 0.2, '.6f')
+					currentitems[3] = format(lastPosY, '.6f')
+					currentitems[4] = format(lastPosY + 0.2, '.6f')
+					newLineContent = ";".join(currentitems)
+					print(newLineContent)
+					fileLines[i] = newLineContent
+			if lastPath != currentPath and nextPath == currentPath: # Wrong at the start
+				if (abs(nextPosX - posX) > 100 or abs(nextPosY - posY) > 100 or abs(nextPosZ - posZ) > 100):
+					currentitems[2] = format(nextPosX + 0.2, '.6f')
+					currentitems[3] = format(nextPosY, '.6f')
+					currentitems[4] = format(nextPosZ + 0.2, '.6f')
+					newLineContent = ";".join(currentitems)
+					print(newLineContent)
+					fileLines[i] = newLineContent
+
 					
 	# if len(nodesToModify) > 0:
 	with open(sourceFolder + "/" + filename, "w") as outfile:
