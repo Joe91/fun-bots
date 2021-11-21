@@ -1194,7 +1194,7 @@ function ClientNodeEditor:_onStartTrace()
 	self.m_CustomTraceDistance = 0
 
 	local s_FirstWaypoint = self.m_CustomTrace:Create({
-		Position = self.m_Player.soldier.worldtransform.trans:Clone()
+		Position = self.m_Player.soldier.worldTransform.trans:Clone()
 	})
 	self.m_CustomTrace:ClearSelection()
 	self.m_CustomTrace:Select(s_FirstWaypoint)
