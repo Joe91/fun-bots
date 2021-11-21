@@ -280,7 +280,7 @@ Language:add(code, "if true, all permissions are ignored --> everyone can do eve
 Language:add(code, "language", "language")
 Language:add(code, "de_DE as sample (default is english, when language file doesnt exists)", "de_DE as sample (default is english, when language file doesnt exists)")
 
--- Strings of ../ext/Client/ClientNodeEditor.lua
+-- Strings of ./../../ext/Client/ClientNodeEditor.lua
 Language:add(code, "Select", "Select")
 Language:add(code, "Finish", "Finish")
 Language:add(code, "Connect", "Connect")
@@ -297,10 +297,10 @@ Language:add(code, "Select Next", "Select Next")
 Language:add(code, "Set Input", "Set Input")
 Language:add(code, "Split", "Split")
 
--- Strings of ../ext/Server/BotSpawner.lua
+-- Strings of ./../../ext/Server/BotSpawner.lua
 Language:add(code, "CANT_JOIN_BOT_TEAM", "CANT_JOIN_BOT_TEAM")
 
--- Strings of ../ext/Server/UIServer.lua
+-- Strings of ./../../ext/Server/UIServer.lua
 Language:add(code, "Bot respawn activated!", "Bot respawn activated!")
 Language:add(code, "Bot respawn deactivated!", "Bot respawn deactivated!")
 Language:add(code, "Bots will attack!", "Bots will attack!")
@@ -318,7 +318,8 @@ Language:add(code, "Load", "Load")
 Language:add(code, "Settings has been saved temporarily.", "Settings has been saved temporarily.")
 Language:add(code, "Settings has been saved.", "Settings has been saved.")
 
--- Strings of ../ext/Shared/NodeCollection.lua
+-- Strings of ./../../ext/Shared/NodeCollection.lua
 Language:add(code, "Loaded %d paths with %d waypoints for map %s", "Loaded %d paths with %d waypoints for map %s")
+Language:add(code, "Save in progress...", "Save in progress...")
 Language:add(code, "Failed to execute query: %s", "Failed to execute query: %s")
 Language:add(code, "Saved %d paths with %d waypoints for map %s", "Saved %d paths with %d waypoints for map %s")

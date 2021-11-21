@@ -1,22 +1,28 @@
-settings_definition = "../ext/shared/Settings/SettingsDefinition.lua"
-index_html = "../WebUI/index.html"
+import sys
+
+pathToFiles = "./"
+if len(sys.argv) > 1:
+	pathToFiles = sys.argv[1]
+
+settings_definition = pathToFiles + "ext/shared/Settings/SettingsDefinition.lua"
+index_html = pathToFiles + "WebUI/index.html"
 listOfJsTranslationFiles = [
-	"../WebUI/Classes/EntryElement.js",
-	"../WebUI/Classes/BotEditor.js"
+	pathToFiles + "WebUI/Classes/EntryElement.js",
+	pathToFiles + "WebUI/Classes/BotEditor.js"
 ]
 
-language_file = "../ext/shared/Languages/DEFAULT.lua"
-language_file_en = "../ext/shared/Languages/en_EN.lua"
-language_file_js = "../WebUI/languages/DEFAULT.js"
-language_file_en_js = "../WebUI/languages/en_EN.js"
+language_file = pathToFiles + "ext/shared/Languages/DEFAULT.lua"
+language_file_en = pathToFiles + "ext/shared/Languages/en_EN.lua"
+language_file_js = pathToFiles + "WebUI/languages/DEFAULT.js"
+language_file_en_js = pathToFiles + "WebUI/languages/en_EN.js"
 
 # other files with Language content : Language:I18N(
 
 listOfTranslationFiles = [
-	"../ext/Client/ClientNodeEditor.lua",
-	"../ext/Server/BotSpawner.lua",
-	"../ext/Server/UIServer.lua",
-	"../ext/Shared/NodeCollection.lua"]
+	pathToFiles + "ext/Client/ClientNodeEditor.lua",
+	pathToFiles + "ext/Server/BotSpawner.lua",
+	pathToFiles + "ext/Server/UIServer.lua",
+	pathToFiles + "ext/Shared/NodeCollection.lua"]
 
 with open(settings_definition, "r") as inFile:
 	readoutActive = False

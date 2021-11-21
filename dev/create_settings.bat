@@ -1,2 +1,0 @@
-python create_settings.py
-pause

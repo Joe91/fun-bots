@@ -4,51 +4,53 @@ master = Tk()
 
 # use "auto-py-to-exe" to convert to exe files
 
-relativePath = "."
+relativePath = "./"
 if os.path.isfile("./mod.db"):
-	relativePath = "./../"
+	relativePath = "./"
 elif os.path.isfile("./../mod.db"):
+	relativePath = "./../"
+elif os.path.isfile("./../../mod.db"):
 	relativePath = "./../../"
 
 # TRACES
 def export_traces():
-	os.system("python ./tools/export_traces.py" + " " + relativePath)
+	os.system("python tools/export_traces.py" + " " + relativePath)
 	print("maps exported")
 
 def import_traces():
-	os.system("python ./tools/import_traces.py"+ " " + relativePath)
+	os.system("python tools/import_traces.py"+ " " + relativePath)
 	print("maps imported")
 
 # SETTINGS
 def export_settings():
-	os.system("python ./tools/export_permission_and_config.py"+ " " + relativePath)
+	os.system("python tools/export_permission_and_config.py"+ " " + relativePath)
 	print("export")
 
 def import_settings():
-	os.system("python ./tools/import_permission_and_config.py"+ " " + relativePath)
+	os.system("python tools/import_permission_and_config.py"+ " " + relativePath)
 	print("import")
 
 # OTHER STUFF
 def clear_paths():
-	os.system("python ./tools/clear_all_paths.py"+ " " + relativePath)
+	os.system("python tools/clear_all_paths.py"+ " " + relativePath)
 	print("paths cleared")
 
 def clear_settings():
-	os.system("python ./tools/clear_settings.py"+ " " + relativePath)
+	os.system("python tools/clear_settings.py"+ " " + relativePath)
 	print("settings cleared")
 
 def create_settings_translations():
-	os.system("python ./tools/create_Settings.py"+ " " + relativePath)
-	os.system("python ./tools/create_translations.py"+ " " + relativePath)
+	os.system("python tools/create_Settings.py"+ " " + relativePath)
+	os.system("python tools/create_translations.py"+ " " + relativePath)
 	print("translation-templates and settigns updated")
 
 def create_mapfiles():
-	os.system("python ./tools/create_maplist.py"+ " " + relativePath)
-	os.system("python ./tools/update_supported_maps.py"+ " " + relativePath)
+	os.system("python tools/create_maplist.py"+ " " + relativePath)
+	os.system("python tools/update_supported_maps.py"+ " " + relativePath)
 
 def fix_maps():
-	os.system("python ./tools/scan_for_invalid_objectives.py"+ " " + relativePath)
-	os.system("python ./tools/scan_for_invalid_nodes.py"+ " " + relativePath)
+	os.system("python tools/scan_for_invalid_objectives.py"+ " " + relativePath)
+	os.system("python tools/scan_for_invalid_nodes.py"+ " " + relativePath)
 # TODO: scan for invalid points in traces
 
 tempRow = 0
