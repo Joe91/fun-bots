@@ -1181,6 +1181,9 @@ function ClientNodeEditor:_getNewIndex()
 end
 
 function ClientNodeEditor:_onStartTrace()
+	if self.m_Player == nil or self.m_Player.soldier == nil then
+		return
+	end
 	if self.m_CustomTrace ~= nil then
 		self.m_CustomTrace:Clear()
 	end
@@ -1191,7 +1194,7 @@ function ClientNodeEditor:_onStartTrace()
 	self.m_CustomTraceDistance = 0
 
 	local s_FirstWaypoint = self.m_CustomTrace:Create({
-		Position = self.m_PlayerPos:Clone()
+		Position = self.m_Player.soldier.worldtransform.trans:Clone()
 	})
 	self.m_CustomTrace:ClearSelection()
 	self.m_CustomTrace:Select(s_FirstWaypoint)
@@ -1727,19 +1730,21 @@ function ClientNodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 
 	if (self.m_CustomTraceTimer >= 0 and self.m_Player ~= nil and self.m_Player.soldier ~= nil) then
 		self.m_CustomTraceTimer = self.m_CustomTraceTimer + p_DeltaTime
+		
+		local s_PlayerPos = self.m_Player.soldier.worldTransform.trans:Clone()
 
 		if self.m_CustomTraceTimer > self.m_CustomTraceDelay then
 			local s_LastWaypoint = self.m_CustomTrace:GetLast()
 
 			if s_LastWaypoint then
-				local s_LastDistance = s_LastWaypoint.Position:Distance(self.m_PlayerPos)
+				local s_LastDistance = s_LastWaypoint.Position:Distance(s_PlayerPos)
 
 				if s_LastDistance >= self.m_CustomTraceDelay then
 					-- primary weapon, record movement
 					if self.m_Player.soldier.weaponsComponent.currentWeaponSlot == WeaponSlot.WeaponSlot_0 then
 						local s_NewWaypoint, s_Msg = self.m_CustomTrace:Add()
 						self.m_CustomTrace:Update(s_NewWaypoint, {
-							Position = self.m_PlayerPos:Clone()
+							Position = s_PlayerPos
 						})
 						self.m_CustomTrace:ClearSelection()
 						self.m_CustomTrace:Select(s_NewWaypoint)
@@ -1821,7 +1826,7 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 	-- doing this here and not in UI:DrawHud prevents a memory leak that crashes you in under a minute
 	if self.m_Player ~= nil and self.m_Player.soldier ~= nil and self.m_Player.soldier.worldTransform ~= nil then
-		self.m_PlayerPos = self.m_Player.soldier.worldTransform.trans
+		self.m_PlayerPos = self.m_Player.soldier.worldTransform.trans:Clone()
 
 		self.m_RaycastTimer = self.m_RaycastTimer + p_DeltaTime
 		-- do not update node positions if saving or loading
