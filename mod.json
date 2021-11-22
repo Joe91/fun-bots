@@ -1,9 +1,9 @@
 {
 	"Name": "fun-bots",
 	"Authors": ["MajorVictory", "Bizzi", "Bree_Arnodl", "Firjen", "NyScorpy", "Joe-91"],
-	"Description": "A highly customizable and configurable mod with extreme intelligent bots for your Venice Unleashed Battlefield 3 server.",
+	"Description": "A highly customizable and configurable bot mod for your Venice Unleashed Battlefield 3 server.",
 	"URL": "https://github.com/Joe91/fun-bots",
-	"Version": "2.4.0-dev7",
+	"Version": "2.4.0-RC1",
 	"HasWebUI": true,
 	"Tags": ["fun-bots"],
 	"HasVeniceEXT": true,
