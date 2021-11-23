@@ -28,9 +28,9 @@ Config = {
 	SpawnMode = SpawnModes.balanced_teams,	-- mode the bots spawn with
 	TeamSwitchMode = TeamSwitcheModes.SwitchForRoundTwo,	-- Mode to switch the team
 	SpawnInBothTeams = true,			-- Bots spawn in both teams
-	InitNumberOfBots = 8,				-- bots for spawnmode
+	InitNumberOfBots = 10,				-- bots for spawnmode
 	NewBotsPerNewPlayer = 1.6,			-- number to increase Bots, when new players join
-	FactorPlayerTeamCount = 1.0,		-- reduce playerteam in balanced_teams or fixed_number mode
+	FactorPlayerTeamCount = 0.9,		-- reduce playerteam in balanced_teams or fixed_number mode
 	BotTeam = 0,						-- default bot team (0 = neutral / auto, 1 = US, 2 = RU) TeamId.Team2
 	BotNewLoadoutOnSpawn = true,		-- bots get a new kit and color, if they respawn
 	MaxAssaultBots = -1,				-- maximum number of Bots with Assault Kit. -1 = no limit
