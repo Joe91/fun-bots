@@ -44,7 +44,7 @@ function FunBotClient:OnExtensionLoaded()
 	self:RegisterHooks()
 
 	-- Announce the version in the client's console if enabled in the registry
-	if Registry.CLIENT_SHOW_VERSION_ON_JOIN then
+	if Registry.VERSION.CLIENT_SHOW_VERSION_ON_JOIN then
 		print("Server is running fun-bots version " .. RegistryManager:GetUtil():GetVersion())
 	end
 end
@@ -72,11 +72,13 @@ function FunBotClient:RegisterEvents()
 end
 
 function FunBotClient:RegisterHooks()
-	if not USE_REAL_DAMAGE then
+	if not Registry.COMMON.USE_REAL_DAMAGE then
 		Hooks:Install('BulletEntity:Collision', 200, self, self.OnBulletEntityCollision)
 	end
 
 	Hooks:Install('UI:PushScreen', 1, self, self.OnUIPushScreen)
+
+	Hooks:Install('Input:PreUpdate', 100, self, self.OnInputPreUpdate)
 end
 
 -- =============================================
@@ -153,8 +155,8 @@ function FunBotClient:OnWriteClientSettings(p_NewConfig, p_UpdateWeaponSets)
 	end
 end
 
-function FunBotClient:CheckForBotBotAttack(p_StartPos, p_EndPos, p_ShooterBotName, p_BotName, p_InVehicle)
-	m_ClientBotManager:CheckForBotBotAttack(p_StartPos, p_EndPos, p_ShooterBotName, p_BotName, p_InVehicle)
+function FunBotClient:CheckForBotBotAttack(p_RaycastData)
+	m_ClientBotManager:CheckForBotBotAttack(p_RaycastData)
 end
 
 function FunBotClient:OnUISettings(p_Data)
@@ -180,6 +182,11 @@ end
 function FunBotClient:OnBulletEntityCollision(p_HookCtx, p_Entity, p_Hit, p_Shooter)
 	m_ClientBotManager:OnBulletEntityCollision(p_HookCtx, p_Entity, p_Hit, p_Shooter)
 end
+
+function FunBotClient:OnInputPreUpdate(p_HookCtx, p_Cache, p_DeltaTime)
+	m_ClientBotManager:OnInputPreUpdate(p_HookCtx, p_Cache, p_DeltaTime)
+end
+
 
 function FunBotClient:OnUIPushScreen(p_HookCtx, p_Screen, p_Priority, p_ParentGraph, p_StateNodeGuid)
 	m_ClientNodeEditor:OnUIPushScreen(p_HookCtx, p_Screen, p_Priority, p_ParentGraph, p_StateNodeGuid)

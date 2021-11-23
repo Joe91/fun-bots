@@ -199,9 +199,10 @@ function ClientNodeEditor:OnRegisterEvents()
 	Console:Register('AddObjective', '<string|Objective> - Add an objective to a path', self, self._onAddObjective)
 	Console:Register('AddMcom', 'Add an MCOM Arm/Disarm-Action to a point', self, self._onAddMcom)
 	Console:Register('AddVehicle', 'Add a vehicle a bot can use', self, self._onAddVehicle)
-	Console:Register('ExitVehicle', 'Add a point where a bot leaves the vehicle', self, self._onExitVehicle)
+	Console:Register('ExitVehicle', '<bool|OnlyPassengers> Add a point where all bots or only the passengers leaves the vehicle', self, self._onExitVehicle)
 	Console:Register('AddVehiclePath', '<string|Type> Add vehicle-usage to a path. Types = land, water, air', self, self._onAddVehiclePath)
 	Console:Register('RemoveObjective', '<string|Objective> - Remove an objective from a path', self, self._onRemoveObjective)
+	Console:Register('RemoveData', 'Remove all data of one or several nodes', self, self._onRemoveData)
 	Console:Register('ProcessMetadata', 'Process waypoint metadata starting with selected nodes or all nodes', self, self._onProcessMetadata)
 	Console:Register('RecalculateIndexes', 'Recalculate Indexes starting with selected nodes or all nodes', self, self._onRecalculateIndexes)
 	Console:Register('DumpNodes', 'Print selected nodes or all nodes to console', self, self._onDumpNodes)
@@ -885,11 +886,16 @@ function ClientNodeEditor:_onExitVehicle(p_Args)
 		return false
 	end
 
-	self:Log('Updating %d Possible Waypoints', (#s_Selection))
+	local s_Data = p_Args[1] or "false"
+	self:Log('Exit Vehicle (type): %s', g_Utilities:dump(s_Data, true))
+
+	local s_OnlyPassengers = not (s_Data:lower() == "false" or s_Data == "0")
+	print(s_OnlyPassengers)
 
 	for i = 1, #s_Selection do
 		local action = {
 			type = "exit",
+			onlyPassengers = s_OnlyPassengers,
 			inputs = {EntryInputActionEnum.EIAInteract},
 			time = 0.5
 		}
@@ -1037,6 +1043,35 @@ function ClientNodeEditor:_onRemoveObjective(p_Args)
 	return true
 end
 
+function ClientNodeEditor:_onRemoveData(p_Args)
+	self.m_CommoRoseActive = false
+
+	if self:IsSavingOrLoading() then
+		return false
+	end
+
+	if self.m_Player == nil or self.m_Player.soldier == nil then
+		self:Log('Player must be alive')
+		return false
+	end
+
+	local s_Selection = m_NodeCollection:GetSelected()
+
+	if #s_Selection < 1 then
+		self:Log('Must select at least one node')
+		return false
+	end
+
+	self:Log('Updating %d Possible Waypoints', (#s_Selection))
+
+	for i = 1, #s_Selection do
+		s_Selection[i].Data = {}
+		self:Log('Updated Waypoint: %s', s_Selection[i].ID)
+	end
+
+	return true
+end
+
 function ClientNodeEditor:_onRecalculateIndexes(p_Args)
 	self.m_CommoRoseActive = false
 
@@ -1130,18 +1165,25 @@ function ClientNodeEditor:_getNewIndex()
 	local s_NextIndex = 0
 	local s_AllPaths = m_NodeCollection:GetPaths()
 
+	local s_HighestIndex = 0
 	for l_PathIndex, l_Points in pairs(s_AllPaths) do
-		if l_PathIndex - s_NextIndex > 1 then
-			return s_NextIndex + 1 -- gap in traces
+		if l_PathIndex > s_HighestIndex then
+			s_HighestIndex = l_PathIndex
 		end
-
-		s_NextIndex = l_PathIndex
 	end
 
-	return s_NextIndex + 1 -- increment index
+	for i = 1, s_HighestIndex do
+		if s_AllPaths[i] == nil or s_AllPaths[i] == {} then	
+			return i
+		end
+	end
+	return s_HighestIndex + 1
 end
 
 function ClientNodeEditor:_onStartTrace()
+	if self.m_Player == nil or self.m_Player.soldier == nil then
+		return
+	end
 	if self.m_CustomTrace ~= nil then
 		self.m_CustomTrace:Clear()
 	end
@@ -1152,7 +1194,7 @@ function ClientNodeEditor:_onStartTrace()
 	self.m_CustomTraceDistance = 0
 
 	local s_FirstWaypoint = self.m_CustomTrace:Create({
-		Position = self.m_PlayerPos:Clone()
+		Position = self.m_Player.soldier.worldTransform.trans:Clone()
 	})
 	self.m_CustomTrace:ClearSelection()
 	self.m_CustomTrace:Select(s_FirstWaypoint)
@@ -1279,6 +1321,8 @@ function ClientNodeEditor:_onSaveTrace(p_PathIndex)
 		end
 	end
 
+	collectgarbage('collect')
+
 	-- merge custom trace into main node collection
 	while s_CurrentWaypoint do
 		s_CurrentWaypoint.PathIndex = p_PathIndex
@@ -1295,6 +1339,7 @@ function ClientNodeEditor:_onSaveTrace(p_PathIndex)
 	end
 
 	self.m_CustomTrace:Clear()
+	collectgarbage('collect')
 	self:Log('Custom Trace Saved to Path: %d', p_PathIndex)
 	self.m_NodeOperation = ''
 end
@@ -1650,7 +1695,7 @@ function ClientNodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 				self.m_NodeSendTimer = -1
 				self.m_NodeSendProgress = 1
 				self.m_NodeOperation = ''
-				NetEvents:Send('NodeEditor:Init', true)
+				NetEvents:Send('NodeEditor:Init', false)
 				self:Log('Finished sending waypoints to server')
 			end
 		end
@@ -1685,19 +1730,21 @@ function ClientNodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 
 	if (self.m_CustomTraceTimer >= 0 and self.m_Player ~= nil and self.m_Player.soldier ~= nil) then
 		self.m_CustomTraceTimer = self.m_CustomTraceTimer + p_DeltaTime
+		
+		local s_PlayerPos = self.m_Player.soldier.worldTransform.trans:Clone()
 
 		if self.m_CustomTraceTimer > self.m_CustomTraceDelay then
 			local s_LastWaypoint = self.m_CustomTrace:GetLast()
 
 			if s_LastWaypoint then
-				local s_LastDistance = s_LastWaypoint.Position:Distance(self.m_PlayerPos)
+				local s_LastDistance = s_LastWaypoint.Position:Distance(s_PlayerPos)
 
 				if s_LastDistance >= self.m_CustomTraceDelay then
 					-- primary weapon, record movement
 					if self.m_Player.soldier.weaponsComponent.currentWeaponSlot == WeaponSlot.WeaponSlot_0 then
 						local s_NewWaypoint, s_Msg = self.m_CustomTrace:Add()
 						self.m_CustomTrace:Update(s_NewWaypoint, {
-							Position = self.m_PlayerPos:Clone()
+							Position = s_PlayerPos
 						})
 						self.m_CustomTrace:ClearSelection()
 						self.m_CustomTrace:Select(s_NewWaypoint)
@@ -1779,13 +1826,13 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 	-- doing this here and not in UI:DrawHud prevents a memory leak that crashes you in under a minute
 	if self.m_Player ~= nil and self.m_Player.soldier ~= nil and self.m_Player.soldier.worldTransform ~= nil then
-		self.m_PlayerPos = self.m_Player.soldier.worldTransform.trans
+		self.m_PlayerPos = self.m_Player.soldier.worldTransform.trans:Clone()
 
 		self.m_RaycastTimer = self.m_RaycastTimer + p_DeltaTime
 		-- do not update node positions if saving or loading
 		if not self:IsSavingOrLoading() then
 
-			if self.m_RaycastTimer >= Registry.GAME_RAYCASTING.RAYCAST_INTERVAL then
+			if self.m_RaycastTimer >= Registry.GAME_RAYCASTING.UPDATE_INTERVAL_NODEEDITOR then
 				self.m_RaycastTimer = 0
 			
 				-- perform raycast to get where player is looking
@@ -1840,6 +1887,7 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 			-- prepare draw of nodes
 			--self:DrawDebugThings(p_DeltaTime)
 			self:DrawSomeNodes(Config.NodesPerCycle)
+			-- collectgarbage("step", 1000) 
 		end
 
 		if self.m_BotVisionEnabled then
@@ -2106,7 +2154,7 @@ function ClientNodeEditor:DrawSomeNodes(p_NrOfNodes)
 			if m_NodeCollection:IsPathVisible(l_Path) then
 				local s_startIndex = 1
 				if s_FirstPath then
-					s_startIndex = self.m_lastDrawIndexNode
+					s_startIndex = self.m_lastDrawIndexNode + 1
 					if s_startIndex <= 0 then
 						s_startIndex = 1
 					end
@@ -2116,7 +2164,7 @@ function ClientNodeEditor:DrawSomeNodes(p_NrOfNodes)
 				for l_Waypoint = s_startIndex, #s_WaypointPaths[l_Path] do
 					self:_drawNode(s_WaypointPaths[l_Path][l_Waypoint], false)
 					s_Count = s_Count + 1
-					if s_Count >= p_NrOfNodes then
+					if s_Count >= p_NrOfNodes and l_Waypoint < #s_WaypointPaths[l_Path] then
 						self.m_lastDrawIndexNode = l_Waypoint
 						self.m_lastDrawIndexPath = l_Path
 						return false
@@ -2125,16 +2173,19 @@ function ClientNodeEditor:DrawSomeNodes(p_NrOfNodes)
 			end
 		end
 	end
+	if self.m_lastDrawIndexPath ~= 99999 then
+		self.m_lastDrawIndexNode = 0
+	end
 	self.m_lastDrawIndexPath = 99999
 
 	-- draw waypoints for custom trace
 	if self.m_CustomTrace ~= nil then
 		local s_CustomWaypoints = self.m_CustomTrace:Get()
 
-		for i = 1, #s_CustomWaypoints do
+		for i = self.m_lastDrawIndexNode + 1, #s_CustomWaypoints do
 			self:_drawNode(s_CustomWaypoints[i], true)
 			s_Count = s_Count + 1
-			if s_Count >= p_NrOfNodes then
+			if s_Count >= p_NrOfNodes and i < #s_CustomWaypoints then
 				self.m_lastDrawIndexNode = i
 				return false
 			end
@@ -2156,7 +2207,7 @@ function ClientNodeEditor:DrawSomeNodes(p_NrOfNodes)
 	-- reset vars
 	self.m_lastDrawIndexPath = 0
 	self.m_lastDrawIndexNode = 0
-
+	collectgarbage('collect')
 	return true
 end
 

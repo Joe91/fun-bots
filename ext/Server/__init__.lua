@@ -124,6 +124,7 @@ function FunBotServer:RegisterCustomEvents()
 	Events:Subscribe('Bot:ExitVehicle', self, self.OnBotExitVehicle)
 	NetEvents:Subscribe('Client:RequestSettings', self, self.OnRequestClientSettings)
 	NetEvents:Subscribe('Client:RequestEnterVehicle', self, self.OnRequestEnterVehicle)
+	NetEvents:Subscribe('Client:RequestChangeVehicleSeat', self, self.OnRequestChangeSeatVehicle)
 	NetEvents:Subscribe('ConsoleCommands:SetConfig', self, self.OnConsoleCommandSetConfig)
 	NetEvents:Subscribe('ConsoleCommands:SaveAll', self, self.OnConsoleCommandSaveAll)
 	NetEvents:Subscribe('ConsoleCommands:Restore', self, self.OnConsoleCommandRestore)
@@ -132,10 +133,10 @@ function FunBotServer:RegisterCustomEvents()
 end
 
 function FunBotServer:RegisterCallbacks()
-	-- Use server-sided bulletdamage
+	-- Use server-sided bulletdamage and modify timeout
 	ResourceManager:RegisterInstanceLoadHandler(Guid('C4DCACFF-ED8F-BC87-F647-0BC8ACE0D9B4'), Guid('818334B3-CEA6-FC3F-B524-4A0FED28CA35'), self, self.OnServerSettingsCallback)
+	ResourceManager:RegisterInstanceLoadHandler(Guid('C4DCACFF-ED8F-BC87-F647-0BC8ACE0D9B4'), Guid('B479A8FA-67FF-8825-9421-B31DE95B551A'), self, self.OnModifyClientTimeoutSettings)
 	ResourceManager:RegisterInstanceLoadHandler(Guid('C4DCACFF-ED8F-BC87-F647-0BC8ACE0D9B4'), Guid('B983148D-4B2B-1CDA-D8A0-407789610202'), self, self.OnSyncedGameSettingsCallback)
-
 	-- Modify stationary AA
 	ResourceManager:RegisterInstanceLoadHandler(Guid('15A6F4C7-1700-432B-95A7-D5DE8A058ED2'), Guid('465DA0A5-F57D-44CF-8383-7F7DC105973A'), self, self.OnStationaryAACallback)
 	-- Conquest
@@ -409,6 +410,10 @@ function FunBotServer:OnRequestEnterVehicle(p_Player, p_BotName)
 	m_BotManager:OnRequestEnterVehicle(p_Player, p_BotName)
 end
 
+function FunBotServer:OnRequestChangeSeatVehicle(p_Player, p_SeatNumber)
+	m_BotManager:OnRequestChangeSeatVehicle(p_Player, p_SeatNumber)
+end
+
 function FunBotServer:OnConsoleCommandSetConfig(p_Player, p_Name, p_Value)
 	m_Console:OnConsoleCommandSetConfig(p_Player, p_Name, p_Value)
 end
@@ -436,22 +441,40 @@ function FunBotServer:OnServerSettingsCallback(p_Instance)
 	p_Instance = ServerSettings(p_Instance)
 	p_Instance:MakeWritable()
 
-	if USE_REAL_DAMAGE then
+	if Registry.COMMON.USE_REAL_DAMAGE then
 		p_Instance.isRenderDamageEvents = true
 	else
 		p_Instance.isRenderDamageEvents = false
 	end
+	p_Instance.loadingTimeout = Registry.COMMON.LOADING_TIMEOUT
+	p_Instance.ingameTimeout = Registry.COMMON.LOADING_TIMEOUT
+	p_Instance.timeoutTime = Registry.COMMON.LOADING_TIMEOUT
+	p_Instance.timeoutGame = false
+
+	m_Logger:Write("Changed ServerSettings")
+
 end
 
 function FunBotServer:OnSyncedGameSettingsCallback(p_Instance)
 	p_Instance = SyncedGameSettings(p_Instance)
 	p_Instance:MakeWritable()
 
-	if USE_REAL_DAMAGE then
+	if Registry.COMMON.USE_REAL_DAMAGE then
 		p_Instance.allowClientSideDamageArbitration = false
 	else
 		p_Instance.allowClientSideDamageArbitration = true
 	end
+end
+
+
+function FunBotServer:OnModifyClientTimeoutSettings(p_Instance)
+	p_Instance = ClientSettings(p_Instance)
+	p_Instance:MakeWritable()
+
+	p_Instance.loadedTimeout = Registry.COMMON.LOADING_TIMEOUT
+	p_Instance.loadingTimeout = Registry.COMMON.LOADING_TIMEOUT
+	p_Instance.ingameTimeout = Registry.COMMON.LOADING_TIMEOUT
+	m_Logger:Write("Changed ClientSettings")
 end
 
 function FunBotServer:OnStationaryAACallback(p_Instance)
@@ -590,7 +613,7 @@ function FunBotServer:SetMaxBotsPerTeam(p_GameMode)
 		Globals.MaxBotsPerTeam = Config.MaxBotsPerTeamS
 	elseif p_GameMode == 'ConquestLarge0' then
 		Globals.MaxBotsPerTeam = Config.MaxBotsPerTeamCl
-	elseif p_GameMode == 'ConquestSmall0' or p_GameMode == 'BFLAG' then
+	elseif p_GameMode == 'ConquestSmall0' or p_GameMode == 'TankSuperiority0' or p_GameMode == 'BFLAG' then
 		Globals.MaxBotsPerTeam = Config.MaxBotsPerTeamCs
 	elseif p_GameMode == 'ConquestAssaultLarge0' then
 		Globals.MaxBotsPerTeam = Config.MaxBotsPerTeamCal
@@ -639,6 +662,7 @@ function FunBotServer:SetGameMode(p_GameMode)
 	p_GameMode == 'ConquestAssaultLarge0' or
 	p_GameMode == 'ConquestAssaultSmall0' or
 	p_GameMode == 'ConquestAssaultSmall1' or
+	p_GameMode == 'TankSuperiority0' or
 	p_GameMode == 'BFLAG'then
 		Globals.IsConquest = true
 	else

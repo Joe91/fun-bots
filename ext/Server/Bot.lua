@@ -38,6 +38,7 @@ function Bot:__init(p_Player)
 	self._SpawnDelayTimer = 0
 	self._WayWaitTimer = 0
 	self._VehicleWaitTimer = 0
+	self._VehicleTakeoffTimer = 0
 	self._WayWaitYawTimer = 0
 	self._ObstaceSequenceTimer = 0
 	self._StuckTimer = 0
@@ -86,6 +87,7 @@ function Bot:__init(p_Player)
 	self._VehicleReadyToShoot = false
 	self._FullVehicleSteering = false
 	self._VehicleDirBackPositive = false
+	self._JetAbortAttackActive = false
 	-- PID Controllers
 	-- normal driving
 	self._Pid_Drv_Yaw = PidController(5, 0.05, 0.2, 1.0)
@@ -103,6 +105,7 @@ function Bot:__init(p_Player)
 	self._ShootPlayerVehicleType = VehicleTypes.NoVehicle
 	self._ShootPlayerName = ""
 	self._DistanceToPlayer = 0.0
+	self.m_ReadyToAttack = false
 	self._WeaponToUse = BotWeapons.Primary
 	self._ShootWayPoints = {}
 	self._KnifeWayPositions = {}
@@ -292,14 +295,48 @@ function Bot:EnterVehicleOfPlayer(p_Player)
 	self._ActiveAction = BotActionFlags.EnterVehicleActive
 	self._ShootPlayer = nil
 	self._ShootPlayerName = p_Player.name
+	self._ShootModeTimer = 0
 end
 
-function Bot:ShootAt(p_Player, p_IgnoreYaw)
-	if 
+function Bot:IsReadyToAttack()
+	if
 	self._ActiveAction == BotActionFlags.OtherActionActive or
 	self._ActiveAction == BotActionFlags.ReviveActive or
 	self._ActiveAction == BotActionFlags.EnterVehicleActive or
 	self._ActiveAction == BotActionFlags.GrenadeActive then
+		return false
+	end
+	if self._ShootPlayer == nil or (self.m_InVehicle and (self._ShootModeTimer > Config.BotMinTimeShootAtPlayer * 2)) or
+		(not self.m_InVehicle and (self._ShootModeTimer > Config.BotMinTimeShootAtPlayer)) or
+		(self.m_KnifeMode and self._ShootModeTimer > (Config.BotMinTimeShootAtPlayer/2)) then
+		return true
+	else
+		return false
+	end
+end
+
+function Bot:GetAttackDistance()
+	local s_AttackDistance = 0.0
+	if not self.m_InVehicle then
+		if self.m_ActiveWeapon.type ~= WeaponTypes.Sniper then
+			s_AttackDistance = Config.MaxShootDistanceNoSniper
+		else
+			s_AttackDistance = Config.MaxRaycastDistance
+		end
+	else
+		if m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) and
+		m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) and
+		m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.AntiAir) then
+			s_AttackDistance = Config.MaxShootDistanceNoAntiAir
+		else
+			s_AttackDistance = Config.MaxRaycastDistanceVehicles
+		end
+	end
+	return s_AttackDistance
+end
+
+function Bot:ShootAt(p_Player, p_IgnoreYaw)
+	if not self:IsReadyToAttack() then
 		return false
 	end
 
@@ -318,6 +355,11 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 				if not Config.ChopperDriversAttack then
 					return false
 				end
+			end
+		end
+		if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
+			if self._VehicleTakeoffTimer > 0 then
+				return false
 			end
 		end
 		if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.NoArmorVehicle) then
@@ -348,16 +390,11 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 		self._DistanceToPlayer = p_Player.soldier.worldTransform.trans:Distance(self.m_Player.soldier.worldTransform.trans)
 	end
 
+	local s_AttackDistance = self:GetAttackDistance()
+
 	-- don't attack if too far away
-	if not p_IgnoreYaw and not self.m_InVehicle then
-		if self.m_ActiveWeapon.type ~= WeaponTypes.Sniper and self._DistanceToPlayer > Config.MaxShootDistanceNoSniper then
-			return false
-		end
-	end
-	if not p_IgnoreYaw and self.m_InVehicle then
-		if m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) and m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) and self._DistanceToPlayer > Config.MaxShootDistanceNoAntiAir then
-			return false
-		end
+	if not p_IgnoreYaw and self._DistanceToPlayer > s_AttackDistance then
+		return false
 	end
 
 	if s_Type ~= VehicleTypes.NoVehicle and m_Vehicles:CheckForVehicleAttack(s_Type, self._DistanceToPlayer, self.m_SecondaryGadget, self.m_InVehicle) == VehicleAttackModes.NoAttack then
@@ -374,6 +411,20 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 	-- if target is air-vehicle and bot is in AA --> ignore yaw
 	if self.m_InVehicle and (s_Type == VehicleTypes.Chopper or s_Type == VehicleTypes.Plane) and m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.AntiAir) then
 		p_IgnoreYaw = true
+	end
+
+	-- don't attack if too close to ground in Plane
+	if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
+		if self._ShootPlayerVehicleType ~= VehicleTypes.Chopper or self._ShootPlayerVehicleType ~= VehicleTypes.Plane then
+			if (self.m_Player.soldier.worldTransform.trans.y - p_Player.soldier.worldTransform.trans.y) < Registry.VEHICLES.ABORT_ATTACK_HEIGHT_JET then
+				return false
+			end
+			if self._DistanceToPlayer < Registry.VEHICLES.ABORT_ATTACK_DISTANCE_JET then
+				return false
+			end
+		else
+			p_IgnoreYaw = true
+		end
 	end
 
 	if not p_IgnoreYaw then
@@ -422,23 +473,18 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 
 	if p_IgnoreYaw or (s_DifferenceYaw < s_FovHalf and s_Pitch < s_PitchHalf) then
 		if self._Shoot then
-			if self._ShootPlayer == nil or 
-			(self.m_InVehicle and (self._ShootModeTimer > Config.BotMinTimeShootAtPlayer * 1.5)) or
-			(not self.m_InVehicle and (self._ShootModeTimer > Config.BotMinTimeShootAtPlayer)) or
-			(self.m_KnifeMode and self._ShootModeTimer > (Config.BotMinTimeShootAtPlayer/2)) then
-				self._ShootModeTimer = 0
-				self._ShootPlayerName = p_Player.name
-				self._ShootPlayer = nil
-				self._KnifeWayPositions = {}
-				self._VehicleReadyToShoot = false
-				self._ShotTimer = - self:GetFirstShotDelay(self._DistanceToPlayer)
+			self._ShootModeTimer = 0
+			self._ShootPlayerName = p_Player.name
+			self._ShootPlayer = nil
+			self._KnifeWayPositions = {}
+			self._VehicleReadyToShoot = false
+			self._ShotTimer = - self:GetFirstShotDelay(self._DistanceToPlayer)
 
-				if self.m_KnifeMode then
-					table.insert(self._KnifeWayPositions, p_Player.soldier.worldTransform.trans:Clone())
-				end
-
-				return true
+			if self.m_KnifeMode then
+				table.insert(self._KnifeWayPositions, p_Player.soldier.worldTransform.trans:Clone())
 			end
+
+			return true
 		else
 			self._ShootModeTimer = Config.BotFireModeDuration
 			return false
@@ -825,17 +871,20 @@ function Bot:_UpdateAimingVehicleAdvanced()
 			self:_AbortAttack()
 			return
 		end
-		if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) and s_FullPositionBot:Distance(s_FullPositionTarget) < 40 then
+		if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) and s_FullPositionBot:Distance(s_FullPositionTarget) < Registry.VEHICLES.ABORT_ATTACK_AIR_DISTANCE_JET then
 			self:_AbortAttack()
 		end
 		if self._ShootPlayerVehicleType ~= VehicleTypes.Chopper and self._ShootPlayerVehicleType ~= VehicleTypes.Plane then
-			local s_DiffVertical = s_FullPositionTarget.y - s_FullPositionBot.y
+			local s_DiffVertical = s_FullPositionBot.y - s_FullPositionTarget.y 
 			if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) then
-				if s_DiffVertical > -20 then -- too low to the ground
+				if s_DiffVertical < Registry.VEHICLES.ABORT_ATTACK_HEIGHT_CHOPPER then -- too low to the ground
 					self:_AbortAttack()
 				end
 			elseif m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
-				if s_DiffVertical > -50 then -- too low to the ground
+				if s_DiffVertical < Registry.VEHICLES.ABORT_ATTACK_HEIGHT_JET then -- too low to the ground
+					self:_AbortAttack()
+				end
+				if self._DistanceToPlayer < Registry.VEHICLES.ABORT_ATTACK_DISTANCE_JET then
 					self:_AbortAttack()
 				end
 			end
@@ -926,17 +975,20 @@ function Bot:_UpdateAimingVehicle(p_DeltaTime)
 			self:_AbortAttack()
 			return
 		end
-		if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) and s_FullPositionBot:Distance(s_FullPositionTarget) < 40 then
+		if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) and s_FullPositionBot:Distance(s_FullPositionTarget) < Registry.VEHICLES.ABORT_ATTACK_AIR_DISTANCE_JET then
 			self:_AbortAttack()
 		end
 		if self._ShootPlayerVehicleType ~= VehicleTypes.Chopper and self._ShootPlayerVehicleType ~= VehicleTypes.Plane then
-			local s_DiffVertical = s_FullPositionTarget.y - s_FullPositionBot.y
+			local s_DiffVertical = s_FullPositionBot.y - s_FullPositionTarget.y 
 			if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) then
-				if s_DiffVertical > -20 then -- too low to the ground
+				if s_DiffVertical < Registry.VEHICLES.ABORT_ATTACK_HEIGHT_CHOPPER then -- too low to the ground
 					self:_AbortAttack()
 				end
 			elseif m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
-				if s_DiffVertical > -50 then -- too low to the ground
+				if s_DiffVertical < Registry.VEHICLES.ABORT_ATTACK_HEIGHT_JET then -- too low to the ground
+					self:_AbortAttack()
+				end
+				if self._DistanceToPlayer < Registry.VEHICLES.ABORT_ATTACK_DISTANCE_JET then
 					self:_AbortAttack()
 				end
 			end
@@ -1698,7 +1750,7 @@ function Bot:_UpdateAttacking()
 				self:_SetInput(EntryInputActionEnum.EIAMeleeAttack, 1)
 				self._MeleeCooldownTimer = Config.MeleeAttackCoolDown
 
-				if not USE_REAL_DAMAGE then
+				if not Registry.COMMON.USE_REAL_DAMAGE then
 					Events:DispatchLocal("Server:DamagePlayer", self._ShootPlayer.name, self.m_Player.name, true)
 				end
 			else
@@ -1752,6 +1804,8 @@ function Bot:_UpdateAttacking()
 			else
 				if self.m_KnifeMode or self._ActiveAction == BotActionFlags.MeleeActive then
 					self._WeaponToUse = BotWeapons.Knife
+				elseif Globals.IsGm then
+					self._WeaponToUse = BotWeapons.Primary
 				else
 					if self._ActiveAction ~= BotActionFlags.GrenadeActive then
 						-- check to use pistol
@@ -1914,6 +1968,11 @@ function Bot:_UpdateAttacking()
 			self:_AbortAttack()
 			self:_ResetActionFlag(BotActionFlags.EnterVehicleActive)
 		end
+		if self._ShootModeTimer > 12 then -- abort this after some time
+			self._TargetPitch = 0.0
+			self:_AbortAttack()
+			self:_ResetActionFlag(BotActionFlags.EnterVehicleActive)
+		end
 	elseif self._ShootPlayer.soldier == nil then -- reset if enemy is dead
 		self:_AbortAttack()
 	end
@@ -1980,11 +2039,24 @@ function Bot:FindVehiclePath(p_Position)
 	end
 end
 
+function Bot:_UpdateVehicleMovableId()
+	self._VehicleMovableId = m_Vehicles:GetPartIdForSeat(self.m_ActiveVehicle, self.m_Player.controlledEntryId)
+	if self.m_Player.controlledEntryId == 0 then
+		self:FindVehiclePath(self.m_Player.soldier.worldTransform.trans)
+	end
+end
+
 function Bot:_EnterVehicleEntity(p_Entity)
 	if p_Entity ~= nil then
 		local s_Position = p_Entity.transform.trans
+
+		-- keep one seat free, if enough available
+		local s_MaxEntries = p_Entity.entryCount
+		if s_MaxEntries > 2 then
+			s_MaxEntries = s_MaxEntries -1
+		end
 	
-		for i = 0, p_Entity.entryCount - 1 do
+		for i = 0, s_MaxEntries - 1 do
 			if p_Entity:GetPlayerInEntry(i) == nil then
 				self.m_Player:EnterVehicle(p_Entity, i)
 
@@ -1993,8 +2065,9 @@ function Bot:_EnterVehicleEntity(p_Entity)
 				self._VehicleMovableId = m_Vehicles:GetPartIdForSeat(self.m_ActiveVehicle, i)
 				m_Logger:Write(self.m_ActiveVehicle)
 				if i == 0 then
-					if i == p_Entity.entryCount - 1 then
+					if i == s_MaxEntries - 1 then
 						self._VehicleWaitTimer = 0.5 -- always wait a short time to check for free start
+						self._VehicleTakeoffTimer = Registry.VEHICLES.JET_TAKEOFF_TIME
 						g_GameDirector:_SetVehicleObjectiveState(p_Entity.transform.trans, false)
 					else
 						self._VehicleWaitTimer = Config.VehicleWaitForPassengersTime
@@ -2002,7 +2075,7 @@ function Bot:_EnterVehicleEntity(p_Entity)
 					end
 				else
 					self._VehicleWaitTimer = 0
-					if i == p_Entity.entryCount - 1 then
+					if i == s_MaxEntries - 1 then
 						-- last seat taken: Disable vehicle and abort wait for passengers:
 						local s_Driver = p_Entity:GetPlayerInEntry(0)
 						if s_Driver ~= nil then
@@ -2109,6 +2182,23 @@ function Bot:ExitVehicle()
 end
 
 function Bot:_UpdateNormalMovementVehicle()
+	if self._VehicleTakeoffTimer > 0 then
+		self._VehicleTakeoffTimer = self._VehicleTakeoffTimer - Registry.BOT.BOT_UPDATE_CYCLE
+		if self._JetAbortAttackActive then
+			local s_TargetPosition = self.m_Player.controlledControllable.transform.trans
+			local s_Forward = self.m_Player.controlledControllable.transform.forward
+			s_Forward.y = 0
+			s_Forward:Normalize()
+			s_TargetPosition = s_TargetPosition + (s_Forward*50)
+			s_TargetPosition.y = s_TargetPosition.y + 50
+			local s_Waypoint = {
+				Position = s_TargetPosition
+			}
+			self._TargetPoint = s_Waypoint
+			return
+		end
+	end
+	self._JetAbortAttackActive = false
 	if self._VehicleWaitTimer > 0 then
 		self._VehicleWaitTimer = self._VehicleWaitTimer - Registry.BOT.BOT_UPDATE_CYCLE
 		if self._VehicleWaitTimer <= 0 then
@@ -2157,6 +2247,11 @@ function Bot:_UpdateNormalMovementVehicle()
 			if s_Point.Data ~= nil and s_Point.Data.Action ~= nil then
 				if s_Point.Data.Action.type == "exit" then
 					self:_ResetActionFlag(BotActionFlags.OtherActionActive)
+					local s_OnlyPassengers = false
+					if s_Point.Data.Action.onlyPassengers ~= nil and s_Point.Data.Action.onlyPassengers == true then
+						s_OnlyPassengers = true
+					end
+
 					-- let all other bots exit the vehicle
 					local s_VehicleEntity = self.m_Player.controlledControllable
 					if s_VehicleEntity ~= nil then
@@ -2168,7 +2263,9 @@ function Bot:_UpdateNormalMovementVehicle()
 						end
 					end
 					-- Exit Vehicle
-					self:ExitVehicle()
+					if not s_OnlyPassengers then
+						self:ExitVehicle()
+					end
 				elseif self._ActionTimer <= s_Point.Data.Action.time then
 					for _, l_Input in pairs(s_Point.Data.Action.inputs) do
 						self:_SetInput(l_Input, 1)
@@ -2928,6 +3025,13 @@ function Bot:_UpdateSpeedOfMovement()
 end
 
 function Bot:_AbortAttack()
+	if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) and self._ShootPlayerName ~= "" then
+		self._VehicleTakeoffTimer = Registry.VEHICLES.JET_ABORT_ATTACK_TIME
+		self._JetAbortAttackActive = true
+		self._Pid_Drv_Yaw:Reset()
+		self._Pid_Drv_Tilt:Reset()
+		self._Pid_Drv_Roll:Reset()
+	end
 	self._ShootPlayerName = ""
 	self._ShootPlayer = nil
 	self._ShootModeTimer = 0

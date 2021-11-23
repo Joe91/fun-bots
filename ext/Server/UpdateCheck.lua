@@ -20,7 +20,7 @@ local function UpdateFinished(p_Result, p_UpdateUrl, p_RemoteVersion, p_RemoteTi
 	end
 
 	if p_Result == 1 then
-		print('[UPDATE] Your version is newer than the one on the selected Updtae-Channel') -- @ToDo: Move this to a logger
+		print('[UPDATE] Your version is newer than the one on the selected Update-Channel') -- @ToDo: Move this to a logger
 		print('[UPDATE] Your version is '.. p_CurrentVersion)
 		do return end
 	end
@@ -37,7 +37,7 @@ local function UpdateFinished(p_Result, p_UpdateUrl, p_RemoteVersion, p_RemoteTi
 
 	if p_Result == 3 then
 		print('[UPDATE] You are running the latest version') -- @ToDo: Move this to a logger
-		print('[UPDATE] There might be a new version on an other Channel') -- @ToDo: Move this to a logger
+		print('[UPDATE] There might be a new version on another Channel') -- @ToDo: Move this to a logger
 	end
 end
 

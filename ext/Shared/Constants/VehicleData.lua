@@ -129,12 +129,6 @@ VehicleData = {
 		Parts = {35},
 		Speed = {900},
 		Drop = {0.0}},
-	["VodnikPhoenix"] = {
-		Name = "[VODNIK AA]",
-		Type =  VehicleTypes.AntiAir,
-		Parts = {nil, 12, nil, nil},
-		Speed = {300, 50, 300, 300},
-		Drop = {9.81, 0.0, 9.82, 9.81}},
 
 	-- light Vehicle? maybe also AA?
 	["AAV-7A1"] = {
@@ -167,8 +161,20 @@ VehicleData = {
 		Parts = {nil, 23, nil, nil},
 		Speed = {300, 600, 300, 300},
 		Drop = {0.0, 9.81, 0.0, 0.0}},
-	["Humvee_ASRAD"] = {Name = "[HMMWV ASRAD]", Type =  VehicleTypes.LightVehicle, Parts = {}},
 	["HIMARS"] = {Name = "[M142]", Type =  VehicleTypes.LightVehicle, Parts = {}},
+
+	["Humvee_ASRAD"] = {
+		Name = "[HMMWV ASRAD]",
+		Type =  VehicleTypes.LightVehicle,
+		Parts = {nil, 25, nil, nil},
+		Speed = {300, 1000, 300, 300},
+		Drop = {300, 0.0, 300, 300}},
+	["VodnikPhoenix"] = {
+		Name = "[VODNIK AA]",
+		Type =  VehicleTypes.LightVehicle,
+		Parts = {nil, 12, nil, nil},
+		Speed = {300, 1000, 300, 300},
+		Drop = {9.81, 0.0, 9.82, 9.81}},
 
 	["VodnikModified_V2"] = {
 		Name = "[BARSUK]",
@@ -186,7 +192,7 @@ VehicleData = {
 	["AC130"] = {Name = "[GUNSHIP]", Type =  VehicleTypes.LightVehicle, Parts = {}},
 
 	-- Air vehicle
-	-- planes
+	-- Jets/Planes
 	["A10_THUNDERBOLT"] = {
 		Name = "[A-10 THUNDERBOLT]",
 		Type =  VehicleTypes.Plane,
