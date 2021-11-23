@@ -38,7 +38,9 @@ function ClientBotManager:OnClientUpdateInput(p_DeltaTime)
 					s_Transform.trans.y + (s_CameraForward.y * s_MaxEnterDistance),
 					s_Transform.trans.z + (s_CameraForward.z * s_MaxEnterDistance))
 
-			local s_Raycast = RaycastManager:Raycast((s_Transform.trans + (4*s_CameraForward)), s_CastPosition, RayCastFlags.DontCheckWater | RayCastFlags.IsAsyncRaycast)
+			local s_StartPosition = s_Transform.trans:Clone() + s_CameraForward * 4
+
+			local s_Raycast = RaycastManager:Raycast(s_StartPosition, s_CastPosition, RayCastFlags.DontCheckWater | RayCastFlags.IsAsyncRaycast)
 			if s_Raycast ~= nil and s_Raycast.rigidBody:Is("CharacterPhysicsEntity") then
 				-- find teammate at this position
 				for _,l_Player in pairs(PlayerManager:GetPlayersByTeam(self.m_Player.teamId)) do
