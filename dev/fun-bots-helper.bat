@@ -1,2 +1,2 @@
 cd fun-bots-helper
-python fun-bot-helper.py
+python fun-bots-helper.py

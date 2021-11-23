@@ -2,6 +2,7 @@ import os
 from os import walk
 import sys
 
+DISTANCE_MAX = 80
 # use "auto-py-to-exe" to convert to exe files
 def scanForInvalidNodes(pathToFiles):
 	sourceFolder = pathToFiles + "mapfiles"
@@ -41,7 +42,7 @@ def scanForInvalidNodes(pathToFiles):
 				nextPosZ = float(items[4])
 
 				if lastPath == currentPath and nextPath == currentPath: # Wrong in the middle
-					if (abs(lastPosX - posX) > 100 or abs(lastPosY - posY) > 100 or abs(lastPosZ - posZ) > 100) and (abs(nextPosX - posX) > 100 or abs(nextPosY - posY) > 100 or abs(nextPosZ - posZ) > 100):
+					if (abs(lastPosX - posX) > DISTANCE_MAX or abs(lastPosY - posY) > DISTANCE_MAX or abs(lastPosZ - posZ) > DISTANCE_MAX) and (abs(nextPosX - posX) > DISTANCE_MAX or abs(nextPosY - posY) > DISTANCE_MAX or abs(nextPosZ - posZ) > DISTANCE_MAX):
 						print(filename)
 						print(items)
 						newPosX = lastPosX + (nextPosX - lastPosX)/2
@@ -54,7 +55,7 @@ def scanForInvalidNodes(pathToFiles):
 						print(newLineContent)
 						fileLines[i] = newLineContent
 				if lastPath == currentPath and nextPath != currentPath: # Wrong at the end
-					if (abs(lastPosX - posX) > 100 or abs(lastPosY - posY) > 100 or abs(lastPosZ - posZ) > 100):
+					if (abs(lastPosX - posX) > DISTANCE_MAX or abs(lastPosY - posY) > DISTANCE_MAX or abs(lastPosZ - posZ) > DISTANCE_MAX):
 						currentitems[2] = format(lastPosX + 0.2, '.6f')
 						currentitems[3] = format(lastPosY, '.6f')
 						currentitems[4] = format(lastPosY + 0.2, '.6f')
@@ -62,7 +63,7 @@ def scanForInvalidNodes(pathToFiles):
 						print(newLineContent)
 						fileLines[i] = newLineContent
 				if lastPath != currentPath and nextPath == currentPath: # Wrong at the start
-					if (abs(nextPosX - posX) > 100 or abs(nextPosY - posY) > 100 or abs(nextPosZ - posZ) > 100):
+					if (abs(nextPosX - posX) > DISTANCE_MAX or abs(nextPosY - posY) > DISTANCE_MAX or abs(nextPosZ - posZ) > DISTANCE_MAX):
 						currentitems[2] = format(nextPosX + 0.2, '.6f')
 						currentitems[3] = format(nextPosY, '.6f')
 						currentitems[4] = format(nextPosZ + 0.2, '.6f')
