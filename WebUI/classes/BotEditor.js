@@ -332,6 +332,23 @@ const BotEditor = (new function BotEditor() {
 					}));
 				break;
 
+				/* Comm-Screen */
+				case 'exit_vehicle':
+					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
+						action:	'exit_vehicle'
+					}));
+				break;
+				case 'drop_ammo':
+					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
+						action:	'drop_ammo'
+					}));
+				break;
+				case 'drop_medkit':
+					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
+						action:	'drop_medkit'
+					}));
+				break;
+
 				/* Settings */
 				case 'request_settings':
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({

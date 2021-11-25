@@ -165,6 +165,14 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		NetEvents:SendTo('UI_Waypoints_Disable', p_Player)
 	elseif request.action == 'hide_waypoints_editor' then
 		NetEvents:SendTo('UI_Waypoints_Editor', p_Player, false)
+
+	-- Comm Screen
+	elseif request.action == 'exit_vehicle' then
+		BotManager:ExitVehicle(p_Player)
+	elseif request.action == 'drop_ammo' then
+		BotManager:Deploy(p_Player, "ammo")
+	elseif request.action == 'drop_medkit' then
+		BotManager:Deploy(p_Player, "medkit")
 	else
 		ChatManager:Yell(Language:I18N('%s is currently not implemented.', request.action), 2.5)
 	end
