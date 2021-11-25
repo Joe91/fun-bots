@@ -338,6 +338,11 @@ const BotEditor = (new function BotEditor() {
 						action:	'exit_vehicle'
 					}));
 				break;
+				case 'enter_vehicle':
+					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
+						action:	'enter_vehicle'
+					}));
+				break;
 				case 'drop_ammo':
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
 						action:	'drop_ammo'
@@ -347,7 +352,7 @@ const BotEditor = (new function BotEditor() {
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
 						action:	'drop_medkit'
 					}));
-				break;
+				break;			
 
 				/* Settings */
 				case 'request_settings':

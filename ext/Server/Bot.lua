@@ -298,6 +298,30 @@ function Bot:EnterVehicleOfPlayer(p_Player)
 	self._ShootModeTimer = 0
 end
 
+function Bot:DeployIfPossible()
+	-- deploy from time to time
+	if self.m_Kit == BotKits.Support or self.m_Kit == BotKits.Assault then
+		if self.m_PrimaryGadget.type == WeaponTypes.Ammobag or self.m_PrimaryGadget.type == WeaponTypes.Medkit then
+			self:_AbortAttack()
+			self._WeaponToUse = BotWeapons.Gadget1
+			self._DeployTimer = 0
+		end
+	end
+end
+
+function Bot:ExitVehicle()
+	self.m_Player:ExitVehicle(false, false)
+	local s_Node = g_GameDirector:FindClosestPath(self.m_Player.soldier.worldTransform.trans, false)
+
+	if s_Node ~= nil then
+		-- switch to vehicle
+		self._InvertPathDirection = false
+		self._PathIndex = s_Node.PathIndex
+		self._CurrentWayPoint = s_Node.PointIndex
+		self._LastWayDistance = 1000
+	end
+end
+
 function Bot:IsReadyToAttack()
 	if
 	self._ActiveAction == BotActionFlags.OtherActionActive or
@@ -1963,7 +1987,7 @@ function Bot:_UpdateAttacking()
 
 		--check for enter of vehicle if close
 		if self._ShootPlayer.soldier.worldTransform.trans:Distance(self.m_Player.soldier.worldTransform.trans) < 5 then
-			self:_EnterVehicle()
+			self:_EnterVehicle(true)
 			self._TargetPitch = 0.0
 			self:_AbortAttack()
 			self:_ResetActionFlag(BotActionFlags.EnterVehicleActive)
@@ -2046,13 +2070,13 @@ function Bot:_UpdateVehicleMovableId()
 	end
 end
 
-function Bot:_EnterVehicleEntity(p_Entity)
+function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 	if p_Entity ~= nil then
 		local s_Position = p_Entity.transform.trans
 
 		-- keep one seat free, if enough available
 		local s_MaxEntries = p_Entity.entryCount
-		if s_MaxEntries > 2 then
+		if not p_PlayerIsDriver and s_MaxEntries > 2 then
 			s_MaxEntries = s_MaxEntries -1
 		end
 	
@@ -2093,7 +2117,7 @@ function Bot:_EnterVehicleEntity(p_Entity)
 	end
 end
 
-function Bot:_EnterVehicle(p_Name)
+function Bot:_EnterVehicle(p_PlayerIsDriver)
 	local s_Iterator = EntityManager:GetIterator("ServerVehicleEntity")
 	local s_Entity = s_Iterator:Next()
 
@@ -2110,7 +2134,7 @@ function Bot:_EnterVehicle(p_Name)
 		s_Entity = s_Iterator:Next()
 	end
 	if s_ClosestEntity ~= nil then
-		return self:_EnterVehicleEntity(s_ClosestEntity)
+		return self:_EnterVehicleEntity(s_ClosestEntity, p_PlayerIsDriver)
 	end
 	return -3 -- no vehicle found
 end
@@ -2165,19 +2189,6 @@ function Bot:_UpdateStaticMovement()
 
 		self._TargetYaw = self._TargetPlayer.input.authoritativeAimingYaw + ((self._TargetPlayer.input.authoritativeAimingYaw > math.pi) and -math.pi or math.pi)
 		self._TargetPitch = self._TargetPlayer.input.authoritativeAimingPitch
-	end
-end
-
-function Bot:ExitVehicle()
-	self.m_Player:ExitVehicle(false, false)
-	local s_Node = g_GameDirector:FindClosestPath(self.m_Player.soldier.worldTransform.trans, false)
-
-	if s_Node ~= nil then
-		-- switch to vehicle
-		self._InvertPathDirection = false
-		self._PathIndex = s_Node.PathIndex
-		self._CurrentWayPoint = s_Node.PointIndex
-		self._LastWayDistance = 1000
 	end
 end
 
@@ -2506,7 +2517,7 @@ function Bot:_UpdateNormalMovement()
 			if s_Point.Data ~= nil and s_Point.Data.Action ~= nil then
 				if s_Point.Data.Action.type == "vehicle" then
 					if Config.UseVehicles then
-						local s_RetCode, s_Position = self:_EnterVehicle()
+						local s_RetCode, s_Position = self:_EnterVehicle(false)
 						if s_RetCode == 0 then
 							self:_ResetActionFlag(BotActionFlags.OtherActionActive)
 							local s_Node = g_GameDirector:FindClosestPath(s_Position, true)
