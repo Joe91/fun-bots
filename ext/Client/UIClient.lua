@@ -114,9 +114,6 @@ end
 function FunBotUIClient:_onUIWaypointsEditorDisable()
 	if self.m_InWaypointEditor then
 		self._views:disable()
-	elseif self.m_InCommScreen then
-		self._views:hide('comm_screen')
-		self._views:blur()
 	end
 end
 
@@ -278,7 +275,7 @@ function FunBotUIClient:_onUICommScreen(p_Data)
 
 	if (p_Data == true) then
 		self._views:show('comm_screen')
-		self._views:focus()
+		self._views:focusMouse()
 		self.m_InCommScreen = true
 	else
 		self._views:hide('comm_screen')
@@ -317,6 +314,8 @@ function FunBotUIClient:OnClientUpdateInput(p_DeltaTime)
 		self.m_LastWaypointEditorState = false
 	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_LeftAlt) and not self.m_InWaypointEditor then
 		self:_onUICommScreen(true) --TODO: Add Permission-Check?
+	elseif InputManager:WentKeyUp(InputDeviceKeys.IDK_LeftAlt) and not self.m_InWaypointEditor then
+		self:_onUICommScreen(false) --TODO: Add Permission-Check?
 	end
 end
 

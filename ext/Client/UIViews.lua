@@ -46,6 +46,11 @@ function UIViews:enable()
 	WebUI:EnableKeyboard()
 end
 
+-- Enable Mouse/Keyboard actions
+function UIViews:enableMouseOnly()
+	WebUI:EnableMouse()
+end
+
 -- Disable Mouse/Keyboard actions
 function UIViews:disable()
 	WebUI:ResetMouse()
@@ -59,6 +64,11 @@ end
 
 function UIViews:focus()
 	self:enable()
+	-- @ToDo send focus to form-object
+end
+
+function UIViews:focusMouse()
+	self:enableMouseOnly()
 	-- @ToDo send focus to form-object
 end
 
