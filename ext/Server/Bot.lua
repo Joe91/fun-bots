@@ -2591,6 +2591,12 @@ function Bot:_UpdateNormalMovement()
 				self._SidewardsTimer = self._SidewardsTimer - Registry.BOT.BOT_UPDATE_CYCLE
 			end
 
+			-- use parachute if needed
+			local s_VelocityFalling = PhysicsEntity(self.m_Player.soldier).velocity.y
+			if s_VelocityFalling < -50.0 then
+				self:_SetInput(EntryInputActionEnum.EIAToggleParachute, 1)
+			end
+
 			local s_DifferenceY = s_Point.Position.z - self.m_Player.soldier.worldTransform.trans.z
 			local s_DifferenceX = s_Point.Position.x - self.m_Player.soldier.worldTransform.trans.x
 			local s_DistanceFromTarget = math.sqrt(s_DifferenceX ^ 2 + s_DifferenceY ^ 2)
