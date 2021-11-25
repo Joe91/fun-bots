@@ -18,6 +18,8 @@ Registry = {
 			USE_COLLITION_RAYCASTS = false,
 			-- timeout to save or load maps
 			LOADING_TIMEOUT = 25,
+			-- distance commands are heard by bots
+			COMMAND_DISTANCE = 20,
 		},
 		-- Version and Release related variables
 		-- Variables related to the current build version, version and the type of version.
@@ -121,7 +123,7 @@ Registry = {
 		},
 
 		-- Bot spawning
-	BOT_SPAWN = {
+		BOT_SPAWN = {
 			-- Time between a level loading and the first bot spawning
 			-- Note: Must be big enough to register inputActiveEvents (> 1.0)
 			FIRST_SPAWN_DELAY = 5.0,

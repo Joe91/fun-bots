@@ -930,7 +930,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 				if s_IsRespawn then
 					p_ExistingBot:SetVarsWay(nil, true, 0, 0, false)
 					self:_SpawnBot(p_ExistingBot, s_Transform, false)
-					if p_ExistingBot:_EnterVehicleEntity(s_SpawnEntity) ~= 0 then
+					if p_ExistingBot:_EnterVehicleEntity(s_SpawnEntity, false) ~= 0 then
 						p_ExistingBot:Kill()
 					else
 						p_ExistingBot:FindVehiclePath(s_SpawnEntity.transform.trans)
@@ -946,7 +946,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 		
 						s_Bot:SetVarsWay(nil, true, 0, 0, false)
 						self:_SpawnBot(s_Bot, s_Transform, true)
-						if s_Bot:_EnterVehicleEntity(s_SpawnEntity) ~= 0 then
+						if s_Bot:_EnterVehicleEntity(s_SpawnEntity, false) ~= 0 then
 							s_Bot:Kill()
 						else
 							s_Bot:FindVehiclePath(s_SpawnEntity.transform.trans)

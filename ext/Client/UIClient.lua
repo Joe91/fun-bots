@@ -9,6 +9,7 @@ Language = require('__shared/Language')
 function FunBotUIClient:__init()
 	self._views = UIViews()
 	self.m_InWaypointEditor = false
+	self.m_InCommScreen = false
 	self.m_LastWaypointEditorState = false
 
 	if Config.DisableUserInterface ~= true then
@@ -26,6 +27,7 @@ function FunBotUIClient:__init()
 
 		NetEvents:Subscribe('UI_Waypoints_Editor', self, self._onUIWaypointsEditor)
 		Events:Subscribe('UI_Waypoints_Editor', self, self._onUIWaypointsEditor)
+		NetEvents:Subscribe('UI_Comm_Screen', self, self._onUICommScreen)
 		NetEvents:Subscribe('UI_Waypoints_Disable', self, self._onUIWaypointsEditorDisable)
 		Events:Subscribe('UI_Waypoints_Disable', self, self._onUIWaypointsEditorDisable)
 		NetEvents:Subscribe('UI_Trace', self, self._onUITrace)
@@ -112,6 +114,9 @@ end
 function FunBotUIClient:_onUIWaypointsEditorDisable()
 	if self.m_InWaypointEditor then
 		self._views:disable()
+	elseif self.m_InCommScreen then
+		self._views:hide('comm_screen')
+		self._views:blur()
 	end
 end
 
@@ -262,6 +267,26 @@ function FunBotUIClient:_onUIShowToolbar(p_Data)
 	end
 end
 
+function FunBotUIClient:_onUICommScreen(p_Data)
+	if Config.DisableUserInterface == true then
+		return
+	end
+
+	if Debug.Client.UI then
+		print('UIClient: UI_Show_Comm_Screen (' .. tostring(p_Data) .. ')')
+	end
+
+	if (p_Data == true) then
+		self._views:show('comm_screen')
+		self._views:focus()
+		self.m_InCommScreen = true
+	else
+		self._views:hide('comm_screen')
+		self._views:blur()
+		self.m_InCommScreen = false
+	end
+end
+
 function FunBotUIClient:OnClientUpdateInput(p_DeltaTime)
 	if Config.DisableUserInterface == true then
 		return
@@ -290,6 +315,8 @@ function FunBotUIClient:OnClientUpdateInput(p_DeltaTime)
 	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_LeftAlt) and self.m_InWaypointEditor then
 		self._views:disable()
 		self.m_LastWaypointEditorState = false
+	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_LeftAlt) and not self.m_InWaypointEditor then
+		self:_onUICommScreen(true) --TODO: Add Permission-Check?
 	end
 end
 

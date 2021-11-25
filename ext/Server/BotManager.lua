@@ -740,6 +740,84 @@ function BotManager:DestroyBot(p_Bot)
 	p_Bot = nil
 end
 
+-- Comm-Actions
+function BotManager:ExitVehicle(p_Player)
+	if p_Player ~= nil and p_Player.soldier ~= nil then
+		-- find closest bots in vehicle
+		local s_ClosestDistance = nil
+		local s_ClosestBot = nil
+		for _, l_Bot in pairs(self._BotsByTeam[p_Player.teamId + 1]) do
+			if l_Bot.m_InVehicle and l_Bot.m_Player.soldier ~= nil then
+				if s_ClosestBot == nil then
+					s_ClosestBot = l_Bot
+					s_ClosestDistance = l_Bot.m_Player.soldier.worldTransform.trans:Distance(p_Player.soldier.worldTransform.trans)
+				else
+					local s_Distance = l_Bot.m_Player.soldier.worldTransform.trans:Distance(p_Player.soldier.worldTransform.trans)
+					if s_Distance < s_ClosestDistance then
+						s_ClosestDistance = s_Distance
+						s_ClosestBot = l_Bot
+					end
+				end
+			end
+		end
+		if s_ClosestBot ~= nil and s_ClosestDistance < Registry.COMMON.COMMAND_DISTANCE then
+			local s_VehicleEntity = s_ClosestBot.m_Player.controlledControllable
+			if s_VehicleEntity ~= nil then
+				for i = 0, (s_VehicleEntity.entryCount - 1) do
+					local s_Player = s_VehicleEntity:GetPlayerInEntry(i)
+					if s_Player ~= nil then
+						self:OnBotExitVehicle(s_Player.name)
+					end
+				end
+			end
+		end
+	end
+end
+
+function BotManager:Deploy(p_Player, p_Type)
+	if p_Player ~= nil and p_Player.soldier ~= nil then
+		-- find bots in range
+		local s_BotsInRange = {}
+		for _, l_Bot in pairs(self._BotsByTeam[p_Player.teamId + 1]) do
+			if not l_Bot.m_InVehicle and l_Bot.m_Player.soldier ~= nil then
+				if p_Type == "ammo" and l_Bot.m_Kit == BotKits.Support then 
+					local s_Distance = l_Bot.m_Player.soldier.worldTransform.trans:Distance(p_Player.soldier.worldTransform.trans)
+					if s_Distance < Registry.COMMON.COMMAND_DISTANCE then
+						l_Bot:DeployIfPossible()
+					end
+				elseif p_Type == "medkit" and l_Bot.m_Kit == BotKits.Assault then
+					local s_Distance = l_Bot.m_Player.soldier.worldTransform.trans:Distance(p_Player.soldier.worldTransform.trans)
+					if s_Distance < Registry.COMMON.COMMAND_DISTANCE then
+						l_Bot:DeployIfPossible()
+					end
+				end
+			end
+		end
+	end
+end
+
+function BotManager:EnterVehicle(p_Player)
+	if p_Player ~= nil and p_Player.soldier ~= nil then
+		-- check for vehicle of player and seats
+		if p_Player.controlledControllable ~= nil and not p_Player.controlledControllable:Is("ServerSoldierEntity") then
+			local s_VehicleEntity = p_Player.controlledControllable
+			local s_MaxFreeSeats = s_VehicleEntity.entryCount - 1
+			for _, l_Bot in pairs(self._BotsByTeam[p_Player.teamId + 1]) do
+				if not l_Bot.m_InVehicle and l_Bot.m_Player.soldier ~= nil then
+					local s_Distance = l_Bot.m_Player.soldier.worldTransform.trans:Distance(p_Player.soldier.worldTransform.trans)
+					if s_Distance < Registry.COMMON.COMMAND_DISTANCE then
+						l_Bot:EnterVehicleOfPlayer(p_Player)
+						s_MaxFreeSeats = s_MaxFreeSeats -1
+					end
+				end
+				if s_MaxFreeSeats <= 0 then
+					break
+				end
+			end
+		end
+	end
+end
+
 -- =============================================
 -- Private Functions
 -- =============================================
