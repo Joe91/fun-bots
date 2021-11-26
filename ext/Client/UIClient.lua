@@ -274,11 +274,11 @@ function FunBotUIClient:_onUICommScreen(p_Data)
 	end
 
 	if (p_Data == true) then
-		self._views:show('comm_screen')
+		self._views:show('commorose')--'comm_screen')
 		self._views:focusMouse()
 		self.m_InCommScreen = true
 	else
-		self._views:hide('comm_screen')
+		self._views:hide('commorose') --('comm_screen')
 		self._views:blur()
 		self.m_InCommScreen = false
 	end
