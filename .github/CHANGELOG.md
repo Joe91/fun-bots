@@ -25,6 +25,8 @@ This is the changelog for the released V2.4.0 version. Don't forget to [join us 
 * allow to export and import settings and permissions
 * Player can swap seats with bots in vehicle
 * fun-bots-helper tool added (reduced exe and extended python-tool)
+* Bots use parachutes
+* Bot-Commands in the UI (press LEFT ALT)
 
 ### Bug fixes
 * Fixed Bot-Behaviour in Gunmaster
