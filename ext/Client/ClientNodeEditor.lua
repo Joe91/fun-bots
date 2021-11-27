@@ -961,6 +961,7 @@ function ClientNodeEditor:_onAddObjective(p_Args)
 	end
 
 	local s_Data = table.concat(p_Args or {}, ' ')
+	s_Data = s_Data:lower()
 	self:Log('Add Objective (data): %s', g_Utilities:dump(s_Data, true))
 
 	local s_Selection = m_NodeCollection:GetSelected()
@@ -1008,6 +1009,7 @@ function ClientNodeEditor:_onRemoveObjective(p_Args)
 	end
 
 	local s_Data = table.concat(p_Args or {}, ' ')
+	s_Data = s_Data:lower()
 	self:Log('Remove Objective (data): %s', g_Utilities:dump(s_Data, true))
 
 	local s_Selection = m_NodeCollection:GetSelected()
