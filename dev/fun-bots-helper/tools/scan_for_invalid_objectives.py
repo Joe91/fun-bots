@@ -25,21 +25,15 @@ def scanForInvalidObjectives(pathToFiles):
 							allObjectives.append(objective)
 			allObjectives.sort()
 			for objectiveName in allObjectives:
-				for compObjectiveName in allObjectives:
-					if objectiveName != compObjectiveName:
-						if objectiveName.lower() == compObjectiveName.lower():
-							print("ERROR: Objective "+objectiveName)
-							objectivesToRename.append(objectiveName)
+				if objectiveName.lower() != objectiveName:
+					objectivesToRename.append(objectiveName)
 		if len(objectivesToRename) > 0:
 			with open(sourceFolder + "/" + filename, "w") as outfile:
 				print(filename)
 				print("replace content")
 				for line in fileLines:
 					for renameItem in objectivesToRename:
-						if len(renameItem) == 3:
-							line = line.replace(renameItem, renameItem.upper())
-						else:
-							line = line.replace(renameItem, renameItem.lower())
+						line = line.replace(renameItem, renameItem.lower())
 					outfile.write(line)
 
 if __name__ == "__main__":

@@ -22,7 +22,6 @@ function FunBotUIServer:__init()
 		NetEvents:Subscribe('UI_Request_Save_Settings', self, self._onUIRequestSaveSettings)
 		NetEvents:Subscribe('BotEditor', self, self._onBotEditorEvent)
 		NetEvents:Subscribe('UI_Request_CommoRose_Show', self, self._onUIRequestCommonRoseShow)
-		NetEvents:Subscribe('UI_Request_CommoRose_Hide', self, self._onUIRequestCommonRoseHide)
 	end
 end
 
@@ -169,16 +168,111 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 	-- Comm Screen
 	elseif request.action == 'exit_vehicle' then
 		BotManager:ExitVehicle(p_Player)
-		NetEvents:SendTo('UI_Comm_Screen', p_Player, false)
+		-- NetEvents:SendTo('UI_CommonRose', p_Player, "false")
 	elseif request.action == 'drop_ammo' then
 		BotManager:Deploy(p_Player, "ammo")
-		NetEvents:SendTo('UI_Comm_Screen', p_Player, false)
+		-- NetEvents:SendTo('UI_CommonRose', p_Player, "false")
 	elseif request.action == 'drop_medkit' then
 		BotManager:Deploy(p_Player, "medkit")
-		NetEvents:SendTo('UI_Comm_Screen', p_Player, false)
+		-- NetEvents:SendTo('UI_CommonRose', p_Player, "false")
 	elseif request.action  == 'enter_vehicle' then
 		BotManager:EnterVehicle(p_Player)
-		NetEvents:SendTo('UI_Comm_Screen', p_Player, false)
+		-- NetEvents:SendTo('UI_CommonRose', p_Player, "false")
+	elseif request.action == 'attack_objective' then
+		-- change commo-rose
+		NetEvents:SendTo('UI_CommonRose', p_Player, {
+			Top = {
+				Action = 'not_implemented',
+				Label = Language:I18N('---'),
+				Confirm = true
+			},
+			Left = {
+				{
+					Action = 'attack_a',
+					Label = Language:I18N('A')
+				}, {
+					Action = 'attack_b',
+					Label = Language:I18N('B')
+				}, {
+					Action = 'attack_c',
+					Label = Language:I18N('C')
+				}, {
+					Action = 'attack_d',
+					Label = Language:I18N('D')
+				}
+			},
+			Center = {
+				Action = 'not_implemented',
+				Label = Language:I18N('Attack') -- or "Unselect"
+			},
+			Right = {
+				{
+					Action = 'attack_e',
+					Label = Language:I18N('E')
+				}, {
+					Action = 'attack_g',
+					Label = Language:I18N('F')
+				}, {
+					Action = 'attack_g',
+					Label = Language:I18N('G')
+				}, {
+					Action = 'attack_h',
+					Label = Language:I18N('H')
+				}
+			},
+			Bottom = {
+				Action = 'back_to_comm',
+				Label = Language:I18N('back'),
+			}
+		})
+	elseif request.action == 'defend_objective' then
+		NetEvents:SendTo('UI_CommonRose', p_Player, {
+			Top = {
+				Action = 'not_implemented',
+				Label = Language:I18N('---'),
+				Confirm = true
+			},
+			Left = {
+				{
+					Action = 'defend_a',
+					Label = Language:I18N('A')
+				}, {
+					Action = 'defend_b',
+					Label = Language:I18N('B')
+				}, {
+					Action = 'defend_c',
+					Label = Language:I18N('C')
+				}, {
+					Action = 'defend_d',
+					Label = Language:I18N('D')
+				}
+			},
+			Center = {
+				Action = 'not_implemented',
+				Label = Language:I18N('defend') -- or "Unselect"
+			},
+			Right = {
+				{
+					Action = 'defend_e',
+					Label = Language:I18N('E')
+				}, {
+					Action = 'defend_g',
+					Label = Language:I18N('F')
+				}, {
+					Action = 'defend_g',
+					Label = Language:I18N('G')
+				}, {
+					Action = 'defend_h',
+					Label = Language:I18N('H')
+				}
+			},
+			Bottom = {
+				Action = 'back_to_comm',
+				Label = Language:I18N('back'),
+			}
+		})
+	elseif request.action == 'back_to_comm' then
+		self:_onUIRequestCommonRoseShow(p_Player)
 	else
 		ChatManager:Yell(Language:I18N('%s is currently not implemented.', request.action), 2.5)
 	end
@@ -208,7 +302,7 @@ function FunBotUIServer:_onUIRequestCommonRoseShow(p_Player, p_Data)
 		return
 	end
 
-	if PermissionManager:HasPermission(p_Player, 'UserInterface.WaypointEditor') == false then
+	if PermissionManager:HasPermission(p_Player, 'Comm') == false then
 		ChatManager:SendMessage('You have no permissions for this action.', p_Player)
 		return
 	end
@@ -219,43 +313,47 @@ function FunBotUIServer:_onUIRequestCommonRoseShow(p_Player, p_Data)
 
 	NetEvents:SendTo('UI_CommonRose', p_Player, {
 		Top = {
-			Action = 'cr_save',
-			Label = Language:I18N('Save'),
-			Confirm = true
+			Action = 'not_implemented',
+			Label = Language:I18N('---'),
 		},
 		Left = {
 			{
-				Action = 'cr_merge',
-				Label = Language:I18N('Merge')
+				Action = 'exit_vehicle',
+				Label = Language:I18N('Exit Vehicle')
 			}, {
-				Action = 'cr_move',
-				Label = Language:I18N('Move')
+				Action = 'enter_vehicle',
+				Label = Language:I18N('Enter Vehicle')
 			}, {
-				Action = 'cr_delete',
-				Label = Language:I18N('Delete')
+				Action = 'drop_ammo',
+				Label = Language:I18N('Drop Ammo')
+			}, {
+				Action = 'drop_medkit',
+				Label = Language:I18N('Drop Medkit')
 			}
 		},
 		Center = {
-			Action = 'cr_select',
-			Label = Language:I18N('Select') -- or "Unselect"
+			Action = 'not_implemented',
+			Label = Language:I18N('Commands') -- or "Unselect"
 		},
 		Right = {
 			{
-				Action = 'cr_split',
-				Label = Language:I18N('Split')
+				Action = 'attack_objective',
+				Label = Language:I18N('Attack Objective')
 			}, {
-				Action = 'cr_set_input',
-				Label = Language:I18N('Set Input'),
-				Confirm = true
+				Action = 'defend_objective',
+				Label = Language:I18N('Defend Objective'),
 			}, {
-				Action = 'cr_create',
-				Label = Language:I18N('Create')
+				Action = 'not_implemented',
+				Label = Language:I18N('---')
+			}
+			, {
+				Action = 'not_implemented',
+				Label = Language:I18N('---')
 			}
 		},
 		Bottom = {
-			Action = 'cr_load',
-			Label = Language:I18N('Load'),
-			Confirm = true
+			Action = 'not_implemented',
+			Label = Language:I18N('---'),
 		}
 	})
 end

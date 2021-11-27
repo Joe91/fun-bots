@@ -27,6 +27,8 @@ This is the changelog for the released V2.4.0 version. Don't forget to [join us 
 * fun-bots-helper tool added (reduced exe and extended python-tool)
 * Bots use parachutes
 * Bot-Commands in the UI (press LEFT ALT)
+	* some first commands
+	* more to come
 
 ### Bug fixes
 * Fixed Bot-Behaviour in Gunmaster
@@ -34,6 +36,7 @@ This is the changelog for the released V2.4.0 version. Don't forget to [join us 
 * Bixed Bot-Bot-attack when both in vehicles
 * Some more fixes in Nodeeditor
 * fixed some TDM-Maps
+* only use lowercase objectives from now on
 
 ### New maps
 * Gulf of Oman Conquest Large (all) - thanks to BOB
@@ -45,6 +48,9 @@ This is the changelog for the released V2.4.0 version. Don't forget to [join us 
 * Operation Riverside Conquest Large (all) - thanks to KrazyIvan777
 * Death Valley Tank Superiority - thanks to KrazyIvan777
 * Bandar Desert Tank Superiority - thanks to KrazyIvan777
+* Talah Market Assalut Vehicles - thanks to MeisterPeitsche
+* Epicenter CQ Small Vehicles - thanks to MeisterPeitsche
+* Azadi Palace CQ Small Vehicles - thanks to MeisterPeitsche
 
 ### Updated maps
 * Lots and lots of Updated maps by MeisterPeitsche and KrazyIvan777 with massive work put into these maps!!!
