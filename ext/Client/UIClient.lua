@@ -27,7 +27,6 @@ function FunBotUIClient:__init()
 
 		NetEvents:Subscribe('UI_Waypoints_Editor', self, self._onUIWaypointsEditor)
 		Events:Subscribe('UI_Waypoints_Editor', self, self._onUIWaypointsEditor)
-		NetEvents:Subscribe('UI_Comm_Screen', self, self._onUICommScreen)
 		NetEvents:Subscribe('UI_Waypoints_Disable', self, self._onUIWaypointsEditorDisable)
 		Events:Subscribe('UI_Waypoints_Disable', self, self._onUIWaypointsEditorDisable)
 		NetEvents:Subscribe('UI_Trace', self, self._onUITrace)
@@ -65,11 +64,13 @@ function FunBotUIClient:_onUICommonRose(p_Data)
 	if p_Data == "false" then
 		self._views:execute('BotEditor.setCommonRose(false)')
 		self._views:blur()
+		self.m_InCommScreen = false
 		return
 	end
 
 	self._views:execute('BotEditor.setCommonRose(\'' .. json.encode(p_Data) .. '\')')
-	self._views:focus()
+	self._views:focusMouse()
+	self.m_InCommScreen = true
 end
 
 function FunBotUIClient:_onSetOperationControls(p_Data)
@@ -264,26 +265,6 @@ function FunBotUIClient:_onUIShowToolbar(p_Data)
 	end
 end
 
-function FunBotUIClient:_onUICommScreen(p_Data)
-	if Config.DisableUserInterface == true then
-		return
-	end
-
-	if Debug.Client.UI then
-		print('UIClient: UI_Show_Comm_Screen (' .. tostring(p_Data) .. ')')
-	end
-
-	if (p_Data == true) then
-		self._views:show('commorose')--'comm_screen')
-		self._views:focusMouse()
-		self.m_InCommScreen = true
-	else
-		self._views:hide('commorose') --('comm_screen')
-		self._views:blur()
-		self.m_InCommScreen = false
-	end
-end
-
 function FunBotUIClient:OnClientUpdateInput(p_DeltaTime)
 	if Config.DisableUserInterface == true then
 		return
@@ -312,10 +293,12 @@ function FunBotUIClient:OnClientUpdateInput(p_DeltaTime)
 	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_LeftAlt) and self.m_InWaypointEditor then
 		self._views:disable()
 		self.m_LastWaypointEditorState = false
-	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_LeftAlt) and not self.m_InWaypointEditor then
-		self:_onUICommScreen(true) --TODO: Add Permission-Check?
-	elseif InputManager:WentKeyUp(InputDeviceKeys.IDK_LeftAlt) and not self.m_InWaypointEditor then
-		self:_onUICommScreen(false) --TODO: Add Permission-Check?
+	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_LeftAlt) and not self.m_InWaypointEditor and not self.m_InCommScreen then
+		print("went down")
+		NetEvents:Send('UI_Request_CommoRose_Show')
+	elseif InputManager:WentKeyUp(InputDeviceKeys.IDK_LeftAlt) and not self.m_InWaypointEditor and self.m_InCommScreen then
+		print("went up")
+		self:_onUICommonRose("false") --TODO: Add Permission-Check?
 	end
 end
 
