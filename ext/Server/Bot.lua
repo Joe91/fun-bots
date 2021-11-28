@@ -88,6 +88,7 @@ function Bot:__init(p_Player)
 	self._FullVehicleSteering = false
 	self._VehicleDirBackPositive = false
 	self._JetAbortAttackActive = false
+	self._LastVehicleHealth = 0.0
 	-- PID Controllers
 	-- normal driving
 	self._Pid_Drv_Yaw = PidController(5, 0.05, 0.2, 1.0)
@@ -166,6 +167,7 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 							self:_UpdateAttacking()
 							if self._ActiveAction == BotActionFlags.ReviveActive or
 							self._ActiveAction == BotActionFlags.EnterVehicleActive or
+							self._ActiveAction == BotActionFlags.RepairActive or
 							self._ActiveAction == BotActionFlags.C4Active then
 								self:_UpdateMovementSprintToTarget()
 							else
@@ -287,6 +289,15 @@ function Bot:Revive(p_Player)
 	end
 end
 
+function Bot:Repair(p_Player)
+	if self.m_Kit == BotKits.Engineer and p_Player.soldier ~= nil and p_Player.controlledControllable ~= nil then
+		self._ActiveAction = BotActionFlags.RepairActive
+		self._LastVehicleHealth = PhysicsEntity(p_Player.controlledControllable).internalHealth
+		self._ShootPlayer = nil
+		self._ShootPlayerName = p_Player.name
+	end
+end
+
 function Bot:ResetVehicleTimer()
 	self._VehicleWaitTimer = 0
 end
@@ -326,6 +337,7 @@ function Bot:IsReadyToAttack()
 	if
 	self._ActiveAction == BotActionFlags.OtherActionActive or
 	self._ActiveAction == BotActionFlags.ReviveActive or
+	self._ActiveAction == BotActionFlags.RepairActive or
 	self._ActiveAction == BotActionFlags.EnterVehicleActive or
 	self._ActiveAction == BotActionFlags.GrenadeActive then
 		return false
@@ -1026,7 +1038,7 @@ function Bot:_UpdateAiming()
 		return
 	end
 
-	if self._ActiveAction ~= BotActionFlags.ReviveActive then
+	if self._ActiveAction ~= BotActionFlags.ReviveActive and self._ActiveAction ~= BotActionFlags.RepairActive then
 		if not self._Shoot or self._ShootPlayer.soldier == nil or self.m_ActiveWeapon == nil then
 			return
 		end
@@ -1171,6 +1183,27 @@ function Bot:_UpdateAiming()
 		local s_WorseningValue = (math.random()*self._Skill/self._DistanceToPlayer) -- value scaled in offset in 1m
 		s_Yaw = s_Yaw + s_WorseningValue
 		s_Pitch = s_Pitch + s_WorseningValue
+
+		self._TargetPitch = s_Pitch
+		self._TargetYaw = s_Yaw
+
+	elseif self._ActiveAction ~= BotActionFlags.RepairActive then -- repair
+		if  self._ShootPlayer.controlledControllable == nil then
+			return
+		end
+		local s_PositionTarget = self._ShootPlayer.controlledControllable.transform.trans:Clone() -- aim at vehicle
+		local s_PositionBot = self.m_Player.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(self.m_Player, false, false)
+
+		local s_DifferenceZ = s_PositionTarget.z - s_PositionBot.z
+		local s_DifferenceX = s_PositionTarget.x - s_PositionBot.x
+		local s_DifferenceY = s_PositionTarget.y - s_PositionBot.y
+
+		local s_AtanDzDx = math.atan(s_DifferenceZ, s_DifferenceX)
+		local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
+
+		--calculate pitch
+		local s_Distance = math.sqrt(s_DifferenceZ ^ 2 + s_DifferenceX ^ 2)
+		local s_Pitch = math.atan(s_DifferenceY, s_Distance)
 
 		self._TargetPitch = s_Pitch
 		self._TargetYaw = s_Yaw
@@ -1654,7 +1687,7 @@ function Bot:_UpdateWeaponSelection()
 					self.m_ActiveWeapon = self.m_SecondaryGadget
 					self._ShotTimer = - self:GetFirstShotDelay(self._DistanceToPlayer)
 				end
-			elseif (self._WeaponToUse == BotWeapons.Gadget1 and Config.BotWeapon == BotWeapons.Auto) or Config.BotWeapon == BotWeapons.Gadget1 then
+			elseif self._ActiveAction == BotActionFlags.RepairActive or (self._WeaponToUse == BotWeapons.Gadget1 and Config.BotWeapon == BotWeapons.Auto) or Config.BotWeapon == BotWeapons.Gadget1 then
 				if self.m_Player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_2 and self.m_Player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_4 then
 					self:_SetInput(EntryInputActionEnum.EIASelectWeapon4, 1)
 					self:_SetInput(EntryInputActionEnum.EIASelectWeapon3, 1)
@@ -1717,6 +1750,7 @@ function Bot:_UpdateDeployAndReload()
 	self._WeaponToUse = BotWeapons.Primary
 	self:_ResetActionFlag(BotActionFlags.C4Active)
 	self:_ResetActionFlag(BotActionFlags.ReviveActive)
+	self:_ResetActionFlag(BotActionFlags.RepairActive)
 	self:_ResetActionFlag(BotActionFlags.EnterVehicleActive)
 	self:_ResetActionFlag(BotActionFlags.GrenadeActive)
 	self:_AbortAttack()
@@ -1750,7 +1784,10 @@ function Bot:_UpdateDeployAndReload()
 end
 
 function Bot:_UpdateAttacking()
-	if self._ShootPlayer.soldier ~= nil and self._ActiveAction ~= BotActionFlags.EnterVehicleActive and self._Shoot then
+	if self._ShootPlayer.soldier ~= nil and
+	self._ActiveAction ~= BotActionFlags.EnterVehicleActive and
+	self._ActiveAction ~= BotActionFlags.RepairActive and 
+	self._Shoot then
 		if (self._ShootModeTimer < Config.BotFireModeDuration) or 
 			(Config.ZombieMode and self._ShootModeTimer < (Config.BotFireModeDuration * 4)) then
 
@@ -1997,6 +2034,31 @@ function Bot:_UpdateAttacking()
 			self:_AbortAttack()
 			self:_ResetActionFlag(BotActionFlags.EnterVehicleActive)
 		end
+	elseif self._ActiveAction == BotActionFlags.RepairActive and self._ShootPlayer.soldier ~= nil then
+		self._ShootModeTimer = self._ShootModeTimer + Registry.BOT.BOT_UPDATE_CYCLE
+		self.m_ActiveMoveMode = BotMoveModes.ReviveC4 -- movement-mode : repair
+
+		local s_CurrentHealth = PhysicsEntity(self._ShootPlayer.controlledControllable).internalHealth
+
+		-- Abort conditions
+		if self._ShootModeTimer > 7.0 or self._ShootPlayer.controlledControllable == nil or self._ShootPlayer.controlledControllable:Is("ServerSoldierEntity") then -- abort this after some time
+			self._TargetPitch = 0.0
+			self:_AbortAttack()
+			self:_ResetActionFlag(BotActionFlags.RepairActive)
+			self._WeaponToUse = BotWeapons.Primary
+		end
+
+		--check for enter of vehicle if close
+		if self._ShootPlayer.soldier.worldTransform.trans:Distance(self.m_Player.soldier.worldTransform.trans) < 5 then
+			if s_CurrentHealth ~= self._LastVehicleHealth then
+				self._ShootModeTimer = 2.0  -- continue for few seconds on progress
+			end
+			self._LastVehicleHealth = s_CurrentHealth
+			self._TargetPitch = 0.0
+			self._AttackModeMoveTimer = 0 -- don't jump anymore
+			self:_SetInput(EntryInputActionEnum.EIAFire, 1)
+		end
+	
 	elseif self._ShootPlayer.soldier == nil then -- reset if enemy is dead
 		self:_AbortAttack()
 	end

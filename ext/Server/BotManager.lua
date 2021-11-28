@@ -796,6 +796,24 @@ function BotManager:Deploy(p_Player, p_Type)
 	end
 end
 
+function BotManager:RepairVehicle(p_Player)
+	if p_Player ~= nil and p_Player.soldier ~= nil and p_Player.controlledControllable ~= nil and not p_Player.controlledControllable:Is("ServerSoldierEntity") then
+		-- find bots in range
+		local s_BotsInRange = {}
+		for _, l_Bot in pairs(self._BotsByTeam[p_Player.teamId + 1]) do
+			if not l_Bot.m_InVehicle and l_Bot.m_Player.soldier ~= nil then
+				if l_Bot.m_Kit == BotKits.Engineer then 
+					local s_Distance = l_Bot.m_Player.soldier.worldTransform.trans:Distance(p_Player.soldier.worldTransform.trans)
+					if s_Distance < Registry.COMMON.COMMAND_DISTANCE then
+						l_Bot:Repair(p_Player)
+						break
+					end
+				end
+			end
+		end
+	end
+end
+
 function BotManager:EnterVehicle(p_Player)
 	if p_Player ~= nil and p_Player.soldier ~= nil then
 		-- check for vehicle of player and seats

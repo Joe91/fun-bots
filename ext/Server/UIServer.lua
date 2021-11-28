@@ -178,6 +178,9 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 	elseif request.action  == 'enter_vehicle' then
 		BotManager:EnterVehicle(p_Player)
 		-- NetEvents:SendTo('UI_CommonRose', p_Player, "false")
+	elseif request.action == 'repair_vehicle' then
+		BotManager:RepairVehicle(p_Player)
+		-- NetEvents:SendTo('UI_CommonRose', p_Player, "false")
 	elseif request.action == 'attack_objective' then
 		-- change commo-rose
 		NetEvents:SendTo('UI_CommonRose', p_Player, {
@@ -343,12 +346,11 @@ function FunBotUIServer:_onUIRequestCommonRoseShow(p_Player, p_Data)
 				Action = 'defend_objective',
 				Label = Language:I18N('Defend Objective'),
 			}, {
+				Action = 'repair_vehicle',
+				Label = Language:I18N('Repair Vehicle')
+			}, {
 				Action = 'not_implemented',
-				Label = Language:I18N('---')
-			}
-			, {
-				Action = 'not_implemented',
-				Label = Language:I18N('---')
+				Label = Language:I18N('')
 			}
 		},
 		Bottom = {

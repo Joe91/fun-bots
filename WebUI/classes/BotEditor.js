@@ -362,8 +362,12 @@ const BotEditor = (new function BotEditor() {
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
 						action:	'defend_objective'
 					}));
+				break;
+				case 'repair_vehicle':
+					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
+						action:	'repair_vehicle'
+					}));
 				break;	
-				
 				// attack
 				case 'attack_a':
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
