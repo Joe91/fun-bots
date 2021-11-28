@@ -168,19 +168,19 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 	-- Comm Screen
 	elseif request.action == 'exit_vehicle' then
 		BotManager:ExitVehicle(p_Player)
-		-- NetEvents:SendTo('UI_CommonRose', p_Player, "false")
+		NetEvents:SendTo('UI_CommonRose', p_Player, "false")
 	elseif request.action == 'drop_ammo' then
 		BotManager:Deploy(p_Player, "ammo")
-		-- NetEvents:SendTo('UI_CommonRose', p_Player, "false")
+		NetEvents:SendTo('UI_CommonRose', p_Player, "false")
 	elseif request.action == 'drop_medkit' then
 		BotManager:Deploy(p_Player, "medkit")
-		-- NetEvents:SendTo('UI_CommonRose', p_Player, "false")
+		NetEvents:SendTo('UI_CommonRose', p_Player, "false")
 	elseif request.action  == 'enter_vehicle' then
 		BotManager:EnterVehicle(p_Player)
-		-- NetEvents:SendTo('UI_CommonRose', p_Player, "false")
+		NetEvents:SendTo('UI_CommonRose', p_Player, "false")
 	elseif request.action == 'repair_vehicle' then
 		BotManager:RepairVehicle(p_Player)
-		-- NetEvents:SendTo('UI_CommonRose', p_Player, "false")
+		NetEvents:SendTo('UI_CommonRose', p_Player, "false")
 	elseif request.action == 'attack_objective' then
 		-- change commo-rose
 		NetEvents:SendTo('UI_CommonRose', p_Player, {

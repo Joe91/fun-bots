@@ -110,6 +110,8 @@ Registry = {
 			PROBABILITY_CHANGE_DIRECTION_IF_STUCK = 50,
 			-- Trace delta a bot uses when they are off a trace path to find his way back to the best path
 			TRACE_DELTA_SHOOTING = 0.4,
+			-- The max time a bot tries to move to the repair-vehicle
+			MAX_TIME_TRY_REPAIR = 10,
 		},
 
 		-- Bot team balancing

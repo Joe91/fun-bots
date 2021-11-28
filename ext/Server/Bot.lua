@@ -89,6 +89,7 @@ function Bot:__init(p_Player)
 	self._VehicleDirBackPositive = false
 	self._JetAbortAttackActive = false
 	self._LastVehicleHealth = 0.0
+	self._RepairVehicleEntity = nil
 	-- PID Controllers
 	-- normal driving
 	self._Pid_Drv_Yaw = PidController(5, 0.05, 0.2, 1.0)
@@ -292,7 +293,8 @@ end
 function Bot:Repair(p_Player)
 	if self.m_Kit == BotKits.Engineer and p_Player.soldier ~= nil and p_Player.controlledControllable ~= nil then
 		self._ActiveAction = BotActionFlags.RepairActive
-		self._LastVehicleHealth = PhysicsEntity(p_Player.controlledControllable).internalHealth
+		self._RepairVehicleEntity = p_Player.controlledControllable
+		self._LastVehicleHealth = 0.0
 		self._ShootPlayer = nil
 		self._ShootPlayerName = p_Player.name
 	end
@@ -1187,11 +1189,11 @@ function Bot:_UpdateAiming()
 		self._TargetPitch = s_Pitch
 		self._TargetYaw = s_Yaw
 
-	elseif self._ActiveAction ~= BotActionFlags.RepairActive then -- repair
-		if  self._ShootPlayer.controlledControllable == nil then
+	elseif self._ActiveAction == BotActionFlags.RepairActive then -- repair
+		if self._ShootPlayer == nil or self._ShootPlayer.soldier == nil or self._RepairVehicleEntity == nil then
 			return
 		end
-		local s_PositionTarget = self._ShootPlayer.controlledControllable.transform.trans:Clone() -- aim at vehicle
+		local s_PositionTarget = self._RepairVehicleEntity.transform.trans:Clone() -- aim at vehicle
 		local s_PositionBot = self.m_Player.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(self.m_Player, false, false)
 
 		local s_DifferenceZ = s_PositionTarget.z - s_PositionBot.z
@@ -2018,7 +2020,8 @@ function Bot:_UpdateAttacking()
 			self:_AbortAttack()
 			self:_ResetActionFlag(BotActionFlags.ReviveActive)
 		end
-	elseif self._ActiveAction == BotActionFlags.EnterVehicleActive and self._ShootPlayer.soldier ~= nil then
+	-- enter vehicle
+	elseif self._ActiveAction == BotActionFlags.EnterVehicleActive and self._ShootPlayer ~= nil and self._ShootPlayer.soldier ~= nil then
 		self._ShootModeTimer = self._ShootModeTimer + Registry.BOT.BOT_UPDATE_CYCLE
 		self.m_ActiveMoveMode = BotMoveModes.ReviveC4 -- movement-mode : revive
 
@@ -2034,29 +2037,30 @@ function Bot:_UpdateAttacking()
 			self:_AbortAttack()
 			self:_ResetActionFlag(BotActionFlags.EnterVehicleActive)
 		end
-	elseif self._ActiveAction == BotActionFlags.RepairActive and self._ShootPlayer.soldier ~= nil then
+	-- repair
+	elseif self._ActiveAction == BotActionFlags.RepairActive and self._ShootPlayer ~= nil and self._ShootPlayer.soldier ~= nil and self._RepairVehicleEntity ~= nil then
 		self._ShootModeTimer = self._ShootModeTimer + Registry.BOT.BOT_UPDATE_CYCLE
 		self.m_ActiveMoveMode = BotMoveModes.ReviveC4 -- movement-mode : repair
 
-		local s_CurrentHealth = PhysicsEntity(self._ShootPlayer.controlledControllable).internalHealth
+		local s_CurrentHealth = PhysicsEntity(self._RepairVehicleEntity).internalHealth
 
-		-- Abort conditions
-		if self._ShootModeTimer > 7.0 or self._ShootPlayer.controlledControllable == nil or self._ShootPlayer.controlledControllable:Is("ServerSoldierEntity") then -- abort this after some time
-			self._TargetPitch = 0.0
-			self:_AbortAttack()
-			self:_ResetActionFlag(BotActionFlags.RepairActive)
-			self._WeaponToUse = BotWeapons.Primary
-		end
-
-		--check for enter of vehicle if close
-		if self._ShootPlayer.soldier.worldTransform.trans:Distance(self.m_Player.soldier.worldTransform.trans) < 5 then
+		--check for repair if close to vehicle
+		if self._RepairVehicleEntity.transform.trans:Distance(self.m_Player.soldier.worldTransform.trans) < 5 then
 			if s_CurrentHealth ~= self._LastVehicleHealth then
-				self._ShootModeTimer = 2.0  -- continue for few seconds on progress
+				self._ShootModeTimer = Registry.BOT.MAX_TIME_TRY_REPAIR - 2.0  -- continue for few seconds on progress
 			end
 			self._LastVehicleHealth = s_CurrentHealth
 			self._TargetPitch = 0.0
 			self._AttackModeMoveTimer = 0 -- don't jump anymore
 			self:_SetInput(EntryInputActionEnum.EIAFire, 1)
+		end
+
+		-- Abort conditions
+		if self._ShootModeTimer > Registry.BOT.MAX_TIME_TRY_REPAIR or self._RepairVehicleEntity == nil then -- abort this after some time
+			self._TargetPitch = 0.0
+			self:_AbortAttack()
+			self:_ResetActionFlag(BotActionFlags.RepairActive)
+			self._WeaponToUse = BotWeapons.Primary
 		end
 	
 	elseif self._ShootPlayer.soldier == nil then -- reset if enemy is dead
