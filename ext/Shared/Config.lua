@@ -149,6 +149,7 @@ Config = {
 
 	--OTHER
 	DisableUserInterface = false,		-- if true, the complete UI will be disabled (not available in the UI -) )
+	AllowCommForAll = true,				-- if true, all Players can access the Comm-Screen
 	DisableChatCommands = false,		-- if true, no chat commands can be used
 	DisableRCONCommands = false,		-- if true, no RCON commands can be used
 	IgnorePermissions = false,			-- if true, all permissions are ignored --> everyone can do everything

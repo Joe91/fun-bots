@@ -30,16 +30,140 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		return
 	end
 
-	if Debug.Server.UI then
-		print('UIServer: BotEditor (' .. tostring(p_Data) .. ')')
-	end
-
-	if PermissionManager:HasPermission(p_Player, 'UserInterface.BotEditor') == false then
+	-- Low permission for Comm-Screen --TODO: for all? 
+	if not Config.AllowCommForAll or PermissionManager:HasPermission(p_Player, 'Comm') == false then
 		ChatManager:SendMessage('You have no permissions for this action.', p_Player)
 		return
 	end
 
 	local request = json.decode(p_Data)
+
+	-- Comm Screen
+	if request.action == 'exit_vehicle' then
+		BotManager:ExitVehicle(p_Player)
+		NetEvents:SendTo('UI_CommonRose', p_Player, "false")
+		return
+	elseif request.action == 'drop_ammo' then
+		BotManager:Deploy(p_Player, "ammo")
+		NetEvents:SendTo('UI_CommonRose', p_Player, "false")
+		return
+	elseif request.action == 'drop_medkit' then
+		BotManager:Deploy(p_Player, "medkit")
+		NetEvents:SendTo('UI_CommonRose', p_Player, "false")
+		return
+	elseif request.action  == 'enter_vehicle' then
+		BotManager:EnterVehicle(p_Player)
+		NetEvents:SendTo('UI_CommonRose', p_Player, "false")
+		return
+	elseif request.action == 'repair_vehicle' then
+		BotManager:RepairVehicle(p_Player)
+		NetEvents:SendTo('UI_CommonRose', p_Player, "false")
+		return
+	elseif request.action == 'attack_objective' then
+		-- change commo-rose
+		NetEvents:SendTo('UI_CommonRose', p_Player, {
+			Top = {
+				Action = 'not_implemented',
+				Label = Language:I18N('---'),
+				Confirm = true
+			},
+			Left = {
+				{
+					Action = 'attack_a',
+					Label = Language:I18N('A')
+				}, {
+					Action = 'attack_b',
+					Label = Language:I18N('B')
+				}, {
+					Action = 'attack_c',
+					Label = Language:I18N('C')
+				}, {
+					Action = 'attack_d',
+					Label = Language:I18N('D')
+				}
+			},
+			Center = {
+				Action = 'not_implemented',
+				Label = Language:I18N('Attack') -- or "Unselect"
+			},
+			Right = {
+				{
+					Action = 'attack_e',
+					Label = Language:I18N('E')
+				}, {
+					Action = 'attack_g',
+					Label = Language:I18N('F')
+				}, {
+					Action = 'attack_g',
+					Label = Language:I18N('G')
+				}, {
+					Action = 'attack_h',
+					Label = Language:I18N('H')
+				}
+			},
+			Bottom = {
+				Action = 'back_to_comm',
+				Label = Language:I18N('back'),
+			}
+		})
+		return
+	elseif request.action == 'defend_objective' then
+		NetEvents:SendTo('UI_CommonRose', p_Player, {
+			Top = {
+				Action = 'not_implemented',
+				Label = Language:I18N('---'),
+				Confirm = true
+			},
+			Left = {
+				{
+					Action = 'defend_a',
+					Label = Language:I18N('A')
+				}, {
+					Action = 'defend_b',
+					Label = Language:I18N('B')
+				}, {
+					Action = 'defend_c',
+					Label = Language:I18N('C')
+				}, {
+					Action = 'defend_d',
+					Label = Language:I18N('D')
+				}
+			},
+			Center = {
+				Action = 'not_implemented',
+				Label = Language:I18N('defend') -- or "Unselect"
+			},
+			Right = {
+				{
+					Action = 'defend_e',
+					Label = Language:I18N('E')
+				}, {
+					Action = 'defend_g',
+					Label = Language:I18N('F')
+				}, {
+					Action = 'defend_g',
+					Label = Language:I18N('G')
+				}, {
+					Action = 'defend_h',
+					Label = Language:I18N('H')
+				}
+			},
+			Bottom = {
+				Action = 'back_to_comm',
+				Label = Language:I18N('back'),
+			}
+		})
+		return
+	elseif request.action == 'back_to_comm' then
+		self:_onUIRequestCommonRoseShow(p_Player)
+		return
+	end
+
+	-- General Commands
+	if PermissionManager:HasPermission(p_Player, 'UserInterface.BotEditor') == false then
+		ChatManager:SendMessage('You have no permissions for this action.', p_Player)
+		return
+	end
 
 	-- Settings
 	if request.action == 'request_settings' then
@@ -164,118 +288,6 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		NetEvents:SendTo('UI_Waypoints_Disable', p_Player)
 	elseif request.action == 'hide_waypoints_editor' then
 		NetEvents:SendTo('UI_Waypoints_Editor', p_Player, false)
-
-	-- Comm Screen
-	elseif request.action == 'exit_vehicle' then
-		BotManager:ExitVehicle(p_Player)
-		NetEvents:SendTo('UI_CommonRose', p_Player, "false")
-	elseif request.action == 'drop_ammo' then
-		BotManager:Deploy(p_Player, "ammo")
-		NetEvents:SendTo('UI_CommonRose', p_Player, "false")
-	elseif request.action == 'drop_medkit' then
-		BotManager:Deploy(p_Player, "medkit")
-		NetEvents:SendTo('UI_CommonRose', p_Player, "false")
-	elseif request.action  == 'enter_vehicle' then
-		BotManager:EnterVehicle(p_Player)
-		NetEvents:SendTo('UI_CommonRose', p_Player, "false")
-	elseif request.action == 'repair_vehicle' then
-		BotManager:RepairVehicle(p_Player)
-		NetEvents:SendTo('UI_CommonRose', p_Player, "false")
-	elseif request.action == 'attack_objective' then
-		-- change commo-rose
-		NetEvents:SendTo('UI_CommonRose', p_Player, {
-			Top = {
-				Action = 'not_implemented',
-				Label = Language:I18N('---'),
-				Confirm = true
-			},
-			Left = {
-				{
-					Action = 'attack_a',
-					Label = Language:I18N('A')
-				}, {
-					Action = 'attack_b',
-					Label = Language:I18N('B')
-				}, {
-					Action = 'attack_c',
-					Label = Language:I18N('C')
-				}, {
-					Action = 'attack_d',
-					Label = Language:I18N('D')
-				}
-			},
-			Center = {
-				Action = 'not_implemented',
-				Label = Language:I18N('Attack') -- or "Unselect"
-			},
-			Right = {
-				{
-					Action = 'attack_e',
-					Label = Language:I18N('E')
-				}, {
-					Action = 'attack_g',
-					Label = Language:I18N('F')
-				}, {
-					Action = 'attack_g',
-					Label = Language:I18N('G')
-				}, {
-					Action = 'attack_h',
-					Label = Language:I18N('H')
-				}
-			},
-			Bottom = {
-				Action = 'back_to_comm',
-				Label = Language:I18N('back'),
-			}
-		})
-	elseif request.action == 'defend_objective' then
-		NetEvents:SendTo('UI_CommonRose', p_Player, {
-			Top = {
-				Action = 'not_implemented',
-				Label = Language:I18N('---'),
-				Confirm = true
-			},
-			Left = {
-				{
-					Action = 'defend_a',
-					Label = Language:I18N('A')
-				}, {
-					Action = 'defend_b',
-					Label = Language:I18N('B')
-				}, {
-					Action = 'defend_c',
-					Label = Language:I18N('C')
-				}, {
-					Action = 'defend_d',
-					Label = Language:I18N('D')
-				}
-			},
-			Center = {
-				Action = 'not_implemented',
-				Label = Language:I18N('defend') -- or "Unselect"
-			},
-			Right = {
-				{
-					Action = 'defend_e',
-					Label = Language:I18N('E')
-				}, {
-					Action = 'defend_g',
-					Label = Language:I18N('F')
-				}, {
-					Action = 'defend_g',
-					Label = Language:I18N('G')
-				}, {
-					Action = 'defend_h',
-					Label = Language:I18N('H')
-				}
-			},
-			Bottom = {
-				Action = 'back_to_comm',
-				Label = Language:I18N('back'),
-			}
-		})
-	elseif request.action == 'back_to_comm' then
-		self:_onUIRequestCommonRoseShow(p_Player)
 	else
 		ChatManager:Yell(Language:I18N('%s is currently not implemented.', request.action), 2.5)
 	end
@@ -305,7 +317,7 @@ function FunBotUIServer:_onUIRequestCommonRoseShow(p_Player, p_Data)
 		return
 	end
 
-	if PermissionManager:HasPermission(p_Player, 'Comm') == false then
+	if not Config.AllowCommForAll or PermissionManager:HasPermission(p_Player, 'Comm') == false then
 		ChatManager:SendMessage('You have no permissions for this action.', p_Player)
 		return
 	end
