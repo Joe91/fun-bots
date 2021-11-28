@@ -53,7 +53,7 @@ This is the changelog for the released V2.4.0 version. Don't forget to [join us 
 * Azadi Palace CQ Small Vehicles - thanks to MeisterPeitsche
 
 ### Updated maps
-* Lots and lots of Updated maps by MeisterPeitsche and KrazyIvan777 with massive work put into these maps!!!
+* Lots and lots of Updated maps by MeisterPeitsche, BOB and KrazyIvan777 with massive work put into these maps!!!
 
 
 ### Documentation update
