@@ -45,7 +45,7 @@ Language['xx_XX'] /* Add/replace the xx_XX here with your language code (like de
 	"Clear Select": "",
 	"Spawn Bot": "",
 	"Press ALT for Interaction with the Editor": "",
-	"---": "",
+	"": "",
 	"Commands": "",
 	"General": "",
 	"Difficulty": "",

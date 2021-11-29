@@ -64,7 +64,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		NetEvents:SendTo('UI_CommonRose', p_Player, {
 			Top = {
 				Action = 'not_implemented',
-				Label = Language:I18N('---'),
+				Label = Language:I18N(''),
 				Confirm = true
 			},
 			Left = {
@@ -111,7 +111,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		NetEvents:SendTo('UI_CommonRose', p_Player, {
 			Top = {
 				Action = 'not_implemented',
-				Label = Language:I18N('---'),
+				Label = Language:I18N(''),
 				Confirm = true
 			},
 			Left = {
@@ -329,7 +329,7 @@ function FunBotUIServer:_onUIRequestCommonRoseShow(p_Player, p_Data)
 	NetEvents:SendTo('UI_CommonRose', p_Player, {
 		Top = {
 			Action = 'not_implemented',
-			Label = Language:I18N('---'),
+			Label = Language:I18N(''),
 		},
 		Left = {
 			{
@@ -367,7 +367,7 @@ function FunBotUIServer:_onUIRequestCommonRoseShow(p_Player, p_Data)
 		},
 		Bottom = {
 			Action = 'not_implemented',
-			Label = Language:I18N('---'),
+			Label = Language:I18N(''),
 		}
 	})
 end
