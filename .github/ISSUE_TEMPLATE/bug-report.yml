@@ -8,17 +8,6 @@ body:
         Thanks for taking the time to fill out this bug report! Before posting be sure that it's not a duplicate of any previous posted issues by using the search function.
         Please note that we do not support outdated versions. Always use the latest stable release.
         Do not use this form for reporting issues related to traces. Use the 'Report traces bug' form.
-  - type: input
-    id: bug-report-token
-    attributes:
-      label: Bug report token
-      description: |
-        Generate a bug report using the `!bugreport` command and enter the token or URL here.
-        This is a **required** step to create the bug report, any bug report without this token will be closed.
-        When reporting multiple bugs, use the same bug report token as long as you've made no changes to the server or configuration. You can only create 3 bug reports every 24 hours.
-      placeholder: https://report.funbots.dev/7e1...
-    validations:
-      required: true
   - type: dropdown
     id: category
     attributes:
@@ -62,9 +51,9 @@ body:
   - type: textarea
     id: server-info
     attributes:
-      label: Server information (if applicable)
-      description: What OS are you running? How much memory is available? What are your server hardware & software specs? Are you running any other mods?
-      placeholder: I am running on Windows x... my server has 4 GB of memory.... I'm only running fun-bots... I have an Intel Pentium Gold G6400 running 4 GHz...
+      label: Version of fun-bots and VU?
+      description: What versions are you using? On what VU version happens this problem? Are you running any other mods?
+      placeholder: fun-bots Release 2.4.0, updateBranch dev of VU
   - type: checkboxes
     id: terms
     attributes:
