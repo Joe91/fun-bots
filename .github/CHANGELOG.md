@@ -27,8 +27,13 @@ This is the changelog for the released V2.4.0 version. Don't forget to [join us 
 * fun-bots-helper tool added (reduced exe and extended python-tool)
 * Bots use parachutes
 * Bot-Commands in the UI (press LEFT ALT)
-	* some first commands
-	* more to come
+	* repair vehicle
+	* exit vehicle
+	* enter vehicle
+	* drop ammo
+	* drop medkit
+	* attack / defend objective
+* Update of Objective improved
 
 ### Bug fixes
 * Fixed Bot-Behaviour in Gunmaster
