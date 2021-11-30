@@ -91,7 +91,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 					Action = 'attack_e',
 					Label = Language:I18N('E')
 				}, {
-					Action = 'attack_g',
+					Action = 'attack_f',
 					Label = Language:I18N('F')
 				}, {
 					Action = 'attack_g',
@@ -138,7 +138,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 					Action = 'defend_e',
 					Label = Language:I18N('E')
 				}, {
-					Action = 'defend_g',
+					Action = 'defend_f',
 					Label = Language:I18N('F')
 				}, {
 					Action = 'defend_g',
@@ -153,6 +153,16 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 				Label = Language:I18N('back'),
 			}
 		})
+		return
+	elseif string.find(request.action, 'attack_') ~= nil then
+		local s_Objective = request.action:split('_')[2]
+		BotManager:Attack(p_Player, s_Objective)
+		NetEvents:SendTo('UI_CommonRose', p_Player, "false")
+		return
+	elseif string.find(request.action, "defend_") ~= nil then
+		local s_Objective = request.action:split('_')[2]
+		BotManager:Attack(p_Player, s_Objective)
+		NetEvents:SendTo('UI_CommonRose', p_Player, "false")
 		return
 	elseif request.action == 'back_to_comm' then
 		self:_onUIRequestCommonRoseShow(p_Player)

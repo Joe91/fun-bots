@@ -311,6 +311,16 @@ function Bot:EnterVehicleOfPlayer(p_Player)
 	self._ShootModeTimer = 0
 end
 
+function Bot:UpdateObjective(p_Objective)
+	local s_AllObjectives = m_NodeCollection:GetKnownObjectives()
+	for l_Objective,_ in pairs(s_AllObjectives) do
+		if l_Objective == p_Objective then
+			self:SetObjective(p_Objective)
+			break
+		end
+	end
+end
+
 function Bot:DeployIfPossible()
 	-- deploy from time to time
 	if self.m_Kit == BotKits.Support or self.m_Kit == BotKits.Assault then
@@ -620,7 +630,14 @@ function Bot:SetSpeed(p_Speed)
 end
 
 function Bot:SetObjective(p_Objective)
-	self._Objective = p_Objective or ''
+	if self._Objective ~= p_Objective then
+		self._Objective = p_Objective or ''
+		local s_Point = m_NodeCollection:Get(self._CurrentWayPoint, self._PathIndex)
+		if s_Point ~= nil then
+			local s_Direction = m_NodeCollection:ObjectiveDirection(s_Point, self._Objective, self.m_InVehicle)
+			self._InvertPathDirection = (s_Direction == 'Previous')
+		end
+	end
 end
 
 function Bot:GetObjective()

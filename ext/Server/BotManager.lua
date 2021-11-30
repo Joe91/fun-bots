@@ -836,6 +836,24 @@ function BotManager:EnterVehicle(p_Player)
 	end
 end
 
+function BotManager:Attack(p_Player, p_Objective)
+	if Globals.IsConquest and p_Player ~= nil and p_Player.soldier ~= nil then
+		local s_MaxObjectiveBots = 4
+		for _, l_Bot in pairs(self._BotsByTeam[p_Player.teamId + 1]) do
+			if l_Bot.m_Player.soldier ~= nil then
+				local s_Distance = l_Bot.m_Player.soldier.worldTransform.trans:Distance(p_Player.soldier.worldTransform.trans)
+				if s_Distance < Registry.COMMON.COMMAND_DISTANCE then
+					l_Bot:UpdateObjective(p_Objective)
+					s_MaxObjectiveBots = s_MaxObjectiveBots -1
+				end
+			end
+			if s_MaxObjectiveBots <= 0 then
+				break
+			end
+		end
+	end
+end
+
 -- =============================================
 -- Private Functions
 -- =============================================
