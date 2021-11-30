@@ -30,7 +30,8 @@ BotActionFlags = {
 	EnterVehicleActive = 3,
 	GrenadeActive = 4,
 	C4Active = 5,
-	OtherActionActive = 6,
+	RepairActive = 6,
+	OtherActionActive = 7,
 }
 
 VehicleTypes = {

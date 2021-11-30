@@ -9,6 +9,8 @@ Language = require('__shared/Language')
 function FunBotUIClient:__init()
 	self._views = UIViews()
 	self.m_InWaypointEditor = false
+	self.m_InCommScreen = false
+	self.m_WaitForKeyLeft = false
 	self.m_LastWaypointEditorState = false
 
 	if Config.DisableUserInterface ~= true then
@@ -63,11 +65,14 @@ function FunBotUIClient:_onUICommonRose(p_Data)
 	if p_Data == "false" then
 		self._views:execute('BotEditor.setCommonRose(false)')
 		self._views:blur()
+		self.m_InCommScreen = false
+		self.m_WaitForKeyLeft = true
 		return
 	end
 
 	self._views:execute('BotEditor.setCommonRose(\'' .. json.encode(p_Data) .. '\')')
-	self._views:focus()
+	self._views:focusMouse()
+	self.m_InCommScreen = true
 end
 
 function FunBotUIClient:_onSetOperationControls(p_Data)
@@ -290,6 +295,13 @@ function FunBotUIClient:OnClientUpdateInput(p_DeltaTime)
 	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_LeftAlt) and self.m_InWaypointEditor then
 		self._views:disable()
 		self.m_LastWaypointEditorState = false
+	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_LeftAlt) and not self.m_InWaypointEditor and not self.m_InCommScreen and not self.m_WaitForKeyLeft then
+		NetEvents:Send('UI_Request_CommoRose_Show')
+	elseif InputManager:WentKeyUp(InputDeviceKeys.IDK_LeftAlt) and not self.m_InWaypointEditor and (self.m_InCommScreen or self.m_WaitForKeyLeft) then
+		if self.m_InCommScreen then
+			self:_onUICommonRose("false") --TODO: Remove Permission-Check?
+		end
+		self.m_WaitForKeyLeft = false
 	end
 end
 

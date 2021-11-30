@@ -462,16 +462,41 @@ function GameDirector:FindClosestPath(p_Trans, p_VehiclePath)
 
 		for _, l_Waypoints in pairs(s_Paths) do
 			if l_Waypoints[1] ~= nil then
-				if (p_VehiclePath and l_Waypoints[1].Data ~= nil and l_Waypoints[1].Data.Vehicles ~= nil) or not p_VehiclePath then
-					local s_NewDistance = l_Waypoints[1].Position:Distance(p_Trans)
+				if p_VehiclePath then
+					if l_Waypoints[1].Data ~= nil and l_Waypoints[1].Data.Vehicles ~= nil then
+						local s_NewDistance = l_Waypoints[1].Position:Distance(p_Trans)
 
-					if s_ClosestDistance == nil then
-						s_ClosestDistance = s_NewDistance
-						s_ClosestPathNode = l_Waypoints[1]
-					else
-						if s_NewDistance < s_ClosestDistance then
+						if s_ClosestDistance == nil then
 							s_ClosestDistance = s_NewDistance
 							s_ClosestPathNode = l_Waypoints[1]
+						else
+							if s_NewDistance < s_ClosestDistance then
+								s_ClosestDistance = s_NewDistance
+								s_ClosestPathNode = l_Waypoints[1]
+							end
+						end
+					end
+				else -- not in vehicle
+					local s_isAirPath = false
+					if l_Waypoints[1].Data ~= nil and l_Waypoints[1].Data.Vehicles ~= nil then
+						for _, l_PathType in pairs(l_Waypoints[1].Data.Vehicles) do
+							if l_PathType:lower() == "air" then
+								s_isAirPath = true
+								break
+							end
+						end
+					end
+					if not s_isAirPath then
+						local s_NewDistance = l_Waypoints[1].Position:Distance(p_Trans)
+
+						if s_ClosestDistance == nil then
+							s_ClosestDistance = s_NewDistance
+							s_ClosestPathNode = l_Waypoints[1]
+						else
+							if s_NewDistance < s_ClosestDistance then
+								s_ClosestDistance = s_NewDistance
+								s_ClosestPathNode = l_Waypoints[1]
+							end
 						end
 					end
 				end

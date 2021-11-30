@@ -1,3 +1,15 @@
 mod.db
 .vu
 .idea
+/dev/fun-bots-helper/tools/__pycache__/clear_all_paths.cpython-37.pyc
+/dev/fun-bots-helper/tools/__pycache__/clear_settings.cpython-37.pyc
+/dev/fun-bots-helper/tools/__pycache__/create_maplist.cpython-37.pyc
+/dev/fun-bots-helper/tools/__pycache__/create_Settings.cpython-37.pyc
+/dev/fun-bots-helper/tools/__pycache__/create_translations.cpython-37.pyc
+/dev/fun-bots-helper/tools/__pycache__/export_permission_and_config.cpython-37.pyc
+/dev/fun-bots-helper/tools/__pycache__/export_traces.cpython-37.pyc
+/dev/fun-bots-helper/tools/__pycache__/import_permission_and_config.cpython-37.pyc
+/dev/fun-bots-helper/tools/__pycache__/import_traces.cpython-37.pyc
+/dev/fun-bots-helper/tools/__pycache__/scan_for_invalid_nodes.cpython-37.pyc
+/dev/fun-bots-helper/tools/__pycache__/scan_for_invalid_objectives.cpython-37.pyc
+/dev/fun-bots-helper/tools/__pycache__/update_supported_maps.cpython-37.pyc

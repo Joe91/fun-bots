@@ -18,6 +18,8 @@ Registry = {
 			USE_COLLITION_RAYCASTS = false,
 			-- timeout to save or load maps
 			LOADING_TIMEOUT = 25,
+			-- distance commands are heard by bots
+			COMMAND_DISTANCE = 20,
 		},
 		-- Version and Release related variables
 		-- Variables related to the current build version, version and the type of version.
@@ -30,7 +32,7 @@ Registry = {
 			-- Patch version
 			VERSION_PATCH = 0,
 			-- Additional label for pre-releases and build meta data
-			VERSION_LABEL = "RC1",
+			VERSION_LABEL = "dev10",
 			-- Current version type of this build
 			VERSION_TYPE = VersionType.Stable,
 			-- The Version used for the Update-Check
@@ -108,6 +110,8 @@ Registry = {
 			PROBABILITY_CHANGE_DIRECTION_IF_STUCK = 50,
 			-- Trace delta a bot uses when they are off a trace path to find his way back to the best path
 			TRACE_DELTA_SHOOTING = 0.4,
+			-- The max time a bot tries to move to the repair-vehicle
+			MAX_TIME_TRY_REPAIR = 10,
 		},
 
 		-- Bot team balancing
@@ -121,7 +125,7 @@ Registry = {
 		},
 
 		-- Bot spawning
-	BOT_SPAWN = {
+		BOT_SPAWN = {
 			-- Time between a level loading and the first bot spawning
 			-- Note: Must be big enough to register inputActiveEvents (> 1.0)
 			FIRST_SPAWN_DELAY = 5.0,

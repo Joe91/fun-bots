@@ -280,8 +280,8 @@ ui-view[data-type="commorose"] ui-horizontal ul.right li:first-child:nth-last-ch
 ui-view[data-type="commorose"] ui-horizontal ui-hexagon {
 	text-align: center;
 	width: 100px;
-	line-height: 100px;
-	height: 100px;
+	line-height: 200px;
+	height: 200px;
 	background-size: 100px;
 	background-repeat: no-repeat;
 	background-position: 50% 50%;
@@ -311,8 +311,8 @@ ui-view[data-type="commorose"] ui-bottom:before {
 	z-index: -1;
 }
 
-ui-view[data-type="commorose"] ui-top:before:hover,
-ui-view[data-type="commorose"] ui-bottom:before:hover {
+ui-view[data-type="commorose"] ui-top:hover:before,
+ui-view[data-type="commorose"] ui-bottom:hover:before {
 	content: "";
 	position: absolute;
 	background: linear-gradient(180deg, rgba(83, 117, 132, 0.25) 0%, rgba(110, 149, 185, 0.65) 100%);

@@ -1387,6 +1387,16 @@ SettingsDefinition = {
 			Category = "OTHER"
 		},
 		{
+			Name = "AllowCommForAll",
+			Text = "Allow Comm-UI for all",
+			Type = Type.Boolean,
+			Value = Config.DisableUserInterface,
+			Description = "if true, all Players can access the Comm-Screen",
+			Default = true,
+			UpdateFlag = UpdateFlag.None,
+			Category = "OTHER"
+		},
+		{
 			Name = "DisableChatCommands",
 			Text = "disable chat-commands",
 			Type = Type.Boolean,

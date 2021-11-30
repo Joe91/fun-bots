@@ -33,6 +33,9 @@ Permissions = {
 	'ChatCommands.PrintTransform',
 	'ChatCommands.TraceSave',
 
+	-- CommScreen
+	'Comm',
+
 	-- UserInterface
 	'UserInterface',
 
