@@ -63,4 +63,4 @@ This is the changelog for the released V2.4.0 version. Don't forget to [join us 
 
 
 ### Documentation update
-* the supported maps are now generated ([this file](https://github.com/Joe91/fun-bots/Supported-maps.md) in this repository)
+* the supported maps are now generated ([this file](https://github.com/Joe91/fun-bots/blob/master/Supported-maps.md) in this repository)
