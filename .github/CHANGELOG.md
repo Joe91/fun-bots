@@ -56,6 +56,7 @@ This is the changelog for the released V2.4.0 version. Don't forget to [join us 
 * Talah Market Assalut Vehicles - thanks to MeisterPeitsche
 * Epicenter CQ Small Vehicles - thanks to MeisterPeitsche
 * Azadi Palace CQ Small Vehicles - thanks to MeisterPeitsche
+* Sabalan Pipeline Rush - thanks to BOB
 
 ### Updated maps
 * Lots and lots of Updated maps by MeisterPeitsche, BOB and KrazyIvan777 with massive work put into these maps!!!
