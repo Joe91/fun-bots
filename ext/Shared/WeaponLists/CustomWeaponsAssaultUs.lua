@@ -1,11 +1,11 @@
-CustomWeaponsAssault = {
+CustomWeaponsAssaultUs = {
 	-- Assault Rifles
-	'AEK971', --ru
-	'AN94',  --ru
-	'AK74M', --ru
-	-- 'SteyrAug', --us
+	-- 'AEK971', --ru
+	-- 'AN94',  --ru
+	-- 'AK74M', --ru
+	'SteyrAug', --us
 	-- 'F2000', --both/none
-	-- 'FAMAS', --us
+	'FAMAS', --us
 	-- 'G3A3', --both/none
 	-- 'KH2002', --ru
 	-- 'L85A2', --us

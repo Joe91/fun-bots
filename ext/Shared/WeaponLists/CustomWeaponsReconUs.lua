@@ -1,22 +1,21 @@
-CustomWeaponsSupport = {
-	-- LMG
-	-- 'L86', --us
-	'LSAT', --us
-	'M249', --us
-	-- 'M27IAR', --us
-	'M60', --us
-	-- 'MG36', --us
-	'Pecheneg', --ru
-	-- 'QBB-95', --ru
-	-- 'Type88', --ru
-	-- 'RPK', --ru
-	'M240', --us
+CustomWeaponsReconUs = {
+	-- Sniper
+	-- 'JNG90', --ru
+	'L96', --us
+	'M39EBR', --us
+	'M98B', --us
+	'M40A5', --us
+	'HK417', --us
+	'MK11', --us
+	-- 'SKS', --ru
+	-- 'SV98', --ru
+	-- 'SVD', --ru
 
 	-- Shotguns
 	-- 'DAO-12', --ru
-	'Jackhammer', --us
+	-- 'Jackhammer', --us
 	-- 'Saiga20', --ru
-	-- 'SPAS12', --us
+	'SPAS12', --us
 	-- 'USAS-12', --ru
 	-- 'M1014', --us
 	-- '870M', --us
@@ -30,32 +29,31 @@ CustomWeaponsSupport = {
 	-- 'UMP45', --us
 	-- 'MP5K', --us
 	-- 'MagpulPDR', --us
-	-- 'Crossbow', --both
+	'Crossbow', --both
 
 	-- Pisotls
 	-- 'Glock17', --us
-	-- 'Glock17_Silenced', --us
-	'Glock18', --us
-	-- 'Glock18_Silenced', --us
-	'M1911_Lit', --us
+	'Glock17_Silenced', --us
+	-- 'Glock18', --us
+	'Glock18_Silenced', --us
+	-- 'M1911_Lit', --us
 	-- 'M1911_Silenced', --us
-	-- 'M1911_Tactical', --us
+	'M1911_Tactical', --us
 	-- 'M9', --us
-	-- 'M9_Silenced', --us
+	'M9_Silenced', --us
 	-- 'M9_Tactical', --us
 	-- 'M93R', --us
-	'MP412Rex', --ru
-	'Taurus44', --both
+	-- 'MP412Rex', --ru
+	-- 'Taurus44', --both
 	-- 'MP443', --ru
 	-- 'MP443_Tactical', --ru
 	-- 'MP443_Silenced', --ru
 
 	-- Gadget 1
-	'Ammobag',
+	'Tug',
 
 	-- Gadget 2
-	-- 'Claymore',
-	'C4',
+	'Beacon',
 
 	-- Knife
 	'Razor',
