@@ -20,6 +20,8 @@ Registry = {
 			LOADING_TIMEOUT = 25,
 			-- distance commands are heard by bots
 			COMMAND_DISTANCE = 20,
+			-- valid keys can be found here: https://docs.veniceunleashed.net/vext/ref/fb/inputdevicekeys/
+			BOT_COMMAND_KEY = InputDeviceKeys.IDK_LeftAlt,
 		},
 		-- Version and Release related variables
 		-- Variables related to the current build version, version and the type of version.
