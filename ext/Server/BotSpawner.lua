@@ -646,7 +646,11 @@ function BotSpawner:_SelectLoadout(p_Bot, p_SetKit)
 	end
 
 	p_Bot:ResetSpawnVars()
-	self:_SetBotWeapons(p_Bot, s_BotKit, s_WriteNewKit)
+	local s_Team = "US"
+	if p_Bot.m_Player.teamId % 2 == 0 then
+		s_Team = "RU"
+	end
+	self:_SetBotWeapons(p_Bot, s_BotKit, s_Team, s_WriteNewKit)
 
 	if p_Bot.m_Player.selectedKit == nil then
 		-- SoldierBlueprint
@@ -1028,7 +1032,11 @@ function BotSpawner:_SpawnBot(p_Bot, p_Trans, p_SetKit)
 		s_BotKit = p_Bot.m_Kit
 	end
 
-	self:_SetBotWeapons(p_Bot, s_BotKit, s_WriteNewKit)
+	local s_Team = "US"
+	if p_Bot.m_Player.teamId % 2 == 0 then
+		s_Team = "RU"
+	end
+	self:_SetBotWeapons(p_Bot, s_BotKit, s_Team, s_WriteNewKit)
 
 	p_Bot:ResetSpawnVars()
 
@@ -1390,69 +1398,30 @@ function BotSpawner:_SetAttachments(p_UnlockWeapon, p_Attachments)
 	end
 end
 
-function BotSpawner:_SetBotWeapons(p_Bot, p_BotKit, p_NewWeapons)
+function BotSpawner:_SetBotWeapons(p_Bot, p_BotKit, p_Team, p_NewWeapons)
 	if p_NewWeapons then
+		local s_Pistol = Config.Pistol
+
+		local s_Weapon = nil
 		if p_BotKit == BotKits.Assault then
-			local s_Weapon = Config.AssaultWeapon
-			local s_Pistol = Config.Pistol
-
-			if Config.UseRandomWeapon then
-				s_Weapon = AssaultPrimary[MathUtils:GetRandomInt(1, #AssaultPrimary)]
-				s_Pistol = AssaultPistol[MathUtils:GetRandomInt(1, #AssaultPistol)]
-			end
-
-			p_Bot.m_Primary = m_WeaponList:getWeapon(s_Weapon)
-			p_Bot.m_SecondaryGadget = m_WeaponList:getWeapon(AssaultGadget2[MathUtils:GetRandomInt(1, #AssaultGadget2)])
-			p_Bot.m_PrimaryGadget = m_WeaponList:getWeapon(AssaultGadget1[MathUtils:GetRandomInt(1, #AssaultGadget1)])
-			p_Bot.m_Pistol = m_WeaponList:getWeapon(s_Pistol)
-			p_Bot.m_Grenade = m_WeaponList:getWeapon(AssaultGrenade[MathUtils:GetRandomInt(1, #AssaultGrenade)])
-			p_Bot.m_Knife = m_WeaponList:getWeapon(AssaultKnife[MathUtils:GetRandomInt(1, #AssaultKnife)])
+			s_Weapon = Config.AssaultWeapon
 		elseif p_BotKit == BotKits.Engineer then
-			local s_Weapon = Config.EngineerWeapon
-			local s_Pistol = Config.Pistol
-
-			if Config.UseRandomWeapon then
-				s_Weapon = EngineerPrimary[MathUtils:GetRandomInt(1, #EngineerPrimary)]
-				s_Pistol = EngineerPistol[MathUtils:GetRandomInt(1, #EngineerPistol)]
-			end
-
-			p_Bot.m_Primary = m_WeaponList:getWeapon(s_Weapon)
-			p_Bot.m_SecondaryGadget = m_WeaponList:getWeapon(EngineerGadget2[MathUtils:GetRandomInt(1, #EngineerGadget2)])
-			p_Bot.m_PrimaryGadget = m_WeaponList:getWeapon(EngineerGadget1[MathUtils:GetRandomInt(1, #EngineerGadget1)])
-			p_Bot.m_Pistol = m_WeaponList:getWeapon(s_Pistol)
-			p_Bot.m_Grenade = m_WeaponList:getWeapon(EngineerGrenade[MathUtils:GetRandomInt(1, #EngineerGrenade)])
-			p_Bot.m_Knife = m_WeaponList:getWeapon(EngineerKnife[MathUtils:GetRandomInt(1, #EngineerKnife)])
+			s_Weapon = Config.EngineerWeapon
 		elseif p_BotKit == BotKits.Support then
-			local s_Weapon = Config.SupportWeapon
-			local s_Pistol = Config.Pistol
-
-			if Config.UseRandomWeapon then
-				s_Weapon = SupportPrimary[MathUtils:GetRandomInt(1, #SupportPrimary)]
-				s_Pistol = SupportPistol[MathUtils:GetRandomInt(1, #SupportPistol)]
-			end
-
-			p_Bot.m_Primary = m_WeaponList:getWeapon(s_Weapon)
-			p_Bot.m_SecondaryGadget = m_WeaponList:getWeapon(SupportGadget2[MathUtils:GetRandomInt(1, #SupportGadget2)])
-			p_Bot.m_PrimaryGadget = m_WeaponList:getWeapon(SupportGadget1[MathUtils:GetRandomInt(1, #SupportGadget1)])
-			p_Bot.m_Pistol = m_WeaponList:getWeapon(s_Pistol)
-			p_Bot.m_Grenade = m_WeaponList:getWeapon(SupportGrenade[MathUtils:GetRandomInt(1, #SupportGrenade)])
-			p_Bot.m_Knife = m_WeaponList:getWeapon(SupportKnife[MathUtils:GetRandomInt(1, #SupportKnife)])
+			s_Weapon = Config.SupportWeapon
 		else
-			local s_Weapon = Config.ReconWeapon
-			local s_Pistol = Config.Pistol
-
-			if Config.UseRandomWeapon then
-				s_Weapon = ReconPrimary[MathUtils:GetRandomInt(1, #ReconPrimary)]
-				s_Pistol = ReconPistol[MathUtils:GetRandomInt(1, #ReconPistol)]
-			end
-
-			p_Bot.m_Primary = m_WeaponList:getWeapon(s_Weapon)
-			p_Bot.m_SecondaryGadget = m_WeaponList:getWeapon(ReconGadget2[MathUtils:GetRandomInt(1, #ReconGadget2)])
-			p_Bot.m_PrimaryGadget = m_WeaponList:getWeapon(ReconGadget1[MathUtils:GetRandomInt(1, #ReconGadget1)])
-			p_Bot.m_Pistol = m_WeaponList:getWeapon(s_Pistol)
-			p_Bot.m_Grenade = m_WeaponList:getWeapon(ReconGrenade[MathUtils:GetRandomInt(1, #ReconGrenade)])
-			p_Bot.m_Knife = m_WeaponList:getWeapon(ReconKnife[MathUtils:GetRandomInt(1, #ReconKnife)])
+			s_Weapon = Config.ReconWeapon
 		end
+		if Config.UseRandomWeapon then
+			s_Weapon = Weapons[p_BotKit][BotWeapons.Primary][p_Team][MathUtils:GetRandomInt(1, #Weapons[p_BotKit][BotWeapons.Primary][p_Team])]
+			s_Pistol = Weapons[p_BotKit][BotWeapons.Pistol][p_Team][MathUtils:GetRandomInt(1, #Weapons[p_BotKit][BotWeapons.Pistol][p_Team])]
+		end
+		p_Bot.m_Primary = m_WeaponList:getWeapon(s_Weapon)
+		p_Bot.m_SecondaryGadget = m_WeaponList:getWeapon(Weapons[p_BotKit][BotWeapons.Gadget2][p_Team][MathUtils:GetRandomInt(1, #Weapons[p_BotKit][BotWeapons.Gadget2][p_Team])])
+		p_Bot.m_PrimaryGadget = m_WeaponList:getWeapon(Weapons[p_BotKit][BotWeapons.Gadget1][p_Team][MathUtils:GetRandomInt(1, #Weapons[p_BotKit][BotWeapons.Gadget1][p_Team])])
+		p_Bot.m_Pistol = m_WeaponList:getWeapon(s_Pistol)
+		p_Bot.m_Grenade = m_WeaponList:getWeapon(Weapons[p_BotKit][BotWeapons.Grenade][p_Team][MathUtils:GetRandomInt(1, #Weapons[p_BotKit][BotWeapons.Grenade][p_Team])])
+		p_Bot.m_Knife = m_WeaponList:getWeapon(Weapons[p_BotKit][BotWeapons.Knife][p_Team][MathUtils:GetRandomInt(1, #Weapons[p_BotKit][BotWeapons.Knife][p_Team])])
 	end
 
 	if Config.BotWeapon == BotWeapons.Primary or Config.BotWeapon == BotWeapons.Auto then
