@@ -3,64 +3,20 @@
 ![Image](https://img.shields.io/github/downloads/Joe91/fun-bots/total?style=for-the-badge)
 ![Image](https://img.shields.io/github/stars/Joe91/fun-bots?style=for-the-badge)
 
-## Welcome to the changelogs for release **V2.4.0**
-This is the changelog for the released V2.4.0 version. Don't forget to [join us on Discord](https://discord.funbots.dev)
+## Welcome to the changelogs for release **V2.5.0**
+This is the changelog for the version V2.5.0. Don't forget to [join us on Discord](https://discord.funbots.dev)
 
 ## Changelog
 
 ### New features
-* Bots can now see the same distance as players
-* improved attacking of jets
-* improved abort attack of jets - less kamikaze ;-)
-* more vehicles supported
-* Cleanup of Config.lua (some stuff moved to the Registry.lua)
-* Preparation for new Raycast-methods
-* Improved-Check-mechanisms of Bot on Bot attack
-* added Spanisch translations by Lukajo
-* Massive core-rework of Bot-Bot-Attack
-* Support for TankSuperiority
-* Extended "exit"-command for node-editor
-* Added "removeData"-command for node-editor
-* moved "save" to coroutine
-* allow to export and import settings and permissions
-* Player can swap seats with bots in vehicle
-* fun-bots-helper tool added (reduced exe and extended python-tool)
-* Bots use parachutes
-* Bot-Commands in the UI (press LEFT ALT)
-	* repair vehicle
-	* exit vehicle
-	* enter vehicle
-	* drop ammo
-	* drop medkit
-	* attack / defend objective
-* Update of Objective improved
+* Bot-Command-Key now configurable in Registry.lua
+* Separated Weapon-Lists per Team
 
 ### Bug fixes
-* Fixed Bot-Behaviour in Gunmaster
-* Fixed strange behaviour in some cases with huge gaps in Nodeeditor
-* Bixed Bot-Bot-attack when both in vehicles
-* Some more fixes in Nodeeditor
-* fixed some TDM-Maps
-* only use lowercase objectives from now on
 
 ### New maps
-* Gulf of Oman Conquest Large (all) - thanks to BOB
-* Sabalan Pipeline Conquest Large (all) - thanks to BOB
-* Strike at Karkand Assault 2 - thanks to DuTcHrEaGaN
-* Gulf of Oman Assault - thanks to DuTcHrEaGaN
-* Kiasar Railroad Conquest Small Vehicles - thanks to KrazyIvan777
-* Sabalan Pipeline Conquest Small Vehicles - thanks to KrazyIvan777
-* Operation Riverside Conquest Large (all) - thanks to KrazyIvan777
-* Death Valley Tank Superiority - thanks to KrazyIvan777
-* Bandar Desert Tank Superiority - thanks to KrazyIvan777
-* Talah Market Assalut Vehicles - thanks to MeisterPeitsche
-* Epicenter CQ Small Vehicles - thanks to MeisterPeitsche
-* Azadi Palace CQ Small Vehicles - thanks to MeisterPeitsche
-* Sabalan Pipeline Rush - thanks to BOB
 
 ### Updated maps
-* Lots and lots of Updated maps by MeisterPeitsche, BOB and KrazyIvan777 with massive work put into these maps!!!
-
+* Lots and lots of Updated maps by MeisterPeitsche (exit-command of vehicles)
 
 ### Documentation update
-* the supported maps are now generated ([this file](https://github.com/Joe91/fun-bots/blob/dev/Supported-maps.md) in this repository)
