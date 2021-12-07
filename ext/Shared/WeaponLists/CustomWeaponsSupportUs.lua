@@ -1,11 +1,11 @@
 CustomWeaponsSupportUs = {
 	-- LMG
 	-- 'L86', --us
-	'LSAT', --us
+	-- 'LSAT', --us
 	'M249', --us
-	-- 'M27IAR', --us
+	'M27IAR', --us
 	'M60', --us
-	'MG36', --us
+	-- 'MG36', --us
 	-- 'Pecheneg', --ru
 	-- 'QBB-95', --ru
 	-- 'Type88', --ru
@@ -19,7 +19,7 @@ CustomWeaponsSupportUs = {
 	-- 'SPAS12', --us
 	-- 'USAS-12', --ru
 	'M1014', --us
-	-- '870M', --us
+	'870M', --us
 
 	-- PDW
 	-- 'ASVal', --ru
@@ -33,7 +33,7 @@ CustomWeaponsSupportUs = {
 	-- 'Crossbow', --both
 
 	-- Pisotls
-	-- 'Glock17', --us
+	'Glock17', --us
 	-- 'Glock17_Silenced', --us
 	'Glock18', --us
 	-- 'Glock18_Silenced', --us
@@ -45,7 +45,7 @@ CustomWeaponsSupportUs = {
 	-- 'M9_Tactical', --us
 	-- 'M93R', --us
 	-- 'MP412Rex', --ru
-	'Taurus44', --both
+	-- 'Taurus44', --both
 	-- 'MP443', --ru
 	-- 'MP443_Tactical', --ru
 	-- 'MP443_Silenced', --ru

@@ -6,8 +6,8 @@ CustomWeaponsEngineerRu = {
 	-- 'G36C',  --us
 	-- 'HK53', --us
 	-- 'M4A1', --us
-	'MTAR', --both/none
-	'QBZ-95B', --ru
+	-- 'MTAR', --both/none
+	-- 'QBZ-95B', --ru
 	-- 'SCAR-H', --us
 	-- 'SG553LB', --us
 
@@ -32,21 +32,21 @@ CustomWeaponsEngineerRu = {
 	-- 'Crossbow', --both
 
 	-- Pisotls
-	-- 'Glock17', --us
+	'Glock17', --us
 	-- 'Glock17_Silenced', --us
 	'Glock18', --us
 	-- 'Glock18_Silenced', --us
-	'M1911_Lit', --us
+	-- 'M1911_Lit', --us
 	-- 'M1911_Silenced', --us
-	'M1911_Tactical', --us
+	-- 'M1911_Tactical', --us
 	-- 'M9', --us
-	'M9_Silenced', --us
+	-- 'M9_Silenced', --us
 	-- 'M9_Tactical', --us
 	-- 'M93R', --us
 	'MP412Rex', --ru
-	'Taurus44', --both
-	-- 'MP443', --ru
-	-- 'MP443_Tactical', --ru
+	-- 'Taurus44', --both
+	'MP443', --ru
+	'MP443_Tactical', --ru
 	-- 'MP443_Silenced', --ru
 
 	-- Gadget 1

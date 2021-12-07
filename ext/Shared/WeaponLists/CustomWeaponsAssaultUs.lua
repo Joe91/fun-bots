@@ -3,16 +3,16 @@ CustomWeaponsAssaultUs = {
 	-- 'AEK971', --ru
 	-- 'AN94',  --ru
 	-- 'AK74M', --ru
-	'SteyrAug', --us
+	-- 'SteyrAug', --us
 	-- 'F2000', --both/none
-	'FAMAS', --us
+	-- 'FAMAS', --us
 	-- 'G3A3', --both/none
 	-- 'KH2002', --ru
 	-- 'L85A2', --us
 	'M16A4', --us
 	'M16-Burst', --us
 	'M416', --us
-	-- 'SCAR-L', --us
+	'SCAR-L', --us
 
 	-- Shotguns
 	-- 'DAO-12', --ru
@@ -35,7 +35,7 @@ CustomWeaponsAssaultUs = {
 	-- 'Crossbow', --both
 
 	-- Pisotls
-	-- 'Glock17', --us
+	'Glock17', --us
 	-- 'Glock17_Silenced', --us
 	'Glock18', --us
 	-- 'Glock18_Silenced', --us
@@ -46,8 +46,8 @@ CustomWeaponsAssaultUs = {
 	'M9_Silenced', --us
 	-- 'M9_Tactical', --us
 	-- 'M93R', --us
-	'MP412Rex', --ru
-	'Taurus44', --both
+	-- 'MP412Rex', --ru
+	-- 'Taurus44', --both
 	-- 'MP443', --ru
 	-- 'MP443_Tactical', --ru
 	-- 'MP443_Silenced', --ru

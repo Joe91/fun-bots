@@ -8,7 +8,7 @@ CustomWeaponsSupportRu = {
 	-- 'MG36', --us
 	'Pecheneg', --ru
 	'QBB-95', --ru
-	'Type88', --ru
+	-- 'Type88', --ru
 	'RPK', --ru
 	-- 'M240', --us
 
@@ -33,9 +33,9 @@ CustomWeaponsSupportRu = {
 	-- 'Crossbow', --both
 
 	-- Pisotls
-	-- 'Glock17', --us
+	'Glock17', --us
 	-- 'Glock17_Silenced', --us
-	-- 'Glock18', --us
+	'Glock18', --us
 	-- 'Glock18_Silenced', --us
 	-- 'M1911_Lit', --us
 	-- 'M1911_Silenced', --us
@@ -43,9 +43,9 @@ CustomWeaponsSupportRu = {
 	-- 'M9', --us
 	-- 'M9_Silenced', --us
 	-- 'M9_Tactical', --us
-	'M93R', --us
+	-- 'M93R', --us
 	'MP412Rex', --ru
-	'Taurus44', --both
+	-- 'Taurus44', --both
 	'MP443', --ru
 	'MP443_Tactical', --ru
 	-- 'MP443_Silenced', --ru

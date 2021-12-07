@@ -1,6 +1,6 @@
 CustomWeaponsReconRu = {
 	-- Sniper
-	'JNG90', --ru
+	-- 'JNG90', --ru
 	-- 'L96', --us
 	-- 'M39EBR', --us
 	-- 'M98B', --us
@@ -15,7 +15,7 @@ CustomWeaponsReconRu = {
 	-- 'DAO-12', --ru
 	-- 'Jackhammer', --us
 	-- 'Saiga20', --ru
-	-- 'SPAS12', --us
+	'SPAS12', --us
 	-- 'USAS-12', --ru
 	-- 'M1014', --us
 	-- '870M', --us
@@ -35,12 +35,12 @@ CustomWeaponsReconRu = {
 	-- 'Glock17', --us
 	'Glock17_Silenced', --us
 	-- 'Glock18', --us
-	-- 'Glock18_Silenced', --us
+	'Glock18_Silenced', --us
 	-- 'M1911_Lit', --us
-	'M1911_Silenced', --us
+	-- 'M1911_Silenced', --us
 	-- 'M1911_Tactical', --us
 	-- 'M9', --us
-	'M9_Silenced', --us
+	-- 'M9_Silenced', --us
 	-- 'M9_Tactical', --us
 	-- 'M93R', --us
 	-- 'MP412Rex', --ru

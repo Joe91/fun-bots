@@ -1,11 +1,11 @@
 CustomWeaponsReconUs = {
 	-- Sniper
 	-- 'JNG90', --ru
-	'L96', --us
+	-- 'L96', --us
 	'M39EBR', --us
-	'M98B', --us
+	-- 'M98B', --us
 	'M40A5', --us
-	'HK417', --us
+	-- 'HK417', --us
 	'MK11', --us
 	-- 'SKS', --ru
 	-- 'SV98', --ru

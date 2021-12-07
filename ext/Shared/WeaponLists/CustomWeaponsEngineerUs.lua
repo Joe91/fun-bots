@@ -1,10 +1,10 @@
 CustomWeaponsEngineerUs = {
 	-- Carabine
 	-- 'A91', --ru
-	'ACR', --us
+	-- 'ACR', --us
 	-- 'AKS74u', --ru
-	'G36C',  --us
-	'HK53', --us
+	-- 'G36C',  --us
+	-- 'HK53', --us
 	'M4A1', --us
 	-- 'MTAR', --both/none
 	-- 'QBZ-95B', --ru
@@ -22,17 +22,17 @@ CustomWeaponsEngineerUs = {
 
 	-- PDW
 	-- 'ASVal', --ru
-	-- 'MP7', --us
-	'P90', --us
+	'MP7', --us
+	-- 'P90', --us
 	-- 'PP-19', --ru
 	-- 'PP2000', --ru
-	-- 'UMP45', --us
-	-- 'MP5K', --us
-	'MagpulPDR', --us
+	'UMP45', --us
+	'MP5K', --us
+	-- 'MagpulPDR', --us
 	-- 'Crossbow', --both
 
 	-- Pisotls
-	-- 'Glock17', --us
+	'Glock17', --us
 	-- 'Glock17_Silenced', --us
 	'Glock18', --us
 	-- 'Glock18_Silenced', --us
@@ -43,8 +43,8 @@ CustomWeaponsEngineerUs = {
 	'M9_Silenced', --us
 	-- 'M9_Tactical', --us
 	-- 'M93R', --us
-	'MP412Rex', --ru
-	'Taurus44', --both
+	-- 'MP412Rex', --ru
+	-- 'Taurus44', --both
 	-- 'MP443', --ru
 	-- 'MP443_Tactical', --ru
 	-- 'MP443_Silenced', --ru

@@ -4,10 +4,10 @@ CustomWeaponsAssaultRu = {
 	'AN94',  --ru
 	'AK74M', --ru
 	-- 'SteyrAug', --us
-	'F2000', --both/none
+	-- 'F2000', --both/none
 	-- 'FAMAS', --us
 	-- 'G3A3', --both/none
-	'KH2002', --ru
+	-- 'KH2002', --ru
 	-- 'L85A2', --us
 	-- 'M16A4', --us
 	-- 'M16-Burst', --us
@@ -35,20 +35,20 @@ CustomWeaponsAssaultRu = {
 	-- 'Crossbow', --both
 
 	-- Pisotls
-	-- 'Glock17', --us
-	-- 'Glock17_Silenced', --us
-	'Glock18', --us
-	-- 'Glock18_Silenced', --us
-	'M1911_Lit', --us
+	'Glock17', --both
+	-- 'Glock17_Silenced', --both
+	'Glock18', --both
+	-- 'Glock18_Silenced', --both
+	-- 'M1911_Lit', --us
 	-- 'M1911_Silenced', --us
-	'M1911_Tactical', --us
+	-- 'M1911_Tactical', --us
 	-- 'M9', --us
-	'M9_Silenced', --us
+	-- 'M9_Silenced', --us
 	-- 'M9_Tactical', --us
 	-- 'M93R', --us
 	'MP412Rex', --ru
-	'Taurus44', --both
-	-- 'MP443', --ru
+	-- 'Taurus44', --both
+	'MP443', --ru
 	-- 'MP443_Tactical', --ru
 	-- 'MP443_Silenced', --ru
 
