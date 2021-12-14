@@ -1,4 +1,5 @@
-class 'Language'
+---@class Language
+Language = class 'Language'
 
 require('__shared/Utilities')
 

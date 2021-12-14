@@ -1,4 +1,5 @@
-class('ClientBotManager')
+---@class ClientBotManager
+ClientBotManager = class('ClientBotManager')
 
 local m_WeaponList = require('__shared/WeaponList')
 local m_Utilities = require('__shared/Utilities')

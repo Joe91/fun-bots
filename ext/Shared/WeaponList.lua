@@ -1,4 +1,5 @@
-class('WeaponList')
+---@class WeaponList
+WeaponList = class('WeaponList')
 
 require('__shared/WeaponClass')
 require('__shared/Config')

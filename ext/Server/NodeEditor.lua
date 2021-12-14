@@ -1,4 +1,5 @@
-class "NodeEditor"
+---@class NodeEditor
+NodeEditor = class "NodeEditor"
 
 local m_NodeCollection = require('__shared/NodeCollection')
 local m_Logger = Logger("NodeEditor", Debug.Server.NODEEDITOR)

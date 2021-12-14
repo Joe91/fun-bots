@@ -1,4 +1,5 @@
-class 'FunBotUIServer'
+---@class FunBotUIServer
+FunBotUIServer = class 'FunBotUIServer'
 
 require('__shared/ArrayMap')
 require('__shared/Config')

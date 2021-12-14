@@ -1,4 +1,5 @@
-class('Weapon')
+---@class Weapon
+Weapon = class('Weapon')
 
 local m_Logger = Logger("Weapon", Debug.Shared.MODIFICATIONS)
 

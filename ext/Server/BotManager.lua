@@ -1,4 +1,5 @@
-class('BotManager')
+---@class BotManager
+BotManager = class('BotManager')
 
 require('Bot')
 

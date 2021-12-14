@@ -1,4 +1,5 @@
-class('FunBotServer')
+---@class FunBotServer
+FunBotServer = class('FunBotServer')
 
 -- The registry should be loaded first before loading anything else.
 require('__shared/Registry/Registry')

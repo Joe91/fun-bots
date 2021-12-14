@@ -1,4 +1,5 @@
-class('BugReport')
+---@class BugReport
+BugReport = class('BugReport')
 
 -- Create a bug report using an in-game !bugreport command.
 -- A bug report is required in order to create a new issue on the Github.

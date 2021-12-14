@@ -1,4 +1,5 @@
-class "NodeCollection"
+---@class NodeCollection
+NodeCollection = class "NodeCollection"
 
 local m_Utilities = require('__shared/Utilities.lua')
 local m_Logger = Logger("NodeCollection", Debug.Shared.NODECOLLECTION)

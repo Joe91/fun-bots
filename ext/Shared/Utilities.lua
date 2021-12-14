@@ -1,4 +1,5 @@
-class('Utilities')
+---@class Utilities
+Utilities = class('Utilities')
 
 require('__shared/Config')
 

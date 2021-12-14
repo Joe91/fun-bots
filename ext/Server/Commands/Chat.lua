@@ -1,4 +1,5 @@
-class('ChatCommands')
+---@class ChatCommands
+ChatCommands = class('ChatCommands')
 
 require('__shared/Config')
 local m_NodeCollection = require('__shared/NodeCollection')

@@ -1,4 +1,5 @@
-class('WayPoint')
+---@class WayPoint
+WayPoint = class('WayPoint')
 
 function WayPoint:__init()
 	self.m_Trans = Vec3()

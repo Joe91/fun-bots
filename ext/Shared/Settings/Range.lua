@@ -1,7 +1,5 @@
---[[
-	@class: Range
-]]
-class('Range')
+---@class Range
+Range = class('Range')
 
 --[[
 	@method: __init

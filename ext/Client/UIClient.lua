@@ -1,4 +1,5 @@
-class 'FunBotUIClient'
+---@class FunBotUIClient
+FunBotUIClient = class 'FunBotUIClient'
 
 require('UIViews')
 require('UISettings')

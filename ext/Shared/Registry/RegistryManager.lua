@@ -1,4 +1,5 @@
-class 'RegistryManager'
+---@class RegistryManager
+RegistryManager = class 'RegistryManager'
 
 require('__shared/Registry/Registry')
 

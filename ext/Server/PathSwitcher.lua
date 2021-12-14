@@ -1,4 +1,5 @@
-class('PathSwitcher')
+---@class PathSwitcher
+PathSwitcher = class('PathSwitcher')
 
 require('__shared/Config')
 

@@ -1,4 +1,5 @@
-class 'UIViews'
+---@class UIViews
+UIViews = class 'UIViews'
 
 require('__shared/ArrayMap')
 

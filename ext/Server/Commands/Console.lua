@@ -1,4 +1,5 @@
-class('Console')
+---@class Console
+Console = class('Console')
 
 require('__shared/Config')
 

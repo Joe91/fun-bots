@@ -1,4 +1,5 @@
-class 'RegistryUtil'
+---@class RegistryUtil
+RegistryUtil = class 'RegistryUtil'
 
 require('__shared/Registry/Registry')
 

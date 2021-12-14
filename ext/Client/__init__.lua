@@ -1,4 +1,5 @@
-class('FunBotClient')
+---@class FunBotClient
+FunBotClient = class('FunBotClient')
 
 require('__shared/Config')
 require('__shared/Debug')

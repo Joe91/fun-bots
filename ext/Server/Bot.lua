@@ -1,4 +1,5 @@
-class('Bot')
+---@class Bot
+Bot = class('Bot')
 
 require('__shared/Config')
 require('PidController')
@@ -2202,6 +2203,7 @@ end
 
 function Bot:_EnterVehicle(p_PlayerIsDriver)
 	local s_Iterator = EntityManager:GetIterator("ServerVehicleEntity")
+	---@type ControllableEntity
 	local s_Entity = s_Iterator:Next()
 
 	local s_ClosestEntity = nil

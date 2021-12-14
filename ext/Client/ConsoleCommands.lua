@@ -1,4 +1,5 @@
-class('ConsoleCommands')
+---@class ConsoleCommands
+ConsoleCommands = class('ConsoleCommands')
 
 function ConsoleCommands:__init()
 	self._ConfigList = {}

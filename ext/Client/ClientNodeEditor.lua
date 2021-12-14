@@ -1,4 +1,5 @@
-class "ClientNodeEditor"
+---@class ClientNodeEditor
+ClientNodeEditor = class "ClientNodeEditor"
 
 require('__shared/Config')
 
