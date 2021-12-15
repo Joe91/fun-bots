@@ -177,9 +177,9 @@ function string:split(p_Sep)
 	return s_Fields
 end
 
-function string:starts(String,Start)
-	return string.sub(String,1,string.len(Start))==Start
- end
+function string:starts(p_Start)
+	return string.sub(self,1,string.len(p_Start))==p_Start
+end
 
 function requireExists(p_Module)
 	local function reference(p_Module)
