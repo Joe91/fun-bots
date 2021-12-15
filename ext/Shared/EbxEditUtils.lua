@@ -1,4 +1,5 @@
-class 'EbxEditUtils'
+---@class EbxEditUtils
+EbxEditUtils = class 'EbxEditUtils'
 
 function EbxEditUtils:__init()
 

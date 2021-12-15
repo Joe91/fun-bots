@@ -1,4 +1,5 @@
-class('Utilities')
+---@class Utilities
+Utilities = class('Utilities')
 
 require('__shared/Config')
 
@@ -175,6 +176,10 @@ function string:split(p_Sep)
 
 	return s_Fields
 end
+
+function string:starts(String,Start)
+	return string.sub(String,1,string.len(Start))==Start
+ end
 
 function requireExists(p_Module)
 	local function reference(p_Module)

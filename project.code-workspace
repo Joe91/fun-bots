@@ -1,0 +1,13 @@
+{
+    "folders": [
+        {
+            "path": "ext\\Client"
+        },
+        {
+            "path": "ext\\Shared"
+        },
+        {
+            "path": "ext\\Server"
+        }
+    ]
+}

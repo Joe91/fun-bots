@@ -1,4 +1,5 @@
-class('Weapon')
+---@class Weapon
+Weapon = class('Weapon')
 
 local m_Logger = Logger("Weapon", Debug.Shared.MODIFICATIONS)
 
@@ -148,7 +149,7 @@ function Weapon:getResourcePath(p_Unlock)
 		local s_Ext = ""
 
 		if p_Unlock ~= nil then
-			if string.starts(p_Unlock, 'Weapons/') then
+			if string:starts(p_Unlock, 'Weapons/') then
 				return p_Unlock
 			end
 
@@ -162,7 +163,7 @@ function Weapon:getResourcePath(p_Unlock)
 		return "Weapons/"..s_Ext..self.name.."/U_"..self.name..s_Unl
 	else
 		if p_Unlock ~= nil then
-			if string.starts(p_Unlock, 'Weapons/') then
+			if string:starts(p_Unlock, 'Weapons/') then
 				return p_Unlock
 			end
 

@@ -1,4 +1,5 @@
-class('BotSpawner')
+---@class BotSpawner
+BotSpawner = class('BotSpawner')
 
 require('Model/SpawnSet')
 
@@ -746,6 +747,7 @@ function BotSpawner:_FindAttackedSpawnPoint(p_TeamId)
 	local s_BestSpawnPoint = nil
 	local s_LowestFlagLocation = 100.0
 	local s_EntityIterator = EntityManager:GetIterator("ServerCapturePointEntity")
+	---@type CapturePointEntity
 	local s_Entity = s_EntityIterator:Next()
 
 	while s_Entity do
@@ -787,6 +789,7 @@ function BotSpawner:_FindClosestSpawnPoint(p_TeamId)
 	-- Enemy and Neutralized CapturePoints
 	local s_TargetLocation = self:_FindTargetLocation(p_TeamId)
 	local s_EntityIterator = EntityManager:GetIterator("ServerCapturePointEntity")
+	---@type CapturePointEntity
 	local s_Entity = s_EntityIterator:Next()
 
 	while s_Entity do
@@ -831,6 +834,7 @@ end
 function BotSpawner:_FindTargetLocation(p_TeamId)
 	local s_TargetLocation = nil
 	local s_EntityIterator = EntityManager:GetIterator("ServerCapturePointEntity")
+	---@type CapturePointEntity
 	local s_Entity = s_EntityIterator:Next()
 
 	while s_Entity do
@@ -1362,7 +1366,7 @@ function BotSpawner:_FindKit(p_TeamName, p_KitName)
 		end
 	end
 
-	return
+	return nil
 end
 
 function BotSpawner:_FindAppearance(p_TeamName, p_KitName, p_ColorName)
@@ -1381,7 +1385,7 @@ function BotSpawner:_FindAppearance(p_TeamName, p_KitName, p_ColorName)
 		end
 	end
 
-	return
+	return nil
 end
 
 function BotSpawner:_SetAttachments(p_UnlockWeapon, p_Attachments)

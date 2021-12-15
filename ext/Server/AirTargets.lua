@@ -1,4 +1,5 @@
-class('AirTargets')
+---@class AirTargets
+AirTargets = class('AirTargets')
 
 local m_Utilities = require('__shared/Utilities')
 local m_Vehicles = require("Vehicles")

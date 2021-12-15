@@ -1,4 +1,5 @@
-class('RCONCommands')
+---@class RCONCommands
+RCONCommands = class('RCONCommands')
 
 require('__shared/Config')
 

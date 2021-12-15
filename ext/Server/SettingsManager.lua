@@ -1,4 +1,5 @@
-class('SettingsManager')
+---@class SettingsManager
+SettingsManager = class('SettingsManager')
 
 require('__shared/Config')
 

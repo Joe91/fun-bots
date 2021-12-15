@@ -1,4 +1,5 @@
-class("Vehicles")
+---@class Vehicles
+Vehicles = class("Vehicles")
 
 require('__shared/Constants/VehicleData')
 local m_Logger = Logger("Vehicles", Debug.Server.VEHICLES)

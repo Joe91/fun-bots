@@ -1,4 +1,5 @@
-class('Database')
+---@class Database
+Database = class('Database')
 
 require('__shared/ArrayMap')
 local m_Batches = ArrayMap()

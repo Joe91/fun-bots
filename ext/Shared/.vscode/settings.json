@@ -1,0 +1,11 @@
+{
+    "Lua": {
+        "completion": {
+            "requireSeparator": "/"
+        },
+        "workspace": {
+            "maxPreload": 4000,
+            "useGitIgnore": false
+        }
+    }
+}

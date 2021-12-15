@@ -1,4 +1,5 @@
-class 'ClientSpawnPointHelper'
+---@class ClientSpawnPointHelper
+ClientSpawnPointHelper = class 'ClientSpawnPointHelper'
 
 require('__shared/Config')
 

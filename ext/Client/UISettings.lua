@@ -1,4 +1,5 @@
-class 'UISettings'
+---@class UISettings
+UISettings = class 'UISettings'
 
 require('__shared/ArrayMap')
 

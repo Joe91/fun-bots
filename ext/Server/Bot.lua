@@ -1,4 +1,5 @@
-class('Bot')
+---@class Bot
+Bot = class('Bot')
 
 require('__shared/Config')
 require('PidController')
@@ -190,7 +191,7 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 
 					-- fast code
 					if s_Attacking then
-						self:_UpdateAiming(self._UpdateFastTimer)
+						self:_UpdateAiming()
 					else
 						self:_UpdateTargetMovement()
 					end
@@ -2202,6 +2203,7 @@ end
 
 function Bot:_EnterVehicle(p_PlayerIsDriver)
 	local s_Iterator = EntityManager:GetIterator("ServerVehicleEntity")
+	---@type ControllableEntity
 	local s_Entity = s_Iterator:Next()
 
 	local s_ClosestEntity = nil

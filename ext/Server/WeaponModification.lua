@@ -1,4 +1,5 @@
-class('WeaponModification')
+---@class WeaponModification
+WeaponModification = class('WeaponModification')
 
 require('__shared/Config')
 local m_Logger = Logger("WeaponModification", Debug.Shared.MODIFICATIONS)

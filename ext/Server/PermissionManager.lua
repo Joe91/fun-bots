@@ -1,4 +1,5 @@
-class('PermissionManager')
+---@class PermissionManager
+PermissionManager = class('PermissionManager')
 
 local m_Logger = Logger("PermissionManager", Debug.Server.PERMISSIONS)
 local m_Database = require('Database')

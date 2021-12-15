@@ -1,4 +1,5 @@
-class('BotManager')
+---@class BotManager
+BotManager = class('BotManager')
 
 require('Bot')
 
@@ -432,7 +433,7 @@ end
 
 function BotManager:GetBots(p_TeamId)
 	if p_TeamId ~= nil then
-		return self._BotInfo.team[p_TeamId + 1]
+		return self._BotsByTeam[p_TeamId + 1]
 	else
 		return self._Bots
 	end

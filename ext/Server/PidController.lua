@@ -1,4 +1,5 @@
-class('PidController')
+---@class PidController
+PidController = class('PidController')
 
 function PidController:__init(p_Kp, p_Ki, p_Kd, p_Limit)
 	self._Integral = 0
