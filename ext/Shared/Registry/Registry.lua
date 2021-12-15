@@ -20,6 +20,8 @@ Registry = {
 			LOADING_TIMEOUT = 25,
 			-- distance commands are heard by bots
 			COMMAND_DISTANCE = 20,
+			-- valid keys can be found here: https://docs.veniceunleashed.net/vext/ref/fb/inputdevicekeys/
+			BOT_COMMAND_KEY = InputDeviceKeys.IDK_LeftAlt,
 		},
 		-- Version and Release related variables
 		-- Variables related to the current build version, version and the type of version.
@@ -28,15 +30,15 @@ Registry = {
 			-- Major version
 			VERSION_MAJ = 2,
 			-- Minor version
-			VERSION_MIN = 4,
+			VERSION_MIN = 5,
 			-- Patch version
 			VERSION_PATCH = 0,
 			-- Additional label for pre-releases and build meta data
-			VERSION_LABEL = "",
+			VERSION_LABEL = "dev1",
 			-- Current version type of this build
-			VERSION_TYPE = VersionType.Release,
+			VERSION_TYPE = VersionType.DevBuild,
 			-- The Version used for the Update-Check
-			UPDATE_CHANNEL = VersionType.Stable,
+			UPDATE_CHANNEL = VersionType.DevBuild,
 
 			CLIENT_SHOW_VERSION_ON_JOIN = false,
 		},

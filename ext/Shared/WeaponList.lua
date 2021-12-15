@@ -4,10 +4,15 @@ WeaponList = class('WeaponList')
 require('__shared/WeaponClass')
 require('__shared/Config')
 require('__shared/Constants/WeaponTypes')
-require('__shared/WeaponLists/CustomWeaponsAssault')
-require('__shared/WeaponLists/CustomWeaponsEngineer')
-require('__shared/WeaponLists/CustomWeaponsRecon')
-require('__shared/WeaponLists/CustomWeaponsSupport')
+require('__shared/WeaponLists/CustomWeaponsAssaultUs')
+require('__shared/WeaponLists/CustomWeaponsAssaultRu')
+require('__shared/WeaponLists/CustomWeaponsEngineerUs')
+require('__shared/WeaponLists/CustomWeaponsEngineerRu')
+require('__shared/WeaponLists/CustomWeaponsReconUs')
+require('__shared/WeaponLists/CustomWeaponsReconRu')
+require('__shared/WeaponLists/CustomWeaponsSupportUs')
+require('__shared/WeaponLists/CustomWeaponsSupportRu')
+
 
 local m_Logger = Logger("WeaponList", Debug.Shared.MODIFICATIONS)
 
@@ -15,31 +20,13 @@ local m_Logger = Logger("WeaponList", Debug.Shared.MODIFICATIONS)
 AllWeapons = {}
 KnifeWeapons = {}
 PistoWeapons = {}
+Weapons = {}
 
 AssaultPrimary = {}
-AssaultPistol = {}
-AssaultKnife = {}
-AssaultGadget1 = {}
-AssaultGadget2 = {}
-AssaultGrenade = {}
 EngineerPrimary = {}
-EngineerPistol = {}
-EngineerKnife = {}
-EngineerGadget1 = {}
-EngineerGadget2 = {}
-EngineerGrenade = {}
 SupportPrimary = {}
-SupportPistol = {}
-SupportKnife = {}
-SupportGadget1 = {}
-SupportGadget2 = {}
-SupportGrenade = {}
 ReconPrimary = {}
-ReconPistol = {}
-ReconKnife = {}
-ReconGadget1 = {}
-ReconGadget2 = {}
-ReconGrenade = {}
+
 
 function WeaponList:__init()
 	self._weapons = {}
@@ -574,18 +561,30 @@ function WeaponList:__init()
 	self:updateWeaponList()
 end
 
-function WeaponList:_isCustomWeapon(p_Class, p_Name)
+function WeaponList:_isCustomWeapon(p_Class, p_Name, p_Team)
 	local s_CustomWeaponList = nil
 	local s_IsCustomWeapon = false
 
-	if p_Class == BotKits.Assault then
-		s_CustomWeaponList = CustomWeaponsAssault
-	elseif p_Class == BotKits.Engineer then
-		s_CustomWeaponList = CustomWeaponsEngineer
-	elseif p_Class == BotKits.Support then
-		s_CustomWeaponList = CustomWeaponsSupport
-	elseif p_Class == BotKits.Recon then
-		s_CustomWeaponList = CustomWeaponsRecon
+	if p_Team == "US" then
+		if p_Class == BotKits.Assault then
+			s_CustomWeaponList = CustomWeaponsAssaultUs
+		elseif p_Class == BotKits.Engineer then
+			s_CustomWeaponList = CustomWeaponsEngineerUs
+		elseif p_Class == BotKits.Support then
+			s_CustomWeaponList = CustomWeaponsSupportUs
+		elseif p_Class == BotKits.Recon then
+			s_CustomWeaponList = CustomWeaponsReconUs
+		end
+	else
+		if p_Class == BotKits.Assault then
+			s_CustomWeaponList = CustomWeaponsAssaultRu
+		elseif p_Class == BotKits.Engineer then
+			s_CustomWeaponList = CustomWeaponsEngineerRu
+		elseif p_Class == BotKits.Support then
+			s_CustomWeaponList = CustomWeaponsSupportRu
+		elseif p_Class == BotKits.Recon then
+			s_CustomWeaponList = CustomWeaponsReconRu
+		end
 	end
 
 	for _, l_CustomName in pairs(s_CustomWeaponList) do
@@ -598,7 +597,7 @@ function WeaponList:_isCustomWeapon(p_Class, p_Name)
 	return s_IsCustomWeapon
 end
 
-function WeaponList:_useWeaponType(p_Class, p_Type, p_Name)
+function WeaponList:_useWeaponType(p_Class, p_Type, p_Name, p_Team)
 	local s_UseThisWeapon = false
 	local s_IsClassWeapon = false
 	local s_WeaponSet = ""
@@ -631,7 +630,7 @@ function WeaponList:_useWeaponType(p_Class, p_Type, p_Name)
 
 	-- check for custom-weapon
 	if s_WeaponSet == WeaponSets.Custom then
-		s_UseThisWeapon = self:_isCustomWeapon(p_Class, p_Name)
+		s_UseThisWeapon = self:_isCustomWeapon(p_Class, p_Name, p_Team)
 	else -- check for other p_Classes
 		if p_Type == WeaponTypes.PDW then
 			if s_WeaponSet == WeaponSets.PDW or
@@ -658,42 +657,92 @@ function WeaponList:_useWeaponType(p_Class, p_Type, p_Name)
 			end
 		else
 			-- for all other weapons - use p_Class-list
-			s_UseThisWeapon = self:_isCustomWeapon(p_Class, p_Name)
+			s_UseThisWeapon = self:_isCustomWeapon(p_Class, p_Name, p_Team)
 		end
 	end
 
 	return s_UseThisWeapon
 end
 
+function WeaponList:_insertWeapon(p_Kit, p_WeaponType, p_WeaponName, p_Team)
+	local s_BotWeaponType = nil
+	-- translate type to BotWeapon
+	if p_WeaponType == WeaponTypes.Assault or
+	p_WeaponType == WeaponTypes.Carabine or
+	p_WeaponType == WeaponTypes.LMG or
+	p_WeaponType == WeaponTypes.Sniper or
+	p_WeaponType == WeaponTypes.Shotgun or
+	p_WeaponType == WeaponTypes.PDW then
+		s_BotWeaponType = BotWeapons.Primary
+	elseif p_WeaponType == WeaponTypes.Pistol then
+		s_BotWeaponType = BotWeapons.Pistol
+	elseif p_WeaponType == WeaponTypes.Medkit or
+	p_WeaponType == WeaponTypes.Torch or
+	p_WeaponType == WeaponTypes.Ammobag or
+	p_WeaponType == WeaponTypes.Tugs then
+		s_BotWeaponType = BotWeapons.Gadget1
+	elseif p_WeaponType == WeaponTypes.Defibrillator or
+	p_WeaponType == WeaponTypes.Rocket or
+	p_WeaponType == WeaponTypes.Claymore or
+	p_WeaponType == WeaponTypes.C4 or
+	p_WeaponType == WeaponTypes.Beacon then
+		s_BotWeaponType = BotWeapons.Gadget2
+	elseif p_WeaponType == WeaponTypes.Grenade then
+		s_BotWeaponType = BotWeapons.Grenade
+	elseif p_WeaponType == WeaponTypes.Knife then
+		s_BotWeaponType = BotWeapons.Knife
+	end
+
+	if s_BotWeaponType ~= nil then
+		table.insert(Weapons[p_Kit][s_BotWeaponType][p_Team], p_WeaponName)
+	end
+
+	if s_BotWeaponType == BotWeapons.Primary then
+		if p_Kit == BotKits.Assault then
+			table.insert(AssaultPrimary, p_WeaponName)
+		elseif p_Kit == BotKits.Engineer then
+			table.insert(EngineerPrimary, p_WeaponName)
+		elseif p_Kit == BotKits.Support then
+			table.insert(SupportPrimary, p_WeaponName)
+		else
+			table.insert(ReconPrimary, p_WeaponName)
+		end
+	end
+end
+
+
 function WeaponList:updateWeaponList()
 	AllWeapons = {}
 	KnifeWeapons = {}
 	PistoWeapons = {}
-
 	AssaultPrimary = {}
-	AssaultPistol = {}
-	AssaultKnife = {}
-	AssaultGadget1 = {}
-	AssaultGadget2 = {}
-	AssaultGrenade = {}
 	EngineerPrimary = {}
-	EngineerPistol = {}
-	EngineerKnife = {}
-	EngineerGadget1 = {}
-	EngineerGadget2 = {}
-	EngineerGrenade = {}
 	SupportPrimary = {}
-	SupportPistol = {}
-	SupportKnife = {}
-	SupportGadget1 = {}
-	SupportGadget2 = {}
-	SupportGrenade = {}
 	ReconPrimary = {}
-	ReconPistol = {}
-	ReconKnife = {}
-	ReconGadget1 = {}
-	ReconGadget2 = {}
-	ReconGrenade = {}
+
+	Weapons =  {}
+	-- clear-weapons-table
+	for l_Key, l_Value in pairs(BotKits) do
+		if l_Value ~= BotKits.Count and l_Value ~= BotKits.RANDOM_KIT then
+			Weapons[l_Value] = {}
+		end
+	end
+	for l_Class,_ in pairs(Weapons) do
+		local s_TempTable = {}
+		for l_key, l_Value in pairs(BotWeapons) do
+			if l_Value ~= BotWeapons.Auto then
+				s_TempTable[l_Value] = {}
+			end
+		end
+
+		for l_Weapon,_ in pairs(s_TempTable) do
+			s_TempTable[l_Weapon] = {
+				US = {},
+				RU = {}
+			}
+		end
+		Weapons[l_Class] = s_TempTable
+	end
 
 	for i = 1, #self._weapons do
 		local s_Wep = self._weapons[i]
@@ -705,67 +754,14 @@ function WeaponList:updateWeaponList()
 			table.insert(PistoWeapons, s_Wep.name)
 		end
 
-		if self:_useWeaponType(BotKits.Assault, s_Wep.type, s_Wep.name) then
-			if (s_Wep.type == WeaponTypes.Knife) then
-				table.insert(AssaultKnife, s_Wep.name)
-			elseif (s_Wep.type == WeaponTypes.Pistol) then
-				table.insert(AssaultPistol, s_Wep.name)
-			elseif (s_Wep.type == WeaponTypes.Grenade) then
-				table.insert(AssaultGrenade, s_Wep.name)
-			elseif (s_Wep.type == WeaponTypes.Medkit) then
-				table.insert(AssaultGadget1, s_Wep.name)
-			elseif (s_Wep.type == WeaponTypes.Defibrillator) then
-				table.insert(AssaultGadget2, s_Wep.name)
-			else
-				table.insert(AssaultPrimary, s_Wep.name)
-			end
-		end
-
-		if self:_useWeaponType(BotKits.Engineer, s_Wep.type, s_Wep.name) then
-			if (s_Wep.type == WeaponTypes.Knife) then
-				table.insert(EngineerKnife, s_Wep.name)
-			elseif (s_Wep.type == WeaponTypes.Pistol) then
-				table.insert(EngineerPistol, s_Wep.name)
-			elseif (s_Wep.type == WeaponTypes.Grenade) then
-				table.insert(EngineerGrenade, s_Wep.name)
-			elseif (s_Wep.type == WeaponTypes.Torch) then
-				table.insert(EngineerGadget1, s_Wep.name)
-			elseif (s_Wep.type == WeaponTypes.Rocket) then
-				table.insert(EngineerGadget2, s_Wep.name)
-			else
-				table.insert(EngineerPrimary, s_Wep.name)
-			end
-		end
-
-		if self:_useWeaponType(BotKits.Support, s_Wep.type, s_Wep.name) then
-			if (s_Wep.type == WeaponTypes.Knife) then
-				table.insert(SupportKnife, s_Wep.name)
-			elseif (s_Wep.type == WeaponTypes.Pistol) then
-				table.insert(SupportPistol, s_Wep.name)
-			elseif (s_Wep.type == WeaponTypes.Grenade) then
-				table.insert(SupportGrenade, s_Wep.name)
-			elseif (s_Wep.type == WeaponTypes.Ammobag) then
-				table.insert(SupportGadget1, s_Wep.name)
-			elseif (s_Wep.type == WeaponTypes.Claymore) or (s_Wep.type == WeaponTypes.C4) then
-				table.insert(SupportGadget2, s_Wep.name)
-			else
-				table.insert(SupportPrimary, s_Wep.name)
-			end
-		end
-
-		if self:_useWeaponType(BotKits.Recon, s_Wep.type, s_Wep.name) then
-			if (s_Wep.type == WeaponTypes.Knife) then
-				table.insert(ReconKnife, s_Wep.name)
-			elseif (s_Wep.type == WeaponTypes.Pistol) then
-				table.insert(ReconPistol, s_Wep.name)
-			elseif (s_Wep.type == WeaponTypes.Grenade) then
-				table.insert(ReconGrenade, s_Wep.name)
-			elseif (s_Wep.type == WeaponTypes.Tugs) then
-				table.insert(ReconGadget1, s_Wep.name)
-			elseif (s_Wep.type == WeaponTypes.Beacon) then
-				table.insert(ReconGadget2, s_Wep.name)
-			else
-				table.insert(ReconPrimary, s_Wep.name)
+		for _, l_BotKit in pairs(BotKits) do
+			if l_BotKit ~= BotKits.Count and l_BotKit ~= BotKits.RANDOM_KIT then
+				if self:_useWeaponType(l_BotKit, s_Wep.type, s_Wep.name, "US") then
+					self:_insertWeapon(l_BotKit, s_Wep.type, s_Wep.name, "US")
+				end
+				if self:_useWeaponType(l_BotKit, s_Wep.type, s_Wep.name, "RU") then
+					self:_insertWeapon(l_BotKit, s_Wep.type, s_Wep.name, "RU")
+				end
 			end
 		end
 	end
