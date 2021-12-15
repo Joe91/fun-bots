@@ -92,7 +92,7 @@ end
 
 function FunBotClient:OnPlayerRespawn(p_Player)
     local s_LocalPlayer = PlayerManager:GetLocalPlayer()
-    if s_LocalPlayer ~= nil and p_Player == localPlayer then
+    if s_LocalPlayer ~= nil and p_Player == s_LocalPlayer then
 		local s_OldMemory = math.floor(collectgarbage("count")/1024)
 		collectgarbage('collect')
 		m_Logger:Write("*Collecting Garbage on Level Destroy: " .. math.floor(collectgarbage("count")/1024) .. " MB | Old Memory: " .. s_OldMemory .. " MB")

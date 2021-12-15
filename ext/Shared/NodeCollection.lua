@@ -42,8 +42,8 @@ function NodeCollection:RegisterEvents()
 	NetEvents:Subscribe('NodeCollection:SetInput', self, self.SetInput)
 	NetEvents:Subscribe('NodeCollection:Link', self, self.Link)
 	NetEvents:Subscribe('NodeCollection:Unlink', self, self.Unlink)
-	NetEvents:Subscribe('NodeCollection:Merge', self, self.MergeSelected)
-	NetEvents:Subscribe('NodeCollection:Split', self, self.SplitSelected)
+	NetEvents:Subscribe('NodeCollection:Merge', self, self.MergeSelection)
+	NetEvents:Subscribe('NodeCollection:Split', self, self.SplitSelection)
 
 	-- Selection
 	NetEvents:Subscribe('NodeCollection:Select', self, self.Select)
@@ -444,10 +444,8 @@ function NodeCollection:UpdateMetadata(p_Data)
 		return false, 'Must select one or more waypoints'
 	end
 
-	local s_ErrorMsg = ''
-
 	if type(p_Data) == 'string' then
-		p_Data, s_ErrorMsg = json.decode(p_Data) or {}
+		p_Data = json.decode(p_Data) or {}
 	end
 
 	m_Logger:Write('[B] NodeCollection:UpdateMetadata -> p_Data: '..m_Utilities:dump(p_Data, true))

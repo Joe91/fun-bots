@@ -191,7 +191,7 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 
 					-- fast code
 					if s_Attacking then
-						self:_UpdateAiming(self._UpdateFastTimer)
+						self:_UpdateAiming()
 					else
 						self:_UpdateTargetMovement()
 					end

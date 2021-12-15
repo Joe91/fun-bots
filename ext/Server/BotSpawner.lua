@@ -1366,7 +1366,7 @@ function BotSpawner:_FindKit(p_TeamName, p_KitName)
 		end
 	end
 
-	return
+	return nil
 end
 
 function BotSpawner:_FindAppearance(p_TeamName, p_KitName, p_ColorName)
@@ -1385,7 +1385,7 @@ function BotSpawner:_FindAppearance(p_TeamName, p_KitName, p_ColorName)
 		end
 	end
 
-	return
+	return nil
 end
 
 function BotSpawner:_SetAttachments(p_UnlockWeapon, p_Attachments)

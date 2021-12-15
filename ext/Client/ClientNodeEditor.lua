@@ -2132,7 +2132,7 @@ function ClientNodeEditor:DrawDebugThings(p_DeltaTime)
 
 	--self:DrawText2D(self.helpTextLocation.x, self.helpTextLocation.y, helpText, self.colors.Text, 1)
 	-- draw debug selection traces
-	if self.debugSelectionRaytraces then
+	if Config.debugSelectionRaytraces then
 		if self.m_LastTraceStart ~= nil and self.m_LastTraceEnd ~= nil then
 			self:DrawLine(self.m_LastTraceStart, self.m_LastTraceEnd, self.m_Colors.Ray.Line[1], self.m_Colors.Ray.Line[2])
 		end

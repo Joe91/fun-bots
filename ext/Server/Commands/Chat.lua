@@ -377,7 +377,7 @@ function ChatCommands:Execute(p_Parts, p_Player)
 		end
 
 		m_NodeCollection:Clear()
-		NetEvents:SendLocal('NodeCollection:Clear')
+		NetEvents:SendToLocal('NodeCollection:Clear')
 	elseif p_Parts[1] == '!printtrans' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands.PrintTransform') == false then
 			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.PrintTransform).', p_Player)
@@ -399,7 +399,7 @@ function ChatCommands:Execute(p_Parts, p_Player)
 		local s_TraceIndex = tonumber(p_Parts[2]) or 0
 		NetEvents:SendToLocal('ClientNodeEditor:SaveTrace', p_Player, s_TraceIndex)
 
-	-- [[ Section: Debugging, Bug Reporting and error logging ]]
+	-- Section: Debugging, Bug Reporting and error logging
 	-- Command: !bugreport
 	-- Permission: Debug.BugReport
 	elseif p_Parts[1] == '!bugreport' then
@@ -409,6 +409,8 @@ function ChatCommands:Execute(p_Parts, p_Player)
 		end
 
 		BugReport:GenerateReport(p_Player)
+	else
+		-- nothing to do
 	end
 end
 
