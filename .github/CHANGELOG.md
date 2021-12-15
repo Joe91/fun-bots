@@ -15,6 +15,7 @@ This is the changelog for the version V2.5.0. Don't forget to [join us on Discor
 ### Bug fixes
 
 ### New maps
+* Vehicles for Rush Theran Highway by BOB
 
 ### Updated maps
 * Lots and lots of Updated maps by MeisterPeitsche (exit-command of vehicles)
