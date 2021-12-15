@@ -13,6 +13,7 @@ This is the changelog for the version V2.5.0. Don't forget to [join us on Discor
 * Separated Weapon-Lists per Team
 
 ### Bug fixes
+* Several Bugfixes thanks to Bree_Arnold
 
 ### New maps
 * Vehicles for Rush Theran Highway by BOB

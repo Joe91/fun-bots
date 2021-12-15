@@ -377,7 +377,7 @@ function ChatCommands:Execute(p_Parts, p_Player)
 		end
 
 		m_NodeCollection:Clear()
-		NetEvents:SendToLocal('NodeCollection:Clear')
+		NetEvents:SendToLocal('NodeCollection:Clear', p_Player)
 	elseif p_Parts[1] == '!printtrans' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands.PrintTransform') == false then
 			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.PrintTransform).', p_Player)
