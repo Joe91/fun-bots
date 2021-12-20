@@ -902,7 +902,7 @@ SettingsDefinition = {
 		{
 			Name = "AssaultWeapon",
 			Text = "Primary Weapon Assault",
-			Type = Type.Table,
+			Type = Type.List,
 			Value = Config.AssaultWeapon,
 			Description = "primary weapon of Assault class, if random-weapon == false",
 			Reference = AssaultPrimary,
@@ -913,7 +913,7 @@ SettingsDefinition = {
 		{
 			Name = "EngineerWeapon",
 			Text = "Primary Weapon Engineer",
-			Type = Type.Table,
+			Type = Type.List,
 			Value = Config.EngineerWeapon,
 			Description = "primary weapon of Engineer class, if random-weapon == false",
 			Reference = EngineerPrimary,
@@ -924,7 +924,7 @@ SettingsDefinition = {
 		{
 			Name = "SupportWeapon",
 			Text = "Primary Weapon Support",
-			Type = Type.Table,
+			Type = Type.List,
 			Value = Config.SupportWeapon,
 			Description = "primary weapon of Support class, if random-weapon == false",
 			Reference = SupportPrimary,
@@ -935,7 +935,7 @@ SettingsDefinition = {
 		{
 			Name = "ReconWeapon",
 			Text = "Primary Weapon Recon",
-			Type = Type.Table,
+			Type = Type.List,
 			Value = Config.ReconWeapon,
 			Description = "primary weapon of Recon class, if random-weapon == false",
 			Reference = ReconPrimary,
@@ -946,7 +946,7 @@ SettingsDefinition = {
 		{
 			Name = "Pistol",
 			Text = "Pistol of Bots",
-			Type = Type.Table,
+			Type = Type.List,
 			Value = Config.Pistol,
 			Description = "Pistol of Bots, if random-weapon == false",
 			Reference = PistoWeapons,
@@ -957,7 +957,7 @@ SettingsDefinition = {
 		{
 			Name = "Knife",
 			Text = "Knife of Bots",
-			Type = Type.Table,
+			Type = Type.List,
 			Value = Config.Knife,
 			Description = "Knife of Bots, if random-weapon == false",
 			Reference = KnifeWeapons,
