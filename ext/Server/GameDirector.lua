@@ -1,9 +1,13 @@
 ---@class GameDirector
 GameDirector = class('GameDirector')
 
+---@type NodeCollection
 local m_NodeCollection = require('__shared/NodeCollection')
+---@type Utilities
 local m_Utilities = require('__shared/Utilities')
+---@type Vehicles
 local m_Vehicles = require("Vehicles")
+---@type Logger
 local m_Logger = Logger("GameDirector", Debug.Server.GAMEDIRECTOR)
 
 function GameDirector:__init()
@@ -344,7 +348,7 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 
 		if s_Objective ~= nil and s_Objective.isSpawnPath then
 			local s_Node = g_GameDirector:FindClosestPath(p_Entity.transform.trans, true)
-			if s_Node ~= nil and s_Node.Position:Distance(p_Entity.transform.trans) < Registry.VEHICLES.MIN_DISTANCE_VEHICLE_ENTER  then
+			if s_Node ~= nil and s_Node.Position:Distance(p_Entity.transform.trans) < Registry.VEHICLES.MIN_DISTANCE_VEHICLE_ENTER then
 				table.insert(self.m_SpawnableVehicles[s_Objective.team], p_Entity)
 			end
 		end
@@ -787,10 +791,10 @@ function GameDirector:_RegisterRushEventCallbacks()
 	s_Entity = s_Iterator:Next()
 
 	while s_Entity do
-		if  s_Entity.data.instanceGuid == Guid("2CEA23B6-76E9-4E7B-85E6-EE648F686E48") then
+		if s_Entity.data.instanceGuid == Guid("2CEA23B6-76E9-4E7B-85E6-EE648F686E48") then
 			s_Entity:RegisterEventCallback(self, self._OnInteractionDefend)
 		end
-		if s_Entity.data.instanceGuid ==  Guid("1768D76F-6DD0-4425-A898-32C851A4A476") then
+		if s_Entity.data.instanceGuid == Guid("1768D76F-6DD0-4425-A898-32C851A4A476") then
 			s_Entity:RegisterEventCallback(self, self._OnInteractionAttack)
 		end
 		s_Entity = s_Iterator:Next()
@@ -1211,6 +1215,7 @@ function GameDirector:_UseSubobjective(p_BotTeam, p_ObjectiveName)
 end
 
 if g_GameDirector == nil then
+	---@type GameDirector
 	g_GameDirector = GameDirector()
 end
 

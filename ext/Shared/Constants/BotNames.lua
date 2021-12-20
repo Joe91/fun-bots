@@ -1,3 +1,4 @@
+---@class BotNames
 BotNames = {
 	'Liam',
 	'Noah',

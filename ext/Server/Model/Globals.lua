@@ -1,3 +1,4 @@
+---@class Globals
 Globals = {
 	WayPoints = {},
 	ActiveTraceIndexes = 0,

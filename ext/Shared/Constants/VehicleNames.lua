@@ -1,3 +1,4 @@
+---@class VehicleTable
 VehicleTable = { -- thanks to Bree_Arnold
 	["LAV25"] = "[LAV-25]",
 	["BMP2"] = "[BMP-2M]",

@@ -1,13 +1,14 @@
 require('__shared/Constants/VersionType')
 
 --[[
-        <!> Modifications to this file should not be made unless you know what you are doing.
+		<!> Modifications to this file should not be made unless you know what you are doing.
 
 		Welcome to the fun-bots registry. This file contains config-like variables related to the mod, such as versions and API-related stuff,
 		but also important variables related to bots.
 		These variables should not be configured by the end-user. The development team and CI/CD should set these variables to their correct value.
 		As such, modifications to these variables are not supported by the fun-bots development team. Changing them is not recommended.
 ]]
+---@class Registry
 Registry = {
 		COMMON = {
 			-- token Bots are marked with. Can also be " "
@@ -120,7 +121,7 @@ Registry = {
 		BOT_TEAM_BALANCING = {
 			-- Minimum amount of players required before balancing bots across teams
 			-- Note: Only for mode keep_playercount
-			THRESHOLD = 6, -- only for mode 
+			THRESHOLD = 6, -- only for mode
 			-- Maximum bot count difference between both teams (even count: 1, uneven: 2)
 			-- Note: Only for mode keep_playercount
 			ALLOWED_DIFFERENCE = 1,

@@ -5,21 +5,21 @@ require('__shared/Config')
 
 function ClientSpawnPointHelper:__init()
 	self.m_Enabled = false
-    self.m_SpawnPointTable = {}
+	self.m_SpawnPointTable = {}
 	self.m_SelectedSpawnPoint = nil
 end
 
 function ClientSpawnPointHelper:OnPartitionLoaded(p_Partition)
-    for _, l_Instance in pairs(p_Partition.instances) do
-        if l_Instance:Is("AlternateSpawnEntityData") then
-            l_Instance = AlternateSpawnEntityData(l_Instance)
-            table.insert(self.m_SpawnPointTable, l_Instance.transform)
-        end
-    end
+	for _, l_Instance in pairs(p_Partition.instances) do
+		if l_Instance:Is("AlternateSpawnEntityData") then
+			l_Instance = AlternateSpawnEntityData(l_Instance)
+			table.insert(self.m_SpawnPointTable, l_Instance.transform)
+		end
+	end
 end
 
 function ClientSpawnPointHelper:OnLevelDestroy()
-    self.m_SpawnPointTable = {}
+	self.m_SpawnPointTable = {}
 end
 
 function ClientSpawnPointHelper:OnSetEnabled(p_Args)
@@ -112,7 +112,8 @@ function ClientSpawnPointHelper:GetForwardOffsetFromLT(p_Transform)
 end
 
 if g_ClientSpawnPointHelper == nil then
-    g_ClientSpawnPointHelper = ClientSpawnPointHelper()
+	---@type ClientSpawnPointHelper
+	g_ClientSpawnPointHelper = ClientSpawnPointHelper()
 end
 
 return g_ClientSpawnPointHelper

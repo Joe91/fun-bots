@@ -4,18 +4,27 @@ FunBotUIServer = class 'FunBotUIServer'
 require('__shared/ArrayMap')
 require('__shared/Config')
 
+---@type Language
 Language = require('__shared/Language')
 
+---@type NodeCollection
 local m_NodeCollection = require('__shared/NodeCollection')
+---@type SettingsManager
 local m_SettingsManager = require('SettingsManager')
 
+---@type BotManager
 local BotManager = require('BotManager')
+---@type BotSpawner
 local BotSpawner = require('BotSpawner')
+---@type WeaponModification
 local WeaponModification = require('WeaponModification')
+---@type WeaponList
 local WeaponList = require('__shared/WeaponList')
 
 function FunBotUIServer:__init()
+	-- TODO: remove? unused
 	self._webui = 0
+	-- TODO: remove? unused
 	self._authenticated = ArrayMap()
 
 	if Config.DisableUserInterface ~= true then
@@ -31,7 +40,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		return
 	end
 
-	-- Low permission for Comm-Screen --TODO: for all? 
+	-- Low permission for Comm-Screen --TODO: for all?
 	if not Config.AllowCommForAll or PermissionManager:HasPermission(p_Player, 'Comm') == false then
 		ChatManager:SendMessage('You have no permissions for this action.', p_Player)
 		return
@@ -52,7 +61,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		BotManager:Deploy(p_Player, "medkit")
 		NetEvents:SendTo('UI_CommonRose', p_Player, "false")
 		return
-	elseif request.action  == 'enter_vehicle' then
+	elseif request.action == 'enter_vehicle' then
 		BotManager:EnterVehicle(p_Player)
 		NetEvents:SendTo('UI_CommonRose', p_Player, "false")
 		return
@@ -229,7 +238,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		Globals.SpawnMode = "manual"
 		BotManager:KillAll()
 
-	elseif request.action == 'bot_respawn' then  --toggle this function
+	elseif request.action == 'bot_respawn' then --toggle this function
 		local respawning = not Globals.RespawnWayBots
 		Globals.RespawnWayBots = respawning
 		BotManager:SetOptionForAll('respawn', respawning)
@@ -239,7 +248,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 			ChatManager:Yell(Language:I18N('Bot respawn deactivated!', request.action), 2.5)
 		end
 
-	elseif request.action == 'bot_attack' then  --toggle this function
+	elseif request.action == 'bot_attack' then --toggle this function
 		local attack = not Globals.AttackWayBots
 		Globals.AttackWayBots = attack
 		BotManager:SetOptionForAll('shoot', attack)
@@ -459,7 +468,7 @@ function FunBotUIServer:_writeSettings(p_Player, p_Request)
 					end
 				end
 
-			elseif l_Item.Type == Type.Table then
+			elseif l_Item.Type == Type.List then
 				for _, l_Value in pairs(l_Item.Reference) do
 					if l_Value == p_Request[l_Item.Name] then
 						s_Value = l_Value
@@ -559,6 +568,7 @@ function FunBotUIServer:_writeSettings(p_Player, p_Request)
 end
 
 if g_FunBotUIServer == nil then
+	---@type FunBotUIServer
 	g_FunBotUIServer = FunBotUIServer()
 end
 

@@ -79,6 +79,7 @@ function Language:I18N(p_Input, ...)
 end
 
 if g_Language == nil then
+	---@type Language
 	g_Language = Language()
 end
 

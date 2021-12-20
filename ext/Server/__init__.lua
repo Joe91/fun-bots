@@ -31,24 +31,40 @@ require('Vehicles')
 require('Model/Globals')
 require('Constants/Permissions')
 
+---@type Logger
 local m_Logger = Logger("FunBotServer", Debug.Server.INFO)
 
 require('__shared/Utilities')
 
+---@type NodeEditor
 local m_NodeEditor = require('NodeEditor')
+---@type WeaponModification
 local m_WeaponModification = require('WeaponModification')
+---@type Language
 local m_Language = require('__shared/Language')
+---@type SettingsManager
 local m_SettingsManager = require('SettingsManager')
+---@type BotManager
 local m_BotManager = require('BotManager')
+---@type BotSpawner
 local m_BotSpawner = require('BotSpawner')
+---@type WeaponList
 local m_WeaponList = require('__shared/WeaponList')
+---@type BugReport
 local m_bugReport = require('Debug/BugReport')
+---@type ChatCommands
 local m_ChatCommands = require('Commands/Chat')
+---@type Console
 local m_Console = require('Commands/Console')
+---@type RCONCommands
 local m_RCONCommands = require('Commands/RCON')
+---@type FunBotUIServer
 local m_FunBotUIServer = require('UIServer')
+---@type AirTargets
 local m_AirTargets = require('AirTargets')
+---@type GameDirector
 local m_GameDirector = require('GameDirector')
+---@type PermissionManager
 PermissionManager = require('PermissionManager')
 
 
@@ -684,7 +700,7 @@ function FunBotServer:SetGameMode(p_GameMode)
 		Globals.IsDomination = false
 	end
 
-	if p_GameMode == 'RushLarge0' or 
+	if p_GameMode == 'RushLarge0' or
 	p_GameMode == 'SquadRush0' then
 		Globals.IsRush = true
 	else
@@ -699,6 +715,7 @@ function FunBotServer:SetGameMode(p_GameMode)
 end
 
 if g_FunBotServer == nil then
+	---@type FunBotServer
 	g_FunBotServer = FunBotServer()
 end
 

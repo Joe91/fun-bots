@@ -1,4 +1,4 @@
-
+---@class UpdateFlag
 UpdateFlag = {
 	None = 0,
 	Weapons = 1,

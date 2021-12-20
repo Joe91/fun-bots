@@ -100,7 +100,7 @@ Language:add(code, "max number of bots in one team for Scavenger", "max number o
 Language:add(code, "FOV of Bots", "FOV of Bots")
 Language:add(code, "Degrees of FOV of Bot", "Degrees of FOV of Bot")
 Language:add(code, "FOV of Bots Verticle", "FOV of Bots Verticle")
-Language:add(code, "Degrees of FOV of Bot in verticle  direction", "Degrees of FOV of Bot in verticle  direction")
+Language:add(code, "Degrees of FOV of Bot in verticle direction", "Degrees of FOV of Bot in verticle direction")
 Language:add(code, "Max Raycast Distance", "Max Raycast Distance")
 Language:add(code, "meters bots start shooting at player", "meters bots start shooting at player")
 Language:add(code, "Max Shoot-Distance No Sniper", "Max Shoot-Distance No Sniper")

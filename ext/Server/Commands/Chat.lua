@@ -415,6 +415,7 @@ function ChatCommands:Execute(p_Parts, p_Player)
 end
 
 if g_ChatCommands == nil then
+	---@type ChatCommands
 	g_ChatCommands = ChatCommands()
 end
 

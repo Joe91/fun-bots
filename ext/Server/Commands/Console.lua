@@ -66,6 +66,7 @@ function Console:RegisterConsoleCommands(p_Player)
 end
 
 if g_Console == nil then
+	---@type Console
 	g_Console = Console()
 end
 

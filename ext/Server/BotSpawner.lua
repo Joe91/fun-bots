@@ -3,10 +3,15 @@ BotSpawner = class('BotSpawner')
 
 require('Model/SpawnSet')
 
+---@type NodeCollection
 local m_NodeCollection = require('__shared/NodeCollection')
+---@type BotManager
 local m_BotManager = require('BotManager')
+---@type WeaponList
 local m_WeaponList = require('__shared/WeaponList')
+---@type Utilities
 local m_Utilities = require('__shared/Utilities')
+---@type Logger
 local m_Logger = Logger("BotSpawner", Debug.Server.BOT)
 
 function BotSpawner:__init()
@@ -14,15 +19,20 @@ function BotSpawner:__init()
 end
 
 function BotSpawner:RegisterVars()
-	self._BotSpawnTimer = 0
+	self._BotSpawnTimer = 0.0
 	self._LastRound = 0
-	self._PlayerUpdateTimer = 0
-	self._SpawnInObjectsTimer = 0
+	self._PlayerUpdateTimer = 0.0
+	-- TODO: remove? unused
+	self._SpawnInObjectsTimer = 0.0
 	self._FirstSpawnInLevel = true
 	self._FirstSpawnDelay = Registry.BOT_SPAWN.FIRST_SPAWN_DELAY
 	self._UpdateActive = false
+	---@type SpawnSet[]
 	self._SpawnSets = {}
+	---@type string[]
+	---`playerName[]` @kick players that use botNames
 	self._KickPlayers = {}
+	---@type Bot[]
 	self._BotsWithoutPath = {}
 end
 
@@ -37,11 +47,11 @@ end
 function BotSpawner:OnLevelLoaded(p_Round)
 	m_Logger:Write("on level loaded on spawner")
 	self._FirstSpawnInLevel = true
-	self._PlayerUpdateTimer = 0
+	self._PlayerUpdateTimer = 0.0
 	self._FirstSpawnDelay = Registry.BOT_SPAWN.FIRST_SPAWN_DELAY
 
-	if (Config.TeamSwitchMode == TeamSwitcheModes.SwitchForRoundTwo and p_Round ~= self._LastRound) or
-	(Config.TeamSwitchMode == TeamSwitcheModes.AlwaysSwitchTeams) then
+	if (Config.TeamSwitchMode == TeamSwitchModes.SwitchForRoundTwo and p_Round ~= self._LastRound) or
+	(Config.TeamSwitchMode == TeamSwitchModes.AlwaysSwitchTeams) then
 		m_Logger:Write("switch teams")
 		self:_SwitchTeams()
 	end
@@ -54,7 +64,7 @@ function BotSpawner:OnLevelDestroy()
 	self._UpdateActive = false
 	self._FirstSpawnInLevel = true
 	self._FirstSpawnDelay = Registry.BOT_SPAWN.FIRST_SPAWN_DELAY
-	self._PlayerUpdateTimer = 0
+	self._PlayerUpdateTimer = 0.0
 end
 
 -- =============================================
@@ -67,10 +77,10 @@ function BotSpawner:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	end
 
 	if self._FirstSpawnInLevel then
-		if self._FirstSpawnDelay <= 0 then
+		if self._FirstSpawnDelay <= 0.0 then
 			m_BotManager:ConfigGlobals()
 			self:UpdateBotAmountAndTeam()
-			self._PlayerUpdateTimer = 0
+			self._PlayerUpdateTimer = 0.0
 			self._FirstSpawnInLevel = false
 		else
 			self._FirstSpawnDelay = self._FirstSpawnDelay - p_DeltaTime
@@ -78,15 +88,15 @@ function BotSpawner:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	else
 		self._PlayerUpdateTimer = self._PlayerUpdateTimer + p_DeltaTime
 
-		if self._PlayerUpdateTimer > 2 then
-			self._PlayerUpdateTimer = 0
+		if self._PlayerUpdateTimer > 2.0 then
+			self._PlayerUpdateTimer = 0.0
 			self:UpdateBotAmountAndTeam()
 		end
 	end
 
 	if #self._SpawnSets > 0 then
 		if self._BotSpawnTimer > 0.2 then --time to wait between spawn. 0.2 works
-			self._BotSpawnTimer = 0
+			self._BotSpawnTimer = 0.0
 			local s_SpawnSet = table.remove(self._SpawnSets)
 			self:_SpawnSingleWayBot(s_SpawnSet.m_PlayerVarOfBot, s_SpawnSet.m_UseRandomWay, s_SpawnSet.m_ActiveWayIndex, s_SpawnSet.m_IndexOnPath, nil, s_SpawnSet.m_Team)
 		end
@@ -602,6 +612,7 @@ function BotSpawner:SpawnWayBots(p_Player, p_Amount, p_UseRandomWay, p_ActiveWay
 	end
 
 	for i = 1, p_Amount do
+		---@type SpawnSet
 		local s_SpawnSet = SpawnSet()
 		s_SpawnSet.m_PlayerVarOfBot = nil
 		s_SpawnSet.m_UseRandomWay = p_UseRandomWay
@@ -945,13 +956,13 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 					end
 				else
 					local s_Bot = m_BotManager:CreateBot(s_Name, s_TeamId, s_SquadId)
-		
+
 					if s_Bot ~= nil then
 						-- check for first one in squad
 						if (TeamSquadManager:GetSquadPlayerCount(s_TeamId, s_SquadId) == 1) then
 							s_Bot.m_Player:SetSquadLeader(true, false) -- not private
 						end
-		
+
 						s_Bot:SetVarsWay(nil, true, 0, 0, false)
 						self:_SpawnBot(s_Bot, s_Transform, true)
 						if s_Bot:_EnterVehicleEntity(s_SpawnEntity, false) ~= 0 then
@@ -1209,7 +1220,7 @@ function BotSpawner:_GetKitAppearanceCustomization(p_TeamId, p_Kit, p_Color, p_P
 
 	local s_PrimaryWeaponResource = ResourceManager:SearchForDataContainer(p_Primary:getResourcePath())
 	s_PrimaryWeapon.weapon = SoldierWeaponUnlockAsset(s_PrimaryWeaponResource)
-	self:_SetAttachments(s_PrimaryWeapon, p_Primary:getAllAttachements())
+	self:_SetAttachments(s_PrimaryWeapon, p_Primary:getAllAttachments())
 
 	local s_PrimaryGadget = UnlockWeaponAndSlot()
 	s_PrimaryGadget.weapon = SoldierWeaponUnlockAsset(s_Gadget1Weapon)
@@ -1473,6 +1484,7 @@ function BotSpawner:_SwitchTeams()
 end
 
 if g_BotSpawner == nil then
+	---@type BotSpawner
 	g_BotSpawner = BotSpawner()
 end
 

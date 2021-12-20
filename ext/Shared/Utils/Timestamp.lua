@@ -17,6 +17,7 @@ end
 
 -- Enums for different time units used to convert milliseconds into a readable format to the clients.
 -- @author Firjen <https://github.com/Firjens>
+---@class TimeUnits
 TimeUnits = {
 	FIT = 99,
 	DAYS = 4,
@@ -31,7 +32,7 @@ TimeUnits = {
 -- @author Firjen <https://github.com/Firjens>
 -- @return String - [Double-like] (eg. 2.1, 1.6, 0.5)
 function Trim(degree, number)
-    return string.format("%.1f",number)
+	return string.format("%.1f",number)
 end
 
 -- Convert to a readable format (eg. 5 Minutes, 12 Seconds, etc.)

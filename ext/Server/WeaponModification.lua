@@ -2,6 +2,7 @@
 WeaponModification = class('WeaponModification')
 
 require('__shared/Config')
+---@type Logger
 local m_Logger = Logger("WeaponModification", Debug.Shared.MODIFICATIONS)
 
 
@@ -267,6 +268,7 @@ function WeaponModification:_MakeWritable(p_Instance)
 end
 
 if g_WeaponModification == nil then
+	---@type WeaponModification
 	g_WeaponModification = WeaponModification()
 end
 

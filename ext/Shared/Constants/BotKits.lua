@@ -1,3 +1,4 @@
+---@class BotKits
 BotKits = {
 	RANDOM_KIT = 0,
 	Assault = 1,

@@ -1,6 +1,7 @@
 --
 -- SOON DEPRECATED - A better debugging system is currently in development by @Firjens
 --
+---@class Debug
 Debug = {
 	Globals = {
 		UPDATE = true				-- Debug the Updater

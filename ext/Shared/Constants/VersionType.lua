@@ -1,3 +1,4 @@
+---@class VersionType
 VersionType = {
 	Release = 0,
 	Stable = 1,

@@ -3,8 +3,11 @@ RCONCommands = class('RCONCommands')
 
 require('__shared/Config')
 
+---@type BotManager
 local m_BotManager = require('BotManager')
+---@type BotSpawner
 local m_BotSpawner = require('BotSpawner')
+---@type SettingsManager
 local m_SettingsManager = require('SettingsManager')
 
 function RCONCommands:__init()
@@ -275,7 +278,7 @@ function RCONCommands:CreateConfigCommands()
 			if p_Args == nil or #p_Args == 0 then
 				-- get var
 				return {'OK', 'value of var '.. s_VarName .. ' is '..tostring(Config[s_VarName])}
-			elseif #p_Args == 1 and  p_Args[1] ~= nil then
+			elseif #p_Args == 1 and p_Args[1] ~= nil then
 				-- set var
 				local s_Result = m_SettingsManager:UpdateSetting(s_VarName, p_Args[1])
 				if s_Result then
@@ -302,6 +305,7 @@ function RCONCommands:_CreateCommand(p_Name, p_Callback)
 end
 
 if g_RCONCommands == nil then
+	---@type RCONCommands
 	g_RCONCommands = RCONCommands()
 end
 

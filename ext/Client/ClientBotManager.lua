@@ -1,8 +1,11 @@
 ---@class ClientBotManager
 ClientBotManager = class('ClientBotManager')
 
+---@type WeaponList
 local m_WeaponList = require('__shared/WeaponList')
+---@type Utilities
 local m_Utilities = require('__shared/Utilities')
+---@type Logger
 local m_Logger = Logger("ClientBotManager", Debug.Client.INFO)
 
 function ClientBotManager:__init()
@@ -90,7 +93,7 @@ function ClientBotManager:DoRaycast(p_Pos1, p_Pos2, p_InObjectPos1, p_InObjectPo
 		if p_InObjectPos2 then
 			s_MaxHits = s_MaxHits + 1
 		end
-		local s_RaycastFlags =  RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter
+		local s_RaycastFlags = RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter
 		local s_MaterialFlags = 0 --MaterialFlags.MfPenetrable | MaterialFlags.MfClientDestructible | MaterialFlags.MfBashable | MaterialFlags.MfSeeThrough | MaterialFlags.MfNoCollisionResponse | MaterialFlags.MfNoCollisionResponseCombined
 
 		local s_RayHits = RaycastManager:CollisionRaycast(p_Pos1, p_Pos2, s_MaxHits, s_MaterialFlags, s_RaycastFlags)
@@ -111,7 +114,7 @@ function ClientBotManager:DoRaycast(p_Pos1, p_Pos2, p_InObjectPos1, p_InObjectPo
 			end
 		end
 
-		local s_RaycastFlags =  RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.IsAsyncRaycast
+		local s_RaycastFlags = RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.IsAsyncRaycast
 		local s_Raycast = RaycastManager:Raycast(p_Pos1, p_Pos2, s_RaycastFlags)
 
 		if s_Raycast == nil or s_Raycast.rigidBody == nil then
@@ -123,7 +126,7 @@ function ClientBotManager:DoRaycast(p_Pos1, p_Pos2, p_InObjectPos1, p_InObjectPo
 end
 
 function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
-	if p_UpdatePass ~= UpdatePass.UpdatePass_PreSim or not self.m_ReadyToUpdate then --UpdatePass_PreSim  UpdatePass_PreFrame
+	if p_UpdatePass ~= UpdatePass.UpdatePass_PreSim or not self.m_ReadyToUpdate then --UpdatePass_PreSim UpdatePass_PreFrame
 		return
 	end
 
@@ -183,7 +186,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 		local s_EnemyPlayers = {}
 		for _, l_Player in pairs(PlayerManager:GetPlayers()) do
-			if l_Player.teamId ~= self.m_Player.teamId and self.m_Player.teamId ~= 0 then  -- don't let bots attack spectators
+			if l_Player.teamId ~= self.m_Player.teamId and self.m_Player.teamId ~= 0 then -- don't let bots attack spectators
 				table.insert(s_EnemyPlayers, l_Player)
 			end
 		end
@@ -225,7 +228,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 				return --only one raycast per cycle
 			end
 
-			if s_CheckCount >= Registry.CLIENT.MAX_CHECKS_PER_CYCLE  then
+			if s_CheckCount >= Registry.CLIENT.MAX_CHECKS_PER_CYCLE then
 				self.m_LastIndex = s_Index
 				return
 			end
@@ -347,6 +350,7 @@ function ClientBotManager:OnBulletEntityCollision(p_HookCtx, p_Entity, p_Hit, p_
 end
 
 if g_ClientBotManager == nil then
+	---@type ClientBotManager
 	g_ClientBotManager = ClientBotManager()
 end
 

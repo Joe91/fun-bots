@@ -1,3 +1,4 @@
+---@class BotMoveModes
 BotMoveModes = {
 	Standstill = 0,
 	Mirror = 3,
@@ -7,12 +8,14 @@ BotMoveModes = {
 	Shooting = 9
 }
 
+---@class BotSpawnModes
 BotSpawnModes = {
 	NoRespawn = 0,
 	RespawnFixedPath = 4,
 	RespawnRandomPath = 5
 }
 
+---@class BotAttackingModes
 BotAttackingModes = {
 	NoAttack = 0,
 	AttackWithRifle = 1,
@@ -23,6 +26,7 @@ BotAttackingModes = {
 	EnterVehicleOfPlayer = 6
 }
 
+---@class BotActionFlags
 BotActionFlags = {
 	NoActionActive = 0,
 	MeleeActive = 1,
@@ -34,6 +38,7 @@ BotActionFlags = {
 	OtherActionActive = 7,
 }
 
+---@class VehicleTypes
 VehicleTypes = {
 	NoVehicle = 0,
 	Tank = 1,
@@ -46,6 +51,7 @@ VehicleTypes = {
 	StationaryAA = 8
 }
 
+---@class VehicleAttackModes
 VehicleAttackModes = {
 	NoAttack = 0,
 	AttackWithRifle = 1,

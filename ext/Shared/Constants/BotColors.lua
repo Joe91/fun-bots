@@ -1,3 +1,4 @@
+---@class BotColors
 BotColors = {
 	RANDOM_COLOR = 0,
 	Urban = 1,

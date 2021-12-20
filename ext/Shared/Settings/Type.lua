@@ -8,6 +8,7 @@
 	@value: Enum
 	@value: Boolean
 ]]
+---@class Type
 Type = {
 	Text = 0,
 	Integer = 1,

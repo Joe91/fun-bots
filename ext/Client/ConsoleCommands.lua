@@ -33,6 +33,7 @@ function ConsoleCommands:OnPrintResponse(p_Response)
 end
 
 if g_ConsoleCommands == nil then
+	---@type ConsoleCommands
 	g_ConsoleCommands = ConsoleCommands()
 end
 

@@ -3,7 +3,9 @@ ClientNodeEditor = class "ClientNodeEditor"
 
 require('__shared/Config')
 
+---@type NodeCollection
 local m_NodeCollection = require('__shared/NodeCollection')
+---@type Logger
 local m_Logger = Logger("ClientNodeEditor", Debug.Client.NODEEDITOR)
 
 function ClientNodeEditor:__init()
@@ -46,15 +48,15 @@ function ClientNodeEditor:__init()
 	self.m_CustomTraceSaving = false
 
 	self.m_RaycastTimer = 0
-    self.m_NodesToDraw = {}
+	self.m_NodesToDraw = {}
 	self.m_NodesToDraw_temp = {}
-    self.m_LinesToDraw = {}
+	self.m_LinesToDraw = {}
 	self.m_LinesToDraw_temp = {}
-    self.m_TextToDraw = {}
+	self.m_TextToDraw = {}
 	self.m_TextToDraw_temp = {}
 	self.m_TextPosToDraw = {}
 	self.m_TextPosToDraw_temp = {}
-    self.m_ObbToDraw = {}
+	self.m_ObbToDraw = {}
 	self.m_ObbToDraw_temp = {}
 	self.m_lastDrawIndexPath = 0
 	self.m_lastDrawIndexNode = 0
@@ -404,7 +406,7 @@ function ClientNodeEditor:_onToggleMoveNode(p_Args)
 
 	if self.m_EditMode == 'move' then
 		self.m_EditMode = 'none'
-        
+
 		self.editRayHitStart = nil
 		self.m_EditModeManualOffset = Vec3.zero
 
@@ -1176,7 +1178,7 @@ function ClientNodeEditor:_getNewIndex()
 	end
 
 	for i = 1, s_HighestIndex do
-		if s_AllPaths[i] == nil or s_AllPaths[i] == {} then	
+		if s_AllPaths[i] == nil or s_AllPaths[i] == {} then
 			return i
 		end
 	end
@@ -1375,15 +1377,15 @@ function ClientNodeEditor:_onUnload(p_Args)
 	self.m_lastDrawIndexPath = 0
 	self.m_lastDrawIndexNode = 0
 
-    self.m_NodesToDraw = {}
+	self.m_NodesToDraw = {}
 	self.m_NodesToDraw_temp = {}
-    self.m_LinesToDraw = {}
+	self.m_LinesToDraw = {}
 	self.m_LinesToDraw_temp = {}
-    self.m_TextToDraw = {}
+	self.m_TextToDraw = {}
 	self.m_TextToDraw_temp = {}
 	self.m_TextPosToDraw = {}
 	self.m_TextPosToDraw_temp = {}
-    self.m_ObbToDraw = {}
+	self.m_ObbToDraw = {}
 	self.m_ObbToDraw_temp = {}
 
 	if p_Args ~= nil then
@@ -1585,10 +1587,10 @@ function ClientNodeEditor:OnClientUpdateInput(p_DeltaTime)
 			self:_onToggleMoveNode()
 			return
 		end
-        
-        if InputManager:WentKeyDown(InputDeviceKeys.IDK_T) then
-            -- TODO: Not functional yet!
-            -- self:_onSwitchToArea()
+
+		if InputManager:WentKeyDown(InputDeviceKeys.IDK_T) then
+			-- TODO: Not functional yet!
+			-- self:_onSwitchToArea()
 			-- NetEvents:SendLocal('WaypointEditor:ChangeMode', self.m_EditMode, {tostring(self.m_EditModeManualSpeed), self.m_EditPositionMode})
 			return
 		end
@@ -1733,7 +1735,7 @@ function ClientNodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 
 	if (self.m_CustomTraceTimer >= 0 and self.m_Player ~= nil and self.m_Player.soldier ~= nil) then
 		self.m_CustomTraceTimer = self.m_CustomTraceTimer + p_DeltaTime
-		
+
 		local s_PlayerPos = self.m_Player.soldier.worldTransform.trans:Clone()
 
 		if self.m_CustomTraceTimer > self.m_CustomTraceDelay then
@@ -1837,7 +1839,7 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 			if self.m_RaycastTimer >= Registry.GAME_RAYCASTING.UPDATE_INTERVAL_NODEEDITOR then
 				self.m_RaycastTimer = 0
-			
+
 				-- perform raycast to get where player is looking
 				if self.m_EditMode == 'move' then
 					local s_Selection = m_NodeCollection:GetSelected()
@@ -1886,11 +1888,11 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 					end
 				end
 			end
-			
+
 			-- prepare draw of nodes
 			--self:DrawDebugThings(p_DeltaTime)
 			self:DrawSomeNodes(Config.NodesPerCycle)
-			-- collectgarbage("step", 1000) 
+			-- collectgarbage("step", 1000)
 		end
 
 		if self.m_BotVisionEnabled then
@@ -1930,7 +1932,7 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 					self.m_BotVisionPlayers[s_Players[p].name] = s_PosData
 				end
 			end
-		end    
+		end
 	end
 end
 
@@ -1978,16 +1980,16 @@ function ClientNodeEditor:OnUIDrawHud()
 	end
 
 	for _,l_Node in pairs(self.m_NodesToDraw) do
-        -- draw speres
-        DebugRenderer:DrawSphere(l_Node.pos, l_Node.radius, l_Node.color, l_Node.renderLines, l_Node.smallSizeSegmentDecrease)
-    end
-    for _,l_Line in pairs(self.m_LinesToDraw) do
-        -- draw lines
-        DebugRenderer:DrawLine(l_Line.from, l_Line.to, l_Line.colorFrom, l_Line.colorTo)
-    end
-    for _,l_Text in pairs(self.m_TextToDraw) do
-        -- draw text
-        DebugRenderer:DrawText2D(l_Text.x, l_Text.y, l_Text.text, l_Text.color, l_Text.scale)
+		-- draw speres
+		DebugRenderer:DrawSphere(l_Node.pos, l_Node.radius, l_Node.color, l_Node.renderLines, l_Node.smallSizeSegmentDecrease)
+	end
+	for _,l_Line in pairs(self.m_LinesToDraw) do
+		-- draw lines
+		DebugRenderer:DrawLine(l_Line.from, l_Line.to, l_Line.colorFrom, l_Line.colorTo)
+	end
+	for _,l_Text in pairs(self.m_TextToDraw) do
+		-- draw text
+		DebugRenderer:DrawText2D(l_Text.x, l_Text.y, l_Text.text, l_Text.color, l_Text.scale)
 	end
 	for _,l_TextPos in pairs(self.m_TextPosToDraw) do
 		local s_ScreenPos = ClientUtils:WorldToScreen(l_TextPos.pos)
@@ -1995,56 +1997,56 @@ function ClientNodeEditor:OnUIDrawHud()
 			DebugRenderer:DrawText2D(s_ScreenPos.x, s_ScreenPos.y, l_TextPos.text, l_TextPos.color, l_TextPos.scale)
 		end
 	end
-    for _,l_Obb in pairs(self.m_ObbToDraw) do
-        -- draw OBB
-        DebugRenderer:DrawOBB(l_Obb.p_Aab, l_Obb.transform, l_Obb.color)
-    end
+	for _,l_Obb in pairs(self.m_ObbToDraw) do
+		-- draw OBB
+		DebugRenderer:DrawOBB(l_Obb.p_Aab, l_Obb.transform, l_Obb.color)
+	end
 end
 
 function ClientNodeEditor:DrawSphere(p_Position, p_Size, p_Color, p_RenderLines, p_SmallSizeSegmentDecrease)
-    table.insert(self.m_NodesToDraw_temp, {
-        pos = p_Position,
-        radius = p_Size,
-        color = p_Color,
-        renderLines = p_RenderLines,
-        smallSizeSegmentDecrease = p_SmallSizeSegmentDecrease
-    })
+	table.insert(self.m_NodesToDraw_temp, {
+		pos = p_Position,
+		radius = p_Size,
+		color = p_Color,
+		renderLines = p_RenderLines,
+		smallSizeSegmentDecrease = p_SmallSizeSegmentDecrease
+	})
 end
 
 function ClientNodeEditor:DrawLine(p_From, p_To, p_ColorFrom, p_ColorTo)
-    table.insert(self.m_LinesToDraw_temp, {
-        from = p_From,
-        to = p_To,
-        colorFrom = p_ColorFrom,
-        colorTo = p_ColorTo
-    })
+	table.insert(self.m_LinesToDraw_temp, {
+		from = p_From,
+		to = p_To,
+		colorFrom = p_ColorFrom,
+		colorTo = p_ColorTo
+	})
 end
 
 function ClientNodeEditor:DrawText2D(p_X, p_Y, p_Text, p_Color, p_Scale)
-    table.insert(self.m_TextToDraw_temp, {
-        x = p_X,
+	table.insert(self.m_TextToDraw_temp, {
+		x = p_X,
 		y = p_Y,
 		text = p_Text,
-        color = p_Color,
-        scale = p_Scale
-    })
+		color = p_Color,
+		scale = p_Scale
+	})
 end
 
 function ClientNodeEditor:DrawPosText2D(p_Pos, p_Text, p_Color, p_Scale)
-    table.insert(self.m_TextPosToDraw_temp, {
-        pos = p_Pos,
+	table.insert(self.m_TextPosToDraw_temp, {
+		pos = p_Pos,
 		text = p_Text,
-        color = p_Color,
-        scale = p_Scale
-    })
+		color = p_Color,
+		scale = p_Scale
+	})
 end
 
 function ClientNodeEditor:DrawOBB(p_Aab, p_Transform, p_Color)
-    table.insert(self.m_ObbToDraw_temp, {
-        aab = p_Aab,
-        transform = p_Transform,
-        color = p_Color
-    })
+	table.insert(self.m_ObbToDraw_temp, {
+		aab = p_Aab,
+		transform = p_Transform,
+		color = p_Color
+	})
 end
 
 
@@ -2062,7 +2064,7 @@ function ClientNodeEditor:DrawDebugThings(p_DeltaTime)
 	end
 	self.m_DebugEntries['botSelectedWaypoints'] = s_Botwpcount
 
-    -- generic debug values
+	-- generic debug values
 	local s_DebugText = ''
 
 	self.m_DebugEntries['commoRoseEnabled'] = self.m_CommoRoseEnabled
@@ -2132,7 +2134,7 @@ function ClientNodeEditor:DrawDebugThings(p_DeltaTime)
 
 	--self:DrawText2D(self.helpTextLocation.x, self.helpTextLocation.y, helpText, self.colors.Text, 1)
 	-- draw debug selection traces
-	if Config.debugSelectionRaytraces then
+	if Config.DebugSelectionRaytraces then
 		if self.m_LastTraceStart ~= nil and self.m_LastTraceEnd ~= nil then
 			self:DrawLine(self.m_LastTraceStart, self.m_LastTraceEnd, self.m_Colors.Ray.Line[1], self.m_Colors.Ray.Line[2])
 		end
@@ -2148,7 +2150,7 @@ function ClientNodeEditor:DrawSomeNodes(p_NrOfNodes)
 	end
 	local s_FirstPath = true
 	local s_Count = 0
-	
+
 	-- draw waypoints stored in main collection
 	local s_WaypointPaths = m_NodeCollection:GetPaths()
 
@@ -2194,7 +2196,7 @@ function ClientNodeEditor:DrawSomeNodes(p_NrOfNodes)
 			end
 		end
 	end
-	
+
 	-- copy tables
 	self.m_NodesToDraw = self.m_NodesToDraw_temp
 	self.m_NodesToDraw_temp = {}
@@ -2490,6 +2492,7 @@ function ClientNodeEditor:Raycast(p_MaxDistance, p_UseAsync)
 end
 
 if g_ClientNodeEditor == nil then
+	---@type ClientNodeEditor
 	g_ClientNodeEditor = ClientNodeEditor()
 end
 
