@@ -459,7 +459,7 @@ function FunBotUIServer:_writeSettings(p_Player, p_Request)
 					end
 				end
 
-			elseif l_Item.Type == Type.Table then
+			elseif l_Item.Type == Type.List then
 				for _, l_Value in pairs(l_Item.Reference) do
 					if l_Value == p_Request[l_Item.Name] then
 						s_Value = l_Value

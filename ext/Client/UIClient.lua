@@ -198,7 +198,7 @@ function FunBotUIClient:_onUISettings(p_Data)
 				end
 			end
 			settings:addList(l_Item.Category, l_Item.Name, Language:I18N(l_Item.Text), s_EnumTable, s_Value, s_Default, Language:I18N(l_Item.Description))
-		elseif l_Item.Type == Type.Table then
+		elseif l_Item.Type == Type.List then
 			settings:addList(l_Item.Category, l_Item.Name, Language:I18N(l_Item.Text), l_Item.Reference, p_Data[l_Item.Name], l_Item.Default, Language:I18N(l_Item.Description))
 		elseif l_Item.Type == Type.Integer then
 			s_TypeString = "Integer"

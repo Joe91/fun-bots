@@ -695,7 +695,7 @@ function Bot:ResetSpawnVars()
 	self._AttackMode = BotAttackModes.RandomNotSet
 	self._ShootWayPoints = {}
 
-	if self.m_ActiveWeapon.Type == WeaponTypes.Sniper then
+	if self.m_ActiveWeapon.type == WeaponTypes.Sniper then
 		self._Skill = math.random()*Config.BotSniperWorseningSkill
 	else
 		self._Skill = math.random()*Config.BotWorseningSkill
@@ -1075,9 +1075,9 @@ function Bot:_UpdateAiming()
 			s_FullPositionTarget = self._ShootPlayer.controlledControllable.transform.trans:Clone()
 		else
 			local s_AimForHead = false
-			if self.m_ActiveWeapon.Type == WeaponTypes.Sniper then
+			if self.m_ActiveWeapon.type == WeaponTypes.Sniper then
 				s_AimForHead = Config.AimForHeadSniper
-			elseif self.m_ActiveWeapon.Type == WeaponTypes.LMG then
+			elseif self.m_ActiveWeapon.type == WeaponTypes.LMG then
 				s_AimForHead = Config.AimForHeadSupport
 			else
 				s_AimForHead = Config.AimForHead
