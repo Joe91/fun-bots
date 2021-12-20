@@ -1,8 +1,14 @@
 ---@class Weapon
 Weapon = class('Weapon')
 
+---@type Logger
 local m_Logger = Logger("Weapon", Debug.Shared.MODIFICATIONS)
 
+---@param p_Name string
+---@param p_Extension string|'"XP1"'|'"XP2"'|nil
+---@param p_Unlocks string[] @length 3 or 0
+---@param p_Type WeaponTypes
+---@param p_FullResource string
 function Weapon:__init(p_Name, p_Extension, p_Unlocks, p_Type, p_FullResource)
 	self.name = p_Name
 	self.extension = p_Extension
@@ -10,14 +16,14 @@ function Weapon:__init(p_Name, p_Extension, p_Unlocks, p_Type, p_FullResource)
 	self.type = p_Type
 	self.fullResource = p_FullResource
 
-	self.damage = 0
-	self.endDamage = 0
-	self.damageFalloffStartDistance = 0
-	self.damageFalloffEndDistance = 0
-	self.bulletSpeed= 0
-	self.bulletDrop = 0
-	self.fireCycle = 0
-	self.pauseCycle = 0
+	self.damage = 0.0
+	self.endDamage = 0.0
+	self.damageFalloffStartDistance = 0.0
+	self.damageFalloffEndDistance = 0.0
+	self.bulletSpeed = 0.0
+	self.bulletDrop = 0.0
+	self.fireCycle = 0.0
+	self.pauseCycle = 0.0
 	self.reload = 0
 	self.delayed = false
 	self.needvalues = true
@@ -25,9 +31,13 @@ end
 
 function Weapon:learnStatsValues()
 	local s_Success = false
+	---@type SoldierWeaponBlueprint
 	local s_Blueprint = nil
+	---@type FiringFunctionData
 	local s_FireData = nil
+	---@type AIWeaponData
 	local s_AiData = nil
+	---@type BulletEntityData
 	local s_BulletData = nil
 
 	s_Blueprint, s_Success = g_EbxEditUtils:GetWritableInstance(self:getResourcePath())
@@ -62,8 +72,8 @@ function Weapon:learnStatsValues()
 
 	-- stats depending on weapon-type
 	local s_AiDataString = tostring(s_AiData.name)
-	local s_FireDuration = 0
-	local s_FirePause = 0
+	local s_FireDuration = 0.0
+	local s_FirePause = 0.0
 	local s_DelayedShot = false
 	m_Logger:Write(self.name)
 
@@ -134,14 +144,17 @@ function Weapon:learnStatsValues()
 	self.damageFalloffStartDistance = s_BulletData.damageFalloffStartDistance
 	self.damageFalloffEndDistance = s_BulletData.damageFalloffStartDistance
 	self.bulletSpeed = s_FireData.shot.initialSpeed.z
-	self.bulletDrop = (s_BulletData.gravity or 0) * -1
+	self.bulletDrop = (s_BulletData.gravity or 0.0) * -1
 	self.fireCycle = s_FireDuration --aiData.minBurstCoolDownTime
 	self.pauseCycle = s_FirePause --(aiData.maxBurstCoolDownTime + aiData.minBurstCoolDownTime) / 2
+	---@type integer
 	self.reload = math.floor(s_FireData.ammo.magazineCapacity * 0.2)
 	self.delayed = s_DelayedShot
 	self.needvalues = false
 end
 
+---@param p_Unlock string|nil
+---@return string
 function Weapon:getResourcePath(p_Unlock)
 	local s_Unl = ""
 
@@ -174,7 +187,9 @@ function Weapon:getResourcePath(p_Unlock)
 	end
 end
 
-function Weapon:getAllAttachements()
+---@return string[]
+function Weapon:getAllAttachments()
+	---@type string[]
 	local s_AttachmentList = {}
 
 	for _, l_Attachment in pairs(self.unlocks) do

@@ -13,8 +13,8 @@ local MODULE_NAME = "Registry Manager"
 local m_registryUtil = nil
 
 function RegistryManager:__init()
-    local s_start = SharedUtils:GetTimeMS()
-	
+	local s_start = SharedUtils:GetTimeMS()
+
 	m_registryUtil = require('__shared/Registry/RegistryUtil')
 
 	print("Enabled \"" .. MODULE_NAME .. "\" in " .. ReadableTimetamp(SharedUtils:GetTimeMS() - s_start, TimeUnits.FIT, 1))
@@ -41,8 +41,8 @@ function RegistryManager:Get(variable, default, indispensable)
 	return default;
 end
 
-if g_Registry == nil then
-	g_Registry = RegistryManager()
+if g_RegistryManager == nil then
+	g_RegistryManager = RegistryManager()
 end
 
-return g_Registry
+return g_RegistryManager

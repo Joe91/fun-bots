@@ -2,8 +2,10 @@
 Database = class('Database')
 
 require('__shared/ArrayMap')
+---@type ArrayMap
 local m_Batches = ArrayMap()
 local m_Batched = ''
+---@type Logger
 local m_Logger = Logger("Database", Debug.Server.DATABASE)
 
 DatabaseField = {
@@ -228,6 +230,7 @@ function Database:Insert(p_TableName, p_Parameters)
 end
 
 if g_Database == nil then
+	---@type Database
 	g_Database = Database()
 end
 

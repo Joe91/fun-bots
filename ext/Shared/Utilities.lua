@@ -197,6 +197,7 @@ function requireExists(p_Module)
 end
 
 if g_Utilities == nil then
+	---@type Utilities
 	g_Utilities = Utilities()
 end
 

@@ -3,6 +3,8 @@
 ---@class Logger
 Logger = class "Logger"
 
+---@param p_ClassName string
+---@param p_ActivateLogging boolean
 function Logger:__init(p_ClassName, p_ActivateLogging)
 	if type(p_ClassName) ~= "string" then
 		error("Logger: Wrong arguments creating object, className is not a string. ClassName: "..tostring(p_ClassName))

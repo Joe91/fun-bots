@@ -21,5 +21,7 @@ require('__shared/WeaponList')
 require('__shared/EbxEditUtils')
 require('__shared/Registry/Registry')
 
+---@type Language
 local m_Language = require('__shared/Language')
+---@type RegistryManager
 local m_Registry = require('__shared/Registry/RegistryManager')

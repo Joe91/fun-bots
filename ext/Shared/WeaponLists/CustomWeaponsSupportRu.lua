@@ -1,3 +1,4 @@
+---@class CustomWeaponsSupportRu
 CustomWeaponsSupportRu = {
 	-- LMG
 	-- 'L86', --us

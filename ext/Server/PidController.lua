@@ -1,6 +1,10 @@
 ---@class PidController
 PidController = class('PidController')
 
+---@param p_Kp number
+---@param p_Ki number
+---@param p_Kd number
+---@param p_Limit number
 function PidController:__init(p_Kp, p_Ki, p_Kd, p_Limit)
 	self._Integral = 0
 	self._LastError = 0
@@ -40,6 +44,5 @@ function PidController:Update(p_Error)
 
 	return s_Output
 end
-
 
 return PidController

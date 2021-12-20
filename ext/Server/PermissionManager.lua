@@ -1,8 +1,11 @@
 ---@class PermissionManager
 PermissionManager = class('PermissionManager')
 
+---@type Logger
 local m_Logger = Logger("PermissionManager", Debug.Server.PERMISSIONS)
+---@type Database
 local m_Database = require('Database')
+---@type Console
 local m_Console = require('Commands/Console')
 
 function PermissionManager:__init()
@@ -332,6 +335,7 @@ function PermissionManager:GetDataByName(p_Name)
 end
 
 if g_PermissionManager == nil then
+	---@type PermissionManager
 	g_PermissionManager = PermissionManager()
 end
 

@@ -1,7 +1,8 @@
+---@class CustomWeaponsAssaultUs
 CustomWeaponsAssaultUs = {
 	-- Assault Rifles
 	-- 'AEK971', --ru
-	-- 'AN94',  --ru
+	-- 'AN94', --ru
 	-- 'AK74M', --ru
 	-- 'SteyrAug', --us
 	-- 'F2000', --both/none

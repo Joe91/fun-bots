@@ -1,8 +1,11 @@
 ---@class AirTargets
 AirTargets = class('AirTargets')
 
+---@type Utilities
 local m_Utilities = require('__shared/Utilities')
+---@type Vehicles
 local m_Vehicles = require("Vehicles")
+---@type Logger
 local m_Logger = Logger("BotManager", Debug.Server.BOT)
 
 
@@ -28,11 +31,11 @@ function AirTargets:OnVehicleExit(p_VehicleEntiy, p_Player)
 end
 
 function AirTargets:OnPlayerKilled(p_Player)
-    self:_RemoveTarget(p_Player)
+	self:_RemoveTarget(p_Player)
 end
 
 function AirTargets:OnPlayerDestroyed(p_Player)
-    self:_RemoveTarget(p_Player)
+	self:_RemoveTarget(p_Player)
 end
 
 -- public functions
@@ -82,6 +85,7 @@ end
 
 
 if g_AirTargets == nil then
+	---@type AirTargets
 	g_AirTargets = AirTargets()
 end
 

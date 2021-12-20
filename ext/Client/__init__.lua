@@ -24,13 +24,20 @@ require('__shared/WeaponList')
 require('__shared/EbxEditUtils')
 require('__shared/Utils/Logger')
 
+---@type Logger
 local m_Logger = Logger("FunBotClient", true)
 
+---@type ClientBotManager
 local m_ClientBotManager = require('ClientBotManager')
+---@type ClientNodeEditor
 local m_ClientNodeEditor = require('ClientNodeEditor')
+---@type ClientSpawnPointHelper
 local m_ClientSpawnPointHelper = require('ClientSpawnPointHelper')
+---@type ConsoleCommands
 local m_ConsoleCommands = require('ConsoleCommands')
+---@type Language
 local m_Language = require('__shared/Language')
+---@type FunBotUIClient
 local m_FunBotUIClient = require('UIClient')
 
 
@@ -91,12 +98,12 @@ function FunBotClient:OnEngineMessage(p_Message)
 end
 
 function FunBotClient:OnPlayerRespawn(p_Player)
-    local s_LocalPlayer = PlayerManager:GetLocalPlayer()
-    if s_LocalPlayer ~= nil and p_Player == s_LocalPlayer then
+	local s_LocalPlayer = PlayerManager:GetLocalPlayer()
+	if s_LocalPlayer ~= nil and p_Player == s_LocalPlayer then
 		local s_OldMemory = math.floor(collectgarbage("count")/1024)
 		collectgarbage('collect')
 		m_Logger:Write("*Collecting Garbage on Level Destroy: " .. math.floor(collectgarbage("count")/1024) .. " MB | Old Memory: " .. s_OldMemory .. " MB")
-    end
+	end
 end
 
 function FunBotClient:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
@@ -194,6 +201,7 @@ function FunBotClient:OnUIPushScreen(p_HookCtx, p_Screen, p_Priority, p_ParentGr
 end
 
 if g_FunBotClient == nil then
+	---@type FunBotClient
 	g_FunBotClient = FunBotClient()
 end
 

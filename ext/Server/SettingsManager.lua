@@ -3,10 +3,15 @@ SettingsManager = class('SettingsManager')
 
 require('__shared/Config')
 
+---@type Database
 local m_Database = require('Database')
+---@type BotManager
 local m_BotManager = require('BotManager')
+---@type BotSpawner
 local m_BotSpawner = require('BotSpawner')
+---@type WeaponModification
 local m_WeaponModification = require('WeaponModification')
+---@type WeaponList
 local m_WeaponList = require('__shared/WeaponList')
 
 function SettingsManager:__init()
@@ -275,6 +280,7 @@ function SettingsManager:UpdateSetting(p_Name, p_Value)
 end
 
 if g_Settings == nil then
+	---@type SettingsManager
 	g_Settings = SettingsManager()
 end
 

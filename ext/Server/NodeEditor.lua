@@ -1,7 +1,9 @@
 ---@class NodeEditor
 NodeEditor = class "NodeEditor"
 
+---@type NodeCollection
 local m_NodeCollection = require('__shared/NodeCollection')
+---@type Logger
 local m_Logger = Logger("NodeEditor", Debug.Server.NODEEDITOR)
 
 function NodeEditor:__init()
@@ -219,7 +221,7 @@ function NodeEditor:OnReceiveNodes(p_Player, p_NodeCount)
 	if PermissionManager:HasPermission(p_Player, 'UserInterface.WaypointEditor') == false then
 		ChatManager:SendMessage('You have no permissions for this action.', p_Player)
 		return
-	end	
+	end
 
 	m_NodeCollection:Clear()
 	self.m_PlayerSendingNodes = p_Player
@@ -338,6 +340,7 @@ function NodeEditor:Log(...)
 end
 
 if g_NodeEditor == nil then
+	---@type NodeEditor
 	g_NodeEditor = NodeEditor()
 end
 

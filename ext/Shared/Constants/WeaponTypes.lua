@@ -1,3 +1,4 @@
+---@class WeaponTypes
 WeaponTypes = {
 	Knife = 0,
 	Pistol = 1,

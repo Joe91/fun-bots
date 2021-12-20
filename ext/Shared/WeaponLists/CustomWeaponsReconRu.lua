@@ -1,3 +1,4 @@
+---@class CustomWeaponsReconRu
 CustomWeaponsReconRu = {
 	-- Sniper
 	-- 'JNG90', --ru

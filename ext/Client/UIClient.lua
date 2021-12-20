@@ -315,6 +315,7 @@ function FunBotUIClient:OnExtensionUnloading()
 end
 
 if g_FunBotUIClient == nil then
+	---@type FunBotUIClient
 	g_FunBotUIClient = FunBotUIClient()
 end
 

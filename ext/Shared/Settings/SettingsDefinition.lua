@@ -1,6 +1,7 @@
 --[[
 	@property: SettingsDefinition
 ]]
+---@class SettingsDefinition
 SettingsDefinition = {
 	--[[
 		@property: Categorys
@@ -27,6 +28,7 @@ SettingsDefinition = {
 		{
 			Name = "BotWeapon",
 			Text = "Bot Weapon",
+			---@type Type|integer
 			Type = Type.Enum,
 			Value = Config.BotWeapon,
 			Reference = BotWeapons,
@@ -38,6 +40,7 @@ SettingsDefinition = {
 		{
 			Name = "BotKit",
 			Text = "Bot Kit",
+			---@type Type|integer
 			Type = Type.Enum,
 			Value = Config.BotKit,
 			Reference = BotKits,
@@ -49,6 +52,7 @@ SettingsDefinition = {
 		{
 			Name = "BotColor",
 			Text = "Bot Color",
+			---@type Type|integer
 			Type = Type.Enum,
 			Reference = BotColors,
 			Value = Config.BotColor,
@@ -60,6 +64,7 @@ SettingsDefinition = {
 		{
 			Name = "ZombieMode",
 			Text = "Zombie Mode",
+			---@type Type|integer
 			Type = Type.Boolean,
 			Value = Config.ZombieMode,
 			Description = "Zombie Bot Mode",
@@ -72,6 +77,7 @@ SettingsDefinition = {
 		{
 			Name = "BotAimWorsening",
 			Text = "Bot Aim Worsening",
+			---@type Type|integer
 			Type = Type.Float,
 			Value = Config.BotAimWorsening,
 			Description = "make aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy).",
@@ -83,6 +89,7 @@ SettingsDefinition = {
 		{
 			Name = "BotSniperAimWorsening",
 			Text = "Bot Aim Worsening of Snipers",
+			---@type Type|integer
 			Type = Type.Float,
 			Value = Config.BotSniperAimWorsening,
 			Description = "see botAimWorsening, only for Sniper-rifles",
@@ -94,6 +101,7 @@ SettingsDefinition = {
 		{
 			Name = "BotSupportAimWorsening",
 			Text = "Bot Aim Worsening of Support",
+			---@type Type|integer
 			Type = Type.Float,
 			Value = Config.BotSupportAimWorsening,
 			Description = "see botAimWorsening, only for LMGs",
@@ -105,6 +113,7 @@ SettingsDefinition = {
 		{
 			Name = "BotWorseningSkill",
 			Text = "Bot Worsening Skill",
+			---@type Type|integer
 			Type = Type.Float,
 			Value = Config.BotWorseningSkill,
 			Description = "variation of the skill of a single bot. the higher, the worse the bots can get compared to the original settings",
@@ -116,6 +125,7 @@ SettingsDefinition = {
 		{
 			Name = "BotSniperWorseningSkill",
 			Text = "Bot Sniper Worsening Skill",
+			---@type Type|integer
 			Type = Type.Float,
 			Value = Config.BotSniperWorseningSkill,
 			Description = "see BotWorseningSkill - only for BOTs using sniper bolt-action rifles.",
@@ -127,6 +137,7 @@ SettingsDefinition = {
 		{
 			Name = "DamageFactorAssault",
 			Text = "Damage Factor Assault",
+			---@type Type|integer
 			Type = Type.Float,
 			Value = Config.DamageFactorAssault,
 			Description = "original Damage from bots gets multiplied by this",
@@ -138,6 +149,7 @@ SettingsDefinition = {
 		{
 			Name = "DamageFactorCarabine",
 			Text = "Damage Factor Carabine",
+			---@type Type|integer
 			Type = Type.Float,
 			Value = Config.DamageFactorCarabine,
 			Description = "original Damage from bots gets multiplied by this",
@@ -149,6 +161,7 @@ SettingsDefinition = {
 		{
 			Name = "DamageFactorLMG",
 			Text = "Damage Factor LMG",
+			---@type Type|integer
 			Type = Type.Float,
 			Value = Config.DamageFactorLMG,
 			Description = "original Damage from bots gets multiplied by this",
@@ -160,6 +173,7 @@ SettingsDefinition = {
 		{
 			Name = "DamageFactorPDW",
 			Text = "Damage Factor PDW",
+			---@type Type|integer
 			Type = Type.Float,
 			Value = Config.DamageFactorPDW,
 			Description = "original Damage from bots gets multiplied by this",
@@ -171,6 +185,7 @@ SettingsDefinition = {
 		{
 			Name = "DamageFactorSniper",
 			Text = "Damage Factor Sniper",
+			---@type Type|integer
 			Type = Type.Float,
 			Value = Config.DamageFactorSniper,
 			Description = "original Damage from bots gets multiplied by this",
@@ -182,6 +197,7 @@ SettingsDefinition = {
 		{
 			Name = "DamageFactorShotgun",
 			Text = "Damage Factor Shotgun",
+			---@type Type|integer
 			Type = Type.Float,
 			Value = Config.DamageFactorShotgun,
 			Description = "original Damage from bots gets multiplied by this",
@@ -193,6 +209,7 @@ SettingsDefinition = {
 		{
 			Name = "DamageFactorPistol",
 			Text = "Damage Factor Pistol",
+			---@type Type|integer
 			Type = Type.Float,
 			Value = Config.DamageFactorPistol,
 			Description = "original Damage from bots gets multiplied by this",
@@ -204,6 +221,7 @@ SettingsDefinition = {
 		{
 			Name = "DamageFactorKnife",
 			Text = "Damage Factor Knife",
+			---@type Type|integer
 			Type = Type.Float,
 			Value = Config.DamageFactorKnife,
 			Description = "original Damage from bots gets multiplied by this",
@@ -217,6 +235,7 @@ SettingsDefinition = {
 		{
 			Name = "SpawnMode",
 			Text = "Spawn Mode",
+			---@type Type|integer
 			Type = Type.Enum,
 			Value = Config.SpawnMode,
 			Description = "mode the bots spawn with",
@@ -228,17 +247,19 @@ SettingsDefinition = {
 		{
 			Name = "TeamSwitchMode",
 			Text = "Team Switch Mode",
+			---@type Type|integer
 			Type = Type.Enum,
 			Value = Config.TeamSwitchMode,
 			Description = "Mode to switch the team",
-			Reference = TeamSwitcheModes,
-			Default = TeamSwitcheModes.SwitchForRoundTwo,
+			Reference = TeamSwitchModes,
+			Default = TeamSwitchModes.SwitchForRoundTwo,
 			UpdateFlag = UpdateFlag.AmountAndTeam,
 			Category = "SPAWN"
 		},
 		{
 			Name = "SpawnInBothTeams",
 			Text = "Spawn Bots in all teams",
+			---@type Type|integer
 			Type = Type.Boolean,
 			Value = Config.SpawnInBothTeams,
 			Description = "Bots spawn in both teams",
@@ -249,6 +270,7 @@ SettingsDefinition = {
 		{
 			Name = "InitNumberOfBots",
 			Text = "Start Number of Bots",
+			---@type Type|integer
 			Type = Type.Integer,
 			Value = Config.InitNumberOfBots,
 			Description = "bots for spawnmode",
@@ -260,6 +282,7 @@ SettingsDefinition = {
 		{
 			Name = "NewBotsPerNewPlayer",
 			Text = "New Bots per Player",
+			---@type Type|integer
 			Type = Type.Float,
 			Value = Config.NewBotsPerNewPlayer,
 			Description = "number to increase Bots, when new players join",
@@ -271,6 +294,7 @@ SettingsDefinition = {
 		{
 			Name = "FactorPlayerTeamCount",
 			Text = "Factor Player Team Count",
+			---@type Type|integer
 			Type = Type.Float,
 			Value = Config.FactorPlayerTeamCount,
 			Description = "reduce playerteam in balanced_teams or fixed_number mode",
@@ -282,6 +306,7 @@ SettingsDefinition = {
 		{
 			Name = "BotTeam",
 			Text = "Team of the Bots",
+			---@type Type|integer
 			Type = Type.Integer,
 			Value = Config.BotTeam,
 			Description = "default bot team (0 = neutral / auto, 1 = US, 2 = RU) TeamId.Team2",
@@ -293,6 +318,7 @@ SettingsDefinition = {
 		{
 			Name = "BotNewLoadoutOnSpawn",
 			Text = "New Loadout on Spawn",
+			---@type Type|integer
 			Type = Type.Boolean,
 			Value = Config.BotNewLoadoutOnSpawn,
 			Description = "bots get a new kit and color, if they respawn",
@@ -303,6 +329,7 @@ SettingsDefinition = {
 		{
 			Name = "MaxAssaultBots",
 			Text = "Max Assault Bots",
+			---@type Type|integer
 			Type = Type.Integer,
 			Value = Config.MaxAssaultBots,
 			Description = "maximum number of Bots with Assault Kit. -1 = no limit",
@@ -314,6 +341,7 @@ SettingsDefinition = {
 		{
 			Name = "MaxEngineerBots",
 			Text = "Max Engineer Bots",
+			---@type Type|integer
 			Type = Type.Integer,
 			Value = Config.MaxEngineerBots,
 			Description = "maximum number of Bots with Engineer Kit. -1 = no limit",
@@ -325,6 +353,7 @@ SettingsDefinition = {
 		{
 			Name = "MaxSupportBots",
 			Text = "Max Support Bots",
+			---@type Type|integer
 			Type = Type.Integer,
 			Value = Config.MaxSupportBots,
 			Description = "maximum number of Bots with Support Kit. -1 = no limit",
@@ -336,6 +365,7 @@ SettingsDefinition = {
 		{
 			Name = "MaxReconBots",
 			Text = "Max Recon Bots",
+			---@type Type|integer
 			Type = Type.Integer,
 			Value = Config.MaxReconBots,
 			Description = "maximum number of Bots with Recon Kit. -1 = no limit",
@@ -347,6 +377,7 @@ SettingsDefinition = {
 		{
 			Name = "AdditionalBotSpawnDelay",
 			Text = "Additional Spawn Delay",
+			---@type Type|integer
 			Type = Type.Float,
 			Value = Config.AdditionalBotSpawnDelay,
 			Description = "additional time a bot waits to respawn",
@@ -358,6 +389,7 @@ SettingsDefinition = {
 		{
 			Name = "BotMaxHealth",
 			Text = "Bot Health at spawn",
+			---@type Type|integer
 			Type = Type.Float,
 			Value = Config.BotMaxHealth,
 			Description = "max health of bot (default 100.0)",
@@ -371,6 +403,7 @@ SettingsDefinition = {
 		{
 			Name = "MaxBotsPerTeamDefault",
 			Text = "Max Bots Per Team (default)",
+			---@type Type|integer
 			Type = Type.Integer,
 			Value = Config.MaxBotsPerTeamDefault,
 			Description = "max number of bots in one team, if no other mode fits",
@@ -382,6 +415,7 @@ SettingsDefinition = {
 		{
 			Name = "MaxBotsPerTeamTdm",
 			Text = "Max Bots Per Team (TDM)",
+			---@type Type|integer
 			Type = Type.Integer,
 			Value = Config.MaxBotsPerTeamTdm,
 			Description = "max number of bots in one team for TDM",
@@ -393,6 +427,7 @@ SettingsDefinition = {
 		{
 			Name = "MaxBotsPerTeamTdmc",
 			Text = "Max Bots Per Team (TDM-CQ)",
+			---@type Type|integer
 			Type = Type.Integer,
 			Value = Config.MaxBotsPerTeamTdmc,
 			Description = "max number of bots in one team for TDM-CQ",
@@ -404,6 +439,7 @@ SettingsDefinition = {
 		{
 			Name = "MaxBotsPerTeamSdm",
 			Text = "Max Bots Per Team (Squad-DM)",
+			---@type Type|integer
 			Type = Type.Integer,
 			Value = Config.MaxBotsPerTeamSdm,
 			Description = "max number of bots in one team for Squad-DM",
@@ -415,6 +451,7 @@ SettingsDefinition = {
 		{
 			Name = "MaxBotsPerTeamCl",
 			Text = "Max Bots Per Team (CQ-Large)",
+			---@type Type|integer
 			Type = Type.Integer,
 			Value = Config.MaxBotsPerTeamCl,
 			Description = "max number of bots in one team for CQ-Large",
@@ -426,6 +463,7 @@ SettingsDefinition = {
 		{
 			Name = "MaxBotsPerTeamCs",
 			Text = "Max Bots Per Team (CQ-Small)",
+			---@type Type|integer
 			Type = Type.Integer,
 			Value = Config.MaxBotsPerTeamCs,
 			Description = "max number of bots in one team for CQ-Small",
@@ -437,6 +475,7 @@ SettingsDefinition = {
 		{
 			Name = "MaxBotsPerTeamCal",
 			Text = "Max Bots Per Team (CQ-Assault-Large)",
+			---@type Type|integer
 			Type = Type.Integer,
 			Value = Config.MaxBotsPerTeamCal,
 			Description = "max number of bots in one team for CQ-Assault-Large",
@@ -448,6 +487,7 @@ SettingsDefinition = {
 		{
 			Name = "MaxBotsPerTeamCas",
 			Text = "Max Bots Per Team (CQ-Assault-Small)",
+			---@type Type|integer
 			Type = Type.Integer,
 			Value = Config.MaxBotsPerTeamCas,
 			Description = "max number of bots in one team for CQ-Assault-Small",
@@ -459,6 +499,7 @@ SettingsDefinition = {
 		{
 			Name = "MaxBotsPerTeamRl",
 			Text = "Max Bots Per Team (Rush)",
+			---@type Type|integer
 			Type = Type.Integer,
 			Value = Config.MaxBotsPerTeamRl,
 			Description = "max number of bots in one team for Rush",
@@ -470,6 +511,7 @@ SettingsDefinition = {
 		{
 			Name = "MaxBotsPerTeamCtf",
 			Text = "Max Bots Per Team (CTF)",
+			---@type Type|integer
 			Type = Type.Integer,
 			Value = Config.MaxBotsPerTeamCtf,
 			Description = "max number of bots in one team for CTF",
@@ -481,6 +523,7 @@ SettingsDefinition = {
 		{
 			Name = "MaxBotsPerTeamD",
 			Text = "Max Bots Per Team (Domination)",
+			---@type Type|integer
 			Type = Type.Integer,
 			Value = Config.MaxBotsPerTeamD,
 			Description = "max number of bots in one team for Domination",
@@ -492,6 +535,7 @@ SettingsDefinition = {
 		{
 			Name = "MaxBotsPerTeamGm",
 			Text = "Max Bots Per Team (Gunmaster)",
+			---@type Type|integer
 			Type = Type.Integer,
 			Value = Config.MaxBotsPerTeamGm,
 			Description = "max number of bots in one team for Gunmaster",
@@ -503,6 +547,7 @@ SettingsDefinition = {
 		{
 			Name = "MaxBotsPerTeamS",
 			Text = "Max Bots Per Team (Scavenger)",
+			---@type Type|integer
 			Type = Type.Integer,
 			Value = Config.MaxBotsPerTeamS,
 			Description = "max number of bots in one team for Scavenger",
@@ -516,6 +561,7 @@ SettingsDefinition = {
 		{
 			Name = "FovForShooting",
 			Text = "FOV of Bots",
+			---@type Type|integer
 			Type = Type.Integer,
 			Value = Config.FovForShooting,
 			Description = "Degrees of FOV of Bot",
@@ -527,9 +573,10 @@ SettingsDefinition = {
 		{
 			Name = "FovVerticleForShooting",
 			Text = "FOV of Bots Verticle",
+			---@type Type|integer
 			Type = Type.Integer,
 			Value = Config.FovVerticleForShooting,
-			Description = "Degrees of FOV of Bot in verticle  direction",
+			Description = "Degrees of FOV of Bot in verticle direction",
 			Reference = Range(0.00, 180.00, 1.0),
 			Default = 90,
 			UpdateFlag = UpdateFlag.None,
@@ -538,6 +585,7 @@ SettingsDefinition = {
 		{
 			Name = "MaxRaycastDistance",
 			Text = "Max Raycast Distance",
+			---@type Type|integer
 			Type = Type.Integer,
 			Value = Config.MaxRaycastDistance,
 			Description = "meters bots start shooting at player",
@@ -549,6 +597,7 @@ SettingsDefinition = {
 		{
 			Name = "MaxShootDistanceNoSniper",
 			Text = "Max Shoot-Distance No Sniper",
+			---@type Type|integer
 			Type = Type.Integer,
 			Value = Config.MaxShootDistanceNoSniper,
 			Description = "meters a bot (not sniper) start shooting at player",
@@ -560,6 +609,7 @@ SettingsDefinition = {
 		{
 			Name = "MaxShootDistancePistol",
 			Text = "Max Shoot-Distance Pistol",
+			---@type Type|integer
 			Type = Type.Integer,
 			Value = Config.MaxShootDistancePistol,
 			Description = "only in auto-weapon-mode, the distance until a bot switches to pistol if his magazine is empty",
@@ -571,6 +621,7 @@ SettingsDefinition = {
 		{
 			Name = "BotAttackMode",
 			Text = "Bot Attack Mode",
+			---@type Type|integer
 			Type = Type.Enum,
 			Value = Config.BotAttackMode,
 			Description = "Mode the Bots attack with. Random, Crouch or Stand",
@@ -582,6 +633,7 @@ SettingsDefinition = {
 		{
 			Name = "ShootBackIfHit",
 			Text = "Shoot Back if Hit",
+			---@type Type|integer
 			Type = Type.Boolean,
 			Value = Config.ShootBackIfHit,
 			Description = "bot shoots back, if hit",
@@ -592,6 +644,7 @@ SettingsDefinition = {
 		{
 			Name = "BotsAttackBots",
 			Text = "Bots Attack Bots",
+			---@type Type|integer
 			Type = Type.Boolean,
 			Value = Config.BotsAttackBots,
 			Description = "bots attack bots from other team",
@@ -602,6 +655,7 @@ SettingsDefinition = {
 		{
 			Name = "MeleeAttackIfClose",
 			Text = "Melee Attack If Close",
+			---@type Type|integer
 			Type = Type.Boolean,
 			Value = Config.MeleeAttackIfClose,
 			Description = "bot attacks with melee if close",
@@ -612,6 +666,7 @@ SettingsDefinition = {
 		{
 			Name = "BotCanKillHimself",
 			Text = "Bots can kill themself",
+			---@type Type|integer
 			Type = Type.Boolean,
 			Value = Config.BotCanKillHimself,
 			Description = "bot takes falldamage or explosion-damage from onw frags",
@@ -622,6 +677,7 @@ SettingsDefinition = {
 		{
 			Name = "TeleportIfStuck",
 			Text = "Bots teleport them when stuck",
+			---@type Type|integer
 			Type = Type.Boolean,
 			Value = Config.TeleportIfStuck,
 			Description = "bot teleport to their target if stuck",
@@ -632,6 +688,7 @@ SettingsDefinition = {
 		{
 			Name = "BotsRevive",
 			Text = "Bots revive players",
+			---@type Type|integer
 			Type = Type.Boolean,
 			Value = Config.BotsRevive,
 			Description = "Bots revive other players",
@@ -642,6 +699,7 @@ SettingsDefinition = {
 		{
 			Name = "BotsThrowGrenades",
 			Text = "Bots throw grenades",
+			---@type Type|integer
 			Type = Type.Boolean,
 			Value = Config.BotsThrowGrenades,
 			Description = "Bots throw grenades",
@@ -652,6 +710,7 @@ SettingsDefinition = {
 		{
 			Name = "BotsDeploy",
 			Text = "Bots deploy bags",
+			---@type Type|integer
 			Type = Type.Boolean,
 			Value = Config.BotsDeploy,
 			Description = "Bots deploy ammo and medkits",
@@ -662,6 +721,7 @@ SettingsDefinition = {
 		{
 			Name = "DeployCycle",
 			Text = "Deploy Cycle",
+			---@type Type|integer
 			Type = Type.Integer,
 			Value = Config.DeployCycle,
 			Description = "time between deployment of bots in seconds",
@@ -673,6 +733,7 @@ SettingsDefinition = {
 		{
 			Name = "MoveSidewards",
 			Text = "Move Sidewards",
+			---@type Type|integer
 			Type = Type.Boolean,
 			Value = Config.MoveSidewards,
 			Description = "Bots move sidewards",
@@ -683,6 +744,7 @@ SettingsDefinition = {
 		{
 			Name = "MaxStraigtCycle",
 			Text = "Max straight Cycle",
+			---@type Type|integer
 			Type = Type.Float,
 			Value = Config.MaxStraigtCycle,
 			Description = "max time bots move straigt, before sidewares-movement (in sec)",
@@ -694,6 +756,7 @@ SettingsDefinition = {
 		{
 			Name = "MaxSideCycle",
 			Text = "Max Side Cycle",
+			---@type Type|integer
 			Type = Type.Float,
 			Value = Config.MaxSideCycle,
 			Description = "max time bots move sidewards, before straight-movement (in sec)",
@@ -705,6 +768,7 @@ SettingsDefinition = {
 		{
 			Name = "MinMoveCycle",
 			Text = "min Move Cycle",
+			---@type Type|integer
 			Type = Type.Float,
 			Value = Config.MinMoveCycle,
 			Description = "min time bots move sidewards or staight before switching (in sec)",
@@ -713,11 +777,12 @@ SettingsDefinition = {
 			UpdateFlag = UpdateFlag.None,
 			Category = "BEHAVIOUR"
 		},
-		
+
 		-- Vehicles behaviour
 		{
 			Name = "UseVehicles",
 			Text = "Use vehicles",
+			---@type Type|integer
 			Type = Type.Boolean,
 			Value = Config.UseVehicles,
 			Description = "Bots use vehicles",
@@ -728,6 +793,7 @@ SettingsDefinition = {
 		{
 			Name = "FovVehicleForShooting",
 			Text = "FOV of Vehicles",
+			---@type Type|integer
 			Type = Type.Integer,
 			Value = Config.FovForShooting,
 			Description = "Degrees of FOV of Non AA - Vehicles",
@@ -739,6 +805,7 @@ SettingsDefinition = {
 		{
 			Name = "FovVerticleVehicleForShooting",
 			Text = "FOV of Vehicles Verticle",
+			---@type Type|integer
 			Type = Type.Integer,
 			Value = Config.FovVerticleVehicleForShooting,
 			Description = "Degrees of FOV of Non AA-Vehicles",
@@ -750,6 +817,7 @@ SettingsDefinition = {
 		{
 			Name = "FovVerticleChopperForShooting",
 			Text = "FOV of Chopper Verticle",
+			---@type Type|integer
 			Type = Type.Integer,
 			Value = Config.FovVerticleChopperForShooting,
 			Description = "Degrees of pitch a chopper attacks",
@@ -761,6 +829,7 @@ SettingsDefinition = {
 		{
 			Name = "FovVehicleAAForShooting",
 			Text = "FOV of AA-Vehicles",
+			---@type Type|integer
 			Type = Type.Integer,
 			Value = Config.FovVehicleAAForShooting,
 			Description = "Degrees of FOV of AA - Vehicles",
@@ -772,6 +841,7 @@ SettingsDefinition = {
 		{
 			Name = "FovVerticleVehicleAAForShooting",
 			Text = "FOV of AA-Vehicles Verticle",
+			---@type Type|integer
 			Type = Type.Integer,
 			Value = Config.FovVerticleVehicleAAForShooting,
 			Description = "Degrees of FOV of AA-Vehicles",
@@ -783,6 +853,7 @@ SettingsDefinition = {
 		{
 			Name = "MaxRaycastDistanceVehicles",
 			Text = "Max Raycast Distance for Vehicles",
+			---@type Type|integer
 			Type = Type.Integer,
 			Value = Config.MaxRaycastDistance,
 			Description = "meters bots in Vehicles start shooting at player",
@@ -794,6 +865,7 @@ SettingsDefinition = {
 		{
 			Name = "MaxShootDistanceNoAntiAir",
 			Text = "Max Shoot-Distance No Anti Air",
+			---@type Type|integer
 			Type = Type.Integer,
 			Value = Config.MaxShootDistanceNoAntiAir,
 			Description = "meters a vehicle (no Anti-Air) starts shooting at player",
@@ -805,6 +877,7 @@ SettingsDefinition = {
 		{
 			Name = "VehicleWaitForPassengersTime",
 			Text = "Time a vehicle driver waits for passengers",
+			---@type Type|integer
 			Type = Type.Float,
 			Value = Config.VehicleWaitForPassengersTime,
 			Description = "seconds to wait for other passengers",
@@ -816,6 +889,7 @@ SettingsDefinition = {
 		{
 			Name = "ChopperDriversAttack",
 			Text = "Choppers Attack",
+			---@type Type|integer
 			Type = Type.Boolean,
 			Value = Config.ChopperDriversAttack,
 			Description = "if false choppers only attack without gunner on board",
@@ -826,6 +900,7 @@ SettingsDefinition = {
 		{
 			Name = "AABots",
 			Text = "Activate Auto-AA",
+			---@type Type|integer
 			Type = Type.Boolean,
 			Value = Config.AABots,
 			Description = "Enable Auto-AA by NyScorpy",
@@ -836,6 +911,7 @@ SettingsDefinition = {
 		{
 			Name = "MaxDistanceAABots",
 			Text = "Max Distance Auto-AA",
+			---@type Type|integer
 			Type = Type.Integer,
 			Value = Config.MaxDistanceAABots,
 			Description = "Max Range of Stationary AA",
@@ -848,6 +924,7 @@ SettingsDefinition = {
 		{
 			Name = "UseRandomWeapon",
 			Text = "Random Weapon usage",
+			---@type Type|integer
 			Type = Type.Boolean,
 			Value = Config.UseRandomWeapon,
 			Description = "use a random weapon out of the weapon set",
@@ -858,6 +935,7 @@ SettingsDefinition = {
 		{
 			Name = "AssaultWeaponSet",
 			Text = "Weapon Set Assault",
+			---@type Type|integer
 			Type = Type.Enum,
 			Value = Config.AssaultWeaponSet,
 			Description = "weaponset of Assault class. Custom uses the Shared/WeaponLists",
@@ -869,6 +947,7 @@ SettingsDefinition = {
 		{
 			Name = "EngineerWeaponSet",
 			Text = "Weapon Set Engineer",
+			---@type Type|integer
 			Type = Type.Enum,
 			Value = Config.EngineerWeaponSet,
 			Description = "weaponset of Engineer class. Custom uses the Shared/WeaponLists",
@@ -880,6 +959,7 @@ SettingsDefinition = {
 		{
 			Name = "SupportWeaponSet",
 			Text = "Weapon Set Support",
+			---@type Type|integer
 			Type = Type.Enum,
 			Value = Config.SupportWeaponSet,
 			Description = "weaponset of Support class. Custom uses the Shared/WeaponLists",
@@ -891,6 +971,7 @@ SettingsDefinition = {
 		{
 			Name = "ReconWeaponSet",
 			Text = "Weapon Set Recon",
+			---@type Type|integer
 			Type = Type.Enum,
 			Value = Config.ReconWeaponSet,
 			Description = "weaponset of Recon class. Custom uses the Shared/WeaponLists",
@@ -902,6 +983,7 @@ SettingsDefinition = {
 		{
 			Name = "AssaultWeapon",
 			Text = "Primary Weapon Assault",
+			---@type Type|integer
 			Type = Type.List,
 			Value = Config.AssaultWeapon,
 			Description = "primary weapon of Assault class, if random-weapon == false",
@@ -913,6 +995,7 @@ SettingsDefinition = {
 		{
 			Name = "EngineerWeapon",
 			Text = "Primary Weapon Engineer",
+			---@type Type|integer
 			Type = Type.List,
 			Value = Config.EngineerWeapon,
 			Description = "primary weapon of Engineer class, if random-weapon == false",
@@ -924,6 +1007,7 @@ SettingsDefinition = {
 		{
 			Name = "SupportWeapon",
 			Text = "Primary Weapon Support",
+			---@type Type|integer
 			Type = Type.List,
 			Value = Config.SupportWeapon,
 			Description = "primary weapon of Support class, if random-weapon == false",
@@ -935,6 +1019,7 @@ SettingsDefinition = {
 		{
 			Name = "ReconWeapon",
 			Text = "Primary Weapon Recon",
+			---@type Type|integer
 			Type = Type.List,
 			Value = Config.ReconWeapon,
 			Description = "primary weapon of Recon class, if random-weapon == false",
@@ -946,6 +1031,7 @@ SettingsDefinition = {
 		{
 			Name = "Pistol",
 			Text = "Pistol of Bots",
+			---@type Type|integer
 			Type = Type.List,
 			Value = Config.Pistol,
 			Description = "Pistol of Bots, if random-weapon == false",
@@ -957,6 +1043,7 @@ SettingsDefinition = {
 		{
 			Name = "Knife",
 			Text = "Knife of Bots",
+			---@type Type|integer
 			Type = Type.List,
 			Value = Config.Knife,
 			Description = "Knife of Bots, if random-weapon == false",
@@ -970,6 +1057,7 @@ SettingsDefinition = {
 		{
 			Name = "DebugTracePaths",
 			Text = "Debug Trace Paths",
+			---@type Type|integer
 			Type = Type.Boolean,
 			Value = Config.DebugTracePaths,
 			Description = "Shows the trace line and search area from Commo Rose selection",
@@ -980,6 +1068,7 @@ SettingsDefinition = {
 		{
 			Name = "WaypointRange",
 			Text = "Waypoint Range",
+			---@type Type|integer
 			Type = Type.Integer,
 			Value = Config.WaypointRange,
 			Description = "Set how far away waypoints are visible (meters)",
@@ -991,6 +1080,7 @@ SettingsDefinition = {
 		{
 			Name = "DrawWaypointLines",
 			Text = "Draw Waypoint Lines",
+			---@type Type|integer
 			Type = Type.Boolean,
 			Value = Config.DrawWaypointLines,
 			Description = "Draw waypoint connection Lines",
@@ -1001,6 +1091,7 @@ SettingsDefinition = {
 		{
 			Name = "LineRange",
 			Text = "Line Range",
+			---@type Type|integer
 			Type = Type.Integer,
 			Value = Config.LineRange,
 			Description = "Set how far away waypoint lines are visible (meters)",
@@ -1012,6 +1103,7 @@ SettingsDefinition = {
 		{
 			Name = "DrawWaypointIDs",
 			Text = "Draw Waypoint IDs",
+			---@type Type|integer
 			Type = Type.Boolean,
 			Value = Config.DrawWaypointIDs,
 			Description = "Draw waypoint IDs",
@@ -1022,6 +1114,7 @@ SettingsDefinition = {
 		{
 			Name = "TextRange",
 			Text = "Text Range",
+			---@type Type|integer
 			Type = Type.Integer,
 			Value = Config.TextRange,
 			Description = "Set how far away waypoint text is visible (meters)",
@@ -1033,6 +1126,7 @@ SettingsDefinition = {
 		{
 			Name = "DrawSpawnPoints",
 			Text = "Draw Spawn Points",
+			---@type Type|integer
 			Type = Type.Boolean,
 			Value = Config.DrawSpawnPoints,
 			Description = "Draw Spawn Points",
@@ -1043,6 +1137,7 @@ SettingsDefinition = {
 		{
 			Name = "SpawnPointRange",
 			Text = "Range of Spawnpoints",
+			---@type Type|integer
 			Type = Type.Integer,
 			Value = Config.SpawnPointRange,
 			Description = "Set how far away spawnpoints are visible (meters)",
@@ -1054,6 +1149,7 @@ SettingsDefinition = {
 		{
 			Name = "DebugSelectionRaytraces",
 			Text = "Debug Selection Raytraces",
+			---@type Type|integer
 			Type = Type.Boolean,
 			Value = Config.DebugSelectionRaytraces,
 			Description = "Shows the trace line and search area from Commo Rose selection",
@@ -1064,6 +1160,7 @@ SettingsDefinition = {
 		{
 			Name = "TraceDelta",
 			Text = "Trace Delta Points",
+			---@type Type|integer
 			Type = Type.Float,
 			Value = Config.TraceDelta,
 			Description = "update intervall of trace",
@@ -1075,6 +1172,7 @@ SettingsDefinition = {
 		{
 			Name = "NodesPerCycle",
 			Text = "Nodes that are drawn per cycle",
+			---@type Type|integer
 			Type = Type.Integer,
 			Value = Config.NodesPerCycle,
 			Description = "Set how many nodes get drawn per cycle. Affects performance",
@@ -1087,6 +1185,7 @@ SettingsDefinition = {
 		{
 			Name = "DistanceForDirectAttack",
 			Text = "Distance for direct attack",
+			---@type Type|integer
 			Type = Type.Integer,
 			Value = Config.DistanceForDirectAttack,
 			Description = "if that close, the bot can hear you",
@@ -1098,6 +1197,7 @@ SettingsDefinition = {
 		{
 			Name = "MaxBotAttackBotDistance",
 			Text = "Bot attack Bot distance",
+			---@type Type|integer
 			Type = Type.Integer,
 			Value = Config.MaxBotAttackBotDistance,
 			Description = "meters a bot attacks an other bot",
@@ -1109,6 +1209,7 @@ SettingsDefinition = {
 		{
 			Name = "MeleeAttackCoolDown",
 			Text = "Bot melee attack cool-down",
+			---@type Type|integer
 			Type = Type.Float,
 			Value = Config.MeleeAttackCoolDown,
 			Description = "the time a bot waits before attacking with melee again",
@@ -1120,6 +1221,7 @@ SettingsDefinition = {
 		{
 			Name = "AimForHead",
 			Text = "Bots without sniper aim for head",
+			---@type Type|integer
 			Type = Type.Boolean,
 			Value = Config.AimForHead,
 			Description = "bots without sniper aim for the head. More an experimental config",
@@ -1130,6 +1232,7 @@ SettingsDefinition = {
 		{
 			Name = "AimForHeadSniper",
 			Text = "Bots with Sniper aim for head",
+			---@type Type|integer
 			Type = Type.Boolean,
 			Value = Config.AimForHeadSniper,
 			Description = "bots with sniper aim for the head. More an experimental config",
@@ -1140,6 +1243,7 @@ SettingsDefinition = {
 		{
 			Name = "AimForHeadSupport",
 			Text = "Bots with Support LMGs aim for head",
+			---@type Type|integer
 			Type = Type.Boolean,
 			Value = Config.AimForHeadSupport,
 			Description = "bots with support LMGs aim for the head. More an experimental config",
@@ -1150,6 +1254,7 @@ SettingsDefinition = {
 		{
 			Name = "JumpWhileShooting",
 			Text = "jump while shooting",
+			---@type Type|integer
 			Type = Type.Boolean,
 			Value = Config.JumpWhileShooting,
 			Description = "bots jump over obstacles while shooting if needed",
@@ -1160,6 +1265,7 @@ SettingsDefinition = {
 		{
 			Name = "JumpWhileMoving",
 			Text = "jump while moving",
+			---@type Type|integer
 			Type = Type.Boolean,
 			Value = Config.JumpWhileMoving,
 			Description = "bots jump while moving. If false, only on obstacles!",
@@ -1170,6 +1276,7 @@ SettingsDefinition = {
 		{
 			Name = "OverWriteBotSpeedMode",
 			Text = "Overwrite speed mode",
+			---@type Type|integer
 			Type = Type.Enum,
 			Value = Config.OverWriteBotSpeedMode,
 			Description = "0 = no overwrite. 1 = prone, 2 = crouch, 3 = walk, 4 = run",
@@ -1181,6 +1288,7 @@ SettingsDefinition = {
 		{
 			Name = "OverWriteBotAttackMode",
 			Text = "Overwrite attack speed mode",
+			---@type Type|integer
 			Type = Type.Enum,
 			Value = Config.OverWriteBotAttackMode,
 			Description = "Affects Aiming!!! 0 = no overwrite. 1 = prone, 2 = crouch (good aim), 3 = walk (good aim), 4 = run",
@@ -1192,6 +1300,7 @@ SettingsDefinition = {
 		{
 			Name = "SpeedFactor",
 			Text = "speed facator",
+			---@type Type|integer
 			Type = Type.Float,
 			Value = Config.SpeedFactor,
 			Description = "reduces the movementspeed. 1 = normal, 0 = standing.",
@@ -1203,6 +1312,7 @@ SettingsDefinition = {
 		{
 			Name = "SpeedFactorAttack",
 			Text = "speed facator attack",
+			---@type Type|integer
 			Type = Type.Float,
 			Value = Config.SpeedFactorAttack,
 			Description = "reduces the movementspeed while attacking. 1 = normal, 0 = standing.",
@@ -1214,6 +1324,7 @@ SettingsDefinition = {
 		{
 			Name = "UseRandomNames",
 			Text = "Use Random Names",
+			---@type Type|integer
 			Type = Type.Boolean,
 			Value = Config.UseRandomNames,
 			Description = "changes names of the bots on every new round. Experimental right now...",
@@ -1226,6 +1337,7 @@ SettingsDefinition = {
 		{
 			Name = "BotFirstShotDelay",
 			Text = "Bot first shot delay",
+			---@type Type|integer
 			Type = Type.Float,
 			Value = Config.BotFirstShotDelay,
 			Description = "delay for first shot. If too small, there will be great spread in first cycle because its not kompensated jet.",
@@ -1237,6 +1349,7 @@ SettingsDefinition = {
 		{
 			Name = "BotMinTimeShootAtPlayer",
 			Text = "Bot min time shoot at player",
+			---@type Type|integer
 			Type = Type.Float,
 			Value = Config.BotMinTimeShootAtPlayer,
 			Description = "the minimum time a bot shoots at one player - recommended minimum 1.5, below this you will have issues.",
@@ -1248,6 +1361,7 @@ SettingsDefinition = {
 		{
 			Name = "BotFireModeDuration",
 			Text = "Bot fire mode duration",
+			---@type Type|integer
 			Type = Type.Float,
 			Value = Config.BotFireModeDuration,
 			Description = "the minimum time a bot tries to shoot a player - recommended minimum 3.0, below this you will have issues.",
@@ -1259,6 +1373,7 @@ SettingsDefinition = {
 		{
 			Name = "MaximunYawPerSec",
 			Text = "maximun yaw per sec",
+			---@type Type|integer
 			Type = Type.Integer,
 			Value = Config.MaximunYawPerSec,
 			Description = "in Degree. Rotaion-Movement per second.",
@@ -1270,6 +1385,7 @@ SettingsDefinition = {
 		{
 			Name = "TargetDistanceWayPoint",
 			Text = "target distance waypoint",
+			---@type Type|integer
 			Type = Type.Float,
 			Value = Config.TargetDistanceWayPoint,
 			Description = "distance the bots have to reach to continue with next Waypoint",
@@ -1281,6 +1397,7 @@ SettingsDefinition = {
 		{
 			Name = "KeepOneSlotForPlayers",
 			Text = "keep one slot for players",
+			---@type Type|integer
 			Type = Type.Boolean,
 			Value = Config.KeepOneSlotForPlayers,
 			Description = "always keep one slot for new Players to join",
@@ -1291,6 +1408,7 @@ SettingsDefinition = {
 		{
 			Name = "DistanceToSpawnBots",
 			Text = "distance to spawn",
+			---@type Type|integer
 			Type = Type.Integer,
 			Value = Config.DistanceToSpawnBots,
 			Description = "distance to spawn Bots away from players.",
@@ -1302,6 +1420,7 @@ SettingsDefinition = {
 		{
 			Name = "HeightDistanceToSpawn",
 			Text = "height distance to spawn",
+			---@type Type|integer
 			Type = Type.Float,
 			Value = Config.HeightDistanceToSpawn,
 			Description = "distance vertically, Bots should spawn away, if closer than distance.",
@@ -1313,6 +1432,7 @@ SettingsDefinition = {
 		{
 			Name = "DistanceToSpawnReduction",
 			Text = "Distance to spawn reduction",
+			---@type Type|integer
 			Type = Type.Integer,
 			Value = Config.DistanceToSpawnReduction,
 			Description = "reduce distance if not possible.",
@@ -1324,6 +1444,7 @@ SettingsDefinition = {
 		{
 			Name = "MaxTrysToSpawnAtDistance",
 			Text = "max tries to spawn at distance",
+			---@type Type|integer
 			Type = Type.Integer,
 			Value = Config.MaxTrysToSpawnAtDistance,
 			Description = "try this often to spawn a bot away from players",
@@ -1335,6 +1456,7 @@ SettingsDefinition = {
 		{
 			Name = "HeadShotFactorBots",
 			Text = "headshot factor bots",
+			---@type Type|integer
 			Type = Type.Float,
 			Value = Config.HeadShotFactorBots,
 			Description = "factor for damage if headshot (only in Fake-mode)",
@@ -1346,6 +1468,7 @@ SettingsDefinition = {
 		{
 			Name = "AttackWayBots",
 			Text = "attack way Bots",
+			---@type Type|integer
 			Type = Type.Boolean,
 			Value = Config.AttackWayBots,
 			Description = "bots on paths attack player",
@@ -1356,6 +1479,7 @@ SettingsDefinition = {
 		{
 			Name = "RespawnWayBots",
 			Text = "respawn way Bots",
+			---@type Type|integer
 			Type = Type.Boolean,
 			Value = Config.RespawnWayBots,
 			Description = "bots on paths respawn if killed",
@@ -1366,6 +1490,7 @@ SettingsDefinition = {
 		{
 			Name = "SpawnMethod",
 			Text = "spawn-mehtod",
+			---@type Type|integer
 			Type = Type.Enum,
 			Value = Config.SpawnMethod,
 			Description = "method the bots spawn with. Careful, not supported on most of the maps!!",
@@ -1379,6 +1504,7 @@ SettingsDefinition = {
 		{
 			Name = "DisableUserInterface",
 			Text = "disable UI",
+			---@type Type|integer
 			Type = Type.Boolean,
 			Value = Config.DisableUserInterface,
 			Description = "if true, the complete UI will be disabled (not available in the UI -) )",
@@ -1389,6 +1515,7 @@ SettingsDefinition = {
 		{
 			Name = "AllowCommForAll",
 			Text = "Allow Comm-UI for all",
+			---@type Type|integer
 			Type = Type.Boolean,
 			Value = Config.DisableUserInterface,
 			Description = "if true, all Players can access the Comm-Screen",
@@ -1399,6 +1526,7 @@ SettingsDefinition = {
 		{
 			Name = "DisableChatCommands",
 			Text = "disable chat-commands",
+			---@type Type|integer
 			Type = Type.Boolean,
 			Value = Config.DisableChatCommands,
 			Description = "if true, no chat commands can be used",
@@ -1409,6 +1537,7 @@ SettingsDefinition = {
 		{
 			Name = "DisableRCONCommands",
 			Text = "disable RCON-commands",
+			---@type Type|integer
 			Type = Type.Boolean,
 			Value = Config.DisableRCONCommands,
 			Description = "if true, no RCON commands can be used",
@@ -1419,6 +1548,7 @@ SettingsDefinition = {
 		{
 			Name = "IgnorePermissions",
 			Text = "ignore Permissions",
+			---@type Type|integer
 			Type = Type.Boolean,
 			Value = Config.IgnorePermissions,
 			Description = "if true, all permissions are ignored --> everyone can do everything",
@@ -1429,6 +1559,7 @@ SettingsDefinition = {
 		{
 			Name = "Language",
 			Text = "language",
+			---@type Type|integer
 			Type = Type.List,
 			Value = Config.Language,
 			Description = "de_DE as sample (default is english, when language file doesnt exists)",
