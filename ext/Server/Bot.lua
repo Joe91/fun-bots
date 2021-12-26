@@ -54,8 +54,6 @@ function Bot:__init(p_Player)
 	--timers
 	self._UpdateTimer = 0.0
 	self._UpdateFastTimer = 0.0
-	-- TODO: remove? unused
-	self._AimUpdateTimer = 0.0
 	self._SpawnDelayTimer = 0.0
 	self._WayWaitTimer = 0.0
 	self._VehicleWaitTimer = 0.0
@@ -152,8 +150,6 @@ function Bot:__init(p_Player)
 	self._ShootPlayerVehicleType = VehicleTypes.NoVehicle
 	self._ShootPlayerName = ""
 	self._DistanceToPlayer = 0.0
-	--- TODO: remove? unused
-	self.m_ReadyToAttack = false
 	---@type BotWeapons
 	self._WeaponToUse = BotWeapons.Primary
 	-- TODO: add emmylua type
@@ -287,7 +283,11 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 
 						-- fast code
 						if s_Attacking then
-							self:_UpdateAimingVehicle(self._UpdateFastTimer)
+							if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) or m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
+								self:_UpdateAimingVehicleAdvanced()
+							else
+								self:_UpdateAimingVehicle()
+							end
 						else
 							if self.m_Player.controlledEntryId == 0 then -- only if driver
 								self:_UpdateTargetMovementVehicle()
@@ -729,8 +729,7 @@ function Bot:GetWayIndex()
 	return self._PathIndex
 end
 
--- TODO: add emmylua type
----@return any
+---@return integer
 function Bot:GetPointIndex()
 	return self._CurrentWayPoint
 end
@@ -1037,8 +1036,7 @@ function Bot:_UpdateAimingVehicleAdvanced()
 	end
 end
 
----@param p_DeltaTime number
-function Bot:_UpdateAimingVehicle(p_DeltaTime)
+function Bot:_UpdateAimingVehicle()
 	if self._ShootPlayer == nil then
 		return
 	end
@@ -1424,7 +1422,7 @@ function Bot:_UpdateStationaryAAVehicle(p_Attacking)
 	if p_Attacking then -- target available
 		-- aim at target
 		self:_UpdateAimingVehicleAdvanced()
-		--self:_UpdateAimingVehicle(Registry.BOT.BOT_FAST_UPDATE_CYCLE)
+		--self:_UpdateAimingVehicle()
 	else
 		-- just look a little around
 		self:_UpdateVehicleLookAround(Registry.BOT.BOT_FAST_UPDATE_CYCLE)
@@ -3279,34 +3277,6 @@ function Bot:_SetActiveVars()
 	else
 		self.m_KnifeMode = false
 	end
-end
-
--- TODO: remove? this is unused
----@param p_Soldier SoldierEntity
----@param p_IsTarget boolean
----@return number
-function Bot:_GetCameraHeight(p_Soldier, p_IsTarget)
-	local s_CameraHeight = 0.0
-
-	if not p_IsTarget then
-		s_CameraHeight = 1.6 --bot.soldier.pose == CharacterPoseType.CharacterPoseType_Stand
-
-		if p_Soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
-			s_CameraHeight = 0.3
-		elseif p_Soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
-			s_CameraHeight = 1.0
-		end
-	else
-		s_CameraHeight = 1.3 --bot.soldier.pose == CharacterPoseType.CharacterPoseType_Stand - reduce by 0.3
-
-		if p_Soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
-			s_CameraHeight = 0.3 -- don't reduce
-		elseif p_Soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
-			s_CameraHeight = 0.8 -- reduce by 0.2
-		end
-	end
-
-	return s_CameraHeight
 end
 
 return Bot
