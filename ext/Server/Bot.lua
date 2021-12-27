@@ -1942,6 +1942,12 @@ function Bot:_UpdateAttacking()
 				end
 			end
 
+			if self.m_ActiveWeapon.type == WeaponTypes.Rocket then
+				if self.m_Player.soldier.weaponsComponent.currentWeapon.secondaryAmmo <= 0 then
+					self.m_Player.soldier.weaponsComponent.currentWeapon.secondaryAmmo = self.m_Player.soldier.weaponsComponent.currentWeapon.secondaryAmmo + 1
+				end
+			end
+
 			if self._ShootPlayerVehicleType ~= VehicleTypes.NoVehicle then
 				local s_AttackMode = m_Vehicles:CheckForVehicleAttack(self._ShootPlayerVehicleType, self._DistanceToPlayer, self.m_SecondaryGadget, false)
 
