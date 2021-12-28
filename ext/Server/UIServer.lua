@@ -542,7 +542,7 @@ function FunBotUIServer:_writeSettings(p_Player, p_Request)
 
 	-- update Weapons if needed
 	if updateWeapons then
-		WeaponModification:ModifyAllWeapons(Config.BotAimWorsening, Config.BotSniperAimWorsening)
+		WeaponModification:ModifyAllWeapons(Config.BotAimWorsening, Config.BotSniperAimWorsening, Config.BotSupportAimWorsening)
 	end
 
 	if updateWeaponSets then
