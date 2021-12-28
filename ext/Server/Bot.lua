@@ -1245,7 +1245,30 @@ function Bot:_UpdateAiming()
 				elseif self._DistanceToPlayer > 0.5 then s_GrenadePitch = 1.5603243512829308
 				end
 			else
-				s_TimeToTravel = (self._DistanceToPlayer / s_Speed)
+				if Registry.BOT.USE_ADVANCED_AIMING then
+					--calculate how long the distance is --> time to travel
+					local s_VectorBetween = s_FullPositionTarget - s_FullPositionBot
+				
+					local A = s_TargetMovement:Dot(s_TargetMovement) - s_Speed * s_Speed
+					local B = 2.0 * s_TargetMovement:Dot(s_VectorBetween)
+					local C = s_VectorBetween:Dot(s_VectorBetween)
+					local s_Determinant = math.sqrt(B*B-4*A*C)
+					local t1 = (-B + s_Determinant) / (2*A)
+					local t2 = (-B - s_Determinant) / (2*A)
+				
+					if t1 > 0 then
+						if t2 > 0 then
+							s_TimeToTravel = math.min(t1, t2)
+						else
+							s_TimeToTravel = t1
+						end
+					else
+						s_TimeToTravel = math.max(t2, 0.0)
+					end
+				else
+					s_TimeToTravel = (self._DistanceToPlayer / s_Speed)
+				end
+
 				s_PitchCorrection = 0.5 * s_TimeToTravel * s_TimeToTravel * s_Drop
 			end
 
