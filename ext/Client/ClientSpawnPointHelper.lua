@@ -9,7 +9,10 @@ function ClientSpawnPointHelper:__init()
 	self.m_SelectedSpawnPoint = nil
 end
 
+---VEXT Shared Partition:Loaded Event
+---@param p_Partition DatabasePartition
 function ClientSpawnPointHelper:OnPartitionLoaded(p_Partition)
+	---@type AlternateSpawnEntityData
 	for _, l_Instance in pairs(p_Partition.instances) do
 		if l_Instance:Is("AlternateSpawnEntityData") then
 			l_Instance = AlternateSpawnEntityData(l_Instance)
@@ -18,6 +21,7 @@ function ClientSpawnPointHelper:OnPartitionLoaded(p_Partition)
 	end
 end
 
+---VEXT Shared Level:Destroy Event
 function ClientSpawnPointHelper:OnLevelDestroy()
 	self.m_SpawnPointTable = {}
 end
@@ -32,6 +36,7 @@ function ClientSpawnPointHelper:OnSetEnabled(p_Args)
 	self.m_Enabled = (s_Enabled == true or s_Enabled == 'true' or s_Enabled == '1')
 end
 
+---VEXT Client UI:DrawHud Event
 function ClientSpawnPointHelper:OnUIDrawHud()
 	self.m_SelectedSpawnPoint = nil
 
@@ -56,6 +61,8 @@ function ClientSpawnPointHelper:OnUIDrawHud()
 	end
 end
 
+---VEXT Client Client:UpdateInput Event
+---@param p_DeltaTime number
 function ClientSpawnPointHelper:OnClientUpdateInput(p_DeltaTime)
 	if not Config.DrawSpawnPoints or not self.m_Enabled then
 		return

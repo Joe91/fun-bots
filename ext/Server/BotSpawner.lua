@@ -60,6 +60,7 @@ function BotSpawner:OnLevelLoaded(p_Round)
 	self._LastRound = p_Round
 end
 
+---VEXT Shared Level:Destroy Event
 function BotSpawner:OnLevelDestroy()
 	self._SpawnSets = {}
 	self._UpdateActive = false
@@ -72,6 +73,7 @@ end
 	-- Update Events
 -- =============================================
 
+---VEXT Shared UpdateManager:Update Event
 ---@param p_DeltaTime number
 ---@param p_UpdatePass UpdatePass|integer
 function BotSpawner:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
@@ -172,6 +174,7 @@ end
 	-- Player Events
 -- =============================================
 
+---VEXT Server Player:Joining Event
 ---@param p_Name string
 function BotSpawner:OnPlayerJoining(p_Name)
 	-- detect BOT-Names
@@ -211,8 +214,9 @@ function BotSpawner:OnTeamChange(p_Player, p_TeamId, p_SquadId)
 	end
 end
 
+---VEXT Server Player:KitPickup Event
 ---@param p_Player Player
----@param p_NewCustomization DataContainer @VeniceSoldierCustomizationAsset
+---@param p_NewCustomization DataContainer @Can be casted to `VeniceSoldierCustomizationAsset`
 function BotSpawner:OnKitPickup(p_Player, p_NewCustomization)
 	if p_Player.soldier ~= nil then
 		if p_Player.soldier.weaponsComponent.weapons[1] ~= nil then

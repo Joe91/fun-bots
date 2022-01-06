@@ -74,10 +74,12 @@ function FunBotServer:__init()
 	Events:Subscribe('Extension:Loaded', self, self.OnExtensionLoaded)
 end
 
+---VEXT Server Engine:Init Event
 function FunBotServer:OnEngineInit()
 	require('UpdateCheck')
 end
 
+---VEXT Shared Extension:Loaded Event
 function FunBotServer:OnExtensionLoaded()
 	m_SettingsManager:OnExtensionLoaded()
 	m_Language:loadLanguage(Config.Language)
@@ -113,10 +115,6 @@ function FunBotServer:RegisterEvents()
 	Events:Subscribe('CapturePoint:Lost', self, self.OnCapturePointLost)
 	Events:Subscribe('CapturePoint:Captured', self, self.OnCapturePointCaptured)
 	Events:Subscribe('Player:EnteredCapturePoint', self, self.OnPlayerEnteredCapturePoint)
-	Events:Subscribe('MCOM:Armed', self, self.OnMcomArmed)
-	Events:Subscribe('MCOM:Disarmed', self, self.OnMcomDisarmed)
-	Events:Subscribe('MCOM:Destroyed', self, self.OnMcomDestroyed)
-	Events:Subscribe('RUSH:ZoneDisabled', self, self.OnRushZoneDisabled)
 	Events:Subscribe('Vehicle:SpawnDone', self, self.OnVehicleSpawnDone)
 	Events:Subscribe('Vehicle:Enter', self, self.OnVehicleEnter)
 	Events:Subscribe('Vehicle:Exit', self, self.OnVehicleExit)
@@ -207,19 +205,28 @@ end
 -- Events
 -- =============================================
 
+---VEXT Shared Extension:Unloading Event
 function FunBotServer:OnExtensionUnloading()
 	m_BotManager:DestroyAll(nil, nil, true)
 end
 
+---VEXT Shared Partition:Loaded Event
+---@param p_Partition DatabasePartition
 function FunBotServer:OnPartitionLoaded(p_Partition)
 	m_WeaponModification:OnPartitionLoaded(p_Partition)
 end
 
+---VEXT Shared Engine:Update Event
+---@param p_DeltaTime number
+---@param p_SimulationDeltaTime number
 function FunBotServer:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 	m_GameDirector:OnEngineUpdate(p_DeltaTime)
-	m_NodeEditor:OnEngineUpdate(p_DeltaTime)
+	m_NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 end
 
+---VEXT Shared UpdateManager:Update Event
+---@param p_DeltaTime number
+---@param p_UpdatePass UpdatePass|integer
 function FunBotServer:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	m_BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	m_BotSpawner:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
@@ -229,6 +236,11 @@ end
 	-- Level Events
 -- =============================================
 
+---VEXT Server Level:Loaded Event
+---@param p_LevelName string
+---@param p_GameMode string
+---@param p_Round integer
+---@param p_RoundsPerMap integer
 function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPerMap)
 	Globals.GameMode = p_GameMode
 	local s_GameMode = ServerUtils:GetCustomGameModeName()
@@ -261,6 +273,7 @@ function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPe
 	NetEvents:BroadcastUnreliableLocal('WriteClientSettings', Config, true)
 end
 
+---VEXT Shared Level:Destroy Event
 function FunBotServer:OnLevelDestroy()
 	m_BotManager:OnLevelDestroy()
 	m_BotSpawner:OnLevelDestroy()
@@ -271,50 +284,85 @@ function FunBotServer:OnLevelDestroy()
 	m_Logger:Write("*Collecting Garbage on Level Destroy: " .. math.floor(collectgarbage("count")/1024) .. " MB | Old Memory: " .. s_OldMemory .. " MB")
 end
 
+---VEXT Server Server:RoundOver Event
+---@param p_RoundTime number
+---@param p_WinningTeam TeamId|integer
 function FunBotServer:OnRoundOver(p_RoundTime, p_WinningTeam)
 	m_GameDirector:OnRoundOver(p_RoundTime, p_WinningTeam)
 	Globals.IsInputAllowed = false
 end
 
-function FunBotServer:OnRoundReset(p_RoundTime, p_WinningTeam)
-	m_GameDirector:OnRoundReset(p_RoundTime, p_WinningTeam)
+---VEXT Server Server:RoundReset Event
+function FunBotServer:OnRoundReset()
+	m_GameDirector:OnRoundReset()
 end
 
 -- =============================================
 	-- Player Events
 -- =============================================
 
-function FunBotServer:OnPlayerJoining(p_Name)
+---VEXT Server Player:Joining Event
+---@param p_Name string
+---@param p_PlayerGuid Guid
+---@param p_IpAddress string
+---@param p_AccountGuid Guid
+function FunBotServer:OnPlayerJoining(p_Name, p_PlayerGuid, p_IpAddress, p_AccountGuid)
 	m_BotSpawner:OnPlayerJoining(p_Name)
 end
 
+---VEXT Server Player:TeamChange Event
+---@param p_Player Player
+---@param p_TeamId TeamId|integer
+---@param p_SquadId SquadId|integer
 function FunBotServer:OnTeamChange(p_Player, p_TeamId, p_SquadId)
 	m_BotSpawner:OnTeamChange(p_Player, p_TeamId, p_SquadId)
 end
 
+---VEXT Server Player:KitPickup Event
+---@param p_Player Player
+---@param p_NewCustomization DataContainer @Can be casted to `VeniceSoldierCustomizationAsset`
 function FunBotServer:OnKitPickup(p_Player, p_NewCustomization)
 	m_BotSpawner:OnKitPickup(p_Player, p_NewCustomization)
 end
 
+---VEXT Server Player:Respawn Event
+---@param p_Player Player
 function FunBotServer:OnPlayerRespawn(p_Player)
 	m_NodeEditor:OnPlayerRespawn(p_Player)
 end
 
+---VEXT Server Player:Killed Event
+---@param p_Player Player
+---@param p_Inflictor Player|nil
+---@param p_Position Vec3
+---@param p_Weapon string
+---@param p_IsRoadKill boolean
+---@param p_IsHeadShot boolean
+---@param p_WasVictimInReviveState boolean
+---@param p_Info DamageGiverInfo
 function FunBotServer:OnPlayerKilled(p_Player, p_Inflictor, p_Position, p_Weapon, p_IsRoadKill, p_IsHeadShot, p_WasVictimInReviveState, p_Info)
 	m_NodeEditor:OnPlayerKilled(p_Player)
 	m_AirTargets:OnPlayerKilled(p_Player)
 end
 
+---VEXT Server Player:Chat Event
+---@param p_Player Player
+---@param p_RecipientMask integer
+---@param p_Message string
 function FunBotServer:OnPlayerChat(p_Player, p_RecipientMask, p_Message)
 	local s_MessageParts = string.lower(p_Message):split(' ')
 	m_ChatCommands:Execute(s_MessageParts, p_Player)
 end
 
+---VEXT Server Player:Left Event
+---@param p_Player Player
 function FunBotServer:OnPlayerLeft(p_Player)
 	m_BotManager:OnPlayerLeft(p_Player)
 	m_NodeEditor:OnPlayerLeft(p_Player)
 end
 
+---VEXT Server Player:Destroyed Event
+---@param p_Player Player
 function FunBotServer:OnPlayerDestroyed(p_Player)
 	m_NodeEditor:OnPlayerDestroyed(p_Player)
 	m_AirTargets:OnPlayerDestroyed(p_Player)
@@ -324,14 +372,21 @@ end
 	-- CapturePoint Events
 -- =============================================
 
+---VEXT Server CapturePoint:Lost Event
+---@param p_CapturePoint Entity @`CapturePointEntity`
 function FunBotServer:OnCapturePointLost(p_CapturePoint)
 	m_GameDirector:OnCapturePointLost(p_CapturePoint)
 end
 
+---VEXT Server CapturePoint:Captured Event
+---@param p_CapturePoint Entity @`CapturePointEntity`
 function FunBotServer:OnCapturePointCaptured(p_CapturePoint)
 	m_GameDirector:OnCapturePointCaptured(p_CapturePoint)
 end
 
+---VEXT Server Player:EnteredCapturePoint Event
+---@param p_Player Player
+---@param p_CapturePoint Entity @`CapturePointEntity`
 function FunBotServer:OnPlayerEnteredCapturePoint(p_Player, p_CapturePoint)
 	m_GameDirector:OnPlayerEnteredCapturePoint(p_Player, p_CapturePoint)
 end
@@ -340,43 +395,36 @@ end
 	-- Vehicle Events
 -- =============================================
 
-function FunBotServer:OnVehicleSpawnDone(p_VehicleEntiy)
-	m_GameDirector:OnVehicleSpawnDone(p_VehicleEntiy)
+---VEXT Server Vehicle:SpawnDone Event
+---@param p_VehicleEntity Entity @`ControllableEntity`
+function FunBotServer:OnVehicleSpawnDone(p_VehicleEntity)
+	m_GameDirector:OnVehicleSpawnDone(p_VehicleEntity)
 end
 
-function FunBotServer:OnVehicleEnter(p_VehicleEntiy, p_Player)
-	m_GameDirector:OnVehicleEnter(p_VehicleEntiy, p_Player)
-	m_AirTargets:OnVehicleEnter(p_VehicleEntiy, p_Player)
+---VEXT Server Vehicle:Enter Event
+---@param p_VehicleEntity Entity @`ControllableEntity`
+---@param p_Player Player
+function FunBotServer:OnVehicleEnter(p_VehicleEntity, p_Player)
+	m_GameDirector:OnVehicleEnter(p_VehicleEntity, p_Player)
+	m_AirTargets:OnVehicleEnter(p_VehicleEntity, p_Player)
 end
 
-function FunBotServer:OnVehicleExit(p_VehicleEntiy, p_Player)
-	m_AirTargets:OnVehicleExit(p_VehicleEntiy, p_Player)
-end
-
--- =============================================
-	-- Rush Events
--- =============================================
-
-function FunBotServer:OnMcomArmed(p_Player)
-	m_GameDirector:OnMcomArmed(p_Player)
-end
-
-function FunBotServer:OnMcomDisarmed(p_Player)
-	m_GameDirector:OnMcomDisarmed(p_Player)
-end
-
-function FunBotServer:OnMcomDestroyed(p_Player)
-	m_GameDirector:OnMcomDestroyed(p_Player)
-end
-
-function FunBotServer:OnRushZoneDisabled(p_EntityId)
-	m_GameDirector:OnRushZoneDisabled(p_EntityId)
+---VEXT Server Vehicle:Exit Event
+---@param p_VehicleEntity Entity @`ControllableEntity`
+---@param p_Player Player
+function FunBotServer:OnVehicleExit(p_VehicleEntity, p_Player)
+	m_AirTargets:OnVehicleExit(p_VehicleEntity, p_Player)
 end
 
 -- =============================================
 -- Hooks
 -- =============================================
 
+---VEXT Server Soldier:Damage Hook
+---@param p_HookCtx HookContext
+---@param p_Soldier SoldierEntity
+---@param p_Info DamageInfo
+---@param p_GiverInfo DamageGiverInfo
 function FunBotServer:OnSoldierDamage(p_HookCtx, p_Soldier, p_Info, p_GiverInfo)
 	m_BotManager:OnSoldierDamage(p_HookCtx, p_Soldier, p_Info, p_GiverInfo)
 end
@@ -454,48 +502,51 @@ end
 -- Register Callbacks
 -- =============================================
 
-function FunBotServer:OnServerSettingsCallback(p_Instance)
-	p_Instance = ServerSettings(p_Instance)
-	p_Instance:MakeWritable()
+---@param p_ServerSettings ServerSettings|DataContainer
+function FunBotServer:OnServerSettingsCallback(p_ServerSettings)
+	p_ServerSettings = ServerSettings(p_ServerSettings)
+	p_ServerSettings:MakeWritable()
 
 	if Registry.COMMON.USE_REAL_DAMAGE then
-		p_Instance.isRenderDamageEvents = true
+		p_ServerSettings.isRenderDamageEvents = true
 	else
-		p_Instance.isRenderDamageEvents = false
+		p_ServerSettings.isRenderDamageEvents = false
 	end
-	p_Instance.loadingTimeout = Registry.COMMON.LOADING_TIMEOUT
-	p_Instance.ingameTimeout = Registry.COMMON.LOADING_TIMEOUT
-	p_Instance.timeoutTime = Registry.COMMON.LOADING_TIMEOUT
-	p_Instance.timeoutGame = false
+	p_ServerSettings.loadingTimeout = Registry.COMMON.LOADING_TIMEOUT
+	p_ServerSettings.ingameTimeout = Registry.COMMON.LOADING_TIMEOUT
+	p_ServerSettings.timeoutTime = Registry.COMMON.LOADING_TIMEOUT
+	p_ServerSettings.timeoutGame = false
 
 	m_Logger:Write("Changed ServerSettings")
 
 end
 
-function FunBotServer:OnSyncedGameSettingsCallback(p_Instance)
-	p_Instance = SyncedGameSettings(p_Instance)
-	p_Instance:MakeWritable()
+---@param p_SyncedGameSettings SyncedGameSettings|DataContainer
+function FunBotServer:OnSyncedGameSettingsCallback(p_SyncedGameSettings)
+	p_SyncedGameSettings = SyncedGameSettings(p_SyncedGameSettings)
+	p_SyncedGameSettings:MakeWritable()
 
 	if Registry.COMMON.USE_REAL_DAMAGE then
-		p_Instance.allowClientSideDamageArbitration = false
+		p_SyncedGameSettings.allowClientSideDamageArbitration = false
 	else
-		p_Instance.allowClientSideDamageArbitration = true
+		p_SyncedGameSettings.allowClientSideDamageArbitration = true
 	end
 end
 
+---@param p_ClientSettings ClientSettings|DataContainer
+function FunBotServer:OnModifyClientTimeoutSettings(p_ClientSettings)
+	p_ClientSettings = ClientSettings(p_ClientSettings)
+	p_ClientSettings:MakeWritable()
 
-function FunBotServer:OnModifyClientTimeoutSettings(p_Instance)
-	p_Instance = ClientSettings(p_Instance)
-	p_Instance:MakeWritable()
-
-	p_Instance.loadedTimeout = Registry.COMMON.LOADING_TIMEOUT
-	p_Instance.loadingTimeout = Registry.COMMON.LOADING_TIMEOUT
-	p_Instance.ingameTimeout = Registry.COMMON.LOADING_TIMEOUT
+	p_ClientSettings.loadedTimeout = Registry.COMMON.LOADING_TIMEOUT
+	p_ClientSettings.loadingTimeout = Registry.COMMON.LOADING_TIMEOUT
+	p_ClientSettings.ingameTimeout = Registry.COMMON.LOADING_TIMEOUT
 	m_Logger:Write("Changed ClientSettings")
 end
 
-function FunBotServer:OnStationaryAACallback(p_Instance)
-	local p_FiringFunctionData = FiringFunctionData(p_Instance)
+---@param p_FiringFunctionData FiringFunctionData|DataContainer
+function FunBotServer:OnStationaryAACallback(p_FiringFunctionData)
+	p_FiringFunctionData = FiringFunctionData(p_FiringFunctionData)
 	p_FiringFunctionData:MakeWritable()
 	p_FiringFunctionData.overHeat.heatPerBullet = 0.0001
 	p_FiringFunctionData.dispersion[1].minAngle = 0.2--Config.spreadMinAngle
@@ -506,20 +557,22 @@ function FunBotServer:OnStationaryAACallback(p_Instance)
 	--p_FiringFunctionData.fireLogic.clientFireRateMultiplier = Config.clientFireRateMultiplier
 end
 
-function FunBotServer:OnAutoTeamEntityDataCallback(p_Instance)
-	p_Instance = AutoTeamEntityData(p_Instance)
-	p_Instance:MakeWritable()
-	p_Instance.rotateTeamOnNewRound = false
-	p_Instance.teamAssignMode = TeamAssignMode.TamOneTeam
-	p_Instance.playerCountNeededToAutoBalance = 127
-	p_Instance.teamDifferenceToAutoBalance = 127
-	p_Instance.autoBalance = false
-	p_Instance.forceIntoSquad = true
+---@param p_AutoTeamEntityData AutoTeamEntityData|DataContainer
+function FunBotServer:OnAutoTeamEntityDataCallback(p_AutoTeamEntityData)
+	p_AutoTeamEntityData = AutoTeamEntityData(p_AutoTeamEntityData)
+	p_AutoTeamEntityData:MakeWritable()
+	p_AutoTeamEntityData.rotateTeamOnNewRound = false
+	p_AutoTeamEntityData.teamAssignMode = TeamAssignMode.TamOneTeam
+	p_AutoTeamEntityData.playerCountNeededToAutoBalance = 127
+	p_AutoTeamEntityData.teamDifferenceToAutoBalance = 127
+	p_AutoTeamEntityData.autoBalance = false
+	p_AutoTeamEntityData.forceIntoSquad = true
 end
 
-function FunBotServer:OnHumanPlayerEntityDataCallback(p_Instance)
-	p_Instance = HumanPlayerEntityData(p_Instance)
-	self.m_PlayerKilledDelay = p_Instance.playerKilledDelay
+---@param p_HumanPlayerEntityData HumanPlayerEntityData|DataContainer
+function FunBotServer:OnHumanPlayerEntityDataCallback(p_HumanPlayerEntityData)
+	p_HumanPlayerEntityData = HumanPlayerEntityData(p_HumanPlayerEntityData)
+	self.m_PlayerKilledDelay = p_HumanPlayerEntityData.playerKilledDelay
 end
 
 -- =============================================

@@ -18,22 +18,33 @@ function AirTargets:OnLevelLoaded()
 	self._Targets = {}
 end
 
+---VEXT Shared Level:Destroy Event
 function AirTargets:OnLevelDestroy()
 	self._Targets = {}
 end
 
-function AirTargets:OnVehicleEnter(p_VehicleEntiy, p_Player)
+---VEXT Server Vehicle:Enter Event
+---@param p_VehicleEntity Entity @`ControllableEntity`
+---@param p_Player Player
+function AirTargets:OnVehicleEnter(p_VehicleEntity, p_Player)
 	self:_CreateTarget(p_Player)
 end
 
-function AirTargets:OnVehicleExit(p_VehicleEntiy, p_Player)
+---VEXT Server Vehicle:Exit Event
+---@param p_VehicleEntity Entity @`ControllableEntity`
+---@param p_Player Player
+function AirTargets:OnVehicleExit(p_VehicleEntity, p_Player)
 	self:_RemoveTarget(p_Player)
 end
 
+---VEXT Server Player:Killed Event
+---@param p_Player Player
 function AirTargets:OnPlayerKilled(p_Player)
 	self:_RemoveTarget(p_Player)
 end
 
+---VEXT Server Player:Destroyed Event
+---@param p_Player Player
 function AirTargets:OnPlayerDestroyed(p_Player)
 	self:_RemoveTarget(p_Player)
 end

@@ -268,6 +268,8 @@ function FunBotUIClient:_onUIShowToolbar(p_Data)
 	end
 end
 
+---VEXT Client Client:UpdateInput Event
+---@param p_DeltaTime number
 function FunBotUIClient:OnClientUpdateInput(p_DeltaTime)
 	if Config.DisableUserInterface == true then
 		return
@@ -310,6 +312,7 @@ function FunBotUIClient:OnExtensionLoaded()
 	self._views:OnExtensionLoaded()
 end
 
+---VEXT Shared Extension:Unloading Event
 function FunBotUIClient:OnExtensionUnloading()
 	self._views:OnExtensionUnloading()
 end

@@ -1352,6 +1352,9 @@ end
 -- ##################################### Events
 -- ############################################
 
+---VEXT Client Level:Loaded Event
+---@param p_LevelName string
+---@param p_GameMode string
 function ClientNodeEditor:OnLevelLoaded(p_LevelName, p_GameMode)
 	self.m_Enabled = Config.DebugTracePaths
 
@@ -1360,12 +1363,15 @@ function ClientNodeEditor:OnLevelLoaded(p_LevelName, p_GameMode)
 	end
 end
 
+---VEXT Client Player:Deleted Event
+---@param p_Player Player
 function ClientNodeEditor:OnPlayerDeleted(p_Player)
 	if self.m_Player ~= nil and p_Player ~= nil and self.m_Player.name == p_Player.name then
 		self:_onUnload()
 	end
 end
 
+---VEXT Shared Level:Destroy Event
 function ClientNodeEditor:OnLevelDestroy()
 	self:_onUnload()
 end
@@ -1480,6 +1486,12 @@ function ClientNodeEditor:_onCommoRoseAction(p_Action, p_Hit)
 	end
 end
 
+---VEXT Client UI:PushScreen Hook
+---@param p_HookCtx HookContext
+---@param p_Screen DataContainer
+---@param p_Priority UIGraphPriority
+---@param p_ParentGraph DataContainer
+---@param p_StateNodeGuid Guid|nil
 function ClientNodeEditor:OnUIPushScreen(p_HookCtx, p_Screen, p_Priority, p_ParentGraph, p_StateNodeGuid)
 	if self.m_Enabled and self.m_CommoRoseEnabled and p_Screen ~= nil and UIScreenAsset(p_Screen).name == 'UI/Flow/Screen/CommRoseScreen' then
 		self:Log('Blocked vanilla commo rose')
@@ -1493,6 +1505,8 @@ end
 -- ############################## Update Events
 -- ############################################
 
+---VEXT Client Client:UpdateInput Event
+---@param p_DeltaTime number
 function ClientNodeEditor:OnClientUpdateInput(p_DeltaTime)
 	if not self.m_Enabled then
 		return
@@ -1667,6 +1681,9 @@ function ClientNodeEditor:OnClientUpdateInput(p_DeltaTime)
 	end
 end
 
+---VEXT Shared Engine:Update Event
+---@param p_DeltaTime number
+---@param p_SimulationDeltaTime number
 function ClientNodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 	if self.m_NodeSendTimer >= 0 and #self.m_NodesToSend > 0 then
 		self.m_DebugEntries['nodeSendProgress'] = self.m_NodeSendProgress..'/'..(#self.m_NodesToSend)
@@ -1818,6 +1835,9 @@ function ClientNodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 	end
 end
 
+---VEXT Shared UpdateManager:Update Event
+---@param p_DeltaTime number
+---@param p_UpdatePass UpdatePass|integer
 function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	-- Only do math on presimulation UpdatePass, don't bother if debugging is off
 	if not self.m_Enabled or p_UpdatePass ~= UpdatePass.UpdatePass_PreSim then
@@ -1936,6 +1956,7 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	end
 end
 
+---VEXT Client UI:DrawHud Event
 function ClientNodeEditor:OnUIDrawHud()
 	if self.m_BotVisionEnabled then
 		if self.m_BotVisionCrosshair ~= nil then

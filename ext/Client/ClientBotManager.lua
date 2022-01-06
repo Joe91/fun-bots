@@ -28,6 +28,8 @@ end
 -- Events
 -- =============================================
 
+---VEXT Client Client:UpdateInput Event
+---@param p_DeltaTime number
 function ClientBotManager:OnClientUpdateInput(p_DeltaTime)
 	-- TODO: find a better solution for that!!!
 	if InputManager:WentKeyDown(InputDeviceKeys.IDK_Q) then
@@ -58,6 +60,10 @@ function ClientBotManager:OnClientUpdateInput(p_DeltaTime)
 	end
 end
 
+---VEXT Client Input:PreUpdate Hook
+---@param p_HookCtx HookContext
+---@param p_Cache ConceptCache
+---@param p_DeltaTime number
 function ClientBotManager:OnInputPreUpdate(p_HookCtx, p_Cache, p_DeltaTime)
 	if self.m_Player ~= nil and self.m_Player.inVehicle then
 		for i = 1, 8 do
@@ -72,6 +78,8 @@ function ClientBotManager:OnInputPreUpdate(p_HookCtx, p_Cache, p_DeltaTime)
 	end
 end
 
+---VEXT Shared Engine:Message Event
+---@param p_Message Message
 function ClientBotManager:OnEngineMessage(p_Message)
 	if p_Message.type == MessageType.ClientLevelFinalizedMessage then
 		NetEvents:SendLocal('Client:RequestSettings')
@@ -125,6 +133,9 @@ function ClientBotManager:DoRaycast(p_Pos1, p_Pos2, p_InObjectPos1, p_InObjectPo
 	end
 end
 
+---VEXT Shared UpdateManager:Update Event
+---@param p_DeltaTime number
+---@param p_UpdatePass UpdatePass|integer
 function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	if p_UpdatePass ~= UpdatePass.UpdatePass_PreSim or not self.m_ReadyToUpdate then --UpdatePass_PreSim UpdatePass_PreFrame
 		return
@@ -282,10 +293,12 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	end
 end
 
+---VEXT Shared Extension:Unloading Event
 function ClientBotManager:OnExtensionUnloading()
 	self:RegisterVars()
 end
 
+---VEXT Shared Level:Destroy Event
 function ClientBotManager:OnLevelDestroy()
 	self:RegisterVars()
 end
@@ -318,6 +331,11 @@ end
 -- Hooks
 -- =============================================
 
+---VEXT Client BulletEntity:Collision Hook
+---@param p_HookCtx HookContext
+---@param p_Entity Entity
+---@param p_Hit RayCastHit
+---@param p_Shooter Player|nil
 function ClientBotManager:OnBulletEntityCollision(p_HookCtx, p_Entity, p_Hit, p_Shooter)
 	if p_Hit.rigidBody.typeInfo.name ~= 'CharacterPhysicsEntity' then
 		return

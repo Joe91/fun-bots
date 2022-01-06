@@ -72,6 +72,7 @@ function NodeEditor:OnLevelLoaded(p_LevelName, p_GameMode)
 	self:Log('Load -> Stale Nodes: %d', s_Counter)
 end
 
+---VEXT Shared Level:Destroy Event
 function NodeEditor:OnLevelDestroy()
 	m_NodeCollection:Clear()
 end
@@ -80,6 +81,8 @@ end
 	-- Player Events
 -- =============================================
 
+---VEXT Server Player:Respawn Event
+---@param p_Player Player
 function NodeEditor:OnPlayerRespawn(p_Player)
 	if self.m_BotVision[p_Player.name] == nil then
 		return
@@ -94,6 +97,8 @@ function NodeEditor:OnPlayerRespawn(p_Player)
 	}
 end
 
+---VEXT Server Player:Killed Event
+---@param p_Player Player
 function NodeEditor:OnPlayerKilled(p_Player)
 	if p_Player == nil or self.m_BotVision[p_Player.name] == nil then
 		return
@@ -108,10 +113,14 @@ function NodeEditor:OnPlayerKilled(p_Player)
 	}
 end
 
+---VEXT Server Player:Left Event
+---@param p_Player Player
 function NodeEditor:OnPlayerLeft(p_Player)
 	self:StopSendingNodes(p_Player)
 end
 
+---VEXT Server Player:Destroyed Event
+---@param p_Player Player
 function NodeEditor:OnPlayerDestroyed(p_Player)
 	self:StopSendingNodes(p_Player)
 end
@@ -120,6 +129,9 @@ end
 	-- Update Events
 -- =============================================
 
+---VEXT Shared Engine:Update Event
+---@param p_DeltaTime number
+---@param p_SimulationDeltaTime number
 function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 	for l_PlayerName, l_TimeData in pairs(self.m_BotVision) do
 		if type(l_TimeData) == 'table' then

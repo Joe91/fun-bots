@@ -44,6 +44,7 @@ function SettingsManager:__init()
 	--m_Database:Query('CREATE UNIQUE INDEX USKey ON FB_Settings(Key)')
 end
 
+---VEXT Shared Extension:Loaded Event
 function SettingsManager:OnExtensionLoaded()
 	-- Fix nil values on config
 	if Config.Language == nil then

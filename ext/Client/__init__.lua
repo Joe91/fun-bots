@@ -40,7 +40,6 @@ local m_Language = require('__shared/Language')
 ---@type FunBotUIClient
 local m_FunBotUIClient = require('UIClient')
 
-
 function FunBotClient:__init()
 	Events:Subscribe('Extension:Loaded', self, self.OnExtensionLoaded)
 	self._SettingsValid = false
@@ -93,10 +92,14 @@ end
 -- Events
 -- =============================================
 
+---VEXT Shared Engine:Message Event
+---@param p_Message Message
 function FunBotClient:OnEngineMessage(p_Message)
 	m_ClientBotManager:OnEngineMessage(p_Message)
 end
 
+---VEXT Client Player:Respawn Event
+---@param p_Player Player
 function FunBotClient:OnPlayerRespawn(p_Player)
 	local s_LocalPlayer = PlayerManager:GetLocalPlayer()
 	if s_LocalPlayer ~= nil and p_Player == s_LocalPlayer then
@@ -106,30 +109,42 @@ function FunBotClient:OnPlayerRespawn(p_Player)
 	end
 end
 
+---VEXT Shared UpdateManager:Update Event
+---@param p_DeltaTime number
+---@param p_UpdatePass UpdatePass|integer
 function FunBotClient:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	m_ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	m_ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 end
 
+---VEXT Shared Extension:Unloading Event
 function FunBotClient:OnExtensionUnloading()
 	m_ClientBotManager:OnExtensionUnloading()
 	m_FunBotUIClient:OnExtensionUnloading()
 end
 
+---VEXT Shared Level:Destroy Event
 function FunBotClient:OnLevelDestroy()
 	m_ClientBotManager:OnLevelDestroy()
 	m_ClientNodeEditor:OnLevelDestroy()
 	m_ClientSpawnPointHelper:OnLevelDestroy()
 end
 
+---VEXT Client Level:Loaded Event
+---@param p_LevelName string
+---@param p_GameMode string
 function FunBotClient:OnLevelLoaded(p_LevelName, p_GameMode)
 	m_ClientNodeEditor:OnLevelLoaded(p_LevelName, p_GameMode)
 end
 
+---VEXT Client Player:Deleted Event
+---@param p_Player Player
 function FunBotClient:OnPlayerDeleted(p_Player)
 	m_ClientNodeEditor:OnPlayerDeleted(p_Player)
 end
 
+---VEXT Client Client:UpdateInput Event
+---@param p_DeltaTime number
 function FunBotClient:OnClientUpdateInput(p_DeltaTime)
 	m_ClientNodeEditor:OnClientUpdateInput(p_DeltaTime)
 	m_ClientBotManager:OnClientUpdateInput(p_DeltaTime)
@@ -137,15 +152,21 @@ function FunBotClient:OnClientUpdateInput(p_DeltaTime)
 	m_FunBotUIClient:OnClientUpdateInput(p_DeltaTime)
 end
 
+---VEXT Shared Engine:Update Event
+---@param p_DeltaTime number
+---@param p_SimulationDeltaTime number
 function FunBotClient:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 	m_ClientNodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 end
 
+---VEXT Client UI:DrawHud Event
 function FunBotClient:OnUIDrawHud()
 	m_ClientNodeEditor:OnUIDrawHud()
 	m_ClientSpawnPointHelper:OnUIDrawHud()
 end
 
+---VEXT Shared Partition:Loaded Event
+---@param p_Partition DatabasePartition
 function FunBotClient:OnPartitionLoaded(p_Partition)
 	m_ClientSpawnPointHelper:OnPartitionLoaded(p_Partition)
 end
@@ -187,22 +208,31 @@ end
 -- Hooks
 -- =============================================
 
+---VEXT Client BulletEntity:Collision Hook
+---@param p_HookCtx HookContext
+---@param p_Entity Entity
+---@param p_Hit RayCastHit
+---@param p_Shooter Player|nil
 function FunBotClient:OnBulletEntityCollision(p_HookCtx, p_Entity, p_Hit, p_Shooter)
 	m_ClientBotManager:OnBulletEntityCollision(p_HookCtx, p_Entity, p_Hit, p_Shooter)
 end
 
+---VEXT Client Input:PreUpdate Hook
+---@param p_HookCtx HookContext
+---@param p_Cache ConceptCache
+---@param p_DeltaTime number
 function FunBotClient:OnInputPreUpdate(p_HookCtx, p_Cache, p_DeltaTime)
 	m_ClientBotManager:OnInputPreUpdate(p_HookCtx, p_Cache, p_DeltaTime)
 end
 
-
+---VEXT Client UI:PushScreen Hook
+---@param p_HookCtx HookContext
+---@param p_Screen DataContainer
+---@param p_Priority UIGraphPriority
+---@param p_ParentGraph DataContainer
+---@param p_StateNodeGuid Guid|nil
 function FunBotClient:OnUIPushScreen(p_HookCtx, p_Screen, p_Priority, p_ParentGraph, p_StateNodeGuid)
 	m_ClientNodeEditor:OnUIPushScreen(p_HookCtx, p_Screen, p_Priority, p_ParentGraph, p_StateNodeGuid)
 end
 
-if g_FunBotClient == nil then
-	---@type FunBotClient
-	g_FunBotClient = FunBotClient()
-end
-
-return g_FunBotClient
+return FunBotClient()

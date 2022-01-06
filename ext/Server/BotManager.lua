@@ -58,6 +58,7 @@ end
 -- Events
 -- =============================================
 
+---VEXT Shared Level:Destroy Event
 function BotManager:OnLevelDestroy()
 	m_Logger:Write("destroyLevel")
 
@@ -67,6 +68,8 @@ function BotManager:OnLevelDestroy()
 	--self:KillAll() -- this crashes when the server ended. do it on levelstart instead
 end
 
+
+---VEXT Shared UpdateManager:Update Event
 ---@param p_DeltaTime number
 ---@param p_UpdatePass UpdatePass|integer
 function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
@@ -109,6 +112,7 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	end
 end
 
+---VEXT Server Player:Left Event
 ---@param p_Player Player
 function BotManager:OnPlayerLeft(p_Player)
 	--remove all references of player
@@ -199,6 +203,7 @@ end
 -- Hooks
 -- =============================================
 
+---VEXT Server Soldier:Damage Hook
 ---@param p_HookCtx HookContext
 ---@param p_Soldier SoldierEntity
 ---@param p_Info DamageInfo
