@@ -928,10 +928,15 @@ end
 
 function NodeCollection:Load(p_LevelName, p_GameMode)
 
-	self.levelName = p_LevelName or self.levelName
-	self.gameMode = p_GameMode or self.gameMode
+	if p_GameMode ~= nil and p_LevelName ~= nil then
+		self.mapName = p_LevelName .. '_' .. p_GameMode
+		self.mapName = self.mapName:gsub(" ", "_")
+	end
 
-	self.mapName = self.levelName .. '_' .. self.gameMode
+	if self.mapName == '' or self.mapName == nil then
+		m_Logger:Error('Mapname not set. Abort Load')
+		return
+	end
 
 	m_Logger:Write('Load: '..self.mapName)
 
@@ -1026,6 +1031,11 @@ function NodeCollection:Save()
 			return
 		end
 
+		if self.mapName == '' or self.mapName == nil then
+			m_Logger:Error('Mapname not set. Abort Save')
+			return
+		end
+
 		if not SQL:Query('DROP TABLE IF EXISTS '..self.mapName..'_table') then
 			m_Logger:Error('Failed to reset table for map ['..self.mapName..']: '..SQL:Error())
 			return
@@ -1051,8 +1061,6 @@ function NodeCollection:Save()
 
 		ChatManager:Yell(Language:I18N('Save in progress...'), 1)
 		coroutine.yield()
-
-		--self.mapName
 
 		local s_ChangedWaypoints = {}
 		local s_WaypointCount = #self.waypoints
