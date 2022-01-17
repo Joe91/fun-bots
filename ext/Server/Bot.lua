@@ -1248,14 +1248,14 @@ function Bot:_UpdateAiming()
 				if Registry.BOT.USE_ADVANCED_AIMING then
 					--calculate how long the distance is --> time to travel
 					local s_VectorBetween = s_FullPositionTarget - s_FullPositionBot
-				
+
 					local A = s_TargetMovement:Dot(s_TargetMovement) - s_Speed * s_Speed
 					local B = 2.0 * s_TargetMovement:Dot(s_VectorBetween)
 					local C = s_VectorBetween:Dot(s_VectorBetween)
 					local s_Determinant = math.sqrt(B*B-4*A*C)
 					local t1 = (-B + s_Determinant) / (2*A)
 					local t2 = (-B - s_Determinant) / (2*A)
-				
+
 					if t1 > 0 then
 						if t2 > 0 then
 							s_TimeToTravel = math.min(t1, t2)
@@ -1269,7 +1269,7 @@ function Bot:_UpdateAiming()
 					s_TimeToTravel = (self._DistanceToPlayer / s_Speed)
 				end
 
-				s_PitchCorrection = 0.5 * s_TimeToTravel * s_TimeToTravel * s_Drop
+				s_PitchCorrection = 0.5 * s_TimeToTravel * s_TimeToTravel * s_Drop * math.abs(math.cos(self._TargetPitch)) -- this correction might improve
 			end
 
 			s_TargetMovement = (s_TargetMovement * s_TimeToTravel)
