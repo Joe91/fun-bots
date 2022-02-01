@@ -329,21 +329,20 @@ function BotSpawner:UpdateBotAmountAndTeam()
 			end
 		else
 			for i = 1, Globals.NrOfTeams do
-				if s_BotTeam ~= i then
+				if s_BotTeam % 2 ~= i % 2 then
 					s_TargetTeamCount[i] = 0
 				else
-					s_TargetTeamCount[i] = Config.InitNumberOfBots
+					s_TargetTeamCount[i] = Config.InitNumberOfBots / (Globals.NrOfTeams / 2)
 				end
 			end
 		end
 		--limit team count
 		for i = 1, Globals.NrOfTeams do
-			if Globals.NrOfTeams == 2 then
-				if i ~= s_BotTeam then
-					s_TargetTeamCount[i] = math.floor((s_TargetTeamCount[i] * Config.FactorPlayerTeamCount) + 0.5)
-				else
-					s_TargetTeamCount[i] = math.floor((s_TargetTeamCount[i] * (2 - Config.FactorPlayerTeamCount)) + 0.5)
-				end
+
+			if i % 2 ~= s_BotTeam % 2 then
+				s_TargetTeamCount[i] = math.floor((s_TargetTeamCount[i] * Config.FactorPlayerTeamCount / (Globals.NrOfTeams / 2)) + 0.5)
+			else
+				s_TargetTeamCount[i] = math.floor((s_TargetTeamCount[i] * (2 - Config.FactorPlayerTeamCount) / (Globals.NrOfTeams / 2)) + 0.5)
 			end
 
 			if s_TargetTeamCount[i] > Globals.MaxBotsPerTeam then
@@ -394,7 +393,7 @@ function BotSpawner:UpdateBotAmountAndTeam()
 		local targetCount = Config.InitNumberOfBots + math.floor(((s_maxPlayersInOneTeam - 1) * Config.NewBotsPerNewPlayer) + 0.5)
 
 		for i = 1, Globals.NrOfTeams do
-			s_TargetTeamCount[i] = targetCount
+			s_TargetTeamCount[i] = targetCount / (Globals.NrOfTeams / 2)
 
 			if s_TargetTeamCount[i] > Globals.MaxBotsPerTeam then
 				s_TargetTeamCount[i] = Globals.MaxBotsPerTeam
@@ -447,26 +446,26 @@ function BotSpawner:UpdateBotAmountAndTeam()
 		else
 			-- check for bots in wrong team
 			for i = 1, Globals.NrOfTeams do
-				if i ~= s_BotTeam and s_CountBots[i] > 0 then
+				if i % 2 ~= s_BotTeam % 2 and s_CountBots[i] > 0 then
 					m_BotManager:KillAll(nil, i)
 				end
 			end
 
 			local s_TargetBotCount = Config.InitNumberOfBots + math.floor(((s_PlayerCount - 1) * Config.NewBotsPerNewPlayer) + 0.5)
+			local s_TargetBotCountPerEnemyTeam = s_TargetBotCount / (Globals.NrOfTeams / 2)
 
-			if s_TargetBotCount > Globals.MaxBotsPerTeam then
-				s_TargetBotCount = Globals.MaxBotsPerTeam
+			if s_TargetBotCountPerEnemyTeam > Globals.MaxBotsPerTeam then
+				s_TargetBotCountPerEnemyTeam = Globals.MaxBotsPerTeam
 			end
 
-			local s_AmountToSpawn = s_TargetBotCount - s_BotCount
-
-			if s_AmountToSpawn > 0 then
-				self._BotSpawnTimer = -5.0
-				self:SpawnWayBots(nil, s_AmountToSpawn, true, 0, 0, s_BotTeam)
-			end
-
-			if s_AmountToSpawn < 0 then
-				m_BotManager:KillAll(-s_AmountToSpawn)
+			for i = 1, Globals.NrOfTeams do
+				if i % 2 == s_BotTeam % 2 then
+					if s_TeamCount[i] < s_TargetBotCountPerEnemyTeam then
+						self:SpawnWayBots(nil, s_TargetBotCountPerEnemyTeam - s_TeamCount[i], true, 0, 0, i)
+					elseif s_TeamCount[i] > s_TargetBotCountPerEnemyTeam then
+						m_BotManager:KillAll(s_TeamCount[i] - s_TargetBotCountPerEnemyTeam, i)
+					end
+				end
 			end
 		end
 	-- FIXED NUMBER TO SPAWN
@@ -497,26 +496,26 @@ function BotSpawner:UpdateBotAmountAndTeam()
 		else
 			-- check for bots in wrong team
 			for i = 1, Globals.NrOfTeams do
-				if i ~= s_BotTeam and s_CountBots[i] > 0 then
+				if i % 2 ~= s_BotTeam % 2 and s_CountBots[i] > 0 then
 					m_BotManager:KillAll(nil, i)
 				end
 			end
 
 			local s_TargetBotCount = Config.InitNumberOfBots
+			local s_TargetBotCountPerEnemyTeam = s_TargetBotCount / (Globals.NrOfTeams / 2)
 
-			if s_TargetBotCount > Globals.MaxBotsPerTeam then
-				s_TargetBotCount = Globals.MaxBotsPerTeam
+			if s_TargetBotCountPerEnemyTeam > Globals.MaxBotsPerTeam then
+				s_TargetBotCountPerEnemyTeam = Globals.MaxBotsPerTeam
 			end
 
-			local s_AmountToSpawn = s_TargetBotCount - s_BotCount
-
-			if s_AmountToSpawn > 0 then
-				self._BotSpawnTimer = -5.0
-				self:SpawnWayBots(nil, s_AmountToSpawn, true, 0, 0, s_BotTeam)
-			end
-
-			if s_AmountToSpawn < 0 then
-				m_BotManager:KillAll(-s_AmountToSpawn)
+			for i = 1, Globals.NrOfTeams do
+				if i % 2 == s_BotTeam % 2 then
+					if s_TeamCount[i] < s_TargetBotCountPerEnemyTeam then
+						self:SpawnWayBots(nil, s_TargetBotCountPerEnemyTeam - s_TeamCount[i], true, 0, 0, i)
+					elseif s_TeamCount[i] > s_TargetBotCountPerEnemyTeam then
+						m_BotManager:KillAll(s_TeamCount[i] - s_TargetBotCountPerEnemyTeam, i)
+					end
+				end
 			end
 		end
 	elseif Globals.SpawnMode == SpawnModes.manual then

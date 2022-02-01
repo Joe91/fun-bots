@@ -14,6 +14,7 @@ This is the changelog for the version V2.5.0. Don't forget to [join us on Discor
 * Cleanup of code
 * Improved aiming in larger distances
 * Option to use advanced aiming algorithms for every bot
+* Improved spawning in SQDM (#209)
 
 ### Bug fixes
 * Several Bugfixes thanks to Bree_Arnold (#207)
