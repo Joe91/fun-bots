@@ -282,7 +282,7 @@ function BotSpawner:UpdateBotAmountAndTeam()
 	local s_BotCount = m_BotManager:GetActiveBotCount()
 	local s_PlayerCount = 0
 
-	local s_BotTeam = m_BotManager:GetBotTeam()
+	local s_PlayerTeam = m_BotManager:GetPlayerTeam()
 	local s_CountPlayers = {}
 	local s_TeamCount = {}
 	local s_CountBots = {}
@@ -329,20 +329,22 @@ function BotSpawner:UpdateBotAmountAndTeam()
 			end
 		else
 			for i = 1, Globals.NrOfTeams do
-				if s_BotTeam % 2 ~= i % 2 then
+				if s_PlayerTeam == i then
 					s_TargetTeamCount[i] = 0
 				else
-					s_TargetTeamCount[i] = Config.InitNumberOfBots / (Globals.NrOfTeams / 2)
+					s_TargetTeamCount[i] = Config.InitNumberOfBots / (Globals.NrOfTeams - 1)
 				end
 			end
 		end
 		--limit team count
 		for i = 1, Globals.NrOfTeams do
 
-			if i % 2 ~= s_BotTeam % 2 then
-				s_TargetTeamCount[i] = math.floor((s_TargetTeamCount[i] * Config.FactorPlayerTeamCount / (Globals.NrOfTeams / 2)) + 0.5)
-			else
-				s_TargetTeamCount[i] = math.floor((s_TargetTeamCount[i] * (2 - Config.FactorPlayerTeamCount) / (Globals.NrOfTeams / 2)) + 0.5)
+			if Globals.NrOfTeams == 2 then
+				if i == s_PlayerTeam then
+					s_TargetTeamCount[i] = math.floor((s_TargetTeamCount[i] * Config.FactorPlayerTeamCount) + 0.5)
+				else
+					s_TargetTeamCount[i] = math.floor((s_TargetTeamCount[i] * (2 - Config.FactorPlayerTeamCount)) + 0.5)
+				end
 			end
 
 			if s_TargetTeamCount[i] > Globals.MaxBotsPerTeam then
@@ -399,7 +401,7 @@ function BotSpawner:UpdateBotAmountAndTeam()
 				s_TargetTeamCount[i] = Globals.MaxBotsPerTeam
 			end
 
-			if Globals.NrOfTeams == 2 and i ~= s_BotTeam then
+			if Globals.NrOfTeams == 2 and i == s_PlayerTeam then
 				s_TargetTeamCount[i] = math.floor((s_TargetTeamCount[i] * Config.FactorPlayerTeamCount) + 0.5)
 			end
 		end
@@ -446,20 +448,20 @@ function BotSpawner:UpdateBotAmountAndTeam()
 		else
 			-- check for bots in wrong team
 			for i = 1, Globals.NrOfTeams do
-				if i % 2 ~= s_BotTeam % 2 and s_CountBots[i] > 0 then
+				if i == s_PlayerTeam and s_CountBots[i] > 0 then
 					m_BotManager:KillAll(nil, i)
 				end
 			end
 
 			local s_TargetBotCount = Config.InitNumberOfBots + math.floor(((s_PlayerCount - 1) * Config.NewBotsPerNewPlayer) + 0.5)
-			local s_TargetBotCountPerEnemyTeam = s_TargetBotCount / (Globals.NrOfTeams / 2)
+			local s_TargetBotCountPerEnemyTeam = s_TargetBotCount / (Globals.NrOfTeams - 1)
 
 			if s_TargetBotCountPerEnemyTeam > Globals.MaxBotsPerTeam then
 				s_TargetBotCountPerEnemyTeam = Globals.MaxBotsPerTeam
 			end
 
 			for i = 1, Globals.NrOfTeams do
-				if i % 2 == s_BotTeam % 2 then
+				if i ~= s_PlayerTeam then
 					if s_TeamCount[i] < s_TargetBotCountPerEnemyTeam then
 						self:SpawnWayBots(nil, s_TargetBotCountPerEnemyTeam - s_TeamCount[i], true, 0, 0, i)
 					elseif s_TeamCount[i] > s_TargetBotCountPerEnemyTeam then
@@ -475,7 +477,7 @@ function BotSpawner:UpdateBotAmountAndTeam()
 				s_TargetTeamCount[i] = math.floor(Config.InitNumberOfBots/Globals.NrOfTeams)
 
 				if Globals.NrOfTeams == 2 then
-					if i ~= s_BotTeam then
+					if i == s_PlayerTeam then
 						s_TargetTeamCount[i] = math.floor((s_TargetTeamCount[i] * Config.FactorPlayerTeamCount) + 0.5)
 					else
 						s_TargetTeamCount[i] = math.floor((s_TargetTeamCount[i] * (2 - Config.FactorPlayerTeamCount)) + 0.5)
@@ -496,20 +498,20 @@ function BotSpawner:UpdateBotAmountAndTeam()
 		else
 			-- check for bots in wrong team
 			for i = 1, Globals.NrOfTeams do
-				if i % 2 ~= s_BotTeam % 2 and s_CountBots[i] > 0 then
+				if i == s_PlayerTeam and s_CountBots[i] > 0 then
 					m_BotManager:KillAll(nil, i)
 				end
 			end
 
 			local s_TargetBotCount = Config.InitNumberOfBots
-			local s_TargetBotCountPerEnemyTeam = s_TargetBotCount / (Globals.NrOfTeams / 2)
+			local s_TargetBotCountPerEnemyTeam = s_TargetBotCount / (Globals.NrOfTeams - 1)
 
 			if s_TargetBotCountPerEnemyTeam > Globals.MaxBotsPerTeam then
 				s_TargetBotCountPerEnemyTeam = Globals.MaxBotsPerTeam
 			end
 
 			for i = 1, Globals.NrOfTeams do
-				if i % 2 == s_BotTeam % 2 then
+				if i ~= s_PlayerTeam then
 					if s_TeamCount[i] < s_TargetBotCountPerEnemyTeam then
 						self:SpawnWayBots(nil, s_TargetBotCountPerEnemyTeam - s_TeamCount[i], true, 0, 0, i)
 					elseif s_TeamCount[i] > s_TargetBotCountPerEnemyTeam then

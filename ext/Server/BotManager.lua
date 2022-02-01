@@ -407,6 +407,37 @@ function BotManager:RegisterActivePlayer(p_Player)
 end
 
 ---@return integer|TeamId
+function BotManager:GetPlayerTeam()
+	---@type integer|TeamId
+	local s_PlayerTeam
+	---@type table<integer|TeamId, integer>
+	local s_CountPlayers = {}
+
+	for i = 1, Globals.NrOfTeams do
+		s_CountPlayers[i] = 0
+		local s_Players = PlayerManager:GetPlayersByTeam(i)
+
+		for j = 1, #s_Players do
+			if not m_Utilities:isBot(s_Players[j]) then
+				s_CountPlayers[i] = s_CountPlayers[i] + 1
+			end
+		end
+	end
+
+	local s_HighestPlayerCount = 0
+
+	---@type integer|TeamId
+	for i = 1, Globals.NrOfTeams do
+		if s_CountPlayers[i] > s_HighestPlayerCount then
+			s_PlayerTeam = i
+			s_HighestPlayerCount = s_CountPlayers[i]
+		end
+	end
+
+	return s_PlayerTeam
+end
+
+---@return integer|TeamId
 function BotManager:GetBotTeam()
 	if Config.BotTeam ~= TeamId.TeamNeutral then
 		return Config.BotTeam
