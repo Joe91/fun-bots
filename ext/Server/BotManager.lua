@@ -434,6 +434,7 @@ function BotManager:GetBotTeam()
 	for i = 1, Globals.NrOfTeams do
 		if s_CountPlayers[i] < s_LowestPlayerCount then
 			s_BotTeam = i
+			s_LowestPlayerCount = s_CountPlayers[i]
 		end
 	end
 
