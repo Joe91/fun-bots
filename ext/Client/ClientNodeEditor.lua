@@ -2233,7 +2233,7 @@ function ClientNodeEditor:DrawSomeNodes(p_NrOfNodes)
 	-- reset vars
 	self.m_lastDrawIndexPath = 0
 	self.m_lastDrawIndexNode = 0
-	collectgarbage('collect')
+	-- collectgarbage('collect')
 	return true
 end
 

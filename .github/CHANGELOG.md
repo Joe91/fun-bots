@@ -12,11 +12,14 @@ This is the changelog for the version V2.5.0. Don't forget to [join us on Discor
 * Bot-Command-Key now configurable in Registry.lua
 * Separated Weapon-Lists per Team
 * Cleanup of code
+* Improved aiming in larger distances
+* Option to use advanced aiming algorithms for every bot
 
 ### Bug fixes
 * Several Bugfixes thanks to Bree_Arnold (#207)
 * Bugfix saving Weapon-Modifications
 * Reload Rockets if empty
+* some tweaks to improve performance on tracing (possible since a fix of a memoryleak by VU)
 
 ### New maps
 * Vehicles for Rush Theran Highway by BOB
