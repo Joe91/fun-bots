@@ -1,4 +1,5 @@
-class 'FunBotUIClient'
+---@class FunBotUIClient
+FunBotUIClient = class 'FunBotUIClient'
 
 require('UIViews')
 require('UISettings')
@@ -197,7 +198,7 @@ function FunBotUIClient:_onUISettings(p_Data)
 				end
 			end
 			settings:addList(l_Item.Category, l_Item.Name, Language:I18N(l_Item.Text), s_EnumTable, s_Value, s_Default, Language:I18N(l_Item.Description))
-		elseif l_Item.Type == Type.Table then
+		elseif l_Item.Type == Type.List then
 			settings:addList(l_Item.Category, l_Item.Name, Language:I18N(l_Item.Text), l_Item.Reference, p_Data[l_Item.Name], l_Item.Default, Language:I18N(l_Item.Description))
 		elseif l_Item.Type == Type.Integer then
 			s_TypeString = "Integer"
@@ -267,6 +268,8 @@ function FunBotUIClient:_onUIShowToolbar(p_Data)
 	end
 end
 
+---VEXT Client Client:UpdateInput Event
+---@param p_DeltaTime number
 function FunBotUIClient:OnClientUpdateInput(p_DeltaTime)
 	if Config.DisableUserInterface == true then
 		return
@@ -295,9 +298,9 @@ function FunBotUIClient:OnClientUpdateInput(p_DeltaTime)
 	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_LeftAlt) and self.m_InWaypointEditor then
 		self._views:disable()
 		self.m_LastWaypointEditorState = false
-	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_LeftAlt) and not self.m_InWaypointEditor and not self.m_InCommScreen and not self.m_WaitForKeyLeft then
+	elseif InputManager:WentKeyDown(Registry.COMMON.BOT_COMMAND_KEY) and not self.m_InWaypointEditor and not self.m_InCommScreen and not self.m_WaitForKeyLeft then
 		NetEvents:Send('UI_Request_CommoRose_Show')
-	elseif InputManager:WentKeyUp(InputDeviceKeys.IDK_LeftAlt) and not self.m_InWaypointEditor and (self.m_InCommScreen or self.m_WaitForKeyLeft) then
+	elseif InputManager:WentKeyUp(Registry.COMMON.BOT_COMMAND_KEY) and not self.m_InWaypointEditor and (self.m_InCommScreen or self.m_WaitForKeyLeft) then
 		if self.m_InCommScreen then
 			self:_onUICommonRose("false") --TODO: Remove Permission-Check?
 		end
@@ -309,11 +312,13 @@ function FunBotUIClient:OnExtensionLoaded()
 	self._views:OnExtensionLoaded()
 end
 
+---VEXT Shared Extension:Unloading Event
 function FunBotUIClient:OnExtensionUnloading()
 	self._views:OnExtensionUnloading()
 end
 
 if g_FunBotUIClient == nil then
+	---@type FunBotUIClient
 	g_FunBotUIClient = FunBotUIClient()
 end
 

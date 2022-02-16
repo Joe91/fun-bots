@@ -1,3 +1,4 @@
+---@class BotMoveSpeeds
 BotMoveSpeeds = {
 	Backwards = -1,
 	NoMovement = 0,

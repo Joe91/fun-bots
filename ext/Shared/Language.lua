@@ -1,4 +1,5 @@
-class 'Language'
+---@class Language
+Language = class 'Language'
 
 require('__shared/Utilities')
 
@@ -78,6 +79,7 @@ function Language:I18N(p_Input, ...)
 end
 
 if g_Language == nil then
+	---@type Language
 	g_Language = Language()
 end
 

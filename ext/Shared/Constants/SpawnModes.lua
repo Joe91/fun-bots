@@ -1,3 +1,4 @@
+---@class SpawnModes
 SpawnModes = {
 	manual = 0,
 	fixed_number = 1,

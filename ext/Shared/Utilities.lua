@@ -1,4 +1,5 @@
-class('Utilities')
+---@class Utilities
+Utilities = class('Utilities')
 
 require('__shared/Config')
 
@@ -176,6 +177,10 @@ function string:split(p_Sep)
 	return s_Fields
 end
 
+function string:starts(p_Start)
+	return string.sub(self,1,string.len(p_Start))==p_Start
+end
+
 function requireExists(p_Module)
 	local function reference(p_Module)
 		require(p_Module)
@@ -192,6 +197,7 @@ function requireExists(p_Module)
 end
 
 if g_Utilities == nil then
+	---@type Utilities
 	g_Utilities = Utilities()
 end
 

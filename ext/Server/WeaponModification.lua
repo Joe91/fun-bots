@@ -1,6 +1,8 @@
-class('WeaponModification')
+---@class WeaponModification
+WeaponModification = class('WeaponModification')
 
 require('__shared/Config')
+---@type Logger
 local m_Logger = Logger("WeaponModification", Debug.Shared.MODIFICATIONS)
 
 
@@ -47,11 +49,14 @@ end
 -- Events
 -- =============================================
 
+---VEXT Shared Partition:Loaded Event
+---@param p_Partition DatabasePartition
 function WeaponModification:OnPartitionLoaded(p_Partition)
 	if not p_Partition.primaryInstance:Is('SoldierWeaponBlueprint') then
 		return
 	end
 
+	---@type SoldierWeaponData
 	for _, p_Instance in pairs(p_Partition.instances) do
 		if p_Instance ~= nil and p_Instance:Is('SoldierWeaponData') then
 			p_Instance = SoldierWeaponData(p_Instance)
@@ -266,6 +271,7 @@ function WeaponModification:_MakeWritable(p_Instance)
 end
 
 if g_WeaponModification == nil then
+	---@type WeaponModification
 	g_WeaponModification = WeaponModification()
 end
 

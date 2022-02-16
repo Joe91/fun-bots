@@ -1,9 +1,13 @@
-class('PathSwitcher')
+---@class PathSwitcher
+PathSwitcher = class('PathSwitcher')
 
 require('__shared/Config')
 
+---@type NodeCollection
 local m_NodeCollection = require('__shared/NodeCollection')
+---@type GameDirector
 local m_GameDirector = require('GameDirector')
+---@type Logger
 local m_Logger = Logger("PathSwitcher", Debug.Server.PATH)
 
 function PathSwitcher:__init()
@@ -28,7 +32,7 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle, p
 
 	if Globals.IsRush then
 		local s_WaitingForZone = false
-		if p_TeamId == TeamId.Team1 then  -- attacking team
+		if p_TeamId == TeamId.Team1 then -- attacking team
 			s_WaitingForZone = m_GameDirector:IsWaitForZoneActive()
 		end
 		if s_WaitingForZone then
@@ -46,7 +50,7 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle, p
 				self.m_KillYourselfCounter[p_BotName] = 0
 			end
 
-			if self.m_KillYourselfCounter[p_BotName] > 20 then
+			if self.m_KillYourselfCounter[p_BotName] > Registry.GAME_DIRECTOR.KILL_ON_INVALID_PATH_CROSSINGS then
 				local s_Bot = PlayerManager:GetPlayerByName(p_BotName)
 
 				if s_Bot ~= nil and s_Bot.soldier ~= nil then
@@ -96,7 +100,7 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle, p
 		-- check for vehicle usage
 		if s_PathNode.Data.Objectives ~= nil and #s_PathNode.Data.Objectives == 1 and s_NewPoint.ID ~= p_Point.ID then
 			if Config.UseVehicles then
-				if  m_GameDirector:UseVehicle(p_TeamId, s_PathNode.Data.Objectives[1]) == true then
+				if m_GameDirector:UseVehicle(p_TeamId, s_PathNode.Data.Objectives[1]) == true then
 					return true, s_NewPoint
 				end
 			else
@@ -296,6 +300,7 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle, p
 end
 
 if g_PathSwitcher == nil then
+	---@type PathSwitcher
 	g_PathSwitcher = PathSwitcher()
 end
 

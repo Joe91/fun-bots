@@ -1,8 +1,13 @@
-class('GameDirector')
+---@class GameDirector
+GameDirector = class('GameDirector')
 
+---@type NodeCollection
 local m_NodeCollection = require('__shared/NodeCollection')
+---@type Utilities
 local m_Utilities = require('__shared/Utilities')
+---@type Vehicles
 local m_Vehicles = require("Vehicles")
+---@type Logger
 local m_Logger = Logger("GameDirector", Debug.Server.GAMEDIRECTOR)
 
 function GameDirector:__init()
@@ -49,11 +54,15 @@ function GameDirector:OnLevelLoaded()
 	end
 end
 
+---VEXT Server Server:RoundOver Event
+---@param p_RoundTime number
+---@param p_WinningTeam TeamId|integer
 function GameDirector:OnRoundOver(p_RoundTime, p_WinningTeam)
 	self.m_UpdateTimer = -1
 end
 
-function GameDirector:OnRoundReset(p_RoundTime, p_WinningTeam)
+---VEXT Server Server:RoundReset Event
+function GameDirector:OnRoundReset()
 	self.m_AllObjectives = {}
 	self.m_UpdateTimer = 0
 end
@@ -62,6 +71,9 @@ end
 	-- CapturePoint Events
 -- =============================================
 
+---VEXT Server Player:EnteredCapturePoint Event
+---@param p_Player Player
+---@param p_CapturePoint CapturePointEntity|Entity
 function GameDirector:OnPlayerEnteredCapturePoint(p_Player, p_CapturePoint)
 	p_CapturePoint = CapturePointEntity(p_CapturePoint)
 	local s_ObjectiveName = self:_TranslateObjective(p_CapturePoint.transform.trans, p_CapturePoint.name)
@@ -71,6 +83,8 @@ function GameDirector:OnPlayerEnteredCapturePoint(p_Player, p_CapturePoint)
 	})
 end
 
+---VEXT Server CapturePoint:Captured Event
+---@param p_CapturePoint CapturePointEntity|Entity
 function GameDirector:OnCapturePointCaptured(p_CapturePoint)
 	p_CapturePoint = CapturePointEntity(p_CapturePoint)
 	local s_ObjectiveName = self:_TranslateObjective(p_CapturePoint.transform.trans, p_CapturePoint.name)
@@ -100,6 +114,8 @@ function GameDirector:OnCapturePointCaptured(p_CapturePoint)
 	end
 end
 
+---VEXT Server CapturePoint:Lost Event
+---@param p_CapturePoint CapturePointEntity|Entity
 function GameDirector:OnCapturePointLost(p_CapturePoint)
 	p_CapturePoint = CapturePointEntity(p_CapturePoint)
 	local s_ObjectiveName = self:_TranslateObjective(p_CapturePoint.transform.trans, p_CapturePoint.name)
@@ -112,6 +128,8 @@ function GameDirector:OnCapturePointLost(p_CapturePoint)
 	m_Logger:Write('GameDirector:_onLost: ' .. s_ObjectiveName)
 end
 
+---VEXT Shared Engine:Update Event
+---@param p_DeltaTime number
 function GameDirector:OnEngineUpdate(p_DeltaTime)
 	if self.m_UpdateTimer >= 0 then
 		self.m_UpdateTimer = self.m_UpdateTimer + p_DeltaTime
@@ -316,7 +334,7 @@ function GameDirector:OnMcomDestroyed(p_Objective)
 	end
 end
 
-
+---@param p_EntityId integer
 function GameDirector:OnRushZoneDisabled(p_EntityId)
 	m_Logger:Write("Zone "..tostring(p_EntityId).." disabled")
 	self.m_waitForZone = false
@@ -334,6 +352,8 @@ function GameDirector:GetStationaryAas(p_TeamId)
 	return self.m_SpawnableStationaryAas[p_TeamId]
 end
 
+---VEXT Server Vehicle:SpawnDone Event
+---@param p_Entity ControllableEntity|Entity
 function GameDirector:OnVehicleSpawnDone(p_Entity)
 	p_Entity = ControllableEntity(p_Entity)
 
@@ -343,7 +363,7 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 
 		if s_Objective ~= nil and s_Objective.isSpawnPath then
 			local s_Node = g_GameDirector:FindClosestPath(p_Entity.transform.trans, true)
-			if s_Node ~= nil and s_Node.Position:Distance(p_Entity.transform.trans) < Registry.VEHICLES.MIN_DISTANCE_VEHICLE_ENTER  then
+			if s_Node ~= nil and s_Node.Position:Distance(p_Entity.transform.trans) < Registry.VEHICLES.MIN_DISTANCE_VEHICLE_ENTER then
 				table.insert(self.m_SpawnableVehicles[s_Objective.team], p_Entity)
 			end
 		end
@@ -353,6 +373,9 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 	end
 end
 
+---VEXT Server Vehicle:Enter Event
+---@param p_Entity ControllableEntity|Entity
+---@param p_Player Player
 function GameDirector:OnVehicleEnter(p_Entity, p_Player)
 	local s_VehicleData = m_Vehicles:GetVehicleByEntity(p_Entity)
 	if s_VehicleData ~= nil then
@@ -773,7 +796,7 @@ function GameDirector:_RegisterRushEventCallbacks()
 		if s_Entity.data.instanceGuid == Guid("F8D564AC-9235-4141-B320-297BEA370FD8") then
 			s_Entity:RegisterEventCallback(function(p_Entity, p_EntityEvent)
 				if p_EntityEvent.eventId == MathUtils:FNVHash("SetTrue") then
-					Events:Dispatch('RUSH:ZoneDisabled', p_Entity.instanceId)
+					self:OnRushZoneDisabled(p_Entity.instanceId)
 				end
 			end)
 		end
@@ -786,10 +809,10 @@ function GameDirector:_RegisterRushEventCallbacks()
 	s_Entity = s_Iterator:Next()
 
 	while s_Entity do
-		if  s_Entity.data.instanceGuid == Guid("2CEA23B6-76E9-4E7B-85E6-EE648F686E48") then
+		if s_Entity.data.instanceGuid == Guid("2CEA23B6-76E9-4E7B-85E6-EE648F686E48") then
 			s_Entity:RegisterEventCallback(self, self._OnInteractionDefend)
 		end
-		if s_Entity.data.instanceGuid ==  Guid("1768D76F-6DD0-4425-A898-32C851A4A476") then
+		if s_Entity.data.instanceGuid == Guid("1768D76F-6DD0-4425-A898-32C851A4A476") then
 			s_Entity:RegisterEventCallback(self, self._OnInteractionAttack)
 		end
 		s_Entity = s_Iterator:Next()
@@ -882,6 +905,7 @@ function GameDirector:_InitFlagTeams()
 	end
 
 	local s_Iterator = EntityManager:GetIterator('ServerCapturePointEntity')
+	---@type CapturePointEntity
 	local s_Entity = s_Iterator:Next()
 
 	while s_Entity ~= nil do
@@ -1209,6 +1233,7 @@ function GameDirector:_UseSubobjective(p_BotTeam, p_ObjectiveName)
 end
 
 if g_GameDirector == nil then
+	---@type GameDirector
 	g_GameDirector = GameDirector()
 end
 

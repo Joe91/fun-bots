@@ -1,4 +1,5 @@
-class 'EbxEditUtils'
+---@class EbxEditUtils
+EbxEditUtils = class 'EbxEditUtils'
 
 function EbxEditUtils:__init()
 
@@ -307,6 +308,7 @@ function EbxEditUtils:dump(p)
 end
 
 if g_EbxEditUtils == nil then
+	---@type EbxEditUtils
 	g_EbxEditUtils = EbxEditUtils()
 end
 

@@ -1,3 +1,4 @@
+---@class WeaponSets
 WeaponSets = {
 	Class = 0,
 	Custom = 1,

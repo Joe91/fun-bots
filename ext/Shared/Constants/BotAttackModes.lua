@@ -1,3 +1,4 @@
+---@class BotAttackModes
 BotAttackModes = {
 	RandomNotSet = 0,
 	Crouch = 2,

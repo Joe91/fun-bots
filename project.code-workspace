@@ -1,0 +1,26 @@
+{
+    "folders": [
+		{
+			"name": "Shared",
+			"path": "ext\\Shared"
+		},
+		{
+			"name": "Server",
+			"path": "ext\\Server"
+		},
+		{
+			"name": "Client",
+			"path": "ext\\Client"
+		},
+		{
+			"name": "Web UI",
+			"path": "WebUI"
+		},
+		{
+			"path": "."
+		}
+	],
+    "settings": {
+        "Lua.workspace.maxPreload": 10000
+    }
+}

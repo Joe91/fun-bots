@@ -1,4 +1,5 @@
-class('ConsoleCommands')
+---@class ConsoleCommands
+ConsoleCommands = class('ConsoleCommands')
 
 function ConsoleCommands:__init()
 	self._ConfigList = {}
@@ -32,6 +33,7 @@ function ConsoleCommands:OnPrintResponse(p_Response)
 end
 
 if g_ConsoleCommands == nil then
+	---@type ConsoleCommands
 	g_ConsoleCommands = ConsoleCommands()
 end
 

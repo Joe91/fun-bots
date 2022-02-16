@@ -1,26 +1,50 @@
-class('BotManager')
+---@class BotManager
+BotManager = class('BotManager')
 
 require('Bot')
 
+---@type Utilities
 local m_Utilities = require('__shared/Utilities')
+---@type Logger
 local m_Logger = Logger("BotManager", Debug.Server.BOT)
 
 function BotManager:__init()
+	---@type Bot[]
 	self._Bots = {}
+	---@type table<string, Bot>
+	---`[Player.name] -> Bot`
 	self._BotsByName = {}
+	---@type table<integer, Bot[]>
 	self._BotsByTeam = {{}, {}, {}, {}, {}} -- neutral, team1, team2, team3, team4
+	---@type table<integer, EntryInput>
+	---`[Player.id] -> EntryInput`
 	self._BotInputs = {}
+	---@type table<string, string>
+	---`[name of damaged player] -> name of shooting player`
 	self._ShooterBots = {}
+	---@type string[]
+	---`playerName:string[]`
 	self._ActivePlayers = {}
-	self._BotAttackBotTimer = 0
-	self._DestroyBotsTimer = 0
+	self._BotAttackBotTimer = 0.0
+	self._DestroyBotsTimer = 0.0
+	---@type string[]
+	---`BotName[]`
 	self._BotsToDestroy = {}
 
+	---@type string[]
+	---`BotName[]`
 	self._BotBotAttackList = {}
 	self._RaycastsPerActivePlayer = 0
+	---@type table<string, boolean>
+	---`[BotName] -> boolean`
 	self._BotCheckState = {}
+
+	---@type table<string, boolean>
+	---`[botPlayer.id .. "-" .. enemyBotPlayer.id] -> boolean`
 	self._ConnectionCheckState = {}
 
+	---@type string[]
+	---`BotName[]`
 	self._PendingAcceptRevives = {}
 	self._LastBotCheckIndex = 1
 	self._LastPlayerCheckIndex = 1
@@ -34,6 +58,7 @@ end
 -- Events
 -- =============================================
 
+---VEXT Shared Level:Destroy Event
 function BotManager:OnLevelDestroy()
 	m_Logger:Write("destroyLevel")
 
@@ -43,6 +68,10 @@ function BotManager:OnLevelDestroy()
 	--self:KillAll() -- this crashes when the server ended. do it on levelstart instead
 end
 
+
+---VEXT Shared UpdateManager:Update Event
+---@param p_DeltaTime number
+---@param p_UpdatePass UpdatePass|integer
 function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	if p_UpdatePass ~= UpdatePass.UpdatePass_PostFrame then
 		return
@@ -54,7 +83,7 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 	if Config.BotsAttackBots and self._InitDone then
 		if self._BotAttackBotTimer >= Registry.GAME_RAYCASTING.BOT_BOT_CHECK_INTERVAL then
-			self._BotAttackBotTimer = 0
+			self._BotAttackBotTimer = 0.0
 			self:_CheckForBotBotAttack()
 		end
 		self._BotAttackBotTimer = self._BotAttackBotTimer + p_DeltaTime
@@ -62,7 +91,7 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 	if #self._BotsToDestroy > 0 then
 		if self._DestroyBotsTimer >= 0.05 then
-			self._DestroyBotsTimer = 0
+			self._DestroyBotsTimer = 0.0
 			self:DestroyBot(table.remove(self._BotsToDestroy))
 		end
 		self._DestroyBotsTimer = self._DestroyBotsTimer + p_DeltaTime
@@ -83,6 +112,8 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	end
 end
 
+---VEXT Server Player:Left Event
+---@param p_Player Player
 function BotManager:OnPlayerLeft(p_Player)
 	--remove all references of player
 	if p_Player ~= nil then
@@ -98,6 +129,7 @@ function BotManager:OnPlayerLeft(p_Player)
 	end
 end
 
+---@param p_BotName string
 function BotManager:OnBotAbortWait(p_BotName)
 	local s_Bot = self:GetBotByName(p_BotName)
 	if s_Bot ~= nil then
@@ -105,6 +137,7 @@ function BotManager:OnBotAbortWait(p_BotName)
 	end
 end
 
+---@param p_BotName string
 function BotManager:OnBotExitVehicle(p_BotName)
 	local s_Bot = self:GetBotByName(p_BotName)
 	if s_Bot ~= nil then
@@ -112,7 +145,9 @@ function BotManager:OnBotExitVehicle(p_BotName)
 	end
 end
 
--- this is unused
+-- TODO: remove? this is unused / commented out
+---@param p_Soldier SoldierEntity
+---@param p_Action HealthStateAction|integer
 function BotManager:OnSoldierHealthAction(p_Soldier, p_Action)
 	if p_Action == HealthStateAction.OnRevive then -- 7
 		if p_Soldier.player ~= nil then
@@ -123,12 +158,17 @@ function BotManager:OnSoldierHealthAction(p_Soldier, p_Action)
 	end
 end
 
--- this is unused
+-- TODO: remove? this is unused / commented out
+---@param p_GunSway GunSway
+---@param p_Weapon Entity|nil
+---@param p_WeaponFiring WeaponFiring|nil
+---@param p_DeltaTime number
 function BotManager:OnGunSway(p_GunSway, p_Weapon, p_WeaponFiring, p_DeltaTime)
 	if p_Weapon == nil then
 		return
 	end
 
+	---@type SoldierEntity|nil
 	local s_Soldier = nil
 
 	for _, l_Entity in pairs(p_Weapon.bus.parent.entities) do
@@ -163,6 +203,11 @@ end
 -- Hooks
 -- =============================================
 
+---VEXT Server Soldier:Damage Hook
+---@param p_HookCtx HookContext
+---@param p_Soldier SoldierEntity
+---@param p_Info DamageInfo
+---@param p_GiverInfo DamageGiverInfo
 function BotManager:OnSoldierDamage(p_HookCtx, p_Soldier, p_Info, p_GiverInfo)
 	-- soldier -> soldier damage only
 	if p_Soldier.player == nil then
@@ -225,6 +270,9 @@ end
 -- Custom (Net-)Events
 -- =============================================
 
+---@param p_PlayerName string
+---@param p_ShooterName string
+---@param p_MeleeAttack boolean
 function BotManager:OnServerDamagePlayer(p_PlayerName, p_ShooterName, p_MeleeAttack)
 	local s_Player = PlayerManager:GetPlayerByName(p_PlayerName)
 
@@ -233,6 +281,10 @@ function BotManager:OnServerDamagePlayer(p_PlayerName, p_ShooterName, p_MeleeAtt
 	end
 end
 
+---@param p_Player Player
+---@param p_ShooterName string
+---@param p_MeleeAttack boolean
+---@param p_IsHeadShot boolean
 function BotManager:OnDamagePlayer(p_Player, p_ShooterName, p_MeleeAttack, p_IsHeadShot)
 	local s_Bot = self:GetBotByName(p_ShooterName)
 
@@ -260,6 +312,9 @@ function BotManager:OnDamagePlayer(p_Player, p_ShooterName, p_MeleeAttack, p_IsH
 	end
 end
 
+---@param p_Player Player
+---@param p_BotName string
+---@param p_IgnoreYaw boolean
 function BotManager:OnShootAt(p_Player, p_BotName, p_IgnoreYaw)
 	local s_Bot = self:GetBotByName(p_BotName)
 
@@ -270,6 +325,8 @@ function BotManager:OnShootAt(p_Player, p_BotName, p_IgnoreYaw)
 	s_Bot:ShootAt(p_Player, p_IgnoreYaw)
 end
 
+---@param p_Player Player
+---@param p_BotName string
 function BotManager:OnRevivePlayer(p_Player, p_BotName)
 	local s_Bot = self:GetBotByName(p_BotName)
 
@@ -280,6 +337,9 @@ function BotManager:OnRevivePlayer(p_Player, p_BotName)
 	s_Bot:Revive(p_Player)
 end
 
+---@param p_Player Player
+---@param p_BotName1 string
+---@param p_BotName2 string
 function BotManager:OnBotShootAtBot(p_Player, p_BotName1, p_BotName2)
 	local s_Bot1 = self:GetBotByName(p_BotName1)
 	local s_Bot2 = self:GetBotByName(p_BotName2)
@@ -296,6 +356,8 @@ function BotManager:OnBotShootAtBot(p_Player, p_BotName1, p_BotName2)
 	end
 end
 
+---@param p_Player Player
+---@param p_BotName string
 function BotManager:OnRequestEnterVehicle(p_Player, p_BotName)
 	local s_Bot = self:GetBotByName(p_BotName)
 	if s_Bot ~= nil and s_Bot.m_Player.soldier ~= nil then
@@ -303,6 +365,8 @@ function BotManager:OnRequestEnterVehicle(p_Player, p_BotName)
 	end
 end
 
+---@param p_Player Player
+---@param p_SeatNumber integer
 function BotManager:OnRequestChangeSeatVehicle(p_Player, p_SeatNumber)
 	local s_TargetEntryId = p_SeatNumber -1
 	local s_VehicleEntity = p_Player.controlledControllable
@@ -329,6 +393,7 @@ end
 -- Public Functions
 -- =============================================
 
+---@param p_Player Player
 function BotManager:RegisterActivePlayer(p_Player)
 	local s_AlreadyListed = false
 	for _, l_PlayerName in pairs(self._ActivePlayers) do
@@ -341,12 +406,46 @@ function BotManager:RegisterActivePlayer(p_Player)
 	end
 end
 
+---@return integer|TeamId
+function BotManager:GetPlayerTeam()
+	---@type integer|TeamId
+	local s_PlayerTeam
+	---@type table<integer|TeamId, integer>
+	local s_CountPlayers = {}
+
+	for i = 1, Globals.NrOfTeams do
+		s_CountPlayers[i] = 0
+		local s_Players = PlayerManager:GetPlayersByTeam(i)
+
+		for j = 1, #s_Players do
+			if not m_Utilities:isBot(s_Players[j]) then
+				s_CountPlayers[i] = s_CountPlayers[i] + 1
+			end
+		end
+	end
+
+	local s_HighestPlayerCount = 0
+
+	---@type integer|TeamId
+	for i = 1, Globals.NrOfTeams do
+		if s_CountPlayers[i] > s_HighestPlayerCount then
+			s_PlayerTeam = i
+			s_HighestPlayerCount = s_CountPlayers[i]
+		end
+	end
+
+	return s_PlayerTeam
+end
+
+---@return integer|TeamId
 function BotManager:GetBotTeam()
 	if Config.BotTeam ~= TeamId.TeamNeutral then
 		return Config.BotTeam
 	end
 
+	---@type integer|TeamId
 	local s_BotTeam
+	---@type table<integer|TeamId, integer>
 	local s_CountPlayers = {}
 
 	for i = 1, Globals.NrOfTeams do
@@ -362,9 +461,11 @@ function BotManager:GetBotTeam()
 
 	local s_LowestPlayerCount = 128
 
+	---@type integer|TeamId
 	for i = 1, Globals.NrOfTeams do
 		if s_CountPlayers[i] < s_LowestPlayerCount then
 			s_BotTeam = i
+			s_LowestPlayerCount = s_CountPlayers[i]
 		end
 	end
 
@@ -398,12 +499,14 @@ function BotManager:ConfigGlobals()
 	self._InitDone = true
 end
 
+---@return number
 function BotManager:CalcYawPerFrame()
 	local s_DeltaTime = 1.0/SharedUtils:GetTickrate()
 	local s_DegreePerDeltaTime = Config.MaximunYawPerSec * s_DeltaTime
 	return (s_DegreePerDeltaTime / 360.0) * 2 * math.pi
 end
 
+---@return string|nil
 function BotManager:FindNextBotName()
 	for _, l_Name in pairs(BotNames) do
 		local s_Name = Registry.COMMON.BOT_TOKEN .. l_Name
@@ -430,18 +533,23 @@ function BotManager:FindNextBotName()
 	return nil
 end
 
+---@param p_TeamId TeamId|integer
+---@return Bot[]
 function BotManager:GetBots(p_TeamId)
 	if p_TeamId ~= nil then
-		return self._BotInfo.team[p_TeamId + 1]
+		return self._BotsByTeam[p_TeamId + 1]
 	else
 		return self._Bots
 	end
 end
 
+---@return integer
 function BotManager:GetBotCount()
 	return #self._Bots
 end
 
+---@param p_TeamId TeamId|integer
+---@return integer
 function BotManager:GetActiveBotCount(p_TeamId)
 	local s_Count = 0
 
@@ -456,6 +564,7 @@ function BotManager:GetActiveBotCount(p_TeamId)
 	return s_Count
 end
 
+---@return Player[]
 function BotManager:GetPlayers()
 	local s_AllPlayers = PlayerManager:GetPlayers()
 	local s_Players = {}
@@ -469,10 +578,13 @@ function BotManager:GetPlayers()
 	return s_Players
 end
 
+---@return integer
 function BotManager:GetPlayerCount()
 	return PlayerManager:GetPlayerCount() - #self._Bots
 end
 
+---@param p_Kit integer|BotKits
+---@return integer
 function BotManager:GetKitCount(p_Kit)
 	local s_Count = 0
 
@@ -491,6 +603,9 @@ function BotManager:ResetAllBots()
 	end
 end
 
+---@param p_Player Player
+---@param p_Option string|'"mode"'|'"speed"'
+---@param p_Value integer|BotMoveModes|BotMoveSpeeds
 function BotManager:SetStaticOption(p_Player, p_Option, p_Value)
 	for _, l_Bot in pairs(self._Bots) do
 		if l_Bot:GetTargetPlayer() == p_Player then
@@ -505,6 +620,8 @@ function BotManager:SetStaticOption(p_Player, p_Option, p_Value)
 	end
 end
 
+---@param p_Option string|'"shoot"'|'"respawn"'|'"moveMode"'
+---@param p_Value boolean|integer|BotMoveModes
 function BotManager:SetOptionForAll(p_Option, p_Value)
 	for _, l_Bot in pairs(self._Bots) do
 		if p_Option == "shoot" then
@@ -517,6 +634,9 @@ function BotManager:SetOptionForAll(p_Option, p_Value)
 	end
 end
 
+---@param p_Player Player
+---@param p_Option string|'"shoot"'|'"respawn"'|'"moveMode"'
+---@param p_Value boolean|integer|BotMoveModes
 function BotManager:SetOptionForPlayer(p_Player, p_Option, p_Value)
 	for _, l_Bot in pairs(self._Bots) do
 		if l_Bot:GetTargetPlayer() == p_Player then
@@ -531,10 +651,16 @@ function BotManager:SetOptionForPlayer(p_Player, p_Option, p_Value)
 	end
 end
 
+---@param p_Name string
+---@return Bot
 function BotManager:GetBotByName(p_Name)
 	return self._BotsByName[p_Name]
 end
 
+---@param p_Name string
+---@param p_TeamId integer|TeamId
+---@param p_SquadId integer|SquadId
+---@return Bot|nil
 function BotManager:CreateBot(p_Name, p_TeamId, p_SquadId)
 	--m_Logger:Write('botsByTeam['..#self._BotsByTeam[2]..'|'..#self._BotsByTeam[3]..']')
 
@@ -556,7 +682,7 @@ function BotManager:CreateBot(p_Name, p_TeamId, p_SquadId)
 
 	if s_PlayerLimit <= PlayerManager:GetPlayerCount() then
 		m_Logger:Write("playerlimit reached")
-		return
+		return nil
 	end
 
 	-- Create a player for this bot.
@@ -564,7 +690,7 @@ function BotManager:CreateBot(p_Name, p_TeamId, p_SquadId)
 
 	if s_BotPlayer == nil then
 		m_Logger:Write("can't create more players on this team")
-		return
+		return nil
 	end
 
 	-- Create input for this bot.
@@ -584,6 +710,13 @@ function BotManager:CreateBot(p_Name, p_TeamId, p_SquadId)
 	return s_Bot
 end
 
+---@param p_Bot Bot
+---@param p_Transform LinearTransform
+---@param p_Pose CharacterPoseType|integer
+---@param p_SoldierBp SoldierBlueprint|DataContainer
+---@param p_Kit CharacterCustomizationAsset|DataContainer
+---@param p_Unlocks UnlockAsset[]|DataContainer[]
+---@return SoldierEntity|nil
 function BotManager:SpawnBot(p_Bot, p_Transform, p_Pose, p_SoldierBp, p_Kit, p_Unlocks)
 	if p_Bot.m_Player.soldier ~= nil then
 		p_Bot.m_Player.soldier:Destroy()
@@ -596,6 +729,7 @@ function BotManager:SpawnBot(p_Bot, p_Transform, p_Pose, p_SoldierBp, p_Kit, p_U
 	p_Bot.m_Player:SelectUnlockAssets(p_Kit, p_Unlocks)
 	local s_BotSoldier = p_Bot.m_Player:CreateSoldier(p_SoldierBp, p_Transform) -- Returns SoldierEntity
 
+	-- TODO: add s_BotSoldier nil check
 	-- Customisation of health of bot
 	s_BotSoldier.maxHealth = Config.BotMaxHealth;
 
@@ -605,6 +739,7 @@ function BotManager:SpawnBot(p_Bot, p_Transform, p_Pose, p_SoldierBp, p_Kit, p_U
 	return s_BotSoldier
 end
 
+---@param p_Player Player
 function BotManager:KillPlayerBots(p_Player)
 	for _, l_Bot in pairs(self._Bots) do
 		if l_Bot:GetTargetPlayer() == p_Player then
@@ -623,6 +758,8 @@ function BotManager:ResetAllBots()
 	end
 end
 
+---@param p_Amount integer
+---@param p_TeamId TeamId|integer
 function BotManager:KillAll(p_Amount, p_TeamId)
 	local s_BotTable = self._Bots
 
@@ -643,6 +780,9 @@ function BotManager:KillAll(p_Amount, p_TeamId)
 	end
 end
 
+---@param p_Amount integer
+---@param p_TeamId TeamId|integer
+---@param p_Force boolean
 function BotManager:DestroyAll(p_Amount, p_TeamId, p_Force)
 	local s_BotTable = self._Bots
 
@@ -675,6 +815,7 @@ function BotManager:DestroyDisabledBots()
 	end
 end
 
+---@param p_Player Player
 function BotManager:DestroyPlayerBots(p_Player)
 	for _, l_Bot in pairs(self._Bots) do
 		if l_Bot:GetTargetPlayer() == p_Player then
@@ -701,6 +842,7 @@ function BotManager:RefreshTables()
 	self._BotsByName = s_NewBotbyNameTable
 end
 
+---@param p_Bot Bot @might be a string as well
 function BotManager:DestroyBot(p_Bot)
 	if type(p_Bot) == 'string' then
 		p_Bot = self._BotsByName[p_Bot]
@@ -741,6 +883,7 @@ function BotManager:DestroyBot(p_Bot)
 end
 
 -- Comm-Actions
+---@param p_Player Player
 function BotManager:ExitVehicle(p_Player)
 	if p_Player ~= nil and p_Player.soldier ~= nil then
 		-- find closest bots in vehicle
@@ -774,13 +917,15 @@ function BotManager:ExitVehicle(p_Player)
 	end
 end
 
+---@param p_Player Player
+---@param p_Type string|'"ammo"'|'"medkit"'
 function BotManager:Deploy(p_Player, p_Type)
 	if p_Player ~= nil and p_Player.soldier ~= nil then
 		-- find bots in range
 		local s_BotsInRange = {}
 		for _, l_Bot in pairs(self._BotsByTeam[p_Player.teamId + 1]) do
 			if not l_Bot.m_InVehicle and l_Bot.m_Player.soldier ~= nil then
-				if p_Type == "ammo" and l_Bot.m_Kit == BotKits.Support then 
+				if p_Type == "ammo" and l_Bot.m_Kit == BotKits.Support then
 					local s_Distance = l_Bot.m_Player.soldier.worldTransform.trans:Distance(p_Player.soldier.worldTransform.trans)
 					if s_Distance < Registry.COMMON.COMMAND_DISTANCE then
 						l_Bot:DeployIfPossible()
@@ -796,13 +941,14 @@ function BotManager:Deploy(p_Player, p_Type)
 	end
 end
 
+---@param p_Player Player
 function BotManager:RepairVehicle(p_Player)
 	if p_Player ~= nil and p_Player.soldier ~= nil and p_Player.controlledControllable ~= nil and not p_Player.controlledControllable:Is("ServerSoldierEntity") then
 		-- find bots in range
 		local s_BotsInRange = {}
 		for _, l_Bot in pairs(self._BotsByTeam[p_Player.teamId + 1]) do
 			if not l_Bot.m_InVehicle and l_Bot.m_Player.soldier ~= nil then
-				if l_Bot.m_Kit == BotKits.Engineer then 
+				if l_Bot.m_Kit == BotKits.Engineer then
 					local s_Distance = l_Bot.m_Player.soldier.worldTransform.trans:Distance(p_Player.soldier.worldTransform.trans)
 					if s_Distance < Registry.COMMON.COMMAND_DISTANCE then
 						l_Bot:Repair(p_Player)
@@ -814,6 +960,7 @@ function BotManager:RepairVehicle(p_Player)
 	end
 end
 
+---@param p_Player Player
 function BotManager:EnterVehicle(p_Player)
 	if p_Player ~= nil and p_Player.soldier ~= nil then
 		-- check for vehicle of player and seats
@@ -836,6 +983,8 @@ function BotManager:EnterVehicle(p_Player)
 	end
 end
 
+---@param p_Player Player
+---@param p_Objective any @TODO add emmylua type
 function BotManager:Attack(p_Player, p_Objective)
 	if Globals.IsConquest and p_Player ~= nil and p_Player.soldier ~= nil then
 		local s_MaxObjectiveBots = 4
@@ -857,6 +1006,8 @@ end
 -- =============================================
 -- Private Functions
 -- =============================================
+
+---@param p_RaycastData any @TODO add emmylua type
 function BotManager:_DistributeRaycastsBotBotAttack(p_RaycastData)
 	local s_RaycastIndex = 0
 	for i = 0, (#self._ActivePlayers - 1) do
@@ -905,7 +1056,7 @@ function BotManager:_CheckForBotBotAttack()
 	end
 
 	local s_Raycasts = 0
-	local s_ChecksDone  = 0
+	local s_ChecksDone = 0
 
 	local s_RaycastEntries = {}
 
@@ -913,15 +1064,15 @@ function BotManager:_CheckForBotBotAttack()
 		-- body
 		local s_BotNameToCheck = self._BotBotAttackList[i]
 		local s_Bot = self:GetBotByName(s_BotNameToCheck)
-		if s_Bot ~= nil and 
-		s_Bot.m_Player and 
+		if s_Bot ~= nil and
+		s_Bot.m_Player and
 		s_Bot.m_Player.soldier ~= nil and
 		s_Bot:IsReadyToAttack() then
 			for _,l_BotName in pairs(self._BotBotAttackList) do
 				if l_BotName ~= s_BotNameToCheck then
 					local s_EnemyBot = self:GetBotByName(l_BotName)
-					if s_EnemyBot ~= nil and 
-					s_EnemyBot.m_Player and 
+					if s_EnemyBot ~= nil and
+					s_EnemyBot.m_Player and
 					s_EnemyBot.m_Player.soldier ~= nil and
 					s_EnemyBot.m_Player.teamId ~= s_Bot.m_Player.teamId and
 					s_EnemyBot:IsReadyToAttack() then
@@ -946,7 +1097,7 @@ function BotManager:_CheckForBotBotAttack()
 							if s_MaxDistanceEnemyBot > s_MaxDistance then
 								s_MaxDistance = s_MaxDistanceEnemyBot
 							end
-							if s_Distance <=  s_MaxDistance then
+							if s_Distance <= s_MaxDistance then
 								self.dummyCnt2 = self.dummyCnt2 + 1
 								table.insert(s_RaycastEntries, {
 									Bot1 = s_BotNameToCheck,
@@ -992,8 +1143,13 @@ function BotManager:_CheckForBotBotAttack()
 	self._BotBotAttackList = {}
 end
 
+---@param p_Damage integer
+---@param p_Bot Bot
+---@param p_Soldier SoldierEntity
+---@param p_Fake boolean
+---@return number
 function BotManager:_GetDamageValue(p_Damage, p_Bot, p_Soldier, p_Fake)
-	local s_ResultDamage = 0
+	local s_ResultDamage = 0.0
 	local s_DamageFactor = 1.0
 
 	if p_Bot.m_ActiveWeapon.type == WeaponTypes.Shotgun then
@@ -1043,6 +1199,7 @@ function BotManager:_GetDamageValue(p_Damage, p_Bot, p_Soldier, p_Fake)
 end
 
 if g_BotManager == nil then
+	---@type BotManager
 	g_BotManager = BotManager()
 end
 

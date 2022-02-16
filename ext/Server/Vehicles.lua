@@ -1,6 +1,8 @@
-class("Vehicles")
+---@class Vehicles
+Vehicles = class("Vehicles")
 
 require('__shared/Constants/VehicleData')
+---@type Logger
 local m_Logger = Logger("Vehicles", Debug.Server.VEHICLES)
 
 function Vehicles:FindOutVehicleType(p_Player)
@@ -122,6 +124,7 @@ function Vehicles:CheckForVehicleAttack(p_VehicleType, p_Distance, p_Gadget, p_I
 end
 
 if g_Vehicles == nil then
+	---@type Vehicles
 	g_Vehicles = Vehicles()
 end
 

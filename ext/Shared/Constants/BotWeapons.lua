@@ -1,3 +1,4 @@
+---@class BotWeapons
 BotWeapons = {
 	Auto = 0,
 	Primary = 1,

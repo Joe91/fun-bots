@@ -1,4 +1,5 @@
-class 'RegistryUtil'
+---@class RegistryUtil
+RegistryUtil = class 'RegistryUtil'
 
 require('__shared/Registry/Registry')
 
@@ -8,7 +9,7 @@ require('__shared/Registry/Registry')
 local MODULE_NAME = "Registry Manager: Util"
 
 function RegistryUtil:__init()
-    local s_start = SharedUtils:GetTimeMS()
+	local s_start = SharedUtils:GetTimeMS()
 
 	print("Enabled \"" .. MODULE_NAME .. "\" in " .. ReadableTimetamp(SharedUtils:GetTimeMS() - s_start, TimeUnits.FIT, 1))
 end
@@ -30,8 +31,9 @@ function RegistryUtil:GetVersion()
 	end
 end
 
-if g_Registry == nil then
-	g_Registry = RegistryUtil()
+if g_RegistryUtil == nil then
+	---@type RegistryUtil
+	g_RegistryUtil = RegistryUtil()
 end
 
-return g_Registry
+return g_RegistryUtil

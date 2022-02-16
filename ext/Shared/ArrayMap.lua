@@ -1,4 +1,5 @@
-class 'ArrayMap'
+---@class ArrayMap
+ArrayMap = class 'ArrayMap'
 
 function ArrayMap:__init()
 	self._entries = {}

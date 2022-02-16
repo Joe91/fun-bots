@@ -1,11 +1,17 @@
-class('SettingsManager')
+---@class SettingsManager
+SettingsManager = class('SettingsManager')
 
 require('__shared/Config')
 
+---@type Database
 local m_Database = require('Database')
+---@type BotManager
 local m_BotManager = require('BotManager')
+---@type BotSpawner
 local m_BotSpawner = require('BotSpawner')
+---@type WeaponModification
 local m_WeaponModification = require('WeaponModification')
+---@type WeaponList
 local m_WeaponList = require('__shared/WeaponList')
 
 function SettingsManager:__init()
@@ -38,6 +44,7 @@ function SettingsManager:__init()
 	--m_Database:Query('CREATE UNIQUE INDEX USKey ON FB_Settings(Key)')
 end
 
+---VEXT Shared Extension:Loaded Event
 function SettingsManager:OnExtensionLoaded()
 	-- Fix nil values on config
 	if Config.Language == nil then
@@ -236,7 +243,7 @@ function SettingsManager:UpdateSetting(p_Name, p_Value)
 						end
 					end
 				end
-			elseif l_Item.Type == Type.Table then
+			elseif l_Item.Type == Type.List then
 				if type(p_Value) == 'string' then
 					for l_Key, l_Value in pairs(l_Item.Reference) do
 						if string.find(p_Value, l_Key) ~= nil then
@@ -260,7 +267,7 @@ function SettingsManager:UpdateSetting(p_Name, p_Value)
 		elseif s_UpdateFlag == UpdateFlag.Weapons then
 			m_WeaponModification:ModifyAllWeapons(Config.BotAimWorsening, Config.BotSniperAimWorsening, Config.BotSupportAimWorsening)
 		elseif s_UpdateFlag == UpdateFlag.YawPerSec then
-			Globals.YawPerFrame = m_BotManager:calcYawPerFrame()
+			Globals.YawPerFrame = m_BotManager:CalcYawPerFrame()
 		elseif s_UpdateFlag == UpdateFlag.AmountAndTeam then
 			Globals.SpawnMode = Config.SpawnMode
 			m_BotSpawner:UpdateBotAmountAndTeam()
@@ -274,6 +281,7 @@ function SettingsManager:UpdateSetting(p_Name, p_Value)
 end
 
 if g_Settings == nil then
+	---@type SettingsManager
 	g_Settings = SettingsManager()
 end
 

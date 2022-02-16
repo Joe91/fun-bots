@@ -1,7 +1,11 @@
-class('ClientBotManager')
+---@class ClientBotManager
+ClientBotManager = class('ClientBotManager')
 
+---@type WeaponList
 local m_WeaponList = require('__shared/WeaponList')
+---@type Utilities
 local m_Utilities = require('__shared/Utilities')
+---@type Logger
 local m_Logger = Logger("ClientBotManager", Debug.Client.INFO)
 
 function ClientBotManager:__init()
@@ -24,6 +28,8 @@ end
 -- Events
 -- =============================================
 
+---VEXT Client Client:UpdateInput Event
+---@param p_DeltaTime number
 function ClientBotManager:OnClientUpdateInput(p_DeltaTime)
 	-- TODO: find a better solution for that!!!
 	if InputManager:WentKeyDown(InputDeviceKeys.IDK_Q) then
@@ -54,6 +60,10 @@ function ClientBotManager:OnClientUpdateInput(p_DeltaTime)
 	end
 end
 
+---VEXT Client Input:PreUpdate Hook
+---@param p_HookCtx HookContext
+---@param p_Cache ConceptCache
+---@param p_DeltaTime number
 function ClientBotManager:OnInputPreUpdate(p_HookCtx, p_Cache, p_DeltaTime)
 	if self.m_Player ~= nil and self.m_Player.inVehicle then
 		for i = 1, 8 do
@@ -68,6 +78,8 @@ function ClientBotManager:OnInputPreUpdate(p_HookCtx, p_Cache, p_DeltaTime)
 	end
 end
 
+---VEXT Shared Engine:Message Event
+---@param p_Message Message
 function ClientBotManager:OnEngineMessage(p_Message)
 	if p_Message.type == MessageType.ClientLevelFinalizedMessage then
 		NetEvents:SendLocal('Client:RequestSettings')
@@ -89,7 +101,7 @@ function ClientBotManager:DoRaycast(p_Pos1, p_Pos2, p_InObjectPos1, p_InObjectPo
 		if p_InObjectPos2 then
 			s_MaxHits = s_MaxHits + 1
 		end
-		local s_RaycastFlags =  RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter
+		local s_RaycastFlags = RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter
 		local s_MaterialFlags = 0 --MaterialFlags.MfPenetrable | MaterialFlags.MfClientDestructible | MaterialFlags.MfBashable | MaterialFlags.MfSeeThrough | MaterialFlags.MfNoCollisionResponse | MaterialFlags.MfNoCollisionResponseCombined
 
 		local s_RayHits = RaycastManager:CollisionRaycast(p_Pos1, p_Pos2, s_MaxHits, s_MaterialFlags, s_RaycastFlags)
@@ -110,7 +122,7 @@ function ClientBotManager:DoRaycast(p_Pos1, p_Pos2, p_InObjectPos1, p_InObjectPo
 			end
 		end
 
-		local s_RaycastFlags =  RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.IsAsyncRaycast
+		local s_RaycastFlags = RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.IsAsyncRaycast
 		local s_Raycast = RaycastManager:Raycast(p_Pos1, p_Pos2, s_RaycastFlags)
 
 		if s_Raycast == nil or s_Raycast.rigidBody == nil then
@@ -121,8 +133,11 @@ function ClientBotManager:DoRaycast(p_Pos1, p_Pos2, p_InObjectPos1, p_InObjectPo
 	end
 end
 
+---VEXT Shared UpdateManager:Update Event
+---@param p_DeltaTime number
+---@param p_UpdatePass UpdatePass|integer
 function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
-	if p_UpdatePass ~= UpdatePass.UpdatePass_PreSim or not self.m_ReadyToUpdate then --UpdatePass_PreSim  UpdatePass_PreFrame
+	if p_UpdatePass ~= UpdatePass.UpdatePass_PreSim or not self.m_ReadyToUpdate then --UpdatePass_PreSim UpdatePass_PreFrame
 		return
 	end
 
@@ -182,7 +197,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 		local s_EnemyPlayers = {}
 		for _, l_Player in pairs(PlayerManager:GetPlayers()) do
-			if l_Player.teamId ~= self.m_Player.teamId and self.m_Player.teamId ~= 0 then  -- don't let bots attack spectators
+			if l_Player.teamId ~= self.m_Player.teamId and self.m_Player.teamId ~= 0 then -- don't let bots attack spectators
 				table.insert(s_EnemyPlayers, l_Player)
 			end
 		end
@@ -224,7 +239,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 				return --only one raycast per cycle
 			end
 
-			if s_CheckCount >= Registry.CLIENT.MAX_CHECKS_PER_CYCLE  then
+			if s_CheckCount >= Registry.CLIENT.MAX_CHECKS_PER_CYCLE then
 				self.m_LastIndex = s_Index
 				return
 			end
@@ -278,10 +293,12 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	end
 end
 
+---VEXT Shared Extension:Unloading Event
 function ClientBotManager:OnExtensionUnloading()
 	self:RegisterVars()
 end
 
+---VEXT Shared Level:Destroy Event
 function ClientBotManager:OnLevelDestroy()
 	self:RegisterVars()
 end
@@ -314,6 +331,11 @@ end
 -- Hooks
 -- =============================================
 
+---VEXT Client BulletEntity:Collision Hook
+---@param p_HookCtx HookContext
+---@param p_Entity Entity
+---@param p_Hit RayCastHit
+---@param p_Shooter Player|nil
 function ClientBotManager:OnBulletEntityCollision(p_HookCtx, p_Entity, p_Hit, p_Shooter)
 	if p_Hit.rigidBody.typeInfo.name ~= 'CharacterPhysicsEntity' then
 		return
@@ -346,6 +368,7 @@ function ClientBotManager:OnBulletEntityCollision(p_HookCtx, p_Entity, p_Hit, p_
 end
 
 if g_ClientBotManager == nil then
+	---@type ClientBotManager
 	g_ClientBotManager = ClientBotManager()
 end
 
