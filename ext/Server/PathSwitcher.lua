@@ -50,7 +50,7 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle, p
 				self.m_KillYourselfCounter[p_BotName] = 0
 			end
 
-			if self.m_KillYourselfCounter[p_BotName] > 20 then
+			if self.m_KillYourselfCounter[p_BotName] > Registry.GAME_DIRECTOR.KILL_ON_INVALID_PATH_CROSSINGS then
 				local s_Bot = PlayerManager:GetPlayerByName(p_BotName)
 
 				if s_Bot ~= nil and s_Bot.soldier ~= nil then
