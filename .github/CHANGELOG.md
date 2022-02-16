@@ -10,11 +10,13 @@ This is the changelog for the version V2.5.0. Don't forget to [join us on Discor
 
 ### New features
 * Bot-Command-Key now configurable in Registry.lua
+* Max tries to find a valid path (Rush) now in Registry.lua
 * Separated Weapon-Lists per Team
 * Cleanup of code
 * Improved aiming in larger distances
 * Option to use advanced aiming algorithms for every bot
 * Improved spawning in SQDM (#209)
+* more comments in the registry
 
 ### Bug fixes
 * Several Bugfixes thanks to Bree_Arnold (#207)

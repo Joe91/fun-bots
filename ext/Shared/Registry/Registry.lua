@@ -35,7 +35,7 @@ Registry = {
 			-- Patch version
 			VERSION_PATCH = 0,
 			-- Additional label for pre-releases and build meta data
-			VERSION_LABEL = "dev3",
+			VERSION_LABEL = "dev4",
 			-- Current version type of this build
 			VERSION_TYPE = VersionType.DevBuild,
 			-- The Version used for the Update-Check
@@ -125,7 +125,7 @@ Registry = {
 			USE_ADVANCED_AIMING = false,
 		},
 
-		-- Bot team balancing
+		-- Bot team balancing (only in keep_playercount - spawn-mode)
 		BOT_TEAM_BALANCING = {
 			-- Minimum amount of players required before balancing bots across teams
 			-- Note: Only for mode keep_playercount
