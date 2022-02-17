@@ -1269,7 +1269,7 @@ function Bot:_UpdateAiming()
 					s_TimeToTravel = (self._DistanceToPlayer / s_Speed)
 				end
 
-				s_PitchCorrection = 0.5 * s_TimeToTravel * s_TimeToTravel * s_Drop * math.abs(math.cos(self._TargetPitch)) -- this correction might improve
+				s_PitchCorrection = 0.25 * s_TimeToTravel * s_TimeToTravel * s_Drop -- this correction (0.5 * 0.5) seems to be correct. No idea why.
 			end
 
 			s_TargetMovement = (s_TargetMovement * s_TimeToTravel)
