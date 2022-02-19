@@ -59,8 +59,7 @@ Language['de_DE'] /* Add/replace the xx_XX here with your language code (like de
 	"Cancel": "Abbrechen",
 	"Restore all to Default": "Alles zurücksetzen",
 	"Save temporarily": "Temporär speichern",
-	"Yes": "Ja",
-	"No": "Nein",
 	"Restore this value to Default": "Dieses Item zurücksetzen",
+	"": "",
+	"Commands": "",
 	"End Trace": "Pfad beenden",
-};

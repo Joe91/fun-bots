@@ -59,8 +59,7 @@ Language['es_ES'] /* Add/replace the xx_XX here with your language code (like de
 	"Cancel": "Cancelar",
 	"Restore all to Default": "Restaurar todos los Ajustes",
 	"Save temporarily": "Guardar Temporalmente",
-	"Yes": "Si",
-	"No": "No",
 	"Restore this value to Default": "Restaurar este Ajuste",
+	"": "",
+	"Commands": "",
 	"End Trace": "Finalizar Trazo",
-};
