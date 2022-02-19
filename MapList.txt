@@ -111,6 +111,7 @@ MP_013 TeamDeathMatch0 1
 MP_017 TeamDeathMatch0 1
 MP_018 TeamDeathMatch0 1
 MP_Subway TeamDeathMatch0 1
+SP_Jet TeamDeathMatch0 1
 XP1_001 TeamDeathMatch0 1
 XP1_002 TeamDeathMatch0 1
 XP1_003 TeamDeathMatch0 1
@@ -137,6 +138,7 @@ MP_013 TeamDeathMatchC0 1
 MP_017 TeamDeathMatchC0 1
 MP_018 TeamDeathMatchC0 1
 MP_Subway TeamDeathMatchC0 1
+SP_Jet TeamDeathMatchC0 1
 XP1_001 TeamDeathMatchC0 1
 XP1_002 TeamDeathMatchC0 1
 XP1_003 TeamDeathMatchC0 1
