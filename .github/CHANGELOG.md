@@ -20,7 +20,7 @@ This is the changelog for the version V2.5.0. Don't forget to [join us on Discor
 * Skill now applied in both directions
 * Improved aiming in vehicles on larger distances
 * Allow empty-Bot-Tokens
-* Improve aiming of tanks
+* Improve language-scripts
 * Chinese translation updated by FanShiFu
 
 ### Bug fixes

@@ -1,7 +1,7 @@
 import sys
 import os
 
-def createTranslations(pathToFiles):
+def updateLanguages(pathToFiles):
 	language_file = pathToFiles + "ext/shared/Languages/DEFAULT.lua"
 	language_file_js = pathToFiles + "WebUI/languages/DEFAULT.js"
 	 
@@ -32,7 +32,6 @@ def createTranslations(pathToFiles):
 						if "Language:add(" in line:
 							line_found = False
 							comp_part = line.split('",')[0]
-							#print(comp_part)
 							# check if comp-part is in other file:
 							for comp_line in compLines:
 								if "Language:add(" in comp_line:
@@ -44,10 +43,6 @@ def createTranslations(pathToFiles):
 										break
 							if line_found == False:
 								lines_to_add.append(line)
-					# print("\n\n"+"Result of " + filename)
-					# print(lines_to_add)
-					# print("\n\n")
-					# print(lines_to_remove)
 					for remove_line in lines_to_remove:
 						compLines.remove(remove_line)
 					for add_line in lines_to_add:
@@ -55,6 +50,7 @@ def createTranslations(pathToFiles):
 					with open(filename, "w", encoding="utf8") as outFile:
 						for line in compLines:
 							outFile.write(line + "\n")
+				print(filename + " done.")
 		
 
 	# js -files
@@ -74,14 +70,13 @@ def createTranslations(pathToFiles):
 					lines_to_remove = []
 					lines_to_add = []
 					for comp_line in compLines[6:]:
-						if ":" in line:
+						if ":" in comp_line:
 							lines_to_remove.append(comp_line)
 					
 					for line in js_lines[6:]:
 						if ":" in line:
 							line_found = False
 							comp_part = line.split('": ')[0].replace(" ","").replace("	","")
-							#print(comp_part)
 							# check if comp-part is in other file:
 							for comp_line in compLines[6:]:
 								if ":" in line:
@@ -93,10 +88,6 @@ def createTranslations(pathToFiles):
 										break
 							if line_found == False:
 								lines_to_add.append(line)
-					# print("\n\n"+"Result of " + filename)
-					# print(lines_to_add)
-					# print("\n\n")
-					# print(lines_to_remove)
 					for remove_line in lines_to_remove:
 						compLines.remove(remove_line)
 					for add_line in lines_to_add:
@@ -104,12 +95,11 @@ def createTranslations(pathToFiles):
 					with open(filename, "w", encoding="utf8") as outFile:
 						for line in compLines:
 							outFile.write(line + "\n")
-
-
+				print(filename + " done.")
 
 
 if __name__ == "__main__":
 	pathToFiles = "./"
 	if len(sys.argv) > 1:
 		pathToFiles = sys.argv[1]
-	createTranslations(pathToFiles)
+	updateLanguages(pathToFiles)
