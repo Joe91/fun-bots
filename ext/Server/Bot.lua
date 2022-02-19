@@ -989,7 +989,7 @@ function Bot:_UpdateAimingVehicleAdvanced()
 
 	local s_AimAt = s_FullPositionTarget + (s_TargetVelocity * s_TimeToTravel)
 
-	s_PitchCorrection = 0.5 * s_TimeToTravel * s_TimeToTravel * s_Drop
+	s_PitchCorrection = 0.25 * s_TimeToTravel * s_TimeToTravel * s_Drop  -- from theory 0.5. In real 0.25 works much better
 
 	--calculate yaw and pitch
 	local s_DifferenceZ = s_AimAt.z - s_FullPositionBot.z
@@ -1084,7 +1084,7 @@ function Bot:_UpdateAimingVehicle()
 	s_Speed, s_Drop = m_Vehicles:GetSpeedAndDrop(self.m_ActiveVehicle, self.m_Player.controlledEntryId)
 
 	local s_TimeToTravel = (self._DistanceToPlayer / s_Speed)
-	s_PitchCorrection = 0.5 * s_TimeToTravel * s_TimeToTravel * s_Drop
+	s_PitchCorrection = 0.25 * s_TimeToTravel * s_TimeToTravel * s_Drop  -- from theory 0.5. In real 0.25 works much better
 
 	s_TargetMovement = (s_TargetMovement * s_TimeToTravel)
 
