@@ -63,3 +63,4 @@ Language['de_DE'] /* Add/replace the xx_XX here with your language code (like de
 	"": "",
 	"Commands": "",
 	"End Trace": "Pfad beenden",
+}
