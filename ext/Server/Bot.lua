@@ -1307,10 +1307,15 @@ function Bot:_UpdateAiming()
 			s_Pitch = math.atan(s_DifferenceY, s_Distance)
 		end
 
-		-- worsen yaw and pitch depending on bot-skill
-		local s_WorseningValue = (math.random()*self._Skill/self._DistanceToPlayer) -- value scaled in offset in 1m
-		s_Yaw = s_Yaw + s_WorseningValue
-		s_Pitch = s_Pitch + s_WorseningValue
+		-- worsen yaw and pitch depending on bot-skill. Don't use Skill for Nades and Rockets.
+		if self.m_ActiveWeapon.type ~= WeaponTypes.Grenade and self.m_ActiveWeapon.type ~= WeaponTypes.Rocket then
+			local s_WorseningValue = (math.random()*self._Skill/self._DistanceToPlayer) -- value scaled in offset in 1m
+			if MathUtils:GetRandomInt(0, 1) > 0 then
+				s_WorseningValue = -s_WorseningValue --randomly use positive or negative values
+			end
+			s_Yaw = s_Yaw + s_WorseningValue
+			s_Pitch = s_Pitch + s_WorseningValue
+		end
 
 		self._TargetPitch = s_Pitch
 		self._TargetYaw = s_Yaw

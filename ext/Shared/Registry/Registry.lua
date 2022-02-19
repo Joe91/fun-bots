@@ -11,7 +11,7 @@ require('__shared/Constants/VersionType')
 ---@class Registry
 Registry = {
 		COMMON = {
-			-- token Bots are marked with. Can also be " "
+			-- token Bots are marked with. Can also be " " or "". If it's "" players with names of the botlist can't join!
 			BOT_TOKEN = "BOT_",
 			-- with real damage, the hitboxes are a bit buggy
 			USE_REAL_DAMAGE = true,

@@ -178,12 +178,26 @@ end
 ---@param p_Name string
 function BotSpawner:OnPlayerJoining(p_Name)
 	-- detect BOT-Names
-	if string.find(p_Name, Registry.COMMON.BOT_TOKEN) == 1 then --check if name starts with bot-token
-		table.insert(self._KickPlayers, p_Name)
+	if Registry.COMMON.BOT_TOKEN == "" then
+		for _, l_Name in pairs(BotNames) do
+			if l_Name == p_Name then
+				table.insert(self._KickPlayers, p_Name)
 
-		if m_BotManager:GetBotByName(p_Name) ~= nil then
-			table.insert(Globals.IgnoreBotNames, p_Name)
-			m_BotManager:DestroyBot(p_Name)
+				if m_BotManager:GetBotByName(p_Name) ~= nil then
+					table.insert(Globals.IgnoreBotNames, p_Name)
+					m_BotManager:DestroyBot(p_Name)
+				end
+				return
+			end
+		end
+	else
+		if string.find(p_Name, Registry.COMMON.BOT_TOKEN) == 1 then --check if name starts with bot-token
+			table.insert(self._KickPlayers, p_Name)
+
+			if m_BotManager:GetBotByName(p_Name) ~= nil then
+				table.insert(Globals.IgnoreBotNames, p_Name)
+				m_BotManager:DestroyBot(p_Name)
+			end
 		end
 	end
 end

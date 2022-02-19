@@ -804,7 +804,7 @@ function GameDirector:_RegisterRushEventCallbacks()
 		s_Entity = s_Iterator:Next()
 	end
 
-	-- most promissing so far!
+	-- most promissing so far! TODO: check for better events again?
 	s_Iterator = EntityManager:GetIterator("ServerInteractionEntity")
 	s_Entity = s_Iterator:Next()
 

@@ -17,6 +17,11 @@ This is the changelog for the version V2.5.0. Don't forget to [join us on Discor
 * Option to use advanced aiming algorithms for every bot
 * Improved spawning in SQDM (#209)
 * more comments in the registry
+* Skill now applied in both directions
+* Improved aiming in vehicles on larger distances
+* Allow empty-Bot-Tokens
+* Improve aiming of tanks
+* Chinese translation updated by FanShiFu
 
 ### Bug fixes
 * Several Bugfixes thanks to Bree_Arnold (#207)
