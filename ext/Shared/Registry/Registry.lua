@@ -97,8 +97,10 @@ Registry = {
 			JET_TAKEOFF_TIME = 20,
 			-- time a jet waits after an attack
 			JET_ABORT_ATTACK_TIME = 5,
-			-- percentage of vehicle health to leave vehicle with
-			VEHILCE_EXIT_HEALTH = 3.0,
+			-- percentage of vehicle health to leave vehicle with (currently no passive events for bot-only vehicles)
+			VEHILCE_EXIT_HEALTH = 10,
+			-- propability to exit on low health
+			VEHICLE_PROPABILITY_EXIT_LOW_HEALTH = 80,
 		},
 
 		-- Bot related

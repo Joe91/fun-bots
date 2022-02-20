@@ -605,8 +605,10 @@ end
 
 ---@param p_CurrentVehicleHealth number
 function Bot:CheckForExitVehicle(p_CurrentVehicleHealth)
-	if p_CurrentVehicleHealth < self._ExitVehicleHealth then
-		self:ExitVehicle()
+	if p_CurrentVehicleHealth <= self._ExitVehicleHealth then
+		if math.random(0, 100) <= Registry.VEHICLES.VEHICLE_PROPABILITY_EXIT_LOW_HEALTH then
+			self:ExitVehicle()
+		end
 	end
 end
 
