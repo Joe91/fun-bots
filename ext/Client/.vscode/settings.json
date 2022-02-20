@@ -1,16 +1,16 @@
 {
-    "Lua": {
-        "workspace": {
-            "maxPreload": 10000,
-            "library": [
-                "../../.vu/intermediate/Client",
-                "../../.vu/intermediate/Shared",
-                "../Shared",
-                "c:\\Users\\Joe\\AppData\\Roaming\\Code\\User\\globalStorage\\imposter.vscode-lua-vu\\data\\lib",
-                "c:\\Users\\Joe\\AppData\\Roaming\\Code\\User\\globalStorage\\imposter.vscode-lua-vu\\data\\types\\fb",
-                "c:\\Users\\Joe\\AppData\\Roaming\\Code\\User\\globalStorage\\imposter.vscode-lua-vu\\data\\types\\shared",
-                "c:\\Users\\Joe\\AppData\\Roaming\\Code\\User\\globalStorage\\imposter.vscode-lua-vu\\data\\types\\client"
-            ]
-        }
-    }
+	"Lua": {
+		"workspace": {
+			"maxPreload": 10000,
+			"library": [
+				"../../.vu/intermediate/Client",
+				"../../.vu/intermediate/Shared",
+				"../Shared",
+				"$APPDATA\\Code\\User\\globalStorage\\imposter.vscode-lua-vu\\data\\lib",
+				"$APPDATA\\Code\\User\\globalStorage\\imposter.vscode-lua-vu\\data\\types\\fb",
+				"$APPDATA\\Code\\User\\globalStorage\\imposter.vscode-lua-vu\\data\\types\\shared",
+				"$APPDATA\\Code\\User\\globalStorage\\imposter.vscode-lua-vu\\data\\types\\client"
+			]
+		}
+	}
 }
