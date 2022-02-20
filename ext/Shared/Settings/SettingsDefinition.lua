@@ -791,6 +791,17 @@ SettingsDefinition = {
 			Category = "VEHICLE"
 		},
 		{
+			Name = "UseAirVehicles",
+			Text = "Use air vehicles",
+			---@type Type|integer
+			Type = Type.Boolean,
+			Value = Config.UseAirVehicles,
+			Description = "Bots use air-vehicles",
+			Default = true,
+			UpdateFlag = UpdateFlag.None,
+			Category = "VEHICLE"
+		},
+		{
 			Name = "FovVehicleForShooting",
 			Text = "FOV of Vehicles",
 			---@type Type|integer

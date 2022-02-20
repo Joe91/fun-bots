@@ -139,6 +139,8 @@ Language:add(code, "min time bots move sidewards or staight before switching (in
 --VEHICLE
 Language:add(code, "Use vehicles", "")
 Language:add(code, "Bots use vehicles", "")
+Language:add(code, "Use air vehicles", "")
+Language:add(code, "Bots use air-vehicles", "")
 Language:add(code, "FOV of Vehicles", "")
 Language:add(code, "Degrees of FOV of Non AA - Vehicles", "")
 Language:add(code, "FOV of Vehicles Verticle", "")
