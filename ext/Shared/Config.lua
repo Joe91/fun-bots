@@ -79,6 +79,7 @@ Config = {
 
 	--VEHICLE
 	UseVehicles = true,					-- Bots use vehicles
+	UseAirVehicles = true,				-- Bots use air-vehicles
 	FovVehicleForShooting = 180,		-- Degrees of FOV of Non AA - Vehicles
 	FovVerticleVehicleForShooting = 60,	-- Degrees of FOV of Non AA-Vehicles
 	FovVerticleChopperForShooting = 80,	-- Degrees of pitch a chopper attacks

@@ -356,11 +356,13 @@ end
 ---@param p_Entity ControllableEntity|Entity
 function GameDirector:OnVehicleSpawnDone(p_Entity)
 	p_Entity = ControllableEntity(p_Entity)
-
-	local s_Objective = self:_SetVehicleObjectiveState(p_Entity.transform.trans, true)
 	local s_VehicleData = m_Vehicles:GetVehicleByEntity(p_Entity)
-	if s_VehicleData ~= nil then
+	if not Config.UseAirVehicles and (s_VehicleData.Type == VehicleTypes.Plane or s_VehicleData.Type == VehicleTypes.Chopper) then
+		return -- not allowed to use
+	end
+	local s_Objective = self:_SetVehicleObjectiveState(p_Entity.transform.trans, true)
 
+	if s_VehicleData ~= nil then
 		if s_Objective ~= nil and s_Objective.isSpawnPath then
 			local s_Node = g_GameDirector:FindClosestPath(p_Entity.transform.trans, true)
 			if s_Node ~= nil and s_Node.Position:Distance(p_Entity.transform.trans) < Registry.VEHICLES.MIN_DISTANCE_VEHICLE_ENTER then
