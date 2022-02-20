@@ -35,11 +35,14 @@ The following maps are currently supported in this commit.
 
 The following maps can be played with the mod from keku645 (https://github.com/keku645/vu-all-gamemodes-in-all-maps)
 CAREFUL: Not all modes that are possible are supported on them!
-|  	|   `SP_Villa`	| **Kaffarov** | `TDM` ,`TDM CQ` |  |
-|  	|   `SP_Valley`	| **Valley** | `TDM` ,`TDM CQ` |  |
-|  	|   `SP_Jet`	| **Carrier** | `TDM` ,`TDM CQ` |  |
-|  	|   `COOP_002`	| **Aygan Village** | `TDM` ,`TDM CQ` |  |
-|  	|   `COOP_006`	| **Hit and Run** | `TDM` ,`TDM CQ` |  |
+
+|   	   	| Technical Name | Name | supported gamemodes |   supported gamemodes with Vehicles |
+|---	|---	|---	|---	|---	|
+|  ---	|   `SP_Villa`	| **Kaffarov** | `TDM` ,`TDM CQ` |  |
+|  ---	|   `SP_Valley`	| **Valley** | `TDM` ,`TDM CQ` |  |
+|  ---	|   `SP_Jet`	| **Carrier** | `TDM` ,`TDM CQ` |  |
+|  ---	|   `COOP_002`	| **Aygan Village** | `TDM` ,`TDM CQ` |  |
+|  ---	|   `COOP_006`	| **Hit and Run** | `TDM` ,`TDM CQ` |  |
 
 ### Help to expand the list
 We are still missing certain gamemodes on certain maps, help us expanding this list by exporting your traces (with the export_traces.exe) and sending it to us on discort or on any other cahnnel.

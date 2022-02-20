@@ -24,6 +24,7 @@ This is the changelog for the version V2.5.0. Don't forget to [join us on Discor
 * Chinese translation updated by FanShiFu
 * bots exit vehicles on low HP #116
 * bots in vehicles shoot back if hit
+* Option for bots to not use air-vehicles
 
 ### Bug fixes
 * Several Bugfixes thanks to Bree_Arnold (#207)

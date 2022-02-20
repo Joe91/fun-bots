@@ -970,7 +970,7 @@ function Bot:_UpdateAimingVehicleAdvanced()
 	else
 		if self.m_Player.controlledEntryId == 0 and self._ShootPlayerVehicleType == VehicleTypes.NoVehicle and self._ShootPlayer.soldier.worldTransform.trans.y < s_FullPositionBot.y then
 			-- add nothing --> aim for the feet of the target
-			s_FullPositionTarget = self._ShootPlayer.soldier.worldTransform.trans:Clone() + Vec3(0.0, 0.1, 0.0)
+			s_FullPositionTarget = self._ShootPlayer.soldier.worldTransform.trans:Clone()
 		else
 			s_FullPositionTarget = self._ShootPlayer.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(self._ShootPlayer, true, false)
 		end
@@ -1082,8 +1082,8 @@ function Bot:_UpdateAimingVehicle()
 		s_FullPositionTarget = self._ShootPlayer.controlledControllable.transform.trans:Clone()
 	else
 		if self.m_Player.controlledEntryId == 0 and self._ShootPlayerVehicleType == VehicleTypes.NoVehicle and self._ShootPlayer.soldier.worldTransform.trans.y < s_FullPositionBot.y then
-			-- add nothing --> aim for the feet of the target (+0.1)
-			s_FullPositionTarget = self._ShootPlayer.soldier.worldTransform.trans:Clone() + Vec3(0.0, 0.1, 0.0)
+			-- add nothing --> aim for the feet of the target
+			s_FullPositionTarget = self._ShootPlayer.soldier.worldTransform.trans:Clone()
 		else
 			s_FullPositionTarget = self._ShootPlayer.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(self._ShootPlayer, true, false)
 		end
@@ -2304,7 +2304,10 @@ end
 function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 	if p_Entity ~= nil then
 		local s_Position = p_Entity.transform.trans
-
+		local s_VehicleData = m_Vehicles:GetVehicleByEntity(p_Entity)
+		if not Config.UseAirVehicles and (s_VehicleData.Type == VehicleTypes.Plane or s_VehicleData.Type == VehicleTypes.Chopper) then
+			return -3 -- not allowed to use
+		end
 		-- keep one seat free, if enough available
 		local s_MaxEntries = p_Entity.entryCount
 		if not p_PlayerIsDriver and s_MaxEntries > 2 then
@@ -2317,7 +2320,7 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 				self._ExitVehicleHealth = PhysicsEntity(p_Entity).internalHealth * (Registry.VEHICLES.VEHILCE_EXIT_HEALTH / 100.0)
 
 				-- get ID
-				self.m_ActiveVehicle = m_Vehicles:GetVehicle(self.m_Player, i)
+				self.m_ActiveVehicle = s_VehicleData
 				self._VehicleMovableId = m_Vehicles:GetPartIdForSeat(self.m_ActiveVehicle, i)
 				m_Logger:Write(self.m_ActiveVehicle)
 				if i == 0 then
