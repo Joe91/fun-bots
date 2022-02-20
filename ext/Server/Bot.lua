@@ -57,6 +57,7 @@ function Bot:__init(p_Player)
 	self._SpawnDelayTimer = 0.0
 	self._WayWaitTimer = 0.0
 	self._VehicleWaitTimer = 0.0
+	self._VehicleHealthTimer = 0.0
 	self._VehicleTakeoffTimer = 0.0
 	self._WayWaitYawTimer = 0.0
 	self._ObstaceSequenceTimer = 0.0
@@ -279,6 +280,7 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 							-- common things
 							self:_UpdateSpeedOfMovementVehicle()
 							self:_UpdateInputs()
+							self:_CheckForExitVehicle(self._UpdateTimer)
 							self._UpdateTimer = 0.0
 						end
 
@@ -389,11 +391,12 @@ function Bot:DeployIfPossible()
 end
 
 function Bot:ExitVehicle()
+	self:_AbortAttack()
 	self.m_Player:ExitVehicle(false, false)
 	local s_Node = g_GameDirector:FindClosestPath(self.m_Player.soldier.worldTransform.trans, false)
 
 	if s_Node ~= nil then
-		-- switch to vehicle
+		-- switch to foot
 		self._InvertPathDirection = false
 		self._PathIndex = s_Node.PathIndex
 		self._CurrentWayPoint = s_Node.PointIndex
@@ -603,11 +606,18 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 	return false
 end
 
----@param p_CurrentVehicleHealth number
-function Bot:CheckForExitVehicle(p_CurrentVehicleHealth)
-	if p_CurrentVehicleHealth <= self._ExitVehicleHealth then
-		if math.random(0, 100) <= Registry.VEHICLES.VEHICLE_PROPABILITY_EXIT_LOW_HEALTH then
-			self:ExitVehicle()
+---@param p_DeltaTime number
+function Bot:_CheckForExitVehicle(p_DeltaTime)
+	if self.m_InVehicle then
+		self._VehicleHealthTimer = self._VehicleHealthTimer + p_DeltaTime
+		if self._VehicleHealthTimer >= Registry.VEHICLES.VEHICLE_HEALTH_CYLCE_TIME then
+			self._VehicleHealthTimer = 0
+			local s_CurrentVehicleHealth = PhysicsEntity(self.m_Player.controlledControllable).internalHealth
+			if s_CurrentVehicleHealth <= self._ExitVehicleHealth then
+				if math.random(0, 100) <= Registry.VEHICLES.VEHICLE_PROPABILITY_EXIT_LOW_HEALTH then
+					self:ExitVehicle()
+				end
+			end
 		end
 	end
 end
@@ -960,7 +970,7 @@ function Bot:_UpdateAimingVehicleAdvanced()
 	else
 		if self.m_Player.controlledEntryId == 0 and self._ShootPlayerVehicleType == VehicleTypes.NoVehicle and self._ShootPlayer.soldier.worldTransform.trans.y < s_FullPositionBot.y then
 			-- add nothing --> aim for the feet of the target
-			s_FullPositionTarget = self._ShootPlayer.soldier.worldTransform.trans:Clone()
+			s_FullPositionTarget = self._ShootPlayer.soldier.worldTransform.trans:Clone() + Vec3(0.0, 0.1, 0.0)
 		else
 			s_FullPositionTarget = self._ShootPlayer.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(self._ShootPlayer, true, false)
 		end
@@ -999,7 +1009,7 @@ function Bot:_UpdateAimingVehicleAdvanced()
 
 	local s_AimAt = s_FullPositionTarget + (s_TargetVelocity * s_TimeToTravel)
 
-	s_PitchCorrection = 0.25 * s_TimeToTravel * s_TimeToTravel * s_Drop  -- from theory 0.5. In real 0.25 works much better
+	s_PitchCorrection = 0.375 * s_TimeToTravel * s_TimeToTravel * s_Drop  -- from theory 0.5. In real 0.25 works much better
 
 	--calculate yaw and pitch
 	local s_DifferenceZ = s_AimAt.z - s_FullPositionBot.z
@@ -1072,8 +1082,8 @@ function Bot:_UpdateAimingVehicle()
 		s_FullPositionTarget = self._ShootPlayer.controlledControllable.transform.trans:Clone()
 	else
 		if self.m_Player.controlledEntryId == 0 and self._ShootPlayerVehicleType == VehicleTypes.NoVehicle and self._ShootPlayer.soldier.worldTransform.trans.y < s_FullPositionBot.y then
-			-- add nothing --> aim for the feet of the target
-			s_FullPositionTarget = self._ShootPlayer.soldier.worldTransform.trans:Clone()
+			-- add nothing --> aim for the feet of the target (+0.1)
+			s_FullPositionTarget = self._ShootPlayer.soldier.worldTransform.trans:Clone() + Vec3(0.0, 0.1, 0.0)
 		else
 			s_FullPositionTarget = self._ShootPlayer.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(self._ShootPlayer, true, false)
 		end
@@ -1094,7 +1104,7 @@ function Bot:_UpdateAimingVehicle()
 	s_Speed, s_Drop = m_Vehicles:GetSpeedAndDrop(self.m_ActiveVehicle, self.m_Player.controlledEntryId)
 
 	local s_TimeToTravel = (self._DistanceToPlayer / s_Speed)
-	s_PitchCorrection = 0.25 * s_TimeToTravel * s_TimeToTravel * s_Drop  -- from theory 0.5. In real 0.25 works much better
+	s_PitchCorrection = 0.375 * s_TimeToTravel * s_TimeToTravel * s_Drop  -- from theory 0.5. In real 0.25 works much better
 
 	s_TargetMovement = (s_TargetMovement * s_TimeToTravel)
 

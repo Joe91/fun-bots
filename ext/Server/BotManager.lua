@@ -204,8 +204,7 @@ end
 ---@param p_Damage number
 ---@param p_DamageGiverInfo DamageGiverInfo|nil
 function BotManager:OnVehicleDamage(p_VehicleEntity, p_Damage, p_DamageGiverInfo)
-	if p_Damage > 0.0 then
-		local s_CurrentHealth = PhysicsEntity(p_VehicleEntity).internalHealth
+	if p_Damage > 0.0 and p_VehicleEntity ~= nil then
 		local s_ControllableEntity = ControllableEntity(p_VehicleEntity)
 		local s_MaxEntries = s_ControllableEntity.entryCount
 		for i = 0, s_MaxEntries - 1 do
@@ -214,8 +213,6 @@ function BotManager:OnVehicleDamage(p_VehicleEntity, p_Damage, p_DamageGiverInfo
 				if m_Utilities:isBot(s_Player) then
 					local s_Bot = self:GetBotByName(s_Player.name)
 					if s_Bot ~= nil then
-						-- check for exit because of health
-						s_Bot:CheckForExitVehicle(s_CurrentHealth)
 						-- shoot back
 						if p_DamageGiverInfo.giver ~= nil then
 							--detect if we need to shoot back

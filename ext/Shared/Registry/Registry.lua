@@ -100,7 +100,9 @@ Registry = {
 			-- percentage of vehicle health to leave vehicle with (currently no passive events for bot-only vehicles)
 			VEHILCE_EXIT_HEALTH = 10,
 			-- propability to exit on low health
-			VEHICLE_PROPABILITY_EXIT_LOW_HEALTH = 80,
+			VEHICLE_PROPABILITY_EXIT_LOW_HEALTH = 60,
+			-- health-check cycle-time
+			VEHICLE_HEALTH_CYLCE_TIME = 0.5,
 		},
 
 		-- Bot related
