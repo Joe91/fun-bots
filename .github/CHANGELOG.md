@@ -34,7 +34,11 @@ This is the changelog for the version V2.5.0. Don't forget to [join us on Discor
 
 ### New maps
 * Vehicles for Rush Theran Highway by BOB
-* TDM paths for COOP_006 (just testing usage of sp-map-mod)
+* TDM paths for SP_Villa
+* TDM paths for SP_Valley
+* TDM paths for SP_Jet
+* TDM paths for COOP_002
+* TDM paths for COOP_006
 
 ### Updated maps
 * Lots and lots of Updated maps by MeisterPeitsche (exit-command of vehicles)
