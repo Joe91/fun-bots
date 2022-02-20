@@ -122,6 +122,7 @@ function Bot:__init(p_Player)
 	self._FullVehicleSteering = false
 	self._VehicleDirBackPositive = false
 	self._JetAbortAttackActive = false
+	self._ExitVehicleHealth = 0.0
 	self._LastVehicleHealth = 0.0
 	---@type ControllableEntity|nil
 	self._RepairVehicleEntity = nil
@@ -600,6 +601,15 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 	end
 
 	return false
+end
+
+---@param p_CurrentVehicleHealth number
+function Bot:CheckForExitVehicle(p_CurrentVehicleHealth)
+	if p_CurrentVehicleHealth <= self._ExitVehicleHealth then
+		if math.random(0, 100) <= Registry.VEHICLES.VEHICLE_PROPABILITY_EXIT_LOW_HEALTH then
+			self:ExitVehicle()
+		end
+	end
 end
 
 function Bot:ResetVars()
@@ -2294,6 +2304,7 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 		for i = 0, s_MaxEntries - 1 do
 			if p_Entity:GetPlayerInEntry(i) == nil then
 				self.m_Player:EnterVehicle(p_Entity, i)
+				self._ExitVehicleHealth = PhysicsEntity(p_Entity).internalHealth * (Registry.VEHICLES.VEHILCE_EXIT_HEALTH / 100.0)
 
 				-- get ID
 				self.m_ActiveVehicle = m_Vehicles:GetVehicle(self.m_Player, i)

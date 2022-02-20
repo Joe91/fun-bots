@@ -23,12 +23,12 @@ function Utilities:getTargetHeight(p_Soldier, p_IsTarget, p_AimForHead)
 			s_CameraHeight = 1.0
 		end
 	elseif p_IsTarget and p_AimForHead then
-		s_CameraHeight = 1.50 --bot.soldier.pose == CharacterPoseType.CharacterPoseType_Stand
+		s_CameraHeight = 1.65 --bot.soldier.pose == CharacterPoseType.CharacterPoseType_Stand
 
 		if p_Soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
 			s_CameraHeight = 0.25
 		elseif p_Soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
-			s_CameraHeight = 1.0
+			s_CameraHeight = 1.05
 		end
 	else --aim a little lower
 		s_CameraHeight = 1.1 --bot.soldier.pose == CharacterPoseType.CharacterPoseType_Stand - reduce by 0.5
