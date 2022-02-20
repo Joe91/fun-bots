@@ -97,6 +97,8 @@ Registry = {
 			JET_TAKEOFF_TIME = 20,
 			-- time a jet waits after an attack
 			JET_ABORT_ATTACK_TIME = 5,
+			-- percentage of vehicle health to leave vehicle with
+			VEHILCE_EXIT_HEALTH = 3.0,
 		},
 
 		-- Bot related

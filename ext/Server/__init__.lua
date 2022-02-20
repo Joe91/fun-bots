@@ -116,6 +116,7 @@ function FunBotServer:RegisterEvents()
 	Events:Subscribe('CapturePoint:Captured', self, self.OnCapturePointCaptured)
 	Events:Subscribe('Player:EnteredCapturePoint', self, self.OnPlayerEnteredCapturePoint)
 	Events:Subscribe('Vehicle:SpawnDone', self, self.OnVehicleSpawnDone)
+	Events:Subscribe('Vehicle:Damage', self, self.OnVehicleDamage)
 	Events:Subscribe('Vehicle:Enter', self, self.OnVehicleEnter)
 	Events:Subscribe('Vehicle:Exit', self, self.OnVehicleExit)
 
@@ -399,6 +400,14 @@ end
 ---@param p_VehicleEntity Entity @`ControllableEntity`
 function FunBotServer:OnVehicleSpawnDone(p_VehicleEntity)
 	m_GameDirector:OnVehicleSpawnDone(p_VehicleEntity)
+end
+
+---VEXT Server Vehicle:Damage Event
+---@param p_VehicleEntity Entity @`ControllableEntity`
+---@param p_Damage number
+---@param p_DamageGiverInfo DamageGiverInfo|nil
+function FunBotServer:OnVehicleDamage(p_VehicleEntity, p_Damage, p_DamageGiverInfo)
+	m_BotManager:OnVehicleDamage(p_VehicleEntity, p_Damage, p_DamageGiverInfo)
 end
 
 ---VEXT Server Vehicle:Enter Event
