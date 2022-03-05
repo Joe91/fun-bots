@@ -1383,6 +1383,7 @@ SettingsDefinition = {
 		},
 		{
 			Name = "MaximunYawPerSec",
+
 			Text = "Maximum yaw per sec",
 			---@type Type|integer
 			Type = Type.Integer,
