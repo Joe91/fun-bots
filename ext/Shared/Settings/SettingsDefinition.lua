@@ -791,6 +791,17 @@ SettingsDefinition = {
 			Category = "VEHICLE"
 		},
 		{
+			Name = "UseAirVehicles",
+			Text = "Use air vehicles",
+			---@type Type|integer
+			Type = Type.Boolean,
+			Value = Config.UseAirVehicles,
+			Description = "Bots can use air-vehicles",
+			Default = true,
+			UpdateFlag = UpdateFlag.None,
+			Category = "VEHICLE"
+		},
+		{
 			Name = "FovVehicleForShooting",
 			Text = "FOV of Vehicles",
 			---@type Type|integer
@@ -1372,7 +1383,7 @@ SettingsDefinition = {
 		},
 		{
 			Name = "MaximunYawPerSec",
-			Text = "Maximun yaw per sec",
+			Text = "Maximum yaw per sec",
 			---@type Type|integer
 			Type = Type.Integer,
 			Value = Config.MaximunYawPerSec,
