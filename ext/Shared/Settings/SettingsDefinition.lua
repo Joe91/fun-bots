@@ -767,7 +767,7 @@ SettingsDefinition = {
 		},
 		{
 			Name = "MinMoveCycle",
-			Text = "min Move Cycle",
+			Text = "Min Move Cycle",
 			---@type Type|integer
 			Type = Type.Float,
 			Value = Config.MinMoveCycle,
@@ -949,7 +949,7 @@ SettingsDefinition = {
 			---@type Type|integer
 			Type = Type.Enum,
 			Value = Config.AssaultWeaponSet,
-			Description = "weaponset of Assault class. Custom uses the Shared/WeaponLists",
+			Description = "Weaponset of Assault class. Custom uses the Shared/WeaponLists",
 			Reference = WeaponSets,
 			Default = WeaponSets.Custom,
 			UpdateFlag = UpdateFlag.WeaponSets,
@@ -961,7 +961,7 @@ SettingsDefinition = {
 			---@type Type|integer
 			Type = Type.Enum,
 			Value = Config.EngineerWeaponSet,
-			Description = "weaponset of Engineer class. Custom uses the Shared/WeaponLists",
+			Description = "Weaponset of Engineer class. Custom uses the Shared/WeaponLists",
 			Reference = WeaponSets,
 			Default = WeaponSets.Custom,
 			UpdateFlag = UpdateFlag.WeaponSets,
@@ -973,7 +973,7 @@ SettingsDefinition = {
 			---@type Type|integer
 			Type = Type.Enum,
 			Value = Config.SupportWeaponSet,
-			Description = "weaponset of Support class. Custom uses the Shared/WeaponLists",
+			Description = "Weaponset of Support class. Custom uses the Shared/WeaponLists",
 			Reference = WeaponSets,
 			Default = WeaponSets.Custom,
 			UpdateFlag = UpdateFlag.WeaponSets,
@@ -985,7 +985,7 @@ SettingsDefinition = {
 			---@type Type|integer
 			Type = Type.Enum,
 			Value = Config.ReconWeaponSet,
-			Description = "weaponset of Recon class. Custom uses the Shared/WeaponLists",
+			Description = "Weaponset of Recon class. Custom uses the Shared/WeaponLists",
 			Reference = WeaponSets,
 			Default = WeaponSets.Custom,
 			UpdateFlag = UpdateFlag.WeaponSets,
@@ -1264,7 +1264,7 @@ SettingsDefinition = {
 		},
 		{
 			Name = "JumpWhileShooting",
-			Text = "jump while shooting",
+			Text = "Jump while shooting",
 			---@type Type|integer
 			Type = Type.Boolean,
 			Value = Config.JumpWhileShooting,
@@ -1275,7 +1275,7 @@ SettingsDefinition = {
 		},
 		{
 			Name = "JumpWhileMoving",
-			Text = "jump while moving",
+			Text = "Jump while moving",
 			---@type Type|integer
 			Type = Type.Boolean,
 			Value = Config.JumpWhileMoving,
@@ -1310,7 +1310,7 @@ SettingsDefinition = {
 		},
 		{
 			Name = "SpeedFactor",
-			Text = "speed facator",
+			Text = "Speed facator",
 			---@type Type|integer
 			Type = Type.Float,
 			Value = Config.SpeedFactor,
@@ -1322,7 +1322,7 @@ SettingsDefinition = {
 		},
 		{
 			Name = "SpeedFactorAttack",
-			Text = "speed facator attack",
+			Text = "Speed facator attack",
 			---@type Type|integer
 			Type = Type.Float,
 			Value = Config.SpeedFactorAttack,
@@ -1501,7 +1501,7 @@ SettingsDefinition = {
 		},
 		{
 			Name = "SpawnMethod",
-			Text = "Spawn-mehtod",
+			Text = "Spawn-Mehtod",
 			---@type Type|integer
 			Type = Type.Enum,
 			Value = Config.SpawnMethod,

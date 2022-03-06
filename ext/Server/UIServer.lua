@@ -113,7 +113,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 			},
 			Bottom = {
 				Action = 'back_to_comm',
-				Label = Language:I18N('back'),
+				Label = Language:I18N('Back'),
 			}
 		})
 		return
@@ -141,7 +141,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 			},
 			Center = {
 				Action = 'not_implemented',
-				Label = Language:I18N('defend') -- or "Unselect"
+				Label = Language:I18N('Defend') -- or "Unselect"
 			},
 			Right = {
 				{
@@ -160,7 +160,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 			},
 			Bottom = {
 				Action = 'back_to_comm',
-				Label = Language:I18N('back'),
+				Label = Language:I18N('Back'),
 			}
 		})
 		return

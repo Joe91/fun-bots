@@ -94,10 +94,10 @@ Config = {
 
 	--WEAPONS
 	UseRandomWeapon = true,				-- Use a random weapon out of the weaponset
-	AssaultWeaponSet = WeaponSets.Custom,	-- weaponset of Assault class. Custom uses the Shared/WeaponLists
-	EngineerWeaponSet = WeaponSets.Custom,	-- weaponset of Engineer class. Custom uses the Shared/WeaponLists
-	SupportWeaponSet = WeaponSets.Custom,	-- weaponset of Support class. Custom uses the Shared/WeaponLists
-	ReconWeaponSet = WeaponSets.Custom,	-- weaponset of Recon class. Custom uses the Shared/WeaponLists
+	AssaultWeaponSet = WeaponSets.Custom,	-- Weaponset of Assault class. Custom uses the Shared/WeaponLists
+	EngineerWeaponSet = WeaponSets.Custom,	-- Weaponset of Engineer class. Custom uses the Shared/WeaponLists
+	SupportWeaponSet = WeaponSets.Custom,	-- Weaponset of Support class. Custom uses the Shared/WeaponLists
+	ReconWeaponSet = WeaponSets.Custom,	-- Weaponset of Recon class. Custom uses the Shared/WeaponLists
 	AssaultWeapon = "M416",				-- Primary weapon of Assault class, if random-weapon == false
 	EngineerWeapon = "M4A1",			-- Primary weapon of Engineer class, if random-weapon == false
 	SupportWeapon = "M249",				-- Primary weapon of Support class, if random-weapon == false
