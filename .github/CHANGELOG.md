@@ -35,6 +35,7 @@ This is the changelog for the version V2.5.0. Don't forget to [join us on Discor
 
 ### New maps
 * Vehicles for Rush Theran Highway by BOB
+* Vehicles for Rush Sharqi Peninsula with vehicles by BOB
 * TDM paths for SP_Villa
 * TDM paths for SP_Valley
 * TDM paths for SP_Jet
