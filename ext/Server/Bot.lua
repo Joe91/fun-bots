@@ -631,7 +631,6 @@ function Bot:_CheckForExitVehicle(p_DeltaTime)
 			local s_CurrentVehicleHealth = PhysicsEntity(self.m_Player.controlledControllable).internalHealth
 			if s_CurrentVehicleHealth <= self._ExitVehicleHealth then
 				if math.random(0, 100) <= Registry.VEHICLES.VEHICLE_PROPABILITY_EXIT_LOW_HEALTH then
-					print(self.m_Player.name.." should exit")
 					self:ExitVehicle()
 				end
 			end
