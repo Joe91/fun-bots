@@ -109,6 +109,7 @@ function Bot:__init(p_Player)
 	self._PathIndex = 0
 	self._LastWayDistance = 0.0
 	self._InvertPathDirection = false
+	self._ExitVehicleActive = false
 	self._ObstacleRetryCounter = 0
 	---@type BotMoveSpeeds
 	self._ZombieSpeedValue = BotMoveSpeeds.NoMovement
@@ -280,7 +281,12 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 							-- common things
 							self:_UpdateSpeedOfMovementVehicle()
 							self:_UpdateInputs()
-							--self:_CheckForExitVehicle(self._UpdateTimer)  -- TODO: FIXME: Not working atm...
+							self:_CheckForExitVehicle(self._UpdateTimer)
+
+							-- only exit at this point and abort afterwards
+							if self:_DoExitVehicle() then
+								return
+							end
 							self._UpdateTimer = 0.0
 						end
 
@@ -390,18 +396,28 @@ function Bot:DeployIfPossible()
 	end
 end
 
-function Bot:ExitVehicle()
-	self:_AbortAttack()
-	self.m_Player:ExitVehicle(false, false)
-	local s_Node = g_GameDirector:FindClosestPath(self.m_Player.soldier.worldTransform.trans, false)
+---@return boolean
+function Bot:_DoExitVehicle()
+	if self._ExitVehicleActive then
+		self:_AbortAttack()
+		self.m_Player:ExitVehicle(false, false)
+		local s_Node = g_GameDirector:FindClosestPath(self.m_Player.soldier.worldTransform.trans, false)
 
-	if s_Node ~= nil then
-		-- switch to foot
-		self._InvertPathDirection = false
-		self._PathIndex = s_Node.PathIndex
-		self._CurrentWayPoint = s_Node.PointIndex
-		self._LastWayDistance = 1000.0
+		if s_Node ~= nil then
+			-- switch to foot
+			self._InvertPathDirection = false
+			self._PathIndex = s_Node.PathIndex
+			self._CurrentWayPoint = s_Node.PointIndex
+			self._LastWayDistance = 1000.0
+		end
+		self._ExitVehicleActive = false
+		return true
 	end
+	return false
+end
+
+function Bot:ExitVehicle()
+	self._ExitVehicleActive = true
 end
 
 ---@return boolean
@@ -608,13 +624,14 @@ end
 
 ---@param p_DeltaTime number
 function Bot:_CheckForExitVehicle(p_DeltaTime)
-	if self.m_InVehicle then
+	if not self._ExitVehicleActive then
 		self._VehicleHealthTimer = self._VehicleHealthTimer + p_DeltaTime
 		if self._VehicleHealthTimer >= Registry.VEHICLES.VEHICLE_HEALTH_CYLCE_TIME then
 			self._VehicleHealthTimer = 0
 			local s_CurrentVehicleHealth = PhysicsEntity(self.m_Player.controlledControllable).internalHealth
 			if s_CurrentVehicleHealth <= self._ExitVehicleHealth then
 				if math.random(0, 100) <= Registry.VEHICLES.VEHICLE_PROPABILITY_EXIT_LOW_HEALTH then
+					print(self.m_Player.name.." should exit")
 					self:ExitVehicle()
 				end
 			end
@@ -633,6 +650,7 @@ function Bot:ResetVars()
 	self._ShootPlayer = nil
 	self._ShootPlayerName = ""
 	self._InvertPathDirection = false
+	self._ExitVehicleActive = false
 	self._ShotTimer = 0.0
 	self._UpdateTimer = 0.0
 	self._TargetPoint = nil
