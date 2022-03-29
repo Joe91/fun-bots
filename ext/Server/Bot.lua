@@ -280,7 +280,7 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 							-- common things
 							self:_UpdateSpeedOfMovementVehicle()
 							self:_UpdateInputs()
-							self:_CheckForExitVehicle(self._UpdateTimer)
+							--self:_CheckForExitVehicle(self._UpdateTimer)  -- TODO: FIXME: Not working atm...
 							self._UpdateTimer = 0.0
 						end
 
