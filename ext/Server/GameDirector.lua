@@ -538,14 +538,30 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 	for _,l_Player in pairs(s_SquadMates) do
 		if l_Player.soldier ~= nil and m_Utilities:isBot(l_Player) then
 			local s_SquadBot = g_BotManager:GetBotByName(l_Player.name)
-			if not s_SquadBot.m_InVehicle and not s_SquadBot:IsStuck() then
-				local s_WayIndex = s_SquadBot:GetWayIndex()
-				local s_PointIndex = s_SquadBot:GetPointIndex()
-				if MathUtils:GetRandomInt(1, 100) <= Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_SPAWN then
-					m_Logger:Write("spawn at squad-mate")
-					return s_WayIndex, s_PointIndex, s_SquadBot._InvertPathDirection -- use same direction
-				else
-					break
+			if not s_SquadBot:IsStuck() then
+				if not s_SquadBot.m_InVehicle then
+					local s_WayIndex = s_SquadBot:GetWayIndex()
+					local s_PointIndex = s_SquadBot:GetPointIndex()
+					if MathUtils:GetRandomInt(1, 100) <= Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_SPAWN then
+						m_Logger:Write("spawn at squad-mate")
+						return s_WayIndex, s_PointIndex, s_SquadBot._InvertPathDirection, nil -- use same direction
+					else
+						break
+					end
+				else -- squad-bot in vehicle
+					local s_EntryId = s_SquadBot.m_Player.controlledEntryId
+					if s_EntryId == 0 then
+						local s_Vehicle = s_SquadBot.m_Player.controlledControllable
+						local s_WayIndex = s_SquadBot:GetWayIndex()
+						local s_PointIndex = s_SquadBot:GetPointIndex()
+						if MathUtils:GetRandomInt(1, 100) <= Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_SPAWN then
+							m_Logger:Write("spawn at squad-mate's vehicle")
+							print("spawn in vehicle")
+							return s_WayIndex, s_PointIndex, s_SquadBot._InvertPathDirection, s_Vehicle -- use same direction
+						else
+							break
+						end
+					end
 				end
 			end
 		end

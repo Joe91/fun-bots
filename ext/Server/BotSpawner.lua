@@ -952,6 +952,7 @@ end
 ---@param p_ForcedTeam TeamId|nil
 function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayIndex, p_IndexOnPath, p_ExistingBot, p_ForcedTeam)
 	local s_SpawnPoint = nil
+	local s_SquadSpawnVehicle = nil
 	local s_IsRespawn = false
 	local s_Name = nil
 
@@ -993,7 +994,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 
 		-- find a spawnpoint
 		if p_UseRandomWay or p_ActiveWayIndex == nil or p_ActiveWayIndex == 0 then
-			s_SpawnPoint, s_InverseDirection = self:_GetSpawnPoint(s_TeamId, s_SquadId)
+			s_SpawnPoint, s_InverseDirection, s_SquadSpawnVehicle = self:_GetSpawnPoint(s_TeamId, s_SquadId)
 			-- special spawn in vehicles
 			if type(s_SpawnPoint) == 'string' then
 				local s_SpawnEntity = nil
@@ -1076,6 +1077,10 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 		if s_IsRespawn then
 			p_ExistingBot:SetVarsWay(p_Player, p_UseRandomWay, p_ActiveWayIndex, p_IndexOnPath, s_InverseDirection)
 			self:_SpawnBot(p_ExistingBot, s_Transform, false)
+			-- check for vehicle of squad
+			if s_SquadSpawnVehicle ~= nil then
+				p_ExistingBot:_EnterVehicleEntity(s_SquadSpawnVehicle, false)
+			end
 		else
 			local s_Bot = m_BotManager:CreateBot(s_Name, s_TeamId, s_SquadId)
 
@@ -1087,6 +1092,10 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 
 				s_Bot:SetVarsWay(p_Player, p_UseRandomWay, p_ActiveWayIndex, p_IndexOnPath, s_InverseDirection)
 				self:_SpawnBot(s_Bot, s_Transform, true)
+			end
+			-- check for vehicle of squad
+			if s_SquadSpawnVehicle ~= nil then
+				s_Bot:_EnterVehicleEntity(s_SquadSpawnVehicle, false)
 			end
 		end
 	end
@@ -1158,12 +1167,14 @@ end
 ---@param p_SquadId SquadId|integer
 ---@return string|table|nil
 ---@return boolean|nil
+---@return ControllableEntity|nil
 function BotSpawner:_GetSpawnPoint(p_TeamId, p_SquadId)
 	local s_ActiveWayIndex = 0
 	local s_IndexOnPath = 0
 
 	local s_InvertDirection = nil
 	local s_TargetNode = nil
+	local s_VehicleToSpawnIn = nil
 	local s_ValidPointFound = false
 	local s_TargetDistance = Config.DistanceToSpawnBots
 	local s_RetryCounter = Config.MaxTrysToSpawnAtDistance
@@ -1181,7 +1192,7 @@ function BotSpawner:_GetSpawnPoint(p_TeamId, p_SquadId)
 	-- CONQUEST
 	-- spawn at base, squad-mate, captured flag
 	if Globals.IsConquest then
-		s_ActiveWayIndex, s_IndexOnPath, s_InvertDirection = g_GameDirector:GetSpawnPath(p_TeamId, p_SquadId, false)
+		s_ActiveWayIndex, s_IndexOnPath, s_InvertDirection, s_VehicleToSpawnIn = g_GameDirector:GetSpawnPath(p_TeamId, p_SquadId, false)
 
 		if s_ActiveWayIndex == 0 then
 			-- something went wrong. use random path
@@ -1193,7 +1204,7 @@ function BotSpawner:_GetSpawnPoint(p_TeamId, p_SquadId)
 	-- RUSH
 	-- spawn at base (of zone) or squad-mate
 	elseif Globals.IsRush then
-		s_ActiveWayIndex, s_IndexOnPath, s_InvertDirection = g_GameDirector:GetSpawnPath(p_TeamId, p_SquadId, true)
+		s_ActiveWayIndex, s_IndexOnPath, s_InvertDirection, s_VehicleToSpawnIn = g_GameDirector:GetSpawnPath(p_TeamId, p_SquadId, true)
 
 		if s_ActiveWayIndex == 0 then
 			-- something went wrong. use random path
@@ -1260,7 +1271,7 @@ function BotSpawner:_GetSpawnPoint(p_TeamId, p_SquadId)
 		end
 	end
 
-	return s_TargetNode, s_InvertDirection
+	return s_TargetNode, s_InvertDirection, s_VehicleToSpawnIn
 end
 
 -- TODO: create a more advanced algorithm?
