@@ -105,6 +105,8 @@ Registry = {
 			VEHICLE_PROPABILITY_EXIT_LOW_HEALTH = 60,
 			-- health-check cycle-time
 			VEHICLE_HEALTH_CYLCE_TIME = 0.5,
+			-- seat-check cycle-time
+			VEHICLE_SEAT_CHECK_CYCLE_TIME = 4.0,
 		},
 
 		-- Bot related

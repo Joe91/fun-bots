@@ -58,6 +58,7 @@ function Bot:__init(p_Player)
 	self._WayWaitTimer = 0.0
 	self._VehicleWaitTimer = 0.0
 	self._VehicleHealthTimer = 0.0
+	self._VehicleSeatTimer = 0.0
 	self._VehicleTakeoffTimer = 0.0
 	self._WayWaitYawTimer = 0.0
 	self._ObstaceSequenceTimer = 0.0
@@ -281,7 +282,7 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 							-- common things
 							self:_UpdateSpeedOfMovementVehicle()
 							self:_UpdateInputs()
-							self:_CheckForExitVehicle(self._UpdateTimer)
+							self:_CheckForVehicleActions(self._UpdateTimer)
 
 							-- only exit at this point and abort afterwards
 							if self:_DoExitVehicle() then
@@ -623,7 +624,8 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 end
 
 ---@param p_DeltaTime number
-function Bot:_CheckForExitVehicle(p_DeltaTime)
+function Bot:_CheckForVehicleActions(p_DeltaTime)
+	-- check if exit of vehicle is needed (because of low health)
 	if not self._ExitVehicleActive then
 		self._VehicleHealthTimer = self._VehicleHealthTimer + p_DeltaTime
 		if self._VehicleHealthTimer >= Registry.VEHICLES.VEHICLE_HEALTH_CYLCE_TIME then
@@ -636,6 +638,23 @@ function Bot:_CheckForExitVehicle(p_DeltaTime)
 			end
 		end
 	end
+
+	-- check if better seat is available
+	self._VehicleSeatTimer = self._VehicleSeatTimer + p_DeltaTime
+	if self._VehicleSeatTimer >= Registry.VEHICLES.VEHICLE_SEAT_CHECK_CYCLE_TIME then
+		self._VehicleSeatTimer = 0
+		local s_VehicleEntity = self.m_Player.controlledControllable
+		for l_SeatIndex = 0, self.m_Player.controlledEntryId do
+			if s_VehicleEntity:GetPlayerInEntry(l_SeatIndex) == nil then
+				-- better seat available --> swich seats
+				m_Logger:Write("switch to better seat")
+				self.m_Player:EnterVehicle(s_VehicleEntity, l_SeatIndex)
+				self:_UpdateVehicleMovableId()
+				break
+			end
+		end
+	end
+
 end
 
 function Bot:ResetVars()
