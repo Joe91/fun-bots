@@ -9,6 +9,7 @@ from tools.export_permission_and_config import exportPermissionAndConfig
 
 from tools.create_Settings import createSettings
 from tools.create_translations import createTranslations
+from tools.update_all_languages import updateLanguages
 
 from tools.clear_settings import clearSettings
 from tools.clear_all_paths import clearAllPaths
@@ -70,8 +71,10 @@ def clear_settings():
 def create_settings_translations():
 	createSettings(relativePath)
 	createTranslations(relativePath)
+	updateLanguages(relativePath)
 	# os.system("python tools/create_Settings.py"+ " " + relativePath)
 	# os.system("python tools/create_translations.py"+ " " + relativePath)
+	# os.system("python tools/update_all_languages.py"+ " " + relativePath)
 	print("translation-templates and settigns updated")
 
 def create_mapfiles():

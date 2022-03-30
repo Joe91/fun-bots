@@ -199,6 +199,34 @@ function BotManager:OnGunSway(p_GunSway, p_Weapon, p_WeaponFiring, p_DeltaTime)
 	end
 end
 
+---VEXT Server Vehicle:Damage Event
+---@param p_VehicleEntity Entity @`ControllableEntity`
+---@param p_Damage number
+---@param p_DamageGiverInfo DamageGiverInfo|nil
+function BotManager:OnVehicleDamage(p_VehicleEntity, p_Damage, p_DamageGiverInfo)
+	if p_Damage > 0.0 and p_VehicleEntity ~= nil then
+		local s_ControllableEntity = ControllableEntity(p_VehicleEntity)
+		local s_MaxEntries = s_ControllableEntity.entryCount
+		for i = 0, s_MaxEntries - 1 do
+			local s_Player = s_ControllableEntity:GetPlayerInEntry(i)
+			if s_Player ~= nil then
+				if m_Utilities:isBot(s_Player) then
+					local s_Bot = self:GetBotByName(s_Player.name)
+					if s_Bot ~= nil then
+						-- shoot back
+						if p_DamageGiverInfo.giver ~= nil then
+							--detect if we need to shoot back
+							if Config.ShootBackIfHit then
+								s_Bot:ShootAt(p_DamageGiverInfo.giver, true)
+							end
+						end
+					end
+				end
+			end
+		end
+	end
+end
+
 -- =============================================
 -- Hooks
 -- =============================================

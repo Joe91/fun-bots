@@ -11,7 +11,7 @@ require('__shared/Constants/VersionType')
 ---@class Registry
 Registry = {
 		COMMON = {
-			-- token Bots are marked with. Can also be " "
+			-- token Bots are marked with. Can also be " " or "". If it's "" players with names of the botlist can't join!
 			BOT_TOKEN = "BOT_",
 			-- with real damage, the hitboxes are a bit buggy
 			USE_REAL_DAMAGE = true,
@@ -35,7 +35,7 @@ Registry = {
 			-- Patch version
 			VERSION_PATCH = 0,
 			-- Additional label for pre-releases and build meta data
-			VERSION_LABEL = "RC1",
+			VERSION_LABEL = "RC2",
 			-- Current version type of this build
 			VERSION_TYPE = VersionType.DevBuild,
 			-- The Version used for the Update-Check
@@ -97,6 +97,12 @@ Registry = {
 			JET_TAKEOFF_TIME = 20,
 			-- time a jet waits after an attack
 			JET_ABORT_ATTACK_TIME = 5,
+			-- percentage of vehicle health to leave vehicle with (currently no passive events for bot-only vehicles)
+			VEHILCE_EXIT_HEALTH = 10,
+			-- propability to exit on low health
+			VEHICLE_PROPABILITY_EXIT_LOW_HEALTH = 60,
+			-- health-check cycle-time
+			VEHICLE_HEALTH_CYLCE_TIME = 0.5,
 		},
 
 		-- Bot related

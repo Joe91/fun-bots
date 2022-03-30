@@ -13,8 +13,8 @@ def updateSupportedMaps(pathToFiles):
 	GameModesToUse = ["TDM", "SDM", "TDM CQ", "Rush", "SQ Rush", "CQ Small", "CQ Large", "Assault", "Assault 2", "Assault Large", "GM", "CQ Dom", "Scavanger", "CTF", "Tank Superiority"]
 	RoundsToUse = 1
 	#AddComment = True # True or False
-	MapsWithGunmaster = ["XP2", "XP4"]
-	MapsWithoutTdmCq = ["XP2"]
+	MapsWithGunmaster = ["XP2", "XP4", "sp_", "coop_"]
+	MapsWithoutTdmCq = ["XP2", "sp_", "coop_"]
 
 	AllGameModes = ["TDM", "SDM", "TDM CQ", "Rush", "SQ Rush", "CQ Small", "CQ Large", "Assault", "Assault 2", "Assault Large", "GM", "CQ Dom", "Scavanger", "CTF", "Tank Superiority"]
 	GameModeTranslations = {

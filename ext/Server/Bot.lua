@@ -57,6 +57,7 @@ function Bot:__init(p_Player)
 	self._SpawnDelayTimer = 0.0
 	self._WayWaitTimer = 0.0
 	self._VehicleWaitTimer = 0.0
+	self._VehicleHealthTimer = 0.0
 	self._VehicleTakeoffTimer = 0.0
 	self._WayWaitYawTimer = 0.0
 	self._ObstaceSequenceTimer = 0.0
@@ -108,6 +109,7 @@ function Bot:__init(p_Player)
 	self._PathIndex = 0
 	self._LastWayDistance = 0.0
 	self._InvertPathDirection = false
+	self._ExitVehicleActive = false
 	self._ObstacleRetryCounter = 0
 	---@type BotMoveSpeeds
 	self._ZombieSpeedValue = BotMoveSpeeds.NoMovement
@@ -122,6 +124,7 @@ function Bot:__init(p_Player)
 	self._FullVehicleSteering = false
 	self._VehicleDirBackPositive = false
 	self._JetAbortAttackActive = false
+	self._ExitVehicleHealth = 0.0
 	self._LastVehicleHealth = 0.0
 	---@type ControllableEntity|nil
 	self._RepairVehicleEntity = nil
@@ -278,6 +281,12 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 							-- common things
 							self:_UpdateSpeedOfMovementVehicle()
 							self:_UpdateInputs()
+							self:_CheckForExitVehicle(self._UpdateTimer)
+
+							-- only exit at this point and abort afterwards
+							if self:_DoExitVehicle() then
+								return
+							end
 							self._UpdateTimer = 0.0
 						end
 
@@ -387,17 +396,28 @@ function Bot:DeployIfPossible()
 	end
 end
 
-function Bot:ExitVehicle()
-	self.m_Player:ExitVehicle(false, false)
-	local s_Node = g_GameDirector:FindClosestPath(self.m_Player.soldier.worldTransform.trans, false)
+---@return boolean
+function Bot:_DoExitVehicle()
+	if self._ExitVehicleActive then
+		self:_AbortAttack()
+		self.m_Player:ExitVehicle(false, false)
+		local s_Node = g_GameDirector:FindClosestPath(self.m_Player.soldier.worldTransform.trans, false)
 
-	if s_Node ~= nil then
-		-- switch to vehicle
-		self._InvertPathDirection = false
-		self._PathIndex = s_Node.PathIndex
-		self._CurrentWayPoint = s_Node.PointIndex
-		self._LastWayDistance = 1000.0
+		if s_Node ~= nil then
+			-- switch to foot
+			self._InvertPathDirection = false
+			self._PathIndex = s_Node.PathIndex
+			self._CurrentWayPoint = s_Node.PointIndex
+			self._LastWayDistance = 1000.0
+		end
+		self._ExitVehicleActive = false
+		return true
 	end
+	return false
+end
+
+function Bot:ExitVehicle()
+	self._ExitVehicleActive = true
 end
 
 ---@return boolean
@@ -602,6 +622,22 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 	return false
 end
 
+---@param p_DeltaTime number
+function Bot:_CheckForExitVehicle(p_DeltaTime)
+	if not self._ExitVehicleActive then
+		self._VehicleHealthTimer = self._VehicleHealthTimer + p_DeltaTime
+		if self._VehicleHealthTimer >= Registry.VEHICLES.VEHICLE_HEALTH_CYLCE_TIME then
+			self._VehicleHealthTimer = 0
+			local s_CurrentVehicleHealth = PhysicsEntity(self.m_Player.controlledControllable).internalHealth
+			if s_CurrentVehicleHealth <= self._ExitVehicleHealth then
+				if math.random(0, 100) <= Registry.VEHICLES.VEHICLE_PROPABILITY_EXIT_LOW_HEALTH then
+					self:ExitVehicle()
+				end
+			end
+		end
+	end
+end
+
 function Bot:ResetVars()
 	self._SpawnMode = BotSpawnModes.NoRespawn
 	self._MoveMode = BotMoveModes.Standstill
@@ -613,6 +649,7 @@ function Bot:ResetVars()
 	self._ShootPlayer = nil
 	self._ShootPlayerName = ""
 	self._InvertPathDirection = false
+	self._ExitVehicleActive = false
 	self._ShotTimer = 0.0
 	self._UpdateTimer = 0.0
 	self._TargetPoint = nil
@@ -989,7 +1026,7 @@ function Bot:_UpdateAimingVehicleAdvanced()
 
 	local s_AimAt = s_FullPositionTarget + (s_TargetVelocity * s_TimeToTravel)
 
-	s_PitchCorrection = 0.5 * s_TimeToTravel * s_TimeToTravel * s_Drop
+	s_PitchCorrection = 0.375 * s_TimeToTravel * s_TimeToTravel * s_Drop  -- from theory 0.5. In real 0.25 works much better
 
 	--calculate yaw and pitch
 	local s_DifferenceZ = s_AimAt.z - s_FullPositionBot.z
@@ -1084,7 +1121,7 @@ function Bot:_UpdateAimingVehicle()
 	s_Speed, s_Drop = m_Vehicles:GetSpeedAndDrop(self.m_ActiveVehicle, self.m_Player.controlledEntryId)
 
 	local s_TimeToTravel = (self._DistanceToPlayer / s_Speed)
-	s_PitchCorrection = 0.5 * s_TimeToTravel * s_TimeToTravel * s_Drop
+	s_PitchCorrection = 0.375 * s_TimeToTravel * s_TimeToTravel * s_Drop  -- from theory 0.5. In real 0.25 works much better
 
 	s_TargetMovement = (s_TargetMovement * s_TimeToTravel)
 
@@ -1307,10 +1344,15 @@ function Bot:_UpdateAiming()
 			s_Pitch = math.atan(s_DifferenceY, s_Distance)
 		end
 
-		-- worsen yaw and pitch depending on bot-skill
-		local s_WorseningValue = (math.random()*self._Skill/self._DistanceToPlayer) -- value scaled in offset in 1m
-		s_Yaw = s_Yaw + s_WorseningValue
-		s_Pitch = s_Pitch + s_WorseningValue
+		-- worsen yaw and pitch depending on bot-skill. Don't use Skill for Nades and Rockets.
+		if self.m_ActiveWeapon.type ~= WeaponTypes.Grenade and self.m_ActiveWeapon.type ~= WeaponTypes.Rocket then
+			local s_WorseningValue = (math.random()*self._Skill/self._DistanceToPlayer) -- value scaled in offset in 1m
+			if MathUtils:GetRandomInt(0, 1) > 0 then
+				s_WorseningValue = -s_WorseningValue --randomly use positive or negative values
+			end
+			s_Yaw = s_Yaw + s_WorseningValue
+			s_Pitch = s_Pitch + s_WorseningValue
+		end
 
 		self._TargetPitch = s_Pitch
 		self._TargetYaw = s_Yaw
@@ -2279,7 +2321,10 @@ end
 function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 	if p_Entity ~= nil then
 		local s_Position = p_Entity.transform.trans
-
+		local s_VehicleData = m_Vehicles:GetVehicleByEntity(p_Entity)
+		if not Config.UseAirVehicles and (s_VehicleData.Type == VehicleTypes.Plane or s_VehicleData.Type == VehicleTypes.Chopper) then
+			return -3 -- not allowed to use
+		end
 		-- keep one seat free, if enough available
 		local s_MaxEntries = p_Entity.entryCount
 		if not p_PlayerIsDriver and s_MaxEntries > 2 then
@@ -2289,9 +2334,10 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 		for i = 0, s_MaxEntries - 1 do
 			if p_Entity:GetPlayerInEntry(i) == nil then
 				self.m_Player:EnterVehicle(p_Entity, i)
+				self._ExitVehicleHealth = PhysicsEntity(p_Entity).internalHealth * (Registry.VEHICLES.VEHILCE_EXIT_HEALTH / 100.0)
 
 				-- get ID
-				self.m_ActiveVehicle = m_Vehicles:GetVehicle(self.m_Player, i)
+				self.m_ActiveVehicle = s_VehicleData
 				self._VehicleMovableId = m_Vehicles:GetPartIdForSeat(self.m_ActiveVehicle, i)
 				m_Logger:Write(self.m_ActiveVehicle)
 				if i == 0 then

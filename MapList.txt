@@ -68,6 +68,7 @@ MP_018 RushLarge0 1
 MP_Subway RushLarge0 1
 XP1_001 RushLarge0 1
 XP1_002 RushLarge0 1
+XP1_003 RushLarge0 1
 XP5_004 RushLarge0 1
 MP_001 SquadDeathMatch0 1
 MP_003 SquadDeathMatch0 1
@@ -101,6 +102,7 @@ XP5_004 SquadDeathMatch0 1
 XP4_Rubble SquadRush0 1
 XP3_Desert TankSuperiority0 1
 XP3_Valley TankSuperiority0 1
+COOP_002 TeamDeathMatch0 1
 COOP_006 TeamDeathMatch0 1
 MP_001 TeamDeathMatch0 1
 MP_003 TeamDeathMatch0 1
@@ -111,6 +113,9 @@ MP_013 TeamDeathMatch0 1
 MP_017 TeamDeathMatch0 1
 MP_018 TeamDeathMatch0 1
 MP_Subway TeamDeathMatch0 1
+SP_Jet TeamDeathMatch0 1
+SP_Valley TeamDeathMatch0 1
+SP_Villa TeamDeathMatch0 1
 XP1_001 TeamDeathMatch0 1
 XP1_002 TeamDeathMatch0 1
 XP1_003 TeamDeathMatch0 1
@@ -127,6 +132,7 @@ XP5_001 TeamDeathMatch0 1
 XP5_002 TeamDeathMatch0 1
 XP5_003 TeamDeathMatch0 1
 XP5_004 TeamDeathMatch0 1
+COOP_002 TeamDeathMatchC0 1
 COOP_006 TeamDeathMatchC0 1
 MP_001 TeamDeathMatchC0 1
 MP_003 TeamDeathMatchC0 1
@@ -137,6 +143,9 @@ MP_013 TeamDeathMatchC0 1
 MP_017 TeamDeathMatchC0 1
 MP_018 TeamDeathMatchC0 1
 MP_Subway TeamDeathMatchC0 1
+SP_Jet TeamDeathMatchC0 1
+SP_Valley TeamDeathMatchC0 1
+SP_Villa TeamDeathMatchC0 1
 XP1_001 TeamDeathMatchC0 1
 XP1_002 TeamDeathMatchC0 1
 XP1_003 TeamDeathMatchC0 1

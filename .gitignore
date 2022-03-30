@@ -1,5 +1,6 @@
 mod.db
 .vu
+.vscode
 .idea
 /dev/fun-bots-helper/tools/__pycache__/clear_all_paths.cpython-37.pyc
 /dev/fun-bots-helper/tools/__pycache__/clear_settings.cpython-37.pyc

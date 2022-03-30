@@ -13,10 +13,18 @@ This is the changelog for the version V2.5.0. Don't forget to [join us on Discor
 * Max tries to find a valid path (Rush) now in Registry.lua
 * Separated Weapon-Lists per Team
 * Cleanup of code
-* Improved aiming in larger distances
+* Improved soldier aiming in larger distances
 * Option to use advanced aiming algorithms for every bot
 * Improved spawning in SQDM (#209)
 * more comments in the registry
+* Skill now applied in both directions
+* Improved aiming in vehicles on larger distances
+* Allow empty-Bot-Tokens
+* Improve language-scripts
+* Chinese translation updated by FanShiFu
+* bots exit vehicles on low HP #116
+* bots in vehicles shoot back if hit
+* Option for bots to not use air-vehicles
 
 ### Bug fixes
 * Several Bugfixes thanks to Bree_Arnold (#207)
@@ -24,10 +32,17 @@ This is the changelog for the version V2.5.0. Don't forget to [join us on Discor
 * Reload Rockets if empty
 * some tweaks to improve performance on tracing (possible since a fix of a memoryleak by VU)
 * fixed Bot-Team-Detection
+* rework of some language-stings
+* Bugifx on vehicle-exit
 
 ### New maps
 * Vehicles for Rush Theran Highway by BOB
-* TDM paths for COOP_006 (just testing usage of sp-map-mod)
+* Vehicles for Rush Sharqi Peninsula with vehicles by BOB
+* TDM paths for SP_Villa
+* TDM paths for SP_Valley
+* TDM paths for SP_Jet
+* TDM paths for COOP_002
+* TDM paths for COOP_006
 
 ### Updated maps
 * Lots and lots of Updated maps by MeisterPeitsche (exit-command of vehicles)

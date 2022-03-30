@@ -14,7 +14,7 @@ The following maps are currently supported in this commit.
 |   ![image](https://user-images.githubusercontent.com/57008952/124316492-f26fc580-db75-11eb-9a27-cffec0fc8564.png) 	|   `MP_Subway`	| **Operation Metro** | `CQ Large` ,`Rush` ,`SDM` ,`TDM` ,`TDM CQ` |  |
 |   ![image](https://user-images.githubusercontent.com/57008952/124316546-0a474980-db76-11eb-9a00-48a44d38de9d.png) 	|   `XP1_001`	| **Strike at Karkand** | `Assault Large` ,`Assault` ,`Assault 2` ,`Rush` ,`SDM` ,`TDM` ,`TDM CQ` | `Assault Large` ,`Assault` ,`Assault 2` |
 |   ![image](https://user-images.githubusercontent.com/57008952/124316582-19c69280-db76-11eb-87ff-fe9bbeb857fc.png) 	|   `XP1_002`	| **Gulf of Oman** | `Assault` ,`CQ Large` ,`CQ Small` ,`Rush` ,`SDM` ,`TDM` ,`TDM CQ` | `CQ Large` ,`CQ Small` ,`Rush` |
-|   ![image](https://user-images.githubusercontent.com/57008952/124316597-21863700-db76-11eb-969d-49f6cb167b82.png) 	|   `XP1_003`	| **Sharqi Peninsula** | `Assault Large` ,`Assault` ,`Assault 2` ,`SDM` ,`TDM` ,`TDM CQ` | `Assault` |
+|   ![image](https://user-images.githubusercontent.com/57008952/124316597-21863700-db76-11eb-969d-49f6cb167b82.png) 	|   `XP1_003`	| **Sharqi Peninsula** | `Assault Large` ,`Assault` ,`Assault 2` ,`Rush` ,`SDM` ,`TDM` ,`TDM CQ` | `Assault` ,`Rush` |
 |   ![image](https://user-images.githubusercontent.com/57008952/124316613-2945db80-db76-11eb-8a71-ea094670337b.png) 	|   `XP1_004`	| **Wake Island** | `Assault Large` ,`Assault` ,`Assault 2` ,`SDM` ,`TDM` ,`TDM CQ` | `Assault Large` ,`Assault 2` |
 |   ![image](https://user-images.githubusercontent.com/57008952/124316641-34007080-db76-11eb-899e-019b0d04c73a.png) 	|   `XP2_Factory`	| **Scrapmetal** | `CQ Dom` ,`GM` ,`SDM` ,`TDM CQ` |  |
 |   ![image](https://user-images.githubusercontent.com/57008952/124316661-3cf14200-db76-11eb-809b-59d14953eaa5.png) 	|   `XP2_Office`	| **Operation 925** | `CQ Dom` ,`GM` ,`SDM` ,`TDM CQ` |  |
@@ -32,6 +32,17 @@ The following maps are currently supported in this commit.
 |   ![image](https://user-images.githubusercontent.com/57008952/124316951-aec98b80-db76-11eb-816d-140f9614359e.png) 	|   `XP5_002`	| **Nebandan Flats** | `CQ Small` ,`SDM` ,`TDM` ,`TDM CQ` | `CQ Small` |
 |   ![image](https://user-images.githubusercontent.com/57008952/124316976-b8eb8a00-db76-11eb-8207-addf58c94317.png) 	|   `XP5_003`	| **Kiasar Railroad** | `CTF` ,`CQ Small` ,`SDM` ,`TDM` ,`TDM CQ` | `CQ Small` |
 |   ![image](https://user-images.githubusercontent.com/57008952/124316988-bee16b00-db76-11eb-96f4-fc714fcf6fce.png) 	|   `XP5_004`	| **Sabalan Pipeline** | `CQ Large` ,`CQ Small` ,`Rush` ,`SDM` ,`TDM` ,`TDM CQ` | `CQ Large` ,`CQ Small` ,`Rush` |
+
+The following maps can be played with the mod from keku645 (https://github.com/keku645/vu-all-gamemodes-in-all-maps)
+CAREFUL: Not all modes that are possible are supported on them!
+
+|   	   	| Technical Name | Name | supported gamemodes |   supported gamemodes with Vehicles |
+|---	|---	|---	|---	|---	|
+|  ---	|   `SP_Villa`	| **Kaffarov** | `TDM` ,`TDM CQ` |  |
+|  ---	|   `SP_Valley`	| **Valley** | `TDM` ,`TDM CQ` |  |
+|  ---	|   `SP_Jet`	| **Carrier** | `TDM` ,`TDM CQ` |  |
+|  ---	|   `COOP_002`	| **Aygan Village** | `TDM` ,`TDM CQ` |  |
+|  ---	|   `COOP_006`	| **Hit and Run** | `TDM` ,`TDM CQ` |  |
 
 ### Help to expand the list
 We are still missing certain gamemodes on certain maps, help us expanding this list by exporting your traces (with the export_traces.exe) and sending it to us on discort or on any other cahnnel.
