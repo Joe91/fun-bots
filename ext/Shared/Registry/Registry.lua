@@ -98,7 +98,7 @@ Registry = {
 			-- time a jet waits after an attack
 			JET_ABORT_ATTACK_TIME = 5,
 			-- percentage of vehicle health to leave vehicle with (currently no passive events for bot-only vehicles)
-			VEHILCE_EXIT_HEALTH = 10,
+			VEHILCE_EXIT_HEALTH = 12,
 			-- propability to exit on low health
 			VEHICLE_PROPABILITY_EXIT_LOW_HEALTH = 60,
 			-- health-check cycle-time
@@ -148,6 +148,10 @@ Registry = {
 			FIRST_SPAWN_DELAY = 5.0,
 			-- Probability of a bot spawning on a member of the same squad.
 			PROBABILITY_SQUADMATE_SPAWN = 40,
+			-- Probability of a bot spawning in the vehicle of a bot of the same squad.
+			PROBABILITY_SQUADMATE_VEHICLE_SPAWN = 40,
+			-- Probability of a bot spawning in the vehicle of a player of the same squad.
+			PROBABILITY_SQUADMATE_PLAYER_VEHICLE_SPAWN = 80,
 			-- Probability of a bot spawning on the closest spawn point
 			PROBABILITY_CLOSEST_SPAWN = 80,
 			-- Probability of a bot spawning on an attacked spawn point

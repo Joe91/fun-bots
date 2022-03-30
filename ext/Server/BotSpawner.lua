@@ -1051,7 +1051,14 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 		end
 
 		if s_SpawnPoint == nil then
-			return
+			if s_SquadSpawnVehicle ~= nil then
+				s_SpawnPoint = m_NodeCollection:Get()[1]
+				if s_SpawnPoint == nil then
+					return
+				end
+			else
+				return
+			end
 		else
 			p_IndexOnPath = s_SpawnPoint.PointIndex
 			p_ActiveWayIndex = s_SpawnPoint.PathIndex

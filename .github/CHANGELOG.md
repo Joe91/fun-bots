@@ -26,6 +26,7 @@ This is the changelog for the version V2.5.0. Don't forget to [join us on Discor
 * bots in vehicles shoot back if hit
 * Option for bots to not use air-vehicles
 * Add option for random team-switch(#213)
+* Bots can now spawn at squad-vehicles of bots or players (#115)
 
 ### Bug fixes
 * Several Bugfixes thanks to Bree_Arnold (#207)
