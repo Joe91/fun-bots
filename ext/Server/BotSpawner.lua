@@ -180,25 +180,40 @@ end
 ---@param p_Name string
 function BotSpawner:OnPlayerJoining(p_Name)
 	-- detect BOT-Names
-	if Registry.COMMON.BOT_TOKEN == "" then
+	if Registry.COMMON.ALLOW_PLAYER_BOT_NAMES then
 		for _, l_Name in pairs(BotNames) do
-			if l_Name == p_Name then
-				table.insert(self._KickPlayers, p_Name)
-
+			if Registry.COMMON.BOT_TOKEN..l_Name == p_Name then
+				-- prevent bots from being named like this
+				m_Logger:Write("Don't use the name ".. p_Name .." for Bots anymore")
+				table.insert(Globals.IgnoreBotNames, p_Name)
+				-- destroy bots with this name
 				if m_BotManager:GetBotByName(p_Name) ~= nil then
-					table.insert(Globals.IgnoreBotNames, p_Name)
 					m_BotManager:DestroyBot(p_Name)
 				end
 				return
 			end
 		end
-	else
-		if string.find(p_Name, Registry.COMMON.BOT_TOKEN) == 1 then --check if name starts with bot-token
-			table.insert(self._KickPlayers, p_Name)
-
-			if m_BotManager:GetBotByName(p_Name) ~= nil then
-				table.insert(Globals.IgnoreBotNames, p_Name)
-				m_BotManager:DestroyBot(p_Name)
+	else -- not allowed to use Bot-Names
+		if Registry.COMMON.BOT_TOKEN == "" then
+			for _, l_Name in pairs(BotNames) do
+				if l_Name == p_Name then
+					table.insert(self._KickPlayers, p_Name)
+	
+					if m_BotManager:GetBotByName(p_Name) ~= nil then
+						table.insert(Globals.IgnoreBotNames, p_Name)
+						m_BotManager:DestroyBot(p_Name)
+					end
+					return
+				end
+			end
+		else
+			if string.find(p_Name, Registry.COMMON.BOT_TOKEN) == 1 then --check if name starts with bot-token
+				table.insert(self._KickPlayers, p_Name)
+	
+				if m_BotManager:GetBotByName(p_Name) ~= nil then
+					table.insert(Globals.IgnoreBotNames, p_Name)
+					m_BotManager:DestroyBot(p_Name)
+				end
 			end
 		end
 	end

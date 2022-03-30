@@ -27,6 +27,7 @@ This is the changelog for the version V2.5.0. Don't forget to [join us on Discor
 * Option for bots to not use air-vehicles
 * Add option for random team-switch(#213)
 * Bots can now spawn at squad-vehicles of bots or players (#115)
+* Option to use Bot-Names added (#152)
 
 ### Bug fixes
 * Several Bugfixes thanks to Bree_Arnold (#207)

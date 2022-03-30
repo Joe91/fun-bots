@@ -49,9 +49,6 @@ function BotManager:__init()
 	self._LastBotCheckIndex = 1
 	self._LastPlayerCheckIndex = 1
 	self._InitDone = false
-
-	self.dummyCnt = 0
-	self.dummyCnt2 = 0
 end
 
 -- =============================================
@@ -125,6 +122,16 @@ function BotManager:OnPlayerLeft(p_Player)
 		if l_PlayerName == p_Player.name then
 			table.remove(self._ActivePlayers, l_Index)
 			break
+		end
+	end
+
+	-- check if player used a Bot-Name
+	if Registry.COMMON.ALLOW_PLAYER_BOT_NAMES then
+		for l_Index, l_BotNameToIgnore in pairs(Globals.IgnoreBotNames) do
+			if l_BotNameToIgnore ==  p_Player.name then
+				table.remove(Globals.IgnoreBotNames, l_Index)
+				m_Logger:Write("Bot-Name ".. l_BotNameToIgnore .." usable again")
+			end
 		end
 	end
 end
@@ -1118,7 +1125,6 @@ function BotManager:_CheckForBotBotAttack()
 							self._ConnectionCheckState[s_ConnectionValue] = true
 							-- check distance
 							local s_Distance = s_Bot.m_Player.soldier.worldTransform.trans:Distance(s_EnemyBot.m_Player.soldier.worldTransform.trans)
-							self.dummyCnt = self.dummyCnt + 1
 							s_ChecksDone = s_ChecksDone + 1
 							local s_MaxDistance = s_Bot:GetAttackDistance()
 							local s_MaxDistanceEnemyBot = s_EnemyBot:GetAttackDistance()
@@ -1126,7 +1132,6 @@ function BotManager:_CheckForBotBotAttack()
 								s_MaxDistance = s_MaxDistanceEnemyBot
 							end
 							if s_Distance <= s_MaxDistance then
-								self.dummyCnt2 = self.dummyCnt2 + 1
 								table.insert(s_RaycastEntries, {
 									Bot1 = s_BotNameToCheck,
 									Bot2 = l_BotName,
@@ -1159,12 +1164,6 @@ function BotManager:_CheckForBotBotAttack()
 
 	-- should only reach here if every connection has been checked
 	-- clear the cache and start over
-	-- ONLY FOR DEBUGGING:
-	-- if (self.dummyCnt2 > 5) then
-	-- 	print("all bots done "..tostring(self.dummyCnt).." "..tostring(self.dummyCnt2))
-	-- end
-	self.dummyCnt = 0
-	self.dummyCnt2 = 0
 	self._LastBotCheckIndex = 1
 	self._BotCheckState = {}
 	self._ConnectionCheckState = {}

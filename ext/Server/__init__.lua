@@ -261,7 +261,10 @@ function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPe
 	m_Logger:Write('OnLevelLoaded: ' .. p_LevelName .. ' ' .. s_GameMode)
 
 	self:SetRespawnDelay()
-	Globals.IgnoreBotNames = {}
+	-- don't reset list of Ignore-Bot-Names, if those are allowed to use
+	if not Registry.COMMON.ALLOW_PLAYER_BOT_NAMES then
+		Globals.IgnoreBotNames = {}
+	end
 	self:DetectSpecialMods()
 	self:RegisterInputRestrictionEventCallbacks()
 	self:SetGameMode(s_GameMode)

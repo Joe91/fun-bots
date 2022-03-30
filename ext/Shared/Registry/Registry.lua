@@ -13,6 +13,8 @@ Registry = {
 		COMMON = {
 			-- token Bots are marked with. Can also be " " or "". If it's "" players with names of the botlist can't join!
 			BOT_TOKEN = "BOT_",
+			-- allow players to use Bot-Names
+			ALLOW_PLAYER_BOT_NAMES = true,
 			-- with real damage, the hitboxes are a bit buggy
 			USE_REAL_DAMAGE = true,
 			-- collition-raycasts are only supporded by the dev-buidls of VU atm (VEXT 1.3.2 or greater)
