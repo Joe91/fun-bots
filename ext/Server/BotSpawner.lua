@@ -52,7 +52,9 @@ function BotSpawner:OnLevelLoaded(p_Round)
 	self._FirstSpawnDelay = Registry.BOT_SPAWN.FIRST_SPAWN_DELAY
 
 	if (Config.TeamSwitchMode == TeamSwitchModes.SwitchForRoundTwo and p_Round ~= self._LastRound) or
-	(Config.TeamSwitchMode == TeamSwitchModes.AlwaysSwitchTeams) then
+		(Config.TeamSwitchMode == TeamSwitchModes.AlwaysSwitchTeams) or
+		(Config.TeamSwitchMode == TeamSwitchModes.SwitchTeamsRandomly and MathUtils:GetRandom(1, 100) >= 50)
+	then
 		m_Logger:Write("switch teams")
 		self:_SwitchTeams()
 	end
