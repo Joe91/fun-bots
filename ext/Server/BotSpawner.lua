@@ -151,7 +151,7 @@ function BotSpawner:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 			if l_Bot.m_Player.soldier ~= nil then
 				local s_Position = l_Bot.m_Player.soldier.worldTransform.trans:Clone()
 				--local s_Node = m_NodeCollection:Find(s_Position, 5)
-				local s_Node = g_GameDirector:FindClosestPath(s_Position, false)
+				local s_Node = g_GameDirector:FindClosestPath(s_Position, false, false)
 
 				if s_Node ~= nil then
 					l_Bot:SetVarsWay(nil, true, s_Node.PathIndex, s_Node.PointIndex, false)

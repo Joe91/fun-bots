@@ -402,7 +402,7 @@ function Bot:_DoExitVehicle()
 	if self._ExitVehicleActive then
 		self:_AbortAttack()
 		self.m_Player:ExitVehicle(false, false)
-		local s_Node = g_GameDirector:FindClosestPath(self.m_Player.soldier.worldTransform.trans, false)
+		local s_Node = g_GameDirector:FindClosestPath(self.m_Player.soldier.worldTransform.trans, false, true)
 
 		if s_Node ~= nil then
 			-- switch to foot
@@ -2316,7 +2316,7 @@ end
 
 ---@param p_Position Vec3
 function Bot:FindVehiclePath(p_Position)
-	local s_Node = g_GameDirector:FindClosestPath(p_Position, true)
+	local s_Node = g_GameDirector:FindClosestPath(p_Position, true, true)
 	if s_Node ~= nil then
 		-- switch to vehicle
 		self._InvertPathDirection = false
@@ -2804,7 +2804,7 @@ function Bot:_UpdateNormalMovement()
 						local s_RetCode, s_Position = self:_EnterVehicle(false)
 						if s_RetCode == 0 then
 							self:_ResetActionFlag(BotActionFlags.OtherActionActive)
-							local s_Node = g_GameDirector:FindClosestPath(s_Position, true)
+							local s_Node = g_GameDirector:FindClosestPath(s_Position, true, false)
 
 							if s_Node ~= nil then
 								-- switch to vehicle

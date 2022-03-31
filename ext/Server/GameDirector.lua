@@ -364,7 +364,7 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 
 	if s_VehicleData ~= nil then
 		if s_Objective ~= nil and s_Objective.isSpawnPath then
-			local s_Node = g_GameDirector:FindClosestPath(p_Entity.transform.trans, true)
+			local s_Node = g_GameDirector:FindClosestPath(p_Entity.transform.trans, true, false)
 			if s_Node ~= nil and s_Node.Position:Distance(p_Entity.transform.trans) < Registry.VEHICLES.MIN_DISTANCE_VEHICLE_ENTER then
 				table.insert(self.m_SpawnableVehicles[s_Objective.team], p_Entity)
 			end
@@ -478,7 +478,7 @@ function GameDirector:CheckForExecution(p_Point, p_TeamId, p_InVehicle)
 	end
 end
 
-function GameDirector:FindClosestPath(p_Trans, p_VehiclePath)
+function GameDirector:FindClosestPath(p_Trans, p_VehiclePath, p_DetailedSearch)
 	local s_ClosestPathNode = nil
 	local s_Paths = m_NodeCollection:GetPaths()
 
@@ -489,15 +489,31 @@ function GameDirector:FindClosestPath(p_Trans, p_VehiclePath)
 			if l_Waypoints[1] ~= nil then
 				if p_VehiclePath then
 					if l_Waypoints[1].Data ~= nil and l_Waypoints[1].Data.Vehicles ~= nil then
-						local s_NewDistance = l_Waypoints[1].Position:Distance(p_Trans)
-
-						if s_ClosestDistance == nil then
-							s_ClosestDistance = s_NewDistance
-							s_ClosestPathNode = l_Waypoints[1]
+						if p_DetailedSearch then
+							for i = 1, #l_Waypoints, Registry.GAME_DIRECTOR.NODE_SEARCH_INCREMENTS do
+								local s_NewDistance = Utilities:DistanceFast(l_Waypoints[i].Position, p_Trans)
+								
+								if s_ClosestDistance == nil then
+									s_ClosestDistance = s_NewDistance
+									s_ClosestPathNode = l_Waypoints[i]
+								else
+									if s_NewDistance < s_ClosestDistance then
+										s_ClosestDistance = s_NewDistance
+										s_ClosestPathNode = l_Waypoints[i]
+									end
+								end
+							end
 						else
-							if s_NewDistance < s_ClosestDistance then
+							local s_NewDistance = Utilities:DistanceFast(l_Waypoints[1].Position, p_Trans)
+
+							if s_ClosestDistance == nil then
 								s_ClosestDistance = s_NewDistance
 								s_ClosestPathNode = l_Waypoints[1]
+							else
+								if s_NewDistance < s_ClosestDistance then
+									s_ClosestDistance = s_NewDistance
+									s_ClosestPathNode = l_Waypoints[1]
+								end
 							end
 						end
 					end
@@ -512,15 +528,31 @@ function GameDirector:FindClosestPath(p_Trans, p_VehiclePath)
 						end
 					end
 					if not s_isAirPath then
-						local s_NewDistance = l_Waypoints[1].Position:Distance(p_Trans)
-
-						if s_ClosestDistance == nil then
-							s_ClosestDistance = s_NewDistance
-							s_ClosestPathNode = l_Waypoints[1]
+						if p_DetailedSearch then
+							for i = 1, #l_Waypoints, Registry.GAME_DIRECTOR.NODE_SEARCH_INCREMENTS do
+								local s_NewDistance = Utilities:DistanceFast(l_Waypoints[i].Position, p_Trans)
+								
+								if s_ClosestDistance == nil then
+									s_ClosestDistance = s_NewDistance
+									s_ClosestPathNode = l_Waypoints[i]
+								else
+									if s_NewDistance < s_ClosestDistance then
+										s_ClosestDistance = s_NewDistance
+										s_ClosestPathNode = l_Waypoints[i]
+									end
+								end
+							end
 						else
-							if s_NewDistance < s_ClosestDistance then
+							local s_NewDistance = Utilities:DistanceFast(l_Waypoints[1].Position, p_Trans)
+
+							if s_ClosestDistance == nil then
 								s_ClosestDistance = s_NewDistance
 								s_ClosestPathNode = l_Waypoints[1]
+							else
+								if s_NewDistance < s_ClosestDistance then
+									s_ClosestDistance = s_NewDistance
+									s_ClosestPathNode = l_Waypoints[1]
+								end
 							end
 						end
 					end

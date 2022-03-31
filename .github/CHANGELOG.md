@@ -29,6 +29,7 @@ This is the changelog for the version V2.5.0. Don't forget to [join us on Discor
 * Bots can now spawn at squad-vehicles of bots or players (#115)
 * Option to use Bot-Names added (#152)
 * Bots use better seat in vehicle if one available (#148)
+* improved path-finding when exiting vehicles
 
 ### Bug fixes
 * Several Bugfixes thanks to Bree_Arnold (#207)
