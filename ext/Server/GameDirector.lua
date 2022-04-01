@@ -519,15 +519,18 @@ function GameDirector:FindClosestPath(p_Trans, p_VehiclePath, p_DetailedSearch)
 					end
 				else -- not in vehicle
 					local s_isAirPath = false
+					local s_isWaterPath = false
 					if l_Waypoints[1].Data ~= nil and l_Waypoints[1].Data.Vehicles ~= nil then
 						for _, l_PathType in pairs(l_Waypoints[1].Data.Vehicles) do
 							if l_PathType:lower() == "air" then
 								s_isAirPath = true
-								break
+							end
+							if l_PathType:lower() == "water" then
+								s_isWaterPath = true
 							end
 						end
 					end
-					if not s_isAirPath then
+					if not s_isAirPath and not s_isWaterPath then
 						if p_DetailedSearch then
 							for i = 1, #l_Waypoints, Registry.GAME_DIRECTOR.NODE_SEARCH_INCREMENTS do
 								local s_NewDistance = Utilities:DistanceFast(l_Waypoints[i].Position, p_Trans)
