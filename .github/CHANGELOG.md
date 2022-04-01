@@ -39,6 +39,7 @@ This is the changelog for the version V2.5.0. Don't forget to [join us on Discor
 * fixed Bot-Team-Detection
 * rework of some language-stings
 * Bugifx on vehicle-exit
+* Workaround for Missing-Kit-Bug by Lesley (Careful with this option! Might cause crashes)
 
 ### New maps
 * Vehicles for Rush Theran Highway by BOB

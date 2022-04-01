@@ -25,7 +25,7 @@ require('__shared/EbxEditUtils')
 require('__shared/Utils/Logger')
 
 ---@type Logger
-local m_Logger = Logger("FunBotClient", true)
+local m_Logger = Logger("FunBotClient", Debug.Client.INFO)
 
 ---@type ClientBotManager
 local m_ClientBotManager = require('ClientBotManager')
