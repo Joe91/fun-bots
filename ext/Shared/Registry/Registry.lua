@@ -23,6 +23,8 @@ Registry = {
 			LOADING_TIMEOUT = 25,
 			-- distance commands are heard by bots
 			COMMAND_DISTANCE = 20,
+			-- use load of Bundle to fix Bug of weapons disapearing (thanks to Lesley!)
+			USE_LOAD_BUNDLE_BUGFIX = true,
 			-- valid keys can be found here: https://docs.veniceunleashed.net/vext/ref/fb/inputdevicekeys/
 			BOT_COMMAND_KEY = InputDeviceKeys.IDK_LeftAlt,
 		},
