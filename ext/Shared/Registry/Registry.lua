@@ -23,8 +23,8 @@ Registry = {
 			LOADING_TIMEOUT = 25,
 			-- distance commands are heard by bots
 			COMMAND_DISTANCE = 20,
-			-- use load of Bundle to fix Bug of weapons disapearing (thanks to Lesley!)
-			USE_LOAD_BUNDLE_BUGFIX = true,
+			-- use load of Bundle to fix Bug of weapons disapearing (thanks to Lesley!) !!! THIS MIGHT CAUSE CRASHES !!!
+			USE_LOAD_BUNDLE_BUGFIX = false,
 			-- valid keys can be found here: https://docs.veniceunleashed.net/vext/ref/fb/inputdevicekeys/
 			BOT_COMMAND_KEY = InputDeviceKeys.IDK_LeftAlt,
 		},
@@ -39,7 +39,7 @@ Registry = {
 			-- Patch version
 			VERSION_PATCH = 0,
 			-- Additional label for pre-releases and build meta data
-			VERSION_LABEL = "dev8",
+			VERSION_LABEL = "dev9",
 			-- Current version type of this build
 			VERSION_TYPE = VersionType.DevBuild,
 			-- The Version used for the Update-Check
