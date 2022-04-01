@@ -237,6 +237,11 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 						-- common things
 						self:_UpdateSpeedOfMovement()
 						self:_UpdateInputs()
+
+						-- only exit at this point and abort afterwards. This is needed for bots in open seats
+						if self:_DoExitVehicle() then
+							return
+						end
 						self._UpdateTimer = 0.0
 					end
 
