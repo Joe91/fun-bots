@@ -310,7 +310,7 @@ Language:add(code, "Failed to execute query: %s", "Fallo en la ejecución del qu
 Language:add(code, "Saved %d paths with %d waypoints for map %s", "Se guardaron %d paths con %d rutas para el mapa %s")
 
 Language:add(code, "Allow Comm-UI for all", "Permitir el uso de comandos en pantalla")
-Language:add(code, "If true, all Players can access the Comm-Screen", ""Si se activa está opción, todos los jugadores podrán acceder al menú de comandos de los bots)
+Language:add(code, "If true, all Players can access the Comm-Screen", "Si se activa está opción, todos los jugadores podrán acceder al menú de comandos de los bots")
 Language:add(code, "Attack", "Atacar")
 Language:add(code, "A", "A")
 Language:add(code, "B", "B")
