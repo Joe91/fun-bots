@@ -41,7 +41,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 	end
 
 	-- Low permission for Comm-Screen --TODO: for all?
-	if not Config.AllowCommForAll or PermissionManager:HasPermission(p_Player, 'Comm') == false then
+	if not Config.AllowCommForAll and PermissionManager:HasPermission(p_Player, 'Comm') == false then
 		ChatManager:SendMessage('You have no permissions for this action.', p_Player)
 		return
 	end
@@ -337,7 +337,7 @@ function FunBotUIServer:_onUIRequestCommonRoseShow(p_Player, p_Data)
 		return
 	end
 
-	if not Config.AllowCommForAll or PermissionManager:HasPermission(p_Player, 'Comm') == false then
+	if not Config.AllowCommForAll and PermissionManager:HasPermission(p_Player, 'Comm') == false then
 		ChatManager:SendMessage('You have no permissions for this action.', p_Player)
 		return
 	end
