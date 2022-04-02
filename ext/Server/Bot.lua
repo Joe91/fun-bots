@@ -210,6 +210,10 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 				local s_Attacking = self._ShootPlayer ~= nil -- can be either attacking or reviving or enter of a vehicle with a player
 
 				if not self.m_InVehicle then
+					local s_OnVehicle = false
+					if self.m_Player.attachedControllable ~= nil then
+						s_OnVehicle = true
+					end
 					-- sync slow code with fast code. Therefore execute the slow code first
 					if self._UpdateTimer >= Registry.BOT.BOT_UPDATE_CYCLE then
 						-- common part
@@ -218,17 +222,21 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 						-- differ attacking
 						if s_Attacking then
 							self:_UpdateAttacking()
-							if self._ActiveAction == BotActionFlags.ReviveActive or
-							self._ActiveAction == BotActionFlags.EnterVehicleActive or
-							self._ActiveAction == BotActionFlags.RepairActive or
-							self._ActiveAction == BotActionFlags.C4Active then
-								self:_UpdateMovementSprintToTarget()
-							else
-								self:_UpdateShootMovement()
+							if not s_OnVehicle then
+								if self._ActiveAction == BotActionFlags.ReviveActive or
+								self._ActiveAction == BotActionFlags.EnterVehicleActive or
+								self._ActiveAction == BotActionFlags.RepairActive or
+								self._ActiveAction == BotActionFlags.C4Active then
+									self:_UpdateMovementSprintToTarget()
+								else
+									self:_UpdateShootMovement()
+								end
 							end
 						else
-							self:_UpdateDeployAndReload()
-							self:_UpdateNormalMovement()
+							if not s_OnVehicle then
+								self:_UpdateDeployAndReload()
+								self:_UpdateNormalMovement()
+							end
 							if self.m_Player.soldier == nil then
 								return
 							end
@@ -249,7 +257,11 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 					if s_Attacking then
 						self:_UpdateAiming()
 					else
-						self:_UpdateTargetMovement()
+						if not s_OnVehicle then
+							self:_UpdateTargetMovement()
+						else
+							self:_LookAround(Registry.BOT.BOT_FAST_UPDATE_CYCLE)
+						end
 					end
 
 				else -- bot in vehicle
@@ -915,6 +927,7 @@ function Bot:_LookAround(p_DeltaTime)
 	self._WayWaitYawTimer = self._WayWaitYawTimer + p_DeltaTime
 	self.m_ActiveSpeedValue = BotMoveSpeeds.NoMovement
 	self._TargetPoint = nil
+	self._TargetPitch = 0.0
 
 	if self._WayWaitYawTimer > 6.0 then
 		self._WayWaitYawTimer = 0.0

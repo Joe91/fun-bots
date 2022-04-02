@@ -157,7 +157,7 @@ Registry = {
 			-- Probability of a bot spawning on a member of the same squad.
 			PROBABILITY_SQUADMATE_SPAWN = 40,
 			-- Probability of a bot spawning in the vehicle of a bot of the same squad.
-			PROBABILITY_SQUADMATE_VEHICLE_SPAWN = 40,
+			PROBABILITY_SQUADMATE_VEHICLE_SPAWN = 50,
 			-- Probability of a bot spawning in the vehicle of a player of the same squad.
 			PROBABILITY_SQUADMATE_PLAYER_VEHICLE_SPAWN = 80,
 			-- Probability of a bot spawning on the closest spawn point
