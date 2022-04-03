@@ -42,6 +42,7 @@ This is the changelog for the version V2.5.0. Don't forget to [join us on Discor
 * Workaround for Missing-Kit-Bug by Lesley (Careful with this option! Might cause crashes)
 * fixed option with comm-permissions
 * fixed bots on vehicles behaving strange
+* fixed seat-swap in some choppers
 
 ### New maps
 * Vehicles for Rush Theran Highway by BOB
