@@ -11,10 +11,10 @@ Config = {
 	ZombieMode = false,					-- Zombie Bot Mode
 
 	--DIFFICULTY
-	BotAimWorsening = 0.5,				-- Make bots aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy).
+	BotAimWorsening = 0.4,				-- Make bots aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy).
 	BotSniperAimWorsening = 0.2,		-- See botAimWorsening, only for Sniper-rifles
 	BotSupportAimWorsening = 0.2,		-- See botAimWorsening, only for LMGs
-	BotWorseningSkill = 0.25,			-- Variation of the skill of a single bot. the higher, the worse the bots can get compared to the original settings
+	BotWorseningSkill = 0.75,			-- Variation of the skill of a single bot. the higher, the worse the bots can get compared to the original settings
 	BotSniperWorseningSkill = 0.50,		-- See BotWorseningSkill - only for BOTs using sniper bolt-action rifles.
 	DamageFactorAssault = 0.5,			-- Original Damage from bots gets multiplied by this
 	DamageFactorCarabine = 0.5,			-- Original Damage from bots gets multiplied by this
@@ -31,7 +31,7 @@ Config = {
 	SpawnInBothTeams = true,			-- Bots spawn in both teams
 	InitNumberOfBots = 10,				-- Bots for spawnmode
 	NewBotsPerNewPlayer = 1.6,			-- Number to increase Bots by when new players join
-	FactorPlayerTeamCount = 0.9,		-- Reduce playerteam in balanced_teams or fixed_number mode
+	FactorPlayerTeamCount = 1.0,		-- Reduce playerteam in balanced_teams or fixed_number mode
 	BotTeam = 0,						-- Default bot team (0 = neutral / auto, 1 = US, 2 = RU) TeamId.Team2
 	BotNewLoadoutOnSpawn = true,		-- Bots get a new kit and color, if they respawn
 	MaxAssaultBots = -1,				-- Maximum number of Bots with Assault Kit. -1 = no limit
@@ -71,11 +71,11 @@ Config = {
 	BotsRevive = true,					-- Bots revive other players
 	BotsThrowGrenades = true,			-- Bots throw grenades
 	BotsDeploy = true,					-- Bots deploy ammo and medkits
-	DeployCycle = 50,					-- Time between deployment of bots in seconds
+	DeployCycle = 60,					-- Time between deployment of bots in seconds
 	MoveSidewards = true,				-- Bots move sidewards
 	MaxStraigtCycle = 10.0,				-- Max time bots move straight, before sidewards-movement (in sec)
 	MaxSideCycle = 5.0,					-- Max time bots move sidewards, before straight-movement (in sec)
-	MinMoveCycle = 0.5,					-- Min time bots move sidewards or staight before switching (in sec)
+	MinMoveCycle = 0.3,					-- Min time bots move sidewards or staight before switching (in sec)
 
 	--VEHICLE
 	UseVehicles = true,					-- Bots can use vehicles
@@ -90,7 +90,7 @@ Config = {
 	VehicleWaitForPassengersTime = 7.0,	-- Seconds to wait for other passengers
 	ChopperDriversAttack = false,		-- If false choppers only attack without gunner on board
 	AABots = true,						-- Enable Auto-AA by NyScorpy
-	MaxDistanceAABots = 250,			-- Max Range of Stationary AA
+	MaxDistanceAABots = 300,			-- Max Range of Stationary AA
 
 	--WEAPONS
 	UseRandomWeapon = true,				-- Use a random weapon out of the weaponset
@@ -119,9 +119,8 @@ Config = {
 	NodesPerCycle = 100,				-- Set how many nodes get drawn per cycle. Affects performance
 
 	--ADVANCED
-	DistanceForDirectAttack = 5,		-- Distance bots can hear you at
-	MaxBotAttackBotDistance = 30,		-- Distance bots attacks other bots
-	MeleeAttackCoolDown = 3.0,			-- The time a bot waits before attacking with melee again
+	DistanceForDirectAttack = 7,		-- Distance bots can hear you at
+	MeleeAttackCoolDown = 3.5,			-- The time a bot waits before attacking with melee again
 	AimForHead = false,					-- Bots without sniper aim for the head. More an experimental config
 	AimForHeadSniper = false,			-- Bots with sniper aim for the head. More an experimental config
 	AimForHeadSupport = false,			-- Bots with support LMGs aim for the head. More an experimental config
@@ -130,13 +129,13 @@ Config = {
 	OverWriteBotSpeedMode = BotMoveSpeeds.NoMovement,	-- 0 = no overwrite. 1 = prone, 2 = crouch, 3 = walk, 4 = run
 	OverWriteBotAttackMode = BotMoveSpeeds.NoMovement,	-- Affects Aiming!!! 0 = no overwrite. 1 = prone, 2 = crouch (good aim), 3 = walk (good aim), 4 = run
 	SpeedFactor = 1.0,					-- Reduces the movementspeed. 1 = normal, 0 = standing.
-	SpeedFactorAttack = 0.6,			-- Reduces the movementspeed while attacking. 1 = normal, 0 = standing.
+	SpeedFactorAttack = 0.8,			-- Reduces the movementspeed while attacking. 1 = normal, 0 = standing.
 	UseRandomNames = false,				-- Changes names of the bots on every new round. Experimental right now...
 
 	--EXPERT
-	BotFirstShotDelay = 0.35,			-- Delay for first shot. If too small, there will be great spread in first cycle because its not compensated yet.
-	BotMinTimeShootAtPlayer = 2.0,		-- The minimum time a bot shoots at one player for - recommended minimum 1.5, below this you will have issues.
-	BotFireModeDuration = 5.0,			-- The minimum time a bot tries to shoot a player - recommended minimum 3.0, below this you will have issues.
+	BotFirstShotDelay = 0.25,			-- Delay for first shot. If too small, there will be great spread in first cycle because its not compensated yet.
+	BotMinTimeShootAtPlayer = 2.5,		-- The minimum time a bot shoots at one player for - recommended minimum 1.5, below this you will have issues.
+	BotFireModeDuration = 4.0,			-- The minimum time a bot tries to shoot a player - recommended minimum 3.0, below this you will have issues.
 	MaximunYawPerSec = 450,				-- in Degrees. Rotaion-Movement per second.
 	TargetDistanceWayPoint = 0.8,		-- Distance the bots have to reach to continue with the next Waypoint
 	KeepOneSlotForPlayers = true,		-- Always keep one slot for free new Players to join

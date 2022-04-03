@@ -82,7 +82,7 @@ SettingsDefinition = {
 			Value = Config.BotAimWorsening,
 			Description = "Make bots aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy).",
 			Reference = Range(0.00, 10.00, 0.05),
-			Default = 0.5,
+			Default = 0.4,
 			UpdateFlag = UpdateFlag.Weapons,
 			Category = "DIFFICULTY"
 		},
@@ -117,8 +117,8 @@ SettingsDefinition = {
 			Type = Type.Float,
 			Value = Config.BotWorseningSkill,
 			Description = "Variation of the skill of a single bot. the higher, the worse the bots can get compared to the original settings",
-			Reference = Range(0.00, 1.00, 0.05),
-			Default = 0.25,
+			Reference = Range(0.00, 2.00, 0.05),
+			Default = 0.75,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
@@ -299,7 +299,7 @@ SettingsDefinition = {
 			Value = Config.FactorPlayerTeamCount,
 			Description = "Reduce playerteam in balanced_teams or fixed_number mode",
 			Reference = Range(0.00, 1.00, 0.05),
-			Default = 0.9,
+			Default = 1.0,
 			UpdateFlag = UpdateFlag.AmountAndTeam,
 			Category = "SPAWN"
 		},
@@ -726,7 +726,7 @@ SettingsDefinition = {
 			Value = Config.DeployCycle,
 			Description = "Time between deployment of bots in seconds",
 			Reference = Range(1.00, 600.00, 5.0),
-			Default = 50,
+			Default = 60,
 			UpdateFlag = UpdateFlag.None,
 			Category = "BEHAVIOUR"
 		},
@@ -773,7 +773,7 @@ SettingsDefinition = {
 			Value = Config.MinMoveCycle,
 			Description = "Min time bots move sidewards or staight before switching (in sec)",
 			Reference = Range(0.30, 10.00, 0.5),
-			Default = 0.5,
+			Default = 0.3,
 			UpdateFlag = UpdateFlag.None,
 			Category = "BEHAVIOUR"
 		},
@@ -927,7 +927,7 @@ SettingsDefinition = {
 			Value = Config.MaxDistanceAABots,
 			Description = "Max Range of Stationary AA",
 			Reference = Range(50, 1500.00, 5),
-			Default = 250,
+			Default = 300,
 			UpdateFlag = UpdateFlag.None,
 			Category = "VEHICLE"
 		},
@@ -1201,19 +1201,7 @@ SettingsDefinition = {
 			Value = Config.DistanceForDirectAttack,
 			Description = "Distance bots can hear you at",
 			Reference = Range(0.00, 1000.00, 1.0),
-			Default = 5,
-			UpdateFlag = UpdateFlag.None,
-			Category = "ADVANCED"
-		},
-		{
-			Name = "MaxBotAttackBotDistance",
-			Text = "Bot attack Bot distance",
-			---@type Type|integer
-			Type = Type.Integer,
-			Value = Config.MaxBotAttackBotDistance,
-			Description = "Distance bots attacks other bots",
-			Reference = Range(0.00, 1000.00, 5.0),
-			Default = 30,
+			Default = 7,
 			UpdateFlag = UpdateFlag.None,
 			Category = "ADVANCED"
 		},
@@ -1225,7 +1213,7 @@ SettingsDefinition = {
 			Value = Config.MeleeAttackCoolDown,
 			Description = "The time a bot waits before attacking with melee again",
 			Reference = Range(0.00, 60.00, 0.5),
-			Default = 3.0,
+			Default = 3.5,
 			UpdateFlag = UpdateFlag.None,
 			Category = "ADVANCED"
 		},
@@ -1328,7 +1316,7 @@ SettingsDefinition = {
 			Value = Config.SpeedFactorAttack,
 			Description = "Reduces the movementspeed while attacking. 1 = normal, 0 = standing.",
 			Reference = Range(0.00, 1.00, 0.10),
-			Default = 0.6,
+			Default = 0.8,
 			UpdateFlag = UpdateFlag.None,
 			Category = "ADVANCED"
 		},
@@ -1353,7 +1341,7 @@ SettingsDefinition = {
 			Value = Config.BotFirstShotDelay,
 			Description = "Delay for first shot. If too small, there will be great spread in first cycle because its not compensated yet.",
 			Reference = Range(0.00, 10.00, 0.10),
-			Default = 0.35,
+			Default = 0.25,
 			UpdateFlag = UpdateFlag.None,
 			Category = "EXPERT"
 		},
@@ -1365,7 +1353,7 @@ SettingsDefinition = {
 			Value = Config.BotMinTimeShootAtPlayer,
 			Description = "The minimum time a bot shoots at one player for - recommended minimum 1.5, below this you will have issues.",
 			Reference = Range(0.00, 60.00, 0.5),
-			Default = 2.0,
+			Default = 2.5,
 			UpdateFlag = UpdateFlag.None,
 			Category = "EXPERT"
 		},
@@ -1377,7 +1365,7 @@ SettingsDefinition = {
 			Value = Config.BotFireModeDuration,
 			Description = "The minimum time a bot tries to shoot a player - recommended minimum 3.0, below this you will have issues.",
 			Reference = Range(0.00, 60.00, 0.5),
-			Default = 5.0,
+			Default = 4.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "EXPERT"
 		},
