@@ -495,7 +495,7 @@ end
 ---@param p_IgnoreYaw boolean
 ---@return boolean
 function Bot:ShootAt(p_Player, p_IgnoreYaw)
-	if not self:IsReadyToAttack() then
+	if not self:IsReadyToAttack() or self._Shoot == false then
 		return false
 	end
 
@@ -645,6 +645,8 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 
 			return true
 		else
+			self._ShootPlayerName = ""
+			self._ShootPlayer = nil
 			self._ShootModeTimer = Config.BotFireModeDuration
 			return false
 		end
@@ -2320,7 +2322,7 @@ function Bot:_UpdateAttacking()
 			self._WeaponToUse = BotWeapons.Primary
 		end
 
-	elseif self._ShootPlayer.soldier == nil then -- reset if enemy is dead
+	elseif self._ShootPlayer.soldier == nil or self._Shoot == false then -- reset if enemy is dead or attack is disabled
 		self:_AbortAttack()
 	end
 end

@@ -11,10 +11,10 @@ Config = {
 	ZombieMode = false,					-- Zombie Bot Mode
 
 	--DIFFICULTY
-	BotAimWorsening = 0.5,				-- Make bots aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy).
+	BotAimWorsening = 0.4,				-- Make bots aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy).
 	BotSniperAimWorsening = 0.2,		-- See botAimWorsening, only for Sniper-rifles
 	BotSupportAimWorsening = 0.2,		-- See botAimWorsening, only for LMGs
-	BotWorseningSkill = 0.25,			-- Variation of the skill of a single bot. the higher, the worse the bots can get compared to the original settings
+	BotWorseningSkill = 0.50,			-- Variation of the skill of a single bot. the higher, the worse the bots can get compared to the original settings
 	BotSniperWorseningSkill = 0.50,		-- See BotWorseningSkill - only for BOTs using sniper bolt-action rifles.
 	DamageFactorAssault = 0.5,			-- Original Damage from bots gets multiplied by this
 	DamageFactorCarabine = 0.5,			-- Original Damage from bots gets multiplied by this
@@ -71,11 +71,11 @@ Config = {
 	BotsRevive = true,					-- Bots revive other players
 	BotsThrowGrenades = true,			-- Bots throw grenades
 	BotsDeploy = true,					-- Bots deploy ammo and medkits
-	DeployCycle = 50,					-- Time between deployment of bots in seconds
+	DeployCycle = 60,					-- Time between deployment of bots in seconds
 	MoveSidewards = true,				-- Bots move sidewards
 	MaxStraigtCycle = 10.0,				-- Max time bots move straight, before sidewards-movement (in sec)
 	MaxSideCycle = 5.0,					-- Max time bots move sidewards, before straight-movement (in sec)
-	MinMoveCycle = 0.5,					-- Min time bots move sidewards or staight before switching (in sec)
+	MinMoveCycle = 0.3,					-- Min time bots move sidewards or staight before switching (in sec)
 
 	--VEHICLE
 	UseVehicles = true,					-- Bots can use vehicles
@@ -90,7 +90,7 @@ Config = {
 	VehicleWaitForPassengersTime = 7.0,	-- Seconds to wait for other passengers
 	ChopperDriversAttack = false,		-- If false choppers only attack without gunner on board
 	AABots = true,						-- Enable Auto-AA by NyScorpy
-	MaxDistanceAABots = 250,			-- Max Range of Stationary AA
+	MaxDistanceAABots = 300,			-- Max Range of Stationary AA
 
 	--WEAPONS
 	UseRandomWeapon = true,				-- Use a random weapon out of the weaponset
@@ -119,9 +119,8 @@ Config = {
 	NodesPerCycle = 100,				-- Set how many nodes get drawn per cycle. Affects performance
 
 	--ADVANCED
-	DistanceForDirectAttack = 5,		-- Distance bots can hear you at
-	MaxBotAttackBotDistance = 30,		-- Distance bots attacks other bots
-	MeleeAttackCoolDown = 3.0,			-- The time a bot waits before attacking with melee again
+	DistanceForDirectAttack = 8,		-- Distance bots can hear you at
+	MeleeAttackCoolDown = 3.5,			-- The time a bot waits before attacking with melee again
 	AimForHead = false,					-- Bots without sniper aim for the head. More an experimental config
 	AimForHeadSniper = false,			-- Bots with sniper aim for the head. More an experimental config
 	AimForHeadSupport = false,			-- Bots with support LMGs aim for the head. More an experimental config
@@ -134,9 +133,9 @@ Config = {
 	UseRandomNames = false,				-- Changes names of the bots on every new round. Experimental right now...
 
 	--EXPERT
-	BotFirstShotDelay = 0.35,			-- Delay for first shot. If too small, there will be great spread in first cycle because its not compensated yet.
-	BotMinTimeShootAtPlayer = 2.0,		-- The minimum time a bot shoots at one player for - recommended minimum 1.5, below this you will have issues.
-	BotFireModeDuration = 5.0,			-- The minimum time a bot tries to shoot a player - recommended minimum 3.0, below this you will have issues.
+	BotFirstShotDelay = 0.25,			-- Delay for first shot. If too small, there will be great spread in first cycle because its not compensated yet.
+	BotMinTimeShootAtPlayer = 2.5,		-- The minimum time a bot shoots at one player for - recommended minimum 1.5, below this you will have issues.
+	BotFireModeDuration = 4.0,			-- The minimum time a bot tries to shoot a player - recommended minimum 3.0, below this you will have issues.
 	MaximunYawPerSec = 450,				-- in Degrees. Rotaion-Movement per second.
 	TargetDistanceWayPoint = 0.8,		-- Distance the bots have to reach to continue with the next Waypoint
 	KeepOneSlotForPlayers = true,		-- Always keep one slot for free new Players to join

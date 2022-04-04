@@ -208,8 +208,6 @@ Language:add(code, "Set how many nodes get drawn per cycle. Affects performance"
 --ADVANCED
 Language:add(code, "Distance for direct attack", "Distancia para un ataque directo")
 Language:add(code, "Distance bots can hear you at", "Proximidad en la cual los bots pueden oírte")
-Language:add(code, "Bot attack Bot distance", "Distancia en que los Bot atacan a los Bot")
-Language:add(code, "Distance bots attacks other bots", "Metros dentro de los cuales un bot ataca a otro bot")
 Language:add(code, "Bot melee attack cool-down", "Tiempo de espera entre ataques cuerpo a cuerpo")
 Language:add(code, "The time a bot waits before attacking with melee again", "el tiempo que un bot tiene que esperar antes de volver a atacar con un arma cuerpo a cuerpo")
 Language:add(code, "Bots without sniper aim for head", "Los Bots sin rifles francotirador apuntan a la cabeza")
