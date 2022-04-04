@@ -39,7 +39,7 @@ Registry = {
 			-- Patch version
 			VERSION_PATCH = 0,
 			-- Additional label for pre-releases and build meta data
-			VERSION_LABEL = "dev9",
+			VERSION_LABEL = "dev10",
 			-- Current version type of this build
 			VERSION_TYPE = VersionType.DevBuild,
 			-- The Version used for the Update-Check
