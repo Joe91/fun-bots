@@ -117,8 +117,8 @@ SettingsDefinition = {
 			Type = Type.Float,
 			Value = Config.BotWorseningSkill,
 			Description = "Variation of the skill of a single bot. the higher, the worse the bots can get compared to the original settings",
-			Reference = Range(0.00, 2.00, 0.05),
-			Default = 0.75,
+			Reference = Range(0.00, 1.00, 0.05),
+			Default = 0.50,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
@@ -299,7 +299,7 @@ SettingsDefinition = {
 			Value = Config.FactorPlayerTeamCount,
 			Description = "Reduce playerteam in balanced_teams or fixed_number mode",
 			Reference = Range(0.00, 1.00, 0.05),
-			Default = 1.0,
+			Default = 0.9,
 			UpdateFlag = UpdateFlag.AmountAndTeam,
 			Category = "SPAWN"
 		},
@@ -1201,7 +1201,7 @@ SettingsDefinition = {
 			Value = Config.DistanceForDirectAttack,
 			Description = "Distance bots can hear you at",
 			Reference = Range(0.00, 1000.00, 1.0),
-			Default = 7,
+			Default = 8,
 			UpdateFlag = UpdateFlag.None,
 			Category = "ADVANCED"
 		},
@@ -1316,7 +1316,7 @@ SettingsDefinition = {
 			Value = Config.SpeedFactorAttack,
 			Description = "Reduces the movementspeed while attacking. 1 = normal, 0 = standing.",
 			Reference = Range(0.00, 1.00, 0.10),
-			Default = 0.8,
+			Default = 0.6,
 			UpdateFlag = UpdateFlag.None,
 			Category = "ADVANCED"
 		},

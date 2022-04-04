@@ -43,6 +43,7 @@ This is the changelog for the version V2.5.0. Don't forget to [join us on Discor
 * fixed option with comm-permissions
 * fixed bots on vehicles behaving strange
 * fixed seat-swap in some choppers
+* bugfix bot-behaviour when toggling attack-mode
 
 ### New maps
 * Vehicles for Rush Theran Highway by BOB
