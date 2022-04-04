@@ -2,7 +2,7 @@ Language['es_ES'] /* Add/replace the xx_XX here with your language code (like de
 	"__LANGUAGE_INFO": {
 		"name": "es_ES",
 		"author": "Lukajo",
-		"version": "1.1.0"
+		"version": "1.1.5"
 	},
 	"Bots": "Bots",
 	"Spawn Enemy Bots": "Spawnear Bots enemigos",
@@ -61,6 +61,6 @@ Language['es_ES'] /* Add/replace the xx_XX here with your language code (like de
 	"Save temporarily": "Guardar Temporalmente",
 	"Restore this value to Default": "Restaurar este Ajuste",
 	"": "",
-	"Commands": "",
+	"Commands": "Comandos",
 	"End Trace": "Finalizar Trazo",
 };

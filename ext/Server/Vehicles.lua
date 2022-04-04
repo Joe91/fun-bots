@@ -48,6 +48,22 @@ function Vehicles:GetVehicleByEntity(p_Entity)
 	return VehicleData[s_VehicleName]
 end
 
+function Vehicles:GetNrOfFreeSeats(p_Entity, p_PlayerIsDriver)
+	local s_NrOfFreeSeats = 0
+	local s_MaxEntries = p_Entity.entryCount
+	-- keep one seat free, if enough available
+	if not p_PlayerIsDriver and s_MaxEntries > 2 then
+		s_MaxEntries = s_MaxEntries -1
+	end
+
+	for i = 0, s_MaxEntries - 1 do
+		if p_Entity:GetPlayerInEntry(i) == nil then
+			s_NrOfFreeSeats = s_NrOfFreeSeats + 1
+		end
+	end
+	return s_NrOfFreeSeats
+end
+
 function Vehicles:GetPartIdForSeat(p_VehicleData, p_Index)
 	if p_VehicleData ~= nil and p_VehicleData.Parts ~= nil then
 		return p_VehicleData.Parts[p_Index + 1]

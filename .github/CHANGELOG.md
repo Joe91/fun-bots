@@ -25,6 +25,11 @@ This is the changelog for the version V2.5.0. Don't forget to [join us on Discor
 * bots exit vehicles on low HP #116
 * bots in vehicles shoot back if hit
 * Option for bots to not use air-vehicles
+* Add option for random team-switch(#213)
+* Bots can now spawn at squad-vehicles of bots or players (#115)
+* Option to use Bot-Names added (#152)
+* Bots use better seat in vehicle if one available (#148)
+* improved path-finding when exiting vehicles
 
 ### Bug fixes
 * Several Bugfixes thanks to Bree_Arnold (#207)
@@ -34,6 +39,11 @@ This is the changelog for the version V2.5.0. Don't forget to [join us on Discor
 * fixed Bot-Team-Detection
 * rework of some language-stings
 * Bugifx on vehicle-exit
+* Workaround for Missing-Kit-Bug by Lesley (Careful with this option! Might cause crashes)
+* fixed option with comm-permissions
+* fixed bots on vehicles behaving strange
+* fixed seat-swap in some choppers
+* bugfix bot-behaviour when toggling attack-mode
 
 ### New maps
 * Vehicles for Rush Theran Highway by BOB

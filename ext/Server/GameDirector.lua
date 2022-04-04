@@ -364,7 +364,7 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 
 	if s_VehicleData ~= nil then
 		if s_Objective ~= nil and s_Objective.isSpawnPath then
-			local s_Node = g_GameDirector:FindClosestPath(p_Entity.transform.trans, true)
+			local s_Node = g_GameDirector:FindClosestPath(p_Entity.transform.trans, true, false)
 			if s_Node ~= nil and s_Node.Position:Distance(p_Entity.transform.trans) < Registry.VEHICLES.MIN_DISTANCE_VEHICLE_ENTER then
 				table.insert(self.m_SpawnableVehicles[s_Objective.team], p_Entity)
 			end
@@ -478,7 +478,7 @@ function GameDirector:CheckForExecution(p_Point, p_TeamId, p_InVehicle)
 	end
 end
 
-function GameDirector:FindClosestPath(p_Trans, p_VehiclePath)
+function GameDirector:FindClosestPath(p_Trans, p_VehiclePath, p_DetailedSearch)
 	local s_ClosestPathNode = nil
 	local s_Paths = m_NodeCollection:GetPaths()
 
@@ -489,38 +489,73 @@ function GameDirector:FindClosestPath(p_Trans, p_VehiclePath)
 			if l_Waypoints[1] ~= nil then
 				if p_VehiclePath then
 					if l_Waypoints[1].Data ~= nil and l_Waypoints[1].Data.Vehicles ~= nil then
-						local s_NewDistance = l_Waypoints[1].Position:Distance(p_Trans)
-
-						if s_ClosestDistance == nil then
-							s_ClosestDistance = s_NewDistance
-							s_ClosestPathNode = l_Waypoints[1]
+						if p_DetailedSearch then
+							for i = 1, #l_Waypoints, Registry.GAME_DIRECTOR.NODE_SEARCH_INCREMENTS do
+								local s_NewDistance = Utilities:DistanceFast(l_Waypoints[i].Position, p_Trans)
+								
+								if s_ClosestDistance == nil then
+									s_ClosestDistance = s_NewDistance
+									s_ClosestPathNode = l_Waypoints[i]
+								else
+									if s_NewDistance < s_ClosestDistance then
+										s_ClosestDistance = s_NewDistance
+										s_ClosestPathNode = l_Waypoints[i]
+									end
+								end
+							end
 						else
-							if s_NewDistance < s_ClosestDistance then
+							local s_NewDistance = Utilities:DistanceFast(l_Waypoints[1].Position, p_Trans)
+
+							if s_ClosestDistance == nil then
 								s_ClosestDistance = s_NewDistance
 								s_ClosestPathNode = l_Waypoints[1]
+							else
+								if s_NewDistance < s_ClosestDistance then
+									s_ClosestDistance = s_NewDistance
+									s_ClosestPathNode = l_Waypoints[1]
+								end
 							end
 						end
 					end
 				else -- not in vehicle
 					local s_isAirPath = false
+					local s_isWaterPath = false
 					if l_Waypoints[1].Data ~= nil and l_Waypoints[1].Data.Vehicles ~= nil then
 						for _, l_PathType in pairs(l_Waypoints[1].Data.Vehicles) do
 							if l_PathType:lower() == "air" then
 								s_isAirPath = true
-								break
+							end
+							if l_PathType:lower() == "water" then
+								s_isWaterPath = true
 							end
 						end
 					end
-					if not s_isAirPath then
-						local s_NewDistance = l_Waypoints[1].Position:Distance(p_Trans)
-
-						if s_ClosestDistance == nil then
-							s_ClosestDistance = s_NewDistance
-							s_ClosestPathNode = l_Waypoints[1]
+					if not s_isAirPath and not s_isWaterPath then
+						if p_DetailedSearch then
+							for i = 1, #l_Waypoints, Registry.GAME_DIRECTOR.NODE_SEARCH_INCREMENTS do
+								local s_NewDistance = Utilities:DistanceFast(l_Waypoints[i].Position, p_Trans)
+								
+								if s_ClosestDistance == nil then
+									s_ClosestDistance = s_NewDistance
+									s_ClosestPathNode = l_Waypoints[i]
+								else
+									if s_NewDistance < s_ClosestDistance then
+										s_ClosestDistance = s_NewDistance
+										s_ClosestPathNode = l_Waypoints[i]
+									end
+								end
+							end
 						else
-							if s_NewDistance < s_ClosestDistance then
+							local s_NewDistance = Utilities:DistanceFast(l_Waypoints[1].Position, p_Trans)
+
+							if s_ClosestDistance == nil then
 								s_ClosestDistance = s_NewDistance
 								s_ClosestPathNode = l_Waypoints[1]
+							else
+								if s_NewDistance < s_ClosestDistance then
+									s_ClosestDistance = s_NewDistance
+									s_ClosestPathNode = l_Waypoints[1]
+								end
 							end
 						end
 					end
@@ -536,16 +571,56 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 	-- check for spawn at squad-mate
 	local s_SquadMates = PlayerManager:GetPlayersBySquad(p_TeamId, p_SquadId)
 	for _,l_Player in pairs(s_SquadMates) do
-		if l_Player.soldier ~= nil and m_Utilities:isBot(l_Player) then
-			local s_SquadBot = g_BotManager:GetBotByName(l_Player.name)
-			if not s_SquadBot.m_InVehicle and not s_SquadBot:IsStuck() then
-				local s_WayIndex = s_SquadBot:GetWayIndex()
-				local s_PointIndex = s_SquadBot:GetPointIndex()
-				if MathUtils:GetRandomInt(1, 100) <= Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_SPAWN then
-					m_Logger:Write("spawn at squad-mate")
-					return s_WayIndex, s_PointIndex, s_SquadBot._InvertPathDirection -- use same direction
-				else
-					break
+		if l_Player.soldier ~= nil then
+			if m_Utilities:isBot(l_Player) then
+				local s_SquadBot = g_BotManager:GetBotByName(l_Player.name)
+				if not s_SquadBot:IsStuck() then
+					if not s_SquadBot.m_InVehicle then
+						local s_WayIndex = s_SquadBot:GetWayIndex()
+						local s_PointIndex = s_SquadBot:GetPointIndex()
+						if MathUtils:GetRandomInt(1, 100) <= Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_SPAWN then
+							m_Logger:Write("spawn at squad-mate")
+							return s_WayIndex, s_PointIndex, s_SquadBot._InvertPathDirection, nil -- use same direction
+						else
+							break
+						end
+					else -- squad-bot in vehicle
+						local s_EntryId = s_SquadBot.m_Player.controlledEntryId
+						if s_EntryId == 0 then
+							local s_Vehicle = s_SquadBot.m_Player.controlledControllable
+							-- check for free seats
+							if m_Vehicles:GetNrOfFreeSeats(s_Vehicle, false) > 0 then
+								local s_WayIndex = s_SquadBot:GetWayIndex()
+								local s_PointIndex = s_SquadBot:GetPointIndex()
+								if MathUtils:GetRandomInt(1, 100) <= Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_VEHICLE_SPAWN then
+									m_Logger:Write("spawn at squad-mate's vehicle")
+									return s_WayIndex, s_PointIndex, s_SquadBot._InvertPathDirection, s_Vehicle -- use same direction
+								else
+									break
+								end
+							else
+								break
+							end
+						end
+					end
+				end
+			else
+				-- check for vehicle of real player
+				if l_Player.controlledControllable ~= nil and not l_Player.controlledControllable:Is("ServerSoldierEntity") then
+					if l_Player.controlledEntryId == 0 then
+						local s_Vehicle = l_Player.controlledControllable
+						-- check for free seats
+						if m_Vehicles:GetNrOfFreeSeats(s_Vehicle, true) > 0 then
+							if MathUtils:GetRandomInt(1, 100) <= Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_PLAYER_VEHICLE_SPAWN then
+								m_Logger:Write("spawn at squad-mate's vehicle")
+								return 1, 1, false, s_Vehicle
+							else
+								break
+							end
+						else
+							break
+						end
+					end
 				end
 			end
 		end

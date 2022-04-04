@@ -52,7 +52,9 @@ function BotSpawner:OnLevelLoaded(p_Round)
 	self._FirstSpawnDelay = Registry.BOT_SPAWN.FIRST_SPAWN_DELAY
 
 	if (Config.TeamSwitchMode == TeamSwitchModes.SwitchForRoundTwo and p_Round ~= self._LastRound) or
-	(Config.TeamSwitchMode == TeamSwitchModes.AlwaysSwitchTeams) then
+		(Config.TeamSwitchMode == TeamSwitchModes.AlwaysSwitchTeams) or
+		(Config.TeamSwitchMode == TeamSwitchModes.SwitchTeamsRandomly and MathUtils:GetRandom(1, 100) >= 50)
+	then
 		m_Logger:Write("switch teams")
 		self:_SwitchTeams()
 	end
@@ -149,7 +151,7 @@ function BotSpawner:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 			if l_Bot.m_Player.soldier ~= nil then
 				local s_Position = l_Bot.m_Player.soldier.worldTransform.trans:Clone()
 				--local s_Node = m_NodeCollection:Find(s_Position, 5)
-				local s_Node = g_GameDirector:FindClosestPath(s_Position, false)
+				local s_Node = g_GameDirector:FindClosestPath(s_Position, false, false)
 
 				if s_Node ~= nil then
 					l_Bot:SetVarsWay(nil, true, s_Node.PathIndex, s_Node.PointIndex, false)
@@ -178,25 +180,40 @@ end
 ---@param p_Name string
 function BotSpawner:OnPlayerJoining(p_Name)
 	-- detect BOT-Names
-	if Registry.COMMON.BOT_TOKEN == "" then
+	if Registry.COMMON.ALLOW_PLAYER_BOT_NAMES then
 		for _, l_Name in pairs(BotNames) do
-			if l_Name == p_Name then
-				table.insert(self._KickPlayers, p_Name)
-
+			if Registry.COMMON.BOT_TOKEN..l_Name == p_Name then
+				-- prevent bots from being named like this
+				m_Logger:Write("Don't use the name ".. p_Name .." for Bots anymore")
+				table.insert(Globals.IgnoreBotNames, p_Name)
+				-- destroy bots with this name
 				if m_BotManager:GetBotByName(p_Name) ~= nil then
-					table.insert(Globals.IgnoreBotNames, p_Name)
 					m_BotManager:DestroyBot(p_Name)
 				end
 				return
 			end
 		end
-	else
-		if string.find(p_Name, Registry.COMMON.BOT_TOKEN) == 1 then --check if name starts with bot-token
-			table.insert(self._KickPlayers, p_Name)
-
-			if m_BotManager:GetBotByName(p_Name) ~= nil then
-				table.insert(Globals.IgnoreBotNames, p_Name)
-				m_BotManager:DestroyBot(p_Name)
+	else -- not allowed to use Bot-Names
+		if Registry.COMMON.BOT_TOKEN == "" then
+			for _, l_Name in pairs(BotNames) do
+				if l_Name == p_Name then
+					table.insert(self._KickPlayers, p_Name)
+	
+					if m_BotManager:GetBotByName(p_Name) ~= nil then
+						table.insert(Globals.IgnoreBotNames, p_Name)
+						m_BotManager:DestroyBot(p_Name)
+					end
+					return
+				end
+			end
+		else
+			if string.find(p_Name, Registry.COMMON.BOT_TOKEN) == 1 then --check if name starts with bot-token
+				table.insert(self._KickPlayers, p_Name)
+	
+				if m_BotManager:GetBotByName(p_Name) ~= nil then
+					table.insert(Globals.IgnoreBotNames, p_Name)
+					m_BotManager:DestroyBot(p_Name)
+				end
 			end
 		end
 	end
@@ -950,6 +967,7 @@ end
 ---@param p_ForcedTeam TeamId|nil
 function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayIndex, p_IndexOnPath, p_ExistingBot, p_ForcedTeam)
 	local s_SpawnPoint = nil
+	local s_SquadSpawnVehicle = nil
 	local s_IsRespawn = false
 	local s_Name = nil
 
@@ -991,7 +1009,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 
 		-- find a spawnpoint
 		if p_UseRandomWay or p_ActiveWayIndex == nil or p_ActiveWayIndex == 0 then
-			s_SpawnPoint, s_InverseDirection = self:_GetSpawnPoint(s_TeamId, s_SquadId)
+			s_SpawnPoint, s_InverseDirection, s_SquadSpawnVehicle = self:_GetSpawnPoint(s_TeamId, s_SquadId)
 			-- special spawn in vehicles
 			if type(s_SpawnPoint) == 'string' then
 				local s_SpawnEntity = nil
@@ -1048,7 +1066,14 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 		end
 
 		if s_SpawnPoint == nil then
-			return
+			if s_SquadSpawnVehicle ~= nil then
+				s_SpawnPoint = m_NodeCollection:Get()[1]
+				if s_SpawnPoint == nil then
+					return
+				end
+			else
+				return
+			end
 		else
 			p_IndexOnPath = s_SpawnPoint.PointIndex
 			p_ActiveWayIndex = s_SpawnPoint.PathIndex
@@ -1074,6 +1099,10 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 		if s_IsRespawn then
 			p_ExistingBot:SetVarsWay(p_Player, p_UseRandomWay, p_ActiveWayIndex, p_IndexOnPath, s_InverseDirection)
 			self:_SpawnBot(p_ExistingBot, s_Transform, false)
+			-- check for vehicle of squad
+			if s_SquadSpawnVehicle ~= nil then
+				p_ExistingBot:_EnterVehicleEntity(s_SquadSpawnVehicle, false)
+			end
 		else
 			local s_Bot = m_BotManager:CreateBot(s_Name, s_TeamId, s_SquadId)
 
@@ -1085,6 +1114,10 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 
 				s_Bot:SetVarsWay(p_Player, p_UseRandomWay, p_ActiveWayIndex, p_IndexOnPath, s_InverseDirection)
 				self:_SpawnBot(s_Bot, s_Transform, true)
+			end
+			-- check for vehicle of squad
+			if s_SquadSpawnVehicle ~= nil then
+				s_Bot:_EnterVehicleEntity(s_SquadSpawnVehicle, false)
 			end
 		end
 	end
@@ -1156,12 +1189,14 @@ end
 ---@param p_SquadId SquadId|integer
 ---@return string|table|nil
 ---@return boolean|nil
+---@return ControllableEntity|nil
 function BotSpawner:_GetSpawnPoint(p_TeamId, p_SquadId)
 	local s_ActiveWayIndex = 0
 	local s_IndexOnPath = 0
 
 	local s_InvertDirection = nil
 	local s_TargetNode = nil
+	local s_VehicleToSpawnIn = nil
 	local s_ValidPointFound = false
 	local s_TargetDistance = Config.DistanceToSpawnBots
 	local s_RetryCounter = Config.MaxTrysToSpawnAtDistance
@@ -1179,7 +1214,7 @@ function BotSpawner:_GetSpawnPoint(p_TeamId, p_SquadId)
 	-- CONQUEST
 	-- spawn at base, squad-mate, captured flag
 	if Globals.IsConquest then
-		s_ActiveWayIndex, s_IndexOnPath, s_InvertDirection = g_GameDirector:GetSpawnPath(p_TeamId, p_SquadId, false)
+		s_ActiveWayIndex, s_IndexOnPath, s_InvertDirection, s_VehicleToSpawnIn = g_GameDirector:GetSpawnPath(p_TeamId, p_SquadId, false)
 
 		if s_ActiveWayIndex == 0 then
 			-- something went wrong. use random path
@@ -1191,7 +1226,7 @@ function BotSpawner:_GetSpawnPoint(p_TeamId, p_SquadId)
 	-- RUSH
 	-- spawn at base (of zone) or squad-mate
 	elseif Globals.IsRush then
-		s_ActiveWayIndex, s_IndexOnPath, s_InvertDirection = g_GameDirector:GetSpawnPath(p_TeamId, p_SquadId, true)
+		s_ActiveWayIndex, s_IndexOnPath, s_InvertDirection, s_VehicleToSpawnIn = g_GameDirector:GetSpawnPath(p_TeamId, p_SquadId, true)
 
 		if s_ActiveWayIndex == 0 then
 			-- something went wrong. use random path
@@ -1258,7 +1293,7 @@ function BotSpawner:_GetSpawnPoint(p_TeamId, p_SquadId)
 		end
 	end
 
-	return s_TargetNode, s_InvertDirection
+	return s_TargetNode, s_InvertDirection, s_VehicleToSpawnIn
 end
 
 -- TODO: create a more advanced algorithm?

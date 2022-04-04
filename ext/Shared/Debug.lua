@@ -28,6 +28,7 @@ Debug = {
 		UI = false					-- Debug all UI things
 	},
 	Shared = {
+		INFO = false,				-- Global Informations
 		EBX = false,				-- Debug EBX-Utils
 		LANGUAGE = false,			-- Debug Language
 		NODECOLLECTION = false,		-- Debug NodeCollection

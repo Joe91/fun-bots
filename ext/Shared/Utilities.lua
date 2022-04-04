@@ -69,6 +69,12 @@ function Utilities:getEnumName(p_Enum, p_Value)
 	return nil
 end
 
+function Utilities:DistanceFast(p_PosA, p_PosB)
+	return ( math.abs(p_PosA.x - p_PosB.x) +
+		math.abs(p_PosA.y - p_PosB.y) +
+		math.abs(p_PosA.z - p_PosB.z))
+end
+
 -- do not use on numerically indexed tables, only tables with string keys
 -- this is shallow merge, does not recurse deeper than one p_Level
 function Utilities:mergeKeys(p_OriginalTable, p_NewData)

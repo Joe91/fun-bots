@@ -13,6 +13,8 @@ Registry = {
 		COMMON = {
 			-- token Bots are marked with. Can also be " " or "". If it's "" players with names of the botlist can't join!
 			BOT_TOKEN = "BOT_",
+			-- allow players to use Bot-Names
+			ALLOW_PLAYER_BOT_NAMES = true,
 			-- with real damage, the hitboxes are a bit buggy
 			USE_REAL_DAMAGE = true,
 			-- collition-raycasts are only supporded by the dev-buidls of VU atm (VEXT 1.3.2 or greater)
@@ -21,6 +23,8 @@ Registry = {
 			LOADING_TIMEOUT = 25,
 			-- distance commands are heard by bots
 			COMMAND_DISTANCE = 20,
+			-- use load of Bundle to fix Bug of weapons disapearing (thanks to Lesley!) !!! THIS MIGHT CAUSE CRASHES !!!
+			USE_LOAD_BUNDLE_BUGFIX = false,
 			-- valid keys can be found here: https://docs.veniceunleashed.net/vext/ref/fb/inputdevicekeys/
 			BOT_COMMAND_KEY = InputDeviceKeys.IDK_LeftAlt,
 		},
@@ -35,7 +39,7 @@ Registry = {
 			-- Patch version
 			VERSION_PATCH = 0,
 			-- Additional label for pre-releases and build meta data
-			VERSION_LABEL = "RC2",
+			VERSION_LABEL = "RC3",
 			-- Current version type of this build
 			VERSION_TYPE = VersionType.DevBuild,
 			-- The Version used for the Update-Check
@@ -73,13 +77,15 @@ Registry = {
 		GAME_DIRECTOR = {
 			UPDATE_OBJECTIVES_CYCLE = 1.5,
 			-- Time after a mcom is considered destroyed
-			MCOMS_CHECK_CYCLE = 26.0, 
+			MCOMS_CHECK_CYCLE = 26.0,
 			-- Zone is 30 s. 10 Seconds without damage
-			ZONE_CHECK_CYCLE = 20.0, 
+			ZONE_CHECK_CYCLE = 20.0,
 			-- max bots per objective
-			MAX_ASSIGNED_LIMIT = 8, 
+			MAX_ASSIGNED_LIMIT = 8,
 			-- after finding no valid path for that many crossings, a bot is killed (Rush only)
-			KILL_ON_INVALID_PATH_CROSSINGS = 10, 
+			KILL_ON_INVALID_PATH_CROSSINGS = 10,
+			-- increments of nodes to search best patch with
+			NODE_SEARCH_INCREMENTS = 10,
 		},
 
 		VEHICLES = {
@@ -98,11 +104,13 @@ Registry = {
 			-- time a jet waits after an attack
 			JET_ABORT_ATTACK_TIME = 5,
 			-- percentage of vehicle health to leave vehicle with (currently no passive events for bot-only vehicles)
-			VEHILCE_EXIT_HEALTH = 10,
+			VEHILCE_EXIT_HEALTH = 12,
 			-- propability to exit on low health
 			VEHICLE_PROPABILITY_EXIT_LOW_HEALTH = 60,
 			-- health-check cycle-time
 			VEHICLE_HEALTH_CYLCE_TIME = 0.5,
+			-- seat-check cycle-time
+			VEHICLE_SEAT_CHECK_CYCLE_TIME = 4.0,
 		},
 
 		-- Bot related
@@ -148,6 +156,10 @@ Registry = {
 			FIRST_SPAWN_DELAY = 5.0,
 			-- Probability of a bot spawning on a member of the same squad.
 			PROBABILITY_SQUADMATE_SPAWN = 40,
+			-- Probability of a bot spawning in the vehicle of a bot of the same squad.
+			PROBABILITY_SQUADMATE_VEHICLE_SPAWN = 60,
+			-- Probability of a bot spawning in the vehicle of a player of the same squad.
+			PROBABILITY_SQUADMATE_PLAYER_VEHICLE_SPAWN = 80,
 			-- Probability of a bot spawning on the closest spawn point
 			PROBABILITY_CLOSEST_SPAWN = 80,
 			-- Probability of a bot spawning on an attacked spawn point
