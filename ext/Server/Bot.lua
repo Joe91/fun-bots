@@ -82,6 +82,7 @@ function Bot:__init(p_Player)
 	self.m_ActiveSpeedValue = BotMoveSpeeds.NoMovement
 	self.m_KnifeMode = false
 	self.m_InVehicle = false
+	self.m_OnVehicle = false
 
 	---@class ActiveInput
 	---@field value number
@@ -209,7 +210,7 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 				self:_SetActiveVars()
 				local s_Attacking = self._ShootPlayer ~= nil -- can be either attacking or reviving or enter of a vehicle with a player
 
-				if not self.m_InVehicle then
+				if not self.m_InVehicle and not self.m_OnVehicle then
 					-- sync slow code with fast code. Therefore execute the slow code first
 					if self._UpdateTimer >= Registry.BOT.BOT_UPDATE_CYCLE then
 						-- common part
@@ -264,7 +265,7 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 							self._UpdateTimer = 0.0
 						end
 					else
-						if self.m_Player.controlledControllable:Is("ServerSoldierEntity") then -- passenger of boat for example
+						if self.m_OnVehicle then -- passenger of boat for example
 							-- sync slow code with fast code. Therefore execute the slow code first
 							if self._UpdateTimer >= Registry.BOT.BOT_UPDATE_CYCLE then
 								-- common part
@@ -291,7 +292,7 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 								self:_UpdateLookAroundPassenger(Registry.BOT.BOT_FAST_UPDATE_CYCLE)
 							end
 							self:_UpdateYaw()
-						else -- normal vehicle
+						else -- normal vehicle --> self.m_InVehicle == true
 							-- sync slow code with fast code. Therefore execute the slow code first
 							if self._UpdateTimer >= Registry.BOT.BOT_UPDATE_CYCLE then
 								-- common part
@@ -3423,10 +3424,15 @@ function Bot:_SetActiveVars()
 	self.m_ActiveMoveMode = self._MoveMode
 	self.m_ActiveSpeedValue = self._BotSpeed
 
-	if (self.m_Player.controlledControllable ~= nil and not self.m_Player.controlledControllable:Is("ServerSoldierEntity")) or self.m_Player.attachedControllable ~= nil then
+	if self.m_Player.controlledControllable ~= nil and not self.m_Player.controlledControllable:Is("ServerSoldierEntity") then
 		self.m_InVehicle = true
+		self.m_OnVehicle = false
+	elseif self.m_Player.attachedControllable ~= nil then
+		self.m_InVehicle = false
+		self.m_OnVehicle = true
 	else
 		self.m_InVehicle = false
+		self.m_OnVehicle = false
 	end
 
 	if Config.BotWeapon == BotWeapons.Knife or Config.ZombieMode then
