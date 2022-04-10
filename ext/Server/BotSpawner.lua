@@ -1172,17 +1172,24 @@ function BotSpawner:_SpawnBot(p_Bot, p_Transform, p_SetKit)
 
 	-- And then spawn the bot. This will create and return a new SoldierEntity object.
 	-- for Civilianizer-Mod
+	local s_ResutlSoldier = nil
 	if Globals.RemoveKitVisuals then
-		m_BotManager:SpawnBot(p_Bot, s_Transform, CharacterPoseType.CharacterPoseType_Stand, s_SoldierBlueprint, s_SoldierKit, {})
+		s_ResutlSoldier = m_BotManager:SpawnBot(p_Bot, s_Transform, CharacterPoseType.CharacterPoseType_Stand, s_SoldierBlueprint, s_SoldierKit, {})
 	else
-		m_BotManager:SpawnBot(p_Bot, s_Transform, CharacterPoseType.CharacterPoseType_Stand, s_SoldierBlueprint, s_SoldierKit, { s_Appearance })
+		s_ResutlSoldier = m_BotManager:SpawnBot(p_Bot, s_Transform, CharacterPoseType.CharacterPoseType_Stand, s_SoldierBlueprint, s_SoldierKit, { s_Appearance })
 	end
 
-	p_Bot.m_Player.soldier:ApplyCustomization(s_SoldierCustomization)
-	self:_ModifyWeapon(p_Bot.m_Player.soldier)
+	if s_ResutlSoldier ~= nil then
+		p_Bot.m_Player.soldier:ApplyCustomization(s_SoldierCustomization)
+		self:_ModifyWeapon(p_Bot.m_Player.soldier)
 
-	-- for Civilianizer-mod:
-	Events:Dispatch('Bot:SoldierEntity', p_Bot.m_Player.soldier)
+		-- for Civilianizer-mod:
+		Events:Dispatch('Bot:SoldierEntity', p_Bot.m_Player.soldier)
+	else
+		m_Logger:Error("Spawn of Bot failed")
+		return
+	end
+	
 end
 
 ---@param p_TeamId TeamId|integer
