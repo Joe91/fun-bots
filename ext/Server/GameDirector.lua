@@ -357,21 +357,22 @@ end
 function GameDirector:OnVehicleSpawnDone(p_Entity)
 	p_Entity = ControllableEntity(p_Entity)
 	local s_VehicleData = m_Vehicles:GetVehicleByEntity(p_Entity)
+	if s_VehicleData == nil then
+		return -- no vehicle found
+	end
 	if not Config.UseAirVehicles and (s_VehicleData.Type == VehicleTypes.Plane or s_VehicleData.Type == VehicleTypes.Chopper) then
 		return -- not allowed to use
 	end
 	local s_Objective = self:_SetVehicleObjectiveState(p_Entity.transform.trans, true)
 
-	if s_VehicleData ~= nil then
-		if s_Objective ~= nil and s_Objective.isSpawnPath then
-			local s_Node = g_GameDirector:FindClosestPath(p_Entity.transform.trans, true, false)
-			if s_Node ~= nil and s_Node.Position:Distance(p_Entity.transform.trans) < Registry.VEHICLES.MIN_DISTANCE_VEHICLE_ENTER then
-				table.insert(self.m_SpawnableVehicles[s_Objective.team], p_Entity)
-			end
+	if s_Objective ~= nil and s_Objective.isSpawnPath then
+		local s_Node = g_GameDirector:FindClosestPath(p_Entity.transform.trans, true, false)
+		if s_Node ~= nil and s_Node.Position:Distance(p_Entity.transform.trans) < Registry.VEHICLES.MIN_DISTANCE_VEHICLE_ENTER then
+			table.insert(self.m_SpawnableVehicles[s_Objective.team], p_Entity)
 		end
-		if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.StationaryAA) then
-			table.insert(self.m_SpawnableStationaryAas[s_VehicleData.Team], p_Entity)
-		end
+	end
+	if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.StationaryAA) then
+		table.insert(self.m_SpawnableStationaryAas[s_VehicleData.Team], p_Entity)
 	end
 end
 

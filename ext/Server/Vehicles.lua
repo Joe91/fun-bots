@@ -45,7 +45,11 @@ function Vehicles:GetVehicleByEntity(p_Entity)
 	if s_VehicleName == nil then
 		return nil
 	end
-	return VehicleData[s_VehicleName]
+	local s_VehicleData = VehicleData[s_VehicleName]
+	if s_VehicleData == nil then
+		m_Logger:Warning(s_VehicleName.." not found")
+	end
+	return s_VehicleData
 end
 
 function Vehicles:GetNrOfFreeSeats(p_Entity, p_PlayerIsDriver)
