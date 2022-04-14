@@ -1179,7 +1179,7 @@ function BotSpawner:_SpawnBot(p_Bot, p_Transform, p_SetKit)
 		s_ResutlSoldier = m_BotManager:SpawnBot(p_Bot, s_Transform, CharacterPoseType.CharacterPoseType_Stand, s_SoldierBlueprint, s_SoldierKit, { s_Appearance })
 	end
 
-	if s_ResutlSoldier ~= nil then
+	if s_ResutlSoldier ~= nil and s_SoldierCustomization ~= nil then
 		p_Bot.m_Player.soldier:ApplyCustomization(s_SoldierCustomization)
 		self:_ModifyWeapon(p_Bot.m_Player.soldier)
 
@@ -1189,7 +1189,6 @@ function BotSpawner:_SpawnBot(p_Bot, p_Transform, p_SetKit)
 		m_Logger:Error("Spawn of Bot failed")
 		return
 	end
-	
 end
 
 ---@param p_TeamId TeamId|integer
