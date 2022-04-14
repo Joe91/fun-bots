@@ -383,4 +383,10 @@ VehicleData = {
 		Parts = {2},
 		Speed = {20},
 		Drop = {0.0},},
+	["TOW2"] = {
+		Name = "[TOW2]", 
+		Type = VehicleTypes.StationaryLauncher,
+		Parts = {2},
+		Speed = {20},
+		Drop = {0.0},},
 }
