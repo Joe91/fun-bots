@@ -375,4 +375,12 @@ VehicleData = {
 	-- MAV / BOt
 	["EODBot"] = {Name = "[EOD BOT]", Type = VehicleTypes.MavBot, Parts = {}},
 	["MAV"] = {Name = "[MAV]", Type = VehicleTypes.MavBot, Parts = {}},
+
+	-- Stationary Defense
+	["Kornet"] = {
+		Name = "[Kornet]", 
+		Type = VehicleTypes.StationaryLauncher,
+		Parts = {2},
+		Speed = {20},
+		Drop = {0.0},},
 }

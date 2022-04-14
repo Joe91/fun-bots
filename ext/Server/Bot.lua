@@ -329,7 +329,7 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 									self:_UpdateAimingVehicle()
 								end
 							else
-								if self.m_Player.controlledEntryId == 0 then -- only if driver
+								if self.m_Player.controlledEntryId == 0 and m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.StationaryLauncher) then -- only if driver
 									self:_UpdateTargetMovementVehicle()
 								else
 									self:_UpdateVehicleLookAround(self._UpdateFastTimer)
