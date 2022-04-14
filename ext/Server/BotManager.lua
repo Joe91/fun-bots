@@ -769,18 +769,23 @@ function BotManager:SpawnBot(p_Bot, p_Transform, p_Pose, p_SoldierBp, p_Kit, p_U
 
 	p_Bot.m_Player:SelectUnlockAssets(p_Kit, p_Unlocks)
 	local s_BotSoldier = p_Bot.m_Player:CreateSoldier(p_SoldierBp, p_Transform) -- Returns SoldierEntity
+
 	if s_BotSoldier == nil then
 		m_Logger:Error("CreateSoldier failed")
 		return nil
 	end
+
 	-- Customisation of health of bot
-	s_BotSoldier.maxHealth = Config.BotMaxHealth;
+	s_BotSoldier.maxHealth = Config.BotMaxHealth
 
 	p_Bot.m_Player:SpawnSoldierAt(s_BotSoldier, p_Transform, p_Pose)
 	p_Bot.m_Player:AttachSoldier(s_BotSoldier)
 
 	if p_Bot.m_Player.soldier == nil then
 		m_Logger:Error("AttachSoldier failed. Maybe the spawn failed as well")
+		return nil
+	elseif p_Bot.m_Player.soldier ~= s_BotSoldier then
+		m_Logger:Error("AttachSoldier failed. We still have the old SoldierEntity attached to the Player.")
 		return nil
 	else
 		return s_BotSoldier

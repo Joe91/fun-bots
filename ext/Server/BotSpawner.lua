@@ -198,7 +198,7 @@ function BotSpawner:OnPlayerJoining(p_Name)
 			for _, l_Name in pairs(BotNames) do
 				if l_Name == p_Name then
 					table.insert(self._KickPlayers, p_Name)
-	
+
 					if m_BotManager:GetBotByName(p_Name) ~= nil then
 						table.insert(Globals.IgnoreBotNames, p_Name)
 						m_BotManager:DestroyBot(p_Name)
@@ -209,7 +209,7 @@ function BotSpawner:OnPlayerJoining(p_Name)
 		else
 			if string.find(p_Name, Registry.COMMON.BOT_TOKEN) == 1 then --check if name starts with bot-token
 				table.insert(self._KickPlayers, p_Name)
-	
+
 				if m_BotManager:GetBotByName(p_Name) ~= nil then
 					table.insert(Globals.IgnoreBotNames, p_Name)
 					m_BotManager:DestroyBot(p_Name)
@@ -1172,19 +1172,20 @@ function BotSpawner:_SpawnBot(p_Bot, p_Transform, p_SetKit)
 
 	-- And then spawn the bot. This will create and return a new SoldierEntity object.
 	-- for Civilianizer-Mod
-	local s_ResutlSoldier = nil
+	local s_ResultSoldier = nil
+
 	if Globals.RemoveKitVisuals then
-		s_ResutlSoldier = m_BotManager:SpawnBot(p_Bot, s_Transform, CharacterPoseType.CharacterPoseType_Stand, s_SoldierBlueprint, s_SoldierKit, {})
+		s_ResultSoldier = m_BotManager:SpawnBot(p_Bot, s_Transform, CharacterPoseType.CharacterPoseType_Stand, s_SoldierBlueprint, s_SoldierKit, {})
 	else
-		s_ResutlSoldier = m_BotManager:SpawnBot(p_Bot, s_Transform, CharacterPoseType.CharacterPoseType_Stand, s_SoldierBlueprint, s_SoldierKit, { s_Appearance })
+		s_ResultSoldier = m_BotManager:SpawnBot(p_Bot, s_Transform, CharacterPoseType.CharacterPoseType_Stand, s_SoldierBlueprint, s_SoldierKit, { s_Appearance })
 	end
 
-	if s_ResutlSoldier ~= nil and s_SoldierCustomization ~= nil then
-		p_Bot.m_Player.soldier:ApplyCustomization(s_SoldierCustomization)
-		self:_ModifyWeapon(p_Bot.m_Player.soldier)
+	if s_ResultSoldier ~= nil and s_SoldierCustomization ~= nil then
+		s_ResultSoldier:ApplyCustomization(s_SoldierCustomization)
+		self:_ModifyWeapon(s_ResultSoldier)
 
 		-- for Civilianizer-mod:
-		Events:Dispatch('Bot:SoldierEntity', p_Bot.m_Player.soldier)
+		Events:Dispatch('Bot:SoldierEntity', s_ResultSoldier)
 	else
 		m_Logger:Error("Spawn of Bot failed")
 		return
