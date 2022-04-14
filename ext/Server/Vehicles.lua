@@ -120,6 +120,8 @@ function Vehicles:CheckForVehicleAttack(p_VehicleType, p_Distance, p_Gadget, p_I
 		s_AttackMode = VehicleAttackModes.AttackWithRifle -- attack with rifle
 	elseif p_VehicleType == VehicleTypes.NoArmorVehicle then
 		s_AttackMode = VehicleAttackModes.AttackWithRifle -- attack with rifle
+	elseif p_VehicleType == VehicleTypes.StationaryLauncher then
+		s_AttackMode = VehicleAttackModes.AttackWithRifle -- attack with rifle
 	elseif p_VehicleType == VehicleTypes.Chopper then --don't attack planes. Too fast...
 		s_AttackMode = VehicleAttackModes.AttackWithRifle -- attack with rifle
 	elseif (p_VehicleType == VehicleTypes.LightVehicle or p_VehicleType == VehicleTypes.AntiAir) and p_Distance < 35 then
