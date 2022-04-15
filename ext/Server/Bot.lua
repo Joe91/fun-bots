@@ -2044,6 +2044,7 @@ function Bot:_UpdateAttacking()
 	if self._ShootPlayer.soldier ~= nil and
 	self._ActiveAction ~= BotActionFlags.EnterVehicleActive and
 	self._ActiveAction ~= BotActionFlags.RepairActive and
+	self._ActiveAction ~= BotActionFlags.ReviveActive  and
 	self._Shoot then
 		if (self._ShootModeTimer < Config.BotFireModeDuration) or
 			(Config.ZombieMode and self._ShootModeTimer < (Config.BotFireModeDuration * 4)) then
@@ -2275,7 +2276,7 @@ function Bot:_UpdateAttacking()
 			end
 
 			self._ShootTraceTimer = self._ShootTraceTimer + Registry.BOT.BOT_UPDATE_CYCLE
-		else
+		else -- soldier alive again
 			self._WeaponToUse = BotWeapons.Primary
 			self._TargetPitch = 0.0
 			self:_AbortAttack()
