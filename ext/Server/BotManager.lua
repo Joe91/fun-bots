@@ -1064,7 +1064,7 @@ end
 function BotManager:_DistributeRaycastsBotBotAttack(p_RaycastData)
 	local s_RaycastIndex = 0
 	for i = 0, (#self._ActivePlayers - 1) do
-		local s_Index = (self._LastPlayerCheckIndex + i) % #self._ActivePlayers + 1
+		local s_Index = ((self._LastPlayerCheckIndex + i) % #self._ActivePlayers) + 1
 		local s_ActivePlayer = PlayerManager:GetPlayerByName(self._ActivePlayers[s_Index])
 		if s_ActivePlayer ~= nil then
 			local s_RaycastsToSend = {}
@@ -1074,12 +1074,11 @@ function BotManager:_DistributeRaycastsBotBotAttack(p_RaycastData)
 					table.insert(s_RaycastsToSend, p_RaycastData[s_RaycastIndex])
 				else
 					NetEvents:SendUnreliableToLocal('CheckBotBotAttack', s_ActivePlayer, s_RaycastsToSend)
-					self._LastPlayerCheckIndex = i
+					self._LastPlayerCheckIndex = s_Index
 					return
 				end
 			end
 			NetEvents:SendUnreliableToLocal('CheckBotBotAttack', s_ActivePlayer, s_RaycastsToSend)
-			self._LastPlayerCheckIndex = i
 		end
 	end
 end
@@ -1159,7 +1158,7 @@ function BotManager:_CheckForBotBotAttack()
 								})
 								s_Raycasts = s_Raycasts + 1
 
-								if s_Raycasts >= (#self._ActivePlayers*self._RaycastsPerActivePlayer) then
+								if s_Raycasts >= (--[[#self._ActivePlayers*]]self._RaycastsPerActivePlayer) then
 									self._LastBotCheckIndex = i
 									self:_DistributeRaycastsBotBotAttack(s_RaycastEntries)
 									return
