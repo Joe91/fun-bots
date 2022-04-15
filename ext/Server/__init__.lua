@@ -130,9 +130,10 @@ function FunBotServer:RegisterHooks()
 end
 
 function FunBotServer:RegisterCustomEvents()
-	NetEvents:Subscribe('Bot:ShootAtPlayer', self, self.OnShootAt)
-	NetEvents:Subscribe('Bot:RevivePlayer', self, self.OnRevivePlayer)
-	NetEvents:Subscribe('Bot:ShootAtBot', self, self.OnBotShootAtBot)
+	-- NetEvents:Subscribe('Bot:ShootAtPlayer', self, self.OnShootAt)
+	-- NetEvents:Subscribe('Bot:RevivePlayer', self, self.OnRevivePlayer)
+	-- NetEvents:Subscribe('Bot:ShootAtBot', self, self.OnBotShootAtBot)
+	NetEvents:Subscribe("Botmanager:RaycastResults", self, self.OnClientRaycastResults)
 	NetEvents:Subscribe('Client:DamagePlayer', self, self.OnDamagePlayer) --only triggered on false damage
 	Events:Subscribe('Server:DamagePlayer', self, self.OnServerDamagePlayer) --only triggered on false damage
 	Events:Subscribe('Bot:RespawnBot', self, self.OnRespawnBot)
@@ -455,6 +456,10 @@ end
 
 function FunBotServer:OnBotShootAtBot(p_Player, p_BotName1, p_BotName2)
 	m_BotManager:OnBotShootAtBot(p_Player, p_BotName1, p_BotName2)
+end
+
+function FunBotServer:OnClientRaycastResults(p_Player, p_RaycastResults)
+	m_BotManager:OnClientRaycastResults(p_Player, p_RaycastResults)
 end
 
 function FunBotServer:OnBotAbortWait(p_BotName)

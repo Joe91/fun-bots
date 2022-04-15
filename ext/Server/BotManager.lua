@@ -391,6 +391,21 @@ function BotManager:OnBotShootAtBot(p_Player, p_BotName1, p_BotName2)
 	end
 end
 
+function BotManager:OnClientRaycastResults(p_Player, p_RaycastResults)
+	if p_RaycastResults == nil then
+		return
+	end
+	for _, l_RaycastResult in pairs(p_RaycastResults) do
+		if l_RaycastResult.Mode == "ShootAtBot" then
+			self:OnBotShootAtBot(p_Player, l_RaycastResult.Bot1, l_RaycastResult.Bot2)
+		elseif l_RaycastResult.Mode == "ShootAtPlayer" then
+			self:OnShootAt(p_Player, l_RaycastResult.Bot1, l_RaycastResult.IgnoreYaw)
+		elseif l_RaycastResult.Mode == "RevivePlayer" then
+			self:OnRevivePlayer(p_Player, l_RaycastResult.Bot1)
+		end
+	end
+end
+
 ---@param p_Player Player
 ---@param p_BotName string
 function BotManager:OnRequestEnterVehicle(p_Player, p_BotName)
