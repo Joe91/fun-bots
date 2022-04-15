@@ -293,6 +293,7 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 							end
 							self:_UpdateYaw()
 						else -- normal vehicle --> self.m_InVehicle == true
+							local s_IsStationaryLauncher = m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.StationaryLauncher)
 							-- sync slow code with fast code. Therefore execute the slow code first
 							if self._UpdateTimer >= Registry.BOT.BOT_UPDATE_CYCLE then
 								-- common part
@@ -304,7 +305,7 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 									self:_UpdateShootMovementVehicle()
 								else
 									self:_UpdateReloadVehicle()
-									if self.m_Player.controlledEntryId == 0 then -- only if driver
+									if self.m_Player.controlledEntryId == 0 and not s_IsStationaryLauncher then -- only if driver
 										self:_UpdateNormalMovementVehicle()
 									end
 								end
@@ -329,13 +330,13 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 									self:_UpdateAimingVehicle()
 								end
 							else
-								if self.m_Player.controlledEntryId == 0 and m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.StationaryLauncher) then -- only if driver
+								if self.m_Player.controlledEntryId == 0 and not s_IsStationaryLauncher then -- only if driver
 									self:_UpdateTargetMovementVehicle()
 								else
 									self:_UpdateVehicleLookAround(self._UpdateFastTimer)
 								end
 							end
-							self:_UpdateYawVehicle(s_Attacking)
+							self:_UpdateYawVehicle(s_Attacking, s_IsStationaryLauncher)
 						end
 					end
 				end
@@ -1575,7 +1576,7 @@ function Bot:_UpdateStationaryAAVehicle(p_Attacking)
 		-- just look a little around
 		self:_UpdateVehicleLookAround(Registry.BOT.BOT_FAST_UPDATE_CYCLE)
 	end
-	self:_UpdateYawVehicle(true) --only gun --> therefore alsways gun-mode
+	self:_UpdateYawVehicle(true, false) --only gun --> therefore alsways gun-mode
 end
 
 function Bot:_UpdateAttackStationaryAAVehicle()
@@ -1585,7 +1586,7 @@ function Bot:_UpdateAttackStationaryAAVehicle()
 end
 
 ---@param p_Attacking boolean
-function Bot:_UpdateYawVehicle(p_Attacking)
+function Bot:_UpdateYawVehicle(p_Attacking, p_IsStationaryLauncher)
 	local s_DeltaYaw = 0
 	local s_DeltaPitch = 0
 	local s_CorrectGunYaw = false
@@ -1593,7 +1594,7 @@ function Bot:_UpdateYawVehicle(p_Attacking)
 	local s_Pos = nil
 
 	if not p_Attacking then
-		if self.m_Player.controlledEntryId == 0 then
+		if self.m_Player.controlledEntryId == 0 and not p_IsStationaryLauncher then
 			s_Pos = self.m_Player.controlledControllable.transform.forward
 			local s_AtanDzDx = math.atan(s_Pos.z, s_Pos.x)
 			local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
@@ -1844,7 +1845,7 @@ function Bot:_UpdateYawVehicle(p_Attacking)
 	end
 
 	if not p_Attacking then
-		if self.m_Player.controlledEntryId == 0 then -- driver
+		if self.m_Player.controlledEntryId == 0 and not p_IsStationaryLauncher then -- driver
 			local s_Output = self._Pid_Drv_Yaw:Update(s_DeltaYaw)
 
 			if self.m_ActiveSpeedValue == BotMoveSpeeds.Backwards then
