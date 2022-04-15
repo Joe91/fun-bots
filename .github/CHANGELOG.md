@@ -30,6 +30,7 @@ This is the changelog for the version V2.5.0. Don't forget to [join us on Discor
 * Option to use Bot-Names added (#152)
 * Bots use better seat in vehicle if one available (#148)
 * improved path-finding when exiting vehicles
+* Support for some stationary launchers (Kornet and TOW2)
 
 ### Bug fixes
 * Several Bugfixes thanks to Bree_Arnold (#207)
@@ -44,6 +45,7 @@ This is the changelog for the version V2.5.0. Don't forget to [join us on Discor
 * fixed bots on vehicles behaving strange
 * fixed seat-swap in some choppers
 * bugfix bot-behaviour when toggling attack-mode
+* bugfix bot do friendly fire after revive
 
 ### New maps
 * Vehicles for Rush Theran Highway by BOB

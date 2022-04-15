@@ -1173,7 +1173,7 @@ function BotManager:_CheckForBotBotAttack()
 								})
 								s_Raycasts = s_Raycasts + 1
 
-								if s_Raycasts >= (--[[#self._ActivePlayers*]]self._RaycastsPerActivePlayer) then
+								if s_Raycasts >= (#self._ActivePlayers*self._RaycastsPerActivePlayer) then
 									self._LastBotCheckIndex = i
 									self:_DistributeRaycastsBotBotAttack(s_RaycastEntries)
 									return
