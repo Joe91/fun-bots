@@ -1168,10 +1168,10 @@ function BotSpawner:_SpawnBot(p_Bot, p_Transform, p_SetKit)
 
 	-- create kit and appearance
 	local s_SoldierBlueprint = ResourceManager:SearchForDataContainer('Characters/Soldiers/MpSoldier')
+	local s_SoldierCustomization = CustomizeSoldierData()
 	if self._SoldierCustomizations[p_Bot.m_Player.id] == nil or not self._SoldierCustomizations[p_Bot.m_Player.id]:Is("CustomizeSoldierData") then
-		self._SoldierCustomizations[p_Bot.m_Player.id] = CustomizeSoldierData()
+		self._SoldierCustomizations[p_Bot.m_Player.id] = s_SoldierCustomization
 	end
-	local s_SoldierCustomization = self._SoldierCustomizations[p_Bot.m_Player.id]
 	local s_SoldierKit = nil
 	local s_Appearance = nil
 	s_SoldierKit, s_Appearance = self:_GetKitAppearanceCustomization(p_Bot.m_Player.teamId, s_SoldierCustomization, s_BotKit, s_BotColor, p_Bot.m_Primary, p_Bot.m_Pistol, p_Bot.m_Knife, p_Bot.m_PrimaryGadget, p_Bot.m_SecondaryGadget, p_Bot.m_Grenade)
@@ -1196,7 +1196,6 @@ function BotSpawner:_SpawnBot(p_Bot, p_Transform, p_SetKit)
 		if s_SoldierCustomization ~= self._SoldierCustomizations[p_Bot.m_Player.id] then
 			self._SoldierCustomizations[p_Bot.m_Player.id]:ReplaceReferences(s_SoldierCustomization)
 		end
-
 
 		-- for Civilianizer-mod:
 		Events:Dispatch('Bot:SoldierEntity', p_Bot.m_Player.soldier)
