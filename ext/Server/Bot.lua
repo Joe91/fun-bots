@@ -376,7 +376,7 @@ end
 
 ---@param p_Player Player
 function Bot:Revive(p_Player)
-	if self.m_Kit == BotKits.Assault and p_Player.corpse ~= nil then
+	if self.m_Kit == BotKits.Assault and p_Player.corpse ~= nil and not p_Player.corpse.isDead and not Globals.isGm then
 		if Config.BotsRevive then
 			self._ActiveAction = BotActionFlags.ReviveActive
 			self._ShootPlayer = nil
@@ -2247,15 +2247,23 @@ function Bot:_UpdateAttacking()
 			self:_ResetActionFlag(BotActionFlags.GrenadeActive)
 		end
 	elseif self._ActiveAction == BotActionFlags.ReviveActive then
-		if self._ShootPlayer.corpse ~= nil then -- revive
+		if self._ShootPlayer.corpse ~= nil and not self._ShootPlayer.corpse.isDead then -- revive
 			self._ShootModeTimer = self._ShootModeTimer + Registry.BOT.BOT_UPDATE_CYCLE
 			self.m_ActiveMoveMode = BotMoveModes.ReviveC4 -- movement-mode : revive
 			self._ReloadTimer = 0.0 -- reset reloading
 
 			--check for revive if close
 			if self._ShootPlayer.corpse.worldTransform.trans:Distance(self.m_Player.soldier.worldTransform.trans) < 3 then
-				self:_SetInput(EntryInputActionEnum.EIAFire, 1)
+				if self._ShotTimer >= (self.m_ActiveWeapon.fireCycle + self.m_ActiveWeapon.pauseCycle) then
+					self._ShotTimer = 0.0
+				end
+				if self._ShotTimer <= self.m_ActiveWeapon.fireCycle then
+					self:_SetInput(EntryInputActionEnum.EIAFire, 1)
+				end
+			else
+				self._ShotTimer = 0.0
 			end
+			self._ShotTimer = self._ShotTimer + Registry.BOT.BOT_UPDATE_CYCLE
 
 			--trace way back
 			if self._ShootTraceTimer > Registry.BOT.TRACE_DELTA_SHOOTING then

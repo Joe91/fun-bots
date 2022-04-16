@@ -269,7 +269,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 			::continue_enemy_loop::
 		end
-	elseif self.m_Player.corpse ~= nil then -- dead. check for revive botsAttackBots
+	elseif self.m_Player.corpse ~= nil and not self.m_Player.corpse.isDead then -- dead. check for revive botsAttackBots
 		self.m_AliveTimer = 0.5 --add a little delay
 		local s_TeamMates = PlayerManager:GetPlayersByTeam(self.m_Player.teamId)
 
