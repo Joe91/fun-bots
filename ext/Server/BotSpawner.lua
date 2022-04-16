@@ -156,11 +156,10 @@ function BotSpawner:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 				if s_Node ~= nil then
 					l_Bot:SetVarsWay(nil, true, s_Node.PathIndex, s_Node.PointIndex, false)
 					table.remove(self._BotsWithoutPath, i)
-					local s_SoldierCustomization = nil
+					local s_SoldierCustomization = CustomizeSoldierData()
 					local s_SoldierKit = nil
 					local s_Appearance = nil
-					s_SoldierKit, s_Appearance, s_SoldierCustomization = self:_GetKitAppearanceCustomization(l_Bot.m_Player.teamId, l_Bot.m_Kit, l_Bot.m_Color, l_Bot.m_Primary, l_Bot.m_Pistol, l_Bot.m_Knife, l_Bot.m_PrimaryGadget, l_Bot.m_SecondaryGadget, l_Bot.m_Grenade)
-					self._SoldierCustomizations[l_Bot.m_Player.id] = s_SoldierCustomization -- store soldier customizations to prevent garbage collection
+					s_SoldierKit, s_Appearance = self:_GetKitAppearanceCustomization(l_Bot.m_Player.teamId, s_SoldierCustomization, l_Bot.m_Kit, l_Bot.m_Color, l_Bot.m_Primary, l_Bot.m_Pistol, l_Bot.m_Knife, l_Bot.m_PrimaryGadget, l_Bot.m_SecondaryGadget, l_Bot.m_Grenade)
 
 					l_Bot.m_Player:SelectUnlockAssets(s_SoldierKit, {s_Appearance})
 
@@ -1169,11 +1168,13 @@ function BotSpawner:_SpawnBot(p_Bot, p_Transform, p_SetKit)
 
 	-- create kit and appearance
 	local s_SoldierBlueprint = ResourceManager:SearchForDataContainer('Characters/Soldiers/MpSoldier')
-	local s_SoldierCustomization = nil
+	if self._SoldierCustomizations[p_Bot.m_Player.id] == nil or not self._SoldierCustomizations[p_Bot.m_Player.id]:Is("CustomizeSoldierData") then
+		self._SoldierCustomizations[p_Bot.m_Player.id] = CustomizeSoldierData()
+	end
+	local s_SoldierCustomization = self._SoldierCustomizations[p_Bot.m_Player.id]
 	local s_SoldierKit = nil
 	local s_Appearance = nil
-	s_SoldierKit, s_Appearance, s_SoldierCustomization = self:_GetKitAppearanceCustomization(p_Bot.m_Player.teamId, s_BotKit, s_BotColor, p_Bot.m_Primary, p_Bot.m_Pistol, p_Bot.m_Knife, p_Bot.m_PrimaryGadget, p_Bot.m_SecondaryGadget, p_Bot.m_Grenade)
-	self._SoldierCustomizations[p_Bot.m_Player.id] = s_SoldierCustomization -- store soldier customizations to prevent garbage collection
+	s_SoldierKit, s_Appearance = self:_GetKitAppearanceCustomization(p_Bot.m_Player.teamId, s_SoldierCustomization, s_BotKit, s_BotColor, p_Bot.m_Primary, p_Bot.m_Pistol, p_Bot.m_Knife, p_Bot.m_PrimaryGadget, p_Bot.m_SecondaryGadget, p_Bot.m_Grenade)
 
 	-- Create the transform of where to spawn the bot at.
 	local s_Transform = p_Transform
@@ -1188,12 +1189,17 @@ function BotSpawner:_SpawnBot(p_Bot, p_Transform, p_SetKit)
 		s_ResultSoldier = m_BotManager:SpawnBot(p_Bot, s_Transform, CharacterPoseType.CharacterPoseType_Stand, s_SoldierBlueprint, s_SoldierKit, { s_Appearance })
 	end
 
-	if s_ResultSoldier ~= nil and s_SoldierCustomization ~= nil then
-		s_ResultSoldier:ApplyCustomization(s_SoldierCustomization)
-		self:_ModifyWeapon(s_ResultSoldier)
+	if s_ResultSoldier ~= nil and s_SoldierCustomization ~= nil and s_SoldierCustomization:Is("CustomizeSoldierData") then
+		print(s_SoldierCustomization)
+		p_Bot.m_Player.soldier:ApplyCustomization(s_SoldierCustomization)
+		self:_ModifyWeapon(p_Bot.m_Player.soldier)
+		if s_SoldierCustomization ~= self._SoldierCustomizations[p_Bot.m_Player.id] then
+			self._SoldierCustomizations[p_Bot.m_Player.id]:ReplaceReferences(s_SoldierCustomization)
+		end
+
 
 		-- for Civilianizer-mod:
-		Events:Dispatch('Bot:SoldierEntity', s_ResultSoldier)
+		Events:Dispatch('Bot:SoldierEntity', p_Bot.m_Player.soldier)
 	else
 		m_Logger:Error("Spawn of Bot failed")
 		return
@@ -1341,11 +1347,10 @@ end
 ---@return DataContainer
 ---@return DataContainer
 ---@return CustomizeSoldierData
-function BotSpawner:_GetKitAppearanceCustomization(p_TeamId, p_Kit, p_Color, p_Primary, p_Pistol, p_Knife, p_Gadget1, p_Gadget2, p_Grenade)
+function BotSpawner:_GetKitAppearanceCustomization(p_TeamId, p_SoldierCustomization, p_Kit, p_Color, p_Primary, p_Pistol, p_Knife, p_Gadget1, p_Gadget2, p_Grenade)
 	-- Create the loadouts
 	local s_SoldierKit = nil
 	local s_Appearance = nil
-	local s_SoldierCustomization = CustomizeSoldierData()
 
 	local s_PistolWeapon = ResourceManager:SearchForDataContainer(p_Pistol:getResourcePath())
 	local s_KnifeWeapon = ResourceManager:SearchForDataContainer(p_Knife:getResourcePath())
@@ -1353,8 +1358,8 @@ function BotSpawner:_GetKitAppearanceCustomization(p_TeamId, p_Kit, p_Color, p_P
 	local s_Gadget2Weapon = ResourceManager:SearchForDataContainer(p_Gadget2:getResourcePath())
 	local s_GrenadeWeapon = ResourceManager:SearchForDataContainer(p_Grenade:getResourcePath())
 
-	s_SoldierCustomization.activeSlot = WeaponSlot.WeaponSlot_0
-	s_SoldierCustomization.removeAllExistingWeapons = true
+	p_SoldierCustomization.activeSlot = WeaponSlot.WeaponSlot_0
+	p_SoldierCustomization.removeAllExistingWeapons = true
 
 	local s_PrimaryWeapon = UnlockWeaponAndSlot()
 	s_PrimaryWeapon.slot = WeaponSlot.WeaponSlot_0
@@ -1427,19 +1432,20 @@ function BotSpawner:_GetKitAppearanceCustomization(p_TeamId, p_Kit, p_Color, p_P
 		end
 	end
 
+	p_SoldierCustomization.weapons:clear()
 	if Config.ZombieMode then
-		s_SoldierCustomization.activeSlot = WeaponSlot.WeaponSlot_7
-		s_SoldierCustomization.weapons:add(s_Knife)
+		p_SoldierCustomization.activeSlot = WeaponSlot.WeaponSlot_7
+		p_SoldierCustomization.weapons:add(s_Knife)
 	else
-		s_SoldierCustomization.weapons:add(s_PrimaryWeapon)
-		s_SoldierCustomization.weapons:add(s_SecondaryWeapon)
-		s_SoldierCustomization.weapons:add(s_PrimaryGadget)
-		s_SoldierCustomization.weapons:add(s_SecondaryGadget)
-		s_SoldierCustomization.weapons:add(s_Grenade)
-		s_SoldierCustomization.weapons:add(s_Knife)
+		p_SoldierCustomization.weapons:add(s_PrimaryWeapon)
+		p_SoldierCustomization.weapons:add(s_SecondaryWeapon)
+		p_SoldierCustomization.weapons:add(s_PrimaryGadget)
+		p_SoldierCustomization.weapons:add(s_SecondaryGadget)
+		p_SoldierCustomization.weapons:add(s_Grenade)
+		p_SoldierCustomization.weapons:add(s_Knife)
 	end
 
-	return s_SoldierKit, s_Appearance, s_SoldierCustomization
+	return s_SoldierKit, s_Appearance
 end
 
 ---@return BotKits|integer
