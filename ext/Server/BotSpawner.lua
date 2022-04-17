@@ -33,6 +33,14 @@ function BotSpawner:RegisterVars()
 	self._KickPlayers = {}
 	---@type Bot[]
 	self._BotsWithoutPath = {}
+
+	-- weapon-stuff
+	self._PrimaryWeapons = {}
+	self._PrimaryGadget = {}
+	self._SecondaryGadget = {}
+	self._Grenade = {}
+	self._SecondaryWeapon = {}
+	self._Knife = {}
 end
 
 -- =============================================
@@ -64,7 +72,6 @@ end
 ---VEXT Shared Level:Destroy Event
 function BotSpawner:OnLevelDestroy()
 	self._SpawnSets = {}
-	self._SoldierCustomizations = {}
 	self._UpdateActive = false
 	self._FirstSpawnInLevel = true
 	self._FirstSpawnDelay = Registry.BOT_SPAWN.FIRST_SPAWN_DELAY
@@ -159,7 +166,7 @@ function BotSpawner:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 					local s_SoldierCustomization = CustomizeSoldierData()
 					local s_SoldierKit = nil
 					local s_Appearance = nil
-					s_SoldierKit, s_Appearance = self:_GetKitAppearanceCustomization(l_Bot.m_Player.teamId, s_SoldierCustomization, l_Bot.m_Kit, l_Bot.m_Color, l_Bot.m_Primary, l_Bot.m_Pistol, l_Bot.m_Knife, l_Bot.m_PrimaryGadget, l_Bot.m_SecondaryGadget, l_Bot.m_Grenade)
+					s_SoldierKit, s_Appearance = self:_GetKitAppearanceCustomization(l_Bot, s_SoldierCustomization, l_Bot.m_Kit, l_Bot.m_Color)
 
 					l_Bot.m_Player:SelectUnlockAssets(s_SoldierKit, {s_Appearance})
 
@@ -1170,12 +1177,12 @@ function BotSpawner:_SpawnBot(p_Bot, p_Transform, p_SetKit)
 	-- create kit and appearance
 	local s_SoldierBlueprint = ResourceManager:SearchForDataContainer('Characters/Soldiers/MpSoldier')
 	local s_SoldierCustomization = CustomizeSoldierData()
-	if self._SoldierCustomizations[p_Bot.m_Player.id] == nil or not self._SoldierCustomizations[p_Bot.m_Player.id]:Is("CustomizeSoldierData") then
-		self._SoldierCustomizations[p_Bot.m_Player.id] = s_SoldierCustomization
-	end
+	-- s_SoldierCustomization.unlocks:clear()
+	-- s_SoldierCustomization.visualGroups:clear()
 	local s_SoldierKit = nil
 	local s_Appearance = nil
-	s_SoldierKit, s_Appearance = self:_GetKitAppearanceCustomization(p_Bot.m_Player.teamId, s_SoldierCustomization, s_BotKit, s_BotColor, p_Bot.m_Primary, p_Bot.m_Pistol, p_Bot.m_Knife, p_Bot.m_PrimaryGadget, p_Bot.m_SecondaryGadget, p_Bot.m_Grenade)
+	s_SoldierKit, s_Appearance = self:_GetKitAppearanceCustomization(p_Bot, s_SoldierCustomization, s_BotKit, s_BotColor)
+	self._SoldierCustomizations[p_Bot.m_Player.id] = s_SoldierCustomization
 
 	-- Create the transform of where to spawn the bot at.
 	local s_Transform = p_Transform
@@ -1194,9 +1201,6 @@ function BotSpawner:_SpawnBot(p_Bot, p_Transform, p_SetKit)
 		print(s_SoldierCustomization)
 		p_Bot.m_Player.soldier:ApplyCustomization(s_SoldierCustomization)
 		self:_ModifyWeapon(p_Bot.m_Player.soldier)
-		if s_SoldierCustomization ~= self._SoldierCustomizations[p_Bot.m_Player.id] then
-			self._SoldierCustomizations[p_Bot.m_Player.id]:ReplaceReferences(s_SoldierCustomization)
-		end
 
 		-- for Civilianizer-mod:
 		Events:Dispatch('Bot:SoldierEntity', p_Bot.m_Player.soldier)
@@ -1335,40 +1339,51 @@ function BotSpawner:_GetSquadToJoin(p_TeamId)
 	return SquadId.SquadNone
 end
 
----@param p_TeamId TeamId|integer
+---@param p_Bot Bot|integer
+---@param p_SoldierCustomization CustomizeSoldierData
 ---@param p_Kit BotKits|integer
 ---@param p_Color BotColors|integer
----@param p_Primary Weapon
----@param p_Pistol Weapon
----@param p_Knife Weapon
----@param p_Gadget1 Weapon
----@param p_Gadget2 Weapon
----@param p_Grenade Weapon
 ---@return DataContainer
 ---@return DataContainer
 ---@return CustomizeSoldierData
-function BotSpawner:_GetKitAppearanceCustomization(p_TeamId, p_SoldierCustomization, p_Kit, p_Color, p_Primary, p_Pistol, p_Knife, p_Gadget1, p_Gadget2, p_Grenade)
+function BotSpawner:_GetKitAppearanceCustomization(p_Bot, p_SoldierCustomization, p_Kit, p_Color)
 	-- Create the loadouts
 	local s_SoldierKit = nil
 	local s_Appearance = nil
 
-	local s_PistolWeapon = ResourceManager:SearchForDataContainer(p_Pistol:getResourcePath())
-	local s_KnifeWeapon = ResourceManager:SearchForDataContainer(p_Knife:getResourcePath())
-	local s_Gadget1Weapon = ResourceManager:SearchForDataContainer(p_Gadget1:getResourcePath())
-	local s_Gadget2Weapon = ResourceManager:SearchForDataContainer(p_Gadget2:getResourcePath())
-	local s_GrenadeWeapon = ResourceManager:SearchForDataContainer(p_Grenade:getResourcePath())
+	local s_TeamId = p_Bot.m_Player.teamId
+	local s_Primary = p_Bot.m_Primary
+	local s_Pistol = p_Bot.m_Pistol
+	local s_Knife = p_Bot.m_Knife
+	local s_Gadget1 = p_Bot.m_PrimaryGadget
+	local s_Gadget2 = p_Bot.m_SecondaryGadget
+	local s_Grenade = p_Bot.m_Grenade
+
+	local s_PistolWeapon = ResourceManager:SearchForDataContainer(s_Pistol:getResourcePath())
+	local s_KnifeWeapon = ResourceManager:SearchForDataContainer(s_Knife:getResourcePath())
+	local s_Gadget1Weapon = ResourceManager:SearchForDataContainer(s_Gadget1:getResourcePath())
+	local s_Gadget2Weapon = ResourceManager:SearchForDataContainer(s_Gadget2:getResourcePath())
+	local s_GrenadeWeapon = ResourceManager:SearchForDataContainer(s_Grenade:getResourcePath())
 
 	p_SoldierCustomization.activeSlot = WeaponSlot.WeaponSlot_0
-	p_SoldierCustomization.removeAllExistingWeapons = true
+	p_SoldierCustomization.removeAllExistingWeapons = false
 
-	local s_PrimaryWeapon = UnlockWeaponAndSlot()
+	if self._PrimaryWeapons[p_Bot.m_Player.id] == nil then
+		self._PrimaryWeapons[p_Bot.m_Player.id] = UnlockWeaponAndSlot()
+	end
+	local s_PrimaryWeapon = self._PrimaryWeapons[p_Bot.m_Player.id]
 	s_PrimaryWeapon.slot = WeaponSlot.WeaponSlot_0
+	s_PrimaryWeapon.unlockAssets:clear()
 
-	local s_PrimaryWeaponResource = ResourceManager:SearchForDataContainer(p_Primary:getResourcePath())
+	local s_PrimaryWeaponResource = ResourceManager:SearchForDataContainer(s_Primary:getResourcePath())
 	s_PrimaryWeapon.weapon = SoldierWeaponUnlockAsset(s_PrimaryWeaponResource)
-	self:_SetAttachments(s_PrimaryWeapon, p_Primary:getAllAttachments())
+	self:_SetAttachments(s_PrimaryWeapon, s_Primary:getAllAttachments())
 
-	local s_PrimaryGadget = UnlockWeaponAndSlot()
+
+	if self._PrimaryGadget[p_Bot.m_Player.id] == nil then
+		self._PrimaryGadget[p_Bot.m_Player.id] = UnlockWeaponAndSlot()
+	end
+	local s_PrimaryGadget = self._PrimaryGadget[p_Bot.m_Player.id]
 	s_PrimaryGadget.weapon = SoldierWeaponUnlockAsset(s_Gadget1Weapon)
 
 	if p_Kit == BotKits.Assault or p_Kit == BotKits.Support then
@@ -1377,19 +1392,35 @@ function BotSpawner:_GetKitAppearanceCustomization(p_TeamId, p_SoldierCustomizat
 		s_PrimaryGadget.slot = WeaponSlot.WeaponSlot_2
 	end
 
-	local s_SecondaryGadget = UnlockWeaponAndSlot()
+
+	if self._SecondaryGadget[p_Bot.m_Player.id] == nil then
+		self._SecondaryGadget[p_Bot.m_Player.id] = UnlockWeaponAndSlot()
+	end
+	local s_SecondaryGadget = self._SecondaryGadget[p_Bot.m_Player.id]
 	s_SecondaryGadget.weapon = SoldierWeaponUnlockAsset(s_Gadget2Weapon)
 	s_SecondaryGadget.slot = WeaponSlot.WeaponSlot_5
 
-	local s_Grenade = UnlockWeaponAndSlot()
+
+	if self._Grenade[p_Bot.m_Player.id] == nil then
+		self._Grenade[p_Bot.m_Player.id] = UnlockWeaponAndSlot()
+	end
+	local s_Grenade = self._Grenade[p_Bot.m_Player.id]
 	s_Grenade.weapon = SoldierWeaponUnlockAsset(s_GrenadeWeapon)
 	s_Grenade.slot = WeaponSlot.WeaponSlot_6
 
-	local s_SecondaryWeapon = UnlockWeaponAndSlot()
+
+	if self._SecondaryWeapon[p_Bot.m_Player.id] == nil then
+		self._SecondaryWeapon[p_Bot.m_Player.id] = UnlockWeaponAndSlot()
+	end
+	local s_SecondaryWeapon = self._SecondaryWeapon[p_Bot.m_Player.id]
 	s_SecondaryWeapon.weapon = SoldierWeaponUnlockAsset(s_PistolWeapon)
 	s_SecondaryWeapon.slot = WeaponSlot.WeaponSlot_1
 
-	local s_Knife = UnlockWeaponAndSlot()
+
+	if self._Knife[p_Bot.m_Player.id] == nil then
+		self._Knife[p_Bot.m_Player.id] = UnlockWeaponAndSlot()
+	end
+	local s_Knife = self._Knife[p_Bot.m_Player.id]
 	s_Knife.weapon = SoldierWeaponUnlockAsset(s_KnifeWeapon)
 	s_Knife.slot = WeaponSlot.WeaponSlot_7
 
@@ -1402,7 +1433,7 @@ function BotSpawner:_GetKitAppearanceCustomization(p_TeamId, p_SoldierCustomizat
 		end
 	end
 
-	if p_TeamId % 2 == 1 then -- US
+	if s_TeamId % 2 == 1 then -- US
 		if p_Kit == BotKits.Assault then --assault
 			s_Appearance = self:_FindAppearance('Us', 'Assault', s_ColorString)
 			s_SoldierKit = self:_FindKit('US', 'Assault')
