@@ -27,7 +27,6 @@ function BotSpawner:RegisterVars()
 	self._UpdateActive = false
 	---@type SpawnSet[]
 	self._SpawnSets = {}
-	self._SoldierCustomizations = {}
 	---@type string[]
 	---`playerName[]` @kick players that use botNames
 	self._KickPlayers = {}
@@ -64,7 +63,6 @@ end
 ---VEXT Shared Level:Destroy Event
 function BotSpawner:OnLevelDestroy()
 	self._SpawnSets = {}
-	self._SoldierCustomizations = {}
 	self._UpdateActive = false
 	self._FirstSpawnInLevel = true
 	self._FirstSpawnDelay = Registry.BOT_SPAWN.FIRST_SPAWN_DELAY
@@ -160,7 +158,6 @@ function BotSpawner:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 					local s_SoldierKit = nil
 					local s_Appearance = nil
 					s_SoldierKit, s_Appearance, s_SoldierCustomization = self:_GetKitAppearanceCustomization(l_Bot.m_Player.teamId, l_Bot.m_Kit, l_Bot.m_Color, l_Bot.m_Primary, l_Bot.m_Pistol, l_Bot.m_Knife, l_Bot.m_PrimaryGadget, l_Bot.m_SecondaryGadget, l_Bot.m_Grenade)
-					self._SoldierCustomizations[l_Bot.m_Player.id] = s_SoldierCustomization -- store soldier customizations to prevent garbage collection
 
 					l_Bot.m_Player:SelectUnlockAssets(s_SoldierKit, {s_Appearance})
 
@@ -1174,7 +1171,6 @@ function BotSpawner:_SpawnBot(p_Bot, p_Transform, p_SetKit)
 	local s_SoldierKit = nil
 	local s_Appearance = nil
 	s_SoldierKit, s_Appearance, s_SoldierCustomization = self:_GetKitAppearanceCustomization(p_Bot.m_Player.teamId, s_BotKit, s_BotColor, p_Bot.m_Primary, p_Bot.m_Pistol, p_Bot.m_Knife, p_Bot.m_PrimaryGadget, p_Bot.m_SecondaryGadget, p_Bot.m_Grenade)
-	self._SoldierCustomizations[p_Bot.m_Player.id] = s_SoldierCustomization -- store soldier customizations to prevent garbage collection
 
 	-- Create the transform of where to spawn the bot at.
 	local s_Transform = p_Transform
