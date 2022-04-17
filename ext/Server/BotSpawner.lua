@@ -1121,10 +1121,11 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 
 				s_Bot:SetVarsWay(p_Player, p_UseRandomWay, p_ActiveWayIndex, p_IndexOnPath, s_InverseDirection)
 				self:_SpawnBot(s_Bot, s_Transform, true)
-			end
-			-- check for vehicle of squad
-			if s_SquadSpawnVehicle ~= nil then
-				s_Bot:_EnterVehicleEntity(s_SquadSpawnVehicle, false)
+
+				-- check for vehicle of squad
+				if s_SquadSpawnVehicle ~= nil then
+					s_Bot:_EnterVehicleEntity(s_SquadSpawnVehicle, false)
+				end
 			end
 		end
 	end
