@@ -27,7 +27,6 @@ function BotSpawner:RegisterVars()
 	self._UpdateActive = false
 	---@type SpawnSet[]
 	self._SpawnSets = {}
-	self._SoldierCustomizations = {}
 	---@type string[]
 	---`playerName[]` @kick players that use botNames
 	self._KickPlayers = {}
@@ -167,7 +166,6 @@ function BotSpawner:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 					local s_SoldierKit = nil
 					local s_Appearance = nil
 					s_SoldierKit, s_Appearance = self:_GetKitAppearanceCustomization(l_Bot, s_SoldierCustomization, l_Bot.m_Kit, l_Bot.m_Color)
-					self._SoldierCustomizations[l_Bot.m_Player.id] = s_SoldierCustomization
 
 					l_Bot.m_Player:SelectUnlockAssets(s_SoldierKit, {s_Appearance})
 
@@ -1183,7 +1181,6 @@ function BotSpawner:_SpawnBot(p_Bot, p_Transform, p_SetKit)
 	local s_SoldierKit = nil
 	local s_Appearance = nil
 	s_SoldierKit, s_Appearance = self:_GetKitAppearanceCustomization(p_Bot, s_SoldierCustomization, s_BotKit, s_BotColor)
-	self._SoldierCustomizations[p_Bot.m_Player.id] = s_SoldierCustomization
 
 	-- Create the transform of where to spawn the bot at.
 	local s_Transform = p_Transform
