@@ -1588,9 +1588,7 @@ function BotSpawner:_SetAttachments(p_UnlockWeapon, p_Attachments)
 		local s_Asset = ResourceManager:SearchForDataContainer(l_Attachment)
 
 		if s_Asset == nil then
-			if Debug.Server.BOT then
-				m_Logger:Warning('Attachment invalid [' .. tostring(p_UnlockWeapon.weapon.name) .. ']: ' .. tostring(l_Attachment))
-			end
+			m_Logger:Warning('Attachment invalid [' .. tostring(p_UnlockWeapon.weapon.name) .. ']: ' .. tostring(l_Attachment))
 		else
 			p_UnlockWeapon.unlockAssets:add(UnlockAsset(s_Asset))
 		end
