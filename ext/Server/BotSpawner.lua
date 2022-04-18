@@ -109,7 +109,7 @@ function BotSpawner:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	end
 
 	if #self._SpawnSets > 0 then
-		if self._BotSpawnTimer > 0.2 then --time to wait between spawn. 0.2 works
+		if self._BotSpawnTimer > 0.1 then --time to wait between spawn. 0.2 works
 			self._BotSpawnTimer = 0.0
 			local s_SpawnSet = table.remove(self._SpawnSets)
 			self:_SpawnSingleWayBot(s_SpawnSet.m_PlayerVarOfBot, s_SpawnSet.m_UseRandomWay, s_SpawnSet.m_ActiveWayIndex, s_SpawnSet.m_IndexOnPath, nil, s_SpawnSet.m_Team)
