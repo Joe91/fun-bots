@@ -1198,7 +1198,6 @@ function BotSpawner:_SpawnBot(p_Bot, p_Transform, p_SetKit)
 	end
 
 	if s_ResultSoldier ~= nil and s_SoldierCustomization ~= nil and s_SoldierCustomization:Is("CustomizeSoldierData") then
-		print(s_SoldierCustomization)
 		p_Bot.m_Player.soldier:ApplyCustomization(s_SoldierCustomization)
 		self:_ModifyWeapon(p_Bot.m_Player.soldier)
 
