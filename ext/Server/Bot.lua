@@ -187,10 +187,6 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 			self._UpdateTimer = 0.0
 		end
 	else -- player alive
-		self.m_Player.soldier:Kill()
-		if self.m_Player.soldier == nil then
-			return
-		end
 
 		if Globals.IsInputAllowed and self._SpawnProtectionTimer <= 0.0 then
 			-- update timer
@@ -1039,7 +1035,7 @@ function Bot:_UpdateRespawn(p_DeltaTime)
 
 	if self.m_Player.soldier == nil then
 		-- wait for respawn-delay gone
-		if self._SpawnDelayTimer < 1.0 then--(Globals.RespawnDelay + Config.AdditionalBotSpawnDelay) then
+		if self._SpawnDelayTimer < (Globals.RespawnDelay + Config.AdditionalBotSpawnDelay) then
 			self._SpawnDelayTimer = self._SpawnDelayTimer + p_DeltaTime
 		else
 			self._SpawnDelayTimer = 0.0 -- prevent triggering again.
