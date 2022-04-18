@@ -47,6 +47,8 @@ This is the changelog for the version V2.5.0. Don't forget to [join us on Discor
 * bugfix bot-behaviour when toggling attack-mode
 * bugfix bot do friendly fire after revive
 * bugfix revive if already dead
+* fix some invalid weapon-attachments
+* workaround for crash with CustomSoldierData --> this causes some errors from time to time, but much less crashes
 
 ### New maps
 * Vehicles for Rush Theran Highway by BOB
