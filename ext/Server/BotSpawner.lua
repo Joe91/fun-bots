@@ -1349,80 +1349,102 @@ function BotSpawner:_GetKitAppearanceCustomization(p_Bot, p_SoldierCustomization
 	local s_Appearance = nil
 
 	local s_TeamId = p_Bot.m_Player.teamId
-	local s_Primary = p_Bot.m_Primary
-	local s_Pistol = p_Bot.m_Pistol
-	local s_Knife = p_Bot.m_Knife
-	local s_Gadget1 = p_Bot.m_PrimaryGadget
-	local s_Gadget2 = p_Bot.m_SecondaryGadget
-	local s_Grenade = p_Bot.m_Grenade
-
-	local s_PistolWeapon = ResourceManager:SearchForDataContainer(s_Pistol:getResourcePath())
-	local s_KnifeWeapon = ResourceManager:SearchForDataContainer(s_Knife:getResourcePath())
-	local s_Gadget1Weapon = ResourceManager:SearchForDataContainer(s_Gadget1:getResourcePath())
-	local s_Gadget2Weapon = ResourceManager:SearchForDataContainer(s_Gadget2:getResourcePath())
-	local s_GrenadeWeapon = ResourceManager:SearchForDataContainer(s_Grenade:getResourcePath())
+	local s_PrimaryInput = p_Bot.m_Primary
+	local s_PistolInput = p_Bot.m_Pistol
+	local s_KnifeInput = p_Bot.m_Knife
+	local s_Gadget1Input = p_Bot.m_PrimaryGadget
+	local s_Gadget2Input = p_Bot.m_SecondaryGadget
+	local s_GrenadeInput = p_Bot.m_Grenade
 
 	p_SoldierCustomization.activeSlot = WeaponSlot.WeaponSlot_0
 	p_SoldierCustomization.removeAllExistingWeapons = false
 
+	-- Primary Weapon
 	if self._PrimaryWeapons[p_Bot.m_Player.id] == nil then
 		self._PrimaryWeapons[p_Bot.m_Player.id] = UnlockWeaponAndSlot()
 	end
 	local s_PrimaryWeapon = self._PrimaryWeapons[p_Bot.m_Player.id]
-	s_PrimaryWeapon.slot = WeaponSlot.WeaponSlot_0
 	s_PrimaryWeapon.unlockAssets:clear()
+	s_PrimaryWeapon.slot = WeaponSlot.WeaponSlot_0
+	local s_PrimaryWeaponResource = ResourceManager:SearchForDataContainer(s_PrimaryInput:getResourcePath())
+	if s_PrimaryWeaponResource == nil then
+		m_Logger:Warning("Path not found: "..s_PrimaryInput:getResourcePath())
+	else
+		s_PrimaryWeapon.weapon = SoldierWeaponUnlockAsset(s_PrimaryWeaponResource)
+		self:_SetAttachments(s_PrimaryWeapon, s_PrimaryInput:getAllAttachments())
+	end
 
-	local s_PrimaryWeaponResource = ResourceManager:SearchForDataContainer(s_Primary:getResourcePath())
-	s_PrimaryWeapon.weapon = SoldierWeaponUnlockAsset(s_PrimaryWeaponResource)
-	self:_SetAttachments(s_PrimaryWeapon, s_Primary:getAllAttachments())
-
-
+	-- Primary Gadget
 	if self._PrimaryGadget[p_Bot.m_Player.id] == nil then
 		self._PrimaryGadget[p_Bot.m_Player.id] = UnlockWeaponAndSlot()
 	end
 	local s_PrimaryGadget = self._PrimaryGadget[p_Bot.m_Player.id]
-	s_PrimaryGadget.weapon = SoldierWeaponUnlockAsset(s_Gadget1Weapon)
-
 	if p_Kit == BotKits.Assault or p_Kit == BotKits.Support then
 		s_PrimaryGadget.slot = WeaponSlot.WeaponSlot_4
 	else
 		s_PrimaryGadget.slot = WeaponSlot.WeaponSlot_2
 	end
+	local s_Gadget1Weapon = ResourceManager:SearchForDataContainer(s_Gadget1Input:getResourcePath())
+	if s_Gadget1Weapon == nil then
+		m_Logger:Warning("Path not found: "..s_Gadget1Input:getResourcePath())
+	else
+		s_PrimaryGadget.weapon = SoldierWeaponUnlockAsset(s_Gadget1Weapon)
+	end
 
-
+	-- Secondary Gadget
 	if self._SecondaryGadget[p_Bot.m_Player.id] == nil then
 		self._SecondaryGadget[p_Bot.m_Player.id] = UnlockWeaponAndSlot()
 	end
 	local s_SecondaryGadget = self._SecondaryGadget[p_Bot.m_Player.id]
-	s_SecondaryGadget.weapon = SoldierWeaponUnlockAsset(s_Gadget2Weapon)
+	local s_Gadget2Weapon = ResourceManager:SearchForDataContainer(s_Gadget2Input:getResourcePath())
 	s_SecondaryGadget.slot = WeaponSlot.WeaponSlot_5
+	if s_Gadget2Weapon == nil then
+		m_Logger:Warning("Path not found: "..s_Gadget2Input:getResourcePath())
+	else
+		s_SecondaryGadget.weapon = SoldierWeaponUnlockAsset(s_Gadget2Weapon)
+	end
 
-
+	-- Grenade
 	if self._Grenade[p_Bot.m_Player.id] == nil then
 		self._Grenade[p_Bot.m_Player.id] = UnlockWeaponAndSlot()
 	end
 	local s_Grenade = self._Grenade[p_Bot.m_Player.id]
-	s_Grenade.weapon = SoldierWeaponUnlockAsset(s_GrenadeWeapon)
 	s_Grenade.slot = WeaponSlot.WeaponSlot_6
+	local s_GrenadeWeapon = ResourceManager:SearchForDataContainer(s_GrenadeInput:getResourcePath())
+	if s_GrenadeWeapon == nil then
+		m_Logger:Warning("Path not found: "..s_GrenadeInput:getResourcePath())
+	else
+		s_Grenade.weapon = SoldierWeaponUnlockAsset(s_GrenadeWeapon)
+	end
 
-
+	-- Pistol / Secondary
 	if self._SecondaryWeapon[p_Bot.m_Player.id] == nil then
 		self._SecondaryWeapon[p_Bot.m_Player.id] = UnlockWeaponAndSlot()
 	end
 	local s_SecondaryWeapon = self._SecondaryWeapon[p_Bot.m_Player.id]
-	s_SecondaryWeapon.weapon = SoldierWeaponUnlockAsset(s_PistolWeapon)
 	s_SecondaryWeapon.slot = WeaponSlot.WeaponSlot_1
+	local s_PistolWeapon = ResourceManager:SearchForDataContainer(s_PistolInput:getResourcePath())
+	if s_PistolWeapon == nil then
+		m_Logger:Warning("Path not found: "..s_PistolInput:getResourcePath())
+	else
+		s_SecondaryWeapon.weapon = SoldierWeaponUnlockAsset(s_PistolWeapon)
+	end
 
-
+	-- Knife
 	if self._Knife[p_Bot.m_Player.id] == nil then
 		self._Knife[p_Bot.m_Player.id] = UnlockWeaponAndSlot()
 	end
 	local s_Knife = self._Knife[p_Bot.m_Player.id]
-	s_Knife.weapon = SoldierWeaponUnlockAsset(s_KnifeWeapon)
 	s_Knife.slot = WeaponSlot.WeaponSlot_7
+	local s_KnifeWeapon = ResourceManager:SearchForDataContainer(s_KnifeInput:getResourcePath())
+	if s_KnifeWeapon == nil then
+		m_Logger:Warning("Path not found: "..s_KnifeInput:getResourcePath())
+	else
+		s_Knife.weapon = SoldierWeaponUnlockAsset(s_KnifeWeapon)
+	end
 
+	-- Cast Color
 	local s_ColorString = ""
-
 	for l_Key, l_Value in pairs(BotColors) do
 		if l_Value == p_Color then
 			s_ColorString = l_Key
@@ -1430,6 +1452,7 @@ function BotSpawner:_GetKitAppearanceCustomization(p_Bot, p_SoldierCustomization
 		end
 	end
 
+	-- get Kit and Appearance
 	if s_TeamId % 2 == 1 then -- US
 		if p_Kit == BotKits.Assault then --assault
 			s_Appearance = self:_FindAppearance('Us', 'Assault', s_ColorString)
@@ -1460,6 +1483,7 @@ function BotSpawner:_GetKitAppearanceCustomization(p_Bot, p_SoldierCustomization
 		end
 	end
 
+	-- fill Customization
 	p_SoldierCustomization.weapons:clear()
 	if Config.ZombieMode then
 		p_SoldierCustomization.activeSlot = WeaponSlot.WeaponSlot_7

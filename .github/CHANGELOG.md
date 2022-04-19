@@ -49,6 +49,7 @@ This is the changelog for the version V2.5.0. Don't forget to [join us on Discor
 * bugfix revive if already dead
 * fix some invalid weapon-attachments
 * workaround for crash with CustomSoldierData --> this causes some errors from time to time, but much less crashes
+* remove some warnings
 
 ### New maps
 * Vehicles for Rush Theran Highway by BOB
