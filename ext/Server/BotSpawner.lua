@@ -28,17 +28,22 @@ function BotSpawner:RegisterVars()
 	---@type SpawnSet[]
 	self._SpawnSets = {}
 	---@type string[]
-	---`playerName[]` @kick players that use botNames
 	self._KickPlayers = {}
 	---@type Bot[]
 	self._BotsWithoutPath = {}
 
 	-- weapon-stuff
+	---@type UnlockWeaponAndSlot[]
 	self._PrimaryWeapons = {}
+	---@type UnlockWeaponAndSlot[]
 	self._PrimaryGadget = {}
+	---@type UnlockWeaponAndSlot[]
 	self._SecondaryGadget = {}
+	---@type UnlockWeaponAndSlot[]
 	self._Grenade = {}
+	---@type UnlockWeaponAndSlot[]
 	self._SecondaryWeapon = {}
+	---@type UnlockWeaponAndSlot[]
 	self._Knife = {}
 end
 
@@ -1325,7 +1330,6 @@ function BotSpawner:_GetSquadToJoin(p_TeamId)
 	if Globals.IsSdm or Globals.IsSquadRush then
 		return SquadId.Squad1
 	else
-		---@type SquadId|integer
 		for l_SquadId = 1, SquadId.SquadIdCount - 1 do -- for i = 9, SquadId.SquadIdCount - 1 do -- first 8 squads for real players
 			if TeamSquadManager:GetSquadPlayerCount(p_TeamId, l_SquadId) < 4 then
 				return l_SquadId

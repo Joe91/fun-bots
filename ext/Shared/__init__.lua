@@ -35,7 +35,7 @@ function FunBotShared:__init()
 	if Registry.COMMON.USE_LOAD_BUNDLE_BUGFIX then
 		Events:Subscribe('Level:LoadResources', self, self.OnLevelLoadResources) -- Load Resources
 		Events:Subscribe('Level:RegisterEntityResources', self, self.OnLevelRegisterEntityResources) -- Register Resource
-		Hooks:Install('ResourceManager:LoadBundles', 100, self, self.OnResourceManagerLoadBundle) ---- Inject Bundles
+		Hooks:Install('ResourceManager:LoadBundles', 100, self, self.OnResourceManagerLoadBundle) -- Inject Bundles
 	end
 end
 

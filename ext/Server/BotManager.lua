@@ -423,6 +423,9 @@ function BotManager:OnRequestChangeSeatVehicle(p_Player, p_SeatNumber)
 	if s_VehicleEntity ~= nil and s_VehicleEntity:Is("ServerSoldierEntity") and p_Player.attachedControllable ~= nil then
 		s_VehicleEntity = p_Player.attachedControllable
 	end
+	if s_VehicleEntity == nil then
+		return
+	end
 	local s_PlayerInTargetSet = s_VehicleEntity:GetPlayerInEntry(s_TargetEntryId)
 	if s_PlayerInTargetSet ~= nil then
 		local s_Bot = self:GetBotByName(s_PlayerInTargetSet.name)

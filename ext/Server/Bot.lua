@@ -20,8 +20,11 @@ local m_Logger = Logger("Bot", Debug.Server.BOT)
 ---@param p_Player Player
 function Bot:__init(p_Player)
 	--Player Object
+	---@type Player
 	self.m_Player = p_Player
+	---@type string
 	self.m_Name = p_Player.name
+	---@type integer
 	self.m_Id = p_Player.id
 
 	--common settings
