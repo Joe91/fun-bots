@@ -133,6 +133,10 @@ function ClientBotManager:DoRaycast(p_Pos1, p_Pos2, p_InObjectPos1, p_InObjectPo
 	end
 end
 
+function ClientBotManager:SendRaycastResults(p_RaycastResultsToSend)
+	NetEvents:SendLocal("Botmanager:RaycastResults", p_RaycastResultsToSend)
+end
+
 ---VEXT Shared UpdateManager:Update Event
 ---@param p_DeltaTime number
 ---@param p_UpdatePass UpdatePass|integer
@@ -140,6 +144,8 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	if p_UpdatePass ~= UpdatePass.UpdatePass_PreSim or not self.m_ReadyToUpdate then --UpdatePass_PreSim UpdatePass_PreFrame
 		return
 	end
+
+	local s_RaycastResultsToSend = {}
 
 	self.m_RaycastTimer = self.m_RaycastTimer + p_DeltaTime
 	local s_SkipEnemyCheck = (self.m_RaycastTimer < Registry.GAME_RAYCASTING.RAYCAST_INTERVAL_ENEMY_CHECK)
@@ -163,7 +169,13 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 					local s_EndPos = s_Bot2.soldier.worldTransform.trans:Clone()
 					s_EndPos.y = s_EndPos.y + 1.2
 					if self:DoRaycast(s_StartPos, s_EndPos, s_RaycastCheckEntry.Bot1InVehicle, s_RaycastCheckEntry.Bot2InVehicle) then
-						NetEvents:SendLocal("Bot:ShootAtBot", s_RaycastCheckEntry.Bot1, s_RaycastCheckEntry.Bot2)
+						-- NetEvents:SendLocal("Bot:ShootAtBot", s_RaycastCheckEntry.Bot1, s_RaycastCheckEntry.Bot2)
+						table.insert(s_RaycastResultsToSend, {
+							Mode = "ShootAtBot",
+							Bot1 = s_RaycastCheckEntry.Bot1,
+							Bot2 = s_RaycastCheckEntry.Bot2,
+							IgnoreYaw = false,
+						})
 					end
 				end
 			end
@@ -178,11 +190,13 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	if self.m_Player == nil then
 		self.m_Player = PlayerManager:GetLocalPlayer()
 		if self.m_Player == nil then
+			self:SendRaycastResults(s_RaycastResultsToSend)
 			return
 		end
 	end
 
 	if s_SkipEnemyCheck then
+		self:SendRaycastResults(s_RaycastResultsToSend)
 		return
 	end
 
@@ -192,6 +206,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	if self.m_Player.soldier ~= nil then -- alive. Check for enemy bots
 		if self.m_AliveTimer < Registry.CLIENT.SPAWN_PROTECTION then -- wait 2s (spawn-protection)
 			self.m_AliveTimer = self.m_AliveTimer + p_DeltaTime
+			self:SendRaycastResults(s_RaycastResultsToSend)
 			return
 		end
 
@@ -232,21 +247,29 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 						s_IgnoreYaw = true -- shoot, because you are near
 					end
 
-					NetEvents:SendLocal("Bot:ShootAtPlayer", s_Bot.name, s_IgnoreYaw)
+					-- NetEvents:SendLocal("Bot:ShootAtPlayer", s_Bot.name, s_IgnoreYaw)
+					table.insert(s_RaycastResultsToSend, {
+						Mode = "ShootAtPlayer",
+						Bot1 = s_Bot.name,
+						Bot2 = "",
+						IgnoreYaw = s_IgnoreYaw,
+					})
 				end
 
 				self.m_LastIndex = s_Index
+				self:SendRaycastResults(s_RaycastResultsToSend)
 				return --only one raycast per cycle
 			end
 
 			if s_CheckCount >= Registry.CLIENT.MAX_CHECKS_PER_CYCLE then
 				self.m_LastIndex = s_Index
+				self:SendRaycastResults(s_RaycastResultsToSend)
 				return
 			end
 
 			::continue_enemy_loop::
 		end
-	elseif self.m_Player.corpse ~= nil then -- dead. check for revive botsAttackBots
+	elseif self.m_Player.corpse ~= nil and not self.m_Player.corpse.isDead then -- dead. check for revive botsAttackBots
 		self.m_AliveTimer = 0.5 --add a little delay
 		local s_TeamMates = PlayerManager:GetPlayersByTeam(self.m_Player.teamId)
 
@@ -275,14 +298,22 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 				self.m_LastIndex = s_Index
 				if self:DoRaycast(s_PlayerPosition, s_Target, false, false) then
 					-- we found a valid bot in Sight (either no hit, or player-hit). Signal Server with players
-					NetEvents:SendLocal("Bot:RevivePlayer", s_Bot.name)
+					-- NetEvents:SendLocal("Bot:RevivePlayer", s_Bot.name)
+					table.insert(s_RaycastResultsToSend, {
+						Mode = "RevivePlayer",
+						Bot1 = s_Bot.name,
+						Bot2 = "",
+						IgnoreYaw = false,
+					})
 				end
 
+				self:SendRaycastResults(s_RaycastResultsToSend)
 				return -- only one raycast per cycle
 			end
 
 			if s_CheckCount >= Registry.CLIENT.MAX_CHECKS_PER_CYCLE then
 				self.m_LastIndex = s_Index
+				self:SendRaycastResults(s_RaycastResultsToSend)
 				return
 			end
 
@@ -291,6 +322,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	else
 		self.m_AliveTimer = 0 --add a little delay after spawn
 	end
+	self:SendRaycastResults(s_RaycastResultsToSend)
 end
 
 ---VEXT Shared Extension:Unloading Event

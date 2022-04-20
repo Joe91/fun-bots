@@ -375,4 +375,24 @@ VehicleData = {
 	-- MAV / BOt
 	["EODBot"] = {Name = "[EOD BOT]", Type = VehicleTypes.MavBot, Parts = {}},
 	["MAV"] = {Name = "[MAV]", Type = VehicleTypes.MavBot, Parts = {}},
+
+	-- Stationary Defense
+	["Kornet"] = {
+		Name = "[Kornet]", 
+		Type = VehicleTypes.StationaryLauncher,
+		Parts = {2},
+		Speed = {20},
+		Drop = {0.0},},
+	["TOW2"] = {
+		Name = "[TOW2]", 
+		Type = VehicleTypes.StationaryLauncher,
+		Parts = {2},
+		Speed = {20},
+		Drop = {0.0},},
+
+	-- Gadgets
+	["AGM-144_Hellfire_TV"] = {Name = "[Hellfire]", Type = VehicleTypes.Gadgets, Parts = {}},
+	["RadioBeacon_Projectile"] = {Name = "[RadioBeacon]", Type = VehicleTypes.Gadgets, Parts = {}},
+	["SOFLAM_Projectile"] = {Name = "[SOFLAM]", Type = VehicleTypes.Gadgets, Parts = {}},
+	["T-UGS_Vehicle"] = {Name = "[T-UGS]", Type = VehicleTypes.Gadgets, Parts = {}},
 }

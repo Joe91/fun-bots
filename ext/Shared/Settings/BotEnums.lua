@@ -48,7 +48,9 @@ VehicleTypes = {
 	Chopper = 5,
 	NoArmorVehicle = 6,
 	MavBot = 7,
-	StationaryAA = 8
+	StationaryAA = 8,
+	StationaryLauncher = 9,
+	Gadgets = 10
 }
 
 ---@class VehicleAttackModes

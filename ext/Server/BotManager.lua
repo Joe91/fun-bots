@@ -391,6 +391,21 @@ function BotManager:OnBotShootAtBot(p_Player, p_BotName1, p_BotName2)
 	end
 end
 
+function BotManager:OnClientRaycastResults(p_Player, p_RaycastResults)
+	if p_RaycastResults == nil then
+		return
+	end
+	for _, l_RaycastResult in pairs(p_RaycastResults) do
+		if l_RaycastResult.Mode == "ShootAtBot" then
+			self:OnBotShootAtBot(p_Player, l_RaycastResult.Bot1, l_RaycastResult.Bot2)
+		elseif l_RaycastResult.Mode == "ShootAtPlayer" then
+			self:OnShootAt(p_Player, l_RaycastResult.Bot1, l_RaycastResult.IgnoreYaw)
+		elseif l_RaycastResult.Mode == "RevivePlayer" then
+			self:OnRevivePlayer(p_Player, l_RaycastResult.Bot1)
+		end
+	end
+end
+
 ---@param p_Player Player
 ---@param p_BotName string
 function BotManager:OnRequestEnterVehicle(p_Player, p_BotName)
@@ -407,6 +422,9 @@ function BotManager:OnRequestChangeSeatVehicle(p_Player, p_SeatNumber)
 	local s_VehicleEntity = p_Player.controlledControllable
 	if s_VehicleEntity ~= nil and s_VehicleEntity:Is("ServerSoldierEntity") and p_Player.attachedControllable ~= nil then
 		s_VehicleEntity = p_Player.attachedControllable
+	end
+	if s_VehicleEntity == nil then
+		return
 	end
 	local s_PlayerInTargetSet = s_VehicleEntity:GetPlayerInEntry(s_TargetEntryId)
 	if s_PlayerInTargetSet ~= nil then
@@ -770,14 +788,26 @@ function BotManager:SpawnBot(p_Bot, p_Transform, p_Pose, p_SoldierBp, p_Kit, p_U
 	p_Bot.m_Player:SelectUnlockAssets(p_Kit, p_Unlocks)
 	local s_BotSoldier = p_Bot.m_Player:CreateSoldier(p_SoldierBp, p_Transform) -- Returns SoldierEntity
 
-	-- TODO: add s_BotSoldier nil check
+	if s_BotSoldier == nil then
+		m_Logger:Error("CreateSoldier failed")
+		return nil
+	end
+
 	-- Customisation of health of bot
-	s_BotSoldier.maxHealth = Config.BotMaxHealth;
+	s_BotSoldier.maxHealth = Config.BotMaxHealth
 
 	p_Bot.m_Player:SpawnSoldierAt(s_BotSoldier, p_Transform, p_Pose)
 	p_Bot.m_Player:AttachSoldier(s_BotSoldier)
 
-	return s_BotSoldier
+	if p_Bot.m_Player.soldier == nil then
+		m_Logger:Error("AttachSoldier failed. Maybe the spawn failed as well")
+		return nil
+	elseif p_Bot.m_Player.soldier ~= s_BotSoldier then
+		m_Logger:Error("AttachSoldier failed. We still have the old SoldierEntity attached to the Player.")
+		return nil
+	else
+		return s_BotSoldier
+	end
 end
 
 ---@param p_Player Player
@@ -1052,7 +1082,7 @@ end
 function BotManager:_DistributeRaycastsBotBotAttack(p_RaycastData)
 	local s_RaycastIndex = 0
 	for i = 0, (#self._ActivePlayers - 1) do
-		local s_Index = (self._LastPlayerCheckIndex + i) % #self._ActivePlayers + 1
+		local s_Index = ((self._LastPlayerCheckIndex + i) % #self._ActivePlayers) + 1
 		local s_ActivePlayer = PlayerManager:GetPlayerByName(self._ActivePlayers[s_Index])
 		if s_ActivePlayer ~= nil then
 			local s_RaycastsToSend = {}
@@ -1062,12 +1092,11 @@ function BotManager:_DistributeRaycastsBotBotAttack(p_RaycastData)
 					table.insert(s_RaycastsToSend, p_RaycastData[s_RaycastIndex])
 				else
 					NetEvents:SendUnreliableToLocal('CheckBotBotAttack', s_ActivePlayer, s_RaycastsToSend)
-					self._LastPlayerCheckIndex = i
+					self._LastPlayerCheckIndex = s_Index
 					return
 				end
 			end
 			NetEvents:SendUnreliableToLocal('CheckBotBotAttack', s_ActivePlayer, s_RaycastsToSend)
-			self._LastPlayerCheckIndex = i
 		end
 	end
 end

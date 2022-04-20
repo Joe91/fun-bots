@@ -35,9 +35,9 @@ function WeaponList:__init()
 		Weapon('DAO-12_Flechette', '', {'Weapons/DAO-12/U_DAO-12_Flechette', 'Kobra', 'ExtendedMag'}, WeaponTypes.Shotgun, 'Weapons/DAO-12/U_DAO-12'),
 		Weapon('DAO-12_Frag', '', {'Weapons/DAO-12/U_DAO-12_Frag', 'Kobra', 'ExtendedMag'}, WeaponTypes.Shotgun, 'Weapons/DAO-12/U_DAO-12'),
 		Weapon('DAO-12_Slug', '', {'Weapons/DAO-12/U_DAO-12_Slug', 'Kobra', 'TargetPointer'}, WeaponTypes.Shotgun, 'Weapons/DAO-12/U_DAO-12'),
-		Weapon('Jackhammer_Flechette', 'XP1', {'Weapons/XP1_Jackhammer/U_Jackhammer_Flechette', 'Kobra', 'ExtendedMag', 'Weapons/XP1_Jackhammer/U_JACKHAMMER_CAMO_1'}, WeaponTypes.Shotgun, 'Weapons/XP1_Jackhammer/U_Jackhammer'),
-		Weapon('Jackhammer_Frag', 'XP1', {'Weapons/XP1_Jackhammer/U_Jackhammer_Frag', 'Kobra', 'ExtendedMag', 'Weapons/XP1_Jackhammer/U_JACKHAMMER_CAMO_2'}, WeaponTypes.Shotgun, 'Weapons/XP1_Jackhammer/U_Jackhammer'),
-		Weapon('Jackhammer_Slug', 'XP1', {'Weapons/XP1_Jackhammer/U_Jackhammer_Slug', 'Kobra', 'TargetPointer', 'Weapons/XP1_Jackhammer/U_JACKHAMMER_CAMO_1'}, WeaponTypes.Shotgun, 'Weapons/XP1_Jackhammer/U_Jackhammer'),
+		Weapon('Jackhammer_Flechette', 'XP1', {'Weapons/XP1_Jackhammer/U_Jackhammer_Flechette', 'Kobra', 'ExtendedMag', 'CAMO_1'}, WeaponTypes.Shotgun, 'Weapons/XP1_Jackhammer/U_Jackhammer'),
+		Weapon('Jackhammer_Frag', 'XP1', {'Weapons/XP1_Jackhammer/U_Jackhammer_Frag', 'Kobra', 'ExtendedMag', 'CAMO_2'}, WeaponTypes.Shotgun, 'Weapons/XP1_Jackhammer/U_Jackhammer'),
+		Weapon('Jackhammer_Slug', 'XP1', {'Weapons/XP1_Jackhammer/U_Jackhammer_Slug', 'Kobra', 'TargetPointer', 'CAMO_1'}, WeaponTypes.Shotgun, 'Weapons/XP1_Jackhammer/U_Jackhammer'),
 		Weapon('Saiga20_Flechette', '', {'Weapons/SAIGA20K/U_Saiga_20k_Flechette', 'Kobra', 'ExtendedMag'}, WeaponTypes.Shotgun, 'Weapons/SAIGA20K/U_SAIGA_20K'),
 		Weapon('Saiga20_Frag', '', {'Weapons/SAIGA20K/U_Saiga_20k_Frag', 'Kobra', 'ExtendedMag'}, WeaponTypes.Shotgun, 'Weapons/SAIGA20K/U_SAIGA_20K'),
 		Weapon('Saiga20_Slug', '', {'Weapons/SAIGA20K/U_Saiga_20k_Slug', 'Kobra', 'ExtendedMag'}, WeaponTypes.Shotgun, 'Weapons/SAIGA20K/U_SAIGA_20K'),
@@ -54,6 +54,7 @@ function WeaponList:__init()
 		Weapon('870M_Flechette', '', {'Weapons/Remington870/U_870_Flechette', 'ExtendedMag', 'RX01'}, WeaponTypes.Shotgun, 'Weapons/Remington870/U_870'),
 		Weapon('870M_Frag', '', {'Weapons/Remington870/U_870_Frag', 'ExtendedMag', 'RX01'}, WeaponTypes.Shotgun, 'Weapons/Remington870/U_870'),
 		Weapon('870M_Slug', '', {'Weapons/Remington870/U_870_Slug', 'ExtendedMag', 'RX01'}, WeaponTypes.Shotgun, 'Weapons/Remington870/U_870'),
+
 		---------------------------
 		--assault
 
@@ -65,22 +66,22 @@ function WeaponList:__init()
 		Weapon('AK74M_RX01', '', {'RX_01', 'HeavyBarrel', 'Foregrip'}, WeaponTypes.Assault, 'Weapons/AK74M/U_AK74M'),
 		Weapon('SteyrAug_RX01', 'XP2', {'RX01', 'Foregrip', 'Heavy_Barrel'},WeaponTypes.Assault, 'Weapons/XP2_SteyrAug/U_SteyrAug'),
 		Weapon('SteyrAug_Kobra', 'XP2', {'Kobra', 'Foregrip', 'Heavy_Barrel'},WeaponTypes.Assault, 'Weapons/XP2_SteyrAug/U_SteyrAug'),
-		Weapon('F2000_RX01', '', {'RX01', 'Foregrip', 'Heavy_Barrel', 'Weapons/F2000/U_F2000_Camo_NWU'},WeaponTypes.Assault, 'Weapons/F2000/U_F2000'),
-		Weapon('F2000_Kobra', '', {'Kobra', 'Foregrip', 'Heavy_Barrel', 'Weapons/F2000/U_F2000_Camo_PARTIZAN'},WeaponTypes.Assault, 'Weapons/F2000/U_F2000'),
+		Weapon('F2000_RX01', '', {'RX01', 'Foregrip', 'Heavy_Barrel', 'Camo_NWU'},WeaponTypes.Assault, 'Weapons/F2000/U_F2000'),
+		Weapon('F2000_Kobra', '', {'Kobra', 'Foregrip', 'Heavy_Barrel', 'Camo_PARTIZAN'},WeaponTypes.Assault, 'Weapons/F2000/U_F2000'),
 		Weapon('FAMAS_RX01', 'XP1', {'RX01', 'Foregrip', 'HeavyBarrel'}, WeaponTypes.Assault, 'Weapons/XP1_FAMAS/U_FAMAS'),
 		Weapon('FAMAS_Kobra', 'XP1', {'Kobra', 'Foregrip', 'HeavyBarrel'}, WeaponTypes.Assault, 'Weapons/XP1_FAMAS/U_FAMAS'),
 		Weapon('G3A3_RX01', '', {'RX01', 'Target_Pointer', 'Foregrip'}, WeaponTypes.Assault, 'Weapons/G3A3/U_G3A3'),
 		Weapon('G3A3_Kobra', '', {'Kobra', 'HeavyBarrel', 'Foregrip'}, WeaponTypes.Assault, 'Weapons/G3A3/U_G3A3'),
 		Weapon('KH2002_Kobra', '', {'Kobra', 'Foregrip', 'Heavy_Barrel'}, WeaponTypes.Assault, 'Weapons/KH2002/U_KH2002'),
 		Weapon('KH2002_RX01', '', {'RX01', 'Foregrip', 'Heavy_Barrel'}, WeaponTypes.Assault, 'Weapons/KH2002/U_KH2002'),
-		Weapon('L85A2_RX01', 'XP1', {'RX01', 'HeavyBarrel', 'ForeGrip', 'Weapons/XP1_L85A2/U_L85A2_CAMO_1'},WeaponTypes.Assault, 'Weapons/XP1_L85A2/U_L85A2'),
-		Weapon('L85A2_Kobra', 'XP1', {'Kobra', 'HeavyBarrel', 'ForeGrip', 'Weapons/XP1_L85A2/U_L85A2_CAMO_2'},WeaponTypes.Assault, 'Weapons/XP1_L85A2/U_L85A2'),
+		Weapon('L85A2_RX01', 'XP1', {'RX01', 'HeavyBarrel', 'ForeGrip', 'CAMO_1'},WeaponTypes.Assault, 'Weapons/XP1_L85A2/U_L85A2'),
+		Weapon('L85A2_Kobra', 'XP1', {'Kobra', 'HeavyBarrel', 'ForeGrip', 'CAMO_2'},WeaponTypes.Assault, 'Weapons/XP1_L85A2/U_L85A2'),
 		Weapon('M16A4_RX01', '', {'RX01', 'HeavyBarrel', 'Weapons/Common/NoSecondaryRail'}, WeaponTypes.Assault, 'Weapons/M16A4/U_M16A4'),
 		Weapon('M16A4_Kobra', '', {'Kobra', 'HeavyBarrel', 'Weapons/Common/NoSecondaryRail'}, WeaponTypes.Assault, 'Weapons/M16A4/U_M16A4'),
 		Weapon('M16-Burst_RX01', '', {'Weapons/M16A4/U_M16A4_RX01', 'Weapons/M16A4/U_M16A4_HeavyBarrel', 'Weapons/M16A4/U_M16A4_Foregrip'}, WeaponTypes.Assault, 'Weapons/M16A4/U_M16_Burst'),
 		Weapon('M16-Burst_Kobra', '', {'Weapons/M16A4/U_M16A4_Kobra', 'Weapons/M16A4/U_M16A4_HeavyBarrel', 'Weapons/M16A4/U_M16A4_Foregrip'}, WeaponTypes.Assault, 'Weapons/M16A4/U_M16_Burst'),
-		Weapon('M416_RX01', '', {'RX01', 'HeavyBarrel', 'Foregrip', 'Weapons/M416/U_M416_CAMO_1'},WeaponTypes.Assault, 'Weapons/M416/U_M416'),
-		Weapon('M416_Kobra', '', {'Kobra', 'HeavyBarrel', 'Foregrip', 'Weapons/M416/U_M416_CAMO_2'},WeaponTypes.Assault, 'Weapons/M416/U_M416'),
+		Weapon('M416_RX01', '', {'RX01', 'HeavyBarrel', 'Foregrip', 'CAMO_1'},WeaponTypes.Assault, 'Weapons/M416/U_M416'),
+		Weapon('M416_Kobra', '', {'Kobra', 'HeavyBarrel', 'Foregrip', 'CAMO_2'},WeaponTypes.Assault, 'Weapons/M416/U_M416'),
 		Weapon('SCAR-L_EOTech', 'XP2', {'EOTech', 'Foregrip', 'HeavyBarrel'},WeaponTypes.Assault, 'Weapons/XP2_SCAR-L/U_SCAR-L'),
 		Weapon('SCAR-L_Kobra', 'XP2', {'Kobra', 'Foregrip', 'HeavyBarrel'},WeaponTypes.Assault, 'Weapons/XP2_SCAR-L/U_SCAR-L'),
 
@@ -93,14 +94,14 @@ function WeaponList:__init()
 		Weapon('MP7_Kobra', '', {'Kobra', 'ExtendedMag', 'Targetpointer'}, WeaponTypes.PDW, 'Weapons/MP7/U_MP7'),
 		Weapon('P90_RX01', '', {'RX01', 'Targetpointer', 'Flashsuppressor'}, WeaponTypes.PDW, 'Weapons/P90/U_P90'),
 		Weapon('P90_Kobra', '', {'Kobra', 'Targetpointer', 'Flashsuppressor'}, WeaponTypes.PDW, 'Weapons/P90/U_P90'),
-		Weapon('PP-19_Kobra', 'XP1', {'Kobra', 'FlashSuppressor', 'Targetpointer', 'Weapons/XP1_PP-19/U_PP-19_CAMO_2'}, WeaponTypes.PDW, 'Weapons/XP1_PP-19/U_PP-19'),
-		Weapon('PP-19_RX01', 'XP1', {'RX01', 'FlashSuppressor', 'Targetpointer', 'Weapons/XP1_PP-19/U_PP-19_CAMO_1'}, WeaponTypes.PDW, 'Weapons/XP1_PP-19/U_PP-19'),
-		Weapon('PP2000_Kobra', '', {'Kobra', 'Flashsuppressor', 'Targetpointer'}, WeaponTypes.PDW, 'Weapons/PP2000/U_PP2000'),
-		Weapon('PP2000_RX01', '', {'RX01', 'Flashsuppressor', 'Targetpointer'}, WeaponTypes.PDW, 'Weapons/PP2000/U_PP2000'),
-		Weapon('UMP45_RX01', '', {'RX01', 'Flashsuppressor', 'Targetpointer', 'Weapons/UMP45/U_UMP45_CAMO_1'}, WeaponTypes.PDW, 'Weapons/UMP45/U_UMP45'),
-		Weapon('UMP45_Kobra', '', {'Kobra', 'Flashsuppressor', 'Targetpointer', 'Weapons/UMP45/U_UMP45_CAMO_2'}, WeaponTypes.PDW, 'Weapons/UMP45/U_UMP45'),
-		Weapon('MP5K_RX01', 'XP2', {'RX01', 'Flashsuppressor', 'ExtendedMags'}, WeaponTypes.PDW, 'Weapons/XP2_MP5K/U_MP5K'),
-		Weapon('MP5K_Kobra', 'XP2', {'Kobra', 'Flashsuppressor', 'ExtendedMags'}, WeaponTypes.PDW, 'Weapons/XP2_MP5K/U_MP5K'),
+		Weapon('PP-19_Kobra', 'XP1', {'Kobra', 'FlashSuppressor', 'Targetpointer', 'CAMO_2'}, WeaponTypes.PDW, 'Weapons/XP1_PP-19/U_PP-19'),
+		Weapon('PP-19_RX01', 'XP1', {'RX01', 'FlashSuppressor', 'Targetpointer', 'CAMO_1'}, WeaponTypes.PDW, 'Weapons/XP1_PP-19/U_PP-19'),
+		Weapon('PP2000_Kobra', '', {'Kobra', 'Flash_Suppressor', 'Targetpointer'}, WeaponTypes.PDW, 'Weapons/PP2000/U_PP2000'),
+		Weapon('PP2000_RX01', '', {'RX01', 'Flash_Suppressor', 'Targetpointer'}, WeaponTypes.PDW, 'Weapons/PP2000/U_PP2000'),
+		Weapon('UMP45_RX01', '', {'RX01', 'Flashsuppressor', 'Targetpointer', 'CAMO_1'}, WeaponTypes.PDW, 'Weapons/UMP45/U_UMP45'),
+		Weapon('UMP45_Kobra', '', {'Kobra', 'Flashsuppressor', 'Targetpointer', 'CAMO_2'}, WeaponTypes.PDW, 'Weapons/UMP45/U_UMP45'),
+		Weapon('MP5K_RX01', 'XP2', {'RX01', 'Flashsuppressor', 'ExtendedMag'}, WeaponTypes.PDW, 'Weapons/XP2_MP5K/U_MP5K'),
+		Weapon('MP5K_Kobra', 'XP2', {'Kobra', 'Flashsuppressor', 'ExtendedMag'}, WeaponTypes.PDW, 'Weapons/XP2_MP5K/U_MP5K'),
 		Weapon('MagpulPDR_Kobra', '', {'Kobra', 'Flashsuppressor', 'Targetpointer'}, WeaponTypes.PDW, 'Weapons/MagpulPDR/U_MagpulPDR'),
 		Weapon('MagpulPDR_RX01', '', {'RX01', 'Flashsuppressor', 'Targetpointer'}, WeaponTypes.PDW, 'Weapons/MagpulPDR/U_MagpulPDR'),
 		Weapon('Crossbow_Kobra', '', {}, WeaponTypes.PDW, 'Weapons/XP4_Crossbow_Prototype/U_Crossbow_Scoped_Cobra'),
@@ -111,24 +112,22 @@ function WeaponList:__init()
 
 		Weapon('A91_Kobra', '', {'Kobra', 'HeavyBarrel', 'Foregrip'}, WeaponTypes.Carabine, 'Weapons/A91/U_A91'),
 		Weapon('A91_RX01', '', {'RX_01', 'HeavyBarrel', 'Foregrip'}, WeaponTypes.Carabine, 'Weapons/A91/U_A91'),
-		Weapon('ACR_RX01', 'XP2', {'RX01', 'HeavyBarrel', 'Foregrip', 'Weapons/XP2_ACR/U_ACR_CAMO_1'}, WeaponTypes.Carabine, 'Weapons/XP2_ACR/U_ACR'),
-		Weapon('ACR_Kobra', 'XP2', {'Kobra', 'HeavyBarrel', 'Foregrip', 'Weapons/XP2_ACR/U_ACR_CAMO_2'}, WeaponTypes.Carabine, 'Weapons/XP2_ACR/U_ACR'),
+		Weapon('ACR_RX01', 'XP2', {'RX01', 'HeavyBarrel', 'Foregrip', 'CAMO_1'}, WeaponTypes.Carabine, 'Weapons/XP2_ACR/U_ACR'),
+		Weapon('ACR_Kobra', 'XP2', {'Kobra', 'HeavyBarrel', 'Foregrip', 'CAMO_2'}, WeaponTypes.Carabine, 'Weapons/XP2_ACR/U_ACR'),
 		Weapon('AKS74u_Kobra', '', {'Kobra', 'HeavyBarrel', 'Foregrip'}, WeaponTypes.Carabine, 'Weapons/AKS74u/U_AKS74u'),
 		Weapon('AKS74u_RX01', '', {'RX_01', 'HeavyBarrel', 'Foregrip'}, WeaponTypes.Carabine, 'Weapons/AKS74u/U_AKS74u'),
-		Weapon('G36C_RX01', '', {'RX01', 'HeavyBarrel', 'Foregrip'}, WeaponTypes.Carabine, 'Weapons/G36C/U_G36C'),
+		Weapon('G36C_RX01', '', {'RX_01', 'HeavyBarrel', 'Foregrip'}, WeaponTypes.Carabine, 'Weapons/G36C/U_G36C'),
 		Weapon('G36C_Kobra', '', {'Kobra', 'HeavyBarrel', 'Foregrip'}, WeaponTypes.Carabine, 'Weapons/G36C/U_G36C'),
-		Weapon('HK53_RX01', 'XP1', {'RX01', 'HeavyBarrel', 'Foregrip', 'Weapons/XP1_HK53/U_HK53_CAMO_1'}, WeaponTypes.Carabine, 'Weapons/XP1_HK53/U_HK53'),
-		Weapon('HK53_Kobra', 'XP1', {'Kobra', 'HeavyBarrel', 'Foregrip', 'Weapons/XP1_HK53/U_HK53_CAMO_2'}, WeaponTypes.Carabine, 'Weapons/XP1_HK53/U_HK53'),
+		Weapon('HK53_RX01', 'XP1', {'RX01', 'HeavyBarrel', 'Foregrip', 'CAMO_1'}, WeaponTypes.Carabine, 'Weapons/XP1_HK53/U_HK53'),
+		Weapon('HK53_Kobra', 'XP1', {'Kobra', 'HeavyBarrel', 'Foregrip', 'CAMO_2'}, WeaponTypes.Carabine, 'Weapons/XP1_HK53/U_HK53'),
 		Weapon('M4A1_RX01', '', {'RX01', 'HeavyBarrel', 'Foregrip'}, WeaponTypes.Carabine, 'Weapons/M4A1/U_M4A1'),
 		Weapon('M4A1_Kobra', '', {'Kobra', 'HeavyBarrel', 'Foregrip'}, WeaponTypes.Carabine, 'Weapons/M4A1/U_M4A1'),
-		Weapon('M4_RX01', '', {'RX01', 'HeavyBarrel', 'Foregrip'}, WeaponTypes.Carabine, 'Weapons/M4A1/U_M4'),
-		Weapon('M4_Kobra', '', {'Kobra', 'HeavyBarrel', 'Foregrip'}, WeaponTypes.Carabine, 'Weapons/M4A1/U_M4'),
-		Weapon('MTAR_RX01', 'XP2', {'RX_01', 'HeavyBarrel', 'Foregrip', 'Weapons/XP2_MTAR/U_MTAR_CAMO_1'}, WeaponTypes.Carabine, 'Weapons/XP2_MTAR/U_MTAR'),
-		Weapon('MTAR_Kobra', 'XP2', {'Kobra', 'HeavyBarrel', 'Foregrip', 'Weapons/XP2_MTAR/U_MTAR_CAMO_2'}, WeaponTypes.Carabine, 'Weapons/XP2_MTAR/U_MTAR'),
+		Weapon('MTAR_RX01', 'XP2', {'RX_01', 'HeavyBarrel', 'Foregrip', 'CAMO_1'}, WeaponTypes.Carabine, 'Weapons/XP2_MTAR/U_MTAR'),
+		Weapon('MTAR_Kobra', 'XP2', {'Kobra', 'HeavyBarrel', 'Foregrip', 'CAMO_2'}, WeaponTypes.Carabine, 'Weapons/XP2_MTAR/U_MTAR'),
 		Weapon('QBZ-95B_Kobra', 'XP1', {'Kobra', 'HeavyBarrel', 'TargetPointer'}, WeaponTypes.Carabine, 'Weapons/XP1_QBZ-95B/U_QBZ-95B'),
 		Weapon('QBZ-95B_RX01', 'XP1', {'RX01', 'HeavyBarrel', 'TargetPointer'}, WeaponTypes.Carabine, 'Weapons/XP1_QBZ-95B/U_QBZ-95B'),
-		Weapon('SCAR-H_EOTech', '', {'EOTech', 'HeavyBarrel','Foregrip', 'Weapons/SCAR-H/U_SCAR-H_CAMO_DSRTTIGER'}, WeaponTypes.Carabine, 'Weapons/SCAR-H/U_SCAR-H'),
-		Weapon('SCAR-H_Kobra', '', {'Kobra', 'HeavyBarrel','Foregrip', 'Weapons/SCAR-H/U_SCAR-H_CAMO_BERKUT'}, WeaponTypes.Carabine, 'Weapons/SCAR-H/U_SCAR-H'),
+		Weapon('SCAR-H_EOTech', '', {'EOTech', 'HeavyBarrel','Foregrip', 'CAMO_DSRTTIGER'}, WeaponTypes.Carabine, 'Weapons/SCAR-H/U_SCAR-H'),
+		Weapon('SCAR-H_Kobra', '', {'Kobra', 'HeavyBarrel','Foregrip', 'CAMO_BERKUT'}, WeaponTypes.Carabine, 'Weapons/SCAR-H/U_SCAR-H'),
 		Weapon('SG553LB_Kobra', '', {'Kobra', 'HeavyBarrel', 'Foregrip'}, WeaponTypes.Carabine, 'Weapons/SG553LB/U_SG553LB'),
 		Weapon('SG553LB_RX01', '', {'RX01', 'HeavyBarrel', 'Foregrip'}, WeaponTypes.Carabine, 'Weapons/SG553LB/U_SG553LB'),
 
@@ -137,8 +136,8 @@ function WeaponList:__init()
 
 		Weapon('L86_RX01', 'XP2', {'RX01', 'HeavyBarrel', 'Foregrip'},WeaponTypes.LMG, 'Weapons/XP2_L86/U_L86'),
 		Weapon('L86_Kobra', 'XP2', {'Kobra', 'HeavyBarrel', 'Foregrip'},WeaponTypes.LMG, 'Weapons/XP2_L86/U_L86'),
-		Weapon('LSAT_RX01', 'XP2', {'RX01', 'ExtendedMag', 'Foregrip', 'Weapons/XP2_LSAT/U_LSAT_CAMO_1'},WeaponTypes.LMG, 'Weapons/XP2_LSAT/U_LSAT'),
-		Weapon('LSAT_Kobra', 'XP2', {'Kobra', 'ExtendedMag', 'Foregrip', 'Weapons/XP2_LSAT/U_LSAT_CAMO_2'},WeaponTypes.LMG, 'Weapons/XP2_LSAT/U_LSAT'),
+		Weapon('LSAT_RX01', 'XP2', {'RX01', 'ExtendedMag', 'Foregrip', 'CAMO_1'},WeaponTypes.LMG, 'Weapons/XP2_LSAT/U_LSAT'),
+		Weapon('LSAT_Kobra', 'XP2', {'Kobra', 'ExtendedMag', 'Foregrip', 'CAMO_2'},WeaponTypes.LMG, 'Weapons/XP2_LSAT/U_LSAT'),
 		Weapon('M249_RX01', '', {'RX01', 'ExtendedMag', 'Foregrip'},WeaponTypes.LMG, 'Weapons/M249/U_M249'),
 		Weapon('M249_Kobra', '', {'Kobra', 'ExtendedMag', 'Foregrip'},WeaponTypes.LMG, 'Weapons/M249/U_M249'),
 		Weapon('M27IAR_RX01', '', {'RX01', 'HeavyBarrel', 'Foregrip'},WeaponTypes.LMG, 'Weapons/M27IAR/U_M27IAR'),
@@ -149,24 +148,24 @@ function WeaponList:__init()
 		Weapon('MG36_Kobra', 'XP1', {'Kobra', 'Foregrip', 'HeavyBarrel'}, WeaponTypes.LMG, 'Weapons/XP1_MG36/U_MG36'),
 		Weapon('Pecheneg_Kobra', '', {'Kobra', 'Foregrip', 'ExtendedMag', 'Weapons/Pecheneg/U_Peceheneg_Camo_KAMYSH'},WeaponTypes.LMG, 'Weapons/Pecheneg/U_Pecheneg'),
 		Weapon('Pecheneg_RX01', '', {'RX01', 'Foregrip', 'ExtendedMag', 'Weapons/Pecheneg/U_Peceheneg_Camo_ATACS'},WeaponTypes.LMG, 'Weapons/Pecheneg/U_Pecheneg'),
-		Weapon('QBB-95_Kobra', 'XP1', {'Kobra', 'Foregrip', 'HeavyBarrel', 'Weapons/XP1_QBB-95/U_QBB-95_CAMO_2'},WeaponTypes.LMG, 'Weapons/XP1_QBB-95/U_QBB-95'),
-		Weapon('QBB-95_RX01', 'XP1', {'RX01', 'Foregrip', 'HeavyBarrel', 'Weapons/XP1_QBB-95/U_QBB-95_CAMO_1'},WeaponTypes.LMG, 'Weapons/XP1_QBB-95/U_QBB-95'),
+		Weapon('QBB-95_Kobra', 'XP1', {'Kobra', 'Foregrip', 'HeavyBarrel', 'CAMO_2'},WeaponTypes.LMG, 'Weapons/XP1_QBB-95/U_QBB-95'),
+		Weapon('QBB-95_RX01', 'XP1', {'RX01', 'Foregrip', 'HeavyBarrel', 'CAMO_1'},WeaponTypes.LMG, 'Weapons/XP1_QBB-95/U_QBB-95'),
 		Weapon('Type88_Kobra', '', {'Kobra', 'ExtendedMag', 'Foregrip'},WeaponTypes.LMG, 'Weapons/Type88/U_Type88'),
 		Weapon('Type88_RX01', '', {'RX01', 'ExtendedMag', 'Foregrip'},WeaponTypes.LMG, 'Weapons/Type88/U_Type88'),
-		Weapon('RPK_Kobra', '', {'Kobra', 'HeavyBarrel', 'Foregrip'},WeaponTypes.LMG, 'Weapons/RPK/U_RPK-74M'),
-		Weapon('RPK_RXO1', '', {'RXO1', 'HeavyBarrel', 'Foregrip'},WeaponTypes.LMG, 'Weapons/RPK/U_RPK-74M'),
-		Weapon('M240_RX01', '', {'RX01', 'ExtendedMag', 'Foregrip', 'Weapons/M240/U_M240_CAMO_1'}, WeaponTypes.LMG, 'Weapons/M240/U_M240'),
-		Weapon('M240_Kobra', '', {'Kobra', 'ExtendedMag', 'Foregrip', 'Weapons/M240/U_M240_CAMO_2'}, WeaponTypes.LMG, 'Weapons/M240/U_M240'),
+		Weapon('RPK_Kobra', '', {'Weapons/RPK/U_RPK_Kobra', 'Weapons/RPK/U_RPK_HeavyBarrel', 'Weapons/RPK/U_RPK_Foregrip'},WeaponTypes.LMG, 'Weapons/RPK/U_RPK-74M'),
+		Weapon('RPK_RXO1', '', {'Weapons/RPK/U_RPK_RX01', 'Weapons/RPK/U_RPK_HeavyBarrel', 'Weapons/RPK/U_RPK_Foregrip'},WeaponTypes.LMG, 'Weapons/RPK/U_RPK-74M'),
+		Weapon('M240_RX01', '', {'RX01', 'ExtendedMag', 'Foregrip', 'CAMO_1'}, WeaponTypes.LMG, 'Weapons/M240/U_M240'),
+		Weapon('M240_Kobra', '', {'Kobra', 'ExtendedMag', 'Foregrip', 'CAMO_2'}, WeaponTypes.LMG, 'Weapons/M240/U_M240'),
 
 		---------------------------
 		-- Sniper
 
-		Weapon('JNG90_Kobra', 'XP2', {'Kobra', 'StraightPull', 'Target_Pointer', 'Weapons/XP2_JNG90/U_JNG90_CAMO_2'}, WeaponTypes.Sniper, 'Weapons/XP2_JNG90/U_JNG90'),
-		Weapon('JNG90_PSO-1', 'XP2', {'PSO-1', 'StraightPull', 'Target_Pointer', 'Weapons/XP2_JNG90/U_JNG90_CAMO_2'}, WeaponTypes.Sniper, 'Weapons/XP2_JNG90/U_JNG90'),
-		Weapon('JNG90_RifleScope', 'XP2', {'Rifle_Scope', 'StraightPull', 'Target_Pointer', 'Weapons/XP2_JNG90/U_JNG90_CAMO_1'}, WeaponTypes.Sniper, 'Weapons/XP2_JNG90/U_JNG90'),
-		Weapon('L96_EOTech', 'XP1', {'EOTech', 'StraightPull', 'TargetPointer', 'Weapons/XP1_L96/U_L96_CAMO_ABU'}, WeaponTypes.Sniper, 'Weapons/XP1_L96/U_L96'),
-		Weapon('L96_Acog', 'XP1', {'Acog', 'StraightPull', 'TargetPointer', 'Weapons/XP1_L96/U_L96_CAMO_ABU'}, WeaponTypes.Sniper, 'Weapons/XP1_L96/U_L96'),
-		Weapon('L96_RifleScope', 'XP1', {'Rifle_Scope', 'StraightPull', 'TargetPointer', 'Weapons/XP1_L96/U_L96_CAMO_DIGIFLORA'}, WeaponTypes.Sniper, 'Weapons/XP1_L96/U_L96'),
+		Weapon('JNG90_Kobra', 'XP2', {'Kobra', 'StraightPull', 'Target_Pointer', 'CAMO_2'}, WeaponTypes.Sniper, 'Weapons/XP2_JNG90/U_JNG90'),
+		Weapon('JNG90_PSO-1', 'XP2', {'PSO-1', 'StraightPull', 'Target_Pointer', 'CAMO_2'}, WeaponTypes.Sniper, 'Weapons/XP2_JNG90/U_JNG90'),
+		Weapon('JNG90_RifleScope', 'XP2', {'Rifle_Scope', 'StraightPull', 'Target_Pointer', 'CAMO_1'}, WeaponTypes.Sniper, 'Weapons/XP2_JNG90/U_JNG90'),
+		Weapon('L96_EOTech', 'XP1', {'EOTech', 'StraightPull', 'TargetPointer', 'CAMO_ABU'}, WeaponTypes.Sniper, 'Weapons/XP1_L96/U_L96'),
+		Weapon('L96_Acog', 'XP1', {'Acog', 'StraightPull', 'TargetPointer', 'CAMO_ABU'}, WeaponTypes.Sniper, 'Weapons/XP1_L96/U_L96'),
+		Weapon('L96_RifleScope', 'XP1', {'Rifle_Scope', 'StraightPull', 'TargetPointer', 'CAMO_DIGIFLORA'}, WeaponTypes.Sniper, 'Weapons/XP1_L96/U_L96'),
 		Weapon('M98B_EOTech', '', {'EOTech', 'StraightPull', 'Target_Pointer'}, WeaponTypes.Sniper, 'Weapons/Model98B/U_M98B'),
 		Weapon('M98B_Acog', '', {'Acog', 'StraightPull', 'Target_Pointer'}, WeaponTypes.Sniper, 'Weapons/Model98B/U_M98B'),
 		Weapon('M98B_RifleScope', '', {'Rifle_Scope', 'StraightPull', 'Target_Pointer'}, WeaponTypes.Sniper, 'Weapons/Model98B/U_M98B'),
@@ -176,21 +175,21 @@ function WeaponList:__init()
 		Weapon('SV98_Kobra', '', {'Kobra', 'StraightPull', 'Target_Pointer'}, WeaponTypes.Sniper, 'Weapons/SV98/U_SV98'),
 		Weapon('SV98_PSO-1', '', {'PSO-1', 'StraightPull', 'Target_Pointer'}, WeaponTypes.Sniper, 'Weapons/SV98/U_SV98'),
 		Weapon('SV98_RifleScope', '', {'Rifle_Scope', 'StraightPull', 'Target_Pointer'}, WeaponTypes.Sniper, 'Weapons/SV98/U_SV98'),
-		Weapon('M39EBR_EOTech', '', {'EOTech', 'Target_pointer', 'Flashsuppressor', 'Weapons/M39EBR/U_M39EBR_CAMO_1'}, WeaponTypes.Sniper, 'Weapons/M39EBR/U_M39EBR'),
-		Weapon('M39EBR_Acog', '', {'Acog', 'Target_pointer', 'Flashsuppressor', 'Weapons/M39EBR/U_M39EBR_CAMO_1'}, WeaponTypes.Sniper, 'Weapons/M39EBR/U_M39EBR'),
-		Weapon('M39EBR_RifleScope', '', {'Rifle_Scope', 'Target_pointer', 'Flashsuppressor', 'Weapons/M39EBR/U_M39EBR_CAMO_2'}, WeaponTypes.Sniper, 'Weapons/M39EBR/U_M39EBR'),
-		Weapon('HK417_EOTech', 'XP2', {'EOTech', 'Target_pointer', 'HeavyBarrel'}, WeaponTypes.Sniper, 'Weapons/XP2_HK417/U_HK417'),
-		Weapon('HK417_Acog', 'XP2', {'Acog', 'Target_pointer', 'HeavyBarrel'}, WeaponTypes.Sniper, 'Weapons/XP2_HK417/U_HK417'),
-		Weapon('HK417_RifleScope', 'XP2', {'Rifle_Scope', 'Target_pointer', 'HeavyBarrel'}, WeaponTypes.Sniper, 'Weapons/XP2_HK417/U_HK417'),
-		Weapon('MK11_EOTech', '', {'EOTech', 'Target_pointer', 'Flashsuppressor'}, WeaponTypes.Sniper, 'Weapons/MK11/U_MK11'),
-		Weapon('MK11_Acog', '', {'Acog', 'Target_pointer', 'Flashsuppressor'}, WeaponTypes.Sniper, 'Weapons/MK11/U_MK11'),
-		Weapon('MK11_RifleScope', '', {'Rifle_Scope', 'Target_pointer', 'Flashsuppressor'}, WeaponTypes.Sniper, 'Weapons/MK11/U_MK11'),
-		Weapon('SKS_Kobra', '', {'Kobra', 'Target_pointer', 'Heavy_Barrel', 'Weapons/SKS/U_SKS_CAMO_2'}, WeaponTypes.Sniper, 'Weapons/SKS/U_SKS'),
-		Weapon('SKS_PSO-1', '', {'PSO-1', 'Target_pointer', 'Heavy_Barrel', 'Weapons/SKS/U_SKS_CAMO_2'}, WeaponTypes.Sniper, 'Weapons/SKS/U_SKS'),
-		Weapon('SKS_RifleScope', '', {'Rifle_Scope', 'Target_pointer', 'Heavy_Barrel', 'Weapons/SKS/U_SKS_CAMO_1'}, WeaponTypes.Sniper, 'Weapons/SKS/U_SKS'),
-		Weapon('SVD_Kobra', '', {'Kobra', 'Target_pointer', 'Flashsuppressor'}, WeaponTypes.Sniper, 'Weapons/SVD/U_SVD'),
-		Weapon('SVD_PSO-1', '', {'PSO-1', 'Target_pointer', 'Flashsuppressor'}, WeaponTypes.Sniper, 'Weapons/SVD/U_SVD'),
-		Weapon('SVD_RifleScope', '', {'Rifle_Scope', 'Target_pointer', 'Flashsuppressor'}, WeaponTypes.Sniper, 'Weapons/SVD/U_SVD'),
+		Weapon('M39EBR_EOTech', '', {'EOTech', 'Target_pointer', 'Weapons/Common/NoPrimaryAccessory', 'CAMO_1'}, WeaponTypes.Sniper, 'Weapons/M39EBR/U_M39EBR'),
+		Weapon('M39EBR_Acog', '', {'Acog', 'Flashsuppressor', 'Weapons/Common/NoPrimaryAccessory', 'CAMO_1'}, WeaponTypes.Sniper, 'Weapons/M39EBR/U_M39EBR'),
+		Weapon('M39EBR_RifleScope', '', {'Rifle_Scope', 'Target_pointer', 'Weapons/Common/NoPrimaryAccessory', 'CAMO_2'}, WeaponTypes.Sniper, 'Weapons/M39EBR/U_M39EBR'),
+		Weapon('HK417_EOTech', 'XP2', {'EOTech', 'TargetPointer', 'Weapons/Common/NoPrimaryAccessory'}, WeaponTypes.Sniper, 'Weapons/XP2_HK417/U_HK417'),
+		Weapon('HK417_Acog', 'XP2', {'Acog', 'TargetPointer', 'Weapons/Common/NoPrimaryAccessory'}, WeaponTypes.Sniper, 'Weapons/XP2_HK417/U_HK417'),
+		Weapon('HK417_RifleScope', 'XP2', {'Rifle_Scope', 'TargetPointer', 'Weapons/Common/NoPrimaryAccessory'}, WeaponTypes.Sniper, 'Weapons/XP2_HK417/U_HK417'),
+		Weapon('MK11_EOTech', '', {'EOTech', 'Flashsuppressor', 'Weapons/Common/NoPrimaryAccessory'}, WeaponTypes.Sniper, 'Weapons/MK11/U_MK11'),
+		Weapon('MK11_Acog', '', {'Acog', 'TargetPointer', 'Weapons/Common/NoPrimaryAccessory'}, WeaponTypes.Sniper, 'Weapons/MK11/U_MK11'),
+		Weapon('MK11_RifleScope', '', {'Rifle_Scope', 'Flashsuppressor', 'Weapons/Common/NoPrimaryAccessory'}, WeaponTypes.Sniper, 'Weapons/MK11/U_MK11'),
+		Weapon('SKS_Kobra', '', {'Kobra', 'Target_pointer', 'Weapons/Common/NoPrimaryAccessory', 'CAMO_2'}, WeaponTypes.Sniper, 'Weapons/SKS/U_SKS'),
+		Weapon('SKS_PSO-1', '', {'PSO-1', 'Target_pointer', 'Weapons/Common/NoPrimaryAccessory', 'CAMO_2'}, WeaponTypes.Sniper, 'Weapons/SKS/U_SKS'),
+		Weapon('SKS_RifleScope', '', {'Rifle_Scope', 'Heavy_Barrel', 'Weapons/Common/NoPrimaryAccessory', 'CAMO_1'}, WeaponTypes.Sniper, 'Weapons/SKS/U_SKS'),
+		Weapon('SVD_Kobra', '', {'Kobra', 'Target_pointer', 'Weapons/Common/NoPrimaryAccessory'}, WeaponTypes.Sniper, 'Weapons/SVD/U_SVD'),
+		Weapon('SVD_PSO-1', '', {'PSO-1', 'Target_pointer', 'Weapons/Common/NoPrimaryAccessory'}, WeaponTypes.Sniper, 'Weapons/SVD/U_SVD'),
+		Weapon('SVD_RifleScope', '', {'Rifle_Scope', 'Target_pointer', 'Weapons/Common/NoPrimaryAccessory'}, WeaponTypes.Sniper, 'Weapons/SVD/U_SVD'),
 
 		---------------------------
 		-- pistols
@@ -479,6 +478,25 @@ function WeaponList:onLevelLoaded()
 			l_Weapon:learnStatsValues()
 		end
 	end
+
+	-- Debug-Code to test all items of the weapon-list
+	--[[for _, l_Weapon in pairs(self._weapons) do
+		local s_WeaponResource = ResourceManager:SearchForDataContainer(l_Weapon:getResourcePath())
+		if s_WeaponResource == nil then
+			m_Logger:Warning("Path not found: "..l_Weapon:getResourcePath())
+		else
+			local s_TempUnlock = SoldierWeaponUnlockAsset(s_WeaponResource)
+			local s_Attachments = l_Weapon:getAllAttachments()
+			for _, l_Attachment in pairs(s_Attachments) do
+				local s_Asset = ResourceManager:SearchForDataContainer(l_Attachment)
+				if s_Asset == nil then
+					m_Logger:Warning('Attachment invalid [' .. tostring(l_Weapon.name) .. ']: ' .. tostring(l_Attachment))
+				else
+					local s_TempAsset = UnlockAsset(s_Asset)
+				end
+			end
+		end
+	end]]
 end
 
 if g_WeaponList == nil then

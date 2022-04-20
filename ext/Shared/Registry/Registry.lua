@@ -17,8 +17,8 @@ Registry = {
 			ALLOW_PLAYER_BOT_NAMES = true,
 			-- with real damage, the hitboxes are a bit buggy
 			USE_REAL_DAMAGE = true,
-			-- collition-raycasts are only supporded by the dev-buidls of VU atm (VEXT 1.3.2 or greater)
-			USE_COLLITION_RAYCASTS = false,
+			-- collition-raycasts are an other type of raycast. This should improve some vehicle issues...
+			USE_COLLITION_RAYCASTS = true,
 			-- timeout to save or load maps
 			LOADING_TIMEOUT = 25,
 			-- distance commands are heard by bots
@@ -37,7 +37,7 @@ Registry = {
 			-- Minor version
 			VERSION_MIN = 5,
 			-- Patch version
-			VERSION_PATCH = 0,
+			VERSION_PATCH = 3,
 			-- Additional label for pre-releases and build meta data
 			VERSION_LABEL = "",
 			-- Current version type of this build
