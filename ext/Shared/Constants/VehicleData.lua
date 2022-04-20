@@ -393,5 +393,6 @@ VehicleData = {
 	-- Gadgets
 	["AGM-144_Hellfire_TV"] = {Name = "[Hellfire]", Type = VehicleTypes.Gadgets, Parts = {}},
 	["RadioBeacon_Projectile"] = {Name = "[RadioBeacon]", Type = VehicleTypes.Gadgets, Parts = {}},
-	["T-UGS_Vehicle"] = {Name = "[T-UGS]", Type = VehicleTypes.Gadgets,	Parts = {}},
+	["SOFLAM_Projectile"] = {Name = "[SOFLAM]", Type = VehicleTypes.Gadgets, Parts = {}},
+	["T-UGS_Vehicle"] = {Name = "[T-UGS]", Type = VehicleTypes.Gadgets, Parts = {}},
 }
