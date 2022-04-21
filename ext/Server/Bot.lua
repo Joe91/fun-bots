@@ -440,7 +440,7 @@ function Bot:_DoExitVehicle()
 	if self._ExitVehicleActive then
 		self:_AbortAttack()
 		self.m_Player:ExitVehicle(false, false)
-		local s_Node = g_GameDirector:FindClosestPath(self.m_Player.soldier.worldTransform.trans, false, true)
+		local s_Node = g_GameDirector:FindClosestPath(self.m_Player.soldier.worldTransform.trans, false, true, nil)
 
 		if s_Node ~= nil then
 			-- switch to foot
@@ -2427,7 +2427,7 @@ end
 
 ---@param p_Position Vec3
 function Bot:FindVehiclePath(p_Position)
-	local s_Node = g_GameDirector:FindClosestPath(p_Position, true, true)
+	local s_Node = g_GameDirector:FindClosestPath(p_Position, true, true, self.m_ActiveVehicle.Terrain)
 	if s_Node ~= nil then
 		-- switch to vehicle
 		self._InvertPathDirection = false
@@ -2925,7 +2925,7 @@ function Bot:_UpdateNormalMovement()
 						local s_RetCode, s_Position = self:_EnterVehicle(false)
 						if s_RetCode == 0 then
 							self:_ResetActionFlag(BotActionFlags.OtherActionActive)
-							local s_Node = g_GameDirector:FindClosestPath(s_Position, true, false)
+							local s_Node = g_GameDirector:FindClosestPath(s_Position, true, false, self.m_ActiveVehicle.Terrain)
 
 							if s_Node ~= nil then
 								-- switch to vehicle
@@ -3349,18 +3349,13 @@ function Bot:_UpdateSpeedOfMovementVehicle()
 		return
 	end
 
-	if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) or m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
-		-- This is solved this in the yaw-function
-		if self.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Stand then
-			self.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Stand, true, true)
-		end
-	else
+	if self.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Stand then
+		self.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Stand, true, true)
+	end
+
+	if  m_Vehicles:IsNotVehicleTerrain(self.m_ActiveVehicle, VehicleTerrains.Air) then -- Air-Vehicles are handled in the yaw-function
 		-- additional movement
 		local s_SpeedVal = 0
-
-		if self.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Stand then
-			self.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Stand, true, true)
-		end
 
 		if self.m_ActiveMoveMode ~= BotMoveModes.Standstill then
 			-- limit speed if full steering active

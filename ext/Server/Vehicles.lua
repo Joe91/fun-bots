@@ -76,6 +76,22 @@ function Vehicles:GetPartIdForSeat(p_VehicleData, p_Index)
 	end
 end
 
+function Vehicles:IsVehicleTerrain(p_VehicleData, p_VehicleTerrain)
+	if p_VehicleData ~= nil and p_VehicleData.Terrain ~= nil then
+		return p_VehicleData.Terrain == p_VehicleTerrain
+	else
+		return false
+	end
+end
+
+function Vehicles:IsNotVehicleTerrain(p_VehicleData, p_VehicleTerrain)
+	if p_VehicleData ~= nil and p_VehicleData.Terrain ~= nil then
+		return p_VehicleData.Terrain ~= p_VehicleTerrain
+	else
+		return false
+	end
+end
+
 function Vehicles:IsVehicleType(p_VehicleData, p_VehicleType)
 	if p_VehicleData ~= nil and p_VehicleData.Type ~= nil then
 		return p_VehicleData.Type == p_VehicleType

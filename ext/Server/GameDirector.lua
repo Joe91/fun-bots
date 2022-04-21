@@ -366,7 +366,7 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 	local s_Objective = self:_SetVehicleObjectiveState(p_Entity.transform.trans, true)
 
 	if s_Objective ~= nil and s_Objective.isSpawnPath then
-		local s_Node = g_GameDirector:FindClosestPath(p_Entity.transform.trans, true, false)
+		local s_Node = g_GameDirector:FindClosestPath(p_Entity.transform.trans, true, false, s_VehicleData.Terrain)
 		if s_Node ~= nil and s_Node.Position:Distance(p_Entity.transform.trans) < Registry.VEHICLES.MIN_DISTANCE_VEHICLE_ENTER then
 			table.insert(self.m_SpawnableVehicles[s_Objective.team], p_Entity)
 		end
@@ -479,7 +479,7 @@ function GameDirector:CheckForExecution(p_Point, p_TeamId, p_InVehicle)
 	end
 end
 
-function GameDirector:FindClosestPath(p_Trans, p_VehiclePath, p_DetailedSearch)
+function GameDirector:FindClosestPath(p_Trans, p_VehiclePath, p_DetailedSearch, p_VehicleTerrain)
 	local s_ClosestPathNode = nil
 	local s_Paths = m_NodeCollection:GetPaths()
 
@@ -488,49 +488,57 @@ function GameDirector:FindClosestPath(p_Trans, p_VehiclePath, p_DetailedSearch)
 
 		for _, l_Waypoints in pairs(s_Paths) do
 			if l_Waypoints[1] ~= nil then
+				local s_isVehiclePath = false
+				local s_isAirPath = false
+				local s_isWaterPath = false
+				if l_Waypoints[1].Data ~= nil and l_Waypoints[1].Data.Vehicles ~= nil then
+					s_isVehiclePath = true
+					for _, l_PathType in pairs(l_Waypoints[1].Data.Vehicles) do
+						if l_PathType:lower() == "air" then
+							s_isAirPath = true
+						end
+						if l_PathType:lower() == "water" then
+							s_isWaterPath = true
+						end
+					end
+				end
+
 				if p_VehiclePath then
-					if l_Waypoints[1].Data ~= nil and l_Waypoints[1].Data.Vehicles ~= nil then
-						if p_DetailedSearch then
-							for i = 1, #l_Waypoints, Registry.GAME_DIRECTOR.NODE_SEARCH_INCREMENTS do
-								local s_NewDistance = Utilities:DistanceFast(l_Waypoints[i].Position, p_Trans)
-								
+					if s_isVehiclePath then
+						if (p_VehicleTerrain == VehicleTerrains.Air and s_isAirPath) or
+						(p_VehicleTerrain == VehicleTerrains.Water and s_isWaterPath) or
+						(p_VehicleTerrain == VehicleTerrains.Land and not s_isWaterPath and not s_isAirPath) or
+						(p_VehicleTerrain == VehicleTerrains.Amphibious and not s_isAirPath) then
+							if p_DetailedSearch then
+								for i = 1, #l_Waypoints, Registry.GAME_DIRECTOR.NODE_SEARCH_INCREMENTS do
+									local s_NewDistance = Utilities:DistanceFast(l_Waypoints[i].Position, p_Trans)
+									
+									if s_ClosestDistance == nil then
+										s_ClosestDistance = s_NewDistance
+										s_ClosestPathNode = l_Waypoints[i]
+									else
+										if s_NewDistance < s_ClosestDistance then
+											s_ClosestDistance = s_NewDistance
+											s_ClosestPathNode = l_Waypoints[i]
+										end
+									end
+								end
+							else
+								local s_NewDistance = Utilities:DistanceFast(l_Waypoints[1].Position, p_Trans)
+
 								if s_ClosestDistance == nil then
 									s_ClosestDistance = s_NewDistance
-									s_ClosestPathNode = l_Waypoints[i]
+									s_ClosestPathNode = l_Waypoints[1]
 								else
 									if s_NewDistance < s_ClosestDistance then
 										s_ClosestDistance = s_NewDistance
-										s_ClosestPathNode = l_Waypoints[i]
+										s_ClosestPathNode = l_Waypoints[1]
 									end
-								end
-							end
-						else
-							local s_NewDistance = Utilities:DistanceFast(l_Waypoints[1].Position, p_Trans)
-
-							if s_ClosestDistance == nil then
-								s_ClosestDistance = s_NewDistance
-								s_ClosestPathNode = l_Waypoints[1]
-							else
-								if s_NewDistance < s_ClosestDistance then
-									s_ClosestDistance = s_NewDistance
-									s_ClosestPathNode = l_Waypoints[1]
 								end
 							end
 						end
 					end
 				else -- not in vehicle
-					local s_isAirPath = false
-					local s_isWaterPath = false
-					if l_Waypoints[1].Data ~= nil and l_Waypoints[1].Data.Vehicles ~= nil then
-						for _, l_PathType in pairs(l_Waypoints[1].Data.Vehicles) do
-							if l_PathType:lower() == "air" then
-								s_isAirPath = true
-							end
-							if l_PathType:lower() == "water" then
-								s_isWaterPath = true
-							end
-						end
-					end
 					if not s_isAirPath and not s_isWaterPath then
 						if p_DetailedSearch then
 							for i = 1, #l_Waypoints, Registry.GAME_DIRECTOR.NODE_SEARCH_INCREMENTS do
