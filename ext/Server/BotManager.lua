@@ -430,6 +430,7 @@ function BotManager:OnRequestChangeSeatVehicle(p_Player, p_SeatNumber)
 	if s_PlayerInTargetSet ~= nil then
 		local s_Bot = self:GetBotByName(s_PlayerInTargetSet.name)
 		if s_Bot ~= nil then
+			s_Bot:_AbortAttack()
 			s_Bot.m_Player:ExitVehicle(false, false)
 			p_Player:EnterVehicle(s_VehicleEntity, s_TargetEntryId)
 			-- find next free seat

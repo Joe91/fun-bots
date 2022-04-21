@@ -131,6 +131,7 @@ function Bot:__init(p_Player)
 	self._JetAbortAttackActive = false
 	self._ExitVehicleHealth = 0.0
 	self._LastVehicleHealth = 0.0
+	self._TargetHeightAttack = 0.0
 	---@type ControllableEntity|nil
 	self._RepairVehicleEntity = nil
 	-- PID Controllers
@@ -280,6 +281,8 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 								else
 									self:_UpdateDeployAndReload(false)
 								end
+
+								self:_CheckForVehicleActions(self._UpdateTimer)
 
 								-- only exit at this point and abort afterwards
 								if self:_DoExitVehicle() then
@@ -667,9 +670,15 @@ function Bot:_CheckForVehicleActions(p_DeltaTime)
 		self._VehicleHealthTimer = self._VehicleHealthTimer + p_DeltaTime
 		if self._VehicleHealthTimer >= Registry.VEHICLES.VEHICLE_HEALTH_CYLCE_TIME then
 			self._VehicleHealthTimer = 0
-			local s_CurrentVehicleHealth = PhysicsEntity(self.m_Player.controlledControllable).internalHealth
+			local s_CurrentVehicleHealth = 0
+			if self.m_InVehicle then
+				s_CurrentVehicleHealth = PhysicsEntity(self.m_Player.controlledControllable).internalHealth
+			elseif self.m_OnVehicle then
+				s_CurrentVehicleHealth = PhysicsEntity(self.m_Player.attachedControllable).internalHealth
+			end
 			if s_CurrentVehicleHealth <= self._ExitVehicleHealth then
 				if math.random(0, 100) <= Registry.VEHICLES.VEHICLE_PROPABILITY_EXIT_LOW_HEALTH then
+					self:_AbortAttack()
 					self:ExitVehicle()
 				end
 			end
@@ -680,18 +689,37 @@ function Bot:_CheckForVehicleActions(p_DeltaTime)
 	self._VehicleSeatTimer = self._VehicleSeatTimer + p_DeltaTime
 	if self._VehicleSeatTimer >= Registry.VEHICLES.VEHICLE_SEAT_CHECK_CYCLE_TIME then
 		self._VehicleSeatTimer = 0
-		local s_VehicleEntity = self.m_Player.controlledControllable
-		for l_SeatIndex = 0, self.m_Player.controlledEntryId do
-			if s_VehicleEntity:GetPlayerInEntry(l_SeatIndex) == nil then
-				-- better seat available --> swich seats
-				m_Logger:Write("switch to better seat")
-				self.m_Player:EnterVehicle(s_VehicleEntity, l_SeatIndex)
-				self:_UpdateVehicleMovableId()
-				break
+		if self.m_InVehicle then --in vehicle
+			local s_VehicleEntity = self.m_Player.controlledControllable
+			for l_SeatIndex = 0, self.m_Player.controlledEntryId do
+				if s_VehicleEntity:GetPlayerInEntry(l_SeatIndex) == nil then
+					-- better seat available --> swich seats
+					m_Logger:Write("switch to better seat")
+					self:_AbortAttack()
+					self.m_Player:EnterVehicle(s_VehicleEntity, l_SeatIndex)
+					self:_UpdateVehicleMovableId()
+					break
+				end
+			end
+		elseif self.m_OnVehicle then --only passenger.
+			local s_VehicleEntity = self.m_Player.attachedControllable
+			local s_LowestSeatIndex = -1
+			for l_SeatIndex = 0, s_VehicleEntity.entryCount - 1 do
+				if s_VehicleEntity:GetPlayerInEntry(l_SeatIndex) == nil then
+					-- maybe better seat available
+					s_LowestSeatIndex = l_SeatIndex
+				else -- check if there is a gap
+					if s_LowestSeatIndex >= 0 then -- there is a better place
+						m_Logger:Write("switch to better seat")
+						self:_AbortAttack()
+						self.m_Player:EnterVehicle(s_VehicleEntity, s_LowestSeatIndex)
+						self:_UpdateVehicleMovableId()
+						break
+					end
+				end
 			end
 		end
 	end
-
 end
 
 function Bot:ResetVars()
@@ -1695,7 +1723,13 @@ function Bot:_UpdateYawVehicle(p_Attacking, p_IsStationaryLauncher)
 		self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, -s_Output_Yaw)
 
 		-- HEIGHT
-		local s_Delta_Height = self._TargetPoint.Position.y - self.m_Player.controlledControllable.transform.trans.y
+		local s_Delta_Height = 0.0
+		if p_Attacking then
+			s_Delta_Height = self._TargetHeightAttack - self.m_Player.controlledControllable.transform.trans.y
+		else
+			self._TargetHeightAttack = self._TargetPoint.Position.y
+			s_Delta_Height = self._TargetPoint.Position.y - self.m_Player.controlledControllable.transform.trans.y
+		end
 		local s_Output_Throttle = self._Pid_Drv_Throttle:Update(s_Delta_Height)
 		if s_Output_Throttle > 0 then
 			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAThrottle, s_Output_Throttle)
@@ -1726,7 +1760,7 @@ function Bot:_UpdateYawVehicle(p_Attacking, p_IsStationaryLauncher)
 
 		-- ROLL (keep it zero)
 		local s_Tartget_Roll = 0.0
-		-- TODO: in strog steering: Roll a little
+		-- TODO: in strog steering: Roll a little?
 		-- if self._FullVehicleSteering then
 		-- 	if s_AbsDeltaYaw > 0 then
 		-- 		s_Tartget_Roll = 0.1
@@ -2400,13 +2434,23 @@ function Bot:FindVehiclePath(p_Position)
 		self._PathIndex = s_Node.PathIndex
 		self._CurrentWayPoint = s_Node.PointIndex
 		self._LastWayDistance = 1000.0
+		-- set path
+		self._TargetPoint = s_Node
+		self._NextTargetPoint = s_Node
+		-- only for choppers
+		self._TargetHeightAttack = p_Position.y
 	end
 end
 
 function Bot:_UpdateVehicleMovableId()
-	self._VehicleMovableId = m_Vehicles:GetPartIdForSeat(self.m_ActiveVehicle, self.m_Player.controlledEntryId)
-	if self.m_Player.controlledEntryId == 0 then
-		self:FindVehiclePath(self.m_Player.soldier.worldTransform.trans)
+	self:_SetActiveVars() -- update if "on vehicle" or "in vehicle"
+	if self.m_OnVehicle then
+		self._VehicleMovableId = nil
+	elseif self.m_InVehicle then
+		self._VehicleMovableId = m_Vehicles:GetPartIdForSeat(self.m_ActiveVehicle, self.m_Player.controlledEntryId)
+		if self.m_Player.controlledEntryId == 0 then
+			self:FindVehiclePath(self.m_Player.soldier.worldTransform.trans)
+		end
 	end
 end
 
