@@ -15,7 +15,7 @@ function PathSwitcher:__init()
 	self.m_KillYourselfCounter = {}
 end
 
-function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle, p_TeamId)
+function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle, p_TeamId, p_VehicleTerrain)
 	-- check if on base, or on path away from base. In this case: change path
 	local s_OnBasePath = false
 	local s_CurrentPathFirst = m_NodeCollection:GetFirst(p_Point.PathIndex)
@@ -83,8 +83,28 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle, p
 			else
 				local s_PathNode = m_NodeCollection:GetFirst(s_NewPoint.PathIndex)
 
-				if s_PathNode.Data.Vehicles ~= nil and #s_PathNode.Data.Vehicles > 0 then --TODO: check for vehicle-Type later
-					table.insert(s_PossiblePaths, s_NewPoint)
+				if s_PathNode.Data.Vehicles ~= nil and #s_PathNode.Data.Vehicles > 0 then -- check for vehicle-type
+					if p_VehicleTerrain ~= nil then
+						local s_isAirPath = false
+						local s_isWaterPath = false
+						for _, l_PathType in pairs(s_PathNode.Data.Vehicles) do
+							if l_PathType:lower() == "air" then
+								s_isAirPath = true
+							end
+							if l_PathType:lower() == "water" then
+								s_isWaterPath = true
+							end
+						end
+						if (p_VehicleTerrain == VehicleTerrains.Air and s_isAirPath) or
+						(p_VehicleTerrain == VehicleTerrains.Water and s_isWaterPath) or
+						(p_VehicleTerrain == VehicleTerrains.Land and not s_isWaterPath and not s_isAirPath) or
+						(p_VehicleTerrain == VehicleTerrains.Amphibious and not s_isAirPath) then
+							table.insert(s_PossiblePaths, s_NewPoint)
+						end
+					else
+						-- invalid Terrain. Insert path anyways
+						table.insert(s_PossiblePaths, s_NewPoint)
+					end
 				end
 			end
 		end
