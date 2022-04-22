@@ -480,6 +480,19 @@ function FunBotUIServer:_writeSettings(p_Player, p_Request)
 					end
 				end
 
+			elseif l_Item.Type == Type.DynamicList then
+				local s_Reference = _G[l_Item.Reference]
+				for _, l_Value in pairs(s_Reference) do
+					if l_Value == p_Request[l_Item.Name] then
+						s_Value = l_Value
+						s_Valid = true
+						if s_Value ~= Config[l_Item.Name] then
+							s_Changed = true
+						end
+						break
+					end
+				end
+
 			elseif l_Item.Type == Type.Integer or l_Item.Type == Type.Float then
 				s_Value = tonumber(p_Request[l_Item.Name])
 				if l_Item.Reference:IsValid(s_Value) then

@@ -200,6 +200,8 @@ function FunBotUIClient:_onUISettings(p_Data)
 			settings:addList(l_Item.Category, l_Item.Name, Language:I18N(l_Item.Text), s_EnumTable, s_Value, s_Default, Language:I18N(l_Item.Description))
 		elseif l_Item.Type == Type.List then
 			settings:addList(l_Item.Category, l_Item.Name, Language:I18N(l_Item.Text), l_Item.Reference, p_Data[l_Item.Name], l_Item.Default, Language:I18N(l_Item.Description))
+		elseif l_Item.Type == Type.DynamicList then
+			settings:addList(l_Item.Category, l_Item.Name, Language:I18N(l_Item.Text), _G[l_Item.Reference], p_Data[l_Item.Name], l_Item.Default, Language:I18N(l_Item.Description))
 		elseif l_Item.Type == Type.Integer then
 			s_TypeString = "Integer"
 			settings:add(l_Item.Category, s_TypeString, l_Item.Name, Language:I18N(l_Item.Text), p_Data[l_Item.Name], l_Item.Default, Language:I18N(l_Item.Description))

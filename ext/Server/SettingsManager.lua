@@ -253,6 +253,17 @@ function SettingsManager:UpdateSetting(p_Name, p_Value)
 						end
 					end
 				end
+			elseif l_Item.Type == Type.DynamicList then
+				if type(p_Value) == 'string' then
+					local s_Reference = _G[l_Item.Reference]
+					for l_Key, l_Value in pairs(s_Reference) do
+						if string.find(p_Value, l_Key) ~= nil then
+							s_ConvertedValue = l_Value
+							s_Valid = true
+							break
+						end
+					end
+				end
 			end
 			s_UpdateFlag = l_Item.UpdateFlag
 			break
