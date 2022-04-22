@@ -9,7 +9,7 @@ CustomWeaponsSupportRu = {
 	-- 'MG36', --us
 	'Pecheneg', --ru
 	'QBB-95', --ru
-	-- 'Type88', --ru
+	'Type88', --ru
 	'RPK', --ru
 	-- 'M240', --us
 

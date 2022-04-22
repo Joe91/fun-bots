@@ -24,6 +24,7 @@ require('__shared/Settings/UpdateFlag')
 require('__shared/Settings/BotEnums')
 require('__shared/Settings/Range')
 require('__shared/Settings/SettingsDefinition')
+require('__shared/WeaponLists/WeaponListsManual')
 require('__shared/WeaponList')
 require('__shared/EbxEditUtils')
 require('__shared/Utils/Logger')
@@ -276,7 +277,7 @@ function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPe
 	m_GameDirector:OnLevelLoaded()
 	m_AirTargets:OnLevelLoaded()
 	m_BotSpawner:OnLevelLoaded(p_Round)
-	NetEvents:BroadcastUnreliableLocal('WriteClientSettings', Config, true)
+	-- NetEvents:BroadcastUnreliableLocal('WriteClientSettings', Config, true) --check if this is really needed
 end
 
 ---VEXT Shared Level:Destroy Event

@@ -1630,6 +1630,7 @@ end
 function BotSpawner:_SetBotWeapons(p_Bot, p_BotKit, p_Team, p_NewWeapons)
 	if p_NewWeapons then
 		local s_Pistol = Config.Pistol
+		local s_Knife = Config.Knife
 
 		local s_Weapon = nil
 		if p_BotKit == BotKits.Assault then
@@ -1644,13 +1645,14 @@ function BotSpawner:_SetBotWeapons(p_Bot, p_BotKit, p_Team, p_NewWeapons)
 		if Config.UseRandomWeapon then
 			s_Weapon = Weapons[p_BotKit][BotWeapons.Primary][p_Team][MathUtils:GetRandomInt(1, #Weapons[p_BotKit][BotWeapons.Primary][p_Team])]
 			s_Pistol = Weapons[p_BotKit][BotWeapons.Pistol][p_Team][MathUtils:GetRandomInt(1, #Weapons[p_BotKit][BotWeapons.Pistol][p_Team])]
+			s_Knife = Weapons[p_BotKit][BotWeapons.Knife][p_Team][MathUtils:GetRandomInt(1, #Weapons[p_BotKit][BotWeapons.Knife][p_Team])]
 		end
 		p_Bot.m_Primary = m_WeaponList:getWeapon(s_Weapon)
 		p_Bot.m_SecondaryGadget = m_WeaponList:getWeapon(Weapons[p_BotKit][BotWeapons.Gadget2][p_Team][MathUtils:GetRandomInt(1, #Weapons[p_BotKit][BotWeapons.Gadget2][p_Team])])
 		p_Bot.m_PrimaryGadget = m_WeaponList:getWeapon(Weapons[p_BotKit][BotWeapons.Gadget1][p_Team][MathUtils:GetRandomInt(1, #Weapons[p_BotKit][BotWeapons.Gadget1][p_Team])])
 		p_Bot.m_Pistol = m_WeaponList:getWeapon(s_Pistol)
 		p_Bot.m_Grenade = m_WeaponList:getWeapon(Weapons[p_BotKit][BotWeapons.Grenade][p_Team][MathUtils:GetRandomInt(1, #Weapons[p_BotKit][BotWeapons.Grenade][p_Team])])
-		p_Bot.m_Knife = m_WeaponList:getWeapon(Weapons[p_BotKit][BotWeapons.Knife][p_Team][MathUtils:GetRandomInt(1, #Weapons[p_BotKit][BotWeapons.Knife][p_Team])])
+		p_Bot.m_Knife = m_WeaponList:getWeapon(s_Knife)
 	end
 
 	if Config.BotWeapon == BotWeapons.Primary or Config.BotWeapon == BotWeapons.Auto then

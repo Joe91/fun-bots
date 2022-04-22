@@ -1046,7 +1046,7 @@ SettingsDefinition = {
 			Type = Type.List,
 			Value = Config.Pistol,
 			Description = "Pistol of Bots, if random-weapon == false",
-			Reference = PistoWeapons,
+			Reference = PistolWeapons,
 			Default = "MP412Rex",
 			UpdateFlag = UpdateFlag.None,
 			Category = "WEAPONS"
