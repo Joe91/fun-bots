@@ -132,6 +132,7 @@ function Bot:__init(p_Player)
 	self._ExitVehicleHealth = 0.0
 	self._LastVehicleHealth = 0.0
 	self._TargetHeightAttack = 0.0
+	self._ActiveVehicleWeaponSlot = 0
 	---@type ControllableEntity|nil
 	self._RepairVehicleEntity = nil
 	-- PID Controllers
@@ -1119,7 +1120,7 @@ function Bot:_UpdateAimingVehicleAdvanced()
 	local s_Speed = 0.0
 	local s_VectorBetween = s_FullPositionTarget - s_FullPositionBot
 
-	s_Speed, s_Drop = m_Vehicles:GetSpeedAndDrop(self.m_ActiveVehicle, self.m_Player.controlledEntryId)
+	s_Speed, s_Drop = m_Vehicles:GetSpeedAndDrop(self.m_ActiveVehicle, self.m_Player.controlledEntryId, self._ActiveVehicleWeaponSlot)
 
 	local A = s_TargetVelocity:Dot(s_TargetVelocity) - s_Speed * s_Speed
 	local B = 2.0 * s_TargetVelocity:Dot(s_VectorBetween)
@@ -1233,7 +1234,7 @@ function Bot:_UpdateAimingVehicle()
 	local s_Drop = 0.0
 	local s_Speed = 0.0
 
-	s_Speed, s_Drop = m_Vehicles:GetSpeedAndDrop(self.m_ActiveVehicle, self.m_Player.controlledEntryId)
+	s_Speed, s_Drop = m_Vehicles:GetSpeedAndDrop(self.m_ActiveVehicle, self.m_Player.controlledEntryId, self._ActiveVehicleWeaponSlot)
 
 	local s_TimeToTravel = (self._DistanceToPlayer / s_Speed)
 	s_PitchCorrection = 0.375 * s_TimeToTravel * s_TimeToTravel * s_Drop  -- from theory 0.5. In real 0.25 works much better
@@ -2014,10 +2015,35 @@ end
 
 function Bot:_UpdateWeaponSelectionVehicle()
 	--select weapon-slot (rn always primary in vehicle)
-	if self.m_Player.soldier.weaponsComponent ~= nil then
-		if self.m_Player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_0 then
+	local s_AvailableWeaponSlots = m_Vehicles:GetAvailableWeaponSlots(self.m_ActiveVehicle, self.m_Player.controlledEntryId)
+	if s_AvailableWeaponSlots > 1 then -- more than one weapon to select from
+		-- not set yet
+		if self._ActiveVehicleWeaponSlot == 0 then 
 			self:_SetInput(EntryInputActionEnum.EIASelectWeapon1, 1)
-			self.m_ActiveWeapon = self.m_Primary
+			self._ActiveVehicleWeaponSlot = 1
+		end
+
+		local s_TargetWeapon = 1
+		-- now starts the logic!!! TODO
+
+		-- if tank
+		-- 	if target = soldier & distance < x then -->2
+		s_TargetWeapon = 2
+
+
+		-- select inputs
+		if self._ActiveVehicleWeaponSlot ~= s_TargetWeapon then
+			if s_TargetWeapon == 1 then
+				self:_SetInput(EntryInputActionEnum.EIASelectWeapon1, 1)
+				self._ActiveVehicleWeaponSlot = s_TargetWeapon
+			elseif s_TargetWeapon == 2 then
+				self:_SetInput(EntryInputActionEnum.EIASelectWeapon2, 1)
+				self._ActiveVehicleWeaponSlot = s_TargetWeapon
+			elseif s_TargetWeapon == 3 then
+				self:_SetInput(EntryInputActionEnum.EIASelectWeapon3, 1)
+				self._ActiveVehicleWeaponSlot = s_TargetWeapon
+			end
+			self._VehicleMovableId = m_Vehicles:GetPartIdForSeat(self.m_ActiveVehicle, self.m_Player.controlledEntryId, self._ActiveVehicleWeaponSlot)
 			self._ShotTimer = 0.0
 		end
 	end
@@ -2447,7 +2473,8 @@ function Bot:_UpdateVehicleMovableId()
 	if self.m_OnVehicle then
 		self._VehicleMovableId = nil
 	elseif self.m_InVehicle then
-		self._VehicleMovableId = m_Vehicles:GetPartIdForSeat(self.m_ActiveVehicle, self.m_Player.controlledEntryId)
+		self._ActiveVehicleWeaponSlot = 0
+		self._VehicleMovableId = m_Vehicles:GetPartIdForSeat(self.m_ActiveVehicle, self.m_Player.controlledEntryId, self._ActiveVehicleWeaponSlot)
 		if self.m_Player.controlledEntryId == 0 then
 			self:FindVehiclePath(self.m_Player.soldier.worldTransform.trans)
 		end
@@ -2478,7 +2505,8 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 
 				-- get ID
 				self.m_ActiveVehicle = s_VehicleData
-				self._VehicleMovableId = m_Vehicles:GetPartIdForSeat(self.m_ActiveVehicle, i)
+				self._ActiveVehicleWeaponSlot = 0
+				self._VehicleMovableId = m_Vehicles:GetPartIdForSeat(self.m_ActiveVehicle, i, self._ActiveVehicleWeaponSlot)
 				m_Logger:Write(self.m_ActiveVehicle)
 				if i == 0 then
 					if i == s_MaxEntries - 1 then
