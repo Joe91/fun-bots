@@ -347,7 +347,7 @@ function ClientBotManager:OnWriteClientSettings(p_NewConfig, p_UpdateWeaponSets)
 	m_Logger:Write("write settings")
 
 	if p_UpdateWeaponSets then
-		m_WeaponList:updateWeaponList()
+		m_WeaponList:UpdateWeaponList()
 	end
 
 	self.m_Player = PlayerManager:GetLocalPlayer()

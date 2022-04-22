@@ -83,6 +83,7 @@ end
 function FunBotServer:OnExtensionLoaded()
 	m_SettingsManager:OnExtensionLoaded()
 	m_Language:loadLanguage(Config.Language)
+	m_WeaponList:UpdateWeaponList()
 	self:RegisterEvents()
 	self:RegisterHooks()
 	self:RegisterCustomEvents()
@@ -257,7 +258,7 @@ function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPe
 	end
 
 	m_WeaponModification:ModifyAllWeapons(Config.BotAimWorsening, Config.BotSniperAimWorsening, Config.BotSupportAimWorsening)
-	m_WeaponList:onLevelLoaded()
+	m_WeaponList:OnLevelLoaded()
 
 	m_Logger:Write('OnLevelLoaded: ' .. p_LevelName .. ' ' .. s_GameMode)
 

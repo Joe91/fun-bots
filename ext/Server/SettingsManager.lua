@@ -262,7 +262,7 @@ function SettingsManager:UpdateSetting(p_Name, p_Value)
 		self:Update(p_Name, s_ConvertedValue, true, false)
 
 		if s_UpdateFlag == UpdateFlag.WeaponSets then
-			m_WeaponList:updateWeaponList()
+			m_WeaponList:UpdateWeaponList()
 			s_UpdateClientWeapons = true
 		elseif s_UpdateFlag == UpdateFlag.Weapons then
 			m_WeaponModification:ModifyAllWeapons(Config.BotAimWorsening, Config.BotSniperAimWorsening, Config.BotSupportAimWorsening)

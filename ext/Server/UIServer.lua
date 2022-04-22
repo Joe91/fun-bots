@@ -546,7 +546,7 @@ function FunBotUIServer:_writeSettings(p_Player, p_Request)
 	end
 
 	if updateWeaponSets then
-		WeaponList:updateWeaponList()
+		WeaponList:UpdateWeaponList()
 	end
 
 	if calcYawPerFrame then

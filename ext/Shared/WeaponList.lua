@@ -235,8 +235,6 @@ function WeaponList:__init()
 		Weapon('Beacon', '', {}, WeaponTypes.Beacon, 'Weapons/Gadgets/RadioBeacon/U_RadioBeacon'),
 		Weapon('M67', '', {}, WeaponTypes.Grenade)
 	}
-
-	self:updateWeaponList()
 end
 
 function WeaponList:_isCustomWeapon(p_Class, p_Name, p_Team)
@@ -278,7 +276,7 @@ end
 function WeaponList:_useWeaponType(p_Class, p_Type, p_Name, p_Team)
 	local s_UseThisWeapon = false
 	local s_IsClassWeapon = false
-	local s_WeaponSet = ""
+	local s_WeaponSet = nil
 
 	if p_Class == BotKits.Assault then
 		s_WeaponSet = Config.AssaultWeaponSet
@@ -389,7 +387,7 @@ function WeaponList:_insertWeapon(p_Kit, p_WeaponType, p_WeaponName, p_Team)
 end
 
 
-function WeaponList:updateWeaponList()
+function WeaponList:UpdateWeaponList()
 	AllWeapons = {}
 	KnifeWeapons = {}
 	PistoWeapons = {}
@@ -472,7 +470,7 @@ function WeaponList:getWeapon(p_Name)
 	end
 end
 
-function WeaponList:onLevelLoaded()
+function WeaponList:OnLevelLoaded()
 	for _, l_Weapon in pairs(self._weapons) do
 		if l_Weapon.needvalues then
 			l_Weapon:learnStatsValues()
