@@ -21,6 +21,6 @@ This is the changelog for the version V2.6.0. Don't forget to [join us on Discor
 * 
 
 ### Updated maps
-* 
+* XP4_Parl_ConquestLarge0 (fixed some paths #219)
 
 ### Documentation update
