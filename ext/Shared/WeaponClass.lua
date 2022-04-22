@@ -85,12 +85,12 @@ function Weapon:learnStatsValues()
 	elseif string.find(s_AiDataString, "_sni_") ~= nil then
 		m_Logger:Write("sniper")
 		s_FireDuration = 0.2
-		s_FirePause = 0.5
+		s_FirePause = 0.4
 		s_DelayedShot = true
 	elseif string.find(s_AiDataString, "_snisemi_") ~= nil then
 		m_Logger:Write("auto sniper")
-		s_FireDuration = 0.4
-		s_FirePause = 0.3
+		s_FireDuration = 0.2
+		s_FirePause = 0.4
 		s_DelayedShot = true
 	elseif string.find(s_AiDataString, "_rif_") ~= nil then
 		m_Logger:Write("rifle")

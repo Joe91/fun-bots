@@ -14,7 +14,7 @@ This is the changelog for the version V2.6.0. Don't forget to [join us on Discor
 * terrain-handling of vehicles added
 
 ### Bug fixes
-* 
+* #218 increased auto-sniper-time a little
 
 ### New maps
 * 

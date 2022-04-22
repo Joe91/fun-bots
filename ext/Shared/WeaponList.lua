@@ -19,6 +19,13 @@ local m_Logger = Logger("WeaponList", Debug.Shared.MODIFICATIONS)
 -- create globals
 Weapons = {}
 
+AssaultPrimary = {}
+EngineerPrimary = {}
+SupportPrimary = {}
+ReconPrimary = {}
+KnifeWeapons = {}
+PistolWeapons = {}
+
 function WeaponList:__init()
 	self._weapons = {
 		---------------------------
@@ -364,11 +371,29 @@ function WeaponList:_insertWeapon(p_Kit, p_WeaponType, p_WeaponName, p_Team)
 	if s_BotWeaponType ~= nil then
 		table.insert(Weapons[p_Kit][s_BotWeaponType][p_Team], p_WeaponName)
 	end
+
+	if s_BotWeaponType == BotWeapons.Primary and p_Team == "US" then -- only insert primaries once
+		if p_Kit == BotKits.Assault then
+			table.insert(AssaultPrimary, p_WeaponName)
+		elseif p_Kit == BotKits.Engineer then
+			table.insert(EngineerPrimary, p_WeaponName)
+		elseif p_Kit == BotKits.Support then
+			table.insert(SupportPrimary, p_WeaponName)
+		else
+			table.insert(ReconPrimary, p_WeaponName)
+		end
+	end
 end
 
 
 function WeaponList:UpdateWeaponList()
-	-- clear weapons
+	KnifeWeapons = {}
+	PistolWeapons = {}
+	AssaultPrimary = {}
+	EngineerPrimary = {}
+	SupportPrimary = {}
+	ReconPrimary = {}
+
 	Weapons = {}
 	-- clear-weapons-table
 	for l_Key, l_Value in pairs(BotKits) do
@@ -395,6 +420,12 @@ function WeaponList:UpdateWeaponList()
 
 	for i = 1, #self._weapons do
 		local s_Wep = self._weapons[i]
+
+		if (s_Wep.type == WeaponTypes.Knife) then
+			table.insert(KnifeWeapons, s_Wep.name)
+		elseif (s_Wep.type == WeaponTypes.Pistol) then
+			table.insert(PistolWeapons, s_Wep.name)
+		end
 
 		for _, l_BotKit in pairs(BotKits) do
 			if l_BotKit ~= BotKits.Count and l_BotKit ~= BotKits.RANDOM_KIT then
