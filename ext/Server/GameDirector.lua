@@ -168,12 +168,27 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 	end
 
 	local s_MaxAssigns = {}
+	-- evaluate how many bots are max- and min-assigned per objective
+
+	local s_AvailableObjectives = {}
+	for _, l_Objective in pairs(self.m_AllObjectives) do
+		if not l_Objective.subObjective and not l_Objective.isBase and l_Objective.active and not l_Objective.destroyed and not l_Objective.isEnterVehiclePath then
+			for i = 1, Globals.NrOfTeams do
+				if s_AvailableObjectives[i] == nil then
+					s_AvailableObjectives[i] = 0
+				end
+				if l_Objective.team ~= i then
+					s_AvailableObjectives[i] = s_AvailableObjectives[i] + 1
+				end
+			end
+		end
+	end
 
 	for i = 1, Globals.NrOfTeams do
 		s_MaxAssigns[i] = 0
 
 		if self.m_BotsByTeam[i] ~= nil then
-			s_MaxAssigns[i] = math.floor((#self.m_BotsByTeam[i] / Globals.NrOfTeams) + 1)
+			s_MaxAssigns[i] = math.floor((#self.m_BotsByTeam[i] / s_AvailableObjectives[i]) + 1)
 
 			if (#self.m_BotsByTeam[i] % 2) == 1 then
 				s_MaxAssigns[i] = s_MaxAssigns[i] + 1

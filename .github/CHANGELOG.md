@@ -12,6 +12,7 @@ This is the changelog for the version V2.6.0. Don't forget to [join us on Discor
 * passengers can change seats
 * passengers exit vehicles on low health
 * terrain-handling of vehicles added
+* better splitting of objectives between the bots
 
 ### Bug fixes
 * #218 increased auto-sniper-time a little
@@ -20,6 +21,6 @@ This is the changelog for the version V2.6.0. Don't forget to [join us on Discor
 * 
 
 ### Updated maps
-* 
+* XP4_Parl_ConquestLarge0 (fixed some paths #219)
 
 ### Documentation update

@@ -158,11 +158,6 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 		return
 	end
 
-	-- saving nodes before sending or recieving
-	if m_NodeCollection:IsSaveActive() then
-		m_NodeCollection:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
-	end
-
 	-- only do sending if not receiving
 	if self.m_BatchSendTimer < 0 or #self.m_PlayersReceivingNodes == 0 then
 		return
