@@ -1997,7 +1997,6 @@ function Bot:_UpdateWeaponSelection()
 				end
 			elseif (self._WeaponToUse == BotWeapons.Pistol and Config.BotWeapon == BotWeapons.Auto) or Config.BotWeapon == BotWeapons.Pistol then
 				if self.m_Player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_1 then
-					self.m_Player.input:SetLevel(EntryInputActionEnum.EIASelectWeapon2, 1)
 					self:_SetInput(EntryInputActionEnum.EIASelectWeapon2, 1)
 					self.m_ActiveWeapon = self.m_Pistol
 					self._ShotTimer = - self:GetFirstShotDelay(self._DistanceToPlayer, true)
