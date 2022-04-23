@@ -118,10 +118,10 @@ end
 
 function Vehicles:GetAvailableWeaponSlots(p_VehicleData, p_Index)
 	if p_VehicleData ~= nil then
-		if type(p_VehicleData.Parts[p_Index]) == "table" then
-			return #p_VehicleData.Parts[p_Index]
+		if type(p_VehicleData.Parts[p_Index + 1]) == "table" then
+			return #p_VehicleData.Parts[p_Index + 1]
 		else
-			if p_VehicleData.Parts[p_Index] == nil then
+			if p_VehicleData.Parts[p_Index + 1] == nil then
 				return 0
 			else
 				return 1

@@ -132,6 +132,7 @@ function Bot:__init(p_Player)
 	self._ExitVehicleHealth = 0.0
 	self._LastVehicleHealth = 0.0
 	self._TargetHeightAttack = 0.0
+	self._VehicleWeaponSlotToUse = 1
 	self._ActiveVehicleWeaponSlot = 0
 	---@type ControllableEntity|nil
 	self._RepairVehicleEntity = nil
@@ -285,6 +286,7 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 
 								self:_CheckForVehicleActions(self._UpdateTimer)
 
+								self:_UpdateInputs()
 								-- only exit at this point and abort afterwards
 								if self:_DoExitVehicle() then
 									return
@@ -2014,7 +2016,9 @@ function Bot:_UpdateWeaponSelection()
 end
 
 function Bot:_UpdateWeaponSelectionVehicle()
-	--select weapon-slot (rn always primary in vehicle)
+	self._WeaponToUse = BotWeapons.Primary -- for exit
+
+	--select weapon-slot
 	local s_AvailableWeaponSlots = m_Vehicles:GetAvailableWeaponSlots(self.m_ActiveVehicle, self.m_Player.controlledEntryId)
 	if s_AvailableWeaponSlots > 1 then -- more than one weapon to select from
 		-- not set yet
@@ -2023,34 +2027,30 @@ function Bot:_UpdateWeaponSelectionVehicle()
 			self._ActiveVehicleWeaponSlot = 1
 		end
 
-		local s_TargetWeapon = 1
-		-- now starts the logic!!! TODO
-
-		-- if tank
-		-- 	if target = soldier & distance < x then -->2
-		s_TargetWeapon = 2
-
+		self._VehicleWeaponSlotToUse = 2
 
 		-- select inputs
-		if self._ActiveVehicleWeaponSlot ~= s_TargetWeapon then
-			if s_TargetWeapon == 1 then
-				self:_SetInput(EntryInputActionEnum.EIASelectWeapon1, 1)
-				self._ActiveVehicleWeaponSlot = s_TargetWeapon
-			elseif s_TargetWeapon == 2 then
-				self:_SetInput(EntryInputActionEnum.EIASelectWeapon2, 1)
-				self._ActiveVehicleWeaponSlot = s_TargetWeapon
-			elseif s_TargetWeapon == 3 then
-				self:_SetInput(EntryInputActionEnum.EIASelectWeapon3, 1)
-				self._ActiveVehicleWeaponSlot = s_TargetWeapon
-			end
+		if self._ActiveVehicleWeaponSlot ~= self._VehicleWeaponSlotToUse then
 			self._VehicleMovableId = m_Vehicles:GetPartIdForSeat(self.m_ActiveVehicle, self.m_Player.controlledEntryId, self._ActiveVehicleWeaponSlot)
+			self._ActiveVehicleWeaponSlot = self._VehicleWeaponSlotToUse
 			self._ShotTimer = 0.0
+
+			-- todo: how long to press? how to switch?
+			if self._VehicleWeaponSlotToUse == 1 then
+				self:_SetInput(EntryInputActionEnum.EIASelectWeapon1, 1)
+			elseif self._VehicleWeaponSlotToUse == 2 then
+				self:_SetInput(EntryInputActionEnum.EIASelectWeapon2, 1)
+			elseif self._VehicleWeaponSlotToUse == 3 then
+				self:_SetInput(EntryInputActionEnum.EIASelectWeapon3, 1)
+			elseif self._VehicleWeaponSlotToUse == 4 then
+				self:_SetInput(EntryInputActionEnum.EIASelectWeapon4, 1)
+			end
 		end
 	end
 end
 
 function Bot:_UpdateReloadVehicle()
-	self._WeaponToUse = BotWeapons.Primary
+	self._VehicleWeaponSlotToUse = 1 -- primary
 	self:_AbortAttack()
 	if self._ActiveAction ~= BotActionFlags.OtherActionActive then
 		self._TargetPitch = 0.0
@@ -2404,6 +2404,8 @@ end
 function Bot:_UpdateAttackingVehicle()
 	if self._ShootPlayer.soldier ~= nil and self._Shoot then
 		if (self._ShootModeTimer < Config.BotFireModeDuration * 3) then -- thre time the default duration
+			-- get amount of weaponslots
+			local s_WeaponSlots = m_Vehicles:GetAvailableWeaponSlots(self.m_ActiveVehicle, self.m_Player.controlledEntryId)
 
 			self._ReloadTimer = 0.0 -- reset reloading
 
@@ -2411,14 +2413,26 @@ function Bot:_UpdateAttackingVehicle()
 				local s_AttackMode = m_Vehicles:CheckForVehicleAttack(self._ShootPlayerVehicleType, self._DistanceToPlayer, self.m_SecondaryGadget, true)
 
 				if s_AttackMode ~= VehicleAttackModes.NoAttack then
-					self._WeaponToUse = BotWeapons.Primary
+					if s_WeaponSlots > 1 then
+						-- TODO more logic depending on vehicle and distance
+						self._VehicleWeaponSlotToUse = 1
+					else
+						self._VehicleWeaponSlotToUse = 1 -- primary
+					end
 				else
 					self._ShootModeTimer = Config.BotFireModeDuration -- end attack
 				end
-			else
-				self._WeaponToUse = BotWeapons.Primary
+			else -- Soldier
+				if s_WeaponSlots > 1 then
+					-- if in Tank and target == soldier and distance small enough --> LMG / HMG
+					if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Tank) and self._DistanceToPlayer < Config.MaxRaycastDistance then
+						self._VehicleWeaponSlotToUse = 2
+					end
+					-- TODO more vehicles and more logic
+				else
+					self._VehicleWeaponSlotToUse = 1 -- primary
+				end
 			end
-
 
 			--shooting sequence
 			if self.m_ActiveWeapon ~= nil then
@@ -2441,7 +2455,7 @@ function Bot:_UpdateAttackingVehicle()
 			end
 		else
 			self._TargetPitch = 0.0
-			self._WeaponToUse = BotWeapons.Primary
+			self._VehicleWeaponSlotToUse = 1 -- primary
 			self:_AbortAttack()
 			self:_ResetActionFlag(BotActionFlags.C4Active)
 			self:_ResetActionFlag(BotActionFlags.GrenadeActive)
