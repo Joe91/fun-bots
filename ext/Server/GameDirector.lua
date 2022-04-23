@@ -186,6 +186,9 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 
 	for i = 1, Globals.NrOfTeams do
 		s_MaxAssigns[i] = 0
+		if s_AvailableObjectives[i] == nil then
+			s_AvailableObjectives[i] = 1
+		end
 
 		if self.m_BotsByTeam[i] ~= nil then
 			s_MaxAssigns[i] = math.floor((#self.m_BotsByTeam[i] / s_AvailableObjectives[i]) + 1)
