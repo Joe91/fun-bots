@@ -284,9 +284,8 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 									self:_UpdateDeployAndReload(false)
 								end
 
-								self:_CheckForVehicleActions(self._UpdateTimer)
-
 								self:_UpdateInputs()
+								self:_CheckForVehicleActions(self._UpdateTimer)
 								-- only exit at this point and abort afterwards
 								if self:_DoExitVehicle() then
 									return
@@ -300,7 +299,6 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 							else
 								self:_UpdateLookAroundPassenger(Registry.BOT.BOT_FAST_UPDATE_CYCLE)
 							end
-							self:_UpdateYaw()
 						else -- normal vehicle --> self.m_InVehicle == true
 							local s_IsStationaryLauncher = m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.StationaryLauncher)
 							-- sync slow code with fast code. Therefore execute the slow code first
