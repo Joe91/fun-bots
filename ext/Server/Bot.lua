@@ -481,7 +481,7 @@ end
 function Bot:GetAttackDistance()
 	local s_AttackDistance = 0.0
 	if not self.m_InVehicle then
-		if self.m_ActiveWeapon.type ~= WeaponTypes.Sniper then
+		if self.m_ActiveWeapon == nil or self.m_ActiveWeapon.type ~= WeaponTypes.Sniper then
 			s_AttackDistance = Config.MaxShootDistanceNoSniper
 		else
 			s_AttackDistance = Config.MaxRaycastDistance
@@ -895,7 +895,7 @@ function Bot:ResetSpawnVars()
 	self._AttackMode = BotAttackModes.RandomNotSet
 	self._ShootWayPoints = {}
 
-	if self.m_ActiveWeapon.type == WeaponTypes.Sniper then
+	if self.m_ActiveWeapon ~= nil and self.m_ActiveWeapon.type == WeaponTypes.Sniper then
 		self._Skill = math.random()*Config.BotSniperWorseningSkill
 	else
 		self._Skill = math.random()*Config.BotWorseningSkill
@@ -1978,20 +1978,20 @@ function Bot:_UpdateWeaponSelection()
 				if self.m_Player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_5 then
 					self:_SetInput(EntryInputActionEnum.EIASelectWeapon5, 1)
 					self.m_ActiveWeapon = self.m_SecondaryGadget
-					self._ShotTimer = - self:GetFirstShotDelay(self._DistanceToPlayer)
+					self._ShotTimer = - self:GetFirstShotDelay(self._DistanceToPlayer, false)
 				end
 			elseif self._ActiveAction == BotActionFlags.RepairActive or (self._WeaponToUse == BotWeapons.Gadget1 and Config.BotWeapon == BotWeapons.Auto) or Config.BotWeapon == BotWeapons.Gadget1 then
 				if self.m_Player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_2 and self.m_Player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_4 then
 					self:_SetInput(EntryInputActionEnum.EIASelectWeapon4, 1)
 					self:_SetInput(EntryInputActionEnum.EIASelectWeapon3, 1)
 					self.m_ActiveWeapon = self.m_PrimaryGadget
-					self._ShotTimer = - self:GetFirstShotDelay(self._DistanceToPlayer)
+					self._ShotTimer = - self:GetFirstShotDelay(self._DistanceToPlayer, false)
 				end
 			elseif self._ActiveAction == BotActionFlags.GrenadeActive or (self._WeaponToUse == BotWeapons.Grenade and Config.BotWeapon == BotWeapons.Auto) or Config.BotWeapon == BotWeapons.Grenade then
 				if self.m_Player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_6 then
 					self:_SetInput(EntryInputActionEnum.EIASelectWeapon6, 1)
 					self.m_ActiveWeapon = self.m_Grenade
-					self._ShotTimer = - self:GetFirstShotDelay(self._DistanceToPlayer)
+					self._ShotTimer = - self:GetFirstShotDelay(self._DistanceToPlayer, false)
 				end
 			elseif (self._WeaponToUse == BotWeapons.Pistol and Config.BotWeapon == BotWeapons.Auto) or Config.BotWeapon == BotWeapons.Pistol then
 				if self.m_Player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_1 then
@@ -1999,12 +1999,19 @@ function Bot:_UpdateWeaponSelection()
 					self.m_ActiveWeapon = self.m_Pistol
 					self._ShotTimer = - self:GetFirstShotDelay(self._DistanceToPlayer, true)
 				end
+				if self.m_Player.soldier.weaponsComponent.weapons[2] ~= nil and self.m_Player.soldier.weaponsComponent.weapons[2].secondaryAmmo < 3 then
+					self.m_Player.soldier.weaponsComponent.weapons[2].secondaryAmmo = self.m_Player.soldier.weaponsComponent.weapons[2].weaponFiring.primaryAmmoToFill + 1
+				end
 			elseif (self._WeaponToUse == BotWeapons.Primary and Config.BotWeapon == BotWeapons.Auto) or Config.BotWeapon == BotWeapons.Primary then
 				if self.m_Player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_0 then
 					self:_SetInput(EntryInputActionEnum.EIASelectWeapon1, 1)
 					self.m_ActiveWeapon = self.m_Primary
 					self._ShotTimer = 0.0
 				end
+				if self.m_Player.soldier.weaponsComponent.weapons[1] ~= nil and self.m_Player.soldier.weaponsComponent.weapons[1].secondaryAmmo < 3 then
+					self.m_Player.soldier.weaponsComponent.weapons[1].secondaryAmmo = self.m_Player.soldier.weaponsComponent.weapons[1].weaponFiring.primaryAmmoToFill + 1
+				end
+		
 			end
 		end
 	end
@@ -2053,13 +2060,13 @@ function Bot:_UpdateDeployAndReload(p_Deploy)
 
 	self._ReloadTimer = self._ReloadTimer + Registry.BOT.BOT_UPDATE_CYCLE
 
-	if self._ReloadTimer > 1.5 and self._ReloadTimer < 2.5 and self.m_Player.soldier.weaponsComponent.currentWeapon.primaryAmmo <= self.m_ActiveWeapon.reload then
+	if self.m_ActiveWeapon ~= nil and self._ReloadTimer > 1.5 and self._ReloadTimer < 2.5 and self.m_Player.soldier.weaponsComponent.currentWeapon.primaryAmmo <= self.m_ActiveWeapon.reload then
 		self:_SetInput(EntryInputActionEnum.EIAReload, 1)
 	end
 
 	-- deploy from time to time
 	if Config.BotsDeploy and p_Deploy then
-		if self.m_Kit == BotKits.Support or self.m_Kit == BotKits.Assault then
+		if self.m_Kit == BotKits.Support or self.m_Kit == BotKits.Assault and self.m_PrimaryGadget ~= nil then
 			if self.m_PrimaryGadget.type == WeaponTypes.Ammobag or self.m_PrimaryGadget.type == WeaponTypes.Medkit then
 				self._DeployTimer = self._DeployTimer + Registry.BOT.BOT_UPDATE_CYCLE
 

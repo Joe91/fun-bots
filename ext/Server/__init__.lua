@@ -106,7 +106,6 @@ function FunBotServer:RegisterEvents()
 
 	Events:Subscribe('Player:Joining', self, self.OnPlayerJoining)
 	Events:Subscribe('Player:TeamChange', self, self.OnTeamChange)
-	Events:Subscribe('Player:KitPickup', self, self.OnKitPickup)
 	Events:Subscribe('Player:Respawn', self, self.OnPlayerRespawn)
 	Events:Subscribe('Player:Killed', self, self.OnPlayerKilled)
 	Events:Subscribe('Player:Chat', self, self.OnPlayerChat)
@@ -322,13 +321,6 @@ end
 ---@param p_SquadId SquadId|integer
 function FunBotServer:OnTeamChange(p_Player, p_TeamId, p_SquadId)
 	m_BotSpawner:OnTeamChange(p_Player, p_TeamId, p_SquadId)
-end
-
----VEXT Server Player:KitPickup Event
----@param p_Player Player
----@param p_NewCustomization DataContainer @Can be casted to `VeniceSoldierCustomizationAsset`
-function FunBotServer:OnKitPickup(p_Player, p_NewCustomization)
-	m_BotSpawner:OnKitPickup(p_Player, p_NewCustomization)
 end
 
 ---VEXT Server Player:Respawn Event

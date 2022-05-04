@@ -13,6 +13,8 @@ This is the changelog for the version V2.6.0. Don't forget to [join us on Discor
 * passengers exit vehicles on low health
 * terrain-handling of vehicles added
 * better splitting of objectives between the bots
+* Support Scavenger Gamemode
+* Don't modify ammo on Kit-Pickup
 
 ### Bug fixes
 * #218 increased auto-sniper-time a little

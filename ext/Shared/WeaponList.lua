@@ -12,6 +12,7 @@ require('__shared/WeaponLists/CustomWeaponsReconUs')
 require('__shared/WeaponLists/CustomWeaponsReconRu')
 require('__shared/WeaponLists/CustomWeaponsSupportUs')
 require('__shared/WeaponLists/CustomWeaponsSupportRu')
+require('__shared/WeaponLists/ScavengerWeaponList')
 
 ---@type Logger
 local m_Logger = Logger("WeaponList", Debug.Shared.MODIFICATIONS)
@@ -25,6 +26,7 @@ SupportPrimary = {}
 ReconPrimary = {}
 KnifeWeapons = {}
 PistolWeapons = {}
+ScavengerWeapons = {}
 
 function WeaponList:__init()
 	self._weapons = {
@@ -272,6 +274,15 @@ function WeaponList:_isCustomWeapon(p_Class, p_Name, p_Team)
 	return s_IsCustomWeapon
 end
 
+function WeaponList:_useWeaponScavenger(p_Name)
+	for _, l_ScavengerName in pairs(ScavengerWeaponList) do
+		if l_ScavengerName == p_Name or string.find(p_Name, l_ScavengerName.."_") ~= nil then -- use all fitting weapon-variants of this type
+			return true
+		end
+	end
+	return false
+end
+
 function WeaponList:_useWeaponType(p_Class, p_Type, p_Name, p_Team)
 	local s_UseThisWeapon = false
 	local s_IsClassWeapon = false
@@ -339,7 +350,7 @@ function WeaponList:_useWeaponType(p_Class, p_Type, p_Name, p_Team)
 	return s_UseThisWeapon
 end
 
-function WeaponList:_insertWeapon(p_Kit, p_WeaponType, p_WeaponName, p_Team)
+function WeaponList:_typeToBotWeapon(p_WeaponType)
 	local s_BotWeaponType = nil
 	-- translate type to BotWeapon
 	if p_WeaponType == WeaponTypes.Assault or
@@ -367,6 +378,11 @@ function WeaponList:_insertWeapon(p_Kit, p_WeaponType, p_WeaponName, p_Team)
 	elseif p_WeaponType == WeaponTypes.Knife then
 		s_BotWeaponType = BotWeapons.Knife
 	end
+	return s_BotWeaponType
+end
+
+function WeaponList:_insertWeapon(p_Kit, p_WeaponType, p_WeaponName, p_Team)
+	local s_BotWeaponType = self:_typeToBotWeapon(p_WeaponType)
 
 	if s_BotWeaponType ~= nil then
 		table.insert(Weapons[p_Kit][s_BotWeaponType][p_Team], p_WeaponName)
@@ -389,6 +405,7 @@ end
 function WeaponList:UpdateWeaponList()
 	KnifeWeapons = {}
 	PistolWeapons = {}
+	ScavengerWeapons = {}
 	AssaultPrimary = {}
 	EngineerPrimary = {}
 	SupportPrimary = {}
@@ -401,6 +418,14 @@ function WeaponList:UpdateWeaponList()
 			Weapons[l_Value] = {}
 		end
 	end
+
+	-- clear scavenger-table
+	for l_key, l_Value in pairs(BotWeapons) do
+		if l_Value ~= BotWeapons.Auto then
+			ScavengerWeapons[l_Value] = {}
+		end
+	end
+
 	for l_Class,_ in pairs(Weapons) do
 		local s_TempTable = {}
 		for l_key, l_Value in pairs(BotWeapons) do
@@ -425,6 +450,13 @@ function WeaponList:UpdateWeaponList()
 			table.insert(KnifeWeapons, s_Wep.name)
 		elseif (s_Wep.type == WeaponTypes.Pistol) then
 			table.insert(PistolWeapons, s_Wep.name)
+		end
+
+		if self:_useWeaponScavenger(s_Wep.name) then
+			local s_BotWeaponType = self:_typeToBotWeapon(s_Wep.type)
+			if s_BotWeaponType ~= nil then
+				table.insert(ScavengerWeapons[s_BotWeaponType], s_Wep.name)
+			end
 		end
 
 		for _, l_BotKit in pairs(BotKits) do
