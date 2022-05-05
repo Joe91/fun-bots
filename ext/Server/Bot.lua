@@ -644,7 +644,7 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 			self._ShootPlayer = nil
 			self._KnifeWayPositions = {}
 			self._VehicleReadyToShoot = false
-			self._ShotTimer = - self:GetFirstShotDelay(self._DistanceToPlayer)
+			self._ShotTimer = - self:GetFirstShotDelay(self._DistanceToPlayer, false)
 
 			if self.m_KnifeMode then
 				table.insert(self._KnifeWayPositions, p_Player.soldier.worldTransform.trans:Clone())
@@ -1999,8 +1999,8 @@ function Bot:_UpdateWeaponSelection()
 					self.m_ActiveWeapon = self.m_Pistol
 					self._ShotTimer = - self:GetFirstShotDelay(self._DistanceToPlayer, true)
 				end
-				if self.m_Player.soldier.weaponsComponent.weapons[2] ~= nil and self.m_Player.soldier.weaponsComponent.weapons[2].secondaryAmmo < 3 then
-					self.m_Player.soldier.weaponsComponent.weapons[2].secondaryAmmo = self.m_Player.soldier.weaponsComponent.weapons[2].weaponFiring.primaryAmmoToFill + 1
+				if self.m_Player.soldier.weaponsComponent.weapons[2] ~= nil and self.m_Player.soldier.weaponsComponent.weapons[2].secondaryAmmo < self.m_Player.soldier.weaponsComponent.weapons[2].primaryAmmo + 1 then
+					self.m_Player.soldier.weaponsComponent.weapons[2].secondaryAmmo = self.m_Player.soldier.weaponsComponent.weapons[2].primaryAmmo + 3
 				end
 			elseif (self._WeaponToUse == BotWeapons.Primary and Config.BotWeapon == BotWeapons.Auto) or Config.BotWeapon == BotWeapons.Primary then
 				if self.m_Player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_0 then
@@ -2008,10 +2008,9 @@ function Bot:_UpdateWeaponSelection()
 					self.m_ActiveWeapon = self.m_Primary
 					self._ShotTimer = 0.0
 				end
-				if self.m_Player.soldier.weaponsComponent.weapons[1] ~= nil and self.m_Player.soldier.weaponsComponent.weapons[1].secondaryAmmo < 3 then
-					self.m_Player.soldier.weaponsComponent.weapons[1].secondaryAmmo = self.m_Player.soldier.weaponsComponent.weapons[1].weaponFiring.primaryAmmoToFill + 1
+				if self.m_Player.soldier.weaponsComponent.weapons[1] ~= nil and self.m_Player.soldier.weaponsComponent.weapons[1].secondaryAmmo < self.m_Player.soldier.weaponsComponent.weapons[1].primaryAmmo + 1 then
+					self.m_Player.soldier.weaponsComponent.weapons[1].secondaryAmmo = self.m_Player.soldier.weaponsComponent.weapons[1].primaryAmmo + 3
 				end
-		
 			end
 		end
 	end
@@ -2196,14 +2195,14 @@ function Bot:_UpdateAttacking()
 					end
 					-- use grenade from time to time
 					if Config.BotsThrowGrenades then
-						local s_TargetTimeValue = Config.BotMinTimeShootAtPlayer - Registry.BOT.BOT_UPDATE_CYCLE
+						local s_TargetTimeValue = Config.BotFireModeDuration - 2 * Registry.BOT.BOT_UPDATE_CYCLE
 
-						if ((self._ShootModeTimer >= s_TargetTimeValue - 0.001) and
+						if ((self._ShootModeTimer >= (s_TargetTimeValue - 0.001)) and
 						(self._ShootModeTimer <= (s_TargetTimeValue + Registry.BOT.BOT_UPDATE_CYCLE + 0.001)) and
 						self._ActiveAction ~= BotActionFlags.GrenadeActive) or Config.BotWeapon == BotWeapons.Grenade then
 							-- should be triggered only once per fireMode
 							if MathUtils:GetRandomInt(1,100) <= Registry.BOT.PROBABILITY_THROW_GRENADE then
-								if self.m_Grenade ~= nil and self._DistanceToPlayer < 27.0 then -- algorith only works for up to 22 m
+								if self.m_Grenade ~= nil and self._DistanceToPlayer < 25.0 then -- algorith only works for up to 25 m
 									self._ActiveAction = BotActionFlags.GrenadeActive
 								end
 							end

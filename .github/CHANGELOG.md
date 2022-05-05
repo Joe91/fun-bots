@@ -18,6 +18,7 @@ This is the changelog for the version V2.6.0. Don't forget to [join us on Discor
 
 ### Bug fixes
 * #218 increased auto-sniper-time a little
+* fix throw of nade too early / often
 
 ### New maps
 * 
