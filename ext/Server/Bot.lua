@@ -425,7 +425,7 @@ end
 
 function Bot:DeployIfPossible()
 	-- deploy from time to time
-	if self.m_Kit == BotKits.Support or self.m_Kit == BotKits.Assault then
+	if self.m_PrimaryGadget ~= nil and (self.m_Kit == BotKits.Support or self.m_Kit == BotKits.Assault) then
 		if self.m_PrimaryGadget.type == WeaponTypes.Ammobag or self.m_PrimaryGadget.type == WeaponTypes.Medkit then
 			self:_AbortAttack()
 			self._WeaponToUse = BotWeapons.Gadget1
@@ -2065,7 +2065,7 @@ function Bot:_UpdateDeployAndReload(p_Deploy)
 
 	-- deploy from time to time
 	if Config.BotsDeploy and p_Deploy then
-		if self.m_Kit == BotKits.Support or self.m_Kit == BotKits.Assault and self.m_PrimaryGadget ~= nil then
+		if self.m_PrimaryGadget ~= nil and (self.m_Kit == BotKits.Support or self.m_Kit == BotKits.Assault) then
 			if self.m_PrimaryGadget.type == WeaponTypes.Ammobag or self.m_PrimaryGadget.type == WeaponTypes.Medkit then
 				self._DeployTimer = self._DeployTimer + Registry.BOT.BOT_UPDATE_CYCLE
 
