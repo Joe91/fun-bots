@@ -1171,17 +1171,14 @@ function BotSpawner:_SpawnBot(p_Bot, p_Transform, p_SetKit)
 	local s_Appearance = nil
 	s_SoldierKit, s_Appearance = self:_GetKitAppearanceCustomization(p_Bot, s_SoldierCustomization, s_BotKit, s_BotColor)
 
-	-- Create the transform of where to spawn the bot at.
-	local s_Transform = p_Transform
-
 	-- And then spawn the bot. This will create and return a new SoldierEntity object.
 	-- for Civilianizer-Mod
 	local s_ResultSoldier = nil
 
 	if Globals.RemoveKitVisuals then
-		s_ResultSoldier = m_BotManager:SpawnBot(p_Bot, s_Transform, CharacterPoseType.CharacterPoseType_Stand, s_SoldierBlueprint, s_SoldierKit, {})
+		s_ResultSoldier = m_BotManager:SpawnBot(p_Bot, p_Transform, CharacterPoseType.CharacterPoseType_Stand, s_SoldierBlueprint, s_SoldierKit, {})
 	else
-		s_ResultSoldier = m_BotManager:SpawnBot(p_Bot, s_Transform, CharacterPoseType.CharacterPoseType_Stand, s_SoldierBlueprint, s_SoldierKit, { s_Appearance })
+		s_ResultSoldier = m_BotManager:SpawnBot(p_Bot, p_Transform, CharacterPoseType.CharacterPoseType_Stand, s_SoldierBlueprint, s_SoldierKit, { s_Appearance })
 	end
 
 	if s_ResultSoldier ~= nil and s_SoldierCustomization ~= nil and s_SoldierCustomization:Is("CustomizeSoldierData") then
@@ -1231,7 +1228,6 @@ function BotSpawner:_GetSpawnPoint(p_TeamId, p_SquadId)
 			m_Logger:Write("no base or capturepoint found to spawn")
 			return
 		end
-
 		s_TargetNode = m_NodeCollection:Get(s_IndexOnPath, s_ActiveWayIndex)
 	-- RUSH
 	-- spawn at base (of zone) or squad-mate

@@ -398,17 +398,18 @@ end
 ---@param p_Entity ControllableEntity|Entity
 ---@param p_Player Player
 function GameDirector:OnVehicleEnter(p_Entity, p_Player)
+	p_Entity = ControllableEntity(p_Entity)
 	local s_VehicleData = m_Vehicles:GetVehicleByEntity(p_Entity)
 	if s_VehicleData ~= nil then
 		if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.StationaryAA) then
 			for l_Index, l_Entity in pairs(self.m_SpawnableStationaryAas[p_Player.teamId]) do
-				if p_Entity == l_Entity then
+				if (l_Entity.uniqueId == p_Entity.uniqueId) and (l_Entity.instanceId == p_Entity.instanceId) then
 					table.remove(self.m_SpawnableStationaryAas[p_Player.teamId], l_Index)
 				end
 			end
 		else
 			for l_Index, l_Entity in pairs(self.m_SpawnableVehicles[p_Player.teamId]) do
-				if p_Entity == l_Entity then
+				if (l_Entity.uniqueId == p_Entity.uniqueId) and (l_Entity.instanceId == p_Entity.instanceId) then
 					table.remove(self.m_SpawnableVehicles[p_Player.teamId], l_Index)
 				end
 			end
