@@ -209,21 +209,21 @@ function RCONCommands:__init()
 						return s_Result
 					end
 
-					return {'ERROR', 'Needing PlayerName.'}
+					return {'ERROR', 'PlayerName needed.'}
 				end
 
-				local s_Player = PlayerManager:GetPlayerByName(s_Name)
+				-- local s_Player = PlayerManager:GetPlayerByName(s_Name)
 
-				if s_Player == nil then
-					s_Player = PlayerManager:GetPlayerByGuid(Guid(s_Name))
+				-- if s_Player == nil then
+				-- 	s_Player = PlayerManager:GetPlayerByGuid(Guid(s_Name))
 
-					if s_Player == nil then
-						return {'ERROR', 'Unknown PlayerName "' .. s_Name .. '".'}
-					end
-				end
+				-- 	if s_Player == nil then
+				-- 		return {'ERROR', 'Unknown PlayerName "' .. s_Name .. '".'}
+				-- 	end
+				-- end
 
 				if s_Permission == nil then
-					local s_Result = { 'LIST', s_Player.name, tostring(s_Player.guid) }
+					local s_Result = { 'LIST', s_Name }
 					local s_Permissions = PermissionManager:GetPermissions(s_Name)
 
 					if s_Permissions ~= nil then
@@ -239,7 +239,7 @@ function RCONCommands:__init()
 					return {'ERROR', 'Unknown Permission:', s_Permission}
 				end
 
-				PermissionManager:AddPermission(s_Player.name, s_Permission)
+				PermissionManager:AddPermission(s_Name, s_Permission)
 
 				return {'OK'}
 			end)

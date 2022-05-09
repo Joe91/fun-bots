@@ -11,6 +11,7 @@ local m_Console = require('Commands/Console')
 function PermissionManager:__init()
 	self.m_Permissions = {}
 	self.m_Guid_Players = {}
+	self.m_Names_Players = {}
 	self.m_Events = {
 		ModuleLoaded = Events:Subscribe('Extension:Loaded', self, self.__boot)
 	}
@@ -47,12 +48,12 @@ function PermissionManager:__boot()
 			self.m_Guid_Players[l_Value.PlayerName] = l_Value.GUID
 		end
 
-		if self.m_Permissions[l_Value.GUID] == nil then
-			m_Logger:Write(l_Value.GUID .. ' (' .. l_Value.PlayerName .. ') ~> ' .. PermissionManager:GetCorrectName(l_Value.Value))
-			self.m_Permissions[l_Value.GUID] = { PermissionManager:GetCorrectName(l_Value.Value) }
-		elseif Utilities:has(self.m_Permissions[l_Value.GUID], l_Value.Value) == false then
-			m_Logger:Write(l_Value.GUID .. ' (' .. l_Value.PlayerName .. ') ~> ' .. PermissionManager:GetCorrectName(l_Value.Value))
-			table.insert(self.m_Permissions[l_Value.GUID], PermissionManager:GetCorrectName(l_Value.Value))
+		if self.m_Permissions[l_Value.PlayerName] == nil then
+			m_Logger:Write(l_Value.PlayerName .. ' ~> ' .. PermissionManager:GetCorrectName(l_Value.Value))
+			self.m_Permissions[l_Value.PlayerName] = { PermissionManager:GetCorrectName(l_Value.Value) }
+		elseif Utilities:has(self.m_Permissions[l_Value.PlayerName], l_Value.Value) == false then
+			m_Logger:Write(l_Value.PlayerName .. ' ~> ' .. PermissionManager:GetCorrectName(l_Value.Value))
+			table.insert(self.m_Permissions[l_Value.PlayerName], PermissionManager:GetCorrectName(l_Value.Value))
 		end
 	end
 end
@@ -64,10 +65,6 @@ function PermissionManager:GetPermissions(p_Name)
 		s_Player = PlayerManager:GetPlayerByName(p_Name)
 
 		if s_Player == nil then
-			s_Player = PlayerManager:GetPlayerByGuid(Guid(p_Name))
-		end
-
-		if s_Player == nil then
 			s_Player = self:GetDataByName(p_Name)
 		end
 	end
@@ -76,11 +73,7 @@ function PermissionManager:GetPermissions(p_Name)
 		return nil
 	end
 
-	if self.m_Permissions[tostring(s_Player.guid)] ~= nil then
-		return self.m_Permissions[tostring(s_Player.guid)]
-	end
-
-	return nil
+	return self.m_Permissions[p_Name]
 end
 
 function PermissionManager:AddPermission(p_Name, p_Permission)
@@ -91,28 +84,27 @@ function PermissionManager:AddPermission(p_Name, p_Permission)
 		s_Player = PlayerManager:GetPlayerByName(p_Name)
 
 		if s_Player == nil then
-			s_Player = PlayerManager:GetPlayerByGuid(Guid(p_Name))
-		end
-
-		if s_Player == nil then
 			s_Player = self:GetDataByName(p_Name)
 		end
 	end
 
-	if self.m_Permissions[tostring(s_Player.guid)] == nil then
-		self.m_Permissions[tostring(s_Player.guid)] = { p_Permission }
-		self.m_Guid_Players[s_Player.name] = tostring(s_Player.guid)
-	elseif Utilities:has(self.m_Permissions[tostring(s_Player.guid)], p_Permission) == false then
-		table.insert(self.m_Permissions[tostring(s_Player.guid)], p_Permission)
+	if self.m_Permissions[p_Name] == nil then
+		self.m_Permissions[p_Name] = { p_Permission }
+	elseif Utilities:has(self.m_Permissions[p_Name], p_Permission) == false then
+		table.insert(self.m_Permissions[p_Name], p_Permission)
 	end
 
-	local s_Single = m_Database:Single('SELECT * FROM `FB_Permissions` WHERE `GUID`=\'' .. tostring(s_Player.guid) .. '\' AND `Value`=\'' .. p_Permission .. '\' LIMIT 1')
+	local s_Single = m_Database:Single('SELECT * FROM `FB_Permissions` WHERE `PlayerName`=\'' .. p_Name .. '\' AND `Value`=\'' .. p_Permission .. '\' LIMIT 1')
+	local s_Guid = 0
+	if s_Player ~= nil then
+		tostring(s_Player.guid)
+	end
 
 	-- If not exists, create
 	if s_Single == nil then
 		m_Database:Insert('FB_Permissions', {
-			GUID = tostring(s_Player.guid),
-			PlayerName = s_Player.name,
+			GUID = tostring(s_Guid),
+			PlayerName = p_Name,
 			Value = p_Permission,
 			Time = m_Database:Now()
 		})
@@ -125,17 +117,8 @@ end
 function PermissionManager:GetAll()
 	local s_Result = {}
 
-	for l_Guid, l_Permissions in pairs(self.m_Permissions) do
-		local s_Name = nil
-
-		for l_Temp_Name, l_Temp_Guid in pairs(self.m_Guid_Players) do
-			if l_Guid:lower() == l_Temp_Guid:lower() then
-				s_Name = l_Temp_Name
-			end
-		end
-
-		table.insert(s_Result, l_Guid)
-		table.insert(s_Result, s_Name)
+	for l_Name, l_Permissions in pairs(self.m_Permissions) do
+		table.insert(s_Result, l_Name)
 		table.insert(s_Result, tostring(#l_Permissions))
 	end
 
@@ -245,10 +228,6 @@ function PermissionManager:Revoke(p_Name, p_Permission)
 		p_Player = PlayerManager:GetPlayerByName(p_Name)
 
 		if p_Player == nil then
-			p_Player = PlayerManager:GetPlayerByGuid(Guid(p_Name))
-		end
-
-		if p_Player == nil then
 			p_Player = self:GetDataByName(p_Name)
 		end
 	end
@@ -257,7 +236,7 @@ function PermissionManager:Revoke(p_Name, p_Permission)
 		return false
 	end
 
-	if self.m_Permissions[tostring(p_Player.guid)] == nil then
+	if self.m_Permissions[p_Name] == nil then
 		return false
 	end
 
@@ -270,11 +249,11 @@ function PermissionManager:Revoke(p_Name, p_Permission)
 	for i = 1, #s_Permissions do
 		if s_Permissions[i]:lower() == p_Permission:lower() then
 			m_Database:Delete('FB_Permissions', {
-				GUID = tostring(p_Player.guid),
+				PlayerName = p_Name,
 				Value = PermissionManager:GetCorrectName(s_Permissions[i])
 			})
 
-			table.remove(self.m_Permissions[tostring(p_Player.guid)], i)
+			table.remove(self.m_Permissions[p_Name], i)
 			return true
 		end
 	end
@@ -289,11 +268,7 @@ function PermissionManager:RevokeAll(p_Name)
 		s_Player = PlayerManager:GetPlayerByName(p_Name)
 
 		if s_Player == nil then
-			s_Player = PlayerManager:GetPlayerByGuid(Guid(p_Name))
-
-			if s_Player == nil then
-				s_Player = self:GetDataByName(p_Name)
-			end
+			s_Player = self:GetDataByName(p_Name)
 		end
 	end
 
@@ -301,14 +276,19 @@ function PermissionManager:RevokeAll(p_Name)
 		return false
 	end
 
-	if self.m_Permissions[tostring(s_Player.guid)] == nil then
+	if self.m_Permissions[p_Name] == nil then
 		return false
 	end
 
-	self.m_Permissions[tostring(s_Player.guid)] = {}
+	self.m_Permissions[p_Name] = {}
+	local s_guid = 0
+	if s_Player ~= nil then
+		s_guid = s_Player.guid
+	end
 
 	m_Database:Delete('FB_Permissions', {
-		GUID = tostring(s_Player.guid)
+		GUID = s_guid,
+		PlayerName = p_Name
 	})
 
 	return true
