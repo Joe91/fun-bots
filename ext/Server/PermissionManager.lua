@@ -97,7 +97,7 @@ function PermissionManager:AddPermission(p_Name, p_Permission)
 	local s_Single = m_Database:Single('SELECT * FROM `FB_Permissions` WHERE `PlayerName`=\'' .. p_Name .. '\' AND `Value`=\'' .. p_Permission .. '\' LIMIT 1')
 	local s_Guid = 0
 	if s_Player ~= nil then
-		tostring(s_Player.guid)
+		s_Guid = tostring(s_Player.guid)
 	end
 
 	-- If not exists, create
@@ -110,8 +110,10 @@ function PermissionManager:AddPermission(p_Name, p_Permission)
 		})
 	end
 
-	-- Register console-commands, if needed
-	m_Console:RegisterConsoleCommands(s_Player)
+	if s_Player ~= nil and type(s_Player) ~= "table" then
+		-- Register console-commands, if needed
+		m_Console:RegisterConsoleCommands(s_Player)
+	end
 end
 
 function PermissionManager:GetAll()
@@ -171,12 +173,17 @@ function PermissionManager:GetCorrectName(p_Name)
 	return p_Name
 end
 
-function PermissionManager:HasPermission(p_Name, p_Permission)
+function PermissionManager:HasPermission(p_Player, p_Permission)
 	if Config.IgnorePermissions then
 		return true
 	end
 
-	local s_Permissions = self:GetPermissions(p_Name)
+	if p_Player == nil or p_Permission == nil then
+		return false
+	end
+
+	local s_Name = p_Player.name
+	local s_Permissions = self:GetPermissions(s_Name)
 
 	if s_Permissions == nil then
 		return false
@@ -281,13 +288,8 @@ function PermissionManager:RevokeAll(p_Name)
 	end
 
 	self.m_Permissions[p_Name] = {}
-	local s_guid = 0
-	if s_Player ~= nil then
-		s_guid = s_Player.guid
-	end
 
 	m_Database:Delete('FB_Permissions', {
-		GUID = s_guid,
 		PlayerName = p_Name
 	})
 
@@ -298,7 +300,7 @@ function PermissionManager:GetDataByName(p_Name)
 	local s_Guid = nil
 
 	for l_Temp_Name, l_Temp_Guid in pairs(self.m_Guid_Players) do
-		if p_Name:lower() == l_Temp_Guid:lower() or p_Name:lower() == l_Temp_Name:lower() then
+		if p_Name:lower() == l_Temp_Name:lower() then
 			s_Guid = l_Temp_Guid
 			p_Name = l_Temp_Name
 		end

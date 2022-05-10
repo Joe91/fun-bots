@@ -15,6 +15,7 @@ This is the changelog for the version V2.6.0. Don't forget to [join us on Discor
 * better splitting of objectives between the bots
 * Support Scavenger Gamemode
 * Don't modify ammo on Kit-Pickup
+* simplify permissions. No need to be on the server anymore
 
 ### Bug fixes
 * #218 increased auto-sniper-time a little
