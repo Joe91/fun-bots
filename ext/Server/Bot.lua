@@ -20,6 +20,7 @@ local m_BotAttacking = require('Bot/BotAttacking')
 local m_BotMovement = require('Bot/BotMovement')
 local m_BotWeaponHandling = require('Bot/BotWeaponHandling')
 local m_VehicleAiming = require('Bot/VehicleAiming')
+local m_VehicleMovement = require('Bot/VehicleMovement')
 
 
 
@@ -184,6 +185,12 @@ end
 -- Events
 -- =============================================
 
+-- Update frame (every Cycle)
+-- Update very fast (0.05) ? Needed? Aiming? 
+-- Update fast (0.1) ? Movement, Reactions
+-- (Update medium? Maybe some things in between)
+-- Update slow (1.0) ? Reload, Deploy, (Obstacle-Handling)
+
 ---@param p_DeltaTime number
 function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 	if self.m_Player.soldier ~= nil then
@@ -238,7 +245,7 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 								m_BotMovement:UpdateShootMovement(self)
 							end
 						else
-							m_BotWeaponHandling:UpdateWeaponSelection(self, true)
+							m_BotWeaponHandling:UpdateDeployAndReload(self, true)
 							m_BotMovement:UpdateNormalMovement(self)
 							if self.m_Player.soldier == nil then
 								return
@@ -279,13 +286,13 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 							-- sync slow code with fast code. Therefore execute the slow code first
 							if self._UpdateTimer >= Registry.BOT.BOT_UPDATE_CYCLE then
 								-- common part
-								self:_UpdateWeaponSelection()
+								m_BotWeaponHandling:UpdateWeaponSelection(self)
 
 								-- differ attacking
 								if s_Attacking then
-									self:_UpdateAttacking()
+									m_BotAttacking:UpdateAttacking(self)
 								else
-									self:_UpdateDeployAndReload(false)
+									m_BotWeaponHandling:UpdateDeployAndReload(self, false)
 								end
 
 								self:_UpdateInputs()
@@ -314,16 +321,16 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 								-- differ attacking
 								if s_Attacking then
 									self:_UpdateAttackingVehicle()
-									self:_UpdateShootMovementVehicle()
+									m_VehicleMovement:UpdateShootMovementVehicle(self)
 								else
 									self:_UpdateReloadVehicle()
 									if self.m_Player.controlledEntryId == 0 and not s_IsStationaryLauncher then -- only if driver
-										self:_UpdateNormalMovementVehicle()
+										m_VehicleMovement:UpdateNormalMovementVehicle(self)
 									end
 								end
 
 								-- common things
-								self:_UpdateSpeedOfMovementVehicle()
+								m_VehicleMovement:UpdateSpeedOfMovementVehicle(self)
 								self:_UpdateInputs()
 								self:_CheckForVehicleActions(self._UpdateTimer)
 
@@ -370,7 +377,7 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 				end
 
 				self:_UpdateYaw()
-				self:_LookAround(Registry.BOT.BOT_UPDATE_CYCLE)
+				m_BotMovement:LookAround(self, Registry.BOT.BOT_UPDATE_CYCLE)
 				self:_UpdateInputs()
 				self._UpdateTimer = 0.0
 			end
@@ -973,43 +980,6 @@ end
 -- =============================================
 -- Private Functions
 -- =============================================
-
----@param p_DeltaTime number
-function Bot:_LookAround(p_DeltaTime)
-	-- move around a little
-	local s_LastYawTimer = self._WayWaitYawTimer
-	self._WayWaitYawTimer = self._WayWaitYawTimer + p_DeltaTime
-	self.m_ActiveSpeedValue = BotMoveSpeeds.NoMovement
-	self._TargetPoint = nil
-	self._TargetPitch = 0.0
-
-	if self._WayWaitYawTimer > 6.0 then
-		self._WayWaitYawTimer = 0.0
-		self._TargetYaw = self._TargetYaw + 1.0 -- 60 ° rotation right
-
-		if self._TargetYaw > (math.pi * 2) then
-			self._TargetYaw = self._TargetYaw - (2 * math.pi)
-		end
-	elseif self._WayWaitYawTimer >= 4.0 and s_LastYawTimer < 4.0 then
-		self._TargetYaw = self._TargetYaw - 1.0 -- 60 ° rotation left
-
-		if self._TargetYaw < 0.0 then
-			self._TargetYaw = self._TargetYaw + (2 * math.pi)
-		end
-	elseif self._WayWaitYawTimer >= 3.0 and s_LastYawTimer < 3.0 then
-		self._TargetYaw = self._TargetYaw - 1.0 -- 60 ° rotation left
-
-		if self._TargetYaw < 0.0 then
-			self._TargetYaw = self._TargetYaw + (2 * math.pi)
-		end
-	elseif self._WayWaitYawTimer >= 1.0 and s_LastYawTimer < 1.0 then
-		self._TargetYaw = self._TargetYaw + 1.0 -- 60 ° rotation right
-
-		if self._TargetYaw > (math.pi * 2) then
-			self._TargetYaw = self._TargetYaw - (2 * math.pi)
-		end
-	end
-end
 
 ---@param p_DeltaTime number
 function Bot:_UpdateLookAroundPassenger(p_DeltaTime)
@@ -1733,335 +1703,6 @@ function Bot:_GetWayIndex(p_CurrentWayPoint)
 	end
 
 	return s_ActivePointIndex
-end
-
-function Bot:_UpdateNormalMovementVehicle()
-	if self._VehicleTakeoffTimer > 0.0 then
-		self._VehicleTakeoffTimer = self._VehicleTakeoffTimer - Registry.BOT.BOT_UPDATE_CYCLE
-		if self._JetAbortAttackActive then
-			local s_TargetPosition = self.m_Player.controlledControllable.transform.trans
-			local s_Forward = self.m_Player.controlledControllable.transform.forward
-			s_Forward.y = 0
-			s_Forward:Normalize()
-			s_TargetPosition = s_TargetPosition + (s_Forward*50)
-			s_TargetPosition.y = s_TargetPosition.y + 50
-			local s_Waypoint = {
-				Position = s_TargetPosition
-			}
-			self._TargetPoint = s_Waypoint
-			return
-		end
-	end
-	self._JetAbortAttackActive = false
-	if self._VehicleWaitTimer > 0.0 then
-		self._VehicleWaitTimer = self._VehicleWaitTimer - Registry.BOT.BOT_UPDATE_CYCLE
-		if self._VehicleWaitTimer <= 0.0 then
-			if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
-				-- check for other plane in front of bot
-				local s_IsInfront = false
-				for _, l_Jet in pairs(g_GameDirector:GetSpawnableVehicle(self.m_Player.teamId)) do
-					local s_DistanceToJet = self.m_Player.controlledControllable.transform.trans:Distance(l_Jet.transform.trans)
-					if s_DistanceToJet < 30 then
-						local s_CompPos = self.m_Player.controlledControllable.transform.trans + self.m_Player.controlledControllable.transform.forward * s_DistanceToJet
-						if l_Jet.transform.trans:Distance(s_CompPos) < 10 then
-							s_IsInfront = true
-						end
-					end
-				end
-				if s_IsInfront then
-					self._VehicleWaitTimer = 5.0 -- one more cycle
-					return
-				end
-			end
-			g_GameDirector:_SetVehicleObjectiveState(self.m_Player.soldier.worldTransform.trans, false)
-		else
-			return
-		end
-	end
-
-	-- move along points
-	if m_NodeCollection:Get(1, self._PathIndex) ~= nil then -- check for valid point
-		-- get next point
-		local s_ActivePointIndex = self:_GetWayIndex(self._CurrentWayPoint)
-
-		local s_Point = nil
-		local s_NextPoint = nil
-		local s_PointIncrement = 1
-
-		s_Point = m_NodeCollection:Get(s_ActivePointIndex, self._PathIndex)
-
-		if not self._InvertPathDirection then
-			s_NextPoint = m_NodeCollection:Get(self:_GetWayIndex(self._CurrentWayPoint + 1), self._PathIndex)
-		else
-			s_NextPoint = m_NodeCollection:Get(self:_GetWayIndex(self._CurrentWayPoint - 1), self._PathIndex)
-		end
-
-		-- execute Action if needed
-		if self._ActiveAction == BotActionFlags.OtherActionActive then
-			if s_Point.Data ~= nil and s_Point.Data.Action ~= nil then
-				if s_Point.Data.Action.type == "exit" then
-					self:_ResetActionFlag(BotActionFlags.OtherActionActive)
-					local s_OnlyPassengers = false
-					if s_Point.Data.Action.onlyPassengers ~= nil and s_Point.Data.Action.onlyPassengers == true then
-						s_OnlyPassengers = true
-					end
-
-					-- let all other bots exit the vehicle
-					local s_VehicleEntity = self.m_Player.controlledControllable
-					if s_VehicleEntity ~= nil then
-						for i = 1, (s_VehicleEntity.entryCount - 1) do
-							local s_Player = s_VehicleEntity:GetPlayerInEntry(i)
-							if s_Player ~= nil then
-								Events:Dispatch('Bot:ExitVehicle', s_Player.name)
-							end
-						end
-					end
-					-- Exit Vehicle
-					if not s_OnlyPassengers then
-						self:ExitVehicle()
-					end
-				elseif self._ActionTimer <= s_Point.Data.Action.time then
-					for _, l_Input in pairs(s_Point.Data.Action.inputs) do
-						self:_SetInput(l_Input, 1)
-					end
-				end
-			else
-				self:_ResetActionFlag(BotActionFlags.OtherActionActive)
-			end
-
-			self._ActionTimer = self._ActionTimer - Registry.BOT.BOT_UPDATE_CYCLE
-
-			if self._ActionTimer <= 0.0 then
-				self:_ResetActionFlag(BotActionFlags.OtherActionActive)
-			end
-
-			if self._ActiveAction == BotActionFlags.OtherActionActive then
-				return --DONT EXECUTE ANYTHING ELSE
-			else
-				s_Point = s_NextPoint
-			end
-		end
-
-		if s_Point.SpeedMode ~= BotMoveSpeeds.NoMovement then -- movement
-			self._WayWaitTimer = 0.0
-			self._WayWaitYawTimer = 0.0
-			self.m_ActiveSpeedValue = s_Point.SpeedMode --speed
-
-			-- TODO: use vehicle transform also for trace?
-			local s_DifferenceY = s_Point.Position.z - self.m_Player.soldier.worldTransform.trans.z
-			local s_DifferenceX = s_Point.Position.x - self.m_Player.soldier.worldTransform.trans.x
-			local s_DistanceFromTarget = math.sqrt(s_DifferenceX ^ 2 + s_DifferenceY ^ 2)
-			local s_HeightDistance = math.abs(s_Point.Position.y - self.m_Player.soldier.worldTransform.trans.y)
-
-			--detect obstacle and move over or around TODO: Move before normal jump
-			local s_CurrentWayPointDistance = self.m_Player.soldier.worldTransform.trans:Distance(s_Point.Position)
-
-			if s_CurrentWayPointDistance > self._LastWayDistance + 0.02 and self._ObstaceSequenceTimer == 0.0 then
-				--skip one pooint
-				s_DistanceFromTarget = 0
-				s_HeightDistance = 0
-			end
-
-			self._TargetPoint = s_Point
-			self._NextTargetPoint = s_NextPoint
-
-			if math.abs(s_CurrentWayPointDistance - self._LastWayDistance) < 0.02 or self._ObstaceSequenceTimer ~= 0.0 then
-				-- try to get around obstacle
-				if self._ObstacleRetryCounter % 2 == 0 then
-					if self._ObstaceSequenceTimer < 4.0 then
-						self.m_ActiveSpeedValue = BotMoveSpeeds.Sprint -- full throttle
-					end
-				else
-					if self._ObstaceSequenceTimer < 2.0 then
-						self.m_ActiveSpeedValue = BotMoveSpeeds.Backwards
-					end
-				end
-
-				if (self.m_ActiveSpeedValue == BotMoveSpeeds.Backwards and self._ObstaceSequenceTimer > 3.0) or
-				(self.m_ActiveSpeedValue ~= BotMoveSpeeds.Backwards and self._ObstaceSequenceTimer > 5.0) then
-					self._ObstaceSequenceTimer = 0.0
-					self._ObstacleRetryCounter = self._ObstacleRetryCounter + 1
-				end
-
-				self._ObstaceSequenceTimer = self._ObstaceSequenceTimer + Registry.BOT.BOT_UPDATE_CYCLE
-
-				if self._ObstacleRetryCounter >= 4 then --try next waypoint
-					self._ObstacleRetryCounter = 0
-
-					s_DistanceFromTarget = 0
-					s_HeightDistance = 0
-
-					-- teleport if stuck
-					if Config.TeleportIfStuck and
-					m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) and
-					m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) and
-					(MathUtils:GetRandomInt(0,100) <= Registry.BOT.PROBABILITY_TELEPORT_IF_STUCK_IN_VEHICLE) then
-						local s_Transform = self.m_Player.controlledControllable.transform:Clone()
-						s_Transform.trans = self._TargetPoint.Position
-						s_Transform:LookAtTransform(self._TargetPoint.Position, self._NextTargetPoint.Position)
-						self.m_Player.controlledControllable.transform = s_Transform
-						m_Logger:Write("tepeported in vehicle of "..self.m_Player.name)
-					else
-						if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) or m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
-							s_PointIncrement = 1
-						else
-							if MathUtils:GetRandomInt(1, 2) == 1 then
-								s_PointIncrement = 1
-							else
-								s_PointIncrement = -1
-							end
-						end
-					end
-				end
-			end
-
-			self._LastWayDistance = s_CurrentWayPointDistance
-
-
-			local s_TargetDistanceSpeed = Config.TargetDistanceWayPoint * 5
-
-			if self.m_ActiveSpeedValue == BotMoveSpeeds.Sprint then
-				s_TargetDistanceSpeed = s_TargetDistanceSpeed * 6
-			elseif self.m_ActiveSpeedValue == BotMoveSpeeds.SlowCrouch then
-				s_TargetDistanceSpeed = s_TargetDistanceSpeed * 4
-			elseif self.m_ActiveSpeedValue == BotMoveSpeeds.VerySlowProne then
-				s_TargetDistanceSpeed = s_TargetDistanceSpeed * 3
-			end
-
-			--check for reached target
-			if s_DistanceFromTarget <= s_TargetDistanceSpeed and s_HeightDistance <= Registry.BOT.TARGET_HEIGHT_DISTANCE_WAYPOINT then
-
-				-- CHECK FOR ACTION
-				if s_Point.Data.Action ~= nil then
-					local s_Action = s_Point.Data.Action
-
-					if g_GameDirector:CheckForExecution(s_Point, self.m_Player.teamId, true) then
-						self._ActiveAction = BotActionFlags.OtherActionActive
-
-						if s_Action.time ~= nil then
-							self._ActionTimer = s_Action.time
-						else
-							self._ActionTimer = 0.0
-						end
-
-						if s_Action.yaw ~= nil then
-							self._TargetYaw = s_Action.yaw
-						end
-
-						if s_Action.pitch ~= nil then
-							self._TargetPitch = s_Action.pitch
-						end
-
-						return --DONT DO ANYTHING ELSE ANYMORE
-					end
-				end
-
-				-- CHECK FOR PATH-SWITCHES
-				local s_NewWaypoint = nil
-				local s_SwitchPath = false
-				s_SwitchPath, s_NewWaypoint = m_PathSwitcher:GetNewPath(self.m_Name, s_Point, self._Objective, self.m_InVehicle, self.m_Player.teamId, self.m_ActiveVehicle.Terrain)
-
-				if self.m_Player.soldier == nil then
-					return
-				end
-
-				if s_SwitchPath == true and not self._OnSwitch then
-					if self._Objective ~= '' then
-						-- 'best' direction for objective on switch
-						local s_Direction = m_NodeCollection:ObjectiveDirection(s_NewWaypoint, self._Objective, self.m_InVehicle)
-						self._InvertPathDirection = (s_Direction == 'Previous')
-					else
-						-- random path direction on switch
-						self._InvertPathDirection = MathUtils:GetRandomInt(1,2) == 1
-					end
-
-					self._PathIndex = s_NewWaypoint.PathIndex
-					self._CurrentWayPoint = s_NewWaypoint.PointIndex
-					self._OnSwitch = true
-				else
-					self._OnSwitch = false
-
-					if self._InvertPathDirection then
-						self._CurrentWayPoint = s_ActivePointIndex - s_PointIncrement
-					else
-						self._CurrentWayPoint = s_ActivePointIndex + s_PointIncrement
-					end
-				end
-
-				self._ObstaceSequenceTimer = 0.0
-				self._LastWayDistance = 1000.0
-			end
-		else -- wait mode
-			self._WayWaitTimer = self._WayWaitTimer + Registry.BOT.BOT_UPDATE_CYCLE
-
-			self:_LookAround(Registry.BOT.BOT_UPDATE_CYCLE)
-
-			if self._WayWaitTimer > s_Point.OptValue then
-				self._WayWaitTimer = 0.0
-
-				if self._InvertPathDirection then
-					self._CurrentWayPoint = s_ActivePointIndex - 1
-				else
-					self._CurrentWayPoint = s_ActivePointIndex + 1
-				end
-			end
-		end
-	--else -- no point: do nothing
-	end
-end
-
-function Bot:_UpdateShootMovementVehicle()
-	self.m_ActiveSpeedValue = BotMoveSpeeds.NoMovement -- no movement while attacking in vehicles
-end
-
-
-function Bot:_UpdateSpeedOfMovementVehicle()
-	if self.m_Player.soldier == nil or self._VehicleWaitTimer > 0.0 then
-		return
-	end
-
-	if self.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Stand then
-		self.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Stand, true, true)
-	end
-
-	if  m_Vehicles:IsNotVehicleTerrain(self.m_ActiveVehicle, VehicleTerrains.Air) then -- Air-Vehicles are handled in the yaw-function
-		-- additional movement
-		local s_SpeedVal = 0
-
-		if self.m_ActiveMoveMode ~= BotMoveModes.Standstill then
-			-- limit speed if full steering active
-			if self._FullVehicleSteering and self.m_ActiveSpeedValue >= BotMoveSpeeds.Normal then
-				self.m_ActiveSpeedValue = BotMoveSpeeds.SlowCrouch
-			end
-
-			-- normal values
-			if self.m_ActiveSpeedValue == BotMoveSpeeds.VerySlowProne then
-				s_SpeedVal = 0.25
-			elseif self.m_ActiveSpeedValue == BotMoveSpeeds.SlowCrouch then
-				s_SpeedVal = 0.5
-			elseif self.m_ActiveSpeedValue == BotMoveSpeeds.Normal then
-				s_SpeedVal = 0.8
-			elseif self.m_ActiveSpeedValue == BotMoveSpeeds.Sprint then
-				s_SpeedVal = 1.0
-			elseif self.m_ActiveSpeedValue == BotMoveSpeeds.Backwards then
-				s_SpeedVal = -0.7
-			end
-		end
-
-		-- movent speed
-		if self.m_ActiveSpeedValue == BotMoveSpeeds.Backwards then
-			self:_SetInput(EntryInputActionEnum.EIABrake, -s_SpeedVal)
-		elseif self.m_ActiveSpeedValue ~= BotMoveSpeeds.NoMovement then
-			self._BrakeTimer = 0.7
-			self:_SetInput(EntryInputActionEnum.EIAThrottle, s_SpeedVal)
-		else
-			if self._BrakeTimer > 0.0 then
-				self:_SetInput(EntryInputActionEnum.EIABrake, 1)
-			end
-
-			self._BrakeTimer = self._BrakeTimer - Registry.BOT.BOT_UPDATE_CYCLE
-		end
-	end
 end
 
 function Bot:_AbortAttack()
