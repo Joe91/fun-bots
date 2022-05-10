@@ -1,6 +1,8 @@
 ---@class Permissions
 Permissions = {
 	-- ChatCommands
+	'ChatCommands',
+
 	'ChatCommands.Row',
 	'ChatCommands.Tower',
 	'ChatCommands.Grid',
