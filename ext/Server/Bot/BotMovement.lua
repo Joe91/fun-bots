@@ -368,7 +368,7 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 		else -- wait mode
 			p_Bot._WayWaitTimer = p_Bot._WayWaitTimer + Registry.BOT.BOT_UPDATE_CYCLE
 
-			p_Bot:_LookAround(Registry.BOT.BOT_UPDATE_CYCLE)
+			self:LookAround(p_Bot, Registry.BOT.BOT_UPDATE_CYCLE)
 
 			if p_Bot._WayWaitTimer > s_Point.OptValue then
 				p_Bot._WayWaitTimer = 0.0
@@ -549,7 +549,78 @@ function BotMovement:UpdateTargetMovement(p_Bot)
 	end
 end
 
+---@param p_DeltaTime number
+function BotMovement:LookAround(p_Bot, p_DeltaTime)
+	-- move around a little
+	local s_LastYawTimer = p_Bot._WayWaitYawTimer
+	p_Bot._WayWaitYawTimer = p_Bot._WayWaitYawTimer + p_DeltaTime
+	p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.NoMovement
+	p_Bot._TargetPoint = nil
+	p_Bot._TargetPitch = 0.0
 
+	if p_Bot._WayWaitYawTimer > 6.0 then
+		p_Bot._WayWaitYawTimer = 0.0
+		p_Bot._TargetYaw = p_Bot._TargetYaw + 1.0 -- 60 ° rotation right
+
+		if p_Bot._TargetYaw > (math.pi * 2) then
+			p_Bot._TargetYaw = p_Bot._TargetYaw - (2 * math.pi)
+		end
+	elseif p_Bot._WayWaitYawTimer >= 4.0 and s_LastYawTimer < 4.0 then
+		p_Bot._TargetYaw = p_Bot._TargetYaw - 1.0 -- 60 ° rotation left
+
+		if p_Bot._TargetYaw < 0.0 then
+			p_Bot._TargetYaw = p_Bot._TargetYaw + (2 * math.pi)
+		end
+	elseif p_Bot._WayWaitYawTimer >= 3.0 and s_LastYawTimer < 3.0 then
+		p_Bot._TargetYaw = p_Bot._TargetYaw - 1.0 -- 60 ° rotation left
+
+		if p_Bot._TargetYaw < 0.0 then
+			p_Bot._TargetYaw = p_Bot._TargetYaw + (2 * math.pi)
+		end
+	elseif p_Bot._WayWaitYawTimer >= 1.0 and s_LastYawTimer < 1.0 then
+		p_Bot._TargetYaw = p_Bot._TargetYaw + 1.0 -- 60 ° rotation right
+
+		if p_Bot._TargetYaw > (math.pi * 2) then
+			p_Bot._TargetYaw = p_Bot._TargetYaw - (2 * math.pi)
+		end
+	end
+end
+
+function BotMovement:UpdateYaw(p_Bot)
+	local s_DeltaYaw = 0
+	s_DeltaYaw = p_Bot.m_Player.input.authoritativeAimingYaw - p_Bot._TargetYaw
+
+	if s_DeltaYaw > math.pi then
+		s_DeltaYaw = s_DeltaYaw - 2*math.pi
+	elseif s_DeltaYaw < -math.pi then
+		s_DeltaYaw = s_DeltaYaw + 2*math.pi
+	end
+
+	local s_AbsDeltaYaw = math.abs(s_DeltaYaw)
+	local s_Increment = Globals.YawPerFrame
+
+	if s_AbsDeltaYaw < s_Increment then
+		p_Bot.m_Player.input.authoritativeAimingYaw = p_Bot._TargetYaw
+		p_Bot.m_Player.input.authoritativeAimingPitch = p_Bot._TargetPitch
+		return
+	end
+
+	if s_DeltaYaw > 0 then
+		s_Increment = -s_Increment
+	end
+
+	local s_TempYaw = p_Bot.m_Player.input.authoritativeAimingYaw + s_Increment
+
+	if s_TempYaw >= (math.pi * 2) then
+		s_TempYaw = s_TempYaw - (math.pi * 2)
+	elseif s_TempYaw < 0.0 then
+		s_TempYaw = s_TempYaw + (math.pi * 2)
+	end
+
+	p_Bot.m_Player.input.authoritativeAimingYaw = s_TempYaw
+	p_Bot.m_Player.input.authoritativeAimingPitch = p_Bot._TargetPitch
+
+end
 
 
 function BotMovement:UpdateStaticMovement(p_Bot)

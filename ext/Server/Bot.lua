@@ -20,6 +20,7 @@ local m_BotAttacking = require('Bot/BotAttacking')
 local m_BotMovement = require('Bot/BotMovement')
 local m_BotWeaponHandling = require('Bot/BotWeaponHandling')
 local m_VehicleAiming = require('Bot/VehicleAiming')
+local m_VehicleAttacking = require('Bot/VehicleAttacking')
 local m_VehicleMovement = require('Bot/VehicleMovement')
 
 
@@ -217,7 +218,7 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 				if self:IsStaticMovement() then
 					m_BotMovement:UpdateStaticMovement(self)
 					self:_UpdateInputs()
-					self:_UpdateYaw()
+					m_BotMovement:UpdateYaw(self)
 					self._UpdateFastTimer = 0.0
 					return
 				end
@@ -276,7 +277,7 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 
 							-- differ attacking
 							if s_Attacking then
-								self:_UpdateAttackStationaryAAVehicle()
+								m_VehicleAttacking:UpdateAttackStationaryAAVehicle(self)
 							end
 							self:_UpdateInputs()
 							self._UpdateTimer = 0.0
@@ -320,7 +321,7 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 
 								-- differ attacking
 								if s_Attacking then
-									self:_UpdateAttackingVehicle()
+									m_VehicleAttacking:UpdateAttackingVehicle(self)
 									m_VehicleMovement:UpdateShootMovementVehicle(self)
 								else
 									self:_UpdateReloadVehicle()
@@ -350,12 +351,12 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 								end
 							else
 								if self.m_Player.controlledEntryId == 0 and not s_IsStationaryLauncher then -- only if driver
-									self:_UpdateTargetMovementVehicle()
+									m_VehicleMovement:UpdateTargetMovementVehicle(self)
 								else
-									self:_UpdateVehicleLookAround(self._UpdateFastTimer)
+									m_VehicleMovement:UpdateVehicleLookAround(self, self._UpdateFastTimer)
 								end
 							end
-							self:_UpdateYawVehicle(s_Attacking, s_IsStationaryLauncher)
+							m_VehicleMovement:UpdateYawVehicle(self, s_Attacking, s_IsStationaryLauncher)
 						end
 					end
 				end
@@ -364,7 +365,7 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 
 			-- very fast code
 			if not self.m_InVehicle then
-				self:_UpdateYaw()
+				m_BotMovement:UpdateYaw(self)
 			end
 
 		else -- alive, but no inputs allowed yet --> look around
@@ -376,7 +377,7 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 					self._SpawnProtectionTimer = 0.0
 				end
 
-				self:_UpdateYaw()
+				m_BotMovement:UpdateYaw(self)
 				m_BotMovement:LookAround(self, Registry.BOT.BOT_UPDATE_CYCLE)
 				self:_UpdateInputs()
 				self._UpdateTimer = 0.0
@@ -1051,54 +1052,6 @@ function Bot:_UpdateRespawn(p_DeltaTime)
 	end
 end
 
-function Bot:_UpdateTargetMovementVehicle()
-	if self._TargetPoint ~= nil then
-		local s_Distance = self.m_Player.soldier.worldTransform.trans:Distance(self._TargetPoint.Position)
-
-		if s_Distance < 3.0 then
-			self._TargetPoint = self._NextTargetPoint
-		end
-
-		local s_DifferenceY = self._TargetPoint.Position.z - self.m_Player.soldier.worldTransform.trans.z
-		local s_DifferenceX = self._TargetPoint.Position.x - self.m_Player.soldier.worldTransform.trans.x
-		local s_AtanDzDx = math.atan(s_DifferenceY, s_DifferenceX)
-		local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
-		self._TargetYaw = s_Yaw
-	end
-end
-
----@param p_DeltaTime number
-function Bot:_UpdateVehicleLookAround(p_DeltaTime)
-	-- move around a little
-	if self._VehicleMovableId ~= nil then
-		local s_Pos = self.m_Player.controlledControllable.transform.forward
-		local s_AtanDzDx = math.atan(s_Pos.z, s_Pos.x)
-		self._TargetYaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
-		self._TargetPitch = 0.0
-
-		self._VehicleWaitTimer = self._VehicleWaitTimer + p_DeltaTime
-
-		if self._VehicleWaitTimer > 9.0 then
-			self._VehicleWaitTimer = 0.0
-		elseif self._VehicleWaitTimer >= 6.0 then
-		elseif self._VehicleWaitTimer >= 3.0 then
-			self._TargetYaw = self._TargetYaw - 1.0 -- 60 ° rotation left
-			self._TargetPitch = 0.5
-
-			if self._TargetYaw < 0.0 then
-				self._TargetYaw = self._TargetYaw + (2 * math.pi)
-			end
-		elseif self._VehicleWaitTimer >= 0.0 then
-			self._TargetYaw = self._TargetYaw + 1.0 -- 60 ° rotation right
-			self._TargetPitch = -0.5
-
-			if self._TargetYaw > (math.pi * 2) then
-				self._TargetYaw = self._TargetYaw - (2 * math.pi)
-			end
-		end
-	end
-end
-
 ---@param p_Attacking boolean
 function Bot:_UpdateStationaryAAVehicle(p_Attacking)
 	-- get new target if needed
@@ -1121,364 +1074,9 @@ function Bot:_UpdateStationaryAAVehicle(p_Attacking)
 		m_VehicleAiming:UpdateAimingVehicleAdvanced(self)
 	else
 		-- just look a little around
-		self:_UpdateVehicleLookAround(Registry.BOT.BOT_FAST_UPDATE_CYCLE)
+		m_VehicleMovement:UpdateVehicleLookAround(self, Registry.BOT.BOT_FAST_UPDATE_CYCLE)
 	end
-	self:_UpdateYawVehicle(true, false) --only gun --> therefore alsways gun-mode
-end
-
-function Bot:_UpdateAttackStationaryAAVehicle()
-	if self._VehicleReadyToShoot then
-		self:_SetInput(EntryInputActionEnum.EIAFire, 1)
-	end
-end
-
----@param p_Attacking boolean
-function Bot:_UpdateYawVehicle(p_Attacking, p_IsStationaryLauncher)
-	local s_DeltaYaw = 0
-	local s_DeltaPitch = 0
-	local s_CorrectGunYaw = false
-
-	local s_Pos = nil
-
-	if not p_Attacking then
-		if self.m_Player.controlledEntryId == 0 and not p_IsStationaryLauncher then
-			s_Pos = self.m_Player.controlledControllable.transform.forward
-			local s_AtanDzDx = math.atan(s_Pos.z, s_Pos.x)
-			local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
-			s_DeltaYaw = s_Yaw - self._TargetYaw
-
-			if self._VehicleMovableId ~= nil then
-				self.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, 0)
-				local s_DiffPos = s_Pos - self.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(self._VehicleMovableId):ToLinearTransform().forward
-				-- prepare for moving gun back
-				self._LastVehicleYaw = s_Yaw
-
-				if math.abs(s_DiffPos.x) > 0.08 or math.abs(s_DiffPos.z) > 0.08 then
-					s_CorrectGunYaw = true
-				end
-			end
-		else -- passenger
-			if self._VehicleMovableId ~= nil then
-				s_Pos = self.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(self._VehicleMovableId):ToLinearTransform().forward
-				local s_AtanDzDx = math.atan(s_Pos.z, s_Pos.x)
-				local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
-				local s_Pitch = math.asin(s_Pos.y / 1.0)
-				s_DeltaPitch = s_Pitch - self._TargetPitch
-				s_DeltaYaw = s_Yaw - self._TargetYaw
-			end
-		end
-	else
-		if self._VehicleMovableId ~= nil then
-			s_Pos = self.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(self._VehicleMovableId):ToLinearTransform().forward
-			local s_AtanDzDx = math.atan(s_Pos.z, s_Pos.x)
-			local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
-			local s_Pitch = math.asin(s_Pos.y / 1.0)
-			s_DeltaPitch = s_Pitch - self._TargetPitch
-			s_DeltaYaw = s_Yaw - self._TargetYaw
-
-			--detect direction for moving gun back
-			local s_GunDeltaYaw = s_Yaw - self._LastVehicleYaw
-
-			if s_GunDeltaYaw > math.pi then
-				s_GunDeltaYaw = s_GunDeltaYaw - 2*math.pi
-			elseif s_GunDeltaYaw < -math.pi then
-				s_GunDeltaYaw = s_GunDeltaYaw + 2*math.pi
-			end
-
-			if s_GunDeltaYaw > 0 then
-				self._VehicleDirBackPositive = false
-			else
-				self._VehicleDirBackPositive = true
-			end
-		elseif (m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) and self.m_Player.controlledEntryId == 0 ) or m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
-			s_Pos = self.m_Player.controlledControllable.transform.forward
-			local s_AtanDzDx = math.atan(s_Pos.z, s_Pos.x)
-			local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
-			local s_Pitch = math.asin(s_Pos.y / 1.0)
-			s_DeltaPitch = s_Pitch - self._TargetPitch
-			s_DeltaYaw = s_Yaw - self._TargetYaw
-		end
-	end
-
-	if s_DeltaYaw > (math.pi + 0.2) then
-		s_DeltaYaw = s_DeltaYaw - 2*math.pi
-	elseif s_DeltaYaw < -(math.pi + 0.2) then
-		s_DeltaYaw = s_DeltaYaw + 2*math.pi
-	end
-
-	local s_AbsDeltaYaw = math.abs(s_DeltaYaw)
-	local s_AbsDeltaPitch = math.abs(s_DeltaPitch)
-
-	self.m_Player.input.authoritativeAimingYaw = self._TargetYaw --alsways set yaw to let the FOV work
-
-	if s_AbsDeltaYaw < 0.10 then
-		self._FullVehicleSteering = false
-		if p_Attacking and s_AbsDeltaPitch < 0.10 then
-			self._VehicleReadyToShoot = true
-		end
-	else
-		self._FullVehicleSteering = true
-		self._VehicleReadyToShoot = false
-	end
-
-	-- chopper driver handling here
-	if self.m_Player.controlledEntryId == 0 and m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) then
-		if self._VehicleWaitTimer > 0.0 then
-			return
-		end
-		if not p_Attacking and (self._TargetPoint == nil or self._NextTargetPoint == nil) then
-			return
-		end
-		if self.m_Player.controlledControllable == nil then
-			return
-		end
-
-		-- YAW
-		local s_Output_Yaw = self._Pid_Drv_Yaw:Update(s_DeltaYaw)
-		-- no backwards in chopper
-		self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, -s_Output_Yaw)
-
-		-- HEIGHT
-		local s_Delta_Height = 0.0
-		if p_Attacking then
-			s_Delta_Height = self._TargetHeightAttack - self.m_Player.controlledControllable.transform.trans.y
-		else
-			self._TargetHeightAttack = self._TargetPoint.Position.y
-			s_Delta_Height = self._TargetPoint.Position.y - self.m_Player.controlledControllable.transform.trans.y
-		end
-		local s_Output_Throttle = self._Pid_Drv_Throttle:Update(s_Delta_Height)
-		if s_Output_Throttle > 0 then
-			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAThrottle, s_Output_Throttle)
-			self.m_Player.input:SetLevel(EntryInputActionEnum.EIABrake, 0.0)
-		else
-			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAThrottle, 0.0)
-			self.m_Player.input:SetLevel(EntryInputActionEnum.EIABrake, -s_Output_Throttle)
-		end
-
-		-- FOREWARD (depending on speed)
-		-- A: use distance horizontally between points for speed-value --> not that good for that
-		-- local DeltaX = self._NextTargetPoint.Position.x - self._TargetPoint.Position.x
-		-- local DeltaZ = self._NextTargetPoint.Position.z - self._TargetPoint.Position.z
-		-- local Distance = math.sqrt(DeltaX*DeltaX + DeltaZ*DeltaZ)
-		-- B: just fly with constant speed -->
-
-		local s_Delta_Tilt = 0
-		if p_Attacking then
-			s_Delta_Tilt = -s_DeltaPitch
-		else
-			local s_Tartget_Tilt = -0.35 -- = 20 °
-			local s_Current_Tilt = math.asin(self.m_Player.controlledControllable.transform.forward.y / 1.0)
-			s_Delta_Tilt = s_Tartget_Tilt - s_Current_Tilt
-		end
-
-		local s_Output_Tilt = self._Pid_Drv_Tilt:Update(s_Delta_Tilt)
-		self.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, -s_Output_Tilt)
-
-		-- ROLL (keep it zero)
-		local s_Tartget_Roll = 0.0
-		-- TODO: in strog steering: Roll a little?
-		-- if self._FullVehicleSteering then
-		-- 	if s_AbsDeltaYaw > 0 then
-		-- 		s_Tartget_Roll = 0.1
-		-- 	else
-		-- 		s_Tartget_Roll = -0.1
-		-- 	end
-		-- end
-
-		local s_Current_Roll = math.asin(self.m_Player.controlledControllable.transform.left.y / 1.0)
-		local s_Delta_Roll = s_Tartget_Roll - s_Current_Roll
-		local s_Output_Roll = self._Pid_Drv_Roll:Update(s_Delta_Roll)
-		self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, s_Output_Roll)
-
-		return -- don't do anything else
-
-	-- jet driver handling here
-	elseif m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
-		if self._VehicleWaitTimer > 0.0 then
-			return
-		end
-		if not p_Attacking and (self._TargetPoint == nil or self._NextTargetPoint == nil) then
-			return
-		end
-		if self.m_Player.controlledControllable == nil then
-			return
-		end
-
-
-		-- Calculat delta pitch
-		local s_Delta_Tilt = 0
-		local s_Current_Tilt = math.asin(self.m_Player.controlledControllable.transform.forward.y / 1.0)
-
-		if p_Attacking then
-			s_Delta_Tilt = -s_DeltaPitch
-		else
-			-- TODO: use angle between two nodes?
-
-			local s_Delta_Height = self._TargetPoint.Position.y - self.m_Player.controlledControllable.transform.trans.y
-
-			local s_Tartget_Tilt = 0.0
-			local s_Abs_Delta_Height = math.abs(s_Delta_Height)
-			s_Tartget_Tilt = 0.6 * s_Abs_Delta_Height/10 -- 45°=0.785 rad
-			local s_LimitTilt = 0.5
-			if s_Tartget_Tilt > s_LimitTilt then
-				s_Tartget_Tilt = s_LimitTilt
-			end
-			if s_Delta_Height < 0 then
-				s_Tartget_Tilt = -s_Tartget_Tilt
-			end
-
-			s_Delta_Tilt = s_Tartget_Tilt - s_Current_Tilt -- inverted tilt
-			if s_Delta_Tilt > math.pi then
-				s_Delta_Tilt = s_Delta_Tilt - 2*math.pi
-			elseif s_Delta_Tilt < -math.pi then
-				s_Delta_Tilt = s_Delta_Tilt + 2*math.pi
-			end
-		end
-
-		-- Caclulate angle for roll
-		local s_Target_Roll = 0
-		s_Target_Roll = 1.57 * -s_DeltaYaw/1.0 --full roll on 60°
-		local s_LimitRoll = 1.57
-		if s_Target_Roll > s_LimitRoll then -- 80° = 1.4 . 60° = 1.0
-			s_Target_Roll = s_LimitRoll
-		elseif s_Target_Roll < -s_LimitRoll then
-			s_Target_Roll = -s_LimitRoll
-		end
-
-		local s_Current_Roll = 0
-		if self.m_Player.controlledControllable.transform.up.y > 0 then
-			local s_ProjectedY = self.m_Player.controlledControllable.transform.left.y / math.cos(s_Current_Tilt)
-			s_Current_Roll = math.asin(s_ProjectedY / 1.0)
-		elseif self.m_Player.controlledControllable.transform.up.y < 0 then
-			local s_ProjectedY = self.m_Player.controlledControllable.transform.up.y / math.cos(s_Current_Tilt)
-			s_Current_Roll = math.asin(s_ProjectedY / 1.0) - math.pi/2
-			if s_Current_Roll < -2* math.pi then
-				s_Current_Roll = s_Current_Roll + 2* math.pi
-			end
-		end
-
-		local s_Delta_Roll = s_Target_Roll - s_Current_Roll
-		if s_Delta_Roll > math.pi then
-			s_Delta_Roll = s_Delta_Roll - 2*math.pi
-		elseif s_Delta_Roll < -math.pi then
-			s_Delta_Roll = s_Delta_Roll + 2*math.pi
-		end
-		local s_Output_Roll = self._Pid_Drv_Roll:Update(s_Delta_Roll)
-		self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, s_Output_Roll)
-
-		-- trasform tilt and yaw to rotation of roll
-		local s_TransformedInputYaw = math.cos(s_Current_Roll) * s_DeltaYaw + math.sin(s_Current_Roll) * s_Delta_Tilt
-		local s_TransformedInputTilt = math.cos(s_Current_Roll) * s_Delta_Tilt - math.sin(s_Current_Roll) * s_DeltaYaw
-
-
-		local s_Output_Tilt = self._Pid_Drv_Tilt:Update(s_TransformedInputTilt)
-		local s_Output_Yaw = self._Pid_Drv_Yaw:Update(s_TransformedInputYaw)
-
-		-- TILT
-		self.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, -s_Output_Tilt)
-
-		-- YAW
-		-- no backwards in planes
-		self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, -s_Output_Yaw)
-
-
-		-- Throttle
-		-- target velocity == 313 km/h --> 86.9444 m/s
-		local s_Delta_Speed = 86.9444 - PhysicsEntity(self.m_Player.controlledControllable).velocity.magnitude
-		local s_Output_Throttle = self._Pid_Drv_Throttle:Update(s_Delta_Speed)
-		if s_Output_Throttle > 0 then
-			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAThrottle, s_Output_Throttle)
-			self.m_Player.input:SetLevel(EntryInputActionEnum.EIABrake, 0.0)
-		else
-			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAThrottle, 0.0)
-			self.m_Player.input:SetLevel(EntryInputActionEnum.EIABrake, -s_Output_Throttle)
-		end
-
-		return -- don't do anything else
-	end
-
-	if not p_Attacking then
-		if self.m_Player.controlledEntryId == 0 and not p_IsStationaryLauncher then -- driver
-			local s_Output = self._Pid_Drv_Yaw:Update(s_DeltaYaw)
-
-			if self.m_ActiveSpeedValue == BotMoveSpeeds.Backwards then
-				self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, s_Output)
-			else
-				self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, -s_Output)
-			end
-
-			if s_CorrectGunYaw then
-				if self._VehicleDirBackPositive then
-					self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, 1)
-				else
-					self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, -1)
-				end
-			else
-				self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, 0)
-			end
-		else -- passenger
-			if self._VehicleMovableId ~= nil then
-				local s_Output = self._Pid_Att_Yaw:Update(s_DeltaYaw)
-				self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, -s_Output)
-
-				local s_Output = self._Pid_Att_Pitch:Update(s_DeltaPitch)
-				self.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, -s_Output)
-			end
-		end
-	else -- attacking
-		-- yaw
-		local s_Output = self._Pid_Att_Yaw:Update(s_DeltaYaw)
-
-		if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.StationaryAA) then
-			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, -s_Output) --doubles the output of stationary AA --> faster turret
-		else
-			self.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, 0)
-		end
-		self.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, -s_Output)
-		-- self.m_Player.input:SetLevel(EntryInputActionEnum.EIACameraYaw, -s_Output)
-
-		-- pitch
-		local s_Output = self._Pid_Att_Pitch:Update(s_DeltaPitch)
-		self.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, -s_Output)
-		-- self.m_Player.input:SetLevel(EntryInputActionEnum.EIACameraPitch, -s_Output)
-	end
-end
-
-function Bot:_UpdateYaw()
-	local s_DeltaYaw = 0
-	local s_DeltaPitch = 0
-	s_DeltaYaw = self.m_Player.input.authoritativeAimingYaw - self._TargetYaw
-
-	if s_DeltaYaw > math.pi then
-		s_DeltaYaw = s_DeltaYaw - 2*math.pi
-	elseif s_DeltaYaw < -math.pi then
-		s_DeltaYaw = s_DeltaYaw + 2*math.pi
-	end
-
-	local s_AbsDeltaYaw = math.abs(s_DeltaYaw)
-	local s_Increment = Globals.YawPerFrame
-
-	if s_AbsDeltaYaw < s_Increment then
-		self.m_Player.input.authoritativeAimingYaw = self._TargetYaw
-		self.m_Player.input.authoritativeAimingPitch = self._TargetPitch
-		return
-	end
-
-	if s_DeltaYaw > 0 then
-		s_Increment = -s_Increment
-	end
-
-	local s_TempYaw = self.m_Player.input.authoritativeAimingYaw + s_Increment
-
-	if s_TempYaw >= (math.pi * 2) then
-		s_TempYaw = s_TempYaw - (math.pi * 2)
-	elseif s_TempYaw < 0.0 then
-		s_TempYaw = s_TempYaw + (math.pi * 2)
-	end
-
-	self.m_Player.input.authoritativeAimingYaw = s_TempYaw
-	self.m_Player.input.authoritativeAimingPitch = self._TargetPitch
-
+	m_VehicleMovement:UpdateYawVehicle(self, true, false) --only gun --> therefore alsways gun-mode
 end
 
 function Bot:_UpdateWeaponSelectionVehicle()
@@ -1503,56 +1101,6 @@ function Bot:_UpdateReloadVehicle()
 
 	if self._ReloadTimer > 1.5 and self._ReloadTimer < 2.5 then
 		self:_SetInput(EntryInputActionEnum.EIAReload, 1)
-	end
-end
-
-function Bot:_UpdateAttackingVehicle()
-	if self._ShootPlayer.soldier ~= nil and self._Shoot then
-		if (self._ShootModeTimer < Config.BotFireModeDuration * 3) then -- thre time the default duration
-
-			self._ReloadTimer = 0.0 -- reset reloading
-
-			if self._ShootPlayerVehicleType ~= VehicleTypes.NoVehicle then
-				local s_AttackMode = m_Vehicles:CheckForVehicleAttack(self._ShootPlayerVehicleType, self._DistanceToPlayer, self.m_SecondaryGadget, true)
-
-				if s_AttackMode ~= VehicleAttackModes.NoAttack then
-					self._WeaponToUse = BotWeapons.Primary
-				else
-					self._ShootModeTimer = Config.BotFireModeDuration -- end attack
-				end
-			else
-				self._WeaponToUse = BotWeapons.Primary
-			end
-
-
-			--shooting sequence
-			if self.m_ActiveWeapon ~= nil then
-				if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.AntiAir) then
-					if self._ShotTimer >= 5.0 then
-						self._ShotTimer = 0.0
-					end
-					if self._ShotTimer >= 0.5 and self._VehicleReadyToShoot then
-						self:_SetInput(EntryInputActionEnum.EIAFire, 1)
-					end
-				else
-					if self._ShotTimer >= 0.6 then
-						self._ShotTimer = 0.0
-					end
-					if self._ShotTimer >= 0.3 and self._VehicleReadyToShoot then
-						self:_SetInput(EntryInputActionEnum.EIAFire, 1)
-					end
-				end
-				self._ShotTimer = self._ShotTimer + Registry.BOT.BOT_UPDATE_CYCLE
-			end
-		else
-			self._TargetPitch = 0.0
-			self._WeaponToUse = BotWeapons.Primary
-			self:_AbortAttack()
-			self:_ResetActionFlag(BotActionFlags.C4Active)
-			self:_ResetActionFlag(BotActionFlags.GrenadeActive)
-		end
-	elseif self._ShootPlayer.soldier == nil then -- reset if enemy is dead
-		self:_AbortAttack()
 	end
 end
 
