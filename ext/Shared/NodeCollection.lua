@@ -204,7 +204,7 @@ function NodeCollection:Add()
 	return false, 'Must select up to two waypoints'
 end
 
----@param p_Waypoint Waypoint
+---@param p_Waypoint? Waypoint
 ---@return boolean
 ---@return string
 function NodeCollection:Remove(p_Waypoint)
@@ -503,7 +503,7 @@ end
 -- p_Waypoints | Waypoint or {Waypoint} | Can be a single waypoint or a table of waypoints, `nil` defaults to current selection
 -- p_LinkID | string | a waypoint ID, must not be `nil`
 -- p_OneWay | boolean | if true, the connection is only made on this node, prevents infinite recursion
----@param p_Waypoints Waypoint|Waypoint[]|nil
+---@param p_Waypoints? Waypoint|Waypoint[]
 ---@param p_LinkID string
 ---@param p_OneWay? boolean
 ---@return boolean
@@ -690,7 +690,7 @@ function NodeCollection:Get(p_Waypoint, p_PathIndex)
 end
 
 ---@param p_PathIndex? integer
----@return boolean
+---@return Waypoint|boolean
 function NodeCollection:GetFirst(p_PathIndex)
 	local s_FirstWaypoint = self.waypoints[1]
 

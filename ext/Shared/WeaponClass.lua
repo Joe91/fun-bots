@@ -8,7 +8,7 @@ local m_Logger = Logger("Weapon", Debug.Shared.MODIFICATIONS)
 ---@param p_Extension string|'"XP1"'|'"XP2"'|nil
 ---@param p_Unlocks string[] @length 3 or 0
 ---@param p_Type WeaponTypes
----@param p_FullResource? string
+---@param p_FullResource string|nil
 function Weapon:__init(p_Name, p_Extension, p_Unlocks, p_Type, p_FullResource)
 	self.name = p_Name
 	self.extension = p_Extension

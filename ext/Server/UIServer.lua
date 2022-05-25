@@ -482,8 +482,10 @@ function FunBotUIServer:_writeSettings(p_Player, p_Request)
 				end
 			elseif l_Item.Type == Type.Integer or l_Item.Type == Type.Float then
 				s_Value = tonumber(p_Request[l_Item.Name])
+				---@type Range
+				local s_Reference = l_Item.Reference
 
-				if l_Item.Reference:IsValid(s_Value) then
+				if s_Reference:IsValid(s_Value) then
 					s_Valid = true
 					if math.abs(s_Value - Config[l_Item.Name]) > 0.001 then
 						s_Changed = true

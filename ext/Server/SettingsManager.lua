@@ -219,9 +219,11 @@ function SettingsManager:UpdateSetting(p_Name, p_Value)
 		if l_Item.Name == p_Name then
 			if l_Item.Type == Type.Integer or l_Item.Type == Type.Float then
 				s_ConvertedValue = tonumber(p_Value)
+				---@type Range
+				local s_Reference = l_Item.Reference
 
 				-- check for Range
-				if l_Item.Reference:GetMax() >= s_ConvertedValue and l_Item.Reference:GetMin() <= s_ConvertedValue then
+				if s_Reference:GetMax() >= s_ConvertedValue and s_Reference:GetMin() <= s_ConvertedValue then
 					s_Valid = true
 				end
 			elseif l_Item.Type == Type.Boolean then
