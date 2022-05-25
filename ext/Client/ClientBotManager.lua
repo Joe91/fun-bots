@@ -36,6 +36,9 @@ function ClientBotManager:OnClientUpdateInput(p_DeltaTime)
 		--execute Vehicle Enter Detection here
 		if self.m_Player ~= nil and self.m_Player.inVehicle then
 			local s_Transform = ClientUtils:GetCameraTransform()
+
+			if s_Transform == nil then return end
+
 			-- The freecam transform is inverted. Invert it back
 			local s_CameraForward = Vec3(s_Transform.forward.x * -1, s_Transform.forward.y * -1, s_Transform.forward.z * -1)
 
@@ -369,7 +372,7 @@ end
 ---@param p_Hit RayCastHit
 ---@param p_Shooter Player|nil
 function ClientBotManager:OnBulletEntityCollision(p_HookCtx, p_Entity, p_Hit, p_Shooter)
-	if p_Hit.rigidBody.typeInfo.name ~= 'CharacterPhysicsEntity' then
+	if p_Hit.rigidBody.typeInfo.name ~= 'CharacterPhysicsEntity' or not p_Shooter then
 		return
 	end
 

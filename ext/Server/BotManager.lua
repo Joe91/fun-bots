@@ -221,7 +221,7 @@ function BotManager:OnVehicleDamage(p_VehicleEntity, p_Damage, p_DamageGiverInfo
 					local s_Bot = self:GetBotByName(s_Player.name)
 					if s_Bot ~= nil then
 						-- shoot back
-						if p_DamageGiverInfo.giver ~= nil then
+						if p_DamageGiverInfo and p_DamageGiverInfo.giver ~= nil then
 							--detect if we need to shoot back
 							if Config.ShootBackIfHit then
 								s_Bot:ShootAt(p_DamageGiverInfo.giver, true)
@@ -593,7 +593,7 @@ function BotManager:FindNextBotName()
 	return nil
 end
 
----@param p_TeamId TeamId|integer
+---@param p_TeamId? TeamId|integer
 ---@return Bot[]
 function BotManager:GetBots(p_TeamId)
 	if p_TeamId ~= nil then
@@ -608,7 +608,7 @@ function BotManager:GetBotCount()
 	return #self._Bots
 end
 
----@param p_TeamId TeamId|integer
+---@param p_TeamId? TeamId|integer
 ---@return integer
 function BotManager:GetActiveBotCount(p_TeamId)
 	local s_Count = 0
@@ -759,6 +759,7 @@ function BotManager:CreateBot(p_Name, p_TeamId, p_SquadId)
 	s_BotInput.flags = EntryInputFlags.AuthoritativeAiming
 	s_BotPlayer.input = s_BotInput
 
+	---@type Bot
 	s_Bot = Bot(s_BotPlayer)
 
 	local teamLookup = s_Bot.m_Player.teamId + 1
@@ -830,8 +831,8 @@ function BotManager:ResetAllBots()
 	end
 end
 
----@param p_Amount integer
----@param p_TeamId TeamId|integer
+---@param p_Amount? integer
+---@param p_TeamId? TeamId|integer
 function BotManager:KillAll(p_Amount, p_TeamId)
 	local s_BotTable = self._Bots
 
@@ -852,9 +853,9 @@ function BotManager:KillAll(p_Amount, p_TeamId)
 	end
 end
 
----@param p_Amount integer
----@param p_TeamId TeamId|integer
----@param p_Force boolean
+---@param p_Amount? integer
+---@param p_TeamId? TeamId|integer
+---@param p_Force? boolean
 function BotManager:DestroyAll(p_Amount, p_TeamId, p_Force)
 	local s_BotTable = self._Bots
 

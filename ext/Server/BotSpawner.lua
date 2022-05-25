@@ -600,6 +600,11 @@ function BotSpawner:SpawnBotRow(p_Player, p_Length, p_Spacing)
 			local s_Transform = LinearTransform()
 			s_Transform.trans = p_Player.soldier.worldTransform.trans + (p_Player.soldier.worldTransform.forward * i * p_Spacing)
 			local s_Bot = m_BotManager:CreateBot(s_Name, m_BotManager:GetBotTeam(), SquadId.SquadNone)
+
+			if not s_Bot then
+				return
+			end
+
 			s_Bot:SetVarsStatic(p_Player)
 			self:_SpawnBot(s_Bot, s_Transform, true)
 		end
@@ -619,6 +624,11 @@ function BotSpawner:SpawnBotTower(p_Player, p_Height)
 			s_Transform.trans.y = p_Player.soldier.worldTransform.trans.y + ((i - 1) * 1.8)
 			s_Transform.trans.z = p_Player.soldier.worldTransform.trans.z + (math.sin(s_Yaw + (math.pi / 2)))
 			local s_Bot = m_BotManager:CreateBot(s_Name, m_BotManager:GetBotTeam(), SquadId.SquadNone)
+
+			if not s_Bot then
+				return
+			end
+
 			s_Bot:SetVarsStatic(p_Player)
 			self:_SpawnBot(s_Bot, s_Transform, true)
 		end
@@ -641,6 +651,11 @@ function BotSpawner:SpawnBotGrid(p_Player, p_Rows, p_Columns, p_Spacing)
 				s_Transform.trans.y = p_Player.soldier.worldTransform.trans.y
 				s_Transform.trans.z = p_Player.soldier.worldTransform.trans.z + (i * math.sin(s_Yaw + (math.pi / 2)) * p_Spacing) + ((j - 1) * math.sin(s_Yaw) * p_Spacing)
 				local s_Bot = m_BotManager:CreateBot(s_Name, m_BotManager:GetBotTeam(), SquadId.SquadNone)
+
+				if not s_Bot then
+					return
+				end
+
 				s_Bot:SetVarsStatic(p_Player)
 				self:_SpawnBot(s_Bot, s_Transform, true)
 			end
@@ -651,9 +666,9 @@ end
 ---@param p_Player Player
 ---@param p_Amount integer
 ---@param p_UseRandomWay boolean
----@param p_ActiveWayIndex integer
----@param p_IndexOnPath integer
----@param p_TeamId TeamId|integer
+---@param p_ActiveWayIndex? integer
+---@param p_IndexOnPath? integer
+---@param p_TeamId? TeamId|integer
 function BotSpawner:SpawnWayBots(p_Player, p_Amount, p_UseRandomWay, p_ActiveWayIndex, p_IndexOnPath, p_TeamId)
 	if #m_NodeCollection:GetPaths() <= 0 then
 		return
@@ -747,6 +762,11 @@ end
 ---@param p_Bot Bot
 function BotSpawner:_TriggerSpawn(p_Bot)
 	local s_CurrentGameMode = SharedUtils:GetCurrentGameMode()
+
+	if s_CurrentGameMode == nil then
+		m_Logger:Error("CurrentGameMode returned nil. ")
+		return
+	end
 
 	if s_CurrentGameMode:match("DeathMatch") or
 	s_CurrentGameMode:match("Domination") or

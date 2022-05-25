@@ -59,6 +59,7 @@ function WeaponModification:OnPartitionLoaded(p_Partition)
 	---@type SoldierWeaponData
 	for _, p_Instance in pairs(p_Partition.instances) do
 		if p_Instance ~= nil and p_Instance:Is('SoldierWeaponData') then
+			---@type SoldierWeaponData
 			p_Instance = SoldierWeaponData(p_Instance)
 
 			if p_Instance.soldierWeaponBlueprint == nil then
