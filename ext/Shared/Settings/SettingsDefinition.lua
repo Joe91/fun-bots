@@ -399,7 +399,7 @@ SettingsDefinition = {
 			Category = "SPAWN"
 		},
 
-	-- Spawn limits
+		-- Spawn limits
 		{
 			Name = "MaxBotsPerTeamDefault",
 			Text = "Max Bots Per Team (default)",
@@ -604,7 +604,7 @@ SettingsDefinition = {
 			Reference = Range(1.00, 1500.00, 5.0),
 			Default = 70,
 			UpdateFlag = UpdateFlag.None,
-			Category ="BEHAVIOUR"
+			Category = "BEHAVIOUR"
 		},
 		{
 			Name = "MaxShootDistancePistol",
@@ -883,7 +883,7 @@ SettingsDefinition = {
 			Reference = Range(1.00, 1500.00, 5.0),
 			Default = 150,
 			UpdateFlag = UpdateFlag.None,
-			Category ="VEHICLE"
+			Category = "VEHICLE"
 		},
 		{
 			Name = "VehicleWaitForPassengersTime",
@@ -895,7 +895,7 @@ SettingsDefinition = {
 			Reference = Range(0.50, 60.00, 0.5),
 			Default = 7.0,
 			UpdateFlag = UpdateFlag.None,
-			Category ="VEHICLE"
+			Category = "VEHICLE"
 		},
 		{
 			Name = "ChopperDriversAttack",

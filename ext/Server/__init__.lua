@@ -235,14 +235,14 @@ function FunBotServer:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 end
 
 -- =============================================
-	-- Level Events
+-- Level Events
 -- =============================================
 
 ---VEXT Server Level:Loaded Event
 ---@param p_LevelName string
 ---@param p_GameMode string
----@param p_Round integer
----@param p_RoundsPerMap integer
+---@param p_Round? integer
+---@param p_RoundsPerMap? integer
 function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPerMap)
 	Globals.GameMode = p_GameMode
 	local s_GameMode = ServerUtils:GetCustomGameModeName()
@@ -262,10 +262,12 @@ function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPe
 	m_Logger:Write('OnLevelLoaded: ' .. p_LevelName .. ' ' .. s_GameMode)
 
 	self:SetRespawnDelay()
+
 	-- don't reset list of Ignore-Bot-Names, if those are allowed to use
 	if not Registry.COMMON.ALLOW_PLAYER_BOT_NAMES then
 		Globals.IgnoreBotNames = {}
 	end
+
 	self:DetectSpecialMods()
 	self:RegisterInputRestrictionEventCallbacks()
 	self:SetGameMode(s_GameMode)
@@ -284,9 +286,9 @@ function FunBotServer:OnLevelDestroy()
 	m_BotSpawner:OnLevelDestroy()
 	m_NodeEditor:OnLevelDestroy()
 	m_AirTargets:OnLevelDestroy()
-	local s_OldMemory = math.floor(collectgarbage("count")/1024)
+	local s_OldMemory = math.floor(collectgarbage("count") / 1024)
 	collectgarbage('collect')
-	m_Logger:Write("*Collecting Garbage on Level Destroy: " .. math.floor(collectgarbage("count")/1024) .. " MB | Old Memory: " .. s_OldMemory .. " MB")
+	m_Logger:Write("*Collecting Garbage on Level Destroy: " .. math.floor(collectgarbage("count") / 1024) .. " MB | Old Memory: " .. s_OldMemory .. " MB")
 end
 
 ---VEXT Server Server:RoundOver Event
@@ -303,7 +305,7 @@ function FunBotServer:OnRoundReset()
 end
 
 -- =============================================
-	-- Player Events
+-- Player Events
 -- =============================================
 
 ---VEXT Server Player:Joining Event
@@ -367,7 +369,7 @@ function FunBotServer:OnPlayerDestroyed(p_Player)
 end
 
 -- =============================================
-	-- CapturePoint Events
+-- CapturePoint Events
 -- =============================================
 
 ---VEXT Server CapturePoint:Lost Event
@@ -390,7 +392,7 @@ function FunBotServer:OnPlayerEnteredCapturePoint(p_Player, p_CapturePoint)
 end
 
 -- =============================================
-	-- Vehicle Events
+-- Vehicle Events
 -- =============================================
 
 ---VEXT Server Vehicle:SpawnDone Event
@@ -505,6 +507,7 @@ function FunBotServer:OnTeleportTo(p_Player, p_Transform)
 	if p_Player == nil or p_Player.soldier == nil then
 		return
 	end
+
 	p_Player.soldier:SetTransform(p_Transform)
 end
 
@@ -522,6 +525,7 @@ function FunBotServer:OnServerSettingsCallback(p_ServerSettings)
 	else
 		p_ServerSettings.isRenderDamageEvents = false
 	end
+
 	p_ServerSettings.loadingTimeout = Registry.COMMON.LOADING_TIMEOUT
 	p_ServerSettings.ingameTimeout = Registry.COMMON.LOADING_TIMEOUT
 	p_ServerSettings.timeoutTime = Registry.COMMON.LOADING_TIMEOUT
@@ -559,8 +563,8 @@ function FunBotServer:OnStationaryAACallback(p_FiringFunctionData)
 	p_FiringFunctionData = FiringFunctionData(p_FiringFunctionData)
 	p_FiringFunctionData:MakeWritable()
 	p_FiringFunctionData.overHeat.heatPerBullet = 0.0001
-	p_FiringFunctionData.dispersion[1].minAngle = 0.2--Config.spreadMinAngle
-	p_FiringFunctionData.dispersion[1].maxAngle = 0.6--Config.spreadMaxAngle
+	p_FiringFunctionData.dispersion[1].minAngle = 0.2 --Config.spreadMinAngle
+	p_FiringFunctionData.dispersion[1].maxAngle = 0.6 --Config.spreadMaxAngle
 	--p_FiringFunctionData.shot.initialSpeed = Vec3(0, 0, Config.bulletSpeed)
 	--p_FiringFunctionData.shot.initialPosition = Vec3(0, 0, 35)
 	--p_FiringFunctionData.fireLogic.rateOfFire = Config.rateOfFire
@@ -657,16 +661,16 @@ function FunBotServer:RegisterInputRestrictionEventCallbacks()
 		s_Entity = Entity(s_Entity)
 
 		if s_Entity.data.instanceGuid == Guid('E8C37E6A-0C8B-4F97-ABDD-28715376BD2D') or -- cq / cq assault / tank- / air superiority
-		s_Entity.data.instanceGuid == Guid('593710B7-EDC4-4EDB-BE20-323E7B0CE023') or -- tdm XP4
-		s_Entity.data.instanceGuid == Guid('6F42FBE3-428A-463A-9014-AA0C6E09DA64') or -- tdm
-		s_Entity.data.instanceGuid == Guid('9EDC59FB-5821-4A37-A739-FE867F251000') or -- rush / sq rush
-		s_Entity.data.instanceGuid == Guid('BF4003AC-4B85-46DC-8975-E6682815204D') or -- domination / scavenger
-		s_Entity.data.instanceGuid == Guid('A0158B87-FA34-4ED2-B752-EBFC1A34B081') or -- gunmaster XP4
-		s_Entity.data.instanceGuid == Guid('AAF90FE3-D1CA-4CFE-84F3-66C6146AD96F') or -- gunmaster
-		s_Entity.data.instanceGuid == Guid('753BD81F-07AC-4140-B05C-24210E1DF3FA') or -- sqdm XP4
-		s_Entity.data.instanceGuid == Guid('CBFB0D7E-8561-4216-9AB2-99E14E9D18D0') or -- sqdm noVehicles
-		s_Entity.data.instanceGuid == Guid('A40B08B7-D781-487A-8D0C-2E1B911C1949') then -- sqdm
-		-- rip CTF
+			s_Entity.data.instanceGuid == Guid('593710B7-EDC4-4EDB-BE20-323E7B0CE023') or -- tdm XP4
+			s_Entity.data.instanceGuid == Guid('6F42FBE3-428A-463A-9014-AA0C6E09DA64') or -- tdm
+			s_Entity.data.instanceGuid == Guid('9EDC59FB-5821-4A37-A739-FE867F251000') or -- rush / sq rush
+			s_Entity.data.instanceGuid == Guid('BF4003AC-4B85-46DC-8975-E6682815204D') or -- domination / scavenger
+			s_Entity.data.instanceGuid == Guid('A0158B87-FA34-4ED2-B752-EBFC1A34B081') or -- gunmaster XP4
+			s_Entity.data.instanceGuid == Guid('AAF90FE3-D1CA-4CFE-84F3-66C6146AD96F') or -- gunmaster
+			s_Entity.data.instanceGuid == Guid('753BD81F-07AC-4140-B05C-24210E1DF3FA') or -- sqdm XP4
+			s_Entity.data.instanceGuid == Guid('CBFB0D7E-8561-4216-9AB2-99E14E9D18D0') or -- sqdm noVehicles
+			s_Entity.data.instanceGuid == Guid('A40B08B7-D781-487A-8D0C-2E1B911C1949') then -- sqdm
+			-- rip CTF
 			s_Entity:RegisterEventCallback(function(p_Entity, p_Event)
 				if p_Event.eventId == MathUtils:FNVHash("Activate") and Globals.IsInputAllowed then
 					Globals.IsInputAllowed = false
@@ -738,20 +742,20 @@ function FunBotServer:SetGameMode(p_GameMode)
 	end
 
 	if p_GameMode == 'ConquestLarge0' or
-	p_GameMode == 'ConquestSmall0' or
-	p_GameMode == 'ConquestAssaultLarge0' or
-	p_GameMode == 'ConquestAssaultSmall0' or
-	p_GameMode == 'ConquestAssaultSmall1' or
-	p_GameMode == 'TankSuperiority0' or
-	p_GameMode == 'BFLAG'then
+		p_GameMode == 'ConquestSmall0' or
+		p_GameMode == 'ConquestAssaultLarge0' or
+		p_GameMode == 'ConquestAssaultSmall0' or
+		p_GameMode == 'ConquestAssaultSmall1' or
+		p_GameMode == 'TankSuperiority0' or
+		p_GameMode == 'BFLAG' then
 		Globals.IsConquest = true
 	else
 		Globals.IsConquest = false
 	end
 
 	if p_GameMode == 'ConquestAssaultLarge0' or
-	p_GameMode == 'ConquestAssaultSmall0' or
-	p_GameMode == 'ConquestAssaultSmall1' then
+		p_GameMode == 'ConquestAssaultSmall0' or
+		p_GameMode == 'ConquestAssaultSmall1' then
 		Globals.IsAssault = true
 	else
 		Globals.IsAssault = false
@@ -764,7 +768,7 @@ function FunBotServer:SetGameMode(p_GameMode)
 	end
 
 	if p_GameMode == 'RushLarge0' or
-	p_GameMode == 'SquadRush0' then
+		p_GameMode == 'SquadRush0' then
 		Globals.IsRush = true
 	else
 		Globals.IsRush = false

@@ -62,7 +62,7 @@ function Language:I18N(p_Input, ...)
 	end
 
 	-- if Debug.Shared.LANGUAGE then
-		-- print(s_Arguments[1])
+	-- print(s_Arguments[1])
 	-- end
 
 	if self._Translations ~= nil then

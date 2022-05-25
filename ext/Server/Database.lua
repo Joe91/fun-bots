@@ -196,7 +196,7 @@ function Database:Delete(p_TableName, p_Parameters)
 	local s_Where = ArrayMap()
 
 	for l_Name, l_Value in pairs(p_Parameters) do
-		s_Where:add('`' .. l_Name .. '`=\'' ..l_Value .. '\'')
+		s_Where:add('`' .. l_Name .. '`=\'' .. l_Value .. '\'')
 	end
 
 	return self:Query('DELETE FROM ' .. p_TableName .. ' WHERE ' .. s_Where:join(' AND '))

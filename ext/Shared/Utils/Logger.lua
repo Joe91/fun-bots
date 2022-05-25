@@ -7,10 +7,10 @@ Logger = class "Logger"
 ---@param p_ActivateLogging boolean
 function Logger:__init(p_ClassName, p_ActivateLogging)
 	if type(p_ClassName) ~= "string" then
-		error("Logger: Wrong arguments creating object, className is not a string. ClassName: "..tostring(p_ClassName))
+		error("Logger: Wrong arguments creating object, className is not a string. ClassName: " .. tostring(p_ClassName))
 		return
 	elseif type(p_ActivateLogging) ~= "boolean" then
-		error("Logger: Wrong arguments creating object, ActivateLogging is not a boolean. ActivateLogging: " ..tostring(p_ActivateLogging))
+		error("Logger: Wrong arguments creating object, ActivateLogging is not a boolean. ActivateLogging: " .. tostring(p_ActivateLogging))
 		return
 	end
 
@@ -33,12 +33,11 @@ function Logger:Write(p_Message)
 	end
 
 	::continue::
-
 	if type(p_Message) == 'table' then
-		print("["..self.m_ClassName.."]")
+		print("[" .. self.m_ClassName .. "]")
 		print(p_Message)
 	else
-		print("["..self.m_ClassName.."] " .. tostring(p_Message))
+		print("[" .. self.m_ClassName .. "] " .. tostring(p_Message))
 	end
 end
 
@@ -53,7 +52,7 @@ function Logger:Warning(p_Message)
 		return
 	end
 
-	print("["..self.m_ClassName.."] WARNING: " .. tostring(p_Message))
+	print("[" .. self.m_ClassName .. "] WARNING: " .. tostring(p_Message))
 end
 
 function Logger:Error(p_Message)
@@ -61,7 +60,7 @@ function Logger:Error(p_Message)
 		return
 	end
 
-	print("["..self.m_ClassName.."] ERROR: " .. tostring(p_Message))
+	print("[" .. self.m_ClassName .. "] ERROR: " .. tostring(p_Message))
 end
 
 return Logger
