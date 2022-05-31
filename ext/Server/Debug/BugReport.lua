@@ -22,14 +22,14 @@ local DEBUG_SUBMIT_PATH = "/api/submit"
 local DEBUG_LAST_REPORT = 0
 
 -- Cooldown between bug reports in milliseconds. You are limited to a certain reports per 24 hours, and it's useless to create a new report when no major changes were made.
-local DEBUG_REPORT_COOLDOWN = 60*1000*5 -- 5 minutes cooldown
+local DEBUG_REPORT_COOLDOWN = 60 * 1000 * 5 -- 5 minutes cooldown
 
 -- This function is solely run by someone with permissions running the in-game !bugreport command.
 -- Param: p_Player - User who initiated the request
 function BugReport:GenerateReport(p_Player)
 	-- Check if there is a current cooldown active, if so, return and tell the user.
 	if DEBUG_LAST_REPORT ~= nil and (DEBUG_LAST_REPORT - SharedUtils:GetTimeMS() > 0) then
-		ChatManager:Yell("A report was recently made, please wait " .. ReadableTimetamp((DEBUG_LAST_REPORT-SharedUtils:GetTimeMS()), TimeUnits.FIT, 1) .. " before creating a new report", 5.0, p_Player)
+		ChatManager:Yell("A report was recently made, please wait " .. ReadableTimetamp((DEBUG_LAST_REPORT - SharedUtils:GetTimeMS()), TimeUnits.FIT, 1) .. " before creating a new report", 5.0, p_Player)
 		do return end
 	end
 

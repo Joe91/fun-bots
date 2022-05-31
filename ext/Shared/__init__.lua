@@ -39,7 +39,6 @@ function FunBotShared:__init()
 	end
 end
 
-
 -- function for Weapon Dissaper Workaround
 function FunBotShared:OnLevelLoadResources()
 	m_Logger:Write('Mounting superbundle...')

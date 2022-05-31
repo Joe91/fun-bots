@@ -59,6 +59,7 @@ function WeaponModification:OnPartitionLoaded(p_Partition)
 	---@type SoldierWeaponData
 	for _, p_Instance in pairs(p_Partition.instances) do
 		if p_Instance ~= nil and p_Instance:Is('SoldierWeaponData') then
+			---@type SoldierWeaponData
 			p_Instance = SoldierWeaponData(p_Instance)
 
 			if p_Instance.soldierWeaponBlueprint == nil then
@@ -83,7 +84,7 @@ function WeaponModification:ModifyAllWeapons(p_AimWorseningNormal, p_AimWorsenin
 	m_Logger:Write(#self.m_WeaponInstances .. ' loaded weapons to modify')
 
 	for i, p_WeaponInstance in pairs(self.m_WeaponInstances) do
-		self:_ModifyWeapon(p_WeaponInstance , i, p_AimWorseningNormal, p_AimWorseningSniper, p_AimWorseningSupport)
+		self:_ModifyWeapon(p_WeaponInstance, i, p_AimWorseningNormal, p_AimWorseningSniper, p_AimWorseningSupport)
 	end
 
 	self.m_AlreadyLoaded = true
@@ -104,10 +105,10 @@ function WeaponModification:_ModifyWeapon(p_SoldierWeaponData, p_Index, p_AimWor
 	local s_AiData = s_SoldierWeaponData.aiData
 	local s_NameOfAiData = tostring(s_AiData.name)
 
-	if string.find(s_NameOfAiData ,"Handheld_sni_AI_Weapon") ~= nil
-	or string.find(s_NameOfAiData ,"Handheld_snisemi_AI_Weapon") ~= nil then
+	if string.find(s_NameOfAiData, "Handheld_sni_AI_Weapon") ~= nil
+		or string.find(s_NameOfAiData, "Handheld_snisemi_AI_Weapon") ~= nil then
 		s_BotAimWorsening = p_AimWorseningSniper
-	elseif string.find(s_NameOfAiData ,"Handheld_lmg_AI_Weapon") ~= nil then
+	elseif string.find(s_NameOfAiData, "Handheld_lmg_AI_Weapon") ~= nil then
 		s_BotAimWorsening = p_AimWorseningSupport
 	end
 
@@ -133,7 +134,7 @@ function WeaponModification:_ModifyWeapon(p_SoldierWeaponData, p_Index, p_AimWor
 					self.m_IncPerShot[p_Index] = s_MovingValue.increasePerShot
 				end
 
-				s_MovingValue.minAngle = self.m_MinAngles[p_Index] * s_BotAimWorsening/3
+				s_MovingValue.minAngle = self.m_MinAngles[p_Index] * s_BotAimWorsening / 3
 				s_MovingValue.maxAngle = self.m_MaxAngles[p_Index] * s_BotAimWorsening
 				s_MovingValue.increasePerShot = self.m_IncPerShot[p_Index] * s_BotAimWorsening
 				--decreasePerSecond float

@@ -33,7 +33,7 @@ end
 -- =============================================
 
 -- =============================================
-	-- Level Events
+-- Level Events
 -- =============================================
 
 function NodeEditor:OnLevelLoaded(p_LevelName, p_GameMode)
@@ -78,7 +78,7 @@ function NodeEditor:OnLevelDestroy()
 end
 
 -- =============================================
-	-- Player Events
+-- Player Events
 -- =============================================
 
 ---VEXT Server Player:Respawn Event
@@ -126,7 +126,7 @@ function NodeEditor:OnPlayerDestroyed(p_Player)
 end
 
 -- =============================================
-	-- Update Events
+-- Update Events
 -- =============================================
 
 ---VEXT Shared Engine:Update Event
@@ -218,7 +218,7 @@ end
 -- player has indicated they are ready to receive nodes
 function NodeEditor:OnSendNodes(p_Player)
 	local s_Nodes = m_NodeCollection:Get()
-	table.insert(self.m_PlayersReceivingNodes, {Player = p_Player, Index = 1, Nodes = s_Nodes, BatchSendDelay = 0})
+	table.insert(self.m_PlayersReceivingNodes, { Player = p_Player, Index = 1, Nodes = s_Nodes, BatchSendDelay = 0 })
 	self.m_BatchSendTimer = 0
 	self:Log('Sending %d waypoints to %s', #s_Nodes, p_Player.name)
 end

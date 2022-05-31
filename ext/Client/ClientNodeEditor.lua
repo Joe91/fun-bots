@@ -68,34 +68,34 @@ function ClientNodeEditor:__init()
 	self.m_BotSelectedWaypoints = {}
 
 	self.m_Colors = {
-		["Text"] = Vec4(1,1,1,1),
-		["White"] = Vec4(1,1,1,1),
-		["Red"] = Vec4(1,0,0,1),
-		["Green"] = Vec4(0,1,0,1),
-		["Blue"] = Vec4(0,0,1,1),
-		["Purple"] = Vec4(0.5,0,1,1),
-		["Ray"] = {Node = Vec4(1,1,1,0.2), Line = {Vec4(1,1,1,1),Vec4(0,0,0,1)}},
-		["Orphan"] = {Node = Vec4(0,0,0,0.5), Line = Vec4(0,0,0,1)},
-		{Node = Vec4(1,0,0,0.25), Line = Vec4(1,0,0,1)},
-		{Node = Vec4(1,0.55,0,0.25), Line = Vec4(1,0.55,0,1)},
-		{Node = Vec4(1,1,0,0.25), Line = Vec4(1,1,0,1)},
-		{Node = Vec4(0,0.5,0,0.25), Line = Vec4(0,0.5,0,1)},
-		{Node = Vec4(0,0,1,0.25), Line = Vec4(0,0,1,1)},
-		{Node = Vec4(0.29,0,0.51,0.25), Line = Vec4(0.29,0,0.51,1)},
-		{Node = Vec4(1,0,1,0.25), Line = Vec4(1,0,1,1)},
-		{Node = Vec4(0.55,0,0,0.25), Line = Vec4(0.55,0,0,1)},
-		{Node = Vec4(1,0.65,0,0.25), Line = Vec4(1,0.65,0,1)},
-		{Node = Vec4(0.94,0.9,0.55,0.25), Line = Vec4(0.94,0.9,0.55,1)},
-		{Node = Vec4(0.5,1,0,0.25), Line = Vec4(0.5,1,0,1)},
-		{Node = Vec4(0.39,0.58,0.93,0.25), Line = Vec4(0.39,0.58,0.93,1)},
-		{Node = Vec4(0.86,0.44,0.58,0.25), Line = Vec4(0.86,0.44,0.58,1)},
-		{Node = Vec4(0.93,0.51,0.93,0.25), Line = Vec4(0.93,0.51,0.93,1)},
-		{Node = Vec4(1,0.63,0.48,0.25), Line = Vec4(1,0.63,0.48,1)},
-		{Node = Vec4(0.5,0.5,0,0.25), Line = Vec4(0.5,0.5,0,1)},
-		{Node = Vec4(0,0.98,0.6,0.25), Line = Vec4(0,0.98,0.6,1)},
-		{Node = Vec4(0.18,0.31,0.31,0.25), Line = Vec4(0.18,0.31,0.31,1)},
-		{Node = Vec4(0,1,1,0.25), Line = Vec4(0,1,1,1)},
-		{Node = Vec4(1,0.08,0.58,0.25), Line = Vec4(1,0.08,0.58,1)},
+		["Text"] = Vec4(1, 1, 1, 1),
+		["White"] = Vec4(1, 1, 1, 1),
+		["Red"] = Vec4(1, 0, 0, 1),
+		["Green"] = Vec4(0, 1, 0, 1),
+		["Blue"] = Vec4(0, 0, 1, 1),
+		["Purple"] = Vec4(0.5, 0, 1, 1),
+		["Ray"] = { Node = Vec4(1, 1, 1, 0.2), Line = { Vec4(1, 1, 1, 1), Vec4(0, 0, 0, 1) } },
+		["Orphan"] = { Node = Vec4(0, 0, 0, 0.5), Line = Vec4(0, 0, 0, 1) },
+		{ Node = Vec4(1, 0, 0, 0.25), Line = Vec4(1, 0, 0, 1) },
+		{ Node = Vec4(1, 0.55, 0, 0.25), Line = Vec4(1, 0.55, 0, 1) },
+		{ Node = Vec4(1, 1, 0, 0.25), Line = Vec4(1, 1, 0, 1) },
+		{ Node = Vec4(0, 0.5, 0, 0.25), Line = Vec4(0, 0.5, 0, 1) },
+		{ Node = Vec4(0, 0, 1, 0.25), Line = Vec4(0, 0, 1, 1) },
+		{ Node = Vec4(0.29, 0, 0.51, 0.25), Line = Vec4(0.29, 0, 0.51, 1) },
+		{ Node = Vec4(1, 0, 1, 0.25), Line = Vec4(1, 0, 1, 1) },
+		{ Node = Vec4(0.55, 0, 0, 0.25), Line = Vec4(0.55, 0, 0, 1) },
+		{ Node = Vec4(1, 0.65, 0, 0.25), Line = Vec4(1, 0.65, 0, 1) },
+		{ Node = Vec4(0.94, 0.9, 0.55, 0.25), Line = Vec4(0.94, 0.9, 0.55, 1) },
+		{ Node = Vec4(0.5, 1, 0, 0.25), Line = Vec4(0.5, 1, 0, 1) },
+		{ Node = Vec4(0.39, 0.58, 0.93, 0.25), Line = Vec4(0.39, 0.58, 0.93, 1) },
+		{ Node = Vec4(0.86, 0.44, 0.58, 0.25), Line = Vec4(0.86, 0.44, 0.58, 1) },
+		{ Node = Vec4(0.93, 0.51, 0.93, 0.25), Line = Vec4(0.93, 0.51, 0.93, 1) },
+		{ Node = Vec4(1, 0.63, 0.48, 0.25), Line = Vec4(1, 0.63, 0.48, 1) },
+		{ Node = Vec4(0.5, 0.5, 0, 0.25), Line = Vec4(0.5, 0.5, 0, 1) },
+		{ Node = Vec4(0, 0.98, 0.6, 0.25), Line = Vec4(0, 0.98, 0.6, 1) },
+		{ Node = Vec4(0.18, 0.31, 0.31, 0.25), Line = Vec4(0.18, 0.31, 0.31, 1) },
+		{ Node = Vec4(0, 1, 1, 0.25), Line = Vec4(0, 1, 1, 1) },
+		{ Node = Vec4(1, 0.08, 0.58, 0.25), Line = Vec4(1, 0.08, 0.58, 1) },
 	}
 
 	self.m_LastTraceSearchAreaPos = nil
@@ -424,21 +424,21 @@ function ClientNodeEditor:_onToggleMoveNode(p_Args)
 
 		g_FunBotUIClient:_onSetOperationControls({
 			Numpad = {
-				{Grid = 'K1', Key = '1', Name = 'Remove'},
-				{Grid = 'K2', Key = '2', Name = 'Unlink'},
-				{Grid = 'K3', Key = '3', Name = 'Add'},
-				{Grid = 'K4', Key = '4', Name = 'Move'},
-				{Grid = 'K5', Key = '5', Name = 'Select'},
-				{Grid = 'K6', Key = '6', Name = 'Input'},
-				{Grid = 'K7', Key = '7', Name = 'Merge'},
-				{Grid = 'K8', Key = '8', Name = 'Link'},
-				{Grid = 'K9', Key = '9', Name = 'Split'}
+				{ Grid = 'K1', Key = '1', Name = 'Remove' },
+				{ Grid = 'K2', Key = '2', Name = 'Unlink' },
+				{ Grid = 'K3', Key = '3', Name = 'Add' },
+				{ Grid = 'K4', Key = '4', Name = 'Move' },
+				{ Grid = 'K5', Key = '5', Name = 'Select' },
+				{ Grid = 'K6', Key = '6', Name = 'Input' },
+				{ Grid = 'K7', Key = '7', Name = 'Merge' },
+				{ Grid = 'K8', Key = '8', Name = 'Link' },
+				{ Grid = 'K9', Key = '9', Name = 'Split' }
 			},
 			Other = {
-				{Key = 'F12', Name = 'Settings'},
-				{Key = 'Q', Name = 'Quick Select'},
-				{Key = 'BS', Name = 'Clear Select'},
-				{Key = 'INS', Name = 'Spawn Bot'}
+				{ Key = 'F12', Name = 'Settings' },
+				{ Key = 'Q', Name = 'Quick Select' },
+				{ Key = 'BS', Name = 'Clear Select' },
+				{ Key = 'INS', Name = 'Spawn Bot' }
 			}
 		})
 
@@ -469,22 +469,22 @@ function ClientNodeEditor:_onToggleMoveNode(p_Args)
 
 		g_FunBotUIClient:_onSetOperationControls({
 			Numpad = {
-				{Grid = 'K1', Key = '1', Name = 'Mode'},
-				{Grid = 'K2', Key = '2', Name = 'Back'},
-				{Grid = 'K3', Key = '3', Name = 'Down'},
-				{Grid = 'K4', Key = '4', Name = 'Left'},
-				{Grid = 'K5', Key = '5', Name = 'Finish'},
-				{Grid = 'K6', Key = '6', Name = 'Right'},
-				{Grid = 'K7', Key = '7', Name = 'Reset'},
-				{Grid = 'K8', Key = '8', Name = 'Forward'},
-				{Grid = 'K9', Key = '9', Name = 'Up'},
+				{ Grid = 'K1', Key = '1', Name = 'Mode' },
+				{ Grid = 'K2', Key = '2', Name = 'Back' },
+				{ Grid = 'K3', Key = '3', Name = 'Down' },
+				{ Grid = 'K4', Key = '4', Name = 'Left' },
+				{ Grid = 'K5', Key = '5', Name = 'Finish' },
+				{ Grid = 'K6', Key = '6', Name = 'Right' },
+				{ Grid = 'K7', Key = '7', Name = 'Reset' },
+				{ Grid = 'K8', Key = '8', Name = 'Forward' },
+				{ Grid = 'K9', Key = '9', Name = 'Up' },
 			},
 			Other = {
-				{Key = 'F12', Name = 'Settings'},
-				{Key = 'Q', Name = 'Finish Move'},
-				{Key = 'BS', Name = 'Cancel Move'},
-				{Key = 'KP_PLUS', Name = 'Speed +'},
-				{Key = 'KP_MINUS', Name = 'Speed -'},
+				{ Key = 'F12', Name = 'Settings' },
+				{ Key = 'Q', Name = 'Finish Move' },
+				{ Key = 'BS', Name = 'Cancel Move' },
+				{ Key = 'KP_PLUS', Name = 'Speed +' },
+				{ Key = 'KP_MINUS', Name = 'Speed -' },
 			}
 		})
 
@@ -588,6 +588,7 @@ function ClientNodeEditor:_onSelectBetween()
 	end
 
 	local s_Selection = m_NodeCollection:GetSelected()
+
 	if #s_Selection < 1 then
 		self:Log('Must select more than one node')
 		return false
@@ -822,7 +823,7 @@ function ClientNodeEditor:_onAddMcom(p_Args)
 	for i = 1, #s_Selection do
 		local action = {
 			type = "mcom",
-			inputs = {EntryInputActionEnum.EIAInteract},
+			inputs = { EntryInputActionEnum.EIAInteract },
 			time = 6.0,
 			yaw = self.m_Player.input.authoritativeAimingYaw,
 			pitch = self.m_Player.input.authoritativeAimingPitch
@@ -858,7 +859,7 @@ function ClientNodeEditor:_onAddVehicle(p_Args)
 	for i = 1, #s_Selection do
 		local action = {
 			type = "vehicle",
-			inputs = {EntryInputActionEnum.EIAInteract},
+			inputs = { EntryInputActionEnum.EIAInteract },
 			time = 0.5,
 			yaw = self.m_Player.input.authoritativeAimingYaw,
 			pitch = self.m_Player.input.authoritativeAimingPitch
@@ -899,7 +900,7 @@ function ClientNodeEditor:_onExitVehicle(p_Args)
 		local action = {
 			type = "exit",
 			onlyPassengers = s_OnlyPassengers,
-			inputs = {EntryInputActionEnum.EIAInteract},
+			inputs = { EntryInputActionEnum.EIAInteract },
 			time = 0.5
 		}
 		s_Selection[i].Data.Action = action
@@ -916,7 +917,7 @@ function ClientNodeEditor:_onAddVehiclePath(p_Args)
 		return false
 	end
 
-	local s_Data = table.concat(p_Args or {"land"}, ' ')
+	local s_Data = table.concat(p_Args or { "land" }, ' ')
 	self:Log('Add Vehicle (type): %s', g_Utilities:dump(s_Data, true))
 
 	local s_Selection = m_NodeCollection:GetSelected()
@@ -1128,7 +1129,6 @@ function ClientNodeEditor:_onSetBotVision(p_Args)
 	end
 end
 
-
 function ClientNodeEditor:_onObjectiveDirection(p_Args)
 	self.m_CommoRoseActive = false
 
@@ -1159,7 +1159,7 @@ end
 
 function ClientNodeEditor:_onGetKnownObjectives(p_Args)
 	self.m_CommoRoseActive = false
-	self:Log('Known Objectives -> '..g_Utilities:dump(m_NodeCollection:GetKnownObjectives(), true))
+	self:Log('Known Objectives -> ' .. g_Utilities:dump(m_NodeCollection:GetKnownObjectives(), true))
 	return true
 end
 
@@ -1171,6 +1171,7 @@ function ClientNodeEditor:_getNewIndex()
 	local s_AllPaths = m_NodeCollection:GetPaths()
 
 	local s_HighestIndex = 0
+
 	for l_PathIndex, l_Points in pairs(s_AllPaths) do
 		if l_PathIndex > s_HighestIndex then
 			s_HighestIndex = l_PathIndex
@@ -1182,6 +1183,7 @@ function ClientNodeEditor:_getNewIndex()
 			return i
 		end
 	end
+
 	return s_HighestIndex + 1
 end
 
@@ -1189,6 +1191,7 @@ function ClientNodeEditor:_onStartTrace()
 	if self.m_Player == nil or self.m_Player.soldier == nil then
 		return
 	end
+
 	if self.m_CustomTrace ~= nil then
 		self.m_CustomTrace:Clear()
 	end
@@ -1302,6 +1305,7 @@ function ClientNodeEditor:_onSaveTrace(p_PathIndex)
 			s_CurrentWaypoint = self.m_CustomTrace:GetLast()
 			s_Direction = 'Previous'
 		end
+
 	-- p_PathIndex is between 2 and #m_NodeCollection:GetPaths()
 	-- get the node before the start of the specified path, if the path is existing
 	elseif p_PathIndex <= s_PathCount then
@@ -1310,6 +1314,7 @@ function ClientNodeEditor:_onSaveTrace(p_PathIndex)
 		else
 			s_ReferrenceWaypoint = m_NodeCollection:GetLast()
 		end
+
 	-- p_PathIndex == last path index, append all nodes to end of collection
 	elseif p_PathIndex > s_PathCount then
 		s_ReferrenceWaypoint = m_NodeCollection:GetLast()
@@ -1628,10 +1633,12 @@ function ClientNodeEditor:OnClientUpdateInput(p_DeltaTime)
 			self:_onMergeNode()
 			return
 		end
+
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad4) then
 			self:_onToggleMoveNode()
 			return
 		end
+
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad1) then
 			self:_onRemoveNode()
 			return
@@ -1641,10 +1648,12 @@ function ClientNodeEditor:OnClientUpdateInput(p_DeltaTime)
 			self:_onSplitNode()
 			return
 		end
+
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad6) then
 			self:_onSetInputNode()
 			return
 		end
+
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad3) then
 			self:_onAddNode()
 			return
@@ -1686,7 +1695,7 @@ end
 ---@param p_SimulationDeltaTime number
 function ClientNodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 	if self.m_NodeSendTimer >= 0 and #self.m_NodesToSend > 0 then
-		self.m_DebugEntries['nodeSendProgress'] = self.m_NodeSendProgress..'/'..(#self.m_NodesToSend)
+		self.m_DebugEntries['nodeSendProgress'] = self.m_NodeSendProgress .. '/' .. (#self.m_NodesToSend)
 		self.m_NodeSendTimer = self.m_NodeSendTimer + p_DeltaTime
 
 		if self.m_NodeSendTimer > self.m_NodeSendDelay then
@@ -1843,6 +1852,7 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	if not self.m_Enabled or p_UpdatePass ~= UpdatePass.UpdatePass_PreSim then
 		return
 	end
+
 	if self.m_HelpTextLocation == Vec2.zero then
 		local s_WindowSize = ClientUtils:GetWindowSize()
 		-- fun fact, debugtext is 8x15 pixels
@@ -1856,7 +1866,6 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 		self.m_RaycastTimer = self.m_RaycastTimer + p_DeltaTime
 		-- do not update node positions if saving or loading
 		if not self:IsSavingOrLoading() then
-
 			if self.m_RaycastTimer >= Registry.GAME_RAYCASTING.UPDATE_INTERVAL_NODEEDITOR then
 				self.m_RaycastTimer = 0
 
@@ -1938,7 +1947,7 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 			for p = 1, #s_Players do
 				if s_Players[p].soldier ~= nil and self.m_Player.teamId ~= s_Players[p].teamId then
-					local s_Ray = RaycastManager:Raycast(self.m_PlayerPos+Vec3.up, (s_Players[p].soldier.worldTransform.trans+Vec3.up), RayCastFlags.CheckDetailMesh | RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.IsAsyncRaycast)
+					local s_Ray = RaycastManager:Raycast(self.m_PlayerPos + Vec3.up, (s_Players[p].soldier.worldTransform.trans + Vec3.up), RayCastFlags.CheckDetailMesh | RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.IsAsyncRaycast)
 
 					local s_PosData = {
 						Visible = (s_Ray == nil or s_Ray.rigidBody == nil),
@@ -1988,9 +1997,9 @@ function ClientNodeEditor:OnUIDrawHud()
 					end
 				end
 
-				DebugRenderer:DrawSphere(v.Position+(Vec3.up*1.5), 0.15, s_Color, false, false)
-				DebugRenderer:DrawSphere(v.Position+(Vec3.up*1.0), 0.3, s_Color, false, false)
-				DebugRenderer:DrawSphere(v.Position+(Vec3.up*0.3), 0.2, s_Color, false, false)
+				DebugRenderer:DrawSphere(v.Position + (Vec3.up * 1.5), 0.15, s_Color, false, false)
+				DebugRenderer:DrawSphere(v.Position + (Vec3.up * 1.0), 0.3, s_Color, false, false)
+				DebugRenderer:DrawSphere(v.Position + (Vec3.up * 0.3), 0.2, s_Color, false, false)
 			end
 		end
 	end
@@ -2000,25 +2009,30 @@ function ClientNodeEditor:OnUIDrawHud()
 		return
 	end
 
-	for _,l_Node in pairs(self.m_NodesToDraw) do
+	for _, l_Node in pairs(self.m_NodesToDraw) do
 		-- draw speres
 		DebugRenderer:DrawSphere(l_Node.pos, l_Node.radius, l_Node.color, l_Node.renderLines, l_Node.smallSizeSegmentDecrease)
 	end
-	for _,l_Line in pairs(self.m_LinesToDraw) do
+
+	for _, l_Line in pairs(self.m_LinesToDraw) do
 		-- draw lines
 		DebugRenderer:DrawLine(l_Line.from, l_Line.to, l_Line.colorFrom, l_Line.colorTo)
 	end
-	for _,l_Text in pairs(self.m_TextToDraw) do
+
+	for _, l_Text in pairs(self.m_TextToDraw) do
 		-- draw text
 		DebugRenderer:DrawText2D(l_Text.x, l_Text.y, l_Text.text, l_Text.color, l_Text.scale)
 	end
-	for _,l_TextPos in pairs(self.m_TextPosToDraw) do
+
+	for _, l_TextPos in pairs(self.m_TextPosToDraw) do
 		local s_ScreenPos = ClientUtils:WorldToScreen(l_TextPos.pos)
+
 		if s_ScreenPos ~= nil then
 			DebugRenderer:DrawText2D(s_ScreenPos.x, s_ScreenPos.y, l_TextPos.text, l_TextPos.color, l_TextPos.scale)
 		end
 	end
-	for _,l_Obb in pairs(self.m_ObbToDraw) do
+
+	for _, l_Obb in pairs(self.m_ObbToDraw) do
 		-- draw OBB
 		DebugRenderer:DrawOBB(l_Obb.p_Aab, l_Obb.transform, l_Obb.color)
 	end
@@ -2070,7 +2084,6 @@ function ClientNodeEditor:DrawOBB(p_Aab, p_Transform, p_Color)
 	})
 end
 
-
 function ClientNodeEditor:DrawDebugThings(p_DeltaTime)
 	-- Bot _onSelectNode
 	local s_Botwpcount = 0
@@ -2083,6 +2096,7 @@ function ClientNodeEditor:DrawDebugThings(p_DeltaTime)
 			s_Botwpcount = s_Botwpcount + 1
 		end
 	end
+
 	self.m_DebugEntries['botSelectedWaypoints'] = s_Botwpcount
 
 	-- generic debug values
@@ -2094,7 +2108,7 @@ function ClientNodeEditor:DrawDebugThings(p_DeltaTime)
 	self.m_DebugEntries['commoRoseActive'] = self.m_CommoRoseActive
 
 	for k, v in pairs(self.m_DebugEntries) do
-		s_DebugText = s_DebugText .. k..': '..tostring(v).."\n"
+		s_DebugText = s_DebugText .. k .. ': ' .. tostring(v) .. "\n"
 	end
 
 	--self:DrawText2D(20, 400, debugText, self.colors.Text, 1)
@@ -2102,55 +2116,55 @@ function ClientNodeEditor:DrawDebugThings(p_DeltaTime)
 	local s_HelpText = ''
 
 	if self.m_EditMode == 'none' then
-		s_HelpText = s_HelpText..' Node Operation Controls '.."\n"
-		s_HelpText = s_HelpText..'+-------+-------+-------+'.."\n"
-		s_HelpText = s_HelpText..'|   7   |   8   |   9   |'.."\n"
-		s_HelpText = s_HelpText..'| Merge | Link  | Split |'.."\n"
-		s_HelpText = s_HelpText..'+-------+-------+-------+'.."\n"
-		s_HelpText = s_HelpText..'|   4   |   5   |   6   |'.."\n"
-		s_HelpText = s_HelpText..'| Move  |Select | Input |'.."\n"
-		s_HelpText = s_HelpText..'+-------+-------+-------+'.."\n"
-		s_HelpText = s_HelpText..'|   1   |   2   |   3   |'.."\n"
-		s_HelpText = s_HelpText..'|Remove |Unlink |  Add  |'.."\n"
-		s_HelpText = s_HelpText..'+-------+-------+-------+'.."\n"
-		s_HelpText = s_HelpText..'						 '.."\n"
-		s_HelpText = s_HelpText..'	  [F12] - Settings   '.."\n"
-		s_HelpText = s_HelpText..'	 [Spot] - Quick Select'.."\n"
-		s_HelpText = s_HelpText..'[Backspace] - Clear Select'.."\n"
-		s_HelpText = s_HelpText..'   [Insert] - Spawn Bot  '.."\n"
-		s_HelpText = s_HelpText..'	   [F9] - Save Nodes '.."\n"
-		s_HelpText = s_HelpText..'	  [F11] - Load Nodes '.."\n"
+		s_HelpText = s_HelpText .. ' Node Operation Controls ' .. "\n"
+		s_HelpText = s_HelpText .. '+-------+-------+-------+' .. "\n"
+		s_HelpText = s_HelpText .. '|   7   |   8   |   9   |' .. "\n"
+		s_HelpText = s_HelpText .. '| Merge | Link  | Split |' .. "\n"
+		s_HelpText = s_HelpText .. '+-------+-------+-------+' .. "\n"
+		s_HelpText = s_HelpText .. '|   4   |   5   |   6   |' .. "\n"
+		s_HelpText = s_HelpText .. '| Move  |Select | Input |' .. "\n"
+		s_HelpText = s_HelpText .. '+-------+-------+-------+' .. "\n"
+		s_HelpText = s_HelpText .. '|   1   |   2   |   3   |' .. "\n"
+		s_HelpText = s_HelpText .. '|Remove |Unlink |  Add  |' .. "\n"
+		s_HelpText = s_HelpText .. '+-------+-------+-------+' .. "\n"
+		s_HelpText = s_HelpText .. '						 ' .. "\n"
+		s_HelpText = s_HelpText .. '	  [F12] - Settings   ' .. "\n"
+		s_HelpText = s_HelpText .. '	 [Spot] - Quick Select' .. "\n"
+		s_HelpText = s_HelpText .. '[Backspace] - Clear Select' .. "\n"
+		s_HelpText = s_HelpText .. '   [Insert] - Spawn Bot  ' .. "\n"
+		s_HelpText = s_HelpText .. '	   [F9] - Save Nodes ' .. "\n"
+		s_HelpText = s_HelpText .. '	  [F11] - Load Nodes ' .. "\n"
 	elseif self.m_EditMode == 'move' then
-		s_HelpText = s_HelpText..'  Nudge Position Controls '.."\n"
-		s_HelpText = s_HelpText..'+-------+-------+-------+'.."\n"
-		s_HelpText = s_HelpText..'|   7   |   8   |   9   |'.."\n"
-		s_HelpText = s_HelpText..'| Reset |Forward|  Up   |'.."\n"
-		s_HelpText = s_HelpText..'+-------+-------+-------+'.."\n"
-		s_HelpText = s_HelpText..'|   4   |   5   |   6   |'.."\n"
-		s_HelpText = s_HelpText..'| Left  |Finish | Right |'.."\n"
-		s_HelpText = s_HelpText..'+-------+-------+-------+'.."\n"
-		s_HelpText = s_HelpText..'|   1   |   2   |   3   |'.."\n"
-		s_HelpText = s_HelpText..'| Mode  | Back  | Down  |'.."\n"
-		s_HelpText = s_HelpText..'+-------+-------+-------+'.."\n"
-		s_HelpText = s_HelpText..string.format('|X %+04.2f | Y %+04.2f|', self.m_EditModeManualOffset.x, self.m_EditModeManualOffset.y).."\n"
-		s_HelpText = s_HelpText..string.format('|	  Z %+04.2f	   |', self.m_EditModeManualOffset.z).."\n"
-		s_HelpText = s_HelpText..'+-----------------------+'.."\n"
-		s_HelpText = s_HelpText..' Nudge Speed: '..tostring(self.m_EditModeManualSpeed).."\n"
+		s_HelpText = s_HelpText .. '  Nudge Position Controls ' .. "\n"
+		s_HelpText = s_HelpText .. '+-------+-------+-------+' .. "\n"
+		s_HelpText = s_HelpText .. '|   7   |   8   |   9   |' .. "\n"
+		s_HelpText = s_HelpText .. '| Reset |Forward|  Up   |' .. "\n"
+		s_HelpText = s_HelpText .. '+-------+-------+-------+' .. "\n"
+		s_HelpText = s_HelpText .. '|   4   |   5   |   6   |' .. "\n"
+		s_HelpText = s_HelpText .. '| Left  |Finish | Right |' .. "\n"
+		s_HelpText = s_HelpText .. '+-------+-------+-------+' .. "\n"
+		s_HelpText = s_HelpText .. '|   1   |   2   |   3   |' .. "\n"
+		s_HelpText = s_HelpText .. '| Mode  | Back  | Down  |' .. "\n"
+		s_HelpText = s_HelpText .. '+-------+-------+-------+' .. "\n"
+		s_HelpText = s_HelpText .. string.format('|X %+04.2f | Y %+04.2f|', self.m_EditModeManualOffset.x, self.m_EditModeManualOffset.y) .. "\n"
+		s_HelpText = s_HelpText .. string.format('|	  Z %+04.2f	   |', self.m_EditModeManualOffset.z) .. "\n"
+		s_HelpText = s_HelpText .. '+-----------------------+' .. "\n"
+		s_HelpText = s_HelpText .. ' Nudge Speed: ' .. tostring(self.m_EditModeManualSpeed) .. "\n"
 
 		if self.m_EditPositionMode == 'relative' then
-			s_HelpText = s_HelpText..'   Move Mode: Relative   '.."\n"
+			s_HelpText = s_HelpText .. '   Move Mode: Relative   ' .. "\n"
 		elseif (self.m_EditPositionMode == 'standing') then
-			s_HelpText = s_HelpText..'   Move Mode: Standing   '.."\n"
+			s_HelpText = s_HelpText .. '   Move Mode: Standing   ' .. "\n"
 		else
-			s_HelpText = s_HelpText..'   Move Mode: Absolute   '.."\n"
+			s_HelpText = s_HelpText .. '   Move Mode: Absolute   ' .. "\n"
 		end
 
-		s_HelpText = s_HelpText..'						 '.."\n"
-		s_HelpText = s_HelpText..'	  [F12] - Settings	'.."\n"
-		s_HelpText = s_HelpText..'	 [Spot] - Finish Move '.."\n"
-		s_HelpText = s_HelpText..'[Backspace] - Cancel Move '.."\n"
-		s_HelpText = s_HelpText..' [Numpad +] - Nudge Speed +'.."\n"
-		s_HelpText = s_HelpText..' [Numpad -] - Nudge Speed -'.."\n"
+		s_HelpText = s_HelpText .. '						 ' .. "\n"
+		s_HelpText = s_HelpText .. '	  [F12] - Settings	' .. "\n"
+		s_HelpText = s_HelpText .. '	 [Spot] - Finish Move ' .. "\n"
+		s_HelpText = s_HelpText .. '[Backspace] - Cancel Move ' .. "\n"
+		s_HelpText = s_HelpText .. ' [Numpad +] - Nudge Speed +' .. "\n"
+		s_HelpText = s_HelpText .. ' [Numpad -] - Nudge Speed -' .. "\n"
 	end
 
 	--self:DrawText2D(self.helpTextLocation.x, self.helpTextLocation.y, helpText, self.colors.Text, 1)
@@ -2159,6 +2173,7 @@ function ClientNodeEditor:DrawDebugThings(p_DeltaTime)
 		if self.m_LastTraceStart ~= nil and self.m_LastTraceEnd ~= nil then
 			self:DrawLine(self.m_LastTraceStart, self.m_LastTraceEnd, self.m_Colors.Ray.Line[1], self.m_Colors.Ray.Line[2])
 		end
+
 		if self.m_LastTraceSearchAreaPos ~= nil and self.m_LastTraceSearchAreaSize ~= nil then
 			self:DrawSphere(self.m_LastTraceSearchAreaPos, self.m_LastTraceSearchAreaSize, self.m_Colors.Ray.Node, false, false)
 		end
@@ -2169,6 +2184,7 @@ function ClientNodeEditor:DrawSomeNodes(p_NrOfNodes)
 	if self.m_PlayerPos == nil then
 		return false
 	end
+
 	local s_FirstPath = true
 	local s_Count = 0
 
@@ -2179,17 +2195,21 @@ function ClientNodeEditor:DrawSomeNodes(p_NrOfNodes)
 		if l_Path >= self.m_lastDrawIndexPath then
 			if m_NodeCollection:IsPathVisible(l_Path) then
 				local s_startIndex = 1
+
 				if s_FirstPath then
 					s_startIndex = self.m_lastDrawIndexNode + 1
+
 					if s_startIndex <= 0 then
 						s_startIndex = 1
 					end
+
 					s_FirstPath = false
 				end
 
 				for l_Waypoint = s_startIndex, #s_WaypointPaths[l_Path] do
 					self:_drawNode(s_WaypointPaths[l_Path][l_Waypoint], false)
 					s_Count = s_Count + 1
+
 					if s_Count >= p_NrOfNodes and l_Waypoint < #s_WaypointPaths[l_Path] then
 						self.m_lastDrawIndexNode = l_Waypoint
 						self.m_lastDrawIndexPath = l_Path
@@ -2199,9 +2219,11 @@ function ClientNodeEditor:DrawSomeNodes(p_NrOfNodes)
 			end
 		end
 	end
+
 	if self.m_lastDrawIndexPath ~= 99999 then
 		self.m_lastDrawIndexNode = 0
 	end
+
 	self.m_lastDrawIndexPath = 99999
 
 	-- draw waypoints for custom trace
@@ -2211,6 +2233,7 @@ function ClientNodeEditor:DrawSomeNodes(p_NrOfNodes)
 		for i = self.m_lastDrawIndexNode + 1, #s_CustomWaypoints do
 			self:_drawNode(s_CustomWaypoints[i], true)
 			s_Count = s_Count + 1
+
 			if s_Count >= p_NrOfNodes and i < #s_CustomWaypoints then
 				self.m_lastDrawIndexNode = i
 				return false
@@ -2273,10 +2296,12 @@ function ClientNodeEditor:_drawNode(p_Waypoint, p_IsTracePath)
 
 			-- Skip to the next point if this one isn't in view
 			if s_PointScreenPos ~= nil then
-				local s_Center = ClientUtils:GetWindowSize()/2
+				local s_Center = ClientUtils:GetWindowSize() / 2
+
 				-- Select point if its close to the hitPosition
 				if s_Center:Distance(s_PointScreenPos) < 20 then
 					self.m_ScanForNode = false
+
 					if s_IsSelected then
 						self:Log('Deselect -> %s', p_Waypoint.ID)
 						m_NodeCollection:Deselect(p_Waypoint)
@@ -2369,7 +2394,6 @@ function ClientNodeEditor:_drawNode(p_Waypoint, p_IsTracePath)
 
 			if p_Waypoint.SpeedMode == 4 then s_SpeedMode = 'Sprint' end
 
-
 			local s_ExtraMode = 'N/A'
 
 			if p_Waypoint.ExtraMode == 1 then s_ExtraMode = 'Jump' end
@@ -2377,7 +2401,7 @@ function ClientNodeEditor:_drawNode(p_Waypoint, p_IsTracePath)
 			local s_OptionValue = 'N/A'
 
 			if p_Waypoint.SpeedMode == 0 then
-				s_OptionValue = tostring(p_Waypoint.OptValue)..' Seconds'
+				s_OptionValue = tostring(p_Waypoint.OptValue) .. ' Seconds'
 			end
 
 			local s_PathMode = 'Loops'
@@ -2389,16 +2413,16 @@ function ClientNodeEditor:_drawNode(p_Waypoint, p_IsTracePath)
 			end
 
 			local s_Text = ''
-			s_Text = s_Text..string.format("(%s)Pevious [ %s ] Next(%s)\n", s_PreviousNode, p_Waypoint.ID, s_NextNode)
-			s_Text = s_Text..string.format("Index[%d]\n", p_Waypoint.Index)
-			s_Text = s_Text..string.format("Path[%d][%d] (%s)\n", p_Waypoint.PathIndex, p_Waypoint.PointIndex, s_PathMode)
-			s_Text = s_Text..string.format("Path Objectives: %s\n", g_Utilities:dump(s_PathNode.Data.Objectives, false))
-			s_Text = s_Text..string.format("Vehicles: %s\n", g_Utilities:dump(s_PathNode.Data.Vehicles, false))
-			s_Text = s_Text..string.format("InputVar: %d\n", p_Waypoint.InputVar)
-			s_Text = s_Text..string.format("SpeedMode: %s (%d)\n", s_SpeedMode, p_Waypoint.SpeedMode)
-			s_Text = s_Text..string.format("ExtraMode: %s (%d)\n", s_ExtraMode, p_Waypoint.ExtraMode)
-			s_Text = s_Text..string.format("OptValue: %s (%d)\n", s_OptionValue, p_Waypoint.OptValue)
-			s_Text = s_Text..'Data: '..g_Utilities:dump(p_Waypoint.Data, true)
+			s_Text = s_Text .. string.format("(%s)Pevious [ %s ] Next(%s)\n", s_PreviousNode, p_Waypoint.ID, s_NextNode)
+			s_Text = s_Text .. string.format("Index[%d]\n", p_Waypoint.Index)
+			s_Text = s_Text .. string.format("Path[%d][%d] (%s)\n", p_Waypoint.PathIndex, p_Waypoint.PointIndex, s_PathMode)
+			s_Text = s_Text .. string.format("Path Objectives: %s\n", g_Utilities:dump(s_PathNode.Data.Objectives, false))
+			s_Text = s_Text .. string.format("Vehicles: %s\n", g_Utilities:dump(s_PathNode.Data.Vehicles, false))
+			s_Text = s_Text .. string.format("InputVar: %d\n", p_Waypoint.InputVar)
+			s_Text = s_Text .. string.format("SpeedMode: %s (%d)\n", s_SpeedMode, p_Waypoint.SpeedMode)
+			s_Text = s_Text .. string.format("ExtraMode: %s (%d)\n", s_ExtraMode, p_Waypoint.ExtraMode)
+			s_Text = s_Text .. string.format("OptValue: %s (%d)\n", s_OptionValue, p_Waypoint.OptValue)
+			s_Text = s_Text .. 'Data: ' .. g_Utilities:dump(p_Waypoint.Data, true)
 
 			self:DrawPosText2D(p_Waypoint.Position + Vec3.up, s_Text, self.m_Colors.Text, 1.2)
 		else
@@ -2440,7 +2464,7 @@ end
 function ClientNodeEditor:_onServerCreateNode(p_Data)
 	m_NodeCollection:Create(p_Data, true)
 	self.m_NodeReceiveProgress = self.m_NodeReceiveProgress + 1
-	self.m_DebugEntries['nodeReceiveProgress'] = self.m_NodeReceiveProgress..'/'..(self.m_NodeReceiveExpected)
+	self.m_DebugEntries['nodeReceiveProgress'] = self.m_NodeReceiveProgress .. '/' .. (self.m_NodeReceiveExpected)
 end
 
 -- node payload has finished sending, setup events and calc indexes
@@ -2459,11 +2483,11 @@ function ClientNodeEditor:_onInit()
 		local s_Waypoint = s_Waypoints[i]
 
 		if type(s_Waypoint.Next) == 'string' then
-			s_StaleNodes = s_StaleNodes+1
+			s_StaleNodes = s_StaleNodes + 1
 		end
 
 		if type(s_Waypoint.Previous) == 'string' then
-			s_StaleNodes = s_StaleNodes+1
+			s_StaleNodes = s_StaleNodes + 1
 		end
 	end
 
