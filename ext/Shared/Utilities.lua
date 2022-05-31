@@ -8,7 +8,7 @@ function Utilities:__init()
 end
 
 function Utilities:getCameraPos(p_Player, p_IsTarget, p_AimForHead)
-	return Vec3(0.00 ,self:getTargetHeight(p_Player.soldier, p_IsTarget, p_AimForHead), 0.00)
+	return Vec3(0.00, self:getTargetHeight(p_Player.soldier, p_IsTarget, p_AimForHead), 0.00)
 end
 
 function Utilities:getTargetHeight(p_Soldier, p_IsTarget, p_AimForHead)
@@ -70,7 +70,7 @@ function Utilities:getEnumName(p_Enum, p_Value)
 end
 
 function Utilities:DistanceFast(p_PosA, p_PosB)
-	return ( math.abs(p_PosA.x - p_PosB.x) +
+	return (math.abs(p_PosA.x - p_PosB.x) +
 		math.abs(p_PosA.y - p_PosB.y) +
 		math.abs(p_PosA.z - p_PosB.z))
 end
@@ -84,7 +84,6 @@ function Utilities:mergeKeys(p_OriginalTable, p_NewData)
 
 	return p_OriginalTable
 end
-
 
 -- <object|o> | The object to dump
 -- <boolean|p_Format> | If enabled, tab-spacing and newlines are used
@@ -114,15 +113,15 @@ function Utilities:dump(o, p_Format, p_MaxLevels, p_Level)
 
 			for l_Key, l_Value in pairs(o) do
 				if type(l_Key) ~= 'number' then
-					l_Key = '"'..l_Key..'"'
+					l_Key = '"' .. l_Key .. '"'
 				end
 
-				s = s .. s_Tablevel .. '['..l_Key..'] = ' .. g_Utilities:dump(l_Value, p_Format, p_MaxLevels, p_Level + 1) .. ',' .. s_Newline
+				s = s .. s_Tablevel .. '[' .. l_Key .. '] = ' .. g_Utilities:dump(l_Value, p_Format, p_MaxLevels, p_Level + 1) .. ',' .. s_Newline
 			end
 
 			return s .. s_Tablevellessone .. '}'
 		else
-			return '{ '.. tostring(o) .. ' }'
+			return '{ ' .. tostring(o) .. ' }'
 		end
 	elseif type(o) == 'userdata' and not tostring(o):starts('sol.VEXTRefArray') and not tostring(o):starts('sol.VEXTArray') and getmetatable(o) ~= nil then
 		if p_MaxLevels == -1 or p_Level <= p_MaxLevels then
@@ -138,9 +137,10 @@ function Utilities:dump(o, p_Format, p_MaxLevels, p_Level)
 					s = s .. s_Tablevel .. l_Key .. ': ' .. g_Utilities:dump(o[l_Key], p_Format, p_MaxLevels, p_Level + 1) .. ',' .. s_Newline
 				end
 			end
+
 			return s .. s_Tablevellessone .. ']'
 		else
-			return '[ '.. tostring(o) .. ' ]'
+			return '[ ' .. tostring(o) .. ' ]'
 		end
 	else
 		return tostring(o)
@@ -184,7 +184,7 @@ function string:split(p_Sep)
 end
 
 function string:starts(p_Start)
-	return string.sub(self,1,string.len(p_Start))==p_Start
+	return string.sub(self, 1, string.len(p_Start)) == p_Start
 end
 
 function requireExists(p_Module)
@@ -195,7 +195,7 @@ function requireExists(p_Module)
 
 	local s_Status, s_Error = pcall(reference, p_Module)
 
-	if not(s_Status) then
+	if not (s_Status) then
 		return s_Error
 	end
 

@@ -1,13 +1,13 @@
 ScavengerWeaponList = {
 	-- Level 1
 	'ASVal',
-    'MagpulPDR',
-    'MP7',
-    'MP5K',
-    'PP2000',
-    'UMP45',
-    'PP-19',
-    'P90',
+	'MagpulPDR',
+	'MP7',
+	'MP5K',
+	'PP2000',
+	'UMP45',
+	'PP-19',
+	'P90',
 
 	-- Level 2
 	'SPAS12',
