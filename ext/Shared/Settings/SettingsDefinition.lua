@@ -245,6 +245,17 @@ SettingsDefinition = {
 			Category = "SPAWN"
 		},
 		{
+			Name = "BalancePlayersIgnoringBots",
+			Text = "Balance Players Ignoring Bots",
+			---@type Type|integer
+			Type = Type.Boolean,
+			Value = Config.BalancePlayersIgnoringBots,
+			Description = "Counts players in each team to decide which team a player joins",
+			Default = false,
+			UpdateFlag = UpdateFlag.AmountAndTeam,
+			Category = "SPAWN"
+		},
+		{
 			Name = "TeamSwitchMode",
 			Text = "Team Switch Mode",
 			---@type Type|integer
