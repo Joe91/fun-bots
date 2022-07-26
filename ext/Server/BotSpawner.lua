@@ -237,6 +237,35 @@ function BotSpawner:OnPlayerJoining(p_Name)
 end
 
 ---@param p_Player Player
+function BotSpawner:OnPlayerAuthenticated(p_Player)
+	if (Config.BalancePlayersIgnoringBots) then
+		local s_CountPlayers = {}
+
+		for i = 1, Globals.NrOfTeams do
+			s_CountPlayers[i] = 0
+			local s_TempPlayers = PlayerManager:GetPlayersByTeam(i)
+
+			for _, l_Player in pairs(s_TempPlayers) do
+				if not m_Utilities:isBot(l_Player) then
+					s_CountPlayers[i] = s_CountPlayers[i] + 1
+
+					if Globals.IsSdm then -- TODO: Only needed because of VEXT-Bug
+						l_Player.squadId = 1
+					end
+				end
+			end
+		end
+
+		-- move player to other team to balance
+		if s_CountPlayers[1] > s_CountPlayers[2] then
+			p_Player.teamId = 2
+		else
+			p_Player.teamId = 1
+		end
+	end
+end
+
+---@param p_Player Player
 ---@param p_TeamId TeamId|integer
 ---@param p_SquadId SquadId|integer
 function BotSpawner:OnTeamChange(p_Player, p_TeamId, p_SquadId)
