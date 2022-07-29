@@ -24,7 +24,7 @@ end
 -- @return String - semantic version
 -- @author Firjen <https://github.com/Firjens>
 function RegistryManager:GetUtil()
-	return m_registryUtil;
+	return m_registryUtil
 end
 
 -- Check if a variable is currently in the registry, if not return the default value.
@@ -36,9 +36,10 @@ end
 -- @todo Add indispensable
 function RegistryManager:Get(variable, default, indispensable)
 	if variable == nil then
-		return default;
+		return default
 	end
-	return default;
+
+	return default
 end
 
 if g_RegistryManager == nil then

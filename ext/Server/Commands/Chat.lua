@@ -29,10 +29,11 @@ function ChatCommands:Execute(p_Parts, p_Player)
 			ChatManager:SendMessage('You have no permissions for this action (ChatCommands).', p_Player)
 			return
 		end
-		m_CarParts = {}
-		if p_Player.attachedControllable ~= nil then
 
-			local s_VehicleName = VehicleEntityData(p_Player.controlledControllable.data).controllableType:gsub(".+/.+/","")
+		m_CarParts = {}
+
+		if p_Player.attachedControllable ~= nil then
+			local s_VehicleName = VehicleEntityData(p_Player.controlledControllable.data).controllableType:gsub(".+/.+/", "")
 			local s_Pos = p_Player.controlledControllable.transform.forward
 			print(s_VehicleName)
 			local s_VehicleEntity
@@ -48,8 +49,9 @@ function ChatCommands:Execute(p_Parts, p_Player)
 					if s_QuatTransform == nil then
 						return -1
 					end
+
 					print(p_Player.controlledControllable.physicsEntityBase:GetPart(j).typeInfo.name)
-					print("index: "..j)
+					print("index: " .. j)
 					local s_Direction = s_QuatTransform:ToLinearTransform().forward - s_Pos
 					print(s_Direction)
 					m_CarParts[j] = s_Direction
@@ -61,9 +63,9 @@ function ChatCommands:Execute(p_Parts, p_Player)
 			ChatManager:SendMessage('You have no permissions for this action (ChatCommands).', p_Player)
 			return
 		end
-		if p_Player.attachedControllable ~= nil then
 
-			local s_VehicleName = VehicleEntityData(p_Player.controlledControllable.data).controllableType:gsub(".+/.+/","")
+		if p_Player.attachedControllable ~= nil then
+			local s_VehicleName = VehicleEntityData(p_Player.controlledControllable.data).controllableType:gsub(".+/.+/", "")
 			local s_Pos = p_Player.controlledControllable.transform.forward
 			print(s_VehicleName)
 			local s_VehicleEntity
@@ -79,9 +81,11 @@ function ChatCommands:Execute(p_Parts, p_Player)
 					if s_QuatTransform == nil then
 						return -1
 					end
+
 					print(p_Player.controlledControllable.physicsEntityBase:GetPart(j).typeInfo.name)
-					print("index: "..j)
+					print("index: " .. j)
 					local s_Direction = s_QuatTransform:ToLinearTransform().forward - s_Pos
+
 					if m_CarParts[j] ~= nil then
 						print(s_Direction - m_CarParts[j])
 					end
@@ -240,7 +244,7 @@ function ChatCommands:Execute(p_Parts, p_Player)
 		end
 
 		Config.BotAimWorsening = tonumber(p_Parts[2]) or 0.5
-		--self:_modifyWeapons(Config.BotAimWorsening) --causes lag. Instead restart round
+	--self:_modifyWeapons(Config.BotAimWorsening) --causes lag. Instead restart round
 	elseif p_Parts[1] == '!shootback' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands.ShootBack') == false then
 			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.ShootBack).', p_Player)

@@ -8,7 +8,7 @@ CustomWeaponsAssaultRu = {
 	-- 'F2000', --both/none
 	-- 'FAMAS', --us
 	-- 'G3A3', --both/none
-	-- 'KH2002', --ru
+	'KH2002', --ru
 	-- 'L85A2', --us
 	-- 'M16A4', --us
 	-- 'M16-Burst', --us

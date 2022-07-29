@@ -54,11 +54,12 @@ function FunBotUIClient:_onUIToggle()
 
 	self._views:execute('BotEditor.Hide()')
 	self._views:disable()
+
 	--if self._views:isVisible() then
-		--self._views:close()
+	--self._views:close()
 	--else
-		--self._views:open()
-		--self._views:focus()
+	--self._views:open()
+	--self._views:focus()
 	--end
 end
 
@@ -181,25 +182,32 @@ function FunBotUIClient:_onUISettings(p_Data)
 
 	for _, l_Item in pairs(SettingsDefinition.Elements) do
 		local s_TypeString = ""
+
 		if l_Item.Type == Type.Enum then
 			-- create table out of Enum
 			local s_EnumTable = {}
 			local s_Default = ""
 			local s_Value = ""
+
 			for l_Key, l_Value in pairs(l_Item.Reference) do
 				if l_Key ~= "Count" then
 					table.insert(s_EnumTable, l_Key)
 				end
+
 				if l_Value == p_Data[l_Item.Name] then
 					s_Value = l_Key
 				end
+
 				if l_Value == l_Item.Default then
 					s_Default = l_Key
 				end
 			end
+
 			settings:addList(l_Item.Category, l_Item.Name, Language:I18N(l_Item.Text), s_EnumTable, s_Value, s_Default, Language:I18N(l_Item.Description))
 		elseif l_Item.Type == Type.List then
 			settings:addList(l_Item.Category, l_Item.Name, Language:I18N(l_Item.Text), l_Item.Reference, p_Data[l_Item.Name], l_Item.Default, Language:I18N(l_Item.Description))
+		elseif l_Item.Type == Type.DynamicList then
+			settings:addList(l_Item.Category, l_Item.Name, Language:I18N(l_Item.Text), _G[l_Item.Reference], p_Data[l_Item.Name], l_Item.Default, Language:I18N(l_Item.Description))
 		elseif l_Item.Type == Type.Integer then
 			s_TypeString = "Integer"
 			settings:add(l_Item.Category, s_TypeString, l_Item.Name, Language:I18N(l_Item.Text), p_Data[l_Item.Name], l_Item.Default, Language:I18N(l_Item.Description))
@@ -221,6 +229,7 @@ function FunBotUIClient:_onUIChangeLanguage(p_Language)
 	if Config.DisableUserInterface == true then
 		return
 	end
+
 	Language:loadLanguage(p_Language)
 	self._views:setLanguage(p_Language)
 end
@@ -279,6 +288,7 @@ function FunBotUIClient:OnClientUpdateInput(p_DeltaTime)
 		if Debug.Client.UI then
 			print('Client send: UI_Request_Open')
 		end
+
 		-- This request can be used for UI-Toggle
 		if self.m_InWaypointEditor then
 			if self.m_LastWaypointEditorState == false then
@@ -291,6 +301,7 @@ function FunBotUIClient:OnClientUpdateInput(p_DeltaTime)
 		else
 			NetEvents:Send('UI_Request_Open')
 		end
+
 		return
 	elseif InputManager:WentKeyUp(InputDeviceKeys.IDK_LeftAlt) and self.m_InWaypointEditor then
 		self._views:enable()
@@ -304,6 +315,7 @@ function FunBotUIClient:OnClientUpdateInput(p_DeltaTime)
 		if self.m_InCommScreen then
 			self:_onUICommonRose("false") --TODO: Remove Permission-Check?
 		end
+
 		self.m_WaitForKeyLeft = false
 	end
 end

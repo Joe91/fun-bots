@@ -2,21 +2,18 @@
 EbxEditUtils = class 'EbxEditUtils'
 
 function EbxEditUtils:__init()
-
 	self.LuaReserverdWords = {
 		"and", "break", "do", "else", "elseif",
 		"end", "false", "for", "function", "goto", "if",
 		"in", "local", "nil", "not", "or",
 		"repeat", "return", "then", "true", "until", "while"
 	}
-
 end
 
 -- returns two values <value>,<status>
 -- <value>: the found instance as a typed object and made writable
 -- <status>: boolean true if valid, string with message if failed
 function EbxEditUtils:GetWritableInstance(p_ResourcePathOrGUIDOrContainer)
-
 	if type(p_ResourcePathOrGUIDOrContainer) == 'userdata' and p_ResourcePathOrGUIDOrContainer.typeInfo ~= nil then
 		local s_ReturnInstance = _G[p_ResourcePathOrGUIDOrContainer.typeInfo.name](p_ResourcePathOrGUIDOrContainer)
 
@@ -101,9 +98,9 @@ function EbxEditUtils:GetWritableProperty(p_Instance, p_PropertyPath)
 		else
 			-- we've reached a value
 			if type(s_WorkingInstance[s_PropertyName]) == 'string' or
-			type(s_WorkingInstance[s_PropertyName]) == 'number' or
-			type(s_WorkingInstance[s_PropertyName]) == 'boolean' or
-			type(s_WorkingInstance[s_PropertyName]) == 'nil' then
+				type(s_WorkingInstance[s_PropertyName]) == 'number' or
+				type(s_WorkingInstance[s_PropertyName]) == 'boolean' or
+				type(s_WorkingInstance[s_PropertyName]) == 'nil' then
 				if s_WorkingInstance.MakeWritable ~= nil then
 					s_WorkingInstance:MakeWritable()
 				end
@@ -159,13 +156,13 @@ function EbxEditUtils:ValidateValue(p_ArgValue, p_ArgParams)
 		return s_DefaultValue, true
 	elseif p_ArgParams.Type == 'number' or p_ArgParams.Type == 'float' then
 		if p_ArgValue ~= nil and tonumber(p_ArgValue) == nil then
-			return s_DefaultValue, 'Must be a **'..p_ArgParams.Type..'**'
+			return s_DefaultValue, 'Must be a **' .. p_ArgParams.Type .. '**'
 		end
 	elseif p_ArgParams.Type == 'boolean' then
 		if p_ArgValue ~= nil then -- sorry this is ugly
 			if p_ArgValue == '1' or p_ArgValue == '0' or
-			string.lower(p_ArgValue) == 'true' or string.lower(p_ArgValue) == 'false' or
-			string.lower(p_ArgValue) == 'y' or string.lower(p_ArgValue) == 'n' then
+				string.lower(p_ArgValue) == 'true' or string.lower(p_ArgValue) == 'false' or
+				string.lower(p_ArgValue) == 'y' or string.lower(p_ArgValue) == 'n' then
 				-- the value still needs to be a string, but let's normalise it
 				local s_BoolToString = tostring((p_ArgValue == '1' or string.lower(p_ArgValue) == 'true' or string.lower(p_ArgValue) == 'y'))
 				return (s_BoolToString == 'true'), true
@@ -184,13 +181,13 @@ function EbxEditUtils:ValidateValue(p_ArgValue, p_ArgParams)
 
 		for i = 1, p_ArgParams.Choices do
 			if string.len(s_Choices) > 0 then
-				s_Choices = s_Choices..', '
+				s_Choices = s_Choices .. ', '
 			end
 
-			s_Choices = s_Choices..'*'..p_ArgParams.Choices[i]..'*'
+			s_Choices = s_Choices .. '*' .. p_ArgParams.Choices[i] .. '*'
 		end
 
-		return s_DefaultValue, 'Not a valid **choice**, use: ['..s_Choices..']'
+		return s_DefaultValue, 'Not a valid **choice**, use: [' .. s_Choices .. ']'
 	elseif p_ArgParams.Type == 'string' then
 		if p_ArgValue == nil then
 			return s_DefaultValue, 'Must be a **string**'
@@ -224,7 +221,7 @@ function EbxEditUtils:FormatMemberName(p_MemberName)
 		local s_Continue = false -- dirty hack to give lua a 'continue' statement in loops
 
 		if s_FoundLower then
-			s_OutputName = s_OutputName..p_MemberName:sub(i,i)
+			s_OutputName = s_OutputName .. p_MemberName:sub(i, i)
 			s_Continue = true
 		end
 
@@ -232,19 +229,19 @@ function EbxEditUtils:FormatMemberName(p_MemberName)
 			s_FoundLower = true
 
 			if i > 1 then
-				s_OutputName = s_OutputName..p_MemberName:sub(i,i)
+				s_OutputName = s_OutputName .. p_MemberName:sub(i, i)
 				s_Continue = true
 			end
 		end
 
 		if not s_Continue then
-			s_OutputName = s_OutputName..p_MemberName:sub(i,1):lower()
+			s_OutputName = s_OutputName .. p_MemberName:sub(i, 1):lower()
 		end
 	end
 
 	for i = 1, #self.LuaReserverdWords do
 		if s_OutputName:lower() == self.LuaReserverdWords[i] then
-			s_OutputName = s_OutputName..'Value'
+			s_OutputName = s_OutputName .. 'Value'
 		end
 	end
 
@@ -258,7 +255,7 @@ function EbxEditUtils:StringSplit(p_Value, p_Seperator)
 
 	local s_Result = {}
 
-	for l_Piece in string.gmatch(p_Value, "([^"..p_Seperator.."]+)") do
+	for l_Piece in string.gmatch(p_Value, "([^" .. p_Seperator .. "]+)") do
 		s_Result[#s_Result + 1] = l_Piece
 	end
 
@@ -295,10 +292,10 @@ function EbxEditUtils:dump(p)
 	if type(p) == 'table' then
 		local s = '{ '
 
-		for k,v in pairs(p) do
-			if type(k) ~= 'number' then k = '"'..k..'"' end
+		for k, v in pairs(p) do
+			if type(k) ~= 'number' then k = '"' .. k .. '"' end
 
-			s = s .. '['..k..'] = ' .. self:dump(v) .. ','
+			s = s .. '[' .. k .. '] = ' .. self:dump(v) .. ','
 		end
 
 		return s .. '} '

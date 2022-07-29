@@ -410,7 +410,7 @@ SettingsDefinition = {
 			Category = "SPAWN"
 		},
 
-	-- Spawn limits
+		-- Spawn limits
 		{
 			Name = "MaxBotsPerTeamDefault",
 			Text = "Max Bots Per Team (default)",
@@ -615,7 +615,7 @@ SettingsDefinition = {
 			Reference = Range(1.00, 1500.00, 5.0),
 			Default = 70,
 			UpdateFlag = UpdateFlag.None,
-			Category ="BEHAVIOUR"
+			Category = "BEHAVIOUR"
 		},
 		{
 			Name = "MaxShootDistancePistol",
@@ -894,7 +894,7 @@ SettingsDefinition = {
 			Reference = Range(1.00, 1500.00, 5.0),
 			Default = 150,
 			UpdateFlag = UpdateFlag.None,
-			Category ="VEHICLE"
+			Category = "VEHICLE"
 		},
 		{
 			Name = "VehicleWaitForPassengersTime",
@@ -906,7 +906,7 @@ SettingsDefinition = {
 			Reference = Range(0.50, 60.00, 0.5),
 			Default = 7.0,
 			UpdateFlag = UpdateFlag.None,
-			Category ="VEHICLE"
+			Category = "VEHICLE"
 		},
 		{
 			Name = "ChopperDriversAttack",
@@ -1006,10 +1006,10 @@ SettingsDefinition = {
 			Name = "AssaultWeapon",
 			Text = "Primary Weapon Assault",
 			---@type Type|integer
-			Type = Type.List,
+			Type = Type.DynamicList,
 			Value = Config.AssaultWeapon,
 			Description = "Primary weapon of Assault class, if random-weapon == false",
-			Reference = AssaultPrimary,
+			Reference = "AssaultPrimary",
 			Default = "M416",
 			UpdateFlag = UpdateFlag.None,
 			Category = "WEAPONS"
@@ -1018,10 +1018,10 @@ SettingsDefinition = {
 			Name = "EngineerWeapon",
 			Text = "Primary Weapon Engineer",
 			---@type Type|integer
-			Type = Type.List,
+			Type = Type.DynamicList,
 			Value = Config.EngineerWeapon,
 			Description = "Primary weapon of Engineer class, if random-weapon == false",
-			Reference = EngineerPrimary,
+			Reference = "EngineerPrimary",
 			Default = "M4A1",
 			UpdateFlag = UpdateFlag.None,
 			Category = "WEAPONS"
@@ -1030,10 +1030,10 @@ SettingsDefinition = {
 			Name = "SupportWeapon",
 			Text = "Primary Weapon Support",
 			---@type Type|integer
-			Type = Type.List,
+			Type = Type.DynamicList,
 			Value = Config.SupportWeapon,
 			Description = "Primary weapon of Support class, if random-weapon == false",
-			Reference = SupportPrimary,
+			Reference = "SupportPrimary",
 			Default = "M249",
 			UpdateFlag = UpdateFlag.None,
 			Category = "WEAPONS"
@@ -1042,10 +1042,10 @@ SettingsDefinition = {
 			Name = "ReconWeapon",
 			Text = "Primary Weapon Recon",
 			---@type Type|integer
-			Type = Type.List,
+			Type = Type.DynamicList,
 			Value = Config.ReconWeapon,
 			Description = "Primary weapon of Recon class, if random-weapon == false",
-			Reference = ReconPrimary,
+			Reference = "ReconPrimary",
 			Default = "L96",
 			UpdateFlag = UpdateFlag.None,
 			Category = "WEAPONS"
@@ -1054,10 +1054,10 @@ SettingsDefinition = {
 			Name = "Pistol",
 			Text = "Pistol of Bots",
 			---@type Type|integer
-			Type = Type.List,
+			Type = Type.DynamicList,
 			Value = Config.Pistol,
 			Description = "Pistol of Bots, if random-weapon == false",
-			Reference = PistoWeapons,
+			Reference = "PistolWeapons",
 			Default = "MP412Rex",
 			UpdateFlag = UpdateFlag.None,
 			Category = "WEAPONS"
@@ -1066,10 +1066,10 @@ SettingsDefinition = {
 			Name = "Knife",
 			Text = "Knife of Bots",
 			---@type Type|integer
-			Type = Type.List,
+			Type = Type.DynamicList,
 			Value = Config.Knife,
 			Description = "Knife of Bots, if random-weapon == false",
-			Reference = KnifeWeapons,
+			Reference = "KnifeWeapons",
 			Default = "Razor",
 			UpdateFlag = UpdateFlag.None,
 			Category = "WEAPONS"

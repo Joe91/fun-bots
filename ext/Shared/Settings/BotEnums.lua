@@ -53,6 +53,14 @@ VehicleTypes = {
 	Gadgets = 10
 }
 
+---@class VehicleTerrains
+VehicleTerrains = {
+	Land = 1,
+	Water = 2,
+	Air = 3,
+	Amphibious = 4
+}
+
 ---@class VehicleAttackModes
 VehicleAttackModes = {
 	NoAttack = 0,
