@@ -1508,14 +1508,23 @@ function Bot:_UpdateAiming()
 
 		-- worsen yaw and pitch depending on bot-skill. Don't use Skill for Nades and Rockets.
 		if self.m_ActiveWeapon.type ~= WeaponTypes.Grenade and self.m_ActiveWeapon.type ~= WeaponTypes.Rocket then
-			local s_WorseningValue = (math.random() * self._Skill / self._DistanceToPlayer) -- value scaled in offset in 1m
+			local s_SkillFactor = self._Skill / self._DistanceToPlayer
+			local s_WorseningSkillX = (MathUtils:GetRandom(-1.0, 1.0) * s_SkillFactor) -- value scaled in offset in 1m
+			local s_WorseningSkillY = (MathUtils:GetRandom(-1.0, 1.0) * s_SkillFactor) -- value scaled in offset in 1m
 
-			if MathUtils:GetRandomInt(0, 1) > 0 then
-				s_WorseningValue = -s_WorseningValue --randomly use positive or negative values
+			local s_WorseningClassFactor = 0
+			if self.m_Kit == BotKits.Support then
+				s_WorseningClassFactor = Config.BotSupportAimWorsening / self._DistanceToPlayer
+			elseif self.m_Kit == BotKits.Recon then
+				s_WorseningClassFactor = Config.BotSniperAimWorsening / self._DistanceToPlayer
+			else
+				s_WorseningClassFactor = Config.BotAimWorsening / self._DistanceToPlayer
 			end
+			local s_WorseningClassX = (MathUtils:GetRandom(-1.0, 1.0) * s_WorseningClassFactor)
+			local s_WorseningClassY = (MathUtils:GetRandom(-1.0, 1.0) * s_WorseningClassFactor)
 
-			s_Yaw = s_Yaw + s_WorseningValue
-			s_Pitch = s_Pitch + s_WorseningValue
+			s_Yaw = s_Yaw + s_WorseningSkillX + s_WorseningClassX
+			s_Pitch = s_Pitch + s_WorseningSkillY + s_WorseningClassY
 		end
 
 		self._TargetPitch = s_Pitch
