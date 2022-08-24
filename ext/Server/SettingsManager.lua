@@ -9,8 +9,6 @@ local m_Database = require('Database')
 local m_BotManager = require('BotManager')
 ---@type BotSpawner
 local m_BotSpawner = require('BotSpawner')
----@type WeaponModification
-local m_WeaponModification = require('WeaponModification')
 ---@type WeaponList
 local m_WeaponList = require('__shared/WeaponList')
 
@@ -285,8 +283,6 @@ function SettingsManager:UpdateSetting(p_Name, p_Value)
 		if s_UpdateFlag == UpdateFlag.WeaponSets then
 			m_WeaponList:UpdateWeaponList()
 			s_UpdateClientWeapons = true
-		elseif s_UpdateFlag == UpdateFlag.Weapons then
-			m_WeaponModification:ModifyAllWeapons(Config.BotAimWorsening, Config.BotSniperAimWorsening, Config.BotSupportAimWorsening)
 		elseif s_UpdateFlag == UpdateFlag.YawPerSec then
 			Globals.YawPerFrame = m_BotManager:CalcYawPerFrame()
 		elseif s_UpdateFlag == UpdateFlag.AmountAndTeam then

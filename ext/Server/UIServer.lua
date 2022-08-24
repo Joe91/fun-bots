@@ -16,8 +16,6 @@ local m_SettingsManager = require('SettingsManager')
 local BotManager = require('BotManager')
 ---@type BotSpawner
 local BotSpawner = require('BotSpawner')
----@type WeaponModification
-local WeaponModification = require('WeaponModification')
 ---@type WeaponList
 local WeaponList = require('__shared/WeaponList')
 
@@ -544,10 +542,6 @@ function FunBotUIServer:_writeSettings(p_Player, p_Request)
 	end
 
 	-- update Weapons if needed
-	if updateWeapons then
-		WeaponModification:ModifyAllWeapons(Config.BotAimWorsening, Config.BotSniperAimWorsening, Config.BotSupportAimWorsening)
-	end
-
 	if updateWeaponSets then
 		WeaponList:UpdateWeaponList()
 	end
