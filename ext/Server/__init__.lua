@@ -38,8 +38,6 @@ require('__shared/Utilities')
 
 ---@type NodeEditor
 local m_NodeEditor = require('NodeEditor')
----@type WeaponModification
-local m_WeaponModification = require('WeaponModification')
 ---@type Language
 local m_Language = require('__shared/Language')
 ---@type SettingsManager
@@ -95,7 +93,6 @@ end
 function FunBotServer:RegisterEvents()
 	Events:Subscribe('Extension:Unloading', self, self.OnExtensionUnloading)
 
-	Events:Subscribe('Partition:Loaded', self, self.OnPartitionLoaded)
 	Events:Subscribe('Engine:Update', self, self.OnEngineUpdate)
 	Events:Subscribe('UpdateManager:Update', self, self.OnUpdateManagerUpdate)
 
@@ -213,12 +210,6 @@ function FunBotServer:OnExtensionUnloading()
 	m_BotManager:DestroyAll(nil, nil, true)
 end
 
----VEXT Shared Partition:Loaded Event
----@param p_Partition DatabasePartition
-function FunBotServer:OnPartitionLoaded(p_Partition)
-	m_WeaponModification:OnPartitionLoaded(p_Partition)
-end
-
 ---VEXT Shared Engine:Update Event
 ---@param p_DeltaTime number
 ---@param p_SimulationDeltaTime number
@@ -257,7 +248,6 @@ function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPe
 		self:ScambleBotNames()
 	end
 
-	m_WeaponModification:ModifyAllWeapons(Config.BotAimWorsening, Config.BotSniperAimWorsening, Config.BotSupportAimWorsening)
 	m_WeaponList:OnLevelLoaded()
 
 	m_Logger:Write('OnLevelLoaded: ' .. p_LevelName .. ' ' .. s_GameMode)

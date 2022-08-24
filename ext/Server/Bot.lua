@@ -2162,6 +2162,7 @@ function Bot:_UpdateAttacking()
 			(Config.ZombieMode and self._ShootModeTimer < (Config.BotFireModeDuration * 4)) then
 			if self._ActiveAction ~= BotActionFlags.C4Active then
 				self:_SetInput(EntryInputActionEnum.EIAZoom, 1) -- does not work yet :-/
+				self.m_Player.input.zoomLevel = 1
 			end
 
 			if self._ActiveAction ~= BotActionFlags.GrenadeActive then
@@ -3558,7 +3559,7 @@ function Bot:_AbortAttack()
 		self._Pid_Drv_Tilt:Reset()
 		self._Pid_Drv_Roll:Reset()
 	end
-
+	self.m_Player.input.zoomLevel = 0
 	self._ShootPlayerName = ""
 	self._ShootPlayer = nil
 	self._ShootModeTimer = 0.0
