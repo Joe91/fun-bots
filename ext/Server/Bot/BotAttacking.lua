@@ -22,6 +22,7 @@ function BotAttacking:UpdateAttacking(p_Bot)
 
 			if p_Bot._ActiveAction ~= BotActionFlags.C4Active then
 				p_Bot:_SetInput(EntryInputActionEnum.EIAZoom, 1) -- does not work yet :-/
+				p_Bot.m_Player.input.zoomLevel = 1
 			end
 
 			if p_Bot._ActiveAction ~= BotActionFlags.GrenadeActive then

@@ -1307,6 +1307,7 @@ function Bot:_AbortAttack()
 		self._Pid_Drv_Roll:Reset()
 	end
 
+	self.m_Player.input.zoomLevel = 0
 	self._ShootPlayerName = ""
 	self._ShootPlayer = nil
 	self._ShootModeTimer = 0.0
