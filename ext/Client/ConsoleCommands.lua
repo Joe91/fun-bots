@@ -12,9 +12,10 @@ function ConsoleCommands:OnRegisterConsoleCommands(p_ConfigList)
 				print(Config[l_Item.Name])
 			end)
 
-			Console:Register('config.set.' .. l_Item.Name, 'Default: ' .. tostring(l_Item.Default) .. ', ' .. l_Item.Description, function(p_Args)
-				NetEvents:SendLocal('ConsoleCommands:SetConfig', l_Item.Name, p_Args[1])
-			end)
+			Console:Register('config.set.' .. l_Item.Name, 'Default: ' .. tostring(l_Item.Default) .. ', ' .. l_Item.Description,
+				function(p_Args)
+					NetEvents:SendLocal('ConsoleCommands:SetConfig', l_Item.Name, p_Args[1])
+				end)
 		end
 
 		self._ConfigList = p_ConfigList

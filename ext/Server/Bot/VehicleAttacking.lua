@@ -17,7 +17,8 @@ function VehicleAttacking:UpdateAttackingVehicle(p_Bot)
 			p_Bot._ReloadTimer = 0.0 -- reset reloading
 
 			if p_Bot._ShootPlayerVehicleType ~= VehicleTypes.NoVehicle then
-				local s_AttackMode = m_Vehicles:CheckForVehicleAttack(p_Bot._ShootPlayerVehicleType, p_Bot._DistanceToPlayer, p_Bot.m_SecondaryGadget, true)
+				local s_AttackMode = m_Vehicles:CheckForVehicleAttack(p_Bot._ShootPlayerVehicleType, p_Bot._DistanceToPlayer,
+					p_Bot.m_SecondaryGadget, true)
 
 				if s_AttackMode ~= VehicleAttackModes.NoAttack then
 					p_Bot._WeaponToUse = BotWeapons.Primary
@@ -65,7 +66,6 @@ function VehicleAttacking:UpdateAttackStationaryAAVehicle(p_Bot)
 		p_Bot:_SetInput(EntryInputActionEnum.EIAFire, 1)
 	end
 end
-
 
 if g_VehicleAttacking == nil then
 	---@type VehicleAttacking

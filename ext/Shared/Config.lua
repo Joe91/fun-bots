@@ -27,7 +27,7 @@ Config = {
 
 	--SPAWN
 	SpawnMode = SpawnModes.balanced_teams, -- Mode the bots spawn with
-	BalancePlayersIgnoringBots = false,	-- Counts players in each team to decide which team a player joins
+	BalancePlayersIgnoringBots = false, -- Counts players in each team to decide which team a player joins
 	TeamSwitchMode = TeamSwitchModes.SwitchForRoundTwo, -- Mode to switch the team
 	SpawnInBothTeams = true, -- Bots spawn in both teams
 	InitNumberOfBots = 10, -- Bots for spawnmode

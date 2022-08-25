@@ -187,7 +187,7 @@ end
 -- =============================================
 
 -- Update frame (every Cycle)
--- Update very fast (0.05) ? Needed? Aiming? 
+-- Update very fast (0.05) ? Needed? Aiming?
 -- Update fast (0.1) ? Movement, Reactions
 -- (Update medium? Maybe some things in between)
 -- Update slow (1.0) ? Reload, Deploy, (Obstacle-Handling)
@@ -349,7 +349,8 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 
 							-- fast code
 							if s_Attacking then
-								if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) or m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
+								if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) or
+									m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
 									m_VehicleAiming:UpdateAimingVehicleAdvanced(self)
 								else
 									m_VehicleAiming:UpdateAimingVehicle(self)
@@ -583,7 +584,8 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 	self._DistanceToPlayer = 0.0
 
 	if s_Type == VehicleTypes.MavBot then
-		self._DistanceToPlayer = p_Player.controlledControllable.transform.trans:Distance(self.m_Player.soldier.worldTransform.trans)
+		self._DistanceToPlayer = p_Player.controlledControllable.transform.trans:Distance(self.m_Player.soldier.worldTransform
+			.trans)
 	else
 		self._DistanceToPlayer = p_Player.soldier.worldTransform.trans:Distance(self.m_Player.soldier.worldTransform.trans)
 	end
@@ -595,7 +597,9 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 		return false
 	end
 
-	if s_Type ~= VehicleTypes.NoVehicle and m_Vehicles:CheckForVehicleAttack(s_Type, self._DistanceToPlayer, self.m_SecondaryGadget, self.m_InVehicle) == VehicleAttackModes.NoAttack then
+	if s_Type ~= VehicleTypes.NoVehicle and
+		m_Vehicles:CheckForVehicleAttack(s_Type, self._DistanceToPlayer, self.m_SecondaryGadget, self.m_InVehicle) ==
+		VehicleAttackModes.NoAttack then
 		return false
 	end
 
@@ -607,14 +611,16 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 	local s_PitchHalf = 0
 
 	-- if target is air-vehicle and bot is in AA --> ignore yaw
-	if self.m_InVehicle and (s_Type == VehicleTypes.Chopper or s_Type == VehicleTypes.Plane) and m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.AntiAir) then
+	if self.m_InVehicle and (s_Type == VehicleTypes.Chopper or s_Type == VehicleTypes.Plane) and
+		m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.AntiAir) then
 		p_IgnoreYaw = true
 	end
 
 	-- don't attack if too close to ground in Plane
 	if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
 		if self._ShootPlayerVehicleType ~= VehicleTypes.Chopper or self._ShootPlayerVehicleType ~= VehicleTypes.Plane then
-			if (self.m_Player.soldier.worldTransform.trans.y - p_Player.soldier.worldTransform.trans.y) < Registry.VEHICLES.ABORT_ATTACK_HEIGHT_JET then
+			if (self.m_Player.soldier.worldTransform.trans.y - p_Player.soldier.worldTransform.trans.y) <
+				Registry.VEHICLES.ABORT_ATTACK_HEIGHT_JET then
 				return false
 			end
 
@@ -658,7 +664,9 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 			if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.AntiAir) then
 				s_FovHalf = Config.FovVehicleAAForShooting / 360 * math.pi
 				s_PitchHalf = Config.FovVerticleVehicleAAForShooting / 360 * math.pi
-			elseif (m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) or m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane)) and self.m_Player.controlledEntryId == 0 then -- chopper as driver
+			elseif (
+				m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) or
+					m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane)) and self.m_Player.controlledEntryId == 0 then -- chopper as driver
 				s_FovHalf = Config.FovVehicleForShooting / 360 * math.pi
 				s_PitchHalf = Config.FovVerticleChopperForShooting / 360 * math.pi
 			else
@@ -839,7 +847,8 @@ end
 
 ---@return boolean
 function Bot:IsStaticMovement()
-	if self._MoveMode == BotMoveModes.Standstill or self._MoveMode == BotMoveModes.Mirror or self._MoveMode == BotMoveModes.Mimic then
+	if self._MoveMode == BotMoveModes.Standstill or self._MoveMode == BotMoveModes.Mirror or
+		self._MoveMode == BotMoveModes.Mimic then
 		return true
 	else
 		return false
@@ -1180,7 +1189,8 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 		local s_Position = p_Entity.transform.trans
 		local s_VehicleData = m_Vehicles:GetVehicleByEntity(p_Entity)
 
-		if not Config.UseAirVehicles and (s_VehicleData.Type == VehicleTypes.Plane or s_VehicleData.Type == VehicleTypes.Chopper) then
+		if not Config.UseAirVehicles and
+			(s_VehicleData.Type == VehicleTypes.Plane or s_VehicleData.Type == VehicleTypes.Chopper) then
 			return -3 -- not allowed to use
 		end
 

@@ -27,7 +27,8 @@ local function UpdateFinished(p_Result, p_UpdateUrl, p_RemoteVersion, p_RemoteTi
 
 	if p_Result == 2 then
 		if p_RemoteTimestamp ~= nil then
-			print('[ + ] A new version for fun-bots was released on ' .. os.date('%d-%m-%Y %H:%M', ParseOffset(p_RemoteTimestamp)) .. '!')
+			print('[ + ] A new version for fun-bots was released on ' ..
+				os.date('%d-%m-%Y %H:%M', ParseOffset(p_RemoteTimestamp)) .. '!')
 		else
 			print('[ + ] A new version for fun-bots is available!')
 		end

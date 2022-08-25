@@ -49,12 +49,14 @@ function ClientBotManager:OnClientUpdateInput(p_DeltaTime)
 
 			local s_StartPosition = s_Transform.trans:Clone() + s_CameraForward * 4
 
-			local s_Raycast = RaycastManager:Raycast(s_StartPosition, s_CastPosition, RayCastFlags.DontCheckWater | RayCastFlags.IsAsyncRaycast)
+			local s_Raycast = RaycastManager:Raycast(s_StartPosition, s_CastPosition,
+				RayCastFlags.DontCheckWater | RayCastFlags.IsAsyncRaycast)
 
 			if s_Raycast ~= nil and s_Raycast.rigidBody:Is("CharacterPhysicsEntity") then
 				-- find teammate at this position
 				for _, l_Player in pairs(PlayerManager:GetPlayersByTeam(self.m_Player.teamId)) do
-					if l_Player.soldier ~= nil and m_Utilities:isBot(l_Player) and l_Player.soldier.worldTransform.trans:Distance(s_Raycast.position) < 2 then
+					if l_Player.soldier ~= nil and m_Utilities:isBot(l_Player) and
+						l_Player.soldier.worldTransform.trans:Distance(s_Raycast.position) < 2 then
 						NetEvents:SendLocal('Client:RequestEnterVehicle', l_Player.name)
 						break
 					end
@@ -93,7 +95,8 @@ function ClientBotManager:OnEngineMessage(p_Message)
 		m_Logger:Write("level loaded on Client")
 	end
 
-	if p_Message.type == MessageType.ClientConnectionUnloadLevelMessage or p_Message.type == MessageType.ClientCharacterLocalPlayerDeletedMessage then
+	if p_Message.type == MessageType.ClientConnectionUnloadLevelMessage or
+		p_Message.type == MessageType.ClientCharacterLocalPlayerDeletedMessage then
 		self:RegisterVars()
 	end
 end

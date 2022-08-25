@@ -8,9 +8,6 @@ function BotAiming:__init()
 	-- nothing to do
 end
 
-
-
-
 function BotAiming:UpdateAiming(p_Bot)
 	if p_Bot._ShootPlayer == nil then
 		return
@@ -27,7 +24,8 @@ function BotAiming:UpdateAiming(p_Bot)
 		local s_FullPositionTarget = nil
 		local s_FullPositionBot = nil
 
-		s_FullPositionBot = p_Bot.m_Player.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(p_Bot.m_Player, false, false)
+		s_FullPositionBot = p_Bot.m_Player.soldier.worldTransform.trans:Clone() +
+			m_Utilities:getCameraPos(p_Bot.m_Player, false, false)
 
 		if p_Bot._ShootPlayerVehicleType == VehicleTypes.MavBot then
 			s_FullPositionTarget = p_Bot._ShootPlayer.controlledControllable.transform.trans:Clone()
@@ -125,9 +123,9 @@ function BotAiming:UpdateAiming(p_Bot)
 					local A = s_TargetMovement:Dot(s_TargetMovement) - s_Speed * s_Speed
 					local B = 2.0 * s_TargetMovement:Dot(s_VectorBetween)
 					local C = s_VectorBetween:Dot(s_VectorBetween)
-					local s_Determinant = math.sqrt(B*B-4*A*C)
-					local t1 = (-B + s_Determinant) / (2*A)
-					local t2 = (-B - s_Determinant) / (2*A)
+					local s_Determinant = math.sqrt(B * B - 4 * A * C)
+					local t1 = (-B + s_Determinant) / (2 * A)
+					local t2 = (-B - s_Determinant) / (2 * A)
 
 					if t1 > 0 then
 						if t2 > 0 then
@@ -212,7 +210,8 @@ function BotAiming:UpdateAiming(p_Bot)
 			return
 		end
 		local s_PositionTarget = p_Bot._RepairVehicleEntity.transform.trans:Clone() -- aim at vehicle
-		local s_PositionBot = p_Bot.m_Player.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(p_Bot.m_Player, false, false)
+		local s_PositionBot = p_Bot.m_Player.soldier.worldTransform.trans:Clone() +
+			m_Utilities:getCameraPos(p_Bot.m_Player, false, false)
 
 		local s_DifferenceZ = s_PositionTarget.z - s_PositionBot.z
 		local s_DifferenceX = s_PositionTarget.x - s_PositionBot.x
@@ -234,7 +233,8 @@ function BotAiming:UpdateAiming(p_Bot)
 		end
 
 		local s_PositionTarget = p_Bot._ShootPlayer.corpse.worldTransform.trans:Clone()
-		local s_PositionBot = p_Bot.m_Player.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(p_Bot.m_Player, false, false)
+		local s_PositionBot = p_Bot.m_Player.soldier.worldTransform.trans:Clone() +
+			m_Utilities:getCameraPos(p_Bot.m_Player, false, false)
 
 		local s_DifferenceZ = s_PositionTarget.z - s_PositionBot.z
 		local s_DifferenceX = s_PositionTarget.x - s_PositionBot.x
@@ -251,11 +251,6 @@ function BotAiming:UpdateAiming(p_Bot)
 		p_Bot._TargetYaw = s_Yaw
 	end
 end
-
-
-
-
-
 
 if g_BotAiming == nil then
 	---@type BotAiming

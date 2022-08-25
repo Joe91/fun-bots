@@ -131,7 +131,8 @@ function Database:Update(p_TableName, p_Parameters, p_Where)
 
 	m_Logger:Write('UPDATE `' .. p_TableName .. '` SET ' .. s_Fields:join(',') .. ' WHERE `' .. p_Where .. '`=' .. s_Found)
 
-	return self:Query('UPDATE `' .. p_TableName .. '` SET ' .. s_Fields:join(', ') .. ' WHERE `' .. p_Where .. '`=\'' .. s_Found .. '\'')
+	return self:Query('UPDATE `' ..
+		p_TableName .. '` SET ' .. s_Fields:join(', ') .. ' WHERE `' .. p_Where .. '`=\'' .. s_Found .. '\'')
 end
 
 -- this is unused

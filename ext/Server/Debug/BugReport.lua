@@ -29,7 +29,9 @@ local DEBUG_REPORT_COOLDOWN = 60 * 1000 * 5 -- 5 minutes cooldown
 function BugReport:GenerateReport(p_Player)
 	-- Check if there is a current cooldown active, if so, return and tell the user.
 	if DEBUG_LAST_REPORT ~= nil and (DEBUG_LAST_REPORT - SharedUtils:GetTimeMS() > 0) then
-		ChatManager:Yell("A report was recently made, please wait " .. ReadableTimetamp((DEBUG_LAST_REPORT - SharedUtils:GetTimeMS()), TimeUnits.FIT, 1) .. " before creating a new report", 5.0, p_Player)
+		ChatManager:Yell("A report was recently made, please wait " ..
+			ReadableTimetamp((DEBUG_LAST_REPORT - SharedUtils:GetTimeMS()), TimeUnits.FIT, 1) .. " before creating a new report",
+			5.0, p_Player)
 		do return end
 	end
 
@@ -63,8 +65,10 @@ function BugReport:GenerateReport(p_Player)
 
 		-- Rate limiting, a limited amount of reports are allowed to be made within 24 hours.
 		if p_HttpResponse.status == 429 then
-			ChatManager:Yell("Too many bug reports created, try again in " .. ReadableTimetamp(s_Json.try_again, TimeUnits.FIT, 1), 5.0, p_Player)
-			print("[Debugger: Report] Failure to precheck for a bug report. Too many bug reports created, try again in " .. ReadableTimetamp(s_Json.try_again, TimeUnits.FIT, 0));
+			ChatManager:Yell("Too many bug reports created, try again in " .. ReadableTimetamp(s_Json.try_again, TimeUnits.FIT, 1)
+				, 5.0, p_Player)
+			print("[Debugger: Report] Failure to precheck for a bug report. Too many bug reports created, try again in " ..
+				ReadableTimetamp(s_Json.try_again, TimeUnits.FIT, 0));
 			do return end
 		end
 
@@ -105,7 +109,8 @@ function BugReport:GenerateReport(p_Player)
 			-- 403 forbidden contains a message why it's forbidden. Show to user.
 			if p_HttpResponse.status == 403 then
 				ChatManager:Yell("Failed to create bug report. Server returned: " .. s_Json.message, 5.0, p_Player)
-				print("[Debugger: Report] Failure to post a bug report. Returned HTTP code " .. p_HttpResponse.status .. " with message: " .. s_Json.message);
+				print("[Debugger: Report] Failure to post a bug report. Returned HTTP code " ..
+					p_HttpResponse.status .. " with message: " .. s_Json.message);
 				do return end
 			end
 
@@ -118,7 +123,8 @@ function BugReport:GenerateReport(p_Player)
 			end
 
 			ChatManager:Yell("Failed to create bug report. Returned HTTP code " .. p_HttpResponse.status, 5.0, p_Player)
-			print("[Debugger: Report] Failure to post a bug report. Returned HTTP code " .. p_HttpResponse.status .. " with message: " .. s_Json.message);
+			print("[Debugger: Report] Failure to post a bug report. Returned HTTP code " ..
+				p_HttpResponse.status .. " with message: " .. s_Json.message);
 		end)
 	end)
 end

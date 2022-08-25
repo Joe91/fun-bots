@@ -14,7 +14,6 @@ function BotMovement:__init()
 	-- nothing to do
 end
 
-
 function BotMovement:UpdateNormalMovement(p_Bot)
 	-- move along points
 	p_Bot._AttackModeMoveTimer = 0.0
@@ -48,7 +47,7 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 			if not p_Bot._InvertPathDirection then
 				s_NextPoint = m_NodeCollection:Get(p_Bot:_GetWayIndex(p_Bot._CurrentWayPoint + 1), p_Bot._PathIndex)
 
-				--[[if Config.DebugTracePaths then
+			--[[if Config.DebugTracePaths then
 					NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', p_Bot._PathIndex, p_Bot:_GetWayIndex(p_Bot._CurrentWayPoint + 1), p_Bot.m_Player.soldier.worldTransform.trans, (p_Bot._ObstaceSequenceTimer > 0.0), "Green")
 				end--]]
 			else
@@ -111,7 +110,7 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 
 			if Config.ZombieMode then
 				if p_Bot._ZombieSpeedValue == BotMoveSpeeds.NoMovement then
-					if MathUtils:GetRandomInt(0,1) == 1 then
+					if MathUtils:GetRandomInt(0, 1) == 1 then
 						p_Bot._ZombieSpeedValue = BotMoveSpeeds.SlowCrouch
 					else
 						p_Bot._ZombieSpeedValue = BotMoveSpeeds.VerySlowProne
@@ -134,7 +133,7 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 						p_Bot.m_YawOffset = 0.0
 					else
 						p_Bot._SidewardsTimer = MathUtils:GetRandom(Config.MinMoveCycle, Config.MaxSideCycle)
-						if MathUtils:GetRandomInt(0, 1) > 0 then-- random direction
+						if MathUtils:GetRandomInt(0, 1) > 0 then -- random direction
 							p_Bot.m_StrafeValue = 1.0
 						else
 							p_Bot.m_StrafeValue = -1.0
@@ -201,7 +200,7 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 				elseif p_Bot._ObstaceSequenceTimer > 0.4 then --step 2
 					p_Bot._TargetPitch = 0.0
 
-					if (MathUtils:GetRandomInt(0,1) == 1) then
+					if (MathUtils:GetRandomInt(0, 1) == 1) then
 						p_Bot:_SetInput(EntryInputActionEnum.EIAStrafe, 1.0 * Config.SpeedFactor)
 					else
 						p_Bot:_SetInput(EntryInputActionEnum.EIAStrafe, -1.0 * Config.SpeedFactor)
@@ -222,15 +221,15 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 
 					-- teleport to target
 					s_NoStuckReset = true
-					if Config.TeleportIfStuck and (MathUtils:GetRandomInt(0,100) <= Registry.BOT.PROBABILITY_TELEPORT_IF_STUCK) then
+					if Config.TeleportIfStuck and (MathUtils:GetRandomInt(0, 100) <= Registry.BOT.PROBABILITY_TELEPORT_IF_STUCK) then
 						local s_Transform = p_Bot.m_Player.soldier.worldTransform:Clone()
 						s_Transform.trans = p_Bot._TargetPoint.Position
 						s_Transform:LookAtTransform(p_Bot._TargetPoint.Position, p_Bot._NextTargetPoint.Position)
 						p_Bot.m_Player.soldier:SetTransform(s_Transform)
-						m_Logger:Write("tepeported "..p_Bot.m_Player.name)
+						m_Logger:Write("tepeported " .. p_Bot.m_Player.name)
 					else
 						if not p_Bot.m_InVehicle then
-							s_PointIncrement = MathUtils:GetRandomInt(-5,5) -- go 5 points further
+							s_PointIncrement = MathUtils:GetRandomInt(-5, 5) -- go 5 points further
 							-- experimental
 							if s_PointIncrement == 0 then -- we can't have this
 								s_PointIncrement = -2 --go backwards and try again
@@ -238,7 +237,8 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 
 							if (Globals.IsConquest or Globals.IsRush) then
 								if g_GameDirector:IsOnObjectivePath(p_Bot._PathIndex) then
-									p_Bot._InvertPathDirection = (MathUtils:GetRandomInt(0,100) <= Registry.BOT.PROBABILITY_CHANGE_DIRECTION_IF_STUCK)
+									p_Bot._InvertPathDirection = (
+										MathUtils:GetRandomInt(0, 100) <= Registry.BOT.PROBABILITY_CHANGE_DIRECTION_IF_STUCK)
 								end
 							end
 						end
@@ -248,7 +248,7 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 				if p_Bot._StuckTimer > 15.0 then
 					p_Bot.m_Player.soldier:Kill()
 
-					m_Logger:Write(p_Bot.m_Player.name.." got stuck. Kill")
+					m_Logger:Write(p_Bot.m_Player.name .. " got stuck. Kill")
 
 					return
 				end
@@ -269,7 +269,8 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 						local s_PointBefore = m_NodeCollection:Get(s_ActivePointIndex - i, p_Bot._PathIndex)
 						local s_PointAfter = m_NodeCollection:Get(s_ActivePointIndex + i, p_Bot._PathIndex)
 
-						if (s_PointBefore ~= nil and s_PointBefore.ExtraMode == 1) or (s_PointAfter ~= nil and s_PointAfter.ExtraMode == 1) then
+						if (s_PointBefore ~= nil and s_PointBefore.ExtraMode == 1) or (s_PointAfter ~= nil and s_PointAfter.ExtraMode == 1
+							) then
 							s_JumpValid = true
 							break
 						end
@@ -327,7 +328,8 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 					-- CHECK FOR PATH-SWITCHES
 					local s_NewWaypoint = nil
 					local s_SwitchPath = false
-					s_SwitchPath, s_NewWaypoint = m_PathSwitcher:GetNewPath(p_Bot.m_Name, s_Point, p_Bot._Objective, p_Bot.m_InVehicle, p_Bot.m_Player.teamId, nil)
+					s_SwitchPath, s_NewWaypoint = m_PathSwitcher:GetNewPath(p_Bot.m_Name, s_Point, p_Bot._Objective, p_Bot.m_InVehicle,
+						p_Bot.m_Player.teamId, nil)
 
 					if p_Bot.m_Player.soldier == nil then
 						return
@@ -340,7 +342,7 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 							p_Bot._InvertPathDirection = (s_Direction == 'Previous')
 						else
 							-- random path direction on switch
-							p_Bot._InvertPathDirection = MathUtils:GetRandomInt(1,2) == 1
+							p_Bot._InvertPathDirection = MathUtils:GetRandomInt(1, 2) == 1
 						end
 
 						p_Bot._PathIndex = s_NewWaypoint.PathIndex
@@ -380,7 +382,7 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 				end
 			end
 		end
-	--else -- no point: do nothing
+		--else -- no point: do nothing
 	end
 end
 
@@ -428,7 +430,9 @@ function BotMovement:UpdateShootMovement(p_Bot)
 	end
 
 	--crouch moving (only mode with modified gun)
-	if ((p_Bot.m_ActiveWeapon.type == WeaponTypes.Sniper or p_Bot.m_ActiveWeapon.type == WeaponTypes.Rocket) and not p_Bot.m_KnifeMode) then --don't move while shooting in a vehicle
+	if (
+		(p_Bot.m_ActiveWeapon.type == WeaponTypes.Sniper or p_Bot.m_ActiveWeapon.type == WeaponTypes.Rocket) and
+			not p_Bot.m_KnifeMode) then --don't move while shooting in a vehicle
 		if p_Bot._AttackMode == BotAttackModes.Crouch then
 			if p_Bot.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Crouch then
 				p_Bot.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Crouch, true, true)
@@ -460,7 +464,8 @@ function BotMovement:UpdateShootMovement(p_Bot)
 		end
 
 		if #p_Bot._ShootWayPoints > s_TargetCycles and Config.JumpWhileShooting then
-			local s_DistanceDone = p_Bot._ShootWayPoints[#p_Bot._ShootWayPoints].Position:Distance(p_Bot._ShootWayPoints[#p_Bot._ShootWayPoints-s_TargetCycles].Position)
+			local s_DistanceDone = p_Bot._ShootWayPoints[#p_Bot._ShootWayPoints].Position:Distance(p_Bot._ShootWayPoints[
+				#p_Bot._ShootWayPoints - s_TargetCycles].Position)
 			if s_DistanceDone < 0.5 then --no movement was possible. Try to jump over obstacle
 				p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.Normal
 				p_Bot:_SetInput(EntryInputActionEnum.EIAJump, 1)
@@ -482,7 +487,6 @@ function BotMovement:UpdateShootMovement(p_Bot)
 		p_Bot._AttackModeMoveTimer = p_Bot._AttackModeMoveTimer + Registry.BOT.BOT_UPDATE_CYCLE
 	end
 end
-
 
 function BotMovement:UpdateSpeedOfMovement(p_Bot)
 	-- additional movement
@@ -519,7 +523,8 @@ function BotMovement:UpdateSpeedOfMovement(p_Bot)
 	end
 
 	-- do not reduce speed if sprinting
-	if s_SpeedVal > 0 and p_Bot._ShootPlayer ~= nil and p_Bot._ShootPlayer.soldier ~= nil and p_Bot.m_ActiveSpeedValue <= BotMoveSpeeds.Normal then
+	if s_SpeedVal > 0 and p_Bot._ShootPlayer ~= nil and p_Bot._ShootPlayer.soldier ~= nil and
+		p_Bot.m_ActiveSpeedValue <= BotMoveSpeeds.Normal then
 		s_SpeedVal = s_SpeedVal * Config.SpeedFactorAttack
 	end
 
@@ -591,9 +596,9 @@ function BotMovement:UpdateYaw(p_Bot)
 	s_DeltaYaw = p_Bot.m_Player.input.authoritativeAimingYaw - p_Bot._TargetYaw
 
 	if s_DeltaYaw > math.pi then
-		s_DeltaYaw = s_DeltaYaw - 2*math.pi
+		s_DeltaYaw = s_DeltaYaw - 2 * math.pi
 	elseif s_DeltaYaw < -math.pi then
-		s_DeltaYaw = s_DeltaYaw + 2*math.pi
+		s_DeltaYaw = s_DeltaYaw + 2 * math.pi
 	end
 
 	local s_AbsDeltaYaw = math.abs(s_DeltaYaw)
@@ -622,7 +627,6 @@ function BotMovement:UpdateYaw(p_Bot)
 
 end
 
-
 function BotMovement:UpdateStaticMovement(p_Bot)
 	-- mimicking
 	if p_Bot.m_ActiveMoveMode == BotMoveModes.Mimic and p_Bot._TargetPlayer ~= nil then
@@ -641,11 +645,11 @@ function BotMovement:UpdateStaticMovement(p_Bot)
 			p_Bot:_SetInput(i, p_Bot._TargetPlayer.input:GetLevel(i))
 		end
 
-		p_Bot._TargetYaw = p_Bot._TargetPlayer.input.authoritativeAimingYaw + ((p_Bot._TargetPlayer.input.authoritativeAimingYaw > math.pi) and -math.pi or math.pi)
+		p_Bot._TargetYaw = p_Bot._TargetPlayer.input.authoritativeAimingYaw +
+			((p_Bot._TargetPlayer.input.authoritativeAimingYaw > math.pi) and -math.pi or math.pi)
 		p_Bot._TargetPitch = p_Bot._TargetPlayer.input.authoritativeAimingPitch
 	end
 end
-
 
 if g_BotMovement == nil then
 	---@type BotMovement

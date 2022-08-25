@@ -94,7 +94,8 @@ function PermissionManager:AddPermission(p_Name, p_Permission)
 		table.insert(self.m_Permissions[p_Name], p_Permission)
 	end
 
-	local s_Single = m_Database:Single('SELECT * FROM `FB_Permissions` WHERE `PlayerName`=\'' .. p_Name .. '\' AND `Value`=\'' .. p_Permission .. '\' LIMIT 1')
+	local s_Single = m_Database:Single('SELECT * FROM `FB_Permissions` WHERE `PlayerName`=\'' ..
+		p_Name .. '\' AND `Value`=\'' .. p_Permission .. '\' LIMIT 1')
 	local s_Guid = 0
 
 	if s_Player ~= nil then
@@ -204,7 +205,8 @@ function PermissionManager:HasPermission(p_Player, p_Permission)
 		end
 
 		-- Simple Check
-		if s_Permissions[i]:lower() == p_Permission:lower() or s_Permissions[i] == '*' or s_Permissions[i]:lower() == p_Permission:lower() .. '.*' then
+		if s_Permissions[i]:lower() == p_Permission:lower() or s_Permissions[i] == '*' or
+			s_Permissions[i]:lower() == p_Permission:lower() .. '.*' then
 			s_Result = true
 		end
 

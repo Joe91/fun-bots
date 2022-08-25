@@ -59,7 +59,8 @@ function AirTargets:GetTarget(p_Player)
 		local s_TargetPlayer = PlayerManager:GetPlayerByName(l_Target)
 
 		if s_TargetPlayer ~= nil and s_TargetPlayer.teamId ~= s_Team and s_TargetPlayer.soldier ~= nil then
-			local s_CurrentDistance = p_Player.controlledControllable.transform.trans:Distance(s_TargetPlayer.controlledControllable.transform.trans)
+			local s_CurrentDistance = p_Player.controlledControllable.transform.trans:Distance(s_TargetPlayer.controlledControllable
+				.transform.trans)
 
 			if s_ClosestDistance == nil then
 				if s_CurrentDistance < Config.MaxDistanceAABots then
