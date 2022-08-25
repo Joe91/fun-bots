@@ -31,16 +31,19 @@ function BotAiming:UpdateAiming(p_Bot)
 			s_FullPositionTarget = p_Bot._ShootPlayer.controlledControllable.transform.trans:Clone()
 		else
 			local s_AimForHead = false
+			local s_AdditionalOffset = Vec3.zero
 			if p_Bot.m_ActiveWeapon.type == WeaponTypes.Sniper then
 				s_AimForHead = Config.AimForHeadSniper
 			elseif p_Bot.m_ActiveWeapon.type == WeaponTypes.LMG then
 				s_AimForHead = Config.AimForHeadSupport
+				s_AdditionalOffset = Vec3(0.0, -0.5, 0.0) -- aim lower for recoil-compensation
 			else
 				s_AimForHead = Config.AimForHead
 			end
 
 			s_FullPositionTarget = p_Bot._ShootPlayer.soldier.worldTransform.trans:Clone()
-			s_FullPositionTarget = s_FullPositionTarget + m_Utilities:getCameraPos(p_Bot._ShootPlayer, true, s_AimForHead)
+			s_FullPositionTarget = s_FullPositionTarget + m_Utilities:getCameraPos(p_Bot._ShootPlayer, true, s_AimForHead) +
+				s_AdditionalOffset
 		end
 
 		if p_Bot._ShootPlayerVehicleType == VehicleTypes.NoVehicle then
