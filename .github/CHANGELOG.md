@@ -18,6 +18,7 @@ This is the changelog for the version V2.6.0. Don't forget to [join us on Discor
 * simplify permissions. No need to be on the server anymore
 * REAL AIMING OF BOTS Thanks to Bree_Arnold!!! Please use the dev-version of VU
 * Recoil-Compensation added for all Bots
+* keep Skill of Bot for whole game
 * restructurisation of Bot.lua-Class
 
 ### Bug fixes

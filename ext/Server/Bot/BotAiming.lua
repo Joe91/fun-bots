@@ -23,6 +23,7 @@ function BotAiming:UpdateAiming(p_Bot)
 		local s_PitchCorrection = 0.0
 		local s_FullPositionTarget = nil
 		local s_FullPositionBot = nil
+		local s_Skil = p_Bot._Skill
 
 		s_FullPositionBot = p_Bot.m_Player.soldier.worldTransform.trans:Clone() +
 			m_Utilities:getCameraPos(p_Bot.m_Player, false, false)
@@ -34,6 +35,7 @@ function BotAiming:UpdateAiming(p_Bot)
 			local s_AdditionalOffset = Vec3.zero
 			if p_Bot.m_ActiveWeapon.type == WeaponTypes.Sniper then
 				s_AimForHead = Config.AimForHeadSniper
+				s_Skil = p_Bot._SkillSniper
 			elseif p_Bot.m_ActiveWeapon.type == WeaponTypes.LMG then
 				s_AimForHead = Config.AimForHeadSupport
 			else
@@ -182,7 +184,7 @@ function BotAiming:UpdateAiming(p_Bot)
 
 		-- worsen yaw and pitch depending on bot-skill. Don't use Skill for Nades and Rockets.
 		if p_Bot.m_ActiveWeapon.type ~= WeaponTypes.Grenade and p_Bot.m_ActiveWeapon.type ~= WeaponTypes.Rocket then
-			local s_SkillFactor = p_Bot._Skill / p_Bot._DistanceToPlayer
+			local s_SkillFactor = s_Skil / p_Bot._DistanceToPlayer
 			local s_WorseningSkillX = (MathUtils:GetRandom(-1.0, 1.0) * s_SkillFactor) -- value scaled in offset in 1m
 			local s_WorseningSkillY = (MathUtils:GetRandom(-1.0, 1.0) * s_SkillFactor) -- value scaled in offset in 1m
 

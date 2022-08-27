@@ -419,9 +419,9 @@ function FunBotUIServer:_writeSettings(p_Player, p_Request)
 	end
 
 	local temporary = false
-	local updateWeapons = false
 	local updateBotTeamAndNumber = false
 	local updateWeaponSets = false
+	local resetSkill = false
 	local calcYawPerFrame = false
 	local updateLanguage = false
 	local updateMaxBots = false
@@ -509,8 +509,8 @@ function FunBotUIServer:_writeSettings(p_Player, p_Request)
 			if s_Changed then
 				if l_Item.UpdateFlag == UpdateFlag.WeaponSets then
 					updateWeaponSets = true
-				elseif l_Item.UpdateFlag == UpdateFlag.Weapons then
-					updateWeapons = true
+				elseif l_Item.UpdateFlag == UpdateFlag.Skill then
+					resetSkill = true
 				elseif l_Item.UpdateFlag == UpdateFlag.YawPerSec then
 					calcYawPerFrame = true
 				elseif l_Item.UpdateFlag == UpdateFlag.AmountAndTeam then
@@ -544,6 +544,10 @@ function FunBotUIServer:_writeSettings(p_Player, p_Request)
 	-- update Weapons if needed
 	if updateWeaponSets then
 		WeaponList:UpdateWeaponList()
+	end
+
+	if resetSkill then
+		BotManager:ResetSkills()
 	end
 
 	if calcYawPerFrame then

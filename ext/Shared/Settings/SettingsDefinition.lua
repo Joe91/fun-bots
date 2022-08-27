@@ -119,7 +119,7 @@ SettingsDefinition = {
 			Description = "Variation of the skill of a single bot. the higher, the worse the bots can get compared to the original settings",
 			Reference = Range(0.00, 1.00, 0.05),
 			Default = 0.50,
-			UpdateFlag = UpdateFlag.None,
+			UpdateFlag = UpdateFlag.Skill,
 			Category = "DIFFICULTY"
 		},
 		{
@@ -131,7 +131,7 @@ SettingsDefinition = {
 			Description = "See BotWorseningSkill - only for BOTs using sniper bolt-action rifles.",
 			Reference = Range(0.00, 1.00, 0.05),
 			Default = 0.50,
-			UpdateFlag = UpdateFlag.None,
+			UpdateFlag = UpdateFlag.Skill,
 			Category = "DIFFICULTY"
 		},
 		{
