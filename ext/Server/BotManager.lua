@@ -279,7 +279,8 @@ function BotManager:OnSoldierDamage(p_HookCtx, p_Soldier, p_Info, p_GiverInfo)
 				p_Info.damage = self:_GetDamageValue(p_Info.damage, s_Bot, p_Soldier, true)
 				p_Info.boneIndex = 0
 				p_Info.isBulletDamage = true
-				p_Info.position = Vec3(p_Soldier.worldTransform.trans.x, p_Soldier.worldTransform.trans.y + 1, p_Soldier.worldTransform.trans.z)
+				p_Info.position = Vec3(p_Soldier.worldTransform.trans.x, p_Soldier.worldTransform.trans.y + 1,
+					p_Soldier.worldTransform.trans.z)
 				p_Info.direction = p_Soldier.worldTransform.trans - s_Bot.m_Player.soldier.worldTransform.trans
 				p_Info.origin = s_Bot.m_Player.soldier.worldTransform.trans
 
@@ -1043,7 +1044,8 @@ end
 
 ---@param p_Player Player
 function BotManager:RepairVehicle(p_Player)
-	if p_Player ~= nil and p_Player.soldier ~= nil and p_Player.controlledControllable ~= nil and not p_Player.controlledControllable:Is("ServerSoldierEntity") then
+	if p_Player ~= nil and p_Player.soldier ~= nil and p_Player.controlledControllable ~= nil and
+		not p_Player.controlledControllable:Is("ServerSoldierEntity") then
 		-- find bots in range
 		local s_BotsInRange = {}
 
@@ -1203,7 +1205,8 @@ function BotManager:_CheckForBotBotAttack()
 						if not self._ConnectionCheckState[s_ConnectionValue] then
 							self._ConnectionCheckState[s_ConnectionValue] = true
 							-- check distance
-							local s_Distance = s_Bot.m_Player.soldier.worldTransform.trans:Distance(s_EnemyBot.m_Player.soldier.worldTransform.trans)
+							local s_Distance = s_Bot.m_Player.soldier.worldTransform.trans:Distance(s_EnemyBot.m_Player.soldier.worldTransform
+								.trans)
 							s_ChecksDone = s_ChecksDone + 1
 							local s_MaxDistance = s_Bot:GetAttackDistance()
 							local s_MaxDistanceEnemyBot = s_EnemyBot:GetAttackDistance()
@@ -1291,8 +1294,10 @@ function BotManager:_GetDamageValue(p_Damage, p_Bot, p_Soldier, p_Fake)
 			elseif s_Distance <= p_Bot.m_ActiveWeapon.damageFalloffStartDistance then
 				s_ResultDamage = p_Bot.m_ActiveWeapon.damage
 			else -- extrapolate damage
-				local s_RelativePosition = (s_Distance - p_Bot.m_ActiveWeapon.damageFalloffStartDistance) / (p_Bot.m_ActiveWeapon.damageFalloffEndDistance - p_Bot.m_ActiveWeapon.damageFalloffStartDistance)
-				s_ResultDamage = p_Bot.m_ActiveWeapon.damage - (s_RelativePosition * (p_Bot.m_ActiveWeapon.damage - p_Bot.m_ActiveWeapon.endDamage))
+				local s_RelativePosition = (s_Distance - p_Bot.m_ActiveWeapon.damageFalloffStartDistance) /
+					(p_Bot.m_ActiveWeapon.damageFalloffEndDistance - p_Bot.m_ActiveWeapon.damageFalloffStartDistance)
+				s_ResultDamage = p_Bot.m_ActiveWeapon.damage -
+					(s_RelativePosition * (p_Bot.m_ActiveWeapon.damage - p_Bot.m_ActiveWeapon.endDamage))
 			end
 
 			if p_Damage == 2 then

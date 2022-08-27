@@ -227,7 +227,8 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle, p
 			if Globals.IsRush then
 				local s_TopObjective = m_GameDirector:_GetObjectiveFromSubObj(p_Objective)
 
-				if s_TopObjective ~= nil and s_CurrentPathStatus == 0 and s_CountNew == 1 and s_TopObjective == s_PathNode.Data.Objectives[1] then
+				if s_TopObjective ~= nil and s_CurrentPathStatus == 0 and s_CountNew == 1 and
+					s_TopObjective == s_PathNode.Data.Objectives[1] then
 					s_SwitchAnyways = true
 				end
 			end
@@ -244,7 +245,8 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle, p
 					Base = s_NewBasePath
 				})
 			else
-				if s_CountOld == 1 and s_CountNew == 1 and p_Objective ~= "" and s_CurrentPathFirst.Data.Objectives[1] ~= p_Objective and
+				if s_CountOld == 1 and s_CountNew == 1 and p_Objective ~= "" and s_CurrentPathFirst.Data.Objectives[1] ~= p_Objective
+					and
 					s_CurrentPathFirst.Data.Objectives[1] == s_PathNode.Data.Objectives[1] then
 					--path has same objective. Maybe a switch can help to find the new one
 					table.insert(s_Paths, {
@@ -298,7 +300,8 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle, p
 				return false
 			end
 
-			m_Logger:Write('found multiple higher priority s_ValidPaths | Priority: ( ' .. s_CurrentPriority .. ' | ' .. s_HighestPriority .. ' )')
+			m_Logger:Write('found multiple higher priority s_ValidPaths | Priority: ( ' ..
+				s_CurrentPriority .. ' | ' .. s_HighestPriority .. ' )')
 
 			return true, s_RandomPath.Point
 		end

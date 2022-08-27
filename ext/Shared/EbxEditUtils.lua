@@ -164,7 +164,8 @@ function EbxEditUtils:ValidateValue(p_ArgValue, p_ArgParams)
 				string.lower(p_ArgValue) == 'true' or string.lower(p_ArgValue) == 'false' or
 				string.lower(p_ArgValue) == 'y' or string.lower(p_ArgValue) == 'n' then
 				-- the value still needs to be a string, but let's normalise it
-				local s_BoolToString = tostring((p_ArgValue == '1' or string.lower(p_ArgValue) == 'true' or string.lower(p_ArgValue) == 'y'))
+				local s_BoolToString = tostring((
+					p_ArgValue == '1' or string.lower(p_ArgValue) == 'true' or string.lower(p_ArgValue) == 'y'))
 				return (s_BoolToString == 'true'), true
 			end
 		end
@@ -225,7 +226,9 @@ function EbxEditUtils:FormatMemberName(p_MemberName)
 			s_Continue = true
 		end
 
-		if i < s_MemberLength - 1 and (self:StringIsLower(p_MemberName:sub(i + 1, i + 1)) or self:StringIsDigit(p_MemberName:sub(i + 1, i + 1))) and not s_Continue then
+		if i < s_MemberLength - 1 and
+			(self:StringIsLower(p_MemberName:sub(i + 1, i + 1)) or self:StringIsDigit(p_MemberName:sub(i + 1, i + 1))) and
+			not s_Continue then
 			s_FoundLower = true
 
 			if i > 1 then

@@ -203,20 +203,26 @@ function FunBotUIClient:_onUISettings(p_Data)
 				end
 			end
 
-			settings:addList(l_Item.Category, l_Item.Name, Language:I18N(l_Item.Text), s_EnumTable, s_Value, s_Default, Language:I18N(l_Item.Description))
+			settings:addList(l_Item.Category, l_Item.Name, Language:I18N(l_Item.Text), s_EnumTable, s_Value, s_Default,
+				Language:I18N(l_Item.Description))
 		elseif l_Item.Type == Type.List then
-			settings:addList(l_Item.Category, l_Item.Name, Language:I18N(l_Item.Text), l_Item.Reference, p_Data[l_Item.Name], l_Item.Default, Language:I18N(l_Item.Description))
+			settings:addList(l_Item.Category, l_Item.Name, Language:I18N(l_Item.Text), l_Item.Reference, p_Data[l_Item.Name],
+				l_Item.Default, Language:I18N(l_Item.Description))
 		elseif l_Item.Type == Type.DynamicList then
-			settings:addList(l_Item.Category, l_Item.Name, Language:I18N(l_Item.Text), _G[l_Item.Reference], p_Data[l_Item.Name], l_Item.Default, Language:I18N(l_Item.Description))
+			settings:addList(l_Item.Category, l_Item.Name, Language:I18N(l_Item.Text), _G[l_Item.Reference], p_Data[l_Item.Name],
+				l_Item.Default, Language:I18N(l_Item.Description))
 		elseif l_Item.Type == Type.Integer then
 			s_TypeString = "Integer"
-			settings:add(l_Item.Category, s_TypeString, l_Item.Name, Language:I18N(l_Item.Text), p_Data[l_Item.Name], l_Item.Default, Language:I18N(l_Item.Description))
+			settings:add(l_Item.Category, s_TypeString, l_Item.Name, Language:I18N(l_Item.Text), p_Data[l_Item.Name],
+				l_Item.Default, Language:I18N(l_Item.Description))
 		elseif l_Item.Type == Type.Float then
 			s_TypeString = "Float"
-			settings:add(l_Item.Category, s_TypeString, l_Item.Name, Language:I18N(l_Item.Text), p_Data[l_Item.Name], l_Item.Default, Language:I18N(l_Item.Description))
+			settings:add(l_Item.Category, s_TypeString, l_Item.Name, Language:I18N(l_Item.Text), p_Data[l_Item.Name],
+				l_Item.Default, Language:I18N(l_Item.Description))
 		elseif l_Item.Type == Type.Boolean then
 			s_TypeString = "Boolean"
-			settings:add(l_Item.Category, s_TypeString, l_Item.Name, Language:I18N(l_Item.Text), p_Data[l_Item.Name], l_Item.Default, Language:I18N(l_Item.Description))
+			settings:add(l_Item.Category, s_TypeString, l_Item.Name, Language:I18N(l_Item.Text), p_Data[l_Item.Name],
+				l_Item.Default, Language:I18N(l_Item.Description))
 		end
 	end
 
@@ -309,9 +315,11 @@ function FunBotUIClient:OnClientUpdateInput(p_DeltaTime)
 	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_LeftAlt) and self.m_InWaypointEditor then
 		self._views:disable()
 		self.m_LastWaypointEditorState = false
-	elseif InputManager:WentKeyDown(Registry.COMMON.BOT_COMMAND_KEY) and not self.m_InWaypointEditor and not self.m_InCommScreen and not self.m_WaitForKeyLeft then
+	elseif InputManager:WentKeyDown(Registry.COMMON.BOT_COMMAND_KEY) and not self.m_InWaypointEditor and
+		not self.m_InCommScreen and not self.m_WaitForKeyLeft then
 		NetEvents:Send('UI_Request_CommoRose_Show')
-	elseif InputManager:WentKeyUp(Registry.COMMON.BOT_COMMAND_KEY) and not self.m_InWaypointEditor and (self.m_InCommScreen or self.m_WaitForKeyLeft) then
+	elseif InputManager:WentKeyUp(Registry.COMMON.BOT_COMMAND_KEY) and not self.m_InWaypointEditor and
+		(self.m_InCommScreen or self.m_WaitForKeyLeft) then
 		if self.m_InCommScreen then
 			self:_onUICommonRose("false") --TODO: Remove Permission-Check?
 		end

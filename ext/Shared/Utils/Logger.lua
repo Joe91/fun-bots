@@ -10,7 +10,8 @@ function Logger:__init(p_ClassName, p_ActivateLogging)
 		error("Logger: Wrong arguments creating object, className is not a string. ClassName: " .. tostring(p_ClassName))
 		return
 	elseif type(p_ActivateLogging) ~= "boolean" then
-		error("Logger: Wrong arguments creating object, ActivateLogging is not a boolean. ActivateLogging: " .. tostring(p_ActivateLogging))
+		error("Logger: Wrong arguments creating object, ActivateLogging is not a boolean. ActivateLogging: " ..
+			tostring(p_ActivateLogging))
 		return
 	end
 

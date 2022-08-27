@@ -106,7 +106,8 @@ function GameDirector:OnCapturePointCaptured(p_CapturePoint)
 	for l_BotTeam, l_Bots in pairs(self.m_BotsByTeam) do
 		for i = 1, #l_Bots do
 			if l_Bots[i]:GetObjective() == s_Objective.name and s_Objective.team == l_BotTeam then
-				m_Logger:Write('Bot completed objective: ' .. l_Bots[i].m_Name .. ' (team: ' .. l_BotTeam .. ') -> ' .. s_Objective.name)
+				m_Logger:Write('Bot completed objective: ' ..
+					l_Bots[i].m_Name .. ' (team: ' .. l_BotTeam .. ') -> ' .. s_Objective.name)
 
 				l_Bots[i]:SetObjective()
 				s_Objective.assigned[l_BotTeam] = math.max(s_Objective.assigned[l_BotTeam] - 1, 0)
@@ -174,7 +175,8 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 	local s_AvailableObjectives = {}
 
 	for _, l_Objective in pairs(self.m_AllObjectives) do
-		if not l_Objective.subObjective and not l_Objective.isBase and l_Objective.active and not l_Objective.destroyed and not l_Objective.isEnterVehiclePath then
+		if not l_Objective.subObjective and not l_Objective.isBase and l_Objective.active and not l_Objective.destroyed and
+			not l_Objective.isEnterVehiclePath then
 			for i = 1, Globals.NrOfTeams do
 				if s_AvailableObjectives[i] == nil then
 					s_AvailableObjectives[i] = 0
@@ -259,7 +261,8 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 				if s_ClosestObjective ~= nil then
 					local s_Objective = self:_GetObjectiveObject(s_ClosestObjective)
 					l_Bot:SetObjective(s_ClosestObjective)
-					m_Logger:Write("Team " .. tostring(l_BotTeam) .. " with " .. l_Bot.m_Name .. " gets this objective: " .. s_ClosestObjective)
+					m_Logger:Write("Team " ..
+						tostring(l_BotTeam) .. " with " .. l_Bot.m_Name .. " gets this objective: " .. s_ClosestObjective)
 					s_Objective.assigned[l_BotTeam] = s_Objective.assigned[l_BotTeam] + 1
 				end
 			else
@@ -384,7 +387,8 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 		return -- no vehicle found
 	end
 
-	if not Config.UseAirVehicles and (s_VehicleData.Type == VehicleTypes.Plane or s_VehicleData.Type == VehicleTypes.Chopper) then
+	if not Config.UseAirVehicles and
+		(s_VehicleData.Type == VehicleTypes.Plane or s_VehicleData.Type == VehicleTypes.Chopper) then
 		return -- not allowed to use
 	end
 
@@ -684,7 +688,8 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 	local s_ReferenceObjectivesEnemy = {}
 
 	for _, l_ReferenceObjective in pairs(self.m_AllObjectives) do
-		if not l_ReferenceObjective.isEnterVehiclePath and not l_ReferenceObjective.isBase and not l_ReferenceObjective.isSpawnPath then
+		if not l_ReferenceObjective.isEnterVehiclePath and not l_ReferenceObjective.isBase and
+			not l_ReferenceObjective.isSpawnPath then
 			if l_ReferenceObjective.team == TeamId.TeamNeutral then
 				table.insert(s_ReferenceObjectivesNeutral, l_ReferenceObjective)
 				break
@@ -750,7 +755,8 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 						end
 					end
 				end
-			elseif l_Objective.team ~= p_TeamId and l_Objective.isBase and not l_Objective.active and l_Objective.name == self.m_RushAttackingBase then --rush attacking team
+			elseif l_Objective.team ~= p_TeamId and l_Objective.isBase and not l_Objective.active and
+				l_Objective.name == self.m_RushAttackingBase then --rush attacking team
 				table.insert(s_RushConvertedBases, l_Path)
 			end
 
@@ -761,7 +767,8 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 
 	-- spawn in base from time to time to get a vehicle
 	-- TODO: do this dependant of vehicle available
-	if not p_OnlyBase and #s_PossibleBases > 0 and MathUtils:GetRandomInt(1, 100) <= Registry.BOT_SPAWN.PROBABILITY_BASE_SPAWN then
+	if not p_OnlyBase and #s_PossibleBases > 0 and
+		MathUtils:GetRandomInt(1, 100) <= Registry.BOT_SPAWN.PROBABILITY_BASE_SPAWN then
 		m_Logger:Write("spwawn at base because of randomness")
 		local s_PathIndex = s_PossibleBases[MathUtils:GetRandomInt(1, #s_PossibleBases)]
 		return s_PathIndex, MathUtils:GetRandomInt(1, #m_NodeCollection:Get(nil, s_PathIndex))
@@ -1216,7 +1223,8 @@ function GameDirector:_SetVehicleObjectiveState(p_Position, p_Value)
 	local s_ClosestVehicleEnterObjective = nil
 
 	for _, l_Waypoints in pairs(s_Paths) do
-		if l_Waypoints[1] ~= nil and l_Waypoints[1].Data ~= nil and l_Waypoints[1].Data.Objectives ~= nil and #l_Waypoints[1].Data.Objectives == 1 then
+		if l_Waypoints[1] ~= nil and l_Waypoints[1].Data ~= nil and l_Waypoints[1].Data.Objectives ~= nil and
+			#l_Waypoints[1].Data.Objectives == 1 then
 			local s_ObjectiveObject = self:_GetObjectiveObject(l_Waypoints[1].Data.Objectives[1])
 
 			if s_ObjectiveObject ~= nil and s_ObjectiveObject.active ~= p_Value and s_ObjectiveObject.isEnterVehiclePath then -- only check disabled objectives
