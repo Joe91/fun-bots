@@ -207,7 +207,6 @@ function BotAiming:UpdateAiming(p_Bot)
 				s_RecoilYaw = p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway.currentRecoilDeviation.yaw
 			end
 			-- recoil is negative --> add them
-			--print(s_RecoilPitch)
 
 			s_Yaw = s_Yaw + s_WorseningSkillX + s_WorseningClassX + s_RecoilYaw
 			s_Pitch = s_Pitch + s_WorseningSkillY + s_WorseningClassY + s_RecoilPitch

@@ -269,7 +269,6 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 						s_IgnoreYaw = true -- shoot, because you are near
 					end
 
-					-- NetEvents:SendLocal("Bot:ShootAtPlayer", s_Bot.name, s_IgnoreYaw)
 					table.insert(s_RaycastResultsToSend, {
 						Mode = "ShootAtPlayer",
 						Bot1 = s_Bot.name,
@@ -321,7 +320,6 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 				if self:DoRaycast(s_PlayerPosition, s_Target, false, false) then
 					-- we found a valid bot in Sight (either no hit, or player-hit). Signal Server with players
-					-- NetEvents:SendLocal("Bot:RevivePlayer", s_Bot.name)
 					table.insert(s_RaycastResultsToSend, {
 						Mode = "RevivePlayer",
 						Bot1 = s_Bot.name,
