@@ -801,7 +801,7 @@ end
 ---@param p_ReducedTiming boolean
 ---@return number
 function Bot:GetFirstShotDelay(p_DistanceToTarget, p_ReducedTiming)
-	local s_Delay = (Config.BotFirstShotDelay + self._Skill) -- slower reaction with lower skill. Always use "Skill" for this (independant of Sniper)
+	local s_Delay = (Config.BotFirstShotDelay + (math.random() * self._Skill)) -- slower reaction with lower skill. Always use "Skill" for this (independant of Sniper)
 
 	if p_ReducedTiming then
 		s_Delay = s_Delay * 0.6
