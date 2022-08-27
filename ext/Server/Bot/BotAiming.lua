@@ -201,17 +201,27 @@ function BotAiming:UpdateAiming(p_Bot)
 			local s_WorseningClassX = (MathUtils:GetRandom(-1.0, 1.0) * s_WorseningClassFactor)
 			local s_WorseningClassY = (MathUtils:GetRandom(-1.0, 1.0) * s_WorseningClassFactor)
 
-			local s_RecoilPitch = 0.0
-			local s_RecoilYaw = 0.0
+			local s_RecoilCompensationPitch = 0.0
+			local s_RecoilCompensationYaw = 0.0
 			-- compensate recoil
 			if p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway ~= nil then
-				s_RecoilPitch = p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway.currentRecoilDeviation.pitch
-				s_RecoilYaw = p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway.currentRecoilDeviation.yaw
-			end
-			-- recoil is negative --> add them
+				s_RecoilCompensationPitch = p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway.currentRecoilDeviation
+					.pitch
+				s_RecoilCompensationYaw = p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway.currentRecoilDeviation
+					.yaw
 
-			s_Yaw = s_Yaw + s_WorseningSkillX + s_WorseningClassX + s_RecoilYaw
-			s_Pitch = s_Pitch + s_WorseningSkillY + s_WorseningClassY + s_RecoilPitch
+				-- worsen compensation dependant of skill?
+				local s_SkillFactorRecoil = (1.0 - s_Skil)
+				if s_SkillFactorRecoil < 0 then
+					s_SkillFactorRecoil = 0.0
+				end
+				s_RecoilCompensationPitch = s_RecoilCompensationPitch * s_SkillFactorRecoil
+				s_RecoilCompensationYaw = s_RecoilCompensationYaw * s_SkillFactorRecoil
+			end
+
+			-- recoil from gunSway is negative --> add recoil to yaw
+			s_Yaw = s_Yaw + s_WorseningSkillX + s_WorseningClassX + s_RecoilCompensationYaw
+			s_Pitch = s_Pitch + s_WorseningSkillY + s_WorseningClassY + s_RecoilCompensationPitch
 		end
 
 		p_Bot._TargetPitch = s_Pitch
