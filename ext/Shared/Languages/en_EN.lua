@@ -41,6 +41,8 @@ Language:add(code, "Original Damage from bots gets multiplied by this", "Origina
 --SPAWN
 Language:add(code, "Spawn Mode", "Spawn Mode")
 Language:add(code, "Mode the bots spawn with", "Mode the bots spawn with")
+Language:add(code, "Balance Players Ignoring Bots", "Balance Players Ignoring Bots")
+Language:add(code, "Counts players in each team to decide which team a player joins", "Counts players in each team to decide which team a player joins")
 Language:add(code, "Team Switch Mode", "Team Switch Mode")
 Language:add(code, "Mode to switch the team", "Mode to switch the team")
 Language:add(code, "Spawn Bots in all teams", "Spawn Bots in all teams")

@@ -6,5 +6,6 @@ UpdateFlag = {
 	AmountAndTeam = 3,
 	YawPerSec = 4,
 	Language = 5,
-	MaxBots = 6
+	MaxBots = 6,
+	Skill = 7
 }
