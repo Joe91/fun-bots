@@ -205,6 +205,14 @@ function BotAiming:UpdateAiming(p_Bot)
 			if p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway ~= nil then
 				s_RecoilPitch = p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway.currentRecoilDeviation.pitch
 				s_RecoilYaw = p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway.currentRecoilDeviation.yaw
+
+				-- worsen compensation dependant of skill?
+				local s_SkillFactor = (1.0 - p_Bot._Skill)
+				if s_SkillFactor < 0 then
+					s_SkillFactor = 0
+				end
+				s_RecoilPitch = s_RecoilPitch * s_SkillFactor
+				s_RecoilYaw = s_RecoilYaw * s_SkillFactor
 			end
 			-- recoil is negative --> add them
 
