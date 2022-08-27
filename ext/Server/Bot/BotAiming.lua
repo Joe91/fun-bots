@@ -36,7 +36,6 @@ function BotAiming:UpdateAiming(p_Bot)
 				s_AimForHead = Config.AimForHeadSniper
 			elseif p_Bot.m_ActiveWeapon.type == WeaponTypes.LMG then
 				s_AimForHead = Config.AimForHeadSupport
-				s_AdditionalOffset = Vec3(0.0, -0.5, 0.0) -- aim lower for recoil-compensation
 			else
 				s_AimForHead = Config.AimForHead
 			end
@@ -200,9 +199,18 @@ function BotAiming:UpdateAiming(p_Bot)
 			local s_WorseningClassX = (MathUtils:GetRandom(-1.0, 1.0) * s_WorseningClassFactor)
 			local s_WorseningClassY = (MathUtils:GetRandom(-1.0, 1.0) * s_WorseningClassFactor)
 
-			-- TODO: add recoil compensation?
-			s_Yaw = s_Yaw + s_WorseningSkillX + s_WorseningClassX
-			s_Pitch = s_Pitch + s_WorseningSkillY + s_WorseningClassY
+			local s_RecoilPitch = 0.0
+			local s_RecoilYaw = 0.0
+			-- compensate recoil
+			if p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway ~= nil then
+				s_RecoilPitch = p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway.currentRecoilDeviation.pitch
+				s_RecoilYaw = p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway.currentRecoilDeviation.yaw
+			end
+			-- recoil is negative --> add them
+			--print(s_RecoilPitch)
+
+			s_Yaw = s_Yaw + s_WorseningSkillX + s_WorseningClassX + s_RecoilYaw
+			s_Pitch = s_Pitch + s_WorseningSkillY + s_WorseningClassY + s_RecoilPitch
 		end
 
 		p_Bot._TargetPitch = s_Pitch

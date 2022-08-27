@@ -118,7 +118,6 @@ function FunBotServer:RegisterEvents()
 	Events:Subscribe('Vehicle:Enter', self, self.OnVehicleEnter)
 	Events:Subscribe('Vehicle:Exit', self, self.OnVehicleExit)
 
-	--Events:Subscribe('Soldier:HealthAction', m_BotManager, m_BotManager.OnSoldierHealthAction)	-- use this for more options on revive. Not needed yet
 	--Events:Subscribe('GunSway:Update', m_BotManager, m_BotManager.OnGunSway)
 	--Events:Subscribe('GunSway:UpdateRecoil', m_BotManager, m_BotManager.OnGunSway)
 end
@@ -128,9 +127,6 @@ function FunBotServer:RegisterHooks()
 end
 
 function FunBotServer:RegisterCustomEvents()
-	-- NetEvents:Subscribe('Bot:ShootAtPlayer', self, self.OnShootAt)
-	-- NetEvents:Subscribe('Bot:RevivePlayer', self, self.OnRevivePlayer)
-	-- NetEvents:Subscribe('Bot:ShootAtBot', self, self.OnBotShootAtBot)
 	NetEvents:Subscribe("Botmanager:RaycastResults", self, self.OnClientRaycastResults)
 	NetEvents:Subscribe('Client:DamagePlayer', self, self.OnDamagePlayer) --only triggered on false damage
 	Events:Subscribe('Server:DamagePlayer', self, self.OnServerDamagePlayer) --only triggered on false damage

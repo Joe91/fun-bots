@@ -189,7 +189,6 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 					s_EndPos.y = s_EndPos.y + 1.2
 
 					if self:DoRaycast(s_StartPos, s_EndPos, s_RaycastCheckEntry.Bot1InVehicle, s_RaycastCheckEntry.Bot2InVehicle) then
-						-- NetEvents:SendLocal("Bot:ShootAtBot", s_RaycastCheckEntry.Bot1, s_RaycastCheckEntry.Bot2)
 						table.insert(s_RaycastResultsToSend, {
 							Mode = "ShootAtBot",
 							Bot1 = s_RaycastCheckEntry.Bot1,
