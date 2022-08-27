@@ -174,6 +174,10 @@ function Bot:__init(p_Player)
 	---@type Vec3[]
 	self._KnifeWayPositions = {}
 	self._Skill = 0.0
+	self._SkillFound = false
+	self._SkillNormal = 0.0
+	self._SkillSniper = 0.0
+
 
 	--simple movement
 	---@type BotMoveSpeeds
@@ -887,6 +891,10 @@ function Bot:SetObjective(p_Objective)
 	end
 end
 
+function Bot:ResetSkill()
+	self._SkillFound = false
+end
+
 ---@return string
 function Bot:GetObjective()
 	return self._Objective
@@ -947,10 +955,17 @@ function Bot:ResetSpawnVars()
 	self._AttackMode = BotAttackModes.RandomNotSet
 	self._ShootWayPoints = {}
 
+	-- skill
+	if not self._SkillFound then
+		local s_TempSkillValue = math.random()
+		self._SkillNormal = Config.BotWorseningSkill * s_TempSkillValue
+		self._SkillSniper = Config.BotSniperWorseningSkill * s_TempSkillValue
+		self._SkillFound = true
+	end
 	if self.m_ActiveWeapon ~= nil and self.m_ActiveWeapon.type == WeaponTypes.Sniper then
-		self._Skill = math.random() * Config.BotSniperWorseningSkill
+		self._Skill = self._SkillSniper
 	else
-		self._Skill = math.random() * Config.BotWorseningSkill
+		self._Skill = self._SkillNormal
 	end
 
 	self._ShotTimer = 0.0
