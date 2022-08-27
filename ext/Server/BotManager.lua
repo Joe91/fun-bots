@@ -45,7 +45,6 @@ function BotManager:__init()
 
 	---@type string[]
 	---`BotName[]`
-	self._PendingAcceptRevives = {}
 	self._LastBotCheckIndex = 1
 	self._LastPlayerCheckIndex = 1
 	self._InitDone = false
@@ -94,20 +93,6 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 		self._DestroyBotsTimer = self._DestroyBotsTimer + p_DeltaTime
 	end
-
-	-- accept revives
-	for i, l_Botname in pairs(self._PendingAcceptRevives) do
-		local s_BotPlayer = self:GetBotByName(l_Botname)
-
-		if s_BotPlayer ~= nil and s_BotPlayer.m_Player.soldier ~= nil then
-			if s_BotPlayer.m_Player.soldier.health == 20 then
-				s_BotPlayer.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Stand, true, true)
-				self._PendingAcceptRevives[i] = nil
-			end
-		else
-			self._PendingAcceptRevives[i] = nil
-		end
-	end
 end
 
 ---VEXT Server Player:Left Event
@@ -153,19 +138,6 @@ function BotManager:OnBotExitVehicle(p_BotName)
 
 	if s_Bot ~= nil then
 		s_Bot:ExitVehicle()
-	end
-end
-
--- TODO: remove? this is unused / commented out
----@param p_Soldier SoldierEntity
----@param p_Action HealthStateAction|integer
-function BotManager:OnSoldierHealthAction(p_Soldier, p_Action)
-	if p_Action == HealthStateAction.OnRevive then -- 7
-		if p_Soldier.player ~= nil then
-			if m_Utilities:isBot(p_Soldier.player.name) then
-				table.insert(self._PendingAcceptRevives, p_Soldier.player.name)
-			end
-		end
 	end
 end
 
