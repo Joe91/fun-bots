@@ -1440,8 +1440,13 @@ function BotSpawner:_GetKitAppearanceCustomization(p_Bot, p_Kit, p_Color)
 
 	-- Knife
 	if s_KnifeInput ~= nil then
-		p_Bot.m_Player:SelectWeapon(WeaponSlot.WeaponSlot_7,
-			ResourceManager:SearchForDataContainer(s_KnifeInput:getResourcePath()), {})
+		local s_KnifeWeapon = ResourceManager:SearchForDataContainer(s_KnifeInput:getResourcePath())
+		if s_KnifeWeapon == nil then
+			m_Logger:Warning("Path not found: " .. s_KnifeInput:getResourcePath())
+		else
+			p_Bot.m_Player:SelectWeapon(WeaponSlot.WeaponSlot_7,
+				SoldierWeaponUnlockAsset(s_KnifeWeapon), {})
+		end
 	end
 	if Config.ZombieMode then
 		return --only knife in Zombie-Mode
@@ -1449,16 +1454,28 @@ function BotSpawner:_GetKitAppearanceCustomization(p_Bot, p_Kit, p_Color)
 
 	-- Primary Weapon
 	if s_PrimaryInput ~= nil then
-		local s_UnlockAssets = {}
-		self:_SetAttachments(s_UnlockAssets, s_PrimaryInput:getAllAttachments())
-		p_Bot.m_Player:SelectWeapon(WeaponSlot.WeaponSlot_0,
-			ResourceManager:SearchForDataContainer(s_PrimaryInput:getResourcePath()), s_UnlockAssets)
+		local s_PrimaryWeaponResource = ResourceManager:SearchForDataContainer(s_PrimaryInput:getResourcePath())
+
+		if s_PrimaryWeaponResource == nil then
+			m_Logger:Warning("Path not found: " .. s_PrimaryInput:getResourcePath())
+		else
+			local s_UnlockAssets = {}
+			self:_SetAttachments(s_UnlockAssets, s_PrimaryInput:getAllAttachments())
+			p_Bot.m_Player:SelectWeapon(WeaponSlot.WeaponSlot_0,
+				SoldierWeaponUnlockAsset(s_PrimaryWeaponResource), s_UnlockAssets)
+		end
 	end
 
 	-- Pistol / Secondary
 	if s_PistolInput ~= nil then
-		p_Bot.m_Player:SelectWeapon(WeaponSlot.WeaponSlot_1,
-			ResourceManager:SearchForDataContainer(s_PistolInput:getResourcePath()), {})
+		local s_PistolWeapon = ResourceManager:SearchForDataContainer(s_PistolInput:getResourcePath())
+
+		if s_PistolWeapon == nil then
+			m_Logger:Warning("Path not found: " .. s_PistolInput:getResourcePath())
+		else
+			p_Bot.m_Player:SelectWeapon(WeaponSlot.WeaponSlot_1,
+				SoldierWeaponUnlockAsset(s_PistolWeapon), {})
+		end
 	end
 	if Globals.IsScavenger then
 		return -- only knife, primary and secondary in scavenger
@@ -1470,20 +1487,38 @@ function BotSpawner:_GetKitAppearanceCustomization(p_Bot, p_Kit, p_Color)
 		if p_Kit == BotKits.Assault or p_Kit == BotKits.Support then
 			s_WeaponSlotGadget = WeaponSlot.WeaponSlot_4
 		end
-		p_Bot.m_Player:SelectWeapon(s_WeaponSlotGadget,
-			ResourceManager:SearchForDataContainer(s_Gadget1Input:getResourcePath()), {})
+		local s_Gadget1Weapon = ResourceManager:SearchForDataContainer(s_Gadget1Input:getResourcePath())
+
+		if s_Gadget1Weapon == nil then
+			m_Logger:Warning("Path not found: " .. s_Gadget1Input:getResourcePath())
+		else
+			p_Bot.m_Player:SelectWeapon(s_WeaponSlotGadget,
+				SoldierWeaponUnlockAsset(s_Gadget1Weapon), {})
+		end
 	end
 
 	-- Secondary Gadget
 	if s_Gadget2Input ~= nil then
-		p_Bot.m_Player:SelectWeapon(WeaponSlot.WeaponSlot_5,
-			ResourceManager:SearchForDataContainer(s_Gadget2Input:getResourcePath()), {})
+		local s_Gadget2Weapon = ResourceManager:SearchForDataContainer(s_Gadget2Input:getResourcePath())
+
+		if s_Gadget2Weapon == nil then
+			m_Logger:Warning("Path not found: " .. s_Gadget2Input:getResourcePath())
+		else
+			p_Bot.m_Player:SelectWeapon(WeaponSlot.WeaponSlot_5,
+				SoldierWeaponUnlockAsset(s_Gadget2Weapon), {})
+		end
 	end
 
 	-- Grenade
 	if s_GrenadeInput ~= nil then
-		p_Bot.m_Player:SelectWeapon(WeaponSlot.WeaponSlot_6,
-			ResourceManager:SearchForDataContainer(s_GrenadeInput:getResourcePath()), {})
+		local s_GrenadeWeapon = ResourceManager:SearchForDataContainer(s_GrenadeInput:getResourcePath())
+
+		if s_GrenadeWeapon == nil then
+			m_Logger:Warning("Path not found: " .. s_GrenadeInput:getResourcePath())
+		else
+			p_Bot.m_Player:SelectWeapon(WeaponSlot.WeaponSlot_6,
+				SoldierWeaponUnlockAsset(s_GrenadeWeapon), {})
+		end
 	end
 end
 
@@ -1594,13 +1629,15 @@ function BotSpawner:_FindAppearance(p_TeamName, p_KitName, p_ColorName)
 	return nil
 end
 
----@param p_UnlockWeapon UnlockWeaponAndSlot
+---@param p_UnlockAssets UnlockAssetBase[]
 ---@param p_Attachments string[]
 function BotSpawner:_SetAttachments(p_UnlockAssets, p_Attachments)
 	for _, l_Attachment in pairs(p_Attachments) do
 		local s_Asset = ResourceManager:SearchForDataContainer(l_Attachment)
 
-		if s_Asset ~= nil then
+		if s_Asset == nil then
+			m_Logger:Warning('Attachment invalid:' .. tostring(l_Attachment))
+		else
 			table.insert(p_UnlockAssets, (UnlockAsset(s_Asset)))
 		end
 	end
