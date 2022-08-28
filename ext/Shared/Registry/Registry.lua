@@ -81,7 +81,7 @@ Registry = {
 		-- Zone is 30 s. 10 Seconds without damage
 		ZONE_CHECK_CYCLE = 20.0,
 		-- max bots per objective
-		MAX_ASSIGNED_LIMIT = 8,
+		MAX_ASSIGNED_LIMIT = 16,
 		-- after finding no valid path for that many crossings, a bot is killed (Rush only)
 		KILL_ON_INVALID_PATH_CROSSINGS = 10,
 		-- increments of nodes to search best patch with

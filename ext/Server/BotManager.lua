@@ -61,7 +61,6 @@ function BotManager:OnLevelDestroy()
 	self:ResetAllBots()
 	self._ActivePlayers = {}
 	self._InitDone = false
-	--self:KillAll() -- this crashes when the server ended. do it on levelstart instead
 end
 
 ---VEXT Shared UpdateManager:Update Event
@@ -529,7 +528,6 @@ function BotManager:ConfigGlobals()
 	Globals.AttackWayBots = Config.AttackWayBots
 	Globals.SpawnMode = Config.SpawnMode
 	Globals.YawPerFrame = self:CalcYawPerFrame()
-	--self:KillAll()
 	local s_MaxPlayers = RCON:SendCommand('vars.maxPlayers')
 	s_MaxPlayers = tonumber(s_MaxPlayers[2])
 

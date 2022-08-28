@@ -290,7 +290,6 @@ function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPe
 	m_GameDirector:OnLevelLoaded()
 	m_AirTargets:OnLevelLoaded()
 	m_BotSpawner:OnLevelLoaded(p_Round)
-	-- NetEvents:BroadcastUnreliableLocal('WriteClientSettings', Config, true) --check if this is really needed
 end
 
 ---VEXT Shared Level:Destroy Event
