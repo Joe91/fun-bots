@@ -764,11 +764,7 @@ end
 ---@param p_Bot Bot
 ---@param p_Transform LinearTransform
 ---@param p_Pose CharacterPoseType|integer
----@param p_SoldierBp SoldierBlueprint|DataContainer
----@param p_Kit CharacterCustomizationAsset|DataContainer
----@param p_Unlocks UnlockAsset[]|DataContainer[]
----@return SoldierEntity|nil
-function BotManager:SpawnBot(p_Bot, p_Transform, p_Pose, p_SoldierBp, p_Kit, p_Unlocks)
+function BotManager:SpawnBot(p_Bot, p_Transform, p_Pose)
 	if p_Bot.m_Player.soldier ~= nil then
 		p_Bot.m_Player.soldier:Destroy()
 	end
@@ -777,8 +773,7 @@ function BotManager:SpawnBot(p_Bot, p_Transform, p_Pose, p_SoldierBp, p_Kit, p_U
 		p_Bot.m_Player.corpse:Destroy()
 	end
 
-	p_Bot.m_Player:SelectUnlockAssets(p_Kit, p_Unlocks)
-	local s_BotSoldier = p_Bot.m_Player:CreateSoldier(p_SoldierBp, p_Transform) -- Returns SoldierEntity
+	local s_BotSoldier = p_Bot.m_Player:CreateSoldier(p_Bot.m_Player.selectedKit, p_Transform) -- Returns SoldierEntity
 
 	if s_BotSoldier == nil then
 		m_Logger:Error("CreateSoldier failed")
@@ -790,16 +785,6 @@ function BotManager:SpawnBot(p_Bot, p_Transform, p_Pose, p_SoldierBp, p_Kit, p_U
 
 	p_Bot.m_Player:SpawnSoldierAt(s_BotSoldier, p_Transform, p_Pose)
 	p_Bot.m_Player:AttachSoldier(s_BotSoldier)
-
-	if p_Bot.m_Player.soldier == nil then
-		m_Logger:Error("AttachSoldier failed. Maybe the spawn failed as well")
-		return nil
-	elseif p_Bot.m_Player.soldier ~= s_BotSoldier then
-		m_Logger:Error("AttachSoldier failed. We still have the old SoldierEntity attached to the Player.")
-		return nil
-	else
-		return s_BotSoldier
-	end
 end
 
 ---@param p_Player Player
