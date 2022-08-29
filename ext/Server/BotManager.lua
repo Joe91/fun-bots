@@ -1,4 +1,5 @@
 ---@class BotManager
+---@overload fun():BotManager
 BotManager = class('BotManager')
 
 require('Bot')
@@ -98,10 +99,8 @@ end
 ---@param p_Player Player
 function BotManager:OnPlayerLeft(p_Player)
 	--remove all references of player
-	if p_Player ~= nil then
-		for _, l_Bot in pairs(self._Bots) do
-			l_Bot:ClearPlayer(p_Player)
-		end
+	for _, l_Bot in pairs(self._Bots) do
+		l_Bot:ClearPlayer(p_Player)
 	end
 
 	for l_Index, l_PlayerName in pairs(self._ActivePlayers) do
@@ -145,28 +144,39 @@ end
 ---@param p_Damage number
 ---@param p_DamageGiverInfo DamageGiverInfo|nil
 function BotManager:OnVehicleDamage(p_VehicleEntity, p_Damage, p_DamageGiverInfo)
-	if p_Damage > 0.0 and p_VehicleEntity ~= nil then
-		local s_ControllableEntity = ControllableEntity(p_VehicleEntity)
-		local s_MaxEntries = s_ControllableEntity.entryCount
+	-- ignore healing
+	if p_Damage <= 0.0 then
+		return
+	end
 
-		for i = 0, s_MaxEntries - 1 do
-			local s_Player = s_ControllableEntity:GetPlayerInEntry(i)
+	-- ignore if no damage giver
+	if not p_DamageGiverInfo or not p_DamageGiverInfo.giver then
+		return
+	end
 
-			if s_Player ~= nil then
-				if m_Utilities:isBot(s_Player) then
-					local s_Bot = self:GetBotByName(s_Player.name)
+	-- detect if we need to shoot back
+	if not Config.ShootBackIfHit then
+		return
+	end
 
-					if s_Bot ~= nil then
-						-- shoot back
-						if p_DamageGiverInfo and p_DamageGiverInfo.giver ~= nil then
-							--detect if we need to shoot back
-							if Config.ShootBackIfHit then
-								s_Bot:ShootAt(p_DamageGiverInfo.giver, true)
-							end
-						end
-					end
-				end
+	p_VehicleEntity = ControllableEntity(p_VehicleEntity)
+	---@cast p_VehicleEntity ControllableEntity
+
+	-- loop all seats / entries
+	for l_EntryId = 0, p_VehicleEntity.entryCount - 1 do
+		local s_Player = p_VehicleEntity:GetPlayerInEntry(l_EntryId)
+
+		-- make sure it's a bot
+		if s_Player and m_Utilities:isBot(s_Player) then
+			local s_Bot = self:GetBotByName(s_Player.name)
+
+			if not s_Bot then
+				m_Logger:Error("Could not find Bot for bot player " .. s_Player.name)
+				return
 			end
+
+			-- shoot back
+			s_Bot:ShootAt(p_DamageGiverInfo.giver, true)
 		end
 	end
 end
