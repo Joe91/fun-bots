@@ -189,64 +189,75 @@ end
 ---@param p_HookCtx HookContext
 ---@param p_Soldier SoldierEntity
 ---@param p_Info DamageInfo
----@param p_GiverInfo DamageGiverInfo
+---@param p_GiverInfo DamageGiverInfo|nil
 function BotManager:OnSoldierDamage(p_HookCtx, p_Soldier, p_Info, p_GiverInfo)
 	-- soldier -> soldier damage only
-	if p_Soldier.player == nil then
+
+	-- ignore if there is no player for this soldier
+	if not p_Soldier.player then
 		return
 	end
 
-	local s_SoldierIsBot = m_Utilities:isBot(p_Soldier.player)
-
-	if s_SoldierIsBot and p_GiverInfo.giver ~= nil then
-		--detect if we need to shoot back
-		if Config.ShootBackIfHit and p_Info.damage > 0 then
-			self:OnShootAt(p_GiverInfo.giver, p_Soldier.player.name, true)
-		end
-
-		-- prevent bots from killing themselves. Bad bot, no suicide.
-		if not Config.BotCanKillHimself and p_Soldier.player == p_GiverInfo.giver then
-			p_Info.damage = 0
-		end
+	-- ignore healing
+	if p_Info.damage <= 0.0 then
+		return
 	end
 
-	--find out, if a player was hit by the server:
-	if not s_SoldierIsBot then
-		if p_GiverInfo.giver == nil then
-			local s_Bot = self:GetBotByName(self._ShooterBots[p_Soldier.player.name])
+	-- this is a bot
+	if m_Utilities:isBot(p_Soldier.player) then
+		if p_GiverInfo and p_GiverInfo.giver then
+			--detect if we need to shoot back
+			if Config.ShootBackIfHit then
+				self:OnShootAt(p_GiverInfo.giver, p_Soldier.player.name, true)
+			end
 
-			if s_Bot ~= nil and s_Bot.m_Player.soldier ~= nil and p_Info.damage > 0 then
+			-- prevent bots from killing themselves. Bad bot, no suicide.
+			if not Config.BotCanKillHimself and p_Soldier.player == p_GiverInfo.giver then
+				p_Info.damage = 0.0
+			end
+		end
+	-- this is a real player; check if the damage was dealt by a bot
+	else
+		-- we have a giver
+		if p_GiverInfo and p_GiverInfo.giver then
+			local s_Bot = self:GetBotByName(p_GiverInfo.giver.name)
+
+			-- this damage was dealt by a bot
+			if s_Bot and s_Bot.m_Player.soldier then
+				-- update the bot damage with the multipliers from the config
+				p_Info.damage = self:_GetDamageValue(p_Info.damage, s_Bot, p_Soldier, false)
+			end
+		-- no damage giver
+		else
+			-- check the table, the damage giver might be a bot
+			local s_Bot = self:GetBotByName(self._ShooterBots[p_Soldier.player.name])
+			-- get the soldier of the bot if there is a valid bot
+			local s_BotSoldier = s_Bot and s_Bot.m_Player.soldier
+
+			-- soldier found, now update the whole DamageInfo
+			if s_BotSoldier then
+				local s_SoldierPosition = p_Soldier.worldTransform.trans
 				p_Info.damage = self:_GetDamageValue(p_Info.damage, s_Bot, p_Soldier, true)
 				p_Info.boneIndex = 0
 				p_Info.isBulletDamage = true
-				p_Info.position = Vec3(p_Soldier.worldTransform.trans.x, p_Soldier.worldTransform.trans.y + 1,
-					p_Soldier.worldTransform.trans.z)
-				p_Info.direction = p_Soldier.worldTransform.trans - s_Bot.m_Player.soldier.worldTransform.trans
-				p_Info.origin = s_Bot.m_Player.soldier.worldTransform.trans
+				p_Info.position = Vec3(s_SoldierPosition.x, s_SoldierPosition.y + 1.0,
+					s_SoldierPosition.z)
+				p_Info.origin = s_BotSoldier.worldTransform.trans
+				p_Info.direction = s_SoldierPosition - p_Info.origin
 
-				if (p_Soldier.health - p_Info.damage) <= 0 then
+				-- this is a kill
+				if (p_Soldier.health - p_Info.damage) <= 0.0 then
+					-- increase tickets manually in TDM
 					if Globals.IsTdm then
-						local s_EnemyTeam = TeamId.Team1
-
-						if p_Soldier.player.teamId == TeamId.Team1 then
-							s_EnemyTeam = TeamId.Team2
-						end
-
+						local s_EnemyTeam = p_Soldier.player.teamId == TeamId.Team2 and TeamId.Team1 or TeamId.Team2
 						TicketManager:SetTicketCount(s_EnemyTeam, (TicketManager:GetTicketCount(s_EnemyTeam) + 1))
 					end
 				end
 			end
-		else
-			--valid bot-damage?
-			local s_Bot = self:GetBotByName(p_GiverInfo.giver.name)
-
-			if s_Bot ~= nil and s_Bot.m_Player.soldier ~= nil then
-				-- giver was a bot
-				p_Info.damage = self:_GetDamageValue(p_Info.damage, s_Bot, p_Soldier, false)
-			end
 		end
 	end
 
+	-- pass everything, modified or not
 	p_HookCtx:Pass(p_Soldier, p_Info, p_GiverInfo)
 end
 
