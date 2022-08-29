@@ -442,79 +442,82 @@ end
 
 ---@param p_Player Player
 function BotManager:RegisterActivePlayer(p_Player)
-	local s_AlreadyListed = false
-
-	for _, l_PlayerName in pairs(self._ActivePlayers) do
+	-- check if the player is already listed
+	for _, l_PlayerName in ipairs(self._ActivePlayers) do
 		if l_PlayerName == p_Player.name then
-			s_AlreadyListed = true
+			return
 		end
 	end
 
-	if not s_AlreadyListed then
-		table.insert(self._ActivePlayers, p_Player.name)
-	end
+	-- not listed, add to the list
+	table.insert(self._ActivePlayers, p_Player.name)
 end
 
----@return integer|TeamId
+---Returns the teamId for the team that has the most real players
+---@return TeamId
 function BotManager:GetPlayerTeam()
-	---@type integer|TeamId
-	local s_PlayerTeam
-	---@type table<integer|TeamId, integer>
+
+	--- Count real players for each team
+	---@type table<TeamId, integer>
 	local s_CountPlayers = {}
 
-	for i = 1, Globals.NrOfTeams do
-		s_CountPlayers[i] = 0
-		local s_Players = PlayerManager:GetPlayersByTeam(i)
+	for l_TeamId = TeamId.Team1, Globals.NrOfTeams do
+		---@cast l_TeamId TeamId
 
-		for j = 1, #s_Players do
-			if not m_Utilities:isBot(s_Players[j]) then
-				s_CountPlayers[i] = s_CountPlayers[i] + 1
+		s_CountPlayers[l_TeamId] = 0
+		local s_Players = PlayerManager:GetPlayersByTeam(l_TeamId)
+
+		for l_Index = 1, #s_Players do
+			if not m_Utilities:isBot(s_Players[l_Index]) then
+				s_CountPlayers[l_TeamId] = s_CountPlayers[l_TeamId] + 1
 			end
 		end
 	end
 
-	local s_HighestPlayerCount = 0
+	-- Get the team with the highest real-player count
+	---@type TeamId
+	local s_PlayerTeam = TeamId.Team1
 
-	---@type integer|TeamId
-	for i = 1, Globals.NrOfTeams do
-		if s_CountPlayers[i] > s_HighestPlayerCount then
-			s_PlayerTeam = i
-			s_HighestPlayerCount = s_CountPlayers[i]
+	for l_TeamId = TeamId.Team2, Globals.NrOfTeams do
+		---@cast l_TeamId TeamId
+		if s_CountPlayers[l_TeamId] > s_CountPlayers[s_PlayerTeam] then
+			s_PlayerTeam = l_TeamId
 		end
 	end
 
 	return s_PlayerTeam
 end
 
----@return integer|TeamId
+---@return TeamId
 function BotManager:GetBotTeam()
 	if Config.BotTeam ~= TeamId.TeamNeutral then
 		return Config.BotTeam
 	end
 
-	---@type integer|TeamId
-	local s_BotTeam
-	---@type table<integer|TeamId, integer>
+	--- Count bot players for each team
+	---@type table<TeamId, integer>
 	local s_CountPlayers = {}
 
-	for i = 1, Globals.NrOfTeams do
-		s_CountPlayers[i] = 0
-		local s_Players = PlayerManager:GetPlayersByTeam(i)
+	for l_TeamId = TeamId.Team1, Globals.NrOfTeams do
+		---@cast l_TeamId TeamId
+		s_CountPlayers[l_TeamId] = 0
+		local s_Players = PlayerManager:GetPlayersByTeam(l_TeamId)
 
-		for j = 1, #s_Players do
-			if not m_Utilities:isBot(s_Players[j]) then
-				s_CountPlayers[i] = s_CountPlayers[i] + 1
+		for l_Index = 1, #s_Players do
+			if not m_Utilities:isBot(s_Players[l_Index]) then
+				s_CountPlayers[l_TeamId] = s_CountPlayers[l_TeamId] + 1
 			end
 		end
 	end
 
-	local s_LowestPlayerCount = 128
+	-- Get the team with the lowest bot-player count
+	---@type TeamId
+	local s_BotTeam = TeamId.Team1
 
-	---@type integer|TeamId
-	for i = 1, Globals.NrOfTeams do
-		if s_CountPlayers[i] < s_LowestPlayerCount then
-			s_BotTeam = i
-			s_LowestPlayerCount = s_CountPlayers[i]
+	for l_TeamId = TeamId.Team2, Globals.NrOfTeams do
+		---@cast l_TeamId TeamId
+		if s_CountPlayers[l_TeamId] < s_CountPlayers[s_BotTeam] then
+			s_BotTeam = l_TeamId
 		end
 	end
 
