@@ -1224,6 +1224,8 @@ function BotSpawner:_SpawnBot(p_Bot, p_Transform, p_SetKit)
 
 	m_BotManager:SpawnBot(p_Bot, p_Transform, CharacterPoseType.CharacterPoseType_Stand)
 
+	p_Bot.m_Player.soldier:ApplyCustomization(self:_OldGetKitAppearanceCustomization(p_Bot, s_BotKit))
+
 	if Globals.RemoveKitVisuals then
 		-- for Civilianizer-mod:
 		Events:Dispatch('Bot:SoldierEntity', p_Bot.m_Player.soldier)
@@ -1417,6 +1419,119 @@ function BotSpawner:_GetKitAppearanceCustomization(p_Bot, p_Kit, p_Color)
 		p_Bot.m_Player:SelectUnlockAssets(s_SoldierKit, { s_Appearance })
 	end
 
+	-- local s_PrimaryInput = p_Bot.m_Primary
+	-- local s_PistolInput = p_Bot.m_Pistol
+	-- local s_KnifeInput = p_Bot.m_Knife
+	-- local s_Gadget1Input = p_Bot.m_PrimaryGadget
+	-- local s_Gadget2Input = p_Bot.m_SecondaryGadget
+	-- local s_GrenadeInput = p_Bot.m_Grenade
+
+	-- -- reset Slots
+	-- p_Bot.m_Player:SelectWeapon(WeaponSlot.WeaponSlot_2, ResourceManager:SearchForDataContainer('Weapons/Common/NoGadget1')
+	-- 	, {})
+	-- p_Bot.m_Player:SelectWeapon(WeaponSlot.WeaponSlot_4, ResourceManager:SearchForDataContainer('Weapons/Common/NoGadget1')
+	-- 	, {})
+	-- p_Bot.m_Player:SelectWeapon(WeaponSlot.WeaponSlot_5, ResourceManager:SearchForDataContainer('Weapons/Common/NoGadget2')
+	-- 	, {})
+	-- p_Bot.m_Player:SelectWeapon(WeaponSlot.WeaponSlot_6, ResourceManager:SearchForDataContainer('Weapons/M67/U_M67'), {})
+
+	-- -- Knife
+	-- if s_KnifeInput ~= nil then
+	-- 	local s_KnifeWeapon = ResourceManager:SearchForDataContainer(s_KnifeInput:getResourcePath())
+	-- 	if s_KnifeWeapon == nil then
+	-- 		m_Logger:Warning("Path not found: " .. s_KnifeInput:getResourcePath())
+	-- 	else -- was slot 7 - not slot 3, 8, 9. Does not work anymore
+	-- 		p_Bot.m_Player:SelectWeapon(WeaponSlot.WeaponSlot_7,
+	-- 			SoldierWeaponUnlockAsset(s_KnifeWeapon), {})
+	-- 	end
+	-- end
+
+	-- -- Primary Weapon
+	-- if s_PrimaryInput ~= nil then
+	-- 	local s_PrimaryWeaponResource = ResourceManager:SearchForDataContainer(s_PrimaryInput:getResourcePath())
+
+	-- 	if s_PrimaryWeaponResource == nil then
+	-- 		m_Logger:Warning("Path not found: " .. s_PrimaryInput:getResourcePath())
+	-- 	else
+	-- 		local s_UnlockAssets = {}
+	-- 		self:_SetAttachments(s_UnlockAssets, s_PrimaryInput:getAllAttachments())
+	-- 		p_Bot.m_Player:SelectWeapon(WeaponSlot.WeaponSlot_0,
+	-- 			SoldierWeaponUnlockAsset(s_PrimaryWeaponResource), s_UnlockAssets)
+	-- 	end
+	-- end
+
+	-- -- Pistol / Secondary
+	-- if s_PistolInput ~= nil then
+	-- 	local s_PistolWeapon = ResourceManager:SearchForDataContainer(s_PistolInput:getResourcePath())
+
+	-- 	if s_PistolWeapon == nil then
+	-- 		m_Logger:Warning("Path not found: " .. s_PistolInput:getResourcePath())
+	-- 	else
+	-- 		p_Bot.m_Player:SelectWeapon(WeaponSlot.WeaponSlot_1,
+	-- 			SoldierWeaponUnlockAsset(s_PistolWeapon), {})
+	-- 	end
+	-- end
+	-- if Globals.IsScavenger or Config.ZombieMode then
+	-- 	return -- only knife, primary and secondary in scavenger
+	-- end
+
+	-- -- Primary Gadget
+	-- if s_Gadget1Input ~= nil then
+	-- 	local s_WeaponSlotGadget = WeaponSlot.WeaponSlot_2
+	-- 	if p_Kit == BotKits.Assault or p_Kit == BotKits.Support then
+	-- 		s_WeaponSlotGadget = WeaponSlot.WeaponSlot_4
+	-- 	end
+	-- 	local s_Gadget1Weapon = ResourceManager:SearchForDataContainer(s_Gadget1Input:getResourcePath())
+
+	-- 	if s_Gadget1Weapon == nil then
+	-- 		m_Logger:Warning("Path not found: " .. s_Gadget1Input:getResourcePath())
+	-- 	else
+	-- 		p_Bot.m_Player:SelectWeapon(s_WeaponSlotGadget,
+	-- 			SoldierWeaponUnlockAsset(s_Gadget1Weapon), {})
+	-- 	end
+	-- end
+
+	-- -- Secondary Gadget
+	-- if s_Gadget2Input ~= nil then
+	-- 	local s_Gadget2Weapon = ResourceManager:SearchForDataContainer(s_Gadget2Input:getResourcePath())
+
+	-- 	if s_Gadget2Weapon == nil then
+	-- 		m_Logger:Warning("Path not found: " .. s_Gadget2Input:getResourcePath())
+	-- 	else
+	-- 		p_Bot.m_Player:SelectWeapon(WeaponSlot.WeaponSlot_5,
+	-- 			SoldierWeaponUnlockAsset(s_Gadget2Weapon), {})
+	-- 	end
+	-- end
+
+	-- -- Grenade
+	-- if s_GrenadeInput ~= nil then
+	-- 	local s_GrenadeWeapon = ResourceManager:SearchForDataContainer(s_GrenadeInput:getResourcePath())
+
+	-- 	if s_GrenadeWeapon == nil then
+	-- 		m_Logger:Warning("Path not found: " .. s_GrenadeInput:getResourcePath())
+	-- 	else
+	-- 		p_Bot.m_Player:SelectWeapon(WeaponSlot.WeaponSlot_6,
+	-- 			SoldierWeaponUnlockAsset(s_GrenadeWeapon), {})
+	-- 	end
+	-- end
+end
+
+function BotSpawner:_OldSetAttachments(p_UnlockWeapon, p_Attachments)
+	for _, l_Attachment in pairs(p_Attachments) do
+		local s_Asset = ResourceManager:SearchForDataContainer(l_Attachment)
+
+		if s_Asset == nil then
+			m_Logger:Warning('Attachment invalid [' .. tostring(p_UnlockWeapon.weapon.name) .. ']: ' .. tostring(l_Attachment))
+		else
+			p_UnlockWeapon.unlockAssets:add(UnlockAsset(s_Asset))
+		end
+	end
+end
+
+function BotSpawner:_OldGetKitAppearanceCustomization(p_Bot, p_Kit)
+
+	local p_SoldierCustomization = CustomizeSoldierData()
+
 	local s_PrimaryInput = p_Bot.m_Primary
 	local s_PistolInput = p_Bot.m_Pistol
 	local s_KnifeInput = p_Bot.m_Knife
@@ -1424,94 +1539,117 @@ function BotSpawner:_GetKitAppearanceCustomization(p_Bot, p_Kit, p_Color)
 	local s_Gadget2Input = p_Bot.m_SecondaryGadget
 	local s_GrenadeInput = p_Bot.m_Grenade
 
-	-- reset Slots
-	p_Bot.m_Player:SelectWeapon(WeaponSlot.WeaponSlot_2, ResourceManager:SearchForDataContainer('Weapons/Common/NoGadget1')
-		, {})
-	p_Bot.m_Player:SelectWeapon(WeaponSlot.WeaponSlot_4, ResourceManager:SearchForDataContainer('Weapons/Common/NoGadget1')
-		, {})
-	p_Bot.m_Player:SelectWeapon(WeaponSlot.WeaponSlot_5, ResourceManager:SearchForDataContainer('Weapons/Common/NoGadget2')
-		, {})
-	p_Bot.m_Player:SelectWeapon(WeaponSlot.WeaponSlot_6, ResourceManager:SearchForDataContainer('Weapons/M67/U_M67'), {})
-
-	-- Knife
-	if s_KnifeInput ~= nil then
-		local s_KnifeWeapon = ResourceManager:SearchForDataContainer(s_KnifeInput:getResourcePath())
-		if s_KnifeWeapon == nil then
-			m_Logger:Warning("Path not found: " .. s_KnifeInput:getResourcePath())
-		else
-			p_Bot.m_Player:SelectWeapon(WeaponSlot.WeaponSlot_7,
-				SoldierWeaponUnlockAsset(s_KnifeWeapon), {})
-		end
-	end
+	p_SoldierCustomization.activeSlot = WeaponSlot.WeaponSlot_0
+	p_SoldierCustomization.removeAllExistingWeapons = false
 
 	-- Primary Weapon
+	local s_PrimaryWeapon = UnlockWeaponAndSlot()
+	s_PrimaryWeapon.slot = WeaponSlot.WeaponSlot_0
+
 	if s_PrimaryInput ~= nil then
 		local s_PrimaryWeaponResource = ResourceManager:SearchForDataContainer(s_PrimaryInput:getResourcePath())
 
 		if s_PrimaryWeaponResource == nil then
 			m_Logger:Warning("Path not found: " .. s_PrimaryInput:getResourcePath())
 		else
-			local s_UnlockAssets = {}
-			self:_SetAttachments(s_UnlockAssets, s_PrimaryInput:getAllAttachments())
-			p_Bot.m_Player:SelectWeapon(WeaponSlot.WeaponSlot_0,
-				SoldierWeaponUnlockAsset(s_PrimaryWeaponResource), s_UnlockAssets)
+			s_PrimaryWeapon.weapon = SoldierWeaponUnlockAsset(s_PrimaryWeaponResource)
+			self:_OldSetAttachments(s_PrimaryWeapon, s_PrimaryInput:getAllAttachments())
 		end
-	end
-
-	-- Pistol / Secondary
-	if s_PistolInput ~= nil then
-		local s_PistolWeapon = ResourceManager:SearchForDataContainer(s_PistolInput:getResourcePath())
-
-		if s_PistolWeapon == nil then
-			m_Logger:Warning("Path not found: " .. s_PistolInput:getResourcePath())
-		else
-			p_Bot.m_Player:SelectWeapon(WeaponSlot.WeaponSlot_1,
-				SoldierWeaponUnlockAsset(s_PistolWeapon), {})
-		end
-	end
-	if Globals.IsScavenger or Config.ZombieMode then
-		return -- only knife, primary and secondary in scavenger
 	end
 
 	-- Primary Gadget
+	local s_PrimaryGadget = UnlockWeaponAndSlot()
+
+	if p_Kit == BotKits.Assault or p_Kit == BotKits.Support then
+		s_PrimaryGadget.slot = WeaponSlot.WeaponSlot_4
+	else
+		s_PrimaryGadget.slot = WeaponSlot.WeaponSlot_2
+	end
+
 	if s_Gadget1Input ~= nil then
-		local s_WeaponSlotGadget = WeaponSlot.WeaponSlot_2
-		if p_Kit == BotKits.Assault or p_Kit == BotKits.Support then
-			s_WeaponSlotGadget = WeaponSlot.WeaponSlot_4
-		end
 		local s_Gadget1Weapon = ResourceManager:SearchForDataContainer(s_Gadget1Input:getResourcePath())
 
 		if s_Gadget1Weapon == nil then
 			m_Logger:Warning("Path not found: " .. s_Gadget1Input:getResourcePath())
 		else
-			p_Bot.m_Player:SelectWeapon(s_WeaponSlotGadget,
-				SoldierWeaponUnlockAsset(s_Gadget1Weapon), {})
+			s_PrimaryGadget.weapon = SoldierWeaponUnlockAsset(s_Gadget1Weapon)
 		end
 	end
 
 	-- Secondary Gadget
+	local s_SecondaryGadget = UnlockWeaponAndSlot()
 	if s_Gadget2Input ~= nil then
 		local s_Gadget2Weapon = ResourceManager:SearchForDataContainer(s_Gadget2Input:getResourcePath())
+		s_SecondaryGadget.slot = WeaponSlot.WeaponSlot_5
 
 		if s_Gadget2Weapon == nil then
 			m_Logger:Warning("Path not found: " .. s_Gadget2Input:getResourcePath())
 		else
-			p_Bot.m_Player:SelectWeapon(WeaponSlot.WeaponSlot_5,
-				SoldierWeaponUnlockAsset(s_Gadget2Weapon), {})
+			s_SecondaryGadget.weapon = SoldierWeaponUnlockAsset(s_Gadget2Weapon)
 		end
 	end
 
 	-- Grenade
+
+	local s_Grenade = UnlockWeaponAndSlot()
+	s_Grenade.slot = WeaponSlot.WeaponSlot_6
+
 	if s_GrenadeInput ~= nil then
 		local s_GrenadeWeapon = ResourceManager:SearchForDataContainer(s_GrenadeInput:getResourcePath())
 
 		if s_GrenadeWeapon == nil then
 			m_Logger:Warning("Path not found: " .. s_GrenadeInput:getResourcePath())
 		else
-			p_Bot.m_Player:SelectWeapon(WeaponSlot.WeaponSlot_6,
-				SoldierWeaponUnlockAsset(s_GrenadeWeapon), {})
+			s_Grenade.weapon = SoldierWeaponUnlockAsset(s_GrenadeWeapon)
 		end
 	end
+
+	-- Pistol / Secondary
+	local s_SecondaryWeapon = UnlockWeaponAndSlot()
+	s_SecondaryWeapon.slot = WeaponSlot.WeaponSlot_1
+
+	if s_PistolInput ~= nil then
+		local s_PistolWeapon = ResourceManager:SearchForDataContainer(s_PistolInput:getResourcePath())
+
+		if s_PistolWeapon == nil then
+			m_Logger:Warning("Path not found: " .. s_PistolInput:getResourcePath())
+		else
+			s_SecondaryWeapon.weapon = SoldierWeaponUnlockAsset(s_PistolWeapon)
+		end
+	end
+
+	-- Knife
+	local s_Knife = UnlockWeaponAndSlot()
+	s_Knife.slot = WeaponSlot.WeaponSlot_7
+
+	if s_KnifeInput ~= nil then
+		local s_KnifeWeapon = ResourceManager:SearchForDataContainer(s_KnifeInput:getResourcePath())
+
+		if s_KnifeWeapon == nil then
+			m_Logger:Warning("Path not found: " .. s_KnifeInput:getResourcePath())
+		else
+			s_Knife.weapon = SoldierWeaponUnlockAsset(s_KnifeWeapon)
+		end
+	end
+
+	-- fill Customization
+	if Config.ZombieMode then
+		p_SoldierCustomization.activeSlot = WeaponSlot.WeaponSlot_7
+		p_SoldierCustomization.weapons:add(s_Knife)
+	elseif Globals.IsScavenger then
+		p_SoldierCustomization.weapons:add(s_PrimaryWeapon)
+		p_SoldierCustomization.weapons:add(s_SecondaryWeapon)
+		p_SoldierCustomization.weapons:add(s_Knife)
+	else
+		p_SoldierCustomization.weapons:add(s_PrimaryWeapon)
+		p_SoldierCustomization.weapons:add(s_SecondaryWeapon)
+		p_SoldierCustomization.weapons:add(s_PrimaryGadget)
+		p_SoldierCustomization.weapons:add(s_SecondaryGadget)
+		p_SoldierCustomization.weapons:add(s_Grenade)
+		p_SoldierCustomization.weapons:add(s_Knife)
+	end
+
+	return p_SoldierCustomization
 end
 
 ---@return BotKits|integer
