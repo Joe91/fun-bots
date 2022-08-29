@@ -269,7 +269,8 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 						local s_PointBefore = m_NodeCollection:Get(s_ActivePointIndex - i, p_Bot._PathIndex)
 						local s_PointAfter = m_NodeCollection:Get(s_ActivePointIndex + i, p_Bot._PathIndex)
 
-						if (s_PointBefore ~= nil and s_PointBefore.ExtraMode == 1) or (s_PointAfter ~= nil and s_PointAfter.ExtraMode == 1
+						if (s_PointBefore ~= nil and s_PointBefore.ExtraMode == 1) or
+							(s_PointAfter ~= nil and s_PointAfter.ExtraMode == 1
 							) then
 							s_JumpValid = true
 							break

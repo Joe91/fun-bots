@@ -1217,7 +1217,7 @@ function BotSpawner:_SpawnBot(p_Bot, p_Transform, p_SetKit)
 	-- create kit and appearance
 	if p_Bot.m_Player.selectedKit == nil then
 		-- SoldierBlueprint
-		p_Bot.m_Player.selectedKit = ResourceManager:SearchForInstanceByGuid(Guid('261E43BF-259B-41D2-BF3B-9AE4DDA96AD2')) -- MpSoldier
+		p_Bot.m_Player.selectedKit = ResourceManager:SearchForDataContainer('Characters/Soldiers/MpSoldier') -- MpSoldier
 	end
 
 	self:_GetKitAppearanceCustomization(p_Bot, s_BotKit, s_BotColor)
@@ -1424,6 +1424,15 @@ function BotSpawner:_GetKitAppearanceCustomization(p_Bot, p_Kit, p_Color)
 	local s_Gadget2Input = p_Bot.m_SecondaryGadget
 	local s_GrenadeInput = p_Bot.m_Grenade
 
+	-- reset Slots
+	p_Bot.m_Player:SelectWeapon(WeaponSlot.WeaponSlot_2, ResourceManager:SearchForDataContainer('Weapons/Common/NoGadget1')
+		, {})
+	p_Bot.m_Player:SelectWeapon(WeaponSlot.WeaponSlot_4, ResourceManager:SearchForDataContainer('Weapons/Common/NoGadget1')
+		, {})
+	p_Bot.m_Player:SelectWeapon(WeaponSlot.WeaponSlot_5, ResourceManager:SearchForDataContainer('Weapons/Common/NoGadget2')
+		, {})
+	p_Bot.m_Player:SelectWeapon(WeaponSlot.WeaponSlot_6, ResourceManager:SearchForDataContainer('Weapons/M67/U_M67'), {})
+
 	-- Knife
 	if s_KnifeInput ~= nil then
 		local s_KnifeWeapon = ResourceManager:SearchForDataContainer(s_KnifeInput:getResourcePath())
@@ -1433,9 +1442,6 @@ function BotSpawner:_GetKitAppearanceCustomization(p_Bot, p_Kit, p_Color)
 			p_Bot.m_Player:SelectWeapon(WeaponSlot.WeaponSlot_7,
 				SoldierWeaponUnlockAsset(s_KnifeWeapon), {})
 		end
-	end
-	if Config.ZombieMode then
-		return --only knife in Zombie-Mode
 	end
 
 	-- Primary Weapon
@@ -1463,7 +1469,7 @@ function BotSpawner:_GetKitAppearanceCustomization(p_Bot, p_Kit, p_Color)
 				SoldierWeaponUnlockAsset(s_PistolWeapon), {})
 		end
 	end
-	if Globals.IsScavenger then
+	if Globals.IsScavenger or Config.ZombieMode then
 		return -- only knife, primary and secondary in scavenger
 	end
 
