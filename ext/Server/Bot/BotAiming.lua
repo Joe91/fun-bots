@@ -204,7 +204,9 @@ function BotAiming:UpdateAiming(p_Bot)
 			local s_RecoilCompensationPitch = 0.0
 			local s_RecoilCompensationYaw = 0.0
 			-- compensate recoil
-			if p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway ~= nil then
+			if p_Bot.m_Player.soldier.weaponsComponent.currentWeapon ~= nil and
+				p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.weaponFiring ~= nil and
+				p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway ~= nil then
 				s_RecoilCompensationPitch = p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway.currentRecoilDeviation
 					.pitch
 				s_RecoilCompensationYaw = p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway.currentRecoilDeviation

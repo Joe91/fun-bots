@@ -216,6 +216,9 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 				-- increment slow timer
 				self._UpdateTimer = self._UpdateTimer + self._UpdateFastTimer
 
+				-- detect modes
+				self:_SetActiveVars()
+
 				-- old movement-modes -- remove one day?
 				if self:IsStaticMovement() then
 					m_BotMovement:UpdateStaticMovement(self)
@@ -226,8 +229,6 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 				end
 
 				------------------ CODE OF BEHAVIOUR STARTS HERE ---------------------
-				-- detect modes
-				self:_SetActiveVars()
 				local s_Attacking = self._ShootPlayer ~= nil -- can be either attacking or reviving or enter of a vehicle with a player
 
 				if not self.m_InVehicle and not self.m_OnVehicle then
