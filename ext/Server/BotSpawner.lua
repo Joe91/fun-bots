@@ -31,20 +31,6 @@ function BotSpawner:RegisterVars()
 	self._KickPlayers = {}
 	---@type Bot[]
 	self._BotsWithoutPath = {}
-
-	-- weapon-stuff
-	---@type UnlockWeaponAndSlot[]
-	self._PrimaryWeapons = {}
-	---@type UnlockWeaponAndSlot[]
-	self._PrimaryGadget = {}
-	---@type UnlockWeaponAndSlot[]
-	self._SecondaryGadget = {}
-	---@type UnlockWeaponAndSlot[]
-	self._Grenade = {}
-	---@type UnlockWeaponAndSlot[]
-	self._SecondaryWeapon = {}
-	---@type UnlockWeaponAndSlot[]
-	self._Knife = {}
 end
 
 -- =============================================
