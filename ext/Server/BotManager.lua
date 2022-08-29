@@ -281,9 +281,13 @@ end
 ---@param p_MeleeAttack boolean
 ---@param p_IsHeadShot boolean
 function BotManager:OnDamagePlayer(p_Player, p_ShooterName, p_MeleeAttack, p_IsHeadShot)
+	if not p_Player.soldier then
+		return
+	end
+
 	local s_Bot = self:GetBotByName(p_ShooterName)
 
-	if p_Player.soldier == nil or s_Bot == nil then
+	if not s_Bot then
 		return
 	end
 
@@ -291,10 +295,10 @@ function BotManager:OnDamagePlayer(p_Player, p_ShooterName, p_MeleeAttack, p_IsH
 		return
 	end
 
-	local s_Damage = 1 --only trigger soldier-damage with this
+	local s_Damage = 1 -- only trigger soldier-damage with this
 
 	if p_IsHeadShot then
-		s_Damage = 2 -- singal Headshot
+		s_Damage = 2 -- signal Headshot
 	elseif p_MeleeAttack then
 		s_Damage = 3 --signal melee damage with this value
 	end
@@ -313,7 +317,7 @@ end
 function BotManager:OnShootAt(p_Player, p_BotName, p_IgnoreYaw)
 	local s_Bot = self:GetBotByName(p_BotName)
 
-	if s_Bot == nil or s_Bot.m_Player == nil or s_Bot.m_Player.soldier == nil or p_Player == nil then
+	if not s_Bot then
 		return
 	end
 
@@ -325,7 +329,7 @@ end
 function BotManager:OnRevivePlayer(p_Player, p_BotName)
 	local s_Bot = self:GetBotByName(p_BotName)
 
-	if s_Bot == nil or s_Bot.m_Player == nil or s_Bot.m_Player.soldier == nil or p_Player == nil then
+	if not s_Bot then
 		return
 	end
 
@@ -337,9 +341,14 @@ end
 ---@param p_BotName2 string
 function BotManager:OnBotShootAtBot(p_Player, p_BotName1, p_BotName2)
 	local s_Bot1 = self:GetBotByName(p_BotName1)
+
+	if not s_Bot1 then
+		return
+	end
+
 	local s_Bot2 = self:GetBotByName(p_BotName2)
 
-	if s_Bot1 == nil or s_Bot1.m_Player == nil or s_Bot2 == nil or s_Bot2.m_Player == nil then
+	if not s_Bot2 then
 		return
 	end
 
@@ -357,7 +366,7 @@ function BotManager:OnClientRaycastResults(p_Player, p_RaycastResults)
 		return
 	end
 
-	for _, l_RaycastResult in pairs(p_RaycastResults) do
+	for _, l_RaycastResult in ipairs(p_RaycastResults) do
 		if l_RaycastResult.Mode == "ShootAtBot" then
 			self:OnBotShootAtBot(p_Player, l_RaycastResult.Bot1, l_RaycastResult.Bot2)
 		elseif l_RaycastResult.Mode == "ShootAtPlayer" then
@@ -373,7 +382,7 @@ end
 function BotManager:OnRequestEnterVehicle(p_Player, p_BotName)
 	local s_Bot = self:GetBotByName(p_BotName)
 
-	if s_Bot ~= nil and s_Bot.m_Player.soldier ~= nil then
+	if s_Bot and s_Bot.m_Player.soldier then
 		s_Bot:EnterVehicleOfPlayer(p_Player)
 	end
 end
@@ -384,32 +393,41 @@ function BotManager:OnRequestChangeSeatVehicle(p_Player, p_SeatNumber)
 	local s_TargetEntryId = p_SeatNumber - 1
 	local s_VehicleEntity = p_Player.controlledControllable
 
-	if s_VehicleEntity ~= nil and s_VehicleEntity:Is("ServerSoldierEntity") and p_Player.attachedControllable ~= nil then
+	if s_VehicleEntity and s_VehicleEntity.typeInfo.name == "ServerSoldierEntity" then
 		s_VehicleEntity = p_Player.attachedControllable
 	end
 
-	if s_VehicleEntity == nil then
+	-- no vehicle found
+	if not s_VehicleEntity then
 		return
 	end
 
-	local s_PlayerInTargetSet = s_VehicleEntity:GetPlayerInEntry(s_TargetEntryId)
+	-- player in target seat
+	local s_TargetPlayer = s_VehicleEntity:GetPlayerInEntry(s_TargetEntryId)
 
-	if s_PlayerInTargetSet ~= nil then
-		local s_Bot = self:GetBotByName(s_PlayerInTargetSet.name)
+	-- no player in target seat
+	if not s_TargetPlayer then
+		return
+	end
 
-		if s_Bot ~= nil then
-			s_Bot:_AbortAttack()
-			s_Bot.m_Player:ExitVehicle(false, false)
-			p_Player:EnterVehicle(s_VehicleEntity, s_TargetEntryId)
+	local s_Bot = self:GetBotByName(s_TargetPlayer.name)
 
-			-- find next free seat
-			for i = 0, s_VehicleEntity.entryCount - 1 do
-				if s_VehicleEntity:GetPlayerInEntry(i) == nil then
-					s_Bot.m_Player:EnterVehicle(s_VehicleEntity, i)
-					s_Bot:_UpdateVehicleMovableId()
-					break
-				end
-			end
+	-- real player in target seat
+	if not s_Bot then
+		return
+	end
+
+	-- exit vehicle with bot, so the real player can get this seat
+	s_Bot:AbortAttack()
+	s_Bot.m_Player:ExitVehicle(false, false)
+	p_Player:EnterVehicle(s_VehicleEntity, s_TargetEntryId)
+
+	-- find next free seat and re-enter with the bot if possible
+	for i = 0, s_VehicleEntity.entryCount - 1 do
+		if s_VehicleEntity:GetPlayerInEntry(i) == nil then
+			s_Bot.m_Player:EnterVehicle(s_VehicleEntity, i)
+			s_Bot:UpdateVehicleMovableId()
+			break
 		end
 	end
 end
@@ -1206,49 +1224,62 @@ function BotManager:_GetDamageValue(p_Damage, p_Bot, p_Soldier, p_Fake)
 	local s_ResultDamage = 0.0
 	local s_DamageFactor = 1.0
 
-	if p_Bot.m_ActiveWeapon.type == WeaponTypes.Shotgun then
+	local s_ActiveWeapon = p_Bot.m_ActiveWeapon
+
+	if not s_ActiveWeapon then
+		m_Logger:Error("Bot without active weapon in Soldier:Damage")
+		return s_ResultDamage
+	end
+
+	local s_ActiveWeaponType = p_Bot.m_ActiveWeapon.type
+
+	if s_ActiveWeaponType == WeaponTypes.Shotgun then
 		s_DamageFactor = Config.DamageFactorShotgun
-	elseif p_Bot.m_ActiveWeapon.type == WeaponTypes.Assault then
+	elseif s_ActiveWeaponType == WeaponTypes.Assault then
 		s_DamageFactor = Config.DamageFactorAssault
-	elseif p_Bot.m_ActiveWeapon.type == WeaponTypes.Carabine then
+	elseif s_ActiveWeaponType == WeaponTypes.Carabine then
 		s_DamageFactor = Config.DamageFactorCarabine
-	elseif p_Bot.m_ActiveWeapon.type == WeaponTypes.PDW then
+	elseif s_ActiveWeaponType == WeaponTypes.PDW then
 		s_DamageFactor = Config.DamageFactorPDW
-	elseif p_Bot.m_ActiveWeapon.type == WeaponTypes.LMG then
+	elseif s_ActiveWeaponType == WeaponTypes.LMG then
 		s_DamageFactor = Config.DamageFactorLMG
-	elseif p_Bot.m_ActiveWeapon.type == WeaponTypes.Sniper then
+	elseif s_ActiveWeaponType == WeaponTypes.Sniper then
 		s_DamageFactor = Config.DamageFactorSniper
-	elseif p_Bot.m_ActiveWeapon.type == WeaponTypes.Pistol then
+	elseif s_ActiveWeaponType == WeaponTypes.Pistol then
 		s_DamageFactor = Config.DamageFactorPistol
-	elseif p_Bot.m_ActiveWeapon.type == WeaponTypes.Knife then
+	elseif s_ActiveWeaponType == WeaponTypes.Knife then
 		s_DamageFactor = Config.DamageFactorKnife
 	end
 
-	if not p_Fake then -- frag mode
-		s_ResultDamage = p_Damage * s_DamageFactor
-	else
-		if p_Damage <= 2 then
-			local s_Distance = p_Bot.m_Player.soldier.worldTransform.trans:Distance(p_Soldier.worldTransform.trans)
+	-- frag mode
+	if not p_Fake then
+		return p_Damage * s_DamageFactor
+	end
 
-			if s_Distance >= p_Bot.m_ActiveWeapon.damageFalloffEndDistance then
-				s_ResultDamage = p_Bot.m_ActiveWeapon.endDamage
-			elseif s_Distance <= p_Bot.m_ActiveWeapon.damageFalloffStartDistance then
-				s_ResultDamage = p_Bot.m_ActiveWeapon.damage
-			else -- extrapolate damage
-				local s_RelativePosition = (s_Distance - p_Bot.m_ActiveWeapon.damageFalloffStartDistance) /
-					(p_Bot.m_ActiveWeapon.damageFalloffEndDistance - p_Bot.m_ActiveWeapon.damageFalloffStartDistance)
-				s_ResultDamage = p_Bot.m_ActiveWeapon.damage -
-					(s_RelativePosition * (p_Bot.m_ActiveWeapon.damage - p_Bot.m_ActiveWeapon.endDamage))
-			end
+	if p_Damage == 1 or p_Damage == 2 then
+		local s_Distance = p_Bot.m_Player.soldier.worldTransform.trans:Distance(p_Soldier.worldTransform.trans)
 
-			if p_Damage == 2 then
-				s_ResultDamage = s_ResultDamage * Config.HeadShotFactorBots
-			end
-
-			s_ResultDamage = s_ResultDamage * s_DamageFactor
-		elseif p_Damage == 3 then -- melee
-			s_ResultDamage = p_Bot.m_Knife.damage * Config.DamageFactorKnife
+		if s_Distance >= s_ActiveWeapon.damageFalloffEndDistance then
+			s_ResultDamage = s_ActiveWeapon.endDamage
+		elseif s_Distance <= s_ActiveWeapon.damageFalloffStartDistance then
+			s_ResultDamage = s_ActiveWeapon.damage
+		-- extrapolate damage
+		else
+			local s_RelativePosition = (s_Distance - s_ActiveWeapon.damageFalloffStartDistance) /
+				(s_ActiveWeapon.damageFalloffEndDistance - s_ActiveWeapon.damageFalloffStartDistance)
+			s_ResultDamage = s_ActiveWeapon.damage -
+				(s_RelativePosition * (s_ActiveWeapon.damage - s_ActiveWeapon.endDamage))
 		end
+
+		-- headshot
+		if p_Damage == 2 then
+			s_ResultDamage = s_ResultDamage * Config.HeadShotFactorBots
+		end
+
+		s_ResultDamage = s_ResultDamage * s_DamageFactor
+	-- melee
+	elseif p_Damage == 3 then
+		s_ResultDamage = p_Bot.m_Knife.damage * Config.DamageFactorKnife
 	end
 
 	return s_ResultDamage

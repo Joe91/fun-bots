@@ -406,7 +406,7 @@ end
 
 ---@param p_Player Player
 function Bot:Revive(p_Player)
-	if self.m_Kit == BotKits.Assault and p_Player.corpse ~= nil and not p_Player.corpse.isDead and not Globals.IsGm then
+	if self.m_Kit == BotKits.Assault and p_Player.corpse and not p_Player.corpse.isDead and not Globals.IsGm then
 		if Config.BotsRevive then
 			self._ActiveAction = BotActionFlags.ReviveActive
 			self._ShootPlayer = nil
@@ -453,7 +453,7 @@ function Bot:DeployIfPossible()
 	-- deploy from time to time
 	if self.m_PrimaryGadget ~= nil and (self.m_Kit == BotKits.Support or self.m_Kit == BotKits.Assault) then
 		if self.m_PrimaryGadget.type == WeaponTypes.Ammobag or self.m_PrimaryGadget.type == WeaponTypes.Medkit then
-			self:_AbortAttack()
+			self:AbortAttack()
 			self._WeaponToUse = BotWeapons.Gadget1
 			self._DeployTimer = 0.0
 		end
@@ -463,7 +463,7 @@ end
 ---@return boolean
 function Bot:_DoExitVehicle()
 	if self._ExitVehicleActive then
-		self:_AbortAttack()
+		self:AbortAttack()
 		self.m_Player:ExitVehicle(false, false)
 		local s_Node = g_GameDirector:FindClosestPath(self.m_Player.soldier.worldTransform.trans, false, true, nil)
 
@@ -725,7 +725,7 @@ function Bot:_CheckForVehicleActions(p_DeltaTime)
 
 			if s_CurrentVehicleHealth <= self._ExitVehicleHealth then
 				if math.random(0, 100) <= Registry.VEHICLES.VEHICLE_PROPABILITY_EXIT_LOW_HEALTH then
-					self:_AbortAttack()
+					self:AbortAttack()
 					self:ExitVehicle()
 				end
 			end
@@ -745,9 +745,9 @@ function Bot:_CheckForVehicleActions(p_DeltaTime)
 				if s_VehicleEntity:GetPlayerInEntry(l_SeatIndex) == nil then
 					-- better seat available --> swich seats
 					m_Logger:Write("switch to better seat")
-					self:_AbortAttack()
+					self:AbortAttack()
 					self.m_Player:EnterVehicle(s_VehicleEntity, l_SeatIndex)
-					self:_UpdateVehicleMovableId()
+					self:UpdateVehicleMovableId()
 					break
 				end
 			end
@@ -762,9 +762,9 @@ function Bot:_CheckForVehicleActions(p_DeltaTime)
 				else -- check if there is a gap
 					if s_LowestSeatIndex >= 0 then -- there is a better place
 						m_Logger:Write("switch to better seat")
-						self:_AbortAttack()
+						self:AbortAttack()
 						self.m_Player:EnterVehicle(s_VehicleEntity, s_LowestSeatIndex)
-						self:_UpdateVehicleMovableId()
+						self:UpdateVehicleMovableId()
 						break
 					end
 				end
@@ -1113,7 +1113,7 @@ function Bot:_UpdateStationaryAAVehicle(p_Attacking)
 			self._ShootPlayer = PlayerManager:GetPlayerByName(self._ShootPlayerName)
 			self._ShootPlayerVehicleType = m_Vehicles:FindOutVehicleType(self._ShootPlayer)
 		else
-			self:_AbortAttack()
+			self:AbortAttack()
 		end
 
 		self._DeployTimer = 0.0
@@ -1144,7 +1144,7 @@ end
 
 function Bot:_UpdateReloadVehicle()
 	self._WeaponToUse = BotWeapons.Primary
-	self:_AbortAttack()
+	self:AbortAttack()
 
 	if self._ActiveAction ~= BotActionFlags.OtherActionActive then
 		self._TargetPitch = 0.0
@@ -1175,7 +1175,7 @@ function Bot:FindVehiclePath(p_Position)
 	end
 end
 
-function Bot:_UpdateVehicleMovableId()
+function Bot:UpdateVehicleMovableId()
 	self:_SetActiveVars() -- update if "on vehicle" or "in vehicle"
 
 	if self.m_OnVehicle then
@@ -1317,7 +1317,7 @@ function Bot:_GetWayIndex(p_CurrentWayPoint)
 	return s_ActivePointIndex
 end
 
-function Bot:_AbortAttack()
+function Bot:AbortAttack()
 	if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) and self._ShootPlayerName ~= "" then
 		self._VehicleTakeoffTimer = Registry.VEHICLES.JET_ABORT_ATTACK_TIME
 		self._JetAbortAttackActive = true
