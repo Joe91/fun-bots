@@ -117,9 +117,6 @@ function FunBotServer:RegisterEvents()
 	Events:Subscribe('Vehicle:Damage', self, self.OnVehicleDamage)
 	Events:Subscribe('Vehicle:Enter', self, self.OnVehicleEnter)
 	Events:Subscribe('Vehicle:Exit', self, self.OnVehicleExit)
-
-	--Events:Subscribe('GunSway:Update', m_BotManager, m_BotManager.OnGunSway)
-	--Events:Subscribe('GunSway:UpdateRecoil', m_BotManager, m_BotManager.OnGunSway)
 end
 
 function FunBotServer:RegisterHooks()
