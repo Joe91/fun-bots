@@ -1,4 +1,5 @@
 ---@class FunBotClient
+---@overload fun():FunBotClient
 FunBotClient = class('FunBotClient')
 
 require('__shared/Config')
@@ -105,7 +106,8 @@ function FunBotClient:OnPlayerRespawn(p_Player)
 	if s_LocalPlayer ~= nil and p_Player == s_LocalPlayer then
 		local s_OldMemory = math.floor(collectgarbage("count") / 1024)
 		collectgarbage('collect')
-		m_Logger:Write("*Collecting Garbage on Level Destroy: " .. math.floor(collectgarbage("count") / 1024) .. " MB | Old Memory: " .. s_OldMemory .. " MB")
+		m_Logger:Write("*Collecting Garbage on Level Destroy: " ..
+			math.floor(collectgarbage("count") / 1024) .. " MB | Old Memory: " .. s_OldMemory .. " MB")
 	end
 end
 

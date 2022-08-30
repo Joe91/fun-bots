@@ -1,6 +1,7 @@
 -- thanks to RM https://github.com/BF3RM/MapEditor/blob/development/ext/Shared/Util/Logger.lua
 
 ---@class Logger
+---@overload fun(p_ClassName: string, p_ActivateLogging: boolean):Logger
 Logger = class "Logger"
 
 ---@param p_ClassName string

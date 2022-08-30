@@ -1,4 +1,5 @@
 ---@class FunBotUIServer
+---@overload fun():FunBotUIServer
 FunBotUIServer = class 'FunBotUIServer'
 
 require('__shared/ArrayMap')

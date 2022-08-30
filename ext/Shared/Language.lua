@@ -1,4 +1,5 @@
 ---@class Language
+---@overload fun():Language
 Language = class 'Language'
 
 require('__shared/Utilities')

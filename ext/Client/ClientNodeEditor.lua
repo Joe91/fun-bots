@@ -1,4 +1,5 @@
 ---@class ClientNodeEditor
+---@overload fun():ClientNodeEditor
 ClientNodeEditor = class "ClientNodeEditor"
 
 require('__shared/Config')
@@ -181,7 +182,9 @@ function ClientNodeEditor:OnRegisterEvents()
 	Console:Register('Split', 'Split selected waypoints', self, self._onSplitNode)
 	Console:Register('SelectNext', 'Extend selection to next waypoint', self, self._onSelectNext)
 	Console:Register('SelectBetween', 'Select all waypoint between start and end of selection', self, self._onSelectBetween)
-	Console:Register('SetInput', '<number|0-15> <number|0-15> <number|0-255> - Sets input variables for the selected waypoints', self, self._onSetInputNode)
+	Console:Register('SetInput',
+		'<number|0-15> <number|0-15> <number|0-255> - Sets input variables for the selected waypoints', self,
+		self._onSetInputNode)
 
 	Console:Register('TraceShow', '\'all\' or <number|PathIndex> - Show trace\'s waypoints', self, self._onShowPath)
 	Console:Register('TraceHide', '\'all\' or <number|PathIndex> - Hide trace\'s waypoints', self, self._onHidePath)
@@ -195,27 +198,36 @@ function ClientNodeEditor:OnRegisterEvents()
 
 	-- debugging commands, not meant for UI
 	Console:Register('Enabled', 'Enable / Disable the waypoint editor', self, self.OnSetEnabled)
-	Console:Register('CommoRoseEnabled', 'Enable / Disable the waypoint editor Commo Rose', self, self._onSetCommoRoseEnabled)
+	Console:Register('CommoRoseEnabled', 'Enable / Disable the waypoint editor Commo Rose', self,
+		self._onSetCommoRoseEnabled)
 	Console:Register('CommoRoseShow', 'Show custom Commo Rose', self, self._onShowRose)
 	Console:Register('CommoRoseHide', 'Hide custom Commo Rose', self, self._onHideRose)
-	Console:Register('SetMetadata', '<string|Data> - Set Metadata for waypoint, Must be valid JSON string', self, self._onSetMetadata)
+	Console:Register('SetMetadata', '<string|Data> - Set Metadata for waypoint, Must be valid JSON string', self,
+		self._onSetMetadata)
 	Console:Register('AddObjective', '<string|Objective> - Add an objective to a path', self, self._onAddObjective)
 	Console:Register('AddMcom', 'Add an MCOM Arm/Disarm-Action to a point', self, self._onAddMcom)
 	Console:Register('AddVehicle', 'Add a vehicle a bot can use', self, self._onAddVehicle)
-	Console:Register('ExitVehicle', '<bool|OnlyPassengers> Add a point where all bots or only the passengers leaves the vehicle', self, self._onExitVehicle)
-	Console:Register('AddVehiclePath', '<string|Type> Add vehicle-usage to a path. Types = land, water, air', self, self._onAddVehiclePath)
-	Console:Register('RemoveObjective', '<string|Objective> - Remove an objective from a path', self, self._onRemoveObjective)
+	Console:Register('ExitVehicle',
+		'<bool|OnlyPassengers> Add a point where all bots or only the passengers leaves the vehicle', self, self._onExitVehicle)
+	Console:Register('AddVehiclePath', '<string|Type> Add vehicle-usage to a path. Types = land, water, air', self,
+		self._onAddVehiclePath)
+	Console:Register('RemoveObjective', '<string|Objective> - Remove an objective from a path', self,
+		self._onRemoveObjective)
 	Console:Register('RemoveData', 'Remove all data of one or several nodes', self, self._onRemoveData)
-	Console:Register('ProcessMetadata', 'Process waypoint metadata starting with selected nodes or all nodes', self, self._onProcessMetadata)
-	Console:Register('RecalculateIndexes', 'Recalculate Indexes starting with selected nodes or all nodes', self, self._onRecalculateIndexes)
+	Console:Register('ProcessMetadata', 'Process waypoint metadata starting with selected nodes or all nodes', self,
+		self._onProcessMetadata)
+	Console:Register('RecalculateIndexes', 'Recalculate Indexes starting with selected nodes or all nodes', self,
+		self._onRecalculateIndexes)
 	Console:Register('DumpNodes', 'Print selected nodes or all nodes to console', self, self._onDumpNodes)
 	Console:Register('UnloadNodes', 'Clears and unloads all clientside nodes', self, self._onUnload)
 
 	Console:Register('ObjectiveDirection', 'Show best direction to given objective', self, self._onObjectiveDirection)
-	Console:Register('GetKnownObjectives', 'print all known objectives and associated paths', self, self._onGetKnownObjectives)
+	Console:Register('GetKnownObjectives', 'print all known objectives and associated paths', self,
+		self._onGetKnownObjectives)
 
 
-	Console:Register('BotVision', '*<boolean|Enabled>* Lets you see what the bots see [Experimental]', self, self._onSetBotVision)
+	Console:Register('BotVision', '*<boolean|Enabled>* Lets you see what the bots see [Experimental]', self,
+		self._onSetBotVision)
 
 	self.m_EventsReady = true
 	self:Log('Register Events')
@@ -1227,9 +1239,14 @@ function ClientNodeEditor:_onEndTrace()
 		local s_Raycast = nil
 
 		if self.m_Player.attachedControllable ~= nil then
-			s_Raycast = RaycastManager:Raycast(s_StartPos, s_EndPos, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll | RayCastFlags.CheckDetailMesh | RayCastFlags.DontCheckPhantoms | RayCastFlags.DontCheckGroup | RayCastFlags.IsAsyncRaycast)
+			s_Raycast = RaycastManager:Raycast(s_StartPos, s_EndPos,
+				RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll |
+				RayCastFlags.CheckDetailMesh | RayCastFlags.DontCheckPhantoms | RayCastFlags.DontCheckGroup |
+				RayCastFlags.IsAsyncRaycast)
 		else
-			s_Raycast = RaycastManager:Raycast(s_StartPos, s_EndPos, RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll | RayCastFlags.CheckDetailMesh | RayCastFlags.IsAsyncRaycast)
+			s_Raycast = RaycastManager:Raycast(s_StartPos, s_EndPos,
+				RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll |
+				RayCastFlags.CheckDetailMesh | RayCastFlags.IsAsyncRaycast)
 		end
 
 		self.m_CustomTrace:ClearSelection()
@@ -1498,7 +1515,8 @@ end
 ---@param p_ParentGraph DataContainer
 ---@param p_StateNodeGuid Guid|nil
 function ClientNodeEditor:OnUIPushScreen(p_HookCtx, p_Screen, p_Priority, p_ParentGraph, p_StateNodeGuid)
-	if self.m_Enabled and self.m_CommoRoseEnabled and p_Screen ~= nil and UIScreenAsset(p_Screen).name == 'UI/Flow/Screen/CommRoseScreen' then
+	if self.m_Enabled and self.m_CommoRoseEnabled and p_Screen ~= nil and
+		UIScreenAsset(p_Screen).name == 'UI/Flow/Screen/CommRoseScreen' then
 		self:Log('Blocked vanilla commo rose')
 		p_HookCtx:Return()
 		return
@@ -1827,7 +1845,8 @@ function ClientNodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 						local s_LastWaypointAgain = self.m_CustomTrace:GetLast()
 						self.m_CustomTrace:ClearSelection()
 						self.m_CustomTrace:Select(s_LastWaypointAgain)
-						self.m_CustomTrace:SetInput(s_LastWaypointAgain.SpeedMode, s_LastWaypointAgain.ExtraMode, s_LastWaypointAgain.OptValue + p_DeltaTime)
+						self.m_CustomTrace:SetInput(s_LastWaypointAgain.SpeedMode, s_LastWaypointAgain.ExtraMode,
+							s_LastWaypointAgain.OptValue + p_DeltaTime)
 					end
 
 					self.m_CustomTraceDistance = self.m_CustomTraceDistance + s_LastDistance
@@ -1947,7 +1966,10 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 			for p = 1, #s_Players do
 				if s_Players[p].soldier ~= nil and self.m_Player.teamId ~= s_Players[p].teamId then
-					local s_Ray = RaycastManager:Raycast(self.m_PlayerPos + Vec3.up, (s_Players[p].soldier.worldTransform.trans + Vec3.up), RayCastFlags.CheckDetailMesh | RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.IsAsyncRaycast)
+					local s_Ray = RaycastManager:Raycast(self.m_PlayerPos + Vec3.up,
+						(s_Players[p].soldier.worldTransform.trans + Vec3.up),
+						RayCastFlags.CheckDetailMesh | RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter |
+						RayCastFlags.IsAsyncRaycast)
 
 					local s_PosData = {
 						Visible = (s_Ray == nil or s_Ray.rigidBody == nil),
@@ -2146,7 +2168,8 @@ function ClientNodeEditor:DrawDebugThings(p_DeltaTime)
 		s_HelpText = s_HelpText .. '|   1   |   2   |   3   |' .. "\n"
 		s_HelpText = s_HelpText .. '| Mode  | Back  | Down  |' .. "\n"
 		s_HelpText = s_HelpText .. '+-------+-------+-------+' .. "\n"
-		s_HelpText = s_HelpText .. string.format('|X %+04.2f | Y %+04.2f|', self.m_EditModeManualOffset.x, self.m_EditModeManualOffset.y) .. "\n"
+		s_HelpText = s_HelpText ..
+			string.format('|X %+04.2f | Y %+04.2f|', self.m_EditModeManualOffset.x, self.m_EditModeManualOffset.y) .. "\n"
 		s_HelpText = s_HelpText .. string.format('|	  Z %+04.2f	   |', self.m_EditModeManualOffset.z) .. "\n"
 		s_HelpText = s_HelpText .. '+-----------------------+' .. "\n"
 		s_HelpText = s_HelpText .. ' Nudge Speed: ' .. tostring(self.m_EditModeManualSpeed) .. "\n"
@@ -2525,7 +2548,8 @@ function ClientNodeEditor:Raycast(p_MaxDistance, p_UseAsync)
 
 	-- Perform raycast, returns a RayCastHit object.
 
-	local s_Flags = RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll | RayCastFlags.CheckDetailMesh
+	local s_Flags = RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll |
+		RayCastFlags.CheckDetailMesh
 
 	if p_UseAsync then
 		s_Flags = s_Flags | RayCastFlags.IsAsyncRaycast

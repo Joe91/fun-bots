@@ -1,4 +1,5 @@
 ---@class FunBotUIClient
+---@overload fun():FunBotUIClient
 FunBotUIClient = class 'FunBotUIClient'
 
 require('UIViews')

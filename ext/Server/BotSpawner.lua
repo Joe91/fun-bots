@@ -1,4 +1,5 @@
 ---@class BotSpawner
+---@overload fun():BotSpawner
 BotSpawner = class('BotSpawner')
 
 require('Model/SpawnSet')
@@ -718,8 +719,8 @@ function BotSpawner:SpawnWayBots(p_Player, p_Amount, p_UseRandomWay, p_ActiveWay
 		local s_SpawnSet = SpawnSet()
 		s_SpawnSet.m_PlayerVarOfBot = nil
 		s_SpawnSet.m_UseRandomWay = p_UseRandomWay
-		s_SpawnSet.m_ActiveWayIndex = p_ActiveWayIndex
-		s_SpawnSet.m_IndexOnPath = p_IndexOnPath
+		s_SpawnSet.m_ActiveWayIndex = p_ActiveWayIndex or 1
+		s_SpawnSet.m_IndexOnPath = p_IndexOnPath or 1
 		s_SpawnSet.m_Team = p_TeamId
 		table.insert(self._SpawnSets, s_SpawnSet)
 	end
@@ -1760,7 +1761,7 @@ function BotSpawner:_FindAppearance(p_TeamName, p_KitName, p_ColorName)
 	return nil
 end
 
---[[ 
+--[[
 ---@param p_UnlockAssets UnlockAssetBase[]
 ---@param p_Attachments string[]
 function BotSpawner:_SetAttachments(p_UnlockAssets, p_Attachments)

@@ -1,4 +1,5 @@
 ---@class UISettings
+---@overload fun():UISettings
 UISettings = class 'UISettings'
 
 require('__shared/ArrayMap')

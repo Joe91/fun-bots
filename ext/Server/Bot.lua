@@ -1,4 +1,5 @@
 ---@class Bot
+---@overload fun(p_Player: Player):Bot
 Bot = class('Bot')
 
 require('__shared/Config')

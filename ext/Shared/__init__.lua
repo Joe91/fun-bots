@@ -1,4 +1,5 @@
 ---@class FunBotShared
+---@overload fun():FunBotShared
 FunBotShared = class('FunBotShared')
 
 require('__shared/Debug')

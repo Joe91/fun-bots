@@ -1,4 +1,5 @@
 ---@class RegistryManager
+---@overload fun():RegistryManager
 RegistryManager = class 'RegistryManager'
 
 require('__shared/Registry/Registry')

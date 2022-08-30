@@ -1,4 +1,5 @@
 ---@class VehicleMovement
+---@overload fun():VehicleMovement
 VehicleMovement = class('VehicleMovement')
 
 ---@type Logger

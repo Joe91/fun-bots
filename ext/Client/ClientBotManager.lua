@@ -1,4 +1,5 @@
 ---@class ClientBotManager
+---@overload fun():ClientBotManager
 ClientBotManager = class('ClientBotManager')
 
 ---@type WeaponList

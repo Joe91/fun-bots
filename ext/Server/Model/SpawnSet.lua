@@ -1,5 +1,5 @@
 ---@class SpawnSet
-SpawnSet = class('SpawnSet')
+SpawnSet = {}
 
 function SpawnSet:__init()
 	self.m_PlayerVarOfBot = nil

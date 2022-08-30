@@ -1,4 +1,5 @@
 ---@class ChatCommands
+---@overload fun():ChatCommands
 ChatCommands = class('ChatCommands')
 
 require('__shared/Config')

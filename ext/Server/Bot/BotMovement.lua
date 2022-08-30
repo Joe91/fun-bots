@@ -1,4 +1,5 @@
 ---@class BotMovement
+---@overload fun():BotMovement
 BotMovement = class('BotMovement')
 
 ---@type Logger

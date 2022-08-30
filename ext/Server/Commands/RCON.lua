@@ -1,4 +1,5 @@
 ---@class RCONCommands
+---@overload fun():RCONCommands
 RCONCommands = class('RCONCommands')
 
 require('__shared/Config')

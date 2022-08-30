@@ -1,4 +1,5 @@
 ---@class NodeEditor
+---@overload fun():NodeEditor
 NodeEditor = class "NodeEditor"
 
 ---@type NodeCollection

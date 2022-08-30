@@ -1,4 +1,5 @@
 ---@class SettingsManager
+---@overload fun():SettingsManager
 SettingsManager = class('SettingsManager')
 
 require('__shared/Config')

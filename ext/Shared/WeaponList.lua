@@ -1,4 +1,5 @@
 ---@class WeaponList
+---@overload fun():WeaponList
 WeaponList = class('WeaponList')
 
 require('__shared/WeaponClass')
