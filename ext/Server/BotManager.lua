@@ -44,8 +44,6 @@ function BotManager:__init()
 	---`[botPlayer.id .. "-" .. enemyBotPlayer.id] -> boolean`
 	self._ConnectionCheckState = {}
 
-	---@type string[]
-	---`BotName[]`
 	self._LastBotCheckIndex = 1
 	self._LastPlayerCheckIndex = 1
 	self._InitDone = false
@@ -236,6 +234,7 @@ function BotManager:OnSoldierDamage(p_HookCtx, p_Soldier, p_Info, p_GiverInfo)
 
 			-- soldier found, now update the whole DamageInfo
 			if s_BotSoldier then
+				---@cast s_Bot -nil
 				local s_SoldierPosition = p_Soldier.worldTransform.trans
 				p_Info.damage = self:_GetDamageValue(p_Info.damage, s_Bot, p_Soldier, true)
 				p_Info.boneIndex = 0
@@ -1136,18 +1135,18 @@ end
 
 ---@param p_RaycastData any @TODO add emmylua type
 function BotManager:_DistributeRaycastsBotBotAttack(p_RaycastData)
-	local s_RaycastIndex = 0
+	local s_RaycastDataCount = #p_RaycastData
+	local s_ActivePlayerCount = #self._ActivePlayers
 
-	for i = 0, (#self._ActivePlayers - 1) do
-		local s_Index = ((self._LastPlayerCheckIndex + i) % #self._ActivePlayers) + 1
+	for i = 0, (s_ActivePlayerCount - 1) do
+		local s_Index = ((self._LastPlayerCheckIndex + i) % s_ActivePlayerCount) + 1
 		local s_ActivePlayer = PlayerManager:GetPlayerByName(self._ActivePlayers[s_Index])
 
 		if s_ActivePlayer ~= nil then
 			local s_RaycastsToSend = {}
 
-			for l_Count = 1, self._RaycastsPerActivePlayer do
-				if s_RaycastIndex < #p_RaycastData then
-					s_RaycastIndex = s_RaycastIndex + 1
+			for s_RaycastIndex = 1, self._RaycastsPerActivePlayer do
+				if s_RaycastIndex <= s_RaycastDataCount then
 					table.insert(s_RaycastsToSend, p_RaycastData[s_RaycastIndex])
 				else
 					NetEvents:SendUnreliableToLocal('CheckBotBotAttack', s_ActivePlayer, s_RaycastsToSend)
@@ -1169,16 +1168,18 @@ function BotManager:_CheckForBotBotAttack()
 
 	-- create tables and scramble them
 	if #self._BotBotAttackList == 0 then
-		for _, s_TempBot in pairs(self._Bots) do
-			if s_TempBot.m_InVehicle then
-				if s_TempBot.m_ActiveVehicle ~= nil and s_TempBot.m_ActiveVehicle.Type ~= VehicleTypes.StationaryAA then
-					table.insert(self._BotBotAttackList, s_TempBot.m_Name)
+		-- filter out bots not in StationaryAA
+		for _, l_Bot in ipairs(self._Bots) do
+			if l_Bot.m_InVehicle then
+				if l_Bot.m_ActiveVehicle and l_Bot.m_ActiveVehicle.Type ~= VehicleTypes.StationaryAA then
+					table.insert(self._BotBotAttackList, l_Bot.m_Name)
 				end
 			else
-				table.insert(self._BotBotAttackList, s_TempBot.m_Name)
+				table.insert(self._BotBotAttackList, l_Bot.m_Name)
 			end
 		end
 
+		-- randomize the botlist order
 		for i = #self._BotBotAttackList, 2, -1 do
 			local j = math.random(i)
 			self._BotBotAttackList[i], self._BotBotAttackList[j] = self._BotBotAttackList[j], self._BotBotAttackList[i]
@@ -1195,19 +1196,15 @@ function BotManager:_CheckForBotBotAttack()
 		local s_BotNameToCheck = self._BotBotAttackList[i]
 		local s_Bot = self:GetBotByName(s_BotNameToCheck)
 
-		if s_Bot ~= nil and
-			s_Bot.m_Player and
-			s_Bot.m_Player.soldier ~= nil and
-			s_Bot:IsReadyToAttack() then
-			for _, l_BotName in pairs(self._BotBotAttackList) do
+		if s_Bot and s_Bot.m_Player and s_Bot.m_Player.soldier and s_Bot:IsReadyToAttack() then
+			local s_BotPosition = s_Bot.m_Player.soldier.worldTransform.trans
+
+			for _, l_BotName in ipairs(self._BotBotAttackList) do
 				if l_BotName ~= s_BotNameToCheck then
 					local s_EnemyBot = self:GetBotByName(l_BotName)
 
-					if s_EnemyBot ~= nil and
-						s_EnemyBot.m_Player and
-						s_EnemyBot.m_Player.soldier ~= nil and
-						s_EnemyBot.m_Player.teamId ~= s_Bot.m_Player.teamId and
-						s_EnemyBot:IsReadyToAttack() then
+					if s_EnemyBot and s_EnemyBot.m_Player and s_EnemyBot.m_Player.soldier and
+						s_EnemyBot.m_Player.teamId ~= s_Bot.m_Player.teamId and s_EnemyBot:IsReadyToAttack() then
 						-- check connection-state
 						local s_ConnectionValue = ""
 						local s_Id1 = s_Bot.m_Player.id
@@ -1222,8 +1219,7 @@ function BotManager:_CheckForBotBotAttack()
 						if not self._ConnectionCheckState[s_ConnectionValue] then
 							self._ConnectionCheckState[s_ConnectionValue] = true
 							-- check distance
-							local s_Distance = s_Bot.m_Player.soldier.worldTransform.trans:Distance(s_EnemyBot.m_Player.soldier.worldTransform
-								.trans)
+							local s_Distance = s_BotPosition:Distance(s_EnemyBot.m_Player.soldier.worldTransform.trans)
 							s_ChecksDone = s_ChecksDone + 1
 							local s_MaxDistance = s_Bot:GetAttackDistance()
 							local s_MaxDistanceEnemyBot = s_EnemyBot:GetAttackDistance()
