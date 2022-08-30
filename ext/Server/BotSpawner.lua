@@ -1383,8 +1383,8 @@ function BotSpawner:_SetKitAndAppearance(p_Bot, p_Kit, p_Color)
 	end
 
 	-- get Kit and Appearance
-	if p_Kit == BotKits.Assault then --assault
-		if s_TeamId % 2 == 1 then -- US
+	if s_TeamId % 2 == 1 then -- US
+		if p_Kit == BotKits.Assault then --assault
 			s_Appearance = self:_FindAppearance('Us', 'Assault', s_ColorString)
 			s_SoldierKit = self:_FindKit('US', 'Assault')
 		elseif p_Kit == BotKits.Engineer then --engineer
