@@ -529,41 +529,41 @@ function BotManager:ConfigGlobals()
 	Globals.AttackWayBots = Config.AttackWayBots
 	Globals.SpawnMode = Config.SpawnMode
 	Globals.YawPerFrame = self:CalcYawPerFrame()
-	local s_MaxPlayers = RCON:SendCommand('vars.maxPlayers')
-	s_MaxPlayers = tonumber(s_MaxPlayers[2])
 
-	if s_MaxPlayers ~= nil and s_MaxPlayers > 0 then
+	local s_MaxPlayersRCON = RCON:SendCommand('vars.maxPlayers')
+	local s_MaxPlayers = tonumber(s_MaxPlayersRCON[2])
+
+	if s_MaxPlayers and s_MaxPlayers > 0 then
 		Globals.MaxPlayers = s_MaxPlayers
-
 		m_Logger:Write("there are " .. s_MaxPlayers .. " slots on this server")
 	else
-		Globals.MaxPlayers = 127 -- only fallback. Should not happens
+		-- only fallback. Should not happen
+		Globals.MaxPlayers = 127
 		m_Logger:Error("No Playercount found")
 	end
 
 	-- calculate Raycast per Player
-	local s_CycleTime = 1.0 / SharedUtils:GetTickrate()
-	local s_FactorTicksUpdate = Registry.GAME_RAYCASTING.BOT_BOT_CHECK_INTERVAL / s_CycleTime
+	local s_FactorTicksUpdate = Registry.GAME_RAYCASTING.BOT_BOT_CHECK_INTERVAL * SharedUtils:GetTickrate()
 	local s_RaycastsMax = s_FactorTicksUpdate * (Registry.GAME_RAYCASTING.MAX_RAYCASTS_PER_PLAYER_BOT_BOT)
-	self._RaycastsPerActivePlayer = math.floor(s_RaycastsMax - 0.1) -- always round down one
+	-- always round down one
+	self._RaycastsPerActivePlayer = math.floor(s_RaycastsMax - 0.1)
 
 	self._InitDone = true
 end
 
 ---@return number
 function BotManager:CalcYawPerFrame()
-	local s_DeltaTime = 1.0 / SharedUtils:GetTickrate()
-	local s_DegreePerDeltaTime = Config.MaximunYawPerSec * s_DeltaTime
+	local s_DegreePerDeltaTime = Config.MaximunYawPerSec / SharedUtils:GetTickrate()
 	return (s_DegreePerDeltaTime / 360.0) * 2 * math.pi
 end
 
 ---@return string|nil
 function BotManager:FindNextBotName()
-	for _, l_Name in pairs(BotNames) do
+	for _, l_Name in ipairs(BotNames) do
 		local s_Name = Registry.COMMON.BOT_TOKEN .. l_Name
 		local s_SkipName = false
 
-		for _, l_IgnoreName in pairs(Globals.IgnoreBotNames) do
+		for _, l_IgnoreName in ipairs(Globals.IgnoreBotNames) do
 			if s_Name == l_IgnoreName then
 				s_SkipName = true
 				break
@@ -573,9 +573,9 @@ function BotManager:FindNextBotName()
 		if not s_SkipName then
 			local s_Bot = self:GetBotByName(s_Name)
 
-			if s_Bot == nil and PlayerManager:GetPlayerByName(s_Name) == nil then
+			if not s_Bot and not PlayerManager:GetPlayerByName(s_Name) then
 				return s_Name
-			elseif s_Bot ~= nil and s_Bot.m_Player.soldier == nil and s_Bot:GetSpawnMode() ~= BotSpawnModes.RespawnRandomPath then
+			elseif s_Bot and not s_Bot.m_Player.soldier and s_Bot:GetSpawnMode() ~= BotSpawnModes.RespawnRandomPath then
 				return s_Name
 			end
 		end
@@ -584,7 +584,7 @@ function BotManager:FindNextBotName()
 	return nil
 end
 
----@param p_TeamId? TeamId|integer
+---@param p_TeamId? TeamId
 ---@return Bot[]
 function BotManager:GetBots(p_TeamId)
 	if p_TeamId ~= nil then
@@ -599,12 +599,12 @@ function BotManager:GetBotCount()
 	return #self._Bots
 end
 
----@param p_TeamId? TeamId|integer
+---@param p_TeamId? TeamId
 ---@return integer
 function BotManager:GetActiveBotCount(p_TeamId)
 	local s_Count = 0
 
-	for _, l_Bot in pairs(self._Bots) do
+	for _, l_Bot in ipairs(self._Bots) do
 		if not l_Bot:IsInactive() then
 			if p_TeamId == nil or l_Bot.m_Player.teamId == p_TeamId then
 				s_Count = s_Count + 1
@@ -615,6 +615,7 @@ function BotManager:GetActiveBotCount(p_TeamId)
 	return s_Count
 end
 
+---Returns all real players
 ---@return Player[]
 function BotManager:GetPlayers()
 	local s_AllPlayers = PlayerManager:GetPlayers()
@@ -629,17 +630,19 @@ function BotManager:GetPlayers()
 	return s_Players
 end
 
+---Returns real player count
 ---@return integer
 function BotManager:GetPlayerCount()
 	return PlayerManager:GetPlayerCount() - #self._Bots
 end
 
----@param p_Kit integer|BotKits
+---Get the amount of bots using this kit
+---@param p_Kit BotKits
 ---@return integer
 function BotManager:GetKitCount(p_Kit)
 	local s_Count = 0
 
-	for _, l_Bot in pairs(self._Bots) do
+	for _, l_Bot in ipairs(self._Bots) do
 		if l_Bot.m_Kit == p_Kit then
 			s_Count = s_Count + 1
 		end
@@ -649,21 +652,23 @@ function BotManager:GetKitCount(p_Kit)
 end
 
 function BotManager:ResetAllBots()
-	for _, l_Bot in pairs(self._Bots) do
+	for _, l_Bot in ipairs(self._Bots) do
 		l_Bot:ResetVars()
 	end
 end
 
 ---@param p_Player Player
 ---@param p_Option string|'"mode"'|'"speed"'
----@param p_Value integer|BotMoveModes|BotMoveSpeeds
+---@param p_Value BotMoveModes|BotMoveSpeeds
 function BotManager:SetStaticOption(p_Player, p_Option, p_Value)
-	for _, l_Bot in pairs(self._Bots) do
+	for _, l_Bot in ipairs(self._Bots) do
 		if l_Bot:GetTargetPlayer() == p_Player then
 			if l_Bot:IsStaticMovement() then
 				if p_Option == "mode" then
+					---@cast p_Value BotMoveModes
 					l_Bot:SetMoveMode(p_Value)
 				elseif p_Option == "speed" then
+					---@cast p_Value BotMoveSpeeds
 					l_Bot:SetSpeed(p_Value)
 				end
 			end
@@ -672,14 +677,17 @@ function BotManager:SetStaticOption(p_Player, p_Option, p_Value)
 end
 
 ---@param p_Option string|'"shoot"'|'"respawn"'|'"moveMode"'
----@param p_Value boolean|integer|BotMoveModes
+---@param p_Value boolean|BotMoveModes
 function BotManager:SetOptionForAll(p_Option, p_Value)
 	for _, l_Bot in pairs(self._Bots) do
 		if p_Option == "shoot" then
+			---@cast p_Value boolean
 			l_Bot:SetShoot(p_Value)
 		elseif p_Option == "respawn" then
+			---@cast p_Value boolean
 			l_Bot:SetRespawn(p_Value)
 		elseif p_Option == "moveMode" then
+			---@cast p_Value BotMoveModes
 			l_Bot:SetMoveMode(p_Value)
 		end
 	end
@@ -687,15 +695,18 @@ end
 
 ---@param p_Player Player
 ---@param p_Option string|'"shoot"'|'"respawn"'|'"moveMode"'
----@param p_Value boolean|integer|BotMoveModes
+---@param p_Value boolean|BotMoveModes
 function BotManager:SetOptionForPlayer(p_Player, p_Option, p_Value)
 	for _, l_Bot in pairs(self._Bots) do
 		if l_Bot:GetTargetPlayer() == p_Player then
 			if p_Option == "shoot" then
+				---@cast p_Value boolean
 				l_Bot:SetShoot(p_Value)
 			elseif p_Option == "respawn" then
+				---@cast p_Value boolean
 				l_Bot:SetRespawn(p_Value)
 			elseif p_Option == "moveMode" then
+				---@cast p_Value BotMoveModes
 				l_Bot:SetMoveMode(p_Value)
 			end
 		end
@@ -703,20 +714,21 @@ function BotManager:SetOptionForPlayer(p_Player, p_Option, p_Value)
 end
 
 ---@param p_Name string
----@return Bot
+---@return Bot|nil
 function BotManager:GetBotByName(p_Name)
 	return self._BotsByName[p_Name]
 end
 
 ---@param p_Name string
----@param p_TeamId integer|TeamId
----@param p_SquadId integer|SquadId
+---@param p_TeamId TeamId
+---@param p_SquadId SquadId
 ---@return Bot|nil
 function BotManager:CreateBot(p_Name, p_TeamId, p_SquadId)
 	--m_Logger:Write('botsByTeam['..#self._BotsByTeam[2]..'|'..#self._BotsByTeam[3]..']')
 
 	local s_Bot = self:GetBotByName(p_Name)
 
+	-- Bot exists, so just reset him
 	if s_Bot ~= nil then
 		s_Bot.m_Player.teamId = p_TeamId
 		s_Bot.m_Player.squadId = p_SquadId
@@ -753,12 +765,16 @@ function BotManager:CreateBot(p_Name, p_TeamId, p_SquadId)
 	---@type Bot
 	s_Bot = Bot(s_BotPlayer)
 
-	local teamLookup = s_Bot.m_Player.teamId + 1
 	table.insert(self._Bots, s_Bot)
-	self._BotsByTeam[teamLookup] = self._BotsByTeam[teamLookup] or {}
-	table.insert(self._BotsByTeam[teamLookup], s_Bot)
 	self._BotsByName[p_Name] = s_Bot
-	self._BotInputs[s_BotPlayer.id] = s_BotInput -- bot inputs are stored to prevent garbage collection
+
+	-- teamid's in self._BotsByTeam are offset by 1
+	local s_TeamLookup = s_Bot.m_Player.teamId + 1
+	self._BotsByTeam[s_TeamLookup] = self._BotsByTeam[s_TeamLookup] or {}
+	table.insert(self._BotsByTeam[s_TeamLookup], s_Bot)
+
+	-- bot inputs are stored to prevent garbage collection
+	self._BotInputs[s_BotPlayer.id] = s_BotInput
 	return s_Bot
 end
 
