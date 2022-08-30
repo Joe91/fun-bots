@@ -1135,6 +1135,7 @@ end
 
 ---@param p_RaycastData any @TODO add emmylua type
 function BotManager:_DistributeRaycastsBotBotAttack(p_RaycastData)
+	local s_RaycastIndex = 0
 	local s_RaycastDataCount = #p_RaycastData
 	local s_ActivePlayerCount = #self._ActivePlayers
 
@@ -1145,8 +1146,9 @@ function BotManager:_DistributeRaycastsBotBotAttack(p_RaycastData)
 		if s_ActivePlayer ~= nil then
 			local s_RaycastsToSend = {}
 
-			for s_RaycastIndex = 1, self._RaycastsPerActivePlayer do
-				if s_RaycastIndex <= s_RaycastDataCount then
+			for l_Count = 1, self._RaycastsPerActivePlayer do
+				if s_RaycastIndex < s_RaycastDataCount then
+					s_RaycastIndex = s_RaycastIndex + 1
 					table.insert(s_RaycastsToSend, p_RaycastData[s_RaycastIndex])
 				else
 					NetEvents:SendUnreliableToLocal('CheckBotBotAttack', s_ActivePlayer, s_RaycastsToSend)

@@ -719,8 +719,8 @@ function BotSpawner:SpawnWayBots(p_Player, p_Amount, p_UseRandomWay, p_ActiveWay
 		local s_SpawnSet = SpawnSet()
 		s_SpawnSet.m_PlayerVarOfBot = nil
 		s_SpawnSet.m_UseRandomWay = p_UseRandomWay
-		s_SpawnSet.m_ActiveWayIndex = p_ActiveWayIndex or 1
-		s_SpawnSet.m_IndexOnPath = p_IndexOnPath or 1
+		s_SpawnSet.m_ActiveWayIndex = p_ActiveWayIndex or 0
+		s_SpawnSet.m_IndexOnPath = p_IndexOnPath or 0
 		s_SpawnSet.m_Team = p_TeamId
 		table.insert(self._SpawnSets, s_SpawnSet)
 	end

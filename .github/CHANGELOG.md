@@ -21,11 +21,13 @@ This is the changelog for the version V2.6.0. Don't forget to [join us on Discor
 * keep Skill of Bot for whole game
 * restructurisation of Bot.lua-Class
 * massive rework on BotSpawner to prevent crashes on Map-Change.
+* massive refactoring of BotManager by Bree_Arnold!
 
 ### Bug fixes
 * #218 increased auto-sniper-time a little
 * fix throw of nade too early / often
 * #227 fix for crash on mapchange with current VU-Version
+* fix some static move-modes with new Bot-Structure
 
 ### New maps
 * 
