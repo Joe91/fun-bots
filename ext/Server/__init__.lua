@@ -1,4 +1,5 @@
 ---@class FunBotServer
+---@overload fun():FunBotServer
 FunBotServer = class('FunBotServer')
 
 -- The registry should be loaded first before loading anything else.
@@ -252,8 +253,8 @@ end
 ---VEXT Server Level:Loaded Event
 ---@param p_LevelName string
 ---@param p_GameMode string
----@param p_Round? integer
----@param p_RoundsPerMap? integer
+---@param p_Round integer
+---@param p_RoundsPerMap integer
 function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPerMap)
 	Globals.GameMode = p_GameMode
 	local s_GameMode = ServerUtils:GetCustomGameModeName()
@@ -617,13 +618,13 @@ function FunBotServer:OnModReloaded()
 		return
 	end
 
-	s_FullLevelPath = s_FullLevelPath:split('/')
-	local s_Level = s_FullLevelPath[#s_FullLevelPath]
+	local s_FullLevelPathTable = s_FullLevelPath:split('/')
+	local s_Level = s_FullLevelPathTable[#s_FullLevelPathTable]
 	local s_GameMode = SharedUtils:GetCurrentGameMode()
 	m_Logger:Write(s_Level .. '_' .. s_GameMode .. ' reloaded')
 
 	if s_Level ~= nil and s_GameMode ~= nil then
-		self:OnLevelLoaded(s_Level, s_GameMode)
+		self:OnLevelLoaded(s_Level, s_GameMode, TicketManager:GetCurrentRound(), TicketManager:GetRoundCount())
 	end
 end
 
