@@ -1068,24 +1068,34 @@ end
 
 ---@param p_Player Player
 function BotManager:EnterVehicle(p_Player)
-	if p_Player ~= nil and p_Player.soldier ~= nil then
-		-- check for vehicle of player and seats
-		if p_Player.controlledControllable ~= nil and not p_Player.controlledControllable:Is("ServerSoldierEntity") then
-			local s_VehicleEntity = p_Player.controlledControllable
-			local s_MaxFreeSeats = s_VehicleEntity.entryCount - 1
+	if not p_Player or not p_Player.soldier or not p_Player.controlledControllable or
+		p_Player.controlledControllable.typeInfo.name == "ServerSoldierEntity" then
+		return
+	end
 
-			for _, l_Bot in pairs(self._BotsByTeam[p_Player.teamId + 1]) do
-				if not l_Bot.m_InVehicle and l_Bot.m_Player.soldier ~= nil then
-					local s_Distance = l_Bot.m_Player.soldier.worldTransform.trans:Distance(p_Player.soldier.worldTransform.trans)
+	-- check for vehicle of player and seats
+	local s_MaxFreeSeats = p_Player.controlledControllable.entryCount - 1
 
-					if s_Distance < Registry.COMMON.COMMAND_DISTANCE then
-						l_Bot:EnterVehicleOfPlayer(p_Player)
-						s_MaxFreeSeats = s_MaxFreeSeats - 1
+	if s_MaxFreeSeats <= 0 then
+		return
+	end
+
+	local s_SoldierPosition = p_Player.soldier.worldTransform.trans
+
+	for _, l_Bot in ipairs(self._BotsByTeam[p_Player.teamId + 1]) do
+		if not l_Bot.m_InVehicle then
+			local s_BotSoldier = l_Bot.m_Player.soldier
+
+			if s_BotSoldier then
+				local s_Distance = s_BotSoldier.worldTransform.trans:Distance(s_SoldierPosition)
+
+				if s_Distance < Registry.COMMON.COMMAND_DISTANCE then
+					l_Bot:EnterVehicleOfPlayer(p_Player)
+					s_MaxFreeSeats = s_MaxFreeSeats - 1
+
+					if s_MaxFreeSeats == 0 then
+						break
 					end
-				end
-
-				if s_MaxFreeSeats <= 0 then
-					break
 				end
 			end
 		end
@@ -1095,21 +1105,26 @@ end
 ---@param p_Player Player
 ---@param p_Objective any @TODO add emmylua type
 function BotManager:Attack(p_Player, p_Objective)
-	if Globals.IsConquest and p_Player ~= nil and p_Player.soldier ~= nil then
-		local s_MaxObjectiveBots = 4
+	if not Globals.IsConquest or not p_Player or not p_Player.soldier then
+		return
+	end
 
-		for _, l_Bot in pairs(self._BotsByTeam[p_Player.teamId + 1]) do
-			if l_Bot.m_Player.soldier ~= nil then
-				local s_Distance = l_Bot.m_Player.soldier.worldTransform.trans:Distance(p_Player.soldier.worldTransform.trans)
+	local s_MaxObjectiveBots = 4
+	local s_SoldierPosition = p_Player.soldier.worldTransform.trans
 
-				if s_Distance < Registry.COMMON.COMMAND_DISTANCE then
-					l_Bot:UpdateObjective(p_Objective)
-					s_MaxObjectiveBots = s_MaxObjectiveBots - 1
+	for _, l_Bot in ipairs(self._BotsByTeam[p_Player.teamId + 1]) do
+		local s_BotSoldier = l_Bot.m_Player.soldier
+
+		if s_BotSoldier then
+			local s_Distance = s_BotSoldier.worldTransform.trans:Distance(s_SoldierPosition)
+
+			if s_Distance < Registry.COMMON.COMMAND_DISTANCE then
+				l_Bot:UpdateObjective(p_Objective)
+				s_MaxObjectiveBots = s_MaxObjectiveBots - 1
+
+				if s_MaxObjectiveBots == 0 then
+					break
 				end
-			end
-
-			if s_MaxObjectiveBots <= 0 then
-				break
 			end
 		end
 	end
