@@ -1012,20 +1012,25 @@ end
 ---@param p_Player Player
 ---@param p_Type string|'"ammo"'|'"medkit"'
 function BotManager:Deploy(p_Player, p_Type)
-	if p_Player ~= nil and p_Player.soldier ~= nil then
-		-- find bots in range
-		local s_BotsInRange = {}
+	if not p_Player or not p_Player.soldier then
+		return
+	end
 
-		for _, l_Bot in pairs(self._BotsByTeam[p_Player.teamId + 1]) do
-			if not l_Bot.m_InVehicle and l_Bot.m_Player.soldier ~= nil then
+	local s_SoldierPosition = p_Player.soldier.worldTransform.trans
+
+	for _, l_Bot in ipairs(self._BotsByTeam[p_Player.teamId + 1]) do
+		if not l_Bot.m_InVehicle then
+			local s_BotPosition = l_Bot.m_Player.soldier and l_Bot.m_Player.soldier.worldTransform.trans
+
+			if s_BotPosition then
 				if p_Type == "ammo" and l_Bot.m_Kit == BotKits.Support then
-					local s_Distance = l_Bot.m_Player.soldier.worldTransform.trans:Distance(p_Player.soldier.worldTransform.trans)
+					local s_Distance = s_BotPosition:Distance(s_SoldierPosition)
 
 					if s_Distance < Registry.COMMON.COMMAND_DISTANCE then
 						l_Bot:DeployIfPossible()
 					end
 				elseif p_Type == "medkit" and l_Bot.m_Kit == BotKits.Assault then
-					local s_Distance = l_Bot.m_Player.soldier.worldTransform.trans:Distance(p_Player.soldier.worldTransform.trans)
+					local s_Distance = s_BotPosition:Distance(s_SoldierPosition)
 
 					if s_Distance < Registry.COMMON.COMMAND_DISTANCE then
 						l_Bot:DeployIfPossible()
@@ -1038,20 +1043,23 @@ end
 
 ---@param p_Player Player
 function BotManager:RepairVehicle(p_Player)
-	if p_Player ~= nil and p_Player.soldier ~= nil and p_Player.controlledControllable ~= nil and
-		not p_Player.controlledControllable:Is("ServerSoldierEntity") then
-		-- find bots in range
-		local s_BotsInRange = {}
+	if not p_Player or not p_Player.soldier or not p_Player.controlledControllable or
+		p_Player.controlledControllable.typeInfo.name == "ServerSoldierEntity" then
+		return
+	end
 
-		for _, l_Bot in pairs(self._BotsByTeam[p_Player.teamId + 1]) do
-			if not l_Bot.m_InVehicle and l_Bot.m_Player.soldier ~= nil then
-				if l_Bot.m_Kit == BotKits.Engineer then
-					local s_Distance = l_Bot.m_Player.soldier.worldTransform.trans:Distance(p_Player.soldier.worldTransform.trans)
+	local s_SoldierPosition = p_Player.soldier.worldTransform.trans
 
-					if s_Distance < Registry.COMMON.COMMAND_DISTANCE then
-						l_Bot:Repair(p_Player)
-						break
-					end
+	for _, l_Bot in ipairs(self._BotsByTeam[p_Player.teamId + 1]) do
+		if not l_Bot.m_InVehicle and l_Bot.m_Kit == BotKits.Engineer then
+			local s_BotSoldier = l_Bot.m_Player.soldier
+
+			if s_BotSoldier then
+				local s_Distance = s_BotSoldier.worldTransform.trans:Distance(s_SoldierPosition)
+
+				if s_Distance < Registry.COMMON.COMMAND_DISTANCE then
+					l_Bot:Repair(p_Player)
+					break
 				end
 			end
 		end
