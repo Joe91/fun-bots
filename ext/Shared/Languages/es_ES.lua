@@ -252,8 +252,6 @@ Language:add(code, "Distance to spawn reduction", "Reducción de la distancia de
 Language:add(code, "Reduce distance if not possible.", "Reduce la distancia si no se es posible.")
 Language:add(code, "Max tries to spawn at distance", "máximos intentos de spawneo en la distancia")
 Language:add(code, "Try this often to spawn a bot away from players", "intenta esta opción con frecuencia para spawnear bots lejos de los jugadores")
-Language:add(code, "Headshot factor bots", "Valor de los disparos a la cabeza")
-Language:add(code, "Factor for damage if headshot (only in Fake-mode)", "Valor utilizado para el daño de los headshots (solo en --Fake-mode--)")
 Language:add(code, "Attack way Bots", "Atacar a bots de rutas")
 Language:add(code, "Bots on paths attack player", "Bots en las rutas atacan a los jugadores")
 Language:add(code, "Respawn way Bots", "reaparecer bots en las rutas")

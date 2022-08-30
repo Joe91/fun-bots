@@ -80,10 +80,6 @@ function FunBotClient:RegisterEvents()
 end
 
 function FunBotClient:RegisterHooks()
-	if not Registry.COMMON.USE_REAL_DAMAGE then
-		Hooks:Install('BulletEntity:Collision', 200, self, self.OnBulletEntityCollision)
-	end
-
 	Hooks:Install('UI:PushScreen', 1, self, self.OnUIPushScreen)
 	Hooks:Install('Input:PreUpdate', 100, self, self.OnInputPreUpdate)
 end
@@ -210,15 +206,6 @@ end
 -- =============================================
 -- Hooks
 -- =============================================
-
----VEXT Client BulletEntity:Collision Hook
----@param p_HookCtx HookContext
----@param p_Entity Entity
----@param p_Hit RayCastHit
----@param p_Shooter Player|nil
-function FunBotClient:OnBulletEntityCollision(p_HookCtx, p_Entity, p_Hit, p_Shooter)
-	m_ClientBotManager:OnBulletEntityCollision(p_HookCtx, p_Entity, p_Hit, p_Shooter)
-end
 
 ---VEXT Client Input:PreUpdate Hook
 ---@param p_HookCtx HookContext

@@ -20,9 +20,6 @@ function BotManager:__init()
 	---@type table<integer, EntryInput>
 	---`[Player.id] -> EntryInput`
 	self._BotInputs = {}
-	---@type table<string, string>
-	---`[name of damaged player] -> name of shooting player`
-	self._ShooterBots = {}
 	---@type string[]
 	---`playerName:string[]`
 	self._ActivePlayers = {}
@@ -223,35 +220,7 @@ function BotManager:OnSoldierDamage(p_HookCtx, p_Soldier, p_Info, p_GiverInfo)
 			-- this damage was dealt by a bot
 			if s_Bot and s_Bot.m_Player.soldier then
 				-- update the bot damage with the multipliers from the config
-				p_Info.damage = self:_GetDamageValue(p_Info.damage, s_Bot, p_Soldier, false)
-			end
-		-- no damage giver
-		else
-			-- check the table, the damage giver might be a bot
-			local s_Bot = self:GetBotByName(self._ShooterBots[p_Soldier.player.name])
-			-- get the soldier of the bot if there is a valid bot
-			local s_BotSoldier = s_Bot and s_Bot.m_Player.soldier
-
-			-- soldier found, now update the whole DamageInfo
-			if s_BotSoldier then
-				---@cast s_Bot -nil
-				local s_SoldierPosition = p_Soldier.worldTransform.trans
-				p_Info.damage = self:_GetDamageValue(p_Info.damage, s_Bot, p_Soldier, true)
-				p_Info.boneIndex = 0
-				p_Info.isBulletDamage = true
-				p_Info.position = Vec3(s_SoldierPosition.x, s_SoldierPosition.y + 1.0,
-					s_SoldierPosition.z)
-				p_Info.origin = s_BotSoldier.worldTransform.trans
-				p_Info.direction = s_SoldierPosition - p_Info.origin
-
-				-- this is a kill
-				if (p_Soldier.health - p_Info.damage) <= 0.0 then
-					-- increase tickets manually in TDM
-					if Globals.IsTdm then
-						local s_EnemyTeam = p_Soldier.player.teamId == TeamId.Team2 and TeamId.Team1 or TeamId.Team2
-						TicketManager:SetTicketCount(s_EnemyTeam, (TicketManager:GetTicketCount(s_EnemyTeam) + 1))
-					end
-				end
+				p_Info.damage = self:_GetDamageValue(p_Info.damage, s_Bot, p_Soldier)
 			end
 		end
 	end
@@ -263,52 +232,6 @@ end
 -- =============================================
 -- Custom (Net-)Events
 -- =============================================
-
----@param p_PlayerName string
----@param p_ShooterName string
----@param p_MeleeAttack boolean
-function BotManager:OnServerDamagePlayer(p_PlayerName, p_ShooterName, p_MeleeAttack)
-	local s_Player = PlayerManager:GetPlayerByName(p_PlayerName)
-
-	if s_Player ~= nil then
-		self:OnDamagePlayer(s_Player, p_ShooterName, p_MeleeAttack, false)
-	end
-end
-
----@param p_Player Player
----@param p_ShooterName string
----@param p_MeleeAttack boolean
----@param p_IsHeadShot boolean
-function BotManager:OnDamagePlayer(p_Player, p_ShooterName, p_MeleeAttack, p_IsHeadShot)
-	if not p_Player.soldier then
-		return
-	end
-
-	local s_Bot = self:GetBotByName(p_ShooterName)
-
-	if not s_Bot then
-		return
-	end
-
-	if p_Player.teamId == s_Bot.m_Player.teamId then
-		return
-	end
-
-	local s_Damage = 1 -- only trigger soldier-damage with this
-
-	if p_IsHeadShot then
-		s_Damage = 2 -- signal Headshot
-	elseif p_MeleeAttack then
-		s_Damage = 3 --signal melee damage with this value
-	end
-
-	--save potential killer bot
-	self._ShooterBots[p_Player.name] = p_ShooterName
-
-	if p_Player.soldier ~= nil then
-		p_Player.soldier.health = p_Player.soldier.health - s_Damage
-	end
-end
 
 ---@param p_Player Player
 ---@param p_BotName string
@@ -1274,9 +1197,8 @@ end
 ---@param p_Damage integer
 ---@param p_Bot Bot
 ---@param p_Soldier SoldierEntity
----@param p_Fake boolean
 ---@return number
-function BotManager:_GetDamageValue(p_Damage, p_Bot, p_Soldier, p_Fake)
+function BotManager:_GetDamageValue(p_Damage, p_Bot, p_Soldier)
 	local s_ResultDamage = 0.0
 	local s_DamageFactor = 1.0
 
@@ -1307,38 +1229,7 @@ function BotManager:_GetDamageValue(p_Damage, p_Bot, p_Soldier, p_Fake)
 		s_DamageFactor = Config.DamageFactorKnife
 	end
 
-	-- frag mode
-	if not p_Fake then
-		return p_Damage * s_DamageFactor
-	end
-
-	if p_Damage == 1 or p_Damage == 2 then
-		local s_Distance = p_Bot.m_Player.soldier.worldTransform.trans:Distance(p_Soldier.worldTransform.trans)
-
-		if s_Distance >= s_ActiveWeapon.damageFalloffEndDistance then
-			s_ResultDamage = s_ActiveWeapon.endDamage
-		elseif s_Distance <= s_ActiveWeapon.damageFalloffStartDistance then
-			s_ResultDamage = s_ActiveWeapon.damage
-		-- extrapolate damage
-		else
-			local s_RelativePosition = (s_Distance - s_ActiveWeapon.damageFalloffStartDistance) /
-				(s_ActiveWeapon.damageFalloffEndDistance - s_ActiveWeapon.damageFalloffStartDistance)
-			s_ResultDamage = s_ActiveWeapon.damage -
-				(s_RelativePosition * (s_ActiveWeapon.damage - s_ActiveWeapon.endDamage))
-		end
-
-		-- headshot
-		if p_Damage == 2 then
-			s_ResultDamage = s_ResultDamage * Config.HeadShotFactorBots
-		end
-
-		s_ResultDamage = s_ResultDamage * s_DamageFactor
-	-- melee
-	elseif p_Damage == 3 then
-		s_ResultDamage = p_Bot.m_Knife.damage * Config.DamageFactorKnife
-	end
-
-	return s_ResultDamage
+	return p_Damage * s_DamageFactor
 end
 
 if g_BotManager == nil then

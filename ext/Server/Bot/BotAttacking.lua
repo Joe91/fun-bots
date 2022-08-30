@@ -42,10 +42,6 @@ function BotAttacking:UpdateAttacking(p_Bot)
 				p_Bot:_SetInput(EntryInputActionEnum.EIAQuicktimeFastMelee, 1)
 				p_Bot:_SetInput(EntryInputActionEnum.EIAMeleeAttack, 1)
 				p_Bot._MeleeCooldownTimer = Config.MeleeAttackCoolDown
-
-				if not Registry.COMMON.USE_REAL_DAMAGE then
-					Events:DispatchLocal("Server:DamagePlayer", p_Bot._ShootPlayer.name, p_Bot.m_Player.name, true)
-				end
 			else
 				if p_Bot._MeleeCooldownTimer < 0.0 then
 					p_Bot._MeleeCooldownTimer = 0.0

@@ -142,7 +142,7 @@ SettingsDefinition = {
 			Value = Config.DamageFactorAssault,
 			Description = "Original Damage from bots gets multiplied by this",
 			Reference = Range(0.00, 2.00, 0.10),
-			Default = 0.5,
+			Default = 1.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
@@ -154,7 +154,7 @@ SettingsDefinition = {
 			Value = Config.DamageFactorCarabine,
 			Description = "Original Damage from bots gets multiplied by this",
 			Reference = Range(0.00, 2.00, 0.10),
-			Default = 0.5,
+			Default = 1.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
@@ -166,7 +166,7 @@ SettingsDefinition = {
 			Value = Config.DamageFactorLMG,
 			Description = "Original Damage from bots gets multiplied by this",
 			Reference = Range(0.00, 2.00, 0.10),
-			Default = 0.5,
+			Default = 1.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
@@ -178,7 +178,7 @@ SettingsDefinition = {
 			Value = Config.DamageFactorPDW,
 			Description = "Original Damage from bots gets multiplied by this",
 			Reference = Range(0.00, 2.00, 0.10),
-			Default = 0.5,
+			Default = 1.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
@@ -190,7 +190,7 @@ SettingsDefinition = {
 			Value = Config.DamageFactorSniper,
 			Description = "Original Damage from bots gets multiplied by this",
 			Reference = Range(0.00, 2.00, 0.10),
-			Default = 0.8,
+			Default = 1.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
@@ -202,7 +202,7 @@ SettingsDefinition = {
 			Value = Config.DamageFactorShotgun,
 			Description = "Original Damage from bots gets multiplied by this",
 			Reference = Range(0.00, 2.00, 0.10),
-			Default = 0.8,
+			Default = 1.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
@@ -214,7 +214,7 @@ SettingsDefinition = {
 			Value = Config.DamageFactorPistol,
 			Description = "Original Damage from bots gets multiplied by this",
 			Reference = Range(0.00, 2.00, 0.10),
-			Default = 0.7,
+			Default = 1.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
@@ -1461,18 +1461,6 @@ SettingsDefinition = {
 			Description = "Try this often to spawn a bot away from players",
 			Reference = Range(0.00, 100.00, 1.0),
 			Default = 3,
-			UpdateFlag = UpdateFlag.None,
-			Category = "EXPERT"
-		},
-		{
-			Name = "HeadShotFactorBots",
-			Text = "Headshot factor bots",
-			---@type Type|integer
-			Type = Type.Float,
-			Value = Config.HeadShotFactorBots,
-			Description = "Factor for damage if headshot (only in Fake-mode)",
-			Reference = Range(0.00, 10.00, 0.1),
-			Default = 1.5,
 			UpdateFlag = UpdateFlag.None,
 			Category = "EXPERT"
 		},

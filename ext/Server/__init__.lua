@@ -126,8 +126,6 @@ end
 
 function FunBotServer:RegisterCustomEvents()
 	NetEvents:Subscribe("Botmanager:RaycastResults", self, self.OnClientRaycastResults)
-	NetEvents:Subscribe('Client:DamagePlayer', self, self.OnDamagePlayer) --only triggered on false damage
-	Events:Subscribe('Server:DamagePlayer', self, self.OnServerDamagePlayer) --only triggered on false damage
 	Events:Subscribe('Bot:RespawnBot', self, self.OnRespawnBot)
 	Events:Subscribe('Bot:AbortWait', self, self.OnBotAbortWait)
 	Events:Subscribe('Bot:ExitVehicle', self, self.OnBotExitVehicle)
@@ -483,14 +481,6 @@ function FunBotServer:OnBotExitVehicle(p_BotName)
 	m_BotManager:OnBotExitVehicle(p_BotName)
 end
 
-function FunBotServer:OnDamagePlayer(p_Player, p_ShooterName, p_MeleeAttack, p_IsHeadShot)
-	m_BotManager:OnDamagePlayer(p_Player, p_ShooterName, p_MeleeAttack, p_IsHeadShot)
-end
-
-function FunBotServer:OnServerDamagePlayer(p_PlayerName, p_ShooterName, p_MeleeAttack)
-	m_BotManager:OnServerDamagePlayer(p_PlayerName, p_ShooterName, p_MeleeAttack)
-end
-
 function FunBotServer:OnRespawnBot(p_BotName)
 	m_BotSpawner:OnRespawnBot(p_BotName)
 end
@@ -538,12 +528,7 @@ function FunBotServer:OnServerSettingsCallback(p_ServerSettings)
 	p_ServerSettings = ServerSettings(p_ServerSettings)
 	p_ServerSettings:MakeWritable()
 
-	if Registry.COMMON.USE_REAL_DAMAGE then
-		p_ServerSettings.isRenderDamageEvents = true
-	else
-		p_ServerSettings.isRenderDamageEvents = false
-	end
-
+	p_ServerSettings.isRenderDamageEvents = true
 	p_ServerSettings.loadingTimeout = Registry.COMMON.LOADING_TIMEOUT
 	p_ServerSettings.ingameTimeout = Registry.COMMON.LOADING_TIMEOUT
 	p_ServerSettings.timeoutTime = Registry.COMMON.LOADING_TIMEOUT
@@ -558,11 +543,7 @@ function FunBotServer:OnSyncedGameSettingsCallback(p_SyncedGameSettings)
 	p_SyncedGameSettings = SyncedGameSettings(p_SyncedGameSettings)
 	p_SyncedGameSettings:MakeWritable()
 
-	if Registry.COMMON.USE_REAL_DAMAGE then
-		p_SyncedGameSettings.allowClientSideDamageArbitration = false
-	else
-		p_SyncedGameSettings.allowClientSideDamageArbitration = true
-	end
+	p_SyncedGameSettings.allowClientSideDamageArbitration = false
 end
 
 ---@param p_ClientSettings ClientSettings|DataContainer
