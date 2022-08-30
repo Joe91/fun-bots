@@ -957,20 +957,30 @@ function BotManager:DestroyBot(p_Bot)
 end
 
 -- Comm-Actions
+--- All bots that are close to this player (and in the same team) leave the vehicles
 ---@param p_Player Player
 function BotManager:ExitVehicle(p_Player)
-	if p_Player ~= nil and p_Player.soldier ~= nil then
-		-- find closest bots in vehicle
-		local s_ClosestDistance = nil
-		local s_ClosestBot = nil
+	if not p_Player.soldier then
+		return
+	end
 
-		for _, l_Bot in pairs(self._BotsByTeam[p_Player.teamId + 1]) do
-			if l_Bot.m_InVehicle and l_Bot.m_Player.soldier ~= nil then
+	-- find closest bots in vehicle
+	local s_ClosestDistance = nil
+	---@type Bot|nil
+	local s_ClosestBot = nil
+
+	local s_SoldierPosition = p_Player.soldier.worldTransform.trans
+
+	for _, l_Bot in ipairs(self._BotsByTeam[p_Player.teamId + 1]) do
+		if l_Bot.m_InVehicle then
+			local s_BotSoldierPosition = l_Bot.m_Player.soldier and l_Bot.m_Player.soldier.worldTransform.trans
+
+			if s_BotSoldierPosition then
 				if s_ClosestBot == nil then
 					s_ClosestBot = l_Bot
-					s_ClosestDistance = l_Bot.m_Player.soldier.worldTransform.trans:Distance(p_Player.soldier.worldTransform.trans)
+					s_ClosestDistance = s_BotSoldierPosition:Distance(s_SoldierPosition)
 				else
-					local s_Distance = l_Bot.m_Player.soldier.worldTransform.trans:Distance(p_Player.soldier.worldTransform.trans)
+					local s_Distance = s_BotSoldierPosition:Distance(s_SoldierPosition)
 
 					if s_Distance < s_ClosestDistance then
 						s_ClosestDistance = s_Distance
@@ -979,17 +989,20 @@ function BotManager:ExitVehicle(p_Player)
 				end
 			end
 		end
+	end
 
-		if s_ClosestBot ~= nil and s_ClosestDistance < Registry.COMMON.COMMAND_DISTANCE then
-			local s_VehicleEntity = s_ClosestBot.m_Player.controlledControllable
+	--- if there is a bot, then there is a number as well
+	---@cast s_ClosestDistance number
 
-			if s_VehicleEntity ~= nil then
-				for i = 0, (s_VehicleEntity.entryCount - 1) do
-					local s_Player = s_VehicleEntity:GetPlayerInEntry(i)
+	if s_ClosestBot and s_ClosestDistance < Registry.COMMON.COMMAND_DISTANCE then
+		local s_VehicleEntity = s_ClosestBot.m_Player.controlledControllable
 
-					if s_Player ~= nil then
-						self:OnBotExitVehicle(s_Player.name)
-					end
+		if s_VehicleEntity then
+			for l_EntryId = 0, s_VehicleEntity.entryCount - 1 do
+				local s_Player = s_VehicleEntity:GetPlayerInEntry(l_EntryId)
+
+				if s_Player then
+					self:OnBotExitVehicle(s_Player.name)
 				end
 			end
 		end
