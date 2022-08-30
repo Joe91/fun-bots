@@ -780,37 +780,40 @@ end
 
 ---@param p_Bot Bot
 ---@param p_Transform LinearTransform
----@param p_Pose CharacterPoseType|integer
+---@param p_Pose CharacterPoseType
 function BotManager:SpawnBot(p_Bot, p_Transform, p_Pose)
-	if p_Bot.m_Player.soldier ~= nil then
-		p_Bot.m_Player.soldier:Destroy()
+	local s_BotPlayer = p_Bot.m_Player
+
+	if s_BotPlayer.soldier ~= nil then
+		s_BotPlayer.soldier:Destroy()
 	end
 
-	if p_Bot.m_Player.corpse ~= nil then
-		p_Bot.m_Player.corpse:Destroy()
+	if s_BotPlayer.corpse ~= nil then
+		s_BotPlayer.corpse:Destroy()
 	end
 
-	local s_BotSoldier = p_Bot.m_Player:CreateSoldier(p_Bot.m_Player.selectedKit, p_Transform) -- Returns SoldierEntity
+	-- Returns SoldierEntity
+	local s_BotSoldier = s_BotPlayer:CreateSoldier(s_BotPlayer.selectedKit, p_Transform)
 
-	if s_BotSoldier == nil then
+	if not s_BotSoldier then
 		m_Logger:Error("CreateSoldier failed")
 		return nil
 	end
 
-	-- Customisation of health of bot
+	-- Customization of health of bot
 	s_BotSoldier.maxHealth = Config.BotMaxHealth
 
-	p_Bot.m_Player:SpawnSoldierAt(s_BotSoldier, p_Transform, p_Pose)
-	p_Bot.m_Player:AttachSoldier(s_BotSoldier)
+	s_BotPlayer:SpawnSoldierAt(s_BotSoldier, p_Transform, p_Pose)
+	s_BotPlayer:AttachSoldier(s_BotSoldier)
 end
 
 ---@param p_Player Player
 function BotManager:KillPlayerBots(p_Player)
-	for _, l_Bot in pairs(self._Bots) do
+	for _, l_Bot in ipairs(self._Bots) do
 		if l_Bot:GetTargetPlayer() == p_Player then
 			l_Bot:ResetVars()
 
-			if l_Bot.m_Player.soldier ~= nil then
+			if l_Bot.m_Player.soldier then
 				l_Bot.m_Player.soldier:Kill()
 			end
 		end
@@ -818,29 +821,29 @@ function BotManager:KillPlayerBots(p_Player)
 end
 
 function BotManager:ResetAllBots()
-	for _, l_Bot in pairs(self._Bots) do
+	for _, l_Bot in ipairs(self._Bots) do
 		l_Bot:ResetVars()
 	end
 end
 
 function BotManager:ResetSkills()
-	for _, l_Bot in pairs(self._Bots) do
+	for _, l_Bot in ipairs(self._Bots) do
 		l_Bot:ResetSkill()
 	end
 end
 
 ---@param p_Amount? integer
----@param p_TeamId? TeamId|integer
+---@param p_TeamId? TeamId
 function BotManager:KillAll(p_Amount, p_TeamId)
 	local s_BotTable = self._Bots
 
-	if p_TeamId ~= nil then
+	if p_TeamId then
 		s_BotTable = self._BotsByTeam[p_TeamId + 1]
 	end
 
 	p_Amount = p_Amount or #s_BotTable
 
-	for _, l_Bot in pairs(s_BotTable) do
+	for _, l_Bot in ipairs(s_BotTable) do
 		l_Bot:Kill()
 
 		p_Amount = p_Amount - 1
@@ -852,18 +855,18 @@ function BotManager:KillAll(p_Amount, p_TeamId)
 end
 
 ---@param p_Amount? integer
----@param p_TeamId? TeamId|integer
+---@param p_TeamId? TeamId
 ---@param p_Force? boolean
 function BotManager:DestroyAll(p_Amount, p_TeamId, p_Force)
 	local s_BotTable = self._Bots
 
-	if p_TeamId ~= nil then
+	if p_TeamId then
 		s_BotTable = self._BotsByTeam[p_TeamId + 1]
 	end
 
 	p_Amount = p_Amount or #s_BotTable
 
-	for _, l_Bot in pairs(s_BotTable) do
+	for _, l_Bot in ipairs(s_BotTable) do
 		if p_Force then
 			self:DestroyBot(l_Bot)
 		else
@@ -879,7 +882,7 @@ function BotManager:DestroyAll(p_Amount, p_TeamId, p_Force)
 end
 
 function BotManager:DestroyDisabledBots()
-	for _, l_Bot in pairs(self._Bots) do
+	for _, l_Bot in ipairs(self._Bots) do
 		if l_Bot:IsInactive() then
 			table.insert(self._BotsToDestroy, l_Bot.m_Name)
 		end
@@ -888,7 +891,7 @@ end
 
 ---@param p_Player Player
 function BotManager:DestroyPlayerBots(p_Player)
-	for _, l_Bot in pairs(self._Bots) do
+	for _, l_Bot in ipairs(self._Bots) do
 		if l_Bot:GetTargetPlayer() == p_Player then
 			table.insert(self._BotsToDestroy, l_Bot.m_Name)
 		end
@@ -900,7 +903,7 @@ function BotManager:RefreshTables()
 	local s_NewBotTable = {}
 	local s_NewBotbyNameTable = {}
 
-	for _, l_Bot in pairs(self._Bots) do
+	for _, l_Bot in ipairs(self._Bots) do
 		if l_Bot.m_Player ~= nil then
 			table.insert(s_NewBotTable, l_Bot)
 			table.insert(s_NewTeamsTable[l_Bot.m_Player.teamId + 1], l_Bot)
@@ -924,32 +927,32 @@ function BotManager:DestroyBot(p_Bot)
 		return
 	end
 
-	-- Find index of this bot.
-	local s_NewTable = {}
+	for l_Index = #self._Bots, 1, -1 do
+		local s_Bot = self._Bots[l_Index]
 
-	for _, l_Bot in pairs(self._Bots) do
-		if p_Bot.m_Name ~= l_Bot.m_Name then
-			table.insert(s_NewTable, l_Bot)
+		if p_Bot.m_Name == s_Bot.m_Name then
+			table.remove(self._Bots, l_Index)
 		end
 
-		l_Bot:ClearPlayer(p_Bot.m_Player)
+		--- this will clear all references of the bot that gets destroyed
+		s_Bot:ClearPlayer(p_Bot.m_Player)
 	end
 
-	self._Bots = s_NewTable
+	local s_BotTeam = self._BotsByTeam[p_Bot.m_Player.teamId + 1]
 
-	local s_NewTeamsTable = {}
+	for l_Index = #s_BotTeam, 1, -1 do
+		local s_Bot = s_BotTeam[l_Index]
 
-	for _, l_Bot in pairs(self._BotsByTeam[p_Bot.m_Player.teamId + 1]) do
-		if p_Bot.m_Name ~= l_Bot.m_Name then
-			table.insert(s_NewTeamsTable, l_Bot)
+		if p_Bot.m_Name == s_Bot.m_Name then
+			table.remove(s_BotTeam, l_Index)
 		end
 	end
 
-	self._BotsByTeam[p_Bot.m_Player.teamId + 1] = s_NewTeamsTable
 	self._BotsByName[p_Bot.m_Name] = nil
 	self._BotInputs[p_Bot.m_Id] = nil
 
 	p_Bot:Destroy()
+	---@diagnostic disable-next-line: cast-local-type
 	p_Bot = nil
 end
 
