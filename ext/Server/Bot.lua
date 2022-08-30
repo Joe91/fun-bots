@@ -742,6 +742,10 @@ function Bot:_CheckForVehicleActions(p_DeltaTime)
 		if self.m_InVehicle then --in vehicle
 			local s_VehicleEntity = self.m_Player.controlledControllable
 
+			if not s_VehicleEntity then
+				return
+			end
+
 			for l_SeatIndex = 0, self.m_Player.controlledEntryId do
 				if s_VehicleEntity:GetPlayerInEntry(l_SeatIndex) == nil then
 					-- better seat available --> swich seats
@@ -755,6 +759,10 @@ function Bot:_CheckForVehicleActions(p_DeltaTime)
 		elseif self.m_OnVehicle then --only passenger.
 			local s_VehicleEntity = self.m_Player.attachedControllable
 			local s_LowestSeatIndex = -1
+
+			if not s_VehicleEntity then
+				return
+			end
 
 			for l_SeatIndex = 0, s_VehicleEntity.entryCount - 1 do
 				if s_VehicleEntity:GetPlayerInEntry(l_SeatIndex) == nil then
@@ -978,13 +986,13 @@ function Bot:ResetSpawnVars()
 	self._WeaponToUse = BotWeapons.Primary
 
 	-- reset all input-vars
-	---@type EntryInputActionEnum|integer
-	for i = 0, 36 do
-		self.m_ActiveInputs[i] = {
+	---@type EntryInputActionEnum
+	for l_EIA = 0, 36 do
+		self.m_ActiveInputs[l_EIA] = {
 			value = 0,
 			reset = false
 		}
-		self.m_Player.input:SetLevel(i, 0.0)
+		self.m_Player.input:SetLevel(l_EIA, 0.0)
 	end
 end
 
@@ -1073,7 +1081,7 @@ function Bot:_SetInput(p_Input, p_Value)
 end
 
 function Bot:_UpdateInputs()
-	---@type EntryInputActionEnum|integer
+	---@type EntryInputActionEnum
 	for i = 0, 36 do
 		if self.m_ActiveInputs[i].reset then
 			self.m_Player.input:SetLevel(i, 0)
@@ -1195,62 +1203,68 @@ end
 ---@return integer
 ---@return Vec3|nil
 function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
-	if p_Entity ~= nil then
-		local s_Position = p_Entity.transform.trans
-		local s_VehicleData = m_Vehicles:GetVehicleByEntity(p_Entity)
-
-		if not Config.UseAirVehicles and
-			(s_VehicleData.Type == VehicleTypes.Plane or s_VehicleData.Type == VehicleTypes.Chopper) then
-			return -3 -- not allowed to use
-		end
-
-		-- keep one seat free, if enough available
-		local s_MaxEntries = p_Entity.entryCount
-
-		if not p_PlayerIsDriver and s_MaxEntries > 2 then
-			s_MaxEntries = s_MaxEntries - 1
-		end
-
-		for i = 0, s_MaxEntries - 1 do
-			if p_Entity:GetPlayerInEntry(i) == nil then
-				self.m_Player:EnterVehicle(p_Entity, i)
-				self._ExitVehicleHealth = PhysicsEntity(p_Entity).internalHealth * (Registry.VEHICLES.VEHILCE_EXIT_HEALTH / 100.0)
-
-				-- get ID
-				self.m_ActiveVehicle = s_VehicleData
-				self._VehicleMovableId = m_Vehicles:GetPartIdForSeat(self.m_ActiveVehicle, i)
-				m_Logger:Write(self.m_ActiveVehicle)
-
-				if i == 0 then
-					if i == s_MaxEntries - 1 then
-						self._VehicleWaitTimer = 0.5 -- always wait a short time to check for free start
-						self._VehicleTakeoffTimer = Registry.VEHICLES.JET_TAKEOFF_TIME
-						g_GameDirector:_SetVehicleObjectiveState(p_Entity.transform.trans, false)
-					else
-						self._VehicleWaitTimer = Config.VehicleWaitForPassengersTime
-						self._BrakeTimer = 0.0
-					end
-				else
-					self._VehicleWaitTimer = 0.0
-
-					if i == s_MaxEntries - 1 then
-						-- last seat taken: Disable vehicle and abort wait for passengers:
-						local s_Driver = p_Entity:GetPlayerInEntry(0)
-
-						if s_Driver ~= nil then
-							Events:Dispatch('Bot:AbortWait', s_Driver.name)
-							g_GameDirector:_SetVehicleObjectiveState(p_Entity.transform.trans, false)
-						end
-					end
-				end
-
-				return 0, s_Position -- everything fine
-			end
-		end
-
-		--no place left
+	if not p_Entity then
 		return -2
 	end
+
+	local s_Position = p_Entity.transform.trans
+	local s_VehicleData = m_Vehicles:GetVehicleByEntity(p_Entity)
+
+	if not s_VehicleData then
+		return -2
+	end
+
+	if not Config.UseAirVehicles and
+		(s_VehicleData.Type == VehicleTypes.Plane or s_VehicleData.Type == VehicleTypes.Chopper) then
+		return -3 -- not allowed to use
+	end
+
+	-- keep one seat free, if enough available
+	local s_MaxEntries = p_Entity.entryCount
+
+	if not p_PlayerIsDriver and s_MaxEntries > 2 then
+		s_MaxEntries = s_MaxEntries - 1
+	end
+
+	for i = 0, s_MaxEntries - 1 do
+		if p_Entity:GetPlayerInEntry(i) == nil then
+			self.m_Player:EnterVehicle(p_Entity, i)
+			self._ExitVehicleHealth = PhysicsEntity(p_Entity).internalHealth * (Registry.VEHICLES.VEHILCE_EXIT_HEALTH / 100.0)
+
+			-- get ID
+			self.m_ActiveVehicle = s_VehicleData
+			self._VehicleMovableId = m_Vehicles:GetPartIdForSeat(self.m_ActiveVehicle, i)
+			m_Logger:Write(self.m_ActiveVehicle)
+
+			if i == 0 then
+				if i == s_MaxEntries - 1 then
+					self._VehicleWaitTimer = 0.5 -- always wait a short time to check for free start
+					self._VehicleTakeoffTimer = Registry.VEHICLES.JET_TAKEOFF_TIME
+					g_GameDirector:_SetVehicleObjectiveState(p_Entity.transform.trans, false)
+				else
+					self._VehicleWaitTimer = Config.VehicleWaitForPassengersTime
+					self._BrakeTimer = 0.0
+				end
+			else
+				self._VehicleWaitTimer = 0.0
+
+				if i == s_MaxEntries - 1 then
+					-- last seat taken: Disable vehicle and abort wait for passengers:
+					local s_Driver = p_Entity:GetPlayerInEntry(0)
+
+					if s_Driver ~= nil then
+						Events:Dispatch('Bot:AbortWait', s_Driver.name)
+						g_GameDirector:_SetVehicleObjectiveState(p_Entity.transform.trans, false)
+					end
+				end
+			end
+
+			return 0, s_Position -- everything fine
+		end
+	end
+
+	--no place left
+	return -2
 end
 
 ---@param p_PlayerIsDriver boolean
@@ -1258,7 +1272,6 @@ end
 ---@return Vec3|nil
 function Bot:_EnterVehicle(p_PlayerIsDriver)
 	local s_Iterator = EntityManager:GetIterator("ServerVehicleEntity")
-	---@type ControllableEntity
 	local s_Entity = s_Iterator:Next()
 
 	local s_ClosestEntity = nil
