@@ -104,25 +104,25 @@ function VehicleAiming:UpdateAimingVehicleAdvanced(p_Bot)
 		m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane) then
 		local s_PitchHalf = Config.FovVerticleChopperForShooting / 360 * math.pi
 		if math.abs(p_Bot._TargetPitch) > s_PitchHalf then
-			p_Bot:_AbortAttack()
+			p_Bot:AbortAttack()
 			return
 		end
 		if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane) and
 			s_FullPositionBot:Distance(s_FullPositionTarget) < Registry.VEHICLES.ABORT_ATTACK_AIR_DISTANCE_JET then
-			p_Bot:_AbortAttack()
+			p_Bot:AbortAttack()
 		end
 		if p_Bot._ShootPlayerVehicleType ~= VehicleTypes.Chopper and p_Bot._ShootPlayerVehicleType ~= VehicleTypes.Plane then
 			local s_DiffVertical = s_FullPositionBot.y - s_FullPositionTarget.y
 			if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Chopper) then
 				if s_DiffVertical < Registry.VEHICLES.ABORT_ATTACK_HEIGHT_CHOPPER then -- too low to the ground
-					p_Bot:_AbortAttack()
+					p_Bot:AbortAttack()
 				end
 			elseif m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane) then
 				if s_DiffVertical < Registry.VEHICLES.ABORT_ATTACK_HEIGHT_JET then -- too low to the ground
-					p_Bot:_AbortAttack()
+					p_Bot:AbortAttack()
 				end
 				if p_Bot._DistanceToPlayer < Registry.VEHICLES.ABORT_ATTACK_DISTANCE_JET then
-					p_Bot:_AbortAttack()
+					p_Bot:AbortAttack()
 				end
 			end
 			return
@@ -212,25 +212,25 @@ function VehicleAiming:UpdateAimingVehicle(p_Bot)
 		m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane) then
 		local s_PitchHalf = Config.FovVerticleChopperForShooting / 360 * math.pi
 		if math.abs(p_Bot._TargetPitch) > s_PitchHalf then
-			p_Bot:_AbortAttack()
+			p_Bot:AbortAttack()
 			return
 		end
 		if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane) and
 			s_FullPositionBot:Distance(s_FullPositionTarget) < Registry.VEHICLES.ABORT_ATTACK_AIR_DISTANCE_JET then
-			p_Bot:_AbortAttack()
+			p_Bot:AbortAttack()
 		end
 		if p_Bot._ShootPlayerVehicleType ~= VehicleTypes.Chopper and p_Bot._ShootPlayerVehicleType ~= VehicleTypes.Plane then
 			local s_DiffVertical = s_FullPositionBot.y - s_FullPositionTarget.y
 			if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Chopper) then
 				if s_DiffVertical < Registry.VEHICLES.ABORT_ATTACK_HEIGHT_CHOPPER then -- too low to the ground
-					p_Bot:_AbortAttack()
+					p_Bot:AbortAttack()
 				end
 			elseif m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane) then
 				if s_DiffVertical < Registry.VEHICLES.ABORT_ATTACK_HEIGHT_JET then -- too low to the ground
-					p_Bot:_AbortAttack()
+					p_Bot:AbortAttack()
 				end
 				if p_Bot._DistanceToPlayer < Registry.VEHICLES.ABORT_ATTACK_DISTANCE_JET then
-					p_Bot:_AbortAttack()
+					p_Bot:AbortAttack()
 				end
 			end
 			return

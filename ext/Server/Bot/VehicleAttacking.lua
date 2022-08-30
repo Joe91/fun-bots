@@ -53,12 +53,12 @@ function VehicleAttacking:UpdateAttackingVehicle(p_Bot)
 		else
 			p_Bot._TargetPitch = 0.0
 			p_Bot._WeaponToUse = BotWeapons.Primary
-			p_Bot:_AbortAttack()
+			p_Bot:AbortAttack()
 			p_Bot:_ResetActionFlag(BotActionFlags.C4Active)
 			p_Bot:_ResetActionFlag(BotActionFlags.GrenadeActive)
 		end
 	elseif p_Bot._ShootPlayer.soldier == nil then -- reset if enemy is dead
-		p_Bot:_AbortAttack()
+		p_Bot:AbortAttack()
 	end
 end
 
