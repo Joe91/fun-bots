@@ -1,4 +1,5 @@
 ---@class GameDirector
+---@overload fun():GameDirector
 GameDirector = class('GameDirector')
 
 ---@type NodeCollection

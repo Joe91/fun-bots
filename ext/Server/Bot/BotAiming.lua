@@ -1,4 +1,5 @@
 ---@class BotAiming
+---@overload fun():BotAiming
 BotAiming = class('BotAiming')
 
 ---@type Utilities

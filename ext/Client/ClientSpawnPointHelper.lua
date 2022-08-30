@@ -1,4 +1,5 @@
 ---@class ClientSpawnPointHelper
+---@overload fun():ClientSpawnPointHelper
 ClientSpawnPointHelper = class 'ClientSpawnPointHelper'
 
 require('__shared/Config')

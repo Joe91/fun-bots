@@ -1,4 +1,5 @@
 ---@class BugReport
+---@overload fun():BugReport
 BugReport = class('BugReport')
 
 -- Create a bug report using an in-game !bugreport command.

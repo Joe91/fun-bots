@@ -1,4 +1,5 @@
 ---@class ArrayMap
+---@overload fun():ArrayMap
 ArrayMap = class 'ArrayMap'
 
 function ArrayMap:__init()

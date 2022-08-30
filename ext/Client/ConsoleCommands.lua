@@ -1,4 +1,5 @@
 ---@class ConsoleCommands
+---@overload fun():ConsoleCommands
 ConsoleCommands = class('ConsoleCommands')
 
 function ConsoleCommands:__init()

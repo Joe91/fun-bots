@@ -1,4 +1,5 @@
 ---@class Vehicles
+---@overload fun():Vehicles
 Vehicles = class("Vehicles")
 
 require('__shared/Constants/VehicleData')

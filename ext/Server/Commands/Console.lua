@@ -1,4 +1,5 @@
 ---@class Console
+---@overload fun():Console
 Console = class('Console')
 
 require('__shared/Config')

@@ -1,4 +1,5 @@
 ---@class Database
+---@overload fun():Database
 Database = class('Database')
 
 require('__shared/ArrayMap')

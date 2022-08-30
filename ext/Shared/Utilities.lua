@@ -1,4 +1,5 @@
 ---@class Utilities
+---@overload fun():Utilities
 Utilities = class('Utilities')
 
 require('__shared/Config')
@@ -116,14 +117,17 @@ function Utilities:dump(o, p_Format, p_MaxLevels, p_Level)
 					l_Key = '"' .. l_Key .. '"'
 				end
 
-				s = s .. s_Tablevel .. '[' .. l_Key .. '] = ' .. g_Utilities:dump(l_Value, p_Format, p_MaxLevels, p_Level + 1) .. ',' .. s_Newline
+				s = s ..
+					s_Tablevel ..
+					'[' .. l_Key .. '] = ' .. g_Utilities:dump(l_Value, p_Format, p_MaxLevels, p_Level + 1) .. ',' .. s_Newline
 			end
 
 			return s .. s_Tablevellessone .. '}'
 		else
 			return '{ ' .. tostring(o) .. ' }'
 		end
-	elseif type(o) == 'userdata' and not tostring(o):starts('sol.VEXTRefArray') and not tostring(o):starts('sol.VEXTArray') and getmetatable(o) ~= nil then
+	elseif type(o) == 'userdata' and not tostring(o):starts('sol.VEXTRefArray') and not tostring(o):starts('sol.VEXTArray')
+		and getmetatable(o) ~= nil then
 		if p_MaxLevels == -1 or p_Level <= p_MaxLevels then
 			local s = tostring(o)
 
@@ -134,7 +138,8 @@ function Utilities:dump(o, p_Format, p_MaxLevels, p_Level)
 
 			for l_Key, _ in pairs(getmetatable(o)) do
 				if (not l_Key:starts('__') and l_Key ~= 'typeInfo' and l_Key ~= 'class_cast' and l_Key ~= 'class_check') then
-					s = s .. s_Tablevel .. l_Key .. ': ' .. g_Utilities:dump(o[l_Key], p_Format, p_MaxLevels, p_Level + 1) .. ',' .. s_Newline
+					s = s ..
+						s_Tablevel .. l_Key .. ': ' .. g_Utilities:dump(o[l_Key], p_Format, p_MaxLevels, p_Level + 1) .. ',' .. s_Newline
 				end
 			end
 

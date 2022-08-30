@@ -1,4 +1,5 @@
 ---@class PathSwitcher
+---@overload fun():PathSwitcher
 PathSwitcher = class('PathSwitcher')
 
 require('__shared/Config')

@@ -1,4 +1,5 @@
 ---@class UIViews
+---@overload fun():UIViews
 UIViews = class 'UIViews'
 
 require('__shared/ArrayMap')

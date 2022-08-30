@@ -1,4 +1,5 @@
 ---@class AirTargets
+---@overload fun():AirTargets
 AirTargets = class('AirTargets')
 
 ---@type Utilities

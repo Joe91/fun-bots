@@ -1,4 +1,5 @@
 ---@class Weapon
+---@overload fun(p_Name: string, p_Extension?: string, p_Unlocks: string[], p_Type: WeaponTypes, p_FullResource?: string):Weapon
 Weapon = class('Weapon')
 
 ---@type Logger

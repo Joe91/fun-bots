@@ -1,4 +1,5 @@
 ---@class Bot
+---@overload fun(p_Player: Player):Bot
 Bot = class('Bot')
 
 require('__shared/Config')
@@ -406,7 +407,7 @@ end
 
 ---@param p_Player Player
 function Bot:Revive(p_Player)
-	if self.m_Kit == BotKits.Assault and p_Player.corpse ~= nil and not p_Player.corpse.isDead and not Globals.IsGm then
+	if self.m_Kit == BotKits.Assault and p_Player.corpse and not p_Player.corpse.isDead and not Globals.IsGm then
 		if Config.BotsRevive then
 			self._ActiveAction = BotActionFlags.ReviveActive
 			self._ShootPlayer = nil
@@ -453,7 +454,7 @@ function Bot:DeployIfPossible()
 	-- deploy from time to time
 	if self.m_PrimaryGadget ~= nil and (self.m_Kit == BotKits.Support or self.m_Kit == BotKits.Assault) then
 		if self.m_PrimaryGadget.type == WeaponTypes.Ammobag or self.m_PrimaryGadget.type == WeaponTypes.Medkit then
-			self:_AbortAttack()
+			self:AbortAttack()
 			self._WeaponToUse = BotWeapons.Gadget1
 			self._DeployTimer = 0.0
 		end
@@ -463,7 +464,7 @@ end
 ---@return boolean
 function Bot:_DoExitVehicle()
 	if self._ExitVehicleActive then
-		self:_AbortAttack()
+		self:AbortAttack()
 		self.m_Player:ExitVehicle(false, false)
 		local s_Node = g_GameDirector:FindClosestPath(self.m_Player.soldier.worldTransform.trans, false, true, nil)
 
@@ -725,7 +726,7 @@ function Bot:_CheckForVehicleActions(p_DeltaTime)
 
 			if s_CurrentVehicleHealth <= self._ExitVehicleHealth then
 				if math.random(0, 100) <= Registry.VEHICLES.VEHICLE_PROPABILITY_EXIT_LOW_HEALTH then
-					self:_AbortAttack()
+					self:AbortAttack()
 					self:ExitVehicle()
 				end
 			end
@@ -741,19 +742,27 @@ function Bot:_CheckForVehicleActions(p_DeltaTime)
 		if self.m_InVehicle then --in vehicle
 			local s_VehicleEntity = self.m_Player.controlledControllable
 
+			if not s_VehicleEntity then
+				return
+			end
+
 			for l_SeatIndex = 0, self.m_Player.controlledEntryId do
 				if s_VehicleEntity:GetPlayerInEntry(l_SeatIndex) == nil then
 					-- better seat available --> swich seats
 					m_Logger:Write("switch to better seat")
-					self:_AbortAttack()
+					self:AbortAttack()
 					self.m_Player:EnterVehicle(s_VehicleEntity, l_SeatIndex)
-					self:_UpdateVehicleMovableId()
+					self:UpdateVehicleMovableId()
 					break
 				end
 			end
 		elseif self.m_OnVehicle then --only passenger.
 			local s_VehicleEntity = self.m_Player.attachedControllable
 			local s_LowestSeatIndex = -1
+
+			if not s_VehicleEntity then
+				return
+			end
 
 			for l_SeatIndex = 0, s_VehicleEntity.entryCount - 1 do
 				if s_VehicleEntity:GetPlayerInEntry(l_SeatIndex) == nil then
@@ -762,9 +771,9 @@ function Bot:_CheckForVehicleActions(p_DeltaTime)
 				else -- check if there is a gap
 					if s_LowestSeatIndex >= 0 then -- there is a better place
 						m_Logger:Write("switch to better seat")
-						self:_AbortAttack()
+						self:AbortAttack()
 						self.m_Player:EnterVehicle(s_VehicleEntity, s_LowestSeatIndex)
-						self:_UpdateVehicleMovableId()
+						self:UpdateVehicleMovableId()
 						break
 					end
 				end
@@ -977,13 +986,13 @@ function Bot:ResetSpawnVars()
 	self._WeaponToUse = BotWeapons.Primary
 
 	-- reset all input-vars
-	---@type EntryInputActionEnum|integer
-	for i = 0, 36 do
-		self.m_ActiveInputs[i] = {
+	---@type EntryInputActionEnum
+	for l_EIA = 0, 36 do
+		self.m_ActiveInputs[l_EIA] = {
 			value = 0,
 			reset = false
 		}
-		self.m_Player.input:SetLevel(i, 0.0)
+		self.m_Player.input:SetLevel(l_EIA, 0.0)
 	end
 end
 
@@ -1072,7 +1081,7 @@ function Bot:_SetInput(p_Input, p_Value)
 end
 
 function Bot:_UpdateInputs()
-	---@type EntryInputActionEnum|integer
+	---@type EntryInputActionEnum
 	for i = 0, 36 do
 		if self.m_ActiveInputs[i].reset then
 			self.m_Player.input:SetLevel(i, 0)
@@ -1113,7 +1122,7 @@ function Bot:_UpdateStationaryAAVehicle(p_Attacking)
 			self._ShootPlayer = PlayerManager:GetPlayerByName(self._ShootPlayerName)
 			self._ShootPlayerVehicleType = m_Vehicles:FindOutVehicleType(self._ShootPlayer)
 		else
-			self:_AbortAttack()
+			self:AbortAttack()
 		end
 
 		self._DeployTimer = 0.0
@@ -1144,7 +1153,7 @@ end
 
 function Bot:_UpdateReloadVehicle()
 	self._WeaponToUse = BotWeapons.Primary
-	self:_AbortAttack()
+	self:AbortAttack()
 
 	if self._ActiveAction ~= BotActionFlags.OtherActionActive then
 		self._TargetPitch = 0.0
@@ -1175,7 +1184,7 @@ function Bot:FindVehiclePath(p_Position)
 	end
 end
 
-function Bot:_UpdateVehicleMovableId()
+function Bot:UpdateVehicleMovableId()
 	self:_SetActiveVars() -- update if "on vehicle" or "in vehicle"
 
 	if self.m_OnVehicle then
@@ -1194,62 +1203,68 @@ end
 ---@return integer
 ---@return Vec3|nil
 function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
-	if p_Entity ~= nil then
-		local s_Position = p_Entity.transform.trans
-		local s_VehicleData = m_Vehicles:GetVehicleByEntity(p_Entity)
-
-		if not Config.UseAirVehicles and
-			(s_VehicleData.Type == VehicleTypes.Plane or s_VehicleData.Type == VehicleTypes.Chopper) then
-			return -3 -- not allowed to use
-		end
-
-		-- keep one seat free, if enough available
-		local s_MaxEntries = p_Entity.entryCount
-
-		if not p_PlayerIsDriver and s_MaxEntries > 2 then
-			s_MaxEntries = s_MaxEntries - 1
-		end
-
-		for i = 0, s_MaxEntries - 1 do
-			if p_Entity:GetPlayerInEntry(i) == nil then
-				self.m_Player:EnterVehicle(p_Entity, i)
-				self._ExitVehicleHealth = PhysicsEntity(p_Entity).internalHealth * (Registry.VEHICLES.VEHILCE_EXIT_HEALTH / 100.0)
-
-				-- get ID
-				self.m_ActiveVehicle = s_VehicleData
-				self._VehicleMovableId = m_Vehicles:GetPartIdForSeat(self.m_ActiveVehicle, i)
-				m_Logger:Write(self.m_ActiveVehicle)
-
-				if i == 0 then
-					if i == s_MaxEntries - 1 then
-						self._VehicleWaitTimer = 0.5 -- always wait a short time to check for free start
-						self._VehicleTakeoffTimer = Registry.VEHICLES.JET_TAKEOFF_TIME
-						g_GameDirector:_SetVehicleObjectiveState(p_Entity.transform.trans, false)
-					else
-						self._VehicleWaitTimer = Config.VehicleWaitForPassengersTime
-						self._BrakeTimer = 0.0
-					end
-				else
-					self._VehicleWaitTimer = 0.0
-
-					if i == s_MaxEntries - 1 then
-						-- last seat taken: Disable vehicle and abort wait for passengers:
-						local s_Driver = p_Entity:GetPlayerInEntry(0)
-
-						if s_Driver ~= nil then
-							Events:Dispatch('Bot:AbortWait', s_Driver.name)
-							g_GameDirector:_SetVehicleObjectiveState(p_Entity.transform.trans, false)
-						end
-					end
-				end
-
-				return 0, s_Position -- everything fine
-			end
-		end
-
-		--no place left
+	if not p_Entity then
 		return -2
 	end
+
+	local s_Position = p_Entity.transform.trans
+	local s_VehicleData = m_Vehicles:GetVehicleByEntity(p_Entity)
+
+	if not s_VehicleData then
+		return -2
+	end
+
+	if not Config.UseAirVehicles and
+		(s_VehicleData.Type == VehicleTypes.Plane or s_VehicleData.Type == VehicleTypes.Chopper) then
+		return -3 -- not allowed to use
+	end
+
+	-- keep one seat free, if enough available
+	local s_MaxEntries = p_Entity.entryCount
+
+	if not p_PlayerIsDriver and s_MaxEntries > 2 then
+		s_MaxEntries = s_MaxEntries - 1
+	end
+
+	for i = 0, s_MaxEntries - 1 do
+		if p_Entity:GetPlayerInEntry(i) == nil then
+			self.m_Player:EnterVehicle(p_Entity, i)
+			self._ExitVehicleHealth = PhysicsEntity(p_Entity).internalHealth * (Registry.VEHICLES.VEHILCE_EXIT_HEALTH / 100.0)
+
+			-- get ID
+			self.m_ActiveVehicle = s_VehicleData
+			self._VehicleMovableId = m_Vehicles:GetPartIdForSeat(self.m_ActiveVehicle, i)
+			m_Logger:Write(self.m_ActiveVehicle)
+
+			if i == 0 then
+				if i == s_MaxEntries - 1 then
+					self._VehicleWaitTimer = 0.5 -- always wait a short time to check for free start
+					self._VehicleTakeoffTimer = Registry.VEHICLES.JET_TAKEOFF_TIME
+					g_GameDirector:_SetVehicleObjectiveState(p_Entity.transform.trans, false)
+				else
+					self._VehicleWaitTimer = Config.VehicleWaitForPassengersTime
+					self._BrakeTimer = 0.0
+				end
+			else
+				self._VehicleWaitTimer = 0.0
+
+				if i == s_MaxEntries - 1 then
+					-- last seat taken: Disable vehicle and abort wait for passengers:
+					local s_Driver = p_Entity:GetPlayerInEntry(0)
+
+					if s_Driver ~= nil then
+						Events:Dispatch('Bot:AbortWait', s_Driver.name)
+						g_GameDirector:_SetVehicleObjectiveState(p_Entity.transform.trans, false)
+					end
+				end
+			end
+
+			return 0, s_Position -- everything fine
+		end
+	end
+
+	--no place left
+	return -2
 end
 
 ---@param p_PlayerIsDriver boolean
@@ -1257,7 +1272,6 @@ end
 ---@return Vec3|nil
 function Bot:_EnterVehicle(p_PlayerIsDriver)
 	local s_Iterator = EntityManager:GetIterator("ServerVehicleEntity")
-	---@type ControllableEntity
 	local s_Entity = s_Iterator:Next()
 
 	local s_ClosestEntity = nil
@@ -1317,7 +1331,7 @@ function Bot:_GetWayIndex(p_CurrentWayPoint)
 	return s_ActivePointIndex
 end
 
-function Bot:_AbortAttack()
+function Bot:AbortAttack()
 	if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) and self._ShootPlayerName ~= "" then
 		self._VehicleTakeoffTimer = Registry.VEHICLES.JET_ABORT_ATTACK_TIME
 		self._JetAbortAttackActive = true

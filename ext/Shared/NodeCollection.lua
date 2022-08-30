@@ -1,4 +1,5 @@
 ---@class NodeCollection
+---@overload fun(p_DisableServerEvents?: boolean):NodeCollection
 NodeCollection = class "NodeCollection"
 
 ---@type Utilities
@@ -139,7 +140,8 @@ function NodeCollection:Register(p_Waypoint)
 	if #self.waypoints ~= p_Waypoint.Index then
 		local s_Diff = p_Waypoint.Index - #self.waypoints
 
-		m_Logger:Warning('New Node Index does not match: p_Waypoint.Index:' .. tostring(p_Waypoint.Index) .. ' | #self.waypoints:' .. tostring(#self.waypoints) .. ' | ' .. tostring(s_Diff))
+		m_Logger:Warning('New Node Index does not match: p_Waypoint.Index:' ..
+			tostring(p_Waypoint.Index) .. ' | #self.waypoints:' .. tostring(#self.waypoints) .. ' | ' .. tostring(s_Diff))
 	end
 
 	table.insert(self.waypointsByPathIndex[p_Waypoint.PathIndex], p_Waypoint)
@@ -147,7 +149,11 @@ function NodeCollection:Register(p_Waypoint)
 	if #self.waypointsByPathIndex[p_Waypoint.PathIndex] ~= p_Waypoint.PointIndex then
 		local s_Diff = p_Waypoint.PointIndex - #self.waypointsByPathIndex[p_Waypoint.PathIndex]
 
-		m_Logger:Warning('New Node PointIndex does not match: p_Waypoint.PointIndex: ' .. tostring(p_Waypoint.PointIndex) .. ' | #self.waypointsByPathIndex[' .. p_Waypoint.PathIndex .. ']: ' .. tostring(#self.waypointsByPathIndex[p_Waypoint.PathIndex]) .. ' | ' .. tostring(s_Diff))
+		m_Logger:Warning('New Node PointIndex does not match: p_Waypoint.PointIndex: ' ..
+			tostring(p_Waypoint.PointIndex) ..
+			' | #self.waypointsByPathIndex[' ..
+			p_Waypoint.PathIndex ..
+			']: ' .. tostring(#self.waypointsByPathIndex[p_Waypoint.PathIndex]) .. ' | ' .. tostring(s_Diff))
 	end
 
 	self.waypointsByID[p_Waypoint.ID] = p_Waypoint
@@ -413,7 +419,8 @@ function NodeCollection:_processWaypointMetadata(p_Waypoint)
 	--}
 
 	-- if the node has a linkmode and no links then try to find them
-	if p_Waypoint.Data.LinkMode ~= nil and (p_Waypoint.Data.Links == nil or (type(p_Waypoint.Data.Links) == 'table' and #p_Waypoint.Data.Links < 1)) then
+	if p_Waypoint.Data.LinkMode ~= nil and
+		(p_Waypoint.Data.Links == nil or (type(p_Waypoint.Data.Links) == 'table' and #p_Waypoint.Data.Links < 1)) then
 		-- indirect connections
 		if p_Waypoint.Data.LinkMode == 1 then
 			local s_Range = p_Waypoint.Data.Range or 3 -- meters, box-like area
@@ -706,7 +713,8 @@ function NodeCollection:GetFirst(p_PathIndex)
 		return false
 	end
 
-	while s_FirstWaypoint.Previous and ((p_PathIndex ~= nil and s_FirstWaypoint.Previous.PathIndex == s_FirstWaypoint.PathIndex) or p_PathIndex == nil) do
+	while s_FirstWaypoint.Previous and
+		((p_PathIndex ~= nil and s_FirstWaypoint.Previous.PathIndex == s_FirstWaypoint.PathIndex) or p_PathIndex == nil) do
 		s_FirstWaypoint = s_FirstWaypoint.Previous
 	end
 
@@ -730,7 +738,8 @@ function NodeCollection:GetLast(p_PathIndex)
 		return false
 	end
 
-	while s_LastWaypoint.Next and ((p_PathIndex ~= nil and s_LastWaypoint.Next.PathIndex == s_LastWaypoint.PathIndex) or p_PathIndex == nil) do
+	while s_LastWaypoint.Next and
+		((p_PathIndex ~= nil and s_LastWaypoint.Next.PathIndex == s_LastWaypoint.PathIndex) or p_PathIndex == nil) do
 		s_LastWaypoint = s_LastWaypoint.Next
 	end
 
@@ -1041,7 +1050,8 @@ function NodeCollection:Load(p_LevelName, p_GameMode)
 
 	m_Logger:Write('Load -> Paths: ' .. tostring(s_PathCount) .. ' | Waypoints: ' .. tostring(s_WaypointCount))
 
-	ChatManager:Yell(Language:I18N('Loaded %d paths with %d waypoints for map %s', s_PathCount, s_WaypointCount, self.mapName), 5.5)
+	ChatManager:Yell(Language:I18N('Loaded %d paths with %d waypoints for map %s', s_PathCount, s_WaypointCount,
+		self.mapName), 5.5)
 end
 
 function NodeCollection:Save()
@@ -1173,7 +1183,8 @@ function NodeCollection:Save()
 	local s_QueriesTotal = #s_BatchQueries
 	local s_BatchSize = 1000
 	local s_HasError = false
-	local s_InsertQuery = 'INSERT INTO ' .. self.mapName .. '_table (pathIndex, pointIndex, transX, transY, transZ, inputVar, data) VALUES '
+	local s_InsertQuery = 'INSERT INTO ' ..
+		self.mapName .. '_table (pathIndex, pointIndex, transX, transY, transZ, inputVar, data) VALUES '
 
 	while s_QueriesTotal > s_QueriesDone and not s_HasError do
 		local s_QueriesLeft = s_QueriesTotal - s_QueriesDone
@@ -1204,7 +1215,8 @@ function NodeCollection:Save()
 	local s_Results = SQL:Query('SELECT * FROM ' .. self.mapName .. '_table')
 
 	if not s_Results then
-		m_Logger:Error('NodeCollection:Save -> Failed to double-check table entries for map [' .. self.mapName .. ']: ' .. SQL:Error())
+		m_Logger:Error('NodeCollection:Save -> Failed to double-check table entries for map [' ..
+			self.mapName .. ']: ' .. SQL:Error())
 		ChatManager:Yell(Language:I18N('Failed to execute query: %s', SQL:Error()), 5.5)
 		return
 	end
@@ -1212,7 +1224,8 @@ function NodeCollection:Save()
 	SQL:Close()
 
 	m_Logger:Write('Save -> Saved [' .. s_QueriesTotal .. '] waypoints for map [' .. self.mapName .. ']')
-	ChatManager:Yell(Language:I18N('Saved %d paths with %d waypoints for map %s', s_PathCount, s_QueriesTotal, self.mapName), 5.5)
+	ChatManager:Yell(Language:I18N('Saved %d paths with %d waypoints for map %s', s_PathCount, s_QueriesTotal, self.mapName)
+		, 5.5)
 end
 
 -----------------------------
@@ -1262,7 +1275,8 @@ function NodeCollection:ObjectiveDirection(p_Waypoint, p_Objective, p_InVehicle)
 					local s_Link = self:Get(l_LinkID)
 					local s_PathWaypoint = self:GetFirst(s_Link.PathIndex)
 
-					if s_PathWaypoint ~= nil and s_PathWaypoint.Data.Objectives ~= nil and table.has(s_PathWaypoint.Data.Objectives, p_Objective) then
+					if s_PathWaypoint ~= nil and s_PathWaypoint.Data.Objectives ~= nil and
+						table.has(s_PathWaypoint.Data.Objectives, p_Objective) then
 						-- highest priority path found, return now
 						if #s_PathWaypoint.Data.Objectives == 1 then
 							return s_Direction, s_CurrentWaypoint[s_Direction]
@@ -1336,7 +1350,8 @@ function NodeCollection:Find(p_Vec3Position, p_Tolerance)
 	local s_ClosestWaypointDist = p_Tolerance
 
 	for _, l_Waypoint in pairs(self.waypointsByID) do
-		if l_Waypoint ~= nil and l_Waypoint.Position ~= nil and self:IsPathVisible(l_Waypoint.PathIndex) and self:IsPathVisible(l_Waypoint.PathIndex) then
+		if l_Waypoint ~= nil and l_Waypoint.Position ~= nil and self:IsPathVisible(l_Waypoint.PathIndex) and
+			self:IsPathVisible(l_Waypoint.PathIndex) then
 			if self:InRange(l_Waypoint, p_Vec3Position, p_Tolerance) then -- faster check
 				local s_Distance = l_Waypoint.Position:Distance(p_Vec3Position) -- then do slower math
 
@@ -1363,7 +1378,8 @@ function NodeCollection:FindAll(p_Vec3Position, p_Tolerance)
 	local s_WaypointsFound = {}
 
 	for _, l_Waypoint in pairs(self.waypointsByID) do
-		if l_Waypoint ~= nil and l_Waypoint.Position ~= nil and self:IsPathVisible(l_Waypoint.PathIndex) and self:InRange(l_Waypoint, p_Vec3Position, p_Tolerance) then
+		if l_Waypoint ~= nil and l_Waypoint.Position ~= nil and self:IsPathVisible(l_Waypoint.PathIndex) and
+			self:InRange(l_Waypoint, p_Vec3Position, p_Tolerance) then
 			table.insert(s_WaypointsFound, l_Waypoint)
 		end
 	end
@@ -1410,7 +1426,8 @@ function NodeCollection:FindAlongTrace(p_Vec3Start, p_Vec3End, p_Granularity, p_
 
 	while #s_SearchWaypoints > 0 and s_Distance > p_Granularity and s_Distance > 0 do
 		for _, l_Waypoint in pairs(s_SearchWaypoints) do
-			if l_Waypoint ~= nil and self:IsPathVisible(l_Waypoint.PathIndex) and l_Waypoint.Position ~= nil and l_Waypoint.Position:Distance(s_TestPos) <= p_Tolerance then
+			if l_Waypoint ~= nil and self:IsPathVisible(l_Waypoint.PathIndex) and l_Waypoint.Position ~= nil and
+				l_Waypoint.Position:Distance(s_TestPos) <= p_Tolerance then
 				self:Log('NodeCollection:FindAlongTrace -> Found: ' .. l_Waypoint.ID)
 				return l_Waypoint
 			end

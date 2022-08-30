@@ -1,4 +1,5 @@
 ---@class PermissionManager
+---@overload fun():PermissionManager
 PermissionManager = class('PermissionManager')
 
 ---@type Logger

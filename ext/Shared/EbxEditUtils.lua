@@ -1,4 +1,5 @@
 ---@class EbxEditUtils
+---@overload fun():EbxEditUtils
 EbxEditUtils = class 'EbxEditUtils'
 
 function EbxEditUtils:__init()

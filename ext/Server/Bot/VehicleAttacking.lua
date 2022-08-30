@@ -1,4 +1,5 @@
 ---@class VehicleAttacking
+---@overload fun():VehicleAttacking
 VehicleAttacking = class('VehicleAttacking')
 
 ---@type Utilities
