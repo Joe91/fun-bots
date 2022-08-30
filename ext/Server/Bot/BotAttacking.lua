@@ -224,7 +224,7 @@ function BotAttacking:UpdateAttacking(p_Bot)
 		else
 			p_Bot._TargetPitch = 0.0
 			p_Bot._WeaponToUse = BotWeapons.Primary
-			p_Bot:_AbortAttack()
+			p_Bot:AbortAttack()
 			p_Bot:_ResetActionFlag(BotActionFlags.C4Active)
 			p_Bot:_ResetActionFlag(BotActionFlags.GrenadeActive)
 		end
@@ -269,7 +269,7 @@ function BotAttacking:UpdateAttacking(p_Bot)
 		else -- soldier alive again
 			p_Bot._WeaponToUse = BotWeapons.Primary
 			p_Bot._TargetPitch = 0.0
-			p_Bot:_AbortAttack()
+			p_Bot:AbortAttack()
 			p_Bot:_ResetActionFlag(BotActionFlags.ReviveActive)
 		end
 	-- enter vehicle
@@ -282,12 +282,12 @@ function BotAttacking:UpdateAttacking(p_Bot)
 		if p_Bot._ShootPlayer.soldier.worldTransform.trans:Distance(p_Bot.m_Player.soldier.worldTransform.trans) < 5 then
 			p_Bot:_EnterVehicle(true)
 			p_Bot._TargetPitch = 0.0
-			p_Bot:_AbortAttack()
+			p_Bot:AbortAttack()
 			p_Bot:_ResetActionFlag(BotActionFlags.EnterVehicleActive)
 		end
 		if p_Bot._ShootModeTimer > 12.0 then -- abort this after some time
 			p_Bot._TargetPitch = 0.0
-			p_Bot:_AbortAttack()
+			p_Bot:AbortAttack()
 			p_Bot:_ResetActionFlag(BotActionFlags.EnterVehicleActive)
 		end
 	-- repair
@@ -312,13 +312,13 @@ function BotAttacking:UpdateAttacking(p_Bot)
 		-- Abort conditions
 		if p_Bot._ShootModeTimer > Registry.BOT.MAX_TIME_TRY_REPAIR or p_Bot._RepairVehicleEntity == nil then -- abort this after some time
 			p_Bot._TargetPitch = 0.0
-			p_Bot:_AbortAttack()
+			p_Bot:AbortAttack()
 			p_Bot:_ResetActionFlag(BotActionFlags.RepairActive)
 			p_Bot._WeaponToUse = BotWeapons.Primary
 		end
 
 	elseif p_Bot._ShootPlayer.soldier == nil or p_Bot._Shoot == false then -- reset if enemy is dead or attack is disabled
-		p_Bot:_AbortAttack()
+		p_Bot:AbortAttack()
 	end
 end
 

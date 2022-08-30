@@ -19,7 +19,7 @@ function BotWeaponHandling:UpdateDeployAndReload(p_Bot, p_Deploy)
 	p_Bot:_ResetActionFlag(BotActionFlags.RepairActive)
 	p_Bot:_ResetActionFlag(BotActionFlags.EnterVehicleActive)
 	p_Bot:_ResetActionFlag(BotActionFlags.GrenadeActive)
-	p_Bot:_AbortAttack()
+	p_Bot:AbortAttack()
 
 	if p_Bot._ActiveAction ~= BotActionFlags.OtherActionActive then
 		p_Bot._TargetPitch = 0.0
