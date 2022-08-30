@@ -1,4 +1,4 @@
----@class TeamSwitchModes
+---@enum TeamSwitchModes
 TeamSwitchModes = {
 	NoTeamSwitch = 0,
 	SwitchForRoundTwo = 1,

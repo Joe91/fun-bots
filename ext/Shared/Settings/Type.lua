@@ -9,7 +9,7 @@
 	@value: Boolean
 	@value: DynamicList
 ]]
----@class Type
+---@enum Type
 Type = {
 	Text = 0,
 	Integer = 1,

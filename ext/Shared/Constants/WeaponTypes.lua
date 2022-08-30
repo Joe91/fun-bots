@@ -1,4 +1,4 @@
----@class WeaponTypes
+---@enum WeaponTypes
 WeaponTypes = {
 	Knife = 0,
 	Pistol = 1,

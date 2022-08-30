@@ -1,4 +1,4 @@
----@class BotWeapons
+---@enum BotWeapons
 BotWeapons = {
 	Auto = 0,
 	Primary = 1,
