@@ -82,7 +82,7 @@ SettingsDefinition = {
 			Value = Config.BotAimWorsening,
 			Description = "Make bots aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy).",
 			Reference = Range(0.00, 10.00, 0.05),
-			Default = 0.4,
+			Default = 0.3,
 			UpdateFlag = UpdateFlag.Weapons,
 			Category = "DIFFICULTY"
 		},
@@ -106,7 +106,7 @@ SettingsDefinition = {
 			Value = Config.BotSupportAimWorsening,
 			Description = "See botAimWorsening, only for LMGs",
 			Reference = Range(0.00, 10.00, 0.05),
-			Default = 0.2,
+			Default = 0.3,
 			UpdateFlag = UpdateFlag.Weapons,
 			Category = "DIFFICULTY"
 		},
