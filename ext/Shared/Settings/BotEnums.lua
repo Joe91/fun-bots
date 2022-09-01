@@ -67,5 +67,7 @@ VehicleAttackModes = {
 	AttackWithRifle = 1,
 	AttackWithNade = 2,
 	AttackWithRocket = 3,
-	AttackWithC4 = 4
+	AttackWithC4 = 4,
+	AttackWithMissileAir = 5,
+	AttackWithMissileLand = 6
 }

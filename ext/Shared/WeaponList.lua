@@ -460,10 +460,10 @@ function WeaponList:_typeToBotWeapon(p_WeaponType)
 		s_BotWeaponType = BotWeapons.Gadget1
 	elseif p_WeaponType == WeaponTypes.Defibrillator or
 		p_WeaponType == WeaponTypes.Rocket or
-		p_WeaponType == WeaponTypes.Claymore or
-		p_WeaponType == WeaponTypes.C4 or
 		p_WeaponType == WeaponTypes.MissileAir or
 		p_WeaponType == WeaponTypes.MissileLand or
+		p_WeaponType == WeaponTypes.Claymore or
+		p_WeaponType == WeaponTypes.C4 or
 		p_WeaponType == WeaponTypes.Beacon then
 		s_BotWeaponType = BotWeapons.Gadget2
 	elseif p_WeaponType == WeaponTypes.Grenade then

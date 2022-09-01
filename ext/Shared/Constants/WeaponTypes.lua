@@ -1,6 +1,5 @@
 ---@enum WeaponTypes
 WeaponTypes = {
-	Knife = 0,
 	Pistol = 1,
 	Shotgun = 2,
 	Assault = 3,
@@ -19,5 +18,6 @@ WeaponTypes = {
 	Beacon = 16,
 	Grenade = 17,
 	MissileAir = 18,
-	MissileLand = 19
+	MissileLand = 19,
+	Knife = 20,
 }

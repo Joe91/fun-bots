@@ -19,6 +19,8 @@ function BotAiming:UpdateAiming(p_Bot)
 			return
 		end
 
+		local s_ActiveWeaponType = p_Bot.m_ActiveWeapon.type
+
 		--interpolate target-player movement
 		local s_TargetMovement = Vec3.zero
 		local s_PitchCorrection = 0.0
@@ -34,10 +36,10 @@ function BotAiming:UpdateAiming(p_Bot)
 		else
 			local s_AimForHead = false
 			local s_AdditionalOffset = Vec3.zero
-			if p_Bot.m_ActiveWeapon.type == WeaponTypes.Sniper then
+			if s_ActiveWeaponType == WeaponTypes.Sniper then
 				s_AimForHead = Config.AimForHeadSniper
 				s_Skil = p_Bot._SkillSniper
-			elseif p_Bot.m_ActiveWeapon.type == WeaponTypes.LMG then
+			elseif s_ActiveWeaponType == WeaponTypes.LMG then
 				s_AimForHead = Config.AimForHeadSupport
 			else
 				s_AimForHead = Config.AimForHead
@@ -65,7 +67,7 @@ function BotAiming:UpdateAiming(p_Bot)
 			s_Drop = p_Bot.m_ActiveWeapon.bulletDrop
 			s_Speed = p_Bot.m_ActiveWeapon.bulletSpeed
 
-			if p_Bot.m_ActiveWeapon.type == WeaponTypes.Grenade then
+			if s_ActiveWeaponType == WeaponTypes.Grenade then
 				if p_Bot._DistanceToPlayer < 3.0 then
 					p_Bot._DistanceToPlayer = 3.0 -- don't throw them too close..
 				end
@@ -120,7 +122,7 @@ function BotAiming:UpdateAiming(p_Bot)
 				elseif p_Bot._DistanceToPlayer > 1.0 then s_GrenadePitch = 1.5498523757709646
 				elseif p_Bot._DistanceToPlayer > 0.5 then s_GrenadePitch = 1.5603243512829308
 				end
-			else
+			elseif s_ActiveWeaponType <= WeaponTypes.Rocket then -- no compensation for other weapons needed
 				if Registry.BOT.USE_ADVANCED_AIMING then
 					--calculate how long the distance is --> time to travel
 					local s_VectorBetween = s_FullPositionTarget - s_FullPositionBot
@@ -176,15 +178,15 @@ function BotAiming:UpdateAiming(p_Bot)
 		--calculate pitch
 		local s_Pitch = 0.0
 
-		if p_Bot.m_ActiveWeapon.type == WeaponTypes.Grenade then
+		if s_ActiveWeaponType == WeaponTypes.Grenade then
 			s_Pitch = s_GrenadePitch
 		else
 			local s_Distance = math.sqrt(s_DifferenceZ ^ 2 + s_DifferenceX ^ 2)
 			s_Pitch = math.atan(s_DifferenceY, s_Distance)
 		end
 
-		-- worsen yaw and pitch depending on bot-skill. Don't use Skill for Nades and Rockets.
-		if p_Bot.m_ActiveWeapon.type ~= WeaponTypes.Grenade and p_Bot.m_ActiveWeapon.type ~= WeaponTypes.Rocket then
+		-- worsen yaw and pitch depending on bot-skill. Don't use Skill for Nades, Rockets, Missiles, ...
+		if s_ActiveWeaponType <= WeaponTypes.Sniper then -- all normal weapons
 			local s_SkillFactor = s_Skil / p_Bot._DistanceToPlayer
 			local s_WorseningSkillX = (MathUtils:GetRandom(-1.0, 1.0) * s_SkillFactor) -- value scaled in offset in 1m
 			local s_WorseningSkillY = (MathUtils:GetRandom(-1.0, 1.0) * s_SkillFactor) -- value scaled in offset in 1m
