@@ -432,9 +432,12 @@ function BotMovement:UpdateShootMovement(p_Bot)
 	end
 
 	--crouch moving (only mode with modified gun)
+	local s_ActiveWeaponType = p_Bot.m_ActiveWeapon.type
 	if (
-		(p_Bot.m_ActiveWeapon.type == WeaponTypes.Sniper or p_Bot.m_ActiveWeapon.type == WeaponTypes.Rocket) and
-			not p_Bot.m_KnifeMode) then --don't move while shooting in a vehicle
+		(
+			s_ActiveWeaponType == WeaponTypes.Sniper or s_ActiveWeaponType == WeaponTypes.Rocket or
+				s_ActiveWeaponType == WeaponTypes.MissileAir or s_ActiveWeaponType == WeaponTypes.MissileLand) and
+			not p_Bot.m_KnifeMode) then --don't move while shooting some weapons
 		if p_Bot._AttackMode == BotAttackModes.Crouch then
 			if p_Bot.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Crouch then
 				p_Bot.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Crouch, true, true)

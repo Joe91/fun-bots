@@ -54,6 +54,9 @@ CustomWeaponsEngineerRu = {
 	'Repairtool',
 
 	-- Gadget 2
+	'Sa18IGLA', --ru
+	-- 'Stinger', --us
+	'Javelin', --both
 	-- 'SMAW', --us
 	'RPG7', --ru
 

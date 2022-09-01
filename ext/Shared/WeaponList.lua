@@ -309,10 +309,11 @@ function WeaponList:__init()
 		---------------------------
 		-- Sidearms
 
-		-- only rockets supported for engineers right now
 		Weapon('SMAW', '', {}, WeaponTypes.Rocket),
-		-- only rockets supported for engineers right now
 		Weapon('RPG7', '', {}, WeaponTypes.Rocket),
+		Weapon('Sa18IGLA', '', {}, WeaponTypes.MissileAir),
+		Weapon('Stinger', '', {}, WeaponTypes.MissileAir, 'Weapons/FIM92A/U_FIM92'),
+		Weapon('Javelin', '', {}, WeaponTypes.MissileLand, 'Weapons/FGM148/U_FGM148'),
 		Weapon('Repairtool', '', {}, WeaponTypes.Torch, 'Weapons/Gadgets/Repairtool/U_Repairtool'),
 		Weapon('Defib', '', {}, WeaponTypes.Defibrillator, 'Weapons/Gadgets/Defibrillator/U_Defib'),
 		Weapon('Medkit', '', {}, WeaponTypes.Medkit, 'Weapons/Gadgets/Medicbag/U_Medkit'),
@@ -459,6 +460,8 @@ function WeaponList:_typeToBotWeapon(p_WeaponType)
 		s_BotWeaponType = BotWeapons.Gadget1
 	elseif p_WeaponType == WeaponTypes.Defibrillator or
 		p_WeaponType == WeaponTypes.Rocket or
+		p_WeaponType == WeaponTypes.MissileAir or
+		p_WeaponType == WeaponTypes.MissileLand or
 		p_WeaponType == WeaponTypes.Claymore or
 		p_WeaponType == WeaponTypes.C4 or
 		p_WeaponType == WeaponTypes.Beacon then

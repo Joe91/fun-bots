@@ -1376,7 +1376,7 @@ SettingsDefinition = {
 			Value = Config.BotFireModeDuration,
 			Description = "The minimum time a bot tries to shoot a player - recommended minimum 3.0, below this you will have issues.",
 			Reference = Range(0.00, 60.00, 0.5),
-			Default = 4.0,
+			Default = 4.5,
 			UpdateFlag = UpdateFlag.None,
 			Category = "EXPERT"
 		},

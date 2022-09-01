@@ -139,8 +139,11 @@ function Vehicles:GetSpeedAndDrop(p_VehicleData, p_Index)
 end
 
 function Vehicles:CheckForVehicleAttack(p_VehicleType, p_Distance, p_Gadget, p_InVehicle)
-	local s_AttackMode = VehicleAttackModes.NoAttack -- no attack
+	if p_InVehicle then
+		return VehicleAttackModes.AttackWithRifle -- attack with main-weapon
+	end
 
+	local s_AttackMode = VehicleAttackModes.NoAttack -- no attack
 	if p_VehicleType == VehicleTypes.MavBot or
 		p_VehicleType == VehicleTypes.NoArmorVehicle or
 		p_VehicleType == VehicleTypes.StationaryLauncher or
@@ -152,18 +155,22 @@ function Vehicles:CheckForVehicleAttack(p_VehicleType, p_Distance, p_Gadget, p_I
 		s_AttackMode = VehicleAttackModes.AttackWithNade -- attack with grenade
 	end
 
-	if p_VehicleType ~= VehicleTypes.MavBot then -- MAV or EOD always with rifle
-		if p_Gadget ~= nil and p_Gadget.type == WeaponTypes.Rocket then
+	if p_VehicleType ~= VehicleTypes.MavBot and p_Gadget then -- MAV or EOD always with rifle
+		if p_Gadget.type == WeaponTypes.Rocket then
 			s_AttackMode = VehicleAttackModes.AttackWithRocket -- always use rocket if possible
-		elseif p_Gadget ~= nil and p_Gadget.type == WeaponTypes.C4 and p_Distance < 25 then
+		elseif p_Gadget.type == WeaponTypes.C4 and p_Distance < 25 then
 			if p_VehicleType ~= VehicleTypes.Chopper and p_VehicleType ~= VehicleTypes.Plane then -- no air vehicles
 				s_AttackMode = VehicleAttackModes.AttackWithC4 -- always use c4 if possible
 			end
+		elseif p_Gadget.type == WeaponTypes.MissileAir then
+			if p_VehicleType == VehicleTypes.Chopper or p_VehicleType == VehicleTypes.Plane then -- no air vehicles
+				s_AttackMode = VehicleAttackModes.AttackWithMissileAir -- always use c4 if possible
+			end
+		elseif p_Gadget.type == WeaponTypes.MissileLand then
+			if p_VehicleType ~= VehicleTypes.Chopper and p_VehicleType ~= VehicleTypes.Plane then -- no air vehicles
+				s_AttackMode = VehicleAttackModes.AttackWithMissileLand -- always use c4 if possible
+			end
 		end
-	end
-
-	if p_InVehicle then
-		s_AttackMode = VehicleAttackModes.AttackWithRifle -- attack with main-weapon
 	end
 
 	return s_AttackMode
