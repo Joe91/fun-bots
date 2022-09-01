@@ -17,5 +17,7 @@ WeaponTypes = {
 	C4 = 14,
 	Tugs = 15,
 	Beacon = 16,
-	Grenade = 17
+	Grenade = 17,
+	MissileAir = 18,
+	MissileLand = 19
 }
