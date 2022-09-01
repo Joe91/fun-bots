@@ -23,7 +23,7 @@ This is the changelog for the version V2.6.0. Don't forget to [join us on Discor
 * massive rework on BotSpawner to prevent crashes on Map-Change.
 * massive refactoring of BotManager by Bree_Arnold!
 * cleanup of unused code
-* Engineers use missiles
+* #80 Engineers use missiles
 
 ### Bug fixes
 * #218 increased auto-sniper-time a little
@@ -31,6 +31,7 @@ This is the changelog for the version V2.6.0. Don't forget to [join us on Discor
 * #227 fix for crash on mapchange with current VU-Version
 * fix some static move-modes with new Bot-Structure
 * small fix of wrong appearance of some assault-bots
+* modified mapfiles with newlines can be imported now
 
 ### New maps
 * 
