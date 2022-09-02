@@ -52,7 +52,6 @@ function NodeEditor:RegisterCustomEvents()
 	-- tracing
 	-- trace recording events
 	NetEvents:Subscribe('NodeEditor:StartTrace', self, self._onStartTrace)
-	NetEvents:Subscribe('NodeEditor:EndTrace', self, self._onEndTrace)
 	NetEvents:Subscribe('NodeEditor:ClearTrace', self, self._onClearTrace)
 	NetEvents:Subscribe('NodeEditor:SaveTrace', self, self._onSaveTrace)
 	-- start clear
@@ -101,7 +100,7 @@ function NodeEditor:_getNewIndex()
 	return s_HighestIndex + 1
 end
 
-function NodeEditor:_onStartTrace(p_Player)
+function NodeEditor:StartTrace(p_Player)
 	if self.m_Player == nil or self.m_Player.soldier == nil then
 		return
 	end
@@ -126,23 +125,39 @@ function NodeEditor:_onStartTrace(p_Player)
 	local s_TotalTraceDistance = self.m_CustomTraceDistance[l_PlayerGuid]
 	local s_TotalTraceNodes = #self.m_CustomTrace[l_PlayerGuid]:Get()
 	local s_TraceIndex = self.m_CustomTraceIndex[p_Player.guid] -- TODO: not really needed ?
-	NetEvents:SendToLocal("ClientNodeEditor:TraceUiData", p_Player, s_TotalTraceNodes, s_TotalTraceDistance, s_TraceIndex,
+	NetEvents:SendToLocal("UI_ClientNodeEditor_TraceData", p_Player, s_TotalTraceNodes, s_TotalTraceDistance, s_TraceIndex,
 		true)
 end
 
-function NodeEditor:_onEndTrace(p_Player, p_ClearSightToStart)
+function NodeEditor:EndTrace(p_Player)
 	self.m_CustomTraceTimer[p_Player.guid] = -1
-	-- TODO: UI Client:
-	NetEvents:SendToLocal("ClientNodeEditor:TraceUiData", p_Player, nil, nil, nil, false)
-	-- get RaycastData for Node
+	NetEvents:SendToLocal("UI_ClientNodeEditor_TraceData", p_Player, nil, nil, nil, false)
 
 	local s_FirstWaypoint = self.m_CustomTrace[p_Player.guid]:GetFirst()
 
 	if s_FirstWaypoint then
+		local s_FirstWaypoint = self.m_CustomTrace:GetFirst()
+
+		local s_StartPos = s_FirstWaypoint.Position + Vec3.up
+		local s_EndPos = self.m_CustomTrace:GetLast().Position + Vec3.up
+		local s_RayHits = nil
+
+		if p_Player.attachedControllable then
+			s_RayHits = RaycastManager:CollisionRaycast(s_StartPos, s_EndPos, 1, 0,
+				RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll |
+				RayCastFlags.CheckDetailMesh | RayCastFlags.DontCheckPhantoms | RayCastFlags.DontCheckGroup |
+				RayCastFlags.IsAsyncRaycast)
+		else
+			s_RayHits = RaycastManager:CollisionRaycast(s_StartPos, s_EndPos, 1, 0,
+				RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll |
+				RayCastFlags.CheckDetailMesh | RayCastFlags.IsAsyncRaycast)
+		end
+
+
 		self.m_CustomTrace[p_Player.guid]:ClearSelection()
 		self.m_CustomTrace[p_Player.guid]:Select(s_FirstWaypoint)
 
-		if p_ClearSightToStart then
+		if s_RayHits == nil or s_RayHits == 0 then
 			-- clear view from start node to end node, path loops
 			self.m_CustomTrace[p_Player.guid]:SetInput(s_FirstWaypoint.SpeedMode, s_FirstWaypoint.ExtraMode, 0)
 		else
@@ -156,7 +171,7 @@ function NodeEditor:_onEndTrace(p_Player, p_ClearSightToStart)
 	self:Log('Custom Trace Ended')
 end
 
-function NodeEditor:_onClearTrace(p_Player)
+function NodeEditor:ClearTrace(p_Player)
 	self.m_CustomTraceTimer[p_Player.guid] = -1
 	self.m_CustomTraceIndex[p_Player.guid] = self:_getNewIndex()
 	self.m_CustomTraceDistance[p_Player.guid] = 0
@@ -166,7 +181,7 @@ function NodeEditor:_onClearTrace(p_Player)
 	local s_TotalTraceDistance = self.m_CustomTraceDistance[l_PlayerGuid]
 	local s_TotalTraceNodes = #self.m_CustomTrace[l_PlayerGuid]:Get()
 	local s_TraceIndex = self.m_CustomTraceIndex[p_Player.guid] -- TODO: not really needed ?
-	NetEvents:SendToLocal("ClientNodeEditor:TraceUiData", p_Player, s_TotalTraceNodes, s_TotalTraceDistance, s_TraceIndex,
+	NetEvents:SendToLocal("UI_ClientNodeEditor_TraceData", p_Player, s_TotalTraceNodes, s_TotalTraceDistance, s_TraceIndex,
 		false)
 
 	self:Log('Custom Trace Cleared')
@@ -176,7 +191,7 @@ function NodeEditor:IsSavingOrLoading()
 	return self.m_NodeOperation ~= ''
 end
 
-function NodeEditor:_onSaveTrace(p_Player, p_PathIndex)
+function NodeEditor:SaveTrace(p_Player, p_PathIndex)
 	if self:IsSavingOrLoading() then
 		self:Log('Operation in progress, please wait...')
 		return false
@@ -424,7 +439,7 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 						-- TODO: Send to Client UI:
 						local s_TotalTraceDistance = self.m_CustomTraceDistance[l_PlayerGuid]
 						local s_TotalTraceNodes = #self.m_CustomTrace[l_PlayerGuid]:Get()
-						NetEvents:SendToLocal("ClientNodeEditor:TraceUiData", s_Player, s_TotalTraceNodes, s_TotalTraceDistance)
+						NetEvents:SendToLocal("UI_ClientNodeEditor_TraceData", s_Player, s_TotalTraceNodes, s_TotalTraceDistance)
 					end
 				else
 					-- collection is empty, stop the timer
@@ -458,6 +473,7 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 			local s_WaypointPaths = m_NodeCollection:GetPaths()
 			for l_Path, _ in pairs(s_WaypointPaths) do
 				if m_NodeCollection:IsPathVisible(l_Path) then
+					local s_FirstNode = s_WaypointPaths[l_Path][1]
 					for _, l_Node in pairs(s_WaypointPaths[l_Path]) do
 
 						local s_DrawNode = false
@@ -481,13 +497,28 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 								s_IsSelected = true
 							end
 
+							local s_LinkPositions = {}
+							if l_Node.Data.Links then
+								for i = 1, #l_Node.Data.Links do
+									local s_LinkNode = m_NodeCollection:Get(l_Node.Data.Links[i])
+									if s_LinkNode then
+										table.insert(s_LinkPositions, s_LinkNode.Position)
+									end
+								end
+							end
+
 							local s_DataNode = {
 								Node = l_Node,
 								DrawNode = s_DrawNode,
 								DrawLine = s_DrawLine,
 								DrawText = s_DrawText,
 								IsSelected = s_IsSelected,
-								IsTrace = false
+								Objective = s_FirstNode.Data.Objective,
+								Vehicles = s_FirstNode.Data.Vehicles,
+								Reverse = (s_FirstNode.OptValue == 0XFF),
+								Links = s_LinkPositions,
+								IsTrace = false,
+								IsOthersTrace = false
 							}
 							table.insert(s_NodesToDraw, s_DataNode)
 						end
@@ -512,9 +543,6 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 					if s_Distance <= Config.LineRange then
 						s_DrawLine = true
 					end
-					if s_Distance <= Config.TextRange then
-						s_DrawText = true
-					end
 
 					if s_DrawNode or s_DrawLine or s_DrawText then
 						if m_NodeCollection:IsSelected(l_PlayerGuid) then
@@ -525,16 +553,17 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 							Node = l_Node,
 							DrawNode = s_DrawNode,
 							DrawLine = s_DrawLine,
-							DrawText = s_DrawText,
+							DrawText = false,
 							IsSelected = s_IsSelected,
-							IsTrace = true
+							IsTrace = true,
+							IsOthersTrace = false
 						}
 						table.insert(s_NodesToDraw, s_DataNode)
 					end
 				end
 			end
 
-			NetEvents:SendToLocal('ClientNodeEditor:SendNodes', s_Player, s_NodesToDraw) -- send all nodes that are visible for the player
+			NetEvents:SendToLocal('ClientNodeEditor:DrawNodes', s_Player, s_NodesToDraw) -- send all nodes that are visible for the player
 
 			::continue::
 		end
