@@ -14,11 +14,10 @@ function NodeEditor:__init()
 	self.m_NexBatchSend = 0
 	self.m_PlayerSendingNodes = nil
 	self.m_PlayersReceivingNodes = {}
-	self.m_BotVision = {}
 	self.m_Debugprints = 0
 
 
-	
+
 	self.m_ActiveTracePlayers = {}
 
 	self.m_CustomTrace = {}
@@ -48,11 +47,10 @@ function NodeEditor:RegisterCustomEvents()
 	NetEvents:Subscribe('NodeEditor:Init', self, self.OnInit)
 	NetEvents:Subscribe('NodeEditor:WarpTo', self, self.OnWarpTo)
 	-- NetEvents:Subscribe('UI_Request_Save_Settings', self, self.OnUIRequestSaveSettings)
-	NetEvents:Subscribe('NodeEditor:SetBotVision', self, self.OnSetBotVision)
 
 
 	-- tracing
-		-- trace recording events
+	-- trace recording events
 	NetEvents:Subscribe('NodeEditor:StartTrace', self, self._onStartTrace)
 	NetEvents:Subscribe('NodeEditor:EndTrace', self, self._onEndTrace)
 	NetEvents:Subscribe('NodeEditor:ClearTrace', self, self._onClearTrace)
@@ -76,7 +74,6 @@ end
 function NodeEditor:OnCloseEditor(p_Player)
 	self.m_ActiveTracePlayers[p_Player.guid] = false
 end
-
 
 --- TRACE Events
 
@@ -128,8 +125,9 @@ function NodeEditor:_onStartTrace(p_Player)
 
 	local s_TotalTraceDistance = self.m_CustomTraceDistance[l_PlayerGuid]
 	local s_TotalTraceNodes = #self.m_CustomTrace[l_PlayerGuid]:Get()
-	local s_TraceIndex = self.m_CustomTraceIndex[p_Player.guid]  -- TODO: not really needed ?
-	NetEvents:SendToLocal("ClientNodeEditor:TraceUiData", p_Player, s_TotalTraceNodes, s_TotalTraceDistance, s_TraceIndex, true)
+	local s_TraceIndex = self.m_CustomTraceIndex[p_Player.guid] -- TODO: not really needed ?
+	NetEvents:SendToLocal("ClientNodeEditor:TraceUiData", p_Player, s_TotalTraceNodes, s_TotalTraceDistance, s_TraceIndex,
+		true)
 end
 
 function NodeEditor:_onEndTrace(p_Player, p_ClearSightToStart)
@@ -140,7 +138,7 @@ function NodeEditor:_onEndTrace(p_Player, p_ClearSightToStart)
 
 	local s_FirstWaypoint = self.m_CustomTrace[p_Player.guid]:GetFirst()
 
-	if s_FirstWaypoint then	
+	if s_FirstWaypoint then
 		self.m_CustomTrace[p_Player.guid]:ClearSelection()
 		self.m_CustomTrace[p_Player.guid]:Select(s_FirstWaypoint)
 
@@ -167,8 +165,9 @@ function NodeEditor:_onClearTrace(p_Player)
 	-- TODO: Client: set UI
 	local s_TotalTraceDistance = self.m_CustomTraceDistance[l_PlayerGuid]
 	local s_TotalTraceNodes = #self.m_CustomTrace[l_PlayerGuid]:Get()
-	local s_TraceIndex = self.m_CustomTraceIndex[p_Player.guid]  -- TODO: not really needed ?
-	NetEvents:SendToLocal("ClientNodeEditor:TraceUiData", p_Player, s_TotalTraceNodes, s_TotalTraceDistance, s_TraceIndex, false)
+	local s_TraceIndex = self.m_CustomTraceIndex[p_Player.guid] -- TODO: not really needed ?
+	NetEvents:SendToLocal("ClientNodeEditor:TraceUiData", p_Player, s_TotalTraceNodes, s_TotalTraceDistance, s_TraceIndex,
+		false)
 
 	self:Log('Custom Trace Cleared')
 end
@@ -267,8 +266,6 @@ function NodeEditor:_onSaveTrace(p_Player, p_PathIndex)
 	self.m_NodeOperation = ''
 end
 
-
-
 --- COMMON EVENTS
 
 function NodeEditor:OnLevelLoaded(p_LevelName, p_GameMode)
@@ -320,33 +317,11 @@ end
 ---VEXT Server Player:Respawn Event
 ---@param p_Player Player
 function NodeEditor:OnPlayerRespawn(p_Player)
-	if self.m_BotVision[p_Player.name] == nil then
-		return
-	end
-
-	self.m_BotVision[p_Player.name] = {
-		Player = p_Player,
-		Current = 0,
-		Delay = 1,
-		Speed = 0.5,
-		State = true
-	}
 end
 
 ---VEXT Server Player:Killed Event
 ---@param p_Player Player
 function NodeEditor:OnPlayerKilled(p_Player)
-	if p_Player == nil or self.m_BotVision[p_Player.name] == nil then
-		return
-	end
-
-	self.m_BotVision[p_Player.name] = {
-		Player = p_Player,
-		Current = 0,
-		Delay = 0,
-		Speed = 0.5,
-		State = false
-	}
 end
 
 ---VEXT Server Player:Left Event
@@ -465,7 +440,7 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 	-- visible NODE distribution-handling
 	if self.m_NodeSendUpdateTimer < 1.5 then
 		self.m_NodeSendUpdateTimer = self.m_NodeSendUpdateTimer + p_DeltaTime
-	else	
+	else
 		self.m_NodeSendUpdateTimer = 0.0
 
 		-- ToDo: distribute load equally (multible Players)
@@ -488,7 +463,7 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 						local s_DrawNode = false
 						local s_DrawLine = false
 						local s_DrawText = false
-						local s_IsSelected = false					
+						local s_IsSelected = false
 
 						local s_Distance = m_NodeCollection:GetDistance(l_Node, s_PlayerPos)
 						if s_Distance <= Config.WaypointRange then
@@ -528,7 +503,7 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 					local s_DrawNode = false
 					local s_DrawLine = false
 					local s_DrawText = false
-					local s_IsSelected = false					
+					local s_IsSelected = false
 
 					local s_Distance = m_NodeCollection:GetDistance(l_Node, s_PlayerPos)
 					if s_Distance <= Config.WaypointRange then
@@ -559,28 +534,14 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 				end
 			end
 
-			NetEvents:SendToLocal('ClientNodeEditor:SendNodes', s_Player, s_NodesToDraw)) -- send all nodes that are visible for the player
+			NetEvents:SendToLocal('ClientNodeEditor:SendNodes', s_Player, s_NodesToDraw) -- send all nodes that are visible for the player
 
 			::continue::
 		end
 	end
 end
 
-
 function NodeEditor:OnEngineUpdateOld(p_DeltaTime, p_SimulatioonDeltaTime)
-	for l_PlayerName, l_TimeData in pairs(self.m_BotVision) do
-		if type(l_TimeData) == 'table' then
-			l_TimeData.Current = l_TimeData.Current + p_DeltaTime
-
-			if l_TimeData.Current >= l_TimeData.Delay then
-				self:Log('Player -> Fade [%s]: %s', l_TimeData.Player.name, l_TimeData.State)
-				l_TimeData.Player:Fade(l_TimeData.Speed, l_TimeData.State)
-				self.m_BotVision[l_PlayerName] = true
-			else
-				self.m_BotVision[l_PlayerName] = l_TimeData
-			end
-		end
-	end
 	-- receiving nodes from player takes priority over sending
 	if self.m_NodeReceiveTimer >= 0 and self.m_PlayerSendingNodes ~= nil then
 		self.m_NodeReceiveTimer = self.m_NodeReceiveTimer + p_DeltaTime
@@ -723,23 +684,6 @@ function NodeEditor:OnWarpTo(p_Player, p_Vec3Position)
 
 	self:Log('Teleporting %s to %s', p_Player.name, tostring(p_Vec3Position))
 	p_Player.soldier:SetPosition(p_Vec3Position)
-end
-
-function NodeEditor:OnSetBotVision(p_Player, p_Enabled)
-	self:Log('Player -> BotVision [%s]: %s', p_Player.name, p_Enabled)
-
-	if p_Enabled then
-		self.m_BotVision[p_Player.name] = {
-			Player = p_Player,
-			Current = 0,
-			Delay = 1,
-			Speed = 0.5,
-			State = p_Enabled
-		}
-	else
-		p_Player:Fade(0.5, false)
-		self.m_BotVision[p_Player.name] = nil
-	end
 end
 
 function NodeEditor:OnUIRequestSaveSettings(p_Player, p_Data)

@@ -104,10 +104,6 @@ function ClientNodeEditor:__init()
 	self.m_LastTraceStart = nil
 	self.m_LastTraceEnd = nil
 
-	self.m_BotVisionEnabled = false
-	self.m_BotVisionPlayers = {}
-	self.m_BotVisionCrosshair = nil
-
 	self.m_DebugEntries = {}
 	self.m_EventsReady = false
 end
@@ -224,10 +220,6 @@ function ClientNodeEditor:OnRegisterEvents()
 	Console:Register('ObjectiveDirection', 'Show best direction to given objective', self, self._onObjectiveDirection)
 	Console:Register('GetKnownObjectives', 'print all known objectives and associated paths', self,
 		self._onGetKnownObjectives)
-
-
-	Console:Register('BotVision', '*<boolean|Enabled>* Lets you see what the bots see [Experimental]', self,
-		self._onSetBotVision)
 
 	self.m_EventsReady = true
 	self:Log('Register Events')
@@ -1126,21 +1118,6 @@ function ClientNodeEditor:_onProcessMetadata(p_Args)
 	return true
 end
 
-function ClientNodeEditor:_onSetBotVision(p_Args)
-	self.m_BotVisionEnabled = (p_Args ~= nil and (p_Args[1] == '1' or p_Args[1] == 'true'))
-
-	self:Log('BotVision: %s', self.m_BotVisionEnabled)
-
-	NetEvents:Send('NodeEditor:SetBotVision', self.m_BotVisionEnabled)
-
-	if self.m_BotVisionEnabled then
-		-- unload our current cache
-		self:_onUnload(p_Args)
-		-- enable the timer before we are ready to receive
-		self.m_NodeReceiveTimer = 0
-	end
-end
-
 function ClientNodeEditor:_onObjectiveDirection(p_Args)
 	self.m_CommoRoseActive = false
 
@@ -1943,90 +1920,11 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 			self:DrawSomeNodes(Config.NodesPerCycle)
 			-- collectgarbage("step", 1000)
 		end
-
-		if self.m_BotVisionEnabled then
-			-- bot vision crosshair lines, generate once only
-			if self.m_BotVisionCrosshair == nil then
-				local s_WindowSize = ClientUtils:GetWindowSize()
-				local cx = math.floor(s_WindowSize.x / 2.0 + 0.5)
-				local cy = math.floor(s_WindowSize.y / 2.0 + 0.5)
-
-				self.m_BotVisionCrosshair = {
-					Vec2(cx - 9, cy - 1), Vec2(cx + 8, cy - 1),
-					Vec2(cx - 10, cy), Vec2(cx + 9, cy),
-					Vec2(cx - 9, cy + 1), Vec2(cx + 8, cy + 1),
-
-					Vec2(cx - 1, cy - 9), Vec2(cx - 1, cy + 8),
-					Vec2(cx, cy - 10), Vec2(cx, cy + 9),
-					Vec2(cx + 1, cy - 9), Vec2(cx + 1, cy + 8)
-				}
-			end
-
-			-- check vision from player to "enemies", only update position if visible
-			local s_Players = PlayerManager:GetPlayers()
-
-			for p = 1, #s_Players do
-				if s_Players[p].soldier ~= nil and self.m_Player.teamId ~= s_Players[p].teamId then
-					local s_Ray = RaycastManager:Raycast(self.m_PlayerPos + Vec3.up,
-						(s_Players[p].soldier.worldTransform.trans + Vec3.up),
-						RayCastFlags.CheckDetailMesh | RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter |
-						RayCastFlags.IsAsyncRaycast)
-
-					local s_PosData = {
-						Visible = (s_Ray == nil or s_Ray.rigidBody == nil),
-						Alive = s_Players[p].soldier ~= nil
-					}
-
-					if s_PosData.Visible then
-						s_PosData.Position = s_Players[p].soldier.worldTransform.trans
-					end
-
-					self.m_BotVisionPlayers[s_Players[p].name] = s_PosData
-				end
-			end
-		end
 	end
 end
 
 ---VEXT Client UI:DrawHud Event
 function ClientNodeEditor:OnUIDrawHud()
-	if self.m_BotVisionEnabled then
-		if self.m_BotVisionCrosshair ~= nil then
-			-- all this for a simple + in the middle of the screen
-			DebugRenderer:DrawLine2D(self.m_BotVisionCrosshair[1], self.m_BotVisionCrosshair[2], self.m_Colors.Text)
-			DebugRenderer:DrawLine2D(self.m_BotVisionCrosshair[3], self.m_BotVisionCrosshair[4], self.m_Colors.Text)
-			DebugRenderer:DrawLine2D(self.m_BotVisionCrosshair[5], self.m_BotVisionCrosshair[6], self.m_Colors.Text)
-			DebugRenderer:DrawLine2D(self.m_BotVisionCrosshair[7], self.m_BotVisionCrosshair[8], self.m_Colors.Text)
-			DebugRenderer:DrawLine2D(self.m_BotVisionCrosshair[9], self.m_BotVisionCrosshair[10], self.m_Colors.Text)
-			DebugRenderer:DrawLine2D(self.m_BotVisionCrosshair[11], self.m_BotVisionCrosshair[12], self.m_Colors.Text)
-		end
-
-		for k, v in pairs(self.m_BotVisionPlayers) do
-			if v ~= nil and v ~= false and v.Position ~= nil then
-				local s_ScreenPos = ClientUtils:WorldToScreen(v.Position + (Vec3.up * 0.3))
-
-				if s_ScreenPos ~= nil then
-					DebugRenderer:DrawText2D(s_ScreenPos.x, s_ScreenPos.y, k, self.m_Colors.Text, 1)
-					s_ScreenPos = nil
-				end
-
-				local s_Color = self.m_Colors.Text
-
-				if not v.Alive then
-					s_Color = self.m_Colors[1].Line
-				else
-					if v.Visible then
-						s_Color = self.m_Colors[4].Line
-					end
-				end
-
-				DebugRenderer:DrawSphere(v.Position + (Vec3.up * 1.5), 0.15, s_Color, false, false)
-				DebugRenderer:DrawSphere(v.Position + (Vec3.up * 1.0), 0.3, s_Color, false, false)
-				DebugRenderer:DrawSphere(v.Position + (Vec3.up * 0.3), 0.2, s_Color, false, false)
-			end
-		end
-	end
-
 	-- dont process waypoints if we're not supposed to see them
 	if not self.m_Enabled then
 		return
