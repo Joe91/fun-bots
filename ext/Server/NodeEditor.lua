@@ -51,9 +51,9 @@ function NodeEditor:RegisterCustomEvents()
 
 	-- tracing
 	-- trace recording events
-	NetEvents:Subscribe('NodeEditor:StartTrace', self, self._onStartTrace)
-	NetEvents:Subscribe('NodeEditor:ClearTrace', self, self._onClearTrace)
-	NetEvents:Subscribe('NodeEditor:SaveTrace', self, self._onSaveTrace)
+	-- NetEvents:Subscribe('NodeEditor:StartTrace', self, self.StartTrace)
+	-- NetEvents:Subscribe('NodeEditor:ClearTrace', self, self.ClearTrace)
+	-- NetEvents:Subscribe('NodeEditor:SaveTrace', self, self.SaveTrace)
 	-- start clear
 end
 
@@ -67,11 +67,12 @@ end
 
 -- Management Events
 function NodeEditor:OnOpenEditor(p_Player)
-	self.m_ActiveTracePlayers[p_Player.guid] = true
+	self.m_CustomTraceTimer[p_Player.onlineId] = -1
+	self.m_ActiveTracePlayers[p_Player.onlineId] = true
 end
 
 function NodeEditor:OnCloseEditor(p_Player)
-	self.m_ActiveTracePlayers[p_Player.guid] = false
+	self.m_ActiveTracePlayers[p_Player.onlineId] = false
 end
 
 --- TRACE Events
@@ -101,39 +102,39 @@ function NodeEditor:_getNewIndex()
 end
 
 function NodeEditor:StartTrace(p_Player)
-	if self.m_Player == nil or self.m_Player.soldier == nil then
+	if not p_Player.soldier then
 		return
 	end
 
-	if self.m_CustomTrace[p_Player.guid] ~= nil then
-		self.m_CustomTrace[p_Player.guid]:Clear()
+	if self.m_CustomTrace[p_Player.onlineId] ~= nil then
+		self.m_CustomTrace[p_Player.onlineId]:Clear()
 	end
 
-	self.m_CustomTrace[p_Player.guid] = NodeCollection(true)
-	self.m_CustomTraceTimer[p_Player.guid] = 0
-	self.m_CustomTraceIndex[p_Player.guid] = self:_getNewIndex()
-	self.m_CustomTraceDistance[p_Player.guid] = 0
+	self.m_CustomTrace[p_Player.onlineId] = NodeCollection(true)
+	self.m_CustomTraceTimer[p_Player.onlineId] = 0
+	self.m_CustomTraceIndex[p_Player.onlineId] = self:_getNewIndex()
+	self.m_CustomTraceDistance[p_Player.onlineId] = 0
 
-	local s_FirstWaypoint = self.m_CustomTrace[p_Player.guid]:Create({
-		Position = self.m_Player.soldier.worldTransform.trans:Clone()
+	local s_FirstWaypoint = self.m_CustomTrace[p_Player.onlineId]:Create({
+		Position = p_Player.soldier.worldTransform.trans:Clone()
 	})
-	self.m_CustomTrace[p_Player.guid]:ClearSelection()
-	self.m_CustomTrace[p_Player.guid]:Select(s_FirstWaypoint)
+	self.m_CustomTrace[p_Player.onlineId]:ClearSelection()
+	self.m_CustomTrace[p_Player.onlineId]:Select(s_FirstWaypoint)
 
 	self:Log('Custom Trace Started')
 
-	local s_TotalTraceDistance = self.m_CustomTraceDistance[l_PlayerGuid]
-	local s_TotalTraceNodes = #self.m_CustomTrace[l_PlayerGuid]:Get()
-	local s_TraceIndex = self.m_CustomTraceIndex[p_Player.guid] -- TODO: not really needed ?
+	local s_TotalTraceDistance = self.m_CustomTraceDistance[p_Player.onlineId]
+	local s_TotalTraceNodes = #self.m_CustomTrace[p_Player.onlineId]:Get()
+	local s_TraceIndex = self.m_CustomTraceIndex[p_Player.onlineId] -- TODO: not really needed ?
 	NetEvents:SendToLocal("UI_ClientNodeEditor_TraceData", p_Player, s_TotalTraceNodes, s_TotalTraceDistance, s_TraceIndex,
 		true)
 end
 
 function NodeEditor:EndTrace(p_Player)
-	self.m_CustomTraceTimer[p_Player.guid] = -1
+	self.m_CustomTraceTimer[p_Player.onlineId] = -1
 	NetEvents:SendToLocal("UI_ClientNodeEditor_TraceData", p_Player, nil, nil, nil, false)
 
-	local s_FirstWaypoint = self.m_CustomTrace[p_Player.guid]:GetFirst()
+	local s_FirstWaypoint = self.m_CustomTrace[p_Player.onlineId]:GetFirst()
 
 	if s_FirstWaypoint then
 		local s_FirstWaypoint = self.m_CustomTrace:GetFirst()
@@ -154,33 +155,33 @@ function NodeEditor:EndTrace(p_Player)
 		end
 
 
-		self.m_CustomTrace[p_Player.guid]:ClearSelection()
-		self.m_CustomTrace[p_Player.guid]:Select(s_FirstWaypoint)
+		self.m_CustomTrace[p_Player.onlineId]:ClearSelection()
+		self.m_CustomTrace[p_Player.onlineId]:Select(s_FirstWaypoint)
 
 		if s_RayHits == nil or s_RayHits == 0 then
 			-- clear view from start node to end node, path loops
-			self.m_CustomTrace[p_Player.guid]:SetInput(s_FirstWaypoint.SpeedMode, s_FirstWaypoint.ExtraMode, 0)
+			self.m_CustomTrace[p_Player.onlineId]:SetInput(s_FirstWaypoint.SpeedMode, s_FirstWaypoint.ExtraMode, 0)
 		else
 			-- no clear view, path should just invert at the end
-			self.m_CustomTrace[p_Player.guid]:SetInput(s_FirstWaypoint.SpeedMode, s_FirstWaypoint.ExtraMode, 0XFF)
+			self.m_CustomTrace[p_Player.onlineId]:SetInput(s_FirstWaypoint.SpeedMode, s_FirstWaypoint.ExtraMode, 0XFF)
 		end
 
-		self.m_CustomTrace[p_Player.guid]:ClearSelection()
+		self.m_CustomTrace[p_Player.onlineId]:ClearSelection()
 	end
 
 	self:Log('Custom Trace Ended')
 end
 
 function NodeEditor:ClearTrace(p_Player)
-	self.m_CustomTraceTimer[p_Player.guid] = -1
-	self.m_CustomTraceIndex[p_Player.guid] = self:_getNewIndex()
-	self.m_CustomTraceDistance[p_Player.guid] = 0
-	self.m_CustomTrace[p_Player.guid]:Clear()
+	self.m_CustomTraceTimer[p_Player.onlineId] = -1
+	self.m_CustomTraceIndex[p_Player.onlineId] = self:_getNewIndex()
+	self.m_CustomTraceDistance[p_Player.onlineId] = 0
+	self.m_CustomTrace[p_Player.onlineId]:Clear()
 
 	-- TODO: Client: set UI
-	local s_TotalTraceDistance = self.m_CustomTraceDistance[l_PlayerGuid]
-	local s_TotalTraceNodes = #self.m_CustomTrace[l_PlayerGuid]:Get()
-	local s_TraceIndex = self.m_CustomTraceIndex[p_Player.guid] -- TODO: not really needed ?
+	local s_TotalTraceDistance = self.m_CustomTraceDistance[p_Player.onlineId]
+	local s_TotalTraceNodes = #self.m_CustomTrace[p_Player.onlineId]:Get()
+	local s_TraceIndex = self.m_CustomTraceIndex[p_Player.onlineId] -- TODO: not really needed ?
 	NetEvents:SendToLocal("UI_ClientNodeEditor_TraceData", p_Player, s_TotalTraceNodes, s_TotalTraceDistance, s_TraceIndex,
 		false)
 
@@ -201,7 +202,7 @@ function NodeEditor:SaveTrace(p_Player, p_PathIndex)
 		p_PathIndex = p_PathIndex[1]
 	end
 
-	if self.m_CustomTrace[p_Player.guid] == nil then
+	if self.m_CustomTrace[p_Player.onlineId] == nil then
 		self:Log('Custom Trace is empty')
 		return false
 	end
@@ -210,7 +211,7 @@ function NodeEditor:SaveTrace(p_Player, p_PathIndex)
 
 	local s_PathCount = #m_NodeCollection:GetPaths()
 	p_PathIndex = tonumber(p_PathIndex) or self:_getNewIndex()
-	local s_CurrentWaypoint = self.m_CustomTrace[p_Player.guid]:GetFirst()
+	local s_CurrentWaypoint = self.m_CustomTrace[p_Player.onlineId]:GetFirst()
 	local s_ReferrenceWaypoint = nil
 	local s_Direction = 'Next'
 
@@ -229,7 +230,7 @@ function NodeEditor:SaveTrace(p_Player, p_PathIndex)
 		else
 			-- get first node of 2nd path, we'll InsertBefore the new nodes
 			s_ReferrenceWaypoint = m_NodeCollection:GetFirst(2)
-			s_CurrentWaypoint = self.m_CustomTrace[p_Player.guid]:GetLast()
+			s_CurrentWaypoint = self.m_CustomTrace[p_Player.onlineId]:GetLast()
 			s_Direction = 'Previous'
 		end
 
@@ -275,7 +276,7 @@ function NodeEditor:SaveTrace(p_Player, p_PathIndex)
 		s_CurrentWaypoint = s_CurrentWaypoint[s_Direction]
 	end
 
-	self.m_CustomTrace[p_Player.guid]:Clear()
+	self.m_CustomTrace[p_Player.onlineId]:Clear()
 	collectgarbage('collect')
 	self:Log('Custom Trace Saved to Path: %d', p_PathIndex)
 	self.m_NodeOperation = ''
@@ -361,8 +362,8 @@ end
 function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 	-- TRACE-Handling
 	for l_PlayerGuid, l_Active in pairs(self.m_ActiveTracePlayers) do
-		local s_Player = PlayerManager:GetPlayerByGuid(l_PlayerGuid)
-		if (s_Player and s_Player.soldier and self.m_CustomTraceTimer[l_PlayerGuid] >= 0) then
+		local s_Player = PlayerManager:GetPlayerByOnlineId(l_PlayerGuid)
+		if (s_Player and s_Player.soldier and l_Active and self.m_CustomTraceTimer[l_PlayerGuid] >= 0) then
 			self.m_CustomTraceTimer[l_PlayerGuid] = self.m_CustomTraceTimer[l_PlayerGuid] + p_DeltaTime
 
 			local s_PlayerPos = s_Player.soldier.worldTransform.trans:Clone()
@@ -460,8 +461,8 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 
 		-- ToDo: distribute load equally (multible Players)
 		for l_PlayerGuid, l_Active in pairs(self.m_ActiveTracePlayers) do
-			local s_Player = PlayerManager:GetPlayerByGuid(l_PlayerGuid)
-			if not s_Player or not s_Player.soldier then
+			local s_Player = PlayerManager:GetPlayerByOnlineId(l_PlayerGuid)
+			if not s_Player or not s_Player.soldier or not l_Active then
 				goto continue
 			end
 
@@ -562,6 +563,7 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 					end
 				end
 			end
+			print(#s_NodesToDraw)
 
 			NetEvents:SendToLocal('ClientNodeEditor:DrawNodes', s_Player, s_NodesToDraw) -- send all nodes that are visible for the player
 

@@ -114,8 +114,8 @@ function ClientNodeEditor:OnRegisterEvents()
 	-- simple check to make sure we don't reregister things if they are already done
 	if self.m_EventsReady then return end
 
-	NetEvents:Subscribe("UI_ClientNodeEditor_TraceData", self, self._OnUiTraceData)
-	NetEvents:Subscribe("ClientNodeEditor:DrawNodes", self, self._OnDrawNodes)
+	NetEvents:Subscribe('UI_ClientNodeEditor_TraceData', self, self._OnUiTraceData)
+	NetEvents:Subscribe('ClientNodeEditor:DrawNodes', self, self._OnDrawNodes)
 
 	-- enable/disable events
 	-- ('UI_CommoRose_Enabled', <Bool|Enabled>) -- true == block the BF3 commo rose
@@ -2052,6 +2052,11 @@ end
 ---@param p_DeltaTime number
 ---@param p_UpdatePass UpdatePass|integer
 function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
+	if true then
+		return
+	end
+
+
 	-- Only do math on presimulation UpdatePass, don't bother if debugging is off
 	if not self.m_Enabled or p_UpdatePass ~= UpdatePass.UpdatePass_PreSim then
 		return

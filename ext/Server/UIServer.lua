@@ -258,6 +258,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		end
 	-- Trace
 	elseif request.action == 'trace_start' then
+		print("start Trace")
 		m_NodeEditor:StartTrace(p_Player)
 	-- NetEvents:SendToLocal('ClientNodeEditor:StartTrace', p_Player)
 	elseif request.action == 'trace_end' then
@@ -293,10 +294,13 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		NetEvents:SendToLocal('WriteClientSettings', p_Player, Config, false)
 	-- Waypoints-Editor
 	elseif request.action == 'request_waypoints_editor' then
+		m_NodeEditor:OnOpenEditor(p_Player)
 		NetEvents:SendTo('UI_Waypoints_Editor', p_Player, true)
 	elseif request.action == 'disable_waypoint_editor' then
+		m_NodeEditor:OnCloseEditor(p_Player)
 		NetEvents:SendTo('UI_Waypoints_Disable', p_Player)
 	elseif request.action == 'hide_waypoints_editor' then
+		m_NodeEditor:OnCloseEditor(p_Player)
 		NetEvents:SendTo('UI_Waypoints_Editor', p_Player, false)
 	else
 		ChatManager:Yell(Language:I18N('%s is currently not implemented.', request.action), 2.5)
