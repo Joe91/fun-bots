@@ -774,49 +774,77 @@ end
 
 ---@param p_Waypoint? Waypoint
 ---@param p_PathIndex? integer
-function NodeCollection:Select(p_Waypoint, p_PathIndex)
+function NodeCollection:Select(p_Waypoint, p_PathIndex, p_SelectionId)
+	if not p_SelectionId then
+		p_SelectionId = 1
+	end
+	if self.selectedWaypoints[p_SelectionId] == nil then
+		self.selectedWaypoints[p_SelectionId] = {}
+	end
+
 	if p_Waypoint == nil then return end
 
 	p_Waypoint = self:Get(p_Waypoint, p_PathIndex)
 
 	if p_Waypoint == nil then return end
 
-	self.selectedWaypoints[p_Waypoint.ID] = p_Waypoint
+	self.selectedWaypoints[p_SelectionId][p_Waypoint.ID] = p_Waypoint
 end
 
 ---@param p_Waypoint? Waypoint
 ---@param p_PathIndex? integer
-function NodeCollection:Deselect(p_Waypoint, p_PathIndex)
+function NodeCollection:Deselect(p_Waypoint, p_PathIndex, p_SelectionId)
+	if not p_SelectionId then
+		p_SelectionId = 1
+	end
+	if self.selectedWaypoints[p_SelectionId] == nil then
+		self.selectedWaypoints[p_SelectionId] = {}
+	end
+
 	if p_Waypoint == nil then
-		self:ClearSelection()
+		self:ClearSelection(p_SelectionId)
 	else
 		p_Waypoint = self:Get(p_Waypoint, p_PathIndex)
 
 		if p_Waypoint == nil then return end
 
-		self.selectedWaypoints[p_Waypoint.ID] = nil
+		self.selectedWaypoints[p_SelectionId][p_Waypoint.ID] = nil
 	end
 end
 
 ---@param p_Waypoint? Waypoint
 ---@param p_PathIndex? integer
-function NodeCollection:IsSelected(p_Waypoint, p_PathIndex)
+function NodeCollection:IsSelected(p_Waypoint, p_PathIndex, p_SelectionId)
+	if not p_SelectionId then
+		p_SelectionId = 1
+	end
+	if self.selectedWaypoints[p_SelectionId] == nil then
+		self.selectedWaypoints[p_SelectionId] = {}
+	end
+
 	if p_Waypoint == nil then return false end
 
 	p_Waypoint = self:Get(p_Waypoint, p_PathIndex)
 
 	if p_Waypoint == nil then return false end
 
-	return self.selectedWaypoints[p_Waypoint.ID] ~= nil
+	return self.selectedWaypoints[p_SelectionId][p_Waypoint.ID] ~= nil
 end
 
 ---@param p_PathIndex? integer
 ---@return Waypoint[]
-function NodeCollection:GetSelected(p_PathIndex)
+function NodeCollection:GetSelected(p_PathIndex, p_SelectionId)
+	if not p_SelectionId then
+		p_SelectionId = 1
+	end
+	if self.selectedWaypoints[p_SelectionId] == nil then
+		self.selectedWaypoints[p_SelectionId] = {}
+	end
+
 	local s_Selection = {}
 
 	-- copy selection into index-based array and sort results
-	for l_WaypointID, l_Waypoint in pairs(self.selectedWaypoints) do
+	for l_WaypointID, l_Waypoint in pairs(self.selectedWaypoints[p_SelectionId]) do
 		if self:IsSelected(l_Waypoint) and (p_PathIndex == nil or l_Waypoint.PathIndex == p_PathIndex) then
 			table.insert(s_Selection, l_Waypoint)
 		end
@@ -831,8 +859,12 @@ function NodeCollection:GetSelected(p_PathIndex)
 	return s_Selection
 end
 
-function NodeCollection:ClearSelection()
-	self.selectedWaypoints = {}
+function NodeCollection:ClearSelection(p_SelectionId)
+	if not p_SelectionId then
+		p_SelectionId = 1
+	end
+
+	self.selectedWaypoints[p_SelectionId] = {}
 end
 
 function NodeCollection:_sort(p_Collection, p_KeyName, p_Descending)
@@ -1006,12 +1038,10 @@ function NodeCollection:Load(p_LevelName, p_GameMode)
 	local s_WaypointCount = 0
 	local s_FirstWaypoint = nil
 	local s_LastWaypoint = nil
-	local s_LastPathindex = 0
 
 	for _, l_Row in pairs(s_Results) do
-		if l_Row["pathIndex"] ~= s_LastPathindex then
-			s_PathCount = s_PathCount + 1
-			s_LastPathindex = l_Row["pathIndex"]
+		if l_Row["pathIndex"] > s_PathCount then
+			s_PathCount = l_Row["pathIndex"]
 		end
 
 		local s_Waypoint = {
@@ -1095,7 +1125,6 @@ function NodeCollection:Save()
 	local s_ChangedWaypoints = {}
 	local s_WaypointCount = #self.waypoints
 	local s_PathCount = 0
-	local s_LastPathIndex
 	local s_WaypointsChanged = 0
 	local s_Orphans = {}
 	local s_Disconnects = {}
@@ -1157,9 +1186,8 @@ function NodeCollection:Save()
 				end
 			end
 
-			if l_Waypoint.PathIndex ~= s_LastPathIndex then
-				s_PathCount = s_PathCount + 1
-				s_LastPathIndex = l_Waypoint.PathIndex
+			if l_Waypoint.PathIndex > s_PathCount then
+				s_PathCount = l_Waypoint.PathIndex
 			end
 
 			table.insert(s_BatchQueries, '(' .. table.concat({
@@ -1342,6 +1370,22 @@ function NodeCollection:InRange(p_Waypoint, p_Vec3Position, p_Range)
 	return (math.abs(s_PosA.x - s_PosB.x) <= p_Range and
 		math.abs(s_PosA.y - s_PosB.y) <= p_Range and
 		math.abs(s_PosA.z - s_PosB.z) <= p_Range)
+end
+
+-- this method avoids the use of the Vec3:Distance() method to avoid complex math internally
+-- it's a tradeoff for speed over accuracy, as this method produces a box instead of a sphere
+-- @returns float of Distance
+function NodeCollection:GetDistance(p_Waypoint, p_Vec3Position)
+	local s_PosA = p_Waypoint.Position or Vec3.zero
+	local s_PosB = p_Vec3Position or Vec3.zero
+	local s_DiffX = math.abs(s_PosA.x - s_PosB.x)
+	local s_DiffY = math.abs(s_PosA.y - s_PosB.y)
+	local s_DiffZ = math.abs(s_PosA.z - s_PosB.z)
+	if s_DiffX > s_DiffZ then
+		return s_DiffX + 0.5* s_DiffZ + 0.25 *s_DiffY
+	else
+		return s_DiffZ + 0.5* s_DiffX + 0.25 *s_DiffY
+	end
 end
 
 -- Find the closest waypoint at position `p_Vec3Position` with a search radius of `p_Tolerance`

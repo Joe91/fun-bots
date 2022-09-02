@@ -16,9 +16,31 @@ function NodeEditor:__init()
 	self.m_PlayersReceivingNodes = {}
 	self.m_BotVision = {}
 	self.m_Debugprints = 0
+
+
+	
+	self.m_ActiveTracePlayers = {}
+
+	self.m_CustomTrace = {}
+	self.m_CustomTraceIndex = {}
+	self.m_CustomTraceTimer = {}
+	self.m_CustomTraceDelay = Config.TraceDelta
+	self.m_CustomTraceDistance = {}
+	self.m_CustomTraceSaving = false
+
+	self.m_NodeOperation = ''
+
+	self.m_NodeSendUpdateTimer = 0
 end
 
 function NodeEditor:RegisterCustomEvents()
+	-- management:
+	-- Open Editor
+	-- Close Editor
+
+	-- Engine Update()
+
+
 	NetEvents:Subscribe('NodeEditor:RequestNodes', self, self.OnRequestNodes)
 	NetEvents:Subscribe('NodeEditor:SendNodes', self, self.OnSendNodes)
 	NetEvents:Subscribe('NodeEditor:ReceivingNodes', self, self.OnReceiveNodes)
@@ -27,6 +49,15 @@ function NodeEditor:RegisterCustomEvents()
 	NetEvents:Subscribe('NodeEditor:WarpTo', self, self.OnWarpTo)
 	-- NetEvents:Subscribe('UI_Request_Save_Settings', self, self.OnUIRequestSaveSettings)
 	NetEvents:Subscribe('NodeEditor:SetBotVision', self, self.OnSetBotVision)
+
+
+	-- tracing
+		-- trace recording events
+	NetEvents:Subscribe('NodeEditor:StartTrace', self, self._onStartTrace)
+	NetEvents:Subscribe('NodeEditor:EndTrace', self, self._onEndTrace)
+	NetEvents:Subscribe('NodeEditor:ClearTrace', self, self._onClearTrace)
+	NetEvents:Subscribe('NodeEditor:SaveTrace', self, self._onSaveTrace)
+	-- start clear
 end
 
 -- =============================================
@@ -36,6 +67,209 @@ end
 -- =============================================
 -- Level Events
 -- =============================================
+
+-- Management Events
+function NodeEditor:OnOpenEditor(p_Player)
+	self.m_ActiveTracePlayers[p_Player.guid] = true
+end
+
+function NodeEditor:OnCloseEditor(p_Player)
+	self.m_ActiveTracePlayers[p_Player.guid] = false
+end
+
+
+--- TRACE Events
+
+-- ############################ Trace Recording
+-- ############################################
+
+function NodeEditor:_getNewIndex()
+	local s_NextIndex = 0
+	local s_AllPaths = m_NodeCollection:GetPaths()
+
+	local s_HighestIndex = 0
+
+	for l_PathIndex, l_Points in pairs(s_AllPaths) do
+		if l_PathIndex > s_HighestIndex then
+			s_HighestIndex = l_PathIndex
+		end
+	end
+
+	for i = 1, s_HighestIndex do
+		if s_AllPaths[i] == nil or s_AllPaths[i] == {} then
+			return i
+		end
+	end
+
+	return s_HighestIndex + 1
+end
+
+function NodeEditor:_onStartTrace(p_Player)
+	if self.m_Player == nil or self.m_Player.soldier == nil then
+		return
+	end
+
+	if self.m_CustomTrace[p_Player.guid] ~= nil then
+		self.m_CustomTrace[p_Player.guid]:Clear()
+	end
+
+	self.m_CustomTrace[p_Player.guid] = NodeCollection(true)
+	self.m_CustomTraceTimer[p_Player.guid] = 0
+	self.m_CustomTraceIndex[p_Player.guid] = self:_getNewIndex()
+	self.m_CustomTraceDistance[p_Player.guid] = 0
+
+	local s_FirstWaypoint = self.m_CustomTrace[p_Player.guid]:Create({
+		Position = self.m_Player.soldier.worldTransform.trans:Clone()
+	})
+	self.m_CustomTrace[p_Player.guid]:ClearSelection()
+	self.m_CustomTrace[p_Player.guid]:Select(s_FirstWaypoint)
+
+	self:Log('Custom Trace Started')
+
+	local s_TotalTraceDistance = self.m_CustomTraceDistance[l_PlayerGuid]
+	local s_TotalTraceNodes = #self.m_CustomTrace[l_PlayerGuid]:Get()
+	local s_TraceIndex = self.m_CustomTraceIndex[p_Player.guid]  -- TODO: not really needed ?
+	NetEvents:SendToLocal("ClientNodeEditor:TraceUiData", p_Player, s_TotalTraceNodes, s_TotalTraceDistance, s_TraceIndex, true)
+end
+
+function NodeEditor:_onEndTrace(p_Player, p_ClearSightToStart)
+	self.m_CustomTraceTimer[p_Player.guid] = -1
+	-- TODO: UI Client:
+	NetEvents:SendToLocal("ClientNodeEditor:TraceUiData", p_Player, nil, nil, nil, false)
+	-- get RaycastData for Node
+
+	local s_FirstWaypoint = self.m_CustomTrace[p_Player.guid]:GetFirst()
+
+	if s_FirstWaypoint then	
+		self.m_CustomTrace[p_Player.guid]:ClearSelection()
+		self.m_CustomTrace[p_Player.guid]:Select(s_FirstWaypoint)
+
+		if p_ClearSightToStart then
+			-- clear view from start node to end node, path loops
+			self.m_CustomTrace[p_Player.guid]:SetInput(s_FirstWaypoint.SpeedMode, s_FirstWaypoint.ExtraMode, 0)
+		else
+			-- no clear view, path should just invert at the end
+			self.m_CustomTrace[p_Player.guid]:SetInput(s_FirstWaypoint.SpeedMode, s_FirstWaypoint.ExtraMode, 0XFF)
+		end
+
+		self.m_CustomTrace[p_Player.guid]:ClearSelection()
+	end
+
+	self:Log('Custom Trace Ended')
+end
+
+function NodeEditor:_onClearTrace(p_Player)
+	self.m_CustomTraceTimer[p_Player.guid] = -1
+	self.m_CustomTraceIndex[p_Player.guid] = self:_getNewIndex()
+	self.m_CustomTraceDistance[p_Player.guid] = 0
+	self.m_CustomTrace[p_Player.guid]:Clear()
+
+	-- TODO: Client: set UI
+	local s_TotalTraceDistance = self.m_CustomTraceDistance[l_PlayerGuid]
+	local s_TotalTraceNodes = #self.m_CustomTrace[l_PlayerGuid]:Get()
+	local s_TraceIndex = self.m_CustomTraceIndex[p_Player.guid]  -- TODO: not really needed ?
+	NetEvents:SendToLocal("ClientNodeEditor:TraceUiData", p_Player, s_TotalTraceNodes, s_TotalTraceDistance, s_TraceIndex, false)
+
+	self:Log('Custom Trace Cleared')
+end
+
+function NodeEditor:IsSavingOrLoading()
+	return self.m_NodeOperation ~= ''
+end
+
+function NodeEditor:_onSaveTrace(p_Player, p_PathIndex)
+	if self:IsSavingOrLoading() then
+		self:Log('Operation in progress, please wait...')
+		return false
+	end
+
+	if type(p_PathIndex) == 'table' then
+		p_PathIndex = p_PathIndex[1]
+	end
+
+	if self.m_CustomTrace[p_Player.guid] == nil then
+		self:Log('Custom Trace is empty')
+		return false
+	end
+
+	self.m_NodeOperation = 'Custom Trace'
+
+	local s_PathCount = #m_NodeCollection:GetPaths()
+	p_PathIndex = tonumber(p_PathIndex) or self:_getNewIndex()
+	local s_CurrentWaypoint = self.m_CustomTrace[p_Player.guid]:GetFirst()
+	local s_ReferrenceWaypoint = nil
+	local s_Direction = 'Next'
+
+	if s_PathCount == 0 then
+		s_CurrentWaypoint.PathIndex = 1
+		s_ReferrenceWaypoint = m_NodeCollection:Create(s_CurrentWaypoint)
+		s_CurrentWaypoint = s_CurrentWaypoint.Next
+
+		s_PathCount = #m_NodeCollection:GetPaths()
+	end
+
+	-- remove existing path and replace with current
+	if p_PathIndex == 1 then
+		if s_PathCount == 1 then
+			s_ReferrenceWaypoint = m_NodeCollection:GetFirst()
+		else
+			-- get first node of 2nd path, we'll InsertBefore the new nodes
+			s_ReferrenceWaypoint = m_NodeCollection:GetFirst(2)
+			s_CurrentWaypoint = self.m_CustomTrace[p_Player.guid]:GetLast()
+			s_Direction = 'Previous'
+		end
+
+	-- p_PathIndex is between 2 and #m_NodeCollection:GetPaths()
+	-- get the node before the start of the specified path, if the path is existing
+	elseif p_PathIndex <= s_PathCount then
+		if #m_NodeCollection:Get(nil, p_PathIndex) > 0 then
+			s_ReferrenceWaypoint = m_NodeCollection:GetFirst(p_PathIndex).Previous
+		else
+			s_ReferrenceWaypoint = m_NodeCollection:GetLast()
+		end
+
+	-- p_PathIndex == last path index, append all nodes to end of collection
+	elseif p_PathIndex > s_PathCount then
+		s_ReferrenceWaypoint = m_NodeCollection:GetLast()
+	end
+
+	-- we might have a path to delete
+	if p_PathIndex > 0 and p_PathIndex <= s_PathCount then
+		local s_PathWaypoints = m_NodeCollection:Get(nil, p_PathIndex)
+
+		if #s_PathWaypoints > 0 then
+			for i = 1, #s_PathWaypoints do
+				m_NodeCollection:Remove(s_PathWaypoints[i])
+			end
+		end
+	end
+
+	collectgarbage('collect')
+
+	-- merge custom trace into main node collection
+	while s_CurrentWaypoint do
+		s_CurrentWaypoint.PathIndex = p_PathIndex
+		local s_NewWaypoint = m_NodeCollection:Create(s_CurrentWaypoint)
+
+		if s_Direction == 'Next' then
+			m_NodeCollection:InsertAfter(s_ReferrenceWaypoint, s_NewWaypoint)
+		else
+			m_NodeCollection:InsertBefore(s_ReferrenceWaypoint, s_NewWaypoint)
+		end
+
+		s_ReferrenceWaypoint = s_NewWaypoint
+		s_CurrentWaypoint = s_CurrentWaypoint[s_Direction]
+	end
+
+	self.m_CustomTrace[p_Player.guid]:Clear()
+	collectgarbage('collect')
+	self:Log('Custom Trace Saved to Path: %d', p_PathIndex)
+	self.m_NodeOperation = ''
+end
+
+
+
+--- COMMON EVENTS
 
 function NodeEditor:OnLevelLoaded(p_LevelName, p_GameMode)
 	self:Log('Level Load: %s %s', p_LevelName, p_GameMode)
@@ -76,6 +310,7 @@ end
 ---VEXT Shared Level:Destroy Event
 function NodeEditor:OnLevelDestroy()
 	m_NodeCollection:Clear()
+	self.m_ActiveTracePlayers = {}
 end
 
 -- =============================================
@@ -134,6 +369,205 @@ end
 ---@param p_DeltaTime number
 ---@param p_SimulationDeltaTime number
 function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
+	-- TRACE-Handling
+	for l_PlayerGuid, l_Active in pairs(self.m_ActiveTracePlayers) do
+		local s_Player = PlayerManager:GetPlayerByGuid(l_PlayerGuid)
+		if (s_Player and s_Player.soldier and self.m_CustomTraceTimer[l_PlayerGuid] >= 0) then
+			self.m_CustomTraceTimer[l_PlayerGuid] = self.m_CustomTraceTimer[l_PlayerGuid] + p_DeltaTime
+
+			local s_PlayerPos = s_Player.soldier.worldTransform.trans:Clone()
+
+			if self.m_CustomTraceTimer[l_PlayerGuid] > self.m_CustomTraceDelay then
+				local s_LastWaypoint = self.m_CustomTrace[l_PlayerGuid]:GetLast()
+
+				if s_LastWaypoint then
+					local s_LastDistance = s_LastWaypoint.Position:Distance(s_PlayerPos)
+
+					if s_LastDistance >= self.m_CustomTraceDelay then
+						-- primary weapon, record movement
+						if s_Player.soldier.weaponsComponent.currentWeaponSlot == WeaponSlot.WeaponSlot_0 then
+							local s_NewWaypoint, s_Msg = self.m_CustomTrace[l_PlayerGuid]:Add()
+							self.m_CustomTrace[l_PlayerGuid]:Update(s_NewWaypoint, {
+								Position = s_PlayerPos
+							})
+							self.m_CustomTrace[l_PlayerGuid]:ClearSelection()
+							self.m_CustomTrace[l_PlayerGuid]:Select(s_NewWaypoint)
+
+							local s_Speed = BotMoveSpeeds.NoMovement -- 0 = wait, 1 = prone ... (4 Bits)
+							local s_Extra = 0 -- 0 = nothing, 1 = jump ... (4 Bits)
+
+							if s_Player.attachedControllable ~= nil then
+								local s_SpeedInput = math.abs(s_Player.input:GetLevel(EntryInputActionEnum.EIAThrottle))
+
+								if s_SpeedInput > 0 then
+									s_Speed = BotMoveSpeeds.Normal
+
+									if s_Player.input:GetLevel(EntryInputActionEnum.EIASprint) == 1 then
+										s_Speed = BotMoveSpeeds.Sprint
+									end
+								elseif s_SpeedInput == 0 then
+									s_Speed = BotMoveSpeeds.SlowCrouch
+								end
+
+								if s_Player.input:GetLevel(EntryInputActionEnum.EIABrake) > 0 then
+									s_Speed = BotMoveSpeeds.VerySlowProne
+								end
+
+								self.m_CustomTrace[l_PlayerGuid]:SetInput(s_Speed, s_Extra, 0)
+							else
+								if s_Player.input:GetLevel(EntryInputActionEnum.EIAThrottle) > 0 then --record only if moving
+									if s_Player.soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
+										s_Speed = BotMoveSpeeds.VerySlowProne
+									elseif s_Player.soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
+										s_Speed = BotMoveSpeeds.SlowCrouch
+									else
+										s_Speed = BotMoveSpeeds.Normal
+
+										if s_Player.input:GetLevel(EntryInputActionEnum.EIASprint) == 1 then
+											s_Speed = BotMoveSpeeds.Sprint
+										end
+									end
+
+									if s_Player.input:GetLevel(EntryInputActionEnum.EIAJump) == 1 then
+										s_Extra = 1
+									end
+
+									self.m_CustomTrace[l_PlayerGuid]:SetInput(s_Speed, s_Extra, 0)
+								end
+							end
+						-- secondary weapon, increase wait timer
+						elseif s_Player.soldier.weaponsComponent.currentWeaponSlot == WeaponSlot.WeaponSlot_1 then
+							local s_LastWaypointAgain = self.m_CustomTrace[l_PlayerGuid]:GetLast()
+							self.m_CustomTrace[l_PlayerGuid]:ClearSelection()
+							self.m_CustomTrace[l_PlayerGuid]:Select(s_LastWaypointAgain)
+							self.m_CustomTrace[l_PlayerGuid]:SetInput(s_LastWaypointAgain.SpeedMode, s_LastWaypointAgain.ExtraMode,
+								s_LastWaypointAgain.OptValue + p_DeltaTime)
+						end
+
+						self.m_CustomTraceDistance[l_PlayerGuid] = self.m_CustomTraceDistance[l_PlayerGuid] + s_LastDistance
+
+						-- TODO: Send to Client UI:
+						local s_TotalTraceDistance = self.m_CustomTraceDistance[l_PlayerGuid]
+						local s_TotalTraceNodes = #self.m_CustomTrace[l_PlayerGuid]:Get()
+						NetEvents:SendToLocal("ClientNodeEditor:TraceUiData", s_Player, s_TotalTraceNodes, s_TotalTraceDistance)
+					end
+				else
+					-- collection is empty, stop the timer
+					self.m_CustomTraceTimer[l_PlayerGuid] = -1
+				end
+
+				self.m_CustomTraceTimer[l_PlayerGuid] = 0
+			end
+		end
+	end
+
+
+	-- visible NODE distribution-handling
+	if self.m_NodeSendUpdateTimer < 1.5 then
+		self.m_NodeSendUpdateTimer = self.m_NodeSendUpdateTimer + p_DeltaTime
+	else	
+		self.m_NodeSendUpdateTimer = 0.0
+
+		-- ToDo: distribute load equally (multible Players)
+		for l_PlayerGuid, l_Active in pairs(self.m_ActiveTracePlayers) do
+			local s_Player = PlayerManager:GetPlayerByGuid(l_PlayerGuid)
+			if not s_Player or not s_Player.soldier then
+				goto continue
+			end
+
+			local s_NodesToDraw = {}
+
+			-- selected + isTracepath + showOption (text, node, id)
+
+			local s_PlayerPos = s_Player.soldier.worldTransform.trans
+			local s_WaypointPaths = m_NodeCollection:GetPaths()
+			for l_Path, _ in pairs(s_WaypointPaths) do
+				if m_NodeCollection:IsPathVisible(l_Path) then
+					for _, l_Node in pairs(s_WaypointPaths[l_Path]) do
+
+						local s_DrawNode = false
+						local s_DrawLine = false
+						local s_DrawText = false
+						local s_IsSelected = false					
+
+						local s_Distance = m_NodeCollection:GetDistance(l_Node, s_PlayerPos)
+						if s_Distance <= Config.WaypointRange then
+							s_DrawNode = true
+						end
+						if s_Distance <= Config.LineRange then
+							s_DrawLine = true
+						end
+						if s_Distance <= Config.TextRange then
+							s_DrawText = true
+						end
+
+						if s_DrawNode or s_DrawLine or s_DrawText then
+							if m_NodeCollection:IsSelected(l_PlayerGuid) then
+								s_IsSelected = true
+							end
+
+							local s_DataNode = {
+								Node = l_Node,
+								DrawNode = s_DrawNode,
+								DrawLine = s_DrawLine,
+								DrawText = s_DrawText,
+								IsSelected = s_IsSelected,
+								IsTrace = false
+							}
+							table.insert(s_NodesToDraw, s_DataNode)
+						end
+					end
+				end
+			end
+
+			-- custom trace of player
+			-- TODO: also show active Traces of other players with other color?
+			if self.m_CustomTrace[l_PlayerGuid] then
+				local s_CustomWaypoints = self.m_CustomTrace[l_PlayerGuid]:Get()
+				for _, l_Node in pairs(s_CustomWaypoints) do
+					local s_DrawNode = false
+					local s_DrawLine = false
+					local s_DrawText = false
+					local s_IsSelected = false					
+
+					local s_Distance = m_NodeCollection:GetDistance(l_Node, s_PlayerPos)
+					if s_Distance <= Config.WaypointRange then
+						s_DrawNode = true
+					end
+					if s_Distance <= Config.LineRange then
+						s_DrawLine = true
+					end
+					if s_Distance <= Config.TextRange then
+						s_DrawText = true
+					end
+
+					if s_DrawNode or s_DrawLine or s_DrawText then
+						if m_NodeCollection:IsSelected(l_PlayerGuid) then
+							s_IsSelected = true
+						end
+
+						local s_DataNode = {
+							Node = l_Node,
+							DrawNode = s_DrawNode,
+							DrawLine = s_DrawLine,
+							DrawText = s_DrawText,
+							IsSelected = s_IsSelected,
+							IsTrace = true
+						}
+						table.insert(s_NodesToDraw, s_DataNode)
+					end
+				end
+			end
+
+			NetEvents:SendToLocal('ClientNodeEditor:SendNodes', s_Player, s_NodesToDraw)) -- send all nodes that are visible for the player
+
+			::continue::
+		end
+	end
+end
+
+
+function NodeEditor:OnEngineUpdateOld(p_DeltaTime, p_SimulatioonDeltaTime)
 	for l_PlayerName, l_TimeData in pairs(self.m_BotVision) do
 		if type(l_TimeData) == 'table' then
 			l_TimeData.Current = l_TimeData.Current + p_DeltaTime

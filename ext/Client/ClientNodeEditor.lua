@@ -1712,7 +1712,7 @@ end
 ---@param p_DeltaTime number
 ---@param p_SimulationDeltaTime number
 function ClientNodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
-	if self.m_NodeSendTimer >= 0 and #self.m_NodesToSend > 0 then
+	--[[if self.m_NodeSendTimer >= 0 and #self.m_NodesToSend > 0 then
 		self.m_DebugEntries['nodeSendProgress'] = self.m_NodeSendProgress .. '/' .. (#self.m_NodesToSend)
 		self.m_NodeSendTimer = self.m_NodeSendTimer + p_DeltaTime
 
@@ -1777,6 +1777,7 @@ function ClientNodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 		end
 	end
 
+	-- TRACE
 	if (self.m_CustomTraceTimer >= 0 and self.m_Player ~= nil and self.m_Player.soldier ~= nil) then
 		self.m_CustomTraceTimer = self.m_CustomTraceTimer + p_DeltaTime
 
@@ -1860,7 +1861,7 @@ function ClientNodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 
 			self.m_CustomTraceTimer = 0
 		end
-	end
+	end --]]
 end
 
 ---VEXT Shared UpdateManager:Update Event
