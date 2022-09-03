@@ -37,13 +37,8 @@ function NodeEditor:__init()
 end
 
 function NodeEditor:RegisterCustomEvents()
-	-- management:
-	-- Open Editor
-	-- Close Editor
 
-	-- Engine Update()
-
-
+	-- Remove them?
 	NetEvents:Subscribe('NodeEditor:RequestNodes', self, self.OnRequestNodes)
 	NetEvents:Subscribe('NodeEditor:SendNodes', self, self.OnSendNodes)
 	NetEvents:Subscribe('NodeEditor:ReceivingNodes', self, self.OnReceiveNodes)
@@ -53,17 +48,105 @@ function NodeEditor:RegisterCustomEvents()
 	-- NetEvents:Subscribe('UI_Request_Save_Settings', self, self.OnUIRequestSaveSettings)
 
 
-	-- tracing
-	-- trace recording events
-	-- NetEvents:Subscribe('NodeEditor:StartTrace', self, self.StartTrace)
-	-- NetEvents:Subscribe('NodeEditor:ClearTrace', self, self.ClearTrace)
-	-- NetEvents:Subscribe('NodeEditor:SaveTrace', self, self.SaveTrace)
-	-- start clear
+	-- EDIT-Events from Client
+	NetEvents:Subscribe('NodeEditor:Select', self, self.OnSelect)
+	NetEvents:Subscribe('NodeEditor:Deselect', self, self.OnDeselect)
+	NetEvents:Subscribe('NodeEditor:SelectBetween', self, self.OnSelectBetween)
+	NetEvents:Subscribe('NodeEditor:SelectNext', self, self.OnSelectNext)
+	NetEvents:Subscribe('NodeEditor:SelectPrevious', self, self.OnSelectPrevious)
+	NetEvents:Subscribe('NodeEditor:ClearSelection', self, self.OnClearSelection)
+	-- TODO fill
+
 end
 
 -- =============================================
 -- Events
 -- =============================================
+
+function NodeEditor:OnSelect(p_Player, p_WaypointId, p_Position)
+	if p_WaypointId then
+		m_NodeCollection:Select(p_WaypointId, nil, p_Player.onlineId)
+	elseif p_Position then
+		local s_HitPoint = m_NodeCollection:Find(p_Position)
+
+		-- nothing found at hit location, try a raytracing check
+		if s_HitPoint == nil and p_Player.soldier then
+			local s_PlayerCamPos = p_Player.soldier.worldTransform.trans + p_Player.input.authoritativeCameraPosition
+			s_HitPoint = m_NodeCollection:FindAlongTrace(s_PlayerCamPos, p_Position)
+		end
+
+		-- we found one, let's toggle its selected state
+		if s_HitPoint ~= nil then
+			local s_IsSelected = m_NodeCollection:IsSelected(s_HitPoint)
+
+			if s_IsSelected then
+				self:Log('Deselect -> %s', s_HitPoint.ID)
+				m_NodeCollection:Deselect(s_HitPoint, nil, p_Player.onlineId)
+				return
+			else
+				self:Log('Select -> %s', s_HitPoint.ID)
+				m_NodeCollection:Select(s_HitPoint, nil, p_Player.onlineId)
+				return
+			end
+		end
+	end
+end
+
+function NodeEditor:OnDeselect(p_Player, p_WaypointId)
+	m_NodeCollection:Deselect(p_WaypointId, nil, p_Player.onlineId)
+end
+
+function NodeEditor:OnSelectBetween(p_Player)
+	local s_Selection = m_NodeCollection:GetSelected(nil, p_Player.onlineId)
+
+	if #s_Selection < 1 then
+		self:Log('Must select more than one node')
+		return false
+	end
+
+	local s_BreakAt = (#m_NodeCollection:Get())
+	local s_Current = 0
+	local s_CurrentWaypoint = s_Selection[1]
+
+	while s_CurrentWaypoint.Next and s_CurrentWaypoint.ID ~= s_Selection[#s_Selection].ID do
+		m_NodeCollection:Select(s_CurrentWaypoint, nil, p_Player.onlineId)
+		s_Current = s_Current + 1
+
+		if s_Current > s_BreakAt then
+			break
+		end
+
+		s_CurrentWaypoint = s_CurrentWaypoint.Next
+	end
+end
+
+function NodeEditor:OnSelectNext(p_Player)
+	local s_Selection = m_NodeCollection:GetSelected(nil, p_Player.onlineId)
+
+	if #s_Selection > 0 then
+		if s_Selection[1].Next ~= false then
+			m_NodeCollection:Select(s_Selection[1].Next, nil, p_Player.onlineId)
+		end
+	else
+		self:Log('Must select at least one node')
+	end
+end
+
+function NodeEditor:OnSelectPrevious(p_Player)
+	local s_Selection = m_NodeCollection:GetSelected(nil, p_Player.onlineId)
+
+	if #s_Selection > 0 then
+		if s_Selection[1].Next ~= false then
+			m_NodeCollection:Select(s_Selection[1].Previous, nil, p_Player.onlineId)
+		end
+	else
+		self:Log('Must select at least one node')
+	end
+end
+
+function NodeEditor:OnClearSelection(p_Player)
+	m_NodeCollection:ClearSelection(p_Player.onlineId)
+end
 
 -- =============================================
 -- Level Events
