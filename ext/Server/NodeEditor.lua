@@ -55,13 +55,69 @@ function NodeEditor:RegisterCustomEvents()
 	NetEvents:Subscribe('NodeEditor:SelectNext', self, self.OnSelectNext)
 	NetEvents:Subscribe('NodeEditor:SelectPrevious', self, self.OnSelectPrevious)
 	NetEvents:Subscribe('NodeEditor:ClearSelection', self, self.OnClearSelection)
-	-- TODO fill
+	NetEvents:Subscribe('NodeEditor:SetInputNode', self, self.OnSetInputNode)
+	NetEvents:Subscribe('NodeEditor:LinkNodes', self, self.OnLinkNodes)
+	NetEvents:Subscribe('NodeEditor:UnlinkNodes', self, self.OnUnlinkNodes)
+	NetEvents:Subscribe('NodeEditor:MergeNodes', self, self.OnMergeNodes)
+	NetEvents:Subscribe('NodeEditor:SplitNode', self, self.OnSplitNode)
+	NetEvents:Subscribe('NodeEditor:RemoveNode', self, self.OnRemoveNode)
 
+
+	-- TODO: fill
 end
 
 -- =============================================
 -- Events
 -- =============================================
+
+function NodeEditor:OnRemoveNode(p_Player)
+	local s_Result, s_Message = m_NodeCollection:Remove(nil, p_Player.onlineId)
+	if not s_Result then
+		self:Log(s_Message)
+	end
+end
+
+function NodeEditor:OnSplitNode(p_Player)
+	local s_Result, s_Message = m_NodeCollection:SplitSelection(p_Player.onlineId)
+	if not s_Result then
+		self:Log(s_Message)
+	end
+end
+
+function NodeEditor:OnMergeNodes(p_Player)
+	local s_Result, s_Message = m_NodeCollection:MergeSelection(p_Player.onlineId)
+	if not s_Result then
+		self:Log(s_Message)
+	end
+end
+
+function NodeEditor:OnUnlinkNodes(p_Player)
+	local s_Result, s_Message = m_NodeCollection:Unlink(nil, nil, nil, p_Player.onlineId)
+	if not s_Result then
+		self:Log(s_Message)
+	end
+end
+
+function NodeEditor:OnLinkNodes(p_Player)
+	local s_Result, s_Message = m_NodeCollection:Link(nil, nil, nil, p_Player.onlineId)
+	if not s_Result then
+		self:Log(s_Message)
+	end
+end
+
+function NodeEditor:OnSpitNode(p_Player)
+	local s_Result, s_Message = m_NodeCollection:SplitSelection(p_Player.onlineId)
+	if not s_Result then
+		self:Log(s_Message)
+	end
+end
+
+function NodeEditor:OnSetInputNode(p_Player, p_Arg1, p_Arg2, p_Arg3)
+	local s_Result, s_Message = m_NodeCollection:SetInput(p_Arg1, p_Arg2, p_Arg3)
+	if not s_Result then
+		self:Log(s_Message)
+	end
+end
 
 function NodeEditor:OnSelect(p_Player, p_WaypointId, p_Position)
 	if p_WaypointId then

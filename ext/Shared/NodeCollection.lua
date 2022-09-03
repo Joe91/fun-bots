@@ -213,10 +213,10 @@ end
 ---@param p_Waypoint? Waypoint
 ---@return boolean
 ---@return string
-function NodeCollection:Remove(p_Waypoint)
+function NodeCollection:Remove(p_Waypoint, p_SelectionId)
 	-- batch operation on selections
 	if p_Waypoint == nil then
-		local s_Selection = self:GetSelected()
+		local s_Selection = self:GetSelected(nil, p_SelectionId)
 
 		for _, l_SelectedWaypoint in pairs(s_Selection) do
 			self:Remove(l_SelectedWaypoint)
@@ -515,18 +515,18 @@ end
 ---@param p_OneWay? boolean
 ---@return boolean
 ---@return string
-function NodeCollection:Link(p_Waypoints, p_LinkID, p_OneWay)
-	local s_Selection = p_Waypoints or g_NodeCollection:GetSelected()
+function NodeCollection:Link(p_Waypoints, p_LinkID, p_OneWay, p_SelectionId)
+	local s_Selection = p_Waypoints or g_NodeCollection:GetSelected(nil, p_SelectionId)
 	p_OneWay = p_OneWay or false
 
 	if #s_Selection == 2 then
 		--special case, nodes link to each other
-		self:Link(s_Selection[1], s_Selection[2].ID, true)
-		self:Link(s_Selection[2], s_Selection[1].ID, true)
+		self:Link(s_Selection[1], s_Selection[2].ID, true, p_SelectionId)
+		self:Link(s_Selection[2], s_Selection[1].ID, true, p_SelectionId)
 		return true, 'Success'
 	elseif #s_Selection > 0 then
 		for i = 1, #s_Selection do
-			local s_Success, s_Msg = self:Link(s_Selection[i], p_LinkID)
+			local s_Success, s_Msg = self:Link(s_Selection[i], p_LinkID, nil, p_SelectionId)
 
 			if not s_Success then
 				return s_Success, s_Msg
@@ -548,7 +548,7 @@ function NodeCollection:Link(p_Waypoints, p_LinkID, p_OneWay)
 	})
 
 	if not p_OneWay then
-		self:Link(self:Get(p_LinkID), s_Selection.ID, true)
+		self:Link(self:Get(p_LinkID), s_Selection.ID, true, p_SelectionId)
 	end
 
 	return true, 'Success'
@@ -563,19 +563,19 @@ end
 ---@param p_OneWay? boolean
 ---@return boolean
 ---@return string
-function NodeCollection:Unlink(p_Waypoints, p_LinkID, p_OneWay)
+function NodeCollection:Unlink(p_Waypoints, p_LinkID, p_OneWay, p_SelectionId)
 
-	local s_Selection = p_Waypoints or g_NodeCollection:GetSelected()
+	local s_Selection = p_Waypoints or g_NodeCollection:GetSelected(nil, p_SelectionId)
 	p_OneWay = p_OneWay or false
 
 	if #s_Selection == 2 then
 		--special case, nodes unlink from each other
-		self:Unlink(s_Selection[1], s_Selection[2].ID, true)
-		self:Unlink(s_Selection[2], s_Selection[1].ID, true)
+		self:Unlink(s_Selection[1], s_Selection[2].ID, true, p_SelectionId)
+		self:Unlink(s_Selection[2], s_Selection[1].ID, true, p_SelectionId)
 		return true, 'Success'
 	elseif (#s_Selection > 0) then
 		for i = 1, #s_Selection do
-			local s_Success, s_Msg = self:Unlink(s_Selection[i], p_LinkID)
+			local s_Success, s_Msg = self:Unlink(s_Selection[i], p_LinkID, nil, p_SelectionId)
 
 			if not s_Success then
 				return s_Success, s_Msg
@@ -596,7 +596,7 @@ function NodeCollection:Unlink(p_Waypoints, p_LinkID, p_OneWay)
 			else
 				-- remove link from connected node, `p_OneWay` prevents infinite recursion
 				if not p_OneWay then
-					self:Unlink(self:Get(p_LinkID), s_Selection.ID, true)
+					self:Unlink(self:Get(p_LinkID), s_Selection.ID, true, p_SelectionId)
 				end
 			end
 		end
@@ -890,11 +890,11 @@ function NodeCollection:_sort(p_Collection, p_KeyName, p_Descending)
 	return p_Collection
 end
 
-function NodeCollection:MergeSelection()
+function NodeCollection:MergeSelection(p_SelectionId)
 	-- TODO
 	-- combine selected nodes
 	-- nodes must be sequential or the start/end of two paths
-	local s_Selection = self:GetSelected()
+	local s_Selection = self:GetSelected(nil, p_SelectionId)
 
 	if #s_Selection < 2 then
 		return false, 'Must select two or more waypoints'
@@ -931,8 +931,8 @@ function NodeCollection:MergeSelection()
 	return true, 'Success'
 end
 
-function NodeCollection:SplitSelection()
-	local s_Selection = self:GetSelected()
+function NodeCollection:SplitSelection(p_SelectionId)
+	local s_Selection = self:GetSelected(nil, p_SelectionId)
 
 	if #s_Selection < 2 then
 		return false, 'Must select two or more waypoints'
@@ -958,7 +958,7 @@ function NodeCollection:SplitSelection()
 			PathIndex = s_Selection[i].PathIndex
 		})
 
-		self:Select(s_NewWaypoint)
+		self:Select(s_NewWaypoint, nil, p_SelectionId)
 		self:InsertAfter(s_Selection[i], s_NewWaypoint)
 	end
 
@@ -1382,9 +1382,9 @@ function NodeCollection:GetDistance(p_Waypoint, p_Vec3Position)
 	local s_DiffY = math.abs(s_PosA.y - s_PosB.y)
 	local s_DiffZ = math.abs(s_PosA.z - s_PosB.z)
 	if s_DiffX > s_DiffZ then
-		return s_DiffX + 0.5* s_DiffZ + 0.25 *s_DiffY
+		return s_DiffX + 0.5 * s_DiffZ + 0.25 * s_DiffY
 	else
-		return s_DiffZ + 0.5* s_DiffX + 0.25 *s_DiffY
+		return s_DiffZ + 0.5 * s_DiffX + 0.25 * s_DiffY
 	end
 end
 

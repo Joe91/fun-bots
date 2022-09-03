@@ -15,6 +15,8 @@ function ClientNodeEditor:__init()
 	self.m_DataPoints = {}
 	self.m_TempDataPoints = {}
 
+	self.m_ScanForNode = false
+
 	-- caching values for drawing performance
 	self.m_Player = nil
 	self.m_PlayerPos = nil
@@ -67,7 +69,6 @@ function ClientNodeEditor:__init()
 	self.m_lastDrawIndexPath = 0
 	self.m_lastDrawIndexNode = 0
 
-	self.m_ScanForNode = false
 
 	self.m_NodeOperation = ''
 
@@ -178,8 +179,8 @@ function ClientNodeEditor:OnRegisterEvents()
 	Console:Register('Remove', 'Remove selected waypoints', self, self._onRemoveNode)
 	Console:Register('Unlink', 'Unlink two waypoints', self, self._onUnlinkNode)
 	Console:Register('Merge', 'Merge selected waypoints', self, self._onMergeNode)
-	Console:Register('SelectPrevious', 'Extend selection to previous waypoint', self, self._onSelectPrevious)
-	Console:Register('ClearSelection', 'Clear selection', self, self._onClearSelection)
+	Console:Register('SelectPrevious', 'Extend selection to previous waypoint', self, self._onSelectPrevious) --done
+	Console:Register('ClearSelection', 'Clear selection', self, self._onClearSelection) --done
 	Console:Register('Move', 'toggle move mode on selected waypoints', self, self._onToggleMoveNode)
 
 	--add these Events to NodeEditor
@@ -364,12 +365,12 @@ function ClientNodeEditor:_DrawData(p_DataPoint)
 
 					if s_IsSelected then
 						self:Log('Deselect -> %s', s_Waypoint.ID)
-						NetEvents:SendLocal("NodeEditor:Deselect", s_Waypoint.ID)
+						NetEvents:SendLocal('NodeEditor:Deselect', s_Waypoint.ID)
 					-- m_NodeCollection:Deselect(s_Waypoint)
 					-- return
 					else
 						self:Log('Select -> %s', s_Waypoint.ID)
-						NetEvents:SendLocal("NodeEditor:Select", s_Waypoint.ID)
+						NetEvents:SendLocal('NodeEditor:Select', s_Waypoint.ID)
 						-- m_NodeCollection:Select(s_Waypoint)
 						-- return
 					end
@@ -495,107 +496,39 @@ end
 -- ########### commo rose top / middle / bottom
 -- ############################################
 
---[[ function ClientNodeEditor:_onSaveNodes(p_Args)
-	self.m_CommoRoseActive = false
 
-	if not self:IsSavingOrLoading() then
-		self:Log('Initiating Save...')
-		self.m_NodeOperation = 'Client Save'
-		NetEvents:Send('NodeEditor:ReceivingNodes', #m_NodeCollection:Get())
-		return true
-	end
-
-	self:Log('Operation in progress, please wait...')
-	return false
-end
- ]]
 function ClientNodeEditor:_onSelectNode(p_Args)
-	self.m_CommoRoseActive = false
+	local s_Hit = self:Raycast()
 
-	self:_onCommoRoseAction('Select')
-	return true
-end
-
---[[ function ClientNodeEditor:_onLoadNodes(p_Args)
-	self.m_CommoRoseActive = false
-
-	if not self:IsSavingOrLoading() then
-		self:Log('Initiating Load...')
-		self.m_NodeOperation = 'Client Load'
-		self:_onGetNodes()
-		return true
+	if s_Hit == nil then
+		self.m_ScanForNode = true
+		return
 	end
 
-	self:Log('Operation in progress, please wait...')
-	return false
-end ]]
+	NetEvents:SendLocal('NodeEditor:Select', nil, s_Hit.position)
+end
 
 -- ####################### commo rose left side
 -- ############################################
 
 function ClientNodeEditor:_onRemoveNode(p_Args)
-	self.m_CommoRoseActive = false
-
-	if self:IsSavingOrLoading() then
-		return false
-	end
-
-	local s_Result, s_Message = m_NodeCollection:Remove()
-
-	if not s_Result then
-		self:Log(s_Message)
-	end
-
-	return s_Result
+	NetEvents:SendLocal('NodeEditor:RemoveNode')
 end
 
 function ClientNodeEditor:_onUnlinkNode()
-	self.m_CommoRoseActive = false
-
-	local s_Result, s_Message = m_NodeCollection:Unlink()
-
-	if not s_Result then
-		self:Log(s_Message)
-	end
-
-	return s_Result
+	NetEvents:SendLocal('NodeEditor:UnlinkNodes')
 end
 
 function ClientNodeEditor:_onMergeNode(p_Args)
-	self.m_CommoRoseActive = false
-
-	local s_Result, s_Message = m_NodeCollection:MergeSelection()
-
-	if not s_Result then
-		self:Log(s_Message)
-	end
-
-	return s_Result
+	NetEvents:SendLocal('NodeEditor:MergeNode')
 end
 
 function ClientNodeEditor:_onSelectPrevious()
 	NetEvents:SendLocal('NodeEditor:SelectPrevious')
-	--[[ self.m_CommoRoseActive = false
-
-	local s_Selection = m_NodeCollection:GetSelected()
-
-	if #s_Selection > 0 then
-		if s_Selection[1].Previous ~= false then
-			m_NodeCollection:Select(s_Selection[1].Previous)
-			return true
-		end
-	else
-		self:Log('Must select at least one node')
-	end
-
-	return false ]]
 end
 
 function ClientNodeEditor:_onClearSelection(p_Args)
-	self.m_CommoRoseActive = false
-
-	m_NodeCollection:ClearSelection()
-	return true
+	NetEvents:SendLocal('NodeEditor:ClearSelection')
 end
 
 function ClientNodeEditor:_onToggleMoveNode(p_Args)
@@ -721,86 +654,23 @@ function ClientNodeEditor:_onAddNode(p_Args)
 end
 
 function ClientNodeEditor:_onLinkNode()
-	self.m_CommoRoseActive = false
-
-	local s_Result, s_Message = m_NodeCollection:Link()
-
-	if not s_Result then
-		self:Log(s_Message)
-	end
-
-	return s_Result
+	NetEvents:SendLocal('NodeEditor:LinkNodes')
 end
 
 function ClientNodeEditor:_onSplitNode(p_Args)
-	self.m_CommoRoseActive = false
-
-	local s_Result, s_Message = m_NodeCollection:SplitSelection()
-
-	if not s_Result then
-		self:Log(s_Message)
-	end
-
-	return s_Result
+	NetEvents:SendLocal('NodeEditor:SplitNode')
 end
 
 function ClientNodeEditor:_onSelectNext()
 	NetEvents:SendLocal('NodeEditor:SelectNext')
-	--[[ self.m_CommoRoseActive = false
-
-	local s_Selection = m_NodeCollection:GetSelected()
-
-	if #s_Selection > 0 then
-		if s_Selection[1].Next ~= false then
-			m_NodeCollection:Select(s_Selection[1].Next)
-			return true
-		end
-	else
-		self:Log('Must select at least one node')
-	end
-
-	return false ]]
 end
 
 function ClientNodeEditor:_onSelectBetween()
 	NetEvents:SendLocal('NodeEditor:SelectBetween')
-	--[[ self.m_CommoRoseActive = false
-
-	local s_Selection = m_NodeCollection:GetSelected()
-
-	if #s_Selection < 1 then
-		self:Log('Must select more than one node')
-		return false
-	end
-
-	local s_BreakAt = (#m_NodeCollection:Get())
-	local s_Current = 0
-	local s_CurrentWaypoint = s_Selection[1]
-
-	while s_CurrentWaypoint.Next and s_CurrentWaypoint.ID ~= s_Selection[#s_Selection].ID do
-		m_NodeCollection:Select(s_CurrentWaypoint)
-		s_Current = s_Current + 1
-
-		if s_Current > s_BreakAt then
-			break
-		end
-
-		s_CurrentWaypoint = s_CurrentWaypoint.Next
-	end
-
-	return true ]]
 end
 
 function ClientNodeEditor:_onSetInputNode(p_Args)
-	self.m_CommoRoseActive = false
-
-	local s_Result, s_Message = m_NodeCollection:SetInput(p_Args[1], p_Args[2], p_Args[3])
-
-	if not s_Result then
-		self:Log(s_Message)
-	end
-
-	return s_Result
+	NetEvents:SendLocal('NodeEditor:SetInputNode', p_Args[1], p_Args[2], p_Args[3])
 end
 
 -- ############################## Other Methods
@@ -1357,64 +1227,7 @@ function ClientNodeEditor:_onCommoRoseAction(p_Action, p_Hit)
 		elseif (self.m_EditMode == 'link') then
 			s_Center = { Action = 'UI_CommoRose_Action_Connect', Label = Language:I18N('Connect') }
 		end
-
-		--[[
-		g_FunBotUIClient:_onUICommonRose({
-			Top = { Action = 'UI_CommoRose_Action_ClearSelection', Label = Language:I18N('Clear Selection') },
-			Bottom = { Action = 'UI_CommoRose_Action_SelectBetween', Label = Language:I18N('Select Between') },
-			Center = s_Center,
-			Left = {
-				{ Action = 'UI_CommoRose_Action_Remove', Label = Language:I18N('Remove') },
-				{ Action = 'UI_CommoRose_Action_Unlink', Label = Language:I18N('Unlink') },
-				{ Action = 'UI_CommoRose_Action_SelectPrevious', Label = Language:I18N('Select Previous') },
-				{ Action = 'UI_CommoRose_Action_Move', Label = Language:I18N('Move') },
-				{ Action = 'UI_CommoRose_Action_Merge', Label = Language:I18N('Merge') },
-			},
-			Right = {
-				{ Action = 'UI_CommoRose_Action_Add', Label = Language:I18N('Add') },
-				{ Action = 'UI_CommoRose_Action_Link', Label = Language:I18N('Link') },
-				{ Action = 'UI_CommoRose_Action_SelectNext', Label = Language:I18N('Select Next') },
-				{ Action = 'UI_CommoRose_Action_SetInput', Label = Language:I18N('Set Input') },
-				{ Action = 'UI_CommoRose_Action_Split', Label = Language:I18N('Split') },
-			}
-		})
-		]] -- disabled for now
 		return
-	end
-
-	if p_Action == 'Select' then
-		local s_Hit = self:Raycast()
-
-		if s_Hit == nil then
-			self.m_ScanForNode = true
-			return
-		end
-
-		NetEvents:SendLocal('NodeEditor:Select', nil, s_Hit.position)
-		--[[ local s_HitPoint = m_NodeCollection:Find(s_Hit.position)
-
-		-- nothing found at hit location, try a raytracing check
-		if s_HitPoint == nil and self.m_Player ~= nil and self.m_Player.soldier ~= nil then
-			local s_PlayerCamPos = self.m_Player.soldier.worldTransform.trans + self.m_Player.input.authoritativeCameraPosition
-			s_HitPoint = m_NodeCollection:FindAlongTrace(s_PlayerCamPos, s_Hit.position)
-			self.m_LastTraceStart = s_PlayerCamPos
-			self.m_LastTraceEnd = s_Hit.position
-		end
-
-		-- we found one, let's toggle its selected state
-		if s_HitPoint ~= nil then
-			local s_IsSelected = m_NodeCollection:IsSelected(s_HitPoint)
-
-			if s_IsSelected then
-				self:Log('Deselect -> %s', s_HitPoint.ID)
-				m_NodeCollection:Deselect(s_HitPoint)
-				return
-			else
-				self:Log('Select -> %s', s_HitPoint.ID)
-				m_NodeCollection:Select(s_HitPoint)
-				return
-			end
-		end ]]
 	end
 end
 
@@ -1456,7 +1269,7 @@ function ClientNodeEditor:OnClientUpdateInput(p_DeltaTime)
 			if self.m_EditMode == 'move' then
 				self:_onToggleMoveNode()
 			else
-				self:_onCommoRoseAction('Select')
+				self:_onSelectNode()
 			end
 		end
 
@@ -1782,341 +1595,6 @@ function ClientNodeEditor:DrawOBB(p_Aab, p_Transform, p_Color)
 		color = p_Color
 	})
 end
-
-function ClientNodeEditor:DrawDebugThings(p_DeltaTime)
-	-- Bot _onSelectNode
-	local s_Botwpcount = 0
-
-	for l_WaypointID, l_Data in pairs(self.m_BotSelectedWaypoints) do
-		if l_Data.Timer < 0 then
-			self.m_BotSelectedWaypoints[l_WaypointID] = nil
-		else
-			l_Data.Timer = l_Data.Timer - p_DeltaTime
-			s_Botwpcount = s_Botwpcount + 1
-		end
-	end
-
-	self.m_DebugEntries['botSelectedWaypoints'] = s_Botwpcount
-
-	-- generic debug values
-	local s_DebugText = ''
-
-	self.m_DebugEntries['commoRoseEnabled'] = self.m_CommoRoseEnabled
-	self.m_DebugEntries['commoRosePressed'] = self.m_CommoRosePressed
-	self.m_DebugEntries['commoRoseTimer'] = string.format('%4.2f', self.m_CommoRoseTimer)
-	self.m_DebugEntries['commoRoseActive'] = self.m_CommoRoseActive
-
-	for k, v in pairs(self.m_DebugEntries) do
-		s_DebugText = s_DebugText .. k .. ': ' .. tostring(v) .. "\n"
-	end
-
-	--self:DrawText2D(20, 400, debugText, self.colors.Text, 1)
-	-- draw help info
-	local s_HelpText = ''
-
-	if self.m_EditMode == 'none' then
-		s_HelpText = s_HelpText .. ' Node Operation Controls ' .. "\n"
-		s_HelpText = s_HelpText .. '+-------+-------+-------+' .. "\n"
-		s_HelpText = s_HelpText .. '|   7   |   8   |   9   |' .. "\n"
-		s_HelpText = s_HelpText .. '| Merge | Link  | Split |' .. "\n"
-		s_HelpText = s_HelpText .. '+-------+-------+-------+' .. "\n"
-		s_HelpText = s_HelpText .. '|   4   |   5   |   6   |' .. "\n"
-		s_HelpText = s_HelpText .. '| Move  |Select | Input |' .. "\n"
-		s_HelpText = s_HelpText .. '+-------+-------+-------+' .. "\n"
-		s_HelpText = s_HelpText .. '|   1   |   2   |   3   |' .. "\n"
-		s_HelpText = s_HelpText .. '|Remove |Unlink |  Add  |' .. "\n"
-		s_HelpText = s_HelpText .. '+-------+-------+-------+' .. "\n"
-		s_HelpText = s_HelpText .. '						 ' .. "\n"
-		s_HelpText = s_HelpText .. '	  [F12] - Settings   ' .. "\n"
-		s_HelpText = s_HelpText .. '	 [Spot] - Quick Select' .. "\n"
-		s_HelpText = s_HelpText .. '[Backspace] - Clear Select' .. "\n"
-		s_HelpText = s_HelpText .. '   [Insert] - Spawn Bot  ' .. "\n"
-		s_HelpText = s_HelpText .. '	   [F9] - Save Nodes ' .. "\n"
-		s_HelpText = s_HelpText .. '	  [F11] - Load Nodes ' .. "\n"
-	elseif self.m_EditMode == 'move' then
-		s_HelpText = s_HelpText .. '  Nudge Position Controls ' .. "\n"
-		s_HelpText = s_HelpText .. '+-------+-------+-------+' .. "\n"
-		s_HelpText = s_HelpText .. '|   7   |   8   |   9   |' .. "\n"
-		s_HelpText = s_HelpText .. '| Reset |Forward|  Up   |' .. "\n"
-		s_HelpText = s_HelpText .. '+-------+-------+-------+' .. "\n"
-		s_HelpText = s_HelpText .. '|   4   |   5   |   6   |' .. "\n"
-		s_HelpText = s_HelpText .. '| Left  |Finish | Right |' .. "\n"
-		s_HelpText = s_HelpText .. '+-------+-------+-------+' .. "\n"
-		s_HelpText = s_HelpText .. '|   1   |   2   |   3   |' .. "\n"
-		s_HelpText = s_HelpText .. '| Mode  | Back  | Down  |' .. "\n"
-		s_HelpText = s_HelpText .. '+-------+-------+-------+' .. "\n"
-		s_HelpText = s_HelpText ..
-			string.format('|X %+04.2f | Y %+04.2f|', self.m_EditModeManualOffset.x, self.m_EditModeManualOffset.y) .. "\n"
-		s_HelpText = s_HelpText .. string.format('|	  Z %+04.2f	   |', self.m_EditModeManualOffset.z) .. "\n"
-		s_HelpText = s_HelpText .. '+-----------------------+' .. "\n"
-		s_HelpText = s_HelpText .. ' Nudge Speed: ' .. tostring(self.m_EditModeManualSpeed) .. "\n"
-
-		if self.m_EditPositionMode == 'relative' then
-			s_HelpText = s_HelpText .. '   Move Mode: Relative   ' .. "\n"
-		elseif (self.m_EditPositionMode == 'standing') then
-			s_HelpText = s_HelpText .. '   Move Mode: Standing   ' .. "\n"
-		else
-			s_HelpText = s_HelpText .. '   Move Mode: Absolute   ' .. "\n"
-		end
-
-		s_HelpText = s_HelpText .. '						 ' .. "\n"
-		s_HelpText = s_HelpText .. '	  [F12] - Settings	' .. "\n"
-		s_HelpText = s_HelpText .. '	 [Spot] - Finish Move ' .. "\n"
-		s_HelpText = s_HelpText .. '[Backspace] - Cancel Move ' .. "\n"
-		s_HelpText = s_HelpText .. ' [Numpad +] - Nudge Speed +' .. "\n"
-		s_HelpText = s_HelpText .. ' [Numpad -] - Nudge Speed -' .. "\n"
-	end
-
-	--self:DrawText2D(self.helpTextLocation.x, self.helpTextLocation.y, helpText, self.colors.Text, 1)
-	-- draw debug selection traces
-	if Config.DebugSelectionRaytraces then
-		if self.m_LastTraceStart ~= nil and self.m_LastTraceEnd ~= nil then
-			self:DrawLine(self.m_LastTraceStart, self.m_LastTraceEnd, self.m_Colors.Ray.Line[1], self.m_Colors.Ray.Line[2])
-		end
-
-		if self.m_LastTraceSearchAreaPos ~= nil and self.m_LastTraceSearchAreaSize ~= nil then
-			self:DrawSphere(self.m_LastTraceSearchAreaPos, self.m_LastTraceSearchAreaSize, self.m_Colors.Ray.Node, false, false)
-		end
-	end
-end
-
-function ClientNodeEditor:_drawNode(p_Waypoint, p_IsTracePath)
-	local s_IsSelected = not p_IsTracePath and m_NodeCollection:IsSelected(p_Waypoint)
-	local s_QualityAtRange = m_NodeCollection:InRange(p_Waypoint, self.m_PlayerPos, Config.LineRange)
-
-	-- setup node color information
-	local s_Color = self.m_Colors.Orphan
-
-	if p_Waypoint.Previous ~= false and p_Waypoint.Next ~= false then
-		-- happens after the 20th path
-		if self.m_Colors[p_Waypoint.PathIndex] == nil then
-			local r, g, b = (math.random(20, 100) / 100), (math.random(20, 100) / 100), (math.random(20, 100) / 100)
-			self.m_Colors[p_Waypoint.PathIndex] = {
-				Node = Vec4(r, g, b, 0.25),
-				Line = Vec4(r, g, b, 1),
-			}
-		end
-
-		s_Color = self.m_Colors[p_Waypoint.PathIndex]
-	end
-
-	if p_IsTracePath then
-		s_Color = {
-			Node = self.m_Colors.White,
-			Line = self.m_Colors.White,
-		}
-	end
-
-	-- draw the node for the waypoint itself
-	if m_NodeCollection:InRange(p_Waypoint, self.m_PlayerPos, Config.WaypointRange) then
-		self:DrawSphere(p_Waypoint.Position, 0.05, s_Color.Node, false, (not s_QualityAtRange))
-
-		if self.m_ScanForNode then
-			local s_PointScreenPos = ClientUtils:WorldToScreen(p_Waypoint.Position)
-
-			-- Skip to the next point if this one isn't in view
-			if s_PointScreenPos ~= nil then
-				local s_Center = ClientUtils:GetWindowSize() / 2
-
-				-- Select point if its close to the hitPosition
-				if s_Center:Distance(s_PointScreenPos) < 20 then
-					self.m_ScanForNode = false
-
-					if s_IsSelected then
-						self:Log('Deselect -> %s', p_Waypoint.ID)
-						m_NodeCollection:Deselect(p_Waypoint)
-						return
-					else
-						self:Log('Select -> %s', p_Waypoint.ID)
-						m_NodeCollection:Select(p_Waypoint)
-						return
-					end
-				end
-			end
-		end
-	end
-
-	-- if bot has selected draw it
-	--[[if not p_IsTracePath and self.m_BotSelectedWaypoints[p_Waypoint.ID] ~= nil then
-		local s_SelectData = self.m_BotSelectedWaypoints[p_Waypoint.ID]
-		if s_SelectData.Obstacle then
-			self:DrawLine(s_SelectData.Position + (Vec3.up * 1.2), p_Waypoint.Position, self.m_Colors.Red, self.m_Colors.Red)
-		else
-			self:DrawLine(s_SelectData.Position + (Vec3.up * 1.2), p_Waypoint.Position, self.m_Colors[s_SelectData.Color], self.m_Colors[s_SelectData.Color])
-		end
-	end--]]
-
-	-- if selected draw bigger node and transform helper
-	if not p_IsTracePath and s_IsSelected and m_NodeCollection:InRange(p_Waypoint, self.m_PlayerPos, Config.WaypointRange) then
-		-- node selection indicator
-		self:DrawSphere(p_Waypoint.Position, 0.08, s_Color.Node, false, (not s_QualityAtRange))
-
-		-- transform marker
-		self:DrawLine(p_Waypoint.Position, p_Waypoint.Position + (Vec3.up), self.m_Colors.Red, self.m_Colors.Red)
-		self:DrawLine(p_Waypoint.Position, p_Waypoint.Position + (Vec3.right * 0.5), self.m_Colors.Green, self.m_Colors.Green)
-		self:DrawLine(p_Waypoint.Position, p_Waypoint.Position + (Vec3.forward * 0.5), self.m_Colors.Blue, self.m_Colors.Blue)
-	end
-
-	-- draw connection lines
-	if Config.DrawWaypointLines and m_NodeCollection:InRange(p_Waypoint, self.m_PlayerPos, Config.LineRange) then
-		-- try to find a previous node and draw a line to it
-		if p_Waypoint.Previous and type(p_Waypoint.Previous) == 'string' then
-			p_Waypoint.Previous = m_NodeCollection:Get(p_Waypoint.Previous)
-		end
-
-		if p_Waypoint.Previous then
-			if (p_Waypoint.PathIndex ~= p_Waypoint.Previous.PathIndex) then
-				-- draw a white line between nodes on separate paths
-				-- self:DrawLine(p_Waypoint.Previous.Position, p_Waypoint.Position, self.colors.White, self.colors.White)
-			else
-				-- draw fading line between nodes on same path
-				self:DrawLine(p_Waypoint.Previous.Position, p_Waypoint.Position, s_Color.Line, s_Color.Line)
-			end
-		end
-
-		if p_Waypoint.Data and p_Waypoint.Data.LinkMode ~= nil and p_Waypoint.Data.Links ~= nil then
-			for i = 1, #p_Waypoint.Data.Links do
-				local s_LinkedWaypoint = m_NodeCollection:Get(p_Waypoint.Data.Links[i])
-
-				if s_LinkedWaypoint ~= nil then
-					-- draw lines between linked nodes
-					self:DrawLine(s_LinkedWaypoint.Position, p_Waypoint.Position, self.m_Colors.Purple, self.m_Colors.Purple)
-				end
-			end
-		end
-	end
-
-	-- draw debugging text
-	if Config.DrawWaypointIDs and m_NodeCollection:InRange(p_Waypoint, self.m_PlayerPos, Config.TextRange) then
-		if s_IsSelected then
-			-- don't try to precalc this value like with the distance, another memory leak crash awaits you
-			local s_PreviousNode = tostring(p_Waypoint.Previous)
-			local s_NextNode = tostring(p_Waypoint.Next)
-			local s_PathNode = m_NodeCollection:GetFirst(p_Waypoint.PathIndex)
-
-			if type(p_Waypoint.Previous) == 'table' then
-				s_PreviousNode = p_Waypoint.Previous.ID
-			end
-
-			if type(p_Waypoint.Next) == 'table' then
-				s_NextNode = p_Waypoint.Next.ID
-			end
-
-			local s_SpeedMode = 'N/A'
-
-			if p_Waypoint.SpeedMode == 0 then s_SpeedMode = 'Wait' end
-
-			if p_Waypoint.SpeedMode == 1 then s_SpeedMode = 'Prone' end
-
-			if p_Waypoint.SpeedMode == 2 then s_SpeedMode = 'Crouch' end
-
-			if p_Waypoint.SpeedMode == 3 then s_SpeedMode = 'Walk' end
-
-			if p_Waypoint.SpeedMode == 4 then s_SpeedMode = 'Sprint' end
-
-			local s_ExtraMode = 'N/A'
-
-			if p_Waypoint.ExtraMode == 1 then s_ExtraMode = 'Jump' end
-
-			local s_OptionValue = 'N/A'
-
-			if p_Waypoint.SpeedMode == 0 then
-				s_OptionValue = tostring(p_Waypoint.OptValue) .. ' Seconds'
-			end
-
-			local s_PathMode = 'Loops'
-
-			if s_PathNode then
-				if (s_PathNode.OptValue == 0XFF) then
-					s_PathMode = 'Reverses'
-				end
-			end
-
-			local s_Text = ''
-			s_Text = s_Text .. string.format("(%s)Pevious [ %s ] Next(%s)\n", s_PreviousNode, p_Waypoint.ID, s_NextNode)
-			s_Text = s_Text .. string.format("Index[%d]\n", p_Waypoint.Index)
-			s_Text = s_Text .. string.format("Path[%d][%d] (%s)\n", p_Waypoint.PathIndex, p_Waypoint.PointIndex, s_PathMode)
-			s_Text = s_Text .. string.format("Path Objectives: %s\n", g_Utilities:dump(s_PathNode.Data.Objectives, false))
-			s_Text = s_Text .. string.format("Vehicles: %s\n", g_Utilities:dump(s_PathNode.Data.Vehicles, false))
-			s_Text = s_Text .. string.format("InputVar: %d\n", p_Waypoint.InputVar)
-			s_Text = s_Text .. string.format("SpeedMode: %s (%d)\n", s_SpeedMode, p_Waypoint.SpeedMode)
-			s_Text = s_Text .. string.format("ExtraMode: %s (%d)\n", s_ExtraMode, p_Waypoint.ExtraMode)
-			s_Text = s_Text .. string.format("OptValue: %s (%d)\n", s_OptionValue, p_Waypoint.OptValue)
-			s_Text = s_Text .. 'Data: ' .. g_Utilities:dump(p_Waypoint.Data, true)
-
-			self:DrawPosText2D(p_Waypoint.Position + Vec3.up, s_Text, self.m_Colors.Text, 1.2)
-		else
-			-- don't try to precalc this value like with the distance, another memory leak crash awaits you
-			self:DrawPosText2D(p_Waypoint.Position + (Vec3.up * 0.05), tostring(p_Waypoint.ID), self.m_Colors.Text, 1)
-		end
-	end
-end
-
--- ################# Node sending and retrieval
--- ############################################
-
--- request a fresh node list from the server
--- or server has told us be ready to receive
---[[ function ClientNodeEditor:_onGetNodes(p_Args)
-	self:Log('Getting Nodes: %s', tostring(p_Args))
-
-	-- unload our current cache
-	self:_onUnload(p_Args)
-	-- enable the timer before we are ready to receive
-	self.m_NodeReceiveTimer = 0
-	return true
-end ]]
-
--- server is ready to receive our nodes
---[[ function ClientNodeEditor:_onSendNodes(p_Args)
-	self.m_NodesToSend = m_NodeCollection:Get()
-	self:Log('Sending Nodes: %d', #self.m_NodesToSend)
-
-	if self.m_NodesToSend == nil or #self.m_NodesToSend < 1 then
-		self:Log('Client has 0 Nodes, Cancelling Send!')
-		return false
-	else
-		self.m_NodeSendTimer = 0
-		return true
-	end
-end ]]
-
---[[ function ClientNodeEditor:_onServerCreateNode(p_Data)
-	m_NodeCollection:Create(p_Data, true)
-	self.m_NodeReceiveProgress = self.m_NodeReceiveProgress + 1
-	self.m_DebugEntries['nodeReceiveProgress'] = self.m_NodeReceiveProgress .. '/' .. (self.m_NodeReceiveExpected)
-end
-
--- node payload has finished sending, setup events and calc indexes
-function ClientNodeEditor:_onInit()
-	m_NodeCollection:RecalculateIndexes()
-	m_NodeCollection:ProcessMetadata()
-
-	local s_Waypoints = m_NodeCollection:Get()
-	self.m_Player = PlayerManager:GetLocalPlayer()
-
-	local s_StaleNodes = 0
-
-	self:Log('Receved Nodes: %d', #s_Waypoints)
-
-	for i = 1, #s_Waypoints do
-		local s_Waypoint = s_Waypoints[i]
-
-		if type(s_Waypoint.Next) == 'string' then
-			s_StaleNodes = s_StaleNodes + 1
-		end
-
-		if type(s_Waypoint.Previous) == 'string' then
-			s_StaleNodes = s_StaleNodes + 1
-		end
-	end
-
-	if s_StaleNodes > 0 then
-		self:Log('Warning! Stale Nodes: %d', s_StaleNodes)
-	end
-
-	self.m_NodeOperation = ''
-end ]]
 
 -- stolen't https://github.com/EmulatorNexus/VEXT-Samples/blob/80cddf7864a2cdcaccb9efa810e65fae1baeac78/no-headglitch-raycast/ext/Client/__init__.lua
 function ClientNodeEditor:Raycast(p_MaxDistance, p_UseAsync)
