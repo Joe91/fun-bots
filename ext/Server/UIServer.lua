@@ -258,7 +258,6 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		end
 	-- Trace
 	elseif request.action == 'trace_start' then
-		print("start Trace")
 		m_NodeEditor:StartTrace(p_Player)
 	-- NetEvents:SendToLocal('ClientNodeEditor:StartTrace', p_Player)
 	elseif request.action == 'trace_end' then

@@ -697,7 +697,7 @@ function BotSpawner:SpawnWayBots(p_Player, p_Amount, p_UseRandomWay, p_ActiveWay
 	end
 
 	if p_Amount <= 0 then
-		m_Logger:Error("can't spawn zero or negative amount of bots")
+		m_Logger:Warning("can't spawn zero or negative amount of bots")
 	end
 
 	-- check for amount available

@@ -10,7 +10,7 @@ local m_NodeCollection = require('__shared/NodeCollection')
 local m_Logger = Logger("ClientNodeEditor", Debug.Client.NODEEDITOR)
 
 function ClientNodeEditor:__init()
-	self.m_DataToDraw = {}
+	self.m_LastDataPoint = nil
 
 	-- caching values for drawing performance
 	self.m_Player = nil
@@ -275,25 +275,24 @@ function ClientNodeEditor:_OnUiTraceData(p_TotalTraceNodes, p_TotalTraceDistance
 	end
 end
 
-function ClientNodeEditor:_OnDrawNodes(p_NodesToDraw)
-	self.m_DataToDraw = p_NodesToDraw
-
-	self.m_LastDataPoint = nil
-	for _, l_NodeData in pairs(self.m_DataToDraw) do
+function ClientNodeEditor:_OnDrawNodes(p_NodesToDraw, p_UpdateView)
+	for _, l_NodeData in pairs(p_NodesToDraw) do
 		self:_DrawData(l_NodeData)
 	end
 
-	-- copy tables
-	self.m_NodesToDraw = self.m_NodesToDraw_temp
-	self.m_NodesToDraw_temp = {}
-	self.m_LinesToDraw = self.m_LinesToDraw_temp
-	self.m_LinesToDraw_temp = {}
-	self.m_TextToDraw = self.m_TextToDraw_temp
-	self.m_TextToDraw_temp = {}
-	self.m_TextPosToDraw = self.m_TextPosToDraw_temp
-	self.m_TextPosToDraw_temp = {}
-	self.m_ObbToDraw = self.m_ObbToDraw_temp
-	self.m_ObbToDraw_temp = {}
+	if p_UpdateView then
+		-- copy tables
+		self.m_NodesToDraw = self.m_NodesToDraw_temp
+		self.m_NodesToDraw_temp = {}
+		self.m_LinesToDraw = self.m_LinesToDraw_temp
+		self.m_LinesToDraw_temp = {}
+		self.m_TextToDraw = self.m_TextToDraw_temp
+		self.m_TextToDraw_temp = {}
+		self.m_TextPosToDraw = self.m_TextPosToDraw_temp
+		self.m_TextPosToDraw_temp = {}
+		self.m_ObbToDraw = self.m_ObbToDraw_temp
+		self.m_ObbToDraw_temp = {}
+	end
 
 end
 
@@ -304,7 +303,7 @@ function ClientNodeEditor:_DrawData(p_DataPoint)
 		DrawLine = s_DrawLine,
 		DrawText = s_DrawText,
 		IsSelected = s_IsSelected,
-		Objective = s_FirstNode.Data.Objective,
+		Objectives = s_FirstNode.Data.Objectives,
 		Vehicles = s_FirstNode.Data.Vehicles,
 		Reverse = (s_FirstNode.OptValue == 0XFF),
 		Links = s_LinkPositions,
@@ -321,18 +320,17 @@ function ClientNodeEditor:_DrawData(p_DataPoint)
 	-- setup node color information
 	local s_Color = self.m_Colors.Orphan
 
-	if not self.m_LastDataPoint or self.m_LastDataPoint.Node.PathIndex ~= s_Waypoint.PathIndex then
-		-- happens after the 20th path --TODO: add more colors?
-		if self.m_Colors[s_Waypoint.PathIndex] == nil then
-			local r, g, b = (math.random(20, 100) / 100), (math.random(20, 100) / 100), (math.random(20, 100) / 100)
-			self.m_Colors[s_Waypoint.PathIndex] = {
-				Node = Vec4(r, g, b, 0.25),
-				Line = Vec4(r, g, b, 1),
-			}
-		end
-
-		s_Color = self.m_Colors[s_Waypoint.PathIndex]
+	-- happens after the 20th path --TODO: add more colors?
+	if self.m_Colors[s_Waypoint.PathIndex] == nil then
+		local r, g, b = (math.random(20, 100) / 100), (math.random(20, 100) / 100), (math.random(20, 100) / 100)
+		self.m_Colors[s_Waypoint.PathIndex] = {
+			Node = Vec4(r, g, b, 0.25),
+			Line = Vec4(r, g, b, 1),
+		}
 	end
+
+	s_Color = self.m_Colors[s_Waypoint.PathIndex]
+
 
 	if s_IsTracePath then
 		s_Color = {
@@ -345,31 +343,31 @@ function ClientNodeEditor:_DrawData(p_DataPoint)
 	if p_DataPoint.DrawNode then
 		self:DrawSphere(s_Waypoint.Position, 0.05, s_Color.Node, false, (not s_QualityAtRange))
 
-		if self.m_ScanForNode then
-			local s_PointScreenPos = ClientUtils:WorldToScreen(s_Waypoint.Position)
+		-- if self.m_ScanForNode then
+		-- 	local s_PointScreenPos = ClientUtils:WorldToScreen(s_Waypoint.Position)
 
-			-- Skip to the next point if this one isn't in view
-			if s_PointScreenPos ~= nil then
-				local s_Center = ClientUtils:GetWindowSize() / 2
+		-- 	-- Skip to the next point if this one isn't in view
+		-- 	if s_PointScreenPos ~= nil then
+		-- 		local s_Center = ClientUtils:GetWindowSize() / 2
 
-				-- Select point if its close to the hitPosition
-				if s_Center:Distance(s_PointScreenPos) < 20 then
-					self.m_ScanForNode = false
+		-- 		-- Select point if its close to the hitPosition
+		-- 		if s_Center:Distance(s_PointScreenPos) < 20 then
+		-- 			self.m_ScanForNode = false
 
-					if s_IsSelected then
-						self:Log('Deselect -> %s', s_Waypoint.ID)
-						-- m_NodeCollection:Deselect(s_Waypoint)
-						-- TODO: Event for NodeEditor
-						return
-					else
-						self:Log('Select -> %s', s_Waypoint.ID)
-						-- m_NodeCollection:Select(s_Waypoint)
-						-- TODO: Event for NodeEditor
-						return
-					end
-				end
-			end
-		end
+		-- 			if s_IsSelected then
+		-- 				self:Log('Deselect -> %s', s_Waypoint.ID)
+		-- 				-- m_NodeCollection:Deselect(s_Waypoint)
+		-- 				-- TODO: Event for NodeEditor
+		-- 				return
+		-- 			else
+		-- 				self:Log('Select -> %s', s_Waypoint.ID)
+		-- 				-- m_NodeCollection:Select(s_Waypoint)
+		-- 				-- TODO: Event for NodeEditor
+		-- 				return
+		-- 			end
+		-- 		end
+		-- 	end
+		-- end
 	end
 
 	-- if selected draw bigger node and transform helper
@@ -459,7 +457,10 @@ function ClientNodeEditor:_DrawData(p_DataPoint)
 		end
 	end
 
-	self.m_LastDataPoint = p_DataPoint
+	self.m_LastDataPoint = {}
+	for l_Key, l_Value in pairs(p_DataPoint) do
+		self.m_LastDataPoint[l_Key] = l_Value
+	end
 end
 
 function ClientNodeEditor:_onSetCommoRoseEnabled(p_Args)

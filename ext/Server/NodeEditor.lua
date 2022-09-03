@@ -27,6 +27,10 @@ function NodeEditor:__init()
 	self.m_CustomTraceDistance = {}
 	self.m_CustomTraceSaving = false
 
+
+	self.m_lastDrawIndexNode = {}
+	self.m_lastDrawIndexPath = {}
+
 	self.m_NodeOperation = ''
 
 	self.m_NodeSendUpdateTimer = 0
@@ -68,6 +72,8 @@ end
 -- Management Events
 function NodeEditor:OnOpenEditor(p_Player)
 	self.m_CustomTraceTimer[p_Player.onlineId] = -1
+	self.m_lastDrawIndexNode[p_Player.onlineId] = 0
+	self.m_lastDrawIndexPath[p_Player.onlineId] = 0
 	self.m_ActiveTracePlayers[p_Player.onlineId] = true
 end
 
@@ -137,10 +143,10 @@ function NodeEditor:EndTrace(p_Player)
 	local s_FirstWaypoint = self.m_CustomTrace[p_Player.onlineId]:GetFirst()
 
 	if s_FirstWaypoint then
-		local s_FirstWaypoint = self.m_CustomTrace:GetFirst()
+		local s_FirstWaypoint = self.m_CustomTrace[p_Player.onlineId]:GetFirst()
 
 		local s_StartPos = s_FirstWaypoint.Position + Vec3.up
-		local s_EndPos = self.m_CustomTrace:GetLast().Position + Vec3.up
+		local s_EndPos = self.m_CustomTrace[p_Player.onlineId]:GetLast().Position + Vec3.up
 		local s_RayHits = nil
 
 		if p_Player.attachedControllable then
@@ -355,6 +361,12 @@ end
 -- =============================================
 -- Update Events
 -- =============================================
+function NodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
+	-- Only do math on presimulation UpdatePass, don't bother if debugging is off
+	if p_UpdatePass ~= UpdatePass.UpdatePass_PreSim then
+		return
+	end
+end
 
 ---VEXT Shared Engine:Update Event
 ---@param p_DeltaTime number
@@ -440,7 +452,7 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 						-- TODO: Send to Client UI:
 						local s_TotalTraceDistance = self.m_CustomTraceDistance[l_PlayerGuid]
 						local s_TotalTraceNodes = #self.m_CustomTrace[l_PlayerGuid]:Get()
-						NetEvents:SendToLocal("UI_ClientNodeEditor_TraceData", s_Player, s_TotalTraceNodes, s_TotalTraceDistance)
+						NetEvents:SendUnreliableToLocal("UI_ClientNodeEditor_TraceData", s_Player, s_TotalTraceNodes, s_TotalTraceDistance)
 					end
 				else
 					-- collection is empty, stop the timer
@@ -454,7 +466,7 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 
 
 	-- visible NODE distribution-handling
-	if self.m_NodeSendUpdateTimer < 1.5 then
+	if self.m_NodeSendUpdateTimer < 0.2 then
 		self.m_NodeSendUpdateTimer = self.m_NodeSendUpdateTimer + p_DeltaTime
 	else
 		self.m_NodeSendUpdateTimer = 0.0
@@ -462,6 +474,8 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 		-- ToDo: distribute load equally (multible Players)
 		for l_PlayerGuid, l_Active in pairs(self.m_ActiveTracePlayers) do
 			local s_Player = PlayerManager:GetPlayerByOnlineId(l_PlayerGuid)
+			local s_FirstPath = true
+			local s_Count = 0
 			if not s_Player or not s_Player.soldier or not l_Active then
 				goto continue
 			end
@@ -473,9 +487,22 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 			local s_PlayerPos = s_Player.soldier.worldTransform.trans
 			local s_WaypointPaths = m_NodeCollection:GetPaths()
 			for l_Path, _ in pairs(s_WaypointPaths) do
-				if m_NodeCollection:IsPathVisible(l_Path) then
+				if m_NodeCollection:IsPathVisible(l_Path) and l_Path >= self.m_lastDrawIndexPath[l_PlayerGuid] then
+					local s_startIndex = 1
+
+					if s_FirstPath then
+						s_startIndex = self.m_lastDrawIndexNode[l_PlayerGuid] + 1
+
+						if s_startIndex <= 0 then
+							s_startIndex = 1
+						end
+
+						s_FirstPath = false
+					end
+
 					local s_FirstNode = s_WaypointPaths[l_Path][1]
-					for _, l_Node in pairs(s_WaypointPaths[l_Path]) do
+					for l_Waypoint = s_startIndex, #s_WaypointPaths[l_Path] do
+						local l_Node = s_WaypointPaths[l_Path][l_Waypoint]
 
 						local s_DrawNode = false
 						local s_DrawLine = false
@@ -493,45 +520,79 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 							s_DrawText = true
 						end
 
+						s_Count = s_Count + 1
+
 						if s_DrawNode or s_DrawLine or s_DrawText then
 							if m_NodeCollection:IsSelected(l_PlayerGuid) then
 								s_IsSelected = true
 							end
 
-							local s_LinkPositions = {}
-							if l_Node.Data.Links then
-								for i = 1, #l_Node.Data.Links do
-									local s_LinkNode = m_NodeCollection:Get(l_Node.Data.Links[i])
-									if s_LinkNode then
-										table.insert(s_LinkPositions, s_LinkNode.Position)
-									end
-								end
-							end
-
 							local s_DataNode = {
-								Node = l_Node,
+								Node = {},
 								DrawNode = s_DrawNode,
 								DrawLine = s_DrawLine,
 								DrawText = s_DrawText,
 								IsSelected = s_IsSelected,
-								Objective = s_FirstNode.Data.Objective,
-								Vehicles = s_FirstNode.Data.Vehicles,
+								Objectives = {},
+								Vehicles = {},
 								Reverse = (s_FirstNode.OptValue == 0XFF),
-								Links = s_LinkPositions,
+								Links = {},
 								IsTrace = false,
 								IsOthersTrace = false
 							}
+
+							-- fill tables
+							if l_Node.Data.Links then
+								for i = 1, #l_Node.Data.Links do
+									local s_LinkNode = m_NodeCollection:Get(l_Node.Data.Links[i])
+									if s_LinkNode then
+										table.insert(s_DataNode.Links, s_LinkNode.Position)
+									end
+								end
+							end
+
+							for l_Key, l_Value in pairs(l_Node) do
+								if (l_Key ~= 'Next' and l_Key ~= 'Previous') then
+									s_DataNode.Node[l_Key] = l_Value
+								end
+							end
+
+							if s_FirstNode.Data.Objectives then
+								for _, l_Objective in pairs(s_FirstNode.Data.Objectives) do
+									table.insert(s_DataNode.Objectives, l_Objective)
+								end
+							end
+
+							if s_FirstNode.Data.Vehicles then
+								for _, l_Vehicle in pairs(s_FirstNode.Data.Vehicles) do
+									table.insert(s_DataNode.Vehicles, l_Vehicle)
+								end
+							end
+
 							table.insert(s_NodesToDraw, s_DataNode)
+							if s_Count >= Config.NodesPerCycle and l_Waypoint < #s_WaypointPaths[l_Path] then
+								self.m_lastDrawIndexNode[l_PlayerGuid] = l_Waypoint
+								self.m_lastDrawIndexPath[l_PlayerGuid] = l_Path
+								NetEvents:SendUnreliableToLocal('ClientNodeEditor:DrawNodes', s_Player, s_NodesToDraw, false) -- send all nodes that are visible for the player
+								return
+							end
 						end
 					end
 				end
 			end
 
+			if self.m_lastDrawIndexPath[l_PlayerGuid] ~= 99999 then
+				self.m_lastDrawIndexNode[l_PlayerGuid] = 0
+			end
+
+			self.m_lastDrawIndexPath[l_PlayerGuid] = 99999
+
 			-- custom trace of player
 			-- TODO: also show active Traces of other players with other color?
 			if self.m_CustomTrace[l_PlayerGuid] then
 				local s_CustomWaypoints = self.m_CustomTrace[l_PlayerGuid]:Get()
-				for _, l_Node in pairs(s_CustomWaypoints) do
+				for i = self.m_lastDrawIndexNode[l_PlayerGuid] + 1, #s_CustomWaypoints do
+					local l_Node = s_CustomWaypoints[i]
 					local s_DrawNode = false
 					local s_DrawLine = false
 					local s_DrawText = false
@@ -545,27 +606,45 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 						s_DrawLine = true
 					end
 
+					s_Count = s_Count + 1
+
 					if s_DrawNode or s_DrawLine or s_DrawText then
 						if m_NodeCollection:IsSelected(l_PlayerGuid) then
 							s_IsSelected = true
 						end
 
 						local s_DataNode = {
-							Node = l_Node,
+							Node = {},
 							DrawNode = s_DrawNode,
 							DrawLine = s_DrawLine,
-							DrawText = false,
+							DrawText = s_DrawText,
 							IsSelected = s_IsSelected,
 							IsTrace = true,
 							IsOthersTrace = false
 						}
+
+						-- fill tables
+						for l_Key, l_Value in pairs(l_Node) do
+							if (l_Key ~= 'Next' and l_Key ~= 'Previous') then
+								s_DataNode.Node[l_Key] = l_Value
+							end
+						end
+
 						table.insert(s_NodesToDraw, s_DataNode)
+						if s_Count >= Config.NodesPerCycle and i < #s_CustomWaypoints then
+							self.m_lastDrawIndexNode[l_PlayerGuid] = i
+							NetEvents:SendUnreliableToLocal('ClientNodeEditor:DrawNodes', s_Player, s_NodesToDraw, false)
+							return
+						end
 					end
+
 				end
 			end
-			print(#s_NodesToDraw)
 
-			NetEvents:SendToLocal('ClientNodeEditor:DrawNodes', s_Player, s_NodesToDraw) -- send all nodes that are visible for the player
+			NetEvents:SendUnreliableToLocal('ClientNodeEditor:DrawNodes', s_Player, s_NodesToDraw, true) -- send all nodes that are visible for the player
+			-- reset vars
+			self.m_lastDrawIndexPath[l_PlayerGuid] = 0
+			self.m_lastDrawIndexNode[l_PlayerGuid] = 0
 
 			::continue::
 		end

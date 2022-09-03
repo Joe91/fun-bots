@@ -1095,7 +1095,7 @@ SettingsDefinition = {
 			Value = Config.WaypointRange,
 			Description = "Set how far away waypoints are visible (meters)",
 			Reference = Range(1.00, 1000.00, 1.0),
-			Default = 100,
+			Default = 50,
 			UpdateFlag = UpdateFlag.None,
 			Category = "TRACE"
 		},
@@ -1118,7 +1118,7 @@ SettingsDefinition = {
 			Value = Config.LineRange,
 			Description = "Set how far away waypoint lines are visible (meters)",
 			Reference = Range(1.00, 1000.00, 1.0),
-			Default = 15,
+			Default = 25,
 			UpdateFlag = UpdateFlag.None,
 			Category = "TRACE"
 		},
@@ -1141,7 +1141,7 @@ SettingsDefinition = {
 			Value = Config.TextRange,
 			Description = "Set how far away waypoint text is visible (meters)",
 			Reference = Range(1.00, 1000.00, 1.0),
-			Default = 5,
+			Default = 7,
 			UpdateFlag = UpdateFlag.None,
 			Category = "TRACE"
 		},
