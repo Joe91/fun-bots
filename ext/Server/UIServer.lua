@@ -273,11 +273,6 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 	elseif request.action == 'trace_reset_all' then
 		m_NodeCollection:Clear()
 		NetEvents:BroadcastLocal('NodeCollection:Clear')
-	elseif request.action == 'waypoints_client_load' then
-		local expectedAmount = m_NodeCollection:Get()
-		NetEvents:SendToLocal('ClientNodeEditor:ReceiveNodes', p_Player, (#expectedAmount))
-	elseif request.action == 'waypoints_client_save' then
-		NetEvents:SendToLocal('ClientNodeEditor:SaveNodes', p_Player)
 	elseif request.action == 'waypoints_server_load' then
 		m_NodeCollection:Load()
 	elseif request.action == 'waypoints_server_save' then

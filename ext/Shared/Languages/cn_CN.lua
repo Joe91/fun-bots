@@ -278,14 +278,6 @@ Language:add(code, "de_DE as sample (default is english, when language file does
 -- Strings of ../ext/Client/ClientNodeEditor.lua
 Language:add(code, "Finish", "完成")
 Language:add(code, "Connect", "连接")
-Language:add(code, "Clear Selection", "取消选择")
-Language:add(code, "Select Between", "选择中间")
-Language:add(code, "Remove", "删除")
-Language:add(code, "Unlink", "取消链接")
-Language:add(code, "Select Previous", "选择上一个")
-Language:add(code, "Add", "添加")
-Language:add(code, "Link", "链接")
-Language:add(code, "Select Next", "选择下一个")
 
 -- Strings of ../ext/Server/BotSpawner.lua
 Language:add(code, "CANT_JOIN_BOT_TEAM", "无法加入BOT队伍")
@@ -315,11 +307,7 @@ Language:add(code, "Bot respawn deactivated!", "BOT重生已关闭!")
 Language:add(code, "Bots will attack!", "BOT启用攻击!")
 Language:add(code, "Bots will not attack!", "BOT关闭攻击!")
 Language:add(code, "%s is currently not implemented.", "%S目前未实现")
-Language:add(code, "Merge", "合并")
-Language:add(code, "Move", "移动")
 Language:add(code, "Select", "选择")
-Language:add(code, "Split", "拆分")
-Language:add(code, "Set Input", "设置输入")
 Language:add(code, "Settings has been saved temporarily.", "设置已暂时保存")
 Language:add(code, "Settings has been saved.", "设置已保存")
 
