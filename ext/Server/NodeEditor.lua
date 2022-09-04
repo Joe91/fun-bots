@@ -317,7 +317,7 @@ function NodeEditor:OnRemoveData(p_Player)
 end
 
 function NodeEditor:OnRemoveNode(p_Player)
-	local s_Result, s_Message = m_NodeCollection:Remove(nil, p_Player.onlineId)
+	local s_Result, s_Message = m_NodeCollection:Remove(p_Player.onlineId)
 	if not s_Result then
 		self:Log(s_Message)
 	end
@@ -645,7 +645,7 @@ function NodeEditor:SaveTrace(p_Player, p_PathIndex)
 
 		if #s_PathWaypoints > 0 then
 			for i = 1, #s_PathWaypoints do
-				m_NodeCollection:Remove(s_PathWaypoints[i])
+				m_NodeCollection:Remove(p_Player.onlineId, s_PathWaypoints[i])
 			end
 		end
 	end
@@ -851,7 +851,7 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 
 
 	-- visible NODE distribution-handling
-	if self.m_NodeSendUpdateTimer < 0.2 then
+	if self.m_NodeSendUpdateTimer < 0.1 then
 		self.m_NodeSendUpdateTimer = self.m_NodeSendUpdateTimer + p_DeltaTime
 	else
 		self.m_NodeSendUpdateTimer = 0.0
@@ -888,78 +888,80 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 					local s_FirstNode = s_WaypointPaths[l_Path][1]
 					for l_Waypoint = s_startIndex, #s_WaypointPaths[l_Path] do
 						local l_Node = s_WaypointPaths[l_Path][l_Waypoint]
+						if (l_Node.Next ~= false and l_Node.Previous ~= false) then -- removed node?
 
-						local s_DrawNode = false
-						local s_DrawLine = false
-						local s_DrawText = false
-						local s_IsSelected = false
+							local s_DrawNode = false
+							local s_DrawLine = false
+							local s_DrawText = false
+							local s_IsSelected = false
 
-						local s_Distance = m_NodeCollection:GetDistance(l_Node, s_PlayerPos)
-						if s_Distance <= Config.WaypointRange then
-							s_DrawNode = true
-						end
-						if s_Distance <= Config.LineRange then
-							s_DrawLine = true
-						end
-						if s_Distance <= Config.TextRange then
-							s_DrawText = true
-						end
-
-						s_Count = s_Count + 1
-
-						if s_DrawNode or s_DrawLine or s_DrawText then
-							if m_NodeCollection:IsSelected(l_PlayerGuid, l_Node) then
-								s_IsSelected = true
+							local s_Distance = m_NodeCollection:GetDistance(l_Node, s_PlayerPos)
+							if s_Distance <= Config.WaypointRange then
+								s_DrawNode = true
+							end
+							if s_Distance <= Config.LineRange then
+								s_DrawLine = true
+							end
+							if s_Distance <= Config.TextRange then
+								s_DrawText = true
 							end
 
-							local s_DataNode = {
-								Node = {},
-								DrawNode = s_DrawNode,
-								DrawLine = s_DrawLine,
-								DrawText = s_DrawText,
-								IsSelected = s_IsSelected,
-								Objectives = {},
-								Vehicles = {},
-								Reverse = (s_FirstNode.OptValue == 0XFF),
-								Links = {},
-								IsTrace = false,
-								IsOthersTrace = false
-							}
+							s_Count = s_Count + 1
 
-							-- fill tables
-							if l_Node.Data.Links then
-								for i = 1, #l_Node.Data.Links do
-									local s_LinkNode = m_NodeCollection:Get(l_Node.Data.Links[i])
-									if s_LinkNode then
-										table.insert(s_DataNode.Links, s_LinkNode.Position)
+							if s_DrawNode or s_DrawLine or s_DrawText then
+								if m_NodeCollection:IsSelected(l_PlayerGuid, l_Node) then
+									s_IsSelected = true
+								end
+
+								local s_DataNode = {
+									Node = {},
+									DrawNode = s_DrawNode,
+									DrawLine = s_DrawLine,
+									DrawText = s_DrawText,
+									IsSelected = s_IsSelected,
+									Objectives = {},
+									Vehicles = {},
+									Reverse = (s_FirstNode.OptValue == 0XFF),
+									Links = {},
+									IsTrace = false,
+									IsOthersTrace = false
+								}
+
+								-- fill tables
+								if l_Node.Data.Links then
+									for i = 1, #l_Node.Data.Links do
+										local s_LinkNode = m_NodeCollection:Get(l_Node.Data.Links[i])
+										if s_LinkNode then
+											table.insert(s_DataNode.Links, s_LinkNode.Position)
+										end
 									end
 								end
-							end
 
-							for l_Key, l_Value in pairs(l_Node) do
-								if (l_Key ~= 'Next' and l_Key ~= 'Previous') then
-									s_DataNode.Node[l_Key] = l_Value
+								for l_Key, l_Value in pairs(l_Node) do
+									if (l_Key ~= 'Next' and l_Key ~= 'Previous') then
+										s_DataNode.Node[l_Key] = l_Value
+									end
 								end
-							end
 
-							if s_FirstNode.Data.Objectives then
-								for _, l_Objective in pairs(s_FirstNode.Data.Objectives) do
-									table.insert(s_DataNode.Objectives, l_Objective)
+								if s_FirstNode.Data.Objectives then
+									for _, l_Objective in pairs(s_FirstNode.Data.Objectives) do
+										table.insert(s_DataNode.Objectives, l_Objective)
+									end
 								end
-							end
 
-							if s_FirstNode.Data.Vehicles then
-								for _, l_Vehicle in pairs(s_FirstNode.Data.Vehicles) do
-									table.insert(s_DataNode.Vehicles, l_Vehicle)
+								if s_FirstNode.Data.Vehicles then
+									for _, l_Vehicle in pairs(s_FirstNode.Data.Vehicles) do
+										table.insert(s_DataNode.Vehicles, l_Vehicle)
+									end
 								end
-							end
 
-							table.insert(s_NodesToDraw, s_DataNode)
-							if s_Count >= Config.NodesPerCycle and l_Waypoint < #s_WaypointPaths[l_Path] then
-								self.m_lastDrawIndexNode[l_PlayerGuid] = l_Waypoint
-								self.m_lastDrawIndexPath[l_PlayerGuid] = l_Path
-								NetEvents:SendUnreliableToLocal('ClientNodeEditor:DrawNodes', s_Player, s_NodesToDraw, false) -- send all nodes that are visible for the player
-								return
+								table.insert(s_NodesToDraw, s_DataNode)
+								if s_Count >= Config.NodesPerCycle and l_Waypoint < #s_WaypointPaths[l_Path] then
+									self.m_lastDrawIndexNode[l_PlayerGuid] = l_Waypoint
+									self.m_lastDrawIndexPath[l_PlayerGuid] = l_Path
+									NetEvents:SendUnreliableToLocal('ClientNodeEditor:DrawNodes', s_Player, s_NodesToDraw, false) -- send all nodes that are visible for the player
+									return
+								end
 							end
 						end
 					end

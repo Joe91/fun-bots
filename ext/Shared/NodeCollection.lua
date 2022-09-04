@@ -5,7 +5,7 @@ NodeCollection = class "NodeCollection"
 ---@type Utilities
 local m_Utilities = require('__shared/Utilities.lua')
 ---@type Logger
-local m_Logger = Logger("NodeCollection", Debug.Shared.NODECOLLECTION)
+local m_Logger = Logger("NodeCollection", true)
 
 function NodeCollection:__init(p_DisableServerEvents)
 	self:InitTables()
@@ -213,13 +213,13 @@ end
 ---@param p_Waypoint? Waypoint
 ---@return boolean
 ---@return string
-function NodeCollection:Remove(p_Waypoint, p_SelectionId)
+function NodeCollection:Remove(p_SelectionId, p_Waypoint)
 	-- batch operation on selections
 	if p_Waypoint == nil then
-		local s_Selection = self:GetSelected(nil, p_SelectionId)
+		local s_Selection = self:GetSelected(p_SelectionId)
 
 		for _, l_SelectedWaypoint in pairs(s_Selection) do
-			self:Remove(l_SelectedWaypoint)
+			self:Remove(p_SelectionId, l_SelectedWaypoint)
 		end
 
 		return true, 'Success'
@@ -237,7 +237,7 @@ function NodeCollection:Remove(p_Waypoint, p_SelectionId)
 	end
 
 	-- use connections to update indexes
-	self:Unlink(p_Waypoint)
+	self:Unlink(p_SelectionId, p_Waypoint)
 
 	if p_Waypoint.Previous then
 		self:RecalculateIndexes(p_Waypoint.Previous)
@@ -253,7 +253,10 @@ function NodeCollection:Remove(p_Waypoint, p_SelectionId)
 	self.waypoints[p_Waypoint.Index] = p_Waypoint
 	self.waypointsByID[p_Waypoint.ID] = p_Waypoint
 	self.waypointsByPathIndex[p_Waypoint.PathIndex][p_Waypoint.PointIndex] = p_Waypoint
-	self.selectedWaypoints[p_Waypoint.ID] = nil
+	-- delete IDs for everyone
+	for l_PlayerGuid, _ in pairs(self.selectedWaypoints) do
+		self.selectedWaypoints[l_PlayerGuid][p_Waypoint.ID] = nil
+	end
 	return true, 'Success'
 	-- go hit the gym
 end
@@ -563,19 +566,19 @@ end
 ---@param p_OneWay? boolean
 ---@return boolean
 ---@return string
-function NodeCollection:Unlink(p_Waypoints, p_LinkID, p_OneWay, p_SelectionId)
+function NodeCollection:Unlink(p_SelectionId, p_Waypoints, p_LinkID, p_OneWay)
 
-	local s_Selection = p_Waypoints or g_NodeCollection:GetSelected(nil, p_SelectionId)
+	local s_Selection = p_Waypoints or g_NodeCollection:GetSelected(p_SelectionId)
 	p_OneWay = p_OneWay or false
 
 	if #s_Selection == 2 then
 		--special case, nodes unlink from each other
-		self:Unlink(s_Selection[1], s_Selection[2].ID, true, p_SelectionId)
-		self:Unlink(s_Selection[2], s_Selection[1].ID, true, p_SelectionId)
+		self:Unlink(p_SelectionId, s_Selection[1], s_Selection[2].ID, true)
+		self:Unlink(p_SelectionId, s_Selection[2], s_Selection[1].ID, true)
 		return true, 'Success'
 	elseif (#s_Selection > 0) then
 		for i = 1, #s_Selection do
-			local s_Success, s_Msg = self:Unlink(s_Selection[i], p_LinkID, nil, p_SelectionId)
+			local s_Success, s_Msg = self:Unlink(p_SelectionId, s_Selection[i], p_LinkID, nil)
 
 			if not s_Success then
 				return s_Success, s_Msg
@@ -596,7 +599,7 @@ function NodeCollection:Unlink(p_Waypoints, p_LinkID, p_OneWay, p_SelectionId)
 			else
 				-- remove link from connected node, `p_OneWay` prevents infinite recursion
 				if not p_OneWay then
-					self:Unlink(self:Get(p_LinkID), s_Selection.ID, true, p_SelectionId)
+					self:Unlink(p_SelectionId, self:Get(p_LinkID), s_Selection.ID, true)
 				end
 			end
 		end
@@ -774,7 +777,7 @@ end
 
 ---@param p_Waypoint? Waypoint
 ---@param p_PathIndex? integer
-function NodeCollection:Select(p_Waypoint, p_PathIndex, p_SelectionId)
+function NodeCollection:Select(p_SelectionId, p_Waypoint, p_PathIndex)
 	if not p_SelectionId then
 		p_SelectionId = 1
 	end
@@ -793,7 +796,7 @@ end
 
 ---@param p_Waypoint? Waypoint
 ---@param p_PathIndex? integer
-function NodeCollection:Deselect(p_Waypoint, p_PathIndex, p_SelectionId)
+function NodeCollection:Deselect(p_SelectionId, p_Waypoint, p_PathIndex)
 	if not p_SelectionId then
 		p_SelectionId = 1
 	end
@@ -814,7 +817,7 @@ end
 
 ---@param p_Waypoint? Waypoint
 ---@param p_PathIndex? integer
-function NodeCollection:IsSelected(p_Waypoint, p_PathIndex, p_SelectionId)
+function NodeCollection:IsSelected(p_SelectionId, p_Waypoint, p_PathIndex)
 	if not p_SelectionId then
 		p_SelectionId = 1
 	end
@@ -833,7 +836,7 @@ end
 
 ---@param p_PathIndex? integer
 ---@return Waypoint[]
-function NodeCollection:GetSelected(p_PathIndex, p_SelectionId)
+function NodeCollection:GetSelected(p_SelectionId, p_PathIndex)
 	if not p_SelectionId then
 		p_SelectionId = 1
 	end
@@ -845,7 +848,7 @@ function NodeCollection:GetSelected(p_PathIndex, p_SelectionId)
 
 	-- copy selection into index-based array and sort results
 	for l_WaypointID, l_Waypoint in pairs(self.selectedWaypoints[p_SelectionId]) do
-		if self:IsSelected(l_Waypoint) and (p_PathIndex == nil or l_Waypoint.PathIndex == p_PathIndex) then
+		if self:IsSelected(p_SelectionId, l_Waypoint) and (p_PathIndex == nil or l_Waypoint.PathIndex == p_PathIndex) then
 			table.insert(s_Selection, l_Waypoint)
 		end
 	end
@@ -894,7 +897,7 @@ function NodeCollection:MergeSelection(p_SelectionId)
 	-- TODO
 	-- combine selected nodes
 	-- nodes must be sequential or the start/end of two paths
-	local s_Selection = self:GetSelected(nil, p_SelectionId)
+	local s_Selection = self:GetSelected(p_SelectionId)
 
 	if #s_Selection < 2 then
 		return false, 'Must select two or more waypoints'
@@ -925,14 +928,14 @@ function NodeCollection:MergeSelection(p_SelectionId)
 
 	-- remove all selected nodes except the first one
 	for i = 2, #s_Selection do
-		self:Remove(s_Selection[i])
+		self:Remove(p_SelectionId, s_Selection[i])
 	end
 
 	return true, 'Success'
 end
 
 function NodeCollection:SplitSelection(p_SelectionId)
-	local s_Selection = self:GetSelected(nil, p_SelectionId)
+	local s_Selection = self:GetSelected(p_SelectionId)
 
 	if #s_Selection < 2 then
 		return false, 'Must select two or more waypoints'
@@ -958,7 +961,7 @@ function NodeCollection:SplitSelection(p_SelectionId)
 			PathIndex = s_Selection[i].PathIndex
 		})
 
-		self:Select(s_NewWaypoint, nil, p_SelectionId)
+		self:Select(p_SelectionId, s_NewWaypoint)
 		self:InsertAfter(s_Selection[i], s_NewWaypoint)
 	end
 
