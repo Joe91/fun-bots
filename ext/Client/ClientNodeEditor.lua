@@ -840,256 +840,33 @@ function ClientNodeEditor:_onSetMetadata(p_Args)
 	return s_Result
 end
 
-function ClientNodeEditor:_onAddMcom(p_Args)
-	self.m_CommoRoseActive = false
-
-	if self.m_Player == nil or self.m_Player.soldier == nil then
-		self:Log('Player must be alive')
-		return false
-	end
-
-	local s_Selection = m_NodeCollection:GetSelected()
-
-	if #s_Selection ~= 1 then
-		self:Log('Must select one node')
-		return false
-	end
-
-	self:Log('Updating %d Possible Waypoints', (#s_Selection))
-
-	for i = 1, #s_Selection do
-		local action = {
-			type = "mcom",
-			inputs = { EntryInputActionEnum.EIAInteract },
-			time = 6.0,
-			yaw = self.m_Player.input.authoritativeAimingYaw,
-			pitch = self.m_Player.input.authoritativeAimingPitch
-		}
-		s_Selection[i].Data.Action = action
-		self:Log('Updated Waypoint: %s', s_Selection[i].ID)
-	end
-
-	return true
+function ClientNodeEditor:_onAddMcom()
+	NetEvents:SendLocal('NodeEditor:AddMcom')
 end
 
 function ClientNodeEditor:_onAddVehicle(p_Args)
-	self.m_CommoRoseActive = false
-
-	if self.m_Player == nil or self.m_Player.soldier == nil then
-		self:Log('Player must be alive')
-		return false
-	end
-
-	local s_Selection = m_NodeCollection:GetSelected()
-
-	if #s_Selection ~= 1 then
-		self:Log('Must select one node')
-		return false
-	end
-
-	self:Log('Updating %d Possible Waypoints', (#s_Selection))
-
-	for i = 1, #s_Selection do
-		local action = {
-			type = "vehicle",
-			inputs = { EntryInputActionEnum.EIAInteract },
-			time = 0.5,
-			yaw = self.m_Player.input.authoritativeAimingYaw,
-			pitch = self.m_Player.input.authoritativeAimingPitch
-		}
-		s_Selection[i].Data.Action = action
-		self:Log('Updated Waypoint: %s', s_Selection[i].ID)
-	end
-
-	return true
+	NetEvents:SendLocal('NodeEditor:AddVehicle')
 end
 
 function ClientNodeEditor:_onExitVehicle(p_Args)
-	self.m_CommoRoseActive = false
-
-	if self.m_Player == nil or self.m_Player.soldier == nil then
-		self:Log('Player must be alive')
-		return false
-	end
-
-	local s_Selection = m_NodeCollection:GetSelected()
-
-	if #s_Selection ~= 1 then
-		self:Log('Must select one node')
-		return false
-	end
-
-	local s_Data = p_Args[1] or "false"
-	self:Log('Exit Vehicle (type): %s', g_Utilities:dump(s_Data, true))
-
-	local s_OnlyPassengers = not (s_Data:lower() == "false" or s_Data == "0")
-	print(s_OnlyPassengers)
-
-	for i = 1, #s_Selection do
-		local action = {
-			type = "exit",
-			onlyPassengers = s_OnlyPassengers,
-			inputs = { EntryInputActionEnum.EIAInteract },
-			time = 0.5
-		}
-		s_Selection[i].Data.Action = action
-		self:Log('Updated Waypoint: %s', s_Selection[i].ID)
-	end
-
-	return true
+	NetEvents:SendLocal('NodeEditor:ExitVehicle', p_Args)
 end
 
 function ClientNodeEditor:_onAddVehiclePath(p_Args)
-	self.m_CommoRoseActive = false
-
-	local s_Data = table.concat(p_Args or { "land" }, ' ')
-	self:Log('Add Vehicle (type): %s', g_Utilities:dump(s_Data, true))
-
-	local s_Selection = m_NodeCollection:GetSelected()
-
-	if #s_Selection < 1 then
-		self:Log('Must select at least one node')
-		return false
-	end
-
-	local s_DonePaths = {}
-	self:Log('Updating %d Possible Waypoints', (#s_Selection))
-
-	for i = 1, #s_Selection do
-		local s_Waypoint = m_NodeCollection:GetFirst(s_Selection[i].PathIndex)
-
-		if not s_DonePaths[s_Waypoint.PathIndex] then
-			s_DonePaths[s_Waypoint.PathIndex] = true
-
-			local s_Vehicles = s_Waypoint.Data.Vehicles or {}
-			local s_InTable = false
-
-			for j = 1, #s_Vehicles do
-				if (s_Vehicles[j] == s_Data) then
-					s_InTable = true
-					break
-				end
-			end
-
-			if not s_InTable then
-				table.insert(s_Vehicles, s_Data)
-				s_Waypoint.Data.Vehicles = s_Vehicles
-				self:Log('Updated Waypoint: %s', s_Waypoint.ID)
-			end
-		end
-	end
-
-	return true
+	NetEvents:SendLocal('NodeEditor:AddVehiclePath', p_Args)
 end
 
 -- EVENTS for editing
 function ClientNodeEditor:_onAddObjective(p_Args)
-	self.m_CommoRoseActive = false
-
-	local s_Data = table.concat(p_Args or {}, ' ')
-	s_Data = s_Data:lower()
-	self:Log('Add Objective (data): %s', g_Utilities:dump(s_Data, true))
-
-	local s_Selection = m_NodeCollection:GetSelected()
-
-	if #s_Selection < 1 then
-		self:Log('Must select at least one node')
-		return false
-	end
-
-	local s_DonePaths = {}
-	self:Log('Updating %d Possible Waypoints', (#s_Selection))
-
-	for i = 1, #s_Selection do
-		local s_Waypoint = m_NodeCollection:GetFirst(s_Selection[i].PathIndex)
-
-		if not s_DonePaths[s_Waypoint.PathIndex] then
-			s_DonePaths[s_Waypoint.PathIndex] = true
-
-			local s_Objectives = s_Waypoint.Data.Objectives or {}
-			local s_InTable = false
-
-			for j = 1, #s_Objectives do
-				if (s_Objectives[j] == s_Data) then
-					s_InTable = true
-					break
-				end
-			end
-
-			if not s_InTable then
-				table.insert(s_Objectives, s_Data)
-				s_Waypoint.Data.Objectives = s_Objectives
-				self:Log('Updated Waypoint: %s', s_Waypoint.ID)
-			end
-		end
-	end
-
-	return true
+	NetEvents:SendLocal('NodeEditor:AddObjective', p_Args)
 end
 
 function ClientNodeEditor:_onRemoveObjective(p_Args)
-	self.m_CommoRoseActive = false
-
-	local s_Data = table.concat(p_Args or {}, ' ')
-	s_Data = s_Data:lower()
-	self:Log('Remove Objective (data): %s', g_Utilities:dump(s_Data, true))
-
-	local s_Selection = m_NodeCollection:GetSelected()
-
-	if #s_Selection < 1 then
-		self:Log('Must select at least one node')
-		return false
-	end
-
-	local s_DonePaths = {}
-	self:Log('Updating %d Possible Waypoints', (#s_Selection))
-
-	for i = 1, #s_Selection do
-		local s_Waypoint = m_NodeCollection:GetFirst(s_Selection[i].PathIndex)
-
-		if not s_DonePaths[s_Waypoint.PathIndex] then
-			s_DonePaths[s_Waypoint.PathIndex] = true
-
-			local s_Objectives = s_Waypoint.Data.Objectives or {}
-			local s_NewObjectives = {}
-
-			for j = 1, #s_Objectives do
-				if (s_Objectives[j] ~= s_Data) then
-					table.insert(s_NewObjectives, s_Objectives[j])
-				end
-			end
-
-			s_Waypoint.Data.Objectives = s_NewObjectives
-			self:Log('Updated Waypoint: %s', s_Waypoint.ID)
-		end
-	end
-
-	return true
+	NetEvents:SendLocal('NodeEditor:RemoveObjective', p_Args)
 end
 
 function ClientNodeEditor:_onRemoveData(p_Args)
-	self.m_CommoRoseActive = false
-
-	if self.m_Player == nil or self.m_Player.soldier == nil then
-		self:Log('Player must be alive')
-		return false
-	end
-
-	local s_Selection = m_NodeCollection:GetSelected()
-
-	if #s_Selection < 1 then
-		self:Log('Must select at least one node')
-		return false
-	end
-
-	self:Log('Updating %d Possible Waypoints', (#s_Selection))
-
-	for i = 1, #s_Selection do
-		s_Selection[i].Data = {}
-		self:Log('Updated Waypoint: %s', s_Selection[i].ID)
-	end
-
-	return true
+	NetEvents:Subscribe('NodeEditor:RemoveData')
 end
 
 function ClientNodeEditor:_onRecalculateIndexes(p_Args)
@@ -1397,7 +1174,7 @@ function ClientNodeEditor:OnClientUpdateInput(p_DeltaTime)
 		end
 
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Backspace) then
-			m_NodeCollection:ClearSelection()
+			self:_onClearSelection()
 			return
 		end
 

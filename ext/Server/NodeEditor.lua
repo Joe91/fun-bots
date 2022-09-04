@@ -62,13 +62,259 @@ function NodeEditor:RegisterCustomEvents()
 	NetEvents:Subscribe('NodeEditor:SplitNode', self, self.OnSplitNode)
 	NetEvents:Subscribe('NodeEditor:RemoveNode', self, self.OnRemoveNode)
 
-
+	NetEvents:Subscribe('NodeEditor:AddMcom', self, self.OnAddMcom)
+	NetEvents:Subscribe('NodeEditor:AddVehicle', self, self.OnAddVehicle)
+	NetEvents:Subscribe('NodeEditor:ExitVehicle', self, self.OnExitVehicle)
+	NetEvents:Subscribe('NodeEditor:AddVehiclePath', self, self.OnAddVehiclePath)
+	NetEvents:Subscribe('NodeEditor:AddObjective', self, self.OnAddObjective)
+	NetEvents:Subscribe('NodeEditor:RemoveObjective', self, self.OnRemoveObjective)
+	NetEvents:Subscribe('NodeEditor:RemoveData', self, self.OnRemoveData)
 	-- TODO: fill
 end
 
 -- =============================================
 -- Events
 -- =============================================
+
+function NodeEditor:OnAddMcom(p_Player)
+
+	if not p_Player.soldier then
+		self:Log('Player must be alive')
+		return
+	end
+
+	local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
+
+	if #s_Selection ~= 1 then
+		self:Log('Must select one node')
+		return false
+	end
+
+	self:Log('Updating %d Possible Waypoints', (#s_Selection))
+
+	for i = 1, #s_Selection do
+		local action = {
+			type = "mcom",
+			inputs = { EntryInputActionEnum.EIAInteract },
+			time = 6.0,
+			yaw = p_Player.input.authoritativeAimingYaw,
+			pitch = p_Player.input.authoritativeAimingPitch
+		}
+		s_Selection[i].Data.Action = action
+		self:Log('Updated Waypoint: %s', s_Selection[i].ID)
+	end
+
+	return true
+end
+
+function NodeEditor:OnAddVehicle(p_Player)
+
+	if not p_Player.soldier then
+		self:Log('Player must be alive')
+		return
+	end
+
+	local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
+
+	if #s_Selection ~= 1 then
+		self:Log('Must select one node')
+		return
+	end
+
+	self:Log('Updating %d Possible Waypoints', (#s_Selection))
+
+	for i = 1, #s_Selection do
+		local action = {
+			type = "vehicle",
+			inputs = { EntryInputActionEnum.EIAInteract },
+			time = 0.5,
+			yaw = p_Player.input.authoritativeAimingYaw,
+			pitch = p_Player.input.authoritativeAimingPitch
+		}
+		s_Selection[i].Data.Action = action
+		self:Log('Updated Waypoint: %s', s_Selection[i].ID)
+	end
+
+	return
+end
+
+function NodeEditor:OnExitVehicle(p_Player, p_Args)
+	self.m_CommoRoseActive = false
+
+	if not p_Player.soldier then
+		self:Log('Player must be alive')
+		return
+	end
+
+	local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
+
+	if #s_Selection ~= 1 then
+		self:Log('Must select one node')
+		return
+	end
+
+	local s_Data = p_Args[1] or "false"
+	self:Log('Exit Vehicle (type): %s', g_Utilities:dump(s_Data, true))
+
+	local s_OnlyPassengers = not (s_Data:lower() == "false" or s_Data == "0")
+	print(s_OnlyPassengers)
+
+	for i = 1, #s_Selection do
+		local action = {
+			type = "exit",
+			onlyPassengers = s_OnlyPassengers,
+			inputs = { EntryInputActionEnum.EIAInteract },
+			time = 0.5
+		}
+		s_Selection[i].Data.Action = action
+		self:Log('Updated Waypoint: %s', s_Selection[i].ID)
+	end
+
+	return
+end
+
+function NodeEditor:OnAddVehiclePath(p_Player, p_Args)
+	local s_Data = table.concat(p_Args or { "land" }, ' ')
+	self:Log('Add Vehicle (type): %s', g_Utilities:dump(s_Data, true))
+
+	local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
+
+	if #s_Selection < 1 then
+		self:Log('Must select at least one node')
+		return false
+	end
+
+	local s_DonePaths = {}
+	self:Log('Updating %d Possible Waypoints', (#s_Selection))
+
+	for i = 1, #s_Selection do
+		local s_Waypoint = m_NodeCollection:GetFirst(s_Selection[i].PathIndex)
+
+		if not s_DonePaths[s_Waypoint.PathIndex] then
+			s_DonePaths[s_Waypoint.PathIndex] = true
+
+			local s_Vehicles = s_Waypoint.Data.Vehicles or {}
+			local s_InTable = false
+
+			for j = 1, #s_Vehicles do
+				if (s_Vehicles[j] == s_Data) then
+					s_InTable = true
+					break
+				end
+			end
+
+			if not s_InTable then
+				table.insert(s_Vehicles, s_Data)
+				s_Waypoint.Data.Vehicles = s_Vehicles
+				self:Log('Updated Waypoint: %s', s_Waypoint.ID)
+			end
+		end
+	end
+
+	return true
+end
+
+-- EVENTS for editing
+function NodeEditor:OnAddObjective(p_Player, p_Args)
+	local s_Data = table.concat(p_Args or {}, ' ')
+	s_Data = s_Data:lower()
+	self:Log('Add Objective (data): %s', g_Utilities:dump(s_Data, true))
+
+	local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
+
+	if #s_Selection < 1 then
+		self:Log('Must select at least one node')
+		return false
+	end
+
+	local s_DonePaths = {}
+	self:Log('Updating %d Possible Waypoints', (#s_Selection))
+
+	for i = 1, #s_Selection do
+		local s_Waypoint = m_NodeCollection:GetFirst(s_Selection[i].PathIndex)
+
+		if not s_DonePaths[s_Waypoint.PathIndex] then
+			s_DonePaths[s_Waypoint.PathIndex] = true
+
+			local s_Objectives = s_Waypoint.Data.Objectives or {}
+			local s_InTable = false
+
+			for j = 1, #s_Objectives do
+				if (s_Objectives[j] == s_Data) then
+					s_InTable = true
+					break
+				end
+			end
+
+			if not s_InTable then
+				table.insert(s_Objectives, s_Data)
+				s_Waypoint.Data.Objectives = s_Objectives
+				self:Log('Updated Waypoint: %s', s_Waypoint.ID)
+			end
+		end
+	end
+
+	return true
+end
+
+function NodeEditor:OnRemoveObjective(p_Player, p_Args)
+	local s_Data = table.concat(p_Args or {}, ' ')
+	s_Data = s_Data:lower()
+	self:Log('Remove Objective (data): %s', g_Utilities:dump(s_Data, true))
+
+	local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
+
+	if #s_Selection < 1 then
+		self:Log('Must select at least one node')
+		return false
+	end
+
+	local s_DonePaths = {}
+	self:Log('Updating %d Possible Waypoints', (#s_Selection))
+
+	for i = 1, #s_Selection do
+		local s_Waypoint = m_NodeCollection:GetFirst(s_Selection[i].PathIndex)
+
+		if not s_DonePaths[s_Waypoint.PathIndex] then
+			s_DonePaths[s_Waypoint.PathIndex] = true
+
+			local s_Objectives = s_Waypoint.Data.Objectives or {}
+			local s_NewObjectives = {}
+
+			for j = 1, #s_Objectives do
+				if (s_Objectives[j] ~= s_Data) then
+					table.insert(s_NewObjectives, s_Objectives[j])
+				end
+			end
+
+			s_Waypoint.Data.Objectives = s_NewObjectives
+			self:Log('Updated Waypoint: %s', s_Waypoint.ID)
+		end
+	end
+
+	return true
+end
+
+function NodeEditor:OnRemoveData(p_Player)
+	if not p_Player.soldier then
+		self:Log('Player must be alive')
+		return
+	end
+
+	local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
+
+	if #s_Selection < 1 then
+		self:Log('Must select at least one node')
+		return
+	end
+
+	self:Log('Updating %d Possible Waypoints', (#s_Selection))
+
+	for i = 1, #s_Selection do
+		s_Selection[i].Data = {}
+		self:Log('Updated Waypoint: %s', s_Selection[i].ID)
+	end
+end
 
 function NodeEditor:OnRemoveNode(p_Player)
 	local s_Result, s_Message = m_NodeCollection:Remove(nil, p_Player.onlineId)
@@ -121,7 +367,7 @@ end
 
 function NodeEditor:OnSelect(p_Player, p_WaypointId, p_Position)
 	if p_WaypointId then
-		m_NodeCollection:Select(p_WaypointId, nil, p_Player.onlineId)
+		m_NodeCollection:Select(p_Player.onlineId, p_WaypointId)
 	elseif p_Position then
 		local s_HitPoint = m_NodeCollection:Find(p_Position)
 
@@ -133,15 +379,15 @@ function NodeEditor:OnSelect(p_Player, p_WaypointId, p_Position)
 
 		-- we found one, let's toggle its selected state
 		if s_HitPoint ~= nil then
-			local s_IsSelected = m_NodeCollection:IsSelected(s_HitPoint)
+			local s_IsSelected = m_NodeCollection:IsSelected(p_Player.onlineId, s_HitPoint)
 
 			if s_IsSelected then
 				self:Log('Deselect -> %s', s_HitPoint.ID)
-				m_NodeCollection:Deselect(s_HitPoint, nil, p_Player.onlineId)
+				m_NodeCollection:Deselect(p_Player.onlineId, s_HitPoint)
 				return
 			else
 				self:Log('Select -> %s', s_HitPoint.ID)
-				m_NodeCollection:Select(s_HitPoint, nil, p_Player.onlineId)
+				m_NodeCollection:Select(p_Player.onlineId, s_HitPoint)
 				return
 			end
 		end
@@ -149,11 +395,11 @@ function NodeEditor:OnSelect(p_Player, p_WaypointId, p_Position)
 end
 
 function NodeEditor:OnDeselect(p_Player, p_WaypointId)
-	m_NodeCollection:Deselect(p_WaypointId, nil, p_Player.onlineId)
+	m_NodeCollection:Deselect(p_Player.onlineId, p_WaypointId)
 end
 
 function NodeEditor:OnSelectBetween(p_Player)
-	local s_Selection = m_NodeCollection:GetSelected(nil, p_Player.onlineId)
+	local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
 
 	if #s_Selection < 1 then
 		self:Log('Must select more than one node')
@@ -165,7 +411,7 @@ function NodeEditor:OnSelectBetween(p_Player)
 	local s_CurrentWaypoint = s_Selection[1]
 
 	while s_CurrentWaypoint.Next and s_CurrentWaypoint.ID ~= s_Selection[#s_Selection].ID do
-		m_NodeCollection:Select(s_CurrentWaypoint, nil, p_Player.onlineId)
+		m_NodeCollection:Select(p_Player.onlineId, s_CurrentWaypoint)
 		s_Current = s_Current + 1
 
 		if s_Current > s_BreakAt then
@@ -177,11 +423,11 @@ function NodeEditor:OnSelectBetween(p_Player)
 end
 
 function NodeEditor:OnSelectNext(p_Player)
-	local s_Selection = m_NodeCollection:GetSelected(nil, p_Player.onlineId)
+	local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
 
 	if #s_Selection > 0 then
 		if s_Selection[1].Next ~= false then
-			m_NodeCollection:Select(s_Selection[1].Next, nil, p_Player.onlineId)
+			m_NodeCollection:Select(p_Player.onlineId, s_Selection[1].Next)
 		end
 	else
 		self:Log('Must select at least one node')
@@ -189,11 +435,11 @@ function NodeEditor:OnSelectNext(p_Player)
 end
 
 function NodeEditor:OnSelectPrevious(p_Player)
-	local s_Selection = m_NodeCollection:GetSelected(nil, p_Player.onlineId)
+	local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
 
 	if #s_Selection > 0 then
 		if s_Selection[1].Next ~= false then
-			m_NodeCollection:Select(s_Selection[1].Previous, nil, p_Player.onlineId)
+			m_NodeCollection:Select(p_Player.onlineId, s_Selection[1].Previous)
 		end
 	else
 		self:Log('Must select at least one node')
@@ -264,7 +510,7 @@ function NodeEditor:StartTrace(p_Player)
 		Position = p_Player.soldier.worldTransform.trans:Clone()
 	})
 	self.m_CustomTrace[p_Player.onlineId]:ClearSelection()
-	self.m_CustomTrace[p_Player.onlineId]:Select(s_FirstWaypoint)
+	self.m_CustomTrace[p_Player.onlineId]:Select(p_Player.onlineId, s_FirstWaypoint)
 
 	self:Log('Custom Trace Started')
 
@@ -301,7 +547,7 @@ function NodeEditor:EndTrace(p_Player)
 
 
 		self.m_CustomTrace[p_Player.onlineId]:ClearSelection()
-		self.m_CustomTrace[p_Player.onlineId]:Select(s_FirstWaypoint)
+		self.m_CustomTrace[p_Player.onlineId]:Select(p_Player.onlineId, s_FirstWaypoint)
 
 		if s_RayHits == nil or s_RayHits == 0 then
 			-- clear view from start node to end node, path loops
@@ -533,7 +779,7 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 								Position = s_PlayerPos
 							})
 							self.m_CustomTrace[l_PlayerGuid]:ClearSelection()
-							self.m_CustomTrace[l_PlayerGuid]:Select(s_NewWaypoint)
+							self.m_CustomTrace[l_PlayerGuid]:Select(l_PlayerGuid, s_NewWaypoint)
 
 							local s_Speed = BotMoveSpeeds.NoMovement -- 0 = wait, 1 = prone ... (4 Bits)
 							local s_Extra = 0 -- 0 = nothing, 1 = jump ... (4 Bits)
@@ -581,7 +827,7 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 						elseif s_Player.soldier.weaponsComponent.currentWeaponSlot == WeaponSlot.WeaponSlot_1 then
 							local s_LastWaypointAgain = self.m_CustomTrace[l_PlayerGuid]:GetLast()
 							self.m_CustomTrace[l_PlayerGuid]:ClearSelection()
-							self.m_CustomTrace[l_PlayerGuid]:Select(s_LastWaypointAgain)
+							self.m_CustomTrace[l_PlayerGuid]:Select(l_PlayerGuid, s_LastWaypointAgain)
 							self.m_CustomTrace[l_PlayerGuid]:SetInput(s_LastWaypointAgain.SpeedMode, s_LastWaypointAgain.ExtraMode,
 								s_LastWaypointAgain.OptValue + p_DeltaTime)
 						end
@@ -662,7 +908,7 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 						s_Count = s_Count + 1
 
 						if s_DrawNode or s_DrawLine or s_DrawText then
-							if m_NodeCollection:IsSelected(l_PlayerGuid) then
+							if m_NodeCollection:IsSelected(l_PlayerGuid, l_Node) then
 								s_IsSelected = true
 							end
 
@@ -748,9 +994,6 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 					s_Count = s_Count + 1
 
 					if s_DrawNode or s_DrawLine or s_DrawText then
-						if m_NodeCollection:IsSelected(l_PlayerGuid) then
-							s_IsSelected = true
-						end
 
 						local s_DataNode = {
 							Node = {},
