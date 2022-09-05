@@ -378,8 +378,7 @@ function ClientNodeEditor:_DrawData(p_DataPoint)
 	-- draw connection lines
 	if Config.DrawWaypointLines and p_DataPoint.DrawLine then
 		-- try to find a previous node and draw a line to it
-		if self.m_LastDataPoint and
-			(self.m_LastDataPoint.Node.PathIndex == s_Waypoint.PathIndex or (s_IsTracePath and self.m_LastDataPoint.IsTrace)) then -- TODO: why are the pathindexes wrong for trace-paths
+		if self.m_LastDataPoint and self.m_LastDataPoint.Node.PathIndex == s_Waypoint.PathIndex then
 			self:DrawLine(self.m_LastDataPoint.Node.Position, s_Waypoint.Position, s_Color.Line, s_Color.Line)
 		end
 

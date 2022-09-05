@@ -535,7 +535,7 @@ function NodeEditor:StartTrace(p_Player)
 		Position = p_Player.soldier.worldTransform.trans:Clone()
 	})
 	self.m_CustomTrace[p_Player.onlineId]:ClearSelection()
-	self.m_CustomTrace[p_Player.onlineId]:Select(p_Player.onlineId, s_FirstWaypoint)
+	self.m_CustomTrace[p_Player.onlineId]:Select(nil, s_FirstWaypoint)
 
 	self:Log('Custom Trace Started')
 
@@ -572,7 +572,7 @@ function NodeEditor:EndTrace(p_Player)
 
 
 		self.m_CustomTrace[p_Player.onlineId]:ClearSelection()
-		self.m_CustomTrace[p_Player.onlineId]:Select(p_Player.onlineId, s_FirstWaypoint)
+		self.m_CustomTrace[p_Player.onlineId]:Select(nil, s_FirstWaypoint)
 
 		if s_RayHits == nil or s_RayHits == 0 then
 			-- clear view from start node to end node, path loops
@@ -804,7 +804,7 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 								Position = s_PlayerPos
 							})
 							self.m_CustomTrace[l_PlayerGuid]:ClearSelection()
-							self.m_CustomTrace[l_PlayerGuid]:Select(l_PlayerGuid, s_NewWaypoint)
+							self.m_CustomTrace[l_PlayerGuid]:Select(nil, s_NewWaypoint)
 
 							local s_Speed = BotMoveSpeeds.NoMovement -- 0 = wait, 1 = prone ... (4 Bits)
 							local s_Extra = 0 -- 0 = nothing, 1 = jump ... (4 Bits)
@@ -852,7 +852,7 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 						elseif s_Player.soldier.weaponsComponent.currentWeaponSlot == WeaponSlot.WeaponSlot_1 then
 							local s_LastWaypointAgain = self.m_CustomTrace[l_PlayerGuid]:GetLast()
 							self.m_CustomTrace[l_PlayerGuid]:ClearSelection()
-							self.m_CustomTrace[l_PlayerGuid]:Select(l_PlayerGuid, s_LastWaypointAgain)
+							self.m_CustomTrace[l_PlayerGuid]:Select(nil, s_LastWaypointAgain)
 							self.m_CustomTrace[l_PlayerGuid]:SetInput(s_LastWaypointAgain.SpeedMode, s_LastWaypointAgain.ExtraMode,
 								s_LastWaypointAgain.OptValue + p_DeltaTime)
 						end
