@@ -72,6 +72,7 @@ function NodeEditor:RegisterCustomEvents()
 
 	NetEvents:Subscribe('NodeEditor:SpawnBot', self, self.OnSpawnBot)
 	NetEvents:Subscribe('NodeEditor:UpdatePos', self, self.OnUpdatePos)
+	NetEvents:Subscribe('NodeEditor:AddNode', self, self.OnAddNode)
 
 
 	-- TODO: fill
@@ -80,6 +81,28 @@ end
 -- =============================================
 -- Events
 -- =============================================
+
+function NodeEditor:OnAddNode(p_Player)
+	local s_Result, s_Message = m_NodeCollection:Add(p_Player.onlineId)
+
+	if not s_Result then
+		self:Log(s_Message)
+		return false
+	end
+
+	local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
+
+	-- if selected is 0 or 1, we created a new node
+	-- clear selection, select new node, change to move mode
+	-- otherwise we just connected two nodes, don't change selection
+	if s_Result ~= nil and #s_Selection <= 1 then
+		m_NodeCollection:ClearSelection(p_Player.onlineId)
+		m_NodeCollection:Select(p_Player.onlineId, s_Result)
+		NetEvents:SendToLocal('ClientNodeEditor:SelectNewNode', p_Player)
+	end
+
+	return true
+end
 
 function NodeEditor:OnUpdatePos(p_Player, p_UpdateData)
 	for _, l_UpdateItem in pairs(p_UpdateData) do

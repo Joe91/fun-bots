@@ -163,8 +163,8 @@ end
 
 ---@return boolean
 ---@return string
-function NodeCollection:Add()
-	local s_Selection = self:GetSelected()
+function NodeCollection:Add(p_SelectionId)
+	local s_Selection = self:GetSelected(p_SelectionId)
 
 	if #s_Selection == 2 then
 		local s_Orphan = nil

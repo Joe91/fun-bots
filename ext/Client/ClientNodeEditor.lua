@@ -5,7 +5,6 @@ ClientNodeEditor = class "ClientNodeEditor"
 require('__shared/Config')
 
 ---@type NodeCollection
-local m_NodeCollection = require('__shared/NodeCollection')
 ---@type Logger
 local m_Logger = Logger("ClientNodeEditor", Debug.Client.NODEEDITOR)
 
@@ -140,10 +139,9 @@ function ClientNodeEditor:OnRegisterEvents()
 	-- ('UI_ClientNodeEditor_Trace_Hide', <Int|PathIndex>)
 	-- NetEvents:Subscribe('UI_ClientNodeEditor_Trace_Hide', self, self._onHidePath)
 
+	NetEvents:Subscribe('ClientNodeEditor:SelectNewNode', self, self._onSelectNewNode)
 	-- debug stuff
 	NetEvents:Subscribe('ClientNodeEditor:SetLastTraceSearchArea', self, self._onSetLastTraceSearchArea)
-	NetEvents:Subscribe('ClientNodeEditor:BotSelect', self, self._onBotSelect)
-
 	-- sever->client and client->server syncing events
 	-- NetEvents:Subscribe('ClientNodeEditor:SaveNodes', self, self._onSaveNodes)
 	-- NetEvents:Subscribe('ClientNodeEditor:ReceiveNodes', self, self._onGetNodes)
@@ -194,10 +192,9 @@ function ClientNodeEditor:OnRegisterEvents()
 	-- debugging commands, not meant for UI
 	Console:Register('Enabled', 'Enable / Disable the waypoint editor', self, self.OnSetEnabled)
 	-- Console:Register('CommoRoseEnabled', 'Enable / Disable the waypoint editor Commo Rose', self, self._onSetCommoRoseEnabled)
-	Console:Register('CommoRoseShow', 'Show custom Commo Rose', self, self._onShowRose)
-	Console:Register('CommoRoseHide', 'Hide custom Commo Rose', self, self._onHideRose)
-	Console:Register('SetMetadata', '<string|Data> - Set Metadata for waypoint, Must be valid JSON string', self,
-		self._onSetMetadata)
+	-- Console:Register('CommoRoseShow', 'Show custom Commo Rose', self, self._onShowRose)
+	-- Console:Register('CommoRoseHide', 'Hide custom Commo Rose', self, self._onHideRose)
+	-- Console:Register('SetMetadata', '<string|Data> - Set Metadata for waypoint, Must be valid JSON string', self, self._onSetMetadata)
 
 	-- add these Events for NodeEditor
 	Console:Register('AddObjective', '<string|Objective> - Add an objective to a path', self, self._onAddObjective)
@@ -212,11 +209,8 @@ function ClientNodeEditor:OnRegisterEvents()
 	Console:Register('RemoveData', 'Remove all data of one or several nodes', self, self._onRemoveData)
 
 
-	Console:Register('ProcessMetadata', 'Process waypoint metadata starting with selected nodes or all nodes', self,
-		self._onProcessMetadata)
-	Console:Register('RecalculateIndexes', 'Recalculate Indexes starting with selected nodes or all nodes', self,
-		self._onRecalculateIndexes)
-	Console:Register('DumpNodes', 'Print selected nodes or all nodes to console', self, self._onDumpNodes)
+	-- Console:Register('ProcessMetadata', 'Process waypoint metadata starting with selected nodes or all nodes', self, self._onProcessMetadata)
+	-- Console:Register('RecalculateIndexes', 'Recalculate Indexes starting with selected nodes or all nodes', self, self._onRecalculateIndexes)
 	Console:Register('UnloadNodes', 'Clears and unloads all clientside nodes', self, self._onUnload)
 
 	-- Console:Register('ObjectiveDirection', 'Show best direction to given objective', self, self._onObjectiveDirection)
@@ -242,13 +236,6 @@ function ClientNodeEditor:OnSetEnabled(p_Args)
 	if self.m_Enabled ~= s_Enabled then
 		self.m_Enabled = s_Enabled
 		self.m_CommoRoseEnabled = s_Enabled
-
-		if #m_NodeCollection:Get() == 0 then
-			if self.m_Enabled then
-				self:_onUnload() -- clear local copy
-				self.m_NodeReceiveTimer = 0 -- enable the timer for receiving nodes
-			end
-		end
 	end
 end
 
@@ -547,7 +534,6 @@ function ClientNodeEditor:GetSelectedNodes()
 end
 
 function ClientNodeEditor:_onToggleMoveNode(p_Args)
-	self.m_CommoRoseActive = false
 	local s_Player = PlayerManager:GetLocalPlayer()
 
 	if self.m_EditMode == 'move' then
@@ -651,28 +637,12 @@ end
 -- ############################################
 
 function ClientNodeEditor:_onAddNode(p_Args)
-	self.m_CommoRoseActive = false
+	NetEvents:SendLocal('NodeEditor:AddNode')
+end
 
-	local s_Result, s_Message = m_NodeCollection:Add()
-
-	if not s_Result then
-		self:Log(s_Message)
-		return false
-	end
-
-	local s_Selection = m_NodeCollection:GetSelected()
-
-	-- if selected is 0 or 1, we created a new node
-	-- clear selection, select new node, change to move mode
-	-- otherwise we just connected two nodes, don't change selection
-	if s_Result ~= nil and #s_Selection <= 1 then
-		m_NodeCollection:ClearSelection()
-		m_NodeCollection:Select(s_Result)
-		self.m_EditPositionMode = 'absolute'
-		self:_onToggleMoveNode()
-	end
-
-	return true
+function ClientNodeEditor:_onSelectNewNode()
+	self.m_EditPositionMode = 'absolute'
+	self:_onToggleMoveNode()
 end
 
 function ClientNodeEditor:_onLinkNode()
@@ -697,59 +667,6 @@ end
 
 -- ############################## Other Methods
 -- ############################################
---[[ 
-
-function ClientNodeEditor:_onShowPath(p_Args)
-	self.m_CommoRoseActive = false
-
-	local s_PathIndex = p_Args
-
-	if type(p_Args) == 'table' then
-		s_PathIndex = p_Args[1]
-	end
-
-	if s_PathIndex ~= nil and s_PathIndex:lower() == 'all' then
-		for l_PathID, l_Waypoints in pairs(m_NodeCollection:GetPaths()) do
-			m_NodeCollection:ShowPath(l_PathID)
-		end
-
-		return true
-	end
-
-	if (s_PathIndex ~= nil and tonumber(s_PathIndex) ~= nil) then
-		m_NodeCollection:ShowPath(tonumber(s_PathIndex))
-		return true
-	end
-
-	self:Log('Use `all` or *<number|PathIndex>*')
-	return false
-end
-
-function ClientNodeEditor:_onHidePath(p_Args)
-	self.m_CommoRoseActive = false
-
-	local s_PathIndex = p_Args
-
-	if type(p_Args) == 'table' then
-		s_PathIndex = p_Args[1]
-	end
-
-	if s_PathIndex ~= nil and s_PathIndex:lower() == 'all' then
-		for l_PathID, l_Waypoints in pairs(m_NodeCollection:GetPaths()) do
-			m_NodeCollection:HidePath(l_PathID)
-		end
-
-		return true
-	end
-
-	if (s_PathIndex ~= nil and tonumber(s_PathIndex) ~= nil) then
-		m_NodeCollection:HidePath(tonumber(s_PathIndex))
-		return true
-	end
-
-	self:Log('Use `all` or *<number|PathIndex>*')
-	return false
-end ]]
 
 --[[ function ClientNodeEditor:_onWarpTo(p_Args)
 	self.m_CommoRoseActive = false
@@ -804,21 +721,7 @@ function ClientNodeEditor:_onSetLastTraceSearchArea(p_Data)
 	self.m_LastTraceSearchAreaSize = p_Data[2]
 end
 
--- NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', pathIndex, pointIndex, botPosition, color)
-function ClientNodeEditor:_onBotSelect(p_PathIndex, p_PointIndex, p_BotPosition, p_IsObstacleMode, p_Color)
-	local s_Waypoint = m_NodeCollection:Get(p_PointIndex, p_PathIndex)
-
-	if s_Waypoint ~= nil then
-		self.m_BotSelectedWaypoints[s_Waypoint.ID] = {
-			Timer = 0.5,
-			Position = p_BotPosition,
-			Obstacle = p_IsObstacleMode,
-			Color = (p_Color or 'White')
-		}
-	end
-end
-
-function ClientNodeEditor:_onShowRose(p_Args)
+--[[ function ClientNodeEditor:_onShowRose(p_Args)
 	self.m_CommoRoseEnabled = true
 	self.m_CommoRoseActive = true
 	self:_onCommoRoseAction('Show')
@@ -829,39 +732,7 @@ function ClientNodeEditor:_onHideRose(p_Args)
 	self.m_CommoRoseActive = false
 	self:_onCommoRoseAction('Hide')
 	return true
-end
-
-function ClientNodeEditor:_onDumpNodes(p_Args)
-	local s_Selection = m_NodeCollection:GetSelected()
-
-	if #s_Selection < 1 then
-		s_Selection = m_NodeCollection:Get()
-	end
-
-	for i = 1, #s_Selection do
-		self:Log(g_Utilities:dump(s_Selection[i], true, 1))
-	end
-
-	self:Log('Dumped [%d] Nodes!', #s_Selection)
-	return true
-end
-
-function ClientNodeEditor:_onSetMetadata(p_Args)
-	self.m_CommoRoseActive = false
-
-	local s_Data = table.concat(p_Args or {}, ' ')
-	self:Log('Set Metadata (data): %s', g_Utilities:dump(s_Data, true))
-
-	local s_Result, s_Message = m_NodeCollection:UpdateMetadata(s_Data)
-
-	if s_Result ~= false then
-		m_NodeCollection:ProcessMetadata(s_Result)
-	else
-		self:Log(s_Message)
-	end
-
-	return s_Result
-end
+end ]]
 
 function ClientNodeEditor:_onAddMcom()
 	NetEvents:SendLocal('NodeEditor:AddMcom')
@@ -879,7 +750,6 @@ function ClientNodeEditor:_onAddVehiclePath(p_Args)
 	NetEvents:SendLocal('NodeEditor:AddVehiclePath', p_Args)
 end
 
--- EVENTS for editing
 function ClientNodeEditor:_onAddObjective(p_Args)
 	NetEvents:SendLocal('NodeEditor:AddObjective', p_Args)
 end
@@ -890,34 +760,6 @@ end
 
 function ClientNodeEditor:_onRemoveData()
 	NetEvents:SendLocal('NodeEditor:RemoveData')
-end
-
-function ClientNodeEditor:_onRecalculateIndexes(p_Args)
-	self.m_CommoRoseActive = false
-
-	local s_Selection = m_NodeCollection:GetSelected()
-	local s_Firstnode = nil
-
-	if #s_Selection > 0 then
-		s_Firstnode = s_Selection[1]
-	end
-
-	m_NodeCollection:RecalculateIndexes(s_Firstnode)
-	return true
-end
-
-function ClientNodeEditor:_onProcessMetadata(p_Args)
-	self.m_CommoRoseActive = false
-
-	local s_Selection = m_NodeCollection:GetSelected()
-	local s_Firstnode = nil
-
-	if #s_Selection > 0 then
-		s_Firstnode = s_Selection[1]
-	end
-
-	m_NodeCollection:ProcessMetadata(s_Firstnode)
-	return true
 end
 
 --[[ function ClientNodeEditor:_onObjectiveDirection(p_Args)
