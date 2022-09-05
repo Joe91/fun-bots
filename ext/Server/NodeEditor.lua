@@ -69,12 +69,26 @@ function NodeEditor:RegisterCustomEvents()
 	NetEvents:Subscribe('NodeEditor:AddObjective', self, self.OnAddObjective)
 	NetEvents:Subscribe('NodeEditor:RemoveObjective', self, self.OnRemoveObjective)
 	NetEvents:Subscribe('NodeEditor:RemoveData', self, self.OnRemoveData)
+
+	NetEvents:Subscribe('NodeEditor:SpawnBot', self, self.OnSpawnBot)
+	NetEvents:Subscribe('NodeEditor:UpdatePos', self, self.OnUpdatePos)
+
+
 	-- TODO: fill
 end
 
 -- =============================================
 -- Events
 -- =============================================
+
+function NodeEditor:OnUpdatePos(p_Player, p_UpdateData)
+	for _, l_UpdateItem in pairs(p_UpdateData) do
+		local s_NodeToUpdate = m_NodeCollection:Get(l_UpdateItem.ID)
+		m_NodeCollection:Update(s_NodeToUpdate, {
+			Position = l_UpdateItem.Pos
+		})
+	end
+end
 
 function NodeEditor:OnAddMcom(p_Player)
 
@@ -362,6 +376,18 @@ function NodeEditor:OnSetInputNode(p_Player, p_Arg1, p_Arg2, p_Arg3)
 	local s_Result, s_Message = m_NodeCollection:SetInput(p_Arg1, p_Arg2, p_Arg3)
 	if not s_Result then
 		self:Log(s_Message)
+	end
+end
+
+function NodeEditor:OnSpawnBot(p_Player)
+	local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
+
+	if #s_Selection > 0 then
+		Events:Dispatch('BotEditor', json.encode({
+			action = 'bot_spawn_path',
+			value = s_Selection[1].PathIndex,
+			pointindex = s_Selection[1].PointIndex,
+		}))
 	end
 end
 
