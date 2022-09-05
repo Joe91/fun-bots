@@ -340,20 +340,6 @@ function ChatCommands:Execute(p_Parts, p_Player)
 
 		m_BotManager:KillAll()
 	-- waypoint stuff
-	elseif p_Parts[1] == '!getnodes' then
-		if PermissionManager:HasPermission(p_Player, 'ChatCommands.GetNodes') == false then
-			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.GetNodes).', p_Player)
-			return
-		end
-
-		NetEvents:SendToLocal('ClientNodeEditor:ReceiveNodes', p_Player, #m_NodeCollection:Get())
-	elseif p_Parts[1] == '!sendnodes' then
-		if PermissionManager:HasPermission(p_Player, 'ChatCommands.SendNodes') == false then
-			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.SendNodes).', p_Player)
-			return
-		end
-
-		NetEvents:SendToLocal('ClientNodeEditor:SaveNodes', p_Player)
 	elseif p_Parts[1] == '!trace' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Trace') == false then
 			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Trace).', p_Player)

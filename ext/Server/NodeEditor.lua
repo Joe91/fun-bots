@@ -98,6 +98,7 @@ function NodeEditor:OnAddNode(p_Player)
 	if s_Result ~= nil and #s_Selection <= 1 then
 		m_NodeCollection:ClearSelection(p_Player.onlineId)
 		m_NodeCollection:Select(p_Player.onlineId, s_Result)
+
 		NetEvents:SendToLocal('ClientNodeEditor:SelectNewNode', p_Player)
 	end
 

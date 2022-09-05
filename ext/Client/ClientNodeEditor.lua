@@ -15,6 +15,8 @@ function ClientNodeEditor:__init()
 	self.m_TempDataPoints = {}
 
 	self.m_ScanForNode = false
+	self.m_WaitForUpdatedData = false
+	self.m_FullUpdateCycle = false
 
 	-- caching values for drawing performance
 	self.m_PlayerPos = nil
@@ -275,6 +277,17 @@ function ClientNodeEditor:_OnDrawNodes(p_NodesToDraw, p_UpdateView)
 
 		self.m_DataPoints = self.m_TempDataPoints
 		self.m_TempDataPoints = {}
+
+		if self.m_FullUpdateCycle then
+			self.m_FullUpdateCycle = false
+			self.m_EditPositionMode = 'absolute'
+			self:_onToggleMoveNode()
+		end
+
+		if self.m_WaitForUpdatedData then
+			self.m_WaitForUpdatedData = false
+			self.m_FullUpdateCycle = true
+		end
 	end
 
 end
@@ -641,8 +654,7 @@ function ClientNodeEditor:_onAddNode(p_Args)
 end
 
 function ClientNodeEditor:_onSelectNewNode()
-	self.m_EditPositionMode = 'absolute'
-	self:_onToggleMoveNode()
+	self.m_WaitForUpdatedData = true
 end
 
 function ClientNodeEditor:_onLinkNode()

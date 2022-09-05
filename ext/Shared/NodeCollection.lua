@@ -166,28 +166,7 @@ end
 function NodeCollection:Add(p_SelectionId)
 	local s_Selection = self:GetSelected(p_SelectionId)
 
-	if #s_Selection == 2 then
-		local s_Orphan = nil
-		local s_Reference = nil
-		for i = 1, #s_Selection do
-			if not s_Selection[i].Previous and not s_Selection[i].Next then
-				s_Orphan = s_Selection[i]
-			else
-				s_Reference = s_Selection[i]
-			end
-		end
-
-		if s_Orphan ~= nil and s_Reference ~= nil then
-			self:Update(s_Orphan, {
-				PathIndex = s_Reference.PathIndex
-			})
-
-			self:InsertAfter(s_Reference, s_Orphan)
-			return true, 'Success'
-		else
-			return false, 'Two Waypoints: Must select only orphaned node and connected node'
-		end
-	elseif #s_Selection == 1 then
+	if #s_Selection == 1 then
 		local s_LastWaypoint = s_Selection[#s_Selection]
 		local s_NewWaypoint = self:Create({
 			PathIndex = s_LastWaypoint.PathIndex,
@@ -196,7 +175,7 @@ function NodeCollection:Add(p_SelectionId)
 		})
 		self:InsertAfter(s_LastWaypoint, s_NewWaypoint)
 		return s_NewWaypoint, 'Success'
-	else
+	elseif #s_Selection == 0 then
 		local s_LastWaypoint = self.waypoints[#self.waypoints]
 		local s_NewWaypoint = self:Create({
 			PathIndex = s_LastWaypoint.PathIndex + 1,
