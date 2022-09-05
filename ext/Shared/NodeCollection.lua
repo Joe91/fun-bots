@@ -518,18 +518,18 @@ end
 ---@param p_OneWay? boolean
 ---@return boolean
 ---@return string
-function NodeCollection:Link(p_Waypoints, p_LinkID, p_OneWay, p_SelectionId)
-	local s_Selection = p_Waypoints or g_NodeCollection:GetSelected(nil, p_SelectionId)
+function NodeCollection:Link(p_SelectionId, p_Waypoints, p_LinkID, p_OneWay)
+	local s_Selection = p_Waypoints or g_NodeCollection:GetSelected(p_SelectionId)
 	p_OneWay = p_OneWay or false
 
 	if #s_Selection == 2 then
 		--special case, nodes link to each other
-		self:Link(s_Selection[1], s_Selection[2].ID, true, p_SelectionId)
-		self:Link(s_Selection[2], s_Selection[1].ID, true, p_SelectionId)
+		self:Link(p_SelectionId, s_Selection[1], s_Selection[2].ID, true)
+		self:Link(p_SelectionId, s_Selection[2], s_Selection[1].ID, true)
 		return true, 'Success'
 	elseif #s_Selection > 0 then
 		for i = 1, #s_Selection do
-			local s_Success, s_Msg = self:Link(s_Selection[i], p_LinkID, nil, p_SelectionId)
+			local s_Success, s_Msg = self:Link(p_SelectionId, s_Selection[i], p_LinkID, nil)
 
 			if not s_Success then
 				return s_Success, s_Msg
@@ -551,7 +551,7 @@ function NodeCollection:Link(p_Waypoints, p_LinkID, p_OneWay, p_SelectionId)
 	})
 
 	if not p_OneWay then
-		self:Link(self:Get(p_LinkID), s_Selection.ID, true, p_SelectionId)
+		self:Link(p_SelectionId, self:Get(p_LinkID), s_Selection.ID, true)
 	end
 
 	return true, 'Success'

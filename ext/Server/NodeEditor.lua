@@ -338,14 +338,14 @@ function NodeEditor:OnMergeNodes(p_Player)
 end
 
 function NodeEditor:OnUnlinkNodes(p_Player)
-	local s_Result, s_Message = m_NodeCollection:Unlink(nil, nil, nil, p_Player.onlineId)
+	local s_Result, s_Message = m_NodeCollection:Unlink(p_Player.onlineId)
 	if not s_Result then
 		self:Log(s_Message)
 	end
 end
 
 function NodeEditor:OnLinkNodes(p_Player)
-	local s_Result, s_Message = m_NodeCollection:Link(nil, nil, nil, p_Player.onlineId)
+	local s_Result, s_Message = m_NodeCollection:Link(p_Player.onlineId)
 	if not s_Result then
 		self:Log(s_Message)
 	end
@@ -365,33 +365,8 @@ function NodeEditor:OnSetInputNode(p_Player, p_Arg1, p_Arg2, p_Arg3)
 	end
 end
 
-function NodeEditor:OnSelect(p_Player, p_WaypointId, p_Position)
-	if p_WaypointId then
-		m_NodeCollection:Select(p_Player.onlineId, p_WaypointId)
-	elseif p_Position then
-		local s_HitPoint = m_NodeCollection:Find(p_Position)
-
-		-- nothing found at hit location, try a raytracing check
-		if s_HitPoint == nil and p_Player.soldier then
-			local s_PlayerCamPos = p_Player.soldier.worldTransform.trans + p_Player.input.authoritativeCameraPosition
-			s_HitPoint = m_NodeCollection:FindAlongTrace(s_PlayerCamPos, p_Position)
-		end
-
-		-- we found one, let's toggle its selected state
-		if s_HitPoint ~= nil then
-			local s_IsSelected = m_NodeCollection:IsSelected(p_Player.onlineId, s_HitPoint)
-
-			if s_IsSelected then
-				self:Log('Deselect -> %s', s_HitPoint.ID)
-				m_NodeCollection:Deselect(p_Player.onlineId, s_HitPoint)
-				return
-			else
-				self:Log('Select -> %s', s_HitPoint.ID)
-				m_NodeCollection:Select(p_Player.onlineId, s_HitPoint)
-				return
-			end
-		end
-	end
+function NodeEditor:OnSelect(p_Player, p_WaypointId)
+	m_NodeCollection:Select(p_Player.onlineId, p_WaypointId)
 end
 
 function NodeEditor:OnDeselect(p_Player, p_WaypointId)

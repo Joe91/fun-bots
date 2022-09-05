@@ -18,7 +18,6 @@ function ClientNodeEditor:__init()
 	self.m_ScanForNode = false
 
 	-- caching values for drawing performance
-	self.m_Player = nil
 	self.m_PlayerPos = nil
 
 	self.m_Enabled = Config.DebugTracePaths
@@ -366,13 +365,11 @@ function ClientNodeEditor:_DrawData(p_DataPoint)
 					if s_IsSelected then
 						self:Log('Deselect -> %s', s_Waypoint.ID)
 						NetEvents:SendLocal('NodeEditor:Deselect', s_Waypoint.ID)
-					-- m_NodeCollection:Deselect(s_Waypoint)
-					-- return
+						return
 					else
 						self:Log('Select -> %s', s_Waypoint.ID)
 						NetEvents:SendLocal('NodeEditor:Select', s_Waypoint.ID)
-						-- m_NodeCollection:Select(s_Waypoint)
-						-- return
+						return
 					end
 				end
 			end
@@ -496,6 +493,36 @@ end
 -- ########### commo rose top / middle / bottom
 -- ############################################
 
+function ClientNodeEditor:GetDistance(p_Position1, p_Position2)
+	local s_PosA = p_Position1 or Vec3.zero
+	local s_PosB = p_Position2 or Vec3.zero
+	local s_DiffX = math.abs(s_PosA.x - s_PosB.x)
+	local s_DiffY = math.abs(s_PosA.y - s_PosB.y)
+	local s_DiffZ = math.abs(s_PosA.z - s_PosB.z)
+	if s_DiffX > s_DiffZ then
+		return s_DiffX + 0.5 * s_DiffZ + 0.25 * s_DiffY
+	else
+		return s_DiffZ + 0.5 * s_DiffX + 0.25 * s_DiffY
+	end
+end
+
+function ClientNodeEditor:FindNode(p_Position)
+	local s_ClosestNode = nil
+	local s_ClosestDistance = nil
+	for _, l_DataNode in pairs(self.m_DataPoints) do
+		local s_Distance = self:GetDistance(l_DataNode.Node.Position, p_Position)
+		if not s_ClosestDistance or s_ClosestDistance > s_Distance then
+			s_ClosestDistance = s_Distance
+			s_ClosestNode = l_DataNode
+		end
+	end
+	--[[if s_ClosestDistance < 1 then
+		return s_ClosestNode
+	else
+		return nil
+	end ]]
+	return s_ClosestNode
+end
 
 function ClientNodeEditor:_onSelectNode(p_Args)
 	local s_Hit = self:Raycast()
@@ -505,7 +532,15 @@ function ClientNodeEditor:_onSelectNode(p_Args)
 		return
 	end
 
-	NetEvents:SendLocal('NodeEditor:Select', nil, s_Hit.position)
+	local s_HitPoint = self:FindNode(s_Hit.position)
+
+	if s_HitPoint then
+		if s_HitPoint.IsSelected then
+			NetEvents:SendLocal('NodeEditor:Deselect', s_HitPoint.Node.ID)
+		else
+			NetEvents:SendLocal('NodeEditor:Select', s_HitPoint.Node.ID)
+		end
+	end
 end
 
 -- ####################### commo rose left side
@@ -533,6 +568,7 @@ end
 
 function ClientNodeEditor:_onToggleMoveNode(p_Args)
 	self.m_CommoRoseActive = false
+	local s_Player = PlayerManager:GetLocalPlayer()
 
 	if self.m_EditMode == 'move' then
 		self.m_EditMode = 'none'
@@ -575,7 +611,7 @@ function ClientNodeEditor:_onToggleMoveNode(p_Args)
 		self:Log('Edit Mode: %s', self.m_EditMode)
 		return true
 	else
-		if self.m_Player == nil or self.m_Player.soldier == nil then
+		if s_Player == nil or s_Player.soldier == nil then
 			self:Log('Player must be alive')
 			return false
 		end
@@ -731,8 +767,9 @@ end
 
 function ClientNodeEditor:_onWarpTo(p_Args)
 	self.m_CommoRoseActive = false
+	local s_Player = PlayerManager:GetLocalPlayer()
 
-	if self.m_Player == nil or self.m_Player.soldier == nil or self.m_Player.soldier == nil then
+	if s_Player == nil or s_Player.soldier == nil then
 		self:Log('Player must be alive')
 		return false
 	end
@@ -944,7 +981,8 @@ end
 ---VEXT Client Player:Deleted Event
 ---@param p_Player Player
 function ClientNodeEditor:OnPlayerDeleted(p_Player)
-	if self.m_Player ~= nil and p_Player ~= nil and self.m_Player.name == p_Player.name then
+	local s_Player = PlayerManager:GetLocalPlayer()
+	if s_Player ~= nil and p_Player ~= nil and s_Player.name == p_Player.name then
 		self:_onUnload()
 	end
 end
@@ -955,7 +993,6 @@ function ClientNodeEditor:OnLevelDestroy()
 end
 
 function ClientNodeEditor:_onUnload(p_Args)
-	self.m_Player = nil
 	self.m_NodeReceiveProgress = 0
 	self.m_NodeReceiveExpected = 0
 	self.m_lastDrawIndexPath = 0
@@ -1225,8 +1262,9 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	end
 
 	-- doing this here and not in UI:DrawHud prevents a memory leak that crashes you in under a minute
-	if self.m_Player ~= nil and self.m_Player.soldier ~= nil and self.m_Player.soldier.worldTransform ~= nil then
-		self.m_PlayerPos = self.m_Player.soldier.worldTransform.trans:Clone()
+	local s_Player = PlayerManager:GetLocalPlayer()
+	if s_Player ~= nil and s_Player.soldier ~= nil and s_Player.soldier.worldTransform ~= nil then
+		self.m_PlayerPos = s_Player.soldier.worldTransform.trans:Clone()
 
 		self.m_RaycastTimer = self.m_RaycastTimer + p_DeltaTime
 		-- do not update node positions if saving or loading
@@ -1375,7 +1413,9 @@ end
 
 -- stolen't https://github.com/EmulatorNexus/VEXT-Samples/blob/80cddf7864a2cdcaccb9efa810e65fae1baeac78/no-headglitch-raycast/ext/Client/__init__.lua
 function ClientNodeEditor:Raycast(p_MaxDistance, p_UseAsync)
-	if self.m_Player == nil then
+	local s_Player = PlayerManager:GetLocalPlayer()
+	if not s_Player then
+		print("no Player")
 		return
 	end
 
