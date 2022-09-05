@@ -881,13 +881,14 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 								s_DrawText = true
 							end
 
+							-- display all selected nodes
+							if m_NodeCollection:IsSelected(l_PlayerGuid, l_Node) then
+								s_IsSelected = true
+							end
+
 							s_Count = s_Count + 1
 
-							if s_DrawNode or s_DrawLine or s_DrawText then
-								if m_NodeCollection:IsSelected(l_PlayerGuid, l_Node) then
-									s_IsSelected = true
-								end
-
+							if s_DrawNode or s_DrawLine or s_DrawText or s_IsSelected then
 								local s_DataNode = {
 									Node = {},
 									DrawNode = s_DrawNode,

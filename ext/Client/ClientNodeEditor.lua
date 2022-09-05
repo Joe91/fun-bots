@@ -490,9 +490,6 @@ function ClientNodeEditor:OnUISettings(p_Data)
 	end
 end
 
--- ########### commo rose top / middle / bottom
--- ############################################
-
 function ClientNodeEditor:GetDistance(p_Position1, p_Position2)
 	local s_PosA = p_Position1 or Vec3.zero
 	local s_PosB = p_Position2 or Vec3.zero
@@ -516,12 +513,11 @@ function ClientNodeEditor:FindNode(p_Position)
 			s_ClosestNode = l_DataNode
 		end
 	end
-	--[[if s_ClosestDistance < 1 then
+	if s_ClosestDistance < 0.5 then
 		return s_ClosestNode
 	else
 		return nil
-	end ]]
-	return s_ClosestNode
+	end
 end
 
 function ClientNodeEditor:_onSelectNode(p_Args)
@@ -543,10 +539,7 @@ function ClientNodeEditor:_onSelectNode(p_Args)
 	end
 end
 
--- ####################### commo rose left side
--- ############################################
-
-function ClientNodeEditor:_onRemoveNode(p_Args)
+function ClientNodeEditor:_onRemoveNode()
 	NetEvents:SendLocal('NodeEditor:RemoveNode')
 end
 
@@ -554,15 +547,15 @@ function ClientNodeEditor:_onUnlinkNode()
 	NetEvents:SendLocal('NodeEditor:UnlinkNodes')
 end
 
-function ClientNodeEditor:_onMergeNode(p_Args)
-	NetEvents:SendLocal('NodeEditor:MergeNode')
+function ClientNodeEditor:_onMergeNode()
+	NetEvents:SendLocal('NodeEditor:MergeNodes')
 end
 
 function ClientNodeEditor:_onSelectPrevious()
 	NetEvents:SendLocal('NodeEditor:SelectPrevious')
 end
 
-function ClientNodeEditor:_onClearSelection(p_Args)
+function ClientNodeEditor:_onClearSelection()
 	NetEvents:SendLocal('NodeEditor:ClearSelection')
 end
 
