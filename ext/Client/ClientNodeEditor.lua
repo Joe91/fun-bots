@@ -207,6 +207,8 @@ function ClientNodeEditor:_OnDrawNodes(p_NodesToDraw, p_UpdateView)
 			self.m_EditPositionMode = 'absolute'
 			self:_onToggleMoveNode()
 		end
+		-- clear last node
+		self.m_LastDataPoint = nil
 	end
 
 end
