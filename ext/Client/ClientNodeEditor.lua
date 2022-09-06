@@ -4,7 +4,6 @@ ClientNodeEditor = class "ClientNodeEditor"
 
 require('__shared/Config')
 
----@type NodeCollection
 ---@type Logger
 local m_Logger = Logger("ClientNodeEditor", Debug.Client.NODEEDITOR)
 
@@ -15,8 +14,8 @@ function ClientNodeEditor:__init()
 	self.m_TempDataPoints = {}
 
 	self.m_ScanForNode = false
-	self.m_WaitForUpdatedData = false
-	self.m_FullUpdateCycle = false
+	self.m_NewNodeId = -1
+	self.m_NodeIdFound = false
 
 	-- caching values for drawing performance
 	self.m_PlayerPos = nil
@@ -180,6 +179,10 @@ function ClientNodeEditor:_OnDrawNodes(p_NodesToDraw, p_UpdateView)
 	for _, l_NodeData in pairs(p_NodesToDraw) do
 		self:_DrawData(l_NodeData)
 		table.insert(self.m_TempDataPoints, l_NodeData)
+
+		if self.m_NewNodeId > 0 and l_NodeData.Node.Index == self.m_NewNodeId then
+			self.m_NodeIdFound = true
+		end
 	end
 
 	if p_UpdateView then
@@ -198,15 +201,11 @@ function ClientNodeEditor:_OnDrawNodes(p_NodesToDraw, p_UpdateView)
 		self.m_DataPoints = self.m_TempDataPoints
 		self.m_TempDataPoints = {}
 
-		if self.m_FullUpdateCycle then
-			self.m_FullUpdateCycle = false
+		if self.m_NewNodeId > 0 and self.m_NodeIdFound then
+			self.m_NodeIdFound = false
+			self.m_NewNodeId = -1
 			self.m_EditPositionMode = 'absolute'
 			self:_onToggleMoveNode()
-		end
-
-		if self.m_WaitForUpdatedData then
-			self.m_WaitForUpdatedData = false
-			self.m_FullUpdateCycle = true
 		end
 	end
 
@@ -555,8 +554,9 @@ function ClientNodeEditor:_onAddNode(p_Args)
 	NetEvents:SendLocal('NodeEditor:AddNode')
 end
 
-function ClientNodeEditor:_onSelectNewNode()
-	self.m_WaitForUpdatedData = true
+function ClientNodeEditor:_onSelectNewNode(p_NewDataNodeId)
+	self.m_NodeIdFound = false
+	self.m_NewNodeId = p_NewDataNodeId
 end
 
 function ClientNodeEditor:_onLinkNode()
@@ -988,7 +988,6 @@ end
 function ClientNodeEditor:Raycast(p_MaxDistance, p_UseAsync)
 	local s_Player = PlayerManager:GetLocalPlayer()
 	if not s_Player then
-		print("no Player")
 		return
 	end
 

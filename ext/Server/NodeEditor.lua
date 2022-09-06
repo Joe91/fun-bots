@@ -80,7 +80,7 @@ function NodeEditor:OnAddNode(p_Player)
 		m_NodeCollection:ClearSelection(p_Player.onlineId)
 		m_NodeCollection:Select(p_Player.onlineId, s_Result)
 
-		NetEvents:SendToLocal('ClientNodeEditor:SelectNewNode', p_Player)
+		NetEvents:SendToLocal('ClientNodeEditor:SelectNewNode', p_Player, s_Result.Index)
 	end
 
 	return true
