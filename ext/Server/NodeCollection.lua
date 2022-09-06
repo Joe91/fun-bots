@@ -26,37 +26,6 @@ function NodeCollection:InitTables()
 	self.mapName = ''
 end
 
-function NodeCollection:RegisterEvents()
-	-- Management
-	NetEvents:Subscribe('NodeCollection:Register', self, self.Register)
-	NetEvents:Subscribe('NodeCollection:Add', self, self.Add)
-	NetEvents:Subscribe('NodeCollection:Remove', self, self.Remove)
-	NetEvents:Subscribe('NodeCollection:InsertAfter', self, self.InsertAfter)
-	NetEvents:Subscribe('NodeCollection:InsertBefore', self, self.InsertBefore)
-	NetEvents:Subscribe('NodeCollection:RecalculateIndexes', self, self.RecalculateIndexes)
-	NetEvents:Subscribe('NodeCollection:ProcessMetadata', self, self.ProcessMetadata)
-	NetEvents:Subscribe('NodeCollection:Update', self, self.Update)
-	NetEvents:Subscribe('NodeCollection:UpdateMetadata', self, self.UpdateMetadata)
-	NetEvents:Subscribe('NodeCollection:SetInput', self, self.SetInput)
-	NetEvents:Subscribe('NodeCollection:Link', self, self.Link)
-	NetEvents:Subscribe('NodeCollection:Unlink', self, self.Unlink)
-	NetEvents:Subscribe('NodeCollection:Merge', self, self.MergeSelection)
-	NetEvents:Subscribe('NodeCollection:Split', self, self.SplitSelection)
-
-	-- Selection
-	NetEvents:Subscribe('NodeCollection:Select', self, self.Select)
-	NetEvents:Subscribe('NodeCollection:Deselect', self, self.Deselect)
-	NetEvents:Subscribe('NodeCollection:ClearSelection', self, self.ClearSelection)
-
-	-- Paths
-	NetEvents:Subscribe('NodeCollection:ShowPath', self, self.ShowPath)
-	NetEvents:Subscribe('NodeCollection:HidePath', self, self.HidePath)
-
-	-- Save/Load
-	NetEvents:Subscribe('NodeCollection:Save', self, self.Save)
-	NetEvents:Subscribe('NodeCollection:Load', self, self.Load)
-end
-
 -----------------------------
 -- Management
 

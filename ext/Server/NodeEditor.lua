@@ -8,25 +8,12 @@ local m_NodeCollection = require('NodeCollection')
 local m_Logger = Logger("NodeEditor", Debug.Server.NODEEDITOR)
 
 function NodeEditor:__init()
-	self.m_NodeReceiveDelay = 1
-	self.m_NodeReceiveTimer = -1
-	self.m_BatchSendTimer = 0
-	self.m_NexBatchSend = 0
-	self.m_PlayerSendingNodes = nil
-	self.m_PlayersReceivingNodes = {}
-	self.m_Debugprints = 0
-
-
-
 	self.m_ActiveTracePlayers = {}
 
 	self.m_CustomTrace = {}
 	self.m_CustomTraceIndex = {}
 	self.m_CustomTraceTimer = {}
-	self.m_CustomTraceDelay = Config.TraceDelta
 	self.m_CustomTraceDistance = {}
-	self.m_CustomTraceSaving = false
-
 
 	self.m_lastDrawIndexNode = {}
 	self.m_lastDrawIndexPath = {}
@@ -39,12 +26,6 @@ end
 function NodeEditor:RegisterCustomEvents()
 
 	-- Remove them?
-	NetEvents:Subscribe('NodeEditor:RequestNodes', self, self.OnRequestNodes)
-	NetEvents:Subscribe('NodeEditor:SendNodes', self, self.OnSendNodes)
-	NetEvents:Subscribe('NodeEditor:ReceivingNodes', self, self.OnReceiveNodes)
-	NetEvents:Subscribe('NodeEditor:Create', self, self.OnCreate)
-	NetEvents:Subscribe('NodeEditor:Init', self, self.OnInit)
-	NetEvents:Subscribe('NodeEditor:WarpTo', self, self.OnWarpTo)
 	-- NetEvents:Subscribe('UI_Request_Save_Settings', self, self.OnUIRequestSaveSettings)
 
 
@@ -740,6 +721,10 @@ end
 function NodeEditor:OnLevelDestroy()
 	m_NodeCollection:Clear()
 	self.m_ActiveTracePlayers = {}
+	self.m_CustomTrace = {}
+	self.m_CustomTraceIndex = {}
+	self.m_CustomTraceTimer = {}
+	self.m_CustomTraceDistance = {}
 end
 
 -- =============================================
@@ -759,13 +744,12 @@ end
 ---VEXT Server Player:Left Event
 ---@param p_Player Player
 function NodeEditor:OnPlayerLeft(p_Player)
-	self:StopSendingNodes(p_Player)
+	self.m_CustomTrace[p_Player.onlineId] = nil
 end
 
 ---VEXT Server Player:Destroyed Event
 ---@param p_Player Player
 function NodeEditor:OnPlayerDestroyed(p_Player)
-	self:StopSendingNodes(p_Player)
 end
 
 -- =============================================
@@ -790,13 +774,13 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 
 			local s_PlayerPos = s_Player.soldier.worldTransform.trans:Clone()
 
-			if self.m_CustomTraceTimer[l_PlayerGuid] > self.m_CustomTraceDelay then
+			if self.m_CustomTraceTimer[l_PlayerGuid] > Config.TraceDelta then
 				local s_LastWaypoint = self.m_CustomTrace[l_PlayerGuid]:GetLast()
 
 				if s_LastWaypoint then
 					local s_LastDistance = s_LastWaypoint.Position:Distance(s_PlayerPos)
 
-					if s_LastDistance >= self.m_CustomTraceDelay then
+					if s_LastDistance >= Config.TraceDelta then
 						-- primary weapon, record movement
 						if s_Player.soldier.weaponsComponent.currentWeaponSlot == WeaponSlot.WeaponSlot_0 then
 							local s_NewWaypoint, s_Msg = self.m_CustomTrace[l_PlayerGuid]:Add()
@@ -1061,185 +1045,9 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 	end
 end
 
-function NodeEditor:OnEngineUpdateOld(p_DeltaTime, p_SimulatioonDeltaTime)
-	-- receiving nodes from player takes priority over sending
-	if self.m_NodeReceiveTimer >= 0 and self.m_PlayerSendingNodes ~= nil then
-		self.m_NodeReceiveTimer = self.m_NodeReceiveTimer + p_DeltaTime
-
-		if self.m_NodeReceiveTimer >= self.m_NodeReceiveDelay then
-			NetEvents:SendToLocal('ClientNodeEditor:SendNodes', self.m_PlayerSendingNodes, #m_NodeCollection:Get())
-			self.m_NodeReceiveTimer = -1
-		end
-
-		return
-	end
-
-	-- only do sending if not receiving
-	if self.m_BatchSendTimer < 0 or #self.m_PlayersReceivingNodes == 0 then
-		return
-	end
-
-	self.m_BatchSendTimer = self.m_BatchSendTimer + p_DeltaTime
-
-	for i = 1, #self.m_PlayersReceivingNodes do
-		local s_SendStatus = self.m_PlayersReceivingNodes[i]
-
-		if self.m_BatchSendTimer > s_SendStatus.BatchSendDelay then
-			s_SendStatus.BatchSendDelay = s_SendStatus.BatchSendDelay + 0.02 -- milliseconds
-			local s_DoneThisBatch = 0
-
-			for j = s_SendStatus.Index, #s_SendStatus.Nodes do
-				local s_SendableNode = {}
-
-				for l_Key, l_Value in pairs(s_SendStatus.Nodes[j]) do
-					if (l_Key == 'Next' or l_Key == 'Previous') and type(l_Value) == 'table' then
-						s_SendableNode[l_Key] = l_Value.ID
-					else
-						s_SendableNode[l_Key] = l_Value
-					end
-				end
-
-				NetEvents:SendToLocal('ClientNodeEditor:Create', s_SendStatus.Player, s_SendableNode)
-				s_DoneThisBatch = s_DoneThisBatch + 1
-				s_SendStatus.Index = j + 1
-
-				if s_DoneThisBatch >= 30 then
-					break
-				end
-			end
-			if s_SendStatus.Index >= #s_SendStatus.Nodes then
-				self:Log('Finished sending waypoints to %s', s_SendStatus.Player.name)
-				table.remove(self.m_PlayersReceivingNodes, i)
-				NetEvents:SendToLocal('ClientNodeEditor:Init', s_SendStatus.Player)
-				break
-			end
-		end
-	end
-
-	if #self.m_PlayersReceivingNodes < 1 then
-		self.m_BatchSendTimer = -1
-	end
-end
-
--- =============================================
--- Custom Events
--- =============================================
-
--- player has requested node collection to be sent
-function NodeEditor:OnRequestNodes(p_Player)
-	-- tell client to clear their list and how many to expect
-	NetEvents:SendToLocal('ClientNodeEditor:ReceivingNodes', p_Player, #m_NodeCollection:Get())
-end
-
--- player has indicated they are ready to receive nodes
-function NodeEditor:OnSendNodes(p_Player)
-	local s_Nodes = m_NodeCollection:Get()
-	table.insert(self.m_PlayersReceivingNodes, { Player = p_Player, Index = 1, Nodes = s_Nodes, BatchSendDelay = 0 })
-	self.m_BatchSendTimer = 0
-	self:Log('Sending %d waypoints to %s', #s_Nodes, p_Player.name)
-end
-
--- player has indicated they are ready to send nodes to the server
-function NodeEditor:OnReceiveNodes(p_Player, p_NodeCount)
-	if PermissionManager:HasPermission(p_Player, 'UserInterface.WaypointEditor') == false then
-		ChatManager:SendMessage('You have no permissions for this action.', p_Player)
-		return
-	end
-
-	m_NodeCollection:Clear()
-	self.m_PlayerSendingNodes = p_Player
-	self.m_NodeReceiveTimer = 0
-	self:Log('Receiving %d waypoints from %s', p_NodeCount, p_Player.name)
-end
-
--- player is sending a single node over
-function NodeEditor:OnCreate(p_Player, p_Data)
-	if PermissionManager:HasPermission(p_Player, 'UserInterface.WaypointEditor') == false then
-		ChatManager:SendMessage('You have no permissions for this action.', p_Player)
-		return
-	end
-
-	m_NodeCollection:Create(p_Data, true)
-end
-
--- node payload has finished sending, setup events and calc indexes
-function NodeEditor:OnInit(p_Player, p_Save)
-	if PermissionManager:HasPermission(p_Player, 'UserInterface.WaypointEditor') == false then
-		ChatManager:SendMessage('You have no permissions for this action.', p_Player)
-		return
-	end
-
-	m_NodeCollection:RecalculateIndexes()
-	m_NodeCollection:ProcessMetadata()
-
-	local s_StaleNodes = 0
-	local s_NodesToCheck = m_NodeCollection:Get()
-	self:Log('Nodes Received: %d', #s_NodesToCheck)
-
-	for i = 1, #s_NodesToCheck do
-		local s_Waypoint = s_NodesToCheck[i]
-
-		if type(s_Waypoint.Next) == 'string' then
-			s_StaleNodes = s_StaleNodes + 1
-		end
-
-		if type(s_Waypoint.Previous) == 'string' then
-			s_StaleNodes = s_StaleNodes + 1
-		end
-	end
-
-	self:Log('Stale Nodes: %d', s_StaleNodes)
-
-	-- don't save when sent from client
-	ChatManager:Yell(Language:I18N('Server recieved %d nodes.', #s_NodesToCheck), 5.5)
-	if p_Save then
-		m_NodeCollection:Save()
-	end
-end
-
-function NodeEditor:OnWarpTo(p_Player, p_Vec3Position)
-	if p_Player == nil or not p_Player.alive or p_Player.soldier == nil or not p_Player.soldier.isAlive then
-		return
-	end
-
-	self:Log('Teleporting %s to %s', p_Player.name, tostring(p_Vec3Position))
-	p_Player.soldier:SetPosition(p_Vec3Position)
-end
-
-function NodeEditor:OnUIRequestSaveSettings(p_Player, p_Data)
-	if Config.DisableUserInterface == true then
-		return
-	end
-
-	if PermissionManager:HasPermission(p_Player, 'UserInterface.WaypointEditor') == false then
-		ChatManager:SendMessage('You have no permissions for this action.', p_Player)
-		return
-	end
-
-	local s_Request = json.decode(p_Data)
-
-	if s_Request.debugTracePaths then
-		-- enabled, send them a fresh list
-		self:OnRequestNodes(p_Player)
-	else
-		-- disabled, delete the client's list
-		NetEvents:SendToLocal('NodeEditor:Clear', p_Player)
-		NetEvents:SendToLocal('NodeEditor:ClientInit', p_Player)
-	end
-end
-
 -- =============================================
 -- Functions
 -- =============================================
-
-function NodeEditor:StopSendingNodes(p_Player)
-	for i = 1, #self.m_PlayersReceivingNodes do
-		if self.m_PlayersReceivingNodes[i].Player.name == p_Player.name then
-			table.remove(self.m_PlayersReceivingNodes, i)
-			break
-		end
-	end
-end
 
 function NodeEditor:Log(...)
 	m_Logger:Write(Language:I18N(...))
