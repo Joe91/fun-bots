@@ -25,7 +25,7 @@ Debug = {
 	},
 	Client = {
 		INFO = false, -- Global Informations
-		NODEEDITOR = true, -- Debug the NodeEditor
+		NODEEDITOR = false, -- Debug the NodeEditor
 		UI = false -- Debug all UI things
 	},
 	Shared = {
