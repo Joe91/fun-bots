@@ -3,7 +3,7 @@
 ChatCommands = class('ChatCommands')
 
 require('__shared/Config')
-local m_NodeCollection = require('__shared/NodeCollection')
+local m_NodeCollection = require('NodeCollection')
 
 local m_BotManager = require('BotManager')
 local m_BotSpawner = require('BotSpawner')

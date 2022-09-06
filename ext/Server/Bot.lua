@@ -6,7 +6,7 @@ require('__shared/Config')
 require('PidController')
 
 ---@type NodeCollection
-local m_NodeCollection = require('__shared/NodeCollection')
+local m_NodeCollection = require('NodeCollection')
 ---@type PathSwitcher
 local m_PathSwitcher = require('PathSwitcher')
 ---@type Vehicles

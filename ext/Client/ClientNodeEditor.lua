@@ -87,39 +87,20 @@ function ClientNodeEditor:OnRegisterEvents()
 	NetEvents:Subscribe('UI_ClientNodeEditor_TraceData', self, self._OnUiTraceData)
 	NetEvents:Subscribe('ClientNodeEditor:DrawNodes', self, self._OnDrawNodes)
 
-	-- enable/disable events
-	-- ('UI_CommoRose_Enabled', <Bool|Enabled>) -- true == block the BF3 commo rose
-	-- NetEvents:Subscribe('UI_CommoRose_Enabled', self, self._onSetCommoRoseEnabled)
-
-	-- selection-based events, no arguments required
-	-- NetEvents:Subscribe('UI_CommoRose_Action_Save', self, self._onSaveNodes)
-	-- NetEvents:Subscribe('UI_CommoRose_Action_Load', self, self._onLoadNodes)
-
 	NetEvents:Subscribe('UI_CommoRose_Action_Select', self, self._onSelectNode)
-	-- Commo Rose left buttons
 	NetEvents:Subscribe('UI_CommoRose_Action_Remove', self, self._onRemoveNode)
 	NetEvents:Subscribe('UI_CommoRose_Action_Unlink', self, self._onUnlinkNode)
 	NetEvents:Subscribe('UI_CommoRose_Action_Merge', self, self._onMergeNode)
 	NetEvents:Subscribe('UI_CommoRose_Action_SelectPrevious', self, self._onSelectPrevious)
 	NetEvents:Subscribe('UI_CommoRose_Action_ClearSelections', self, self._onClearSelection)
 	NetEvents:Subscribe('UI_CommoRose_Action_Move', self, self._onToggleMoveNode)
-
-	-- Commor Rose right buttons
 	NetEvents:Subscribe('UI_CommoRose_Action_Add', self, self._onAddNode)
 	NetEvents:Subscribe('UI_CommoRose_Action_Link', self, self._onLinkNode)
 	NetEvents:Subscribe('UI_CommoRose_Action_Split', self, self._onSplitNode)
 	NetEvents:Subscribe('UI_CommoRose_Action_SelectNext', self, self._onSelectNext)
 	NetEvents:Subscribe('UI_CommoRose_Action_SelectBetween', self, self._onSelectBetween)
 	NetEvents:Subscribe('UI_CommoRose_Action_SetInput', self, self._onSetInputNode)
-
-	-- must provide arguments
-	-- ('UI_ClientNodeEditor_Trace_Show', <Int|PathIndex>)
-	-- NetEvents:Subscribe('UI_ClientNodeEditor_Trace_Show', self, self._onShowPath)
-	-- ('UI_ClientNodeEditor_Trace_Hide', <Int|PathIndex>)
-	-- NetEvents:Subscribe('UI_ClientNodeEditor_Trace_Hide', self, self._onHidePath)
-
 	NetEvents:Subscribe('ClientNodeEditor:SelectNewNode', self, self._onSelectNewNode)
-	-- debug stuff
 
 
 	--add these Events to NodeEditor
@@ -141,11 +122,8 @@ function ClientNodeEditor:OnRegisterEvents()
 		'<number|0-15> <number|0-15> <number|0-255> - Sets input variables for the selected waypoints', self,
 		self._onSetInputNode)
 
-	-- Console:Register('TraceShow', '\'all\' or <number|PathIndex> - Show trace\'s waypoints', self, self._onShowPath)
-	-- Console:Register('TraceHide', '\'all\' or <number|PathIndex> - Hide trace\'s waypoints', self, self._onHidePath)
-	-- Console:Register('WarpTo', '*<string|WaypointID>* Teleport yourself to the specified Waypoint ID', self, self._onWarpTo)
 
-	-- debugging commands, not meant for UI
+	-- -- debugging commands, not meant for UI
 	Console:Register('Enabled', 'Enable / Disable the waypoint editor', self, self.OnSetEnabled)
 
 	-- add these Events for NodeEditor
@@ -159,10 +137,6 @@ function ClientNodeEditor:OnRegisterEvents()
 	Console:Register('RemoveObjective', '<string|Objective> - Remove an objective from a path', self,
 		self._onRemoveObjective)
 	Console:Register('RemoveData', 'Remove all data of one or several nodes', self, self._onRemoveData)
-
-	-- Others
-	Console:Register('UnloadNodes', 'Clears and unloads all clientside nodes', self, self._onUnload)
-
 
 	self.m_EventsReady = true
 	self:Log('Register Events')
@@ -577,9 +551,6 @@ function ClientNodeEditor:_onToggleMoveNode(p_Args)
 	return false
 end
 
--- ###################### commo rose right side
--- ############################################
-
 function ClientNodeEditor:_onAddNode(p_Args)
 	NetEvents:SendLocal('NodeEditor:AddNode')
 end
@@ -607,34 +578,6 @@ end
 function ClientNodeEditor:_onSetInputNode(p_Args)
 	NetEvents:SendLocal('NodeEditor:SetInputNode', p_Args[1], p_Args[2], p_Args[3])
 end
-
--- ############################## Other Methods
--- ############################################
-
---[[ function ClientNodeEditor:_onWarpTo(p_Args)
-	self.m_CommoRoseActive = false
-	local s_Player = PlayerManager:GetLocalPlayer()
-
-	if s_Player == nil or s_Player.soldier == nil then
-		self:Log('Player must be alive')
-		return false
-	end
-
-	if p_Args == nil or #p_Args == 0 then
-		self:Log('Must provide Waypoint ID')
-		return false
-	end
-
-	local s_Waypoint = m_NodeCollection:Get(p_Args[1])
-
-	if s_Waypoint == nil then
-		self:Log('Waypoint not found: %s', p_Args[1])
-		return false
-	end
-
-	self:Log('Teleporting to Waypoint: %s (%s)', s_Waypoint.ID, tostring(s_Waypoint.Position))
-	NetEvents:Send('NodeEditor:WarpTo', s_Waypoint.Position)
-end ]]
 
 function ClientNodeEditor:_onAddMcom()
 	NetEvents:SendLocal('NodeEditor:AddMcom')
@@ -664,36 +607,6 @@ function ClientNodeEditor:_onRemoveData()
 	NetEvents:SendLocal('NodeEditor:RemoveData')
 end
 
---[[ function ClientNodeEditor:_onObjectiveDirection(p_Args)
-	self.m_CommoRoseActive = false
-
-	local s_Data = table.concat(p_Args or {}, ' ')
-	self:Log('Objective Direction (data): %s', g_Utilities:dump(s_Data, true))
-
-	local s_Selection = m_NodeCollection:GetSelected()
-
-	if #s_Selection < 1 then
-		self:Log('Must select at least one node')
-		return false
-	end
-
-	local s_Direction, s_BestPreviousWaypoint = m_NodeCollection:ObjectiveDirection(s_Selection[1], s_Data)
-
-	self:Log('Direction: %s', s_Direction)
-
-	if s_BestPreviousWaypoint ~= nil then
-		self:Log('Best Previous Waypoint: %s', s_BestPreviousWaypoint.ID)
-	end
-
-	return true
-end
-
-function ClientNodeEditor:_onGetKnownObjectives(p_Args)
-	self.m_CommoRoseActive = false
-	self:Log('Known Objectives -> ' .. g_Utilities:dump(m_NodeCollection:GetKnownObjectives(), true))
-	return true
-end ]]
-
 -- ##################################### Events
 -- ############################################
 
@@ -714,7 +627,11 @@ end
 function ClientNodeEditor:OnLevelLoaded(p_LevelName, p_GameMode)
 end
 
-function ClientNodeEditor:_onUnload(p_Args)
+function ClientNodeEditor:_onUnload()
+	self.m_LastDataPoint = nil
+	self.m_DataPoints = {}
+	self.m_TempDataPoints = {}
+
 	self.m_NodesToDraw = {}
 	self.m_NodesToDraw_temp = {}
 	self.m_LinesToDraw = {}
@@ -725,29 +642,6 @@ function ClientNodeEditor:_onUnload(p_Args)
 	self.m_TextPosToDraw_temp = {}
 	self.m_ObbToDraw = {}
 	self.m_ObbToDraw_temp = {}
-end
-
-function ClientNodeEditor:_onCommoRoseAction(p_Action, p_Hit)
-	self:Log('Commo Rose -> %s', p_Action)
-
-	if p_Action == 'Hide' then
-		self.m_CommoRoseActive = false
-		g_FunBotUIClient:_onUICommonRose('false')
-		return
-	end
-
-	if p_Action == 'Show' then
-		self.m_CommoRoseActive = false -- disabled for now
-
-		local s_Center = { Action = 'UI_CommoRose_Action_Select', Label = Language:I18N('Select') }
-
-		if self.m_EditMode == 'move' then
-			s_Center = { Action = 'UI_CommoRose_Action_Move', Label = Language:I18N('Finish') }
-		elseif (self.m_EditMode == 'link') then
-			s_Center = { Action = 'UI_CommoRose_Action_Connect', Label = Language:I18N('Connect') }
-		end
-		return
-	end
 end
 
 ---VEXT Client UI:PushScreen Hook

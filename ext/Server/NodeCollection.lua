@@ -5,7 +5,7 @@ NodeCollection = class "NodeCollection"
 ---@type Utilities
 local m_Utilities = require('__shared/Utilities.lua')
 ---@type Logger
-local m_Logger = Logger("NodeCollection", Debug.Shared.NODECOLLECTION)
+local m_Logger = Logger("NodeCollection", Debug.Server.NODECOLLECTION)
 
 function NodeCollection:__init(p_DisableServerEvents)
 	self:InitTables()

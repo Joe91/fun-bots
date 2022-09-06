@@ -9,7 +9,7 @@ require('__shared/Config')
 Language = require('__shared/Language')
 
 ---@type NodeCollection
-local m_NodeCollection = require('__shared/NodeCollection')
+local m_NodeCollection = require('NodeCollection')
 ---@type SettingsManager
 local m_SettingsManager = require('SettingsManager')
 -- @type NodeEditor

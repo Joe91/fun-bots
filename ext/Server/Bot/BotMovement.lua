@@ -9,7 +9,7 @@ local m_Utilities = require('__shared/Utilities')
 ---@type PathSwitcher
 local m_PathSwitcher = require('PathSwitcher')
 ---@type NodeCollection
-local m_NodeCollection = require('__shared/NodeCollection')
+local m_NodeCollection = require('NodeCollection')
 
 function BotMovement:__init()
 	-- nothing to do

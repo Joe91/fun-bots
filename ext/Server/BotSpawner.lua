@@ -5,7 +5,7 @@ BotSpawner = class('BotSpawner')
 require('Model/SpawnSet')
 
 ---@type NodeCollection
-local m_NodeCollection = require('__shared/NodeCollection')
+local m_NodeCollection = require('NodeCollection')
 ---@type BotManager
 local m_BotManager = require('BotManager')
 ---@type WeaponList

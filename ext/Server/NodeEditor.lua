@@ -3,7 +3,7 @@
 NodeEditor = class "NodeEditor"
 
 ---@type NodeCollection
-local m_NodeCollection = require('__shared/NodeCollection')
+local m_NodeCollection = require('NodeCollection')
 ---@type Logger
 local m_Logger = Logger("NodeEditor", Debug.Server.NODEEDITOR)
 

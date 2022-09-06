@@ -20,6 +20,7 @@ Debug = {
 		UI = false, -- Debug all UI things
 		PERMISSIONS = false, -- Debug all Permission things
 		MODIFICATIONS = false, -- Debug some Modifications
+		NODECOLLECTION = false, -- Debug NodeCollection
 		RCON = false -- Debug some RCON Commands
 	},
 	Client = {
@@ -31,7 +32,6 @@ Debug = {
 		INFO = false, -- Global Informations
 		EBX = false, -- Debug EBX-Utils
 		LANGUAGE = false, -- Debug Language
-		NODECOLLECTION = false, -- Debug NodeCollection
 		DATABASE = false, -- Debug Database-Operations
 		MODIFICATIONS = false -- Debug some Modifications
 	},
