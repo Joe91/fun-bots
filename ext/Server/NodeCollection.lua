@@ -989,10 +989,12 @@ function NodeCollection:Load(p_LevelName, p_GameMode)
 	local s_WaypointCount = 0
 	local s_FirstWaypoint = nil
 	local s_LastWaypoint = nil
+	local s_LastPathindex = -1
 
 	for _, l_Row in pairs(s_Results) do
-		if l_Row["pathIndex"] > s_PathCount then
-			s_PathCount = l_Row["pathIndex"]
+		if l_Row["pathIndex"] ~= s_LastPathindex then
+			s_PathCount = s_PathCount + 1
+			s_LastPathindex = l_Row["pathIndex"]
 		end
 
 		local s_Waypoint = {
@@ -1076,6 +1078,7 @@ function NodeCollection:Save()
 	local s_ChangedWaypoints = {}
 	local s_WaypointCount = #self.waypoints
 	local s_PathCount = 0
+	local s_LastPathIndex = -1
 	local s_WaypointsChanged = 0
 	local s_Orphans = {}
 	local s_Disconnects = {}
@@ -1137,8 +1140,9 @@ function NodeCollection:Save()
 				end
 			end
 
-			if l_Waypoint.PathIndex > s_PathCount then
-				s_PathCount = l_Waypoint.PathIndex
+			if l_Waypoint.PathIndex ~= s_LastPathIndex then
+				s_PathCount = s_PathCount + 1
+				s_LastPathIndex = l_Waypoint.PathIndex
 			end
 
 			table.insert(s_BatchQueries, '(' .. table.concat({

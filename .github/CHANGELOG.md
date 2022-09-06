@@ -25,6 +25,7 @@ This is the changelog for the version V2.6.0. Don't forget to [join us on Discor
 * cleanup of unused code
 * #80 Engineers use missiles
 * massive rework on NodeEditor: Now completely on Server
+* count paths correctly
 
 ### Bug fixes
 * #218 increased auto-sniper-time a little
