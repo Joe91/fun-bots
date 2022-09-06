@@ -570,19 +570,47 @@ function NodeEditor:EndTrace(p_Player)
 end
 
 function NodeEditor:ClearTrace(p_Player)
-	self.m_CustomTraceTimer[p_Player.onlineId] = -1
-	self.m_CustomTraceIndex[p_Player.onlineId] = self:_getNewIndex()
-	self.m_CustomTraceDistance[p_Player.onlineId] = 0
-	self.m_CustomTrace[p_Player.onlineId]:Clear()
+	-- check if custom-Trace is available. Otherwise delete selected trace
+	if self.m_CustomTrace[p_Player.onlineId] and #self.m_CustomTrace[p_Player.onlineId]:Get() > 0 then
 
-	-- TODO: Client: set UI
-	local s_TotalTraceDistance = self.m_CustomTraceDistance[p_Player.onlineId]
-	local s_TotalTraceNodes = #self.m_CustomTrace[p_Player.onlineId]:Get()
-	local s_TraceIndex = self.m_CustomTraceIndex[p_Player.onlineId] -- TODO: not really needed ?
-	NetEvents:SendToLocal("UI_ClientNodeEditor_TraceData", p_Player, s_TotalTraceNodes, s_TotalTraceDistance, s_TraceIndex,
-		false)
+		self.m_CustomTraceTimer[p_Player.onlineId] = -1
+		self.m_CustomTraceIndex[p_Player.onlineId] = self:_getNewIndex()
+		self.m_CustomTraceDistance[p_Player.onlineId] = 0
+		self.m_CustomTrace[p_Player.onlineId]:Clear()
 
-	self:Log('Custom Trace Cleared')
+		-- TODO: Client: set UI
+		local s_TotalTraceDistance = self.m_CustomTraceDistance[p_Player.onlineId]
+		local s_TotalTraceNodes = #self.m_CustomTrace[p_Player.onlineId]:Get()
+		local s_TraceIndex = self.m_CustomTraceIndex[p_Player.onlineId] -- TODO: not really needed ?
+		NetEvents:SendToLocal("UI_ClientNodeEditor_TraceData", p_Player, s_TotalTraceNodes, s_TotalTraceDistance, s_TraceIndex
+			,
+			false)
+
+		self:Log('Custom Trace Cleared')
+	else
+		-- delete paths of selection
+		local s_PathIndexes = {}
+
+		-- detect selected path(s)
+		local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
+		for _, l_Node in pairs(s_Selection) do
+			local s_PathIndex = l_Node.PathIndex
+			s_PathIndexes[s_PathIndex] = true -- add more checks?
+		end
+
+		for l_PathIndex in pairs(s_PathIndexes) do
+			if s_PathIndexes[l_PathIndex] == true then
+				local s_PathWaypoints = m_NodeCollection:Get(nil, l_PathIndex)
+
+				if #s_PathWaypoints > 0 then
+					for i = 1, #s_PathWaypoints do
+						m_NodeCollection:Remove(p_Player.onlineId, s_PathWaypoints[i])
+					end
+					self:Log('Trace Nr. %d Cleared', l_PathIndex)
+				end
+			end
+		end
+	end
 end
 
 function NodeEditor:IsSavingOrLoading()
