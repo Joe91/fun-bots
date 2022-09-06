@@ -540,22 +540,23 @@ function NodeEditor:EndTrace(p_Player)
 		local s_EndPos = self.m_CustomTrace[p_Player.onlineId]:GetLast().Position + Vec3.up
 		local s_RayHits = nil
 
-		if p_Player.attachedControllable then
-			s_RayHits = RaycastManager:CollisionRaycast(s_StartPos, s_EndPos, 1, 0,
-				RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll |
-				RayCastFlags.CheckDetailMesh | RayCastFlags.DontCheckPhantoms | RayCastFlags.DontCheckGroup |
-				RayCastFlags.IsAsyncRaycast)
+		local s_FlagsMaterial = 0
+		local s_RaycastFlags = 0
+
+		if p_Player.attachedControllable ~= nil then
+			s_RaycastFlags = RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll |
+				RayCastFlags.CheckDetailMesh | RayCastFlags.DontCheckPhantoms | RayCastFlags.DontCheckGroup
 		else
-			s_RayHits = RaycastManager:CollisionRaycast(s_StartPos, s_EndPos, 1, 0,
-				RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll |
-				RayCastFlags.CheckDetailMesh | RayCastFlags.IsAsyncRaycast)
+			s_RaycastFlags = RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll |
+				RayCastFlags.CheckDetailMesh
 		end
 
+		s_RayHits = RaycastManager:CollisionRaycast(s_StartPos, s_EndPos, 1, s_FlagsMaterial, s_RaycastFlags)
 
 		self.m_CustomTrace[p_Player.onlineId]:ClearSelection()
 		self.m_CustomTrace[p_Player.onlineId]:Select(nil, s_FirstWaypoint)
 
-		if s_RayHits == nil or s_RayHits == 0 then
+		if #s_RayHits == 0 then
 			-- clear view from start node to end node, path loops
 			self.m_CustomTrace[p_Player.onlineId]:SetInput(s_FirstWaypoint.SpeedMode, s_FirstWaypoint.ExtraMode, 0)
 		else
@@ -648,29 +649,31 @@ function NodeEditor:SaveTrace(p_Player, p_PathIndex)
 		s_PathCount = #m_NodeCollection:GetPaths()
 	end
 
-	-- remove existing path and replace with current
-	if p_PathIndex == 1 then
-		if s_PathCount == 1 then
-			s_ReferrenceWaypoint = m_NodeCollection:GetFirst()
+	-- check for first index smaller first path
+	local s_LowestPathIndex = 1
+	if m_NodeCollection:GetFirst(p_PathIndex) then
+		s_LowestPathIndex = m_NodeCollection:GetFirst(p_PathIndex).PathIndex
+	end
+
+	if p_PathIndex <= s_LowestPathIndex then
+		-- remove existing path and replace with current
+		if #m_NodeCollection:Get(nil, p_PathIndex) > 0 then
+			s_ReferrenceWaypoint = m_NodeCollection:GetFirst(p_PathIndex)
 		else
-			-- get first node of 2nd path, we'll InsertBefore the new nodes
-			s_ReferrenceWaypoint = m_NodeCollection:GetFirst(2)
+			-- get first node of first path, we'll InsertBefore the new nodes
+			s_ReferrenceWaypoint = m_NodeCollection:GetFirst()
 			s_CurrentWaypoint = self.m_CustomTrace[p_Player.onlineId]:GetLast()
 			s_Direction = 'Previous'
 		end
 
-	-- p_PathIndex is between 2 and #m_NodeCollection:GetPaths()
-	-- get the node before the start of the specified path, if the path is existing
-	elseif p_PathIndex <= s_PathCount then
+	-- p_PathIndex is greater or equal 2
+	-- get the node before the start of the specified path, if the path is existing, otherwise use the end
+	else
 		if #m_NodeCollection:Get(nil, p_PathIndex) > 0 then
 			s_ReferrenceWaypoint = m_NodeCollection:GetFirst(p_PathIndex).Previous
 		else
 			s_ReferrenceWaypoint = m_NodeCollection:GetLast()
 		end
-
-	-- p_PathIndex == last path index, append all nodes to end of collection
-	elseif p_PathIndex > s_PathCount then
-		s_ReferrenceWaypoint = m_NodeCollection:GetLast()
 	end
 
 	-- we might have a path to delete

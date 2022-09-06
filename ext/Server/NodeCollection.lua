@@ -41,7 +41,7 @@ function NodeCollection:Create(p_Data, p_Authoritative)
 		OriginalID = nil, -- original id from database
 		Index = s_NewIndex, -- new generated id in numerical form
 		Position = Vec3(0, 0, 0),
-		PathIndex = 1, -- Path #
+		PathIndex = 0, -- Path #
 		PointIndex = 1, -- index inside parent path
 		InputVar = s_InputVar, -- raw input value
 		SpeedMode = s_InputVar & 0xF, -- 0 = wait, 1 = prone, 2 = crouch, 3 = walk, 4 run

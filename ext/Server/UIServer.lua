@@ -268,7 +268,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		m_NodeEditor:SaveTrace(p_Player, s_Index)
 	-- NetEvents:SendToLocal('ClientNodeEditor:SaveTrace', p_Player, s_Index)
 	elseif request.action == 'trace_clear' then
-		m_NodeEditor:ClearTrace()
+		m_NodeEditor:ClearTrace(p_Player)
 	-- NetEvents:SendToLocal('ClientNodeEditor:ClearTrace', p_Player)
 	elseif request.action == 'trace_reset_all' then
 		m_NodeCollection:Clear()
