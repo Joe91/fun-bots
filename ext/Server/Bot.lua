@@ -6,7 +6,7 @@ require('__shared/Config')
 require('PidController')
 
 ---@type NodeCollection
-local m_NodeCollection = require('__shared/NodeCollection')
+local m_NodeCollection = require('NodeCollection')
 ---@type PathSwitcher
 local m_PathSwitcher = require('PathSwitcher')
 ---@type Vehicles
@@ -655,7 +655,7 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 		local s_AtanYaw = math.atan(s_DifferenceY, s_DifferenceX)
 		local s_Yaw = (s_AtanYaw > math.pi / 2) and (s_AtanYaw - math.pi / 2) or (s_AtanYaw + 3 * math.pi / 2)
 
-		local s_DistanceHoizontal = math.sqrt(s_DifferenceY ^ 2 + s_DifferenceY ^ 2)
+		local s_DistanceHoizontal = math.sqrt(s_DifferenceX ^ 2 + s_DifferenceY ^ 2)
 		s_Pitch = math.abs(math.atan(s_DifferenceZ, s_DistanceHoizontal))
 
 		s_DifferenceYaw = math.abs(s_OldYaw - s_Yaw)

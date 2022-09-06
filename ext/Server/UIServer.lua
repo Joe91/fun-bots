@@ -9,9 +9,11 @@ require('__shared/Config')
 Language = require('__shared/Language')
 
 ---@type NodeCollection
-local m_NodeCollection = require('__shared/NodeCollection')
+local m_NodeCollection = require('NodeCollection')
 ---@type SettingsManager
 local m_SettingsManager = require('SettingsManager')
+-- @type NodeEditor
+local m_NodeEditor = require('NodeEditor')
 
 ---@type BotManager
 local BotManager = require('BotManager')
@@ -256,22 +258,21 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		end
 	-- Trace
 	elseif request.action == 'trace_start' then
-		NetEvents:SendToLocal('ClientNodeEditor:StartTrace', p_Player)
+		m_NodeEditor:StartTrace(p_Player)
+	-- NetEvents:SendToLocal('ClientNodeEditor:StartTrace', p_Player)
 	elseif request.action == 'trace_end' then
-		NetEvents:SendToLocal('ClientNodeEditor:EndTrace', p_Player)
+		m_NodeEditor:EndTrace(p_Player)
+	-- NetEvents:SendToLocal('ClientNodeEditor:EndTrace', p_Player)
 	elseif request.action == 'trace_save' then
-		local index = tonumber(request.value)
-		NetEvents:SendToLocal('ClientNodeEditor:SaveTrace', p_Player, index)
+		local s_Index = tonumber(request.value)
+		m_NodeEditor:SaveTrace(p_Player, s_Index)
+	-- NetEvents:SendToLocal('ClientNodeEditor:SaveTrace', p_Player, s_Index)
 	elseif request.action == 'trace_clear' then
-		NetEvents:SendToLocal('ClientNodeEditor:ClearTrace', p_Player)
+		m_NodeEditor:ClearTrace()
+	-- NetEvents:SendToLocal('ClientNodeEditor:ClearTrace', p_Player)
 	elseif request.action == 'trace_reset_all' then
 		m_NodeCollection:Clear()
 		NetEvents:BroadcastLocal('NodeCollection:Clear')
-	elseif request.action == 'waypoints_client_load' then
-		local expectedAmount = m_NodeCollection:Get()
-		NetEvents:SendToLocal('ClientNodeEditor:ReceiveNodes', p_Player, (#expectedAmount))
-	elseif request.action == 'waypoints_client_save' then
-		NetEvents:SendToLocal('ClientNodeEditor:SaveNodes', p_Player)
 	elseif request.action == 'waypoints_server_load' then
 		m_NodeCollection:Load()
 	elseif request.action == 'waypoints_server_save' then
@@ -287,10 +288,13 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		NetEvents:SendToLocal('WriteClientSettings', p_Player, Config, false)
 	-- Waypoints-Editor
 	elseif request.action == 'request_waypoints_editor' then
+		m_NodeEditor:OnOpenEditor(p_Player)
 		NetEvents:SendTo('UI_Waypoints_Editor', p_Player, true)
 	elseif request.action == 'disable_waypoint_editor' then
+		m_NodeEditor:OnCloseEditor(p_Player)
 		NetEvents:SendTo('UI_Waypoints_Disable', p_Player)
 	elseif request.action == 'hide_waypoints_editor' then
+		m_NodeEditor:OnCloseEditor(p_Player)
 		NetEvents:SendTo('UI_Waypoints_Editor', p_Player, false)
 	else
 		ChatManager:Yell(Language:I18N('%s is currently not implemented.', request.action), 2.5)

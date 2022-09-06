@@ -274,16 +274,6 @@ const BotEditor = (new function BotEditor() {
 						action:	'trace_reset_all'
 					}));
 				break;
-				case 'waypoints_client_load':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'waypoints_client_load'
-					}));
-				break;
-				case 'waypoints_client_save':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'waypoints_client_save'
-					}));
-				break;
 				case 'waypoints_server_load':
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
 						action:	'waypoints_server_load'

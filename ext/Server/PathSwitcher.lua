@@ -5,7 +5,7 @@ PathSwitcher = class('PathSwitcher')
 require('__shared/Config')
 
 ---@type NodeCollection
-local m_NodeCollection = require('__shared/NodeCollection')
+local m_NodeCollection = require('NodeCollection')
 ---@type GameDirector
 local m_GameDirector = require('GameDirector')
 ---@type Logger

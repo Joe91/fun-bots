@@ -108,16 +108,16 @@ Config = {
 
 	--TRACE
 	DebugTracePaths = false,			-- Shows the trace line and search area from Commo Rose selection
-	WaypointRange = 100,				-- Set how far away waypoints are visible (meters)
+	WaypointRange = 50,					-- Set how far away waypoints are visible (meters)
 	DrawWaypointLines = true,			-- Draw waypoint connection Lines
-	LineRange = 15,						-- Set how far away waypoint lines are visible (meters)
+	LineRange = 25,						-- Set how far away waypoint lines are visible (meters)
 	DrawWaypointIDs = true,				-- Draw waypoint IDs
-	TextRange = 5,						-- Set how far away waypoint text is visible (meters)
+	TextRange = 7,						-- Set how far away waypoint text is visible (meters)
 	DrawSpawnPoints = false,			-- Draw Spawn Points
 	SpawnPointRange = 100,				-- Set how far away spawnpoints are visible (meters)
 	DebugSelectionRaytraces = false,	-- Shows the trace line and search area from Commo Rose selection
 	TraceDelta = 0.3,					-- Update interval of trace
-	NodesPerCycle = 100,				-- Set how many nodes get drawn per cycle. Affects performance
+	NodesPerCycle = 400,				-- Set how many nodes get drawn per cycle. Affects performance
 
 	--ADVANCED
 	DistanceForDirectAttack = 8,		-- Distance bots can hear you at

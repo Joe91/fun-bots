@@ -154,7 +154,7 @@ end
 ---@param p_DeltaTime number
 ---@param p_SimulationDeltaTime number
 function FunBotClient:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
-	m_ClientNodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
+	-- m_ClientNodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 end
 
 ---VEXT Client UI:DrawHud Event

@@ -286,18 +286,6 @@ Language:add(code, "de_DE as sample (default is english, when language file does
 Language:add(code, "Select", "Select")
 Language:add(code, "Finish", "Finish")
 Language:add(code, "Connect", "Connect")
-Language:add(code, "Clear Selection", "Clear Selection")
-Language:add(code, "Select Between", "Select Between")
-Language:add(code, "Remove", "Remove")
-Language:add(code, "Unlink", "Unlink")
-Language:add(code, "Select Previous", "Select Previous")
-Language:add(code, "Move", "Move")
-Language:add(code, "Merge", "Merge")
-Language:add(code, "Add", "Add")
-Language:add(code, "Link", "Link")
-Language:add(code, "Select Next", "Select Next")
-Language:add(code, "Set Input", "Set Input")
-Language:add(code, "Split", "Split")
 
 -- Strings of ./../../ext/Server/BotSpawner.lua
 Language:add(code, "CANT_JOIN_BOT_TEAM", "CANT_JOIN_BOT_TEAM")

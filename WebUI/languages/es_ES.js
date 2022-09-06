@@ -15,10 +15,8 @@ Language['es_ES'] /* Add/replace the xx_XX here with your language code (like de
 	"Waypoint-Editor": "Editor de Trazado de Rutas",
 	"Settings": "Ajustes",
 	"Exit": "Salir",
-	"[Client]": "[Cliente]",
 	"Save": "Guardar",
 	"Load": "Cargar",
-	"[Server]": "[Servidor]",
 	"View": "Ver",
 	"Toggle Spawns": "Activar Spawns",
 	"Toggle Lines": "Activar Líneas",
@@ -63,4 +61,5 @@ Language['es_ES'] /* Add/replace the xx_XX here with your language code (like de
 	"": "",
 	"Commands": "Comandos",
 	"End Trace": "Finalizar Trazo",
+	"[Save / Load]": "",
 };

@@ -3,7 +3,7 @@
 GameDirector = class('GameDirector')
 
 ---@type NodeCollection
-local m_NodeCollection = require('__shared/NodeCollection')
+local m_NodeCollection = require('NodeCollection')
 ---@type Utilities
 local m_Utilities = require('__shared/Utilities')
 ---@type Vehicles

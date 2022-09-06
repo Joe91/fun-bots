@@ -5,7 +5,7 @@ BotSpawner = class('BotSpawner')
 require('Model/SpawnSet')
 
 ---@type NodeCollection
-local m_NodeCollection = require('__shared/NodeCollection')
+local m_NodeCollection = require('NodeCollection')
 ---@type BotManager
 local m_BotManager = require('BotManager')
 ---@type WeaponList
@@ -697,7 +697,7 @@ function BotSpawner:SpawnWayBots(p_Player, p_Amount, p_UseRandomWay, p_ActiveWay
 	end
 
 	if p_Amount <= 0 then
-		m_Logger:Error("can't spawn zero or negative amount of bots")
+		m_Logger:Warning("can't spawn zero or negative amount of bots")
 	end
 
 	-- check for amount available

@@ -11,7 +11,7 @@ local m_Vehicles = require("Vehicles")
 ---@type PathSwitcher
 local m_PathSwitcher = require('PathSwitcher')
 ---@type NodeCollection
-local m_NodeCollection = require('__shared/NodeCollection')
+local m_NodeCollection = require('NodeCollection')
 
 function VehicleMovement:__init()
 	-- nothing to do

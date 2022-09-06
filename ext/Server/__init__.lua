@@ -242,6 +242,7 @@ end
 function FunBotServer:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	m_BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	m_BotSpawner:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
+	m_NodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 end
 
 -- =============================================
