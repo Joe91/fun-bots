@@ -1417,6 +1417,7 @@ function NodeCollection:FindAll(p_Vec3Position, p_Tolerance)
 	return s_WaypointsFound
 end
 
+-- TODO: Not used anymore - Remove?
 function NodeCollection:FindAlongTrace(p_Vec3Start, p_Vec3End, p_Granularity, p_Tolerance)
 	if p_Granularity == nil then
 		p_Granularity = 0.25
@@ -1435,11 +1436,6 @@ function NodeCollection:FindAlongTrace(p_Vec3Start, p_Vec3End, p_Granularity, p_
 	-- shift the search area forward by 1/2 distance and also 1/2 the radius needed
 	local s_SearchAreaPos = p_Vec3Start + ((p_Vec3End - p_Vec3Start) * 0.4) -- not exactly half ahead
 	local s_SearchAreaSize = (s_Distance * 0.6) -- lil bit bigger than half for searching
-	NetEvents:Send('ClientNodeEditor:SetLastTraceSearchArea', { s_SearchAreaPos:Clone(), s_SearchAreaSize })
-
-	if g_ClientNodeEditor then
-		g_ClientNodeEditor:_onSetLastTraceSearchArea({ s_SearchAreaPos:Clone(), s_SearchAreaSize })
-	end
 
 	local s_SearchWaypoints = self:FindAll(s_SearchAreaPos, s_SearchAreaSize)
 	local s_TestPos = p_Vec3Start:Clone()

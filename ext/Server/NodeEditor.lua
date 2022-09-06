@@ -913,7 +913,7 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 					local s_FirstNode = s_WaypointPaths[l_Path][1]
 					for l_Waypoint = s_startIndex, #s_WaypointPaths[l_Path] do
 						local l_Node = s_WaypointPaths[l_Path][l_Waypoint]
-						if (l_Node.Next ~= false and l_Node.Previous ~= false) then -- removed node?
+						if (l_Node.Next ~= false or l_Node.Previous ~= false) then -- removed node?
 
 							local s_DrawNode = false
 							local s_DrawLine = false

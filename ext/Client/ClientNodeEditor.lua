@@ -28,23 +28,11 @@ function ClientNodeEditor:__init()
 	self.m_CommoRoseTimer = -1
 	self.m_CommoRoseDelay = 0.25
 
-	self.m_NodeReceiveTimer = -1
-	self.m_NodeReceiveProgress = 0
-	self.m_NodeReceiveDelay = 1
-	self.m_NodeReceiveExpected = 0
-
-	self.m_NodesToSend = {}
-	self.m_NodeSendTimer = -1
-	self.m_NodeSendProgress = 1
-	self.m_NodeSendDelay = 0.02
-
 	self.m_EditMode = 'none' -- 'move', 'none', 'area'
-	self.m_EditStartPos = nil
-	self.m_NodeStartPos = {}
+	self.m_EditNodeStartPos = {}
 	self.m_EditModeManualOffset = Vec3.zero
 	self.m_EditModeManualSpeed = 0.05
 	self.m_EditPositionMode = 'relative'
-	self.m_HelpTextLocation = Vec2.zero
 
 	self.m_RaycastTimer = 0
 	self.m_NodesToDraw = {}
@@ -57,11 +45,6 @@ function ClientNodeEditor:__init()
 	self.m_TextPosToDraw_temp = {}
 	self.m_ObbToDraw = {}
 	self.m_ObbToDraw_temp = {}
-
-
-	self.m_NodeOperation = ''
-
-	self.m_BotSelectedWaypoints = {}
 
 	self.m_Colors = {
 		["Text"] = Vec4(1, 1, 1, 1),
@@ -94,12 +77,6 @@ function ClientNodeEditor:__init()
 		{ Node = Vec4(1, 0.08, 0.58, 0.25), Line = Vec4(1, 0.08, 0.58, 1) },
 	}
 
-	self.m_LastTraceSearchAreaPos = nil
-	self.m_LastTraceSearchAreaSize = nil
-	self.m_LastTraceStart = nil
-	self.m_LastTraceEnd = nil
-
-	self.m_DebugEntries = {}
 	self.m_EventsReady = false
 end
 
@@ -143,24 +120,7 @@ function ClientNodeEditor:OnRegisterEvents()
 
 	NetEvents:Subscribe('ClientNodeEditor:SelectNewNode', self, self._onSelectNewNode)
 	-- debug stuff
-	NetEvents:Subscribe('ClientNodeEditor:SetLastTraceSearchArea', self, self._onSetLastTraceSearchArea)
-	-- sever->client and client->server syncing events
-	-- NetEvents:Subscribe('ClientNodeEditor:SaveNodes', self, self._onSaveNodes)
-	-- NetEvents:Subscribe('ClientNodeEditor:ReceiveNodes', self, self._onGetNodes)
-	-- NetEvents:Subscribe('ClientNodeEditor:SendNodes', self, self._onSendNodes)
-	-- NetEvents:Subscribe('ClientNodeEditor:Create', self, self._onServerCreateNode)
-	-- NetEvents:Subscribe('ClientNodeEditor:Init', self, self._onInit)
 
-	-- trace recording events
-	-- NetEvents:Subscribe('ClientNodeEditor:StartTrace', self, self._onStartTrace)
-	-- NetEvents:Subscribe('ClientNodeEditor:EndTrace', self, self._onEndTrace)
-	-- NetEvents:Subscribe('ClientNodeEditor:ClearTrace', self, self._onClearTrace)
-	-- NetEvents:Subscribe('ClientNodeEditor:SaveTrace', self, self._onSaveTrace)
-
-
-	-- UI Commands as Console commands
-	-- Console:Register('Save', 'Send waypoints to server for saving to file', self, self._onSaveNodes)
-	-- Console:Register('Load', 'Resend all waypoints and lose all changes', self, self._onGetNodes)
 
 	--add these Events to NodeEditor
 	Console:Register('Select', 'Select or Deselect the waypoint you are looking at', self, self._onSelectNode) --done
@@ -184,19 +144,9 @@ function ClientNodeEditor:OnRegisterEvents()
 	-- Console:Register('TraceShow', '\'all\' or <number|PathIndex> - Show trace\'s waypoints', self, self._onShowPath)
 	-- Console:Register('TraceHide', '\'all\' or <number|PathIndex> - Hide trace\'s waypoints', self, self._onHidePath)
 	-- Console:Register('WarpTo', '*<string|WaypointID>* Teleport yourself to the specified Waypoint ID', self, self._onWarpTo)
-	-- Console:Register('SpawnAtWaypoint', '', self, self._onSpawnAtWaypoint)
-
-	-- Console:Register('StartTrace', 'Begin recording a new trace', self, self._onStartTrace)
-	-- Console:Register('EndTrace', 'Stop recording a new trace', self, self._onEndTrace)
-	-- Console:Register('ClearTrace', 'Clear all nodes from recorded trace', self, self._onClearTrace)
-	-- Console:Register('SaveTrace', '<number|PathIndex> Merge new trace with current waypoints', self, self._onSaveTrace)
 
 	-- debugging commands, not meant for UI
 	Console:Register('Enabled', 'Enable / Disable the waypoint editor', self, self.OnSetEnabled)
-	-- Console:Register('CommoRoseEnabled', 'Enable / Disable the waypoint editor Commo Rose', self, self._onSetCommoRoseEnabled)
-	-- Console:Register('CommoRoseShow', 'Show custom Commo Rose', self, self._onShowRose)
-	-- Console:Register('CommoRoseHide', 'Hide custom Commo Rose', self, self._onHideRose)
-	-- Console:Register('SetMetadata', '<string|Data> - Set Metadata for waypoint, Must be valid JSON string', self, self._onSetMetadata)
 
 	-- add these Events for NodeEditor
 	Console:Register('AddObjective', '<string|Objective> - Add an objective to a path', self, self._onAddObjective)
@@ -210,13 +160,9 @@ function ClientNodeEditor:OnRegisterEvents()
 		self._onRemoveObjective)
 	Console:Register('RemoveData', 'Remove all data of one or several nodes', self, self._onRemoveData)
 
-
-	-- Console:Register('ProcessMetadata', 'Process waypoint metadata starting with selected nodes or all nodes', self, self._onProcessMetadata)
-	-- Console:Register('RecalculateIndexes', 'Recalculate Indexes starting with selected nodes or all nodes', self, self._onRecalculateIndexes)
+	-- Others
 	Console:Register('UnloadNodes', 'Clears and unloads all clientside nodes', self, self._onUnload)
 
-	-- Console:Register('ObjectiveDirection', 'Show best direction to given objective', self, self._onObjectiveDirection)
-	-- Console:Register('GetKnownObjectives', 'print all known objectives and associated paths', self,	self._onGetKnownObjectives)
 
 	self.m_EventsReady = true
 	self:Log('Register Events')
@@ -439,23 +385,8 @@ function ClientNodeEditor:_DrawData(p_DataPoint)
 		end
 	end
 
-	self.m_LastDataPoint = {}
-	for l_Key, l_Value in pairs(p_DataPoint) do
-		self.m_LastDataPoint[l_Key] = l_Value
-	end
+	self.m_LastDataPoint = p_DataPoint --TODO: check if we need to perform a deep copy
 end
-
---[[ function ClientNodeEditor:_onSetCommoRoseEnabled(p_Args)
-	local s_Enabled = p_Args
-
-	if type(p_Args) == 'table' then
-		s_Enabled = p_Args[1]
-	end
-
-	s_Enabled = (s_Enabled == true or s_Enabled == 'true' or s_Enabled == '1')
-
-	self.m_CommoRoseEnabled = s_Enabled
-end ]]
 
 function ClientNodeEditor:OnUISettings(p_Data)
 	if p_Data == false then -- client closed settings
@@ -565,7 +496,7 @@ function ClientNodeEditor:_onToggleMoveNode(p_Args)
 			for i = 1, #s_Selection do
 				local s_UpdateNode = {
 					ID = s_Selection[i].Node.ID,
-					Pos = self.editNodeStartPos[s_Selection[i].Node.ID],
+					Pos = self.m_EditNodeStartPos[s_Selection[i].Node.ID],
 				}
 				table.insert(s_UpdateData, s_UpdateNode)
 			end
@@ -608,11 +539,11 @@ function ClientNodeEditor:_onToggleMoveNode(p_Args)
 			return false
 		end
 
-		self.editNodeStartPos = {}
+		self.m_EditNodeStartPos = {}
 
 		for i = 1, #s_Selection do
-			self.editNodeStartPos[i] = s_Selection[i].Node.Position:Clone()
-			self.editNodeStartPos[s_Selection[i].Node.ID] = s_Selection[i].Node.Position:Clone()
+			self.m_EditNodeStartPos[i] = s_Selection[i].Node.Position:Clone()
+			self.m_EditNodeStartPos[s_Selection[i].Node.ID] = s_Selection[i].Node.Position:Clone()
 		end
 
 		self.m_EditMode = 'move'
@@ -703,47 +634,6 @@ end
 
 	self:Log('Teleporting to Waypoint: %s (%s)', s_Waypoint.ID, tostring(s_Waypoint.Position))
 	NetEvents:Send('NodeEditor:WarpTo', s_Waypoint.Position)
-end
-
-function ClientNodeEditor:_onSpawnAtWaypoint(p_Args)
-	if p_Args == nil or #p_Args == 0 then
-		self:Log('Must provide Waypoint ID')
-		return false
-	end
-
-	local s_Waypoint = m_NodeCollection:Get(p_Args[1])
-
-	if s_Waypoint == nil then
-		self:Log('Waypoint not found: %s', p_Args[1])
-		return false
-	end
-
-	NetEvents:Send('BotEditor', json.encode({
-		action = 'bot_spawn_path',
-		value = s_Waypoint.PathIndex,
-		pointindex = s_Waypoint.PointIndex,
-	}))
-end ]]
-
--- ############################## Debug Methods
--- ############################################
-
-function ClientNodeEditor:_onSetLastTraceSearchArea(p_Data)
-	self.m_LastTraceSearchAreaPos = p_Data[1]
-	self.m_LastTraceSearchAreaSize = p_Data[2]
-end
-
---[[ function ClientNodeEditor:_onShowRose(p_Args)
-	self.m_CommoRoseEnabled = true
-	self.m_CommoRoseActive = true
-	self:_onCommoRoseAction('Show')
-	return true
-end
-
-function ClientNodeEditor:_onHideRose(p_Args)
-	self.m_CommoRoseActive = false
-	self:_onCommoRoseAction('Hide')
-	return true
 end ]]
 
 function ClientNodeEditor:_onAddMcom()
@@ -1093,7 +983,7 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 						for i = 1, #s_Selection do
 
-							local s_AdjustedPosition = self.editNodeStartPos[s_Selection[i].Node.ID] + self.m_EditModeManualOffset
+							local s_AdjustedPosition = self.m_EditNodeStartPos[s_Selection[i].Node.ID] + self.m_EditModeManualOffset
 
 							if self.m_EditPositionMode == 'relative' then
 								s_AdjustedPosition = s_AdjustedPosition + (self.editRayHitRelative or Vec3.zero)
