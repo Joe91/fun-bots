@@ -35,6 +35,7 @@ This is the changelog for the version V2.6.0. Don't forget to [join us on Discor
 * fix some static move-modes with new Bot-Structure
 * small fix of wrong appearance of some assault-bots
 * modified mapfiles with newlines can be imported now
+* several bugs in new node-editor
 
 ### New maps
 * 

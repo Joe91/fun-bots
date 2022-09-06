@@ -47,7 +47,6 @@ function FunBotShared:__init()
 		Guid('818334B3-CEA6-FC3F-B524-4A0FED28CA35'), self, self._modifyServerTimeoutSettings)
 
 	Hooks:Install('ResourceManager:LoadBundles', 1, function(p_HookCtx, p_Bundles, p_Compartment)
-		print(p_Compartment)
 		if p_Compartment == 3 then
 			p_HookCtx:Call()
 			local s_ServerSettings = ResourceManager:GetSettings("ServerSettings")

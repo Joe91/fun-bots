@@ -110,7 +110,7 @@ function Utilities:dump(o, p_Format, p_MaxLevels, p_Level)
 
 	if type(o) == 'table' or tostring(o):starts('sol.VEXTRefArray') or tostring(o):starts('sol.VEXTArray') then
 		if p_MaxLevels == -1 or p_Level <= p_MaxLevels then
-			local s = tostring(o) .. ' -> { ' .. s_Newline
+			local s = type(o) .. ' -> { ' .. s_Newline
 
 			for l_Key, l_Value in pairs(o) do
 				if type(l_Key) ~= 'number' then
