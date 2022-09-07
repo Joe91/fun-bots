@@ -384,19 +384,16 @@ end
 
 function ClientNodeEditor:FindNode(p_Position)
 	local s_ClosestNode = nil
-	local s_ClosestDistance = nil
+	local s_ClosestDistance = 0.6 -- maximum 0.6 meter
 	for _, l_DataNode in pairs(self.m_DataPoints) do
 		local s_Distance = self:GetDistance(l_DataNode.Node.Position, p_Position)
-		if not s_ClosestDistance or s_ClosestDistance > s_Distance then
+		if s_ClosestDistance > s_Distance then
 			s_ClosestDistance = s_Distance
 			s_ClosestNode = l_DataNode
 		end
 	end
-	if s_ClosestDistance < 0.5 then
-		return s_ClosestNode
-	else
-		return nil
-	end
+
+	return s_ClosestNode
 end
 
 function ClientNodeEditor:_onSelectNode(p_Args)

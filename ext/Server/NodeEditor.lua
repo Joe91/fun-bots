@@ -492,6 +492,18 @@ function NodeEditor:_getNewIndex()
 	for i = 1, s_HighestIndex do
 		if s_AllPaths[i] == nil or s_AllPaths[i] == {} then
 			return i
+		else
+			-- maybe path was deleted
+			local s_PathIsDeleted = true
+			for _, l_NodeInPath in pairs(s_AllPaths[i]) do
+				if l_NodeInPath.Next ~= false or l_NodeInPath.Previous ~= false then
+					s_PathIsDeleted = false
+					break
+				end
+			end
+			if s_PathIsDeleted then
+				return i
+			end
 		end
 	end
 
@@ -658,7 +670,9 @@ function NodeEditor:SaveTrace(p_Player, p_PathIndex)
 	if p_PathIndex <= s_LowestPathIndex then
 		-- remove existing path and replace with current
 		if #m_NodeCollection:Get(nil, p_PathIndex) > 0 then
-			s_ReferrenceWaypoint = m_NodeCollection:GetFirst(p_PathIndex)
+			s_CurrentWaypoint.PathIndex = p_PathIndex
+			s_ReferrenceWaypoint = m_NodeCollection:Create(s_CurrentWaypoint)
+			s_CurrentWaypoint = s_CurrentWaypoint.Next
 		else
 			-- get first node of first path, we'll InsertBefore the new nodes
 			s_ReferrenceWaypoint = m_NodeCollection:GetFirst()
@@ -677,7 +691,7 @@ function NodeEditor:SaveTrace(p_Player, p_PathIndex)
 	end
 
 	-- we might have a path to delete
-	if p_PathIndex > 0 and p_PathIndex <= s_PathCount then
+	if p_PathIndex > 0 then
 		local s_PathWaypoints = m_NodeCollection:Get(nil, p_PathIndex)
 
 		if #s_PathWaypoints > 0 then
