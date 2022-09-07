@@ -978,6 +978,7 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 									Vehicles = {},
 									Reverse = (s_FirstNode.OptValue == 0XFF),
 									Links = {},
+									NextPos = nil,
 									IsTrace = false,
 									IsOthersTrace = false
 								}
@@ -1008,6 +1009,10 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 									for _, l_Vehicle in pairs(s_FirstNode.Data.Vehicles) do
 										table.insert(s_DataNode.Vehicles, l_Vehicle)
 									end
+								end
+
+								if l_Node.Next and l_Node.Next.PathIndex == l_Node.PathIndex then
+									s_DataNode.NextPos = l_Node.Next.Position:Clone()
 								end
 
 								table.insert(s_NodesToDraw, s_DataNode)
@@ -1058,6 +1063,7 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 							DrawLine = s_DrawLine,
 							DrawText = s_DrawText,
 							IsSelected = s_IsSelected,
+							NextPos = nil,
 							IsTrace = true,
 							IsOthersTrace = false
 						}
@@ -1067,6 +1073,10 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 							if (l_Key ~= 'Next' and l_Key ~= 'Previous') then
 								s_DataNode.Node[l_Key] = l_Value
 							end
+						end
+
+						if l_Node.Next and l_Node.Next.PathIndex == l_Node.PathIndex then
+							s_DataNode.NextPos = l_Node.Next.Position:Clone()
 						end
 
 						table.insert(s_NodesToDraw, s_DataNode)

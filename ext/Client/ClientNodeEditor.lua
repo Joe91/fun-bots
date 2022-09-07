@@ -224,6 +224,7 @@ function ClientNodeEditor:_DrawData(p_DataPoint)
 		Vehicles = s_FirstNode.Data.Vehicles,
 		Reverse = (s_FirstNode.OptValue == 0XFF),
 		Links = s_LinkPositions,
+		NextPos = nil,
 		IsTrace = false,
 		IsOthersTrace = false
 	}--]]
@@ -299,8 +300,8 @@ function ClientNodeEditor:_DrawData(p_DataPoint)
 	-- draw connection lines
 	if Config.DrawWaypointLines and p_DataPoint.DrawLine then
 		-- try to find a previous node and draw a line to it
-		if self.m_LastDataPoint and self.m_LastDataPoint.Node.PathIndex == s_Waypoint.PathIndex then
-			self:DrawLine(self.m_LastDataPoint.Node.Position, s_Waypoint.Position, s_Color.Line, s_Color.Line)
+		if p_DataPoint.NextPos then
+			self:DrawLine(p_DataPoint.NextPos, s_Waypoint.Position, s_Color.Line, s_Color.Line)
 		end
 
 		-- draw Links
