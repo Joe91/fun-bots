@@ -1373,7 +1373,7 @@ function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 		"persistence/unlocks/soldiers/specializations/explosiveresistl2", -- tier 2
 		"persistence/unlocks/soldiers/specializations/grenadeboostl2", -- tier 3
 		"persistence/unlocks/soldiers/specializations/suppressionboostl2", -- tier 3
-		-- "persistence/unlocks/soldiers/specializations/healspeedboostl2", -- not
+		-- "persistence/unlocks/soldiers/specializations/healspeedboostl2", -- not used
 	}
 
 	local s_SquadPlayers = PlayerManager:GetPlayersBySquad(p_TeamId, p_SquadId)
@@ -1392,10 +1392,11 @@ function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 		end
 	end
 
+	-- choose good available perk
 	local s_SelectedPerk = ""
 	for l_IndexPerk, l_PerkName in pairs(s_PossiblePerks) do
 		s_SelectedPerk = s_PossiblePerks[l_IndexPerk]
-		if MathUtils:GetRandomInt(1, 100) >= 66 then -- use best available perk with 66%
+		if MathUtils:GetRandomInt(1, 100) <= 66 then -- use best available perk with 66%
 			break
 		end
 	end
