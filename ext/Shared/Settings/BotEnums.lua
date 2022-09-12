@@ -1,4 +1,4 @@
----@class BotMoveModes
+---@enum BotMoveModes
 BotMoveModes = {
 	Standstill = 0,
 	Mirror = 3,
@@ -8,14 +8,14 @@ BotMoveModes = {
 	Shooting = 9
 }
 
----@class BotSpawnModes
+---@enum BotSpawnModes
 BotSpawnModes = {
 	NoRespawn = 0,
 	RespawnFixedPath = 4,
 	RespawnRandomPath = 5
 }
 
----@class BotAttackingModes
+---@enum BotAttackingModes
 BotAttackingModes = {
 	NoAttack = 0,
 	AttackWithRifle = 1,
@@ -26,7 +26,7 @@ BotAttackingModes = {
 	EnterVehicleOfPlayer = 6
 }
 
----@class BotActionFlags
+---@enum BotActionFlags
 BotActionFlags = {
 	NoActionActive = 0,
 	MeleeActive = 1,
@@ -38,7 +38,7 @@ BotActionFlags = {
 	OtherActionActive = 7,
 }
 
----@class VehicleTypes
+---@enum VehicleTypes
 VehicleTypes = {
 	NoVehicle = 0,
 	Tank = 1,
@@ -53,11 +53,21 @@ VehicleTypes = {
 	Gadgets = 10
 }
 
----@class VehicleAttackModes
+---@enum VehicleTerrains
+VehicleTerrains = {
+	Land = 1,
+	Water = 2,
+	Air = 3,
+	Amphibious = 4
+}
+
+---@enum VehicleAttackModes
 VehicleAttackModes = {
 	NoAttack = 0,
 	AttackWithRifle = 1,
 	AttackWithNade = 2,
 	AttackWithRocket = 3,
-	AttackWithC4 = 4
+	AttackWithC4 = 4,
+	AttackWithMissileAir = 5,
+	AttackWithMissileLand = 6
 }

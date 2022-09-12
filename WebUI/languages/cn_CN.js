@@ -52,8 +52,6 @@ Language['cn_CN'] /* Add/replace the xx_XX here with your language code (like de
 	"Select": "选择",
 	"Split": "拆分",
 	"Load": "加载",
-	"[Client]": "客户端",
-	"[Server]": "服务器",
 	"Toggle Spawns": "显示重生点",
 	"Toggle Lines": "显示线",
 	"Toggle Labels": "显示标签",
@@ -63,4 +61,5 @@ Language['cn_CN'] /* Add/replace the xx_XX here with your language code (like de
 	"": "",
 	"Commands": "命令",
 	"Spawn Bot": "生成BOT"
+	"[Save / Load]": "",
 };

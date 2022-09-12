@@ -1,4 +1,5 @@
 ---@class PidController
+---@overload fun(p_Kp: number, p_Ki: number, p_Kd: number, p_Limit: number):PidController
 PidController = class('PidController')
 
 ---@param p_Kp number

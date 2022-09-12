@@ -1,4 +1,5 @@
 ---@class SettingsManager
+---@overload fun():SettingsManager
 SettingsManager = class('SettingsManager')
 
 require('__shared/Config')
@@ -9,8 +10,6 @@ local m_Database = require('Database')
 local m_BotManager = require('BotManager')
 ---@type BotSpawner
 local m_BotSpawner = require('BotSpawner')
----@type WeaponModification
-local m_WeaponModification = require('WeaponModification')
 ---@type WeaponList
 local m_WeaponList = require('__shared/WeaponList')
 
@@ -50,6 +49,7 @@ function SettingsManager:OnExtensionLoaded()
 	if Config.Language == nil then
 		Config.Language = DatabaseField.NULL
 	end
+
 	-- get Values from Config.lua
 	for l_Name, l_Value in pairs(Config) do
 		-- Check SQL if Config.lua has changed
@@ -67,11 +67,11 @@ function SettingsManager:OnExtensionLoaded()
 				Time = m_Database:Now()
 			})
 
-			--m_Database:Insert('FB_Settings', {
-				--Key = l_Name,
-				--Value = DatabaseField.NULL,
-				--Time = DatabaseField.NULL
-			--})
+		--m_Database:Insert('FB_Settings', {
+		--Key = l_Name,
+		--Value = DatabaseField.NULL,
+		--Time = DatabaseField.NULL
+		--})
 
 		-- If exists update Settings, if newer
 		else
@@ -198,6 +198,7 @@ function SettingsManager:SaveAll()
 	for l_Key, l_Value in pairs(Config) do
 		self:Update(l_Key, l_Value, false, true)
 	end
+
 	m_Database:ExecuteBatch()
 end
 
@@ -212,12 +213,16 @@ function SettingsManager:UpdateSetting(p_Name, p_Value)
 	local s_UpdateClientWeapons = false
 	local s_UpdateFlag = UpdateFlag.None
 	local s_ConvertedValue = nil
+
 	for _, l_Item in pairs(SettingsDefinition.Elements) do
 		if l_Item.Name == p_Name then
 			if l_Item.Type == Type.Integer or l_Item.Type == Type.Float then
 				s_ConvertedValue = tonumber(p_Value)
+				---@type Range
+				local s_Reference = l_Item.Reference
+
 				-- check for Range
-				if l_Item.Reference:GetMax() >= s_ConvertedValue and l_Item.Reference:GetMin() <= s_ConvertedValue then
+				if s_Reference:GetMax() >= s_ConvertedValue and s_Reference:GetMin() <= s_ConvertedValue then
 					s_Valid = true
 				end
 			elseif l_Item.Type == Type.Boolean then
@@ -225,6 +230,7 @@ function SettingsManager:UpdateSetting(p_Name, p_Value)
 				s_Valid = true
 			elseif l_Item.Type == Type.Enum then
 				s_ConvertedValue = tonumber(p_Value)
+
 				if s_ConvertedValue == nil and type(p_Value) == 'string' then -- check for enum-string
 					if type(p_Value) == 'string' then
 						for l_Key, l_Value in pairs(l_Item.Reference) do
@@ -253,24 +259,38 @@ function SettingsManager:UpdateSetting(p_Name, p_Value)
 						end
 					end
 				end
+			elseif l_Item.Type == Type.DynamicList then
+				if type(p_Value) == 'string' then
+					local s_Reference = _G[l_Item.Reference]
+
+					for l_Key, l_Value in pairs(s_Reference) do
+						if string.find(p_Value, l_Key) ~= nil then
+							s_ConvertedValue = l_Value
+							s_Valid = true
+							break
+						end
+					end
+				end
 			end
+
 			s_UpdateFlag = l_Item.UpdateFlag
 			break
 		end
 	end
+
 	if s_Valid then
 		self:Update(p_Name, s_ConvertedValue, true, false)
 
 		if s_UpdateFlag == UpdateFlag.WeaponSets then
-			m_WeaponList:updateWeaponList()
+			m_WeaponList:UpdateWeaponList()
 			s_UpdateClientWeapons = true
-		elseif s_UpdateFlag == UpdateFlag.Weapons then
-			m_WeaponModification:ModifyAllWeapons(Config.BotAimWorsening, Config.BotSniperAimWorsening, Config.BotSupportAimWorsening)
 		elseif s_UpdateFlag == UpdateFlag.YawPerSec then
 			Globals.YawPerFrame = m_BotManager:CalcYawPerFrame()
 		elseif s_UpdateFlag == UpdateFlag.AmountAndTeam then
 			Globals.SpawnMode = Config.SpawnMode
 			m_BotSpawner:UpdateBotAmountAndTeam()
+		elseif s_UpdateFlag == UpdateFlag.Skil then
+			m_BotManager:ResetSkills()
 		end
 
 		NetEvents:BroadcastLocal('WriteClientSettings', Config, s_UpdateClientWeapons)

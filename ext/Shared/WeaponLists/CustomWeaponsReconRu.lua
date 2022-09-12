@@ -1,7 +1,7 @@
 ---@class CustomWeaponsReconRu
 CustomWeaponsReconRu = {
 	-- Sniper
-	-- 'JNG90', --ru
+	'JNG90', --ru
 	-- 'L96', --us
 	-- 'M39EBR', --us
 	-- 'M98B', --us
@@ -15,8 +15,8 @@ CustomWeaponsReconRu = {
 	-- Shotguns
 	-- 'DAO-12', --ru
 	-- 'Jackhammer', --us
-	-- 'Saiga20', --ru
-	'SPAS12', --us
+	'Saiga20', --ru
+	-- 'SPAS12', --us
 	-- 'USAS-12', --ru
 	-- 'M1014', --us
 	-- '870M', --us

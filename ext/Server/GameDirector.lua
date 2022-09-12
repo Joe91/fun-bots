@@ -1,8 +1,9 @@
 ---@class GameDirector
+---@overload fun():GameDirector
 GameDirector = class('GameDirector')
 
 ---@type NodeCollection
-local m_NodeCollection = require('__shared/NodeCollection')
+local m_NodeCollection = require('NodeCollection')
 ---@type Utilities
 local m_Utilities = require('__shared/Utilities')
 ---@type Vehicles
@@ -38,7 +39,7 @@ end
 -- =============================================
 
 -- =============================================
-	-- Level Events
+-- Level Events
 -- =============================================
 
 function GameDirector:OnLevelLoaded()
@@ -48,6 +49,7 @@ function GameDirector:OnLevelLoaded()
 	-- TODO, assign weights to each objective
 	self.m_UpdateTimer = 0
 	self:_InitObjectives()
+
 	for i = 0, Globals.NrOfTeams do
 		self.m_SpawnableVehicles[i] = {}
 		self.m_SpawnableStationaryAas[i] = {}
@@ -68,7 +70,7 @@ function GameDirector:OnRoundReset()
 end
 
 -- =============================================
-	-- CapturePoint Events
+-- CapturePoint Events
 -- =============================================
 
 ---VEXT Server Player:EnteredCapturePoint Event
@@ -99,13 +101,14 @@ function GameDirector:OnCapturePointCaptured(p_CapturePoint)
 		return
 	end
 
-	m_Logger:Write('GameDirector:_onCapture: '..s_ObjectiveName)
-	m_Logger:Write('self.CurrentAssignedCount: '..m_Utilities:dump(s_Objective.assigned, true))
+	m_Logger:Write('GameDirector:_onCapture: ' .. s_ObjectiveName)
+	m_Logger:Write('self.CurrentAssignedCount: ' .. m_Utilities:dump(s_Objective.assigned, true))
 
 	for l_BotTeam, l_Bots in pairs(self.m_BotsByTeam) do
 		for i = 1, #l_Bots do
 			if l_Bots[i]:GetObjective() == s_Objective.name and s_Objective.team == l_BotTeam then
-				m_Logger:Write('Bot completed objective: '..l_Bots[i].m_Name..' (team: '..l_BotTeam..') -> '..s_Objective.name)
+				m_Logger:Write('Bot completed objective: ' ..
+					l_Bots[i].m_Name .. ' (team: ' .. l_BotTeam .. ') -> ' .. s_Objective.name)
 
 				l_Bots[i]:SetObjective()
 				s_Objective.assigned[l_BotTeam] = math.max(s_Objective.assigned[l_BotTeam] - 1, 0)
@@ -142,16 +145,16 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 	if Globals.IsRush then
 		if self.m_WaitForZone then
 			self.m_ZoneTimer = self.m_ZoneTimer + self.m_UpdateTimer
+
 			if self.m_ZoneTimer >= Registry.GAME_DIRECTOR.ZONE_CHECK_CYCLE then
 				self.m_WaitForZone = false
 			end
 		end
+
 		self:_UpdateTimersOfMcoms(self.m_UpdateTimer)
 	end
 
 	self.m_UpdateTimer = 0
-
-
 
 	--update bot -> team list
 	local s_BotList = g_BotManager:GetBots()
@@ -168,12 +171,34 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 	end
 
 	local s_MaxAssigns = {}
+	-- evaluate how many bots are max- and min-assigned per objective
+
+	local s_AvailableObjectives = {}
+
+	for _, l_Objective in pairs(self.m_AllObjectives) do
+		if not l_Objective.subObjective and not l_Objective.isBase and l_Objective.active and not l_Objective.destroyed and
+			not l_Objective.isEnterVehiclePath then
+			for i = 1, Globals.NrOfTeams do
+				if s_AvailableObjectives[i] == nil then
+					s_AvailableObjectives[i] = 0
+				end
+
+				if l_Objective.team ~= i then
+					s_AvailableObjectives[i] = s_AvailableObjectives[i] + 1
+				end
+			end
+		end
+	end
 
 	for i = 1, Globals.NrOfTeams do
 		s_MaxAssigns[i] = 0
 
+		if s_AvailableObjectives[i] == nil then
+			s_AvailableObjectives[i] = 1
+		end
+
 		if self.m_BotsByTeam[i] ~= nil then
-			s_MaxAssigns[i] = math.floor((#self.m_BotsByTeam[i] / Globals.NrOfTeams) + 1)
+			s_MaxAssigns[i] = math.floor((#self.m_BotsByTeam[i] / s_AvailableObjectives[i]) + 1)
 
 			if (#self.m_BotsByTeam[i] % 2) == 1 then
 				s_MaxAssigns[i] = s_MaxAssigns[i] + 1
@@ -237,7 +262,8 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 				if s_ClosestObjective ~= nil then
 					local s_Objective = self:_GetObjectiveObject(s_ClosestObjective)
 					l_Bot:SetObjective(s_ClosestObjective)
-					m_Logger:Write("Team "..tostring(l_BotTeam).." with "..l_Bot.m_Name.." gets this objective: "..s_ClosestObjective)
+					m_Logger:Write("Team " ..
+						tostring(l_BotTeam) .. " with " .. l_Bot.m_Name .. " gets this objective: " .. s_ClosestObjective)
 					s_Objective.assigned[l_BotTeam] = s_Objective.assigned[l_BotTeam] + 1
 				end
 			else
@@ -274,11 +300,11 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 end
 
 -- =============================================
-	-- RUSH Events
+-- RUSH Events
 -- =============================================
 
 function GameDirector:OnMcomArmed(p_Objective)
-	m_Logger:Write(p_Objective.." armed")
+	m_Logger:Write(p_Objective .. " armed")
 
 	self:_UpdateObjective(p_Objective, {
 		team = TeamId.Team1,
@@ -289,7 +315,7 @@ function GameDirector:OnMcomArmed(p_Objective)
 end
 
 function GameDirector:OnMcomDisarmed(p_Objective)
-	m_Logger:Write(p_Objective.." disarmed")
+	m_Logger:Write(p_Objective .. " disarmed")
 
 	self:_UpdateObjective(p_Objective, {
 		team = TeamId.TeamNeutral,
@@ -303,7 +329,7 @@ function GameDirector:OnMcomDestroyed(p_Objective)
 	self.m_McomCounter = self.m_McomCounter + 1
 	self:_UpdateValidObjectives()
 
-	m_Logger:Write(p_Objective.." destroyed after "..tostring(self.m_ArmedMcoms[p_Objective]).." s")
+	m_Logger:Write(p_Objective .. " destroyed after " .. tostring(self.m_ArmedMcoms[p_Objective]) .. " s")
 
 	self.m_ArmedMcoms[p_Objective] = nil
 
@@ -313,7 +339,7 @@ function GameDirector:OnMcomDestroyed(p_Objective)
 
 	if p_Objective ~= '' then
 		self:_UpdateObjective(p_Objective, {
-			team = TeamId.TeamNeutral,--p_Player.teamId,
+			team = TeamId.TeamNeutral, --p_Player.teamId,
 			isAttacked = false,
 			destroyed = true
 		})
@@ -336,12 +362,12 @@ end
 
 ---@param p_EntityId integer
 function GameDirector:OnRushZoneDisabled(p_EntityId)
-	m_Logger:Write("Zone "..tostring(p_EntityId).." disabled")
+	m_Logger:Write("Zone " .. tostring(p_EntityId) .. " disabled")
 	self.m_waitForZone = false
 end
 
 -- =============================================
-	-- Vehicle Events
+-- Vehicle Events
 -- =============================================
 
 function GameDirector:GetSpawnableVehicle(p_TeamId)
@@ -357,20 +383,26 @@ end
 function GameDirector:OnVehicleSpawnDone(p_Entity)
 	p_Entity = ControllableEntity(p_Entity)
 	local s_VehicleData = m_Vehicles:GetVehicleByEntity(p_Entity)
+
 	if s_VehicleData == nil then
 		return -- no vehicle found
 	end
-	if not Config.UseAirVehicles and (s_VehicleData.Type == VehicleTypes.Plane or s_VehicleData.Type == VehicleTypes.Chopper) then
+
+	if not Config.UseAirVehicles and
+		(s_VehicleData.Type == VehicleTypes.Plane or s_VehicleData.Type == VehicleTypes.Chopper) then
 		return -- not allowed to use
 	end
+
 	local s_Objective = self:_SetVehicleObjectiveState(p_Entity.transform.trans, true)
 
 	if s_Objective ~= nil and s_Objective.isSpawnPath then
-		local s_Node = g_GameDirector:FindClosestPath(p_Entity.transform.trans, true, false)
+		local s_Node = g_GameDirector:FindClosestPath(p_Entity.transform.trans, true, false, s_VehicleData.Terrain)
+
 		if s_Node ~= nil and s_Node.Position:Distance(p_Entity.transform.trans) < Registry.VEHICLES.MIN_DISTANCE_VEHICLE_ENTER then
 			table.insert(self.m_SpawnableVehicles[s_Objective.team], p_Entity)
 		end
 	end
+
 	if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.StationaryAA) then
 		table.insert(self.m_SpawnableStationaryAas[s_VehicleData.Team], p_Entity)
 	end
@@ -380,17 +412,19 @@ end
 ---@param p_Entity ControllableEntity|Entity
 ---@param p_Player Player
 function GameDirector:OnVehicleEnter(p_Entity, p_Player)
+	p_Entity = ControllableEntity(p_Entity)
 	local s_VehicleData = m_Vehicles:GetVehicleByEntity(p_Entity)
+
 	if s_VehicleData ~= nil then
 		if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.StationaryAA) then
 			for l_Index, l_Entity in pairs(self.m_SpawnableStationaryAas[p_Player.teamId]) do
-				if p_Entity == l_Entity then
+				if (l_Entity.uniqueId == p_Entity.uniqueId) and (l_Entity.instanceId == p_Entity.instanceId) then
 					table.remove(self.m_SpawnableStationaryAas[p_Player.teamId], l_Index)
 				end
 			end
 		else
 			for l_Index, l_Entity in pairs(self.m_SpawnableVehicles[p_Player.teamId]) do
-				if p_Entity == l_Entity then
+				if (l_Entity.uniqueId == p_Entity.uniqueId) and (l_Entity.instanceId == p_Entity.instanceId) then
 					table.remove(self.m_SpawnableVehicles[p_Player.teamId], l_Index)
 				end
 			end
@@ -400,13 +434,16 @@ function GameDirector:OnVehicleEnter(p_Entity, p_Player)
 	if not m_Utilities:isBot(p_Player) then
 		p_Entity = ControllableEntity(p_Entity)
 		self:_SetVehicleObjectiveState(p_Entity.transform.trans, false)
+
 		if p_Player.controlledEntryId ~= 0 then
 			local s_Entity = p_Player.controlledControllable
 			local s_Driver = s_Entity:GetPlayerInEntry(0)
+
 			if s_Driver ~= nil then
 				Events:Dispatch("Bot:AbortWait", s_Driver.name)
 			end
 		end
+
 		self:_SetVehicleObjectiveState(p_Entity.transform.trans, false)
 	end
 end
@@ -432,7 +469,6 @@ function GameDirector:CheckForExecution(p_Point, p_TeamId, p_InVehicle)
 	local s_Action = p_Point.Data.Action
 
 	if s_Action.type == "mcom" then
-
 		local s_Mcom = self:_TranslateObjective(p_Point.Position)
 
 		if s_Mcom == nil then
@@ -459,9 +495,12 @@ function GameDirector:CheckForExecution(p_Point, p_TeamId, p_InVehicle)
 		if p_InVehicle then
 			return false
 		end
+
 		local s_CurrentPathFirst = m_NodeCollection:GetFirst(p_Point.PathIndex)
+
 		if s_CurrentPathFirst.Data.Objectives ~= nil and #s_CurrentPathFirst.Data.Objectives == 1 then
 			local s_TempObjective = self:_GetObjectiveObject(s_CurrentPathFirst.Data.Objectives[1])
+
 			if s_TempObjective ~= nil and s_TempObjective.active and s_TempObjective.isEnterVehiclePath then
 				return true
 			end
@@ -479,7 +518,7 @@ function GameDirector:CheckForExecution(p_Point, p_TeamId, p_InVehicle)
 	end
 end
 
-function GameDirector:FindClosestPath(p_Trans, p_VehiclePath, p_DetailedSearch)
+function GameDirector:FindClosestPath(p_Trans, p_VehiclePath, p_DetailedSearch, p_VehicleTerrain)
 	local s_ClosestPathNode = nil
 	local s_Paths = m_NodeCollection:GetPaths()
 
@@ -488,54 +527,65 @@ function GameDirector:FindClosestPath(p_Trans, p_VehiclePath, p_DetailedSearch)
 
 		for _, l_Waypoints in pairs(s_Paths) do
 			if l_Waypoints[1] ~= nil then
+				local s_isVehiclePath = false
+				local s_isAirPath = false
+				local s_isWaterPath = false
+
+				if l_Waypoints[1].Data ~= nil and l_Waypoints[1].Data.Vehicles ~= nil then
+					s_isVehiclePath = true
+
+					for _, l_PathType in pairs(l_Waypoints[1].Data.Vehicles) do
+						if l_PathType:lower() == "air" then
+							s_isAirPath = true
+						end
+
+						if l_PathType:lower() == "water" then
+							s_isWaterPath = true
+						end
+					end
+				end
+
 				if p_VehiclePath then
-					if l_Waypoints[1].Data ~= nil and l_Waypoints[1].Data.Vehicles ~= nil then
-						if p_DetailedSearch then
-							for i = 1, #l_Waypoints, Registry.GAME_DIRECTOR.NODE_SEARCH_INCREMENTS do
-								local s_NewDistance = Utilities:DistanceFast(l_Waypoints[i].Position, p_Trans)
-								
+					if s_isVehiclePath then
+						if (p_VehicleTerrain == VehicleTerrains.Air and s_isAirPath) or
+							(p_VehicleTerrain == VehicleTerrains.Water and s_isWaterPath) or
+							(p_VehicleTerrain == VehicleTerrains.Land and not s_isWaterPath and not s_isAirPath) or
+							(p_VehicleTerrain == VehicleTerrains.Amphibious and not s_isAirPath) then
+							if p_DetailedSearch then
+								for i = 1, #l_Waypoints, Registry.GAME_DIRECTOR.NODE_SEARCH_INCREMENTS do
+									local s_NewDistance = Utilities:DistanceFast(l_Waypoints[i].Position, p_Trans)
+
+									if s_ClosestDistance == nil then
+										s_ClosestDistance = s_NewDistance
+										s_ClosestPathNode = l_Waypoints[i]
+									else
+										if s_NewDistance < s_ClosestDistance then
+											s_ClosestDistance = s_NewDistance
+											s_ClosestPathNode = l_Waypoints[i]
+										end
+									end
+								end
+							else
+								local s_NewDistance = Utilities:DistanceFast(l_Waypoints[1].Position, p_Trans)
+
 								if s_ClosestDistance == nil then
 									s_ClosestDistance = s_NewDistance
-									s_ClosestPathNode = l_Waypoints[i]
+									s_ClosestPathNode = l_Waypoints[1]
 								else
 									if s_NewDistance < s_ClosestDistance then
 										s_ClosestDistance = s_NewDistance
-										s_ClosestPathNode = l_Waypoints[i]
+										s_ClosestPathNode = l_Waypoints[1]
 									end
-								end
-							end
-						else
-							local s_NewDistance = Utilities:DistanceFast(l_Waypoints[1].Position, p_Trans)
-
-							if s_ClosestDistance == nil then
-								s_ClosestDistance = s_NewDistance
-								s_ClosestPathNode = l_Waypoints[1]
-							else
-								if s_NewDistance < s_ClosestDistance then
-									s_ClosestDistance = s_NewDistance
-									s_ClosestPathNode = l_Waypoints[1]
 								end
 							end
 						end
 					end
 				else -- not in vehicle
-					local s_isAirPath = false
-					local s_isWaterPath = false
-					if l_Waypoints[1].Data ~= nil and l_Waypoints[1].Data.Vehicles ~= nil then
-						for _, l_PathType in pairs(l_Waypoints[1].Data.Vehicles) do
-							if l_PathType:lower() == "air" then
-								s_isAirPath = true
-							end
-							if l_PathType:lower() == "water" then
-								s_isWaterPath = true
-							end
-						end
-					end
 					if not s_isAirPath and not s_isWaterPath then
 						if p_DetailedSearch then
 							for i = 1, #l_Waypoints, Registry.GAME_DIRECTOR.NODE_SEARCH_INCREMENTS do
 								local s_NewDistance = Utilities:DistanceFast(l_Waypoints[i].Position, p_Trans)
-								
+
 								if s_ClosestDistance == nil then
 									s_ClosestDistance = s_NewDistance
 									s_ClosestPathNode = l_Waypoints[i]
@@ -571,14 +621,17 @@ end
 function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 	-- check for spawn at squad-mate
 	local s_SquadMates = PlayerManager:GetPlayersBySquad(p_TeamId, p_SquadId)
-	for _,l_Player in pairs(s_SquadMates) do
+
+	for _, l_Player in pairs(s_SquadMates) do
 		if l_Player.soldier ~= nil then
 			if m_Utilities:isBot(l_Player) then
 				local s_SquadBot = g_BotManager:GetBotByName(l_Player.name)
+
 				if not s_SquadBot:IsStuck() then
 					if not s_SquadBot.m_InVehicle then
 						local s_WayIndex = s_SquadBot:GetWayIndex()
 						local s_PointIndex = s_SquadBot:GetPointIndex()
+
 						if MathUtils:GetRandomInt(1, 100) <= Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_SPAWN then
 							m_Logger:Write("spawn at squad-mate")
 							return s_WayIndex, s_PointIndex, s_SquadBot._InvertPathDirection, nil -- use same direction
@@ -587,12 +640,15 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 						end
 					else -- squad-bot in vehicle
 						local s_EntryId = s_SquadBot.m_Player.controlledEntryId
+
 						if s_EntryId == 0 then
 							local s_Vehicle = s_SquadBot.m_Player.controlledControllable
+
 							-- check for free seats
 							if m_Vehicles:GetNrOfFreeSeats(s_Vehicle, false) > 0 then
 								local s_WayIndex = s_SquadBot:GetWayIndex()
 								local s_PointIndex = s_SquadBot:GetPointIndex()
+
 								if MathUtils:GetRandomInt(1, 100) <= Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_VEHICLE_SPAWN then
 									m_Logger:Write("spawn at squad-mate's vehicle")
 									return s_WayIndex, s_PointIndex, s_SquadBot._InvertPathDirection, s_Vehicle -- use same direction
@@ -610,6 +666,7 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 				if l_Player.controlledControllable ~= nil and not l_Player.controlledControllable:Is("ServerSoldierEntity") then
 					if l_Player.controlledEntryId == 0 then
 						local s_Vehicle = l_Player.controlledControllable
+
 						-- check for free seats
 						if m_Vehicles:GetNrOfFreeSeats(s_Vehicle, true) > 0 then
 							if MathUtils:GetRandomInt(1, 100) <= Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_PLAYER_VEHICLE_SPAWN then
@@ -632,7 +689,8 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 	local s_ReferenceObjectivesEnemy = {}
 
 	for _, l_ReferenceObjective in pairs(self.m_AllObjectives) do
-		if not l_ReferenceObjective.isEnterVehiclePath and not l_ReferenceObjective.isBase and not l_ReferenceObjective.isSpawnPath then
+		if not l_ReferenceObjective.isEnterVehiclePath and not l_ReferenceObjective.isBase and
+			not l_ReferenceObjective.isSpawnPath then
 			if l_ReferenceObjective.team == TeamId.TeamNeutral then
 				table.insert(s_ReferenceObjectivesNeutral, l_ReferenceObjective)
 				break
@@ -643,6 +701,7 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 	end
 
 	local s_ReferenceObjective = nil
+
 	if #s_ReferenceObjectivesNeutral > 0 then
 		s_ReferenceObjective = s_ReferenceObjectivesNeutral[MathUtils:GetRandomInt(1, #s_ReferenceObjectivesNeutral)]
 	elseif #s_ReferenceObjectivesEnemy > 0 then
@@ -663,7 +722,7 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 
 		if s_PathsWithObjective == nil then
 			-- can only happen if the collection was cleared. So don't spawn in this case
-			return 0 , 0
+			return 0, 0
 		end
 
 		for _, l_Path in pairs(s_PathsWithObjective) do
@@ -683,20 +742,22 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 					table.insert(s_PossibleBases, l_Path)
 				elseif not p_OnlyBase then
 					if l_Objective.isAttacked then
-						table.insert(s_AttackedObjectives, {name = l_Objective.name, path = l_Path})
+						table.insert(s_AttackedObjectives, { name = l_Objective.name, path = l_Path })
 					end
-					table.insert(s_PossibleObjectives, {name = l_Objective.name, path = l_Path})
+
+					table.insert(s_PossibleObjectives, { name = l_Objective.name, path = l_Path })
 
 					if s_ReferenceObjective ~= nil and s_ReferenceObjective.position ~= nil and l_Objective.position ~= nil then
 						local s_DistanceToRef = s_ReferenceObjective.position:Distance(l_Objective.position)
 
 						if s_ClosestDistance == nil or s_DistanceToRef < s_ClosestDistance then
 							s_ClosestDistance = s_DistanceToRef
-							s_ClosestObjective = {name = l_Objective.name, path = l_Path}
+							s_ClosestObjective = { name = l_Objective.name, path = l_Path }
 						end
 					end
 				end
-			elseif l_Objective.team ~= p_TeamId and l_Objective.isBase and not l_Objective.active and l_Objective.name == self.m_RushAttackingBase then --rush attacking team
+			elseif l_Objective.team ~= p_TeamId and l_Objective.isBase and not l_Objective.active and
+				l_Objective.name == self.m_RushAttackingBase then --rush attacking team
 				table.insert(s_RushConvertedBases, l_Path)
 			end
 
@@ -707,7 +768,8 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 
 	-- spawn in base from time to time to get a vehicle
 	-- TODO: do this dependant of vehicle available
-	if not p_OnlyBase and #s_PossibleBases > 0 and MathUtils:GetRandomInt(1, 100) <= Registry.BOT_SPAWN.PROBABILITY_BASE_SPAWN then
+	if not p_OnlyBase and #s_PossibleBases > 0 and
+		MathUtils:GetRandomInt(1, 100) <= Registry.BOT_SPAWN.PROBABILITY_BASE_SPAWN then
 		m_Logger:Write("spwawn at base because of randomness")
 		local s_PathIndex = s_PossibleBases[MathUtils:GetRandomInt(1, #s_PossibleBases)]
 		return s_PathIndex, MathUtils:GetRandomInt(1, #m_NodeCollection:Get(nil, s_PathIndex))
@@ -719,7 +781,7 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 		return self:GetSpawnPathOfObjectives(s_AttackedObjectives)
 	elseif s_ClosestObjective ~= nil and (MathUtils:GetRandomInt(1, 100) < Registry.BOT_SPAWN.PROBABILITY_CLOSEST_SPAWN) then
 		m_Logger:Write("spwawn at closest objective")
-		return self:GetSpawnPathOfObjectives({s_ClosestObjective})
+		return self:GetSpawnPathOfObjectives({ s_ClosestObjective })
 	elseif #s_PossibleObjectives > 0 then
 		m_Logger:Write("spwawn at random objective")
 		return self:GetSpawnPathOfObjectives(s_PossibleObjectives)
@@ -741,7 +803,7 @@ function GameDirector:GetSpawnPathOfObjectives(p_PossibleObjectives)
 
 	for _, l_Objective in pairs(self.m_AllObjectives) do
 		if l_Objective.isSpawnPath and not l_Objective.isEnterVehiclePath then
-			for _,name in pairs(l_Objective.name:split(" ")) do
+			for _, name in pairs(l_Objective.name:split(" ")) do
 				if name == s_TempObject.name then
 					s_AvailableSpawnPaths = l_Objective.name
 					break
@@ -770,6 +832,7 @@ function GameDirector:IsOnObjectivePath(p_Path)
 			return true
 		end
 	end
+
 	return false
 end
 
@@ -781,6 +844,7 @@ function GameDirector:IsBasePath(p_ObjectiveNames)
 			return true
 		end
 	end
+
 	return false
 end
 
@@ -825,9 +889,11 @@ end
 
 function GameDirector:IsVehicleEnterPath(p_Objective)
 	local s_TempObjective = self:_GetObjectiveObject(p_Objective)
+
 	if s_TempObjective ~= nil and s_TempObjective.isEnterVehiclePath then
 		return true
 	end
+
 	return false
 end
 
@@ -836,11 +902,11 @@ function GameDirector:UseSubobjective(p_BotName, p_BotTeam, p_Objective)
 
 	if s_TempObjective ~= nil and s_TempObjective.subObjective then -- is valid getSubObjective
 		if s_TempObjective.active and not s_TempObjective.destroyed then
-
 			if self:_UseSubobjective(p_BotTeam, p_Objective) then
 				if s_TempObjective.assigned[p_BotTeam] < 2 then
 					s_TempObjective.assigned[p_BotTeam] = s_TempObjective.assigned[p_BotTeam] + 1
 					local s_Bot = g_BotManager:GetBotByName(p_BotName)
+
 					if s_Bot ~= nil then
 						s_Bot:SetObjective(p_Objective)
 						return true
@@ -890,9 +956,11 @@ function GameDirector:_RegisterRushEventCallbacks()
 		if s_Entity.data.instanceGuid == Guid("2CEA23B6-76E9-4E7B-85E6-EE648F686E48") then
 			s_Entity:RegisterEventCallback(self, self._OnInteractionDefend)
 		end
+
 		if s_Entity.data.instanceGuid == Guid("1768D76F-6DD0-4425-A898-32C851A4A476") then
 			s_Entity:RegisterEventCallback(self, self._OnInteractionAttack)
 		end
+
 		s_Entity = s_Iterator:Next()
 	end
 end
@@ -900,6 +968,7 @@ end
 function GameDirector:_UpdateTimersOfMcoms(p_DeltaTime)
 	for l_Objective, l_Timer in pairs(self.m_ArmedMcoms) do
 		self.m_ArmedMcoms[l_Objective] = l_Timer + p_DeltaTime
+
 		if self.m_ArmedMcoms[l_Objective] >= Registry.GAME_DIRECTOR.MCOMS_CHECK_CYCLE then
 			self:OnMcomDestroyed(l_Objective)
 		end
@@ -910,8 +979,10 @@ function GameDirector:_OnInteractionAttack(p_Entity, p_EntityEvent)
 	if p_EntityEvent.type == "ServerPlayerEvent" then
 		return
 	end
+
 	local s_GameEntity = GameEntity(p_Entity)
 	local s_Objective = self:_TranslateObjective(s_GameEntity.transform.trans)
+
 	if p_EntityEvent.eventId == MathUtils:FNVHash("Disable") then
 		self:OnMcomArmed(s_Objective)
 	end
@@ -921,8 +992,10 @@ function GameDirector:_OnInteractionDefend(p_Entity, p_EntityEvent)
 	if p_EntityEvent.type == "ServerPlayerEvent" then
 		return
 	end
+
 	local s_GameEntity = GameEntity(p_Entity)
 	local s_Objective = self:_TranslateObjective(s_GameEntity.transform.trans)
+
 	if p_EntityEvent.eventId == MathUtils:FNVHash("Disable") then
 		self:OnMcomDisarmed(s_Objective)
 	end
@@ -948,6 +1021,7 @@ function GameDirector:_InitObjectives()
 
 		if string.find(l_ObjectiveName:lower(), "base") ~= nil then
 			s_Objective.isBase = true
+
 			if string.find(l_ObjectiveName:lower(), "us") ~= nil then
 				s_Objective.team = TeamId.Team1
 			else
@@ -963,6 +1037,7 @@ function GameDirector:_InitObjectives()
 		if string.find(l_ObjectiveName:lower(), "vehicle") ~= nil then
 			s_Objective.isEnterVehiclePath = true
 			s_Objective.active = false
+
 			if string.find(l_ObjectiveName:lower(), "us") ~= nil then
 				s_Objective.team = TeamId.Team1
 			else
@@ -1015,7 +1090,9 @@ function GameDirector:_UpdateValidObjectives()
 			self.m_waitForZone = true
 			self.m_ZoneTimer = -self.m_UpdateTimer
 		end
+
 		local s_RushIndex = self.m_McomCounter + 1
+
 		for _, l_Objective in pairs(self.m_AllObjectives) do
 			local s_Fields = l_Objective.name:split(" ")
 			local s_Active = false
@@ -1059,31 +1136,33 @@ function GameDirector:_UpdateValidObjectives()
 	elseif Globals.IsRush then
 		if (self.m_McomCounter % 2) == 0 then
 			self.m_OnlyOneMcom = false
+
 			if self.m_McomCounter > 0 then
 				self.m_waitForZone = true
 				self.m_ZoneTimer = -self.m_UpdateTimer
 			end
+
 			local s_BaseIndex = 0
-			local s_McomIndexes = {0, 0}
+			local s_McomIndexes = { 0, 0 }
 
 			if self.m_McomCounter < 2 then
 				s_BaseIndex = 1
-				s_McomIndexes = {1, 2}
+				s_McomIndexes = { 1, 2 }
 			elseif self.m_McomCounter < 4 then
 				s_BaseIndex = 2
-				s_McomIndexes = {3, 4}
+				s_McomIndexes = { 3, 4 }
 			elseif self.m_McomCounter < 6 then
 				s_BaseIndex = 3
-				s_McomIndexes = {5, 6}
+				s_McomIndexes = { 5, 6 }
 			elseif self.m_McomCounter < 8 then
 				s_BaseIndex = 4
-				s_McomIndexes = {7, 8}
+				s_McomIndexes = { 7, 8 }
 			elseif self.m_McomCounter < 10 then
 				s_BaseIndex = 5
-				s_McomIndexes = {9, 10}
+				s_McomIndexes = { 9, 10 }
 			else
 				s_BaseIndex = 6
-				s_McomIndexes = {11, 12}
+				s_McomIndexes = { 11, 12 }
 			end
 
 			for _, l_Objective in pairs(self.m_AllObjectives) do
@@ -1145,7 +1224,8 @@ function GameDirector:_SetVehicleObjectiveState(p_Position, p_Value)
 	local s_ClosestVehicleEnterObjective = nil
 
 	for _, l_Waypoints in pairs(s_Paths) do
-		if l_Waypoints[1] ~= nil and l_Waypoints[1].Data ~= nil and l_Waypoints[1].Data.Objectives ~= nil and #l_Waypoints[1].Data.Objectives == 1 then
+		if l_Waypoints[1] ~= nil and l_Waypoints[1].Data ~= nil and l_Waypoints[1].Data.Objectives ~= nil and
+			#l_Waypoints[1].Data.Objectives == 1 then
 			local s_ObjectiveObject = self:_GetObjectiveObject(l_Waypoints[1].Data.Objectives[1])
 
 			if s_ObjectiveObject ~= nil and s_ObjectiveObject.active ~= p_Value and s_ObjectiveObject.isEnterVehiclePath then -- only check disabled objectives
@@ -1171,6 +1251,7 @@ function GameDirector:_SetVehicleObjectiveState(p_Position, p_Value)
 	if s_ClosestVehicleEnterObjective ~= nil then
 		s_ClosestVehicleEnterObjective.active = p_Value
 	end
+
 	return s_ClosestVehicleEnterObjective
 end
 

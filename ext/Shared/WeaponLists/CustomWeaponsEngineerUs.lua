@@ -4,8 +4,8 @@ CustomWeaponsEngineerUs = {
 	-- 'A91', --ru
 	-- 'ACR', --us
 	-- 'AKS74u', --ru
-	-- 'G36C', --us
-	-- 'HK53', --us
+	'G36C', --us
+	'HK53', --us
 	'M4A1', --us
 	-- 'MTAR', --both/none
 	-- 'QBZ-95B', --ru
@@ -54,6 +54,9 @@ CustomWeaponsEngineerUs = {
 	'Repairtool',
 
 	-- Gadget 2
+	-- 'Sa18IGLA', --ru
+	'Stinger', --us
+	'Javelin', --both
 	'SMAW', --us
 	-- 'RPG7', --ru
 

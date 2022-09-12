@@ -1,4 +1,4 @@
----@class BotKits
+---@enum BotKits
 BotKits = {
 	RANDOM_KIT = 0,
 	Assault = 1,

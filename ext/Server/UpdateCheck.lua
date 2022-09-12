@@ -21,16 +21,18 @@ local function UpdateFinished(p_Result, p_UpdateUrl, p_RemoteVersion, p_RemoteTi
 
 	if p_Result == 1 then
 		print('[UPDATE] Your version is newer than the one on the selected Update-Channel') -- @ToDo: Move this to a logger
-		print('[UPDATE] Your version is '.. p_CurrentVersion)
+		print('[UPDATE] Your version is ' .. p_CurrentVersion)
 		do return end
 	end
 
 	if p_Result == 2 then
 		if p_RemoteTimestamp ~= nil then
-			print('[ + ] A new version for fun-bots was released on ' .. os.date('%d-%m-%Y %H:%M', ParseOffset(p_RemoteTimestamp)) .. '!')
+			print('[ + ] A new version for fun-bots was released on ' ..
+				os.date('%d-%m-%Y %H:%M', ParseOffset(p_RemoteTimestamp)) .. '!')
 		else
 			print('[ + ] A new version for fun-bots is available!')
 		end
+
 		print('[ + ] Upgrade to ' .. p_RemoteVersion)
 		print('[ + ] Download: ' .. p_UpdateUrl)
 	end
@@ -52,10 +54,12 @@ local function CompareVersion(p_CurrentVersion, p_ExternalVersion)
 		-- print(s_NumericPartsCurrentVersion)
 		s_TempVersion = p_ExternalVersion:gsub("V", "", 1):gsub("v", "", 1)
 		local s_NumericPartsRemoteVersion = s_TempVersion:split("-")[1]:split(".")
+
 		-- print(s_NumericPartsRemoteVersion)
 		for i = 1, #s_NumericPartsCurrentVersion do
 			local s_NumberCurrent = tonumber(s_NumericPartsCurrentVersion[i])
 			local s_NumberRemote = tonumber(s_NumericPartsRemoteVersion[i])
+
 			if s_NumberCurrent ~= nil and s_NumberRemote ~= nil then
 				if s_NumberCurrent > s_NumberRemote then
 					return 1
@@ -69,6 +73,7 @@ local function CompareVersion(p_CurrentVersion, p_ExternalVersion)
 		if string.find(p_CurrentVersion, "dev") ~= nil and string.find(p_ExternalVersion, "dev") ~= nil then
 			local s_CurrentDev = p_CurrentVersion:split("dev")[2]
 			local s_RemoteDev = p_ExternalVersion:split("dev")[2]
+
 			if s_CurrentDev ~= nil and s_RemoteDev ~= nil then
 				if tonumber(s_CurrentDev) > tonumber(s_RemoteDev) then
 					return 1
@@ -82,6 +87,7 @@ local function CompareVersion(p_CurrentVersion, p_ExternalVersion)
 		if string.find(p_CurrentVersion, "RC") ~= nil and string.find(p_ExternalVersion, "RC") ~= nil then
 			local s_CurrentRc = p_CurrentVersion:split("RC")[2]
 			local s_RemoteRc = p_ExternalVersion:split("RC")[2]
+
 			if s_CurrentRc ~= nil and s_RemoteRc ~= nil then
 				if tonumber(s_CurrentRc) > tonumber(s_RemoteRc) then
 					return 1
@@ -99,6 +105,7 @@ end
 local function updateCheckCB(httpRequest)
 	-- Parse JSON
 	local s_EndpointJSON = json.decode(httpRequest.body)
+
 	if s_EndpointJSON == nil then
 		UpdateFinished(-1, nil, nil, nil, nil)
 		do return end
@@ -131,7 +138,6 @@ end
 -- Async check for newer updates
 -- Return: tba
 local function UpdateCheck()
-
 	-- Calculate the URL to get from.
 	local s_EndpointURL = ApiUrls.release
 

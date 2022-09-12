@@ -1,4 +1,4 @@
----@class VersionType
+---@enum VersionType
 VersionType = {
 	Release = 0,
 	Stable = 1,

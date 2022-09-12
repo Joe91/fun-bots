@@ -2,7 +2,7 @@
 CustomWeaponsSupportUs = {
 	-- LMG
 	-- 'L86', --us
-	-- 'LSAT', --us
+	'LSAT', --us
 	'M249', --us
 	'M27IAR', --us
 	'M60', --us

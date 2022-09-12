@@ -1,5 +1,6 @@
 ---@class BotNames
 BotNames = {
+	-- Normal Names
 	'Liam',
 	'Noah',
 	'Oliver',
@@ -26,7 +27,6 @@ BotNames = {
 	'Joseph',
 	'Levi',
 	'Mateo',
-	'David',
 	'John',
 	'Wyatt',
 	'Carter',
@@ -43,7 +43,6 @@ BotNames = {
 	'Lincoln',
 	'Jaxon',
 	'Asher',
-	'Christopher',
 	'Josiah',
 	'Andrew',
 	'Thomas',
@@ -130,18 +129,38 @@ BotNames = {
 	'Horst',
 	'Romeo',
 	'Erwin',
-	'Bizzi',
-	'Major',
-	'Joe',
-	'Firjen',
-	'Sjoerd',
 	'Robbe',
-	'Kiwi',
 	'Joker',
 	'Rube',
 	'Leon',
 	'Zaviar',
-	'LunyblacAseity',
+	-- Devs
+	'Bizzi',
+	'FlashHit',
+	'Bree',
+	'Arnold',
+	'Major',
+	'Joe',
+	'Firjen',
+	'Sjoerd',
+	'Kiwi',
+	'NoFaTe',
+	-- Contributors
+	'BOB',
+	'MeisterPeitsche',
+	'DuTcHrEaGaN',
+	'SmartShots',
+	'RekkieSA',
+	'MrDonPotato',
+	'KrazyIvan',
+	'GaryTheNoTrashCougar',
+	-- Supporters
+	'jacky890818',
+	'Cosmin',
+	'qnr3343',
+	'akebono047',
+	-- Other names
+	--[[ 'LunyblacAseity',
 	'Aseityja753',
 	'WordplayAmelus',
 	'Ameluslan93',
@@ -396,5 +415,5 @@ BotNames = {
 	'JedrekDiable',
 	'Diablercs_1',
 	'EcnerBarn',
-	'Barnman38'
+	'Barnman38' ]]
 }
