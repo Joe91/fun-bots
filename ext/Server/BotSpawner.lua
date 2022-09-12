@@ -1365,32 +1365,55 @@ end
 
 function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 	local s_Unlocks = {}
-	-- squad-perks
-	-- ammo, explosive, explosiveResist, Grenade, HealSpeed, sprint, supression, supression resist
-	-- table.insert(s_Unlocks,	ResourceManager:SearchForDataContainer("Persistence/Unlocks/Soldiers/Specializations/AmmoBoostL2"))
-	-- table.insert(s_Unlocks,	ResourceManager:SearchForDataContainer("Persistence/Unlocks/Soldiers/Specializations/ExplosiveBoostL2"))
-	-- table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("Persistence/Unlocks/Soldiers/Specializations/ExplosiveResistL2")) -- not real?
-	-- table.insert(s_Unlocks,	ResourceManager:SearchForDataContainer("Persistence/Unlocks/Soldiers/Specializations/GrenadeBoostL2"))
-	-- table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("Persistence/Unlocks/Soldiers/Specializations/HealSpeedBoostL2")) --not real?
-	table.insert(s_Unlocks,
-		ResourceManager:SearchForDataContainer("Persistence/Unlocks/Soldiers/Specializations/SprintBoostL2"))
-	-- table.insert(s_Unlocks,	ResourceManager:SearchForDataContainer("Persistence/Unlocks/Soldiers/Specializations/SuppressionBoostL2"))
-	-- table.insert(s_Unlocks,	ResourceManager:SearchForDataContainer("Persistence/Unlocks/Soldiers/Specializations/SuppressionResistL2"))
+	local s_PossiblePerks = { -- sorted by quality
+		"persistence/unlocks/soldiers/specializations/sprintboostl2", -- tier 1
+		"persistence/unlocks/soldiers/specializations/ammoboostl2", -- tier 1
+		"persistence/unlocks/soldiers/specializations/suppressionresistl2", -- tier 1
+		"persistence/unlocks/soldiers/specializations/explosiveboostl2", -- tier 2
+		"persistence/unlocks/soldiers/specializations/explosiveresistl2", -- tier 2
+		"persistence/unlocks/soldiers/specializations/grenadeboostl2", -- tier 3
+		"persistence/unlocks/soldiers/specializations/suppressionboostl2", -- tier 3
+		-- "persistence/unlocks/soldiers/specializations/healspeedboostl2", -- not
+	}
 
-	-- Vehicle perks
-	table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/jetflarelauncher"))
-	table.insert(s_Unlocks,
-		ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/atkheliproximityscangunner"))
-	table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/mbtproximityscan"))
-	table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/mbtcoaxlmg"))
-	table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/mbtsmokelaunchers"))
-	table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/jetheatseekerstance"))
-	table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/atkhelizoomoptics"))
-	table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/atkhelihellfiremissile"))
-	table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/atkheliheatseekermissile"))
-	table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/atkheliflarelauncher"))
-	table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/atkhelistealth"))
-	table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/jetstealth"))
+	local s_SquadPlayers = PlayerManager:GetPlayersBySquad(p_TeamId, p_SquadId)
+	for _, l_SquadPlayer in pairs(s_SquadPlayers) do
+		if l_SquadPlayer.id ~= p_Bot.m_Player.id then
+			print(l_SquadPlayer.id)
+			for _, l_PlayerUnlock in pairs(l_SquadPlayer.selectedUnlocks) do
+				local s_UsedSquadPerk = l_PlayerUnlock["partition"]["name"]
+				for l_Index, l_PossiblePerk in pairs(s_PossiblePerks) do
+					if l_PossiblePerk == s_UsedSquadPerk then
+						table.remove(s_PossiblePerks, l_Index)
+						break
+					end
+				end
+			end
+		end
+	end
+
+	local s_SelectedPerk = ""
+	for l_IndexPerk, l_PerkName in pairs(s_PossiblePerks) do
+		s_SelectedPerk = s_PossiblePerks[l_IndexPerk]
+		if MathUtils:GetRandomInt(1, 100) >= 66 then -- use best available perk with 66%
+			break
+		end
+	end
+	table.insert(s_Unlocks, ResourceManager:SearchForDataContainer(s_SelectedPerk))
+
+	-- -- Vehicle perks
+	-- table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/jetflarelauncher"))
+	-- table.insert(s_Unlocks,	ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/atkheliproximityscangunner"))
+	-- table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/mbtproximityscan"))
+	-- table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/mbtcoaxlmg"))
+	-- table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/mbtsmokelaunchers"))
+	-- table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/jetheatseekerstance"))
+	-- table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/atkhelizoomoptics"))
+	-- table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/atkhelihellfiremissile"))
+	-- table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/atkheliheatseekermissile"))
+	-- table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/atkheliflarelauncher"))
+	-- table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/atkhelistealth"))
+	-- table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/jetstealth"))
 
 
 	return s_Unlocks
