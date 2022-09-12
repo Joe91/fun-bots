@@ -512,9 +512,9 @@ function Bot:GetAttackDistance()
 
 	if not self.m_InVehicle then
 		if self.m_ActiveWeapon == nil or self.m_ActiveWeapon.type ~= WeaponTypes.Sniper then
-			s_AttackDistance = Config.MaxShootDistanceNoSniper
+			s_AttackDistance = Config.MaxShootDistance
 		else
-			s_AttackDistance = Config.MaxRaycastDistance
+			s_AttackDistance = Config.MaxShootDistanceSniper
 		end
 	else
 		if m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) and
@@ -522,7 +522,7 @@ function Bot:GetAttackDistance()
 			m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.AntiAir) then
 			s_AttackDistance = Config.MaxShootDistanceNoAntiAir
 		else
-			s_AttackDistance = Config.MaxRaycastDistanceVehicles
+			s_AttackDistance = Config.MaxShootDistanceVehicles
 		end
 	end
 

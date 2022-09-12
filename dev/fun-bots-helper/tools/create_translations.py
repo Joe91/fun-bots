@@ -19,7 +19,7 @@ def createTranslations(pathToFiles):
 		pathToFiles + "ext/Client/ClientNodeEditor.lua",
 		pathToFiles + "ext/Server/BotSpawner.lua",
 		pathToFiles + "ext/Server/UIServer.lua",
-		pathToFiles + "ext/Shared/NodeCollection.lua"]
+		pathToFiles + "ext/Server/NodeCollection.lua"]
 
 	with open(settings_definition, "r") as inFile:
 		readoutActive = False
