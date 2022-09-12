@@ -23,6 +23,7 @@ local m_BotWeaponHandling = require('Bot/BotWeaponHandling')
 local m_VehicleAiming = require('Bot/VehicleAiming')
 local m_VehicleAttacking = require('Bot/VehicleAttacking')
 local m_VehicleMovement = require('Bot/VehicleMovement')
+local m_VehicleWeaponHandling = require('Bot/VehicleWeaponHandling')
 
 
 
@@ -280,7 +281,7 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 
 						if self._UpdateTimer >= Registry.BOT.BOT_UPDATE_CYCLE then
 							-- common part
-							self:_UpdateWeaponSelectionVehicle()
+							m_VehicleWeaponHandling:UpdateWeaponSelectionVehicle(self)
 
 							-- differ attacking
 							if s_Attacking then
@@ -327,14 +328,14 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 							-- sync slow code with fast code. Therefore execute the slow code first
 							if self._UpdateTimer >= Registry.BOT.BOT_UPDATE_CYCLE then
 								-- common part
-								self:_UpdateWeaponSelectionVehicle()
+								m_VehicleWeaponHandling:UpdateWeaponSelectionVehicle(self)
 
 								-- differ attacking
 								if s_Attacking then
 									m_VehicleAttacking:UpdateAttackingVehicle(self)
 									m_VehicleMovement:UpdateShootMovementVehicle(self)
 								else
-									self:_UpdateReloadVehicle()
+									m_VehicleWeaponHandling:UpdateReloadVehicle(self)
 									if self.m_Player.controlledEntryId == 0 and not s_IsStationaryLauncher then -- only if driver
 										m_VehicleMovement:UpdateNormalMovementVehicle(self)
 									end
@@ -1142,32 +1143,6 @@ function Bot:_UpdateStationaryAAVehicle(p_Attacking)
 	m_VehicleMovement:UpdateYawVehicle(self, true, false) --only gun --> therefore alsways gun-mode
 end
 
-function Bot:_UpdateWeaponSelectionVehicle()
-	--select weapon-slot (rn always primary in vehicle)
-	if self.m_Player.soldier.weaponsComponent ~= nil then
-		if self.m_Player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_0 then
-			self:_SetInput(EntryInputActionEnum.EIASelectWeapon1, 1)
-			self.m_ActiveWeapon = self.m_Primary
-			self._ShotTimer = 0.0
-		end
-	end
-end
-
-function Bot:_UpdateReloadVehicle()
-	self._WeaponToUse = BotWeapons.Primary
-	self:AbortAttack()
-
-	if self._ActiveAction ~= BotActionFlags.OtherActionActive then
-		self._TargetPitch = 0.0
-	end
-
-	self._ReloadTimer = self._ReloadTimer + Registry.BOT.BOT_UPDATE_CYCLE
-
-	if self._ReloadTimer > 1.5 and self._ReloadTimer < 2.5 then
-		self:_SetInput(EntryInputActionEnum.EIAReload, 1)
-	end
-end
-
 ---@param p_Position Vec3
 function Bot:FindVehiclePath(p_Position)
 	local s_Node = g_GameDirector:FindClosestPath(p_Position, true, true, self.m_ActiveVehicle.Terrain)
@@ -1192,7 +1167,9 @@ function Bot:UpdateVehicleMovableId()
 	if self.m_OnVehicle then
 		self._VehicleMovableId = nil
 	elseif self.m_InVehicle then
-		self._VehicleMovableId = m_Vehicles:GetPartIdForSeat(self.m_ActiveVehicle, self.m_Player.controlledEntryId)
+		self._ActiveVehicleWeaponSlot = 0
+		self._VehicleMovableId = m_Vehicles:GetPartIdForSeat(self.m_ActiveVehicle, self.m_Player.controlledEntryId,
+			self._ActiveVehicleWeaponSlot)
 
 		if self.m_Player.controlledEntryId == 0 then
 			self:FindVehiclePath(self.m_Player.soldier.worldTransform.trans)
@@ -1235,7 +1212,8 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 
 			-- get ID
 			self.m_ActiveVehicle = s_VehicleData
-			self._VehicleMovableId = m_Vehicles:GetPartIdForSeat(self.m_ActiveVehicle, i)
+			self._ActiveVehicleWeaponSlot = 0
+			self._VehicleMovableId = m_Vehicles:GetPartIdForSeat(self.m_ActiveVehicle, i, self._ActiveVehicleWeaponSlot)
 			m_Logger:Write(self.m_ActiveVehicle)
 
 			if i == 0 then
