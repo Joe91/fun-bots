@@ -1,4 +1,5 @@
 ---@class RCONCommands
+---@overload fun():RCONCommands
 RCONCommands = class('RCONCommands')
 
 require('__shared/Config')
@@ -54,7 +55,7 @@ function RCONCommands:__init()
 				local s_Value = p_Args[1]
 
 				if s_Value == nil then
-					return {'ERROR', 'Needing <String>.'}
+					return { 'ERROR', 'Needing <String>.' }
 				end
 
 				table.insert(BotNames, s_Value)
@@ -71,13 +72,13 @@ function RCONCommands:__init()
 				local s_Value = p_Args[1]
 
 				if s_Value == nil then
-					return {'ERROR', 'Needing <JSONArray>.'}
+					return { 'ERROR', 'Needing <JSONArray>.' }
 				end
 
 				local s_Result = json.decode(s_Value)
 
 				if s_Result == nil then
-					return {'ERROR', 'Needing <JSONArray>.'}
+					return { 'ERROR', 'Needing <JSONArray>.' }
 				end
 
 				BotNames = s_Result
@@ -104,7 +105,7 @@ function RCONCommands:__init()
 				local s_Name = p_Args[1]
 
 				if s_Name == nil then
-					return {'ERROR', 'Name needed.'}
+					return { 'ERROR', 'Name needed.' }
 				end
 
 				m_BotManager:DestroyBot(s_Name)
@@ -132,26 +133,26 @@ function RCONCommands:__init()
 				local s_Team = p_Args[2]
 
 				if s_Value == nil then
-					return {'ERROR', 'Needing Spawn amount.'}
+					return { 'ERROR', 'Needing Spawn amount.' }
 				end
 
 				if s_Team == nil then
-					return {'ERROR', 'Needing Team.'}
+					return { 'ERROR', 'Needing Team.' }
 				end
 
 				if tonumber(s_Value) == nil then
-					return {'ERROR', 'Needing Spawn amount.'}
+					return { 'ERROR', 'Needing Spawn amount.' }
 				end
 
 				local s_Amount = tonumber(s_Value)
 
 				if TeamId[s_Team] == nil then
-					return {'ERROR', 'Unknown Team: TeamId.' .. s_Team }
+					return { 'ERROR', 'Unknown Team: TeamId.' .. s_Team }
 				end
 
 				m_BotSpawner:SpawnWayBots(nil, s_Amount, true, nil, nil, TeamId[s_Team])
 
-				return {'OK'}
+				return { 'OK' }
 			end)
 		},
 
@@ -167,7 +168,7 @@ function RCONCommands:__init()
 				if s_Permission ~= nil then
 					if s_Permission == '!' then
 						local s_Permissions = PermissionManager:GetPermissions(s_Name)
-						local s_Result = {'OK', 'REVOKED'}
+						local s_Result = { 'OK', 'REVOKED' }
 
 						if s_Permissions ~= nil and #s_Permissions >= 1 then
 							for l_Key, l_Value in pairs(s_Permissions) do
@@ -178,20 +179,21 @@ function RCONCommands:__init()
 						if PermissionManager:RevokeAll(s_Name) then
 							return s_Result
 						else
-							return {'ERROR', 'Can\'r revoke all Permissions from "' .. s_Name .. '".'}
+							return { 'ERROR', 'Can\'r revoke all Permissions from "' .. s_Name .. '".' }
 						end
 					-- Revoke SPECIFIC Permission
 					elseif s_Permission:sub(1, 1) == '!' then
 						s_Permission = s_Permission:sub(2)
 
 						if PermissionManager:Exists(s_Permission) == false then
-							return {'ERROR', 'Unknown Permission:', s_Permission}
+							return { 'ERROR', 'Unknown Permission:', s_Permission }
 						end
 
 						if PermissionManager:Revoke(s_Name, s_Permission) then
-							return {'OK', 'REVOKED'}
+							return { 'OK', 'REVOKED' }
 						else
-							return {'ERROR', 'Can\'r revoke the Permission "' .. PermissionManager:GetCorrectName(s_Permission) .. '" for "' .. s_Name .. '".'}
+							return { 'ERROR',
+								'Can\'r revoke the Permission "' .. PermissionManager:GetCorrectName(s_Permission) .. '" for "' .. s_Name .. '".' }
 						end
 					end
 				end
@@ -200,7 +202,7 @@ function RCONCommands:__init()
 					local s_All = PermissionManager:GetAll()
 
 					if s_All ~= nil and #s_All >= 1 then
-						local s_Result = {'OK', 'LIST'}
+						local s_Result = { 'OK', 'LIST' }
 
 						for l_Key, l_Value in pairs(s_All) do
 							table.insert(s_Result, PermissionManager:GetCorrectName(l_Value))
@@ -209,21 +211,21 @@ function RCONCommands:__init()
 						return s_Result
 					end
 
-					return {'ERROR', 'Needing PlayerName.'}
+					return { 'ERROR', 'PlayerName needed.' }
 				end
 
-				local s_Player = PlayerManager:GetPlayerByName(s_Name)
+				-- local s_Player = PlayerManager:GetPlayerByName(s_Name)
 
-				if s_Player == nil then
-					s_Player = PlayerManager:GetPlayerByGuid(Guid(s_Name))
+				-- if s_Player == nil then
+				-- 	s_Player = PlayerManager:GetPlayerByGuid(Guid(s_Name))
 
-					if s_Player == nil then
-						return {'ERROR', 'Unknown PlayerName "' .. s_Name .. '".'}
-					end
-				end
+				-- 	if s_Player == nil then
+				-- 		return {'ERROR', 'Unknown PlayerName "' .. s_Name .. '".'}
+				-- 	end
+				-- end
 
 				if s_Permission == nil then
-					local s_Result = { 'LIST', s_Player.name, tostring(s_Player.guid) }
+					local s_Result = { 'LIST', s_Name }
 					local s_Permissions = PermissionManager:GetPermissions(s_Name)
 
 					if s_Permissions ~= nil then
@@ -236,12 +238,12 @@ function RCONCommands:__init()
 				end
 
 				if PermissionManager:Exists(s_Permission) == false then
-					return {'ERROR', 'Unknown Permission:', s_Permission}
+					return { 'ERROR', 'Unknown Permission:', s_Permission }
 				end
 
-				PermissionManager:AddPermission(s_Player.name, s_Permission)
+				PermissionManager:AddPermission(s_Name, s_Permission)
 
-				return {'OK'}
+				return { 'OK' }
 			end)
 		}
 	}
@@ -271,28 +273,31 @@ end
 
 function RCONCommands:CreateConfigCommands()
 	for key, value in pairs(Config) do
-		RCON:RegisterCommand('funbots.config.'..key, RemoteCommandFlag.RequiresLogin, function(p_Command, p_Args, p_LoggedIn)
-			local s_values = p_Command:split(".")
-			local s_VarName = s_values[#s_values]
+		RCON:RegisterCommand('funbots.config.' .. key, RemoteCommandFlag.RequiresLogin,
+			function(p_Command, p_Args, p_LoggedIn)
+				local s_values = p_Command:split(".")
+				local s_VarName = s_values[#s_values]
 
-			if p_Args == nil or #p_Args == 0 then
-				-- get var
-				return {'OK', 'value of var '.. s_VarName .. ' is '..tostring(Config[s_VarName])}
-			elseif #p_Args == 1 and p_Args[1] ~= nil then
-				-- set var
-				local s_Result = m_SettingsManager:UpdateSetting(s_VarName, p_Args[1])
-				if s_Result then
-					return {'OK'}
-				else
-					return {'ERROR', 'Not valid'}
+				if p_Args == nil or #p_Args == 0 then
+					-- get var
+					return { 'OK', 'value of var ' .. s_VarName .. ' is ' .. tostring(Config[s_VarName]) }
+				elseif #p_Args == 1 and p_Args[1] ~= nil then
+					-- set var
+					local s_Result = m_SettingsManager:UpdateSetting(s_VarName, p_Args[1])
+
+					if s_Result then
+						return { 'OK' }
+					else
+						return { 'ERROR', 'Not valid' }
+					end
 				end
-			end
-		end)
+			end)
 	end
 end
 
 function RCONCommands:_Create()
 	self:CreateConfigCommands()
+
 	for l_Index, l_Command in pairs(self.m_Commands) do
 		self:_CreateCommand(l_Command.Name, l_Command.Callback)
 	end

@@ -1,4 +1,5 @@
 ---@class Database
+---@overload fun():Database
 Database = class('Database')
 
 require('__shared/ArrayMap')
@@ -131,7 +132,8 @@ function Database:Update(p_TableName, p_Parameters, p_Where)
 
 	m_Logger:Write('UPDATE `' .. p_TableName .. '` SET ' .. s_Fields:join(',') .. ' WHERE `' .. p_Where .. '`=' .. s_Found)
 
-	return self:Query('UPDATE `' .. p_TableName .. '` SET ' .. s_Fields:join(', ') .. ' WHERE `' .. p_Where .. '`=\'' .. s_Found .. '\'')
+	return self:Query('UPDATE `' ..
+		p_TableName .. '` SET ' .. s_Fields:join(', ') .. ' WHERE `' .. p_Where .. '`=\'' .. s_Found .. '\'')
 end
 
 -- this is unused
@@ -196,7 +198,7 @@ function Database:Delete(p_TableName, p_Parameters)
 	local s_Where = ArrayMap()
 
 	for l_Name, l_Value in pairs(p_Parameters) do
-		s_Where:add('`' .. l_Name .. '`=\'' ..l_Value .. '\'')
+		s_Where:add('`' .. l_Name .. '`=\'' .. l_Value .. '\'')
 	end
 
 	return self:Query('DELETE FROM ' .. p_TableName .. ' WHERE ' .. s_Where:join(' AND '))

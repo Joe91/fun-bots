@@ -1,5 +1,6 @@
 ---@class SpawnSet
-SpawnSet = class('SpawnSet')
+---@overload fun():SpawnSet
+SpawnSet = class("SpawnSet")
 
 function SpawnSet:__init()
 	self.m_PlayerVarOfBot = nil

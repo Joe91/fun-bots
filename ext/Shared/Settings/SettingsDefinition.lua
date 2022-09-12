@@ -82,7 +82,7 @@ SettingsDefinition = {
 			Value = Config.BotAimWorsening,
 			Description = "Make bots aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy).",
 			Reference = Range(0.00, 10.00, 0.05),
-			Default = 0.4,
+			Default = 0.3,
 			UpdateFlag = UpdateFlag.Weapons,
 			Category = "DIFFICULTY"
 		},
@@ -106,7 +106,7 @@ SettingsDefinition = {
 			Value = Config.BotSupportAimWorsening,
 			Description = "See botAimWorsening, only for LMGs",
 			Reference = Range(0.00, 10.00, 0.05),
-			Default = 0.2,
+			Default = 0.3,
 			UpdateFlag = UpdateFlag.Weapons,
 			Category = "DIFFICULTY"
 		},
@@ -119,7 +119,7 @@ SettingsDefinition = {
 			Description = "Variation of the skill of a single bot. the higher, the worse the bots can get compared to the original settings",
 			Reference = Range(0.00, 1.00, 0.05),
 			Default = 0.50,
-			UpdateFlag = UpdateFlag.None,
+			UpdateFlag = UpdateFlag.Skill,
 			Category = "DIFFICULTY"
 		},
 		{
@@ -131,7 +131,7 @@ SettingsDefinition = {
 			Description = "See BotWorseningSkill - only for BOTs using sniper bolt-action rifles.",
 			Reference = Range(0.00, 1.00, 0.05),
 			Default = 0.50,
-			UpdateFlag = UpdateFlag.None,
+			UpdateFlag = UpdateFlag.Skill,
 			Category = "DIFFICULTY"
 		},
 		{
@@ -142,7 +142,7 @@ SettingsDefinition = {
 			Value = Config.DamageFactorAssault,
 			Description = "Original Damage from bots gets multiplied by this",
 			Reference = Range(0.00, 2.00, 0.10),
-			Default = 0.5,
+			Default = 1.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
@@ -154,7 +154,7 @@ SettingsDefinition = {
 			Value = Config.DamageFactorCarabine,
 			Description = "Original Damage from bots gets multiplied by this",
 			Reference = Range(0.00, 2.00, 0.10),
-			Default = 0.5,
+			Default = 1.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
@@ -166,7 +166,7 @@ SettingsDefinition = {
 			Value = Config.DamageFactorLMG,
 			Description = "Original Damage from bots gets multiplied by this",
 			Reference = Range(0.00, 2.00, 0.10),
-			Default = 0.5,
+			Default = 1.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
@@ -178,7 +178,7 @@ SettingsDefinition = {
 			Value = Config.DamageFactorPDW,
 			Description = "Original Damage from bots gets multiplied by this",
 			Reference = Range(0.00, 2.00, 0.10),
-			Default = 0.5,
+			Default = 1.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
@@ -190,7 +190,7 @@ SettingsDefinition = {
 			Value = Config.DamageFactorSniper,
 			Description = "Original Damage from bots gets multiplied by this",
 			Reference = Range(0.00, 2.00, 0.10),
-			Default = 0.8,
+			Default = 1.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
@@ -202,7 +202,7 @@ SettingsDefinition = {
 			Value = Config.DamageFactorShotgun,
 			Description = "Original Damage from bots gets multiplied by this",
 			Reference = Range(0.00, 2.00, 0.10),
-			Default = 0.8,
+			Default = 1.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
@@ -214,7 +214,7 @@ SettingsDefinition = {
 			Value = Config.DamageFactorPistol,
 			Description = "Original Damage from bots gets multiplied by this",
 			Reference = Range(0.00, 2.00, 0.10),
-			Default = 0.7,
+			Default = 1.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
@@ -241,6 +241,17 @@ SettingsDefinition = {
 			Description = "Mode the bots spawn with",
 			Reference = SpawnModes,
 			Default = SpawnModes.balanced_teams,
+			UpdateFlag = UpdateFlag.AmountAndTeam,
+			Category = "SPAWN"
+		},
+		{
+			Name = "BalancePlayersIgnoringBots",
+			Text = "Balance Players Ignoring Bots",
+			---@type Type|integer
+			Type = Type.Boolean,
+			Value = Config.BalancePlayersIgnoringBots,
+			Description = "Counts players in each team to decide which team a player joins",
+			Default = false,
 			UpdateFlag = UpdateFlag.AmountAndTeam,
 			Category = "SPAWN"
 		},
@@ -399,7 +410,7 @@ SettingsDefinition = {
 			Category = "SPAWN"
 		},
 
-	-- Spawn limits
+		-- Spawn limits
 		{
 			Name = "MaxBotsPerTeamDefault",
 			Text = "Max Bots Per Team (default)",
@@ -604,7 +615,7 @@ SettingsDefinition = {
 			Reference = Range(1.00, 1500.00, 5.0),
 			Default = 70,
 			UpdateFlag = UpdateFlag.None,
-			Category ="BEHAVIOUR"
+			Category = "BEHAVIOUR"
 		},
 		{
 			Name = "MaxShootDistancePistol",
@@ -883,7 +894,7 @@ SettingsDefinition = {
 			Reference = Range(1.00, 1500.00, 5.0),
 			Default = 150,
 			UpdateFlag = UpdateFlag.None,
-			Category ="VEHICLE"
+			Category = "VEHICLE"
 		},
 		{
 			Name = "VehicleWaitForPassengersTime",
@@ -895,7 +906,7 @@ SettingsDefinition = {
 			Reference = Range(0.50, 60.00, 0.5),
 			Default = 7.0,
 			UpdateFlag = UpdateFlag.None,
-			Category ="VEHICLE"
+			Category = "VEHICLE"
 		},
 		{
 			Name = "ChopperDriversAttack",
@@ -1084,7 +1095,7 @@ SettingsDefinition = {
 			Value = Config.WaypointRange,
 			Description = "Set how far away waypoints are visible (meters)",
 			Reference = Range(1.00, 1000.00, 1.0),
-			Default = 100,
+			Default = 50,
 			UpdateFlag = UpdateFlag.None,
 			Category = "TRACE"
 		},
@@ -1107,7 +1118,7 @@ SettingsDefinition = {
 			Value = Config.LineRange,
 			Description = "Set how far away waypoint lines are visible (meters)",
 			Reference = Range(1.00, 1000.00, 1.0),
-			Default = 15,
+			Default = 25,
 			UpdateFlag = UpdateFlag.None,
 			Category = "TRACE"
 		},
@@ -1130,7 +1141,7 @@ SettingsDefinition = {
 			Value = Config.TextRange,
 			Description = "Set how far away waypoint text is visible (meters)",
 			Reference = Range(1.00, 1000.00, 1.0),
-			Default = 5,
+			Default = 7,
 			UpdateFlag = UpdateFlag.None,
 			Category = "TRACE"
 		},
@@ -1188,7 +1199,7 @@ SettingsDefinition = {
 			Value = Config.NodesPerCycle,
 			Description = "Set how many nodes get drawn per cycle. Affects performance",
 			Reference = Range(1.00, 10000.00, 1.0),
-			Default = 100,
+			Default = 400,
 			UpdateFlag = UpdateFlag.None,
 			Category = "TRACE"
 		},
@@ -1365,7 +1376,7 @@ SettingsDefinition = {
 			Value = Config.BotFireModeDuration,
 			Description = "The minimum time a bot tries to shoot a player - recommended minimum 3.0, below this you will have issues.",
 			Reference = Range(0.00, 60.00, 0.5),
-			Default = 4.0,
+			Default = 4.5,
 			UpdateFlag = UpdateFlag.None,
 			Category = "EXPERT"
 		},
@@ -1450,18 +1461,6 @@ SettingsDefinition = {
 			Description = "Try this often to spawn a bot away from players",
 			Reference = Range(0.00, 100.00, 1.0),
 			Default = 3,
-			UpdateFlag = UpdateFlag.None,
-			Category = "EXPERT"
-		},
-		{
-			Name = "HeadShotFactorBots",
-			Text = "Headshot factor bots",
-			---@type Type|integer
-			Type = Type.Float,
-			Value = Config.HeadShotFactorBots,
-			Description = "Factor for damage if headshot (only in Fake-mode)",
-			Reference = Range(0.00, 10.00, 0.1),
-			Default = 1.5,
 			UpdateFlag = UpdateFlag.None,
 			Category = "EXPERT"
 		},

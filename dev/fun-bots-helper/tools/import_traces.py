@@ -30,13 +30,14 @@ def importTraces(pathToFiles):
 		with open(sourceFolder + "/" + filename, "r") as infile:
 			allNodeData = []
 			for line in infile.readlines()[1:]:
-				lineData = line.split(";")
-				dataString = ""
-				if len(lineData) >= 7:
-					dataString = lineData[6]
-					dataString = dataString.replace("\n","")
-				node = (int(lineData[0]),int(lineData[1]),float(lineData[2]),float(lineData[3]),float(lineData[4]), int(lineData[5]), dataString)
-				allNodeData.append(node)
+				if len(line) > 1: #skip newlines
+					lineData = line.split(";")
+					dataString = ""
+					if len(lineData) >= 7:
+						dataString = lineData[6]
+						dataString = dataString.replace("\n","")
+					node = (int(lineData[0]),int(lineData[1]),float(lineData[2]),float(lineData[3]),float(lineData[4]), int(lineData[5]), dataString)
+					allNodeData.append(node)
 			cursor.executemany('INSERT INTO ' + tablename + ' (pathIndex, pointIndex, transX, transY, transZ, inputVar, data) VALUES (?,?,?,?,?,?,?)', allNodeData)
 			
 	connection.commit()

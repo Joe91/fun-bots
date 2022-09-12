@@ -1,4 +1,5 @@
 ---@class FunBotClient
+---@overload fun():FunBotClient
 FunBotClient = class('FunBotClient')
 
 require('__shared/Config')
@@ -79,12 +80,7 @@ function FunBotClient:RegisterEvents()
 end
 
 function FunBotClient:RegisterHooks()
-	if not Registry.COMMON.USE_REAL_DAMAGE then
-		Hooks:Install('BulletEntity:Collision', 200, self, self.OnBulletEntityCollision)
-	end
-
 	Hooks:Install('UI:PushScreen', 1, self, self.OnUIPushScreen)
-
 	Hooks:Install('Input:PreUpdate', 100, self, self.OnInputPreUpdate)
 end
 
@@ -102,10 +98,12 @@ end
 ---@param p_Player Player
 function FunBotClient:OnPlayerRespawn(p_Player)
 	local s_LocalPlayer = PlayerManager:GetLocalPlayer()
+
 	if s_LocalPlayer ~= nil and p_Player == s_LocalPlayer then
-		local s_OldMemory = math.floor(collectgarbage("count")/1024)
+		local s_OldMemory = math.floor(collectgarbage("count") / 1024)
 		collectgarbage('collect')
-		m_Logger:Write("*Collecting Garbage on Level Destroy: " .. math.floor(collectgarbage("count")/1024) .. " MB | Old Memory: " .. s_OldMemory .. " MB")
+		m_Logger:Write("*Collecting Garbage on Level Destroy: " ..
+			math.floor(collectgarbage("count") / 1024) .. " MB | Old Memory: " .. s_OldMemory .. " MB")
 	end
 end
 
@@ -156,7 +154,7 @@ end
 ---@param p_DeltaTime number
 ---@param p_SimulationDeltaTime number
 function FunBotClient:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
-	m_ClientNodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
+	-- m_ClientNodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 end
 
 ---VEXT Client UI:DrawHud Event
@@ -177,6 +175,7 @@ end
 
 function FunBotClient:OnWriteClientSettings(p_NewConfig, p_UpdateWeaponSets)
 	m_ClientBotManager:OnWriteClientSettings(p_NewConfig, p_UpdateWeaponSets)
+
 	if not self._SettingsValid then
 		self._SettingsValid = true
 		m_Language:loadLanguage(Config.Language)
@@ -207,15 +206,6 @@ end
 -- =============================================
 -- Hooks
 -- =============================================
-
----VEXT Client BulletEntity:Collision Hook
----@param p_HookCtx HookContext
----@param p_Entity Entity
----@param p_Hit RayCastHit
----@param p_Shooter Player|nil
-function FunBotClient:OnBulletEntityCollision(p_HookCtx, p_Entity, p_Hit, p_Shooter)
-	m_ClientBotManager:OnBulletEntityCollision(p_HookCtx, p_Entity, p_Hit, p_Shooter)
-end
 
 ---VEXT Client Input:PreUpdate Hook
 ---@param p_HookCtx HookContext

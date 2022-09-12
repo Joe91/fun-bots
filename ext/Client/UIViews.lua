@@ -1,4 +1,5 @@
 ---@class UIViews
+---@overload fun():UIViews
 UIViews = class 'UIViews'
 
 require('__shared/ArrayMap')
@@ -24,21 +25,21 @@ end
 function UIViews:_onUIClose(p_Name)
 	-- @ToDo p_Name of closing view
 	--if self:isVisible() and self._views:isEmpty() then
-		--self:close()
+	--self:close()
 	--end
 end
 
 -- Open the complete WebUI
 --function UIViews:open()
-	--WebUI:Show()
-	--self._webui = 1
+--WebUI:Show()
+--self._webui = 1
 --end
 
 -- Close the complete WebUI
 --function UIViews:close()
-	--WebUI:Hide()
-	--self:disable()
-	--self._webui = 0
+--WebUI:Hide()
+--self:disable()
+--self._webui = 0
 --end
 
 -- Enable Mouse/Keyboard actions
@@ -60,7 +61,7 @@ end
 
 -- Check if WebUI is visible
 --function UIViews:isVisible()
-	--return self._webui ~= 0
+--return self._webui ~= 0
 --end
 
 function UIViews:focus()
@@ -118,11 +119,11 @@ end
 
 -- Handle WebUI when view-stack is empty
 --function UIViews:_handleViewManagement()
-	--if self._views:isEmpty() then
-		--self:close()
-	--else
-		--self:open()
-	--end
+--if self._views:isEmpty() then
+--self:close()
+--else
+--self:open()
+--end
 --end
 
 return UIViews

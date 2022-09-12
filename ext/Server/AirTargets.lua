@@ -1,4 +1,5 @@
 ---@class AirTargets
+---@overload fun():AirTargets
 AirTargets = class('AirTargets')
 
 ---@type Utilities
@@ -54,10 +55,14 @@ function AirTargets:GetTarget(p_Player)
 	local s_Team = p_Player.teamId
 	local s_ClosestDistance = nil
 	local s_ClosestTarget = nil
+
 	for _, l_Target in pairs(self._Targets) do
 		local s_TargetPlayer = PlayerManager:GetPlayerByName(l_Target)
+
 		if s_TargetPlayer ~= nil and s_TargetPlayer.teamId ~= s_Team and s_TargetPlayer.soldier ~= nil then
-			local s_CurrentDistance = p_Player.controlledControllable.transform.trans:Distance(s_TargetPlayer.controlledControllable.transform.trans)
+			local s_CurrentDistance = p_Player.controlledControllable.transform.trans:Distance(s_TargetPlayer.controlledControllable
+				.transform.trans)
+
 			if s_ClosestDistance == nil then
 				if s_CurrentDistance < Config.MaxDistanceAABots then
 					s_ClosestDistance = s_CurrentDistance
@@ -71,6 +76,7 @@ function AirTargets:GetTarget(p_Player)
 			end
 		end
 	end
+
 	return s_ClosestTarget
 end
 
@@ -79,6 +85,7 @@ end
 function AirTargets:_CreateTarget(p_Player)
 	if p_Player.controlledEntryId == 0 then
 		local s_Vehicle = m_Vehicles:GetVehicle(p_Player, 0)
+
 		if m_Vehicles:IsVehicleType(s_Vehicle, VehicleTypes.Chopper) or m_Vehicles:IsVehicleType(s_Vehicle, VehicleTypes.Plane) then
 			table.insert(self._Targets, p_Player.name)
 		end
@@ -93,7 +100,6 @@ function AirTargets:_RemoveTarget(p_Player)
 		end
 	end
 end
-
 
 if g_AirTargets == nil then
 	---@type AirTargets

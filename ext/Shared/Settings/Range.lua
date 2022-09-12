@@ -1,4 +1,5 @@
 ---@class Range
+---@overload fun(p_Min, p_Max, p_Step):Range
 Range = class('Range')
 
 --[[

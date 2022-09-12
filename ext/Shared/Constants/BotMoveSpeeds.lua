@@ -1,4 +1,4 @@
----@class BotMoveSpeeds
+---@enum BotMoveSpeeds
 BotMoveSpeeds = {
 	Backwards = -1,
 	NoMovement = 0,

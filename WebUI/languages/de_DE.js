@@ -15,10 +15,8 @@ Language['de_DE'] /* Add/replace the xx_XX here with your language code (like de
 	"Waypoint-Editor": "Wegpunk-Editor",
 	"Settings": "Einstellungen",
 	"Exit": "Zurück",
-	"[Client]": "[Client]",
 	"Save": "Speichern",
 	"Load": "Laden",
-	"[Server]": "[Server]",
 	"View": "Anzeige",
 	"Toggle Spawns": "Umschalten Spawns",
 	"Toggle Lines": "Umschalten Linien",
@@ -63,4 +61,5 @@ Language['de_DE'] /* Add/replace the xx_XX here with your language code (like de
 	"": "",
 	"Commands": "",
 	"End Trace": "Pfad beenden",
+	"[Save / Load]": "",
 };

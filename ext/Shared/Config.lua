@@ -11,22 +11,23 @@ Config = {
 	ZombieMode = false,					-- Zombie Bot Mode
 
 	--DIFFICULTY
-	BotAimWorsening = 0.4,				-- Make bots aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy).
+	BotAimWorsening = 0.3,				-- Make bots aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy).
 	BotSniperAimWorsening = 0.2,		-- See botAimWorsening, only for Sniper-rifles
-	BotSupportAimWorsening = 0.2,		-- See botAimWorsening, only for LMGs
+	BotSupportAimWorsening = 0.3,		-- See botAimWorsening, only for LMGs
 	BotWorseningSkill = 0.50,			-- Variation of the skill of a single bot. the higher, the worse the bots can get compared to the original settings
 	BotSniperWorseningSkill = 0.50,		-- See BotWorseningSkill - only for BOTs using sniper bolt-action rifles.
-	DamageFactorAssault = 0.5,			-- Original Damage from bots gets multiplied by this
-	DamageFactorCarabine = 0.5,			-- Original Damage from bots gets multiplied by this
-	DamageFactorLMG = 0.5,				-- Original Damage from bots gets multiplied by this
-	DamageFactorPDW = 0.5,				-- Original Damage from bots gets multiplied by this
-	DamageFactorSniper = 0.8,			-- Original Damage from bots gets multiplied by this
-	DamageFactorShotgun = 0.8,			-- Original Damage from bots gets multiplied by this
-	DamageFactorPistol = 0.7,			-- Original Damage from bots gets multiplied by this
+	DamageFactorAssault = 1.0,			-- Original Damage from bots gets multiplied by this
+	DamageFactorCarabine = 1.0,			-- Original Damage from bots gets multiplied by this
+	DamageFactorLMG = 1.0,				-- Original Damage from bots gets multiplied by this
+	DamageFactorPDW = 1.0,				-- Original Damage from bots gets multiplied by this
+	DamageFactorSniper = 1.0,			-- Original Damage from bots gets multiplied by this
+	DamageFactorShotgun = 1.0,			-- Original Damage from bots gets multiplied by this
+	DamageFactorPistol = 1.0,			-- Original Damage from bots gets multiplied by this
 	DamageFactorKnife = 1.5,			-- Original Damage from bots gets multiplied by this
 
 	--SPAWN
 	SpawnMode = SpawnModes.balanced_teams,	-- Mode the bots spawn with
+	BalancePlayersIgnoringBots = false,	-- Counts players in each team to decide which team a player joins
 	TeamSwitchMode = TeamSwitchModes.SwitchForRoundTwo,	-- Mode to switch the team
 	SpawnInBothTeams = true,			-- Bots spawn in both teams
 	InitNumberOfBots = 10,				-- Bots for spawnmode
@@ -107,16 +108,16 @@ Config = {
 
 	--TRACE
 	DebugTracePaths = false,			-- Shows the trace line and search area from Commo Rose selection
-	WaypointRange = 100,				-- Set how far away waypoints are visible (meters)
+	WaypointRange = 50,					-- Set how far away waypoints are visible (meters)
 	DrawWaypointLines = true,			-- Draw waypoint connection Lines
-	LineRange = 15,						-- Set how far away waypoint lines are visible (meters)
+	LineRange = 25,						-- Set how far away waypoint lines are visible (meters)
 	DrawWaypointIDs = true,				-- Draw waypoint IDs
-	TextRange = 5,						-- Set how far away waypoint text is visible (meters)
+	TextRange = 7,						-- Set how far away waypoint text is visible (meters)
 	DrawSpawnPoints = false,			-- Draw Spawn Points
 	SpawnPointRange = 100,				-- Set how far away spawnpoints are visible (meters)
 	DebugSelectionRaytraces = false,	-- Shows the trace line and search area from Commo Rose selection
 	TraceDelta = 0.3,					-- Update interval of trace
-	NodesPerCycle = 100,				-- Set how many nodes get drawn per cycle. Affects performance
+	NodesPerCycle = 400,				-- Set how many nodes get drawn per cycle. Affects performance
 
 	--ADVANCED
 	DistanceForDirectAttack = 8,		-- Distance bots can hear you at
@@ -135,7 +136,7 @@ Config = {
 	--EXPERT
 	BotFirstShotDelay = 0.25,			-- Delay for first shot. If too small, there will be great spread in first cycle because its not compensated yet.
 	BotMinTimeShootAtPlayer = 2.5,		-- The minimum time a bot shoots at one player for - recommended minimum 1.5, below this you will have issues.
-	BotFireModeDuration = 4.0,			-- The minimum time a bot tries to shoot a player - recommended minimum 3.0, below this you will have issues.
+	BotFireModeDuration = 4.5,			-- The minimum time a bot tries to shoot a player - recommended minimum 3.0, below this you will have issues.
 	MaximunYawPerSec = 450,				-- in Degrees. Rotaion-Movement per second.
 	TargetDistanceWayPoint = 0.8,		-- Distance the bots have to reach to continue with the next Waypoint
 	KeepOneSlotForPlayers = true,		-- Always keep one slot for free new Players to join
@@ -143,7 +144,6 @@ Config = {
 	HeightDistanceToSpawn = 2.8,		-- Distance vertically, Bots should spawn away, if closer than distance.
 	DistanceToSpawnReduction = 5,		-- Reduce distance if not possible.
 	MaxTrysToSpawnAtDistance = 3,		-- Try this often to spawn a bot away from players
-	HeadShotFactorBots = 1.5,			-- Factor for damage if headshot (only in Fake-mode)
 	AttackWayBots = true,				-- Bots on paths attack player
 	RespawnWayBots = true,				-- Bots on paths respawn if killed
 	SpawnMethod = SpawnMethod.SpawnSoldierAt,	-- Method the bots spawn with. Careful, not supported on most of the maps!!

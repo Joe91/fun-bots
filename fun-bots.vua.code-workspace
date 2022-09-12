@@ -19,7 +19,15 @@
 	],
 	"settings": {
 		"Lua.workspace.maxPreload": 10000,
-		"Lua.diagnostics.libraryFiles": "Disable"
+		"Lua.diagnostics.libraryFiles": "Disable",
+		"Lua.runtime.version": "Lua 5.4",
+		"Lua.format.enable": true,
+		"Lua.misc.parameters": [
+			"--preview"
+		],
+		"editor.codeActionsOnSave": {
+			"source.fixAll.eslint": true
+		}
 	},
 	"extensions": {
 		"recommendations": [

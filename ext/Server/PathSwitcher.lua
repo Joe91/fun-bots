@@ -1,10 +1,11 @@
 ---@class PathSwitcher
+---@overload fun():PathSwitcher
 PathSwitcher = class('PathSwitcher')
 
 require('__shared/Config')
 
 ---@type NodeCollection
-local m_NodeCollection = require('__shared/NodeCollection')
+local m_NodeCollection = require('NodeCollection')
 ---@type GameDirector
 local m_GameDirector = require('GameDirector')
 ---@type Logger
@@ -32,9 +33,11 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle, p
 
 	if Globals.IsRush then
 		local s_WaitingForZone = false
+
 		if p_TeamId == TeamId.Team1 then -- attacking team
 			s_WaitingForZone = m_GameDirector:IsWaitForZoneActive()
 		end
+
 		if s_WaitingForZone then
 			return false --don't switch
 		end
@@ -56,7 +59,7 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle, p
 				if s_Bot ~= nil and s_Bot.soldier ~= nil then
 					s_Bot.soldier:Kill()
 					self.m_KillYourselfCounter[p_BotName] = 0
-					m_Logger:Write("kill "..p_BotName.." because of inactivity on wrong paths")
+					m_Logger:Write("kill " .. p_BotName .. " because of inactivity on wrong paths")
 					return false
 				end
 			end
@@ -87,18 +90,20 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle, p
 					if p_VehicleTerrain ~= nil then
 						local s_isAirPath = false
 						local s_isWaterPath = false
+
 						for _, l_PathType in pairs(s_PathNode.Data.Vehicles) do
 							if l_PathType:lower() == "air" then
 								s_isAirPath = true
 							end
+
 							if l_PathType:lower() == "water" then
 								s_isWaterPath = true
 							end
 						end
 						if (p_VehicleTerrain == VehicleTerrains.Air and s_isAirPath) or
-						(p_VehicleTerrain == VehicleTerrains.Water and s_isWaterPath) or
-						(p_VehicleTerrain == VehicleTerrains.Land and not s_isWaterPath and not s_isAirPath) or
-						(p_VehicleTerrain == VehicleTerrains.Amphibious and not s_isAirPath) then
+							(p_VehicleTerrain == VehicleTerrains.Water and s_isWaterPath) or
+							(p_VehicleTerrain == VehicleTerrains.Land and not s_isWaterPath and not s_isAirPath) or
+							(p_VehicleTerrain == VehicleTerrains.Amphibious and not s_isAirPath) then
 							table.insert(s_PossiblePaths, s_NewPoint)
 						end
 					else
@@ -222,7 +227,9 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle, p
 			-- leave subobjective, if disabled
 			if Globals.IsRush then
 				local s_TopObjective = m_GameDirector:_GetObjectiveFromSubObj(p_Objective)
-				if s_TopObjective ~= nil and s_CurrentPathStatus == 0 and s_CountNew == 1 and s_TopObjective == s_PathNode.Data.Objectives[1] then
+
+				if s_TopObjective ~= nil and s_CurrentPathStatus == 0 and s_CountNew == 1 and
+					s_TopObjective == s_PathNode.Data.Objectives[1] then
 					s_SwitchAnyways = true
 				end
 			end
@@ -239,8 +246,9 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle, p
 					Base = s_NewBasePath
 				})
 			else
-				if s_CountOld == 1 and s_CountNew == 1 and p_Objective ~= "" and s_CurrentPathFirst.Data.Objectives[1] ~= p_Objective and
-				s_CurrentPathFirst.Data.Objectives[1] == s_PathNode.Data.Objectives[1] then
+				if s_CountOld == 1 and s_CountNew == 1 and p_Objective ~= "" and s_CurrentPathFirst.Data.Objectives[1] ~= p_Objective
+					and
+					s_CurrentPathFirst.Data.Objectives[1] == s_PathNode.Data.Objectives[1] then
 					--path has same objective. Maybe a switch can help to find the new one
 					table.insert(s_Paths, {
 						Priority = 0,
@@ -281,7 +289,6 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle, p
 	local s_LinkMode = tonumber(p_Point.Data.LinkMode) or 0
 
 	if s_LinkMode == 0 then -- random path switch
-
 		local s_Chance = tonumber(p_Point.Data.LinkChance) or 40
 		local s_RandomNumber = MathUtils:GetRandomInt(0, 100)
 		local s_RandomIndex = MathUtils:GetRandomInt(1, #s_ValidPaths)
@@ -290,11 +297,12 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle, p
 			local s_RandomPath = s_ValidPaths[s_RandomIndex]
 
 			if s_RandomPath == nil then
-				m_Logger:Write('[A] s_ValidPaths['..s_RandomIndex..'] was nil : '..g_Utilities:dump(s_ValidPaths, true, 2))
+				m_Logger:Write('[A] s_ValidPaths[' .. s_RandomIndex .. '] was nil : ' .. g_Utilities:dump(s_ValidPaths, true, 2))
 				return false
 			end
 
-			m_Logger:Write('found multiple higher priority s_ValidPaths | Priority: ( '..s_CurrentPriority..' | '..s_HighestPriority..' )')
+			m_Logger:Write('found multiple higher priority s_ValidPaths | Priority: ( ' ..
+				s_CurrentPriority .. ' | ' .. s_HighestPriority .. ' )')
 
 			return true, s_RandomPath.Point
 		end
@@ -303,7 +311,7 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle, p
 			local s_RandomPath = s_ValidPaths[s_RandomIndex]
 
 			if s_RandomPath == nil then
-				m_Logger:Write('[B] s_ValidPaths['..s_RandomIndex..'] was nil : '..g_Utilities:dump(s_ValidPaths, true, 2))
+				m_Logger:Write('[B] s_ValidPaths[' .. s_RandomIndex .. '] was nil : ' .. g_Utilities:dump(s_ValidPaths, true, 2))
 
 				return false
 			end

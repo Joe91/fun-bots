@@ -1,4 +1,5 @@
 ---@class Weapon
+---@overload fun(p_Name: string, p_Extension?: string, p_Unlocks: string[], p_Type: WeaponTypes, p_FullResource?: string):Weapon
 Weapon = class('Weapon')
 
 ---@type Logger
@@ -8,7 +9,7 @@ local m_Logger = Logger("Weapon", Debug.Shared.MODIFICATIONS)
 ---@param p_Extension string|'"XP1"'|'"XP2"'|nil
 ---@param p_Unlocks string[] @length 3 or 0
 ---@param p_Type WeaponTypes
----@param p_FullResource string
+---@param p_FullResource string|nil
 function Weapon:__init(p_Name, p_Extension, p_Unlocks, p_Type, p_FullResource)
 	self.name = p_Name
 	self.extension = p_Extension
@@ -43,28 +44,28 @@ function Weapon:learnStatsValues()
 	s_Blueprint, s_Success = g_EbxEditUtils:GetWritableInstance(self:getResourcePath())
 
 	if not s_Success then
-		m_Logger:Warning('No blueprint for: '..self.name)
+		m_Logger:Warning('No blueprint for: ' .. self.name)
 		return
 	end
 
 	s_FireData, s_Success = g_EbxEditUtils:GetWritableContainer(s_Blueprint, 'Weapon.Object.WeaponFiring.PrimaryFire')
 
 	if not s_Success then
-		m_Logger:Warning('No fireData for: '..self.name)
+		m_Logger:Warning('No fireData for: ' .. self.name)
 		return
 	end
 
 	s_AiData, s_Success = g_EbxEditUtils:GetWritableContainer(s_Blueprint, 'Weapon.Object.aiData')
 
 	if not s_Success then
-		m_Logger:Warning('No aiData for: '..self.name)
+		m_Logger:Warning('No aiData for: ' .. self.name)
 		return
 	end
 
 	s_BulletData, s_Success = g_EbxEditUtils:GetWritableContainer(s_FireData, 'shot.ProjectileData')
 
 	if not s_Success then
-		m_Logger:Warning('No bulletData for: '..self.name)
+		m_Logger:Warning('No bulletData for: ' .. self.name)
 		return
 	end
 
@@ -127,13 +128,15 @@ function Weapon:learnStatsValues()
 		s_FireDuration = 0.2
 		s_FirePause = 0.2
 		s_DelayedShot = false
-	elseif self.type == WeaponTypes.Torch or self.type == WeaponTypes.Claymore or self.type == WeaponTypes.C4 or self.type == WeaponTypes.Tugs or self.type == WeaponTypes.Beacon then
+	elseif self.type == WeaponTypes.Torch or self.type == WeaponTypes.Claymore or self.type == WeaponTypes.C4 or
+		self.type == WeaponTypes.Tugs or self.type == WeaponTypes.Beacon or self.type == WeaponTypes.MissileAir or
+		self.type == WeaponTypes.MissileLand then
 		m_Logger:Write("other stuff")
 		s_FireDuration = 0.2
 		s_FirePause = 0.2
 		s_DelayedShot = false
 	else
-		m_Logger:Warning("No data found for "..self.name..': '..tostring(s_AiData.name))
+		m_Logger:Warning("No data found for " .. self.name .. ': ' .. tostring(s_AiData.name))
 		s_FireDuration = 0.2
 		s_FirePause = 0.2
 		s_DelayedShot = false
@@ -166,24 +169,24 @@ function Weapon:getResourcePath(p_Unlock)
 				return p_Unlock
 			end
 
-			s_Unl = "_"..p_Unlock
+			s_Unl = "_" .. p_Unlock
 		end
 
 		if self.extension ~= '' then
-			s_Ext = self.extension.."_"
+			s_Ext = self.extension .. "_"
 		end
 
-		return "Weapons/"..s_Ext..self.name.."/U_"..self.name..s_Unl
+		return "Weapons/" .. s_Ext .. self.name .. "/U_" .. self.name .. s_Unl
 	else
 		if p_Unlock ~= nil then
 			if string.starts(p_Unlock, 'Weapons/') then
 				return p_Unlock
 			end
 
-			s_Unl = "_"..p_Unlock
+			s_Unl = "_" .. p_Unlock
 		end
 
-		return self.fullResource..s_Unl
+		return self.fullResource .. s_Unl
 	end
 end
 

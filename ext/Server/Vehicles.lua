@@ -1,4 +1,5 @@
 ---@class Vehicles
+---@overload fun():Vehicles
 Vehicles = class("Vehicles")
 
 require('__shared/Constants/VehicleData')
@@ -9,7 +10,7 @@ function Vehicles:FindOutVehicleType(p_Player)
 	local s_VehicleType = VehicleTypes.NoVehicle -- no vehicle
 
 	if p_Player.controlledControllable ~= nil and not p_Player.controlledControllable:Is("ServerSoldierEntity") then
-		local s_VehicleName = VehicleEntityData(p_Player.controlledControllable.data).controllableType:gsub(".+/.+/","")
+		local s_VehicleName = VehicleEntityData(p_Player.controlledControllable.data).controllableType:gsub(".+/.+/", "")
 
 		local s_VehicleData = VehicleData[s_VehicleName]
 		if s_VehicleData ~= nil and s_VehicleData.Type ~= nil then
@@ -22,7 +23,7 @@ end
 
 function Vehicles:GetVehicleName(p_Player)
 	if p_Player.controlledControllable ~= nil and not p_Player.controlledControllable:Is("ServerSoldierEntity") then
-		return VehicleEntityData(p_Player.controlledControllable.data).controllableType:gsub(".+/.+/","")
+		return VehicleEntityData(p_Player.controlledControllable.data).controllableType:gsub(".+/.+/", "")
 	else
 		return nil
 	end
@@ -31,33 +32,41 @@ end
 function Vehicles:GetVehicle(p_Player, p_Index)
 	local s_VehicleName = self:GetVehicleName(p_Player)
 	m_Logger:Write("s_VehicleName")
+
 	if s_VehicleName == nil then
 		return nil
 	end
+
 	return VehicleData[s_VehicleName]
 end
 
 function Vehicles:GetVehicleByEntity(p_Entity)
 	local s_VehicleName = nil
+
 	if p_Entity ~= nil then
-		s_VehicleName = VehicleEntityData(p_Entity.data).controllableType:gsub(".+/.+/","")
+		s_VehicleName = VehicleEntityData(p_Entity.data).controllableType:gsub(".+/.+/", "")
 	end
+
 	if s_VehicleName == nil then
 		return nil
 	end
+
 	local s_VehicleData = VehicleData[s_VehicleName]
+
 	if s_VehicleData == nil then
-		m_Logger:Warning(s_VehicleName.." not found")
+		m_Logger:Warning(s_VehicleName .. " not found")
 	end
+
 	return s_VehicleData
 end
 
 function Vehicles:GetNrOfFreeSeats(p_Entity, p_PlayerIsDriver)
 	local s_NrOfFreeSeats = 0
 	local s_MaxEntries = p_Entity.entryCount
+
 	-- keep one seat free, if enough available
 	if not p_PlayerIsDriver and s_MaxEntries > 2 then
-		s_MaxEntries = s_MaxEntries -1
+		s_MaxEntries = s_MaxEntries - 1
 	end
 
 	for i = 0, s_MaxEntries - 1 do
@@ -65,6 +74,7 @@ function Vehicles:GetNrOfFreeSeats(p_Entity, p_PlayerIsDriver)
 			s_NrOfFreeSeats = s_NrOfFreeSeats + 1
 		end
 	end
+
 	return s_NrOfFreeSeats
 end
 
@@ -165,33 +175,39 @@ function Vehicles:GetSpeedAndDrop(p_VehicleData, p_Index, p_WeaponSelection)
 	return s_Speed, s_Drop
 end
 
-
 function Vehicles:CheckForVehicleAttack(p_VehicleType, p_Distance, p_Gadget, p_InVehicle)
-	local s_AttackMode = VehicleAttackModes.NoAttack -- no attack
+	if p_InVehicle then
+		return VehicleAttackModes.AttackWithRifle -- attack with main-weapon
+	end
 
+	local s_AttackMode = VehicleAttackModes.NoAttack -- no attack
 	if p_VehicleType == VehicleTypes.MavBot or
-	p_VehicleType == VehicleTypes.NoArmorVehicle or
-	p_VehicleType == VehicleTypes.StationaryLauncher or
-	p_VehicleType == VehicleTypes.Gadgets or --no idea what this might be
-	p_VehicleType == VehicleTypes.Chopper then --don't attack planes. Too fast...
+		p_VehicleType == VehicleTypes.NoArmorVehicle or
+		p_VehicleType == VehicleTypes.StationaryLauncher or
+		p_VehicleType == VehicleTypes.Gadgets or --no idea what this might be
+		p_VehicleType == VehicleTypes.Chopper then --don't attack planes. Too fast...
 		s_AttackMode = VehicleAttackModes.AttackWithRifle -- attack with rifle
 	elseif (p_VehicleType == VehicleTypes.LightVehicle or
-	p_VehicleType == VehicleTypes.AntiAir) and p_Distance < 35 then
+		p_VehicleType == VehicleTypes.AntiAir) and p_Distance < 35 then
 		s_AttackMode = VehicleAttackModes.AttackWithNade -- attack with grenade
 	end
 
-	if p_VehicleType ~= VehicleTypes.MavBot then -- MAV or EOD always with rifle
-		if p_Gadget ~= nil and p_Gadget.type == WeaponTypes.Rocket then
+	if p_VehicleType ~= VehicleTypes.MavBot and p_Gadget then -- MAV or EOD always with rifle
+		if p_Gadget.type == WeaponTypes.Rocket then
 			s_AttackMode = VehicleAttackModes.AttackWithRocket -- always use rocket if possible
-		elseif p_Gadget ~= nil and p_Gadget.type == WeaponTypes.C4 and p_Distance < 25 then
+		elseif p_Gadget.type == WeaponTypes.C4 and p_Distance < 25 then
 			if p_VehicleType ~= VehicleTypes.Chopper and p_VehicleType ~= VehicleTypes.Plane then -- no air vehicles
 				s_AttackMode = VehicleAttackModes.AttackWithC4 -- always use c4 if possible
 			end
+		elseif p_Gadget.type == WeaponTypes.MissileAir then
+			if p_VehicleType == VehicleTypes.Chopper or p_VehicleType == VehicleTypes.Plane then -- no air vehicles
+				s_AttackMode = VehicleAttackModes.AttackWithMissileAir -- always use c4 if possible
+			end
+		elseif p_Gadget.type == WeaponTypes.MissileLand then
+			if p_VehicleType ~= VehicleTypes.Chopper and p_VehicleType ~= VehicleTypes.Plane then -- no air vehicles
+				s_AttackMode = VehicleAttackModes.AttackWithMissileLand -- always use c4 if possible
+			end
 		end
-	end
-
-	if p_InVehicle then
-		s_AttackMode = VehicleAttackModes.AttackWithRifle -- attack with main-weapon
 	end
 
 	return s_AttackMode

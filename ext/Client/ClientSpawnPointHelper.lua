@@ -1,4 +1,5 @@
 ---@class ClientSpawnPointHelper
+---@overload fun():ClientSpawnPointHelper
 ClientSpawnPointHelper = class 'ClientSpawnPointHelper'
 
 require('__shared/Config')
@@ -15,6 +16,7 @@ function ClientSpawnPointHelper:OnPartitionLoaded(p_Partition)
 	---@type AlternateSpawnEntityData
 	for _, l_Instance in pairs(p_Partition.instances) do
 		if l_Instance:Is("AlternateSpawnEntityData") then
+			---@type AlternateSpawnEntityData
 			l_Instance = AlternateSpawnEntityData(l_Instance)
 			table.insert(self.m_SpawnPointTable, l_Instance.transform)
 		end
@@ -85,7 +87,8 @@ function ClientSpawnPointHelper:DrawSpawnPoint(p_Transform)
 
 	-- Skip to the next point if this one isn't in view
 	if s_PointScreenPos ~= nil then
-		local s_Center = ClientUtils:GetWindowSize()/2
+		local s_Center = ClientUtils:GetWindowSize() / 2
+
 		-- Select point if its close to the hitPosition
 		if s_Center:Distance(s_PointScreenPos) < 20 then
 			self.m_SelectedSpawnPoint = p_Transform
@@ -106,7 +109,6 @@ end
 
 -- Returns a Vec3 thats offset in the direction of the linearTransform
 function ClientSpawnPointHelper:GetForwardOffsetFromLT(p_Transform)
-
 	-- We get the direction from the forward vector
 	local s_Direction = p_Transform.forward
 
