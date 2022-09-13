@@ -103,10 +103,14 @@ Language:add(code, "FOV of Bots", "")
 Language:add(code, "Degrees of FOV of Bot", "")
 Language:add(code, "FOV of Bots Verticle", "")
 Language:add(code, "Degrees of FOV of Bot in vertical direction", "")
-Language:add(code, "Max Raycast Distance", "")
-Language:add(code, "Meters before bots will start shooting at players", "")
 Language:add(code, "Max Shoot-Distance No Sniper", "")
 Language:add(code, "Meters before bots (not sniper) will start shooting at players", "")
+Language:add(code, "Max Shoot Distance Sniper", "")
+Language:add(code, "Meters before bots will start shooting at players", "")
+Language:add(code, "Max Distance a normal soldier shoots back if Hit", "")
+Language:add(code, "Meters until bots (not sniper) shoot back if hit", "")
+Language:add(code, "Max Distance a sniper soldier shoots back if Hit", "")
+Language:add(code, "Meters until snipers shoot back if hit", "")
 Language:add(code, "Max Shoot-Distance Pistol", "")
 Language:add(code, "The distance before a bot switches to pistol if his magazine is empty (Only in auto-weapon-mode)", "")
 Language:add(code, "Bot Attack Mode", "")
@@ -283,9 +287,6 @@ Language:add(code, "Language", "")
 Language:add(code, "de_DE as sample (default is english, when language file doesnt exists)", "")
 
 -- Strings of ./../../ext/Client/ClientNodeEditor.lua
-Language:add(code, "Select", "")
-Language:add(code, "Finish", "")
-Language:add(code, "Connect", "")
 
 -- Strings of ./../../ext/Server/BotSpawner.lua
 Language:add(code, "CANT_JOIN_BOT_TEAM", "")
@@ -318,7 +319,7 @@ Language:add(code, "Repair Vehicle", "")
 Language:add(code, "Settings has been saved temporarily.", "")
 Language:add(code, "Settings has been saved.", "")
 
--- Strings of ./../../ext/Shared/NodeCollection.lua
+-- Strings of ./../../ext/Server/NodeCollection.lua
 Language:add(code, "Loaded %d paths with %d waypoints for map %s", "")
 Language:add(code, "Save in progress...", "")
 Language:add(code, "Failed to execute query: %s", "")

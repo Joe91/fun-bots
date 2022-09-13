@@ -103,10 +103,14 @@ Language:add(code, "FOV of Bots", "FOV of Bots")
 Language:add(code, "Degrees of FOV of Bot", "Degrees of FOV of Bot")
 Language:add(code, "FOV of Bots Verticle", "FOV of Bots Verticle")
 Language:add(code, "Degrees of FOV of Bot in vertical direction", "Degrees of FOV of Bot in vertical direction")
-Language:add(code, "Max Raycast Distance", "Max Raycast Distance")
-Language:add(code, "Meters before bots will start shooting at players", "Meters before bots will start shooting at players")
 Language:add(code, "Max Shoot-Distance No Sniper", "Max Shoot-Distance No Sniper")
 Language:add(code, "Meters before bots (not sniper) will start shooting at players", "Meters before bots (not sniper) will start shooting at players")
+Language:add(code, "Max Shoot Distance Sniper", "Max Shoot Distance Sniper")
+Language:add(code, "Meters before bots will start shooting at players", "Meters before bots will start shooting at players")
+Language:add(code, "Max Distance a normal soldier shoots back if Hit", "Max Distance a normal soldier shoots back if Hit")
+Language:add(code, "Meters until bots (not sniper) shoot back if hit", "Meters until bots (not sniper) shoot back if hit")
+Language:add(code, "Max Distance a sniper soldier shoots back if Hit", "Max Distance a sniper soldier shoots back if Hit")
+Language:add(code, "Meters until snipers shoot back if hit", "Meters until snipers shoot back if hit")
 Language:add(code, "Max Shoot-Distance Pistol", "Max Shoot-Distance Pistol")
 Language:add(code, "The distance before a bot switches to pistol if his magazine is empty (Only in auto-weapon-mode)", "The distance before a bot switches to pistol if his magazine is empty (Only in auto-weapon-mode)")
 Language:add(code, "Bot Attack Mode", "Bot Attack Mode")
@@ -283,9 +287,6 @@ Language:add(code, "Language", "Language")
 Language:add(code, "de_DE as sample (default is english, when language file doesnt exists)", "de_DE as sample (default is english, when language file doesnt exists)")
 
 -- Strings of ./../../ext/Client/ClientNodeEditor.lua
-Language:add(code, "Select", "Select")
-Language:add(code, "Finish", "Finish")
-Language:add(code, "Connect", "Connect")
 
 -- Strings of ./../../ext/Server/BotSpawner.lua
 Language:add(code, "CANT_JOIN_BOT_TEAM", "CANT_JOIN_BOT_TEAM")
@@ -318,7 +319,7 @@ Language:add(code, "Repair Vehicle", "Repair Vehicle")
 Language:add(code, "Settings has been saved temporarily.", "Settings has been saved temporarily.")
 Language:add(code, "Settings has been saved.", "Settings has been saved.")
 
--- Strings of ./../../ext/Shared/NodeCollection.lua
+-- Strings of ./../../ext/Server/NodeCollection.lua
 Language:add(code, "Loaded %d paths with %d waypoints for map %s", "Loaded %d paths with %d waypoints for map %s")
 Language:add(code, "Save in progress...", "Save in progress...")
 Language:add(code, "Failed to execute query: %s", "Failed to execute query: %s")
