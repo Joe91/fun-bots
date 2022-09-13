@@ -1363,6 +1363,62 @@ function BotSpawner:_GetSquadToJoin(p_TeamId)
 	return SquadId.SquadNone
 end
 
+function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
+	local s_Unlocks = {}
+	local s_PossiblePerks = { -- sorted by quality
+		"persistence/unlocks/soldiers/specializations/sprintboostl2", -- tier 1
+		"persistence/unlocks/soldiers/specializations/ammoboostl2", -- tier 1
+		"persistence/unlocks/soldiers/specializations/suppressionresistl2", -- tier 1
+		"persistence/unlocks/soldiers/specializations/explosiveboostl2", -- tier 2
+		"persistence/unlocks/soldiers/specializations/explosiveresistl2", -- tier 2
+		"persistence/unlocks/soldiers/specializations/grenadeboostl2", -- tier 3
+		"persistence/unlocks/soldiers/specializations/suppressionboostl2", -- tier 3
+		-- "persistence/unlocks/soldiers/specializations/healspeedboostl2", -- not used
+	}
+
+	local s_SquadPlayers = PlayerManager:GetPlayersBySquad(p_TeamId, p_SquadId)
+	for _, l_SquadPlayer in pairs(s_SquadPlayers) do
+		if l_SquadPlayer.id ~= p_Bot.m_Player.id then
+			for _, l_PlayerUnlock in pairs(l_SquadPlayer.selectedUnlocks) do
+				local s_UsedSquadPerk = l_PlayerUnlock["partition"]["name"]
+				for l_Index, l_PossiblePerk in pairs(s_PossiblePerks) do
+					if l_PossiblePerk == s_UsedSquadPerk then
+						table.remove(s_PossiblePerks, l_Index)
+						break
+					end
+				end
+			end
+		end
+	end
+
+	-- choose good available perk
+	local s_SelectedPerk = ""
+	for _, l_PerkName in pairs(s_PossiblePerks) do
+		s_SelectedPerk = l_PerkName
+		if MathUtils:GetRandomInt(1, 100) <= 60 then -- use best available perk with this percentage
+			break
+		end
+	end
+	table.insert(s_Unlocks, ResourceManager:SearchForDataContainer(s_SelectedPerk))
+
+	-- -- Vehicle perks
+	-- table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/jetflarelauncher"))
+	-- table.insert(s_Unlocks,	ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/atkheliproximityscangunner"))
+	-- table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/mbtproximityscan"))
+	-- table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/mbtcoaxlmg"))
+	-- table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/mbtsmokelaunchers"))
+	-- table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/jetheatseekerstance"))
+	-- table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/atkhelizoomoptics"))
+	-- table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/atkhelihellfiremissile"))
+	-- table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/atkheliheatseekermissile"))
+	-- table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/atkheliflarelauncher"))
+	-- table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/atkhelistealth"))
+	-- table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/jetstealth"))
+
+
+	return s_Unlocks
+end
+
 ---@param p_Bot Bot|integer
 ---@param p_Kit BotKits|integer
 ---@param p_Color BotColors|integer
@@ -1370,7 +1426,9 @@ function BotSpawner:_SetKitAndAppearance(p_Bot, p_Kit, p_Color)
 	-- Create the loadouts
 	local s_SoldierKit = nil
 	local s_Appearance = nil
+	local s_Unlocks = nil
 	local s_TeamId = p_Bot.m_Player.teamId
+	local s_SquadId = p_Bot.m_Player.squadId
 
 	-- Cast Color
 	local s_ColorString = ""
@@ -1413,109 +1471,14 @@ function BotSpawner:_SetKitAndAppearance(p_Bot, p_Kit, p_Color)
 		end
 	end
 
+	s_Unlocks = self:_GetUnlocks(p_Bot, s_TeamId, s_SquadId)
+
 	if Globals.RemoveKitVisuals then
 		-- for Civilianizer-mod:
-		p_Bot.m_Player:SelectUnlockAssets(s_SoldierKit, {})
+		p_Bot.m_Player:SelectUnlockAssets(s_SoldierKit, {}, s_Unlocks)
 	else
-		p_Bot.m_Player:SelectUnlockAssets(s_SoldierKit, { s_Appearance })
+		p_Bot.m_Player:SelectUnlockAssets(s_SoldierKit, { s_Appearance }, s_Unlocks)
 	end
-
-	-- Other Option
-	--[[ local s_PrimaryInput = p_Bot.m_Primary
-	local s_PistolInput = p_Bot.m_Pistol
-	local s_KnifeInput = p_Bot.m_Knife
-	local s_Gadget1Input = p_Bot.m_PrimaryGadget
-	local s_Gadget2Input = p_Bot.m_SecondaryGadget
-	local s_GrenadeInput = p_Bot.m_Grenade
-
-	-- reset Slots
-	p_Bot.m_Player:SelectWeapon(WeaponSlot.WeaponSlot_2, ResourceManager:SearchForDataContainer('Weapons/Common/NoGadget1')
-		, {})
-	p_Bot.m_Player:SelectWeapon(WeaponSlot.WeaponSlot_4, ResourceManager:SearchForDataContainer('Weapons/Common/NoGadget1')
-		, {})
-	p_Bot.m_Player:SelectWeapon(WeaponSlot.WeaponSlot_5, ResourceManager:SearchForDataContainer('Weapons/Common/NoGadget2')
-		, {})
-	p_Bot.m_Player:SelectWeapon(WeaponSlot.WeaponSlot_6, ResourceManager:SearchForDataContainer('Weapons/M67/U_M67'), {})
-
-	-- Knife
-	if s_KnifeInput ~= nil then
-		local s_KnifeWeapon = ResourceManager:SearchForDataContainer(s_KnifeInput:getResourcePath())
-		if s_KnifeWeapon == nil then
-			m_Logger:Warning("Path not found: " .. s_KnifeInput:getResourcePath())
-		else -- was slot 7 - not slot 3, 8, 9. Does not work anymore
-			p_Bot.m_Player:SelectWeapon(WeaponSlot.WeaponSlot_7,
-				SoldierWeaponUnlockAsset(s_KnifeWeapon), {})
-		end
-	end
-
-	-- Primary Weapon
-	if s_PrimaryInput ~= nil then
-		local s_PrimaryWeaponResource = ResourceManager:SearchForDataContainer(s_PrimaryInput:getResourcePath())
-
-		if s_PrimaryWeaponResource == nil then
-			m_Logger:Warning("Path not found: " .. s_PrimaryInput:getResourcePath())
-		else
-			local s_UnlockAssets = {}
-			self:_SetAttachments(s_UnlockAssets, s_PrimaryInput:getAllAttachments())
-			p_Bot.m_Player:SelectWeapon(WeaponSlot.WeaponSlot_0,
-				SoldierWeaponUnlockAsset(s_PrimaryWeaponResource), s_UnlockAssets)
-		end
-	end
-
-	-- Pistol / Secondary
-	if s_PistolInput ~= nil then
-		local s_PistolWeapon = ResourceManager:SearchForDataContainer(s_PistolInput:getResourcePath())
-
-		if s_PistolWeapon == nil then
-			m_Logger:Warning("Path not found: " .. s_PistolInput:getResourcePath())
-		else
-			p_Bot.m_Player:SelectWeapon(WeaponSlot.WeaponSlot_1,
-				SoldierWeaponUnlockAsset(s_PistolWeapon), {})
-		end
-	end
-	if Globals.IsScavenger or Config.ZombieMode then
-		return -- only knife, primary and secondary in scavenger
-	end
-
-	-- Primary Gadget
-	if s_Gadget1Input ~= nil then
-		local s_WeaponSlotGadget = WeaponSlot.WeaponSlot_2
-		if p_Kit == BotKits.Assault or p_Kit == BotKits.Support then
-			s_WeaponSlotGadget = WeaponSlot.WeaponSlot_4
-		end
-		local s_Gadget1Weapon = ResourceManager:SearchForDataContainer(s_Gadget1Input:getResourcePath())
-
-		if s_Gadget1Weapon == nil then
-			m_Logger:Warning("Path not found: " .. s_Gadget1Input:getResourcePath())
-		else
-			p_Bot.m_Player:SelectWeapon(s_WeaponSlotGadget,
-				SoldierWeaponUnlockAsset(s_Gadget1Weapon), {})
-		end
-	end
-
-	-- Secondary Gadget
-	if s_Gadget2Input ~= nil then
-		local s_Gadget2Weapon = ResourceManager:SearchForDataContainer(s_Gadget2Input:getResourcePath())
-
-		if s_Gadget2Weapon == nil then
-			m_Logger:Warning("Path not found: " .. s_Gadget2Input:getResourcePath())
-		else
-			p_Bot.m_Player:SelectWeapon(WeaponSlot.WeaponSlot_5,
-				SoldierWeaponUnlockAsset(s_Gadget2Weapon), {})
-		end
-	end
-
-	-- Grenade
-	if s_GrenadeInput ~= nil then
-		local s_GrenadeWeapon = ResourceManager:SearchForDataContainer(s_GrenadeInput:getResourcePath())
-
-		if s_GrenadeWeapon == nil then
-			m_Logger:Warning("Path not found: " .. s_GrenadeInput:getResourcePath())
-		else
-			p_Bot.m_Player:SelectWeapon(WeaponSlot.WeaponSlot_6,
-				SoldierWeaponUnlockAsset(s_GrenadeWeapon), {})
-		end
-	end ]]
 end
 
 function BotSpawner:_SetPrimaryAttachments(p_UnlockWeapon, p_Attachments)
