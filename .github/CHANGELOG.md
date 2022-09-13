@@ -3,8 +3,8 @@
 ![Image](https://img.shields.io/github/downloads/Joe91/fun-bots/total?style=for-the-badge)
 ![Image](https://img.shields.io/github/stars/Joe91/fun-bots?style=for-the-badge)
 
-## Welcome to the changelogs for release **V2.6.0**
-This is the changelog for the version V2.6.0. Don't forget to [join us on Discord](https://discord.funbots.dev)
+## Welcome to the changelogs for release **V2.6.1**
+This is the changelog for the version V2.6.1. Don't forget to [join us on Discord](https://discord.funbots.dev)
 
 ## Changelog
 
@@ -28,7 +28,9 @@ This is the changelog for the version V2.6.0. Don't forget to [join us on Discor
 * count paths correctly
 * delte existing path now possible
 * Limit Distance of Bots when they shoot back
+
 * Use Statevents to increase Rush-Stability
+* Bots use Squad-Perks
 
 ### Bug fixes
 * #218 increased auto-sniper-time a little

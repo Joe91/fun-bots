@@ -1379,7 +1379,6 @@ function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 	local s_SquadPlayers = PlayerManager:GetPlayersBySquad(p_TeamId, p_SquadId)
 	for _, l_SquadPlayer in pairs(s_SquadPlayers) do
 		if l_SquadPlayer.id ~= p_Bot.m_Player.id then
-			print(l_SquadPlayer.id)
 			for _, l_PlayerUnlock in pairs(l_SquadPlayer.selectedUnlocks) do
 				local s_UsedSquadPerk = l_PlayerUnlock["partition"]["name"]
 				for l_Index, l_PossiblePerk in pairs(s_PossiblePerks) do
@@ -1394,9 +1393,9 @@ function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 
 	-- choose good available perk
 	local s_SelectedPerk = ""
-	for l_IndexPerk, l_PerkName in pairs(s_PossiblePerks) do
-		s_SelectedPerk = s_PossiblePerks[l_IndexPerk]
-		if MathUtils:GetRandomInt(1, 100) <= 66 then -- use best available perk with 66%
+	for _, l_PerkName in pairs(s_PossiblePerks) do
+		s_SelectedPerk = l_PerkName
+		if MathUtils:GetRandomInt(1, 100) <= 60 then -- use best available perk with this percentage
 			break
 		end
 	end
