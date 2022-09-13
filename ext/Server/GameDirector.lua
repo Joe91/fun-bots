@@ -22,8 +22,8 @@ function GameDirector:RegisterVars()
 
 	self.m_AllObjectives = {}
 	self.m_Translations = {}
-
 	self.m_ArmedMcoms = {}
+
 	self.m_McomCounter = 0
 	self.m_OnlyOneMcom = false
 	self.m_waitForZone = false
@@ -150,7 +150,6 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 				self.m_WaitForZone = false
 			end
 		end
-
 		self:_UpdateTimersOfMcoms(self.m_UpdateTimer)
 	end
 
@@ -303,39 +302,56 @@ end
 -- RUSH Events
 -- =============================================
 
-function GameDirector:OnMcomArmed(p_Objective)
-	m_Logger:Write(p_Objective .. " armed")
+function GameDirector:OnMcomArmed(p_Player)
+	local s_PlayerPos = nil
+	if p_Player and p_Player.soldier then
+		s_PlayerPos = p_Player.soldier.worldTransform.trans:Clone()
+	elseif p_Player and p_Player.corpse then
+		s_PlayerPos = p_Player.corpse.worldTransform.trans:Clone()
+	end
 
-	self:_UpdateObjective(p_Objective, {
-		team = TeamId.Team1,
-		isAttacked = true
-	})
+	if s_PlayerPos then
+		local s_Objective = self:_TranslateObjective(s_PlayerPos)
+		m_Logger:Write(s_Objective .. " armed")
 
-	self.m_ArmedMcoms[p_Objective] = -self.m_UpdateTimer
+		self:_UpdateObjective(s_Objective, {
+			team = TeamId.Team1,
+			isAttacked = true
+		})
+		self.m_ArmedMcoms[s_Objective] = -self.m_UpdateTimer
+	end
 end
 
-function GameDirector:OnMcomDisarmed(p_Objective)
-	m_Logger:Write(p_Objective .. " disarmed")
+function GameDirector:OnMcomDisarmed(p_Player)
+	local s_PlayerPos = nil
+	if p_Player and p_Player.soldier then
+		s_PlayerPos = p_Player.soldier.worldTransform.trans:Clone()
+	elseif p_Player and p_Player.corpse then
+		s_PlayerPos = p_Player.corpse.worldTransform.trans:Clone()
+	end
 
-	self:_UpdateObjective(p_Objective, {
-		team = TeamId.TeamNeutral,
-		isAttacked = false
-	})
+	if s_PlayerPos then
+		local s_Objective = self:_TranslateObjective(s_PlayerPos)
+		m_Logger:Write(s_Objective .. " disarmed")
 
-	self.m_ArmedMcoms[p_Objective] = nil
+		self:_UpdateObjective(s_Objective, {
+			team = TeamId.TeamNeutral,
+			isAttacked = false
+		})
+		self.m_ArmedMcoms[s_Objective] = nil
+	end
 end
 
 function GameDirector:OnMcomDestroyed(p_Objective)
+
 	self.m_McomCounter = self.m_McomCounter + 1
 	self:_UpdateValidObjectives()
 
 	m_Logger:Write(p_Objective .. " destroyed after " .. tostring(self.m_ArmedMcoms[p_Objective]) .. " s")
-
 	self.m_ArmedMcoms[p_Objective] = nil
 
 	local s_SubObjective = nil
 	local s_TopObjective = nil
-
 
 	if p_Objective ~= '' then
 		self:_UpdateObjective(p_Objective, {
@@ -947,22 +963,6 @@ function GameDirector:_RegisterRushEventCallbacks()
 
 		s_Entity = s_Iterator:Next()
 	end
-
-	-- most promissing so far! TODO: check for better events again?
-	s_Iterator = EntityManager:GetIterator("ServerInteractionEntity")
-	s_Entity = s_Iterator:Next()
-
-	while s_Entity do
-		if s_Entity.data.instanceGuid == Guid("2CEA23B6-76E9-4E7B-85E6-EE648F686E48") then
-			s_Entity:RegisterEventCallback(self, self._OnInteractionDefend)
-		end
-
-		if s_Entity.data.instanceGuid == Guid("1768D76F-6DD0-4425-A898-32C851A4A476") then
-			s_Entity:RegisterEventCallback(self, self._OnInteractionAttack)
-		end
-
-		s_Entity = s_Iterator:Next()
-	end
 end
 
 function GameDirector:_UpdateTimersOfMcoms(p_DeltaTime)
@@ -972,32 +972,6 @@ function GameDirector:_UpdateTimersOfMcoms(p_DeltaTime)
 		if self.m_ArmedMcoms[l_Objective] >= Registry.GAME_DIRECTOR.MCOMS_CHECK_CYCLE then
 			self:OnMcomDestroyed(l_Objective)
 		end
-	end
-end
-
-function GameDirector:_OnInteractionAttack(p_Entity, p_EntityEvent)
-	if p_EntityEvent.type == "ServerPlayerEvent" then
-		return
-	end
-
-	local s_GameEntity = GameEntity(p_Entity)
-	local s_Objective = self:_TranslateObjective(s_GameEntity.transform.trans)
-
-	if p_EntityEvent.eventId == MathUtils:FNVHash("Disable") then
-		self:OnMcomArmed(s_Objective)
-	end
-end
-
-function GameDirector:_OnInteractionDefend(p_Entity, p_EntityEvent)
-	if p_EntityEvent.type == "ServerPlayerEvent" then
-		return
-	end
-
-	local s_GameEntity = GameEntity(p_Entity)
-	local s_Objective = self:_TranslateObjective(s_GameEntity.transform.trans)
-
-	if p_EntityEvent.eventId == MathUtils:FNVHash("Disable") then
-		self:OnMcomDisarmed(s_Objective)
 	end
 end
 

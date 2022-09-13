@@ -510,22 +510,40 @@ function Bot:IsReadyToAttack()
 end
 
 ---@return number
-function Bot:GetAttackDistance()
+function Bot:GetAttackDistance(p_ShootBackAfterHit)
 	local s_AttackDistance = 0.0
 
 	if not self.m_InVehicle then
 		if self.m_ActiveWeapon == nil or self.m_ActiveWeapon.type ~= WeaponTypes.Sniper then
-			s_AttackDistance = Config.MaxShootDistanceNoSniper
+			if p_ShootBackAfterHit then
+				s_AttackDistance = Config.MaxDistanceShootBack
+			else
+				s_AttackDistance = Config.MaxShootDistance
+			end
+
 		else
-			s_AttackDistance = Config.MaxRaycastDistance
+			if p_ShootBackAfterHit then
+				s_AttackDistance = Config.MaxDistanceShootBackSniper
+			else
+				s_AttackDistance = Config.MaxShootDistanceSniper
+			end
 		end
 	else
 		if m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) and
 			m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) and
 			m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.AntiAir) then
-			s_AttackDistance = Config.MaxShootDistanceNoAntiAir
+			if p_ShootBackAfterHit then
+				s_AttackDistance = Config.MaxShootDistanceNoAntiAir * 2
+			else
+				s_AttackDistance = Config.MaxShootDistanceNoAntiAir
+			end
+
 		else
-			s_AttackDistance = Config.MaxRaycastDistanceVehicles
+			if p_ShootBackAfterHit then
+				s_AttackDistance = Config.MaxShootDistanceVehicles * 2
+			else
+				s_AttackDistance = Config.MaxShootDistanceVehicles
+			end
 		end
 	end
 
@@ -597,10 +615,10 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 		self._DistanceToPlayer = p_Player.soldier.worldTransform.trans:Distance(self.m_Player.soldier.worldTransform.trans)
 	end
 
-	local s_AttackDistance = self:GetAttackDistance()
+	local s_AttackDistance = self:GetAttackDistance(p_IgnoreYaw)
 
 	-- don't attack if too far away
-	if not p_IgnoreYaw and self._DistanceToPlayer > s_AttackDistance then
+	if self._DistanceToPlayer > s_AttackDistance then
 		return false
 	end
 

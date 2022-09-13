@@ -101,7 +101,6 @@ Language:add(code, "FOV of Bots", "Punto de Vista de los Bots")
 Language:add(code, "Degrees of FOV of Bot", "Grados del Punto de Vista de los Bots")
 Language:add(code, "FOV of Bots Verticle", "Punto de Vista del Verticle de los Bots")
 Language:add(code, "Degrees of FOV of Bot in vertical direction", "Grados del Punto de Vista del Bot en la dirección del Verticle")
-Language:add(code, "Max Raycast Distance", "Distancia Máxima del Raycast")
 Language:add(code, "Meters before bots will start shooting at players", "Proximidad Máxima del Ataque de los Bots al Jugador")
 Language:add(code, "Max Shoot-Distance No Sniper", "Distancia Máxima de ataque (No Snipers)")
 Language:add(code, "Meters before bots (not sniper) will start shooting at players", "Distancia máxima en la cual los bots (excluyendo a los francotiradores) atacan a los jugadores")
@@ -272,8 +271,6 @@ Language:add(code, "If true, all permissions are ignored --> everyone can do eve
 Language:add(code, "Language", "lenguaje")
 
 -- Strings of ../ext/Client/ClientNodeEditor.lua
-Language:add(code, "Finish", "Terminar")
-Language:add(code, "Connect", "Conectar")
 
 -- Strings of ../ext/Server/BotSpawner.lua
 Language:add(code, "CANT_JOIN_BOT_TEAM", "NO_TE_PUEDES_UNIR_AL_EQUIPO_DE_LOS_BOT")
@@ -284,7 +281,6 @@ Language:add(code, "Bot respawn deactivated!", "Respawneo de bots desactivado!")
 Language:add(code, "Bots will attack!", "Los Bots atacarán!")
 Language:add(code, "Bots will not attack!", "Los Bots no atacarán!")
 Language:add(code, "%s is currently not implemented.", "%S no está actualmente implementado.")
-Language:add(code, "Select", "Seleccionar")
 Language:add(code, "Settings has been saved temporarily.", "Se guardaron los ajustes temporalmente")
 Language:add(code, "Settings has been saved.", "Se guardaron los ajustes")
 
@@ -319,3 +315,8 @@ Language:add(code, "Use air vehicles", "Usar vehículos aéreos")
 Language:add(code, "Bots can use air-vehicles", "Los bots podrán utilizar los vehículos aéreos")
 Language:add(code, "Balance Players Ignoring Bots", "")
 Language:add(code, "Counts players in each team to decide which team a player joins", "")
+Language:add(code, "Max Shoot Distance Sniper", "")
+Language:add(code, "Max Distance a normal soldier shoots back if Hit", "")
+Language:add(code, "Meters until bots (not sniper) shoot back if hit", "")
+Language:add(code, "Max Distance a sniper soldier shoots back if Hit", "")
+Language:add(code, "Meters until snipers shoot back if hit", "")

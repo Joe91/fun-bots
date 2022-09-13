@@ -35,9 +35,9 @@ Registry = {
 		-- Minor version
 		VERSION_MIN = 6,
 		-- Patch version
-		VERSION_PATCH = 0,
+		VERSION_PATCH = 1,
 		-- Additional label for pre-releases and build meta data
-		VERSION_LABEL = "dev8",
+		VERSION_LABEL = "dev1",
 		-- Current version type of this build
 		VERSION_TYPE = VersionType.DevBuild,
 		-- The Version used for the Update-Check
@@ -75,7 +75,7 @@ Registry = {
 	GAME_DIRECTOR = {
 		UPDATE_OBJECTIVES_CYCLE = 1.5,
 		-- Time after a mcom is considered destroyed
-		MCOMS_CHECK_CYCLE = 26.0,
+		MCOMS_CHECK_CYCLE = 26.5,
 		-- Zone is 30 s. 10 Seconds without damage
 		ZONE_CHECK_CYCLE = 20.0,
 		-- max bots per objective
