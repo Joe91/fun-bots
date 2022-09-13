@@ -118,6 +118,8 @@ function FunBotServer:RegisterEvents()
 	Events:Subscribe('Vehicle:Damage', self, self.OnVehicleDamage)
 	Events:Subscribe('Vehicle:Enter', self, self.OnVehicleEnter)
 	Events:Subscribe('Vehicle:Exit', self, self.OnVehicleExit)
+	Events:Subscribe('ScoringSystem:StatEvent', self, self.OnScoringStatEvent)
+
 end
 
 function FunBotServer:RegisterHooks()
@@ -243,6 +245,18 @@ function FunBotServer:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	m_BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	m_BotSpawner:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	m_NodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
+end
+
+function FunBotServer:OnScoringStatEvent(p_Player, p_ObjectPlayer, p_StatEvent, p_ParamX, p_ParamY, p_Value)
+	if p_StatEvent == StatEvent.StatEvent_CrateArmed then
+		m_GameDirector:OnMcomArmed(p_Player)
+	end
+	if p_StatEvent == StatEvent.StatEvent_CrateDisarmed then
+		m_GameDirector:OnMcomDisarmed(p_Player)
+	end
+	--[[ if p_StatEvent == StatEvent.StatEvent_CrateDestroyed then
+		-- not reliably usable, since place can be anywhere at this moment
+	end ]]
 end
 
 -- =============================================

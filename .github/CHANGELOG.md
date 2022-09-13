@@ -28,6 +28,7 @@ This is the changelog for the version V2.6.0. Don't forget to [join us on Discor
 * count paths correctly
 * delte existing path now possible
 * Limit Distance of Bots when they shoot back
+* Use Statevents to increase Rush-Stability
 
 ### Bug fixes
 * #218 increased auto-sniper-time a little
