@@ -1364,7 +1364,21 @@ function BotSpawner:_GetSquadToJoin(p_TeamId)
 end
 
 function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
+	if Globals.IsGm then
+		-- no Perks in Gunmaster
+		return nil
+	end
+
+	local s_CurrentUnlockNames = {}
+	local s_CurrentUnlocks = {}
+
+	for _, l_PlayerUnlock in pairs(p_Bot.m_Player.selectedUnlocks) do
+		table.insert(s_CurrentUnlocks, l_PlayerUnlock)
+		table.insert(s_CurrentUnlockNames, l_PlayerUnlock["partition"]["name"])
+	end
+
 	local s_Unlocks = {}
+	local s_SelectedPerk = ""
 	local s_PossiblePerks = { -- sorted by quality
 		"persistence/unlocks/soldiers/specializations/sprintboostl2", -- tier 1
 		"persistence/unlocks/soldiers/specializations/ammoboostl2", -- tier 1
@@ -1375,6 +1389,23 @@ function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 		"persistence/unlocks/soldiers/specializations/suppressionboostl2", -- tier 3
 		-- "persistence/unlocks/soldiers/specializations/healspeedboostl2", -- not used
 	}
+	local s_VehiclePerksToAdd = {}
+	if not Globals.IsScavenger and not Globals.IsTdm then
+		s_VehiclePerksToAdd = {
+			"persistence/unlocks/vehicles/mbtproximityscan",
+			"persistence/unlocks/vehicles/mbtcoaxlmg",
+			"persistence/unlocks/vehicles/mbtsmokelaunchers",
+			"persistence/unlocks/vehicles/atkheliproximityscangunner",
+			"persistence/unlocks/vehicles/atkhelizoomoptics",
+			"persistence/unlocks/vehicles/atkhelihellfiremissile",
+			"persistence/unlocks/vehicles/atkheliheatseekermissile",
+			"persistence/unlocks/vehicles/atkheliflarelauncher",
+			"persistence/unlocks/vehicles/atkhelistealth",
+			"persistence/unlocks/vehicles/jetstealth",
+			"persistence/unlocks/vehicles/jetflarelauncher",
+			"persistence/unlocks/vehicles/jetheatseekerstance",
+		}
+	end
 
 	local s_SquadPlayers = PlayerManager:GetPlayersBySquad(p_TeamId, p_SquadId)
 	for _, l_SquadPlayer in pairs(s_SquadPlayers) do
@@ -1392,30 +1423,39 @@ function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 	end
 
 	-- choose good available perk
-	local s_SelectedPerk = ""
 	for _, l_PerkName in pairs(s_PossiblePerks) do
 		s_SelectedPerk = l_PerkName
-		if MathUtils:GetRandomInt(1, 100) <= 60 then -- use best available perk with this percentage
+		if MathUtils:GetRandomInt(1, 100) <= 80 then -- use best available perk with this percentage
 			break
 		end
 	end
-	table.insert(s_Unlocks, ResourceManager:SearchForDataContainer(s_SelectedPerk))
 
-	-- -- Vehicle perks
-	table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/jetflarelauncher"))
-	table.insert(s_Unlocks,
-		ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/atkheliproximityscangunner"))
-	table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/mbtproximityscan"))
-	table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/mbtcoaxlmg"))
-	table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/mbtsmokelaunchers"))
-	table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/jetheatseekerstance"))
-	table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/atkhelizoomoptics"))
-	table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/atkhelihellfiremissile"))
-	table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/atkheliheatseekermissile"))
-	table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/atkheliflarelauncher"))
-	table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/atkhelistealth"))
-	table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/jetstealth"))
+	-- update Perks if needed
+	for l_Index, l_PerkName in pairs(s_CurrentUnlockNames) do
+		if string.find(l_PerkName, "soldiers") then
+			-- squad perk
+			if l_PerkName == s_SelectedPerk then
+				s_SelectedPerk = ""
+				table.insert(s_Unlocks, s_CurrentUnlocks[l_Index])
+			end
+		else
+			-- vehicle perk
+			for l_IndexVehiclePerk, l_VehiclePerkName in pairs(s_VehiclePerksToAdd) do
+				if l_PerkName == l_VehiclePerkName then
+					table.remove(s_VehiclePerksToAdd, l_IndexVehiclePerk)
+					table.insert(s_Unlocks, s_CurrentUnlocks[l_Index])
+				end
+			end
+		end
+	end
 
+	-- add perk if not already copied
+	if s_SelectedPerk ~= "" then
+		table.insert(s_Unlocks, ResourceManager:SearchForDataContainer(s_SelectedPerk))
+	end
+	for _, l_VehicelPerk in pairs(s_VehiclePerksToAdd) do
+		table.insert(s_Unlocks, ResourceManager:SearchForDataContainer(l_VehicelPerk))
+	end
 
 	return s_Unlocks
 end

@@ -37,7 +37,7 @@ function VehicleAttacking:UpdateAttackingVehicle(p_Bot)
 				if s_WeaponSlots > 1 then
 					-- if in Tank and target == soldier and distance small enough --> LMG / HMG
 					if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Tank) and
-						p_Bot._DistanceToPlayer < Config.MaxRaycastDistance then
+						p_Bot._DistanceToPlayer < Config.MaxShootDistanceSniper then
 						p_Bot._VehicleWeaponSlotToUse = 2
 					end
 				-- TODO more vehicles and more logic
