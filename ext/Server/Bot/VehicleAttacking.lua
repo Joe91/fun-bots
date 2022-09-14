@@ -14,6 +14,8 @@ end
 function VehicleAttacking:UpdateAttackingVehicle(p_Bot)
 	if p_Bot._ShootPlayer.soldier ~= nil and p_Bot._Shoot then
 		if (p_Bot._ShootModeTimer < Config.BotFireModeDuration * 3) then -- thre time the default duration
+			-- get amount of weaponslots
+			local s_WeaponSlots = m_Vehicles:GetAvailableWeaponSlots(p_Bot.m_ActiveVehicle, p_Bot.m_Player.controlledEntryId)
 
 			p_Bot._ReloadTimer = 0.0 -- reset reloading
 
@@ -22,12 +24,26 @@ function VehicleAttacking:UpdateAttackingVehicle(p_Bot)
 					p_Bot.m_SecondaryGadget, true)
 
 				if s_AttackMode ~= VehicleAttackModes.NoAttack then
-					p_Bot._WeaponToUse = BotWeapons.Primary
+					if s_WeaponSlots > 1 then
+						-- TODO more logic depending on vehicle and distance
+						p_Bot._VehicleWeaponSlotToUse = 1
+					else
+						p_Bot._VehicleWeaponSlotToUse = 1 -- primary
+					end
 				else
 					p_Bot._ShootModeTimer = Config.BotFireModeDuration -- end attack
 				end
-			else
-				p_Bot._WeaponToUse = BotWeapons.Primary
+			else -- Soldier
+				if s_WeaponSlots > 1 then
+					-- if in Tank and target == soldier and distance small enough --> LMG / HMG
+					if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Tank) and
+						p_Bot._DistanceToPlayer < Config.MaxRaycastDistance then
+						p_Bot._VehicleWeaponSlotToUse = 2
+					end
+				-- TODO more vehicles and more logic
+				else
+					p_Bot._VehicleWeaponSlotToUse = 1 -- primary
+				end
 			end
 
 
@@ -52,7 +68,7 @@ function VehicleAttacking:UpdateAttackingVehicle(p_Bot)
 			end
 		else
 			p_Bot._TargetPitch = 0.0
-			p_Bot._WeaponToUse = BotWeapons.Primary
+			p_Bot._VehicleWeaponSlotToUse = 1 -- primary
 			p_Bot:AbortAttack()
 			p_Bot:_ResetActionFlag(BotActionFlags.C4Active)
 			p_Bot:_ResetActionFlag(BotActionFlags.GrenadeActive)

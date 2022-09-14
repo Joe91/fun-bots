@@ -1402,18 +1402,19 @@ function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 	table.insert(s_Unlocks, ResourceManager:SearchForDataContainer(s_SelectedPerk))
 
 	-- -- Vehicle perks
-	-- table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/jetflarelauncher"))
-	-- table.insert(s_Unlocks,	ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/atkheliproximityscangunner"))
-	-- table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/mbtproximityscan"))
-	-- table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/mbtcoaxlmg"))
-	-- table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/mbtsmokelaunchers"))
-	-- table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/jetheatseekerstance"))
-	-- table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/atkhelizoomoptics"))
-	-- table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/atkhelihellfiremissile"))
-	-- table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/atkheliheatseekermissile"))
-	-- table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/atkheliflarelauncher"))
-	-- table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/atkhelistealth"))
-	-- table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/jetstealth"))
+	table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/jetflarelauncher"))
+	table.insert(s_Unlocks,
+		ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/atkheliproximityscangunner"))
+	table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/mbtproximityscan"))
+	table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/mbtcoaxlmg"))
+	table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/mbtsmokelaunchers"))
+	table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/jetheatseekerstance"))
+	table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/atkhelizoomoptics"))
+	table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/atkhelihellfiremissile"))
+	table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/atkheliheatseekermissile"))
+	table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/atkheliflarelauncher"))
+	table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/atkhelistealth"))
+	table.insert(s_Unlocks, ResourceManager:SearchForDataContainer("persistence/unlocks/vehicles/jetstealth"))
 
 
 	return s_Unlocks
