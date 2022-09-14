@@ -27,11 +27,11 @@ This is the changelog for the version V2.6.1. Don't forget to [join us on Discor
 * massive rework on NodeEditor: Now completely on Server
 * count paths correctly
 * delte existing path now possible
-* Limit Distance of Bots when they shoot back
 
+* Limit Distance of Bots when they shoot back
 * Use Statevents to increase Rush-Stability
-* Bots use Squad-Perks
-* First implementation of Alternate Weapons on some vehicles
+* Bots use Squad-Perks (#101)
+* First implementation of Alternate Weapons on some vehicles (#172)
 
 ### Bug fixes
 * #218 increased auto-sniper-time a little
