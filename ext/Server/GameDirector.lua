@@ -412,7 +412,7 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 	local s_Objective = self:_SetVehicleObjectiveState(p_Entity.transform.trans, true)
 
 	if s_Objective ~= nil and s_Objective.isSpawnPath then
-		local s_Node = g_GameDirector:FindClosestPath(p_Entity.transform.trans, true, false, s_VehicleData.Terrain)
+		local s_Node = self:FindClosestPath(p_Entity.transform.trans, true, false, s_VehicleData.Terrain)
 
 		if s_Node ~= nil and s_Node.Position:Distance(p_Entity.transform.trans) < Registry.VEHICLES.MIN_DISTANCE_VEHICLE_ENTER then
 			table.insert(self.m_SpawnableVehicles[s_Objective.team], p_Entity)
@@ -639,45 +639,45 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 	local s_SquadMates = PlayerManager:GetPlayersBySquad(p_TeamId, p_SquadId)
 
 	for _, l_Player in pairs(s_SquadMates) do
-		if l_Player.soldier ~= nil then
+		if l_Player.soldier and l_Player.isAllowedToSpawnOn then
 			if m_Utilities:isBot(l_Player) then
 				local s_SquadBot = g_BotManager:GetBotByName(l_Player.name)
+				if not s_SquadBot.m_InVehicle then
+					local s_WayIndex = s_SquadBot:GetWayIndex()
+					local s_PointIndex = s_SquadBot:GetPointIndex()
 
-				if not s_SquadBot:IsStuck() then
-					if not s_SquadBot.m_InVehicle then
-						local s_WayIndex = s_SquadBot:GetWayIndex()
-						local s_PointIndex = s_SquadBot:GetPointIndex()
+					if MathUtils:GetRandomInt(1, 100) <= Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_SPAWN then
+						m_Logger:Write("spawn at squad-mate")
+						print("spawn at squad-mate")
+						return s_WayIndex, s_PointIndex, s_SquadBot._InvertPathDirection, nil -- use same direction
+					else
+						break
+					end
+				else -- squad-bot in vehicle
+					local s_EntryId = s_SquadBot.m_Player.controlledEntryId
 
-						if MathUtils:GetRandomInt(1, 100) <= Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_SPAWN then
-							m_Logger:Write("spawn at squad-mate")
-							return s_WayIndex, s_PointIndex, s_SquadBot._InvertPathDirection, nil -- use same direction
-						else
-							break
-						end
-					else -- squad-bot in vehicle
-						local s_EntryId = s_SquadBot.m_Player.controlledEntryId
+					if s_EntryId == 0 then
+						local s_Vehicle = s_SquadBot.m_Player.controlledControllable
 
-						if s_EntryId == 0 then
-							local s_Vehicle = s_SquadBot.m_Player.controlledControllable
+						-- check for free seats
+						if m_Vehicles:GetNrOfFreeSeats(s_Vehicle, false) > 0 then
+							local s_WayIndex = s_SquadBot:GetWayIndex()
+							local s_PointIndex = s_SquadBot:GetPointIndex()
 
-							-- check for free seats
-							if m_Vehicles:GetNrOfFreeSeats(s_Vehicle, false) > 0 then
-								local s_WayIndex = s_SquadBot:GetWayIndex()
-								local s_PointIndex = s_SquadBot:GetPointIndex()
-
-								if MathUtils:GetRandomInt(1, 100) <= Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_VEHICLE_SPAWN then
-									m_Logger:Write("spawn at squad-mate's vehicle")
-									return s_WayIndex, s_PointIndex, s_SquadBot._InvertPathDirection, s_Vehicle -- use same direction
-								else
-									break
-								end
+							if MathUtils:GetRandomInt(1, 100) <= Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_VEHICLE_SPAWN then
+								m_Logger:Write("spawn at squad-mate's vehicle")
+								print("spawn at squad-mate's vehicle")
+								return s_WayIndex, s_PointIndex, s_SquadBot._InvertPathDirection, s_Vehicle -- use same direction
 							else
 								break
 							end
+						else
+							break
 						end
 					end
 				end
 			else
+
 				-- check for vehicle of real player
 				if l_Player.controlledControllable ~= nil and not l_Player.controlledControllable:Is("ServerSoldierEntity") then
 					if l_Player.controlledEntryId == 0 then
@@ -695,6 +695,14 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 							break
 						end
 					end
+				else
+					--[[ 	if MathUtils:GetRandomInt(1, 100) <= Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_VEHICLE_SPAWN then
+						-- TODO: find closest path
+						local s_Node = self:FindClosestPath(l_Player.soldier.worldTransform.trans, false, false, nil)
+						if s_Node and s_Node.Position:Distance(l_Player.soldier.worldTransform.trans) < 10 then
+							return s_Node.PathIndex, s_Node.PointIndex, false, nil -- use same direction
+						end
+					end ]]
 				end
 			end
 		end
