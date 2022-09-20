@@ -42,6 +42,8 @@ This is the changelog for the version V2.6.1. Don't forget to [join us on Discor
 * modified mapfiles with newlines can be imported now
 * several bugs in new node-editor
 
+* fix endless attack of vehicles
+
 ### New maps
 * 
 
