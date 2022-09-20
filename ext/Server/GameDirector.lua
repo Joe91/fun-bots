@@ -648,7 +648,6 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 
 					if MathUtils:GetRandomInt(1, 100) <= Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_SPAWN then
 						m_Logger:Write("spawn at squad-mate")
-						print("spawn at squad-mate")
 						return s_WayIndex, s_PointIndex, s_SquadBot._InvertPathDirection, nil -- use same direction
 					else
 						break
@@ -666,7 +665,6 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 
 							if MathUtils:GetRandomInt(1, 100) <= Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_VEHICLE_SPAWN then
 								m_Logger:Write("spawn at squad-mate's vehicle")
-								print("spawn at squad-mate's vehicle")
 								return s_WayIndex, s_PointIndex, s_SquadBot._InvertPathDirection, s_Vehicle -- use same direction
 							else
 								break

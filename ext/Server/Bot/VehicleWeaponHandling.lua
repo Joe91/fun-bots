@@ -40,8 +40,6 @@ function VehicleWeaponHandling:UpdateWeaponSelectionVehicle(p_Bot)
 			p_Bot._ActiveVehicleWeaponSlot = 1
 		end
 
-		p_Bot._VehicleWeaponSlotToUse = 2
-
 		-- select inputs
 		if p_Bot._ActiveVehicleWeaponSlot ~= p_Bot._VehicleWeaponSlotToUse then
 			p_Bot._VehicleMovableId = m_Vehicles:GetPartIdForSeat(p_Bot.m_ActiveVehicle, p_Bot.m_Player.controlledEntryId,
