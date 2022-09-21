@@ -695,7 +695,7 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 					end
 				else
 					if MathUtils:GetRandomInt(1, 100) <= Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_SPAWN then
-						local s_Node = self:FindClosestPath(l_Player.soldier.worldTransform.trans, false, false, nil)
+						local s_Node = self:FindClosestPath(l_Player.soldier.worldTransform.trans, false, true, nil)
 						if s_Node and s_Node.Position:Distance(l_Player.soldier.worldTransform.trans) < 6.0 then
 							return s_Node.PathIndex, s_Node.PointIndex, false, nil -- use same direction
 						end
