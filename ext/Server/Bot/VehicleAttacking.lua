@@ -13,7 +13,7 @@ end
 
 function VehicleAttacking:UpdateAttackingVehicle(p_Bot)
 	if p_Bot._ShootPlayer.soldier ~= nil and p_Bot._Shoot then
-		if (p_Bot._ShootModeTimer < Config.BotFireModeDuration * 2) then -- thre time the default duration
+		if (p_Bot._ShootModeTimer < Config.BotVehicleFireModeDuration) then -- thre time the default duration
 
 			p_Bot._ShootModeTimer = p_Bot._ShootModeTimer + Registry.BOT.BOT_UPDATE_CYCLE
 
@@ -34,7 +34,7 @@ function VehicleAttacking:UpdateAttackingVehicle(p_Bot)
 						p_Bot._VehicleWeaponSlotToUse = 1 -- primary
 					end
 				else
-					p_Bot._ShootModeTimer = Config.BotFireModeDuration * 2 -- end attack
+					p_Bot._ShootModeTimer = Config.BotVehicleFireModeDuration -- end attack
 				end
 			else -- Soldier
 				if s_WeaponSlots > 1 then

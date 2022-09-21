@@ -1393,6 +1393,18 @@ SettingsDefinition = {
 			Category = "EXPERT"
 		},
 		{
+			Name = "BotVehicleMinTimeShootAtPlayer",
+			Text = "Bot min time shoot at player in vehicle",
+			---@type Type|integer
+			Type = Type.Float,
+			Value = Config.BotVehicleMinTimeShootAtPlayer,
+			Description = "The minimum time a bot shoots at one player if in vehicle - recommended minimum 2.5, below this you will have issues.",
+			Reference = Range(0.00, 60.00, 0.5),
+			Default = 4.0,
+			UpdateFlag = UpdateFlag.None,
+			Category = "EXPERT"
+		},
+		{
 			Name = "BotFireModeDuration",
 			Text = "Bot fire mode duration",
 			---@type Type|integer
@@ -1401,6 +1413,18 @@ SettingsDefinition = {
 			Description = "The minimum time a bot tries to shoot a player - recommended minimum 3.0, below this you will have issues.",
 			Reference = Range(0.00, 60.00, 0.5),
 			Default = 4.5,
+			UpdateFlag = UpdateFlag.None,
+			Category = "EXPERT"
+		},
+		{
+			Name = "BotVehicleFireModeDuration",
+			Text = "Bot fire mode duration in vehicle",
+			---@type Type|integer
+			Type = Type.Float,
+			Value = Config.BotVehicleFireModeDuration,
+			Description = "The minimum time a bot tries to shoot a player or vehicle, when in a vehicle - recommended minimum 7.0.",
+			Reference = Range(0.00, 60.00, 0.5),
+			Default = 9.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "EXPERT"
 		},

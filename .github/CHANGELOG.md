@@ -32,6 +32,7 @@ This is the changelog for the version V2.6.1. Don't forget to [join us on Discor
 * Use Statevents to increase Rush-Stability
 * Bots use Squad-Perks (#101)
 * First implementation of Alternate Weapons on some vehicles (#172)
+* Spawn at Player, if player close to path
 
 ### Bug fixes
 * #218 increased auto-sniper-time a little

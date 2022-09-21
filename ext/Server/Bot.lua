@@ -500,7 +500,7 @@ function Bot:IsReadyToAttack()
 		return false
 	end
 
-	if self._ShootPlayer == nil or (self.m_InVehicle and (self._ShootModeTimer > Config.BotMinTimeShootAtPlayer * 2)) or
+	if self._ShootPlayer == nil or (self.m_InVehicle and (self._ShootModeTimer > Config.BotVehicleMinTimeShootAtPlayer)) or
 		(not self.m_InVehicle and (self._ShootModeTimer > Config.BotMinTimeShootAtPlayer)) or
 		(self.m_KnifeMode and self._ShootModeTimer > (Config.BotMinTimeShootAtPlayer / 2)) then
 		return true
@@ -721,7 +721,11 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 		else
 			self._ShootPlayerName = ""
 			self._ShootPlayer = nil
-			self._ShootModeTimer = Config.BotFireModeDuration
+			if self.m_InVehicle then
+				self._ShootModeTimer = Config.BotVehicleFireModeDuration
+			else
+				self._ShootModeTimer = Config.BotFireModeDuration
+			end
 			return false
 		end
 	end
