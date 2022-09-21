@@ -92,7 +92,7 @@ Config = {
 	MaxShootDistanceNoAntiAir = 150,	-- Meters bots in vehicle (no Anti-Air) starts shooting at players
 	VehicleWaitForPassengersTime = 7.0,	-- Seconds to wait for other passengers
 	ChopperDriversAttack = false,		-- If false choppers only attack without gunner on board
-	AABots = true,						-- Enable Auto-AA by NyScorpy
+	AABots = false,						-- Enable Auto-AA by NyScorpy
 	MaxDistanceAABots = 300,			-- Max Range of Stationary AA
 
 	--WEAPONS

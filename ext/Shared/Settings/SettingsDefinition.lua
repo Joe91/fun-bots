@@ -950,7 +950,7 @@ SettingsDefinition = {
 			Type = Type.Boolean,
 			Value = Config.AABots,
 			Description = "Enable Auto-AA by NyScorpy",
-			Default = true,
+			Default = false,
 			UpdateFlag = UpdateFlag.None,
 			Category = "VEHICLE"
 		},
