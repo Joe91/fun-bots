@@ -124,6 +124,7 @@ end
 
 function FunBotServer:RegisterHooks()
 	Hooks:Install('Soldier:Damage', 100, self, self.OnSoldierDamage)
+	Hooks:Install('EntityFactory:Create', 100, self, self.OnEntityFactoryCreate)
 end
 
 function FunBotServer:RegisterCustomEvents()
@@ -466,6 +467,36 @@ end
 ---@param p_GiverInfo DamageGiverInfo
 function FunBotServer:OnSoldierDamage(p_HookCtx, p_Soldier, p_Info, p_GiverInfo)
 	m_BotManager:OnSoldierDamage(p_HookCtx, p_Soldier, p_Info, p_GiverInfo)
+end
+
+function FunBotServer:OnEntityFactoryCreate(p_HookCtx, p_EntityData, p_Transform)
+	if p_EntityData.typeInfo.name == "MissileEntityData" then
+		local s_MissileEntityData = MissileEntityData(p_EntityData)
+		if s_MissileEntityData.lockingController then
+			-- lockable missile: We need to inform target-bot
+			print('Creating entity')
+			local s_CreatedEntity = p_HookCtx:Call()
+			if not s_CreatedEntity then return end
+
+			local s_SpartialEntity = SpatialEntity(s_CreatedEntity)
+			local s_Soldier = nil
+
+			for _, l_Entity in ipairs(s_CreatedEntity.bus.parent.entities) do
+				if l_Entity.type.name == "ServerSoldierEntity" then
+					print(l_Entity.player)
+				end
+			end
+			print(s_SpartialEntity.transform)
+			print(s_MissileEntityData.defaultTeam)
+			print(s_MissileEntityData.engineTimeToIgnition)
+			print(s_MissileEntityData.engineTimeToLive)
+			print(s_MissileEntityData.unguidedData)
+			print(s_MissileEntityData.lockableInfo)
+			print(s_MissileEntityData.initialAngularVelocity)
+			print(s_MissileEntityData.transform)
+			print(s_MissileEntityData.lockingController)
+		end
+	end
 end
 
 -- =============================================
