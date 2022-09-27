@@ -124,6 +124,7 @@ end
 
 function FunBotServer:RegisterHooks()
 	Hooks:Install('Soldier:Damage', 100, self, self.OnSoldierDamage)
+	Hooks:Install('EntityFactory:Create', 100, self, self.OnEntityFactoryCreate)
 end
 
 function FunBotServer:RegisterCustomEvents()
@@ -466,6 +467,20 @@ end
 ---@param p_GiverInfo DamageGiverInfo
 function FunBotServer:OnSoldierDamage(p_HookCtx, p_Soldier, p_Info, p_GiverInfo)
 	m_BotManager:OnSoldierDamage(p_HookCtx, p_Soldier, p_Info, p_GiverInfo)
+end
+
+function FunBotServer:OnEntityFactoryCreate(p_HookCtx, p_EntityData, p_Transform)
+	if p_EntityData.typeInfo.name == "MissileEntityData" then
+		local s_MissileEntityData = MissileEntityData(p_EntityData)
+		if s_MissileEntityData.lockingController then
+			local s_CreatedEntity = p_HookCtx:Call()
+			if not s_CreatedEntity then
+				return
+			end
+
+			m_BotManager:CheckForFlareOrSmoke(s_CreatedEntity)
+		end
+	end
 end
 
 -- =============================================

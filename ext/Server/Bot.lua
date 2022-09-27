@@ -419,6 +419,10 @@ function Bot:Revive(p_Player)
 	end
 end
 
+function Bot:FireFlareSmoke()
+	self:_SetInput(EntryInputActionEnum.EIAFireCountermeasure, 1)
+end
+
 ---@param p_Player Player
 function Bot:Repair(p_Player)
 	if self.m_Kit == BotKits.Engineer and p_Player.soldier ~= nil and p_Player.controlledControllable ~= nil then
