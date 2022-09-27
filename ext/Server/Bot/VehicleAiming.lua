@@ -159,7 +159,7 @@ function VehicleAiming:UpdateAimingVehicle(p_Bot)
 		s_FullPositionTarget = p_Bot._ShootPlayer.controlledControllable.transform.trans:Clone()
 	else
 		if p_Bot.m_Player.controlledEntryId == 0 and p_Bot._ShootPlayerVehicleType == VehicleTypes.NoVehicle and
-			p_Bot._ShootPlayer.soldier.worldTransform.trans.y < s_FullPositionBot.y then
+			p_Bot._ActiveVehicleWeaponSlot == 1 then
 			-- add nothing --> aim for the feet of the target
 			s_FullPositionTarget = p_Bot._ShootPlayer.soldier.worldTransform.trans:Clone()
 		else

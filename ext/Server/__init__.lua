@@ -479,6 +479,42 @@ function FunBotServer:OnEntityFactoryCreate(p_HookCtx, p_EntityData, p_Transform
 			if not s_CreatedEntity then return end
 
 			local s_SpartialEntity = SpatialEntity(s_CreatedEntity)
+			local s_MissileTransform = s_SpartialEntity.transform
+			local s_MissilePosition = s_MissileTransform.trans
+
+			local s_SmallestAngle = 10
+			local s_EntityWithSmallestAngle = nil
+			local s_DriverOfVehicle = nil
+
+			local s_Iterator = EntityManager:GetIterator("ServerVehicleEntity")
+			local s_Entity = s_Iterator:Next()
+			while s_Entity ~= nil do
+				s_Entity = ControllableEntity(s_Entity)
+				local s_DriverPlayer = s_Entity:GetPlayerInEntry(0)
+				if s_DriverPlayer then
+					local s_PositionVehicle = s_Entity.transform.trans
+					local s_VecMissile = (s_PositionVehicle - s_MissilePosition):Normalize()
+					print(s_VecMissile)
+					print(s_MissileTransform.forward)
+					local s_Angle = s_VecMissile:Dot(s_MissileTransform.forward)
+					local s_Distance = s_PositionVehicle:Distance(s_MissilePosition)
+
+					print(s_Angle)
+					print(s_Distance)
+					print(s_DriverPlayer)
+
+					if s_Angle < s_SmallestAngle then
+						s_EntityWithSmallestAngle = s_Entity
+						s_SmallestAngle = s_Angle
+						s_DriverOfVehicle = s_DriverPlayer
+					end
+				end
+
+				s_Entity = s_Iterator:Next()
+			end
+
+			--[[ print(s_MissileTransform)
+
 			local s_Soldier = nil
 
 			for _, l_Entity in ipairs(s_CreatedEntity.bus.parent.entities) do
@@ -494,7 +530,7 @@ function FunBotServer:OnEntityFactoryCreate(p_HookCtx, p_EntityData, p_Transform
 			print(s_MissileEntityData.lockableInfo)
 			print(s_MissileEntityData.initialAngularVelocity)
 			print(s_MissileEntityData.transform)
-			print(s_MissileEntityData.lockingController)
+			print(s_MissileEntityData.lockingController) ]]
 		end
 	end
 end
