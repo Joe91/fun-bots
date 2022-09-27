@@ -283,6 +283,14 @@ function BotManager:OnBotShootAtBot(p_Player, p_BotName1, p_BotName2)
 	end
 end
 
+function BotManager:OnFlareSmoke()
+	for _, l_Bot in pairs(self._Bots) do
+		if l_Bot.m_InVehicle and l_Bot.m_Player.controlledEntryId == 0 then
+			l_Bot:_SetInput(EntryInputActionEnum.EIAFireCountermeasure, 1.0)
+		end
+	end
+end
+
 function BotManager:OnClientRaycastResults(p_Player, p_RaycastResults)
 	if p_RaycastResults == nil then
 		return

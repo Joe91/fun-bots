@@ -494,16 +494,11 @@ function FunBotServer:OnEntityFactoryCreate(p_HookCtx, p_EntityData, p_Transform
 				if s_DriverPlayer then
 					local s_PositionVehicle = s_Entity.transform.trans
 					local s_VecMissile = (s_PositionVehicle - s_MissilePosition):Normalize()
-					print(s_VecMissile)
-					print(s_MissileTransform.forward)
-					local s_Angle = s_VecMissile:Dot(s_MissileTransform.forward)
+
+					local s_Angle = math.acos(s_VecMissile:Dot(s_MissileTransform.forward))
 					local s_Distance = s_PositionVehicle:Distance(s_MissilePosition)
 
-					print(s_Angle)
-					print(s_Distance)
-					print(s_DriverPlayer)
-
-					if s_Angle < s_SmallestAngle then
+					if s_Angle < s_SmallestAngle and s_Distance < 350 then
 						s_EntityWithSmallestAngle = s_Entity
 						s_SmallestAngle = s_Angle
 						s_DriverOfVehicle = s_DriverPlayer
@@ -511,6 +506,15 @@ function FunBotServer:OnEntityFactoryCreate(p_HookCtx, p_EntityData, p_Transform
 				end
 
 				s_Entity = s_Iterator:Next()
+			end
+
+			print(s_DriverOfVehicle)
+			print(s_SmallestAngle)
+
+			m_BotManager:OnFlareSmoke()
+
+			if s_DriverOfVehicle then
+
 			end
 
 			--[[ print(s_MissileTransform)
