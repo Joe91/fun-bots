@@ -283,11 +283,44 @@ function BotManager:OnBotShootAtBot(p_Player, p_BotName1, p_BotName2)
 	end
 end
 
-function BotManager:OnFlareSmoke()
-	for _, l_Bot in pairs(self._Bots) do
-		if l_Bot.m_InVehicle and l_Bot.m_Player.controlledEntryId == 0 then
-			l_Bot:_SetInput(EntryInputActionEnum.EIAFireCountermeasure, 1.0)
+---@param p_MissileEntity Entity
+function BotManager:CheckForFlareOrSmoke(p_MissileEntity)
+	p_MissileEntity = SpatialEntity(p_MissileEntity)
+
+	local s_MissileTransform = p_MissileEntity.transform
+	local s_MissilePosition = s_MissileTransform.trans
+
+	local s_SmallestAngle = 1.0
+	local s_DriverOfVehicle = nil
+
+	local s_Iterator = EntityManager:GetIterator("ServerVehicleEntity")
+	local s_Entity = s_Iterator:Next()
+	while s_Entity ~= nil do
+		s_Entity = ControllableEntity(s_Entity)
+		local s_DriverPlayer = s_Entity:GetPlayerInEntry(0)
+		if s_DriverPlayer then
+			local s_PositionVehicle = s_Entity.transform.trans
+			local s_VecMissile = (s_PositionVehicle - s_MissilePosition):Normalize()
+
+			local s_Angle = math.acos(s_VecMissile:Dot(s_MissileTransform.forward))
+			local s_Distance = s_PositionVehicle:Distance(s_MissilePosition)
+
+			if s_Angle < s_SmallestAngle and s_Distance < 350 then
+				s_SmallestAngle = s_Angle
+				s_DriverOfVehicle = s_DriverPlayer
+			end
 		end
+
+		s_Entity = s_Iterator:Next()
+	end
+
+	if not s_DriverOfVehicle then
+		return
+	end
+
+	local s_TargetBot = self:GetBotByName(s_DriverOfVehicle.name)
+	if s_TargetBot then
+		s_TargetBot:FireFlareSmoke()
 	end
 end
 

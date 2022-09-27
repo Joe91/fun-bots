@@ -27,6 +27,7 @@ This is the changelog for the version V2.6.1. Don't forget to [join us on Discor
 * massive rework on NodeEditor: Now completely on Server
 * count paths correctly
 * delte existing path now possible
+* Bots use flares or smoke
 
 * Limit Distance of Bots when they shoot back
 * Use Statevents to increase Rush-Stability

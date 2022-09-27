@@ -473,68 +473,12 @@ function FunBotServer:OnEntityFactoryCreate(p_HookCtx, p_EntityData, p_Transform
 	if p_EntityData.typeInfo.name == "MissileEntityData" then
 		local s_MissileEntityData = MissileEntityData(p_EntityData)
 		if s_MissileEntityData.lockingController then
-			-- lockable missile: We need to inform target-bot
-			print('Creating entity')
 			local s_CreatedEntity = p_HookCtx:Call()
-			if not s_CreatedEntity then return end
-
-			local s_SpartialEntity = SpatialEntity(s_CreatedEntity)
-			local s_MissileTransform = s_SpartialEntity.transform
-			local s_MissilePosition = s_MissileTransform.trans
-
-			local s_SmallestAngle = 10
-			local s_EntityWithSmallestAngle = nil
-			local s_DriverOfVehicle = nil
-
-			local s_Iterator = EntityManager:GetIterator("ServerVehicleEntity")
-			local s_Entity = s_Iterator:Next()
-			while s_Entity ~= nil do
-				s_Entity = ControllableEntity(s_Entity)
-				local s_DriverPlayer = s_Entity:GetPlayerInEntry(0)
-				if s_DriverPlayer then
-					local s_PositionVehicle = s_Entity.transform.trans
-					local s_VecMissile = (s_PositionVehicle - s_MissilePosition):Normalize()
-
-					local s_Angle = math.acos(s_VecMissile:Dot(s_MissileTransform.forward))
-					local s_Distance = s_PositionVehicle:Distance(s_MissilePosition)
-
-					if s_Angle < s_SmallestAngle and s_Distance < 350 then
-						s_EntityWithSmallestAngle = s_Entity
-						s_SmallestAngle = s_Angle
-						s_DriverOfVehicle = s_DriverPlayer
-					end
-				end
-
-				s_Entity = s_Iterator:Next()
+			if not s_CreatedEntity then
+				return
 			end
 
-			print(s_DriverOfVehicle)
-			print(s_SmallestAngle)
-
-			m_BotManager:OnFlareSmoke()
-
-			if s_DriverOfVehicle then
-
-			end
-
-			--[[ print(s_MissileTransform)
-
-			local s_Soldier = nil
-
-			for _, l_Entity in ipairs(s_CreatedEntity.bus.parent.entities) do
-				if l_Entity.type.name == "ServerSoldierEntity" then
-					print(l_Entity.player)
-				end
-			end
-			print(s_SpartialEntity.transform)
-			print(s_MissileEntityData.defaultTeam)
-			print(s_MissileEntityData.engineTimeToIgnition)
-			print(s_MissileEntityData.engineTimeToLive)
-			print(s_MissileEntityData.unguidedData)
-			print(s_MissileEntityData.lockableInfo)
-			print(s_MissileEntityData.initialAngularVelocity)
-			print(s_MissileEntityData.transform)
-			print(s_MissileEntityData.lockingController) ]]
+			m_BotManager:CheckForFlareOrSmoke(s_CreatedEntity)
 		end
 	end
 end
