@@ -143,11 +143,9 @@ function FunBotServer:RegisterCustomEvents()
 end
 
 function FunBotServer:RegisterCallbacks()
-	-- Use server-sided bulletdamage and modify timeout
+	-- Use server-sided bulletdamage
 	ResourceManager:RegisterInstanceLoadHandler(Guid('C4DCACFF-ED8F-BC87-F647-0BC8ACE0D9B4'),
 		Guid('818334B3-CEA6-FC3F-B524-4A0FED28CA35'), self, self.OnServerSettingsCallback)
-	ResourceManager:RegisterInstanceLoadHandler(Guid('C4DCACFF-ED8F-BC87-F647-0BC8ACE0D9B4'),
-		Guid('B479A8FA-67FF-8825-9421-B31DE95B551A'), self, self.OnModifyClientTimeoutSettings)
 	ResourceManager:RegisterInstanceLoadHandler(Guid('C4DCACFF-ED8F-BC87-F647-0BC8ACE0D9B4'),
 		Guid('B983148D-4B2B-1CDA-D8A0-407789610202'), self, self.OnSyncedGameSettingsCallback)
 	-- Modify stationary AA
@@ -557,34 +555,15 @@ end
 function FunBotServer:OnServerSettingsCallback(p_ServerSettings)
 	p_ServerSettings = ServerSettings(p_ServerSettings)
 	p_ServerSettings:MakeWritable()
-
 	p_ServerSettings.isRenderDamageEvents = true
-	p_ServerSettings.loadingTimeout = Registry.COMMON.LOADING_TIMEOUT
-	p_ServerSettings.ingameTimeout = Registry.COMMON.LOADING_TIMEOUT
-	p_ServerSettings.timeoutTime = Registry.COMMON.LOADING_TIMEOUT
-	p_ServerSettings.timeoutGame = false
-
 	m_Logger:Write("Changed ServerSettings")
-
 end
 
 ---@param p_SyncedGameSettings SyncedGameSettings|DataContainer
 function FunBotServer:OnSyncedGameSettingsCallback(p_SyncedGameSettings)
 	p_SyncedGameSettings = SyncedGameSettings(p_SyncedGameSettings)
 	p_SyncedGameSettings:MakeWritable()
-
 	p_SyncedGameSettings.allowClientSideDamageArbitration = false
-end
-
----@param p_ClientSettings ClientSettings|DataContainer
-function FunBotServer:OnModifyClientTimeoutSettings(p_ClientSettings)
-	p_ClientSettings = ClientSettings(p_ClientSettings)
-	p_ClientSettings:MakeWritable()
-
-	p_ClientSettings.loadedTimeout = Registry.COMMON.LOADING_TIMEOUT
-	p_ClientSettings.loadingTimeout = Registry.COMMON.LOADING_TIMEOUT
-	p_ClientSettings.ingameTimeout = Registry.COMMON.LOADING_TIMEOUT
-	m_Logger:Write("Changed ClientSettings")
 end
 
 ---@param p_FiringFunctionData FiringFunctionData|DataContainer
