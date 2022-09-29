@@ -159,9 +159,9 @@ function Bot:__init(p_Player)
 	self._Pid_Drv_Roll = PidController(5, 0.05, 0.2, 1.0)
 	-- guns
 	---@type PidController
-	self._Pid_Att_Yaw = PidController(7, 0.4, 0.2, 1.0)
+	self._Pid_Att_Yaw = PidController(10, 2.0, 2.0, 1.0)
 	---@type PidController
-	self._Pid_Att_Pitch = PidController(7, 0.4, 0.2, 1.0)
+	self._Pid_Att_Pitch = PidController(10, 2.0, 2.0, 1.0)
 
 	--shooting
 	self._Shoot = false
