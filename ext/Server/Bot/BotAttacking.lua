@@ -175,7 +175,16 @@ function BotAttacking:UpdateAttacking(p_Bot)
 			end
 
 			--shooting sequence
-			if p_Bot.m_ActiveWeapon ~= nil then
+			if Globals.IsGm then
+				if p_Bot._ShotTimer >= (0.4) then
+					p_Bot._ShotTimer = 0.0
+				end
+				if p_Bot._ShotTimer <= 0.2 then
+					p_Bot:_SetInput(EntryInputActionEnum.EIAFire, 1)
+				end
+
+				p_Bot._ShotTimer = p_Bot._ShotTimer + Registry.BOT.BOT_UPDATE_CYCLE
+			elseif p_Bot.m_ActiveWeapon ~= nil then
 				if p_Bot.m_KnifeMode then
 					-- nothing to do
 					-- C4 Handling

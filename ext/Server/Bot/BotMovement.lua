@@ -191,6 +191,7 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 								p_Bot:_SetInput(EntryInputActionEnum.EIAQuicktimeFastMelee, 1)
 								p_Bot:_SetInput(EntryInputActionEnum.EIAMeleeAttack, 1)
 								p_Bot.m_ActiveWeapon = p_Bot.m_Knife
+								p_Bot._MeleeCooldownTimer = Config.MeleeAttackCoolDown -- set time to enxure bot exit knife-mode when attack starts
 							else
 								p_Bot:_SetInput(EntryInputActionEnum.EIAFire, 1)
 							end

@@ -48,6 +48,7 @@ This is the changelog for the version V2.6.1. Don't forget to [join us on Discor
 
 * fix endless attack of vehicles
 * fix Gunmaster Gamemode
+* fix Bots keeping the knife for one whole fight.
 
 ### New maps
 * 
