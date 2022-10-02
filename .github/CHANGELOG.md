@@ -34,7 +34,8 @@ This is the changelog for the version V2.6.1. Don't forget to [join us on Discor
 * Bots use Squad-Perks (#101)
 * First implementation of Alternate Weapons on some vehicles (#172)
 * Spawn at Player, if player close to path
-* Don't use missiles on tdm / domination
+* Don't use missiles without vehicles
+* Don't spam nades on vehicles anymore
 
 ### Bug fixes
 * #218 increased auto-sniper-time a little

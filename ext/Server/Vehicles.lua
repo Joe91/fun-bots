@@ -187,9 +187,6 @@ function Vehicles:CheckForVehicleAttack(p_VehicleType, p_Distance, p_Gadget, p_I
 		p_VehicleType == VehicleTypes.Gadgets or --no idea what this might be
 		p_VehicleType == VehicleTypes.Chopper then --don't attack planes. Too fast...
 		s_AttackMode = VehicleAttackModes.AttackWithRifle -- attack with rifle
-	elseif (p_VehicleType == VehicleTypes.LightVehicle or
-		p_VehicleType == VehicleTypes.AntiAir) and p_Distance < 35 then
-		s_AttackMode = VehicleAttackModes.AttackWithNade -- attack with grenade
 	end
 
 	if p_VehicleType ~= VehicleTypes.MavBot and p_Gadget then -- MAV or EOD always with rifle
