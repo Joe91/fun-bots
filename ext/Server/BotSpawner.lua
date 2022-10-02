@@ -1512,13 +1512,23 @@ function BotSpawner:_SetKitAndAppearance(p_Bot, p_Kit, p_Color)
 		end
 	end
 
-	s_Unlocks = self:_GetUnlocks(p_Bot, s_TeamId, s_SquadId)
+	if not Globals.IsGm then
+		s_Unlocks = self:_GetUnlocks(p_Bot, s_TeamId, s_SquadId)
+	end
 
 	if Globals.RemoveKitVisuals then
 		-- for Civilianizer-mod:
-		p_Bot.m_Player:SelectUnlockAssets(s_SoldierKit, {}, s_Unlocks)
+		if not Globals.IsGm then
+			p_Bot.m_Player:SelectUnlockAssets(s_SoldierKit, { s_Appearance }, s_Unlocks)
+		else
+			p_Bot.m_Player:SelectUnlockAssets(s_SoldierKit, {})
+		end
 	else
-		p_Bot.m_Player:SelectUnlockAssets(s_SoldierKit, { s_Appearance }, s_Unlocks)
+		if not Globals.IsGm then
+			p_Bot.m_Player:SelectUnlockAssets(s_SoldierKit, { s_Appearance }, s_Unlocks)
+		else
+			p_Bot.m_Player:SelectUnlockAssets(s_SoldierKit, { s_Appearance })
+		end
 	end
 end
 
@@ -1764,21 +1774,6 @@ function BotSpawner:_FindAppearance(p_TeamName, p_KitName, p_ColorName)
 
 	return nil
 end
-
---[[
----@param p_UnlockAssets UnlockAssetBase[]
----@param p_Attachments string[]
-function BotSpawner:_SetAttachments(p_UnlockAssets, p_Attachments)
-	for _, l_Attachment in pairs(p_Attachments) do
-		local s_Asset = ResourceManager:SearchForDataContainer(l_Attachment)
-
-		if s_Asset == nil then
-			m_Logger:Warning('Attachment invalid:' .. tostring(l_Attachment))
-		else
-			table.insert(p_UnlockAssets, (UnlockAsset(s_Asset)))
-		end
-	end
-end ]]
 
 ---@param p_Bot Bot
 ---@param p_BotKit BotKits|integer
