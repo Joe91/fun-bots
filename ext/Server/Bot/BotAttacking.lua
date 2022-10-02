@@ -56,8 +56,7 @@ function BotAttacking:UpdateAttacking(p_Bot)
 
 			if p_Bot._ActiveAction == BotActionFlags.GrenadeActive then -- throw grenade
 				if p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.secondaryAmmo <= 0 then
-					p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.secondaryAmmo = p_Bot.m_Player.soldier.weaponsComponent.currentWeapon
-						.secondaryAmmo + 1
+					p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.secondaryAmmo = 1
 					p_Bot:_ResetActionFlag(BotActionFlags.GrenadeActive)
 					p_Bot._ShootModeTimer = p_Bot._ShootModeTimer + 2 * Registry.BOT.BOT_UPDATE_CYCLE
 				end
@@ -133,7 +132,7 @@ function BotAttacking:UpdateAttacking(p_Bot)
 					end
 					-- use grenade from time to time
 					if Config.BotsThrowGrenades then
-						local s_TargetTimeValue = Config.BotFireModeDuration - 2 * Registry.BOT.BOT_UPDATE_CYCLE
+						local s_TargetTimeValue = Config.BotFireModeDuration - (3 * Registry.BOT.BOT_UPDATE_CYCLE)
 
 						if ((p_Bot._ShootModeTimer >= (s_TargetTimeValue - 0.001)) and
 							(p_Bot._ShootModeTimer <= (s_TargetTimeValue + Registry.BOT.BOT_UPDATE_CYCLE + 0.001)) and
