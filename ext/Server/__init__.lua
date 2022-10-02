@@ -293,7 +293,7 @@ function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPe
 
 	self:DetectSpecialMods()
 	self:RegisterInputRestrictionEventCallbacks()
-	self:SetGameMode(s_GameMode)
+	self:SetGameMode(s_GameMode, p_LevelName)
 	self:SetMaxBotsPerTeam(p_GameMode)
 
 	m_NodeEditor:OnLevelLoaded(p_LevelName, s_GameMode)
@@ -723,7 +723,7 @@ function FunBotServer:SetMaxBotsPerTeam(p_GameMode)
 	end
 end
 
-function FunBotServer:SetGameMode(p_GameMode)
+function FunBotServer:SetGameMode(p_GameMode, p_LevelName)
 	Globals.NrOfTeams = 2
 	if p_GameMode == 'TeamDeathMatchC0' or p_GameMode == 'TeamDeathMatch0' then
 		Globals.IsTdm = true
@@ -779,8 +779,14 @@ function FunBotServer:SetGameMode(p_GameMode)
 	if p_GameMode == 'RushLarge0' or
 		p_GameMode == 'SquadRush0' then
 		Globals.IsRush = true
+		if p_LevelName == "MP_Subway" or p_LevelName == "XP4_Rubble" then
+			Globals.IsRushWithoutVehicles = true
+		else
+			Globals.IsRushWithoutVehicles = false
+		end
 	else
 		Globals.IsRush = false
+		Globals.IsRushWithoutVehicles = false
 	end
 
 	if p_GameMode == 'SquadRush0' then
