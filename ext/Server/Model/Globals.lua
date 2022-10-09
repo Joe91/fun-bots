@@ -8,6 +8,7 @@ Globals = {
 	IsSdm = false,
 	IsScavenger = false,
 	IsRush = false,
+	IsRushWithoutVehicles = false,
 	IsSquadRush = false,
 	IsGm = false,
 	IsConquest = false,

@@ -114,8 +114,8 @@ function ClientBotManager:DoRaycast(p_Pos1, p_Pos2, p_InObjectPos1, p_InObjectPo
 			s_MaxHits = s_MaxHits + 1
 		end
 
-		local s_RaycastFlags = RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter
 		local s_MaterialFlags = 0 --MaterialFlags.MfPenetrable | MaterialFlags.MfClientDestructible | MaterialFlags.MfBashable | MaterialFlags.MfSeeThrough | MaterialFlags.MfNoCollisionResponse | MaterialFlags.MfNoCollisionResponseCombined
+		local s_RaycastFlags = RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter
 
 		local s_RayHits = RaycastManager:CollisionRaycast(p_Pos1, p_Pos2, s_MaxHits, s_MaterialFlags, s_RaycastFlags)
 
@@ -261,7 +261,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 			s_CheckCount = s_CheckCount + 1
 
-			if (s_Distance < Config.MaxRaycastDistance) or (s_Bot.inVehicle and Config.MaxRaycastDistanceVehicles) then
+			if (s_Distance < Config.MaxShootDistanceSniper) or (s_Bot.inVehicle and Config.MaxShootDistanceVehicles) then
 				if self:DoRaycast(s_PlayerPosition, s_Target, self.m_Player.inVehicle, s_Bot.inVehicle) then
 					-- we found a valid bot in Sight (either no hit, or player-hit). Signal Server with players
 					local s_IgnoreYaw = false

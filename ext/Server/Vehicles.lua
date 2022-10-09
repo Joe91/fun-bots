@@ -78,9 +78,17 @@ function Vehicles:GetNrOfFreeSeats(p_Entity, p_PlayerIsDriver)
 	return s_NrOfFreeSeats
 end
 
-function Vehicles:GetPartIdForSeat(p_VehicleData, p_Index)
+function Vehicles:GetPartIdForSeat(p_VehicleData, p_Index, p_WeaponSelection)
 	if p_VehicleData ~= nil and p_VehicleData.Parts ~= nil then
-		return p_VehicleData.Parts[p_Index + 1]
+		if type(p_VehicleData.Parts[p_Index + 1]) == "table" then
+			if p_WeaponSelection == 0 then
+				return p_VehicleData.Parts[p_Index + 1][1]
+			else
+				return p_VehicleData.Parts[p_Index + 1][p_WeaponSelection]
+			end
+		else
+			return p_VehicleData.Parts[p_Index + 1]
+		end
 	else
 		return nil
 	end
@@ -118,15 +126,44 @@ function Vehicles:IsNotVehicleType(p_VehicleData, p_VehicleType)
 	end
 end
 
-function Vehicles:GetSpeedAndDrop(p_VehicleData, p_Index)
+function Vehicles:GetAvailableWeaponSlots(p_VehicleData, p_Index)
+	if p_VehicleData ~= nil then
+		if type(p_VehicleData.Parts[p_Index + 1]) == "table" then
+			return #p_VehicleData.Parts[p_Index + 1]
+		else
+			if p_VehicleData.Parts[p_Index + 1] == nil then
+				return 0
+			else
+				return 1
+			end
+		end
+	end
+	return 0
+end
+
+function Vehicles:GetSpeedAndDrop(p_VehicleData, p_Index, p_WeaponSelection)
 	local s_Drop = nil
 	local s_Speed = nil
 
 	if p_VehicleData ~= nil and p_VehicleData.Speed ~= nil then
 		s_Speed = p_VehicleData.Speed[p_Index + 1]
+		if type(s_Speed) == "table" then
+			if p_WeaponSelection ~= 0 then
+				s_Speed = s_Speed[p_WeaponSelection]
+			else
+				s_Speed = s_Speed[1]
+			end
+		end
 	end
 	if p_VehicleData ~= nil and p_VehicleData.Drop ~= nil then
 		s_Drop = p_VehicleData.Drop[p_Index + 1]
+		if type(s_Drop) == "table" then
+			if p_WeaponSelection ~= 0 then
+				s_Drop = s_Drop[p_WeaponSelection]
+			else
+				s_Drop = s_Drop[1]
+			end
+		end
 	end
 	if s_Speed == nil then
 		s_Speed = 500
@@ -150,9 +187,6 @@ function Vehicles:CheckForVehicleAttack(p_VehicleType, p_Distance, p_Gadget, p_I
 		p_VehicleType == VehicleTypes.Gadgets or --no idea what this might be
 		p_VehicleType == VehicleTypes.Chopper then --don't attack planes. Too fast...
 		s_AttackMode = VehicleAttackModes.AttackWithRifle -- attack with rifle
-	elseif (p_VehicleType == VehicleTypes.LightVehicle or
-		p_VehicleType == VehicleTypes.AntiAir) and p_Distance < 35 then
-		s_AttackMode = VehicleAttackModes.AttackWithNade -- attack with grenade
 	end
 
 	if p_VehicleType ~= VehicleTypes.MavBot and p_Gadget then -- MAV or EOD always with rifle

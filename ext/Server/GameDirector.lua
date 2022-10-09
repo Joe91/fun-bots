@@ -22,8 +22,8 @@ function GameDirector:RegisterVars()
 
 	self.m_AllObjectives = {}
 	self.m_Translations = {}
-
 	self.m_ArmedMcoms = {}
+
 	self.m_McomCounter = 0
 	self.m_OnlyOneMcom = false
 	self.m_waitForZone = false
@@ -150,7 +150,6 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 				self.m_WaitForZone = false
 			end
 		end
-
 		self:_UpdateTimersOfMcoms(self.m_UpdateTimer)
 	end
 
@@ -303,39 +302,56 @@ end
 -- RUSH Events
 -- =============================================
 
-function GameDirector:OnMcomArmed(p_Objective)
-	m_Logger:Write(p_Objective .. " armed")
+function GameDirector:OnMcomArmed(p_Player)
+	local s_PlayerPos = nil
+	if p_Player and p_Player.soldier then
+		s_PlayerPos = p_Player.soldier.worldTransform.trans:Clone()
+	elseif p_Player and p_Player.corpse then
+		s_PlayerPos = p_Player.corpse.worldTransform.trans:Clone()
+	end
 
-	self:_UpdateObjective(p_Objective, {
-		team = TeamId.Team1,
-		isAttacked = true
-	})
+	if s_PlayerPos then
+		local s_Objective = self:_TranslateObjective(s_PlayerPos)
+		m_Logger:Write(s_Objective .. " armed")
 
-	self.m_ArmedMcoms[p_Objective] = -self.m_UpdateTimer
+		self:_UpdateObjective(s_Objective, {
+			team = TeamId.Team1,
+			isAttacked = true
+		})
+		self.m_ArmedMcoms[s_Objective] = -self.m_UpdateTimer
+	end
 end
 
-function GameDirector:OnMcomDisarmed(p_Objective)
-	m_Logger:Write(p_Objective .. " disarmed")
+function GameDirector:OnMcomDisarmed(p_Player)
+	local s_PlayerPos = nil
+	if p_Player and p_Player.soldier then
+		s_PlayerPos = p_Player.soldier.worldTransform.trans:Clone()
+	elseif p_Player and p_Player.corpse then
+		s_PlayerPos = p_Player.corpse.worldTransform.trans:Clone()
+	end
 
-	self:_UpdateObjective(p_Objective, {
-		team = TeamId.TeamNeutral,
-		isAttacked = false
-	})
+	if s_PlayerPos then
+		local s_Objective = self:_TranslateObjective(s_PlayerPos)
+		m_Logger:Write(s_Objective .. " disarmed")
 
-	self.m_ArmedMcoms[p_Objective] = nil
+		self:_UpdateObjective(s_Objective, {
+			team = TeamId.TeamNeutral,
+			isAttacked = false
+		})
+		self.m_ArmedMcoms[s_Objective] = nil
+	end
 end
 
 function GameDirector:OnMcomDestroyed(p_Objective)
+
 	self.m_McomCounter = self.m_McomCounter + 1
 	self:_UpdateValidObjectives()
 
 	m_Logger:Write(p_Objective .. " destroyed after " .. tostring(self.m_ArmedMcoms[p_Objective]) .. " s")
-
 	self.m_ArmedMcoms[p_Objective] = nil
 
 	local s_SubObjective = nil
 	local s_TopObjective = nil
-
 
 	if p_Objective ~= '' then
 		self:_UpdateObjective(p_Objective, {
@@ -396,7 +412,7 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 	local s_Objective = self:_SetVehicleObjectiveState(p_Entity.transform.trans, true)
 
 	if s_Objective ~= nil and s_Objective.isSpawnPath then
-		local s_Node = g_GameDirector:FindClosestPath(p_Entity.transform.trans, true, false, s_VehicleData.Terrain)
+		local s_Node = self:FindClosestPath(p_Entity.transform.trans, true, false, s_VehicleData.Terrain)
 
 		if s_Node ~= nil and s_Node.Position:Distance(p_Entity.transform.trans) < Registry.VEHICLES.MIN_DISTANCE_VEHICLE_ENTER then
 			table.insert(self.m_SpawnableVehicles[s_Objective.team], p_Entity)
@@ -623,45 +639,43 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 	local s_SquadMates = PlayerManager:GetPlayersBySquad(p_TeamId, p_SquadId)
 
 	for _, l_Player in pairs(s_SquadMates) do
-		if l_Player.soldier ~= nil then
+		if l_Player.soldier and l_Player.isAllowedToSpawnOn then
 			if m_Utilities:isBot(l_Player) then
 				local s_SquadBot = g_BotManager:GetBotByName(l_Player.name)
+				if not s_SquadBot.m_InVehicle then
+					local s_WayIndex = s_SquadBot:GetWayIndex()
+					local s_PointIndex = s_SquadBot:GetPointIndex()
 
-				if not s_SquadBot:IsStuck() then
-					if not s_SquadBot.m_InVehicle then
-						local s_WayIndex = s_SquadBot:GetWayIndex()
-						local s_PointIndex = s_SquadBot:GetPointIndex()
+					if MathUtils:GetRandomInt(1, 100) <= Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_SPAWN then
+						m_Logger:Write("spawn at squad-mate")
+						return s_WayIndex, s_PointIndex, s_SquadBot._InvertPathDirection, nil -- use same direction
+					else
+						break
+					end
+				else -- squad-bot in vehicle
+					local s_EntryId = s_SquadBot.m_Player.controlledEntryId
 
-						if MathUtils:GetRandomInt(1, 100) <= Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_SPAWN then
-							m_Logger:Write("spawn at squad-mate")
-							return s_WayIndex, s_PointIndex, s_SquadBot._InvertPathDirection, nil -- use same direction
-						else
-							break
-						end
-					else -- squad-bot in vehicle
-						local s_EntryId = s_SquadBot.m_Player.controlledEntryId
+					if s_EntryId == 0 then
+						local s_Vehicle = s_SquadBot.m_Player.controlledControllable
 
-						if s_EntryId == 0 then
-							local s_Vehicle = s_SquadBot.m_Player.controlledControllable
+						-- check for free seats
+						if m_Vehicles:GetNrOfFreeSeats(s_Vehicle, false) > 0 then
+							local s_WayIndex = s_SquadBot:GetWayIndex()
+							local s_PointIndex = s_SquadBot:GetPointIndex()
 
-							-- check for free seats
-							if m_Vehicles:GetNrOfFreeSeats(s_Vehicle, false) > 0 then
-								local s_WayIndex = s_SquadBot:GetWayIndex()
-								local s_PointIndex = s_SquadBot:GetPointIndex()
-
-								if MathUtils:GetRandomInt(1, 100) <= Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_VEHICLE_SPAWN then
-									m_Logger:Write("spawn at squad-mate's vehicle")
-									return s_WayIndex, s_PointIndex, s_SquadBot._InvertPathDirection, s_Vehicle -- use same direction
-								else
-									break
-								end
+							if MathUtils:GetRandomInt(1, 100) <= Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_VEHICLE_SPAWN then
+								m_Logger:Write("spawn at squad-mate's vehicle")
+								return s_WayIndex, s_PointIndex, s_SquadBot._InvertPathDirection, s_Vehicle -- use same direction
 							else
 								break
 							end
+						else
+							break
 						end
 					end
 				end
 			else
+
 				-- check for vehicle of real player
 				if l_Player.controlledControllable ~= nil and not l_Player.controlledControllable:Is("ServerSoldierEntity") then
 					if l_Player.controlledEntryId == 0 then
@@ -677,6 +691,13 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 							end
 						else
 							break
+						end
+					end
+				else
+					if MathUtils:GetRandomInt(1, 100) <= Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_SPAWN then
+						local s_Node = self:FindClosestPath(l_Player.soldier.worldTransform.trans, false, true, nil)
+						if s_Node and s_Node.Position:Distance(l_Player.soldier.worldTransform.trans) < 6.0 then
+							return s_Node.PathIndex, s_Node.PointIndex, false, nil -- use same direction
 						end
 					end
 				end
@@ -947,22 +968,6 @@ function GameDirector:_RegisterRushEventCallbacks()
 
 		s_Entity = s_Iterator:Next()
 	end
-
-	-- most promissing so far! TODO: check for better events again?
-	s_Iterator = EntityManager:GetIterator("ServerInteractionEntity")
-	s_Entity = s_Iterator:Next()
-
-	while s_Entity do
-		if s_Entity.data.instanceGuid == Guid("2CEA23B6-76E9-4E7B-85E6-EE648F686E48") then
-			s_Entity:RegisterEventCallback(self, self._OnInteractionDefend)
-		end
-
-		if s_Entity.data.instanceGuid == Guid("1768D76F-6DD0-4425-A898-32C851A4A476") then
-			s_Entity:RegisterEventCallback(self, self._OnInteractionAttack)
-		end
-
-		s_Entity = s_Iterator:Next()
-	end
 end
 
 function GameDirector:_UpdateTimersOfMcoms(p_DeltaTime)
@@ -972,32 +977,6 @@ function GameDirector:_UpdateTimersOfMcoms(p_DeltaTime)
 		if self.m_ArmedMcoms[l_Objective] >= Registry.GAME_DIRECTOR.MCOMS_CHECK_CYCLE then
 			self:OnMcomDestroyed(l_Objective)
 		end
-	end
-end
-
-function GameDirector:_OnInteractionAttack(p_Entity, p_EntityEvent)
-	if p_EntityEvent.type == "ServerPlayerEvent" then
-		return
-	end
-
-	local s_GameEntity = GameEntity(p_Entity)
-	local s_Objective = self:_TranslateObjective(s_GameEntity.transform.trans)
-
-	if p_EntityEvent.eventId == MathUtils:FNVHash("Disable") then
-		self:OnMcomArmed(s_Objective)
-	end
-end
-
-function GameDirector:_OnInteractionDefend(p_Entity, p_EntityEvent)
-	if p_EntityEvent.type == "ServerPlayerEvent" then
-		return
-	end
-
-	local s_GameEntity = GameEntity(p_Entity)
-	local s_Objective = self:_TranslateObjective(s_GameEntity.transform.trans)
-
-	if p_EntityEvent.eventId == MathUtils:FNVHash("Disable") then
-		self:OnMcomDisarmed(s_Objective)
 	end
 end
 

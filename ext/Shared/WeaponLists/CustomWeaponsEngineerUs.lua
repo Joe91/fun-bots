@@ -54,11 +54,11 @@ CustomWeaponsEngineerUs = {
 	'Repairtool',
 
 	-- Gadget 2
+	'SMAW', --us
+	-- 'RPG7', --ru
 	-- 'Sa18IGLA', --ru
 	'Stinger', --us
 	'Javelin', --both
-	'SMAW', --us
-	-- 'RPG7', --ru
 
 	-- Knife
 	'Razor',

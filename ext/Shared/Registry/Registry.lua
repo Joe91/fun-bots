@@ -18,7 +18,7 @@ Registry = {
 		-- collition-raycasts are an other type of raycast. This should improve some vehicle issues...
 		USE_COLLITION_RAYCASTS = true,
 		-- timeout to save or load maps
-		LOADING_TIMEOUT = 65,
+		LOADING_TIMEOUT = 172800.0,
 		-- distance commands are heard by bots
 		COMMAND_DISTANCE = 20,
 		-- use load of Bundle to fix Bug of weapons disapearing (thanks to Lesley!) !!! THIS MIGHT CAUSE CRASHES !!!
@@ -35,7 +35,7 @@ Registry = {
 		-- Minor version
 		VERSION_MIN = 6,
 		-- Patch version
-		VERSION_PATCH = 0,
+		VERSION_PATCH = 1,
 		-- Additional label for pre-releases and build meta data
 		VERSION_LABEL = "RC1",
 		-- Current version type of this build
@@ -75,7 +75,7 @@ Registry = {
 	GAME_DIRECTOR = {
 		UPDATE_OBJECTIVES_CYCLE = 1.5,
 		-- Time after a mcom is considered destroyed
-		MCOMS_CHECK_CYCLE = 26.0,
+		MCOMS_CHECK_CYCLE = 26.5,
 		-- Zone is 30 s. 10 Seconds without damage
 		ZONE_CHECK_CYCLE = 20.0,
 		-- max bots per objective

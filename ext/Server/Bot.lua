@@ -23,6 +23,7 @@ local m_BotWeaponHandling = require('Bot/BotWeaponHandling')
 local m_VehicleAiming = require('Bot/VehicleAiming')
 local m_VehicleAttacking = require('Bot/VehicleAttacking')
 local m_VehicleMovement = require('Bot/VehicleMovement')
+local m_VehicleWeaponHandling = require('Bot/VehicleWeaponHandling')
 
 
 
@@ -141,6 +142,8 @@ function Bot:__init(p_Player)
 	self._ExitVehicleHealth = 0.0
 	self._LastVehicleHealth = 0.0
 	self._TargetHeightAttack = 0.0
+	self._VehicleWeaponSlotToUse = 1
+	self._ActiveVehicleWeaponSlot = 0
 	---@type ControllableEntity|nil
 	self._RepairVehicleEntity = nil
 	-- PID Controllers
@@ -156,9 +159,9 @@ function Bot:__init(p_Player)
 	self._Pid_Drv_Roll = PidController(5, 0.05, 0.2, 1.0)
 	-- guns
 	---@type PidController
-	self._Pid_Att_Yaw = PidController(7, 0.4, 0.2, 1.0)
+	self._Pid_Att_Yaw = PidController(10, 2.0, 2.0, 1.0)
 	---@type PidController
-	self._Pid_Att_Pitch = PidController(7, 0.4, 0.2, 1.0)
+	self._Pid_Att_Pitch = PidController(10, 2.0, 2.0, 1.0)
 
 	--shooting
 	self._Shoot = false
@@ -278,7 +281,7 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 
 						if self._UpdateTimer >= Registry.BOT.BOT_UPDATE_CYCLE then
 							-- common part
-							self:_UpdateWeaponSelectionVehicle()
+							m_VehicleWeaponHandling:UpdateWeaponSelectionVehicle(self)
 
 							-- differ attacking
 							if s_Attacking then
@@ -325,14 +328,14 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 							-- sync slow code with fast code. Therefore execute the slow code first
 							if self._UpdateTimer >= Registry.BOT.BOT_UPDATE_CYCLE then
 								-- common part
-								self:_UpdateWeaponSelectionVehicle()
+								m_VehicleWeaponHandling:UpdateWeaponSelectionVehicle(self)
 
 								-- differ attacking
 								if s_Attacking then
 									m_VehicleAttacking:UpdateAttackingVehicle(self)
 									m_VehicleMovement:UpdateShootMovementVehicle(self)
 								else
-									self:_UpdateReloadVehicle()
+									m_VehicleWeaponHandling:UpdateReloadVehicle(self)
 									if self.m_Player.controlledEntryId == 0 and not s_IsStationaryLauncher then -- only if driver
 										m_VehicleMovement:UpdateNormalMovementVehicle(self)
 									end
@@ -416,6 +419,10 @@ function Bot:Revive(p_Player)
 	end
 end
 
+function Bot:FireFlareSmoke()
+	self:_SetInput(EntryInputActionEnum.EIAFireCountermeasure, 1)
+end
+
 ---@param p_Player Player
 function Bot:Repair(p_Player)
 	if self.m_Kit == BotKits.Engineer and p_Player.soldier ~= nil and p_Player.controlledControllable ~= nil then
@@ -497,7 +504,7 @@ function Bot:IsReadyToAttack()
 		return false
 	end
 
-	if self._ShootPlayer == nil or (self.m_InVehicle and (self._ShootModeTimer > Config.BotMinTimeShootAtPlayer * 2)) or
+	if self._ShootPlayer == nil or (self.m_InVehicle and (self._ShootModeTimer > Config.BotVehicleMinTimeShootAtPlayer)) or
 		(not self.m_InVehicle and (self._ShootModeTimer > Config.BotMinTimeShootAtPlayer)) or
 		(self.m_KnifeMode and self._ShootModeTimer > (Config.BotMinTimeShootAtPlayer / 2)) then
 		return true
@@ -507,22 +514,40 @@ function Bot:IsReadyToAttack()
 end
 
 ---@return number
-function Bot:GetAttackDistance()
+function Bot:GetAttackDistance(p_ShootBackAfterHit)
 	local s_AttackDistance = 0.0
 
 	if not self.m_InVehicle then
 		if self.m_ActiveWeapon == nil or self.m_ActiveWeapon.type ~= WeaponTypes.Sniper then
-			s_AttackDistance = Config.MaxShootDistanceNoSniper
+			if p_ShootBackAfterHit then
+				s_AttackDistance = Config.MaxDistanceShootBack
+			else
+				s_AttackDistance = Config.MaxShootDistance
+			end
+
 		else
-			s_AttackDistance = Config.MaxRaycastDistance
+			if p_ShootBackAfterHit then
+				s_AttackDistance = Config.MaxDistanceShootBackSniper
+			else
+				s_AttackDistance = Config.MaxShootDistanceSniper
+			end
 		end
 	else
 		if m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) and
 			m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) and
 			m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.AntiAir) then
-			s_AttackDistance = Config.MaxShootDistanceNoAntiAir
+			if p_ShootBackAfterHit then
+				s_AttackDistance = Config.MaxShootDistanceNoAntiAir * 2
+			else
+				s_AttackDistance = Config.MaxShootDistanceNoAntiAir
+			end
+
 		else
-			s_AttackDistance = Config.MaxRaycastDistanceVehicles
+			if p_ShootBackAfterHit then
+				s_AttackDistance = Config.MaxShootDistanceVehicles * 2
+			else
+				s_AttackDistance = Config.MaxShootDistanceVehicles
+			end
 		end
 	end
 
@@ -594,10 +619,10 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 		self._DistanceToPlayer = p_Player.soldier.worldTransform.trans:Distance(self.m_Player.soldier.worldTransform.trans)
 	end
 
-	local s_AttackDistance = self:GetAttackDistance()
+	local s_AttackDistance = self:GetAttackDistance(p_IgnoreYaw)
 
 	-- don't attack if too far away
-	if not p_IgnoreYaw and self._DistanceToPlayer > s_AttackDistance then
+	if self._DistanceToPlayer > s_AttackDistance then
 		return false
 	end
 
@@ -700,7 +725,11 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 		else
 			self._ShootPlayerName = ""
 			self._ShootPlayer = nil
-			self._ShootModeTimer = Config.BotFireModeDuration
+			if self.m_InVehicle then
+				self._ShootModeTimer = Config.BotVehicleFireModeDuration
+			else
+				self._ShootModeTimer = Config.BotFireModeDuration
+			end
 			return false
 		end
 	end
@@ -1140,32 +1169,6 @@ function Bot:_UpdateStationaryAAVehicle(p_Attacking)
 	m_VehicleMovement:UpdateYawVehicle(self, true, false) --only gun --> therefore alsways gun-mode
 end
 
-function Bot:_UpdateWeaponSelectionVehicle()
-	--select weapon-slot (rn always primary in vehicle)
-	if self.m_Player.soldier.weaponsComponent ~= nil then
-		if self.m_Player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_0 then
-			self:_SetInput(EntryInputActionEnum.EIASelectWeapon1, 1)
-			self.m_ActiveWeapon = self.m_Primary
-			self._ShotTimer = 0.0
-		end
-	end
-end
-
-function Bot:_UpdateReloadVehicle()
-	self._WeaponToUse = BotWeapons.Primary
-	self:AbortAttack()
-
-	if self._ActiveAction ~= BotActionFlags.OtherActionActive then
-		self._TargetPitch = 0.0
-	end
-
-	self._ReloadTimer = self._ReloadTimer + Registry.BOT.BOT_UPDATE_CYCLE
-
-	if self._ReloadTimer > 1.5 and self._ReloadTimer < 2.5 then
-		self:_SetInput(EntryInputActionEnum.EIAReload, 1)
-	end
-end
-
 ---@param p_Position Vec3
 function Bot:FindVehiclePath(p_Position)
 	local s_Node = g_GameDirector:FindClosestPath(p_Position, true, true, self.m_ActiveVehicle.Terrain)
@@ -1190,7 +1193,9 @@ function Bot:UpdateVehicleMovableId()
 	if self.m_OnVehicle then
 		self._VehicleMovableId = nil
 	elseif self.m_InVehicle then
-		self._VehicleMovableId = m_Vehicles:GetPartIdForSeat(self.m_ActiveVehicle, self.m_Player.controlledEntryId)
+		self._ActiveVehicleWeaponSlot = 0
+		self._VehicleMovableId = m_Vehicles:GetPartIdForSeat(self.m_ActiveVehicle, self.m_Player.controlledEntryId,
+			self._ActiveVehicleWeaponSlot)
 
 		if self.m_Player.controlledEntryId == 0 then
 			self:FindVehiclePath(self.m_Player.soldier.worldTransform.trans)
@@ -1233,7 +1238,8 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 
 			-- get ID
 			self.m_ActiveVehicle = s_VehicleData
-			self._VehicleMovableId = m_Vehicles:GetPartIdForSeat(self.m_ActiveVehicle, i)
+			self._ActiveVehicleWeaponSlot = 0
+			self._VehicleMovableId = m_Vehicles:GetPartIdForSeat(self.m_ActiveVehicle, i, self._ActiveVehicleWeaponSlot)
 			m_Logger:Write(self.m_ActiveVehicle)
 
 			if i == 0 then

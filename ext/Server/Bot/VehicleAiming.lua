@@ -59,7 +59,8 @@ function VehicleAiming:UpdateAimingVehicleAdvanced(p_Bot)
 	local s_Speed = 0.0
 	local s_VectorBetween = s_FullPositionTarget - s_FullPositionBot
 
-	s_Speed, s_Drop = m_Vehicles:GetSpeedAndDrop(p_Bot.m_ActiveVehicle, p_Bot.m_Player.controlledEntryId)
+	s_Speed, s_Drop = m_Vehicles:GetSpeedAndDrop(p_Bot.m_ActiveVehicle, p_Bot.m_Player.controlledEntryId,
+		p_Bot._ActiveVehicleWeaponSlot)
 
 	local A = s_TargetVelocity:Dot(s_TargetVelocity) - s_Speed * s_Speed
 	local B = 2.0 * s_TargetVelocity:Dot(s_VectorBetween)
@@ -158,7 +159,7 @@ function VehicleAiming:UpdateAimingVehicle(p_Bot)
 		s_FullPositionTarget = p_Bot._ShootPlayer.controlledControllable.transform.trans:Clone()
 	else
 		if p_Bot.m_Player.controlledEntryId == 0 and p_Bot._ShootPlayerVehicleType == VehicleTypes.NoVehicle and
-			p_Bot._ShootPlayer.soldier.worldTransform.trans.y < s_FullPositionBot.y then
+			p_Bot._ActiveVehicleWeaponSlot == 1 then
 			-- add nothing --> aim for the feet of the target
 			s_FullPositionTarget = p_Bot._ShootPlayer.soldier.worldTransform.trans:Clone()
 		else
@@ -179,7 +180,8 @@ function VehicleAiming:UpdateAimingVehicle(p_Bot)
 	local s_Drop = 0.0
 	local s_Speed = 0.0
 
-	s_Speed, s_Drop = m_Vehicles:GetSpeedAndDrop(p_Bot.m_ActiveVehicle, p_Bot.m_Player.controlledEntryId)
+	s_Speed, s_Drop = m_Vehicles:GetSpeedAndDrop(p_Bot.m_ActiveVehicle, p_Bot.m_Player.controlledEntryId,
+		p_Bot._ActiveVehicleWeaponSlot)
 
 	local s_TimeToTravel = (p_Bot._DistanceToPlayer / s_Speed)
 	s_PitchCorrection = 0.375 * s_TimeToTravel * s_TimeToTravel * s_Drop -- from theory 0.5. In real 0.25 works much better

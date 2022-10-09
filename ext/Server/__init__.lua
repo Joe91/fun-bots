@@ -118,10 +118,13 @@ function FunBotServer:RegisterEvents()
 	Events:Subscribe('Vehicle:Damage', self, self.OnVehicleDamage)
 	Events:Subscribe('Vehicle:Enter', self, self.OnVehicleEnter)
 	Events:Subscribe('Vehicle:Exit', self, self.OnVehicleExit)
+	Events:Subscribe('ScoringSystem:StatEvent', self, self.OnScoringStatEvent)
+
 end
 
 function FunBotServer:RegisterHooks()
 	Hooks:Install('Soldier:Damage', 100, self, self.OnSoldierDamage)
+	Hooks:Install('EntityFactory:Create', 100, self, self.OnEntityFactoryCreate)
 end
 
 function FunBotServer:RegisterCustomEvents()
@@ -140,11 +143,9 @@ function FunBotServer:RegisterCustomEvents()
 end
 
 function FunBotServer:RegisterCallbacks()
-	-- Use server-sided bulletdamage and modify timeout
+	-- Use server-sided bulletdamage
 	ResourceManager:RegisterInstanceLoadHandler(Guid('C4DCACFF-ED8F-BC87-F647-0BC8ACE0D9B4'),
 		Guid('818334B3-CEA6-FC3F-B524-4A0FED28CA35'), self, self.OnServerSettingsCallback)
-	ResourceManager:RegisterInstanceLoadHandler(Guid('C4DCACFF-ED8F-BC87-F647-0BC8ACE0D9B4'),
-		Guid('B479A8FA-67FF-8825-9421-B31DE95B551A'), self, self.OnModifyClientTimeoutSettings)
 	ResourceManager:RegisterInstanceLoadHandler(Guid('C4DCACFF-ED8F-BC87-F647-0BC8ACE0D9B4'),
 		Guid('B983148D-4B2B-1CDA-D8A0-407789610202'), self, self.OnSyncedGameSettingsCallback)
 	-- Modify stationary AA
@@ -245,6 +246,18 @@ function FunBotServer:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	m_NodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 end
 
+function FunBotServer:OnScoringStatEvent(p_Player, p_ObjectPlayer, p_StatEvent, p_ParamX, p_ParamY, p_Value)
+	if p_StatEvent == StatEvent.StatEvent_CrateArmed then
+		m_GameDirector:OnMcomArmed(p_Player)
+	end
+	if p_StatEvent == StatEvent.StatEvent_CrateDisarmed then
+		m_GameDirector:OnMcomDisarmed(p_Player)
+	end
+	--[[ if p_StatEvent == StatEvent.StatEvent_CrateDestroyed then
+		-- not reliably usable, since place can be anywhere at this moment
+	end ]]
+end
+
 -- =============================================
 -- Level Events
 -- =============================================
@@ -269,6 +282,8 @@ function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPe
 
 	m_WeaponList:OnLevelLoaded()
 
+	-- only use name of Level
+	p_LevelName = p_LevelName:gsub(".+/.+/", "")
 	m_Logger:Write('OnLevelLoaded: ' .. p_LevelName .. ' ' .. s_GameMode)
 
 	self:SetRespawnDelay()
@@ -280,7 +295,7 @@ function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPe
 
 	self:DetectSpecialMods()
 	self:RegisterInputRestrictionEventCallbacks()
-	self:SetGameMode(s_GameMode)
+	self:SetGameMode(s_GameMode, p_LevelName)
 	self:SetMaxBotsPerTeam(p_GameMode)
 
 	m_NodeEditor:OnLevelLoaded(p_LevelName, s_GameMode)
@@ -454,6 +469,20 @@ function FunBotServer:OnSoldierDamage(p_HookCtx, p_Soldier, p_Info, p_GiverInfo)
 	m_BotManager:OnSoldierDamage(p_HookCtx, p_Soldier, p_Info, p_GiverInfo)
 end
 
+function FunBotServer:OnEntityFactoryCreate(p_HookCtx, p_EntityData, p_Transform)
+	if p_EntityData.typeInfo.name == "MissileEntityData" then
+		local s_MissileEntityData = MissileEntityData(p_EntityData)
+		if s_MissileEntityData.lockingController then
+			local s_CreatedEntity = p_HookCtx:Call()
+			if not s_CreatedEntity then
+				return
+			end
+
+			m_BotManager:CheckForFlareOrSmoke(s_CreatedEntity)
+		end
+	end
+end
+
 -- =============================================
 -- Custom Events
 -- =============================================
@@ -528,34 +557,15 @@ end
 function FunBotServer:OnServerSettingsCallback(p_ServerSettings)
 	p_ServerSettings = ServerSettings(p_ServerSettings)
 	p_ServerSettings:MakeWritable()
-
 	p_ServerSettings.isRenderDamageEvents = true
-	p_ServerSettings.loadingTimeout = Registry.COMMON.LOADING_TIMEOUT
-	p_ServerSettings.ingameTimeout = Registry.COMMON.LOADING_TIMEOUT
-	p_ServerSettings.timeoutTime = Registry.COMMON.LOADING_TIMEOUT
-	p_ServerSettings.timeoutGame = false
-
 	m_Logger:Write("Changed ServerSettings")
-
 end
 
 ---@param p_SyncedGameSettings SyncedGameSettings|DataContainer
 function FunBotServer:OnSyncedGameSettingsCallback(p_SyncedGameSettings)
 	p_SyncedGameSettings = SyncedGameSettings(p_SyncedGameSettings)
 	p_SyncedGameSettings:MakeWritable()
-
 	p_SyncedGameSettings.allowClientSideDamageArbitration = false
-end
-
----@param p_ClientSettings ClientSettings|DataContainer
-function FunBotServer:OnModifyClientTimeoutSettings(p_ClientSettings)
-	p_ClientSettings = ClientSettings(p_ClientSettings)
-	p_ClientSettings:MakeWritable()
-
-	p_ClientSettings.loadedTimeout = Registry.COMMON.LOADING_TIMEOUT
-	p_ClientSettings.loadingTimeout = Registry.COMMON.LOADING_TIMEOUT
-	p_ClientSettings.ingameTimeout = Registry.COMMON.LOADING_TIMEOUT
-	m_Logger:Write("Changed ClientSettings")
 end
 
 ---@param p_FiringFunctionData FiringFunctionData|DataContainer
@@ -715,7 +725,7 @@ function FunBotServer:SetMaxBotsPerTeam(p_GameMode)
 	end
 end
 
-function FunBotServer:SetGameMode(p_GameMode)
+function FunBotServer:SetGameMode(p_GameMode, p_LevelName)
 	Globals.NrOfTeams = 2
 	if p_GameMode == 'TeamDeathMatchC0' or p_GameMode == 'TeamDeathMatch0' then
 		Globals.IsTdm = true
@@ -771,8 +781,14 @@ function FunBotServer:SetGameMode(p_GameMode)
 	if p_GameMode == 'RushLarge0' or
 		p_GameMode == 'SquadRush0' then
 		Globals.IsRush = true
+		if p_LevelName == "MP_Subway" or p_LevelName == "XP4_Rubble" then
+			Globals.IsRushWithoutVehicles = true
+		else
+			Globals.IsRushWithoutVehicles = false
+		end
 	else
 		Globals.IsRush = false
+		Globals.IsRushWithoutVehicles = false
 	end
 
 	if p_GameMode == 'SquadRush0' then

@@ -594,11 +594,23 @@ SettingsDefinition = {
 			Category = "BEHAVIOUR"
 		},
 		{
-			Name = "MaxRaycastDistance",
-			Text = "Max Raycast Distance",
+			Name = "MaxShootDistance",
+			Text = "Max Shoot-Distance No Sniper",
 			---@type Type|integer
 			Type = Type.Integer,
-			Value = Config.MaxRaycastDistance,
+			Value = Config.MaxShootDistance,
+			Description = "Meters before bots (not sniper) will start shooting at players",
+			Reference = Range(1.00, 1500.00, 5.0),
+			Default = 70,
+			UpdateFlag = UpdateFlag.None,
+			Category = "BEHAVIOUR"
+		},
+		{
+			Name = "MaxShootDistanceSniper",
+			Text = "Max Shoot Distance Sniper",
+			---@type Type|integer
+			Type = Type.Integer,
+			Value = Config.MaxShootDistanceSniper,
 			Description = "Meters before bots will start shooting at players",
 			Reference = Range(1.00, 1500.00, 5.0),
 			Default = 150,
@@ -606,14 +618,26 @@ SettingsDefinition = {
 			Category = "BEHAVIOUR"
 		},
 		{
-			Name = "MaxShootDistanceNoSniper",
-			Text = "Max Shoot-Distance No Sniper",
+			Name = "MaxDistanceShootBack",
+			Text = "Max Distance a normal soldier shoots back if Hit",
 			---@type Type|integer
 			Type = Type.Integer,
-			Value = Config.MaxShootDistanceNoSniper,
-			Description = "Meters before bots (not sniper) will start shooting at players",
+			Value = Config.MaxDistanceShootBack,
+			Description = "Meters until bots (not sniper) shoot back if hit",
 			Reference = Range(1.00, 1500.00, 5.0),
-			Default = 70,
+			Default = 150,
+			UpdateFlag = UpdateFlag.None,
+			Category = "BEHAVIOUR"
+		},
+		{
+			Name = "MaxDistanceShootBackSniper",
+			Text = "Max Distance a sniper soldier shoots back if Hit",
+			---@type Type|integer
+			Type = Type.Integer,
+			Value = Config.MaxDistanceShootBackSniper,
+			Description = "Meters until snipers shoot back if hit",
+			Reference = Range(1.00, 1500.00, 5.0),
+			Default = 400,
 			UpdateFlag = UpdateFlag.None,
 			Category = "BEHAVIOUR"
 		},
@@ -873,11 +897,11 @@ SettingsDefinition = {
 			Category = "VEHICLE"
 		},
 		{
-			Name = "MaxRaycastDistanceVehicles",
+			Name = "MaxShootDistanceVehicles",
 			Text = "Max Raycast Distance for Vehicles",
 			---@type Type|integer
 			Type = Type.Integer,
-			Value = Config.MaxRaycastDistance,
+			Value = Config.MaxShootDistanceVehicles,
 			Description = "Meters bots in Vehicles start shooting at players",
 			Reference = Range(1.00, 1500.00, 5.0),
 			Default = 250,
@@ -926,7 +950,7 @@ SettingsDefinition = {
 			Type = Type.Boolean,
 			Value = Config.AABots,
 			Description = "Enable Auto-AA by NyScorpy",
-			Default = true,
+			Default = false,
 			UpdateFlag = UpdateFlag.None,
 			Category = "VEHICLE"
 		},
@@ -1369,6 +1393,18 @@ SettingsDefinition = {
 			Category = "EXPERT"
 		},
 		{
+			Name = "BotVehicleMinTimeShootAtPlayer",
+			Text = "Bot min time shoot at player in vehicle",
+			---@type Type|integer
+			Type = Type.Float,
+			Value = Config.BotVehicleMinTimeShootAtPlayer,
+			Description = "The minimum time a bot shoots at one player if in vehicle - recommended minimum 2.5, below this you will have issues.",
+			Reference = Range(0.00, 60.00, 0.5),
+			Default = 4.0,
+			UpdateFlag = UpdateFlag.None,
+			Category = "EXPERT"
+		},
+		{
 			Name = "BotFireModeDuration",
 			Text = "Bot fire mode duration",
 			---@type Type|integer
@@ -1377,6 +1413,18 @@ SettingsDefinition = {
 			Description = "The minimum time a bot tries to shoot a player - recommended minimum 3.0, below this you will have issues.",
 			Reference = Range(0.00, 60.00, 0.5),
 			Default = 4.5,
+			UpdateFlag = UpdateFlag.None,
+			Category = "EXPERT"
+		},
+		{
+			Name = "BotVehicleFireModeDuration",
+			Text = "Bot fire mode duration in vehicle",
+			---@type Type|integer
+			Type = Type.Float,
+			Value = Config.BotVehicleFireModeDuration,
+			Description = "The minimum time a bot tries to shoot a player or vehicle, when in a vehicle - recommended minimum 7.0.",
+			Reference = Range(0.00, 60.00, 0.5),
+			Default = 9.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "EXPERT"
 		},

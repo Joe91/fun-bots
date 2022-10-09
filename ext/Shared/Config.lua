@@ -60,8 +60,10 @@ Config = {
 	--BEHAVIOUR
 	FovForShooting = 180,				-- Degrees of FOV of Bot
 	FovVerticleForShooting = 90,		-- Degrees of FOV of Bot in vertical direction
-	MaxRaycastDistance = 150,			-- Meters before bots will start shooting at players
-	MaxShootDistanceNoSniper = 70,		-- Meters before bots (not sniper) will start shooting at players
+	MaxShootDistance = 70,				-- Meters before bots (not sniper) will start shooting at players
+	MaxShootDistanceSniper = 150,		-- Meters before bots will start shooting at players
+	MaxDistanceShootBack = 150,			-- Meters until bots (not sniper) shoot back if hit
+	MaxDistanceShootBackSniper = 400,	-- Meters until snipers shoot back if hit
 	MaxShootDistancePistol = 20,		-- The distance before a bot switches to pistol if his magazine is empty (Only in auto-weapon-mode)
 	BotAttackMode = BotAttackModes.RandomNotSet,	-- Mode the Bots attack with. Random, Crouch or Stand
 	ShootBackIfHit = true,				-- Bot shoots back if hit
@@ -86,11 +88,11 @@ Config = {
 	FovVerticleChopperForShooting = 80,	-- Degrees of pitch a chopper attacks
 	FovVehicleAAForShooting = 360,		-- Degrees of FOV of AA - Vehicles
 	FovVerticleVehicleAAForShooting = 160,	-- Degrees of FOV of AA - Vehicles
-	MaxRaycastDistanceVehicles = 250,	-- Meters bots in Vehicles start shooting at players
+	MaxShootDistanceVehicles = 250,		-- Meters bots in Vehicles start shooting at players
 	MaxShootDistanceNoAntiAir = 150,	-- Meters bots in vehicle (no Anti-Air) starts shooting at players
 	VehicleWaitForPassengersTime = 7.0,	-- Seconds to wait for other passengers
 	ChopperDriversAttack = false,		-- If false choppers only attack without gunner on board
-	AABots = true,						-- Enable Auto-AA by NyScorpy
+	AABots = false,						-- Enable Auto-AA by NyScorpy
 	MaxDistanceAABots = 300,			-- Max Range of Stationary AA
 
 	--WEAPONS
@@ -136,7 +138,9 @@ Config = {
 	--EXPERT
 	BotFirstShotDelay = 0.25,			-- Delay for first shot. If too small, there will be great spread in first cycle because its not compensated yet.
 	BotMinTimeShootAtPlayer = 2.5,		-- The minimum time a bot shoots at one player for - recommended minimum 1.5, below this you will have issues.
+	BotVehicleMinTimeShootAtPlayer = 4.0,	-- The minimum time a bot shoots at one player if in vehicle - recommended minimum 2.5, below this you will have issues.
 	BotFireModeDuration = 4.5,			-- The minimum time a bot tries to shoot a player - recommended minimum 3.0, below this you will have issues.
+	BotVehicleFireModeDuration = 9.0,	-- The minimum time a bot tries to shoot a player or vehicle, when in a vehicle - recommended minimum 7.0.
 	MaximunYawPerSec = 450,				-- in Degrees. Rotaion-Movement per second.
 	TargetDistanceWayPoint = 0.8,		-- Distance the bots have to reach to continue with the next Waypoint
 	KeepOneSlotForPlayers = true,		-- Always keep one slot for free new Players to join
