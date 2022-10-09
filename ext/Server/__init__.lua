@@ -282,6 +282,8 @@ function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPe
 
 	m_WeaponList:OnLevelLoaded()
 
+	-- only use name of Level
+	p_LevelName = p_LevelName:gsub(".+/.+/", "")
 	m_Logger:Write('OnLevelLoaded: ' .. p_LevelName .. ' ' .. s_GameMode)
 
 	self:SetRespawnDelay()
