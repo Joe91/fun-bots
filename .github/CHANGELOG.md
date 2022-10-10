@@ -12,10 +12,12 @@ This is the changelog for the version V2.6.2. Don't forget to [join us on Discor
 * real ticket-count on conquest thanks to VU bugfix
 
 ### Bug fixes
+* fix scavenger revive
 
 ### New maps
 
 ### Updated maps
+* Fix Wake-Island Rush
 
 ### Documentation update
 
