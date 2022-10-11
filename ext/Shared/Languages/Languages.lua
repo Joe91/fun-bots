@@ -5,4 +5,5 @@ Languages = {
 	"es_ES",
 	"ja_JA",
 	"pt_PT",
+	"fr_FR",
 }
