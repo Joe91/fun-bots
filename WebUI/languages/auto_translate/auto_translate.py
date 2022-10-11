@@ -20,7 +20,10 @@ def main() -> None:
         )
         return '"'.join(splitted_line)
 
+    langs_dict = GoogleTranslator().get_supported_languages(as_dict=True)
     file[0] = file[0].replace("'xx_XX'", f"'{LANG}_{LANG.upper()}'")
+    file[2] = file[2].replace("English", [k for k, v in langs_dict.items() if v == LANG][0].capitalize())
+    file[3] = file[3].replace("Unknown", "GoogleTranslator")
 
     for index, line in enumerate(file):
         if index > 5 and line.startswith("\t\"") and not line.split(":")[0].startswith("\t\"\""):

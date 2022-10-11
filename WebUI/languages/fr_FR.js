@@ -1,7 +1,7 @@
 Language['fr_FR'] /* Add/replace the xx_XX here with your language code (like de_DE, en_US, or other)! */ = {
 	"__LANGUAGE_INFO": {
-		"name": "Frensch",
-		"author": "Unknown",
+		"name": "French",
+		"author": "GoogleTranslator",
 		"version": "1.0.0"
 	},
 	"Bots": "Robots",
