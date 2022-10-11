@@ -10,6 +10,8 @@ This is the changelog for the version V2.6.2. Don't forget to [join us on Discor
 
 ### New features / improvements
 * real ticket-count on conquest thanks to VU bugfix
+* updated chinese translation (by Augusta)
+* auto-translation-scripts (by João Vitor)
 
 ### Bug fixes
 * fix scavenger revive
