@@ -35,13 +35,13 @@ Registry = {
 		-- Minor version
 		VERSION_MIN = 6,
 		-- Patch version
-		VERSION_PATCH = 1,
+		VERSION_PATCH = 2,
 		-- Additional label for pre-releases and build meta data
-		VERSION_LABEL = "",
+		VERSION_LABEL = "dev1",
 		-- Current version type of this build
-		VERSION_TYPE = VersionType.Release,
+		VERSION_TYPE = VersionType.DevBuild,
 		-- The Version used for the Update-Check
-		UPDATE_CHANNEL = VersionType.Stable,
+		UPDATE_CHANNEL = VersionType.DevBuild,
 		-- prints current version in console
 		CLIENT_SHOW_VERSION_ON_JOIN = false,
 	},

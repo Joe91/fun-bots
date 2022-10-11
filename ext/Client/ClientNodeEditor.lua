@@ -624,9 +624,6 @@ function ClientNodeEditor:OnLevelDestroy()
 	self:_onUnload()
 end
 
-function ClientNodeEditor:OnLevelLoaded(p_LevelName, p_GameMode)
-end
-
 function ClientNodeEditor:_onUnload()
 	self.m_LastDataPoint = nil
 	self.m_DataPoints = {}
