@@ -62,7 +62,6 @@ function FunBotClient:RegisterEvents()
 	Events:Subscribe('Engine:Message', self, self.OnEngineMessage)
 	Events:Subscribe('UpdateManager:Update', self, self.OnUpdateManagerUpdate)
 	Events:Subscribe('Level:Destroy', self, self.OnLevelDestroy)
-	Events:Subscribe('Level:Loaded', self, self.OnLevelLoaded)
 	Events:Subscribe('Player:Deleted', self, self.OnPlayerDeleted)
 	Events:Subscribe('Client:UpdateInput', self, self.OnClientUpdateInput)
 	Events:Subscribe('Engine:Update', self, self.OnEngineUpdate)
@@ -126,13 +125,6 @@ function FunBotClient:OnLevelDestroy()
 	m_ClientBotManager:OnLevelDestroy()
 	m_ClientNodeEditor:OnLevelDestroy()
 	m_ClientSpawnPointHelper:OnLevelDestroy()
-end
-
----VEXT Client Level:Loaded Event
----@param p_LevelName string
----@param p_GameMode string
-function FunBotClient:OnLevelLoaded(p_LevelName, p_GameMode)
-	m_ClientNodeEditor:OnLevelLoaded(p_LevelName, p_GameMode)
 end
 
 ---VEXT Client Player:Deleted Event

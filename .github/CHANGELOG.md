@@ -3,57 +3,21 @@
 ![Image](https://img.shields.io/github/downloads/Joe91/fun-bots/total?style=for-the-badge)
 ![Image](https://img.shields.io/github/stars/Joe91/fun-bots?style=for-the-badge)
 
-## Welcome to the changelogs for release **V2.6.1**
-This is the changelog for the version V2.6.1. Don't forget to [join us on Discord](https://discord.funbots.dev)
+## Welcome to the changelogs for release **V2.6.2**
+This is the changelog for the version V2.6.2. Don't forget to [join us on Discord](https://discord.funbots.dev)
 
 ## Changelog
 
 ### New features / improvements
-* passengers can change seats
-* passengers exit vehicles on low health
-* terrain-handling of vehicles added
-* better splitting of objectives between the bots
-* Support Scavenger Gamemode
-* Don't modify ammo on Kit-Pickup
-* simplify permissions. No need to be on the server anymore
-* REAL AIMING OF BOTS Thanks to Bree_Arnold!!! Please use the dev-version of VU
-* Recoil-Compensation added for all Bots dependant of skill
-* keep Skill of Bot for whole game
-* restructurisation of Bot.lua-Class
-* massive rework on BotSpawner to prevent crashes on Map-Change.
-* massive refactoring of BotManager by Bree_Arnold!
-* cleanup of unused code
-* #80 Engineers use missiles
-* massive rework on NodeEditor: Now completely on Server
-* count paths correctly
-* delte existing path now possible
-* Bots use flares or smoke
-
-* Limit Distance of Bots when they shoot back
-* Use Statevents to increase Rush-Stability
-* Bots use Squad-Perks (#101)
-* First implementation of Alternate Weapons on some vehicles (#172)
-* Spawn at Player, if player close to path
-* Don't use missiles without vehicles
-* Don't spam nades on vehicles anymore
+* real ticket-count on conquest thanks to VU bugfix
 
 ### Bug fixes
-* #218 increased auto-sniper-time a little
-* fix throw of nade too early / often
-* #227 fix for crash on mapchange with current VU-Version
-* fix some static move-modes with new Bot-Structure
-* small fix of wrong appearance of some assault-bots
-* modified mapfiles with newlines can be imported now
-* several bugs in new node-editor
-
-* fix endless attack of vehicles
-* fix Gunmaster Gamemode
-* fix Bots keeping the knife for one whole fight.
+* fix scavenger revive
 
 ### New maps
-* Rush Wake Island
 
 ### Updated maps
-* XP4_Parl_ConquestLarge0 (fixed some paths #219)
+* Fix Wake-Island Rush
 
 ### Documentation update
+

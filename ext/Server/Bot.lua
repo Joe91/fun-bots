@@ -410,7 +410,9 @@ end
 
 ---@param p_Player Player
 function Bot:Revive(p_Player)
-	if self.m_Kit == BotKits.Assault and p_Player.corpse and not p_Player.corpse.isDead and not Globals.IsGm then
+	if self.m_Kit == BotKits.Assault and p_Player.corpse and not p_Player.corpse.isDead
+		and not Globals.IsGm and
+		not Globals.IsScavenger then
 		if Config.BotsRevive then
 			self._ActiveAction = BotActionFlags.ReviveActive
 			self._ShootPlayer = nil
