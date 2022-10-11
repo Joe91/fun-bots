@@ -4,4 +4,5 @@ Languages = {
 	"cn_CN",
 	"es_ES",
 	"ja_JA",
+	"pt_PT",
 }
