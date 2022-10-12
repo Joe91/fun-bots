@@ -206,7 +206,6 @@ Language:add(code, "Set how far away waypoint text is visible (meters)", "Defina
 Language:add(code, "Draw Spawn Points", "Desenhe Pontos de Spawn")
 Language:add(code, "Range of Spawnpoints", "Alcançe dos Pontos de Spawn")
 Language:add(code, "Set how far away spawnpoints are visible (meters)", "Defina a que distância os pontos de spawn são visíveis (metros)")
-Language:add(code, "Debug Selection Raytraces", "Depurar Seleção de Raytraces")
 Language:add(code, "Trace Delta Points", "Traço dos Pontos Delta")
 Language:add(code, "Update interval of trace", "Atualizar intervalo dos traços")
 Language:add(code, "Nodes that are drawn per cycle", "Nós que são desenhados por ciclo")

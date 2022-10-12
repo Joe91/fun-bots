@@ -737,7 +737,7 @@ SettingsDefinition = {
 			---@type Type|integer
 			Type = Type.Boolean,
 			Value = Config.BotsThrowGrenades,
-			Description = "Bots throw grenades",
+			Description = "Bots throw grenades at enemies",
 			Default = true,
 			UpdateFlag = UpdateFlag.None,
 			Category = "BEHAVIOUR"
@@ -854,7 +854,7 @@ SettingsDefinition = {
 			---@type Type|integer
 			Type = Type.Integer,
 			Value = Config.FovVerticleVehicleForShooting,
-			Description = "Degrees of FOV of Non AA - Vehicles",
+			Description = "Degrees of vertical FOV of Non AA - Vehicles",
 			Reference = Range(0.00, 180.00, 1.0),
 			Default = 60,
 			UpdateFlag = UpdateFlag.None,
@@ -1152,7 +1152,7 @@ SettingsDefinition = {
 			---@type Type|integer
 			Type = Type.Boolean,
 			Value = Config.DrawWaypointIDs,
-			Description = "Draw waypoint IDs",
+			Description = "Draw the IDs of the waypoints",
 			Default = true,
 			UpdateFlag = UpdateFlag.None,
 			Category = "TRACE"
@@ -1175,7 +1175,7 @@ SettingsDefinition = {
 			---@type Type|integer
 			Type = Type.Boolean,
 			Value = Config.DrawSpawnPoints,
-			Description = "Draw Spawn Points",
+			Description = "Draw the Points where players can spawn",
 			Default = false,
 			UpdateFlag = UpdateFlag.None,
 			Category = "TRACE"
@@ -1189,17 +1189,6 @@ SettingsDefinition = {
 			Description = "Set how far away spawnpoints are visible (meters)",
 			Reference = Range(1.00, 1000.00, 1.0),
 			Default = 100,
-			UpdateFlag = UpdateFlag.None,
-			Category = "TRACE"
-		},
-		{
-			Name = "DebugSelectionRaytraces",
-			Text = "Debug Selection Raytraces",
-			---@type Type|integer
-			Type = Type.Boolean,
-			Value = Config.DebugSelectionRaytraces,
-			Description = "Shows the trace line and search area from Commo Rose selection",
-			Default = false,
 			UpdateFlag = UpdateFlag.None,
 			Category = "TRACE"
 		},
