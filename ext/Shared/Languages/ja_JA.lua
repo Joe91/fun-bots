@@ -322,3 +322,7 @@ Language:add(code, "Loaded %d paths with %d waypoints for map %s", "マップ %s
 Language:add(code, "Save in progress...", "保存中...")
 Language:add(code, "Failed to execute query: %s", "クエリの実行に失敗しました: %s")
 Language:add(code, "Saved %d paths with %d waypoints for map %s", "マップ %s の %d 個のパスと %d 個のウェイポイントを保存しました")
+Language:add(code, "Bots throw grenades at enemies", "ボットが敵にグレネードを投げる")
+Language:add(code, "Degrees of vertical FOV of Non AA - Vehicles", "非 AA の垂直 FOV の角度 - 車両")
+Language:add(code, "Draw the IDs of the waypoints", "ウェイポイントの ID を描画する")
+Language:add(code, "Draw the Points where players can spawn", "プレイヤーがスポーンできるポイントを描く")

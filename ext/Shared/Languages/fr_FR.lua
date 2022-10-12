@@ -322,3 +322,7 @@ Language:add(code, "Loaded %d paths with %d waypoints for map %s", "%d chemins c
 Language:add(code, "Save in progress...", "Sauvegarde en cours...")
 Language:add(code, "Failed to execute query: %s", "Échec de l'exécution de la requête : %s")
 Language:add(code, "Saved %d paths with %d waypoints for map %s", "%d chemins enregistrés avec %d waypoints pour la carte %s")
+Language:add(code, "Bots throw grenades at enemies", "Les bots lancent des grenades sur les ennemis")
+Language:add(code, "Degrees of vertical FOV of Non AA - Vehicles", "Degrés de champ de vision vertical des véhicules non AA")
+Language:add(code, "Draw the IDs of the waypoints", "Dessinez les identifiants des waypoints")
+Language:add(code, "Draw the Points where players can spawn", "Dessinez les points où les joueurs peuvent apparaître")

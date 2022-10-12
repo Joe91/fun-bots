@@ -321,3 +321,7 @@ Language:add(code, "The minimum time a bot tries to shoot a player or vehicle, w
 Language:add(code, "Bot min time shoot at player in vehicle", "BOT射击载具中玩家的最短时间")
 Language:add(code, "The minimum time a bot shoots at one player if in vehicle - recommended minimum 2.5, below this you will have issues.", "当玩家在载具内,BOT向一名玩家射击的最短时间-建议最短时间为2.5,低于此时间,将出现错误")
 Language:add(code, "Bot fire mode duration in vehicle", "BOT在载具内的开火模式")
+Language:add(code, "Bots throw grenades at enemies", "机器人向敌人投掷手榴弹")
+Language:add(code, "Degrees of vertical FOV of Non AA - Vehicles", "非 AA - 车辆的垂直 FOV 度数")
+Language:add(code, "Draw the IDs of the waypoints", "绘制航路点的 ID")
+Language:add(code, "Draw the Points where players can spawn", "绘制玩家可以生成的点")

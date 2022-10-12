@@ -1,6 +1,6 @@
 import os
 import sys
-
+from deep_translator import GoogleTranslator
 
 def updateLanguages(pathToFiles: str) -> None:
     language_file = pathToFiles + "ext/shared/Languages/DEFAULT.lua"
@@ -21,6 +21,19 @@ def updateLanguages(pathToFiles: str) -> None:
                 # compare files line by line
                 with open(filename, "r", encoding="utf8") as compFile:
                     compLines = compFile.read().splitlines()
+                    
+                    LANG = compLines[0].split("'")[1].split("_")[0]
+                    if LANG == "cn":
+                        LANG = "zh-CN"
+                    translator = GoogleTranslator(source="en", target=LANG)
+
+                    def translate(line: str) -> str:
+                        splitted_line = line.split('"')
+                        splitted_line.remove("")
+                        splitted_line.insert(3, translator.translate(splitted_line[1]))
+                        return '"'.join(splitted_line)
+
+                    
                     lines_to_remove = []
                     lines_to_add = []
                     for comp_line in compLines:
@@ -41,7 +54,8 @@ def updateLanguages(pathToFiles: str) -> None:
                                             lines_to_remove.remove(comp_line)
                                         break
                             if line_found == False:
-                                lines_to_add.append(line)
+                                #translate line
+                                lines_to_add.append(translate(line))
                     for remove_line in lines_to_remove:
                         compLines.remove(remove_line)
                     for add_line in lines_to_add:
@@ -63,6 +77,22 @@ def updateLanguages(pathToFiles: str) -> None:
                 # compare files line by line
                 with open(filename, "r", encoding="utf8") as compFile:
                     compLines = compFile.read().splitlines()
+                    
+                    LANG = compLines[0].split("'")[1].split("_")[0]
+                    if LANG == "cn":
+                        LANG = "zh-CN"
+                    translator = GoogleTranslator(source="en", target=LANG)
+
+                    def translate(line: str) -> str:
+                        splitted_line = line.split('"')
+                        splitted_line.remove("")
+                        splitted_line.insert(
+                            3, translator.translate(splitted_line[1])
+                        )
+                        return '"'.join(splitted_line)
+
+                    
+                    
                     lines_to_remove = []
                     lines_to_add = []
                     for comp_line in compLines[6:]:
@@ -89,7 +119,8 @@ def updateLanguages(pathToFiles: str) -> None:
                                             lines_to_remove.remove(comp_line)
                                         break
                             if line_found == False:
-                                lines_to_add.append(line)
+                                #translate line
+                                lines_to_add.append(translate(line))
                     for remove_line in lines_to_remove:
                         compLines.remove(remove_line)
                     for add_line in lines_to_add:
