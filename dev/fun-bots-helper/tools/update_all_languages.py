@@ -55,7 +55,9 @@ def updateLanguages(pathToFiles: str) -> None:
                                         break
                             if line_found == False:
                                 #translate line
-                                lines_to_add.append(translate(line))
+                                if line.startswith("Language:add"):
+                                    line = translate(line)
+                                lines_to_add.append(line)
                     for remove_line in lines_to_remove:
                         compLines.remove(remove_line)
                     for add_line in lines_to_add:
@@ -120,7 +122,9 @@ def updateLanguages(pathToFiles: str) -> None:
                                         break
                             if line_found == False:
                                 #translate line
-                                lines_to_add.append(translate(line))
+                                if line.startswith("\t\"") and not line.split(":")[0].startswith("\t\"\""):
+                                    line = translate(line)
+                                lines_to_add.append(line)
                     for remove_line in lines_to_remove:
                         compLines.remove(remove_line)
                     for add_line in lines_to_add:
