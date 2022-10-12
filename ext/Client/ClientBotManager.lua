@@ -130,11 +130,11 @@ function ClientBotManager:DoRaycast(p_Pos1, p_Pos2, p_InObjectPos1, p_InObjectPo
 			s_DeltaPos = s_DeltaPos:Normalize()
 
 			if p_InObjectPos1 then -- Start Raycast outside of vehicle?
-				p_Pos1 = p_Pos1 + (s_DeltaPos * 4.0)
+				p_Pos1 = p_Pos1 + (s_DeltaPos * 2.5)
 			end
 
 			if p_InObjectPos2 then
-				p_Pos2 = p_Pos2 - (s_DeltaPos * 4.0)
+				p_Pos2 = p_Pos2 - (s_DeltaPos * 2.5)
 			end
 		end
 
