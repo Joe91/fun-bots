@@ -1,5 +1,6 @@
-import sys
 import os
+import sys
+
 from deep_translator import GoogleTranslator
 
 os.chdir(os.getcwd() + "/..")
@@ -12,12 +13,12 @@ def main() -> None:
 
     LANG = sys.argv[1]
 
+    translator = GoogleTranslator(source="en", target=LANG)
+
     def translate(line: str) -> str:
         splitted_line = line.split('"')
         splitted_line.remove("")
-        splitted_line.insert(
-            3, GoogleTranslator(source="en", target=LANG).translate(splitted_line[1])
-        )
+        splitted_line.insert(3, translator.translate(splitted_line[1]))
         return '"'.join(splitted_line)
 
     file[0] = file[0].replace("'xx_XX'", f"'{LANG}_{LANG.upper()}'")
