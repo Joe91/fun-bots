@@ -28,68 +28,75 @@ master.title("fun-bots-helper")
 # use "auto-py-to-exe" to convert to exe files
 
 relativePath = "./"
-if os.path.isfile("./mod.db"):
-	relativePath = "./"
-elif os.path.isfile("./../mod.db"):
-	relativePath = "./../"
+if os.path.isfile("./../mod.db"):
+    relativePath = "./../"
 elif os.path.isfile("./../../mod.db"):
-	relativePath = "./../../"
+    relativePath = "./../../"
 
 # TRACES
 def export_traces():
-	exportTraces(relativePath)
-	#os.system("python tools/export_traces.py" + " " + relativePath)
-	print("maps exported")
+    exportTraces(relativePath)
+    # os.system("python tools/export_traces.py" + " " + relativePath)
+    print("maps exported")
+
 
 def import_traces():
-	importTraces(relativePath)
-	# os.system("python tools/import_traces.py"+ " " + relativePath)
-	print("maps imported")
+    importTraces(relativePath)
+    # os.system("python tools/import_traces.py"+ " " + relativePath)
+    print("maps imported")
+
 
 # SETTINGS
 def export_settings():
-	exportPermissionAndConfig(relativePath)
-	#os.system("python tools/export_permission_and_config.py"+ " " + relativePath)
-	print("export")
+    exportPermissionAndConfig(relativePath)
+    # os.system("python tools/export_permission_and_config.py"+ " " + relativePath)
+    print("export")
+
 
 def import_settings():
-	importPermissionAndConfig(relativePath)
-	#os.system("python tools/import_permission_and_config.py"+ " " + relativePath)
-	print("import")
+    importPermissionAndConfig(relativePath)
+    # os.system("python tools/import_permission_and_config.py"+ " " + relativePath)
+    print("import")
+
 
 # OTHER STUFF
 def clear_paths():
-	clearAllPaths(relativePath)
-	#os.system("python tools/clear_all_paths.py"+ " " + relativePath)
-	print("paths cleared")
+    clearAllPaths(relativePath)
+    # os.system("python tools/clear_all_paths.py"+ " " + relativePath)
+    print("paths cleared")
+
 
 def clear_settings():
-	clearSettings(relativePath)
-	#os.system("python tools/clear_settings.py"+ " " + relativePath)
-	print("settings cleared")
+    clearSettings(relativePath)
+    # os.system("python tools/clear_settings.py"+ " " + relativePath)
+    print("settings cleared")
+
 
 def create_settings_translations():
-	createSettings(relativePath)
-	createTranslations(relativePath)
-	updateLanguages(relativePath)
-	# os.system("python tools/create_Settings.py"+ " " + relativePath)
-	# os.system("python tools/create_translations.py"+ " " + relativePath)
-	# os.system("python tools/update_all_languages.py"+ " " + relativePath)
-	print("translation-templates and settigns updated")
+    createSettings(relativePath)
+    createTranslations(relativePath)
+    updateLanguages(relativePath)
+    # os.system("python tools/create_Settings.py"+ " " + relativePath)
+    # os.system("python tools/create_translations.py"+ " " + relativePath)
+    # os.system("python tools/update_all_languages.py"+ " " + relativePath)
+    print("translation-templates and settigns updated")
+
 
 def create_mapfiles():
-	updateSupportedMaps(relativePath)
-	createMaplist(relativePath)
-	#os.system("python tools/create_maplist.py"+ " " + relativePath)
-	#os.system("python tools/update_supported_maps.py"+ " " + relativePath)
-	print("mapfiles updated")
+    updateSupportedMaps(relativePath)
+    createMaplist(relativePath)
+    # os.system("python tools/create_maplist.py"+ " " + relativePath)
+    # os.system("python tools/update_supported_maps.py"+ " " + relativePath)
+    print("mapfiles updated")
+
 
 def fix_maps():
-	scanForInvalidObjectives(relativePath)
-	scanForInvalidNodes(relativePath)
-	print("all maps scanned and fixed")
-	#os.system("python tools/scan_for_invalid_objectives.py"+ " " + relativePath)
-	#os.system("python tools/scan_for_invalid_nodes.py"+ " " + relativePath)
+    scanForInvalidObjectives(relativePath)
+    scanForInvalidNodes(relativePath)
+    print("all maps scanned and fixed")
+    # os.system("python tools/scan_for_invalid_objectives.py"+ " " + relativePath)
+    # os.system("python tools/scan_for_invalid_nodes.py"+ " " + relativePath)
+
 
 tempRow = 0
 master.columnconfigure(tuple(range(60)), weight=1)
@@ -98,30 +105,52 @@ master.rowconfigure(tuple(range(30)), weight=1)
 # Checkbutton(master, text="male", variable=var1).grid(row=1, sticky=W)
 # var2 = IntVar()
 # Checkbutton(master, text="female", variable=var2).grid(row=2, sticky=W)
-Label(master, text="Trace functions:").grid(row=tempRow, sticky='nesw')
-tempRow = tempRow +1
-Button(master, text='Export Traces', command=export_traces).grid(row=tempRow, sticky='nesw', pady=4, padx=4)
-tempRow = tempRow +1
-Button(master, text='Import Traces', command=import_traces).grid(row=tempRow, sticky='nesw', pady=4, padx=4)
-tempRow = tempRow +1
+Label(master, text="Trace functions:").grid(row=tempRow, sticky="nesw")
+tempRow = tempRow + 1
+Button(master, text="Export Traces", command=export_traces).grid(
+    row=tempRow, sticky="nesw", pady=4, padx=4
+)
+tempRow = tempRow + 1
+Button(master, text="Import Traces", command=import_traces).grid(
+    row=tempRow, sticky="nesw", pady=4, padx=4
+)
+tempRow = tempRow + 1
 
-Label(master, text="Settings / Permission functions").grid(row=tempRow, sticky='nesw', padx=4)
-tempRow = tempRow +1
-Button(master, text='Export Permissions and Settings', command=export_settings).grid(row=tempRow, sticky='nesw', pady=4, padx=4)
-tempRow = tempRow +1
-Button(master, text='Import Permissions and Settings', command=import_settings).grid(row=tempRow, sticky='nesw', pady=4, padx=4)
-tempRow = tempRow +1
+Label(master, text="Settings / Permission functions").grid(
+    row=tempRow, sticky="nesw", padx=4
+)
+tempRow = tempRow + 1
+Button(master, text="Export Permissions and Settings", command=export_settings).grid(
+    row=tempRow, sticky="nesw", pady=4, padx=4
+)
+tempRow = tempRow + 1
+Button(master, text="Import Permissions and Settings", command=import_settings).grid(
+    row=tempRow, sticky="nesw", pady=4, padx=4
+)
+tempRow = tempRow + 1
 if SHOW_DEV_TOOLS:
-	Label(master, text="Other Stuff").grid(row=tempRow, sticky='nesw', padx=4)
-	tempRow = tempRow +1
-	Button(master, text='Clear all Traces from DB', command=clear_paths).grid(row=tempRow, sticky='nesw', pady=4, padx=4)
-	tempRow = tempRow +1
-	Button(master, text='Clear settings from DB', command=clear_settings).grid(row=tempRow, sticky='nesw', pady=4, padx=4)
-	tempRow = tempRow +1
-	Button(master, text='Create Settings + Translations', command=create_settings_translations).grid(row=tempRow, sticky='nesw', pady=4, padx=4)
-	tempRow = tempRow +1
-	Button(master, text='Create Mapfiles', command=create_mapfiles).grid(row=tempRow, sticky='nesw', pady=4, padx=4)
-	tempRow = tempRow +1
-	Button(master, text='Fix Invalid paths', command=fix_maps).grid(row=tempRow, sticky='nesw', pady=4, padx=4)
-	tempRow = tempRow +1
+    Label(master, text="Other Stuff").grid(row=tempRow, sticky="nesw", padx=4)
+    tempRow = tempRow + 1
+    Button(master, text="Clear all Traces from DB", command=clear_paths).grid(
+        row=tempRow, sticky="nesw", pady=4, padx=4
+    )
+    tempRow = tempRow + 1
+    Button(master, text="Clear settings from DB", command=clear_settings).grid(
+        row=tempRow, sticky="nesw", pady=4, padx=4
+    )
+    tempRow = tempRow + 1
+    Button(
+        master,
+        text="Create Settings + Translations",
+        command=create_settings_translations,
+    ).grid(row=tempRow, sticky="nesw", pady=4, padx=4)
+    tempRow = tempRow + 1
+    Button(master, text="Create Mapfiles", command=create_mapfiles).grid(
+        row=tempRow, sticky="nesw", pady=4, padx=4
+    )
+    tempRow = tempRow + 1
+    Button(master, text="Fix Invalid paths", command=fix_maps).grid(
+        row=tempRow, sticky="nesw", pady=4, padx=4
+    )
+    tempRow = tempRow + 1
 mainloop()
