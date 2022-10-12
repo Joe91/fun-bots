@@ -14,6 +14,7 @@ def clearSettings(pathToFiles):
         cursor.execute("DROP TABLE IF EXISTS " + tablename)
 
     connection.commit()
+    connection.close()
 
 
 if __name__ == "__main__":
