@@ -1,7 +1,7 @@
 import sys
 
 
-def createTranslations(pathToFiles):
+def createTranslations(pathToFiles: str) -> None:
     settings_definition = pathToFiles + "ext/shared/Settings/SettingsDefinition.lua"
     index_html = pathToFiles + "WebUI/index.html"
     listOfJsTranslationFiles = [

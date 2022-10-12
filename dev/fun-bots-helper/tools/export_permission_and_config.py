@@ -3,7 +3,7 @@ import sqlite3
 import sys
 
 
-def exportPermissionAndConfig(pathToFiles):
+def exportPermissionAndConfig(pathToFiles: str) -> None:
     exportList = ["FB_Permissions", "FB_Config_Trace", "FB_Settings"]
 
     destFolder = pathToFiles + "permission_and_config"

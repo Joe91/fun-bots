@@ -3,7 +3,7 @@ import sys
 from os import walk
 
 
-def importTraces(pathToFiles):
+def importTraces(pathToFiles: str) -> None:
     sourceFolder = pathToFiles + "mapfiles"
     connection = sqlite3.connect(pathToFiles + "mod.db")
     cursor = connection.cursor()

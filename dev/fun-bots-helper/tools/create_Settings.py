@@ -1,7 +1,7 @@
 import sys
 
 
-def createSettings(pathToFiles):
+def createSettings(pathToFiles: str) -> None:
     settings_definition = pathToFiles + "ext/shared/Settings/SettingsDefinition.lua"
     config_file = pathToFiles + "ext/shared/Config.lua"
 

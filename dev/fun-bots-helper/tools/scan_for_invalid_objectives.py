@@ -3,7 +3,7 @@ from os import walk
 
 
 # use "auto-py-to-exe" to convert to exe files
-def scanForInvalidObjectives(pathToFiles):
+def scanForInvalidObjectives(pathToFiles: str) -> None:
     sourceFolder = pathToFiles + "mapfiles"
 
     filenames = next(walk(sourceFolder), (None, None, []))[2]  # [] if no file

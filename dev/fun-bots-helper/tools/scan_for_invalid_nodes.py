@@ -3,7 +3,7 @@ from os import walk
 
 DISTANCE_MAX = 80
 # use "auto-py-to-exe" to convert to exe files
-def scanForInvalidNodes(pathToFiles):
+def scanForInvalidNodes(pathToFiles: str) -> None:
     sourceFolder = pathToFiles + "mapfiles"
 
     filenames = next(walk(sourceFolder), (None, None, []))[2]  # [] if no file

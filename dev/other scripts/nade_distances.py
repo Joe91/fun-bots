@@ -5,7 +5,7 @@ Drop = 9.8
 Height = 1.6
 
 
-def Distance(angle):
+def Distance(angle: float) -> float:
     return Speed * Speed * math.sin(2 * angle) / (2 * Drop) + Speed * math.cos(
         angle
     ) / Drop * math.sqrt(

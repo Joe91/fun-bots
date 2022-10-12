@@ -3,7 +3,7 @@ import sys
 from os import walk
 
 
-def importPermissionAndConfig(pathToFiles):
+def importPermissionAndConfig(pathToFiles: str) -> None:
     allStructures = {
         "FB_Permissions": ["GUID", "PlayerName", "Value", "Time"],
         "FB_Config_Trace": ["Key", "Value", "Time"],

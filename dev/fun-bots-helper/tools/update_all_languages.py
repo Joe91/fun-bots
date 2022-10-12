@@ -2,7 +2,7 @@ import os
 import sys
 
 
-def updateLanguages(pathToFiles):
+def updateLanguages(pathToFiles: str) -> None:
     language_file = pathToFiles + "ext/shared/Languages/DEFAULT.lua"
     language_file_js = pathToFiles + "WebUI/languages/DEFAULT.js"
 

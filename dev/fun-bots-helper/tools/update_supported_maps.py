@@ -3,7 +3,7 @@ import sys
 from os import walk
 
 
-def updateSupportedMaps(pathToFiles):
+def updateSupportedMaps(pathToFiles: str) -> None:
     Template = pathToFiles + "dev/templates/Supported-maps.md"
     OutFile = pathToFiles + "Supported-maps.md"
     PathToMapfiles = pathToFiles + "mapfiles"

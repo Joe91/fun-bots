@@ -3,7 +3,7 @@ import sys
 from os import walk
 
 
-def createMaplist(pathToFiles):
+def createMaplist(pathToFiles: str) -> None:
     # All GameModes
     # TDM, TDM CQ, Rush, CQ Small, CQ Large, Assault, Assault 2, Assault Large GM, CQ Dom, Scavanger, CTF
     GameModesToUse = [

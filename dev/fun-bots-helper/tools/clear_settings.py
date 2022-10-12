@@ -2,7 +2,7 @@ import sqlite3
 import sys
 
 
-def clearSettings(pathToFiles):
+def clearSettings(pathToFiles: str) -> None:
     removeList = ["FB_Config_Trace", "FB_Settings"]  # "FB_Permissions"
 
     connection = sqlite3.connect(pathToFiles + "mod.db")

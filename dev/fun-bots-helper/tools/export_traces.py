@@ -3,7 +3,7 @@ import sqlite3
 import sys
 
 
-def exportTraces(pathToFiles):
+def exportTraces(pathToFiles: str) -> None:
     ignoreList = ["sqlite_sequence", "FB_Permissions", "FB_Config_Trace", "FB_Settings"]
 
     destFolder = pathToFiles + "mapfiles"

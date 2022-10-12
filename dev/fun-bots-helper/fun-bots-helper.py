@@ -34,45 +34,45 @@ elif os.path.isfile("./../../mod.db"):
     relativePath = "./../../"
 
 # TRACES
-def export_traces():
+def export_traces() -> None:
     exportTraces(relativePath)
     # os.system("python tools/export_traces.py" + " " + relativePath)
     print("maps exported")
 
 
-def import_traces():
+def import_traces() -> None:
     importTraces(relativePath)
     # os.system("python tools/import_traces.py"+ " " + relativePath)
     print("maps imported")
 
 
 # SETTINGS
-def export_settings():
+def export_settings() -> None:
     exportPermissionAndConfig(relativePath)
     # os.system("python tools/export_permission_and_config.py"+ " " + relativePath)
     print("export")
 
 
-def import_settings():
+def import_settings() -> None:
     importPermissionAndConfig(relativePath)
     # os.system("python tools/import_permission_and_config.py"+ " " + relativePath)
     print("import")
 
 
 # OTHER STUFF
-def clear_paths():
+def clear_paths() -> None:
     clearAllPaths(relativePath)
     # os.system("python tools/clear_all_paths.py"+ " " + relativePath)
     print("paths cleared")
 
 
-def clear_settings():
+def clear_settings() -> None:
     clearSettings(relativePath)
     # os.system("python tools/clear_settings.py"+ " " + relativePath)
     print("settings cleared")
 
 
-def create_settings_translations():
+def create_settings_translations() -> None:
     createSettings(relativePath)
     createTranslations(relativePath)
     updateLanguages(relativePath)
@@ -82,7 +82,7 @@ def create_settings_translations():
     print("translation-templates and settigns updated")
 
 
-def create_mapfiles():
+def create_mapfiles() -> None:
     updateSupportedMaps(relativePath)
     createMaplist(relativePath)
     # os.system("python tools/create_maplist.py"+ " " + relativePath)
@@ -90,7 +90,7 @@ def create_mapfiles():
     print("mapfiles updated")
 
 
-def fix_maps():
+def fix_maps() -> None:
     scanForInvalidObjectives(relativePath)
     scanForInvalidNodes(relativePath)
     print("all maps scanned and fixed")

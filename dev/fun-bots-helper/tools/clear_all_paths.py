@@ -2,7 +2,7 @@ import sqlite3
 import sys
 
 
-def clearAllPaths(pathToFiles):
+def clearAllPaths(pathToFiles: str) -> None:
     ignoreList = ["sqlite_sequence", "FB_Permissions", "FB_Config_Trace", "FB_Settings"]
 
     connection = sqlite3.connect(pathToFiles + "mod.db")
