@@ -244,7 +244,6 @@ Language:add(code, "Delay for first shot. If too small, there will be great spre
 Language:add(code, "Bot min time shoot at player", "Bot min Zeit auf Spieler schießen")
 Language:add(code, "The minimum time a bot shoots at one player for - recommended minimum 1.5, below this you will have issues.", "Die Mindestzeit, für die ein Bot auf einen Spieler schießt – empfohlenes Minimum 1,5, darunter treten Probleme auf.")
 Language:add(code, "Bot min time shoot at player in vehicle", "Bot-Minutenzeit auf Spieler im Fahrzeug schießen")
-	, "Die Mindestzeit, in der ein Bot auf einen Spieler schießt, wenn er sich im Fahrzeug befindet – empfohlenes Minimum 2,5, darunter treten Probleme auf.")
 Language:add(code, "Bot fire mode duration", "Dauer des Bot-Feuermodus")
 Language:add(code, "The minimum time a bot tries to shoot a player - recommended minimum 3.0, below this you will have issues.", "Die Mindestzeit, die ein Bot versucht, einen Spieler zu erschießen – empfohlenes Minimum 3,0, darunter treten Probleme auf.")
 Language:add(code, "Bot fire mode duration in vehicle", "Dauer des Bot-Feuermodus im Fahrzeug")
