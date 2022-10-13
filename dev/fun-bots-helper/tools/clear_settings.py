@@ -12,6 +12,7 @@ def clearSettings() -> None:
         print("remove " + tablename)
         cursor.execute("DROP TABLE IF EXISTS " + tablename)
 
+    cursor.execute("vacuum")
     connection.commit()
     connection.close()
 
