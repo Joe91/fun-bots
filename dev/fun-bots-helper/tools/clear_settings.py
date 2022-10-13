@@ -4,7 +4,7 @@ from go_back_to_root import go_back_to_root
 
 def clearSettings() -> None:
     removeList = ["FB_Config_Trace", "FB_Settings"]  # "FB_Permissions"
-
+    go_back_to_root()
     connection = sqlite3.connect("mod.db")
     cursor = connection.cursor()
 
@@ -18,5 +18,4 @@ def clearSettings() -> None:
 
 
 if __name__ == "__main__":
-    go_back_to_root()
     clearSettings()

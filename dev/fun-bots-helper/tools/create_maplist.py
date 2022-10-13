@@ -48,9 +48,9 @@ def createMaplist() -> None:
     outFile = "MapList.txt"
 
     mapItems = []
+    go_back_to_root()
 
-    # [] if no file
-    filenames = next(walk("mapfiles"), (None, None, []))[2]
+    filenames = next(walk("mapfiles"), (None, None, []))[2]  # [] if no file
     for filename in filenames:
         combinedName = filename.split(".")[0]
         nameParts = combinedName.rsplit("_", 1)
@@ -82,5 +82,4 @@ def createMaplist() -> None:
 
 
 if __name__ == "__main__":
-    go_back_to_root()
     createMaplist()
