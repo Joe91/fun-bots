@@ -1,11 +1,11 @@
 import sqlite3
-import sys
+from go_back_to_root import go_back_to_root
 
 
-def clearAllPaths(pathToFiles: str) -> None:
+def clearAllPaths() -> None:
     ignoreList = ["sqlite_sequence", "FB_Permissions", "FB_Config_Trace", "FB_Settings"]
-
-    connection = sqlite3.connect(pathToFiles + "mod.db")
+    go_back_to_root()
+    connection = sqlite3.connect("mod.db")
     cursor = connection.cursor()
 
     sql_instruction = """
@@ -15,12 +15,7 @@ def clearAllPaths(pathToFiles: str) -> None:
     content = cursor.fetchall()
 
     for item in content:
-        skip = False
-        for ignoreItem in ignoreList:
-            if item[1] == ignoreItem:
-                skip = True
-                break
-        if skip:
+        if item[1] in ignoreList:
             continue
 
         print("clear " + item[1])
@@ -32,7 +27,4 @@ def clearAllPaths(pathToFiles: str) -> None:
 
 
 if __name__ == "__main__":
-    pathToFiles = "./"
-    if len(sys.argv) > 1:
-        pathToFiles = sys.argv[1]
-    clearAllPaths(pathToFiles)
+    clearAllPaths()

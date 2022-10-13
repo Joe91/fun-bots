@@ -1,9 +1,11 @@
-import sys
+from go_back_to_root import go_back_to_root
 
 
-def createSettings(pathToFiles: str) -> None:
-    settings_definition = pathToFiles + "ext/shared/Settings/SettingsDefinition.lua"
-    config_file = pathToFiles + "ext/shared/Config.lua"
+def createSettings() -> None:
+
+    go_back_to_root()
+    settings_definition = "ext/Shared/Settings/SettingsDefinition.lua"
+    config_file = "ext/Shared/Config.lua"
 
     with open(settings_definition, "r") as inFile:
         readoutActive = False
@@ -24,15 +26,11 @@ def createSettings(pathToFiles: str) -> None:
                     setting["Description"] = line.split('"')[-2]
                 if "Category =" in line:
                     setting["Category"] = line.split('"')[-2]
-                if "}," in line:
+                if "}," in line or (len(setting) != 0 and "}" in line):
                     allSettings.append(setting)
-                    numberOfSettings = numberOfSettings + 1
+                    numberOfSettings += 1
                     setting = {}
-        # add last setting
-        allSettings.append(setting)
-        numberOfSettings = numberOfSettings + 1
         print("import done")
-        setting = {}
 
         with open(config_file, "w") as outFile:
             outFile.write(
@@ -42,14 +40,12 @@ def createSettings(pathToFiles: str) -> None:
                 "-- for permanent changes use this file and regenerate the Config.lua-file.\n\n"
             )
             outFile.write("---@class Config\n")
-            outFile.write("Config = {\n\n")
-            lastCategory = None
+            outFile.write("Config = {\n")
+            lastCategory = ""
 
             for setting in allSettings:
                 if setting["Category"] != lastCategory:
-                    if lastCategory != None:
-                        outFile.write("\n")
-                    outFile.write("	--" + setting["Category"] + "\n")
+                    outFile.write("\n	--" + setting["Category"] + "\n")
                     lastCategory = setting["Category"]
                 tempString = "	" + setting["Name"] + " = " + setting["Default"] + ","
                 # calc tabs
@@ -71,7 +67,4 @@ def createSettings(pathToFiles: str) -> None:
 
 
 if __name__ == "__main__":
-    pathToFiles = "./"
-    if len(sys.argv) > 1:
-        pathToFiles = sys.argv[1]
-    createSettings(pathToFiles)
+    createSettings()

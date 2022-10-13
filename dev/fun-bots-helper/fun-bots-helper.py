@@ -27,6 +27,7 @@ master.title("fun-bots-helper")
 
 # use "auto-py-to-exe" to convert to exe files
 
+# This is going to be removed as soon as all functions implement go_back_to_root function
 relativePath = "./"
 if os.path.isfile("./../mod.db"):
     relativePath = "./../"
@@ -61,19 +62,19 @@ def import_settings() -> None:
 
 # OTHER STUFF
 def clear_paths() -> None:
-    clearAllPaths(relativePath)
+    clearAllPaths()
     # os.system("python tools/clear_all_paths.py"+ " " + relativePath)
     print("paths cleared")
 
 
 def clear_settings() -> None:
-    clearSettings(relativePath)
+    clearSettings()
     # os.system("python tools/clear_settings.py"+ " " + relativePath)
     print("settings cleared")
 
 
 def create_settings_translations() -> None:
-    createSettings(relativePath)
+    createSettings()
     createTranslations(relativePath)
     updateLanguages(relativePath)
     # os.system("python tools/create_Settings.py"+ " " + relativePath)
@@ -84,7 +85,7 @@ def create_settings_translations() -> None:
 
 def create_mapfiles() -> None:
     updateSupportedMaps(relativePath)
-    createMaplist(relativePath)
+    createMaplist()
     # os.system("python tools/create_maplist.py"+ " " + relativePath)
     # os.system("python tools/update_supported_maps.py"+ " " + relativePath)
     print("mapfiles updated")
