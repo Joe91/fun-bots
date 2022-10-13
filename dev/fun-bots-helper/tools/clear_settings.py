@@ -1,15 +1,14 @@
 import sqlite3
-import sys
+from go_back_to_root import go_back_to_root
 
 
-def clearSettings(pathToFiles: str) -> None:
+def clearSettings() -> None:
     removeList = ["FB_Config_Trace", "FB_Settings"]  # "FB_Permissions"
 
-    connection = sqlite3.connect(pathToFiles + "mod.db")
+    connection = sqlite3.connect("mod.db")
     cursor = connection.cursor()
 
-    for removeTable in removeList:
-        tablename = removeTable
+    for tablename in removeList:
         print("remove " + tablename)
         cursor.execute("DROP TABLE IF EXISTS " + tablename)
 
@@ -18,7 +17,5 @@ def clearSettings(pathToFiles: str) -> None:
 
 
 if __name__ == "__main__":
-    pathToFiles = "./"
-    if len(sys.argv) > 1:
-        pathToFiles = sys.argv[1]
-    clearSettings(pathToFiles)
+    go_back_to_root()
+    clearSettings()

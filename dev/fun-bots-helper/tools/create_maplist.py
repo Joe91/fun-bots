@@ -1,9 +1,9 @@
 import operator
-import sys
 from os import walk
+from go_back_to_root import go_back_to_root
 
 
-def createMaplist(pathToFiles: str) -> None:
+def createMaplist() -> None:
     # All GameModes
     # TDM, TDM CQ, Rush, CQ Small, CQ Large, Assault, Assault 2, Assault Large GM, CQ Dom, Scavanger, CTF
     GameModesToUse = [
@@ -23,28 +23,10 @@ def createMaplist(pathToFiles: str) -> None:
         "CTF",
         "Tank Superiority",
     ]
-    RoundsToUse = 1
+    RoundsToUse = "1"
     # AddComment = True # True or False
     MapsWithGunmaster = ["XP2", "XP4"]
     MapsWithoutTdmCq = ["XP2"]
-
-    AllGameModes = [
-        "TDM",
-        "SDM",
-        "TDM CQ",
-        "Rush",
-        "SQ Rush",
-        "CQ Small",
-        "CQ Large",
-        "Assault",
-        "Assault 2",
-        "Assault Large",
-        "GM",
-        "CQ Dom",
-        "Scavanger",
-        "CTF",
-        "Tank Superiority",
-    ]
     GameModeTranslations = {
         "TDM": "TeamDeathMatch0",
         "SDM": "SquadDeathMatch0",
@@ -63,55 +45,42 @@ def createMaplist(pathToFiles: str) -> None:
         "Tank Superiority": "TankSuperiority0",
     }
 
-    outFile = pathToFiles + "MapList.txt"
+    outFile = "MapList.txt"
 
     mapItems = []
 
-    filenames = next(walk(pathToFiles + "mapfiles"), (None, None, []))[
-        2
-    ]  # [] if no file
+    # [] if no file
+    filenames = next(walk("mapfiles"), (None, None, []))[2]
     for filename in filenames:
         combinedName = filename.split(".")[0]
         nameParts = combinedName.rsplit("_", 1)
         mapname = nameParts[0]
         translatedGamemode = nameParts[1]
         gameMode = ""
-        for mode in AllGameModes:
+        for mode in GameModesToUse:
             if GameModeTranslations[mode] == translatedGamemode:
                 gameMode = mode
                 break
-        if gameMode != "" and gameMode in GameModesToUse:
-            # find special modes for TDM-Paths
-            addTdm = True
+        # find special modes for TDM-Paths
+        if gameMode in GameModesToUse:
             if gameMode == "TDM":
-                for token in MapsWithGunmaster:
-                    if token in mapname:
-                        tempTable = [mapname, "GunMaster0", str(RoundsToUse)]
-                        mapItems.append(tempTable)
-                for token in MapsWithoutTdmCq:
-                    if token in mapname:
-                        addTdm = False
-                if addTdm:
-                    tempTable = [mapname, translatedGamemode, str(RoundsToUse)]
-                    mapItems.append(tempTable)
-                tempTable = [mapname, "TeamDeathMatchC0", str(RoundsToUse)]
-                mapItems.append(tempTable)
+                if mapname.split("_")[0] in MapsWithGunmaster:
+                    mapItems.append([mapname, "GunMaster0", RoundsToUse])
+                if mapname.split("_")[0] not in MapsWithoutTdmCq:
+                    mapItems.append([mapname, translatedGamemode, RoundsToUse])
+                mapItems.append([mapname, "TeamDeathMatchC0", RoundsToUse])
             else:
-                tempTable = [mapname, translatedGamemode, str(RoundsToUse)]
-                mapItems.append(tempTable)
+                mapItems.append([mapname, translatedGamemode, RoundsToUse])
 
     # sort the list by gamemode
     mapItems = sorted(mapItems, key=operator.itemgetter(2, 1))
 
     with open(outFile, "w") as output:
         for item in mapItems:
-            tempLine = " ".join(item) + "\n"
-            output.write(tempLine)
+            output.write(" ".join(item) + "\n")
         print("write done")
 
 
 if __name__ == "__main__":
-    pathToFiles = "./"
-    if len(sys.argv) > 1:
-        pathToFiles = sys.argv[1]
-    createMaplist(pathToFiles)
+    go_back_to_root()
+    createMaplist()
