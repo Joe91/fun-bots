@@ -1,6 +1,6 @@
 import operator
 from os import walk
-from go_back_to_root import go_back_to_root
+from tools.go_back_to_root import go_back_to_root
 
 
 def createMaplist() -> None:
