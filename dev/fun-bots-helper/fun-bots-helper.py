@@ -74,7 +74,7 @@ def clear_settings() -> None:
 
 
 def create_settings_translations() -> None:
-    createSettings(relativePath)
+    createSettings()
     createTranslations(relativePath)
     updateLanguages(relativePath)
     # os.system("python tools/create_Settings.py"+ " " + relativePath)
