@@ -7,8 +7,8 @@ from tools.export_traces import exportTraces
 from tools.import_permission_and_config import importPermissionAndConfig
 from tools.export_permission_and_config import exportPermissionAndConfig
 
-from tools.create_Settings import createSettings
-from tools.create_translations import createTranslations
+from tools.create_settings import createSettings
+from tools.create_defaults import createDefaults
 from tools.update_all_languages import updateLanguages
 
 from tools.clear_settings import clearSettings
@@ -38,63 +38,57 @@ elif os.path.isfile("./../../mod.db"):
 def export_traces() -> None:
     exportTraces(relativePath)
     # os.system("python tools/export_traces.py" + " " + relativePath)
-    print("maps exported")
+    print("Maps Exported")
 
 
 def import_traces() -> None:
     importTraces(relativePath)
     # os.system("python tools/import_traces.py"+ " " + relativePath)
-    print("maps imported")
+    print("Maps Imported")
 
 
 # SETTINGS
 def export_settings() -> None:
     exportPermissionAndConfig(relativePath)
     # os.system("python tools/export_permission_and_config.py"+ " " + relativePath)
-    print("export")
+    print("Export")
 
 
 def import_settings() -> None:
     importPermissionAndConfig(relativePath)
     # os.system("python tools/import_permission_and_config.py"+ " " + relativePath)
-    print("import")
+    print("Import")
 
 
 # OTHER STUFF
 def clear_paths() -> None:
     clearAllPaths()
-    # os.system("python tools/clear_all_paths.py"+ " " + relativePath)
-    print("paths cleared")
+    print("Paths Cleared")
 
 
 def clear_settings() -> None:
     clearSettings()
-    # os.system("python tools/clear_settings.py"+ " " + relativePath)
-    print("settings cleared")
+    print("Settings Cleared")
 
 
 def create_settings_translations() -> None:
     createSettings()
-    createTranslations(relativePath)
-    updateLanguages(relativePath)
-    # os.system("python tools/create_Settings.py"+ " " + relativePath)
-    # os.system("python tools/create_translations.py"+ " " + relativePath)
-    # os.system("python tools/update_all_languages.py"+ " " + relativePath)
-    print("translation-templates and settigns updated")
+    createDefaults()
+    updateLanguages()
+    print("Templates Translated and Settings Updated")
 
 
 def create_mapfiles() -> None:
     updateSupportedMaps(relativePath)
     createMaplist()
-    # os.system("python tools/create_maplist.py"+ " " + relativePath)
     # os.system("python tools/update_supported_maps.py"+ " " + relativePath)
-    print("mapfiles updated")
+    print("Mapfiles Updated")
 
 
 def fix_maps() -> None:
     scanForInvalidObjectives(relativePath)
     scanForInvalidNodes(relativePath)
-    print("all maps scanned and fixed")
+    print("All Maps Scanned and Fixed")
     # os.system("python tools/scan_for_invalid_objectives.py"+ " " + relativePath)
     # os.system("python tools/scan_for_invalid_nodes.py"+ " " + relativePath)
 
