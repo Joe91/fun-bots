@@ -1,112 +1,18 @@
-import operator
 import sys
-from os import walk
+
+sys.path.insert(1, "../")
+from addons.go_back_to_root import go_back_to_root
+from addons.retrieves import retrieve_lines_maps
 
 
-def updateSupportedMaps(pathToFiles: str) -> None:
-    Template = pathToFiles + "dev/templates/Supported-maps.md"
-    OutFile = pathToFiles + "Supported-maps.md"
-    PathToMapfiles = pathToFiles + "mapfiles"
-    # All GameModes
-    # TDM, TDM CQ, Rush, CQ Small, CQ Large, Assault, Assault 2, Assault Large GM, CQ Dom, Scavanger, CTF
-    GameModesToUse = [
-        "TDM",
-        "SDM",
-        "TDM CQ",
-        "Rush",
-        "SQ Rush",
-        "CQ Small",
-        "CQ Large",
-        "Assault",
-        "Assault 2",
-        "Assault Large",
-        "GM",
-        "CQ Dom",
-        "Scavanger",
-        "CTF",
-        "Tank Superiority",
-    ]
-    # AddComment = True # True or False
-    MapsWithGunmaster = ["XP2", "XP4", "sp_", "coop_"]
-    MapsWithoutTdmCq = ["XP2", "sp_", "coop_"]
+# Updating Supported-maps.md
+def updateSupportedMaps() -> None:
+    go_back_to_root()
+    Template = "dev/templates/Supported-maps.md"
+    OutFile = "Supported-maps.md"
 
-    AllGameModes = [
-        "TDM",
-        "SDM",
-        "TDM CQ",
-        "Rush",
-        "SQ Rush",
-        "CQ Small",
-        "CQ Large",
-        "Assault",
-        "Assault 2",
-        "Assault Large",
-        "GM",
-        "CQ Dom",
-        "Scavanger",
-        "CTF",
-        "Tank Superiority",
-    ]
-    GameModeTranslations = {
-        "TDM": "TeamDeathMatch0",
-        "SDM": "SquadDeathMatch0",
-        "TDM CQ": "TeamDeathMatchC0",
-        "Rush": "RushLarge0",
-        "SQ Rush": "SquadRush0",
-        "CQ Small": "ConquestSmall0",
-        "CQ Large": "ConquestLarge0",
-        "Assault": "ConquestAssaultSmall0",
-        "Assault 2": "ConquestAssaultSmall1",
-        "Assault Large": "ConquestAssaultLarge0",
-        "GM": "GunMaster0",
-        "CQ Dom": "Domination0",
-        "Scavanger": "Scavenger0",
-        "CTF": "CaptureTheFlag0",
-        "Tank Superiority": "TankSuperiority0",
-    }
-
-    mapItems = []
-
-    filenames = next(walk(PathToMapfiles), (None, None, []))[2]  # [] if no file
-    for filename in filenames:
-        combinedName = filename.split(".")[0]
-        nameParts = combinedName.rsplit("_", 1)
-        mapname = nameParts[0]
-        translatedGamemode = nameParts[1]
-        gameMode = ""
-        vehicleSupport = False
-        with open(PathToMapfiles + "/" + filename, "r") as tempMapFile:
-            for line in tempMapFile.readlines():
-                if '"Vehicles":[' in line:
-                    vehicleSupport = True
-                    break
-        for mode in AllGameModes:
-            if GameModeTranslations[mode] == translatedGamemode:
-                gameMode = mode
-                break
-        if gameMode != "" and gameMode in GameModesToUse:
-            # find special modes for TDM-Paths
-            addTdm = True
-            if gameMode == "TDM":
-                for token in MapsWithGunmaster:
-                    if token in mapname:
-                        tempTable = [mapname, "GM", "GunMaster0", vehicleSupport]
-                        mapItems.append(tempTable)
-                for token in MapsWithoutTdmCq:
-                    if token in mapname:
-                        addTdm = False
-                if addTdm:
-                    tempTable = [mapname, gameMode, translatedGamemode, vehicleSupport]
-                    mapItems.append(tempTable)
-                tempTable = [mapname, "TDM CQ", "TeamDeathMatchC0", vehicleSupport]
-                mapItems.append(tempTable)
-            else:
-                tempTable = [mapname, gameMode, translatedGamemode, vehicleSupport]
-                mapItems.append(tempTable)
-
-    # sort the list by gamemode
-    mapItems = sorted(mapItems, key=operator.itemgetter(2, 1))
-
+    # Lines
+    mapItems = retrieve_lines_maps(update_supported=True)
     with open(OutFile, "w") as output:
         with open(Template, "r") as template:
             for line in template.readlines():
@@ -119,7 +25,7 @@ def updateSupportedMaps(pathToFiles: str) -> None:
                         for item in mapItems:
                             if item[0] == mapname:
                                 allSupportedGameModes.append("`" + item[1] + "`")
-                                if item[3] == True:
+                                if item[3]:
                                     vehicleSupportedGameModes.append(
                                         "`" + item[1] + "`"
                                     )
@@ -131,11 +37,9 @@ def updateSupportedMaps(pathToFiles: str) -> None:
                     )
 
                 output.write(line)
-        print("write done")
+
+        print("Update Supported-maps.md Done")
 
 
 if __name__ == "__main__":
-    pathToFiles = "./"
-    if len(sys.argv) > 1:
-        pathToFiles = sys.argv[1]
-    updateSupportedMaps(pathToFiles)
+    updateSupportedMaps()
