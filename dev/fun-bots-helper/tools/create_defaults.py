@@ -14,9 +14,7 @@ from addons.retrieves import (retrieve_lines_js, retrieve_lines_lua,
 
 
 def createDefaults() -> None:
-
     go_back_to_root()
-
     language_file = "ext/Shared/Languages/DEFAULT.lua"
     language_file_js = "WebUI/languages/DEFAULT.js"
 
@@ -24,7 +22,6 @@ def createDefaults() -> None:
 
     # Creating DEFAULT.lua
     with open(language_file, "w") as outFile:
-
         # Header
         outFile.write(
             "local code = 'xx_XX' -- Add/replace the xx_XX here with your language code (like de_DE, en_US, or other)!\n\n"
@@ -32,14 +29,12 @@ def createDefaults() -> None:
 
         # Lines
         outFileLines = retrieve_lines_lua(allSettings)
-
         for line in outFileLines:
             outFile.write(line + "\n")
-        print("write done")
+        print("Write DEFAULT.lua Done")
 
     # Creating DEFAULT.js
     with open(language_file_js, "w") as outFileHtml:
-
         # Header
         outFileHtml.write(
             """Language['xx_XX'] /* Add/replace the xx_XX here with your language code (like de_DE, en_US, or other)! */ = {
@@ -52,12 +47,11 @@ def createDefaults() -> None:
         )
 
         # Lines
-        allHtmlTranslations = retrieve_lines_js()
-
-        for translation in allHtmlTranslations:
+        outFileLines = retrieve_lines_js()
+        for translation in outFileLines:
             outFileHtml.write('	"' + translation + '": "",\n')
         outFileHtml.write("};")
-        print("write done")
+        print("Write DEFAULT.js Done")
 
 
 if __name__ == "__main__":

@@ -7,11 +7,8 @@ from addons.go_back_to_root import go_back_to_root
 
 
 def clearAllPaths() -> None:
-
-    ignoreList = ["sqlite_sequence", "FB_Permissions", "FB_Config_Trace", "FB_Settings"]
-
     go_back_to_root()
-
+    ignoreList = ["sqlite_sequence", "FB_Permissions", "FB_Config_Trace", "FB_Settings"]
     connection = sqlite3.connect("mod.db")
     cursor = connection.cursor()
 
@@ -25,7 +22,7 @@ def clearAllPaths() -> None:
         if item[1] in ignoreList:
             continue
 
-        print("clear " + item[1])
+        print("Clear " + item[1])
         cursor.execute("DROP TABLE IF EXISTS " + item[1])
 
     cursor.execute("vacuum")

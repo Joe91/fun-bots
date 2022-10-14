@@ -7,16 +7,13 @@ from addons.go_back_to_root import go_back_to_root
 
 
 def clearSettings() -> None:
-
-    removeList = ["FB_Config_Trace", "FB_Settings"]  # "FB_Permissions"
-
     go_back_to_root()
-
+    removeList = ["FB_Config_Trace", "FB_Settings"]  # "FB_Permissions"
     connection = sqlite3.connect("mod.db")
     cursor = connection.cursor()
 
     for tablename in removeList:
-        print("remove " + tablename)
+        print("Remove " + tablename)
         cursor.execute("DROP TABLE IF EXISTS " + tablename)
 
     cursor.execute("vacuum")

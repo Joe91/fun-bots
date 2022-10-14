@@ -79,9 +79,8 @@ def create_settings_translations() -> None:
 
 
 def create_mapfiles() -> None:
-    updateSupportedMaps(relativePath)
+    updateSupportedMaps()
     createMaplist()
-    # os.system("python tools/update_supported_maps.py"+ " " + relativePath)
     print("Mapfiles Updated")
 
 
