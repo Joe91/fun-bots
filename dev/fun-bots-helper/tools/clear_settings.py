@@ -1,10 +1,17 @@
 import sqlite3
-from tools.go_back_to_root import go_back_to_root
+import sys
+
+sys.path.insert(1, "../")
+
+from addons.go_back_to_root import go_back_to_root
 
 
 def clearSettings() -> None:
+
     removeList = ["FB_Config_Trace", "FB_Settings"]  # "FB_Permissions"
+
     go_back_to_root()
+
     connection = sqlite3.connect("mod.db")
     cursor = connection.cursor()
 

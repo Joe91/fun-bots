@@ -1,9 +1,15 @@
 import operator
+import sys
 from os import walk
-from tools.go_back_to_root import go_back_to_root
+
+sys.path.insert(1, "../")
+from addons.go_back_to_root import go_back_to_root
 
 
 def createMaplist() -> None:
+
+    """This process will be modularized to be used in update_supported_maps.py too"""
+
     # All GameModes
     # TDM, TDM CQ, Rush, CQ Small, CQ Large, Assault, Assault 2, Assault Large GM, CQ Dom, Scavanger, CTF
     GameModesToUse = [

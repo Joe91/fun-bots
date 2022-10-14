@@ -1,13 +1,24 @@
 import os
 import sys
+
 from deep_translator import GoogleTranslator
 
-def updateLanguages(pathToFiles: str) -> None:
-    language_file = pathToFiles + "ext/shared/Languages/DEFAULT.lua"
-    language_file_js = pathToFiles + "WebUI/languages/DEFAULT.js"
+sys.path.insert(1, "../")
 
-    lua_path = pathToFiles + "ext/shared/Languages"
-    js_path = pathToFiles + "WebUI/languages"
+from addons.go_back_to_root import go_back_to_root
+
+
+def updateLanguages() -> None:
+
+    """It's still to be modularized"""
+
+    go_back_to_root()
+
+    language_file = "ext/Shared/Languages/DEFAULT.lua"
+    language_file_js = "WebUI/languages/DEFAULT.js"
+
+    lua_path = "ext/Shared/Languages"
+    js_path = "WebUI/languages"
 
     # lua -files
     lua_lines = []
@@ -21,7 +32,7 @@ def updateLanguages(pathToFiles: str) -> None:
                 # compare files line by line
                 with open(filename, "r", encoding="utf8") as compFile:
                     compLines = compFile.read().splitlines()
-                    
+
                     LANG = compLines[0].split("'")[1].split("_")[0]
                     if LANG == "cn":
                         LANG = "zh-CN"
@@ -33,7 +44,6 @@ def updateLanguages(pathToFiles: str) -> None:
                         splitted_line.insert(3, translator.translate(splitted_line[1]))
                         return '"'.join(splitted_line)
 
-                    
                     lines_to_remove = []
                     lines_to_add = []
                     for comp_line in compLines:
@@ -54,7 +64,7 @@ def updateLanguages(pathToFiles: str) -> None:
                                             lines_to_remove.remove(comp_line)
                                         break
                             if line_found == False:
-                                #translate line
+                                # translate line
                                 if line.startswith("Language:add"):
                                     line = translate(line)
                                 lines_to_add.append(line)
@@ -79,7 +89,7 @@ def updateLanguages(pathToFiles: str) -> None:
                 # compare files line by line
                 with open(filename, "r", encoding="utf8") as compFile:
                     compLines = compFile.read().splitlines()
-                    
+
                     LANG = compLines[0].split("'")[1].split("_")[0]
                     if LANG == "cn":
                         LANG = "zh-CN"
@@ -88,13 +98,9 @@ def updateLanguages(pathToFiles: str) -> None:
                     def translate(line: str) -> str:
                         splitted_line = line.split('"')
                         splitted_line.remove("")
-                        splitted_line.insert(
-                            3, translator.translate(splitted_line[1])
-                        )
+                        splitted_line.insert(3, translator.translate(splitted_line[1]))
                         return '"'.join(splitted_line)
 
-                    
-                    
                     lines_to_remove = []
                     lines_to_add = []
                     for comp_line in compLines[6:]:
@@ -121,8 +127,10 @@ def updateLanguages(pathToFiles: str) -> None:
                                             lines_to_remove.remove(comp_line)
                                         break
                             if line_found == False:
-                                #translate line
-                                if line.startswith("\t\"") and not line.split(":")[0].startswith("\t\"\""):
+                                # translate line
+                                if line.startswith('\t"') and not line.split(":")[
+                                    0
+                                ].startswith('\t""'):
                                     line = translate(line)
                                 lines_to_add.append(line)
                     for remove_line in lines_to_remove:
@@ -136,7 +144,4 @@ def updateLanguages(pathToFiles: str) -> None:
 
 
 if __name__ == "__main__":
-    pathToFiles = "./"
-    if len(sys.argv) > 1:
-        pathToFiles = sys.argv[1]
-    updateLanguages(pathToFiles)
+    updateLanguages()
