@@ -288,12 +288,12 @@ Language:add(code, "If true, all permissions are ignored --> everyone can do eve
 Language:add(code, "Language", "Language")
 Language:add(code, "de_DE as sample (default is english, when language file doesnt exists)", "de_DE as sample (default is english, when language file doesnt exists)")
 
--- Strings of ./../../ext/Client/ClientNodeEditor.lua
+-- Strings of ext/Client/ClientNodeEditor.lua
 
--- Strings of ./../../ext/Server/BotSpawner.lua
+-- Strings of ext/Server/BotSpawner.lua
 Language:add(code, "CANT_JOIN_BOT_TEAM", "CANT_JOIN_BOT_TEAM")
 
--- Strings of ./../../ext/Server/UIServer.lua
+-- Strings of ext/Server/UIServer.lua
 Language:add(code, "A", "A")
 Language:add(code, "B", "B")
 Language:add(code, "C", "C")
@@ -321,7 +321,7 @@ Language:add(code, "Repair Vehicle", "Repair Vehicle")
 Language:add(code, "Settings has been saved temporarily.", "Settings has been saved temporarily.")
 Language:add(code, "Settings has been saved.", "Settings has been saved.")
 
--- Strings of ./../../ext/Server/NodeCollection.lua
+-- Strings of ext/Server/NodeCollection.lua
 Language:add(code, "Loaded %d paths with %d waypoints for map %s", "Loaded %d paths with %d waypoints for map %s")
 Language:add(code, "Save in progress...", "Save in progress...")
 Language:add(code, "Failed to execute query: %s", "Failed to execute query: %s")
