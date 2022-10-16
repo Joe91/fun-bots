@@ -1,22 +1,15 @@
-import sqlite3
 import sys
 
 sys.path.insert(1, "../")
 
-from addons.go_back_to_root import go_back_to_root
+from addons.root import go_back_to_root, select_all_tables
 
 
 def clearAllPaths() -> None:
     go_back_to_root()
-    ignoreList = ["sqlite_sequence", "FB_Permissions", "FB_Config_Trace", "FB_Settings"]
-    connection = sqlite3.connect("mod.db")
-    cursor = connection.cursor()
-
-    sql_instruction = """
-		SELECT * FROM sqlite_master WHERE type='table'
-	"""
-    cursor.execute(sql_instruction)
+    connection, cursor = select_all_tables()
     content = cursor.fetchall()
+    ignoreList = ["sqlite_sequence", "FB_Permissions", "FB_Config_Trace", "FB_Settings"]
 
     for item in content:
         if item[1] in ignoreList:
