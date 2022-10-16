@@ -2,7 +2,7 @@ import sys
 
 sys.path.insert(1, "../")
 
-from addons.go_back_to_root import go_back_to_root
+from addons.root import go_back_to_root
 from addons.retrieves import retrieve_lines_settings, retrieve_settings
 
 
