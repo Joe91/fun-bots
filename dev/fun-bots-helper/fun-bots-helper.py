@@ -36,8 +36,7 @@ elif os.path.isfile("./../../mod.db"):
 
 # TRACES
 def export_traces() -> None:
-    exportTraces(relativePath)
-    # os.system("python tools/export_traces.py" + " " + relativePath)
+    exportTraces()
     print("Maps Exported")
 
 
@@ -49,8 +48,7 @@ def import_traces() -> None:
 
 # SETTINGS
 def export_settings() -> None:
-    exportPermissionAndConfig(relativePath)
-    # os.system("python tools/export_permission_and_config.py"+ " " + relativePath)
+    exportPermissionAndConfig()
     print("Export")
 
 
@@ -71,11 +69,11 @@ def clear_settings() -> None:
     print("Settings Cleared")
 
 
-def create_settings_translations() -> None:
+def create_settings_defaults() -> None:
     createSettings()
     createDefaults()
     updateLanguages()
-    print("Templates Translated and Settings Updated")
+    print("Default Templates and Settings Updated")
 
 
 def create_mapfiles() -> None:
@@ -135,8 +133,8 @@ if SHOW_DEV_TOOLS:
     tempRow = tempRow + 1
     Button(
         master,
-        text="Create Settings + Translations",
-        command=create_settings_translations,
+        text="Create Settings + Defaults",
+        command=create_settings_defaults,
     ).grid(row=tempRow, sticky="nesw", pady=4, padx=4)
     tempRow = tempRow + 1
     Button(master, text="Create Mapfiles", command=create_mapfiles).grid(
