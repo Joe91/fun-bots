@@ -628,8 +628,10 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 		return false
 	end
 
+	local s_IsSniper = (self.m_ActiveWeapon and self.m_ActiveWeapon.type == WeaponTypes.Sniper)
 	if s_Type ~= VehicleTypes.NoVehicle and
-		m_Vehicles:CheckForVehicleAttack(s_Type, self._DistanceToPlayer, self.m_SecondaryGadget, self.m_InVehicle) ==
+		m_Vehicles:CheckForVehicleAttack(s_Type, self._DistanceToPlayer, self.m_SecondaryGadget, self.m_InVehicle, s_IsSniper)
+		==
 		VehicleAttackModes.NoAttack then
 		return false
 	end

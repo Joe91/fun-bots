@@ -64,8 +64,9 @@ function BotAttacking:UpdateAttacking(p_Bot)
 
 			-- target in vehicle
 			if p_Bot._ShootPlayerVehicleType ~= VehicleTypes.NoVehicle then
+				local s_IsSniper = (p_Bot.m_ActiveWeapon and p_Bot.m_ActiveWeapon.type == WeaponTypes.Sniper)
 				local s_AttackMode = m_Vehicles:CheckForVehicleAttack(p_Bot._ShootPlayerVehicleType, p_Bot._DistanceToPlayer,
-					p_Bot.m_SecondaryGadget, false)
+					p_Bot.m_SecondaryGadget, false, s_IsSniper)
 
 				if s_AttackMode ~= VehicleAttackModes.NoAttack then
 					if s_AttackMode == VehicleAttackModes.AttackWithNade then -- grenade

@@ -127,6 +127,8 @@ Registry = {
 		PROBABILITY_THROW_GRENADE = 80,
 		-- the probabilty to use the rocket instead of the a primary
 		PROBABILITY_SHOOT_ROCKET = 33,
+		-- the probabilty to use the rifle to attack a chopper
+		PROBABILITY_ATTACK_CHOPPER_WITH_RIFLE = 25,
 		-- If the gamemode is Rush or Conquest, change direction if the bot is stuck on non-connecting paths.
 		PROBABILITY_CHANGE_DIRECTION_IF_STUCK = 50,
 		-- Trace delta a bot uses when they are off a trace path to find his way back to the best path

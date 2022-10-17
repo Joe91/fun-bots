@@ -175,7 +175,7 @@ function Vehicles:GetSpeedAndDrop(p_VehicleData, p_Index, p_WeaponSelection)
 	return s_Speed, s_Drop
 end
 
-function Vehicles:CheckForVehicleAttack(p_VehicleType, p_Distance, p_Gadget, p_InVehicle)
+function Vehicles:CheckForVehicleAttack(p_VehicleType, p_Distance, p_Gadget, p_InVehicle, p_IsSniper)
 	if p_InVehicle then
 		return VehicleAttackModes.AttackWithRifle -- attack with main-weapon
 	end
@@ -184,9 +184,13 @@ function Vehicles:CheckForVehicleAttack(p_VehicleType, p_Distance, p_Gadget, p_I
 	if p_VehicleType == VehicleTypes.MavBot or
 		p_VehicleType == VehicleTypes.NoArmorVehicle or
 		p_VehicleType == VehicleTypes.StationaryLauncher or
-		p_VehicleType == VehicleTypes.Gadgets or --no idea what this might be
-		p_VehicleType == VehicleTypes.Chopper then --don't attack planes. Too fast...
+		p_VehicleType == VehicleTypes.Gadgets then --no idea what this might be
 		s_AttackMode = VehicleAttackModes.AttackWithRifle -- attack with rifle
+	end
+	if (p_IsSniper and p_VehicleType == VehicleTypes.Chopper and Config.SnipersAttackChoppers) then --don't attack planes. Too fast...
+		if MathUtils:GetRandomInt(1, 100) <= Registry.BOT.PROBABILITY_ATTACK_CHOPPER_WITH_RIFLE then
+			s_AttackMode = VehicleAttackModes.AttackWithRifle -- attack with rifle
+		end
 	end
 
 	if p_VehicleType ~= VehicleTypes.MavBot and p_Gadget then -- MAV or EOD always with rifle
