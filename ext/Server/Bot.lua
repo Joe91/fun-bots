@@ -1243,7 +1243,7 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 	else
 		-- allow one more bot, if driver is player
 		if s_MaxEntries > (Config.MaxBotsPerVehicle + 1) then
-			s_MaxEntries = Config.MaxBotsPerVehicle
+			s_MaxEntries = Config.MaxBotsPerVehicle + 1
 		end
 	end
 
