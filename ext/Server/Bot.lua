@@ -1231,8 +1231,20 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 	-- keep one seat free, if enough available
 	local s_MaxEntries = p_Entity.entryCount
 
-	if not p_PlayerIsDriver and s_MaxEntries > 2 then
-		s_MaxEntries = s_MaxEntries - 1
+	if not p_PlayerIsDriver then
+		-- leave a place for a player if more than two seats are available
+		if s_MaxEntries > 2 then
+			s_MaxEntries = s_MaxEntries - 1
+		end
+		-- limit the bots per verhicle, if no player is the driver
+		if s_MaxEntries > Config.MaxBotsPerVehicle then
+			s_MaxEntries = Config.MaxBotsPerVehicle
+		end
+	else
+		-- allow one more bot, if driver is player
+		if s_MaxEntries > (Config.MaxBotsPerVehicle + 1) then
+			s_MaxEntries = Config.MaxBotsPerVehicle
+		end
 	end
 
 	for i = 0, s_MaxEntries - 1 do

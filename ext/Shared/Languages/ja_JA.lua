@@ -328,3 +328,5 @@ Language:add(code, "Draw the IDs of the waypoints", "ウェイポイントの ID
 Language:add(code, "Draw the Points where players can spawn", "プレイヤーがスポーンできるポイントを描く")
 Language:add(code, "Snipers attack choppers", "スナイパーがチョッパーを攻撃")
 Language:add(code, "Bots with sniper-rifels attack choppers", "スナイパーライフルを持つボットがチョッパーを攻撃")
+Language:add(code, "Max Bots per vehicle", "ビークルあたりの最大ボット数")
+Language:add(code, "Maximum number of Bots in a vehicle", "車両内のボットの最大数")

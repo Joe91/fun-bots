@@ -327,3 +327,5 @@ Language:add(code, "Draw the IDs of the waypoints", "Desenhe os IDs dos waypoint
 Language:add(code, "Draw the Points where players can spawn", "Desenhe os pontos onde os jogadores podem aparecer")
 Language:add(code, "Snipers attack choppers", "Snipers atacam helicópteros")
 Language:add(code, "Bots with sniper-rifels attack choppers", "Bots com helicópteros de ataque com rifles de precisão")
+Language:add(code, "Max Bots per vehicle", "Max Bots por veículo")
+Language:add(code, "Maximum number of Bots in a vehicle", "Número máximo de Bots em um veículo")

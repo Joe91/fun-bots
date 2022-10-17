@@ -16,6 +16,7 @@ This is the changelog for the version V2.6.2. Don't forget to [join us on Discor
 * massive rework of all python-scripts (WIP - by João Vitor)
 * temporary workaround for not working collition-raycasts
 * new setting and propability for snipers to attack choppers
+* limit number of Bots in a vehicle (new config-value)
 
 ### Bug fixes
 * fix scavenger revive

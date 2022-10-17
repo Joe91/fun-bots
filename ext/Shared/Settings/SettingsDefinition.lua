@@ -848,6 +848,18 @@ SettingsDefinition = {
 			Category = "VEHICLE"
 		},
 		{
+			Name = "MaxBotsPerVehicle",
+			Text = "Max Bots per vehicle",
+			---@type Type|integer
+			Type = Type.Integer,
+			Value = Config.MaxBotsPerVehicle,
+			Description = "Maximum number of Bots in a vehicle",
+			Reference = Range(1, 10, 1),
+			Default = 3,
+			UpdateFlag = UpdateFlag.None,
+			Category = "VEHICLE"
+		},
+		{
 			Name = "FovVehicleForShooting",
 			Text = "FOV of Vehicles",
 			---@type Type|integer
