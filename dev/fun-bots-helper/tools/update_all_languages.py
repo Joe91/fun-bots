@@ -5,7 +5,7 @@ from deep_translator import GoogleTranslator
 
 sys.path.insert(1, "../")
 
-from addons.go_back_to_root import go_back_to_root
+from addons.root import go_back_to_root
 
 
 def updateLanguages() -> None:

@@ -326,3 +326,5 @@ Language:add(code, "Bots throw grenades at enemies", "Les bots lancent des grena
 Language:add(code, "Degrees of vertical FOV of Non AA - Vehicles", "Degrés de champ de vision vertical des véhicules non AA")
 Language:add(code, "Draw the IDs of the waypoints", "Dessinez les identifiants des waypoints")
 Language:add(code, "Draw the Points where players can spawn", "Dessinez les points où les joueurs peuvent apparaître")
+Language:add(code, "Snipers attack choppers", "Les tireurs d'élite attaquent les hélicoptères")
+Language:add(code, "Bots with sniper-rifels attack choppers", "Des bots avec des fusils de sniper attaquent des hélicoptères")

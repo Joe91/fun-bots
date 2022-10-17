@@ -766,6 +766,17 @@ SettingsDefinition = {
 			Category = "BEHAVIOUR"
 		},
 		{
+			Name = "SnipersAttackChoppers",
+			Text = "Snipers attack choppers",
+			---@type Type|integer
+			Type = Type.Boolean,
+			Value = Config.SnipersAttackChoppers,
+			Description = "Bots with sniper-rifels attack choppers",
+			Default = false,
+			UpdateFlag = UpdateFlag.None,
+			Category = "BEHAVIOUR"
+		},
+		{
 			Name = "MoveSidewards",
 			Text = "Move Sidewards",
 			---@type Type|integer

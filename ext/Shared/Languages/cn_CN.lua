@@ -325,3 +325,5 @@ Language:add(code, "Bots throw grenades at enemies", "机器人向敌人投掷�
 Language:add(code, "Degrees of vertical FOV of Non AA - Vehicles", "非 AA - 车辆的垂直 FOV 度数")
 Language:add(code, "Draw the IDs of the waypoints", "绘制航路点的 ID")
 Language:add(code, "Draw the Points where players can spawn", "绘制玩家可以生成的点")
+Language:add(code, "Snipers attack choppers", "狙击手攻击直升机")
+Language:add(code, "Bots with sniper-rifels attack choppers", "带有狙击步枪的机器人攻击直升机")

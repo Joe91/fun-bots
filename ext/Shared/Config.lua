@@ -3,7 +3,7 @@
 
 ---@class Config
 Config = {
-
+    
 	--GENERAL
 	BotWeapon = BotWeapons.Auto,		-- Select the weapon the bots use
 	BotKit = BotKits.RANDOM_KIT,		-- The Kit of the Bots
@@ -75,6 +75,7 @@ Config = {
 	BotsThrowGrenades = true,			-- Bots throw grenades at enemies
 	BotsDeploy = true,					-- Bots deploy ammo and medkits
 	DeployCycle = 60,					-- Time between deployment of bots in seconds
+	SnipersAttackChoppers = false,		-- Bots with sniper-rifels attack choppers
 	MoveSidewards = true,				-- Bots move sidewards
 	MaxStraigtCycle = 10.0,				-- Max time bots move straight, before sidewards-movement (in sec)
 	MaxSideCycle = 5.0,					-- Max time bots move sidewards, before straight-movement (in sec)

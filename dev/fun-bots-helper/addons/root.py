@@ -3,7 +3,7 @@ import sqlite3
 
 
 def go_back_to_root() -> None:
-    cwd_splitted = os.getcwd().split("/")
+    cwd_splitted = os.getcwd().replace("\\", "/").split("/")
     new_cwd = "/".join(cwd_splitted[: cwd_splitted.index("fun-bots") + 1])
     os.chdir(new_cwd)
 

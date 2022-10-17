@@ -326,3 +326,5 @@ Language:add(code, "Degrees of vertical FOV of Non AA - Vehicles", "Grad des ver
 Language:add(code, "Draw the IDs of the waypoints", "Zeichnen Sie die IDs der Wegpunkte")
 Language:add(code, "Draw the Points where players can spawn", "Zeichnen Sie die Punkte, an denen Spieler spawnen können")
 Language:add(code, "The minimum time a bot shoots at one player if in vehicle - recommended minimum 2.5, below this you will have issues.", "Die Mindestzeit, in der ein Bot auf einen Spieler schießt, wenn er sich im Fahrzeug befindet – empfohlenes Minimum 2,5, darunter treten Probleme auf.")
+Language:add(code, "Snipers attack choppers", "Scharfschützen greifen Hubschrauber an")
+Language:add(code, "Bots with sniper-rifels attack choppers", "Bots mit Scharfschützengewehren greifen Hubschrauber an")

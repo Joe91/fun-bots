@@ -15,7 +15,7 @@ Registry = {
 		BOT_TOKEN = "BOT_",
 		-- allow players to use Bot-Names
 		ALLOW_PLAYER_BOT_NAMES = true,
-		-- collition-raycasts are an other type of raycast. This should improve some vehicle issues...
+		-- collition-raycasts are an other type of raycast. Sadly not working atm...
 		USE_COLLITION_RAYCASTS = false,
 		-- timeout to save or load maps
 		LOADING_TIMEOUT = 172800.0,

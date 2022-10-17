@@ -13,6 +13,9 @@ This is the changelog for the version V2.6.2. Don't forget to [join us on Discor
 * updated chinese translation (by Augusta)
 * auto-translation-scripts (by João Vitor)
 * add Japanese and Portuguese
+* massive rework of all python-scripts (WIP - by João Vitor)
+* temporary workaround for not working collition-raycasts
+* new setting and propability for snipers to attack choppers
 
 ### Bug fixes
 * fix scavenger revive

@@ -326,3 +326,5 @@ Language:add(code, "Loaded %d paths with %d waypoints for map %s", "Loaded %d pa
 Language:add(code, "Save in progress...", "Save in progress...")
 Language:add(code, "Failed to execute query: %s", "Failed to execute query: %s")
 Language:add(code, "Saved %d paths with %d waypoints for map %s", "Saved %d paths with %d waypoints for map %s")
+Language:add(code, "Snipers attack choppers", "Snipers attack choppers")
+Language:add(code, "Bots with sniper-rifels attack choppers", "Bots with sniper-rifels attack choppers")

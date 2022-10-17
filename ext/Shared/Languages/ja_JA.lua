@@ -326,3 +326,5 @@ Language:add(code, "Bots throw grenades at enemies", "ボットが敵にグレ�
 Language:add(code, "Degrees of vertical FOV of Non AA - Vehicles", "非 AA の垂直 FOV の角度 - 車両")
 Language:add(code, "Draw the IDs of the waypoints", "ウェイポイントの ID を描画する")
 Language:add(code, "Draw the Points where players can spawn", "プレイヤーがスポーンできるポイントを描く")
+Language:add(code, "Snipers attack choppers", "スナイパーがチョッパーを攻撃")
+Language:add(code, "Bots with sniper-rifels attack choppers", "スナイパーライフルを持つボットがチョッパーを攻撃")
