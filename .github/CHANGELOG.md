@@ -11,9 +11,9 @@ This is the changelog for the version V2.6.2. Don't forget to [join us on Discor
 ### New features / improvements
 * real ticket-count on conquest thanks to VU bugfix
 * updated chinese translation (by Augusta)
-* auto-translation-scripts (by João Vitor)
+* auto-translation-scripts (by [João Vitor](https://battlelog.battlefield.com/bf4/soldier/JOAO_SSOUZA/stats/1448854914/ps3/))
 * add Japanese and Portuguese
-* massive rework of all python-scripts (WIP - by João Vitor)
+* massive rework of all python-scripts (by [João Vitor](https://battlelog.battlefield.com/bf4/soldier/JOAO_SSOUZA/stats/1448854914/ps3/))
 * temporary workaround for not working collition-raycasts
 * new setting and probability for snipers to attack choppers
 * limit number of Bots in a vehicle (new config-value)
