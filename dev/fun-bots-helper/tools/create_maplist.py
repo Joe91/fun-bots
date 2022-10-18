@@ -1,17 +1,15 @@
 import sys
 
 sys.path.insert(1, "../")
-from addons.root import go_back_to_root
-from addons.retrieves import retrieve_lines_maps
+
+from addons.gets import get_map_lines, get_to_root
 
 
-# Creating Maplist.txt
 def createMaplist() -> None:
-    go_back_to_root()
+    get_to_root()
     outFile = "MapList.txt"
 
-    # Lines
-    mapItems = retrieve_lines_maps(create=True)
+    mapItems = get_map_lines(create=True)
     with open(outFile, "w") as output:
         for item in mapItems:
             output.write(" ".join(item) + "\n")

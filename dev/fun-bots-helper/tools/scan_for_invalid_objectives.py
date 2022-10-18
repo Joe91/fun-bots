@@ -1,34 +1,24 @@
 import sys
 from os import walk
 
+sys.path.insert(1, "../")
 
-# use "auto-py-to-exe" to convert to exe files
-def scanForInvalidObjectives(pathToFiles: str) -> None:
-    sourceFolder = pathToFiles + "mapfiles"
+from addons.gets import get_objectives_to_rename, get_to_root
 
-    filenames = next(walk(sourceFolder), (None, None, []))[2]  # [] if no file
+
+def scanForInvalidObjectives() -> None:
+    get_to_root()
+    sourceFolder = "mapfiles"
+
+    filenames = next(walk(sourceFolder), (None, None, []))[2]
 
     for filename in filenames:
         with open(sourceFolder + "/" + filename, "r") as infile:
-            allObjectives = []
-            objectivesToRename = []
-            fileLines = infile.readlines()
-            for line in fileLines[1:]:
-                if '"Objectives":[' in line:
-                    objectives = line.split('"Objectives":[')[1]
-                    objectives = objectives.split("]")[0]
-                    objectives = objectives.split(",")
-                    for objective in objectives:
-                        if objective not in allObjectives:
-                            allObjectives.append(objective)
-            allObjectives.sort()
-            for objectiveName in allObjectives:
-                if objectiveName.lower() != objectiveName:
-                    objectivesToRename.append(objectiveName)
+            objectivesToRename, fileLines = get_objectives_to_rename(infile)
         if len(objectivesToRename) > 0:
             with open(sourceFolder + "/" + filename, "w") as outfile:
                 print(filename)
-                print("replace content")
+                print("Replace Content")
                 for line in fileLines:
                     for renameItem in objectivesToRename:
                         line = line.replace(renameItem, renameItem.lower())
@@ -36,7 +26,4 @@ def scanForInvalidObjectives(pathToFiles: str) -> None:
 
 
 if __name__ == "__main__":
-    pathToFiles = "./"
-    if len(sys.argv) > 1:
-        pathToFiles = sys.argv[1]
-    scanForInvalidObjectives(pathToFiles)
+    scanForInvalidObjectives()
