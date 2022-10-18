@@ -5,7 +5,7 @@ NodeCollection = class "NodeCollection"
 ---@type Utilities
 local m_Utilities = require('__shared/Utilities.lua')
 ---@type Logger
-local m_Logger = Logger("NodeCollection", Debug.Server.NODECOLLECTION)
+local m_Logger = Logger("NodeCollection", true)
 
 function NodeCollection:__init(p_DisableServerEvents)
 	self:InitTables()
@@ -1168,34 +1168,33 @@ function NodeCollection:Save()
 
 	local s_QueriesDone = 0
 	local s_QueriesTotal = #s_BatchQueries
-	local s_BatchSize = 1000
 	local s_HasError = false
 	local s_InsertQuery = 'INSERT INTO ' ..
 		self.mapName .. '_table (pathIndex, pointIndex, transX, transY, transZ, inputVar, data) VALUES '
 
 	while s_QueriesTotal > s_QueriesDone and not s_HasError do
-		local s_QueriesLeft = s_QueriesTotal - s_QueriesDone
+		local s_StringLenght = #s_InsertQuery
 
-		if s_QueriesLeft > s_BatchSize then
-			s_QueriesLeft = s_BatchSize
+		local s_Iterator = 1 + s_QueriesDone
+		local s_Values = s_BatchQueries[s_Iterator]
+		s_StringLenght = s_StringLenght + #s_Values
+		s_Iterator = s_Iterator + 1
+		while s_Iterator <= s_QueriesTotal and (s_StringLenght + #s_BatchQueries[s_Iterator] + 1) < 230000 do
+			local s_NewString = s_BatchQueries[s_Iterator]
+			s_Values = s_Values .. ',' .. s_NewString
+			s_StringLenght = s_StringLenght + #s_NewString + 1
+			s_Iterator = s_Iterator + 1
 		end
 
-		local s_Values = ''
-
-		for i = 1 + s_QueriesDone, s_QueriesLeft + s_QueriesDone do
-			s_Values = s_Values .. s_BatchQueries[i]
-
-			if i < s_QueriesLeft + s_QueriesDone then
-				s_Values = s_Values .. ','
-			end
-		end
+		print(s_Iterator - 1)
+		print(#s_Values)
 
 		if not SQL:Query(s_InsertQuery .. s_Values) then
 			m_Logger:Write('Save -> Batch query failed [' .. s_QueriesDone .. ']: ' .. SQL:Error())
 			return
 		end
 
-		s_QueriesDone = s_QueriesDone + s_QueriesLeft
+		s_QueriesDone = s_Iterator - 1
 	end
 
 	-- Fetch all rows from the table.
