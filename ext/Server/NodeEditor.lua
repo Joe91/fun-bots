@@ -760,6 +760,8 @@ function NodeEditor:OnLevelLoaded(p_LevelName, p_GameMode)
 	end
 
 	self:Log('Load -> Stale Nodes: %d', s_Counter)
+
+	m_NodeCollection:Save()
 end
 
 ---VEXT Shared Level:Destroy Event
@@ -802,9 +804,11 @@ end
 -- =============================================
 function NodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	-- Only do math on presimulation UpdatePass, don't bother if debugging is off
-	if p_UpdatePass ~= UpdatePass.UpdatePass_PreSim then
+	if p_UpdatePass ~= UpdatePass.UpdatePass_PostFrame then
 		return
 	end
+
+	m_NodeCollection:Update();
 end
 
 ---VEXT Shared Engine:Update Event

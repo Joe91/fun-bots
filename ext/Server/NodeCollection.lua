@@ -1039,179 +1039,216 @@ function NodeCollection:Load(p_LevelName, p_GameMode)
 		self.mapName), 5.5)
 end
 
-function NodeCollection:Save()
-	if not SQL:Open() then
-		m_Logger:Error('Could not open database')
-		return
+function NodeCollection:Update()
+	if self.m_SaveActive then
+		self:ProcessAllDataToSave()
+	end
+end
+
+function NodeCollection:ProcessAllDataToSave()
+	if self.m_PrepareToSave then
+		self.m_QueryStrings = {}
+		self.m_StateMachine = 0
+		self.m_QueryStringsDone = 0
+		self.m_PrepareToSave = false
 	end
 
-	if self.mapName == '' or self.mapName == nil then
-		m_Logger:Error('Mapname not set. Abort Save')
-		return
-	end
+	if self.m_StateMachine == 0 then
+		ChatManager:Yell(Language:I18N('Save in progress...'), 1)
 
-	if not SQL:Query('DROP TABLE IF EXISTS ' .. self.mapName .. '_table') then
-		m_Logger:Error('Failed to reset table for map [' .. self.mapName .. ']: ' .. SQL:Error())
-		return
-	end
+		self.m_WaypointCount = #self.waypoints
+		self.m_PathCount = 0
+		self.m_LastPathIndex = -1
+		self.m_Orphans = {}
+		self.m_Disconnects = {}
+		self.m_BatchQueries = {}
 
-	local s_Query = [[
-		CREATE TABLE IF NOT EXISTS ]] .. self.mapName .. [[_table (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		pathIndex INTEGER,
-		pointIndex INTEGER,
-		transX FLOAT,
-		transY FLOAT,
-		transZ FLOAT,
-		inputVar INTEGER,
-		data TEXT
-		)
-	]]
+		m_Logger:Write('NodeCollection:Save -> Processing: ' .. (self.m_WaypointCount))
+	elseif self.m_StateMachine == 10 then
 
-	if not SQL:Query(s_Query) then
-		m_Logger:Error('Failed to create table for map [' .. self.mapName .. ']: ' .. SQL:Error())
-		return
-	end
+		for _, l_Waypoint in pairs(self.waypoints) do
+			-- keep track of disconnected nodes, only two should exist
+			-- the first node and the last node
+			if l_Waypoint.Previous == false and l_Waypoint.Next ~= false then
+				table.insert(self.m_Disconnects, l_Waypoint)
+			elseif l_Waypoint.Previous ~= false and l_Waypoint.Next == false then
+				table.insert(self.m_Disconnects, l_Waypoint)
+			end
 
-	ChatManager:Yell(Language:I18N('Save in progress...'), 1)
+			-- skip orphaned nodes
+			if l_Waypoint.Previous == false and l_Waypoint.Next == false then
+				table.insert(self.m_Orphans, l_Waypoint)
+			else
+				local s_WaypointData = {}
 
-	local s_ChangedWaypoints = {}
-	local s_WaypointCount = #self.waypoints
-	local s_PathCount = 0
-	local s_LastPathIndex = -1
-	local s_WaypointsChanged = 0
-	local s_Orphans = {}
-	local s_Disconnects = {}
-
-	local s_BatchQueries = {}
-
-	m_Logger:Write('NodeCollection:Save -> Processing: ' .. (s_WaypointCount))
-
-	for _, l_Waypoint in pairs(self.waypoints) do
-		-- keep track of disconnected nodes, only two should exist
-		-- the first node and the last node
-		if l_Waypoint.Previous == false and l_Waypoint.Next ~= false then
-			table.insert(s_Disconnects, l_Waypoint)
-		elseif l_Waypoint.Previous ~= false and l_Waypoint.Next == false then
-			table.insert(s_Disconnects, l_Waypoint)
-		end
-
-		-- skip orphaned nodes
-		if l_Waypoint.Previous == false and l_Waypoint.Next == false then
-			table.insert(s_Orphans, l_Waypoint)
-		else
-			local s_WaypointData = {}
-
-			if l_Waypoint.Data then
-				-- shallow clone
-				for l_Key, l_Value in pairs(l_Waypoint.Data) do
-					s_WaypointData[l_Key] = l_Value
-				end
-
-				--convert linked node ids to {pathIndex,pointindex}
-				if l_Waypoint.Data.Links ~= nil and #l_Waypoint.Data.Links > 0 then
-					local s_ConvertedLinks = {}
-
-					for i = 1, #l_Waypoint.Data.Links do
-						local s_LinkedWaypoint = self:Get(l_Waypoint.Data.Links[i])
-
-						if s_LinkedWaypoint ~= nil then
-							table.insert(s_ConvertedLinks, { s_LinkedWaypoint.PathIndex, s_LinkedWaypoint.PointIndex })
-						end
+				if l_Waypoint.Data then
+					-- shallow clone
+					for l_Key, l_Value in pairs(l_Waypoint.Data) do
+						s_WaypointData[l_Key] = l_Value
 					end
 
-					s_WaypointData.Links = s_ConvertedLinks
+					--convert linked node ids to {pathIndex,pointindex}
+					if l_Waypoint.Data.Links ~= nil and #l_Waypoint.Data.Links > 0 then
+						local s_ConvertedLinks = {}
+
+						for i = 1, #l_Waypoint.Data.Links do
+							local s_LinkedWaypoint = self:Get(l_Waypoint.Data.Links[i])
+
+							if s_LinkedWaypoint ~= nil then
+								table.insert(s_ConvertedLinks, { s_LinkedWaypoint.PathIndex, s_LinkedWaypoint.PointIndex })
+							end
+						end
+
+						s_WaypointData.Links = s_ConvertedLinks
+					end
 				end
-			end
 
-			local s_JsonSaveData = ''
+				local s_JsonSaveData = ''
 
-			if s_WaypointData ~= nil and type(s_WaypointData) == 'table' then
-				local s_JsonData, s_EncodeError = json.encode(s_WaypointData)
+				if s_WaypointData ~= nil and type(s_WaypointData) == 'table' then
+					local s_JsonData, s_EncodeError = json.encode(s_WaypointData)
 
-				if s_JsonData == nil then
-					m_Logger:Warning('Waypoint [' .. l_Waypoint.ID .. '] data could not encode: ' .. tostring(s_EncodeError))
-					m_Logger:Warning('waypoint -> ' .. m_Utilities:dump(l_Waypoint, true, 1))
-					m_Logger:Warning('waypointData -> ' .. m_Utilities:dump(s_WaypointData, true))
+					if s_JsonData == nil then
+						m_Logger:Warning('Waypoint [' .. l_Waypoint.ID .. '] data could not encode: ' .. tostring(s_EncodeError))
+						m_Logger:Warning('waypoint -> ' .. m_Utilities:dump(l_Waypoint, true, 1))
+						m_Logger:Warning('waypointData -> ' .. m_Utilities:dump(s_WaypointData, true))
+					end
+
+					if s_JsonData ~= '{}' then
+						s_JsonSaveData = SQL:Escape(table.concat(s_JsonData:split('"'), '""'))
+					end
 				end
 
-				if s_JsonData ~= '{}' then
-					s_JsonSaveData = SQL:Escape(table.concat(s_JsonData:split('"'), '""'))
+				if l_Waypoint.PathIndex ~= self.m_LastPathIndex then
+					self.m_PathCount = self.m_PathCount + 1
+					self.m_LastPathIndex = l_Waypoint.PathIndex
 				end
-			end
 
-			if l_Waypoint.PathIndex ~= s_LastPathIndex then
-				s_PathCount = s_PathCount + 1
-				s_LastPathIndex = l_Waypoint.PathIndex
+				table.insert(self.m_BatchQueries, '(' .. table.concat({
+					l_Waypoint.PathIndex,
+					l_Waypoint.PointIndex,
+					l_Waypoint.Position.x,
+					l_Waypoint.Position.y,
+					l_Waypoint.Position.z,
+					l_Waypoint.InputVar,
+					'"' .. s_JsonSaveData .. '"'
+				}, ',') .. ')')
 			end
-
-			table.insert(s_BatchQueries, '(' .. table.concat({
-				l_Waypoint.PathIndex,
-				l_Waypoint.PointIndex,
-				l_Waypoint.Position.x,
-				l_Waypoint.Position.y,
-				l_Waypoint.Position.z,
-				l_Waypoint.InputVar,
-				'"' .. s_JsonSaveData .. '"'
-			}, ',') .. ')')
 		end
-	end
+	elseif self.m_StateMachine == 20 then
+		m_Logger:Write('Save -> Waypoints to write: ' .. (#self.m_BatchQueries))
+		m_Logger:Write('Save -> Orphans: ' .. (#self.m_Orphans) .. ' (Removed)')
+		m_Logger:Write('Save -> Disconnected: ' .. (#self.m_Disconnects) .. ' (Expected: 2)')
 
-	m_Logger:Write('Save -> Waypoints to write: ' .. (#s_BatchQueries))
-	m_Logger:Write('Save -> Orphans: ' .. (#s_Orphans) .. ' (Removed)')
-	m_Logger:Write('Save -> Disconnected: ' .. (#s_Disconnects) .. ' (Expected: 2)')
+		if #self.m_Disconnects > 2 then
+			m_Logger:Warning('WARNING! More than two disconnected nodes were found!')
+			m_Logger:Warning(m_Utilities:dump(self.m_Disconnects, true, 2))
+		end
 
-	if #s_Disconnects > 2 then
-		m_Logger:Warning('WARNING! More than two disconnected nodes were found!')
-		m_Logger:Warning(m_Utilities:dump(s_Disconnects, true, 2))
-	end
+		self.m_QueriesDone = 0
+		self.m_QueriesTotal = #self.m_BatchQueries
+		self.m_HasError = false
+		self.m_InsertQuery = 'INSERT INTO ' ..
+			self.mapName .. '_table (pathIndex, pointIndex, transX, transY, transZ, inputVar, data) VALUES '
 
-	local s_QueriesDone = 0
-	local s_QueriesTotal = #s_BatchQueries
-	local s_HasError = false
-	local s_InsertQuery = 'INSERT INTO ' ..
-		self.mapName .. '_table (pathIndex, pointIndex, transX, transY, transZ, inputVar, data) VALUES '
+	elseif self.m_StateMachine == 30 then
+		if self.m_QueriesTotal > self.m_QueriesDone and not self.m_HasError then
 
-	while s_QueriesTotal > s_QueriesDone and not s_HasError do
-		local s_StringLenght = #s_InsertQuery
+			local s_StringLenght = #self.m_InsertQuery
 
-		local s_Iterator = 1 + s_QueriesDone
-		local s_Values = s_BatchQueries[s_Iterator]
-		s_StringLenght = s_StringLenght + #s_Values
-		s_Iterator = s_Iterator + 1
-		while s_Iterator <= s_QueriesTotal and (s_StringLenght + #s_BatchQueries[s_Iterator] + 1) < 230000 do
-			local s_NewString = s_BatchQueries[s_Iterator]
-			s_Values = s_Values .. ',' .. s_NewString
-			s_StringLenght = s_StringLenght + #s_NewString + 1
+			local s_Iterator = 1 + self.m_QueriesDone
+			local s_Values = self.m_BatchQueries[s_Iterator]
+			s_StringLenght = s_StringLenght + #s_Values
 			s_Iterator = s_Iterator + 1
+			while s_Iterator <= self.m_QueriesTotal and (s_StringLenght + #self.m_BatchQueries[s_Iterator] + 1) < 230000 do
+				local s_NewString = self.m_BatchQueries[s_Iterator]
+				s_Values = s_Values .. ',' .. s_NewString
+				s_StringLenght = s_StringLenght + #s_NewString + 1
+				s_Iterator = s_Iterator + 1
+			end
+
+			table.insert(self.m_QueryStrings, self.m_InsertQuery .. s_Values)
+
+			self.m_QueriesDone = s_Iterator - 1
+
+			self.m_StateMachine = 21 -- do this again
 		end
-
-		print(s_Iterator - 1)
-		print(#s_Values)
-
-		if not SQL:Query(s_InsertQuery .. s_Values) then
-			m_Logger:Write('Save -> Batch query failed [' .. s_QueriesDone .. ']: ' .. SQL:Error())
+	elseif self.m_StateMachine == 40 then
+		if not SQL:Open() then
+			m_Logger:Error('Could not open database')
+			return
+		end
+		if self.mapName == '' or self.mapName == nil then
+			m_Logger:Error('Mapname not set. Abort Save')
 			return
 		end
 
-		s_QueriesDone = s_Iterator - 1
+		if not SQL:Query('DROP TABLE IF EXISTS ' .. self.mapName .. '_table') then
+			m_Logger:Error('Failed to reset table for map [' .. self.mapName .. ']: ' .. SQL:Error())
+			return
+		end
+
+		local s_Query = [[
+			CREATE TABLE IF NOT EXISTS ]] .. self.mapName .. [[_table (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			pathIndex INTEGER,
+			pointIndex INTEGER,
+			transX FLOAT,
+			transY FLOAT,
+			transZ FLOAT,
+			inputVar INTEGER,
+			data TEXT
+			)
+		]]
+
+		if not SQL:Query(s_Query) then
+			m_Logger:Error('Failed to create table for map [' .. self.mapName .. ']: ' .. SQL:Error())
+			return
+		end
+	elseif self.m_StateMachine == 50 then
+
+		local s_QueryIndex = 1 + self.m_QueryStringsDone
+
+		if self.m_QueryStrings[s_QueryIndex] then
+			if not SQL:Query(self.m_QueryStrings[s_QueryIndex]) then
+				m_Logger:Write('Save -> Batch query failed [' .. self.m_QueriesDone .. ']: ' .. SQL:Error())
+				return
+			end
+			self.m_QueryStringsDone = s_QueryIndex
+			self.m_StateMachine = 41 -- do this again
+		end
+
+	elseif self.m_StateMachine == 60 then
+		-- Fetch all rows from the table.
+		local s_Results = SQL:Query('SELECT * FROM ' .. self.mapName .. '_table')
+
+		if not s_Results then
+			m_Logger:Error('NodeCollection:Save -> Failed to double-check table entries for map [' ..
+				self.mapName .. ']: ' .. SQL:Error())
+			ChatManager:Yell(Language:I18N('Failed to execute query: %s', SQL:Error()), 5.5)
+			return
+		end
+
+		SQL:Close()
+
+		m_Logger:Write('Save -> Saved [' .. self.m_QueriesTotal .. '] waypoints for map [' .. self.mapName .. ']')
+		ChatManager:Yell(Language:I18N('Saved %d paths with %d waypoints for map %s', self.m_PathCount, self.m_QueriesTotal,
+			self.mapName)
+			, 5.5)
+
+		self.m_SaveActive = false
 	end
+	print(self.m_StateMachine)
 
-	-- Fetch all rows from the table.
-	local s_Results = SQL:Query('SELECT * FROM ' .. self.mapName .. '_table')
+	self.m_StateMachine = self.m_StateMachine + 1
 
-	if not s_Results then
-		m_Logger:Error('NodeCollection:Save -> Failed to double-check table entries for map [' ..
-			self.mapName .. ']: ' .. SQL:Error())
-		ChatManager:Yell(Language:I18N('Failed to execute query: %s', SQL:Error()), 5.5)
-		return
+end
+
+function NodeCollection:Save()
+	if not self.m_SaveActive then
+		self.m_SaveActive = true
+		self.m_PrepareToSave = true
 	end
-
-	SQL:Close()
-
-	m_Logger:Write('Save -> Saved [' .. s_QueriesTotal .. '] waypoints for map [' .. self.mapName .. ']')
-	ChatManager:Yell(Language:I18N('Saved %d paths with %d waypoints for map %s', s_PathCount, s_QueriesTotal, self.mapName)
-		, 5.5)
 end
 
 -----------------------------
