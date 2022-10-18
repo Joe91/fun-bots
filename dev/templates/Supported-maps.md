@@ -1,7 +1,7 @@
 ### Supported Maps
 The following maps are currently supported in this commit.
 
-|   	   	| Technical Name | Name | supported gamemodes |   supported gamemodes with Vehicles |
+|   	   	| Technical Name | Name | Supported Gamemodes |   Supported Gamemodes with Vehicles |
 |---	|---	|---	|---	|---	|
 |   ![image](https://user-images.githubusercontent.com/57008952/124316245-9a38c380-db75-11eb-9bad-d248e002fd21.png)	 |   `MP_001`	| **Grand Bazaar** | !ALL-GAMEMODES! | !VEHICLE-GAMEMODES! |
 |   ![image](https://user-images.githubusercontent.com/57008952/124316273-a3c22b80-db75-11eb-86fc-ad43486a6b61.png)	 |   `MP_003`	| **Teheran Highway** | !ALL-GAMEMODES! | !VEHICLE-GAMEMODES! |
@@ -33,10 +33,11 @@ The following maps are currently supported in this commit.
 |   ![image](https://user-images.githubusercontent.com/57008952/124316976-b8eb8a00-db76-11eb-8207-addf58c94317.png) 	|   `XP5_003`	| **Kiasar Railroad** | !ALL-GAMEMODES! | !VEHICLE-GAMEMODES! |
 |   ![image](https://user-images.githubusercontent.com/57008952/124316988-bee16b00-db76-11eb-96f4-fc714fcf6fce.png) 	|   `XP5_004`	| **Sabalan Pipeline** | !ALL-GAMEMODES! | !VEHICLE-GAMEMODES! |
 
-The following maps can be played with the mod from keku645 (https://github.com/keku645/vu-all-gamemodes-in-all-maps)
-CAREFUL: Not all modes that are possible are supported on them!
+The following maps can be played with the [mod](https://github.com/keku645/vu-all-gamemodes-in-all-maps) from keku645.
 
-|   	   	| Technical Name | Name | supported gamemodes |   supported gamemodes with Vehicles |
+<b>CAREFUL: Not all modes that are possible are supported on them!</b>
+
+|   	   	| Technical Name | Name | Supported Gamemodes |   Supported Gamemodes with Vehicles |
 |---	|---	|---	|---	|---	|
 |  ---	|   `SP_Villa`	| **Kaffarov** | !ALL-GAMEMODES! | !VEHICLE-GAMEMODES! |
 |  ---	|   `SP_Valley`	| **Valley** | !ALL-GAMEMODES! | !VEHICLE-GAMEMODES! |
@@ -45,4 +46,4 @@ CAREFUL: Not all modes that are possible are supported on them!
 |  ---	|   `COOP_006`	| **Hit and Run** | !ALL-GAMEMODES! | !VEHICLE-GAMEMODES! |
 
 ### Help to expand the list
-We are still missing certain gamemodes on certain maps, help us expanding this list by exporting your traces (with the export_traces.exe) and sending it to us on discort or on any other cahnnel.
+We are still missing certain gamemodes on certain maps, help us expanding this list by exporting your traces (with the export_traces.exe) and sending it to us on Discord or on any other channel.

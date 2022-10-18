@@ -2,12 +2,12 @@ import sys
 
 sys.path.insert(1, "../")
 
-from addons.root import go_back_to_root, select_all_tables
+from addons.gets import get_all_tables, get_to_root
 
 
 def clearAllPaths() -> None:
-    go_back_to_root()
-    connection, cursor = select_all_tables()
+    get_to_root()
+    connection, cursor = get_all_tables()
     content = cursor.fetchall()
     ignoreList = ["sqlite_sequence", "FB_Permissions", "FB_Config_Trace", "FB_Settings"]
 
