@@ -13,7 +13,7 @@ First off, thanks for taking the time to contribute!
 
 #### Code convention:
 
-  * Tabs are use for indexing. Don't use spaces.
+  * Tabs are used for indexing. Don't use spaces.
   * Don't use semicolons (`;`)
   * Put a space after commas `,`
   * Put spaces around binary operators (`a + b`)
@@ -32,7 +32,7 @@ First off, thanks for taking the time to contribute!
 #### Console output:
 
   As there is no debugger, we heavily rely on prints. For that we use the class Logger, which shows which class
-  printed the message, as well as adds ability to disable prints per class or disabling all prints in production.
+  printed the message, as well as adds the ability to disable prints per class or disabling all prints in production.
   Each class instantiates its own Logger object with its class name and an enabled flag. For testing, you can set that flag
   to true, but remember to disable it before pushing it.
   Never use the default `print` function.
@@ -53,7 +53,7 @@ First off, thanks for taking the time to contribute!
   VEXT player objects can also cause problems when keeping their references. To avoid that, save the player id or name,
   and look for the player object with `PlayerManager:GetPlayerById()` or `PlayerManager:GetPlayerByName()` when
   needed. If you
-  are using ids as an index you should keep in mind that these ids aren't unique, so when a player disconnects the id
+  are using ids as an index, you should keep in mind that these ids aren't unique, so when a player disconnects the id
   gets reassigned to the next player that joins. You should subscribe to the player deleted or destroyed events and
   clear the necessary data.
 
@@ -61,13 +61,13 @@ First off, thanks for taking the time to contribute!
 
   In RM, between WebUI and the logic we have a "presenter" layer. Files located in `ext/Client/UI` manage UI updates
   and follow a similar structure as WebUI one, where there are different views that hold different elements.
-  By default you dont need to touch the client-sides LUA file, because the data will only forwarded to the WebUI. Here, all forwards will be handled by JavaScript.
+  By default you don't need to touch the client-sides LUA file, because the data will only be forwarded to the WebUI. Here, all forwards will be handled by JavaScript.
   Logic classes have callbacks that the UI classes can register to, and call WebUI with the necessary info. This JS
-  calls are throttled by a class, WebUpdater, preventing spams and derived performance issues.
+  calls are throttled by a class, WebUpdater, preventing spam and derived performance issues.
 
 #### Resetting of variables and DCs
 
-  When working on LUA always keep in mind that after a round end everything has to be properly reset. For this we have
+  When working on LUA always keep in mind that after a round ends everything has to be properly reset. For this we have
   the function `OnResetData`, which you should use to reset the variables that need to be defaulted or cleared and
   all references to DataContainers or Frostbite entities. To avoid repetition, we use `ResetVars`
   function in each class that sets the default value for resettable variables. This function should be called both in
@@ -109,25 +109,16 @@ TODO
 
 ## 1.2 Productivity
 
-Debugging and testing can become time consuming, specially with LUA. There are some ways to reduce wasted time like
+Debugging and testing can become time consuming, especially with LUA. There are some ways to reduce wasted time like
 loading times or finding the root of a problem.
 
-First of all, having BF3 installed on an SSD is a must. Loading times will decrease greatly. High tickrate will
+First of all, having BF3 installed on an SSD is a must. Loading times will decrease greatly. High tick rate will
 improve your loading times as well, and you should work on maps that are faster to load. DLC maps are faster than
 vanilla, and if you are not running RM Ziba Tower map is one of the fastest, if not the fastest. You can
-add your server id with the VU shortcut `vu://join/<server-id>` (replace `<server-id>` with the guid printed on the server console),
+add your server id with the VU shortcut `vu://join/<server-id>` (replace `<server-id>` with the GUID printed on the server console),
 so your client will autoconnect to your server as soon as you log in.
 
-Secondly, get yourself an RCON client like Procon. It's a server management tool that lets you, along other things,
-change server settings easily. VU adds some extra options, like a mod reload command (`modList.reloadExtensions`).
-This command is really useful, it allows hot reloading (reloading the mod on the fly). But keep in mind that hot
-reloading means that everything is reinstantiated. If your changes rely on patching something when it loads or
-something that requires a reload you should follow the command with a round restart (there's a button for that).
-Hot reloading is not necessary if you updated `ui.vuic` file, but the client needs to reconnect in order to download
-the new UI file, when you dont update the client file on the location `%localappdata%\VeniceUnleashed\mods\fun-bots\ui.vuic`.
-The best solution is, to use our UI compiler-script located at `Binary/CompileUI.bat` - Here the client file will always
-refreshed and the client dont needs any reconnects.
-As stated previously, you should remove references to DCs, otherwise hot reloading will crash your client or server.
+Secondly, get yourself an RCON client like Procon. It's a server management tool that lets you, along with other things, change server settings easily. VU adds some extra options, like a mod reload command (`modList.reloadExtensions`). This command is really useful, it allows hot reloading (reloading the mod on the fly). But keep in mind that hot reloading means that everything is reinstantiated. If your changes rely on patching something when it loads or something that requires a reload, you should follow the command with a round restart (there's a button for that). Hot reloading is not necessary if you updated `ui.vuic` file, but the client needs to reconnect in order to download the new UI file, when you don't update the client file on the location `%localappdata%\VeniceUnleashed\mods\fun-bots\ui.vuic`. The best solution is, to use our UI compiler-script located at `Binary/CompileUI.bat` - Here the client file will always refreshed and the client doesn't need any reconnects. As stated previously, you should remove references to DCs, otherwise hot reloading will crash your client or server.
 
 When working with DCs or a system that doesn't need RM functionalities, it's usually better to create a separate test
 mod, as RM takes longer to load and doesn't support fast loading maps like Ziba Tower.

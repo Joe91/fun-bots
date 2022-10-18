@@ -1,10 +1,10 @@
-[![Support Server](https://img.shields.io/discord/862736286774198322.svg?label=Discord&logo=Discord&colorB=7289da&style=for-the-badge)](https://discord.gg/K44VsQsKnx)
+[![Support Server](https://img.shields.io/discord/862736286774198322.svg?label=Discord&logo=Discord&colorB=7289da&style=for-the-badge)](https://discord.com/invite/FKamccAEqz)
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg?style=for-the-badge)](https://www.paypal.me/joe91de)
 ![Image](https://img.shields.io/github/downloads/Joe91/fun-bots/total?style=for-the-badge)
 ![Image](https://img.shields.io/github/stars/Joe91/fun-bots?style=for-the-badge)
 
 ## Welcome to the changelogs for release **V2.6.2**
-This is the changelog for the version V2.6.2. Don't forget to [join us on Discord](https://discord.funbots.dev)
+This is the changelog for the version V2.6.2. Don't forget to [join us on Discord](https://discord.com/invite/FKamccAEqz)
 
 ## Changelog
 
@@ -15,7 +15,7 @@ This is the changelog for the version V2.6.2. Don't forget to [join us on Discor
 * add Japanese and Portuguese
 * massive rework of all python-scripts (WIP - by João Vitor)
 * temporary workaround for not working collition-raycasts
-* new setting and propability for snipers to attack choppers
+* new setting and probability for snipers to attack choppers
 * limit number of Bots in a vehicle (new config-value)
 
 ### Bug fixes
