@@ -1039,23 +1039,21 @@ function NodeCollection:Load(p_LevelName, p_GameMode)
 		self.mapName), 5.5)
 end
 
-function NodeCollection:Update()
+function NodeCollection:UpdateSaving()
 	if self.m_SaveActive then
 		self:ProcessAllDataToSave()
+		return true
 	end
+	return false
 end
 
 function NodeCollection:ProcessAllDataToSave()
-	if self.m_PrepareToSave then
-		self.m_QueryStrings = {}
-		self.m_StateMachine = 0
-		self.m_QueryStringsDone = 0
-		self.m_PrepareToSave = false
-	end
-
 	print(self.m_StateMachine)
 
 	if self.m_StateMachine == 0 then
+		self.m_QueryStrings = {}
+		self.m_QueryStringsDone = 0
+
 		ChatManager:Yell(Language:I18N('Save in progress...'), 1)
 
 		self.m_WaypointCount = #self.waypoints
@@ -1255,8 +1253,8 @@ end
 
 function NodeCollection:Save()
 	if not self.m_SaveActive then
+		self.m_StateMachine = 0
 		self.m_SaveActive = true
-		self.m_PrepareToSave = true
 	end
 end
 

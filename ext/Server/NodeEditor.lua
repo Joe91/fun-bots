@@ -804,17 +804,21 @@ end
 -- =============================================
 function NodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	-- Only do math on presimulation UpdatePass, don't bother if debugging is off
-	if p_UpdatePass ~= UpdatePass.UpdatePass_PostFrame then
+	if p_UpdatePass ~= UpdatePass.UpdatePass_PreSim then
 		return
 	end
-
-	m_NodeCollection:Update();
 end
 
 ---VEXT Shared Engine:Update Event
 ---@param p_DeltaTime number
 ---@param p_SimulationDeltaTime number
 function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
+
+	-- SAVING
+	if m_NodeCollection:UpdateSaving() then
+		return
+	end
+
 	-- TRACE-Handling
 	for l_PlayerGuid, l_Active in pairs(self.m_ActiveTracePlayers) do
 		local s_Player = PlayerManager:GetPlayerByOnlineId(l_PlayerGuid)
