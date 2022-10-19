@@ -760,8 +760,6 @@ function NodeEditor:OnLevelLoaded(p_LevelName, p_GameMode)
 	end
 
 	self:Log('Load -> Stale Nodes: %d', s_Counter)
-
-	m_NodeCollection:Save()
 end
 
 ---VEXT Shared Level:Destroy Event

@@ -1048,7 +1048,6 @@ function NodeCollection:UpdateSaving()
 end
 
 function NodeCollection:ProcessAllDataToSave()
-	print(self.m_StateMachine)
 	if self.m_StateMachine == 0 then
 		self.m_QueryStrings = {}
 		self.m_QueryStringsDone = 0
@@ -1141,7 +1140,6 @@ function NodeCollection:ProcessAllDataToSave()
 			m_Logger:Warning('WARNING! More than two disconnected nodes were found!')
 			m_Logger:Warning(m_Utilities:dump(s_Disconnects, true, 2))
 		end
-	elseif self.m_StateMachine == 2 then
 
 		self.m_QueriesDone = 0
 		self.m_QueriesTotal = #self.m_BatchQueries
@@ -1149,7 +1147,7 @@ function NodeCollection:ProcessAllDataToSave()
 			self.mapName .. '_table (pathIndex, pointIndex, transX, transY, transZ, inputVar, data) VALUES '
 		self.m_Values = ""
 
-	elseif self.m_StateMachine == 3 then
+	elseif self.m_StateMachine == 2 then
 		if self.m_QueriesTotal > self.m_QueriesDone then
 
 			local s_StringLenght = #self.m_InsertQuery
@@ -1178,7 +1176,7 @@ function NodeCollection:ProcessAllDataToSave()
 
 			return -- do this again
 		end
-	elseif self.m_StateMachine == 4 then
+	elseif self.m_StateMachine == 3 then
 		if not SQL:Open() then
 			m_Logger:Error('Could not open database')
 			self.m_SaveActive = false
@@ -1214,7 +1212,7 @@ function NodeCollection:ProcessAllDataToSave()
 			self.m_SaveActive = false
 			return
 		end
-	elseif self.m_StateMachine == 5 then
+	elseif self.m_StateMachine == 4 then
 
 		local s_QueryIndex = 1 + self.m_QueryStringsDone
 
@@ -1228,7 +1226,7 @@ function NodeCollection:ProcessAllDataToSave()
 			return -- do this again
 		end
 
-	elseif self.m_StateMachine == 6 then
+	elseif self.m_StateMachine == 5 then
 		-- Fetch all rows from the table.
 		local s_Results = SQL:Query('SELECT * FROM ' .. self.mapName .. '_table')
 
@@ -1236,6 +1234,7 @@ function NodeCollection:ProcessAllDataToSave()
 			m_Logger:Error('NodeCollection:Save -> Failed to double-check table entries for map [' ..
 				self.mapName .. ']: ' .. SQL:Error())
 			ChatManager:Yell(Language:I18N('Failed to execute query: %s', SQL:Error()), 5.5)
+			self.m_SaveActive = false
 			return
 		end
 
