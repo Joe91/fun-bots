@@ -38,9 +38,7 @@ def createLanguage(lang: str) -> None:
         file = template.readlines()
 
     file[0] = file[0].replace("'xx_XX'", f"'{lang}_{lang.upper()}'")
-    file[2] = file[2].replace(
-        "English", [k for k, v in langs_dict.items() if v == lang][0].capitalize()
-    )
+    file[2] = file[2].replace("English", lang_name)
     file[3] = file[3].replace("Unknown", "GoogleTranslator")
 
     print(f"\nTranslating DEFAULT.js to {lang_name}...")
