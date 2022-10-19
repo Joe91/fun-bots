@@ -5,7 +5,7 @@ NodeCollection = class "NodeCollection"
 ---@type Utilities
 local m_Utilities = require('__shared/Utilities.lua')
 ---@type Logger
-local m_Logger = Logger("NodeCollection", true)
+local m_Logger = Logger("NodeCollection", Debug.Server.NODECOLLECTION)
 
 function NodeCollection:__init(p_DisableServerEvents)
 	self:InitTables()
@@ -1053,6 +1053,8 @@ function NodeCollection:ProcessAllDataToSave()
 		self.m_PrepareToSave = false
 	end
 
+	print(self.m_StateMachine)
+
 	if self.m_StateMachine == 0 then
 		ChatManager:Yell(Language:I18N('Save in progress...'), 1)
 
@@ -1150,28 +1152,36 @@ function NodeCollection:ProcessAllDataToSave()
 		self.m_HasError = false
 		self.m_InsertQuery = 'INSERT INTO ' ..
 			self.mapName .. '_table (pathIndex, pointIndex, transX, transY, transZ, inputVar, data) VALUES '
+		self.m_Values = ""
 
 	elseif self.m_StateMachine == 30 then
 		if self.m_QueriesTotal > self.m_QueriesDone and not self.m_HasError then
 
 			local s_StringLenght = #self.m_InsertQuery
+			local s_QueryCount = 0
 
-			local s_Iterator = 1 + self.m_QueriesDone
-			local s_Values = self.m_BatchQueries[s_Iterator]
-			s_StringLenght = s_StringLenght + #s_Values
-			s_Iterator = s_Iterator + 1
-			while s_Iterator <= self.m_QueriesTotal and (s_StringLenght + #self.m_BatchQueries[s_Iterator] + 1) < 230000 do
-				local s_NewString = self.m_BatchQueries[s_Iterator]
-				s_Values = s_Values .. ',' .. s_NewString
+			if self.m_Values == "" then
+				self.m_Values = self.m_BatchQueries[self.m_QueriesDone + 1]
+				self.m_QueriesDone = self.m_QueriesDone + 1
+			end
+			s_StringLenght = s_StringLenght + #self.m_Values
+			while self.m_QueriesDone < self.m_QueriesTotal and
+				(s_StringLenght + #self.m_BatchQueries[self.m_QueriesDone + 1] + 1) < 230000 do
+				local s_NewString = self.m_BatchQueries[self.m_QueriesDone + 1]
+				self.m_Values = self.m_Values .. ',' .. s_NewString
 				s_StringLenght = s_StringLenght + #s_NewString + 1
-				s_Iterator = s_Iterator + 1
+				self.m_QueriesDone = self.m_QueriesDone + 1
+				s_QueryCount = s_QueryCount + 1
+				if s_QueryCount > 100 then -- only do 100 querys per cycle
+					return
+				end
 			end
 
-			table.insert(self.m_QueryStrings, self.m_InsertQuery .. s_Values)
+			table.insert(self.m_QueryStrings, self.m_InsertQuery .. self.m_Values)
 
-			self.m_QueriesDone = s_Iterator - 1
+			self.m_Values = ""
 
-			self.m_StateMachine = 21 -- do this again
+			self.m_StateMachine = 25 -- do this again
 		end
 	elseif self.m_StateMachine == 40 then
 		if not SQL:Open() then
@@ -1238,7 +1248,6 @@ function NodeCollection:ProcessAllDataToSave()
 
 		self.m_SaveActive = false
 	end
-	print(self.m_StateMachine)
 
 	self.m_StateMachine = self.m_StateMachine + 1
 
