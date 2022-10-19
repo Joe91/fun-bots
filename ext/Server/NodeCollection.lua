@@ -1049,35 +1049,33 @@ end
 
 function NodeCollection:ProcessAllDataToSave()
 	print(self.m_StateMachine)
-
 	if self.m_StateMachine == 0 then
 		self.m_QueryStrings = {}
 		self.m_QueryStringsDone = 0
 
 		ChatManager:Yell(Language:I18N('Save in progress...'), 1)
 
-		self.m_WaypointCount = #self.waypoints
 		self.m_PathCount = 0
-		self.m_LastPathIndex = -1
-		self.m_Orphans = {}
-		self.m_Disconnects = {}
 		self.m_BatchQueries = {}
 
-		m_Logger:Write('NodeCollection:Save -> Processing: ' .. (self.m_WaypointCount))
+		m_Logger:Write('NodeCollection:Save -> Processing: ' .. (#self.waypoints))
 	elseif self.m_StateMachine == 1 then
+		local s_LastPathIndex = -1
+		local s_Orphans = {}
+		local s_Disconnects = {}
 
 		for _, l_Waypoint in pairs(self.waypoints) do
 			-- keep track of disconnected nodes, only two should exist
 			-- the first node and the last node
 			if l_Waypoint.Previous == false and l_Waypoint.Next ~= false then
-				table.insert(self.m_Disconnects, l_Waypoint)
+				table.insert(s_Disconnects, l_Waypoint)
 			elseif l_Waypoint.Previous ~= false and l_Waypoint.Next == false then
-				table.insert(self.m_Disconnects, l_Waypoint)
+				table.insert(s_Disconnects, l_Waypoint)
 			end
 
 			-- skip orphaned nodes
 			if l_Waypoint.Previous == false and l_Waypoint.Next == false then
-				table.insert(self.m_Orphans, l_Waypoint)
+				table.insert(s_Orphans, l_Waypoint)
 			else
 				local s_WaypointData = {}
 
@@ -1119,9 +1117,9 @@ function NodeCollection:ProcessAllDataToSave()
 					end
 				end
 
-				if l_Waypoint.PathIndex ~= self.m_LastPathIndex then
+				if l_Waypoint.PathIndex ~= s_LastPathIndex then
 					self.m_PathCount = self.m_PathCount + 1
-					self.m_LastPathIndex = l_Waypoint.PathIndex
+					s_LastPathIndex = l_Waypoint.PathIndex
 				end
 
 				table.insert(self.m_BatchQueries, '(' .. table.concat({
@@ -1135,25 +1133,24 @@ function NodeCollection:ProcessAllDataToSave()
 				}, ',') .. ')')
 			end
 		end
-	elseif self.m_StateMachine == 2 then
 		m_Logger:Write('Save -> Waypoints to write: ' .. (#self.m_BatchQueries))
-		m_Logger:Write('Save -> Orphans: ' .. (#self.m_Orphans) .. ' (Removed)')
-		m_Logger:Write('Save -> Disconnected: ' .. (#self.m_Disconnects) .. ' (Expected: 2)')
+		m_Logger:Write('Save -> Orphans: ' .. (#s_Orphans) .. ' (Removed)')
+		m_Logger:Write('Save -> Disconnected: ' .. (#s_Disconnects) .. ' (Expected: 2)')
 
-		if #self.m_Disconnects > 2 then
+		if #s_Disconnects > 2 then
 			m_Logger:Warning('WARNING! More than two disconnected nodes were found!')
-			m_Logger:Warning(m_Utilities:dump(self.m_Disconnects, true, 2))
+			m_Logger:Warning(m_Utilities:dump(s_Disconnects, true, 2))
 		end
+	elseif self.m_StateMachine == 2 then
 
 		self.m_QueriesDone = 0
 		self.m_QueriesTotal = #self.m_BatchQueries
-		self.m_HasError = false
 		self.m_InsertQuery = 'INSERT INTO ' ..
 			self.mapName .. '_table (pathIndex, pointIndex, transX, transY, transZ, inputVar, data) VALUES '
 		self.m_Values = ""
 
 	elseif self.m_StateMachine == 3 then
-		if self.m_QueriesTotal > self.m_QueriesDone and not self.m_HasError then
+		if self.m_QueriesTotal > self.m_QueriesDone then
 
 			local s_StringLenght = #self.m_InsertQuery
 			local s_QueryCount = 0
@@ -1184,15 +1181,18 @@ function NodeCollection:ProcessAllDataToSave()
 	elseif self.m_StateMachine == 4 then
 		if not SQL:Open() then
 			m_Logger:Error('Could not open database')
+			self.m_SaveActive = false
 			return
 		end
 		if self.mapName == '' or self.mapName == nil then
 			m_Logger:Error('Mapname not set. Abort Save')
+			self.m_SaveActive = false
 			return
 		end
 
 		if not SQL:Query('DROP TABLE IF EXISTS ' .. self.mapName .. '_table') then
 			m_Logger:Error('Failed to reset table for map [' .. self.mapName .. ']: ' .. SQL:Error())
+			self.m_SaveActive = false
 			return
 		end
 
@@ -1211,6 +1211,7 @@ function NodeCollection:ProcessAllDataToSave()
 
 		if not SQL:Query(s_Query) then
 			m_Logger:Error('Failed to create table for map [' .. self.mapName .. ']: ' .. SQL:Error())
+			self.m_SaveActive = false
 			return
 		end
 	elseif self.m_StateMachine == 5 then
@@ -1220,6 +1221,7 @@ function NodeCollection:ProcessAllDataToSave()
 		if self.m_QueryStrings[s_QueryIndex] then
 			if not SQL:Query(self.m_QueryStrings[s_QueryIndex]) then
 				m_Logger:Write('Save -> Batch query failed [' .. self.m_QueriesDone .. ']: ' .. SQL:Error())
+				self.m_SaveActive = false
 				return
 			end
 			self.m_QueryStringsDone = s_QueryIndex
