@@ -1064,7 +1064,7 @@ function NodeCollection:ProcessAllDataToSave()
 		self.m_BatchQueries = {}
 
 		m_Logger:Write('NodeCollection:Save -> Processing: ' .. (self.m_WaypointCount))
-	elseif self.m_StateMachine == 10 then
+	elseif self.m_StateMachine == 1 then
 
 		for _, l_Waypoint in pairs(self.waypoints) do
 			-- keep track of disconnected nodes, only two should exist
@@ -1135,7 +1135,7 @@ function NodeCollection:ProcessAllDataToSave()
 				}, ',') .. ')')
 			end
 		end
-	elseif self.m_StateMachine == 20 then
+	elseif self.m_StateMachine == 2 then
 		m_Logger:Write('Save -> Waypoints to write: ' .. (#self.m_BatchQueries))
 		m_Logger:Write('Save -> Orphans: ' .. (#self.m_Orphans) .. ' (Removed)')
 		m_Logger:Write('Save -> Disconnected: ' .. (#self.m_Disconnects) .. ' (Expected: 2)')
@@ -1152,7 +1152,7 @@ function NodeCollection:ProcessAllDataToSave()
 			self.mapName .. '_table (pathIndex, pointIndex, transX, transY, transZ, inputVar, data) VALUES '
 		self.m_Values = ""
 
-	elseif self.m_StateMachine == 30 then
+	elseif self.m_StateMachine == 3 then
 		if self.m_QueriesTotal > self.m_QueriesDone and not self.m_HasError then
 
 			local s_StringLenght = #self.m_InsertQuery
@@ -1164,13 +1164,13 @@ function NodeCollection:ProcessAllDataToSave()
 			end
 			s_StringLenght = s_StringLenght + #self.m_Values
 			while self.m_QueriesDone < self.m_QueriesTotal and
-				(s_StringLenght + #self.m_BatchQueries[self.m_QueriesDone + 1] + 1) < 230000 do
+				(s_StringLenght + #self.m_BatchQueries[self.m_QueriesDone + 1] + 1) < 230000 do -- max: 230000
 				local s_NewString = self.m_BatchQueries[self.m_QueriesDone + 1]
 				self.m_Values = self.m_Values .. ',' .. s_NewString
 				s_StringLenght = s_StringLenght + #s_NewString + 1
 				self.m_QueriesDone = self.m_QueriesDone + 1
 				s_QueryCount = s_QueryCount + 1
-				if s_QueryCount > 100 then -- only do 100 querys per cycle
+				if s_QueryCount >= 100 then -- only do 100 querys per cycle
 					return
 				end
 			end
@@ -1179,9 +1179,9 @@ function NodeCollection:ProcessAllDataToSave()
 
 			self.m_Values = ""
 
-			self.m_StateMachine = 25 -- do this again
+			return -- do this again
 		end
-	elseif self.m_StateMachine == 40 then
+	elseif self.m_StateMachine == 4 then
 		if not SQL:Open() then
 			m_Logger:Error('Could not open database')
 			return
@@ -1213,7 +1213,7 @@ function NodeCollection:ProcessAllDataToSave()
 			m_Logger:Error('Failed to create table for map [' .. self.mapName .. ']: ' .. SQL:Error())
 			return
 		end
-	elseif self.m_StateMachine == 50 then
+	elseif self.m_StateMachine == 5 then
 
 		local s_QueryIndex = 1 + self.m_QueryStringsDone
 
@@ -1223,10 +1223,10 @@ function NodeCollection:ProcessAllDataToSave()
 				return
 			end
 			self.m_QueryStringsDone = s_QueryIndex
-			self.m_StateMachine = 41 -- do this again
+			return -- do this again
 		end
 
-	elseif self.m_StateMachine == 60 then
+	elseif self.m_StateMachine == 6 then
 		-- Fetch all rows from the table.
 		local s_Results = SQL:Query('SELECT * FROM ' .. self.mapName .. '_table')
 
