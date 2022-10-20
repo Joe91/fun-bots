@@ -14,6 +14,7 @@ def clearAllPaths() -> None:
         print("Clear " + item[1])
         cursor.execute("DROP TABLE IF EXISTS " + item[1])
 
+    cursor.execute("vacuum")
     connection.commit()
     connection.close()
 

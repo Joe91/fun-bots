@@ -13,6 +13,7 @@ def test_clear_settings(session):
         print("Remove " + tablename)
         session.execute("DROP TABLE IF EXISTS " + tablename)
 
+    session.execute("vacuum")
     session.execute(
         """
         SELECT name FROM sqlite_master WHERE type='table'

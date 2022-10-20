@@ -21,9 +21,11 @@ def test_clear_all_paths(session):
         print("Clear " + item[1])
         session.execute("DROP TABLE IF EXISTS " + item[1])
 
+    session.execute("vacuum")
     session.connection.commit()
 
     session.execute(sql_instruction)
     remaining_tables = [item[1] for item in session.fetchall()]
+    ignoreList.remove("sqlite_sequence")
 
     assert sorted(remaining_tables) == sorted(ignoreList)
