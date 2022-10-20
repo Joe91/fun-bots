@@ -67,7 +67,7 @@ function NodeEditor:OnAddNode(p_Player)
 	local s_Result, s_Message = m_NodeCollection:Add(p_Player.onlineId)
 
 	if not s_Result then
-		self:Log(s_Message)
+		self:Log(p_Player, s_Message)
 		return false
 	end
 
@@ -98,18 +98,18 @@ end
 function NodeEditor:OnAddMcom(p_Player)
 
 	if not p_Player.soldier then
-		self:Log('Player must be alive')
+		self:Log(p_Player, 'Player must be alive')
 		return
 	end
 
 	local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
 
 	if #s_Selection ~= 1 then
-		self:Log('Must select one node')
+		self:Log(p_Player, 'Must select one node')
 		return false
 	end
 
-	self:Log('Updating %d Possible Waypoints', (#s_Selection))
+	self:Log(p_Player, 'Updating %d Possible Waypoints', (#s_Selection))
 
 	for i = 1, #s_Selection do
 		local action = {
@@ -120,7 +120,7 @@ function NodeEditor:OnAddMcom(p_Player)
 			pitch = p_Player.input.authoritativeAimingPitch
 		}
 		s_Selection[i].Data.Action = action
-		self:Log('Updated Waypoint: %s', s_Selection[i].ID)
+		self:Log(p_Player, 'Updated Waypoint: %s', s_Selection[i].ID)
 	end
 
 	return true
@@ -129,18 +129,18 @@ end
 function NodeEditor:OnAddVehicle(p_Player)
 
 	if not p_Player.soldier then
-		self:Log('Player must be alive')
+		self:Log(p_Player, 'Player must be alive')
 		return
 	end
 
 	local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
 
 	if #s_Selection ~= 1 then
-		self:Log('Must select one node')
+		self:Log(p_Player, 'Must select one node')
 		return
 	end
 
-	self:Log('Updating %d Possible Waypoints', (#s_Selection))
+	self:Log(p_Player, 'Updating %d Possible Waypoints', (#s_Selection))
 
 	for i = 1, #s_Selection do
 		local action = {
@@ -151,7 +151,7 @@ function NodeEditor:OnAddVehicle(p_Player)
 			pitch = p_Player.input.authoritativeAimingPitch
 		}
 		s_Selection[i].Data.Action = action
-		self:Log('Updated Waypoint: %s', s_Selection[i].ID)
+		self:Log(p_Player, 'Updated Waypoint: %s', s_Selection[i].ID)
 	end
 
 	return
@@ -161,19 +161,19 @@ function NodeEditor:OnExitVehicle(p_Player, p_Args)
 	self.m_CommoRoseActive = false
 
 	if not p_Player.soldier then
-		self:Log('Player must be alive')
+		self:Log(p_Player, 'Player must be alive')
 		return
 	end
 
 	local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
 
 	if #s_Selection ~= 1 then
-		self:Log('Must select one node')
+		self:Log(p_Player, 'Must select one node')
 		return
 	end
 
 	local s_Data = p_Args[1] or "false"
-	self:Log('Exit Vehicle (type): %s', g_Utilities:dump(s_Data, true))
+	self:Log(p_Player, 'Exit Vehicle (type): %s', g_Utilities:dump(s_Data, true))
 
 	local s_OnlyPassengers = not (s_Data:lower() == "false" or s_Data == "0")
 	print(s_OnlyPassengers)
@@ -186,7 +186,7 @@ function NodeEditor:OnExitVehicle(p_Player, p_Args)
 			time = 0.5
 		}
 		s_Selection[i].Data.Action = action
-		self:Log('Updated Waypoint: %s', s_Selection[i].ID)
+		self:Log(p_Player, 'Updated Waypoint: %s', s_Selection[i].ID)
 	end
 
 	return
@@ -194,17 +194,17 @@ end
 
 function NodeEditor:OnAddVehiclePath(p_Player, p_Args)
 	local s_Data = table.concat(p_Args or { "land" }, ' ')
-	self:Log('Add Vehicle (type): %s', g_Utilities:dump(s_Data, true))
+	self:Log(p_Player, 'Add Vehicle (type): %s', g_Utilities:dump(s_Data, true))
 
 	local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
 
 	if #s_Selection < 1 then
-		self:Log('Must select at least one node')
+		self:Log(p_Player, 'Must select at least one node')
 		return false
 	end
 
 	local s_DonePaths = {}
-	self:Log('Updating %d Possible Waypoints', (#s_Selection))
+	self:Log(p_Player, 'Updating %d Possible Waypoints', (#s_Selection))
 
 	for i = 1, #s_Selection do
 		local s_Waypoint = m_NodeCollection:GetFirst(s_Selection[i].PathIndex)
@@ -225,7 +225,7 @@ function NodeEditor:OnAddVehiclePath(p_Player, p_Args)
 			if not s_InTable then
 				table.insert(s_Vehicles, s_Data)
 				s_Waypoint.Data.Vehicles = s_Vehicles
-				self:Log('Updated Waypoint: %s', s_Waypoint.ID)
+				self:Log(p_Player, 'Updated Waypoint: %s', s_Waypoint.ID)
 			end
 		end
 	end
@@ -237,17 +237,17 @@ end
 function NodeEditor:OnAddObjective(p_Player, p_Args)
 	local s_Data = table.concat(p_Args or {}, ' ')
 	s_Data = s_Data:lower()
-	self:Log('Add Objective (data): %s', g_Utilities:dump(s_Data, true))
+	self:Log(p_Player, 'Add Objective (data): %s', g_Utilities:dump(s_Data, true))
 
 	local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
 
 	if #s_Selection < 1 then
-		self:Log('Must select at least one node')
+		self:Log(p_Player, 'Must select at least one node')
 		return false
 	end
 
 	local s_DonePaths = {}
-	self:Log('Updating %d Possible Waypoints', (#s_Selection))
+	self:Log(p_Player, 'Updating %d Possible Waypoints', (#s_Selection))
 
 	for i = 1, #s_Selection do
 		local s_Waypoint = m_NodeCollection:GetFirst(s_Selection[i].PathIndex)
@@ -268,7 +268,7 @@ function NodeEditor:OnAddObjective(p_Player, p_Args)
 			if not s_InTable then
 				table.insert(s_Objectives, s_Data)
 				s_Waypoint.Data.Objectives = s_Objectives
-				self:Log('Updated Waypoint: %s', s_Waypoint.ID)
+				self:Log(p_Player, 'Updated Waypoint: %s', s_Waypoint.ID)
 			end
 		end
 	end
@@ -279,17 +279,17 @@ end
 function NodeEditor:OnRemoveObjective(p_Player, p_Args)
 	local s_Data = table.concat(p_Args or {}, ' ')
 	s_Data = s_Data:lower()
-	self:Log('Remove Objective (data): %s', g_Utilities:dump(s_Data, true))
+	self:Log(p_Player, 'Remove Objective (data): %s', g_Utilities:dump(s_Data, true))
 
 	local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
 
 	if #s_Selection < 1 then
-		self:Log('Must select at least one node')
+		self:Log(p_Player, 'Must select at least one node')
 		return false
 	end
 
 	local s_DonePaths = {}
-	self:Log('Updating %d Possible Waypoints', (#s_Selection))
+	self:Log(p_Player, 'Updating %d Possible Waypoints', (#s_Selection))
 
 	for i = 1, #s_Selection do
 		local s_Waypoint = m_NodeCollection:GetFirst(s_Selection[i].PathIndex)
@@ -307,7 +307,7 @@ function NodeEditor:OnRemoveObjective(p_Player, p_Args)
 			end
 
 			s_Waypoint.Data.Objectives = s_NewObjectives
-			self:Log('Updated Waypoint: %s', s_Waypoint.ID)
+			self:Log(p_Player, 'Updated Waypoint: %s', s_Waypoint.ID)
 		end
 	end
 
@@ -316,71 +316,71 @@ end
 
 function NodeEditor:OnRemoveData(p_Player)
 	if not p_Player.soldier then
-		self:Log('Player must be alive')
+		self:Log(p_Player, 'Player must be alive')
 		return
 	end
 
 	local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
 
 	if #s_Selection < 1 then
-		self:Log('Must select at least one node')
+		self:Log(p_Player, 'Must select at least one node')
 		return
 	end
 
-	self:Log('Updating %d Possible Waypoints', (#s_Selection))
+	self:Log(p_Player, 'Updating %d Possible Waypoints', (#s_Selection))
 
 	for i = 1, #s_Selection do
 		s_Selection[i].Data = {}
-		self:Log('Updated Waypoint: %s', s_Selection[i].ID)
+		self:Log(p_Player, 'Updated Waypoint: %s', s_Selection[i].ID)
 	end
 end
 
 function NodeEditor:OnRemoveNode(p_Player)
 	local s_Result, s_Message = m_NodeCollection:Remove(p_Player.onlineId)
 	if not s_Result then
-		self:Log(s_Message)
+		self:Log(p_Player, s_Message)
 	end
 end
 
 function NodeEditor:OnSplitNode(p_Player)
 	local s_Result, s_Message = m_NodeCollection:SplitSelection(p_Player.onlineId)
 	if not s_Result then
-		self:Log(s_Message)
+		self:Log(p_Player, s_Message)
 	end
 end
 
 function NodeEditor:OnMergeNodes(p_Player)
 	local s_Result, s_Message = m_NodeCollection:MergeSelection(p_Player.onlineId)
 	if not s_Result then
-		self:Log(s_Message)
+		self:Log(p_Player, s_Message)
 	end
 end
 
 function NodeEditor:OnUnlinkNodes(p_Player)
 	local s_Result, s_Message = m_NodeCollection:Unlink(p_Player.onlineId)
 	if not s_Result then
-		self:Log(s_Message)
+		self:Log(p_Player, s_Message)
 	end
 end
 
 function NodeEditor:OnLinkNodes(p_Player)
 	local s_Result, s_Message = m_NodeCollection:Link(p_Player.onlineId)
 	if not s_Result then
-		self:Log(s_Message)
+		self:Log(p_Player, s_Message)
 	end
 end
 
 function NodeEditor:OnSpitNode(p_Player)
 	local s_Result, s_Message = m_NodeCollection:SplitSelection(p_Player.onlineId)
 	if not s_Result then
-		self:Log(s_Message)
+		self:Log(p_Player, s_Message)
 	end
 end
 
 function NodeEditor:OnSetInputNode(p_Player, p_Arg1, p_Arg2, p_Arg3)
 	local s_Result, s_Message = m_NodeCollection:SetInput(p_Arg1, p_Arg2, p_Arg3)
 	if not s_Result then
-		self:Log(s_Message)
+		self:Log(p_Player, s_Message)
 	end
 end
 
@@ -408,7 +408,7 @@ function NodeEditor:OnSelectBetween(p_Player)
 	local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
 
 	if #s_Selection < 1 then
-		self:Log('Must select more than one node')
+		self:Log(p_Player, 'Must select more than one node')
 		return false
 	end
 
@@ -436,7 +436,7 @@ function NodeEditor:OnSelectNext(p_Player)
 			m_NodeCollection:Select(p_Player.onlineId, s_Selection[1].Next)
 		end
 	else
-		self:Log('Must select at least one node')
+		self:Log(p_Player, 'Must select at least one node')
 	end
 end
 
@@ -448,7 +448,7 @@ function NodeEditor:OnSelectPrevious(p_Player)
 			m_NodeCollection:Select(p_Player.onlineId, s_Selection[1].Previous)
 		end
 	else
-		self:Log('Must select at least one node')
+		self:Log(p_Player, 'Must select at least one node')
 	end
 end
 
@@ -530,7 +530,7 @@ function NodeEditor:StartTrace(p_Player)
 	self.m_CustomTrace[p_Player.onlineId]:ClearSelection()
 	self.m_CustomTrace[p_Player.onlineId]:Select(nil, s_FirstWaypoint)
 
-	self:Log('Custom Trace Started')
+	self:Log(p_Player, 'Custom Trace Started')
 
 	local s_TotalTraceDistance = self.m_CustomTraceDistance[p_Player.onlineId]
 	local s_TotalTraceNodes = #self.m_CustomTrace[p_Player.onlineId]:Get()
@@ -579,7 +579,7 @@ function NodeEditor:EndTrace(p_Player)
 		self.m_CustomTrace[p_Player.onlineId]:ClearSelection()
 	end
 
-	self:Log('Custom Trace Ended')
+	self:Log(p_Player, 'Custom Trace Ended')
 end
 
 function NodeEditor:ClearTrace(p_Player)
@@ -599,7 +599,7 @@ function NodeEditor:ClearTrace(p_Player)
 			,
 			false)
 
-		self:Log('Custom Trace Cleared')
+		self:Log(p_Player, 'Custom Trace Cleared')
 	else
 		-- delete paths of selection
 		local s_PathIndexes = {}
@@ -619,7 +619,7 @@ function NodeEditor:ClearTrace(p_Player)
 					for i = 1, #s_PathWaypoints do
 						m_NodeCollection:Remove(p_Player.onlineId, s_PathWaypoints[i])
 					end
-					self:Log('Trace Nr. %d Cleared', l_PathIndex)
+					self:Log(p_Player, 'Trace Nr. %d Cleared', l_PathIndex)
 				end
 			end
 		end
@@ -632,7 +632,7 @@ end
 
 function NodeEditor:SaveTrace(p_Player, p_PathIndex)
 	if self:IsSavingOrLoading() then
-		self:Log('Operation in progress, please wait...')
+		self:Log(p_Player, 'Operation in progress, please wait...')
 		return false
 	end
 
@@ -641,7 +641,7 @@ function NodeEditor:SaveTrace(p_Player, p_PathIndex)
 	end
 
 	if self.m_CustomTrace[p_Player.onlineId] == nil then
-		self:Log('Custom Trace is empty')
+		self:Log(p_Player, 'Custom Trace is empty')
 		return false
 	end
 
@@ -720,14 +720,14 @@ function NodeEditor:SaveTrace(p_Player, p_PathIndex)
 
 	self.m_CustomTrace[p_Player.onlineId]:Clear()
 	collectgarbage('collect')
-	self:Log('Custom Trace Saved to Path: %d', p_PathIndex)
+	self:Log(p_Player, 'Custom Trace Saved to Path: %d', p_PathIndex)
 	self.m_NodeOperation = ''
 end
 
 --- COMMON EVENTS
 
 function NodeEditor:OnLevelLoaded(p_LevelName, p_GameMode)
-	self:Log('Level Load: %s %s', p_LevelName, p_GameMode)
+	self:Log(nil, 'Level Load: %s %s', p_LevelName, p_GameMode)
 
 	-- convert mapnames if needed
 	if Globals.IsTdm or Globals.IsGm or Globals.IsScavenger then
@@ -759,7 +759,7 @@ function NodeEditor:OnLevelLoaded(p_LevelName, p_GameMode)
 		end
 	end
 
-	self:Log('Load -> Stale Nodes: %d', s_Counter)
+	self:Log(nil, 'Load -> Stale Nodes: %d', s_Counter)
 end
 
 ---VEXT Shared Level:Destroy Event
@@ -1110,8 +1110,15 @@ end
 -- Functions
 -- =============================================
 
-function NodeEditor:Log(...)
-	m_Logger:Write(Language:I18N(...))
+function NodeEditor:Log(p_Player, ...)
+	local s_MessageString = Language:I18N(...)
+	m_Logger:Write(s_MessageString)
+	-- send message to client as well
+	if p_Player then
+		NetEvents:SendUnreliableToLocal('ClientNodeEditor:PrintLog', p_Player, s_MessageString)
+	else
+		NetEvents:BroadcastUnreliableLocal('ClientNodeEditor:PrintLog', s_MessageString)
+	end
 end
 
 if g_NodeEditor == nil then
