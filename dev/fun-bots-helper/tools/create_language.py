@@ -1,7 +1,5 @@
 import sys
 
-sys.path.insert(1, "../")
-
 from addons.gets import get_to_root, get_translation
 from deep_translator import GoogleTranslator
 

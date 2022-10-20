@@ -1,7 +1,3 @@
-import sys
-
-sys.path.insert(1, "../")
-
 from addons.gets import get_all_tables, get_to_root
 
 
@@ -18,7 +14,6 @@ def clearAllPaths() -> None:
         print("Clear " + item[1])
         cursor.execute("DROP TABLE IF EXISTS " + item[1])
 
-    cursor.execute("vacuum")
     connection.commit()
     connection.close()
 

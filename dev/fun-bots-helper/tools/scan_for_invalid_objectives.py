@@ -1,7 +1,4 @@
-import sys
 from os import walk
-
-sys.path.insert(1, "../")
 
 from addons.gets import get_objectives_to_rename, get_to_root
 
