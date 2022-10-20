@@ -17,6 +17,8 @@ This is the changelog for the version V2.6.2. Don't forget to [join us on Discor
 * temporary workaround for not working collition-raycasts
 * new setting and probability for snipers to attack choppers
 * limit number of Bots in a vehicle (new config-value)
+* fix Timout when saving huge paths #204
+* fix compatibility with [More Vehicles-Mod](https://github.com/KrazyIvan777/CQ-MoreVehicles)
 
 ### Bug fixes
 * fix scavenger revive

@@ -17,8 +17,6 @@ Registry = {
 		ALLOW_PLAYER_BOT_NAMES = true,
 		-- collition-raycasts are an other type of raycast. Sadly not working atm...
 		USE_COLLITION_RAYCASTS = false,
-		-- timeout to save or load maps
-		LOADING_TIMEOUT = 172800.0,
 		-- distance commands are heard by bots
 		COMMAND_DISTANCE = 20,
 		-- use load of Bundle to fix Bug of weapons disapearing (thanks to Lesley!) !!! THIS MIGHT CAUSE CRASHES !!!

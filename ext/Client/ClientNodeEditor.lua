@@ -85,6 +85,7 @@ function ClientNodeEditor:OnRegisterEvents()
 
 	NetEvents:Subscribe('UI_ClientNodeEditor_TraceData', self, self._OnUiTraceData)
 	NetEvents:Subscribe('ClientNodeEditor:DrawNodes', self, self._OnDrawNodes)
+	NetEvents:Subscribe('ClientNodeEditor:PrintLog', self, self._OnPrintServerLog)
 
 	NetEvents:Subscribe('UI_CommoRose_Action_Select', self, self._onSelectNode)
 	NetEvents:Subscribe('UI_CommoRose_Action_Remove', self, self._onRemoveNode)
@@ -138,11 +139,15 @@ function ClientNodeEditor:OnRegisterEvents()
 	Console:Register('RemoveData', 'Remove all data of one or several nodes', self, self._onRemoveData)
 
 	self.m_EventsReady = true
-	self:Log('Register Events')
+	--self:Log('Register Events')
 end
 
 function ClientNodeEditor:Log(...)
 	m_Logger:Write('ClientNodeEditor: ' .. Language:I18N(...))
+end
+
+function ClientNodeEditor:_OnPrintServerLog(p_Message)
+	m_Logger:Write('NodeEditor: ' .. p_Message)
 end
 
 function ClientNodeEditor:OnSetEnabled(p_Args)
@@ -650,7 +655,7 @@ end
 function ClientNodeEditor:OnUIPushScreen(p_HookCtx, p_Screen, p_Priority, p_ParentGraph, p_StateNodeGuid)
 	if self.m_Enabled and self.m_CommoRoseEnabled and p_Screen ~= nil and
 		UIScreenAsset(p_Screen).name == 'UI/Flow/Screen/CommRoseScreen' then
-		self:Log('Blocked vanilla commo rose')
+		--self:Log('Blocked vanilla commo rose')
 		p_HookCtx:Return()
 		return
 	end

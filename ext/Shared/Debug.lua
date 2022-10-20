@@ -12,7 +12,7 @@ Debug = {
 		COMMAND = false, -- Debug Chat- & RCON Commands
 		DATABASE = false, -- Debug Database-Operations
 		GAMEDIRECTOR = false, -- Debug the GameDirector
-		VEHICLES = false,
+		VEHICLES = false, -- Debug the Vehicle-Class
 		NODEEDITOR = false, -- Debug the NodeEditor
 		PATH = false, -- Debug the PathSwitcher
 		SETTINGS = false, -- Debug the Settings-Migrator
@@ -25,7 +25,7 @@ Debug = {
 	},
 	Client = {
 		INFO = false, -- Global Informations
-		NODEEDITOR = false, -- Debug the NodeEditor
+		NODEEDITOR = true, -- Debug the NodeEditor
 		UI = false -- Debug all UI things
 	},
 	Shared = {
