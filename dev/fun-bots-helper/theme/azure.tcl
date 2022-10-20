@@ -1,4 +1,4 @@
-source [file join [file dirname [info script]] theme dark.tcl]
+source [file join [file dirname [info script]] dark.tcl]
 
 option add *tearOff 0
 
