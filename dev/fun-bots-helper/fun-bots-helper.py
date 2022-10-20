@@ -26,7 +26,7 @@ SHOW_DEV_TOOLS = True
 master = Tk()
 master.title("fun-bots-helper")
 
-master.tk.call("source", "azure.tcl")
+master.tk.call("source", "theme/azure.tcl")
 master.tk.call("set_theme", "dark")
 
 # TRACES
