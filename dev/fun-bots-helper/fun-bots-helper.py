@@ -1,4 +1,5 @@
 from tkinter import *
+from tkinter import ttk
 
 from tools.import_traces import importTraces
 from tools.export_traces import exportTraces
@@ -24,6 +25,9 @@ SHOW_DEV_TOOLS = True
 
 master = Tk()
 master.title("fun-bots-helper")
+
+master.tk.call("source", "azure.tcl")
+master.tk.call("set_theme", "dark")
 
 # TRACES
 def export_traces() -> None:
@@ -88,61 +92,74 @@ master.rowconfigure(tuple(range(30)), weight=1)
 
 Label(master, text="Trace functions").grid(row=tempRow, sticky="nesw")
 tempRow += 1
-Button(master, text="Export Traces", command=export_traces).grid(
-    row=tempRow, sticky="nesw", pady=4, padx=4
-)
+ttk.Button(
+    master, text="Export Traces", command=export_traces, style="Accent.TButton"
+).grid(row=tempRow, sticky="nesw", pady=4, padx=4)
 tempRow += 1
-Button(master, text="Import Traces", command=import_traces).grid(
-    row=tempRow, sticky="nesw", pady=4, padx=4
-)
+ttk.Button(
+    master, text="Import Traces", command=import_traces, style="Accent.TButton"
+).grid(row=tempRow, sticky="nesw", pady=4, padx=4)
 tempRow += 1
 
 Label(master, text="Settings / Permission functions").grid(
     row=tempRow, sticky="nesw", padx=4
 )
 tempRow += 1
-Button(master, text="Export Permissions and Settings", command=export_settings).grid(
-    row=tempRow, sticky="nesw", pady=4, padx=4
-)
+ttk.Button(
+    master,
+    text="Export Permissions and Settings",
+    command=export_settings,
+    style="Accent.TButton",
+).grid(row=tempRow, sticky="nesw", pady=4, padx=4)
 tempRow += 1
-Button(master, text="Import Permissions and Settings", command=import_settings).grid(
-    row=tempRow, sticky="nesw", pady=4, padx=4
-)
+ttk.Button(
+    master,
+    text="Import Permissions and Settings",
+    command=import_settings,
+    style="Accent.TButton",
+).grid(row=tempRow, sticky="nesw", pady=4, padx=4)
 tempRow += 1
 
 if SHOW_DEV_TOOLS:
     Label(master, text="Other Stuff").grid(row=tempRow, sticky="nesw", padx=4)
     tempRow += 1
-    Button(master, text="Clear all Traces from DB", command=clear_paths).grid(
-        row=tempRow, sticky="nesw", pady=4, padx=4
-    )
+    ttk.Button(
+        master,
+        text="Clear all Traces from DB",
+        command=clear_paths,
+        style="Accent.TButton",
+    ).grid(row=tempRow, sticky="nesw", pady=4, padx=4)
     tempRow += 1
-    Button(master, text="Clear settings from DB", command=clear_settings).grid(
-        row=tempRow, sticky="nesw", pady=4, padx=4
-    )
+    ttk.Button(
+        master,
+        text="Clear settings from DB",
+        command=clear_settings,
+        style="Accent.TButton",
+    ).grid(row=tempRow, sticky="nesw", pady=4, padx=4)
     tempRow += 1
-    Button(
+    ttk.Button(
         master,
         text="Create Settings + Defaults",
         command=create_settings_defaults,
+        style="Accent.TButton",
     ).grid(row=tempRow, sticky="nesw", pady=4, padx=4)
     tempRow += 1
-    Button(master, text="Create Mapfiles", command=create_mapfiles).grid(
-        row=tempRow, sticky="nesw", pady=4, padx=4
-    )
+    ttk.Button(
+        master, text="Create Mapfiles", command=create_mapfiles, style="Accent.TButton"
+    ).grid(row=tempRow, sticky="nesw", pady=4, padx=4)
     tempRow += 1
-    Button(master, text="Fix Invalid paths", command=fix_maps).grid(
-        row=tempRow, sticky="nesw", pady=4, padx=4
-    )
+    ttk.Button(
+        master, text="Fix Invalid paths", command=fix_maps, style="Accent.TButton"
+    ).grid(row=tempRow, sticky="nesw", pady=4, padx=4)
     tempRow += 1
 
     entry = Entry(master)
     entry.grid(row=tempRow, sticky="nesw", pady=4, padx=4)
     tempRow += 1
 
-    Button(master, text="Create Language", command=create_language).grid(
-        row=tempRow, sticky="nesw", pady=4, padx=4
-    )
+    ttk.Button(
+        master, text="Create Language", command=create_language, style="Accent.TButton"
+    ).grid(row=tempRow, sticky="nesw", pady=4, padx=4)
     tempRow += 1
 
 mainloop()
