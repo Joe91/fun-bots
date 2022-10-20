@@ -1,7 +1,3 @@
-import sys
-
-sys.path.insert(1, "../")
-
 from addons.gets import get_all_tables, get_to_root
 from addons.sets import set_permission_config_files
 

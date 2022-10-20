@@ -1,9 +1,7 @@
 import os
-import sys
 
-sys.path.insert(1, "../")
-
-from addons.gets import get_to_root, get_updated_lines_js, get_updated_lines_lua
+from addons.gets import (get_to_root, get_updated_lines_js,
+                         get_updated_lines_lua)
 
 
 def updateLanguages() -> None:

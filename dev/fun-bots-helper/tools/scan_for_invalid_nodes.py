@@ -1,7 +1,4 @@
-import sys
 from os import walk
-
-sys.path.insert(1, "../")
 
 from addons.gets import get_invalid_node_lines, get_to_root
 

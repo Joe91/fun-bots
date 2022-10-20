@@ -1,7 +1,4 @@
 import sqlite3
-import sys
-
-sys.path.insert(1, "../")
 
 from addons.gets import get_to_root
 from addons.sets import set_permission_config_db

@@ -1,7 +1,3 @@
-import sys
-
-sys.path.insert(1, "../")
-
 from addons.gets import get_js_lines, get_lua_lines, get_settings, get_to_root
 
 

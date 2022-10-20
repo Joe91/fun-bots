@@ -1,7 +1,3 @@
-import sys
-
-sys.path.insert(1, "../")
-
 from addons.gets import get_settings, get_settings_lines, get_to_root
 
 
