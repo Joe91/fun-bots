@@ -221,8 +221,6 @@ VehicleData = {
 		Speed = { 300, 600, 300, 300 },
 		Drop = { 0.0, 9.81, 0.0, 0.0 }
 	},
-	["HIMARS"] = { Name = "[M142]", Type = VehicleTypes.LightVehicle, Terrain = VehicleTerrains.Land, Parts = {} },
-
 	["Humvee_ASRAD"] = {
 		Name = "[HMMWV ASRAD]",
 		Type = VehicleTypes.LightVehicle,
@@ -256,8 +254,24 @@ VehicleData = {
 		Speed = { 300, 600, 80 },
 		Drop = { 0.0, 15, 7.0 }
 	},
-	["STAR_1466"] = { Name = "[BM-23]", Type = VehicleTypes.LightVehicle, Terrain = VehicleTerrains.Land, Parts = {} },
-	["AC130"] = { Name = "[GUNSHIP]", Type = VehicleTypes.LightVehicle, Terrain = VehicleTerrains.Land, Parts = {} },
+
+	-- MobileArtillery
+	["HIMARS"] = { 
+		Name = "[M142]", 
+		Type = VehicleTypes.MobileArtillery,
+		Terrain = VehicleTerrains.Land,
+		Parts = {nil, 13},
+		Speed = { 300, 90 },
+		Drop = { 0.0, 25.0}
+	},
+	["STAR_1466"] = { 
+		Name = "[BM-23]",
+		Type = VehicleTypes.MobileArtillery,
+		Terrain = VehicleTerrains.Land,
+		Parts = {nil, nil},  -- TODO
+		Speed = { 300, 90 },
+		Drop = { 0.0, 25.0}
+	},
 
 	-- Air vehicle
 	-- Jets/Planes
@@ -426,31 +440,25 @@ VehicleData = {
 		Speed = { 300, 610, 600 },
 		Drop = { 0.0, 9.81, 15 }
 	},
-	["CivilianCar_03_Vehicle"] = { Name = "[CIVILIAN CAR]", Type = VehicleTypes.NoArmorVehicle,
-		Terrain = VehicleTerrains.Land, Parts = {} },
-	["CivilianCar_03_Vehicle_SPJet"] = { Name = "[CIVILIAN CAR]", Type = VehicleTypes.NoArmorVehicle,
-		Terrain = VehicleTerrains.Land, Parts = {} },
-	["DeliveryVan_Vehicle"] = { Name = "[DELIVERY VAN]", Type = VehicleTypes.NoArmorVehicle, Terrain = VehicleTerrains.Land,
-		Parts = {} },
+
+	["CivilianCar_03_Vehicle"] = { Name = "[CIVILIAN CAR]", Type = VehicleTypes.NoArmorVehicle,	Terrain = VehicleTerrains.Land, Parts = {} },
+	["CivilianCar_03_Vehicle_SPJet"] = { Name = "[CIVILIAN CAR]", Type = VehicleTypes.NoArmorVehicle, Terrain = VehicleTerrains.Land, Parts = {} },
+	["DeliveryVan_Vehicle"] = { Name = "[DELIVERY VAN]", Type = VehicleTypes.NoArmorVehicle, Terrain = VehicleTerrains.Land, Parts = {} },
 	["Paris_SUV"] = { Name = "[SUV]", Type = VehicleTypes.NoArmorVehicle, Terrain = VehicleTerrains.Land, Parts = {} },
 	["Paris_SUV_Coop"] = { Name = "[SUV]", Type = VehicleTypes.NoArmorVehicle, Terrain = VehicleTerrains.Land, Parts = {} },
 	["Sniper_SUV"] = { Name = "[SUV]", Type = VehicleTypes.NoArmorVehicle, Terrain = VehicleTerrains.Land, Parts = {} },
-	["PoliceVan_Vehicle"] = { Name = "[POLICE VAN]", Type = VehicleTypes.NoArmorVehicle, Terrain = VehicleTerrains.Land,
-		Parts = {} },
-	["RHIB"] = { Name = "[RHIB BOAT]", Type = VehicleTypes.NoArmorVehicle, Terrain = VehicleTerrains.Water,
-		Parts = { nil, nil, nil, nil } },
-	["TechnicalTruck"] = { Name = "[TECHNICAL TRUCK]", Type = VehicleTypes.NoArmorVehicle, Terrain = VehicleTerrains.Land,
-		Parts = {} },
-	["TechnicalTruck_Restricted"] = { Name = "[TECHNICAL TRUCK]", Type = VehicleTypes.NoArmorVehicle,
-		Terrain = VehicleTerrains.Land, Parts = {} },
+	["PoliceVan_Vehicle"] = { Name = "[POLICE VAN]", Type = VehicleTypes.NoArmorVehicle, Terrain = VehicleTerrains.Land, Parts = {} },
+	["RHIB"] = { Name = "[RHIB BOAT]", Type = VehicleTypes.NoArmorVehicle, Terrain = VehicleTerrains.Water,	Parts = { nil, nil, nil, nil } },
+	["TechnicalTruck"] = { Name = "[TECHNICAL TRUCK]", Type = VehicleTypes.NoArmorVehicle, Terrain = VehicleTerrains.Land, Parts = {} },
+	["TechnicalTruck_Restricted"] = { Name = "[TECHNICAL TRUCK]", Type = VehicleTypes.NoArmorVehicle, Terrain = VehicleTerrains.Land, Parts = {} },
 
 	["Villa_SUV"] = { Name = "[SUV]", Type = VehicleTypes.NoArmorVehicle, Terrain = VehicleTerrains.Land, Parts = {} },
 	["QuadBike"] = { Name = "[QUAD BIKE]", Type = VehicleTypes.NoArmorVehicle, Terrain = VehicleTerrains.Land, Parts = {} },
 	["C130"] = { Name = "[GUNSHIP]", Type = VehicleTypes.NoArmorVehicle, Terrain = VehicleTerrains.Land, Parts = {} },
 	["KLR650"] = { Name = "[DIRTBIKE]", Type = VehicleTypes.NoArmorVehicle, Terrain = VehicleTerrains.Land, Parts = {} },
-	["SkidLoader"] = { Name = "[SKID LOADER]", Type = VehicleTypes.NoArmorVehicle, Terrain = VehicleTerrains.Land,
-		Parts = {} },
+	["SkidLoader"] = { Name = "[SKID LOADER]", Type = VehicleTypes.NoArmorVehicle, Terrain = VehicleTerrains.Land,	Parts = {} },
 
+	["AC130"] = { Name = "[GUNSHIP]", Type = VehicleTypes.LightVehicle, Terrain = VehicleTerrains.Air, Parts = {} },
 
 	-- AA Stationary
 	["Centurion_C-RAM"] = {
@@ -505,8 +513,7 @@ VehicleData = {
 
 	-- Gadgets
 	["AGM-144_Hellfire_TV"] = { Name = "[Hellfire]", Type = VehicleTypes.Gadgets, Terrain = VehicleTerrains.Air, Parts = {} },
-	["RadioBeacon_Projectile"] = { Name = "[RadioBeacon]", Type = VehicleTypes.Gadgets, Terrain = VehicleTerrains.Land,
-		Parts = {} },
+	["RadioBeacon_Projectile"] = { Name = "[RadioBeacon]", Type = VehicleTypes.Gadgets, Terrain = VehicleTerrains.Land,	Parts = {} },
 	["SOFLAM_Projectile"] = { Name = "[SOFLAM]", Type = VehicleTypes.Gadgets, Terrain = VehicleTerrains.Land, Parts = {} },
 	["T-UGS_Vehicle"] = { Name = "[T-UGS]", Type = VehicleTypes.Gadgets, Terrain = VehicleTerrains.Land, Parts = {} },
 }
