@@ -330,3 +330,5 @@ Language:add(code, "Snipers attack choppers", "Scharfschützen greifen Hubschrau
 Language:add(code, "Bots with sniper-rifels attack choppers", "Bots mit Scharfschützengewehren greifen Hubschrauber an")
 Language:add(code, "Max Bots per vehicle", "Max. Bots pro Fahrzeug")
 Language:add(code, "Maximum number of Bots in a vehicle", "Maximale Anzahl an Bots in einem Fahrzeug")
+Language:add(code, "Bots Attack Players", "Bots greifen Spieler an")
+Language:add(code, "Bots attack Players from other team", "Bots greifen Spieler eines anderen Teams an")

@@ -68,6 +68,7 @@ Config = {
 	BotAttackMode = BotAttackModes.RandomNotSet,	-- Mode the Bots attack with. Random, Crouch or Stand
 	ShootBackIfHit = true,				-- Bot shoots back if hit
 	BotsAttackBots = true,				-- Bots attack bots from other team
+	BotsAttackPlayers = true,			-- Bots attack Players from other team
 	MeleeAttackIfClose = true,			-- Bot attacks with melee if close
 	BotCanKillHimself = false,			-- Bot takes falldamage or explosion-damage from own frags
 	TeleportIfStuck = true,				-- Bot teleport to their target if they are stuck
@@ -76,10 +77,6 @@ Config = {
 	BotsDeploy = true,					-- Bots deploy ammo and medkits
 	DeployCycle = 60,					-- Time between deployment of bots in seconds
 	SnipersAttackChoppers = true,		-- Bots with sniper-rifels attack choppers
-	MoveSidewards = true,				-- Bots move sidewards
-	MaxStraigtCycle = 10.0,				-- Max time bots move straight, before sidewards-movement (in sec)
-	MaxSideCycle = 5.0,					-- Max time bots move sidewards, before straight-movement (in sec)
-	MinMoveCycle = 0.3,					-- Min time bots move sidewards or staight before switching (in sec)
 
 	--VEHICLE
 	UseVehicles = true,					-- Bots can use vehicles
@@ -135,6 +132,10 @@ Config = {
 	SpeedFactor = 1.0,					-- Reduces the movementspeed. 1 = normal, 0 = standing.
 	SpeedFactorAttack = 0.6,			-- Reduces the movementspeed while attacking. 1 = normal, 0 = standing.
 	UseRandomNames = false,				-- Changes names of the bots on every new round. Experimental right now...
+	MoveSidewards = true,				-- Bots move sidewards
+	MaxStraigtCycle = 10.0,				-- Max time bots move straight, before sidewards-movement (in sec)
+	MaxSideCycle = 5.0,					-- Max time bots move sidewards, before straight-movement (in sec)
+	MinMoveCycle = 0.3,					-- Min time bots move sidewards or staight before switching (in sec)
 
 	--EXPERT
 	BotFirstShotDelay = 0.25,			-- Delay for first shot. If too small, there will be great spread in first cycle because its not compensated yet.

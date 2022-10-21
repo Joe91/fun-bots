@@ -688,6 +688,17 @@ SettingsDefinition = {
 			Category = "BEHAVIOUR"
 		},
 		{
+			Name = "BotsAttackPlayers",
+			Text = "Bots Attack Players",
+			---@type Type|integer
+			Type = Type.Boolean,
+			Value = Config.BotsAttackPlayers,
+			Description = "Bots attack Players from other team",
+			Default = true,
+			UpdateFlag = UpdateFlag.None,
+			Category = "BEHAVIOUR"
+		},
+		{
 			Name = "MeleeAttackIfClose",
 			Text = "Melee Attack If Close",
 			---@type Type|integer
@@ -776,54 +787,7 @@ SettingsDefinition = {
 			UpdateFlag = UpdateFlag.None,
 			Category = "BEHAVIOUR"
 		},
-		{
-			Name = "MoveSidewards",
-			Text = "Move Sidewards",
-			---@type Type|integer
-			Type = Type.Boolean,
-			Value = Config.MoveSidewards,
-			Description = "Bots move sidewards",
-			Default = true,
-			UpdateFlag = UpdateFlag.None,
-			Category = "BEHAVIOUR"
-		},
-		{
-			Name = "MaxStraigtCycle",
-			Text = "Max straight Cycle",
-			---@type Type|integer
-			Type = Type.Float,
-			Value = Config.MaxStraigtCycle,
-			Description = "Max time bots move straight, before sidewards-movement (in sec)",
-			Reference = Range(1.00, 60.00, 1.0),
-			Default = 10.0,
-			UpdateFlag = UpdateFlag.None,
-			Category = "BEHAVIOUR"
-		},
-		{
-			Name = "MaxSideCycle",
-			Text = "Max Side Cycle",
-			---@type Type|integer
-			Type = Type.Float,
-			Value = Config.MaxSideCycle,
-			Description = "Max time bots move sidewards, before straight-movement (in sec)",
-			Reference = Range(1.00, 60.00, 1.0),
-			Default = 5.0,
-			UpdateFlag = UpdateFlag.None,
-			Category = "BEHAVIOUR"
-		},
-		{
-			Name = "MinMoveCycle",
-			Text = "Min Move Cycle",
-			---@type Type|integer
-			Type = Type.Float,
-			Value = Config.MinMoveCycle,
-			Description = "Min time bots move sidewards or staight before switching (in sec)",
-			Reference = Range(0.30, 10.00, 0.5),
-			Default = 0.3,
-			UpdateFlag = UpdateFlag.None,
-			Category = "BEHAVIOUR"
-		},
-
+		
 		-- Vehicles behaviour
 		{
 			Name = "UseVehicles",
@@ -1375,6 +1339,53 @@ SettingsDefinition = {
 			Value = Config.UseRandomNames,
 			Description = "Changes names of the bots on every new round. Experimental right now...",
 			Default = false,
+			UpdateFlag = UpdateFlag.None,
+			Category = "ADVANCED"
+		},
+		{
+			Name = "MoveSidewards",
+			Text = "Move Sidewards",
+			---@type Type|integer
+			Type = Type.Boolean,
+			Value = Config.MoveSidewards,
+			Description = "Bots move sidewards",
+			Default = true,
+			UpdateFlag = UpdateFlag.None,
+			Category = "ADVANCED"
+		},
+		{
+			Name = "MaxStraigtCycle",
+			Text = "Max straight Cycle",
+			---@type Type|integer
+			Type = Type.Float,
+			Value = Config.MaxStraigtCycle,
+			Description = "Max time bots move straight, before sidewards-movement (in sec)",
+			Reference = Range(1.00, 60.00, 1.0),
+			Default = 10.0,
+			UpdateFlag = UpdateFlag.None,
+			Category = "ADVANCED"
+		},
+		{
+			Name = "MaxSideCycle",
+			Text = "Max Side Cycle",
+			---@type Type|integer
+			Type = Type.Float,
+			Value = Config.MaxSideCycle,
+			Description = "Max time bots move sidewards, before straight-movement (in sec)",
+			Reference = Range(1.00, 60.00, 1.0),
+			Default = 5.0,
+			UpdateFlag = UpdateFlag.None,
+			Category = "ADVANCED"
+		},
+		{
+			Name = "MinMoveCycle",
+			Text = "Min Move Cycle",
+			---@type Type|integer
+			Type = Type.Float,
+			Value = Config.MinMoveCycle,
+			Description = "Min time bots move sidewards or staight before switching (in sec)",
+			Reference = Range(0.30, 10.00, 0.5),
+			Default = 0.3,
 			UpdateFlag = UpdateFlag.None,
 			Category = "ADVANCED"
 		},

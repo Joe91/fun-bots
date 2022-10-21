@@ -330,3 +330,5 @@ Language:add(code, "Snipers attack choppers", "スナイパーがチョッパー
 Language:add(code, "Bots with sniper-rifels attack choppers", "スナイパーライフルを持つボットがチョッパーを攻撃")
 Language:add(code, "Max Bots per vehicle", "ビークルあたりの最大ボット数")
 Language:add(code, "Maximum number of Bots in a vehicle", "車両内のボットの最大数")
+Language:add(code, "Bots Attack Players", "ボット攻撃プレイヤー")
+Language:add(code, "Bots attack Players from other team", "ボットが他のチームのプレイヤーを攻撃する")

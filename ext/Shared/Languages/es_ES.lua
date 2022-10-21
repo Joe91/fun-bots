@@ -329,3 +329,5 @@ Language:add(code, "Snipers attack choppers", "Francotiradores atacan helicópte
 Language:add(code, "Bots with sniper-rifels attack choppers", "Bots con rifles de francotirador atacan helicópteros")
 Language:add(code, "Max Bots per vehicle", "Max Bots por vehículo")
 Language:add(code, "Maximum number of Bots in a vehicle", "Número máximo de Bots en un vehículo")
+Language:add(code, "Bots Attack Players", "Los bots atacan a los jugadores")
+Language:add(code, "Bots attack Players from other team", "Los bots atacan a los jugadores de otro equipo.")

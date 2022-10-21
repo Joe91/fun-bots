@@ -225,7 +225,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	self.m_RaycastTimer = 0
 	local s_CheckCount = 0
 
-	if self.m_Player.soldier ~= nil then -- alive. Check for enemy bots
+	if self.m_Player.soldier ~= nil and Config.BotsAttackPlayers then -- alive. Check for enemy bots
 		if self.m_AliveTimer < Registry.CLIENT.SPAWN_PROTECTION then -- wait 2s (spawn-protection)
 			self.m_AliveTimer = self.m_AliveTimer + p_DeltaTime
 			self:SendRaycastResults(s_RaycastResultsToSend)
