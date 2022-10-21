@@ -302,7 +302,7 @@ def get_invalid_node_lines(infile: TextIOWrapper) -> List[str]:
             ):
                 currentitems[2] = format(lastPosX + 0.2, ".6f")
                 currentitems[3] = format(lastPosY, ".6f")
-                currentitems[4] = format(lastPosY + 0.2, ".6f")
+                currentitems[4] = format(lastPosZ + 0.2, ".6f")
                 newLineContent = ";".join(currentitems)
                 outFileLines[i] = newLineContent
         if lastPath != currentPath and nextPath == currentPath:  # Wrong at the start
