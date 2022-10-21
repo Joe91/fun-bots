@@ -2,7 +2,7 @@
 if the remaining tables after clear all paths are the same as those that were ignored."""
 
 
-def test_clear_all_paths(session):
+def test_clear_all_paths(session) -> None:
     """Key arguments.
 
     session: cursor object from a temporary copy of mod.db

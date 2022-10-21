@@ -2,7 +2,7 @@
 if any of the remaining tables after clear settings is a setting table."""
 
 
-def test_clear_settings(session):
+def test_clear_settings(session) -> None:
     """Key arguments.
 
     session: cursor object from a temporary copy of mod.db
