@@ -12,27 +12,24 @@ def set_permission_config_files(cursor: sqlite3.Cursor) -> None:
     exportList = ["FB_Permissions", "FB_Config_Trace", "FB_Settings"]
     destFolder = "permission_and_config"
 
-    if not os.path.exists(destFolder):
-        os.makedirs(destFolder)
     for item in exportList:
         print("Export " + item)
         structure = cursor.execute("PRAGMA table_info('" + item + "')").fetchall()
-        if len(structure) > 1:
-            filename = item + ".cfg"
-            with open(destFolder + "/" + filename, "w") as outfile:
-                header = [collumn[1] for collumn in structure]
-                outfile.write(";".join(header) + "\n")
-                sql_instruction = (
-                    "SELECT * FROM " + item + " ORDER BY " + structure[-3][1] + " ASC"
-                )
-                cursor.execute(sql_instruction)
-                table_content = cursor.fetchall()
-                for line in table_content:
-                    outList = [
-                        format(item, ".6f") if type(item) is float else str(item)
-                        for item in line
-                    ]
-                    outfile.write(";".join(outList) + "\n")
+        filename = item + ".cfg"
+        with open(destFolder + "/" + filename, "w") as outfile:
+            header = [column[1] for column in structure]
+            outfile.write(";".join(header) + "\n")
+            sql_instruction = (
+                "SELECT * FROM " + item + " ORDER BY " + structure[-3][1] + " ASC"
+            )
+            cursor.execute(sql_instruction)
+            table_content = cursor.fetchall()
+            for line in table_content:
+                outList = [
+                    format(item, ".6f") if type(item) is float else str(item)
+                    for item in line
+                ]
+                outfile.write(";".join(outList) + "\n")
 
 
 def set_permission_config_db(cursor: sqlite3.Cursor) -> None:
@@ -43,24 +40,23 @@ def set_permission_config_db(cursor: sqlite3.Cursor) -> None:
     }
     sourceFolder = "permission_and_config"
 
-    filenames = next(os.walk(sourceFolder), (None, None, []))[2]
+    filenames = os.listdir(sourceFolder)
 
     for filename in filenames:
         tablename = filename.split(".")[0]
         print("Import " + tablename)
         cursor.execute("DROP TABLE IF EXISTS " + tablename)
 
-        sql_instruction = "CREATE TABLE IF NOT EXISTS " + tablename + " ("
+        sql_instruction = "CREATE TABLE " + tablename + " ("
         for key, value in allStructures.items():
             if key == tablename:
                 for item in value:
                     if item == "Time":
-                        sql_instruction = sql_instruction + item + " DATETIME,"
+                        sql_instruction = sql_instruction + item + " DATETIME, "
                     else:
-                        sql_instruction = sql_instruction + item + " TEXT,"
+                        sql_instruction = sql_instruction + item + " TEXT, "
                 break
-        sql_instruction = sql_instruction[:-1] + ")"
-
+        sql_instruction = sql_instruction[:-2] + ");"
         cursor.execute(sql_instruction)
         with open(sourceFolder + "/" + filename, "r") as infile:
             AllData = [
@@ -71,8 +67,8 @@ def set_permission_config_db(cursor: sqlite3.Cursor) -> None:
                 "INSERT INTO "
                 + tablename
                 + " ("
-                + ",".join(items)
-                + ") VALUES ("
+                + ", ".join(items)
+                + ") VALUES("
                 + (len(items) * "?,")[:-1]
                 + ")",
                 AllData,
@@ -84,8 +80,6 @@ def set_traces_files(cursor: sqlite3.Cursor) -> None:
     ignoreList = ["sqlite_sequence", "FB_Permissions", "FB_Config_Trace", "FB_Settings"]
     destFolder = "mapfiles"
 
-    if not os.path.exists(destFolder):
-        os.makedirs(destFolder)
     for item in content:
         if item[1] in ignoreList:
             continue
@@ -95,11 +89,7 @@ def set_traces_files(cursor: sqlite3.Cursor) -> None:
 
         filename = item[1].replace("_table", "") + ".map"
         with open(destFolder + "/" + filename, "w") as outfile:
-            idsToRemove = False
-            header = [collumn[1] for collumn in structure]
-            if header[0] == "id":
-                header.pop(0)
-                idsToRemove = True
+            header = [column[1] for column in structure[1:]]
             outfile.write(";".join(header) + "\n")
             sql_instruction = (
                 "SELECT * FROM " + item[1] + " ORDER BY pathIndex, pointIndex ASC"
@@ -109,16 +99,14 @@ def set_traces_files(cursor: sqlite3.Cursor) -> None:
             for line in table_content:
                 outList = [
                     format(item, ".6f") if type(item) is float else str(item)
-                    for item in line
+                    for item in line[1:]
                 ]
-                if len(outList) > 1 and idsToRemove:
-                    outList.pop(0)
                 outfile.write(";".join(outList) + "\n")
 
 
 def set_traces_db(cursor: sqlite3.Cursor) -> None:
     sourceFolder = "mapfiles"
-    filenames = next(os.walk(sourceFolder), (None, None, []))[2]
+    filenames = os.listdir(sourceFolder)
 
     for filename in filenames:
         tablename = filename.split(".")[0] + "_table"
@@ -126,7 +114,7 @@ def set_traces_db(cursor: sqlite3.Cursor) -> None:
         cursor.execute("DROP TABLE IF EXISTS " + tablename)
         sql_instruction = (
             """
-			CREATE TABLE IF NOT EXISTS """
+			CREATE TABLE """
             + tablename
             + """ (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -162,6 +150,6 @@ def set_traces_db(cursor: sqlite3.Cursor) -> None:
             cursor.executemany(
                 "INSERT INTO "
                 + tablename
-                + " (pathIndex, pointIndex, transX, transY, transZ, inputVar, data) VALUES (?,?,?,?,?,?,?)",
+                + " (pathIndex, pointIndex, transX, transY, transZ, inputVar, data) VALUES(?,?,?,?,?,?,?)",
                 allNodeData,
             )

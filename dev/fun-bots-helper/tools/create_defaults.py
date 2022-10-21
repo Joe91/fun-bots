@@ -3,12 +3,12 @@ from addons.gets import get_js_lines, get_lua_lines, get_settings, get_to_root
 
 def createDefaults() -> None:
     get_to_root()
-    language_file = "ext/Shared/Languages/DEFAULT.lua"
+    language_file_lua = "ext/Shared/Languages/DEFAULT.lua"
     language_file_js = "WebUI/languages/DEFAULT.js"
 
     allSettings = get_settings(first_key="Text")
 
-    with open(language_file, "w") as outFile:
+    with open(language_file_lua, "w") as outFile:
         outFile.write(
             "local code = 'xx_XX' -- Add/replace the xx_XX here with your language code (like de_DE, en_US, or other)!\n\n"
         )

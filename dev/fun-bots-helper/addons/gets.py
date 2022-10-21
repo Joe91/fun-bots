@@ -25,16 +25,13 @@ def get_settings(first_key: str) -> List[Dict]:
             if "Elements = {" in line:
                 readoutActive = True
             if readoutActive:
-                if f"{first_key} = " in line:
-                    setting[first_key] = line.split('"')[-2]
+                for key in [f"{first_key} =", "Description =", "Category ="]:
+                    if key in line:
+                        setting[key[:-2]] = line.split('"')[-2]
                 if "Default =" in line:
                     setting["Default"] = (
                         line.split("=")[-1].replace(",", "").replace(" ", "")
                     )
-                if "Description =" in line:
-                    setting["Description"] = line.split('"')[-2]
-                if "Category =" in line:
-                    setting["Category"] = line.split('"')[-2]
                 if "}," in line or (len(setting) != 0 and "}" in line):
                     allSettings.append(setting)
                     numberOfSettings += 1
@@ -45,7 +42,7 @@ def get_settings(first_key: str) -> List[Dict]:
 
 
 def get_settings_lines(allSettings: List[Dict]) -> List[str]:
-    outFileLines, lastCategory = [], ""
+    outFileLines, lastCategory = [], None
 
     for setting in allSettings:
         if setting["Category"] != lastCategory:
@@ -53,10 +50,10 @@ def get_settings_lines(allSettings: List[Dict]) -> List[str]:
             lastCategory = setting["Category"]
         tempString = "	" + setting["Name"] + " = " + setting["Default"] + ","
 
-        width = len(tempString) + 3
-        numberOfTabs = (44 - width) // 4
-        if ((44 - width) % 4) == 0:
-            numberOfTabs = numberOfTabs - 1
+        width = len(tempString)
+        numberOfTabs = (41 - width) // 4
+        if ((41 - width) % 4) == 0:
+            numberOfTabs -= 1
         if numberOfTabs <= 0:
             numberOfTabs = 1
         outFileLines.append(
@@ -187,11 +184,12 @@ def get_map_lines(create: bool = False, update_supported: bool = False) -> List[
 
     mapItems = []
 
-    filenames = next(os.walk("mapfiles"), (None, None, []))[2]
+    filenames = os.listdir("mapfiles")
     for filename in filenames:
         combinedName = filename.split(".")[0]
         nameParts = combinedName.rsplit("_", 1)
         mapname = nameParts[0]
+        mapname_splitted = mapname.split("_")[0]
         translatedGamemode = nameParts[1]
         gameMode = ""
 
@@ -211,15 +209,15 @@ def get_map_lines(create: bool = False, update_supported: bool = False) -> List[
         if gameMode in AllGameModes:
             if gameMode == "TDM":
                 if create:
-                    if mapname.split("_")[0] in MapsWithGunmaster:
+                    if mapname_splitted in MapsWithGunmaster:
                         mapItems.append([mapname, "GunMaster0", RoundsToUse])
-                    if mapname.split("_")[0] not in MapsWithoutTdmCq:
+                    if mapname_splitted not in MapsWithoutTdmCq:
                         mapItems.append([mapname, translatedGamemode, RoundsToUse])
                     mapItems.append([mapname, "TeamDeathMatchC0", RoundsToUse])
                 if update_supported:
-                    if mapname.split("_")[0] in MapsWithGunmaster:
+                    if mapname_splitted in MapsWithGunmaster:
                         mapItems.append([mapname, "GM", "GunMaster0", vehicleSupport])
-                    if mapname.split("_")[0] not in MapsWithoutTdmCq:
+                    if mapname_splitted not in MapsWithoutTdmCq:
                         mapItems.append(
                             [mapname, gameMode, translatedGamemode, vehicleSupport]
                         )
@@ -251,7 +249,7 @@ def get_all_tables() -> Tuple[sqlite3.Connection, sqlite3.Cursor]:
     return connection, cursor
 
 
-def get_invalid_node_lines(filename: str, infile: TextIOWrapper) -> List[str]:
+def get_invalid_node_lines(infile: TextIOWrapper) -> List[str]:
     DISTANCE_MAX = 80
 
     outFileLines = infile.readlines()
@@ -288,8 +286,6 @@ def get_invalid_node_lines(filename: str, infile: TextIOWrapper) -> List[str]:
                 or abs(nextPosY - posY) > DISTANCE_MAX
                 or abs(nextPosZ - posZ) > DISTANCE_MAX
             ):
-                print(filename)
-                print(items)
                 newPosX = lastPosX + (nextPosX - lastPosX) / 2
                 newPosY = lastPosY + (nextPosY - lastPosY) / 2
                 newPosZ = lastPosZ + (nextPosZ - lastPosZ) / 2
@@ -297,7 +293,6 @@ def get_invalid_node_lines(filename: str, infile: TextIOWrapper) -> List[str]:
                 currentitems[3] = format(newPosY, ".6f")
                 currentitems[4] = format(newPosZ, ".6f")
                 newLineContent = ";".join(currentitems)
-                print(newLineContent)
                 outFileLines[i] = newLineContent
         if lastPath == currentPath and nextPath != currentPath:  # Wrong at the end
             if (
@@ -309,7 +304,6 @@ def get_invalid_node_lines(filename: str, infile: TextIOWrapper) -> List[str]:
                 currentitems[3] = format(lastPosY, ".6f")
                 currentitems[4] = format(lastPosY + 0.2, ".6f")
                 newLineContent = ";".join(currentitems)
-                print(newLineContent)
                 outFileLines[i] = newLineContent
         if lastPath != currentPath and nextPath == currentPath:  # Wrong at the start
             if (
@@ -321,7 +315,6 @@ def get_invalid_node_lines(filename: str, infile: TextIOWrapper) -> List[str]:
                 currentitems[3] = format(nextPosY, ".6f")
                 currentitems[4] = format(nextPosZ + 0.2, ".6f")
                 newLineContent = ";".join(currentitems)
-                print(newLineContent)
                 outFileLines[i] = newLineContent
 
     return outFileLines
@@ -332,10 +325,8 @@ def get_objectives_to_rename(infile: TextIOWrapper) -> Tuple[List[str], List[str
     fileLines = infile.readlines()
     for line in fileLines[1:]:
         if '"Objectives":[' in line:
-            objectives = line.split('"Objectives":[')[1]
-            _objectives = objectives.split("]")[0]
-            __objectives = _objectives.split(",")
-            for objective in __objectives:
+            objectives = line.split('"Objectives":[')[1].split("]")[0].split(",")
+            for objective in objectives:
                 if objective not in allObjectives:
                     allObjectives.append(objective)
     allObjectives.sort()
