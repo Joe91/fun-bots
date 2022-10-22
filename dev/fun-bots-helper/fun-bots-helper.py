@@ -66,7 +66,7 @@ def create_settings_defaults() -> None:
     createSettings()
     createDefaults()
     updateLanguages()
-    print("\nDefault Templates and Settings Updated\n")
+    print("\nDefault, Settings and Languages Updated\n")
 
 
 def create_mapfiles() -> None:
@@ -132,14 +132,14 @@ if SHOW_DEV_TOOLS:
     tempRow += 1
     ttk.Button(
         master,
-        text="Clear settings from DB",
+        text="Clear Settings from DB",
         command=clear_settings,
         style="Accent.TButton",
     ).grid(row=tempRow, sticky="nesw", pady=4, padx=4)
     tempRow += 1
     ttk.Button(
         master,
-        text="Create Settings + Defaults",
+        text="Create Settings, Defaults and Update Languages",
         command=create_settings_defaults,
         style="Accent.TButton",
     ).grid(row=tempRow, sticky="nesw", pady=4, padx=4)
@@ -149,7 +149,7 @@ if SHOW_DEV_TOOLS:
     ).grid(row=tempRow, sticky="nesw", pady=4, padx=4)
     tempRow += 1
     ttk.Button(
-        master, text="Fix Invalid paths", command=fix_maps, style="Accent.TButton"
+        master, text="Fix Invalid Paths", command=fix_maps, style="Accent.TButton"
     ).grid(row=tempRow, sticky="nesw", pady=4, padx=4)
     tempRow += 1
 
