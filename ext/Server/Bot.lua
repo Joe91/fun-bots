@@ -306,7 +306,7 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 								end
 
 								self:_UpdateInputs()
-								self:_CheckForVehicleActions(self._UpdateTimer)
+								self:_CheckForVehicleActions(self._UpdateTimer, s_Attacking)
 
 								-- only exit at this point and abort afterwards
 								if self:_DoExitVehicle() then
@@ -742,7 +742,7 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 end
 
 ---@param p_DeltaTime number
-function Bot:_CheckForVehicleActions(p_DeltaTime)
+function Bot:_CheckForVehicleActions(p_DeltaTime, p_AttackActive)
 	-- check if exit of vehicle is needed (because of low health)
 	if not self._ExitVehicleActive then
 		self._VehicleHealthTimer = self._VehicleHealthTimer + p_DeltaTime
@@ -766,11 +766,28 @@ function Bot:_CheckForVehicleActions(p_DeltaTime)
 		end
 	end
 
-	-- check if better seat is available
-	self._VehicleSeatTimer = self._VehicleSeatTimer + p_DeltaTime
-	if self._VehicleSeatTimer >= Registry.VEHICLES.VEHICLE_SEAT_CHECK_CYCLE_TIME then
-		self._VehicleSeatTimer = 0
-		if m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.MobileArtillery) then
+	if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.MobileArtillery) then
+		-- change seat, for attack
+		local s_VehicleEntity = self.m_Player.controlledControllable
+		if not s_VehicleEntity then
+			return
+		end
+		if p_AttackActive and self.m_Player.controlledEntryId == 0 then
+			-- change to gunner seat
+			self.m_Player:EnterVehicle(s_VehicleEntity, 1)
+			self:UpdateVehicleMovableId()
+		elseif not p_AttackActive and self.m_Player.controlledEntryId == 1 then
+			-- change to driver seat
+			self.m_Player:EnterVehicle(s_VehicleEntity, 0)
+			self:UpdateVehicleMovableId()
+		end
+
+	else
+		-- check if better seat is available
+		self._VehicleSeatTimer = self._VehicleSeatTimer + p_DeltaTime
+		if self._VehicleSeatTimer >= Registry.VEHICLES.VEHICLE_SEAT_CHECK_CYCLE_TIME then
+			self._VehicleSeatTimer = 0
+
 			if self.m_InVehicle then --in vehicle
 				local s_VehicleEntity = self.m_Player.controlledControllable
 
