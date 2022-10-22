@@ -260,7 +260,7 @@ VehicleData = {
 		Name = "[M142]", 
 		Type = VehicleTypes.MobileArtillery,
 		Terrain = VehicleTerrains.Land,
-		Parts = {nil, 13},
+		Parts = {nil, 13 },
 		Speed = { 300, 90 },
 		Drop = { 0.0, 25.0}
 	},
@@ -268,7 +268,7 @@ VehicleData = {
 		Name = "[BM-23]",
 		Type = VehicleTypes.MobileArtillery,
 		Terrain = VehicleTerrains.Land,
-		Parts = {nil, nil},  -- TODO
+		Parts = {nil, 1 },  -- TODO
 		Speed = { 300, 90 },
 		Drop = { 0.0, 25.0}
 	},

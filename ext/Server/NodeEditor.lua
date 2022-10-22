@@ -823,7 +823,12 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 		if (s_Player and s_Player.soldier and l_Active and self.m_CustomTraceTimer[l_PlayerGuid] >= 0) then
 			self.m_CustomTraceTimer[l_PlayerGuid] = self.m_CustomTraceTimer[l_PlayerGuid] + p_DeltaTime
 
-			local s_PlayerPos = s_Player.soldier.worldTransform.trans:Clone()
+			local s_PlayerPos = nil
+			if not s_Player.attachedControllable then
+				s_PlayerPos = s_Player.soldier.worldTransform.trans:Clone()
+			else
+				s_PlayerPos = s_Player.controlledControllable.transform.trans:Clone()
+			end
 
 			if self.m_CustomTraceTimer[l_PlayerGuid] > Config.TraceDelta then
 				local s_LastWaypoint = self.m_CustomTrace[l_PlayerGuid]:GetLast()

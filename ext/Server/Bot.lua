@@ -768,46 +768,46 @@ function Bot:_CheckForVehicleActions(p_DeltaTime)
 
 	-- check if better seat is available
 	self._VehicleSeatTimer = self._VehicleSeatTimer + p_DeltaTime
-
 	if self._VehicleSeatTimer >= Registry.VEHICLES.VEHICLE_SEAT_CHECK_CYCLE_TIME then
 		self._VehicleSeatTimer = 0
+		if m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.MobileArtillery) then
+			if self.m_InVehicle then --in vehicle
+				local s_VehicleEntity = self.m_Player.controlledControllable
 
-		if self.m_InVehicle then --in vehicle
-			local s_VehicleEntity = self.m_Player.controlledControllable
-
-			if not s_VehicleEntity then
-				return
-			end
-
-			for l_SeatIndex = 0, self.m_Player.controlledEntryId do
-				if s_VehicleEntity:GetPlayerInEntry(l_SeatIndex) == nil then
-					-- better seat available --> swich seats
-					m_Logger:Write("switch to better seat")
-					self:AbortAttack()
-					self.m_Player:EnterVehicle(s_VehicleEntity, l_SeatIndex)
-					self:UpdateVehicleMovableId()
-					break
+				if not s_VehicleEntity then
+					return
 				end
-			end
-		elseif self.m_OnVehicle then --only passenger.
-			local s_VehicleEntity = self.m_Player.attachedControllable
-			local s_LowestSeatIndex = -1
 
-			if not s_VehicleEntity then
-				return
-			end
-
-			for l_SeatIndex = 0, s_VehicleEntity.entryCount - 1 do
-				if s_VehicleEntity:GetPlayerInEntry(l_SeatIndex) == nil then
-					-- maybe better seat available
-					s_LowestSeatIndex = l_SeatIndex
-				else -- check if there is a gap
-					if s_LowestSeatIndex >= 0 then -- there is a better place
+				for l_SeatIndex = 0, self.m_Player.controlledEntryId do
+					if s_VehicleEntity:GetPlayerInEntry(l_SeatIndex) == nil then
+						-- better seat available --> swich seats
 						m_Logger:Write("switch to better seat")
 						self:AbortAttack()
-						self.m_Player:EnterVehicle(s_VehicleEntity, s_LowestSeatIndex)
+						self.m_Player:EnterVehicle(s_VehicleEntity, l_SeatIndex)
 						self:UpdateVehicleMovableId()
 						break
+					end
+				end
+			elseif self.m_OnVehicle then --only passenger.
+				local s_VehicleEntity = self.m_Player.attachedControllable
+				local s_LowestSeatIndex = -1
+
+				if not s_VehicleEntity then
+					return
+				end
+
+				for l_SeatIndex = 0, s_VehicleEntity.entryCount - 1 do
+					if s_VehicleEntity:GetPlayerInEntry(l_SeatIndex) == nil then
+						-- maybe better seat available
+						s_LowestSeatIndex = l_SeatIndex
+					else -- check if there is a gap
+						if s_LowestSeatIndex >= 0 then -- there is a better place
+							m_Logger:Write("switch to better seat")
+							self:AbortAttack()
+							self.m_Player:EnterVehicle(s_VehicleEntity, s_LowestSeatIndex)
+							self:UpdateVehicleMovableId()
+							break
+						end
 					end
 				end
 			end
@@ -1230,6 +1230,9 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 
 	-- keep one seat free, if enough available
 	local s_MaxEntries = p_Entity.entryCount
+	if s_VehicleData.Type == VehicleTypes.MobileArtillery then
+		s_MaxEntries = 1
+	end
 
 	if not p_PlayerIsDriver then
 		-- leave a place for a player if more than two seats are available
