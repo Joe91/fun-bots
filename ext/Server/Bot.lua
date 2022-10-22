@@ -613,13 +613,22 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 
 	-- don't shoot if too far away
 	self._DistanceToPlayer = 0.0
-
-	if s_Type == VehicleTypes.MavBot then
-		self._DistanceToPlayer = p_Player.controlledControllable.transform.trans:Distance(self.m_Player.soldier.worldTransform
-			.trans)
+	local s_PlayerPos = nil
+	local s_TargetPos = nil
+	if s_Type == VehicleTypes.MavBot or s_Type == VehicleTypes.MobileArtillery then
+		s_TargetPos = p_Player.controlledControllable.transform.trans:Clone()
 	else
-		self._DistanceToPlayer = p_Player.soldier.worldTransform.trans:Distance(self.m_Player.soldier.worldTransform.trans)
+		s_TargetPos = p_Player.soldier.worldTransform.trans:Clone()
 	end
+
+	if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.MobileArtillery) then
+		s_PlayerPos = self.m_Player.controlledControllable.transform.trans:Clone()
+	else
+		s_PlayerPos = self.m_Player.soldier.worldTransform.trans:Clone()
+	end
+
+	self._DistanceToPlayer = s_TargetPos:Distance(s_PlayerPos)
+
 
 	local s_AttackDistance = self:GetAttackDistance(p_IgnoreYaw)
 
@@ -667,19 +676,10 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 
 	if not p_IgnoreYaw then
 		local s_OldYaw = self.m_Player.input.authoritativeAimingYaw
-		local s_DifferenceY = 0.0
-		local s_DifferenceX = 0.0
-		local s_DifferenceZ = 0.0
 
-		if s_Type == VehicleTypes.MavBot then
-			s_DifferenceY = p_Player.controlledControllable.transform.trans.z - self.m_Player.soldier.worldTransform.trans.z
-			s_DifferenceX = p_Player.controlledControllable.transform.trans.x - self.m_Player.soldier.worldTransform.trans.x
-			s_DifferenceZ = p_Player.controlledControllable.transform.trans.y - self.m_Player.soldier.worldTransform.trans.y
-		else
-			s_DifferenceY = p_Player.soldier.worldTransform.trans.z - self.m_Player.soldier.worldTransform.trans.z
-			s_DifferenceX = p_Player.soldier.worldTransform.trans.x - self.m_Player.soldier.worldTransform.trans.x
-			s_DifferenceZ = p_Player.soldier.worldTransform.trans.y - self.m_Player.soldier.worldTransform.trans.y
-		end
+		local s_DifferenceY = s_TargetPos.z - s_PlayerPos.z
+		local s_DifferenceX = s_TargetPos.x - s_PlayerPos.x
+		local s_DifferenceZ = s_TargetPos.y - s_PlayerPos.y
 
 		local s_AtanYaw = math.atan(s_DifferenceY, s_DifferenceX)
 		local s_Yaw = (s_AtanYaw > math.pi / 2) and (s_AtanYaw - math.pi / 2) or (s_AtanYaw + 3 * math.pi / 2)
