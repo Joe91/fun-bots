@@ -38,10 +38,10 @@ function VehicleAiming:UpdateAimingVehicleAdvanced(p_Bot)
 	if p_Bot._ShootPlayerVehicleType == VehicleTypes.MavBot or p_Bot._ShootPlayerVehicleType == VehicleTypes.MobileArtillery then
 		s_FullPositionTarget = p_Bot._ShootPlayer.controlledControllable.transform.trans:Clone()
 	else
-		if p_Bot.m_Player.controlledEntryId == 0 and p_Bot._ShootPlayerVehicleType == VehicleTypes.NoVehicle and
-			p_Bot._ShootPlayer.soldier.worldTransform.trans.y < s_FullPositionBot.y then
-			-- add nothing --> aim for the feet of the target
+		if p_Bot.m_Player.controlledEntryId == 0 and p_Bot._ShootPlayerVehicleType == VehicleTypes.NoVehicle then
+			-- add nothing (0.1)--> aim for the feet of the target
 			s_FullPositionTarget = p_Bot._ShootPlayer.soldier.worldTransform.trans:Clone()
+			s_FullPositionTarget.y = s_FullPositionTarget.y + 0.1
 		else
 			s_FullPositionTarget = p_Bot._ShootPlayer.soldier.worldTransform.trans:Clone() +
 				m_Utilities:getCameraPos(p_Bot._ShootPlayer, true, false)
