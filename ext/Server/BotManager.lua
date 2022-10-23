@@ -1038,6 +1038,7 @@ function BotManager:EnterVehicle(p_Player)
 
 	-- check for vehicle of player and seats
 	local s_MaxFreeSeats = p_Player.controlledControllable.entryCount - 1
+	-- TODO: abort for mobile artillery
 
 	if s_MaxFreeSeats <= 0 then
 		return

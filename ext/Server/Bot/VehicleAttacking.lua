@@ -29,7 +29,7 @@ function VehicleAttacking:UpdateAttackingVehicle(p_Bot)
 				if s_AttackMode ~= VehicleAttackModes.NoAttack then
 					if s_WeaponSlots > 1 then
 						-- TODO more logic depending on vehicle and distance
-						-- Chopper on Plane / Chopper = 2 (seaker)
+						-- Chopper on Plane / Chopper --> weapon 2 (seaker)
 						if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle == VehicleTypes.Chopper) or
 							m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle == VehicleTypes.Plane) then
 							if p_Bot.controlledEntryId == 0 and
