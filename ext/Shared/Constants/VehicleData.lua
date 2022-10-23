@@ -261,7 +261,7 @@ VehicleData = {
 		Type = VehicleTypes.MobileArtillery,
 		Terrain = VehicleTerrains.Land,
 		Parts = {nil, 13 },
-		Speed = { 300, 90 },
+		Speed = { 300, 50 },
 		Drop = { 0.0, 25.0}
 	},
 	["STAR_1466"] = { 
@@ -269,7 +269,7 @@ VehicleData = {
 		Type = VehicleTypes.MobileArtillery,
 		Terrain = VehicleTerrains.Land,
 		Parts = {nil, 1 },
-		Speed = { 300, 90 },
+		Speed = { 300, 50 },
 		Drop = { 0.0, 25.0}
 	},
 

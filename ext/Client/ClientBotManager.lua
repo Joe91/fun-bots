@@ -183,12 +183,22 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 				local s_Bot1 = PlayerManager:GetPlayerByName(s_RaycastCheckEntry.Bot1)
 				local s_Bot2 = PlayerManager:GetPlayerByName(s_RaycastCheckEntry.Bot2)
 
-				if s_Bot1 ~= nil and s_Bot2 ~= nil and s_Bot1.soldier ~= nil and s_Bot2.soldier ~= nil then
-					local s_StartPos = s_Bot1.soldier.worldTransform.trans:Clone()
+				if s_Bot1 and s_Bot2 and s_Bot1.soldier and s_Bot2.soldier then
+					local s_StartPos = nil
+					local s_EndPos = nil
+					if s_RaycastCheckEntry.Bot1InVehicle then
+						s_StartPos = s_Bot1.controlledControllable.transform.trans:Clone()
+					else
+						s_StartPos = s_Bot1.soldier.worldTransform.trans:Clone()
+					end
 					s_StartPos.y = s_StartPos.y + 1.2
-					local s_EndPos = s_Bot2.soldier.worldTransform.trans:Clone()
-					s_EndPos.y = s_EndPos.y + 1.2
 
+					if s_RaycastCheckEntry.Bot2InVehicle then
+						s_EndPos = s_Bot2.controlledControllable.transform.trans:Clone()
+					else
+						s_EndPos = s_Bot2.soldier.worldTransform.trans:Clone()
+					end
+					s_EndPos.y = s_EndPos.y + 1.2
 					if self:DoRaycast(s_StartPos, s_EndPos, s_RaycastCheckEntry.Bot1InVehicle, s_RaycastCheckEntry.Bot2InVehicle) then
 						table.insert(s_RaycastResultsToSend, {
 							Mode = "ShootAtBot",
@@ -253,16 +263,27 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 			end
 
 			-- check for clear view
-			local s_PlayerPosition = ClientUtils:GetCameraTransform().trans:Clone() --player.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(player, false)
-
+			local s_PlayerPosition = nil
+			if self.m_Player.inVehicle then
+				s_PlayerPosition = self.m_Player.controlledControllable.transform.trans:Clone()
+				s_PlayerPosition.y = s_PlayerPosition.y + 1.2
+			else
+				s_PlayerPosition = ClientUtils:GetCameraTransform().trans:Clone() --player.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(player, false)
+			end
 			-- find direction of Bot
-			local s_Target = s_Bot.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(s_Bot, false, false)
-			local s_Distance = s_PlayerPosition:Distance(s_Bot.soldier.worldTransform.trans)
+			local s_TargetPos = Vec3()
+			if s_Bot.inVehicle then
+				s_TargetPos = self.m_Player.controlledControllable.transform.trans:Clone()
+				s_TargetPos.y = s_TargetPos.y + 1.2
+			else
+				s_TargetPos = s_Bot.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(s_Bot, false, false)
+			end
+			local s_Distance = s_PlayerPosition:Distance(s_TargetPos)
 
 			s_CheckCount = s_CheckCount + 1
 
 			if (s_Distance < Config.MaxShootDistanceSniper) or (s_Bot.inVehicle and Config.MaxShootDistanceVehicles) then
-				if self:DoRaycast(s_PlayerPosition, s_Target, self.m_Player.inVehicle, s_Bot.inVehicle) then
+				if self:DoRaycast(s_PlayerPosition, s_TargetPos, self.m_Player.inVehicle, s_Bot.inVehicle) then
 					-- we found a valid bot in Sight (either no hit, or player-hit). Signal Server with players
 					local s_IgnoreYaw = false
 
@@ -303,12 +324,13 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 			local s_Index = (self.m_LastIndex + i) % #s_TeamMates + 1
 			local s_Bot = s_TeamMates[s_Index]
 
-			if s_Bot == nil or s_Bot.onlineId ~= 0 or s_Bot.soldier == nil then
+			if s_Bot == nil or s_Bot.onlineId ~= 0 or s_Bot.soldier == nil or s_Bot.inVehicle then
 				goto continue_teamMate_loop
 			end
 
 			-- check for clear view
-			local s_PlayerPosition = self.m_Player.corpse.worldTransform.trans:Clone() + Vec3(0.0, 1.0, 0.0)
+			local s_PlayerPosition = self.m_Player.corpse.worldTransform.trans:Clone()
+			s_PlayerPosition.y = s_PlayerPosition.y + 0.4
 
 			-- find direction of Bot
 			local s_Target = s_Bot.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(s_Bot, false, false)

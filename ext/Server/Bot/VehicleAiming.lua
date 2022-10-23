@@ -35,7 +35,7 @@ function VehicleAiming:UpdateAimingVehicleAdvanced(p_Bot)
 			m_Utilities:getCameraPos(p_Bot.m_Player, false, false)
 	end
 
-	if p_Bot._ShootPlayerVehicleType == VehicleTypes.MavBot then
+	if p_Bot._ShootPlayerVehicleType == VehicleTypes.MavBot or p_Bot._ShootPlayerVehicleType == VehicleTypes.MobileArtillery then
 		s_FullPositionTarget = p_Bot._ShootPlayer.controlledControllable.transform.trans:Clone()
 	else
 		if p_Bot.m_Player.controlledEntryId == 0 and p_Bot._ShootPlayerVehicleType == VehicleTypes.NoVehicle and
@@ -155,7 +155,7 @@ function VehicleAiming:UpdateAimingVehicle(p_Bot)
 			m_Utilities:getCameraPos(p_Bot.m_Player, false, false)
 	end
 
-	if p_Bot._ShootPlayerVehicleType == VehicleTypes.MavBot then
+	if p_Bot._ShootPlayerVehicleType == VehicleTypes.MavBot or p_Bot._ShootPlayerVehicleType == VehicleTypes.MobileArtillery then
 		s_FullPositionTarget = p_Bot._ShootPlayer.controlledControllable.transform.trans:Clone()
 	else
 		if p_Bot.m_Player.controlledEntryId == 0 and p_Bot._ShootPlayerVehicleType == VehicleTypes.NoVehicle and

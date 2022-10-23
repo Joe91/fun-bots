@@ -31,7 +31,8 @@ function BotAiming:UpdateAiming(p_Bot)
 		s_FullPositionBot = p_Bot.m_Player.soldier.worldTransform.trans:Clone() +
 			m_Utilities:getCameraPos(p_Bot.m_Player, false, false)
 
-		if p_Bot._ShootPlayerVehicleType == VehicleTypes.MavBot then
+		if p_Bot._ShootPlayerVehicleType == VehicleTypes.MavBot or
+			p_Bot._ShootPlayerVehicleType == VehicleTypes.MobileArtillery then
 			s_FullPositionTarget = p_Bot._ShootPlayer.controlledControllable.transform.trans:Clone()
 		else
 			local s_AimForHead = false
