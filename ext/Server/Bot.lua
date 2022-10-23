@@ -537,6 +537,7 @@ function Bot:GetAttackDistance(p_ShootBackAfterHit)
 	else
 		if m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) and
 			m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) and
+			m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.MobileArtillery) and
 			m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.AntiAir) then
 			if p_ShootBackAfterHit then
 				s_AttackDistance = Config.MaxShootDistanceNoAntiAir * 2
