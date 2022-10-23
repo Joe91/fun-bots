@@ -268,7 +268,7 @@ VehicleData = {
 		Name = "[BM-23]",
 		Type = VehicleTypes.MobileArtillery,
 		Terrain = VehicleTerrains.Land,
-		Parts = {nil, 1 },  -- TODO
+		Parts = {nil, 1 },
 		Speed = { 300, 90 },
 		Drop = { 0.0, 25.0}
 	},

@@ -524,8 +524,15 @@ function NodeEditor:StartTrace(p_Player)
 	self.m_CustomTraceIndex[p_Player.onlineId] = self:_getNewIndex()
 	self.m_CustomTraceDistance[p_Player.onlineId] = 0
 
+	local s_PlayerPos = nil
+	if not p_Player.attachedControllable then
+		s_PlayerPos = p_Player.soldier.worldTransform.trans:Clone()
+	else
+		s_PlayerPos = p_Player.controlledControllable.transform.trans:Clone()
+	end
+
 	local s_FirstWaypoint = self.m_CustomTrace[p_Player.onlineId]:Create({
-		Position = p_Player.soldier.worldTransform.trans:Clone()
+		Position = s_PlayerPos
 	})
 	self.m_CustomTrace[p_Player.onlineId]:ClearSelection()
 	self.m_CustomTrace[p_Player.onlineId]:Select(nil, s_FirstWaypoint)

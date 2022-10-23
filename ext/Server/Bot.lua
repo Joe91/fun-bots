@@ -344,7 +344,7 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 								-- common things
 								m_VehicleMovement:UpdateSpeedOfMovementVehicle(self)
 								self:_UpdateInputs()
-								self:_CheckForVehicleActions(self._UpdateTimer)
+								self:_CheckForVehicleActions(self._UpdateTimer, s_Attacking)
 
 								-- only exit at this point and abort afterwards
 								if self:_DoExitVehicle() then
@@ -772,6 +772,7 @@ function Bot:_CheckForVehicleActions(p_DeltaTime, p_AttackActive)
 		if not s_VehicleEntity then
 			return
 		end
+
 		if p_AttackActive and self.m_Player.controlledEntryId == 0 then
 			-- change to gunner seat
 			self.m_Player:EnterVehicle(s_VehicleEntity, 1)
