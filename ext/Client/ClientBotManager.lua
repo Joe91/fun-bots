@@ -130,11 +130,11 @@ function ClientBotManager:DoRaycast(p_Pos1, p_Pos2, p_InObjectPos1, p_InObjectPo
 			s_DeltaPos = s_DeltaPos:Normalize()
 
 			if p_InObjectPos1 then -- Start Raycast outside of vehicle?
-				p_Pos1 = p_Pos1 + (s_DeltaPos * 2.5)
+				p_Pos1 = p_Pos1 + (s_DeltaPos * 3.2)
 			end
 
 			if p_InObjectPos2 then
-				p_Pos2 = p_Pos2 - (s_DeltaPos * 2.5)
+				p_Pos2 = p_Pos2 - (s_DeltaPos * 3.2)
 			end
 		end
 
@@ -192,14 +192,14 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 					else
 						s_StartPos = s_Bot1.soldier.worldTransform.trans:Clone()
 					end
-					s_StartPos.y = s_StartPos.y + 1.2
+					s_StartPos.y = s_StartPos.y + 1.4
 
 					if s_RaycastCheckEntry.Bot2InVehicle then
 						s_EndPos = s_Bot2.controlledControllable.transform.trans:Clone()
 					else
 						s_EndPos = s_Bot2.soldier.worldTransform.trans:Clone()
 					end
-					s_EndPos.y = s_EndPos.y + 1.2
+					s_EndPos.y = s_EndPos.y + 1.4
 					if self:DoRaycast(s_StartPos, s_EndPos, s_RaycastCheckEntry.Bot1InVehicle, s_RaycastCheckEntry.Bot2InVehicle) then
 						table.insert(s_RaycastResultsToSend, {
 							Mode = "ShootAtBot",
@@ -259,7 +259,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 		local s_PlayerPosition = Vec3()
 		if self.m_Player.inVehicle then
 			s_PlayerPosition = self.m_Player.controlledControllable.transform.trans:Clone()
-			s_PlayerPosition.y = s_PlayerPosition.y + 1.2
+			s_PlayerPosition.y = s_PlayerPosition.y + 1.4
 		else
 			s_PlayerPosition = ClientUtils:GetCameraTransform().trans:Clone() --player.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(player, false)
 		end
@@ -275,7 +275,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 			local s_TargetPos = Vec3()
 			if s_Bot.inVehicle then
 				s_TargetPos = s_Bot.controlledControllable.transform.trans:Clone()
-				s_TargetPos.y = s_TargetPos.y + 1.2
+				s_TargetPos.y = s_TargetPos.y + 1.4
 			else
 				s_TargetPos = s_Bot.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(s_Bot, false, false)
 			end
