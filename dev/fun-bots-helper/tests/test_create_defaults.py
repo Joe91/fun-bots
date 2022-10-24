@@ -10,9 +10,14 @@ from addons.gets import get_js_lines, get_lua_lines, get_settings, get_to_root
 
 
 def test_create_defaults(tmp_path) -> None:
-    """Key arguments.
+    """Test createDefaults algorithm.
 
-    tmp_path: built-in pytest fixture to create Pathlib temporary files"""
+    Args:
+        - tmp_path - built-in pytest fixture to create Pathlib temporary files
+
+    Returns:
+        None
+    """
     get_to_root()
     original_lua_path = "ext/Shared/Languages/DEFAULT.lua"
     d = tmp_path / "sub"

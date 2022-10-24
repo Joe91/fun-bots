@@ -3,9 +3,13 @@ if the remaining tables after clear all paths are the same as those that were ig
 
 
 def test_clear_all_paths(session) -> None:
-    """Key arguments.
+    """Test clearAllPaths algorithm.
 
-    session: cursor object from a temporary copy of mod.db
+    Args:
+        - session - cursor object from a temporary copy of mod.db
+
+    Returns:
+        None
     """
     sql_instruction = """
 		SELECT * FROM sqlite_master WHERE type='table'

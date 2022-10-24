@@ -1,7 +1,7 @@
-""" 
-This module provides all intermediary functions for the scripts in /tools. All functions here 
-(except get_to_root and get_all_tables) return a list that will be used to write the lines of 
-external files.
+"""This module provides all intermediary functions for the scripts in /tools.
+
+All functions here (except get_to_root and get_all_tables) return a list that will be used 
+to write the lines of external files.
 """
 
 import operator
@@ -14,13 +14,20 @@ from deep_translator import GoogleTranslator
 
 
 def get_settings(first_key: str) -> List[Dict]:
+    """Retrieve settings of SettingsDefinition.lua into a list.
+
+    Args:
+        - first_key - The key setting to be retrieved along with Description, Category and Default settings
+
+    Returns:
+        - allSettings - A list containing all settings
+    """
     settings_definition = "ext/Shared/Settings/SettingsDefinition.lua"
 
     with open(settings_definition, "r") as inFile:
         readoutActive = False
         allSettings = []
         setting = {}
-        numberOfSettings = 0
         for line in inFile.read().splitlines():
             if "Elements = {" in line:
                 readoutActive = True
@@ -34,14 +41,20 @@ def get_settings(first_key: str) -> List[Dict]:
                     )
                 if "}," in line or (len(setting) != 0 and "}" in line):
                     allSettings.append(setting)
-                    numberOfSettings += 1
                     setting = {}
 
-    print("Settings Retrieved")
     return allSettings
 
 
 def get_settings_lines(allSettings: List[Dict]) -> List[str]:
+    """Create a list of formatted setting lines to be used in Config.lua.
+
+    Args:
+        - allSettings - The list of settings
+
+    Returns:
+        - outFileLines - A list of formatted setting lines
+    """
     outFileLines, lastCategory = [], None
 
     for setting in allSettings:
@@ -61,11 +74,18 @@ def get_settings_lines(allSettings: List[Dict]) -> List[str]:
         )
     outFileLines.append("}")
 
-    print("Settings Lines Retrieved")
     return outFileLines
 
 
 def get_lua_lines(allSettings: List[Dict]) -> List[str]:
+    """Create a list of formatted language setting lines to be used in DEFAULT.lua.
+
+    Args:
+        - allSettings - The list of settings
+
+    Returns:
+        - outFileLines - A list of formatted language setting lines
+    """
     outFileLines = []
 
     lastCategory = None
@@ -78,13 +98,20 @@ def get_lua_lines(allSettings: List[Dict]) -> List[str]:
         outFileLines.append('Language:add(code, "' + setting["Text"] + '", "")')
         outFileLines.append('Language:add(code, "' + setting["Description"] + '", "")')
 
-    print("Lua Lines Retrieved")
     outFileLines.extend(__scan_other_files())
-    print("All Lua Lines Retrieved")
+
     return outFileLines
 
 
 def __scan_other_files() -> List[str]:
+    """Scan other files, besides SettingsDefinition.lua, searching for more settings.
+
+    Args:
+        None 
+
+    Returns:
+        - outFileLinesOthers - A list of external formatted language setting lines
+    """
     listOfTranslationFiles = [
         "ext/Client/ClientNodeEditor.lua",
         "ext/Server/BotSpawner.lua",
@@ -104,11 +131,18 @@ def __scan_other_files() -> List[str]:
                         if newLine not in outFileLinesOthers:
                             outFileLinesOthers.append(newLine)
 
-    print("Lua Lines Retrieved from Other Files")
     return outFileLinesOthers
 
 
 def get_js_lines() -> List[str]:
+    """Create a list of formatted language setting lines to be used in DEFAULT.js.
+
+    Args:
+        None 
+
+    Returns:
+        - outFileLines - A list of formatted language setting lines
+    """
     index_html = "WebUI/index.html"
     listOfJsTranslationFiles = [
         "WebUI/classes/EntryElement.js",
@@ -132,12 +166,19 @@ def get_js_lines() -> List[str]:
                         if translation not in outFileLines:
                             outFileLines.append(translation)
 
-    print("JS Lines Retrieved")
     return outFileLines
 
 
 def get_map_lines(create: bool = False, update_supported: bool = False) -> List[List]:
+    """Build a list of maps to be used in MapList.txt and Supported-maps.md.
 
+    Args:
+        - create - True if we want to get the maps for MapList.txt,
+        - update_supported - True if we want to update the maps of Supported-maps.md
+
+    Returns:
+        - mapItems - A list of all maps' information
+    """
     AllGameModes = [
         "TDM",
         "SDM",
@@ -238,18 +279,35 @@ def get_map_lines(create: bool = False, update_supported: bool = False) -> List[
 
 
 def get_all_tables() -> Tuple[sqlite3.Connection, sqlite3.Cursor]:
-    connection = sqlite3.connect("mod.db")
-    cursor = connection.cursor()
+    """Get all tables from the mod database.
+
+    Args:
+        None
+
+    Returns:
+        - connect - The object associated with the database connection
+        - cursor - The object associated with the database operations
+    """
+    connect = sqlite3.connect("mod.db")
+    cursor = connect.cursor()
 
     sql_instruction = """
 		SELECT * FROM sqlite_master WHERE type='table'
 	"""
     cursor.execute(sql_instruction)
 
-    return connection, cursor
+    return connect, cursor
 
 
 def get_invalid_node_lines(infile: TextIOWrapper) -> List[str]:
+    """Fix invalid nodes of all maps.
+
+    Args:
+        - infile - The opened map file to be fixed
+
+    Returns:
+        - outFileLines - The new lines used to update the map's node
+    """
     DISTANCE_MAX = 80
 
     outFileLines = infile.readlines()
@@ -321,6 +379,15 @@ def get_invalid_node_lines(infile: TextIOWrapper) -> List[str]:
 
 
 def get_objectives_to_rename(infile: TextIOWrapper) -> Tuple[List[str], List[str]]:
+    """Fix invalid objective names.
+
+    Args:
+        - infile - The opened map file to have objectives fixed
+
+    Returns:
+        - outFileLines - The new lines used to update the map's objectives
+        - fileLines - A list with the original file lines
+    """
     allObjectives = []
     fileLines = infile.readlines()
     for line in fileLines[1:]:
@@ -340,94 +407,127 @@ def get_objectives_to_rename(infile: TextIOWrapper) -> Tuple[List[str], List[str
 
 
 def get_translation(translator: Any, line: str) -> str:
+    """Translate a line from one language to another.
+
+    Args:
+        - translator - The translator object used to translate it
+        - line - The line to be translated
+
+    Returns:
+        - str - The translated line
+    """
     splitted_line = line.split('"')
     splitted_line.remove("")
     splitted_line.insert(3, translator.translate(splitted_line[1]))
     return '"'.join(splitted_line)
 
 
-def get_updated_lines_lua(compFile: TextIOWrapper) -> List[str]:
+def get_updated_lines_lua(infile: TextIOWrapper) -> List[str]:
+    """Update all lua language files based on DEFAULT.lua.
+
+    Args:
+        - infile - The file to be updated
+
+    Returns:
+        - outFileLines - A list with all translated lines, including new ones
+    """
     language_file = "ext/Shared/Languages/DEFAULT.lua"
     with open(language_file, "r", encoding="utf8") as inFile:
         lua_lines = inFile.read().splitlines()
 
-    compLines = compFile.read().splitlines()
+    outFileLines = infile.read().splitlines()
 
-    LANG = compLines[0].split("'")[1].split("_")[0]
+    LANG = outFileLines[0].split("'")[1].split("_")[0]
     if LANG == "cn":
         LANG = "zh-CN"
 
     translator = GoogleTranslator(source="en", target=LANG)
 
     lines_to_remove = [
-        comp_line for comp_line in compLines if "Language:add" in comp_line
+        out_line for out_line in outFileLines if "Language:add" in out_line
     ]
     lines_to_add = []
 
     for line in lua_lines:
         if "Language:add" in line:
             line_found = False
-            comp_part = line.split('",')[0]
-            for comp_line in compLines:
-                if "Language:add" in comp_line:
-                    comp_part_2 = comp_line.split('",')[0]
-                    if comp_part == comp_part_2:
+            line_part = line.split('",')[0]
+            for out_line in outFileLines:
+                if "Language:add" in out_line:
+                    line_part_2 = out_line.split('",')[0]
+                    if line_part == line_part_2:
                         line_found = True
-                        if comp_line in lines_to_remove:
-                            lines_to_remove.remove(comp_line)
+                        if out_line in lines_to_remove:
+                            lines_to_remove.remove(out_line)
                         break
             if line_found == False:
                 lines_to_add.append(get_translation(translator, line))
     for remove_line in lines_to_remove:
-        compLines.remove(remove_line)
+        outFileLines.remove(remove_line)
     for add_line in lines_to_add:
-        compLines.append(add_line)
+        outFileLines.append(add_line)
 
-    return compLines
+    return outFileLines
 
 
-def get_updated_lines_js(compFile: TextIOWrapper) -> List[str]:
+def get_updated_lines_js(infile: TextIOWrapper) -> List[str]:
+    """Update all JS language files based on DEFAULT.js.
+
+    Args:
+        - infile - The file to be updated
+
+    Returns:
+        - outFileLines - A list with all translated lines, including new ones
+    """
     language_file_js = "WebUI/languages/DEFAULT.js"
 
     with open(language_file_js, "r", encoding="utf8") as inFile:
         js_lines = inFile.read().splitlines()
 
-    compLines = compFile.read().splitlines()
+    outFileLines = infile.read().splitlines()
 
-    LANG = compLines[0].split("'")[1].split("_")[0]
+    LANG = outFileLines[0].split("'")[1].split("_")[0]
     if LANG == "cn":
         LANG = "zh-CN"
     translator = GoogleTranslator(source="en", target=LANG)
 
-    lines_to_remove = [comp_line for comp_line in compLines[6:] if ":" in comp_line]
+    lines_to_remove = [out_line for out_line in outFileLines[6:] if ":" in out_line]
     lines_to_add = []
 
     for line in js_lines[6:]:
         if ":" in line:
             line_found = False
-            comp_part = line.split('": ')[0].replace(" ", "").replace("	", "")
-            for comp_line in compLines[6:]:
+            line_part = line.split('": ')[0].replace(" ", "").replace("	", "")
+            for out_line in outFileLines[6:]:
                 if ":" in line:
-                    comp_part_2 = (
-                        comp_line.split('": ')[0].replace(" ", "").replace("	", "")
+                    line_part_2 = (
+                        out_line.split('": ')[0].replace(" ", "").replace("	", "")
                     )
-                    if comp_part == comp_part_2:
+                    if line_part == line_part_2:
                         line_found = True
-                        if comp_line in lines_to_remove:
-                            lines_to_remove.remove(comp_line)
+                        if out_line in lines_to_remove:
+                            lines_to_remove.remove(out_line)
                         break
             if line_found == False:
                 if line.startswith('\t"') and not line.split(":")[0].startswith('\t""'):
                     lines_to_add.append(get_translation(translator, line))
     for remove_line in lines_to_remove:
-        compLines.remove(remove_line)
+        outFileLines.remove(remove_line)
     for add_line in lines_to_add:
-        compLines.insert(-1, add_line)
+        outFileLines.insert(-1, add_line)
 
-    return compLines
+    return outFileLines
 
 
 def get_to_root() -> None:
+    """Go back to the fun-bots root, i.e, /fun-bots.
+
+    Args:
+        None
+
+    Returns:
+        None
+    """
     cwd_splitted = os.getcwd().replace("\\", "/").split("/")
     new_cwd = "/".join(cwd_splitted[: cwd_splitted.index("fun-bots") + 1])
     os.chdir(new_cwd)

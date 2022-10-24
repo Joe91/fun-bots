@@ -1,7 +1,7 @@
-"""
-This module provides functions that accept a cursor object. This cursor will somehow interact with 
-the mod database, writing files out of specific sql instructions or inserting values in the 
-database itself. All functions return None.
+"""This module provides functions that interact with the mod database.
+
+All functions receive a cursor that's used to interact with the mod database, writing files out of 
+specific SQL instructions or inserting values in the database itself. All functions return None.
 """
 
 import os
@@ -9,6 +9,14 @@ import sqlite3
 
 
 def set_permission_config_files(cursor: sqlite3.Cursor) -> None:
+    """Write permission_and_config files out of the database.
+
+    Args:
+        - cursor - The object that'll interact with the database
+
+    Returns:
+        None
+    """
     exportList = ["FB_Permissions", "FB_Config_Trace", "FB_Settings"]
     destFolder = "permission_and_config"
 
@@ -33,6 +41,14 @@ def set_permission_config_files(cursor: sqlite3.Cursor) -> None:
 
 
 def set_permission_config_db(cursor: sqlite3.Cursor) -> None:
+    """Write permission and configuration tables to the database, out of permission_and_config.
+
+    Args:
+        - cursor - The object that'll interact with the database
+
+    Returns:
+        None
+    """
     allStructures = {
         "FB_Permissions": ["GUID", "PlayerName", "Value", "Time"],
         "FB_Config_Trace": ["Key", "Value", "Time"],
@@ -76,6 +92,14 @@ def set_permission_config_db(cursor: sqlite3.Cursor) -> None:
 
 
 def set_traces_files(cursor: sqlite3.Cursor) -> None:
+    """Write trace mapfiles out of the database.
+
+    Args:
+        - cursor - The object that'll interact with the database
+
+    Returns:
+        None
+    """
     content = cursor.fetchall()
     ignoreList = ["sqlite_sequence", "FB_Permissions", "FB_Config_Trace", "FB_Settings"]
     destFolder = "mapfiles"
@@ -105,6 +129,14 @@ def set_traces_files(cursor: sqlite3.Cursor) -> None:
 
 
 def set_traces_db(cursor: sqlite3.Cursor) -> None:
+    """Write trace tables to the the database, out of mapfiles folder.
+
+    Args:
+        - cursor - The object that'll interact with the database
+
+    Returns:
+        None
+    """
     sourceFolder = "mapfiles"
     filenames = os.listdir(sourceFolder)
 

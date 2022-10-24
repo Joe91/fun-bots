@@ -8,9 +8,14 @@ from addons.gets import get_map_lines, get_to_root
 
 
 def test_create_maplist(tmp_path) -> None:
-    """Key arguments.
+    """Test createMaplist algorithm.
 
-    tmp_path: built-in pytest fixture to create Pathlib temporary files"""
+    Args:
+        - tmp_path - built-in pytest fixture to create Pathlib temporary files
+
+    Returns:
+        None
+    """
     get_to_root()
     original_maplist_path = "MapList.txt"
     d = tmp_path / "sub"

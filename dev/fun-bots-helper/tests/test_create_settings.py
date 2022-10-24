@@ -10,9 +10,14 @@ from addons.gets import get_settings, get_settings_lines, get_to_root
 
 
 def test_create_settings(tmp_path) -> None:
-    """Key arguments.
+    """Test createSettings algorithm.
 
-    tmp_path: built-in pytest fixture to create Pathlib temporary files"""
+    Args:
+        - tmp_path - built-in pytest fixture to create Pathlib temporary files
+
+    Returns:
+        None
+    """
     get_to_root()
     original_config_path = "ext/Shared/Config.lua"
     d = tmp_path / "sub"

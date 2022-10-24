@@ -3,9 +3,13 @@ if any of the remaining tables after clear settings is a setting table."""
 
 
 def test_clear_settings(session) -> None:
-    """Key arguments.
+    """Test clearSettings algorithm.
 
-    session: cursor object from a temporary copy of mod.db
+    Args:
+        - session - cursor object from a temporary copy of mod.db
+
+    Returns:
+        None
     """
     removeList = ["FB_Config_Trace", "FB_Settings"]
 

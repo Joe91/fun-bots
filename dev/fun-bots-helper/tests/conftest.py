@@ -1,4 +1,5 @@
-"""This file provides all fixtures for the testing scripts"""
+"""This file provides all fixtures for the testing scripts."""
+
 import sqlite3
 
 import pytest
@@ -7,7 +8,14 @@ from addons.gets import get_to_root
 
 @pytest.fixture
 def session():
-    """Yield a cursor of a temporary mod.db copy"""
+    """Yield a cursor of a temporary mod.db copy.
+
+    Args:
+        None
+
+    Returns:
+        None
+    """
     get_to_root()
     connection = sqlite3.connect("mod.db")
     temp_connection = sqlite3.connect(":memory:")
