@@ -344,7 +344,7 @@ VehicleData = {
 		Name = "[AH-1Z VIPER]",
 		Type = VehicleTypes.Chopper,
 		Terrain = VehicleTerrains.Air,
-		Parts = {  { -1, -1 }, 1 }, --0,1,14
+		Parts = {  { -2, -2 }, 1 }, --0,1,14
 		Speed = { {300, 10000}, 600 },
 		Drop = { {0.0, 0.0}, 0.0 }
 	},
@@ -352,7 +352,7 @@ VehicleData = {
 		Name = "[AH-1Z VIPER]",
 		Type = VehicleTypes.Chopper,
 		Terrain = VehicleTerrains.Air,
-		Parts = {  { -1, -1 }, 1 }, --0,1,14
+		Parts = {  { -2, -2 }, 1 }, --0,1,14
 		Speed = { {300, 10000}, 600 },
 		Drop = { {0.0, 0.0}, 0.0 }
 	},
@@ -360,7 +360,7 @@ VehicleData = {
 		Name = "[AH-6J LITTLE BIRD]",
 		Type = VehicleTypes.Chopper,
 		Terrain = VehicleTerrains.Air,
-		Parts = { { -1, -1 } },
+		Parts = { { -2, -2 } },
 		Speed = { {900, 10000} },
 		Drop = { {0.0, 0.0} }
 	},
@@ -368,7 +368,7 @@ VehicleData = {
 		Name = "[AH-6J LITTLE BIRD]",
 		Type = VehicleTypes.Chopper,
 		Terrain = VehicleTerrains.Air,
-		Parts = { { -1, -1 }, -1, -1, -1 },
+		Parts = { { -2, -2 }, -1, -1, -1 },
 		Speed = { {900, 10000}, 300, 300, 300 },
 		Drop = { {0.0, 0.0}, 9.81, 9.81, 9.81 }
 	},
@@ -384,7 +384,7 @@ VehicleData = {
 		Name = "[MI-28 HAVOC]",
 		Type = VehicleTypes.Chopper,
 		Terrain = VehicleTerrains.Air,
-		Parts = {  { -1, -1 }, 2 }, --0,1,14
+		Parts = {  { -2, -2 }, 2 }, --0,1,14
 		Speed = { {300, 10000}, 600 },
 		Drop = { {0.0, 0.0}, 0.0 }
 	},
