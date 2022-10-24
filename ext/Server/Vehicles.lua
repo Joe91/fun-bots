@@ -166,10 +166,10 @@ function Vehicles:GetSpeedAndDrop(p_VehicleData, p_Index, p_WeaponSelection)
 		end
 	end
 	if s_Speed == nil then
-		s_Speed = 500
+		s_Speed = 10000
 	end
 	if s_Drop == nil then
-		s_Drop = 9.81
+		s_Drop = 0.0
 	end
 
 	return s_Speed, s_Drop
