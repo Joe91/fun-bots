@@ -6,6 +6,7 @@ require('Bot')
 
 ---@type Utilities
 local m_Utilities = require('__shared/Utilities')
+local m_Vehicles = require("Vehicles")
 ---@type Logger
 local m_Logger = Logger("BotManager", Debug.Server.BOT)
 
@@ -1031,14 +1032,14 @@ end
 
 ---@param p_Player Player
 function BotManager:EnterVehicle(p_Player)
-	if not p_Player or not p_Player.soldier or not p_Player.controlledControllable or
-		p_Player.controlledControllable.typeInfo.name == "ServerSoldierEntity" then
+
+	local s_VehicleType = m_Vehicles:FindOutVehicleType(p_Player)
+	if s_VehicleType == VehicleTypes.NoVehicle or s_VehicleType == VehicleTypes.MobileArtillery then
 		return
 	end
 
 	-- check for vehicle of player and seats
 	local s_MaxFreeSeats = p_Player.controlledControllable.entryCount - 1
-	-- TODO: abort for mobile artillery
 
 	if s_MaxFreeSeats <= 0 then
 		return

@@ -9,7 +9,7 @@ local m_Logger = Logger("Vehicles", Debug.Server.VEHICLES)
 function Vehicles:FindOutVehicleType(p_Player)
 	local s_VehicleType = VehicleTypes.NoVehicle -- no vehicle
 
-	if p_Player.controlledControllable and not p_Player.controlledControllable:Is("ServerSoldierEntity") then
+	if p_Player and p_Player.controlledControllable and not p_Player.controlledControllable:Is("ServerSoldierEntity") then
 		local s_VehicleName = VehicleEntityData(p_Player.controlledControllable.data).controllableType:gsub(".+/.+/", "")
 
 		local s_VehicleData = VehicleData[s_VehicleName]
