@@ -524,8 +524,15 @@ function NodeEditor:StartTrace(p_Player)
 	self.m_CustomTraceIndex[p_Player.onlineId] = self:_getNewIndex()
 	self.m_CustomTraceDistance[p_Player.onlineId] = 0
 
+	local s_PlayerPos = nil
+	if not p_Player.attachedControllable then
+		s_PlayerPos = p_Player.soldier.worldTransform.trans:Clone()
+	else
+		s_PlayerPos = p_Player.controlledControllable.transform.trans:Clone()
+	end
+
 	local s_FirstWaypoint = self.m_CustomTrace[p_Player.onlineId]:Create({
-		Position = p_Player.soldier.worldTransform.trans:Clone()
+		Position = s_PlayerPos
 	})
 	self.m_CustomTrace[p_Player.onlineId]:ClearSelection()
 	self.m_CustomTrace[p_Player.onlineId]:Select(nil, s_FirstWaypoint)
@@ -823,7 +830,12 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 		if (s_Player and s_Player.soldier and l_Active and self.m_CustomTraceTimer[l_PlayerGuid] >= 0) then
 			self.m_CustomTraceTimer[l_PlayerGuid] = self.m_CustomTraceTimer[l_PlayerGuid] + p_DeltaTime
 
-			local s_PlayerPos = s_Player.soldier.worldTransform.trans:Clone()
+			local s_PlayerPos = nil
+			if not s_Player.attachedControllable then
+				s_PlayerPos = s_Player.soldier.worldTransform.trans:Clone()
+			else
+				s_PlayerPos = s_Player.controlledControllable.transform.trans:Clone()
+			end
 
 			if self.m_CustomTraceTimer[l_PlayerGuid] > Config.TraceDelta then
 				local s_LastWaypoint = self.m_CustomTrace[l_PlayerGuid]:GetLast()

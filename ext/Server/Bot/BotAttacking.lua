@@ -73,9 +73,8 @@ function BotAttacking:UpdateAttacking(p_Bot)
 						p_Bot._ActiveAction = BotActionFlags.GrenadeActive
 					elseif s_AttackMode == VehicleAttackModes.AttackWithRocket or
 						s_AttackMode == VehicleAttackModes.AttackWithMissileAir or
-						s_AttackMode == WeaponTypes.AttackWithMissileLand then -- rockets and missiles
+						s_AttackMode == VehicleAttackModes.AttackWithMissileLand then -- rockets and missiles
 						p_Bot._WeaponToUse = BotWeapons.Gadget2
-
 						if p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.secondaryAmmo <= 0 then
 							p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.secondaryAmmo = 1
 						end

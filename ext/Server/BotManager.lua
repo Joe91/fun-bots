@@ -6,6 +6,7 @@ require('Bot')
 
 ---@type Utilities
 local m_Utilities = require('__shared/Utilities')
+local m_Vehicles = require("Vehicles")
 ---@type Logger
 local m_Logger = Logger("BotManager", Debug.Server.BOT)
 
@@ -1031,8 +1032,9 @@ end
 
 ---@param p_Player Player
 function BotManager:EnterVehicle(p_Player)
-	if not p_Player or not p_Player.soldier or not p_Player.controlledControllable or
-		p_Player.controlledControllable.typeInfo.name == "ServerSoldierEntity" then
+
+	local s_VehicleType = m_Vehicles:FindOutVehicleType(p_Player)
+	if s_VehicleType == VehicleTypes.NoVehicle or s_VehicleType == VehicleTypes.MobileArtillery then
 		return
 	end
 
@@ -1163,7 +1165,12 @@ function BotManager:_CheckForBotBotAttack()
 		local s_Bot = self:GetBotByName(s_BotNameToCheck)
 
 		if s_Bot and s_Bot.m_Player and s_Bot.m_Player.soldier and s_Bot:IsReadyToAttack() then
-			local s_BotPosition = s_Bot.m_Player.soldier.worldTransform.trans
+			local s_BotPosition = nil
+			if s_Bot.m_Player.controlledControllable then
+				s_BotPosition = s_Bot.m_Player.controlledControllable.transform.trans
+			else
+				s_BotPosition = s_Bot.m_Player.soldier.worldTransform.trans
+			end
 
 			for _, l_BotName in ipairs(self._BotBotAttackList) do
 				if l_BotName ~= s_BotNameToCheck then
@@ -1185,7 +1192,13 @@ function BotManager:_CheckForBotBotAttack()
 						if not self._ConnectionCheckState[s_ConnectionValue] then
 							self._ConnectionCheckState[s_ConnectionValue] = true
 							-- check distance
-							local s_Distance = s_BotPosition:Distance(s_EnemyBot.m_Player.soldier.worldTransform.trans)
+							local s_EnemyBotPosition = nil
+							if s_Bot.m_Player.controlledControllable then
+								s_EnemyBotPosition = s_EnemyBot.m_Player.controlledControllable.transform.trans
+							else
+								s_EnemyBotPosition = s_EnemyBot.m_Player.soldier.worldTransform.trans
+							end
+							local s_Distance = s_BotPosition:Distance(s_EnemyBotPosition)
 							s_ChecksDone = s_ChecksDone + 1
 							local s_MaxDistance = s_Bot:GetAttackDistance()
 							local s_MaxDistanceEnemyBot = s_EnemyBot:GetAttackDistance()

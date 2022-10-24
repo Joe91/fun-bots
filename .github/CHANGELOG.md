@@ -20,9 +20,13 @@ This is the changelog for the version V2.6.2. Don't forget to [join us on Discor
 * fix Timout when saving huge paths #204
 * fix compatibility with [More Vehicles-Mod](https://github.com/KrazyIvan777/CQ-MoreVehicles)
 * Option to prevent bots from attacking other players
+* usage of Mobile Artillery possible
+* jets and choppers also use secondary weapon
 
 ### Bug fixes
 * fix scavenger revive
+* fix usage of javelin
+* some attack- and aiming-issues with vehicles
 
 ### New maps
 

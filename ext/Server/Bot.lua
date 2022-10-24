@@ -133,7 +133,7 @@ function Bot:__init(p_Player)
 
 	-- vehicle stuff
 	---@type integer|nil
-	self._VehicleMovableId = nil
+	self._VehicleMovableId = -1
 	self._LastVehicleYaw = 0.0
 	self._VehicleReadyToShoot = false
 	self._FullVehicleSteering = false
@@ -306,7 +306,7 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 								end
 
 								self:_UpdateInputs()
-								self:_CheckForVehicleActions(self._UpdateTimer)
+								self:_CheckForVehicleActions(self._UpdateTimer, s_Attacking)
 
 								-- only exit at this point and abort afterwards
 								if self:_DoExitVehicle() then
@@ -344,7 +344,7 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 								-- common things
 								m_VehicleMovement:UpdateSpeedOfMovementVehicle(self)
 								self:_UpdateInputs()
-								self:_CheckForVehicleActions(self._UpdateTimer)
+								self:_CheckForVehicleActions(self._UpdateTimer, s_Attacking)
 
 								-- only exit at this point and abort afterwards
 								if self:_DoExitVehicle() then
@@ -537,6 +537,7 @@ function Bot:GetAttackDistance(p_ShootBackAfterHit)
 	else
 		if m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) and
 			m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) and
+			m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.MobileArtillery) and
 			m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.AntiAir) then
 			if p_ShootBackAfterHit then
 				s_AttackDistance = Config.MaxShootDistanceNoAntiAir * 2
@@ -576,10 +577,11 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 	-- don't attack as driver in some vehicles
 	if self.m_InVehicle and self.m_Player.controlledEntryId == 0 then
 		if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) then
-			if self.m_Player.controlledControllable:GetPlayerInEntry(1) ~= nil then
-				if not Config.ChopperDriversAttack then
-					return false
-				end
+
+			if self._VehicleMovableId == -1 then -- transport-choppers don't attack as driver
+				return false
+			elseif self.m_Player.controlledControllable:GetPlayerInEntry(1) ~= nil and not Config.ChopperDriversAttack then -- don't attack if gunner available and conifg is false
+				return false
 			end
 		end
 
@@ -613,13 +615,22 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 
 	-- don't shoot if too far away
 	self._DistanceToPlayer = 0.0
-
-	if s_Type == VehicleTypes.MavBot then
-		self._DistanceToPlayer = p_Player.controlledControllable.transform.trans:Distance(self.m_Player.soldier.worldTransform
-			.trans)
+	local s_PlayerPos = nil
+	local s_TargetPos = nil
+	if s_Type == VehicleTypes.MavBot or s_Type == VehicleTypes.MobileArtillery then
+		s_TargetPos = p_Player.controlledControllable.transform.trans:Clone()
 	else
-		self._DistanceToPlayer = p_Player.soldier.worldTransform.trans:Distance(self.m_Player.soldier.worldTransform.trans)
+		s_TargetPos = p_Player.soldier.worldTransform.trans:Clone()
 	end
+
+	if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.MobileArtillery) then
+		s_PlayerPos = self.m_Player.controlledControllable.transform.trans:Clone()
+	else
+		s_PlayerPos = self.m_Player.soldier.worldTransform.trans:Clone()
+	end
+
+	self._DistanceToPlayer = s_TargetPos:Distance(s_PlayerPos)
+
 
 	local s_AttackDistance = self:GetAttackDistance(p_IgnoreYaw)
 
@@ -667,19 +678,10 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 
 	if not p_IgnoreYaw then
 		local s_OldYaw = self.m_Player.input.authoritativeAimingYaw
-		local s_DifferenceY = 0.0
-		local s_DifferenceX = 0.0
-		local s_DifferenceZ = 0.0
 
-		if s_Type == VehicleTypes.MavBot then
-			s_DifferenceY = p_Player.controlledControllable.transform.trans.z - self.m_Player.soldier.worldTransform.trans.z
-			s_DifferenceX = p_Player.controlledControllable.transform.trans.x - self.m_Player.soldier.worldTransform.trans.x
-			s_DifferenceZ = p_Player.controlledControllable.transform.trans.y - self.m_Player.soldier.worldTransform.trans.y
-		else
-			s_DifferenceY = p_Player.soldier.worldTransform.trans.z - self.m_Player.soldier.worldTransform.trans.z
-			s_DifferenceX = p_Player.soldier.worldTransform.trans.x - self.m_Player.soldier.worldTransform.trans.x
-			s_DifferenceZ = p_Player.soldier.worldTransform.trans.y - self.m_Player.soldier.worldTransform.trans.y
-		end
+		local s_DifferenceY = s_TargetPos.z - s_PlayerPos.z
+		local s_DifferenceX = s_TargetPos.x - s_PlayerPos.x
+		local s_DifferenceZ = s_TargetPos.y - s_PlayerPos.y
 
 		local s_AtanYaw = math.atan(s_DifferenceY, s_DifferenceX)
 		local s_Yaw = (s_AtanYaw > math.pi / 2) and (s_AtanYaw - math.pi / 2) or (s_AtanYaw + 3 * math.pi / 2)
@@ -742,7 +744,7 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 end
 
 ---@param p_DeltaTime number
-function Bot:_CheckForVehicleActions(p_DeltaTime)
+function Bot:_CheckForVehicleActions(p_DeltaTime, p_AttackActive)
 	-- check if exit of vehicle is needed (because of low health)
 	if not self._ExitVehicleActive then
 		self._VehicleHealthTimer = self._VehicleHealthTimer + p_DeltaTime
@@ -766,48 +768,66 @@ function Bot:_CheckForVehicleActions(p_DeltaTime)
 		end
 	end
 
-	-- check if better seat is available
-	self._VehicleSeatTimer = self._VehicleSeatTimer + p_DeltaTime
+	if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.MobileArtillery) then
+		-- change seat, for attack
+		local s_VehicleEntity = self.m_Player.controlledControllable
+		if not s_VehicleEntity then
+			return
+		end
 
-	if self._VehicleSeatTimer >= Registry.VEHICLES.VEHICLE_SEAT_CHECK_CYCLE_TIME then
-		self._VehicleSeatTimer = 0
+		if p_AttackActive and self.m_Player.controlledEntryId == 0 then
+			-- change to gunner seat
+			self.m_Player:EnterVehicle(s_VehicleEntity, 1)
+			self:UpdateVehicleMovableId()
+		elseif not p_AttackActive and self.m_Player.controlledEntryId == 1 then
+			-- change to driver seat
+			self.m_Player:EnterVehicle(s_VehicleEntity, 0)
+			self:UpdateVehicleMovableId()
+		end
 
-		if self.m_InVehicle then --in vehicle
-			local s_VehicleEntity = self.m_Player.controlledControllable
+	else
+		-- check if better seat is available
+		self._VehicleSeatTimer = self._VehicleSeatTimer + p_DeltaTime
+		if self._VehicleSeatTimer >= Registry.VEHICLES.VEHICLE_SEAT_CHECK_CYCLE_TIME then
+			self._VehicleSeatTimer = 0
 
-			if not s_VehicleEntity then
-				return
-			end
+			if self.m_InVehicle then --in vehicle
+				local s_VehicleEntity = self.m_Player.controlledControllable
 
-			for l_SeatIndex = 0, self.m_Player.controlledEntryId do
-				if s_VehicleEntity:GetPlayerInEntry(l_SeatIndex) == nil then
-					-- better seat available --> swich seats
-					m_Logger:Write("switch to better seat")
-					self:AbortAttack()
-					self.m_Player:EnterVehicle(s_VehicleEntity, l_SeatIndex)
-					self:UpdateVehicleMovableId()
-					break
+				if not s_VehicleEntity then
+					return
 				end
-			end
-		elseif self.m_OnVehicle then --only passenger.
-			local s_VehicleEntity = self.m_Player.attachedControllable
-			local s_LowestSeatIndex = -1
 
-			if not s_VehicleEntity then
-				return
-			end
-
-			for l_SeatIndex = 0, s_VehicleEntity.entryCount - 1 do
-				if s_VehicleEntity:GetPlayerInEntry(l_SeatIndex) == nil then
-					-- maybe better seat available
-					s_LowestSeatIndex = l_SeatIndex
-				else -- check if there is a gap
-					if s_LowestSeatIndex >= 0 then -- there is a better place
+				for l_SeatIndex = 0, self.m_Player.controlledEntryId do
+					if s_VehicleEntity:GetPlayerInEntry(l_SeatIndex) == nil then
+						-- better seat available --> swich seats
 						m_Logger:Write("switch to better seat")
 						self:AbortAttack()
-						self.m_Player:EnterVehicle(s_VehicleEntity, s_LowestSeatIndex)
+						self.m_Player:EnterVehicle(s_VehicleEntity, l_SeatIndex)
 						self:UpdateVehicleMovableId()
 						break
+					end
+				end
+			elseif self.m_OnVehicle then --only passenger.
+				local s_VehicleEntity = self.m_Player.attachedControllable
+				local s_LowestSeatIndex = -1
+
+				if not s_VehicleEntity then
+					return
+				end
+
+				for l_SeatIndex = 0, s_VehicleEntity.entryCount - 1 do
+					if s_VehicleEntity:GetPlayerInEntry(l_SeatIndex) == nil then
+						-- maybe better seat available
+						s_LowestSeatIndex = l_SeatIndex
+					else -- check if there is a gap
+						if s_LowestSeatIndex >= 0 then -- there is a better place
+							m_Logger:Write("switch to better seat")
+							self:AbortAttack()
+							self.m_Player:EnterVehicle(s_VehicleEntity, s_LowestSeatIndex)
+							self:UpdateVehicleMovableId()
+							break
+						end
 					end
 				end
 			end
@@ -1195,7 +1215,7 @@ function Bot:UpdateVehicleMovableId()
 	self:_SetActiveVars() -- update if "on vehicle" or "in vehicle"
 
 	if self.m_OnVehicle then
-		self._VehicleMovableId = nil
+		self._VehicleMovableId = -1
 	elseif self.m_InVehicle then
 		self._ActiveVehicleWeaponSlot = 0
 		self._VehicleMovableId = m_Vehicles:GetPartIdForSeat(self.m_ActiveVehicle, self.m_Player.controlledEntryId,
@@ -1230,6 +1250,9 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 
 	-- keep one seat free, if enough available
 	local s_MaxEntries = p_Entity.entryCount
+	if s_VehicleData.Type == VehicleTypes.MobileArtillery then
+		s_MaxEntries = 1
+	end
 
 	if not p_PlayerIsDriver then
 		-- leave a place for a player if more than two seats are available

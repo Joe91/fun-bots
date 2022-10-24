@@ -26,7 +26,7 @@ function VehicleAiming:UpdateAimingVehicleAdvanced(p_Bot)
 	local s_FullPositionTarget = nil
 	local s_FullPositionBot = nil
 
-	if p_Bot._VehicleMovableId ~= nil then
+	if p_Bot._VehicleMovableId >= 0 then
 		s_FullPositionBot = p_Bot.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(p_Bot._VehicleMovableId):
 			ToLinearTransform().trans
 	else
@@ -35,13 +35,13 @@ function VehicleAiming:UpdateAimingVehicleAdvanced(p_Bot)
 			m_Utilities:getCameraPos(p_Bot.m_Player, false, false)
 	end
 
-	if p_Bot._ShootPlayerVehicleType == VehicleTypes.MavBot then
+	if p_Bot._ShootPlayerVehicleType == VehicleTypes.MavBot or p_Bot._ShootPlayerVehicleType == VehicleTypes.MobileArtillery then
 		s_FullPositionTarget = p_Bot._ShootPlayer.controlledControllable.transform.trans:Clone()
 	else
-		if p_Bot.m_Player.controlledEntryId == 0 and p_Bot._ShootPlayerVehicleType == VehicleTypes.NoVehicle and
-			p_Bot._ShootPlayer.soldier.worldTransform.trans.y < s_FullPositionBot.y then
-			-- add nothing --> aim for the feet of the target
+		if p_Bot.m_Player.controlledEntryId == 0 and p_Bot._ShootPlayerVehicleType == VehicleTypes.NoVehicle then
+			-- add nothing (0.1)--> aim for the feet of the target
 			s_FullPositionTarget = p_Bot._ShootPlayer.soldier.worldTransform.trans:Clone()
+			s_FullPositionTarget.y = s_FullPositionTarget.y + 0.1
 		else
 			s_FullPositionTarget = p_Bot._ShootPlayer.soldier.worldTransform.trans:Clone() +
 				m_Utilities:getCameraPos(p_Bot._ShootPlayer, true, false)
@@ -82,7 +82,7 @@ function VehicleAiming:UpdateAimingVehicleAdvanced(p_Bot)
 
 	local s_AimAt = s_FullPositionTarget + (s_TargetVelocity * s_TimeToTravel)
 
-	s_PitchCorrection = 0.375 * s_TimeToTravel * s_TimeToTravel * s_Drop -- from theory 0.5. In real 0.25 works much better
+	s_PitchCorrection = 0.5 * s_TimeToTravel * s_TimeToTravel * s_Drop -- from theory 0.5. In real 0.375 works much better
 
 	--calculate yaw and pitch
 	local s_DifferenceZ = s_AimAt.z - s_FullPositionBot.z
@@ -146,7 +146,7 @@ function VehicleAiming:UpdateAimingVehicle(p_Bot)
 	local s_FullPositionTarget = nil
 	local s_FullPositionBot = nil
 
-	if p_Bot._VehicleMovableId ~= nil then
+	if p_Bot._VehicleMovableId >= 0 then
 		s_FullPositionBot = p_Bot.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(p_Bot._VehicleMovableId):
 			ToLinearTransform().trans
 	else
@@ -155,7 +155,7 @@ function VehicleAiming:UpdateAimingVehicle(p_Bot)
 			m_Utilities:getCameraPos(p_Bot.m_Player, false, false)
 	end
 
-	if p_Bot._ShootPlayerVehicleType == VehicleTypes.MavBot then
+	if p_Bot._ShootPlayerVehicleType == VehicleTypes.MavBot or p_Bot._ShootPlayerVehicleType == VehicleTypes.MobileArtillery then
 		s_FullPositionTarget = p_Bot._ShootPlayer.controlledControllable.transform.trans:Clone()
 	else
 		if p_Bot.m_Player.controlledEntryId == 0 and p_Bot._ShootPlayerVehicleType == VehicleTypes.NoVehicle and
@@ -184,7 +184,7 @@ function VehicleAiming:UpdateAimingVehicle(p_Bot)
 		p_Bot._ActiveVehicleWeaponSlot)
 
 	local s_TimeToTravel = (p_Bot._DistanceToPlayer / s_Speed)
-	s_PitchCorrection = 0.375 * s_TimeToTravel * s_TimeToTravel * s_Drop -- from theory 0.5. In real 0.25 works much better
+	s_PitchCorrection = 0.5 * s_TimeToTravel * s_TimeToTravel * s_Drop -- from theory 0.5. In real 0.375 works much better
 
 	s_TargetMovement = (s_TargetMovement * s_TimeToTravel)
 

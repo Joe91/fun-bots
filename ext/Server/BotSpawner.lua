@@ -1399,6 +1399,11 @@ function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 			"persistence/unlocks/vehicles/jetstealth",
 			"persistence/unlocks/vehicles/jetflarelauncher",
 			"persistence/unlocks/vehicles/jetheatseekerstance",
+			-- xp5 perks
+			"persistence/unlocks/vehicles/lbtcoaxlmg",
+			"persistence/unlocks/vehicles/lbtreloadupgrade1",
+			"persistence/unlocks/vehicles/artilleryatacms",
+			"persistence/unlocks/vehicles/landvehiclefireextinguisher",
 		}
 	end
 

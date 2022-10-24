@@ -56,7 +56,7 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_Bot)
 					return
 				end
 			end
-			g_GameDirector:_SetVehicleObjectiveState(p_Bot.m_Player.soldier.worldTransform.trans, false)
+			g_GameDirector:_SetVehicleObjectiveState(p_Bot.m_Player.controlledControllable.transform.trans, false)
 		else
 			return
 		end
@@ -131,13 +131,13 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_Bot)
 			p_Bot.m_ActiveSpeedValue = s_Point.SpeedMode --speed
 
 			-- TODO: use vehicle transform also for trace?
-			local s_DifferenceY = s_Point.Position.z - p_Bot.m_Player.soldier.worldTransform.trans.z
-			local s_DifferenceX = s_Point.Position.x - p_Bot.m_Player.soldier.worldTransform.trans.x
+			local s_DifferenceY = s_Point.Position.z - p_Bot.m_Player.controlledControllable.transform.trans.z
+			local s_DifferenceX = s_Point.Position.x - p_Bot.m_Player.controlledControllable.transform.trans.x
 			local s_DistanceFromTarget = math.sqrt(s_DifferenceX ^ 2 + s_DifferenceY ^ 2)
-			local s_HeightDistance = math.abs(s_Point.Position.y - p_Bot.m_Player.soldier.worldTransform.trans.y)
+			local s_HeightDistance = math.abs(s_Point.Position.y - p_Bot.m_Player.controlledControllable.transform.trans.y)
 
 			--detect obstacle and move over or around TODO: Move before normal jump
-			local s_CurrentWayPointDistance = p_Bot.m_Player.soldier.worldTransform.trans:Distance(s_Point.Position)
+			local s_CurrentWayPointDistance = p_Bot.m_Player.controlledControllable.transform.trans:Distance(s_Point.Position)
 
 			if s_CurrentWayPointDistance > p_Bot._LastWayDistance + 0.02 and p_Bot._ObstaceSequenceTimer == 0.0 then
 				--skip one pooint
@@ -350,14 +350,14 @@ end
 
 function VehicleMovement:UpdateTargetMovementVehicle(p_Bot)
 	if p_Bot._TargetPoint ~= nil then
-		local s_Distance = p_Bot.m_Player.soldier.worldTransform.trans:Distance(p_Bot._TargetPoint.Position)
+		local s_Distance = p_Bot.m_Player.controlledControllable.transform.trans:Distance(p_Bot._TargetPoint.Position)
 
 		if s_Distance < 3.0 then
 			p_Bot._TargetPoint = p_Bot._NextTargetPoint
 		end
 
-		local s_DifferenceY = p_Bot._TargetPoint.Position.z - p_Bot.m_Player.soldier.worldTransform.trans.z
-		local s_DifferenceX = p_Bot._TargetPoint.Position.x - p_Bot.m_Player.soldier.worldTransform.trans.x
+		local s_DifferenceY = p_Bot._TargetPoint.Position.z - p_Bot.m_Player.controlledControllable.transform.trans.z
+		local s_DifferenceX = p_Bot._TargetPoint.Position.x - p_Bot.m_Player.controlledControllable.transform.trans.x
 		local s_AtanDzDx = math.atan(s_DifferenceY, s_DifferenceX)
 		local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
 		p_Bot._TargetYaw = s_Yaw
@@ -367,7 +367,7 @@ end
 ---@param p_DeltaTime number
 function VehicleMovement:UpdateVehicleLookAround(p_Bot, p_DeltaTime)
 	-- move around a little
-	if p_Bot._VehicleMovableId ~= nil then
+	if p_Bot._VehicleMovableId >= 0 then
 		local s_Pos = p_Bot.m_Player.controlledControllable.transform.forward
 		local s_AtanDzDx = math.atan(s_Pos.z, s_Pos.x)
 		p_Bot._TargetYaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
@@ -411,7 +411,7 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 			local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
 			s_DeltaYaw = s_Yaw - p_Bot._TargetYaw
 
-			if p_Bot._VehicleMovableId ~= nil then
+			if p_Bot._VehicleMovableId >= 0 then
 				p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, 0)
 				local s_DiffPos = s_Pos -
 					p_Bot.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(p_Bot._VehicleMovableId):ToLinearTransform()
@@ -424,7 +424,7 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 				end
 			end
 		else -- passenger
-			if p_Bot._VehicleMovableId ~= nil then
+			if p_Bot._VehicleMovableId >= 0 then
 				s_Pos = p_Bot.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(p_Bot._VehicleMovableId):
 					ToLinearTransform().forward
 				local s_AtanDzDx = math.atan(s_Pos.z, s_Pos.x)
@@ -435,7 +435,7 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 			end
 		end
 	else
-		if p_Bot._VehicleMovableId ~= nil then
+		if p_Bot._VehicleMovableId >= 0 then
 			s_Pos = p_Bot.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(p_Bot._VehicleMovableId):
 				ToLinearTransform().forward
 			local s_AtanDzDx = math.atan(s_Pos.z, s_Pos.x)
@@ -687,7 +687,7 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 				p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, 0)
 			end
 		else -- passenger
-			if p_Bot._VehicleMovableId ~= nil then
+			if p_Bot._VehicleMovableId >= 0 then
 				local s_Output = p_Bot._Pid_Att_Yaw:Update(s_DeltaYaw)
 				p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, -s_Output)
 

@@ -50,7 +50,8 @@ VehicleTypes = {
 	MavBot = 7,
 	StationaryAA = 8,
 	StationaryLauncher = 9,
-	Gadgets = 10
+	MobileArtillery = 10,
+	Gadgets = 11
 }
 
 ---@enum VehicleTerrains
