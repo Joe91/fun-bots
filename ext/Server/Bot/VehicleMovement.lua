@@ -367,7 +367,7 @@ end
 ---@param p_DeltaTime number
 function VehicleMovement:UpdateVehicleLookAround(p_Bot, p_DeltaTime)
 	-- move around a little
-	if p_Bot._VehicleMovableId ~= nil then
+	if p_Bot._VehicleMovableId >= 0 then
 		local s_Pos = p_Bot.m_Player.controlledControllable.transform.forward
 		local s_AtanDzDx = math.atan(s_Pos.z, s_Pos.x)
 		p_Bot._TargetYaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
@@ -411,7 +411,7 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 			local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
 			s_DeltaYaw = s_Yaw - p_Bot._TargetYaw
 
-			if p_Bot._VehicleMovableId ~= nil then
+			if p_Bot._VehicleMovableId >= 0 then
 				p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, 0)
 				local s_DiffPos = s_Pos -
 					p_Bot.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(p_Bot._VehicleMovableId):ToLinearTransform()
@@ -424,7 +424,7 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 				end
 			end
 		else -- passenger
-			if p_Bot._VehicleMovableId ~= nil then
+			if p_Bot._VehicleMovableId >= 0 then
 				s_Pos = p_Bot.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(p_Bot._VehicleMovableId):
 					ToLinearTransform().forward
 				local s_AtanDzDx = math.atan(s_Pos.z, s_Pos.x)
@@ -435,7 +435,7 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 			end
 		end
 	else
-		if p_Bot._VehicleMovableId ~= nil then
+		if p_Bot._VehicleMovableId >= 0 then
 			s_Pos = p_Bot.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(p_Bot._VehicleMovableId):
 				ToLinearTransform().forward
 			local s_AtanDzDx = math.atan(s_Pos.z, s_Pos.x)
@@ -687,7 +687,7 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 				p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, 0)
 			end
 		else -- passenger
-			if p_Bot._VehicleMovableId ~= nil then
+			if p_Bot._VehicleMovableId >= 0 then
 				local s_Output = p_Bot._Pid_Att_Yaw:Update(s_DeltaYaw)
 				p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, -s_Output)
 

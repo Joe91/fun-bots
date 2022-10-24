@@ -26,7 +26,7 @@ function VehicleAiming:UpdateAimingVehicleAdvanced(p_Bot)
 	local s_FullPositionTarget = nil
 	local s_FullPositionBot = nil
 
-	if p_Bot._VehicleMovableId ~= nil then
+	if p_Bot._VehicleMovableId >= 0 then
 		s_FullPositionBot = p_Bot.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(p_Bot._VehicleMovableId):
 			ToLinearTransform().trans
 	else
@@ -146,7 +146,7 @@ function VehicleAiming:UpdateAimingVehicle(p_Bot)
 	local s_FullPositionTarget = nil
 	local s_FullPositionBot = nil
 
-	if p_Bot._VehicleMovableId ~= nil then
+	if p_Bot._VehicleMovableId >= 0 then
 		s_FullPositionBot = p_Bot.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(p_Bot._VehicleMovableId):
 			ToLinearTransform().trans
 	else

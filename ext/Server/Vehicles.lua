@@ -9,11 +9,11 @@ local m_Logger = Logger("Vehicles", Debug.Server.VEHICLES)
 function Vehicles:FindOutVehicleType(p_Player)
 	local s_VehicleType = VehicleTypes.NoVehicle -- no vehicle
 
-	if p_Player.controlledControllable ~= nil and not p_Player.controlledControllable:Is("ServerSoldierEntity") then
+	if p_Player.controlledControllable and not p_Player.controlledControllable:Is("ServerSoldierEntity") then
 		local s_VehicleName = VehicleEntityData(p_Player.controlledControllable.data).controllableType:gsub(".+/.+/", "")
 
 		local s_VehicleData = VehicleData[s_VehicleName]
-		if s_VehicleData ~= nil and s_VehicleData.Type ~= nil then
+		if s_VehicleData and s_VehicleData.Type then
 			s_VehicleType = s_VehicleData.Type
 		end
 	end
@@ -22,7 +22,7 @@ function Vehicles:FindOutVehicleType(p_Player)
 end
 
 function Vehicles:GetVehicleName(p_Player)
-	if p_Player.controlledControllable ~= nil and not p_Player.controlledControllable:Is("ServerSoldierEntity") then
+	if p_Player.controlledControllable and not p_Player.controlledControllable:Is("ServerSoldierEntity") then
 		return VehicleEntityData(p_Player.controlledControllable.data).controllableType:gsub(".+/.+/", "")
 	else
 		return nil
@@ -43,7 +43,7 @@ end
 function Vehicles:GetVehicleByEntity(p_Entity)
 	local s_VehicleName = nil
 
-	if p_Entity ~= nil then
+	if p_Entity then
 		s_VehicleName = VehicleEntityData(p_Entity.data).controllableType:gsub(".+/.+/", "")
 	end
 
@@ -79,7 +79,7 @@ function Vehicles:GetNrOfFreeSeats(p_Entity, p_PlayerIsDriver)
 end
 
 function Vehicles:GetPartIdForSeat(p_VehicleData, p_Index, p_WeaponSelection)
-	if p_VehicleData ~= nil and p_VehicleData.Parts ~= nil then
+	if p_VehicleData and p_VehicleData.Parts then
 		if type(p_VehicleData.Parts[p_Index + 1]) == "table" then
 			if p_WeaponSelection == 0 then
 				return p_VehicleData.Parts[p_Index + 1][1]
@@ -95,7 +95,7 @@ function Vehicles:GetPartIdForSeat(p_VehicleData, p_Index, p_WeaponSelection)
 end
 
 function Vehicles:IsVehicleTerrain(p_VehicleData, p_VehicleTerrain)
-	if p_VehicleData ~= nil and p_VehicleData.Terrain ~= nil then
+	if p_VehicleData and p_VehicleData.Terrain then
 		return p_VehicleData.Terrain == p_VehicleTerrain
 	else
 		return false
@@ -103,7 +103,7 @@ function Vehicles:IsVehicleTerrain(p_VehicleData, p_VehicleTerrain)
 end
 
 function Vehicles:IsNotVehicleTerrain(p_VehicleData, p_VehicleTerrain)
-	if p_VehicleData ~= nil and p_VehicleData.Terrain ~= nil then
+	if p_VehicleData and p_VehicleData.Terrain then
 		return p_VehicleData.Terrain ~= p_VehicleTerrain
 	else
 		return false
@@ -111,7 +111,7 @@ function Vehicles:IsNotVehicleTerrain(p_VehicleData, p_VehicleTerrain)
 end
 
 function Vehicles:IsVehicleType(p_VehicleData, p_VehicleType)
-	if p_VehicleData ~= nil and p_VehicleData.Type ~= nil then
+	if p_VehicleData and p_VehicleData.Type then
 		return p_VehicleData.Type == p_VehicleType
 	else
 		return false
@@ -119,7 +119,7 @@ function Vehicles:IsVehicleType(p_VehicleData, p_VehicleType)
 end
 
 function Vehicles:IsNotVehicleType(p_VehicleData, p_VehicleType)
-	if p_VehicleData ~= nil and p_VehicleData.Type ~= nil then
+	if p_VehicleData and p_VehicleData.Type then
 		return p_VehicleData.Type ~= p_VehicleType
 	else
 		return false
@@ -127,11 +127,11 @@ function Vehicles:IsNotVehicleType(p_VehicleData, p_VehicleType)
 end
 
 function Vehicles:GetAvailableWeaponSlots(p_VehicleData, p_Index)
-	if p_VehicleData ~= nil then
+	if p_VehicleData then
 		if type(p_VehicleData.Parts[p_Index + 1]) == "table" then
 			return #p_VehicleData.Parts[p_Index + 1]
 		else
-			if p_VehicleData.Parts[p_Index + 1] == nil then
+			if p_VehicleData.Parts[p_Index + 1] < 0 then
 				return 0
 			else
 				return 1
@@ -145,7 +145,7 @@ function Vehicles:GetSpeedAndDrop(p_VehicleData, p_Index, p_WeaponSelection)
 	local s_Drop = nil
 	local s_Speed = nil
 
-	if p_VehicleData ~= nil and p_VehicleData.Speed ~= nil then
+	if p_VehicleData and p_VehicleData.Speed then
 		s_Speed = p_VehicleData.Speed[p_Index + 1]
 		if type(s_Speed) == "table" then
 			if p_WeaponSelection ~= 0 then
@@ -155,7 +155,7 @@ function Vehicles:GetSpeedAndDrop(p_VehicleData, p_Index, p_WeaponSelection)
 			end
 		end
 	end
-	if p_VehicleData ~= nil and p_VehicleData.Drop ~= nil then
+	if p_VehicleData and p_VehicleData.Drop then
 		s_Drop = p_VehicleData.Drop[p_Index + 1]
 		if type(s_Drop) == "table" then
 			if p_WeaponSelection ~= 0 then

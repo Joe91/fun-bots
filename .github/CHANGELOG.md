@@ -26,6 +26,7 @@ This is the changelog for the version V2.6.2. Don't forget to [join us on Discor
 ### Bug fixes
 * fix scavenger revive
 * fix usage of javelin
+* some attack- and aiming-issues with vehicles
 
 ### New maps
 

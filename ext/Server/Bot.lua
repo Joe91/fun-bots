@@ -133,7 +133,7 @@ function Bot:__init(p_Player)
 
 	-- vehicle stuff
 	---@type integer|nil
-	self._VehicleMovableId = nil
+	self._VehicleMovableId = -1
 	self._LastVehicleYaw = 0.0
 	self._VehicleReadyToShoot = false
 	self._FullVehicleSteering = false
@@ -1214,7 +1214,7 @@ function Bot:UpdateVehicleMovableId()
 	self:_SetActiveVars() -- update if "on vehicle" or "in vehicle"
 
 	if self.m_OnVehicle then
-		self._VehicleMovableId = nil
+		self._VehicleMovableId = -1
 	elseif self.m_InVehicle then
 		self._ActiveVehicleWeaponSlot = 0
 		self._VehicleMovableId = m_Vehicles:GetPartIdForSeat(self.m_ActiveVehicle, self.m_Player.controlledEntryId,
