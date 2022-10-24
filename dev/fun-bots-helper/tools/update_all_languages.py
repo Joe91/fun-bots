@@ -13,10 +13,10 @@ def updateLanguages() -> None:
         if file.endswith(".lua"):
             filename = os.path.join(lua_path, file)
             if not "DEFAULT" in filename and not "Languages.lua" in filename:
-                with open(filename, "r", encoding="utf8") as compFile:
-                    compLines = get_updated_lines_lua(compFile)
+                with open(filename, "r", encoding="utf8") as infile:
+                    outFileLines = get_updated_lines_lua(infile)
                     with open(filename, "w", encoding="utf8") as outFile:
-                        for line in compLines:
+                        for line in outFileLines:
                             outFile.write(line + "\n")
                 print(filename + " Done")
 
@@ -24,10 +24,10 @@ def updateLanguages() -> None:
         if file.endswith(".js"):
             filename = os.path.join(js_path, file)
             if not "DEFAULT" in filename:
-                with open(filename, "r", encoding="utf8") as compFile:
-                    compLines = get_updated_lines_js(compFile)
+                with open(filename, "r", encoding="utf8") as infile:
+                    outFileLines = get_updated_lines_js(infile)
                     with open(filename, "w", encoding="utf8") as outFile:
-                        for line in compLines:
+                        for line in outFileLines:
                             outFile.write(line + "\n")
                 print(filename + " Done")
 
