@@ -22,6 +22,7 @@ This is the changelog for the version V2.6.2. Don't forget to [join us on Discor
 * Option to prevent bots from attacking other players
 * usage of Mobile Artillery possible (#200)
 * jets and choppers also use secondary weapon
+* Bots with missiles attack on larger distances
 
 ### Bug fixes
 * fix scavenger revive

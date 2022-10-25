@@ -516,24 +516,30 @@ function Bot:IsReadyToAttack()
 end
 
 ---@return number
-function Bot:GetAttackDistance(p_ShootBackAfterHit)
+function Bot:GetAttackDistance(p_ShootBackAfterHit, p_VehicleAttackMode)
 	local s_AttackDistance = 0.0
 
 	if not self.m_InVehicle then
-		if self.m_ActiveWeapon == nil or self.m_ActiveWeapon.type ~= WeaponTypes.Sniper then
-			if p_ShootBackAfterHit then
-				s_AttackDistance = Config.MaxDistanceShootBack
-			else
-				s_AttackDistance = Config.MaxShootDistance
-			end
-
-		else
+		local s_MissileAttack = false
+		if p_VehicleAttackMode and (p_VehicleAttackMode == VehicleAttackModes.AttackWithMissileAir or
+			p_VehicleAttackMode == VehicleAttackModes.AttackWithMissileLand) then
+			s_MissileAttack = true
+		end
+		if (self.m_ActiveWeapon and self.m_ActiveWeapon.type == WeaponTypes.Sniper) or s_MissileAttack then
 			if p_ShootBackAfterHit then
 				s_AttackDistance = Config.MaxDistanceShootBackSniper
 			else
 				s_AttackDistance = Config.MaxShootDistanceSniper
 			end
+
+		else
+			if p_ShootBackAfterHit then
+				s_AttackDistance = Config.MaxDistanceShootBack
+			else
+				s_AttackDistance = Config.MaxShootDistance
+			end
 		end
+
 	else
 		if m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) and
 			m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) and
@@ -631,21 +637,24 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 
 	self._DistanceToPlayer = s_TargetPos:Distance(s_PlayerPos)
 
+	local s_IsSniper = (self.m_ActiveWeapon and self.m_ActiveWeapon.type == WeaponTypes.Sniper)
+	local s_VehicleAttackMode = nil
+	if s_Type ~= VehicleTypes.NoVehicle then
+		s_VehicleAttackMode = m_Vehicles:CheckForVehicleAttack(s_Type, self._DistanceToPlayer, self.m_SecondaryGadget,
+			self.m_InVehicle, s_IsSniper)
+		if s_VehicleAttackMode == VehicleAttackModes.NoAttack then
+			return false
+		end
+	end
 
-	local s_AttackDistance = self:GetAttackDistance(p_IgnoreYaw)
+	local s_AttackDistance = self:GetAttackDistance(p_IgnoreYaw, s_VehicleAttackMode)
 
 	-- don't attack if too far away
 	if self._DistanceToPlayer > s_AttackDistance then
 		return false
 	end
 
-	local s_IsSniper = (self.m_ActiveWeapon and self.m_ActiveWeapon.type == WeaponTypes.Sniper)
-	if s_Type ~= VehicleTypes.NoVehicle and
-		m_Vehicles:CheckForVehicleAttack(s_Type, self._DistanceToPlayer, self.m_SecondaryGadget, self.m_InVehicle, s_IsSniper)
-		==
-		VehicleAttackModes.NoAttack then
-		return false
-	end
+
 
 	self._ShootPlayerVehicleType = s_Type
 
