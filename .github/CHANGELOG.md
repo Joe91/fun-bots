@@ -36,6 +36,8 @@ This is the changelog for the version V2.6.2. Don't forget to [join us on Discor
 * Fix Wake-Island Rush
 * New paths for mobile arillery on XP3 Desert Conquest Small (by KrazyIvan777)
 * New paths for mobile arillery on XP3 Shield Conquest Small (by KrazyIvan777)
+* New paths for mobile arillery on XP3 Alborz Conquest Small (by KrazyIvan777)
+* New paths for mobile arillery on XP3 Valley Conquest Small (by KrazyIvan777)
 
 ### Documentation update
 

@@ -521,8 +521,7 @@ function Bot:GetAttackDistance(p_ShootBackAfterHit, p_VehicleAttackMode)
 
 	if not self.m_InVehicle then
 		local s_MissileAttack = false
-		if p_VehicleAttackMode and (p_VehicleAttackMode == VehicleAttackModes.AttackWithMissileAir or
-			p_VehicleAttackMode == VehicleAttackModes.AttackWithMissileLand) then --TODO: is Land-Missile needed on that distance?
+		if p_VehicleAttackMode and (p_VehicleAttackMode == VehicleAttackModes.AttackWithMissileAir) then
 			s_MissileAttack = true
 		end
 		if (self.m_ActiveWeapon and self.m_ActiveWeapon.type == WeaponTypes.Sniper) or s_MissileAttack then
