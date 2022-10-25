@@ -79,19 +79,23 @@ function Vehicles:GetNrOfFreeSeats(p_Entity, p_PlayerIsDriver)
 end
 
 function Vehicles:GetPartIdForSeat(p_VehicleData, p_Index, p_WeaponSelection)
+	local s_Part = -1
 	if p_VehicleData and p_VehicleData.Parts then
+		local s_NewPart = nil
 		if type(p_VehicleData.Parts[p_Index + 1]) == "table" then
 			if p_WeaponSelection == 0 then
-				return p_VehicleData.Parts[p_Index + 1][1]
+				s_NewPart = p_VehicleData.Parts[p_Index + 1][1]
 			else
-				return p_VehicleData.Parts[p_Index + 1][p_WeaponSelection]
+				s_NewPart = p_VehicleData.Parts[p_Index + 1][p_WeaponSelection]
 			end
 		else
-			return p_VehicleData.Parts[p_Index + 1]
+			s_NewPart = p_VehicleData.Parts[p_Index + 1]
 		end
-	else
-		return nil
+		if s_NewPart then
+			s_Part = s_NewPart
+		end
 	end
+	return s_Part
 end
 
 function Vehicles:IsVehicleTerrain(p_VehicleData, p_VehicleTerrain)
@@ -131,7 +135,7 @@ function Vehicles:GetAvailableWeaponSlots(p_VehicleData, p_Index)
 		if type(p_VehicleData.Parts[p_Index + 1]) == "table" then
 			return #p_VehicleData.Parts[p_Index + 1]
 		else
-			if p_VehicleData.Parts[p_Index + 1] < 0 then
+			if not p_VehicleData.Parts[p_Index + 1] or p_VehicleData.Parts[p_Index + 1] < 0 then
 				return 0
 			else
 				return 1
