@@ -1402,7 +1402,9 @@ function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 			-- xp5 perks
 			"persistence/unlocks/vehicles/lbtcoaxlmg",
 			"persistence/unlocks/vehicles/lbtreloadupgrade1",
-			"persistence/unlocks/vehicles/artilleryatacms",
+			"persistence/unlocks/vehicles/artilleryreloadupgrade",
+			"persistence/unlocks/vehicles/artillerysmokelaunchers",
+			"persistence/unlocks/vehicles/artilleryairburst",
 			"persistence/unlocks/vehicles/landvehiclefireextinguisher",
 		}
 	end
