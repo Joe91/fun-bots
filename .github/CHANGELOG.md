@@ -3,8 +3,8 @@
 ![Image](https://img.shields.io/github/downloads/Joe91/fun-bots/total?style=for-the-badge)
 ![Image](https://img.shields.io/github/stars/Joe91/fun-bots?style=for-the-badge)
 
-## Welcome to the changelogs for release **V2.6.2**
-This is the changelog for the version V2.6.2. Don't forget to [join us on Discord](https://discord.com/invite/FKamccAEqz)
+## Welcome to the changelogs for release **V2.7**
+This is the changelog for the version V2.7 Don't forget to [join us on Discord](https://discord.com/invite/FKamccAEqz)
 
 ## Changelog
 

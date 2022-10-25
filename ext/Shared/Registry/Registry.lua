@@ -31,9 +31,9 @@ Registry = {
 		-- Major version
 		VERSION_MAJ = 2,
 		-- Minor version
-		VERSION_MIN = 6,
+		VERSION_MIN = 7,
 		-- Patch version
-		VERSION_PATCH = 2,
+		VERSION_PATCH = 0,
 		-- Additional label for pre-releases and build meta data
 		VERSION_LABEL = "dev3",
 		-- Current version type of this build
