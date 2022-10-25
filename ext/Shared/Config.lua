@@ -76,7 +76,7 @@ Config = {
 	BotsThrowGrenades = true,			-- Bots throw grenades at enemies
 	BotsDeploy = true,					-- Bots deploy ammo and medkits
 	DeployCycle = 60,					-- Time between deployment of bots in seconds
-	SnipersAttackChoppers = true,		-- Bots with sniper-rifels attack choppers
+	SnipersAttackChoppers = false,		-- Bots with sniper-rifels attack choppers
 
 	--VEHICLE
 	UseVehicles = true,					-- Bots can use vehicles

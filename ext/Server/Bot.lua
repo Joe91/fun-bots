@@ -522,7 +522,7 @@ function Bot:GetAttackDistance(p_ShootBackAfterHit, p_VehicleAttackMode)
 	if not self.m_InVehicle then
 		local s_MissileAttack = false
 		if p_VehicleAttackMode and (p_VehicleAttackMode == VehicleAttackModes.AttackWithMissileAir or
-			p_VehicleAttackMode == VehicleAttackModes.AttackWithMissileLand) then
+			p_VehicleAttackMode == VehicleAttackModes.AttackWithMissileLand) then --TODO: is Land-Missile needed on that distance?
 			s_MissileAttack = true
 		end
 		if (self.m_ActiveWeapon and self.m_ActiveWeapon.type == WeaponTypes.Sniper) or s_MissileAttack then
@@ -664,9 +664,11 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 	local s_PitchHalf = 0
 
 	-- if target is air-vehicle and bot is in AA --> ignore yaw
-	if self.m_InVehicle and (s_Type == VehicleTypes.Chopper or s_Type == VehicleTypes.Plane) and
-		m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.AntiAir) then
-		p_IgnoreYaw = true
+	if (s_Type == VehicleTypes.Chopper or s_Type == VehicleTypes.Plane) then
+		if (self.m_InVehicle and m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.AntiAir)) or
+			(s_VehicleAttackMode == VehicleAttackModes.AttackWithMissileAir) then
+			p_IgnoreYaw = true
+		end
 	end
 
 	-- don't attack if too close to ground in Plane

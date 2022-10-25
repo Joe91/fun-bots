@@ -783,7 +783,7 @@ SettingsDefinition = {
 			Type = Type.Boolean,
 			Value = Config.SnipersAttackChoppers,
 			Description = "Bots with sniper-rifels attack choppers",
-			Default = true,
+			Default = false,
 			UpdateFlag = UpdateFlag.None,
 			Category = "BEHAVIOUR"
 		},
