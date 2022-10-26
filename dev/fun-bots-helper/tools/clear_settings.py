@@ -1,17 +1,16 @@
-import sqlite3
-
-from addons.gets import get_to_root
+from addons.gets import get_to_root, get_all_tables
 
 
 def clearSettings() -> None:
     get_to_root()
     removeList = ["FB_Config_Trace", "FB_Settings"]
-    connection = sqlite3.connect("mod.db")
-    cursor = connection.cursor()
+    connection, cursor = get_all_tables()
+    content = cursor.fetchall()
 
-    for tablename in removeList:
-        print("Remove " + tablename)
-        cursor.execute("DROP TABLE IF EXISTS " + tablename)
+    for item in content:
+        if item[1] in removeList:
+            print("Remove " + item[1])
+            cursor.execute("DROP TABLE " + item[1])
 
     cursor.execute("vacuum")
     connection.commit()
