@@ -21,23 +21,27 @@ def set_permission_config_files(cursor: sqlite3.Cursor) -> None:
     destFolder = "permission_and_config"
 
     for item in exportList:
-        print("Export " + item)
         structure = cursor.execute("PRAGMA table_info('" + item + "')").fetchall()
         filename = item + ".cfg"
         with open(destFolder + "/" + filename, "w") as outfile:
             header = [column[1] for column in structure]
             outfile.write(";".join(header) + "\n")
-            sql_instruction = (
-                "SELECT * FROM " + item + " ORDER BY " + structure[-3][1] + " ASC"
-            )
-            cursor.execute(sql_instruction)
-            table_content = cursor.fetchall()
-            for line in table_content:
-                outList = [
-                    format(item, ".6f") if type(item) is float else str(item)
-                    for item in line
-                ]
-                outfile.write(";".join(outList) + "\n")
+            try:
+                sql_instruction = (
+                    "SELECT * FROM " + item + " ORDER BY " + structure[-3][1] + " ASC"
+                )
+            except IndexError:
+                print(f"{item} table not found!")
+            else:
+                print("Export " + item)
+                cursor.execute(sql_instruction)
+                table_content = cursor.fetchall()
+                for line in table_content:
+                    outList = [
+                        format(item, ".6f") if type(item) is float else str(item)
+                        for item in line
+                    ]
+                    outfile.write(";".join(outList) + "\n")
 
 
 def set_permission_config_db(cursor: sqlite3.Cursor) -> None:
