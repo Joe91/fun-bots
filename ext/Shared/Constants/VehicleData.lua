@@ -260,17 +260,17 @@ VehicleData = {
 		Name = "[M142]", 
 		Type = VehicleTypes.MobileArtillery,
 		Terrain = VehicleTerrains.Land,
-		Parts = {-1, 13 },
-		Speed = { 300, 50 },
-		Drop = { 0.0, 25.0}
+		Parts = {-1, {13, 13} },
+		Speed = { 300, {50, 50} },
+		Drop = { 0.0, {25.0, 25.0}}
 	},
 	["STAR_1466"] = { 
 		Name = "[BM-23]",
 		Type = VehicleTypes.MobileArtillery,
 		Terrain = VehicleTerrains.Land,
-		Parts = {-1, 1 },
-		Speed = { 300, 50 },
-		Drop = { 0.0, 25.0}
+		Parts = {-1, {1, 1} },
+		Speed = { 300, {50, 50} },
+		Drop = { 0.0, {25.0, 25.0}}
 	},
 
 	-- Air vehicle

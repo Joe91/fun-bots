@@ -53,6 +53,10 @@ function VehicleAttacking:UpdateAttackingVehicle(p_Bot)
 					if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Tank) and
 						p_Bot._DistanceToPlayer < Config.MaxShootDistanceSniper then
 						p_Bot._VehicleWeaponSlotToUse = 2
+					-- elseif m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.MobileArtillery) then --TODO: only do that when tere is an idication for ammo
+					-- 	p_Bot._VehicleWeaponSlotToUse = 2
+					else
+						p_Bot._VehicleWeaponSlotToUse = 1
 					end
 				-- TODO more vehicles and more logic
 				else

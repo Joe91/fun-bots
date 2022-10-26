@@ -26,6 +26,7 @@ A team works around-the-clock to offer you an amazing bot experience. Got a ques
 - [@Joe91](https://github.com/Joe91), the current project maintainer and lead developer
 - [@FlashHit](https://github.com/FlashHit), project developer and modding wizard
 - [@MajorVictory](https://github.com/MajorVictory), project developer
+- [@João Vitor](https://github.com/joao-vitor-souza),  project developer and python-wizard
 - [@Firjens](https://github.com/Firjens), the documenter (documentalist? document man? Is he a Marvel superhero?), project developer and the pipelines man
 - [@Sj0erd](https://github.com/Sj0erd), manager, housekeeper and receptionist of the community server and Discord server
 
