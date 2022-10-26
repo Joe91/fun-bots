@@ -529,5 +529,6 @@ def get_to_root() -> None:
         None
     """
     cwd_splitted = os.getcwd().replace("\\", "/").split("/")
-    new_cwd = "/".join(cwd_splitted[: cwd_splitted.index("fun-bots") + 1])
+    last_index_pos = len(cwd_splitted) - cwd_splitted[::-1].index("fun-bots") - 1
+    new_cwd = "/".join(cwd_splitted[: cwd_splitted.index("fun-bots", last_index_pos) + 1])
     os.chdir(new_cwd)
