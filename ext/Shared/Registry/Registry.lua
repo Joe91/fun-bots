@@ -16,7 +16,7 @@ Registry = {
 		-- allow players to use Bot-Names
 		ALLOW_PLAYER_BOT_NAMES = true,
 		-- collition-raycasts are an other type of raycast. This should improve some vehicle issues...
-		USE_COLLITION_RAYCASTS = true,
+		USE_COLLITION_RAYCASTS = false,
 		-- timeout to save or load maps
 		LOADING_TIMEOUT = 172800.0,
 		-- distance commands are heard by bots
@@ -35,7 +35,7 @@ Registry = {
 		-- Minor version
 		VERSION_MIN = 6,
 		-- Patch version
-		VERSION_PATCH = 1,
+		VERSION_PATCH = 2,
 		-- Additional label for pre-releases and build meta data
 		VERSION_LABEL = "",
 		-- Current version type of this build
