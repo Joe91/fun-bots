@@ -22,7 +22,7 @@ function ClientBotManager:RegisterVars()
 	self.m_BotBotRaycastsToDo = {}
 
 	-- inputs for change of seats (1-8)
-	self.m_LastInputLevelsPos = { 0, 0, 0, 0, 0, 0, 0, 0 }
+	self.m_LastInputLevelsPos = {0, 0, 0, 0, 0, 0, 0, 0}
 end
 
 -- =============================================
@@ -103,7 +103,7 @@ function ClientBotManager:OnEngineMessage(p_Message)
 end
 
 function ClientBotManager:DoRaycast(p_Pos1, p_Pos2, p_InObjectPos1, p_InObjectPos2)
-	if Registry.COMMON.USE_COLLITION_RAYCASTS then
+	if Registry.COMMON.USE_COLLISION_RAYCASTS then
 		local s_MaxHits = 1
 
 		if p_InObjectPos1 then

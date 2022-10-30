@@ -15,11 +15,11 @@ Registry = {
 		BOT_TOKEN = "BOT_",
 		-- allow players to use Bot-Names
 		ALLOW_PLAYER_BOT_NAMES = true,
-		-- collition-raycasts are an other type of raycast. Sadly not working atm...
-		USE_COLLITION_RAYCASTS = false,
+		-- collision-raycasts are an other type of raycast. Sadly not working at the moment...
+		USE_COLLISION_RAYCASTS = false,
 		-- distance commands are heard by bots
 		COMMAND_DISTANCE = 20,
-		-- use load of Bundle to fix Bug of weapons disapearing (thanks to Lesley!) !!! THIS MIGHT CAUSE CRASHES !!!
+		-- use load of Bundle to fix Bug of weapons disappearing (thanks to Lesley!) !!! THIS MIGHT CAUSE CRASHES !!!
 		USE_LOAD_BUNDLE_BUGFIX = false,
 		-- valid keys can be found here: https://docs.veniceunleashed.net/vext/ref/fb/inputdevicekeys/
 		BOT_COMMAND_KEY = InputDeviceKeys.IDK_LeftAlt,
@@ -123,9 +123,9 @@ Registry = {
 		PROBABILITY_TELEPORT_IF_STUCK_IN_VEHICLE = 20,
 		-- At the end of an attack cycle, chance of throwing a grenade.
 		PROBABILITY_THROW_GRENADE = 80,
-		-- the probabilty to use the rocket instead of the a primary
+		-- the probability to use the rocket instead of the a primary
 		PROBABILITY_SHOOT_ROCKET = 33,
-		-- the probabilty to use the rifle to attack a chopper
+		-- the probability to use the rifle to attack a chopper
 		PROBABILITY_ATTACK_CHOPPER_WITH_RIFLE = 25,
 		-- If the gamemode is Rush or Conquest, change direction if the bot is stuck on non-connecting paths.
 		PROBABILITY_CHANGE_DIRECTION_IF_STUCK = 50,
