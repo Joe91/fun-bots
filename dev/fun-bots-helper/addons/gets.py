@@ -10,6 +10,7 @@ import sqlite3
 from io import TextIOWrapper
 from typing import Any, Dict, List, Tuple
 
+import requests
 from deep_translator import GoogleTranslator
 
 
@@ -107,7 +108,7 @@ def __scan_other_files() -> List[str]:
     """Scan other files, besides SettingsDefinition.lua, searching for more settings.
 
     Args:
-        None 
+        None
 
     Returns:
         - outFileLinesOthers - A list of external formatted language setting lines
@@ -138,7 +139,7 @@ def get_js_lines() -> List[str]:
     """Create a list of formatted language setting lines to be used in DEFAULT.js.
 
     Args:
-        None 
+        None
 
     Returns:
         - outFileLines - A list of formatted language setting lines
@@ -530,5 +531,117 @@ def get_to_root() -> None:
     """
     cwd_splitted = os.getcwd().replace("\\", "/").split("/")
     last_index_pos = len(cwd_splitted) - cwd_splitted[::-1].index("fun-bots") - 1
-    new_cwd = "/".join(cwd_splitted[: cwd_splitted.index("fun-bots", last_index_pos) + 1])
+    new_cwd = "/".join(
+        cwd_splitted[: cwd_splitted.index("fun-bots", last_index_pos) + 1]
+    )
     os.chdir(new_cwd)
+
+
+def get_recursive_correction(
+    replacements: List, line: str, c_factor: int, i: int = 0
+) -> str:
+    """Recursively correct the grammar of comments.
+
+    Args:
+        - replacements - A list with grammar changes
+        - line - The line to be changed
+        - c_factor - A factor to correct offsets during the recursion process
+        - i - A flag to control the grammar issue we're fixing
+
+    Returns:
+        - line - The line grammarly updated
+    """
+    if i != len(replacements):
+        value = replacements[i]["value"]
+        offset = replacements[i]["offset"] + c_factor
+        length = replacements[i]["length"]
+
+        new_line = line[:offset] + value + line[offset + length :]
+        c_factor += len(value) - length
+        i += 1
+        return get_recursive_correction(replacements, new_line, c_factor, i)
+    else:
+        if line[-2] != ".":
+            if line[-2] in ["!", "?", "=", ")"]:
+                return line[:-1] + " \n"
+            else:
+                return line[:-1] + ". \n"
+        return line[:-1] + " \n"
+
+
+def get_variable_existence(line: str) -> bool:
+    """Check if a line has camelCase variables.
+
+    Args:
+        - line - The line to be checked
+
+    Returns:
+        - bool - True if it has variables, False otherwise
+    """
+    for char_index, char in enumerate(line[:-1]):
+        if char.islower() and line[char_index + 1].isupper():
+            return True
+    return False
+
+
+def get_comments_fixed(infile: TextIOWrapper) -> List[str]:
+    """Create a list with grammarly updated comments.
+
+    Args:
+        - infile - The file to be updated
+
+    Returns:
+        - outFileLines - A list with comments updated
+    """
+    outFileLines = []
+    lines = infile.readlines()
+    for line in lines:
+        try:
+            if line[-2] != " " and "--" in line and "---" not in line:
+                index = line.index("--") + 2
+
+                if line[index:][0] != " ":
+                    if line[index : index + 2] == "[[":
+                        index += 2
+                        line = line[:index] + " " + line[index:]
+                    else:
+                        line = line[:index] + " " + line[index:]
+
+                words_ignore = ["raycast", "raycasts", "raycasting"]
+
+                data = {"text": line[index:], "language": "en-GB"}
+                check_grammar = requests.post(
+                    "https://api.languagetool.org/v2/check", data=data
+                ).json()
+
+                try:
+                    replacements = []
+                    for message in check_grammar["matches"]:
+                        part_line = line[
+                            index
+                            + message["offset"] : index
+                            + message["offset"]
+                            + message["length"]
+                        ]
+                        if (
+                            part_line.lower() not in words_ignore
+                            and not get_variable_existence(part_line)
+                        ):
+
+                            replacements.append(
+                                {
+                                    "value": message["replacements"][0]["value"],
+                                    "offset": message["offset"],
+                                    "length": message["length"],
+                                }
+                            )
+                except IndexError:
+                    continue
+
+                outFileLines.append(get_recursive_correction(replacements, line, index))
+            else:
+                outFileLines.append(line)
+        except IndexError:
+            outFileLines.append(line)
+
+    return outFileLines
