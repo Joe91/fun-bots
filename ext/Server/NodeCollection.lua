@@ -25,7 +25,7 @@ function NodeCollection:InitVars()
 
 	self._MapName = ''
 
-	-- data for Save-Statemachine
+	-- Data for Save-Statemachine. 
 	self._SaveActive = false
 	self._SaveStateMachineCounter = 0
 	self._SaveTracesQueryStrings = {}
@@ -36,30 +36,30 @@ function NodeCollection:InitVars()
 end
 
 -----------------------------
--- Management
+-- Management. 
 
 function NodeCollection:Create(p_Data, p_Authoritative)
 	p_Authoritative = p_Authoritative or false
 	local s_NewIndex = #self._Waypoints + 1
 	local s_InputVar = 3
 
-	-- setup defaults for a blank node
+	-- Setup defaults for a blank node. 
 	---@class Waypoint
 	local s_Waypoint = {
-		ID = string.format('p_%d', s_NewIndex), -- new generated id for internal storage
-		OriginalID = nil, -- original id from database
-		Index = s_NewIndex, -- new generated id in numerical form
+		ID = string.format('p_%d', s_NewIndex), -- New generated ID for internal storage. 
+		OriginalID = nil, -- Original ID from database. 
+		Index = s_NewIndex, -- New generated ID in numerical form. 
 		Position = Vec3(0, 0, 0),
-		PathIndex = 0, -- Path #
-		PointIndex = 1, -- index inside parent path
-		InputVar = s_InputVar, -- raw input value
-		SpeedMode = s_InputVar & 0xF, -- 0 = wait, 1 = prone, 2 = crouch, 3 = walk, 4 run
+		PathIndex = 0, -- Path # 
+		PointIndex = 1, -- Index inside parent path. 
+		InputVar = s_InputVar, -- Raw input value. 
+		SpeedMode = s_InputVar & 0xF, -- 0 = wait, 1 = prone, 2 = crouch, 3 = walk, 4 run. 
 		ExtraMode = (s_InputVar >> 4) & 0xF,
 		OptValue = (s_InputVar >> 8) & 0xFF,
 		Data = {},
-		Distance = nil, -- current distance to player
-		Updated = false, -- if true, needs to be sent to server for saving
-		Previous = false, -- tree navigation
+		Distance = nil, -- Current distance to player. 
+		Updated = false, -- If true, needs to be sent to server for saving. 
+		Previous = false, -- Tree navigation. 
 		Next = false
 	}
 
@@ -93,20 +93,20 @@ function NodeCollection:Register(p_Waypoint)
 		self._WaypointsByPathIndex[p_Waypoint.PathIndex] = {}
 	end
 
-	-- node associations are already set, don't change them
-	if p_Waypoint.Previous and p_Waypoint.Next and false then -- disabled for now
-		-- begin searching for related nodes from the tail and work backwards
+	-- Node associations are already set, don't change them. 
+	if p_Waypoint.Previous and p_Waypoint.Next and false then -- Disabled for now. 
+		-- Begin searching for related nodes from the tail and work backwards. 
 		for i = #self._WaypointsByPathIndex[p_Waypoint.PathIndex], 1, -1 do
 			local s_CurrentWaypoint = self._WaypointsByPathIndex[p_Waypoint.PathIndex][i]
 
 			if s_CurrentWaypoint ~= nil then
-				-- our new node should go ahead of the currentWaypoint
+				-- Our new node should go ahead of the currentWaypoint. 
 				if s_CurrentWaypoint.PointIndex == p_Waypoint.PointIndex - 1 then
-					-- update connections
+					-- Update connections. 
 					self:InsertAfter(s_CurrentWaypoint, p_Waypoint)
-				-- our new node should go behind the current waypoint
+				-- Our new node should go behind the current waypoint. 
 				elseif s_CurrentWaypoint.PointIndex == p_Waypoint.PointIndex + 1 then
-					-- update connections
+					-- Update connections. 
 					self:InsertBefore(s_CurrentWaypoint, p_Waypoint)
 				end
 			end
@@ -171,7 +171,7 @@ end
 ---@return boolean
 ---@return string
 function NodeCollection:Remove(p_SelectionId, p_Waypoint)
-	-- batch operation on selections
+	-- Batch operation on selections. 
 	if p_Waypoint == nil then
 		local s_Selection = self:GetSelected(p_SelectionId)
 
@@ -184,7 +184,7 @@ function NodeCollection:Remove(p_SelectionId, p_Waypoint)
 
 	m_Logger:Write('Removing: ' .. tostring(p_Waypoint.ID))
 
-	-- update connections, no more middle-man
+	-- Update connections, no more middle-man. 
 	if p_Waypoint.Previous then
 		p_Waypoint.Previous.Next = p_Waypoint.Next
 	end
@@ -193,7 +193,7 @@ function NodeCollection:Remove(p_SelectionId, p_Waypoint)
 		p_Waypoint.Next.Previous = p_Waypoint.Previous
 	end
 
-	-- use connections to update indexes
+	-- Use connections to update indexes. 
 	self:Unlink(p_SelectionId, p_Waypoint)
 
 	if p_Waypoint.Previous then
@@ -202,20 +202,20 @@ function NodeCollection:Remove(p_SelectionId, p_Waypoint)
 		self:RecalculateIndexes(p_Waypoint.Next)
 	end
 
-	-- cut ties with old friends
+	-- Cut ties with old friends. 
 	p_Waypoint.Next = false
 	p_Waypoint.Previous = false
 
-	-- delete facebook
+	-- Delete Facebook. 
 	self._Waypoints[p_Waypoint.Index] = p_Waypoint
 	self._WaypointsByID[p_Waypoint.ID] = p_Waypoint
 	self._WaypointsByPathIndex[p_Waypoint.PathIndex][p_Waypoint.PointIndex] = p_Waypoint
-	-- delete IDs for everyone
+	-- Delete IDs for everyone. 
 	for l_PlayerGuid, _ in pairs(self._SelectedWaypoints) do
 		self._SelectedWaypoints[l_PlayerGuid][p_Waypoint.ID] = nil
 	end
 	return true, 'Success'
-	-- go hit the gym
+	-- Go hit the gym. 
 end
 
 ---@param p_ReferrenceWaypoint Waypoint
@@ -237,7 +237,7 @@ function NodeCollection:InsertAfter(p_ReferrenceWaypoint, p_Waypoint)
 		p_Waypoint.Next.Previous = p_Waypoint
 	end
 
-	-- use connections to update indexes
+	-- Use connections to update indexes. 
 	self:RecalculateIndexes(p_ReferrenceWaypoint)
 end
 
@@ -260,7 +260,7 @@ function NodeCollection:InsertBefore(p_ReferrenceWaypoint, p_Waypoint)
 		p_Waypoint.Previous.Next = p_Waypoint
 	end
 
-	-- use connections to update indexes
+	-- Use connections to update indexes. 
 	self:RecalculateIndexes(p_Waypoint.Previous or p_Waypoint)
 end
 
@@ -300,7 +300,7 @@ function NodeCollection:_processWaypointRecalc(p_Waypoint)
 	local s_LastPointIndex = 0
 	local s_CurrentPathIndex = -1
 
-	-- convert neighbor referrences
+	-- Convert neighbour references. 
 	if type(p_Waypoint.Next) == 'string' then
 		p_Waypoint.Next = self._WaypointsByID[p_Waypoint.Next]
 
@@ -323,7 +323,7 @@ function NodeCollection:_processWaypointRecalc(p_Waypoint)
 		s_LastPointIndex = p_Waypoint.Previous.PointIndex
 	end
 
-	--reset lastPointIndex on new path
+	-- Reset lastPointIndex on new path. 
 	if p_Waypoint.PathIndex ~= s_LastPathIndex then
 		s_LastPathIndex = p_Waypoint.PathIndex
 		s_LastPointIndex = 0
@@ -360,7 +360,7 @@ end
 ---@param p_Waypoint Waypoint
 ---@return Waypoint
 function NodeCollection:_processWaypointMetadata(p_Waypoint)
-	-- safety checks
+	-- Safety checks. 
 	if p_Waypoint.Data == nil then
 		p_Waypoint.Data = {}
 	end
@@ -370,21 +370,21 @@ function NodeCollection:_processWaypointMetadata(p_Waypoint)
 	end
 	-- -----
 
-	-- Check if indirect connections, create if missing
-	-- p_Waypoint.Data.LinkMode = 1
-	-- p_Waypoint.Data.Links = {
-	-- <p_Waypoint_ID>,
-	-- <p_Waypoint_ID>,
-	-- ...
-	--}
+	-- Check if indirect connections, create if missing. 
+	-- p_Waypoint.Data.LinkMode = 1 
+	-- p_Waypoint.Data.Links = { 
+	-- <p_Waypoint_ID>, 
+	-- <p_Waypoint_ID>, 
+	-- ... 
+	--} 
 
-	-- if the node has a linkmode and no links then try to find them
+	-- If the node has a link mode and no links, then try to find them. 
 	if p_Waypoint.Data.LinkMode ~= nil and
 		(p_Waypoint.Data.Links == nil or (type(p_Waypoint.Data.Links) == 'table' and #p_Waypoint.Data.Links < 1)) then
-		-- indirect connections
+		-- Indirect connections. 
 		if p_Waypoint.Data.LinkMode == 1 then
-			local s_Range = p_Waypoint.Data.Range or 3 -- meters, box-like area
-			local s_Chance = p_Waypoint.Data.Chance or 25 -- 1 - 100
+			local s_Range = p_Waypoint.Data.Range or 3 -- Meters, box-like area. 
+			local s_Chance = p_Waypoint.Data.Chance or 25 -- 1 - 100 
 			local s_NearbyNodes = self:FindAll(p_Waypoint.Position, s_Range)
 
 			p_Waypoint.Data.Links = {}
@@ -395,7 +395,7 @@ function NodeCollection:_processWaypointMetadata(p_Waypoint)
 		end
 	end
 
-	-- if the Links table has entries, but they need converting
+	-- If the Links' table has entries, but they need converting. 
 	if p_Waypoint.Data.Links ~= nil then
 		for i = 1, #p_Waypoint.Data.Links do
 			local s_LinkedData = p_Waypoint.Data.Links[i]
@@ -466,10 +466,10 @@ function NodeCollection:SetInput(p_Speed, p_Extra, p_Option)
 	return s_InputVar
 end
 
--- Created a linked connection between two or more arbitrary waypoints
--- p_Waypoints | Waypoint or {Waypoint} | Can be a single waypoint or a table of waypoints, `nil` defaults to current selection
--- p_LinkID | string | a waypoint ID, must not be `nil`
--- p_OneWay | boolean | if true, the connection is only made on this node, prevents infinite recursion
+-- Created a linked connection between two or more arbitrary waypoints. 
+-- p_Waypoints | Waypoint or {Waypoint} | Can be a single waypoint or a table of waypoints, `nil` defaults to current selection. 
+-- p_LinkID | string | a waypoint ID, must not be `nil`. 
+-- p_OneWay | boolean | if true, the connection is only made on this node, prevents infinite recursion. 
 ---@param p_Waypoints? Waypoint|Waypoint[]
 ---@param p_LinkID string
 ---@param p_OneWay? boolean
@@ -480,7 +480,7 @@ function NodeCollection:Link(p_SelectionId, p_Waypoints, p_LinkID, p_OneWay)
 	p_OneWay = p_OneWay or false
 
 	if #s_Selection == 2 then
-		--special case, nodes link to each other
+		-- Special case, nodes link to each other. 
 		self:Link(p_SelectionId, s_Selection[1], s_Selection[2].ID, true)
 		self:Link(p_SelectionId, s_Selection[2], s_Selection[1].ID, true)
 		return true, 'Success'
@@ -514,10 +514,10 @@ function NodeCollection:Link(p_SelectionId, p_Waypoints, p_LinkID, p_OneWay)
 	return true, 'Success'
 end
 
--- Removes a linked connection between two or more arbitrary waypoints
--- p_Waypoints | Waypoint or {Waypoint} | Can be a single waypoint or a table of waypoints, `nil` defaults to current selection
--- p_LinkID | string | a waypoint ID to remove, can be `nil` to clear connections
--- p_OneWay | boolean | if true, the connection is only made on this node, prevents infinite recursion
+-- Removes a linked connection between two or more arbitrary waypoints. 
+-- p_Waypoints | Waypoint or {Waypoint} | Can be a single waypoint or a table of waypoints, `nil` defaults to current selection. 
+-- p_LinkID | string | a waypoint ID to remove, can be `nil` to clear connections. 
+-- p_OneWay | boolean | if true, the connection is only made on this node, prevents infinite recursion. 
 ---@param p_Waypoints Waypoint|Waypoint[]|nil
 ---@param p_LinkID string|nil
 ---@param p_OneWay? boolean
@@ -529,7 +529,7 @@ function NodeCollection:Unlink(p_SelectionId, p_Waypoints, p_LinkID, p_OneWay)
 	p_OneWay = p_OneWay or false
 
 	if #s_Selection == 2 then
-		--special case, nodes unlink from each other
+		-- Special case, nodes unlink from each other. 
 		self:Unlink(p_SelectionId, s_Selection[1], s_Selection[2].ID, true)
 		self:Unlink(p_SelectionId, s_Selection[2], s_Selection[1].ID, true)
 		return true, 'Success'
@@ -547,14 +547,14 @@ function NodeCollection:Unlink(p_SelectionId, p_Waypoints, p_LinkID, p_OneWay)
 
 	local s_NewLinks = {}
 
-	-- generate new links table, otherwise it gets emptied
+	-- Generate new links table, otherwise it gets emptied. 
 	if p_LinkID ~= nil and s_Selection.Data.Links ~= nil then
 		for i = 1, #s_Selection.Data.Links do
 			if s_Selection.Data.Links[i] ~= p_LinkID then
-				-- skip matching connections
+				-- Skip matching connections. 
 				table.insert(s_NewLinks, s_Selection.Data.Links[i])
 			else
-				-- remove link from connected node, `p_OneWay` prevents infinite recursion
+				-- Remove link from connected node, `p_OneWay` prevents infinite recursion. 
 				if not p_OneWay then
 					self:Unlink(p_SelectionId, self:Get(p_LinkID), s_Selection.ID, true)
 				end
@@ -562,7 +562,7 @@ function NodeCollection:Unlink(p_SelectionId, p_Waypoints, p_LinkID, p_OneWay)
 		end
 	end
 
-	-- update waypoint's Data table, remove linking info if necessary
+	-- Update waypoint's Data table, remove linking info if necessary. 
 	m_Logger:Write('newLinks -> ' .. m_Utilities:dump(s_NewLinks, true))
 
 	if #s_NewLinks > 0 then
@@ -589,16 +589,16 @@ function NodeCollection:Unlink(p_SelectionId, p_Waypoints, p_LinkID, p_OneWay)
 	return true, 'Success'
 end
 
--- USAGE
--- g_NodeCollection:Get() -- all waypoints as unsorted table
--- g_NodeCollection:Get(nil, <int|PathIndex>) -- all waypoints in PathIndex as unsorted table
---
--- g_NodeCollection:Get(<string|WaypointID>) -- waypoint from id - Speed: O(1)
--- g_NodeCollection:Get(<table|Waypoint>) -- waypoint from another waypoint referrence - Speed: O(1)
--- g_NodeCollection:Get(<int|Index>) -- waypoint from waypoint Index - Speed: O(n)
--- g_NodeCollection:Get(<int|PointIndex>, <int|PathIndex>) -- waypoint from PointIndex and PathIndex - Speed: O(1)
--- g_NodeCollection:Get(<string|WaypointID>, <int|PathIndex>) -- waypoint from PointIndex and PathIndex - Speed: O(n)
--- g_NodeCollection:Get(<table|Waypoint>, <int|PathIndex>) -- waypoint from PointIndex and PathIndex - Speed: O(n)
+-- USAGE 
+-- g_NodeCollection:Get() -- all waypoints as unsorted table. 
+-- g_NodeCollection:Get(nil, <int|PathIndex>) -- all waypoints in PathIndex as unsorted table. 
+--  
+-- g_NodeCollection:Get(<string|WaypointID>) -- waypoint from ID - Speed: O(1). 
+-- g_NodeCollection:Get(<table|Waypoint>) -- waypoint from another waypoint reference - Speed: O(1). 
+-- g_NodeCollection:Get(<int|Index>) -- waypoint from waypoint Index - Speed: O(n). 
+-- g_NodeCollection:Get(<int|PointIndex>, <int|PathIndex>) -- waypoint from PointIndex and PathIndex - Speed: O(1). 
+-- g_NodeCollection:Get(<string|WaypointID>, <int|PathIndex>) -- waypoint from PointIndex and PathIndex - Speed: O(n). 
+-- g_NodeCollection:Get(<table|Waypoint>, <int|PathIndex>) -- waypoint from PointIndex and PathIndex - Speed: O(n). 
 
 ---@param p_Waypoint? integer|string|Waypoint
 ---@param p_PathIndex? integer
@@ -730,7 +730,7 @@ function NodeCollection:Clear()
 end
 
 -----------------------------
--- Selection
+-- Selection. 
 
 ---@param p_Waypoint? Waypoint
 ---@param p_PathIndex? integer
@@ -803,7 +803,7 @@ function NodeCollection:GetSelected(p_SelectionId, p_PathIndex)
 
 	local s_Selection = {}
 
-	-- copy selection into index-based array and sort results
+	-- Copy selection into index-based array and sort results. 
 	for l_WaypointID, l_Waypoint in pairs(self._SelectedWaypoints[p_SelectionId]) do
 		if self:IsSelected(p_SelectionId, l_Waypoint) and (p_PathIndex == nil or l_Waypoint.PathIndex == p_PathIndex) then
 			table.insert(s_Selection, l_Waypoint)
@@ -851,16 +851,16 @@ function NodeCollection:_sort(p_Collection, p_KeyName, p_Descending)
 end
 
 function NodeCollection:MergeSelection(p_SelectionId)
-	-- TODO
-	-- combine selected nodes
-	-- nodes must be sequential or the start/end of two paths
+	-- To-do 
+	-- Combine selected nodes; 
+	-- Nodes must be sequential or the start/end of two paths. 
 	local s_Selection = self:GetSelected(p_SelectionId)
 
 	if #s_Selection < 2 then
 		return false, 'Must select two or more waypoints'
 	end
 
-	-- check is same path and sequential
+	-- Check is same path and sequential. 
 	local s_CurrentWaypoint = s_Selection[1]
 
 	for i = 2, #s_Selection do
@@ -875,15 +875,15 @@ function NodeCollection:MergeSelection(p_SelectionId)
 		s_CurrentWaypoint = s_Selection[i]
 	end
 
-	-- all clear, points are on same path, and in order with no gaps
+	-- All clear, points are on same path, and in order with no gaps. 
 	local s_FirstPoint = s_Selection[1]
 	local s_LastPoint = s_Selection[#s_Selection]
 	local s_MiddlePosition = (s_FirstPoint.Position + s_LastPoint.Position) / 2
 
-	-- move the first node to the center
+	-- Move the first node to the centre. 
 	s_FirstPoint.Position = s_MiddlePosition
 
-	-- remove all selected nodes except the first one
+	-- Remove all selected nodes except the first one. 
 	for i = 2, #s_Selection do
 		self:Remove(p_SelectionId, s_Selection[i])
 	end
@@ -898,7 +898,7 @@ function NodeCollection:SplitSelection(p_SelectionId)
 		return false, 'Must select two or more waypoints'
 	end
 
-	-- check is same path and sequential
+	-- Check if it's the same path and sequential. 
 	local s_CurrentWaypoint = s_Selection[1]
 	for i = 2, #s_Selection do
 		if s_CurrentWaypoint.PathIndex ~= s_Selection[i].PathIndex then
@@ -926,7 +926,7 @@ function NodeCollection:SplitSelection(p_SelectionId)
 end
 
 -----------------------------
--- Paths
+-- Paths. 
 
 function NodeCollection:ShowPath(p_PathIndex)
 	self._HiddenPaths[p_PathIndex] = false
@@ -945,7 +945,7 @@ function NodeCollection:GetHiddenPaths()
 end
 
 -----------------------------
--- Save/Load
+-- Save/Load. 
 
 function NodeCollection:Load(p_LevelName, p_GameMode)
 
@@ -985,7 +985,7 @@ function NodeCollection:Load(p_LevelName, p_GameMode)
 	end
 
 
-	-- Fetch all rows from the table.
+	-- Fetch all rows from the table. 
 	local s_Results = SQL:Query('SELECT * FROM ' .. self._MapName .. '_table ORDER BY pathIndex, pointIndex ASC')
 
 	if not s_Results then
@@ -1036,11 +1036,11 @@ function NodeCollection:Load(p_LevelName, p_GameMode)
 	self:RecalculateIndexes(s_LastWaypoint)
 	self:ProcessMetadata()
 
-	-- we're on the server
-	-- if Globals ~= nil then
-	-- Globals.wayPoints = self._WaypointsByPathIndex
-	-- Globals.activeTraceIndexes = pathCount
-	-- end
+	-- We're on the server. 
+	-- if Global ~= nil then 
+	-- Global.wayPoints = self._WaypointsByPathIndex 
+	-- Global.activeTraceIndexes = pathCount 
+	-- end 
 
 	m_Logger:Write('Load -> Paths: ' .. tostring(s_PathCount) .. ' | Waypoints: ' .. tostring(s_WaypointCount))
 
@@ -1073,27 +1073,27 @@ function NodeCollection:ProcessAllDataToSave()
 		local s_Disconnects = {}
 
 		for _, l_Waypoint in pairs(self._Waypoints) do
-			-- keep track of disconnected nodes, only two should exist
-			-- the first node and the last node
+			-- Keep track of disconnected nodes, only two should exist. 
+			-- The first node and the last node. 
 			if l_Waypoint.Previous == false and l_Waypoint.Next ~= false then
 				table.insert(s_Disconnects, l_Waypoint)
 			elseif l_Waypoint.Previous ~= false and l_Waypoint.Next == false then
 				table.insert(s_Disconnects, l_Waypoint)
 			end
 
-			-- skip orphaned nodes
+			-- Skip orphaned nodes. 
 			if l_Waypoint.Previous == false and l_Waypoint.Next == false then
 				table.insert(s_Orphans, l_Waypoint)
 			else
 				local s_WaypointData = {}
 
 				if l_Waypoint.Data then
-					-- shallow clone
+					-- Shallow clone. 
 					for l_Key, l_Value in pairs(l_Waypoint.Data) do
 						s_WaypointData[l_Key] = l_Value
 					end
 
-					--convert linked node ids to {pathIndex,pointindex}
+					-- Convert linked node IDs to {pathIndex, pointindex}. 
 					if l_Waypoint.Data.Links ~= nil and #l_Waypoint.Data.Links > 0 then
 						local s_ConvertedLinks = {}
 
@@ -1168,13 +1168,13 @@ function NodeCollection:ProcessAllDataToSave()
 			end
 			s_StringLenght = s_StringLenght + #self._Values
 			while self._SaveTraceQueriesDone < s_QueriesTotal and
-				(s_StringLenght + #self._SaveTraceBatchQueries[self._SaveTraceQueriesDone + 1] + 1) < 230000 do -- max: 230000
+				(s_StringLenght + #self._SaveTraceBatchQueries[self._SaveTraceQueriesDone + 1] + 1) < 230000 do -- Max: 230000 
 				local s_NewString = self._SaveTraceBatchQueries[self._SaveTraceQueriesDone + 1]
 				self._Values = self._Values .. ',' .. s_NewString
 				s_StringLenght = s_StringLenght + #s_NewString + 1
 				self._SaveTraceQueriesDone = self._SaveTraceQueriesDone + 1
 				s_QueryCount = s_QueryCount + 1
-				if s_QueryCount >= 100 then -- only do 100 querys per cycle
+				if s_QueryCount >= 100 then -- Only do 100 queries per cycle. 
 					return
 				end
 			end
@@ -1183,7 +1183,7 @@ function NodeCollection:ProcessAllDataToSave()
 
 			self._Values = ""
 
-			return -- do this again
+			return -- Do this again. 
 		end
 	elseif self._SaveStateMachineCounter == 3 then
 		if not SQL:Open() then
@@ -1232,11 +1232,11 @@ function NodeCollection:ProcessAllDataToSave()
 				return
 			end
 			self._SaveTracesQueryStringsDone = s_QueryIndex
-			return -- do this again
+			return -- Do this again. 
 		end
 
 	elseif self._SaveStateMachineCounter == 5 then
-		-- Fetch all rows from the table.
+		-- Fetch all rows from the table. 
 		local s_Results = SQL:Query('SELECT * FROM ' .. self._MapName .. '_table')
 
 		if not s_Results then
@@ -1270,7 +1270,7 @@ function NodeCollection:Save()
 end
 
 -----------------------------
--- Navigation
+-- Navigation. 
 
 function NodeCollection:Previous(p_Waypoint)
 	if type(p_Waypoint.Previous) == 'string' then
@@ -1288,9 +1288,9 @@ function NodeCollection:Next(p_Waypoint)
 	return p_Waypoint.Next
 end
 
--- discover in which direction an objective is from a given waypoint
--- returns <Direction>, <BestWaypoint>
--- <Direction> will be either 'Next' or 'Previous'
+-- Discover in which direction an objective is from a given waypoint. 
+-- Returns <Direction>, <BestWaypoint> 
+-- <Direction> will be either 'Next' or 'Previous'. 
 function NodeCollection:ObjectiveDirection(p_Waypoint, p_Objective, p_InVehicle)
 	if p_Objective == '' then
 		return 'Next', nil
@@ -1304,11 +1304,11 @@ function NodeCollection:ObjectiveDirection(p_Waypoint, p_Objective, p_InVehicle)
 
 	while s_CurrentWaypoint and s_CurrentWaypoint[s_Direction] do
 		if s_CurrentWaypoint[s_Direction].PathIndex > p_Waypoint.PathIndex then
-			-- hit the last node in the path, reset start and reverse direction
+			-- Hit the last node in the path, reset start and reverse direction. 
 			s_CurrentWaypoint = p_Waypoint
 			s_Direction = 'Previous'
 		elseif s_CurrentWaypoint[s_Direction].PathIndex < p_Waypoint.PathIndex then
-			-- hit the first node in the path, finish searching
+			-- Hit the first node in the path, finish searching. 
 			break
 		else
 			if s_CurrentWaypoint[s_Direction].Data.Links ~= nil then
@@ -1318,10 +1318,10 @@ function NodeCollection:ObjectiveDirection(p_Waypoint, p_Objective, p_InVehicle)
 
 					if s_PathWaypoint ~= nil and s_PathWaypoint.Data.Objectives ~= nil and
 						table.has(s_PathWaypoint.Data.Objectives, p_Objective) then
-						-- highest priority path found, return now
+						-- Highest priority path found, return now. 
 						if #s_PathWaypoint.Data.Objectives == 1 then
 							return s_Direction, s_CurrentWaypoint[s_Direction]
-						-- lower priority connecting path found, store for now
+						-- Lower priority connecting path found, store for now. 
 						else
 							if s_BestDirection == nil then
 								s_BestDirection = s_Direction
@@ -1350,13 +1350,13 @@ end
 
 function NodeCollection:GetKnownObjectives()
 	local s_Objectives = {
-		--[<Objective Name>] = {<PathIndex 1>, <PathIndex 2>}
+		-- [<Objective Name>] = {<PathIndex 1>, <PathIndex 2>} 
 	}
 
 	for l_PathIndex, _ in pairs(self._WaypointsByPathIndex) do
 		local s_PathWaypoint = self._WaypointsByPathIndex[l_PathIndex][1]
 
-		-- only insert objectives that are objectives (on at least one path alone)
+		-- Only insert objectives that are objectives (on at least one path alone). 
 		if s_PathWaypoint ~= nil and s_PathWaypoint.Data.Objectives ~= nil and #s_PathWaypoint.Data.Objectives == 1 then
 			local s_Objective = s_PathWaypoint.Data.Objectives[1]
 			if s_Objectives[s_Objective] == nil then
@@ -1370,9 +1370,9 @@ function NodeCollection:GetKnownObjectives()
 	return s_Objectives
 end
 
--- this method avoids the use of the Vec3:Distance() method to avoid complex math internally
--- it's a tradeoff for speed over accuracy, as this method produces a box instead of a sphere
--- @returns boolean whther given waypoint is inside the given range
+-- This method avoids the use of the Vec3:Distance() method to avoid complex maths internally. 
+-- It's a tradeoff for speed over accuracy, as this method produces a box instead of a sphere. 
+-- @returns boolean whether given waypoint is inside the given range. 
 function NodeCollection:InRange(p_Waypoint, p_Vec3Position, p_Range)
 	local s_PosA = p_Waypoint.Position or Vec3.zero
 	local s_PosB = p_Vec3Position or Vec3.zero
@@ -1381,9 +1381,9 @@ function NodeCollection:InRange(p_Waypoint, p_Vec3Position, p_Range)
 		math.abs(s_PosA.z - s_PosB.z) <= p_Range)
 end
 
--- this method avoids the use of the Vec3:Distance() method to avoid complex math internally
--- it's a tradeoff for speed over accuracy, as this method produces a box instead of a sphere
--- @returns float of Distance
+-- This method avoids the use of the Vec3:Distance() method to avoid complex maths internally. 
+-- It's a tradeoff for speed over accuracy, as this method produces a box instead of a sphere. 
+-- @returns float of Distance. 
 function NodeCollection:GetDistance(p_Waypoint, p_Vec3Position)
 	local s_PosA = p_Waypoint.Position or Vec3.zero
 	local s_PosB = p_Vec3Position or Vec3.zero
@@ -1397,7 +1397,7 @@ function NodeCollection:GetDistance(p_Waypoint, p_Vec3Position)
 	end
 end
 
--- Find the closest waypoint at position `p_Vec3Position` with a search radius of `p_Tolerance`
+-- Find the closest waypoint at position `p_Vec3Position` with a search radius of `p_Tolerance`. 
 function NodeCollection:Find(p_Vec3Position, p_Tolerance)
 	if p_Tolerance == nil then
 		p_Tolerance = 0.2
@@ -1409,8 +1409,8 @@ function NodeCollection:Find(p_Vec3Position, p_Tolerance)
 	for _, l_Waypoint in pairs(self._WaypointsByID) do
 		if l_Waypoint ~= nil and l_Waypoint.Position ~= nil and self:IsPathVisible(l_Waypoint.PathIndex) and
 			self:IsPathVisible(l_Waypoint.PathIndex) then
-			if self:InRange(l_Waypoint, p_Vec3Position, p_Tolerance) then -- faster check
-				local s_Distance = l_Waypoint.Position:Distance(p_Vec3Position) -- then do slower math
+			if self:InRange(l_Waypoint, p_Vec3Position, p_Tolerance) then -- Faster check. 
+				local s_Distance = l_Waypoint.Position:Distance(p_Vec3Position) -- Then do slower maths. 
 
 				if s_ClosestWaypoint == nil then
 					s_ClosestWaypoint = l_Waypoint
@@ -1426,7 +1426,7 @@ function NodeCollection:Find(p_Vec3Position, p_Tolerance)
 	return s_ClosestWaypoint
 end
 
--- Find all waypoints within `p_Tolerance` range of the position `p_Vec3Position`
+-- Find all waypoints within `p_Tolerance` range of the position `p_Vec3Position`. 
 function NodeCollection:FindAll(p_Vec3Position, p_Tolerance)
 	if p_Tolerance == nil then
 		p_Tolerance = 0.2
@@ -1444,7 +1444,7 @@ function NodeCollection:FindAll(p_Vec3Position, p_Tolerance)
 	return s_WaypointsFound
 end
 
--- TODO: Not used anymore - Remove?
+-- To-do: Not used any more - Remove? 
 function NodeCollection:FindAlongTrace(p_Vec3Start, p_Vec3End, p_Granularity, p_Tolerance)
 	if p_Granularity == nil then
 		p_Granularity = 0.25
@@ -1459,10 +1459,10 @@ function NodeCollection:FindAlongTrace(p_Vec3Start, p_Vec3End, p_Granularity, p_
 
 	local s_Distance = math.min(math.max(p_Vec3Start:Distance(p_Vec3End), 0.05), 10)
 
-	-- instead of searching a possible 3k or more nodes, we grab only those that would be in range
-	-- shift the search area forward by 1/2 distance and also 1/2 the radius needed
-	local s_SearchAreaPos = p_Vec3Start + ((p_Vec3End - p_Vec3Start) * 0.4) -- not exactly half ahead
-	local s_SearchAreaSize = (s_Distance * 0.6) -- lil bit bigger than half for searching
+	-- Instead of searching a possible 3k or more nodes, we grab only those that would be in range. 
+	-- Shift the search area forward by 1/2 distance and also 1/2 the radius needed. 
+	local s_SearchAreaPos = p_Vec3Start + ((p_Vec3End - p_Vec3Start) * 0.4) -- Not exactly half ahead. 
+	local s_SearchAreaSize = (s_Distance * 0.6) -- Little bit bigger than half for searching. 
 
 	local s_SearchWaypoints = self:FindAll(s_SearchAreaPos, s_SearchAreaSize)
 	local s_TestPos = p_Vec3Start:Clone()

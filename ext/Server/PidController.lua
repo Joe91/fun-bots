@@ -27,7 +27,7 @@ function PidController:Update(p_Error)
 	local s_Output = s_Proportional + s_Derivative + self._Integral
 	self._LastError = p_Error
 
-	-- anti wind up
+	-- Anti wind up. 
 	if s_Output > self._Limit then
 		s_Output = self._Limit
 		self._Integral = self._Integral - s_IntegralInc
@@ -36,7 +36,7 @@ function PidController:Update(p_Error)
 		self._Integral = self._Integral - s_IntegralInc
 	end
 
-	-- clear Integral on dir-change
+	-- Clear Integral on dir-change. 
 	if p_Error > 0 and self._Integral < 0 then
 		self._Integral = 0
 	elseif p_Error < 0 and self._Integral > 0 then

@@ -17,7 +17,7 @@ function RCONCommands:__init()
 	end
 
 	self.m_Commands = {
-		-- save config
+		-- Save config. 
 		CONFIG_SAVE = {
 			Name = 'funbots.saveall',
 			Callback = (function(p_Command, p_Args)
@@ -27,7 +27,7 @@ function RCONCommands:__init()
 			end)
 		},
 
-		-- save config
+		-- Save config. 
 		CONFIG_RESET = {
 			Name = 'funbots.restore',
 			Callback = (function(p_Command, p_Args)
@@ -37,7 +37,7 @@ function RCONCommands:__init()
 			end)
 		},
 
-		-- Clear/Reset Botnames
+		-- Clear/Reset Botnames. 
 		CLEAR_BOTNAMES = {
 			Name = 'funbots.clear.BotNames',
 			Callback = (function(p_Command, p_Args)
@@ -47,7 +47,7 @@ function RCONCommands:__init()
 			end)
 		},
 
-		-- Add BotName
+		-- Add BotName. 
 		ADD_BOTNAMES = {
 			Name = 'funbots.add.BotNames',
 			Parameters = { 'String' },
@@ -64,7 +64,7 @@ function RCONCommands:__init()
 			end)
 		},
 
-		-- Replace BotName
+		-- Replace BotName. 
 		REPLACE_BOTNAMES = {
 			Name = 'funbots.replace.BotNames',
 			Parameters = { 'JSONArray' },
@@ -87,7 +87,7 @@ function RCONCommands:__init()
 			end)
 		},
 
-		-- Kick All
+		-- Kick All. 
 		KICKALLL = {
 			Name = 'funbots.kickAll',
 			Callback = (function(p_Command, p_Args)
@@ -97,7 +97,7 @@ function RCONCommands:__init()
 			end)
 		},
 
-		-- Kick Bot
+		-- Kick Bot. 
 		KICKBOT = {
 			Name = 'funbots.kickBot',
 			Parameters = { 'Name' },
@@ -114,7 +114,7 @@ function RCONCommands:__init()
 			end)
 		},
 
-		-- Kill All
+		-- Kill All. 
 		KILLALL = {
 			Name = 'funbots.killAll',
 			Callback = (function(p_Command, p_Args)
@@ -124,7 +124,7 @@ function RCONCommands:__init()
 			end)
 		},
 
-		-- Spawn <Amount> <Team>
+		-- Spawn <Amount> <Team> 
 		SPAWN = {
 			Name = 'funbots.spawn',
 			Parameters = { 'Amount', 'Team' },
@@ -156,7 +156,7 @@ function RCONCommands:__init()
 			end)
 		},
 
-		-- Permissions <Player> <PermissionName>
+		-- Permissions <Player> <PermissionName> 
 		PERMISSIONS = {
 			Name = 'funbots.Permissions',
 			Parameters = { 'PlayerName', 'PermissionName' },
@@ -164,7 +164,7 @@ function RCONCommands:__init()
 				local s_Name = args[1]
 				local s_Permission = args[2]
 
-				-- Revoke ALL Permissions
+				-- Revoke ALL Permissions. 
 				if s_Permission ~= nil then
 					if s_Permission == '!' then
 						local s_Permissions = PermissionManager:GetPermissions(s_Name)
@@ -181,7 +181,7 @@ function RCONCommands:__init()
 						else
 							return { 'ERROR', 'Can\'r revoke all Permissions from "' .. s_Name .. '".' }
 						end
-					-- Revoke SPECIFIC Permission
+					-- Revoke SPECIFIC Permission. 
 					elseif s_Permission:sub(1, 1) == '!' then
 						s_Permission = s_Permission:sub(2)
 
@@ -214,15 +214,15 @@ function RCONCommands:__init()
 					return { 'ERROR', 'PlayerName needed.' }
 				end
 
-				-- local s_Player = PlayerManager:GetPlayerByName(s_Name)
+				-- local s_Player = PlayerManager:GetPlayerByName(s_Name) 
 
-				-- if s_Player == nil then
-				-- 	s_Player = PlayerManager:GetPlayerByGuid(Guid(s_Name))
+				-- if s_Player == nil then 
+				-- 	s_Player = PlayerManager:GetPlayerByGuid(Guid(s_Name)) 
 
-				-- 	if s_Player == nil then
-				-- 		return {'ERROR', 'Unknown PlayerName "' .. s_Name .. '".'}
-				-- 	end
-				-- end
+				-- 	if s_Player == nil then 
+				-- 		return {'ERROR', 'Unknown PlayerName "' .. s_Name .. '".'} 
+				-- 	end 
+				-- end 
 
 				if s_Permission == nil then
 					local s_Result = { 'LIST', s_Name }
@@ -279,10 +279,10 @@ function RCONCommands:CreateConfigCommands()
 				local s_VarName = s_values[#s_values]
 
 				if p_Args == nil or #p_Args == 0 then
-					-- get var
+					-- Get var. 
 					return { 'OK', 'value of var ' .. s_VarName .. ' is ' .. tostring(Config[s_VarName]) }
 				elseif #p_Args == 1 and p_Args[1] ~= nil then
-					-- set var
+					-- Set var. 
 					local s_Result = m_SettingsManager:UpdateSetting(s_VarName, p_Args[1])
 
 					if s_Result then

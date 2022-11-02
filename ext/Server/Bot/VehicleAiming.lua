@@ -8,7 +8,7 @@ local m_Utilities = require('__shared/Utilities')
 local m_Vehicles = require("Vehicles")
 
 function VehicleAiming:__init()
-	-- nothing to do
+	-- Nothing to do. 
 end
 
 function VehicleAiming:UpdateAimingVehicleAdvanced(p_Bot)
@@ -20,7 +20,7 @@ function VehicleAiming:UpdateAimingVehicleAdvanced(p_Bot)
 		return
 	end
 
-	--interpolate target-player movement
+	-- Interpolate target-player movement. 
 	local s_TargetVelocity = Vec3.zero
 	local s_PitchCorrection = 0.0
 	local s_FullPositionTarget = nil
@@ -30,7 +30,7 @@ function VehicleAiming:UpdateAimingVehicleAdvanced(p_Bot)
 		s_FullPositionBot = p_Bot.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(p_Bot._VehicleMovableId):
 			ToLinearTransform().trans
 	else
-		-- TODO: adjust for chopper-drivers?
+		-- To-do: adjust for chopper-drivers? 
 		s_FullPositionBot = p_Bot.m_Player.soldier.worldTransform.trans:Clone() +
 			m_Utilities:getCameraPos(p_Bot.m_Player, false, false)
 	end
@@ -39,7 +39,7 @@ function VehicleAiming:UpdateAimingVehicleAdvanced(p_Bot)
 		s_FullPositionTarget = p_Bot._ShootPlayer.controlledControllable.transform.trans:Clone()
 	else
 		if p_Bot.m_Player.controlledEntryId == 0 and p_Bot._ShootPlayerVehicleType == VehicleTypes.NoVehicle then
-			-- add nothing (0.1)--> aim for the feet of the target
+			-- Add nothing (0.1) → aim for the feet of the target. 
 			s_FullPositionTarget = p_Bot._ShootPlayer.soldier.worldTransform.trans:Clone()
 			s_FullPositionTarget.y = s_FullPositionTarget.y + 0.1
 		else
@@ -54,7 +54,7 @@ function VehicleAiming:UpdateAimingVehicleAdvanced(p_Bot)
 		s_TargetVelocity = PhysicsEntity(p_Bot._ShootPlayer.controlledControllable).velocity
 	end
 
-	--calculate how long the distance is --> time to travel
+	-- Calculate how long the distance is → time to travel. 
 	local s_Drop = 0.0
 	local s_Speed = 0.0
 	local s_VectorBetween = s_FullPositionTarget - s_FullPositionBot
@@ -82,9 +82,9 @@ function VehicleAiming:UpdateAimingVehicleAdvanced(p_Bot)
 
 	local s_AimAt = s_FullPositionTarget + (s_TargetVelocity * s_TimeToTravel)
 
-	s_PitchCorrection = 0.5 * s_TimeToTravel * s_TimeToTravel * s_Drop -- from theory 0.5. In real 0.375 works much better
+	s_PitchCorrection = 0.5 * s_TimeToTravel * s_TimeToTravel * s_Drop -- From theory 0.5. In real, 0.375 works much better. 
 
-	--calculate yaw and pitch
+	-- Calculate yaw and pitch. 
 	local s_DifferenceZ = s_AimAt.z - s_FullPositionBot.z
 	local s_DifferenceX = s_AimAt.x - s_FullPositionBot.x
 	local s_DifferenceY = s_AimAt.y + s_PitchCorrection - s_FullPositionBot.y
@@ -92,7 +92,7 @@ function VehicleAiming:UpdateAimingVehicleAdvanced(p_Bot)
 	local s_AtanDzDx = math.atan(s_DifferenceZ, s_DifferenceX)
 	local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
 
-	--calculate pitch
+	-- Calculate pitch. 
 	local s_Distance = math.sqrt(s_DifferenceZ ^ 2 + s_DifferenceX ^ 2)
 	local s_Pitch = math.atan(s_DifferenceY, s_Distance)
 
@@ -100,7 +100,7 @@ function VehicleAiming:UpdateAimingVehicleAdvanced(p_Bot)
 	p_Bot._TargetYaw = s_Yaw
 
 
-	-- abort attacking in chopper or jet if too steep or too low
+	-- Abort attacking in chopper or jet if too steep or too low. 
 	if (m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Chopper) and p_Bot.m_Player.controlledEntryId == 0) or
 		m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane) then
 		local s_PitchHalf = Config.FovVerticleChopperForShooting / 360 * math.pi
@@ -115,11 +115,11 @@ function VehicleAiming:UpdateAimingVehicleAdvanced(p_Bot)
 		if p_Bot._ShootPlayerVehicleType ~= VehicleTypes.Chopper and p_Bot._ShootPlayerVehicleType ~= VehicleTypes.Plane then
 			local s_DiffVertical = s_FullPositionBot.y - s_FullPositionTarget.y
 			if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Chopper) then
-				if s_DiffVertical < Registry.VEHICLES.ABORT_ATTACK_HEIGHT_CHOPPER then -- too low to the ground
+				if s_DiffVertical < Registry.VEHICLES.ABORT_ATTACK_HEIGHT_CHOPPER then -- Too low to the ground. 
 					p_Bot:AbortAttack()
 				end
 			elseif m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane) then
-				if s_DiffVertical < Registry.VEHICLES.ABORT_ATTACK_HEIGHT_JET then -- too low to the ground
+				if s_DiffVertical < Registry.VEHICLES.ABORT_ATTACK_HEIGHT_JET then -- Too low to the ground. 
 					p_Bot:AbortAttack()
 				end
 				if p_Bot._DistanceToPlayer < Registry.VEHICLES.ABORT_ATTACK_DISTANCE_JET then
@@ -140,7 +140,7 @@ function VehicleAiming:UpdateAimingVehicle(p_Bot)
 		return
 	end
 
-	--interpolate target-player movement
+	-- Interpolate target-player movement. 
 	local s_TargetMovement = Vec3.zero
 	local s_PitchCorrection = 0.0
 	local s_FullPositionTarget = nil
@@ -150,7 +150,7 @@ function VehicleAiming:UpdateAimingVehicle(p_Bot)
 		s_FullPositionBot = p_Bot.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(p_Bot._VehicleMovableId):
 			ToLinearTransform().trans
 	else
-		-- TODO: adjust for chopper-drivers?
+		-- To-do: adjust for chopper-drivers? 
 		s_FullPositionBot = p_Bot.m_Player.soldier.worldTransform.trans:Clone() +
 			m_Utilities:getCameraPos(p_Bot.m_Player, false, false)
 	end
@@ -160,7 +160,7 @@ function VehicleAiming:UpdateAimingVehicle(p_Bot)
 	else
 		if p_Bot.m_Player.controlledEntryId == 0 and p_Bot._ShootPlayerVehicleType == VehicleTypes.NoVehicle and
 			p_Bot._ActiveVehicleWeaponSlot == 1 then
-			-- add nothing --> aim for the feet of the target
+			-- Add nothing → aim for the feet of the target. 
 			s_FullPositionTarget = p_Bot._ShootPlayer.soldier.worldTransform.trans:Clone()
 		else
 			s_FullPositionTarget = p_Bot._ShootPlayer.soldier.worldTransform.trans:Clone() +
@@ -174,7 +174,7 @@ function VehicleAiming:UpdateAimingVehicle(p_Bot)
 		s_TargetMovement = PhysicsEntity(p_Bot._ShootPlayer.controlledControllable).velocity
 	end
 
-	--calculate how long the distance is --> time to travel
+	-- Calculate how long the distance is → time to travel. 
 	p_Bot._DistanceToPlayer = s_FullPositionTarget:Distance(s_FullPositionBot)
 
 	local s_Drop = 0.0
@@ -184,7 +184,7 @@ function VehicleAiming:UpdateAimingVehicle(p_Bot)
 		p_Bot._ActiveVehicleWeaponSlot)
 
 	local s_TimeToTravel = (p_Bot._DistanceToPlayer / s_Speed)
-	s_PitchCorrection = 0.5 * s_TimeToTravel * s_TimeToTravel * s_Drop -- from theory 0.5. In real 0.375 works much better
+	s_PitchCorrection = 0.5 * s_TimeToTravel * s_TimeToTravel * s_Drop -- From theory 0.5. In real, 0.375 works much better. 
 
 	s_TargetMovement = (s_TargetMovement * s_TimeToTravel)
 
@@ -193,7 +193,7 @@ function VehicleAiming:UpdateAimingVehicle(p_Bot)
 	local s_DifferenceX = 0
 	local s_DifferenceZ = 0
 
-	--calculate yaw and pitch
+	-- Calculate yaw and pitch. 
 	s_DifferenceZ = s_FullPositionTarget.z + s_TargetMovement.z - s_FullPositionBot.z
 	s_DifferenceX = s_FullPositionTarget.x + s_TargetMovement.x - s_FullPositionBot.x
 	s_DifferenceY = s_FullPositionTarget.y + s_TargetMovement.y + s_PitchCorrection - s_FullPositionBot.y
@@ -201,7 +201,7 @@ function VehicleAiming:UpdateAimingVehicle(p_Bot)
 	local s_AtanDzDx = math.atan(s_DifferenceZ, s_DifferenceX)
 	local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
 
-	--calculate pitch
+	-- Calculate pitch. 
 	local s_Distance = math.sqrt(s_DifferenceZ ^ 2 + s_DifferenceX ^ 2)
 	local s_Pitch = math.atan(s_DifferenceY, s_Distance)
 
@@ -209,7 +209,7 @@ function VehicleAiming:UpdateAimingVehicle(p_Bot)
 	p_Bot._TargetYaw = s_Yaw
 
 
-	-- abort attacking in chopper or jet if too steep or too low
+	-- Abort attacking in chopper or jet if too steep or too low. 
 	if (m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Chopper) and p_Bot.m_Player.controlledEntryId == 0) or
 		m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane) then
 		local s_PitchHalf = Config.FovVerticleChopperForShooting / 360 * math.pi
@@ -224,11 +224,11 @@ function VehicleAiming:UpdateAimingVehicle(p_Bot)
 		if p_Bot._ShootPlayerVehicleType ~= VehicleTypes.Chopper and p_Bot._ShootPlayerVehicleType ~= VehicleTypes.Plane then
 			local s_DiffVertical = s_FullPositionBot.y - s_FullPositionTarget.y
 			if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Chopper) then
-				if s_DiffVertical < Registry.VEHICLES.ABORT_ATTACK_HEIGHT_CHOPPER then -- too low to the ground
+				if s_DiffVertical < Registry.VEHICLES.ABORT_ATTACK_HEIGHT_CHOPPER then -- Too low to the ground. 
 					p_Bot:AbortAttack()
 				end
 			elseif m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane) then
-				if s_DiffVertical < Registry.VEHICLES.ABORT_ATTACK_HEIGHT_JET then -- too low to the ground
+				if s_DiffVertical < Registry.VEHICLES.ABORT_ATTACK_HEIGHT_JET then -- Too low to the ground. 
 					p_Bot:AbortAttack()
 				end
 				if p_Bot._DistanceToPlayer < Registry.VEHICLES.ABORT_ATTACK_DISTANCE_JET then

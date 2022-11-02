@@ -21,7 +21,7 @@ end
 function PermissionManager:__boot()
 	m_Logger:Write('Booting...')
 
-	-- Create Permissions
+	-- Create Permissions. 
 	m_Database:CreateTable('FB_Permissions', {
 		DatabaseField.Text,
 		DatabaseField.Text,
@@ -34,7 +34,7 @@ function PermissionManager:__boot()
 		'Time'
 	})
 
-	-- Load all permissions
+	-- Load all permissions. 
 	local s_Permissions = m_Database:Fetch('SELECT * FROM `FB_Permissions`')
 
 	if s_Permissions == nil then
@@ -103,7 +103,7 @@ function PermissionManager:AddPermission(p_Name, p_Permission)
 		s_Guid = tostring(s_Player.guid)
 	end
 
-	-- If not exists, create
+	-- If not exists, create. 
 	if s_Single == nil then
 		m_Database:Insert('FB_Permissions', {
 			GUID = tostring(s_Guid),
@@ -114,7 +114,7 @@ function PermissionManager:AddPermission(p_Name, p_Permission)
 	end
 
 	if s_Player ~= nil and type(s_Player) ~= "table" then
-		-- Register console-commands, if needed
+		-- Register console-commands, if needed. 
 		m_Console:RegisterConsoleCommands(s_Player)
 	end
 end
@@ -153,7 +153,7 @@ function PermissionManager:Exists(p_Name)
 		return true
 	end
 
-	local s_CorrectedName = string.gsub(p_Name, "%.%*", ""):lower() -- remove ".*" at the end
+	local s_CorrectedName = string.gsub(p_Name, "%.%*", ""):lower() -- Remove ".*" at the end. 
 
 	for _, l_Permission in pairs(Permissions) do
 		if l_Permission:lower() == s_CorrectedName then
@@ -205,13 +205,13 @@ function PermissionManager:HasPermission(p_Player, p_Permission)
 			return true
 		end
 
-		-- Simple Check
+		-- Simple Check. 
 		if s_Permissions[i]:lower() == p_Permission:lower() or s_Permissions[i] == '*' or
 			s_Permissions[i]:lower() == p_Permission:lower() .. '.*' then
 			s_Result = true
 		end
 
-		-- Extended Check
+		-- Extended Check. 
 		local s_Temp = ''
 
 		for j = 1, #s_Search do

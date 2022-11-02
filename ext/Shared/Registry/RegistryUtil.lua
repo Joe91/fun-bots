@@ -4,9 +4,9 @@ RegistryUtil = class('RegistryUtil')
 
 require('__shared/Registry/Registry')
 
--- Utils for the registry, only use it for important and essential functions.
--- @author Firjen
--- @release V2.2.0 - 22/08/21
+-- Utils for the registry, only use it for important and essential functions. 
+-- @author Firjen 
+-- @release V2.2.0 - 22/08/21 
 local MODULE_NAME = "Registry Manager: Util"
 
 function RegistryUtil:__init()
@@ -15,12 +15,11 @@ function RegistryUtil:__init()
               ReadableTimetamp(SharedUtils:GetTimeMS() - self._StartTime, TimeUnits.FIT, 1))
 end
 
--- Get the version of the current build as in a semantic format.
--- @return String - semantic version
--- @author Firjen <https://github.com/Firjens>
+-- Get the version of the current build as in a semantic format. 
+-- @return String - semantic version. 
+-- @author Firjen <https://github.com/Firjens> 
 function RegistryUtil:GetVersion()
-	-- If there is no label, we return the MAJ.MIN.PATCH, otherwise we need
-    -- to return the MAJ.MIN.PATCH-LABEL.
+	-- If there is no label, we return the MAJ.MIN.PATCH, otherwise we need to return the MAJ.MIN.PATCH-LABEL. 
     if Registry.VERSION.VERSION_LABEL == nil or Registry.VERSION.VERSION_LABEL == "" or Registry.VERSION.VERSION_TYPE ==
         VersionType.Release then
         return "V" .. Registry.VERSION.VERSION_MAJ .. "." .. Registry.VERSION.VERSION_MIN .. "." ..
