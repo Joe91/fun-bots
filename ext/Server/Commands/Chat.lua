@@ -39,12 +39,12 @@ function ChatCommands:Execute(p_Parts, p_Player)
 			print(s_VehicleName)
 			local s_VehicleEntity
 
-			-- vehicle found
+			-- Vehicle found. 
 			print(p_Player.controlledControllable.physicsEntityBase.partCount)
 			s_VehicleEntity = p_Player.controlledControllable.physicsEntityBase
 
 			for j = 0, s_VehicleEntity.partCount - 1 do
-				if p_Player.controlledControllable.physicsEntityBase:GetPart(j) ~= nil then --and p_Player.controlledControllable.physicsEntityBase:GetPart(j):Is("ServerChildComponent") then
+				if p_Player.controlledControllable.physicsEntityBase:GetPart(j) ~= nil then -- And p_Player.controlledControllable.physicsEntityBase:GetPart(j):Is("ServerChildComponent") then 
 					local s_QuatTransform = p_Player.controlledControllable.physicsEntityBase:GetPartTransform(j)
 
 					if s_QuatTransform == nil then
@@ -77,12 +77,12 @@ function ChatCommands:Execute(p_Parts, p_Player)
 			print(s_VehicleName)
 			local s_VehicleEntity
 
-			-- vehicle found
+			-- Vehicle found. 
 			print(p_Player.controlledControllable.physicsEntityBase.partCount)
 			s_VehicleEntity = p_Player.controlledControllable.physicsEntityBase
 
 			for j = 0, s_VehicleEntity.partCount - 1 do
-				if p_Player.controlledControllable.physicsEntityBase:GetPart(j) ~= nil then --and p_Player.controlledControllable.physicsEntityBase:GetPart(j):Is("ServerChildComponent") then
+				if p_Player.controlledControllable.physicsEntityBase:GetPart(j) ~= nil then -- And p_Player.controlledControllable.physicsEntityBase:GetPart(j):Is("ServerChildComponent") then 
 					local s_QuatTransform = p_Player.controlledControllable.physicsEntityBase:GetPartTransform(j)
 
 					if s_QuatTransform == nil then
@@ -140,7 +140,7 @@ function ChatCommands:Execute(p_Parts, p_Player)
 		local s_Spacing = tonumber(p_Parts[4]) or 2
 
 		m_BotSpawner:SpawnBotGrid(p_Player, s_Rows, s_Columns, s_Spacing)
-	-- static mode commands
+	-- Static mode commands. 
 	elseif p_Parts[1] == '!mimic' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Mimic') == false then
 			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Mimic).', p_Player)
@@ -190,7 +190,7 @@ function ChatCommands:Execute(p_Parts, p_Player)
 		local s_Amount = tonumber(p_Parts[2])
 
 		m_BotSpawner:SpawnWayBots(p_Player, s_Amount, true)
-	-- respawn moving bots
+	-- Respawn moving bots. 
 	elseif p_Parts[1] == '!respawn' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Respawn') == false then
 			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Respawn).', p_Player)
@@ -221,7 +221,7 @@ function ChatCommands:Execute(p_Parts, p_Player)
 		Globals.AttackWayBots = s_Shooting
 
 		m_BotManager:SetOptionForAll('shoot', s_Shooting)
-	-- spawn team settings
+	-- Spawn team settings. 
 	elseif p_Parts[1] == '!setbotkit' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands.SetBotKit') == false then
 			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.SetBotKit).', p_Player)
@@ -251,7 +251,7 @@ function ChatCommands:Execute(p_Parts, p_Player)
 		end
 
 		Config.BotAimWorsening = tonumber(p_Parts[2]) or 0.5
-	--self:_modifyWeapons(Config.BotAimWorsening) --causes lag. Instead restart round
+	-- self:_modifyWeapons(Config.BotAimWorsening) --causes lag. Instead, restart round. 
 	elseif p_Parts[1] == '!shootback' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands.ShootBack') == false then
 			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.ShootBack).', p_Player)
@@ -274,7 +274,7 @@ function ChatCommands:Execute(p_Parts, p_Player)
 		else
 			Config.MeleeAttackIfClose = true
 		end
-	-- reset everything
+	-- Reset everything. 
 	elseif p_Parts[1] == '!stopall' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands.StopAll') == false then
 			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.StopAll).', p_Player)
@@ -345,7 +345,7 @@ function ChatCommands:Execute(p_Parts, p_Player)
 		end
 
 		m_BotManager:KillAll()
-	-- waypoint stuff
+	-- Waypoint stuff. 
 	elseif p_Parts[1] == '!trace' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Trace') == false then
 			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Trace).', p_Player)
@@ -396,9 +396,9 @@ function ChatCommands:Execute(p_Parts, p_Player)
 		local s_TraceIndex = tonumber(p_Parts[2]) or 0
 		NetEvents:SendToLocal('ClientNodeEditor:SaveTrace', p_Player, s_TraceIndex)
 
-	-- Section: Debugging, Bug Reporting and error logging
-	-- Command: !bugreport
-	-- Permission: Debug.BugReport
+	-- Section: Debugging, Bug Reporting and error logging. 
+	-- Command: !bugreport 
+	-- Permission: Debug.BugReport 
 	elseif p_Parts[1] == '!bugreport' then
 		if PermissionManager:HasPermission(p_Player, 'Debug.BugReport') == false then
 			ChatManager:SendMessage('You have no permissions for this action (Debug.BugReport).', p_Player)
@@ -407,7 +407,7 @@ function ChatCommands:Execute(p_Parts, p_Player)
 
 		BugReport:GenerateReport(p_Player)
 	else
-		-- nothing to do
+		-- Nothing to do. 
 	end
 end
 

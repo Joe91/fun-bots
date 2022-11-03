@@ -1,4 +1,4 @@
--- thanks to RM https://github.com/BF3RM/MapEditor/blob/development/ext/Shared/Util/Logger.lua
+-- Thanks to RM https://github.com/BF3RM/MapEditor/blob/development/ext/Shared/Util/Logger.lua 
 
 ---@class Logger
 ---@overload fun(p_ClassName: string, p_ActivateLogging: boolean):Logger
@@ -16,7 +16,7 @@ function Logger:__init(p_ClassName, p_ActivateLogging)
 		return
 	end
 
-	-- print("Creating object with: "..p_ClassName..", "..tostring(p_ActivateLogging))
+	-- print("Creating object with: "..p_ClassName..", "..tostring(p_ActivateLogging)) 
 	self.m_Debug = p_ActivateLogging
 	self.m_ClassName = p_ClassName
 end

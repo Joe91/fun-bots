@@ -8,11 +8,11 @@ local m_Utilities = require('__shared/Utilities')
 local m_Vehicles = require("Vehicles")
 
 function VehicleWeaponHandling:__init()
-	-- nothing to do
+	-- Nothing to do. 
 end
 
 function VehicleWeaponHandling:UpdateReloadVehicle(p_Bot)
-	p_Bot._VehicleWeaponSlotToUse = 1 -- primary
+	p_Bot._VehicleWeaponSlotToUse = 1 -- Primary. 
 	p_Bot:AbortAttack()
 
 	if p_Bot._ActiveAction ~= BotActionFlags.OtherActionActive then
@@ -27,27 +27,27 @@ function VehicleWeaponHandling:UpdateReloadVehicle(p_Bot)
 end
 
 function VehicleWeaponHandling:UpdateWeaponSelectionVehicle(p_Bot)
-	--select weapon-slot
-	p_Bot._WeaponToUse = BotWeapons.Primary -- for exit
+	-- Select weapon-slot. 
+	p_Bot._WeaponToUse = BotWeapons.Primary -- For exit. 
 
-	--select weapon-slot
+	-- Select weapon-slot. 
 	local s_AvailableWeaponSlots = m_Vehicles:GetAvailableWeaponSlots(p_Bot.m_ActiveVehicle,
 		p_Bot.m_Player.controlledEntryId)
-	if s_AvailableWeaponSlots > 1 then -- more than one weapon to select from
-		-- not set yet
+	if s_AvailableWeaponSlots > 1 then -- More than one weapon to select from. 
+		-- Not set yet. 
 		if p_Bot._ActiveVehicleWeaponSlot == 0 then
 			p_Bot:_SetInput(EntryInputActionEnum.EIASelectWeapon1, 1)
 			p_Bot._ActiveVehicleWeaponSlot = 1
 		end
 
-		-- select inputs
+		-- Select inputs. 
 		if p_Bot._ActiveVehicleWeaponSlot ~= p_Bot._VehicleWeaponSlotToUse then
 			p_Bot._VehicleMovableId = m_Vehicles:GetPartIdForSeat(p_Bot.m_ActiveVehicle, p_Bot.m_Player.controlledEntryId,
 				p_Bot._ActiveVehicleWeaponSlot)
 			p_Bot._ActiveVehicleWeaponSlot = p_Bot._VehicleWeaponSlotToUse
 			p_Bot._ShotTimer = 0.0
 
-			-- todo: how long to press? how to switch?
+			-- To-do: how long to press? How to switch? 
 			if p_Bot._VehicleWeaponSlotToUse == 1 then
 				p_Bot:_SetInput(EntryInputActionEnum.EIASelectWeapon1, 1)
 			elseif p_Bot._VehicleWeaponSlotToUse == 2 then

@@ -1,6 +1,6 @@
-local code = 'ja_JA' -- Add/replace the xx_XX here with your language code (like de_DE, en_US, or other)!
+local code = 'ja_JA' -- Add/replace the xx_XX here with your language code (like de_DE, en_US, or other)! 
 
---GENERAL
+-- GENERAL 
 Language:add(code, "Bot Weapon", "ボット武器")
 Language:add(code, "Select the weapon the bots use", "ボットが使用する武器を選択します")
 Language:add(code, "Bot Kit", "ボットキット")
@@ -10,7 +10,7 @@ Language:add(code, "The Color of the Bots", "ボットの色")
 Language:add(code, "Zombie Mode", "ゾンビモード")
 Language:add(code, "Zombie Bot Mode", "ゾンビボットモード")
 
---DIFFICULTY
+-- DIFFICULTY 
 Language:add(code, "Bot Aim Worsening", "ボットエイムの悪化")
 Language:add(code, "Make bots aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy).", "ボットの照準を悪化させます: 難易度: 0 = オフセットなし (難しい)、1 以上 = より揺れる (簡単)。")
 Language:add(code, "Bot Aim Worsening of Snipers", "スナイパーのボットエイム悪化")
@@ -38,7 +38,7 @@ Language:add(code, "Original Damage from bots gets multiplied by this", "ボッ�
 Language:add(code, "Damage Factor Knife", "ダメージファクターナイフ")
 Language:add(code, "Original Damage from bots gets multiplied by this", "ボットからの元のダメージはこれで乗算されます")
 
---SPAWN
+-- SPAWN 
 Language:add(code, "Spawn Mode", "スポーンモード")
 Language:add(code, "Mode the bots spawn with", "ボットがスポーンするモード")
 Language:add(code, "Balance Players Ignoring Bots", "ボットを無視してプレイヤーのバランスをとる")
@@ -70,7 +70,7 @@ Language:add(code, "Additional time a bot waits to respawn", "ボットがリス
 Language:add(code, "Bot Health at spawn", "スポーン時のボットの健全性")
 Language:add(code, "Max health of bot (default 100.0)", "ボットの最大ヘルス (デフォルト 100.0)")
 
---SPAWNLIMITS
+-- SPAWN LIMITS 
 Language:add(code, "Max Bots Per Team (default)", "チームごとの最大ボット数 (デフォルト)")
 Language:add(code, "Max number of bots in one team, if no other mode fits", "他のモードが適合しない場合、1 つのチーム内のボットの最大数")
 Language:add(code, "Max Bots Per Team (TDM)", "チームあたりの最大ボット数 (TDM)")
@@ -98,7 +98,7 @@ Language:add(code, "Max number of bots in one team for Gunmaster", "ガンマス
 Language:add(code, "Max Bots Per Team (Scavenger)", "チームあたりの最大ボット数 (スカベンジャー)")
 Language:add(code, "Max number of bots in one team for Scavenger", "スカベンジャーの 1 チーム内のボットの最大数")
 
---BEHAVIOUR
+-- BEHAVIOUR 
 Language:add(code, "FOV of Bots", "ボットのFOV")
 Language:add(code, "Degrees of FOV of Bot", "ボットの視野角")
 Language:add(code, "FOV of Bots Verticle", "ボット垂直の FOV")
@@ -141,7 +141,7 @@ Language:add(code, "Max time bots move sidewards, before straight-movement (in s
 Language:add(code, "Min Move Cycle", "最小移動サイクル")
 Language:add(code, "Min time bots move sidewards or staight before switching (in sec)", "ボットが切り替え前に横または直進する最小時間 (秒)")
 
---VEHICLE
+-- VEHICLE 
 Language:add(code, "Use vehicles", "車両を使用する")
 Language:add(code, "Bots can use vehicles", "ボットは車両を使用できます")
 Language:add(code, "Use air vehicles", "航空機を利用する")
@@ -168,7 +168,7 @@ Language:add(code, "Enable Auto-AA by NyScorpy", "NyScorpy による自動 AA �
 Language:add(code, "Max Distance Auto-AA", "最大距離自動 AA")
 Language:add(code, "Max Range of Stationary AA", "固定対空砲の最大射程")
 
---WEAPONS
+-- WEAPONS 
 Language:add(code, "Random Weapon usage", "ランダムな武器の使用")
 Language:add(code, "Use a random weapon out of the weaponset", "武器セットからランダムな武器を使用する")
 Language:add(code, "Weapon Set Assault", "ウェポンセットアサルト")
@@ -192,7 +192,7 @@ Language:add(code, "Pistol of Bots, if random-weapon == false", "ボットのピ
 Language:add(code, "Knife of Bots", "ボットのナイフ")
 Language:add(code, "Knife of Bots, if random-weapon == false", "ボットのナイフ、random-weapon == false の場合")
 
---TRACE
+-- TRACE 
 Language:add(code, "Debug Trace Paths", "デバッグ トレース パス")
 Language:add(code, "Waypoint Range", "ウェイポイント範囲")
 Language:add(code, "Set how far away waypoints are visible (meters)", "ウェイポイントが見える距離 (メートル) を設定します")
@@ -212,7 +212,7 @@ Language:add(code, "Update interval of trace", "トレースの更新間隔")
 Language:add(code, "Nodes that are drawn per cycle", "サイクルごとに描画されるノード")
 Language:add(code, "Set how many nodes get drawn per cycle. Affects performance", "サイクルごとに描画されるノードの数を設定します。パフォーマンスへの影響")
 
---ADVANCED
+-- ADVANCED 
 Language:add(code, "Distance for direct attack", "直接攻撃の距離")
 Language:add(code, "Distance bots can hear you at", "ボットがあなたの声を聞くことができる距離")
 Language:add(code, "Bot melee attack cool-down", "ボットの近接攻撃のクールダウン")
@@ -238,7 +238,7 @@ Language:add(code, "Reduces the movementspeed while attacking. 1 = normal, 0 = s
 Language:add(code, "Use Random Names", "ランダムな名前を使用する")
 Language:add(code, "Changes names of the bots on every new round. Experimental right now...", "新しいラウンドごとにボットの名前を変更します。ただいま実験中…")
 
---EXPERT
+-- EXPERT 
 Language:add(code, "Bot first shot delay", "ボットの最初のショットの遅延")
 Language:add(code, "Delay for first shot. If too small, there will be great spread in first cycle because its not compensated yet.", "最初のショットの遅延。小さすぎると、まだ補償されていないため、最初のサイクルで大きなスプレッドが発生します。")
 Language:add(code, "Bot min time shoot at player", "プレーヤーでのボット最小時間シュート")
@@ -270,7 +270,7 @@ Language:add(code, "Bots on paths respawn if killed", "経路上のボットが�
 Language:add(code, "Spawn-Mehtod", "スポーン方法")
 Language:add(code, "Method the bots spawn with. Careful, not supported on most of the maps!!", "ボットがスポーンする方法。ほとんどのマップではサポートされていないため、注意してください!!")
 
---OTHER
+-- OTHER 
 Language:add(code, "Disable UI", "UI を無効にする")
 Language:add(code, "If true, the complete UI will be disabled (not available in the UI -) )", "true の場合、完全な UI が無効になります (UI では使用できません -) )")
 Language:add(code, "Allow Comm-UI for all", "すべての通信 UI を許可する")
@@ -284,12 +284,12 @@ Language:add(code, "If true, all permissions are ignored --> everyone can do eve
 Language:add(code, "Language", "言語")
 Language:add(code, "de_DE as sample (default is english, when language file doesnt exists)", "サンプルとして de_DE (言語ファイルが存在しない場合、デフォルトは英語)")
 
--- Strings of ./../../ext/Client/ClientNodeEditor.lua
+-- Strings of ./../../ext/Client/ClientNodeEditor.lua 
 
--- Strings of ./../../ext/Server/BotSpawner.lua
+-- Strings of ./../../ext/Server/BotSpawner.lua 
 Language:add(code, "CANT_JOIN_BOT_TEAM", "CANT_JOIN_BOT_TEAM")
 
--- Strings of ./../../ext/Server/UIServer.lua
+-- Strings of ./../../ext/Server/UIServer.lua 
 Language:add(code, "A", "あ")
 Language:add(code, "B", "B")
 Language:add(code, "C", "C")
@@ -317,7 +317,7 @@ Language:add(code, "Repair Vehicle", "修理車両")
 Language:add(code, "Settings has been saved temporarily.", "設定が一時的に保存されました。")
 Language:add(code, "Settings has been saved.", "設定が保存されました。")
 
--- Strings of ./../../ext/Server/NodeCollection.lua
+-- Strings of ./../../ext/Server/NodeCollection.lua 
 Language:add(code, "Loaded %d paths with %d waypoints for map %s", "マップ %s の %d ウェイポイントを含む %d パスをロードしました")
 Language:add(code, "Save in progress...", "保存中...")
 Language:add(code, "Failed to execute query: %s", "クエリの実行に失敗しました: %s")

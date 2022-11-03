@@ -51,7 +51,7 @@ function FunBotClient:OnExtensionLoaded()
 	self:RegisterEvents()
 	self:RegisterHooks()
 
-	-- Announce the version in the client's console if enabled in the registry
+	-- Announce the version in the client's console if enabled in the registry. 
 	if Registry.VERSION.CLIENT_SHOW_VERSION_ON_JOIN then
 		print("Server is running fun-bots version " .. RegistryManager:GetUtil():GetVersion())
 	end
@@ -83,9 +83,9 @@ function FunBotClient:RegisterHooks()
 	Hooks:Install('Input:PreUpdate', 100, self, self.OnInputPreUpdate)
 end
 
--- =============================================
--- Events
--- =============================================
+-- ============================================= 
+-- Events 
+-- ============================================= 
 
 ---VEXT Shared Engine:Message Event
 ---@param p_Message Message
@@ -146,7 +146,7 @@ end
 ---@param p_DeltaTime number
 ---@param p_SimulationDeltaTime number
 function FunBotClient:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
-	-- m_ClientNodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
+	-- m_ClientNodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime) 
 end
 
 ---VEXT Client UI:DrawHud Event
@@ -161,9 +161,9 @@ function FunBotClient:OnPartitionLoaded(p_Partition)
 	m_ClientSpawnPointHelper:OnPartitionLoaded(p_Partition)
 end
 
--- =============================================
--- NetEvents
--- =============================================
+-- ============================================= 
+-- NetEvents 
+-- ============================================= 
 
 function FunBotClient:OnWriteClientSettings(p_NewConfig, p_UpdateWeaponSets)
 	m_ClientBotManager:OnWriteClientSettings(p_NewConfig, p_UpdateWeaponSets)
@@ -195,9 +195,9 @@ function FunBotClient:OnPrintResponse(p_Response)
 	m_ConsoleCommands:OnPrintResponse(p_Response)
 end
 
--- =============================================
--- Hooks
--- =============================================
+-- ============================================= 
+-- Hooks 
+-- ============================================= 
 
 ---VEXT Client Input:PreUpdate Hook
 ---@param p_HookCtx HookContext

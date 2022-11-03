@@ -8,7 +8,7 @@ local m_Utilities = require('__shared/Utilities')
 local m_Vehicles = require("Vehicles")
 
 function BotAttacking:__init()
-	-- nothing to do
+	-- Nothing to do. 
 end
 
 function BotAttacking:UpdateAttacking(p_Bot)
@@ -21,7 +21,7 @@ function BotAttacking:UpdateAttacking(p_Bot)
 			(Config.ZombieMode and p_Bot._ShootModeTimer < (Config.BotFireModeDuration * 4)) then
 
 			if p_Bot._ActiveAction ~= BotActionFlags.C4Active then
-				p_Bot:_SetInput(EntryInputActionEnum.EIAZoom, 1) -- does not work yet :-/
+				p_Bot:_SetInput(EntryInputActionEnum.EIAZoom, 1) -- Does not work yet :-/ 
 				p_Bot.m_Player.input.zoomLevel = 1
 			end
 
@@ -29,9 +29,9 @@ function BotAttacking:UpdateAttacking(p_Bot)
 				p_Bot._ShootModeTimer = p_Bot._ShootModeTimer + Registry.BOT.BOT_UPDATE_CYCLE
 			end
 
-			p_Bot._ReloadTimer = 0.0 -- reset reloading
+			p_Bot._ReloadTimer = 0.0 -- Reset reloading. 
 
-			--check for melee attack
+			-- Check for melee attack. 
 			if Config.MeleeAttackIfClose and p_Bot._ActiveAction ~= BotActionFlags.MeleeActive and
 				p_Bot._MeleeCooldownTimer <= 0.0 and
 				p_Bot._ShootPlayer.soldier.worldTransform.trans:Distance(p_Bot.m_Player.soldier.worldTransform.trans) < 2 then
@@ -54,7 +54,7 @@ function BotAttacking:UpdateAttacking(p_Bot)
 				end
 			end
 
-			if p_Bot._ActiveAction == BotActionFlags.GrenadeActive then -- throw grenade
+			if p_Bot._ActiveAction == BotActionFlags.GrenadeActive then -- Throw grenade. 
 				if p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.secondaryAmmo <= 0 then
 					p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.secondaryAmmo = 1
 					p_Bot:_ResetActionFlag(BotActionFlags.GrenadeActive)
@@ -62,27 +62,27 @@ function BotAttacking:UpdateAttacking(p_Bot)
 				end
 			end
 
-			-- target in vehicle
+			-- Target in vehicle. 
 			if p_Bot._ShootPlayerVehicleType ~= VehicleTypes.NoVehicle then
 				local s_IsSniper = (p_Bot.m_ActiveWeapon and p_Bot.m_ActiveWeapon.type == WeaponTypes.Sniper)
 				local s_AttackMode = m_Vehicles:CheckForVehicleAttack(p_Bot._ShootPlayerVehicleType, p_Bot._DistanceToPlayer,
 					p_Bot.m_SecondaryGadget, false, s_IsSniper)
 
 				if s_AttackMode ~= VehicleAttackModes.NoAttack then
-					if s_AttackMode == VehicleAttackModes.AttackWithNade then -- grenade
+					if s_AttackMode == VehicleAttackModes.AttackWithNade then -- Grenade. 
 						p_Bot._ActiveAction = BotActionFlags.GrenadeActive
 					elseif s_AttackMode == VehicleAttackModes.AttackWithRocket or
 						s_AttackMode == VehicleAttackModes.AttackWithMissileAir or
-						s_AttackMode == VehicleAttackModes.AttackWithMissileLand then -- rockets and missiles
+						s_AttackMode == VehicleAttackModes.AttackWithMissileLand then -- Rockets and missiles. 
 						p_Bot._WeaponToUse = BotWeapons.Gadget2
 						if p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.secondaryAmmo <= 0 then
 							p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.secondaryAmmo = 1
 						end
-					elseif s_AttackMode == VehicleAttackModes.AttackWithC4 then -- C4
+					elseif s_AttackMode == VehicleAttackModes.AttackWithC4 then -- C4 
 						p_Bot._WeaponToUse = BotWeapons.Gadget2
 						p_Bot._ActiveAction = BotActionFlags.C4Active
 					elseif s_AttackMode == VehicleAttackModes.AttackWithRifle then
-						-- TODO: double code is not nice
+						-- To-do: double code is not nice. 
 						if p_Bot._ActiveAction ~= BotActionFlags.GrenadeActive and
 							p_Bot.m_Player.soldier.weaponsComponent.weapons[1] ~= nil then
 							if p_Bot.m_Player.soldier.weaponsComponent.weapons[1].primaryAmmo == 0 then
@@ -93,11 +93,11 @@ function BotAttacking:UpdateAttacking(p_Bot)
 						end
 					end
 				else
-					p_Bot._ShootModeTimer = Config.BotFireModeDuration -- end attack
+					p_Bot._ShootModeTimer = Config.BotFireModeDuration -- End attack. 
 				end
 			else
-				-- target not in vehicle
-				-- refill rockets if empty
+				-- Target not in vehicle. 
+				-- Refill rockets if empty. 
 				if p_Bot.m_ActiveWeapon.type == WeaponTypes.Rocket then
 					if p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.secondaryAmmo <= 0 then
 						p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.secondaryAmmo = 1
@@ -110,7 +110,7 @@ function BotAttacking:UpdateAttacking(p_Bot)
 					p_Bot._WeaponToUse = BotWeapons.Primary
 				else
 					if p_Bot._ActiveAction ~= BotActionFlags.GrenadeActive then
-						-- check to use pistol
+						-- Check to use pistol. 
 						if p_Bot.m_Player.soldier.weaponsComponent.weapons[1] ~= nil then
 							if p_Bot.m_Player.soldier.weaponsComponent.weapons[1].primaryAmmo == 0 and
 								p_Bot._DistanceToPlayer <= Config.MaxShootDistancePistol then
@@ -119,7 +119,7 @@ function BotAttacking:UpdateAttacking(p_Bot)
 								if p_Bot.m_ActiveWeapon.type ~= WeaponTypes.Rocket then
 
 									p_Bot._WeaponToUse = BotWeapons.Primary
-									-- check to use rocket
+									-- Check to use rocket. 
 									if p_Bot._ShootModeTimer <= Registry.BOT.BOT_UPDATE_CYCLE + 0.001 and
 										p_Bot.m_SecondaryGadget ~= nil and p_Bot.m_SecondaryGadget.type == WeaponTypes.Rocket and
 										MathUtils:GetRandomInt(1, 100) <= Registry.BOT.PROBABILITY_SHOOT_ROCKET then
@@ -130,16 +130,16 @@ function BotAttacking:UpdateAttacking(p_Bot)
 						end
 
 					end
-					-- use grenade from time to time
+					-- Use grenade from time to time. 
 					if Config.BotsThrowGrenades then
 						local s_TargetTimeValue = Config.BotFireModeDuration - (3 * Registry.BOT.BOT_UPDATE_CYCLE)
 
 						if ((p_Bot._ShootModeTimer >= (s_TargetTimeValue - 0.001)) and
 							(p_Bot._ShootModeTimer <= (s_TargetTimeValue + Registry.BOT.BOT_UPDATE_CYCLE + 0.001)) and
 							p_Bot._ActiveAction ~= BotActionFlags.GrenadeActive) or Config.BotWeapon == BotWeapons.Grenade then
-							-- should be triggered only once per fireMode
+							-- Should be triggered only once per fireMode. 
 							if MathUtils:GetRandomInt(1, 100) <= Registry.BOT.PROBABILITY_THROW_GRENADE then
-								if p_Bot.m_Grenade ~= nil and p_Bot._DistanceToPlayer < 25.0 then -- algorith only works for up to 25 m
+								if p_Bot.m_Grenade ~= nil and p_Bot._DistanceToPlayer < 25.0 then -- Algorith only works for up to 25 m. 
 									p_Bot._ActiveAction = BotActionFlags.GrenadeActive
 								end
 							end
@@ -148,17 +148,17 @@ function BotAttacking:UpdateAttacking(p_Bot)
 				end
 			end
 
-			--trace way back
+			-- Trace way back. 
 			if (
 				p_Bot.m_ActiveWeapon and p_Bot.m_ActiveWeapon.type ~= WeaponTypes.Sniper and
 					p_Bot.m_ActiveWeapon.type ~= WeaponTypes.Rocket and p_Bot.m_ActiveWeapon.type ~= WeaponTypes.MissileAir and
 					p_Bot.m_ActiveWeapon.type ~= WeaponTypes.MissileLand) or p_Bot.m_KnifeMode then
 				if p_Bot._ShootTraceTimer > Registry.BOT.TRACE_DELTA_SHOOTING then
-					--create a Trace to find way back
+					-- Create a Trace to find way back. 
 					p_Bot._ShootTraceTimer = 0.0
 					local s_Point = {
 						Position = p_Bot.m_Player.soldier.worldTransform.trans:Clone(),
-						SpeedMode = BotMoveSpeeds.Sprint, -- 0 = wait, 1 = prone, 2 = crouch, 3 = walk, 4 run
+						SpeedMode = BotMoveSpeeds.Sprint, -- 0 = wait, 1 = prone, 2 = crouch, 3 = walk, 4 run 
 						ExtraMode = 0,
 						OptValue = 0,
 					}
@@ -174,7 +174,7 @@ function BotAttacking:UpdateAttacking(p_Bot)
 				p_Bot._ShootTraceTimer = p_Bot._ShootTraceTimer + Registry.BOT.BOT_UPDATE_CYCLE
 			end
 
-			--shooting sequence
+			-- Shooting sequence. 
 			if Globals.IsGm then
 				if p_Bot._ShotTimer >= (0.4) then
 					p_Bot._ShotTimer = 0.0
@@ -186,8 +186,8 @@ function BotAttacking:UpdateAttacking(p_Bot)
 				p_Bot._ShotTimer = p_Bot._ShotTimer + Registry.BOT.BOT_UPDATE_CYCLE
 			elseif p_Bot.m_ActiveWeapon ~= nil then
 				if p_Bot.m_KnifeMode then
-					-- nothing to do
-					-- C4 Handling
+					-- Nothing to do. 
+					-- C4 Handling. 
 				elseif p_Bot._ActiveAction == BotActionFlags.C4Active then
 					if p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.secondaryAmmo > 0 then
 						if p_Bot._ShotTimer >= (p_Bot.m_ActiveWeapon.fireCycle + p_Bot.m_ActiveWeapon.pauseCycle) then
@@ -201,7 +201,7 @@ function BotAttacking:UpdateAttacking(p_Bot)
 						end
 					else
 						if p_Bot._ShotTimer >= (p_Bot.m_ActiveWeapon.fireCycle + p_Bot.m_ActiveWeapon.pauseCycle) then
-							--TODO: run away from object now
+							-- To-do: run away from object now. 
 							if p_Bot._ShotTimer >= ((p_Bot.m_ActiveWeapon.fireCycle * 2) + p_Bot.m_ActiveWeapon.pauseCycle) then
 								p_Bot:_SetInput(EntryInputActionEnum.EIAFire, 1)
 								p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.secondaryAmmo = 4
@@ -219,7 +219,7 @@ function BotAttacking:UpdateAttacking(p_Bot)
 							if p_Bot._ShotTimer <= p_Bot.m_ActiveWeapon.fireCycle then
 								p_Bot:_SetInput(EntryInputActionEnum.EIAFire, 1)
 							end
-						else --start with pause Cycle
+						else -- Start with pause Cycle. 
 							if p_Bot._ShotTimer >= p_Bot.m_ActiveWeapon.pauseCycle then
 								p_Bot:_SetInput(EntryInputActionEnum.EIAFire, 1)
 							end
@@ -237,12 +237,12 @@ function BotAttacking:UpdateAttacking(p_Bot)
 			p_Bot:_ResetActionFlag(BotActionFlags.GrenadeActive)
 		end
 	elseif p_Bot._ActiveAction == BotActionFlags.ReviveActive then
-		if p_Bot._ShootPlayer.corpse ~= nil and not p_Bot._ShootPlayer.corpse.isDead then -- revive
+		if p_Bot._ShootPlayer.corpse ~= nil and not p_Bot._ShootPlayer.corpse.isDead then -- Revive. 
 			p_Bot._ShootModeTimer = p_Bot._ShootModeTimer + Registry.BOT.BOT_UPDATE_CYCLE
-			p_Bot.m_ActiveMoveMode = BotMoveModes.ReviveC4 -- movement-mode : revive
-			p_Bot._ReloadTimer = 0.0 -- reset reloading
+			p_Bot.m_ActiveMoveMode = BotMoveModes.ReviveC4 -- Movement-mode : revive. 
+			p_Bot._ReloadTimer = 0.0 -- Reset reloading. 
 
-			--check for revive if close
+			-- Check for revive if close. 
 			if p_Bot._ShootPlayer.corpse.worldTransform.trans:Distance(p_Bot.m_Player.soldier.worldTransform.trans) < 3 then
 				if p_Bot._ShotTimer >= (p_Bot.m_ActiveWeapon.fireCycle + p_Bot.m_ActiveWeapon.pauseCycle) then
 					p_Bot._ShotTimer = 0.0
@@ -255,13 +255,13 @@ function BotAttacking:UpdateAttacking(p_Bot)
 			end
 			p_Bot._ShotTimer = p_Bot._ShotTimer + Registry.BOT.BOT_UPDATE_CYCLE
 
-			--trace way back
+			-- Trace way back. 
 			if p_Bot._ShootTraceTimer > Registry.BOT.TRACE_DELTA_SHOOTING then
-				--create a Trace to find way back
+				-- Create a Trace to find way back. 
 				p_Bot._ShootTraceTimer = 0.0
 				local s_Point = {
 					Position = p_Bot.m_Player.soldier.worldTransform.trans:Clone(),
-					SpeedMode = BotMoveSpeeds.Sprint, -- 0 = wait, 1 = prone, 2 = crouch, 3 = walk, 4 run
+					SpeedMode = BotMoveSpeeds.Sprint, -- 0 = wait, 1 = prone, 2 = crouch, 3 = walk, 4 run 
 					ExtraMode = 0,
 					OptValue = 0,
 				}
@@ -274,58 +274,58 @@ function BotAttacking:UpdateAttacking(p_Bot)
 			end
 
 			p_Bot._ShootTraceTimer = p_Bot._ShootTraceTimer + Registry.BOT.BOT_UPDATE_CYCLE
-		else -- soldier alive again
+		else -- Soldier alive again. 
 			p_Bot._WeaponToUse = BotWeapons.Primary
 			p_Bot._TargetPitch = 0.0
 			p_Bot:AbortAttack()
 			p_Bot:_ResetActionFlag(BotActionFlags.ReviveActive)
 		end
-	-- enter vehicle
+	-- Enter vehicle. 
 	elseif p_Bot._ActiveAction == BotActionFlags.EnterVehicleActive and p_Bot._ShootPlayer ~= nil and
 		p_Bot._ShootPlayer.soldier ~= nil then
 		p_Bot._ShootModeTimer = p_Bot._ShootModeTimer + Registry.BOT.BOT_UPDATE_CYCLE
-		p_Bot.m_ActiveMoveMode = BotMoveModes.ReviveC4 -- movement-mode : revive
+		p_Bot.m_ActiveMoveMode = BotMoveModes.ReviveC4 -- Movement-mode : revive. 
 
-		--check for enter of vehicle if close
+		-- Check for enter of vehicle if close. 
 		if p_Bot._ShootPlayer.soldier.worldTransform.trans:Distance(p_Bot.m_Player.soldier.worldTransform.trans) < 5 then
 			p_Bot:_EnterVehicle(true)
 			p_Bot._TargetPitch = 0.0
 			p_Bot:AbortAttack()
 			p_Bot:_ResetActionFlag(BotActionFlags.EnterVehicleActive)
 		end
-		if p_Bot._ShootModeTimer > 12.0 then -- abort this after some time
+		if p_Bot._ShootModeTimer > 12.0 then -- Abort this after some time. 
 			p_Bot._TargetPitch = 0.0
 			p_Bot:AbortAttack()
 			p_Bot:_ResetActionFlag(BotActionFlags.EnterVehicleActive)
 		end
-	-- repair
+	-- Repair. 
 	elseif p_Bot._ActiveAction == BotActionFlags.RepairActive and p_Bot._ShootPlayer ~= nil and
 		p_Bot._ShootPlayer.soldier ~= nil and p_Bot._RepairVehicleEntity ~= nil then
 		p_Bot._ShootModeTimer = p_Bot._ShootModeTimer + Registry.BOT.BOT_UPDATE_CYCLE
-		p_Bot.m_ActiveMoveMode = BotMoveModes.ReviveC4 -- movement-mode : repair
+		p_Bot.m_ActiveMoveMode = BotMoveModes.ReviveC4 -- Movement-mode : repair. 
 
 		local s_CurrentHealth = PhysicsEntity(p_Bot._RepairVehicleEntity).internalHealth
 
-		--check for repair if close to vehicle
+		-- Check for repair if close to vehicle. 
 		if p_Bot._RepairVehicleEntity.transform.trans:Distance(p_Bot.m_Player.soldier.worldTransform.trans) < 5 then
 			if s_CurrentHealth ~= p_Bot._LastVehicleHealth then
-				p_Bot._ShootModeTimer = Registry.BOT.MAX_TIME_TRY_REPAIR - 2.0 -- continue for few seconds on progress
+				p_Bot._ShootModeTimer = Registry.BOT.MAX_TIME_TRY_REPAIR - 2.0 -- Continue for few seconds on progress. 
 			end
 			p_Bot._LastVehicleHealth = s_CurrentHealth
 			p_Bot._TargetPitch = 0.0
-			p_Bot._AttackModeMoveTimer = 0.0 -- don't jump anymore
+			p_Bot._AttackModeMoveTimer = 0.0 -- Don't jump any more. 
 			p_Bot:_SetInput(EntryInputActionEnum.EIAFire, 1)
 		end
 
-		-- Abort conditions
-		if p_Bot._ShootModeTimer > Registry.BOT.MAX_TIME_TRY_REPAIR or p_Bot._RepairVehicleEntity == nil then -- abort this after some time
+		-- Abort conditions. 
+		if p_Bot._ShootModeTimer > Registry.BOT.MAX_TIME_TRY_REPAIR or p_Bot._RepairVehicleEntity == nil then -- Abort this after some time. 
 			p_Bot._TargetPitch = 0.0
 			p_Bot:AbortAttack()
 			p_Bot:_ResetActionFlag(BotActionFlags.RepairActive)
 			p_Bot._WeaponToUse = BotWeapons.Primary
 		end
 
-	elseif p_Bot._ShootPlayer.soldier == nil or p_Bot._Shoot == false then -- reset if enemy is dead or attack is disabled
+	elseif p_Bot._ShootPlayer.soldier == nil or p_Bot._Shoot == false then -- Reset if enemy is dead or attack is disabled. 
 		p_Bot:AbortAttack()
 	end
 end
