@@ -1,6 +1,6 @@
 ---@class Permissions
 Permissions = {
-	-- ChatCommands
+	-- ChatCommands. 
 	'ChatCommands',
 
 	'ChatCommands.Row',
@@ -36,10 +36,10 @@ Permissions = {
 	'ChatCommands.PrintTransform',
 	'ChatCommands.TraceSave',
 
-	-- CommScreen
+	-- CommScreen. 
 	'Comm',
 
-	-- UserInterface
+	-- UserInterface. 
 	'UserInterface',
 
 	'UserInterface.BotEditor',
@@ -61,9 +61,9 @@ Permissions = {
 	'UserInterface.WaypointEditor.TraceClear',
 	'UserInterface.WaypointEditor.TraceReset',
 
-	-- Settings
+	-- Settings. 
 	'UserInterface.Settings',
 
-	-- Debugger
+	-- Debugger. 
 	'Debug.BugReport'
 }

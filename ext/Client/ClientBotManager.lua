@@ -21,26 +21,26 @@ function ClientBotManager:RegisterVars()
 	self.m_ReadyToUpdate = false
 	self.m_BotBotRaycastsToDo = {}
 
-	-- inputs for change of seats (1-8)
+	-- Inputs for change of seats (1-8). 
 	self.m_LastInputLevelsPos = {0, 0, 0, 0, 0, 0, 0, 0}
 end
 
--- =============================================
--- Events
--- =============================================
+-- ============================================= 
+-- Events 
+-- ============================================= 
 
 ---VEXT Client Client:UpdateInput Event
 ---@param p_DeltaTime number
 function ClientBotManager:OnClientUpdateInput(p_DeltaTime)
-	-- TODO: find a better solution for that!!!
+	-- To-do: find a better solution for that!!! 
 	if InputManager:WentKeyDown(InputDeviceKeys.IDK_Q) then
-		--execute Vehicle Enter Detection here
+		-- Execute Vehicle Enter Detection here. 
 		if self.m_Player ~= nil and self.m_Player.inVehicle then
 			local s_Transform = ClientUtils:GetCameraTransform()
 
 			if s_Transform == nil then return end
 
-			-- The freecam transform is inverted. Invert it back
+			-- The free cam transform is inverted. Invert it back. 
 			local s_CameraForward = Vec3(s_Transform.forward.x * -1, s_Transform.forward.y * -1, s_Transform.forward.z * -1)
 
 			local s_MaxEnterDistance = 50
@@ -54,7 +54,7 @@ function ClientBotManager:OnClientUpdateInput(p_DeltaTime)
 				RayCastFlags.DontCheckWater | RayCastFlags.IsAsyncRaycast)
 
 			if s_Raycast ~= nil and s_Raycast.rigidBody:Is("CharacterPhysicsEntity") then
-				-- find teammate at this position
+				-- Find a teammate at this position. 
 				for _, l_Player in pairs(PlayerManager:GetPlayersByTeam(self.m_Player.teamId)) do
 					if l_Player.soldier ~= nil and m_Utilities:isBot(l_Player) and
 						l_Player.soldier.worldTransform.trans:Distance(s_Raycast.position) < 2 then
@@ -114,7 +114,7 @@ function ClientBotManager:DoRaycast(p_Pos1, p_Pos2, p_InObjectPos1, p_InObjectPo
 			s_MaxHits = s_MaxHits + 1
 		end
 
-		local s_MaterialFlags = 0 --MaterialFlags.MfPenetrable | MaterialFlags.MfClientDestructible | MaterialFlags.MfBashable | MaterialFlags.MfSeeThrough | MaterialFlags.MfNoCollisionResponse | MaterialFlags.MfNoCollisionResponseCombined
+		local s_MaterialFlags = 0 -- MaterialFlags.MfPenetrable | MaterialFlags.MfClientDestructible | MaterialFlags.MfBashable | MaterialFlags.MfSeeThrough | MaterialFlags.MfNoCollisionResponse | MaterialFlags.MfNoCollisionResponseCombined 
 		local s_RaycastFlags = RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter
 
 		local s_RayHits = RaycastManager:CollisionRaycast(p_Pos1, p_Pos2, s_MaxHits, s_MaterialFlags, s_RaycastFlags)
@@ -129,7 +129,7 @@ function ClientBotManager:DoRaycast(p_Pos1, p_Pos2, p_InObjectPos1, p_InObjectPo
 			local s_DeltaPos = p_Pos2 - p_Pos1
 			s_DeltaPos = s_DeltaPos:Normalize()
 
-			if p_InObjectPos1 then -- Start Raycast outside of vehicle?
+			if p_InObjectPos1 then -- Start Raycast outside of vehicle? 
 				p_Pos1 = p_Pos1 + (s_DeltaPos * 3.2)
 			end
 
@@ -157,7 +157,7 @@ end
 ---@param p_DeltaTime number
 ---@param p_UpdatePass UpdatePass|integer
 function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
-	if p_UpdatePass ~= UpdatePass.UpdatePass_PreSim or not self.m_ReadyToUpdate then --UpdatePass_PreSim UpdatePass_PreFrame
+	if p_UpdatePass ~= UpdatePass.UpdatePass_PreSim or not self.m_ReadyToUpdate then -- UpdatePass_PreSim UpdatePass_PreFrame 
 		return
 	end
 
@@ -167,7 +167,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	local s_SkipEnemyCheck = not Config.BotsAttackPlayers or
 		(self.m_RaycastTimer < Registry.GAME_RAYCASTING.RAYCAST_INTERVAL_ENEMY_CHECK)
 
-	-- check bot-bot attack
+	-- Check bot-bot attack. 
 	if #self.m_BotBotRaycastsToDo > 0 then
 		local s_MaxRaycastsBotBot = Registry.GAME_RAYCASTING.MAX_RAYCASTS_PER_PLAYER_PER_CYCLE
 
@@ -212,7 +212,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 			end
 		end
 
-		-- check for too many entries
+		-- Check for too many entries. 
 		if #self.m_BotBotRaycastsToDo > 20 then
 			m_Logger:Write("More Raycasts than doable")
 			self.m_BotBotRaycastsToDo = {}
@@ -236,8 +236,8 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	self.m_RaycastTimer = 0
 	local s_CheckCount = 0
 
-	if self.m_Player.soldier ~= nil then -- alive. Check for enemy bots
-		if self.m_AliveTimer < Registry.CLIENT.SPAWN_PROTECTION then -- wait 2s (spawn-protection)
+	if self.m_Player.soldier ~= nil then -- Alive. Check for enemy bots. 
+		if self.m_AliveTimer < Registry.CLIENT.SPAWN_PROTECTION then -- Wait 2s (spawn-protection). 
 			self.m_AliveTimer = self.m_AliveTimer + p_DeltaTime
 			self:SendRaycastResults(s_RaycastResultsToSend)
 			return
@@ -246,7 +246,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 		local s_EnemyPlayers = {}
 
 		for _, l_Player in pairs(PlayerManager:GetPlayers()) do
-			if l_Player.teamId ~= self.m_Player.teamId and self.m_Player.teamId ~= 0 then -- don't let bots attack spectators
+			if l_Player.teamId ~= self.m_Player.teamId and self.m_Player.teamId ~= 0 then -- Don't let bots attack spectators. 
 				table.insert(s_EnemyPlayers, l_Player)
 			end
 		end
@@ -255,13 +255,13 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 			self.m_LastIndex = 0
 		end
 
-		-- check for clear view
+		-- Check for clear view. 
 		local s_PlayerPosition = Vec3()
 		if self.m_Player.inVehicle then
 			s_PlayerPosition = self.m_Player.controlledControllable.transform.trans:Clone()
 			s_PlayerPosition.y = s_PlayerPosition.y + 1.4
 		else
-			s_PlayerPosition = ClientUtils:GetCameraTransform().trans:Clone() --player.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(player, false)
+			s_PlayerPosition = ClientUtils:GetCameraTransform().trans:Clone() -- player.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(player, false) 
 		end
 		for i = 0, #s_EnemyPlayers - 1 do
 			local s_Index = (self.m_LastIndex + i) % #s_EnemyPlayers + 1
@@ -271,7 +271,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 				goto continue_enemy_loop
 			end
 
-			-- find direction of Bot
+			-- Find direction of Bot. 
 			local s_TargetPos = Vec3()
 			if s_Bot.inVehicle then
 				s_TargetPos = s_Bot.controlledControllable.transform.trans:Clone()
@@ -286,11 +286,11 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 			if (s_Distance < Config.MaxShootDistanceSniper) or
 				(s_Bot.inVehicle and (s_Distance < Config.MaxShootDistanceVehicles)) then
 				if self:DoRaycast(s_PlayerPosition, s_TargetPos, self.m_Player.inVehicle, s_Bot.inVehicle) then
-					-- we found a valid bot in Sight (either no hit, or player-hit). Signal Server with players
+					-- We found a valid bot in Sight (either no hit, or player-hit). Signal Server with players. 
 					local s_IgnoreYaw = false
 
 					if s_Distance < Config.DistanceForDirectAttack then
-						s_IgnoreYaw = true -- shoot, because you are near
+						s_IgnoreYaw = true -- Shoot, because you are near. 
 					end
 
 					table.insert(s_RaycastResultsToSend, {
@@ -303,7 +303,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 				self.m_LastIndex = s_Index
 				self:SendRaycastResults(s_RaycastResultsToSend)
-				return --only one raycast per cycle
+				return -- Only one raycast per cycle. 
 			end
 
 			if s_CheckCount >= Registry.CLIENT.MAX_CHECKS_PER_CYCLE then
@@ -314,8 +314,8 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 			::continue_enemy_loop::
 		end
-	elseif self.m_Player.corpse ~= nil and not self.m_Player.corpse.isDead then -- dead. check for revive botsAttackBots
-		self.m_AliveTimer = 0.5 --add a little delay
+	elseif self.m_Player.corpse ~= nil and not self.m_Player.corpse.isDead then -- Dead. Check for revive botsAttackBots. 
+		self.m_AliveTimer = 0.5 -- Add a little delay. 
 		local s_TeamMates = PlayerManager:GetPlayersByTeam(self.m_Player.teamId)
 
 		if self.m_LastIndex >= #s_TeamMates then
@@ -330,21 +330,21 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 				goto continue_teamMate_loop
 			end
 
-			-- check for clear view
+			-- Check for clear view. 
 			local s_PlayerPosition = self.m_Player.corpse.worldTransform.trans:Clone()
 			s_PlayerPosition.y = s_PlayerPosition.y + 0.4
 
-			-- find direction of Bot
+			-- Find direction of Bot. 
 			local s_Target = s_Bot.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(s_Bot, false, false)
 			local s_Distance = s_PlayerPosition:Distance(s_Bot.soldier.worldTransform.trans)
 
 			s_CheckCount = s_CheckCount + 1
 
-			if s_Distance < Registry.CLIENT.REVIVE_DISTANCE then -- TODO: use config var for this
+			if s_Distance < Registry.CLIENT.REVIVE_DISTANCE then -- To-do: use config var for this. 
 				self.m_LastIndex = s_Index
 
 				if self:DoRaycast(s_PlayerPosition, s_Target, false, false) then
-					-- we found a valid bot in Sight (either no hit, or player-hit). Signal Server with players
+					-- We found a valid bot in Sight (either no hit, or player-hit). Signal Server with players. 
 					table.insert(s_RaycastResultsToSend, {
 						Mode = "RevivePlayer",
 						Bot1 = s_Bot.name,
@@ -354,7 +354,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 				end
 
 				self:SendRaycastResults(s_RaycastResultsToSend)
-				return -- only one raycast per cycle
+				return -- Only one raycast per cycle. 
 			end
 
 			if s_CheckCount >= Registry.CLIENT.MAX_CHECKS_PER_CYCLE then
@@ -366,7 +366,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 			::continue_teamMate_loop::
 		end
 	else
-		self.m_AliveTimer = 0 --add a little delay after spawn
+		self.m_AliveTimer = 0 -- Add a little delay after spawn. 
 	end
 
 	self:SendRaycastResults(s_RaycastResultsToSend)
@@ -382,9 +382,9 @@ function ClientBotManager:OnLevelDestroy()
 	self:RegisterVars()
 end
 
--- =============================================
--- NetEvents
--- =============================================
+-- ============================================= 
+-- NetEvents 
+-- ============================================= 
 
 function ClientBotManager:OnWriteClientSettings(p_NewConfig, p_UpdateWeaponSets)
 	for l_Key, l_Value in pairs(p_NewConfig) do
@@ -406,9 +406,9 @@ function ClientBotManager:CheckForBotBotAttack(p_RaycastData)
 	end
 end
 
--- =============================================
--- Hooks
--- =============================================
+-- ============================================= 
+-- Hooks 
+-- ============================================= 
 
 if g_ClientBotManager == nil then
 	---@type ClientBotManager

@@ -17,6 +17,7 @@ from tools.clear_all_paths import clearAllPaths
 
 from tools.scan_for_invalid_objectives import scanForInvalidObjectives
 from tools.scan_for_invalid_nodes import scanForInvalidNodes
+from tools.scan_for_invalid_comments import scanForInvalidComments
 
 from tools.update_supported_maps import updateSupportedMaps
 from tools.create_maplist import createMaplist
@@ -86,6 +87,11 @@ def create_language() -> None:
     createLanguage(lang)
 
 
+def fix_comments() -> None:
+    scanForInvalidComments()
+    print("\nAll Comments Grammarly Checked\n")
+
+
 tempRow = 0
 master.columnconfigure(tuple(range(60)), weight=1)
 master.rowconfigure(tuple(range(30)), weight=1)
@@ -150,6 +156,10 @@ if SHOW_DEV_TOOLS:
     tempRow += 1
     ttk.Button(
         master, text="Fix Invalid Paths", command=fix_maps, style="Accent.TButton"
+    ).grid(row=tempRow, sticky="nesw", pady=4, padx=4)
+    tempRow += 1
+    ttk.Button(
+        master, text="Fix Grammar", command=fix_comments, style="Accent.TButton"
     ).grid(row=tempRow, sticky="nesw", pady=4, padx=4)
     tempRow += 1
 

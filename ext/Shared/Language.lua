@@ -45,7 +45,7 @@ end
 function Language:I18NReplace(p_Input, p_Arguments)
 	local s_Position = 0
 
-	-- ToDo implement %1$d, %2$d for indexes
+	-- To-do: Implement %1$d, %2$d for indexes. 
 
 	return (string.gsub(p_Input, '%%[d|s]', function(placeholder)
 		s_Position = s_Position + 1
@@ -62,9 +62,9 @@ function Language:I18N(p_Input, ...)
 		s_Arguments[#s_Arguments + 1] = select(index, ...)
 	end
 
-	-- if Debug.Shared.LANGUAGE then
-	-- print(s_Arguments[1])
-	-- end
+	-- if Debug.Shared.LANGUAGE then 
+	-- print(s_Arguments[1]) 
+	-- end 
 
 	if self._Translations ~= nil then
 		if self._Translations[self._Language] ~= nil then
