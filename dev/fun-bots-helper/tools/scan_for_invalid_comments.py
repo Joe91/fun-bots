@@ -29,9 +29,9 @@ def scanForInvalidComments() -> None:
                 "SettingsDefinition.lua",
             ]:  # Ignore these files.
                 continue
-            with open(folder + filename, "r") as infile:
+            with open(folder + filename, "r", encoding="utf-8") as infile:
                 outFileLines = get_comments_fixed(infile)
-            with open(folder + filename, "w") as outFile:
+            with open(folder + filename, "w", encoding="utf-8") as outFile:
                 for line in outFileLines:
                     outFile.write(line)
 
