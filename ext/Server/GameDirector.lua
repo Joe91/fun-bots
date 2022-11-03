@@ -24,8 +24,7 @@ function GameDirector:RegisterVars()
 	self.m_Translations = {}
 	self.m_ArmedMcoms = {}
 
-	self.m_McomCounter = 0
-	self.m_OnlyOneMcom = false
+	self.m_RushStageCounter = 0
 	self.m_RushAttackingBase = ''
 
 	self.m_SpawnableStationaryAas = {}
@@ -198,12 +197,6 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 		if s_MaxAssigns[i] > Registry.GAME_DIRECTOR.MAX_ASSIGNED_LIMIT then
 			s_MaxAssigns[i] = Registry.GAME_DIRECTOR.MAX_ASSIGNED_LIMIT
 		end
-
-		if self.m_OnlyOneMcom then
-			if self.m_BotsByTeam[i] ~= nil then
-				s_MaxAssigns[i] = #self.m_BotsByTeam[i]
-			end
-		end
 	end
 
 	-- check objective statuses
@@ -302,10 +295,6 @@ function GameDirector:ToggleDirectionCombatZone(p_Entity, p_Player)
 	end
 end
 
-function GameDirector:OnLifeCounterBaseDestoyed(p_LifeCounterEntity, p_FinalBase)
-end
-
-
 function GameDirector:OnMcomArmed(p_Player)
 	local s_PlayerPos = nil
 	if p_Player and p_Player.soldier then
@@ -346,11 +335,12 @@ function GameDirector:OnMcomDisarmed(p_Player)
 	end
 end
 
-function GameDirector:OnMcomDestroyed(p_Objective)
-
-	self.m_McomCounter = self.m_McomCounter + 1
+function GameDirector:OnLifeCounterBaseDestoyed(p_LifeCounterEntity, p_FinalBase)
+	print("Trigger of finished stage")
 	self:_UpdateValidObjectives()
+end
 
+function GameDirector:OnMcomDestroyed(p_Objective)
 	m_Logger:Write(p_Objective .. " destroyed after " .. tostring(self.m_ArmedMcoms[p_Objective]) .. " s")
 	self.m_ArmedMcoms[p_Objective] = nil
 
@@ -948,7 +938,7 @@ function GameDirector:_RegisterRushEventCallbacks()
 		return
 	end
 
-	self.m_McomCounter = 0
+	self.m_RushStageCounter = 0
 
 	-- register Event for Zone
 	local s_Iterator = EntityManager:GetIterator("ServerSyncedBoolEntity")
@@ -1063,9 +1053,9 @@ function GameDirector:_UpdateValidObjectives()
 		return
 	end
 
-	if Globals.IsSquadRush then
-		local s_RushIndex = self.m_McomCounter + 1
+	self.m_RushStageCounter = self.m_RushStageCounter + 1
 
+	if Globals.IsSquadRush then
 		for _, l_Objective in pairs(self.m_AllObjectives) do
 			local s_Fields = l_Objective.name:split(" ")
 			local s_Active = false
@@ -1079,7 +1069,7 @@ function GameDirector:_UpdateValidObjectives()
 				if #s_Fields > 1 then
 					local s_Index = tonumber(s_Fields[2])
 
-					if s_Index == s_RushIndex then
+					if s_Index == self.m_RushStageCounter then
 						s_Active = true
 					end
 
@@ -1091,11 +1081,11 @@ function GameDirector:_UpdateValidObjectives()
 				if #s_Fields > 2 then
 					local s_Index = tonumber(s_Fields[3])
 
-					if s_Index == s_RushIndex then
+					if s_Index == self.m_RushStageCounter then
 						s_Active = true
 					end
 
-					if s_Index == s_RushIndex - 1 then
+					if s_Index == self.m_RushStageCounter - 1 then
 						self.m_RushAttackingBase = l_Objective.name
 					end
 				end
@@ -1107,75 +1097,45 @@ function GameDirector:_UpdateValidObjectives()
 		end
 
 	elseif Globals.IsRush then
-		if (self.m_McomCounter % 2) == 0 then
-			self.m_OnlyOneMcom = false
+		local s_McomIndexB = self.m_RushStageCounter * 2
+		local s_McomIndexA = s_McomIndexB - 1
+		for _, l_Objective in pairs(self.m_AllObjectives) do
+			local s_Fields = l_Objective.name:split(" ")
+			local s_Active = false
+			local s_SubObjective = false
 
-			local s_BaseIndex = 0
-			local s_McomIndexes = { 0, 0 }
+			if l_Objective.isSpawnPath or l_Objective.isEnterVehiclePath then
+				goto continue_objective_loop
+			end
 
-			if self.m_McomCounter < 2 then
-				s_BaseIndex = 1
-				s_McomIndexes = { 1, 2 }
-			elseif self.m_McomCounter < 4 then
-				s_BaseIndex = 2
-				s_McomIndexes = { 3, 4 }
-			elseif self.m_McomCounter < 6 then
-				s_BaseIndex = 3
-				s_McomIndexes = { 5, 6 }
-			elseif self.m_McomCounter < 8 then
-				s_BaseIndex = 4
-				s_McomIndexes = { 7, 8 }
-			elseif self.m_McomCounter < 10 then
-				s_BaseIndex = 5
-				s_McomIndexes = { 9, 10 }
+			if not l_Objective.isBase then
+				if #s_Fields > 1 then
+					local s_Index = tonumber(s_Fields[2])
+					if s_Index == s_McomIndexA or s_Index == s_McomIndexB then
+						s_Active = true
+					end
+
+					if #s_Fields > 2 then -- "mcom N interact"
+						s_SubObjective = true
+					end
+				end
 			else
-				s_BaseIndex = 6
-				s_McomIndexes = { 11, 12 }
-			end
+				if #s_Fields > 2 then
+					local s_Index = tonumber(s_Fields[3])
 
-			for _, l_Objective in pairs(self.m_AllObjectives) do
-				local s_Fields = l_Objective.name:split(" ")
-				local s_Active = false
-				local s_SubObjective = false
-
-				if l_Objective.isSpawnPath or l_Objective.isEnterVehiclePath then
-					goto continue_objective_loop
-				end
-
-				if not l_Objective.isBase then
-					if #s_Fields > 1 then
-						local s_Index = tonumber(s_Fields[2])
-
-						for _, l_TargetIndex in pairs(s_McomIndexes) do
-							if s_Index == l_TargetIndex then
-								s_Active = true
-							end
-						end
-
-						if #s_Fields > 2 then -- "mcom N interact"
-							s_SubObjective = true
-						end
+					if s_Index == self.m_RushStageCounter then
+						s_Active = true
 					end
-				else
-					if #s_Fields > 2 then
-						local s_Index = tonumber(s_Fields[3])
 
-						if s_Index == s_BaseIndex then
-							s_Active = true
-						end
-
-						if s_Index == s_BaseIndex - 1 then
-							self.m_RushAttackingBase = l_Objective.name
-						end
+					if s_Index == self.m_RushStageCounter - 1 then
+						self.m_RushAttackingBase = l_Objective.name
 					end
 				end
-
-				l_Objective.active = s_Active
-				l_Objective.subObjective = s_SubObjective
-				::continue_objective_loop::
 			end
-		else
-			self.m_OnlyOneMcom = true
+
+			l_Objective.active = s_Active
+			l_Objective.subObjective = s_SubObjective
+			::continue_objective_loop::
 		end
 	end
 end
