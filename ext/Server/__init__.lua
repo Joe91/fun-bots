@@ -120,6 +120,10 @@ function FunBotServer:RegisterEvents()
 	Events:Subscribe('Vehicle:Exit', self, self.OnVehicleExit)
 	Events:Subscribe('ScoringSystem:StatEvent', self, self.OnScoringStatEvent)
 
+	Events:Subscribe('CombatArea:PlayerDeserting', self, self.OnCombatAreaDeserting)
+	Events:Subscribe('CombatArea:PlayerReturning', self, self.OnCombatAreaReturning)
+	Events:Subscribe('LifeCounterEntity:BaseDestroyed', self, self.OnLifeCounterBaseDestoyed)
+	
 end
 
 function FunBotServer:RegisterHooks()
@@ -257,6 +261,20 @@ function FunBotServer:OnScoringStatEvent(p_Player, p_ObjectPlayer, p_StatEvent, 
 		-- not reliably usable, since place can be anywhere at this moment
 	end ]]
 end
+
+function FunBotServer:OnCombatAreaDeserting(p_Entity, p_Player)
+	m_GameDirector:ToggleDirectionCombatZone(p_Entity, p_Player)
+end
+
+function FunBotServer:OnCombatAreaReturning(p_Entity, p_Player)
+	m_GameDirector:ToggleDirectionCombatZone(p_Entity, p_Player)
+end
+
+function FunBotServer:OnLifeCounterBaseDestoyed(p_LifeCounterEntity, p_FinalBase)
+	m_GameDirector:OnLifeCounterBaseDestoyed(p_LifeCounterEntity, p_FinalBase)
+end
+
+
 
 -- =============================================
 -- Level Events

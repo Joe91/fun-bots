@@ -74,8 +74,6 @@ Registry = {
 		UPDATE_OBJECTIVES_CYCLE = 1.5,
 		-- Time after a mcom is considered destroyed
 		MCOMS_CHECK_CYCLE = 26.5,
-		-- Zone is 30 s. 10 Seconds without damage
-		ZONE_CHECK_CYCLE = 20.0,
 		-- max bots per objective
 		MAX_ASSIGNED_LIMIT = 16,
 		-- after finding no valid path for that many crossings, a bot is killed (Rush only)

@@ -26,8 +26,6 @@ function GameDirector:RegisterVars()
 
 	self.m_McomCounter = 0
 	self.m_OnlyOneMcom = false
-	self.m_waitForZone = false
-	self.m_ZoneTimer = 0
 	self.m_RushAttackingBase = ''
 
 	self.m_SpawnableStationaryAas = {}
@@ -143,13 +141,6 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 	end
 
 	if Globals.IsRush then
-		if self.m_WaitForZone then
-			self.m_ZoneTimer = self.m_ZoneTimer + self.m_UpdateTimer
-
-			if self.m_ZoneTimer >= Registry.GAME_DIRECTOR.ZONE_CHECK_CYCLE then
-				self.m_WaitForZone = false
-			end
-		end
 		self:_UpdateTimersOfMcoms(self.m_UpdateTimer)
 	end
 
@@ -302,6 +293,19 @@ end
 -- RUSH Events
 -- =============================================
 
+function GameDirector:ToggleDirectionCombatZone(p_Entity, p_Player)
+	if m_Utilities:isBot(p_Player) and p_Player.teamId == TeamId.Team1 then -- attacking team
+		local s_Bot = g_BotManager:GetBotByName(p_Player.name)
+		if s_Bot then
+			s_Bot._InvertPathDirection = not s_Bot._InvertPathDirection
+		end
+	end
+end
+
+function GameDirector:OnLifeCounterBaseDestoyed(p_LifeCounterEntity, p_FinalBase)
+end
+
+
 function GameDirector:OnMcomArmed(p_Player)
 	local s_PlayerPos = nil
 	if p_Player and p_Player.soldier then
@@ -379,7 +383,6 @@ end
 ---@param p_EntityId integer
 function GameDirector:OnRushZoneDisabled(p_EntityId)
 	m_Logger:Write("Zone " .. tostring(p_EntityId) .. " disabled")
-	self.m_waitForZone = false
 end
 
 -- =============================================
@@ -472,10 +475,6 @@ end
 -- Public Functions
 -- =============================================
 
-
-function GameDirector:IsWaitForZoneActive()
-	return self.m_waitForZone
-end
 
 function GameDirector:CheckForExecution(p_Point, p_TeamId, p_InVehicle)
 	if p_Point.Data.Action == nil then
@@ -1065,11 +1064,6 @@ function GameDirector:_UpdateValidObjectives()
 	end
 
 	if Globals.IsSquadRush then
-		if self.m_McomCounter > 0 then
-			self.m_waitForZone = true
-			self.m_ZoneTimer = -self.m_UpdateTimer
-		end
-
 		local s_RushIndex = self.m_McomCounter + 1
 
 		for _, l_Objective in pairs(self.m_AllObjectives) do
@@ -1115,11 +1109,6 @@ function GameDirector:_UpdateValidObjectives()
 	elseif Globals.IsRush then
 		if (self.m_McomCounter % 2) == 0 then
 			self.m_OnlyOneMcom = false
-
-			if self.m_McomCounter > 0 then
-				self.m_waitForZone = true
-				self.m_ZoneTimer = -self.m_UpdateTimer
-			end
 
 			local s_BaseIndex = 0
 			local s_McomIndexes = { 0, 0 }
@@ -1187,7 +1176,6 @@ function GameDirector:_UpdateValidObjectives()
 			end
 		else
 			self.m_OnlyOneMcom = true
-			self.m_waitForZone = false --should not be needed
 		end
 	end
 end

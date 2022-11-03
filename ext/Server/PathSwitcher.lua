@@ -32,16 +32,6 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle, p
 	end
 
 	if Globals.IsRush then
-		local s_WaitingForZone = false
-
-		if p_TeamId == TeamId.Team1 then -- attacking team
-			s_WaitingForZone = m_GameDirector:IsWaitForZoneActive()
-		end
-
-		if s_WaitingForZone then
-			return false --don't switch
-		end
-
 		if not p_InVehicle then
 			if self.m_KillYourselfCounter[p_BotName] == nil then
 				self.m_KillYourselfCounter[p_BotName] = 0
