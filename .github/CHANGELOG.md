@@ -25,6 +25,7 @@ This is the changelog for the version V2.7 Don't forget to [join us on Discord](
 * Bots with missiles attack on larger distances
 * air-missiles of bots get used much better now
 * improve Rush-Logic with new VEXT-Version
+* use more stable Rush-Events with new VEXT-Version
 
 ### Bug fixes
 * fix scavenger revive

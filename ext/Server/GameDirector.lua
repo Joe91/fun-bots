@@ -336,7 +336,6 @@ function GameDirector:OnMcomDisarmed(p_Player)
 end
 
 function GameDirector:OnLifeCounterBaseDestoyed(p_LifeCounterEntity, p_FinalBase)
-	print("Trigger of finished stage")
 	self:_UpdateValidObjectives()
 end
 
@@ -1055,50 +1054,16 @@ function GameDirector:_UpdateValidObjectives()
 
 	self.m_RushStageCounter = self.m_RushStageCounter + 1
 
-	if Globals.IsSquadRush then
-		for _, l_Objective in pairs(self.m_AllObjectives) do
-			local s_Fields = l_Objective.name:split(" ")
-			local s_Active = false
-			local s_SubObjective = false
-
-			if l_Objective.isSpawnPath or l_Objective.isEnterVehiclePath then
-				goto continue_first_objective_loop
-			end
-
-			if not l_Objective.isBase then
-				if #s_Fields > 1 then
-					local s_Index = tonumber(s_Fields[2])
-
-					if s_Index == self.m_RushStageCounter then
-						s_Active = true
-					end
-
-					if #s_Fields > 2 then -- "mcom N interact"
-						s_SubObjective = true
-					end
-				end
-			else
-				if #s_Fields > 2 then
-					local s_Index = tonumber(s_Fields[3])
-
-					if s_Index == self.m_RushStageCounter then
-						s_Active = true
-					end
-
-					if s_Index == self.m_RushStageCounter - 1 then
-						self.m_RushAttackingBase = l_Objective.name
-					end
-				end
-			end
-
-			l_Objective.active = s_Active
-			l_Objective.subObjective = s_SubObjective
-			::continue_first_objective_loop::
+	if Globals.IsRush then
+		local s_McomIndexA = -1
+		local s_McomIndexB = -1
+		if Globals.IsSquadRush then
+			s_McomIndexA = self.m_RushStageCounter
+		else -- Rush-Large
+			s_McomIndexA = (self.m_RushStageCounter * 2) -1
+			s_McomIndexB = self.m_RushStageCounter * 2
 		end
 
-	elseif Globals.IsRush then
-		local s_McomIndexB = self.m_RushStageCounter * 2
-		local s_McomIndexA = s_McomIndexB - 1
 		for _, l_Objective in pairs(self.m_AllObjectives) do
 			local s_Fields = l_Objective.name:split(" ")
 			local s_Active = false
