@@ -122,7 +122,7 @@ function FunBotServer:RegisterEvents()
 
 	Events:Subscribe('CombatArea:PlayerDeserting', self, self.OnCombatAreaDeserting)
 	Events:Subscribe('CombatArea:PlayerReturning', self, self.OnCombatAreaReturning)
-	Events:Subscribe('LifeCounterEntity:BaseDestroyed', self, self.OnLifeCounterBaseDestoyed)
+	Events:Subscribe('LifeCounter:BaseDestroyed', self, self.OnLifeCounterBaseDestoyed)
 	
 end
 
