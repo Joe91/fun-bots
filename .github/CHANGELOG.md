@@ -31,6 +31,7 @@ This is the changelog for the version V2.7 Don't forget to [join us on Discord](
 * fix scavenger revive
 * fix usage of javelin
 * some attack- and aiming-issues with vehicles
+* Don't spawn new bots when kicked by RCON
 
 ### New maps
 
