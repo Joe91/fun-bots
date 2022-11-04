@@ -91,6 +91,7 @@ function RCONCommands:__init()
 		KICKALLL = {
 			Name = 'funbots.kickAll',
 			Callback = (function(p_Command, p_Args)
+				Globals.SpawnMode = "manual"
 				m_BotManager:DestroyAll()
 
 				return { 'OK' }
@@ -118,6 +119,7 @@ function RCONCommands:__init()
 		KILLALL = {
 			Name = 'funbots.killAll',
 			Callback = (function(p_Command, p_Args)
+				Globals.SpawnMode = "manual"
 				m_BotManager:KillAll()
 
 				return { 'OK' }
