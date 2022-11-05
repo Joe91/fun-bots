@@ -60,6 +60,6 @@ Language['cn_CN'] /* Add/replace the xx_XX here with your language code (like de
 	"Press ALT for Interaction with the Editor": "按下ALT显示光标",
 	"": "",
 	"Commands": "命令",
-	"Spawn Bot": "生成BOT"
+	"Spawn Bot": "生成BOT",
 	"[Save / Load]": "[保存/加载]",
 };
