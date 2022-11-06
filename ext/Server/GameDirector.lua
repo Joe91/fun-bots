@@ -43,7 +43,7 @@ function GameDirector:OnLevelLoaded()
 	self.m_AllObjectives = {}
 	self.m_Translations = {}
 	self:_RegisterRushEventCallbacks()
-	-- To-do, assign weights to each objective. 
+	-- To-do: assign weights to each objective. 
 	self.m_UpdateTimer = 0
 	self:_InitObjectives()
 
@@ -77,7 +77,7 @@ function GameDirector:OnPlayerEnteredCapturePoint(p_Player, p_CapturePoint)
 	p_CapturePoint = CapturePointEntity(p_CapturePoint)
 	local s_ObjectiveName = self:_TranslateObjective(p_CapturePoint.transform.trans, p_CapturePoint.name)
 	self:_UpdateObjective(s_ObjectiveName, {
-		-- Team = p_CapturePoint.team,. 
+		-- team = p_CapturePoint.team, 
 		isAttacked = p_CapturePoint.isAttacked
 	})
 end
@@ -121,7 +121,7 @@ function GameDirector:OnCapturePointLost(p_CapturePoint)
 	local s_ObjectiveName = self:_TranslateObjective(p_CapturePoint.transform.trans, p_CapturePoint.name)
 	local s_IsAttacked = p_CapturePoint.flagLocation < 100.0 and p_CapturePoint.isControlled
 	self:_UpdateObjective(s_ObjectiveName, {
-		team = TeamId.TeamNeutral, -- P_CapturePoint.team. 
+		team = TeamId.TeamNeutral, -- p_CapturePoint.team 
 		isAttacked = s_IsAttacked
 	})
 
@@ -348,7 +348,7 @@ function GameDirector:OnMcomDestroyed(p_Objective)
 
 	if p_Objective ~= '' then
 		self:_UpdateObjective(p_Objective, {
-			team = TeamId.TeamNeutral, -- P_Player.teamId,. 
+			team = TeamId.TeamNeutral, -- p_Player.teamId, 
 			isAttacked = false,
 			destroyed = true
 		})
@@ -693,7 +693,7 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 		end
 	end
 
-	-- find referece-objective
+	-- Find reference-objective. 
 	local s_ReferenceObjectivesNeutral = {}
 	local s_ReferenceObjectivesEnemy = {}
 
@@ -869,7 +869,7 @@ function GameDirector:GetEnableStateOfPath(p_ObjectiveNamesOfPath)
 
 		if s_Objective ~= nil then
 			if s_Objective.destroyed and #p_ObjectiveNamesOfPath == 1 and s_Objective.subObjective then
-				return -1 -- Path of a destroyed MCO. 
+				return -1 -- Path of a destroyed MCOM 
 			elseif s_Objective.active then
 				s_ActiveCount = s_ActiveCount + 1
 			end
@@ -889,7 +889,7 @@ function GameDirector:UseVehicle(p_BotTeam, p_Objective)
 	local s_TempObjective = self:_GetObjectiveObject(p_Objective)
 
 	if s_TempObjective ~= nil and s_TempObjective.active and s_TempObjective.isEnterVehiclePath then
-		-- S_TempObjective.active = false. 
+		-- s_TempObjective.active = false 
 		return true
 	end
 
@@ -1080,7 +1080,7 @@ function GameDirector:_UpdateValidObjectives()
 						s_Active = true
 					end
 
-					if #s_Fields > 2 then -- "Mcom N interact". 
+					if #s_Fields > 2 then -- "MCOM N interact". 
 						s_SubObjective = true
 					end
 				end

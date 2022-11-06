@@ -56,7 +56,7 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle, p
 		end
 	end
 
-	-- To-do get all paths via links, assign priority, sort by priority. 
+	-- To-do: get all paths via links, assign priority, sort by priority. 
 	-- If multiple are top priority, choose at random. 
 
 	p_Objective = p_Objective or ''
@@ -214,7 +214,7 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle, p
 				s_SwitchAnyways = true
 			end
 
-			-- leave subobjective, if disabled
+			-- Leave subObjective, if disabled. 
 			if Globals.IsRush then
 				local s_TopObjective = m_GameDirector:_GetObjectiveFromSubObj(p_Objective)
 
@@ -263,16 +263,16 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle, p
 		end
 	end
 
-	--m_Logger:Write('Trimmed Priority List -> '..g_Utilities:dump(s_Paths, true, 2))
-	--m_Logger:Write('Highest Priority -> '..s_HighestPriority)
-	--m_Logger:Write('#s_Paths -> '..(#s_Paths))
+	-- m_Logger:Write('Trimmed Priority List -> '..g_Utilities:dump(s_Paths, true, 2)) 
+	-- m_Logger:Write('Highest Priority -> '..s_HighestPriority) 
+	-- m_Logger:Write('#s_Paths -> '..(#s_Paths)) 
 
 	if #s_ValidPaths == 0 then
 		return false
 	end
 
 	if #s_ValidPaths == 1 and s_CurrentPriority < s_ValidPaths[1].Priority then
-		-- M_Logger:Write('found single higher priority path ('.s_CurrentPriority.' | '.s_ValidPaths[1]. Priority.' ') 
+		-- m_Logger:Write('chose to switch at random ('..s_RandomNumber..' >= '..s_Chance..') | Priority: ( '..s_CurrentPriority..' | '..s_RandomPath.Priority..' )') 
 		return true, s_ValidPaths[1].Point
 	end
 
@@ -306,14 +306,14 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle, p
 				return false
 			end
 
-			-- M_Logger:Write('chose to switch at random ('.s_RandomNumber.' >= '.s_Chance.') | Priority: ('.s_CurrentPriority.' | '.s_RandomPath. Priority.' ') 
+			-- m_Logger:Write('chose to switch at random ('..s_RandomNumber..' >= '..s_Chance..') | Priority: ( '..s_CurrentPriority..' | '..s_RandomPath.Priority..' )') 
 			return true, s_RandomPath.Point
 		end
 	elseif s_LinkMode == 1 then -- Some other kind of switching decision. 
 		-- Etc... 
 	end
 
-	-- M_Logger:Write('don't change') 
+	-- m_Logger:Write("don't change") 
 	return false
 end
 

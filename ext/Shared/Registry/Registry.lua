@@ -1,6 +1,6 @@
 require('__shared/Constants/VersionType')
 
---[[ . 
+--[[ 
 		<!> Modifications to this file should not be made unless you know what you are doing.
 
 		Welcome to the fun-bots registry. This file contains config-like variables related to the mod, such as versions and API-related stuff,
@@ -11,7 +11,7 @@ require('__shared/Constants/VersionType')
 ---@class Registry
 Registry = {
 	COMMON = {
-		-- Token Bots are marked with. Can also be" " or "". If it's "" players with names of the hotlist can't join! 
+		-- Token Bots are marked with. Can also be " " or "". If it's "" players with names of the botlist can't join! 
 		BOT_TOKEN = "BOT_",
 		-- Allow players to use Bot-Names. 
 		ALLOW_PLAYER_BOT_NAMES = true,
@@ -57,7 +57,7 @@ Registry = {
 	-- Variables related to raycasting. 
 	GAME_RAYCASTING = {
 		MAX_RAYCASTS_PER_PLAYER_PER_CYCLE = 3,
-		-- Max Raycasts for Bot-Bot Attack per player and cycle. Needs to be smaller than max_ray cats. 
+		-- Max Raycasts for Bot-Bot Attack per player and cycle. Needs to be smaller than max_raycasts. 
 		MAX_RAYCASTS_PER_PLAYER_BOT_BOT = 2,
 		-- How often get the nodes calculated. 
 		UPDATE_INTERVAL_NODEEDITOR = 0.03,
@@ -98,7 +98,7 @@ Registry = {
 		JET_ABORT_ATTACK_TIME = 5,
 		-- Percentage of vehicle health to leave vehicle with (currently no passive events for bot-only vehicles) 
 		VEHILCE_EXIT_HEALTH = 12,
-		-- Propability to exit on low health. 
+		-- Probability to exit on low health. 
 		VEHICLE_PROPABILITY_EXIT_LOW_HEALTH = 60,
 		-- Health-check cycle-time. 
 		VEHICLE_HEALTH_CYLCE_TIME = 0.5,
@@ -134,13 +134,13 @@ Registry = {
 		USE_ADVANCED_AIMING = false,
 	},
 
-	-- Bot team balancing (only in keep_player count - spawn-mode) 
+	-- Bot team balancing (only in keep_playercount - spawn-mode) 
 	BOT_TEAM_BALANCING = {
 		-- Minimum amount of players required before balancing bots across teams. 
-		-- Note: Only for mode keep_player count. 
+		-- Note: Only for mode keep_playercount. 
 		THRESHOLD = 6, -- Only for mode. 
 		-- Maximum bot count difference between both teams (even count: 1, uneven: 2) 
-		-- Note: Only for mode keep_player count. 
+		-- Note: Only for mode keep_playercount. 
 		ALLOWED_DIFFERENCE = 1,
 	},
 

@@ -297,7 +297,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		m_NodeEditor:OnCloseEditor(p_Player)
 		NetEvents:SendTo('UI_Waypoints_Editor', p_Player, false)
 	else
-		ChatManager:Yell(Language:I18N('%s is currently not implemented.', request.action), 2.5)
+		ChatManager:Yell(Language:I18N('%s is currently not implemented', request.action), 2.5)
 	end
 end
 
@@ -541,9 +541,9 @@ function FunBotUIServer:_writeSettings(p_Player, p_Request)
 	end
 
 	if temporary then
-		ChatManager:Yell(Language:I18N('Settings has been saved temporarily.'), 2.5)
+		ChatManager:Yell(Language:I18N('Settings has been saved temporarily'), 2.5)
 	else
-		ChatManager:Yell(Language:I18N('Settings has been saved.'), 2.5)
+		ChatManager:Yell(Language:I18N('Settings has been saved'), 2.5)
 	end
 
 	-- Update Weapons if needed. 

@@ -211,17 +211,17 @@ function FunBotServer:RegisterCallbacks()
 	ResourceManager:RegisterInstanceLoadHandler(Guid('676C0FD7-EA75-4F5D-8764-BB076F6F3E11'),
 		Guid('4B797B64-6CDC-41F3-963D-DE22517EC4B5'), self, self.OnHumanPlayerEntityDataCallback)
 	-- Coop. 
-	-- ResourceManager:RegisterInstanceLoadHandler(GUID('945CAF0E-B0F2-11DF-91B7-DD34EE95ED77'), GUID('77B694D1-046A-4A33-A5F2-4C667DB51D27'), self, self.OnHumanPlayerEntityDataCallback) 
+	-- ResourceManager:RegisterInstanceLoadHandler(Guid('945CAF0E-B0F2-11DF-91B7-DD34EE95ED77'), Guid('77B694D1-046A-4A33-A5F2-4C667DB51D27'), self, self.OnHumanPlayerEntityDataCallback) 
 	-- SP. 
-	-- ResourceManager:RegisterInstanceLoadHandler(GUID('9C2FFA19-B419-11DF-A7E7-B3A3B68B4D14'), GUID('7B7F0014-13B6-4387-AE94-1E61548AB6D3'), self, self.OnHumanPlayerEntityDataCallback) 
+	-- ResourceManager:RegisterInstanceLoadHandler(Guid('9C2FFA19-B419-11DF-A7E7-B3A3B68B4D14'), Guid('7B7F0014-13B6-4387-AE94-1E61548AB6D3'), self, self.OnHumanPlayerEntityDataCallback) 
 	-- FrontEnd. 
-	-- ResourceManager:RegisterInstanceLoadHandler(GUID('6EA4B5DA-DE3A-4808-A85C-FCA07B2AFB04'), GUID('8BD2E753-9B37-426A-8AA8-1685C8E2744D'), self, self.OnHumanPlayerEntityDataCallback) 
+	-- ResourceManager:RegisterInstanceLoadHandler(Guid('6EA4B5DA-DE3A-4808-A85C-FCA07B2AFB04'), Guid('8BD2E753-9B37-426A-8AA8-1685C8E2744D'), self, self.OnHumanPlayerEntityDataCallback) 
 	-- TutorialMP Sandbox. 
-	-- ResourceManager:RegisterInstanceLoadHandler(GUID('CC083805-FAC2-4940-9D8E-45C232C005E3'), GUID('592D94FC-68F7-413E-8B61-0ACEC4FD7D0D'), self, self.OnHumanPlayerEntityDataCallback) 
+	-- ResourceManager:RegisterInstanceLoadHandler(Guid('CC083805-FAC2-4940-9D8E-45C232C005E3'), Guid('592D94FC-68F7-413E-8B61-0ACEC4FD7D0D'), self, self.OnHumanPlayerEntityDataCallback) 
 	-- TutorialMP. 
-	-- ResourceManager:RegisterInstanceLoadHandler(GUID('8517D561-0AED-4C58-A634-5D069A8E1BA2'), GUID('502DA681-116F-494C-AFBD-DC02522A14B4'), self, self.OnHumanPlayerEntityDataCallback) 
+	-- ResourceManager:RegisterInstanceLoadHandler(Guid('8517D561-0AED-4C58-A634-5D069A8E1BA2'), Guid('502DA681-116F-494C-AFBD-DC02522A14B4'), self, self.OnHumanPlayerEntityDataCallback) 
 	-- TutorialMP ShootHouse. 
-	-- ResourceManager:RegisterInstanceLoadHandler(GUID('53C55F5E-C5CF-4B60-A455-445739D99501'), GUID('F4B49F70-BE94-4792-95E6-09A5F3F932F4'), self, self.OnHumanPlayerEntityDataCallback) 
+	-- ResourceManager:RegisterInstanceLoadHandler(Guid('53C55F5E-C5CF-4B60-A455-445739D99501'), Guid('F4B49F70-BE94-4792-95E6-09A5F3F932F4'), self, self.OnHumanPlayerEntityDataCallback) 
 end
 
 -- ============================================= 
@@ -591,12 +591,12 @@ function FunBotServer:OnStationaryAACallback(p_FiringFunctionData)
 	p_FiringFunctionData = FiringFunctionData(p_FiringFunctionData)
 	p_FiringFunctionData:MakeWritable()
 	p_FiringFunctionData.overHeat.heatPerBullet = 0.0001
-	p_FiringFunctionData.dispersion[1].minAngle = 0.2 -- Config.spreadMinAngle. 
-	p_FiringFunctionData.dispersion[1].maxAngle = 0.6 -- Config.spreadMaxAngle. 
-	-- P_FiringFunctionData.shot.initialSpeed = Vec3(0, 0, Config.bulletSpeed) 
-	-- P_FiringFunctionData.shot.initialPosition = Vec3(0, 0, 35) 
-	-- P_FiringFunctionData.fireLogic.rateOfFire = Config.rateOfFire. 
-	-- P_FiringFunctionData.fireLogic.clientFireRateMultiplier = Config.clientFireRateMultiplier. 
+	p_FiringFunctionData.dispersion[1].minAngle = 0.2 -- Config.spreadMinAngle  
+	p_FiringFunctionData.dispersion[1].maxAngle = 0.6 -- Config.spreadMaxAngle  
+	-- p_FiringFunctionData.shot.initialSpeed = Vec3(0, 0, Config.bulletSpeed) 
+	-- p_FiringFunctionData.shot.initialPosition = Vec3(0, 0, 35) 
+	-- p_FiringFunctionData.fireLogic.rateOfFire = Config.rateOfFire  
+	-- p_FiringFunctionData.fireLogic.clientFireRateMultiplier = Config.clientFireRateMultiplier  
 end
 
 ---@param p_AutoTeamEntityData AutoTeamEntityData|DataContainer
