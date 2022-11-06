@@ -1,14 +1,14 @@
-from addons.gets import get_to_root, get_all_tables
+from addons.gets import get_all_tables, get_to_root
 
 
-def clearSettings() -> None:
+def clear_settings() -> None:
     get_to_root()
-    removeList = ["FB_Config_Trace", "FB_Settings"]
+    remove_list = ["FB_Config_Trace", "FB_Settings"]
     connection, cursor = get_all_tables()
     content = cursor.fetchall()
 
     for item in content:
-        if item[1] in removeList:
+        if item[1] in remove_list:
             print("Remove " + item[1])
             cursor.execute("DROP TABLE " + item[1])
 
@@ -18,4 +18,4 @@ def clearSettings() -> None:
 
 
 if __name__ == "__main__":
-    clearSettings()
+    clear_settings()

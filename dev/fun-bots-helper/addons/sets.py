@@ -17,15 +17,15 @@ def set_permission_config_files(cursor: sqlite3.Cursor) -> None:
     Returns:
         None
     """
-    exportList = ["FB_Permissions", "FB_Config_Trace", "FB_Settings"]
-    destFolder = "permission_and_config"
+    export_list = ["FB_Permissions", "FB_Config_Trace", "FB_Settings"]
+    dest_folder = "permission_and_config"
 
-    for item in exportList:
+    for item in export_list:
         structure = cursor.execute("PRAGMA table_info('" + item + "')").fetchall()
-        filename = item + ".cfg"
-        with open(destFolder + "/" + filename, "w") as outfile:
+        file_name = item + ".cfg"
+        with open(dest_folder + "/" + file_name, "w") as out_file:
             header = [column[1] for column in structure]
-            outfile.write(";".join(header) + "\n")
+            out_file.write(";".join(header) + "\n")
             try:
                 sql_instruction = (
                     "SELECT * FROM " + item + " ORDER BY " + structure[-3][1] + " ASC"
@@ -41,7 +41,7 @@ def set_permission_config_files(cursor: sqlite3.Cursor) -> None:
                         format(item, ".6f") if type(item) is float else str(item)
                         for item in line
                     ]
-                    outfile.write(";".join(outList) + "\n")
+                    out_file.write(";".join(outList) + "\n")
 
 
 def set_permission_config_db(cursor: sqlite3.Cursor) -> None:
@@ -53,23 +53,23 @@ def set_permission_config_db(cursor: sqlite3.Cursor) -> None:
     Returns:
         None
     """
-    allStructures = {
+    all_structures = {
         "FB_Permissions": ["GUID", "PlayerName", "Value", "Time"],
         "FB_Config_Trace": ["Key", "Value", "Time"],
         "FB_Settings": ["Key", "Value", "Time"],
     }
-    sourceFolder = "permission_and_config"
+    source_folder = "permission_and_config"
 
-    filenames = os.listdir(sourceFolder)
+    file_names = os.listdir(source_folder)
 
-    for filename in filenames:
-        tablename = filename.split(".")[0]
-        print("Import " + tablename)
-        cursor.execute("DROP TABLE IF EXISTS " + tablename)
+    for file_name in file_names:
+        table_name = file_name.split(".")[0]
+        print("Import " + table_name)
+        cursor.execute("DROP TABLE IF EXISTS " + table_name)
 
-        sql_instruction = "CREATE TABLE " + tablename + " ("
-        for key, value in allStructures.items():
-            if key == tablename:
+        sql_instruction = "CREATE TABLE " + table_name + " ("
+        for key, value in all_structures.items():
+            if key == table_name:
                 for item in value:
                     if item == "Time":
                         sql_instruction = sql_instruction + item + " DATETIME, "
@@ -78,20 +78,20 @@ def set_permission_config_db(cursor: sqlite3.Cursor) -> None:
                 break
         sql_instruction = sql_instruction[:-2] + ");"
         cursor.execute(sql_instruction)
-        with open(sourceFolder + "/" + filename, "r") as infile:
-            AllData = [
-                line.replace("\n", "").split(";") for line in infile.readlines()[1:]
+        with open(source_folder + "/" + file_name, "r") as in_file:
+            all_data = [
+                line.replace("\n", "").split(";") for line in in_file.readlines()[1:]
             ]
-            items = allStructures[tablename]
+            items = all_structures[table_name]
             cursor.executemany(
                 "INSERT INTO "
-                + tablename
+                + table_name
                 + " ("
                 + ", ".join(items)
                 + ") VALUES("
                 + (len(items) * "?,")[:-1]
                 + ")",
-                AllData,
+                all_data,
             )
 
 
@@ -105,20 +105,25 @@ def set_traces_files(cursor: sqlite3.Cursor) -> None:
         None
     """
     content = cursor.fetchall()
-    ignoreList = ["sqlite_sequence", "FB_Permissions", "FB_Config_Trace", "FB_Settings"]
-    destFolder = "mapfiles"
+    ignore_list = [
+        "sqlite_sequence",
+        "FB_Permissions",
+        "FB_Config_Trace",
+        "FB_Settings",
+    ]
+    dest_folder = "mapfiles"
 
     for item in content:
-        if item[1] in ignoreList:
+        if item[1] in ignore_list:
             continue
 
         print("Export " + item[1])
         structure = cursor.execute("PRAGMA table_info('" + item[1] + "')").fetchall()
 
-        filename = item[1].replace("_table", "") + ".map"
-        with open(destFolder + "/" + filename, "w") as outfile:
+        file_name = item[1].replace("_table", "") + ".map"
+        with open(dest_folder + "/" + file_name, "w") as out_file:
             header = [column[1] for column in structure[1:]]
-            outfile.write(";".join(header) + "\n")
+            out_file.write(";".join(header) + "\n")
             sql_instruction = (
                 "SELECT * FROM " + item[1] + " ORDER BY pathIndex, pointIndex ASC"
             )
@@ -129,7 +134,7 @@ def set_traces_files(cursor: sqlite3.Cursor) -> None:
                     format(item, ".6f") if type(item) is float else str(item)
                     for item in line[1:]
                 ]
-                outfile.write(";".join(outList) + "\n")
+                out_file.write(";".join(outList) + "\n")
 
 
 def set_traces_db(cursor: sqlite3.Cursor) -> None:
@@ -141,17 +146,17 @@ def set_traces_db(cursor: sqlite3.Cursor) -> None:
     Returns:
         None
     """
-    sourceFolder = "mapfiles"
-    filenames = os.listdir(sourceFolder)
+    source_folder = "mapfiles"
+    file_names = os.listdir(source_folder)
 
-    for filename in filenames:
-        tablename = filename.split(".")[0] + "_table"
-        print("Import " + tablename)
-        cursor.execute("DROP TABLE IF EXISTS " + tablename)
+    for file_name in file_names:
+        table_name = file_name.split(".")[0] + "_table"
+        print("Import " + table_name)
+        cursor.execute("DROP TABLE IF EXISTS " + table_name)
         sql_instruction = (
             """
 			CREATE TABLE """
-            + tablename
+            + table_name
             + """ (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			pathIndex INTEGER,
@@ -165,27 +170,27 @@ def set_traces_db(cursor: sqlite3.Cursor) -> None:
 		"""
         )
         cursor.execute(sql_instruction)
-        with open(sourceFolder + "/" + filename, "r") as infile:
-            allNodeData = []
-            for line in infile.readlines()[1:]:
+        with open(source_folder + "/" + file_name, "r") as in_file:
+            all_node_data = []
+            for line in in_file.readlines()[1:]:
                 if len(line) > 1:
-                    lineData = line.split(";")
+                    line_data = line.split(";")
                     dataString = (
-                        lineData[6].replace("\n", "") if len(lineData) >= 7 else ""
+                        line_data[6].replace("\n", "") if len(line_data) >= 7 else ""
                     )
                     node = (
-                        int(lineData[0]),
-                        int(lineData[1]),
-                        float(lineData[2]),
-                        float(lineData[3]),
-                        float(lineData[4]),
-                        int(lineData[5]),
+                        int(line_data[0]),
+                        int(line_data[1]),
+                        float(line_data[2]),
+                        float(line_data[3]),
+                        float(line_data[4]),
+                        int(line_data[5]),
                         dataString,
                     )
-                    allNodeData.append(node)
+                    all_node_data.append(node)
             cursor.executemany(
                 "INSERT INTO "
-                + tablename
+                + table_name
                 + " (pathIndex, pointIndex, transX, transY, transZ, inputVar, data) VALUES(?,?,?,?,?,?,?)",
-                allNodeData,
+                all_node_data,
             )

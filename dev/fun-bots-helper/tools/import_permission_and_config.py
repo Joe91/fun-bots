@@ -4,7 +4,7 @@ from addons.gets import get_to_root
 from addons.sets import set_permission_config_db
 
 
-def importPermissionAndConfig() -> None:
+def import_permission_and_config() -> None:
     get_to_root()
     connection = sqlite3.connect("mod.db")
     cursor = connection.cursor()
@@ -14,4 +14,4 @@ def importPermissionAndConfig() -> None:
 
 
 if __name__ == "__main__":
-    importPermissionAndConfig()
+    import_permission_and_config()

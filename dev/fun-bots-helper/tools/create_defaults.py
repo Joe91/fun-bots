@@ -1,25 +1,25 @@
 from addons.gets import get_js_lines, get_lua_lines, get_settings, get_to_root
 
 
-def createDefaults() -> None:
+def create_defaults() -> None:
     get_to_root()
     language_file_lua = "ext/Shared/Languages/DEFAULT.lua"
     language_file_js = "WebUI/languages/DEFAULT.js"
 
-    allSettings = get_settings(first_key="Text")
+    all_settings = get_settings(first_key="Text")
 
-    with open(language_file_lua, "w") as outFile:
-        outFile.write(
-            "local code = 'xx_XX' -- Add/replace the xx_XX here with your language code (like de_DE, en_US, or other)!\n\n"
+    with open(language_file_lua, "w") as out_file:
+        out_file.write(
+            "local code = 'xx_XX' -- Add/replace the xx_XX here with your language code (like de_DE, en_US, or other)! \n\n"
         )
 
-        outFileLines = get_lua_lines(allSettings)
-        for line in outFileLines:
-            outFile.write(line + "\n")
+        out_file_lines = get_lua_lines(all_settings)
+        for line in out_file_lines:
+            out_file.write(line + "\n")
         print("Write DEFAULT.lua Done")
 
-    with open(language_file_js, "w") as outFileHtml:
-        outFileHtml.write(
+    with open(language_file_js, "w") as out_file_html:
+        out_file_html.write(
             """Language['xx_XX'] /* Add/replace the xx_XX here with your language code (like de_DE, en_US, or other)! */ = {
 	"__LANGUAGE_INFO": {
 		"name": "English",
@@ -29,12 +29,12 @@ def createDefaults() -> None:
 """
         )
 
-        outFileLines = get_js_lines()
-        for translation in outFileLines:
-            outFileHtml.write('	"' + translation + '": "",\n')
-        outFileHtml.write("};")
+        out_file_lines = get_js_lines()
+        for translation in out_file_lines:
+            out_file_html.write('	"' + translation + '": "",\n')
+        out_file_html.write("};")
         print("Write DEFAULT.js Done")
 
 
 if __name__ == "__main__":
-    createDefaults()
+    create_defaults()

@@ -1,26 +1,26 @@
 from tkinter import *
 from tkinter import ttk
 
-from tools.import_traces import importTraces
-from tools.export_traces import exportTraces
+from tools.import_traces import import_traces
+from tools.export_traces import export_traces
 
-from tools.import_permission_and_config import importPermissionAndConfig
-from tools.export_permission_and_config import exportPermissionAndConfig
+from tools.import_permission_and_config import import_permission_and_config
+from tools.export_permission_and_config import export_permission_and_config
 
-from tools.create_settings import createSettings
-from tools.create_defaults import createDefaults
-from tools.update_all_languages import updateLanguages
-from tools.create_language import createLanguage
+from tools.create_settings import create_settings
+from tools.create_defaults import create_defaults
+from tools.update_all_languages import update_languages
+from tools.create_language import create_language
 
-from tools.clear_settings import clearSettings
-from tools.clear_all_paths import clearAllPaths
+from tools.clear_settings import clear_settings
+from tools.clear_all_paths import clear_all_paths
 
-from tools.scan_for_invalid_objectives import scanForInvalidObjectives
-from tools.scan_for_invalid_nodes import scanForInvalidNodes
-from tools.scan_for_invalid_comments import scanForInvalidComments
+from tools.scan_for_invalid_objectives import scan_for_invalid_objectives
+from tools.scan_for_invalid_nodes import scan_for_invalid_nodes
+from tools.scan_for_invalid_comments import scan_for_invalid_comments
 
-from tools.update_supported_maps import updateSupportedMaps
-from tools.create_maplist import createMaplist
+from tools.update_supported_maps import update_supported_maps
+from tools.create_maplist import create_map_list
 
 SHOW_DEV_TOOLS = True
 
@@ -31,64 +31,64 @@ master.tk.call("source", "theme/azure.tcl")
 master.tk.call("set_theme", "dark")
 
 # TRACES
-def export_traces() -> None:
-    exportTraces()
+def export_traces_fb() -> None:
+    export_traces()
     print("\nMaps Exported\n")
 
 
-def import_traces() -> None:
-    importTraces()
+def import_traces_fb() -> None:
+    import_traces()
     print("\nMaps Imported\n")
 
 
 # SETTINGS
-def export_settings() -> None:
-    exportPermissionAndConfig()
+def export_permission_and_config_fb() -> None:
+    export_permission_and_config()
     print("\nPermissions and Configurations Exported\n")
 
 
-def import_settings() -> None:
-    importPermissionAndConfig()
+def import_permission_and_config_fb() -> None:
+    import_permission_and_config()
     print("\nPermissions and Configurations Imported\n")
 
 
 # DEV TOOLS
-def clear_paths() -> None:
-    clearAllPaths()
+def clear_all_paths_fb() -> None:
+    clear_all_paths()
     print("\nPaths Cleared\n")
 
 
-def clear_settings() -> None:
-    clearSettings()
+def clear_settings_fb() -> None:
+    clear_settings()
     print("\nSettings Cleared\n")
 
 
-def create_settings_defaults() -> None:
-    createSettings()
-    createDefaults()
-    updateLanguages()
+def create_settings_defaults_fb() -> None:
+    create_settings()
+    create_defaults()
+    update_languages()
     print("\nDefault, Settings and Languages Updated\n")
 
 
-def create_mapfiles() -> None:
-    updateSupportedMaps()
-    createMaplist()
+def create_mapfiles_fb() -> None:
+    update_supported_maps()
+    create_map_list()
     print("\nMapfiles Updated\n")
 
 
-def fix_maps() -> None:
-    scanForInvalidObjectives()
-    scanForInvalidNodes()
+def fix_maps_fb() -> None:
+    scan_for_invalid_objectives()
+    scan_for_invalid_nodes()
     print("\nAll Maps Scanned and Fixed\n")
 
 
-def create_language() -> None:
+def create_language_fb() -> None:
     lang = entry.get()
-    createLanguage(lang)
+    create_language(lang)
 
 
-def fix_comments() -> None:
-    scanForInvalidComments()
+def fix_comments_fb() -> None:
+    scan_for_invalid_comments()
     print("\nAll Comments Grammarly Checked\n")
 
 
@@ -99,11 +99,11 @@ master.rowconfigure(tuple(range(30)), weight=1)
 Label(master, text="Trace Functions").grid(row=tempRow, sticky="nesw")
 tempRow += 1
 ttk.Button(
-    master, text="Export Traces", command=export_traces, style="Accent.TButton"
+    master, text="Export Traces", command=export_traces_fb, style="Accent.TButton"
 ).grid(row=tempRow, sticky="nesw", pady=4, padx=4)
 tempRow += 1
 ttk.Button(
-    master, text="Import Traces", command=import_traces, style="Accent.TButton"
+    master, text="Import Traces", command=import_traces_fb, style="Accent.TButton"
 ).grid(row=tempRow, sticky="nesw", pady=4, padx=4)
 tempRow += 1
 
@@ -114,14 +114,14 @@ tempRow += 1
 ttk.Button(
     master,
     text="Export Permissions and Settings",
-    command=export_settings,
+    command=export_permission_and_config_fb,
     style="Accent.TButton",
 ).grid(row=tempRow, sticky="nesw", pady=4, padx=4)
 tempRow += 1
 ttk.Button(
     master,
     text="Import Permissions and Settings",
-    command=import_settings,
+    command=import_permission_and_config_fb,
     style="Accent.TButton",
 ).grid(row=tempRow, sticky="nesw", pady=4, padx=4)
 tempRow += 1
@@ -132,34 +132,37 @@ if SHOW_DEV_TOOLS:
     ttk.Button(
         master,
         text="Clear all Traces from DB",
-        command=clear_paths,
+        command=clear_all_paths_fb,
         style="Accent.TButton",
     ).grid(row=tempRow, sticky="nesw", pady=4, padx=4)
     tempRow += 1
     ttk.Button(
         master,
         text="Clear Settings from DB",
-        command=clear_settings,
+        command=clear_settings_fb,
         style="Accent.TButton",
     ).grid(row=tempRow, sticky="nesw", pady=4, padx=4)
     tempRow += 1
     ttk.Button(
         master,
         text="Create Settings, Defaults and Update Languages",
-        command=create_settings_defaults,
+        command=create_settings_defaults_fb,
         style="Accent.TButton",
     ).grid(row=tempRow, sticky="nesw", pady=4, padx=4)
     tempRow += 1
     ttk.Button(
-        master, text="Create Mapfiles", command=create_mapfiles, style="Accent.TButton"
+        master,
+        text="Create Mapfiles",
+        command=create_mapfiles_fb,
+        style="Accent.TButton",
     ).grid(row=tempRow, sticky="nesw", pady=4, padx=4)
     tempRow += 1
     ttk.Button(
-        master, text="Fix Invalid Paths", command=fix_maps, style="Accent.TButton"
+        master, text="Fix Invalid Paths", command=fix_maps_fb, style="Accent.TButton"
     ).grid(row=tempRow, sticky="nesw", pady=4, padx=4)
     tempRow += 1
     ttk.Button(
-        master, text="Fix Grammar", command=fix_comments, style="Accent.TButton"
+        master, text="Fix Grammar", command=fix_comments_fb, style="Accent.TButton"
     ).grid(row=tempRow, sticky="nesw", pady=4, padx=4)
     tempRow += 1
 
@@ -168,7 +171,10 @@ if SHOW_DEV_TOOLS:
     tempRow += 1
 
     ttk.Button(
-        master, text="Create Language", command=create_language, style="Accent.TButton"
+        master,
+        text="Create Language",
+        command=create_language_fb,
+        style="Accent.TButton",
     ).grid(row=tempRow, sticky="nesw", pady=4, padx=4)
     tempRow += 1
 

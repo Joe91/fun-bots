@@ -2,7 +2,7 @@ from addons.gets import get_all_tables, get_to_root
 from addons.sets import set_traces_files
 
 
-def exportTraces() -> None:
+def export_traces() -> None:
     get_to_root()
     connection, cursor = get_all_tables()
     set_traces_files(cursor)
@@ -10,4 +10,4 @@ def exportTraces() -> None:
 
 
 if __name__ == "__main__":
-    exportTraces()
+    export_traces()

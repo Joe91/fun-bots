@@ -3,7 +3,7 @@ import os
 from addons.gets import get_comments_fixed, get_to_root
 
 
-def scanForInvalidComments() -> None:
+def scan_for_invalid_comments() -> None:
     get_to_root()
     folders = [
         "ext/Client/",
@@ -19,22 +19,19 @@ def scanForInvalidComments() -> None:
         "ext/Shared/Settings/",
         "ext/Shared/Utils/",
         "ext/Shared/WeaponLists/",
-        # Shared/Languages/ ignored.
+        "ext/Shared/Languages/",
     ]
     for folder in folders:
-        filenames = [filename for filename in os.listdir(folder) if ".lua" in filename]
-        for filename in filenames:
-            if filename in [
-                "Config.lua",
-                "SettingsDefinition.lua",
-            ]:  # Ignore these files.
-                continue
-            with open(folder + filename, "r", encoding="utf-8") as infile:
-                outFileLines = get_comments_fixed(infile)
-            with open(folder + filename, "w", encoding="utf-8") as outFile:
-                for line in outFileLines:
-                    outFile.write(line)
+        file_names = [
+            file_name for file_name in os.listdir(folder) if ".lua" in file_name
+        ]
+        for file_name in file_names:
+            with open(folder + file_name, "r", encoding="utf-8") as in_file:
+                out_file_lines = get_comments_fixed(in_file)
+            with open(folder + file_name, "w", encoding="utf-8") as out_file:
+                for line in out_file_lines:
+                    out_file.write(line)
 
 
 if __name__ == "__main__":
-    scanForInvalidComments()
+    scan_for_invalid_comments()

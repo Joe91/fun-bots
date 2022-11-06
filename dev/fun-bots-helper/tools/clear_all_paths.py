@@ -1,14 +1,19 @@
 from addons.gets import get_all_tables, get_to_root
 
 
-def clearAllPaths() -> None:
+def clear_all_paths() -> None:
     get_to_root()
     connection, cursor = get_all_tables()
     content = cursor.fetchall()
-    ignoreList = ["sqlite_sequence", "FB_Permissions", "FB_Config_Trace", "FB_Settings"]
+    ignore_list = [
+        "sqlite_sequence",
+        "FB_Permissions",
+        "FB_Config_Trace",
+        "FB_Settings",
+    ]
 
     for item in content:
-        if item[1] in ignoreList:
+        if item[1] in ignore_list:
             continue
 
         print("Clear " + item[1])
@@ -20,4 +25,4 @@ def clearAllPaths() -> None:
 
 
 if __name__ == "__main__":
-    clearAllPaths()
+    clear_all_paths()

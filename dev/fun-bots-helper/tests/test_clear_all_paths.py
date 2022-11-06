@@ -3,7 +3,7 @@ if the remaining tables after clear all paths are the same as those that were ig
 
 
 def test_clear_all_paths(session) -> None:
-    """Test clearAllPaths algorithm.
+    """Test clear_all_paths algorithm.
 
     Args:
         - session - cursor object from a temporary copy of mod.db
@@ -16,10 +16,15 @@ def test_clear_all_paths(session) -> None:
 	"""
     session.execute(sql_instruction)
     content = session.fetchall()
-    ignoreList = ["sqlite_sequence", "FB_Permissions", "FB_Config_Trace", "FB_Settings"]
+    ignore_list = [
+        "sqlite_sequence",
+        "FB_Permissions",
+        "FB_Config_Trace",
+        "FB_Settings",
+    ]
 
     for item in content:
-        if item[1] in ignoreList:
+        if item[1] in ignore_list:
             continue
 
         print("Clear " + item[1])
@@ -30,6 +35,6 @@ def test_clear_all_paths(session) -> None:
 
     session.execute(sql_instruction)
     remaining_tables = [item[1] for item in session.fetchall()]
-    ignoreList.remove("sqlite_sequence")
+    ignore_list.remove("sqlite_sequence")
 
-    assert sorted(remaining_tables) == sorted(ignoreList)
+    assert sorted(remaining_tables) == sorted(ignore_list)

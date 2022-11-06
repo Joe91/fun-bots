@@ -3,7 +3,7 @@ if any of the remaining tables after clear settings is a setting table."""
 
 
 def test_clear_settings(session) -> None:
-    """Test clearSettings algorithm.
+    """Test clear_settings algorithm.
 
     Args:
         - session - cursor object from a temporary copy of mod.db
@@ -11,11 +11,11 @@ def test_clear_settings(session) -> None:
     Returns:
         None
     """
-    removeList = ["FB_Config_Trace", "FB_Settings"]
+    remove_list = ["FB_Config_Trace", "FB_Settings"]
 
-    for tablename in removeList:
-        print("Remove " + tablename)
-        session.execute("DROP TABLE IF EXISTS " + tablename)
+    for table_name in remove_list:
+        print("Remove " + table_name)
+        session.execute("DROP TABLE IF EXISTS " + table_name)
 
     session.execute("vacuum")
     session.execute(

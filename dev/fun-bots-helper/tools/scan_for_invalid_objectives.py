@@ -3,23 +3,23 @@ import os
 from addons.gets import get_objectives_to_rename, get_to_root
 
 
-def scanForInvalidObjectives() -> None:
+def scan_for_invalid_objectives() -> None:
     get_to_root()
-    sourceFolder = "mapfiles"
+    source_folder = "mapfiles"
 
-    filenames = os.listdir(sourceFolder)
+    file_names = os.listdir(source_folder)
 
-    for filename in filenames:
-        with open(sourceFolder + "/" + filename, "r") as infile:
-            objectivesToRename, fileLines = get_objectives_to_rename(infile)
-        if len(objectivesToRename) > 0:
-            with open(sourceFolder + "/" + filename, "w") as outfile:
-                print("Objective Fixed in: ", filename)
-                for line in fileLines:
-                    for renameItem in objectivesToRename:
-                        line = line.replace(renameItem, renameItem.lower())
-                    outfile.write(line)
+    for file_name in file_names:
+        with open(source_folder + "/" + file_name, "r") as in_file:
+            objectives_to_rename, file_lines = get_objectives_to_rename(in_file)
+        if len(objectives_to_rename) > 0:
+            with open(source_folder + "/" + file_name, "w") as out_file:
+                print("Objective Fixed in: ", file_name)
+                for line in file_lines:
+                    for rename_item in objectives_to_rename:
+                        line = line.replace(rename_item, rename_item.lower())
+                    out_file.write(line)
 
 
 if __name__ == "__main__":
-    scanForInvalidObjectives()
+    scan_for_invalid_objectives()

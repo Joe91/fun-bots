@@ -1,37 +1,37 @@
 from addons.gets import get_map_lines, get_to_root
 
 
-def updateSupportedMaps() -> None:
+def update_supported_maps() -> None:
     get_to_root()
-    Template = "dev/templates/Supported-maps.md"
-    OutFile = "Supported-maps.md"
+    template_path = "dev/templates/Supported-maps.md"
+    out_file = "Supported-maps.md"
 
-    mapItems = get_map_lines(update_supported=True)
-    with open(OutFile, "w") as output:
-        with open(Template, "r") as template:
+    map_items = get_map_lines(update_supported=True)
+    with open(out_file, "w") as output:
+        with open(template_path, "r") as template:
             for line in template.readlines():
-                allSupportedGameModes = []
-                vehicleSupportedGameModes = []
+                all_supported_game_modes = []
+                vehicle_supported_game_modes = []
                 if "!ALL-GAMEMODES!" in line:
-                    lineParts = line.split("|")
-                    if len(lineParts) >= 5:
-                        mapname = lineParts[2].split("`")[1]
-                        for item in mapItems:
+                    line_parts = line.split("|")
+                    if len(line_parts) >= 5:
+                        mapname = line_parts[2].split("`")[1]
+                        for item in map_items:
                             if item[0] == mapname:
-                                allSupportedGameModes.append("`" + item[1] + "`")
+                                all_supported_game_modes.append("`" + item[1] + "`")
                                 if item[3]:
-                                    vehicleSupportedGameModes.append(
+                                    vehicle_supported_game_modes.append(
                                         "`" + item[1] + "`"
                                     )
                     line = line.replace(
-                        "!ALL-GAMEMODES!", " ,".join(allSupportedGameModes)
+                        "!ALL-GAMEMODES!", " ,".join(all_supported_game_modes)
                     )
                     line = line.replace(
-                        "!VEHICLE-GAMEMODES!", " ,".join(vehicleSupportedGameModes)
+                        "!VEHICLE-GAMEMODES!", " ,".join(vehicle_supported_game_modes)
                     )
                 output.write(line)
         print("Update Supported-maps.md Done")
 
 
 if __name__ == "__main__":
-    updateSupportedMaps()
+    update_supported_maps()

@@ -10,7 +10,7 @@ from addons.gets import get_js_lines, get_lua_lines, get_settings, get_to_root
 
 
 def test_create_defaults(tmp_path) -> None:
-    """Test createDefaults algorithm.
+    """Test create_defaults algorithm.
 
     Args:
         - tmp_path - built-in pytest fixture to create Pathlib temporary files
@@ -24,13 +24,13 @@ def test_create_defaults(tmp_path) -> None:
     d.mkdir()
     temp_lua_path = d / "temp_file.lua"
 
-    allSettings = get_settings(first_key="Text")
+    all_settings = get_settings(first_key="Text")
     with temp_lua_path.open("a") as temp_lua:
         temp_lua.write(
             "local code = 'xx_XX' -- Add/replace the xx_XX here with your language code (like de_DE, en_US, or other)!\n\n"
         )
-        outFileLines = get_lua_lines(allSettings)
-        for line in outFileLines:
+        out_file_lines = get_lua_lines(all_settings)
+        for line in out_file_lines:
             temp_lua.write(line + "\n")
 
     original_js_path = "WebUI/languages/DEFAULT.js"
@@ -46,8 +46,8 @@ def test_create_defaults(tmp_path) -> None:
 	},
 """
         )
-        outFileLines = get_js_lines()
-        for translation in outFileLines:
+        out_file_lines = get_js_lines()
+        for translation in out_file_lines:
             temp_js.write('	"' + translation + '": "",\n')
         temp_js.write("};")
 

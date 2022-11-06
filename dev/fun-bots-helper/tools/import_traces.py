@@ -4,7 +4,7 @@ from addons.gets import get_to_root
 from addons.sets import set_traces_db
 
 
-def importTraces() -> None:
+def import_traces() -> None:
     get_to_root()
     connection = sqlite3.connect("mod.db")
     cursor = connection.cursor()
@@ -14,4 +14,4 @@ def importTraces() -> None:
 
 
 if __name__ == "__main__":
-    importTraces()
+    import_traces()

@@ -4,7 +4,7 @@ from addons.gets import get_to_root, get_translation
 from deep_translator import GoogleTranslator
 
 
-def createLanguage(lang: str) -> None:
+def create_language(lang: str) -> None:
     get_to_root()
     translator = GoogleTranslator(source="en", target=lang)
     langs_dict = GoogleTranslator().get_supported_languages(as_dict=True)
@@ -59,4 +59,4 @@ def createLanguage(lang: str) -> None:
 
 if __name__ == "__main__":
     lang = sys.argv[1]
-    createLanguage(lang)
+    create_language(lang)
