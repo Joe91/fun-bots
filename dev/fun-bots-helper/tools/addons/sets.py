@@ -25,7 +25,7 @@ def set_permission_config_files(cursor: sqlite3.Cursor) -> None:
     for item in export_list:
         structure = cursor.execute("PRAGMA table_info('" + item + "')").fetchall()
         file_name = item + ".cfg"
-        with open(dest_folder + "/" + file_name, "w") as out_file:
+        with open(dest_folder + "/" + file_name, "w", encoding="utf-8") as out_file:
             header = [column[1] for column in structure]
             out_file.write(";".join(header) + "\n")
             try:
@@ -40,7 +40,7 @@ def set_permission_config_files(cursor: sqlite3.Cursor) -> None:
                 table_content = cursor.fetchall()
                 for line in table_content:
                     outList = [
-                        format(item, ".6f") if type(item) is float else str(item)
+                        format(item, ".6f") if isinstance(item, float) else str(item)
                         for item in line
                     ]
                     out_file.write(";".join(outList) + "\n")
@@ -80,7 +80,7 @@ def set_permission_config_db(cursor: sqlite3.Cursor) -> None:
                 break
         sql_instruction = sql_instruction[:-2] + ");"
         cursor.execute(sql_instruction)
-        with open(source_folder + "/" + file_name, "r") as in_file:
+        with open(source_folder + "/" + file_name, "r", encoding="utf-8") as in_file:
             all_data = [
                 line.replace("\n", "").split(";") for line in in_file.readlines()[1:]
             ]
@@ -123,7 +123,7 @@ def set_traces_files(cursor: sqlite3.Cursor) -> None:
         structure = cursor.execute("PRAGMA table_info('" + item[1] + "')").fetchall()
 
         file_name = item[1].replace("_table", "") + ".map"
-        with open(dest_folder + "/" + file_name, "w") as out_file:
+        with open(dest_folder + "/" + file_name, "w", encoding="utf-8") as out_file:
             header = [column[1] for column in structure[1:]]
             out_file.write(";".join(header) + "\n")
             sql_instruction = (
@@ -133,7 +133,7 @@ def set_traces_files(cursor: sqlite3.Cursor) -> None:
             table_content = cursor.fetchall()
             for line in table_content:
                 outList = [
-                    format(item, ".6f") if type(item) is float else str(item)
+                    format(item, ".6f") if isinstance(item, float) else str(item)
                     for item in line[1:]
                 ]
                 out_file.write(";".join(outList) + "\n")
@@ -172,7 +172,7 @@ def set_traces_db(cursor: sqlite3.Cursor) -> None:
 		"""
         )
         cursor.execute(sql_instruction)
-        with open(source_folder + "/" + file_name, "r") as in_file:
+        with open(source_folder + "/" + file_name, "r", encoding="utf-8") as in_file:
             all_node_data = []
             for line in in_file.readlines()[1:]:
                 if len(line) > 1:
