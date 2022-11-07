@@ -1,7 +1,6 @@
 """This module provides all intermediary functions for the scripts in /tools.
 
-All functions here (except get_to_root and get_all_tables) return a list that will be used 
-to write the lines of external files.
+Most functions here returns a list that will be used to write the lines of external files.
 """
 
 import operator
@@ -21,18 +20,18 @@ def get_settings(first_key: str) -> List[Dict]:
         - first_key - The key setting to be retrieved along with Description, Category and Default settings
 
     Returns:
-        - allSettings - A list containing all settings
+        - all_settings - A list containing all settings
     """
     settings_definition = "ext/Shared/Settings/SettingsDefinition.lua"
 
-    with open(settings_definition, "r") as inFile:
-        readoutActive = False
-        allSettings = []
+    with open(settings_definition, "r") as in_file:
+        readout_active = False
+        all_settings = []
         setting = {}
-        for line in inFile.read().splitlines():
+        for line in in_file.read().splitlines():
             if "Elements = {" in line:
-                readoutActive = True
-            if readoutActive:
+                readout_active = True
+            if readout_active:
                 for key in [f"{first_key} =", "Description =", "Category ="]:
                     if key in line:
                         setting[key[:-2]] = line.split('"')[-2]
@@ -41,67 +40,69 @@ def get_settings(first_key: str) -> List[Dict]:
                         line.split("=")[-1].replace(",", "").replace(" ", "")
                     )
                 if "}," in line or (len(setting) != 0 and "}" in line):
-                    allSettings.append(setting)
+                    all_settings.append(setting)
                     setting = {}
 
-    return allSettings
+    return all_settings
 
 
-def get_settings_lines(allSettings: List[Dict]) -> List[str]:
+def get_settings_lines(all_settings: List[Dict]) -> List[str]:
     """Create a list of formatted setting lines to be used in Config.lua.
 
     Args:
-        - allSettings - The list of settings
+        - all_settings - The list of settings
 
     Returns:
-        - outFileLines - A list of formatted setting lines
+        - out_file_lines - A list of formatted setting lines
     """
-    outFileLines, lastCategory = [], None
+    out_file_lines, last_category = [], None
 
-    for setting in allSettings:
-        if setting["Category"] != lastCategory:
-            outFileLines.append("\n	--" + setting["Category"])
-            lastCategory = setting["Category"]
-        tempString = "	" + setting["Name"] + " = " + setting["Default"] + ","
+    for setting in all_settings:
+        if setting["Category"] != last_category:
+            out_file_lines.append("\n	-- " + setting["Category"])
+            last_category = setting["Category"]
+        temp_string = "	" + setting["Name"] + " = " + setting["Default"] + ","
 
-        width = len(tempString)
-        numberOfTabs = (41 - width) // 4
+        width = len(temp_string)
+        number_of_tabs = (41 - width) // 4
         if ((41 - width) % 4) == 0:
-            numberOfTabs -= 1
-        if numberOfTabs <= 0:
-            numberOfTabs = 1
-        outFileLines.append(
-            tempString + "	" * numberOfTabs + "-- " + setting["Description"]
+            number_of_tabs -= 1
+        if number_of_tabs <= 0:
+            number_of_tabs = 1
+        out_file_lines.append(
+            temp_string + "	" * number_of_tabs + "-- " + setting["Description"]
         )
-    outFileLines.append("}")
+    out_file_lines.append("}")
 
-    return outFileLines
+    return out_file_lines
 
 
-def get_lua_lines(allSettings: List[Dict]) -> List[str]:
+def get_lua_lines(all_settings: List[Dict]) -> List[str]:
     """Create a list of formatted language setting lines to be used in DEFAULT.lua.
 
     Args:
-        - allSettings - The list of settings
+        - all_settings - The list of settings
 
     Returns:
-        - outFileLines - A list of formatted language setting lines
+        - out_file_lines - A list of formatted language setting lines
     """
-    outFileLines = []
+    out_file_lines = []
 
-    lastCategory = None
-    for setting in allSettings:
-        if setting["Category"] != lastCategory:
-            if lastCategory != None:
-                outFileLines.append("")
-            outFileLines.append("--" + setting["Category"])
-            lastCategory = setting["Category"]
-        outFileLines.append('Language:add(code, "' + setting["Text"] + '", "")')
-        outFileLines.append('Language:add(code, "' + setting["Description"] + '", "")')
+    last_category = None
+    for setting in all_settings:
+        if setting["Category"] != last_category:
+            if last_category != None:
+                out_file_lines.append("")
+            out_file_lines.append("-- " + setting["Category"] + " ")
+            last_category = setting["Category"]
+        out_file_lines.append('Language:add(code, "' + setting["Text"] + '", "")')
+        out_file_lines.append(
+            'Language:add(code, "' + setting["Description"] + '", "")'
+        )
 
-    outFileLines.extend(__scan_other_files())
+    out_file_lines.extend(__scan_other_files())
 
-    return outFileLines
+    return out_file_lines
 
 
 def __scan_other_files() -> List[str]:
@@ -111,28 +112,28 @@ def __scan_other_files() -> List[str]:
         None
 
     Returns:
-        - outFileLinesOthers - A list of external formatted language setting lines
+        - out_file_lines_others - A list of external formatted language setting lines
     """
-    listOfTranslationFiles = [
+    list_of_translation_files = [
         "ext/Client/ClientNodeEditor.lua",
         "ext/Server/BotSpawner.lua",
         "ext/Server/UIServer.lua",
         "ext/Server/NodeCollection.lua",
     ]
-    outFileLinesOthers = []
-    for fileName in listOfTranslationFiles:
-        outFileLinesOthers.append("\n-- Strings of " + fileName)
-        with open(fileName, "r") as fileWithTranslation:
-            for line in fileWithTranslation.read().splitlines():
+    out_file_lines_others = []
+    for file_name in list_of_translation_files:
+        out_file_lines_others.append("\n-- Strings of " + file_name + " ")
+        with open(file_name, "r") as file_with_translation:
+            for line in file_with_translation.read().splitlines():
                 if "Language:I18N(" in line:
                     translation = line.split("Language:I18N(")[1]
                     translation = translation.split(translation[0])[1]
                     if translation != "":
                         newLine = 'Language:add(code, "' + translation + '", "")'
-                        if newLine not in outFileLinesOthers:
-                            outFileLinesOthers.append(newLine)
+                        if newLine not in out_file_lines_others:
+                            out_file_lines_others.append(newLine)
 
-    return outFileLinesOthers
+    return out_file_lines_others
 
 
 def get_js_lines() -> List[str]:
@@ -142,32 +143,32 @@ def get_js_lines() -> List[str]:
         None
 
     Returns:
-        - outFileLines - A list of formatted language setting lines
+        - out_file_lines - A list of formatted language setting lines
     """
     index_html = "WebUI/index.html"
-    listOfJsTranslationFiles = [
+    list_of_js_translation_files = [
         "WebUI/classes/EntryElement.js",
         "WebUI/classes/BotEditor.js",
     ]
 
-    outFileLines = []
+    out_file_lines = []
 
-    with open(index_html, "r") as inFileHtml:
-        for line in inFileHtml.read().splitlines():
+    with open(index_html, "r") as in_file_html:
+        for line in in_file_html.read().splitlines():
             if 'data-lang="' in line:
-                translationHtml = line.split('data-lang="')[1].split('"')[0]
-                if translationHtml not in outFileLines:
-                    outFileLines.append(translationHtml)
-        for fileName in listOfJsTranslationFiles:
-            with open(fileName, "r") as fileWithTranslation:
-                for line in fileWithTranslation.read().splitlines():
+                translation_html = line.split('data-lang="')[1].split('"')[0]
+                if translation_html not in out_file_lines:
+                    out_file_lines.append(translation_html)
+        for file_name in list_of_js_translation_files:
+            with open(file_name, "r") as file_with_translation:
+                for line in file_with_translation.read().splitlines():
                     if "I18N('" in line:
                         translation = line.split("I18N('")[1]
                         translation = translation.split("'")[0]
-                        if translation not in outFileLines:
-                            outFileLines.append(translation)
+                        if translation not in out_file_lines:
+                            out_file_lines.append(translation)
 
-    return outFileLines
+    return out_file_lines
 
 
 def get_map_lines(create: bool = False, update_supported: bool = False) -> List[List]:
@@ -178,9 +179,9 @@ def get_map_lines(create: bool = False, update_supported: bool = False) -> List[
         - update_supported - True if we want to update the maps of Supported-maps.md
 
     Returns:
-        - mapItems - A list of all maps' information
+        - map_items - A list of all maps' information
     """
-    AllGameModes = [
+    all_game_modes = [
         "TDM",
         "SDM",
         "TDM CQ",
@@ -197,7 +198,7 @@ def get_map_lines(create: bool = False, update_supported: bool = False) -> List[
         "CTF",
         "Tank Superiority",
     ]
-    GameModeTranslations = {
+    game_mode_translations = {
         "TDM": "TeamDeathMatch0",
         "SDM": "SquadDeathMatch0",
         "TDM CQ": "TeamDeathMatchC0",
@@ -216,67 +217,67 @@ def get_map_lines(create: bool = False, update_supported: bool = False) -> List[
     }
 
     if create:
-        RoundsToUse = "1"
-        MapsWithGunmaster = ["XP2", "XP4"]
-        MapsWithoutTdmCq = ["XP2"]
+        rounds_to_use = "1"
+        maps_with_gunmaster = ["XP2", "XP4"]
+        maps_without_tdm_cq = ["XP2"]
 
     if update_supported:
-        MapsWithGunmaster = ["XP2", "XP4", "sp_", "coop_"]
-        MapsWithoutTdmCq = ["XP2", "sp_", "coop_"]
+        maps_with_gunmaster = ["XP2", "XP4", "sp_", "coop_"]
+        maps_without_tdm_cq = ["XP2", "sp_", "coop_"]
 
-    mapItems = []
+    map_items = []
 
-    filenames = os.listdir("mapfiles")
-    for filename in filenames:
-        combinedName = filename.split(".")[0]
-        nameParts = combinedName.rsplit("_", 1)
-        mapname = nameParts[0]
+    file_names = os.listdir("mapfiles")
+    for file_name in file_names:
+        combined_name = file_name.split(".")[0]
+        name_parts = combined_name.rsplit("_", 1)
+        mapname = name_parts[0]
         mapname_splitted = mapname.split("_")[0]
-        translatedGamemode = nameParts[1]
-        gameMode = ""
+        translated_game_mode = name_parts[1]
+        game_mode = ""
 
         if update_supported:
-            vehicleSupport = False
-            with open("mapfiles" + "/" + filename, "r") as tempMapFile:
-                for line in tempMapFile.readlines():
+            vehicle_support = False
+            with open("mapfiles" + "/" + file_name, "r") as temp_map_file:
+                for line in temp_map_file.readlines():
                     if '"Vehicles":[' in line:
-                        vehicleSupport = True
+                        vehicle_support = True
                         break
 
-        for mode in AllGameModes:
-            if GameModeTranslations[mode] == translatedGamemode:
-                gameMode = mode
+        for mode in all_game_modes:
+            if game_mode_translations[mode] == translated_game_mode:
+                game_mode = mode
                 break
 
-        if gameMode in AllGameModes:
-            if gameMode == "TDM":
+        if game_mode in all_game_modes:
+            if game_mode == "TDM":
                 if create:
-                    if mapname_splitted in MapsWithGunmaster:
-                        mapItems.append([mapname, "GunMaster0", RoundsToUse])
-                    if mapname_splitted not in MapsWithoutTdmCq:
-                        mapItems.append([mapname, translatedGamemode, RoundsToUse])
-                    mapItems.append([mapname, "TeamDeathMatchC0", RoundsToUse])
+                    if mapname_splitted in maps_with_gunmaster:
+                        map_items.append([mapname, "GunMaster0", rounds_to_use])
+                    if mapname_splitted not in maps_without_tdm_cq:
+                        map_items.append([mapname, translated_game_mode, rounds_to_use])
+                    map_items.append([mapname, "TeamDeathMatchC0", rounds_to_use])
                 if update_supported:
-                    if mapname_splitted in MapsWithGunmaster:
-                        mapItems.append([mapname, "GM", "GunMaster0", vehicleSupport])
-                    if mapname_splitted not in MapsWithoutTdmCq:
-                        mapItems.append(
-                            [mapname, gameMode, translatedGamemode, vehicleSupport]
+                    if mapname_splitted in maps_with_gunmaster:
+                        map_items.append([mapname, "GM", "GunMaster0", vehicle_support])
+                    if mapname_splitted not in maps_without_tdm_cq:
+                        map_items.append(
+                            [mapname, game_mode, translated_game_mode, vehicle_support]
                         )
-                    mapItems.append(
-                        [mapname, "TDM CQ", "TeamDeathMatchC0", vehicleSupport]
+                    map_items.append(
+                        [mapname, "TDM CQ", "TeamDeathMatchC0", vehicle_support]
                     )
             else:
                 if create:
-                    mapItems.append([mapname, translatedGamemode, RoundsToUse])
+                    map_items.append([mapname, translated_game_mode, rounds_to_use])
                 if update_supported:
-                    mapItems.append(
-                        [mapname, gameMode, translatedGamemode, vehicleSupport]
+                    map_items.append(
+                        [mapname, game_mode, translated_game_mode, vehicle_support]
                     )
 
-    mapItems = sorted(mapItems, key=operator.itemgetter(2, 1))
+    map_items = sorted(map_items, key=operator.itemgetter(2, 1))
 
-    return mapItems
+    return map_items
 
 
 def get_all_tables() -> Tuple[sqlite3.Connection, sqlite3.Cursor]:
@@ -300,111 +301,115 @@ def get_all_tables() -> Tuple[sqlite3.Connection, sqlite3.Cursor]:
     return connect, cursor
 
 
-def get_invalid_node_lines(infile: TextIOWrapper) -> List[str]:
+def get_invalid_node_lines(in_file: TextIOWrapper) -> List[str]:
     """Fix invalid nodes of all maps.
 
     Args:
-        - infile - The opened map file to be fixed
+        - in_file - The opened map file to be fixed
 
     Returns:
-        - outFileLines - The new lines used to update the map's node
+        - out_file_lines - The new lines used to update the map's node
     """
     DISTANCE_MAX = 80
 
-    outFileLines = infile.readlines()
-    lastPath, currentPath = 0, 0
-    for i in range(2, len(outFileLines) - 2):
-        line = outFileLines[i]
-        currentitems = line.split(";")
-        currentPath = int(currentitems[0])
-        posX = float(currentitems[2])
-        posY = float(currentitems[3])
-        posZ = float(currentitems[4])
+    out_file_lines = in_file.readlines()
+    last_path, current_path = 0, 0
+    for i in range(2, len(out_file_lines) - 2):
+        line = out_file_lines[i]
+        current_items = line.split(";")
+        current_path = int(current_items[0])
+        pos_x = float(current_items[2])
+        pos_y = float(current_items[3])
+        pos_z = float(current_items[4])
 
-        line = outFileLines[i - 1]
+        line = out_file_lines[i - 1]
         items = line.split(";")
-        lastPath = int(items[0])
-        lastPosX = float(items[2])
-        lastPosY = float(items[3])
-        lastPosZ = float(items[4])
+        last_path = int(items[0])
+        last_pos_x = float(items[2])
+        last_pos_y = float(items[3])
+        last_pos_z = float(items[4])
 
-        line = outFileLines[i + 1]
+        line = out_file_lines[i + 1]
         items = line.split(";")
-        nextPath = int(items[0])
-        nextPosX = float(items[2])
-        nextPosY = float(items[3])
-        nextPosZ = float(items[4])
+        next_path = int(items[0])
+        next_pos_x = float(items[2])
+        next_pos_y = float(items[3])
+        next_pos_z = float(items[4])
 
-        if lastPath == currentPath and nextPath == currentPath:  # Wrong in the middle
+        if (
+            last_path == current_path and next_path == current_path
+        ):  # Wrong in the middle
             if (
-                abs(lastPosX - posX) > DISTANCE_MAX
-                or abs(lastPosY - posY) > DISTANCE_MAX
-                or abs(lastPosZ - posZ) > DISTANCE_MAX
+                abs(last_pos_x - pos_x) > DISTANCE_MAX
+                or abs(last_pos_y - pos_y) > DISTANCE_MAX
+                or abs(last_pos_z - pos_z) > DISTANCE_MAX
             ) and (
-                abs(nextPosX - posX) > DISTANCE_MAX
-                or abs(nextPosY - posY) > DISTANCE_MAX
-                or abs(nextPosZ - posZ) > DISTANCE_MAX
+                abs(next_pos_x - pos_x) > DISTANCE_MAX
+                or abs(next_pos_y - pos_y) > DISTANCE_MAX
+                or abs(next_pos_z - pos_z) > DISTANCE_MAX
             ):
-                newPosX = lastPosX + (nextPosX - lastPosX) / 2
-                newPosY = lastPosY + (nextPosY - lastPosY) / 2
-                newPosZ = lastPosZ + (nextPosZ - lastPosZ) / 2
-                currentitems[2] = format(newPosX, ".6f")
-                currentitems[3] = format(newPosY, ".6f")
-                currentitems[4] = format(newPosZ, ".6f")
-                newLineContent = ";".join(currentitems)
-                outFileLines[i] = newLineContent
-        if lastPath == currentPath and nextPath != currentPath:  # Wrong at the end
+                new_pos_x = last_pos_x + (next_pos_x - last_pos_x) / 2
+                new_pos_y = last_pos_y + (next_pos_y - last_pos_y) / 2
+                new_pos_z = last_pos_z + (next_pos_z - last_pos_z) / 2
+                current_items[2] = format(new_pos_x, ".6f")
+                current_items[3] = format(new_pos_y, ".6f")
+                current_items[4] = format(new_pos_z, ".6f")
+                new_line_content = ";".join(current_items)
+                out_file_lines[i] = new_line_content
+        if last_path == current_path and next_path != current_path:  # Wrong at the end
             if (
-                abs(lastPosX - posX) > DISTANCE_MAX
-                or abs(lastPosY - posY) > DISTANCE_MAX
-                or abs(lastPosZ - posZ) > DISTANCE_MAX
+                abs(last_pos_x - pos_x) > DISTANCE_MAX
+                or abs(last_pos_y - pos_y) > DISTANCE_MAX
+                or abs(last_pos_z - pos_z) > DISTANCE_MAX
             ):
-                currentitems[2] = format(lastPosX + 0.2, ".6f")
-                currentitems[3] = format(lastPosY, ".6f")
-                currentitems[4] = format(lastPosZ + 0.2, ".6f")
-                newLineContent = ";".join(currentitems)
-                outFileLines[i] = newLineContent
-        if lastPath != currentPath and nextPath == currentPath:  # Wrong at the start
+                current_items[2] = format(last_pos_x + 0.2, ".6f")
+                current_items[3] = format(last_pos_y, ".6f")
+                current_items[4] = format(last_pos_z + 0.2, ".6f")
+                new_line_content = ";".join(current_items)
+                out_file_lines[i] = new_line_content
+        if (
+            last_path != current_path and next_path == current_path
+        ):  # Wrong at the start
             if (
-                abs(nextPosX - posX) > DISTANCE_MAX
-                or abs(nextPosY - posY) > DISTANCE_MAX
-                or abs(nextPosZ - posZ) > DISTANCE_MAX
+                abs(next_pos_x - pos_x) > DISTANCE_MAX
+                or abs(next_pos_y - pos_y) > DISTANCE_MAX
+                or abs(next_pos_z - pos_z) > DISTANCE_MAX
             ):
-                currentitems[2] = format(nextPosX + 0.2, ".6f")
-                currentitems[3] = format(nextPosY, ".6f")
-                currentitems[4] = format(nextPosZ + 0.2, ".6f")
-                newLineContent = ";".join(currentitems)
-                outFileLines[i] = newLineContent
+                current_items[2] = format(next_pos_x + 0.2, ".6f")
+                current_items[3] = format(next_pos_y, ".6f")
+                current_items[4] = format(next_pos_z + 0.2, ".6f")
+                new_line_content = ";".join(current_items)
+                out_file_lines[i] = new_line_content
 
-    return outFileLines
+    return out_file_lines
 
 
-def get_objectives_to_rename(infile: TextIOWrapper) -> Tuple[List[str], List[str]]:
+def get_objectives_to_rename(in_file: TextIOWrapper) -> Tuple[List[str], List[str]]:
     """Fix invalid objective names.
 
     Args:
-        - infile - The opened map file to have objectives fixed
+        - in_file - The opened map file to have objectives fixed
 
     Returns:
-        - outFileLines - The new lines used to update the map's objectives
-        - fileLines - A list with the original file lines
+        - out_file_lines - The new lines used to update the map's objectives
+        - file_lines - A list with the original file lines
     """
-    allObjectives = []
-    fileLines = infile.readlines()
-    for line in fileLines[1:]:
+    all_objectives = []
+    file_lines = in_file.readlines()
+    for line in file_lines[1:]:
         if '"Objectives":[' in line:
             objectives = line.split('"Objectives":[')[1].split("]")[0].split(",")
             for objective in objectives:
-                if objective not in allObjectives:
-                    allObjectives.append(objective)
-    allObjectives.sort()
-    objectivesToRename = [
-        objectiveName
-        for objectiveName in allObjectives
-        if objectiveName.lower() != objectiveName
+                if objective not in all_objectives:
+                    all_objectives.append(objective)
+    all_objectives.sort()
+    objectives_to_rename = [
+        objective_name
+        for objective_name in all_objectives
+        if objective_name.lower() != objective_name
     ]
 
-    return objectivesToRename, fileLines
+    return objectives_to_rename, file_lines
 
 
 def get_translation(translator: Any, line: str) -> str:
@@ -423,29 +428,29 @@ def get_translation(translator: Any, line: str) -> str:
     return '"'.join(splitted_line)
 
 
-def get_updated_lines_lua(infile: TextIOWrapper) -> List[str]:
+def get_updated_lines_lua(in_file: TextIOWrapper) -> List[str]:
     """Update all lua language files based on DEFAULT.lua.
 
     Args:
-        - infile - The file to be updated
+        - in_file - The file to be updated
 
     Returns:
-        - outFileLines - A list with all translated lines, including new ones
+        - out_file_lines - A list with all translated lines, including new ones
     """
     language_file = "ext/Shared/Languages/DEFAULT.lua"
-    with open(language_file, "r", encoding="utf8") as inFile:
-        lua_lines = inFile.read().splitlines()
+    with open(language_file, "r", encoding="utf8") as lua_file:
+        lua_lines = lua_file.read().splitlines()
 
-    outFileLines = infile.read().splitlines()
+    out_file_lines = in_file.read().splitlines()
 
-    LANG = outFileLines[0].split("'")[1].split("_")[0]
+    LANG = out_file_lines[0].split("'")[1].split("_")[0]
     if LANG == "cn":
         LANG = "zh-CN"
 
     translator = GoogleTranslator(source="en", target=LANG)
 
     lines_to_remove = [
-        out_line for out_line in outFileLines if "Language:add" in out_line
+        out_line for out_line in out_file_lines if "Language:add" in out_line
     ]
     lines_to_add = []
 
@@ -453,7 +458,7 @@ def get_updated_lines_lua(infile: TextIOWrapper) -> List[str]:
         if "Language:add" in line:
             line_found = False
             line_part = line.split('",')[0]
-            for out_line in outFileLines:
+            for out_line in out_file_lines:
                 if "Language:add" in out_line:
                     line_part_2 = out_line.split('",')[0]
                     if line_part == line_part_2:
@@ -464,42 +469,41 @@ def get_updated_lines_lua(infile: TextIOWrapper) -> List[str]:
             if line_found == False:
                 lines_to_add.append(get_translation(translator, line))
     for remove_line in lines_to_remove:
-        outFileLines.remove(remove_line)
+        out_file_lines.remove(remove_line)
     for add_line in lines_to_add:
-        outFileLines.append(add_line)
+        out_file_lines.append(add_line)
+    return out_file_lines
 
-    return outFileLines
 
-
-def get_updated_lines_js(infile: TextIOWrapper) -> List[str]:
+def get_updated_lines_js(in_file: TextIOWrapper) -> List[str]:
     """Update all JS language files based on DEFAULT.js.
 
     Args:
-        - infile - The file to be updated
+        - in_file - The file to be updated
 
     Returns:
-        - outFileLines - A list with all translated lines, including new ones
+        - out_file_lines - A list with all translated lines, including new ones
     """
     language_file_js = "WebUI/languages/DEFAULT.js"
 
-    with open(language_file_js, "r", encoding="utf8") as inFile:
-        js_lines = inFile.read().splitlines()
+    with open(language_file_js, "r", encoding="utf8") as js_file:
+        js_lines = js_file.read().splitlines()
 
-    outFileLines = infile.read().splitlines()
+    out_file_lines = in_file.read().splitlines()
 
-    LANG = outFileLines[0].split("'")[1].split("_")[0]
+    LANG = out_file_lines[0].split("'")[1].split("_")[0]
     if LANG == "cn":
         LANG = "zh-CN"
     translator = GoogleTranslator(source="en", target=LANG)
 
-    lines_to_remove = [out_line for out_line in outFileLines[6:] if ":" in out_line]
+    lines_to_remove = [out_line for out_line in out_file_lines[6:] if ":" in out_line]
     lines_to_add = []
 
     for line in js_lines[6:]:
         if ":" in line:
             line_found = False
             line_part = line.split('": ')[0].replace(" ", "").replace("	", "")
-            for out_line in outFileLines[6:]:
+            for out_line in out_file_lines[6:]:
                 if ":" in line:
                     line_part_2 = (
                         out_line.split('": ')[0].replace(" ", "").replace("	", "")
@@ -513,11 +517,11 @@ def get_updated_lines_js(infile: TextIOWrapper) -> List[str]:
                 if line.startswith('\t"') and not line.split(":")[0].startswith('\t""'):
                     lines_to_add.append(get_translation(translator, line))
     for remove_line in lines_to_remove:
-        outFileLines.remove(remove_line)
+        out_file_lines.remove(remove_line)
     for add_line in lines_to_add:
-        outFileLines.insert(-1, add_line)
+        out_file_lines.insert(-1, add_line)
 
-    return outFileLines
+    return out_file_lines
 
 
 def get_to_root() -> None:
@@ -561,12 +565,24 @@ def get_recursive_correction(
         i += 1
         return get_recursive_correction(replacements, new_line, c_factor, i)
     else:
-        if line[-2] != ".":
-            if line[-2] in ["!", "?", "=", ")"]:
-                return line[:-1] + " \n"
-            else:
-                return line[:-1] + ". \n"
-        return line[:-1] + " \n"
+        return get_punctuation(line)
+
+
+def get_punctuation(line: str) -> str:
+    """Punctuate and break line.
+
+    Args:
+        - line - The line to be formatted
+
+    Returns:
+        - line - A formatted line
+    """
+    if line[-2] != ".":
+        if line[-2] in ["!", "?", "=", ")", "["]:
+            return line[:-1] + " \n"
+        else:
+            return line[:-1] + ". \n"
+    return line[:-1] + " \n"
 
 
 def get_variable_existence(line: str) -> bool:
@@ -584,20 +600,20 @@ def get_variable_existence(line: str) -> bool:
     return False
 
 
-def get_comments_fixed(infile: TextIOWrapper) -> List[str]:
+def get_comments_fixed(in_file: TextIOWrapper) -> List[str]:
     """Create a list with grammarly updated comments.
 
     Args:
-        - infile - The file to be updated
+        - in_file - The file to be updated
 
     Returns:
-        - outFileLines - A list with comments updated
+        - out_file_lines - A list with comments updated
     """
-    outFileLines = []
-    lines = infile.readlines()
+    out_file_lines = []
+    lines = in_file.readlines()
     for line in lines:
         try:
-            if line[-2] != " " and "--" in line and "---" not in line:
+            if line[-2] != " " and "--" in line and "---" not in line and "-->" not in line:
                 index = line.index("--") + 2
 
                 if line[index:][0] != " ":
@@ -636,12 +652,15 @@ def get_comments_fixed(infile: TextIOWrapper) -> List[str]:
                                 }
                             )
                 except IndexError:
+                    out_file_lines.append(get_punctuation(line))
                     continue
 
-                outFileLines.append(get_recursive_correction(replacements, line, index))
+                out_file_lines.append(
+                    get_recursive_correction(replacements, line, index)
+                )
             else:
-                outFileLines.append(line)
+                out_file_lines.append(line)
         except IndexError:
-            outFileLines.append(line)
+            out_file_lines.append(line)
 
-    return outFileLines
+    return out_file_lines

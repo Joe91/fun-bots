@@ -19,13 +19,14 @@ def scan_for_invalid_comments() -> None:
         "ext/Shared/Settings/",
         "ext/Shared/Utils/",
         "ext/Shared/WeaponLists/",
-        "ext/Shared/Languages/",
     ]
     for folder in folders:
         file_names = [
             file_name for file_name in os.listdir(folder) if ".lua" in file_name
         ]
         for file_name in file_names:
+            if file_name in ["SettingsDefinition.lua", "Config.lua"]:
+                continue
             with open(folder + file_name, "r", encoding="utf-8") as in_file:
                 out_file_lines = get_comments_fixed(in_file)
             with open(folder + file_name, "w", encoding="utf-8") as out_file:
