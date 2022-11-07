@@ -1,7 +1,7 @@
 """Execute tools/clear_settings.py over a temporary copy of the mod database and test 
 if any of the remaining tables after clear settings is a setting table."""
 
-from loguru import logger 
+from loguru import logger
 
 
 def test_clear_settings(session) -> None:

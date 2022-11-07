@@ -1,9 +1,14 @@
 """This file provides all fixtures for the testing scripts."""
 
+import sys
+
+sys.path.insert(1, "..")
+
 import sqlite3
 
 import pytest
-from addons.gets import get_to_root
+
+from tools.addons.gets import get_to_root
 
 
 @pytest.fixture

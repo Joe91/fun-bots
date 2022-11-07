@@ -3,8 +3,11 @@ file and compare it with the original MapList.txt already merged on dev branch. 
 be executed after any change in get_map_lines, by doing this we will ensure it is creating the 
 same file."""
 
+import sys
 
-from addons.gets import get_map_lines, get_to_root
+sys.path.insert(1, "..")
+
+from tools.addons.gets import get_map_lines_created, get_to_root
 
 
 def test_create_maplist(tmp_path) -> None:
@@ -22,7 +25,7 @@ def test_create_maplist(tmp_path) -> None:
     d.mkdir()
     temp_maplist_path = d / "temp_file.txt"
 
-    map_items = get_map_lines(create=True)
+    map_items = get_map_lines_created()
     with temp_maplist_path.open("w") as temp_maplist_file:
         for item in map_items:
             temp_maplist_file.write(" ".join(item) + "\n")

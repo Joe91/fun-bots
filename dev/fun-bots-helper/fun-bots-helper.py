@@ -1,8 +1,11 @@
-from tkinter import *
-from tkinter import ttk
+import sys
+
+sys.path.append("tools")
+
+import os
+from tkinter import Entry, Label, Tk, mainloop, ttk
 
 from loguru import logger
-import os
 
 from tools.clear_all_paths import clear_all_paths
 from tools.clear_settings import clear_settings
@@ -92,91 +95,91 @@ def fix_comments_fb() -> None:
     logger.info("All Comments Grammarly Checked\n")
 
 
-tempRow = 0
+temp_row = 0
 master.columnconfigure(tuple(range(60)), weight=1)
 master.rowconfigure(tuple(range(30)), weight=1)
 
-Label(master, text="Trace Functions").grid(row=tempRow, sticky="nesw")
-tempRow += 1
+Label(master, text="Trace Functions").grid(row=temp_row, sticky="nesw")
+temp_row += 1
 ttk.Button(
     master, text="Export Traces", command=export_traces_fb, style="Accent.TButton"
-).grid(row=tempRow, sticky="nesw", pady=4, padx=4)
-tempRow += 1
+).grid(row=temp_row, sticky="nesw", pady=4, padx=4)
+temp_row += 1
 ttk.Button(
     master, text="Import Traces", command=import_traces_fb, style="Accent.TButton"
-).grid(row=tempRow, sticky="nesw", pady=4, padx=4)
-tempRow += 1
+).grid(row=temp_row, sticky="nesw", pady=4, padx=4)
+temp_row += 1
 
 Label(master, text="Setting/Permission Functions").grid(
-    row=tempRow, sticky="nesw", padx=4
+    row=temp_row, sticky="nesw", padx=4
 )
-tempRow += 1
+temp_row += 1
 ttk.Button(
     master,
     text="Export Permissions and Settings",
     command=export_permission_and_config_fb,
     style="Accent.TButton",
-).grid(row=tempRow, sticky="nesw", pady=4, padx=4)
-tempRow += 1
+).grid(row=temp_row, sticky="nesw", pady=4, padx=4)
+temp_row += 1
 ttk.Button(
     master,
     text="Import Permissions and Settings",
     command=import_permission_and_config_fb,
     style="Accent.TButton",
-).grid(row=tempRow, sticky="nesw", pady=4, padx=4)
-tempRow += 1
+).grid(row=temp_row, sticky="nesw", pady=4, padx=4)
+temp_row += 1
 
 if SHOW_DEV_TOOLS:
-    Label(master, text="Dev Tools").grid(row=tempRow, sticky="nesw", padx=4)
-    tempRow += 1
+    Label(master, text="Dev Tools").grid(row=temp_row, sticky="nesw", padx=4)
+    temp_row += 1
     ttk.Button(
         master,
         text="Clear all Traces from DB",
         command=clear_all_paths_fb,
         style="Accent.TButton",
-    ).grid(row=tempRow, sticky="nesw", pady=4, padx=4)
-    tempRow += 1
+    ).grid(row=temp_row, sticky="nesw", pady=4, padx=4)
+    temp_row += 1
     ttk.Button(
         master,
         text="Clear Settings from DB",
         command=clear_settings_fb,
         style="Accent.TButton",
-    ).grid(row=tempRow, sticky="nesw", pady=4, padx=4)
-    tempRow += 1
+    ).grid(row=temp_row, sticky="nesw", pady=4, padx=4)
+    temp_row += 1
     ttk.Button(
         master,
         text="Create Settings, Defaults and Update Languages",
         command=create_settings_defaults_fb,
         style="Accent.TButton",
-    ).grid(row=tempRow, sticky="nesw", pady=4, padx=4)
-    tempRow += 1
+    ).grid(row=temp_row, sticky="nesw", pady=4, padx=4)
+    temp_row += 1
     ttk.Button(
         master,
         text="Create Mapfiles",
         command=create_mapfiles_fb,
         style="Accent.TButton",
-    ).grid(row=tempRow, sticky="nesw", pady=4, padx=4)
-    tempRow += 1
+    ).grid(row=temp_row, sticky="nesw", pady=4, padx=4)
+    temp_row += 1
     ttk.Button(
         master, text="Fix Invalid Paths", command=fix_maps_fb, style="Accent.TButton"
-    ).grid(row=tempRow, sticky="nesw", pady=4, padx=4)
-    tempRow += 1
+    ).grid(row=temp_row, sticky="nesw", pady=4, padx=4)
+    temp_row += 1
     ttk.Button(
         master, text="Fix Grammar", command=fix_comments_fb, style="Accent.TButton"
-    ).grid(row=tempRow, sticky="nesw", pady=4, padx=4)
-    tempRow += 1
+    ).grid(row=temp_row, sticky="nesw", pady=4, padx=4)
+    temp_row += 1
 
     entry = Entry(master)
-    entry.grid(row=tempRow, sticky="nesw", pady=4, padx=4)
-    tempRow += 1
+    entry.grid(row=temp_row, sticky="nesw", pady=4, padx=4)
+    temp_row += 1
 
     ttk.Button(
         master,
         text="Create Language",
         command=create_language_fb,
         style="Accent.TButton",
-    ).grid(row=tempRow, sticky="nesw", pady=4, padx=4)
-    tempRow += 1
+    ).grid(row=temp_row, sticky="nesw", pady=4, padx=4)
+    temp_row += 1
 
 try:
     mainloop()
