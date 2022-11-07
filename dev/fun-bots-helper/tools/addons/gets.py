@@ -692,7 +692,68 @@ def get_comments_fixed(in_file: TextIOWrapper) -> List[str]:
 
 
 def get_it_running(function: Callable) -> None:
+    """Run a function through a try-except KeyboardInterrupt block.
+
+    Args:
+        - function - The function to be executed
+
+    Returns:
+        None
+    """
     try:
         function()
     except KeyboardInterrupt:
         logger.warning("Crtl+C detected! Exiting Script...")
+
+
+def get_maps_merged(merge_file_1: str, merge_file_2: str) -> List[str]:
+    """Merge the paths of two map files.
+
+    Args:
+        - merge_file_1 - 1st map file
+        - merge_file_2 - 2nd map file
+
+    Returns:
+        - out_file_lines - The lines of the merged map file
+    """
+    with open("mapfiles/" + merge_file_1, "r", encoding="utf-8") as base_file:
+        out_file_lines = base_file.readlines()
+        last_base_path = out_file_lines[-1].split(";")[0]
+
+        with open("mapfiles/" + merge_file_2, "r", encoding="utf-8") as addition_file:
+            lines_to_add = addition_file.readlines()
+            path_dict = {}
+            last_path = 0
+            for line in lines_to_add[1:-1]:
+                lines_parts_addition = line.split(";")
+                if len(lines_parts_addition) > 1:
+                    current_path = lines_parts_addition[0]
+                    if current_path != last_path:
+                        path_dict[current_path] = str(
+                            int(last_base_path) + 1 + len(path_dict)
+                        )
+                        last_path = current_path
+            for line in lines_to_add[1:-1]:
+                lines_parts_addition = line.split(";")
+                if len(lines_parts_addition) >= 6:
+                    lines_parts_addition[0] = path_dict[lines_parts_addition[0]]
+                    data_parts = lines_parts_addition[-1]
+                    if "links" in data_parts.lower():
+                        pos_1 = data_parts.find("[[") + 2
+                        pos_2 = data_parts.find("]]")
+                        link_part = data_parts[pos_1:pos_2]
+                        all_links = link_part.split("],[")
+                        new_link_parts = []
+                        for link in all_links:
+                            parts_of_link = link.split(",")
+                            if parts_of_link[0] in path_dict:
+                                parts_of_link[0] = path_dict[parts_of_link[0]]
+                                new_link_parts.append(",".join(parts_of_link))
+                        newLinks = "],[".join(new_link_parts)
+                        lines_parts_addition[-1] = (
+                            data_parts[:pos_1] + newLinks + data_parts[pos_2:]
+                        )
+                    new_line = ";".join(lines_parts_addition)
+                    out_file_lines.append(new_line)
+
+    return out_file_lines

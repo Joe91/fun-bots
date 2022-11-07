@@ -3,7 +3,7 @@ import sys
 sys.path.append("tools")
 
 import os
-from tkinter import Entry, Label, Tk, mainloop, ttk
+from tkinter import Label, StringVar, Tk, mainloop, ttk
 
 from loguru import logger
 
@@ -17,6 +17,7 @@ from tools.export_permission_and_config import export_permission_and_config
 from tools.export_traces import export_traces
 from tools.import_permission_and_config import import_permission_and_config
 from tools.import_traces import import_traces
+from tools.merge_two_mapfiles import merge_two_mapfiles
 from tools.scan_for_invalid_comments import scan_for_invalid_comments
 from tools.scan_for_invalid_nodes import scan_for_invalid_nodes
 from tools.scan_for_invalid_objectives import scan_for_invalid_objectives
@@ -95,6 +96,12 @@ def fix_comments_fb() -> None:
     logger.info("All Comments Grammarly Checked\n")
 
 
+def merge_two_mapfiles_fb() -> None:
+    merge_file_1 = dropdown_merge_file_1.get()
+    merge_file_2 = dropdown_merge_file_2.get()
+    merge_two_mapfiles(merge_file_1, merge_file_2)
+
+
 temp_row = 0
 master.columnconfigure(tuple(range(60)), weight=1)
 master.rowconfigure(tuple(range(30)), weight=1)
@@ -169,7 +176,7 @@ if SHOW_DEV_TOOLS:
     ).grid(row=temp_row, sticky="nesw", pady=4, padx=4)
     temp_row += 1
 
-    entry = Entry(master)
+    entry = ttk.Entry(master)
     entry.grid(row=temp_row, sticky="nesw", pady=4, padx=4)
     temp_row += 1
 
@@ -177,6 +184,34 @@ if SHOW_DEV_TOOLS:
         master,
         text="Create Language",
         command=create_language_fb,
+        style="Accent.TButton",
+    ).grid(row=temp_row, sticky="nesw", pady=4, padx=4)
+    temp_row += 1
+
+    map_file_names = os.listdir("../../mapfiles/")
+
+    merge_file_1 = StringVar(master)
+    merge_file_1.set(map_file_names[0])
+
+    dropdown_merge_file_1 = ttk.Combobox(
+        master, textvariable=merge_file_1, values=map_file_names
+    )
+    dropdown_merge_file_1.grid(row=temp_row, sticky="nesw", pady=4, padx=4)
+    temp_row += 1
+
+    merge_file_2 = StringVar(master)
+    merge_file_2.set(map_file_names[-1])
+
+    dropdown_merge_file_2 = ttk.Combobox(
+        master, textvariable=merge_file_2, values=map_file_names
+    )
+    dropdown_merge_file_2.grid(row=temp_row, sticky="nesw", pady=4, padx=4)
+    temp_row += 1
+
+    ttk.Button(
+        master,
+        text="Merge Mapfiles",
+        command=merge_two_mapfiles_fb,
         style="Accent.TButton",
     ).grid(row=temp_row, sticky="nesw", pady=4, padx=4)
     temp_row += 1
