@@ -7,6 +7,8 @@ specific SQL instructions or inserting values in the database itself. All functi
 import os
 import sqlite3
 
+from loguru import logger
+
 
 def set_permission_config_files(cursor: sqlite3.Cursor) -> None:
     """Write permission_and_config files out of the database.
@@ -31,9 +33,9 @@ def set_permission_config_files(cursor: sqlite3.Cursor) -> None:
                     "SELECT * FROM " + item + " ORDER BY " + structure[-3][1] + " ASC"
                 )
             except IndexError:
-                print(f"{item} table not found!")
+                logger.warning(f"{item} table not found!")
             else:
-                print("Export " + item)
+                logger.info("Export " + item)
                 cursor.execute(sql_instruction)
                 table_content = cursor.fetchall()
                 for line in table_content:
@@ -64,7 +66,7 @@ def set_permission_config_db(cursor: sqlite3.Cursor) -> None:
 
     for file_name in file_names:
         table_name = file_name.split(".")[0]
-        print("Import " + table_name)
+        logger.info("Import " + table_name)
         cursor.execute("DROP TABLE IF EXISTS " + table_name)
 
         sql_instruction = "CREATE TABLE " + table_name + " ("
@@ -117,7 +119,7 @@ def set_traces_files(cursor: sqlite3.Cursor) -> None:
         if item[1] in ignore_list:
             continue
 
-        print("Export " + item[1])
+        logger.info("Export " + item[1])
         structure = cursor.execute("PRAGMA table_info('" + item[1] + "')").fetchall()
 
         file_name = item[1].replace("_table", "") + ".map"
@@ -151,7 +153,7 @@ def set_traces_db(cursor: sqlite3.Cursor) -> None:
 
     for file_name in file_names:
         table_name = file_name.split(".")[0] + "_table"
-        print("Import " + table_name)
+        logger.info("Import " + table_name)
         cursor.execute("DROP TABLE IF EXISTS " + table_name)
         sql_instruction = (
             """

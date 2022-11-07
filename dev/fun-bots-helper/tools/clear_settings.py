@@ -1,3 +1,5 @@
+from loguru import logger
+
 from addons.gets import get_all_tables, get_to_root
 
 
@@ -9,7 +11,7 @@ def clear_settings() -> None:
 
     for item in content:
         if item[1] in remove_list:
-            print("Remove " + item[1])
+            logger.info("Remove " + item[1])
             cursor.execute("DROP TABLE " + item[1])
 
     cursor.execute("vacuum")

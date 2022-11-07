@@ -1,3 +1,5 @@
+from loguru import logger
+
 from addons.gets import get_map_lines, get_to_root
 
 
@@ -30,7 +32,7 @@ def update_supported_maps() -> None:
                         "!VEHICLE-GAMEMODES!", " ,".join(vehicle_supported_game_modes)
                     )
                 output.write(line)
-        print("Update Supported-maps.md Done")
+        logger.info("Supported-maps.md has been updated")
 
 
 if __name__ == "__main__":

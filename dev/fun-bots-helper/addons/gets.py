@@ -613,7 +613,12 @@ def get_comments_fixed(in_file: TextIOWrapper) -> List[str]:
     lines = in_file.readlines()
     for line in lines:
         try:
-            if line[-2] != " " and "--" in line and "---" not in line and "-->" not in line:
+            if (
+                line[-2] != " "
+                and "--" in line
+                and "---" not in line
+                and "-->" not in line
+            ):
                 index = line.index("--") + 2
 
                 if line[index:][0] != " ":
@@ -623,7 +628,7 @@ def get_comments_fixed(in_file: TextIOWrapper) -> List[str]:
                     else:
                         line = line[:index] + " " + line[index:]
 
-                words_ignore = ["raycast", "raycasts", "raycasting"]
+                words_ignore = ["raycast", "raycasts", "raycasting", "botlist"]
 
                 data = {"text": line[index:], "language": "en-GB"}
                 check_grammar = requests.post(

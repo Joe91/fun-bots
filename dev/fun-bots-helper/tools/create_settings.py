@@ -1,3 +1,5 @@
+from loguru import logger
+
 from addons.gets import get_settings, get_settings_lines, get_to_root
 
 
@@ -17,7 +19,7 @@ Config = {
         out_file_lines = get_settings_lines(all_settings)
         for line in out_file_lines:
             out_file.write(line + " \n")
-        print("Write Config.lua Done")
+        logger.info("Config.lua has been built")
 
 
 if __name__ == "__main__":

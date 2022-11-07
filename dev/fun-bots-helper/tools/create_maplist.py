@@ -1,3 +1,5 @@
+from loguru import logger
+
 from addons.gets import get_map_lines, get_to_root
 
 
@@ -9,7 +11,7 @@ def create_map_list() -> None:
     with open(out_file, "w") as output:
         for item in map_items:
             output.write(" ".join(item) + "\n")
-        print("Write MapList.txt Done")
+        logger.info("MapList.txt has been built")
 
 
 if __name__ == "__main__":

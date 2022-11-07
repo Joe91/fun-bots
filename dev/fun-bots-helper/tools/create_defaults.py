@@ -1,3 +1,5 @@
+from loguru import logger
+
 from addons.gets import get_js_lines, get_lua_lines, get_settings, get_to_root
 
 
@@ -16,7 +18,7 @@ def create_defaults() -> None:
         out_file_lines = get_lua_lines(all_settings)
         for line in out_file_lines:
             out_file.write(line + "\n")
-        print("Write DEFAULT.lua Done")
+        logger.info("DEFAULT.lua has been built")
 
     with open(language_file_js, "w") as out_file_html:
         out_file_html.write(
@@ -33,7 +35,7 @@ def create_defaults() -> None:
         for translation in out_file_lines:
             out_file_html.write('	"' + translation + '": "",\n')
         out_file_html.write("};")
-        print("Write DEFAULT.js Done")
+        logger.info("DEFAULT.js has been built")
 
 
 if __name__ == "__main__":

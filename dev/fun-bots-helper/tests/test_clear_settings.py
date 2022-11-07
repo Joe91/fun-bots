@@ -1,6 +1,8 @@
 """Execute tools/clear_settings.py over a temporary copy of the mod database and test 
 if any of the remaining tables after clear settings is a setting table."""
 
+from loguru import logger 
+
 
 def test_clear_settings(session) -> None:
     """Test clear_settings algorithm.
@@ -14,7 +16,7 @@ def test_clear_settings(session) -> None:
     remove_list = ["FB_Config_Trace", "FB_Settings"]
 
     for table_name in remove_list:
-        print("Remove " + table_name)
+        logger.info("Remove " + table_name)
         session.execute("DROP TABLE IF EXISTS " + table_name)
 
     session.execute("vacuum")

@@ -1,6 +1,8 @@
 """Execute tools/clear_all_paths.py over a temporary copy of the mod database and test 
 if the remaining tables after clear all paths are the same as those that were ignored."""
 
+from loguru import logger
+
 
 def test_clear_all_paths(session) -> None:
     """Test clear_all_paths algorithm.
@@ -27,7 +29,7 @@ def test_clear_all_paths(session) -> None:
         if item[1] in ignore_list:
             continue
 
-        print("Clear " + item[1])
+        logger.info("Clear " + item[1])
         session.execute("DROP TABLE IF EXISTS " + item[1])
 
     session.execute("vacuum")
