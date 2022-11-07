@@ -1,6 +1,5 @@
+from addons.gets import get_it_running, get_map_lines_updated, get_to_root
 from loguru import logger
-
-from addons.gets import get_map_lines, get_to_root
 
 
 def update_supported_maps() -> None:
@@ -8,9 +7,9 @@ def update_supported_maps() -> None:
     template_path = "dev/templates/Supported-maps.md"
     out_file = "Supported-maps.md"
 
-    map_items = get_map_lines(update_supported=True)
-    with open(out_file, "w") as output:
-        with open(template_path, "r") as template:
+    map_items = get_map_lines_updated()
+    with open(out_file, "w", encoding="utf-8") as output:
+        with open(template_path, "r", encoding="utf-8") as template:
             for line in template.readlines():
                 all_supported_game_modes = []
                 vehicle_supported_game_modes = []
@@ -36,4 +35,4 @@ def update_supported_maps() -> None:
 
 
 if __name__ == "__main__":
-    update_supported_maps()
+    get_it_running(update_supported_maps)

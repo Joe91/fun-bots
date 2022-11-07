@@ -1,6 +1,5 @@
+from addons.gets import get_all_tables, get_it_running, get_to_root
 from loguru import logger
-
-from addons.gets import get_all_tables, get_to_root
 
 
 def clear_all_paths() -> None:
@@ -27,4 +26,4 @@ def clear_all_paths() -> None:
 
 
 if __name__ == "__main__":
-    clear_all_paths()
+    get_it_running(clear_all_paths)

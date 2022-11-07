@@ -1,6 +1,6 @@
 import os
 
-from addons.gets import get_comments_fixed, get_to_root
+from addons.gets import get_comments_fixed, get_it_running, get_to_root
 
 
 def scan_for_invalid_comments() -> None:
@@ -35,4 +35,4 @@ def scan_for_invalid_comments() -> None:
 
 
 if __name__ == "__main__":
-    scan_for_invalid_comments()
+    get_it_running(scan_for_invalid_comments)

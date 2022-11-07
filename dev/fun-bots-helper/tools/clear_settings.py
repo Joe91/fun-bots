@@ -1,6 +1,5 @@
+from addons.gets import get_all_tables, get_it_running, get_to_root
 from loguru import logger
-
-from addons.gets import get_all_tables, get_to_root
 
 
 def clear_settings() -> None:
@@ -20,4 +19,4 @@ def clear_settings() -> None:
 
 
 if __name__ == "__main__":
-    clear_settings()
+    get_it_running(clear_settings)

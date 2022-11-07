@@ -1,6 +1,11 @@
+from addons.gets import (
+    get_it_running,
+    get_js_lines,
+    get_lua_lines,
+    get_settings,
+    get_to_root,
+)
 from loguru import logger
-
-from addons.gets import get_js_lines, get_lua_lines, get_settings, get_to_root
 
 
 def create_defaults() -> None:
@@ -10,7 +15,7 @@ def create_defaults() -> None:
 
     all_settings = get_settings(first_key="Text")
 
-    with open(language_file_lua, "w") as out_file:
+    with open(language_file_lua, "w", encoding="utf-8") as out_file:
         out_file.write(
             "local code = 'xx_XX' -- Add/replace the xx_XX here with your language code (like de_DE, en_US, or other)! \n\n"
         )
@@ -20,7 +25,7 @@ def create_defaults() -> None:
             out_file.write(line + "\n")
         logger.info("DEFAULT.lua has been built")
 
-    with open(language_file_js, "w") as out_file_html:
+    with open(language_file_js, "w", encoding="utf-8") as out_file_html:
         out_file_html.write(
             """Language['xx_XX'] /* Add/replace the xx_XX here with your language code (like de_DE, en_US, or other)! */ = {
 	"__LANGUAGE_INFO": {
@@ -39,4 +44,4 @@ def create_defaults() -> None:
 
 
 if __name__ == "__main__":
-    create_defaults()
+    get_it_running(create_defaults)

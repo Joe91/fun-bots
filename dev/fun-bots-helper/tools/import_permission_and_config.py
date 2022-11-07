@@ -1,6 +1,6 @@
 import sqlite3
 
-from addons.gets import get_to_root
+from addons.gets import get_it_running, get_to_root
 from addons.sets import set_permission_config_db
 
 
@@ -14,4 +14,4 @@ def import_permission_and_config() -> None:
 
 
 if __name__ == "__main__":
-    import_permission_and_config()
+    get_it_running(import_permission_and_config)

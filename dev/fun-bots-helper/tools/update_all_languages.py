@@ -1,9 +1,12 @@
 import os
 
+from addons.gets import (
+    get_it_running,
+    get_to_root,
+    get_updated_lines_js,
+    get_updated_lines_lua,
+)
 from loguru import logger
-
-from addons.gets import (get_to_root, get_updated_lines_js,
-                         get_updated_lines_lua)
 
 
 def update_languages() -> None:
@@ -14,7 +17,7 @@ def update_languages() -> None:
     for file in os.listdir(lua_path):
         if file.endswith(".lua"):
             file_name = os.path.join(lua_path, file)
-            if not "DEFAULT" in file_name and not "Languages.lua" in file_name:
+            if "DEFAULT" not in file_name and "Languages.lua" not in file_name:
                 with open(file_name, "r", encoding="utf8") as in_file:
                     out_file_lines = get_updated_lines_lua(in_file)
                     with open(file_name, "w", encoding="utf8") as out_file:
@@ -25,7 +28,7 @@ def update_languages() -> None:
     for file in os.listdir(js_path):
         if file.endswith(".js"):
             file_name = os.path.join(js_path, file)
-            if not "DEFAULT" in file_name:
+            if "DEFAULT" not in file_name:
                 with open(file_name, "r", encoding="utf8") as in_file:
                     out_file_lines = get_updated_lines_js(in_file)
                     with open(file_name, "w", encoding="utf8") as out_file:
@@ -35,4 +38,4 @@ def update_languages() -> None:
 
 
 if __name__ == "__main__":
-    update_languages()
+    get_it_running(update_languages)

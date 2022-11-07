@@ -1,6 +1,6 @@
 import sqlite3
 
-from addons.gets import get_to_root
+from addons.gets import get_it_running, get_to_root
 from addons.sets import set_traces_db
 
 
@@ -14,4 +14,4 @@ def import_traces() -> None:
 
 
 if __name__ == "__main__":
-    import_traces()
+    get_it_running(import_traces)
