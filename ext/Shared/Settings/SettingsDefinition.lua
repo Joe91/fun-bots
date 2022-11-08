@@ -1397,7 +1397,7 @@ SettingsDefinition = {
 			---@type Type|integer
 			Type = Type.Float,
 			Value = Config.BotFirstShotDelay,
-			Description = "Delay for first shot. If too small, there will be great spread in first cycle because it's not compensated yet",
+			Description = "Delay for first shot. If too small, there will be great spread in first cycle because it is not compensated yet",
 			Reference = Range(0.00, 10.00, 0.10),
 			Default = 0.25,
 			UpdateFlag = UpdateFlag.None,
@@ -1631,7 +1631,7 @@ SettingsDefinition = {
 			---@type Type|integer
 			Type = Type.List,
 			Value = Config.Language,
-			Description = "de_DE as sample (default is English, when language file doesn't exist)",
+			Description = "de_DE as sample (default is English, when language file does not exist)",
 			Default = nil,
 			Reference = Languages,
 			UpdateFlag = UpdateFlag.Language,
