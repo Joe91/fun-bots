@@ -428,7 +428,7 @@ function NodeEditor:OnSetSpawnPath(p_Player, p_Args)
 				-- check if only one objective
 				if s_LinkedWaypoint then
 					local s_FirstOfLinkedPath = m_NodeCollection:GetFirst(s_LinkedWaypoint.PathIndex)
-					if s_FirstOfLinkedPath and s_FirstOfLinkedPath.Data and s_FirstOfLinkedPath.Data.Objectivs and #s_FirstOfLinkedPath.Data.Objectivs == 1 then
+					if s_FirstOfLinkedPath and s_FirstOfLinkedPath.Data and s_FirstOfLinkedPath.Data.Objectives and #s_FirstOfLinkedPath.Data.Objectives == 1 then
 						s_TargetObjective = s_FirstOfLinkedPath.Data.Objectives[1]
 						local s_FirstWaypoint = m_NodeCollection:GetFirst(s_Selection[i].PathIndex)
 						local s_SpawnObjective = "spawn "..s_TargetObjective

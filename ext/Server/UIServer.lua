@@ -152,16 +152,6 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 					Label = Language:I18N('Add') -- Or "Unselect". 
 				},
 				Left = {
-					{
-						Action = 'not_implemented',
-						Label = Language:I18N('')
-					}, {
-						Action = 'not_implemented',
-						Label = Language:I18N('')
-					},{
-						Action = 'not_implemented',
-						Label = Language:I18N('')
-					}
 				},
 				Bottom = {
 					Action = 'data_menu',
@@ -193,19 +183,9 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 					Label = Language:I18N('Add') -- Or "Unselect". 
 				},
 				Left = {
-					{
-						Action = 'not_implemented',
-						Label = Language:I18N('')
-					}, {
-						Action = 'not_implemented',
-						Label = Language:I18N('')
-					},{
-						Action = 'not_implemented',
-						Label = Language:I18N('')
-					}
 				},
 				Bottom = {
-					Action = 'close_comm',
+					Action = 'data_menu',
 					Label = Language:I18N('Back')
 				}
 			})
