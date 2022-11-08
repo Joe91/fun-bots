@@ -229,7 +229,7 @@ Language:add(code, "Changes names of the bots on every new round. Experimental r
 
 -- EXPERT 
 Language:add(code, "Bot first shot delay", "Retardo del primer disparo de los bots")
-Language:add(code, "Delay for first shot. If too small, there will be great spread in first cycle because it's not compensated yet", "retarda el primer disparo de los bots. Si el valor introducido es muy pequeño el esparcimiento en cada ciclo será mayor debido a que este no es compensado en los jets")
+Language:add(code, "Delay for first shot. If too small, there will be great spread in first cycle because it is not compensated yet", "retarda el primer disparo de los bots. Si el valor introducido es muy pequeño el esparcimiento en cada ciclo será mayor debido a que este no es compensado en los jets")
 Language:add(code, "Bot min time shoot at player", "Tiempo mínimo en el que los bots disparan al jugador")
 Language:add(code, "The minimum time a bot shoots at one player for - recommended minimum 1.5, below this you will have issues", "el tiempo mínimo que tardará un bot en dispararle al jugador - se recomienda tener un mínimo máximo de 1.5, si se disminuye más podría causarse errores")
 Language:add(code, "Bot fire mode duration", "Duración del modo de fuego de los bots")
@@ -256,7 +256,7 @@ Language:add(code, "Spawn Method", "métodos de spawneo")
 Language:add(code, "Method the bots spawn with. Careful, not supported on most of the maps!!", "el método que los bots utilizan para spawnear. Usa esta opción con cuidado, no funciona en la mayoría de los mapas")
 
 -- OTHER 
-Language:add(code, "de_DE as sample (default is English, when language file doesn't exist)", "ejemplo: De_De (el lenguaje por defecto siempre será inglés si no existen otros archivos de lenguaje")
+Language:add(code, "de_DE as sample (default is English, when language file does not exist)", "ejemplo: De_De (el lenguaje por defecto siempre será inglés si no existen otros archivos de lenguaje")
 Language:add(code, "Disable UI", "desactivar UI/Menus")
 Language:add(code, "If true, the complete UI will be disabled (not available in the UI)", "si se activa, todos los menus serán desactivados (no disponible en el menu)")
 Language:add(code, "Disable chat-commands", "desactivar comandos en el chat")

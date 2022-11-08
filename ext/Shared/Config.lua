@@ -138,7 +138,7 @@ Config = {
 	MinMoveCycle = 0.3,					-- Min time bots move sidewards or straight before switching (in sec) 
 
 	-- EXPERT 
-	BotFirstShotDelay = 0.25,			-- Delay for first shot. If too small, there will be great spread in first cycle because it's not compensated yet 
+	BotFirstShotDelay = 0.25,			-- Delay for first shot. If too small, there will be great spread in first cycle because it is not compensated yet 
 	BotMinTimeShootAtPlayer = 2.5,		-- The minimum time a bot shoots at one player for - recommended minimum 1.5, below this you will have issues 
 	BotVehicleMinTimeShootAtPlayer = 4.0,	-- The minimum time a bot shoots at one player if in vehicle - recommended minimum 2.5, below this you will have issues 
 	BotFireModeDuration = 4.5,			-- The minimum time a bot tries to shoot a player - recommended minimum 3.0, below this you will have issues 
@@ -160,5 +160,5 @@ Config = {
 	DisableChatCommands = false,		-- If true, no chat commands can be used 
 	DisableRCONCommands = false,		-- If true, no RCON commands can be used 
 	IgnorePermissions = false,			-- If true, all permissions are ignored --> everyone can do everything 
-	Language = nil,						-- de_DE as sample (default is English, when language file doesn't exist) 
+	Language = nil,						-- de_DE as sample (default is English, when language file does not exist) 
 } 

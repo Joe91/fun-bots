@@ -240,7 +240,7 @@ Language:add(code, "Changes names of the bots on every new round. Experimental r
 
 -- EXPERT 
 Language:add(code, "Bot first shot delay", "ボットの最初のショットの遅延")
-Language:add(code, "Delay for first shot. If too small, there will be great spread in first cycle because it's not compensated yet", "最初のショットの遅延。小さすぎると、まだ補償されていないため、最初のサイクルで大きなスプレッドが発生します。")
+Language:add(code, "Delay for first shot. If too small, there will be great spread in first cycle because it is not compensated yet", "最初のショットの遅延。小さすぎると、まだ補償されていないため、最初のサイクルで大きなスプレッドが発生します。")
 Language:add(code, "Bot min time shoot at player", "プレーヤーでのボット最小時間シュート")
 Language:add(code, "The minimum time a bot shoots at one player for - recommended minimum 1.5, below this you will have issues", "ボットが 1 人のプレイヤーを撃つ最小時間 - 推奨される最小値は 1.5 です。これを下回ると問題が発生します。")
 Language:add(code, "Bot min time shoot at player in vehicle", "車両内のプレーヤーを撃つボットの最小時間")
@@ -282,7 +282,7 @@ Language:add(code, "If true, no RCON commands can be used", "true の場合、RC
 Language:add(code, "Ignore Permissions", "権限を無視")
 Language:add(code, "If true, all permissions are ignored --> everyone can do everything", "true の場合、すべての権限が無視されます --> 誰もがすべてを実行できます")
 Language:add(code, "Language", "言語")
-Language:add(code, "de_DE as sample (default is English, when language file doesn't exist)", "サンプルとして de_DE (言語ファイルが存在しない場合、デフォルトは英語)")
+Language:add(code, "de_DE as sample (default is English, when language file does not exist)", "サンプルとして de_DE (言語ファイルが存在しない場合、デフォルトは英語)")
 
 -- Strings of ./../../ext/Client/ClientNodeEditor.lua 
 

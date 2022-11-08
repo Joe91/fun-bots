@@ -250,7 +250,7 @@ Language:add(code, "Min time bots move sidewards or straight before switching (i
 
 -- EXPERT 
 Language:add(code, "Bot first shot delay", "BOT第一枪延迟")
-Language:add(code, "Delay for first shot. If too small, there will be great spread in first cycle because it's not compensated yet", "第一枪延迟.如果太小,第一个回合会有很大的扩散,因为它还没有得到补偿")
+Language:add(code, "Delay for first shot. If too small, there will be great spread in first cycle because it is not compensated yet", "第一枪延迟.如果太小,第一个回合会有很大的扩散,因为它还没有得到补偿")
 Language:add(code, "Bot min time shoot at player", "BOT最短向玩家射击的时间")
 Language:add(code, "The minimum time a bot shoots at one player for - recommended minimum 1.5, below this you will have issues", "BOT向一名玩家射击的最短时间-建议至少为1.5,低于此会遇到问题")
 Language:add(code, "Bot min time shoot at player in vehicle", "BOT射击载具中玩家的最短时间")
@@ -292,7 +292,7 @@ Language:add(code, "If true, no RCON commands can be used", "如果为true,则�
 Language:add(code, "Ignore Permissions", "无视权限")
 Language:add(code, "If true, all permissions are ignored --> everyone can do everything", "如果为true,则忽略所有权限-->每个人都可以执行所有操作")
 Language:add(code, "Language", "语言")
-Language:add(code, "de_DE as sample (default is English, when language file doesn't exist)", "默认为英语")
+Language:add(code, "de_DE as sample (default is English, when language file does not exist)", "默认为英语")
 
 -- Strings of ../ext/Client/ClientNodeEditor.lua 
 

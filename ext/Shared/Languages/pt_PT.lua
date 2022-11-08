@@ -239,7 +239,7 @@ Language:add(code, "Changes names of the bots on every new round. Experimental r
 
 -- EXPERT 
 Language:add(code, "Bot first shot delay", "Atraso do primeiro tiro do bot")
-Language:add(code, "Delay for first shot. If too small, there will be great spread in first cycle because it's not compensated yet", "Atraso para o primeiro tiro. Se for muito pequeno, haverá um grande spread no primeiro ciclo porque ainda não foi compensado")
+Language:add(code, "Delay for first shot. If too small, there will be great spread in first cycle because it is not compensated yet", "Atraso para o primeiro tiro. Se for muito pequeno, haverá um grande spread no primeiro ciclo porque ainda não foi compensado")
 Language:add(code, "Bot min time shoot at player", "Tempo mínimo para que bot atire no jogador")
 Language:add(code, "The minimum time a bot shoots at one player for - recommended minimum 1.5, below this you will have issues", "O tempo mínimo que um bot atira em um jogador - mínimo recomendado de 1,5, abaixo disso você terá problemas")
 Language:add(code, "Bot min time shoot at player in vehicle", "Tempo mínimo para que bot atire no jogador em veículos")
@@ -281,7 +281,7 @@ Language:add(code, "If true, no RCON commands can be used", "Se verdadeiro, nenh
 Language:add(code, "Ignore Permissions", "Ignorar Permissões")
 Language:add(code, "If true, all permissions are ignored --> everyone can do everything", "Se verdadeiro, todas as permissões são ignoradas --> todos podem fazer tudo")
 Language:add(code, "Language", "Língua")
-Language:add(code, "de_DE as sample (default is English, when language file doesn't exist)", "de_DE como exemplo (o padrão é inglês, quando o arquivo de idioma não existe)")
+Language:add(code, "de_DE as sample (default is English, when language file does not exist)", "de_DE como exemplo (o padrão é inglês, quando o arquivo de idioma não existe)")
 
 -- Strings of ./../../ext/Client/ClientNodeEditor.lua 
 
