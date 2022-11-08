@@ -426,14 +426,20 @@ function NodeEditor:OnSetSpawnPath(p_Player, p_Args)
 				-- get objective of linked path
 				local s_LinkedWaypoint = m_NodeCollection:Get(s_Links[1])
 				-- check if only one objective
-				if s_LinkedWaypoint and #s_LinkedWaypoint.Data.Objectives == 1 then
-					s_TargetObjective = s_LinkedWaypoint.Data.Objectives[1]
-					local s_FirstWaypoint = m_NodeCollection:GetFirst(s_Selection[i].PathIndex)
-					local s_SpawnObjective = "spawn "..s_TargetObjective
-					-- add new objective to current path
-					s_FirstWaypoint.Data.Objectives = {s_SpawnObjective}
-					
-					self:Log(p_Player, 'Updated Waypoint: %s', s_FirstWaypoint.ID)
+				if s_LinkedWaypoint then
+					local s_FirstOfLinkedPath = m_NodeCollection:GetFirst(s_LinkedWaypoint.PathIndex)
+					if s_FirstOfLinkedPath and s_FirstOfLinkedPath.Data and s_FirstOfLinkedPath.Data.Objectivs and #s_FirstOfLinkedPath.Data.Objectivs == 1 then
+						s_TargetObjective = s_FirstOfLinkedPath.Data.Objectives[1]
+						local s_FirstWaypoint = m_NodeCollection:GetFirst(s_Selection[i].PathIndex)
+						local s_SpawnObjective = "spawn "..s_TargetObjective
+						-- add new objective to current path
+						s_FirstWaypoint.Data.Objectives = {s_SpawnObjective}
+						
+						self:Log(p_Player, 'Updated Waypoint: %s', s_FirstWaypoint.ID)
+					else
+						self:Log(p_Player, 'Path must have one connection to target-objective on last node')
+						return false
+					end
 				else
 					self:Log(p_Player, 'Path must have one connection to target-objective on last node')
 					return false

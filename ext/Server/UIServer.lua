@@ -66,10 +66,10 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 					Action = 'not_implemented',
 					Label = Language:I18N('Remove Label / Objective')
 				}, {
-					Action = 'not_implemented',
+					Action = 'set_spawn_path',
 					Label = Language:I18N('Set Spawn-Path')
 				}, {
-					Action = 'not_implemented',
+					Action = 'remove_all_objectives',
 					Label = Language:I18N('Remove all Labels / Objectives')
 				}
 			},
@@ -79,83 +79,376 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 			},
 			Left = {
 				{
-					Action = 'not_implemented',
+					Action = 'set_mcom',
 					Label = Language:I18N('Add Mcom')
 				}, {
-					Action = 'not_implemented',
-					Label = Language:I18N('Overwrite Loop-Path')
+					Action = 'loop_path',
+					Label = Language:I18N('Overwrite: Loop-Path')
+				}, {
+					Action = 'invert_path',
+					Label = Language:I18N('Overwrite: Invert-Path')
 				},{
-					Action = 'not_implemented',
+					Action = 'remove_data',
 					Label = Language:I18N('Remove Data')
 				}
 			},
 			Bottom = {
 				Action = 'close_comm',
-				Label = Language:I18N('Back'),
+				Label = Language:I18N('Exit'),
 			}
 		})
 		return
 	elseif request.action == 'close_comm' then
 		NetEvents:SendTo('UI_CommonRose', p_Player, "false")
 		return
+	elseif request.action == 'set_spawn_path' then
+		--NetEvents:SendTo('UI_CommonRose', p_Player, "false")
+		m_NodeEditor:OnSetSpawnPath(p_Player)
+		return
+	elseif request.action == 'remove_all_objectives' then
+		--NetEvents:SendTo('UI_CommonRose', p_Player, "false")
+		m_NodeEditor:OnRemoveAllObjectives(p_Player)
+		return
+	elseif request.action == 'remove_data' then
+		--NetEvents:SendTo('UI_CommonRose', p_Player, "false")
+		m_NodeEditor:OnRemoveData(p_Player)
+		return
+	elseif request.action == 'loop_path' then
+		--NetEvents:SendTo('UI_CommonRose', p_Player, "false")
+		m_NodeEditor:OnSetLoopMode(p_Player, {"true"})
+		return
+	elseif request.action == 'invert_path' then
+		--NetEvents:SendTo('UI_CommonRose', p_Player, "false")
+		m_NodeEditor:OnSetLoopMode(p_Player, {"false"})
+		return
+	elseif request.action == 'set_mcom' then
+		--NetEvents:SendTo('UI_CommonRose', p_Player, "false")
+		m_NodeEditor:OnAddMcom(p_Player)
+		return
 	elseif request.action == 'add_objective' then
 		--NetEvents:SendTo('UI_Toggle_DataMenu', p_Player, true)
 		-- Change Commo-rose. 
+		if Globals.IsRush then
+			NetEvents:SendTo('UI_CommonRose', p_Player, {
+				Top = {
+					Action = 'not_implemented',
+					Label = Language:I18N(''),
+					Confirm = true
+				},
+				Right = {
+					{
+						Action = 'base_rush',
+						Label = Language:I18N('Base')
+					}, {
+						Action = 'add_mcom',
+						Label = Language:I18N('MCOM')
+					}, {
+						Action = 'add_mcom_interact',
+						Label = Language:I18N('MCOM Interact')
+					}
+				},
+				Center = {
+					Action = 'not_implemented',
+					Label = Language:I18N('Add') -- Or "Unselect". 
+				},
+				Left = {
+					{
+						Action = 'not_implemented',
+						Label = Language:I18N('')
+					}, {
+						Action = 'not_implemented',
+						Label = Language:I18N('')
+					},{
+						Action = 'not_implemented',
+						Label = Language:I18N('')
+					}
+				},
+				Bottom = {
+					Action = 'data_menu',
+					Label = Language:I18N('Back')
+				}
+			})
+			return
+		else -- Conquest
+			NetEvents:SendTo('UI_CommonRose', p_Player, {
+				Top = {
+					Action = 'not_implemented',
+					Label = Language:I18N(''),
+					Confirm = true
+				},
+				Right = {
+					{
+						Action = 'base_us',
+						Label = Language:I18N('Base US')
+					}, {
+						Action = 'base_ru',
+						Label = Language:I18N('Base RU')
+					}, {
+						Action = 'capture_point',
+						Label = Language:I18N('Capture Point')
+					}
+				},
+				Center = {
+					Action = 'not_implemented',
+					Label = Language:I18N('Add') -- Or "Unselect". 
+				},
+				Left = {
+					{
+						Action = 'not_implemented',
+						Label = Language:I18N('')
+					}, {
+						Action = 'not_implemented',
+						Label = Language:I18N('')
+					},{
+						Action = 'not_implemented',
+						Label = Language:I18N('')
+					}
+				},
+				Bottom = {
+					Action = 'close_comm',
+					Label = Language:I18N('Back')
+				}
+			})
+			return
+		end
+	elseif request.action == 'add_mcom' then
 		NetEvents:SendTo('UI_CommonRose', p_Player, {
 			Top = {
 				Action = 'not_implemented',
 				Label = Language:I18N(''),
 				Confirm = true
 			},
-			Right = {
+			Left = {
 				{
-					Action = 'base_us',
-					Label = Language:I18N('Base US')
+					Action = 'mcom_1',
+					Label = Language:I18N('MCOM 1')
 				}, {
-					Action = 'base_ru',
-					Label = Language:I18N('Base RU')
+					Action = 'mcom_2',
+					Label = Language:I18N('MCOM 2')
 				}, {
-					Action = 'capture_point',
-					Label = Language:I18N('Capture Point')
+					Action = 'mcom_3',
+					Label = Language:I18N('MCOM 3')
 				}, {
-					Action = 'add_mcom',
-					Label = Language:I18N('MCOM')
+					Action = 'mcom_4',
+					Label = Language:I18N('MCOM 4')
 				}, {
-					Action = 'add_mcom_interact',
-					Label = Language:I18N('MCOM Interact')
+					Action = 'mcom_5',
+					Label = Language:I18N('MCOM 5')
 				}
 			},
 			Center = {
 				Action = 'not_implemented',
-				Label = Language:I18N('Add') -- Or "Unselect". 
+				Label = Language:I18N('MCOM') -- Or "Unselect". 
 			},
-			Left = {
+			Right = {
 				{
-					Action = 'not_implemented',
-					Label = Language:I18N('')
+					Action = 'mcom_6',
+					Label = Language:I18N('MCOM 6')
 				}, {
-					Action = 'not_implemented',
-					Label = Language:I18N('')
-				},{
-					Action = 'not_implemented',
-					Label = Language:I18N('')
+					Action = 'mcom_7',
+					Label = Language:I18N('MCOM 7')
+				}, {
+					Action = 'mcom_8',
+					Label = Language:I18N('MCOM 8')
+				}, {
+					Action = 'mcom_9',
+					Label = Language:I18N('MCOM 9')
+				}, {
+					Action = 'mcom_10',
+					Label = Language:I18N('MCOM 10')
 				}
 			},
 			Bottom = {
-				Action = 'close_comm',
+				Action = 'add_objective',
 				Label = Language:I18N('Back')
 			}
 		})
 		return
-	elseif request.action == 'base_us' or  request.action == 'base_ru' then
+
+	elseif request.action == 'add_mcom_interact' then
+		NetEvents:SendTo('UI_CommonRose', p_Player, {
+			Top = {
+				Action = 'not_implemented',
+				Label = Language:I18N(''),
+				Confirm = true
+			},
+			Left = {
+				{
+					Action = 'mcom_inter_1',
+					Label = Language:I18N('MCOM INTERACT 1')
+				}, {
+					Action = 'mcom_inter_2',
+					Label = Language:I18N('MCOM INTERACT 2')
+				}, {
+					Action = 'mcom_inter_3',
+					Label = Language:I18N('MCOM INTERACT 3')
+				}, {
+					Action = 'mcom_inter_4',
+					Label = Language:I18N('MCOM INTERACT 4')
+				}, {
+					Action = 'mcom_inter_5',
+					Label = Language:I18N('MCOM INTERACT 5')
+				}
+			},
+			Center = {
+				Action = 'not_implemented',
+				Label = Language:I18N('MCOM') -- Or "Unselect". 
+			},
+			Right = {
+				{
+					Action = 'mcom_inter_6',
+					Label = Language:I18N('MCOM INTERACT 6')
+				}, {
+					Action = 'mcom_inter_7',
+					Label = Language:I18N('MCOM INTERACT 7')
+				}, {
+					Action = 'mcom_inter_8',
+					Label = Language:I18N('MCOM INTERACT 8')
+				}, {
+					Action = 'mcom_inter_9',
+					Label = Language:I18N('MCOM INTERACT 9')
+				}, {
+					Action = 'mcom_inter_10',
+					Label = Language:I18N('MCOM INTERACT 10')
+				}
+			},
+			Bottom = {
+				Action = 'add_objective',
+				Label = Language:I18N('Back')
+			}
+		})
+		return
+
+		
+	elseif request.action == 'base_us' or  request.action == 'base_ru' or request.action == 'base_rush' then
 		if Globals.IsRush then
+			-- Add index here
+			NetEvents:SendTo('UI_CommonRose', p_Player, {
+				Top = {
+					Action = 'not_implemented',
+					Label = Language:I18N(''),
+					Confirm = true
+				},
+				Left = {
+					{
+						Action = 'base_ru_1',
+						Label = Language:I18N('base ru stage 1')
+					}, {
+						Action = 'base_ru_2',
+						Label = Language:I18N('base ru stage 2')
+					}, {
+						Action = 'base_ru_3',
+						Label = Language:I18N('base ru stage 3')
+					}, {
+						Action = 'base_ru_4',
+						Label = Language:I18N('base ru stage 4')
+					}, {
+						Action = 'base_ru_5',
+						Label = Language:I18N('base ru stage 5')
+					}
+				},
+				Center = {
+					Action = 'not_implemented',
+					Label = Language:I18N('Base') -- Or "Unselect". 
+				},
+				Right = {
+					{
+						Action = 'base_us_1',
+						Label = Language:I18N('base us stage 1')
+					}, {
+						Action = 'base_us_2',
+						Label = Language:I18N('base us stage 2')
+					}, {
+						Action = 'base_us_3',
+						Label = Language:I18N('base us stage 3')
+					}, {
+						Action = 'base_us_4',
+						Label = Language:I18N('base us stage 4')
+					}, {
+						Action = 'base_us_5',
+						Label = Language:I18N('base us stage 5')
+					}
+				},
+				Bottom = {
+					Action = 'add_objective',
+					Label = Language:I18N('Back')
+				}
+			})
 		else
-			NetEvents:SendTo('UI_CommonRose', p_Player, "false")
 			local s_BaseParts = request.action:split("_")
 			m_NodeEditor:OnAddObjective(p_Player, s_BaseParts)
 		end
 		
 		return
+	elseif string.find(request.action, 'mcom_') ~= nil then
+		local s_Data = request.action:split('_')
+		local s_McomString = "mcom "..s_Data[2]
+		if #s_Data == 3 then
+			s_McomString = s_McomString.." interact"
+		end
+		m_NodeEditor:OnAddObjective(p_Player, s_McomString:split(' '))
+	elseif string.find(request.action, 'base_') ~= nil then
+		local s_Data = request.action:split('_')
+		m_NodeEditor:OnAddObjective(p_Player, s_Data)
+	elseif string.find(request.action, 'objective_') ~= nil then
+		local s_Objective = request.action:split('_')[2]
+		--NetEvents:SendTo('UI_CommonRose', p_Player, "false")
+		m_NodeEditor:OnAddObjective(p_Player, {s_Objective})
+		return
+	elseif request.action == 'capture_point' then
+		if Globals.IsRush then
+			NetEvents:SendTo('UI_CommonRose', p_Player, "false")
+		else
+			NetEvents:SendTo('UI_CommonRose', p_Player, {
+				Top = {
+					Action = 'not_implemented',
+					Label = Language:I18N(''),
+					Confirm = true
+				},
+				Left = {
+					{
+						Action = 'objective_a',
+						Label = Language:I18N('A')
+					}, {
+						Action = 'objective_b',
+						Label = Language:I18N('B')
+					}, {
+						Action = 'objective_c',
+						Label = Language:I18N('C')
+					}, {
+						Action = 'objective_d',
+						Label = Language:I18N('D')
+					}
+				},
+				Center = {
+					Action = 'not_implemented',
+					Label = Language:I18N('Objective') -- Or "Unselect". 
+				},
+				Right = {
+					{
+						Action = 'objective_e',
+						Label = Language:I18N('E')
+					}, {
+						Action = 'objective_f',
+						Label = Language:I18N('F')
+					}, {
+						Action = 'objective_g',
+						Label = Language:I18N('G')
+					}, {
+						Action = 'objective_h',
+						Label = Language:I18N('H')
+					}
+				},
+				Bottom = {
+					Action = 'add_objective',
+					Label = Language:I18N('Back')
+				}
+			})
+		end
+		
+		return
+
+		
 	elseif request.action == 'vehicle_menu' then
 		--NetEvents:SendTo('UI_Toggle_DataMenu', p_Player, true)
 		-- Change Commo-rose. 

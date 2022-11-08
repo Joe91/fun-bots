@@ -204,7 +204,7 @@ const BotEditor = (new function BotEditor() {
 				case 'bot_spawn_default':
 					count = document.querySelector('[data-action="bot_spawn_default"] input[type="number"]');
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'bot_spawn_default',
+						action:	parent.dataset.action,
 						value:	count.value
 					}));
 					count.value = 1;
@@ -212,49 +212,41 @@ const BotEditor = (new function BotEditor() {
 				case 'bot_spawn_friend':
 					count = document.querySelector('[data-action="bot_spawn_friend"] input[type="number"]');
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'bot_spawn_friend',
+						action:	parent.dataset.action,
+						value:	count.value
+					}));
+					count.value = 1;
+				break;
+				case 'bot_kick_team':
+					count = document.querySelector('[data-action="bot_kick_team"] input[type="number"]');
+					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
+						action:	parent.dataset.action,
 						value:	count.value
 					}));
 					count.value = 1;
 				break;
 				case 'bot_kick_all':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'bot_kick_all'
-					}));
-				break;
-				case 'bot_kick_team':
-					count = document.querySelector('[data-action="bot_kick_team"] input[type="number"]');
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'bot_kick_team',
-						value:	count.value
-					}));
-					count.value = 1;
-				break;
 				case 'bot_kill_all':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'bot_kill_all'
-					}));
-				break;
 				case 'bot_respawn':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'bot_respawn'
-					}));
-				break;
 				case 'bot_attack':
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'bot_attack'
+						action:	parent.dataset.action
 					}));
 				break;
 
 				/* Trace */
 				case 'trace_start':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'trace_start'
-					}));
-				break;
 				case 'trace_end':
+				case 'trace_clear':
+				case 'trace_reset_all':
+				case 'waypoints_server_load':
+				case 'waypoints_server_save':
+				case 'trace_show':
+				case 'waypoints_show_spawns':
+				case 'waypoints_show_lines':
+				case 'waypoints_show_labels':
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'trace_end',
+						action:	parent.dataset.action
 					}));
 				break;
 				case 'trace_save':
@@ -264,61 +256,13 @@ const BotEditor = (new function BotEditor() {
 						value: index.value
 					}));
 				break;
-				case 'trace_clear':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'trace_clear'
-					}));
-				break;
-				case 'trace_reset_all':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'trace_reset_all'
-					}));
-				break;
-				case 'waypoints_server_load':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'waypoints_server_load'
-					}));
-				break;
-				case 'waypoints_server_save':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'waypoints_server_save'
-					}));
-				break;
-				case 'trace_show':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'trace_show'
-					}));
-				break;
-				case 'waypoints_show_spawns':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'waypoints_show_spawns',
-					}));
-				break;
-				case 'waypoints_show_lines':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'waypoints_show_lines',
-					}));
-				break;
-				case 'waypoints_show_labels':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'waypoints_show_labels',
-					}));
-				break;
-				
+	
 				/* Waypoint-Editor */
-				case 'data_menu':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'data_menu',
-					}));
-				break;
+				case 'data_menu':	
 				case 'vehicle_menu':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'vehicle_menu',
-					}));
-				break;
 				case 'request_waypoints_editor':
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'request_waypoints_editor'
+						action:	parent.dataset.action
 					}));
 				break;
 				case 'continue':
@@ -334,25 +278,51 @@ const BotEditor = (new function BotEditor() {
 
 				/* Path-Menu */
 				case 'add_objective':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'add_objective'
-					}));
-				break;
 				case 'close_comm':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'close_comm'
-					}));
-				break;
+				case 'base_rush':
 				case 'base_us':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'base_us'
-					}));
-				break;
 				case 'base_ru':
+				case 'capture_point':
+				case 'add_mcom':
+				case 'add_mcom_interact':
+				case 'objective_a':
+				case 'objective_b':
+				case 'objective_c':
+				case 'objective_d':
+				case 'objective_e':
+				case 'objective_f':
+				case 'objective_g':
+				case 'objective_h':
+				case 'set_spawn_path':
+				case 'remove_all_objectives':
+				case 'loop_path':
+				case 'invert_path':
+				case 'remove_data':
+				case 'set_mcom':
+				case 'mcom_1':
+				case 'mcom_2':
+				case 'mcom_3':
+				case 'mcom_4':
+				case 'mcom_5':
+				case 'mcom_6':
+				case 'mcom_7':
+				case 'mcom_8':
+				case 'mcom_9':
+				case 'mcom_10':
+				case 'mcom_inter_1':
+				case 'mcom_inter_2':
+				case 'mcom_inter_3':
+				case 'mcom_inter_4':
+				case 'mcom_inter_5':
+				case 'mcom_inter_6':
+				case 'mcom_inter_7':
+				case 'mcom_inter_8':
+				case 'mcom_inter_9':
+				case 'mcom_inter_10':
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'base_ru'
+						action:	parent.dataset.action
 					}));
-				break;
+				break;				
 				
 
 				/* Comm-Screen */
