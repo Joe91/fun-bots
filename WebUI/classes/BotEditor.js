@@ -328,6 +328,10 @@ const BotEditor = (new function BotEditor() {
 				case 'path_type_water':
 				case 'path_type_air':
 				case 'path_type_clear':
+				case 'add_vehicle_tank':
+				case 'add_vehicle_chopper':
+				case 'add_vehicle_plane':
+				case 'add_vehicle_other':
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
 						action:	parent.dataset.action
 					}));

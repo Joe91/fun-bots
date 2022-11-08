@@ -199,6 +199,47 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 			}
 		})
 		return
+	elseif request.action == 'vehicle_objective' then
+		NetEvents:SendTo('UI_CommonRose', p_Player, {
+			Top = {
+				Action = 'not_implemented',
+				Label = Language:I18N(''),
+				Confirm = true
+			},
+			Right = {
+				{
+					Action = 'add_vehicle_tank',
+					Label = Language:I18N('Add Tank')
+				}, {
+					Action = 'add_vehicle_chopper',
+					Label = Language:I18N('Add Chopper')
+				}, {
+					Action = 'add_vehicle_plane',
+					Label = Language:I18N('Add Plane')
+				}, {
+					Action = 'add_vehicle_other',
+					Label = Language:I18N('Add Other Vehicle')
+				}
+		},
+			Center = {
+				Action = 'not_implemented',
+				Label = Language:I18N('Vehicle') -- Or "Unselect". 
+			},
+			Left = {
+			},
+			Bottom = {
+				Action = 'add_objective',
+				Label = Language:I18N('Back')
+			}
+		})
+		return
+	elseif request.action == 'add_enter_vehicle' then
+		m_NodeEditor:OnAddVehicle(p_Player)
+	elseif request.action == 'add_exit_vehicle_passengers' then
+		m_NodeEditor:OnExitVehicle(p_Player, {"true"})
+	elseif request.action == 'add_exit_vehicle_all' then
+		m_NodeEditor:OnExitVehicle(p_Player,  {"false"})
+
 	elseif request.action == 'add_objective' then
 		--NetEvents:SendTo('UI_Toggle_DataMenu', p_Player, true)
 		-- Change Commo-rose. 
