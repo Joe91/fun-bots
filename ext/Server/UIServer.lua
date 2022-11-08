@@ -287,6 +287,10 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		Config.DrawWaypointIDs = not Config.DrawWaypointIDs
 		NetEvents:SendToLocal('WriteClientSettings', p_Player, Config, false)
 	-- Waypoints-Editor 
+	
+	elseif request.action == 'data_menu' then
+		m_NodeEditor:OnOpenEditor(p_Player)
+		NetEvents:SendTo('UI_Toggle_DataMenu', p_Player, true)
 	elseif request.action == 'request_waypoints_editor' then
 		m_NodeEditor:OnOpenEditor(p_Player)
 		NetEvents:SendTo('UI_Waypoints_Editor', p_Player, true)

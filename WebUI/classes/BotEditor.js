@@ -306,6 +306,11 @@ const BotEditor = (new function BotEditor() {
 				break;
 				
 				/* Waypoint-Editor */
+				case 'data_menu':
+					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
+						action:	'data_menu',
+					}));
+				break;
 				case 'request_waypoints_editor':
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
 						action:	'request_waypoints_editor'
