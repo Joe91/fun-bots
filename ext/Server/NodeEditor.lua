@@ -200,6 +200,10 @@ function NodeEditor:OnAddVehiclePath(p_Player, p_Args)
 	local s_Data = table.concat(p_Args or { "land" }, ' ')
 	self:Log(p_Player, 'Add Vehicle (type): %s', g_Utilities:dump(s_Data, true))
 
+	if s_Data == "clear" then
+		s_Data = ""
+	end
+
 	local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
 
 	if #s_Selection < 1 then

@@ -259,7 +259,6 @@ const BotEditor = (new function BotEditor() {
 	
 				/* Waypoint-Editor */
 				case 'data_menu':	
-				case 'vehicle_menu':
 				case 'request_waypoints_editor':
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
 						action:	parent.dataset.action
@@ -319,6 +318,16 @@ const BotEditor = (new function BotEditor() {
 				case 'mcom_inter_8':
 				case 'mcom_inter_9':
 				case 'mcom_inter_10':
+				case 'set_vehicle_path_type':
+				case 'vehicle_objective':
+				case 'enter_exit_vehicle':
+				case 'add_enter_vehicle':
+				case 'add_exit_vehicle_passengers':
+				case 'add_exit_vehicle_all':
+				case 'path_type_land':
+				case 'path_type_water':
+				case 'path_type_air':
+				case 'path_type_clear':
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
 						action:	parent.dataset.action
 					}));

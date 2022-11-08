@@ -52,22 +52,31 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 	-- Editor Data-Menu
 	if request.action == 'data_menu' then
 		-- Change Commo-rose. 
-		NetEvents:SendTo('UI_CommonRose', p_Player, {
-			Top = {
+		local s_Top = {}
+		if Globals.IsRush then
+			s_Top = {
+				Action = 'set_mcom',
+				Label = Language:I18N('Add Mcom')
+			}
+		else
+			s_Top = {
 				Action = 'not_implemented',
 				Label = Language:I18N(''),
 				Confirm = true
-			},
+			}
+		end
+		NetEvents:SendTo('UI_CommonRose', p_Player, {
+			Top = s_Top,
 			Right = {
 				{
 					Action = 'add_objective',
 					Label = Language:I18N('Add Label / Objective')
 				}, {
-					Action = 'not_implemented',
-					Label = Language:I18N('Remove Label / Objective')
-				}, {
 					Action = 'set_spawn_path',
 					Label = Language:I18N('Set Spawn-Path')
+				}, {
+					Action = 'set_vehicle_path_type',
+					Label = Language:I18N('Set Vehicle Path-Type')
 				}, {
 					Action = 'remove_all_objectives',
 					Label = Language:I18N('Remove all Labels / Objectives')
@@ -79,14 +88,14 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 			},
 			Left = {
 				{
-					Action = 'set_mcom',
-					Label = Language:I18N('Add Mcom')
+					Action = 'enter_exit_vehicle',
+					Label = Language:I18N('Enter / Exit Vehicle')
 				}, {
 					Action = 'loop_path',
 					Label = Language:I18N('Overwrite: Loop-Path')
 				}, {
 					Action = 'invert_path',
-					Label = Language:I18N('Overwrite: Invert-Path')
+					Label = Language:I18N('Overwrite: Reverse-Path')
 				},{
 					Action = 'remove_data',
 					Label = Language:I18N('Remove Data')
@@ -96,7 +105,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 				Action = 'close_comm',
 				Label = Language:I18N('Exit'),
 			}
-		})
+		})	
 		return
 	elseif request.action == 'close_comm' then
 		NetEvents:SendTo('UI_CommonRose', p_Player, "false")
@@ -125,6 +134,71 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		--NetEvents:SendTo('UI_CommonRose', p_Player, "false")
 		m_NodeEditor:OnAddMcom(p_Player)
 		return
+	elseif request.action == 'set_vehicle_path_type' then
+		NetEvents:SendTo('UI_CommonRose', p_Player, {
+			Top = {
+				Action = 'not_implemented',
+				Label = Language:I18N(''),
+				Confirm = true
+			},
+			Right = {
+				{
+					Action = 'path_type_land',
+					Label = Language:I18N('Land')
+				}, {
+					Action = 'path_type_water',
+					Label = Language:I18N('Water')
+				}, {
+					Action = 'path_type_air',
+					Label = Language:I18N('Air')
+				}, {
+					Action = 'path_type_clear',
+					Label = Language:I18N('Clear Path-Type')
+				}
+			},
+			Center = {
+				Action = 'not_implemented',
+				Label = Language:I18N('Path-Type') -- Or "Unselect". 
+			},
+			Left = {
+			},
+			Bottom = {
+				Action = 'data_menu',
+				Label = Language:I18N('Back')
+			}
+		})
+		return
+	elseif request.action == 'enter_exit_vehicle' then
+		NetEvents:SendTo('UI_CommonRose', p_Player, {
+			Top = {
+				Action = 'not_implemented',
+				Label = Language:I18N(''),
+				Confirm = true
+			},
+			Right = {
+				{
+					Action = 'add_enter_vehicle',
+					Label = Language:I18N('Enter Vehicle')
+				}, {
+					Action = 'add_exit_vehicle_passengers',
+					Label = Language:I18N('Exit Vehicle Passengers')
+				}, {
+					Action = 'add_exit_vehicle_all',
+					Label = Language:I18N('Exit Vehicle All')
+				}
+			},
+			Center = {
+				Action = 'not_implemented',
+				Label = Language:I18N('Vehicle') -- Or "Unselect". 
+			},
+			Left = {
+			},
+			Bottom = {
+				Action = 'data_menu',
+				Label = Language:I18N('Back')
+			}
+		})
+		return
 	elseif request.action == 'add_objective' then
 		--NetEvents:SendTo('UI_Toggle_DataMenu', p_Player, true)
 		-- Change Commo-rose. 
@@ -145,6 +219,9 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 					}, {
 						Action = 'add_mcom_interact',
 						Label = Language:I18N('MCOM Interact')
+					}, {
+						Action = 'vehicle_objective',
+						Label = Language:I18N('Vehicle')
 					}
 				},
 				Center = {
@@ -176,6 +253,9 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 					}, {
 						Action = 'capture_point',
 						Label = Language:I18N('Capture Point')
+					}, {
+						Action = 'vehicle_objective',
+						Label = Language:I18N('Vehicle')
 					}
 				},
 				Center = {
@@ -360,6 +440,9 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		end
 		
 		return
+	elseif string.find(request.action, 'path_type_') ~= nil then
+		local s_Type = request.action:split('_')[3]
+		m_NodeEditor:OnAddVehiclePath(p_Player, {s_Type})
 	elseif string.find(request.action, 'mcom_') ~= nil then
 		local s_Data = request.action:split('_')
 		local s_McomString = "mcom "..s_Data[2]
@@ -426,51 +509,6 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 			})
 		end
 		
-		return
-
-		
-	elseif request.action == 'vehicle_menu' then
-		--NetEvents:SendTo('UI_Toggle_DataMenu', p_Player, true)
-		-- Change Commo-rose. 
-		NetEvents:SendTo('UI_CommonRose', p_Player, {
-			Top = {
-				Action = 'not_implemented',
-				Label = Language:I18N(''),
-				Confirm = true
-			},
-			Right = {
-				{
-					Action = 'not_implemented',
-					Label = Language:I18N('Add Vehicle Path')
-				}, {
-					Action = 'not_implemented',
-					Label = Language:I18N('Set Vehicle Path-Type')
-				}, {
-					Action = 'not_implemented',
-					Label = Language:I18N('Remove all Labels / Objectives')
-				}
-			},
-			Center = {
-				Action = 'not_implemented',
-				Label = Language:I18N('Vehicles') -- Or "Unselect". 
-			},
-			Left = {
-				{
-					Action = 'not_implemented',
-					Label = Language:I18N('Set Enter Vehicle')
-				}, {
-					Action = 'not_implemented',
-					Label = Language:I18N('Set Exit Vehicle')
-				}, {
-					Action = 'not_implemented',
-					Label = Language:I18N('Remove Data')
-				}
-			},
-			Bottom = {
-				Action = 'close_comm',
-				Label = Language:I18N('Back')
-			}
-		})
 		return
 
 	-- Comm Screen. 
