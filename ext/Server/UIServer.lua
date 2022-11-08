@@ -49,8 +49,159 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 
 	local request = json.decode(p_Data)
 
+	-- Editor Data-Menu
+	if request.action == 'data_menu' then
+		-- Change Commo-rose. 
+		NetEvents:SendTo('UI_CommonRose', p_Player, {
+			Top = {
+				Action = 'not_implemented',
+				Label = Language:I18N(''),
+				Confirm = true
+			},
+			Right = {
+				{
+					Action = 'add_objective',
+					Label = Language:I18N('Add Label / Objective')
+				}, {
+					Action = 'not_implemented',
+					Label = Language:I18N('Remove Label / Objective')
+				}, {
+					Action = 'not_implemented',
+					Label = Language:I18N('Set Spawn-Path')
+				}, {
+					Action = 'not_implemented',
+					Label = Language:I18N('Remove all Labels / Objectives')
+				}
+			},
+			Center = {
+				Action = 'not_implemented',
+				Label = Language:I18N('Paths') -- Or "Unselect". 
+			},
+			Left = {
+				{
+					Action = 'not_implemented',
+					Label = Language:I18N('Add Mcom')
+				}, {
+					Action = 'not_implemented',
+					Label = Language:I18N('Overwrite Loop-Path')
+				},{
+					Action = 'not_implemented',
+					Label = Language:I18N('Remove Data')
+				}
+			},
+			Bottom = {
+				Action = 'close_comm',
+				Label = Language:I18N('Back'),
+			}
+		})
+		return
+	elseif request.action == 'close_comm' then
+		NetEvents:SendTo('UI_CommonRose', p_Player, "false")
+		return
+	elseif request.action == 'add_objective' then
+		--NetEvents:SendTo('UI_Toggle_DataMenu', p_Player, true)
+		-- Change Commo-rose. 
+		NetEvents:SendTo('UI_CommonRose', p_Player, {
+			Top = {
+				Action = 'not_implemented',
+				Label = Language:I18N(''),
+				Confirm = true
+			},
+			Right = {
+				{
+					Action = 'base_us',
+					Label = Language:I18N('Base US')
+				}, {
+					Action = 'base_ru',
+					Label = Language:I18N('Base RU')
+				}, {
+					Action = 'capture_point',
+					Label = Language:I18N('Capture Point')
+				}, {
+					Action = 'add_mcom',
+					Label = Language:I18N('MCOM')
+				}, {
+					Action = 'add_mcom_interact',
+					Label = Language:I18N('MCOM Interact')
+				}
+			},
+			Center = {
+				Action = 'not_implemented',
+				Label = Language:I18N('Add') -- Or "Unselect". 
+			},
+			Left = {
+				{
+					Action = 'not_implemented',
+					Label = Language:I18N('')
+				}, {
+					Action = 'not_implemented',
+					Label = Language:I18N('')
+				},{
+					Action = 'not_implemented',
+					Label = Language:I18N('')
+				}
+			},
+			Bottom = {
+				Action = 'close_comm',
+				Label = Language:I18N('Back')
+			}
+		})
+		return
+	elseif request.action == 'base_us' or  request.action == 'base_ru' then
+		if Globals.IsRush then
+		else
+			NetEvents:SendTo('UI_CommonRose', p_Player, "false")
+			local s_BaseParts = request.action:split("_")
+			m_NodeEditor:OnAddObjective(p_Player, s_BaseParts)
+		end
+		
+		return
+	elseif request.action == 'vehicle_menu' then
+		--NetEvents:SendTo('UI_Toggle_DataMenu', p_Player, true)
+		-- Change Commo-rose. 
+		NetEvents:SendTo('UI_CommonRose', p_Player, {
+			Top = {
+				Action = 'not_implemented',
+				Label = Language:I18N(''),
+				Confirm = true
+			},
+			Right = {
+				{
+					Action = 'not_implemented',
+					Label = Language:I18N('Add Vehicle Path')
+				}, {
+					Action = 'not_implemented',
+					Label = Language:I18N('Set Vehicle Path-Type')
+				}, {
+					Action = 'not_implemented',
+					Label = Language:I18N('Remove all Labels / Objectives')
+				}
+			},
+			Center = {
+				Action = 'not_implemented',
+				Label = Language:I18N('Vehicles') -- Or "Unselect". 
+			},
+			Left = {
+				{
+					Action = 'not_implemented',
+					Label = Language:I18N('Set Enter Vehicle')
+				}, {
+					Action = 'not_implemented',
+					Label = Language:I18N('Set Exit Vehicle')
+				}, {
+					Action = 'not_implemented',
+					Label = Language:I18N('Remove Data')
+				}
+			},
+			Bottom = {
+				Action = 'close_comm',
+				Label = Language:I18N('Back')
+			}
+		})
+		return
+
 	-- Comm Screen. 
-	if request.action == 'exit_vehicle' then
+	elseif request.action == 'exit_vehicle' then
 		BotManager:ExitVehicle(p_Player)
 		NetEvents:SendTo('UI_CommonRose', p_Player, "false")
 		return
@@ -114,7 +265,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 			},
 			Bottom = {
 				Action = 'back_to_comm',
-				Label = Language:I18N('Back'),
+				Label = Language:I18N('Back')
 			}
 		})
 		return
@@ -287,10 +438,6 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		Config.DrawWaypointIDs = not Config.DrawWaypointIDs
 		NetEvents:SendToLocal('WriteClientSettings', p_Player, Config, false)
 	-- Waypoints-Editor 
-	
-	elseif request.action == 'data_menu' then
-		m_NodeEditor:OnOpenEditor(p_Player)
-		NetEvents:SendTo('UI_Toggle_DataMenu', p_Player, true)
 	elseif request.action == 'request_waypoints_editor' then
 		m_NodeEditor:OnOpenEditor(p_Player)
 		NetEvents:SendTo('UI_Waypoints_Editor', p_Player, true)

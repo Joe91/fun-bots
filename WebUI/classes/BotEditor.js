@@ -311,6 +311,11 @@ const BotEditor = (new function BotEditor() {
 						action:	'data_menu',
 					}));
 				break;
+				case 'vehicle_menu':
+					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
+						action:	'vehicle_menu',
+					}));
+				break;
 				case 'request_waypoints_editor':
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
 						action:	'request_waypoints_editor'
@@ -326,6 +331,29 @@ const BotEditor = (new function BotEditor() {
 						action:	'hide_waypoints_editor'
 					}));
 				break;
+
+				/* Path-Menu */
+				case 'add_objective':
+					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
+						action:	'add_objective'
+					}));
+				break;
+				case 'close_comm':
+					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
+						action:	'close_comm'
+					}));
+				break;
+				case 'base_us':
+					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
+						action:	'base_us'
+					}));
+				break;
+				case 'base_ru':
+					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
+						action:	'base_ru'
+					}));
+				break;
+				
 
 				/* Comm-Screen */
 				case 'exit_vehicle':
