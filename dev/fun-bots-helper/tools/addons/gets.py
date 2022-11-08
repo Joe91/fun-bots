@@ -556,10 +556,34 @@ def get_to_root() -> None:
         None
     """
     cwd_splitted = os.getcwd().replace("\\", "/").split("/")
-    last_index_pos = len(cwd_splitted) - cwd_splitted[::-1].index("fun-bots") - 1
-    new_cwd = "/".join(
-        cwd_splitted[: cwd_splitted.index("fun-bots", last_index_pos) + 1]
-    )
+    cwd_splitted = os.getcwd().replace("\\", "/").split("/")
+    fun_bots_name_branch = [
+        folder for folder in cwd_splitted if folder.startswith("fun-bots")
+    ]
+    try:
+        new_cwd = "/".join(
+            cwd_splitted[
+                : cwd_splitted.index(
+                    fun_bots_name_branch[-2],
+                    len(cwd_splitted)
+                    - cwd_splitted[::-1].index(fun_bots_name_branch[-2])
+                    - 1,
+                )
+                + 1
+            ]
+        )
+    except IndexError:
+        new_cwd = "/".join(
+            cwd_splitted[
+                : cwd_splitted.index(
+                    fun_bots_name_branch[-1],
+                    len(cwd_splitted)
+                    - cwd_splitted[::-1].index(fun_bots_name_branch[-1])
+                    - 1,
+                )
+                + 1
+            ]
+        )
     os.chdir(new_cwd)
 
 
