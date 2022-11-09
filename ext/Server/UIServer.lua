@@ -25,6 +25,7 @@ local WeaponList = require('__shared/WeaponList')
 function FunBotUIServer:__init()
 	-- To-do: remove? Unused. 
 	self.m_NavigaionPath = {}
+	self.m_InPathMenu = false
 	
 
 	if Config.DisableUserInterface ~= true then
@@ -48,8 +49,24 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 
 	local request = json.decode(p_Data)
 
-	-- Editor Data-Menu
+	-- Reenter or hide Data-Menu?
 	if request.action == 'data_menu' then
+		if self.m_InPathMenu then
+			request.action = 'hide_comm'
+		elseif self.m_NavigaionPath[p_Player.onlineId] and #self.m_NavigaionPath[p_Player.onlineId] > 0 then
+			-- goto last posiiton in menu
+			request.action = self.m_NavigaionPath[p_Player.onlineId][#self.m_NavigaionPath[p_Player.onlineId]]
+			self.m_InPathMenu = true
+		end
+	end
+
+	-- Editor Data-Menu
+	if request.action == 'data_menu' or request.action == 'back_to_data_menu' then
+		if not Globals.IsConquest and not Globals.IsRush then
+			ChatManager:SendMessage('This menu is not available in this gamemode.', p_Player)
+			return
+		end
+		self.m_InPathMenu = true
 		self.m_NavigaionPath[p_Player.onlineId] = {}
 		-- Change Commo-rose. 
 		local s_Left = {}
@@ -116,30 +133,30 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		})	
 		return
 	elseif request.action == 'close_comm' then
+		self.m_NavigaionPath[p_Player.onlineId] = {}
+		self.m_InPathMenu = false
+		NetEvents:SendTo('UI_CommonRose', p_Player, "false")
+		return
+	elseif request.action == 'hide_comm' then
+		self.m_InPathMenu = false
 		NetEvents:SendTo('UI_CommonRose', p_Player, "false")
 		return
 	elseif request.action == 'set_spawn_path' then
-		--NetEvents:SendTo('UI_CommonRose', p_Player, "false")
 		m_NodeEditor:OnSetSpawnPath(p_Player)
 		return
 	elseif request.action == 'remove_all_objectives' then
-		--NetEvents:SendTo('UI_CommonRose', p_Player, "false")
 		m_NodeEditor:OnRemoveAllObjectives(p_Player)
 		return
 	elseif request.action == 'remove_data' then
-		--NetEvents:SendTo('UI_CommonRose', p_Player, "false")
 		m_NodeEditor:OnRemoveData(p_Player)
 		return
 	elseif request.action == 'loop_path' then
-		--NetEvents:SendTo('UI_CommonRose', p_Player, "false")
 		m_NodeEditor:OnSetLoopMode(p_Player, {"true"})
 		return
 	elseif request.action == 'invert_path' then
-		--NetEvents:SendTo('UI_CommonRose', p_Player, "false")
 		m_NodeEditor:OnSetLoopMode(p_Player, {"false"})
 		return
 	elseif request.action == 'set_mcom' then
-		--NetEvents:SendTo('UI_CommonRose', p_Player, "false")
 		m_NodeEditor:OnAddMcom(p_Player)
 		return
 	elseif request.action == 'set_vehicle_path_type' then
@@ -173,7 +190,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 			Left = {
 			},
 			Bottom = {
-				Action = 'data_menu',
+				Action = 'back_to_data_menu',
 				Label = Language:I18N('Back')
 			}
 		})
@@ -221,7 +238,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 				}
 			},
 			Bottom = {
-				Action = 'data_menu',
+				Action = 'back_to_data_menu',
 				Label = Language:I18N('Back')
 			}
 		})
@@ -424,7 +441,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 					}
 				},
 				Bottom = {
-					Action = 'data_menu',
+					Action = 'back_to_data_menu',
 					Label = Language:I18N('Back')
 				}
 			})
@@ -456,7 +473,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 					}
 				},
 				Bottom = {
-					Action = 'data_menu',
+					Action = 'back_to_data_menu',
 					Label = Language:I18N('Back')
 				}
 			})
