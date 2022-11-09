@@ -50,23 +50,45 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 
 	-- Editor Data-Menu
 	if request.action == 'data_menu' then
-		self.m_NavigaionPath[p_Player.onlineId][1] = nil
+		self.m_NavigaionPath[p_Player.onlineId] = {}
 		-- Change Commo-rose. 
-		local s_Top = {}
+		local s_Left = {}
 		if Globals.IsRush then
-			s_Top = {
-				Action = 'set_mcom',
-				Label = Language:I18N('Add Mcom')
+			s_Left = {
+			    {
+					Action = 'set_mcom',
+					Label = Language:I18N('Add Mcom-Action'),
+				}, {
+					Action = 'loop_path',
+					Label = Language:I18N('Overwrite: Loop-Path')
+				}, {
+					Action = 'invert_path',
+					Label = Language:I18N('Overwrite: Reverse-Path')
+				},{
+					Action = 'remove_data',
+					Label = Language:I18N('Remove Data')
+				}
 			}
 		else
-			s_Top = {
-				Action = 'not_implemented',
-				Label = Language:I18N(''),
-				Confirm = true
+			s_Left = {
+			    {
+					Action = 'loop_path',
+					Label = Language:I18N('Overwrite: Loop-Path')
+				}, {
+					Action = 'invert_path',
+					Label = Language:I18N('Overwrite: Reverse-Path')
+				},{
+					Action = 'remove_data',
+					Label = Language:I18N('Remove Data')
+				}
 			}
 		end
 		NetEvents:SendTo('UI_CommonRose', p_Player, {
-			Top = s_Top,
+			Top = {
+				Action = 'not_implemented',
+				Label = Language:I18N(''),
+				Confirm = true
+			},
 			Right = {
 				{
 					Action = 'add_objective',
@@ -86,18 +108,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 				Action = 'not_implemented',
 				Label = Language:I18N('Paths') -- Or "Unselect". 
 			},
-			Left = {
-			    {
-					Action = 'loop_path',
-					Label = Language:I18N('Overwrite: Loop-Path')
-				}, {
-					Action = 'invert_path',
-					Label = Language:I18N('Overwrite: Reverse-Path')
-				},{
-					Action = 'remove_data',
-					Label = Language:I18N('Remove Data')
-				}
-			},
+			Left = s_Left,
 			Bottom = {
 				Action = 'close_comm',
 				Label = Language:I18N('Exit'),
@@ -187,6 +198,9 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 				}, {
 					Action = 'add_exit_vehicle_all',
 					Label = Language:I18N('Exit Vehicle All')
+				}, {
+					Action = 'remove_data',
+					Label = Language:I18N('Remove Vehicle Data')
 				}
 			},
 			Center = {
@@ -244,7 +258,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 			},
 			Left = {
 				{
-					Action = 'set_vehcile_spawn',
+					Action = 'set_vehicle_spawn',
 					Label = Language:I18N('Set Vehicle Spawn-Path')
 				}
 			},
@@ -349,18 +363,22 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		local s_ObjectiveData = {}
 		table.insert(s_ObjectiveData, "vehicle")
 		table.insert(s_ObjectiveData, s_VehicleType..s_Index)
-		table.insert(s_ObjectiveData, s_Index)
+		table.insert(s_ObjectiveData, s_Team)
 		m_NodeEditor:OnAddObjective(p_Player, s_ObjectiveData);
 		return
 		
-	elseif request.action == 'set_vehcile_spawn' then
+	elseif request.action == 'set_vehicle_spawn' then
 		m_NodeEditor:OnSetVehicleSpawn(p_Player);
+		return
 	elseif request.action == 'add_enter_vehicle' then
 		m_NodeEditor:OnAddVehicle(p_Player)
+		return
 	elseif request.action == 'add_exit_vehicle_passengers' then
 		m_NodeEditor:OnExitVehicle(p_Player, {"true"})
+		return
 	elseif request.action == 'add_exit_vehicle_all' then
 		m_NodeEditor:OnExitVehicle(p_Player,  {"false"})
+		return
 
 	elseif request.action == 'add_objective' or request.action == 'remove_objective' then
 		--NetEvents:SendTo('UI_Toggle_DataMenu', p_Player, true)
@@ -368,7 +386,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		self.m_NavigaionPath[p_Player.onlineId][2] = nil
 		self.m_NavigaionPath[p_Player.onlineId][1] = request.action
 		local s_Center = {}
-		if request.action == add_objective then
+		if request.action == 'add_objective' then
 			s_Center = {
 				Action = 'not_implemented',
 				Label = Language:I18N('Add') 
@@ -618,7 +636,11 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 			})
 		else
 			local s_BaseParts = request.action:split("_")
-			m_NodeEditor:OnAddObjective(p_Player, s_BaseParts)
+			if self.m_NavigaionPath[p_Player.onlineId][1] == "remove_objective" then
+				m_NodeEditor:OnRemoveObjective(p_Player, s_BaseParts)
+			else
+				m_NodeEditor:OnAddObjective(p_Player, s_BaseParts)
+			end
 		end
 		
 		return

@@ -344,7 +344,7 @@ const BotEditor = (new function BotEditor() {
 				case 'add_vehicle_chopper':
 				case 'add_vehicle_plane':
 				case 'add_vehicle_other':
-				case 'set_vehcile_spawn':
+				case 'set_vehicle_spawn':
 				case 'team_ru':
 				case 'team_us':
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
