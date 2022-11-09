@@ -32,14 +32,12 @@ end
 -- Open the complete WebUI. 
 -- function UIViews:open() 
 -- WebUI:Show() 
--- self._webui = 1 
 -- end 
 
 -- Close the complete WebUI. 
 -- function UIViews:close() 
 -- WebUI:Hide() 
 -- self:disable() 
--- self._webui = 0 
 -- end 
 
 -- Enable Mouse/Keyboard actions. 
@@ -58,11 +56,6 @@ function UIViews:disable()
 	WebUI:ResetMouse()
 	WebUI:ResetKeyboard()
 end
-
--- Check if WebUI is visible. 
--- function UIViews:isVisible() 
--- return self._webui ~= 0 
--- end 
 
 function UIViews:focus()
 	self:enable()

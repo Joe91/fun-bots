@@ -277,6 +277,8 @@ const BotEditor = (new function BotEditor() {
 
 				/* Path-Menu */
 				case 'add_objective':
+				case 'remove_objective':
+				case 'vehicle_menu':
 				case 'close_comm':
 				case 'base_rush':
 				case 'base_us':
@@ -318,6 +320,16 @@ const BotEditor = (new function BotEditor() {
 				case 'mcom_inter_8':
 				case 'mcom_inter_9':
 				case 'mcom_inter_10':
+				case 'index_vehcile_1':
+				case 'index_vehcile_2':
+				case 'index_vehcile_3':
+				case 'index_vehcile_4':
+				case 'index_vehcile_5':
+				case 'index_vehcile_6':
+				case 'index_vehcile_7':
+				case 'index_vehcile_8':
+				case 'index_vehcile_9':
+				case 'index_vehcile_10':
 				case 'set_vehicle_path_type':
 				case 'vehicle_objective':
 				case 'enter_exit_vehicle':
@@ -332,6 +344,9 @@ const BotEditor = (new function BotEditor() {
 				case 'add_vehicle_chopper':
 				case 'add_vehicle_plane':
 				case 'add_vehicle_other':
+				case 'set_vehcile_spawn':
+				case 'team_ru':
+				case 'team_us':
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
 						action:	parent.dataset.action
 					}));

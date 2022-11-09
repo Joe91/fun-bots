@@ -24,9 +24,8 @@ local WeaponList = require('__shared/WeaponList')
 
 function FunBotUIServer:__init()
 	-- To-do: remove? Unused. 
-	self._webui = 0
-	-- To-do: remove? Unused. 
-	self._authenticated = ArrayMap()
+	self.m_NavigaionPath = {}
+	
 
 	if Config.DisableUserInterface ~= true then
 		NetEvents:Subscribe('UI_Request_Open', self, self._onUIRequestOpen)
@@ -51,6 +50,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 
 	-- Editor Data-Menu
 	if request.action == 'data_menu' then
+		self.m_NavigaionPath[p_Player.onlineId][1] = nil
 		-- Change Commo-rose. 
 		local s_Top = {}
 		if Globals.IsRush then
@@ -71,12 +71,12 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 				{
 					Action = 'add_objective',
 					Label = Language:I18N('Add Label / Objective')
+				},{
+					Action = 'remove_objective',
+					Label = Language:I18N('Remove Label / Objective')
 				}, {
-					Action = 'set_spawn_path',
-					Label = Language:I18N('Set Spawn-Path')
-				}, {
-					Action = 'set_vehicle_path_type',
-					Label = Language:I18N('Set Vehicle Path-Type')
+					Action = 'vehicle_menu',
+					Label = Language:I18N('Vehicles')
 				}, {
 					Action = 'remove_all_objectives',
 					Label = Language:I18N('Remove all Labels / Objectives')
@@ -87,10 +87,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 				Label = Language:I18N('Paths') -- Or "Unselect". 
 			},
 			Left = {
-				{
-					Action = 'enter_exit_vehicle',
-					Label = Language:I18N('Enter / Exit Vehicle')
-				}, {
+			    {
 					Action = 'loop_path',
 					Label = Language:I18N('Overwrite: Loop-Path')
 				}, {
@@ -135,6 +132,8 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		m_NodeEditor:OnAddMcom(p_Player)
 		return
 	elseif request.action == 'set_vehicle_path_type' then
+		self.m_NavigaionPath[p_Player.onlineId][3] = nil
+		self.m_NavigaionPath[p_Player.onlineId][2] = request.action
 		NetEvents:SendTo('UI_CommonRose', p_Player, {
 			Top = {
 				Action = 'not_implemented',
@@ -168,14 +167,17 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 			}
 		})
 		return
-	elseif request.action == 'enter_exit_vehicle' then
+	elseif request.action == 'vehicle_menu' then
+		self.m_NavigaionPath[p_Player.onlineId][2] = nil
+		self.m_NavigaionPath[p_Player.onlineId][1] = request.action
+		
 		NetEvents:SendTo('UI_CommonRose', p_Player, {
 			Top = {
 				Action = 'not_implemented',
 				Label = Language:I18N(''),
 				Confirm = true
 			},
-			Right = {
+			Left = {
 				{
 					Action = 'add_enter_vehicle',
 					Label = Language:I18N('Enter Vehicle')
@@ -191,7 +193,18 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 				Action = 'not_implemented',
 				Label = Language:I18N('Vehicle') -- Or "Unselect". 
 			},
-			Left = {
+			Right = {
+				-- vehicle Menu
+				{
+					Action = 'vehicle_objective',
+					Label = Language:I18N('Add Vehicle')
+				}, {
+					Action = 'set_vehicle_path_type',
+					Label = Language:I18N('Set Vehicle Path-Type')
+				}, {
+					Action = 'remove_all_objectives',
+					Label = Language:I18N('Remove Vehicle')
+				}
 			},
 			Bottom = {
 				Action = 'data_menu',
@@ -200,6 +213,10 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		})
 		return
 	elseif request.action == 'vehicle_objective' then
+		self.m_NavigaionPath[p_Player.onlineId][5] = nil
+		self.m_NavigaionPath[p_Player.onlineId][4] = nil
+		self.m_NavigaionPath[p_Player.onlineId][3] = nil
+		self.m_NavigaionPath[p_Player.onlineId][2] = request.action
 		NetEvents:SendTo('UI_CommonRose', p_Player, {
 			Top = {
 				Action = 'not_implemented',
@@ -226,13 +243,118 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 				Label = Language:I18N('Vehicle') -- Or "Unselect". 
 			},
 			Left = {
+				{
+					Action = 'set_vehcile_spawn',
+					Label = Language:I18N('Set Vehicle Spawn-Path')
+				}
 			},
 			Bottom = {
-				Action = 'add_objective',
+				Action = 'vehicle_menu',
 				Label = Language:I18N('Back')
 			}
 		})
 		return
+	elseif string.find(request.action, 'add_vehicle_') ~= nil then
+		self.m_NavigaionPath[p_Player.onlineId][4] = nil
+		self.m_NavigaionPath[p_Player.onlineId][3] = request.action
+		
+		NetEvents:SendTo('UI_CommonRose', p_Player, {
+			Top = {
+				Action = 'not_implemented',
+				Label = Language:I18N(''),
+				Confirm = true
+			},
+			Left = {
+				{
+					Action = 'team_us',
+					Label = Language:I18N('US')
+				}
+			},
+			Center = {
+				Action = 'not_implemented',
+				Label = Language:I18N('Team') -- Or "Unselect". 
+			},
+			Right = {
+				{
+					Action = 'team_ru',
+					Label = Language:I18N('RU')
+				}
+			},
+			Bottom = {
+				Action = 'vehicle_objective',
+				Label = Language:I18N('Back')
+			}
+		})
+	elseif string.find(request.action, 'team_') ~= nil then
+		self.m_NavigaionPath[p_Player.onlineId][5] = nil
+		self.m_NavigaionPath[p_Player.onlineId][4] = request.action
+		
+		NetEvents:SendTo('UI_CommonRose', p_Player, {
+			Top = {
+				Action = 'not_implemented',
+				Label = Language:I18N(''),
+				Confirm = true
+			},
+			Left = {
+				{
+					Action = 'index_vehcile_1',
+					Label = Language:I18N('Vehicle 1')
+				}, {
+					Action = 'index_vehcile_2',
+					Label = Language:I18N('Vehicle 2')
+				}, {
+					Action = 'index_vehcile_3',
+					Label = Language:I18N('Vehicle 3')
+				}, {
+					Action = 'index_vehcile_4',
+					Label = Language:I18N('Vehicle 4')
+				}, {
+					Action = 'index_vehcile_5',
+					Label = Language:I18N('Vehicle 5')
+				}
+			},
+			Center = {
+				Action = 'not_implemented',
+				Label = Language:I18N('Index') -- Or "Unselect". 
+			},
+			Right = {
+				{
+					Action = 'index_vehcile_6',
+					Label = Language:I18N('Vehicle 6')
+				}, {
+					Action = 'index_vehcile_7',
+					Label = Language:I18N('Vehicle 7')
+				}, {
+					Action = 'index_vehcile_8',
+					Label = Language:I18N('Vehicle 8')
+				}, {
+					Action = 'index_vehcile_9',
+					Label = Language:I18N('Vehicle 9')
+				}, {
+					Action = 'index_vehcile_10',
+					Label = Language:I18N('Vehicle 10')
+				}
+			},
+			Bottom = {
+				Action = 'vehicle_objective',
+				Label = Language:I18N('Back')
+			}
+		})
+	elseif string.find(request.action, 'index_vehcile_') ~= nil then
+		self.m_NavigaionPath[p_Player.onlineId][5] = request.action
+		-- FILL THIS
+		local s_Team = self.m_NavigaionPath[p_Player.onlineId][4]:split('_')[2]
+		local s_VehicleType = self.m_NavigaionPath[p_Player.onlineId][3]:split('_')[3]
+		local s_Index = request.action:split('_')[3]
+		local s_ObjectiveData = {}
+		table.insert(s_ObjectiveData, "vehicle")
+		table.insert(s_ObjectiveData, s_VehicleType..s_Index)
+		table.insert(s_ObjectiveData, s_Index)
+		m_NodeEditor:OnAddObjective(p_Player, s_ObjectiveData);
+		return
+		
+	elseif request.action == 'set_vehcile_spawn' then
+		m_NodeEditor:OnSetVehicleSpawn(p_Player);
 	elseif request.action == 'add_enter_vehicle' then
 		m_NodeEditor:OnAddVehicle(p_Player)
 	elseif request.action == 'add_exit_vehicle_passengers' then
@@ -240,9 +362,23 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 	elseif request.action == 'add_exit_vehicle_all' then
 		m_NodeEditor:OnExitVehicle(p_Player,  {"false"})
 
-	elseif request.action == 'add_objective' then
+	elseif request.action == 'add_objective' or request.action == 'remove_objective' then
 		--NetEvents:SendTo('UI_Toggle_DataMenu', p_Player, true)
 		-- Change Commo-rose. 
+		self.m_NavigaionPath[p_Player.onlineId][2] = nil
+		self.m_NavigaionPath[p_Player.onlineId][1] = request.action
+		local s_Center = {}
+		if request.action == add_objective then
+			s_Center = {
+				Action = 'not_implemented',
+				Label = Language:I18N('Add') 
+			}
+		else
+			s_Center = {
+				Action = 'not_implemented',
+				Label = Language:I18N('Remove')
+			}
+		end
 		if Globals.IsRush then
 			NetEvents:SendTo('UI_CommonRose', p_Player, {
 				Top = {
@@ -260,16 +396,14 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 					}, {
 						Action = 'add_mcom_interact',
 						Label = Language:I18N('MCOM Interact')
-					}, {
-						Action = 'vehicle_objective',
-						Label = Language:I18N('Vehicle')
 					}
 				},
-				Center = {
-					Action = 'not_implemented',
-					Label = Language:I18N('Add') -- Or "Unselect". 
-				},
+				Center = s_Center,
 				Left = {
+					{
+						Action = 'set_spawn_path',
+						Label = Language:I18N('Set Spawn-Path')
+					}
 				},
 				Bottom = {
 					Action = 'data_menu',
@@ -294,16 +428,14 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 					}, {
 						Action = 'capture_point',
 						Label = Language:I18N('Capture Point')
-					}, {
-						Action = 'vehicle_objective',
-						Label = Language:I18N('Vehicle')
 					}
 				},
-				Center = {
-					Action = 'not_implemented',
-					Label = Language:I18N('Add') -- Or "Unselect". 
-				},
+				Center = s_Center,
 				Left = {
+					{
+						Action = 'set_spawn_path',
+						Label = Language:I18N('Set Spawn-Path')
+					}
 				},
 				Bottom = {
 					Action = 'data_menu',
@@ -313,6 +445,9 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 			return
 		end
 	elseif request.action == 'add_mcom' then
+		self.m_NavigaionPath[p_Player.onlineId][3] = nil
+		self.m_NavigaionPath[p_Player.onlineId][2] = request.action
+
 		NetEvents:SendTo('UI_CommonRose', p_Player, {
 			Top = {
 				Action = 'not_implemented',
@@ -367,6 +502,9 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		return
 
 	elseif request.action == 'add_mcom_interact' then
+		self.m_NavigaionPath[p_Player.onlineId][3] = nil
+		self.m_NavigaionPath[p_Player.onlineId][2] = request.action
+
 		NetEvents:SendTo('UI_CommonRose', p_Player, {
 			Top = {
 				Action = 'not_implemented',
@@ -422,6 +560,9 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 
 		
 	elseif request.action == 'base_us' or  request.action == 'base_ru' or request.action == 'base_rush' then
+
+		self.m_NavigaionPath[p_Player.onlineId][3] = nil
+		self.m_NavigaionPath[p_Player.onlineId][2] = request.action
 		if Globals.IsRush then
 			-- Add index here
 			NetEvents:SendTo('UI_CommonRose', p_Player, {
@@ -490,66 +631,77 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		if #s_Data == 3 then
 			s_McomString = s_McomString.." interact"
 		end
-		m_NodeEditor:OnAddObjective(p_Player, s_McomString:split(' '))
+		if self.m_NavigaionPath[p_Player.onlineId][1] == "remove_objective" then
+			m_NodeEditor:OnRemoveObjective(p_Player, s_McomString:split(' '))
+		else
+			m_NodeEditor:OnAddObjective(p_Player, s_McomString:split(' '))
+		end
+		return
 	elseif string.find(request.action, 'base_') ~= nil then
 		local s_Data = request.action:split('_')
-		m_NodeEditor:OnAddObjective(p_Player, s_Data)
+		if self.m_NavigaionPath[p_Player.onlineId][1] == "remove_objective" then
+			m_NodeEditor:OnRemoveObjective(p_Player, s_Data)
+		else
+			m_NodeEditor:OnAddObjective(p_Player, s_Data)
+		end
+		return
 	elseif string.find(request.action, 'objective_') ~= nil then
 		local s_Objective = request.action:split('_')[2]
-		--NetEvents:SendTo('UI_CommonRose', p_Player, "false")
-		m_NodeEditor:OnAddObjective(p_Player, {s_Objective})
+		if self.m_NavigaionPath[p_Player.onlineId][1] == "remove_objective" then
+			m_NodeEditor:OnRemoveObjective(p_Player, {s_Objective})
+		else
+			m_NodeEditor:OnAddObjective(p_Player, {s_Objective})
+		end
 		return
 	elseif request.action == 'capture_point' then
-		if Globals.IsRush then
-			NetEvents:SendTo('UI_CommonRose', p_Player, "false")
-		else
-			NetEvents:SendTo('UI_CommonRose', p_Player, {
-				Top = {
-					Action = 'not_implemented',
-					Label = Language:I18N(''),
-					Confirm = true
-				},
-				Left = {
-					{
-						Action = 'objective_a',
-						Label = Language:I18N('A')
-					}, {
-						Action = 'objective_b',
-						Label = Language:I18N('B')
-					}, {
-						Action = 'objective_c',
-						Label = Language:I18N('C')
-					}, {
-						Action = 'objective_d',
-						Label = Language:I18N('D')
-					}
-				},
-				Center = {
-					Action = 'not_implemented',
-					Label = Language:I18N('Objective') -- Or "Unselect". 
-				},
-				Right = {
-					{
-						Action = 'objective_e',
-						Label = Language:I18N('E')
-					}, {
-						Action = 'objective_f',
-						Label = Language:I18N('F')
-					}, {
-						Action = 'objective_g',
-						Label = Language:I18N('G')
-					}, {
-						Action = 'objective_h',
-						Label = Language:I18N('H')
-					}
-				},
-				Bottom = {
-					Action = 'add_objective',
-					Label = Language:I18N('Back')
+
+		self.m_NavigaionPath[p_Player.onlineId][3] = nil
+		self.m_NavigaionPath[p_Player.onlineId][2] = request.action
+		NetEvents:SendTo('UI_CommonRose', p_Player, {
+			Top = {
+				Action = 'not_implemented',
+				Label = Language:I18N(''),
+				Confirm = true
+			},
+			Left = {
+				{
+					Action = 'objective_a',
+					Label = Language:I18N('A')
+				}, {
+					Action = 'objective_b',
+					Label = Language:I18N('B')
+				}, {
+					Action = 'objective_c',
+					Label = Language:I18N('C')
+				}, {
+					Action = 'objective_d',
+					Label = Language:I18N('D')
 				}
-			})
-		end
-		
+			},
+			Center = {
+				Action = 'not_implemented',
+				Label = Language:I18N('Objective') -- Or "Unselect". 
+			},
+			Right = {
+				{
+					Action = 'objective_e',
+					Label = Language:I18N('E')
+				}, {
+					Action = 'objective_f',
+					Label = Language:I18N('F')
+				}, {
+					Action = 'objective_g',
+					Label = Language:I18N('G')
+				}, {
+					Action = 'objective_h',
+					Label = Language:I18N('H')
+				}
+			},
+			Bottom = {
+				Action = 'add_objective',
+				Label = Language:I18N('Back')
+			}
+		})	
 		return
 
 	-- Comm Screen. 

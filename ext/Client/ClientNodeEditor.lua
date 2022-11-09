@@ -130,6 +130,7 @@ function ClientNodeEditor:OnRegisterEvents()
 	Console:Register('AddVehicle', 'Add a vehicle a bot can use', self, self._onAddVehicle)
 	Console:Register('ExitVehicle',	'<bool|OnlyPassengers> Add a point where all bots or only the passengers leaves the vehicle', self, self._onExitVehicle)
 	Console:Register('AddVehiclePath', '<string|Type> Add vehicle-usage to a path. Types = land, water, air', self,	self._onAddVehiclePath)
+	Console:Register('AddVehicleSpawn','Makes an already existing vehicle-path spawnable', self, self._onSetVehicleSpawn)
 	Console:Register('RemoveObjective', '<string|Objective> - Remove an objective from a path', self, self._onRemoveObjective)
 	Console:Register('RemoveAllObjectives', 'Remove all objectives from a path', self, self._onRemoveAllObjectives)
 	Console:Register('SetPathLoops', '<bool|Loop> - manually set loop-mode of selected path', self, self._onSetLoopMode)
@@ -597,6 +598,11 @@ end
 function ClientNodeEditor:_onAddVehiclePath(p_Args)
 	NetEvents:SendLocal('NodeEditor:AddVehiclePath', p_Args)
 end
+
+function ClientNodeEditor:_onSetVehicleSpawn(p_Args)
+	NetEvents:SendLocal('NodeEditor:SetVehicleSpawn', p_Args)
+end
+
 
 function ClientNodeEditor:_onAddObjective(p_Args)
 	NetEvents:SendLocal('NodeEditor:AddObjective', p_Args)
