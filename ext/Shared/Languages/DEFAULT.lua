@@ -250,7 +250,7 @@ Language:add(code, "Min time bots move sidewards or straight before switching (i
 
 -- EXPERT 
 Language:add(code, "Bot first shot delay", "")
-Language:add(code, "Delay for first shot. If too small, there will be great spread in first cycle because it's not compensated yet", "")
+Language:add(code, "Delay for first shot. If too small, there will be great spread in first cycle because it is not compensated yet", "")
 Language:add(code, "Bot min time shoot at player", "")
 Language:add(code, "The minimum time a bot shoots at one player for - recommended minimum 1.5, below this you will have issues", "")
 Language:add(code, "Bot min time shoot at player in vehicle", "")
@@ -292,7 +292,7 @@ Language:add(code, "If true, no RCON commands can be used", "")
 Language:add(code, "Ignore Permissions", "")
 Language:add(code, "If true, all permissions are ignored --> everyone can do everything", "")
 Language:add(code, "Language", "")
-Language:add(code, "de_DE as sample (default is English, when language file doesn't exist)", "")
+Language:add(code, "de_DE as sample (default is English, when language file does not exist)", "")
 
 -- Strings of ext/Client/ClientNodeEditor.lua 
 
