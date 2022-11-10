@@ -3,7 +3,7 @@
 BotMovement = class('BotMovement')
 
 ---@type Logger
-local m_Logger = Logger("Bot", Debug.Server.BOT)
+local m_Logger = Logger('Bot', Debug.Server.BOT)
 ---@type Utilities
 local m_Utilities = require('__shared/Utilities')
 ---@type PathSwitcher
@@ -48,7 +48,7 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 			if not p_Bot._InvertPathDirection then
 				s_NextPoint = m_NodeCollection:Get(p_Bot:_GetWayIndex(p_Bot._CurrentWayPoint + 1), p_Bot._PathIndex)
 
-			--[[if Config.DebugTracePaths then 
+				--[[if Config.DebugTracePaths then 
 					NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', p_Bot._PathIndex, p_Bot:_GetWayIndex(p_Bot._CurrentWayPoint + 1), p_Bot.m_Player.soldier.worldTransform.trans, (p_Bot._ObstaceSequenceTimer > 0.0), "Green")
 				end--]] 
 			else
@@ -63,7 +63,7 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 		-- Execute Action if needed. 
 		if p_Bot._ActiveAction == BotActionFlags.OtherActionActive then
 			if s_Point.Data ~= nil and s_Point.Data.Action ~= nil then
-				if s_Point.Data.Action.type == "vehicle" then
+				if s_Point.Data.Action.type == 'vehicle' then
 					if Config.UseVehicles then
 						local s_RetCode, s_Position = p_Bot:_EnterVehicle(false)
 						if s_RetCode == 0 then
@@ -128,7 +128,7 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 			-- Sidewards movement. 
 			if Config.MoveSidewards then
 				if p_Bot._SidewardsTimer <= 0.0 then
-					if p_Bot.m_StrafeValue ~= 0.0 then
+					if p_Bot.m_StrafeValue ~= 0 then
 						p_Bot._SidewardsTimer = MathUtils:GetRandom(Config.MinMoveCycle, Config.MaxStraigtCycle)
 						p_Bot.m_StrafeValue = 0.0
 						p_Bot.m_YawOffset = 0.0
@@ -164,7 +164,7 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 			-- Detect obstacle and move over or around. To-do: Move before normal jump. 
 			local s_CurrentWayPointDistance = p_Bot.m_Player.soldier.worldTransform.trans:Distance(s_Point.Position)
 
-			if s_CurrentWayPointDistance > p_Bot._LastWayDistance + 0.02 and p_Bot._ObstaceSequenceTimer == 0.0 then
+			if s_CurrentWayPointDistance > p_Bot._LastWayDistance + 0.02 and p_Bot._ObstaceSequenceTimer == 0 then
 				-- Skip one point. 
 				s_DistanceFromTarget = 0
 				s_HeightDistance = 0
@@ -173,11 +173,11 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 			p_Bot._TargetPoint = s_Point
 			p_Bot._NextTargetPoint = s_NextPoint
 
-			if math.abs(s_CurrentWayPointDistance - p_Bot._LastWayDistance) < 0.02 or p_Bot._ObstaceSequenceTimer ~= 0.0 then
+			if math.abs(s_CurrentWayPointDistance - p_Bot._LastWayDistance) < 0.02 or p_Bot._ObstaceSequenceTimer ~= 0 then
 				-- Try to get around obstacle. 
 				p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.Sprint -- Always try to stand. 
 
-				if p_Bot._ObstaceSequenceTimer == 0.0 then -- Step 0 
+				if p_Bot._ObstaceSequenceTimer == 0 then -- Step 0 
 				elseif p_Bot._ObstaceSequenceTimer > 2.4 then -- Step 4 - repeat afterwards. 
 					p_Bot._ObstaceSequenceTimer = 0.0
 					p_Bot:_ResetActionFlag(BotActionFlags.MeleeActive)
@@ -228,7 +228,7 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 						s_Transform.trans = p_Bot._TargetPoint.Position
 						s_Transform:LookAtTransform(p_Bot._TargetPoint.Position, p_Bot._NextTargetPoint.Position)
 						p_Bot.m_Player.soldier:SetTransform(s_Transform)
-						m_Logger:Write("tepeported " .. p_Bot.m_Player.name)
+						m_Logger:Write('teleported ' .. p_Bot.m_Player.name)
 					else
 						if not p_Bot.m_InVehicle then
 							s_PointIncrement = MathUtils:GetRandomInt(-5, 5) -- Go 5 points further. 
@@ -250,7 +250,7 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 				if p_Bot._StuckTimer > 15.0 then
 					p_Bot.m_Player.soldier:Kill()
 
-					m_Logger:Write(p_Bot.m_Player.name .. " got stuck. Kill")
+					m_Logger:Write(p_Bot.m_Player.name .. ' got stuck. Kill')
 
 					return
 				end
@@ -261,7 +261,7 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 			p_Bot._LastWayDistance = s_CurrentWayPointDistance
 
 			-- Jump detection. Much more simple now, but works fine -) 
-			if p_Bot._ObstaceSequenceTimer == 0.0 then
+			if p_Bot._ObstaceSequenceTimer == 0 then
 				if (s_Point.Position.y - p_Bot.m_Player.soldier.worldTransform.trans.y) > 0.3 and Config.JumpWhileMoving then
 					-- Detect, if a jump was recorded or not. 
 					local s_TimeForwardBackwardJumpDetection = 1.1 -- 1.5 s ahead and back. 
@@ -272,8 +272,7 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 						local s_PointAfter = m_NodeCollection:Get(s_ActivePointIndex + i, p_Bot._PathIndex)
 
 						if (s_PointBefore ~= nil and s_PointBefore.ExtraMode == 1) or
-							(s_PointAfter ~= nil and s_PointAfter.ExtraMode == 1
-							) then
+							(s_PointAfter ~= nil and s_PointAfter.ExtraMode == 1) then
 							s_JumpValid = true
 							break
 						end
@@ -434,11 +433,11 @@ function BotMovement:UpdateShootMovement(p_Bot)
 
 	-- Crouch moving (only mode with modified gun). 
 	local s_ActiveWeaponType = p_Bot.m_ActiveWeapon.type
-	if (
-		(
-			s_ActiveWeaponType == WeaponTypes.Sniper or s_ActiveWeaponType == WeaponTypes.Rocket or
-				s_ActiveWeaponType == WeaponTypes.MissileAir or s_ActiveWeaponType == WeaponTypes.MissileLand) and
-			not p_Bot.m_KnifeMode) then -- Don't move while shooting some weapons. 
+	if ((s_ActiveWeaponType == WeaponTypes.Sniper or 
+	s_ActiveWeaponType == WeaponTypes.Rocket or
+	s_ActiveWeaponType == WeaponTypes.MissileAir or 
+	s_ActiveWeaponType == WeaponTypes.MissileLand) and
+	not p_Bot.m_KnifeMode) then -- Don't move while shooting some weapons. 
 		if p_Bot._AttackMode == BotAttackModes.Crouch then
 			if p_Bot.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Crouch then
 				p_Bot.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Crouch, true, true)
@@ -583,13 +582,13 @@ function BotMovement:LookAround(p_Bot, p_DeltaTime)
 			p_Bot._TargetYaw = p_Bot._TargetYaw + (2 * math.pi)
 		end
 	elseif p_Bot._WayWaitYawTimer >= 3.0 and s_LastYawTimer < 3.0 then
-		p_Bot._TargetYaw = p_Bot._TargetYaw - 1.0 -- 60° rotation left 
+		p_Bot._TargetYaw = p_Bot._TargetYaw - 1.0 -- 60° rotation left. 
 
 		if p_Bot._TargetYaw < 0.0 then
 			p_Bot._TargetYaw = p_Bot._TargetYaw + (2 * math.pi)
 		end
 	elseif p_Bot._WayWaitYawTimer >= 1.0 and s_LastYawTimer < 1.0 then
-		p_Bot._TargetYaw = p_Bot._TargetYaw + 1.0 -- 60° rotation right 
+		p_Bot._TargetYaw = p_Bot._TargetYaw + 1.0 -- 60° rotation right. 
 
 		if p_Bot._TargetYaw > (math.pi * 2) then
 			p_Bot._TargetYaw = p_Bot._TargetYaw - (2 * math.pi)
@@ -652,7 +651,11 @@ function BotMovement:UpdateStaticMovement(p_Bot)
 		end
 
 		p_Bot._TargetYaw = p_Bot._TargetPlayer.input.authoritativeAimingYaw +
-			((p_Bot._TargetPlayer.input.authoritativeAimingYaw > math.pi) and -math.pi or math.pi)
+			(
+				(p_Bot._TargetPlayer.input.authoritativeAimingYaw > math.pi) and
+				-math.pi or 
+				math.pi
+			)
 		p_Bot._TargetPitch = p_Bot._TargetPlayer.input.authoritativeAimingPitch
 	end
 end
