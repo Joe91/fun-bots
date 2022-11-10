@@ -157,6 +157,7 @@ def __scan_other_files() -> List[str]:
         "ext/Client/ClientNodeEditor.lua",
         "ext/Server/BotSpawner.lua",
         "ext/Server/UIServer.lua",
+        "ext/Server/UIPathMenu.lua",
         "ext/Server/NodeCollection.lua",
     ]
     out_file_lines_others = []
