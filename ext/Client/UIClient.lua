@@ -13,7 +13,6 @@ function FunBotUIClient:__init()
 	self.m_InWaypointEditor = false
 	self.m_InCommScreen = false
 	self.m_WaitForKeyLeft = false
-	self.m_LastWaypointEditorState = false
 
 	if Config.DisableUserInterface ~= true then
 		NetEvents:Subscribe('UI_Toggle', self, self._onUIToggle)
@@ -56,6 +55,7 @@ function FunBotUIClient:_onUIToggle()
 	end
 
 	self._views:execute('BotEditor.Hide()')
+	--NetEvents:Send('PathMenu:Hide')
 	self._views:disable()
 
 	-- if self._views:isVisible() then 
@@ -94,11 +94,11 @@ function FunBotUIClient:_onUIWaypointsEditor(p_State)
 			print('UIClient: close UI_Waypoints_Editor')
 		end
 
+		--NetEvents:Send('PathMenu:Close')
 		self._views:hide('waypoint_toolbar')
 		self._views:show('toolbar')
 		Config.DebugTracePaths = false
 		self.m_InWaypointEditor = false
-		self.m_LastWaypointEditorState = false
 		NetEvents:Send('UI_CommoRose_Enabled', false)
 		g_ClientNodeEditor:OnSetEnabled(false)
 		g_ClientSpawnPointHelper:OnSetEnabled(false)
@@ -114,13 +114,13 @@ function FunBotUIClient:_onUIWaypointsEditor(p_State)
 		self._views:show('waypoint_toolbar')
 		self._views:hide('toolbar')
 		self.m_InWaypointEditor = true
-		self.m_LastWaypointEditorState = false
 		self._views:disable()
 	end
 end
 
 function FunBotUIClient:_onUIWaypointsEditorDisable()
 	if self.m_InWaypointEditor then
+		NetEvents:Send('PathMenu:Hide')
 		self._views:disable()
 	end
 end
@@ -155,6 +155,7 @@ function FunBotUIClient:_onUITrace(p_State)
 	end
 
 	self._views:execute('BotEditor.toggleTraceRun(' .. tostring(p_State) .. ')')
+	NetEvents:Send('PathMenu:Hide')
 	self._views:disable()
 end
 
@@ -272,6 +273,7 @@ function FunBotUIClient:_OnPathMenuRequest(p_Data)
 	if Config.DisableUserInterface == true then
 		return
 	end
+	-- Redirect to Server. 
 	NetEvents:Send('PathMenu:Request', p_Data)
 end
 
@@ -307,13 +309,8 @@ function FunBotUIClient:OnClientUpdateInput(p_DeltaTime)
 
 		-- This request can be used for UI-Toggle. 
 		if self.m_InWaypointEditor then
-			if self.m_LastWaypointEditorState == false then
-				self._views:enable()
-				self.m_LastWaypointEditorState = true
-			else
-				self._views:disable()
-				self.m_LastWaypointEditorState = false
-			end
+			self._views:enable()
+			NetEvents:Send('PathMenu:Unhide')
 		else
 			NetEvents:Send('UI_Request_Open')
 		end
@@ -321,10 +318,7 @@ function FunBotUIClient:OnClientUpdateInput(p_DeltaTime)
 		return
 	elseif InputManager:WentKeyUp(InputDeviceKeys.IDK_LeftAlt) and self.m_InWaypointEditor then
 		self._views:enable()
-		self.m_LastWaypointEditorState = true
-	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_LeftAlt) and self.m_InWaypointEditor then
-		self._views:disable()
-		self.m_LastWaypointEditorState = false
+		NetEvents:Send('PathMenu:Unhide')
 	elseif InputManager:WentKeyDown(Registry.COMMON.BOT_COMMAND_KEY) and not self.m_InWaypointEditor and
 		not self.m_InCommScreen and not self.m_WaitForKeyLeft then
 		NetEvents:Send('UI_Request_CommoRose_Show')

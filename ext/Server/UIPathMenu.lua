@@ -22,10 +22,13 @@ function FunBotUIPathMenu:__init()
 		NetEvents:Subscribe('PathMenu:Request', self, self._OnPathMenuRequest)
 		NetEvents:Subscribe('PathMenu:Open', self, self._OnPathMenuOpen)
 		NetEvents:Subscribe('PathMenu:Hide', self, self._OnPathMenuHide)
+		NetEvents:Subscribe('PathMenu:Unhide', self, self._OnPathMenuUnhide)
+		NetEvents:Subscribe('PathMenu:Close', self, self._OnPathMenuClose)
 	end
 end
 
 function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
+	print(p_Data)
 	local request = json.decode(p_Data)
 
 	-- Reenter or hide Data-Menu?
@@ -39,6 +42,16 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 		end
 	end
 
+	if request.action == 'unhide_comm' then
+		if self.m_NavigaionPath[p_Player.onlineId] and #self.m_NavigaionPath[p_Player.onlineId] > 0 then
+			-- goto last posiiton in menu
+			request.action = self.m_NavigaionPath[p_Player.onlineId][#self.m_NavigaionPath[p_Player.onlineId]]
+			self.m_InPathMenu = true
+		else
+			return
+		end
+	end
+
 	-- Editor Data-Menu
 	if request.action == 'data_menu' or request.action == 'back_to_data_menu' then
 		if not Globals.IsConquest and not Globals.IsRush then
@@ -47,6 +60,7 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 		end
 		self.m_InPathMenu = true
 		self.m_NavigaionPath[p_Player.onlineId] = {}
+		self.m_NavigaionPath[p_Player.onlineId][1] = request.action
 		-- Change Commo-rose. 
 		local s_Left = {}
 		if Globals.IsRush then
@@ -139,8 +153,8 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 		m_NodeEditor:OnAddMcom(p_Player)
 		return
 	elseif request.action == 'set_vehicle_path_type' then
-		self.m_NavigaionPath[p_Player.onlineId][3] = nil
-		self.m_NavigaionPath[p_Player.onlineId][2] = request.action
+		self.m_NavigaionPath[p_Player.onlineId][4] = nil
+		self.m_NavigaionPath[p_Player.onlineId][3] = request.action
 		NetEvents:SendTo('UI_CommonRose', p_Player, {
 			Top = {
 				Action = 'not_implemented',
@@ -175,8 +189,8 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 		})
 		return
 	elseif request.action == 'vehicle_menu' then
-		self.m_NavigaionPath[p_Player.onlineId][2] = nil
-		self.m_NavigaionPath[p_Player.onlineId][1] = request.action
+		self.m_NavigaionPath[p_Player.onlineId][3] = nil
+		self.m_NavigaionPath[p_Player.onlineId][2] = request.action
 		
 		NetEvents:SendTo('UI_CommonRose', p_Player, {
 			Top = {
@@ -223,10 +237,10 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 		})
 		return
 	elseif request.action == 'vehicle_objective' then
+		self.m_NavigaionPath[p_Player.onlineId][6] = nil
 		self.m_NavigaionPath[p_Player.onlineId][5] = nil
 		self.m_NavigaionPath[p_Player.onlineId][4] = nil
-		self.m_NavigaionPath[p_Player.onlineId][3] = nil
-		self.m_NavigaionPath[p_Player.onlineId][2] = request.action
+		self.m_NavigaionPath[p_Player.onlineId][3] = request.action
 		NetEvents:SendTo('UI_CommonRose', p_Player, {
 			Top = {
 				Action = 'not_implemented',
@@ -265,8 +279,8 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 		})
 		return
 	elseif string.find(request.action, 'add_vehicle_') ~= nil then
-		self.m_NavigaionPath[p_Player.onlineId][4] = nil
-		self.m_NavigaionPath[p_Player.onlineId][3] = request.action
+		self.m_NavigaionPath[p_Player.onlineId][5] = nil
+		self.m_NavigaionPath[p_Player.onlineId][4] = request.action
 		
 		NetEvents:SendTo('UI_CommonRose', p_Player, {
 			Top = {
@@ -296,8 +310,8 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 			}
 		})
 	elseif string.find(request.action, 'team_') ~= nil then
-		self.m_NavigaionPath[p_Player.onlineId][5] = nil
-		self.m_NavigaionPath[p_Player.onlineId][4] = request.action
+		self.m_NavigaionPath[p_Player.onlineId][6] = nil
+		self.m_NavigaionPath[p_Player.onlineId][5] = request.action
 		
 		NetEvents:SendTo('UI_CommonRose', p_Player, {
 			Top = {
@@ -351,10 +365,10 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 			}
 		})
 	elseif string.find(request.action, 'index_vehcile_') ~= nil then
-		self.m_NavigaionPath[p_Player.onlineId][5] = request.action
+		self.m_NavigaionPath[p_Player.onlineId][6] = request.action
 		-- FILL THIS
-		local s_Team = self.m_NavigaionPath[p_Player.onlineId][4]:split('_')[2]
-		local s_VehicleType = self.m_NavigaionPath[p_Player.onlineId][3]:split('_')[3]
+		local s_Team = self.m_NavigaionPath[p_Player.onlineId][5]:split('_')[2]
+		local s_VehicleType = self.m_NavigaionPath[p_Player.onlineId][4]:split('_')[3]
 		local s_Index = request.action:split('_')[3]
 		local s_ObjectiveData = {}
 		table.insert(s_ObjectiveData, "vehicle")
@@ -379,8 +393,8 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 	elseif request.action == 'add_objective' or request.action == 'remove_objective' then
 		--NetEvents:SendTo('UI_Toggle_DataMenu', p_Player, true)
 		-- Change Commo-rose. 
-		self.m_NavigaionPath[p_Player.onlineId][2] = nil
-		self.m_NavigaionPath[p_Player.onlineId][1] = request.action
+		self.m_NavigaionPath[p_Player.onlineId][3] = nil
+		self.m_NavigaionPath[p_Player.onlineId][2] = request.action
 		local s_Center = {}
 		if request.action == 'add_objective' then
 			s_Center = {
@@ -459,8 +473,8 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 			return
 		end
 	elseif request.action == 'add_mcom' then
-		self.m_NavigaionPath[p_Player.onlineId][3] = nil
-		self.m_NavigaionPath[p_Player.onlineId][2] = request.action
+		self.m_NavigaionPath[p_Player.onlineId][4] = nil
+		self.m_NavigaionPath[p_Player.onlineId][3] = request.action
 
 		NetEvents:SendTo('UI_CommonRose', p_Player, {
 			Top = {
@@ -516,8 +530,8 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 		return
 
 	elseif request.action == 'add_mcom_interact' then
-		self.m_NavigaionPath[p_Player.onlineId][3] = nil
-		self.m_NavigaionPath[p_Player.onlineId][2] = request.action
+		self.m_NavigaionPath[p_Player.onlineId][4] = nil
+		self.m_NavigaionPath[p_Player.onlineId][3] = request.action
 
 		NetEvents:SendTo('UI_CommonRose', p_Player, {
 			Top = {
@@ -575,8 +589,8 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 		
 	elseif request.action == 'base_us' or  request.action == 'base_ru' or request.action == 'base_rush' then
 
-		self.m_NavigaionPath[p_Player.onlineId][3] = nil
-		self.m_NavigaionPath[p_Player.onlineId][2] = request.action
+		self.m_NavigaionPath[p_Player.onlineId][4] = nil
+		self.m_NavigaionPath[p_Player.onlineId][3] = request.action
 		if Globals.IsRush then
 			-- Add index here
 			NetEvents:SendTo('UI_CommonRose', p_Player, {
@@ -632,7 +646,7 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 			})
 		else
 			local s_BaseParts = request.action:split("_")
-			if self.m_NavigaionPath[p_Player.onlineId][1] == "remove_objective" then
+			if self.m_NavigaionPath[p_Player.onlineId][2] == "remove_objective" then
 				m_NodeEditor:OnRemoveObjective(p_Player, s_BaseParts)
 			else
 				m_NodeEditor:OnAddObjective(p_Player, s_BaseParts)
@@ -649,7 +663,7 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 		if #s_Data == 3 then
 			s_McomString = s_McomString.." interact"
 		end
-		if self.m_NavigaionPath[p_Player.onlineId][1] == "remove_objective" then
+		if self.m_NavigaionPath[p_Player.onlineId][2] == "remove_objective" then
 			m_NodeEditor:OnRemoveObjective(p_Player, s_McomString:split(' '))
 		else
 			m_NodeEditor:OnAddObjective(p_Player, s_McomString:split(' '))
@@ -657,7 +671,7 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 		return
 	elseif string.find(request.action, 'base_') ~= nil then
 		local s_Data = request.action:split('_')
-		if self.m_NavigaionPath[p_Player.onlineId][1] == "remove_objective" then
+		if self.m_NavigaionPath[p_Player.onlineId][2] == "remove_objective" then
 			m_NodeEditor:OnRemoveObjective(p_Player, s_Data)
 		else
 			m_NodeEditor:OnAddObjective(p_Player, s_Data)
@@ -665,7 +679,7 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 		return
 	elseif string.find(request.action, 'objective_') ~= nil then
 		local s_Objective = request.action:split('_')[2]
-		if self.m_NavigaionPath[p_Player.onlineId][1] == "remove_objective" then
+		if self.m_NavigaionPath[p_Player.onlineId][2] == "remove_objective" then
 			m_NodeEditor:OnRemoveObjective(p_Player, {s_Objective})
 		else
 			m_NodeEditor:OnAddObjective(p_Player, {s_Objective})
@@ -673,8 +687,8 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 		return
 	elseif request.action == 'capture_point' then
 
-		self.m_NavigaionPath[p_Player.onlineId][3] = nil
-		self.m_NavigaionPath[p_Player.onlineId][2] = request.action
+		self.m_NavigaionPath[p_Player.onlineId][4] = nil
+		self.m_NavigaionPath[p_Player.onlineId][3] = request.action
 		NetEvents:SendTo('UI_CommonRose', p_Player, {
 			Top = {
 				Action = 'not_implemented',
@@ -725,13 +739,20 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 end
 
 function FunBotUIPathMenu:_OnPathMenuOpen(p_Player)
-	self:_OnPathMenuRequest(p_Player, "{action:	'data_menu'}")
+	self:_OnPathMenuRequest(p_Player, [[{"action":"data_menu"}]])
+end
+
+function FunBotUIPathMenu:_OnPathMenuUnhide(p_Player)
+	self:_OnPathMenuRequest(p_Player, [[{"action":"unhide_comm"}]])
 end
 
 function FunBotUIPathMenu:_OnPathMenuHide(p_Player)
-	self:_OnPathMenuRequest(p_Player, "{action:	'hide_comm'}")
+	self:_OnPathMenuRequest(p_Player, [[{"action":"hide_comm"}]])
 end
 
+function FunBotUIPathMenu:_OnPathMenuClose(p_Player)
+	self:_OnPathMenuRequest(p_Player, [[{"action":"close_comm"}]])
+end
 
 
 

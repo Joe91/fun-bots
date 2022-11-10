@@ -576,6 +576,11 @@ const BotEditor = (new function BotEditor() {
 				case InputDeviceKeys.IDK_ALT:
 					WebUI.Call('DispatchEventLocal', 'UI_Waypoints_Disable', false);
 				break;
+				case InputDeviceKeys.IDK_F:
+				WebUI.Call('DispatchEventLocal', 'PathMenu:Request', JSON.stringify({
+					action:	'data_menu'
+				}));
+				break;
 			}
 		}.bind(this));
 	};
