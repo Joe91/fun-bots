@@ -7,7 +7,7 @@ require('__shared/ArrayMap')
 local m_Batches = ArrayMap()
 local m_Batched = ''
 ---@type Logger
-local m_Logger = Logger("Database", Debug.Server.DATABASE)
+local m_Logger = Logger('Database', Debug.Server.DATABASE)
 
 DatabaseField = {
 	NULL = '{::DB:NULL::}',
@@ -140,10 +140,10 @@ end
 function Database:ExecuteBatch()
 	self:Query('DELETE FROM `FB_Settings`')
 	self:Query(m_Batched .. m_Batches:join(', '))
-	m_Batched = ""
+	m_Batched = ''
 	m_Batches:clear()
 
-	if self:GetError() ~= "" then
+	if self:GetError() ~= '' then
 		m_Logger:Error(self:GetError())
 	end
 end
@@ -152,7 +152,6 @@ function Database:BatchQuery(p_TableName, p_Parameters, p_Where)
 	local s_Names = ArrayMap()
 	local s_Values = ArrayMap()
 	local s_Fields = ArrayMap()
-	local s_Found = nil
 
 	for l_Name, l_Value in pairs(p_Parameters) do
 		s_Names:add('`' .. l_Name .. '`')
@@ -175,10 +174,6 @@ function Database:BatchQuery(p_TableName, p_Parameters, p_Where)
 		else
 			s_Values:add('\'' .. tostring(l_Value) .. '\'')
 			l_Value = tostring(l_Value)
-		end
-
-		if p_Where == l_Name then
-			s_Found = l_Value
 		end
 
 		if p_Where ~= l_Name then
