@@ -587,10 +587,9 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 
 		
 	elseif request.action == 'base_us' or  request.action == 'base_ru' or request.action == 'base_rush' then
-
-		self.m_NavigaionPath[p_Player.onlineId][4] = nil
-		self.m_NavigaionPath[p_Player.onlineId][3] = request.action
 		if Globals.IsRush then
+			self.m_NavigaionPath[p_Player.onlineId][4] = nil
+			self.m_NavigaionPath[p_Player.onlineId][3] = request.action
 			-- Add index here
 			NetEvents:SendTo('UI_CommonRose', p_Player, {
 				Top = {

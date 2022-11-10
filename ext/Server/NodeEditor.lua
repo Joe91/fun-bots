@@ -1303,6 +1303,7 @@ function NodeEditor:Log(p_Player, ...)
 	m_Logger:Write(s_MessageString)
 	-- Send message to client as well. 
 	if p_Player then
+		ChatManager:SendMessage('TRACE: '..s_MessageString , p_Player)
 		NetEvents:SendUnreliableToLocal('ClientNodeEditor:PrintLog', p_Player, s_MessageString)
 	else
 		NetEvents:BroadcastUnreliableLocal('ClientNodeEditor:PrintLog', s_MessageString)
