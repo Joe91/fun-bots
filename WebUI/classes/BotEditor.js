@@ -258,7 +258,6 @@ const BotEditor = (new function BotEditor() {
 				break;
 	
 				/* Waypoint-Editor */
-				case 'data_menu':	
 				case 'request_waypoints_editor':
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
 						action:	parent.dataset.action
@@ -276,6 +275,7 @@ const BotEditor = (new function BotEditor() {
 				break;
 
 				/* Path-Menu */
+				case 'data_menu':	
 				case 'add_objective':
 				case 'remove_objective':
 				case 'vehicle_menu':
@@ -349,7 +349,7 @@ const BotEditor = (new function BotEditor() {
 				case 'back_to_data_menu':
 				case 'team_ru':
 				case 'team_us':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
+					WebUI.Call('DispatchEventLocal', 'PathMenu:Request', JSON.stringify({
 						action:	parent.dataset.action
 					}));
 				break;				

@@ -20,6 +20,8 @@ function FunBotUIClient:__init()
 		Events:Subscribe('UI_Toggle', self, self._onUIToggle)
 		NetEvents:Subscribe('BotEditor', self, self._onBotEditorEvent)
 		Events:Subscribe('BotEditor', self, self._onBotEditorEvent)
+		NetEvents:Subscribe('PathMenu:Request', self, self._OnPathMenuRequest)
+		Events:Subscribe('PathMenu:Request', self, self._OnPathMenuRequest)
 		NetEvents:Subscribe('UI_Show_Toolbar', self, self._onUIShowToolbar)
 		NetEvents:Subscribe('UI_Settings', self, self._onUISettings)
 		NetEvents:Subscribe('UI_CommonRose', self, self._onUICommonRose)
@@ -264,6 +266,13 @@ function FunBotUIClient:_onBotEditorEvent(p_Data)
 
 	-- Redirect to Server. 
 	NetEvents:Send('BotEditor', p_Data)
+end
+
+function FunBotUIClient:_OnPathMenuRequest(p_Data)
+	if Config.DisableUserInterface == true then
+		return
+	end
+	NetEvents:Send('PathMenu:Request', p_Data)
 end
 
 function FunBotUIClient:_onUIShowToolbar(p_Data)

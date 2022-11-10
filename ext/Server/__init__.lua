@@ -29,6 +29,8 @@ require('__shared/WeaponList')
 require('__shared/EbxEditUtils')
 require('__shared/Utils/Logger')
 require('Vehicles')
+require('UIServer')
+require('UIPathMenu')
 require('Model/Globals')
 require('Constants/Permissions')
 
@@ -57,8 +59,6 @@ local m_ChatCommands = require('Commands/Chat')
 local m_Console = require('Commands/Console')
 ---@type RCONCommands
 local m_RCONCommands = require('Commands/RCON')
----@type FunBotUIServer
-local m_FunBotUIServer = require('UIServer')
 ---@type AirTargets
 local m_AirTargets = require('AirTargets')
 ---@type GameDirector
