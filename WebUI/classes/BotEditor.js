@@ -204,7 +204,7 @@ const BotEditor = (new function BotEditor() {
 				case 'bot_spawn_default':
 					count = document.querySelector('[data-action="bot_spawn_default"] input[type="number"]');
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'bot_spawn_default',
+						action:	parent.dataset.action,
 						value:	count.value
 					}));
 					count.value = 1;
@@ -212,49 +212,41 @@ const BotEditor = (new function BotEditor() {
 				case 'bot_spawn_friend':
 					count = document.querySelector('[data-action="bot_spawn_friend"] input[type="number"]');
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'bot_spawn_friend',
+						action:	parent.dataset.action,
+						value:	count.value
+					}));
+					count.value = 1;
+				break;
+				case 'bot_kick_team':
+					count = document.querySelector('[data-action="bot_kick_team"] input[type="number"]');
+					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
+						action:	parent.dataset.action,
 						value:	count.value
 					}));
 					count.value = 1;
 				break;
 				case 'bot_kick_all':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'bot_kick_all'
-					}));
-				break;
-				case 'bot_kick_team':
-					count = document.querySelector('[data-action="bot_kick_team"] input[type="number"]');
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'bot_kick_team',
-						value:	count.value
-					}));
-					count.value = 1;
-				break;
 				case 'bot_kill_all':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'bot_kill_all'
-					}));
-				break;
 				case 'bot_respawn':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'bot_respawn'
-					}));
-				break;
 				case 'bot_attack':
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'bot_attack'
+						action:	parent.dataset.action
 					}));
 				break;
 
 				/* Trace */
 				case 'trace_start':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'trace_start'
-					}));
-				break;
 				case 'trace_end':
+				case 'trace_clear':
+				case 'trace_reset_all':
+				case 'waypoints_server_load':
+				case 'waypoints_server_save':
+				case 'trace_show':
+				case 'waypoints_show_spawns':
+				case 'waypoints_show_lines':
+				case 'waypoints_show_labels':
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'trace_end',
+						action:	parent.dataset.action
 					}));
 				break;
 				case 'trace_save':
@@ -264,51 +256,11 @@ const BotEditor = (new function BotEditor() {
 						value: index.value
 					}));
 				break;
-				case 'trace_clear':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'trace_clear'
-					}));
-				break;
-				case 'trace_reset_all':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'trace_reset_all'
-					}));
-				break;
-				case 'waypoints_server_load':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'waypoints_server_load'
-					}));
-				break;
-				case 'waypoints_server_save':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'waypoints_server_save'
-					}));
-				break;
-				case 'trace_show':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'trace_show'
-					}));
-				break;
-				case 'waypoints_show_spawns':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'waypoints_show_spawns',
-					}));
-				break;
-				case 'waypoints_show_lines':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'waypoints_show_lines',
-					}));
-				break;
-				case 'waypoints_show_labels':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'waypoints_show_labels',
-					}));
-				break;
-				
+	
 				/* Waypoint-Editor */
 				case 'request_waypoints_editor':
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'request_waypoints_editor'
+						action:	parent.dataset.action
 					}));
 				break;
 				case 'continue':
@@ -321,6 +273,87 @@ const BotEditor = (new function BotEditor() {
 						action:	'hide_waypoints_editor'
 					}));
 				break;
+
+				/* Path-Menu */
+				case 'data_menu':	
+				case 'add_objective':
+				case 'remove_objective':
+				case 'vehicle_menu':
+				case 'close_comm':
+				case 'base_rush':
+				case 'base_us':
+				case 'base_ru':
+				case 'capture_point':
+				case 'add_mcom':
+				case 'add_mcom_interact':
+				case 'objective_a':
+				case 'objective_b':
+				case 'objective_c':
+				case 'objective_d':
+				case 'objective_e':
+				case 'objective_f':
+				case 'objective_g':
+				case 'objective_h':
+				case 'set_spawn_path':
+				case 'remove_all_objectives':
+				case 'loop_path':
+				case 'invert_path':
+				case 'remove_data':
+				case 'set_mcom':
+				case 'mcom_1':
+				case 'mcom_2':
+				case 'mcom_3':
+				case 'mcom_4':
+				case 'mcom_5':
+				case 'mcom_6':
+				case 'mcom_7':
+				case 'mcom_8':
+				case 'mcom_9':
+				case 'mcom_10':
+				case 'mcom_inter_1':
+				case 'mcom_inter_2':
+				case 'mcom_inter_3':
+				case 'mcom_inter_4':
+				case 'mcom_inter_5':
+				case 'mcom_inter_6':
+				case 'mcom_inter_7':
+				case 'mcom_inter_8':
+				case 'mcom_inter_9':
+				case 'mcom_inter_10':
+				case 'index_vehcile_1':
+				case 'index_vehcile_2':
+				case 'index_vehcile_3':
+				case 'index_vehcile_4':
+				case 'index_vehcile_5':
+				case 'index_vehcile_6':
+				case 'index_vehcile_7':
+				case 'index_vehcile_8':
+				case 'index_vehcile_9':
+				case 'index_vehcile_10':
+				case 'set_vehicle_path_type':
+				case 'vehicle_objective':
+				case 'enter_exit_vehicle':
+				case 'add_enter_vehicle':
+				case 'add_exit_vehicle_passengers':
+				case 'add_exit_vehicle_all':
+				case 'path_type_land':
+				case 'path_type_water':
+				case 'path_type_air':
+				case 'path_type_clear':
+				case 'add_vehicle_tank':
+				case 'add_vehicle_chopper':
+				case 'add_vehicle_plane':
+				case 'add_vehicle_other':
+				case 'set_vehicle_spawn':
+				case 'hide_comm':
+				case 'back_to_data_menu':
+				case 'team_ru':
+				case 'team_us':
+					WebUI.Call('DispatchEventLocal', 'PathMenu:Request', JSON.stringify({
+						action:	parent.dataset.action
+					}));
+				break;				
+				
 
 				/* Comm-Screen */
 				case 'exit_vehicle':
@@ -542,6 +575,11 @@ const BotEditor = (new function BotEditor() {
 			switch(event.keyCode || event.which) {
 				case InputDeviceKeys.IDK_ALT:
 					WebUI.Call('DispatchEventLocal', 'UI_Waypoints_Disable', false);
+				break;
+				case InputDeviceKeys.IDK_F:
+				WebUI.Call('DispatchEventLocal', 'PathMenu:Request', JSON.stringify({
+					action:	'data_menu'
+				}));
 				break;
 			}
 		}.bind(this));

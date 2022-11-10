@@ -24,9 +24,9 @@ local WeaponList = require('__shared/WeaponList')
 
 function FunBotUIServer:__init()
 	-- To-do: remove? Unused. 
-	self._webui = 0
-	-- To-do: remove? Unused. 
-	self._authenticated = ArrayMap()
+	self.m_NavigaionPath = {}
+	self.m_InPathMenu = false
+	
 
 	if Config.DisableUserInterface ~= true then
 		NetEvents:Subscribe('UI_Request_Open', self, self._onUIRequestOpen)
@@ -114,7 +114,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 			},
 			Bottom = {
 				Action = 'back_to_comm',
-				Label = Language:I18N('Back'),
+				Label = Language:I18N('Back')
 			}
 		})
 		return

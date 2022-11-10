@@ -118,9 +118,7 @@ function ClientNodeEditor:OnRegisterEvents()
 	Console:Register('Split', 'Split selected waypoints', self, self._onSplitNode)
 	Console:Register('SelectNext', 'Extend selection to next waypoint', self, self._onSelectNext)
 	Console:Register('SelectBetween', 'Select all waypoint between start and end of selection', self, self._onSelectBetween)
-	Console:Register('SetInput',
-		'<number|0-15> <number|0-15> <number|0-255> - Sets input variables for the selected waypoints', self,
-		self._onSetInputNode)
+	Console:Register('SetInput', '<number|0-15> <number|0-15> <number|0-255> - Sets input variables for the selected waypoints', self, self._onSetInputNode)
 
 
 	-- Debugging commands, not meant for UI. 
@@ -130,13 +128,14 @@ function ClientNodeEditor:OnRegisterEvents()
 	Console:Register('AddObjective', '<string|Objective> - Add an objective to a path', self, self._onAddObjective)
 	Console:Register('AddMcom', 'Add an MCOM Arm/Disarm-Action to a point', self, self._onAddMcom)
 	Console:Register('AddVehicle', 'Add a vehicle a bot can use', self, self._onAddVehicle)
-	Console:Register('ExitVehicle',
-		'<bool|OnlyPassengers> Add a point where all bots or only the passengers leaves the vehicle', self, self._onExitVehicle)
-	Console:Register('AddVehiclePath', '<string|Type> Add vehicle-usage to a path. Types = land, water, air', self,
-		self._onAddVehiclePath)
-	Console:Register('RemoveObjective', '<string|Objective> - Remove an objective from a path', self,
-		self._onRemoveObjective)
-	Console:Register('RemoveData', 'Remove all data of one or several nodes', self, self._onRemoveData)
+	Console:Register('ExitVehicle',	'<bool|OnlyPassengers> Add a point where all bots or only the passengers leaves the vehicle', self, self._onExitVehicle)
+	Console:Register('AddVehiclePath', '<string|Type> Add vehicle-usage to a path. Types = land, water, air', self,	self._onAddVehiclePath)
+	Console:Register('AddVehicleSpawn','Makes an already existing vehicle-path spawnable', self, self._onSetVehicleSpawn)
+	Console:Register('RemoveObjective', '<string|Objective> - Remove an objective from a path', self, self._onRemoveObjective)
+	Console:Register('RemoveAllObjectives', 'Remove all objectives from a path', self, self._onRemoveAllObjectives)
+	Console:Register('SetPathLoops', '<bool|Loop> - manually set loop-mode of selected path', self, self._onSetLoopMode)
+	Console:Register('AddSpawnPath', 'Makes a spawn-path of this path.', self, self._onSetSpawnPath)
+
 
 	self.m_EventsReady = true
 	-- self:Log('Register Events') 
@@ -600,12 +599,29 @@ function ClientNodeEditor:_onAddVehiclePath(p_Args)
 	NetEvents:SendLocal('NodeEditor:AddVehiclePath', p_Args)
 end
 
+function ClientNodeEditor:_onSetVehicleSpawn(p_Args)
+	NetEvents:SendLocal('NodeEditor:SetVehicleSpawn', p_Args)
+end
+
+
 function ClientNodeEditor:_onAddObjective(p_Args)
 	NetEvents:SendLocal('NodeEditor:AddObjective', p_Args)
 end
 
 function ClientNodeEditor:_onRemoveObjective(p_Args)
 	NetEvents:SendLocal('NodeEditor:RemoveObjective', p_Args)
+end
+
+function ClientNodeEditor:_onRemoveAllObjectives(p_Args)
+	NetEvents:SendLocal('NodeEditor:RemoveAllObjectives', p_Args)
+end
+
+function ClientNodeEditor:_onSetLoopMode(p_Args)
+	NetEvents:SendLocal('NodeEditor:SetLoopMode', p_Args)
+end
+
+function ClientNodeEditor:_onSetSpawnPath(p_Args)
+	NetEvents:SendLocal('NodeEditor:SetSpawnPath', p_Args)
 end
 
 function ClientNodeEditor:_onRemoveData()

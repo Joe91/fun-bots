@@ -49,7 +49,12 @@ function NodeEditor:RegisterCustomEvents()
 	NetEvents:Subscribe('NodeEditor:AddVehiclePath', self, self.OnAddVehiclePath)
 	NetEvents:Subscribe('NodeEditor:AddObjective', self, self.OnAddObjective)
 	NetEvents:Subscribe('NodeEditor:RemoveObjective', self, self.OnRemoveObjective)
+	NetEvents:Subscribe('NodeEditor:SetVehicleSpawn', self, self.OnSetVehicleSpawn)
 	NetEvents:Subscribe('NodeEditor:RemoveData', self, self.OnRemoveData)
+
+	NetEvents:Subscribe('NodeEditor:RemoveAllObjectives', self, self.OnRemoveAllObjectives)
+	NetEvents:Subscribe('NodeEditor:SetPathLoops', self, self.OnSetLoopMode)
+	NetEvents:Subscribe('NodeEditor:AddSpawnPath', self, self.OnSetSpawnPath)
 
 	NetEvents:Subscribe('NodeEditor:SpawnBot', self, self.OnSpawnBot)
 	NetEvents:Subscribe('NodeEditor:UpdatePos', self, self.OnUpdatePos)
@@ -212,20 +217,55 @@ function NodeEditor:OnAddVehiclePath(p_Player, p_Args)
 		if not s_DonePaths[s_Waypoint.PathIndex] then
 			s_DonePaths[s_Waypoint.PathIndex] = true
 
-			local s_Vehicles = s_Waypoint.Data.Vehicles or {}
-			local s_InTable = false
+			if s_Data == "clear" then
+				s_Waypoint.Data.Vehicles = {}
+				self:Log(p_Player, 'Updated Waypoint: %s', s_Waypoint.ID)
+			else
+				local s_Vehicles = s_Waypoint.Data.Vehicles or {}
+				local s_InTable = false
 
-			for j = 1, #s_Vehicles do
-				if (s_Vehicles[j] == s_Data) then
-					s_InTable = true
-					break
+				for j = 1, #s_Vehicles do
+					if (s_Vehicles[j] == s_Data) then
+						s_InTable = true
+						break
+					end
+				end
+
+				if not s_InTable then
+					table.insert(s_Vehicles, s_Data)
+					s_Waypoint.Data.Vehicles = s_Vehicles
+					self:Log(p_Player, 'Updated Waypoint: %s', s_Waypoint.ID)
 				end
 			end
+		end
+	end
 
-			if not s_InTable then
-				table.insert(s_Vehicles, s_Data)
-				s_Waypoint.Data.Vehicles = s_Vehicles
+	return true
+end
+
+function NodeEditor:OnSetVehicleSpawn(p_Player)
+	local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
+
+	if #s_Selection < 1 then
+		self:Log(p_Player, 'Must select at least one node')
+		return false
+	end
+
+	local s_DonePaths = {}
+	self:Log(p_Player, 'Updating %d Possible Waypoints', (#s_Selection))
+
+	for i = 1, #s_Selection do
+		local s_Waypoint = m_NodeCollection:GetFirst(s_Selection[i].PathIndex)
+
+		if not s_DonePaths[s_Waypoint.PathIndex] then
+			s_DonePaths[s_Waypoint.PathIndex] = true
+
+			local s_Objectives = s_Waypoint.Data.Objectives or {}
+			if #s_Objectives == 1 and string.find(s_Objectives[1], "vehicle") ~= nil then
+				s_Waypoint.Data.Objectives = {"spawn "..s_Objectives[1]}
 				self:Log(p_Player, 'Updated Waypoint: %s', s_Waypoint.ID)
+			else
+				self:Log(p_Player, 'Path must have one vehicle objective')
 			end
 		end
 	end
@@ -277,6 +317,11 @@ function NodeEditor:OnAddObjective(p_Player, p_Args)
 end
 
 function NodeEditor:OnRemoveObjective(p_Player, p_Args)
+	if not p_Player.soldier then
+		self:Log(p_Player, 'Player must be alive')
+		return
+	end
+
 	local s_Data = table.concat(p_Args or {}, ' ')
 	s_Data = s_Data:lower()
 	self:Log(p_Player, 'Remove Objective (data): %s', g_Utilities:dump(s_Data, true))
@@ -313,6 +358,137 @@ function NodeEditor:OnRemoveObjective(p_Player, p_Args)
 
 	return true
 end
+
+
+function NodeEditor:OnRemoveAllObjectives(p_Player, p_Args)
+	if not p_Player.soldier then
+		self:Log(p_Player, 'Player must be alive')
+		return
+	end
+
+	local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
+
+	if #s_Selection < 1 then
+		self:Log(p_Player, 'Must select at least one node')
+		return false
+	end
+
+	local s_DonePaths = {}
+	self:Log(p_Player, 'Updating %d Possible Waypoints', (#s_Selection))
+
+	for i = 1, #s_Selection do
+		local s_Waypoint = m_NodeCollection:GetFirst(s_Selection[i].PathIndex)
+
+		if not s_DonePaths[s_Waypoint.PathIndex] then
+			s_DonePaths[s_Waypoint.PathIndex] = true
+			s_Waypoint.Data.Objectives = {}
+			self:Log(p_Player, 'Updated Waypoint: %s', s_Waypoint.ID)
+		end
+	end
+
+	return true
+end
+
+
+function NodeEditor:OnSetLoopMode(p_Player, p_Args)
+	if not p_Player.soldier then
+		self:Log(p_Player, 'Player must be alive')
+		return
+	end
+
+	local s_Data = p_Args[1] or "false"
+	self:Log(p_Player, 'Exit Vehicle (type): %s', g_Utilities:dump(s_Data, true))
+
+	local s_PathLoops = not (s_Data:lower() == "false" or s_Data == "0")
+
+	local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
+
+	if #s_Selection < 1 then
+		self:Log(p_Player, 'Must select at least one node')
+		return false
+	end
+
+	local s_DonePaths = {}
+	self:Log(p_Player, 'Updating %d Possible Waypoints', (#s_Selection))
+
+	for i = 1, #s_Selection do
+		local s_Waypoint = m_NodeCollection:GetFirst(s_Selection[i].PathIndex)
+
+		if not s_DonePaths[s_Waypoint.PathIndex] then
+			s_DonePaths[s_Waypoint.PathIndex] = true
+
+			if s_PathLoops then
+				s_Waypoint.OptValue = 0
+			else
+				s_Waypoint.OptValue = 0XFF
+			end
+			
+			self:Log(p_Player, 'Updated Waypoint: %s', s_Waypoint.ID)
+		end
+	end
+
+	return true
+end
+
+function NodeEditor:OnSetSpawnPath(p_Player, p_Args)
+	if not p_Player.soldier then
+		self:Log(p_Player, 'Player must be alive')
+		return
+	end
+
+	local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
+
+	if #s_Selection < 1 then
+		self:Log(p_Player, 'Must select at least one node')
+		return false
+	end
+
+	local s_DonePaths = {}
+	self:Log(p_Player, 'Updating %d Possible Waypoints', (#s_Selection))
+
+	for i = 1, #s_Selection do
+		local s_PathWaypoints = m_NodeCollection:Get(nil, s_Selection[i].PathIndex)
+		local s_LastWaypoint = m_NodeCollection:GetLast(s_Selection[i].PathIndex)
+
+		if not s_DonePaths[s_Selection[i].PathIndex] then
+			s_DonePaths[s_Selection[i].PathIndex] = true
+
+			-- find links (should be only one link on the last node)
+			local s_Links = s_LastWaypoint.Data.Links
+
+			local s_TargetObjective = ""
+
+			if #s_Links == 1 then
+				-- get objective of linked path
+				local s_LinkedWaypoint = m_NodeCollection:Get(s_Links[1])
+				-- check if only one objective
+				if s_LinkedWaypoint then
+					local s_FirstOfLinkedPath = m_NodeCollection:GetFirst(s_LinkedWaypoint.PathIndex)
+					if s_FirstOfLinkedPath and s_FirstOfLinkedPath.Data and s_FirstOfLinkedPath.Data.Objectives and #s_FirstOfLinkedPath.Data.Objectives == 1 then
+						s_TargetObjective = s_FirstOfLinkedPath.Data.Objectives[1]
+						local s_FirstWaypoint = m_NodeCollection:GetFirst(s_Selection[i].PathIndex)
+						local s_SpawnObjective = "spawn "..s_TargetObjective
+						-- add new objective to current path
+						s_FirstWaypoint.Data.Objectives = {s_SpawnObjective}
+						
+						self:Log(p_Player, 'Updated Waypoint: %s', s_FirstWaypoint.ID)
+					else
+						self:Log(p_Player, 'Path must have one connection to target-objective on last node')
+						return false
+					end
+				else
+					self:Log(p_Player, 'Path must have one connection to target-objective on last node')
+					return false
+				end
+			else
+				self:Log(p_Player, 'Path must have one connection to target-objective on last node')
+				return false
+			end
+		end
+	end
+	return true
+end
+
 
 function NodeEditor:OnRemoveData(p_Player)
 	if not p_Player.soldier then
@@ -1127,6 +1303,7 @@ function NodeEditor:Log(p_Player, ...)
 	m_Logger:Write(s_MessageString)
 	-- Send message to client as well. 
 	if p_Player then
+		ChatManager:SendMessage('TRACE: '..s_MessageString , p_Player)
 		NetEvents:SendUnreliableToLocal('ClientNodeEditor:PrintLog', p_Player, s_MessageString)
 	else
 		NetEvents:BroadcastUnreliableLocal('ClientNodeEditor:PrintLog', s_MessageString)
