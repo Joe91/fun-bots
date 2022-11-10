@@ -62,4 +62,5 @@ Language['ja_JA'] /* Add/replace the xx_XX here with your language code (like de
 	"Save temporarily": "一時保存",
 	"Restore this value to Default": "この値をデフォルトに戻す",
 	"End Trace": "終了トレース",
+	"[Paths]": "【パス】",
 };
