@@ -1251,11 +1251,8 @@ function NodeCollection:ProcessAllDataToSave()
 
 		local s_QueriesTotal = #self._SaveTraceBatchQueries
 		m_Logger:Write('Save -> Saved [' .. s_QueriesTotal .. '] waypoints for map [' .. self._MapName .. ']')
-		ChatManager:Yell(
-						Language:I18N(
-										'Saved %d paths with %d waypoints for map %s', self._SavedPathCount, s_QueriesTotal, self._MapName
-						), 5.5
-		)
+		ChatManager:Yell(Language:I18N('Saved %d paths with %d waypoints for map %s', self._SavedPathCount, s_QueriesTotal, self._MapName), 
+		5.5)
 
 		self._SaveActive = false
 	end
