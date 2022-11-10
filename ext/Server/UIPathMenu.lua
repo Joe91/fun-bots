@@ -28,13 +28,12 @@ function FunBotUIPathMenu:__init()
 end
 
 function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
-	print(p_Data)
 	local request = json.decode(p_Data)
 
 	-- Reenter or hide Data-Menu?
 	if request.action == 'data_menu' then
 		if self.m_InPathMenu then
-			request.action = 'hide_comm'
+			request.action = 'close_comm'
 		elseif self.m_NavigaionPath[p_Player.onlineId] and #self.m_NavigaionPath[p_Player.onlineId] > 0 then
 			-- goto last posiiton in menu
 			request.action = self.m_NavigaionPath[p_Player.onlineId][#self.m_NavigaionPath[p_Player.onlineId]]

@@ -94,12 +94,11 @@ function FunBotUIClient:_onUIWaypointsEditor(p_State)
 			print('UIClient: close UI_Waypoints_Editor')
 		end
 
-		--NetEvents:Send('PathMenu:Close')
 		self._views:hide('waypoint_toolbar')
+		self._views:execute('BotEditor.setCommonRose(false)')
 		self._views:show('toolbar')
 		Config.DebugTracePaths = false
 		self.m_InWaypointEditor = false
-		NetEvents:Send('UI_CommoRose_Enabled', false)
 		g_ClientNodeEditor:OnSetEnabled(false)
 		g_ClientSpawnPointHelper:OnSetEnabled(false)
 	else
@@ -108,7 +107,6 @@ function FunBotUIClient:_onUIWaypointsEditor(p_State)
 		end
 
 		Config.DebugTracePaths = true
-		NetEvents:Send('UI_CommoRose_Enabled', true)
 		g_ClientNodeEditor:OnSetEnabled(true)
 		g_ClientSpawnPointHelper:OnSetEnabled(true)
 		self._views:show('waypoint_toolbar')
