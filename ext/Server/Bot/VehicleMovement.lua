@@ -3,11 +3,11 @@
 VehicleMovement = class('VehicleMovement')
 
 ---@type Logger
-local m_Logger = Logger("Bot", Debug.Server.BOT)
+local m_Logger = Logger('Bot', Debug.Server.BOT)
 ---@type Utilities
 local m_Utilities = require('__shared/Utilities')
 ---@type Vehicles
-local m_Vehicles = require("Vehicles")
+local m_Vehicles = require('Vehicles')
 ---@type PathSwitcher
 local m_PathSwitcher = require('PathSwitcher')
 ---@type NodeCollection
@@ -28,7 +28,7 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_Bot)
 			s_TargetPosition = s_TargetPosition + (s_Forward * 50)
 			s_TargetPosition.y = s_TargetPosition.y + 50
 			local s_Waypoint = {
-				Position = s_TargetPosition
+				Position = s_TargetPosition,
 			}
 			p_Bot._TargetPoint = s_Waypoint
 			return
@@ -82,7 +82,7 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_Bot)
 		-- Execute Action if needed. 
 		if p_Bot._ActiveAction == BotActionFlags.OtherActionActive then
 			if s_Point.Data ~= nil and s_Point.Data.Action ~= nil then
-				if s_Point.Data.Action.type == "exit" then
+				if s_Point.Data.Action.type == 'exit' then
 					p_Bot:_ResetActionFlag(BotActionFlags.OtherActionActive)
 					local s_OnlyPassengers = false
 					if s_Point.Data.Action.onlyPassengers ~= nil and s_Point.Data.Action.onlyPassengers == true then
@@ -139,7 +139,7 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_Bot)
 			-- Detect obstacle and move over or around. To-do: Move before normal jump. 
 			local s_CurrentWayPointDistance = p_Bot.m_Player.controlledControllable.transform.trans:Distance(s_Point.Position)
 
-			if s_CurrentWayPointDistance > p_Bot._LastWayDistance + 0.02 and p_Bot._ObstaceSequenceTimer == 0.0 then
+			if s_CurrentWayPointDistance > p_Bot._LastWayDistance + 0.02 and p_Bot._ObstaceSequenceTimer == 0 then
 				-- Skip one point. 
 				s_DistanceFromTarget = 0
 				s_HeightDistance = 0
@@ -148,7 +148,7 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_Bot)
 			p_Bot._TargetPoint = s_Point
 			p_Bot._NextTargetPoint = s_NextPoint
 
-			if math.abs(s_CurrentWayPointDistance - p_Bot._LastWayDistance) < 0.02 or p_Bot._ObstaceSequenceTimer ~= 0.0 then
+			if math.abs(s_CurrentWayPointDistance - p_Bot._LastWayDistance) < 0.02 or p_Bot._ObstaceSequenceTimer ~= 0 then
 				-- Try to get around obstacle. 
 				if p_Bot._ObstacleRetryCounter % 2 == 0 then
 					if p_Bot._ObstaceSequenceTimer < 4.0 then
@@ -161,7 +161,7 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_Bot)
 				end
 
 				if (p_Bot.m_ActiveSpeedValue == BotMoveSpeeds.Backwards and p_Bot._ObstaceSequenceTimer > 3.0) or
-					(p_Bot.m_ActiveSpeedValue ~= BotMoveSpeeds.Backwards and p_Bot._ObstaceSequenceTimer > 5.0) then
+				(p_Bot.m_ActiveSpeedValue ~= BotMoveSpeeds.Backwards and p_Bot._ObstaceSequenceTimer > 5.0) then
 					p_Bot._ObstaceSequenceTimer = 0.0
 					p_Bot._ObstacleRetryCounter = p_Bot._ObstacleRetryCounter + 1
 				end
@@ -183,7 +183,7 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_Bot)
 						s_Transform.trans = p_Bot._TargetPoint.Position
 						s_Transform:LookAtTransform(p_Bot._TargetPoint.Position, p_Bot._NextTargetPoint.Position)
 						p_Bot.m_Player.controlledControllable.transform = s_Transform
-						m_Logger:Write("tepeported in vehicle of " .. p_Bot.m_Player.name)
+						m_Logger:Write('teleported in vehicle of ' .. p_Bot.m_Player.name)
 					else
 						if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Chopper) or
 							m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane) then
@@ -200,7 +200,6 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_Bot)
 			end
 
 			p_Bot._LastWayDistance = s_CurrentWayPointDistance
-
 
 			local s_TargetDistanceSpeed = Config.TargetDistanceWayPoint * 5
 
@@ -574,7 +573,6 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 			return
 		end
 
-
 		-- Calculate delta pitch. 
 		local s_Delta_Tilt = 0
 		local s_Current_Tilt = math.asin(p_Bot.m_Player.controlledControllable.transform.forward.y / 1.0)
@@ -640,7 +638,6 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 		local s_TransformedInputYaw = math.cos(s_Current_Roll) * s_DeltaYaw + math.sin(s_Current_Roll) * s_Delta_Tilt
 		local s_TransformedInputTilt = math.cos(s_Current_Roll) * s_Delta_Tilt - math.sin(s_Current_Roll) * s_DeltaYaw
 
-
 		local s_Output_Tilt = p_Bot._Pid_Drv_Tilt:Update(s_TransformedInputTilt)
 		local s_Output_Yaw = p_Bot._Pid_Drv_Yaw:Update(s_TransformedInputYaw)
 
@@ -650,7 +647,6 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 		-- YAW 
 		-- No backwards in planes. 
 		p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, -s_Output_Yaw)
-
 
 		-- Throttle. 
 		-- Target velocity == 313 km/h → 86.9444 m/s 

@@ -1,11 +1,11 @@
 ---@class NodeEditor
 ---@overload fun():NodeEditor
-NodeEditor = class "NodeEditor"
+NodeEditor = class('NodeEditor')
 
 ---@type NodeCollection
 local m_NodeCollection = require('NodeCollection')
 ---@type Logger
-local m_Logger = Logger("NodeEditor", Debug.Server.NODEEDITOR)
+local m_Logger = Logger('NodeEditor', Debug.Server.NODEEDITOR)
 
 function NodeEditor:__init()
 	self.m_ActiveTracePlayers = {}
@@ -27,7 +27,6 @@ function NodeEditor:RegisterCustomEvents()
 
 	-- Remove them? 
 	-- NetEvents:Subscribe('UI_Request_Save_Settings', self, self.OnUIRequestSaveSettings) 
-
 
 	-- EDIT-Events from Client. 
 	NetEvents:Subscribe('NodeEditor:Select', self, self.OnSelect)
@@ -59,7 +58,6 @@ function NodeEditor:RegisterCustomEvents()
 	NetEvents:Subscribe('NodeEditor:SpawnBot', self, self.OnSpawnBot)
 	NetEvents:Subscribe('NodeEditor:UpdatePos', self, self.OnUpdatePos)
 	NetEvents:Subscribe('NodeEditor:AddNode', self, self.OnAddNode)
-
 
 	-- To-do: fill. 
 end
@@ -95,7 +93,7 @@ function NodeEditor:OnUpdatePos(p_Player, p_UpdateData)
 	for _, l_UpdateItem in pairs(p_UpdateData) do
 		local s_NodeToUpdate = m_NodeCollection:Get(l_UpdateItem.ID)
 		m_NodeCollection:Update(s_NodeToUpdate, {
-			Position = l_UpdateItem.Pos
+			Position = l_UpdateItem.Pos,
 		})
 	end
 end
@@ -118,11 +116,11 @@ function NodeEditor:OnAddMcom(p_Player)
 
 	for i = 1, #s_Selection do
 		local action = {
-			type = "mcom",
-			inputs = { EntryInputActionEnum.EIAInteract },
+			type = 'mcom',
+			inputs = {EntryInputActionEnum.EIAInteract},
 			time = 6.0,
 			yaw = p_Player.input.authoritativeAimingYaw,
-			pitch = p_Player.input.authoritativeAimingPitch
+			pitch = p_Player.input.authoritativeAimingPitch,
 		}
 		s_Selection[i].Data.Action = action
 		self:Log(p_Player, 'Updated Waypoint: %s', s_Selection[i].ID)
@@ -149,11 +147,11 @@ function NodeEditor:OnAddVehicle(p_Player)
 
 	for i = 1, #s_Selection do
 		local action = {
-			type = "vehicle",
-			inputs = { EntryInputActionEnum.EIAInteract },
+			type = 'vehicle',
+			inputs = {EntryInputActionEnum.EIAInteract},
 			time = 0.5,
 			yaw = p_Player.input.authoritativeAimingYaw,
-			pitch = p_Player.input.authoritativeAimingPitch
+			pitch = p_Player.input.authoritativeAimingPitch,
 		}
 		s_Selection[i].Data.Action = action
 		self:Log(p_Player, 'Updated Waypoint: %s', s_Selection[i].ID)
@@ -177,18 +175,18 @@ function NodeEditor:OnExitVehicle(p_Player, p_Args)
 		return
 	end
 
-	local s_Data = p_Args[1] or "false"
+	local s_Data = p_Args[1] or 'false'
 	self:Log(p_Player, 'Exit Vehicle (type): %s', g_Utilities:dump(s_Data, true))
 
-	local s_OnlyPassengers = not (s_Data:lower() == "false" or s_Data == "0")
+	local s_OnlyPassengers = not (s_Data:lower() == 'false' or s_Data == '0')
 	print(s_OnlyPassengers)
 
 	for i = 1, #s_Selection do
 		local action = {
-			type = "exit",
+			type = 'exit',
 			onlyPassengers = s_OnlyPassengers,
-			inputs = { EntryInputActionEnum.EIAInteract },
-			time = 0.5
+			inputs = {EntryInputActionEnum.EIAInteract},
+			time = 0.5,
 		}
 		s_Selection[i].Data.Action = action
 		self:Log(p_Player, 'Updated Waypoint: %s', s_Selection[i].ID)
@@ -198,7 +196,7 @@ function NodeEditor:OnExitVehicle(p_Player, p_Args)
 end
 
 function NodeEditor:OnAddVehiclePath(p_Player, p_Args)
-	local s_Data = table.concat(p_Args or { "land" }, ' ')
+	local s_Data = table.concat(p_Args or {'land'}, ' ')
 	self:Log(p_Player, 'Add Vehicle (type): %s', g_Utilities:dump(s_Data, true))
 
 	local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
@@ -648,13 +646,11 @@ function NodeEditor:OnCloseEditor(p_Player)
 	self.m_ActiveTracePlayers[p_Player.onlineId] = false
 end
 
-
 -- ============================================= 
 -- Trace Events 
 -- Trace Recording 
 -- ============================================= 
 function NodeEditor:_getNewIndex()
-	local s_NextIndex = 0
 	local s_AllPaths = m_NodeCollection:GetPaths()
 
 	local s_HighestIndex = 0
@@ -708,7 +704,7 @@ function NodeEditor:StartTrace(p_Player)
 	end
 
 	local s_FirstWaypoint = self.m_CustomTrace[p_Player.onlineId]:Create({
-		Position = s_PlayerPos
+		Position = s_PlayerPos,
 	})
 	self.m_CustomTrace[p_Player.onlineId]:ClearSelection()
 	self.m_CustomTrace[p_Player.onlineId]:Select(nil, s_FirstWaypoint)
@@ -718,13 +714,13 @@ function NodeEditor:StartTrace(p_Player)
 	local s_TotalTraceDistance = self.m_CustomTraceDistance[p_Player.onlineId]
 	local s_TotalTraceNodes = #self.m_CustomTrace[p_Player.onlineId]:Get()
 	local s_TraceIndex = self.m_CustomTraceIndex[p_Player.onlineId] -- To-do: not really needed? 
-	NetEvents:SendToLocal("UI_ClientNodeEditor_TraceData", p_Player, s_TotalTraceNodes, s_TotalTraceDistance, s_TraceIndex,
+	NetEvents:SendToLocal('UI_ClientNodeEditor_TraceData', p_Player, s_TotalTraceNodes, s_TotalTraceDistance, s_TraceIndex,
 		true)
 end
 
 function NodeEditor:EndTrace(p_Player)
 	self.m_CustomTraceTimer[p_Player.onlineId] = -1
-	NetEvents:SendToLocal("UI_ClientNodeEditor_TraceData", p_Player, nil, nil, nil, false)
+	NetEvents:SendToLocal('UI_ClientNodeEditor_TraceData', p_Player, nil, nil, nil, false)
 
 	local s_FirstWaypoint = self.m_CustomTrace[p_Player.onlineId]:GetFirst()
 
@@ -778,8 +774,7 @@ function NodeEditor:ClearTrace(p_Player)
 		local s_TotalTraceDistance = self.m_CustomTraceDistance[p_Player.onlineId]
 		local s_TotalTraceNodes = #self.m_CustomTrace[p_Player.onlineId]:Get()
 		local s_TraceIndex = self.m_CustomTraceIndex[p_Player.onlineId] -- To-do: not really needed ? 
-		NetEvents:SendToLocal("UI_ClientNodeEditor_TraceData", p_Player, s_TotalTraceNodes, s_TotalTraceDistance, s_TraceIndex
-			,
+		NetEvents:SendToLocal('UI_ClientNodeEditor_TraceData', p_Player, s_TotalTraceNodes, s_TotalTraceDistance, s_TraceIndex,
 			false)
 
 		self:Log(p_Player, 'Custom Trace Cleared')
@@ -917,12 +912,12 @@ function NodeEditor:OnLevelLoaded(p_LevelName, p_GameMode)
 		p_GameMode = 'TeamDeathMatch0' -- Paths are compatible. 
 	end
 
-	if p_LevelName == "MP_Subway" and p_GameMode == "ConquestSmall0" then
-		p_GameMode = "ConquestLarge0" -- Paths are the same. 
+	if p_LevelName == 'MP_Subway' and p_GameMode == 'ConquestSmall0' then
+		p_GameMode = 'ConquestLarge0' -- Paths are the same. 
 	end
 
-	if p_LevelName == "XP4_Rubble" and p_GameMode == "ConquestAssaultLarge0" then
-		p_GameMode = "ConquestAssaultSmall0"
+	if p_LevelName == 'XP4_Rubble' and p_GameMode == 'ConquestAssaultLarge0' then
+		p_GameMode = 'ConquestAssaultSmall0'
 	end
 
 	m_NodeCollection:Load(p_LevelName, p_GameMode)
@@ -1024,7 +1019,7 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 						if s_Player.soldier.weaponsComponent.currentWeaponSlot == WeaponSlot.WeaponSlot_0 then
 							local s_NewWaypoint, s_Msg = self.m_CustomTrace[l_PlayerGuid]:Add()
 							self.m_CustomTrace[l_PlayerGuid]:Update(s_NewWaypoint, {
-								Position = s_PlayerPos
+								Position = s_PlayerPos,
 							})
 							self.m_CustomTrace[l_PlayerGuid]:ClearSelection()
 							self.m_CustomTrace[l_PlayerGuid]:Select(nil, s_NewWaypoint)
@@ -1085,7 +1080,7 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 						-- To-do: Send to Client UI. 
 						local s_TotalTraceDistance = self.m_CustomTraceDistance[l_PlayerGuid]
 						local s_TotalTraceNodes = #self.m_CustomTrace[l_PlayerGuid]:Get()
-						NetEvents:SendUnreliableToLocal("UI_ClientNodeEditor_TraceData", s_Player, s_TotalTraceNodes, s_TotalTraceDistance)
+						NetEvents:SendUnreliableToLocal('UI_ClientNodeEditor_TraceData', s_Player, s_TotalTraceNodes, s_TotalTraceDistance)
 					end
 				else
 					-- Collection is empty, stop the timer. 
@@ -1096,7 +1091,6 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 			end
 		end
 	end
-
 
 	-- Visible NODE distribution-handling. 
 	if self.m_NodeSendUpdateTimer < 0.1 then
@@ -1174,7 +1168,7 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 									Links = {},
 									NextPos = nil,
 									IsTrace = false,
-									IsOthersTrace = false
+									IsOthersTrace = false,
 								}
 
 								-- Fill tables. 
@@ -1259,7 +1253,7 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 							IsSelected = s_IsSelected,
 							NextPos = nil,
 							IsTrace = true,
-							IsOthersTrace = false
+							IsOthersTrace = false,
 						}
 
 						-- Fill tables. 
