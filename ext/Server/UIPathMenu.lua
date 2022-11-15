@@ -376,7 +376,6 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 		})
 		return
 	elseif string.find(request.action, 'index_vehcile_') ~= nil then
-		self.m_NavigaionPath[p_Player.onlineId][6] = request.action
 		-- FILL THIS
 		local s_Team = self.m_NavigaionPath[p_Player.onlineId][5]:split('_')[2]
 		local s_VehicleType = self.m_NavigaionPath[p_Player.onlineId][4]:split('_')[3]
