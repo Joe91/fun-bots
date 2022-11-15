@@ -349,6 +349,7 @@ const BotEditor = (new function BotEditor() {
 				case 'back_to_data_menu':
 				case 'team_ru':
 				case 'team_us':
+				case 'team_both':
 					WebUI.Call('DispatchEventLocal', 'PathMenu:Request', JSON.stringify({
 						action:	parent.dataset.action
 					}));

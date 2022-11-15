@@ -160,6 +160,16 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 				Label = Language:I18N(''),
 				Confirm = true
 			},
+			Left = {
+				{
+					Action = 'not_implemented',
+					Label = Language:I18N('')
+				}
+			},
+			Center = {
+				Action = 'not_implemented',
+				Label = Language:I18N('Path-Type') -- Or "Unselect". 
+			},
 			Right = {
 				{
 					Action = 'path_type_land',
@@ -175,14 +185,8 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 					Label = Language:I18N('Clear Path-Type')
 				}
 			},
-			Center = {
-				Action = 'not_implemented',
-				Label = Language:I18N('Path-Type') -- Or "Unselect". 
-			},
-			Left = {
-			},
 			Bottom = {
-				Action = 'back_to_data_menu',
+				Action = 'vehicle_menu',
 				Label = Language:I18N('Back')
 			}
 		})
@@ -246,6 +250,16 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 				Label = Language:I18N(''),
 				Confirm = true
 			},
+			Left = {
+				{
+					Action = 'set_vehicle_spawn',
+					Label = Language:I18N('Set Vehicle Spawn-Path')
+				}
+			},
+			Center = {
+				Action = 'not_implemented',
+				Label = Language:I18N('Vehicle') -- Or "Unselect". 
+			},
 			Right = {
 				{
 					Action = 'add_vehicle_tank',
@@ -259,16 +273,6 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 				}, {
 					Action = 'add_vehicle_other',
 					Label = Language:I18N('Add Other Vehicle')
-				}
-		},
-			Center = {
-				Action = 'not_implemented',
-				Label = Language:I18N('Vehicle') -- Or "Unselect". 
-			},
-			Left = {
-				{
-					Action = 'set_vehicle_spawn',
-					Label = Language:I18N('Set Vehicle Spawn-Path')
 				}
 			},
 			Bottom = {
@@ -289,8 +293,8 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 			},
 			Left = {
 				{
-					Action = 'team_us',
-					Label = Language:I18N('US')
+					Action = 'not_implemented',
+					Label = Language:I18N('')
 				}
 			},
 			Center = {
@@ -299,8 +303,14 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 			},
 			Right = {
 				{
+					Action = 'team_us',
+					Label = Language:I18N('US')
+				}, {
 					Action = 'team_ru',
 					Label = Language:I18N('RU')
+				}, {
+					Action = 'team_both',
+					Label = Language:I18N('BOTH')
 				}
 			},
 			Bottom = {
@@ -308,6 +318,7 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 				Label = Language:I18N('Back')
 			}
 		})
+		return
 	elseif string.find(request.action, 'team_') ~= nil then
 		self.m_NavigaionPath[p_Player.onlineId][6] = nil
 		self.m_NavigaionPath[p_Player.onlineId][5] = request.action
@@ -363,6 +374,7 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 				Label = Language:I18N('Back')
 			}
 		})
+		return
 	elseif string.find(request.action, 'index_vehcile_') ~= nil then
 		self.m_NavigaionPath[p_Player.onlineId][6] = request.action
 		-- FILL THIS
@@ -584,8 +596,6 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 			}
 		})
 		return
-
-		
 	elseif request.action == 'base_us' or  request.action == 'base_ru' or request.action == 'base_rush' then
 		if Globals.IsRush then
 			self.m_NavigaionPath[p_Player.onlineId][4] = nil
@@ -733,6 +743,9 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 			}
 		})	
 		return
+	else
+		print(request.action)
+		print("not found")
 	end
 end
 
