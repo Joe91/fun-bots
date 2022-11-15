@@ -949,6 +949,23 @@ function Bot:SetSpeed(p_Speed)
 	self._BotSpeed = p_Speed
 end
 
+function Bot:SetObjectiveIfPossible(p_Objective)
+	if self._Objective ~= p_Objective and p_Objective ~= '' then
+		local s_Point = m_NodeCollection:Get(self._CurrentWayPoint, self._PathIndex)
+
+		if s_Point ~= nil then
+			local s_Direction, s_BestWaypoint = m_NodeCollection:ObjectiveDirection(s_Point, p_Objective, self.m_InVehicle)
+			if s_BestWaypoint then
+				self._Objective = p_Objective
+				self._InvertPathDirection = (s_Direction == 'Previous')
+				print(s_Direction)
+				return true
+			end
+		end
+	end
+	return false
+end
+
 function Bot:SetObjective(p_Objective)
 	if self._Objective ~= p_Objective then
 		self._Objective = p_Objective or ''
