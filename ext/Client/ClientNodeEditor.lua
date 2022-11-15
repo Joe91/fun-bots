@@ -1,11 +1,11 @@
 ---@class ClientNodeEditor
 ---@overload fun():ClientNodeEditor
-ClientNodeEditor = class "ClientNodeEditor"
+ClientNodeEditor = class('ClientNodeEditor')
 
 require('__shared/Config')
 
 ---@type Logger
-local m_Logger = Logger("ClientNodeEditor", Debug.Client.NODEEDITOR)
+local m_Logger = Logger('ClientNodeEditor', Debug.Client.NODEEDITOR)
 
 function ClientNodeEditor:__init()
 	-- Data Points. 
@@ -46,14 +46,14 @@ function ClientNodeEditor:__init()
 	self.m_ObbToDraw_temp = {}
 
 	self.m_Colors = {
-		["Text"] = Vec4(1, 1, 1, 1),
-		["White"] = Vec4(1, 1, 1, 1),
-		["Red"] = Vec4(1, 0, 0, 1),
-		["Green"] = Vec4(0, 1, 0, 1),
-		["Blue"] = Vec4(0, 0, 1, 1),
-		["Purple"] = Vec4(0.5, 0, 1, 1),
-		["Ray"] = { Node = Vec4(1, 1, 1, 0.2), Line = { Vec4(1, 1, 1, 1), Vec4(0, 0, 0, 1) } },
-		["Orphan"] = { Node = Vec4(0, 0, 0, 0.5), Line = Vec4(0, 0, 0, 1) },
+		['Text'] = Vec4(1, 1, 1, 1),
+		['White'] = Vec4(1, 1, 1, 1),
+		['Red'] = Vec4(1, 0, 0, 1),
+		['Green'] = Vec4(0, 1, 0, 1),
+		['Blue'] = Vec4(0, 0, 1, 1),
+		['Purple'] = Vec4(0.5, 0, 1, 1),
+		['Ray'] = { Node = Vec4(1, 1, 1, 0.2), Line = { Vec4(1, 1, 1, 1), Vec4(0, 0, 0, 1) } },
+		['Orphan'] = { Node = Vec4(0, 0, 0, 0.5), Line = Vec4(0, 0, 0, 1) },
 		{ Node = Vec4(1, 0, 0, 0.25), Line = Vec4(1, 0, 0, 1) },
 		{ Node = Vec4(1, 0.55, 0, 0.25), Line = Vec4(1, 0.55, 0, 1) },
 		{ Node = Vec4(1, 1, 0, 0.25), Line = Vec4(1, 1, 0, 1) },
@@ -101,7 +101,6 @@ function ClientNodeEditor:OnRegisterEvents()
 	NetEvents:Subscribe('UI_CommoRose_Action_SelectBetween', self, self._onSelectBetween)
 	NetEvents:Subscribe('UI_CommoRose_Action_SetInput', self, self._onSetInputNode)
 	NetEvents:Subscribe('ClientNodeEditor:SelectNewNode', self, self._onSelectNewNode)
-
 
 	-- Add these Events to NodeEditor. 
 	Console:Register('Select', 'Select or Deselect the waypoint you are looking at', self, self._onSelectNode) -- Done 
@@ -231,12 +230,12 @@ function ClientNodeEditor:_DrawData(p_DataPoint)
 		NextPos = nil,
 		IsTrace = false,
 		IsOthersTrace = false
-	}--]] 
+	}
+	--]] 
 
 	local s_IsSelected = p_DataPoint.IsSelected
 	local s_QualityAtRange = p_DataPoint.DrawLine
 	local s_IsTracePath = p_DataPoint.IsTrace
-	local s_IsOtherTracePath = false
 	local s_Waypoint = p_DataPoint.Node
 
 	-- Setup node colour information. 
@@ -252,7 +251,6 @@ function ClientNodeEditor:_DrawData(p_DataPoint)
 	end
 
 	s_Color = self.m_Colors[s_Waypoint.PathIndex]
-
 
 	if s_IsTracePath then
 		s_Color = {
@@ -348,14 +346,14 @@ function ClientNodeEditor:_DrawData(p_DataPoint)
 
 			local s_Text = ''
 			-- s_Text = s_Text .. string.format("(%s)Pevious [ %s ] Next(%s)\n", s_PreviousNode, p_Waypoint.ID, s_NextNode) 
-			s_Text = s_Text .. string.format("Index[%d]\n", s_Waypoint.Index)
-			s_Text = s_Text .. string.format("Path[%d][%d] (%s)\n", s_Waypoint.PathIndex, s_Waypoint.PointIndex, s_PathMode)
-			s_Text = s_Text .. string.format("Path Objectives: %s\n", g_Utilities:dump(p_DataPoint.Objectives, false))
-			s_Text = s_Text .. string.format("Vehicles: %s\n", g_Utilities:dump(p_DataPoint.Vehicles, false))
-			s_Text = s_Text .. string.format("InputVar: %d\n", s_Waypoint.InputVar)
-			s_Text = s_Text .. string.format("SpeedMode: %s (%d)\n", s_SpeedMode, s_Waypoint.SpeedMode)
-			s_Text = s_Text .. string.format("ExtraMode: %s (%d)\n", s_ExtraMode, s_Waypoint.ExtraMode)
-			s_Text = s_Text .. string.format("OptValue: %s (%d)\n", s_OptionValue, s_Waypoint.OptValue)
+			s_Text = s_Text .. string.format('Index[%d]\n', s_Waypoint.Index)
+			s_Text = s_Text .. string.format('Path[%d][%d] (%s)\n', s_Waypoint.PathIndex, s_Waypoint.PointIndex, s_PathMode)
+			s_Text = s_Text .. string.format('Path Objectives: %s\n', g_Utilities:dump(p_DataPoint.Objectives, false))
+			s_Text = s_Text .. string.format('Vehicles: %s\n', g_Utilities:dump(p_DataPoint.Vehicles, false))
+			s_Text = s_Text .. string.format('InputVar: %d\n', s_Waypoint.InputVar)
+			s_Text = s_Text .. string.format('SpeedMode: %s (%d)\n', s_SpeedMode, s_Waypoint.SpeedMode)
+			s_Text = s_Text .. string.format('ExtraMode: %s (%d)\n', s_ExtraMode, s_Waypoint.ExtraMode)
+			s_Text = s_Text .. string.format('OptValue: %s (%d)\n', s_OptionValue, s_Waypoint.OptValue)
 			s_Text = s_Text .. 'Data: ' .. g_Utilities:dump(s_Waypoint.Data, true)
 
 			self:DrawPosText2D(s_Waypoint.Position + Vec3.up, s_Text, self.m_Colors.Text, 1.2)
@@ -468,7 +466,7 @@ function ClientNodeEditor:_onToggleMoveNode(p_Args)
 			self:Log('Move Cancelled')
 
 			local s_UpdateData = {}
-			local s_Selection  = self:GetSelectedNodes()
+			local s_Selection = self:GetSelectedNodes()
 
 			for i = 1, #s_Selection do
 				local s_UpdateNode = {
@@ -670,9 +668,11 @@ end
 ---@param p_ParentGraph DataContainer
 ---@param p_StateNodeGuid Guid|nil
 function ClientNodeEditor:OnUIPushScreen(p_HookCtx, p_Screen, p_Priority, p_ParentGraph, p_StateNodeGuid)
-	if self.m_Enabled and self.m_CommoRoseEnabled and p_Screen ~= nil and
-		UIScreenAsset(p_Screen).name == 'UI/Flow/Screen/CommRoseScreen' then
-		-- self:Log('Blocked vanilla Comm Rose') 
+	if self.m_Enabled and 
+	self.m_CommoRoseEnabled and 
+	p_Screen ~= nil and
+	UIScreenAsset(p_Screen).name == 'UI/Flow/Screen/CommRoseScreen' then
+		-- self:Log('Blocked vanilla Commo Rose') 
 		p_HookCtx:Return()
 		return
 	end
@@ -890,7 +890,6 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 							end
 						end
 
-
 						-- Loop selected nodes and update positions. 
 						local s_UpdateData = {}
 
@@ -963,7 +962,7 @@ function ClientNodeEditor:DrawSphere(p_Position, p_Size, p_Color, p_RenderLines,
 		radius = p_Size,
 		color = p_Color,
 		renderLines = p_RenderLines,
-		smallSizeSegmentDecrease = p_SmallSizeSegmentDecrease
+		smallSizeSegmentDecrease = p_SmallSizeSegmentDecrease,
 	})
 end
 
@@ -972,7 +971,7 @@ function ClientNodeEditor:DrawLine(p_From, p_To, p_ColorFrom, p_ColorTo)
 		from = p_From,
 		to = p_To,
 		colorFrom = p_ColorFrom,
-		colorTo = p_ColorTo
+		colorTo = p_ColorTo,
 	})
 end
 
@@ -982,7 +981,7 @@ function ClientNodeEditor:DrawText2D(p_X, p_Y, p_Text, p_Color, p_Scale)
 		y = p_Y,
 		text = p_Text,
 		color = p_Color,
-		scale = p_Scale
+		scale = p_Scale,
 	})
 end
 
@@ -991,7 +990,7 @@ function ClientNodeEditor:DrawPosText2D(p_Pos, p_Text, p_Color, p_Scale)
 		pos = p_Pos,
 		text = p_Text,
 		color = p_Color,
-		scale = p_Scale
+		scale = p_Scale,
 	})
 end
 
@@ -999,7 +998,7 @@ function ClientNodeEditor:DrawOBB(p_Aab, p_Transform, p_Color)
 	table.insert(self.m_ObbToDraw_temp, {
 		aab = p_Aab,
 		transform = p_Transform,
-		color = p_Color
+		color = p_Color,
 	})
 end
 

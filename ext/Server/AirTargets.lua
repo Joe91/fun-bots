@@ -5,10 +5,7 @@ AirTargets = class('AirTargets')
 ---@type Utilities
 local m_Utilities = require('__shared/Utilities')
 ---@type Vehicles
-local m_Vehicles = require("Vehicles")
----@type Logger
-local m_Logger = Logger("BotManager", Debug.Server.BOT)
-
+local m_Vehicles = require('Vehicles')
 
 function AirTargets:__init()
 	self._Targets = {}
