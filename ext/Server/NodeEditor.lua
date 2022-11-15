@@ -260,8 +260,12 @@ function NodeEditor:OnSetVehicleSpawn(p_Player)
 
 			local s_Objectives = s_Waypoint.Data.Objectives or {}
 			if #s_Objectives == 1 and string.find(s_Objectives[1], "vehicle") ~= nil then
-				s_Waypoint.Data.Objectives = {"spawn "..s_Objectives[1]}
-				self:Log(p_Player, 'Updated Waypoint: %s', s_Waypoint.ID)
+				if string.find(s_Objectives[1], "spawn") == nil then
+					s_Waypoint.Data.Objectives = {"spawn "..s_Objectives[1]}
+					self:Log(p_Player, 'Updated Waypoint: %s', s_Waypoint.ID)
+				else
+					self:Log(p_Player, 'Path is already spawnable')
+				end
 			else
 				self:Log(p_Player, 'Path must have one vehicle objective')
 			end

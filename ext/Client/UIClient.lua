@@ -268,7 +268,7 @@ function FunBotUIClient:_onBotEditorEvent(p_Data)
 end
 
 function FunBotUIClient:_OnPathMenuRequest(p_Data)
-	if Config.DisableUserInterface == true then
+	if Config.DisableUserInterface == true or not self.m_InWaypointEditor then
 		return
 	end
 	-- Redirect to Server. 
