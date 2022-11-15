@@ -358,126 +358,31 @@ const BotEditor = (new function BotEditor() {
 
 				/* Comm-Screen */
 				case 'exit_vehicle':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'exit_vehicle'
-					}));
-				break;
 				case 'enter_vehicle':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'enter_vehicle'
-					}));
-				break;
 				case 'drop_ammo':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'drop_ammo'
-					}));
-				break;
 				case 'drop_medkit':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'drop_medkit'
-					}));
-				break;
 				case 'attack_objective':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'attack_objective'
-					}));
-				break;	
 				case 'defend_objective':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'defend_objective'
-					}));
-				break;
 				case 'repair_vehicle':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'repair_vehicle'
-					}));
-				break;	
-				// attack
 				case 'attack_a':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'attack_a'
-					}));
-				break;
 				case 'attack_b':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'attack_b'
-					}));
-				break;
 				case 'attack_c':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'attack_c'
-					}));
-				break;
 				case 'attack_d':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'attack_d'
-					}));
-				break;
 				case 'attack_e':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'attack_e'
-					}));
-				break;
 				case 'attack_f':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'attack_f'
-					}));
-				break;
 				case 'attack_g':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'attack_g'
-					}));
-				break;
 				case 'attack_h':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'attack_h'
-					}));
-				break;
-				// defend
 				case 'defend_a':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'defend_a'
-					}));
-				break;
 				case 'defend_b':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'defend_b'
-					}));
-				break;
 				case 'defend_c':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'defend_c'
-					}));
-				break;
 				case 'defend_d':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'defend_d'
-					}));
-				break;
 				case 'defend_e':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'defend_e'
-					}));
-				break;
 				case 'defend_f':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'defend_f'
-					}));
-				break;
 				case 'defend_g':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'defend_g'
-					}));
-				break;
 				case 'defend_h':
-					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'defend_h'
-					}));
-				break;
-
 				case 'back_to_comm':
 					WebUI.Call('DispatchEventLocal', 'BotEditor', JSON.stringify({
-						action:	'back_to_comm'
+						action:	parent.dataset.action
 					}));
 				break;	
 
