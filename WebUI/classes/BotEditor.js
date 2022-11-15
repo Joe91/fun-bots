@@ -1,7 +1,7 @@
 let Language = {};
 
 const BotEditor = (new function BotEditor() {
-	const DEBUG				= true;
+	const DEBUG				= false;
 	const VERSION			= '1.0.0-Beta';
 	let _language			= 'en_US';
 	
@@ -482,7 +482,7 @@ const BotEditor = (new function BotEditor() {
 				case InputDeviceKeys.IDK_ALT:
 					WebUI.Call('DispatchEventLocal', 'UI_Waypoints_Disable', false);
 				break;
-				case InputDeviceKeys.IDK_F:
+				case InputDeviceKeys.IDK_TAB:
 				WebUI.Call('DispatchEventLocal', 'PathMenu:Request', JSON.stringify({
 					action:	'data_menu'
 				}));
