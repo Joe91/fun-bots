@@ -67,13 +67,8 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle, p
 
 	local s_PossiblePaths = {}
 
-	print(s_OnVehicleEnterObjective)
-	print(p_Objective)
 	if not s_OnVehicleEnterObjective then
 		table.insert(s_PossiblePaths, p_Point) -- Include our current path. 
-	end
-	if s_OnVehicleEnterObjective then
-		print("get new path")
 	end
 
 	for i = 1, #p_Point.Data.Links do
@@ -123,10 +118,8 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle, p
 
 		if s_OnVehicleEnterObjective then
 			if s_PathNode.Data.Objectives[1] == p_Objective then
-				print("found target")
 				return true, s_NewPoint
 			else
-				print("skip - nothing found")
 				goto skip
 			end
 		end

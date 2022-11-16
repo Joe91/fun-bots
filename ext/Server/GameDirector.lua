@@ -9,7 +9,7 @@ local m_Utilities = require('__shared/Utilities')
 ---@type Vehicles
 local m_Vehicles = require("Vehicles")
 ---@type Logger
-local m_Logger = Logger("GameDirector", Debug.Server.GAMEDIRECTOR)
+local m_Logger = Logger("GameDirector", true) --Debug.Server.GAMEDIRECTOR
 
 function GameDirector:__init()
 	self:RegisterVars()
@@ -211,7 +211,7 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 	for l_BotTeam, l_Bots in pairs(self.m_BotsByTeam) do
 		for _, l_Bot in pairs(l_Bots) do
 			if l_Bot:GetObjective() == '' then
-				if l_Bot.m_Player.soldier == nil then
+				if not l_Bot.m_Player.soldier then
 					goto continue_inner_loop
 				end
 
@@ -228,14 +228,17 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 						goto continue_inner_inner_loop
 					end
 
-					-- assign vehicle-objectives if close enough
-					if l_Objective.isEnterVehiclePath and l_Objective.team == l_BotTeam and l_Objective.assigned[l_BotTeam] == 0 and Config.UseVehicles then
-						local s_Possible = l_Bot:SetObjectiveIfPossible(l_Objective.name)
-						if s_Possible then
+					-- assign vehicle-objectives if possible
+					if Config.UseVehicles and
+					l_Objective.isEnterVehiclePath and
+					l_Objective.team == l_BotTeam and
+					l_Objective.assigned[l_BotTeam] == 0 and
+					not l_Bot.m_InVehicle then
+						if l_Bot:SetObjectiveIfPossible(l_Objective.name) then
 							l_Objective.assigned[l_BotTeam] = 1
-							print("assigned bot to "..l_Objective.name)
+							m_Logger:Write("assigned bot to "..l_Objective.name)
+							goto continue_inner_loop
 						end
-						goto continue_inner_loop
 					end
 					
 					if l_Objective.team == l_BotTeam or l_Objective.isEnterVehiclePath then
@@ -262,12 +265,23 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 					s_Objective.assigned[l_BotTeam] = s_Objective.assigned[l_BotTeam] + 1
 				end
 			else
-				if l_Bot.m_Player.soldier == nil then
+				if not l_Bot.m_Player.soldier then
 					l_Bot:SetObjective() -- Reset objective on death. 
 					goto continue_inner_loop
 				end
 
 				local s_Objective = self:_GetObjectiveObject(l_Bot:GetObjective())
+
+				if s_Objective.isEnterVehiclePath then
+					if not s_Objective.active or s_Objective.destroyed or l_Bot.m_InVehicle then
+						l_Bot:SetObjective()
+					end
+
+					goto continue_inner_loop
+					
+				end
+
+				
 				local s_ParentObjective = self:_GetObjectiveFromSubObj(s_Objective.name)
 				s_Objective.assigned[l_BotTeam] = s_Objective.assigned[l_BotTeam] + 1
 
@@ -285,6 +299,9 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 				end
 
 				if s_Objective.isBase or not s_Objective.active or s_Objective.destroyed or (s_Objective.team == l_BotTeam and not s_Objective.isEnterVehiclePath) then
+					l_Bot:SetObjective()
+				end
+				if s_Objective.team == l_BotTeam and s_Objective.isEnterVehiclePath and l_Bot.m_InVehicle then
 					l_Bot:SetObjective()
 				end
 			end
