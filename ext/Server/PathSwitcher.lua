@@ -265,7 +265,6 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle, p
 	end
 
 	if s_OnVehicleEnterObjective then
-		print("nothing found")
 		return false
 	end
 
