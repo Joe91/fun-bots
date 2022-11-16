@@ -9,7 +9,7 @@ local m_Utilities = require('__shared/Utilities')
 ---@type Vehicles
 local m_Vehicles = require("Vehicles")
 ---@type Logger
-local m_Logger = Logger("GameDirector", true) --Debug.Server.GAMEDIRECTOR
+local m_Logger = Logger("GameDirector", Debug.Server.GAMEDIRECTOR)
 
 function GameDirector:__init()
 	self:RegisterVars()

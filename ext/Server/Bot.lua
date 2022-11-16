@@ -958,7 +958,6 @@ function Bot:SetObjectiveIfPossible(p_Objective)
 			if s_BestWaypoint then
 				self._Objective = p_Objective
 				self._InvertPathDirection = (s_Direction == 'Previous')
-				print(s_Direction)
 				return true
 			end
 		end
