@@ -27,6 +27,7 @@ This is the changelog for the version V2.7 Don't forget to [join us on Discord](
 * improve Rush-Logic with new VEXT-Version
 * use more stable Rush-Events with new VEXT-Version
 * New menu for Trace-Creation - no need to use the console anymore
+* Bots now try to use all vehicles in a base
 
 ### Bug fixes
 * fix scavenger revive
