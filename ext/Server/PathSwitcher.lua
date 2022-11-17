@@ -60,12 +60,16 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle, p
 	-- If multiple are top priority, choose at random. 
 
 	p_Objective = p_Objective or ''
+	local s_OnVehicleEnterObjective = m_GameDirector:IsVehicleEnterPath(p_Objective)
 	local s_Paths = {}
 	local s_HighestPriority = 0
 	local s_CurrentPriority = 0
 
 	local s_PossiblePaths = {}
-	table.insert(s_PossiblePaths, p_Point) -- Include our current path. 
+
+	if not s_OnVehicleEnterObjective then
+		table.insert(s_PossiblePaths, p_Point) -- Include our current path. 
+	end
 
 	for i = 1, #p_Point.Data.Links do
 		local s_NewPoint = m_NodeCollection:Get(p_Point.Data.Links[i])
@@ -111,6 +115,14 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle, p
 		local s_PathNode = m_NodeCollection:GetFirst(s_NewPoint.PathIndex)
 		local s_NewPathStatus = m_GameDirector:GetEnableStateOfPath(s_PathNode.Data.Objectives or {})
 		local s_NewBasePath = m_GameDirector:IsBasePath(s_PathNode.Data.Objectives or {})
+
+		if s_OnVehicleEnterObjective then
+			if s_PathNode.Data.Objectives[1] == p_Objective then
+				return true, s_NewPoint
+			else
+				goto skip
+			end
+		end
 
 		-- Check for vehicle usage. 
 		if s_PathNode.Data.Objectives ~= nil and #s_PathNode.Data.Objectives == 1 and s_NewPoint.ID ~= p_Point.ID then
@@ -250,6 +262,10 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle, p
 			end
 		end
 		::skip::
+	end
+
+	if s_OnVehicleEnterObjective then
+		return false
 	end
 
 	-- Remove paths below our highest priority. 
