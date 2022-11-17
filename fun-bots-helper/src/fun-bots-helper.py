@@ -1,5 +1,6 @@
 import os
 import threading
+from typing import Callable
 
 import customtkinter
 from loguru import logger
@@ -29,6 +30,8 @@ class App(customtkinter.CTk):
     def __init__(self):
         super().__init__()
 
+        customtkinter.set_appearance_mode("dark")
+        
         self.geometry("900x500")
         self.title("Fun Bots Helper")
         self.iconbitmap(r"battlefield3.ico")
@@ -280,13 +283,13 @@ class App(customtkinter.CTk):
         merge_file_2 = self.merge_file_2.get()
         merge_two_mapfiles(merge_file_1, merge_file_2)
 
-    def change_appearance_mode(self, new_appearance_mode):
+    def change_appearance_mode(self, new_appearance_mode: str) -> None:
         thread = threading.Thread(
             target=customtkinter.set_appearance_mode, args=(new_appearance_mode,)
         )
         thread.start()
 
-    def create_thread(self, function) -> None:
+    def create_thread(self, function: Callable) -> None:
         threading.Thread(target=function).start()
 
 
