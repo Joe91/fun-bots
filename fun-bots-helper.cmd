@@ -1,2 +1,2 @@
-cd dev\fun-bots-helper
+cd fun-bots-helper\dist
 start fun-bots-helper.exe

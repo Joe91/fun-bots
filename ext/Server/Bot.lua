@@ -1328,7 +1328,7 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 					end
 				end
 			end
-			self.m_InVehicle = true
+			self:_SetActiveVars() -- Update if "on vehicle" or "in vehicle". 
 			return 0, s_Position -- Everything fine. 
 		end
 	end

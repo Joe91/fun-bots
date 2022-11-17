@@ -30,12 +30,12 @@ end
 function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 	local request = json.decode(p_Data)
 
-	-- Reenter or hide Data-Menu?
+	-- Re-enter or hide Data-Menu? 
 	if request.action == 'data_menu' then
 		if self.m_InPathMenu then
 			request.action = 'close_comm'
 		elseif self.m_NavigaionPath[p_Player.onlineId] and #self.m_NavigaionPath[p_Player.onlineId] > 0 then
-			-- goto last posiiton in menu
+			-- Go to last position in menu. 
 			request.action = self.m_NavigaionPath[p_Player.onlineId][#self.m_NavigaionPath[p_Player.onlineId]]
 			self.m_InPathMenu = true
 		end
@@ -43,7 +43,7 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 
 	if request.action == 'unhide_comm' then
 		if self.m_NavigaionPath[p_Player.onlineId] and #self.m_NavigaionPath[p_Player.onlineId] > 0 then
-			-- goto last posiiton in menu
+			-- Go to last position in menu. 
 			request.action = self.m_NavigaionPath[p_Player.onlineId][#self.m_NavigaionPath[p_Player.onlineId]]
 			self.m_InPathMenu = true
 		else
@@ -51,7 +51,7 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 		end
 	end
 
-	-- Editor Data-Menu
+	-- Editor Data-Menu. 
 	if request.action == 'data_menu' or request.action == 'back_to_data_menu' then
 		if not Globals.IsConquest and not Globals.IsRush then
 			ChatManager:SendMessage('This menu is not available in this gamemode.', p_Player)
@@ -221,7 +221,7 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 				Label = Language:I18N('Vehicle') -- Or "Unselect". 
 			},
 			Right = {
-				-- vehicle Menu
+				-- Vehicle Menu. 
 				{
 					Action = 'vehicle_objective',
 					Label = Language:I18N('Add Vehicle')
@@ -376,7 +376,7 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 		})
 		return
 	elseif string.find(request.action, 'index_vehcile_') ~= nil then
-		-- FILL THIS
+		-- FILL THIS. 
 		local s_Team = self.m_NavigaionPath[p_Player.onlineId][5]:split('_')[2]
 		local s_VehicleType = self.m_NavigaionPath[p_Player.onlineId][4]:split('_')[3]
 		local s_Index = request.action:split('_')[3]
@@ -401,7 +401,7 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 		return
 
 	elseif request.action == 'add_objective' or request.action == 'remove_objective' then
-		--NetEvents:SendTo('UI_Toggle_DataMenu', p_Player, true)
+		-- NetEvents:SendTo('UI_Toggle_DataMenu', p_Player, true) 
 		-- Change Commo-rose. 
 		self.m_NavigaionPath[p_Player.onlineId][3] = nil
 		self.m_NavigaionPath[p_Player.onlineId][2] = request.action
@@ -449,7 +449,7 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 				}
 			})
 			return
-		else -- Conquest
+		else -- Conquest. 
 			NetEvents:SendTo('UI_CommonRose', p_Player, {
 				Top = {
 					Action = 'not_implemented',
@@ -599,7 +599,7 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 		if Globals.IsRush then
 			self.m_NavigaionPath[p_Player.onlineId][4] = nil
 			self.m_NavigaionPath[p_Player.onlineId][3] = request.action
-			-- Add index here
+			-- Add index here. 
 			NetEvents:SendTo('UI_CommonRose', p_Player, {
 				Top = {
 					Action = 'not_implemented',
