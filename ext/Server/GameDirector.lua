@@ -228,7 +228,7 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 						goto continue_inner_inner_loop
 					end
 
-					-- assign vehicle-objectives if possible
+					-- Assign vehicle-objectives if possible. 
 					if Config.UseVehicles and
 					l_Objective.isEnterVehiclePath and
 					l_Objective.team == l_BotTeam and
