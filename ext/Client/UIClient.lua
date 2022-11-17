@@ -55,7 +55,7 @@ function FunBotUIClient:_onUIToggle()
 	end
 
 	self._views:execute('BotEditor.Hide()')
-	--NetEvents:Send('PathMenu:Hide')
+	-- NetEvents:Send('PathMenu:Hide') 
 	self._views:disable()
 
 	-- if self._views:isVisible() then 
