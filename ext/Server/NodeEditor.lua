@@ -449,28 +449,27 @@ function NodeEditor:OnSetSpawnPath(p_Player, p_Args)
 	self:Log(p_Player, 'Updating %d Possible Waypoints', (#s_Selection))
 
 	for i = 1, #s_Selection do
-		local s_PathWaypoints = m_NodeCollection:Get(nil, s_Selection[i].PathIndex)
 		local s_LastWaypoint = m_NodeCollection:GetLast(s_Selection[i].PathIndex)
 
 		if not s_DonePaths[s_Selection[i].PathIndex] then
 			s_DonePaths[s_Selection[i].PathIndex] = true
 
-			-- find links (should be only one link on the last node)
+			-- Find links (should be only one link on the last node) 
 			local s_Links = s_LastWaypoint.Data.Links
 
 			local s_TargetObjective = ""
 
 			if #s_Links == 1 then
-				-- get objective of linked path
+				-- Get objective of linked path. 
 				local s_LinkedWaypoint = m_NodeCollection:Get(s_Links[1])
-				-- check if only one objective
+				-- Check if only one objective. 
 				if s_LinkedWaypoint then
 					local s_FirstOfLinkedPath = m_NodeCollection:GetFirst(s_LinkedWaypoint.PathIndex)
 					if s_FirstOfLinkedPath and s_FirstOfLinkedPath.Data and s_FirstOfLinkedPath.Data.Objectives and #s_FirstOfLinkedPath.Data.Objectives == 1 then
 						s_TargetObjective = s_FirstOfLinkedPath.Data.Objectives[1]
 						local s_FirstWaypoint = m_NodeCollection:GetFirst(s_Selection[i].PathIndex)
 						local s_SpawnObjective = "spawn "..s_TargetObjective
-						-- add new objective to current path
+						-- Add new objective to current path. 
 						s_FirstWaypoint.Data.Objectives = {s_SpawnObjective}
 						
 						self:Log(p_Player, 'Updated Waypoint: %s', s_FirstWaypoint.ID)
