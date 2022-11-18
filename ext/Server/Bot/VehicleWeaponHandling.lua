@@ -1,5 +1,5 @@
----@class BotWeaponHandling
----@overload fun():BotWeaponHandling
+---@class VehicleWeaponHandling
+---@overload fun():VehicleWeaponHandling
 VehicleWeaponHandling = class('VehicleWeaponHandling')
 
 ---@type Utilities

@@ -1073,7 +1073,7 @@ function BotManager:EnterVehicle(p_Player)
 end
 
 ---@param p_Player Player
----@param p_Objective. To-do: add emmylua type
+---@param p_Objective any To-do: add emmylua type
 function BotManager:Attack(p_Player, p_Objective)
 	if not Globals.IsConquest or not p_Player or not p_Player.soldier then
 		return
@@ -1104,7 +1104,7 @@ end
 -- Private Functions
 -- =============================================
 
----@param p_RaycastData. To-do: add emmylua type
+---@param p_RaycastData any To-do: add emmylua type
 function BotManager:_DistributeRaycastsBotBotAttack(p_RaycastData)
 	local s_RaycastIndex = 0
 	local s_RaycastDataCount = #p_RaycastData

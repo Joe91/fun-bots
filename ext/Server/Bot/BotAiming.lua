@@ -9,6 +9,7 @@ function BotAiming:__init()
 	-- Nothing to do.
 end
 
+---@param p_Bot Bot
 function BotAiming:UpdateAiming(p_Bot)
 	if p_Bot._ShootPlayer == nil then
 		return

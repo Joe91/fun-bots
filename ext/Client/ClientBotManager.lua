@@ -50,8 +50,9 @@ function ClientBotManager:OnClientUpdateInput(p_DeltaTime)
 
 			local s_StartPosition = s_Transform.trans:Clone() + s_CameraForward * 4
 
-			local s_Raycast = RaycastManager:Raycast(s_StartPosition, s_CastPosition,
-				RayCastFlags.DontCheckWater | RayCastFlags.IsAsyncRaycast)
+			local s_RaycastFlags = RayCastFlags.DontCheckWater | RayCastFlags.IsAsyncRaycast
+			---@cast s_RaycastFlags RayCastFlags
+			local s_Raycast = RaycastManager:Raycast(s_StartPosition, s_CastPosition, s_RaycastFlags)
 
 			if s_Raycast ~= nil and s_Raycast.rigidBody:Is("CharacterPhysicsEntity") then
 				-- Find a teammate at this position.
@@ -115,7 +116,9 @@ function ClientBotManager:DoRaycast(p_Pos1, p_Pos2, p_InObjectPos1, p_InObjectPo
 		end
 
 		local s_MaterialFlags = 0 -- MaterialFlags.MfPenetrable | MaterialFlags.MfClientDestructible | MaterialFlags.MfBashable | MaterialFlags.MfSeeThrough | MaterialFlags.MfNoCollisionResponse | MaterialFlags.MfNoCollisionResponseCombined
+		---@cast s_MaterialFlags MaterialFlags
 		local s_RaycastFlags = RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter
+		---@cast s_RaycastFlags RayCastFlags
 
 		local s_RayHits = RaycastManager:CollisionRaycast(p_Pos1, p_Pos2, s_MaxHits, s_MaterialFlags, s_RaycastFlags)
 
@@ -139,6 +142,7 @@ function ClientBotManager:DoRaycast(p_Pos1, p_Pos2, p_InObjectPos1, p_InObjectPo
 		end
 
 		local s_RaycastFlags = RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.IsAsyncRaycast
+		---@cast s_RaycastFlags RayCastFlags
 		local s_Raycast = RaycastManager:Raycast(p_Pos1, p_Pos2, s_RaycastFlags)
 
 		if s_Raycast == nil or s_Raycast.rigidBody == nil then
@@ -243,6 +247,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 			return
 		end
 
+		---@type Player[]
 		local s_EnemyPlayers = {}
 
 		for _, l_Player in pairs(PlayerManager:GetPlayers()) do
@@ -273,18 +278,19 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 			-- Find direction of Bot.
 			local s_TargetPos = Vec3()
+
 			if s_Bot.inVehicle then
 				s_TargetPos = s_Bot.controlledControllable.transform.trans:Clone()
 				s_TargetPos.y = s_TargetPos.y + 1.4
 			else
 				s_TargetPos = s_Bot.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(s_Bot, false, false)
 			end
+
 			local s_Distance = s_PlayerPosition:Distance(s_TargetPos)
 
 			s_CheckCount = s_CheckCount + 1
 
-			if (s_Distance < Config.MaxShootDistanceSniper) or
-				(s_Bot.inVehicle and (s_Distance < Config.MaxShootDistanceVehicles)) then
+			if (s_Distance < Config.MaxShootDistanceSniper) or (s_Bot.inVehicle and (s_Distance < Config.MaxShootDistanceVehicles)) then
 				if self:DoRaycast(s_PlayerPosition, s_TargetPos, self.m_Player.inVehicle, s_Bot.inVehicle) then
 					-- We found a valid bot in Sight (either no hit, or player-hit). Signal Server with players.
 					local s_IgnoreYaw = false
