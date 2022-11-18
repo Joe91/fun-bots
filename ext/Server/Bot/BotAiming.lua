@@ -6,7 +6,7 @@ BotAiming = class('BotAiming')
 local m_Utilities = require('__shared/Utilities')
 
 function BotAiming:__init()
-	-- Nothing to do. 
+	-- Nothing to do.
 end
 
 function BotAiming:UpdateAiming(p_Bot)
@@ -21,7 +21,7 @@ function BotAiming:UpdateAiming(p_Bot)
 
 		local s_ActiveWeaponType = p_Bot.m_ActiveWeapon.type
 
-		-- Interpolate target-player movement. 
+		-- Interpolate target-player movement.
 		local s_TargetMovement = Vec3.zero
 		local s_PitchCorrection = 0.0
 		local s_FullPositionTarget = nil
@@ -58,7 +58,7 @@ function BotAiming:UpdateAiming(p_Bot)
 		end
 
 		local s_GrenadePitch = 0.0
-		-- Calculate how long the distance is → time to travel. 
+		-- Calculate how long the distance is → time to travel.
 		p_Bot._DistanceToPlayer = s_FullPositionTarget:Distance(s_FullPositionBot)
 
 		if not p_Bot.m_KnifeMode then
@@ -70,7 +70,7 @@ function BotAiming:UpdateAiming(p_Bot)
 
 			if s_ActiveWeaponType == WeaponTypes.Grenade then
 				if p_Bot._DistanceToPlayer < 3.0 then
-					p_Bot._DistanceToPlayer = 3.0 -- Don't throw them too close. 
+					p_Bot._DistanceToPlayer = 3.0 -- Don't throw them too close.
 				end
 
 				if p_Bot._DistanceToPlayer > 24.5 then s_GrenadePitch = 0.7504915783575616
@@ -123,9 +123,9 @@ function BotAiming:UpdateAiming(p_Bot)
 				elseif p_Bot._DistanceToPlayer > 1.0 then s_GrenadePitch = 1.5498523757709646
 				elseif p_Bot._DistanceToPlayer > 0.5 then s_GrenadePitch = 1.5603243512829308
 				end
-			elseif s_ActiveWeaponType <= WeaponTypes.Rocket then -- No compensation for other weapons needed. 
+			elseif s_ActiveWeaponType <= WeaponTypes.Rocket then -- No compensation for other weapons needed.
 				if Registry.BOT.USE_ADVANCED_AIMING then
-					-- Calculate how long the distance is → time to travel. 
+					-- Calculate how long the distance is → time to travel.
 					local s_VectorBetween = s_FullPositionTarget - s_FullPositionBot
 
 					local A = s_TargetMovement:Dot(s_TargetMovement) - s_Speed * s_Speed
@@ -148,7 +148,7 @@ function BotAiming:UpdateAiming(p_Bot)
 					s_TimeToTravel = (p_Bot._DistanceToPlayer / s_Speed)
 				end
 
-				s_PitchCorrection = 0.25 * s_TimeToTravel * s_TimeToTravel * s_Drop -- This correction (0.5 * 0.5) seems to be correct. No idea why. 
+				s_PitchCorrection = 0.25 * s_TimeToTravel * s_TimeToTravel * s_Drop -- This correction (0.5 * 0.5) seems to be correct. No idea why.
 			end
 
 			s_TargetMovement = (s_TargetMovement * s_TimeToTravel)
@@ -159,7 +159,7 @@ function BotAiming:UpdateAiming(p_Bot)
 		local s_DifferenceX = 0
 		local s_DifferenceZ = 0
 
-		-- Calculate yaw and pitch. 
+		-- Calculate yaw and pitch.
 		if p_Bot.m_KnifeMode and #p_Bot._KnifeWayPositions > 0 then
 			s_DifferenceZ = p_Bot._KnifeWayPositions[1].z - p_Bot.m_Player.soldier.worldTransform.trans.z
 			s_DifferenceX = p_Bot._KnifeWayPositions[1].x - p_Bot.m_Player.soldier.worldTransform.trans.x
@@ -176,7 +176,7 @@ function BotAiming:UpdateAiming(p_Bot)
 		local s_AtanDzDx = math.atan(s_DifferenceZ, s_DifferenceX)
 		local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
 
-		-- Calculate pitch. 
+		-- Calculate pitch.
 		local s_Pitch = 0.0
 
 		if s_ActiveWeaponType == WeaponTypes.Grenade then
@@ -186,11 +186,11 @@ function BotAiming:UpdateAiming(p_Bot)
 			s_Pitch = math.atan(s_DifferenceY, s_Distance)
 		end
 
-		-- Worsen yaw and pitch depending on bot-skill. Don't use Skill for Nades, Rockets, Missiles, ... 
-		if s_ActiveWeaponType <= WeaponTypes.Sniper then -- All normal weapons. 
+		-- Worsen yaw and pitch depending on bot-skill. Don't use Skill for Nades, Rockets, Missiles, ...
+		if s_ActiveWeaponType <= WeaponTypes.Sniper then -- All normal weapons.
 			local s_SkillFactor = s_Skil / p_Bot._DistanceToPlayer
-			local s_WorseningSkillX = (MathUtils:GetRandom(-1.0, 1.0) * s_SkillFactor) -- Value scaled in offset in 1 m. 
-			local s_WorseningSkillY = (MathUtils:GetRandom(-1.0, 1.0) * s_SkillFactor) -- Value scaled in offset in 1 m. 
+			local s_WorseningSkillX = (MathUtils:GetRandom(-1.0, 1.0) * s_SkillFactor) -- Value scaled in offset in 1 m.
+			local s_WorseningSkillY = (MathUtils:GetRandom(-1.0, 1.0) * s_SkillFactor) -- Value scaled in offset in 1 m.
 
 			local s_WorseningClassFactor = 0
 			if p_Bot.m_Kit == BotKits.Support then
@@ -207,7 +207,7 @@ function BotAiming:UpdateAiming(p_Bot)
 
 			local s_RecoilCompensationPitch = 0.0
 			local s_RecoilCompensationYaw = 0.0
-			-- Compensate recoil. 
+			-- Compensate recoil.
 			if p_Bot.m_Player.soldier.weaponsComponent.currentWeapon ~= nil and
 				p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.weaponFiring ~= nil and
 				p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway ~= nil then
@@ -216,7 +216,7 @@ function BotAiming:UpdateAiming(p_Bot)
 				s_RecoilCompensationYaw = p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.weaponFiring.gunSway.currentRecoilDeviation
 					.yaw
 
-				-- Worsen compensation dependant on skill? 
+				-- Worsen compensation dependant on skill?
 				local s_SkillFactorRecoil = (1.0 - s_Skil)
 				if s_SkillFactorRecoil < 0 then
 					s_SkillFactorRecoil = 0.0
@@ -225,7 +225,7 @@ function BotAiming:UpdateAiming(p_Bot)
 				s_RecoilCompensationYaw = s_RecoilCompensationYaw * s_SkillFactorRecoil
 			end
 
-			-- Recoil from gunSway is negative → add recoil to yaw. 
+			-- Recoil from gunSway is negative → add recoil to yaw.
 			s_Yaw = s_Yaw + s_WorseningSkillX + s_WorseningClassX + s_RecoilCompensationYaw
 			s_Pitch = s_Pitch + s_WorseningSkillY + s_WorseningClassY + s_RecoilCompensationPitch
 		end
@@ -233,11 +233,11 @@ function BotAiming:UpdateAiming(p_Bot)
 		p_Bot._TargetPitch = s_Pitch
 		p_Bot._TargetYaw = s_Yaw
 
-	elseif p_Bot._ActiveAction == BotActionFlags.RepairActive then -- Repair. 
+	elseif p_Bot._ActiveAction == BotActionFlags.RepairActive then -- Repair.
 		if p_Bot._ShootPlayer == nil or p_Bot._ShootPlayer.soldier == nil or p_Bot._RepairVehicleEntity == nil then
 			return
 		end
-		local s_PositionTarget = p_Bot._RepairVehicleEntity.transform.trans:Clone() -- Aim at vehicle. 
+		local s_PositionTarget = p_Bot._RepairVehicleEntity.transform.trans:Clone() -- Aim at vehicle.
 		local s_PositionBot = p_Bot.m_Player.soldier.worldTransform.trans:Clone() +
 			m_Utilities:getCameraPos(p_Bot.m_Player, false, false)
 
@@ -248,14 +248,14 @@ function BotAiming:UpdateAiming(p_Bot)
 		local s_AtanDzDx = math.atan(s_DifferenceZ, s_DifferenceX)
 		local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
 
-		-- Calculate pitch. 
+		-- Calculate pitch.
 		local s_Distance = math.sqrt(s_DifferenceZ ^ 2 + s_DifferenceX ^ 2)
 		local s_Pitch = math.atan(s_DifferenceY, s_Distance)
 
 		p_Bot._TargetPitch = s_Pitch
 		p_Bot._TargetYaw = s_Yaw
 
-	else -- Revive active. 
+	else -- Revive active.
 		if p_Bot._ShootPlayer.corpse == nil then
 			return
 		end
@@ -271,7 +271,7 @@ function BotAiming:UpdateAiming(p_Bot)
 		local s_AtanDzDx = math.atan(s_DifferenceZ, s_DifferenceX)
 		local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
 
-		-- Calculate pitch. 
+		-- Calculate pitch.
 		local s_Distance = math.sqrt(s_DifferenceZ ^ 2 + s_DifferenceX ^ 2)
 		local s_Pitch = math.atan(s_DifferenceY, s_Distance)
 

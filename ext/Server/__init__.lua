@@ -2,7 +2,7 @@
 ---@overload fun():FunBotServer
 FunBotServer = class('FunBotServer')
 
--- The registry should be loaded first before loading anything else. 
+-- The registry should be loaded first before loading anything else.
 require('__shared/Registry/Registry')
 require('__shared/Registry/RegistryManager')
 
@@ -87,7 +87,7 @@ function FunBotServer:OnExtensionLoaded()
 	self:RegisterHooks()
 	self:RegisterCustomEvents()
 	self:RegisterCallbacks()
-	self:ScambleBotNames() -- Use random names at least once per start. 
+	self:ScambleBotNames() -- Use random names at least once per start.
 	self:OnModReloaded()
 end
 
@@ -123,7 +123,7 @@ function FunBotServer:RegisterEvents()
 	Events:Subscribe('CombatArea:PlayerDeserting', self, self.OnCombatAreaDeserting)
 	Events:Subscribe('CombatArea:PlayerReturning', self, self.OnCombatAreaReturning)
 	Events:Subscribe('LifeCounter:BaseDestroyed', self, self.OnLifeCounterBaseDestoyed)
-	
+
 end
 
 function FunBotServer:RegisterHooks()
@@ -147,86 +147,86 @@ function FunBotServer:RegisterCustomEvents()
 end
 
 function FunBotServer:RegisterCallbacks()
-	-- Use server-sided bullet damage. 
+	-- Use server-sided bullet damage.
 	ResourceManager:RegisterInstanceLoadHandler(Guid('C4DCACFF-ED8F-BC87-F647-0BC8ACE0D9B4'),
 		Guid('818334B3-CEA6-FC3F-B524-4A0FED28CA35'), self, self.OnServerSettingsCallback)
 	ResourceManager:RegisterInstanceLoadHandler(Guid('C4DCACFF-ED8F-BC87-F647-0BC8ACE0D9B4'),
 		Guid('B983148D-4B2B-1CDA-D8A0-407789610202'), self, self.OnSyncedGameSettingsCallback)
-	-- Modify stationary AA. 
+	-- Modify stationary AA.
 	ResourceManager:RegisterInstanceLoadHandler(Guid('15A6F4C7-1700-432B-95A7-D5DE8A058ED2'),
 		Guid('465DA0A5-F57D-44CF-8383-7F7DC105973A'), self, self.OnStationaryAACallback)
-	-- Conquest. 
+	-- Conquest.
 	ResourceManager:RegisterInstanceLoadHandler(Guid('0C342A8C-BCDE-11E0-8467-9159D6ACA94C'),
 		Guid('0093213A-2BA5-4B27-979C-8C0B6DBE38CE'), self, self.OnAutoTeamEntityDataCallback)
 	ResourceManager:RegisterInstanceLoadHandler(Guid('0C342A8C-BCDE-11E0-8467-9159D6ACA94C'),
 		Guid('4CD461D1-A9D5-4A1B-A88D-D72AF01FB82D'), self, self.OnHumanPlayerEntityDataCallback)
-	-- Domination. 
+	-- Domination.
 	ResourceManager:RegisterInstanceLoadHandler(Guid('9E2ED50A-C01C-49BA-B3BE-9940BD4C5A08'),
 		Guid('D9F43E4E-CDB1-4BE5-8C28-80CC6F860090'), self, self.OnAutoTeamEntityDataCallback)
 	ResourceManager:RegisterInstanceLoadHandler(Guid('9E2ED50A-C01C-49BA-B3BE-9940BD4C5A08'),
 		Guid('D90027CC-5A84-4BEB-8622-497E3DAEFA37'), self, self.OnHumanPlayerEntityDataCallback)
-	-- Rush. 
+	-- Rush.
 	ResourceManager:RegisterInstanceLoadHandler(Guid('56364B35-5D80-4874-9D74-CCF829D579D9'),
 		Guid('015C301E-D440-4A25-9F2A-5AA59F6CDDCD'), self, self.OnAutoTeamEntityDataCallback)
 	ResourceManager:RegisterInstanceLoadHandler(Guid('56364B35-5D80-4874-9D74-CCF829D579D9'),
 		Guid('896A2B3B-DC2B-46C6-A288-1A4149C2790C'), self, self.OnHumanPlayerEntityDataCallback)
-	-- Full CTF Prototype. 
+	-- Full CTF Prototype.
 	ResourceManager:RegisterInstanceLoadHandler(Guid('DF2A507F-0CB2-4430-B854-26589870B52C'),
 		Guid('C2A37490-3663-4633-B9AD-7FB04B898A34'), self, self.OnAutoTeamEntityDataCallback)
 	ResourceManager:RegisterInstanceLoadHandler(Guid('DF2A507F-0CB2-4430-B854-26589870B52C'),
 		Guid('0DB61706-1F91-43F4-8898-13DA716E3E9E'), self, self.OnHumanPlayerEntityDataCallback)
-	-- Full GunMaster. 
+	-- Full GunMaster.
 	ResourceManager:RegisterInstanceLoadHandler(Guid('F71EE45B-1BB0-4442-A46D-5B079A722230'),
 		Guid('9C396851-78ED-49B9-8F24-FC6A8E2AF7A9'), self, self.OnAutoTeamEntityDataCallback)
 	ResourceManager:RegisterInstanceLoadHandler(Guid('F71EE45B-1BB0-4442-A46D-5B079A722230'),
 		Guid('4F65C8D9-EE5F-4CAB-BC97-A4DB3D7B528A'), self, self.OnHumanPlayerEntityDataCallback)
-	-- Full GunMaster XP4. 
+	-- Full GunMaster XP4.
 	ResourceManager:RegisterInstanceLoadHandler(Guid('F58C83A7-C753-4360-A9C0-4E44C79836F8'),
 		Guid('58019F0F-3CDA-48EA-BAAE-A776D4395BCF'), self, self.OnAutoTeamEntityDataCallback)
 	ResourceManager:RegisterInstanceLoadHandler(Guid('F58C83A7-C753-4360-A9C0-4E44C79836F8'),
 		Guid('BF4E6675-DC22-4156-A978-C504C6A0B342'), self, self.OnHumanPlayerEntityDataCallback)
-	-- Full SquadDeathmatch. 
+	-- Full SquadDeathmatch.
 	ResourceManager:RegisterInstanceLoadHandler(Guid('A2074F27-7D1F-11E0-B283-C22E2A7B7393'),
 		Guid('5C01FD39-C10C-4D4B-ABDB-724B1EA54815'), self, self.OnAutoTeamEntityDataCallback)
 	ResourceManager:RegisterInstanceLoadHandler(Guid('A2074F27-7D1F-11E0-B283-C22E2A7B7393'),
 		Guid('99CFF247-8F58-489E-BB66-1FAEC6FDA8A9'), self, self.OnHumanPlayerEntityDataCallback)
-	-- Full SquadDeathmatch NoVehicles. 
+	-- Full SquadDeathmatch NoVehicles.
 	ResourceManager:RegisterInstanceLoadHandler(Guid('1341E76F-293C-4091-AF99-05DFA3B73CF3'),
 		Guid('C94EC3CF-FCCB-462C-83E1-8CA70A3A525A'), self, self.OnAutoTeamEntityDataCallback)
 	ResourceManager:RegisterInstanceLoadHandler(Guid('1341E76F-293C-4091-AF99-05DFA3B73CF3'),
 		Guid('43C71D6D-9972-4A8C-BD74-677972E49F4E'), self, self.OnHumanPlayerEntityDataCallback)
-	-- Full SquadDeathmatch XP4. 
+	-- Full SquadDeathmatch XP4.
 	ResourceManager:RegisterInstanceLoadHandler(Guid('7B941CFA-9955-461B-8390-0789AD9AA1A5'),
 		Guid('FA2B2A7D-25C0-4B9B-BF2E-AF363F853F68'), self, self.OnAutoTeamEntityDataCallback)
 	ResourceManager:RegisterInstanceLoadHandler(Guid('7B941CFA-9955-461B-8390-0789AD9AA1A5'),
 		Guid('FF4D8BD7-7D79-499D-AA2B-18865FB01200'), self, self.OnHumanPlayerEntityDataCallback)
-	-- Full TeamDeathmatch. 
+	-- Full TeamDeathmatch.
 	ResourceManager:RegisterInstanceLoadHandler(Guid('FAD987C1-7D2A-11E0-B283-C22E2A7B7393'),
 		Guid('6E2D7A9F-67A8-4827-B261-0025C6559F7B'), self, self.OnAutoTeamEntityDataCallback)
 	ResourceManager:RegisterInstanceLoadHandler(Guid('FAD987C1-7D2A-11E0-B283-C22E2A7B7393'),
 		Guid('742EAB4B-FFCB-4201-ADAC-1D4BC20E6831'), self, self.OnHumanPlayerEntityDataCallback)
-	-- Full TeamDeathmatch XP4. 
+	-- Full TeamDeathmatch XP4.
 	ResourceManager:RegisterInstanceLoadHandler(Guid('676C0FD7-EA75-4F5D-8764-BB076F6F3E11'),
 		Guid('CC76229D-95EE-4B52-822B-BE222EED803B'), self, self.OnAutoTeamEntityDataCallback)
 	ResourceManager:RegisterInstanceLoadHandler(Guid('676C0FD7-EA75-4F5D-8764-BB076F6F3E11'),
 		Guid('4B797B64-6CDC-41F3-963D-DE22517EC4B5'), self, self.OnHumanPlayerEntityDataCallback)
-	-- Coop. 
-	-- ResourceManager:RegisterInstanceLoadHandler(Guid('945CAF0E-B0F2-11DF-91B7-DD34EE95ED77'), Guid('77B694D1-046A-4A33-A5F2-4C667DB51D27'), self, self.OnHumanPlayerEntityDataCallback) 
-	-- SP. 
-	-- ResourceManager:RegisterInstanceLoadHandler(Guid('9C2FFA19-B419-11DF-A7E7-B3A3B68B4D14'), Guid('7B7F0014-13B6-4387-AE94-1E61548AB6D3'), self, self.OnHumanPlayerEntityDataCallback) 
-	-- FrontEnd. 
-	-- ResourceManager:RegisterInstanceLoadHandler(Guid('6EA4B5DA-DE3A-4808-A85C-FCA07B2AFB04'), Guid('8BD2E753-9B37-426A-8AA8-1685C8E2744D'), self, self.OnHumanPlayerEntityDataCallback) 
-	-- TutorialMP Sandbox. 
-	-- ResourceManager:RegisterInstanceLoadHandler(Guid('CC083805-FAC2-4940-9D8E-45C232C005E3'), Guid('592D94FC-68F7-413E-8B61-0ACEC4FD7D0D'), self, self.OnHumanPlayerEntityDataCallback) 
-	-- TutorialMP. 
-	-- ResourceManager:RegisterInstanceLoadHandler(Guid('8517D561-0AED-4C58-A634-5D069A8E1BA2'), Guid('502DA681-116F-494C-AFBD-DC02522A14B4'), self, self.OnHumanPlayerEntityDataCallback) 
-	-- TutorialMP ShootHouse. 
-	-- ResourceManager:RegisterInstanceLoadHandler(Guid('53C55F5E-C5CF-4B60-A455-445739D99501'), Guid('F4B49F70-BE94-4792-95E6-09A5F3F932F4'), self, self.OnHumanPlayerEntityDataCallback) 
+	-- Coop.
+	-- ResourceManager:RegisterInstanceLoadHandler(Guid('945CAF0E-B0F2-11DF-91B7-DD34EE95ED77'), Guid('77B694D1-046A-4A33-A5F2-4C667DB51D27'), self, self.OnHumanPlayerEntityDataCallback)
+	-- SP.
+	-- ResourceManager:RegisterInstanceLoadHandler(Guid('9C2FFA19-B419-11DF-A7E7-B3A3B68B4D14'), Guid('7B7F0014-13B6-4387-AE94-1E61548AB6D3'), self, self.OnHumanPlayerEntityDataCallback)
+	-- FrontEnd.
+	-- ResourceManager:RegisterInstanceLoadHandler(Guid('6EA4B5DA-DE3A-4808-A85C-FCA07B2AFB04'), Guid('8BD2E753-9B37-426A-8AA8-1685C8E2744D'), self, self.OnHumanPlayerEntityDataCallback)
+	-- TutorialMP Sandbox.
+	-- ResourceManager:RegisterInstanceLoadHandler(Guid('CC083805-FAC2-4940-9D8E-45C232C005E3'), Guid('592D94FC-68F7-413E-8B61-0ACEC4FD7D0D'), self, self.OnHumanPlayerEntityDataCallback)
+	-- TutorialMP.
+	-- ResourceManager:RegisterInstanceLoadHandler(Guid('8517D561-0AED-4C58-A634-5D069A8E1BA2'), Guid('502DA681-116F-494C-AFBD-DC02522A14B4'), self, self.OnHumanPlayerEntityDataCallback)
+	-- TutorialMP ShootHouse.
+	-- ResourceManager:RegisterInstanceLoadHandler(Guid('53C55F5E-C5CF-4B60-A455-445739D99501'), Guid('F4B49F70-BE94-4792-95E6-09A5F3F932F4'), self, self.OnHumanPlayerEntityDataCallback)
 end
 
--- ============================================= 
--- Events. 
--- ============================================= 
+-- =============================================
+-- Events.
+-- =============================================
 
 ---VEXT Shared Extension:Unloading Event
 function FunBotServer:OnExtensionUnloading()
@@ -257,8 +257,8 @@ function FunBotServer:OnScoringStatEvent(p_Player, p_ObjectPlayer, p_StatEvent, 
 	if p_StatEvent == StatEvent.StatEvent_CrateDisarmed then
 		m_GameDirector:OnMcomDisarmed(p_Player)
 	end
-	--[[ If p_StatEvent == StatEvent.StatEvent_CrateDestroyed then. 
-		-- Not reliably usable, since place can be anywhere at this moment. 
+	--[[ If p_StatEvent == StatEvent.StatEvent_CrateDestroyed then.
+		-- Not reliably usable, since place can be anywhere at this moment.
 	end ]]
 end
 
@@ -274,11 +274,9 @@ function FunBotServer:OnLifeCounterBaseDestoyed(p_LifeCounterEntity, p_FinalBase
 	m_GameDirector:OnLifeCounterBaseDestoyed(p_LifeCounterEntity, p_FinalBase)
 end
 
-
-
--- ============================================= 
--- Level Events. 
--- ============================================= 
+-- =============================================
+-- Level Events.
+-- =============================================
 
 ---VEXT Server Level:Loaded Event
 ---@param p_LevelName string
@@ -293,20 +291,20 @@ function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPe
 		s_GameMode = p_GameMode
 	end
 
-	-- Randomize used names. 
+	-- Randomize used names.
 	if Config.UseRandomNames then
 		self:ScambleBotNames()
 	end
 
 	m_WeaponList:OnLevelLoaded()
 
-	-- Only use name of Level. 
+	-- Only use name of Level.
 	p_LevelName = p_LevelName:gsub(".+/.+/", "")
 	m_Logger:Write('OnLevelLoaded: ' .. p_LevelName .. ' ' .. s_GameMode)
 
 	self:SetRespawnDelay()
 
-	-- Don't reset list of Ignore-Bot-Names, if those are allowed to use. 
+	-- Don't reset list of Ignore-Bot-Names, if those are allowed to use.
 	if not Registry.COMMON.ALLOW_PLAYER_BOT_NAMES then
 		Globals.IgnoreBotNames = {}
 	end
@@ -347,9 +345,9 @@ function FunBotServer:OnRoundReset()
 	m_GameDirector:OnRoundReset()
 end
 
--- ============================================= 
--- Player Events. 
--- ============================================= 
+-- =============================================
+-- Player Events.
+-- =============================================
 
 ---VEXT Server Player:Authenticated Event
 ---@param p_Player Player
@@ -389,8 +387,7 @@ end
 ---@param p_IsHeadShot boolean
 ---@param p_WasVictimInReviveState boolean
 ---@param p_Info DamageGiverInfo
-function FunBotServer:OnPlayerKilled(p_Player, p_Inflictor, p_Position, p_Weapon, p_IsRoadKill, p_IsHeadShot,
-                                     p_WasVictimInReviveState, p_Info)
+function FunBotServer:OnPlayerKilled(p_Player, p_Inflictor, p_Position, p_Weapon, p_IsRoadKill, p_IsHeadShot, p_WasVictimInReviveState, p_Info)
 	m_NodeEditor:OnPlayerKilled(p_Player)
 	m_AirTargets:OnPlayerKilled(p_Player)
 end
@@ -418,9 +415,9 @@ function FunBotServer:OnPlayerDestroyed(p_Player)
 	m_AirTargets:OnPlayerDestroyed(p_Player)
 end
 
--- ============================================= 
--- CapturePoint Events. 
--- ============================================= 
+-- =============================================
+-- CapturePoint Events.
+-- =============================================
 
 ---VEXT Server CapturePoint:Lost Event
 ---@param p_CapturePoint Entity @`CapturePointEntity`
@@ -441,9 +438,9 @@ function FunBotServer:OnPlayerEnteredCapturePoint(p_Player, p_CapturePoint)
 	m_GameDirector:OnPlayerEnteredCapturePoint(p_Player, p_CapturePoint)
 end
 
--- ============================================= 
--- Vehicle Events. 
--- ============================================= 
+-- =============================================
+-- Vehicle Events.
+-- =============================================
 
 ---VEXT Server Vehicle:SpawnDone Event
 ---@param p_VehicleEntity Entity @`ControllableEntity`
@@ -474,9 +471,9 @@ function FunBotServer:OnVehicleExit(p_VehicleEntity, p_Player)
 	m_AirTargets:OnVehicleExit(p_VehicleEntity, p_Player)
 end
 
--- ============================================= 
--- Hooks. 
--- ============================================= 
+-- =============================================
+-- Hooks.
+-- =============================================
 
 ---VEXT Server Soldier:Damage Hook
 ---@param p_HookCtx HookContext
@@ -501,9 +498,9 @@ function FunBotServer:OnEntityFactoryCreate(p_HookCtx, p_EntityData, p_Transform
 	end
 end
 
--- ============================================= 
--- Custom Events. 
--- ============================================= 
+-- =============================================
+-- Custom Events.
+-- =============================================
 
 function FunBotServer:OnShootAt(p_Player, p_BotName, p_IgnoreYaw)
 	m_BotManager:OnShootAt(p_Player, p_BotName, p_IgnoreYaw)
@@ -567,9 +564,9 @@ function FunBotServer:OnTeleportTo(p_Player, p_Transform)
 	p_Player.soldier:SetTransform(p_Transform)
 end
 
--- ============================================= 
--- Register Callbacks. 
--- ============================================= 
+-- =============================================
+-- Register Callbacks.
+-- =============================================
 
 ---@param p_ServerSettings ServerSettings|DataContainer
 function FunBotServer:OnServerSettingsCallback(p_ServerSettings)
@@ -591,12 +588,12 @@ function FunBotServer:OnStationaryAACallback(p_FiringFunctionData)
 	p_FiringFunctionData = FiringFunctionData(p_FiringFunctionData)
 	p_FiringFunctionData:MakeWritable()
 	p_FiringFunctionData.overHeat.heatPerBullet = 0.0001
-	p_FiringFunctionData.dispersion[1].minAngle = 0.2 -- Config.spreadMinAngle  
-	p_FiringFunctionData.dispersion[1].maxAngle = 0.6 -- Config.spreadMaxAngle  
-	-- p_FiringFunctionData.shot.initialSpeed = Vec3(0, 0, Config.bulletSpeed) 
-	-- p_FiringFunctionData.shot.initialPosition = Vec3(0, 0, 35) 
-	-- p_FiringFunctionData.fireLogic.rateOfFire = Config.rateOfFire  
-	-- p_FiringFunctionData.fireLogic.clientFireRateMultiplier = Config.clientFireRateMultiplier  
+	p_FiringFunctionData.dispersion[1].minAngle = 0.2 -- Config.spreadMinAngle
+	p_FiringFunctionData.dispersion[1].maxAngle = 0.6 -- Config.spreadMaxAngle
+	-- p_FiringFunctionData.shot.initialSpeed = Vec3(0, 0, Config.bulletSpeed)
+	-- p_FiringFunctionData.shot.initialPosition = Vec3(0, 0, 35)
+	-- p_FiringFunctionData.fireLogic.rateOfFire = Config.rateOfFire
+	-- p_FiringFunctionData.fireLogic.clientFireRateMultiplier = Config.clientFireRateMultiplier
 end
 
 ---@param p_AutoTeamEntityData AutoTeamEntityData|DataContainer
@@ -617,9 +614,9 @@ function FunBotServer:OnHumanPlayerEntityDataCallback(p_HumanPlayerEntityData)
 	self.m_PlayerKilledDelay = p_HumanPlayerEntityData.playerKilledDelay
 end
 
--- ============================================= 
--- Functions. 
--- ============================================= 
+-- =============================================
+-- Functions.
+-- =============================================
 
 function FunBotServer:OnModReloaded()
 	local s_FullLevelPath = SharedUtils:GetLevelName()
@@ -675,7 +672,7 @@ function FunBotServer:DetectSpecialMods()
 end
 
 function FunBotServer:RegisterInputRestrictionEventCallbacks()
-	-- Disable inputs on start of round. 
+	-- Disable inputs on start of round.
 	Globals.IsInputAllowed = true
 
 	if Globals.IsInputRestrictionDisabled then
@@ -689,17 +686,17 @@ function FunBotServer:RegisterInputRestrictionEventCallbacks()
 		s_Entity = Entity(s_Entity)
 
 		if s_Entity.data.instanceGuid == Guid('E8C37E6A-0C8B-4F97-ABDD-28715376BD2D') or
-			-- Cq / CD assault / tank- / air superiority. 
-			s_Entity.data.instanceGuid == Guid('593710B7-EDC4-4EDB-BE20-323E7B0CE023') or -- Tdm XP4. 
-			s_Entity.data.instanceGuid == Guid('6F42FBE3-428A-463A-9014-AA0C6E09DA64') or -- Tdm. 
-			s_Entity.data.instanceGuid == Guid('9EDC59FB-5821-4A37-A739-FE867F251000') or -- Rush / sq rush. 
-			s_Entity.data.instanceGuid == Guid('BF4003AC-4B85-46DC-8975-E6682815204D') or -- Domination / scavenger. 
-			s_Entity.data.instanceGuid == Guid('A0158B87-FA34-4ED2-B752-EBFC1A34B081') or -- Gunmaster XP4. 
-			s_Entity.data.instanceGuid == Guid('AAF90FE3-D1CA-4CFE-84F3-66C6146AD96F') or -- Gunmaster. 
-			s_Entity.data.instanceGuid == Guid('753BD81F-07AC-4140-B05C-24210E1DF3FA') or -- Sqdm XP4. 
-			s_Entity.data.instanceGuid == Guid('CBFB0D7E-8561-4216-9AB2-99E14E9D18D0') or -- Sqdm noVehicles. 
-			s_Entity.data.instanceGuid == Guid('A40B08B7-D781-487A-8D0C-2E1B911C1949') then -- Sqdm. 
-			-- Rip CTF. 
+			-- Cq / CD assault / tank- / air superiority.
+			s_Entity.data.instanceGuid == Guid('593710B7-EDC4-4EDB-BE20-323E7B0CE023') or -- Tdm XP4.
+			s_Entity.data.instanceGuid == Guid('6F42FBE3-428A-463A-9014-AA0C6E09DA64') or -- Tdm.
+			s_Entity.data.instanceGuid == Guid('9EDC59FB-5821-4A37-A739-FE867F251000') or -- Rush / sq rush.
+			s_Entity.data.instanceGuid == Guid('BF4003AC-4B85-46DC-8975-E6682815204D') or -- Domination / scavenger.
+			s_Entity.data.instanceGuid == Guid('A0158B87-FA34-4ED2-B752-EBFC1A34B081') or -- Gunmaster XP4.
+			s_Entity.data.instanceGuid == Guid('AAF90FE3-D1CA-4CFE-84F3-66C6146AD96F') or -- Gunmaster.
+			s_Entity.data.instanceGuid == Guid('753BD81F-07AC-4140-B05C-24210E1DF3FA') or -- Sqdm XP4.
+			s_Entity.data.instanceGuid == Guid('CBFB0D7E-8561-4216-9AB2-99E14E9D18D0') or -- Sqdm noVehicles.
+			s_Entity.data.instanceGuid == Guid('A40B08B7-D781-487A-8D0C-2E1B911C1949') then -- Sqdm.
+			-- Rip CTF.
 			s_Entity:RegisterEventCallback(function(p_Entity, p_Event)
 				if p_Event.eventId == MathUtils:FNVHash("Activate") and Globals.IsInputAllowed then
 					Globals.IsInputAllowed = false

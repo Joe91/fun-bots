@@ -1,5 +1,5 @@
 ScavengerWeaponList = {
-	-- Level 1 
+	-- Level 1
 	'ASVal',
 	'MagpulPDR',
 	'MP7',
@@ -9,7 +9,7 @@ ScavengerWeaponList = {
 	'PP-19',
 	'P90',
 
-	-- Level 2 
+	-- Level 2
 	'SPAS12',
 	'870M',
 	'M1014',
@@ -21,7 +21,7 @@ ScavengerWeaponList = {
 	'Mk11',
 	'Crossbow',
 
-	-- Level 3 
+	-- Level 3
 	'SCAR-L',
 	'AK74M',
 	'G3A3',
@@ -39,7 +39,7 @@ ScavengerWeaponList = {
 	'Pecheneg',
 	'M249',
 
-	-- Pistols 
+	-- Pistols
 	'Glock17',
 	'Glock17_Silenced',
 	'Glock18',
@@ -57,7 +57,7 @@ ScavengerWeaponList = {
 	'MP443_Tactical',
 	'MP443_Silenced',
 
-	-- Knives 
+	-- Knives
 	'Razor',
 	'Knife',
 }

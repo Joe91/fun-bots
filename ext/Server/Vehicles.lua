@@ -7,7 +7,7 @@ require('__shared/Constants/VehicleData')
 local m_Logger = Logger("Vehicles", Debug.Server.VEHICLES)
 
 function Vehicles:FindOutVehicleType(p_Player)
-	local s_VehicleType = VehicleTypes.NoVehicle -- No vehicle. 
+	local s_VehicleType = VehicleTypes.NoVehicle -- No vehicle.
 
 	if p_Player and p_Player.controlledControllable and not p_Player.controlledControllable:Is("ServerSoldierEntity") then
 		local s_VehicleName = VehicleEntityData(p_Player.controlledControllable.data).controllableType:gsub(".+/.+/", "")
@@ -64,7 +64,7 @@ function Vehicles:GetNrOfFreeSeats(p_Entity, p_PlayerIsDriver)
 	local s_NrOfFreeSeats = 0
 	local s_MaxEntries = p_Entity.entryCount
 
-	-- Keep one seat free, if enough available. 
+	-- Keep one seat free, if enough available.
 	if not p_PlayerIsDriver and s_MaxEntries > 2 then
 		s_MaxEntries = s_MaxEntries - 1
 	end
@@ -181,36 +181,36 @@ end
 
 function Vehicles:CheckForVehicleAttack(p_VehicleType, p_Distance, p_Gadget, p_InVehicle, p_IsSniper)
 	if p_InVehicle then
-		return VehicleAttackModes.AttackWithRifle -- Attack with main-weapon. 
+		return VehicleAttackModes.AttackWithRifle -- Attack with main-weapon.
 	end
 
-	local s_AttackMode = VehicleAttackModes.NoAttack -- No attack. 
+	local s_AttackMode = VehicleAttackModes.NoAttack -- No attack.
 	if p_VehicleType == VehicleTypes.MavBot or
 		p_VehicleType == VehicleTypes.NoArmorVehicle or
 		p_VehicleType == VehicleTypes.StationaryLauncher or
-		p_VehicleType == VehicleTypes.Gadgets then -- No idea what this might be. 
-		s_AttackMode = VehicleAttackModes.AttackWithRifle -- Attack with rifle. 
+		p_VehicleType == VehicleTypes.Gadgets then -- No idea what this might be.
+		s_AttackMode = VehicleAttackModes.AttackWithRifle -- Attack with rifle.
 	end
-	if (p_IsSniper and p_VehicleType == VehicleTypes.Chopper and Config.SnipersAttackChoppers) then -- Don't attack planes. Too fast... 
+	if (p_IsSniper and p_VehicleType == VehicleTypes.Chopper and Config.SnipersAttackChoppers) then -- Don't attack planes. Too fast...
 		if MathUtils:GetRandomInt(1, 100) <= Registry.BOT.PROBABILITY_ATTACK_CHOPPER_WITH_RIFLE then
-			s_AttackMode = VehicleAttackModes.AttackWithRifle -- Attack with rifle. 
+			s_AttackMode = VehicleAttackModes.AttackWithRifle -- Attack with rifle.
 		end
 	end
 
-	if p_VehicleType ~= VehicleTypes.MavBot and p_Gadget then -- MAV or EOD always with rifle. 
+	if p_VehicleType ~= VehicleTypes.MavBot and p_Gadget then -- MAV or EOD always with rifle.
 		if p_Gadget.type == WeaponTypes.Rocket then
-			s_AttackMode = VehicleAttackModes.AttackWithRocket -- Always use rocket if possible. 
+			s_AttackMode = VehicleAttackModes.AttackWithRocket -- Always use rocket if possible.
 		elseif p_Gadget.type == WeaponTypes.C4 and p_Distance < 25 then
-			if p_VehicleType ~= VehicleTypes.Chopper and p_VehicleType ~= VehicleTypes.Plane then -- No air vehicles. 
-				s_AttackMode = VehicleAttackModes.AttackWithC4 -- Always use C4 if possible. 
+			if p_VehicleType ~= VehicleTypes.Chopper and p_VehicleType ~= VehicleTypes.Plane then -- No air vehicles.
+				s_AttackMode = VehicleAttackModes.AttackWithC4 -- Always use C4 if possible.
 			end
 		elseif p_Gadget.type == WeaponTypes.MissileAir then
-			if p_VehicleType == VehicleTypes.Chopper or p_VehicleType == VehicleTypes.Plane then -- No air vehicles. 
-				s_AttackMode = VehicleAttackModes.AttackWithMissileAir -- Always use C4 if possible. 
+			if p_VehicleType == VehicleTypes.Chopper or p_VehicleType == VehicleTypes.Plane then -- No air vehicles.
+				s_AttackMode = VehicleAttackModes.AttackWithMissileAir -- Always use C4 if possible.
 			end
 		elseif p_Gadget.type == WeaponTypes.MissileLand then
-			if p_VehicleType ~= VehicleTypes.Chopper and p_VehicleType ~= VehicleTypes.Plane then -- No air vehicles. 
-				s_AttackMode = VehicleAttackModes.AttackWithMissileLand -- Always use C4 if possible. 
+			if p_VehicleType ~= VehicleTypes.Chopper and p_VehicleType ~= VehicleTypes.Plane then -- No air vehicles.
+				s_AttackMode = VehicleAttackModes.AttackWithMissileLand -- Always use C4 if possible.
 			end
 		end
 	end

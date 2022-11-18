@@ -1,5 +1,5 @@
 ---@class VehicleTable
-VehicleTable = { -- Thanks to Bree_Arnold. 
+VehicleTable = { -- Thanks to Bree_Arnold.
 	["LAV25"] = "[LAV-25]",
 	["BMP2"] = "[BMP-2M]",
 	["GAZ-3937_Vodnik"] = "[GAZ-3937 VODNIK]",

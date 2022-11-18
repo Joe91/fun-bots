@@ -24,7 +24,7 @@ Globals = {
 	RemoveKitVisuals = false,
 	IgnoreBotNames = {},
 
-	RespawnWayBots = false, -- Used for the runtime respawn. 
-	AttackWayBots = false, -- Used for the runtime attack. 
-	SpawnMode = SpawnModes.manual -- Used for the runtime spawn mode. 
+	RespawnWayBots = false, -- Used for the runtime respawn.
+	AttackWayBots = false, -- Used for the runtime attack.
+	SpawnMode = SpawnModes.manual -- Used for the runtime spawn mode.
 }

@@ -1,6 +1,6 @@
-local code = 'xx_XX' -- Add/replace the xx_XX here with your language code (like de_DE, en_US, or other)! 
+local code = 'xx_XX' -- Add/replace the xx_XX here with your language code (like de_DE, en_US, or other)!
 
--- GENERAL 
+-- GENERAL
 Language:add(code, "Bot Weapon", "")
 Language:add(code, "Select the weapon the bots use", "")
 Language:add(code, "Bot Kit", "")
@@ -10,7 +10,7 @@ Language:add(code, "The Color of the Bots", "")
 Language:add(code, "Zombie Mode", "")
 Language:add(code, "Zombie Bot Mode", "")
 
--- DIFFICULTY 
+-- DIFFICULTY
 Language:add(code, "Bot Aim Worsening", "")
 Language:add(code, "Make bots aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy)", "")
 Language:add(code, "Bot Aim Worsening of Snipers", "")
@@ -38,7 +38,7 @@ Language:add(code, "Original Damage from bots gets multiplied by this", "")
 Language:add(code, "Damage Factor Knife", "")
 Language:add(code, "Original Damage from bots gets multiplied by this", "")
 
--- SPAWN 
+-- SPAWN
 Language:add(code, "Spawn Mode", "")
 Language:add(code, "Mode the bots spawn with", "")
 Language:add(code, "Balance Players Ignoring Bots", "")
@@ -70,7 +70,7 @@ Language:add(code, "Additional time a bot waits to respawn", "")
 Language:add(code, "Bot Health at spawn", "")
 Language:add(code, "Max health of bot (default 100.0)", "")
 
--- SPAWNLIMITS 
+-- SPAWNLIMITS
 Language:add(code, "Max Bots Per Team (default)", "")
 Language:add(code, "Max number of bots in one team, if no other mode fits", "")
 Language:add(code, "Max Bots Per Team (TDM)", "")
@@ -98,7 +98,7 @@ Language:add(code, "Max number of bots in one team for Gunmaster", "")
 Language:add(code, "Max Bots Per Team (Scavenger)", "")
 Language:add(code, "Max number of bots in one team for Scavenger", "")
 
--- BEHAVIOUR 
+-- BEHAVIOUR
 Language:add(code, "FOV of Bots", "")
 Language:add(code, "Degrees of FOV of Bot", "")
 Language:add(code, "FOV of Bots Verticle", "")
@@ -138,7 +138,7 @@ Language:add(code, "Time between deployment of bots in seconds", "")
 Language:add(code, "Snipers attack choppers", "")
 Language:add(code, "Bots with sniper-rifels attack choppers", "")
 
--- VEHICLE 
+-- VEHICLE
 Language:add(code, "Use vehicles", "")
 Language:add(code, "Bots can use vehicles", "")
 Language:add(code, "Use air vehicles", "")
@@ -168,7 +168,7 @@ Language:add(code, "Enable Auto-AA by NyScorpy", "")
 Language:add(code, "Max Distance Auto-AA", "")
 Language:add(code, "Max Range of Stationary AA", "")
 
--- WEAPONS 
+-- WEAPONS
 Language:add(code, "Random Weapon usage", "")
 Language:add(code, "Use a random weapon out of the Weapon Set", "")
 Language:add(code, "Weapon Set Assault", "")
@@ -192,7 +192,7 @@ Language:add(code, "Pistol of Bots, if random-weapon == false", "")
 Language:add(code, "Knife of Bots", "")
 Language:add(code, "Knife of Bots, if random-weapon == false", "")
 
--- TRACE 
+-- TRACE
 Language:add(code, "Debug Trace Paths", "")
 Language:add(code, "Shows the trace line and search area from Commo Rose selection", "")
 Language:add(code, "Waypoint Range", "")
@@ -214,7 +214,7 @@ Language:add(code, "Update interval of trace", "")
 Language:add(code, "Nodes that are drawn per cycle", "")
 Language:add(code, "Set how many nodes get drawn per cycle. Affects performance", "")
 
--- ADVANCED 
+-- ADVANCED
 Language:add(code, "Distance for direct attack", "")
 Language:add(code, "Distance bots can hear you at", "")
 Language:add(code, "Bot melee attack cool-down", "")
@@ -248,7 +248,7 @@ Language:add(code, "Max time bots move sidewards, before straight-movement (in s
 Language:add(code, "Min Move Cycle", "")
 Language:add(code, "Min time bots move sidewards or straight before switching (in sec)", "")
 
--- EXPERT 
+-- EXPERT
 Language:add(code, "Bot first shot delay", "")
 Language:add(code, "Delay for first shot. If too small, there will be great spread in first cycle because it is not compensated yet", "")
 Language:add(code, "Bot min time shoot at player", "")
@@ -280,7 +280,7 @@ Language:add(code, "Bots on paths respawn if killed", "")
 Language:add(code, "Spawn Method", "")
 Language:add(code, "Method the bots spawn with. Careful, not supported on most of the maps!!", "")
 
--- OTHER 
+-- OTHER
 Language:add(code, "Disable UI", "")
 Language:add(code, "If true, the complete UI will be disabled (not available in the UI)", "")
 Language:add(code, "Allow Comm-UI for all", "")
@@ -294,12 +294,12 @@ Language:add(code, "If true, all permissions are ignored --> everyone can do eve
 Language:add(code, "Language", "")
 Language:add(code, "de_DE as sample (default is English, when language file does not exist)", "")
 
--- Strings of ext/Client/ClientNodeEditor.lua 
+-- Strings of ext/Client/ClientNodeEditor.lua
 
--- Strings of ext/Server/BotSpawner.lua 
+-- Strings of ext/Server/BotSpawner.lua
 Language:add(code, "CANT_JOIN_BOT_TEAM", "")
 
--- Strings of ext/Server/UIServer.lua 
+-- Strings of ext/Server/UIServer.lua
 Language:add(code, "A", "")
 Language:add(code, "B", "")
 Language:add(code, "C", "")
@@ -327,7 +327,7 @@ Language:add(code, "Repair Vehicle", "")
 Language:add(code, "Settings has been saved temporarily", "")
 Language:add(code, "Settings has been saved", "")
 
--- Strings of ext/Server/UIPathMenu.lua 
+-- Strings of ext/Server/UIPathMenu.lua
 Language:add(code, "Add Mcom-Action", "")
 Language:add(code, "Overwrite: Loop-Path", "")
 Language:add(code, "Overwrite: Reverse-Path", "")
@@ -411,7 +411,7 @@ Language:add(code, "base us stage 4", "")
 Language:add(code, "base us stage 5", "")
 Language:add(code, "Objective", "")
 
--- Strings of ext/Server/NodeCollection.lua 
+-- Strings of ext/Server/NodeCollection.lua
 Language:add(code, "Loaded %d paths with %d waypoints for map %s", "")
 Language:add(code, "Save in progress...", "")
 Language:add(code, "Failed to execute query: %s", "")

@@ -11,9 +11,9 @@ function EbxEditUtils:__init()
 	}
 end
 
--- Returns two values <value>,<status> 
--- <value>: The found instance as a typed object and made writable. 
--- <status>: Boolean true if valid, string with message if failed. 
+-- Returns two values <value>,<status>
+-- <value>: The found instance as a typed object and made writable.
+-- <status>: Boolean true if valid, string with message if failed.
 function EbxEditUtils:GetWritableInstance(p_ResourcePathOrGUIDOrContainer)
 	if type(p_ResourcePathOrGUIDOrContainer) == 'userdata' and p_ResourcePathOrGUIDOrContainer.typeInfo ~= nil then
 		local s_ReturnInstance = _G[p_ResourcePathOrGUIDOrContainer.typeInfo.name](p_ResourcePathOrGUIDOrContainer)
@@ -48,9 +48,9 @@ function EbxEditUtils:GetWritableInstance(p_ResourcePathOrGUIDOrContainer)
 	return s_WorkingInstance, true
 end
 
--- Returns three values <workingInstance>,<valid> 
--- <workingInstance>: The found instance as a typed object and made writable. 
--- <valid>: The given values were valid. 
+-- Returns three values <workingInstance>,<valid>
+-- <workingInstance>: The found instance as a typed object and made writable.
+-- <valid>: The given values were valid.
 function EbxEditUtils:GetWritableContainer(p_Instance, p_ContainerPath)
 	local s_PropertyName = nil
 	local s_WorkingInstance = self:GetWritableInstance(p_Instance)
@@ -66,7 +66,7 @@ function EbxEditUtils:GetWritableContainer(p_Instance, p_ContainerPath)
 			s_WorkingInstance = s_WorkingInstance[s_PropertyName]
 
 			if i == #s_WorkingPath then
-				-- Safety cast. 
+				-- Safety cast.
 				s_WorkingInstance = _G[s_WorkingInstance.typeInfo.name](s_WorkingInstance)
 
 				if s_WorkingInstance.MakeWritable ~= nil then
@@ -81,10 +81,10 @@ function EbxEditUtils:GetWritableContainer(p_Instance, p_ContainerPath)
 	return s_WorkingInstance, false
 end
 
--- Returns three values <workingInstance>,<propertyName>,<valid> 
--- <workingInstance>: The found instance as a typed object and made writable. 
--- <propertyName>: The property name that works. 
--- <valid>: The given values were valid. 
+-- Returns three values <workingInstance>,<propertyName>,<valid>
+-- <workingInstance>: The found instance as a typed object and made writable.
+-- <propertyName>: The property name that works.
+-- <valid>: The given values were valid.
 function EbxEditUtils:GetWritableProperty(p_Instance, p_PropertyPath)
 	local s_PropertyName = nil
 	local s_WorkingInstance = self:GetWritableInstance(p_Instance)
@@ -97,7 +97,7 @@ function EbxEditUtils:GetWritableProperty(p_Instance, p_PropertyPath)
 		if not s_Valid then
 			return s_WorkingInstance, s_PropertyName, s_Valid
 		else
-			-- We've reached a value 
+			-- We've reached a value
 			if type(s_WorkingInstance[s_PropertyName]) == 'string' or
 				type(s_WorkingInstance[s_PropertyName]) == 'number' or
 				type(s_WorkingInstance[s_PropertyName]) == 'boolean' or
@@ -121,25 +121,25 @@ function EbxEditUtils:CheckInstancePropertyExists(p_Instance, p_PropertyName)
 		return p_Instance, p_PropertyName, false
 	end
 
-	if p_Instance[p_PropertyName] ~= nil then -- Try for property. 
+	if p_Instance[p_PropertyName] ~= nil then -- Try for property.
 		return p_Instance, p_PropertyName, true
 	end
 
-	if tonumber(p_PropertyName) ~= nil then -- Simple lookup failed, maybe it's an array index. 
-		if p_Instance[tonumber(p_PropertyName)] ~= nil then -- Try for property again. 
+	if tonumber(p_PropertyName) ~= nil then -- Simple lookup failed, maybe it's an array index.
+		if p_Instance[tonumber(p_PropertyName)] ~= nil then -- Try for property again.
 			return p_Instance, tonumber(p_PropertyName), true
 		end
 	end
 
-	local s_InstanceType = p_Instance.typeInfo.name -- Get type. 
-	local s_WorkingInstance = _G[s_InstanceType](p_Instance) -- Cast to type. 
+	local s_InstanceType = p_Instance.typeInfo.name -- Get type.
+	local s_WorkingInstance = _G[s_InstanceType](p_Instance) -- Cast to type.
 
-	if s_WorkingInstance[p_PropertyName] ~= nil then -- Try for property again. 
+	if s_WorkingInstance[p_PropertyName] ~= nil then -- Try for property again.
 		return s_WorkingInstance, p_PropertyName, true
 	end
 
-	if tonumber(p_PropertyName) ~= nil then -- Still no, let's try array on the cast. 
-		if s_WorkingInstance[tonumber(p_PropertyName)] ~= nil then -- Try for property again. 
+	if tonumber(p_PropertyName) ~= nil then -- Still no, let's try array on the cast.
+		if s_WorkingInstance[tonumber(p_PropertyName)] ~= nil then -- Try for property again.
 			return s_WorkingInstance, tonumber(p_PropertyName), true
 		end
 	end
@@ -147,9 +147,9 @@ function EbxEditUtils:CheckInstancePropertyExists(p_Instance, p_PropertyName)
 	return p_Instance, p_PropertyName, false
 end
 
--- Returns two values <value>,<status> 
--- <value>: The validated value, with default applied if necessary. 
--- <status>: Boolean true if valid, string with message if failed. 
+-- Returns two values <value>,<status>
+-- <value>: The validated value, with default applied if necessary.
+-- <status>: Boolean true if valid, string with message if failed.
 function EbxEditUtils:ValidateValue(p_ArgValue, p_ArgParams)
 	local s_DefaultValue = p_ArgParams.Default
 
@@ -160,11 +160,11 @@ function EbxEditUtils:ValidateValue(p_ArgValue, p_ArgParams)
 			return s_DefaultValue, 'Must be a **' .. p_ArgParams.Type .. '**'
 		end
 	elseif p_ArgParams.Type == 'boolean' then
-		if p_ArgValue ~= nil then -- Sorry, this is ugly. 
+		if p_ArgValue ~= nil then -- Sorry, this is ugly.
 			if p_ArgValue == '1' or p_ArgValue == '0' or
 				string.lower(p_ArgValue) == 'true' or string.lower(p_ArgValue) == 'false' or
 				string.lower(p_ArgValue) == 'y' or string.lower(p_ArgValue) == 'n' then
-				-- The value still needs to be a string, but let's normalize it. 
+				-- The value still needs to be a string, but let's normalize it.
 				local s_BoolToString = tostring((
 					p_ArgValue == '1' or string.lower(p_ArgValue) == 'true' or string.lower(p_ArgValue) == 'y'))
 				return (s_BoolToString == 'true'), true
@@ -213,14 +213,14 @@ function EbxEditUtils:GetValidPath(p_PropertyPath)
 	return s_Result
 end
 
--- Adapted from the C# implementation used by VU, provided by NoFaTe. 
+-- Adapted from the C# implementation used by VU, provided by NoFaTe.
 function EbxEditUtils:FormatMemberName(p_MemberName)
 	local s_OutputName = ''
 	local s_FoundLower = false
 	local s_MemberLength = p_MemberName:len()
 
 	for i = 1, s_MemberLength do
-		local s_Continue = false -- Dirty hack to give Lua a 'continue' statement in loops. 
+		local s_Continue = false -- Dirty hack to give Lua a 'continue' statement in loops.
 
 		if s_FoundLower then
 			s_OutputName = s_OutputName .. p_MemberName:sub(i, i)

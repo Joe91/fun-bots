@@ -2,7 +2,7 @@
 indent_size = 4
 indent_style = tab
 insert_final_newline = true
-max_line_length = 120
+max_line_length = 1200
 trim_trailing_whitespace = true
 end_of_line = lf
 if_branch_comments_after_block_no_indent = true

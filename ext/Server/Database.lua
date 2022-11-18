@@ -24,7 +24,7 @@ function Database:__init()
 	self.m_LastError = nil
 end
 
--- This is unused. 
+-- This is unused.
 function Database:GetLastError()
 	return self.m_LastError
 end
@@ -39,7 +39,7 @@ end
 
 function Database:Query(p_Query, p_Parameters)
 	SQL:Open()
-	-- To-do: build p_Query with given p_Parameters 
+	-- To-do: build p_Query with given p_Parameters
 	local s_Result = SQL:Query(p_Query)
 
 	if not s_Result then
@@ -93,7 +93,7 @@ function Database:Single(p_Query)
 	return s_Results[1]
 end
 
--- This is unused. 
+-- This is unused.
 function Database:Count(p_Query, p_Parameters)
 	local s_Results = self:Query(p_Query, p_Parameters)
 
@@ -136,7 +136,7 @@ function Database:Update(p_TableName, p_Parameters, p_Where)
 		p_TableName .. '` SET ' .. s_Fields:join(', ') .. ' WHERE `' .. p_Where .. '`=\'' .. s_Found .. '\'')
 end
 
--- This is unused. 
+-- This is unused.
 function Database:ExecuteBatch()
 	self:Query('DELETE FROM `FB_Settings`')
 	self:Query(m_Batched .. m_Batches:join(', '))
@@ -181,8 +181,8 @@ function Database:BatchQuery(p_TableName, p_Parameters, p_Where)
 		end
 	end
 
-	-- m_Batches:add('UPDATE `' .. p_TableName .. '` SET ' .. s_Fields:join(', ') .. ' WHERE `' .. p_Where .. '`=\'' .. s_Found .. '\'') 
-	-- m_Batches:add('INSERT OR REPLACE INTO ' .. p_TableName .. ' (' .. s_Names:join(', ') .. ') VALUES (' .. s_Values:join(', ') .. ')') 
+	-- m_Batches:add('UPDATE `' .. p_TableName .. '` SET ' .. s_Fields:join(', ') .. ' WHERE `' .. p_Where .. '`=\'' .. s_Found .. '\'')
+	-- m_Batches:add('INSERT OR REPLACE INTO ' .. p_TableName .. ' (' .. s_Names:join(', ') .. ') VALUES (' .. s_Values:join(', ') .. ')')
 	m_Batched = 'INSERT INTO ' .. p_TableName .. ' (' .. s_Names:join(', ') .. ') VALUES '
 	m_Batches:add('(' .. s_Values:join(', ') .. ')')
 

@@ -1,4 +1,4 @@
---[[ 
+--[[
 	@property: SettingsDefinition
 ]]
 ---@class SettingsDefinition
@@ -20,11 +20,11 @@ SettingsDefinition = {
 		OTHER = "Other"
 	},
 
-	--[[ 
+	--[[
 		@property: Elements
 	]]
 	Elements = {
-		-- General. 
+		-- General.
 		{
 			Name = "BotWeapon",
 			Text = "Bot Weapon",
@@ -73,7 +73,7 @@ SettingsDefinition = {
 			Category = "GENERAL"
 		},
 
-		-- Difficulty. 
+		-- Difficulty.
 		{
 			Name = "BotAimWorsening",
 			Text = "Bot Aim Worsening",
@@ -231,7 +231,7 @@ SettingsDefinition = {
 			Category = "DIFFICULTY"
 		},
 
-		-- Spawn. 
+		-- Spawn.
 		{
 			Name = "SpawnMode",
 			Text = "Spawn Mode",
@@ -410,7 +410,7 @@ SettingsDefinition = {
 			Category = "SPAWN"
 		},
 
-		-- Spawn limits. 
+		-- Spawn limits.
 		{
 			Name = "MaxBotsPerTeamDefault",
 			Text = "Max Bots Per Team (default)",
@@ -568,7 +568,7 @@ SettingsDefinition = {
 			Category = "SPAWNLIMITS"
 		},
 
-		-- Bot behaviour. 
+		-- Bot behaviour.
 		{
 			Name = "FovForShooting",
 			Text = "FOV of Bots",
@@ -787,8 +787,8 @@ SettingsDefinition = {
 			UpdateFlag = UpdateFlag.None,
 			Category = "BEHAVIOUR"
 		},
-		
-		-- Vehicles behaviour. 
+
+		-- Vehicles behaviour.
 		{
 			Name = "UseVehicles",
 			Text = "Use vehicles",
@@ -953,7 +953,7 @@ SettingsDefinition = {
 			UpdateFlag = UpdateFlag.None,
 			Category = "VEHICLE"
 		},
-		-- Weapons. 
+		-- Weapons.
 		{
 			Name = "UseRandomWeapon",
 			Text = "Random Weapon usage",
@@ -1086,7 +1086,7 @@ SettingsDefinition = {
 			Category = "WEAPONS"
 		},
 
-		-- Traces. 
+		-- Traces.
 		{
 			Name = "DebugTracePaths",
 			Text = "Debug Trace Paths",
@@ -1203,7 +1203,7 @@ SettingsDefinition = {
 			UpdateFlag = UpdateFlag.None,
 			Category = "TRACE"
 		},
-		-- Advanced properties. 
+		-- Advanced properties.
 		{
 			Name = "DistanceForDirectAttack",
 			Text = "Distance for direct attack",
@@ -1390,7 +1390,7 @@ SettingsDefinition = {
 			Category = "ADVANCED"
 		},
 
-		-- Expert Properties. 
+		-- Expert Properties.
 		{
 			Name = "BotFirstShotDelay",
 			Text = "Bot first shot delay",
@@ -1569,7 +1569,7 @@ SettingsDefinition = {
 			Category = "EXPERT"
 		},
 
-		-- Other Stuff. 
+		-- Other Stuff.
 		{
 			Name = "DisableUserInterface",
 			Text = "Disable UI",

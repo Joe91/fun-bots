@@ -1,6 +1,6 @@
-local code = 'cn_CN' -- Add/replace the xx_XX here with your language code (like de_DE, en_US, or other)! 
+local code = 'cn_CN' -- Add/replace the xx_XX here with your language code (like de_DE, en_US, or other)!
 
--- GENERAL 
+-- GENERAL
 Language:add(code, "Bot Weapon", "BOT武器")
 Language:add(code, "Select the weapon the bots use", "选择BOT的武器")
 Language:add(code, "Bot Kit", "BOT兵种")
@@ -10,7 +10,7 @@ Language:add(code, "The Color of the Bots", "BOT重生时的装备皮肤")
 Language:add(code, "Zombie Mode", "僵尸模式")
 Language:add(code, "Zombie Bot Mode", "BOT僵尸模式")
 
--- DIFFICULTY 
+-- DIFFICULTY
 Language:add(code, "Bot Aim Worsening", "BOT瞄准精度")
 Language:add(code, "Make bots aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy)", "让BOT瞄准更糟糕:为了难度: 0 = 难, 1 或者更高 = 随机性强（容易）")
 Language:add(code, "Bot Aim Worsening of Snipers", "BOT狙击手瞄准精度")
@@ -38,7 +38,7 @@ Language:add(code, "Original Damage from bots gets multiplied by this", "BOT原�
 Language:add(code, "Damage Factor Knife", "近战伤害倍率")
 Language:add(code, "Original Damage from bots gets multiplied by this", "BOT原伤害乘以此")
 
--- SPAWN 
+-- SPAWN
 Language:add(code, "Spawn Mode", "生成模式")
 Language:add(code, "Mode the bots spawn with", "BOT以该模式生成")
 Language:add(code, "Balance Players Ignoring Bots", "无视BOT平衡玩家")
@@ -70,7 +70,7 @@ Language:add(code, "Additional time a bot waits to respawn", "BOT重生时等待
 Language:add(code, "Bot Health at spawn", "BOT生成时的生命值")
 Language:add(code, "Max health of bot (default 100.0)", "BOT的最大生命值(默认100)")
 
--- SPAWN LIMITS 
+-- SPAWN LIMITS
 Language:add(code, "Max Bots Per Team (default)", "每支队伍最大BOT数(默认游戏模式)")
 Language:add(code, "Max number of bots in one team, if no other mode fits", "默认是一个队伍中BOT最大数")
 Language:add(code, "Max Bots Per Team (TDM)", "每支队伍最大BOT数(TDM)")
@@ -98,7 +98,7 @@ Language:add(code, "Max number of bots in one team for Gunmaster", "Gunmaster模
 Language:add(code, "Max Bots Per Team (Scavenger)", "每支队伍最大BOT数(Scavenger)")
 Language:add(code, "Max number of bots in one team for Scavenger", "Scavenger模式中一个队伍中BOT最大数")
 
--- BEHAVIOUR 
+-- BEHAVIOUR
 Language:add(code, "FOV of Bots", "BOT视野")
 Language:add(code, "Degrees of FOV of Bot", "BOT的视野,可以在此视野中检测玩家")
 Language:add(code, "FOV of Bots Verticle", "BOT的垂直FOV")
@@ -138,7 +138,7 @@ Language:add(code, "Time between deployment of bots in seconds", "BOT部署的�
 Language:add(code, "Snipers attack choppers", "狙击手攻击直升机")
 Language:add(code, "Bots with sniper-rifels attack choppers", "带有狙击步枪的BOT攻击直升机")
 
--- VEHICLE 
+-- VEHICLE
 Language:add(code, "Use vehicles", "BOT驾驶载具")
 Language:add(code, "Bots can use vehicles", "BOT驾驶载具")
 Language:add(code, "Use air vehicles", "驾驶空中载具")
@@ -168,7 +168,7 @@ Language:add(code, "Enable Auto-AA by NyScorpy", "启用Auto-AA,作者:NyScorpy"
 Language:add(code, "Max Distance Auto-AA", "Auto-AA最远射程")
 Language:add(code, "Max Range of Stationary AA", "固定式AA的最远射程")
 
--- WEAPONS 
+-- WEAPONS
 Language:add(code, "Random Weapon usage", "BOT使用随机武器")
 Language:add(code, "Use a random weapon out of the Weapon Set", "BOT使用随机的组合中的武器")
 Language:add(code, "Weapon Set Assault", "突击兵武器")
@@ -192,7 +192,7 @@ Language:add(code, "Pistol of Bots, if random-weapon == false", "如果为false,
 Language:add(code, "Knife of Bots", "BOT近战武器")
 Language:add(code, "Knife of Bots, if random-weapon == false", "如果为false,则BOT所使用的近战武器将随机")
 
--- TRACE 
+-- TRACE
 Language:add(code, "Debug Trace Paths", "调试路径")
 Language:add(code, "Shows the trace line and search area from Commo Rose selection", "显示选择路径轨迹和搜索区域")
 Language:add(code, "Waypoint Range", "路径点显示范围")
@@ -214,7 +214,7 @@ Language:add(code, "Update interval of trace", "更新路径间隔")
 Language:add(code, "Nodes that are drawn per cycle", "每个周期绘制节点数")
 Language:add(code, "Set how many nodes get drawn per cycle. Affects performance", "设置每个周期绘制的节点数,影响性能")
 
--- ADVANCED 
+-- ADVANCED
 Language:add(code, "Distance for direct attack", "直接攻击距离")
 Language:add(code, "Distance bots can hear you at", "BOT能听到你脚步的距离")
 Language:add(code, "Bot melee attack cool-down", "BOT近战攻击冷却时间")
@@ -248,7 +248,7 @@ Language:add(code, "Max time bots move sidewards, before straight-movement (in s
 Language:add(code, "Min Move Cycle", "最小移动周期")
 Language:add(code, "Min time bots move sidewards or straight before switching (in sec)", "BOT切换前横向或直线移动的最短时间(秒为单位)")
 
--- EXPERT 
+-- EXPERT
 Language:add(code, "Bot first shot delay", "BOT第一枪延迟")
 Language:add(code, "Delay for first shot. If too small, there will be great spread in first cycle because it is not compensated yet", "第一枪延迟.如果太小,第一个回合会有很大的扩散,因为它还没有得到补偿")
 Language:add(code, "Bot min time shoot at player", "BOT最短向玩家射击的时间")
@@ -280,7 +280,7 @@ Language:add(code, "Bots on paths respawn if killed", "如果在被路径上被�
 Language:add(code, "Spawn Method", "BOT生成方法")
 Language:add(code, "Method the bots spawn with. Careful, not supported on most of the maps!!", "BOT生成的方式.小心,大多数地图不支持!!")
 
--- OTHER 
+-- OTHER
 Language:add(code, "Disable UI", "禁用UI界面")
 Language:add(code, "If true, the complete UI will be disabled (not available in the UI)", "如果为true,则UI将被禁用")
 Language:add(code, "Allow Comm-UI for all", "允许所有人使用命令菜单")
@@ -294,12 +294,12 @@ Language:add(code, "If true, all permissions are ignored --> everyone can do eve
 Language:add(code, "Language", "语言")
 Language:add(code, "de_DE as sample (default is English, when language file does not exist)", "默认为英语")
 
--- Strings of ../ext/Client/ClientNodeEditor.lua 
+-- Strings of ../ext/Client/ClientNodeEditor.lua
 
--- Strings of ../ext/Server/BotSpawner.lua 
+-- Strings of ../ext/Server/BotSpawner.lua
 Language:add(code, "CANT_JOIN_BOT_TEAM", "无法加入BOT队伍")
 
--- Strings of ../ext/Server/UIServer.lua 
+-- Strings of ../ext/Server/UIServer.lua
 Language:add(code, "Attack", "进攻")
 Language:add(code, "A", "A点")
 Language:add(code, "B", "B点")
@@ -327,7 +327,7 @@ Language:add(code, "%s is currently not implemented", "%S目前未实现")
 Language:add(code, "Settings has been saved temporarily", "设置已暂时保存")
 Language:add(code, "Settings has been saved", "设置已保存")
 
--- Strings of ../ext/Shared/NodeCollection.lua 
+-- Strings of ../ext/Shared/NodeCollection.lua
 Language:add(code, "Loaded %d paths with %d waypoints for map %s", "为地图%s加载了%d个路径和%d个路径点")
 Language:add(code, "Save in progress...", "正在保存中...")
 Language:add(code, "Failed to execute query: %s", "无法执行查询: %s")
