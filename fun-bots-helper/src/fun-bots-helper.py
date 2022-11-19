@@ -14,12 +14,12 @@ from tools.create_maplist import create_map_list
 from tools.create_settings import create_settings
 from tools.export_permission_and_config import export_permission_and_config
 from tools.export_traces import export_traces
+from tools.fix_comments import fix_comments
+from tools.fix_nodes import fix_nodes
+from tools.fix_objectives import fix_objectives
 from tools.import_permission_and_config import import_permission_and_config
 from tools.import_traces import import_traces
 from tools.merge_two_mapfiles import merge_two_mapfiles
-from tools.scan_for_invalid_comments import scan_for_invalid_comments
-from tools.scan_for_invalid_nodes import scan_for_invalid_nodes
-from tools.scan_for_invalid_objectives import scan_for_invalid_objectives
 from tools.update_all_languages import update_languages
 from tools.update_supported_maps import update_supported_maps
 
@@ -31,7 +31,7 @@ class App(customtkinter.CTk):
         super().__init__()
 
         customtkinter.set_appearance_mode("dark")
-        
+
         self.geometry("900x500")
         self.title("Fun Bots Helper")
         self.iconbitmap(r"battlefield3.ico")
@@ -266,8 +266,8 @@ class App(customtkinter.CTk):
         logger.info("Mapfiles Updated\n")
 
     def fix_maps_fb(self) -> None:
-        scan_for_invalid_objectives()
-        scan_for_invalid_nodes()
+        fix_objectives()
+        fix_nodes()
         logger.info("All Maps Scanned and Fixed\n")
 
     def create_language_fb(self) -> None:
@@ -275,7 +275,7 @@ class App(customtkinter.CTk):
         create_language(lang)
 
     def fix_comments_fb(self) -> None:
-        scan_for_invalid_comments()
+        fix_comments()
         logger.info("All Comments Grammarly Checked\n")
 
     def merge_two_mapfiles_fb(self) -> None:

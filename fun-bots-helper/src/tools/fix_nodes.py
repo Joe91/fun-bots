@@ -1,13 +1,10 @@
 import os
-import sys
 
-sys.path.append("../")
-
-from tools.addons.gets import get_invalid_node_lines, get_it_running, get_to_root
+from tools.addons.gets import get_invalid_node_lines, get_it_running
 
 
-def scan_for_invalid_nodes() -> None:
-    get_to_root()
+def fix_nodes() -> None:
+
     source_folder = "mapfiles"
 
     file_names = os.listdir(source_folder)
@@ -21,4 +18,4 @@ def scan_for_invalid_nodes() -> None:
 
 
 if __name__ == "__main__":
-    get_it_running(scan_for_invalid_nodes)
+    get_it_running(fix_nodes)

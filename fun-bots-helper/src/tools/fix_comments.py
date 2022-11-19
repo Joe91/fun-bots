@@ -1,13 +1,10 @@
 import os
-import sys
 
-sys.path.append("../")
-
-from tools.addons.gets import get_comments_fixed, get_it_running, get_to_root
+from tools.addons.gets import get_comments_fixed, get_it_running
 
 
-def scan_for_invalid_comments() -> None:
-    get_to_root()
+def fix_comments() -> None:
+
     folders = [
         "ext/Client/",
         "ext/Server/",
@@ -38,4 +35,4 @@ def scan_for_invalid_comments() -> None:
 
 
 if __name__ == "__main__":
-    get_it_running(scan_for_invalid_comments)
+    get_it_running(fix_comments)

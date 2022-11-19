@@ -1,7 +1,5 @@
 import sys
 
-sys.path.append("../")
-
 from deep_translator import GoogleTranslator
 from deep_translator.exceptions import (
     InvalidSourceOrTargetLanguage,
@@ -9,11 +7,11 @@ from deep_translator.exceptions import (
 )
 from loguru import logger
 
-from tools.addons.gets import get_to_root, get_translation
+from tools.addons.gets import get_translation
 
 
 def create_language(lang: str) -> None:
-    get_to_root()
+
     supported_languages = {
         "afrikaans": "af",
         "albanian": "sq",

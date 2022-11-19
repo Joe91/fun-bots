@@ -6,6 +6,7 @@ Most functions here returns a list that will be used to write the lines of exter
 import operator
 import os
 import sqlite3
+import sys
 from io import TextIOWrapper
 from typing import Any, Callable, Dict, List, Tuple
 
@@ -548,7 +549,7 @@ def get_updated_lines_js(in_file: TextIOWrapper) -> List[str]:
 
 
 def get_to_root() -> None:
-    """Go back to the fun-bots root, i.e, fun-bots/.
+    """Go back to the fun-bots' root, i.e, fun-bots/.
 
     Args:
         None
@@ -696,7 +697,9 @@ def get_comments_fixed(in_file: TextIOWrapper) -> List[str]:
 
 
 def get_it_running(function: Callable) -> None:
-    """Run a function through a try-except KeyboardInterrupt block.
+    """Run a function through a pre-defined try-except KeyboardInterrupt block.
+    The try statement adds the parent folder to $PYTHONPATH, goes back to the root
+    directory and runs the function there.
 
     Args:
         - function - The function to be executed
@@ -705,6 +708,8 @@ def get_it_running(function: Callable) -> None:
         None
     """
     try:
+        sys.path.append("../")
+        get_to_root()
         function()
     except KeyboardInterrupt:
         logger.warning("Crtl+C detected! Exiting Script...")
@@ -778,7 +783,6 @@ def get_version() -> str:
     Returns:
         The fun-bots version
     """
-    get_to_root()
     with open("ext/Shared/Registry/Registry.lua", "r", encoding="utf-8") as infile:
         lines = infile.readlines()
         readout_active = False

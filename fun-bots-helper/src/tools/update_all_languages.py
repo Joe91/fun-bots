@@ -1,20 +1,16 @@
 import os
-import sys
-
-sys.path.append("../")
 
 from loguru import logger
 
 from tools.addons.gets import (
     get_it_running,
-    get_to_root,
     get_updated_lines_js,
     get_updated_lines_lua,
 )
 
 
 def update_languages() -> None:
-    get_to_root()
+
     lua_path = "ext/Shared/Languages"
     js_path = "WebUI/languages"
 

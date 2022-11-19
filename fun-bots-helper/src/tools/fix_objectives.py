@@ -1,15 +1,12 @@
 import os
-import sys
-
-sys.path.append("../")
 
 from loguru import logger
 
-from tools.addons.gets import get_it_running, get_objectives_to_rename, get_to_root
+from tools.addons.gets import get_it_running, get_objectives_to_rename
 
 
-def scan_for_invalid_objectives() -> None:
-    get_to_root()
+def fix_objectives() -> None:
+
     source_folder = "mapfiles"
 
     file_names = os.listdir(source_folder)
@@ -29,4 +26,4 @@ def scan_for_invalid_objectives() -> None:
 
 
 if __name__ == "__main__":
-    get_it_running(scan_for_invalid_objectives)
+    get_it_running(fix_objectives)

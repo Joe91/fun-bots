@@ -1,14 +1,11 @@
 import sys
 
-sys.path.append("../")
-
 from loguru import logger
 
-from tools.addons.gets import get_maps_merged, get_to_root
+from tools.addons.gets import get_maps_merged
 
 
 def merge_two_mapfiles(merge_file_1: str, merge_file_2: str) -> None:
-    get_to_root()
 
     merged_file = f"mapfiles/merge_{merge_file_1[:-4]}_{merge_file_2[:-4]}.map"
 

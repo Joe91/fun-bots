@@ -1,19 +1,10 @@
-import sys
-
 from loguru import logger
 
-sys.path.append("../")
-
-from tools.addons.gets import (
-    get_it_running,
-    get_settings,
-    get_settings_lines,
-    get_to_root,
-)
+from tools.addons.gets import get_it_running, get_settings, get_settings_lines
 
 
 def create_settings() -> None:
-    get_to_root()
+
     config_file = "ext/Shared/Config.lua"
     all_settings = get_settings(first_key="Name")
 

@@ -1,20 +1,10 @@
-import sys
-
 from loguru import logger
 
-sys.path.append("../")
-
-from tools.addons.gets import (
-    get_it_running,
-    get_js_lines,
-    get_lua_lines,
-    get_settings,
-    get_to_root,
-)
+from tools.addons.gets import get_it_running, get_js_lines, get_lua_lines, get_settings
 
 
 def create_defaults() -> None:
-    get_to_root()
+
     language_file_lua = "ext/Shared/Languages/DEFAULT.lua"
     language_file_js = "WebUI/languages/DEFAULT.js"
 

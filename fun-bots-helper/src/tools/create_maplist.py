@@ -1,14 +1,10 @@
-import sys
-
 from loguru import logger
 
-sys.path.append("../")
-
-from tools.addons.gets import get_it_running, get_map_lines_created, get_to_root
+from tools.addons.gets import get_it_running, get_map_lines_created
 
 
 def create_map_list() -> None:
-    get_to_root()
+
     out_file = "MapList.txt"
 
     map_items = get_map_lines_created()

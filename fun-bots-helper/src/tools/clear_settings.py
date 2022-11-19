@@ -1,14 +1,10 @@
-import sys
-
 from loguru import logger
 
-sys.path.append("../")
-
-from tools.addons.gets import get_all_tables, get_it_running, get_to_root
+from tools.addons.gets import get_all_tables, get_it_running
 
 
 def clear_settings() -> None:
-    get_to_root()
+
     remove_list = ["FB_Config_Trace", "FB_Settings"]
     connection, cursor = get_all_tables()
     content = cursor.fetchall()
