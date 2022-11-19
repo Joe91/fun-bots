@@ -284,10 +284,7 @@ class App(customtkinter.CTk):
         merge_two_mapfiles(merge_file_1, merge_file_2)
 
     def change_appearance_mode(self, new_appearance_mode: str) -> None:
-        thread = threading.Thread(
-            target=customtkinter.set_appearance_mode, args=(new_appearance_mode,)
-        )
-        thread.start()
+        customtkinter.set_appearance_mode(new_appearance_mode)
 
     def create_thread(self, function: Callable) -> None:
         threading.Thread(target=function).start()

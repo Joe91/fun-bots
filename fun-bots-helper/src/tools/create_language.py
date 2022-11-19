@@ -7,7 +7,7 @@ from deep_translator.exceptions import (
 )
 from loguru import logger
 
-from tools.addons.gets import get_translation
+from tools.addons.gets import get_it_running, get_translation
 
 
 def create_language(lang: str) -> None:
@@ -184,7 +184,6 @@ def create_language(lang: str) -> None:
 
 if __name__ == "__main__":
     try:
-        lang = sys.argv[1]
-        create_language(lang)
-    except KeyboardInterrupt:
-        logger.warning("Crtl+C detected! Exiting Script...")
+        get_it_running(create_language, sys.argv[1])
+    except IndexError:
+        logger.error("No language code was passed!")
