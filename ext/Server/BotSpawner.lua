@@ -1398,14 +1398,22 @@ function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 			"persistence/unlocks/vehicles/jetstealth",
 			"persistence/unlocks/vehicles/jetflarelauncher",
 			"persistence/unlocks/vehicles/jetheatseekerstance",
-			-- Xp5 perks.
+			-- Xp3 perks.
 			"persistence/unlocks/vehicles/lbtcoaxlmg",
-			"persistence/unlocks/vehicles/lbtreloadupgrade1",
+			"persistence/unlocks/vehicles/lbtsmokelaunchers",
 			"persistence/unlocks/vehicles/artilleryreloadupgrade",
 			"persistence/unlocks/vehicles/artillerysmokelaunchers",
 			"persistence/unlocks/vehicles/artilleryairburst",
 			"persistence/unlocks/vehicles/landvehiclefireextinguisher",
 		}
+		-- some variation in appearance
+		if MathUtils:GetRandomInt(1, 100) <= 50 then
+			table.insert(s_VehiclePerksToAdd, "persistence/unlocks/vehicles/mbtreactivearmor")
+			table.insert(s_VehiclePerksToAdd, "persistence/unlocks/vehicles/lbtreactivearmor")
+		else
+			table.insert(s_VehiclePerksToAdd, "persistence/unlocks/vehicles/mbtproximityscan")
+			table.insert(s_VehiclePerksToAdd, "persistence/unlocks/vehicles/lbtproximityscan")
+		end
 	end
 
 	local s_SquadPlayers = PlayerManager:GetPlayersBySquad(p_TeamId, p_SquadId)
