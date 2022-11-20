@@ -1,4 +1,4 @@
---[[ 
+--[[
 	@enum: Type
 	@value: Text
 	@value: Integer

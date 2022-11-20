@@ -11,7 +11,7 @@ function AirTargets:__init()
 	self._Targets = {}
 end
 
--- EVENTS 
+-- EVENTS
 function AirTargets:OnLevelLoaded()
 	self._Targets = {}
 end
@@ -47,7 +47,7 @@ function AirTargets:OnPlayerDestroyed(p_Player)
 	self:_RemoveTarget(p_Player)
 end
 
--- Public functions 
+-- Public functions
 function AirTargets:GetTarget(p_Player)
 	local s_Team = p_Player.teamId
 	local s_ClosestDistance = nil
@@ -77,7 +77,7 @@ function AirTargets:GetTarget(p_Player)
 	return s_ClosestTarget
 end
 
--- Private functions 
+-- Private functions
 
 function AirTargets:_CreateTarget(p_Player)
 	if p_Player.controlledEntryId == 0 then

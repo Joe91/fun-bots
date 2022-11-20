@@ -802,7 +802,7 @@ const BotEditor = (new function BotEditor() {
 
 		if (json.Other) {
 			let otherKeysElement = document.querySelector('ui-entry[data-grid="Other"]');
-			while (otherKeysElement.hasChildNodes()) {  
+			while (otherKeysElement.hasChildNodes()) {
 				otherKeysElement.removeChild(otherKeysElement.firstChild);
 			}
 			

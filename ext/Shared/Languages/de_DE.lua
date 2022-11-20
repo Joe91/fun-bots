@@ -1,6 +1,6 @@
-local code = 'de_DE' -- Add/replace the xx_XX here with your language code (like de_DE, en_US, or other)! 
+local code = 'de_DE' -- Add/replace the xx_XX here with your language code (like de_DE, en_US, or other)!
 
--- GENERAL 
+-- GENERAL
 Language:add(code, "Bot Weapon", "Bot-Waffe")
 Language:add(code, "Select the weapon the bots use", "Wählen Sie die Waffe aus, die die Bots verwenden")
 Language:add(code, "Bot Kit", "Bot-Kit")
@@ -10,7 +10,7 @@ Language:add(code, "The Color of the Bots", "Die Farbe der Bots")
 Language:add(code, "Zombie Mode", "Zombie Modus")
 Language:add(code, "Zombie Bot Mode", "Zombie-Bot-Modus")
 
--- DIFFICULTY 
+-- DIFFICULTY
 Language:add(code, "Bot Aim Worsening", "Verschlechterung des Bot-Ziels")
 Language:add(code, "Make bots aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy)", "Lassen Sie Bots schlechter zielen: für Schwierigkeit: 0 = kein Versatz (schwer), 1 oder noch größer = mehr Schwanken (einfach)")
 Language:add(code, "Bot Aim Worsening of Snipers", "Bot-Zielverschlechterung von Scharfschützen")
@@ -38,7 +38,7 @@ Language:add(code, "Original Damage from bots gets multiplied by this", "Ursprü
 Language:add(code, "Damage Factor Knife", "Schadensfaktor-Messer")
 Language:add(code, "Original Damage from bots gets multiplied by this", "Ursprünglicher Schaden von Bots wird damit multipliziert")
 
--- SPAWN 
+-- SPAWN
 Language:add(code, "Spawn Mode", "Spawn-Modus")
 Language:add(code, "Mode the bots spawn with", "Modus, mit dem die Bots spawnen")
 Language:add(code, "Balance Players Ignoring Bots", "Balancieren Sie Spieler, die Bots ignorieren")
@@ -70,7 +70,7 @@ Language:add(code, "Additional time a bot waits to respawn", "Zusätzliche Zeit,
 Language:add(code, "Bot Health at spawn", "Bot-Gesundheit beim Spawn")
 Language:add(code, "Max health of bot (default 100.0)", "Maximale Gesundheit des Bots (Standard 100,0)")
 
--- SPAWN LIMITS 
+-- SPAWN LIMITS
 Language:add(code, "Max Bots Per Team (default)", "Max. Bots pro Team (Standard)")
 Language:add(code, "Max number of bots in one team, if no other mode fits", "Maximale Anzahl an Bots in einem Team, wenn kein anderer Modus passt")
 Language:add(code, "Max Bots Per Team (TDM)", "Max. Bots pro Team (TDM)")
@@ -98,7 +98,7 @@ Language:add(code, "Max number of bots in one team for Gunmaster", "Maximale Anz
 Language:add(code, "Max Bots Per Team (Scavenger)", "Max. Bots pro Team (Scavenger)")
 Language:add(code, "Max number of bots in one team for Scavenger", "Maximale Anzahl von Bots in einem Team für Scavenger")
 
--- BEHAVIOUR 
+-- BEHAVIOUR
 Language:add(code, "FOV of Bots", "FOV von Bots")
 Language:add(code, "Degrees of FOV of Bot", "FOV-Grade von Bot")
 Language:add(code, "FOV of Bots Verticle", "FOV von Bots Vertikal")
@@ -141,7 +141,7 @@ Language:add(code, "Max time bots move sidewards, before straight-movement (in s
 Language:add(code, "Min Move Cycle", "Min. Bewegungszyklus")
 Language:add(code, "Min time bots move sidewards or straight before switching (in sec)", "Min. Zeit, in der sich Bots seitwärts oder geradeaus bewegen, bevor sie wechseln (in Sek.)")
 
--- VEHICLE 
+-- VEHICLE
 Language:add(code, "Use vehicles", "Fahrzeuge nutzen")
 Language:add(code, "Bots can use vehicles", "Bots können Fahrzeuge benutzen")
 Language:add(code, "Use air vehicles", "Verwenden Sie Luftfahrzeuge")
@@ -168,7 +168,7 @@ Language:add(code, "Enable Auto-AA by NyScorpy", "Auto-AA von NyScorpy aktiviere
 Language:add(code, "Max Distance Auto-AA", "Maximale Entfernung Auto-AA")
 Language:add(code, "Max Range of Stationary AA", "Maximale Reichweite der stationären Flugabwehr")
 
--- WEAPONS 
+-- WEAPONS
 Language:add(code, "Random Weapon usage", "Zufällige Waffennutzung")
 Language:add(code, "Use a random weapon out of the Weapon Set", "Verwenden Sie eine zufällige Waffe aus dem Waffenset")
 Language:add(code, "Weapon Set Assault", "Waffenset-Angriff")
@@ -192,7 +192,7 @@ Language:add(code, "Pistol of Bots, if random-weapon == false", "Pistol of Bots,
 Language:add(code, "Knife of Bots", "Messer der Bots")
 Language:add(code, "Knife of Bots, if random-weapon == false", "Knife of Bots, wenn random-weapon == false")
 
--- TRACE 
+-- TRACE
 Language:add(code, "Debug Trace Paths", "Ablaufverfolgungspfade debuggen")
 Language:add(code, "Waypoint Range", "Wegpunktbereich")
 Language:add(code, "Set how far away waypoints are visible (meters)", "Legen Sie fest, wie weit entfernte Wegpunkte sichtbar sind (Meter)")
@@ -212,7 +212,7 @@ Language:add(code, "Update interval of trace", "Aktualisierungsintervall der Abl
 Language:add(code, "Nodes that are drawn per cycle", "Knoten, die pro Zyklus gezeichnet werden")
 Language:add(code, "Set how many nodes get drawn per cycle. Affects performance", "Legen Sie fest, wie viele Knoten pro Zyklus gezeichnet werden. Beeinflusst die Leistung")
 
--- ADVANCED 
+-- ADVANCED
 Language:add(code, "Distance for direct attack", "Distanz für direkten Angriff")
 Language:add(code, "Distance bots can hear you at", "Entfernungs-Bots können Sie hören")
 Language:add(code, "Bot melee attack cool-down", "Abklingzeit für Bot-Nahkampfangriffe")
@@ -238,7 +238,7 @@ Language:add(code, "Reduces the movement speed while attacking. 1 = normal, 0 = 
 Language:add(code, "Use Random Names", "Verwenden Sie zufällige Namen")
 Language:add(code, "Changes names of the bots on every new round. Experimental right now...", "Ändert die Namen der Bots bei jeder neuen Runde. Experimentiere gerade..")
 
--- EXPERT 
+-- EXPERT
 Language:add(code, "Bot first shot delay", "Verzögerung beim ersten Schuss des Bots")
 Language:add(code, "Delay for first shot. If too small, there will be great spread in first cycle because it is not compensated yet", "Verzögerung für den ersten Schuss. Wenn es zu klein ist, wird es im ersten Zyklus eine große Streuung geben, da es noch nicht kompensiert ist")
 Language:add(code, "Bot min time shoot at player", "Bot min Zeit auf Spieler schießen")
@@ -269,7 +269,7 @@ Language:add(code, "Bots on paths respawn if killed", "Bots auf Pfaden respawnen
 Language:add(code, "Spawn Method", "Spawn-Methode")
 Language:add(code, "Method the bots spawn with. Careful, not supported on most of the maps!!", "Methode, mit der die Bots spawnen. Achtung, auf den meisten Karten nicht unterstützt!!")
 
--- OTHER 
+-- OTHER
 Language:add(code, "Disable UI", "Benutzeroberfläche deaktivieren")
 Language:add(code, "If true, the complete UI will be disabled (not available in the UI)", "Wenn wahr, wird die komplette Benutzeroberfläche deaktiviert (nicht verfügbar in der Benutzeroberfläche -) )")
 Language:add(code, "Allow Comm-UI for all", "Comm-UI für alle zulassen")
@@ -283,12 +283,12 @@ Language:add(code, "If true, all permissions are ignored --> everyone can do eve
 Language:add(code, "Language", "Sprache")
 Language:add(code, "de_DE as sample (default is English, when language file does not exist)", "de_DE als Beispiel (Standard ist Englisch, wenn keine Sprachdatei vorhanden ist)")
 
--- Strings of ./../../ext/Client/ClientNodeEditor.lua 
+-- Strings of ./../../ext/Client/ClientNodeEditor.lua
 
--- Strings of ./../../ext/Server/BotSpawner.lua 
+-- Strings of ./../../ext/Server/BotSpawner.lua
 Language:add(code, "CANT_JOIN_BOT_TEAM", "CANT_JOIN_BOT_TEAM")
 
--- Strings of ./../../ext/Server/UIServer.lua 
+-- Strings of ./../../ext/Server/UIServer.lua
 Language:add(code, "A", "A")
 Language:add(code, "B", "B")
 Language:add(code, "C", "C")
@@ -316,7 +316,7 @@ Language:add(code, "Repair Vehicle", "Fahrzeug reparieren")
 Language:add(code, "Settings has been saved temporarily", "Die Einstellungen wurden vorübergehend gespeichert")
 Language:add(code, "Settings has been saved", "Einstellungen wurden gespeichert")
 
--- Strings of ./../../ext/Server/NodeCollection.lua 
+-- Strings of ./../../ext/Server/NodeCollection.lua
 Language:add(code, "Loaded %d paths with %d waypoints for map %s", "%d Pfade mit %d Wegpunkten für Karte %s geladen")
 Language:add(code, "Save in progress...", "Speichern läuft...")
 Language:add(code, "Failed to execute query: %s", "Abfrage konnte nicht ausgeführt werden: %s")

@@ -10,11 +10,11 @@ Language = require('__shared/Language')
 
 ---@type NodeCollection
 local m_NodeCollection = require('NodeCollection')
--- @type NodeEditor 
+-- @type NodeEditor
 local m_NodeEditor = require('NodeEditor')
 
 function FunBotUIPathMenu:__init()
-	-- To-do: remove? Unused. 
+	-- To-do: remove? Unused.
 	self.m_NavigaionPath = {}
 	self.m_InPathMenu = false
 
@@ -30,12 +30,12 @@ end
 function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 	local request = json.decode(p_Data)
 
-	-- Re-enter or hide Data-Menu? 
+	-- Re-enter or hide Data-Menu?
 	if request.action == 'data_menu' then
 		if self.m_InPathMenu then
 			request.action = 'close_comm'
 		elseif self.m_NavigaionPath[p_Player.onlineId] and #self.m_NavigaionPath[p_Player.onlineId] > 0 then
-			-- Go to last position in menu. 
+			-- Go to last position in menu.
 			request.action = self.m_NavigaionPath[p_Player.onlineId][#self.m_NavigaionPath[p_Player.onlineId]]
 			self.m_InPathMenu = true
 		end
@@ -43,7 +43,7 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 
 	if request.action == 'unhide_comm' then
 		if self.m_NavigaionPath[p_Player.onlineId] and #self.m_NavigaionPath[p_Player.onlineId] > 0 then
-			-- Go to last position in menu. 
+			-- Go to last position in menu.
 			request.action = self.m_NavigaionPath[p_Player.onlineId][#self.m_NavigaionPath[p_Player.onlineId]]
 			self.m_InPathMenu = true
 		else
@@ -51,7 +51,7 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 		end
 	end
 
-	-- Editor Data-Menu. 
+	-- Editor Data-Menu.
 	if request.action == 'data_menu' or request.action == 'back_to_data_menu' then
 		if not Globals.IsConquest and not Globals.IsRush then
 			ChatManager:SendMessage('This menu is not available in this gamemode.', p_Player)
@@ -60,11 +60,11 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 		self.m_InPathMenu = true
 		self.m_NavigaionPath[p_Player.onlineId] = {}
 		self.m_NavigaionPath[p_Player.onlineId][1] = request.action
-		-- Change Commo-rose. 
+		-- Change Commo-rose.
 		local s_Left = {}
 		if Globals.IsRush then
 			s_Left = {
-			    {
+				{
 					Action = 'set_mcom',
 					Label = Language:I18N('Add Mcom-Action'),
 				}, {
@@ -73,20 +73,20 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 				}, {
 					Action = 'invert_path',
 					Label = Language:I18N('Overwrite: Reverse-Path')
-				},{
+				}, {
 					Action = 'remove_data',
 					Label = Language:I18N('Remove Data')
 				}
 			}
 		else
 			s_Left = {
-			    {
+				{
 					Action = 'loop_path',
 					Label = Language:I18N('Overwrite: Loop-Path')
 				}, {
 					Action = 'invert_path',
 					Label = Language:I18N('Overwrite: Reverse-Path')
-				},{
+				}, {
 					Action = 'remove_data',
 					Label = Language:I18N('Remove Data')
 				}
@@ -102,7 +102,7 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 				{
 					Action = 'add_objective',
 					Label = Language:I18N('Add Label / Objective')
-				},{
+				}, {
 					Action = 'remove_objective',
 					Label = Language:I18N('Remove Label / Objective')
 				}, {
@@ -115,14 +115,14 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 			},
 			Center = {
 				Action = 'not_implemented',
-				Label = Language:I18N('Paths') -- Or "Unselect". 
+				Label = Language:I18N('Paths') -- Or "Unselect".
 			},
 			Left = s_Left,
 			Bottom = {
 				Action = 'close_comm',
 				Label = Language:I18N('Exit'),
 			}
-		})	
+		})
 		return
 	elseif request.action == 'close_comm' then
 		self.m_NavigaionPath[p_Player.onlineId] = {}
@@ -143,10 +143,10 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 		m_NodeEditor:OnRemoveData(p_Player)
 		return
 	elseif request.action == 'loop_path' then
-		m_NodeEditor:OnSetLoopMode(p_Player, {"true"})
+		m_NodeEditor:OnSetLoopMode(p_Player, { "true" })
 		return
 	elseif request.action == 'invert_path' then
-		m_NodeEditor:OnSetLoopMode(p_Player, {"false"})
+		m_NodeEditor:OnSetLoopMode(p_Player, { "false" })
 		return
 	elseif request.action == 'set_mcom' then
 		m_NodeEditor:OnAddMcom(p_Player)
@@ -168,7 +168,7 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 			},
 			Center = {
 				Action = 'not_implemented',
-				Label = Language:I18N('Path-Type') -- Or "Unselect". 
+				Label = Language:I18N('Path-Type') -- Or "Unselect".
 			},
 			Right = {
 				{
@@ -194,7 +194,7 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 	elseif request.action == 'vehicle_menu' then
 		self.m_NavigaionPath[p_Player.onlineId][3] = nil
 		self.m_NavigaionPath[p_Player.onlineId][2] = request.action
-		
+
 		NetEvents:SendTo('UI_CommonRose', p_Player, {
 			Top = {
 				Action = 'not_implemented',
@@ -218,10 +218,10 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 			},
 			Center = {
 				Action = 'not_implemented',
-				Label = Language:I18N('Vehicle') -- Or "Unselect". 
+				Label = Language:I18N('Vehicle') -- Or "Unselect".
 			},
 			Right = {
-				-- Vehicle Menu. 
+				-- Vehicle Menu.
 				{
 					Action = 'vehicle_objective',
 					Label = Language:I18N('Add Vehicle')
@@ -258,7 +258,7 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 			},
 			Center = {
 				Action = 'not_implemented',
-				Label = Language:I18N('Vehicle') -- Or "Unselect". 
+				Label = Language:I18N('Vehicle') -- Or "Unselect".
 			},
 			Right = {
 				{
@@ -284,7 +284,7 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 	elseif string.find(request.action, 'add_vehicle_') ~= nil then
 		self.m_NavigaionPath[p_Player.onlineId][5] = nil
 		self.m_NavigaionPath[p_Player.onlineId][4] = request.action
-		
+
 		NetEvents:SendTo('UI_CommonRose', p_Player, {
 			Top = {
 				Action = 'not_implemented',
@@ -299,7 +299,7 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 			},
 			Center = {
 				Action = 'not_implemented',
-				Label = Language:I18N('Team') -- Or "Unselect". 
+				Label = Language:I18N('Team') -- Or "Unselect".
 			},
 			Right = {
 				{
@@ -322,7 +322,7 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 	elseif string.find(request.action, 'team_') ~= nil then
 		self.m_NavigaionPath[p_Player.onlineId][6] = nil
 		self.m_NavigaionPath[p_Player.onlineId][5] = request.action
-		
+
 		NetEvents:SendTo('UI_CommonRose', p_Player, {
 			Top = {
 				Action = 'not_implemented',
@@ -349,7 +349,7 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 			},
 			Center = {
 				Action = 'not_implemented',
-				Label = Language:I18N('Index') -- Or "Unselect". 
+				Label = Language:I18N('Index') -- Or "Unselect".
 			},
 			Right = {
 				{
@@ -376,17 +376,17 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 		})
 		return
 	elseif string.find(request.action, 'index_vehcile_') ~= nil then
-		-- FILL THIS. 
+		-- FILL THIS.
 		local s_Team = self.m_NavigaionPath[p_Player.onlineId][5]:split('_')[2]
 		local s_VehicleType = self.m_NavigaionPath[p_Player.onlineId][4]:split('_')[3]
 		local s_Index = request.action:split('_')[3]
 		local s_ObjectiveData = {}
 		table.insert(s_ObjectiveData, "vehicle")
-		table.insert(s_ObjectiveData, s_VehicleType..s_Index)
+		table.insert(s_ObjectiveData, s_VehicleType .. s_Index)
 		table.insert(s_ObjectiveData, s_Team)
 		m_NodeEditor:OnAddObjective(p_Player, s_ObjectiveData);
 		return
-		
+
 	elseif request.action == 'set_vehicle_spawn' then
 		m_NodeEditor:OnSetVehicleSpawn(p_Player);
 		return
@@ -394,22 +394,22 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 		m_NodeEditor:OnAddVehicle(p_Player)
 		return
 	elseif request.action == 'add_exit_vehicle_passengers' then
-		m_NodeEditor:OnExitVehicle(p_Player, {"true"})
+		m_NodeEditor:OnExitVehicle(p_Player, { "true" })
 		return
 	elseif request.action == 'add_exit_vehicle_all' then
-		m_NodeEditor:OnExitVehicle(p_Player,  {"false"})
+		m_NodeEditor:OnExitVehicle(p_Player, { "false" })
 		return
 
 	elseif request.action == 'add_objective' or request.action == 'remove_objective' then
-		-- NetEvents:SendTo('UI_Toggle_DataMenu', p_Player, true) 
-		-- Change Commo-rose. 
+		-- NetEvents:SendTo('UI_Toggle_DataMenu', p_Player, true)
+		-- Change Commo-rose.
 		self.m_NavigaionPath[p_Player.onlineId][3] = nil
 		self.m_NavigaionPath[p_Player.onlineId][2] = request.action
 		local s_Center = {}
 		if request.action == 'add_objective' then
 			s_Center = {
 				Action = 'not_implemented',
-				Label = Language:I18N('Add') 
+				Label = Language:I18N('Add')
 			}
 		else
 			s_Center = {
@@ -449,7 +449,7 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 				}
 			})
 			return
-		else -- Conquest. 
+		else -- Conquest.
 			NetEvents:SendTo('UI_CommonRose', p_Player, {
 				Top = {
 					Action = 'not_implemented',
@@ -512,7 +512,7 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 			},
 			Center = {
 				Action = 'not_implemented',
-				Label = Language:I18N('MCOM') -- Or "Unselect". 
+				Label = Language:I18N('MCOM') -- Or "Unselect".
 			},
 			Right = {
 				{
@@ -569,7 +569,7 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 			},
 			Center = {
 				Action = 'not_implemented',
-				Label = Language:I18N('MCOM') -- Or "Unselect". 
+				Label = Language:I18N('MCOM') -- Or "Unselect".
 			},
 			Right = {
 				{
@@ -595,11 +595,11 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 			}
 		})
 		return
-	elseif request.action == 'base_us' or  request.action == 'base_ru' or request.action == 'base_rush' then
+	elseif request.action == 'base_us' or request.action == 'base_ru' or request.action == 'base_rush' then
 		if Globals.IsRush then
 			self.m_NavigaionPath[p_Player.onlineId][4] = nil
 			self.m_NavigaionPath[p_Player.onlineId][3] = request.action
-			-- Add index here. 
+			-- Add index here.
 			NetEvents:SendTo('UI_CommonRose', p_Player, {
 				Top = {
 					Action = 'not_implemented',
@@ -626,7 +626,7 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 				},
 				Center = {
 					Action = 'not_implemented',
-					Label = Language:I18N('Base') -- Or "Unselect". 
+					Label = Language:I18N('Base') -- Or "Unselect".
 				},
 				Right = {
 					{
@@ -659,16 +659,16 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 				m_NodeEditor:OnAddObjective(p_Player, s_BaseParts)
 			end
 		end
-		
+
 		return
 	elseif string.find(request.action, 'path_type_') ~= nil then
 		local s_Type = request.action:split('_')[3]
-		m_NodeEditor:OnAddVehiclePath(p_Player, {s_Type})
+		m_NodeEditor:OnAddVehiclePath(p_Player, { s_Type })
 	elseif string.find(request.action, 'mcom_') ~= nil then
 		local s_Data = request.action:split('_')
-		local s_McomString = "mcom "..s_Data[2]
+		local s_McomString = "mcom " .. s_Data[2]
 		if #s_Data == 3 then
-			s_McomString = s_McomString.." interact"
+			s_McomString = s_McomString .. " interact"
 		end
 		if self.m_NavigaionPath[p_Player.onlineId][2] == "remove_objective" then
 			m_NodeEditor:OnRemoveObjective(p_Player, s_McomString:split(' '))
@@ -687,9 +687,9 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 	elseif string.find(request.action, 'objective_') ~= nil then
 		local s_Objective = request.action:split('_')[2]
 		if self.m_NavigaionPath[p_Player.onlineId][2] == "remove_objective" then
-			m_NodeEditor:OnRemoveObjective(p_Player, {s_Objective})
+			m_NodeEditor:OnRemoveObjective(p_Player, { s_Objective })
 		else
-			m_NodeEditor:OnAddObjective(p_Player, {s_Objective})
+			m_NodeEditor:OnAddObjective(p_Player, { s_Objective })
 		end
 		return
 	elseif request.action == 'capture_point' then
@@ -719,7 +719,7 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 			},
 			Center = {
 				Action = 'not_implemented',
-				Label = Language:I18N('Objective') -- Or "Unselect". 
+				Label = Language:I18N('Objective') -- Or "Unselect".
 			},
 			Right = {
 				{
@@ -740,7 +740,7 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 				Action = 'add_objective',
 				Label = Language:I18N('Back')
 			}
-		})	
+		})
 		return
 	else
 		print(request.action)
@@ -763,8 +763,6 @@ end
 function FunBotUIPathMenu:_OnPathMenuClose(p_Player)
 	self:_OnPathMenuRequest(p_Player, [[{"action":"close_comm"}]])
 end
-
-
 
 if g_FunBotUIPathMenu == nil then
 	---@type FunBotUIPathMenu

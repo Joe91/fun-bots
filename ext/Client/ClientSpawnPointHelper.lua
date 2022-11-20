@@ -85,11 +85,11 @@ function ClientSpawnPointHelper:DrawSpawnPoint(p_Transform)
 	local s_Color = Vec4(1, 1, 1, 0.5)
 	local s_PointScreenPos = ClientUtils:WorldToScreen(p_Transform.trans)
 
-	-- Skip to the next point if this one isn't in view. 
+	-- Skip to the next point if this one isn't in view.
 	if s_PointScreenPos ~= nil then
 		local s_Center = ClientUtils:GetWindowSize() / 2
 
-		-- Select point if it's close to the hitPosition. 
+		-- Select point if it's close to the hitPosition.
 		if s_Center:Distance(s_PointScreenPos) < 20 then
 			self.m_SelectedSpawnPoint = p_Transform
 			s_Color = Vec4(0, 0, 1, 0.5)
@@ -107,9 +107,9 @@ function ClientSpawnPointHelper:DrawSpawnPoint(p_Transform)
 	DebugRenderer:DrawLine(p_Transform.trans + s_Up, s_Offset + s_Up, s_Color, s_Color)
 end
 
--- Returns a Vec3 that's offset in the direction of the linearTransform. 
+-- Returns a Vec3 that's offset in the direction of the linearTransform.
 function ClientSpawnPointHelper:GetForwardOffsetFromLT(p_Transform)
-	-- We get the direction from the forward vector. 
+	-- We get the direction from the forward vector.
 	local s_Direction = p_Transform.forward
 
 	local s_Forward = Vec3(

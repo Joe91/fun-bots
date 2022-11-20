@@ -16,19 +16,19 @@ end
 
 function ArrayMap:exists(p_Value)
 	for l_Key, l_Data in pairs(self._Entries) do
-        if p_Value == l_Data then
-            return true
-        end
-    end
+		if p_Value == l_Data then
+			return true
+		end
+	end
 	return false
 end
 
 function ArrayMap:delete(p_Value)
 	for l_Key, l_Data in pairs(self._Entries) do
-        if p_Value == l_Data then
-            self:deleteByIndex(l_Key)
-        end
-    end
+		if p_Value == l_Data then
+			self:deleteByIndex(l_Key)
+		end
+	end
 end
 
 function ArrayMap:isEmpty()

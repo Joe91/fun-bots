@@ -44,7 +44,7 @@ function FunBotUIClient:__init()
 	end
 end
 
--- Events. 
+-- Events.
 function FunBotUIClient:_onUIToggle()
 	if Config.DisableUserInterface == true then
 		return
@@ -55,15 +55,15 @@ function FunBotUIClient:_onUIToggle()
 	end
 
 	self._views:execute('BotEditor.Hide()')
-	-- NetEvents:Send('PathMenu:Hide') 
+	-- NetEvents:Send('PathMenu:Hide')
 	self._views:disable()
 
-	-- if self._views:isVisible() then 
-	-- self._views:close() 
-	-- else 
-	-- self._views:open() 
-	-- self._views:focus() 
-	-- end 
+	-- if self._views:isVisible() then
+	-- self._views:close()
+	-- else
+	-- self._views:open()
+	-- self._views:focus()
+	-- end
 end
 
 function FunBotUIClient:_onUICommonRose(p_Data)
@@ -168,7 +168,7 @@ function FunBotUIClient:_onUISettings(p_Data)
 		end
 
 		self._views:hide('settings')
-		-- self._views:blur() 
+		-- self._views:blur()
 		return
 	end
 
@@ -178,15 +178,15 @@ function FunBotUIClient:_onUISettings(p_Data)
 
 	local settings = UISettings()
 
-	-- Samples. 
-	-- add(<category>, <types>, <name>, <title>, <value>, <default>, <description>) 
-	-- addList(<category>, <name>, <title>, <list>, <value>, <default>, <description>) 
+	-- Samples.
+	-- add(<category>, <types>, <name>, <title>, <value>, <default>, <description>)
+	-- addList(<category>, <name>, <title>, <list>, <value>, <default>, <description>)
 
 	for _, l_Item in pairs(SettingsDefinition.Elements) do
 		local s_TypeString = ""
 
 		if l_Item.Type == Type.Enum then
-			-- Create table out of Enum. 
+			-- Create table out of Enum.
 			local s_EnumTable = {}
 			local s_Default = ""
 			local s_Value = ""
@@ -263,7 +263,7 @@ function FunBotUIClient:_onBotEditorEvent(p_Data)
 		print('UIClient: BotEditor (' .. p_Data .. ')')
 	end
 
-	-- Redirect to Server. 
+	-- Redirect to Server.
 	NetEvents:Send('BotEditor', p_Data)
 end
 
@@ -271,7 +271,7 @@ function FunBotUIClient:_OnPathMenuRequest(p_Data)
 	if Config.DisableUserInterface == true or not self.m_InWaypointEditor then
 		return
 	end
-	-- Redirect to Server. 
+	-- Redirect to Server.
 	NetEvents:Send('PathMenu:Request', p_Data)
 end
 
@@ -305,7 +305,7 @@ function FunBotUIClient:OnClientUpdateInput(p_DeltaTime)
 			print('Client send: UI_Request_Open')
 		end
 
-		-- This request can be used for UI-Toggle. 
+		-- This request can be used for UI-Toggle.
 		if self.m_InWaypointEditor then
 			self._views:enable()
 			NetEvents:Send('PathMenu:Unhide')
@@ -323,7 +323,7 @@ function FunBotUIClient:OnClientUpdateInput(p_DeltaTime)
 	elseif InputManager:WentKeyUp(Registry.COMMON.BOT_COMMAND_KEY) and not self.m_InWaypointEditor and
 		(self.m_InCommScreen or self.m_WaitForKeyLeft) then
 		if self.m_InCommScreen then
-			self:_onUICommonRose("false") -- To-do: Remove Permission-Check? 
+			self:_onUICommonRose("false") -- To-do: Remove Permission-Check?
 		end
 
 		self.m_WaitForKeyLeft = false

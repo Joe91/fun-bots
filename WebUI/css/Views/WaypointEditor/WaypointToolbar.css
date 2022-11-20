@@ -28,27 +28,27 @@ ui-view[data-name="waypoint_toolbar"] ui-menu ui-menu ul {
 		background-position: 0% 0%, 0% 0%;
 	}
 	
-    50% {
+	50% {
 		background-position: 0% 0%, 100% 0%;
 	}
 	
-    100% {
+	100% {
 		background-position: 0% 0%, 0% 0%;
 	}
 }
 
 @keyframes Blink {
-    0% {
-        opacity: 0;
-    }
+	0% {
+		opacity: 0;
+	}
 
-    50% {
-        opacity: 1;
-    }
+	50% {
+		opacity: 1;
+	}
 
-    100% {
-        opacity: 0;
-    }
+	100% {
+		opacity: 0;
+	}
 }
 
 ui-view[data-name="waypoint_toolbar"] ui-menu ul.main li a {
@@ -116,7 +116,7 @@ ui-view[data-name="waypoint_toolbar"] ui-box[data-name="record"]:before {
 	background-position: 50% 50%;
 	background-repeat: no-repeat;
 	opacity: 1;
-    animation: Blink 0.5s ease-in-out infinite;
+	animation: Blink 0.5s ease-in-out infinite;
 	background-image: url('../../../assets/stop.svg');
 }
 
@@ -149,7 +149,7 @@ ui-view[data-name="waypoint_toolbar"] ui-box[data-name="info"] ui-entry ui-value
 ui-view[data-name="waypoint_toolbar"] ui-box[data-name="info"] ui-entry ui-container {
 	flex: 1 auto;
 	display: flex;
-    flex-direction: row;
+	flex-direction: row;
 	font-weight: 900;
 	max-width: 60px;
 }
