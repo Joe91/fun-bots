@@ -1,0 +1,20 @@
+{
+	"editor.formatOnSave": true,
+	"editor.insertSpaces": false,
+	"editor.detectIndentation": false,
+	"editor.tabSize": 4,
+	"Lua": {
+		"workspace": {
+			"maxPreload": 10000,
+			"library": [
+				"../../.vu/intermediate/Client",
+				"../../.vu/intermediate/Shared",
+				"../Shared",
+				"$APPDATA\\Code\\User\\globalStorage\\imposter.vscode-lua-vu\\data\\lib",
+				"$APPDATA\\Code\\User\\globalStorage\\imposter.vscode-lua-vu\\data\\types\\fb",
+				"$APPDATA\\Code\\User\\globalStorage\\imposter.vscode-lua-vu\\data\\types\\shared",
+				"$APPDATA\\Code\\User\\globalStorage\\imposter.vscode-lua-vu\\data\\types\\client"
+			]
+		}
+	}
+}
