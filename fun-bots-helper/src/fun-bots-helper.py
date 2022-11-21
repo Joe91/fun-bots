@@ -155,6 +155,7 @@ class App(customtkinter.CTk):
         self.button_fix_grammar = customtkinter.CTkButton(
             text="Fix Docs Grammar",
             command=lambda: self.create_thread(self.fix_comments_fb),
+            state="disabled", # Disabling this option for now.
             **button_properties,
         )
         self.button_fix_grammar.grid(row=4, column=2)

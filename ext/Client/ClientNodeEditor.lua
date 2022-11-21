@@ -675,7 +675,7 @@ function ClientNodeEditor:OnUIPushScreen(p_HookCtx, p_Screen, p_Priority, p_Pare
 	if self.m_Enabled and
 		self.m_CommoRoseEnabled and
 		p_Screen ~= nil and
-		UIScreenAsset(p_Screen).name == 'UI/Flow/Screen/CommRoseScreen' then
+		UIScreenAsset(p_Screen).name == 'UI/Flow/Screen/CommoRoseScreen' then
 		-- self:Log('Blocked vanilla Commo Rose')
 		p_HookCtx:Return()
 		return
