@@ -321,6 +321,27 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 								self:_UpdateLookAroundPassenger(Registry.BOT.BOT_FAST_UPDATE_CYCLE)
 							end
 						else -- Normal vehicle → self.m_InVehicle == true
+							if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
+								if self._DeployTimer > 7.0 and self._VehicleTakeoffTimer <= 0.0 then
+									local s_Target = m_AirTargets:GetTarget(self.m_Player, 700)
+
+									if s_Target ~= nil then
+										print(s_Target.name)
+										self._ShootPlayerName = s_Target.name
+										self._ShootPlayer = PlayerManager:GetPlayerByName(self._ShootPlayerName)
+										self._ShootPlayerVehicleType = m_Vehicles:FindOutVehicleType(self._ShootPlayer)
+									else
+										print("no target found")
+										self:AbortAttack()
+									end
+
+									self._DeployTimer = 0.0
+								else
+									self._DeployTimer = self._DeployTimer + Registry.BOT.BOT_FAST_UPDATE_CYCLE
+								end
+							end
+
+
 							local s_IsStationaryLauncher = m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.StationaryLauncher)
 
 							-- Sync slow code with fast code. Therefore, execute the slow code first.
@@ -605,7 +626,7 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 		end
 
 		-- If stationary AA targets get assigned in another way.
-		if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.StationaryAA) then
+		if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.StationaryAA) or m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
 			return false
 		end
 	end
@@ -1193,7 +1214,7 @@ end
 function Bot:_UpdateStationaryAAVehicle(p_Attacking)
 	-- Get new target if needed.
 	if self._DeployTimer > 1.0 then
-		local s_Target = m_AirTargets:GetTarget(self.m_Player)
+		local s_Target = m_AirTargets:GetTarget(self.m_Player, Config.MaxDistanceAABots)
 
 		if s_Target ~= nil then
 			self._ShootPlayerName = s_Target.name
@@ -1402,7 +1423,7 @@ function Bot:_GetWayIndex(p_CurrentWayPoint)
 end
 
 function Bot:AbortAttack()
-	if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) and self._ShootPlayerName ~= '' then
+	if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) and self._ShootPlayerName ~= '' and self._ShootPlayerVehicleType ~= VehicleTypes.Plane then
 		self._VehicleTakeoffTimer = Registry.VEHICLES.JET_ABORT_ATTACK_TIME
 		self._JetAbortAttackActive = true
 		self._Pid_Drv_Yaw:Reset()

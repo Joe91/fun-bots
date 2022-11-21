@@ -48,7 +48,7 @@ function AirTargets:OnPlayerDestroyed(p_Player)
 end
 
 -- Public functions
-function AirTargets:GetTarget(p_Player)
+function AirTargets:GetTarget(p_Player, p_MaxDistance)
 	local s_Team = p_Player.teamId
 	local s_ClosestDistance = nil
 	local s_ClosestTarget = nil
@@ -61,7 +61,7 @@ function AirTargets:GetTarget(p_Player)
 				.transform.trans)
 
 			if s_ClosestDistance == nil then
-				if s_CurrentDistance < Config.MaxDistanceAABots then
+				if s_CurrentDistance < p_MaxDistance then
 					s_ClosestDistance = s_CurrentDistance
 					s_ClosestTarget = s_TargetPlayer
 				end

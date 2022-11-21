@@ -30,8 +30,7 @@ function VehicleAttacking:UpdateAttackingVehicle(p_Bot)
 					if s_WeaponSlots > 1 then
 						-- To-do more logic depending on vehicle and distance.
 						-- Chopper on Plane / Chopper → weapon 2 (seaker).
-						if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Chopper) or
-							m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane) then
+						if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Chopper) then -- or m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane)
 							if p_Bot.m_Player.controlledEntryId == 0 and
 								(p_Bot._ShootPlayerVehicleType == VehicleTypes.Chopper or p_Bot._ShootPlayerVehicleType == VehicleTypes.Plane) then
 								p_Bot._VehicleWeaponSlotToUse = 2

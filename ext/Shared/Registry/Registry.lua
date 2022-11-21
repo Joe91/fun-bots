@@ -85,7 +85,7 @@ Registry = {
 		-- Distance for the "enter vehicle" command.
 		MIN_DISTANCE_VEHICLE_ENTER = 10.0,
 		-- Once a jet is that low above a vehicle or person, he aborts.
-		ABORT_ATTACK_HEIGHT_JET = 50,
+		ABORT_ATTACK_HEIGHT_JET = 70,
 		-- Once a jet is that far away from a vehicle or person, he aborts.
 		ABORT_ATTACK_DISTANCE_JET = 120,
 		-- Once a jet is that far away from a jet or chopper, he aborts.

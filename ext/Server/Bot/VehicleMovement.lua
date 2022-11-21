@@ -490,6 +490,12 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 		p_Bot._VehicleReadyToShoot = false
 	end
 
+	if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane) then
+		if s_AbsDeltaYaw < 0.20 and s_AbsDeltaPitch < 0.20 and p_Attacking then
+			p_Bot._VehicleReadyToShoot = true
+		end
+	end
+
 	-- Chopper driver handling here.
 	if p_Bot.m_Player.controlledEntryId == 0 and m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Chopper) then
 		if p_Bot._VehicleWaitTimer > 0.0 then
