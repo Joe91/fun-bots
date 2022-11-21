@@ -92,7 +92,7 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 				}
 			}
 		end
-		NetEvents:SendTo('UI_CommonRose', p_Player, {
+		NetEvents:SendTo('UI_CommoRose', p_Player, {
 			Top = {
 				Action = 'not_implemented',
 				Label = Language:I18N(''),
@@ -127,11 +127,11 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 	elseif request.action == 'close_comm' then
 		self.m_NavigaionPath[p_Player.onlineId] = {}
 		self.m_InPathMenu = false
-		NetEvents:SendTo('UI_CommonRose', p_Player, "false")
+		NetEvents:SendTo('UI_CommoRose', p_Player, "false")
 		return
 	elseif request.action == 'hide_comm' then
 		self.m_InPathMenu = false
-		NetEvents:SendTo('UI_CommonRose', p_Player, "false")
+		NetEvents:SendTo('UI_CommoRose', p_Player, "false")
 		return
 	elseif request.action == 'set_spawn_path' then
 		m_NodeEditor:OnSetSpawnPath(p_Player)
@@ -154,7 +154,7 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 	elseif request.action == 'set_vehicle_path_type' then
 		self.m_NavigaionPath[p_Player.onlineId][4] = nil
 		self.m_NavigaionPath[p_Player.onlineId][3] = request.action
-		NetEvents:SendTo('UI_CommonRose', p_Player, {
+		NetEvents:SendTo('UI_CommoRose', p_Player, {
 			Top = {
 				Action = 'not_implemented',
 				Label = Language:I18N(''),
@@ -195,7 +195,7 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 		self.m_NavigaionPath[p_Player.onlineId][3] = nil
 		self.m_NavigaionPath[p_Player.onlineId][2] = request.action
 
-		NetEvents:SendTo('UI_CommonRose', p_Player, {
+		NetEvents:SendTo('UI_CommoRose', p_Player, {
 			Top = {
 				Action = 'not_implemented',
 				Label = Language:I18N(''),
@@ -244,7 +244,7 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 		self.m_NavigaionPath[p_Player.onlineId][5] = nil
 		self.m_NavigaionPath[p_Player.onlineId][4] = nil
 		self.m_NavigaionPath[p_Player.onlineId][3] = request.action
-		NetEvents:SendTo('UI_CommonRose', p_Player, {
+		NetEvents:SendTo('UI_CommoRose', p_Player, {
 			Top = {
 				Action = 'not_implemented',
 				Label = Language:I18N(''),
@@ -285,7 +285,7 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 		self.m_NavigaionPath[p_Player.onlineId][5] = nil
 		self.m_NavigaionPath[p_Player.onlineId][4] = request.action
 
-		NetEvents:SendTo('UI_CommonRose', p_Player, {
+		NetEvents:SendTo('UI_CommoRose', p_Player, {
 			Top = {
 				Action = 'not_implemented',
 				Label = Language:I18N(''),
@@ -323,7 +323,7 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 		self.m_NavigaionPath[p_Player.onlineId][6] = nil
 		self.m_NavigaionPath[p_Player.onlineId][5] = request.action
 
-		NetEvents:SendTo('UI_CommonRose', p_Player, {
+		NetEvents:SendTo('UI_CommoRose', p_Player, {
 			Top = {
 				Action = 'not_implemented',
 				Label = Language:I18N(''),
@@ -418,7 +418,7 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 			}
 		end
 		if Globals.IsRush then
-			NetEvents:SendTo('UI_CommonRose', p_Player, {
+			NetEvents:SendTo('UI_CommoRose', p_Player, {
 				Top = {
 					Action = 'not_implemented',
 					Label = Language:I18N(''),
@@ -450,7 +450,7 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 			})
 			return
 		else -- Conquest.
-			NetEvents:SendTo('UI_CommonRose', p_Player, {
+			NetEvents:SendTo('UI_CommoRose', p_Player, {
 				Top = {
 					Action = 'not_implemented',
 					Label = Language:I18N(''),
@@ -486,7 +486,7 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 		self.m_NavigaionPath[p_Player.onlineId][4] = nil
 		self.m_NavigaionPath[p_Player.onlineId][3] = request.action
 
-		NetEvents:SendTo('UI_CommonRose', p_Player, {
+		NetEvents:SendTo('UI_CommoRose', p_Player, {
 			Top = {
 				Action = 'not_implemented',
 				Label = Language:I18N(''),
@@ -543,7 +543,7 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 		self.m_NavigaionPath[p_Player.onlineId][4] = nil
 		self.m_NavigaionPath[p_Player.onlineId][3] = request.action
 
-		NetEvents:SendTo('UI_CommonRose', p_Player, {
+		NetEvents:SendTo('UI_CommoRose', p_Player, {
 			Top = {
 				Action = 'not_implemented',
 				Label = Language:I18N(''),
@@ -600,7 +600,7 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 			self.m_NavigaionPath[p_Player.onlineId][4] = nil
 			self.m_NavigaionPath[p_Player.onlineId][3] = request.action
 			-- Add index here.
-			NetEvents:SendTo('UI_CommonRose', p_Player, {
+			NetEvents:SendTo('UI_CommoRose', p_Player, {
 				Top = {
 					Action = 'not_implemented',
 					Label = Language:I18N(''),
@@ -696,7 +696,7 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 
 		self.m_NavigaionPath[p_Player.onlineId][4] = nil
 		self.m_NavigaionPath[p_Player.onlineId][3] = request.action
-		NetEvents:SendTo('UI_CommonRose', p_Player, {
+		NetEvents:SendTo('UI_CommoRose', p_Player, {
 			Top = {
 				Action = 'not_implemented',
 				Label = Language:I18N(''),

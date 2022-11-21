@@ -23,7 +23,7 @@ function FunBotUIClient:__init()
 		Events:Subscribe('PathMenu:Request', self, self._OnPathMenuRequest)
 		NetEvents:Subscribe('UI_Show_Toolbar', self, self._onUIShowToolbar)
 		NetEvents:Subscribe('UI_Settings', self, self._onUISettings)
-		NetEvents:Subscribe('UI_CommonRose', self, self._onUICommonRose)
+		NetEvents:Subscribe('UI_CommoRose', self, self._onUICommoRose)
 		Events:Subscribe('UI_Settings', self, self._onUISettings)
 		Events:Subscribe('UI_Save_Settings', self, self._onUISaveSettings)
 		NetEvents:Subscribe('UI_Change_Language', self, self._onUIChangeLanguage)
@@ -66,16 +66,16 @@ function FunBotUIClient:_onUIToggle()
 	-- end
 end
 
-function FunBotUIClient:_onUICommonRose(p_Data)
+function FunBotUIClient:_onUICommoRose(p_Data)
 	if p_Data == "false" then
-		self._views:execute('BotEditor.setCommonRose(false)')
+		self._views:execute('BotEditor.setCommoRose(false)')
 		self._views:blur()
 		self.m_InCommScreen = false
 		self.m_WaitForKeyLeft = true
 		return
 	end
 
-	self._views:execute('BotEditor.setCommonRose(\'' .. json.encode(p_Data) .. '\')')
+	self._views:execute('BotEditor.setCommoRose(\'' .. json.encode(p_Data) .. '\')')
 	self._views:focusMouse()
 	self.m_InCommScreen = true
 end
@@ -95,7 +95,7 @@ function FunBotUIClient:_onUIWaypointsEditor(p_State)
 		end
 
 		self._views:hide('waypoint_toolbar')
-		self._views:execute('BotEditor.setCommonRose(false)')
+		self._views:execute('BotEditor.setCommoRose(false)')
 		self._views:show('toolbar')
 		Config.DebugTracePaths = false
 		self.m_InWaypointEditor = false
@@ -323,7 +323,7 @@ function FunBotUIClient:OnClientUpdateInput(p_DeltaTime)
 	elseif InputManager:WentKeyUp(Registry.COMMON.BOT_COMMAND_KEY) and not self.m_InWaypointEditor and
 		(self.m_InCommScreen or self.m_WaitForKeyLeft) then
 		if self.m_InCommScreen then
-			self:_onUICommonRose("false") -- To-do: Remove Permission-Check?
+			self:_onUICommoRose("false") -- To-do: Remove Permission-Check?
 		end
 
 		self.m_WaitForKeyLeft = false

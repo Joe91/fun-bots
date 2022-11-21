@@ -823,7 +823,7 @@ const BotEditor = (new function BotEditor() {
 
 	};
 	
-	this.setCommonRose = function setCommonRose(data) {	
+	this.setCommoRose = function setCommoRose(data) {	
 		if(data === false) {
 			this.hide('commorose');
 			return;

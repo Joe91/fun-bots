@@ -32,7 +32,7 @@ function FunBotUIServer:__init()
 		NetEvents:Subscribe('UI_Request_Open', self, self._onUIRequestOpen)
 		NetEvents:Subscribe('UI_Request_Save_Settings', self, self._onUIRequestSaveSettings)
 		NetEvents:Subscribe('BotEditor', self, self._onBotEditorEvent)
-		NetEvents:Subscribe('UI_Request_CommoRose_Show', self, self._onUIRequestCommonRoseShow)
+		NetEvents:Subscribe('UI_Request_CommoRose_Show', self, self._onUIRequestCommoRoseShow)
 	end
 end
 
@@ -52,27 +52,27 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 	-- Comm Screen.
 	if request.action == 'exit_vehicle' then
 		BotManager:ExitVehicle(p_Player)
-		NetEvents:SendTo('UI_CommonRose', p_Player, "false")
+		NetEvents:SendTo('UI_CommoRose', p_Player, "false")
 		return
 	elseif request.action == 'drop_ammo' then
 		BotManager:Deploy(p_Player, "ammo")
-		NetEvents:SendTo('UI_CommonRose', p_Player, "false")
+		NetEvents:SendTo('UI_CommoRose', p_Player, "false")
 		return
 	elseif request.action == 'drop_medkit' then
 		BotManager:Deploy(p_Player, "medkit")
-		NetEvents:SendTo('UI_CommonRose', p_Player, "false")
+		NetEvents:SendTo('UI_CommoRose', p_Player, "false")
 		return
 	elseif request.action == 'enter_vehicle' then
 		BotManager:EnterVehicle(p_Player)
-		NetEvents:SendTo('UI_CommonRose', p_Player, "false")
+		NetEvents:SendTo('UI_CommoRose', p_Player, "false")
 		return
 	elseif request.action == 'repair_vehicle' then
 		BotManager:RepairVehicle(p_Player)
-		NetEvents:SendTo('UI_CommonRose', p_Player, "false")
+		NetEvents:SendTo('UI_CommoRose', p_Player, "false")
 		return
 	elseif request.action == 'attack_objective' then
 		-- Change Commo-rose.
-		NetEvents:SendTo('UI_CommonRose', p_Player, {
+		NetEvents:SendTo('UI_CommoRose', p_Player, {
 			Top = {
 				Action = 'not_implemented',
 				Label = Language:I18N(''),
@@ -119,7 +119,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		})
 		return
 	elseif request.action == 'defend_objective' then
-		NetEvents:SendTo('UI_CommonRose', p_Player, {
+		NetEvents:SendTo('UI_CommoRose', p_Player, {
 			Top = {
 				Action = 'not_implemented',
 				Label = Language:I18N(''),
@@ -168,15 +168,15 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 	elseif string.find(request.action, 'attack_') ~= nil then
 		local s_Objective = request.action:split('_')[2]
 		BotManager:Attack(p_Player, s_Objective)
-		NetEvents:SendTo('UI_CommonRose', p_Player, "false")
+		NetEvents:SendTo('UI_CommoRose', p_Player, "false")
 		return
 	elseif string.find(request.action, "defend_") ~= nil then
 		local s_Objective = request.action:split('_')[2]
 		BotManager:Attack(p_Player, s_Objective)
-		NetEvents:SendTo('UI_CommonRose', p_Player, "false")
+		NetEvents:SendTo('UI_CommoRose', p_Player, "false")
 		return
 	elseif request.action == 'back_to_comm' then
-		self:_onUIRequestCommonRoseShow(p_Player)
+		self:_onUIRequestCommoRoseShow(p_Player)
 		return
 	end
 
@@ -320,7 +320,7 @@ function FunBotUIServer:_onUIRequestSaveSettings(p_Player, p_Data)
 	self:_writeSettings(p_Player, request)
 end
 
-function FunBotUIServer:_onUIRequestCommonRoseShow(p_Player, p_Data)
+function FunBotUIServer:_onUIRequestCommoRoseShow(p_Player, p_Data)
 	if Config.DisableUserInterface == true then
 		return
 	end
@@ -331,10 +331,10 @@ function FunBotUIServer:_onUIRequestCommonRoseShow(p_Player, p_Data)
 	end
 
 	if Debug.Server.UI then
-		print(p_Player.name .. ' requesting show CommonRose.')
+		print(p_Player.name .. ' requesting show CommoRose.')
 	end
 
-	NetEvents:SendTo('UI_CommonRose', p_Player, {
+	NetEvents:SendTo('UI_CommoRose', p_Player, {
 		Top = {
 			Action = 'not_implemented',
 			Label = Language:I18N(''),
@@ -380,7 +380,7 @@ function FunBotUIServer:_onUIRequestCommonRoseShow(p_Player, p_Data)
 	})
 end
 
-function FunBotUIServer:_onUIRequestCommonRoseHide(p_Player, p_Data)
+function FunBotUIServer:_onUIRequestCommoRoseHide(p_Player, p_Data)
 	if Config.DisableUserInterface == true then
 		return
 	end
@@ -391,10 +391,10 @@ function FunBotUIServer:_onUIRequestCommonRoseHide(p_Player, p_Data)
 	end
 
 	if Debug.Server.UI then
-		print(p_Player.name .. ' requesting hide CommonRose.')
+		print(p_Player.name .. ' requesting hide CommoRose.')
 	end
 
-	NetEvents:SendTo('UI_CommonRose', p_Player, 'false')
+	NetEvents:SendTo('UI_CommoRose', p_Player, 'false')
 end
 
 function FunBotUIServer:_onUIRequestOpen(p_Player, p_Data)

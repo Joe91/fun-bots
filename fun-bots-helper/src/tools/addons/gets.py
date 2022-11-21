@@ -6,7 +6,6 @@ Most functions here returns a list that will be used to write the lines of exter
 import operator
 import os
 import sqlite3
-import sys
 from io import TextIOWrapper
 from typing import Any, Callable, Dict, List, Tuple
 
