@@ -108,7 +108,7 @@ function VehicleAiming:UpdateAimingVehicleAdvanced(p_Bot)
 			p_Bot:AbortAttack()
 			return
 		end
-		if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane) and
+		if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane) and p_Bot._ShootPlayerVehicleType ~= VehicleTypes.Plane and
 			s_FullPositionBot:Distance(s_FullPositionTarget) < Registry.VEHICLES.ABORT_ATTACK_AIR_DISTANCE_JET then
 			p_Bot:AbortAttack()
 		end

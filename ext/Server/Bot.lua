@@ -323,7 +323,7 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 						else -- Normal vehicle → self.m_InVehicle == true
 							if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
 								if self._DeployTimer > 7.0 and self._VehicleTakeoffTimer <= 0.0 then
-									local s_Target = m_AirTargets:GetTarget(self.m_Player, 700)
+									local s_Target = m_AirTargets:GetTarget(self.m_Player, 900)
 
 									if s_Target ~= nil then
 										print(s_Target.name)
