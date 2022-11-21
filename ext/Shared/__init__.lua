@@ -63,4 +63,9 @@ function FunBotShared:OnLevelRegisterEntityResources(p_LevelData)
 	ResourceManager:AddRegistry(s_aRegistry, ResourceCompartment.ResourceCompartment_Game)
 end
 
-return FunBotShared()
+if g_FunBotShared == nil then
+	---@type FunBotShared
+	g_FunBotShared = FunBotShared()
+end
+
+return g_FunBotShared
