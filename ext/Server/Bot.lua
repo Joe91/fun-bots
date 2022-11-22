@@ -150,11 +150,11 @@ function Bot:__init(p_Player)
 	self._Pid_Drv_Yaw = PidController(5, 0.05, 0.2, 1.0)
 	-- Chopper / Plane
 	---@type PidController
-	self._Pid_Drv_Throttle = PidController(5, 0.05, 0.2, 1.0)
+	self._Pid_Drv_Throttle = PidController(3, 0.05, 0.2, 1.0)
 	---@type PidController
-	self._Pid_Drv_Tilt = PidController(5, 0.05, 0.2, 1.0)
+	self._Pid_Drv_Tilt = PidController(6, 0.1, 0.2, 1.0)
 	---@type PidController
-	self._Pid_Drv_Roll = PidController(5, 0.05, 0.2, 1.0)
+	self._Pid_Drv_Roll = PidController(6, 0.1, 0.2, 1.0)
 	-- Guns.
 	---@type PidController
 	self._Pid_Att_Yaw = PidController(10, 2.0, 2.0, 1.0)
@@ -323,15 +323,13 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 						else -- Normal vehicle → self.m_InVehicle == true
 							if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
 								if self._DeployTimer > 7.0 and self._VehicleTakeoffTimer <= 0.0 then
-									local s_Target = m_AirTargets:GetTarget(self.m_Player, 900)
+									local s_Target = m_AirTargets:GetTarget(self.m_Player, Registry.VEHICLES.MAX_ATTACK_DISTANCE_JET)
 
 									if s_Target ~= nil then
-										print(s_Target.name)
 										self._ShootPlayerName = s_Target.name
 										self._ShootPlayer = PlayerManager:GetPlayerByName(self._ShootPlayerName)
 										self._ShootPlayerVehicleType = m_Vehicles:FindOutVehicleType(self._ShootPlayer)
 									else
-										print("no target found")
 										self:AbortAttack()
 									end
 
@@ -1423,8 +1421,14 @@ function Bot:_GetWayIndex(p_CurrentWayPoint)
 end
 
 function Bot:AbortAttack()
-	if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) and self._ShootPlayerName ~= '' and self._ShootPlayerVehicleType ~= VehicleTypes.Plane then
-		self._VehicleTakeoffTimer = Registry.VEHICLES.JET_ABORT_ATTACK_TIME
+	if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) and
+		self._ShootPlayerName ~= '' then
+		if self._ShootPlayerVehicleType ~= VehicleTypes.Plane then
+			self._VehicleTakeoffTimer = Registry.VEHICLES.JET_ABORT_ATTACK_TIME
+		else
+			self._VehicleTakeoffTimer = 1.0
+		end
+
 		self._JetAbortAttackActive = true
 		self._Pid_Drv_Yaw:Reset()
 		self._Pid_Drv_Tilt:Reset()
