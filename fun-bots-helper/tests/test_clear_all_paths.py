@@ -20,15 +20,27 @@ def test_clear_all_paths(session: sqlite3.Cursor) -> None:
 	"""
     session.execute(sql_instruction)
     content = session.fetchall()
-    ignore_list = [
+    ignored_tables = [
         "sqlite_sequence",
         "FB_Permissions",
         "FB_Config_Trace",
         "FB_Settings",
     ]
 
+    ignored_tables_copy = ignored_tables.copy()
+
+    for ignored_table in ignored_tables_copy:
+        next = False
+        for item in content:
+            if item[1] == ignored_table:
+                next = True
+                break
+        if next:
+            continue
+        ignored_tables.remove(ignored_table)
+
     for item in content:
-        if item[1] in ignore_list:
+        if item[1] in ignored_tables:
             continue
 
         logger.info("Clear " + item[1])
@@ -39,6 +51,6 @@ def test_clear_all_paths(session: sqlite3.Cursor) -> None:
 
     session.execute(sql_instruction)
     remaining_tables = [item[1] for item in session.fetchall()]
-    ignore_list.remove("sqlite_sequence")
+    ignored_tables.remove("sqlite_sequence")
 
-    assert sorted(remaining_tables) == sorted(ignore_list)
+    assert sorted(remaining_tables) == sorted(ignored_tables)
