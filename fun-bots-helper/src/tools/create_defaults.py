@@ -12,7 +12,7 @@ def create_defaults() -> None:
 
     with open(language_file_lua, "w", encoding="utf-8") as out_file:
         out_file.write(
-            "local code = 'xx_XX' -- Add/replace the xx_XX here with your language code (like de_DE, en_US, or other)! \n\n"
+            "local code = 'xx_XX' -- Add/replace the xx_XX here with your language code (like de_DE, en_US, or other)!\n\n"
         )
 
         out_file_lines = get_lua_lines(all_settings)

@@ -1,11 +1,11 @@
 from loguru import logger
 
-from tools.addons.gets import get_all_tables, get_it_running
+from tools.addons.gets import get_it_running, get_tables
 
 
 def clear_all_paths() -> None:
 
-    connection, cursor = get_all_tables()
+    connection, cursor = get_tables()
     content = cursor.fetchall()
     ignore_list = [
         "sqlite_sequence",

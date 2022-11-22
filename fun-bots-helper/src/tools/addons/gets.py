@@ -1,7 +1,4 @@
-"""This module provides all intermediary functions for the scripts in /tools.
-
-Most functions here returns a list that will be used to write the lines of external files.
-"""
+"""This module provides all intermediary functions for the scripts in /tools."""
 
 import operator
 import os
@@ -50,6 +47,126 @@ GAME_MODE_TRANSLATIONS = {
     "Tank Superiority": "TankSuperiority0",
 }
 DISTANCE_MAX = 80
+
+
+# Enviroment related functions.
+
+
+def get_to_root() -> None:
+    """Go back to fun-bots' root, i.e, fun-bots/.
+
+    Args:
+        None
+
+    Returns:
+        None
+    """
+    back = ""
+    actual_position = os.getcwd()
+    while True:
+        os.chdir(os.getcwd() + back)
+        if "mod.db" in os.listdir():
+            break
+        back += "/.."
+        os.chdir(actual_position)
+
+
+def get_it_running(function: Callable, *args: str) -> None:
+    """Run a function through a pre-defined try-except KeyboardInterrupt block.
+    The try statement goes back to the root directory and runs the function there.
+
+    Args:
+        - function - The function to be executed
+
+    Returns:
+        None
+    """
+    try:
+        get_to_root()
+        if args:
+            function(*args)
+        else:
+            function()
+    except KeyboardInterrupt:
+        logger.warning("Crtl+C detected! Exiting Script...")
+
+
+def get_version() -> str:
+    """Return fun-bots' version.
+
+    Args:
+        None
+
+    Returns:
+        Fun-bots' version
+    """
+    with open("ext/Shared/Registry/Registry.lua", "r", encoding="utf-8") as infile:
+        lines = infile.readlines()
+        readout_active = False
+        versions = {}
+        for line in lines:
+            if readout_active:
+                if "=" in line:
+                    line_splitted = line.split("=")
+                    version = line_splitted[0].strip()
+                    value = line_splitted[1].replace('"', "").strip()[:-1]
+                    versions[version] = value
+                    if "VERSION_TYPE" in line:
+                        break
+            if "VERSION = {" in line:
+                readout_active = True
+
+    if (
+        versions["VERSION_LABEL"] in ["nil", ""]
+        or versions["VERSION_TYPE"] == "VersionType.Release"
+    ):
+        return (
+            "V"
+            + versions["VERSION_MAJ"]
+            + "."
+            + versions["VERSION_MIN"]
+            + "."
+            + versions["VERSION_PATCH"]
+        )
+
+    maj_min_patch_label = (
+        versions["VERSION_MAJ"]
+        + "."
+        + versions["VERSION_MIN"]
+        + "."
+        + versions["VERSION_PATCH"]
+        + "-"
+        + versions["VERSION_LABEL"]
+    )
+    if versions["VERSION_TYPE"] == "VersionType.DevBuild":
+        return "v" + maj_min_patch_label
+    if versions["VERSION_TYPE"] == "VersionType.Stable":
+        return "V" + maj_min_patch_label
+    return ""
+
+
+def get_tables() -> Tuple[sqlite3.Connection, sqlite3.Cursor]:
+    """Get all tables from the mod database.
+
+    Args:
+        None
+
+    Returns:
+        - connect - The object associated with the database connection
+        - cursor - The object associated with the database operations
+    """
+    connect = sqlite3.connect("mod.db")
+    cursor = connect.cursor()
+
+    sql_instruction = """
+		SELECT * FROM sqlite_master WHERE type='table'
+	"""
+    cursor.execute(sql_instruction)
+
+    return connect, cursor
+
+
+# File creation related functions.
 
 
 def get_settings(first_key: str) -> List[Dict]:
@@ -132,7 +249,7 @@ def get_lua_lines(all_settings: List[Dict]) -> List[str]:
         if setting["Category"] != last_category:
             if last_category is not None:
                 out_file_lines.append("")
-            out_file_lines.append("-- " + setting["Category"] + " ")
+            out_file_lines.append("-- " + setting["Category"])
             last_category = setting["Category"]
         out_file_lines.append('Language:add(code, "' + setting["Text"] + '", "")')
         out_file_lines.append(
@@ -162,7 +279,7 @@ def __scan_other_files() -> List[str]:
     ]
     out_file_lines_others = []
     for file_name in list_of_translation_files:
-        out_file_lines_others.append("\n-- Strings of " + file_name + " ")
+        out_file_lines_others.append("\n-- Strings of " + file_name)
         with open(file_name, "r", encoding="utf-8") as file_with_translation:
             for line in file_with_translation.read().splitlines():
                 if "Language:I18N(" in line:
@@ -309,148 +426,6 @@ def get_map_lines_created() -> List[List]:
     return map_items
 
 
-def get_all_tables() -> Tuple[sqlite3.Connection, sqlite3.Cursor]:
-    """Get all tables from the mod database.
-
-    Args:
-        None
-
-    Returns:
-        - connect - The object associated with the database connection
-        - cursor - The object associated with the database operations
-    """
-    connect = sqlite3.connect("mod.db")
-    cursor = connect.cursor()
-
-    sql_instruction = """
-		SELECT * FROM sqlite_master WHERE type='table'
-	"""
-    cursor.execute(sql_instruction)
-
-    return connect, cursor
-
-
-def get_invalid_node_lines(in_file: TextIOWrapper) -> List[str]:
-    """Fix invalid nodes of all maps.
-
-    Args:
-        - in_file - The opened map file to be fixed
-
-    Returns:
-        - out_file_lines - The new lines used to update the map's node
-    """
-    out_file_lines = in_file.readlines()
-    for i in range(2, len(out_file_lines) - 2):
-        current_items = out_file_lines[i].split(";")
-        current_path = int(current_items[0])
-        pos_x = float(current_items[2])
-        pos_y = float(current_items[3])
-        pos_z = float(current_items[4])
-
-        items = out_file_lines[i - 1].split(";")
-        last_path = int(items[0])
-        last_pos_x = float(items[2])
-        last_pos_y = float(items[3])
-        last_pos_z = float(items[4])
-
-        items = out_file_lines[i + 1].split(";")
-        next_path = int(items[0])
-        next_pos_x = float(items[2])
-        next_pos_y = float(items[3])
-        next_pos_z = float(items[4])
-
-        if (
-            last_path == current_path and next_path == current_path
-        ):  # Wrong in the middle
-            if (
-                abs(last_pos_x - pos_x) > DISTANCE_MAX
-                or abs(last_pos_y - pos_y) > DISTANCE_MAX
-                or abs(last_pos_z - pos_z) > DISTANCE_MAX
-            ) and (
-                abs(next_pos_x - pos_x) > DISTANCE_MAX
-                or abs(next_pos_y - pos_y) > DISTANCE_MAX
-                or abs(next_pos_z - pos_z) > DISTANCE_MAX
-            ):
-                current_items[2] = format(
-                    last_pos_x + (next_pos_x - last_pos_x) / 2, ".6f"
-                )
-                current_items[3] = format(
-                    last_pos_y + (next_pos_y - last_pos_y) / 2, ".6f"
-                )
-                current_items[4] = format(
-                    last_pos_z + (next_pos_z - last_pos_z) / 2, ".6f"
-                )
-                out_file_lines[i] = ";".join(current_items)
-        if last_path == current_path and next_path != current_path:  # Wrong at the end
-            if (
-                abs(last_pos_x - pos_x) > DISTANCE_MAX
-                or abs(last_pos_y - pos_y) > DISTANCE_MAX
-                or abs(last_pos_z - pos_z) > DISTANCE_MAX
-            ):
-                current_items[2] = format(last_pos_x + 0.2, ".6f")
-                current_items[3] = format(last_pos_y, ".6f")
-                current_items[4] = format(last_pos_z + 0.2, ".6f")
-                out_file_lines[i] = ";".join(current_items)
-        if (
-            last_path != current_path and next_path == current_path
-        ):  # Wrong at the start
-            if (
-                abs(next_pos_x - pos_x) > DISTANCE_MAX
-                or abs(next_pos_y - pos_y) > DISTANCE_MAX
-                or abs(next_pos_z - pos_z) > DISTANCE_MAX
-            ):
-                current_items[2] = format(next_pos_x + 0.2, ".6f")
-                current_items[3] = format(next_pos_y, ".6f")
-                current_items[4] = format(next_pos_z + 0.2, ".6f")
-                out_file_lines[i] = ";".join(current_items)
-
-    return out_file_lines
-
-
-def get_objectives_to_rename(in_file: TextIOWrapper) -> Tuple[List[str], List[str]]:
-    """Fix invalid objective names.
-
-    Args:
-        - in_file - The opened map file to have objectives fixed
-
-    Returns:
-        - out_file_lines - The new lines used to update the map's objectives
-        - file_lines - A list with the original file lines
-    """
-    all_objectives = []
-    file_lines = in_file.readlines()
-    for line in file_lines[1:]:
-        if '"Objectives":[' in line:
-            objectives = line.split('"Objectives":[')[1].split("]")[0].split(",")
-            for objective in objectives:
-                if objective not in all_objectives:
-                    all_objectives.append(objective)
-    all_objectives.sort()
-    objectives_to_rename = [
-        objective_name
-        for objective_name in all_objectives
-        if objective_name.lower() != objective_name
-    ]
-
-    return objectives_to_rename, file_lines
-
-
-def get_translation(translator: Any, line: str) -> str:
-    """Translate a line from one language to another.
-
-    Args:
-        - translator - The translator object used to translate it
-        - line - The line to be translated
-
-    Returns:
-        - str - The translated line
-    """
-    splitted_line = line.split('"')
-    splitted_line.remove("")
-    splitted_line.insert(3, translator.translate(splitted_line[1]))
-    return '"'.join(splitted_line)
-
-
 def get_updated_lines_lua(in_file: TextIOWrapper) -> List[str]:
     """Update all lua language files based on DEFAULT.lua.
 
@@ -547,81 +522,164 @@ def get_updated_lines_js(in_file: TextIOWrapper) -> List[str]:
     return out_file_lines
 
 
-def get_to_root() -> None:
-    """Go back to fun-bots' root, i.e, fun-bots/.
+def get_maps_merged(merge_file_1: str, merge_file_2: str) -> List[str]:
+    """Merge the paths of two map files.
 
     Args:
-        None
+        - merge_file_1 - 1st map file
+        - merge_file_2 - 2nd map file
 
     Returns:
-        None
+        - out_file_lines - The lines of the merged map file
     """
-    back = ""
-    actual_position = os.getcwd()
-    while True:
-        os.chdir(os.getcwd() + back)
-        if "mod.db" in os.listdir():
-            break
-        else:
-            back += "/.."
-            os.chdir(actual_position)
+    with open("mapfiles/" + merge_file_1, "r", encoding="utf-8") as base_file:
+        out_file_lines = base_file.readlines()
+        last_base_path = out_file_lines[-1].split(";")[0]
+
+        with open("mapfiles/" + merge_file_2, "r", encoding="utf-8") as addition_file:
+            lines_to_add = addition_file.readlines()
+            path_dict = {}  # type: Dict[str, str]
+            last_path = ""
+            for line in lines_to_add[1:-1]:
+                lines_parts_addition = line.split(";")
+                if len(lines_parts_addition) > 1:
+                    current_path = lines_parts_addition[0]
+                    if current_path != last_path:
+                        path_dict[current_path] = str(
+                            int(last_base_path) + 1 + len(path_dict)
+                        )
+                        last_path = current_path
+            for line in lines_to_add[1:-1]:
+                lines_parts_addition = line.split(";")
+                if len(lines_parts_addition) >= 6:
+                    lines_parts_addition[0] = path_dict[lines_parts_addition[0]]
+                    data_parts = lines_parts_addition[-1]
+                    if "links" in data_parts.lower():
+                        pos_1 = data_parts.find("[[") + 2
+                        pos_2 = data_parts.find("]]")
+                        link_part = data_parts[pos_1:pos_2]
+                        all_links = link_part.split("],[")
+                        new_link_parts = []
+                        for link in all_links:
+                            parts_of_link = link.split(",")
+                            if parts_of_link[0] in path_dict:
+                                parts_of_link[0] = path_dict[parts_of_link[0]]
+                                new_link_parts.append(",".join(parts_of_link))
+                        newLinks = "],[".join(new_link_parts)
+                        lines_parts_addition[-1] = (
+                            data_parts[:pos_1] + newLinks + data_parts[pos_2:]
+                        )
+                    new_line = ";".join(lines_parts_addition)
+                    out_file_lines.append(new_line)
+    return out_file_lines
 
 
-def get_recursive_correction(
-    replacements: List, line: str, c_factor: int, i: int = 0
-) -> str:
-    """Recursively correct the grammar of comments.
+# Fixing functions.
+
+
+def get_nodes_fixed(in_file: TextIOWrapper) -> List[str]:
+    """Fix invalid nodes of all maps.
 
     Args:
-        - replacements - A list with grammar changes
-        - line - The line to be changed
-        - c_factor - A factor to correct offsets during the recursion process
-        - i - A flag to control the grammar issue we're fixing
+        - in_file - The opened map file to be fixed
 
     Returns:
-        - line - The line grammarly updated
+        - out_file_lines - The lines to update the map's node
     """
-    if i != len(replacements):
-        value = replacements[i]["value"]
-        offset = replacements[i]["offset"] + c_factor
-        length = replacements[i]["length"]
+    out_file_lines = in_file.readlines()
+    for i in range(2, len(out_file_lines) - 2):
+        current_items = out_file_lines[i].split(";")
+        current_path = int(current_items[0])
+        pos_x = float(current_items[2])
+        pos_y = float(current_items[3])
+        pos_z = float(current_items[4])
 
-        new_line = line[:offset] + value + line[offset + length :]
-        c_factor += len(value) - length
-        i += 1
-        return get_recursive_correction(replacements, new_line, c_factor, i)
-    return get_punctuation(line)
+        items = out_file_lines[i - 1].split(";")
+        last_path = int(items[0])
+        last_pos_x = float(items[2])
+        last_pos_y = float(items[3])
+        last_pos_z = float(items[4])
+
+        items = out_file_lines[i + 1].split(";")
+        next_path = int(items[0])
+        next_pos_x = float(items[2])
+        next_pos_y = float(items[3])
+        next_pos_z = float(items[4])
+
+        if (
+            last_path == current_path and next_path == current_path
+        ):  # Wrong in the middle
+            if (
+                abs(last_pos_x - pos_x) > DISTANCE_MAX
+                or abs(last_pos_y - pos_y) > DISTANCE_MAX
+                or abs(last_pos_z - pos_z) > DISTANCE_MAX
+            ) and (
+                abs(next_pos_x - pos_x) > DISTANCE_MAX
+                or abs(next_pos_y - pos_y) > DISTANCE_MAX
+                or abs(next_pos_z - pos_z) > DISTANCE_MAX
+            ):
+                current_items[2] = format(
+                    last_pos_x + (next_pos_x - last_pos_x) / 2, ".6f"
+                )
+                current_items[3] = format(
+                    last_pos_y + (next_pos_y - last_pos_y) / 2, ".6f"
+                )
+                current_items[4] = format(
+                    last_pos_z + (next_pos_z - last_pos_z) / 2, ".6f"
+                )
+                out_file_lines[i] = ";".join(current_items)
+        if last_path == current_path and next_path != current_path:  # Wrong at the end
+            if (
+                abs(last_pos_x - pos_x) > DISTANCE_MAX
+                or abs(last_pos_y - pos_y) > DISTANCE_MAX
+                or abs(last_pos_z - pos_z) > DISTANCE_MAX
+            ):
+                current_items[2] = format(last_pos_x + 0.2, ".6f")
+                current_items[3] = format(last_pos_y, ".6f")
+                current_items[4] = format(last_pos_z + 0.2, ".6f")
+                out_file_lines[i] = ";".join(current_items)
+        if (
+            last_path != current_path and next_path == current_path
+        ):  # Wrong at the start
+            if (
+                abs(next_pos_x - pos_x) > DISTANCE_MAX
+                or abs(next_pos_y - pos_y) > DISTANCE_MAX
+                or abs(next_pos_z - pos_z) > DISTANCE_MAX
+            ):
+                current_items[2] = format(next_pos_x + 0.2, ".6f")
+                current_items[3] = format(next_pos_y, ".6f")
+                current_items[4] = format(next_pos_z + 0.2, ".6f")
+                out_file_lines[i] = ";".join(current_items)
+
+    return out_file_lines
 
 
-def get_punctuation(line: str) -> str:
-    """Punctuate and break line.
+def get_objectives_fixed(in_file: TextIOWrapper) -> Tuple[List[str], List[str]]:
+    """Fix invalid objective names.
 
     Args:
-        - line - The line to be formatted
+        - in_file - The opened map file to have objectives fixed
 
     Returns:
-        - line - A formatted line
+        - out_file_lines - The new lines used to update the map's objectives
+        - file_lines - A list with the original file lines
     """
-    if line[-2] != ".":
-        if line[-2] in ["!", "?", "=", ")", "[", "]"]:
-            return line[:-1] + " \n"
-        return line[:-1] + ". \n"
-    return line[:-1] + " \n"
+    all_objectives = []
+    file_lines = in_file.readlines()
+    for line in file_lines[1:]:
+        if '"Objectives":[' in line:
+            objectives = line.split('"Objectives":[')[1].split("]")[0].split(",")
+            for objective in objectives:
+                if objective not in all_objectives:
+                    all_objectives.append(objective)
+    all_objectives.sort()
+    objectives_to_rename = [
+        objective_name
+        for objective_name in all_objectives
+        if objective_name.lower() != objective_name
+    ]
 
-
-def get_variable_existence(line: str) -> bool:
-    """Check if a line has camelCase variables.
-
-    Args:
-        - line - The line to be checked
-
-    Returns:
-        - bool - True if it has variables, False otherwise
-    """
-    for char_index, char in enumerate(line[:-1]):
-        if char.islower() and line[char_index + 1].isupper():
-            return True
-    return False
+    return objectives_to_rename, file_lines
 
 
 def get_comments_fixed(in_file: TextIOWrapper) -> List[str]:
@@ -695,127 +753,211 @@ def get_comments_fixed(in_file: TextIOWrapper) -> List[str]:
     return out_file_lines
 
 
-def get_it_running(function: Callable, *args: str) -> None:
-    """Run a function through a pre-defined try-except KeyboardInterrupt block.
-    The try statement goes back to the root directory and runs the function there.
+def get_links_and_vehicles_fixed(in_file: TextIOWrapper) -> List[str]:
+    """Fix links and vehicles of all maps.
 
     Args:
-        - function - The function to be executed
+        - in_file - The file to be updated
 
     Returns:
-        None
+        - out_file_lines - The lines to update the map's links and vehicles
     """
-    try:
-        get_to_root()
-        if args:
-            function(*args)
-        else:
-            function()
-    except KeyboardInterrupt:
-        logger.warning("Crtl+C detected! Exiting Script...")
+    lines = in_file.readlines()
+    out_file_lines = [lines[0]]
+    (
+        paths_objectives_us,
+        paths_objectives_ru,
+        vehicles,
+        vehicle_paths,
+    ) = get_paths_to_fix(lines)
 
+    replace_dict, replace_paths = get_paths_to_replace(
+        lines, paths_objectives_us, paths_objectives_ru, vehicles, vehicle_paths
+    )
 
-def get_maps_merged(merge_file_1: str, merge_file_2: str) -> List[str]:
-    """Merge the paths of two map files.
+    for line in lines[1:]:
+        path_Index = int(line.split(";")[0])
+        if path_Index in replace_paths and '"Objectives":[' in line:
+            for key, value in replace_dict.items():
+                line = line.replace(key, value)
+        if 'Links":{}' in line:
+            for link in [
+                ',"Links":{}',
+                '"Links":{},',
+                '"Links":{}',
+                ',"Links":{}',
+                '"LinkMode":0,',
+                ',"LinkMode":0',
+                '"LinkMode":0',
+                "{}",
+            ]:
+                line = line.replace(link, "")
+        if '"Objectives":{}' in line:
+            for objective in [
+                ',"Objectives":{}',
+                '"Objectives":{},',
+                '"Objectives":{}',
+            ]:
+                line = line.replace(objective, "")
+        if "{}" in line:
+            line = line.replace("{}", "")
+        out_file_lines.append(line)
 
-    Args:
-        - merge_file_1 - 1st map file
-        - merge_file_2 - 2nd map file
-
-    Returns:
-        - out_file_lines - The lines of the merged map file
-    """
-    with open("mapfiles/" + merge_file_1, "r", encoding="utf-8") as base_file:
-        out_file_lines = base_file.readlines()
-        last_base_path = out_file_lines[-1].split(";")[0]
-
-        with open("mapfiles/" + merge_file_2, "r", encoding="utf-8") as addition_file:
-            lines_to_add = addition_file.readlines()
-            path_dict = {}  # type: Dict[str, str]
-            last_path = ""
-            for line in lines_to_add[1:-1]:
-                lines_parts_addition = line.split(";")
-                if len(lines_parts_addition) > 1:
-                    current_path = lines_parts_addition[0]
-                    if current_path != last_path:
-                        path_dict[current_path] = str(
-                            int(last_base_path) + 1 + len(path_dict)
-                        )
-                        last_path = current_path
-            for line in lines_to_add[1:-1]:
-                lines_parts_addition = line.split(";")
-                if len(lines_parts_addition) >= 6:
-                    lines_parts_addition[0] = path_dict[lines_parts_addition[0]]
-                    data_parts = lines_parts_addition[-1]
-                    if "links" in data_parts.lower():
-                        pos_1 = data_parts.find("[[") + 2
-                        pos_2 = data_parts.find("]]")
-                        link_part = data_parts[pos_1:pos_2]
-                        all_links = link_part.split("],[")
-                        new_link_parts = []
-                        for link in all_links:
-                            parts_of_link = link.split(",")
-                            if parts_of_link[0] in path_dict:
-                                parts_of_link[0] = path_dict[parts_of_link[0]]
-                                new_link_parts.append(",".join(parts_of_link))
-                        newLinks = "],[".join(new_link_parts)
-                        lines_parts_addition[-1] = (
-                            data_parts[:pos_1] + newLinks + data_parts[pos_2:]
-                        )
-                    new_line = ";".join(lines_parts_addition)
-                    out_file_lines.append(new_line)
     return out_file_lines
 
 
-def get_version() -> str:
-    """Return fun-bots version.
+# Auxiliary functions.
+
+
+def get_recursive_correction(
+    replacements: List, line: str, c_factor: int, i: int = 0
+) -> str:
+    """Recursively correct the grammar of comments.
 
     Args:
-        None
+        - replacements - A list with grammar changes
+        - line - The line to be changed
+        - c_factor - A factor to correct offsets during the recursion process
+        - i - A flag to control the grammar issue we're fixing
 
     Returns:
-        The fun-bots version
+        - line - The line grammarly updated
     """
-    with open("ext/Shared/Registry/Registry.lua", "r", encoding="utf-8") as infile:
-        lines = infile.readlines()
-        readout_active = False
-        versions = {}
-        for line in lines:
-            if readout_active:
-                if "=" in line:
-                    line_splitted = line.split("=")
-                    version = line_splitted[0].strip()
-                    value = line_splitted[1].replace('"', "").strip()[:-1]
-                    versions[version] = value
-                    if "VERSION_TYPE" in line:
-                        break
-            if "VERSION = {" in line:
-                readout_active = True
+    if i != len(replacements):
+        value = replacements[i]["value"]
+        offset = replacements[i]["offset"] + c_factor
+        length = replacements[i]["length"]
 
-    if (
-        versions["VERSION_LABEL"] in ["nil", ""]
-        or versions["VERSION_TYPE"] == "VersionType.Release"
-    ):
-        return (
-            "V"
-            + versions["VERSION_MAJ"]
-            + "."
-            + versions["VERSION_MIN"]
-            + "."
-            + versions["VERSION_PATCH"]
-        )
-    else:
-        maj_min_patch_label = (
-            versions["VERSION_MAJ"]
-            + "."
-            + versions["VERSION_MIN"]
-            + "."
-            + versions["VERSION_PATCH"]
-            + "-"
-            + versions["VERSION_LABEL"]
-        )
-        if versions["VERSION_TYPE"] == "VersionType.DevBuild":
-            return "v" + maj_min_patch_label
-        elif versions["VERSION_TYPE"] == "VersionType.Stable":
-            return "V" + maj_min_patch_label
-    return ""
+        new_line = line[:offset] + value + line[offset + length :]
+        c_factor += len(value) - length
+        i += 1
+        return get_recursive_correction(replacements, new_line, c_factor, i)
+    return get_punctuation(line)
+
+
+def get_punctuation(line: str) -> str:
+    """Punctuate and break line.
+
+    Args:
+        - line - The line to be formatted
+
+    Returns:
+        - line - A formatted line
+    """
+    if line[-2] != ".":
+        if line[-2] in ["!", "?", "=", ")", "[", "]"]:
+            return line[:-1] + " \n"
+        return line[:-1] + ". \n"
+    return line[:-1] + " \n"
+
+
+def get_variable_existence(line: str) -> bool:
+    """Check if a line has camelCase variables.
+
+    Args:
+        - line - The line to be checked
+
+    Returns:
+        - bool - True if it has variables, False otherwise
+    """
+    for char_index, char in enumerate(line[:-1]):
+        if char.islower() and line[char_index + 1].isupper():
+            return True
+    return False
+
+
+def get_translation(translator: Any, line: str) -> str:
+    """Translate a line from one language to another.
+
+    Args:
+        - translator - The translator object used to translate it
+        - line - The line to be translated
+
+    Returns:
+        - str - The translated line
+    """
+    splitted_line = line.split('"')
+    splitted_line.remove("")
+    splitted_line.insert(3, translator.translate(splitted_line[1]))
+    return '"'.join(splitted_line)
+
+
+def get_paths_to_fix(
+    lines: List[str],
+) -> Tuple[List[int], List[int], Dict[int, str], List[int]]:
+    """Computes all paths that needs to be fixed.
+
+    Args:
+        - lines - The file lines
+
+    Returns:
+        - paths_objectives_us - The US paths objectives to be fixed
+        - paths_objectives_ru - The RU paths objectives to be fixed
+        - vehicles - A dictionary of paths for objectives with vehicles in them
+        - vehicle_paths - The vehicle paths themselves
+    """
+    paths_objectives_us = []
+    paths_objectives_ru = []
+    vehicles = {}
+    vehicle_paths = []
+    for line in lines[1:]:
+        if '"Objectives":[' in line:
+            objectives = line.split('"Objectives":[')[1].split("]")[0].split(",")
+            path_index = int(line.split(";")[0])
+            if len(objectives) == 1 and "base" in objectives[0]:
+                if "us" in objectives[0]:
+                    paths_objectives_us.append(path_index)
+                elif "ru" in objectives[0]:
+                    paths_objectives_ru.append(path_index)
+            if len(objectives) == 1 and "vehicle" in objectives[0]:
+                vehicles[path_index] = objectives[0]
+                vehicle_paths.append(path_index)
+
+    return paths_objectives_us, paths_objectives_ru, vehicles, vehicle_paths
+
+
+def get_paths_to_replace(
+    lines: List[str],
+    paths_objectives_us: List[int],
+    paths_objectives_ru: List[int],
+    vehicles: Dict[int, str],
+    vehicle_paths: List[int],
+) -> Tuple[Dict[str, str], List[int]]:
+    """Replace the content of paths that need to be fixed.
+
+    Args:
+        - lines - The file lines
+        - paths_objectives_us - The US paths objectives to be fixed
+        - paths_objectives_ru - The RU paths objectives to be fixed
+        - vehicles - A dictionary of paths for objectives with vehicles in them
+        - vehicle_paths - The vehicle paths themselves
+
+    Returns:
+        - replace_dict - The strings used to replace wrong paths objectives
+        - replace_paths - The paths' index themselves
+    """
+    replace_dict = {}
+    replace_paths = []
+    for line in lines[1:]:
+        path_index = int(line.split(";")[0])
+        for paths_objectives, ally_team, enemy_team in zip(
+            [paths_objectives_us, paths_objectives_ru], ["us", "ru"], ["ru", "us"]
+        ):
+            if path_index in paths_objectives:
+                if "Links" in line and 'Links":{}' not in line:
+                    links = line.split("[[")[1].split("]]")[0].split("],[")
+                    for link in links:
+                        linked_path = int(link.split(",")[0])
+                        if linked_path in vehicle_paths:
+                            if (
+                                ally_team not in vehicles[linked_path]
+                                or f" {enemy_team}" in vehicles[linked_path]
+                            ):
+                                vehicle_string = vehicles[linked_path]
+                                replace_dict[vehicle_string] = (
+                                    vehicle_string.replace(f" {enemy_team}", " ")[:-1]
+                                    + f' {ally_team}"'
+                                )
+                                replace_paths.append(linked_path)
+
+    return replace_dict, replace_paths

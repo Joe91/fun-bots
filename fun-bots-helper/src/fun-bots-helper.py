@@ -15,6 +15,7 @@ from tools.create_settings import create_settings
 from tools.export_permission_and_config import export_permission_and_config
 from tools.export_traces import export_traces
 from tools.fix_comments import fix_comments
+from tools.fix_link_and_vehicles import fix_link_and_vehicles
 from tools.fix_nodes import fix_nodes
 from tools.fix_objectives import fix_objectives
 from tools.import_permission_and_config import import_permission_and_config
@@ -134,7 +135,7 @@ class App(customtkinter.CTk):
         self.button_create_mapfiles.grid(row=6, column=1)
 
         self.button_fix_nodes = customtkinter.CTkButton(
-            text="Fix Invalid Nodes",
+            text="Fix Mapfiles",
             command=lambda: self.create_thread(self.fix_maps_fb),
             **button_properties,
         )
@@ -155,7 +156,7 @@ class App(customtkinter.CTk):
         self.button_fix_grammar = customtkinter.CTkButton(
             text="Fix Docs Grammar",
             command=lambda: self.create_thread(self.fix_comments_fb),
-            state="disabled", # Disabling this option for now.
+            state="disabled",  # Disabling this option for now.
             **button_properties,
         )
         self.button_fix_grammar.grid(row=4, column=2)
@@ -269,6 +270,7 @@ class App(customtkinter.CTk):
     def fix_maps_fb(self) -> None:
         fix_objectives()
         fix_nodes()
+        fix_link_and_vehicles()
         logger.info("All Maps Scanned and Fixed\n")
 
     def create_language_fb(self) -> None:
