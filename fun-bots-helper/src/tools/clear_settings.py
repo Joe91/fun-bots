@@ -1,12 +1,12 @@
 from loguru import logger
 
-from tools.addons.gets import get_all_tables, get_it_running
+from tools.addons.gets import get_it_running, get_tables
 
 
 def clear_settings() -> None:
 
     remove_list = ["FB_Config_Trace", "FB_Settings"]
-    connection, cursor = get_all_tables()
+    connection, cursor = get_tables()
     content = cursor.fetchall()
 
     for item in content:
