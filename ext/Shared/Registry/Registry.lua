@@ -105,9 +105,9 @@ Registry = {
 		-- Probability to exit on low health.
 		VEHICLE_PROPABILITY_EXIT_LOW_HEALTH = 60,
 		-- Probability to use 2nd best air-target.
-		VEHICLE_PROPABILITY_SECOND_AIRTARGET = 35,
+		VEHICLE_PROPABILITY_SECOND_AIRTARGET = 40,
 		-- Probability to use 3nd best air-target.
-		VEHICLE_PROPABILITY_THIRD_AIRTARGET = 20,
+		VEHICLE_PROPABILITY_THIRD_AIRTARGET = 25,
 		-- Health-check cycle-time.
 		VEHICLE_HEALTH_CYLCE_TIME = 0.5,
 		-- Seat-check cycle-time.

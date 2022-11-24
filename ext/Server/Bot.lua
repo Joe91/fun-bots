@@ -1441,6 +1441,7 @@ end
 function Bot:_SetActiveVars()
 	if self._ShootPlayerName ~= '' then
 		self._ShootPlayer = PlayerManager:GetPlayerByName(self._ShootPlayerName)
+		self._ShootPlayerVehicleType = m_Vehicles:FindOutVehicleType(self._ShootPlayer)
 	else
 		self._ShootPlayer = nil
 	end

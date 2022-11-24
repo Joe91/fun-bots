@@ -13,6 +13,11 @@ end
 
 function VehicleAttacking:UpdateAttackingVehicle(p_Bot)
 	if p_Bot._ShootPlayer.soldier ~= nil and p_Bot._Shoot then
+		-- jets should only attack other vehicles for now
+		if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane) and p_Bot._ShootPlayerVehicleType == VehicleTypes.NoVehicle then
+			p_Bot:AbortAttack()
+		end
+
 		if (p_Bot._ShootModeTimer < Config.BotVehicleFireModeDuration) then -- Three times the default duration.
 
 			p_Bot._ShootModeTimer = p_Bot._ShootModeTimer + Registry.BOT.BOT_UPDATE_CYCLE
