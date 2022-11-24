@@ -66,11 +66,18 @@ function VehicleAttacking:UpdateAttackingVehicle(p_Bot)
 
 			-- Shooting sequence.
 			if p_Bot.m_ActiveWeapon ~= nil then
-				if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.AntiAir) or m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane) then
+				if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.AntiAir) then
 					if p_Bot._ShotTimer >= 5.0 then
 						p_Bot._ShotTimer = 0.0
 					end
 					if p_Bot._ShotTimer >= 0.5 and p_Bot._VehicleReadyToShoot then
+						p_Bot:_SetInput(EntryInputActionEnum.EIAFire, 1)
+					end
+				elseif m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane) then
+					if p_Bot._ShotTimer >= 1.6 then
+						p_Bot._ShotTimer = 0.0
+					end
+					if p_Bot._ShotTimer >= 0.3 and p_Bot._VehicleReadyToShoot then
 						p_Bot:_SetInput(EntryInputActionEnum.EIAFire, 1)
 					end
 				else
