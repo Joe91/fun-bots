@@ -483,20 +483,18 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 
 	p_Bot.m_Player.input.authoritativeAimingYaw = p_Bot._TargetYaw -- Always set yaw to let the FOV work.
 
-	if s_AbsDeltaYaw < 0.10 then
+	local s_TargetRangeForShooting = 0.10
+	if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane) then
+		s_TargetRangeForShooting = 0.20
+	end
+	if s_AbsDeltaYaw < s_TargetRangeForShooting then
 		p_Bot._FullVehicleSteering = false
-		if p_Attacking and s_AbsDeltaPitch < 0.10 then
+		if p_Attacking and s_AbsDeltaPitch < s_TargetRangeForShooting then
 			p_Bot._VehicleReadyToShoot = true
 		end
 	else
 		p_Bot._FullVehicleSteering = true
 		p_Bot._VehicleReadyToShoot = false
-	end
-
-	if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane) then
-		if s_AbsDeltaYaw < 0.20 and s_AbsDeltaPitch < 0.20 and p_Attacking then
-			p_Bot._VehicleReadyToShoot = true
-		end
 	end
 
 	-- Chopper driver handling here.

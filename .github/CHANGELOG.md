@@ -29,6 +29,7 @@ This is the changelog for the version V2.7 Don't forget to [join us on Discord](
 * New menu for Trace-Creation - no need to use the console anymore
 * Bots now try to use all vehicles in a base
 * Some variation in the appearance of vehicles (idea from KrazyIvan777)
+* Jets are focused on air-targets and more active.
 
 ### Bug fixes
 * fix scavenger revive

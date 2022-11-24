@@ -322,13 +322,15 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 							end
 						else -- Normal vehicle → self.m_InVehicle == true
 							if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
-								if self._DeployTimer > 7.0 and self._VehicleTakeoffTimer <= 0.0 then
+								-- assign new target after some time
+								if self._DeployTimer > (Config.BotVehicleFireModeDuration - 0.5) and self._VehicleTakeoffTimer <= 0.0 then
 									local s_Target = m_AirTargets:GetTarget(self.m_Player, Registry.VEHICLES.MAX_ATTACK_DISTANCE_JET)
 
 									if s_Target ~= nil then
 										self._ShootPlayerName = s_Target.name
 										self._ShootPlayer = PlayerManager:GetPlayerByName(self._ShootPlayerName)
 										self._ShootPlayerVehicleType = m_Vehicles:FindOutVehicleType(self._ShootPlayer)
+										self._ShootModeTimer = 0.0
 									else
 										self:AbortAttack()
 									end
@@ -609,10 +611,9 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 			end
 		end
 
+		-- If jet targets get assigned in another way.
 		if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
-			if self._VehicleTakeoffTimer > 0.0 then
-				return false
-			end
+			return false
 		end
 
 		if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.NoArmorVehicle) then
@@ -624,7 +625,7 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 		end
 
 		-- If stationary AA targets get assigned in another way.
-		if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.StationaryAA) or m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
+		if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.StationaryAA) then
 			return false
 		end
 	end
@@ -683,22 +684,6 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 	if (s_Type == VehicleTypes.Chopper or s_Type == VehicleTypes.Plane) then
 		if (self.m_InVehicle and m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.AntiAir)) or
 			(s_VehicleAttackMode == VehicleAttackModes.AttackWithMissileAir) then
-			p_IgnoreYaw = true
-		end
-	end
-
-	-- Don't attack if too close to ground in Plane.
-	if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
-		if self._ShootPlayerVehicleType ~= VehicleTypes.Chopper or self._ShootPlayerVehicleType ~= VehicleTypes.Plane then
-			if (self.m_Player.soldier.worldTransform.trans.y - p_Player.soldier.worldTransform.trans.y) <
-				Registry.VEHICLES.ABORT_ATTACK_HEIGHT_JET then
-				return false
-			end
-
-			if self._DistanceToPlayer < Registry.VEHICLES.ABORT_ATTACK_DISTANCE_JET then
-				return false
-			end
-		else
 			p_IgnoreYaw = true
 		end
 	end
@@ -1426,7 +1411,7 @@ function Bot:AbortAttack()
 		if self._ShootPlayerVehicleType ~= VehicleTypes.Plane then
 			self._VehicleTakeoffTimer = Registry.VEHICLES.JET_ABORT_ATTACK_TIME
 		else
-			self._VehicleTakeoffTimer = 1.0
+			self._VehicleTakeoffTimer = Registry.VEHICLES.JET_ABORT_JET_ATTACK_TIME
 		end
 
 		self._JetAbortAttackActive = true

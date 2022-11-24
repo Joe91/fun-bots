@@ -30,7 +30,7 @@ function VehicleAttacking:UpdateAttackingVehicle(p_Bot)
 					if s_WeaponSlots > 1 then
 						-- To-do more logic depending on vehicle and distance.
 						-- Chopper on Plane / Chopper → weapon 2 (seaker).
-						if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Chopper) then -- or m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane)
+						if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Chopper) then
 							if p_Bot.m_Player.controlledEntryId == 0 and
 								(p_Bot._ShootPlayerVehicleType == VehicleTypes.Chopper or p_Bot._ShootPlayerVehicleType == VehicleTypes.Plane) then
 								p_Bot._VehicleWeaponSlotToUse = 2
@@ -66,7 +66,7 @@ function VehicleAttacking:UpdateAttackingVehicle(p_Bot)
 
 			-- Shooting sequence.
 			if p_Bot.m_ActiveWeapon ~= nil then
-				if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.AntiAir) then
+				if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.AntiAir) or m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane) then
 					if p_Bot._ShotTimer >= 5.0 then
 						p_Bot._ShotTimer = 0.0
 					end
