@@ -1,7 +1,4 @@
-"""Execute the inner function of tools/create_maplist.py to create a temporary MapList.txt 
-file and compare it with the original MapList.txt already merged on dev branch. This test must 
-be executed after any change in get_map_lines, by doing this we will ensure it is creating the 
-same file."""
+"""Test get_map_lines_created function."""
 
 from pathlib import Path
 
@@ -9,7 +6,7 @@ from src.tools.addons.gets import get_map_lines_created, get_to_root
 
 
 def test_create_maplist(tmp_path: Path) -> None:
-    """Test create_map_list algorithm.
+    """Test get_map_lines_created function.
 
     Args:
         - tmp_path - built-in pytest fixture to create Pathlib temporary files

@@ -11,13 +11,13 @@ def fix_objectives() -> None:
     for file_name in file_names:
         with open("mapfiles/" + file_name, "r", encoding="utf-8") as in_file:
             objectives_to_rename, file_lines = get_objectives_fixed(in_file)
-        if len(objectives_to_rename) > 0:
-            with open("mapfiles/" + file_name, "w", encoding="utf-8") as out_file:
-                logger.info("Objective Fixed in: ", file_name)
-                for line in file_lines:
-                    for rename_item in objectives_to_rename:
-                        line = line.replace(rename_item, rename_item.lower())
-                    out_file.write(line)
+            if len(objectives_to_rename) > 0:
+                with open("mapfiles/" + file_name, "w", encoding="utf-8") as out_file:
+                    logger.info(f"Objective Fixed in: {file_name}")
+                    for line in file_lines:
+                        for rename_item in objectives_to_rename:
+                            line = line.replace(rename_item, rename_item.lower())
+                        out_file.write(line)
 
 
 if __name__ == "__main__":
