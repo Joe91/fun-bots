@@ -832,11 +832,9 @@ function NodeEditor:SaveTrace(p_Player, p_PathIndex)
 	local s_Direction = 'Next'
 
 	if s_PathCount == 0 then
-		s_CurrentWaypoint.PathIndex = 1
+		s_CurrentWaypoint.PathIndex = p_PathIndex
 		s_ReferrenceWaypoint = m_NodeCollection:Create(s_CurrentWaypoint)
 		s_CurrentWaypoint = s_CurrentWaypoint.Next
-
-		s_PathCount = #m_NodeCollection:GetPaths()
 	end
 
 	-- Check for first index smaller first path.
@@ -845,36 +843,38 @@ function NodeEditor:SaveTrace(p_Player, p_PathIndex)
 		s_LowestPathIndex = m_NodeCollection:GetFirst(p_PathIndex).PathIndex
 	end
 
-	if p_PathIndex <= s_LowestPathIndex then
-		-- Remove existing path and replace with current.
-		if #m_NodeCollection:Get(nil, p_PathIndex) > 0 then
-			s_CurrentWaypoint.PathIndex = p_PathIndex
-			s_ReferrenceWaypoint = m_NodeCollection:Create(s_CurrentWaypoint)
-			s_CurrentWaypoint = s_CurrentWaypoint.Next
+	if s_PathCount > 0 then
+		if p_PathIndex <= s_LowestPathIndex then
+			-- Remove existing path and replace with current.
+			if #m_NodeCollection:Get(nil, p_PathIndex) > 0 then
+				s_CurrentWaypoint.PathIndex = p_PathIndex
+				s_ReferrenceWaypoint = m_NodeCollection:Create(s_CurrentWaypoint)
+				s_CurrentWaypoint = s_CurrentWaypoint.Next
+			else
+				-- Get first node of first path, we'll InsertBefore the new nodes.
+				s_ReferrenceWaypoint = m_NodeCollection:GetFirst()
+				s_CurrentWaypoint = self.m_CustomTrace[p_Player.onlineId]:GetLast()
+				s_Direction = 'Previous'
+			end
+
+		-- p_PathIndex is greater or equal 2.
+		-- Get the node before the start of the specified path, if the path is existing, otherwise use the end.
 		else
-			-- Get first node of first path, we'll InsertBefore the new nodes.
-			s_ReferrenceWaypoint = m_NodeCollection:GetFirst()
-			s_CurrentWaypoint = self.m_CustomTrace[p_Player.onlineId]:GetLast()
-			s_Direction = 'Previous'
+			if #m_NodeCollection:Get(nil, p_PathIndex) > 0 then
+				s_ReferrenceWaypoint = m_NodeCollection:GetFirst(p_PathIndex).Previous
+			else
+				s_ReferrenceWaypoint = m_NodeCollection:GetLast()
+			end
 		end
 
-	-- p_PathIndex is greater or equal 2.
-	-- Get the node before the start of the specified path, if the path is existing, otherwise use the end.
-	else
-		if #m_NodeCollection:Get(nil, p_PathIndex) > 0 then
-			s_ReferrenceWaypoint = m_NodeCollection:GetFirst(p_PathIndex).Previous
-		else
-			s_ReferrenceWaypoint = m_NodeCollection:GetLast()
-		end
-	end
+		-- We might have a path to delete.
+		if p_PathIndex > 0 then
+			local s_PathWaypoints = m_NodeCollection:Get(nil, p_PathIndex)
 
-	-- We might have a path to delete.
-	if p_PathIndex > 0 then
-		local s_PathWaypoints = m_NodeCollection:Get(nil, p_PathIndex)
-
-		if #s_PathWaypoints > 0 then
-			for i = 1, #s_PathWaypoints do
-				m_NodeCollection:Remove(p_Player.onlineId, s_PathWaypoints[i])
+			if #s_PathWaypoints > 0 then
+				for i = 1, #s_PathWaypoints do
+					m_NodeCollection:Remove(p_Player.onlineId, s_PathWaypoints[i])
+				end
 			end
 		end
 	end
