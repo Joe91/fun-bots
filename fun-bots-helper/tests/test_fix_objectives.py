@@ -18,9 +18,9 @@ def test_fix_objectives(tmp_path: Path) -> None:
     get_to_root()
     d = tmp_path / "sub"
     d.mkdir()
-    temp_objectives_before_path = d / "temp_file_before.lua"
-    temp_objectives_after_path = d / "temp_file_after.lua"
-    temp_objectives_fixed_path = d / "temp_file_fixed.lua"
+    temp_objectives_before_path = d / "temp_file_before.map"
+    temp_objectives_after_path = d / "temp_file_after.map"
+    temp_objectives_fixed_path = d / "temp_file_fixed.map"
 
     with open(
         temp_objectives_fixed_path, "w", encoding="utf-8"
@@ -35,7 +35,9 @@ def test_fix_objectives(tmp_path: Path) -> None:
 """
         )
 
-    with open(temp_objectives_before_path, "w", encoding="utf-8") as temp_objectives_before:
+    with open(
+        temp_objectives_before_path, "w", encoding="utf-8"
+    ) as temp_objectives_before:
         temp_objectives_before.write(
             """pathIndex;pointIndex;transX;transY;transZ;inputVar;data
 1;1;-124.363281;75.094536;-26.471680;65283;{"Objectives":["BaSe RU"]}
@@ -46,7 +48,9 @@ def test_fix_objectives(tmp_path: Path) -> None:
 """
         )
 
-    with open(temp_objectives_before_path, "r", encoding="utf-8") as temp_objectives_before:
+    with open(
+        temp_objectives_before_path, "r", encoding="utf-8"
+    ) as temp_objectives_before:
         objectives_to_rename, file_lines = get_objectives_fixed(temp_objectives_before)
         if len(objectives_to_rename) > 0:
             with open(
@@ -57,4 +61,4 @@ def test_fix_objectives(tmp_path: Path) -> None:
                         line = line.replace(rename_item, rename_item.lower())
                     temp_objectives_after.write(line)
 
-    assert cmp(f"{d}/temp_file_after.lua", f"{d}/temp_file_fixed.lua")
+    assert cmp(f"{d}/temp_file_after.map", f"{d}/temp_file_fixed.map")
