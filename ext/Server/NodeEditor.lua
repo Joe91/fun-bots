@@ -11,6 +11,7 @@ function NodeEditor:__init()
 	self.m_ActiveTracePlayers = {}
 
 	self.m_CustomTrace = {}
+	self.m_NodeWaitTimer = {}
 	self.m_CustomTraceIndex = {}
 	self.m_CustomTraceTimer = {}
 	self.m_CustomTraceDistance = {}
@@ -693,6 +694,7 @@ function NodeEditor:StartTrace(p_Player)
 
 	self.m_CustomTrace[p_Player.onlineId] = NodeCollection(true)
 	self.m_CustomTraceTimer[p_Player.onlineId] = 0
+	self.m_NodeWaitTimer[p_Player.onlineId] = 0
 	self.m_CustomTraceIndex[p_Player.onlineId] = self:_getNewIndex()
 	self.m_CustomTraceDistance[p_Player.onlineId] = 0
 
@@ -1017,6 +1019,8 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 					if s_LastDistance >= Config.TraceDelta then
 						-- Primary weapon, record movement.
 						if s_Player.soldier.weaponsComponent.currentWeaponSlot == WeaponSlot.WeaponSlot_0 then
+							self.m_NodeWaitTimer[l_PlayerGuid] = 0.0
+
 							local s_NewWaypoint, s_Msg = self.m_CustomTrace[l_PlayerGuid]:Add()
 							self.m_CustomTrace[l_PlayerGuid]:Update(s_NewWaypoint, {
 								Position = s_PlayerPos,
@@ -1066,16 +1070,17 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 									self.m_CustomTrace[l_PlayerGuid]:SetInput(s_Speed, s_Extra, 0)
 								end
 							end
+
+							self.m_CustomTraceDistance[l_PlayerGuid] = self.m_CustomTraceDistance[l_PlayerGuid] + s_LastDistance
 						-- Secondary weapon, increase wait timer.
 						elseif s_Player.soldier.weaponsComponent.currentWeaponSlot == WeaponSlot.WeaponSlot_1 then
+							self.m_NodeWaitTimer[l_PlayerGuid] = self.m_NodeWaitTimer[l_PlayerGuid] + Config.TraceDelta
 							local s_LastWaypointAgain = self.m_CustomTrace[l_PlayerGuid]:GetLast()
 							self.m_CustomTrace[l_PlayerGuid]:ClearSelection()
 							self.m_CustomTrace[l_PlayerGuid]:Select(nil, s_LastWaypointAgain)
-							self.m_CustomTrace[l_PlayerGuid]:SetInput(s_LastWaypointAgain.SpeedMode, s_LastWaypointAgain.ExtraMode,
-								s_LastWaypointAgain.OptValue + p_DeltaTime)
+							self.m_CustomTrace[l_PlayerGuid]:SetInput(0, s_LastWaypointAgain.ExtraMode,
+								math.floor(self.m_NodeWaitTimer[l_PlayerGuid]))
 						end
-
-						self.m_CustomTraceDistance[l_PlayerGuid] = self.m_CustomTraceDistance[l_PlayerGuid] + s_LastDistance
 
 						-- To-do: Send to Client UI.
 						local s_TotalTraceDistance = self.m_CustomTraceDistance[l_PlayerGuid]
