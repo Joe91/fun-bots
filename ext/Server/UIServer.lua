@@ -32,6 +32,7 @@ function FunBotUIServer:__init()
 		NetEvents:Subscribe('UI_Request_Open', self, self._onUIRequestOpen)
 		NetEvents:Subscribe('UI_Request_Save_Settings', self, self._onUIRequestSaveSettings)
 		NetEvents:Subscribe('BotEditor', self, self._onBotEditorEvent)
+		Events:Subscribe('BotEditor', self, self._onBotEditorEvent)
 		NetEvents:Subscribe('UI_Request_CommoRose_Show', self, self._onUIRequestCommoRoseShow)
 	end
 end

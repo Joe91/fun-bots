@@ -563,7 +563,7 @@ function NodeEditor:OnSpawnBot(p_Player)
 	local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
 
 	if #s_Selection > 0 then
-		Events:Dispatch('BotEditor', json.encode({
+		Events:Dispatch('BotEditor', p_Player, json.encode({
 			action = 'bot_spawn_path',
 			value = s_Selection[1].PathIndex,
 			pointindex = s_Selection[1].PointIndex,
