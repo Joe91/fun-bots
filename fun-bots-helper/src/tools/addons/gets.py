@@ -951,11 +951,11 @@ def get_paths_to_replace(
                         if linked_path in vehicle_paths:
                             if (
                                 ally_team not in vehicles[linked_path]
-                                or f" {enemy_team}" in vehicles[linked_path]
+                                or enemy_team in vehicles[linked_path]
                             ):
                                 vehicle_string = vehicles[linked_path]
                                 replace_dict[vehicle_string] = (
-                                    vehicle_string.replace(f" {enemy_team}", " ")[:-1]
+                                    vehicle_string.replace(enemy_team, "")[:-1]
                                     + f' {ally_team}"'
                                 )
                                 replace_paths.append(linked_path)

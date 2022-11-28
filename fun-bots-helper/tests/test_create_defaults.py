@@ -1,7 +1,4 @@
-"""Execute the inner functions of tools/create_defaults.py to create temporary files and 
-compare them with the original default files already merged on dev branch. This test must 
-be executed after any change in get_js_lines, get_lua_lines and get_settings, by doing this 
-we will ensure that they are creating the same files."""
+"""Test get_js_lines, get_lua_lines and get_settings functions."""
 
 from filecmp import cmp
 from pathlib import Path
@@ -10,7 +7,7 @@ from src.tools.addons.gets import get_js_lines, get_lua_lines, get_settings, get
 
 
 def test_create_defaults(tmp_path: Path) -> None:
-    """Test create_defaults algorithm.
+    """Test Test get_js_lines, get_lua_lines and get_settings functions.
 
     Args:
         - tmp_path - built-in pytest fixture to create Pathlib temporary files

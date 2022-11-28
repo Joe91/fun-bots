@@ -1,7 +1,4 @@
-"""Execute the inner functions of tools/create_settings.py to create a temporary Config.lua 
-and compare it with the original Config.lua file already merged on dev branch. This test must 
-be executed after any change in get_settings and get_settings_lines, by doing this we will 
-ensure it is creating the same file."""
+"""Test get_settings and get_settings_lines functions."""
 
 from filecmp import cmp
 from pathlib import Path
@@ -10,7 +7,7 @@ from src.tools.addons.gets import get_settings, get_settings_lines, get_to_root
 
 
 def test_create_settings(tmp_path: Path) -> None:
-    """Test create_settings algorithm.
+    """Test get_settings and get_settings_lines functions.
 
     Args:
         - tmp_path - built-in pytest fixture to create Pathlib temporary files
