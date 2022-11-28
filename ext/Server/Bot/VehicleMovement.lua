@@ -164,12 +164,12 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_Bot)
 							p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.Sprint -- Full throttle.
 						end
 					else
-						if p_Bot._ObstaceSequenceTimer < 2.0 then
+						if p_Bot._ObstaceSequenceTimer < 2.5 then
 							p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.Backwards
 						end
 					end
 
-					if (p_Bot.m_ActiveSpeedValue == BotMoveSpeeds.Backwards and p_Bot._ObstaceSequenceTimer > 3.0) or
+					if (p_Bot.m_ActiveSpeedValue == BotMoveSpeeds.Backwards and p_Bot._ObstaceSequenceTimer > 3.5) or
 						(p_Bot.m_ActiveSpeedValue ~= BotMoveSpeeds.Backwards and p_Bot._ObstaceSequenceTimer > 5.0) then
 						p_Bot._ObstaceSequenceTimer = 0.0
 						p_Bot._ObstacleRetryCounter = p_Bot._ObstacleRetryCounter + 1
@@ -316,7 +316,7 @@ function VehicleMovement:UpdateSpeedOfMovementVehicle(p_Bot)
 
 		if p_Bot.m_ActiveMoveMode ~= BotMoveModes.Standstill then
 			-- Limit speed if full steering active.
-			if p_Bot._FullVehicleSteering and p_Bot.m_ActiveSpeedValue >= BotMoveSpeeds.Normal then
+			if p_Bot._FullVehicleSteering and p_Bot.m_ActiveSpeedValue >= BotMoveSpeeds.Normal and p_Bot._ObstaceSequenceTimer == 0 then
 				p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.SlowCrouch
 			end
 
