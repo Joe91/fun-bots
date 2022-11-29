@@ -316,7 +316,7 @@ function VehicleMovement:UpdateSpeedOfMovementVehicle(p_Bot)
 
 		if p_Bot.m_ActiveMoveMode ~= BotMoveModes.Standstill then
 			-- Limit speed if full steering active.
-			if p_Bot._FullVehicleSteering and p_Bot.m_ActiveSpeedValue >= BotMoveSpeeds.Normal and p_Bot._ObstaceSequenceTimer == 0 then
+			if p_Bot._FullVehicleSteering and p_Bot.m_ActiveSpeedValue >= BotMoveSpeeds.Normal then
 				p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.SlowCrouch
 			end
 

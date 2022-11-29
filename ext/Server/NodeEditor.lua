@@ -462,7 +462,7 @@ function NodeEditor:OnSetSpawnPath(p_Player, p_Args)
 
 			local s_TargetObjective = ""
 
-			if #s_Links == 1 then
+			if s_Links and #s_Links == 1 then
 				-- Get objective of linked path.
 				local s_LinkedWaypoint = m_NodeCollection:Get(s_Links[1])
 				-- Check if only one objective.
@@ -736,24 +736,19 @@ function NodeEditor:EndTrace(p_Player)
 
 		local s_StartPos = s_FirstWaypoint.Position + Vec3.up
 		local s_EndPos = self.m_CustomTrace[p_Player.onlineId]:GetLast().Position + Vec3.up
-		local s_Raycast = nil
+		local s_RayHits = nil
 
-		local s_RaycastFlags = 0
+		local s_FlagsMaterial = MaterialFlags.MfNoCollisionResponse
+		local s_RaycastFlags = RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll |
+			RayCastFlags.CheckDetailMesh
 
-		if p_Player.attachedControllable ~= nil then
-			s_RaycastFlags = RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll |
-				RayCastFlags.CheckDetailMesh | RayCastFlags.DontCheckPhantoms | RayCastFlags.DontCheckGroup
-		else
-			s_RaycastFlags = RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll |
-				RayCastFlags.CheckDetailMesh
-		end
 
-		s_Raycast = RaycastManager:Raycast(s_StartPos, s_EndPos, s_RaycastFlags)
+		s_RayHits = RaycastManager:DetailedRaycast(s_StartPos, s_EndPos, 2, s_FlagsMaterial, s_RaycastFlags)
 
 		self.m_CustomTrace[p_Player.onlineId]:ClearSelection()
 		self.m_CustomTrace[p_Player.onlineId]:Select(nil, s_FirstWaypoint)
 
-		if s_Raycast == nil or s_Raycast.rigidBody == nil then
+		if #s_RayHits == 0 or (p_Player.attachedControllable and #s_RayHits == 1 and s_RayHits[1].rigidBody:Is("DynamicPhysicsEntity")) then
 			-- Clear view from start node to end node, path loops.
 			self.m_CustomTrace[p_Player.onlineId]:SetInput(s_FirstWaypoint.SpeedMode, s_FirstWaypoint.ExtraMode, 0)
 		else
