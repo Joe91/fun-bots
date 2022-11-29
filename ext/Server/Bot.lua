@@ -40,6 +40,7 @@ function Bot:__init(p_Player)
 	self._SpawnMode = BotSpawnModes.NoRespawn
 	---@type BotMoveModes
 	self._MoveMode = BotMoveModes.Standstill
+	self._ForcedMovement = false
 	---@type BotKits|nil
 	self.m_Kit = nil
 	-- Only used in BotSpawner.
@@ -179,9 +180,6 @@ function Bot:__init(p_Player)
 	self._SkillSniper = 0.0
 	self._SkillFound = false
 
-	-- Simple movement.
-	---@type BotMoveSpeeds
-	self._BotSpeed = BotMoveSpeeds.NoMovement
 	---@type Player|nil
 	self._TargetPlayer = nil
 end
@@ -849,7 +847,7 @@ end
 
 function Bot:ResetVars()
 	self._SpawnMode = BotSpawnModes.NoRespawn
-	self._MoveMode = BotMoveModes.Standstill
+	self._ForcedMovement = false
 	self._ActiveAction = BotActionFlags.NoActionActive
 	self._PathIndex = 0
 	self._Respawning = false
@@ -890,6 +888,7 @@ end
 ---@param p_Player Player
 function Bot:SetVarsStatic(p_Player)
 	self._SpawnMode = BotSpawnModes.NoRespawn
+	self._ForcedMovement = true
 	self._MoveMode = BotMoveModes.Standstill
 	self._PathIndex = 0
 	self._Respawning = false
@@ -915,8 +914,7 @@ function Bot:SetVarsWay(p_Player, p_UseRandomWay, p_PathIndex, p_CurrentWayPoint
 		self._Respawning = false
 	end
 
-	self._BotSpeed = BotMoveSpeeds.Normal
-	self._MoveMode = BotMoveModes.Paths
+	self.m_ActiveMoveMode = BotMoveModes.Paths
 	self._PathIndex = p_PathIndex
 	self._CurrentWayPoint = p_CurrentWayPoint
 	self._InvertPathDirection = p_InverseDirection
@@ -924,9 +922,9 @@ end
 
 ---@return boolean
 function Bot:IsStaticMovement()
-	if self._MoveMode == BotMoveModes.Standstill or
+	if self._ForcedMovement and (self._MoveMode == BotMoveModes.Standstill or
 		self._MoveMode == BotMoveModes.Mirror or
-		self._MoveMode == BotMoveModes.Mimic then
+		self._MoveMode == BotMoveModes.Mimic) then
 		return true
 	else
 		return false
@@ -935,6 +933,7 @@ end
 
 ---@param p_MoveMode BotMoveModes|integer
 function Bot:SetMoveMode(p_MoveMode)
+	self._ForcedMovement = true
 	self._MoveMode = p_MoveMode
 end
 
@@ -946,11 +945,6 @@ end
 ---@param p_Shoot boolean
 function Bot:SetShoot(p_Shoot)
 	self._Shoot = p_Shoot
-end
-
----@param p_Speed integer|BotMoveSpeeds
-function Bot:SetSpeed(p_Speed)
-	self._BotSpeed = p_Speed
 end
 
 function Bot:SetObjectiveIfPossible(p_Objective)
@@ -1446,8 +1440,9 @@ function Bot:_SetActiveVars()
 		self._ShootPlayer = nil
 	end
 
-	self.m_ActiveMoveMode = self._MoveMode
-	self.m_ActiveSpeedValue = self._BotSpeed
+	if self._ForcedMovement then
+		self.m_ActiveMoveMode = self._MoveMode
+	end
 
 	if self.m_Player.controlledControllable ~= nil and not self.m_Player.controlledControllable:Is('ServerSoldierEntity') then
 		self.m_InVehicle = true

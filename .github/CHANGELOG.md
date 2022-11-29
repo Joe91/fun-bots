@@ -37,6 +37,7 @@ This is the changelog for the version V2.7 Don't forget to [join us on Discord](
 * some attack- and aiming-issues with vehicles
 * Don't spawn new bots when kicked by RCON
 * some minor fixes in the trace-creation
+* fix backwards steering of vehicles
 
 ### New maps
 

@@ -631,9 +631,6 @@ function BotManager:SetStaticOption(p_Player, p_Option, p_Value)
 				if p_Option == "mode" then
 					---@cast p_Value BotMoveModes
 					l_Bot:SetMoveMode(p_Value)
-				elseif p_Option == "speed" then
-					---@cast p_Value BotMoveSpeeds
-					l_Bot:SetSpeed(p_Value)
 				end
 			end
 		end

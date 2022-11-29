@@ -713,6 +713,10 @@ function ClientNodeEditor:OnClientUpdateInput(p_DeltaTime)
 		self.m_CommoRosePressed = (s_Comm1 or s_Comm2 or s_Comm3)
 	end
 
+	if InputManager:WentDown(InputConceptIdentifiers.ConceptJump) then
+		NetEvents:SendLocal('NodeEditor:JumpDetected')
+	end
+
 	if self.m_EditMode == 'move' then
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_ArrowLeft) or InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad4) then
 			self.m_EditModeManualOffset = self.m_EditModeManualOffset + (Vec3.left * self.m_EditModeManualSpeed)

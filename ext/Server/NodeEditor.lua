@@ -15,6 +15,7 @@ function NodeEditor:__init()
 	self.m_CustomTraceIndex = {}
 	self.m_CustomTraceTimer = {}
 	self.m_CustomTraceDistance = {}
+	self.m_JumpDetected = {}
 
 	self.m_lastDrawIndexNode = {}
 	self.m_lastDrawIndexPath = {}
@@ -59,6 +60,9 @@ function NodeEditor:RegisterCustomEvents()
 	NetEvents:Subscribe('NodeEditor:SpawnBot', self, self.OnSpawnBot)
 	NetEvents:Subscribe('NodeEditor:UpdatePos', self, self.OnUpdatePos)
 	NetEvents:Subscribe('NodeEditor:AddNode', self, self.OnAddNode)
+
+	NetEvents:Subscribe('NodeEditor:JumpDetected', self, self.OnJumpDetected)
+
 
 	-- To-do: fill.
 end
@@ -694,6 +698,7 @@ function NodeEditor:StartTrace(p_Player)
 
 	self.m_CustomTrace[p_Player.onlineId] = NodeCollection(true)
 	self.m_CustomTraceTimer[p_Player.onlineId] = 0
+	self.m_JumpDetected[p_Player.onlineId] = 0
 	self.m_NodeWaitTimer[p_Player.onlineId] = 0
 	self.m_CustomTraceIndex[p_Player.onlineId] = self:_getNewIndex()
 	self.m_CustomTraceDistance[p_Player.onlineId] = 0
@@ -731,9 +736,8 @@ function NodeEditor:EndTrace(p_Player)
 
 		local s_StartPos = s_FirstWaypoint.Position + Vec3.up
 		local s_EndPos = self.m_CustomTrace[p_Player.onlineId]:GetLast().Position + Vec3.up
-		local s_RayHits = nil
+		local s_Raycast = nil
 
-		local s_FlagsMaterial = 0
 		local s_RaycastFlags = 0
 
 		if p_Player.attachedControllable ~= nil then
@@ -744,12 +748,12 @@ function NodeEditor:EndTrace(p_Player)
 				RayCastFlags.CheckDetailMesh
 		end
 
-		s_RayHits = RaycastManager:CollisionRaycast(s_StartPos, s_EndPos, 1, s_FlagsMaterial, s_RaycastFlags)
+		s_Raycast = RaycastManager:Raycast(s_StartPos, s_EndPos, s_RaycastFlags)
 
 		self.m_CustomTrace[p_Player.onlineId]:ClearSelection()
 		self.m_CustomTrace[p_Player.onlineId]:Select(nil, s_FirstWaypoint)
 
-		if #s_RayHits == 0 then
+		if s_Raycast == nil or s_Raycast.rigidBody == nil then
 			-- Clear view from start node to end node, path loops.
 			self.m_CustomTrace[p_Player.onlineId]:SetInput(s_FirstWaypoint.SpeedMode, s_FirstWaypoint.ExtraMode, 0)
 		else
@@ -977,6 +981,12 @@ end
 function NodeEditor:OnPlayerDestroyed(p_Player)
 end
 
+function NodeEditor:OnJumpDetected(p_Player)
+	if p_Player and p_Player.soldier and self.m_ActiveTracePlayers[p_Player.onlineId] and self.m_CustomTraceTimer[p_Player.onlineId] >= 0 then
+		self.m_JumpDetected[p_Player.onlineId] = true
+	end
+end
+
 -- =============================================
 -- Update Events
 -- =============================================
@@ -1063,7 +1073,7 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 										end
 									end
 
-									if s_Player.input:GetLevel(EntryInputActionEnum.EIAJump) == 1 then
+									if self.m_JumpDetected[l_PlayerGuid] then
 										s_Extra = 1
 									end
 
@@ -1093,6 +1103,7 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 				end
 
 				self.m_CustomTraceTimer[l_PlayerGuid] = 0
+				self.m_JumpDetected[l_PlayerGuid] = false
 			end
 		end
 	end

@@ -164,12 +164,12 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_Bot)
 							p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.Sprint -- Full throttle.
 						end
 					else
-						if p_Bot._ObstaceSequenceTimer < 2.5 then
+						if p_Bot._ObstaceSequenceTimer < 2.0 then
 							p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.Backwards
 						end
 					end
 
-					if (p_Bot.m_ActiveSpeedValue == BotMoveSpeeds.Backwards and p_Bot._ObstaceSequenceTimer > 3.5) or
+					if (p_Bot.m_ActiveSpeedValue == BotMoveSpeeds.Backwards and p_Bot._ObstaceSequenceTimer > 3.0) or
 						(p_Bot.m_ActiveSpeedValue ~= BotMoveSpeeds.Backwards and p_Bot._ObstaceSequenceTimer > 5.0) then
 						p_Bot._ObstaceSequenceTimer = 0.0
 						p_Bot._ObstacleRetryCounter = p_Bot._ObstacleRetryCounter + 1
