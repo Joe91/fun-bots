@@ -712,8 +712,7 @@ function ClientNodeEditor:OnClientUpdateInput(p_DeltaTime)
 
 		self.m_CommoRosePressed = (s_Comm1 or s_Comm2 or s_Comm3)
 	end
-
-	if InputManager:WentDown(InputConceptIdentifiers.ConceptJump) then
+	if InputManager:WentKeyDown(InputDeviceKeys.IDK_Space) then --InputManager:WentDown(InputConceptIdentifiers.ConceptJump)
 		NetEvents:SendLocal('NodeEditor:JumpDetected')
 	end
 

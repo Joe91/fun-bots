@@ -184,7 +184,6 @@ function NodeEditor:OnExitVehicle(p_Player, p_Args)
 	self:Log(p_Player, 'Exit Vehicle (type): %s', g_Utilities:dump(s_Data, true))
 
 	local s_OnlyPassengers = not (s_Data:lower() == 'false' or s_Data == '0')
-	print(s_OnlyPassengers)
 
 	for i = 1, #s_Selection do
 		local action = {
