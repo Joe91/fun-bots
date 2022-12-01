@@ -538,7 +538,8 @@ def get_maps_merged(merge_file_1: str, merge_file_2: str) -> List[str]:
 
         with open("mapfiles/" + merge_file_2, "r", encoding="utf-8") as addition_file:
             lines_to_add = addition_file.readlines()
-            path_dict = {}  # type: Dict[str, str]
+            path_dict: Dict[str, str]
+            path_dict = {}
             last_path = ""
             for line in lines_to_add[1:-1]:
                 lines_parts_addition = line.split(";")

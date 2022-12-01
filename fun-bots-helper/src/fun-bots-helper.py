@@ -1,10 +1,11 @@
 import os
+import signal
+import sys
 import threading
 from typing import Callable
 
 import customtkinter
 from loguru import logger
-
 from tools.addons.gets import get_to_root, get_version
 from tools.clear_all_paths import clear_all_paths
 from tools.clear_settings import clear_settings
@@ -35,7 +36,7 @@ class App(customtkinter.CTk):
 
         self.geometry("900x500")
         self.title("Fun Bots Helper")
-        self.iconbitmap(r"battlefield3.ico")
+        self.iconbitmap("battlefield3.ico")
         self.minsize(700, 300)
 
         self.grid_rowconfigure(tuple(range(8)), weight=1)
@@ -290,11 +291,15 @@ class App(customtkinter.CTk):
         customtkinter.set_appearance_mode(new_appearance_mode)
 
     def create_thread(self, function: Callable) -> None:
-        threading.Thread(target=function).start()
+        threading.Thread(target=function, daemon=True).start()
 
 
-try:
-    app = App()
-    app.mainloop()
-except KeyboardInterrupt:
+def signal_handler(signal, frame):
     logger.warning("Crtl+C detected. Exiting Helper...")
+    sys.exit(0)
+
+
+signal.signal(signal.SIGINT, signal_handler)
+
+app = App()
+app.mainloop()
