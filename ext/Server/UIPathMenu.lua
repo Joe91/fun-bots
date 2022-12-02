@@ -281,7 +281,7 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 			}
 		})
 		return
-	elseif string.find(request.action, 'add_vehicle_') ~= nil then
+	elseif string.find(request.action, 'add_vehicle_') then
 		self.m_NavigaionPath[p_Player.onlineId][5] = nil
 		self.m_NavigaionPath[p_Player.onlineId][4] = request.action
 
@@ -319,7 +319,7 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 			}
 		})
 		return
-	elseif string.find(request.action, 'team_') ~= nil then
+	elseif string.find(request.action, 'team_') then
 		self.m_NavigaionPath[p_Player.onlineId][6] = nil
 		self.m_NavigaionPath[p_Player.onlineId][5] = request.action
 
@@ -375,7 +375,7 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 			}
 		})
 		return
-	elseif string.find(request.action, 'index_vehcile_') ~= nil then
+	elseif string.find(request.action, 'index_vehcile_') then
 		-- FILL THIS.
 		local s_Team = self.m_NavigaionPath[p_Player.onlineId][5]:split('_')[2]
 		local s_VehicleType = self.m_NavigaionPath[p_Player.onlineId][4]:split('_')[3]
@@ -661,10 +661,18 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 		end
 
 		return
-	elseif string.find(request.action, 'path_type_') ~= nil then
+	elseif string.find(request.action, 'base_us_') or string.find(request.action, 'base_ru_') then
+		local s_Data = request.action:split('_')
+		if self.m_NavigaionPath[p_Player.onlineId][2] == "remove_objective" then
+			m_NodeEditor:OnRemoveObjective(p_Player, s_Data)
+		else
+			m_NodeEditor:OnAddObjective(p_Player, s_Data)
+		end
+		return
+	elseif string.find(request.action, 'path_type_') then
 		local s_Type = request.action:split('_')[3]
 		m_NodeEditor:OnAddVehiclePath(p_Player, { s_Type })
-	elseif string.find(request.action, 'mcom_') ~= nil then
+	elseif string.find(request.action, 'mcom_') then
 		local s_Data = request.action:split('_')
 		local s_McomString = "mcom " .. s_Data[2]
 		if #s_Data == 3 then
@@ -676,7 +684,7 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 			m_NodeEditor:OnAddObjective(p_Player, s_McomString:split(' '))
 		end
 		return
-	elseif string.find(request.action, 'base_') ~= nil then
+	elseif string.find(request.action, 'base_') then
 		local s_Data = request.action:split('_')
 		if self.m_NavigaionPath[p_Player.onlineId][2] == "remove_objective" then
 			m_NodeEditor:OnRemoveObjective(p_Player, s_Data)
@@ -684,7 +692,7 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 			m_NodeEditor:OnAddObjective(p_Player, s_Data)
 		end
 		return
-	elseif string.find(request.action, 'objective_') ~= nil then
+	elseif string.find(request.action, 'objective_') then
 		local s_Objective = request.action:split('_')[2]
 		if self.m_NavigaionPath[p_Player.onlineId][2] == "remove_objective" then
 			m_NodeEditor:OnRemoveObjective(p_Player, { s_Objective })

@@ -320,6 +320,16 @@ const BotEditor = (new function BotEditor() {
 				case 'mcom_inter_8':
 				case 'mcom_inter_9':
 				case 'mcom_inter_10':
+				case 'base_us_1':
+				case 'base_us_2':
+				case 'base_us_3':
+				case 'base_us_4':
+				case 'base_us_5':
+				case 'base_ru_1':
+				case 'base_ru_2':
+				case 'base_ru_3':
+				case 'base_ru_4':
+				case 'base_ru_5':
 				case 'index_vehcile_1':
 				case 'index_vehcile_2':
 				case 'index_vehcile_3':
