@@ -70,6 +70,7 @@ XP1_001 RushLarge0 1
 XP1_002 RushLarge0 1
 XP1_003 RushLarge0 1
 XP1_004 RushLarge0 1
+XP4_Rubble RushLarge0 1
 XP5_004 RushLarge0 1
 MP_001 SquadDeathMatch0 1
 MP_003 SquadDeathMatch0 1

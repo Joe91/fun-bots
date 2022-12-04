@@ -674,9 +674,11 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 		m_NodeEditor:OnAddVehiclePath(p_Player, { s_Type })
 	elseif string.find(request.action, 'mcom_') then
 		local s_Data = request.action:split('_')
-		local s_McomString = "mcom " .. s_Data[2]
-		if #s_Data == 3 then
-			s_McomString = s_McomString .. " interact"
+		local s_McomString = "mcom "
+		if #s_Data == 2 then
+			s_McomString = s_McomString .. s_Data[2]
+		elseif #s_Data == 3 then
+			s_McomString = s_McomString .. s_Data[3] .. " interact"
 		end
 		if self.m_NavigaionPath[p_Player.onlineId][2] == "remove_objective" then
 			m_NodeEditor:OnRemoveObjective(p_Player, s_McomString:split(' '))
