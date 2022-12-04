@@ -43,7 +43,7 @@ The following maps can be played with the [mod](https://github.com/keku645/vu-al
 |  ---	|   `SP_Valley`	| **Valley** | `TDM` ,`TDM CQ` |  |
 |  ---	|   `SP_Jet`	| **Carrier** | `TDM` ,`TDM CQ` |  |
 |  ---	|   `COOP_002`	| **Aygan Village** | `TDM` ,`TDM CQ` |  |
-|  ---	|   `COOP_006`	| **Hit and Run** | `TDM` ,`TDM CQ` |  |
+|  ---	|   `COOP_006`	| **Hit and Run** | `CQ Small` ,`TDM` ,`TDM CQ` | `CQ Small` |
 
 ### Help to expand the list
 We are still missing certain gamemodes on certain maps, help us expanding this list by exporting your traces (with the export_traces.exe) and sending it to us on Discord or on any other channel.
