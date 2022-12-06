@@ -271,7 +271,6 @@ class App(customtkinter.CTk):
     def create_settings_defaults_fb(self) -> None:
         create_settings()
         create_defaults()
-        update_languages()
         logger.info("Default and Settings Updated\n")
 
     def update_languages_fb(self) -> None:
