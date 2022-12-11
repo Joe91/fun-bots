@@ -818,7 +818,7 @@ function NodeEditor:SaveTrace(p_Player, p_PathIndex)
 		p_PathIndex = p_PathIndex[1]
 	end
 
-	if self.m_CustomTrace[p_Player.onlineId] == nil then
+	if self.m_CustomTrace[p_Player.onlineId] == nil or #self.m_CustomTrace[p_Player.onlineId]:Get() == 0 then
 		self:Log(p_Player, 'Custom Trace is empty')
 		return false
 	end
