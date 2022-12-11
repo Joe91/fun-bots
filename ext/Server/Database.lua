@@ -44,6 +44,7 @@ function Database:Query(p_Query, p_Parameters)
 
 	if not s_Result then
 		self.m_LastError = 'Failed to execute query: ' .. self:GetError()
+		m_Logger:Error(self.m_LastError)
 		SQL:Close()
 		return nil
 	end
@@ -127,13 +128,13 @@ function Database:Update(p_TableName, p_Parameters, p_Where)
 			s_Found = l_Value
 		end
 
-		s_Fields:add(' `' .. l_Name .. '`=' .. l_Value .. '')
+		s_Fields:add(' ' .. l_Name .. ' =' .. l_Value .. '')
 	end
 
-	m_Logger:Write('UPDATE `' .. p_TableName .. '` SET ' .. s_Fields:join(',') .. ' WHERE `' .. p_Where .. '`=' .. s_Found)
+	m_Logger:Write('UPDATE ' .. p_TableName .. ' SET ' .. s_Fields:join(', ') .. ' WHERE ' .. p_Where .. '= ' .. s_Found .. '')
 
-	return self:Query('UPDATE `' ..
-		p_TableName .. '` SET ' .. s_Fields:join(', ') .. ' WHERE `' .. p_Where .. '`=\'' .. s_Found .. '\'')
+	print(self:Query('UPDATE ' ..
+		p_TableName .. ' SET ' .. s_Fields:join(', ') .. ' WHERE ' .. p_Where .. ' = ' .. s_Found .. ''))
 end
 
 -- This is unused.

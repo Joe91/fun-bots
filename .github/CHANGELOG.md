@@ -39,6 +39,7 @@ This is the changelog for the version V2.7 Don't forget to [join us on Discord](
 * some minor fixes in the trace-creation
 * fix backwards steering of vehicles
 * fix missing Path-Menu-Commands
+* fix Config.lua not getting applied as wanted
 
 ### New maps
 * Rush for Talah Market
