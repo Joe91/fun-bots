@@ -945,6 +945,35 @@ function NodeCollection:GetHiddenPaths()
 	return self._HiddenPaths
 end
 
+function NodeCollection:IsMapAvailable(p_LevelName, p_GameMode)
+	local s_TableName
+	if p_GameMode ~= nil and p_LevelName ~= nil then
+		s_TableName = p_LevelName .. '_' .. p_GameMode
+		s_TableName = s_TableName:gsub(' ', '_')
+	end
+
+	if s_TableName == '' or s_TableName == nil then
+		m_Logger:Error('Mapname not set. Abort Load')
+		return false
+	end
+	s_TableName = s_TableName .. "_table"
+
+	if not SQL:Open() then
+		m_Logger:Error('Failed to open SQL. ' .. SQL:Error())
+		return false
+	end
+
+	local s_Results = SQL:Query("select name from sqlite_master where type='table' and name='" .. s_TableName .. "'")
+	if not s_Results or #s_Results == 0 then
+		m_Logger:Write('Map not available')
+		SQL:Close()
+		return false
+	else
+		SQL:Close()
+		return true
+	end
+end
+
 -----------------------------
 -- Save/Load.
 
@@ -967,21 +996,10 @@ function NodeCollection:Load(p_LevelName, p_GameMode)
 		return
 	end
 
-	local s_Query = [[
-		CREATE TABLE IF NOT EXISTS ]] .. self._MapName .. [[_table (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		pathIndex INTEGER,
-		pointIndex INTEGER,
-		transX FLOAT,
-		transY FLOAT,
-		transZ FLOAT,
-		inputVar INTEGER,
-		data TEXT
-		)
-	]]
-
-	if not SQL:Query(s_Query) then
-		m_Logger:Error('Failed to create table for map [' .. self._MapName .. ']: ' .. SQL:Error())
+	local s_Results = SQL:Query("select name from sqlite_master where type='table' and name='" .. self._MapName .. "_table'")
+	if not s_Results or #s_Results == 0 then
+		m_Logger:Write('Map not available')
+		SQL:Close()
 		return
 	end
 
@@ -990,6 +1008,7 @@ function NodeCollection:Load(p_LevelName, p_GameMode)
 
 	if not s_Results then
 		m_Logger:Error('Failed to retrieve waypoints for map [' .. self._MapName .. ']: ' .. SQL:Error())
+		SQL:Close()
 		return
 	end
 
@@ -1256,6 +1275,8 @@ function NodeCollection:ProcessAllDataToSave()
 			5.5)
 
 		self._SaveActive = false
+
+		--m_GameDirector:OnLevelLoaded()
 	end
 
 	self._SaveStateMachineCounter = self._SaveStateMachineCounter + 1

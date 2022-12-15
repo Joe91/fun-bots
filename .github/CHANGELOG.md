@@ -30,6 +30,7 @@ This is the changelog for the version V2.7 Don't forget to [join us on Discord](
 * Bots now try to use all vehicles in a base
 * Some variation in the appearance of vehicles (idea from KrazyIvan777)
 * Jets are focused on air-targets and more active.
+* Support separated traces for each gamemode, even if compatible with other gamemode
 
 ### Bug fixes
 * fix scavenger revive
@@ -43,6 +44,7 @@ This is the changelog for the version V2.7 Don't forget to [join us on Discord](
 
 ### New maps
 * Rush for Talah Market
+* several New maps for GunMaster by Augusta (MP_013, MP_017, MP_Subway, XP5_002, XP5_003)
 
 ### Updated maps
 * Fix Wake-Island Rush
@@ -50,6 +52,8 @@ This is the changelog for the version V2.7 Don't forget to [join us on Discord](
 * New paths for mobile arillery on XP3 Shield Conquest Small (by KrazyIvan777)
 * New paths for mobile arillery on XP3 Alborz Conquest Small (by KrazyIvan777)
 * New paths for mobile arillery on XP3 Valley Conquest Small (by KrazyIvan777)
+* New and improved paths for SP_Jet TDM (by Augusta)
+* New and improved paths for SP_Valley TDM (by Augusta)
 
 ### Documentation update
 
