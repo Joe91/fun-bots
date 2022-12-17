@@ -748,15 +748,11 @@ proc ::tk::CheckLeave {w} {
 	$w configure -state normal
     }
 
-    # Restore the original button "selected" color; but only if the user
-    # has not changed it in the meantime.
+    # Restore the original button "selected" color; assume that the user
+    # wasn't monkeying around with things too much.
 
     if {![$w cget -indicatoron] && [info exist Priv($w,selectcolor)]} {
-        if {[$w cget -selectcolor] eq $Priv($w,selectcolor)
-                || ([info exist Priv($w,aselectcolor)] &&
-                    [$w cget -selectcolor] eq $Priv($w,aselectcolor))} {
-	    $w configure -selectcolor $Priv($w,selectcolor)
-	}
+	$w configure -selectcolor $Priv($w,selectcolor)
     }
     unset -nocomplain Priv($w,selectcolor) Priv($w,aselectcolor)
 

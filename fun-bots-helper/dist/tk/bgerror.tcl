@@ -21,8 +21,7 @@ namespace eval ::tk::dialog::error {
     if {[tk windowingsystem] eq "aqua"} {
 	option add *ErrorDialog*background systemAlertBackgroundActive \
 		widgetDefault
-	option add *ErrorDialog*info.text.background \
-	        systemTextBackgroundColor widgetDefault
+	option add *ErrorDialog*info.text.background white widgetDefault
 	option add *ErrorDialog*Button.highlightBackground \
 		systemAlertBackgroundActive widgetDefault
     }
@@ -41,7 +40,7 @@ proc ::tk::dialog::error::Details {} {
     set w .bgerrorDialog
     set caption [option get $w.function text {}]
     set command [option get $w.function command {}]
-    if {($caption eq "") || ($command eq "")} {
+    if { ($caption eq "") || ($command eq "") } {
 	grid forget $w.function
     }
     lappend command [$w.top.info.text get 1.0 end-1c]
@@ -50,7 +49,7 @@ proc ::tk::dialog::error::Details {} {
 }
 
 proc ::tk::dialog::error::SaveToLog {text} {
-    if {$::tcl_platform(platform) eq "windows"} {
+    if { $::tcl_platform(platform) eq "windows" } {
 	set allFiles *.*
     } else {
 	set allFiles *
@@ -98,7 +97,7 @@ proc ::tk::dialog::error::ReturnInDetails w {
 # Arguments:
 #	err - The error message.
 #
-proc ::tk::dialog::error::bgerror {err {flag 1}} {
+proc ::tk::dialog::error::bgerror err {
     global errorInfo
     variable button
 
@@ -107,21 +106,15 @@ proc ::tk::dialog::error::bgerror {err {flag 1}} {
     set ret [catch {::tkerror $err} msg];
     if {$ret != 1} {return -code $ret $msg}
 
-    # The application's tkerror either failed or was not found
-    # so we use the default dialog.  But on Aqua we cannot display
-    # the dialog if the background error occurs in an idle task
-    # being processed inside of [NSView drawRect].  In that case
-    # we post the dialog as an after task instead.
+    # Ok the application's tkerror either failed or was not found
+    # we use the default dialog then :
     set windowingsystem [tk windowingsystem]
     if {$windowingsystem eq "aqua"} {
-	if $flag {
-	    set errorInfo $info
-	    after 500 [list bgerror "$err" 0]
-	    return
-	}
+	set ok [mc Ok]
+    } else {
+	set ok [mc OK]
     }
 
-    set ok [mc OK]
     # Truncate the message if it is too wide (>maxLine characters) or
     # too tall (>4 lines).  Truncation occurs at the first point at
     # which one of those conditions is met.
@@ -129,11 +122,11 @@ proc ::tk::dialog::error::bgerror {err {flag 1}} {
     set lines 0
     set maxLine 45
     foreach line [split $err \n] {
-	if {[string length $line] > $maxLine} {
-	    append displayedErr "[string range $line 0 $maxLine-3]..."
+	if { [string length $line] > $maxLine } {
+	    append displayedErr "[string range $line 0 [expr {$maxLine-3}]]..."
 	    break
 	}
-	if {$lines > 4} {
+	if { $lines > 4 } {
 	    append displayedErr "..."
 	    break
 	} else {
@@ -182,7 +175,7 @@ proc ::tk::dialog::error::bgerror {err {flag 1}} {
     pack $W.text -side left -expand yes -fill both
     $W.text insert 0.0 "$err\n$info"
     $W.text mark set insert 0.0
-    bind $W.text <Button-1> {focus %W}
+    bind $W.text <ButtonPress-1> { focus %W }
     $W.text configure -state disabled
 
     # 2. Fill the top part with bitmap and message
