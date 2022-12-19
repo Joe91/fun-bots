@@ -1,4 +1,3 @@
-import multiprocessing
 import os
 import signal
 import sys
@@ -38,10 +37,7 @@ class App(customtkinter.CTk):
 
         self.geometry("900x500")
         self.title("Fun Bots Helper")
-        self.iconbitmap("battlefield3.ico")
         self.minsize(700, 300)
-
-        self.processes = []
 
         self.grid_rowconfigure(tuple(range(8)), weight=1)
         self.grid_columnconfigure(tuple(range(4)), weight=1)
@@ -65,14 +61,14 @@ class App(customtkinter.CTk):
 
         self.button_import_traces = customtkinter.CTkButton(
             text="Import",
-            command=lambda: self.create_process(self.import_traces_fb),
+            command=lambda: self.create_thread(self.import_traces_fb),
             **button_properties,
         )
         self.button_import_traces.grid(row=3, column=0)
 
         self.button_export_traces = customtkinter.CTkButton(
             text="Export",
-            command=lambda: self.create_process(self.export_traces_fb),
+            command=lambda: self.create_thread(self.export_traces_fb),
             **button_properties,
         )
         self.button_export_traces.grid(row=4, column=0)
@@ -84,14 +80,14 @@ class App(customtkinter.CTk):
 
         self.button_import_settings = customtkinter.CTkButton(
             text="Import",
-            command=lambda: self.create_process(self.import_permission_and_config_fb),
+            command=lambda: self.create_thread(self.import_permission_and_config_fb),
             **button_properties,
         )
         self.button_import_settings.grid(row=6, column=0)
 
         self.button_export_settings = customtkinter.CTkButton(
             text="Export",
-            command=lambda: self.create_process(self.export_permission_and_config_fb),
+            command=lambda: self.create_thread(self.export_permission_and_config_fb),
             **button_properties,
         )
         self.button_export_settings.grid(row=7, column=0, pady=(0, 20))
@@ -115,14 +111,14 @@ class App(customtkinter.CTk):
 
         self.button_clear_traces = customtkinter.CTkButton(
             text="Clear Traces",
-            command=lambda: self.create_process(self.clear_all_paths_fb),
+            command=lambda: self.create_thread(self.clear_all_paths_fb),
             **button_properties,
         )
         self.button_clear_traces.grid(row=3, column=1)
 
         self.button_clear_settings = customtkinter.CTkButton(
             text="Clear Settings",
-            command=lambda: self.create_process(self.clear_settings_fb),
+            command=lambda: self.create_thread(self.clear_settings_fb),
             **button_properties,
         )
         self.button_clear_settings.grid(row=4, column=1)
@@ -144,7 +140,7 @@ class App(customtkinter.CTk):
 
         self.button_create_language = customtkinter.CTkButton(
             text="Create Language",
-            command=lambda: self.create_process(self.create_language_fb),
+            command=lambda: self.create_thread(self.create_language_fb),
             **button_properties,
         )
         self.button_create_language.grid(row=7, column=1, pady=(0, 20))
@@ -156,14 +152,14 @@ class App(customtkinter.CTk):
 
         self.button_create_mapfiles = customtkinter.CTkButton(
             text="Create Mapfiles",
-            command=lambda: self.create_process(self.create_mapfiles_fb),
+            command=lambda: self.create_thread(self.create_mapfiles_fb),
             **button_properties,
         )
         self.button_create_mapfiles.grid(row=3, column=2)
 
         self.button_fix_nodes = customtkinter.CTkButton(
             text="Fix Mapfiles",
-            command=lambda: self.create_process(self.fix_maps_fb),
+            command=lambda: self.create_thread(self.fix_maps_fb),
             **button_properties,
         )
         self.button_fix_nodes.grid(row=4, column=2)
@@ -188,7 +184,7 @@ class App(customtkinter.CTk):
 
         self.button_merge_mapfiles = customtkinter.CTkButton(
             text="Merge Mapfiles",
-            command=lambda: self.create_process(self.merge_two_mapfiles_fb),
+            command=lambda: self.create_thread(self.merge_two_mapfiles_fb),
             **button_properties,
         )
         self.button_merge_mapfiles.grid(row=7, column=2, pady=(0, 20))
@@ -200,14 +196,14 @@ class App(customtkinter.CTk):
 
         self.button_update_configs = customtkinter.CTkButton(
             text="Update Configs",
-            command=lambda: self.create_process(self.create_settings_defaults_fb),
+            command=lambda: self.create_thread(self.create_settings_defaults_fb),
             **button_properties,
         )
         self.button_update_configs.grid(row=3, column=3)
 
         self.button_update_languages = customtkinter.CTkButton(
             text="Update Languages",
-            command=lambda: self.create_process(self.update_languages_fb),
+            command=lambda: self.create_thread(self.update_languages_fb),
             **button_properties,
         )
         self.button_update_languages.grid(row=4, column=3)
@@ -222,20 +218,7 @@ class App(customtkinter.CTk):
             corner_radius=20,
             fg_color="#999900",
         )
-        self.change_theme.grid(row=5, column=3)
-
-        self.button_stop = customtkinter.CTkButton(
-            master=self,
-            text="Stop Process",
-            width=160,
-            height=40,
-            text_font=("Terminal", 10),
-            command=lambda: self.create_thread(self.stop_fb),
-            corner_radius=20,
-            fg_color="#CC0000",
-            hover_color="#990000",
-        )
-        self.button_stop.grid(row=6, column=3)
+        self.change_theme.grid(row=6, column=3)
 
         self.label_version = customtkinter.CTkLabel(
             master=self,
@@ -297,28 +280,14 @@ class App(customtkinter.CTk):
         merge_file_2 = self.merge_file_2.get()
         merge_two_mapfiles(merge_file_1, merge_file_2)
 
-    def stop_fb(self) -> None:
-        try:
-            os.kill(self.processes[-1].pid, signal.SIGINT)
-            self.processes.pop()
-        except IndexError:
-            pass
-
     def change_appearance_mode(self, new_appearance_mode: str) -> None:
         customtkinter.set_appearance_mode(new_appearance_mode)
-
-    def create_process(self, function: Callable) -> None:
-        self.processes.append(multiprocessing.Process(target=function, daemon=True))
-        self.processes[-1].start()
 
     def create_thread(self, function: Callable) -> None:
         threading.Thread(target=function, daemon=True).start()
 
     def signal_handler(self, signal, frame):
-        if len(self.processes) > 0:
-            logger.critical("Current Process Has Been Stopped!")
-        else:
-            logger.warning("Crtl+C detected. Exiting Helper...")
+        logger.warning("Crtl+C detected. Exiting Helper...")
         sys.exit(0)
 
 

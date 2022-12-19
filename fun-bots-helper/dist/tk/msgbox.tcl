@@ -164,6 +164,9 @@ proc ::tk::MessageBox {args} {
 	    "warning"   {set data(-icon) "caution"}
 	    "info"      {set data(-icon) "note"}
 	}
+	option add *Dialog*background systemDialogBackgroundActive widgetDefault
+	option add *Dialog*Button.highlightBackground \
+		systemDialogBackgroundActive widgetDefault
     }
 
     if {![winfo exists $data(-parent)]} {
@@ -231,8 +234,7 @@ proc ::tk::MessageBox {args} {
     }
     if {!$valid} {
 	return -code error -errorcode {TK MSGBOX DEFAULT} \
-	    "bad -default value \"$data(-default)\": must be\
-	    abort, retry, ignore, ok, cancel, no, or yes"
+	    "invalid default button \"$data(-default)\""
     }
 
     # 2. Set the dialog to be a child window of $parent

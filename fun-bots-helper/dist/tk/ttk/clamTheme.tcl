@@ -5,7 +5,7 @@
 #
 
 namespace eval ttk::theme::clam {
-    variable colors
+    variable colors 
     array set colors {
 	-disabledfg		"#999999"
 	-frame  		"#dcdad5"
@@ -131,10 +131,8 @@ namespace eval ttk::theme::clam {
 	    -font TkHeadingFont -relief raised -padding {3}
 	ttk::style configure Treeview -background $colors(-window)
 	ttk::style map Treeview \
-	    -background [list disabled $colors(-frame)\
-				selected $colors(-selectbg)] \
-	    -foreground [list disabled $colors(-disabledfg) \
-				selected $colors(-selectfg)]
+	    -background [list selected $colors(-selectbg)] \
+	    -foreground [list selected $colors(-selectfg)] ;
 
     	ttk::style configure TLabelframe \
 	    -labeloutside true -labelmargins {0 0 0 4} \

@@ -212,12 +212,11 @@ proc ::tcl::tm::UnknownHandler {original name args} {
 	    }
 	    set strip [llength [file split $path]]
 
-	    # Get the module files out of the subdirectories.
-	    # - Safe Base interpreters have a restricted "glob" command that
-	    #   works in this case.
-	    # - The "catch" was essential when there was no safe glob and every
-	    #   call in a safe interp failed; it is retained only for corner
-	    #   cases in which the eventual call to glob returns an error.
+	    # We can't use glob in safe interps, so enclose the following in a
+	    # catch statement, where we get the module files out of the
+	    # subdirectories. In other words, Tcl Modules are not-functional
+	    # in such an interpreter. This is the same as for the command
+	    # "tclPkgUnknown", i.e. the search for regular packages.
 
 	    catch {
 		# We always look for _all_ possible modules in the current
@@ -239,16 +238,12 @@ proc ::tcl::tm::UnknownHandler {original name args} {
 			continue
 		    }
 
-		    if {([package ifneeded $pkgname $pkgversion] ne {})
-			    && (![interp issafe])
-		    } {
+		    if {[package ifneeded $pkgname $pkgversion] ne {}} {
 			# There's already a provide script registered for
 			# this version of this package.  Since all units of
 			# code claiming to be the same version of the same
 			# package ought to be identical, just stick with
 			# the one we already have.
-			# This does not apply to Safe Base interpreters because
-			# the token-to-directory mapping may have changed.
 			continue
 		    }
 
@@ -316,7 +311,7 @@ proc ::tcl::tm::UnknownHandler {original name args} {
 proc ::tcl::tm::Defaults {} {
     global env tcl_platform
 
-    regexp {^(\d+)\.(\d+)} [package provide Tcl] - major minor
+    lassign [split [info tclversion] .] major minor
     set exe [file normalize [info nameofexecutable]]
 
     # Note that we're using [::list], not [list] because [list] means
@@ -359,7 +354,7 @@ proc ::tcl::tm::Defaults {} {
 #	Calls 'path add' to paths to the list of module search paths.
 
 proc ::tcl::tm::roots {paths} {
-    regexp {^(\d+)\.(\d+)} [package provide Tcl] - major minor
+    regexp {^(\d+)\.(\d+)} [package present Tcl] - major minor
     foreach pa $paths {
 	set p [file join $pa tcl$major]
 	for {set n $minor} {$n >= 0} {incr n -1} {
