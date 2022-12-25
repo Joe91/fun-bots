@@ -44,6 +44,7 @@ This is the changelog for the version V2.7 Don't forget to [join us on Discord](
 
 ### New maps
 * Rush for Talah Market
+* Rush for Epicenter (by ghost runaway)
 * several New maps for GunMaster by Augusta (MP_013, MP_017, MP_Subway, XP5_002, XP5_003)
 
 ### Updated maps
