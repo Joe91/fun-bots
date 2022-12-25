@@ -6,7 +6,7 @@ BotWeaponHandling = class('BotWeaponHandling')
 local m_Utilities = require('__shared/Utilities')
 
 function BotWeaponHandling:__init()
-	-- nothing to do
+	-- Nothing to do.
 end
 
 function BotWeaponHandling:UpdateDeployAndReload(p_Bot, p_Deploy)
@@ -32,7 +32,7 @@ function BotWeaponHandling:UpdateDeployAndReload(p_Bot, p_Deploy)
 		p_Bot:_SetInput(EntryInputActionEnum.EIAReload, 1)
 	end
 
-	-- deploy from time to time
+	-- Deploy from time to time.
 	if Config.BotsDeploy and p_Deploy and not Globals.IsScavenger and not Config.ZombieMode then
 		if p_Bot.m_PrimaryGadget ~= nil and (p_Bot.m_Kit == BotKits.Support or p_Bot.m_Kit == BotKits.Assault) then
 			if p_Bot.m_PrimaryGadget.type == WeaponTypes.Ammobag or p_Bot.m_PrimaryGadget.type == WeaponTypes.Medkit then
@@ -51,7 +51,7 @@ function BotWeaponHandling:UpdateDeployAndReload(p_Bot, p_Deploy)
 end
 
 function BotWeaponHandling:UpdateWeaponSelection(p_Bot)
-	--select weapon-slot
+	-- Select weapon-slot.
 	if p_Bot._ActiveAction ~= BotActionFlags.MeleeActive then
 		if p_Bot.m_Player.soldier.weaponsComponent ~= nil then
 			if p_Bot.m_KnifeMode then

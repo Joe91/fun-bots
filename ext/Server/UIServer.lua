@@ -23,16 +23,17 @@ local BotSpawner = require('BotSpawner')
 local WeaponList = require('__shared/WeaponList')
 
 function FunBotUIServer:__init()
-	-- TODO: remove? unused
-	self._webui = 0
-	-- TODO: remove? unused
-	self._authenticated = ArrayMap()
+	-- To-do: remove? Unused.
+	self.m_NavigaionPath = {}
+	self.m_InPathMenu = false
+
 
 	if Config.DisableUserInterface ~= true then
 		NetEvents:Subscribe('UI_Request_Open', self, self._onUIRequestOpen)
 		NetEvents:Subscribe('UI_Request_Save_Settings', self, self._onUIRequestSaveSettings)
 		NetEvents:Subscribe('BotEditor', self, self._onBotEditorEvent)
-		NetEvents:Subscribe('UI_Request_CommoRose_Show', self, self._onUIRequestCommonRoseShow)
+		Events:Subscribe('BotEditor', self, self._onBotEditorEvent)
+		NetEvents:Subscribe('UI_Request_CommoRose_Show', self, self._onUIRequestCommoRoseShow)
 	end
 end
 
@@ -41,7 +42,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		return
 	end
 
-	-- Low permission for Comm-Screen --TODO: for all?
+	-- Low permission for Comm-Screen. To-do: for all?
 	if not Config.AllowCommForAll and PermissionManager:HasPermission(p_Player, 'Comm') == false then
 		ChatManager:SendMessage('You have no permissions for this action.', p_Player)
 		return
@@ -49,30 +50,30 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 
 	local request = json.decode(p_Data)
 
-	-- Comm Screen
+	-- Comm Screen.
 	if request.action == 'exit_vehicle' then
 		BotManager:ExitVehicle(p_Player)
-		NetEvents:SendTo('UI_CommonRose', p_Player, "false")
+		NetEvents:SendTo('UI_CommoRose', p_Player, "false")
 		return
 	elseif request.action == 'drop_ammo' then
 		BotManager:Deploy(p_Player, "ammo")
-		NetEvents:SendTo('UI_CommonRose', p_Player, "false")
+		NetEvents:SendTo('UI_CommoRose', p_Player, "false")
 		return
 	elseif request.action == 'drop_medkit' then
 		BotManager:Deploy(p_Player, "medkit")
-		NetEvents:SendTo('UI_CommonRose', p_Player, "false")
+		NetEvents:SendTo('UI_CommoRose', p_Player, "false")
 		return
 	elseif request.action == 'enter_vehicle' then
 		BotManager:EnterVehicle(p_Player)
-		NetEvents:SendTo('UI_CommonRose', p_Player, "false")
+		NetEvents:SendTo('UI_CommoRose', p_Player, "false")
 		return
 	elseif request.action == 'repair_vehicle' then
 		BotManager:RepairVehicle(p_Player)
-		NetEvents:SendTo('UI_CommonRose', p_Player, "false")
+		NetEvents:SendTo('UI_CommoRose', p_Player, "false")
 		return
 	elseif request.action == 'attack_objective' then
-		-- change commo-rose
-		NetEvents:SendTo('UI_CommonRose', p_Player, {
+		-- Change Commo-rose.
+		NetEvents:SendTo('UI_CommoRose', p_Player, {
 			Top = {
 				Action = 'not_implemented',
 				Label = Language:I18N(''),
@@ -95,7 +96,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 			},
 			Center = {
 				Action = 'not_implemented',
-				Label = Language:I18N('Attack') -- or "Unselect"
+				Label = Language:I18N('Attack') -- Or "Unselect".
 			},
 			Right = {
 				{
@@ -114,12 +115,12 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 			},
 			Bottom = {
 				Action = 'back_to_comm',
-				Label = Language:I18N('Back'),
+				Label = Language:I18N('Back')
 			}
 		})
 		return
 	elseif request.action == 'defend_objective' then
-		NetEvents:SendTo('UI_CommonRose', p_Player, {
+		NetEvents:SendTo('UI_CommoRose', p_Player, {
 			Top = {
 				Action = 'not_implemented',
 				Label = Language:I18N(''),
@@ -142,7 +143,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 			},
 			Center = {
 				Action = 'not_implemented',
-				Label = Language:I18N('Defend') -- or "Unselect"
+				Label = Language:I18N('Defend') -- Or "Unselect".
 			},
 			Right = {
 				{
@@ -168,25 +169,25 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 	elseif string.find(request.action, 'attack_') ~= nil then
 		local s_Objective = request.action:split('_')[2]
 		BotManager:Attack(p_Player, s_Objective)
-		NetEvents:SendTo('UI_CommonRose', p_Player, "false")
+		NetEvents:SendTo('UI_CommoRose', p_Player, "false")
 		return
 	elseif string.find(request.action, "defend_") ~= nil then
 		local s_Objective = request.action:split('_')[2]
 		BotManager:Attack(p_Player, s_Objective)
-		NetEvents:SendTo('UI_CommonRose', p_Player, "false")
+		NetEvents:SendTo('UI_CommoRose', p_Player, "false")
 		return
 	elseif request.action == 'back_to_comm' then
-		self:_onUIRequestCommonRoseShow(p_Player)
+		self:_onUIRequestCommoRoseShow(p_Player)
 		return
 	end
 
-	-- General Commands
+	-- General Commands.
 	if PermissionManager:HasPermission(p_Player, 'UserInterface.BotEditor') == false then
 		ChatManager:SendMessage('You have no permissions for this action.', p_Player)
 		return
 	end
 
-	-- Settings
+	-- Settings.
 	if request.action == 'request_settings' then
 		if Config.Language == nil then
 			Config.Language = 'en_US'
@@ -194,7 +195,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 
 		-- request.opened
 		NetEvents:SendTo('UI_Settings', p_Player, Config)
-	-- Bots
+	-- Bots.
 	elseif request.action == 'bot_spawn_default' then
 		local amount = tonumber(request.value)
 		local team = p_Player.teamId
@@ -209,7 +210,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		local amount = tonumber(request.value)
 		Globals.SpawnMode = "manual"
 		BotSpawner:SpawnWayBots(p_Player, amount, true, 0, 0, p_Player.teamId)
-	elseif request.action == 'bot_spawn_path' then --todo: whats the difference? make a function to spawn bots on a fixed way instead?
+	elseif request.action == 'bot_spawn_path' then -- To-do: what's the difference? Make a function to spawn bots on a fixed way instead?
 		local amount = 1
 		local indexOnPath = tonumber(request.pointindex) or 1
 		local index = tonumber(request.value)
@@ -236,7 +237,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 	elseif request.action == 'bot_kill_all' then
 		Globals.SpawnMode = "manual"
 		BotManager:KillAll()
-	elseif request.action == 'bot_respawn' then --toggle this function
+	elseif request.action == 'bot_respawn' then -- Toggle this function.
 		local respawning = not Globals.RespawnWayBots
 		Globals.RespawnWayBots = respawning
 		BotManager:SetOptionForAll('respawn', respawning)
@@ -246,7 +247,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		else
 			ChatManager:Yell(Language:I18N('Bot respawn deactivated!', request.action), 2.5)
 		end
-	elseif request.action == 'bot_attack' then --toggle this function
+	elseif request.action == 'bot_attack' then -- Toggle this function.
 		local attack = not Globals.AttackWayBots
 		Globals.AttackWayBots = attack
 		BotManager:SetOptionForAll('shoot', attack)
@@ -256,7 +257,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		else
 			ChatManager:Yell(Language:I18N('Bots will not attack!', request.action), 2.5)
 		end
-	-- Trace
+	-- Trace.
 	elseif request.action == 'trace_start' then
 		m_NodeEditor:StartTrace(p_Player)
 	-- NetEvents:SendToLocal('ClientNodeEditor:StartTrace', p_Player)
@@ -297,7 +298,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		m_NodeEditor:OnCloseEditor(p_Player)
 		NetEvents:SendTo('UI_Waypoints_Editor', p_Player, false)
 	else
-		ChatManager:Yell(Language:I18N('%s is currently not implemented.', request.action), 2.5)
+		ChatManager:Yell(Language:I18N('%s is currently not implemented', request.action), 2.5)
 	end
 end
 
@@ -320,7 +321,7 @@ function FunBotUIServer:_onUIRequestSaveSettings(p_Player, p_Data)
 	self:_writeSettings(p_Player, request)
 end
 
-function FunBotUIServer:_onUIRequestCommonRoseShow(p_Player, p_Data)
+function FunBotUIServer:_onUIRequestCommoRoseShow(p_Player, p_Data)
 	if Config.DisableUserInterface == true then
 		return
 	end
@@ -331,10 +332,10 @@ function FunBotUIServer:_onUIRequestCommonRoseShow(p_Player, p_Data)
 	end
 
 	if Debug.Server.UI then
-		print(p_Player.name .. ' requesting show CommonRose.')
+		print(p_Player.name .. ' requesting show CommoRose.')
 	end
 
-	NetEvents:SendTo('UI_CommonRose', p_Player, {
+	NetEvents:SendTo('UI_CommoRose', p_Player, {
 		Top = {
 			Action = 'not_implemented',
 			Label = Language:I18N(''),
@@ -356,7 +357,7 @@ function FunBotUIServer:_onUIRequestCommonRoseShow(p_Player, p_Data)
 		},
 		Center = {
 			Action = 'not_implemented',
-			Label = Language:I18N('Commands') -- or "Unselect"
+			Label = Language:I18N('Commands') -- Or "Unselect".
 		},
 		Right = {
 			{
@@ -380,7 +381,7 @@ function FunBotUIServer:_onUIRequestCommonRoseShow(p_Player, p_Data)
 	})
 end
 
-function FunBotUIServer:_onUIRequestCommonRoseHide(p_Player, p_Data)
+function FunBotUIServer:_onUIRequestCommoRoseHide(p_Player, p_Data)
 	if Config.DisableUserInterface == true then
 		return
 	end
@@ -391,10 +392,10 @@ function FunBotUIServer:_onUIRequestCommonRoseHide(p_Player, p_Data)
 	end
 
 	if Debug.Server.UI then
-		print(p_Player.name .. ' requesting hide CommonRose.')
+		print(p_Player.name .. ' requesting hide CommoRose.')
 	end
 
-	NetEvents:SendTo('UI_CommonRose', p_Player, 'false')
+	NetEvents:SendTo('UI_CommoRose', p_Player, 'false')
 end
 
 function FunBotUIServer:_onUIRequestOpen(p_Player, p_Data)
@@ -437,14 +438,14 @@ function FunBotUIServer:_writeSettings(p_Player, p_Request)
 	end
 
 	for _, l_Item in pairs(SettingsDefinition.Elements) do
-		-- validate requests
+		-- Validate requests.
 		if p_Request[l_Item.Name] ~= nil then
 			local s_Changed = false
 			local s_Value = nil
 			local s_Valid = false
 
 			if l_Item.Type == Type.Enum then
-				-- convert value back
+				-- Convert value back.
 				for l_Key, l_Value in pairs(l_Item.Reference) do
 					if l_Key == p_Request[l_Item.Name] and l_Key ~= "Count" then
 						s_Value = l_Value
@@ -503,14 +504,14 @@ function FunBotUIServer:_writeSettings(p_Player, p_Request)
 				end
 			end
 
-			-- update with value or with current Config. Update is needed to not loose Config Values
+			-- Update with value or with current Config. Update is needed to not lose Config Values.
 			if s_Valid then
 				m_SettingsManager:Update(l_Item.Name, s_Value, temporary, batched)
 			else
 				m_SettingsManager:Update(l_Item.Name, Config[l_Item.Name], temporary, batched)
 			end
 
-			-- check for update flags
+			-- Check for update flags.
 			if s_Changed then
 				if l_Item.UpdateFlag == UpdateFlag.WeaponSets then
 					updateWeaponSets = true
@@ -529,24 +530,24 @@ function FunBotUIServer:_writeSettings(p_Player, p_Request)
 		end
 	end
 
-	-- Language of UI
+	-- Language of UI.
 	if updateLanguage then
 		Language:loadLanguage(Config.Language)
 		NetEvents:SendTo('UI_Change_Language', p_Player, Config.Language)
 	end
 
-	-- Call batched process
+	-- Call batched process.
 	if batched then
 		Database:ExecuteBatch()
 	end
 
 	if temporary then
-		ChatManager:Yell(Language:I18N('Settings has been saved temporarily.'), 2.5)
+		ChatManager:Yell(Language:I18N('Settings has been saved temporarily'), 2.5)
 	else
-		ChatManager:Yell(Language:I18N('Settings has been saved.'), 2.5)
+		ChatManager:Yell(Language:I18N('Settings has been saved'), 2.5)
 	end
 
-	-- update Weapons if needed
+	-- Update Weapons if needed.
 	if updateWeaponSets then
 		WeaponList:UpdateWeaponList()
 	end
@@ -570,7 +571,7 @@ function FunBotUIServer:_writeSettings(p_Player, p_Request)
 		BotSpawner:UpdateBotAmountAndTeam()
 	end
 
-	-- @ToDo create Error Array and dont hide if has values
+	-- To-do: create Error Array and don't hide if it has values.
 	NetEvents:SendTo('UI_Settings', p_Player, false)
 end
 

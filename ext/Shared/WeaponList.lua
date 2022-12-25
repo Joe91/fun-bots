@@ -18,7 +18,7 @@ require('__shared/WeaponLists/ScavengerWeaponList')
 ---@type Logger
 local m_Logger = Logger("WeaponList", Debug.Shared.MODIFICATIONS)
 
--- create globals
+-- Create globals.
 Weapons = {}
 
 AssaultPrimary = {}
@@ -32,7 +32,7 @@ ScavengerWeapons = {}
 function WeaponList:__init()
 	self._weapons = {
 		---------------------------
-		-- shotguns
+		-- Shotguns.
 
 		Weapon('DAO-12_Flechette', '', { 'Weapons/DAO-12/U_DAO-12_Flechette', 'Kobra', 'ExtendedMag' }, WeaponTypes.Shotgun,
 			'Weapons/DAO-12/U_DAO-12'),
@@ -57,7 +57,7 @@ function WeaponList:__init()
 			WeaponTypes.Shotgun, 'Weapons/XP2_SPAS12/U_SPAS12'),
 		Weapon('SPAS12_Frag', 'XP2', { 'Weapons/XP2_SPAS12/U_SPAS12_Frag', 'Kobra', 'ExtendedMag' }, WeaponTypes.Shotgun,
 			'Weapons/XP2_SPAS12/U_SPAS12'),
-		--TODO: Get Damage-Values and Speed of other ammo
+		-- To-do: Get Damage-Values and Speed of other ammo.
 		Weapon('SPAS12_Slug', 'XP2', { 'Weapons/XP2_SPAS12/U_SPAS12_Slug', 'Kobra', 'ExtendedMag' }, WeaponTypes.Shotgun,
 			'Weapons/XP2_SPAS12/U_SPAS12'),
 		Weapon('USAS-12_Flechette', '', { 'Weapons/USAS-12/U_USAS-12_Flechette', 'ExtendedMag', 'Kobra' }, WeaponTypes.Shotgun
@@ -80,7 +80,7 @@ function WeaponList:__init()
 			'Weapons/Remington870/U_870'),
 
 		---------------------------
-		--assault
+		-- Assault.
 
 		Weapon('AEK971_Kobra', '', { 'Kobra', 'Weapons/Common/NoSecondaryRail', 'Flashsuppressor' }, WeaponTypes.Assault,
 			'Weapons/AEK971/U_AEK971'),
@@ -125,7 +125,7 @@ function WeaponList:__init()
 			'Weapons/XP2_SCAR-L/U_SCAR-L'),
 
 		---------------------------
-		-- PDW --------------------
+		-- PDW
 
 		Weapon('ASVal_Kobra', '', { 'Kobra', 'ExtendedMag', 'Weapons/Common/NoSecondaryAccessory' }, WeaponTypes.PDW,
 			'Weapons/ASVal/U_ASVal'),
@@ -155,7 +155,7 @@ function WeaponList:__init()
 		Weapon('Crossbow_RifleScope', '', {}, WeaponTypes.PDW, 'Weapons/XP4_Crossbow_Prototype/U_Crossbow_Scoped_RifleScope'),
 
 		---------------------------
-		--Carbines
+		-- Carbines.
 
 		Weapon('A91_Kobra', '', { 'Kobra', 'HeavyBarrel', 'Foregrip' }, WeaponTypes.Carabine, 'Weapons/A91/U_A91'),
 		Weapon('A91_RX01', '', { 'RX_01', 'HeavyBarrel', 'Foregrip' }, WeaponTypes.Carabine, 'Weapons/A91/U_A91'),
@@ -189,7 +189,7 @@ function WeaponList:__init()
 		Weapon('SG553LB_RX01', '', { 'RX01', 'HeavyBarrel', 'Foregrip' }, WeaponTypes.Carabine, 'Weapons/SG553LB/U_SG553LB'),
 
 		---------------------------
-		--LMG
+		-- LMG
 
 		Weapon('L86_RX01', 'XP2', { 'RX01', 'HeavyBarrel', 'Foregrip' }, WeaponTypes.LMG, 'Weapons/XP2_L86/U_L86'),
 		Weapon('L86_Kobra', 'XP2', { 'Kobra', 'HeavyBarrel', 'Foregrip' }, WeaponTypes.LMG, 'Weapons/XP2_L86/U_L86'),
@@ -222,7 +222,7 @@ function WeaponList:__init()
 		Weapon('M240_Kobra', '', { 'Kobra', 'ExtendedMag', 'Foregrip', 'CAMO_2' }, WeaponTypes.LMG, 'Weapons/M240/U_M240'),
 
 		---------------------------
-		-- Sniper
+		-- Sniper.
 
 		Weapon('JNG90_Kobra', 'XP2', { 'Kobra', 'StraightPull', 'Target_Pointer', 'CAMO_2' }, WeaponTypes.Sniper,
 			'Weapons/XP2_JNG90/U_JNG90'),
@@ -280,7 +280,7 @@ function WeaponList:__init()
 			WeaponTypes.Sniper, 'Weapons/SVD/U_SVD'),
 
 		---------------------------
-		-- pistols
+		-- Pistols.
 
 		Weapon('Glock17', '', {}, WeaponTypes.Pistol, 'Weapons/Glock17/U_Glock17'),
 		Weapon('Glock17_Silenced', '', {}, WeaponTypes.Pistol, 'Weapons/Glock17/U_Glock17_Silenced'),
@@ -301,13 +301,13 @@ function WeaponList:__init()
 		Weapon('MP443_Silenced', '', {}, WeaponTypes.Pistol, 'Weapons/MP443/U_MP443_Silenced'),
 
 		---------------------------
-		-- knifes
+		-- Knifes.
 
 		Weapon('Razor', '', {}, WeaponTypes.Knife, 'Weapons/XP2_Knife_RazorBlade/U_Knife_Razor'),
 		Weapon('Knife', '', {}, WeaponTypes.Knife),
 
 		---------------------------
-		-- Sidearms
+		-- Sidearms.
 
 		Weapon('SMAW', '', {}, WeaponTypes.Rocket),
 		Weapon('RPG7', '', {}, WeaponTypes.Rocket),
@@ -353,7 +353,7 @@ function WeaponList:_isCustomWeapon(p_Class, p_Name, p_Team)
 	end
 
 	for _, l_CustomName in pairs(s_CustomWeaponList) do
-		if l_CustomName == p_Name or string.find(p_Name, l_CustomName .. "_") ~= nil then -- use all fitting weapon-variants of this type
+		if l_CustomName == p_Name or string.find(p_Name, l_CustomName .. "_") ~= nil then -- Use all fitting weapon-variants of this type.
 			s_IsCustomWeapon = true
 			break
 		end
@@ -364,7 +364,7 @@ end
 
 function WeaponList:_useWeaponScavenger(p_Name)
 	for _, l_ScavengerName in pairs(ScavengerWeaponList) do
-		if l_ScavengerName == p_Name or string.find(p_Name, l_ScavengerName .. "_") ~= nil then -- use all fitting weapon-variants of this type
+		if l_ScavengerName == p_Name or string.find(p_Name, l_ScavengerName .. "_") ~= nil then -- Use all fitting weapon-variants of this type.
 			return true
 		end
 	end
@@ -395,7 +395,7 @@ function WeaponList:_useWeaponType(p_Class, p_Type, p_Name, p_Team)
 		if p_Type == WeaponTypes.LMG then
 			s_IsClassWeapon = true
 		end
-	else --if p_Class == BotKits.Recon then
+	else -- if p_Class == BotKits.Recon then
 		s_WeaponSet = Config.ReconWeaponSet
 
 		if p_Type == WeaponTypes.Sniper then
@@ -403,10 +403,10 @@ function WeaponList:_useWeaponType(p_Class, p_Type, p_Name, p_Team)
 		end
 	end
 
-	-- check for custom-weapon
+	-- Check for custom-weapon.
 	if s_WeaponSet == WeaponSets.Custom then
 		s_UseThisWeapon = self:_isCustomWeapon(p_Class, p_Name, p_Team)
-	else -- check for other p_Classes
+	else -- Check for other p_Classes.
 		if p_Type == WeaponTypes.PDW then
 			if s_WeaponSet == WeaponSets.PDW or
 				s_WeaponSet == WeaponSets.Class_PDW or
@@ -432,7 +432,7 @@ function WeaponList:_useWeaponType(p_Class, p_Type, p_Name, p_Team)
 				end
 			end
 		else
-			-- for all other weapons - use p_Class-list
+			-- For all other weapons - use p_Class-list.
 			s_UseThisWeapon = self:_isCustomWeapon(p_Class, p_Name, p_Team)
 		end
 	end
@@ -443,7 +443,7 @@ end
 function WeaponList:_typeToBotWeapon(p_WeaponType)
 	local s_BotWeaponType = nil
 
-	-- translate type to BotWeapon
+	-- Translate type to BotWeapon.
 	if p_WeaponType == WeaponTypes.Assault or
 		p_WeaponType == WeaponTypes.Carabine or
 		p_WeaponType == WeaponTypes.LMG or
@@ -482,7 +482,7 @@ function WeaponList:_insertWeapon(p_Kit, p_WeaponType, p_WeaponName, p_Team)
 		table.insert(Weapons[p_Kit][s_BotWeaponType][p_Team], p_WeaponName)
 	end
 
-	if s_BotWeaponType == BotWeapons.Primary and p_Team == "US" then -- only insert primaries once
+	if s_BotWeaponType == BotWeapons.Primary and p_Team == "US" then -- Only insert primaries once.
 		if p_Kit == BotKits.Assault then
 			table.insert(AssaultPrimary, p_WeaponName)
 		elseif p_Kit == BotKits.Engineer then
@@ -505,14 +505,14 @@ function WeaponList:UpdateWeaponList()
 	ReconPrimary = {}
 
 	Weapons = {}
-	-- clear-weapons-table
+	-- Clear weapons-table.
 	for l_Key, l_Value in pairs(BotKits) do
 		if l_Value ~= BotKits.Count and l_Value ~= BotKits.RANDOM_KIT then
 			Weapons[l_Value] = {}
 		end
 	end
 
-	-- clear scavenger-table
+	-- Clear scavenger-table.
 	for l_key, l_Value in pairs(BotWeapons) do
 		if l_Value ~= BotWeapons.Auto then
 			ScavengerWeapons[l_Value] = {}
@@ -578,7 +578,7 @@ function WeaponList:getWeapon(p_Name)
 	end
 
 	for _, l_Weapon in pairs(self._weapons) do
-		if string.find(l_Weapon.name, p_Name .. "_") ~= nil then -- check for weapon-variant
+		if string.find(l_Weapon.name, p_Name .. "_") ~= nil then -- Check for weapon-variant.
 			table.insert(s_AllPossibleWeapons, l_Weapon)
 		end
 

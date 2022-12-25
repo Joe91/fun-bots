@@ -51,7 +51,7 @@ function Console:OnConsoleCommandSaveAll(p_Player, p_Args)
 end
 
 function Console:RegisterConsoleCommands(p_Player)
-	-- generate list out of Name, Default, Description
+	-- Generate list out of Name, Default, Description.
 	if PermissionManager:HasPermission(p_Player, 'UserInterface.Settings') == false then
 		NetEvents:SendToLocal('ConsoleCommands:PrintResponse', p_Player,
 			"No Commands registered because of missing permissions")
@@ -65,7 +65,7 @@ function Console:RegisterConsoleCommands(p_Player)
 		NetEvents:SendToLocal('ConsoleCommands:RegisterCommands', p_Player, s_CommandList)
 	end
 
-	-- register events for NodeEditor
+	-- Register events for NodeEditor.
 	if PermissionManager:HasPermission(p_Player, 'UserInterface.WaypointEditor') == false then
 		NetEvents:SendToLocal('ConsoleCommands:PrintResponse', p_Player,
 			"No Nodeeditor-Commands registered because of missing permissions")

@@ -5,7 +5,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for taking the time to fill out this bug report! Before posting be sure that it's not a duplicate of any previous posted issues by using the search function.
+        Thanks for taking the time to fill out this bug report! Before posting, be sure that it's not a duplicate of any previous posted issues by using the search function.
         Please note that we do not support outdated versions. Always use the latest stable release.
         Do not use this form for reporting issues related to traces. Use the 'Report traces bug' form.
   - type: dropdown
@@ -28,7 +28,7 @@ body:
     id: what-happened
     attributes:
       label: What happened?
-      description: What happened what should not have happened? Please also tell us how we can reproduce it, the more information we have the faster and easier it is for us to fix this issue.
+      description: What happened and what should not have happened? Please also tell us how we can reproduce it, the more information we have, the faster and easier it is for us to fix this issue.
       placeholder: Tell us what you see!
     validations:
       required: true

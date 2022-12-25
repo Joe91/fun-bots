@@ -5,7 +5,7 @@ Utilities = class('Utilities')
 require('__shared/Config')
 
 function Utilities:__init()
-	-- nothing to do
+	-- Nothing to do.
 end
 
 function Utilities:getCameraPos(p_Player, p_IsTarget, p_AimForHead)
@@ -16,7 +16,7 @@ function Utilities:getTargetHeight(p_Soldier, p_IsTarget, p_AimForHead)
 	local s_CameraHeight = 0
 
 	if not p_IsTarget then
-		s_CameraHeight = 1.6 --bot.soldier.pose == CharacterPoseType.CharacterPoseType_Stand
+		s_CameraHeight = 1.6 -- bot.soldier.pose == CharacterPoseType.CharacterPoseType_Stand
 
 		if p_Soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
 			s_CameraHeight = 0.3
@@ -24,20 +24,20 @@ function Utilities:getTargetHeight(p_Soldier, p_IsTarget, p_AimForHead)
 			s_CameraHeight = 1.0
 		end
 	elseif p_IsTarget and p_AimForHead then
-		s_CameraHeight = 1.65 --bot.soldier.pose == CharacterPoseType.CharacterPoseType_Stand
+		s_CameraHeight = 1.65 -- bot.soldier.pose == CharacterPoseType.CharacterPoseType_Stand
 
 		if p_Soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
 			s_CameraHeight = 0.25
 		elseif p_Soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
 			s_CameraHeight = 1.05
 		end
-	else --aim a little lower
-		s_CameraHeight = 1.1 --bot.soldier.pose == CharacterPoseType.CharacterPoseType_Stand - reduce by 0.5
+	else -- Aim a little lower.
+		s_CameraHeight = 1.1 -- bot.soldier.pose == CharacterPoseType.CharacterPoseType_Stand - reduce by 0.5
 
 		if p_Soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
-			s_CameraHeight = 0.2 -- reduce by 0.1
+			s_CameraHeight = 0.2 -- Reduce by 0.1
 		elseif p_Soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
-			s_CameraHeight = 0.7 -- reduce by 0.3
+			s_CameraHeight = 0.7 -- Reduce by 0.3
 		end
 	end
 
@@ -76,8 +76,8 @@ function Utilities:DistanceFast(p_PosA, p_PosB)
 		math.abs(p_PosA.z - p_PosB.z))
 end
 
--- do not use on numerically indexed tables, only tables with string keys
--- this is shallow merge, does not recurse deeper than one p_Level
+-- Do not use on numerically indexed tables, only tables with string keys.
+-- This is a shallow merge, does not recurse deeper than one p_Level.
 function Utilities:mergeKeys(p_OriginalTable, p_NewData)
 	for l_Key, l_Value in pairs(p_NewData) do
 		p_OriginalTable[l_Key] = l_Value
@@ -86,11 +86,11 @@ function Utilities:mergeKeys(p_OriginalTable, p_NewData)
 	return p_OriginalTable
 end
 
--- <object|o> | The object to dump
--- <boolean|p_Format> | If enabled, tab-spacing and newlines are used
--- <int|p_MaxLevels> | Max recursion level, defaults to -1 for infinite
--- <int|level> | Current recursion level
--- returns <string> | a string representation of the object
+-- <object|o> | The object to dump.
+-- <boolean|p_Format> | If enabled, tab-spacing and newlines are used.
+-- <int|p_MaxLevels> | Max recursion level, defaults to -1 for infinite.
+-- <int|level> | Current recursion level.
+-- Returns <string> | a string representation of the object.
 function Utilities:dump(o, p_Format, p_MaxLevels, p_Level)
 	local s_Tablevel = ''
 	local s_Tablevellessone = ''

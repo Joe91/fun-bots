@@ -13,16 +13,17 @@ function FunBotUIClient:__init()
 	self.m_InWaypointEditor = false
 	self.m_InCommScreen = false
 	self.m_WaitForKeyLeft = false
-	self.m_LastWaypointEditorState = false
 
 	if Config.DisableUserInterface ~= true then
 		NetEvents:Subscribe('UI_Toggle', self, self._onUIToggle)
 		Events:Subscribe('UI_Toggle', self, self._onUIToggle)
 		NetEvents:Subscribe('BotEditor', self, self._onBotEditorEvent)
 		Events:Subscribe('BotEditor', self, self._onBotEditorEvent)
+		NetEvents:Subscribe('PathMenu:Request', self, self._OnPathMenuRequest)
+		Events:Subscribe('PathMenu:Request', self, self._OnPathMenuRequest)
 		NetEvents:Subscribe('UI_Show_Toolbar', self, self._onUIShowToolbar)
 		NetEvents:Subscribe('UI_Settings', self, self._onUISettings)
-		NetEvents:Subscribe('UI_CommonRose', self, self._onUICommonRose)
+		NetEvents:Subscribe('UI_CommoRose', self, self._onUICommoRose)
 		Events:Subscribe('UI_Settings', self, self._onUISettings)
 		Events:Subscribe('UI_Save_Settings', self, self._onUISaveSettings)
 		NetEvents:Subscribe('UI_Change_Language', self, self._onUIChangeLanguage)
@@ -43,7 +44,7 @@ function FunBotUIClient:__init()
 	end
 end
 
--- Events
+-- Events.
 function FunBotUIClient:_onUIToggle()
 	if Config.DisableUserInterface == true then
 		return
@@ -54,26 +55,27 @@ function FunBotUIClient:_onUIToggle()
 	end
 
 	self._views:execute('BotEditor.Hide()')
+	-- NetEvents:Send('PathMenu:Hide')
 	self._views:disable()
 
-	--if self._views:isVisible() then
-	--self._views:close()
-	--else
-	--self._views:open()
-	--self._views:focus()
-	--end
+	-- if self._views:isVisible() then
+	-- self._views:close()
+	-- else
+	-- self._views:open()
+	-- self._views:focus()
+	-- end
 end
 
-function FunBotUIClient:_onUICommonRose(p_Data)
+function FunBotUIClient:_onUICommoRose(p_Data)
 	if p_Data == "false" then
-		self._views:execute('BotEditor.setCommonRose(false)')
+		self._views:execute('BotEditor.setCommoRose(false)')
 		self._views:blur()
 		self.m_InCommScreen = false
 		self.m_WaitForKeyLeft = true
 		return
 	end
 
-	self._views:execute('BotEditor.setCommonRose(\'' .. json.encode(p_Data) .. '\')')
+	self._views:execute('BotEditor.setCommoRose(\'' .. json.encode(p_Data) .. '\')')
 	self._views:focusMouse()
 	self.m_InCommScreen = true
 end
@@ -93,11 +95,10 @@ function FunBotUIClient:_onUIWaypointsEditor(p_State)
 		end
 
 		self._views:hide('waypoint_toolbar')
+		self._views:execute('BotEditor.setCommoRose(false)')
 		self._views:show('toolbar')
 		Config.DebugTracePaths = false
 		self.m_InWaypointEditor = false
-		self.m_LastWaypointEditorState = false
-		NetEvents:Send('UI_CommoRose_Enabled', false)
 		g_ClientNodeEditor:OnSetEnabled(false)
 		g_ClientSpawnPointHelper:OnSetEnabled(false)
 	else
@@ -106,19 +107,18 @@ function FunBotUIClient:_onUIWaypointsEditor(p_State)
 		end
 
 		Config.DebugTracePaths = true
-		NetEvents:Send('UI_CommoRose_Enabled', true)
 		g_ClientNodeEditor:OnSetEnabled(true)
 		g_ClientSpawnPointHelper:OnSetEnabled(true)
 		self._views:show('waypoint_toolbar')
 		self._views:hide('toolbar')
 		self.m_InWaypointEditor = true
-		self.m_LastWaypointEditorState = false
 		self._views:disable()
 	end
 end
 
 function FunBotUIClient:_onUIWaypointsEditorDisable()
 	if self.m_InWaypointEditor then
+		NetEvents:Send('PathMenu:Hide')
 		self._views:disable()
 	end
 end
@@ -153,6 +153,7 @@ function FunBotUIClient:_onUITrace(p_State)
 	end
 
 	self._views:execute('BotEditor.toggleTraceRun(' .. tostring(p_State) .. ')')
+	NetEvents:Send('PathMenu:Hide')
 	self._views:disable()
 end
 
@@ -167,7 +168,7 @@ function FunBotUIClient:_onUISettings(p_Data)
 		end
 
 		self._views:hide('settings')
-		--self._views:blur()
+		-- self._views:blur()
 		return
 	end
 
@@ -177,7 +178,7 @@ function FunBotUIClient:_onUISettings(p_Data)
 
 	local settings = UISettings()
 
-	-- Samples
+	-- Samples.
 	-- add(<category>, <types>, <name>, <title>, <value>, <default>, <description>)
 	-- addList(<category>, <name>, <title>, <list>, <value>, <default>, <description>)
 
@@ -185,7 +186,7 @@ function FunBotUIClient:_onUISettings(p_Data)
 		local s_TypeString = ""
 
 		if l_Item.Type == Type.Enum then
-			-- create table out of Enum
+			-- Create table out of Enum.
 			local s_EnumTable = {}
 			local s_Default = ""
 			local s_Value = ""
@@ -262,8 +263,16 @@ function FunBotUIClient:_onBotEditorEvent(p_Data)
 		print('UIClient: BotEditor (' .. p_Data .. ')')
 	end
 
-	-- Redirect to Server
+	-- Redirect to Server.
 	NetEvents:Send('BotEditor', p_Data)
+end
+
+function FunBotUIClient:_OnPathMenuRequest(p_Data)
+	if Config.DisableUserInterface == true or not self.m_InWaypointEditor then
+		return
+	end
+	-- Redirect to Server.
+	NetEvents:Send('PathMenu:Request', p_Data)
 end
 
 function FunBotUIClient:_onUIShowToolbar(p_Data)
@@ -296,15 +305,10 @@ function FunBotUIClient:OnClientUpdateInput(p_DeltaTime)
 			print('Client send: UI_Request_Open')
 		end
 
-		-- This request can be used for UI-Toggle
+		-- This request can be used for UI-Toggle.
 		if self.m_InWaypointEditor then
-			if self.m_LastWaypointEditorState == false then
-				self._views:enable()
-				self.m_LastWaypointEditorState = true
-			else
-				self._views:disable()
-				self.m_LastWaypointEditorState = false
-			end
+			self._views:enable()
+			NetEvents:Send('PathMenu:Unhide')
 		else
 			NetEvents:Send('UI_Request_Open')
 		end
@@ -312,17 +316,14 @@ function FunBotUIClient:OnClientUpdateInput(p_DeltaTime)
 		return
 	elseif InputManager:WentKeyUp(InputDeviceKeys.IDK_LeftAlt) and self.m_InWaypointEditor then
 		self._views:enable()
-		self.m_LastWaypointEditorState = true
-	elseif InputManager:WentKeyDown(InputDeviceKeys.IDK_LeftAlt) and self.m_InWaypointEditor then
-		self._views:disable()
-		self.m_LastWaypointEditorState = false
+		NetEvents:Send('PathMenu:Unhide')
 	elseif InputManager:WentKeyDown(Registry.COMMON.BOT_COMMAND_KEY) and not self.m_InWaypointEditor and
 		not self.m_InCommScreen and not self.m_WaitForKeyLeft then
 		NetEvents:Send('UI_Request_CommoRose_Show')
 	elseif InputManager:WentKeyUp(Registry.COMMON.BOT_COMMAND_KEY) and not self.m_InWaypointEditor and
 		(self.m_InCommScreen or self.m_WaitForKeyLeft) then
 		if self.m_InCommScreen then
-			self:_onUICommonRose("false") --TODO: Remove Permission-Check?
+			self:_onUICommoRose("false") -- To-do: Remove Permission-Check?
 		end
 
 		self.m_WaitForKeyLeft = false

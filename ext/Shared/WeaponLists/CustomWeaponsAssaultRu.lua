@@ -1,57 +1,57 @@
 ---@class CustomWeaponsAssaultRu
 CustomWeaponsAssaultRu = {
 	-- Assault Rifles
-	'AEK971', --ru
-	'AN94', --ru
-	'AK74M', --ru
-	-- 'SteyrAug', --us
-	-- 'F2000', --both/none
-	-- 'FAMAS', --us
-	-- 'G3A3', --both/none
-	'KH2002', --ru
-	-- 'L85A2', --us
-	-- 'M16A4', --us
-	-- 'M16-Burst', --us
-	-- 'M416', --us
-	-- 'SCAR-L', --us
+	'AEK971', -- RU
+	'AN94', -- RU
+	'AK74M', -- RU
+	-- 'SteyrAug', -- US
+	-- 'F2000', -- Both/None
+	-- 'FAMAS', -- US
+	-- 'G3A3', -- Both/None
+	'KH2002', -- RU
+	-- 'L85A2', -- US
+	-- 'M16A4', -- US
+	-- 'M16-Burst', -- US
+	-- 'M416', -- US
+	-- 'SCAR-L', -- US
 
 	-- Shotguns
-	-- 'DAO-12', --ru
-	-- 'Jackhammer', --us
-	-- 'Saiga20', --ru
-	-- 'SPAS12', --us
-	-- 'USAS-12', --ru
-	-- 'M1014', --us
-	-- '870M', --us
+	-- 'DAO-12', -- RU
+	-- 'Jackhammer', -- US
+	-- 'Saiga20', -- RU
+	-- 'SPAS12', -- US
+	-- 'USAS-12', -- RU
+	-- 'M1014', -- US
+	-- '870M', -- US
 
 	-- PDW
-	-- 'ASVal', --ru
-	-- 'MP7', --us
-	-- 'P90', --us
-	-- 'PP-19', --ru
-	-- 'PP2000', --ru
-	-- 'UMP45', --us
-	-- 'MP5K', --us
-	-- 'MagpulPDR', --us
-	-- 'Crossbow', --both
+	-- 'ASVal', -- RU
+	-- 'MP7', -- US
+	-- 'P90', -- US
+	-- 'PP-19', -- RU
+	-- 'PP2000', -- RU
+	-- 'UMP45', -- US
+	-- 'MP5K', -- US
+	-- 'MagpulPDR', -- US
+	-- 'Crossbow', -- Both
 
-	-- Pisotls
-	'Glock17', --both
-	-- 'Glock17_Silenced', --both
-	'Glock18', --both
-	-- 'Glock18_Silenced', --both
-	-- 'M1911_Lit', --us
-	-- 'M1911_Silenced', --us
-	-- 'M1911_Tactical', --us
-	-- 'M9', --us
-	-- 'M9_Silenced', --us
-	-- 'M9_Tactical', --us
-	-- 'M93R', --us
-	'MP412Rex', --ru
-	-- 'Taurus44', --both
-	'MP443', --ru
-	-- 'MP443_Tactical', --ru
-	-- 'MP443_Silenced', --ru
+	-- Pistols
+	'Glock17', -- Both
+	-- 'Glock17_Silenced', -- Both
+	'Glock18', -- Both
+	-- 'Glock18_Silenced', -- Both
+	-- 'M1911_Lit', -- US
+	-- 'M1911_Silenced', -- US
+	-- 'M1911_Tactical', -- US
+	-- 'M9', -- US
+	-- 'M9_Silenced', -- US
+	-- 'M9_Tactical', -- US
+	-- 'M93R', -- US
+	'MP412Rex', -- RU
+	-- 'Taurus44', -- Both
+	'MP443', -- RU
+	-- 'MP443_Tactical', -- RU
+	-- 'MP443_Silenced', -- RU
 
 	-- Gadget 1
 	'Medkit',

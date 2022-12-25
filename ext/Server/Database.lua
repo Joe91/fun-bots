@@ -7,7 +7,7 @@ require('__shared/ArrayMap')
 local m_Batches = ArrayMap()
 local m_Batched = ''
 ---@type Logger
-local m_Logger = Logger("Database", Debug.Server.DATABASE)
+local m_Logger = Logger('Database', Debug.Server.DATABASE)
 
 DatabaseField = {
 	NULL = '{::DB:NULL::}',
@@ -24,7 +24,7 @@ function Database:__init()
 	self.m_LastError = nil
 end
 
--- this is unused
+-- This is unused.
 function Database:GetLastError()
 	return self.m_LastError
 end
@@ -39,11 +39,12 @@ end
 
 function Database:Query(p_Query, p_Parameters)
 	SQL:Open()
-	-- @ToDo build p_Query with given p_Parameters
+	-- To-do: build p_Query with given p_Parameters
 	local s_Result = SQL:Query(p_Query)
 
 	if not s_Result then
 		self.m_LastError = 'Failed to execute query: ' .. self:GetError()
+		m_Logger:Error(self.m_LastError)
 		SQL:Close()
 		return nil
 	end
@@ -93,7 +94,7 @@ function Database:Single(p_Query)
 	return s_Results[1]
 end
 
--- this is unused
+-- This is unused.
 function Database:Count(p_Query, p_Parameters)
 	local s_Results = self:Query(p_Query, p_Parameters)
 
@@ -127,23 +128,23 @@ function Database:Update(p_TableName, p_Parameters, p_Where)
 			s_Found = l_Value
 		end
 
-		s_Fields:add(' `' .. l_Name .. '`=' .. l_Value .. '')
+		s_Fields:add(' ' .. l_Name .. ' =' .. l_Value .. '')
 	end
 
-	m_Logger:Write('UPDATE `' .. p_TableName .. '` SET ' .. s_Fields:join(',') .. ' WHERE `' .. p_Where .. '`=' .. s_Found)
+	m_Logger:Write('UPDATE ' .. p_TableName .. ' SET ' .. s_Fields:join(', ') .. ' WHERE ' .. p_Where .. '= ' .. s_Found .. '')
 
-	return self:Query('UPDATE `' ..
-		p_TableName .. '` SET ' .. s_Fields:join(', ') .. ' WHERE `' .. p_Where .. '`=\'' .. s_Found .. '\'')
+	print(self:Query('UPDATE ' ..
+		p_TableName .. ' SET ' .. s_Fields:join(', ') .. ' WHERE ' .. p_Where .. ' = ' .. s_Found .. ''))
 end
 
--- this is unused
+-- This is unused.
 function Database:ExecuteBatch()
 	self:Query('DELETE FROM `FB_Settings`')
 	self:Query(m_Batched .. m_Batches:join(', '))
-	m_Batched = ""
+	m_Batched = ''
 	m_Batches:clear()
 
-	if self:GetError() ~= "" then
+	if self:GetError() ~= '' then
 		m_Logger:Error(self:GetError())
 	end
 end
@@ -152,7 +153,6 @@ function Database:BatchQuery(p_TableName, p_Parameters, p_Where)
 	local s_Names = ArrayMap()
 	local s_Values = ArrayMap()
 	local s_Fields = ArrayMap()
-	local s_Found = nil
 
 	for l_Name, l_Value in pairs(p_Parameters) do
 		s_Names:add('`' .. l_Name .. '`')
@@ -177,17 +177,13 @@ function Database:BatchQuery(p_TableName, p_Parameters, p_Where)
 			l_Value = tostring(l_Value)
 		end
 
-		if p_Where == l_Name then
-			s_Found = l_Value
-		end
-
 		if p_Where ~= l_Name then
 			s_Fields:add('`' .. l_Name .. '`=' .. l_Value .. '')
 		end
 	end
 
-	--m_Batches:add('UPDATE `' .. p_TableName .. '` SET ' .. s_Fields:join(', ') .. ' WHERE `' .. p_Where .. '`=\'' .. s_Found .. '\'')
-	--m_Batches:add('INSERT OR REPLACE INTO ' .. p_TableName .. ' (' .. s_Names:join(', ') .. ') VALUES (' .. s_Values:join(', ') .. ')')
+	-- m_Batches:add('UPDATE `' .. p_TableName .. '` SET ' .. s_Fields:join(', ') .. ' WHERE `' .. p_Where .. '`=\'' .. s_Found .. '\'')
+	-- m_Batches:add('INSERT OR REPLACE INTO ' .. p_TableName .. ' (' .. s_Names:join(', ') .. ') VALUES (' .. s_Values:join(', ') .. ')')
 	m_Batched = 'INSERT INTO ' .. p_TableName .. ' (' .. s_Names:join(', ') .. ') VALUES '
 	m_Batches:add('(' .. s_Values:join(', ') .. ')')
 

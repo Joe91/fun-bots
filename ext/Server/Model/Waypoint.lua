@@ -1,4 +1,3 @@
----@class WayPoint
 WayPoint = {}
 
 function WayPoint:__init()

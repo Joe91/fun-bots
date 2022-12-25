@@ -1,14 +1,14 @@
 ---@class ClientNodeEditor
 ---@overload fun():ClientNodeEditor
-ClientNodeEditor = class "ClientNodeEditor"
+ClientNodeEditor = class('ClientNodeEditor')
 
 require('__shared/Config')
 
 ---@type Logger
-local m_Logger = Logger("ClientNodeEditor", Debug.Client.NODEEDITOR)
+local m_Logger = Logger('ClientNodeEditor', Debug.Client.NODEEDITOR)
 
 function ClientNodeEditor:__init()
-	-- Data Points
+	-- Data Points.
 	self.m_LastDataPoint = nil
 	self.m_DataPoints = {}
 	self.m_TempDataPoints = {}
@@ -17,7 +17,7 @@ function ClientNodeEditor:__init()
 	self.m_NewNodeId = -1
 	self.m_NodeIdFound = false
 
-	-- caching values for drawing performance
+	-- Caching values for drawing performance.
 	self.m_PlayerPos = nil
 
 	self.m_Enabled = Config.DebugTracePaths
@@ -27,7 +27,7 @@ function ClientNodeEditor:__init()
 	self.m_CommoRoseTimer = -1
 	self.m_CommoRoseDelay = 0.25
 
-	self.m_EditMode = 'none' -- 'move', 'none', 'area'
+	self.m_EditMode = 'none' -- 'Move', 'none', 'area'
 	self.m_EditNodeStartPos = {}
 	self.m_EditModeManualOffset = Vec3.zero
 	self.m_EditModeManualSpeed = 0.05
@@ -46,14 +46,14 @@ function ClientNodeEditor:__init()
 	self.m_ObbToDraw_temp = {}
 
 	self.m_Colors = {
-		["Text"] = Vec4(1, 1, 1, 1),
-		["White"] = Vec4(1, 1, 1, 1),
-		["Red"] = Vec4(1, 0, 0, 1),
-		["Green"] = Vec4(0, 1, 0, 1),
-		["Blue"] = Vec4(0, 0, 1, 1),
-		["Purple"] = Vec4(0.5, 0, 1, 1),
-		["Ray"] = { Node = Vec4(1, 1, 1, 0.2), Line = { Vec4(1, 1, 1, 1), Vec4(0, 0, 0, 1) } },
-		["Orphan"] = { Node = Vec4(0, 0, 0, 0.5), Line = Vec4(0, 0, 0, 1) },
+		['Text'] = Vec4(1, 1, 1, 1),
+		['White'] = Vec4(1, 1, 1, 1),
+		['Red'] = Vec4(1, 0, 0, 1),
+		['Green'] = Vec4(0, 1, 0, 1),
+		['Blue'] = Vec4(0, 0, 1, 1),
+		['Purple'] = Vec4(0.5, 0, 1, 1),
+		['Ray'] = { Node = Vec4(1, 1, 1, 0.2), Line = { Vec4(1, 1, 1, 1), Vec4(0, 0, 0, 1) } },
+		['Orphan'] = { Node = Vec4(0, 0, 0, 0.5), Line = Vec4(0, 0, 0, 1) },
 		{ Node = Vec4(1, 0, 0, 0.25), Line = Vec4(1, 0, 0, 1) },
 		{ Node = Vec4(1, 0.55, 0, 0.25), Line = Vec4(1, 0.55, 0, 1) },
 		{ Node = Vec4(1, 1, 0, 0.25), Line = Vec4(1, 1, 0, 1) },
@@ -80,11 +80,12 @@ function ClientNodeEditor:__init()
 end
 
 function ClientNodeEditor:OnRegisterEvents()
-	-- simple check to make sure we don't reregister things if they are already done
+	-- Simple check to make sure we don't reregister things if they are already done.
 	if self.m_EventsReady then return end
 
 	NetEvents:Subscribe('UI_ClientNodeEditor_TraceData', self, self._OnUiTraceData)
 	NetEvents:Subscribe('ClientNodeEditor:DrawNodes', self, self._OnDrawNodes)
+	NetEvents:Subscribe('ClientNodeEditor:PrintLog', self, self._OnPrintServerLog)
 
 	NetEvents:Subscribe('UI_CommoRose_Action_Select', self, self._onSelectNode)
 	NetEvents:Subscribe('UI_CommoRose_Action_Remove', self, self._onRemoveNode)
@@ -101,17 +102,16 @@ function ClientNodeEditor:OnRegisterEvents()
 	NetEvents:Subscribe('UI_CommoRose_Action_SetInput', self, self._onSetInputNode)
 	NetEvents:Subscribe('ClientNodeEditor:SelectNewNode', self, self._onSelectNewNode)
 
-
-	--add these Events to NodeEditor
-	Console:Register('Select', 'Select or Deselect the waypoint you are looking at', self, self._onSelectNode) --done
+	-- Add these Events to NodeEditor.
+	Console:Register('Select', 'Select or Deselect the waypoint you are looking at', self, self._onSelectNode) -- Done
 	Console:Register('Remove', 'Remove selected waypoints', self, self._onRemoveNode)
 	Console:Register('Unlink', 'Unlink two waypoints', self, self._onUnlinkNode)
 	Console:Register('Merge', 'Merge selected waypoints', self, self._onMergeNode)
-	Console:Register('SelectPrevious', 'Extend selection to previous waypoint', self, self._onSelectPrevious) --done
-	Console:Register('ClearSelection', 'Clear selection', self, self._onClearSelection) --done
+	Console:Register('SelectPrevious', 'Extend selection to previous waypoint', self, self._onSelectPrevious) -- Done
+	Console:Register('ClearSelection', 'Clear selection', self, self._onClearSelection) -- Done
 	Console:Register('Move', 'toggle move mode on selected waypoints', self, self._onToggleMoveNode)
 
-	--add these Events to NodeEditor
+	-- Add these Events to NodeEditor.
 	Console:Register('Add', 'Create a new waypoint after the selected one', self, self._onAddNode)
 	Console:Register('Link', 'Link two waypoints', self, self._onLinkNode)
 	Console:Register('Split', 'Split selected waypoints', self, self._onSplitNode)
@@ -122,10 +122,10 @@ function ClientNodeEditor:OnRegisterEvents()
 		self._onSetInputNode)
 
 
-	-- -- debugging commands, not meant for UI
+	-- Debugging commands, not meant for UI.
 	Console:Register('Enabled', 'Enable / Disable the waypoint editor', self, self.OnSetEnabled)
 
-	-- add these Events for NodeEditor
+	-- Add these Events for NodeEditor.
 	Console:Register('AddObjective', '<string|Objective> - Add an objective to a path', self, self._onAddObjective)
 	Console:Register('AddMcom', 'Add an MCOM Arm/Disarm-Action to a point', self, self._onAddMcom)
 	Console:Register('AddVehicle', 'Add a vehicle a bot can use', self, self._onAddVehicle)
@@ -133,16 +133,24 @@ function ClientNodeEditor:OnRegisterEvents()
 		'<bool|OnlyPassengers> Add a point where all bots or only the passengers leaves the vehicle', self, self._onExitVehicle)
 	Console:Register('AddVehiclePath', '<string|Type> Add vehicle-usage to a path. Types = land, water, air', self,
 		self._onAddVehiclePath)
+	Console:Register('AddVehicleSpawn', 'Makes an already existing vehicle-path spawnable', self, self._onSetVehicleSpawn)
 	Console:Register('RemoveObjective', '<string|Objective> - Remove an objective from a path', self,
 		self._onRemoveObjective)
-	Console:Register('RemoveData', 'Remove all data of one or several nodes', self, self._onRemoveData)
+	Console:Register('RemoveAllObjectives', 'Remove all objectives from a path', self, self._onRemoveAllObjectives)
+	Console:Register('SetPathLoops', '<bool|Loop> - manually set loop-mode of selected path', self, self._onSetLoopMode)
+	Console:Register('AddSpawnPath', 'Makes a spawn-path of this path.', self, self._onSetSpawnPath)
+
 
 	self.m_EventsReady = true
-	self:Log('Register Events')
+	-- self:Log('Register Events')
 end
 
 function ClientNodeEditor:Log(...)
 	m_Logger:Write('ClientNodeEditor: ' .. Language:I18N(...))
+end
+
+function ClientNodeEditor:_OnPrintServerLog(p_Message)
+	m_Logger:Write('NodeEditor: ' .. p_Message)
 end
 
 function ClientNodeEditor:OnSetEnabled(p_Args)
@@ -186,7 +194,7 @@ function ClientNodeEditor:_OnDrawNodes(p_NodesToDraw, p_UpdateView)
 	end
 
 	if p_UpdateView then
-		-- copy tables
+		-- Copy tables.
 		self.m_NodesToDraw = self.m_NodesToDraw_temp
 		self.m_NodesToDraw_temp = {}
 		self.m_LinesToDraw = self.m_LinesToDraw_temp
@@ -207,7 +215,7 @@ function ClientNodeEditor:_OnDrawNodes(p_NodesToDraw, p_UpdateView)
 			self.m_EditPositionMode = 'absolute'
 			self:_onToggleMoveNode()
 		end
-		-- clear last node
+		-- Clear last node.
 		self.m_LastDataPoint = nil
 	end
 
@@ -227,18 +235,18 @@ function ClientNodeEditor:_DrawData(p_DataPoint)
 		NextPos = nil,
 		IsTrace = false,
 		IsOthersTrace = false
-	}--]]
+	}
+	--]]
 
 	local s_IsSelected = p_DataPoint.IsSelected
 	local s_QualityAtRange = p_DataPoint.DrawLine
 	local s_IsTracePath = p_DataPoint.IsTrace
-	local s_IsOtherTracePath = false
 	local s_Waypoint = p_DataPoint.Node
 
-	-- setup node color information
+	-- Setup node colour information.
 	local s_Color = self.m_Colors.Orphan
 
-	-- happens after the 20th path --TODO: add more colors?
+	-- Happens after the 20th path --To-do: add more colours?
 	if self.m_Colors[s_Waypoint.PathIndex] == nil then
 		local r, g, b = (math.random(20, 100) / 100), (math.random(20, 100) / 100), (math.random(20, 100) / 100)
 		self.m_Colors[s_Waypoint.PathIndex] = {
@@ -249,7 +257,6 @@ function ClientNodeEditor:_DrawData(p_DataPoint)
 
 	s_Color = self.m_Colors[s_Waypoint.PathIndex]
 
-
 	if s_IsTracePath then
 		s_Color = {
 			Node = self.m_Colors.White,
@@ -257,18 +264,18 @@ function ClientNodeEditor:_DrawData(p_DataPoint)
 		}
 	end
 
-	-- draw the node for the waypoint itself
+	-- Draw the node for the waypoint itself.
 	if p_DataPoint.DrawNode then
 		self:DrawSphere(s_Waypoint.Position, 0.05, s_Color.Node, false, (not s_QualityAtRange))
 
 		if self.m_ScanForNode then
 			local s_PointScreenPos = ClientUtils:WorldToScreen(s_Waypoint.Position)
 
-			-- Skip to the next point if this one isn't in view
+			-- Skip to the next point if this one isn't in view.
 			if s_PointScreenPos ~= nil then
 				local s_Center = ClientUtils:GetWindowSize() / 2
 
-				-- Select point if its close to the hitPosition
+				-- Select point if it's close to the hitPosition.
 				if s_Center:Distance(s_PointScreenPos) < 20 then
 					self.m_ScanForNode = false
 
@@ -286,25 +293,25 @@ function ClientNodeEditor:_DrawData(p_DataPoint)
 		end
 	end
 
-	-- if selected draw bigger node and transform helper
+	-- If selected, draw bigger node and transform helper.
 	if not s_IsTracePath and s_IsSelected and p_DataPoint.DrawNode then
-		-- node selection indicator
+		-- Node selection indicator.
 		self:DrawSphere(s_Waypoint.Position, 0.08, s_Color.Node, false, (not s_QualityAtRange))
 
-		-- transform marker
+		-- Transform marker.
 		self:DrawLine(s_Waypoint.Position, s_Waypoint.Position + (Vec3.up), self.m_Colors.Red, self.m_Colors.Red)
 		self:DrawLine(s_Waypoint.Position, s_Waypoint.Position + (Vec3.right * 0.5), self.m_Colors.Green, self.m_Colors.Green)
 		self:DrawLine(s_Waypoint.Position, s_Waypoint.Position + (Vec3.forward * 0.5), self.m_Colors.Blue, self.m_Colors.Blue)
 	end
 
-	-- draw connection lines
+	-- Draw connection lines.
 	if Config.DrawWaypointLines and p_DataPoint.DrawLine then
-		-- try to find a previous node and draw a line to it
+		-- Try to find a previous node and draw a line to it.
 		if p_DataPoint.NextPos then
 			self:DrawLine(p_DataPoint.NextPos, s_Waypoint.Position, s_Color.Line, s_Color.Line)
 		end
 
-		-- draw Links
+		-- Draw Links.
 		if s_Waypoint.Data and s_Waypoint.Data.LinkMode ~= nil and s_Waypoint.Data.Links ~= nil then
 			for _, l_LinkPos in pairs(p_DataPoint.Links) do
 				self:DrawLine(l_LinkPos, s_Waypoint.Position, self.m_Colors.Purple, self.m_Colors.Purple)
@@ -312,7 +319,7 @@ function ClientNodeEditor:_DrawData(p_DataPoint)
 		end
 	end
 
-	-- draw debugging text
+	-- Draw debugging text.
 	if Config.DrawWaypointIDs and p_DataPoint.DrawText then
 		if s_IsSelected then
 			local s_SpeedMode = 'N/A'
@@ -344,28 +351,28 @@ function ClientNodeEditor:_DrawData(p_DataPoint)
 
 			local s_Text = ''
 			-- s_Text = s_Text .. string.format("(%s)Pevious [ %s ] Next(%s)\n", s_PreviousNode, p_Waypoint.ID, s_NextNode)
-			s_Text = s_Text .. string.format("Index[%d]\n", s_Waypoint.Index)
-			s_Text = s_Text .. string.format("Path[%d][%d] (%s)\n", s_Waypoint.PathIndex, s_Waypoint.PointIndex, s_PathMode)
-			s_Text = s_Text .. string.format("Path Objectives: %s\n", g_Utilities:dump(p_DataPoint.Objectives, false))
-			s_Text = s_Text .. string.format("Vehicles: %s\n", g_Utilities:dump(p_DataPoint.Vehicles, false))
-			s_Text = s_Text .. string.format("InputVar: %d\n", s_Waypoint.InputVar)
-			s_Text = s_Text .. string.format("SpeedMode: %s (%d)\n", s_SpeedMode, s_Waypoint.SpeedMode)
-			s_Text = s_Text .. string.format("ExtraMode: %s (%d)\n", s_ExtraMode, s_Waypoint.ExtraMode)
-			s_Text = s_Text .. string.format("OptValue: %s (%d)\n", s_OptionValue, s_Waypoint.OptValue)
+			s_Text = s_Text .. string.format('Index[%d]\n', s_Waypoint.Index)
+			s_Text = s_Text .. string.format('Path[%d][%d] (%s)\n', s_Waypoint.PathIndex, s_Waypoint.PointIndex, s_PathMode)
+			s_Text = s_Text .. string.format('Path Objectives: %s\n', g_Utilities:dump(p_DataPoint.Objectives, false))
+			s_Text = s_Text .. string.format('Vehicles: %s\n', g_Utilities:dump(p_DataPoint.Vehicles, false))
+			s_Text = s_Text .. string.format('InputVar: %d\n', s_Waypoint.InputVar)
+			s_Text = s_Text .. string.format('SpeedMode: %s (%d)\n', s_SpeedMode, s_Waypoint.SpeedMode)
+			s_Text = s_Text .. string.format('ExtraMode: %s (%d)\n', s_ExtraMode, s_Waypoint.ExtraMode)
+			s_Text = s_Text .. string.format('OptValue: %s (%d)\n', s_OptionValue, s_Waypoint.OptValue)
 			s_Text = s_Text .. 'Data: ' .. g_Utilities:dump(s_Waypoint.Data, true)
 
 			self:DrawPosText2D(s_Waypoint.Position + Vec3.up, s_Text, self.m_Colors.Text, 1.2)
 		else
-			-- don't try to precalc this value like with the distance, another memory leak crash awaits you
+			-- Don't try to pre-calculate this value like with the distance, another memory leak crash awaits you.
 			self:DrawPosText2D(s_Waypoint.Position + (Vec3.up * 0.05), tostring(s_Waypoint.ID), self.m_Colors.Text, 1)
 		end
 	end
 
-	self.m_LastDataPoint = p_DataPoint --TODO: check if we need to perform a deep copy
+	self.m_LastDataPoint = p_DataPoint -- To-do: check if we need to perform a deep copy.
 end
 
 function ClientNodeEditor:OnUISettings(p_Data)
-	if p_Data == false then -- client closed settings
+	if p_Data == false then -- Client closed settings.
 		self:OnSetEnabled(Config.DebugTracePaths)
 	end
 end
@@ -385,7 +392,7 @@ end
 
 function ClientNodeEditor:FindNode(p_Position)
 	local s_ClosestNode = nil
-	local s_ClosestDistance = 0.6 -- maximum 0.6 meter
+	local s_ClosestDistance = 0.6 -- Maximum 0.6 meter.
 	for _, l_DataNode in pairs(self.m_DataPoints) do
 		local s_Distance = self:GetDistance(l_DataNode.Node.Position, p_Position)
 		if s_ClosestDistance > s_Distance then
@@ -459,12 +466,12 @@ function ClientNodeEditor:_onToggleMoveNode(p_Args)
 		self.editRayHitStart = nil
 		self.m_EditModeManualOffset = Vec3.zero
 
-		-- move was cancelled
+		-- Move was cancelled.
 		if p_Args ~= nil and p_Args == true then
 			self:Log('Move Cancelled')
 
 			local s_UpdateData = {}
-			local s_Selection  = self:GetSelectedNodes()
+			local s_Selection = self:GetSelectedNodes()
 
 			for i = 1, #s_Selection do
 				local s_UpdateNode = {
@@ -595,6 +602,10 @@ function ClientNodeEditor:_onAddVehiclePath(p_Args)
 	NetEvents:SendLocal('NodeEditor:AddVehiclePath', p_Args)
 end
 
+function ClientNodeEditor:_onSetVehicleSpawn(p_Args)
+	NetEvents:SendLocal('NodeEditor:SetVehicleSpawn', p_Args)
+end
+
 function ClientNodeEditor:_onAddObjective(p_Args)
 	NetEvents:SendLocal('NodeEditor:AddObjective', p_Args)
 end
@@ -603,12 +614,25 @@ function ClientNodeEditor:_onRemoveObjective(p_Args)
 	NetEvents:SendLocal('NodeEditor:RemoveObjective', p_Args)
 end
 
+function ClientNodeEditor:_onRemoveAllObjectives(p_Args)
+	NetEvents:SendLocal('NodeEditor:RemoveAllObjectives', p_Args)
+end
+
+function ClientNodeEditor:_onSetLoopMode(p_Args)
+	NetEvents:SendLocal('NodeEditor:SetLoopMode', p_Args)
+end
+
+function ClientNodeEditor:_onSetSpawnPath(p_Args)
+	NetEvents:SendLocal('NodeEditor:SetSpawnPath', p_Args)
+end
+
 function ClientNodeEditor:_onRemoveData()
 	NetEvents:SendLocal('NodeEditor:RemoveData')
 end
 
--- ##################################### Events
--- ############################################
+-- ============================================
+-- Events
+-- ============================================
 
 ---VEXT Client Player:Deleted Event
 ---@param p_Player Player
@@ -622,9 +646,6 @@ end
 ---VEXT Shared Level:Destroy Event
 function ClientNodeEditor:OnLevelDestroy()
 	self:_onUnload()
-end
-
-function ClientNodeEditor:OnLevelLoaded(p_LevelName, p_GameMode)
 end
 
 function ClientNodeEditor:_onUnload()
@@ -651,9 +672,11 @@ end
 ---@param p_ParentGraph DataContainer
 ---@param p_StateNodeGuid Guid|nil
 function ClientNodeEditor:OnUIPushScreen(p_HookCtx, p_Screen, p_Priority, p_ParentGraph, p_StateNodeGuid)
-	if self.m_Enabled and self.m_CommoRoseEnabled and p_Screen ~= nil and
-		UIScreenAsset(p_Screen).name == 'UI/Flow/Screen/CommRoseScreen' then
-		self:Log('Blocked vanilla commo rose')
+	if self.m_Enabled and
+		self.m_CommoRoseEnabled and
+		p_Screen ~= nil and
+		UIScreenAsset(p_Screen).name == 'UI/Flow/Screen/CommoRoseScreen' then
+		-- self:Log('Blocked vanilla Commo Rose')
 		p_HookCtx:Return()
 		return
 	end
@@ -661,8 +684,9 @@ function ClientNodeEditor:OnUIPushScreen(p_HookCtx, p_Screen, p_Priority, p_Pare
 	p_HookCtx:Pass(p_Screen, p_Priority, p_ParentGraph, p_StateNodeGuid)
 end
 
--- ############################## Update Events
--- ############################################
+-- ============================================
+-- Update Events
+-- ============================================
 
 ---VEXT Client Client:UpdateInput Event
 ---@param p_DeltaTime number
@@ -677,7 +701,7 @@ function ClientNodeEditor:OnClientUpdateInput(p_DeltaTime)
 		local s_Comm3 = InputManager:GetLevel(InputConceptIdentifiers.ConceptCommMenu3) > 0
 		local s_CommButtonDown = (s_Comm1 or s_Comm2 or s_Comm3)
 
-		-- pressed and released without triggering commo rose
+		-- Pressed and released without triggering Commo Rose.
 		if self.m_CommoRosePressed and not s_CommButtonDown then
 			if self.m_EditMode == 'move' then
 				self:_onToggleMoveNode()
@@ -687,6 +711,9 @@ function ClientNodeEditor:OnClientUpdateInput(p_DeltaTime)
 		end
 
 		self.m_CommoRosePressed = (s_Comm1 or s_Comm2 or s_Comm3)
+	end
+	if InputManager:WentKeyDown(InputDeviceKeys.IDK_Space) then --InputManager:WentDown(InputConceptIdentifiers.ConceptJump)
+		NetEvents:SendLocal('NodeEditor:JumpDetected')
 	end
 
 	if self.m_EditMode == 'move' then
@@ -758,7 +785,7 @@ function ClientNodeEditor:OnClientUpdateInput(p_DeltaTime)
 		end
 
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_T) then
-			-- TODO: Not functional yet!
+			-- To-do: Not functional yet!
 			-- self:_onSwitchToArea()
 			-- NetEvents:SendLocal('WaypointEditor:ChangeMode', self.m_EditMode, {tostring(self.m_EditModeManualSpeed), self.m_EditPositionMode})
 			return
@@ -835,29 +862,28 @@ end
 ---@param p_DeltaTime number
 ---@param p_UpdatePass UpdatePass|integer
 function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
-	-- Only do math on presimulation UpdatePass, don't bother if debugging is off
 	if not self.m_Enabled or p_UpdatePass ~= UpdatePass.UpdatePass_PreSim then
 		return
 	end
 
-	-- doing this here and not in UI:DrawHud prevents a memory leak that crashes you in under a minute
+	-- Doing this here and not in UI:DrawHud prevents a memory leak that crashes you in under a minute.
 	local s_Player = PlayerManager:GetLocalPlayer()
 	if s_Player and s_Player.soldier and s_Player.soldier.worldTransform then
 		self.m_PlayerPos = s_Player.soldier.worldTransform.trans:Clone()
 
 		self.m_RaycastTimer = self.m_RaycastTimer + p_DeltaTime
-		-- do not update node positions if saving or loading
+		-- Do not update node positions if saving or loading.
 		if true then
 			if self.m_RaycastTimer >= Registry.GAME_RAYCASTING.UPDATE_INTERVAL_NODEEDITOR then
 				self.m_RaycastTimer = 0
 
-				-- perform raycast to get where player is looking
+				-- Perform raycast to get where player is looking.
 				if self.m_EditMode == 'move' then
 
 					local s_Selection = self:GetSelectedNodes()
 
 					if #s_Selection > 0 then
-						--raycast to 4 meters
+						-- Raycast to 4 meters.
 						local s_Hit = self:Raycast(4)
 
 						if s_Hit ~= nil then
@@ -871,8 +897,7 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 							end
 						end
 
-
-						-- loop selected nodes and update positions
+						-- Loop selected nodes and update positions.
 						local s_UpdateData = {}
 
 						for i = 1, #s_Selection do
@@ -904,23 +929,23 @@ end
 
 ---VEXT Client UI:DrawHud Event
 function ClientNodeEditor:OnUIDrawHud()
-	-- dont process waypoints if we're not supposed to see them
+	-- Don't process waypoints if we're not supposed to see them.
 	if not self.m_Enabled then
 		return
 	end
 
 	for _, l_Node in pairs(self.m_NodesToDraw) do
-		-- draw speres
+		-- Draw spheres.
 		DebugRenderer:DrawSphere(l_Node.pos, l_Node.radius, l_Node.color, l_Node.renderLines, l_Node.smallSizeSegmentDecrease)
 	end
 
 	for _, l_Line in pairs(self.m_LinesToDraw) do
-		-- draw lines
+		-- Draw lines.
 		DebugRenderer:DrawLine(l_Line.from, l_Line.to, l_Line.colorFrom, l_Line.colorTo)
 	end
 
 	for _, l_Text in pairs(self.m_TextToDraw) do
-		-- draw text
+		-- Draw text.
 		DebugRenderer:DrawText2D(l_Text.x, l_Text.y, l_Text.text, l_Text.color, l_Text.scale)
 	end
 
@@ -933,7 +958,7 @@ function ClientNodeEditor:OnUIDrawHud()
 	end
 
 	for _, l_Obb in pairs(self.m_ObbToDraw) do
-		-- draw OBB
+		-- Draw OBB.
 		DebugRenderer:DrawOBB(l_Obb.p_Aab, l_Obb.transform, l_Obb.color)
 	end
 end
@@ -944,7 +969,7 @@ function ClientNodeEditor:DrawSphere(p_Position, p_Size, p_Color, p_RenderLines,
 		radius = p_Size,
 		color = p_Color,
 		renderLines = p_RenderLines,
-		smallSizeSegmentDecrease = p_SmallSizeSegmentDecrease
+		smallSizeSegmentDecrease = p_SmallSizeSegmentDecrease,
 	})
 end
 
@@ -953,7 +978,7 @@ function ClientNodeEditor:DrawLine(p_From, p_To, p_ColorFrom, p_ColorTo)
 		from = p_From,
 		to = p_To,
 		colorFrom = p_ColorFrom,
-		colorTo = p_ColorTo
+		colorTo = p_ColorTo,
 	})
 end
 
@@ -963,7 +988,7 @@ function ClientNodeEditor:DrawText2D(p_X, p_Y, p_Text, p_Color, p_Scale)
 		y = p_Y,
 		text = p_Text,
 		color = p_Color,
-		scale = p_Scale
+		scale = p_Scale,
 	})
 end
 
@@ -972,7 +997,7 @@ function ClientNodeEditor:DrawPosText2D(p_Pos, p_Text, p_Color, p_Scale)
 		pos = p_Pos,
 		text = p_Text,
 		color = p_Color,
-		scale = p_Scale
+		scale = p_Scale,
 	})
 end
 
@@ -980,11 +1005,11 @@ function ClientNodeEditor:DrawOBB(p_Aab, p_Transform, p_Color)
 	table.insert(self.m_ObbToDraw_temp, {
 		aab = p_Aab,
 		transform = p_Transform,
-		color = p_Color
+		color = p_Color,
 	})
 end
 
--- stolen't https://github.com/EmulatorNexus/VEXT-Samples/blob/80cddf7864a2cdcaccb9efa810e65fae1baeac78/no-headglitch-raycast/ext/Client/__init__.lua
+-- Stolen't https://github.com/EmulatorNexus/VEXT-Samples/blob/80cddf7864a2cdcaccb9efa810e65fae1baeac78/no-headglitch-raycast/ext/Client/__init__.lua
 function ClientNodeEditor:Raycast(p_MaxDistance, p_UseAsync)
 	local s_Player = PlayerManager:GetLocalPlayer()
 	if not s_Player then

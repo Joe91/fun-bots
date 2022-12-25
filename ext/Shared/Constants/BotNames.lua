@@ -1,6 +1,6 @@
 ---@class BotNames
 BotNames = {
-	-- Normal Names
+	-- Normal Names.
 	'Liam',
 	'Noah',
 	'Oliver',
@@ -134,7 +134,7 @@ BotNames = {
 	'Rube',
 	'Leon',
 	'Zaviar',
-	-- Devs
+	-- Devs.
 	'Bizzi',
 	'FlashHit',
 	'Bree',
@@ -145,7 +145,7 @@ BotNames = {
 	'Sjoerd',
 	'Kiwi',
 	'NoFaTe',
-	-- Contributors
+	-- Contributors.
 	'BOB',
 	'MeisterPeitsche',
 	'DuTcHrEaGaN',
@@ -154,13 +154,13 @@ BotNames = {
 	'MrDonPotato',
 	'KrazyIvan',
 	'GaryTheNoTrashCougar',
-	-- Supporters
+	-- Supporters.
 	'jacky890818',
 	'Cosmin',
 	'qnr3343',
 	'akebono047',
 	-- Other names
-	--[[ 'LunyblacAseity',
+	--[['LunyblacAseity',
 	'Aseityja753',
 	'WordplayAmelus',
 	'Ameluslan93',

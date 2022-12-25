@@ -69,9 +69,9 @@ function Weapon:learnStatsValues()
 		return
 	end
 
-	--m_Logger:Write(self.name..': '..tostring(aiData.name))
+	-- m_Logger:Write(self.name..': '..tostring(aiData.name))
 
-	-- stats depending on weapon-type
+	-- Stats depending on weapon-type.
 	local s_AiDataString = tostring(s_AiData.name)
 	local s_FireDuration = 0.0
 	local s_FirePause = 0.0
@@ -108,7 +108,7 @@ function Weapon:learnStatsValues()
 		s_FireDuration = 0.3
 		s_FirePause = 0.2
 		s_DelayedShot = false
-	elseif string.find(s_AiDataString, "_hg_") ~= nil or string.find(self.name, "MP443") ~= nil then -- "MP443 has no ai data"
+	elseif string.find(s_AiDataString, "_hg_") ~= nil or string.find(self.name, "MP443") ~= nil then -- "MP443 has no AI data".
 		m_Logger:Write("pistol")
 		s_FireDuration = 0.2
 		s_FirePause = 0.2
@@ -148,8 +148,8 @@ function Weapon:learnStatsValues()
 	self.damageFalloffEndDistance = s_BulletData.damageFalloffStartDistance
 	self.bulletSpeed = s_FireData.shot.initialSpeed.z
 	self.bulletDrop = (s_BulletData.gravity or 0.0) * -1
-	self.fireCycle = s_FireDuration --aiData.minBurstCoolDownTime
-	self.pauseCycle = s_FirePause --(aiData.maxBurstCoolDownTime + aiData.minBurstCoolDownTime) / 2
+	self.fireCycle = s_FireDuration -- aiData.minBurstCoolDownTime
+	self.pauseCycle = s_FirePause -- (aiData.maxBurstCoolDownTime + aiData.minBurstCoolDownTime) / 2
 	---@type integer
 	self.reload = math.floor(s_FireData.ammo.magazineCapacity * 0.2)
 	self.delayed = s_DelayedShot

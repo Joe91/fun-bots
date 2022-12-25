@@ -5,10 +5,7 @@ AirTargets = class('AirTargets')
 ---@type Utilities
 local m_Utilities = require('__shared/Utilities')
 ---@type Vehicles
-local m_Vehicles = require("Vehicles")
----@type Logger
-local m_Logger = Logger("BotManager", Debug.Server.BOT)
-
+local m_Vehicles = require('Vehicles')
 
 function AirTargets:__init()
 	self._Targets = {}
@@ -50,11 +47,13 @@ function AirTargets:OnPlayerDestroyed(p_Player)
 	self:_RemoveTarget(p_Player)
 end
 
--- public functions
-function AirTargets:GetTarget(p_Player)
+-- Public functions
+function AirTargets:GetTarget(p_Player, p_MaxDistance)
 	local s_Team = p_Player.teamId
 	local s_ClosestDistance = nil
 	local s_ClosestTarget = nil
+	local s_ClosestTarget2 = nil
+	local s_ClosestTarget3 = nil
 
 	for _, l_Target in pairs(self._Targets) do
 		local s_TargetPlayer = PlayerManager:GetPlayerByName(l_Target)
@@ -64,23 +63,33 @@ function AirTargets:GetTarget(p_Player)
 				.transform.trans)
 
 			if s_ClosestDistance == nil then
-				if s_CurrentDistance < Config.MaxDistanceAABots then
+				if s_CurrentDistance < p_MaxDistance then
 					s_ClosestDistance = s_CurrentDistance
 					s_ClosestTarget = s_TargetPlayer
 				end
 			else
 				if s_CurrentDistance < s_ClosestDistance then
 					s_ClosestDistance = s_CurrentDistance
+					s_ClosestTarget3 = s_ClosestTarget2
+					s_ClosestTarget2 = s_ClosestTarget
 					s_ClosestTarget = s_TargetPlayer
 				end
 			end
 		end
 	end
 
+	local s_RandomValue = MathUtils:GetRandomInt(0, 100)
+	if s_ClosestTarget3 and s_RandomValue <= Registry.VEHICLES.VEHICLE_PROPABILITY_THIRD_AIRTARGET then
+		return s_ClosestTarget3
+	end
+	if s_ClosestTarget2 and s_RandomValue <= Registry.VEHICLES.VEHICLE_PROPABILITY_SECOND_AIRTARGET then
+		return s_ClosestTarget2
+	end
+
 	return s_ClosestTarget
 end
 
--- private functions
+-- Private functions
 
 function AirTargets:_CreateTarget(p_Player)
 	if p_Player.controlledEntryId == 0 then

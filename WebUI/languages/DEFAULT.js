@@ -23,6 +23,7 @@ Language['xx_XX'] /* Add/replace the xx_XX here with your language code (like de
 	"Toggle Spawns": "",
 	"Toggle Lines": "",
 	"Toggle Labels": "",
+	"[Paths]": "",
 	"continue": "",
 	"Back": "",
 	"Start Trace": "",

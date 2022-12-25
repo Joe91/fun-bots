@@ -1,60 +1,60 @@
-[![Support Server](https://img.shields.io/discord/862736286774198322.svg?label=Discord&logo=Discord&colorB=7289da&style=for-the-badge)](https://discord.com/invite/FKamccAEqz)
+[![Support Server](https://img.shields.io/discord/862736286774198322.svg?label=Discord&logo=Discord&colorB=7289da&style=for-the-badge)](https://discord.gg/K44VsQsKnx)
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg?style=for-the-badge)](https://www.paypal.me/joe91de)
 ![Image](https://img.shields.io/github/downloads/Joe91/fun-bots/total?style=for-the-badge)
 ![Image](https://img.shields.io/github/stars/Joe91/fun-bots?style=for-the-badge)
 
-## Welcome to the changelogs for release **V2.6.2**
-This is the changelog for the version V2.6.2. Don't forget to [join us on Discord](https://discord.com/invite/FKamccAEqz)
+## Welcome to the changelogs for release **V2.7.0**
+This is the changelog for the version V2.7.0 Don't forget to [join us on Discord](https://discord.com/invite/FKamccAEqz)
 
 ## Changelog
 
 ### New features / improvements
-* passengers can change seats
-* passengers exit vehicles on low health
-* terrain-handling of vehicles added
-* better splitting of objectives between the bots
-* Support Scavenger Gamemode
-* Don't modify ammo on Kit-Pickup
-* simplify permissions. No need to be on the server anymore
-* REAL AIMING OF BOTS Thanks to Bree_Arnold!!! Please use the dev-version of VU
-* Recoil-Compensation added for all Bots dependant of skill
-* keep Skill of Bot for whole game
-* restructurisation of Bot.lua-Class
-* massive rework on BotSpawner to prevent crashes on Map-Change.
-* massive refactoring of BotManager by Bree_Arnold!
-* cleanup of unused code
-* #80 Engineers use missiles
-* massive rework on NodeEditor: Now completely on Server
-* count paths correctly
-* delte existing path now possible
-* Bots use flares or smoke
-
-* Limit Distance of Bots when they shoot back
-* Use Statevents to increase Rush-Stability
-* Bots use Squad-Perks (#101)
-* First implementation of Alternate Weapons on some vehicles (#172)
-* Spawn at Player, if player close to path
-* Don't use missiles without vehicles
-* Don't spam nades on vehicles anymore
+* real ticket-count on conquest thanks to VU bugfix
+* updated chinese translation (by Augusta)
+* auto-translation-scripts (by [João Vitor](https://battlelog.battlefield.com/bf4/soldier/JOAO_SSOUZA/stats/1448854914/ps3/))
+* add Japanese and Portuguese
+* massive rework of all python-scripts (by [João Vitor](https://battlelog.battlefield.com/bf4/soldier/JOAO_SSOUZA/stats/1448854914/ps3/))
+* temporary workaround for not working collition-raycasts
+* new setting and probability for snipers to attack choppers
+* limit number of Bots in a vehicle (new config-value)
+* fix Timout when saving huge paths #204
+* fix compatibility with [More Vehicles-Mod](https://github.com/KrazyIvan777/CQ-MoreVehicles)
+* Option to prevent bots from attacking other players
+* usage of Mobile Artillery possible (#200)
+* jets and choppers also use secondary weapon
+* Bots with missiles attack on larger distances
+* air-missiles of bots get used much better now
+* improve Rush-Logic with new VEXT-Version
+* use more stable Rush-Events with new VEXT-Version
+* New menu for Trace-Creation - no need to use the console anymore
+* Bots now try to use all vehicles in a base
+* Some variation in the appearance of vehicles (idea from KrazyIvan777)
+* Jets are focused on air-targets and more active.
+* Support separated traces for each gamemode, even if compatible with other gamemode
 
 ### Bug fixes
-* #218 increased auto-sniper-time a little
-* fix throw of nade too early / often
-* #227 fix for crash on mapchange with current VU-Version
-* fix some static move-modes with new Bot-Structure
-* small fix of wrong appearance of some assault-bots
-* modified mapfiles with newlines can be imported now
-* several bugs in new node-editor
-* workaround for Raycast-Bug
-
-* fix endless attack of vehicles
-* fix Gunmaster Gamemode
-* fix Bots keeping the knife for one whole fight.
+* fix scavenger revive
+* fix usage of javelin
+* some attack- and aiming-issues with vehicles
+* Don't spawn new bots when kicked by RCON
+* some minor fixes in the trace-creation
+* fix backwards steering of vehicles
+* fix missing Path-Menu-Commands
+* fix Config.lua not getting applied as wanted
 
 ### New maps
-* Rush Wake Island
+* Rush for Talah Market
+* Rush for Epicenter (by ghost runaway)
+* several New maps for GunMaster by Augusta (MP_013, MP_017, MP_Subway, XP5_002, XP5_003)
 
 ### Updated maps
-* XP4_Parl_ConquestLarge0 (fixed some paths #219)
+* Fix Wake-Island Rush
+* New paths for mobile arillery on XP3 Desert Conquest Small (by KrazyIvan777)
+* New paths for mobile arillery on XP3 Shield Conquest Small (by KrazyIvan777)
+* New paths for mobile arillery on XP3 Alborz Conquest Small (by KrazyIvan777)
+* New paths for mobile arillery on XP3 Valley Conquest Small (by KrazyIvan777)
+* New and improved paths for SP_Jet TDM (by Augusta)
+* New and improved paths for SP_Valley TDM (by Augusta)
 
 ### Documentation update
+
