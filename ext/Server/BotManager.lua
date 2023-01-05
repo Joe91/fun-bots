@@ -615,12 +615,6 @@ function BotManager:GetKitCount(p_Kit)
 	return s_Count
 end
 
-function BotManager:ResetAllBots()
-	for _, l_Bot in ipairs(self._Bots) do
-		l_Bot:ResetVars()
-	end
-end
-
 ---@param p_Player Player
 ---@param p_Option string|'"mode"'|'"speed"'
 ---@param p_Value BotMoveModes|BotMoveSpeeds
