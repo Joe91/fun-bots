@@ -67,7 +67,11 @@ end
 local function _EnterVehicleAttackingAction(p_Bot)
 	p_Bot._ShootModeTimer = p_Bot._ShootModeTimer + Registry.BOT.BOT_UPDATE_CYCLE
 	p_Bot.m_ActiveMoveMode = BotMoveModes.ReviveC4 -- Movement-mode : revive.
-
+	if not p_Bot._ShootPlayer.soldier then
+		p_Bot._TargetPitch = 0.0
+		p_Bot:AbortAttack()
+		p_Bot:_ResetActionFlag(BotActionFlags.EnterVehicleActive)
+	end
 	-- Check for enter of vehicle if close.
 	if p_Bot._ShootPlayer.soldier.worldTransform.trans:Distance(p_Bot.m_Player.soldier.worldTransform.trans) < 5 then
 		p_Bot:_EnterVehicle(true)
@@ -116,7 +120,7 @@ end
 
 ---@param p_Bot Bot
 local function _DefaultAttackingAction(p_Bot)
-	if p_Bot._ShootModeTimer >= Config.BotFireModeDuration and not Config.ZombieMode or p_Bot._ShootModeTimer >= (Config.BotFireModeDuration * 4) then
+	if not p_Bot._ShootPlayer.soldier or not p_Bot._Shoot or p_Bot._ShootModeTimer >= Config.BotFireModeDuration and not Config.ZombieMode or p_Bot._ShootModeTimer >= (Config.BotFireModeDuration * 4) then
 		p_Bot._TargetPitch = 0.0
 		p_Bot._WeaponToUse = BotWeapons.Primary
 		p_Bot:AbortAttack()
@@ -338,7 +342,7 @@ end
 ---@param p_Bot Bot
 function BotAttacking:UpdateAttacking(p_Bot)
 	-- Reset if enemy is dead or attack is disabled.
-	if not p_Bot._ShootPlayer or not p_Bot._ShootPlayer.soldier or not p_Bot._Shoot then
+	if not p_Bot._ShootPlayer then
 		p_Bot:AbortAttack()
 	end
 
