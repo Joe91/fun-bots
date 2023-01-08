@@ -71,6 +71,7 @@ local function _EnterVehicleAttackingAction(p_Bot)
 		p_Bot._TargetPitch = 0.0
 		p_Bot:AbortAttack()
 		p_Bot:_ResetActionFlag(BotActionFlags.EnterVehicleActive)
+		return
 	end
 	-- Check for enter of vehicle if close.
 	if p_Bot._ShootPlayer.soldier.worldTransform.trans:Distance(p_Bot.m_Player.soldier.worldTransform.trans) < 5 then
@@ -344,6 +345,7 @@ function BotAttacking:UpdateAttacking(p_Bot)
 	-- Reset if enemy is dead or attack is disabled.
 	if not p_Bot._ShootPlayer then
 		p_Bot:AbortAttack()
+		return
 	end
 
 	if p_Bot._ActiveAction == BotActionFlags.ReviveActive then
