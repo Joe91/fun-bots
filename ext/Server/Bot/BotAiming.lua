@@ -28,10 +28,13 @@ local function _KnifeAimingAction(p_Bot)
 
 	-- Calculate yaw and pitch.
 	if #p_Bot._KnifeWayPositions > 0 then
+		p_Bot._KnifeWayPointTimer = p_Bot._KnifeWayPointTimer + Registry.BOT.BOT_FAST_UPDATE_CYCLE
+
 		s_DifferenceZ = p_Bot._KnifeWayPositions[1].z - p_Bot.m_Player.soldier.worldTransform.trans.z
 		s_DifferenceX = p_Bot._KnifeWayPositions[1].x - p_Bot.m_Player.soldier.worldTransform.trans.x
 
-		if p_Bot.m_Player.soldier.worldTransform.trans:Distance(p_Bot._KnifeWayPositions[1]) < 1.5 then
+		if p_Bot.m_Player.soldier.worldTransform.trans:Distance(p_Bot._KnifeWayPositions[1]) < 1.5 or p_Bot._KnifeWayPointTimer > (Registry.BOT.TRACE_DELTA_SHOOTING + 0.1) then
+			p_Bot._KnifeWayPointTimer = 0.0
 			table.remove(p_Bot._KnifeWayPositions, 1)
 		end
 	else

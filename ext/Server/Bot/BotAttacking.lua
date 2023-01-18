@@ -35,7 +35,6 @@ local function _DefaultAttackingAction(p_Bot)
 			p_Bot._MeleeCooldownTimer = 0.0
 		elseif p_Bot._MeleeCooldownTimer > 0.0 then
 			p_Bot._MeleeCooldownTimer = p_Bot._MeleeCooldownTimer - Registry.BOT.BOT_UPDATE_CYCLE
-			p_Bot:_SetInput(EntryInputActionEnum.EIAFire, 1)
 			if p_Bot._MeleeCooldownTimer < (Config.MeleeAttackCoolDown - 0.8) then
 				p_Bot:_ResetActionFlag(BotActionFlags.MeleeActive)
 			end

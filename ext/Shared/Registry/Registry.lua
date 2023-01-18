@@ -12,7 +12,7 @@ require('__shared/Constants/VersionType')
 Registry = {
 	COMMON = {
 		-- Token Bots are marked with. Can also be " " or "". If it's "" players with names of the botlist can't join!
-		BOT_TOKEN = "BOT_",
+		BOT_TOKEN = "Zombie_",
 		-- Allow players to use Bot-Names.
 		ALLOW_PLAYER_BOT_NAMES = true,
 		-- Collition-raycasts are another type of raycast. Sadly not working atm...

@@ -322,7 +322,7 @@ SettingsDefinition = {
 			Value = Config.BotTeam,
 			Description = "Default bot team (0 = neutral / auto, 1 = US, 2 = RU) TeamId.Team2",
 			Reference = Range(0.00, 4.00, 1.0),
-			Default = 0,
+			Default = 2,
 			UpdateFlag = UpdateFlag.AmountAndTeam,
 			Category = "SPAWN"
 		},
@@ -1213,7 +1213,7 @@ SettingsDefinition = {
 			Value = Config.MeleeAttackCoolDown,
 			Description = "The time a bot waits before attacking with melee again",
 			Reference = Range(0.00, 60.00, 0.5),
-			Default = 3.5,
+			Default = 2.5,
 			UpdateFlag = UpdateFlag.None,
 			Category = "ADVANCED"
 		},
@@ -1393,14 +1393,14 @@ SettingsDefinition = {
 			Category = "EXPERT"
 		},
 		{
-			Name = "BotMinTimeShootAtPlayer",
-			Text = "Bot min time shoot at player",
+			Name = "BotMinTimeAttackOnePlayer",
+			Text = "Bot min time Attack one player",
 			---@type Type|integer
 			Type = Type.Float,
-			Value = Config.BotMinTimeShootAtPlayer,
-			Description = "The minimum time a bot shoots at one player for - recommended minimum 1.5, below this you will have issues",
+			Value = Config.BotMinTimeAttackOnePlayer,
+			Description = "The minimum time a bot attacks one player for",
 			Reference = Range(0.00, 60.00, 0.5),
-			Default = 2.5,
+			Default = 1.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "EXPERT"
 		},
