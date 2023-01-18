@@ -60,70 +60,26 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 			end
 		end
 
-		-- Execute Action if needed.
-		if p_Bot._ActiveAction == BotActionFlags.OtherActionActive then
-			if s_Point.Data ~= nil and s_Point.Data.Action ~= nil then
-				if s_Point.Data.Action.type == 'vehicle' then
-					if Config.UseVehicles then
-						local s_RetCode, s_Position = p_Bot:_EnterVehicle(false)
-						if s_RetCode == 0 then
-							p_Bot:_ResetActionFlag(BotActionFlags.OtherActionActive)
-							local s_Node = g_GameDirector:FindClosestPath(s_Position, true, false, p_Bot.m_ActiveVehicle.Terrain)
-
-							if s_Node ~= nil then
-								-- Switch to vehicle.
-								s_Point = s_Node
-								p_Bot._InvertPathDirection = false
-								p_Bot._PathIndex = s_Node.PathIndex
-								p_Bot._CurrentWayPoint = s_Node.PointIndex
-								s_NextPoint = m_NodeCollection:Get(p_Bot:_GetWayIndex(p_Bot._CurrentWayPoint + 1), p_Bot._PathIndex)
-								p_Bot._LastWayDistance = 1000.0
-							end
-						end
-					end
-					p_Bot:_ResetActionFlag(BotActionFlags.OtherActionActive)
-				elseif p_Bot._ActionTimer <= s_Point.Data.Action.time then
-					for _, l_Input in pairs(s_Point.Data.Action.inputs) do
-						p_Bot:_SetInput(l_Input, 1)
-					end
-				end
-			else
-				p_Bot:_ResetActionFlag(BotActionFlags.OtherActionActive)
-			end
-
-			p_Bot._ActionTimer = p_Bot._ActionTimer - Registry.BOT.BOT_UPDATE_CYCLE
-
-			if p_Bot._ActionTimer <= 0.0 then
-				p_Bot:_ResetActionFlag(BotActionFlags.OtherActionActive)
-			end
-
-			if p_Bot._ActiveAction == BotActionFlags.OtherActionActive then
-				return -- DON'T EXECUTE ANYTHING ELSE.
-			else
-				s_Point = s_NextPoint
-			end
-		end
-
 		if s_Point.SpeedMode ~= BotMoveSpeeds.NoMovement then -- Movement.
 			p_Bot._WayWaitTimer = 0.0
 			p_Bot._WayWaitYawTimer = 0.0
 			p_Bot.m_ActiveSpeedValue = s_Point.SpeedMode -- Speed.
 
-			if Config.ZombieMode then
-				if p_Bot._ZombieSpeedValue == BotMoveSpeeds.NoMovement then
-					if MathUtils:GetRandomInt(0, 1) == 1 then
-						p_Bot._ZombieSpeedValue = BotMoveSpeeds.SlowCrouch
-					else
-						p_Bot._ZombieSpeedValue = BotMoveSpeeds.VerySlowProne
-					end
+			-- Zombie-Mode:
+			-- TODO: Zombies: add more variation in speed
+			if p_Bot._ZombieSpeedValue == BotMoveSpeeds.NoMovement then
+				if MathUtils:GetRandomInt(0, 1) == 1 then
+					p_Bot._ZombieSpeedValue = BotMoveSpeeds.SlowCrouch
+				else
+					p_Bot._ZombieSpeedValue = BotMoveSpeeds.VerySlowProne
 				end
-
-				p_Bot.m_ActiveSpeedValue = p_Bot._ZombieSpeedValue
 			end
 
-			if Config.OverWriteBotSpeedMode ~= BotMoveSpeeds.NoMovement and not p_Bot.m_InVehicle then
-				p_Bot.m_ActiveSpeedValue = Config.OverWriteBotSpeedMode
-			end
+			p_Bot.m_ActiveSpeedValue = p_Bot._ZombieSpeedValue
+
+			-- if Config.OverWriteBotSpeedMode ~= BotMoveSpeeds.NoMovement and not p_Bot.m_InVehicle then
+			-- 	p_Bot.m_ActiveSpeedValue = Config.OverWriteBotSpeedMode
+			-- end
 
 			-- Sidewards movement.
 			if Config.MoveSidewards then
@@ -148,12 +104,6 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 				end
 				p_Bot:_SetInput(EntryInputActionEnum.EIAStrafe, p_Bot.m_StrafeValue)
 				p_Bot._SidewardsTimer = p_Bot._SidewardsTimer - Registry.BOT.BOT_UPDATE_CYCLE
-			end
-
-			-- Use parachute if needed.
-			local s_VelocityFalling = PhysicsEntity(p_Bot.m_Player.soldier).velocity.y
-			if s_VelocityFalling < -50.0 then
-				p_Bot:_SetInput(EntryInputActionEnum.EIAToggleParachute, 1)
 			end
 
 			local s_DifferenceY = s_Point.Position.z - p_Bot.m_Player.soldier.worldTransform.trans.z
@@ -184,17 +134,13 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 					p_Bot._ObstacleRetryCounter = p_Bot._ObstacleRetryCounter + 1
 				elseif p_Bot._ObstaceSequenceTimer > 1.0 then -- Step 3
 					if not p_Bot.m_InVehicle then
-						if p_Bot._ObstacleRetryCounter == 0 then
-							if p_Bot._ActiveAction ~= BotActionFlags.MeleeActive then
-								p_Bot._ActiveAction = BotActionFlags.MeleeActive
-								p_Bot:_SetInput(EntryInputActionEnum.EIASelectWeapon7, 1)
-								p_Bot:_SetInput(EntryInputActionEnum.EIAQuicktimeFastMelee, 1)
-								p_Bot:_SetInput(EntryInputActionEnum.EIAMeleeAttack, 1)
-								p_Bot.m_ActiveWeapon = p_Bot.m_Knife
-								p_Bot._MeleeCooldownTimer = Config.MeleeAttackCoolDown -- Set time to ensure bot exit knife-mode when attack starts.
-							else
-								p_Bot:_SetInput(EntryInputActionEnum.EIAFire, 1)
-							end
+						if p_Bot._ActiveAction ~= BotActionFlags.MeleeActive then
+							p_Bot._ActiveAction = BotActionFlags.MeleeActive
+							p_Bot:_SetInput(EntryInputActionEnum.EIASelectWeapon7, 1)
+							p_Bot:_SetInput(EntryInputActionEnum.EIAQuicktimeFastMelee, 1)
+							p_Bot:_SetInput(EntryInputActionEnum.EIAMeleeAttack, 1)
+							p_Bot.m_ActiveWeapon = p_Bot.m_Knife
+							p_Bot._MeleeCooldownTimer = Config.MeleeAttackCoolDown -- Set time to ensure bot exit knife-mode when attack starts.
 						else
 							p_Bot:_SetInput(EntryInputActionEnum.EIAFire, 1)
 						end
@@ -418,79 +364,38 @@ function BotMovement:UpdateMovementSprintToTarget(p_Bot)
 end
 
 function BotMovement:UpdateShootMovement(p_Bot)
-	-- Shoot MoveMode.
-	if p_Bot._AttackMode == BotAttackModes.RandomNotSet then
-		if Config.BotAttackMode ~= BotAttackModes.RandomNotSet then
-			p_Bot._AttackMode = Config.BotAttackMode
-		else -- Random.
-			if MathUtils:GetRandomInt(0, 1) == 1 then
-				p_Bot._AttackMode = BotAttackModes.Stand
-			else
-				p_Bot._AttackMode = BotAttackModes.Crouch
-			end
+
+	local s_TargetCycles = 1
+	p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.Sprint -- Run towards player.
+
+
+	if Config.OverWriteBotAttackMode ~= BotMoveSpeeds.NoMovement then
+		p_Bot.m_ActiveSpeedValue = Config.OverWriteBotAttackMode
+	end
+
+	if #p_Bot._ShootWayPoints > s_TargetCycles and Config.JumpWhileShooting then
+		local s_DistanceDone = p_Bot._ShootWayPoints[#p_Bot._ShootWayPoints].Position:Distance(p_Bot._ShootWayPoints[
+			#p_Bot._ShootWayPoints - s_TargetCycles].Position)
+		if s_DistanceDone < 0.5 then -- No movement was possible. Try to jump over an obstacle.
+			p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.Normal
+			p_Bot:_SetInput(EntryInputActionEnum.EIAJump, 1)
+			p_Bot:_SetInput(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1)
 		end
 	end
 
-	-- Crouch moving (only mode with modified gun).
-	local s_ActiveWeaponType = p_Bot.m_ActiveWeapon.type
-	if ((s_ActiveWeaponType == WeaponTypes.Sniper or
-		s_ActiveWeaponType == WeaponTypes.Rocket or
-		s_ActiveWeaponType == WeaponTypes.MissileAir or
-		s_ActiveWeaponType == WeaponTypes.MissileLand) and
-		not p_Bot.m_KnifeMode) then -- Don't move while shooting some weapons.
-		if p_Bot._AttackMode == BotAttackModes.Crouch then
-			if p_Bot.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Crouch then
-				p_Bot.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Crouch, true, true)
-			end
-		else
-			if p_Bot.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Stand then
-				p_Bot.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Stand, true, true)
-			end
-		end
-
-		p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.NoMovement
-	else
-		local s_TargetTime = 5.0
-		local s_TargetCycles = math.floor(s_TargetTime / Registry.BOT.TRACE_DELTA_SHOOTING)
-
-		if p_Bot.m_KnifeMode then -- Knife Only Mode.
-			s_TargetCycles = 1
-			p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.Sprint -- Run towards player.
-		else
-			if p_Bot._AttackMode == BotAttackModes.Crouch then
-				p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.SlowCrouch
-			else
-				p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.Normal
-			end
-		end
-
-		if Config.OverWriteBotAttackMode ~= BotMoveSpeeds.NoMovement then
-			p_Bot.m_ActiveSpeedValue = Config.OverWriteBotAttackMode
-		end
-
-		if #p_Bot._ShootWayPoints > s_TargetCycles and Config.JumpWhileShooting then
-			local s_DistanceDone = p_Bot._ShootWayPoints[#p_Bot._ShootWayPoints].Position:Distance(p_Bot._ShootWayPoints[
-				#p_Bot._ShootWayPoints - s_TargetCycles].Position)
-			if s_DistanceDone < 0.5 then -- No movement was possible. Try to jump over an obstacle.
-				p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.Normal
-				p_Bot:_SetInput(EntryInputActionEnum.EIAJump, 1)
-				p_Bot:_SetInput(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1)
-			end
-		end
-
-		-- Do some sidewards movement from time to time.
-		if p_Bot._AttackModeMoveTimer > 20.0 then
-			p_Bot._AttackModeMoveTimer = 0.0
-		elseif p_Bot._AttackModeMoveTimer > 17.0 then
-			p_Bot:_SetInput(EntryInputActionEnum.EIAStrafe, -0.5 * Config.SpeedFactorAttack)
-		elseif p_Bot._AttackModeMoveTimer > 12.0 and p_Bot._AttackModeMoveTimer <= 13.0 then
-			p_Bot:_SetInput(EntryInputActionEnum.EIAStrafe, 0.5 * Config.SpeedFactorAttack)
-		elseif p_Bot._AttackModeMoveTimer > 7.0 and p_Bot._AttackModeMoveTimer <= 9.0 then
-			p_Bot:_SetInput(EntryInputActionEnum.EIAStrafe, 0.5 * Config.SpeedFactorAttack)
-		end
-
-		p_Bot._AttackModeMoveTimer = p_Bot._AttackModeMoveTimer + Registry.BOT.BOT_UPDATE_CYCLE
+	-- Do some sidewards movement from time to time.
+	if p_Bot._AttackModeMoveTimer > 20.0 then
+		p_Bot._AttackModeMoveTimer = 0.0
+	elseif p_Bot._AttackModeMoveTimer > 17.0 then
+		p_Bot:_SetInput(EntryInputActionEnum.EIAStrafe, -0.5 * Config.SpeedFactorAttack)
+	elseif p_Bot._AttackModeMoveTimer > 12.0 and p_Bot._AttackModeMoveTimer <= 13.0 then
+		p_Bot:_SetInput(EntryInputActionEnum.EIAStrafe, 0.5 * Config.SpeedFactorAttack)
+	elseif p_Bot._AttackModeMoveTimer > 7.0 and p_Bot._AttackModeMoveTimer <= 9.0 then
+		p_Bot:_SetInput(EntryInputActionEnum.EIAStrafe, 0.5 * Config.SpeedFactorAttack)
 	end
+
+	p_Bot._AttackModeMoveTimer = p_Bot._AttackModeMoveTimer + Registry.BOT.BOT_UPDATE_CYCLE
+
 end
 
 function BotMovement:UpdateSpeedOfMovement(p_Bot)

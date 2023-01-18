@@ -699,17 +699,6 @@ SettingsDefinition = {
 			Category = "BEHAVIOUR"
 		},
 		{
-			Name = "MeleeAttackIfClose",
-			Text = "Melee Attack If Close",
-			---@type Type|integer
-			Type = Type.Boolean,
-			Value = Config.MeleeAttackIfClose,
-			Description = "Bot attacks with melee if close",
-			Default = true,
-			UpdateFlag = UpdateFlag.None,
-			Category = "BEHAVIOUR"
-		},
-		{
 			Name = "BotCanKillHimself",
 			Text = "Bots can kill themselves",
 			---@type Type|integer
@@ -1428,14 +1417,14 @@ SettingsDefinition = {
 			Category = "EXPERT"
 		},
 		{
-			Name = "BotFireModeDuration",
-			Text = "Bot fire mode duration",
+			Name = "BotAttackDuration",
+			Text = "Bot attack mode duration",
 			---@type Type|integer
 			Type = Type.Float,
-			Value = Config.BotFireModeDuration,
-			Description = "The minimum time a bot tries to shoot a player - recommended minimum 3.0, below this you will have issues",
-			Reference = Range(0.00, 60.00, 0.5),
-			Default = 4.5,
+			Value = Config.BotAttackDuration,
+			Description = "The minimum time a zombie-bot tries to attack a player - recommended minimum 15,",
+			Reference = Range(0.00, 120.00, 0.5),
+			Default = 20,
 			UpdateFlag = UpdateFlag.None,
 			Category = "EXPERT"
 		},

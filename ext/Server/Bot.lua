@@ -219,177 +219,40 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 				-- Detect modes.
 				self:_SetActiveVars()
 
-				-- Old movement-modes -- remove one day?
-				if self:IsStaticMovement() then
-					m_BotMovement:UpdateStaticMovement(self)
-					self:_UpdateInputs()
-					m_BotMovement:UpdateYaw(self)
-					self._UpdateFastTimer = 0.0
-					return
-				end
-
 				------------------ CODE OF BEHAVIOUR STARTS HERE ---------------------
 				local s_Attacking = self._ShootPlayer ~= nil -- Can be either attacking or reviving or enter of a vehicle with a player.
 
-				if not self.m_InVehicle and not self.m_OnVehicle then
-					-- Sync slow code with fast code. Therefore, execute the slow code first.
-					if self._UpdateTimer >= Registry.BOT.BOT_UPDATE_CYCLE then
-						-- Common part.
-						m_BotWeaponHandling:UpdateWeaponSelection(self)
+				-- Sync slow code with fast code. Therefore, execute the slow code first.
+				if self._UpdateTimer >= Registry.BOT.BOT_UPDATE_CYCLE then
+					-- Common part.
+					m_BotWeaponHandling:UpdateWeaponSelection(self)
 
-						-- Differ attacking.
-						if s_Attacking then
-							m_BotAttacking:UpdateAttacking(self)
-							if self._ActiveAction == BotActionFlags.ReviveActive or
-								self._ActiveAction == BotActionFlags.EnterVehicleActive or
-								self._ActiveAction == BotActionFlags.RepairActive or
-								self._ActiveAction == BotActionFlags.C4Active then
-								m_BotMovement:UpdateMovementSprintToTarget(self)
-							else
-								m_BotMovement:UpdateShootMovement(self)
-							end
-						else
-							m_BotWeaponHandling:UpdateDeployAndReload(self, true)
-							m_BotMovement:UpdateNormalMovement(self)
-							if self.m_Player.soldier == nil then
-								return
-							end
-						end
-
-						-- Common things.
-						m_BotMovement:UpdateSpeedOfMovement(self)
-						self:_UpdateInputs()
-
-						self._UpdateTimer = 0.0
-					end
-
-					-- Fast code.
+					-- Differ attacking.
 					if s_Attacking then
-						m_BotAiming:UpdateAiming(self)
+						m_BotAttacking:UpdateAttacking(self)
+
+						m_BotMovement:UpdateShootMovement(self)
 					else
-						m_BotMovement:UpdateTargetMovement(self)
-					end
-
-				else -- Bot in vehicle.
-					-- Stationary AA needs separate handling.
-					if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.StationaryAA) then
-						self:_UpdateStationaryAAVehicle(s_Attacking)
-
-						if self._UpdateTimer >= Registry.BOT.BOT_UPDATE_CYCLE then
-							-- Common part.
-							m_VehicleWeaponHandling:UpdateWeaponSelectionVehicle(self)
-
-							-- Differ attacking.
-							if s_Attacking then
-								m_VehicleAttacking:UpdateAttackStationaryAAVehicle(self)
-							end
-
-							self:_UpdateInputs()
-							self._UpdateTimer = 0.0
-						end
-					else
-						if self.m_OnVehicle then -- Passenger of boat, for example.
-							-- Sync slow code with fast code. Therefore, execute the slow code first.
-							if self._UpdateTimer >= Registry.BOT.BOT_UPDATE_CYCLE then
-								-- Common part.
-								m_BotWeaponHandling:UpdateWeaponSelection(self)
-
-								-- Differ attacking.
-								if s_Attacking then
-									m_BotAttacking:UpdateAttacking(self)
-								else
-									m_BotWeaponHandling:UpdateDeployAndReload(self, false)
-								end
-
-								self:_UpdateInputs()
-								self:_CheckForVehicleActions(self._UpdateTimer, s_Attacking)
-
-								-- Only exit at this point and abort afterwards.
-								if self:_DoExitVehicle() then
-									return
-								end
-
-								self._UpdateTimer = 0.0
-							end
-
-							-- Fast code.
-							if s_Attacking then
-								m_BotAiming:UpdateAiming(self)
-							else
-								self:_UpdateLookAroundPassenger(Registry.BOT.BOT_FAST_UPDATE_CYCLE)
-							end
-						else -- Normal vehicle → self.m_InVehicle == true
-							if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
-								-- assign new target after some time
-								if self._DeployTimer > (Config.BotVehicleFireModeDuration - 0.5) and self._VehicleTakeoffTimer <= 0.0 then
-									local s_Target = m_AirTargets:GetTarget(self.m_Player, Registry.VEHICLES.MAX_ATTACK_DISTANCE_JET)
-
-									if s_Target ~= nil then
-										self._ShootPlayerName = s_Target.name
-										self._ShootPlayer = PlayerManager:GetPlayerByName(self._ShootPlayerName)
-										self._ShootPlayerVehicleType = m_Vehicles:FindOutVehicleType(self._ShootPlayer)
-										self._ShootModeTimer = 0.0
-									else
-										self:AbortAttack()
-									end
-
-									self._DeployTimer = 0.0
-								else
-									self._DeployTimer = self._DeployTimer + Registry.BOT.BOT_FAST_UPDATE_CYCLE
-								end
-							end
-
-
-							local s_IsStationaryLauncher = m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.StationaryLauncher)
-
-							-- Sync slow code with fast code. Therefore, execute the slow code first.
-							if self._UpdateTimer >= Registry.BOT.BOT_UPDATE_CYCLE then
-								-- Common part.
-								m_VehicleWeaponHandling:UpdateWeaponSelectionVehicle(self)
-
-								-- Differ attacking.
-								if s_Attacking then
-									m_VehicleAttacking:UpdateAttackingVehicle(self)
-									m_VehicleMovement:UpdateShootMovementVehicle(self)
-								else
-									m_VehicleWeaponHandling:UpdateReloadVehicle(self)
-									if self.m_Player.controlledEntryId == 0 and not s_IsStationaryLauncher then -- Only if driver.
-										m_VehicleMovement:UpdateNormalMovementVehicle(self)
-									end
-								end
-
-								-- Common things.
-								m_VehicleMovement:UpdateSpeedOfMovementVehicle(self)
-								self:_UpdateInputs()
-								self:_CheckForVehicleActions(self._UpdateTimer, s_Attacking)
-
-								-- Only exit at this point and abort afterwards.
-								if self:_DoExitVehicle() then
-									return
-								end
-
-								self._UpdateTimer = 0.0
-							end
-
-							-- Fast code.
-							if s_Attacking then
-								if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) or
-									m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
-									m_VehicleAiming:UpdateAimingVehicleAdvanced(self)
-								else
-									m_VehicleAiming:UpdateAimingVehicle(self)
-								end
-							else
-								if self.m_Player.controlledEntryId == 0 and not s_IsStationaryLauncher then -- Only if driver.
-									m_VehicleMovement:UpdateTargetMovementVehicle(self)
-								else
-									m_VehicleMovement:UpdateVehicleLookAround(self, self._UpdateFastTimer)
-								end
-							end
-							m_VehicleMovement:UpdateYawVehicle(self, s_Attacking, s_IsStationaryLauncher)
+						m_BotMovement:UpdateNormalMovement(self)
+						if self.m_Player.soldier == nil then
+							return
 						end
 					end
+
+					-- Common things.
+					m_BotMovement:UpdateSpeedOfMovement(self)
+					self:_UpdateInputs()
+
+					self._UpdateTimer = 0.0
 				end
+
+				-- Fast code.
+				if s_Attacking then
+					m_BotAiming:UpdateAiming(self)
+				else
+					m_BotMovement:UpdateTargetMovement(self)
+				end
+
 				self._UpdateFastTimer = 0.0
 			end
 
@@ -1444,22 +1307,10 @@ function Bot:_SetActiveVars()
 		self.m_ActiveMoveMode = self._MoveMode
 	end
 
-	if self.m_Player.controlledControllable ~= nil and not self.m_Player.controlledControllable:Is('ServerSoldierEntity') then
-		self.m_InVehicle = true
-		self.m_OnVehicle = false
-	elseif self.m_Player.attachedControllable ~= nil then
-		self.m_InVehicle = false
-		self.m_OnVehicle = true
-	else
-		self.m_InVehicle = false
-		self.m_OnVehicle = false
-	end
+	self.m_InVehicle = false
+	self.m_OnVehicle = false
 
-	if Config.BotWeapon == BotWeapons.Knife or Config.ZombieMode then
-		self.m_KnifeMode = true
-	else
-		self.m_KnifeMode = false
-	end
+	self.m_KnifeMode = true
 end
 
 return Bot
