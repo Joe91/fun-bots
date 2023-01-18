@@ -244,14 +244,7 @@ function ChatCommands:Execute(p_Parts, p_Player)
 		if s_BotColor <= #BotColors and s_BotColor >= 0 then
 			Config.BotColor = BotColors[s_BotColor]
 		end
-	elseif p_Parts[1] == '!setaim' then
-		if PermissionManager:HasPermission(p_Player, 'ChatCommands.SetAim') == false then
-			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.SetAim).', p_Player)
-			return
-		end
 
-		Config.BotAimWorsening = tonumber(p_Parts[2]) or 0.5
-	-- self:_modifyWeapons(Config.BotAimWorsening) --causes lag. Instead, restart round.
 	elseif p_Parts[1] == '!shootback' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands.ShootBack') == false then
 			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.ShootBack).', p_Player)

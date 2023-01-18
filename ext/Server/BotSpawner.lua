@@ -214,35 +214,6 @@ function BotSpawner:OnPlayerJoining(p_Name)
 end
 
 ---@param p_Player Player
-function BotSpawner:OnPlayerAuthenticated(p_Player)
-	if (Config.BalancePlayersIgnoringBots) then
-		local s_CountPlayers = {}
-
-		for i = 1, Globals.NrOfTeams do
-			s_CountPlayers[i] = 0
-			local s_TempPlayers = PlayerManager:GetPlayersByTeam(i)
-
-			for _, l_Player in pairs(s_TempPlayers) do
-				if not m_Utilities:isBot(l_Player) then
-					s_CountPlayers[i] = s_CountPlayers[i] + 1
-
-					if Globals.IsSdm then -- To-do: Only needed because of VEXT-Bug.
-						l_Player.squadId = 1
-					end
-				end
-			end
-		end
-
-		-- Move player to other team to balance.
-		if s_CountPlayers[1] > s_CountPlayers[2] then
-			p_Player.teamId = 2
-		else
-			p_Player.teamId = 1
-		end
-	end
-end
-
----@param p_Player Player
 ---@param p_TeamId TeamId|integer
 ---@param p_SquadId SquadId|integer
 function BotSpawner:OnTeamChange(p_Player, p_TeamId, p_SquadId)
@@ -1522,19 +1493,8 @@ function BotSpawner:_SetBotWeapons(p_Bot, p_BotKit, p_Team, p_NewWeapons)
 		p_Bot.m_Knife = m_WeaponList:getWeapon(s_Knife)
 	end
 
-	if Config.BotWeapon == BotWeapons.Primary or Config.BotWeapon == BotWeapons.Auto then
-		p_Bot.m_ActiveWeapon = p_Bot.m_Primary
-	elseif Config.BotWeapon == BotWeapons.Pistol then
-		p_Bot.m_ActiveWeapon = p_Bot.m_Pistol
-	elseif Config.BotWeapon == BotWeapons.Gadget2 then
-		p_Bot.m_ActiveWeapon = p_Bot.m_SecondaryGadget
-	elseif Config.BotWeapon == BotWeapons.Gadget1 then
-		p_Bot.m_ActiveWeapon = p_Bot.m_PrimaryGadget
-	elseif Config.BotWeapon == BotWeapons.Grenade then
-		p_Bot.m_ActiveWeapon = p_Bot.m_Grenade
-	else
-		p_Bot.m_ActiveWeapon = p_Bot.m_Knife
-	end
+
+	p_Bot.m_ActiveWeapon = p_Bot.m_Knife
 end
 
 function BotSpawner:_SwitchTeams()

@@ -290,7 +290,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 			s_CheckCount = s_CheckCount + 1
 
-			if (s_Distance < Config.MaxShootDistanceSniper) or (s_Bot.inVehicle and (s_Distance < Config.MaxShootDistanceVehicles)) then
+			if (s_Distance < Config.MaxShootDistance) then
 				if self:DoRaycast(s_PlayerPosition, s_TargetPos, self.m_Player.inVehicle, s_Bot.inVehicle) then
 					-- We found a valid bot in Sight (either no hit, or player-hit). Signal Server with players.
 					local s_IgnoreYaw = false

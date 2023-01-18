@@ -102,7 +102,6 @@ function FunBotServer:RegisterEvents()
 	Events:Subscribe('Server:RoundOver', self, self.OnRoundOver)
 	Events:Subscribe('Server:RoundReset', self, self.OnRoundReset)
 
-	Events:Subscribe('Player:Authenticated', self, self.OnPlayerAuthenticated)
 	Events:Subscribe('Player:Joining', self, self.OnPlayerJoining)
 	Events:Subscribe('Player:TeamChange', self, self.OnTeamChange)
 	Events:Subscribe('Player:Respawn', self, self.OnPlayerRespawn)
@@ -343,12 +342,6 @@ end
 -- =============================================
 -- Player Events.
 -- =============================================
-
----VEXT Server Player:Authenticated Event
----@param p_Player Player
-function FunBotServer:OnPlayerAuthenticated(p_Player)
-	m_BotSpawner:OnPlayerAuthenticated(p_Player)
-end
 
 ---VEXT Server Player:Joining Event
 ---@param p_Name string
