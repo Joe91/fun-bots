@@ -121,7 +121,7 @@ end
 
 ---@param p_Bot Bot
 local function _DefaultAttackingAction(p_Bot)
-	if not p_Bot._ShootPlayer.soldier or not p_Bot._Shoot or p_Bot._ShootModeTimer >= Config.BotFireModeDuration and not Config.ZombieMode or p_Bot._ShootModeTimer >= (Config.BotFireModeDuration * 4) then
+	if not p_Bot._ShootPlayer.soldier or not p_Bot._Shoot or p_Bot._ShootModeTimer >= Config.BotFireModeDuration then
 		p_Bot._TargetPitch = 0.0
 		p_Bot._WeaponToUse = BotWeapons.Primary
 		p_Bot:AbortAttack()

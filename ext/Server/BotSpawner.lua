@@ -1658,10 +1658,7 @@ function BotSpawner:_GetCustomization(p_Bot, p_Kit)
 	end
 
 	-- Fill Customization.
-	if Config.ZombieMode then
-		p_SoldierCustomization.activeSlot = WeaponSlot.WeaponSlot_7
-		p_SoldierCustomization.weapons:add(s_Knife)
-	elseif Globals.IsScavenger then
+	if Globals.IsScavenger then
 		p_SoldierCustomization.weapons:add(s_PrimaryWeapon)
 		p_SoldierCustomization.weapons:add(s_SecondaryWeapon)
 		p_SoldierCustomization.weapons:add(s_Knife)

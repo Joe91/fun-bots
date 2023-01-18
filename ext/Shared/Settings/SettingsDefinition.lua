@@ -61,17 +61,6 @@ SettingsDefinition = {
 			UpdateFlag = UpdateFlag.None,
 			Category = "GENERAL"
 		},
-		{
-			Name = "ZombieMode",
-			Text = "Zombie Mode",
-			---@type Type|integer
-			Type = Type.Boolean,
-			Value = Config.ZombieMode,
-			Description = "Zombie Bot Mode",
-			Default = false,
-			UpdateFlag = UpdateFlag.None,
-			Category = "GENERAL"
-		},
 
 		-- Difficulty.
 		{
