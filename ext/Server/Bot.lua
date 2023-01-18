@@ -82,12 +82,15 @@ function Bot:__init(p_Player)
 	self._SidewardsTimer = 0.0
 	self._KnifeWayPointTimer = 0.0
 
+	-- Zombie Stuff
+	self._SpeedFactorMovement = 1.0
+
 	-- Shared movement vars.
 	---@type BotMoveModes
 	self.m_ActiveMoveMode = BotMoveModes.Standstill
 	---@type BotMoveSpeeds
 	self.m_ActiveSpeedValue = BotMoveSpeeds.NoMovement
-	self.m_KnifeMode = false
+	self.m_KnifeMode = true
 	self.m_InVehicle = false
 	self.m_OnVehicle = false
 
@@ -577,12 +580,12 @@ function Bot:ResetSpawnVars()
 	self._AttackModeMoveTimer = 0.0
 	self._AttackMode = BotAttackModes.RandomNotSet
 	self._ShootWayPoints = {}
+	self._SpeedFactorMovement = MathUtils:GetRandom(0.05, 1.0)
 
 	-- Skill.
 	if not self._SkillFound then
 		local s_TempSkillValue = math.random()
 		self._Skill = Config.BotWorseningSkill * s_TempSkillValue
-		self._SkillSniper = Config.BotSniperWorseningSkill * s_TempSkillValue
 		self._SkillFound = true
 	end
 

@@ -68,18 +68,21 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 			-- Zombie-Mode:
 			-- TODO: Zombies: add more variation in speed
 			if p_Bot._ZombieSpeedValue == BotMoveSpeeds.NoMovement then
-				if MathUtils:GetRandomInt(0, 1) == 1 then
+				local zombieValue = MathUtils:GetRandomInt(0, 2)
+				if zombieValue == 0 then
 					p_Bot._ZombieSpeedValue = BotMoveSpeeds.SlowCrouch
-				else
+				elseif zombieValue == 1 then
 					p_Bot._ZombieSpeedValue = BotMoveSpeeds.VerySlowProne
+				else
+					p_Bot._ZombieSpeedValue = BotMoveSpeeds.Normal
 				end
 			end
 
 			p_Bot.m_ActiveSpeedValue = p_Bot._ZombieSpeedValue
 
-			-- if Config.OverWriteBotSpeedMode ~= BotMoveSpeeds.NoMovement and not p_Bot.m_InVehicle then
-			-- 	p_Bot.m_ActiveSpeedValue = Config.OverWriteBotSpeedMode
-			-- end
+			if Config.OverWriteBotSpeedMode ~= BotMoveSpeeds.NoMovement then
+				p_Bot.m_ActiveSpeedValue = Config.OverWriteBotSpeedMode
+			end
 
 			-- Sidewards movement.
 			if Config.MoveSidewards then
@@ -433,17 +436,13 @@ function BotMovement:UpdateSpeedOfMovement(p_Bot)
 	end
 
 	-- Do not reduce speed if sprinting.
-	if s_SpeedVal > 0 and p_Bot._ShootPlayer ~= nil and p_Bot._ShootPlayer.soldier ~= nil and
-		p_Bot.m_ActiveSpeedValue <= BotMoveSpeeds.Normal then
-		s_SpeedVal = s_SpeedVal * Config.SpeedFactorAttack
-	end
 
 	-- Movent speed.
 	if p_Bot.m_ActiveSpeedValue ~= BotMoveSpeeds.Sprint then
-		p_Bot:_SetInput(EntryInputActionEnum.EIAThrottle, s_SpeedVal * Config.SpeedFactor)
-	else
+		p_Bot:_SetInput(EntryInputActionEnum.EIAThrottle, s_SpeedVal * p_Bot._SpeedFactorMovement)
+	else -- use full speed for sprinting
 		p_Bot:_SetInput(EntryInputActionEnum.EIAThrottle, 1)
-		p_Bot:_SetInput(EntryInputActionEnum.EIASprint, s_SpeedVal * Config.SpeedFactor)
+		p_Bot:_SetInput(EntryInputActionEnum.EIASprint, s_SpeedVal) -- * Config.SpeedFactor
 	end
 end
 
