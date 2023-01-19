@@ -7,8 +7,6 @@ Language:add(code, "Bot Kit", "BOT兵种")
 Language:add(code, "The Kit of the Bots", "BOT重生选择的兵种")
 Language:add(code, "Bot Color", "BOT皮肤")
 Language:add(code, "The Color of the Bots", "BOT重生时的装备皮肤")
-Language:add(code, "Zombie Mode", "僵尸模式")
-Language:add(code, "Zombie Bot Mode", "BOT僵尸模式")
 
 -- DIFFICULTY
 Language:add(code, "Bot Aim Worsening", "BOT瞄准精度")

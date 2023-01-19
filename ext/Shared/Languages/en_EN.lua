@@ -7,8 +7,6 @@ Language:add(code, "Bot Kit", "Bot Kit")
 Language:add(code, "The Kit of the Bots", "The Kit of the Bots")
 Language:add(code, "Bot Color", "Bot Color")
 Language:add(code, "The Color of the Bots", "The Color of the Bots")
-Language:add(code, "Zombie Mode", "Zombie Mode")
-Language:add(code, "Zombie Bot Mode", "Zombie Bot Mode")
 
 -- DIFFICULTY
 Language:add(code, "Bot Aim Worsening", "Bot Aim Worsening")

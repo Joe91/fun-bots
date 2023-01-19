@@ -50,8 +50,14 @@ XP2_Factory Domination0 1
 XP2_Office Domination0 1
 XP2_Palace Domination0 1
 XP2_Skybar Domination0 1
+MP_001 GunMaster0 1
+MP_003 GunMaster0 1
+MP_007 GunMaster0 1
+MP_011 GunMaster0 1
+MP_012 GunMaster0 1
 MP_013 GunMaster0 1
 MP_017 GunMaster0 1
+MP_018 GunMaster0 1
 MP_Subway GunMaster0 1
 XP2_Factory GunMaster0 1
 XP2_Office GunMaster0 1
@@ -76,6 +82,9 @@ XP1_001 RushLarge0 1
 XP1_002 RushLarge0 1
 XP1_003 RushLarge0 1
 XP1_004 RushLarge0 1
+XP4_FD RushLarge0 1
+XP4_Parl RushLarge0 1
+XP4_Quake RushLarge0 1
 XP4_Rubble RushLarge0 1
 XP5_004 RushLarge0 1
 MP_001 SquadDeathMatch0 1

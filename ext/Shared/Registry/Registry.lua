@@ -31,11 +31,11 @@ Registry = {
 		-- Major version.
 		VERSION_MAJ = 2,
 		-- Minor version.
-		VERSION_MIN = 7,
+		VERSION_MIN = 8,
 		-- Patch version.
 		VERSION_PATCH = 0,
 		-- Additional label for pre-releases and build metadata.
-		VERSION_LABEL = "dev8",
+		VERSION_LABEL = "dev1",
 		-- Current version type of this build.
 		VERSION_TYPE = VersionType.DevBuild,
 		-- The Version used for the Update-Check.

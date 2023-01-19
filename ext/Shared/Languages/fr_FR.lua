@@ -7,8 +7,6 @@ Language:add(code, "Bot Kit", "Kit robot")
 Language:add(code, "The Kit of the Bots", "Le kit des bots")
 Language:add(code, "Bot Color", "Couleur du robot")
 Language:add(code, "The Color of the Bots", "La couleur des robots")
-Language:add(code, "Zombie Mode", "Mode zombie")
-Language:add(code, "Zombie Bot Mode", "Mode robot zombie")
 
 -- DIFFICULTY
 Language:add(code, "Bot Aim Worsening", "Aggravation de la visée du bot")
