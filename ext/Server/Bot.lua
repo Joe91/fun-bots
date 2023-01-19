@@ -90,7 +90,6 @@ function Bot:__init(p_Player)
 	self.m_ActiveMoveMode = BotMoveModes.Standstill
 	---@type BotMoveSpeeds
 	self.m_ActiveSpeedValue = BotMoveSpeeds.NoMovement
-	self.m_KnifeMode = true
 	self.m_InVehicle = false
 	self.m_OnVehicle = false
 
@@ -944,8 +943,6 @@ function Bot:_SetActiveVars()
 
 	self.m_InVehicle = false
 	self.m_OnVehicle = false
-
-	self.m_KnifeMode = true
 end
 
 return Bot

@@ -35,10 +35,6 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 
 			if s_NextPoint == nil then
 				s_NextPoint = m_NodeCollection:Get(s_ActivePointIndex, p_Bot._PathIndex)
-
-				--[[if Config.DebugTracePaths then
-					NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', p_Bot._PathIndex, s_ActivePointIndex, p_Bot.m_Player.soldier.worldTransform.trans, (p_Bot._ObstaceSequenceTimer > 0.0), "Blue")
-				end--]]
 			end
 
 			s_UseShootWayPoint = true
@@ -47,16 +43,8 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 
 			if not p_Bot._InvertPathDirection then
 				s_NextPoint = m_NodeCollection:Get(p_Bot:_GetWayIndex(p_Bot._CurrentWayPoint + 1), p_Bot._PathIndex)
-
-			--[[if Config.DebugTracePaths then
-					NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', p_Bot._PathIndex, p_Bot:_GetWayIndex(p_Bot._CurrentWayPoint + 1), p_Bot.m_Player.soldier.worldTransform.trans, (p_Bot._ObstaceSequenceTimer > 0.0), "Green")
-				end--]]
 			else
 				s_NextPoint = m_NodeCollection:Get(p_Bot:_GetWayIndex(p_Bot._CurrentWayPoint - 1), p_Bot._PathIndex)
-
-				--[[if Config.DebugTracePaths then
-					NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', p_Bot._PathIndex, p_Bot:_GetWayIndex(p_Bot._CurrentWayPoint - 1), p_Bot.m_Player.soldier.worldTransform.trans, (p_Bot._ObstaceSequenceTimer > 0.0), "Green")
-				end--]]
 			end
 		end
 
@@ -337,35 +325,6 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 	end
 end
 
-function BotMovement:UpdateMovementSprintToTarget(p_Bot)
-	p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.Sprint -- Run to target.
-
-	if p_Bot.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Stand then
-		p_Bot.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Stand, true, true)
-	end
-
-	local s_Jump = true
-
-	if p_Bot._ShootPlayer ~= nil and p_Bot._ShootPlayer.corpse ~= nil then
-		if p_Bot.m_Player.soldier.worldTransform.trans:Distance(p_Bot._ShootPlayer.corpse.worldTransform.trans) < 2 then
-			p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.SlowCrouch
-			s_Jump = false
-		end
-	end
-
-	-- To-do: obstacle detection.
-	if s_Jump == true then
-		p_Bot._AttackModeMoveTimer = p_Bot._AttackModeMoveTimer + Registry.BOT.BOT_UPDATE_CYCLE
-
-		if p_Bot._AttackModeMoveTimer > 3.0 then
-			p_Bot._AttackModeMoveTimer = 0.0
-		elseif p_Bot._AttackModeMoveTimer > 2.5 then
-			p_Bot:_SetInput(EntryInputActionEnum.EIAJump, 1)
-			p_Bot:_SetInput(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1)
-		end
-	end
-end
-
 function BotMovement:UpdateShootMovement(p_Bot)
 
 	local s_TargetCycles = 1
@@ -379,7 +338,7 @@ function BotMovement:UpdateShootMovement(p_Bot)
 	if #p_Bot._ShootWayPoints > s_TargetCycles and Config.JumpWhileShooting then
 		local s_DistanceDone = p_Bot._ShootWayPoints[#p_Bot._ShootWayPoints].Position:Distance(p_Bot._ShootWayPoints[
 			#p_Bot._ShootWayPoints - s_TargetCycles].Position)
-		if s_DistanceDone < 0.5 then -- No movement was possible. Try to jump over an obstacle.
+		if s_DistanceDone < 0.5 and p_Bot._DistanceToPlayer > 1.0 then -- No movement was possible. Try to jump over an obstacle.
 			p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.Normal
 			p_Bot:_SetInput(EntryInputActionEnum.EIAJump, 1)
 			p_Bot:_SetInput(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1)

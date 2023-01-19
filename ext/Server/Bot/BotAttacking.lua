@@ -58,8 +58,8 @@ local function _DefaultAttackingAction(p_Bot)
 
 		table.insert(p_Bot._ShootWayPoints, s_Point)
 
-		if p_Bot.m_KnifeMode then
-			local s_Trans = p_Bot._ShootPlayer.soldier.worldTransform.trans:Clone()
+		local s_Trans = p_Bot._ShootPlayer.soldier.worldTransform.trans:Clone()
+		if (#p_Bot._KnifeWayPositions == 0 or s_Trans:Distance(p_Bot._KnifeWayPositions[#p_Bot._KnifeWayPositions]) > Registry.BOT.TRACE_DELTA_SHOOTING) then
 			table.insert(p_Bot._KnifeWayPositions, s_Trans)
 		end
 	end
