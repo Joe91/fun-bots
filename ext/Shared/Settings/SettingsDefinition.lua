@@ -10,7 +10,7 @@ SettingsDefinition = {
 		GENERAL = "General",
 		DIFFICULTY = "Difficulty",
 		SPAWN = "Spawn",
-		SPAWNLIMITS = "Spawnlimits",
+		WAVES = "Waves",
 		BEHAVIOUR = "Behaviour",
 		VEHICLE = "Vehicle",
 		WEAPONS = "Weapons",
@@ -220,8 +220,6 @@ SettingsDefinition = {
 			UpdateFlag = UpdateFlag.None,
 			Category = "SPAWN"
 		},
-
-		-- Spawn limits.
 		{
 			Name = "MaxBotsPerTeamDefault",
 			Text = "Max Bots Per Team (default)",
@@ -230,153 +228,58 @@ SettingsDefinition = {
 			Value = Config.MaxBotsPerTeamDefault,
 			Description = "Max number of bots in one team, if no other mode fits",
 			Reference = Range(0.00, 128.00, 1.0),
-			Default = 32,
-			UpdateFlag = UpdateFlag.MaxBots,
-			Category = "SPAWNLIMITS"
+			Default = 128,
+			UpdateFlag = UpdateFlag.None,
+			Category = "SPAWN"
 		},
+		-- Waves
 		{
-			Name = "MaxBotsPerTeamTdm",
-			Text = "Max Bots Per Team (TDM)",
+			Name = "FirstWaveCount",
+			Text = "Zombies in first Wave",
 			---@type Type|integer
 			Type = Type.Integer,
-			Value = Config.MaxBotsPerTeamTdm,
-			Description = "Max number of bots in one team for TDM",
+			Value = Config.FirstWaveCount,
+			Description = "Zombies that spawn in the first wave",
 			Reference = Range(0.00, 128.00, 1.0),
-			Default = 32,
-			UpdateFlag = UpdateFlag.MaxBots,
-			Category = "SPAWNLIMITS"
+			Default = 30,
+			UpdateFlag = UpdateFlag.None,
+			Category = "WAVES"
 		},
 		{
-			Name = "MaxBotsPerTeamTdmc",
-			Text = "Max Bots Per Team (TDM-CQ)",
+			Name = "IncrementPerWave",
+			Text = "Additional Zombies per wave",
 			---@type Type|integer
 			Type = Type.Integer,
-			Value = Config.MaxBotsPerTeamTdmc,
-			Description = "Max number of bots in one team for TDM-CQ",
+			Value = Config.IncrementPerWave,
+			Description = "Zombies that are added in each new wave",
 			Reference = Range(0.00, 128.00, 1.0),
-			Default = 8,
-			UpdateFlag = UpdateFlag.MaxBots,
-			Category = "SPAWNLIMITS"
+			Default = 10,
+			UpdateFlag = UpdateFlag.None,
+			Category = "WAVES"
 		},
 		{
-			Name = "MaxBotsPerTeamSdm",
-			Text = "Max Bots Per Team (Squad-DM)",
+			Name = "ZombiesAliveForNextWave",
+			Text = "Zombies alive for next wave",
 			---@type Type|integer
 			Type = Type.Integer,
-			Value = Config.MaxBotsPerTeamSdm,
-			Description = "Max number of bots in one team for Squad-DM",
+			Value = Config.ZombiesAliveForNextWave,
+			Description = "New wave is triggered when this number of zombies is reached",
 			Reference = Range(0.00, 128.00, 1.0),
 			Default = 5,
-			UpdateFlag = UpdateFlag.MaxBots,
-			Category = "SPAWNLIMITS"
+			UpdateFlag = UpdateFlag.None,
+			Category = "WAVES"
 		},
 		{
-			Name = "MaxBotsPerTeamCl",
-			Text = "Max Bots Per Team (CQ-Large)",
+			Name = "TimeBetweenWaves",
+			Text = "Time between waves",
 			---@type Type|integer
 			Type = Type.Integer,
-			Value = Config.MaxBotsPerTeamCl,
-			Description = "Max number of bots in one team for CQ-Large",
-			Reference = Range(0.00, 128.00, 1.0),
-			Default = 32,
-			UpdateFlag = UpdateFlag.MaxBots,
-			Category = "SPAWNLIMITS"
-		},
-		{
-			Name = "MaxBotsPerTeamCs",
-			Text = "Max Bots Per Team (CQ-Small)",
-			---@type Type|integer
-			Type = Type.Integer,
-			Value = Config.MaxBotsPerTeamCs,
-			Description = "Max number of bots in one team for CQ-Small",
-			Reference = Range(0.00, 128.00, 1.0),
-			Default = 16,
-			UpdateFlag = UpdateFlag.MaxBots,
-			Category = "SPAWNLIMITS"
-		},
-		{
-			Name = "MaxBotsPerTeamCal",
-			Text = "Max Bots Per Team (CQ-Assault-Large)",
-			---@type Type|integer
-			Type = Type.Integer,
-			Value = Config.MaxBotsPerTeamCal,
-			Description = "Max number of bots in one team for CQ-Assault-Large",
-			Reference = Range(0.00, 128.00, 1.0),
-			Default = 32,
-			UpdateFlag = UpdateFlag.MaxBots,
-			Category = "SPAWNLIMITS"
-		},
-		{
-			Name = "MaxBotsPerTeamCas",
-			Text = "Max Bots Per Team (CQ-Assault-Small)",
-			---@type Type|integer
-			Type = Type.Integer,
-			Value = Config.MaxBotsPerTeamCas,
-			Description = "Max number of bots in one team for CQ-Assault-Small",
-			Reference = Range(0.00, 128.00, 1.0),
-			Default = 16,
-			UpdateFlag = UpdateFlag.MaxBots,
-			Category = "SPAWNLIMITS"
-		},
-		{
-			Name = "MaxBotsPerTeamRl",
-			Text = "Max Bots Per Team (Rush)",
-			---@type Type|integer
-			Type = Type.Integer,
-			Value = Config.MaxBotsPerTeamRl,
-			Description = "Max number of bots in one team for Rush",
-			Reference = Range(0.00, 128.00, 1.0),
-			Default = 24,
-			UpdateFlag = UpdateFlag.MaxBots,
-			Category = "SPAWNLIMITS"
-		},
-		{
-			Name = "MaxBotsPerTeamCtf",
-			Text = "Max Bots Per Team (CTF)",
-			---@type Type|integer
-			Type = Type.Integer,
-			Value = Config.MaxBotsPerTeamCtf,
-			Description = "Max number of bots in one team for CTF",
-			Reference = Range(0.00, 128.00, 1.0),
-			Default = 24,
-			UpdateFlag = UpdateFlag.MaxBots,
-			Category = "SPAWNLIMITS"
-		},
-		{
-			Name = "MaxBotsPerTeamD",
-			Text = "Max Bots Per Team (Domination)",
-			---@type Type|integer
-			Type = Type.Integer,
-			Value = Config.MaxBotsPerTeamD,
-			Description = "Max number of bots in one team for Domination",
-			Reference = Range(0.00, 128.00, 1.0),
-			Default = 12,
-			UpdateFlag = UpdateFlag.MaxBots,
-			Category = "SPAWNLIMITS"
-		},
-		{
-			Name = "MaxBotsPerTeamGm",
-			Text = "Max Bots Per Team (Gunmaster)",
-			---@type Type|integer
-			Type = Type.Integer,
-			Value = Config.MaxBotsPerTeamGm,
-			Description = "Max number of bots in one team for Gunmaster",
-			Reference = Range(0.00, 128.00, 1.0),
-			Default = 12,
-			UpdateFlag = UpdateFlag.MaxBots,
-			Category = "SPAWNLIMITS"
-		},
-		{
-			Name = "MaxBotsPerTeamS",
-			Text = "Max Bots Per Team (Scavenger)",
-			---@type Type|integer
-			Type = Type.Integer,
-			Value = Config.MaxBotsPerTeamS,
-			Description = "Max number of bots in one team for Scavenger",
-			Reference = Range(0.00, 128.00, 1.0),
-			Default = 12,
-			UpdateFlag = UpdateFlag.MaxBots,
-			Category = "SPAWNLIMITS"
+			Value = Config.TimeBetweenWaves,
+			Description = "Time in seconds between two waves",
+			Reference = Range(0.00, 60.00, 1.0),
+			Default = 7.0,
+			UpdateFlag = UpdateFlag.None,
+			Category = "WAVES"
 		},
 
 		-- Bot behaviour.

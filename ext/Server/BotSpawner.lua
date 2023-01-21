@@ -335,11 +335,17 @@ function BotSpawner:UpdateBotAmountAndTeam()
 
 
 	if Globals.SpawnMode == SpawnModes.wave_spawn then
-		Globals.RespawnWayBots = false
+		if self._CurrentSpawnWave == 0 then
+			Globals.RespawnWayBots = false
+			m_BotManager:KillAll()
+			ChatManager:Yell("First Wave starts in 10 seconds", 7.0)
+			self._FirstSpawnDelay = 10
+			self._CurrentSpawnWave = 1
+			self._BotsToSpawnInWave = Config.FirstWaveCount
+		end
 		if self._SpawnedBotsInCurrentWave < self._BotsToSpawnInWave then
-			local s_InactiveBots = m_BotManager:GetBotCount() - m_BotManager:GetActiveBotCount()
 			local s_PlayerLimit = Globals.MaxPlayers - 1
-			local s_SlotsLeft = s_PlayerLimit - (PlayerManager:GetPlayerCount() - s_InactiveBots)
+			local s_SlotsLeft = s_PlayerLimit - (PlayerManager:GetPlayerCount())
 			local numberOfBotsToSpawn = self._BotsToSpawnInWave - self._SpawnedBotsInCurrentWave
 			if numberOfBotsToSpawn > s_SlotsLeft then
 				numberOfBotsToSpawn = s_SlotsLeft
@@ -347,11 +353,12 @@ function BotSpawner:UpdateBotAmountAndTeam()
 			self:SpawnWayBots(nil, numberOfBotsToSpawn, true, 0, 0, Config.BotTeam)
 		else
 			-- all bots spawned. Check for alive bots
-			if m_BotManager:GetActiveBotCount() <= 4 then
-				ChatManager:Yell("Wave finished, new wave starts in 7 seconds", 5.0)
-				self._FirstSpawnDelay = 7.0
+			if m_BotManager:GetAliveBotCount() <= Config.ZombiesAliveForNextWave then
+				ChatManager:Yell("Wave finished, new wave starts in a few seconds", 7.0)
+				self._FirstSpawnDelay = Config.TimeBetweenWaves
 				self._SpawnedBotsInCurrentWave = 0
-				self._BotsToSpawnInWave = self._BotsToSpawnInWave + 10
+				self._BotsToSpawnInWave = Config.FirstWaveCount + (self._CurrentSpawnWave * Config.IncrementPerWave)
+				self._CurrentSpawnWave = self._CurrentSpawnWave + 1
 			end
 		end
 

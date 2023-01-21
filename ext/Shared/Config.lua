@@ -25,21 +25,13 @@ Config = {
 	MaxSupportBots = -1,				-- Maximum number of Bots with Support Kit. -1 = no limit 
 	MaxReconBots = -1,					-- Maximum number of Bots with Recon Kit. -1 = no limit 
 	AdditionalBotSpawnDelay = 0.5,		-- Additional time a bot waits to respawn 
+	MaxBotsPerTeamDefault = 128,		-- Max number of bots in one team, if no other mode fits 
 
-	-- SPAWNLIMITS 
-	MaxBotsPerTeamDefault = 32,			-- Max number of bots in one team, if no other mode fits 
-	MaxBotsPerTeamTdm = 32,				-- Max number of bots in one team for TDM 
-	MaxBotsPerTeamTdmc = 8,				-- Max number of bots in one team for TDM-CQ 
-	MaxBotsPerTeamSdm = 5,				-- Max number of bots in one team for Squad-DM 
-	MaxBotsPerTeamCl = 32,				-- Max number of bots in one team for CQ-Large 
-	MaxBotsPerTeamCs = 16,				-- Max number of bots in one team for CQ-Small 
-	MaxBotsPerTeamCal = 32,				-- Max number of bots in one team for CQ-Assault-Large 
-	MaxBotsPerTeamCas = 16,				-- Max number of bots in one team for CQ-Assault-Small 
-	MaxBotsPerTeamRl = 24,				-- Max number of bots in one team for Rush 
-	MaxBotsPerTeamCtf = 24,				-- Max number of bots in one team for CTF 
-	MaxBotsPerTeamD = 12,				-- Max number of bots in one team for Domination 
-	MaxBotsPerTeamGm = 12,				-- Max number of bots in one team for Gunmaster 
-	MaxBotsPerTeamS = 12,				-- Max number of bots in one team for Scavenger 
+	-- WAVES 
+	FirstWaveCount = 30,				-- Zombies that spawn in the first wave 
+	IncrementPerWave = 10,				-- Zombies that are added in each new wave 
+	ZombiesAliveForNextWave = 5,		-- New wave is triggered when this number of zombies is reached 
+	TimeBetweenWaves = 7.0,				-- Time in seconds between two waves 
 
 	-- BEHAVIOUR 
 	FovForShooting = 180,				-- Degrees of FOV of Bot 
