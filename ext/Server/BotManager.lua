@@ -519,6 +519,20 @@ function BotManager:GetActiveBotCount(p_TeamId)
 	return s_Count
 end
 
+function BotManager:GetAliveBotCount(p_TeamId)
+	local s_Count = 0
+
+	for _, l_Bot in ipairs(self._Bots) do
+		if l_Bot.m_Player.soldier then
+			if p_TeamId == nil or l_Bot.m_Player.teamId == p_TeamId then
+				s_Count = s_Count + 1
+			end
+		end
+	end
+
+	return s_Count
+end
+
 -- Returns all real players.
 ---@return Player[]
 function BotManager:GetPlayers()
@@ -697,6 +711,7 @@ function BotManager:SpawnBot(p_Bot, p_Transform, p_Pose)
 
 	-- Customization of health of bot.
 	s_BotSoldier.maxHealth = Config.BotMaxHealth
+	s_BotSoldier.health = Config.BotMaxHealth
 
 	s_BotPlayer:SpawnSoldierAt(s_BotSoldier, p_Transform, p_Pose)
 	s_BotPlayer:AttachSoldier(s_BotSoldier)

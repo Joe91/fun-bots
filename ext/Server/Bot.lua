@@ -547,7 +547,7 @@ end
 
 ---@return boolean
 function Bot:IsInactive()
-	if self.m_Player.soldier ~= nil or self._SpawnMode ~= BotSpawnModes.NoRespawn then
+	if self.m_Player.soldier ~= nil or self.m_Player.corpse ~= nil then
 		return false
 	else
 		return true
