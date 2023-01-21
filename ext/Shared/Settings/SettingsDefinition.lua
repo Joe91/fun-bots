@@ -97,7 +97,7 @@ SettingsDefinition = {
 			Value = Config.SpawnMode,
 			Description = "Mode the bots spawn with",
 			Reference = SpawnModes,
-			Default = SpawnModes.increment_with_players,
+			Default = SpawnModes.wave_spawn,
 			UpdateFlag = UpdateFlag.AmountAndTeam,
 			Category = "SPAWN"
 		},

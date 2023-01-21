@@ -14,7 +14,7 @@ Config = {
 	DamageFactorKnife = 1.5,			-- Original Damage from bots gets multiplied by this 
 
 	-- SPAWN 
-	SpawnMode = SpawnModes.increment_with_players,	-- Mode the bots spawn with 
+	SpawnMode = SpawnModes.wave_spawn,	-- Mode the bots spawn with 
 	InitNumberOfBots = 10,				-- Bots for spawnmode 
 	NewBotsPerNewPlayer = 5,			-- Number to increase Bots by when new players join 
 	FactorPlayerTeamCount = 0.2,		-- Reduce player team in balanced_teams or fixed_number mode 
