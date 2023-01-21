@@ -35,7 +35,7 @@ function BotSpawner:RegisterVars()
 
 	self._CurrentSpawnWave = 0
 	self._SpawnedBotsInCurrentWave = 0
-	self._BotsToSpawnInWave = 25
+	self._BotsToSpawnInWave = 0
 
 end
 
@@ -56,7 +56,9 @@ function BotSpawner:OnLevelLoaded(p_Round)
 
 	-- don't switch teams
 	--	self:_SwitchTeams()
-
+	self._CurrentSpawnWave = 0
+	self._SpawnedBotsInCurrentWave = 0
+	self._BotsToSpawnInWave = 0
 
 	self._LastRound = p_Round
 end
