@@ -339,7 +339,8 @@ function BotMovement:UpdateShootMovement(p_Bot)
 		local s_DistanceDone = p_Bot._ShootWayPoints[#p_Bot._ShootWayPoints].Position:Distance(p_Bot._ShootWayPoints[
 			#p_Bot._ShootWayPoints - s_TargetCycles].Position)
 		if s_DistanceDone < 0.5 and p_Bot._DistanceToPlayer > 1.0 then -- No movement was possible. Try to jump over an obstacle.
-			p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.Normal
+			-- p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.Normal
+			table.remove(p_Bot._ShootWayPoints)
 			p_Bot:_SetInput(EntryInputActionEnum.EIAJump, 1)
 			p_Bot:_SetInput(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1)
 		end
