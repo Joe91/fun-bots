@@ -93,29 +93,32 @@ end
 
 ---VEXT Server Player:Left Event
 function BotManager:OnPlayerKilled(p_Player)
-	if m_Utilities:isBot(p_Player) then
-		if Config.ZombiesDropAmmo and MathUtils:GetRandomInt(1, 100) <= Registry.ZOMBIES.PROBABILITY_DROP_AMMO then
-			local bp = ResourceManager:SearchForDataContainer('Weapons/Gadgets/Ammobag/Ammobag_Projectile') --ResourceManager:SearchForInstanceByGuid(Guid('31F0464E-5313-4880-40CF-D140349C71A5')) --
-			if bp ~= nil then
-				local creationParams = EntityCreationParams()
-				creationParams.transform = LinearTransform()
-				creationParams.networked = true
-				creationParams.transform.trans = p_Player.soldier.transform.trans:Clone()
-				local projectileBluePrint = ProjectileBlueprint(bp)
-				local supplyData = SupplySphereEntityData(projectileBluePrint.object).supplyData
-				supplyData.ammo.infiniteCapacity = false
-				supplyData.ammo.supplyPointsCapacity = 1
-				supplyData.ammo.supplyPointsRefillSpeed = 1
+	if not m_Utilities:isBot(p_Player) or not Config.ZombiesDropAmmo or MathUtils:GetRandomInt(1, 100) > Registry.ZOMBIES.PROBABILITY_DROP_AMMO then
+		return
+	end
 
-				local createdBus = EntityManager:CreateEntitiesFromBlueprint(bp, creationParams)
+	local bp = ResourceManager:SearchForDataContainer('Weapons/Gadgets/Ammobag/Ammobag_Projectile') --ResourceManager:SearchForInstanceByGuid(Guid('31F0464E-5313-4880-40CF-D140349C71A5')) --
+	if bp == nil then
+		return
+	end
 
-				if createdBus ~= nil then
-					for _, entity in pairs(createdBus.entities) do
-						entity:Init(Realm.Realm_ClientAndServer, true)
-					end
-				end
-			end
-		end
+	local creationParams = EntityCreationParams()
+	creationParams.transform = LinearTransform()
+	creationParams.networked = true
+	creationParams.transform.trans = p_Player.soldier.transform.trans:Clone()
+	local projectileBluePrint = ProjectileBlueprint(bp)
+	local supplyData = SupplySphereEntityData(projectileBluePrint.object).supplyData
+	supplyData.ammo.infiniteCapacity = false
+	supplyData.ammo.supplyPointsCapacity = 1
+	supplyData.ammo.supplyPointsRefillSpeed = 1
+
+	local createdBus = EntityManager:CreateEntitiesFromBlueprint(bp, creationParams)
+	if createdBus == nil then
+		return
+	end
+
+	for _, entity in pairs(createdBus.entities) do
+		entity:Init(Realm.Realm_ClientAndServer, true)
 	end
 end
 
