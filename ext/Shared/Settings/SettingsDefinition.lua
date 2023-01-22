@@ -49,17 +49,62 @@ SettingsDefinition = {
 			UpdateFlag = UpdateFlag.None,
 			Category = "GENERAL"
 		},
+		{
+			Name = "ZombiesDropAmmo",
+			Text = "Zombies Drop Ammo",
+			---@type Type|integer
+			Type = Type.Boolean,
+			Value = Config.ZombiesDropAmmo,
+			Description = "Zombies drop randomly some ammo",
+			Default = true,
+			UpdateFlag = UpdateFlag.None,
+			Category = "GENERAL"
+		},
+		{
+			Name = "RandomHealthOfZombies",
+			Text = "Randomize Helth of Zombies",
+			---@type Type|integer
+			Type = Type.Boolean,
+			Value = Config.RandomHealthOfZombies,
+			Description = "zombie-helth differs from bot to bot",
+			Default = true,
+			UpdateFlag = UpdateFlag.None,
+			Category = "GENERAL"
+		},
+		{
+			Name = "RandomAttackSpeedOfZombies",
+			Text = "Randomize Attack-Speed of Zombies",
+			---@type Type|integer
+			Type = Type.Boolean,
+			Value = Config.RandomAttackSpeedOfZombies,
+			Description = "zombie-speed differs from bot to bot",
+			Default = true,
+			UpdateFlag = UpdateFlag.None,
+			Category = "GENERAL"
+		},
 
 		-- Difficulty.
 		{
 			Name = "BotMaxHealth",
-			Text = "Bot Health at spawn",
+			Text = "Bot Max Health at spawn",
 			---@type Type|integer
 			Type = Type.Float,
 			Value = Config.BotMaxHealth,
-			Description = "Max health of bot (default 100.0)",
+			Description = "Max health of bot at spawn(default 100.0)",
 			Reference = Range(0.0, 1000.00, 1.0),
 			Default = 100.0,
+			UpdateFlag = UpdateFlag.None,
+			Category = "DIFFICULTY"
+		},
+		{
+			Name = "BotMinHealth",
+			Text = "Bot Min Health at spawn",
+			---@type Type|integer
+			Type = Type.Float,
+			Value = Config.BotMinHealth,
+			Description = "Min health of bot at spawn (default 100.0)",
+			Reference = Range(0.0, 1000.00, 1.0),
+			Default = 50.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
@@ -246,14 +291,38 @@ SettingsDefinition = {
 			Category = "WAVES"
 		},
 		{
-			Name = "IncrementPerWave",
+			Name = "IncrementZombiesPerWave",
 			Text = "Additional Zombies per wave",
 			---@type Type|integer
 			Type = Type.Integer,
-			Value = Config.IncrementPerWave,
+			Value = Config.IncrementZombiesPerWave,
 			Description = "Zombies that are added in each new wave",
 			Reference = Range(0.00, 128.00, 1.0),
 			Default = 10,
+			UpdateFlag = UpdateFlag.None,
+			Category = "WAVES"
+		},
+		{
+			Name = "IncrementMaxHealthPerWave",
+			Text = "Additional Max Health per wave",
+			---@type Type|integer
+			Type = Type.Integer,
+			Value = Config.IncrementMaxHealthPerWave,
+			Description = "Zombies get more health each wave",
+			Reference = Range(0.00, 500.00, 1.0),
+			Default = 50,
+			UpdateFlag = UpdateFlag.None,
+			Category = "WAVES"
+		},
+		{
+			Name = "IncrementMaxSpeedPerWave",
+			Text = "Additional Speed for Attack",
+			---@type Type|integer
+			Type = Type.Integer,
+			Value = Config.IncrementMaxSpeedPerWave,
+			Description = "Zombies get more speed each wave",
+			Reference = Range(0.00, 5.00, 1.0),
+			Default = 0.2,
 			UpdateFlag = UpdateFlag.None,
 			Category = "WAVES"
 		},

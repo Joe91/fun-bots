@@ -376,6 +376,7 @@ end
 ---@param p_WasVictimInReviveState boolean
 ---@param p_Info DamageGiverInfo
 function FunBotServer:OnPlayerKilled(p_Player, p_Inflictor, p_Position, p_Weapon, p_IsRoadKill, p_IsHeadShot, p_WasVictimInReviveState, p_Info)
+	m_BotManager:OnPlayerKilled(p_Player)
 	m_NodeEditor:OnPlayerKilled(p_Player)
 	m_AirTargets:OnPlayerKilled(p_Player)
 end

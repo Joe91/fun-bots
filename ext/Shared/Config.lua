@@ -7,9 +7,13 @@ Config = {
 	-- GENERAL 
 	BotKit = BotKits.RANDOM_KIT,		-- The Kit of the Bots 
 	BotColor = BotColors.RANDOM_COLOR,	-- The Color of the Bots 
+	ZombiesDropAmmo = true,				-- Zombies drop randomly some ammo 
+	RandomHealthOfZombies = true,		-- zombie-helth differs from bot to bot 
+	RandomAttackSpeedOfZombies = true,	-- zombie-speed differs from bot to bot 
 
 	-- DIFFICULTY 
-	BotMaxHealth = 100.0,				-- Max health of bot (default 100.0) 
+	BotMaxHealth = 100.0,				-- Max health of bot at spawn(default 100.0) 
+	BotMinHealth = 50.0,				-- Min health of bot at spawn (default 100.0) 
 	BotWorseningSkill = 0.50,			-- Variation of the skill of a single bot. The higher, the worse the bots can get compared to the original settings 
 	DamageFactorKnife = 1.5,			-- Original Damage from bots gets multiplied by this 
 
@@ -29,7 +33,9 @@ Config = {
 
 	-- WAVES 
 	FirstWaveCount = 30,				-- Zombies that spawn in the first wave 
-	IncrementPerWave = 10,				-- Zombies that are added in each new wave 
+	IncrementZombiesPerWave = 10,		-- Zombies that are added in each new wave 
+	IncrementMaxHealthPerWave = 50,		-- Zombies get more health each wave 
+	IncrementMaxSpeedPerWave = 0.2,		-- Zombies get more speed each wave 
 	ZombiesAliveForNextWave = 5,		-- New wave is triggered when this number of zombies is reached 
 	TimeBetweenWaves = 7.0,				-- Time in seconds between two waves 
 

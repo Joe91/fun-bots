@@ -92,6 +92,33 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 end
 
 ---VEXT Server Player:Left Event
+function BotManager:OnPlayerKilled(p_Player)
+	if m_Utilities:isBot(p_Player) then
+		if Config.ZombiesDropAmmo and MathUtils:GetRandomInt(1, 100) <= Registry.ZOMBIES.PROBABILITY_DROP_AMMO then
+			local bp = ResourceManager:SearchForDataContainer('Weapons/Gadgets/Ammobag/Ammobag_Projectile') --ResourceManager:SearchForInstanceByGuid(Guid('31F0464E-5313-4880-40CF-D140349C71A5')) --
+			if bp ~= nil then
+				local creationParams = EntityCreationParams()
+				creationParams.transform = LinearTransform()
+				creationParams.networked = true
+				creationParams.transform.trans = p_Player.soldier.transform.trans:Clone()
+				local projectileBluePrint = ProjectileBlueprint(bp)
+				local supplyData = SupplySphereEntityData(projectileBluePrint.object).supplyData
+				supplyData.ammo.infiniteCapacity = false
+				supplyData.ammo.supplyPointsCapacity = 1
+				supplyData.ammo.supplyPointsRefillSpeed = 1
+
+				local createdBus = EntityManager:CreateEntitiesFromBlueprint(bp, creationParams)
+
+				if createdBus ~= nil then
+					for _, entity in pairs(createdBus.entities) do
+						entity:Init(Realm.Realm_ClientAndServer, true)
+					end
+				end
+			end
+		end
+	end
+end
+
 ---@param p_Player Player
 function BotManager:OnPlayerLeft(p_Player)
 	-- Remove all references of player.
@@ -711,7 +738,13 @@ function BotManager:SpawnBot(p_Bot, p_Transform, p_Pose)
 
 	-- Customization of health of bot.
 	s_BotSoldier.maxHealth = Config.BotMaxHealth
-	s_BotSoldier.health = Config.BotMaxHealth
+
+	if Config.RandomHealthOfZombies then
+		local healthValue = MathUtils:GetRandom(Config.BotMinHealth, Config.BotMaxHealth)
+		s_BotSoldier.health = healthValue
+	else
+		s_BotSoldier.health = Config.BotMaxHealth
+	end
 
 	s_BotPlayer:SpawnSoldierAt(s_BotSoldier, p_Transform, p_Pose)
 	s_BotPlayer:AttachSoldier(s_BotSoldier)

@@ -114,6 +114,10 @@ Registry = {
 		VEHICLE_SEAT_CHECK_CYCLE_TIME = 4.0,
 	},
 
+	ZOMBIES = {
+		PROBABILITY_DROP_AMMO = 20,
+	},
+
 	-- Bot related.
 	BOT = {
 		-- Update cycle fast.

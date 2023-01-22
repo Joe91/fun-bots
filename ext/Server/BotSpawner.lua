@@ -359,7 +359,7 @@ function BotSpawner:UpdateBotAmountAndTeam()
 				ChatManager:Yell("Wave finished, new wave starts in a few seconds", 7.0)
 				self._FirstSpawnDelay = Config.TimeBetweenWaves
 				self._SpawnedBotsInCurrentWave = 0
-				self._BotsToSpawnInWave = Config.FirstWaveCount + (self._CurrentSpawnWave * Config.IncrementPerWave)
+				self._BotsToSpawnInWave = Config.FirstWaveCount + (self._CurrentSpawnWave * Config.IncrementZombiesPerWave)
 				self._CurrentSpawnWave = self._CurrentSpawnWave + 1
 			end
 		end
