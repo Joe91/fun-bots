@@ -129,6 +129,7 @@ end
 function FunBotServer:RegisterHooks()
 	Hooks:Install('Soldier:Damage', 100, self, self.OnSoldierDamage)
 	Hooks:Install('EntityFactory:Create', 100, self, self.OnEntityFactoryCreate)
+	Hooks:Install('BulletEntity:Collision', 1, self, self.OnBulletEntityCollision)
 end
 
 function FunBotServer:RegisterCustomEvents()
@@ -494,6 +495,24 @@ function FunBotServer:OnEntityFactoryCreate(p_HookCtx, p_EntityData, p_Transform
 	end
 end
 
+---@param p_HookCtx HookContext
+---@param p_Entity Entity
+---@param p_Hit RayCastHit
+---@param p_GiverInfo DamageGiverInfo
+function FunBotServer:OnBulletEntityCollision(p_HookCtx, p_Entity, p_Hit, p_GiverInfo)
+	if p_GiverInfo.giver and p_GiverInfo.giver.onlineId == 0 then
+		local s_SyncedGameSettings = ResourceManager:GetSettings("SyncedGameSettings")
+
+		if not s_SyncedGameSettings then return end
+
+		s_SyncedGameSettings = SyncedGameSettings(s_SyncedGameSettings)
+		s_SyncedGameSettings:MakeWritable()
+		s_SyncedGameSettings.allowClientSideDamageArbitration = false
+		p_HookCtx:Call()
+		s_SyncedGameSettings.allowClientSideDamageArbitration = true
+	end
+end
+
 -- =============================================
 -- Custom Events.
 -- =============================================
@@ -576,7 +595,7 @@ end
 function FunBotServer:OnSyncedGameSettingsCallback(p_SyncedGameSettings)
 	p_SyncedGameSettings = SyncedGameSettings(p_SyncedGameSettings)
 	p_SyncedGameSettings:MakeWritable()
-	p_SyncedGameSettings.allowClientSideDamageArbitration = false
+	p_SyncedGameSettings.allowClientSideDamageArbitration = true
 end
 
 ---@param p_FiringFunctionData FiringFunctionData|DataContainer
