@@ -345,6 +345,7 @@ function BotSpawner:UpdateBotAmountAndTeam()
 			self._CurrentSpawnWave = 1
 			Globals.MaxHealthValue = Config.BotMaxHealth
 			Globals.MinHealthValue = Config.BotMinHealth
+			Globals.DamageFactorZombies = Config.DamageFactorKnife
 			self._BotsToSpawnInWave = Config.FirstWaveCount
 		end
 		if self._SpawnedBotsInCurrentWave < self._BotsToSpawnInWave then
@@ -363,6 +364,7 @@ function BotSpawner:UpdateBotAmountAndTeam()
 				self._SpawnedBotsInCurrentWave = 0
 				Globals.MaxHealthValue = Config.BotMaxHealth + (self._CurrentSpawnWave * Config.IncrementMaxHealthPerWave)
 				Globals.MinHealthValue = Config.BotMinHealth + (self._CurrentSpawnWave * Config.IncrementMaxHealthPerWave)
+				Globals.DamageFactorZombies = Config.DamageFactorKnife + (self._CurrentSpawnWave * Config.IncrementDamageFactorPerWave)
 				self._BotsToSpawnInWave = Config.FirstWaveCount + (self._CurrentSpawnWave * Config.IncrementZombiesPerWave)
 				self._CurrentSpawnWave = self._CurrentSpawnWave + 1
 			end

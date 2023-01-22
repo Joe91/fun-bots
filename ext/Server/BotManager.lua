@@ -1255,22 +1255,12 @@ function BotManager:_GetDamageValue(p_Damage, p_Bot, p_Soldier)
 
 	local s_ActiveWeaponType = p_Bot.m_ActiveWeapon.type
 
-	if s_ActiveWeaponType == WeaponTypes.Shotgun then
-		s_DamageFactor = Config.DamageFactorShotgun
-	elseif s_ActiveWeaponType == WeaponTypes.Assault then
-		s_DamageFactor = Config.DamageFactorAssault
-	elseif s_ActiveWeaponType == WeaponTypes.Carabine then
-		s_DamageFactor = Config.DamageFactorCarabine
-	elseif s_ActiveWeaponType == WeaponTypes.PDW then
-		s_DamageFactor = Config.DamageFactorPDW
-	elseif s_ActiveWeaponType == WeaponTypes.LMG then
-		s_DamageFactor = Config.DamageFactorLMG
-	elseif s_ActiveWeaponType == WeaponTypes.Sniper then
-		s_DamageFactor = Config.DamageFactorSniper
-	elseif s_ActiveWeaponType == WeaponTypes.Pistol then
-		s_DamageFactor = Config.DamageFactorPistol
-	elseif s_ActiveWeaponType == WeaponTypes.Knife then
-		s_DamageFactor = Config.DamageFactorKnife
+	if s_ActiveWeaponType == WeaponTypes.Knife then
+		if Globals.SpawnMode == SpawnModes.wave_spawn then
+			s_DamageFactor = Globals.DamageFactorZombies
+		else
+			s_DamageFactor = Config.DamageFactorKnife
+		end
 	end
 
 	return p_Damage * s_DamageFactor
