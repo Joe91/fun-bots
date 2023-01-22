@@ -35,6 +35,7 @@ Config = {
 	FirstWaveCount = 30,				-- Zombies that spawn in the first wave 
 	IncrementZombiesPerWave = 10,		-- Zombies that are added in each new wave 
 	IncrementMaxHealthPerWave = 50,		-- Zombies get more health each wave 
+	IncrementDamageFactorPerWave = 0.1,	-- Zombies deal more damage each wave 
 	IncrementMaxSpeedPerWave = 0.2,		-- Zombies get more speed each wave 
 	ZombiesAliveForNextWave = 5,		-- New wave is triggered when this number of zombies is reached 
 	TimeBetweenWaves = 7.0,				-- Time in seconds between two waves 

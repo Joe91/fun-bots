@@ -315,6 +315,18 @@ SettingsDefinition = {
 			Category = "WAVES"
 		},
 		{
+			Name = "IncrementDamageFactorPerWave",
+			Text = "Additional Damage of Zombies per wave",
+			---@type Type|integer
+			Type = Type.Integer,
+			Value = Config.IncrementDamageFactorPerWave,
+			Description = "Zombies deal more damage each wave",
+			Reference = Range(0.00, 2.00, 0.05),
+			Default = 0.1,
+			UpdateFlag = UpdateFlag.None,
+			Category = "WAVES"
+		},
+		{
 			Name = "IncrementMaxSpeedPerWave",
 			Text = "Additional Speed for Attack",
 			---@type Type|integer

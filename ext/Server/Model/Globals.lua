@@ -24,6 +24,11 @@ Globals = {
 	RemoveKitVisuals = false,
 	IgnoreBotNames = {},
 
+	MaxHealthValue = 0,
+	MinHealthValue = 0,
+	SpeedAttackValue = 0,
+	DamageFactorZombies = 0,
+
 	RespawnWayBots = false, -- Used for the runtime respawn.
 	AttackWayBots = false, -- Used for the runtime attack.
 	SpawnMode = SpawnModes.manual -- Used for the runtime spawn mode.

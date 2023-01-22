@@ -343,6 +343,8 @@ function BotSpawner:UpdateBotAmountAndTeam()
 			ChatManager:Yell("First Wave starts in 10 seconds", 7.0)
 			self._FirstSpawnDelay = 10
 			self._CurrentSpawnWave = 1
+			Globals.MaxHealthValue = Config.BotMaxHealth
+			Globals.MinHealthValue = Config.BotMinHealth
 			self._BotsToSpawnInWave = Config.FirstWaveCount
 		end
 		if self._SpawnedBotsInCurrentWave < self._BotsToSpawnInWave then
@@ -359,6 +361,8 @@ function BotSpawner:UpdateBotAmountAndTeam()
 				ChatManager:Yell("Wave finished, new wave starts in a few seconds", 7.0)
 				self._FirstSpawnDelay = Config.TimeBetweenWaves
 				self._SpawnedBotsInCurrentWave = 0
+				Globals.MaxHealthValue = Config.BotMaxHealth + (self._CurrentSpawnWave * Config.IncrementMaxHealthPerWave)
+				Globals.MinHealthValue = Config.BotMinHealth + (self._CurrentSpawnWave * Config.IncrementMaxHealthPerWave)
 				self._BotsToSpawnInWave = Config.FirstWaveCount + (self._CurrentSpawnWave * Config.IncrementZombiesPerWave)
 				self._CurrentSpawnWave = self._CurrentSpawnWave + 1
 			end

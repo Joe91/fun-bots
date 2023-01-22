@@ -736,14 +736,20 @@ function BotManager:SpawnBot(p_Bot, p_Transform, p_Pose)
 		return nil
 	end
 
-	-- Customization of health of bot.
-	s_BotSoldier.maxHealth = Config.BotMaxHealth
+	local maxHealthValue = Config.BotMaxHealth
+	local minHealthValue = Config.BotMinHealth
 
+	if Globals.SpawnMode == SpawnModes.wave_spawn then
+		maxHealthValue = Globals.MaxHealthValue
+		minHealthValue = Globals.MinHealthValue
+	end
+
+	-- Customization of health of bot.
+	s_BotSoldier.maxHealth = maxHealthValue
 	if Config.RandomHealthOfZombies then
-		local healthValue = MathUtils:GetRandom(Config.BotMinHealth, Config.BotMaxHealth)
-		s_BotSoldier.health = healthValue
+		s_BotSoldier.health = MathUtils:GetRandom(minHealthValue, maxHealthValue)
 	else
-		s_BotSoldier.health = Config.BotMaxHealth
+		s_BotSoldier.health = maxHealthValue
 	end
 
 	s_BotPlayer:SpawnSoldierAt(s_BotSoldier, p_Transform, p_Pose)
