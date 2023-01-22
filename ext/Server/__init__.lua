@@ -220,6 +220,18 @@ function FunBotServer:RegisterCallbacks()
 	-- ResourceManager:RegisterInstanceLoadHandler(Guid('8517D561-0AED-4C58-A634-5D069A8E1BA2'), Guid('502DA681-116F-494C-AFBD-DC02522A14B4'), self, self.OnHumanPlayerEntityDataCallback)
 	-- TutorialMP ShootHouse.
 	-- ResourceManager:RegisterInstanceLoadHandler(Guid('53C55F5E-C5CF-4B60-A455-445739D99501'), Guid('F4B49F70-BE94-4792-95E6-09A5F3F932F4'), self, self.OnHumanPlayerEntityDataCallback)
+
+	-- Ammobag-Nerving
+	ResourceManager:RegisterPartitionLoadHandler(Guid("04CD683B-1F1B-11E0-BBD1-F7235575FD24"), function(p_Partition)
+		local s_ProjectileBlueprint = ProjectileBlueprint(p_Partition.primaryInstance)
+		local s_SupplySphereEntityData = SupplySphereEntityData(s_ProjectileBlueprint.object)
+		s_SupplySphereEntityData:MakeWritable()
+
+		local s_AmmoConfig = s_SupplySphereEntityData.supplyData.ammo
+		s_AmmoConfig.infiniteCapacity = false
+		s_AmmoConfig.supplyPointsCapacity = 1.0
+		s_AmmoConfig.supplyPointsRefillSpeed = 1.0
+	end)
 end
 
 -- =============================================

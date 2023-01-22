@@ -106,11 +106,11 @@ function BotManager:OnPlayerKilled(p_Player)
 	creationParams.transform = LinearTransform()
 	creationParams.networked = true
 	creationParams.transform.trans = p_Player.soldier.transform.trans:Clone()
-	local projectileBluePrint = ProjectileBlueprint(bp)
-	local supplyData = SupplySphereEntityData(projectileBluePrint.object).supplyData
-	supplyData.ammo.infiniteCapacity = false
-	supplyData.ammo.supplyPointsCapacity = 1
-	supplyData.ammo.supplyPointsRefillSpeed = 1
+	-- local projectileBluePrint = ProjectileBlueprint(bp)
+	-- local supplyData = SupplySphereEntityData(projectileBluePrint.object).supplyData
+	-- supplyData.ammo.infiniteCapacity = false
+	-- supplyData.ammo.supplyPointsCapacity = 1
+	-- supplyData.ammo.supplyPointsRefillSpeed = 1
 
 	local createdBus = EntityManager:CreateEntitiesFromBlueprint(bp, creationParams)
 	if createdBus == nil then
