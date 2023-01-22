@@ -16,6 +16,7 @@ Config = {
 	BotMinHealth = 50.0,				-- Min health of bot at spawn (default 100.0) 
 	BotWorseningSkill = 0.50,			-- Variation of the skill of a single bot. The higher, the worse the bots can get compared to the original settings 
 	DamageFactorKnife = 1.5,			-- Original Damage from bots gets multiplied by this 
+	SpeedFactorAttack = 1.5,			-- Modifies the speed while attacking. 1 = normal 
 
 	-- SPAWN 
 	SpawnMode = SpawnModes.wave_spawn,	-- Mode the bots spawn with 
@@ -93,7 +94,6 @@ Config = {
 	OverWriteBotSpeedMode = BotMoveSpeeds.NoMovement,	-- 0 = no overwrite. 1 = prone, 2 = crouch, 3 = walk, 4 = run 
 	OverWriteBotAttackMode = BotMoveSpeeds.NoMovement,	-- Affects Aiming!!! 0 = no overwrite. 1 = prone, 2 = crouch (good aim), 3 = walk (good aim), 4 = run 
 	SpeedFactor = 1.0,					-- Reduces the movement speed. 1 = normal, 0 = standing 
-	SpeedFactorAttack = 0.6,			-- Reduces the movement speed while attacking. 1 = normal, 0 = standing 
 	UseRandomNames = false,				-- Changes names of the bots on every new round. Experimental right now... 
 	MoveSidewards = true,				-- Bots move sidewards 
 	MaxStraigtCycle = 10.0,				-- Max time bots move straight, before sidewards-movement (in sec) 

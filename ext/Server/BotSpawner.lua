@@ -339,13 +339,14 @@ function BotSpawner:UpdateBotAmountAndTeam()
 	if Globals.SpawnMode == SpawnModes.wave_spawn then
 		if self._CurrentSpawnWave == 0 then
 			Globals.RespawnWayBots = false
-			m_BotManager:KillAll()
+			m_BotManager:DestroyAll()
 			ChatManager:Yell("First Wave starts in 10 seconds", 7.0)
 			self._FirstSpawnDelay = 10
 			self._CurrentSpawnWave = 1
 			Globals.MaxHealthValue = Config.BotMaxHealth
 			Globals.MinHealthValue = Config.BotMinHealth
 			Globals.DamageFactorZombies = Config.DamageFactorKnife
+			Globals.SpeedAttackValue = Config.SpeedFactorAttack
 			self._BotsToSpawnInWave = Config.FirstWaveCount
 		end
 		if self._SpawnedBotsInCurrentWave < self._BotsToSpawnInWave then

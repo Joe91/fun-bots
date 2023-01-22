@@ -132,6 +132,18 @@ SettingsDefinition = {
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
+		{
+			Name = "SpeedFactorAttack",
+			Text = "Speed factor attack",
+			---@type Type|integer
+			Type = Type.Float,
+			Value = Config.SpeedFactorAttack,
+			Description = "Modifies the speed while attacking. 1 = normal",
+			Reference = Range(0.00, 3.00, 0.10),
+			Default = 1.5,
+			UpdateFlag = UpdateFlag.None,
+			Category = "DIFFICULTY"
+		},
 
 		-- Spawn.
 		{
@@ -899,18 +911,6 @@ SettingsDefinition = {
 			Description = "Reduces the movement speed. 1 = normal, 0 = standing",
 			Reference = Range(0.00, 1.00, 0.10),
 			Default = 1.0,
-			UpdateFlag = UpdateFlag.None,
-			Category = "ADVANCED"
-		},
-		{
-			Name = "SpeedFactorAttack",
-			Text = "Speed factor attack",
-			---@type Type|integer
-			Type = Type.Float,
-			Value = Config.SpeedFactorAttack,
-			Description = "Reduces the movement speed while attacking. 1 = normal, 0 = standing",
-			Reference = Range(0.00, 1.00, 0.10),
-			Default = 0.6,
 			UpdateFlag = UpdateFlag.None,
 			Category = "ADVANCED"
 		},

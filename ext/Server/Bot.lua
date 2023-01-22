@@ -371,6 +371,7 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 			self._ShootPlayerName = p_Player.name
 			self._ShootPlayer = nil
 			self._KnifeWayPositions = {}
+			self._ShootWayPoints = {}
 			self._ShotTimer = 0.0
 			table.insert(self._KnifeWayPositions, p_Player.soldier.worldTransform.trans:Clone())
 
