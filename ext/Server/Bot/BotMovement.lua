@@ -152,7 +152,7 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 			-- Detect obstacle and move over or around. To-do: Move before normal jump.
 			local s_CurrentWayPointDistance = p_Bot.m_Player.soldier.worldTransform.trans:Distance(s_Point.Position)
 
-			if s_CurrentWayPointDistance > p_Bot._LastWayDistance + 0.02 and p_Bot._ObstaceSequenceTimer == 0 then
+			if s_CurrentWayPointDistance > p_Bot._LastWayDistance + 0.02 and p_Bot._ObstacleSequenceTimer == 0 then
 				-- Skip one point.
 				s_DistanceFromTarget = 0
 				s_HeightDistance = 0
@@ -161,16 +161,16 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 			p_Bot._TargetPoint = s_Point
 			p_Bot._NextTargetPoint = s_NextPoint
 
-			if math.abs(s_CurrentWayPointDistance - p_Bot._LastWayDistance) < 0.02 or p_Bot._ObstaceSequenceTimer ~= 0 then
+			if math.abs(s_CurrentWayPointDistance - p_Bot._LastWayDistance) < 0.02 or p_Bot._ObstacleSequenceTimer ~= 0 then
 				-- Try to get around obstacle.
 				p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.Sprint -- Always try to stand.
 
-				if p_Bot._ObstaceSequenceTimer == 0 then -- Step 0
-				elseif p_Bot._ObstaceSequenceTimer > 2.4 then -- Step 4 - repeat afterwards.
-					p_Bot._ObstaceSequenceTimer = 0.0
+				if p_Bot._ObstacleSequenceTimer == 0 then -- Step 0
+				elseif p_Bot._ObstacleSequenceTimer > 2.4 then -- Step 4 - repeat afterwards.
+					p_Bot._ObstacleSequenceTimer = 0
 					p_Bot:_ResetActionFlag(BotActionFlags.MeleeActive)
 					p_Bot._ObstacleRetryCounter = p_Bot._ObstacleRetryCounter + 1
-				elseif p_Bot._ObstaceSequenceTimer > 1.0 then -- Step 3
+				elseif p_Bot._ObstacleSequenceTimer > 1.0 then -- Step 3
 					if not p_Bot.m_InVehicle then
 						if p_Bot._ObstacleRetryCounter == 0 then
 							if p_Bot._ActiveAction ~= BotActionFlags.MeleeActive then
@@ -187,7 +187,7 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 							p_Bot:_SetInput(EntryInputActionEnum.EIAFire, 1)
 						end
 					end
-				elseif p_Bot._ObstaceSequenceTimer > 0.4 then -- Step 2
+				elseif p_Bot._ObstacleSequenceTimer > 0.4 then -- Step 2
 					p_Bot._TargetPitch = 0.0
 
 					if (MathUtils:GetRandomInt(0, 1) == 1) then
@@ -195,12 +195,12 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 					else
 						p_Bot:_SetInput(EntryInputActionEnum.EIAStrafe, -1.0 * Config.SpeedFactor)
 					end
-				elseif p_Bot._ObstaceSequenceTimer > 0.0 then -- Step 1
+				elseif p_Bot._ObstacleSequenceTimer > 0.0 then -- Step 1
 					p_Bot:_SetInput(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1)
 					p_Bot:_SetInput(EntryInputActionEnum.EIAJump, 1)
 				end
 
-				p_Bot._ObstaceSequenceTimer = p_Bot._ObstaceSequenceTimer + Registry.BOT.BOT_UPDATE_CYCLE
+				p_Bot._ObstacleSequenceTimer = p_Bot._ObstacleSequenceTimer + Registry.BOT.BOT_UPDATE_CYCLE
 				p_Bot._StuckTimer = p_Bot._StuckTimer + Registry.BOT.BOT_UPDATE_CYCLE
 
 				if p_Bot._ObstacleRetryCounter >= 2 then -- Try next waypoint.
@@ -249,7 +249,7 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 			p_Bot._LastWayDistance = s_CurrentWayPointDistance
 
 			-- Jump detection. Much more simple now, but works fine -)
-			if p_Bot._ObstaceSequenceTimer == 0 then
+			if p_Bot._ObstacleSequenceTimer == 0 then
 				if (s_Point.Position.y - p_Bot.m_Player.soldier.worldTransform.trans.y) > 0.3 and Config.JumpWhileMoving then
 					-- Detect, if a jump was recorded or not.
 					local s_TimeForwardBackwardJumpDetection = 1.1 -- 1.5 s ahead and back.
@@ -353,7 +353,7 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 					end
 				end
 
-				p_Bot._ObstaceSequenceTimer = 0.0
+				p_Bot._ObstacleSequenceTimer = 0
 				p_Bot:_ResetActionFlag(BotActionFlags.MeleeActive)
 				p_Bot._LastWayDistance = 1000.0
 			end
@@ -459,7 +459,8 @@ function BotMovement:UpdateShootMovement(p_Bot)
 		if #p_Bot._ShootWayPoints > s_TargetCycles and Config.JumpWhileShooting then
 			local s_DistanceDone = p_Bot._ShootWayPoints[#p_Bot._ShootWayPoints].Position:Distance(p_Bot._ShootWayPoints[
 				#p_Bot._ShootWayPoints - s_TargetCycles].Position)
-			if s_DistanceDone < 0.5 then -- No movement was possible. Try to jump over an obstacle.
+			if s_DistanceDone < 0.5 and p_Bot._DistanceToPlayer > 1.0 then -- No movement was possible. Try to jump over an obstacle.
+				table.remove(p_Bot._ShootWayPoints)
 				p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.Normal
 				p_Bot:_SetInput(EntryInputActionEnum.EIAJump, 1)
 				p_Bot:_SetInput(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1)

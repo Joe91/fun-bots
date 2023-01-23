@@ -54,9 +54,11 @@ local function _ReviveAttackingAction(p_Bot)
 		}
 
 		table.insert(p_Bot._ShootWayPoints, s_Point)
-		if p_Bot.m_KnifeMode then
+		if p_Bot.m_KnifeMode and p_Bot._ShootPlayer.soldier then
 			local s_Trans = p_Bot._ShootPlayer.soldier.worldTransform.trans:Clone()
-			table.insert(p_Bot._KnifeWayPositions, s_Trans)
+			if (#p_Bot._KnifeWayPositions == 0 or s_Trans:Distance(p_Bot._KnifeWayPositions[#p_Bot._KnifeWayPositions]) > Registry.BOT.TRACE_DELTA_SHOOTING) then
+				table.insert(p_Bot._KnifeWayPositions, s_Trans)
+			end
 		end
 	end
 
