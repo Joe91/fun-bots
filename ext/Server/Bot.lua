@@ -127,22 +127,6 @@ function Bot:__init(p_Player)
 	self._Objective = ''
 	self._OnSwitch = false
 
-	-- Vehicle stuff.
-	---@type integer|nil
-	self._VehicleMovableId = -1
-	self._LastVehicleYaw = 0.0
-	self._VehicleReadyToShoot = false
-	self._FullVehicleSteering = false
-	self._VehicleDirBackPositive = false
-	self._JetAbortAttackActive = false
-	self._ExitVehicleHealth = 0.0
-	self._LastVehicleHealth = 0.0
-	self._TargetHeightAttack = 0.0
-	self._VehicleWeaponSlotToUse = 1
-	self._ActiveVehicleWeaponSlot = 0
-	---@type ControllableEntity|nil
-	self._RepairVehicleEntity = nil
-
 	-- Shooting.
 	self._Shoot = false
 	---@type Player|nil
@@ -155,9 +139,6 @@ function Bot:__init(p_Player)
 	self._ShootWayPoints = {}
 	---@type Vec3[]
 	self._KnifeWayPositions = {}
-	self._Skill = 0.0
-	self._SkillSniper = 0.0
-	self._SkillFound = false
 
 	---@type Player|nil
 	self._TargetPlayer = nil
@@ -412,21 +393,6 @@ function Bot:ResetVars()
 	self._WeaponToUse = BotWeapons.Primary
 end
 
----@param p_DistanceToTarget number
----@param p_ReducedTiming boolean
----@return number
-function Bot:GetFirstShotDelay(p_DistanceToTarget, p_ReducedTiming)
-	local s_Delay = (Config.BotFirstShotDelay + (math.random() * self._Skill)) -- Slower reaction with lower skill. Always use "Skill" for this (independent of Sniper).
-
-	if p_ReducedTiming then
-		s_Delay = s_Delay * 0.6
-	end
-
-	-- Slower reaction on greater distances. 100 m = 1 extra second.
-	s_Delay = s_Delay + (p_DistanceToTarget * 0.01)
-	return s_Delay
-end
-
 ---@param p_Player Player
 function Bot:SetVarsStatic(p_Player)
 	self._SpawnMode = BotSpawnModes.NoRespawn
@@ -517,10 +483,6 @@ function Bot:SetObjective(p_Objective)
 	end
 end
 
-function Bot:ResetSkill()
-	self._SkillFound = false
-end
-
 ---@return string
 function Bot:GetObjective()
 	return self._Objective
@@ -581,13 +543,6 @@ function Bot:ResetSpawnVars()
 	self._AttackMode = BotAttackModes.RandomNotSet
 	self._ShootWayPoints = {}
 	self._SpeedFactorMovement = MathUtils:GetRandom(0.05, 1.0)
-
-	-- Skill.
-	if not self._SkillFound then
-		local s_TempSkillValue = math.random()
-		self._Skill = Config.BotWorseningSkill * s_TempSkillValue
-		self._SkillFound = true
-	end
 
 	self._ShotTimer = 0.0
 	self._UpdateTimer = 0.0

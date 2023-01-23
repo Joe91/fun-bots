@@ -673,13 +673,8 @@ function BotSpawner:_SelectLoadout(p_Bot, p_SetKit)
 	end
 
 	p_Bot:ResetSpawnVars()
-	local s_Team = "US"
 
-	if p_Bot.m_Player.teamId % 2 == 0 then
-		s_Team = "RU"
-	end
-
-	self:_SetBotWeapons(p_Bot, s_BotKit, s_Team, s_WriteNewKit)
+	self:_SetBotWeapons(p_Bot, s_WriteNewKit)
 
 	if p_Bot.m_Player.selectedKit == nil then
 		-- SoldierBlueprint
@@ -1115,13 +1110,8 @@ function BotSpawner:_SpawnBot(p_Bot, p_Transform, p_SetKit)
 		s_BotKit = p_Bot.m_Kit
 	end
 
-	local s_Team = "US"
 
-	if p_Bot.m_Player.teamId % 2 == 0 then
-		s_Team = "RU"
-	end
-
-	self:_SetBotWeapons(p_Bot, s_BotKit, s_Team, s_WriteNewKit)
+	self:_SetBotWeapons(p_Bot, s_WriteNewKit)
 	p_Bot:ResetSpawnVars()
 
 	-- Create kit and appearance.
@@ -1482,62 +1472,17 @@ function BotSpawner:_FindAppearance(p_TeamName, p_KitName, p_ColorName)
 end
 
 ---@param p_Bot Bot
----@param p_BotKit BotKits|integer
----@param p_Team TeamId|integer
 ---@param p_NewWeapons boolean
-function BotSpawner:_SetBotWeapons(p_Bot, p_BotKit, p_Team, p_NewWeapons)
-	if Globals.IsScavenger then
-		p_Bot.m_SecondaryGadget = nil
-		p_Bot.m_PrimaryGadget = nil
-		p_Bot.m_Grenade = nil
-		p_Bot.m_Pistol = m_WeaponList:getWeapon(ScavengerWeapons[BotWeapons.Pistol][
-			MathUtils:GetRandomInt(1, #ScavengerWeapons[BotWeapons.Pistol])])
-		p_Bot.m_Knife = m_WeaponList:getWeapon(ScavengerWeapons[BotWeapons.Knife][
-			MathUtils:GetRandomInt(1, #ScavengerWeapons[BotWeapons.Knife])])
-		p_Bot.m_Primary = m_WeaponList:getWeapon(ScavengerWeapons[BotWeapons.Primary][
-			MathUtils:GetRandomInt(1, #ScavengerWeapons[BotWeapons.Primary])])
-	elseif p_NewWeapons then
-		local s_Pistol = Config.Pistol
+function BotSpawner:_SetBotWeapons(p_Bot, p_NewWeapons)
+	if p_NewWeapons then
 		local s_Knife = Config.Knife
 
-		local s_Weapon = nil
-
-		if p_BotKit == BotKits.Assault then
-			s_Weapon = Config.AssaultWeapon
-		elseif p_BotKit == BotKits.Engineer then
-			s_Weapon = Config.EngineerWeapon
-		elseif p_BotKit == BotKits.Support then
-			s_Weapon = Config.SupportWeapon
-		else
-			s_Weapon = Config.ReconWeapon
-		end
-
 		if Config.UseRandomWeapon then
-			s_Weapon = Weapons[p_BotKit][BotWeapons.Primary][p_Team][
-				MathUtils:GetRandomInt(1, #Weapons[p_BotKit][BotWeapons.Primary][p_Team])]
-			s_Pistol = Weapons[p_BotKit][BotWeapons.Pistol][p_Team][
-				MathUtils:GetRandomInt(1, #Weapons[p_BotKit][BotWeapons.Pistol][p_Team])]
-			s_Knife = Weapons[p_BotKit][BotWeapons.Knife][p_Team][
-				MathUtils:GetRandomInt(1, #Weapons[p_BotKit][BotWeapons.Knife][p_Team])]
+			s_Knife = Weapons[MathUtils:GetRandomInt(1, #Weapons)]
 		end
 
-		p_Bot.m_Primary = m_WeaponList:getWeapon(s_Weapon)
-		if p_BotKit == BotKits.Engineer and
-			(Globals.IsTdm or Globals.IsDomination or Globals.IsSquadRush or Globals.IsRushWithoutVehicles) then
-			-- Don't use missiles without vehicles.
-			p_Bot.m_SecondaryGadget = m_WeaponList:getWeapon(Weapons[p_BotKit][BotWeapons.Gadget2][p_Team][1])
-		else
-			p_Bot.m_SecondaryGadget = m_WeaponList:getWeapon(Weapons[p_BotKit][BotWeapons.Gadget2][p_Team][
-				MathUtils:GetRandomInt(1, #Weapons[p_BotKit][BotWeapons.Gadget2][p_Team])])
-		end
-		p_Bot.m_PrimaryGadget = m_WeaponList:getWeapon(Weapons[p_BotKit][BotWeapons.Gadget1][p_Team][
-			MathUtils:GetRandomInt(1, #Weapons[p_BotKit][BotWeapons.Gadget1][p_Team])])
-		p_Bot.m_Pistol = m_WeaponList:getWeapon(s_Pistol)
-		p_Bot.m_Grenade = m_WeaponList:getWeapon(Weapons[p_BotKit][BotWeapons.Grenade][p_Team][
-			MathUtils:GetRandomInt(1, #Weapons[p_BotKit][BotWeapons.Grenade][p_Team])])
 		p_Bot.m_Knife = m_WeaponList:getWeapon(s_Knife)
 	end
-
 
 	p_Bot.m_ActiveWeapon = p_Bot.m_Knife
 end

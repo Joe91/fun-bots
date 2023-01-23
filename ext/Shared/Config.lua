@@ -59,17 +59,8 @@ Config = {
 	SnipersAttackChoppers = false,		-- Bots with sniper-rifels attack choppers 
 
 	-- WEAPONS 
-	UseRandomWeapon = true,				-- Use a random weapon out of the Weapon Set 
-	AssaultWeaponSet = WeaponSets.Custom,	-- Weaponset of Assault class. Custom uses the Shared/WeaponLists 
-	EngineerWeaponSet = WeaponSets.Custom,	-- Weaponset of Engineer class. Custom uses the Shared/WeaponLists 
-	SupportWeaponSet = WeaponSets.Custom,	-- Weaponset of Support class. Custom uses the Shared/WeaponLists 
-	ReconWeaponSet = WeaponSets.Custom,	-- Weaponset of Recon class. Custom uses the Shared/WeaponLists 
-	AssaultWeapon = "M416",				-- Primary weapon of Assault class, if random-weapon == false 
-	EngineerWeapon = "M4A1",			-- Primary weapon of Engineer class, if random-weapon == false 
-	SupportWeapon = "M249",				-- Primary weapon of Support class, if random-weapon == false 
-	ReconWeapon = "L96",				-- Primary weapon of Recon class, if random-weapon == false 
-	Pistol = "MP412Rex",				-- Pistol of Bots, if random-weapon == false 
-	Knife = "Razor",					-- Knife of Bots, if random-weapon == false 
+	UseRandomWeapon = false,			-- Use a random weapon out of the Weapon Set 
+	Knife = "Knife",					-- Knife of Bots, if random-weapon == false 
 
 	-- TRACE 
 	DebugTracePaths = false,			-- Shows the trace line and search area from Commo Rose selection 
@@ -86,13 +77,9 @@ Config = {
 	-- ADVANCED 
 	DistanceForDirectAttack = 8,		-- Distance bots can hear you at 
 	MeleeAttackCoolDown = 1.5,			-- The time a bot waits before attacking with melee again 
-	AimForHead = false,					-- Bots without sniper aim for the head. A more experimental config 
-	AimForHeadSniper = false,			-- Bots with sniper aim for the head. A more experimental config 
-	AimForHeadSupport = false,			-- Bots with support LMGs aim for the head. A more experimental config 
 	JumpWhileShooting = true,			-- Bots jump over obstacles while shooting if needed 
 	JumpWhileMoving = true,				-- Bots jump while moving. If false, only on obstacles! 
 	OverWriteBotSpeedMode = BotMoveSpeeds.NoMovement,	-- 0 = no overwrite. 1 = prone, 2 = crouch, 3 = walk, 4 = run 
-	OverWriteBotAttackMode = BotMoveSpeeds.NoMovement,	-- Affects Aiming!!! 0 = no overwrite. 1 = prone, 2 = crouch (good aim), 3 = walk (good aim), 4 = run 
 	SpeedFactor = 1.0,					-- Reduces the movement speed. 1 = normal, 0 = standing 
 	UseRandomNames = false,				-- Changes names of the bots on every new round. Experimental right now... 
 	MoveSidewards = true,				-- Bots move sidewards 
@@ -101,11 +88,8 @@ Config = {
 	MinMoveCycle = 0.3,					-- Min time bots move sidewards or straight before switching (in sec) 
 
 	-- EXPERT 
-	BotFirstShotDelay = 0.25,			-- Delay for first shot. If too small, there will be great spread in first cycle because it is not compensated yet 
 	BotMinTimeAttackOnePlayer = 1.0,	-- The minimum time a bot attacks one player for 
-	BotVehicleMinTimeShootAtPlayer = 4.0,	-- The minimum time a bot shoots at one player if in vehicle - recommended minimum 2.5, below this you will have issues 
 	BotAttackDuration = 20,				-- The minimum time a zombie-bot tries to attack a player - recommended minimum 15, 
-	BotVehicleFireModeDuration = 9.0,	-- The minimum time a bot tries to shoot a player or vehicle, when in a vehicle - recommended minimum 7.0 
 	MaximunYawPerSec = 450,				-- In Degrees. Rotation Movement per second 
 	TargetDistanceWayPoint = 0.8,		-- The distance the bots have to reach to continue with the next Waypoint 
 	KeepOneSlotForPlayers = true,		-- Always keep one slot for free new Players to join 

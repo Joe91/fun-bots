@@ -330,12 +330,6 @@ function BotMovement:UpdateShootMovement(p_Bot)
 	local s_TargetCycles = 1
 	p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.Sprint -- Run towards player.
 
-
-	if Config.OverWriteBotAttackMode ~= BotMoveSpeeds.NoMovement then
-		p_Bot.m_ActiveSpeedValue = Config.OverWriteBotAttackMode
-	end
-
-
 	if #p_Bot._ShootWayPoints > s_TargetCycles and Config.JumpWhileShooting then
 		local s_DistanceDone = p_Bot._ShootWayPoints[#p_Bot._ShootWayPoints].Position:Distance(p_Bot._ShootWayPoints[
 			#p_Bot._ShootWayPoints - s_TargetCycles].Position)

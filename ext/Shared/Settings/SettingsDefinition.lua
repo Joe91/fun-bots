@@ -556,115 +556,7 @@ SettingsDefinition = {
 			Type = Type.Boolean,
 			Value = Config.UseRandomWeapon,
 			Description = "Use a random weapon out of the Weapon Set",
-			Default = true,
-			UpdateFlag = UpdateFlag.None,
-			Category = "WEAPONS"
-		},
-		{
-			Name = "AssaultWeaponSet",
-			Text = "Weapon Set Assault",
-			---@type Type|integer
-			Type = Type.Enum,
-			Value = Config.AssaultWeaponSet,
-			Description = "Weaponset of Assault class. Custom uses the Shared/WeaponLists",
-			Reference = WeaponSets,
-			Default = WeaponSets.Custom,
-			UpdateFlag = UpdateFlag.WeaponSets,
-			Category = "WEAPONS"
-		},
-		{
-			Name = "EngineerWeaponSet",
-			Text = "Weapon Set Engineer",
-			---@type Type|integer
-			Type = Type.Enum,
-			Value = Config.EngineerWeaponSet,
-			Description = "Weaponset of Engineer class. Custom uses the Shared/WeaponLists",
-			Reference = WeaponSets,
-			Default = WeaponSets.Custom,
-			UpdateFlag = UpdateFlag.WeaponSets,
-			Category = "WEAPONS"
-		},
-		{
-			Name = "SupportWeaponSet",
-			Text = "Weapon Set Support",
-			---@type Type|integer
-			Type = Type.Enum,
-			Value = Config.SupportWeaponSet,
-			Description = "Weaponset of Support class. Custom uses the Shared/WeaponLists",
-			Reference = WeaponSets,
-			Default = WeaponSets.Custom,
-			UpdateFlag = UpdateFlag.WeaponSets,
-			Category = "WEAPONS"
-		},
-		{
-			Name = "ReconWeaponSet",
-			Text = "Weapon Set Recon",
-			---@type Type|integer
-			Type = Type.Enum,
-			Value = Config.ReconWeaponSet,
-			Description = "Weaponset of Recon class. Custom uses the Shared/WeaponLists",
-			Reference = WeaponSets,
-			Default = WeaponSets.Custom,
-			UpdateFlag = UpdateFlag.WeaponSets,
-			Category = "WEAPONS"
-		},
-		{
-			Name = "AssaultWeapon",
-			Text = "Primary Weapon Assault",
-			---@type Type|integer
-			Type = Type.DynamicList,
-			Value = Config.AssaultWeapon,
-			Description = "Primary weapon of Assault class, if random-weapon == false",
-			Reference = "AssaultPrimary",
-			Default = "M416",
-			UpdateFlag = UpdateFlag.None,
-			Category = "WEAPONS"
-		},
-		{
-			Name = "EngineerWeapon",
-			Text = "Primary Weapon Engineer",
-			---@type Type|integer
-			Type = Type.DynamicList,
-			Value = Config.EngineerWeapon,
-			Description = "Primary weapon of Engineer class, if random-weapon == false",
-			Reference = "EngineerPrimary",
-			Default = "M4A1",
-			UpdateFlag = UpdateFlag.None,
-			Category = "WEAPONS"
-		},
-		{
-			Name = "SupportWeapon",
-			Text = "Primary Weapon Support",
-			---@type Type|integer
-			Type = Type.DynamicList,
-			Value = Config.SupportWeapon,
-			Description = "Primary weapon of Support class, if random-weapon == false",
-			Reference = "SupportPrimary",
-			Default = "M249",
-			UpdateFlag = UpdateFlag.None,
-			Category = "WEAPONS"
-		},
-		{
-			Name = "ReconWeapon",
-			Text = "Primary Weapon Recon",
-			---@type Type|integer
-			Type = Type.DynamicList,
-			Value = Config.ReconWeapon,
-			Description = "Primary weapon of Recon class, if random-weapon == false",
-			Reference = "ReconPrimary",
-			Default = "L96",
-			UpdateFlag = UpdateFlag.None,
-			Category = "WEAPONS"
-		},
-		{
-			Name = "Pistol",
-			Text = "Pistol of Bots",
-			---@type Type|integer
-			Type = Type.DynamicList,
-			Value = Config.Pistol,
-			Description = "Pistol of Bots, if random-weapon == false",
-			Reference = "PistolWeapons",
-			Default = "MP412Rex",
+			Default = false,
 			UpdateFlag = UpdateFlag.None,
 			Category = "WEAPONS"
 		},
@@ -676,7 +568,7 @@ SettingsDefinition = {
 			Value = Config.Knife,
 			Description = "Knife of Bots, if random-weapon == false",
 			Reference = "KnifeWeapons",
-			Default = "Razor",
+			Default = "Knife",
 			UpdateFlag = UpdateFlag.None,
 			Category = "WEAPONS"
 		},
@@ -824,39 +716,6 @@ SettingsDefinition = {
 			Category = "ADVANCED"
 		},
 		{
-			Name = "AimForHead",
-			Text = "Bots without sniper aim for head",
-			---@type Type|integer
-			Type = Type.Boolean,
-			Value = Config.AimForHead,
-			Description = "Bots without sniper aim for the head. A more experimental config",
-			Default = false,
-			UpdateFlag = UpdateFlag.None,
-			Category = "ADVANCED"
-		},
-		{
-			Name = "AimForHeadSniper",
-			Text = "Bots with Sniper aim for head",
-			---@type Type|integer
-			Type = Type.Boolean,
-			Value = Config.AimForHeadSniper,
-			Description = "Bots with sniper aim for the head. A more experimental config",
-			Default = false,
-			UpdateFlag = UpdateFlag.None,
-			Category = "ADVANCED"
-		},
-		{
-			Name = "AimForHeadSupport",
-			Text = "Bots with Support LMGs aim for head",
-			---@type Type|integer
-			Type = Type.Boolean,
-			Value = Config.AimForHeadSupport,
-			Description = "Bots with support LMGs aim for the head. A more experimental config",
-			Default = false,
-			UpdateFlag = UpdateFlag.None,
-			Category = "ADVANCED"
-		},
-		{
 			Name = "JumpWhileShooting",
 			Text = "Jump while shooting",
 			---@type Type|integer
@@ -885,18 +744,6 @@ SettingsDefinition = {
 			Type = Type.Enum,
 			Value = Config.OverWriteBotSpeedMode,
 			Description = "0 = no overwrite. 1 = prone, 2 = crouch, 3 = walk, 4 = run",
-			Reference = BotMoveSpeeds,
-			Default = BotMoveSpeeds.NoMovement,
-			UpdateFlag = UpdateFlag.None,
-			Category = "ADVANCED"
-		},
-		{
-			Name = "OverWriteBotAttackMode",
-			Text = "Overwrite attack speed mode",
-			---@type Type|integer
-			Type = Type.Enum,
-			Value = Config.OverWriteBotAttackMode,
-			Description = "Affects Aiming!!! 0 = no overwrite. 1 = prone, 2 = crouch (good aim), 3 = walk (good aim), 4 = run",
 			Reference = BotMoveSpeeds,
 			Default = BotMoveSpeeds.NoMovement,
 			UpdateFlag = UpdateFlag.None,
@@ -975,18 +822,6 @@ SettingsDefinition = {
 
 		-- Expert Properties.
 		{
-			Name = "BotFirstShotDelay",
-			Text = "Bot first shot delay",
-			---@type Type|integer
-			Type = Type.Float,
-			Value = Config.BotFirstShotDelay,
-			Description = "Delay for first shot. If too small, there will be great spread in first cycle because it is not compensated yet",
-			Reference = Range(0.00, 10.00, 0.10),
-			Default = 0.25,
-			UpdateFlag = UpdateFlag.None,
-			Category = "EXPERT"
-		},
-		{
 			Name = "BotMinTimeAttackOnePlayer",
 			Text = "Bot min time Attack one player",
 			---@type Type|integer
@@ -999,18 +834,6 @@ SettingsDefinition = {
 			Category = "EXPERT"
 		},
 		{
-			Name = "BotVehicleMinTimeShootAtPlayer",
-			Text = "Bot min time shoot at player in vehicle",
-			---@type Type|integer
-			Type = Type.Float,
-			Value = Config.BotVehicleMinTimeShootAtPlayer,
-			Description = "The minimum time a bot shoots at one player if in vehicle - recommended minimum 2.5, below this you will have issues",
-			Reference = Range(0.00, 60.00, 0.5),
-			Default = 4.0,
-			UpdateFlag = UpdateFlag.None,
-			Category = "EXPERT"
-		},
-		{
 			Name = "BotAttackDuration",
 			Text = "Bot attack mode duration",
 			---@type Type|integer
@@ -1019,18 +842,6 @@ SettingsDefinition = {
 			Description = "The minimum time a zombie-bot tries to attack a player - recommended minimum 15,",
 			Reference = Range(0.00, 120.00, 0.5),
 			Default = 20,
-			UpdateFlag = UpdateFlag.None,
-			Category = "EXPERT"
-		},
-		{
-			Name = "BotVehicleFireModeDuration",
-			Text = "Bot fire mode duration in vehicle",
-			---@type Type|integer
-			Type = Type.Float,
-			Value = Config.BotVehicleFireModeDuration,
-			Description = "The minimum time a bot tries to shoot a player or vehicle, when in a vehicle - recommended minimum 7.0",
-			Reference = Range(0.00, 60.00, 0.5),
-			Default = 9.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "EXPERT"
 		},

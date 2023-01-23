@@ -799,12 +799,6 @@ function BotManager:ResetAllBots()
 	end
 end
 
-function BotManager:ResetSkills()
-	for _, l_Bot in ipairs(self._Bots) do
-		l_Bot:ResetSkill()
-	end
-end
-
 ---@param p_Amount? integer
 ---@param p_TeamId? TeamId
 function BotManager:KillAll(p_Amount, p_TeamId)
