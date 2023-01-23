@@ -13,6 +13,7 @@ local m_Logger = Logger("BotManager", Debug.Server.BOT)
 function BotManager:__init()
 	---@type Bot[]
 	self._Bots = {}
+	self._ShooterBots = {}
 	---@type table<string, Bot>
 	---`[Player.name] -> Bot`
 	self._BotsByName = {}
@@ -135,6 +136,32 @@ function BotManager:OnBotExitVehicle(p_BotName)
 	end
 end
 
+function BotManager:OnServerDamagePlayer(p_PlayerName, p_ShooterName, p_MeleeAttack)
+	local s_Player = PlayerManager:GetPlayerByName(p_PlayerName)
+	if s_Player == nil then
+		return
+	end
+
+	local s_Bot = self:GetBotByName(p_ShooterName)
+	if not s_Player.alive or s_Bot == nil then
+		return
+	end
+	if s_Player.teamId == s_Bot.m_Player.teamId then
+		return
+	end
+	local s_Damage = 0.1 --only trigger soldier-damage with this
+	if p_MeleeAttack then
+		s_Damage = 0.2 --signal melee damage with this value
+	end
+	--save potential killer bot
+	self._ShooterBots[s_Player.name] = p_ShooterName
+
+	if s_Player.soldier ~= nil then
+		s_Player.soldier.health = s_Player.soldier.health - s_Damage
+	end
+
+end
+
 ---VEXT Server Vehicle:Damage Event
 ---@param p_VehicleEntity Entity @`ControllableEntity`
 ---@param p_Damage number
@@ -222,6 +249,32 @@ function BotManager:OnSoldierDamage(p_HookCtx, p_Soldier, p_Info, p_GiverInfo)
 			if s_Bot and s_Bot.m_Player.soldier then
 				-- Update the bot damage with the multipliers from the config.
 				p_Info.damage = self:_GetDamageValue(p_Info.damage, s_Bot, p_Soldier)
+			end
+		else -- damage dealt by server?
+			local s_Bot = self:GetBotByName(self._ShooterBots[p_Soldier.player.name])
+			if s_Bot ~= nil and s_Bot.m_Player.soldier ~= nil then
+				p_Info.damage = self:_GetDamageValue(p_Info.damage, s_Bot, p_Soldier, true);
+				p_Info.boneIndex = 0;
+				p_Info.isBulletDamage = true;
+				p_Info.position = Vec3(p_Soldier.worldTransform.trans.x, p_Soldier.worldTransform.trans.y + 1, p_Soldier.worldTransform.trans.z)
+				p_Info.direction = p_Soldier.worldTransform.trans - s_Bot.m_Player.soldier.worldTransform.trans
+				p_Info.origin = s_Bot.m_Player.soldier.worldTransform.trans
+
+				--[[ 	p_GiverInfo = DamageGiverInfo()
+				p_GiverInfo.giver = s_Bot.m_Player
+				p_GiverInfo.damageType = DamageType.Melee
+				p_GiverInfo.giverCharacterCustomization = s_Bot.m_Player.customization
+				p_GiverInfo.giverControllable = s_Bot.m_Player.controlledControllable
+				p_GiverInfo.weaponUnlock = nil ]]
+				--[[ if (soldier.health - info.damage) <= 0 then
+						if Globals.isTdm then
+							local enemyTeam = TeamId.Team1;
+							if soldier.player.teamId == TeamId.Team1 then
+								enemyTeam = TeamId.Team2;
+							end
+							TicketManager:SetTicketCount(enemyTeam, (TicketManager:GetTicketCount(enemyTeam) + 1));
+						end
+					end ]]
 			end
 		end
 	end
@@ -1248,7 +1301,7 @@ end
 ---@param p_Bot Bot
 ---@param p_Soldier SoldierEntity
 ---@return number
-function BotManager:_GetDamageValue(p_Damage, p_Bot, p_Soldier)
+function BotManager:_GetDamageValue(p_Damage, p_Bot, p_Soldier, p_Fake)
 	local s_ResultDamage = 0.0
 	local s_DamageFactor = 1.0
 
@@ -1279,7 +1332,15 @@ function BotManager:_GetDamageValue(p_Damage, p_Bot, p_Soldier)
 		s_DamageFactor = Config.DamageFactorKnife
 	end
 
-	return p_Damage * s_DamageFactor
+	local s_ResultDamage = 0
+	if not p_Fake then
+		s_ResultDamage = p_Damage * s_DamageFactor
+	else
+		if p_Damage > 0.19 and p_Damage < 0.21 then --melee
+			s_ResultDamage = p_Bot.m_Knife.damage * Config.DamageFactorKnife;
+		end
+	end
+	return s_ResultDamage
 end
 
 if g_BotManager == nil then
