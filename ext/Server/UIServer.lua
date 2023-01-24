@@ -430,6 +430,7 @@ function FunBotUIServer:_writeSettings(p_Player, p_Request)
 	local calcYawPerFrame = false
 	local updateLanguage = false
 	local updateMaxBots = false
+	local updateWave = false
 	local batched = true
 
 	if p_Request.subaction ~= nil then
@@ -522,6 +523,8 @@ function FunBotUIServer:_writeSettings(p_Player, p_Request)
 					updateLanguage = true
 				elseif l_Item.UpdateFlag == UpdateFlag.MaxBots then
 					updateMaxBots = true
+				elseif l_Item.UpdateFlag == UpdateFlag.Wave then
+					updateWave = true
 				end
 			end
 		end
@@ -562,6 +565,10 @@ function FunBotUIServer:_writeSettings(p_Player, p_Request)
 	if updateBotTeamAndNumber then
 		Globals.SpawnMode = Config.SpawnMode
 		BotSpawner:UpdateBotAmountAndTeam()
+	end
+
+	if updateWave then
+		BotSpawner:UpdateWaveConfig()
 	end
 
 	-- To-do: create Error Array and don't hide if it has values.

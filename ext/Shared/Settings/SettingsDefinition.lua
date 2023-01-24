@@ -353,11 +353,11 @@ SettingsDefinition = {
 			Name = "IncrementMaxSpeedPerWave",
 			Text = "Additional Speed for Attack",
 			---@type Type|integer
-			Type = Type.Integer,
+			Type = Type.Float,
 			Value = Config.IncrementMaxSpeedPerWave,
 			Description = "Zombies get more speed each wave",
 			Reference = Range(0.00, 5.00, 1.0),
-			Default = 0.2,
+			Default = 0.1,
 			UpdateFlag = UpdateFlag.Wave,
 			Category = "WAVES"
 		},
