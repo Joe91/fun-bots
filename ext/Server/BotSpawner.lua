@@ -97,7 +97,7 @@ function BotSpawner:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	else
 		self._PlayerUpdateTimer = self._PlayerUpdateTimer + p_DeltaTime
 
-		if self._PlayerUpdateTimer > 2.0 then
+		if self._PlayerUpdateTimer > 2.0 and #self._SpawnSets == 0 then -- don't update while we have to spawn some more bots
 			self._PlayerUpdateTimer = 0.0
 			self:UpdateBotAmountAndTeam()
 		end
@@ -275,6 +275,18 @@ end
 -- Public Functions
 -- =============================================
 
+function BotSpawner:UpdateWaveConfig()
+	local s_WaveValue = self._CurrentSpawnWave - 1
+	if s_WaveValue < 0 then
+		s_WaveValue = 0
+	end
+	Globals.MaxHealthValue = Config.BotMaxHealth + (s_WaveValue * Config.IncrementMaxHealthPerWave)
+	Globals.MinHealthValue = Config.BotMinHealth + (s_WaveValue * Config.IncrementMaxHealthPerWave)
+	Globals.DamageFactorZombies = Config.DamageFactorKnife + (s_WaveValue * Config.IncrementDamageFactorPerWave)
+	Globals.SpeedAttackValue = Config.SpeedFactorAttack + (s_WaveValue * Config.IncrementMaxSpeedPerWave)
+	self._BotsToSpawnInWave = Config.FirstWaveCount + (s_WaveValue * Config.IncrementZombiesPerWave)
+end
+
 function BotSpawner:UpdateBotAmountAndTeam()
 	-- Keep Slot for next player.
 	if Config.KeepOneSlotForPlayers then
@@ -349,6 +361,9 @@ function BotSpawner:UpdateBotAmountAndTeam()
 			Globals.SpeedAttackValue = Config.SpeedFactorAttack
 			self._BotsToSpawnInWave = Config.FirstWaveCount
 		end
+		if Config.KillRemainingZombiesAfterWave and self._SpawnedBotsInCurrentWave == 0 then
+			m_BotManager:KillAll()
+		end
 		if self._SpawnedBotsInCurrentWave < self._BotsToSpawnInWave then
 			local s_PlayerLimit = Globals.MaxPlayers - 1
 			local s_SlotsLeft = s_PlayerLimit - (PlayerManager:GetPlayerCount())
@@ -362,12 +377,9 @@ function BotSpawner:UpdateBotAmountAndTeam()
 			if m_BotManager:GetAliveBotCount() <= Config.ZombiesAliveForNextWave then
 				ChatManager:Yell("Wave finished, new wave starts in a few seconds", 7.0)
 				self._FirstSpawnDelay = Config.TimeBetweenWaves
-				self._SpawnedBotsInCurrentWave = 0
-				Globals.MaxHealthValue = Config.BotMaxHealth + (self._CurrentSpawnWave * Config.IncrementMaxHealthPerWave)
-				Globals.MinHealthValue = Config.BotMinHealth + (self._CurrentSpawnWave * Config.IncrementMaxHealthPerWave)
-				Globals.DamageFactorZombies = Config.DamageFactorKnife + (self._CurrentSpawnWave * Config.IncrementDamageFactorPerWave)
-				self._BotsToSpawnInWave = Config.FirstWaveCount + (self._CurrentSpawnWave * Config.IncrementZombiesPerWave)
 				self._CurrentSpawnWave = self._CurrentSpawnWave + 1
+				self._SpawnedBotsInCurrentWave = 0
+				self:UpdateWaveConfig()
 			end
 		end
 

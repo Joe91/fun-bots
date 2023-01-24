@@ -10,6 +10,7 @@ Config = {
 	ZombiesDropAmmo = true,				-- Zombies drop randomly some ammo 
 	RandomHealthOfZombies = true,		-- zombie-helth differs from bot to bot 
 	RandomAttackSpeedOfZombies = true,	-- zombie-speed differs from bot to bot 
+	RandomDamgeOfZombies = true,		-- zombie-damage differs from bot to bot 
 
 	-- DIFFICULTY 
 	BotMaxHealth = 100.0,				-- Max health of bot at spawn(default 100.0) 
@@ -40,6 +41,7 @@ Config = {
 	IncrementMaxSpeedPerWave = 0.2,		-- Zombies get more speed each wave 
 	ZombiesAliveForNextWave = 5,		-- New wave is triggered when this number of zombies is reached 
 	TimeBetweenWaves = 7.0,				-- Time in seconds between two waves 
+	KillRemainingZombiesAfterWave = false,	-- Remaining Bots Get Killed before a new wave starts 
 
 	-- BEHAVIOUR 
 	FovForShooting = 180,				-- Degrees of FOV of Bot 

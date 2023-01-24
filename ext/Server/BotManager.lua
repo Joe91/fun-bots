@@ -1279,6 +1279,9 @@ function BotManager:_GetDamageValue(p_Damage, p_Bot, p_Soldier)
 		else
 			s_DamageFactor = Config.DamageFactorKnife
 		end
+		if Config.RandomDamgeOfZombies then
+			s_DamageFactor = s_DamageFactor * MathUtils:GetRandom(0.5, 1.0) -- Zombies deal something between full and half damage
+		end
 	end
 
 	return p_Damage * s_DamageFactor

@@ -82,6 +82,17 @@ SettingsDefinition = {
 			UpdateFlag = UpdateFlag.None,
 			Category = "GENERAL"
 		},
+		{
+			Name = "RandomDamgeOfZombies",
+			Text = "Randomize Damage that zombies deal",
+			---@type Type|integer
+			Type = Type.Boolean,
+			Value = Config.RandomDamgeOfZombies,
+			Description = "zombie-damage differs from bot to bot",
+			Default = true,
+			UpdateFlag = UpdateFlag.None,
+			Category = "GENERAL"
+		},
 
 		-- Difficulty.
 		{
@@ -93,7 +104,7 @@ SettingsDefinition = {
 			Description = "Max health of bot at spawn(default 100.0)",
 			Reference = Range(0.0, 1000.00, 1.0),
 			Default = 100.0,
-			UpdateFlag = UpdateFlag.None,
+			UpdateFlag = UpdateFlag.Wave,
 			Category = "DIFFICULTY"
 		},
 		{
@@ -105,7 +116,7 @@ SettingsDefinition = {
 			Description = "Min health of bot at spawn (default 100.0)",
 			Reference = Range(0.0, 1000.00, 1.0),
 			Default = 50.0,
-			UpdateFlag = UpdateFlag.None,
+			UpdateFlag = UpdateFlag.Wave,
 			Category = "DIFFICULTY"
 		},
 		{
@@ -127,9 +138,9 @@ SettingsDefinition = {
 			Type = Type.Float,
 			Value = Config.DamageFactorKnife,
 			Description = "Original Damage from bots gets multiplied by this",
-			Reference = Range(0.00, 2.00, 0.10),
+			Reference = Range(0.00, 5.00, 0.10),
 			Default = 1.5,
-			UpdateFlag = UpdateFlag.None,
+			UpdateFlag = UpdateFlag.Wave,
 			Category = "DIFFICULTY"
 		},
 		{
@@ -141,7 +152,7 @@ SettingsDefinition = {
 			Description = "Modifies the speed while attacking. 1 = normal",
 			Reference = Range(0.00, 3.00, 0.10),
 			Default = 1.5,
-			UpdateFlag = UpdateFlag.None,
+			UpdateFlag = UpdateFlag.Wave,
 			Category = "DIFFICULTY"
 		},
 
@@ -299,7 +310,7 @@ SettingsDefinition = {
 			Description = "Zombies that spawn in the first wave",
 			Reference = Range(0.00, 128.00, 1.0),
 			Default = 30,
-			UpdateFlag = UpdateFlag.None,
+			UpdateFlag = UpdateFlag.Wave,
 			Category = "WAVES"
 		},
 		{
@@ -311,7 +322,7 @@ SettingsDefinition = {
 			Description = "Zombies that are added in each new wave",
 			Reference = Range(0.00, 128.00, 1.0),
 			Default = 10,
-			UpdateFlag = UpdateFlag.None,
+			UpdateFlag = UpdateFlag.Wave,
 			Category = "WAVES"
 		},
 		{
@@ -323,19 +334,19 @@ SettingsDefinition = {
 			Description = "Zombies get more health each wave",
 			Reference = Range(0.00, 500.00, 1.0),
 			Default = 50,
-			UpdateFlag = UpdateFlag.None,
+			UpdateFlag = UpdateFlag.Wave,
 			Category = "WAVES"
 		},
 		{
 			Name = "IncrementDamageFactorPerWave",
 			Text = "Additional Damage of Zombies per wave",
 			---@type Type|integer
-			Type = Type.Integer,
+			Type = Type.Float,
 			Value = Config.IncrementDamageFactorPerWave,
 			Description = "Zombies deal more damage each wave",
 			Reference = Range(0.00, 2.00, 0.05),
 			Default = 0.1,
-			UpdateFlag = UpdateFlag.None,
+			UpdateFlag = UpdateFlag.Wave,
 			Category = "WAVES"
 		},
 		{
@@ -347,7 +358,7 @@ SettingsDefinition = {
 			Description = "Zombies get more speed each wave",
 			Reference = Range(0.00, 5.00, 1.0),
 			Default = 0.2,
-			UpdateFlag = UpdateFlag.None,
+			UpdateFlag = UpdateFlag.Wave,
 			Category = "WAVES"
 		},
 		{
@@ -371,6 +382,17 @@ SettingsDefinition = {
 			Description = "Time in seconds between two waves",
 			Reference = Range(0.00, 60.00, 1.0),
 			Default = 7.0,
+			UpdateFlag = UpdateFlag.None,
+			Category = "WAVES"
+		},
+		{
+			Name = "KillRemainingZombiesAfterWave",
+			Text = "kill remaining zombies after wave",
+			---@type Type|integer
+			Type = Type.Boolean,
+			Value = Config.KillRemainingZombiesAfterWave,
+			Description = "Remaining Bots Get Killed before a new wave starts",
+			Default = false,
 			UpdateFlag = UpdateFlag.None,
 			Category = "WAVES"
 		},

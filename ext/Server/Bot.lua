@@ -542,7 +542,7 @@ function Bot:ResetSpawnVars()
 	self._AttackModeMoveTimer = 0.0
 	self._AttackMode = BotAttackModes.RandomNotSet
 	self._ShootWayPoints = {}
-	self._SpeedFactorMovement = MathUtils:GetRandom(0.05, 1.0)
+	self._SpeedFactorMovement = MathUtils:GetRandom(0.3, 0.9)
 
 	self._ShotTimer = 0.0
 	self._UpdateTimer = 0.0

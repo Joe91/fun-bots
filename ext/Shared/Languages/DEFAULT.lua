@@ -11,6 +11,8 @@ Language:add(code, "Randomize Helth of Zombies", "")
 Language:add(code, "zombie-helth differs from bot to bot", "")
 Language:add(code, "Randomize Attack-Speed of Zombies", "")
 Language:add(code, "zombie-speed differs from bot to bot", "")
+Language:add(code, "Randomize Damage that zombies deal", "")
+Language:add(code, "zombie-damage differs from bot to bot", "")
 
 -- DIFFICULTY
 Language:add(code, "Bot Max Health at spawn", "")
@@ -65,6 +67,8 @@ Language:add(code, "Zombies alive for next wave", "")
 Language:add(code, "New wave is triggered when this number of zombies is reached", "")
 Language:add(code, "Time between waves", "")
 Language:add(code, "Time in seconds between two waves", "")
+Language:add(code, "kill remaining zombies after wave", "")
+Language:add(code, "Remaining Bots Get Killed before a new wave starts", "")
 
 -- BEHAVIOUR
 Language:add(code, "FOV of Bots", "")
