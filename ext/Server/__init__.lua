@@ -513,7 +513,6 @@ function FunBotServer:OnBulletEntityCollision(p_HookCtx, p_Entity, p_Hit, p_Give
 
 		s_SyncedGameSettings = SyncedGameSettings(s_SyncedGameSettings)
 		s_SyncedGameSettings:MakeWritable()
-		print("bullet form bot")
 		s_SyncedGameSettings.allowClientSideDamageArbitration = false
 		p_HookCtx:Call()
 		s_SyncedGameSettings.allowClientSideDamageArbitration = true
