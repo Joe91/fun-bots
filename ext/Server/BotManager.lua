@@ -72,15 +72,6 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 		l_Bot:OnUpdatePassPostFrame(p_DeltaTime)
 	end
 
-	if Config.BotsAttackBots and self._InitDone then
-		if self._BotAttackBotTimer >= Registry.GAME_RAYCASTING.BOT_BOT_CHECK_INTERVAL then
-			self._BotAttackBotTimer = 0.0
-			self:_CheckForBotBotAttack()
-		end
-
-		self._BotAttackBotTimer = self._BotAttackBotTimer + p_DeltaTime
-	end
-
 	if #self._BotsToDestroy > 0 then
 		if self._DestroyBotsTimer >= 0.05 then
 			self._DestroyBotsTimer = 0.0

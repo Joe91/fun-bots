@@ -120,6 +120,18 @@ SettingsDefinition = {
 			Category = "DIFFICULTY"
 		},
 		{
+			Name = "BotHeadshotDamageMultiplier",
+			Text = "Bot Min Health at spawn",
+			---@type Type|integer
+			Type = Type.Float,
+			Value = Config.BotHeadshotDamageMultiplier,
+			Description = "Damage multiplier for shooting bots in the head",
+			Reference = Range(0.0, 100.00, 0.1),
+			Default = 1.5,
+			UpdateFlag = UpdateFlag.None,
+			Category = "DIFFICULTY"
+		},
+		{
 			Name = "BotWorseningSkill",
 			Text = "Bot Worsening Skill",
 			---@type Type|integer
@@ -177,7 +189,7 @@ SettingsDefinition = {
 			Value = Config.InitNumberOfBots,
 			Description = "Bots for spawnmode",
 			Reference = Range(0.00, 128.00, 1.0),
-			Default = 10,
+			Default = 0,
 			UpdateFlag = UpdateFlag.AmountAndTeam,
 			Category = "SPAWN"
 		},
@@ -357,7 +369,7 @@ SettingsDefinition = {
 			Value = Config.IncrementMaxSpeedPerWave,
 			Description = "Zombies get more speed each wave",
 			Reference = Range(0.00, 5.00, 1.0),
-			Default = 0.1,
+			Default = 0.2,
 			UpdateFlag = UpdateFlag.Wave,
 			Category = "WAVES"
 		},
@@ -406,7 +418,7 @@ SettingsDefinition = {
 			Value = Config.FovForShooting,
 			Description = "Degrees of FOV of Bot",
 			Reference = Range(0.00, 360.00, 1.0),
-			Default = 180,
+			Default = 270,
 			UpdateFlag = UpdateFlag.None,
 			Category = "BEHAVIOUR"
 		},
@@ -418,7 +430,7 @@ SettingsDefinition = {
 			Value = Config.FovVerticleForShooting,
 			Description = "Degrees of FOV of Bot in vertical direction",
 			Reference = Range(0.00, 180.00, 1.0),
-			Default = 90,
+			Default = 270,
 			UpdateFlag = UpdateFlag.None,
 			Category = "BEHAVIOUR"
 		},
@@ -430,7 +442,7 @@ SettingsDefinition = {
 			Value = Config.MaxShootDistance,
 			Description = "Meters before bots (not sniper) will start shooting at players",
 			Reference = Range(1.00, 1500.00, 5.0),
-			Default = 70,
+			Default = 125,
 			UpdateFlag = UpdateFlag.None,
 			Category = "BEHAVIOUR"
 		},
@@ -470,17 +482,6 @@ SettingsDefinition = {
 			Category = "BEHAVIOUR"
 		},
 		{
-			Name = "BotsAttackBots",
-			Text = "Bots Attack Bots",
-			---@type Type|integer
-			Type = Type.Boolean,
-			Value = Config.BotsAttackBots,
-			Description = "Bots attack bots from other team",
-			Default = true,
-			UpdateFlag = UpdateFlag.None,
-			Category = "BEHAVIOUR"
-		},
-		{
 			Name = "BotsAttackPlayers",
 			Text = "Bots Attack Players",
 			---@type Type|integer
@@ -510,51 +511,6 @@ SettingsDefinition = {
 			Value = Config.TeleportIfStuck,
 			Description = "Bot teleport to their target if they are stuck",
 			Default = true,
-			UpdateFlag = UpdateFlag.None,
-			Category = "BEHAVIOUR"
-		},
-		{
-			Name = "BotsRevive",
-			Text = "Bots revive players",
-			---@type Type|integer
-			Type = Type.Boolean,
-			Value = Config.BotsRevive,
-			Description = "Bots revive other players",
-			Default = true,
-			UpdateFlag = UpdateFlag.None,
-			Category = "BEHAVIOUR"
-		},
-		{
-			Name = "BotsThrowGrenades",
-			Text = "Bots throw grenades",
-			---@type Type|integer
-			Type = Type.Boolean,
-			Value = Config.BotsThrowGrenades,
-			Description = "Bots throw grenades at enemies",
-			Default = true,
-			UpdateFlag = UpdateFlag.None,
-			Category = "BEHAVIOUR"
-		},
-		{
-			Name = "BotsDeploy",
-			Text = "Bots deploy bags",
-			---@type Type|integer
-			Type = Type.Boolean,
-			Value = Config.BotsDeploy,
-			Description = "Bots deploy ammo and medkits",
-			Default = true,
-			UpdateFlag = UpdateFlag.None,
-			Category = "BEHAVIOUR"
-		},
-		{
-			Name = "DeployCycle",
-			Text = "Deploy Cycle",
-			---@type Type|integer
-			Type = Type.Integer,
-			Value = Config.DeployCycle,
-			Description = "Time between deployment of bots in seconds",
-			Reference = Range(1.00, 600.00, 5.0),
-			Default = 60,
 			UpdateFlag = UpdateFlag.None,
 			Category = "BEHAVIOUR"
 		},
@@ -1004,7 +960,7 @@ SettingsDefinition = {
 			Type = Type.Boolean,
 			Value = Config.DisableUserInterface,
 			Description = "If true, all Players can access the Comm-Screen",
-			Default = true,
+			Default = false,
 			UpdateFlag = UpdateFlag.None,
 			Category = "OTHER"
 		},

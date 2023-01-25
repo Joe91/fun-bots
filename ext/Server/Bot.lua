@@ -72,7 +72,6 @@ function Bot:__init(p_Player)
 	self._ShotTimer = 0.0
 	self._ShootModeTimer = 0.0
 	self._ReloadTimer = 0.0
-	self._DeployTimer = 0.0
 	self._AttackModeMoveTimer = 0.0
 	self._MeleeCooldownTimer = 0.0
 	self._ShootTraceTimer = 0.0
@@ -538,7 +537,6 @@ function Bot:ResetSpawnVars()
 	self._ShootTraceTimer = 0.0
 	self._ReloadTimer = 0.0
 	self._BrakeTimer = 0.0
-	self._DeployTimer = MathUtils:GetRandomInt(1, Config.DeployCycle)
 	self._AttackModeMoveTimer = 0.0
 	self._AttackMode = BotAttackModes.RandomNotSet
 	self._ShootWayPoints = {}
