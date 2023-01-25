@@ -743,12 +743,14 @@ function BotManager:SpawnBot(p_Bot, p_Transform, p_Pose)
 	end
 
 	-- Customization of health of bot.
-	s_BotSoldier.maxHealth = maxHealthValue
+	local s_RandomValueOfBot = MathUtils:GetRandom(0.0, 1.0)
 	if Config.RandomHealthOfZombies then
-		s_BotSoldier.health = MathUtils:GetRandom(minHealthValue, maxHealthValue)
+
+		s_BotSoldier.health = minHealthValue + ( s_RandomValueOfBot * (maxHealthValue - minHealthValue))
 	else
 		s_BotSoldier.health = maxHealthValue
 	end
+	s_BotSoldier.maxHealth = s_BotSoldier.health
 
 	s_BotPlayer:SpawnSoldierAt(s_BotSoldier, p_Transform, p_Pose)
 	s_BotPlayer:AttachSoldier(s_BotSoldier)
@@ -756,13 +758,29 @@ function BotManager:SpawnBot(p_Bot, p_Transform, p_Pose)
 	local s_EntityIterator = EntityManager:GetIterator('PropertyCastEntity')
 	local s_Entity = s_EntityIterator:Next()
 
+	local s_MinSpeedWalk = 0.3
+	local s_MaxSpeedWalk = 1.0
+	p_Bot._SpeedFactorMovement = s_MinSpeedWalk + ( s_RandomValueOfBot * (s_MaxSpeedWalk - s_MinSpeedWalk))
 
-	local s_SpeedValue = Config.SpeedFactorAttack
+
+	local s_SpeedValue = 0.0
+	local s_MaxSpeedValue = Config.SpeedFactorAttack
+	local s_MinSpeedValue = Config.MinSpeedFactorAttack
 	if Globals.SpawnMode == SpawnModes.wave_spawn then
-		s_SpeedValue = Globals.SpeedAttackValue
+		s_MaxSpeedValue = Globals.MaxSpeedAttackValue
+		s_MinSpeedValue = Globals.MinSpeedAttackValue
 	end
 	if Config.RandomAttackSpeedOfZombies then
-		s_SpeedValue = MathUtils:GetRandom(1.0, s_SpeedValue)
+		s_SpeedValue =  s_MinSpeedValue + ( s_RandomValueOfBot * (s_MaxSpeedValue - s_MinSpeedValue))
+	else
+		s_SpeedValue = s_MaxSpeedValue
+	end
+
+
+	p_Bot._SpeedFactorAttack = s_SpeedValue
+
+	if s_SpeedValue < 1.0 then
+		s_SpeedValue = 1.0  -- default sprint behaviour, don't sptint later
 	end
 
 	while s_Entity do
@@ -770,7 +788,6 @@ function BotManager:SpawnBot(p_Bot, p_Transform, p_Pose)
 			s_Entity:PropertyChanged("FloatValue", s_SpeedValue)
 			return
 		end
-
 		s_Entity = s_EntityIterator:Next()
 	end
 end

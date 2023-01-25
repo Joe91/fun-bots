@@ -35,6 +35,8 @@ Language:add(code, "Damage Factor Knife", "")
 Language:add(code, "Original Damage from bots gets multiplied by this", "")
 Language:add(code, "Speed factor attack", "")
 Language:add(code, "Modifies the speed while attacking. 1 = normal", "")
+Language:add(code, "Min Speed factor attack", "")
+Language:add(code, "Modifies the minimal speed while attacking. 1 = normal", "")
 
 -- SPAWN
 Language:add(code, "Spawn Mode", "")

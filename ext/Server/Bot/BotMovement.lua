@@ -367,11 +367,11 @@ function BotMovement:UpdateShootMovement(p_Bot)
 	if p_Bot._AttackModeMoveTimer > 20.0 then
 		p_Bot._AttackModeMoveTimer = 0.0
 	elseif p_Bot._AttackModeMoveTimer > 17.0 then
-		p_Bot:_SetInput(EntryInputActionEnum.EIAStrafe, -0.5 * Config.SpeedFactorAttack)
+		p_Bot:_SetInput(EntryInputActionEnum.EIAStrafe, -0.5 * p_Bot._SpeedFactorAttack)
 	elseif p_Bot._AttackModeMoveTimer > 12.0 and p_Bot._AttackModeMoveTimer <= 13.0 then
-		p_Bot:_SetInput(EntryInputActionEnum.EIAStrafe, 0.5 * Config.SpeedFactorAttack)
+		p_Bot:_SetInput(EntryInputActionEnum.EIAStrafe, 0.5 * p_Bot._SpeedFactorAttack)
 	elseif p_Bot._AttackModeMoveTimer > 7.0 and p_Bot._AttackModeMoveTimer <= 9.0 then
-		p_Bot:_SetInput(EntryInputActionEnum.EIAStrafe, 0.5 * Config.SpeedFactorAttack)
+		p_Bot:_SetInput(EntryInputActionEnum.EIAStrafe, 0.5 * p_Bot._SpeedFactorAttack)
 	end
 
 	p_Bot._AttackModeMoveTimer = p_Bot._AttackModeMoveTimer + Registry.BOT.BOT_UPDATE_CYCLE
@@ -423,8 +423,12 @@ function BotMovement:UpdateSpeedOfMovement(p_Bot)
 	if p_Bot.m_ActiveSpeedValue ~= BotMoveSpeeds.Sprint then
 		p_Bot:_SetInput(EntryInputActionEnum.EIAThrottle, s_SpeedVal * s_SpeedFactorNormalMovement)
 	else -- use full speed for sprinting
-		p_Bot:_SetInput(EntryInputActionEnum.EIAThrottle, 1)
-		p_Bot:_SetInput(EntryInputActionEnum.EIASprint, s_SpeedVal) -- * Config.SpeedFactor
+		if p_Bot._SpeedFactorAttack >= 1.0 then
+			p_Bot:_SetInput(EntryInputActionEnum.EIAThrottle, 1)
+			p_Bot:_SetInput(EntryInputActionEnum.EIASprint, s_SpeedVal) -- * Config.SpeedFactor
+		else
+			p_Bot:_SetInput(EntryInputActionEnum.EIAThrottle, s_SpeedVal * p_Bot._SpeedFactorAttack)
+		end
 	end
 end
 

@@ -22,7 +22,8 @@ Config = {
 	BotHeadshotDamageMultiplier = 2.0,	-- Damage multiplier for shooting bots in the head 
 	BotWorseningSkill = 0.50,			-- Variation of the skill of a single bot. The higher, the worse the bots can get compared to the original settings 
 	DamageFactorKnife = 1.5,			-- Original Damage from bots gets multiplied by this 
-	SpeedFactorAttack = 1.1,			-- Modifies the speed while attacking. 1 = normal 
+	SpeedFactorAttack = 1.2,			-- Modifies the speed while attacking. 1 = normal 
+	MinSpeedFactorAttack = 0.5,			-- Modifies the minimal speed while attacking. 1 = normal 
 
 	-- SPAWN 
 	SpawnMode = SpawnModes.wave_spawn,	-- Mode the bots spawn with 

@@ -283,7 +283,8 @@ function BotSpawner:UpdateWaveConfig()
 	Globals.MaxHealthValue = Config.BotMaxHealth + (s_WaveValue * Config.IncrementMaxHealthPerWave)
 	Globals.MinHealthValue = Config.BotMinHealth + (s_WaveValue * Config.IncrementMaxHealthPerWave)
 	Globals.DamageFactorZombies = Config.DamageFactorKnife + (s_WaveValue * Config.IncrementDamageFactorPerWave)
-	Globals.SpeedAttackValue = Config.SpeedFactorAttack + (s_WaveValue * Config.IncrementMaxSpeedPerWave)
+	Globals.MaxSpeedAttackValue = Config.SpeedFactorAttack + (s_WaveValue * Config.IncrementMaxSpeedPerWave)
+	Globals.MinSpeedAttackValue = Config.MinSpeedFactorAttack + (s_WaveValue * Config.IncrementMaxSpeedPerWave)
 	self._BotsToSpawnInWave = Config.FirstWaveCount + (s_WaveValue * Config.IncrementZombiesPerWave)
 end
 
@@ -358,7 +359,8 @@ function BotSpawner:UpdateBotAmountAndTeam()
 			Globals.MaxHealthValue = Config.BotMaxHealth
 			Globals.MinHealthValue = Config.BotMinHealth
 			Globals.DamageFactorZombies = Config.DamageFactorKnife
-			Globals.SpeedAttackValue = Config.SpeedFactorAttack
+			Globals.MaxSpeedAttackValue = Config.SpeedFactorAttack
+			Globals.MinSpeedAttackValue = Config.MinSpeedFactorAttack
 			self._BotsToSpawnInWave = Config.FirstWaveCount
 		end
 		if Config.KillRemainingZombiesAfterWave and self._SpawnedBotsInCurrentWave == 0 then

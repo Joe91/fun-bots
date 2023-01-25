@@ -83,6 +83,7 @@ function Bot:__init(p_Player)
 
 	-- Zombie Stuff
 	self._SpeedFactorMovement = 1.0
+	self._SpeedFactorAttack = 1.0
 
 	-- Shared movement vars.
 	---@type BotMoveModes
@@ -540,12 +541,11 @@ function Bot:ResetSpawnVars()
 	self._AttackModeMoveTimer = 0.0
 	self._AttackMode = BotAttackModes.RandomNotSet
 	self._ShootWayPoints = {}
-	self._SpeedFactorMovement = MathUtils:GetRandom(0.3, 0.9)
 
 	self._ShotTimer = 0.0
 	self._UpdateTimer = 0.0
 	self._StuckTimer = 0.0
-	self._SpawnProtectionTimer = 2.0
+	self._SpawnProtectionTimer = 0.0
 	self._TargetPoint = nil
 	self._NextTargetPoint = nil
 	self._ActiveAction = BotActionFlags.NoActionActive
