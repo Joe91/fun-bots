@@ -124,6 +124,8 @@ function FunBotServer:RegisterEvents()
 	Events:Subscribe('CombatArea:PlayerReturning', self, self.OnCombatAreaReturning)
 	Events:Subscribe('LifeCounter:BaseDestroyed', self, self.OnLifeCounterBaseDestoyed)
 
+	Events:Subscribe('ServerDamagePlayer', self, self.OnServerDamagePlayer)
+
 end
 
 function FunBotServer:RegisterHooks()
@@ -273,6 +275,10 @@ end
 
 function FunBotServer:OnLifeCounterBaseDestoyed(p_LifeCounterEntity, p_FinalBase)
 	m_GameDirector:OnLifeCounterBaseDestoyed(p_LifeCounterEntity, p_FinalBase)
+end
+
+function FunBotServer:OnServerDamagePlayer(p_PlayerName, p_ShooterName, p_MeleeAttack)
+	m_BotManager:OnServerDamagePlayer(p_PlayerName, p_ShooterName, p_MeleeAttack)
 end
 
 -- =============================================

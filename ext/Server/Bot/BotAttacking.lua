@@ -159,6 +159,9 @@ local function _DefaultAttackingAction(p_Bot)
 			p_Bot._MeleeCooldownTimer = 0.0
 		elseif p_Bot._MeleeCooldownTimer > 0.0 then
 			p_Bot._MeleeCooldownTimer = p_Bot._MeleeCooldownTimer - Registry.BOT.BOT_UPDATE_CYCLE
+			if p_Bot._MeleeCooldownTimer < (Config.MeleeAttackCoolDown - 0.3) and p_Bot._MeleeCooldownTimer > (Config.MeleeAttackCoolDown - 0.3 - Registry.BOT.BOT_UPDATE_CYCLE) then
+				Events:DispatchLocal("ServerDamagePlayer", p_Bot._ShootPlayer.name, p_Bot.m_Player.name, true);
+			end
 			if p_Bot._MeleeCooldownTimer < (Config.MeleeAttackCoolDown - 0.8) then
 				p_Bot:_ResetActionFlag(BotActionFlags.MeleeActive)
 			else
@@ -277,7 +280,7 @@ local function _DefaultAttackingAction(p_Bot)
 
 			table.insert(p_Bot._ShootWayPoints, s_Point)
 
-			if p_Bot.m_KnifeMode then
+			if p_Bot.m_KnifeMode and p_Bot._ShootPlayer.soldier then
 				local s_Trans = p_Bot._ShootPlayer.soldier.worldTransform.trans:Clone()
 				table.insert(p_Bot._KnifeWayPositions, s_Trans)
 			end
