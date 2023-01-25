@@ -53,38 +53,6 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 			p_Bot._WayWaitYawTimer = 0.0
 			p_Bot.m_ActiveSpeedValue = s_Point.SpeedMode -- Speed.
 
-			-- Zombie-Mode:
-			if p_Bot._ZombieSpeedValue == BotMoveSpeeds.NoMovement then
-				-- evaluate all possible options
-				local s_MoveModes = {}
-				if Config.ZombiesProne then
-					for l_WeightNumber = 1, Registry.ZOMBIES.WEIGHT_PRONE do
-						table.insert(s_MoveModes, BotMoveSpeeds.VerySlowProne)
-					end
-				end
-				if Config.ZombiesCrouch then
-					for l_WeightNumber = 1, Registry.ZOMBIES.WEIGHT_CROUCH do
-						table.insert(s_MoveModes, BotMoveSpeeds.SlowCrouch)
-					end
-				end
-				if Config.ZombiesWalk then
-					for l_WeightNumber = 1, Registry.ZOMBIES.WEIGHT_WALK do
-						table.insert(s_MoveModes, BotMoveSpeeds.Normal)
-					end
-				end
-				if Config.ZombiesSprint then
-					for l_WeightNumber = 1, Registry.ZOMBIES.WEIGHT_SPRINT do
-						table.insert(s_MoveModes, BotMoveSpeeds.Sprint)
-					end
-				end
-
-				if #s_MoveModes > 0 then
-					p_Bot._ZombieSpeedValue = s_MoveModes[MathUtils:GetRandomInt(1, #s_MoveModes)]
-				else
-					p_Bot._ZombieSpeedValue = BotMoveSpeeds.Crouch
-				end
-			end
-
 			p_Bot.m_ActiveSpeedValue = p_Bot._ZombieSpeedValue
 
 			if Config.OverWriteBotSpeedMode ~= BotMoveSpeeds.NoMovement then
@@ -124,7 +92,14 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 			-- Detect obstacle and move over or around. To-do: Move before normal jump.
 			local s_CurrentWayPointDistance = p_Bot.m_Player.soldier.worldTransform.trans:Distance(s_Point.Position)
 
-			if s_CurrentWayPointDistance > p_Bot._LastWayDistance + 0.02 and p_Bot._ObstacleSequenceTimer == 0 then
+			local s_TargetDistanceDelta = 0.03
+			if p_Bot.m_ActiveSpeedValue == BotMoveSpeeds.VerySlowProne then
+				s_TargetDistanceDelta = 0.01
+			elseif p_Bot.m_ActiveSpeedValue == BotMoveSpeeds.SlowCrouch then
+				s_TargetDistanceDelta = 0.02
+			end
+
+			if s_CurrentWayPointDistance > p_Bot._LastWayDistance + s_TargetDistanceDelta and p_Bot._ObstacleSequenceTimer == 0 then
 				-- Skip one point.
 				s_DistanceFromTarget = 0
 				s_HeightDistance = 0
@@ -133,7 +108,7 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 			p_Bot._TargetPoint = s_Point
 			p_Bot._NextTargetPoint = s_NextPoint
 
-			if math.abs(s_CurrentWayPointDistance - p_Bot._LastWayDistance) < 0.02 or p_Bot._ObstacleSequenceTimer ~= 0 then
+			if math.abs(s_CurrentWayPointDistance - p_Bot._LastWayDistance) < s_TargetDistanceDelta or p_Bot._ObstacleSequenceTimer ~= 0 then
 				-- Try to get around obstacle.
 				p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.Sprint -- Always try to stand.
 

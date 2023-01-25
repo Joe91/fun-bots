@@ -760,8 +760,8 @@ function BotManager:SpawnBot(p_Bot, p_Transform, p_Pose)
 	local s_Entity = s_EntityIterator:Next()
 
 	-- Walk-Speed
-	local s_MinSpeedWalk = 0.3
-	local s_MaxSpeedWalk = 1.0
+	local s_MinSpeedWalk = Registry.ZOMBIES.MIN_MOVE_SPEED
+	local s_MaxSpeedWalk = Registry.ZOMBIES.MAX_MOVE_SPEED
 	p_Bot._SpeedFactorMovement = s_MinSpeedWalk + ( s_RandomValueOfBot * (s_MaxSpeedWalk - s_MinSpeedWalk))
 
 	-- Zombie-Move-Mode: evaluate all possible options

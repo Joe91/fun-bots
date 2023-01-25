@@ -120,6 +120,8 @@ Registry = {
 		WEIGHT_CROUCH = 2,
 		WEIGHT_WALK = 2,
 		WEIGHT_SPRINT = 1,
+		MIN_MOVE_SPEED = 0.2,
+		MAX_MOVE_SPEED = 1.0,
 	},
 
 	-- Bot related.
