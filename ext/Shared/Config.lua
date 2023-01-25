@@ -13,12 +13,12 @@ Config = {
 	RandomDamgeOfZombies = true,		-- zombie-damage differs from bot to bot 
 
 	-- DIFFICULTY 
-	BotMaxHealth = 100.0,				-- Max health of bot at spawn(default 100.0) 
-	BotMinHealth = 50.0,				-- Min health of bot at spawn (default 100.0) 
-	BotHeadshotDamageMultiplier = 1.5,  -- Damage multiplier for shooting bots in the head
+	BotMaxHealth = 125.0,				-- Max health of bot at spawn(default 100.0) 
+	BotMinHealth = 75.0,				-- Min health of bot at spawn (default 100.0) 
+	BotHeadshotDamageMultiplier = 2.0,  -- Damage multiplier for shooting bots in the head
 	BotWorseningSkill = 0.50,			-- Variation of the skill of a single bot. The higher, the worse the bots can get compared to the original settings 
 	DamageFactorKnife = 1.5,			-- Original Damage from bots gets multiplied by this 
-	SpeedFactorAttack = 1.5,			-- Modifies the speed while attacking. 1 = normal 
+	SpeedFactorAttack = 1.1,			-- Modifies the speed while attacking. 1 = normal 
 
 	-- SPAWN 
 	SpawnMode = SpawnModes.wave_spawn,	-- Mode the bots spawn with 
@@ -31,15 +31,15 @@ Config = {
 	MaxEngineerBots = -1,				-- Maximum number of Bots with Engineer Kit. -1 = no limit 
 	MaxSupportBots = -1,				-- Maximum number of Bots with Support Kit. -1 = no limit 
 	MaxReconBots = -1,					-- Maximum number of Bots with Recon Kit. -1 = no limit 
-	AdditionalBotSpawnDelay = 0.5,		-- Additional time a bot waits to respawn 
+	AdditionalBotSpawnDelay = 0.1,		-- Additional time a bot waits to respawn 
 	MaxBotsPerTeamDefault = 128,		-- Max number of bots in one team, if no other mode fits 
 
 	-- WAVES 
 	FirstWaveCount = 30,				-- Zombies that spawn in the first wave 
 	IncrementZombiesPerWave = 10,		-- Zombies that are added in each new wave 
-	IncrementMaxHealthPerWave = 50,		-- Zombies get more health each wave 
+	IncrementMaxHealthPerWave = 25,		-- Zombies get more health each wave 
 	IncrementDamageFactorPerWave = 0.1,	-- Zombies deal more damage each wave 
-	IncrementMaxSpeedPerWave = 0.2,		-- Zombies get more speed each wave 
+	IncrementMaxSpeedPerWave = 0.05,		-- Zombies get more speed each wave 
 	ZombiesAliveForNextWave = 5,		-- New wave is triggered when this number of zombies is reached 
 	TimeBetweenWaves = 7.0,				-- Time in seconds between two waves 
 	KillRemainingZombiesAfterWave = false,	-- Remaining Bots Get Killed before a new wave starts 
