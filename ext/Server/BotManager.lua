@@ -744,6 +744,7 @@ function BotManager:SpawnBot(p_Bot, p_Transform, p_Pose)
 
 	-- Customization of health of bot.
 	local s_RandomValueOfBot = MathUtils:GetRandom(0.0, 1.0)
+	p_Bot._RandomValueOfBot = s_RandomValueOfBot
 	if Config.RandomHealthOfZombies then
 
 		s_BotSoldier.health = minHealthValue + ( s_RandomValueOfBot * (maxHealthValue - minHealthValue))
@@ -758,10 +759,43 @@ function BotManager:SpawnBot(p_Bot, p_Transform, p_Pose)
 	local s_EntityIterator = EntityManager:GetIterator('PropertyCastEntity')
 	local s_Entity = s_EntityIterator:Next()
 
+	-- Walk-Speed
 	local s_MinSpeedWalk = 0.3
 	local s_MaxSpeedWalk = 1.0
 	p_Bot._SpeedFactorMovement = s_MinSpeedWalk + ( s_RandomValueOfBot * (s_MaxSpeedWalk - s_MinSpeedWalk))
 
+	-- Zombie-Move-Mode: evaluate all possible options
+	local s_MoveModes = {}
+	if Config.ZombiesProne then
+		for l_WeightNumber = 1, Registry.ZOMBIES.WEIGHT_PRONE do
+			table.insert(s_MoveModes, BotMoveSpeeds.VerySlowProne)
+		end
+	end
+	if Config.ZombiesCrouch then
+		for l_WeightNumber = 1, Registry.ZOMBIES.WEIGHT_CROUCH do
+			table.insert(s_MoveModes, BotMoveSpeeds.SlowCrouch)
+		end
+	end
+	if Config.ZombiesWalk then
+		for l_WeightNumber = 1, Registry.ZOMBIES.WEIGHT_WALK do
+			table.insert(s_MoveModes, BotMoveSpeeds.Normal)
+		end
+	end
+	if Config.ZombiesSprint then
+		for l_WeightNumber = 1, Registry.ZOMBIES.WEIGHT_SPRINT do
+			table.insert(s_MoveModes, BotMoveSpeeds.Sprint)
+		end
+	end
+
+	if #s_MoveModes > 0 then
+		local s_TargetValue = math.floor((s_RandomValueOfBot * #s_MoveModes) + 1.0)
+		if s_TargetValue > #s_MoveModes then
+			s_TargetValue = #s_MoveModes
+		end
+		p_Bot._ZombieSpeedValue = s_MoveModes[s_TargetValue]
+	else
+		p_Bot._ZombieSpeedValue = BotMoveSpeeds.Normal
+	end
 
 	local s_SpeedValue = 0.0
 	local s_MaxSpeedValue = Config.SpeedFactorAttack

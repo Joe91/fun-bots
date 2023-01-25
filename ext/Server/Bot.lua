@@ -84,6 +84,8 @@ function Bot:__init(p_Player)
 	-- Zombie Stuff
 	self._SpeedFactorMovement = 1.0
 	self._SpeedFactorAttack = 1.0
+	self._RandomValueOfBot = 1.0
+	self._ZombieSpeedValue = BotMoveSpeeds.NoMovement
 
 	-- Shared movement vars.
 	---@type BotMoveModes
@@ -123,7 +125,6 @@ function Bot:__init(p_Player)
 	self._ExitVehicleActive = false
 	self._ObstacleRetryCounter = 0
 	---@type BotMoveSpeeds
-	self._ZombieSpeedValue = BotMoveSpeeds.NoMovement
 	self._Objective = ''
 	self._OnSwitch = false
 
@@ -386,7 +387,6 @@ function Bot:ResetVars()
 	self._NextTargetPoint = nil
 	self._KnifeWayPositions = {}
 	self._ShootWayPoints = {}
-	self._ZombieSpeedValue = BotMoveSpeeds.NoMovement
 	self._SpawnDelayTimer = 0.0
 	self._SpawnProtectionTimer = 0.0
 	self._Objective = ''
@@ -550,7 +550,6 @@ function Bot:ResetSpawnVars()
 	self._NextTargetPoint = nil
 	self._ActiveAction = BotActionFlags.NoActionActive
 	self._KnifeWayPositions = {}
-	self._ZombieSpeedValue = BotMoveSpeeds.NoMovement
 	self._OnSwitch = false
 	self._TargetPitch = 0.0
 	self._Objective = '' -- Reset objective on spawn, as another spawn-point might have chosen...
