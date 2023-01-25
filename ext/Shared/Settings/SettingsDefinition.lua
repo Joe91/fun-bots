@@ -137,7 +137,7 @@ SettingsDefinition = {
 			UpdateFlag = UpdateFlag.None,
 			Category = "GENERAL"
 		},
-		
+
 		-- Difficulty.
 		{
 			Name = "BotMaxHealth",
@@ -147,7 +147,7 @@ SettingsDefinition = {
 			Value = Config.BotMaxHealth,
 			Description = "Max health of bot at spawn(default 100.0)",
 			Reference = Range(0.0, 1000.00, 1.0),
-			Default = 100.0,
+			Default = 125.0,
 			UpdateFlag = UpdateFlag.Wave,
 			Category = "DIFFICULTY"
 		},
@@ -159,7 +159,7 @@ SettingsDefinition = {
 			Value = Config.BotMinHealth,
 			Description = "Min health of bot at spawn (default 100.0)",
 			Reference = Range(0.0, 1000.00, 1.0),
-			Default = 50.0,
+			Default = 75.0,
 			UpdateFlag = UpdateFlag.Wave,
 			Category = "DIFFICULTY"
 		},
@@ -171,7 +171,7 @@ SettingsDefinition = {
 			Value = Config.BotHeadshotDamageMultiplier,
 			Description = "Damage multiplier for shooting bots in the head",
 			Reference = Range(0.0, 100.00, 0.1),
-			Default = 1.5,
+			Default = 2.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
@@ -207,7 +207,7 @@ SettingsDefinition = {
 			Value = Config.SpeedFactorAttack,
 			Description = "Modifies the speed while attacking. 1 = normal",
 			Reference = Range(0.00, 3.00, 0.10),
-			Default = 1.5,
+			Default = 1.1,
 			UpdateFlag = UpdateFlag.Wave,
 			Category = "DIFFICULTY"
 		},
@@ -340,7 +340,7 @@ SettingsDefinition = {
 			Value = Config.AdditionalBotSpawnDelay,
 			Description = "Additional time a bot waits to respawn",
 			Reference = Range(0.0, 60.00, 0.5),
-			Default = 0.5,
+			Default = 0.1,
 			UpdateFlag = UpdateFlag.None,
 			Category = "SPAWN"
 		},
@@ -389,7 +389,7 @@ SettingsDefinition = {
 			Value = Config.IncrementMaxHealthPerWave,
 			Description = "Zombies get more health each wave",
 			Reference = Range(0.00, 500.00, 1.0),
-			Default = 50,
+			Default = 25,
 			UpdateFlag = UpdateFlag.Wave,
 			Category = "WAVES"
 		},
@@ -413,7 +413,7 @@ SettingsDefinition = {
 			Value = Config.IncrementMaxSpeedPerWave,
 			Description = "Zombies get more speed each wave",
 			Reference = Range(0.00, 5.00, 1.0),
-			Default = 0.2,
+			Default = 0.05,
 			UpdateFlag = UpdateFlag.Wave,
 			Category = "WAVES"
 		},

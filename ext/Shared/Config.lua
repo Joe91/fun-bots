@@ -19,7 +19,7 @@ Config = {
 	-- DIFFICULTY 
 	BotMaxHealth = 125.0,				-- Max health of bot at spawn(default 100.0) 
 	BotMinHealth = 75.0,				-- Min health of bot at spawn (default 100.0) 
-	BotHeadshotDamageMultiplier = 2.0,  -- Damage multiplier for shooting bots in the head
+	BotHeadshotDamageMultiplier = 2.0,	-- Damage multiplier for shooting bots in the head 
 	BotWorseningSkill = 0.50,			-- Variation of the skill of a single bot. The higher, the worse the bots can get compared to the original settings 
 	DamageFactorKnife = 1.5,			-- Original Damage from bots gets multiplied by this 
 	SpeedFactorAttack = 1.1,			-- Modifies the speed while attacking. 1 = normal 
@@ -43,7 +43,7 @@ Config = {
 	IncrementZombiesPerWave = 10,		-- Zombies that are added in each new wave 
 	IncrementMaxHealthPerWave = 25,		-- Zombies get more health each wave 
 	IncrementDamageFactorPerWave = 0.1,	-- Zombies deal more damage each wave 
-	IncrementMaxSpeedPerWave = 0.05,		-- Zombies get more speed each wave 
+	IncrementMaxSpeedPerWave = 0.05,	-- Zombies get more speed each wave 
 	ZombiesAliveForNextWave = 5,		-- New wave is triggered when this number of zombies is reached 
 	TimeBetweenWaves = 7.0,				-- Time in seconds between two waves 
 	KillRemainingZombiesAfterWave = false,	-- Remaining Bots Get Killed before a new wave starts 
