@@ -62,6 +62,7 @@ function FunBotClient:RegisterEvents()
 	Events:Subscribe('Engine:Message', self, self.OnEngineMessage)
 	Events:Subscribe('UpdateManager:Update', self, self.OnUpdateManagerUpdate)
 	Events:Subscribe('Level:Destroy', self, self.OnLevelDestroy)
+	Events:Subscribe('Level:Loaded', self, self.OnLevelLoaded)
 	Events:Subscribe('Player:Deleted', self, self.OnPlayerDeleted)
 	Events:Subscribe('Client:UpdateInput', self, self.OnClientUpdateInput)
 	Events:Subscribe('Engine:Update', self, self.OnEngineUpdate)
@@ -125,6 +126,44 @@ function FunBotClient:OnLevelDestroy()
 	m_ClientBotManager:OnLevelDestroy()
 	m_ClientNodeEditor:OnLevelDestroy()
 	m_ClientSpawnPointHelper:OnLevelDestroy()
+end
+
+function FunBotClient:OnLevelLoaded(p_LevelName, p_GameMode)
+	local classKits = {"RUAssault", "RUAssault_XP4", "RUEngineer", "RUEngineer_XP4", "RURecon", "RURecon_XP4", "RUSupport", "RUSupport_XP4", "USAssault", "USAssault_XP4", "USEngineer", "USEngineer_XP4", "USRecon" , "USRecon_XP4" , "USSupport" , "USSupport_XP4"}
+
+	for _, kit in ipairs(classKits) do
+
+        local classKit = ResourceManager:SearchForDataContainer('Gameplay/Kits/' .. kit)
+        local classWeaponTable
+
+        if (classKit ~= nil) then
+            classKit = VeniceSoldierCustomizationAsset(classKit)
+            classWeaponTable = CustomizationTable(classKit.weaponTable)
+			
+			if(string.find(kit, 'Support') or string.find(kit, 'Recon')) then
+              for i, unlockPart in pairs(classWeaponTable.unlockParts) do
+                  if(i == 4 or i==5 or i==6) then
+                      unlockPart:MakeWritable()
+                      unlockPart.selectableUnlocks:clear()
+                  end
+              end
+            elseif(string.find(kit, 'Assault')) then
+                for i, unlockPart in pairs(classWeaponTable.unlockParts) do
+                    if(i == 3) then
+                        unlockPart:MakeWritable()
+                        unlockPart.selectableUnlocks:clear()
+                    end
+                end
+            else
+              --for i, unlockPart in pairs(classWeaponTable.unlockParts) do
+                  --if(i == 3 or i == 4 or i==5) then
+                      --unlockPart:MakeWritable()
+                      --unlockPart.selectableUnlocks:clear()
+                  --end
+              --end
+            end
+        end
+    end
 end
 
 ---VEXT Client Player:Deleted Event

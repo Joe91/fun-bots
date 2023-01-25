@@ -169,6 +169,10 @@ function BotManager:OnSoldierDamage(p_HookCtx, p_Soldier, p_Info, p_GiverInfo)
 		return
 	end
 
+	if (p_Info.boneIndex == 1) then -- headshot
+		p_Info.damage = p_Info.damage * Config.BotHeadshotDamageMultiplier -- headshot multiplier is 2x by default
+	end
+
 	-- This is a bot.
 	if m_Utilities:isBot(p_Soldier.player) then
 		if p_GiverInfo and p_GiverInfo.giver then

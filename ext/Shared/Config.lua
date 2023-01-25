@@ -15,13 +15,14 @@ Config = {
 	-- DIFFICULTY 
 	BotMaxHealth = 100.0,				-- Max health of bot at spawn(default 100.0) 
 	BotMinHealth = 50.0,				-- Min health of bot at spawn (default 100.0) 
+	BotHeadshotDamageMultiplier = 1.5,  -- Damage multiplier for shooting bots in the head
 	BotWorseningSkill = 0.50,			-- Variation of the skill of a single bot. The higher, the worse the bots can get compared to the original settings 
 	DamageFactorKnife = 1.5,			-- Original Damage from bots gets multiplied by this 
 	SpeedFactorAttack = 1.5,			-- Modifies the speed while attacking. 1 = normal 
 
 	-- SPAWN 
 	SpawnMode = SpawnModes.wave_spawn,	-- Mode the bots spawn with 
-	InitNumberOfBots = 10,				-- Bots for spawnmode 
+	InitNumberOfBots = 0,				-- Bots for spawnmode 
 	NewBotsPerNewPlayer = 5,			-- Number to increase Bots by when new players join 
 	FactorPlayerTeamCount = 0.2,		-- Reduce player team in balanced_teams or fixed_number mode 
 	BotTeam = 2,						-- Default bot team (0 = neutral / auto, 1 = US, 2 = RU) TeamId.Team2 
@@ -44,19 +45,19 @@ Config = {
 	KillRemainingZombiesAfterWave = false,	-- Remaining Bots Get Killed before a new wave starts 
 
 	-- BEHAVIOUR 
-	FovForShooting = 180,				-- Degrees of FOV of Bot 
-	FovVerticleForShooting = 90,		-- Degrees of FOV of Bot in vertical direction 
-	MaxShootDistance = 70,				-- Meters before bots (not sniper) will start shooting at players 
+	FovForShooting = 360,				-- Degrees of FOV of Bot 
+	FovVerticleForShooting = 360,		-- Degrees of FOV of Bot in vertical direction 
+	MaxShootDistance = 150,				-- Meters before bots (not sniper) will start shooting at players 
 	MaxDistanceShootBack = 150,			-- Meters until bots (not sniper) shoot back if hit 
 	BotAttackMode = BotAttackModes.RandomNotSet,	-- Mode the Bots attack with. Random, Crouch or Stand 
 	ShootBackIfHit = true,				-- Bot shoots back if hit 
-	BotsAttackBots = true,				-- Bots attack bots from other team 
+	BotsAttackBots = false,				-- Bots attack bots from other team 
 	BotsAttackPlayers = true,			-- Bots attack Players from other team 
 	BotCanKillHimself = false,			-- Bot takes fall damage or explosion-damage from own frags 
 	TeleportIfStuck = true,				-- Bot teleport to their target if they are stuck 
-	BotsRevive = true,					-- Bots revive other players 
-	BotsThrowGrenades = true,			-- Bots throw grenades at enemies 
-	BotsDeploy = true,					-- Bots deploy ammo and medkits 
+	BotsRevive = false,					-- Bots revive other players 
+	BotsThrowGrenades = false,			-- Bots throw grenades at enemies 
+	BotsDeploy = false,					-- Bots deploy ammo and medkits 
 	DeployCycle = 60,					-- Time between deployment of bots in seconds 
 	SnipersAttackChoppers = false,		-- Bots with sniper-rifels attack choppers 
 
@@ -105,7 +106,7 @@ Config = {
 
 	-- OTHER 
 	DisableUserInterface = false,		-- If true, the complete UI will be disabled (not available in the UI) 
-	AllowCommForAll = true,				-- If true, all Players can access the Comm-Screen 
+	AllowCommForAll = false,				-- If true, all Players can access the Comm-Screen 
 	DisableChatCommands = false,		-- If true, no chat commands can be used 
 	DisableRCONCommands = false,		-- If true, no RCON commands can be used 
 	IgnorePermissions = false,			-- If true, all permissions are ignored --> everyone can do everything 

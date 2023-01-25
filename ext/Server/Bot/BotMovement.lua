@@ -56,11 +56,9 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 			-- Zombie-Mode:
 			-- TODO: Zombies: add more variation in speed
 			if p_Bot._ZombieSpeedValue == BotMoveSpeeds.NoMovement then
-				local zombieValue = MathUtils:GetRandomInt(0, 2)
+				local zombieValue = MathUtils:GetRandomInt(0, 3)
 				if zombieValue == 0 then
-					p_Bot._ZombieSpeedValue = BotMoveSpeeds.SlowCrouch
-				elseif zombieValue == 1 then
-					p_Bot._ZombieSpeedValue = BotMoveSpeeds.VerySlowProne
+					p_Bot._ZombieSpeedValue = BotMoveSpeeds.Sprint
 				else
 					p_Bot._ZombieSpeedValue = BotMoveSpeeds.Normal
 				end
