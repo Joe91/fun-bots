@@ -11,6 +11,10 @@ Config = {
 	RandomHealthOfZombies = true,		-- zombie-helth differs from bot to bot 
 	RandomAttackSpeedOfZombies = true,	-- zombie-speed differs from bot to bot 
 	RandomDamgeOfZombies = true,		-- zombie-damage differs from bot to bot 
+	ZombiesProne = true,				-- Zombies can prone when walking around 
+	ZombiesCrouch = true,				-- Zombies can crouch when walking around 
+	ZombiesWalk = true,					-- Zombies can walk when walking around 
+	ZombiesSprint = true,				-- Zombies can sprint when walking around 
 
 	-- DIFFICULTY 
 	BotMaxHealth = 100.0,				-- Max health of bot at spawn(default 100.0) 

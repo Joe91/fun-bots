@@ -116,6 +116,10 @@ Registry = {
 
 	ZOMBIES = {
 		PROBABILITY_DROP_AMMO = 20,
+		WEIGHT_PRONE = 2,
+		WEIGHT_CROUCH = 2,
+		WEIGHT_WALK = 2,
+		WEIGHT_SPRINT = 1,
 	},
 
 	-- Bot related.

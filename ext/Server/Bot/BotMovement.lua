@@ -54,13 +54,34 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 			p_Bot.m_ActiveSpeedValue = s_Point.SpeedMode -- Speed.
 
 			-- Zombie-Mode:
-			-- TODO: Zombies: add more variation in speed
 			if p_Bot._ZombieSpeedValue == BotMoveSpeeds.NoMovement then
-				local zombieValue = MathUtils:GetRandomInt(0, 3)
-				if zombieValue == 0 then
-					p_Bot._ZombieSpeedValue = BotMoveSpeeds.Sprint
+				-- evaluate all possible options
+				local s_MoveModes = {}
+				if Config.ZombiesProne then
+					for l_WeightNumber = 1, Registry.ZOMBIES.WEIGHT_PRONE do
+						table.insert(s_MoveModes, BotMoveSpeeds.VerySlowProne)
+					end
+				end
+				if Config.ZombiesCrouch then
+					for l_WeightNumber = 1, Registry.ZOMBIES.WEIGHT_CROUCH do
+						table.insert(s_MoveModes, BotMoveSpeeds.SlowCrouch)
+					end
+				end
+				if Config.ZombiesWalk then
+					for l_WeightNumber = 1, Registry.ZOMBIES.WEIGHT_WALK do
+						table.insert(s_MoveModes, BotMoveSpeeds.Normal)
+					end
+				end
+				if Config.ZombiesSprint then
+					for l_WeightNumber = 1, Registry.ZOMBIES.WEIGHT_SPRINT do
+						table.insert(s_MoveModes, BotMoveSpeeds.Sprint)
+					end
+				end
+
+				if #s_MoveModes > 0 then
+					p_Bot._ZombieSpeedValue = s_MoveModes[MathUtils:GetRandomInt(1, #s_MoveModes)]
 				else
-					p_Bot._ZombieSpeedValue = BotMoveSpeeds.Normal
+					p_Bot._ZombieSpeedValue = BotMoveSpeeds.Crouch
 				end
 			end
 

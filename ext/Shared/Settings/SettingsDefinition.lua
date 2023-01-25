@@ -93,7 +93,51 @@ SettingsDefinition = {
 			UpdateFlag = UpdateFlag.None,
 			Category = "GENERAL"
 		},
-
+		{
+			Name = "ZombiesProne",
+			Text = "Zombies prone",
+			---@type Type|integer
+			Type = Type.Boolean,
+			Value = Config.ZombiesProne,
+			Description = "Zombies can prone when walking around",
+			Default = true,
+			UpdateFlag = UpdateFlag.None,
+			Category = "GENERAL"
+		},
+		{
+			Name = "ZombiesCrouch",
+			Text = "Zombies crouch",
+			---@type Type|integer
+			Type = Type.Boolean,
+			Value = Config.ZombiesCrouch,
+			Description = "Zombies can crouch when walking around",
+			Default = true,
+			UpdateFlag = UpdateFlag.None,
+			Category = "GENERAL"
+		},
+		{
+			Name = "ZombiesWalk",
+			Text = "Zombies walk",
+			---@type Type|integer
+			Type = Type.Boolean,
+			Value = Config.ZombiesWalk,
+			Description = "Zombies can walk when walking around",
+			Default = true,
+			UpdateFlag = UpdateFlag.None,
+			Category = "GENERAL"
+		},
+		{
+			Name = "ZombiesSprint",
+			Text = "Zombies sprint",
+			---@type Type|integer
+			Type = Type.Boolean,
+			Value = Config.ZombiesSprint,
+			Description = "Zombies can sprint when walking around",
+			Default = true,
+			UpdateFlag = UpdateFlag.None,
+			Category = "GENERAL"
+		},
+		
 		-- Difficulty.
 		{
 			Name = "BotMaxHealth",
