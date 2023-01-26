@@ -84,6 +84,7 @@ function Bot:__init(p_Player)
 	-- Zombie Stuff
 	self._SpeedFactorMovement = 1.0
 	self._SpeedFactorAttack = 1.0
+	self._HighJumpSpeed = 1.0
 	self._RandomValueOfBot = 1.0
 	self._ZombieSpeedValue = BotMoveSpeeds.NoMovement
 

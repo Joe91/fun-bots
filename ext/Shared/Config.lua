@@ -11,6 +11,7 @@ Config = {
 	RandomHealthOfZombies = true,		-- zombie-helth differs from bot to bot 
 	RandomAttackSpeedOfZombies = true,	-- zombie-speed differs from bot to bot 
 	RandomDamgeOfZombies = true,		-- zombie-damage differs from bot to bot 
+	RandomJumpSpeedOfZombies = true,	-- zombie-high-jumps differs from bot to bot 
 	ZombiesProne = true,				-- Zombies can prone when walking around 
 	ZombiesCrouch = true,				-- Zombies can crouch when walking around 
 	ZombiesWalk = true,					-- Zombies can walk when walking around 
@@ -24,7 +25,8 @@ Config = {
 	DamageFactorKnife = 1.5,			-- Original Damage from bots gets multiplied by this 
 	SpeedFactorAttack = 1.2,			-- Modifies the speed while attacking. 1 = normal 
 	MinSpeedFactorAttack = 0.5,			-- Modifies the minimal speed while attacking. 1 = normal 
-	MaxJumpSpeed = 10,					-- Max Speed the bots jump with on high-jumps 
+	MinHighJumpSpeed = 5.0,				-- Min Speed the bots jump with on high-jumps 
+	MaxHighJumpSpeed = 12.0,			-- Max Speed the bots jump with on high-jumps 
 
 	-- SPAWN 
 	SpawnMode = SpawnModes.wave_spawn,	-- Mode the bots spawn with 
@@ -46,6 +48,7 @@ Config = {
 	IncrementMaxHealthPerWave = 25,		-- Zombies get more health each wave 
 	IncrementDamageFactorPerWave = 0.1,	-- Zombies deal more damage each wave 
 	IncrementMaxSpeedPerWave = 0.05,	-- Zombies get more speed each wave 
+	IncrementJumpSpeedPerWave = 3.0,	-- Zombies get more speed each wave 
 	ZombiesAliveForNextWave = 5,		-- New wave is triggered when this number of zombies is reached 
 	TimeBetweenWaves = 7.0,				-- Time in seconds between two waves 
 	KillRemainingZombiesAfterWave = false,	-- Remaining Bots Get Killed before a new wave starts 

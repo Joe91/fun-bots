@@ -333,10 +333,9 @@ function BotMovement:UpdateShootMovement(p_Bot)
 			table.remove(p_Bot._ShootWayPoints)
 			p_Bot:_SetInput(EntryInputActionEnum.EIAJump, 1)
 			p_Bot:_SetInput(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1)
-			-- TODO: logic for when to jump how high
 			if MathUtils:GetRandom(0.0, 1.0) < p_Bot._RandomValueOfBot then
 				local s_PhysicsSoldier = PhysicsEntity(p_Bot.m_Player.soldier)
-				s_PhysicsSoldier.velocity = s_PhysicsSoldier.velocity + Vec3(0.0, Config.MaxJumpSpeed, 0.0)
+				s_PhysicsSoldier.velocity = s_PhysicsSoldier.velocity + Vec3(0.0, p_Bot._HighJumpSpeed, 0.0)
 			end
 		else
 			p_Bot._ObstacleSequenceTimer = 0

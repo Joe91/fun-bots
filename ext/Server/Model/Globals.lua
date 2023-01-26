@@ -28,6 +28,8 @@ Globals = {
 	MinHealthValue = 0,
 	MaxSpeedAttackValue = 0,
 	MinSpeedAttackValue = 0,
+	MaxJumpSpeedValue = 0,
+	MinJumpSpeedValue = 0,
 	DamageFactorZombies = 0,
 
 	RespawnWayBots = false, -- Used for the runtime respawn.

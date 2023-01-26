@@ -747,7 +747,7 @@ function BotManager:SpawnBot(p_Bot, p_Transform, p_Pose)
 	p_Bot._RandomValueOfBot = s_RandomValueOfBot
 	if Config.RandomHealthOfZombies then
 
-		s_BotSoldier.health = minHealthValue + ( s_RandomValueOfBot * (maxHealthValue - minHealthValue))
+		s_BotSoldier.health = minHealthValue + (s_RandomValueOfBot * (maxHealthValue - minHealthValue))
 	else
 		s_BotSoldier.health = maxHealthValue
 	end
@@ -762,7 +762,7 @@ function BotManager:SpawnBot(p_Bot, p_Transform, p_Pose)
 	-- Walk-Speed
 	local s_MinSpeedWalk = Registry.ZOMBIES.MIN_MOVE_SPEED
 	local s_MaxSpeedWalk = Registry.ZOMBIES.MAX_MOVE_SPEED
-	p_Bot._SpeedFactorMovement = s_MinSpeedWalk + ( s_RandomValueOfBot * (s_MaxSpeedWalk - s_MinSpeedWalk))
+	p_Bot._SpeedFactorMovement = s_MinSpeedWalk + (s_RandomValueOfBot * (s_MaxSpeedWalk - s_MinSpeedWalk))
 
 	-- Zombie-Move-Mode: evaluate all possible options
 	local s_MoveModes = {}
@@ -797,6 +797,19 @@ function BotManager:SpawnBot(p_Bot, p_Transform, p_Pose)
 		p_Bot._ZombieSpeedValue = BotMoveSpeeds.Normal
 	end
 
+	local s_MaxJumpValue = Config.MaxHighJumpSpeed
+	local s_MinJumpValue = Config.MinHighJumpSpeed
+	if Globals.SpawnMode == SpawnModes.wave_spawn then
+		s_MaxJumpValue = Globals.MaxJumpSpeedValue
+		s_MinJumpValue = Globals.MinJumpSpeedValue
+	end
+
+	if Config.RandomJumpSpeedOfZombies then
+		p_Bot._HighJumpSpeed = s_MinJumpValue + (s_RandomValueOfBot * (s_MaxJumpValue - s_MinJumpValue))
+	else
+		p_Bot._HighJumpSpeed = s_MaxJumpValue
+	end
+
 	local s_SpeedValue = 0.0
 	local s_MaxSpeedValue = Config.SpeedFactorAttack
 	local s_MinSpeedValue = Config.MinSpeedFactorAttack
@@ -805,16 +818,15 @@ function BotManager:SpawnBot(p_Bot, p_Transform, p_Pose)
 		s_MinSpeedValue = Globals.MinSpeedAttackValue
 	end
 	if Config.RandomAttackSpeedOfZombies then
-		s_SpeedValue =  s_MinSpeedValue + ( s_RandomValueOfBot * (s_MaxSpeedValue - s_MinSpeedValue))
+		s_SpeedValue = s_MinSpeedValue + (s_RandomValueOfBot * (s_MaxSpeedValue - s_MinSpeedValue))
 	else
 		s_SpeedValue = s_MaxSpeedValue
 	end
 
-
 	p_Bot._SpeedFactorAttack = s_SpeedValue
 
 	if s_SpeedValue < 1.0 then
-		s_SpeedValue = 1.0  -- default sprint behaviour, don't sptint later
+		s_SpeedValue = 1.0 -- default sprint behaviour, don't sptint later
 	end
 
 	while s_Entity do

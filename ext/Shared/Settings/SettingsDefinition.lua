@@ -94,6 +94,17 @@ SettingsDefinition = {
 			Category = "GENERAL"
 		},
 		{
+			Name = "RandomJumpSpeedOfZombies",
+			Text = "Randomize Jump-Speeds of zombies",
+			---@type Type|integer
+			Type = Type.Boolean,
+			Value = Config.RandomJumpSpeedOfZombies,
+			Description = "zombie-high-jumps differs from bot to bot",
+			Default = true,
+			UpdateFlag = UpdateFlag.None,
+			Category = "GENERAL"
+		},
+		{
 			Name = "ZombiesProne",
 			Text = "Zombies prone",
 			---@type Type|integer
@@ -224,14 +235,26 @@ SettingsDefinition = {
 			Category = "DIFFICULTY"
 		},
 		{
-			Name = "MaxJumpSpeed",
-			Text = "Max Jump Speed",
+			Name = "MinHighJumpSpeed",
+			Text = "Min High Jump Speed",
 			---@type Type|integer
 			Type = Type.Float,
-			Value = Config.MaxJumpSpeed,
+			Value = Config.MinHighJumpSpeed,
+			Description = "Min Speed the bots jump with on high-jumps",
+			Reference = Range(0.00, 100.00, 1.0),
+			Default = 5.0,
+			UpdateFlag = UpdateFlag.Wave,
+			Category = "DIFFICULTY"
+		},
+		{
+			Name = "MaxHighJumpSpeed",
+			Text = "Max High Jump Speed",
+			---@type Type|integer
+			Type = Type.Float,
+			Value = Config.MaxHighJumpSpeed,
 			Description = "Max Speed the bots jump with on high-jumps",
 			Reference = Range(0.00, 100.00, 1.0),
-			Default = 10,
+			Default = 12.0,
 			UpdateFlag = UpdateFlag.Wave,
 			Category = "DIFFICULTY"
 		},
@@ -438,6 +461,18 @@ SettingsDefinition = {
 			Description = "Zombies get more speed each wave",
 			Reference = Range(0.00, 5.00, 1.0),
 			Default = 0.05,
+			UpdateFlag = UpdateFlag.Wave,
+			Category = "WAVES"
+		},
+		{
+			Name = "IncrementJumpSpeedPerWave",
+			Text = "Additional High-Jump-Speed for Attack",
+			---@type Type|integer
+			Type = Type.Float,
+			Value = Config.IncrementJumpSpeedPerWave,
+			Description = "Zombies get more speed each wave",
+			Reference = Range(0.00, 100.00, 1.0),
+			Default = 3.0,
 			UpdateFlag = UpdateFlag.Wave,
 			Category = "WAVES"
 		},

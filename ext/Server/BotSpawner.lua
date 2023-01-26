@@ -285,6 +285,8 @@ function BotSpawner:UpdateWaveConfig()
 	Globals.DamageFactorZombies = Config.DamageFactorKnife + (s_WaveValue * Config.IncrementDamageFactorPerWave)
 	Globals.MaxSpeedAttackValue = Config.SpeedFactorAttack + (s_WaveValue * Config.IncrementMaxSpeedPerWave)
 	Globals.MinSpeedAttackValue = Config.MinSpeedFactorAttack + (s_WaveValue * Config.IncrementMaxSpeedPerWave)
+	Globals.MaxJumpSpeedValue = Config.MaxHighJumpSpeed + (s_WaveValue * Config.IncrementJumpSpeedPerWave)
+	Globals.MinJumpSpeedValue = Config.MinHighJumpSpeed + (s_WaveValue * Config.IncrementJumpSpeedPerWave)
 	self._BotsToSpawnInWave = Config.FirstWaveCount + (s_WaveValue * Config.IncrementZombiesPerWave)
 end
 
@@ -361,6 +363,8 @@ function BotSpawner:UpdateBotAmountAndTeam()
 			Globals.DamageFactorZombies = Config.DamageFactorKnife
 			Globals.MaxSpeedAttackValue = Config.SpeedFactorAttack
 			Globals.MinSpeedAttackValue = Config.MinSpeedFactorAttack
+			Globals.MaxJumpSpeedValue = Config.MaxHighJumpSpeed
+			Globals.MinJumpSpeedValue = Config.MinHighJumpSpeed
 			self._BotsToSpawnInWave = Config.FirstWaveCount
 		end
 		if Config.KillRemainingZombiesAfterWave and self._SpawnedBotsInCurrentWave == 0 then
@@ -621,7 +625,7 @@ function BotSpawner:SpawnWayBots(p_Player, p_Amount, p_UseRandomWay, p_ActiveWay
 	end
 
 	--if p_Amount <= 0 then
-		--m_Logger:Warning("can't spawn zero or negative amount of bots")
+	--m_Logger:Warning("can't spawn zero or negative amount of bots")
 	--end
 
 	-- Check for amount available.
