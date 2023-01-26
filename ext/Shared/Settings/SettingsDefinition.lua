@@ -223,6 +223,18 @@ SettingsDefinition = {
 			UpdateFlag = UpdateFlag.Wave,
 			Category = "DIFFICULTY"
 		},
+		{
+			Name = "MaxJumpSpeed",
+			Text = "Max Jump Speed",
+			---@type Type|integer
+			Type = Type.Float,
+			Value = Config.MaxJumpSpeed,
+			Description = "Max Speed the bots jump with on high-jumps",
+			Reference = Range(0.00, 100.00, 1.0),
+			Default = 10,
+			UpdateFlag = UpdateFlag.Wave,
+			Category = "DIFFICULTY"
+		},
 
 		-- Spawn.
 		{

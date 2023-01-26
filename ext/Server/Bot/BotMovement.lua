@@ -141,6 +141,9 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 				elseif p_Bot._ObstacleSequenceTimer > 0.0 then -- Step 1
 					p_Bot:_SetInput(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1)
 					p_Bot:_SetInput(EntryInputActionEnum.EIAJump, 1)
+					-- TODO: With very low change: jump high
+					local s_PhysicsSoldier = PhysicsEntity(p_Bot.m_Player.soldier)
+					s_PhysicsSoldier.velocity = s_PhysicsSoldier.velocity + Vec3(0.0, Config.MaxJumpSpeed, 0.0)
 				end
 
 				p_Bot._ObstacleSequenceTimer = p_Bot._ObstacleSequenceTimer + Registry.BOT.BOT_UPDATE_CYCLE
@@ -333,6 +336,9 @@ function BotMovement:UpdateShootMovement(p_Bot)
 			table.remove(p_Bot._ShootWayPoints)
 			p_Bot:_SetInput(EntryInputActionEnum.EIAJump, 1)
 			p_Bot:_SetInput(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1)
+			-- TODO: logic for when to jump how high
+			local s_PhysicsSoldier = PhysicsEntity(p_Bot.m_Player.soldier)
+			s_PhysicsSoldier.velocity = s_PhysicsSoldier.velocity + Vec3(0.0, Config.MaxJumpSpeed, 0.0)
 		else
 			p_Bot._ObstacleSequenceTimer = 0
 		end

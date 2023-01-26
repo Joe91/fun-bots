@@ -24,6 +24,7 @@ Config = {
 	DamageFactorKnife = 1.5,			-- Original Damage from bots gets multiplied by this 
 	SpeedFactorAttack = 1.2,			-- Modifies the speed while attacking. 1 = normal 
 	MinSpeedFactorAttack = 0.5,			-- Modifies the minimal speed while attacking. 1 = normal 
+	MaxJumpSpeed = 10,					-- Max Speed the bots jump with on high-jumps 
 
 	-- SPAWN 
 	SpawnMode = SpawnModes.wave_spawn,	-- Mode the bots spawn with 

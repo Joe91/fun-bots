@@ -37,6 +37,8 @@ Language:add(code, "Speed factor attack", "")
 Language:add(code, "Modifies the speed while attacking. 1 = normal", "")
 Language:add(code, "Min Speed factor attack", "")
 Language:add(code, "Modifies the minimal speed while attacking. 1 = normal", "")
+Language:add(code, "Max Jump Speed", "")
+Language:add(code, "Max Speed the bots jump with on high-jumps", "")
 
 -- SPAWN
 Language:add(code, "Spawn Mode", "")
