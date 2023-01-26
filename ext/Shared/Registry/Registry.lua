@@ -133,7 +133,7 @@ Registry = {
 		-- - distance the bots have to reach in height to continue with next Waypoint.
 		TARGET_HEIGHT_DISTANCE_WAYPOINT = 1.5,
 		-- Chance that the bot will teleport when they are stuck.
-		PROBABILITY_TELEPORT_IF_STUCK = 80,
+		PROBABILITY_TELEPORT_IF_STUCK = 70,
 		-- Chance that the bot will teleport when they are stuck in a vehicle.
 		PROBABILITY_TELEPORT_IF_STUCK_IN_VEHICLE = 20,
 		-- At the end of an attack cycle, chance of throwing a grenade.
