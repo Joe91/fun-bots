@@ -285,11 +285,7 @@ end
 ---@param p_RoundsPerMap integer
 function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPerMap)
 	Globals.GameMode = p_GameMode
-	local s_GameMode = ServerUtils:GetCustomGameModeName()
-
-	if s_GameMode == nil then
-		s_GameMode = p_GameMode
-	end
+	local s_CustomGameMode = ServerUtils:GetCustomGameModeName()
 
 	-- Randomize used names.
 	if Config.UseRandomNames then
@@ -300,7 +296,7 @@ function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPe
 
 	-- Only use name of Level.
 	p_LevelName = p_LevelName:gsub(".+/.+/", "")
-	m_Logger:Write('OnLevelLoaded: ' .. p_LevelName .. ' ' .. s_GameMode)
+	m_Logger:Write('OnLevelLoaded: ' .. p_LevelName .. ' ' .. p_GameMode)
 
 	self:SetRespawnDelay()
 
@@ -311,10 +307,10 @@ function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPe
 
 	self:DetectSpecialMods()
 	self:RegisterInputRestrictionEventCallbacks()
-	self:SetGameMode(s_GameMode, p_LevelName)
+	self:SetGameMode(p_GameMode, p_LevelName)
 	self:SetMaxBotsPerTeam(p_GameMode)
 
-	m_NodeEditor:OnLevelLoaded(p_LevelName, s_GameMode)
+	m_NodeEditor:OnLevelLoaded(p_LevelName, p_GameMode, s_CustomGameMode)
 	m_GameDirector:OnLevelLoaded()
 	m_AirTargets:OnLevelLoaded()
 	m_BotSpawner:OnLevelLoaded(p_Round)

@@ -904,26 +904,30 @@ end
 
 -- COMMON EVENTS.
 
-function NodeEditor:OnLevelLoaded(p_LevelName, p_GameMode)
+function NodeEditor:OnLevelLoaded(p_LevelName, p_GameMode, p_CustomGameMode)
 	self:Log(nil, 'Level Load: %s %s', p_LevelName, p_GameMode)
 
+	local s_GameModeToLoad = p_GameMode
+
 	-- check if the mapfile is available. If not, check if a valid alternative is available
-	if not m_NodeCollection:IsMapAvailable(p_LevelName, p_GameMode) then
+	if p_CustomGameMode and m_NodeCollection:IsMapAvailable(p_LevelName, p_CustomGameMode) then
+		s_GameModeToLoad = p_CustomGameMode
+	elseif not m_NodeCollection:IsMapAvailable(p_LevelName, s_GameModeToLoad) then
 		-- Try Convert map names if needed.
 		if Globals.IsTdm or Globals.IsGm or Globals.IsScavenger then
-			p_GameMode = 'TeamDeathMatch0' -- Paths are compatible.
+			s_GameModeToLoad = 'TeamDeathMatch0' -- Paths are compatible.
 		end
 
 		if p_LevelName == 'MP_Subway' and p_GameMode == 'ConquestSmall0' then
-			p_GameMode = 'ConquestLarge0' -- Paths are the same.
+			s_GameModeToLoad = 'ConquestLarge0' -- Paths are the same.
 		end
 
 		if p_LevelName == 'XP4_Rubble' and p_GameMode == 'ConquestAssaultLarge0' then
-			p_GameMode = 'ConquestAssaultSmall0'
+			s_GameModeToLoad = 'ConquestAssaultSmall0'
 		end
 	end
 
-	m_NodeCollection:Load(p_LevelName, p_GameMode)
+	m_NodeCollection:Load(p_LevelName, s_GameModeToLoad)
 
 	local s_Counter = 0
 	local s_Waypoints = m_NodeCollection:Get()

@@ -117,7 +117,7 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle, p
 		local s_NewBasePath = m_GameDirector:IsBasePath(s_PathNode.Data.Objectives or {})
 
 		if s_OnVehicleEnterObjective then
-			if s_PathNode.Data.Objectives[1] == p_Objective then
+			if s_PathNode.Data.Objectives ~= nil and s_PathNode.Data.Objectives[1] == p_Objective then
 				return true, s_NewPoint
 			else
 				goto skip
