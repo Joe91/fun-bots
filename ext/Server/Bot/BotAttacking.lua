@@ -121,7 +121,7 @@ end
 
 ---@param p_Bot Bot
 local function _DefaultAttackingAction(p_Bot)
-	if not p_Bot._ShootPlayer.soldier or not p_Bot._Shoot or p_Bot._ShootModeTimer >= Config.BotFireModeDuration and not Config.ZombieMode or p_Bot._ShootModeTimer >= (Config.BotFireModeDuration * 4) then
+	if not p_Bot._ShootPlayer.soldier or not p_Bot._Shoot or p_Bot._ShootModeTimer >= Config.BotFireModeDuration then
 		p_Bot._TargetPitch = 0.0
 		p_Bot._WeaponToUse = BotWeapons.Primary
 		p_Bot:AbortAttack()
@@ -157,9 +157,10 @@ local function _DefaultAttackingAction(p_Bot)
 			p_Bot._MeleeCooldownTimer = 0.0
 		elseif p_Bot._MeleeCooldownTimer > 0.0 then
 			p_Bot._MeleeCooldownTimer = p_Bot._MeleeCooldownTimer - Registry.BOT.BOT_UPDATE_CYCLE
-			p_Bot:_SetInput(EntryInputActionEnum.EIAFire, 1)
 			if p_Bot._MeleeCooldownTimer < (Config.MeleeAttackCoolDown - 0.8) then
 				p_Bot:_ResetActionFlag(BotActionFlags.MeleeActive)
+			else
+				p_Bot:_SetInput(EntryInputActionEnum.EIAFire, 1)
 			end
 		end
 	end

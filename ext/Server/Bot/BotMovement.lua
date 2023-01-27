@@ -109,18 +109,6 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 			p_Bot._WayWaitYawTimer = 0.0
 			p_Bot.m_ActiveSpeedValue = s_Point.SpeedMode -- Speed.
 
-			if Config.ZombieMode then
-				if p_Bot._ZombieSpeedValue == BotMoveSpeeds.NoMovement then
-					if MathUtils:GetRandomInt(0, 1) == 1 then
-						p_Bot._ZombieSpeedValue = BotMoveSpeeds.SlowCrouch
-					else
-						p_Bot._ZombieSpeedValue = BotMoveSpeeds.VerySlowProne
-					end
-				end
-
-				p_Bot.m_ActiveSpeedValue = p_Bot._ZombieSpeedValue
-			end
-
 			if Config.OverWriteBotSpeedMode ~= BotMoveSpeeds.NoMovement and not p_Bot.m_InVehicle then
 				p_Bot.m_ActiveSpeedValue = Config.OverWriteBotSpeedMode
 			end

@@ -33,7 +33,7 @@ function BotWeaponHandling:UpdateDeployAndReload(p_Bot, p_Deploy)
 	end
 
 	-- Deploy from time to time.
-	if Config.BotsDeploy and p_Deploy and not Globals.IsScavenger and not Config.ZombieMode then
+	if Config.BotsDeploy and p_Deploy and not Globals.IsScavenger then
 		if p_Bot.m_PrimaryGadget ~= nil and (p_Bot.m_Kit == BotKits.Support or p_Bot.m_Kit == BotKits.Assault) then
 			if p_Bot.m_PrimaryGadget.type == WeaponTypes.Ammobag or p_Bot.m_PrimaryGadget.type == WeaponTypes.Medkit then
 				p_Bot._DeployTimer = p_Bot._DeployTimer + Registry.BOT.BOT_UPDATE_CYCLE

@@ -126,7 +126,6 @@ function Bot:__init(p_Player)
 	self._ExitVehicleActive = false
 	self._ObstacleRetryCounter = 0
 	---@type BotMoveSpeeds
-	self._ZombieSpeedValue = BotMoveSpeeds.NoMovement
 	self._Objective = ''
 	self._OnSwitch = false
 
@@ -863,7 +862,6 @@ function Bot:ResetVars()
 	self._NextTargetPoint = nil
 	self._KnifeWayPositions = {}
 	self._ShootWayPoints = {}
-	self._ZombieSpeedValue = BotMoveSpeeds.NoMovement
 	self._SpawnDelayTimer = 0.0
 	self._SpawnProtectionTimer = 0.0
 	self._Objective = ''
@@ -1055,7 +1053,6 @@ function Bot:ResetSpawnVars()
 	self._NextTargetPoint = nil
 	self._ActiveAction = BotActionFlags.NoActionActive
 	self._KnifeWayPositions = {}
-	self._ZombieSpeedValue = BotMoveSpeeds.NoMovement
 	self._OnSwitch = false
 	self._TargetPitch = 0.0
 	self._Objective = '' -- Reset objective on spawn, as another spawn-point might have chosen...
@@ -1455,7 +1452,7 @@ function Bot:_SetActiveVars()
 		self.m_OnVehicle = false
 	end
 
-	if Config.BotWeapon == BotWeapons.Knife or Config.ZombieMode then
+	if Config.BotWeapon == BotWeapons.Knife then
 		self.m_KnifeMode = true
 	else
 		self.m_KnifeMode = false
