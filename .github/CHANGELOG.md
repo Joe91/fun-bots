@@ -27,7 +27,9 @@ This is the changelog for the version V2.8 Don't forget to [join us on Discord](
 * Rush for XP4_Quake by Rolling Wave
 
 ### Updated maps
-* 
+* Rush for MP_001 by Rolling Wave
+* Rush for MP_012 by Rolling Wave
+* Rush for MP_013 by Rolling Wave
 
 ### Documentation update
 

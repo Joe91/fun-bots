@@ -3,12 +3,12 @@ The following maps are currently supported in this commit.
 
 |   	   	| Technical Name | Name | Supported Gamemodes |   Supported Gamemodes with Vehicles |
 |---	|---	|---	|---	|---	|
-|   ![image](https://user-images.githubusercontent.com/57008952/124316245-9a38c380-db75-11eb-9bad-d248e002fd21.png)	 |   `MP_001`	| **Grand Bazaar** | `CQ Large` ,`CQ Small` ,`GM` ,`Rush` ,`SDM` ,`TDM` ,`TDM CQ` | `CQ Small` |
+|   ![image](https://user-images.githubusercontent.com/57008952/124316245-9a38c380-db75-11eb-9bad-d248e002fd21.png)	 |   `MP_001`	| **Grand Bazaar** | `CQ Large` ,`CQ Small` ,`GM` ,`Rush` ,`SDM` ,`TDM` ,`TDM CQ` | `CQ Small` ,`Rush` |
 |   ![image](https://user-images.githubusercontent.com/57008952/124316273-a3c22b80-db75-11eb-86fc-ad43486a6b61.png)	 |   `MP_003`	| **Teheran Highway** | `CQ Small` ,`GM` ,`Rush` ,`SDM` ,`TDM` ,`TDM CQ` | `CQ Small` ,`Rush` |
 |   ![image](https://user-images.githubusercontent.com/57008952/124316281-a886df80-db75-11eb-986d-4576205d0ea9.png)	 |   `MP_007`	| **Caspian Border** | `CQ Large` ,`CQ Small` ,`GM` ,`Rush` ,`SDM` ,`TDM` ,`TDM CQ` | `CQ Large` ,`CQ Small` |
 |   ![image](https://user-images.githubusercontent.com/57008952/124316354-c5231780-db75-11eb-9c0c-e2fd4e8b580f.png) 	|   `MP_011`	| **Seine Crossing** | `CQ Large` ,`CQ Small` ,`GM` ,`Rush` ,`SDM` ,`TDM` ,`TDM CQ` | `CQ Small` |
-|   ![image](https://user-images.githubusercontent.com/57008952/124316386-d0764300-db75-11eb-8ee7-87684f0ec4d7.png) 	|   `MP_012`	| **Operation Firestorm** | `CQ Large` ,`CQ Small` ,`GM` ,`Rush` ,`SDM` ,`TDM` ,`TDM CQ` | `CQ Large` ,`CQ Small` |
-|   ![image](https://user-images.githubusercontent.com/57008952/124316409-d835e780-db75-11eb-986c-d4c942686e80.png) 	|   `MP_013`	| **Damavand Peak** | `CQ Large` ,`CQ Small` ,`GM` ,`Rush` ,`SDM` ,`TDM` ,`TDM CQ` | `CQ Large` ,`CQ Small` |
+|   ![image](https://user-images.githubusercontent.com/57008952/124316386-d0764300-db75-11eb-8ee7-87684f0ec4d7.png) 	|   `MP_012`	| **Operation Firestorm** | `CQ Large` ,`CQ Small` ,`GM` ,`Rush` ,`SDM` ,`TDM` ,`TDM CQ` | `CQ Large` ,`CQ Small` ,`Rush` |
+|   ![image](https://user-images.githubusercontent.com/57008952/124316409-d835e780-db75-11eb-986c-d4c942686e80.png) 	|   `MP_013`	| **Damavand Peak** | `CQ Large` ,`CQ Small` ,`GM` ,`Rush` ,`SDM` ,`TDM` ,`TDM CQ` | `CQ Large` ,`CQ Small` ,`Rush` |
 |   ![image](https://user-images.githubusercontent.com/57008952/124316435-e2f07c80-db75-11eb-9352-7d9865199731.png) 	|   `MP_017`	| **Noshahr Canals** | `CQ Small` ,`GM` ,`Rush` ,`SDM` ,`TDM` ,`TDM CQ` | `CQ Small` |
 |   ![image](https://user-images.githubusercontent.com/57008952/124316457-eab02100-db75-11eb-8cde-ef8fd4e20c71.png) 	|   `MP_018`	| **Kharg Island** | `CQ Large` ,`CQ Small` ,`GM` ,`Rush` ,`SDM` ,`TDM` ,`TDM CQ` | `CQ Small` |
 |   ![image](https://user-images.githubusercontent.com/57008952/124316492-f26fc580-db75-11eb-9a27-cffec0fc8564.png) 	|   `MP_Subway`	| **Operation Metro** | `CQ Large` ,`GM` ,`Rush` ,`SDM` ,`TDM` ,`TDM CQ` |  |
