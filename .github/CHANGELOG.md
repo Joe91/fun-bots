@@ -4,7 +4,7 @@
 ![Image](https://img.shields.io/github/stars/Joe91/fun-bots?style=for-the-badge)
 
 ## Welcome to the changelogs for the fun-bot-zombies-mod (based on fun-bots 2.8)
-This is the changelog for the version V2.8 Don't forget to [join us on Discord](https://discord.com/invite/FKamccAEqz)
+This is the changelog for the version V0.8 Don't forget to [join us on Discord](https://discord.com/invite/FKamccAEqz)
 
 ## Changelog
 
