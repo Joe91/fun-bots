@@ -11,9 +11,9 @@ This is the changelog for the version V2.7.0 Don't forget to [join us on Discord
 ### New features / improvements
 * real ticket-count on conquest thanks to VU bugfix
 * updated chinese translation (by Augusta)
-* auto-translation-scripts (by [João Vitor](https://battlelog.battlefield.com/bf4/soldier/JOAO_SSOUZA/stats/1448854914/ps3/))
+* auto-translation-scripts (by [Joï¿½o Vitor](https://battlelog.battlefield.com/bf4/soldier/JOAO_SSOUZA/stats/1448854914/ps3/))
 * add Japanese and Portuguese
-* massive rework of all python-scripts (by [João Vitor](https://battlelog.battlefield.com/bf4/soldier/JOAO_SSOUZA/stats/1448854914/ps3/))
+* massive rework of all python-scripts (by [Joï¿½o Vitor](https://battlelog.battlefield.com/bf4/soldier/JOAO_SSOUZA/stats/1448854914/ps3/))
 * temporary workaround for not working collition-raycasts
 * new setting and probability for snipers to attack choppers
 * limit number of Bots in a vehicle (new config-value)
@@ -31,6 +31,7 @@ This is the changelog for the version V2.7.0 Don't forget to [join us on Discord
 * Some variation in the appearance of vehicles (idea from KrazyIvan777)
 * Jets are focused on air-targets and more active.
 * Support separated traces for each gamemode, even if compatible with other gamemode
+* Removed Zombie-Option from fun-bots.
 
 ### Bug fixes
 * fix scavenger revive
