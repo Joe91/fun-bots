@@ -84,6 +84,7 @@ end
 ---VEXT Shared Extension:Loaded Event
 function FunBotServer:OnExtensionLoaded()
 	m_SettingsManager:OnExtensionLoaded()
+	m_GamemodeManager:OnExtensionLoaded()
 	m_Language:loadLanguage(Config.Language)
 	m_WeaponList:UpdateWeaponList()
 	ServerUtils:SetCustomGameModeName("Zombies")

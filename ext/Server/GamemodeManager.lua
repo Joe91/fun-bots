@@ -4,14 +4,19 @@ GamemodeManager = class('GamemodeManager')
 
 local firstPlayerJoined = false
 
+function GamemodeManager:OnExtensionLoaded()
+    --RCON:SendCommand('vars.gameModeCounter', {tostring(1000)})
+end
+
 function GamemodeManager:OnLevelLoaded()
     firstPlayerJoined = false
-    RCON:SendCommand('vars.gameModeCounter', {1000})
 end
 
 function GamemodeManager:TeamChange(p_Player, p_TeamId, p_SquadId)
     if (firstPlayerJoined == false) then
-        TicketManager:SetTicketCount(2, 1000 - Config.PlayerLives)
+        local maxTickets = RCON:SendCommand('vars.gameModeCounter')
+        maxTickets = maxTickets[2]
+        TicketManager:SetTicketCount(2, tonumber(maxTickets) - Config.PlayerLives)
         print("Team 1 tickets have been set to: " .. TicketManager:GetTicketCount(2))
         firstPlayerJoined = true
     end
