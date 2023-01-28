@@ -381,11 +381,19 @@ function BotSpawner:UpdateBotAmountAndTeam()
 		else
 			-- all bots spawned. Check for alive bots
 			if m_BotManager:GetAliveBotCount() <= Config.ZombiesAliveForNextWave then
-				ChatManager:Yell("Wave " .. self._CurrentSpawnWave .. " finished, new wave starts in a few seconds", Config.TimeBetweenWaves)
+				if Config.Waves == 0 then
+					ChatManager:Yell("Wave " .. self._CurrentSpawnWave .. " finished, new wave starts in a few seconds", Config.TimeBetweenWaves)
+				else
+					ChatManager:Yell("Wave " .. self._CurrentSpawnWave .. "/" .. Config.Waves .. " finished, new wave starts in a few seconds", Config.TimeBetweenWaves)
+				end
+				
 				self._FirstSpawnDelay = Config.TimeBetweenWaves
 				self._CurrentSpawnWave = self._CurrentSpawnWave + 1
 				self._SpawnedBotsInCurrentWave = 0
 				self:UpdateWaveConfig()
+				if self._CurrentSpawnWave > Config.Waves then
+					GamemodeManager:HumanTeamWin()
+				end
 			end
 		end
 

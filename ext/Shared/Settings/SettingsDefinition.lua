@@ -405,6 +405,30 @@ SettingsDefinition = {
 		},
 		-- Waves
 		{
+			Name = "Waves",
+			Text = "Max waves",
+			---@type Type|integer
+			Type = Type.Integer,
+			Value = Config.Waves,
+			Description = "Total amount of waves needed to win. 0 = infinite",
+			Reference = Range(0.00, 999.00, 1.0),
+			Default = 20,
+			UpdateFlag = UpdateFlag.Wave,
+			Category = "WAVES"
+		},
+		{
+			Name = "PlayerLives",
+			Text = "Player Lives",
+			---@type Type|integer
+			Type = Type.Integer,
+			Value = Config.PlayerLives,
+			Description = "Amount of times players can die before losing",
+			Reference = Range(1.00, 1000.0, 1.0),
+			Default = 20,
+			UpdateFlag = UpdateFlag.Wave,
+			Category = "WAVES"
+		},
+		{
 			Name = "FirstWaveCount",
 			Text = "Zombies in first Wave",
 			---@type Type|integer

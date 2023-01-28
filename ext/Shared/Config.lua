@@ -43,6 +43,8 @@ Config = {
 	MaxBotsPerTeamDefault = 128,		-- Max number of bots in one team, if no other mode fits 
 
 	-- WAVES 
+	Waves = 20,                         -- Total amount of waves needed to win. 0 = infinite
+	PlayerLives = 10,                   -- Amount of time players can die before losing
 	FirstWaveCount = 30,				-- Zombies that spawn in the first wave 
 	IncrementZombiesPerWave = 10,		-- Zombies that are added in each new wave 
 	IncrementMaxHealthPerWave = 25,		-- Zombies get more health each wave 

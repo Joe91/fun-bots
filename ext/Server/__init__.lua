@@ -31,6 +31,7 @@ require('__shared/Utils/Logger')
 require('Vehicles')
 require('UIServer')
 require('UIPathMenu')
+require('GamemodeManager')
 require('Model/Globals')
 require('Constants/Permissions')
 
@@ -49,6 +50,8 @@ local m_SettingsManager = require('SettingsManager')
 local m_BotManager = require('BotManager')
 ---@type BotSpawner
 local m_BotSpawner = require('BotSpawner')
+---@type GamemodeManager
+local m_GamemodeManager = require('GamemodeManager')
 ---@type WeaponList
 local m_WeaponList = require('__shared/WeaponList')
 ---@type BugReport
@@ -325,6 +328,7 @@ function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPe
 	m_GameDirector:OnLevelLoaded()
 	m_AirTargets:OnLevelLoaded()
 	m_BotSpawner:OnLevelLoaded(p_Round)
+	m_GamemodeManager:OnLevelLoaded()
 end
 
 ---VEXT Shared Level:Destroy Event
@@ -371,6 +375,7 @@ end
 ---@param p_SquadId SquadId|integer
 function FunBotServer:OnTeamChange(p_Player, p_TeamId, p_SquadId)
 	m_BotSpawner:OnTeamChange(p_Player, p_TeamId, p_SquadId)
+	m_GamemodeManager:TeamChange(p_Player, p_TeamId, p_SquadId)
 end
 
 ---VEXT Server Player:Respawn Event
@@ -392,6 +397,7 @@ function FunBotServer:OnPlayerKilled(p_Player, p_Inflictor, p_Position, p_Weapon
 	m_BotManager:OnPlayerKilled(p_Player)
 	m_NodeEditor:OnPlayerKilled(p_Player)
 	m_AirTargets:OnPlayerKilled(p_Player)
+	m_GamemodeManager:OnPlayedKilled(p_Player)
 end
 
 ---VEXT Server Player:Chat Event
