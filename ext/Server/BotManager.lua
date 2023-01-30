@@ -756,8 +756,8 @@ function BotManager:SpawnBot(p_Bot, p_Transform, p_Pose)
 	s_BotPlayer:SpawnSoldierAt(s_BotSoldier, p_Transform, p_Pose)
 	s_BotPlayer:AttachSoldier(s_BotSoldier)
 
-	local s_EntityIterator = EntityManager:GetIterator('PropertyCastEntity')
-	local s_Entity = s_EntityIterator:Next()
+	-- Set Bot-Vars
+	p_Bot._GoForDirectAttackIfClose = (MathUtils:GetRandomInt(1, 100) <= Registry.ZOMBIES.PROBABILITY_GO_FOR_DIRECT_ATTACK)
 
 	-- Walk-Speed
 	local s_MinSpeedWalk = Registry.ZOMBIES.MIN_MOVE_SPEED
@@ -829,6 +829,8 @@ function BotManager:SpawnBot(p_Bot, p_Transform, p_Pose)
 		s_SpeedValue = 1.0 -- default sprint behaviour, don't sptint later
 	end
 
+	local s_EntityIterator = EntityManager:GetIterator('PropertyCastEntity')
+	local s_Entity = s_EntityIterator:Next()
 	while s_Entity do
 		if s_Entity.data and s_Entity.data.instanceGuid == Guid("51A231A1-CCBA-3DEF-1E3B-A28F5AE67188") and s_Entity.bus == s_BotPlayer.soldier.bus then
 			s_Entity:PropertyChanged("FloatValue", s_SpeedValue)

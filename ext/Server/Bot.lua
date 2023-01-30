@@ -86,6 +86,8 @@ function Bot:__init(p_Player)
 	self._SpeedFactorAttack = 1.0
 	self._HighJumpSpeed = 1.0
 	self._RandomValueOfBot = 1.0
+	self._GoForDirectAttackIfClose = true
+	self._LastAttackPointDistance = 0.0
 	self._ZombieSpeedValue = BotMoveSpeeds.NoMovement
 
 	-- Shared movement vars.

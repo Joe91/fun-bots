@@ -27,23 +27,29 @@ local function _KnifeAimingAction(p_Bot)
 	local s_DifferenceZ = 0
 
 	-- Calculate yaw and pitch.
-	if #p_Bot._KnifeWayPositions > 0 and p_Bot._DistanceToPlayer > Config.DistanceForDirectAttack then
-		p_Bot._KnifeWayPointTimer = p_Bot._KnifeWayPointTimer + Registry.BOT.BOT_FAST_UPDATE_CYCLE
+	if #p_Bot._KnifeWayPositions > 0 and p_Bot._DistanceToPlayer > 1.0 and
+		(p_Bot._DistanceToPlayer > Config.DistanceForDirectAttack or not p_Bot._GoForDirectAttackIfClose) then
+		if p_Bot._ObstacleSequenceTimer ~= 0 then
+			p_Bot._KnifeWayPointTimer = p_Bot._KnifeWayPointTimer + Registry.BOT.BOT_FAST_UPDATE_CYCLE
+		end
 
 		s_DifferenceZ = p_Bot._KnifeWayPositions[1].z - p_Bot.m_Player.soldier.worldTransform.trans.z
 		s_DifferenceX = p_Bot._KnifeWayPositions[1].x - p_Bot.m_Player.soldier.worldTransform.trans.x
 
-		if p_Bot.m_Player.soldier.worldTransform.trans:Distance(p_Bot._KnifeWayPositions[1]) < 1.5 or p_Bot._KnifeWayPointTimer > (Registry.BOT.TRACE_DELTA_SHOOTING + 0.1) then
+		local s_CurrentAttackPointDistance = p_Bot.m_Player.soldier.worldTransform.trans:Distance(p_Bot._KnifeWayPositions[1])
+
+		if s_CurrentAttackPointDistance < 0.75 or
+			s_CurrentAttackPointDistance > p_Bot._LastAttackPointDistance then
 			p_Bot._KnifeWayPointTimer = 0.0
 			table.remove(p_Bot._KnifeWayPositions, 1)
 		end
+		p_Bot._LastAttackPointDistance = s_CurrentAttackPointDistance
 	else
 		p_Bot._KnifeWayPositions = {}
 		s_DifferenceZ = s_PositionTarget.z - s_PositionBot.z
 		s_DifferenceX = s_PositionTarget.x - s_PositionBot.x
 		s_DifferenceY = s_PositionTarget.y - s_PositionBot.y
 	end
-
 
 	local s_AtanDzDx = math.atan(s_DifferenceZ, s_DifferenceX)
 	local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
