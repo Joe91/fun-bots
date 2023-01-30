@@ -171,7 +171,7 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_Bot)
 
 					if (p_Bot.m_ActiveSpeedValue == BotMoveSpeeds.Backwards and p_Bot._ObstaceSequenceTimer > 3.0) or
 						(p_Bot.m_ActiveSpeedValue ~= BotMoveSpeeds.Backwards and p_Bot._ObstaceSequenceTimer > 5.0) then
-						p_Bot._ObstaceSequenceTimer = 0.0
+						p_Bot._ObstaceSequenceTimer = 0
 						p_Bot._ObstacleRetryCounter = p_Bot._ObstacleRetryCounter + 1
 					end
 
@@ -275,7 +275,7 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_Bot)
 					end
 				end
 
-				p_Bot._ObstaceSequenceTimer = 0.0
+				p_Bot._ObstaceSequenceTimer = 0
 				p_Bot._LastWayDistance = 1000.0
 			end
 		else -- Wait mode.
