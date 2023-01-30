@@ -37,7 +37,7 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 				s_NextPoint = m_NodeCollection:Get(s_ActivePointIndex, p_Bot._PathIndex)
 
 				--[[if Config.DebugTracePaths then
-					NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', p_Bot._PathIndex, s_ActivePointIndex, p_Bot.m_Player.soldier.worldTransform.trans, (p_Bot._ObstaceSequenceTimer > 0.0), "Blue")
+					NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', p_Bot._PathIndex, s_ActivePointIndex, p_Bot.m_Player.soldier.worldTransform.trans, (p_Bot._ObstacleSequenceTimer > 0.0), "Blue")
 				end--]]
 			end
 
@@ -49,13 +49,13 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 				s_NextPoint = m_NodeCollection:Get(p_Bot:_GetWayIndex(p_Bot._CurrentWayPoint + 1), p_Bot._PathIndex)
 
 			--[[if Config.DebugTracePaths then
-					NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', p_Bot._PathIndex, p_Bot:_GetWayIndex(p_Bot._CurrentWayPoint + 1), p_Bot.m_Player.soldier.worldTransform.trans, (p_Bot._ObstaceSequenceTimer > 0.0), "Green")
+					NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', p_Bot._PathIndex, p_Bot:_GetWayIndex(p_Bot._CurrentWayPoint + 1), p_Bot.m_Player.soldier.worldTransform.trans, (p_Bot._ObstacleSequenceTimer > 0.0), "Green")
 				end--]]
 			else
 				s_NextPoint = m_NodeCollection:Get(p_Bot:_GetWayIndex(p_Bot._CurrentWayPoint - 1), p_Bot._PathIndex)
 
 				--[[if Config.DebugTracePaths then
-					NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', p_Bot._PathIndex, p_Bot:_GetWayIndex(p_Bot._CurrentWayPoint - 1), p_Bot.m_Player.soldier.worldTransform.trans, (p_Bot._ObstaceSequenceTimer > 0.0), "Green")
+					NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', p_Bot._PathIndex, p_Bot:_GetWayIndex(p_Bot._CurrentWayPoint - 1), p_Bot.m_Player.soldier.worldTransform.trans, (p_Bot._ObstacleSequenceTimer > 0.0), "Green")
 				end--]]
 			end
 		end

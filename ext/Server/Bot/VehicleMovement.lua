@@ -139,7 +139,7 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_Bot)
 			-- Detect obstacle and move over or around.
 			local s_CurrentWayPointDistance = p_Bot.m_Player.controlledControllable.transform.trans:Distance(s_Point.Position)
 
-			if s_CurrentWayPointDistance > p_Bot._LastWayDistance + 0.02 and p_Bot._ObstaceSequenceTimer == 0 then
+			if s_CurrentWayPointDistance > p_Bot._LastWayDistance + 0.02 and p_Bot._ObstacleSequenceTimer == 0 then
 				-- Skip one point.
 				s_DistanceFromTarget = 0
 				s_HeightDistance = 0
@@ -148,11 +148,11 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_Bot)
 			p_Bot._TargetPoint = s_Point
 			p_Bot._NextTargetPoint = s_NextPoint
 
-			if math.abs(s_CurrentWayPointDistance - p_Bot._LastWayDistance) < 0.02 or p_Bot._ObstaceSequenceTimer ~= 0 then
+			if math.abs(s_CurrentWayPointDistance - p_Bot._LastWayDistance) < 0.02 or p_Bot._ObstacleSequenceTimer ~= 0 then
 				if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Chopper) or
 					m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane) then
 					p_Bot._ObstacleRetryCounter = 0
-					p_Bot._ObstaceSequenceTimer = 0
+					p_Bot._ObstacleSequenceTimer = 0
 					s_DistanceFromTarget = 0
 					s_HeightDistance = 0
 
@@ -160,22 +160,22 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_Bot)
 				else
 					-- Try to get around obstacle.
 					if p_Bot._ObstacleRetryCounter % 2 == 0 then
-						if p_Bot._ObstaceSequenceTimer < 4.0 then
+						if p_Bot._ObstacleSequenceTimer < 4.0 then
 							p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.Sprint -- Full throttle.
 						end
 					else
-						if p_Bot._ObstaceSequenceTimer < 2.0 then
+						if p_Bot._ObstacleSequenceTimer < 2.0 then
 							p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.Backwards
 						end
 					end
 
-					if (p_Bot.m_ActiveSpeedValue == BotMoveSpeeds.Backwards and p_Bot._ObstaceSequenceTimer > 3.0) or
-						(p_Bot.m_ActiveSpeedValue ~= BotMoveSpeeds.Backwards and p_Bot._ObstaceSequenceTimer > 5.0) then
-						p_Bot._ObstaceSequenceTimer = 0
+					if (p_Bot.m_ActiveSpeedValue == BotMoveSpeeds.Backwards and p_Bot._ObstacleSequenceTimer > 3.0) or
+						(p_Bot.m_ActiveSpeedValue ~= BotMoveSpeeds.Backwards and p_Bot._ObstacleSequenceTimer > 5.0) then
+						p_Bot._ObstacleSequenceTimer = 0
 						p_Bot._ObstacleRetryCounter = p_Bot._ObstacleRetryCounter + 1
 					end
 
-					p_Bot._ObstaceSequenceTimer = p_Bot._ObstaceSequenceTimer + Registry.BOT.BOT_UPDATE_CYCLE
+					p_Bot._ObstacleSequenceTimer = p_Bot._ObstacleSequenceTimer + Registry.BOT.BOT_UPDATE_CYCLE
 
 					if p_Bot._ObstacleRetryCounter >= 4 then -- Try next waypoint.
 						p_Bot._ObstacleRetryCounter = 0
@@ -275,7 +275,7 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_Bot)
 					end
 				end
 
-				p_Bot._ObstaceSequenceTimer = 0
+				p_Bot._ObstacleSequenceTimer = 0
 				p_Bot._LastWayDistance = 1000.0
 			end
 		else -- Wait mode.

@@ -125,7 +125,6 @@ function Bot:__init(p_Player)
 	self._InvertPathDirection = false
 	self._ExitVehicleActive = false
 	self._ObstacleRetryCounter = 0
-	self._ObstaceSequenceTimer = 0
 	self._Objective = ''
 	self._OnSwitch = false
 
