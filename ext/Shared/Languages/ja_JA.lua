@@ -1,9 +1,9 @@
 local code = 'ja_JA' -- Add/replace the xx_XX here with your language code (like de_DE, en_US, or other)!
 
 -- GENERAL
-Language:add(code, "Bot Weapon", "ボット武器")
-Language:add(code, "Select the weapon the bots use", "ボットが使用する武器を選択します")
-Language:add(code, "Bot Kit", "ボットキット")
+Language:add(code, "Bot Weapon", "ボットの武器")
+Language:add(code, "Select the weapon the bots use", "ボットの武器を選べ")
+Language:add(code, "Bot Kit", "ボットのキット")
 Language:add(code, "The Kit of the Bots", "ボットのキット")
 Language:add(code, "Bot Color", "ボットの色")
 Language:add(code, "The Color of the Bots", "ボットの色")
