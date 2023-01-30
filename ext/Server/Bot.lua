@@ -73,7 +73,7 @@ function Bot:__init(p_Player)
 	self._VehicleSeatTimer = 0.0
 	self._VehicleTakeoffTimer = 0.0
 	self._WayWaitYawTimer = 0.0
-	self._ObstaceSequenceTimer = 0.0
+	self._ObstacleSequenceTimer = 0.0
 	self._StuckTimer = 0.0
 	self._ShotTimer = 0.0
 	self._ShootModeTimer = 0.0
@@ -1013,7 +1013,7 @@ end
 
 ---@return boolean
 function Bot:IsStuck()
-	if self._ObstaceSequenceTimer ~= 0 then
+	if self._ObstacleSequenceTimer ~= 0 then
 		return true
 	else
 		return false
@@ -1022,7 +1022,7 @@ end
 
 function Bot:ResetSpawnVars()
 	self._SpawnDelayTimer = 0.0
-	self._ObstaceSequenceTimer = 0.0
+	self._ObstacleSequenceTimer = 0.0
 	self._ObstacleRetryCounter = 0
 	self._LastWayDistance = 1000.0
 	self._ShootPlayer = nil

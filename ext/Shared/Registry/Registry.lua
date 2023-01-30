@@ -33,7 +33,7 @@ Registry = {
 		-- Minor version.
 		VERSION_MIN = 7,
 		-- Patch version.
-		VERSION_PATCH = 0,
+		VERSION_PATCH = 1,
 		-- Additional label for pre-releases and build metadata.
 		VERSION_LABEL = "",
 		-- Current version type of this build.
