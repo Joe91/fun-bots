@@ -46,7 +46,6 @@ Language['es_ES'] /* Add/replace the xx_XX here with your language code (like de
 	"General": "General",
 	"Difficulty": "Dificultad",
 	"Spawn": "Spawn",
-	"Spawnlimits": "Limites de Spawneo",
 	"Weapons": "Armas",
 	"Behaviour": "Conductas",
 	"Vehicle": "Vehículos",
@@ -63,4 +62,5 @@ Language['es_ES'] /* Add/replace the xx_XX here with your language code (like de
 	"End Trace": "Finalizar Trazo",
 	"[Save / Load]": "[Guardar / Carga]",
 	"[Paths]": "[Caminos]",
+	"Waves": "Ondas",
 };

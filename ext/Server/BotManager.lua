@@ -747,11 +747,13 @@ function BotManager:SpawnBot(p_Bot, p_Transform, p_Pose)
 	p_Bot._RandomValueOfBot = s_RandomValueOfBot
 	if Config.RandomHealthOfZombies then
 
-		s_BotSoldier.health = minHealthValue + (s_RandomValueOfBot * (maxHealthValue - minHealthValue))
+		s_BotSoldier.maxHealth = minHealthValue + (s_RandomValueOfBot * (maxHealthValue - minHealthValue))
 	else
-		s_BotSoldier.health = maxHealthValue
+		s_BotSoldier.maxHealth = maxHealthValue
 	end
-	s_BotSoldier.maxHealth = s_BotSoldier.health
+
+	s_BotSoldier.health = s_BotSoldier.maxHealth -- this does not work. TODO: find out how to fill the health up
+
 
 	s_BotPlayer:SpawnSoldierAt(s_BotSoldier, p_Transform, p_Pose)
 	s_BotPlayer:AttachSoldier(s_BotSoldier)

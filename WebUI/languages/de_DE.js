@@ -46,7 +46,6 @@ Language['de_DE'] /* Add/replace the xx_XX here with your language code (like de
 	"General": "Allgemein",
 	"Difficulty": "Schwierigkeit",
 	"Spawn": "Spawn",
-	"Spawnlimits": "Spawnbegrenzung",
 	"Weapons": "Waffen",
 	"Behaviour": "Verhalten",
 	"Vehicle": "Fahrzeuge",
@@ -63,4 +62,5 @@ Language['de_DE'] /* Add/replace the xx_XX here with your language code (like de
 	"End Trace": "Pfad beenden",
 	"[Save / Load]": "",
 	"[Paths]": "[Pfade]",
+	"Waves": "Wellen",
 };

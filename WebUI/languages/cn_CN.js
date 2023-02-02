@@ -40,7 +40,6 @@ Language['cn_CN'] /* Add/replace the xx_XX here with your language code (like de
 	"Vehicle": "载具",
 	"Weapons": "武器设置",
 	"Behaviour": "行为设置",
-	"Spawnlimits": "限制生成",
 	"Trace": "路径设置",
 	"Advanced": "高级设置",
 	"Expert": "专家设置",
@@ -63,4 +62,5 @@ Language['cn_CN'] /* Add/replace the xx_XX here with your language code (like de
 	"Spawn Bot": "生成BOT",
 	"[Save / Load]": "[保存/加载]",
 	"[Paths]": "[路径]",
+	"Waves": "波浪",
 };

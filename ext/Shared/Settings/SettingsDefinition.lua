@@ -176,7 +176,7 @@ SettingsDefinition = {
 		},
 		{
 			Name = "BotHeadshotDamageMultiplier",
-			Text = "Bot Min Health at spawn",
+			Text = "Bot Headshot DamageMultiplier",
 			---@type Type|integer
 			Type = Type.Float,
 			Value = Config.BotHeadshotDamageMultiplier,

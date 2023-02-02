@@ -36,7 +36,6 @@ function BotSpawner:RegisterVars()
 	self._CurrentSpawnWave = 0
 	self._SpawnedBotsInCurrentWave = 0
 	self._BotsToSpawnInWave = 0
-	--self._DefaultSpawnDistance = 0
 end
 
 -- =============================================
@@ -61,6 +60,16 @@ function BotSpawner:OnLevelLoaded(p_Round)
 	self._BotsToSpawnInWave = 0
 
 	self._LastRound = p_Round
+
+	-- Init Globals (for safety)
+	Globals.MaxHealthValue = Config.BotMaxHealth
+	Globals.MinHealthValue = Config.BotMinHealth
+	Globals.DamageFactorZombies = Config.DamageFactorKnife
+	Globals.MaxSpeedAttackValue = Config.SpeedFactorAttack
+	Globals.MinSpeedAttackValue = Config.MinSpeedFactorAttack
+	Globals.MaxJumpSpeedValue = Config.MaxHighJumpSpeed
+	Globals.MinJumpSpeedValue = Config.MinHighJumpSpeed
+	Globals.DistanceToSpawnBots = Config.DistanceToSpawnBots
 end
 
 ---VEXT Shared Level:Destroy Event
@@ -70,7 +79,6 @@ function BotSpawner:OnLevelDestroy()
 	self._FirstSpawnInLevel = true
 	self._FirstSpawnDelay = Registry.BOT_SPAWN.FIRST_SPAWN_DELAY
 	self._PlayerUpdateTimer = 0.0
-	--Config.DistanceToSpawnBots = self._DefaultSpawnDistance
 end
 
 -- =============================================
@@ -360,7 +368,6 @@ function BotSpawner:UpdateBotAmountAndTeam()
 			ChatManager:Yell("First Wave starts in 10 seconds", 7.0)
 			self._FirstSpawnDelay = 10
 			self._CurrentSpawnWave = 1
-			--Config.DistanceToSpawnBots = self._DefaultSpawnDistance
 			Globals.MaxHealthValue = Config.BotMaxHealth
 			Globals.MinHealthValue = Config.BotMinHealth
 			Globals.DamageFactorZombies = Config.DamageFactorKnife
@@ -390,7 +397,7 @@ function BotSpawner:UpdateBotAmountAndTeam()
 				else
 					ChatManager:Yell("Wave " .. self._CurrentSpawnWave .. "/" .. Config.Waves .. " finished, new wave starts in a few seconds", Config.TimeBetweenWaves)
 				end
-				
+
 				self._FirstSpawnDelay = Config.TimeBetweenWaves
 				self._CurrentSpawnWave = self._CurrentSpawnWave + 1
 				self._SpawnedBotsInCurrentWave = 0

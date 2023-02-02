@@ -49,7 +49,6 @@ Language['pt_PT'] /* Add/replace the xx_XX here with your language code (like de
 	"General": "Geral",
 	"Difficulty": "Dificuldade",
 	"Spawn": "Spawn",
-	"Spawnlimits": "Limites de Spawn",
 	"Weapons": "Armas",
 	"Behaviour": "Comportamento",
 	"Vehicle": "Veículo",
@@ -63,4 +62,5 @@ Language['pt_PT'] /* Add/replace the xx_XX here with your language code (like de
 	"Restore this value to Default": "Restaurar este valor para o Padrão",
 	"End Trace": "Finalizar Traço",
 	"[Paths]": "[Caminhos]",
+	"Waves": "Ondas",
 };

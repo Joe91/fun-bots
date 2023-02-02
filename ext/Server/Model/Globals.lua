@@ -31,6 +31,7 @@ Globals = {
 	MaxJumpSpeedValue = 0,
 	MinJumpSpeedValue = 0,
 	DamageFactorZombies = 0,
+	DistanceToSpawnBots = 0,
 
 	RespawnWayBots = false, -- Used for the runtime respawn.
 	AttackWayBots = false, -- Used for the runtime attack.
