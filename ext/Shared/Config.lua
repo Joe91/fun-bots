@@ -46,13 +46,13 @@ Config = {
 	Waves = 20,                         -- Total amount of waves needed to win. 0 = infinite
 	PlayerLives = 10,                   -- Amount of time players can die before losing
 	FirstWaveCount = 30,				-- Zombies that spawn in the first wave 
-	IncrementZombiesPerWave = 1,		-- Zombies that are added in each new wave 
+	IncrementZombiesPerWave = 10x,		-- Zombies that are added in each new wave 
 	IncrementMaxHealthPerWave = 25,		-- Zombies get more health each wave 
 	IncrementDamageFactorPerWave = 0.1,	-- Zombies deal more damage each wave 
 	IncrementMaxSpeedPerWave = 0.05,	-- Zombies get more speed each wave 
 	IncrementJumpSpeedPerWave = 3.0,	-- Zombies get more speed each wave 
-	SubtractSpawnDistancePerWave = 1,  -- Decreases the spawn distance each wave. This can help sell the effect of a continuous wave on higher zombie counts
-	ZombiesAliveForNextWave = 25,		-- New wave is triggered when this number of zombies is reached 
+	SubtractSpawnDistancePerWave = 1,  -- Decreases the spawn distance each wave. This can help sell the effect of a continuous wave when the server slot limit is reached
+	ZombiesAliveForNextWave = 5,		-- New wave is triggered when this number of zombies is reached 
 	TimeBetweenWaves = 7.0,				-- Time in seconds between two waves 
 	KillRemainingZombiesAfterWave = false,	-- Remaining Bots Get Killed before a new wave starts 
 
