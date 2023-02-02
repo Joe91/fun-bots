@@ -506,7 +506,7 @@ SettingsDefinition = {
 			---@type Type|integer
 			Type = Type.Float,
 			Value = Config.SubtractSpawnDistancePerWave,
-			Description = "Decreases the spawn distance each wave. This can help sell the effect of a continous wave on higher zombie counts",
+			Description = "Decreases the spawn distance each wave. This can help sell the effect of a continuous wave when the server slot limit is reached",
 			Reference = Range(0.00, 100.00, 1.0),
 			Default = 1.0,
 			UpdateFlag = UpdateFlag.Wave,

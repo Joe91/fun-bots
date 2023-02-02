@@ -36,7 +36,7 @@ function BotSpawner:RegisterVars()
 	self._CurrentSpawnWave = 0
 	self._SpawnedBotsInCurrentWave = 0
 	self._BotsToSpawnInWave = 0
-
+	--self._DefaultSpawnDistance = 0
 end
 
 -- =============================================
@@ -70,6 +70,7 @@ function BotSpawner:OnLevelDestroy()
 	self._FirstSpawnInLevel = true
 	self._FirstSpawnDelay = Registry.BOT_SPAWN.FIRST_SPAWN_DELAY
 	self._PlayerUpdateTimer = 0.0
+	--Config.DistanceToSpawnBots = self._DefaultSpawnDistance
 end
 
 -- =============================================
@@ -288,7 +289,7 @@ function BotSpawner:UpdateWaveConfig()
 	Globals.MaxJumpSpeedValue = Config.MaxHighJumpSpeed + (s_WaveValue * Config.IncrementJumpSpeedPerWave)
 	Globals.MinJumpSpeedValue = Config.MinHighJumpSpeed + (s_WaveValue * Config.IncrementJumpSpeedPerWave)
 	self._BotsToSpawnInWave = Config.FirstWaveCount + (s_WaveValue * Config.IncrementZombiesPerWave)
-	Config.DistanceToSpawnBots = Config.DistanceToSpawnBots - (s_WaveValue * Config.SubtractSpawnDistancePerWave)
+	Globals.DistanceToSpawnBots = Config.DistanceToSpawnBots - (s_WaveValue * Config.SubtractSpawnDistancePerWave)
 end
 
 function BotSpawner:UpdateBotAmountAndTeam()
@@ -359,6 +360,7 @@ function BotSpawner:UpdateBotAmountAndTeam()
 			ChatManager:Yell("First Wave starts in 10 seconds", 7.0)
 			self._FirstSpawnDelay = 10
 			self._CurrentSpawnWave = 1
+			--Config.DistanceToSpawnBots = self._DefaultSpawnDistance
 			Globals.MaxHealthValue = Config.BotMaxHealth
 			Globals.MinHealthValue = Config.BotMinHealth
 			Globals.DamageFactorZombies = Config.DamageFactorKnife
@@ -367,6 +369,7 @@ function BotSpawner:UpdateBotAmountAndTeam()
 			Globals.MaxJumpSpeedValue = Config.MaxHighJumpSpeed
 			Globals.MinJumpSpeedValue = Config.MinHighJumpSpeed
 			self._BotsToSpawnInWave = Config.FirstWaveCount
+			Globals.DistanceToSpawnBots = Config.DistanceToSpawnBots
 		end
 		if Config.KillRemainingZombiesAfterWave and self._SpawnedBotsInCurrentWave == 0 then
 			m_BotManager:KillAll()
@@ -1172,7 +1175,7 @@ function BotSpawner:_GetSpawnPoint(p_TeamId, p_SquadId)
 	local s_TargetNode = nil
 	local s_VehicleToSpawnIn = nil
 	local s_ValidPointFound = false
-	local s_TargetDistance = Config.DistanceToSpawnBots
+	local s_TargetDistance = Globals.DistanceToSpawnBots
 	local s_RetryCounter = Config.MaxTrysToSpawnAtDistance
 	local s_MaximumTrys = 100
 	local s_TrysDone = 0
