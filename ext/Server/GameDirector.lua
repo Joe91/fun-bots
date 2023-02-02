@@ -449,6 +449,34 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 	end
 end
 
+function GameDirector:OnVehicleDestroyed(p_Entity, p_VehiclePoints, p_HotTeam)
+	p_Entity = ControllableEntity(p_Entity)
+	local s_VehicleData = m_Vehicles:GetVehicleByEntity(p_Entity)
+
+	if s_VehicleData ~= nil then
+		for l_Team = TeamId.Team1, Globals.NrOfTeams do
+			if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.StationaryAA) then
+				for l_Index, l_Entity in pairs(self.m_SpawnableStationaryAas[l_Team]) do
+					if (l_Entity.uniqueId == p_Entity.uniqueId) and (l_Entity.instanceId == p_Entity.instanceId) then
+						table.remove(self.m_SpawnableStationaryAas[l_Team], l_Index)
+					end
+				end
+			else
+				for l_Index, l_Entity in pairs(self.m_SpawnableVehicles[l_Team]) do
+					if (l_Entity.uniqueId == p_Entity.uniqueId) and (l_Entity.instanceId == p_Entity.instanceId) then
+						table.remove(self.m_SpawnableVehicles[l_Team], l_Index)
+					end
+				end
+				for l_Index, l_Entity in pairs(self.m_AvailableVehicles[l_Team]) do
+					if (l_Entity.uniqueId == p_Entity.uniqueId) and (l_Entity.instanceId == p_Entity.instanceId) then
+						table.remove(self.m_AvailableVehicles[l_Team], l_Index)
+					end
+				end
+			end
+		end
+	end
+end
+
 ---VEXT Server Vehicle:Enter Event
 ---@param p_Entity ControllableEntity|Entity
 ---@param p_Player Player
