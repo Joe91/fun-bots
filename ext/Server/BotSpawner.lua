@@ -288,6 +288,7 @@ function BotSpawner:UpdateWaveConfig()
 	Globals.MaxJumpSpeedValue = Config.MaxHighJumpSpeed + (s_WaveValue * Config.IncrementJumpSpeedPerWave)
 	Globals.MinJumpSpeedValue = Config.MinHighJumpSpeed + (s_WaveValue * Config.IncrementJumpSpeedPerWave)
 	self._BotsToSpawnInWave = Config.FirstWaveCount + (s_WaveValue * Config.IncrementZombiesPerWave)
+	Config.DistanceToSpawnBots = Config.DistanceToSpawnBots - (s_WaveValue * Config.SubtractSpawnDistancePerWave)
 end
 
 function BotSpawner:UpdateBotAmountAndTeam()

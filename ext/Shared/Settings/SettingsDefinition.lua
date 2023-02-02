@@ -501,6 +501,18 @@ SettingsDefinition = {
 			Category = "WAVES"
 		},
 		{
+			Name = "SubtractSpawnDistancePerWave",
+			Text = "Decrease spawn distance per wave",
+			---@type Type|integer
+			Type = Type.Float,
+			Value = Config.SubtractSpawnDistancePerWave,
+			Description = "Decreases the spawn distance each wave. This can help sell the effect of a continous wave on higher zombie counts",
+			Reference = Range(0.00, 100.00, 1.0),
+			Default = 1.0,
+			UpdateFlag = UpdateFlag.Wave,
+			Category = "WAVES"
+		},
+		{
 			Name = "ZombiesAliveForNextWave",
 			Text = "Zombies alive for next wave",
 			---@type Type|integer
