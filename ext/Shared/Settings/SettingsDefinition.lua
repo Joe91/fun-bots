@@ -694,7 +694,7 @@ SettingsDefinition = {
 			Type = Type.Boolean,
 			Value = Config.MeleeAttackIfClose,
 			Description = "Bot attacks with melee if close",
-			Default = true,
+			Default = false,
 			UpdateFlag = UpdateFlag.None,
 			Category = "BEHAVIOUR"
 		},
