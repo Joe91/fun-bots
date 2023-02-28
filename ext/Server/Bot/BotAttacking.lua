@@ -144,7 +144,7 @@ local function _DefaultAttackingAction(p_Bot)
 	p_Bot._ReloadTimer = 0.0 -- Reset reloading.
 
 	-- Check for melee attack.
-	if Config.MeleeAttackIfClose and p_Bot._ActiveAction ~= BotActionFlags.MeleeActive
+	if Registry.COMMON.USE_BUGGED_HITBOXES and Config.MeleeAttackIfClose and p_Bot._ActiveAction ~= BotActionFlags.MeleeActive
 		and p_Bot._MeleeCooldownTimer <= 0.0
 		and p_Bot._ShootPlayer.soldier.worldTransform.trans:Distance(p_Bot.m_Player.soldier.worldTransform.trans) < 2 then
 		p_Bot._ActiveAction = BotActionFlags.MeleeActive
@@ -159,9 +159,6 @@ local function _DefaultAttackingAction(p_Bot)
 			p_Bot._MeleeCooldownTimer = 0.0
 		elseif p_Bot._MeleeCooldownTimer > 0.0 then
 			p_Bot._MeleeCooldownTimer = p_Bot._MeleeCooldownTimer - Registry.BOT.BOT_UPDATE_CYCLE
-			if p_Bot._MeleeCooldownTimer < (Config.MeleeAttackCoolDown - 0.3) and p_Bot._MeleeCooldownTimer > (Config.MeleeAttackCoolDown - 0.3 - Registry.BOT.BOT_UPDATE_CYCLE) then
-				Events:DispatchLocal("ServerDamagePlayer", p_Bot._ShootPlayer.name, p_Bot.m_Player.name, true);
-			end
 			if p_Bot._MeleeCooldownTimer < (Config.MeleeAttackCoolDown - 0.8) then
 				p_Bot:_ResetActionFlag(BotActionFlags.MeleeActive)
 			else
@@ -233,7 +230,6 @@ local function _DefaultAttackingAction(p_Bot)
 						p_Bot._WeaponToUse = BotWeapons.Pistol
 					else
 						if p_Bot.m_ActiveWeapon.type ~= WeaponTypes.Rocket then
-
 							p_Bot._WeaponToUse = BotWeapons.Primary
 							-- Check to use rocket.
 							if p_Bot._ShootModeTimer <= Registry.BOT.BOT_UPDATE_CYCLE + 0.001 and
@@ -244,7 +240,6 @@ local function _DefaultAttackingAction(p_Bot)
 						end
 					end
 				end
-
 			end
 			-- Use grenade from time to time.
 			if Config.BotsThrowGrenades then

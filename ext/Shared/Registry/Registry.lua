@@ -17,9 +17,11 @@ Registry = {
 		ALLOW_PLAYER_BOT_NAMES = true,
 		-- Collition-raycasts are another type of raycast. Sadly not working atm...
 		USE_COLLITION_RAYCASTS = false,
+		-- Use worse hitboxes but enable bots to use the knive
+		USE_BUGGED_HITBOXES = false,
 		-- Distance commands are heard by bots.
 		COMMAND_DISTANCE = 20,
-		-- Use load of Bundle to fix Bug of weapons disappearing (thanks to Lesley!) !!! THIS MIGHT CAUSE CRASHES !!!
+		-- Use load of Bundle to fix Bug of weapons disappearing (thanks to Lesley!) !!! THIS MIGHT CAUSE CRASHES !!! (for example on MP_Subway)
 		USE_LOAD_BUNDLE_BUGFIX = false,
 		-- Valid keys can be found here: https://docs.veniceunleashed.net/vext/ref/fb/inputdevicekeys/.
 		BOT_COMMAND_KEY = InputDeviceKeys.IDK_LeftAlt,
@@ -43,7 +45,6 @@ Registry = {
 		-- Prints current version in console.
 		CLIENT_SHOW_VERSION_ON_JOIN = false,
 	},
-
 	-- Some Client Variables.
 	CLIENT = {
 		-- Distance a bot tries to revive a player.
@@ -53,7 +54,6 @@ Registry = {
 		-- Time bots will not attack a player when spawned.
 		SPAWN_PROTECTION = 1.5,
 	},
-
 	-- Variables related to raycasting.
 	GAME_RAYCASTING = {
 		MAX_RAYCASTS_PER_PLAYER_PER_CYCLE = 3,
@@ -68,7 +68,6 @@ Registry = {
 		-- Max checks per cycle.
 		BOT_BOT_MAX_CHECKS = 30
 	},
-
 	GAME_DIRECTOR = {
 		UPDATE_OBJECTIVES_CYCLE = 1.5,
 		-- Time after a MCO is considered destroyed.
@@ -80,7 +79,6 @@ Registry = {
 		-- Increments of nodes to search best patch with.
 		NODE_SEARCH_INCREMENTS = 10,
 	},
-
 	VEHICLES = {
 		-- Distance for the "enter vehicle" command.
 		MIN_DISTANCE_VEHICLE_ENTER = 10.0,
@@ -113,7 +111,6 @@ Registry = {
 		-- Seat-check cycle-time.
 		VEHICLE_SEAT_CHECK_CYCLE_TIME = 4.0,
 	},
-
 	-- Bot related.
 	BOT = {
 		-- Update cycle fast.
@@ -141,7 +138,6 @@ Registry = {
 		-- Advanced aiming makes a difference on huge distances, but costs more performance.
 		USE_ADVANCED_AIMING = false,
 	},
-
 	-- Bot team balancing (only in keep_playercount - spawn-mode)
 	BOT_TEAM_BALANCING = {
 		-- Minimum amount of players required before balancing bots across teams.
@@ -151,7 +147,6 @@ Registry = {
 		-- Note: Only for mode keep_playercount.
 		ALLOWED_DIFFERENCE = 1,
 	},
-
 	-- Bot spawning.
 	BOT_SPAWN = {
 		-- Time between a level loading and the first bot spawning.

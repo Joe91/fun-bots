@@ -124,9 +124,6 @@ function FunBotServer:RegisterEvents()
 	Events:Subscribe('CombatArea:PlayerDeserting', self, self.OnCombatAreaDeserting)
 	Events:Subscribe('CombatArea:PlayerReturning', self, self.OnCombatAreaReturning)
 	Events:Subscribe('LifeCounter:BaseDestroyed', self, self.OnLifeCounterBaseDestoyed)
-
-	Events:Subscribe('ServerDamagePlayer', self, self.OnServerDamagePlayer)
-
 end
 
 function FunBotServer:RegisterHooks()
@@ -278,10 +275,6 @@ function FunBotServer:OnLifeCounterBaseDestoyed(p_LifeCounterEntity, p_FinalBase
 	m_GameDirector:OnLifeCounterBaseDestoyed(p_LifeCounterEntity, p_FinalBase)
 end
 
-function FunBotServer:OnServerDamagePlayer(p_PlayerName, p_ShooterName, p_MeleeAttack)
-	m_BotManager:OnServerDamagePlayer(p_PlayerName, p_ShooterName, p_MeleeAttack)
-end
-
 -- =============================================
 -- Level Events.
 -- =============================================
@@ -333,7 +326,7 @@ function FunBotServer:OnLevelDestroy()
 	local s_OldMemory = math.floor(collectgarbage("count") / 1024)
 	collectgarbage('collect')
 	m_Logger:Write("*Collecting Garbage on Level Destroy: " ..
-		math.floor(collectgarbage("count") / 1024) .. " MB | Old Memory: " .. s_OldMemory .. " MB")
+	math.floor(collectgarbage("count") / 1024) .. " MB | Old Memory: " .. s_OldMemory .. " MB")
 end
 
 ---VEXT Server Server:RoundOver Event
@@ -511,6 +504,9 @@ end
 ---@param p_Hit RayCastHit
 ---@param p_GiverInfo DamageGiverInfo
 function FunBotServer:OnBulletEntityCollision(p_HookCtx, p_Entity, p_Hit, p_GiverInfo)
+	if Registry.COMMON.USE_BUGGED_HITBOXES then
+		return
+	end
 	if p_GiverInfo.giver and p_GiverInfo.giver.onlineId == 0 then
 		local s_SyncedGameSettings = ResourceManager:GetSettings("SyncedGameSettings")
 
@@ -606,7 +602,11 @@ end
 function FunBotServer:OnSyncedGameSettingsCallback(p_SyncedGameSettings)
 	p_SyncedGameSettings = SyncedGameSettings(p_SyncedGameSettings)
 	p_SyncedGameSettings:MakeWritable()
-	p_SyncedGameSettings.allowClientSideDamageArbitration = true
+	if Registry.COMMON.USE_BUGGED_HITBOXES then
+		p_SyncedGameSettings.allowClientSideDamageArbitration = false
+	else
+		p_SyncedGameSettings.allowClientSideDamageArbitration = true
+	end
 end
 
 ---@param p_FiringFunctionData FiringFunctionData|DataContainer

@@ -19,7 +19,6 @@ SettingsDefinition = {
 		EXPERT = "Expert",
 		OTHER = "Other"
 	},
-
 	--[[
 		@property: Elements
 	]]
@@ -333,7 +332,7 @@ SettingsDefinition = {
 			Type = Type.Integer,
 			Value = Config.MaxAssaultBots,
 			Description = "Maximum number of Bots with Assault Kit. -1 = no limit",
-			Reference = Range(-1.00, 128.00, 1.0),
+			Reference = Range( -1.00, 128.00, 1.0),
 			Default = -1,
 			UpdateFlag = UpdateFlag.None,
 			Category = "SPAWN"
@@ -345,7 +344,7 @@ SettingsDefinition = {
 			Type = Type.Integer,
 			Value = Config.MaxEngineerBots,
 			Description = "Maximum number of Bots with Engineer Kit. -1 = no limit",
-			Reference = Range(-1.00, 128.00, 1.0),
+			Reference = Range( -1.00, 128.00, 1.0),
 			Default = -1,
 			UpdateFlag = UpdateFlag.None,
 			Category = "SPAWN"
@@ -357,7 +356,7 @@ SettingsDefinition = {
 			Type = Type.Integer,
 			Value = Config.MaxSupportBots,
 			Description = "Maximum number of Bots with Support Kit. -1 = no limit",
-			Reference = Range(-1.00, 128.00, 1.0),
+			Reference = Range( -1.00, 128.00, 1.0),
 			Default = -1,
 			UpdateFlag = UpdateFlag.None,
 			Category = "SPAWN"
@@ -369,7 +368,7 @@ SettingsDefinition = {
 			Type = Type.Integer,
 			Value = Config.MaxReconBots,
 			Description = "Maximum number of Bots with Recon Kit. -1 = no limit",
-			Reference = Range(-1.00, 128.00, 1.0),
+			Reference = Range( -1.00, 128.00, 1.0),
 			Default = -1,
 			UpdateFlag = UpdateFlag.None,
 			Category = "SPAWN"
@@ -694,7 +693,7 @@ SettingsDefinition = {
 			Type = Type.Boolean,
 			Value = Config.MeleeAttackIfClose,
 			Description = "Bot attacks with melee if close",
-			Default = false,
+			Default = true,
 			UpdateFlag = UpdateFlag.None,
 			Category = "BEHAVIOUR"
 		},
