@@ -25,6 +25,8 @@ This is the changelog for the version V2.8 Don't forget to [join us on Discord](
 * Rush for XP4_FD by Rolling Wave
 * Rush for XP4_Parl by Rolling Wave
 * Rush for XP4_Quake by Rolling Wave
+* Rush for XP3_Deser by Rolling Wave
+* Rush for XP3_Valley by Rolling Wave
 
 ### Updated maps
 * Rush for MP_001 by Rolling Wave

@@ -82,6 +82,8 @@ XP1_001 RushLarge0 1
 XP1_002 RushLarge0 1
 XP1_003 RushLarge0 1
 XP1_004 RushLarge0 1
+XP3_Desert RushLarge0 1
+XP3_Valley RushLarge0 1
 XP4_FD RushLarge0 1
 XP4_Parl RushLarge0 1
 XP4_Quake RushLarge0 1
