@@ -16,7 +16,7 @@ function PathSwitcher:__init()
 	self.m_KillYourselfCounter = {}
 end
 
-function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle, p_TeamId, p_VehicleTerrain)
+function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle, p_TeamId, p_ActiveVehicle)
 	-- Check if on base, or on path away from base. In this case: change path.
 	local s_OnBasePath = false
 	local s_CurrentPathFirst = m_NodeCollection:GetFirst(p_Point.PathIndex)
@@ -81,7 +81,8 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle, p
 				local s_PathNode = m_NodeCollection:GetFirst(s_NewPoint.PathIndex)
 
 				if s_PathNode.Data.Vehicles ~= nil and #s_PathNode.Data.Vehicles > 0 then -- Check for vehicle-type.
-					if p_VehicleTerrain ~= nil then
+					if p_ActiveVehicle ~= nil and p_ActiveVehicle.Terrain ~= nil then
+						local s_VehicleTerrain = p_ActiveVehicle.Terrain
 						local s_isAirPath = false
 						local s_isWaterPath = false
 
@@ -94,10 +95,10 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle, p
 								s_isWaterPath = true
 							end
 						end
-						if (p_VehicleTerrain == VehicleTerrains.Air and s_isAirPath) or
-							(p_VehicleTerrain == VehicleTerrains.Water and s_isWaterPath) or
-							(p_VehicleTerrain == VehicleTerrains.Land and not s_isWaterPath and not s_isAirPath) or
-							(p_VehicleTerrain == VehicleTerrains.Amphibious and not s_isAirPath) then
+						if (s_VehicleTerrain == VehicleTerrains.Air and s_isAirPath) or
+							(s_VehicleTerrain == VehicleTerrains.Water and s_isWaterPath) or
+							(s_VehicleTerrain == VehicleTerrains.Land and not s_isWaterPath and not s_isAirPath) or
+							(s_VehicleTerrain == VehicleTerrains.Amphibious and not s_isAirPath) then
 							table.insert(s_PossiblePaths, s_NewPoint)
 						end
 					else
@@ -162,7 +163,7 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle, p
 				if s_NewPoint.ID == p_Point.ID then
 					s_CurrentPriority = 2
 				end
-			-- Otherwise, check if the path has an objective I want.
+				-- Otherwise, check if the path has an objective I want.
 			else
 				-- Loop through the path's objectives and compare to mine.
 				for _, l_PathObjective in pairs(s_PathNode.Data.Objectives) do

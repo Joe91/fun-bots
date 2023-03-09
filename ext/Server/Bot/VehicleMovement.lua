@@ -216,7 +216,6 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_Bot)
 
 			-- Check for reached target.
 			if s_DistanceFromTarget <= s_TargetDistanceSpeed and s_HeightDistance <= Registry.BOT.TARGET_HEIGHT_DISTANCE_WAYPOINT then
-
 				-- CHECK FOR ACTION.
 				if s_Point.Data.Action ~= nil then
 					local s_Action = s_Point.Data.Action
@@ -246,7 +245,7 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_Bot)
 				local s_NewWaypoint = nil
 				local s_SwitchPath = false
 				s_SwitchPath, s_NewWaypoint = m_PathSwitcher:GetNewPath(p_Bot.m_Name, s_Point, p_Bot._Objective, p_Bot.m_InVehicle,
-					p_Bot.m_Player.teamId, p_Bot.m_ActiveVehicle.Terrain)
+					p_Bot.m_Player.teamId, p_Bot.m_ActiveVehicle)
 
 				if p_Bot.m_Player.soldier == nil then
 					return
@@ -568,7 +567,7 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 
 		return -- Don't do anything else.
 
-	-- Jet driver handling here.
+		-- Jet driver handling here.
 	elseif m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane) then
 		if p_Bot._VehicleWaitTimer > 0.0 then
 			return

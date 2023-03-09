@@ -107,7 +107,7 @@ function GameDirector:OnCapturePointCaptured(p_CapturePoint)
 		for i = 1, #l_Bots do
 			if l_Bots[i]:GetObjective() == s_Objective.name and s_Objective.team == l_BotTeam then
 				m_Logger:Write('Bot completed objective: ' ..
-					l_Bots[i].m_Name .. ' (team: ' .. l_BotTeam .. ') -> ' .. s_Objective.name)
+				l_Bots[i].m_Name .. ' (team: ' .. l_BotTeam .. ') -> ' .. s_Objective.name)
 
 				l_Bots[i]:SetObjective()
 				s_Objective.assigned[l_BotTeam] = math.max(s_Objective.assigned[l_BotTeam] - 1, 0)
@@ -261,7 +261,7 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 					local s_Objective = self:_GetObjectiveObject(s_ClosestObjective)
 					l_Bot:SetObjective(s_ClosestObjective)
 					m_Logger:Write("Team " ..
-						tostring(l_BotTeam) .. " with " .. l_Bot.m_Name .. " gets this objective: " .. s_ClosestObjective)
+					tostring(l_BotTeam) .. " with " .. l_Bot.m_Name .. " gets this objective: " .. s_ClosestObjective)
 					s_Objective.assigned[l_BotTeam] = s_Objective.assigned[l_BotTeam] + 1
 				end
 			else
@@ -278,7 +278,6 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 					end
 
 					goto continue_inner_loop
-
 				end
 
 
@@ -452,7 +451,6 @@ end
 function GameDirector:OnVehicleDestroyed(p_Entity, p_VehiclePoints, p_HotTeam)
 	p_Entity = ControllableEntity(p_Entity)
 	local s_VehicleData = m_Vehicles:GetVehicleByEntity(p_Entity)
-
 	if s_VehicleData ~= nil then
 		for l_Team = TeamId.Team1, Globals.NrOfTeams do
 			if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.StationaryAA) then
@@ -560,7 +558,6 @@ function GameDirector:CheckForExecution(p_Point, p_TeamId, p_InVehicle)
 		end
 
 		return false
-
 	elseif s_Action.type == "vehicle" then
 		if p_InVehicle then
 			return false
@@ -576,7 +573,6 @@ function GameDirector:CheckForExecution(p_Point, p_TeamId, p_InVehicle)
 			end
 		end
 		return false
-
 	elseif s_Action.type == "exit" then
 		if p_InVehicle then
 			return true
@@ -729,7 +725,6 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 					end
 				end
 			else
-
 				-- Check for vehicle of real player.
 				if l_Player.controlledControllable ~= nil and not l_Player.controlledControllable:Is("ServerSoldierEntity") then
 					if l_Player.controlledEntryId == 0 then
@@ -849,7 +844,6 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 			s_SpawnAtBase = MathUtils:GetRandomInt(1, 100) <= Registry.BOT_SPAWN.PROBABILITY_BASE_VEHICLE_SPAWN
 		else
 			s_SpawnAtBase = MathUtils:GetRandomInt(1, 100) <= Registry.BOT_SPAWN.PROBABILITY_BASE_SPAWN
-
 		end
 
 		if s_SpawnAtBase then
