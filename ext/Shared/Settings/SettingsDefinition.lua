@@ -332,7 +332,7 @@ SettingsDefinition = {
 			Type = Type.Integer,
 			Value = Config.MaxAssaultBots,
 			Description = "Maximum number of Bots with Assault Kit. -1 = no limit",
-			Reference = Range( -1.00, 128.00, 1.0),
+			Reference = Range(-1.00, 128.00, 1.0),
 			Default = -1,
 			UpdateFlag = UpdateFlag.None,
 			Category = "SPAWN"
@@ -344,7 +344,7 @@ SettingsDefinition = {
 			Type = Type.Integer,
 			Value = Config.MaxEngineerBots,
 			Description = "Maximum number of Bots with Engineer Kit. -1 = no limit",
-			Reference = Range( -1.00, 128.00, 1.0),
+			Reference = Range(-1.00, 128.00, 1.0),
 			Default = -1,
 			UpdateFlag = UpdateFlag.None,
 			Category = "SPAWN"
@@ -356,7 +356,7 @@ SettingsDefinition = {
 			Type = Type.Integer,
 			Value = Config.MaxSupportBots,
 			Description = "Maximum number of Bots with Support Kit. -1 = no limit",
-			Reference = Range( -1.00, 128.00, 1.0),
+			Reference = Range(-1.00, 128.00, 1.0),
 			Default = -1,
 			UpdateFlag = UpdateFlag.None,
 			Category = "SPAWN"
@@ -368,7 +368,7 @@ SettingsDefinition = {
 			Type = Type.Integer,
 			Value = Config.MaxReconBots,
 			Description = "Maximum number of Bots with Recon Kit. -1 = no limit",
-			Reference = Range( -1.00, 128.00, 1.0),
+			Reference = Range(-1.00, 128.00, 1.0),
 			Default = -1,
 			UpdateFlag = UpdateFlag.None,
 			Category = "SPAWN"
@@ -915,6 +915,17 @@ SettingsDefinition = {
 			Value = Config.ChopperDriversAttack,
 			Description = "If false, choppers only attack without gunner on board",
 			Default = false,
+			UpdateFlag = UpdateFlag.None,
+			Category = "VEHICLE"
+		},
+		{
+			Name = "VehicleMoveWhileShooting",
+			Text = "Vehicles move while shooting",
+			---@type Type|integer
+			Type = Type.Boolean,
+			Value = Config.VehicleMoveWhileShooting,
+			Description = "Vehicles like tanks do not stop for shooting",
+			Default = true,
 			UpdateFlag = UpdateFlag.None,
 			Category = "VEHICLE"
 		},

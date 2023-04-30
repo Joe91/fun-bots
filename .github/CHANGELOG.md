@@ -13,6 +13,7 @@ This is the changelog for the version V2.8 Don't forget to [join us on Discord](
 * real Hitboxes thanks to crazy workaround by Bree_Arnold
 * option to use old hitboxes (and enable bots to use the knive again) in Registry added
 * fix and update permissions in UI
+* add option for vehicles to move while attacking
 
 ### Bug fixes
 * fix meele attack
