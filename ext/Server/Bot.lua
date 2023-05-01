@@ -348,7 +348,7 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 								-- Differ attacking.
 								if s_Attacking then
 									m_VehicleAttacking:UpdateAttackingVehicle(self)
-									if Config.VehicleMoveWhileShooting and not (m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) or m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper)) then
+									if Config.VehicleMoveWhileShooting and m_Vehicles:IsNotVehicleTerrain(self.m_ActiveVehicle, VehicleTerrains.Air) then
 										if self.m_Player.controlledEntryId == 0 and not s_IsStationaryLauncher then -- Only if driver.
 											m_VehicleMovement:UpdateNormalMovementVehicle(self)
 										else
@@ -365,7 +365,7 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 								end
 
 								-- Common things.
-								m_VehicleMovement:UpdateSpeedOfMovementVehicle(self)
+								m_VehicleMovement:UpdateSpeedOfMovementVehicle(self, s_Attacking)
 								self:_UpdateInputs()
 								self:_CheckForVehicleActions(self._UpdateTimer, s_Attacking)
 
@@ -383,7 +383,7 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 									m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
 									m_VehicleAiming:UpdateAimingVehicleAdvanced(self)
 								else
-									if Config.VehicleMoveWhileShooting and not (m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) or m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper)) then
+									if Config.VehicleMoveWhileShooting and m_Vehicles:IsNotVehicleTerrain(self.m_ActiveVehicle, VehicleTerrains.Air) then
 										if self.m_Player.controlledEntryId == 0 and not s_IsStationaryLauncher then -- Only if driver.
 											-- also update movement
 											m_VehicleMovement:UpdateTargetMovementVehicle(self)

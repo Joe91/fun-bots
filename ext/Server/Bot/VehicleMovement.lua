@@ -300,7 +300,7 @@ function VehicleMovement:UpdateShootMovementVehicle(p_Bot)
 	p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.NoMovement -- No movement while attacking in vehicles.
 end
 
-function VehicleMovement:UpdateSpeedOfMovementVehicle(p_Bot)
+function VehicleMovement:UpdateSpeedOfMovementVehicle(p_Bot, p_Attacking)
 	if p_Bot.m_Player.soldier == nil or p_Bot._VehicleWaitTimer > 0.0 then
 		return
 	end
@@ -330,6 +330,11 @@ function VehicleMovement:UpdateSpeedOfMovementVehicle(p_Bot)
 				s_SpeedVal = 1.0
 			elseif p_Bot.m_ActiveSpeedValue == BotMoveSpeeds.Backwards then
 				s_SpeedVal = -0.7
+			end
+
+			-- Reduce speed while attacking
+			if p_Attacking then
+				s_SpeedVal = s_SpeedVal * 0.66
 			end
 		end
 
