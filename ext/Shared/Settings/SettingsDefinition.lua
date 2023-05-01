@@ -1331,6 +1331,18 @@ SettingsDefinition = {
 			Category = "ADVANCED"
 		},
 		{
+			Name = "SpeedFactorVehicleAttack",
+			Text = "Speed factor vehicle attack",
+			---@type Type|integer
+			Type = Type.Float,
+			Value = Config.SpeedFactorVehicleAttack,
+			Description = "Reduces the movement speed while attacking in vehicles. 1 = normal, 0 = standing",
+			Reference = Range(0.00, 1.00, 0.10),
+			Default = 0.6,
+			UpdateFlag = UpdateFlag.None,
+			Category = "ADVANCED"
+		},
+		{
 			Name = "UseRandomNames",
 			Text = "Use Random Names",
 			---@type Type|integer

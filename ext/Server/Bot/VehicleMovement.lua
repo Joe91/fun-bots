@@ -334,7 +334,7 @@ function VehicleMovement:UpdateSpeedOfMovementVehicle(p_Bot, p_Attacking)
 
 			-- Reduce speed while attacking
 			if p_Attacking then
-				s_SpeedVal = s_SpeedVal * 0.66
+				s_SpeedVal = s_SpeedVal * Config.SpeedFactorVehicleAttack
 			end
 		end
 

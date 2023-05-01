@@ -131,6 +131,7 @@ Config = {
 	OverWriteBotAttackMode = BotMoveSpeeds.NoMovement,	-- Affects Aiming!!! 0 = no overwrite. 1 = prone, 2 = crouch (good aim), 3 = walk (good aim), 4 = run 
 	SpeedFactor = 1.0,					-- Reduces the movement speed. 1 = normal, 0 = standing 
 	SpeedFactorAttack = 0.6,			-- Reduces the movement speed while attacking. 1 = normal, 0 = standing 
+	SpeedFactorVehicleAttack = 0.6,		-- Reduces the movement speed while attacking in vehicles. 1 = normal, 0 = standing 
 	UseRandomNames = false,				-- Changes names of the bots on every new round. Experimental right now... 
 	MoveSidewards = true,				-- Bots move sidewards 
 	MaxStraigtCycle = 10.0,				-- Max time bots move straight, before sidewards-movement (in sec) 
