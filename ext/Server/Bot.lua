@@ -115,6 +115,7 @@ function Bot:__init(p_Player)
 	-- To-do: add emmylua type.
 	self._CurrentWayPoint = nil
 	self._TargetYaw = 0.0
+	self._TargetYawMovementVehicle = 0.0
 	self._TargetPitch = 0.0
 	-- To-do: add emmylua type.
 	self._TargetPoint = nil
@@ -198,7 +199,7 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 		self.m_Player.soldier:SingleStepEntry(self.m_Player.controlledEntryId)
 	end
 
-	if self.m_Player.soldier == nil then -- Player not alive.
+	if self.m_Player.soldier == nil then              -- Player not alive.
 		self._UpdateTimer = self._UpdateTimer + p_DeltaTime -- Reusage of updateTimer.
 
 		if self._UpdateTimer > Registry.BOT.BOT_UPDATE_CYCLE then
@@ -267,7 +268,6 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 					else
 						m_BotMovement:UpdateTargetMovement(self)
 					end
-
 				else -- Bot in vehicle.
 					-- Stationary AA needs separate handling.
 					if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.StationaryAA) then
@@ -348,7 +348,15 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 								-- Differ attacking.
 								if s_Attacking then
 									m_VehicleAttacking:UpdateAttackingVehicle(self)
-									m_VehicleMovement:UpdateShootMovementVehicle(self)
+									if Config.VehicleMoveWhileShooting and m_Vehicles:IsNotVehicleTerrain(self.m_ActiveVehicle, VehicleTerrains.Air) then
+										if self.m_Player.controlledEntryId == 0 and not s_IsStationaryLauncher then -- Only if driver.
+											m_VehicleMovement:UpdateNormalMovementVehicle(self)
+										else
+											m_VehicleMovement:UpdateShootMovementVehicle(self)
+										end
+									else
+										m_VehicleMovement:UpdateShootMovementVehicle(self)
+									end
 								else
 									m_VehicleWeaponHandling:UpdateReloadVehicle(self)
 									if self.m_Player.controlledEntryId == 0 and not s_IsStationaryLauncher then -- Only if driver.
@@ -357,7 +365,7 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 								end
 
 								-- Common things.
-								m_VehicleMovement:UpdateSpeedOfMovementVehicle(self)
+								m_VehicleMovement:UpdateSpeedOfMovementVehicle(self, s_Attacking)
 								self:_UpdateInputs()
 								self:_CheckForVehicleActions(self._UpdateTimer, s_Attacking)
 
@@ -375,6 +383,12 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 									m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
 									m_VehicleAiming:UpdateAimingVehicleAdvanced(self)
 								else
+									if Config.VehicleMoveWhileShooting and m_Vehicles:IsNotVehicleTerrain(self.m_ActiveVehicle, VehicleTerrains.Air) then
+										if self.m_Player.controlledEntryId == 0 and not s_IsStationaryLauncher then -- Only if driver.
+											-- also update movement
+											m_VehicleMovement:UpdateTargetMovementVehicle(self)
+										end
+									end
 									m_VehicleAiming:UpdateAimingVehicle(self)
 								end
 							else
@@ -395,8 +409,7 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 			if not self.m_InVehicle then
 				m_BotMovement:UpdateYaw(self)
 			end
-
-		else -- Alive, but no inputs allowed yet → look around.
+		else                                           -- Alive, but no inputs allowed yet → look around.
 			self._UpdateTimer = self._UpdateTimer + p_DeltaTime -- Reusage of updateTimer.
 
 			if self._UpdateTimer > Registry.BOT.BOT_UPDATE_CYCLE then
@@ -547,7 +560,6 @@ function Bot:GetAttackDistance(p_ShootBackAfterHit, p_VehicleAttackMode)
 			else
 				s_AttackDistance = Config.MaxShootDistanceSniper
 			end
-
 		else
 			if p_ShootBackAfterHit then
 				s_AttackDistance = Config.MaxDistanceShootBack
@@ -555,7 +567,6 @@ function Bot:GetAttackDistance(p_ShootBackAfterHit, p_VehicleAttackMode)
 				s_AttackDistance = Config.MaxShootDistance
 			end
 		end
-
 	else
 		if m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) and
 			m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) and
@@ -566,7 +577,6 @@ function Bot:GetAttackDistance(p_ShootBackAfterHit, p_VehicleAttackMode)
 			else
 				s_AttackDistance = Config.MaxShootDistanceNoAntiAir
 			end
-
 		else
 			if p_ShootBackAfterHit then
 				s_AttackDistance = Config.MaxShootDistanceVehicles * 2
@@ -599,8 +609,7 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 	-- Don't attack as driver in some vehicles.
 	if self.m_InVehicle and self.m_Player.controlledEntryId == 0 then
 		if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) then
-
-			if self._VehicleMovableId == -1 then -- Transport-choppers don't attack as driver.
+			if self._VehicleMovableId == -1 then                                                                   -- Transport-choppers don't attack as driver.
 				return false
 			elseif self.m_Player.controlledControllable:GetPlayerInEntry(1) ~= nil and not Config.ChopperDriversAttack then -- Don't attack if gunner available and config is false.
 				return false
@@ -708,7 +717,7 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 				s_FovHalf = Config.FovVehicleAAForShooting / 360 * math.pi
 				s_PitchHalf = Config.FovVerticleVehicleAAForShooting / 360 * math.pi
 			elseif (
-				m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) or
+					m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) or
 					m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane)) and self.m_Player.controlledEntryId == 0 then -- Chopper as driver.
 				s_FovHalf = Config.FovVehicleForShooting / 360 * math.pi
 				s_PitchHalf = Config.FovVerticleChopperForShooting / 360 * math.pi
@@ -792,7 +801,6 @@ function Bot:_CheckForVehicleActions(p_DeltaTime, p_AttackActive)
 			self.m_Player:EnterVehicle(s_VehicleEntity, 0)
 			self:UpdateVehicleMovableId()
 		end
-
 	else
 		-- Check if better seat is available.
 		self._VehicleSeatTimer = self._VehicleSeatTimer + p_DeltaTime
@@ -828,7 +836,7 @@ function Bot:_CheckForVehicleActions(p_DeltaTime, p_AttackActive)
 					if s_VehicleEntity:GetPlayerInEntry(l_SeatIndex) == nil then
 						-- Maybe better seat available.
 						s_LowestSeatIndex = l_SeatIndex
-					else -- Check if there is a gap.
+					else             -- Check if there is a gap.
 						if s_LowestSeatIndex >= 0 then -- There is a better place.
 							m_Logger:Write('switch to better seat')
 							self:AbortAttack()
@@ -920,8 +928,8 @@ end
 ---@return boolean
 function Bot:IsStaticMovement()
 	if self._ForcedMovement and (self._MoveMode == BotMoveModes.Standstill or
-		self._MoveMode == BotMoveModes.Mirror or
-		self._MoveMode == BotMoveModes.Mimic) then
+			self._MoveMode == BotMoveModes.Mirror or
+			self._MoveMode == BotMoveModes.Mimic) then
 		return true
 	else
 		return false

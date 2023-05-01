@@ -107,7 +107,7 @@ function GameDirector:OnCapturePointCaptured(p_CapturePoint)
 		for i = 1, #l_Bots do
 			if l_Bots[i]:GetObjective() == s_Objective.name and s_Objective.team == l_BotTeam then
 				m_Logger:Write('Bot completed objective: ' ..
-				l_Bots[i].m_Name .. ' (team: ' .. l_BotTeam .. ') -> ' .. s_Objective.name)
+					l_Bots[i].m_Name .. ' (team: ' .. l_BotTeam .. ') -> ' .. s_Objective.name)
 
 				l_Bots[i]:SetObjective()
 				s_Objective.assigned[l_BotTeam] = math.max(s_Objective.assigned[l_BotTeam] - 1, 0)
@@ -261,7 +261,7 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 					local s_Objective = self:_GetObjectiveObject(s_ClosestObjective)
 					l_Bot:SetObjective(s_ClosestObjective)
 					m_Logger:Write("Team " ..
-					tostring(l_BotTeam) .. " with " .. l_Bot.m_Name .. " gets this objective: " .. s_ClosestObjective)
+						tostring(l_BotTeam) .. " with " .. l_Bot.m_Name .. " gets this objective: " .. s_ClosestObjective)
 					s_Objective.assigned[l_BotTeam] = s_Objective.assigned[l_BotTeam] + 1
 				end
 			else
