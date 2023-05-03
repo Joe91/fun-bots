@@ -14,6 +14,7 @@ This is the changelog for the version V2.8 Don't forget to [join us on Discord](
 * option to use old hitboxes (and enable bots to use the knive again) in Registry added
 * fix and update permissions in UI
 * add option for vehicles to move while attacking (default active)
+* improve rocket- and nade-handling
 
 ### Bug fixes
 * fix meele attack

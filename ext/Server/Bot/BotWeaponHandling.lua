@@ -97,7 +97,7 @@ function BotWeaponHandling:UpdateWeaponSelection(p_Bot)
 					p_Bot.m_Player.soldier.weaponsComponent.weapons[2].secondaryAmmo <
 					p_Bot.m_Player.soldier.weaponsComponent.weapons[2].primaryAmmo + 1 then
 					p_Bot.m_Player.soldier.weaponsComponent.weapons[2].secondaryAmmo = p_Bot.m_Player.soldier.weaponsComponent.weapons[
-						2].primaryAmmo + 3
+					2].primaryAmmo + 3
 				end
 			elseif (p_Bot._WeaponToUse == BotWeapons.Primary and Config.BotWeapon == BotWeapons.Auto) or
 				Config.BotWeapon == BotWeapons.Primary then
@@ -110,7 +110,7 @@ function BotWeaponHandling:UpdateWeaponSelection(p_Bot)
 					p_Bot.m_Player.soldier.weaponsComponent.weapons[1].secondaryAmmo <
 					p_Bot.m_Player.soldier.weaponsComponent.weapons[1].primaryAmmo + 1 then
 					p_Bot.m_Player.soldier.weaponsComponent.weapons[1].secondaryAmmo = p_Bot.m_Player.soldier.weaponsComponent.weapons[
-						1].primaryAmmo + 3
+					1].primaryAmmo + 3
 				end
 			end
 		end

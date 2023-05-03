@@ -124,9 +124,9 @@ Registry = {
 		-- Chance that the bot will teleport when they are stuck in a vehicle.
 		PROBABILITY_TELEPORT_IF_STUCK_IN_VEHICLE = 20,
 		-- At the end of an attack cycle, chance of throwing a grenade.
-		PROBABILITY_THROW_GRENADE = 80,
+		PROBABILITY_THROW_GRENADE = 50,
 		-- The probability to use the rocket instead of the primary.
-		PROBABILITY_SHOOT_ROCKET = 33,
+		PROBABILITY_SHOOT_ROCKET = 25,
 		-- The probability to use the rifle to attack a chopper.
 		PROBABILITY_ATTACK_CHOPPER_WITH_RIFLE = 25,
 		-- If the game mode is Rush or Conquest, change direction if the bot is stuck on non-connecting paths.
