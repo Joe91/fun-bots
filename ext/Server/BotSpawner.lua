@@ -280,6 +280,20 @@ end
 function BotSpawner:OnRespawnBot(p_BotName)
 	local s_Bot = m_BotManager:GetBotByName(p_BotName)
 	local s_SpawnMode = s_Bot:GetSpawnMode()
+	local p_Player = s_Bot.m_Player
+	if p_Player ~= nil then
+		print(TicketManager:GetTicketCount(p_Player.teamId))
+		if TicketManager:GetTicketCount(p_Player.teamId) <= 2 then
+			local s_WinningTeam = TeamId.Team1
+			if p_Player.teamId == TeamId.Team1 then
+				s_WinningTeam = TeamId.Team2
+			end
+			local s_ret = RCON:SendCommand('mapList.endRound', { tostring(s_WinningTeam) })
+			print(s_ret)
+			print("end round manually")
+			return
+		end
+	end
 
 	if s_SpawnMode == BotSpawnModes.RespawnFixedPath then -- Fixed Way.
 		local s_WayIndex = s_Bot:GetWayIndex()
