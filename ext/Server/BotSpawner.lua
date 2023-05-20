@@ -1235,6 +1235,11 @@ function BotSpawner:_SpawnBot(p_Bot, p_Transform, p_SetKit)
 
 	m_BotManager:SpawnBot(p_Bot, p_Transform, CharacterPoseType.CharacterPoseType_Stand)
 
+	if not p_Bot.m_Player.soldier then
+		-- happens on the last ticket. round has ended.
+		return
+	end
+
 	p_Bot.m_Player.soldier:ApplyCustomization(self:_GetCustomization(p_Bot, s_BotKit))
 
 	if Globals.RemoveKitVisuals then
