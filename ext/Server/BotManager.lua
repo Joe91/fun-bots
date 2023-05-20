@@ -758,7 +758,6 @@ function BotManager:SpawnBot(p_Bot, p_Transform, p_Pose)
 	s_BotSoldier.maxHealth = Config.BotMaxHealth
 
 	s_BotPlayer:SpawnSoldierAt(s_BotSoldier, p_Transform, p_Pose)
-	s_BotPlayer:AttachSoldier(s_BotSoldier)
 end
 
 ---@param p_Player Player
