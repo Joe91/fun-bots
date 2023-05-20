@@ -15,6 +15,8 @@ This is the changelog for the version V2.8 Don't forget to [join us on Discord](
 * fix and update permissions in UI
 * add option for vehicles to move while attacking (default active)
 * improve rocket- and nade-handling
+* fix for end-of-round-crash on conquest
+* Option in Registry added to prevent bots from spawning on the last ticket in conquest
 
 ### Bug fixes
 * fix meele attack

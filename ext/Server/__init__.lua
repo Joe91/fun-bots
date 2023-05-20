@@ -326,7 +326,7 @@ function FunBotServer:OnLevelDestroy()
 	local s_OldMemory = math.floor(collectgarbage("count") / 1024)
 	collectgarbage('collect')
 	m_Logger:Write("*Collecting Garbage on Level Destroy: " ..
-	math.floor(collectgarbage("count") / 1024) .. " MB | Old Memory: " .. s_OldMemory .. " MB")
+		math.floor(collectgarbage("count") / 1024) .. " MB | Old Memory: " .. s_OldMemory .. " MB")
 end
 
 ---VEXT Server Server:RoundOver Event
