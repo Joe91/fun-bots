@@ -291,7 +291,7 @@ function BotSpawner:OnRespawnBot(p_BotName)
 		if s_Player ~= nil then
 			local s_PlayerTeam = s_Player.teamId
 			local s_TicketsOfPlayerTeam = TicketManager:GetTicketCount(s_PlayerTeam)
-			if s_TicketsOfPlayerTeam <= 2 then
+			if s_TicketsOfPlayerTeam < 2 then
 				return
 			end
 		end
