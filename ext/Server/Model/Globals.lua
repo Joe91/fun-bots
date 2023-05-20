@@ -22,9 +22,10 @@ Globals = {
 	IsInputAllowed = false,
 	IsInputRestrictionDisabled = false,
 	RemoveKitVisuals = false,
+	EndOfRoundActive = false,
 	IgnoreBotNames = {},
 
-	RespawnWayBots = false, -- Used for the runtime respawn.
-	AttackWayBots = false, -- Used for the runtime attack.
+	RespawnWayBots = false,    -- Used for the runtime respawn.
+	AttackWayBots = false,     -- Used for the runtime attack.
 	SpawnMode = SpawnModes.manual -- Used for the runtime spawn mode.
 }

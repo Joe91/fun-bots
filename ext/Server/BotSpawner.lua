@@ -278,23 +278,35 @@ end
 
 ---@param p_BotName string
 function BotSpawner:OnRespawnBot(p_BotName)
+	if Globals.EndOfRoundActive then
+		return
+	end
 	local s_Bot = m_BotManager:GetBotByName(p_BotName)
-	local s_SpawnMode = s_Bot:GetSpawnMode()
-	local p_Player = s_Bot.m_Player
-	if p_Player ~= nil then
-		print(TicketManager:GetTicketCount(p_Player.teamId))
-		if TicketManager:GetTicketCount(p_Player.teamId) <= 2 then
-			local s_WinningTeam = TeamId.Team1
-			if p_Player.teamId == TeamId.Team1 then
-				s_WinningTeam = TeamId.Team2
+	if s_Bot == nil then
+		return
+	end
+	-- fix for end-of-round-crash
+	if Registry.COMMON.USE_END_OF_ROUND_BUGFIX and Globals.IsConquest then
+		local s_Player = s_Bot.m_Player
+		if s_Player ~= nil then
+			local s_PlayerTeam = s_Player.teamId
+			local s_TicketsOfPlayerTeam = TicketManager:GetTicketCount(s_PlayerTeam)
+			print(s_TicketsOfPlayerTeam)
+			if s_TicketsOfPlayerTeam <= 2 then
+				local s_WinningTeam = TeamId.Team1
+				if s_PlayerTeam == TeamId.Team1 then
+					s_WinningTeam = TeamId.Team2
+				end
+				local s_Ret = RCON:SendCommand('mapList.endRound', { tostring(s_WinningTeam) })
+				print(s_Ret)
+				Globals.EndOfRoundActive = true
+				print("end round manually")
+				return
 			end
-			local s_ret = RCON:SendCommand('mapList.endRound', { tostring(s_WinningTeam) })
-			print(s_ret)
-			print("end round manually")
-			return
 		end
 	end
 
+	local s_SpawnMode = s_Bot:GetSpawnMode()
 	if s_SpawnMode == BotSpawnModes.RespawnFixedPath then -- Fixed Way.
 		local s_WayIndex = s_Bot:GetWayIndex()
 		local s_RandIndex = MathUtils:GetRandomInt(1, #m_NodeCollection:Get(nil, s_WayIndex))
@@ -390,7 +402,6 @@ function BotSpawner:UpdateBotAmountAndTeam()
 		end
 		-- Limit team count.
 		for i = 1, Globals.NrOfTeams do
-
 			if Globals.NrOfTeams == 2 then
 				if i == s_PlayerTeam then
 					s_TargetTeamCount[i] = math.floor((s_TargetTeamCount[i] * Config.FactorPlayerTeamCount) + 0.5)
@@ -437,7 +448,7 @@ function BotSpawner:UpdateBotAmountAndTeam()
 			end
 		end
 
-	-- BALANCED teams.
+		-- BALANCED teams.
 	elseif Globals.SpawnMode == SpawnModes.balanced_teams then
 		local s_maxPlayersInOneTeam = 0
 
@@ -470,7 +481,7 @@ function BotSpawner:UpdateBotAmountAndTeam()
 			end
 		end
 
-	-- INCREMENT WITH PLAYER.
+		-- INCREMENT WITH PLAYER.
 	elseif Globals.SpawnMode == SpawnModes.increment_with_players then
 		if Config.SpawnInBothTeams then
 			for i = 1, Globals.NrOfTeams do
@@ -530,7 +541,7 @@ function BotSpawner:UpdateBotAmountAndTeam()
 				end
 			end
 		end
-	-- FIXED NUMBER TO SPAWN.
+		-- FIXED NUMBER TO SPAWN.
 	elseif Globals.SpawnMode == SpawnModes.fixed_number then
 		if Config.SpawnInBothTeams then
 			for i = 1, Globals.NrOfTeams do
@@ -1280,8 +1291,8 @@ function BotSpawner:_GetSpawnPoint(p_TeamId, p_SquadId)
 		end
 
 		s_TargetNode = m_NodeCollection:Get(s_IndexOnPath, s_ActiveWayIndex)
-	-- RUSH
-	-- Spawn at base (of zone) or squad-mate.
+		-- RUSH
+		-- Spawn at base (of zone) or squad-mate.
 	elseif Globals.IsRush then
 		s_ActiveWayIndex, s_IndexOnPath, s_InvertDirection, s_VehicleToSpawnIn = g_GameDirector:GetSpawnPath(p_TeamId,
 			p_SquadId, true)
@@ -1293,8 +1304,8 @@ function BotSpawner:_GetSpawnPoint(p_TeamId, p_SquadId)
 		end
 
 		s_TargetNode = m_NodeCollection:Get(s_IndexOnPath, s_ActiveWayIndex)
-	-- TDM / GM / SCAVENGER
-	-- Spawn away from other team.
+		-- TDM / GM / SCAVENGER
+		-- Spawn away from other team.
 	else
 		while not s_ValidPointFound and s_TrysDone < s_MaximumTrys do
 			-- Get new point.
@@ -1387,9 +1398,9 @@ function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 
 	local s_Unlocks = {}
 	local s_SelectedPerk = ""
-	local s_PossiblePerks = { -- Sorted by quality.
+	local s_PossiblePerks = {                                         -- Sorted by quality.
 		"persistence/unlocks/soldiers/specializations/sprintboostl2", -- Tier 1
-		"persistence/unlocks/soldiers/specializations/ammoboostl2", -- Tier 1
+		"persistence/unlocks/soldiers/specializations/ammoboostl2",   -- Tier 1
 		"persistence/unlocks/soldiers/specializations/suppressionresistl2", -- Tier 1
 		"persistence/unlocks/soldiers/specializations/explosiveboostl2", -- Tier 2
 		"persistence/unlocks/soldiers/specializations/explosiveresistl2", -- Tier 2
@@ -1505,7 +1516,7 @@ function BotSpawner:_SetKitAndAppearance(p_Bot, p_Kit, p_Color)
 	end
 
 	-- Get Kit and Appearance.
-	if s_TeamId % 2 == 1 then -- US
+	if s_TeamId % 2 == 1 then      -- US
 		if p_Kit == BotKits.Assault then -- Assault
 			s_Appearance = self:_FindAppearance('Us', 'Assault', s_ColorString)
 			s_SoldierKit = self:_FindKit('US', 'Assault')
@@ -1519,7 +1530,7 @@ function BotSpawner:_SetKitAndAppearance(p_Bot, p_Kit, p_Color)
 			s_Appearance = self:_FindAppearance('Us', 'Recon', s_ColorString)
 			s_SoldierKit = self:_FindKit('US', 'Recon')
 		end
-	else -- RU
+	else                           -- RU
 		if p_Kit == BotKits.Assault then -- Assault
 			s_Appearance = self:_FindAppearance('RU', 'Assault', s_ColorString)
 			s_SoldierKit = self:_FindKit('RU', 'Assault')
@@ -1568,7 +1579,6 @@ function BotSpawner:_SetPrimaryAttachments(p_UnlockWeapon, p_Attachments)
 end
 
 function BotSpawner:_GetCustomization(p_Bot, p_Kit)
-
 	local p_SoldierCustomization = CustomizeSoldierData()
 
 	local s_PrimaryInput = p_Bot.m_Primary
@@ -1746,9 +1756,8 @@ end
 ---@param p_KitName string|'"Assault"'|'"Engineer"'|'"Support"'|'"Recon"'
 ---@return DataContainer|nil
 function BotSpawner:_FindKit(p_TeamName, p_KitName)
-
 	local s_GameModeKits = {
-		'', -- Standard.
+		'',  -- Standard.
 		'_GM', -- Gun Master on XP2 Maps.
 		'_GM_XP4', -- Gun Master on XP4 Maps.
 		'_XP4', -- Copy of Standard for XP4 Maps.
@@ -1805,11 +1814,11 @@ function BotSpawner:_SetBotWeapons(p_Bot, p_BotKit, p_Team, p_NewWeapons)
 		p_Bot.m_PrimaryGadget = nil
 		p_Bot.m_Grenade = nil
 		p_Bot.m_Pistol = m_WeaponList:getWeapon(ScavengerWeapons[BotWeapons.Pistol][
-			MathUtils:GetRandomInt(1, #ScavengerWeapons[BotWeapons.Pistol])])
+		MathUtils:GetRandomInt(1, #ScavengerWeapons[BotWeapons.Pistol])])
 		p_Bot.m_Knife = m_WeaponList:getWeapon(ScavengerWeapons[BotWeapons.Knife][
-			MathUtils:GetRandomInt(1, #ScavengerWeapons[BotWeapons.Knife])])
+		MathUtils:GetRandomInt(1, #ScavengerWeapons[BotWeapons.Knife])])
 		p_Bot.m_Primary = m_WeaponList:getWeapon(ScavengerWeapons[BotWeapons.Primary][
-			MathUtils:GetRandomInt(1, #ScavengerWeapons[BotWeapons.Primary])])
+		MathUtils:GetRandomInt(1, #ScavengerWeapons[BotWeapons.Primary])])
 	elseif p_NewWeapons then
 		local s_Pistol = Config.Pistol
 		local s_Knife = Config.Knife
@@ -1828,11 +1837,11 @@ function BotSpawner:_SetBotWeapons(p_Bot, p_BotKit, p_Team, p_NewWeapons)
 
 		if Config.UseRandomWeapon then
 			s_Weapon = Weapons[p_BotKit][BotWeapons.Primary][p_Team][
-				MathUtils:GetRandomInt(1, #Weapons[p_BotKit][BotWeapons.Primary][p_Team])]
+			MathUtils:GetRandomInt(1, #Weapons[p_BotKit][BotWeapons.Primary][p_Team])]
 			s_Pistol = Weapons[p_BotKit][BotWeapons.Pistol][p_Team][
-				MathUtils:GetRandomInt(1, #Weapons[p_BotKit][BotWeapons.Pistol][p_Team])]
+			MathUtils:GetRandomInt(1, #Weapons[p_BotKit][BotWeapons.Pistol][p_Team])]
 			s_Knife = Weapons[p_BotKit][BotWeapons.Knife][p_Team][
-				MathUtils:GetRandomInt(1, #Weapons[p_BotKit][BotWeapons.Knife][p_Team])]
+			MathUtils:GetRandomInt(1, #Weapons[p_BotKit][BotWeapons.Knife][p_Team])]
 		end
 
 		p_Bot.m_Primary = m_WeaponList:getWeapon(s_Weapon)
@@ -1842,13 +1851,13 @@ function BotSpawner:_SetBotWeapons(p_Bot, p_BotKit, p_Team, p_NewWeapons)
 			p_Bot.m_SecondaryGadget = m_WeaponList:getWeapon(Weapons[p_BotKit][BotWeapons.Gadget2][p_Team][1])
 		else
 			p_Bot.m_SecondaryGadget = m_WeaponList:getWeapon(Weapons[p_BotKit][BotWeapons.Gadget2][p_Team][
-				MathUtils:GetRandomInt(1, #Weapons[p_BotKit][BotWeapons.Gadget2][p_Team])])
+			MathUtils:GetRandomInt(1, #Weapons[p_BotKit][BotWeapons.Gadget2][p_Team])])
 		end
 		p_Bot.m_PrimaryGadget = m_WeaponList:getWeapon(Weapons[p_BotKit][BotWeapons.Gadget1][p_Team][
-			MathUtils:GetRandomInt(1, #Weapons[p_BotKit][BotWeapons.Gadget1][p_Team])])
+		MathUtils:GetRandomInt(1, #Weapons[p_BotKit][BotWeapons.Gadget1][p_Team])])
 		p_Bot.m_Pistol = m_WeaponList:getWeapon(s_Pistol)
 		p_Bot.m_Grenade = m_WeaponList:getWeapon(Weapons[p_BotKit][BotWeapons.Grenade][p_Team][
-			MathUtils:GetRandomInt(1, #Weapons[p_BotKit][BotWeapons.Grenade][p_Team])])
+		MathUtils:GetRandomInt(1, #Weapons[p_BotKit][BotWeapons.Grenade][p_Team])])
 		p_Bot.m_Knife = m_WeaponList:getWeapon(s_Knife)
 	end
 

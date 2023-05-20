@@ -23,6 +23,8 @@ Registry = {
 		COMMAND_DISTANCE = 20,
 		-- Use load of Bundle to fix Bug of weapons disappearing (thanks to Lesley!) !!! THIS MIGHT CAUSE CRASHES !!! (for example on MP_Subway)
 		USE_LOAD_BUNDLE_BUGFIX = false,
+		-- Use end-of-round-crash workaround on Conquest-Modes
+		USE_END_OF_ROUND_BUGFIX = true,
 		-- Valid keys can be found here: https://docs.veniceunleashed.net/vext/ref/fb/inputdevicekeys/.
 		BOT_COMMAND_KEY = InputDeviceKeys.IDK_LeftAlt,
 	},
