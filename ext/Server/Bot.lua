@@ -1109,10 +1109,6 @@ function Bot:Destroy()
 		self.m_Player.soldier:Destroy()
 	end
 
-	if self.m_Player.corpse ~= nil then
-		self.m_Player.corpse:Destroy()
-	end
-
 	PlayerManager:DeletePlayer(self.m_Player)
 	self.m_Player = nil
 end

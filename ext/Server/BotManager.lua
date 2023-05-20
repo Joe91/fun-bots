@@ -738,14 +738,6 @@ end
 function BotManager:SpawnBot(p_Bot, p_Transform, p_Pose)
 	local s_BotPlayer = p_Bot.m_Player
 
-	if s_BotPlayer.soldier ~= nil then
-		s_BotPlayer.soldier:Destroy()
-	end
-
-	if s_BotPlayer.corpse ~= nil then
-		s_BotPlayer.corpse:Destroy()
-	end
-
 	-- Returns SoldierEntity.
 	local s_BotSoldier = s_BotPlayer:CreateSoldier(s_BotPlayer.selectedKit, p_Transform)
 
