@@ -22,7 +22,6 @@ Globals = {
 	IsInputAllowed = false,
 	IsInputRestrictionDisabled = false,
 	RemoveKitVisuals = false,
-	EndOfRoundActive = false,
 	IgnoreBotNames = {},
 
 	RespawnWayBots = false,    -- Used for the runtime respawn.

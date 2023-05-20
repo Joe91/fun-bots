@@ -23,8 +23,8 @@ Registry = {
 		COMMAND_DISTANCE = 20,
 		-- Use load of Bundle to fix Bug of weapons disappearing (thanks to Lesley!) !!! THIS MIGHT CAUSE CRASHES !!! (for example on MP_Subway)
 		USE_LOAD_BUNDLE_BUGFIX = false,
-		-- Use end-of-round-crash workaround on Conquest-Modes
-		USE_END_OF_ROUND_BUGFIX = true,
+		-- Keep the last ticket in conquest for the gamemode counter
+		DONT_SPAWN_BOTS_ON_LAST_CONQUEST_TICKET = true,
 		-- Valid keys can be found here: https://docs.veniceunleashed.net/vext/ref/fb/inputdevicekeys/.
 		BOT_COMMAND_KEY = InputDeviceKeys.IDK_LeftAlt,
 	},
@@ -39,7 +39,7 @@ Registry = {
 		-- Patch version.
 		VERSION_PATCH = 0,
 		-- Additional label for pre-releases and build metadata.
-		VERSION_LABEL = "dev3",
+		VERSION_LABEL = "dev4",
 		-- Current version type of this build.
 		VERSION_TYPE = VersionType.DevBuild,
 		-- The Version used for the Update-Check.

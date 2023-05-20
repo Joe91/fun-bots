@@ -278,20 +278,18 @@ end
 
 ---@param p_BotName string
 function BotSpawner:OnRespawnBot(p_BotName)
-	if Globals.EndOfRoundActive then
-		return
-	end
 	local s_Bot = m_BotManager:GetBotByName(p_BotName)
 	if s_Bot == nil then
 		return
 	end
 	-- fix for end-of-round-crash
-	if Registry.COMMON.USE_END_OF_ROUND_BUGFIX and Globals.IsConquest then
+	if Registry.COMMON.DONT_SPAWN_BOTS_ON_LAST_CONQUEST_TICKET and Globals.IsConquest then
 		local s_Player = s_Bot.m_Player
 		if s_Player ~= nil then
 			local s_PlayerTeam = s_Player.teamId
 			local s_TicketsOfPlayerTeam = TicketManager:GetTicketCount(s_PlayerTeam)
 			if s_TicketsOfPlayerTeam < 2 then
+				-- only one ticket remaining. Don't spawn
 				return
 			end
 		end

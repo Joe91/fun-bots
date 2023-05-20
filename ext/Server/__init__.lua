@@ -286,7 +286,6 @@ end
 ---@param p_RoundsPerMap integer
 function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPerMap)
 	Globals.GameMode = p_GameMode
-	Globals.EndOfRoundActive = false
 	local s_CustomGameMode = ServerUtils:GetCustomGameModeName()
 
 	-- Randomize used names.
@@ -324,7 +323,6 @@ function FunBotServer:OnLevelDestroy()
 	m_BotSpawner:OnLevelDestroy()
 	m_NodeEditor:OnLevelDestroy()
 	m_AirTargets:OnLevelDestroy()
-	Globals.EndOfRoundActive = true
 	local s_OldMemory = math.floor(collectgarbage("count") / 1024)
 	collectgarbage('collect')
 	m_Logger:Write("*Collecting Garbage on Level Destroy: " ..
@@ -336,7 +334,6 @@ end
 ---@param p_WinningTeam TeamId|integer
 function FunBotServer:OnRoundOver(p_RoundTime, p_WinningTeam)
 	m_GameDirector:OnRoundOver(p_RoundTime, p_WinningTeam)
-	Globals.EndOfRoundActive = true
 	Globals.IsInputAllowed = false
 end
 
@@ -731,7 +728,6 @@ function FunBotServer:RegisterInputRestrictionEventCallbacks()
 					Globals.IsInputAllowed = false
 				elseif p_Event.eventId == MathUtils:FNVHash("Deactivate") and not Globals.IsInputAllowed then
 					Globals.IsInputAllowed = true
-					Globals.EndOfRoundActive = false
 				end
 			end)
 		end
