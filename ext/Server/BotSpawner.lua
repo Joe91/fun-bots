@@ -291,16 +291,7 @@ function BotSpawner:OnRespawnBot(p_BotName)
 		if s_Player ~= nil then
 			local s_PlayerTeam = s_Player.teamId
 			local s_TicketsOfPlayerTeam = TicketManager:GetTicketCount(s_PlayerTeam)
-			print(s_TicketsOfPlayerTeam)
 			if s_TicketsOfPlayerTeam <= 2 then
-				local s_WinningTeam = TeamId.Team1
-				if s_PlayerTeam == TeamId.Team1 then
-					s_WinningTeam = TeamId.Team2
-				end
-				local s_Ret = RCON:SendCommand('mapList.endRound', { tostring(s_WinningTeam) })
-				print(s_Ret)
-				Globals.EndOfRoundActive = true
-				print("end round manually")
 				return
 			end
 		end
