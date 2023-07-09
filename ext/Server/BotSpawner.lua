@@ -1417,6 +1417,8 @@ function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 			"persistence/unlocks/vehicles/jetstealth",
 			"persistence/unlocks/vehicles/jetflarelauncher",
 			"persistence/unlocks/vehicles/jetheatseekerstance",
+			"persistence/unlocks/vehicles/ifvtow",
+			"persistence/unlocks/vehicles/ifvsmokelaunchers",
 			-- Xp3 perks.
 			"persistence/unlocks/vehicles/lbtcoaxlmg",
 			"persistence/unlocks/vehicles/lbtsmokelaunchers",
@@ -1429,9 +1431,11 @@ function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 		if MathUtils:GetRandomInt(1, 100) <= 50 then
 			table.insert(s_VehiclePerksToAdd, "persistence/unlocks/vehicles/mbtreactivearmor")
 			table.insert(s_VehiclePerksToAdd, "persistence/unlocks/vehicles/lbtreactivearmor")
+			table.insert(s_VehiclePerksToAdd, "persistence/unlocks/vehicles/ifvreloadupgrade")
 		else
 			table.insert(s_VehiclePerksToAdd, "persistence/unlocks/vehicles/mbtproximityscan")
 			table.insert(s_VehiclePerksToAdd, "persistence/unlocks/vehicles/lbtproximityscan")
+			table.insert(s_VehiclePerksToAdd, "persistence/unlocks/vehicles/ifvreactivearmor")
 		end
 	end
 

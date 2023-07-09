@@ -81,33 +81,33 @@ VehicleData = {
 	}, -- 24,25
 	["LAV25"] = {
 		Name = "[LAV-25]",
-		Type = VehicleTypes.Tank,
+		Type = VehicleTypes.IFV,
 		Terrain = VehicleTerrains.Amphibious,
-		Parts = { 10, 25, -1, -1, -1, -1 },
+		Parts = { { 10, 0 }, 25, -1, -1, -1, -1 },
 		Speed = { 200, 610, 350, 350, 350, 350 },
 		Drop = { 4.9, 9.81, 9.81, 9.81, 9.81, 9.81 }
 	}, -- 10,19
 	["LAV25_AI"] = {
 		Name = "[LAV-25]",
-		Type = VehicleTypes.Tank,
+		Type = VehicleTypes.IFV,
 		Terrain = VehicleTerrains.Land,
-		Parts = { 10, 25, -1, -1, -1, -1 },
+		Parts = { { 10, 0 }, 25, -1, -1, -1, -1 },
 		Speed = { 200, 610, 350, 350, 350, 350 },
 		Drop = { 4.9, 9.81, 9.81, 9.81, 9.81, 9.81 }
 	}, -- 10,19
 	["LAV25_Paradrop"] = {
 		Name = "[LAV-25]",
-		Type = VehicleTypes.Tank,
+		Type = VehicleTypes.IFV,
 		Terrain = VehicleTerrains.Land,
-		Parts = { 10, 25, -1, -1, -1, -1 },
+		Parts = { { 10, 0 }, 25, -1, -1, -1, -1 },
 		Speed = { 200, 610, 350, 350, 350, 350 },
 		Drop = { 4.9, 9.81, 9.81, 9.81, 9.81, 9.81 }
 	}, -- 10,19
 	["BTR90"] = {
 		Name = "[BTR-90]",
-		Type = VehicleTypes.Tank,
+		Type = VehicleTypes.IFV,
 		Terrain = VehicleTerrains.Land,
-		Parts = { 4, 29, -1, -1, -1, -1 },
+		Parts = { { 4, 0 }, 29, -1, -1, -1, -1 },
 		Speed = { 200, 600, 350, 350, 350, 350 },
 		Drop = { 4.9, 9.81, 9.81, 9.81, 9.81, 9.81 }
 	},
