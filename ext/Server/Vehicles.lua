@@ -122,6 +122,16 @@ function Vehicles:IsVehicleType(p_VehicleData, p_VehicleType)
 	end
 end
 
+function Vehicles:IsChopper(p_VehicleData)
+	return self:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Chopper)
+		or self:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.ScoutChopper)
+end
+
+function Vehicles:IsAirVehicle(p_VehicleData)
+	return self:IsChopper(p_VehicleData)
+		or self:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane)
+end
+
 function Vehicles:IsNotVehicleType(p_VehicleData, p_VehicleType)
 	if p_VehicleData and p_VehicleData.Type then
 		return p_VehicleData.Type ~= p_VehicleType
@@ -201,16 +211,16 @@ function Vehicles:CheckForVehicleAttack(p_VehicleType, p_Distance, p_Gadget, p_I
 		if p_Gadget.type == WeaponTypes.Rocket then
 			s_AttackMode = VehicleAttackModes.AttackWithRocket -- Always use rocket if possible.
 		elseif p_Gadget.type == WeaponTypes.C4 and p_Distance < 25 then
-			if p_VehicleType ~= VehicleTypes.Chopper and p_VehicleType ~= VehicleTypes.Plane then -- No air vehicles.
+			if p_VehicleType ~= VehicleTypes.Chopper and p_VehicleType ~= VehicleTypes.ScoutChopper and p_VehicleType ~= VehicleTypes.Plane then -- No air vehicles.
 				s_AttackMode = VehicleAttackModes.AttackWithC4 -- Always use C4 if possible.
 			end
 		elseif p_Gadget.type == WeaponTypes.MissileAir then
-			if p_VehicleType == VehicleTypes.Chopper or p_VehicleType == VehicleTypes.Plane then -- No air vehicles.
-				s_AttackMode = VehicleAttackModes.AttackWithMissileAir -- Always use C4 if possible.
+			if p_VehicleType == VehicleTypes.Chopper or p_VehicleType == VehicleTypes.ScoutChopper or p_VehicleType == VehicleTypes.Plane then -- No air vehicles.
+				s_AttackMode = VehicleAttackModes.AttackWithMissileAir
 			end
 		elseif p_Gadget.type == WeaponTypes.MissileLand then
-			if p_VehicleType ~= VehicleTypes.Chopper and p_VehicleType ~= VehicleTypes.Plane then -- No air vehicles.
-				s_AttackMode = VehicleAttackModes.AttackWithMissileLand -- Always use C4 if possible.
+			if p_VehicleType ~= VehicleTypes.Chopper and p_VehicleType ~= VehicleTypes.ScoutChopper and p_VehicleType ~= VehicleTypes.Plane then -- No air vehicles.
+				s_AttackMode = VehicleAttackModes.AttackWithMissileLand
 			end
 		end
 	end

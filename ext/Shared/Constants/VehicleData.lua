@@ -358,17 +358,17 @@ VehicleData = {
 	},
 	["AH6_Littlebird"] = {
 		Name = "[AH-6J LITTLE BIRD]",
-		Type = VehicleTypes.Chopper,
+		Type = VehicleTypes.ScoutChopper,
 		Terrain = VehicleTerrains.Air,
-		Parts = { { -2, -2 } },
+		Parts = { { -2, -2 }, -1, -1, {-1, 2} },
 		Speed = { { 900, 10000 } },
 		Drop = { { 0.0, 0.0 } }
 	},
 	["AH6_Littlebird_EQ"] = {
 		Name = "[AH-6J LITTLE BIRD]",
-		Type = VehicleTypes.Chopper,
+		Type = VehicleTypes.ScoutChopper,
 		Terrain = VehicleTerrains.Air,
-		Parts = { { -2, -2 }, -1, -1, -1 },
+		Parts = { { -2, -2 }, -1, -1, {-1, 2} },
 		Speed = { { 900, 10000 }, 300, 300, 300 },
 		Drop = { { 0.0, 0.0 }, 9.81, 9.81, 9.81 }
 	},
@@ -406,17 +406,17 @@ VehicleData = {
 	},
 	["Z-11w"] = {
 		Name = "[Z-11W]",
-		Type = VehicleTypes.Chopper,
+		Type = VehicleTypes.ScoutChopper,
 		Terrain = VehicleTerrains.Air,
-		Parts = { { -1, -1 }, -1, -1 }, -1,
+		Parts = { { -1, -1 }, -1, -1, {-1, 2} },
 		Speed = { { 900, 10000 }, 350, 350, 350 },
 		Drop = { { 0.0, 0.0 }, 9.81, 9.81, 9.81 }
 	},
 	["Wz11_SP_Paris"] = {
 		Name = "[Z-11W]",
-		Type = VehicleTypes.Chopper,
+		Type = VehicleTypes.ScoutChopper,
 		Terrain = VehicleTerrains.Air,
-		Parts = { { -1, -1 }, -1, -1 }, -1,
+		Parts = { { -1, -1 }, -1, -1, {-1, 2} },
 		Speed = { { 900, 10000 }, 350, 350, 350 },
 		Drop = { { 0.0, 0.0 }, 9.81, 9.81, 9.81 }
 	},

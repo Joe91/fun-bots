@@ -102,6 +102,7 @@ function VehicleAiming:UpdateAimingVehicleAdvanced(p_Bot)
 
 	-- Abort attacking in chopper or jet if too steep or too low.
 	if (m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Chopper) and p_Bot.m_Player.controlledEntryId == 0) or
+		(m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.ScoutChopper) and p_Bot.m_Player.controlledEntryId == 0) or
 		m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane) then
 		local s_PitchHalf = Config.FovVerticleChopperForShooting / 360 * math.pi
 		if math.abs(p_Bot._TargetPitch) > s_PitchHalf then
@@ -112,9 +113,14 @@ function VehicleAiming:UpdateAimingVehicleAdvanced(p_Bot)
 			s_FullPositionBot:Distance(s_FullPositionTarget) < Registry.VEHICLES.ABORT_ATTACK_AIR_DISTANCE_JET then
 			p_Bot:AbortAttack()
 		end
-		if p_Bot._ShootPlayerVehicleType ~= VehicleTypes.Chopper and p_Bot._ShootPlayerVehicleType ~= VehicleTypes.Plane then
+		if p_Bot._ShootPlayerVehicleType ~= VehicleTypes.Chopper
+			and p_Bot._ShootPlayerVehicleType ~= VehicleTypes.ScoutChopper
+			and p_Bot._ShootPlayerVehicleType ~= VehicleTypes.Plane
+		then
 			local s_DiffVertical = s_FullPositionBot.y - s_FullPositionTarget.y
-			if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Chopper) then
+			if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Chopper)
+				or m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.ScoutChopper)
+			then
 				if s_DiffVertical < Registry.VEHICLES.ABORT_ATTACK_HEIGHT_CHOPPER then -- Too low to the ground.
 					p_Bot:AbortAttack()
 				end
@@ -211,6 +217,7 @@ function VehicleAiming:UpdateAimingVehicle(p_Bot)
 
 	-- Abort attacking in chopper or jet if too steep or too low.
 	if (m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Chopper) and p_Bot.m_Player.controlledEntryId == 0) or
+		(m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.ScoutChopper) and p_Bot.m_Player.controlledEntryId == 0) or
 		m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane) then
 		local s_PitchHalf = Config.FovVerticleChopperForShooting / 360 * math.pi
 		if math.abs(p_Bot._TargetPitch) > s_PitchHalf then
@@ -221,9 +228,11 @@ function VehicleAiming:UpdateAimingVehicle(p_Bot)
 			s_FullPositionBot:Distance(s_FullPositionTarget) < Registry.VEHICLES.ABORT_ATTACK_AIR_DISTANCE_JET then
 			p_Bot:AbortAttack()
 		end
-		if p_Bot._ShootPlayerVehicleType ~= VehicleTypes.Chopper and p_Bot._ShootPlayerVehicleType ~= VehicleTypes.Plane then
+		if p_Bot._ShootPlayerVehicleType ~= VehicleTypes.Chopper and p_Bot._ShootPlayerVehicleType ~= ScoutChopper and p_Bot._ShootPlayerVehicleType ~= VehicleTypes.Plane then
 			local s_DiffVertical = s_FullPositionBot.y - s_FullPositionTarget.y
-			if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Chopper) then
+			if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Chopper)
+				or m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.ScoutChopper)
+			then
 				if s_DiffVertical < Registry.VEHICLES.ABORT_ATTACK_HEIGHT_CHOPPER then -- Too low to the ground.
 					p_Bot:AbortAttack()
 				end

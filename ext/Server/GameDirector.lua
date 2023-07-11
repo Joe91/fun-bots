@@ -425,7 +425,10 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 	end
 
 	if not Config.UseAirVehicles and
-		(s_VehicleData.Type == VehicleTypes.Plane or s_VehicleData.Type == VehicleTypes.Chopper) then
+		(s_VehicleData.Type == VehicleTypes.Plane
+		or s_VehicleData.Type == VehicleTypes.Chopper
+		or s_VehicleData.Type == VehicleTypes.ScoutChopper)
+	then
 		return -- Not allowed to use.
 	end
 
