@@ -344,7 +344,7 @@ VehicleData = {
 		Name = "[AH-1Z VIPER]",
 		Type = VehicleTypes.Chopper,
 		Terrain = VehicleTerrains.Air,
-		Parts = { { -2, -2 }, 1 }, -- 0,1,14
+		Parts = { { -2, -2 }, {1, 1} }, -- 0,1,14
 		Speed = { { 300, 10000 }, 600 },
 		Drop = { { 0.0, 0.0 }, 0.0 }
 	},
@@ -384,7 +384,7 @@ VehicleData = {
 		Name = "[MI-28 HAVOC]",
 		Type = VehicleTypes.Chopper,
 		Terrain = VehicleTerrains.Air,
-		Parts = { { -2, -2 }, 2 }, -- 0,1,14
+		Parts = { { -2, -2 }, {2, 1} }, -- 0,1,14
 		Speed = { { 300, 10000 }, 600 },
 		Drop = { { 0.0, 0.0 }, 0.0 }
 	},

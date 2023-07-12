@@ -39,6 +39,16 @@ function VehicleAttacking:UpdateAttackingVehicle(p_Bot)
 							if p_Bot.m_Player.controlledEntryId == 0 and
 								(p_Bot._ShootPlayerVehicleType == VehicleTypes.Chopper or p_Bot._ShootPlayerVehicleType == VehicleTypes.Plane) then
 								p_Bot._VehicleWeaponSlotToUse = 2
+							elseif p_Bot.m_Player.controlledEntryId == 1 and
+								(p_Bot._ShootPlayerVehicleType == VehicleTypes.Tank
+									or p_Bot._ShootPlayerVehicleType == VehicleTypes.IFV
+									or p_Bot._ShootPlayerVehicleType == VehicleTypes.MobileArtillery
+									or p_Bot._ShootPlayerVehicleType == VehicleTypes.AntiAir
+									or p_Bot._ShootPlayerVehicleType == VehicleTypes.LightVehicle
+									or p_Bot._ShootPlayerVehicleType == VehicleTypes.NoArmorVehicle
+									or p_Bot._ShootPlayerVehicleType == VehicleTypes.MavBot)
+							then
+								p_Bot._VehicleWeaponSlotToUse = 2
 							else
 								p_Bot._VehicleWeaponSlotToUse = 1
 							end
