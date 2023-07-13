@@ -133,7 +133,7 @@ VehicleData = {
 		Name = "[SPRUT-SD]",
 		Type = VehicleTypes.Tank,
 		Terrain = VehicleTerrains.Land,
-		Parts = { 16, -1, -1, -1, -1 },
+		Parts = { {16, 1}, -1, -1, -1, -1 },
 		Speed = { 200, 350, 350, 350, 350 },
 		Drop = { 4.9, 9.81, 9.81, 9.81, 9.81 }
 	},
@@ -141,7 +141,7 @@ VehicleData = {
 		Name = "[M1128]",
 		Type = VehicleTypes.Tank,
 		Terrain = VehicleTerrains.Land,
-		Parts = { 26, -1, -1, -1, -1 },
+		Parts = { {26, 1}, -1, -1, -1, -1 },
 		Speed = { 200, 350, 350, 350, 350 },
 		Drop = { 4.9, 9.81, 9.81, 9.81, 9.81 }
 	},
