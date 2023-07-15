@@ -123,13 +123,13 @@ function Vehicles:IsVehicleType(p_VehicleData, p_VehicleType)
 end
 
 function Vehicles:IsChopper(p_VehicleData)
-	return self:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Chopper)
-		or self:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.ScoutChopper)
+	return self:IsVehicleType(p_VehicleData, VehicleTypes.Chopper)
+		or self:IsVehicleType(p_VehicleData, VehicleTypes.ScoutChopper)
 end
 
 function Vehicles:IsAirVehicle(p_VehicleData)
 	return self:IsChopper(p_VehicleData)
-		or self:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane)
+		or self:IsVehicleType(p_VehicleData, VehicleTypes.Plane)
 end
 
 function Vehicles:IsNotVehicleType(p_VehicleData, p_VehicleType)

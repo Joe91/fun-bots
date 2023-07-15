@@ -424,11 +424,7 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 		return -- No vehicle found.
 	end
 
-	if not Config.UseAirVehicles and
-		(s_VehicleData.Type == VehicleTypes.Plane
-		or s_VehicleData.Type == VehicleTypes.Chopper
-		or s_VehicleData.Type == VehicleTypes.ScoutChopper)
-	then
+	if not Config.UseAirVehicles and m_Vehicles:IsAirVehicle(s_VehicleData) then
 		return -- Not allowed to use.
 	end
 

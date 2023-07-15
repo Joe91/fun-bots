@@ -379,9 +379,7 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 
 							-- Fast code.
 							if s_Attacking then
-								if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) or
-									m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.ScoutChopper) or
-									m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
+								if m_Vehicles:IsAirVehicle(self.m_ActiveVehicle) then
 									m_VehicleAiming:UpdateAimingVehicleAdvanced(self)
 								else
 									if Config.VehicleMoveWhileShooting and m_Vehicles:IsNotVehicleTerrain(self.m_ActiveVehicle, VehicleTerrains.Air) then
@@ -569,9 +567,7 @@ function Bot:GetAttackDistance(p_ShootBackAfterHit, p_VehicleAttackMode)
 			end
 		end
 	else
-		if m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) and
-			m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.ScoutChopper) and
-			m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) and
+		if not m_Vehicles:IsAirVehicle(self.m_ActiveVehicle) and
 			m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.MobileArtillery) and
 			m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.AntiAir) then
 			if p_ShootBackAfterHit then
@@ -718,10 +714,8 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 			if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.AntiAir) then
 				s_FovHalf = Config.FovVehicleAAForShooting / 360 * math.pi
 				s_PitchHalf = Config.FovVerticleVehicleAAForShooting / 360 * math.pi
-			elseif (
-					m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) or
-					m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.ScoutChopper) or
-					m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane)) and self.m_Player.controlledEntryId == 0 then -- Chopper as driver.
+			elseif m_Vehicles:IsAirVehicle(self.m_ActiveVehicle) and
+				self.m_Player.controlledEntryId == 0 then
 				s_FovHalf = Config.FovVehicleForShooting / 360 * math.pi
 				s_PitchHalf = Config.FovVerticleChopperForShooting / 360 * math.pi
 			else
@@ -1269,11 +1263,7 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 		return -2
 	end
 
-	if not Config.UseAirVehicles and
-		(s_VehicleData.Type == VehicleTypes.Plane
-			or s_VehicleData.Type == VehicleTypes.Chopper
-			or s_VehicleData.Type == VehicleTypes.ScoutChopper)
-	then
+	if not Config.UseAirVehicles and m_Vehicles:IsAirVehicle(s_VehicleData) then
 		return -3 -- Not allowed to use.
 	end
 
