@@ -5,7 +5,7 @@
 4. Search for this navigate to the WeaponFiring file in the text-dumb;
 5. Search for the "InitialSpeed::Vec3". This is the bullet-speed;
 6. Search for the "gravity" value. This is the bullet-drop;
-7. Identify the moving part, by checking the vehicle components ("!car" chat command) and looking at the y coordinate in different positions;
+7. Identify the moving part, by checking the vehicle components ("!cardiff" chat command after moving). This will plot you the difference of all parts to the "!car" command;
 8. Insert all data as shown below...
 --]]
 
@@ -83,7 +83,7 @@ VehicleData = {
 		Name = "[LAV-25]",
 		Type = VehicleTypes.IFV,
 		Terrain = VehicleTerrains.Amphibious,
-		Parts = { { 10, 0 }, 25, -1, -1, -1, -1 },
+		Parts = { { 10, 10 }, 25, -1, -1, -1, -1 },
 		Speed = { 200, 610, 350, 350, 350, 350 },
 		Drop = { 4.9, 9.81, 9.81, 9.81, 9.81, 9.81 }
 	}, -- 10,19
@@ -91,7 +91,7 @@ VehicleData = {
 		Name = "[LAV-25]",
 		Type = VehicleTypes.IFV,
 		Terrain = VehicleTerrains.Land,
-		Parts = { { 10, 0 }, 25, -1, -1, -1, -1 },
+		Parts = { { 10, 10 }, 25, -1, -1, -1, -1 },
 		Speed = { 200, 610, 350, 350, 350, 350 },
 		Drop = { 4.9, 9.81, 9.81, 9.81, 9.81, 9.81 }
 	}, -- 10,19
@@ -99,7 +99,7 @@ VehicleData = {
 		Name = "[LAV-25]",
 		Type = VehicleTypes.IFV,
 		Terrain = VehicleTerrains.Land,
-		Parts = { { 10, 0 }, 25, -1, -1, -1, -1 },
+		Parts = { { 10, 10 }, 25, -1, -1, -1, -1 },
 		Speed = { 200, 610, 350, 350, 350, 350 },
 		Drop = { 4.9, 9.81, 9.81, 9.81, 9.81, 9.81 }
 	}, -- 10,19
@@ -107,7 +107,7 @@ VehicleData = {
 		Name = "[BTR-90]",
 		Type = VehicleTypes.IFV,
 		Terrain = VehicleTerrains.Land,
-		Parts = { { 4, 0 }, 29, -1, -1, -1, -1 },
+		Parts = { { 4, 4 }, 29, -1, -1, -1, -1 },
 		Speed = { 200, 600, 350, 350, 350, 350 },
 		Drop = { 4.9, 9.81, 9.81, 9.81, 9.81, 9.81 }
 	},
@@ -133,7 +133,7 @@ VehicleData = {
 		Name = "[SPRUT-SD]",
 		Type = VehicleTypes.Tank,
 		Terrain = VehicleTerrains.Land,
-		Parts = { {16, 1}, -1, -1, -1, -1 },
+		Parts = { { 16, 16 }, -1, -1, -1, -1 },
 		Speed = { 200, 350, 350, 350, 350 },
 		Drop = { 4.9, 9.81, 9.81, 9.81, 9.81 }
 	},
@@ -141,7 +141,7 @@ VehicleData = {
 		Name = "[M1128]",
 		Type = VehicleTypes.Tank,
 		Terrain = VehicleTerrains.Land,
-		Parts = { {26, 1}, -1, -1, -1, -1 },
+		Parts = { { 26, 26 }, -1, -1, -1, -1 },
 		Speed = { 200, 350, 350, 350, 350 },
 		Drop = { 4.9, 9.81, 9.81, 9.81, 9.81 }
 	},
@@ -344,7 +344,7 @@ VehicleData = {
 		Name = "[AH-1Z VIPER]",
 		Type = VehicleTypes.Chopper,
 		Terrain = VehicleTerrains.Air,
-		Parts = { { -2, -2 }, {1, 1} }, -- 0,1,14
+		Parts = { { -2, -2 }, { 1, 1 } }, -- 0,1,14
 		Speed = { { 300, 10000 }, 600 },
 		Drop = { { 0.0, 0.0 }, 0.0 }
 	},
@@ -360,7 +360,7 @@ VehicleData = {
 		Name = "[AH-6J LITTLE BIRD]",
 		Type = VehicleTypes.ScoutChopper,
 		Terrain = VehicleTerrains.Air,
-		Parts = { { -2, -2 }, -1, -1, {-1, 2} },
+		Parts = { { -2, -2 }, -1, -1, { -1, -1 } },
 		Speed = { { 900, 10000 } },
 		Drop = { { 0.0, 0.0 } }
 	},
@@ -368,7 +368,7 @@ VehicleData = {
 		Name = "[AH-6J LITTLE BIRD]",
 		Type = VehicleTypes.ScoutChopper,
 		Terrain = VehicleTerrains.Air,
-		Parts = { { -2, -2 }, -1, -1, {-1, 2} },
+		Parts = { { -2, -2 }, -1, -1, { -1, -1 } },
 		Speed = { { 900, 10000 }, 300, 300, 300 },
 		Drop = { { 0.0, 0.0 }, 9.81, 9.81, 9.81 }
 	},
@@ -384,7 +384,7 @@ VehicleData = {
 		Name = "[MI-28 HAVOC]",
 		Type = VehicleTypes.Chopper,
 		Terrain = VehicleTerrains.Air,
-		Parts = { { -2, -2 }, {2, 1} }, -- 0,1,14
+		Parts = { { -2, -2 }, { 2, 1 } }, -- 0,1,14
 		Speed = { { 300, 10000 }, 600 },
 		Drop = { { 0.0, 0.0 }, 0.0 }
 	},
@@ -408,7 +408,7 @@ VehicleData = {
 		Name = "[Z-11W]",
 		Type = VehicleTypes.ScoutChopper,
 		Terrain = VehicleTerrains.Air,
-		Parts = { { -1, -1 }, -1, -1, {-1, 2} },
+		Parts = { { -1, -1 }, -1, -1, { -1, -1 } },
 		Speed = { { 900, 10000 }, 350, 350, 350 },
 		Drop = { { 0.0, 0.0 }, 9.81, 9.81, 9.81 }
 	},
@@ -416,7 +416,7 @@ VehicleData = {
 		Name = "[Z-11W]",
 		Type = VehicleTypes.ScoutChopper,
 		Terrain = VehicleTerrains.Air,
-		Parts = { { -1, -1 }, -1, -1, {-1, 2} },
+		Parts = { { -1, -1 }, -1, -1, { -1, -1 } },
 		Speed = { { 900, 10000 }, 350, 350, 350 },
 		Drop = { { 0.0, 0.0 }, 9.81, 9.81, 9.81 }
 	},

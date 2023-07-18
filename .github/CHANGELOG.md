@@ -18,6 +18,7 @@ This is the changelog for the version V2.8 Don't forget to [join us on Discord](
 * fix for end-of-round-crash on conquest
 * Option in Registry added to prevent bots from spawning on the last ticket in conquest
 * improve compatibility to more-gore-mode
+* vehicle-weapon-improvement and code-cleanup by tagener-noisu #295
 
 ### Bug fixes
 * fix meele attack
