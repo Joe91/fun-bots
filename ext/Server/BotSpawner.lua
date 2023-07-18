@@ -1413,25 +1413,35 @@ function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 			"persistence/unlocks/vehicles/atkhelihellfiremissile",
 			"persistence/unlocks/vehicles/atkheliheatseekermissile",
 			"persistence/unlocks/vehicles/atkheliflarelauncher",
-			"persistence/unlocks/vehicles/atkhelistealth",
+			"persistence/unlocks/vehicles/atkhelilaserdesignator",
+			"persistence/unlocks/vehicles/scoutatgmissile",
+			"persistence/unlocks/vehicles/scoutflares",
+			"persistence/unlocks/vehicles/scoutstealth",
 			"persistence/unlocks/vehicles/jetstealth",
 			"persistence/unlocks/vehicles/jetflarelauncher",
 			"persistence/unlocks/vehicles/jetheatseekerstance",
+			"persistence/unlocks/vehicles/ifvtow",
+			"persistence/unlocks/vehicles/ifvsmokelaunchers",
 			-- Xp3 perks.
 			"persistence/unlocks/vehicles/lbtcoaxlmg",
 			"persistence/unlocks/vehicles/lbtsmokelaunchers",
 			"persistence/unlocks/vehicles/artilleryreloadupgrade",
 			"persistence/unlocks/vehicles/artillerysmokelaunchers",
 			"persistence/unlocks/vehicles/artilleryairburst",
-			"persistence/unlocks/vehicles/landvehiclefireextinguisher",
 		}
 		-- some variation in appearance
 		if MathUtils:GetRandomInt(1, 100) <= 50 then
 			table.insert(s_VehiclePerksToAdd, "persistence/unlocks/vehicles/mbtreactivearmor")
 			table.insert(s_VehiclePerksToAdd, "persistence/unlocks/vehicles/lbtreactivearmor")
+			table.insert(s_VehiclePerksToAdd, "persistence/unlocks/vehicles/ifvreloadupgrade")
+			table.insert(s_VehiclePerksToAdd, "persistence/unlocks/vehicles/mbtsmokelaunchers")
+			table.insert(s_VehiclePerksToAdd, "persistence/unlocks/vehicles/lbtsmokelaunchers")
 		else
 			table.insert(s_VehiclePerksToAdd, "persistence/unlocks/vehicles/mbtproximityscan")
 			table.insert(s_VehiclePerksToAdd, "persistence/unlocks/vehicles/lbtproximityscan")
+			table.insert(s_VehiclePerksToAdd, "persistence/unlocks/vehicles/ifvreactivearmor")
+			table.insert(s_VehiclePerksToAdd, "persistence/unlocks/vehicles/mbtenvgoptics")
+			table.insert(s_VehiclePerksToAdd, "persistence/unlocks/vehicles/lbtenvgoptics")
 		end
 	end
 

@@ -149,8 +149,7 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_Bot)
 			p_Bot._NextTargetPoint = s_NextPoint
 
 			if math.abs(s_CurrentWayPointDistance - p_Bot._LastWayDistance) < 0.02 or p_Bot._ObstacleSequenceTimer ~= 0 then
-				if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Chopper) or
-					m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane) then
+				if m_Vehicles:IsAirVehicle(p_Bot.m_ActiveVehicle) then
 					p_Bot._ObstacleRetryCounter = 0
 					p_Bot._ObstacleSequenceTimer = 0
 					s_DistanceFromTarget = 0
@@ -465,9 +464,7 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 			else
 				p_Bot._VehicleDirBackPositive = true
 			end
-		elseif (
-				m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Chopper) and p_Bot.m_Player.controlledEntryId == 0) or
-			m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane) then
+		elseif m_Vehicles:IsAirVehicle(p_Bot.m_ActiveVehicle) and p_Bot.m_Player.controlledEntryId == 0 then
 			s_Pos = p_Bot.m_Player.controlledControllable.transform.forward
 			local s_AtanDzDx = math.atan(s_Pos.z, s_Pos.x)
 			local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
@@ -503,7 +500,7 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 	end
 
 	-- Chopper driver handling here.
-	if p_Bot.m_Player.controlledEntryId == 0 and m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Chopper) then
+	if p_Bot.m_Player.controlledEntryId == 0 and m_Vehicles:IsChopper(p_Bot.m_ActiveVehicle) then
 		if p_Bot._VehicleWaitTimer > 0.0 then
 			return
 		end
