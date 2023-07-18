@@ -40,10 +40,9 @@ This is the changelog for the version V2.8 Don't forget to [join us on Discord](
 * SquadRush for XP3_Shield by Odysseus
 * Scavenger for XP4_Rubble by Odysseus
 * SquadRush for XP3_Valley by day of light
-* Rush for XP5_002 by day of light
-* Rush for XP5_003 by day of light
-* Rush for XP3_Shield by day of light
-* Rush for XP3_Shield by day of light
+* Rush for XP5_002 by Sunseeker
+* Rush for XP5_003 by Sunseeker
+* Rush for XP3_Shield by Sunseeker
 
 ### Updated maps
 * Rush for MP_001 by Rolling Wave
