@@ -892,6 +892,44 @@ function NodeCollection:MergeSelection(p_SelectionId)
 	return true, 'Success'
 end
 
+function NodeCollection:TeleportToEdge(p_Player)
+	if p_Player == nil or p_Player.soldier == nil then
+		return
+	end
+
+	local s_Transform = p_Player.soldier.worldTransform:Clone()
+	local s_Selection = self:GetSelected(p_Player.onlineId)
+
+	if #s_Selection == 0 then
+		return false, 'No waypoints selected'
+	elseif #s_Selection > 1 then
+		return false, 'Must select only one waypoint'
+	end
+
+	local s_CurrentWaypoint = s_Selection[1]
+	s_First = self:GetFirst(s_CurrentWaypoint.PathIndex)
+	s_Last = self:GetLast(s_CurrentWaypoint.PathIndex)
+	s_FirstDistance = 0
+	s_LastDistance = 0
+
+	if s_First then
+		s_FirstDistance = s_Transform.trans:Distance(s_First.Position)
+	end
+
+	if s_Last then
+		s_LastDistance = s_Transform.trans:Distance(s_Last.Position)
+	end
+
+	if s_FirstDistance > s_LastDistance then
+		s_Transform.trans = s_First.Position
+	else
+		s_Transform.trans = s_Last.Position
+	end
+
+	p_Player.soldier:SetTransform(s_Transform)
+	return true, 'Success'
+end
+
 function NodeCollection:SplitSelection(p_SelectionId)
 	local s_Selection = self:GetSelected(p_SelectionId)
 
