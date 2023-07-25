@@ -45,6 +45,7 @@ This is the changelog for the version V2.8 Don't forget to [join us on Discord](
 * Rush for XP3_Shield by Sunseeker
 * Rush for XP1_003 Rework by Sunseeker
 * Rush for XP1_001 Rework by Sunseeker
+* Rush for XP4_Quake Rework by Sunseeker
 
 ### Updated maps
 * Rush for MP_001 by Rolling Wave
