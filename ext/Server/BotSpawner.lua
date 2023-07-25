@@ -1595,6 +1595,11 @@ function BotSpawner:_GetCustomization(p_Bot, p_Kit)
 	p_SoldierCustomization.activeSlot = WeaponSlot.WeaponSlot_0
 	p_SoldierCustomization.removeAllExistingWeapons = false
 
+	if Globals.IsGm then
+		p_Bot.m_LastWeapon = nil
+		return p_SoldierCustomization
+	end
+
 	-- Primary Weapon.
 	local s_PrimaryWeapon = UnlockWeaponAndSlot()
 	s_PrimaryWeapon.slot = WeaponSlot.WeaponSlot_0

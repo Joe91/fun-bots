@@ -49,6 +49,7 @@ function Bot:__init(p_Player)
 	---@type Weapon|nil
 	self.m_ActiveWeapon = nil
 	self.m_ActiveVehicle = nil
+	self.m_ActiveGmWeaponName = nil
 	---@type Weapon|nil
 	self.m_Primary = nil
 	---@type Weapon|nil
@@ -741,6 +742,29 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 				table.insert(self._KnifeWayPositions, p_Player.soldier.worldTransform.trans:Clone())
 			end
 
+			if Globals.IsGm then
+				-- check for changed weapon
+				local s_SoldierWeapon = SoldierWeapon(p_Player.soldier.weaponsComponent.currentWeapon)
+				if self.m_ActiveGmWeaponName == nil or s_SoldierWeapon.name ~= self.m_ActiveGmWeaponName then
+					local s_name = s_SoldierWeapon.name
+					local s_unlock_path_parts = s_name:split('/')
+					local s_name_of_weapon = s_unlock_path_parts[#s_unlock_path_parts]
+					s_unlock_path_parts[#s_unlock_path_parts] = "U_" .. s_unlock_path_parts[#s_unlock_path_parts]
+					local s_unlock_path = ""
+					for i = 1, #s_unlock_path_parts do
+						s_unlock_path = s_unlock_path .. s_unlock_path_parts[i]
+						if i < #s_unlock_path_parts then
+							s_unlock_path = s_unlock_path .. "/"
+						end
+					end
+					print(s_unlock_path)
+					local s_newWeapon = Weapon(s_name_of_weapon, '', {}, WeaponTypes.None, s_unlock_path)
+					s_newWeapon:learnStatsValues()
+
+					self.m_ActiveWeapon = s_newWeapon
+					self.m_ActiveGmWeaponName = s_SoldierWeapon.name
+				end
+			end
 			return true
 		else
 			self._ShootPlayerName = ''
