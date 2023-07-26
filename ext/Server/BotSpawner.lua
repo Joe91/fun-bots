@@ -758,7 +758,7 @@ function BotSpawner:UpdateGmWeapon(p_Bot)
 				s_unlock_path = s_unlock_path .. "/"
 			end
 		end
-		print(s_unlock_path)
+
 		local s_newWeapon = Weapon(s_NameOfWeapon, '', {}, WeaponTypes.None, s_unlock_path)
 		s_newWeapon:learnStatsValues()
 
