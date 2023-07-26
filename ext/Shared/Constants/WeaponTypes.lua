@@ -21,4 +21,5 @@ WeaponTypes = {
 	MissileAir = 18,
 	MissileLand = 19,
 	Knife = 20,
+	NadeLauncher = 21
 }

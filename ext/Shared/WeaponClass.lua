@@ -158,6 +158,14 @@ function Weapon:learnStatsValues()
 		if self.type == WeaponTypes.None then
 			self.type = WeaponTypes.Grenade
 		end
+	elseif string.find(s_AiDataString, "_rgl_") ~= nil then
+		m_Logger:Write("NadeLauncher")
+		s_FireDuration = 0.2
+		s_FirePause = 0.2
+		s_DelayedShot = false
+		if self.type == WeaponTypes.None then
+			self.type = WeaponTypes.NadeLauncher
+		end
 	elseif self.type == WeaponTypes.Torch or self.type == WeaponTypes.Claymore or self.type == WeaponTypes.C4 or
 		self.type == WeaponTypes.Tugs or self.type == WeaponTypes.Beacon or self.type == WeaponTypes.MissileAir or
 		self.type == WeaponTypes.MissileLand then

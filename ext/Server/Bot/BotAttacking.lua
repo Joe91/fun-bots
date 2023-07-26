@@ -212,7 +212,7 @@ local function _DefaultAttackingAction(p_Bot)
 	else
 		-- Target not in vehicle.
 		-- Refill rockets if empty.
-		if p_Bot.m_ActiveWeapon.type == WeaponTypes.Rocket then
+		if p_Bot.m_ActiveWeapon and p_Bot.m_ActiveWeapon.type == WeaponTypes.Rocket then
 			if p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.primaryAmmo <= 0 then
 				p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.primaryAmmo = 1
 				p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.secondaryAmmo = 3
@@ -291,16 +291,7 @@ local function _DefaultAttackingAction(p_Bot)
 	end
 
 	-- Shooting sequence.
-	if Globals.IsGm then
-		if p_Bot._ShotTimer >= (0.4) then
-			p_Bot._ShotTimer = 0.0
-		end
-		if p_Bot._ShotTimer <= 0.2 then
-			p_Bot:_SetInput(EntryInputActionEnum.EIAFire, 1)
-		end
-
-		p_Bot._ShotTimer = p_Bot._ShotTimer + Registry.BOT.BOT_UPDATE_CYCLE
-	elseif p_Bot.m_ActiveWeapon ~= nil then
+	if p_Bot.m_ActiveWeapon ~= nil then
 		if p_Bot.m_KnifeMode then
 			-- Nothing to do.
 			-- C4 Handling.
