@@ -491,7 +491,7 @@ end
 
 function Bot:DeployIfPossible()
 	-- Deploy from time to time.
-	if self.m_PrimaryGadget ~= nil and (self.m_Kit == BotKits.Support or self.m_Kit == BotKits.Assault) then
+	if self.m_PrimaryGadget ~= nil and (self.m_Kit == BotKits.Support or self.m_Kit == BotKits.Assault) and not Globals.IsGm then
 		if self.m_PrimaryGadget.type == WeaponTypes.Ammobag or self.m_PrimaryGadget.type == WeaponTypes.Medkit then
 			self:AbortAttack()
 			self._WeaponToUse = BotWeapons.Gadget1
@@ -744,12 +744,25 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 
 			if Globals.IsGm then
 				-- check for changed weapon
-				local s_SoldierWeapon = SoldierWeapon(p_Player.soldier.weaponsComponent.currentWeapon)
+				local s_SoldierWeapon = SoldierWeapon(p_Player.soldier.weaponsComponent.weapons[1])
 				if self.m_ActiveGmWeaponName == nil or s_SoldierWeapon.name ~= self.m_ActiveGmWeaponName then
 					local s_name = s_SoldierWeapon.name
 					local s_unlock_path_parts = s_name:split('/')
 					local s_name_of_weapon = s_unlock_path_parts[#s_unlock_path_parts]
-					s_unlock_path_parts[#s_unlock_path_parts] = "U_" .. s_unlock_path_parts[#s_unlock_path_parts]
+
+					local special_weapon_names = {
+						-- Name, Type, Parttransforms, Bullet-Speeds, Drop, Offset-Vec
+						["M320"] = "M320_HE",
+						["Knife_RazorBlade"] = "Knife_Razor"
+					}
+					-- replace invalid weapon-names
+					for l_key, l_value in pairs(special_weapon_names) do
+						if s_name_of_weapon == l_key then
+							s_name_of_weapon = l_value
+							break
+						end
+					end
+					s_unlock_path_parts[#s_unlock_path_parts] = "U_" .. s_name_of_weapon
 					local s_unlock_path = ""
 					for i = 1, #s_unlock_path_parts do
 						s_unlock_path = s_unlock_path .. s_unlock_path_parts[i]
@@ -761,7 +774,9 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 					local s_newWeapon = Weapon(s_name_of_weapon, '', {}, WeaponTypes.None, s_unlock_path)
 					s_newWeapon:learnStatsValues()
 
+					self.m_Primary = s_newWeapon
 					self.m_ActiveWeapon = s_newWeapon
+
 					self.m_ActiveGmWeaponName = s_SoldierWeapon.name
 				end
 			end

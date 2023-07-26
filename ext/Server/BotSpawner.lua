@@ -1403,7 +1403,7 @@ function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 		-- "persistence/unlocks/soldiers/specializations/healspeedboostl2", -- Not used.
 	}
 	local s_VehiclePerksToAdd = {}
-	if not Globals.IsScavenger and not Globals.IsTdm then
+	if not Globals.IsScavenger and not Globals.IsTdm and not Globals.IsGm then
 		s_VehiclePerksToAdd = {
 			"persistence/unlocks/vehicles/mbtproximityscan",
 			"persistence/unlocks/vehicles/mbtcoaxlmg",

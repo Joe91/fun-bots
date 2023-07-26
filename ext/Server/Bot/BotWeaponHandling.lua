@@ -51,10 +51,6 @@ function BotWeaponHandling:UpdateDeployAndReload(p_Bot, p_Deploy)
 end
 
 function BotWeaponHandling:UpdateWeaponSelection(p_Bot)
-	if Globals.IsGm then
-		-- no handling on Gunmaster
-		return
-	end
 	-- Select weapon-slot.
 	if p_Bot._ActiveAction ~= BotActionFlags.MeleeActive then
 		if p_Bot.m_Player.soldier.weaponsComponent ~= nil then
