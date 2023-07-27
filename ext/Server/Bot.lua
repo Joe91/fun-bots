@@ -76,6 +76,7 @@ function Bot:__init(p_Player)
 	self._ObstacleSequenceTimer = 0.0
 	self._StuckTimer = 0.0
 	self._ShotTimer = 0.0
+	self._VehicleSecondaryWeaponTimer = 0.0
 	self._ShootModeTimer = 0.0
 	self._ReloadTimer = 0.0
 	self._DeployTimer = 0.0
@@ -1050,6 +1051,7 @@ function Bot:ResetSpawnVars()
 	end
 
 	self._ShotTimer = 0.0
+	self._VehicleSecondaryWeaponTimer = 0.0
 	self._UpdateTimer = 0.0
 	self._StuckTimer = 0.0
 	self._SpawnProtectionTimer = 2.0
