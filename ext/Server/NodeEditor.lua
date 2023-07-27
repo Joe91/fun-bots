@@ -41,6 +41,7 @@ function NodeEditor:RegisterCustomEvents()
 	NetEvents:Subscribe('NodeEditor:LinkNodes', self, self.OnLinkNodes)
 	NetEvents:Subscribe('NodeEditor:UnlinkNodes', self, self.OnUnlinkNodes)
 	NetEvents:Subscribe('NodeEditor:MergeNodes', self, self.OnMergeNodes)
+	NetEvents:Subscribe('NodeEditor:TeleportToEdge', self, self.OnTeleportToEdge)
 	NetEvents:Subscribe('NodeEditor:SplitNode', self, self.OnSplitNode)
 	NetEvents:Subscribe('NodeEditor:RemoveNode', self, self.OnRemoveNode)
 
@@ -515,6 +516,13 @@ end
 
 function NodeEditor:OnRemoveNode(p_Player)
 	local s_Result, s_Message = m_NodeCollection:Remove(p_Player.onlineId)
+	if not s_Result then
+		self:Log(p_Player, s_Message)
+	end
+end
+
+function NodeEditor:OnTeleportToEdge(p_Player)
+	local s_Result, s_Message = m_NodeCollection:TeleportToEdge(p_Player)
 	if not s_Result then
 		self:Log(p_Player, s_Message)
 	end

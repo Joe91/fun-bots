@@ -570,6 +570,10 @@ function ClientNodeEditor:_onLinkNode()
 	NetEvents:SendLocal('NodeEditor:LinkNodes')
 end
 
+function ClientNodeEditor:_onTeleportToEdge(p_Args)
+	NetEvents:SendLocal('NodeEditor:TeleportToEdge')
+end
+
 function ClientNodeEditor:_onSplitNode(p_Args)
 	NetEvents:SendLocal('NodeEditor:SplitNode')
 end
@@ -818,6 +822,11 @@ function ClientNodeEditor:OnClientUpdateInput(p_DeltaTime)
 
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_Numpad1) then
 			self:_onRemoveNode()
+			return
+		end
+
+		if InputManager:WentKeyDown(InputDeviceKeys.IDK_T) then
+			self:_onTeleportToEdge()
 			return
 		end
 
