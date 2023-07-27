@@ -256,7 +256,9 @@ local function _DefaultAttackingAction(p_Bot)
 						p_Bot._ActiveAction ~= BotActionFlags.GrenadeActive) or Config.BotWeapon == BotWeapons.Grenade then
 					-- Should be triggered only once per fireMode.
 					if MathUtils:GetRandomInt(1, 100) <= Registry.BOT.PROBABILITY_THROW_GRENADE then
-						if p_Bot.m_Grenade ~= nil and p_Bot._DistanceToPlayer < 25.0 then -- Algorith only works for up to 25 m.
+						if p_Bot.m_Grenade ~= nil
+                            and p_Bot._DistanceToPlayer > 15.0
+                            and p_Bot._DistanceToPlayer < 25.0 then -- Algorithm only works for up to 25 m.
 							p_Bot._ActiveAction = BotActionFlags.GrenadeActive
 						end
 					end
