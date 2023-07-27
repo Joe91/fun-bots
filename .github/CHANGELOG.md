@@ -24,6 +24,7 @@ This is the changelog for the version V2.8 Don't forget to [join us on Discord](
 ### Bug fixes
 * fix meele attack
 * missing nil-check in vehicle-movement
+* fix bots getting stuck on vehicle-paths #297
 
 ### New maps
 * Gunmaster for MP_001 by Augusta

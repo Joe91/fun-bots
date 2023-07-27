@@ -610,7 +610,7 @@ function GameDirector:FindClosestPath(p_Trans, p_VehiclePath, p_DetailedSearch, 
 					end
 				end
 
-				if p_VehiclePath then
+				if p_VehiclePath and s_isVehiclePath then
 					if s_isVehiclePath then
 						if (p_VehicleTerrain == VehicleTerrains.Air and s_isAirPath) or
 							(p_VehicleTerrain == VehicleTerrains.Water and s_isWaterPath) or
@@ -645,33 +645,31 @@ function GameDirector:FindClosestPath(p_Trans, p_VehiclePath, p_DetailedSearch, 
 							end
 						end
 					end
-				else -- Not in vehicle.
-					if not s_isAirPath and not s_isWaterPath then
-						if p_DetailedSearch then
-							for i = 1, #l_Waypoints, Registry.GAME_DIRECTOR.NODE_SEARCH_INCREMENTS do
-								local s_NewDistance = Utilities:DistanceFast(l_Waypoints[i].Position, p_Trans)
-
-								if s_ClosestDistance == nil then
-									s_ClosestDistance = s_NewDistance
-									s_ClosestPathNode = l_Waypoints[i]
-								else
-									if s_NewDistance < s_ClosestDistance then
-										s_ClosestDistance = s_NewDistance
-										s_ClosestPathNode = l_Waypoints[i]
-									end
-								end
-							end
-						else
-							local s_NewDistance = Utilities:DistanceFast(l_Waypoints[1].Position, p_Trans)
+				elseif not p_VehiclePath and not s_isVehiclePath then -- Not in vehicle. Only use infantery-paths
+					if p_DetailedSearch then
+						for i = 1, #l_Waypoints, Registry.GAME_DIRECTOR.NODE_SEARCH_INCREMENTS do
+							local s_NewDistance = Utilities:DistanceFast(l_Waypoints[i].Position, p_Trans)
 
 							if s_ClosestDistance == nil then
 								s_ClosestDistance = s_NewDistance
-								s_ClosestPathNode = l_Waypoints[1]
+								s_ClosestPathNode = l_Waypoints[i]
 							else
 								if s_NewDistance < s_ClosestDistance then
 									s_ClosestDistance = s_NewDistance
-									s_ClosestPathNode = l_Waypoints[1]
+									s_ClosestPathNode = l_Waypoints[i]
 								end
+							end
+						end
+					else
+						local s_NewDistance = Utilities:DistanceFast(l_Waypoints[1].Position, p_Trans)
+
+						if s_ClosestDistance == nil then
+							s_ClosestDistance = s_NewDistance
+							s_ClosestPathNode = l_Waypoints[1]
+						else
+							if s_NewDistance < s_ClosestDistance then
+								s_ClosestDistance = s_NewDistance
+								s_ClosestPathNode = l_Waypoints[1]
 							end
 						end
 					end
