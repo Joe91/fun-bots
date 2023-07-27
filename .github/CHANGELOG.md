@@ -20,6 +20,9 @@ This is the changelog for the version V2.8 Don't forget to [join us on Discord](
 * improve compatibility to more-gore-mode
 * vehicle-weapon-improvement and code-cleanup by tagener-noisu #295
 * Real weapondata and aimin in Gunmaster #292
+* Merged pull request #301 from tagener-noisu min nade distance for bots (also with Registry-Entry)
+* Merged pull request #300 from tagener-noisu trace navigation
+* Mergeed pull request #303 from tagener-noisu ifv_tows weapon usage
 
 ### Bug fixes
 * fix meele attack

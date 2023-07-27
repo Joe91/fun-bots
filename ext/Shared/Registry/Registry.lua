@@ -137,6 +137,8 @@ Registry = {
 		TRACE_DELTA_SHOOTING = 0.4,
 		-- The max time a bot tries to move to the repair-vehicle.
 		MAX_TIME_TRY_REPAIR = 10,
+		-- The minimum distance to throw a nade
+		MIN_DISTANCE_NADE = 12,
 		-- Advanced aiming makes a difference on huge distances, but costs more performance.
 		USE_ADVANCED_AIMING = false,
 	},
