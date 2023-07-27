@@ -83,51 +83,89 @@ function Weapon:learnStatsValues()
 		s_FireDuration = 1.5
 		s_FirePause = 0.5
 		s_DelayedShot = true
+		if self.type == WeaponTypes.None then
+			self.type = WeaponTypes.LMG
+		end
 	elseif string.find(s_AiDataString, "_sni_") ~= nil then
 		m_Logger:Write("sniper")
 		s_FireDuration = 0.2
 		s_FirePause = 0.4
 		s_DelayedShot = true
+		if self.type == WeaponTypes.None then
+			self.type = WeaponTypes.Sniper
+		end
 	elseif string.find(s_AiDataString, "_snisemi_") ~= nil then
 		m_Logger:Write("auto sniper")
 		s_FireDuration = 0.2
 		s_FirePause = 0.4
 		s_DelayedShot = true
+		if self.type == WeaponTypes.None then
+			self.type = WeaponTypes.Sniper
+		end
 	elseif string.find(s_AiDataString, "_rif_") ~= nil then
 		m_Logger:Write("rifle")
 		s_FireDuration = 0.4
 		s_FirePause = 0.4
 		s_DelayedShot = false
+		if self.type == WeaponTypes.None then
+			self.type = WeaponTypes.Assault
+		end
 	elseif string.find(s_AiDataString, "_shg_") ~= nil then
 		m_Logger:Write("shotgun")
 		s_FireDuration = 0.2
 		s_FirePause = 0.2
 		s_DelayedShot = false
+		if self.type == WeaponTypes.None then
+			self.type = WeaponTypes.Shotgun
+		end
 	elseif string.find(s_AiDataString, "_smg_") ~= nil then
 		m_Logger:Write("PDW")
 		s_FireDuration = 0.3
 		s_FirePause = 0.2
 		s_DelayedShot = false
+		if self.type == WeaponTypes.None then
+			self.type = WeaponTypes.PDW
+		end
 	elseif string.find(s_AiDataString, "_hg_") ~= nil or string.find(self.name, "MP443") ~= nil then -- "MP443 has no AI data".
 		m_Logger:Write("pistol")
 		s_FireDuration = 0.2
 		s_FirePause = 0.2
 		s_DelayedShot = false
+		if self.type == WeaponTypes.None then
+			self.type = WeaponTypes.Pistol
+		end
 	elseif string.find(s_AiDataString, "_kni_") ~= nil then
 		m_Logger:Write("knife")
 		s_FireDuration = 0.2
 		s_FirePause = 0.2
 		s_DelayedShot = false
+		if self.type == WeaponTypes.None then
+			self.type = WeaponTypes.Knife
+		end
 	elseif string.find(s_AiDataString, "_at_") ~= nil then
 		m_Logger:Write("Rocket")
 		s_FireDuration = 0.2
 		s_FirePause = 0.4
 		s_DelayedShot = true
+		if self.type == WeaponTypes.None then
+			self.type = WeaponTypes.Rocket
+		end
 	elseif string.find(s_AiDataString, "_hgr_") ~= nil then
 		m_Logger:Write("Grenade")
 		s_FireDuration = 0.2
 		s_FirePause = 0.2
 		s_DelayedShot = false
+		if self.type == WeaponTypes.None then
+			self.type = WeaponTypes.Grenade
+		end
+	elseif string.find(s_AiDataString, "_rgl_") ~= nil then
+		m_Logger:Write("NadeLauncher")
+		s_FireDuration = 0.2
+		s_FirePause = 0.2
+		s_DelayedShot = false
+		if self.type == WeaponTypes.None then
+			self.type = WeaponTypes.NadeLauncher
+		end
 	elseif self.type == WeaponTypes.Torch or self.type == WeaponTypes.Claymore or self.type == WeaponTypes.C4 or
 		self.type == WeaponTypes.Tugs or self.type == WeaponTypes.Beacon or self.type == WeaponTypes.MissileAir or
 		self.type == WeaponTypes.MissileLand then

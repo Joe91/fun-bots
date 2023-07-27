@@ -19,10 +19,12 @@ This is the changelog for the version V2.8 Don't forget to [join us on Discord](
 * Option in Registry added to prevent bots from spawning on the last ticket in conquest
 * improve compatibility to more-gore-mode
 * vehicle-weapon-improvement and code-cleanup by tagener-noisu #295
+* Real weapondata and aimin in Gunmaster #292
 
 ### Bug fixes
 * fix meele attack
 * missing nil-check in vehicle-movement
+* fix bots getting stuck on vehicle-paths #297
 
 ### New maps
 * Gunmaster for MP_001 by Augusta

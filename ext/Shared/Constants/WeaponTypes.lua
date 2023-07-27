@@ -1,5 +1,6 @@
 ---@enum WeaponTypes
 WeaponTypes = {
+	None = 0,
 	Pistol = 1,
 	Shotgun = 2,
 	Assault = 3,
@@ -20,4 +21,5 @@ WeaponTypes = {
 	MissileAir = 18,
 	MissileLand = 19,
 	Knife = 20,
+	NadeLauncher = 21
 }

@@ -49,6 +49,7 @@ function Bot:__init(p_Player)
 	---@type Weapon|nil
 	self.m_ActiveWeapon = nil
 	self.m_ActiveVehicle = nil
+	self.m_ActiveGmWeaponName = nil
 	---@type Weapon|nil
 	self.m_Primary = nil
 	---@type Weapon|nil
@@ -490,7 +491,7 @@ end
 
 function Bot:DeployIfPossible()
 	-- Deploy from time to time.
-	if self.m_PrimaryGadget ~= nil and (self.m_Kit == BotKits.Support or self.m_Kit == BotKits.Assault) then
+	if self.m_PrimaryGadget ~= nil and (self.m_Kit == BotKits.Support or self.m_Kit == BotKits.Assault) and not Globals.IsGm then
 		if self.m_PrimaryGadget.type == WeaponTypes.Ammobag or self.m_PrimaryGadget.type == WeaponTypes.Medkit then
 			self:AbortAttack()
 			self._WeaponToUse = BotWeapons.Gadget1
@@ -741,6 +742,10 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 				table.insert(self._KnifeWayPositions, p_Player.soldier.worldTransform.trans:Clone())
 			end
 
+			if Globals.IsGm then
+				-- check for changed weapon
+				BotSpawner:UpdateGmWeapon(self)
+			end
 			return true
 		else
 			self._ShootPlayerName = ''

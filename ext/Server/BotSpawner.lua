@@ -735,6 +735,40 @@ function BotSpawner:SpawnWayBots(p_Player, p_Amount, p_UseRandomWay, p_ActiveWay
 	end
 end
 
+function BotSpawner:UpdateGmWeapon(p_Bot)
+	local s_SoldierWeapon = SoldierWeapon(p_Bot.m_Player.soldier.weaponsComponent.weapons[1])
+	if p_Bot.m_ActiveGmWeaponName == nil or s_SoldierWeapon.name ~= p_Bot.m_ActiveGmWeaponName then
+		local s_Name = s_SoldierWeapon.name
+		local s_UnlockPathParts = s_Name:split('/')
+		local s_NameOfWeapon = s_UnlockPathParts[#s_UnlockPathParts]
+
+		-- replace invalid weapon-names
+		for l_key, l_value in pairs(GmSpecialWeapons) do
+			if s_NameOfWeapon == l_key then
+				s_NameOfWeapon = l_value
+				break
+			end
+		end
+
+		s_UnlockPathParts[#s_UnlockPathParts] = "U_" .. s_NameOfWeapon
+		local s_unlock_path = ""
+		for i = 1, #s_UnlockPathParts do
+			s_unlock_path = s_unlock_path .. s_UnlockPathParts[i]
+			if i < #s_UnlockPathParts then
+				s_unlock_path = s_unlock_path .. "/"
+			end
+		end
+
+		local s_newWeapon = Weapon(s_NameOfWeapon, '', {}, WeaponTypes.None, s_unlock_path)
+		s_newWeapon:learnStatsValues()
+
+		p_Bot.m_Primary = s_newWeapon
+		p_Bot.m_ActiveWeapon = s_newWeapon
+
+		p_Bot.m_ActiveGmWeaponName = s_SoldierWeapon.name
+	end
+end
+
 -- =============================================
 -- Private Functions
 -- =============================================
@@ -1403,7 +1437,7 @@ function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 		-- "persistence/unlocks/soldiers/specializations/healspeedboostl2", -- Not used.
 	}
 	local s_VehiclePerksToAdd = {}
-	if not Globals.IsScavenger and not Globals.IsTdm then
+	if not Globals.IsScavenger and not Globals.IsTdm and not Globals.IsGm then
 		s_VehiclePerksToAdd = {
 			"persistence/unlocks/vehicles/mbtproximityscan",
 			"persistence/unlocks/vehicles/mbtcoaxlmg",
@@ -1594,6 +1628,11 @@ function BotSpawner:_GetCustomization(p_Bot, p_Kit)
 
 	p_SoldierCustomization.activeSlot = WeaponSlot.WeaponSlot_0
 	p_SoldierCustomization.removeAllExistingWeapons = false
+
+	if Globals.IsGm then
+		p_Bot.m_LastWeapon = nil
+		return p_SoldierCustomization
+	end
 
 	-- Primary Weapon.
 	local s_PrimaryWeapon = UnlockWeaponAndSlot()
@@ -1823,6 +1862,8 @@ function BotSpawner:_SetBotWeapons(p_Bot, p_BotKit, p_Team, p_NewWeapons)
 		MathUtils:GetRandomInt(1, #ScavengerWeapons[BotWeapons.Knife])])
 		p_Bot.m_Primary = m_WeaponList:getWeapon(ScavengerWeapons[BotWeapons.Primary][
 		MathUtils:GetRandomInt(1, #ScavengerWeapons[BotWeapons.Primary])])
+	elseif Globals.IsGm then
+		return
 	elseif p_NewWeapons then
 		local s_Pistol = Config.Pistol
 		local s_Knife = Config.Knife
