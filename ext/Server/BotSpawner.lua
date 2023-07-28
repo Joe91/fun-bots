@@ -739,6 +739,7 @@ function BotSpawner:UpdateGmWeapon(p_Bot)
 	local s_SoldierWeapon = SoldierWeapon(p_Bot.m_Player.soldier.weaponsComponent.weapons[1])
 	if p_Bot.m_ActiveGmWeaponName == nil or s_SoldierWeapon.name ~= p_Bot.m_ActiveGmWeaponName then
 		local s_Name = s_SoldierWeapon.name
+		print(s_Name)
 		local s_UnlockPathParts = s_Name:split('/')
 		local s_NameOfWeapon = s_UnlockPathParts[#s_UnlockPathParts]
 
