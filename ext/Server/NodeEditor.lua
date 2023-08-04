@@ -26,7 +26,6 @@ function NodeEditor:__init()
 end
 
 function NodeEditor:RegisterCustomEvents()
-
 	-- Remove them?
 	-- NetEvents:Subscribe('UI_Request_Save_Settings', self, self.OnUIRequestSaveSettings)
 
@@ -105,7 +104,6 @@ function NodeEditor:OnUpdatePos(p_Player, p_UpdateData)
 end
 
 function NodeEditor:OnAddMcom(p_Player)
-
 	if not p_Player.soldier then
 		self:Log(p_Player, 'Player must be alive')
 		return
@@ -136,7 +134,6 @@ function NodeEditor:OnAddMcom(p_Player)
 end
 
 function NodeEditor:OnAddVehicle(p_Player)
-
 	if not p_Player.soldier then
 		self:Log(p_Player, 'Player must be alive')
 		return
@@ -402,7 +399,7 @@ function NodeEditor:OnSetLoopMode(p_Player, p_Args)
 	end
 
 	local s_Data = p_Args[1] or "false"
-	self:Log(p_Player, 'Exit Vehicle (type): %s', g_Utilities:dump(s_Data, true))
+	self:Log(p_Player, 'Set loop-mode: %s', g_Utilities:dump(s_Data, true))
 
 	local s_PathLoops = not (s_Data:lower() == "false" or s_Data == "0")
 
@@ -427,6 +424,7 @@ function NodeEditor:OnSetLoopMode(p_Player, p_Args)
 			else
 				s_Waypoint.OptValue = 0XFF
 			end
+			m_NodeCollection:UpdateInputVar(s_Waypoint)
 
 			self:Log(p_Player, 'Updated Waypoint: %s', s_Waypoint.ID)
 		end
@@ -772,7 +770,6 @@ end
 function NodeEditor:ClearTrace(p_Player)
 	-- Check if custom-Trace is available. Otherwise, delete selected trace.
 	if self.m_CustomTrace[p_Player.onlineId] and #self.m_CustomTrace[p_Player.onlineId]:Get() > 0 then
-
 		self.m_CustomTraceTimer[p_Player.onlineId] = -1
 		self.m_CustomTraceIndex[p_Player.onlineId] = self:_getNewIndex()
 		self.m_CustomTraceDistance[p_Player.onlineId] = 0
@@ -865,8 +862,8 @@ function NodeEditor:SaveTrace(p_Player, p_PathIndex)
 				s_Direction = 'Previous'
 			end
 
-		-- p_PathIndex is greater or equal 2.
-		-- Get the node before the start of the specified path, if the path is existing, otherwise use the end.
+			-- p_PathIndex is greater or equal 2.
+			-- Get the node before the start of the specified path, if the path is existing, otherwise use the end.
 		else
 			if #m_NodeCollection:Get(nil, p_PathIndex) > 0 then
 				s_ReferrenceWaypoint = m_NodeCollection:GetFirst(p_PathIndex).Previous
@@ -1010,7 +1007,6 @@ end
 ---@param p_DeltaTime number
 ---@param p_SimulationDeltaTime number
 function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
-
 	-- SAVING.
 	if m_NodeCollection:UpdateSaving() then
 		return
@@ -1048,7 +1044,7 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 							self.m_CustomTrace[l_PlayerGuid]:Select(nil, s_NewWaypoint)
 
 							local s_Speed = BotMoveSpeeds.NoMovement -- 0 = wait, 1 = prone ... (4 Bits).
-							local s_Extra = 0 -- 0 = nothing, 1 = jump ... (4 Bits).
+							local s_Extra = 0   -- 0 = nothing, 1 = jump ... (4 Bits).
 
 							if s_Player.attachedControllable ~= nil then
 								local s_SpeedInput = math.abs(s_Player.input:GetLevel(EntryInputActionEnum.EIAThrottle))
@@ -1091,7 +1087,7 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 							end
 
 							self.m_CustomTraceDistance[l_PlayerGuid] = self.m_CustomTraceDistance[l_PlayerGuid] + s_LastDistance
-						-- Secondary weapon, increase wait timer.
+							-- Secondary weapon, increase wait timer.
 						elseif s_Player.soldier.weaponsComponent.currentWeaponSlot == WeaponSlot.WeaponSlot_1 then
 							self.m_NodeWaitTimer[l_PlayerGuid] = self.m_NodeWaitTimer[l_PlayerGuid] + Config.TraceDelta
 							local s_LastWaypointAgain = self.m_CustomTrace[l_PlayerGuid]:GetLast()
@@ -1156,7 +1152,6 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 					for l_Waypoint = s_startIndex, #s_WaypointPaths[l_Path] do
 						local l_Node = s_WaypointPaths[l_Path][l_Waypoint]
 						if (l_Node.Next ~= false or l_Node.Previous ~= false) then -- Removed node?
-
 							local s_DrawNode = false
 							local s_DrawLine = false
 							local s_DrawText = false
@@ -1269,7 +1264,6 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 					s_Count = s_Count + 1
 
 					if s_DrawNode or s_DrawLine or s_DrawText then
-
 						local s_DataNode = {
 							Node = {},
 							DrawNode = s_DrawNode,
@@ -1299,7 +1293,6 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 							return
 						end
 					end
-
 				end
 			end
 
