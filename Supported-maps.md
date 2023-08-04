@@ -29,9 +29,9 @@ The following maps are currently supported in this commit.
 |   ![image](https://user-images.githubusercontent.com/57008952/124316901-98233480-db76-11eb-80bd-baf046552122.png) 	|   `XP4_Quake`	| **Epicenter** | `CQ Large` ,`CQ Small` ,`GM` ,`Rush` ,`SDM` ,`TDM` ,`TDM CQ` | `CQ Small` |
 |   ![image](https://user-images.githubusercontent.com/57008952/124316914-a07b6f80-db76-11eb-82cb-2396a2828b76.png) 	|   `XP4_Parl`	| **Azadi Palace** | `CQ Large` ,`CQ Small` ,`GM` ,`Rush` ,`SDM` ,`TDM` ,`TDM CQ` | `CQ Small` ,`Rush` |
 |   ![image](https://user-images.githubusercontent.com/57008952/124316932-a83b1400-db76-11eb-99ad-926721cfbb09.png) 	|   `XP5_001`	| **Operation Riverside** | `CQ Large` ,`CQ Small` ,`SDM` ,`TDM` ,`TDM CQ` | `CQ Large` ,`CQ Small` |
-|   ![image](https://user-images.githubusercontent.com/57008952/124316951-aec98b80-db76-11eb-816d-140f9614359e.png) 	|   `XP5_002`	| **Nebandan Flats** | `CQ Small` ,`GM` ,`Rush` ,`SDM` ,`TDM` ,`TDM CQ` | `CQ Small` ,`Rush` |
+|   ![image](https://user-images.githubusercontent.com/57008952/124316951-aec98b80-db76-11eb-816d-140f9614359e.png) 	|   `XP5_002`	| **Nebandan Flats** | `CQ Small` ,`GM` ,`Rush` ,`SDM` ,`SQ Rush` ,`TDM` ,`TDM CQ` | `CQ Small` ,`Rush` |
 |   ![image](https://user-images.githubusercontent.com/57008952/124316976-b8eb8a00-db76-11eb-8207-addf58c94317.png) 	|   `XP5_003`	| **Kiasar Railroad** | `CTF` ,`CQ Small` ,`GM` ,`Rush` ,`SDM` ,`TDM` ,`TDM CQ` | `CQ Small` ,`Rush` |
-|   ![image](https://user-images.githubusercontent.com/57008952/124316988-bee16b00-db76-11eb-96f4-fc714fcf6fce.png) 	|   `XP5_004`	| **Sabalan Pipeline** | `CQ Large` ,`CQ Small` ,`Rush` ,`SDM` ,`TDM` ,`TDM CQ` | `CQ Large` ,`CQ Small` ,`Rush` |
+|   ![image](https://user-images.githubusercontent.com/57008952/124316988-bee16b00-db76-11eb-96f4-fc714fcf6fce.png) 	|   `XP5_004`	| **Sabalan Pipeline** | `CQ Large` ,`CQ Small` ,`Rush` ,`SDM` ,`SQ Rush` ,`TDM` ,`TDM CQ` | `CQ Large` ,`CQ Small` ,`Rush` |
 
 The following maps can be played with the [mod](https://github.com/keku645/vu-all-gamemodes-in-all-maps) from keku645.
 

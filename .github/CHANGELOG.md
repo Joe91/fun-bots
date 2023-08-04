@@ -51,6 +51,8 @@ This is the changelog for the version V2.8 Don't forget to [join us on Discord](
 * Rush for XP3_Shield by Sunseeker
 * SquadRush XP2_Factory by Sunseeker
 * SquadRush XP2_Office by Sunseeker
+* SquadRush XP5_002 by Sunseeker
+* SquadRush XP5_004 by Sunseeker
 
 ### Updated maps
 * Rush for MP_001 by Rolling Wave

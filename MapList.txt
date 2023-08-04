@@ -128,6 +128,8 @@ XP2_Office SquadRush0 1
 XP3_Shield SquadRush0 1
 XP3_Valley SquadRush0 1
 XP4_Rubble SquadRush0 1
+XP5_002 SquadRush0 1
+XP5_004 SquadRush0 1
 XP3_Desert TankSuperiority0 1
 XP3_Valley TankSuperiority0 1
 COOP_002 TeamDeathMatch0 1
