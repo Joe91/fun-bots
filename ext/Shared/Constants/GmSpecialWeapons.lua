@@ -5,5 +5,6 @@ GmSpecialWeapons = {
 	["AK74"] = "AK74M",
 	["QBU-88"] = "QBU-88_Sniper",
 	["Model_98B"] = "M98B",
-	["XP4_Crossbow_Prototype"] = "Crossbow_Scoped_Cobra"
+	["XP4_Crossbow_Prototype"] = "Crossbow_Scoped_Cobra",
+	["RPK"] = "RPK-74M"
 }
