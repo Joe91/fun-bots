@@ -53,6 +53,13 @@ This is the changelog for the version V2.8 Don't forget to [join us on Discord](
 * SquadRush XP2_Office by Sunseeker
 * SquadRush XP5_002 by Sunseeker
 * SquadRush XP5_004 by Sunseeker
+* SquadRush for XP3_Alborz by Every_knows9
+* SquadRush for MP_001 by Every_knows9
+* SquadRush for MP_003 by Every_knows9
+* SquadRush for MP_007 by Every_knows9
+* SquadRush for MP_017 by Every_knows9
+* SquadRush for MP_Subway by Every_knows9
+* SquadRush for XP3_Desert by Every_knows9
 
 ### Updated maps
 * Rush for MP_001 by Rolling Wave
