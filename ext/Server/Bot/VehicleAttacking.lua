@@ -37,8 +37,50 @@ function VehicleAttacking:UpdateAttackingVehicle(p_Bot)
 						-- Chopper on Plane / Chopper → weapon 2 (seaker).
 						if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Chopper) then
 							if p_Bot.m_Player.controlledEntryId == 0 and
-								(p_Bot._ShootPlayerVehicleType == VehicleTypes.Chopper or p_Bot._ShootPlayerVehicleType == VehicleTypes.Plane) then
+								(p_Bot._ShootPlayerVehicleType == VehicleTypes.Chopper
+								or p_Bot._ShootPlayerVehicleType == VehicleTypes.ScoutChopper
+								or p_Bot._ShootPlayerVehicleType == VehicleTypes.Plane)
+							then
 								p_Bot._VehicleWeaponSlotToUse = 2
+							elseif p_Bot.m_Player.controlledEntryId == 1 and
+								(p_Bot._ShootPlayerVehicleType == VehicleTypes.Tank
+									or p_Bot._ShootPlayerVehicleType == VehicleTypes.IFV
+									or p_Bot._ShootPlayerVehicleType == VehicleTypes.MobileArtillery
+									or p_Bot._ShootPlayerVehicleType == VehicleTypes.AntiAir
+									or p_Bot._ShootPlayerVehicleType == VehicleTypes.LightVehicle
+									or p_Bot._ShootPlayerVehicleType == VehicleTypes.NoArmorVehicle
+									or p_Bot._ShootPlayerVehicleType == VehicleTypes.MavBot)
+							then
+								p_Bot._VehicleWeaponSlotToUse = 2
+							else
+								p_Bot._VehicleWeaponSlotToUse = 1
+							end
+						elseif m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.ScoutChopper) then
+							if p_Bot.m_Player.controlledEntryId == 0 and
+								(p_Bot._ShootPlayerVehicleType == VehicleTypes.Chopper
+								or p_Bot._ShootPlayerVehicleType == VehicleTypes.Plane
+								or p_Bot._ShootPlayerVehicleType == VehicleTypes.ScoutChopper)
+							then
+								p_Bot._VehicleWeaponSlotToUse = 1
+							else
+								p_Bot._VehicleWeaponSlotToUse = 2
+							end
+						elseif m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.IFV) then
+							if p_Bot.m_Player.controlledEntryId == 0 and
+								(p_Bot._ShootPlayerVehicleType == VehicleTypes.Tank
+								or p_Bot._ShootPlayerVehicleType == VehicleTypes.MobileArtillery
+								or p_Bot._ShootPlayerVehicleType == VehicleTypes.AntiAir
+								or p_Bot._ShootPlayerVehicleType == VehicleTypes.IFV)
+							then
+								if p_Bot._VehicleSecondaryWeaponTimer == 0 then
+									p_Bot._VehicleSecondaryWeaponTimer = 12.0
+								end
+
+								if p_Bot._VehicleSecondaryWeaponTimer >= 8.0 then
+									p_Bot._VehicleWeaponSlotToUse = 2
+								else
+									p_Bot._VehicleWeaponSlotToUse = 1
+								end
 							else
 								p_Bot._VehicleWeaponSlotToUse = 1
 							end
@@ -105,6 +147,8 @@ function VehicleAttacking:UpdateAttackingVehicle(p_Bot)
 	elseif p_Bot._ShootPlayer.soldier == nil then -- Reset if enemy is dead.
 		p_Bot:AbortAttack()
 	end
+
+	p_Bot._VehicleSecondaryWeaponTimer = math.max(p_Bot._VehicleSecondaryWeaponTimer - Registry.BOT.BOT_UPDATE_CYCLE, 0)
 end
 
 function VehicleAttacking:UpdateAttackStationaryAAVehicle(p_Bot)

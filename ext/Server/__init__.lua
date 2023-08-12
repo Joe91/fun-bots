@@ -12,6 +12,7 @@ require('__shared/Constants/BotColors')
 require('__shared/Constants/BotNames')
 require('__shared/Constants/BotKits')
 require('__shared/Constants/BotWeapons')
+require('__shared/Constants/GmSpecialWeapons')
 require('__shared/Constants/WeaponSets')
 require('__shared/Constants/WeaponTypes')
 require('__shared/Constants/BotAttackModes')
@@ -115,6 +116,7 @@ function FunBotServer:RegisterEvents()
 	Events:Subscribe('CapturePoint:Captured', self, self.OnCapturePointCaptured)
 	Events:Subscribe('Player:EnteredCapturePoint', self, self.OnPlayerEnteredCapturePoint)
 	Events:Subscribe('Vehicle:SpawnDone', self, self.OnVehicleSpawnDone)
+	Events:Subscribe('Vehicle:Destroyed', self, self.OnVehicleDestroyed)
 	Events:Subscribe('Vehicle:Damage', self, self.OnVehicleDamage)
 	Events:Subscribe('Vehicle:Enter', self, self.OnVehicleEnter)
 	Events:Subscribe('Vehicle:Exit', self, self.OnVehicleExit)
@@ -123,12 +125,12 @@ function FunBotServer:RegisterEvents()
 	Events:Subscribe('CombatArea:PlayerDeserting', self, self.OnCombatAreaDeserting)
 	Events:Subscribe('CombatArea:PlayerReturning', self, self.OnCombatAreaReturning)
 	Events:Subscribe('LifeCounter:BaseDestroyed', self, self.OnLifeCounterBaseDestoyed)
-
 end
 
 function FunBotServer:RegisterHooks()
 	Hooks:Install('Soldier:Damage', 100, self, self.OnSoldierDamage)
 	Hooks:Install('EntityFactory:Create', 100, self, self.OnEntityFactoryCreate)
+	Hooks:Install('BulletEntity:Collision', 1, self, self.OnBulletEntityCollision)
 end
 
 function FunBotServer:RegisterCustomEvents()
@@ -444,6 +446,10 @@ function FunBotServer:OnVehicleSpawnDone(p_VehicleEntity)
 	m_GameDirector:OnVehicleSpawnDone(p_VehicleEntity)
 end
 
+function FunBotServer:OnVehicleDestroyed(p_VehicleEntity, p_VehiclePoints, p_HotTeam)
+	m_GameDirector:OnVehicleDestroyed(p_VehicleEntity, p_VehiclePoints, p_HotTeam)
+end
+
 ---VEXT Server Vehicle:Damage Event
 ---@param p_VehicleEntity Entity @`ControllableEntity`
 ---@param p_Damage number
@@ -491,6 +497,27 @@ function FunBotServer:OnEntityFactoryCreate(p_HookCtx, p_EntityData, p_Transform
 
 			m_BotManager:CheckForFlareOrSmoke(s_CreatedEntity)
 		end
+	end
+end
+
+---@param p_HookCtx HookContext
+---@param p_Entity Entity
+---@param p_Hit RayCastHit
+---@param p_GiverInfo DamageGiverInfo
+function FunBotServer:OnBulletEntityCollision(p_HookCtx, p_Entity, p_Hit, p_GiverInfo)
+	if Registry.COMMON.USE_BUGGED_HITBOXES then
+		return
+	end
+	if p_GiverInfo.giver and p_GiverInfo.giver.onlineId == 0 then
+		local s_SyncedGameSettings = ResourceManager:GetSettings("SyncedGameSettings")
+
+		if not s_SyncedGameSettings then return end
+
+		s_SyncedGameSettings = SyncedGameSettings(s_SyncedGameSettings)
+		s_SyncedGameSettings:MakeWritable()
+		s_SyncedGameSettings.allowClientSideDamageArbitration = false
+		p_HookCtx:Call()
+		s_SyncedGameSettings.allowClientSideDamageArbitration = true
 	end
 end
 
@@ -576,7 +603,11 @@ end
 function FunBotServer:OnSyncedGameSettingsCallback(p_SyncedGameSettings)
 	p_SyncedGameSettings = SyncedGameSettings(p_SyncedGameSettings)
 	p_SyncedGameSettings:MakeWritable()
-	p_SyncedGameSettings.allowClientSideDamageArbitration = false
+	if Registry.COMMON.USE_BUGGED_HITBOXES then
+		p_SyncedGameSettings.allowClientSideDamageArbitration = false
+	else
+		p_SyncedGameSettings.allowClientSideDamageArbitration = true
+	end
 end
 
 ---@param p_FiringFunctionData FiringFunctionData|DataContainer

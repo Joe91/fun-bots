@@ -43,23 +43,18 @@ Permissions = {
 	'UserInterface',
 
 	'UserInterface.BotEditor',
-	'UserInterface.BotEditor.SpawnEnemy',
-	'UserInterface.BotEditor.SpawnFriend',
+	'UserInterface.BotEditor.Spawn',
 	'UserInterface.BotEditor.KickAll',
 	'UserInterface.BotEditor.KickTeam',
 	'UserInterface.BotEditor.KillAll',
-	'UserInterface.BotEditor.ToggleRespawn',
-	'UserInterface.BotEditor.ToggleAttack',
+	'UserInterface.BotEditor.ToggleOption',
 
 	'UserInterface.WaypointEditor',
-	'UserInterface.WaypointEditor.Nodes.Client',
-	'UserInterface.WaypointEditor.Nodes.Server',
 	'UserInterface.WaypointEditor.View',
 	'UserInterface.WaypointEditor.Tracing',
-	'UserInterface.WaypointEditor.TraceSaving',
-	'UserInterface.WaypointEditor.SpawnBot',
-	'UserInterface.WaypointEditor.TraceClear',
-	'UserInterface.WaypointEditor.TraceReset',
+	'UserInterface.WaypointEditor.SaveLoad',
+	'UserInterface.WaypointEditor.Reset',
+
 
 	-- Settings.
 	'UserInterface.Settings',

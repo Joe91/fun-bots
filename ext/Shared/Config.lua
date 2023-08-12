@@ -90,6 +90,7 @@ Config = {
 	MaxShootDistanceNoAntiAir = 150,	-- Meters bots in vehicle (no Anti-Air) starts shooting at players 
 	VehicleWaitForPassengersTime = 7.0,	-- Seconds to wait for other passengers 
 	ChopperDriversAttack = false,		-- If false, choppers only attack without gunner on board 
+	VehicleMoveWhileShooting = true,	-- Vehicles like tanks do not stop for shooting 
 	AABots = false,						-- Enable Auto-AA by NyScorpy 
 	MaxDistanceAABots = 300,			-- Max Range of Stationary AA 
 
@@ -130,6 +131,7 @@ Config = {
 	OverWriteBotAttackMode = BotMoveSpeeds.NoMovement,	-- Affects Aiming!!! 0 = no overwrite. 1 = prone, 2 = crouch (good aim), 3 = walk (good aim), 4 = run 
 	SpeedFactor = 1.0,					-- Reduces the movement speed. 1 = normal, 0 = standing 
 	SpeedFactorAttack = 0.6,			-- Reduces the movement speed while attacking. 1 = normal, 0 = standing 
+	SpeedFactorVehicleAttack = 0.6,		-- Reduces the movement speed while attacking in vehicles. 1 = normal, 0 = standing 
 	UseRandomNames = false,				-- Changes names of the bots on every new round. Experimental right now... 
 	MoveSidewards = true,				-- Bots move sidewards 
 	MaxStraigtCycle = 10.0,				-- Max time bots move straight, before sidewards-movement (in sec) 

@@ -212,7 +212,7 @@ function BotManager:OnSoldierDamage(p_HookCtx, p_Soldier, p_Info, p_GiverInfo)
 				p_Info.damage = 0.0
 			end
 		end
-	-- This is a real player; check if the damage was dealt by a bot.
+		-- This is a real player; check if the damage was dealt by a bot.
 	else
 		-- We have a giver.
 		if p_GiverInfo and p_GiverInfo.giver then
@@ -420,7 +420,6 @@ end
 ---Returns the teamId for the team that has the most real players
 ---@return TeamId
 function BotManager:GetPlayerTeam()
-
 	--- Count real players for each team
 	---@type table<TeamId, integer>
 	local s_CountPlayers = {}
@@ -739,14 +738,6 @@ end
 function BotManager:SpawnBot(p_Bot, p_Transform, p_Pose)
 	local s_BotPlayer = p_Bot.m_Player
 
-	if s_BotPlayer.soldier ~= nil then
-		s_BotPlayer.soldier:Destroy()
-	end
-
-	if s_BotPlayer.corpse ~= nil then
-		s_BotPlayer.corpse:Destroy()
-	end
-
 	-- Returns SoldierEntity.
 	local s_BotSoldier = s_BotPlayer:CreateSoldier(s_BotPlayer.selectedKit, p_Transform)
 
@@ -759,7 +750,6 @@ function BotManager:SpawnBot(p_Bot, p_Transform, p_Pose)
 	s_BotSoldier.maxHealth = Config.BotMaxHealth
 
 	s_BotPlayer:SpawnSoldierAt(s_BotSoldier, p_Transform, p_Pose)
-	s_BotPlayer:AttachSoldier(s_BotSoldier)
 end
 
 ---@param p_Player Player
@@ -1028,7 +1018,6 @@ end
 
 ---@param p_Player Player
 function BotManager:EnterVehicle(p_Player)
-
 	local s_VehicleType = m_Vehicles:FindOutVehicleType(p_Player)
 	if s_VehicleType == VehicleTypes.NoVehicle or s_VehicleType == VehicleTypes.MobileArtillery then
 		return

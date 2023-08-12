@@ -48,7 +48,7 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 			if not p_Bot._InvertPathDirection then
 				s_NextPoint = m_NodeCollection:Get(p_Bot:_GetWayIndex(p_Bot._CurrentWayPoint + 1), p_Bot._PathIndex)
 
-			--[[if Config.DebugTracePaths then
+				--[[if Config.DebugTracePaths then
 					NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', p_Bot._PathIndex, p_Bot:_GetWayIndex(p_Bot._CurrentWayPoint + 1), p_Bot.m_Player.soldier.worldTransform.trans, (p_Bot._ObstacleSequenceTimer > 0.0), "Green")
 				end--]]
 			else
@@ -167,7 +167,7 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 
 				if p_Bot._ObstacleSequenceTimer == 0 then -- Step 0
 				elseif p_Bot._ObstacleSequenceTimer > 2.4 then -- Step 4 - repeat afterwards.
-					p_Bot._ObstacleSequenceTimer = 0.0
+					p_Bot._ObstacleSequenceTimer = 0
 					p_Bot:_ResetActionFlag(BotActionFlags.MeleeActive)
 					p_Bot._ObstacleRetryCounter = p_Bot._ObstacleRetryCounter + 1
 				elseif p_Bot._ObstacleSequenceTimer > 1.0 then -- Step 3
@@ -222,7 +222,7 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 							s_PointIncrement = MathUtils:GetRandomInt(-5, 5) -- Go 5 points further.
 							-- Experimental.
 							if s_PointIncrement == 0 then -- We can't have this.
-								s_PointIncrement = -2 -- Go backwards and try again.
+								s_PointIncrement = -2   -- Go backwards and try again.
 							end
 
 							if (Globals.IsConquest or Globals.IsRush) then
@@ -353,7 +353,7 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 					end
 				end
 
-				p_Bot._ObstacleSequenceTimer = 0.0
+				p_Bot._ObstacleSequenceTimer = 0
 				p_Bot:_ResetActionFlag(BotActionFlags.MeleeActive)
 				p_Bot._LastWayDistance = 1000.0
 			end
@@ -420,12 +420,10 @@ function BotMovement:UpdateShootMovement(p_Bot)
 	end
 
 	-- Crouch moving (only mode with modified gun).
-	local s_ActiveWeaponType = p_Bot.m_ActiveWeapon.type
-	if ((s_ActiveWeaponType == WeaponTypes.Sniper or
-		s_ActiveWeaponType == WeaponTypes.Rocket or
-		s_ActiveWeaponType == WeaponTypes.MissileAir or
-		s_ActiveWeaponType == WeaponTypes.MissileLand) and
-		not p_Bot.m_KnifeMode) then -- Don't move while shooting some weapons.
+	if (p_Bot.m_ActiveWeapon and (p_Bot.m_ActiveWeapon.type == WeaponTypes.Sniper or
+				p_Bot.m_ActiveWeapon.type == WeaponTypes.MissileAir or
+				p_Bot.m_ActiveWeapon.type == WeaponTypes.MissileLand) and
+			not p_Bot.m_KnifeMode) then -- Don't move while shooting some weapons.
 		if p_Bot._AttackMode == BotAttackModes.Crouch then
 			if p_Bot.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Crouch then
 				p_Bot.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Crouch, true, true)
@@ -441,7 +439,7 @@ function BotMovement:UpdateShootMovement(p_Bot)
 		local s_TargetTime = 5.0
 		local s_TargetCycles = math.floor(s_TargetTime / Registry.BOT.TRACE_DELTA_SHOOTING)
 
-		if p_Bot.m_KnifeMode then -- Knife Only Mode.
+		if p_Bot.m_KnifeMode then                  -- Knife Only Mode.
 			s_TargetCycles = 1
 			p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.Sprint -- Run towards player.
 		else
@@ -458,8 +456,9 @@ function BotMovement:UpdateShootMovement(p_Bot)
 
 		if #p_Bot._ShootWayPoints > s_TargetCycles and Config.JumpWhileShooting then
 			local s_DistanceDone = p_Bot._ShootWayPoints[#p_Bot._ShootWayPoints].Position:Distance(p_Bot._ShootWayPoints[
-				#p_Bot._ShootWayPoints - s_TargetCycles].Position)
-			if s_DistanceDone < 0.5 then -- No movement was possible. Try to jump over an obstacle.
+			#p_Bot._ShootWayPoints - s_TargetCycles].Position)
+			if s_DistanceDone < 0.5 and p_Bot._DistanceToPlayer > 1.0 then -- No movement was possible. Try to jump over an obstacle.
+				table.remove(p_Bot._ShootWayPoints)
 				p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.Normal
 				p_Bot:_SetInput(EntryInputActionEnum.EIAJump, 1)
 				p_Bot:_SetInput(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1)
@@ -617,7 +616,6 @@ function BotMovement:UpdateYaw(p_Bot)
 
 	p_Bot.m_Player.input.authoritativeAimingYaw = s_TempYaw
 	p_Bot.m_Player.input.authoritativeAimingPitch = p_Bot._TargetPitch
-
 end
 
 function BotMovement:UpdateStaticMovement(p_Bot)
@@ -631,7 +629,7 @@ function BotMovement:UpdateStaticMovement(p_Bot)
 		p_Bot._TargetYaw = p_Bot._TargetPlayer.input.authoritativeAimingYaw
 		p_Bot._TargetPitch = p_Bot._TargetPlayer.input.authoritativeAimingPitch
 
-	-- Mirroring.
+		-- Mirroring.
 	elseif p_Bot.m_ActiveMoveMode == BotMoveModes.Mirror and p_Bot._TargetPlayer ~= nil then
 		---@type EntryInputActionEnum|integer
 		for i = 0, 36 do
@@ -640,7 +638,7 @@ function BotMovement:UpdateStaticMovement(p_Bot)
 
 		p_Bot._TargetYaw = p_Bot._TargetPlayer.input.authoritativeAimingYaw +
 			(
-			(p_Bot._TargetPlayer.input.authoritativeAimingYaw > math.pi) and
+				(p_Bot._TargetPlayer.input.authoritativeAimingYaw > math.pi) and
 				-math.pi or
 				math.pi
 			)

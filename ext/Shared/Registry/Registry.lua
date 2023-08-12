@@ -17,10 +17,14 @@ Registry = {
 		ALLOW_PLAYER_BOT_NAMES = true,
 		-- Collition-raycasts are another type of raycast. Sadly not working atm...
 		USE_COLLITION_RAYCASTS = false,
+		-- Use worse hitboxes but enable bots to use the knive
+		USE_BUGGED_HITBOXES = false,
 		-- Distance commands are heard by bots.
 		COMMAND_DISTANCE = 20,
-		-- Use load of Bundle to fix Bug of weapons disappearing (thanks to Lesley!) !!! THIS MIGHT CAUSE CRASHES !!!
+		-- Use load of Bundle to fix Bug of weapons disappearing (thanks to Lesley!) !!! THIS MIGHT CAUSE CRASHES !!! (for example on MP_Subway)
 		USE_LOAD_BUNDLE_BUGFIX = false,
+		-- Keep the last ticket in conquest for the gamemode counter
+		DONT_SPAWN_BOTS_ON_LAST_CONQUEST_TICKET = true,
 		-- Valid keys can be found here: https://docs.veniceunleashed.net/vext/ref/fb/inputdevicekeys/.
 		BOT_COMMAND_KEY = InputDeviceKeys.IDK_LeftAlt,
 	},
@@ -31,19 +35,18 @@ Registry = {
 		-- Major version.
 		VERSION_MAJ = 2,
 		-- Minor version.
-		VERSION_MIN = 7,
+		VERSION_MIN = 8,
 		-- Patch version.
-		VERSION_PATCH = 1,
+		VERSION_PATCH = 0,
 		-- Additional label for pre-releases and build metadata.
-		VERSION_LABEL = "",
+		VERSION_LABEL = "RC1",
 		-- Current version type of this build.
-		VERSION_TYPE = VersionType.Release,
+		VERSION_TYPE = VersionType.Stable,
 		-- The Version used for the Update-Check.
-		UPDATE_CHANNEL = VersionType.Stable,
+		UPDATE_CHANNEL = VersionType.DevBuild,
 		-- Prints current version in console.
 		CLIENT_SHOW_VERSION_ON_JOIN = false,
 	},
-
 	-- Some Client Variables.
 	CLIENT = {
 		-- Distance a bot tries to revive a player.
@@ -53,7 +56,6 @@ Registry = {
 		-- Time bots will not attack a player when spawned.
 		SPAWN_PROTECTION = 1.5,
 	},
-
 	-- Variables related to raycasting.
 	GAME_RAYCASTING = {
 		MAX_RAYCASTS_PER_PLAYER_PER_CYCLE = 3,
@@ -68,7 +70,6 @@ Registry = {
 		-- Max checks per cycle.
 		BOT_BOT_MAX_CHECKS = 30
 	},
-
 	GAME_DIRECTOR = {
 		UPDATE_OBJECTIVES_CYCLE = 1.5,
 		-- Time after a MCO is considered destroyed.
@@ -80,7 +81,6 @@ Registry = {
 		-- Increments of nodes to search best patch with.
 		NODE_SEARCH_INCREMENTS = 10,
 	},
-
 	VEHICLES = {
 		-- Distance for the "enter vehicle" command.
 		MIN_DISTANCE_VEHICLE_ENTER = 10.0,
@@ -113,7 +113,6 @@ Registry = {
 		-- Seat-check cycle-time.
 		VEHICLE_SEAT_CHECK_CYCLE_TIME = 4.0,
 	},
-
 	-- Bot related.
 	BOT = {
 		-- Update cycle fast.
@@ -127,9 +126,9 @@ Registry = {
 		-- Chance that the bot will teleport when they are stuck in a vehicle.
 		PROBABILITY_TELEPORT_IF_STUCK_IN_VEHICLE = 20,
 		-- At the end of an attack cycle, chance of throwing a grenade.
-		PROBABILITY_THROW_GRENADE = 80,
+		PROBABILITY_THROW_GRENADE = 50,
 		-- The probability to use the rocket instead of the primary.
-		PROBABILITY_SHOOT_ROCKET = 33,
+		PROBABILITY_SHOOT_ROCKET = 25,
 		-- The probability to use the rifle to attack a chopper.
 		PROBABILITY_ATTACK_CHOPPER_WITH_RIFLE = 25,
 		-- If the game mode is Rush or Conquest, change direction if the bot is stuck on non-connecting paths.
@@ -138,10 +137,11 @@ Registry = {
 		TRACE_DELTA_SHOOTING = 0.4,
 		-- The max time a bot tries to move to the repair-vehicle.
 		MAX_TIME_TRY_REPAIR = 10,
+		-- The minimum distance to throw a nade
+		MIN_DISTANCE_NADE = 12,
 		-- Advanced aiming makes a difference on huge distances, but costs more performance.
 		USE_ADVANCED_AIMING = false,
 	},
-
 	-- Bot team balancing (only in keep_playercount - spawn-mode)
 	BOT_TEAM_BALANCING = {
 		-- Minimum amount of players required before balancing bots across teams.
@@ -151,7 +151,6 @@ Registry = {
 		-- Note: Only for mode keep_playercount.
 		ALLOWED_DIFFERENCE = 1,
 	},
-
 	-- Bot spawning.
 	BOT_SPAWN = {
 		-- Time between a level loading and the first bot spawning.

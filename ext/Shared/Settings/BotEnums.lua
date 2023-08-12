@@ -51,7 +51,9 @@ VehicleTypes = {
 	StationaryAA = 8,
 	StationaryLauncher = 9,
 	MobileArtillery = 10,
-	Gadgets = 11
+	Gadgets = 11,
+	IFV = 12,
+	ScoutChopper = 13,
 }
 
 ---@enum VehicleTerrains

@@ -278,7 +278,6 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 					end
 
 					goto continue_inner_loop
-
 				end
 
 
@@ -425,8 +424,7 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 		return -- No vehicle found.
 	end
 
-	if not Config.UseAirVehicles and
-		(s_VehicleData.Type == VehicleTypes.Plane or s_VehicleData.Type == VehicleTypes.Chopper) then
+	if not Config.UseAirVehicles and m_Vehicles:IsAirVehicle(s_VehicleData) then
 		return -- Not allowed to use.
 	end
 
@@ -446,6 +444,33 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 
 	if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.StationaryAA) then
 		table.insert(self.m_SpawnableStationaryAas[s_VehicleData.Team], p_Entity)
+	end
+end
+
+function GameDirector:OnVehicleDestroyed(p_Entity, p_VehiclePoints, p_HotTeam)
+	p_Entity = ControllableEntity(p_Entity)
+	local s_VehicleData = m_Vehicles:GetVehicleByEntity(p_Entity)
+	if s_VehicleData ~= nil then
+		for l_Team = TeamId.Team1, Globals.NrOfTeams do
+			if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.StationaryAA) then
+				for l_Index, l_Entity in pairs(self.m_SpawnableStationaryAas[l_Team]) do
+					if (l_Entity.uniqueId == p_Entity.uniqueId) and (l_Entity.instanceId == p_Entity.instanceId) then
+						table.remove(self.m_SpawnableStationaryAas[l_Team], l_Index)
+					end
+				end
+			else
+				for l_Index, l_Entity in pairs(self.m_SpawnableVehicles[l_Team]) do
+					if (l_Entity.uniqueId == p_Entity.uniqueId) and (l_Entity.instanceId == p_Entity.instanceId) then
+						table.remove(self.m_SpawnableVehicles[l_Team], l_Index)
+					end
+				end
+				for l_Index, l_Entity in pairs(self.m_AvailableVehicles[l_Team]) do
+					if (l_Entity.uniqueId == p_Entity.uniqueId) and (l_Entity.instanceId == p_Entity.instanceId) then
+						table.remove(self.m_AvailableVehicles[l_Team], l_Index)
+					end
+				end
+			end
+		end
 	end
 end
 
@@ -532,7 +557,6 @@ function GameDirector:CheckForExecution(p_Point, p_TeamId, p_InVehicle)
 		end
 
 		return false
-
 	elseif s_Action.type == "vehicle" then
 		if p_InVehicle then
 			return false
@@ -548,7 +572,6 @@ function GameDirector:CheckForExecution(p_Point, p_TeamId, p_InVehicle)
 			end
 		end
 		return false
-
 	elseif s_Action.type == "exit" then
 		if p_InVehicle then
 			return true
@@ -587,7 +610,7 @@ function GameDirector:FindClosestPath(p_Trans, p_VehiclePath, p_DetailedSearch, 
 					end
 				end
 
-				if p_VehiclePath then
+				if p_VehiclePath and s_isVehiclePath then
 					if s_isVehiclePath then
 						if (p_VehicleTerrain == VehicleTerrains.Air and s_isAirPath) or
 							(p_VehicleTerrain == VehicleTerrains.Water and s_isWaterPath) or
@@ -622,33 +645,31 @@ function GameDirector:FindClosestPath(p_Trans, p_VehiclePath, p_DetailedSearch, 
 							end
 						end
 					end
-				else -- Not in vehicle.
-					if not s_isAirPath and not s_isWaterPath then
-						if p_DetailedSearch then
-							for i = 1, #l_Waypoints, Registry.GAME_DIRECTOR.NODE_SEARCH_INCREMENTS do
-								local s_NewDistance = Utilities:DistanceFast(l_Waypoints[i].Position, p_Trans)
-
-								if s_ClosestDistance == nil then
-									s_ClosestDistance = s_NewDistance
-									s_ClosestPathNode = l_Waypoints[i]
-								else
-									if s_NewDistance < s_ClosestDistance then
-										s_ClosestDistance = s_NewDistance
-										s_ClosestPathNode = l_Waypoints[i]
-									end
-								end
-							end
-						else
-							local s_NewDistance = Utilities:DistanceFast(l_Waypoints[1].Position, p_Trans)
+				elseif not p_VehiclePath and not s_isVehiclePath then -- Not in vehicle. Only use infantery-paths
+					if p_DetailedSearch then
+						for i = 1, #l_Waypoints, Registry.GAME_DIRECTOR.NODE_SEARCH_INCREMENTS do
+							local s_NewDistance = Utilities:DistanceFast(l_Waypoints[i].Position, p_Trans)
 
 							if s_ClosestDistance == nil then
 								s_ClosestDistance = s_NewDistance
-								s_ClosestPathNode = l_Waypoints[1]
+								s_ClosestPathNode = l_Waypoints[i]
 							else
 								if s_NewDistance < s_ClosestDistance then
 									s_ClosestDistance = s_NewDistance
-									s_ClosestPathNode = l_Waypoints[1]
+									s_ClosestPathNode = l_Waypoints[i]
 								end
+							end
+						end
+					else
+						local s_NewDistance = Utilities:DistanceFast(l_Waypoints[1].Position, p_Trans)
+
+						if s_ClosestDistance == nil then
+							s_ClosestDistance = s_NewDistance
+							s_ClosestPathNode = l_Waypoints[1]
+						else
+							if s_NewDistance < s_ClosestDistance then
+								s_ClosestDistance = s_NewDistance
+								s_ClosestPathNode = l_Waypoints[1]
 							end
 						end
 					end
@@ -701,7 +722,6 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 					end
 				end
 			else
-
 				-- Check for vehicle of real player.
 				if l_Player.controlledControllable ~= nil and not l_Player.controlledControllable:Is("ServerSoldierEntity") then
 					if l_Player.controlledEntryId == 0 then
@@ -821,7 +841,6 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 			s_SpawnAtBase = MathUtils:GetRandomInt(1, 100) <= Registry.BOT_SPAWN.PROBABILITY_BASE_VEHICLE_SPAWN
 		else
 			s_SpawnAtBase = MathUtils:GetRandomInt(1, 100) <= Registry.BOT_SPAWN.PROBABILITY_BASE_SPAWN
-
 		end
 
 		if s_SpawnAtBase then

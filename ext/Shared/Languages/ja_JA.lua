@@ -1,14 +1,12 @@
 local code = 'ja_JA' -- Add/replace the xx_XX here with your language code (like de_DE, en_US, or other)!
 
 -- GENERAL
-Language:add(code, "Bot Weapon", "ボット武器")
-Language:add(code, "Select the weapon the bots use", "ボットが使用する武器を選択します")
-Language:add(code, "Bot Kit", "ボットキット")
+Language:add(code, "Bot Weapon", "ボットの武器")
+Language:add(code, "Select the weapon the bots use", "ボットの武器を選べ")
+Language:add(code, "Bot Kit", "ボットのキット")
 Language:add(code, "The Kit of the Bots", "ボットのキット")
 Language:add(code, "Bot Color", "ボットの色")
 Language:add(code, "The Color of the Bots", "ボットの色")
-Language:add(code, "Zombie Mode", "ゾンビモード")
-Language:add(code, "Zombie Bot Mode", "ゾンビボットモード")
 
 -- DIFFICULTY
 Language:add(code, "Bot Aim Worsening", "ボットエイムの悪化")
@@ -414,3 +412,7 @@ Language:add(code, "base us stage 4", "ベースアスステージ4")
 Language:add(code, "base us stage 5", "ベースアスステージ5")
 Language:add(code, "Objective", "目的")
 Language:add(code, "BOTH", "両方")
+Language:add(code, "Vehicles move while shooting", "撮影中に車両が動く")
+Language:add(code, "Vehicles like tanks do not stop for shooting", "戦車などの車両は射撃のために停止しません")
+Language:add(code, "Speed factor vehicle attack", "速度因子車両攻撃")
+Language:add(code, "Reduces the movement speed while attacking in vehicles. 1 = normal, 0 = standing", "乗り物で攻撃中の移動速度を低下させます。 1 = 通常、0 = 立っている")

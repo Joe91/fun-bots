@@ -19,7 +19,6 @@ SettingsDefinition = {
 		EXPERT = "Expert",
 		OTHER = "Other"
 	},
-
 	--[[
 		@property: Elements
 	]]
@@ -920,6 +919,17 @@ SettingsDefinition = {
 			Category = "VEHICLE"
 		},
 		{
+			Name = "VehicleMoveWhileShooting",
+			Text = "Vehicles move while shooting",
+			---@type Type|integer
+			Type = Type.Boolean,
+			Value = Config.VehicleMoveWhileShooting,
+			Description = "Vehicles like tanks do not stop for shooting",
+			Default = true,
+			UpdateFlag = UpdateFlag.None,
+			Category = "VEHICLE"
+		},
+		{
 			Name = "AABots",
 			Text = "Activate Auto-AA",
 			---@type Type|integer
@@ -1315,6 +1325,18 @@ SettingsDefinition = {
 			Type = Type.Float,
 			Value = Config.SpeedFactorAttack,
 			Description = "Reduces the movement speed while attacking. 1 = normal, 0 = standing",
+			Reference = Range(0.00, 1.00, 0.10),
+			Default = 0.6,
+			UpdateFlag = UpdateFlag.None,
+			Category = "ADVANCED"
+		},
+		{
+			Name = "SpeedFactorVehicleAttack",
+			Text = "Speed factor vehicle attack",
+			---@type Type|integer
+			Type = Type.Float,
+			Value = Config.SpeedFactorVehicleAttack,
+			Description = "Reduces the movement speed while attacking in vehicles. 1 = normal, 0 = standing",
 			Reference = Range(0.00, 1.00, 0.10),
 			Default = 0.6,
 			UpdateFlag = UpdateFlag.None,

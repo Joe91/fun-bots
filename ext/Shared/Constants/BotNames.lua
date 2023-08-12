@@ -154,6 +154,8 @@ BotNames = {
 	'MrDonPotato',
 	'KrazyIvan',
 	'GaryTheNoTrashCougar',
+	'Augusta',
+	'Rolling Waves',
 	-- Supporters.
 	'jacky890818',
 	'Cosmin',

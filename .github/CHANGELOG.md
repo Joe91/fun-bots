@@ -1,62 +1,77 @@
-[![Support Server](https://img.shields.io/discord/862736286774198322.svg?label=Discord&logo=Discord&colorB=7289da&style=for-the-badge)](https://discord.gg/K44VsQsKnx)
+[![Support Server](https://img.shields.io/discord/862736286774198322.svg?label=Discord&logo=Discord&colorB=7289da&style=for-the-badge)](https://discord.com/invite/FKamccAEqz)
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg?style=for-the-badge)](https://www.paypal.me/joe91de)
 ![Image](https://img.shields.io/github/downloads/Joe91/fun-bots/total?style=for-the-badge)
 ![Image](https://img.shields.io/github/stars/Joe91/fun-bots?style=for-the-badge)
 
-## Welcome to the changelogs for release **V2.7.1**
-This is the changelog for the version V2.7.1 Don't forget to [join us on Discord](https://discord.com/invite/FKamccAEqz)
+## Welcome to the changelogs for release **V2.8**
+This is the changelog for the version V2.8 Don't forget to [join us on Discord](https://discord.com/invite/FKamccAEqz)
 
 ## Changelog
 
 ### New features / improvements
-* real ticket-count on conquest thanks to VU bugfix
-* updated chinese translation (by Augusta)
-* auto-translation-scripts (by [Jo�o Vitor](https://battlelog.battlefield.com/bf4/soldier/JOAO_SSOUZA/stats/1448854914/ps3/))
-* add Japanese and Portuguese
-* massive rework of all python-scripts (by [Jo�o Vitor](https://battlelog.battlefield.com/bf4/soldier/JOAO_SSOUZA/stats/1448854914/ps3/))
-* temporary workaround for not working collition-raycasts
-* new setting and probability for snipers to attack choppers
-* limit number of Bots in a vehicle (new config-value)
-* fix Timout when saving huge paths #204
-* fix compatibility with [More Vehicles-Mod](https://github.com/KrazyIvan777/CQ-MoreVehicles)
-* Option to prevent bots from attacking other players
-* usage of Mobile Artillery possible (#200)
-* jets and choppers also use secondary weapon
-* Bots with missiles attack on larger distances
-* air-missiles of bots get used much better now
-* improve Rush-Logic with new VEXT-Version
-* use more stable Rush-Events with new VEXT-Version
-* New menu for Trace-Creation - no need to use the console anymore
-* Bots now try to use all vehicles in a base
-* Some variation in the appearance of vehicles (idea from KrazyIvan777)
-* Jets are focused on air-targets and more active.
-* Support separated traces for each gamemode, even if compatible with other gamemode
-* Removed Zombie-Option from fun-bots.
+* remove Zombie-mode (will soon be a separated mod, currently on a branch)
+* real Hitboxes thanks to crazy workaround by Bree_Arnold
+* option to use old hitboxes (and enable bots to use the knive again) in Registry added
+* fix and update permissions in UI
+* add option for vehicles to move while attacking (default active)
+* improve rocket- and nade-handling
+* fix for end-of-round-crash on conquest
+* Option in Registry added to prevent bots from spawning on the last ticket in conquest
+* improve compatibility to more-gore-mode
+* vehicle-weapon-improvement and code-cleanup by tagener-noisu #295
+* Real weapondata and aimin in Gunmaster #292
+* Merged pull request #301 from tagener-noisu min nade distance for bots (also with Registry-Entry)
+* Merged pull request #300 from tagener-noisu trace navigation
+* Mergeed pull request #303 from tagener-noisu ifv_tows weapon usage
 
 ### Bug fixes
-* fix scavenger revive
-* fix usage of javelin
-* some attack- and aiming-issues with vehicles
-* Don't spawn new bots when kicked by RCON
-* some minor fixes in the trace-creation
-* fix backwards steering of vehicles
-* fix missing Path-Menu-Commands
-* fix Config.lua not getting applied as wanted
-* fix wrong timer init
+* fix meele attack
+* missing nil-check in vehicle-movement
+* fix bots getting stuck on vehicle-paths #297
+* overwrite of loop / reverse path does not work #304
 
 ### New maps
-* Rush for Talah Market
-* Rush for Epicenter (by ghost runaway)
-* several New maps for GunMaster by Augusta (MP_013, MP_017, MP_Subway, XP5_002, XP5_003)
+* Gunmaster for MP_001 by Augusta
+* Gunmaster for MP_003 by Augusta
+* Gunmaster for MP_007 by Augusta
+* Gunmaster for MP_011 by Augusta
+* Gunmaster for MP_012 by Augusta
+* Gunmaster for MP_018 by Augusta
+* Rush for XP4_FD by Rolling Wave
+* Rush for XP4_Parl by Rolling Wave
+* Rush for XP4_Quake by Rolling Wave
+* Rush for XP3_Desert by Rolling Wave
+* Rush for XP3_Valley by Rolling Wave
+* SquadRush for MP_011 by Odysseus
+* SquadRush for XP3_Shield by Odysseus
+* Scavenger for XP4_Rubble by Odysseus
+* SquadRush for XP3_Valley by day of light
+* Rush for XP5_002 by Sunseeker
+* Rush for XP5_003 by Sunseeker
+* Rush for XP3_Shield by Sunseeker
+* SquadRush XP2_Factory by Sunseeker
+* SquadRush XP2_Office by Sunseeker
+* SquadRush XP5_002 by Sunseeker
+* SquadRush XP5_004 by Sunseeker
+* SquadRush for XP3_Alborz by Every_knows9
+* SquadRush for MP_001 by Every_knows9
+* SquadRush for MP_003 by Every_knows9
+* SquadRush for MP_007 by Every_knows9
+* SquadRush for MP_017 by Every_knows9
+* SquadRush for MP_Subway by Every_knows9
+* SquadRush for XP3_Desert by Every_knows9
 
 ### Updated maps
-* Fix Wake-Island Rush
-* New paths for mobile arillery on XP3 Desert Conquest Small (by KrazyIvan777)
-* New paths for mobile arillery on XP3 Shield Conquest Small (by KrazyIvan777)
-* New paths for mobile arillery on XP3 Alborz Conquest Small (by KrazyIvan777)
-* New paths for mobile arillery on XP3 Valley Conquest Small (by KrazyIvan777)
-* New and improved paths for SP_Jet TDM (by Augusta)
-* New and improved paths for SP_Valley TDM (by Augusta)
+* Rush for MP_001 by Rolling Wave
+* Rush for MP_012 by Rolling Wave
+* Rush for MP_013 by Rolling Wave
+* Rush for MP_011 by Odysseus
+* Rush for MP_017 by Odysseus
+* Rush for MP_018 by Odysseus
+* TDM XP2_Factory Rework by Sunseeker
+* Rush for XP1_003 Rework by Sunseeker
+* Rush for XP1_001 Rework by Sunseeker
+* Rush for XP4_Quake Rework by Sunseeker
 
 ### Documentation update
 

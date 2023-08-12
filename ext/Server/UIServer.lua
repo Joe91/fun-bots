@@ -42,36 +42,54 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		return
 	end
 
-	-- Low permission for Comm-Screen. To-do: for all?
-	if not Config.AllowCommForAll and PermissionManager:HasPermission(p_Player, 'Comm') == false then
-		ChatManager:SendMessage('You have no permissions for this action.', p_Player)
-		return
-	end
-
 	local request = json.decode(p_Data)
 
 	-- Comm Screen.
 	if request.action == 'exit_vehicle' then
+		if not Config.AllowCommForAll and PermissionManager:HasPermission(p_Player, 'Comm') == false then
+			ChatManager:SendMessage('You have no permissions for this action.', p_Player)
+			return
+		end
 		BotManager:ExitVehicle(p_Player)
 		NetEvents:SendTo('UI_CommoRose', p_Player, "false")
 		return
 	elseif request.action == 'drop_ammo' then
+		if not Config.AllowCommForAll and PermissionManager:HasPermission(p_Player, 'Comm') == false then
+			ChatManager:SendMessage('You have no permissions for this action.', p_Player)
+			return
+		end
 		BotManager:Deploy(p_Player, "ammo")
 		NetEvents:SendTo('UI_CommoRose', p_Player, "false")
 		return
 	elseif request.action == 'drop_medkit' then
+		if not Config.AllowCommForAll and PermissionManager:HasPermission(p_Player, 'Comm') == false then
+			ChatManager:SendMessage('You have no permissions for this action.', p_Player)
+			return
+		end
 		BotManager:Deploy(p_Player, "medkit")
 		NetEvents:SendTo('UI_CommoRose', p_Player, "false")
 		return
 	elseif request.action == 'enter_vehicle' then
+		if not Config.AllowCommForAll and PermissionManager:HasPermission(p_Player, 'Comm') == false then
+			ChatManager:SendMessage('You have no permissions for this action.', p_Player)
+			return
+		end
 		BotManager:EnterVehicle(p_Player)
 		NetEvents:SendTo('UI_CommoRose', p_Player, "false")
 		return
 	elseif request.action == 'repair_vehicle' then
+		if not Config.AllowCommForAll and PermissionManager:HasPermission(p_Player, 'Comm') == false then
+			ChatManager:SendMessage('You have no permissions for this action.', p_Player)
+			return
+		end
 		BotManager:RepairVehicle(p_Player)
 		NetEvents:SendTo('UI_CommoRose', p_Player, "false")
 		return
 	elseif request.action == 'attack_objective' then
+		if not Config.AllowCommForAll and PermissionManager:HasPermission(p_Player, 'Comm') == false then
+			ChatManager:SendMessage('You have no permissions for this action.', p_Player)
+			return
+		end
 		-- Change Commo-rose.
 		NetEvents:SendTo('UI_CommoRose', p_Player, {
 			Top = {
@@ -83,13 +101,16 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 				{
 					Action = 'attack_a',
 					Label = Language:I18N('A')
-				}, {
+				},
+				{
 					Action = 'attack_b',
 					Label = Language:I18N('B')
-				}, {
+				},
+				{
 					Action = 'attack_c',
 					Label = Language:I18N('C')
-				}, {
+				},
+				{
 					Action = 'attack_d',
 					Label = Language:I18N('D')
 				}
@@ -102,13 +123,16 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 				{
 					Action = 'attack_e',
 					Label = Language:I18N('E')
-				}, {
+				},
+				{
 					Action = 'attack_f',
 					Label = Language:I18N('F')
-				}, {
+				},
+				{
 					Action = 'attack_g',
 					Label = Language:I18N('G')
-				}, {
+				},
+				{
 					Action = 'attack_h',
 					Label = Language:I18N('H')
 				}
@@ -120,6 +144,10 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		})
 		return
 	elseif request.action == 'defend_objective' then
+		if not Config.AllowCommForAll and PermissionManager:HasPermission(p_Player, 'Comm') == false then
+			ChatManager:SendMessage('You have no permissions for this action.', p_Player)
+			return
+		end
 		NetEvents:SendTo('UI_CommoRose', p_Player, {
 			Top = {
 				Action = 'not_implemented',
@@ -130,13 +158,16 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 				{
 					Action = 'defend_a',
 					Label = Language:I18N('A')
-				}, {
+				},
+				{
 					Action = 'defend_b',
 					Label = Language:I18N('B')
-				}, {
+				},
+				{
 					Action = 'defend_c',
 					Label = Language:I18N('C')
-				}, {
+				},
+				{
 					Action = 'defend_d',
 					Label = Language:I18N('D')
 				}
@@ -149,13 +180,16 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 				{
 					Action = 'defend_e',
 					Label = Language:I18N('E')
-				}, {
+				},
+				{
 					Action = 'defend_f',
 					Label = Language:I18N('F')
-				}, {
+				},
+				{
 					Action = 'defend_g',
 					Label = Language:I18N('G')
-				}, {
+				},
+				{
 					Action = 'defend_h',
 					Label = Language:I18N('H')
 				}
@@ -167,36 +201,57 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		})
 		return
 	elseif string.find(request.action, 'attack_') ~= nil then
+		if not Config.AllowCommForAll and PermissionManager:HasPermission(p_Player, 'Comm') == false then
+			ChatManager:SendMessage('You have no permissions for this action.', p_Player)
+			return
+		end
 		local s_Objective = request.action:split('_')[2]
 		BotManager:Attack(p_Player, s_Objective)
 		NetEvents:SendTo('UI_CommoRose', p_Player, "false")
 		return
 	elseif string.find(request.action, "defend_") ~= nil then
+		if not Config.AllowCommForAll and PermissionManager:HasPermission(p_Player, 'Comm') == false then
+			ChatManager:SendMessage('You have no permissions for this action.', p_Player)
+			return
+		end
 		local s_Objective = request.action:split('_')[2]
 		BotManager:Attack(p_Player, s_Objective)
 		NetEvents:SendTo('UI_CommoRose', p_Player, "false")
 		return
 	elseif request.action == 'back_to_comm' then
+		if not Config.AllowCommForAll and PermissionManager:HasPermission(p_Player, 'Comm') == false then
+			ChatManager:SendMessage('You have no permissions for this action.', p_Player)
+			return
+		end
 		self:_onUIRequestCommoRoseShow(p_Player)
 		return
 	end
 
 	-- General Commands.
-	if PermissionManager:HasPermission(p_Player, 'UserInterface.BotEditor') == false then
+	if PermissionManager:HasPermission(p_Player, 'UserInterface') == false then
 		ChatManager:SendMessage('You have no permissions for this action.', p_Player)
 		return
 	end
 
 	-- Settings.
 	if request.action == 'request_settings' then
+		if PermissionManager:HasPermission(p_Player, 'UserInterface.Settings') == false then
+			ChatManager:SendMessage('You have no permissions for this action.', p_Player)
+			return
+		end
 		if Config.Language == nil then
 			Config.Language = 'en_US'
 		end
 
 		-- request.opened
 		NetEvents:SendTo('UI_Settings', p_Player, Config)
-	-- Bots.
+		return
+		-- Bots.
 	elseif request.action == 'bot_spawn_default' then
+		if PermissionManager:HasPermission(p_Player, 'UserInterface.BotEditor.Spawn') == false then
+			ChatManager:SendMessage('You have no permissions for this action.', p_Player)
+			return
+		end
 		local amount = tonumber(request.value)
 		local team = p_Player.teamId
 		Globals.SpawnMode = "manual"
@@ -206,11 +261,21 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		else
 			BotSpawner:SpawnWayBots(p_Player, amount, true, 0, 0, TeamId.Team1)
 		end
+		return
 	elseif request.action == 'bot_spawn_friend' then
+		if PermissionManager:HasPermission(p_Player, 'UserInterface.BotEditor.Spawn') == false then
+			ChatManager:SendMessage('You have no permissions for this action.', p_Player)
+			return
+		end
 		local amount = tonumber(request.value)
 		Globals.SpawnMode = "manual"
 		BotSpawner:SpawnWayBots(p_Player, amount, true, 0, 0, p_Player.teamId)
+		return
 	elseif request.action == 'bot_spawn_path' then -- To-do: what's the difference? Make a function to spawn bots on a fixed way instead?
+		if PermissionManager:HasPermission(p_Player, 'UserInterface.BotEditor.Spawn') == false then
+			ChatManager:SendMessage('You have no permissions for this action.', p_Player)
+			return
+		end
 		local amount = 1
 		local indexOnPath = tonumber(request.pointindex) or 1
 		local index = tonumber(request.value)
@@ -222,10 +287,20 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		end
 
 		BotSpawner:SpawnWayBots(p_Player, amount, false, index, indexOnPath, s_TeamId)
+		return
 	elseif request.action == 'bot_kick_all' then
+		if PermissionManager:HasPermission(p_Player, 'UserInterface.BotEditor.KickAll') == false then
+			ChatManager:SendMessage('You have no permissions for this action.', p_Player)
+			return
+		end
 		Globals.SpawnMode = "manual"
 		BotManager:DestroyAll()
+		return
 	elseif request.action == 'bot_kick_team' then
+		if PermissionManager:HasPermission(p_Player, 'UserInterface.BotEditor.KickTeam') == false then
+			ChatManager:SendMessage('You have no permissions for this action.', p_Player)
+			return
+		end
 		Globals.SpawnMode = "manual"
 		local teamNumber = tonumber(request.value)
 
@@ -234,10 +309,20 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		elseif teamNumber == 2 then
 			BotManager:DestroyAll(nil, TeamId.Team2)
 		end
+		return
 	elseif request.action == 'bot_kill_all' then
+		if PermissionManager:HasPermission(p_Player, 'UserInterface.BotEditor.KillAll') == false then
+			ChatManager:SendMessage('You have no permissions for this action.', p_Player)
+			return
+		end
 		Globals.SpawnMode = "manual"
 		BotManager:KillAll()
+		return
 	elseif request.action == 'bot_respawn' then -- Toggle this function.
+		if PermissionManager:HasPermission(p_Player, 'UserInterface.BotEditor.ToggleOption') == false then
+			ChatManager:SendMessage('You have no permissions for this action.', p_Player)
+			return
+		end
 		local respawning = not Globals.RespawnWayBots
 		Globals.RespawnWayBots = respawning
 		BotManager:SetOptionForAll('respawn', respawning)
@@ -247,7 +332,12 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		else
 			ChatManager:Yell(Language:I18N('Bot respawn deactivated!', request.action), 2.5)
 		end
+		return
 	elseif request.action == 'bot_attack' then -- Toggle this function.
+		if PermissionManager:HasPermission(p_Player, 'UserInterface.BotEditor.ToggleOption') == false then
+			ChatManager:SendMessage('You have no permissions for this action.', p_Player)
+			return
+		end
 		local attack = not Globals.AttackWayBots
 		Globals.AttackWayBots = attack
 		BotManager:SetOptionForAll('shoot', attack)
@@ -257,46 +347,103 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		else
 			ChatManager:Yell(Language:I18N('Bots will not attack!', request.action), 2.5)
 		end
-	-- Trace.
+		return
+
+		-- Trace.
 	elseif request.action == 'trace_start' then
+		if PermissionManager:HasPermission(p_Player, 'UserInterface.WaypointEditor.Tracing') == false then
+			ChatManager:SendMessage('You have no permissions for this action.', p_Player)
+			return
+		end
 		m_NodeEditor:StartTrace(p_Player)
-	-- NetEvents:SendToLocal('ClientNodeEditor:StartTrace', p_Player)
+		return
 	elseif request.action == 'trace_end' then
+		if PermissionManager:HasPermission(p_Player, 'UserInterface.WaypointEditor.Tracing') == false then
+			ChatManager:SendMessage('You have no permissions for this action.', p_Player)
+			return
+		end
 		m_NodeEditor:EndTrace(p_Player)
-	-- NetEvents:SendToLocal('ClientNodeEditor:EndTrace', p_Player)
+		return
 	elseif request.action == 'trace_save' then
+		if PermissionManager:HasPermission(p_Player, 'UserInterface.WaypointEditor.Tracing') == false then
+			ChatManager:SendMessage('You have no permissions for this action.', p_Player)
+			return
+		end
 		local s_Index = tonumber(request.value)
 		m_NodeEditor:SaveTrace(p_Player, s_Index)
-	-- NetEvents:SendToLocal('ClientNodeEditor:SaveTrace', p_Player, s_Index)
+		return
 	elseif request.action == 'trace_clear' then
+		if PermissionManager:HasPermission(p_Player, 'UserInterface.WaypointEditor.Tracing') == false then
+			ChatManager:SendMessage('You have no permissions for this action.', p_Player)
+			return
+		end
 		m_NodeEditor:ClearTrace(p_Player)
-	-- NetEvents:SendToLocal('ClientNodeEditor:ClearTrace', p_Player)
+		return
 	elseif request.action == 'trace_reset_all' then
+		if PermissionManager:HasPermission(p_Player, 'UserInterface.WaypointEditor.Reset') == false then
+			ChatManager:SendMessage('You have no permissions for this action.', p_Player)
+			return
+		end
 		m_NodeCollection:Clear()
 		NetEvents:BroadcastLocal('NodeCollection:Clear')
+		return
 	elseif request.action == 'waypoints_server_load' then
+		if PermissionManager:HasPermission(p_Player, 'UserInterface.WaypointEditor.SaveLoad') == false then
+			ChatManager:SendMessage('You have no permissions for this action.', p_Player)
+			return
+		end
 		m_NodeCollection:Load()
+		return
 	elseif request.action == 'waypoints_server_save' then
+		if PermissionManager:HasPermission(p_Player, 'UserInterface.WaypointEditor.SaveLoad') == false then
+			ChatManager:SendMessage('You have no permissions for this action.', p_Player)
+			return
+		end
 		m_NodeCollection:Save()
+		return
 	elseif request.action == 'waypoints_show_spawns' then
+		if PermissionManager:HasPermission(p_Player, 'UserInterface.WaypointEditor.View') == false then
+			ChatManager:SendMessage('You have no permissions for this action.', p_Player)
+			return
+		end
 		Config.DrawSpawnPoints = not Config.DrawSpawnPoints
 		NetEvents:SendToLocal('WriteClientSettings', p_Player, Config, false)
+		return
 	elseif request.action == 'waypoints_show_lines' then
+		if PermissionManager:HasPermission(p_Player, 'UserInterface.WaypointEditor.View') == false then
+			ChatManager:SendMessage('You have no permissions for this action.', p_Player)
+			return
+		end
 		Config.DrawWaypointLines = not Config.DrawWaypointLines
 		NetEvents:SendToLocal('WriteClientSettings', p_Player, Config, false)
+		return
 	elseif request.action == 'waypoints_show_labels' then
+		if PermissionManager:HasPermission(p_Player, 'UserInterface.WaypointEditor.View') == false then
+			ChatManager:SendMessage('You have no permissions for this action.', p_Player)
+			return
+		end
 		Config.DrawWaypointIDs = not Config.DrawWaypointIDs
 		NetEvents:SendToLocal('WriteClientSettings', p_Player, Config, false)
-	-- Waypoints-Editor
+		return
+		-- Waypoints-Editor
 	elseif request.action == 'request_waypoints_editor' then
+		if PermissionManager:HasPermission(p_Player, 'UserInterface.WaypointEditor') == false then
+			ChatManager:SendMessage('You have no permissions for this action.', p_Player)
+			return
+		end
 		m_NodeEditor:OnOpenEditor(p_Player)
 		NetEvents:SendTo('UI_Waypoints_Editor', p_Player, true)
+		return
 	elseif request.action == 'disable_waypoint_editor' then
+		-- always allow to close editor
 		m_NodeEditor:OnCloseEditor(p_Player)
 		NetEvents:SendTo('UI_Waypoints_Disable', p_Player)
+		return
 	elseif request.action == 'hide_waypoints_editor' then
+		-- always allow to hide editor
 		m_NodeEditor:OnCloseEditor(p_Player)
 		NetEvents:SendTo('UI_Waypoints_Editor', p_Player, false)
+		return
 	else
 		ChatManager:Yell(Language:I18N('%s is currently not implemented', request.action), 2.5)
 	end
@@ -344,13 +491,16 @@ function FunBotUIServer:_onUIRequestCommoRoseShow(p_Player, p_Data)
 			{
 				Action = 'exit_vehicle',
 				Label = Language:I18N('Exit Vehicle')
-			}, {
+			},
+			{
 				Action = 'enter_vehicle',
 				Label = Language:I18N('Enter Vehicle')
-			}, {
+			},
+			{
 				Action = 'drop_ammo',
 				Label = Language:I18N('Drop Ammo')
-			}, {
+			},
+			{
 				Action = 'drop_medkit',
 				Label = Language:I18N('Drop Medkit')
 			}
@@ -363,13 +513,16 @@ function FunBotUIServer:_onUIRequestCommoRoseShow(p_Player, p_Data)
 			{
 				Action = 'attack_objective',
 				Label = Language:I18N('Attack Objective')
-			}, {
+			},
+			{
 				Action = 'defend_objective',
 				Label = Language:I18N('Defend Objective'),
-			}, {
+			},
+			{
 				Action = 'repair_vehicle',
 				Label = Language:I18N('Repair Vehicle')
-			}, {
+			},
+			{
 				Action = 'not_implemented',
 				Label = Language:I18N('')
 			}
