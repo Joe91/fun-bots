@@ -64,8 +64,11 @@ function ChatCommands:Execute(p_Parts, p_Player)
 		if p_Player.attachedControllable ~= nil then
 			local s_VehicleName = VehicleEntityData(p_Player.controlledControllable.data).controllableType:gsub(".+/.+/", "")
 			local s_Pos = p_Player.controlledControllable.transform.forward
+			local s_PlayerPos = p_Player.soldier.worldTransform.trans
+			print("-----------------------------")
 			print(s_VehicleName)
 			local s_VehicleEntity
+			print(s_PlayerPos)
 
 			-- Vehicle found.
 			print(p_Player.controlledControllable.physicsEntityBase.partCount)
@@ -79,10 +82,45 @@ function ChatCommands:Execute(p_Parts, p_Player)
 						return -1
 					end
 
-					print(p_Player.controlledControllable.physicsEntityBase:GetPart(j).typeInfo.name)
-					print("index: " .. j)
+					-- print(p_Player.controlledControllable.physicsEntityBase:GetPart(j).typeInfo.name)
+
 					local s_Direction = s_QuatTransform:ToLinearTransform().forward - s_Pos
-					print(s_Direction)
+					local s_Position = s_QuatTransform:ToLinearTransform().trans
+					if Registry.DEBUG.VEHICLE_PROJECTILE_TRACE and Globals.LastPorjectile ~= nil then
+						-- print(s_Position - p_Player.controlledControllable.transform.trans)
+						local s_DiffDir = s_QuatTransform:ToLinearTransform().forward - Globals.LastPorjectile.forward
+
+						if s_DiffDir.magnitude < 0.05 then
+							print("index: " .. j)
+							print(s_Direction)
+							print(s_DiffDir)
+							print("Offset to bullet:")
+							local s_Diff = Globals.LastPorjectile.trans - s_Position
+
+							local s_Left = Globals.LastPorjectile.left
+							local s_FactLeft = s_Diff:Dot(s_Left) / s_Left:Dot(s_Left)
+							print("x: " .. tostring(s_FactLeft))
+
+							local s_Up = Globals.LastPorjectile.up
+							local s_FactUp = s_Diff:Dot(s_Up) / s_Up:Dot(s_Up)
+							print("y: " .. tostring(s_FactUp))
+
+							local s_Forward = Globals.LastPorjectile.forward
+							local s_FactForward = s_Diff:Dot(s_Forward) / s_Forward:Dot(s_Forward)
+							print("z: " .. tostring(s_FactForward))
+
+							-- only for validatiaon
+							-- local s_NewEnd = s_Position + (s_Forward * s_FactForward) + (s_Left * s_FactLeft) + (s_Up * s_FactUp)
+							-- print(s_NewEnd - Globals.LastPorjectile.trans)
+
+							local s_DistToHit = (((Globals.LastPorjectile.trans - s_Position):Cross(Globals.LastPorjectile.forward)).magnitude) / Globals.LastPorjectile.forward.magnitude
+							print("Distance: " .. tostring(s_DistToHit))
+						end
+					else
+						print("index: " .. j)
+						print(s_Direction)
+					end
+
 					m_CarParts[j] = s_Direction
 				end
 			end

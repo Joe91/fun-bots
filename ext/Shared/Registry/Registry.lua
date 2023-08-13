@@ -170,5 +170,10 @@ Registry = {
 		PROBABILITY_BASE_SPAWN = 5,
 		-- Probability of a bot spawning on their deployment base.
 		PROBABILITY_BASE_VEHICLE_SPAWN = 30,
+	},
+	-- Debug
+	DEBUG = {
+		-- enables prints on bullet-collistions for vehicle-offset-identification
+		VEHICLE_PROJECTILE_TRACE = false
 	}
 }

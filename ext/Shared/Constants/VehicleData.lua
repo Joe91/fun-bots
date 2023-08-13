@@ -7,6 +7,11 @@
 6. Search for the "gravity" value. This is the bullet-drop;
 7. Identify the moving part, by checking the vehicle components ("!cardiff" chat command after moving). This will plot you the difference of all parts to the "!car" command;
 8. Insert all data as shown below...
+9. For Offsets:
+    - Enable the Debug-Option in the Registry to True ( Registry.Debug.VEHICLE_PROJECTILE_TRACE)
+	- Shoot with selected weapon (don't look in default direction)
+	- Without further moving, enter "!car" in the chat
+	- Offset of the relevant Indexes will be printed out
 --]]
 
 ---@class VehicleDataInner
@@ -140,8 +145,6 @@ VehicleData = {
 		Drop = { { 4.9, 0.0 }, 9.81, 9.81, 9.81, 9.81, 9.81 },
 		Offset = { { Vec3(0.074, 0.377, -1.699), Vec3(0.0524, 0.134, 1.275) }, Vec3(0.573, 0.174, 0.368), Vec3(0, 0, 0), Vec3(0, 0, 0), Vec3(0, 0, 0), Vec3(0, 0, 0) }
 	},
-
-	-- To-do: search real weapon-stats.
 	["2S25_SPRUT-SD"] = {
 		Name = "[SPRUT-SD]",
 		Type = VehicleTypes.Tank,
@@ -167,16 +170,18 @@ VehicleData = {
 		Parts = { 11, -1, -1, -1 },
 		Speed = { 600, 350, 350, 350 },
 		Drop = { 9.81, 9.81, 9.81, 9.81 }
+		--TODO: Offsets
 	},
 
-	-- AA Vehicle?
+	-- AA Vehicle
 	["LAV_AD"] = {
 		Name = "[LAV-AD]",
 		Type = VehicleTypes.AntiAir,
 		Terrain = VehicleTerrains.Land,
 		Parts = { 1 },
 		Speed = { 900 },
-		Drop = { 0.0 }
+		Drop = { 0.0 },
+		Offset = { Vec3(0.574, 0.291, 0.429) }
 	}, -- 0,1,5
 	["9K22_Tunguska_M"] = {
 		Name = "[9K22 TUNGUSKA-M]",
@@ -184,7 +189,8 @@ VehicleData = {
 		Terrain = VehicleTerrains.Land,
 		Parts = { 35 },
 		Speed = { 900 },
-		Drop = { 0.0 }
+		Drop = { 0.0 },
+		Offset = { Vec3(0.169, 0.562, -1.230) }
 	},
 	["9K22_Tunguska_M_AI"] = {
 		Name = "[9K22 TUNGUSKA-M]",
@@ -192,7 +198,27 @@ VehicleData = {
 		Terrain = VehicleTerrains.Land,
 		Parts = { 35 },
 		Speed = { 900 },
-		Drop = { 0.0 }
+		Drop = { 0.0 },
+		Offset = { Vec3(0.169, 0.562, -1.230) }
+	},
+	-- TODO: Handling of Light vehicle needed?
+	["VodnikPhoenix"] = {
+		Name = "[VODNIK AA]",
+		Type = VehicleTypes.AntiAir,
+		Terrain = VehicleTerrains.Land,
+		Parts = { -1, 12, -1, -1 },
+		Speed = { 300, 1000, 300, 300 },
+		Drop = { 9.81, 0.0, 9.82, 9.81 }
+		--TODO: Offsets
+	},
+	["Humvee_ASRAD"] = {
+		Name = "[HMMWV ASRAD]",
+		Type = VehicleTypes.AntiAir,
+		Terrain = VehicleTerrains.Land,
+		Parts = { -1, 25, -1, -1 },
+		Speed = { 300, 1000, 300, 300 },
+		Drop = { 300, 0.0, 300, 300 }
+		--TODO: Offsets
 	},
 
 	-- Light Vehicle? Maybe also AA?
@@ -203,6 +229,7 @@ VehicleData = {
 		Parts = { -1, 23, -1, -1, -1, -1 },
 		Speed = { 600, 80, 600, 600, 600, 600 },
 		Drop = { 9.81, 7.0, 9.81, 9.81, 9.81, 9.81 }
+		--TODO: Offsets
 	},
 	["HumveeArmored"] = {
 		Name = "[M1114 HMMWV]",
@@ -211,6 +238,7 @@ VehicleData = {
 		Parts = { -1, 19, -1, -1 },
 		Speed = { 300, 610, 300, 300 },
 		Drop = { 0.0, 9.81, 0.0, 0.0 }
+		--TODO: Offsets
 	},
 	["Humvee"] = {
 		Name = "[M1114 HMMWV]",
@@ -219,6 +247,7 @@ VehicleData = {
 		Parts = { -1, 19, -1, -1 },
 		Speed = { 300, 610, 300, 300 },
 		Drop = { 0.0, 9.81, 0.0, 0.0 }
+		--TODO: Offsets
 	},
 	["HumveeArmored_hmg"] = {
 		Name = "[M1114 HMMWV]",
@@ -227,6 +256,7 @@ VehicleData = {
 		Parts = { -1, 19, -1, -1 },
 		Speed = { 300, 610, 300, 300 },
 		Drop = { 0.0, 9.81, 0.0, 0.0 }
+		--TODO: Offsets
 	},
 	["GAZ-3937_Vodnik"] = {
 		Name = "[GAZ-3937 VODNIK]",
@@ -235,24 +265,8 @@ VehicleData = {
 		Parts = { -1, 23, -1, -1 },
 		Speed = { 300, 600, 300, 300 },
 		Drop = { 0.0, 9.81, 0.0, 0.0 }
+		--TODO: Offsets
 	},
-	["Humvee_ASRAD"] = {
-		Name = "[HMMWV ASRAD]",
-		Type = VehicleTypes.LightVehicle,
-		Terrain = VehicleTerrains.Land,
-		Parts = { -1, 25, -1, -1 },
-		Speed = { 300, 1000, 300, 300 },
-		Drop = { 300, 0.0, 300, 300 }
-	},
-	["VodnikPhoenix"] = {
-		Name = "[VODNIK AA]",
-		Type = VehicleTypes.LightVehicle,
-		Terrain = VehicleTerrains.Land,
-		Parts = { -1, 12, -1, -1 },
-		Speed = { 300, 1000, 300, 300 },
-		Drop = { 9.81, 0.0, 9.82, 9.81 }
-	},
-
 	["VodnikModified_V2"] = {
 		Name = "[BARSUK]",
 		Type = VehicleTypes.LightVehicle,
@@ -260,6 +274,7 @@ VehicleData = {
 		Parts = { -1, 6, 16 },
 		Speed = { 300, 600, 80 },
 		Drop = { 0.0, 15, 7.0 }
+		--TODO: Offsets
 	},
 	["HumveeModified"] = {
 		Name = "[PHOENIX]",
@@ -268,6 +283,7 @@ VehicleData = {
 		Parts = { -1, 1, 18 },
 		Speed = { 300, 600, 80 },
 		Drop = { 0.0, 15, 7.0 }
+		--TODO: Offsets
 	},
 
 	-- Mobile Artillery.
@@ -297,6 +313,7 @@ VehicleData = {
 		Parts = { { -1, -1 } },
 		Speed = { { 900, 10000 } },
 		Drop = { { 0.0, 0.0 } }
+		--TODO: Offsets
 	},
 	["A10_THUNDERBOLT_spjet"] = {
 		Name = "[A-10 THUNDERBOLT]",
@@ -305,6 +322,7 @@ VehicleData = {
 		Parts = { { -1, -1 } },
 		Speed = { { 900, 10000 } },
 		Drop = { { 0.0, 0.0 } }
+		--TODO: Offsets
 	},
 	["F16"] = {
 		Name = "[F/A-18E SUPER HORNET]",
@@ -313,6 +331,7 @@ VehicleData = {
 		Parts = { { -1, -1 } },
 		Speed = { { 900, 10000 } },
 		Drop = { { 0.0, 0.0 } }
+		--TODO: Offsets
 	},
 	["F18_Wingman"] = {
 		Name = "[F/A-18E SUPER HORNET]",
@@ -321,6 +340,7 @@ VehicleData = {
 		Parts = { { -1, -1 } },
 		Speed = { { 900, 10000 } },
 		Drop = { { 0.0, 0.0 } }
+		--TODO: Offsets
 	},
 	["Su-25TM"] = {
 		Name = "[SU-25TM FROGFOOT]",
@@ -329,6 +349,7 @@ VehicleData = {
 		Parts = { { -1, -1 } },
 		Speed = { { 900, 10000 } },
 		Drop = { { 0.0, 0.0 } }
+		--TODO: Offsets
 	},
 	["Su-35BM Flanker-E"] = {
 		Name = "[SU-35BM FLANKER-E]",
@@ -337,6 +358,7 @@ VehicleData = {
 		Parts = { { -1, -1 } },
 		Speed = { { 900, 10000 } },
 		Drop = { { 0.0, 0.0 } }
+		--TODO: Offsets
 	},
 	["Su37"] = {
 		Name = "[SU-37]",
@@ -345,6 +367,7 @@ VehicleData = {
 		Parts = { { -1, -1 } },
 		Speed = { { 900, 10000 } },
 		Drop = { { 0.0, 0.0 } }
+		--TODO: Offsets
 	},
 	["F35B"] = {
 		Name = "[F-35]",
@@ -353,23 +376,28 @@ VehicleData = {
 		Parts = { { -1, -1 } },
 		Speed = { { 900, 10000 } },
 		Drop = { { 0.0, 0.0 } }
+		--TODO: Offsets
 	},
 	-- Choppers.
 	["AH1Z"] = {
 		Name = "[AH-1Z VIPER]",
 		Type = VehicleTypes.Chopper,
 		Terrain = VehicleTerrains.Air,
-		Parts = { { -2, -2 }, { 1, 1 } }, -- 0,1,14
-		Speed = { { 300, 10000 }, 600 },
-		Drop = { { 0.0, 0.0 }, 0.0 }
+		Parts = { { -2, -2 }, { 1, 1 } },
+		Speed = { { 300, 10000 }, { 600, 999 } },
+		Drop = { { 0.0, 0.0 }, { 0.0, 0.0 } },
+		Offset = { { Vec3(0, 0, 0), Vec3(0, 0, 0) }, { Vec3(0.549, 0.897, 0.980), Vec3(0.549, 0.897, 0.980) } }
+		--TODO: Offsets Driver
 	},
 	["AH1Z_coop"] = {
 		Name = "[AH-1Z VIPER]",
 		Type = VehicleTypes.Chopper,
 		Terrain = VehicleTerrains.Air,
-		Parts = { { -2, -2 }, 1 }, -- 0,1,14
-		Speed = { { 300, 10000 }, 600 },
-		Drop = { { 0.0, 0.0 }, 0.0 }
+		Parts = { { -2, -2 }, { 1, 1 } },
+		Speed = { { 300, 10000 }, { 600, 999 } },
+		Drop = { { 0.0, 0.0 }, { 0.0, 0.0 } },
+		Offset = { { Vec3(0, 0, 0), Vec3(0, 0, 0) }, { Vec3(0.549, 0.897, 0.980), Vec3(0.549, 0.897, 0.980) } }
+		--TODO: Offsets Driver
 	},
 	["AH6_Littlebird"] = {
 		Name = "[AH-6J LITTLE BIRD]",
@@ -378,6 +406,7 @@ VehicleData = {
 		Parts = { { -2, -2 }, -1, -1, { -1, -1 } },
 		Speed = { { 900, 10000 } },
 		Drop = { { 0.0, 0.0 } }
+		--TODO: Offsets
 	},
 	["AH6_Littlebird_EQ"] = {
 		Name = "[AH-6J LITTLE BIRD]",
@@ -386,6 +415,7 @@ VehicleData = {
 		Parts = { { -2, -2 }, -1, -1, { -1, -1 } },
 		Speed = { { 900, 10000 }, 300, 300, 300 },
 		Drop = { { 0.0, 0.0 }, 9.81, 9.81, 9.81 }
+		--TODO: Offsets
 	},
 	["Ka-60"] = {
 		Name = "[KA-60 KASATKA]",
@@ -394,14 +424,16 @@ VehicleData = {
 		Parts = { -1, 18, 15, -1, -1 },
 		Speed = { 350, 900, 900, 350, 350 },
 		Drop = { 9.81, 0.0, 0.0, 9.81, 9.81 }
+		--TODO: Offsets
 	},
 	["Mi28"] = {
 		Name = "[MI-28 HAVOC]",
 		Type = VehicleTypes.Chopper,
 		Terrain = VehicleTerrains.Air,
-		Parts = { { -2, -2 }, { 2, 1 } }, -- 0,1,14
-		Speed = { { 300, 10000 }, 600 },
-		Drop = { { 0.0, 0.0 }, 0.0 }
+		Parts = { { -2, -2 }, { 6, 6 } },
+		Speed = { { 300, 10000 }, { 600, 999 } },
+		Drop = { { 0.0, 0.0 }, { 0.0, 0.0 } },
+		Offset = { { Vec3(0, 0, 0), Vec3(0, 0, 0) }, { Vec3(0, -0.018, 0.427), Vec3(0, -0.018, 0.427) } }
 	},
 	["Venom"] = {
 		Name = "[UH-1Y VENOM]",
@@ -410,6 +442,7 @@ VehicleData = {
 		Parts = { -1, 19, 16, -1, -1 },
 		Speed = { 350, 900, 900, 350, 350 },
 		Drop = { 9.81, 0.0, 0.0, 9.81, 9.81 }
+		--TODO: Offsets
 	},
 	["Venom_coop"] = {
 		Name = "[UH-1Y VENOM]",
@@ -418,6 +451,7 @@ VehicleData = {
 		Parts = { -1, 19, 16, -1, -1 },
 		Speed = { 350, 900, 900, 350, 350 },
 		Drop = { 9.81, 0.0, 0.0, 9.81, 9.81 }
+		--TODO: Offsets
 	},
 	["Z-11w"] = {
 		Name = "[Z-11W]",
@@ -426,6 +460,7 @@ VehicleData = {
 		Parts = { { -1, -1 }, -1, -1, { -1, -1 } },
 		Speed = { { 900, 10000 }, 350, 350, 350 },
 		Drop = { { 0.0, 0.0 }, 9.81, 9.81, 9.81 }
+		--TODO: Offsets
 	},
 	["Wz11_SP_Paris"] = {
 		Name = "[Z-11W]",
@@ -434,6 +469,7 @@ VehicleData = {
 		Parts = { { -1, -1 }, -1, -1, { -1, -1 } },
 		Speed = { { 900, 10000 }, 350, 350, 350 },
 		Drop = { { 0.0, 0.0 }, 9.81, 9.81, 9.81 }
+		--TODO: Offsets
 	},
 
 	-- Transport.
@@ -443,7 +479,8 @@ VehicleData = {
 		Terrain = VehicleTerrains.Land,
 		Parts = { -1, 47, -1 },
 		Speed = { 300, 610, 300 },
-		Drop = { 0.0, 9.81, 0.0 }
+		Drop = { 0.0, 9.81, 0.0 },
+		Offset = { Vec3(0, 0, 0), Vec3(0, 0.239, -0.816), Vec3(0, 0, 0) }
 	},
 	["GrowlerITV_Valley"] = {
 		Name = "[GROWLER ITV]",
@@ -451,15 +488,17 @@ VehicleData = {
 		Terrain = VehicleTerrains.Land,
 		Parts = { -1, 47, -1 },
 		Speed = { 300, 610, 300 },
-		Drop = { 0.0, 9.81, 0.0 }
+		Drop = { 0.0, 9.81, 0.0 },
+		Offset = { Vec3(0, 0, 0), Vec3(0, 0.239, -0.816), Vec3(0, 0, 0) }
 	},
 	["VDV Buggy"] = {
 		Name = "[VDV Buggy]",
 		Type = VehicleTypes.NoArmorVehicle,
 		Terrain = VehicleTerrains.Land,
-		Parts = { -1, 13, -1 },
+		Parts = { -1, 7, -1 },
 		Speed = { 300, 610, 300 },
-		Drop = { 0.0, 9.81, 0.0 }
+		Drop = { 0.0, 9.81, 0.0 },
+		Offset = { Vec3(0, 0, 0), Vec3(-0.037, 0.096, -0.624), Vec3(0, 0, 0) }
 	},
 	["DPV"] = {
 		Name = "[DPV]",
@@ -468,6 +507,7 @@ VehicleData = {
 		Parts = { -1, 4, -1 },
 		Speed = { 300, 610, 600 },
 		Drop = { 0.0, 9.81, 15 }
+		--TODO: Offsets
 	},
 
 	["CivilianCar_03_Vehicle"] = { Name = "[CIVILIAN CAR]", Type = VehicleTypes.NoArmorVehicle, Terrain = VehicleTerrains.Land, Parts = {} },
