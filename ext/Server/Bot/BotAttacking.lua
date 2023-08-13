@@ -212,7 +212,7 @@ local function _DefaultAttackingAction(p_Bot)
 	else
 		-- Target not in vehicle.
 		-- Refill rockets if empty.
-		if p_Bot.m_ActiveWeapon and p_Bot.m_ActiveWeapon.type == WeaponTypes.Rocket then
+		if p_Bot.m_ActiveWeapon and p_Bot.m_ActiveWeapon.type == WeaponTypes.Rocket and not Globals.IsGm then
 			if p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.primaryAmmo <= 0 then
 				p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.primaryAmmo = 1
 				p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.secondaryAmmo = 3
