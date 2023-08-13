@@ -218,6 +218,18 @@ SettingsDefinition = {
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
+		{
+			Name = "DamageFactorVehicles",
+			Text = "Damage Factor Vehicles",
+			---@type Type|integer
+			Type = Type.Float,
+			Value = Config.DamageFactorVehicles,
+			Description = "Original Damage from bots in vehicles gets multiplied by this",
+			Reference = Range(0.00, 2.00, 0.10),
+			Default = 1.0,
+			UpdateFlag = UpdateFlag.None,
+			Category = "DIFFICULTY"
+		},
 
 		-- Spawn.
 		{
@@ -1529,7 +1541,7 @@ SettingsDefinition = {
 			Value = Config.DistanceToSpawnReduction,
 			Description = "Reduce distance if not possible",
 			Reference = Range(0.00, 100.00, 1.0),
-			Default = 5,
+			Default = 8,
 			UpdateFlag = UpdateFlag.None,
 			Category = "EXPERT"
 		},

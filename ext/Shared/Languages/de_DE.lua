@@ -416,3 +416,5 @@ Language:add(code, "Vehicles move while shooting", "Fahrzeuge bewegen sich währ
 Language:add(code, "Vehicles like tanks do not stop for shooting", "Fahrzeuge wie Panzer halten nicht zum Schießen an")
 Language:add(code, "Speed factor vehicle attack", "Fahrzeugangriff mit Geschwindigkeitsfaktor")
 Language:add(code, "Reduces the movement speed while attacking in vehicles. 1 = normal, 0 = standing", "Verringert die Bewegungsgeschwindigkeit beim Angriff in Fahrzeugen. 1 = normal, 0 = stehend")
+Language:add(code, "Damage Factor Vehicles", "Schadensfaktor Fahrzeuge")
+Language:add(code, "Original Damage from bots in vehicles gets multiplied by this", "Der ursprüngliche Schaden durch Bots in Fahrzeugen wird damit multipliziert")

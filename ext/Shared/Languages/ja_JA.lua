@@ -416,3 +416,5 @@ Language:add(code, "Vehicles move while shooting", "撮影中に車両が動く"
 Language:add(code, "Vehicles like tanks do not stop for shooting", "戦車などの車両は射撃のために停止しません")
 Language:add(code, "Speed factor vehicle attack", "速度因子車両攻撃")
 Language:add(code, "Reduces the movement speed while attacking in vehicles. 1 = normal, 0 = standing", "乗り物で攻撃中の移動速度を低下させます。 1 = 通常、0 = 立っている")
+Language:add(code, "Damage Factor Vehicles", "ダメージファクター車両")
+Language:add(code, "Original Damage from bots in vehicles gets multiplied by this", "車両内のボットからの元のダメージはこれで乗算されます")

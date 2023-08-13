@@ -35,6 +35,8 @@ Language:add(code, "Damage Factor Pistol", "")
 Language:add(code, "Original Damage from bots gets multiplied by this", "")
 Language:add(code, "Damage Factor Knife", "")
 Language:add(code, "Original Damage from bots gets multiplied by this", "")
+Language:add(code, "Damage Factor Vehicles", "")
+Language:add(code, "Original Damage from bots in vehicles gets multiplied by this", "")
 
 -- SPAWN
 Language:add(code, "Spawn Mode", "")

@@ -1248,6 +1248,10 @@ function BotManager:_GetDamageValue(p_Damage, p_Bot, p_Soldier)
 		return s_ResultDamage
 	end
 
+	if p_Bot.m_InVehicle then
+		return p_Damage * Config.DamageFactorVehicles
+	end
+
 	local s_ActiveWeaponType = p_Bot.m_ActiveWeapon.type
 
 	if s_ActiveWeaponType == WeaponTypes.Shotgun then

@@ -23,6 +23,7 @@ Config = {
 	DamageFactorShotgun = 1.0,			-- Original Damage from bots gets multiplied by this 
 	DamageFactorPistol = 1.0,			-- Original Damage from bots gets multiplied by this 
 	DamageFactorKnife = 1.5,			-- Original Damage from bots gets multiplied by this 
+	DamageFactorVehicles = 1.0,			-- Original Damage from bots in vehicles gets multiplied by this 
 
 	-- SPAWN 
 	SpawnMode = SpawnModes.balanced_teams,	-- Mode the bots spawn with 
@@ -149,7 +150,7 @@ Config = {
 	KeepOneSlotForPlayers = true,		-- Always keep one slot for free new Players to join 
 	DistanceToSpawnBots = 30,			-- Distance to spawn Bots away from players 
 	HeightDistanceToSpawn = 2.8,		-- Distance vertically, Bots should spawn away, if closer than distance 
-	DistanceToSpawnReduction = 5,		-- Reduce distance if not possible 
+	DistanceToSpawnReduction = 8,		-- Reduce distance if not possible 
 	MaxTrysToSpawnAtDistance = 3,		-- Try this often to spawn a bot away from players 
 	AttackWayBots = true,				-- Bots on paths attack player 
 	RespawnWayBots = true,				-- Bots on paths respawn if killed 
