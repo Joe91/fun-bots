@@ -1441,7 +1441,6 @@ function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 		s_VehiclePerksToAdd = {
 			"persistence/unlocks/vehicles/mbtproximityscan",
 			"persistence/unlocks/vehicles/mbtcoaxlmg",
-			"persistence/unlocks/vehicles/mbtsmokelaunchers",
 			"persistence/unlocks/vehicles/atkheliproximityscangunner",
 			"persistence/unlocks/vehicles/atkhelizoomoptics",
 			"persistence/unlocks/vehicles/atkhelihellfiremissile",
@@ -1458,7 +1457,6 @@ function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 			"persistence/unlocks/vehicles/ifvsmokelaunchers",
 			-- Xp3 perks.
 			"persistence/unlocks/vehicles/lbtcoaxlmg",
-			"persistence/unlocks/vehicles/lbtsmokelaunchers",
 			"persistence/unlocks/vehicles/artilleryreloadupgrade",
 			"persistence/unlocks/vehicles/artillerysmokelaunchers",
 			"persistence/unlocks/vehicles/artilleryairburst",
