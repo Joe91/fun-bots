@@ -27,58 +27,65 @@ VehicleData = {
 		Name = "[M1 ABRAMS]",
 		Type = VehicleTypes.Tank,
 		Terrain = VehicleTerrains.Land,
-		Parts = { { 25, 26 }, 12, -1 }, -- 25,26 -- 12 -- none
+		Parts = { { 13, 13 }, 12, -1 },
 		Speed = { { 200, 610 }, 600, 350 },
-		Drop = { { 9.81, 9.81 }, 9.81, 9.81 }
+		Drop = { { 9.81, 9.81 }, 9.81, 9.81 },
+		Offset = { { Vec3(0.438, -0.096, -0.742), Vec3(0.436, -0.060, -1.207) }, Vec3(0.253, -0.098, 0.450), Vec3(0, 0, 0) },
 	},
 	["M1Abrams_AI_SP007"] = {
 		Name = "[M1 ABRAMS]",
 		Type = VehicleTypes.Tank,
 		Terrain = VehicleTerrains.Land,
-		Parts = { { 25, 26 }, 12, -1 }, -- 25,26 -- 12 -- none
+		Parts = { { 13, 13 }, 12, -1 },
 		Speed = { { 200, 610 }, 600, 350 },
-		Drop = { { 9.81, 9.81 }, 9.81, 9.81 }
+		Drop = { { 9.81, 9.81 }, 9.81, 9.81 },
+		Offset = { { Vec3(0.438, -0.096, -0.742), Vec3(0.436, -0.060, -1.207) }, Vec3(0.253, -0.098, 0.450), Vec3(0, 0, 0) },
 	},
 	["M1Abrams_SP007"] = {
 		Name = "[M1 ABRAMS]",
 		Type = VehicleTypes.Tank,
 		Terrain = VehicleTerrains.Land,
-		Parts = { { 25, 26 }, 12, -1 }, -- 25,26 -- 12 -- none
+		Parts = { { 13, 13 }, 12, -1 },
 		Speed = { { 200, 610 }, 600, 350 },
-		Drop = { { 9.81, 9.81 }, 9.81, 9.81 }
+		Drop = { { 9.81, 9.81 }, 9.81, 9.81 },
+		Offset = { { Vec3(0.438, -0.096, -0.742), Vec3(0.436, -0.060, -1.207) }, Vec3(0.253, -0.098, 0.450), Vec3(0, 0, 0) },
 	},
 	["M1Abrams_SP_Rail"] = {
 		Name = "[M1 ABRAMS]",
 		Type = VehicleTypes.Tank,
 		Terrain = VehicleTerrains.Land,
-		Parts = { { 25, 26 }, 12, -1 }, -- 25,26 -- 12 -- none
+		Parts = { { 13, 13 }, 12, -1 },
 		Speed = { { 200, 610 }, 600, 350 },
-		Drop = { { 9.81, 9.81 }, 9.81, 9.81 }
+		Drop = { { 9.81, 9.81 }, 9.81, 9.81 },
+		Offset = { { Vec3(0.438, -0.096, -0.742), Vec3(0.436, -0.060, -1.207) }, Vec3(0.253, -0.098, 0.450), Vec3(0, 0, 0) },
 	},
 	["T90"] = {
 		Name = "[T-90A]",
 		Type = VehicleTypes.Tank,
 		Terrain = VehicleTerrains.Land,
-		Parts = { { 24, 25 }, 41, -1 },
+		Parts = { { 9, 9 }, 41, -1 },
 		Speed = { { 200, 610 }, 600, 350 },
-		Drop = { { 9.81, 9.81 }, 9.81, 9.81 }
-	}, -- 24,25
+		Drop = { { 9.81, 9.81 }, 9.81, 9.81 },
+		Offset = { { Vec3(0.497, 0.808, -1.389), Vec3(0.506, -0.797, -1.529) }, Vec3(0.574, -0.196, 0.302), Vec3(0, 0, 0) },
+	},
 	["T90_SP007"] = {
 		Name = "[T-90A]",
 		Type = VehicleTypes.Tank,
 		Terrain = VehicleTerrains.Land,
-		Parts = { { 24, 25 }, 41, -1 },
+		Parts = { { 9, 9 }, 41, -1 },
 		Speed = { { 200, 610 }, 600, 350 },
-		Drop = { { 9.81, 9.81 }, 9.81, 9.81 }
-	}, -- 24,25
+		Drop = { { 9.81, 9.81 }, 9.81, 9.81 },
+		Offset = { { Vec3(0.497, 0.808, -1.389), Vec3(0.506, -0.797, -1.529) }, Vec3(0.574, -0.196, 0.302), Vec3(0, 0, 0) },
+	},
 	["T90_T55_SP007"] = {
 		Name = "[T-90A]",
 		Type = VehicleTypes.Tank,
 		Terrain = VehicleTerrains.Land,
-		Parts = { { 24, 25 }, 41, -1 },
+		Parts = { { 9, 9 }, 41, -1 },
 		Speed = { { 200, 610 }, 600, 350 },
-		Drop = { { 9.81, 9.81 }, 9.81, 9.81 }
-	}, -- 24,25
+		Drop = { { 9.81, 9.81 }, 9.81, 9.81 },
+		Offset = { { Vec3(0.497, 0.808, -1.389), Vec3(0.506, -0.797, -1.529) }, Vec3(0.574, -0.196, 0.302), Vec3(0, 0, 0) },
+	},
 	["LAV25"] = {
 		Name = "[LAV-25]",
 		Type = VehicleTypes.IFV,

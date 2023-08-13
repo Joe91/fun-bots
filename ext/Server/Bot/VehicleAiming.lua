@@ -27,8 +27,7 @@ function VehicleAiming:UpdateAimingVehicleAdvanced(p_Bot)
 	local s_FullPositionBot = nil
 
 	if p_Bot._VehicleMovableId >= 0 then
-		s_FullPositionBot = p_Bot.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(p_Bot._VehicleMovableId):
-			ToLinearTransform().trans
+		s_FullPositionBot = p_Bot.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(p_Bot._VehicleMovableId):ToLinearTransform().trans
 	else
 		-- To-do: adjust for chopper-drivers?
 		s_FullPositionBot = p_Bot.m_Player.soldier.worldTransform.trans:Clone() +
@@ -149,8 +148,9 @@ function VehicleAiming:UpdateAimingVehicle(p_Bot)
 	local s_FullPositionBot = nil
 
 	if p_Bot._VehicleMovableId >= 0 then
-		s_FullPositionBot = p_Bot.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(p_Bot._VehicleMovableId):
-			ToLinearTransform().trans
+		local s_PartTransform = p_Bot.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(p_Bot._VehicleMovableId):ToLinearTransform()
+		local s_Offsets = m_Vehicles:GetOffsets(p_Bot.m_ActiveVehicle, p_Bot.m_Player.controlledEntryId, p_Bot._ActiveVehicleWeaponSlot)
+		s_FullPositionBot = s_PartTransform.trans + (s_PartTransform.left * s_Offsets.x) + (s_PartTransform.up * s_Offsets.y) + (s_PartTransform.forward * s_Offsets.z)
 	else
 		-- To-do: adjust for chopper-drivers?
 		s_FullPositionBot = p_Bot.m_Player.soldier.worldTransform.trans:Clone() +
