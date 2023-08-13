@@ -23,12 +23,14 @@ This is the changelog for the version V2.8 Don't forget to [join us on Discord](
 * Merged pull request #301 from tagener-noisu min nade distance for bots (also with Registry-Entry)
 * Merged pull request #300 from tagener-noisu trace navigation
 * Mergeed pull request #303 from tagener-noisu ifv_tows weapon usage
+* Offset of vehicle-weapons was added
 
 ### Bug fixes
 * fix meele attack
 * missing nil-check in vehicle-movement
 * fix bots getting stuck on vehicle-paths #297
 * overwrite of loop / reverse path does not work #304
+* fix GM-Rocket-usage #305
 
 ### New maps
 * Gunmaster for MP_001 by Augusta
