@@ -382,7 +382,7 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 							-- Fast code.
 							if s_Attacking then
 								if m_Vehicles:IsAirVehicle(self.m_ActiveVehicle) then
-									m_VehicleAiming:UpdateAimingVehicleAdvanced(self)
+									m_VehicleAiming:UpdateAimingVehicle(self, true)
 								else
 									if Config.VehicleMoveWhileShooting and m_Vehicles:IsNotVehicleTerrain(self.m_ActiveVehicle, VehicleTerrains.Air) then
 										if self.m_Player.controlledEntryId == 0 and not s_IsStationaryLauncher then -- Only if driver.
@@ -390,7 +390,7 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 											m_VehicleMovement:UpdateTargetMovementVehicle(self)
 										end
 									end
-									m_VehicleAiming:UpdateAimingVehicle(self)
+									m_VehicleAiming:UpdateAimingVehicle(self, false)
 								end
 							else
 								if self.m_Player.controlledEntryId == 0 and not s_IsStationaryLauncher then -- Only if driver.
@@ -1212,7 +1212,7 @@ function Bot:_UpdateStationaryAAVehicle(p_Attacking)
 
 	if p_Attacking then -- Target available.
 		-- Aim at target.
-		m_VehicleAiming:UpdateAimingVehicleAdvanced(self)
+		m_VehicleAiming:UpdateAimingVehicle(self, true)
 	else
 		-- Just look a little around.
 		m_VehicleMovement:UpdateVehicleLookAround(self, Registry.BOT.BOT_FAST_UPDATE_CYCLE)

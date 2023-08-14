@@ -23,6 +23,8 @@ Config = {
 	DamageFactorShotgun = 1.0,			-- Original Damage from bots gets multiplied by this 
 	DamageFactorPistol = 1.0,			-- Original Damage from bots gets multiplied by this 
 	DamageFactorKnife = 1.5,			-- Original Damage from bots gets multiplied by this 
+	VehicleAimWorsening = 0.0,			-- Make bots in vehicles aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy) 
+	VehicleAirAimWorsening = 0.0,		-- See VehicleAimWorsening, only for Air-Vehicles 
 	DamageFactorVehicles = 1.0,			-- Original Damage from bots in vehicles gets multiplied by this 
 
 	-- SPAWN 

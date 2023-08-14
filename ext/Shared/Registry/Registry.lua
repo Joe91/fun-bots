@@ -141,6 +141,8 @@ Registry = {
 		MIN_DISTANCE_NADE = 12,
 		-- Advanced aiming makes a difference on huge distances, but costs more performance.
 		USE_ADVANCED_AIMING = false,
+		-- Worsening bots on larger distances. Factor 1.0 = no worsening, always same offset
+		WORSENING_FACOTR_DISTANCE = 0.8,
 	},
 	-- Bot team balancing (only in keep_playercount - spawn-mode)
 	BOT_TEAM_BALANCING = {
@@ -174,6 +176,6 @@ Registry = {
 	-- Debug
 	DEBUG = {
 		-- enables prints on bullet-collistions for vehicle-offset-identification
-		VEHICLE_PROJECTILE_TRACE = false
+		VEHICLE_PROJECTILE_TRACE = false,
 	}
 }

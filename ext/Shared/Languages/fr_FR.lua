@@ -418,3 +418,7 @@ Language:add(code, "Speed factor vehicle attack", "Attaque de véhicule de facte
 Language:add(code, "Reduces the movement speed while attacking in vehicles. 1 = normal, 0 = standing", "Réduit la vitesse de déplacement lors d'attaques dans des véhicules. 1 = normal, 0 = debout")
 Language:add(code, "Damage Factor Vehicles", "Véhicules à facteur de dégâts")
 Language:add(code, "Original Damage from bots in vehicles gets multiplied by this", "Les dégâts d'origine des bots dans les véhicules sont multipliés par cela")
+Language:add(code, "Vehicle Aim Worsening", "Détérioration de la visée du véhicule")
+Language:add(code, "Make bots in vehicles aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy)", "Faire en sorte que les bots dans les véhicules visent moins bien : pour la difficulté : 0 = pas de décalage (difficile), 1 ou même plus = plus de balancement (facile)")
+Language:add(code, "Vehicle Air Aim Worsening", "Détérioration de la visée aérienne du véhicule")
+Language:add(code, "See VehicleAimWorsening, only for Air-Vehicles", "Voir VehicleAimWorsening, uniquement pour les véhicules aériens")

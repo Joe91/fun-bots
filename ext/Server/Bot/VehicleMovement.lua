@@ -443,6 +443,7 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 			local s_AtanDzDx = math.atan(s_Pos.z, s_Pos.x)
 			local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
 			local s_Pitch = math.asin(s_Pos.y / 1.0)
+
 			s_DeltaPitch = s_Pitch - p_Bot._TargetPitch
 			s_DeltaYaw = s_Yaw - p_Bot._TargetYaw
 
@@ -465,6 +466,7 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 			local s_AtanDzDx = math.atan(s_Pos.z, s_Pos.x)
 			local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
 			local s_Pitch = math.asin(s_Pos.y / 1.0)
+
 			s_DeltaPitch = s_Pitch - p_Bot._TargetPitch
 			s_DeltaYaw = s_Yaw - p_Bot._TargetYaw
 		end

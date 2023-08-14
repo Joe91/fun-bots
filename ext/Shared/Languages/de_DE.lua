@@ -418,3 +418,7 @@ Language:add(code, "Speed factor vehicle attack", "Fahrzeugangriff mit Geschwind
 Language:add(code, "Reduces the movement speed while attacking in vehicles. 1 = normal, 0 = standing", "Verringert die Bewegungsgeschwindigkeit beim Angriff in Fahrzeugen. 1 = normal, 0 = stehend")
 Language:add(code, "Damage Factor Vehicles", "Schadensfaktor Fahrzeuge")
 Language:add(code, "Original Damage from bots in vehicles gets multiplied by this", "Der ursprüngliche Schaden durch Bots in Fahrzeugen wird damit multipliziert")
+Language:add(code, "Vehicle Aim Worsening", "Verschlechterung des Fahrzeugziels")
+Language:add(code, "Make bots in vehicles aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy)", "Machen Sie Bots in Fahrzeugen schlechter zielen: für Schwierigkeit: 0 = kein Versatz (schwer), 1 oder noch größer = mehr Einfluss (einfach)")
+Language:add(code, "Vehicle Air Aim Worsening", "Verschlechterung der Luftzielgenauigkeit des Fahrzeugs")
+Language:add(code, "See VehicleAimWorsening, only for Air-Vehicles", "Siehe VehicleAimWorsening, nur für Luftfahrzeuge")
