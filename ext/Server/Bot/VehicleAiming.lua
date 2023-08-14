@@ -105,7 +105,7 @@ function VehicleAiming:UpdateAimingVehicle(p_Bot, p_AdvancedAlgorithm)
 
 	s_TimeToTravel = _GetTimeToTravel(p_Bot, s_Speed, s_FullPositionBot, s_FullPositionTarget, s_TargetMovement, p_AdvancedAlgorithm)
 
-	s_PitchCorrection = 0.5 * s_TimeToTravel * s_TimeToTravel * s_Drop -- From theory 0.5. In real, 0.375 works much better.
+	s_PitchCorrection = 0.5 * s_TimeToTravel * s_TimeToTravel * s_Drop
 
 	s_TargetMovement = (s_TargetMovement * s_TimeToTravel)
 

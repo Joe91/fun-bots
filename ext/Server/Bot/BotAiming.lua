@@ -236,11 +236,11 @@ local function _DefaultAimingAction(p_Bot)
 
 		if s_ActiveWeaponType == WeaponTypes.Grenade then
 			if p_Bot._DistanceToPlayer < 3.0 then
-				p_Bot._DistanceToPlayer = 3.0                          -- Don't throw them too close.
+				p_Bot._DistanceToPlayer = 3.0          -- Don't throw them too close.
 			end
-		elseif s_ActiveWeaponType <= WeaponTypes.Rocket then           -- No compensation for other weapons needed.
+		elseif s_ActiveWeaponType <= WeaponTypes.Rocket then -- No compensation for other weapons needed.
 			s_TimeToTravel = _GetTimeToTravel(p_Bot, s_Speed, s_FullPositionBot, s_FullPositionTarget, s_TargetMovement)
-			s_PitchCorrection = 0.25 * s_TimeToTravel * s_TimeToTravel * s_Drop -- This correction (0.5 * 0.5) seems to be correct. No idea why.
+			s_PitchCorrection = 0.5 * s_TimeToTravel * s_TimeToTravel * s_Drop
 		end
 
 		s_TargetMovement = (s_TargetMovement * s_TimeToTravel)

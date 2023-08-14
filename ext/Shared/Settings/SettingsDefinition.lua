@@ -70,7 +70,7 @@ SettingsDefinition = {
 			Value = Config.BotAimWorsening,
 			Description = "Make bots aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy)",
 			Reference = Range(0.00, 10.00, 0.05),
-			Default = 0.3,
+			Default = 0.2,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
@@ -82,7 +82,7 @@ SettingsDefinition = {
 			Value = Config.BotSniperAimWorsening,
 			Description = "See botAimWorsening, only for Sniper-rifles",
 			Reference = Range(0.00, 10.00, 0.05),
-			Default = 0.2,
+			Default = 0.1,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
@@ -106,7 +106,7 @@ SettingsDefinition = {
 			Value = Config.BotWorseningSkill,
 			Description = "Variation of the skill of a single bot. The higher, the worse the bots can get compared to the original settings",
 			Reference = Range(0.00, 1.00, 0.05),
-			Default = 0.50,
+			Default = 0.40,
 			UpdateFlag = UpdateFlag.Skill,
 			Category = "DIFFICULTY"
 		},
@@ -118,7 +118,7 @@ SettingsDefinition = {
 			Value = Config.BotSniperWorseningSkill,
 			Description = "See BotWorseningSkill - only for BOTs using sniper bolt-action rifles",
 			Reference = Range(0.00, 1.00, 0.05),
-			Default = 0.50,
+			Default = 0.30,
 			UpdateFlag = UpdateFlag.Skill,
 			Category = "DIFFICULTY"
 		},

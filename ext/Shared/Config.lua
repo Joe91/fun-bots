@@ -10,11 +10,11 @@ Config = {
 	BotColor = BotColors.RANDOM_COLOR,	-- The Color of the Bots 
 
 	-- DIFFICULTY 
-	BotAimWorsening = 0.3,				-- Make bots aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy) 
-	BotSniperAimWorsening = 0.2,		-- See botAimWorsening, only for Sniper-rifles 
+	BotAimWorsening = 0.2,				-- Make bots aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy) 
+	BotSniperAimWorsening = 0.1,		-- See botAimWorsening, only for Sniper-rifles 
 	BotSupportAimWorsening = 0.3,		-- See botAimWorsening, only for LMGs 
-	BotWorseningSkill = 0.50,			-- Variation of the skill of a single bot. The higher, the worse the bots can get compared to the original settings 
-	BotSniperWorseningSkill = 0.50,		-- See BotWorseningSkill - only for BOTs using sniper bolt-action rifles 
+	BotWorseningSkill = 0.40,			-- Variation of the skill of a single bot. The higher, the worse the bots can get compared to the original settings 
+	BotSniperWorseningSkill = 0.30,		-- See BotWorseningSkill - only for BOTs using sniper bolt-action rifles 
 	DamageFactorAssault = 1.0,			-- Original Damage from bots gets multiplied by this 
 	DamageFactorCarabine = 1.0,			-- Original Damage from bots gets multiplied by this 
 	DamageFactorLMG = 1.0,				-- Original Damage from bots gets multiplied by this 
