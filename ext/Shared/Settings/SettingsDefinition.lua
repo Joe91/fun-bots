@@ -1523,6 +1523,18 @@ SettingsDefinition = {
 			Category = "EXPERT"
 		},
 		{
+			Name = "TargetDistanceWayPointAirVehicles",
+			Text = "Target distance waypoint air vehicles",
+			---@type Type|integer
+			Type = Type.Float,
+			Value = Config.TargetDistanceWayPointAirVehicles,
+			Description = "The distance the bots have to reach to continue with the next Waypoint on air vehicles",
+			Reference = Range(0.00, 100.00, 0.10),
+			Default = 16.0,
+			UpdateFlag = UpdateFlag.None,
+			Category = "EXPERT"
+		},
+		{
 			Name = "KeepOneSlotForPlayers",
 			Text = "Keep one slot for players",
 			---@type Type|integer
