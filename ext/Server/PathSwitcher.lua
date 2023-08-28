@@ -13,10 +13,9 @@ local m_Logger = Logger("PathSwitcher", Debug.Server.PATH)
 
 function PathSwitcher:__init()
 	self.m_DummyData = 0
-	self.m_KillYourselfCounter = {}
 end
 
-function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle, p_TeamId, p_ActiveVehicle)
+function PathSwitcher:GetNewPath(p_Bot, p_BotName, p_Point, p_Objective, p_InVehicle, p_TeamId, p_ActiveVehicle)
 	-- Check if on base, or on path away from base. In this case: change path.
 	local s_OnBasePath = false
 	local s_CurrentPathFirst = m_NodeCollection:GetFirst(p_Point.PathIndex)
@@ -29,31 +28,6 @@ function PathSwitcher:GetNewPath(p_BotName, p_Point, p_Objective, p_InVehicle, p
 
 	if p_Point.Data == nil or p_Point.Data.Links == nil or #p_Point.Data.Links < 1 then
 		return false
-	end
-
-	if Globals.IsRush then
-		if not p_InVehicle then
-			if self.m_KillYourselfCounter[p_BotName] == nil then
-				self.m_KillYourselfCounter[p_BotName] = 0
-			end
-
-			if s_CurrentPathStatus == 0 then
-				self.m_KillYourselfCounter[p_BotName] = self.m_KillYourselfCounter[p_BotName] + 1
-			else
-				self.m_KillYourselfCounter[p_BotName] = 0
-			end
-
-			if self.m_KillYourselfCounter[p_BotName] > Registry.GAME_DIRECTOR.KILL_ON_INVALID_PATH_CROSSINGS then
-				local s_Bot = PlayerManager:GetPlayerByName(p_BotName)
-
-				if s_Bot ~= nil and s_Bot.soldier ~= nil then
-					s_Bot.soldier:Kill()
-					self.m_KillYourselfCounter[p_BotName] = 0
-					m_Logger:Write("kill " .. p_BotName .. " because of inactivity on wrong paths")
-					return false
-				end
-			end
-		end
 	end
 
 	-- To-do: get all paths via links, assign priority, sort by priority.

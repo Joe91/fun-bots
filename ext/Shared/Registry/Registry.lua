@@ -76,8 +76,8 @@ Registry = {
 		MCOMS_CHECK_CYCLE = 26.5,
 		-- Max bots per objective.
 		MAX_ASSIGNED_LIMIT = 16,
-		-- After finding no valid path for that many crossings, a bot is killed (Rush only)
-		KILL_ON_INVALID_PATH_CROSSINGS = 10,
+		-- Kill Bots without valid paths after this amount of time
+		KILL_ON_INVALID_PATH_TIME = 35,
 		-- Increments of nodes to search best patch with.
 		NODE_SEARCH_INCREMENTS = 10,
 	},

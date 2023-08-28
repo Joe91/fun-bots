@@ -88,6 +88,7 @@ function Bot:__init(p_Player)
 	self._BrakeTimer = 0.0
 	self._SpawnProtectionTimer = 0.0
 	self._SidewardsTimer = 0.0
+	self._KillYourselfTimer = 0.0
 
 	-- Shared movement vars.
 	---@type BotMoveModes
@@ -747,6 +748,7 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 				-- check for changed weapon
 				BotSpawner:UpdateGmWeapon(self)
 			end
+			self._KillYourselfTimer = 0.0
 			return true
 		else
 			self._ShootPlayerName = ''
@@ -873,6 +875,7 @@ function Bot:ResetVars()
 	self._KnifeWayPositions = {}
 	self._ShootWayPoints = {}
 	self._SpawnDelayTimer = 0.0
+	self._KillYourselfTimer = 0.0
 	self._SpawnProtectionTimer = 0.0
 	self._Objective = ''
 	self._WeaponToUse = BotWeapons.Primary

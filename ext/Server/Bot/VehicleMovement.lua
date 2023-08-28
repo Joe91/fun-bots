@@ -243,7 +243,7 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_Bot)
 				-- CHECK FOR PATH-SWITCHES.
 				local s_NewWaypoint = nil
 				local s_SwitchPath = false
-				s_SwitchPath, s_NewWaypoint = m_PathSwitcher:GetNewPath(p_Bot.m_Name, s_Point, p_Bot._Objective, p_Bot.m_InVehicle,
+				s_SwitchPath, s_NewWaypoint = m_PathSwitcher:GetNewPath(p_Bot, p_Bot.m_Name, s_Point, p_Bot._Objective, p_Bot.m_InVehicle,
 					p_Bot.m_Player.teamId, p_Bot.m_ActiveVehicle)
 
 				if p_Bot.m_Player.soldier == nil then
