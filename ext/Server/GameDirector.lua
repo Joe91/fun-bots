@@ -160,25 +160,29 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 			table.insert(self.m_BotsByTeam[s_BotList[i].m_Player.teamId], s_BotList[i])
 		end
 
-		if Globals.IsRush and not s_BotList[i].m_InVehicle then
-			-- check if bot is on active path
-			local s_CurrentPathFirst = m_NodeCollection:GetFirst(s_BotList[i]._PathIndex)
-			local s_CurrentPathStatus = 0
-			if s_CurrentPathFirst.Data ~= nil and s_CurrentPathFirst.Data.Objectives ~= nil then
-				s_CurrentPathStatus = self:GetEnableStateOfPath(s_CurrentPathFirst.Data.Objectives)
-			end
-
-			if s_CurrentPathStatus == 0 then
-				s_BotList[i]._KillYourselfTimer = s_BotList[i]._KillYourselfTimer + Registry.GAME_DIRECTOR.UPDATE_OBJECTIVES_CYCLE
-			else
+		if (Globals.IsRush or Globals.IsConquest) then
+			-- chekc for vehicle or valid path
+			if s_BotList[i].m_InVehicle then
 				s_BotList[i]._KillYourselfTimer = 0.0
-			end
+			else
+				-- check if bot is on active path
+				local s_CurrentPathFirst = m_NodeCollection:GetFirst(s_BotList[i]._PathIndex)
+				local s_CurrentPathStatus = 0
+				if s_CurrentPathFirst.Data ~= nil and s_CurrentPathFirst.Data.Objectives ~= nil then
+					s_CurrentPathStatus = self:GetEnableStateOfPath(s_CurrentPathFirst.Data.Objectives)
+				end
 
-			if s_BotList[i]._KillYourselfTimer > Registry.GAME_DIRECTOR.KILL_ON_INVALID_PATH_TIME then
-				if s_BotList[i].m_Player ~= nil and s_BotList[i].m_Player.soldier ~= nil then
-					s_BotList[i].m_Player.soldier:Kill()
-					print("KILLED " .. s_BotList[i].m_Name .. "because of inactivity")
-					m_Logger:Write("kill " .. s_BotList[i].m_Name .. " because of inactivity on wrong paths")
+				if s_CurrentPathStatus == 0 then
+					s_BotList[i]._KillYourselfTimer = s_BotList[i]._KillYourselfTimer + Registry.GAME_DIRECTOR.UPDATE_OBJECTIVES_CYCLE
+				else
+					s_BotList[i]._KillYourselfTimer = 0.0
+				end
+
+				if s_BotList[i]._KillYourselfTimer > Registry.GAME_DIRECTOR.KILL_ON_INVALID_PATH_TIME then
+					if s_BotList[i].m_Player ~= nil and s_BotList[i].m_Player.soldier ~= nil then
+						s_BotList[i].m_Player.soldier:Kill()
+						m_Logger:Write("kill " .. s_BotList[i].m_Name .. " because of inactivity on wrong paths")
+					end
 				end
 			end
 		end

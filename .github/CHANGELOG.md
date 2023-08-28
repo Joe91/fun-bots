@@ -24,6 +24,7 @@ This is the changelog for the version V2.8 Don't forget to [join us on Discord](
 * Merged pull request #300 from tagener-noisu trace navigation
 * Mergeed pull request #303 from tagener-noisu ifv_tows weapon usage
 * Offset of vehicle-weapons was added
+* Kill inactive bots after some time (#307)
 
 ### Bug fixes
 * fix meele attack
