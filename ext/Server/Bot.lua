@@ -1047,6 +1047,7 @@ function Bot:ResetSpawnVars()
 	self._BrakeTimer = 0.0
 	self._DeployTimer = MathUtils:GetRandomInt(1, Config.DeployCycle)
 	self._AttackModeMoveTimer = 0.0
+	self._KillYourselfTimer = 0.0
 	self._AttackMode = BotAttackModes.RandomNotSet
 	self._ShootWayPoints = {}
 

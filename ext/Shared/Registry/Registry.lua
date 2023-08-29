@@ -77,7 +77,7 @@ Registry = {
 		-- Max bots per objective.
 		MAX_ASSIGNED_LIMIT = 16,
 		-- Kill Bots without valid paths after this amount of time
-		KILL_ON_INVALID_PATH_TIME = 35,
+		KILL_ON_INVALID_PATH_TIME = 50,
 		-- Increments of nodes to search best patch with.
 		NODE_SEARCH_INCREMENTS = 10,
 	},
