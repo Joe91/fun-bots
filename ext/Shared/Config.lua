@@ -149,6 +149,7 @@ Config = {
 	BotVehicleFireModeDuration = 9.0,	-- The minimum time a bot tries to shoot a player or vehicle, when in a vehicle - recommended minimum 7.0 
 	MaximunYawPerSec = 450,				-- In Degrees. Rotation Movement per second 
 	TargetDistanceWayPoint = 0.8,		-- The distance the bots have to reach to continue with the next Waypoint 
+	TargetDistanceWayPointAirVehicles = 16.0,	-- The distance the bots have to reach to continue with the next Waypoint on air vehicles 
 	KeepOneSlotForPlayers = true,		-- Always keep one slot for free new Players to join 
 	DistanceToSpawnBots = 30,			-- Distance to spawn Bots away from players 
 	HeightDistanceToSpawn = 2.8,		-- Distance vertically, Bots should spawn away, if closer than distance 

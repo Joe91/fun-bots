@@ -422,3 +422,5 @@ Language:add(code, "Vehicle Aim Worsening", "Verschlechterung des Fahrzeugziels"
 Language:add(code, "Make bots in vehicles aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy)", "Machen Sie Bots in Fahrzeugen schlechter zielen: für Schwierigkeit: 0 = kein Versatz (schwer), 1 oder noch größer = mehr Einfluss (einfach)")
 Language:add(code, "Vehicle Air Aim Worsening", "Verschlechterung der Luftzielgenauigkeit des Fahrzeugs")
 Language:add(code, "See VehicleAimWorsening, only for Air-Vehicles", "Siehe VehicleAimWorsening, nur für Luftfahrzeuge")
+Language:add(code, "Target distance waypoint air vehicles", "Zielentfernung Wegpunkt Luftfahrzeuge")
+Language:add(code, "The distance the bots have to reach to continue with the next Waypoint on air vehicles", "Die Entfernung, die die Bots zurücklegen müssen, um mit Luftfahrzeugen zum nächsten Wegpunkt fortzufahren")
