@@ -3,6 +3,7 @@ name: publish vumm
 on:
   release:
     types: [published]
+  workflow_dispatch: # Put here!!
 
 jobs:
   publish:
