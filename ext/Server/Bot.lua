@@ -516,7 +516,7 @@ function Bot:_DoExitVehicle()
 			self._CurrentWayPoint = s_Node.PointIndex
 			self._LastWayDistance = 1000.0
 		end
-
+		self._KillYourselfTimer = 0.0
 		self._ExitVehicleActive = false
 		return true
 	end
