@@ -6,13 +6,12 @@ on:
 
 jobs:
   publish:
+    name: Publish VUMM
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-      - name: Publish
-        uses: BF3RM/vumm-action
+      - name: Publish to VUMM
+        uses: BF3RM/vumm-action@v1
         env:
           VUMM_TOKEN: ${{ secrets.VUMM_TOKEN }}
