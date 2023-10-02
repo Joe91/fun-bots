@@ -25,6 +25,7 @@ This is the changelog for the version V2.8 Don't forget to [join us on Discord](
 * Mergeed pull request #303 from tagener-noisu ifv_tows weapon usage
 * Offset of vehicle-weapons was added
 * Kill inactive bots after some time (#307)
+* Merged pull request #314 from tagener-noisu Change target waypoint distance for air vehicles 
 
 ### Bug fixes
 * fix meele attack
