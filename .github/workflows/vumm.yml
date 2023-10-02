@@ -1,0 +1,18 @@
+name: publish vumm
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch: # Put here!!
+
+jobs:
+  publish:
+    name: Publish VUMM
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Publish to VUMM
+        uses: BF3RM/vumm-action@v1
+        env:
+          VUMM_TOKEN: ${{ secrets.VUMM_TOKEN }}
