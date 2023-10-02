@@ -205,6 +205,10 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_Bot)
 
 			local s_TargetDistanceSpeed = Config.TargetDistanceWayPoint * 5
 
+			if m_Vehicles:IsAirVehicle(p_Bot.m_ActiveVehicle) then
+				s_TargetDistanceSpeed = Config.TargetDistanceWayPointAirVehicles
+			end
+
 			if p_Bot.m_ActiveSpeedValue == BotMoveSpeeds.Sprint then
 				s_TargetDistanceSpeed = s_TargetDistanceSpeed * 6
 			elseif p_Bot.m_ActiveSpeedValue == BotMoveSpeeds.SlowCrouch then
