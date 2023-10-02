@@ -70,8 +70,8 @@ SettingsDefinition = {
 			Value = Config.BotAimWorsening,
 			Description = "Make bots aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy)",
 			Reference = Range(0.00, 10.00, 0.05),
-			Default = 0.3,
-			UpdateFlag = UpdateFlag.Weapons,
+			Default = 0.2,
+			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
 		{
@@ -82,8 +82,8 @@ SettingsDefinition = {
 			Value = Config.BotSniperAimWorsening,
 			Description = "See botAimWorsening, only for Sniper-rifles",
 			Reference = Range(0.00, 10.00, 0.05),
-			Default = 0.2,
-			UpdateFlag = UpdateFlag.Weapons,
+			Default = 0.1,
+			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
 		{
@@ -95,7 +95,7 @@ SettingsDefinition = {
 			Description = "See botAimWorsening, only for LMGs",
 			Reference = Range(0.00, 10.00, 0.05),
 			Default = 0.3,
-			UpdateFlag = UpdateFlag.Weapons,
+			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
 		{
@@ -106,7 +106,7 @@ SettingsDefinition = {
 			Value = Config.BotWorseningSkill,
 			Description = "Variation of the skill of a single bot. The higher, the worse the bots can get compared to the original settings",
 			Reference = Range(0.00, 1.00, 0.05),
-			Default = 0.50,
+			Default = 0.40,
 			UpdateFlag = UpdateFlag.Skill,
 			Category = "DIFFICULTY"
 		},
@@ -118,7 +118,7 @@ SettingsDefinition = {
 			Value = Config.BotSniperWorseningSkill,
 			Description = "See BotWorseningSkill - only for BOTs using sniper bolt-action rifles",
 			Reference = Range(0.00, 1.00, 0.05),
-			Default = 0.50,
+			Default = 0.30,
 			UpdateFlag = UpdateFlag.Skill,
 			Category = "DIFFICULTY"
 		},
@@ -215,6 +215,42 @@ SettingsDefinition = {
 			Description = "Original Damage from bots gets multiplied by this",
 			Reference = Range(0.00, 2.00, 0.10),
 			Default = 1.5,
+			UpdateFlag = UpdateFlag.None,
+			Category = "DIFFICULTY"
+		},
+		{
+			Name = "VehicleAimWorsening",
+			Text = "Vehicle Aim Worsening",
+			---@type Type|integer
+			Type = Type.Float,
+			Value = Config.VehicleAimWorsening,
+			Description = "Make bots in vehicles aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy)",
+			Reference = Range(0.00, 10.00, 0.05),
+			Default = 0.0,
+			UpdateFlag = UpdateFlag.None,
+			Category = "DIFFICULTY"
+		},
+		{
+			Name = "VehicleAirAimWorsening",
+			Text = "Vehicle Air Aim Worsening",
+			---@type Type|integer
+			Type = Type.Float,
+			Value = Config.VehicleAirAimWorsening,
+			Description = "See VehicleAimWorsening, only for Air-Vehicles",
+			Reference = Range(0.00, 10.00, 0.05),
+			Default = 0.0,
+			UpdateFlag = UpdateFlag.None,
+			Category = "DIFFICULTY"
+		},
+		{
+			Name = "DamageFactorVehicles",
+			Text = "Damage Factor Vehicles",
+			---@type Type|integer
+			Type = Type.Float,
+			Value = Config.DamageFactorVehicles,
+			Description = "Original Damage from bots in vehicles gets multiplied by this",
+			Reference = Range(0.00, 2.00, 0.10),
+			Default = 1.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
@@ -1529,7 +1565,7 @@ SettingsDefinition = {
 			Value = Config.DistanceToSpawnReduction,
 			Description = "Reduce distance if not possible",
 			Reference = Range(0.00, 100.00, 1.0),
-			Default = 5,
+			Default = 8,
 			UpdateFlag = UpdateFlag.None,
 			Category = "EXPERT"
 		},

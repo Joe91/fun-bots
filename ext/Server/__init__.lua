@@ -498,6 +498,15 @@ function FunBotServer:OnEntityFactoryCreate(p_HookCtx, p_EntityData, p_Transform
 			m_BotManager:CheckForFlareOrSmoke(s_CreatedEntity)
 		end
 	end
+	if Registry.DEBUG.VEHICLE_PROJECTILE_TRACE then
+		if p_EntityData.typeInfo.name == "ProjectileEntityData" or p_EntityData.typeInfo.name == "BulletEntityData" or p_EntityData.typeInfo.name == "MissileEntityData" then
+			local s_CreatedEntity = p_HookCtx:Call()
+			if s_CreatedEntity then
+				local s_SpartialEntity = SpatialEntity(s_CreatedEntity)
+				Globals.LastPorjectile = s_SpartialEntity.transform
+			end
+		end
+	end
 end
 
 ---@param p_HookCtx HookContext

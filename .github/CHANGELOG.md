@@ -23,12 +23,15 @@ This is the changelog for the version V2.8 Don't forget to [join us on Discord](
 * Merged pull request #301 from tagener-noisu min nade distance for bots (also with Registry-Entry)
 * Merged pull request #300 from tagener-noisu trace navigation
 * Mergeed pull request #303 from tagener-noisu ifv_tows weapon usage
+* Offset of vehicle-weapons was added
+* Kill inactive bots after some time (#307)
 
 ### Bug fixes
 * fix meele attack
 * missing nil-check in vehicle-movement
 * fix bots getting stuck on vehicle-paths #297
 * overwrite of loop / reverse path does not work #304
+* fix GM-Rocket-usage #305
 
 ### New maps
 * Gunmaster for MP_001 by Augusta
@@ -37,6 +40,7 @@ This is the changelog for the version V2.8 Don't forget to [join us on Discord](
 * Gunmaster for MP_011 by Augusta
 * Gunmaster for MP_012 by Augusta
 * Gunmaster for MP_018 by Augusta
+* GunMaster for XP1_003 by Volbeat13
 * Rush for XP4_FD by Rolling Wave
 * Rush for XP4_Parl by Rolling Wave
 * Rush for XP4_Quake by Rolling Wave
@@ -45,7 +49,9 @@ This is the changelog for the version V2.8 Don't forget to [join us on Discord](
 * SquadRush for MP_011 by Odysseus
 * SquadRush for XP3_Shield by Odysseus
 * Scavenger for XP4_Rubble by Odysseus
+* SquadRush for XP4_Quake by Volbeat13
 * SquadRush for XP3_Valley by day of light
+* Rush for XP5_001 by Volbeat13
 * Rush for XP5_002 by Sunseeker
 * Rush for XP5_003 by Sunseeker
 * Rush for XP3_Shield by Sunseeker
@@ -65,6 +71,7 @@ This is the changelog for the version V2.8 Don't forget to [join us on Discord](
 * Rush for MP_001 by Rolling Wave
 * Rush for MP_012 by Rolling Wave
 * Rush for MP_013 by Rolling Wave
+* Rush for MP_003 by Volbeat13
 * Rush for MP_011 by Odysseus
 * Rush for MP_017 by Odysseus
 * Rush for MP_018 by Odysseus
@@ -72,6 +79,7 @@ This is the changelog for the version V2.8 Don't forget to [join us on Discord](
 * Rush for XP1_003 Rework by Sunseeker
 * Rush for XP1_001 Rework by Sunseeker
 * Rush for XP4_Quake Rework by Sunseeker
+* Conquest Large for MP_011 by ThyKingdomCome
 
 ### Documentation update
 

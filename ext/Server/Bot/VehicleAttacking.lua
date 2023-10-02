@@ -19,7 +19,6 @@ function VehicleAttacking:UpdateAttackingVehicle(p_Bot)
 		end
 
 		if (p_Bot._ShootModeTimer < Config.BotVehicleFireModeDuration) then -- Three times the default duration.
-
 			p_Bot._ShootModeTimer = p_Bot._ShootModeTimer + Registry.BOT.BOT_UPDATE_CYCLE
 
 			-- Get amount of weapon slots.
@@ -38,8 +37,8 @@ function VehicleAttacking:UpdateAttackingVehicle(p_Bot)
 						if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Chopper) then
 							if p_Bot.m_Player.controlledEntryId == 0 and
 								(p_Bot._ShootPlayerVehicleType == VehicleTypes.Chopper
-								or p_Bot._ShootPlayerVehicleType == VehicleTypes.ScoutChopper
-								or p_Bot._ShootPlayerVehicleType == VehicleTypes.Plane)
+									or p_Bot._ShootPlayerVehicleType == VehicleTypes.ScoutChopper
+									or p_Bot._ShootPlayerVehicleType == VehicleTypes.Plane)
 							then
 								p_Bot._VehicleWeaponSlotToUse = 2
 							elseif p_Bot.m_Player.controlledEntryId == 1 and
@@ -58,8 +57,8 @@ function VehicleAttacking:UpdateAttackingVehicle(p_Bot)
 						elseif m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.ScoutChopper) then
 							if p_Bot.m_Player.controlledEntryId == 0 and
 								(p_Bot._ShootPlayerVehicleType == VehicleTypes.Chopper
-								or p_Bot._ShootPlayerVehicleType == VehicleTypes.Plane
-								or p_Bot._ShootPlayerVehicleType == VehicleTypes.ScoutChopper)
+									or p_Bot._ShootPlayerVehicleType == VehicleTypes.Plane
+									or p_Bot._ShootPlayerVehicleType == VehicleTypes.ScoutChopper)
 							then
 								p_Bot._VehicleWeaponSlotToUse = 1
 							else
@@ -68,9 +67,9 @@ function VehicleAttacking:UpdateAttackingVehicle(p_Bot)
 						elseif m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.IFV) then
 							if p_Bot.m_Player.controlledEntryId == 0 and
 								(p_Bot._ShootPlayerVehicleType == VehicleTypes.Tank
-								or p_Bot._ShootPlayerVehicleType == VehicleTypes.MobileArtillery
-								or p_Bot._ShootPlayerVehicleType == VehicleTypes.AntiAir
-								or p_Bot._ShootPlayerVehicleType == VehicleTypes.IFV)
+									or p_Bot._ShootPlayerVehicleType == VehicleTypes.MobileArtillery
+									or p_Bot._ShootPlayerVehicleType == VehicleTypes.AntiAir
+									or p_Bot._ShootPlayerVehicleType == VehicleTypes.IFV)
 							then
 								if p_Bot._VehicleSecondaryWeaponTimer == 0 then
 									p_Bot._VehicleSecondaryWeaponTimer = 12.0
@@ -93,18 +92,16 @@ function VehicleAttacking:UpdateAttackingVehicle(p_Bot)
 				else
 					p_Bot._ShootModeTimer = Config.BotVehicleFireModeDuration -- End attack.
 				end
-			else -- Soldier.
+			else                                               -- Infantery Soldier.
 				if s_WeaponSlots > 1 then
 					-- If in Tank and target == soldier and distance small enough → LMG / HMG
 					if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Tank) and
-						p_Bot._DistanceToPlayer < Config.MaxShootDistanceSniper then
+						p_Bot._DistanceToPlayer < Config.MaxShootDistance then
 						p_Bot._VehicleWeaponSlotToUse = 2
-					-- elseif m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.MobileArtillery) then --To-do: only do that when there is an indication for ammo.
-					-- 	p_Bot._VehicleWeaponSlotToUse = 2
 					else
 						p_Bot._VehicleWeaponSlotToUse = 1
 					end
-				-- To-do more vehicles and more logic.
+					-- To-do more vehicles and more logic.
 				else
 					p_Bot._VehicleWeaponSlotToUse = 1 -- Primary.
 				end

@@ -39,7 +39,7 @@ Registry = {
 		-- Patch version.
 		VERSION_PATCH = 0,
 		-- Additional label for pre-releases and build metadata.
-		VERSION_LABEL = "RC1",
+		VERSION_LABEL = "RC2",
 		-- Current version type of this build.
 		VERSION_TYPE = VersionType.Stable,
 		-- The Version used for the Update-Check.
@@ -76,8 +76,8 @@ Registry = {
 		MCOMS_CHECK_CYCLE = 26.5,
 		-- Max bots per objective.
 		MAX_ASSIGNED_LIMIT = 16,
-		-- After finding no valid path for that many crossings, a bot is killed (Rush only)
-		KILL_ON_INVALID_PATH_CROSSINGS = 10,
+		-- Kill Bots without valid paths after this amount of time
+		KILL_ON_INVALID_PATH_TIME = 50,
 		-- Increments of nodes to search best patch with.
 		NODE_SEARCH_INCREMENTS = 10,
 	},
@@ -141,6 +141,8 @@ Registry = {
 		MIN_DISTANCE_NADE = 12,
 		-- Advanced aiming makes a difference on huge distances, but costs more performance.
 		USE_ADVANCED_AIMING = false,
+		-- Worsening bots on larger distances. Factor 1.0 = no worsening, always same offset
+		WORSENING_FACOTR_DISTANCE = 0.9,
 	},
 	-- Bot team balancing (only in keep_playercount - spawn-mode)
 	BOT_TEAM_BALANCING = {
@@ -170,5 +172,10 @@ Registry = {
 		PROBABILITY_BASE_SPAWN = 5,
 		-- Probability of a bot spawning on their deployment base.
 		PROBABILITY_BASE_VEHICLE_SPAWN = 30,
+	},
+	-- Debug
+	DEBUG = {
+		-- enables prints on bullet-collistions for vehicle-offset-identification
+		VEHICLE_PROJECTILE_TRACE = false,
 	}
 }

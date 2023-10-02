@@ -59,6 +59,7 @@ MP_013 GunMaster0 1
 MP_017 GunMaster0 1
 MP_018 GunMaster0 1
 MP_Subway GunMaster0 1
+XP1_003 GunMaster0 1
 XP2_Factory GunMaster0 1
 XP2_Office GunMaster0 1
 XP2_Palace GunMaster0 1
@@ -90,6 +91,7 @@ XP4_FD RushLarge0 1
 XP4_Parl RushLarge0 1
 XP4_Quake RushLarge0 1
 XP4_Rubble RushLarge0 1
+XP5_001 RushLarge0 1
 XP5_002 RushLarge0 1
 XP5_003 RushLarge0 1
 XP5_004 RushLarge0 1
@@ -134,6 +136,7 @@ XP2_Office SquadRush0 1
 XP3_Desert SquadRush0 1
 XP3_Shield SquadRush0 1
 XP3_Valley SquadRush0 1
+XP4_Quake SquadRush0 1
 XP4_Rubble SquadRush0 1
 XP5_002 SquadRush0 1
 XP5_004 SquadRush0 1

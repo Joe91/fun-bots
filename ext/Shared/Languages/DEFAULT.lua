@@ -35,6 +35,12 @@ Language:add(code, "Damage Factor Pistol", "")
 Language:add(code, "Original Damage from bots gets multiplied by this", "")
 Language:add(code, "Damage Factor Knife", "")
 Language:add(code, "Original Damage from bots gets multiplied by this", "")
+Language:add(code, "Vehicle Aim Worsening", "")
+Language:add(code, "Make bots in vehicles aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy)", "")
+Language:add(code, "Vehicle Air Aim Worsening", "")
+Language:add(code, "See VehicleAimWorsening, only for Air-Vehicles", "")
+Language:add(code, "Damage Factor Vehicles", "")
+Language:add(code, "Original Damage from bots in vehicles gets multiplied by this", "")
 
 -- SPAWN
 Language:add(code, "Spawn Mode", "")

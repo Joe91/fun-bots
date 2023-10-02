@@ -88,6 +88,7 @@ function Bot:__init(p_Player)
 	self._BrakeTimer = 0.0
 	self._SpawnProtectionTimer = 0.0
 	self._SidewardsTimer = 0.0
+	self._KillYourselfTimer = 0.0
 
 	-- Shared movement vars.
 	---@type BotMoveModes
@@ -382,7 +383,7 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 							-- Fast code.
 							if s_Attacking then
 								if m_Vehicles:IsAirVehicle(self.m_ActiveVehicle) then
-									m_VehicleAiming:UpdateAimingVehicleAdvanced(self)
+									m_VehicleAiming:UpdateAimingVehicle(self, true)
 								else
 									if Config.VehicleMoveWhileShooting and m_Vehicles:IsNotVehicleTerrain(self.m_ActiveVehicle, VehicleTerrains.Air) then
 										if self.m_Player.controlledEntryId == 0 and not s_IsStationaryLauncher then -- Only if driver.
@@ -390,7 +391,7 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 											m_VehicleMovement:UpdateTargetMovementVehicle(self)
 										end
 									end
-									m_VehicleAiming:UpdateAimingVehicle(self)
+									m_VehicleAiming:UpdateAimingVehicle(self, false)
 								end
 							else
 								if self.m_Player.controlledEntryId == 0 and not s_IsStationaryLauncher then -- Only if driver.
@@ -515,7 +516,7 @@ function Bot:_DoExitVehicle()
 			self._CurrentWayPoint = s_Node.PointIndex
 			self._LastWayDistance = 1000.0
 		end
-
+		self._KillYourselfTimer = 0.0
 		self._ExitVehicleActive = false
 		return true
 	end
@@ -747,6 +748,7 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 				-- check for changed weapon
 				BotSpawner:UpdateGmWeapon(self)
 			end
+			self._KillYourselfTimer = 0.0
 			return true
 		else
 			self._ShootPlayerName = ''
@@ -873,6 +875,7 @@ function Bot:ResetVars()
 	self._KnifeWayPositions = {}
 	self._ShootWayPoints = {}
 	self._SpawnDelayTimer = 0.0
+	self._KillYourselfTimer = 0.0
 	self._SpawnProtectionTimer = 0.0
 	self._Objective = ''
 	self._WeaponToUse = BotWeapons.Primary
@@ -1044,6 +1047,7 @@ function Bot:ResetSpawnVars()
 	self._BrakeTimer = 0.0
 	self._DeployTimer = MathUtils:GetRandomInt(1, Config.DeployCycle)
 	self._AttackModeMoveTimer = 0.0
+	self._KillYourselfTimer = 0.0
 	self._AttackMode = BotAttackModes.RandomNotSet
 	self._ShootWayPoints = {}
 
@@ -1212,7 +1216,7 @@ function Bot:_UpdateStationaryAAVehicle(p_Attacking)
 
 	if p_Attacking then -- Target available.
 		-- Aim at target.
-		m_VehicleAiming:UpdateAimingVehicleAdvanced(self)
+		m_VehicleAiming:UpdateAimingVehicle(self, true)
 	else
 		-- Just look a little around.
 		m_VehicleMovement:UpdateVehicleLookAround(self, Registry.BOT.BOT_FAST_UPDATE_CYCLE)
