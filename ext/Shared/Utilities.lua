@@ -31,7 +31,7 @@ function Utilities:getTargetHeight(p_Soldier, p_IsTarget, p_AimForHead)
 		elseif p_Soldier.pose == CharacterPoseType.CharacterPoseType_Crouch then
 			s_CameraHeight = 1.05
 		end
-	else -- Aim a little lower.
+	else               -- Aim a little lower.
 		s_CameraHeight = 1.1 -- bot.soldier.pose == CharacterPoseType.CharacterPoseType_Stand - reduce by 0.5
 
 		if p_Soldier.pose == CharacterPoseType.CharacterPoseType_Prone then
@@ -168,6 +168,7 @@ function table:has(p_Value)
 			return true
 		end
 	end
+	return false
 end
 
 function string:isLower(p_Value)
