@@ -945,7 +945,7 @@ function GameDirector:IsBasePath(p_ObjectiveNames)
 	for _, l_ObjectiveName in pairs(p_ObjectiveNames) do
 		local s_Objective = self:_GetObjectiveObject(l_ObjectiveName)
 
-		if s_Objective ~= nil and s_Objective.isBase then
+		if #p_ObjectiveNames == 1 and s_Objective ~= nil and s_Objective.isBase then
 			return true
 		end
 	end
