@@ -829,7 +829,7 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 
 			local s_Node = m_NodeCollection:Get(1, l_Path)
 
-			if s_Node == nil or s_Node.Data.Objectives == nil or #s_Node.Data.Objectives ~= 1 then
+			if s_Node == nil or s_Node.Data.Objectives == nil or #s_Node.Data.Objectives ~= 1 or s_Node.Data.Vehicles ~= nil then
 				goto continue_paths_loop
 			end
 
@@ -945,7 +945,7 @@ function GameDirector:IsBasePath(p_ObjectiveNames)
 	for _, l_ObjectiveName in pairs(p_ObjectiveNames) do
 		local s_Objective = self:_GetObjectiveObject(l_ObjectiveName)
 
-		if s_Objective ~= nil and s_Objective.isBase then
+		if #p_ObjectiveNames == 1 and s_Objective ~= nil and s_Objective.isBase then
 			return true
 		end
 	end
