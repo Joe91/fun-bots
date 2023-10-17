@@ -267,7 +267,7 @@ pathIndex;pointIndex;transX;transY;transZ;inputVar;data
 8;53;-226.061920;134.108978;196.208496;2;
 8;54;-225.617874;133.641357;193.863022;1;
 8;55;-225.459259;133.475662;193.033981;2;{"Links":[[9,1]],"LinkMode":0}
-9;1;-222.386902;131.616714;184.591202;3;{"Action":{"time":0.5,"inputs":[35],"type":"exit","onlyPassengers":false},"LinkMode":0,"Vehicles":{},"Links":[[8,55]],"Objectives":["mcom 1"]}
+9;1;-222.386902;131.616714;184.591202;3;{"Action":{"time":0.5,"inputs":[35],"type":"exit","onlyPassengers":false},"LinkMode":0,"Links":[[8,55]],"Objectives":["mcom 1"]}
 9;2;-222.361938;131.551437;184.249344;3;
 9;3;-222.270248;131.329163;183.011887;3;
 9;4;-222.214890;131.188843;182.264511;3;{"Links":[[1,5]],"LinkMode":0}

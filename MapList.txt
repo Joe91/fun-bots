@@ -20,6 +20,7 @@ MP_Subway ConquestLarge0 1
 XP1_002 ConquestLarge0 1
 XP3_Alborz ConquestLarge0 1
 XP3_Shield ConquestLarge0 1
+XP3_Valley ConquestLarge0 1
 XP4_FD ConquestLarge0 1
 XP4_Parl ConquestLarge0 1
 XP4_Quake ConquestLarge0 1
@@ -95,6 +96,9 @@ XP5_001 RushLarge0 1
 XP5_002 RushLarge0 1
 XP5_003 RushLarge0 1
 XP5_004 RushLarge0 1
+XP4_FD Scavenger0 1
+XP4_Parl Scavenger0 1
+XP4_Quake Scavenger0 1
 XP4_Rubble Scavenger0 1
 MP_001 SquadDeathMatch0 1
 MP_003 SquadDeathMatch0 1
