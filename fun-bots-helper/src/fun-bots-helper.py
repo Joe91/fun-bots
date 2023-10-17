@@ -43,12 +43,12 @@ class App(customtkinter.CTk):
         self.grid_columnconfigure(tuple(range(4)), weight=1)
 
         self.label_user_tools = customtkinter.CTkLabel(
-            text="User Tools", text_font=("Terminal", 17)
+            master=self, text="User Tools", font=("Terminal", 17)
         )
         self.label_user_tools.grid(row=0, column=0, sticky="ew", rowspan=2)
 
         self.label_traces = customtkinter.CTkLabel(
-            master=self, text="Traces", text_font=("Terminal", 12)
+            master=self, text="Traces", font=("Terminal", 12)
         )
         self.label_traces.grid(row=2, column=0, sticky="ew")
 
@@ -56,7 +56,7 @@ class App(customtkinter.CTk):
             "master": self,
             "width": 160,
             "height": 40,
-            "text_font": ("Terminal", 10),
+            "font": ("Terminal", 10),
         }
 
         self.button_import_traces = customtkinter.CTkButton(
@@ -74,7 +74,7 @@ class App(customtkinter.CTk):
         self.button_export_traces.grid(row=4, column=0)
 
         self.label_settings = customtkinter.CTkLabel(
-            text="Settings", text_font=("Terminal", 12)
+            master=self, text="Settings", font=("Terminal", 12)
         )
         self.label_settings.grid(row=5, column=0, sticky="ew")
 
@@ -93,12 +93,12 @@ class App(customtkinter.CTk):
         self.button_export_settings.grid(row=7, column=0, pady=(0, 20))
 
         self.label_dev_tools = customtkinter.CTkLabel(
-            text="Dev Tools", text_font=("Terminal", 17)
+            master=self, text="Dev Tools", font=("Terminal", 17)
         )
         self.label_dev_tools.grid(row=0, column=1, columnspan=4, rowspan=2, sticky="ew")
 
         self.label_mod_database = customtkinter.CTkLabel(
-            text="Mod Database", text_font=("Terminal", 12)
+            master=self, text="Mod Database", font=("Terminal", 12)
         )
         self.label_mod_database.grid(row=2, column=1, sticky="ew")
 
@@ -124,7 +124,7 @@ class App(customtkinter.CTk):
         self.button_clear_settings.grid(row=4, column=1)
 
         self.label_languages = customtkinter.CTkLabel(
-            text="Languages", text_font=("Terminal", 12)
+            master=self, text="Languages", font=("Terminal", 12)
         )
         self.label_languages.grid(row=5, column=1, sticky="ew")
 
@@ -133,7 +133,7 @@ class App(customtkinter.CTk):
             placeholder_text="Language Code",
             width=160,
             height=40,
-            text_font=("Terminal", 10),
+            font=("Terminal", 10),
             corner_radius=10,
         )
         self.language_code.grid(row=6, column=1)
@@ -146,7 +146,7 @@ class App(customtkinter.CTk):
         self.button_create_language.grid(row=7, column=1, pady=(0, 20))
 
         self.label_maps = customtkinter.CTkLabel(
-            text="Maps", text_font=("Terminal", 12)
+            master=self, text="Maps", font=("Terminal", 12)
         )
         self.label_maps.grid(row=2, column=2, sticky="ew")
 
@@ -190,7 +190,7 @@ class App(customtkinter.CTk):
         self.button_merge_mapfiles.grid(row=7, column=2, pady=(0, 20))
 
         self.label_docs_settings = customtkinter.CTkLabel(
-            text="Settings", text_font=("Terminal", 12)
+            master=self, text="Settings", font=("Terminal", 12)
         )
         self.label_docs_settings.grid(row=2, column=3, sticky="ew")
 
@@ -213,7 +213,7 @@ class App(customtkinter.CTk):
             values=["DARK", "LIGHT"],
             width=160,
             height=40,
-            text_font=("Terminal", 10),
+            font=("Terminal", 10),
             command=self.change_appearance_mode,
             corner_radius=20,
             fg_color="#999900",
@@ -223,7 +223,7 @@ class App(customtkinter.CTk):
         self.label_version = customtkinter.CTkLabel(
             master=self,
             text=get_version(),
-            text_font=("Terminal", 10),
+            font=("Terminal", 10),
         )
         self.label_version.grid(row=7, column=3, pady=(0, 20))
 
