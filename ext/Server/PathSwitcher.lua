@@ -156,6 +156,14 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotName, p_Point, p_Objective, p_InVeh
 						if s_NewPoint.ID == p_Point.ID then
 							s_CurrentPriority = 1
 						end
+					-- Consider path with other objective, in case everything else fails
+					elseif #s_PathNode.Data.Objectives == 1 then
+						table.insert(s_Paths, {
+							Priority = 0,
+							Point = s_NewPoint,
+							State = s_NewPathStatus,
+							Base = s_NewBasePath
+						})
 					end
 				end
 			end
