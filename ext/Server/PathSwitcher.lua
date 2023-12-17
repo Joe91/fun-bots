@@ -270,7 +270,7 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotName, p_Point, p_Objective, p_InVeh
 		return false
 	end
 
-	if #s_ValidPaths == 1 and s_CurrentPriority < s_ValidPaths[1].Priority then
+	if #s_ValidPaths == 1 and s_CurrentPriority <= s_ValidPaths[1].Priority then
 		-- m_Logger:Write('chose to switch at random ('..s_RandomNumber..' >= '..s_Chance..') | Priority: ( '..s_CurrentPriority..' | '..s_RandomPath.Priority..' )')
 		return true, s_ValidPaths[1].Point
 	end
