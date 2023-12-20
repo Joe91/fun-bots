@@ -132,6 +132,12 @@ function Vehicles:IsAirVehicle(p_VehicleData)
 		or self:IsVehicleType(p_VehicleData, VehicleTypes.Plane)
 end
 
+function Vehicles:IsAirVehicleType(p_VehicleType)
+	return p_VehicleType == VehicleTypes.Chopper
+		or p_VehicleType == VehicleTypes.ScoutChopper
+		or p_VehicleType == VehicleTypes.Plane
+end
+
 function Vehicles:IsNotVehicleType(p_VehicleData, p_VehicleType)
 	if p_VehicleData and p_VehicleData.Type then
 		return p_VehicleData.Type ~= p_VehicleType
