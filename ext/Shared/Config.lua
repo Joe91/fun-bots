@@ -10,11 +10,11 @@ Config = {
 	BotColor = BotColors.RANDOM_COLOR,	-- The Color of the Bots 
 
 	-- DIFFICULTY 
-	BotAimWorsening = 0.2,				-- Make bots aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy) 
-	BotSniperAimWorsening = 0.1,		-- See botAimWorsening, only for Sniper-rifles 
-	BotSupportAimWorsening = 0.3,		-- See botAimWorsening, only for LMGs 
-	BotWorseningSkill = 0.40,			-- Variation of the skill of a single bot. The higher, the worse the bots can get compared to the original settings 
-	BotSniperWorseningSkill = 0.30,		-- See BotWorseningSkill - only for BOTs using sniper bolt-action rifles 
+	BotAimWorsening = 0.7,				-- Make bots aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy) 
+	BotSniperAimWorsening = 0.7,		-- See botAimWorsening, only for Sniper-rifles 
+	BotSupportAimWorsening = 0.7,		-- See botAimWorsening, only for LMGs 
+	BotWorseningSkill = 0.50,			-- Variation of the skill of a single bot. The higher, the worse the bots can get compared to the original settings 
+	BotSniperWorseningSkill = 0.50,		-- See BotWorseningSkill - only for BOTs using sniper bolt-action rifles 
 	DamageFactorAssault = 1.0,			-- Original Damage from bots gets multiplied by this 
 	DamageFactorCarabine = 1.0,			-- Original Damage from bots gets multiplied by this 
 	DamageFactorLMG = 1.0,				-- Original Damage from bots gets multiplied by this 
@@ -32,43 +32,43 @@ Config = {
 	BalancePlayersIgnoringBots = false,	-- Counts players in each team to decide which team a player joins 
 	TeamSwitchMode = TeamSwitchModes.SwitchForRoundTwo,	-- Mode to switch the team 
 	SpawnInBothTeams = true,			-- Bots spawn in both teams 
-	InitNumberOfBots = 10,				-- Bots for spawnmode 
+	InitNumberOfBots = 32,				-- Bots for spawnmode 
 	NewBotsPerNewPlayer = 1.6,			-- Number to increase Bots by when new players join 
-	FactorPlayerTeamCount = 0.9,		-- Reduce player team in balanced_teams or fixed_number mode 
+	FactorPlayerTeamCount = 1.0,		-- Reduce player team in balanced_teams or fixed_number mode 
 	BotTeam = 0,						-- Default bot team (0 = neutral / auto, 1 = US, 2 = RU) TeamId.Team2 
 	BotNewLoadoutOnSpawn = true,		-- Bots get a new kit and color, if they respawn 
 	MaxAssaultBots = -1,				-- Maximum number of Bots with Assault Kit. -1 = no limit 
 	MaxEngineerBots = -1,				-- Maximum number of Bots with Engineer Kit. -1 = no limit 
 	MaxSupportBots = -1,				-- Maximum number of Bots with Support Kit. -1 = no limit 
 	MaxReconBots = -1,					-- Maximum number of Bots with Recon Kit. -1 = no limit 
-	AdditionalBotSpawnDelay = 0.5,		-- Additional time a bot waits to respawn 
+	AdditionalBotSpawnDelay = 10.0,		-- Additional time a bot waits to respawn 
 	BotMaxHealth = 100.0,				-- Max health of bot (default 100.0) 
 
 	-- SPAWNLIMITS 
 	MaxBotsPerTeamDefault = 32,			-- Max number of bots in one team, if no other mode fits 
-	MaxBotsPerTeamTdm = 32,				-- Max number of bots in one team for TDM 
-	MaxBotsPerTeamTdmc = 8,				-- Max number of bots in one team for TDM-CQ 
+	MaxBotsPerTeamTdm = 16,				-- Max number of bots in one team for TDM 
+	MaxBotsPerTeamTdmc = 16,				-- Max number of bots in one team for TDM-CQ 
 	MaxBotsPerTeamSdm = 5,				-- Max number of bots in one team for Squad-DM 
 	MaxBotsPerTeamCl = 32,				-- Max number of bots in one team for CQ-Large 
 	MaxBotsPerTeamCs = 16,				-- Max number of bots in one team for CQ-Small 
-	MaxBotsPerTeamCal = 32,				-- Max number of bots in one team for CQ-Assault-Large 
+	MaxBotsPerTeamCal = 24,				-- Max number of bots in one team for CQ-Assault-Large 
 	MaxBotsPerTeamCas = 16,				-- Max number of bots in one team for CQ-Assault-Small 
-	MaxBotsPerTeamRl = 24,				-- Max number of bots in one team for Rush 
-	MaxBotsPerTeamCtf = 24,				-- Max number of bots in one team for CTF 
-	MaxBotsPerTeamD = 12,				-- Max number of bots in one team for Domination 
-	MaxBotsPerTeamGm = 12,				-- Max number of bots in one team for Gunmaster 
-	MaxBotsPerTeamS = 12,				-- Max number of bots in one team for Scavenger 
+	MaxBotsPerTeamRl = 12,				-- Max number of bots in one team for Rush 
+	MaxBotsPerTeamCtf = 12,				-- Max number of bots in one team for CTF 
+	MaxBotsPerTeamD = 8,				-- Max number of bots in one team for Domination 
+	MaxBotsPerTeamGm = 8,				-- Max number of bots in one team for Gunmaster 
+	MaxBotsPerTeamS = 8,				-- Max number of bots in one team for Scavenger 
 
 	-- BEHAVIOUR 
-	FovForShooting = 180,				-- Degrees of FOV of Bot 
+	FovForShooting = 150,				-- Degrees of FOV of Bot 
 	FovVerticleForShooting = 90,		-- Degrees of FOV of Bot in vertical direction 
-	MaxShootDistance = 70,				-- Meters before bots (not sniper) will start shooting at players 
-	MaxShootDistanceSniper = 150,		-- Meters before bots will start shooting at players 
-	MaxDistanceShootBack = 150,			-- Meters until bots (not sniper) shoot back if hit 
-	MaxDistanceShootBackSniper = 400,	-- Meters until snipers shoot back if hit 
+	MaxShootDistance = 50,				-- Meters before bots (not sniper) will start shooting at players 
+	MaxShootDistanceSniper = 50,		-- Meters before bots will start shooting at players 
+	MaxDistanceShootBack = 120,			-- Meters until bots (not sniper) shoot back if hit 
+	MaxDistanceShootBackSniper = 120,	-- Meters until snipers shoot back if hit 
 	MaxShootDistancePistol = 20,		-- The distance before a bot switches to pistol if his magazine is empty (Only in auto-weapon-mode) 
 	BotAttackMode = BotAttackModes.RandomNotSet,	-- Mode the Bots attack with. Random, Crouch or Stand 
-	ShootBackIfHit = true,				-- Bot shoots back if hit 
+	ShootBackIfHit = false,				-- Bot shoots back if hit 
 	BotsAttackBots = true,				-- Bots attack bots from other team 
 	BotsAttackPlayers = true,			-- Bots attack Players from other team 
 	MeleeAttackIfClose = true,			-- Bot attacks with melee if close 
@@ -99,10 +99,10 @@ Config = {
 
 	-- WEAPONS 
 	UseRandomWeapon = true,				-- Use a random weapon out of the Weapon Set 
-	AssaultWeaponSet = WeaponSets.Custom,	-- Weaponset of Assault class. Custom uses the Shared/WeaponLists 
-	EngineerWeaponSet = WeaponSets.Custom,	-- Weaponset of Engineer class. Custom uses the Shared/WeaponLists 
-	SupportWeaponSet = WeaponSets.Custom,	-- Weaponset of Support class. Custom uses the Shared/WeaponLists 
-	ReconWeaponSet = WeaponSets.Custom,	-- Weaponset of Recon class. Custom uses the Shared/WeaponLists 
+	AssaultWeaponSet = WeaponSets.Class,	-- Weaponset of Assault class. Custom uses the Shared/WeaponLists 
+	EngineerWeaponSet = WeaponSets.Class,	-- Weaponset of Engineer class. Custom uses the Shared/WeaponLists 
+	SupportWeaponSet = WeaponSets.Class,	-- Weaponset of Support class. Custom uses the Shared/WeaponLists 
+	ReconWeaponSet = WeaponSets.PDW,	-- Weaponset of Recon class. Custom uses the Shared/WeaponLists 
 	AssaultWeapon = "M416",				-- Primary weapon of Assault class, if random-weapon == false 
 	EngineerWeapon = "M4A1",			-- Primary weapon of Engineer class, if random-weapon == false 
 	SupportWeapon = "M249",				-- Primary weapon of Support class, if random-weapon == false 
@@ -153,7 +153,7 @@ Config = {
 	KeepOneSlotForPlayers = true,		-- Always keep one slot for free new Players to join 
 	DistanceToSpawnBots = 30,			-- Distance to spawn Bots away from players 
 	HeightDistanceToSpawn = 2.8,		-- Distance vertically, Bots should spawn away, if closer than distance 
-	DistanceToSpawnReduction = 8,		-- Reduce distance if not possible 
+	DistanceToSpawnReduction = 5,		-- Reduce distance if not possible 
 	MaxTrysToSpawnAtDistance = 3,		-- Try this often to spawn a bot away from players 
 	AttackWayBots = true,				-- Bots on paths attack player 
 	RespawnWayBots = true,				-- Bots on paths respawn if killed 
@@ -164,6 +164,6 @@ Config = {
 	AllowCommForAll = true,				-- If true, all Players can access the Comm-Screen 
 	DisableChatCommands = false,		-- If true, no chat commands can be used 
 	DisableRCONCommands = false,		-- If true, no RCON commands can be used 
-	IgnorePermissions = false,			-- If true, all permissions are ignored --> everyone can do everything 
-	Language = nil,						-- de_DE as sample (default is English, when language file does not exist) 
+	IgnorePermissions = true,			-- If true, all permissions are ignored --> everyone can do everything 
+	Language = "cn_CN",						-- de_DE as sample (default is English, when language file does not exist) 
 } 
