@@ -13,9 +13,10 @@ This is the changelog for the version V2.9 Don't forget to [join us on Discord](
 
 
 ### Bug fixes
-
+* Merged pull request #323 from tagener-noisu Path-Switcher fixes
 
 ### New maps
+* Conquest Large MP_018 by ThyKingdomCome
 * Conquest Large XP3_Valley by ThyKingdomCome
 * XP4_FD Scavenger by Volbeat13
 * XP4_Parl Scavenger by Volbeat13
