@@ -123,47 +123,55 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotName, p_Point, p_Objective, p_InVeh
 
 			-- Path with a single objective that matches mine, top priority.
 			if #s_PathNode.Data.Objectives == 1 and s_PathNode.Data.Objectives[1] == p_Objective then
-				if s_HighestPriority < 2 then
-					s_HighestPriority = 2
+				if s_HighestPriority < 3 then
+					s_HighestPriority = 3
 				end
 
 				table.insert(s_Paths, {
-					Priority = 2,
+					Priority = 3,
 					Point = s_NewPoint,
 					State = s_NewPathStatus,
 					Base = s_NewBasePath
 				})
 
 				if s_NewPoint.ID == p_Point.ID then
-					s_CurrentPriority = 2
+					s_CurrentPriority = 3
 				end
-				-- Otherwise, check if the path has an objective I want.
+			-- Consider path with other objective, in case everything else fails
+			elseif #s_PathNode.Data.Objectives == 1 then
+				if s_HighestPriority < 1 then
+					s_HighestPriority = 1
+				end
+
+				table.insert(s_Paths, {
+					Priority = 1,
+					Point = s_NewPoint,
+					State = s_NewPathStatus,
+					Base = s_NewBasePath
+				})
+
+				if s_NewPoint.ID == p_Point.ID then
+					s_CurrentPriority = 1
+				end
+			-- Otherwise, check if the path has an objective I want.
 			else
 				-- Loop through the path's objectives and compare to mine.
 				for _, l_PathObjective in pairs(s_PathNode.Data.Objectives) do
 					if p_Objective == l_PathObjective then
-						if s_HighestPriority < 1 then
-							s_HighestPriority = 1
+						if s_HighestPriority < 2 then
+							s_HighestPriority = 2
 						end
 
 						table.insert(s_Paths, {
-							Priority = 1,
+							Priority = 2,
 							Point = s_NewPoint,
 							State = s_NewPathStatus,
 							Base = s_NewBasePath
 						})
 
 						if s_NewPoint.ID == p_Point.ID then
-							s_CurrentPriority = 1
+							s_CurrentPriority = 2
 						end
-					-- Consider path with other objective, in case everything else fails
-					elseif #s_PathNode.Data.Objectives == 1 then
-						table.insert(s_Paths, {
-							Priority = 0,
-							Point = s_NewPoint,
-							State = s_NewPathStatus,
-							Base = s_NewBasePath
-						})
 					end
 				end
 			end
