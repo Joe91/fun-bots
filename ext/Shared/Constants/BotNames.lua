@@ -164,6 +164,9 @@ BotNames = {
 	'akebono047',
 	-- Other names
 	'LunyblacAseity',
+	'C4EvC4Elius',
+	'ivan0394',
+	'tagener-noisuf',
 	'Aseityja753',
 	'WordplayAmelus',
 	'Ameluslan93',
