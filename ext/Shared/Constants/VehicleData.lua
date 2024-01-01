@@ -231,6 +231,7 @@ VehicleData = {
 		Parts = { -1, 23, -1, -1, -1, -1 },
 		Speed = { 600, 80, 600, 600, 600, 600 },
 		Drop = { 9.81, 7.0, 9.81, 9.81, 9.81, 9.81 },
+		FirstPassengerSeat = 3,
 		Offset = { Vec3(0, 0, 0), Vec3(-0.324, 0.213, -0.625), Vec3(0, 0, 0), Vec3(0, 0, 0), Vec3(0, 0, 0), Vec3(0, 0, 0) }
 	},
 	["HumveeArmored"] = {

@@ -94,7 +94,10 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_Bot)
 					if s_VehicleEntity ~= nil then
 						for i = 1, (s_VehicleEntity.entryCount - 1) do
 							local s_Player = s_VehicleEntity:GetPlayerInEntry(i)
-							if s_Player ~= nil then
+							local s_IsPassenger = m_Vehicles:IsPassengerSeat(p_Bot.m_ActiveVehicle, i)
+							local s_ShouldExit = not s_OnlyPassengers or s_IsPassenger
+
+							if s_ShouldExit and s_Player ~= nil then
 								Events:Dispatch('Bot:ExitVehicle', s_Player.name)
 							end
 						end
