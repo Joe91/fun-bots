@@ -985,8 +985,11 @@ function GameDirector:UseVehicle(p_BotTeam, p_Objective)
 	local s_TempObjective = self:_GetObjectiveObject(p_Objective)
 
 	if s_TempObjective ~= nil and s_TempObjective.active and s_TempObjective.isEnterVehiclePath then
-		-- s_TempObjective.active = false
-		return true
+		if s_TempObjective.isEnterAirVehiclePath then
+			return Config.UseVehicles and Config.UseAirVehicles
+		else
+			return Config.UseVehicles
+		end
 	end
 
 	return false
@@ -1076,6 +1079,7 @@ function GameDirector:_InitObjectives()
 			isBase = false,
 			isSpawnPath = false,
 			isEnterVehiclePath = false,
+			isEnterAirVehiclePath = false,
 			destroyed = false,
 			active = true,
 			subObjective = false,
@@ -1100,6 +1104,12 @@ function GameDirector:_InitObjectives()
 		if string.find(l_ObjectiveName:lower(), "vehicle") ~= nil then
 			s_Objective.isEnterVehiclePath = true
 			s_Objective.active = false
+
+			if string.find(l_ObjectiveName:lower(), "chopper") ~= nil
+				or string.find(l_ObjectiveName:lower(), "plane") ~= nil
+			then
+				s_Objective.isEnterAirVehiclePath = true
+			end
 
 			if string.find(l_ObjectiveName:lower(), "us") ~= nil then
 				s_Objective.team = TeamId.Team1
