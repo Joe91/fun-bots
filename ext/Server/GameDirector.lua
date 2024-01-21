@@ -444,11 +444,42 @@ function GameDirector:GetStationaryAas(p_TeamId)
 	return self.m_SpawnableStationaryAas[p_TeamId]
 end
 
+function GameDirector:GetGadgetOwner(p_Entity)
+	local s_GadgetPosition = p_Entity.transform.trans
+
+	local s_MinDistance = nil
+	local s_ClosestPlayer = nil
+	local s_Players = PlayerManager:GetPlayers()
+
+	for _, l_Player in pairs(s_Players) do
+		if l_Player.soldier ~= nil then
+
+			local s_CurrentDistance = s_GadgetPosition:Distance(l_Player.soldier.worldTransform.trans)
+
+			if s_MinDistance == nil or s_MinDistance > s_CurrentDistance then
+				s_MinDistance = s_CurrentDistance
+				s_ClosestPlayer = l_Player
+			end
+
+		end
+	end
+
+	return s_ClosestPlayer
+end
+
 ---VEXT Server Vehicle:SpawnDone Event
 ---@param p_Entity ControllableEntity|Entity
 function GameDirector:OnVehicleSpawnDone(p_Entity)
 	p_Entity = ControllableEntity(p_Entity)
 	local s_VehicleData = m_Vehicles:GetVehicleByEntity(p_Entity)
+
+	if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.Gadgets) then
+		local s_Owner = self:GetGadgetOwner(p_Entity)
+
+		if s_Owner ~= nil then
+			print("Gadget spawn: " .. s_VehicleData.Name .. "; Owner: " .. s_Owner.name)
+		end
+	end
 
 	if s_VehicleData == nil then
 		return -- No vehicle found.
@@ -475,6 +506,17 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 	if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.StationaryAA) then
 		table.insert(self.m_SpawnableStationaryAas[s_VehicleData.Team], p_Entity)
 	end
+end
+
+function GameDirector:OnVehicleUnspawn(p_Entity, p_VehiclePoints, p_HotTeam)
+	p_Entity = ControllableEntity(p_Entity)
+	local s_VehicleData = m_Vehicles:GetVehicleByEntity(p_Entity)
+
+	if s_VehicleData ~= nil then
+	    if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.Gadgets) then
+            print("Gadget unspawn: " .. s_VehicleData.Name)
+        end
+    end
 end
 
 function GameDirector:OnVehicleDestroyed(p_Entity, p_VehiclePoints, p_HotTeam)
