@@ -23,6 +23,24 @@ This is the changelog for the version V2.9 Don't forget to [join us on Discord](
 * XP4_Quake Scavenger by Volbeat13
 
 ### Updated maps
+* Conquest Small MP001 by IgorUA
+* Conquest Small MP003 by IgorUA
+* Conquest Small MP007 by IgorUA
+* Conquest Small MP011 by IgorUA
+* Conquest Small MP012 by IgorUA
+* Conquest Large MP012 by IgorUA
+* Conquest Small MP013 by IgorUA
+* Conquest Small MP017 by IgorUA
+* Conquest Small MP018 by IgorUA
+* Conquest Large MP018 by IgorUA
+* Assault Small XP1_001 by IgorUA
+* Assault Large XP1_001 by IgorUA
+* Conquest Small XP1_002 by IgorUA
+* Conquest Large XP1_002 by IgorUA
+* Assault Small XP1_003 by IgorUA
+* Assault Small XP1_004 by IgorUA
+* Conquest Small XP3_Alborz by IgorUA
+* Conquest Small XP3_Alborz by IgorUA
 
 ### Documentation update
 
