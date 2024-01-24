@@ -43,7 +43,13 @@ This is the changelog for the version V2.9 Don't forget to [join us on Discord](
 * Conquest Small XP3_Alborz by IgorUA
 * Conquest Small XP3_Alborz by IgorUA
 * Assault Small XP4_Rubble by MeisterPeitsche
-
+* Conquest Small XP3_Desert by MeisterPeitsche
+* Conquest Small XP3_Shield by MeisterPeitsche
+* Conquest Small XP4_FD by MeisterPeitsche
+* Conquest Small XP4_Parl by MeisterPeitsche
+* Conquest Small XP5_001 by MeisterPeitsche
+* Conquest Small XP5_002 by MeisterPeitsche
+* Conquest Small XP5_004 by MeisterPeitsche
 
 ### Documentation update
 
