@@ -11,6 +11,8 @@ local m_PathSwitcher = require('PathSwitcher')
 ---@type NodeCollection
 local m_NodeCollection = require('NodeCollection')
 
+local m_BotWeaponHandling = require('Bot/BotWeaponHandling')
+
 function BotMovement:__init()
 	-- Nothing to do.
 end
@@ -82,6 +84,22 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 						end
 					end
 					p_Bot:_ResetActionFlag(BotActionFlags.OtherActionActive)
+				elseif s_Point.Data.Action.type == "beacon" and p_Bot.m_SecondaryGadget.type == WeaponTypes.Beacon then
+					if p_Bot._ActionTimer <= s_Point.Data.Action.time
+						and p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.secondaryAmmo > 0
+					then
+						p_Bot._WeaponToUse = BotWeapons.Gadget2
+						m_BotWeaponHandling:UpdateWeaponSelection(p_Bot)
+
+						local s_Interval = 2.0;
+						local s_Remainder = p_Bot._ActionTimer % s_Interval;
+
+						if s_Remainder < s_Interval / 2 then
+							p_Bot:_SetInput(EntryInputActionEnum.EIAFire, 1)
+						else
+							p_Bot:_SetInput(EntryInputActionEnum.EIAFire, 0)
+						end
+					end
 				elseif p_Bot._ActionTimer <= s_Point.Data.Action.time then
 					for _, l_Input in pairs(s_Point.Data.Action.inputs) do
 						p_Bot:_SetInput(l_Input, 1)
