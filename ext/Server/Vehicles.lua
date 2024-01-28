@@ -98,6 +98,15 @@ function Vehicles:GetPartIdForSeat(p_VehicleData, p_Index, p_WeaponSelection)
 	return s_Part
 end
 
+function Vehicles:IsPassengerSeat(p_VehicleData, p_Index)
+	if p_VehicleData and p_VehicleData.FirstPassengerSeat then
+		return p_Index >= p_VehicleData.FirstPassengerSeat - 1
+	end
+
+	-- By default all except the driver
+	return p_Index > 0;
+end
+
 function Vehicles:IsVehicleTerrain(p_VehicleData, p_VehicleTerrain)
 	if p_VehicleData and p_VehicleData.Terrain then
 		return p_VehicleData.Terrain == p_VehicleTerrain
@@ -130,6 +139,12 @@ end
 function Vehicles:IsAirVehicle(p_VehicleData)
 	return self:IsChopper(p_VehicleData)
 		or self:IsVehicleType(p_VehicleData, VehicleTypes.Plane)
+end
+
+function Vehicles:IsAirVehicleType(p_VehicleType)
+	return p_VehicleType == VehicleTypes.Chopper
+		or p_VehicleType == VehicleTypes.ScoutChopper
+		or p_VehicleType == VehicleTypes.Plane
 end
 
 function Vehicles:IsNotVehicleType(p_VehicleData, p_VehicleType)
