@@ -10,7 +10,7 @@ function BotWeaponHandling:__init()
 end
 
 function BotWeaponHandling:UpdateDeployAndReload(p_Bot, p_Deploy)
-	if p_Bot._ActiveAction == BotActionFlags.MeleeActive then
+	if p_Bot._ActiveAction == BotActionFlags.MeleeActive or p_Bot._ActiveAction == BotActionFlags.OtherActionActive then
 		return
 	end
 	p_Bot._WeaponToUse = BotWeapons.Primary
