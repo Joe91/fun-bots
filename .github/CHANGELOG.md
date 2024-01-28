@@ -10,6 +10,7 @@ This is the changelog for the version V2.9 Don't forget to [join us on Discord](
 
 ### New features / improvements
 * Merged pull request #318 from tagener-noisu Navigation fixes
+* Merged pull request #325 form tagener-noisu several small improvements
 
 
 ### Bug fixes
