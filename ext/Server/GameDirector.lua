@@ -478,6 +478,14 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 
 		if s_Owner ~= nil then
 			print("Gadget spawn: " .. s_VehicleData.Name .. "; Owner: " .. s_Owner.name)
+
+			if m_Utilities:isBot(s_Owner) and s_VehicleData.Name == "[RadioBeacon]" then
+				local s_Bot = g_BotManager:GetBotByName(s_Owner.name)
+
+				if s_Bot ~= nil then
+					s_Bot.m_HasBeacon = true
+				end
+			end
 		end
 	end
 
@@ -1044,6 +1052,16 @@ function GameDirector:IsVehicleEnterPath(p_Objective)
 	return false
 end
 
+function GameDirector:IsBeaconPath(p_Objective)
+	local s_TempObjective = self:_GetObjectiveObject(p_Objective)
+
+	if s_TempObjective ~= nil and s_TempObjective.isBeaconPath then
+		return true
+	end
+
+	return false
+end
+
 function GameDirector:UseSubobjective(p_BotName, p_BotTeam, p_Objective)
 	local s_TempObjective = self:_GetObjectiveObject(p_Objective)
 
@@ -1118,6 +1136,7 @@ function GameDirector:_InitObjectives()
 			isBase = false,
 			isSpawnPath = false,
 			isEnterVehiclePath = false,
+			isBeaconPath = false,
 			destroyed = false,
 			active = true,
 			subObjective = false,
@@ -1136,6 +1155,11 @@ function GameDirector:_InitObjectives()
 
 		if string.find(l_ObjectiveName:lower(), "spawn") ~= nil then
 			s_Objective.isSpawnPath = true
+			s_Objective.active = false
+		end
+
+		if string.find(l_ObjectiveName:lower(), "beacon") ~= nil then
+			s_Objective.isBeaconPath = true
 			s_Objective.active = false
 		end
 

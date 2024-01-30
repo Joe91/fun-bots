@@ -110,6 +110,14 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotName, p_Point, p_Objective, p_InVeh
 					goto skip
 				end
 			end
+
+			if m_GameDirector:IsBeaconPath(s_PathNode.Data.Objectives[1]) then
+				if p_Bot.m_SecondaryGadget.type == WeaponTypes.Beacon and not p_Bot.m_HasBeacon then
+					return true, s_NewPoint
+				else
+					goto skip
+				end
+			end
 		end
 
 		-- This path has listed objectives.

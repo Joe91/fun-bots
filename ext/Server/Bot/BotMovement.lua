@@ -84,8 +84,12 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 						end
 					end
 					p_Bot:_ResetActionFlag(BotActionFlags.OtherActionActive)
-				elseif s_Point.Data.Action.type == "beacon" and p_Bot.m_SecondaryGadget.type == WeaponTypes.Beacon then
+				elseif s_Point.Data.Action.type == "beacon"
+					and p_Bot.m_SecondaryGadget.type == WeaponTypes.Beacon
+					and not p_Bot.m_HasBeacon
+				then
 					p_Bot._WeaponToUse = BotWeapons.Gadget2
+
 					if p_Bot.m_Player.soldier.weaponsComponent.currentWeaponSlot == WeaponSlot.WeaponSlot_5 then
 						if p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.primaryAmmo > 0 then
 							p_Bot:_SetInput(EntryInputActionEnum.EIAFire, 1)
