@@ -30,6 +30,7 @@ function GameDirector:RegisterVars()
 	self.m_SpawnableStationaryAas = {}
 	self.m_SpawnableVehicles = {}
 	self.m_AvailableVehicles = {}
+	self.m_Beacons = {}
 end
 
 -- =============================================
@@ -473,24 +474,28 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 	p_Entity = ControllableEntity(p_Entity)
 	local s_VehicleData = m_Vehicles:GetVehicleByEntity(p_Entity)
 
+	if s_VehicleData == nil then
+		return -- No vehicle found.
+	end
+
 	if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.Gadgets) then
 		local s_Owner = self:GetGadgetOwner(p_Entity)
 
 		if s_Owner ~= nil then
 			print("Gadget spawn: " .. s_VehicleData.Name .. "; Owner: " .. s_Owner.name)
 
-			if m_Utilities:isBot(s_Owner) and s_VehicleData.Name == "[RadioBeacon]" then
-				local s_Bot = g_BotManager:GetBotByName(s_Owner.name)
+			if s_VehicleData.Name == "[RadioBeacon]" then
+				if m_Utilities:isBot(s_Owner) then
+					local s_Bot = g_BotManager:GetBotByName(s_Owner.name)
 
-				if s_Bot ~= nil then
-					s_Bot.m_HasBeacon = true
+					if s_Bot ~= nil then
+						s_Bot.m_HasBeacon = true
+					end
 				end
+
+				self.m_Beacons[s_Owner.name] = p_Entity
 			end
 		end
-	end
-
-	if s_VehicleData == nil then
-		return -- No vehicle found.
 	end
 
 	if not Config.UseAirVehicles and m_Vehicles:IsAirVehicle(s_VehicleData) then
@@ -522,9 +527,14 @@ function GameDirector:OnVehicleUnspawn(p_Entity, p_VehiclePoints, p_HotTeam)
 
 	if s_VehicleData ~= nil then
 	    if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.Gadgets) then
-            print("Gadget unspawn: " .. s_VehicleData.Name)
-        end
-    end
+			print("Gadget unspawn: " .. s_VehicleData.Name)
+			for l_Owner, l_Entity in pairs(self.m_Beacons) do
+				if (l_Entity.uniqueId == p_Entity.uniqueId) and (l_Entity.instanceId == p_Entity.instanceId) then
+					self.m_Beacons[l_Owner] = nil
+				end
+			end
+		end
+	end
 end
 
 function GameDirector:OnVehicleDestroyed(p_Entity, p_VehiclePoints, p_HotTeam)
@@ -767,6 +777,21 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 
 	for _, l_Player in pairs(s_SquadMates) do
 		if l_Player.soldier and l_Player.isAllowedToSpawnOn then
+			local s_Beacon = self.m_Beacons[l_Player.name]
+
+			if s_Beacon ~= nil then
+				if MathUtils:GetRandomInt(1, 100) <= Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_SPAWN then
+					m_Logger:Write("spawn at squad-mate's beacon")
+					local s_Pos = s_Beacon.transform.trans
+					local s_Node = self:FindClosestPath(s_Pos, false, true, nil)
+					if s_Node and s_Node.Position:Distance(s_Pos) < 6.0 then
+						return s_Node.PathIndex, s_Node.PointIndex, true, s_Beacon
+					end
+				else
+					break
+				end
+			end
+
 			if m_Utilities:isBot(l_Player) then
 				local s_SquadBot = g_BotManager:GetBotByName(l_Player.name)
 				if not s_SquadBot.m_InVehicle then

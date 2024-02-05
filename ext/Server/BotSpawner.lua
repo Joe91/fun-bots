@@ -14,6 +14,7 @@ local m_WeaponList = require('__shared/WeaponList')
 local m_Utilities = require('__shared/Utilities')
 ---@type Logger
 local m_Logger = Logger("BotSpawner", Debug.Server.BOT)
+local m_Vehicles = require('Vehicles')
 
 function BotSpawner:__init()
 	self:RegisterVars()
@@ -1192,12 +1193,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 
 		if s_IsRespawn then
 			p_ExistingBot:SetVarsWay(p_Player, p_UseRandomWay, p_ActiveWayIndex, p_IndexOnPath, s_InverseDirection)
-			self:_SpawnBot(p_ExistingBot, s_Transform, false)
-
-			-- Check for vehicle of squad.
-			if s_SquadSpawnVehicle ~= nil then
-				p_ExistingBot:_EnterVehicleEntity(s_SquadSpawnVehicle, false)
-			end
+			self:_SpawnInEntity(p_ExistingBot, s_SquadSpawnVehicle, s_Transform, false)
 		else
 			local s_Bot = m_BotManager:CreateBot(s_Name, s_TeamId, s_SquadId)
 
@@ -1208,15 +1204,27 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 				end
 
 				s_Bot:SetVarsWay(p_Player, p_UseRandomWay, p_ActiveWayIndex, p_IndexOnPath, s_InverseDirection)
-				self:_SpawnBot(s_Bot, s_Transform, true)
-
-				-- Check for vehicle of squad.
-				if s_SquadSpawnVehicle ~= nil then
-					s_Bot:_EnterVehicleEntity(s_SquadSpawnVehicle, false)
-				end
+				self:_SpawnInEntity(s_Bot, s_SquadSpawnVehicle, s_Transform, true)
 			end
 		end
 	end
+end
+
+function BotSpawner:_SpawnInEntity(p_Bot, p_Entity, p_Transform, p_SetKit)
+	local s_VehicleData = m_Vehicles:GetVehicleByEntity(p_Entity)
+
+	if s_VehicleData and s_VehicleData.Name == "[RadioBeacon]" then
+		self:_SpawnBot(p_Bot, p_Entity.transform, p_SetKit)
+		return
+	end
+
+	self:_SpawnBot(p_Bot, p_Transform, p_SetKit)
+
+	if p_Entity == nil then
+		return
+	end
+
+	p_Bot:_EnterVehicleEntity(p_Entity, false)
 end
 
 ---@param p_Bot Bot
