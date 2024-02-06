@@ -98,6 +98,8 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 							p_Bot:_ResetActionFlag(BotActionFlags.OtherActionActive)
 						end
 					end
+				elseif s_Point.Data.Action.type == "beacon" then
+					p_Bot:_ResetActionFlag(BotActionFlags.OtherActionActive)
 				elseif p_Bot._ActionTimer <= s_Point.Data.Action.time then
 					for _, l_Input in pairs(s_Point.Data.Action.inputs) do
 						p_Bot:_SetInput(l_Input, 1)
