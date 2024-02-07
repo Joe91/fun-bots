@@ -793,18 +793,18 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 	local s_SquadMates = PlayerManager:GetPlayersBySquad(p_TeamId, p_SquadId)
 
 	for _, l_Player in pairs(s_SquadMates) do
-		if l_Player.soldier and l_Player.isAllowedToSpawnOn then
-			local s_Beacon = self:GetPlayerBeacon(l_Player.name)
+		local s_Beacon = self:GetPlayerBeacon(l_Player.name)
 
-			if s_Beacon ~= nil then
-				if MathUtils:GetRandomInt(1, 100) <= Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_SPAWN then
-					m_Logger:Write("spawn at beacon, owned by " .. l_Player.name)
-					return s_Beacon.Path, s_Beacon.Point, true, s_Beacon.Entity
-				else
-					break
-				end
+		if s_Beacon ~= nil then
+			if MathUtils:GetRandomInt(1, 100) <= Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_SPAWN then
+				m_Logger:Write("spawn at beacon, owned by " .. l_Player.name)
+				return s_Beacon.Path, s_Beacon.Point, true, s_Beacon.Entity
+			else
+				break
 			end
+		end
 
+		if l_Player.soldier and l_Player.isAllowedToSpawnOn then
 			if m_Utilities:isBot(l_Player) then
 				local s_SquadBot = g_BotManager:GetBotByName(l_Player.name)
 				if not s_SquadBot.m_InVehicle then
