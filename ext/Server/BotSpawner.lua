@@ -1061,6 +1061,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 
 	if p_ExistingBot ~= nil then
 		s_IsRespawn = true
+		s_Name = p_ExistingBot.m_Name
 	else
 		s_Name = m_BotManager:FindNextBotName()
 	end
@@ -1095,8 +1096,14 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 			return
 		end
 
+		local s_Beacon = g_GameDirector:GetPlayerBeacon(s_Name)
+
 		-- Find a spawn point.
-		if p_UseRandomWay or p_ActiveWayIndex == nil or p_ActiveWayIndex == 0 then
+		if s_Beacon ~= nil then
+			s_SpawnPoint = m_NodeCollection:Get(s_Beacon.Point, s_Beacon.Path)
+			s_SquadSpawnVehicle = s_Beacon.Entity
+			s_InverseDirection = true
+		elseif p_UseRandomWay or p_ActiveWayIndex == nil or p_ActiveWayIndex == 0 then
 			s_SpawnPoint, s_InverseDirection, s_SquadSpawnVehicle = self:_GetSpawnPoint(s_TeamId, s_SquadId)
 
 			-- Special spawn in vehicles.
