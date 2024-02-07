@@ -493,7 +493,17 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 					end
 				end
 
-				self.m_Beacons[s_Owner.name] = p_Entity
+				local s_Beacon = {}
+				local s_Pos = p_Entity.transform.trans
+				local s_Node = self:FindClosestPath(s_Pos, false, true, nil, 1)
+
+				if s_Node and s_Node.Position:Distance(s_Pos) < 6.0 then
+					s_Beacon.Path = s_Node.PathIndex
+					s_Beacon.Point = s_Node.PointIndex
+					s_Beacon.Entity = p_Entity
+
+					self.m_Beacons[s_Owner.name] = s_Beacon
+				end
 			end
 		end
 	end
@@ -528,7 +538,8 @@ function GameDirector:OnVehicleUnspawn(p_Entity, p_VehiclePoints, p_HotTeam)
 	if s_VehicleData ~= nil then
 	    if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.Gadgets) then
 			m_Logger:Write("Gadget unspawn: " .. s_VehicleData.Name)
-			for l_Owner, l_Entity in pairs(self.m_Beacons) do
+			for l_Owner, l_Beacon in pairs(self.m_Beacons) do
+				local l_Entity = l_Beacon.Entity
 				if (l_Entity.uniqueId == p_Entity.uniqueId) and (l_Entity.instanceId == p_Entity.instanceId) then
 					self.m_Beacons[l_Owner] = nil
 				end
@@ -773,24 +784,22 @@ function GameDirector:FindClosestPath(p_Trans, p_VehiclePath, p_DetailedSearch, 
 	return s_ClosestPathNode
 end
 
+function GameDirector:GetPlayerBeacon(p_PlayerName)
+	return self.m_Beacons[p_PlayerName]
+end
+
 function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 	-- Check for spawn at squad-mate.
 	local s_SquadMates = PlayerManager:GetPlayersBySquad(p_TeamId, p_SquadId)
 
 	for _, l_Player in pairs(s_SquadMates) do
 		if l_Player.soldier and l_Player.isAllowedToSpawnOn then
-			local s_Beacon = self.m_Beacons[l_Player.name]
+			local s_Beacon = self:GetPlayerBeacon(l_Player.name)
 
 			if s_Beacon ~= nil then
 				if MathUtils:GetRandomInt(1, 100) <= Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_SPAWN then
 					m_Logger:Write("spawn at beacon, owned by " .. l_Player.name)
-					local s_Pos = s_Beacon.transform.trans
-					local s_Node = self:FindClosestPath(s_Pos, false, true, nil, 1)
-					if s_Node and s_Node.Position:Distance(s_Pos) < 6.0 then
-						return s_Node.PathIndex, s_Node.PointIndex, true, s_Beacon
-					else
-						m_Logger:Write(l_Player.name .. "the beacon is too far")
-					end
+					return s_Beacon.Path, s_Beacon.Point, true, s_Beacon.Entity
 				else
 					break
 				end
