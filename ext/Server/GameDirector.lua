@@ -673,9 +673,11 @@ function GameDirector:CheckForExecution(p_Point, p_TeamId, p_InVehicle)
 	end
 end
 
-function GameDirector:FindClosestPath(p_Trans, p_VehiclePath, p_DetailedSearch, p_VehicleTerrain)
+function GameDirector:FindClosestPath(p_Trans, p_VehiclePath, p_DetailedSearch, p_VehicleTerrain, p_Increment)
 	local s_ClosestPathNode = nil
 	local s_Paths = m_NodeCollection:GetPaths()
+
+	p_Increment = p_Increment or Registry.GAME_DIRECTOR.NODE_SEARCH_INCREMENTS
 
 	if s_Paths ~= nil then
 		local s_ClosestDistance = nil
@@ -707,7 +709,7 @@ function GameDirector:FindClosestPath(p_Trans, p_VehiclePath, p_DetailedSearch, 
 							(p_VehicleTerrain == VehicleTerrains.Land and not s_isWaterPath and not s_isAirPath) or
 							(p_VehicleTerrain == VehicleTerrains.Amphibious and not s_isAirPath) then
 							if p_DetailedSearch then
-								for i = 1, #l_Waypoints, Registry.GAME_DIRECTOR.NODE_SEARCH_INCREMENTS do
+								for i = 1, #l_Waypoints, p_Increment do
 									local s_NewDistance = Utilities:DistanceFast(l_Waypoints[i].Position, p_Trans)
 
 									if s_ClosestDistance == nil then
@@ -737,7 +739,7 @@ function GameDirector:FindClosestPath(p_Trans, p_VehiclePath, p_DetailedSearch, 
 					end
 				elseif not p_VehiclePath and not s_isVehiclePath then -- Not in vehicle. Only use infantery-paths
 					if p_DetailedSearch then
-						for i = 1, #l_Waypoints, Registry.GAME_DIRECTOR.NODE_SEARCH_INCREMENTS do
+						for i = 1, #l_Waypoints, p_Increment do
 							local s_NewDistance = Utilities:DistanceFast(l_Waypoints[i].Position, p_Trans)
 
 							if s_ClosestDistance == nil then
@@ -781,11 +783,13 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 
 			if s_Beacon ~= nil then
 				if MathUtils:GetRandomInt(1, 100) <= Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_SPAWN then
-					m_Logger:Write("spawn at squad-mate's beacon")
+					m_Logger:Write("spawn at beacon, owned by " .. l_Player.name)
 					local s_Pos = s_Beacon.transform.trans
-					local s_Node = self:FindClosestPath(s_Pos, false, true, nil)
+					local s_Node = self:FindClosestPath(s_Pos, false, true, nil, 1)
 					if s_Node and s_Node.Position:Distance(s_Pos) < 6.0 then
 						return s_Node.PathIndex, s_Node.PointIndex, true, s_Beacon
+					else
+						m_Logger:Write(l_Player.name .. "the beacon is too far")
 					end
 				else
 					break
