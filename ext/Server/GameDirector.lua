@@ -1175,6 +1175,7 @@ function GameDirector:_InitObjectives()
 			isSpawnPath = false,
 			isEnterVehiclePath = false,
 			isBeaconPath = false,
+			canBeCaptured = true,
 			destroyed = false,
 			active = true,
 			subObjective = false,
@@ -1194,16 +1195,19 @@ function GameDirector:_InitObjectives()
 		if string.find(l_ObjectiveName:lower(), "spawn") ~= nil then
 			s_Objective.isSpawnPath = true
 			s_Objective.active = false
+			s_Objective.canBeCaptured = false
 		end
 
 		if string.find(l_ObjectiveName:lower(), "beacon") ~= nil then
 			s_Objective.isBeaconPath = true
 			s_Objective.active = false
+			s_Objective.canBeCaptured = false
 		end
 
 		if string.find(l_ObjectiveName:lower(), "vehicle") ~= nil then
 			s_Objective.isEnterVehiclePath = true
 			s_Objective.active = false
+			s_Objective.canBeCaptured = false
 
 			if string.find(l_ObjectiveName:lower(), "us") ~= nil then
 				s_Objective.team = TeamId.Team1
@@ -1408,7 +1412,7 @@ function GameDirector:_TranslateObjective(p_Position, p_Name)
 			-- Possible objective.
 			local s_TempObject = self:_GetObjectiveObject(l_Objective)
 
-			if s_TempObject == nil or (not s_TempObject.isSpawnPath and not s_TempObject.isEnterVehiclePath) then -- Or not s_TempObject.isBase.
+			if s_TempObject == nil or s_TempObject.canBeCaptured then
 				local s_Distance = p_Position:Distance(s_Node.Position)
 
 				if s_ClosestDistance == nil or s_ClosestDistance > s_Distance then
