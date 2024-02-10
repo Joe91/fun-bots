@@ -1240,6 +1240,12 @@ end
 function BotSpawner:_SpawnBot(p_Bot, p_Transform, p_SetKit)
 	local s_WriteNewKit = (p_SetKit or Config.BotNewLoadoutOnSpawn)
 
+	local s_Beacon = g_GameDirector:GetPlayerBeacon(p_Bot.m_Name)
+
+	if s_Beacon ~= nil then
+		s_WriteNewKit = false or p_SetKit
+	end
+
 	if not s_WriteNewKit and (p_Bot.m_Color == nil or p_Bot.m_Kit == nil or p_Bot.m_ActiveWeapon == nil) then
 		s_WriteNewKit = true
 	end
