@@ -729,6 +729,7 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 		else
 			m_NodeEditor:OnAddObjective(p_Player, { s_Data[2] })
 			m_NodeEditor:OnCustomAction(p_Player, { s_Data[2] })
+			m_NodeEditor:OnSetLoopMode(p_Player, { "false" })
 		end
 		return
 	elseif string.find(request.action, 'base_') then
