@@ -117,6 +117,7 @@ function FunBotServer:RegisterEvents()
 	Events:Subscribe('Player:EnteredCapturePoint', self, self.OnPlayerEnteredCapturePoint)
 	Events:Subscribe('Vehicle:SpawnDone', self, self.OnVehicleSpawnDone)
 	Events:Subscribe('Vehicle:Destroyed', self, self.OnVehicleDestroyed)
+	Events:Subscribe('Vehicle:Unspawn', self, self.OnVehicleUnspawn)
 	Events:Subscribe('Vehicle:Damage', self, self.OnVehicleDamage)
 	Events:Subscribe('Vehicle:Enter', self, self.OnVehicleEnter)
 	Events:Subscribe('Vehicle:Exit', self, self.OnVehicleExit)
@@ -448,6 +449,10 @@ end
 
 function FunBotServer:OnVehicleDestroyed(p_VehicleEntity, p_VehiclePoints, p_HotTeam)
 	m_GameDirector:OnVehicleDestroyed(p_VehicleEntity, p_VehiclePoints, p_HotTeam)
+end
+
+function FunBotServer:OnVehicleUnspawn(p_VehicleEntity, p_VehiclePoints, p_HotTeam)
+	m_GameDirector:OnVehicleUnspawn(p_VehicleEntity, p_VehiclePoints, p_HotTeam)
 end
 
 ---VEXT Server Vehicle:Damage Event

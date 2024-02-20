@@ -131,6 +131,7 @@ function ClientNodeEditor:OnRegisterEvents()
 	Console:Register('AddVehicle', 'Add a vehicle a bot can use', self, self._onAddVehicle)
 	Console:Register('ExitVehicle',
 		'<bool|OnlyPassengers> Add a point where all bots or only the passengers leaves the vehicle', self, self._onExitVehicle)
+	Console:Register('CustomAction', '<string|ActionType> Add custom action to a point', self, self._onCustomAction)
 	Console:Register('AddVehiclePath', '<string|Type> Add vehicle-usage to a path. Types = land, water, air', self,
 		self._onAddVehiclePath)
 	Console:Register('AddVehicleSpawn', 'Makes an already existing vehicle-path spawnable', self, self._onSetVehicleSpawn)
@@ -600,6 +601,10 @@ end
 
 function ClientNodeEditor:_onExitVehicle(p_Args)
 	NetEvents:SendLocal('NodeEditor:ExitVehicle', p_Args)
+end
+
+function ClientNodeEditor:_onCustomAction(p_Args)
+	NetEvents:SendLocal('NodeEditor:CustomAction', p_Args)
 end
 
 function ClientNodeEditor:_onAddVehiclePath(p_Args)

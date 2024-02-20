@@ -30,6 +30,7 @@ function GameDirector:RegisterVars()
 	self.m_SpawnableStationaryAas = {}
 	self.m_SpawnableVehicles = {}
 	self.m_AvailableVehicles = {}
+	self.m_Beacons = {}
 end
 
 -- =============================================
@@ -444,6 +445,27 @@ function GameDirector:GetStationaryAas(p_TeamId)
 	return self.m_SpawnableStationaryAas[p_TeamId]
 end
 
+function GameDirector:GetGadgetOwner(p_Entity)
+	local s_GadgetPosition = p_Entity.transform.trans
+
+	local s_MinDistance = nil
+	local s_ClosestPlayer = nil
+	local s_Players = PlayerManager:GetPlayers()
+
+	for _, l_Player in pairs(s_Players) do
+		if l_Player.soldier ~= nil then
+			local s_CurrentDistance = s_GadgetPosition:Distance(l_Player.soldier.worldTransform.trans)
+
+			if s_MinDistance == nil or s_MinDistance > s_CurrentDistance then
+				s_MinDistance = s_CurrentDistance
+				s_ClosestPlayer = l_Player
+			end
+		end
+	end
+
+	return s_ClosestPlayer
+end
+
 ---VEXT Server Vehicle:SpawnDone Event
 ---@param p_Entity ControllableEntity|Entity
 function GameDirector:OnVehicleSpawnDone(p_Entity)
@@ -452,6 +474,36 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 
 	if s_VehicleData == nil then
 		return -- No vehicle found.
+	end
+
+	if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.Gadgets) then
+		local s_Owner = self:GetGadgetOwner(p_Entity)
+
+		if s_Owner ~= nil then
+			m_Logger:Write("Gadget spawn: " .. s_VehicleData.Name .. "; Owner: " .. s_Owner.name)
+
+			if s_VehicleData.Name == "[RadioBeacon]" then
+				if m_Utilities:isBot(s_Owner) then
+					local s_Bot = g_BotManager:GetBotByName(s_Owner.name)
+
+					if s_Bot ~= nil then
+						s_Bot.m_HasBeacon = true
+					end
+				end
+
+				local s_Beacon = {}
+				local s_Pos = p_Entity.transform.trans
+				local s_Node = self:FindClosestPath(s_Pos, false, true, nil, 1)
+
+				if s_Node and s_Node.Position:Distance(s_Pos) < 6.0 then
+					s_Beacon.Path = s_Node.PathIndex
+					s_Beacon.Point = s_Node.PointIndex
+					s_Beacon.Entity = p_Entity
+
+					self.m_Beacons[s_Owner.name] = s_Beacon
+				end
+			end
+		end
 	end
 
 	if not Config.UseAirVehicles and m_Vehicles:IsAirVehicle(s_VehicleData) then
@@ -474,6 +526,23 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 
 	if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.StationaryAA) then
 		table.insert(self.m_SpawnableStationaryAas[s_VehicleData.Team], p_Entity)
+	end
+end
+
+function GameDirector:OnVehicleUnspawn(p_Entity, p_VehiclePoints, p_HotTeam)
+	p_Entity = ControllableEntity(p_Entity)
+	local s_VehicleData = m_Vehicles:GetVehicleByEntity(p_Entity)
+
+	if s_VehicleData ~= nil then
+		if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.Gadgets) then
+			m_Logger:Write("Gadget unspawn: " .. s_VehicleData.Name)
+			for l_Owner, l_Beacon in pairs(self.m_Beacons) do
+				local l_Entity = l_Beacon.Entity
+				if (l_Entity.uniqueId == p_Entity.uniqueId) and (l_Entity.instanceId == p_Entity.instanceId) then
+					self.m_Beacons[l_Owner] = nil
+				end
+			end
+		end
 	end
 end
 
@@ -613,9 +682,11 @@ function GameDirector:CheckForExecution(p_Point, p_TeamId, p_InVehicle)
 	end
 end
 
-function GameDirector:FindClosestPath(p_Trans, p_VehiclePath, p_DetailedSearch, p_VehicleTerrain)
+function GameDirector:FindClosestPath(p_Trans, p_VehiclePath, p_DetailedSearch, p_VehicleTerrain, p_Increment)
 	local s_ClosestPathNode = nil
 	local s_Paths = m_NodeCollection:GetPaths()
+
+	p_Increment = p_Increment or Registry.GAME_DIRECTOR.NODE_SEARCH_INCREMENTS
 
 	if s_Paths ~= nil then
 		local s_ClosestDistance = nil
@@ -647,7 +718,7 @@ function GameDirector:FindClosestPath(p_Trans, p_VehiclePath, p_DetailedSearch, 
 							(p_VehicleTerrain == VehicleTerrains.Land and not s_isWaterPath and not s_isAirPath) or
 							(p_VehicleTerrain == VehicleTerrains.Amphibious and not s_isAirPath) then
 							if p_DetailedSearch then
-								for i = 1, #l_Waypoints, Registry.GAME_DIRECTOR.NODE_SEARCH_INCREMENTS do
+								for i = 1, #l_Waypoints, p_Increment do
 									local s_NewDistance = Utilities:DistanceFast(l_Waypoints[i].Position, p_Trans)
 
 									if s_ClosestDistance == nil then
@@ -677,7 +748,7 @@ function GameDirector:FindClosestPath(p_Trans, p_VehiclePath, p_DetailedSearch, 
 					end
 				elseif not p_VehiclePath and not s_isVehiclePath then -- Not in vehicle. Only use infantery-paths
 					if p_DetailedSearch then
-						for i = 1, #l_Waypoints, Registry.GAME_DIRECTOR.NODE_SEARCH_INCREMENTS do
+						for i = 1, #l_Waypoints, p_Increment do
 							local s_NewDistance = Utilities:DistanceFast(l_Waypoints[i].Position, p_Trans)
 
 							if s_ClosestDistance == nil then
@@ -711,11 +782,26 @@ function GameDirector:FindClosestPath(p_Trans, p_VehiclePath, p_DetailedSearch, 
 	return s_ClosestPathNode
 end
 
+function GameDirector:GetPlayerBeacon(p_PlayerName)
+	return self.m_Beacons[p_PlayerName]
+end
+
 function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 	-- Check for spawn at squad-mate.
 	local s_SquadMates = PlayerManager:GetPlayersBySquad(p_TeamId, p_SquadId)
 
 	for _, l_Player in pairs(s_SquadMates) do
+		local s_Beacon = self:GetPlayerBeacon(l_Player.name)
+
+		if s_Beacon ~= nil then
+			if MathUtils:GetRandomInt(1, 100) <= Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_SPAWN then
+				m_Logger:Write("spawn at beacon, owned by " .. l_Player.name)
+				return s_Beacon.Path, s_Beacon.Point, true, s_Beacon.Entity
+			else
+				break
+			end
+		end
+
 		if l_Player.soldier and l_Player.isAllowedToSpawnOn then
 			if m_Utilities:isBot(l_Player) then
 				local s_SquadBot = g_BotManager:GetBotByName(l_Player.name)
@@ -1005,6 +1091,16 @@ function GameDirector:IsVehicleEnterPath(p_Objective)
 	return false
 end
 
+function GameDirector:IsBeaconPath(p_Objective)
+	local s_TempObjective = self:_GetObjectiveObject(p_Objective)
+
+	if s_TempObjective ~= nil and s_TempObjective.isBeaconPath then
+		return true
+	end
+
+	return false
+end
+
 function GameDirector:UseSubobjective(p_BotName, p_BotTeam, p_Objective)
 	local s_TempObjective = self:_GetObjectiveObject(p_Objective)
 
@@ -1080,6 +1176,8 @@ function GameDirector:_InitObjectives()
 			isSpawnPath = false,
 			isEnterVehiclePath = false,
 			isEnterAirVehiclePath = false,
+			isBeaconPath = false,
+			canBeCaptured = true,
 			destroyed = false,
 			active = true,
 			subObjective = false,
@@ -1099,11 +1197,19 @@ function GameDirector:_InitObjectives()
 		if string.find(l_ObjectiveName:lower(), "spawn") ~= nil then
 			s_Objective.isSpawnPath = true
 			s_Objective.active = false
+			s_Objective.canBeCaptured = false
+		end
+
+		if string.find(l_ObjectiveName:lower(), "beacon") ~= nil then
+			s_Objective.isBeaconPath = true
+			s_Objective.active = false
+			s_Objective.canBeCaptured = false
 		end
 
 		if string.find(l_ObjectiveName:lower(), "vehicle") ~= nil then
 			s_Objective.isEnterVehiclePath = true
 			s_Objective.active = false
+			s_Objective.canBeCaptured = false
 
 			if string.find(l_ObjectiveName:lower(), "chopper") ~= nil
 				or string.find(l_ObjectiveName:lower(), "plane") ~= nil
@@ -1314,7 +1420,7 @@ function GameDirector:_TranslateObjective(p_Position, p_Name)
 			-- Possible objective.
 			local s_TempObject = self:_GetObjectiveObject(l_Objective)
 
-			if s_TempObject == nil or (not s_TempObject.isSpawnPath and not s_TempObject.isEnterVehiclePath) then -- Or not s_TempObject.isBase.
+			if s_TempObject == nil or s_TempObject.canBeCaptured then
 				local s_Distance = p_Position:Distance(s_Node.Position)
 
 				if s_ClosestDistance == nil or s_ClosestDistance > s_Distance then

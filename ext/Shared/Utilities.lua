@@ -152,6 +152,10 @@ function Utilities:dump(o, p_Format, p_MaxLevels, p_Level)
 	end
 end
 
+function Utilities:CheckProbablity(p_Value)
+	return MathUtils:GetRandomInt(1, 100) <= p_Value
+end
+
 function Utilities:has(p_Object, p_Value)
 	for i = 1, #p_Object do
 		if p_Object[i] == p_Value then
