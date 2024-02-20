@@ -10,6 +10,7 @@ This is the changelog for the version V2.9 Don't forget to [join us on Discord](
 
 ### New features / improvements
 * Merged pull request #318 from tagener-noisu Navigation fixes
+* Merged pull request #325 form tagener-noisu several small improvements
 * POI Implementation with beacon as first usage by tagener-noisu
 
 
@@ -30,11 +31,9 @@ This is the changelog for the version V2.9 Don't forget to [join us on Discord](
 * Conquest Small MP_007 by IgorUA
 * Conquest Small MP_011 by IgorUA
 * Conquest Small MP_012 by IgorUA
-* Conquest Large MP_012 by IgorUA
 * Conquest Small MP_013 by IgorUA
 * Conquest Small MP_017 by IgorUA
 * Conquest Small MP_018 by IgorUA
-* Conquest Large MP_018 by IgorUA
 * Assault Small XP1_001 by IgorUA
 * Assault Large XP1_001 by IgorUA
 * Conquest Small XP1_002 by IgorUA
@@ -42,14 +41,16 @@ This is the changelog for the version V2.9 Don't forget to [join us on Discord](
 * Assault Small XP1_003 by IgorUA
 * Assault Small XP1_004 by IgorUA
 * Conquest Small XP3_Alborz by IgorUA
-* Conquest Small XP3_Alborz by IgorUA
+* Conquest Small XP3_Valley by IgorUA
 * Assault Small XP4_Rubble by MeisterPeitsche
 * Conquest Small XP3_Desert by MeisterPeitsche
 * Conquest Small XP3_Shield by MeisterPeitsche
+* Conquest Large XP3_Shield by IgorUA
 * Conquest Small XP4_FD by MeisterPeitsche
 * Conquest Small XP4_Parl by MeisterPeitsche
 * Conquest Small XP5_001 by MeisterPeitsche
 * Conquest Small XP5_002 by MeisterPeitsche
+* Conquest Small XP5_003 by IgorUA
 * Conquest Small XP5_004 by MeisterPeitsche
 * Conquest Large/Small MP_Subway by ThyKingdomCome (with beacons)
 * Conquest Large MP_018 by ThyKingdomCome (with beacons)

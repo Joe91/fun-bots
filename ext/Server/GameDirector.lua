@@ -454,14 +454,12 @@ function GameDirector:GetGadgetOwner(p_Entity)
 
 	for _, l_Player in pairs(s_Players) do
 		if l_Player.soldier ~= nil then
-
 			local s_CurrentDistance = s_GadgetPosition:Distance(l_Player.soldier.worldTransform.trans)
 
 			if s_MinDistance == nil or s_MinDistance > s_CurrentDistance then
 				s_MinDistance = s_CurrentDistance
 				s_ClosestPlayer = l_Player
 			end
-
 		end
 	end
 
@@ -536,7 +534,7 @@ function GameDirector:OnVehicleUnspawn(p_Entity, p_VehiclePoints, p_HotTeam)
 	local s_VehicleData = m_Vehicles:GetVehicleByEntity(p_Entity)
 
 	if s_VehicleData ~= nil then
-	    if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.Gadgets) then
+		if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.Gadgets) then
 			m_Logger:Write("Gadget unspawn: " .. s_VehicleData.Name)
 			for l_Owner, l_Beacon in pairs(self.m_Beacons) do
 				local l_Entity = l_Beacon.Entity
@@ -1073,8 +1071,11 @@ function GameDirector:UseVehicle(p_BotTeam, p_Objective)
 	local s_TempObjective = self:_GetObjectiveObject(p_Objective)
 
 	if s_TempObjective ~= nil and s_TempObjective.active and s_TempObjective.isEnterVehiclePath then
-		-- s_TempObjective.active = false
-		return true
+		if s_TempObjective.isEnterAirVehiclePath then
+			return Config.UseVehicles and Config.UseAirVehicles
+		else
+			return Config.UseVehicles
+		end
 	end
 
 	return false
@@ -1174,6 +1175,7 @@ function GameDirector:_InitObjectives()
 			isBase = false,
 			isSpawnPath = false,
 			isEnterVehiclePath = false,
+			isEnterAirVehiclePath = false,
 			isBeaconPath = false,
 			canBeCaptured = true,
 			destroyed = false,
@@ -1208,6 +1210,12 @@ function GameDirector:_InitObjectives()
 			s_Objective.isEnterVehiclePath = true
 			s_Objective.active = false
 			s_Objective.canBeCaptured = false
+
+			if string.find(l_ObjectiveName:lower(), "chopper") ~= nil
+				or string.find(l_ObjectiveName:lower(), "plane") ~= nil
+			then
+				s_Objective.isEnterAirVehiclePath = true
+			end
 
 			if string.find(l_ObjectiveName:lower(), "us") ~= nil then
 				s_Objective.team = TeamId.Team1
