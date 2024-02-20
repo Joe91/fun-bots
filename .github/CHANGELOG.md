@@ -10,6 +10,7 @@ This is the changelog for the version V2.9 Don't forget to [join us on Discord](
 
 ### New features / improvements
 * Merged pull request #318 from tagener-noisu Navigation fixes
+* POI Implementation with beacon as first usage by tagener-noisu
 
 
 ### Bug fixes
@@ -50,6 +51,8 @@ This is the changelog for the version V2.9 Don't forget to [join us on Discord](
 * Conquest Small XP5_001 by MeisterPeitsche
 * Conquest Small XP5_002 by MeisterPeitsche
 * Conquest Small XP5_004 by MeisterPeitsche
+* Conquest Large/Small MP_Subway by ThyKingdomCome (with beacons)
+* Conquest Large MP_018 by ThyKingdomCome (with beacons)
 
 ### Documentation update
 
