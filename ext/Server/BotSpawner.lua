@@ -230,10 +230,6 @@ function BotSpawner:OnPlayerAuthenticated(p_Player)
 			for _, l_Player in pairs(s_TempPlayers) do
 				if not m_Utilities:isBot(l_Player) then
 					s_CountPlayers[i] = s_CountPlayers[i] + 1
-
-					if Globals.IsSdm then -- To-do: Only needed because of VEXT-Bug.
-						l_Player.squadId = 1
-					end
 				end
 			end
 		end
@@ -351,10 +347,6 @@ function BotSpawner:UpdateBotAmountAndTeam()
 		for _, l_Player in pairs(s_TempPlayers) do
 			if not m_Utilities:isBot(l_Player) then
 				s_CountPlayers[i] = s_CountPlayers[i] + 1
-
-				if Globals.IsSdm then -- To-do: Only needed because of VEXT-Bug.
-					l_Player.squadId = 1
-				end
 			end
 		end
 
