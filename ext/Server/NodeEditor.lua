@@ -958,6 +958,10 @@ function NodeEditor:OnLevelLoaded(p_LevelName, p_GameMode, p_CustomGameMode)
 			s_GameModeToLoad = 'TeamDeathMatch0' -- Paths are compatible.
 		end
 
+		if p_GameMode == 'BFLAG0' then
+			s_GameModeToLoad = 'BFLAG'
+		end
+
 		if p_LevelName == 'MP_Subway' and p_GameMode == 'ConquestSmall0' then
 			s_GameModeToLoad = 'ConquestLarge0' -- Paths are the same.
 		end
