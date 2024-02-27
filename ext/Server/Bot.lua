@@ -35,6 +35,10 @@ function Bot:__init(p_Player)
 	---@type integer
 	self.m_Id = p_Player.id
 
+	-- create some character proporties
+	---@type BotAttributes
+	self.m_Attributes = nil
+
 	-- Common settings.
 	---@type BotSpawnModes
 	self._SpawnMode = BotSpawnModes.NoRespawn
