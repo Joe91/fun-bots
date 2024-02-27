@@ -247,6 +247,15 @@ end
 ---@param p_TeamId TeamId|integer
 ---@param p_SquadId SquadId|integer
 function BotSpawner:OnTeamChange(p_Player, p_TeamId, p_SquadId)
+	-- kill bot, if still alive
+	local s_Bot = m_BotManager:GetBotByName(p_Player.name)
+	if s_Bot ~= nil then
+		if s_Bot.m_Player.soldier ~= nil then
+			s_Bot.m_Player.soldier:Kill()
+		end
+		s_Bot.m_Player.teamId = p_TeamId --not needed, but does not hurt as well.
+	end
+
 	if Config.BotTeam ~= TeamId.TeamNeutral then
 		if p_Player ~= nil then
 			if p_Player.onlineId ~= 0 then -- No bot.
