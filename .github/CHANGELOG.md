@@ -16,6 +16,7 @@ This is the changelog for the version V2.9 Don't forget to [join us on Discord](
 
 ### Bug fixes
 * Merged pull request #323 from tagener-noisu Path-Switcher fixes
+* Bots find best squad after team-switch again.
 
 ### New maps
 * Conquest Large MP_018 by ThyKingdomCome

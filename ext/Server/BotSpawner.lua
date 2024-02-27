@@ -1060,25 +1060,27 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 	local s_IsRespawn = false
 	local s_Name = nil
 
-	if p_ExistingBot ~= nil then
-		s_IsRespawn = true
-		s_Name = p_ExistingBot.m_Name
-	else
-		s_Name = m_BotManager:FindNextBotName()
-	end
-
 	local s_TeamId = p_ForcedTeam
-	local s_SquadId = SquadId.SquadNone
-
 	if s_TeamId == nil then
 		s_TeamId = m_BotManager:GetBotTeam()
 	end
 
-	if s_IsRespawn then
+	if p_ExistingBot ~= nil then
+		s_IsRespawn = true
+		s_Name = p_ExistingBot.m_Name
 		s_TeamId = p_ExistingBot.m_Player.teamId
-		s_SquadId = p_ExistingBot.m_Player.squadId
 	else
-		s_SquadId = self:_GetSquadToJoin(s_TeamId)
+		s_Name = m_BotManager:FindNextBotName()
+	end
+
+	local s_SquadId = self:_GetSquadToJoin(s_TeamId)
+
+	if s_IsRespawn then
+		if p_ExistingBot.m_Player.squadId == SquadId.SquadNone or p_ExistingBot.m_Player.squadId > s_SquadId then -- place free in other squad
+			p_ExistingBot.m_Player.squadId = s_SquadId
+		else
+			s_SquadId = p_ExistingBot.m_Player.squadId
+		end
 	end
 
 	local s_InverseDirection = nil
