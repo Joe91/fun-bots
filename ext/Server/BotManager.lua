@@ -117,6 +117,18 @@ function BotManager:OnPlayerLeft(p_Player)
 	end
 end
 
+---VEXT Server Soldier:HealthAction Event
+---@param p_Soldier SoldierEntity
+---@param p_Action HealthStateAction|integer
+function BotManager:OnSoldierHealthAction(p_Soldier, p_Action)
+	if p_Action == HealthStateAction.OnRevive then
+		local s_Bot = self:GetBotByName(p_Soldier.player.name)
+		if not s_Bot then return end
+		-- Randomize a delay of 50 to 300ms. So the Bot won't accept the revive immediately.
+		s_Bot:SetActiveDelay(MathUtils:GetRandom(0.050, 0.300))
+	end
+end
+
 ---@param p_BotName string
 function BotManager:OnBotAbortWait(p_BotName)
 	local s_Bot = self:GetBotByName(p_BotName)

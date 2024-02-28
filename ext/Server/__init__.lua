@@ -111,6 +111,7 @@ function FunBotServer:RegisterEvents()
 	Events:Subscribe('Player:Chat', self, self.OnPlayerChat)
 	Events:Subscribe('Player:Left', self, self.OnPlayerLeft)
 	Events:Subscribe('Player:Destroyed', self, self.OnPlayerDestroyed)
+	Events:Subscribe('Soldier:HealthAction', self, self.OnSoldierHealthAction)
 
 	Events:Subscribe('CapturePoint:Lost', self, self.OnCapturePointLost)
 	Events:Subscribe('CapturePoint:Captured', self, self.OnCapturePointCaptured)
@@ -412,6 +413,13 @@ end
 function FunBotServer:OnPlayerDestroyed(p_Player)
 	m_NodeEditor:OnPlayerDestroyed(p_Player)
 	m_AirTargets:OnPlayerDestroyed(p_Player)
+end
+
+---VEXT Server Soldier:HealthAction Event
+---@param p_Soldier SoldierEntity
+---@param p_Action HealthStateAction|integer
+function FunBotServer:OnSoldierHealthAction(p_Soldier, p_Action)
+	m_BotManager:OnSoldierHealthAction(p_Soldier, p_Action)
 end
 
 -- =============================================
