@@ -235,6 +235,12 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 				-- Timeout after revive. Do nothing.
 				if self._ActiveDelay > 0.0 then
 					self._ActiveDelay = self._ActiveDelay - p_DeltaTime
+					if self._ActiveDelay <= 0.0 then
+						-- accept revive
+						self:_SetInput(EntryInputActionEnum.EIACycleRadioChannel, 1)
+						self:_UpdateInputs()
+						self.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Crouch, true, true)
+					end
 					return
 				end
 
