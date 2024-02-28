@@ -312,11 +312,12 @@ end
 
 ---@param p_Bot Bot
 local function _ReviveAimingAction(p_Bot)
-	if p_Bot._ShootPlayer.corpse == nil then
+	if p_Bot._ShootPlayer.corpse == nil or p_Bot._ShootPlayer.corpse.physicsEntityBase == nil
+		or p_Bot._ShootPlayer.corpse.physicsEntityBase.position == nil then
 		return
 	end
 
-	local s_PositionTarget = p_Bot._ShootPlayer.corpse.worldTransform.trans:Clone()
+	local s_PositionTarget = p_Bot._ShootPlayer.corpse.physicsEntityBase.position:Clone()
 	local s_PositionBot = p_Bot.m_Player.soldier.worldTransform.trans:Clone() +
 		m_Utilities:getCameraPos(p_Bot.m_Player, false, false)
 
