@@ -12,11 +12,12 @@ This is the changelog for the version V2.9 Don't forget to [join us on Discord](
 * Merged pull request #318 from tagener-noisu Navigation fixes
 * Merged pull request #325 form tagener-noisu several small improvements
 * POI Implementation with beacon as first usage by tagener-noisu
-
+* Post-revive delay was added by Bree_Arnold
 
 ### Bug fixes
 * Merged pull request #323 from tagener-noisu Path-Switcher fixes
 * Bots find best squad after team-switch again.
+* Aiming with the defib was fixed by Bree_Arnold
 
 ### New maps
 * Conquest Large MP_018 by ThyKingdomCome

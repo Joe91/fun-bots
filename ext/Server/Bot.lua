@@ -132,6 +132,7 @@ function Bot:__init(p_Player)
 	self._ObstacleRetryCounter = 0
 	self._Objective = ''
 	self._OnSwitch = false
+	self._ActiveDelay = 0.0
 
 	-- Vehicle stuff.
 	---@type integer|nil
@@ -228,6 +229,18 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 					self:_UpdateInputs()
 					m_BotMovement:UpdateYaw(self)
 					self._UpdateFastTimer = 0.0
+					return
+				end
+
+				-- Timeout after revive. Do nothing.
+				if self._ActiveDelay > 0.0 then
+					self._ActiveDelay = self._ActiveDelay - p_DeltaTime
+					if self._ActiveDelay <= 0.0 then
+						-- accept revive
+						self:_SetInput(EntryInputActionEnum.EIACycleRadioChannel, 1)
+						self:_UpdateInputs()
+						self.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Crouch, true, true)
+					end
 					return
 				end
 
@@ -1070,6 +1083,7 @@ function Bot:ResetSpawnVars()
 	self._ActiveAction = BotActionFlags.NoActionActive
 	self._KnifeWayPositions = {}
 	self._OnSwitch = false
+	self._ActiveDelay = 0.0
 	self._TargetPitch = 0.0
 	self._Objective = '' -- Reset objective on spawn, as another spawn-point might have chosen...
 	self._WeaponToUse = BotWeapons.Primary
@@ -1469,6 +1483,10 @@ function Bot:_SetActiveVars()
 	else
 		self.m_KnifeMode = false
 	end
+end
+
+function Bot:SetActiveDelay(p_Time)
+	self._ActiveDelay = p_Time
 end
 
 return Bot
