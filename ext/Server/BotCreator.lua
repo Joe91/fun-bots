@@ -29,11 +29,11 @@ function BotCreator:CreateBotAttributes()
 	for l_Index, l_Name in pairs(BotNames) do
 		local s_IndexInKit = math.floor(l_Index / 4)
 		local s_Kit = nil
-		if l_Index % 4 == 0 then -- assault
+		if l_Index % 4 == 1 then -- assault
 			s_Kit = BotKits.Assault
-		elseif l_Index % 4 == 1 then --engineer
+		elseif l_Index % 4 == 2 then --engineer
 			s_Kit = BotKits.Engineer
-		elseif l_Index % 4 == 2 then --support
+		elseif l_Index % 4 == 3 then --support
 			s_Kit = BotKits.Support
 		else                   -- recon
 			s_Kit = BotKits.Recon
@@ -46,32 +46,33 @@ function BotCreator:CreateBotAttributes()
 		local s_Behaviour = s_IndexInKit % BotBehavior.COUNT
 		local s_Color = s_IndexInKit % (BotColors.Count - 1) + 1
 
-		local s_BotAttributes = BotAttributs
-		s_BotAttributes.Accuracy = s_RelAccuracy
-		s_BotAttributes.Kit = s_Kit
-		s_BotAttributes.Name = l_Name
-		s_BotAttributes.ReactionTime = s_RelReactionTime
-		s_BotAttributes.Behaviour = s_Behaviour
-		s_BotAttributes.Color = s_Color
+		local s_BotAttributes = {
+			Accuracy = s_RelAccuracy,
+			Kit = s_Kit,
+			Name = l_Name,
+			ReactionTime = s_RelReactionTime,
+			Behaviour = s_Behaviour,
+			Color = s_Color
+		}
 
 		table.insert(self.AllBotAttributs, s_BotAttributes)
 		table.insert(self.BotAttributesByClass[s_Kit], s_BotAttributes)
+		-- print(s_BotAttributes)
 	end
 	m_Logger:Write("BotAttributes of " .. #self.AllBotAttributs .. " Bots created")
 end
 
 function BotCreator:GetNextBotName(p_BotKit)
 	local s_PossibleAttributes = {}
-
 	for l_Index, l_Attributes in pairs(self.BotAttributesByClass[p_BotKit]) do
 		local s_NameAvailable = true
-		for _, l_UsedNames in self.ActiveBotNames do
+		for _, l_UsedNames in pairs(self.ActiveBotNames) do
 			if l_Attributes.Name == l_UsedNames then
 				s_NameAvailable = false
 				break
 			end
 		end
-		for _, l_PlayerName in self.IgnoreBotNames do
+		for _, l_PlayerName in pairs(self.IgnoreBotNames) do
 			if l_Attributes.Name == l_PlayerName then
 				s_NameAvailable = false
 				break
@@ -79,13 +80,20 @@ function BotCreator:GetNextBotName(p_BotKit)
 		end
 
 		if s_NameAvailable then
-			table.insert(s_PossibleAttributes, l_Attributes)
+			local s_Attribute = {
+				Accuracy = l_Attributes.Accuracy,
+				Kit = l_Attributes.Kit,
+				Name = l_Attributes.Name,
+				ReactionTime = l_Attributes.ReactionTime,
+				Behaviour = l_Attributes.Behaviour,
+				Color = l_Attributes.Color
+			}
+			table.insert(s_PossibleAttributes, s_Attribute)
 		end
 	end
 	-- local s_SelectedAttribute = s_PossibleAttributes[MathUtils:GetRandomInt(1, #s_PossibleAttributes)]
 	local s_SelectedAttribute = s_PossibleAttributes[1] -- don't randomize them for now
 	table.insert(self.ActiveBotNames, s_SelectedAttribute.Name)
-	--return
 	return s_SelectedAttribute.Name
 end
 
