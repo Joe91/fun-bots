@@ -1,6 +1,7 @@
 ---@class BotAttributes
 ---@field Name string
 ---@field Kit BotKits|integer
+---@field Color BotColors|integer
 ---@field Skill number
 ---@field Behaviour BotBehavior[]|integer
 ---@field ReactionTime integer
@@ -11,6 +12,7 @@
 BotAttributs = {
 	Name = "",
 	Kit = BotKits.RANDOM_KIT,
+	Color = BotColors.RANDOM_COLOR,
 	Skill = 0.0,
 	Behaviour = BotBehavior.Default,
 	ReactionTime = 0.0,

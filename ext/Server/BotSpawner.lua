@@ -8,6 +8,8 @@ require('Model/SpawnSet')
 local m_NodeCollection = require('NodeCollection')
 ---@type BotManager
 local m_BotManager = require('BotManager')
+---@type BotCreator
+local m_BotCreator = require('BotCreator')
 ---@type WeaponList
 local m_WeaponList = require('__shared/WeaponList')
 ---@type Utilities
@@ -625,7 +627,8 @@ end
 ---@param p_Spacing number
 function BotSpawner:SpawnBotRow(p_Player, p_Length, p_Spacing)
 	for i = 1, p_Length do
-		local s_Name = m_BotManager:FindNextBotName()
+		-- local s_Name = m_BotManager:FindNextBotName()
+		local s_Name = m_BotCreator:GetNextBotName(self:_GetSpawnBotKit())
 
 		if s_Name ~= nil then
 			local s_Transform = LinearTransform()
@@ -635,7 +638,7 @@ function BotSpawner:SpawnBotRow(p_Player, p_Length, p_Spacing)
 			if not s_Bot then
 				return
 			end
-
+			m_BotCreator:SetAttributesToBot(s_Bot)
 			s_Bot:SetVarsStatic(p_Player)
 			self:_SpawnBot(s_Bot, s_Transform, true)
 		end
@@ -646,7 +649,8 @@ end
 ---@param p_Height integer
 function BotSpawner:SpawnBotTower(p_Player, p_Height)
 	for i = 1, p_Height do
-		local s_Name = m_BotManager:FindNextBotName()
+		-- local s_Name = m_BotManager:FindNextBotName()
+		local s_Name = m_BotCreator:GetNextBotName(self:_GetSpawnBotKit())
 
 		if s_Name ~= nil then
 			local s_Yaw = p_Player.input.authoritativeAimingYaw
@@ -659,7 +663,7 @@ function BotSpawner:SpawnBotTower(p_Player, p_Height)
 			if not s_Bot then
 				return
 			end
-
+			m_BotCreator:SetAttributesToBot(s_Bot)
 			s_Bot:SetVarsStatic(p_Player)
 			self:_SpawnBot(s_Bot, s_Transform, true)
 		end
@@ -673,7 +677,8 @@ end
 function BotSpawner:SpawnBotGrid(p_Player, p_Rows, p_Columns, p_Spacing)
 	for i = 1, p_Rows do
 		for j = 1, p_Columns do
-			local s_Name = m_BotManager:FindNextBotName()
+			--local s_Name = m_BotManager:FindNextBotName()
+			local s_Name = m_BotCreator:GetNextBotName(self:_GetSpawnBotKit())
 
 			if s_Name ~= nil then
 				local s_Yaw = p_Player.input.authoritativeAimingYaw
@@ -689,6 +694,7 @@ function BotSpawner:SpawnBotGrid(p_Player, p_Rows, p_Columns, p_Spacing)
 					return
 				end
 
+				m_BotCreator:SetAttributesToBot(s_Bot)
 				s_Bot:SetVarsStatic(p_Player)
 				self:_SpawnBot(s_Bot, s_Transform, true)
 			end
@@ -782,30 +788,14 @@ end
 ---@param p_Bot Bot
 ---@param p_SetKit boolean
 function BotSpawner:_SelectLoadout(p_Bot, p_SetKit)
-	local s_WriteNewKit = (p_SetKit or Config.BotNewLoadoutOnSpawn)
+	local s_WriteNewKit = false
 
-	if not s_WriteNewKit and (p_Bot.m_Color == nil or p_Bot.m_Kit == nil or p_Bot.m_ActiveWeapon == nil) then
+	if p_Bot.m_ActiveWeapon == nil then
 		s_WriteNewKit = true
 	end
 
-	local s_BotColor = Config.BotColor
-	local s_BotKit = Config.BotKit
-
-	if s_WriteNewKit then
-		if s_BotColor == BotColors.RANDOM_COLOR then
-			s_BotColor = MathUtils:GetRandomInt(1, BotColors.Count - 1) -- Color enum goes from 1 to 13.
-		end
-
-		if s_BotKit == BotKits.RANDOM_KIT then
-			s_BotKit = self:_GetSpawnBotKit()
-		end
-
-		p_Bot.m_Color = s_BotColor
-		p_Bot.m_Kit = s_BotKit
-	else
-		s_BotColor = p_Bot.m_Color
-		s_BotKit = p_Bot.m_Kit
-	end
+	local s_BotColor = p_Bot.m_Color
+	local s_BotKit = p_Bot.m_Kit
 
 	p_Bot:ResetSpawnVars()
 	local s_Team = "US"
@@ -1070,7 +1060,8 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 		s_Name = p_ExistingBot.m_Name
 		s_TeamId = p_ExistingBot.m_Player.teamId
 	else
-		s_Name = m_BotManager:FindNextBotName()
+		-- s_Name = m_BotManager:FindNextBotName()
+		s_Name = m_BotCreator:GetNextBotName(self:_GetSpawnBotKit())
 	end
 
 	local s_SquadId = self:_GetSquadToJoin(s_TeamId)
@@ -1093,7 +1084,8 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 				return
 			end
 
-			self:_SelectLoadout(s_Bot, true)
+			m_BotCreator:SetAttributesToBot(s_Bot)
+			self:_SelectLoadout(s_Bot, false)
 			self:_TriggerSpawn(s_Bot)
 			table.insert(self._BotsWithoutPath, s_Bot)
 			return
@@ -1151,7 +1143,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 						if (TeamSquadManager:GetSquadPlayerCount(s_TeamId, s_SquadId) == 1) then
 							s_Bot.m_Player:SetSquadLeader(true, false) -- Not private.
 						end
-
+						m_BotCreator:SetAttributesToBot(s_Bot)
 						s_Bot:SetVarsWay(nil, true, 0, 0, false)
 						self:_SpawnBot(s_Bot, s_Transform, true)
 
@@ -1212,7 +1204,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 				if (TeamSquadManager:GetSquadPlayerCount(s_TeamId, s_SquadId) == 1) then
 					s_Bot.m_Player:SetSquadLeader(true, false) -- Not private.
 				end
-
+				m_BotCreator:SetAttributesToBot(s_Bot)
 				s_Bot:SetVarsWay(p_Player, p_UseRandomWay, p_ActiveWayIndex, p_IndexOnPath, s_InverseDirection)
 				self:_SpawnInEntity(s_Bot, s_SquadSpawnVehicle, s_Transform, true)
 			end
@@ -1241,36 +1233,14 @@ end
 ---@param p_Transform LinearTransform
 ---@param p_SetKit boolean
 function BotSpawner:_SpawnBot(p_Bot, p_Transform, p_SetKit)
-	local s_WriteNewKit = (p_SetKit or Config.BotNewLoadoutOnSpawn)
+	local s_WriteNewKit = false
 
-	local s_Beacon = g_GameDirector:GetPlayerBeacon(p_Bot.m_Name)
-
-	if s_Beacon ~= nil then
-		s_WriteNewKit = false or p_SetKit
-	end
-
-	if not s_WriteNewKit and (p_Bot.m_Color == nil or p_Bot.m_Kit == nil or p_Bot.m_ActiveWeapon == nil) then
+	if p_Bot.m_ActiveWeapon == nil then
 		s_WriteNewKit = true
 	end
 
-	local s_BotColor = Config.BotColor
-	local s_BotKit = Config.BotKit
-
-	if s_WriteNewKit then
-		if s_BotColor == BotColors.RANDOM_COLOR then
-			s_BotColor = MathUtils:GetRandomInt(1, BotColors.Count - 1) -- Color enum goes from 1 to 13.
-		end
-
-		if s_BotKit == BotKits.RANDOM_KIT then
-			s_BotKit = self:_GetSpawnBotKit()
-		end
-
-		p_Bot.m_Color = s_BotColor
-		p_Bot.m_Kit = s_BotKit
-	else
-		s_BotColor = p_Bot.m_Color
-		s_BotKit = p_Bot.m_Kit
-	end
+	local s_BotColor = p_Bot.m_Color
+	local s_BotKit = p_Bot.m_Kit
 
 	local s_Team = "US"
 
