@@ -1,21 +1,22 @@
----@class BotManager
----@overload fun():BotManager
+---@class BotCreator
+---@overload fun():BotCreator
 BotCreator = class('BotCreator')
 
 
 ---@type Utilities
 local m_Utilities = require('__shared/Utilities')
 ---@type Logger
-local m_Logger = Logger("BotCreator", Debug.Server.BOT)
+local m_Logger = Logger("BotCreator", Debug.Server.BOT_CREATION)
 
 function BotCreator:__init()
 	---@type BotAttributes[]
 	self.AllBotAttributs = {}
 	self.BotAttributesByClass = {}
+	self.ActiveBotNames = {}
 	self._InitDone = false
 end
 
-function BotCreator:CreateBotCharacters()
+function BotCreator:CreateBotAttributes()
 	local s_NumberOfBotsPerKit = math.floor(#BotNames / 4)
 
 	for _, l_Kit in pairs(BotKits) do
@@ -52,6 +53,34 @@ function BotCreator:CreateBotCharacters()
 		table.insert(self.AllBotAttributs, s_BotAttributes)
 		table.insert(self.BotAttributesByClass[s_Kit], s_BotAttributes)
 	end
+	m_Logger:Write("BotAttributes of " .. #self.AllBotAttributs .. " Bots created")
+end
+
+function BotCreator:GetAttributes(p_BotKit)
+	local s_PossibleAttributes = {}
+	for l_Index, l_Attributes in pairs(self.BotAttributesByClass[p_BotKit]) do
+		local s_NameAvailable = true
+		for _, l_UsedNames in self.ActiveBotNames do
+			if l_Attributes.Name == l_UsedNames then
+				s_NameAvailable = false
+				break
+			end
+		end
+		if s_NameAvailable then
+			table.insert(s_PossibleAttributes, l_Attributes)
+		end
+	end
+	--return s_PossibleAttributes[MathUtils:GetRandomInt(1, #s_PossibleAttributes)]
+	return s_PossibleAttributes[1] -- don't randomize them for now
+end
+
+function BotCreator:GetAttributesOfBot(p_BotName)
+	for _, l_Attributes in pairs(self.AllBotAttributs) do
+		if l_Attributes.Name == p_BotName then
+			return l_Attributes
+		end
+	end
+	return nil
 end
 
 if g_BotCreator == nil then
