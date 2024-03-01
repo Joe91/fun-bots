@@ -621,6 +621,16 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 		return false
 	end
 
+	if p_IgnoreYaw then -- was hit, check for special behavior
+		if self.m_Behavior == BotBehavior.DontShootBackHide then
+			-- TODO: behave that way
+			return false
+		elseif self.m_Behavior == BotBehavior.DontShootBackBail then
+			-- TODO: behave that way
+			return false
+		end
+	end
+
 	-- Don't shoot at teammates.
 	if self.m_Player.teamId == p_Player.teamId then
 		return false

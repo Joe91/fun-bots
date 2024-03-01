@@ -44,9 +44,12 @@ function BotCreator:CreateBotAttributes()
 		if s_RelReactionTime < 0.0 then
 			s_RelReactionTime = s_RelReactionTime + 1.0
 		end
+		-- set accuracy to skill level
 		local s_RelAccuracy = s_RelSkill
 
+		-- rotate behavior over each class
 		local s_Behaviour = s_IndexInKit % BotBehavior.COUNT
+		-- rotate colors of the bots
 		local s_Color = s_IndexInKit % (BotColors.Count - 1) + 1
 
 		local s_BotAttributes = {
