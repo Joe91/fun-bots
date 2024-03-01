@@ -14,7 +14,6 @@ function BotCreator:__init()
 	self.BotAttributesByClass = {}
 
 	self.ActiveBotNames = {}
-	self.IgnoreBotNames = {}
 	self._InitDone = false
 end
 
@@ -40,24 +39,30 @@ function BotCreator:CreateBotAttributes()
 		end
 
 		local s_RelSkill = s_IndexInKit / s_NumberOfBotsPerKit
-		local s_RelReactionTime = 1.0 - s_RelSkill
+		-- additional reaction time from 0 to 1
+		local s_RelReactionTime = 0.5 - s_RelSkill
+		if s_RelReactionTime < 0.0 then
+			s_RelReactionTime = s_RelReactionTime + 1.0
+		end
 		local s_RelAccuracy = s_RelSkill
 
 		local s_Behaviour = s_IndexInKit % BotBehavior.COUNT
 		local s_Color = s_IndexInKit % (BotColors.Count - 1) + 1
 
 		local s_BotAttributes = {
-			Accuracy = s_RelAccuracy,
-			Kit = s_Kit,
 			Name = l_Name,
-			ReactionTime = s_RelReactionTime,
+			Kit = s_Kit,
+			Color = s_Color,
+			Skill = s_RelSkill,
 			Behaviour = s_Behaviour,
-			Color = s_Color
+			ReactionTime = s_RelReactionTime,
+			Accuracy = s_RelAccuracy,
+			PrefWeapon = "",
+			PrefVehicle = ""
 		}
 
 		table.insert(self.AllBotAttributs, s_BotAttributes)
 		table.insert(self.BotAttributesByClass[s_Kit], s_BotAttributes)
-		-- print(s_BotAttributes)
 	end
 	m_Logger:Write("BotAttributes of " .. #self.AllBotAttributs .. " Bots created")
 end
@@ -72,7 +77,7 @@ function BotCreator:GetNextBotName(p_BotKit)
 				break
 			end
 		end
-		for _, l_PlayerName in pairs(self.IgnoreBotNames) do
+		for _, l_PlayerName in pairs(Globals.IgnoreBotNames) do
 			if l_Attributes.Name == l_PlayerName then
 				s_NameAvailable = false
 				break
@@ -81,18 +86,21 @@ function BotCreator:GetNextBotName(p_BotKit)
 
 		if s_NameAvailable then
 			local s_Attribute = {
-				Accuracy = l_Attributes.Accuracy,
-				Kit = l_Attributes.Kit,
 				Name = l_Attributes.Name,
-				ReactionTime = l_Attributes.ReactionTime,
+				Kit = l_Attributes.Kit,
+				Color = l_Attributes.Color,
+				Skill = l_Attributes.Skill,
 				Behaviour = l_Attributes.Behaviour,
-				Color = l_Attributes.Color
+				ReactionTime = l_Attributes.ReactionTime,
+				Accuracy = l_Attributes.Accuracy,
+				PrefWeapon = l_Attributes.PrefWeapon,
+				PrefVehicle = l_Attributes.PrefVehicle
 			}
 			table.insert(s_PossibleAttributes, s_Attribute)
 		end
 	end
-	-- local s_SelectedAttribute = s_PossibleAttributes[MathUtils:GetRandomInt(1, #s_PossibleAttributes)]
-	local s_SelectedAttribute = s_PossibleAttributes[1] -- don't randomize them for now
+	local s_SelectedAttribute = s_PossibleAttributes[MathUtils:GetRandomInt(1, #s_PossibleAttributes)]
+	-- local s_SelectedAttribute = s_PossibleAttributes[1] -- don't randomize them for now
 	table.insert(self.ActiveBotNames, s_SelectedAttribute.Name)
 	return s_SelectedAttribute.Name
 end
@@ -101,7 +109,12 @@ function BotCreator:SetAttributesToBot(p_Bot)
 	local s_Attributes = self:GetAttributesOfBot(p_Bot.m_Name)
 	p_Bot.m_Kit = s_Attributes.Kit
 	p_Bot.m_Color = s_Attributes.Color
-	p_Bot.m_Attributes = s_Attributes
+	p_Bot.m_Behavior = s_Attributes.Behaviour
+	p_Bot.m_Reaction = s_Attributes.ReactionTime
+	p_Bot.m_Accuracy = s_Attributes.Accuracy
+	p_Bot.m_Skill = s_Attributes.Skill
+	p_Bot.m_PrefWeapon = s_Attributes.PrefWeapon
+	p_Bot.m_PrefVehicle = s_Attributes.PrefVehicle
 end
 
 function BotCreator:RemoveActiveBot(p_BotName)
@@ -116,18 +129,6 @@ function BotCreator:GetAttributesOfBot(p_BotName)
 	for _, l_Attributes in pairs(self.AllBotAttributs) do
 		if l_Attributes.Name == p_BotName then
 			return l_Attributes
-		end
-	end
-end
-
-function BotCreator:SetIgnoreName(p_Name)
-	table.insert(self.IgnoreBotNames, p_Name)
-end
-
-function BotCreator:RemoveIgnoreName(p_Name)
-	for l_Index, l_Name in pairs(self.IgnoreBotNames) do
-		if (l_Name == p_Name) then
-			table.remove(self.IgnoreBotNames, l_Index)
 		end
 	end
 end

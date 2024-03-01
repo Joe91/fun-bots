@@ -36,8 +36,13 @@ function Bot:__init(p_Player)
 	self.m_Id = p_Player.id
 
 	-- create some character proporties
-	---@type BotAttributes
-	self.m_Attributes = nil
+	---@type BotBehavior
+	self.m_Behavior = nil
+	self.m_Reaction = 0.0
+	self.m_Accuracy = 0.0
+	self.m_Skill = 0.0
+	self.m_PrefWeapon = ""
+	self.m_PrefVehicle = ""
 
 	-- Common settings.
 	---@type BotSpawnModes
@@ -184,8 +189,8 @@ function Bot:__init(p_Player)
 	self._ShootWayPoints = {}
 	---@type Vec3[]
 	self._KnifeWayPositions = {}
-	self._Skill = 0.0
-	self._SkillSniper = 0.0
+	self._Accuracy = 0.0
+	self._AccuracySniper = 0.0
 	self._SkillFound = false
 
 	---@type Player|nil
@@ -903,7 +908,7 @@ end
 ---@param p_ReducedTiming boolean
 ---@return number
 function Bot:GetFirstShotDelay(p_DistanceToTarget, p_ReducedTiming)
-	local s_Delay = (Config.BotFirstShotDelay + (math.random() * self._Skill)) -- Slower reaction with lower skill. Always use "Skill" for this (independent of Sniper).
+	local s_Delay = (Config.BotFirstShotDelay + (Config.ReactionTime * MathUtils:GetRandom(0.8, 1.2) * self.m_Reaction)) -- Slower reaction with lower skill. Always use "Skill" for this (independent of Sniper).
 
 	if p_ReducedTiming then
 		s_Delay = s_Delay * 0.6
@@ -1071,9 +1076,8 @@ function Bot:ResetSpawnVars()
 
 	-- Skill.
 	if not self._SkillFound then
-		local s_TempSkillValue = math.random()
-		self._Skill = Config.BotWorseningSkill * s_TempSkillValue
-		self._SkillSniper = Config.BotSniperWorseningSkill * s_TempSkillValue
+		self._Accuracy = Config.BotWorseningSkill * self.m_Accuracy
+		self._AccuracySniper = Config.BotSniperWorseningSkill * self.m_Accuracy
 		self._SkillFound = true
 	end
 
