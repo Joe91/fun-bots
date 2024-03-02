@@ -235,7 +235,7 @@ local function _DefaultAttackingAction(p_Bot)
 						if p_Bot.m_ActiveWeapon.type ~= WeaponTypes.Rocket then
 							p_Bot._WeaponToUse = BotWeapons.Primary
 							-- Check to use rocket.
-							local s_TargetTimeValueRocket = Config.BotFireModeDuration - (Config.BotMinTimeShootAtPlayer * 0.5)
+							local s_TargetTimeValueRocket = Config.BotFireModeDuration - 0.7 --TODO: relative or absolute offset?
 							local s_ProbabilityRocket = Registry.BOT.PROBABILITY_SHOOT_ROCKET
 							if p_Bot.m_Behavior == BotBehavior.LovesExplosives then
 								s_ProbabilityRocket = Registry.BOT.PROBABILITY_SHOOT_ROCKET_PRIO
@@ -253,7 +253,7 @@ local function _DefaultAttackingAction(p_Bot)
 			end
 			-- Use grenade from time to time.
 			if Config.BotsThrowGrenades then
-				local s_TargetTimeValue = Config.BotFireModeDuration - (Config.BotMinTimeShootAtPlayer * 0.55)
+				local s_TargetTimeValue = Config.BotFireModeDuration - 1.1 --TODO: relative or absolute offset?
 				local s_ProbabilityGrenade = Registry.BOT.PROBABILITY_THROW_GRENADE
 				if p_Bot.m_Behavior == BotBehavior.LovesExplosives then
 					s_ProbabilityGrenade = Registry.BOT.PROBABILITY_THROW_GRENADE_PRIO

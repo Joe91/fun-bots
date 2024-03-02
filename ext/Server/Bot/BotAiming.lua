@@ -238,7 +238,7 @@ local function _DefaultAimingAction(p_Bot)
 			if p_Bot._DistanceToPlayer < 3.0 then
 				p_Bot._DistanceToPlayer = 3.0          -- Don't throw them too close.
 			end
-		elseif s_ActiveWeaponType <= WeaponTypes.Rocket then -- No compensation for other weapons needed.
+		elseif s_ActiveWeaponType <= WeaponTypes.Sniper then -- No compensation for other weapons needed. TODO: drop of rockets?
 			s_TimeToTravel = _GetTimeToTravel(p_Bot, s_Speed, s_FullPositionBot, s_FullPositionTarget, s_TargetMovement)
 			s_PitchCorrection = 0.5 * s_TimeToTravel * s_TimeToTravel * s_Drop
 		end
