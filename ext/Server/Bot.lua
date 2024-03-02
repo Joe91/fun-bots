@@ -622,6 +622,7 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 		return false
 	end
 
+	-- TODO: fill this behavior
 	if p_IgnoreYaw then -- was hit, check for special behavior
 		if self.m_Behavior == BotBehavior.DontShootBackHide then
 			-- TODO: behave that way
