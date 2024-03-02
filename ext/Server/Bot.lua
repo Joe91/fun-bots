@@ -352,7 +352,7 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 										self._ShootPlayerName = s_Target.name
 										self._ShootPlayer = PlayerManager:GetPlayerByName(self._ShootPlayerName)
 										self._ShootPlayerVehicleType = m_Vehicles:FindOutVehicleType(self._ShootPlayer)
-										self._ShootModeTimer = 0.0
+										self._ShootModeTimer = Config.BotVehicleFireModeDuration
 									else
 										self:AbortAttack()
 									end
@@ -488,6 +488,7 @@ function Bot:Repair(p_Player)
 		self._LastVehicleHealth = 0.0
 		self._ShootPlayer = nil
 		self._ShootPlayerName = p_Player.name
+		self._ShootModeTimer = Registry.BOT.MAX_TIME_TRY_REPAIR
 	end
 end
 
@@ -500,7 +501,7 @@ function Bot:EnterVehicleOfPlayer(p_Player)
 	self._ActiveAction = BotActionFlags.EnterVehicleActive
 	self._ShootPlayer = nil
 	self._ShootPlayerName = p_Player.name
-	self._ShootModeTimer = 0.0
+	self._ShootModeTimer = 12.0
 end
 
 function Bot:UpdateObjective(p_Objective)
@@ -561,9 +562,9 @@ function Bot:IsReadyToAttack()
 		return false
 	end
 
-	if self._ShootPlayer == nil or (self.m_InVehicle and (self._ShootModeTimer > Config.BotVehicleMinTimeShootAtPlayer)) or
-		(not self.m_InVehicle and (self._ShootModeTimer > Config.BotMinTimeShootAtPlayer)) or
-		(self.m_KnifeMode and self._ShootModeTimer > (Config.BotMinTimeShootAtPlayer / 2)) then
+	if self._ShootPlayer == nil or (self.m_InVehicle and (self._ShootModeTimer < (Config.BotVehicleFireModeDuration - Config.BotVehicleMinTimeShootAtPlayer))) or
+		(not self.m_InVehicle and (self._ShootModeTimer < (Config.BotFireModeDuration - Config.BotMinTimeShootAtPlayer))) or
+		(self.m_KnifeMode and self._ShootModeTimer < (Config.BotFireModeDuration - (Config.BotMinTimeShootAtPlayer * 0.5))) then
 		return true
 	else
 		return false
@@ -766,7 +767,11 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 
 	if p_IgnoreYaw or (s_DifferenceYaw < s_FovHalf and s_Pitch < s_PitchHalf) then
 		if self._Shoot then
-			self._ShootModeTimer = 0.0
+			if self.m_InVehicle then
+				self._ShootModeTimer = Config.BotVehicleFireModeDuration
+			else
+				self._ShootModeTimer = Config.BotFireModeDuration
+			end
 			self._ShootPlayerName = p_Player.name
 			self._ShootPlayer = nil
 			self._KnifeWayPositions = {}
@@ -786,11 +791,7 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 		else
 			self._ShootPlayerName = ''
 			self._ShootPlayer = nil
-			if self.m_InVehicle then
-				self._ShootModeTimer = Config.BotVehicleFireModeDuration
-			else
-				self._ShootModeTimer = Config.BotFireModeDuration
-			end
+			self._ShootModeTimer = 0.0
 			return false
 		end
 	end
