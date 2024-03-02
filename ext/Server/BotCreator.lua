@@ -26,6 +26,7 @@ function BotCreator:CreateBotAttributes()
 
 	-- create bot-attributes out of each class
 	for l_Index, l_Name in pairs(BotNames) do
+		local s_Name = Registry.COMMON.BOT_TOKEN .. l_Name
 		local s_IndexInKit = math.floor(l_Index / 4)
 		local s_Kit = nil
 		if l_Index % 4 == 1 then -- assault
@@ -53,7 +54,7 @@ function BotCreator:CreateBotAttributes()
 		local s_Color = s_IndexInKit % (BotColors.Count - 1) + 1
 
 		local s_BotAttributes = {
-			Name = l_Name,
+			Name = s_Name,
 			Kit = s_Kit,
 			Color = s_Color,
 			Skill = s_RelSkill,
@@ -71,7 +72,7 @@ function BotCreator:CreateBotAttributes()
 end
 
 function BotCreator:GetNextBotName(p_BotKit)
-	local s_PossibleAttributes = {}
+	local s_PossibleNames = {}
 	for l_Index, l_Attributes in pairs(self.BotAttributesByClass[p_BotKit]) do
 		local s_NameAvailable = true
 		for _, l_UsedNames in pairs(self.ActiveBotNames) do
@@ -86,26 +87,16 @@ function BotCreator:GetNextBotName(p_BotKit)
 				break
 			end
 		end
+		--TODO: check for existing player or Bot?
 
 		if s_NameAvailable then
-			local s_Attribute = {
-				Name = l_Attributes.Name,
-				Kit = l_Attributes.Kit,
-				Color = l_Attributes.Color,
-				Skill = l_Attributes.Skill,
-				Behaviour = l_Attributes.Behaviour,
-				ReactionTime = l_Attributes.ReactionTime,
-				Accuracy = l_Attributes.Accuracy,
-				PrefWeapon = l_Attributes.PrefWeapon,
-				PrefVehicle = l_Attributes.PrefVehicle
-			}
-			table.insert(s_PossibleAttributes, s_Attribute)
+			table.insert(s_PossibleNames, l_Attributes.Name)
 		end
 	end
-	local s_SelectedAttribute = s_PossibleAttributes[MathUtils:GetRandomInt(1, #s_PossibleAttributes)]
-	-- local s_SelectedAttribute = s_PossibleAttributes[1] -- don't randomize them for now
-	table.insert(self.ActiveBotNames, s_SelectedAttribute.Name)
-	return s_SelectedAttribute.Name
+	local s_SelectedName = s_PossibleNames[MathUtils:GetRandomInt(1, #s_PossibleNames)]
+	-- local s_SelectedAttribute = s_PossibleNames[1] -- don't randomize them for now
+	table.insert(self.ActiveBotNames, s_SelectedName)
+	return s_SelectedName
 end
 
 function BotCreator:SetAttributesToBot(p_Bot)
