@@ -925,14 +925,14 @@ end
 ---@param p_ReducedTiming boolean
 ---@return number
 function Bot:GetFirstShotDelay(p_DistanceToTarget, p_ReducedTiming)
-	local s_Delay = (Config.BotFirstShotDelay + (Config.ReactionTime * MathUtils:GetRandom(0.8, 1.2) * self.m_Reaction)) -- Slower reaction with lower skill. Always use "Skill" for this (independent of Sniper).
+	local s_Delay = (Config.BotFirstShotDelay + (Config.ReactionTime * MathUtils:GetRandom(0.8, 1.2) * self.m_Reaction))
 
 	if p_ReducedTiming then
 		s_Delay = s_Delay * 0.6
 	end
 
 	-- Slower reaction on greater distances. 100 m = 1 extra second.
-	s_Delay = s_Delay + (p_DistanceToTarget * 0.01)
+	s_Delay = s_Delay + (p_DistanceToTarget * 0.01 * (1.0 + ((self.m_Reaction - 0.5) * 0.4))) -- +-20% depending on reaction-characteristic of bot
 	return s_Delay
 end
 
@@ -1093,8 +1093,8 @@ function Bot:ResetSpawnVars()
 
 	-- Skill.
 	if not self._SkillFound then
-		self._Accuracy = Config.BotWorseningSkill * self.m_Accuracy
-		self._AccuracySniper = Config.BotSniperWorseningSkill * self.m_Accuracy
+		self._Accuracy = Config.BotWorseningSkill + Config.BotWorseningSkill * (self.m_Accuracy - 0.5)             -- up to 0.5 better or worse
+		self._AccuracySniper = Config.BotSniperWorseningSkill + Config.BotSniperWorseningSkill * (self.m_Accuracy - 0.5) -- up to 0.5 better or worse
 		self._SkillFound = true
 	end
 

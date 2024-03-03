@@ -1458,7 +1458,7 @@ SettingsDefinition = {
 			Value = Config.BotFirstShotDelay,
 			Description = "Delay for first shot. If too small, there will be great spread in first cycle because it is not compensated yet",
 			Reference = Range(0.00, 10.00, 0.10),
-			Default = 0.15,
+			Default = 0.2,
 			UpdateFlag = UpdateFlag.None,
 			Category = "EXPERT"
 		},
