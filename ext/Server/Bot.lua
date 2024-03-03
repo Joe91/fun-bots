@@ -625,10 +625,12 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 	-- TODO: fill this behavior
 	if p_IgnoreYaw then -- was hit, check for special behavior
 		if self.m_Behavior == BotBehavior.DontShootBackHide then
-			-- TODO: behave that way
+			self._ActionTimer = 7.0
+			self._ActiveAction = BotActionFlags.HideOnAttack
 			return false
 		elseif self.m_Behavior == BotBehavior.DontShootBackBail then
-			-- TODO: behave that way
+			self._ActionTimer = 5.0
+			self._ActiveAction = BotActionFlags.RunAway
 			return false
 		end
 	end
@@ -645,7 +647,7 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 	-- Don't attack as driver in some vehicles.
 	if self.m_InVehicle and self.m_Player.controlledEntryId == 0 then
 		if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) then
-			if self._VehicleMovableId == -1 then                                                                   -- Transport-choppers don't attack as driver.
+			if self._VehicleMovableId == -1 then                                                                   -- Tranotort-choppers don't attack as driver.
 				return false
 			elseif self.m_Player.controlledControllable:GetPlayerInEntry(1) ~= nil and not Config.ChopperDriversAttack then -- Don't attack if gunner available and config is false.
 				return false

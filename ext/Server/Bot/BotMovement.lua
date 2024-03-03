@@ -30,7 +30,7 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 		local s_PointIncrement = 1
 		local s_NoStuckReset = false
 
-		if #p_Bot._ShootWayPoints > 0 then -- We need to go back to path first.		
+		if #p_Bot._ShootWayPoints > 0 then -- We need to go back to the path first.		
 			s_Point = m_NodeCollection:Get(s_ActivePointIndex, p_Bot._PathIndex)
 			local s_ClosestDistance = p_Bot.m_Player.soldier.worldTransform.trans:Distance(s_Point.Position)
 			local s_ClosestNode = s_ActivePointIndex
@@ -123,6 +123,24 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 			p_Bot._WayWaitTimer = 0.0
 			p_Bot._WayWaitYawTimer = 0.0
 			p_Bot.m_ActiveSpeedValue = s_Point.SpeedMode -- Speed.
+
+			if p_Bot._ActiveAction == BotActionFlags.RunAway and p_Bot._ActionTimer > 0.0 then
+				p_Bot._ActionTimer = p_Bot._ActionTimer - Registry.BOT.BOT_UPDATE_CYCLE
+
+				p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.Sprint
+				if p_Bot._ActionTimer <= 0.0 then
+					p_Bot:_ResetActionFlag(BotActionFlags.RunAway)
+				end
+			end
+
+			if p_Bot._ActiveAction == BotActionFlags.HideOnAttack and p_Bot._ActionTimer > 0.0 then
+				p_Bot._ActionTimer = p_Bot._ActionTimer - Registry.BOT.BOT_UPDATE_CYCLE
+
+				p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.VerySlowProne
+				if p_Bot._ActionTimer <= 0.0 then
+					p_Bot:_ResetActionFlag(BotActionFlags.HideOnAttack)
+				end
+			end
 
 			if Config.OverWriteBotSpeedMode ~= BotMoveSpeeds.NoMovement and not p_Bot.m_InVehicle then
 				p_Bot.m_ActiveSpeedValue = Config.OverWriteBotSpeedMode
