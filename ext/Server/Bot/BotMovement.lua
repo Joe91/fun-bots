@@ -34,7 +34,7 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 			s_Point = m_NodeCollection:Get(s_ActivePointIndex, p_Bot._PathIndex)
 			local s_ClosestDistance = p_Bot.m_Player.soldier.worldTransform.trans:Distance(s_Point.Position)
 			local s_ClosestNode = s_ActivePointIndex
-			for i = 1, 20 do
+			for i = 1, Registry.BOT.NUMBER_NODES_TO_SCAN_AFTER_ATTACK, 2 do
 				s_Point = m_NodeCollection:Get(s_ActivePointIndex - i, p_Bot._PathIndex)
 				if s_Point and p_Bot.m_Player.soldier.worldTransform.trans:Distance(s_Point.Position) < s_ClosestDistance then
 					s_ClosestNode = s_ActivePointIndex - i

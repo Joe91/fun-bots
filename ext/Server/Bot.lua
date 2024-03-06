@@ -140,6 +140,7 @@ function Bot:__init(p_Player)
 	self._ExitVehicleActive = false
 	self._ObstacleRetryCounter = 0
 	self._Objective = ''
+	self._ObjectiveMode = BotObjectiveModes.Default
 	self._OnSwitch = false
 	self._ActiveDelay = 0.0
 

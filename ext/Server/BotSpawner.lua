@@ -627,7 +627,6 @@ end
 ---@param p_Spacing number
 function BotSpawner:SpawnBotRow(p_Player, p_Length, p_Spacing)
 	for i = 1, p_Length do
-		-- local s_Name = m_BotManager:FindNextBotName()
 		local s_Name = m_BotCreator:GetNextBotName(self:_GetSpawnBotKit())
 
 		if s_Name ~= nil then
@@ -649,7 +648,6 @@ end
 ---@param p_Height integer
 function BotSpawner:SpawnBotTower(p_Player, p_Height)
 	for i = 1, p_Height do
-		-- local s_Name = m_BotManager:FindNextBotName()
 		local s_Name = m_BotCreator:GetNextBotName(self:_GetSpawnBotKit())
 
 		if s_Name ~= nil then
@@ -677,7 +675,6 @@ end
 function BotSpawner:SpawnBotGrid(p_Player, p_Rows, p_Columns, p_Spacing)
 	for i = 1, p_Rows do
 		for j = 1, p_Columns do
-			--local s_Name = m_BotManager:FindNextBotName()
 			local s_Name = m_BotCreator:GetNextBotName(self:_GetSpawnBotKit())
 
 			if s_Name ~= nil then
@@ -1060,7 +1057,6 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 		s_Name = p_ExistingBot.m_Name
 		s_TeamId = p_ExistingBot.m_Player.teamId
 	else
-		-- s_Name = m_BotManager:FindNextBotName()
 		s_Name = m_BotCreator:GetNextBotName(self:_GetSpawnBotKit())
 	end
 
@@ -1735,6 +1731,10 @@ end
 
 ---@return BotKits|integer
 function BotSpawner:_GetSpawnBotKit()
+	-- check for overwritten bot-kit
+	if Config.BotKit ~= BotKits.RANDOM_KIT then
+		return Config.BotKit
+	end
 	---@type BotKits|integer
 	local s_BotKit = MathUtils:GetRandomInt(1, BotKits.Count - 1) -- Kit enum goes from 1 to 4.
 	local s_ChangeKit = false

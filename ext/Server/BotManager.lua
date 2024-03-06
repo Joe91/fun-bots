@@ -533,33 +533,6 @@ function BotManager:CalcYawPerFrame()
 	return (s_DegreePerDeltaTime / 360.0) * 2 * math.pi
 end
 
----@return string|nil
-function BotManager:FindNextBotName()
-	for _, l_Name in ipairs(BotNames) do
-		local s_Name = Registry.COMMON.BOT_TOKEN .. l_Name
-		local s_SkipName = false
-
-		for _, l_IgnoreName in ipairs(Globals.IgnoreBotNames) do
-			if s_Name == l_IgnoreName then
-				s_SkipName = true
-				break
-			end
-		end
-
-		if not s_SkipName then
-			local s_Bot = self:GetBotByName(s_Name)
-
-			if not s_Bot and not PlayerManager:GetPlayerByName(s_Name) then
-				return s_Name
-			elseif s_Bot and not s_Bot.m_Player.soldier and s_Bot:GetSpawnMode() ~= BotSpawnModes.RespawnRandomPath then
-				return s_Name
-			end
-		end
-	end
-
-	return nil
-end
-
 ---@param p_TeamId? TeamId
 ---@return Bot[]
 function BotManager:GetBots(p_TeamId)

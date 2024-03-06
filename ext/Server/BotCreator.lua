@@ -52,6 +52,9 @@ function BotCreator:CreateBotAttributes()
 		local s_Behaviour = s_IndexInKit % BotBehavior.COUNT
 		-- rotate colors of the bots
 		local s_Color = s_IndexInKit % (BotColors.Count - 1) + 1
+		if Config.BotColor ~= BotColors.RANDOM_COLOR then
+			s_Color = Config.BotColor
+		end
 
 		local s_BotAttributes = {
 			Name = s_Name,
