@@ -1015,9 +1015,10 @@ function Bot:SetObjectiveIfPossible(p_Objective)
 	return false
 end
 
-function Bot:SetObjective(p_Objective)
+function Bot:SetObjective(p_Objective, p_ObjectiveMode)
 	if self._Objective ~= p_Objective then
 		self._Objective = p_Objective or ''
+		self._ObjectiveMode = p_ObjectiveMode or BotObjectiveModes.Default
 		local s_Point = m_NodeCollection:Get(self._CurrentWayPoint, self._PathIndex)
 
 		if s_Point ~= nil then
