@@ -172,7 +172,7 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 				local s_OnBasePath = false
 				if s_CurrentPathFirst ~= nil and type(s_CurrentPathFirst) ~= 'boolean' and s_CurrentPathFirst.Data ~= nil and s_CurrentPathFirst.Data.Objectives ~= nil then
 					s_CurrentPathStatus = self:GetEnableStateOfPath(s_CurrentPathFirst.Data.Objectives)
-					s_OnBasePath = self:IsBasePath(s_CurrentPathFirst.Data.Objectives)
+					s_OnBasePath = (self:IsBasePath(s_CurrentPathFirst.Data.Objectives) and (#s_CurrentPathFirst.Data.Objectives == 1))
 				end
 
 				if s_CurrentPathStatus == 0 or s_OnBasePath then
@@ -1028,10 +1028,12 @@ function GameDirector:IsOnObjectivePath(p_Path)
 end
 
 function GameDirector:IsBasePath(p_ObjectiveNames)
+	if #p_ObjectiveNames < 1 then
+		return false
+	end
 	for _, l_ObjectiveName in pairs(p_ObjectiveNames) do
 		local s_Objective = self:_GetObjectiveObject(l_ObjectiveName)
-
-		if #p_ObjectiveNames == 1 and s_Objective ~= nil and s_Objective.isBase then
+		if s_Objective ~= nil and s_Objective.isBase then
 			return true
 		end
 	end
