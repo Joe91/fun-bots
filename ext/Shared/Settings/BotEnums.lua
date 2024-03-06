@@ -36,6 +36,8 @@ BotActionFlags = {
 	C4Active = 5,
 	RepairActive = 6,
 	OtherActionActive = 7,
+	RunAway = 8,
+	HideOnAttack = 9
 }
 
 ---@enum VehicleTypes

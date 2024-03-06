@@ -7,6 +7,7 @@ require('Bot')
 ---@type Utilities
 local m_Utilities = require('__shared/Utilities')
 local m_Vehicles = require("Vehicles")
+local m_BotCreator = require('BotCreator')
 ---@type Logger
 local m_Logger = Logger("BotManager", Debug.Server.BOT)
 
@@ -907,6 +908,7 @@ function BotManager:DestroyBot(p_Bot)
 
 	self._BotsByName[p_Bot.m_Name] = nil
 	self._BotInputs[p_Bot.m_Id] = nil
+	m_BotCreator:RemoveActiveBot(p_Bot.m_Name);
 
 	p_Bot:Destroy()
 	---@diagnostic disable-next-line: cast-local-type

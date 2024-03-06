@@ -35,6 +35,15 @@ function Bot:__init(p_Player)
 	---@type integer
 	self.m_Id = p_Player.id
 
+	-- create some character proporties
+	---@type BotBehavior
+	self.m_Behavior = nil
+	self.m_Reaction = 0.0
+	self.m_Accuracy = 0.0
+	self.m_Skill = 0.0
+	self.m_PrefWeapon = ""
+	self.m_PrefVehicle = ""
+
 	-- Common settings.
 	---@type BotSpawnModes
 	self._SpawnMode = BotSpawnModes.NoRespawn
@@ -180,8 +189,8 @@ function Bot:__init(p_Player)
 	self._ShootWayPoints = {}
 	---@type Vec3[]
 	self._KnifeWayPositions = {}
-	self._Skill = 0.0
-	self._SkillSniper = 0.0
+	self._Accuracy = 0.0
+	self._AccuracySniper = 0.0
 	self._SkillFound = false
 
 	---@type Player|nil
@@ -343,7 +352,7 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 										self._ShootPlayerName = s_Target.name
 										self._ShootPlayer = PlayerManager:GetPlayerByName(self._ShootPlayerName)
 										self._ShootPlayerVehicleType = m_Vehicles:FindOutVehicleType(self._ShootPlayer)
-										self._ShootModeTimer = 0.0
+										self._ShootModeTimer = Config.BotVehicleFireModeDuration
 									else
 										self:AbortAttack()
 									end
@@ -479,6 +488,7 @@ function Bot:Repair(p_Player)
 		self._LastVehicleHealth = 0.0
 		self._ShootPlayer = nil
 		self._ShootPlayerName = p_Player.name
+		self._ShootModeTimer = Registry.BOT.MAX_TIME_TRY_REPAIR
 	end
 end
 
@@ -491,7 +501,7 @@ function Bot:EnterVehicleOfPlayer(p_Player)
 	self._ActiveAction = BotActionFlags.EnterVehicleActive
 	self._ShootPlayer = nil
 	self._ShootPlayerName = p_Player.name
-	self._ShootModeTimer = 0.0
+	self._ShootModeTimer = 12.0
 end
 
 function Bot:UpdateObjective(p_Objective)
@@ -552,9 +562,9 @@ function Bot:IsReadyToAttack()
 		return false
 	end
 
-	if self._ShootPlayer == nil or (self.m_InVehicle and (self._ShootModeTimer > Config.BotVehicleMinTimeShootAtPlayer)) or
-		(not self.m_InVehicle and (self._ShootModeTimer > Config.BotMinTimeShootAtPlayer)) or
-		(self.m_KnifeMode and self._ShootModeTimer > (Config.BotMinTimeShootAtPlayer / 2)) then
+	if self._ShootPlayer == nil or (self.m_InVehicle and (self._ShootModeTimer < (Config.BotVehicleFireModeDuration - Config.BotVehicleMinTimeShootAtPlayer))) or
+		(not self.m_InVehicle and (self._ShootModeTimer < (Config.BotFireModeDuration - Config.BotMinTimeShootAtPlayer))) or
+		(self.m_KnifeMode and self._ShootModeTimer < (Config.BotFireModeDuration - (Config.BotMinTimeShootAtPlayer * 0.5))) then
 		return true
 	else
 		return false
@@ -612,6 +622,19 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 		return false
 	end
 
+	-- TODO: fill this behavior
+	if p_IgnoreYaw then -- was hit, check for special behavior
+		if self.m_Behavior == BotBehavior.DontShootBackHide then
+			self._ActionTimer = 7.0
+			self._ActiveAction = BotActionFlags.HideOnAttack
+			return false
+		elseif self.m_Behavior == BotBehavior.DontShootBackBail then
+			self._ActionTimer = 5.0
+			self._ActiveAction = BotActionFlags.RunAway
+			return false
+		end
+	end
+
 	-- Don't shoot at teammates.
 	if self.m_Player.teamId == p_Player.teamId then
 		return false
@@ -624,7 +647,7 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 	-- Don't attack as driver in some vehicles.
 	if self.m_InVehicle and self.m_Player.controlledEntryId == 0 then
 		if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) then
-			if self._VehicleMovableId == -1 then                                                                   -- Transport-choppers don't attack as driver.
+			if self._VehicleMovableId == -1 then                                                                   -- Tranotort-choppers don't attack as driver.
 				return false
 			elseif self.m_Player.controlledControllable:GetPlayerInEntry(1) ~= nil and not Config.ChopperDriversAttack then -- Don't attack if gunner available and config is false.
 				return false
@@ -747,7 +770,14 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 
 	if p_IgnoreYaw or (s_DifferenceYaw < s_FovHalf and s_Pitch < s_PitchHalf) then
 		if self._Shoot then
-			self._ShootModeTimer = 0.0
+			if self.m_InVehicle then
+				self._ShootModeTimer = Config.BotVehicleFireModeDuration
+			else
+				self._ShootModeTimer = Config.BotFireModeDuration
+				if self.m_Behavior == BotBehavior.LongerAttacking then
+					self._ShootModeTimer = Config.BotFireModeDuration * 1.7
+				end
+			end
 			self._ShootPlayerName = p_Player.name
 			self._ShootPlayer = nil
 			self._KnifeWayPositions = {}
@@ -767,11 +797,7 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 		else
 			self._ShootPlayerName = ''
 			self._ShootPlayer = nil
-			if self.m_InVehicle then
-				self._ShootModeTimer = Config.BotVehicleFireModeDuration
-			else
-				self._ShootModeTimer = Config.BotFireModeDuration
-			end
+			self._ShootModeTimer = 0.0
 			return false
 		end
 	end
@@ -899,14 +925,14 @@ end
 ---@param p_ReducedTiming boolean
 ---@return number
 function Bot:GetFirstShotDelay(p_DistanceToTarget, p_ReducedTiming)
-	local s_Delay = (Config.BotFirstShotDelay + (math.random() * self._Skill)) -- Slower reaction with lower skill. Always use "Skill" for this (independent of Sniper).
+	local s_Delay = (Config.BotFirstShotDelay + (Config.ReactionTime * MathUtils:GetRandom(0.8, 1.2) * self.m_Reaction))
 
 	if p_ReducedTiming then
 		s_Delay = s_Delay * 0.6
 	end
 
 	-- Slower reaction on greater distances. 100 m = 1 extra second.
-	s_Delay = s_Delay + (p_DistanceToTarget * 0.01)
+	s_Delay = s_Delay + (p_DistanceToTarget * 0.01 * (1.0 + ((self.m_Reaction - 0.5) * 0.4))) -- +-20% depending on reaction-characteristic of bot
 	return s_Delay
 end
 
@@ -1067,9 +1093,8 @@ function Bot:ResetSpawnVars()
 
 	-- Skill.
 	if not self._SkillFound then
-		local s_TempSkillValue = math.random()
-		self._Skill = Config.BotWorseningSkill * s_TempSkillValue
-		self._SkillSniper = Config.BotSniperWorseningSkill * s_TempSkillValue
+		self._Accuracy = Config.BotWorseningSkill + Config.BotWorseningSkill * (self.m_Accuracy - 0.5)             -- up to 0.5 better or worse
+		self._AccuracySniper = Config.BotSniperWorseningSkill + Config.BotSniperWorseningSkill * (self.m_Accuracy - 0.5) -- up to 0.5 better or worse
 		self._SkillFound = true
 	end
 

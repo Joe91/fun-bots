@@ -13,6 +13,8 @@ This is the changelog for the version V2.9 Don't forget to [join us on Discord](
 * Merged pull request #325 form tagener-noisu several small improvements
 * POI Implementation with beacon as first usage by tagener-noisu
 * Post-revive delay was added by Bree_Arnold
+* static attributs and behaviors of bots added
+* other handling for going back to the trace after attack
 
 ### Bug fixes
 * Merged pull request #323 from tagener-noisu Path-Switcher fixes

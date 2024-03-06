@@ -123,6 +123,18 @@ SettingsDefinition = {
 			Category = "DIFFICULTY"
 		},
 		{
+			Name = "ReactionTime",
+			Text = "Additional reaciton-time of bots",
+			---@type Type|integer
+			Type = Type.Float,
+			Value = Config.ReactionTime,
+			Description = "Additional delay for bots, dependant of skill (might also be 0)",
+			Reference = Range(0.00, 2.00, 0.10),
+			Default = 0.5,
+			UpdateFlag = UpdateFlag.None,
+			Category = "DIFFICULTY"
+		},
+		{
 			Name = "DamageFactorAssault",
 			Text = "Damage Factor Assault",
 			---@type Type|integer
@@ -1446,7 +1458,7 @@ SettingsDefinition = {
 			Value = Config.BotFirstShotDelay,
 			Description = "Delay for first shot. If too small, there will be great spread in first cycle because it is not compensated yet",
 			Reference = Range(0.00, 10.00, 0.10),
-			Default = 0.25,
+			Default = 0.2,
 			UpdateFlag = UpdateFlag.None,
 			Category = "EXPERT"
 		},

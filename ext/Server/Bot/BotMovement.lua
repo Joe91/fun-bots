@@ -29,38 +29,35 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 		local s_NextPoint = nil
 		local s_PointIncrement = 1
 		local s_NoStuckReset = false
-		local s_UseShootWayPoint = false
 
-		if #p_Bot._ShootWayPoints > 0 then -- We need to go back to path first.
-			s_Point = p_Bot._ShootWayPoints[#p_Bot._ShootWayPoints]
-			s_NextPoint = p_Bot._ShootWayPoints[#p_Bot._ShootWayPoints - 1]
-
-			if s_NextPoint == nil then
-				s_NextPoint = m_NodeCollection:Get(s_ActivePointIndex, p_Bot._PathIndex)
-
-				--[[if Config.DebugTracePaths then
-					NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', p_Bot._PathIndex, s_ActivePointIndex, p_Bot.m_Player.soldier.worldTransform.trans, (p_Bot._ObstacleSequenceTimer > 0.0), "Blue")
-				end--]]
-			end
-
-			s_UseShootWayPoint = true
-		else
+		if #p_Bot._ShootWayPoints > 0 then -- We need to go back to the path first.		
 			s_Point = m_NodeCollection:Get(s_ActivePointIndex, p_Bot._PathIndex)
-
-			if not p_Bot._InvertPathDirection then
-				s_NextPoint = m_NodeCollection:Get(p_Bot:_GetWayIndex(p_Bot._CurrentWayPoint + 1), p_Bot._PathIndex)
-
-				--[[if Config.DebugTracePaths then
-					NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', p_Bot._PathIndex, p_Bot:_GetWayIndex(p_Bot._CurrentWayPoint + 1), p_Bot.m_Player.soldier.worldTransform.trans, (p_Bot._ObstacleSequenceTimer > 0.0), "Green")
-				end--]]
-			else
-				s_NextPoint = m_NodeCollection:Get(p_Bot:_GetWayIndex(p_Bot._CurrentWayPoint - 1), p_Bot._PathIndex)
-
-				--[[if Config.DebugTracePaths then
-					NetEvents:BroadcastLocal('ClientNodeEditor:BotSelect', p_Bot._PathIndex, p_Bot:_GetWayIndex(p_Bot._CurrentWayPoint - 1), p_Bot.m_Player.soldier.worldTransform.trans, (p_Bot._ObstacleSequenceTimer > 0.0), "Green")
-				end--]]
+			local s_ClosestDistance = p_Bot.m_Player.soldier.worldTransform.trans:Distance(s_Point.Position)
+			local s_ClosestNode = s_ActivePointIndex
+			for i = 1, 20 do
+				s_Point = m_NodeCollection:Get(s_ActivePointIndex - i, p_Bot._PathIndex)
+				if s_Point and p_Bot.m_Player.soldier.worldTransform.trans:Distance(s_Point.Position) < s_ClosestDistance then
+					s_ClosestNode = s_ActivePointIndex - i
+				end
+				s_Point = m_NodeCollection:Get(s_ActivePointIndex + i, p_Bot._PathIndex)
+				if s_Point and p_Bot.m_Player.soldier.worldTransform.trans:Distance(s_Point.Position) < s_ClosestDistance then
+					s_ClosestNode = s_ActivePointIndex + i
+				end
 			end
+			if s_ClosestDistance < 5.0 then
+				p_Bot._CurrentWayPoint = s_ClosestNode
+				s_ActivePointIndex = s_ClosestNode
+			end
+			p_Bot._ShootWayPoints = {}
 		end
+		s_Point = m_NodeCollection:Get(s_ActivePointIndex, p_Bot._PathIndex)
+
+		if not p_Bot._InvertPathDirection then
+			s_NextPoint = m_NodeCollection:Get(p_Bot:_GetWayIndex(p_Bot._CurrentWayPoint + 1), p_Bot._PathIndex)
+		else
+			s_NextPoint = m_NodeCollection:Get(p_Bot:_GetWayIndex(p_Bot._CurrentWayPoint - 1), p_Bot._PathIndex)
+		end
+
 
 		-- Execute Action if needed.
 		if p_Bot._ActiveAction == BotActionFlags.OtherActionActive then
@@ -126,6 +123,24 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 			p_Bot._WayWaitTimer = 0.0
 			p_Bot._WayWaitYawTimer = 0.0
 			p_Bot.m_ActiveSpeedValue = s_Point.SpeedMode -- Speed.
+
+			if p_Bot._ActiveAction == BotActionFlags.RunAway and p_Bot._ActionTimer > 0.0 then
+				p_Bot._ActionTimer = p_Bot._ActionTimer - Registry.BOT.BOT_UPDATE_CYCLE
+
+				p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.Sprint
+				if p_Bot._ActionTimer <= 0.0 then
+					p_Bot:_ResetActionFlag(BotActionFlags.RunAway)
+				end
+			end
+
+			if p_Bot._ActiveAction == BotActionFlags.HideOnAttack and p_Bot._ActionTimer > 0.0 then
+				p_Bot._ActionTimer = p_Bot._ActionTimer - Registry.BOT.BOT_UPDATE_CYCLE
+
+				p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.VerySlowProne
+				if p_Bot._ActionTimer <= 0.0 then
+					p_Bot:_ResetActionFlag(BotActionFlags.HideOnAttack)
+				end
+			end
 
 			if Config.OverWriteBotSpeedMode ~= BotMoveSpeeds.NoMovement and not p_Bot.m_InVehicle then
 				p_Bot.m_ActiveSpeedValue = Config.OverWriteBotSpeedMode
@@ -307,67 +322,62 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 					p_Bot._StuckTimer = 0.0
 				end
 
-				if not s_UseShootWayPoint then
-					-- CHECK FOR ACTION.
-					if s_Point.Data.Action ~= nil then
-						local s_Action = s_Point.Data.Action
 
-						if g_GameDirector:CheckForExecution(s_Point, p_Bot.m_Player.teamId, false) then
-							p_Bot._ActiveAction = BotActionFlags.OtherActionActive
+				-- CHECK FOR ACTION.
+				if s_Point.Data.Action ~= nil then
+					local s_Action = s_Point.Data.Action
 
-							if s_Action.time ~= nil then
-								p_Bot._ActionTimer = s_Action.time
-							else
-								p_Bot._ActionTimer = 0.0
-							end
+					if g_GameDirector:CheckForExecution(s_Point, p_Bot.m_Player.teamId, false) then
+						p_Bot._ActiveAction = BotActionFlags.OtherActionActive
 
-							if s_Action.yaw ~= nil then
-								p_Bot._TargetYaw = s_Action.yaw
-							end
-
-							if s_Action.pitch ~= nil then
-								p_Bot._TargetPitch = s_Action.pitch
-							end
-
-							return -- DON'T DO ANYTHING ELSE ANY MORE.
-						end
-					end
-
-					-- CHECK FOR PATH-SWITCHES.
-					local s_NewWaypoint = nil
-					local s_SwitchPath = false
-					s_SwitchPath, s_NewWaypoint = m_PathSwitcher:GetNewPath(p_Bot, p_Bot.m_Name, s_Point, p_Bot._Objective, p_Bot.m_InVehicle,
-						p_Bot.m_Player.teamId, nil)
-
-					if p_Bot.m_Player.soldier == nil then
-						return
-					end
-
-					if s_SwitchPath == true and not p_Bot._OnSwitch then
-						if p_Bot._Objective ~= '' then
-							-- 'Best' direction for objective on switch.
-							local s_Direction = m_NodeCollection:ObjectiveDirection(s_NewWaypoint, p_Bot._Objective, p_Bot.m_InVehicle)
-							p_Bot._InvertPathDirection = (s_Direction == 'Previous')
+						if s_Action.time ~= nil then
+							p_Bot._ActionTimer = s_Action.time
 						else
-							-- Random path direction on switch.
-							p_Bot._InvertPathDirection = MathUtils:GetRandomInt(1, 2) == 1
+							p_Bot._ActionTimer = 0.0
 						end
 
-						p_Bot._PathIndex = s_NewWaypoint.PathIndex
-						p_Bot._CurrentWayPoint = s_NewWaypoint.PointIndex
-						p_Bot._OnSwitch = true
+						if s_Action.yaw ~= nil then
+							p_Bot._TargetYaw = s_Action.yaw
+						end
+
+						if s_Action.pitch ~= nil then
+							p_Bot._TargetPitch = s_Action.pitch
+						end
+
+						return -- DON'T DO ANYTHING ELSE ANY MORE.
+					end
+				end
+
+				-- CHECK FOR PATH-SWITCHES.
+				local s_NewWaypoint = nil
+				local s_SwitchPath = false
+				s_SwitchPath, s_NewWaypoint = m_PathSwitcher:GetNewPath(p_Bot, p_Bot.m_Name, s_Point, p_Bot._Objective, p_Bot.m_InVehicle,
+					p_Bot.m_Player.teamId, nil)
+
+				if p_Bot.m_Player.soldier == nil then
+					return
+				end
+
+				if s_SwitchPath == true and not p_Bot._OnSwitch then
+					if p_Bot._Objective ~= '' then
+						-- 'Best' direction for objective on switch.
+						local s_Direction = m_NodeCollection:ObjectiveDirection(s_NewWaypoint, p_Bot._Objective, p_Bot.m_InVehicle)
+						p_Bot._InvertPathDirection = (s_Direction == 'Previous')
 					else
-						p_Bot._OnSwitch = false
-
-						if p_Bot._InvertPathDirection then
-							p_Bot._CurrentWayPoint = s_ActivePointIndex - s_PointIncrement
-						else
-							p_Bot._CurrentWayPoint = s_ActivePointIndex + s_PointIncrement
-						end
+						-- Random path direction on switch.
+						p_Bot._InvertPathDirection = MathUtils:GetRandomInt(1, 2) == 1
 					end
+
+					p_Bot._PathIndex = s_NewWaypoint.PathIndex
+					p_Bot._CurrentWayPoint = s_NewWaypoint.PointIndex
+					p_Bot._OnSwitch = true
 				else
-					for i = 1, s_PointIncrement do -- One already gets removed on start of way finding.
-						table.remove(p_Bot._ShootWayPoints)
+					p_Bot._OnSwitch = false
+
+					if p_Bot._InvertPathDirection then
+						p_Bot._CurrentWayPoint = s_ActivePointIndex - s_PointIncrement
+					else
+						p_Bot._CurrentWayPoint = s_ActivePointIndex + s_PointIncrement
 					end
 				end
 
@@ -437,7 +447,6 @@ function BotMovement:UpdateShootMovement(p_Bot)
 		end
 	end
 
-	-- Crouch moving (only mode with modified gun).
 	if (p_Bot.m_ActiveWeapon and (p_Bot.m_ActiveWeapon.type == WeaponTypes.Sniper or
 				p_Bot.m_ActiveWeapon.type == WeaponTypes.MissileAir or
 				p_Bot.m_ActiveWeapon.type == WeaponTypes.MissileLand) and

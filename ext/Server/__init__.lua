@@ -8,10 +8,12 @@ require('__shared/Registry/RegistryManager')
 
 require('__shared/Debug')
 require('__shared/Config')
+require('__shared/Constants/BotBehavior')
 require('__shared/Constants/BotColors')
 require('__shared/Constants/BotNames')
 require('__shared/Constants/BotKits')
 require('__shared/Constants/BotWeapons')
+require('__shared/Constants/BotAttributes')
 require('__shared/Constants/GmSpecialWeapons')
 require('__shared/Constants/WeaponSets')
 require('__shared/Constants/WeaponTypes')
@@ -48,6 +50,8 @@ local m_Language = require('__shared/Language')
 local m_SettingsManager = require('SettingsManager')
 ---@type BotManager
 local m_BotManager = require('BotManager')
+---@type BotCreator
+local m_BotCreator = require('BotCreator')
 ---@type BotSpawner
 local m_BotSpawner = require('BotSpawner')
 ---@type WeaponList
@@ -88,7 +92,8 @@ function FunBotServer:OnExtensionLoaded()
 	self:RegisterHooks()
 	self:RegisterCustomEvents()
 	self:RegisterCallbacks()
-	self:ScambleBotNames() -- Use random names at least once per start.
+	-- self:ScambleBotNames() -- Use random names at least once per start.
+	self:CreateBotAttributes()
 	self:OnModReloaded()
 end
 
@@ -293,7 +298,7 @@ function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPe
 
 	-- Randomize used names.
 	if Config.UseRandomNames then
-		self:ScambleBotNames()
+		-- self:ScambleBotNames()
 	end
 
 	m_WeaponList:OnLevelLoaded()
@@ -700,6 +705,10 @@ function FunBotServer:ScambleBotNames()
 		local j = math.random(i)
 		BotNames[i], BotNames[j] = BotNames[j], BotNames[i]
 	end
+end
+
+function FunBotServer:CreateBotAttributes()
+	m_BotCreator:CreateBotAttributes()
 end
 
 function FunBotServer:DetectSpecialMods()
