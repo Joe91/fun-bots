@@ -229,6 +229,7 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 		if s_AvailableObjectivesDefend[i] == nil then
 			s_AvailableObjectivesDefend[i] = 0
 		end
+		-- print(tostring(s_AvailableObjectivesAttack[i]) .. " - " .. tostring(s_AvailableObjectivesDefend[i]))
 
 		-- apply weight to attack-objectives
 		local s_TotalObjectivesBalanced = s_AvailableObjectivesAttack[i] * Registry.GAME_DIRECTOR.WEIGHT_ATTACK_OBJECTIVE +
@@ -238,13 +239,22 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 		-- number of bots / weighted objective-count = bots pro weight-unit
 		if self.m_BotsByTeam[i] ~= nil then
 			local s_BotsPerWeightObjective = #self.m_BotsByTeam[i] / s_TotalObjectivesBalanced
-			s_MaxAssignsAttack[i] = math.floor(s_BotsPerWeightObjective * Registry.GAME_DIRECTOR.WEIGHT_ATTACK_OBJECTIVE + 1)
-			s_MaxAssignsDefend[i] = math.floor(s_BotsPerWeightObjective * Registry.GAME_DIRECTOR.WEIGHT_DEFEND_OBJECTIVE + 1)
-			-- TODO: can this even happen?
-			if ((s_MaxAssignsAttack[i] * s_AvailableObjectivesAttack[i]) + (s_MaxAssignsDefend[i] * s_AvailableObjectivesDefend[i])) < #self.m_BotsByTeam[i] then
-				s_MaxAssignsAttack[i] = s_MaxAssignsAttack[i] + 1
-				print("add one more attacking bot per objective")
+			s_MaxAssignsAttack[i] = math.floor(s_BotsPerWeightObjective * Registry.GAME_DIRECTOR.WEIGHT_ATTACK_OBJECTIVE)
+			s_MaxAssignsDefend[i] = math.floor(s_BotsPerWeightObjective * Registry.GAME_DIRECTOR.WEIGHT_DEFEND_OBJECTIVE)
+			if s_MaxAssignsDefend[i] == 0 then
+				s_MaxAssignsDefend[i] = 1
 			end
+			if s_MaxAssignsAttack[i] == 0 then
+				s_MaxAssignsAttack[i] = 1
+			end
+			-- allow more bots, if there are too less slots
+			if s_AvailableObjectivesAttack[i] == 0 and (s_AvailableObjectivesDefend[i] * s_MaxAssignsDefend[i] < #self.m_BotsByTeam[i]) then
+				s_MaxAssignsDefend[i] = s_MaxAssignsDefend[i] + 1
+			elseif ((s_AvailableObjectivesDefend[i] * s_MaxAssignsDefend[i]) + (s_AvailableObjectivesAttack[i] * s_MaxAssignsAttack[i])) < #self.m_BotsByTeam[i] then
+				s_MaxAssignsAttack[i] = s_MaxAssignsAttack[i] + 1
+			end
+
+			-- print("maxBots: " .. tostring(s_MaxAssignsAttack[i]) .. " - " .. tostring(s_MaxAssignsDefend[i]))
 		end
 	end
 
@@ -294,7 +304,7 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 					end
 
 					-- defend can also be a valid objective
-					if l_Objective.team == l_BotTeam then
+					if l_Objective.team == l_BotTeam and not l_Objective.isEnterVehiclePath then
 						if l_Objective.assigned[l_BotTeam] < s_MaxAssignsDefend[l_BotTeam] then
 							local s_Distance = self:_GetDistanceFromObjective(l_Objective.name, l_Bot.m_Player.soldier.worldTransform.trans)
 
@@ -362,6 +372,7 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 				-- remove bots, if too many defenders
 				if s_Objective.active and s_Objective.team == l_BotTeam and s_Objective.assigned[l_BotTeam] > s_MaxAssignsDefend[l_BotTeam] then
 					l_Bot:SetObjective()
+					s_Objective.assigned[l_BotTeam] = s_Objective.assigned[l_BotTeam] - 1
 				end
 				-- remove from invalid objectives
 				if s_Objective.isBase or not s_Objective.active or s_Objective.destroyed then

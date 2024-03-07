@@ -58,6 +58,47 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 			s_NextPoint = m_NodeCollection:Get(p_Bot:_GetWayIndex(p_Bot._CurrentWayPoint - 1), p_Bot._PathIndex)
 		end
 
+		-- Do defense, if needed
+		if p_Bot._ObjectiveMode == BotObjectiveModes.Defend and g_GameDirector:IsOnObjectivePath(p_Bot._PathIndex) then
+			p_Bot._DefendTimer = p_Bot._DefendTimer + Registry.BOT.BOT_UPDATE_CYCLE
+
+			if p_Bot._DefendTimer >= 3.0 then
+				-- look around
+				p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.NoMovement
+
+				local s_DefendMode = p_Bot.m_Id % 3
+				if s_DefendMode == 0 then
+					if p_Bot.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Crouch then
+						p_Bot.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Crouch, true, true)
+					end
+				elseif s_DefendMode == 1 then
+					if p_Bot.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Stand then
+						p_Bot.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Stand, true, true)
+					end
+				else
+					if p_Bot.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Prone then
+						p_Bot.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Prone, true, true)
+					end
+				end
+
+				self:LookAround(p_Bot, Registry.BOT.BOT_UPDATE_CYCLE)
+
+				-- TODO: look at target
+				-- don't do anything else
+				return
+			elseif p_Bot._DefendTimer >= 1.7 then
+				p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.Normal
+				local s_StrafeValue = 1.0
+				if p_Bot.m_Id % 2 then
+					s_StrafeValue = -1.0
+				end
+				p_Bot:_SetInput(EntryInputActionEnum.EIAStrafe, s_StrafeValue)
+				return
+			end
+		else
+			p_Bot._DefendTimer = 0.0
+		end
+
 
 		-- Execute Action if needed.
 		if p_Bot._ActiveAction == BotActionFlags.OtherActionActive then

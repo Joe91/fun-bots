@@ -97,6 +97,7 @@ function Bot:__init(p_Player)
 	self._ActionTimer = 0.0
 	self._BrakeTimer = 0.0
 	self._SpawnProtectionTimer = 0.0
+	self._DefendTimer = 0.0
 	self._SidewardsTimer = 0.0
 	self._KillYourselfTimer = 0.0
 
