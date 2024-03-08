@@ -82,6 +82,8 @@ Registry = {
 		WEIGHT_ATTACK_OBJECTIVE = 2.5,
 		--- Weight for defending objectives
 		WEIGHT_DEFEND_OBJECTIVE = 1.0,
+		--- PathSwitch on same prio
+		PROBABILITY_SWITCH_SAME_PRIO = 5
 	},
 	VEHICLES = {
 		-- Distance for the "enter vehicle" command.

@@ -1008,7 +1008,9 @@ function Bot:SetObjectiveIfPossible(p_Objective)
 			local s_Direction, s_BestWaypoint = m_NodeCollection:ObjectiveDirection(s_Point, p_Objective, self.m_InVehicle)
 			if s_BestWaypoint then
 				self._Objective = p_Objective
-				self._InvertPathDirection = (s_Direction == 'Previous')
+				if s_Direction then
+					self._InvertPathDirection = (s_Direction == 'Previous')
+				end
 				return true
 			end
 		end
@@ -1024,7 +1026,9 @@ function Bot:SetObjective(p_Objective, p_ObjectiveMode)
 
 		if s_Point ~= nil then
 			local s_Direction = m_NodeCollection:ObjectiveDirection(s_Point, self._Objective, self.m_InVehicle)
-			self._InvertPathDirection = (s_Direction == 'Previous')
+			if s_Direction then
+				self._InvertPathDirection = (s_Direction == 'Previous')
+			end
 		end
 	end
 end

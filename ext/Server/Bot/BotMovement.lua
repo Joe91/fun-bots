@@ -403,7 +403,9 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 					if p_Bot._Objective ~= '' then
 						-- 'Best' direction for objective on switch.
 						local s_Direction = m_NodeCollection:ObjectiveDirection(s_NewWaypoint, p_Bot._Objective, p_Bot.m_InVehicle)
-						p_Bot._InvertPathDirection = (s_Direction == 'Previous')
+						if s_Direction then
+							p_Bot._InvertPathDirection = (s_Direction == 'Previous')
+						end
 					else
 						-- Random path direction on switch.
 						p_Bot._InvertPathDirection = MathUtils:GetRandomInt(1, 2) == 1

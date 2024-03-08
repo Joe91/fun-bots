@@ -15,6 +15,14 @@ function PathSwitcher:__init()
 	self.m_DummyData = 0
 end
 
+function PathSwitcher:GetPriorityOfPath(p_TargetObjective, p_Node)
+	local s_Priority = -1
+
+
+
+	return s_Priority
+end
+
 function PathSwitcher:GetNewPath(p_Bot, p_BotName, p_Point, p_Objective, p_InVehicle, p_TeamId, p_ActiveVehicle)
 	-- Check if on base, or on path away from base. In this case: change path.
 	local s_OnBasePath = false
@@ -42,7 +50,7 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotName, p_Point, p_Objective, p_InVeh
 	local s_PossiblePaths = {}
 
 	if not s_OnVehicleEnterObjective then
-		table.insert(s_PossiblePaths, p_Point) -- Include our current path.
+		table.insert(s_PossiblePaths, p_Point) -- Include our current path on first index.
 	end
 
 	for i = 1, #p_Point.Data.Links do
@@ -50,6 +58,7 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotName, p_Point, p_Objective, p_InVeh
 
 		if s_NewPoint ~= nil then
 			if not p_InVehicle then
+				-- todo: prevent air-paths?
 				table.insert(s_PossiblePaths, s_NewPoint)
 			else
 				local s_PathNode = m_NodeCollection:GetFirst(s_NewPoint.PathIndex)
@@ -91,7 +100,7 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotName, p_Point, p_Objective, p_InVeh
 		local s_NewPathStatus = m_GameDirector:GetEnableStateOfPath(s_PathNode.Data.Objectives or {})
 		local s_NewBasePath = m_GameDirector:IsBasePath(s_PathNode.Data.Objectives or {})
 
-		if s_OnVehicleEnterObjective then
+		if s_OnVehicleEnterObjective and i > 1 then
 			if s_PathNode.Data.Objectives ~= nil and s_PathNode.Data.Objectives[1] == p_Objective then
 				return true, s_NewPoint
 			else
@@ -100,7 +109,7 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotName, p_Point, p_Objective, p_InVeh
 		end
 
 		-- Check for vehicle usage.
-		if s_PathNode.Data.Objectives ~= nil and #s_PathNode.Data.Objectives == 1 and s_NewPoint.ID ~= p_Point.ID then
+		if s_PathNode.Data.Objectives ~= nil and #s_PathNode.Data.Objectives == 1 and i > 1 then
 			if Config.UseVehicles then
 				if m_GameDirector:UseVehicle(p_TeamId, s_PathNode.Data.Objectives[1]) == true then
 					return true, s_NewPoint
@@ -111,14 +120,12 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotName, p_Point, p_Objective, p_InVeh
 				end
 			end
 
-			if m_GameDirector:IsBeaconPath(s_PathNode.Data.Objectives[1]) then
+			if m_GameDirector:IsBeaconPath(s_PathNode.Data.Objectives[1]) and i > 1 then
 				if p_Bot.m_SecondaryGadget.type == WeaponTypes.Beacon
 					and not p_Bot.m_HasBeacon
 					and MathUtils:GetRandomInt(1, 100) <= Registry.BOT.PROBABILITY_SWITCH_TO_BEACON_PATH
 				then
 					return true, s_NewPoint
-				else
-					goto skip
 				end
 			end
 		end
@@ -126,7 +133,7 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotName, p_Point, p_Objective, p_InVeh
 		-- This path has listed objectives.
 		if s_PathNode.Data.Objectives ~= nil and p_Objective ~= '' then
 			-- Check for possible subObjective.
-			if #s_PathNode.Data.Objectives == 1 and s_NewPoint.ID ~= p_Point.ID then
+			if #s_PathNode.Data.Objectives == 1 and i > 1 then
 				if m_GameDirector:UseSubobjective(p_BotName, p_TeamId, s_PathNode.Data.Objectives[1]) == true then
 					return true, s_NewPoint
 				end
@@ -134,74 +141,76 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotName, p_Point, p_Objective, p_InVeh
 
 			-- Path with a single objective that matches mine, top priority.
 			if #s_PathNode.Data.Objectives == 1 and s_PathNode.Data.Objectives[1] == p_Objective then
-				if s_HighestPriority < 3 then
-					s_HighestPriority = 3
-				end
-
-				table.insert(s_Paths, {
-					Priority = 3,
-					Point = s_NewPoint,
-					State = s_NewPathStatus,
-					Base = s_NewBasePath
-				})
-
-				if s_NewPoint.ID == p_Point.ID then
+				if i == 1 then
 					s_CurrentPriority = 3
+				else
+					if s_HighestPriority < 3 then
+						s_HighestPriority = 3
+					end
+
+					table.insert(s_Paths, {
+						Priority = 3,
+						Point = s_NewPoint,
+						State = s_NewPathStatus,
+						Base = s_NewBasePath
+					})
 				end
-			-- Consider path with other objective, in case everything else fails
+
+				-- Consider path with other objective, in case everything else fails
 			elseif #s_PathNode.Data.Objectives == 1 then
-				if s_HighestPriority < 1 then
-					s_HighestPriority = 1
-				end
-
-				table.insert(s_Paths, {
-					Priority = 1,
-					Point = s_NewPoint,
-					State = s_NewPathStatus,
-					Base = s_NewBasePath
-				})
-
-				if s_NewPoint.ID == p_Point.ID then
+				if i == 1 then
 					s_CurrentPriority = 1
+				else
+					if s_HighestPriority < 1 then
+						s_HighestPriority = 1
+					end
+
+					table.insert(s_Paths, {
+						Priority = 1,
+						Point = s_NewPoint,
+						State = s_NewPathStatus,
+						Base = s_NewBasePath
+					})
 				end
-			-- Otherwise, check if the path has an objective I want.
-			else
+				-- Otherwise, check if the path has an objective I want.
+			else -- more than one objective
 				-- Loop through the path's objectives and compare to mine.
 				for _, l_PathObjective in pairs(s_PathNode.Data.Objectives) do
 					if p_Objective == l_PathObjective then
-						if s_HighestPriority < 2 then
-							s_HighestPriority = 2
-						end
-
-						table.insert(s_Paths, {
-							Priority = 2,
-							Point = s_NewPoint,
-							State = s_NewPathStatus,
-							Base = s_NewBasePath
-						})
-
-						if s_NewPoint.ID == p_Point.ID then
+						if i == 1 then
 							s_CurrentPriority = 2
+						else
+							if s_HighestPriority < 2 then
+								s_HighestPriority = 2
+							end
+
+							table.insert(s_Paths, {
+								Priority = 2,
+								Point = s_NewPoint,
+								State = s_NewPathStatus,
+								Base = s_NewBasePath
+							})
 						end
+						break
 					end
 				end
 			end
 		else
 			-- Path has no objectives, the lowest priority.
-			table.insert(s_Paths, {
-				Priority = 0,
-				Point = s_NewPoint,
-				State = s_NewPathStatus,
-				Base = s_NewBasePath
-			})
-
-			if s_NewPoint.ID == p_Point.ID then
+			if i == 1 then
 				s_CurrentPriority = 0
+			else
+				table.insert(s_Paths, {
+					Priority = 0,
+					Point = s_NewPoint,
+					State = s_NewPathStatus,
+					Base = s_NewBasePath
+				})
 			end
 		end
 
 		-- Check for base-Path or inactive path.
-		if s_NewPoint.ID ~= p_Point.ID then
+		if i > 1 then
 			local s_SwitchAnyways = false
 			local s_CountOld = #(s_CurrentPathFirst.Data.Objectives or {})
 			local s_CountNew = #(s_PathNode.Data.Objectives or {})
@@ -239,12 +248,12 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotName, p_Point, p_Objective, p_InVeh
 			end
 
 			if s_SwitchAnyways then
-				if s_HighestPriority < 3 then
-					s_HighestPriority = 3
+				if s_HighestPriority < 4 then
+					s_HighestPriority = 4
 				end
 
 				table.insert(s_Paths, {
-					Priority = 3,
+					Priority = 4,
 					Point = s_NewPoint,
 					State = s_NewPathStatus,
 					Base = s_NewBasePath
@@ -253,9 +262,12 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotName, p_Point, p_Objective, p_InVeh
 				if s_CountOld == 1 and s_CountNew == 1 and p_Objective ~= "" and s_CurrentPathFirst.Data.Objectives[1] ~= p_Objective
 					and
 					s_CurrentPathFirst.Data.Objectives[1] == s_PathNode.Data.Objectives[1] then
+					if s_HighestPriority < 1 then
+						s_HighestPriority = 1
+					end
 					-- Path has the same objective. Maybe a switch can help to find the new one.
 					table.insert(s_Paths, {
-						Priority = 0,
+						Priority = 1,
 						Point = s_NewPoint,
 						State = s_NewPathStatus,
 						Base = s_NewBasePath
@@ -273,66 +285,48 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotName, p_Point, p_Objective, p_InVeh
 	-- Remove paths below our highest priority.
 	local s_ValidPaths = {}
 
+	-- m_Logger:Write('Full List -> ' .. g_Utilities:dump(s_Paths, true, 2))
+
 	for i = 1, #s_Paths do
-		if s_Paths[i].Priority >= s_HighestPriority and s_Paths[i].State >= s_CurrentPathStatus then
-			if s_OnBasePath or (not s_OnBasePath and s_Paths[i].Base == false) or s_CurrentPathStatus <= 0 then
-				table.insert(s_ValidPaths, s_Paths[i])
-			end
+		if s_Paths[i].State >= s_CurrentPathStatus and s_CurrentPriority <= s_Paths[i].Priority and
+			(s_Paths[i].Base == false or s_OnBasePath) then -- filter out paths that are less active or base-paths
+			table.insert(s_ValidPaths, s_Paths[i])
 		end
 	end
 
-	-- m_Logger:Write('Trimmed Priority List -> '..g_Utilities:dump(s_Paths, true, 2))
-	-- m_Logger:Write('Highest Priority -> '..s_HighestPriority)
+	-- m_Logger:Write('Trimmed Priority List -> ' .. g_Utilities:dump(s_ValidPaths, true, 2))
+	-- m_Logger:Write('Current Priority -> ' .. s_CurrentPriority)
 	-- m_Logger:Write('#s_Paths -> '..(#s_Paths))
 
 	if #s_ValidPaths == 0 then
 		return false
 	end
 
-	if #s_ValidPaths == 1 and s_CurrentPriority < s_ValidPaths[1].Priority then
-		-- m_Logger:Write('chose to switch at random ('..s_RandomNumber..' >= '..s_Chance..') | Priority: ( '..s_CurrentPriority..' | '..s_RandomPath.Priority..' )')
-		return true, s_ValidPaths[1].Point
-	end
+	local s_Chance = Registry.GAME_DIRECTOR.PROBABILITY_SWITCH_SAME_PRIO
+	local s_RandomNumber = MathUtils:GetRandomInt(0, 100)
+	local s_RandomIndex = MathUtils:GetRandomInt(1, #s_ValidPaths)
 
-	local s_LinkMode = tonumber(p_Point.Data.LinkMode) or 0
-
-	if s_LinkMode == 0 then -- Random path switch.
-		local s_Chance = tonumber(p_Point.Data.LinkChance) or 40
-		local s_RandomNumber = MathUtils:GetRandomInt(0, 100)
-		local s_RandomIndex = MathUtils:GetRandomInt(1, #s_ValidPaths)
-
-		if s_CurrentPriority < s_HighestPriority then
-			local s_RandomPath = s_ValidPaths[s_RandomIndex]
-
-			if s_RandomPath == nil then
-				m_Logger:Write('[A] s_ValidPaths[' .. s_RandomIndex .. '] was nil : ' .. g_Utilities:dump(s_ValidPaths, true, 2))
-				return false
+	if s_CurrentPriority < s_HighestPriority then
+		local s_HighestPrioPaths = {}
+		for i = 1, #s_ValidPaths do
+			if s_ValidPaths[i].Priority == s_HighestPriority then
+				table.insert(s_HighestPrioPaths, s_ValidPaths[i])
 			end
-
-			m_Logger:Write('found multiple higher priority s_ValidPaths | Priority: ( ' ..
-				s_CurrentPriority .. ' | ' .. s_HighestPriority .. ' )')
-
-			return true, s_RandomPath.Point
 		end
+		local s_RandomPath = s_HighestPrioPaths[s_RandomIndex]
 
-		if s_RandomNumber <= s_Chance then
-			local s_RandomPath = s_ValidPaths[s_RandomIndex]
+		m_Logger:Write('found path with higher priority s_ValidPaths | Priority: ( ' ..
+			s_CurrentPriority .. ' | ' .. s_HighestPriority .. ' )')
 
-			if s_RandomPath == nil then
-				m_Logger:Write('[B] s_ValidPaths[' .. s_RandomIndex .. '] was nil : ' .. g_Utilities:dump(s_ValidPaths, true, 2))
-
-				return false
-			end
-
-			-- m_Logger:Write('chose to switch at random ('..s_RandomNumber..' >= '..s_Chance..') | Priority: ( '..s_CurrentPriority..' | '..s_RandomPath.Priority..' )')
-			return true, s_RandomPath.Point
-		end
-	elseif s_LinkMode == 1 then -- Some other kind of switching decision.
-		-- Etc...
+		return true, s_RandomPath.Point
+	elseif s_RandomNumber <= s_Chance then -- same priority
+		local s_RandomPath = s_ValidPaths[s_RandomIndex]
+		m_Logger:Write('chose to switch at random (' .. s_RandomNumber .. ' <= ' .. s_Chance .. ') | Priority: ( ' .. s_CurrentPriority .. ' | ' .. s_RandomPath.Priority .. ' )')
+		return true, s_RandomPath.Point
+	else
+		m_Logger:Write("don't change " .. s_CurrentPriority)
+		return false
 	end
-
-	-- m_Logger:Write("don't change")
-	return false
 end
 
 if g_PathSwitcher == nil then

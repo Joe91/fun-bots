@@ -249,11 +249,11 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 			end
 			-- allow more bots, if there are too less slots
 			if s_AvailableObjectivesAttack[i] == 0 and (s_AvailableObjectivesDefend[i] * s_MaxAssignsDefend[i] < #self.m_BotsByTeam[i]) then
-				s_MaxAssignsDefend[i] = s_MaxAssignsDefend[i] + 1
+				s_MaxAssignsDefend[i] = math.floor((#self.m_BotsByTeam[i] / s_AvailableObjectivesDefend[i]) + 0.999)
 			elseif ((s_AvailableObjectivesDefend[i] * s_MaxAssignsDefend[i]) + (s_AvailableObjectivesAttack[i] * s_MaxAssignsAttack[i])) < #self.m_BotsByTeam[i] then
-				s_MaxAssignsAttack[i] = s_MaxAssignsAttack[i] + 1
+				local s_AvailableAttackBots = #self.m_BotsByTeam[i] - (s_AvailableObjectivesDefend[i] * s_MaxAssignsDefend[i])
+				s_MaxAssignsAttack[i] = math.floor((s_AvailableAttackBots / s_AvailableObjectivesAttack[i]) + 0.999)
 			end
-
 			-- print("maxBots: " .. tostring(s_MaxAssignsAttack[i]) .. " - " .. tostring(s_MaxAssignsDefend[i]))
 		end
 	end
