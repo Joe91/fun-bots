@@ -246,8 +246,6 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotName, p_Point, p_Objective, p_InVeh
 
 	local s_Chance = Registry.GAME_DIRECTOR.PROBABILITY_SWITCH_SAME_PRIO
 	local s_RandomNumber = MathUtils:GetRandomInt(0, 100)
-	local s_RandomIndex = MathUtils:GetRandomInt(1, #s_ValidPaths)
-
 	if s_CurrentPriority < s_HighestPriority then
 		local s_HighestPrioPathsIndex = {}
 		for i = 1, #s_ValidPaths do
@@ -255,6 +253,7 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotName, p_Point, p_Objective, p_InVeh
 				table.insert(s_HighestPrioPathsIndex, i)
 			end
 		end
+		local s_RandomIndex = MathUtils:GetRandomInt(1, #s_HighestPrioPathsIndex)
 		local s_RandomPath = s_ValidPaths[s_HighestPrioPathsIndex[s_RandomIndex]]
 		if (s_RandomPath == nil) then
 			print("!!! was nil !!!")
@@ -266,6 +265,7 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotName, p_Point, p_Objective, p_InVeh
 
 		return true, s_RandomPath.Point
 	elseif s_RandomNumber <= s_Chance then -- same priority, change by chance
+		local s_RandomIndex = MathUtils:GetRandomInt(1, #s_ValidPaths)
 		local s_RandomPath = s_ValidPaths[s_RandomIndex]
 		m_Logger:Write('chose to switch at random (' .. s_RandomNumber .. ' <= ' .. s_Chance .. ') | Priority: ( ' .. s_CurrentPriority .. ' | ' .. s_RandomPath.Priority .. ' )')
 		return true, s_RandomPath.Point
