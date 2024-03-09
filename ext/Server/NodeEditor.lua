@@ -966,8 +966,12 @@ function NodeEditor:OnLevelLoaded(p_LevelName, p_GameMode, p_CustomGameMode)
 			s_GameModeToLoad = 'ConquestLarge0' -- Paths are the same.
 		end
 
+		if p_LevelName == 'XP5_003' and p_GameMode == 'ConquestLarge0' then
+			s_GameModeToLoad = 'ConquestSmall0' -- Paths are the same.
+		end
+
 		if p_LevelName == 'XP4_Rubble' and p_GameMode == 'ConquestAssaultLarge0' then
-			s_GameModeToLoad = 'ConquestAssaultSmall0'
+			s_GameModeToLoad = 'ConquestAssaultSmall0' -- Paths are the same.
 		end
 	end
 
