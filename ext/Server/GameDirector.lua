@@ -229,7 +229,6 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 		if s_AvailableObjectivesDefend[i] == nil then
 			s_AvailableObjectivesDefend[i] = 0
 		end
-		-- print(tostring(s_AvailableObjectivesAttack[i]) .. " - " .. tostring(s_AvailableObjectivesDefend[i]))
 
 		-- apply weight to attack-objectives
 		local s_TotalObjectivesBalanced = s_AvailableObjectivesAttack[i] * Registry.GAME_DIRECTOR.WEIGHT_ATTACK_OBJECTIVE +
@@ -254,8 +253,6 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 			if s_AvailableObjectivesDefend[i] == 0 then
 				s_MaxAssignsDefend[i] = 0
 			end
-			-- DEBUG
-			print("maxBots: " .. tostring(s_MaxAssignsAttack[i]) .. " - " .. tostring(s_MaxAssignsDefend[i]))
 		end
 	end
 
@@ -269,8 +266,8 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 
 	for l_BotTeam, l_Bots in pairs(self.m_BotsByTeam) do
 		for _, l_Bot in pairs(l_Bots) do
-			if l_Bot:GetObjective() == '' then -- no active objective of bot
-				if not l_Bot.m_Player.soldier then
+			if l_Bot:GetObjective() == '' or l_Bot:GetObjective() == nil then -- no active objective of bot
+				if l_Bot.m_Player.soldier == nil then
 					goto continue_with_next_bot
 				end
 
@@ -373,11 +370,8 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 
 				-- remove bots, if too many defenders
 				if s_Objective.active and s_Objective.team == l_BotTeam and s_Objective.assigned[l_BotTeam] > s_MaxAssignsDefend[l_BotTeam] then
-					print(s_Objective.assigned[l_BotTeam])
 					s_Objective.assigned[l_BotTeam] = s_Objective.assigned[l_BotTeam] - 1
 					l_Bot:SetObjective()
-					print(s_Objective.assigned[l_BotTeam])
-					print("removed bots (too many)")
 				end
 				-- remove from invalid objectives
 				if s_Objective.isBase or not s_Objective.active or s_Objective.destroyed then
@@ -390,12 +384,6 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 			end
 
 			::continue_with_next_bot::
-		end
-	end
-
-	for l_BotTeam, l_Bots in pairs(self.m_BotsByTeam) do
-		for _, l_Objective in pairs(self.m_AllObjectives) do
-			print(l_Objective.name .. " - " .. l_Objective.assigned[l_BotTeam])
 		end
 	end
 end
@@ -1517,7 +1505,7 @@ end
 
 function GameDirector:_GetSubObjectiveFromObj(p_Objective)
 	for _, l_TempObjective in pairs(self.m_AllObjectives) do
-		if l_TempObjective.subObjective then
+		if l_TempObjective.subObjective and l_TempObjective.name ~= p_Objective then
 			local s_Name = l_TempObjective.name:lower()
 
 			if string.find(s_Name, p_Objective:lower()) ~= nil then
@@ -1529,7 +1517,7 @@ end
 
 function GameDirector:_GetObjectiveFromSubObj(p_SubObjective)
 	for _, l_TempObjective in pairs(self.m_AllObjectives) do
-		if not l_TempObjective.subObjective then
+		if not l_TempObjective.subObjective and l_TempObjective.name ~= p_SubObjective then
 			local s_Name = l_TempObjective.name:lower()
 
 			if string.find(p_SubObjective:lower(), s_Name) ~= nil then
