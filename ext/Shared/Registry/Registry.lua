@@ -74,12 +74,16 @@ Registry = {
 		UPDATE_OBJECTIVES_CYCLE = 1.5,
 		-- Time after a MCO is considered destroyed.
 		MCOMS_CHECK_CYCLE = 26.5,
-		-- Max bots per objective.
-		MAX_ASSIGNED_LIMIT = 16,
 		-- Kill Bots without valid paths after this amount of time
 		KILL_ON_INVALID_PATH_TIME = 50,
 		-- Increments of nodes to search best patch with.
 		NODE_SEARCH_INCREMENTS = 10,
+		--- Weight for attacking objectives
+		WEIGHT_ATTACK_OBJECTIVE = 4.0,
+		--- Weight for defending objectives
+		WEIGHT_DEFEND_OBJECTIVE = 1.0,
+		--- PathSwitch on same prio
+		PROBABILITY_SWITCH_SAME_PRIO = 20
 	},
 	VEHICLES = {
 		-- Distance for the "enter vehicle" command.

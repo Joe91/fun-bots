@@ -152,6 +152,15 @@ function ChatCommands:Execute(p_Parts, p_Player)
 			return
 		end
 		print(g_Utilities:dump(p_Player.selectedUnlocks, true, 4))
+	elseif p_Parts[1] == '!objectives' then
+		if PermissionManager:HasPermission(p_Player, 'ChatCommands') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands).', p_Player)
+			return
+		end
+		for _, l_Bot in pairs(m_BotManager:GetBots()) do
+			print("Objecitve: " .. l_Bot._Objective .. " - " .. l_Bot._ObjectiveMode .. " of Bot" .. l_Bot.m_Name)
+		end
+		print(g_Utilities:dump(p_Player.selectedUnlocks, true, 4))
 	elseif p_Parts[1] == '!cardiff' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands') == false then
 			ChatManager:SendMessage('You have no permissions for this action (ChatCommands).', p_Player)

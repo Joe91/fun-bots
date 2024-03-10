@@ -97,6 +97,7 @@ function Bot:__init(p_Player)
 	self._ActionTimer = 0.0
 	self._BrakeTimer = 0.0
 	self._SpawnProtectionTimer = 0.0
+	self._DefendTimer = 0.0
 	self._SidewardsTimer = 0.0
 	self._KillYourselfTimer = 0.0
 
@@ -505,12 +506,12 @@ function Bot:EnterVehicleOfPlayer(p_Player)
 	self._ShootModeTimer = 12.0
 end
 
-function Bot:UpdateObjective(p_Objective)
+function Bot:UpdateObjective(p_Objective, p_ObjectiveMode)
 	local s_AllObjectives = m_NodeCollection:GetKnownObjectives()
 
 	for l_Objective, _ in pairs(s_AllObjectives) do
 		if l_Objective == p_Objective then
-			self:SetObjective(p_Objective)
+			self:SetObjective(p_Objective, p_ObjectiveMode)
 			break
 		end
 	end
@@ -999,7 +1000,7 @@ function Bot:SetShoot(p_Shoot)
 	self._Shoot = p_Shoot
 end
 
-function Bot:SetObjectiveIfPossible(p_Objective)
+function Bot:SetObjectiveIfPossible(p_Objective, p_ObjectiveMode)
 	if self._Objective ~= p_Objective and p_Objective ~= '' then
 		local s_Point = m_NodeCollection:Get(self._CurrentWayPoint, self._PathIndex)
 
@@ -1007,7 +1008,10 @@ function Bot:SetObjectiveIfPossible(p_Objective)
 			local s_Direction, s_BestWaypoint = m_NodeCollection:ObjectiveDirection(s_Point, p_Objective, self.m_InVehicle)
 			if s_BestWaypoint then
 				self._Objective = p_Objective
-				self._InvertPathDirection = (s_Direction == 'Previous')
+				self._ObjectiveMode = p_ObjectiveMode
+				if s_Direction then
+					self._InvertPathDirection = (s_Direction == 'Previous')
+				end
 				return true
 			end
 		end
@@ -1015,14 +1019,17 @@ function Bot:SetObjectiveIfPossible(p_Objective)
 	return false
 end
 
-function Bot:SetObjective(p_Objective)
-	if self._Objective ~= p_Objective then
+function Bot:SetObjective(p_Objective, p_ObjectiveMode)
+	if self._Objective ~= p_Objective or p_ObjectiveMode ~= self._ObjectiveMode then
 		self._Objective = p_Objective or ''
+		self._ObjectiveMode = p_ObjectiveMode or BotObjectiveModes.Default
 		local s_Point = m_NodeCollection:Get(self._CurrentWayPoint, self._PathIndex)
 
 		if s_Point ~= nil then
 			local s_Direction = m_NodeCollection:ObjectiveDirection(s_Point, self._Objective, self.m_InVehicle)
-			self._InvertPathDirection = (s_Direction == 'Previous')
+			if s_Direction then
+				self._InvertPathDirection = (s_Direction == 'Previous')
+			end
 		end
 	end
 end
@@ -1034,6 +1041,11 @@ end
 ---@return string
 function Bot:GetObjective()
 	return self._Objective
+end
+
+---@return integer|BotObjectiveModes
+function Bot:GetObjectiveMode()
+	return self._ObjectiveMode
 end
 
 ---@return integer|BotSpawnModes

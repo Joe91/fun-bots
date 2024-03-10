@@ -76,7 +76,7 @@ end
 ---VEXT Server Player:EnteredCapturePoint Event
 ---@param p_Player Player
 ---@param p_CapturePoint CapturePointEntity|Entity
-function GameDirector:OnPlayerEnteredCapturePoint(p_Player, p_CapturePoint)
+function GameDirector:OnPlayerEnterExitCapturePoint(p_Player, p_CapturePoint)
 	p_CapturePoint = CapturePointEntity(p_CapturePoint)
 	local s_ObjectiveName = self:_TranslateObjective(p_CapturePoint.transform.trans, p_CapturePoint.name)
 	self:_UpdateObjective(s_ObjectiveName, {
@@ -95,26 +95,7 @@ function GameDirector:OnCapturePointCaptured(p_CapturePoint)
 		isAttacked = p_CapturePoint.isAttacked
 	})
 
-	local s_Objective = self:_GetObjectiveObject(s_ObjectiveName)
-
-	if s_Objective == nil then
-		return
-	end
-
 	m_Logger:Write('GameDirector:_onCapture: ' .. s_ObjectiveName)
-	m_Logger:Write('self.CurrentAssignedCount: ' .. m_Utilities:dump(s_Objective.assigned, true))
-
-	for l_BotTeam, l_Bots in pairs(self.m_BotsByTeam) do
-		for i = 1, #l_Bots do
-			if l_Bots[i]:GetObjective() == s_Objective.name and s_Objective.team == l_BotTeam then
-				m_Logger:Write('Bot completed objective: ' ..
-					l_Bots[i].m_Name .. ' (team: ' .. l_BotTeam .. ') -> ' .. s_Objective.name)
-
-				l_Bots[i]:SetObjective()
-				s_Objective.assigned[l_BotTeam] = math.max(s_Objective.assigned[l_BotTeam] - 1, 0)
-			end
-		end
-	end
 end
 
 ---VEXT Server CapturePoint:Lost Event
@@ -192,47 +173,74 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 		end
 	end
 
-	local s_MaxAssigns = {}
+	local s_MaxAssignsAttack = {}
+	local s_MaxAssignsDefend = {}
 	-- Evaluate how many bots are max- and min-assigned per objective.
 
-	local s_AvailableObjectives = {}
+	local s_AvailableObjectivesAttack = {}
+	local s_AvailableObjectivesDefend = {}
 
 	for _, l_Objective in pairs(self.m_AllObjectives) do
 		if not l_Objective.subObjective and not l_Objective.isBase and l_Objective.active and not l_Objective.destroyed and
 			not l_Objective.isEnterVehiclePath then
 			for i = 1, Globals.NrOfTeams do
-				if s_AvailableObjectives[i] == nil then
-					s_AvailableObjectives[i] = 0
+				if s_AvailableObjectivesAttack[i] == nil or s_AvailableObjectivesDefend[i] == nil then
+					s_AvailableObjectivesAttack[i] = 0
+					s_AvailableObjectivesDefend[i] = 0
 				end
 
 				if l_Objective.team ~= i then
-					s_AvailableObjectives[i] = s_AvailableObjectives[i] + 1
+					s_AvailableObjectivesAttack[i] = s_AvailableObjectivesAttack[i] + 1
+				end
+				if l_Objective.team == i then
+					s_AvailableObjectivesDefend[i] = s_AvailableObjectivesDefend[i] + 1
 				end
 			end
 		end
 	end
 
 	for i = 1, Globals.NrOfTeams do
-		s_MaxAssigns[i] = 0
+		s_MaxAssignsAttack[i] = 0
+		s_MaxAssignsDefend[i] = 0
 
-		if s_AvailableObjectives[i] == nil then
-			s_AvailableObjectives[i] = 1
+		if s_AvailableObjectivesAttack[i] == nil then
+			s_AvailableObjectivesAttack[i] = 0
 		end
 
+		if s_AvailableObjectivesDefend[i] == nil then
+			s_AvailableObjectivesDefend[i] = 0
+		end
+
+		-- apply weight to attack-objectives
+		local s_TotalObjectivesBalanced = s_AvailableObjectivesAttack[i] * Registry.GAME_DIRECTOR.WEIGHT_ATTACK_OBJECTIVE +
+			s_AvailableObjectivesDefend[i] * Registry.GAME_DIRECTOR.WEIGHT_DEFEND_OBJECTIVE
+
+		-- assing bots to the objectives
+		-- number of bots / weighted objective-count = bots pro weight-unit
 		if self.m_BotsByTeam[i] ~= nil then
-			s_MaxAssigns[i] = math.floor((#self.m_BotsByTeam[i] / s_AvailableObjectives[i]) + 1)
-
-			if (#self.m_BotsByTeam[i] % 2) == 1 then
-				s_MaxAssigns[i] = s_MaxAssigns[i] + 1
+			local s_BotsPerWeightObjective = #self.m_BotsByTeam[i] / s_TotalObjectivesBalanced
+			s_MaxAssignsAttack[i] = math.floor((s_BotsPerWeightObjective * Registry.GAME_DIRECTOR.WEIGHT_ATTACK_OBJECTIVE) + 0.999)
+			s_MaxAssignsDefend[i] = math.floor((s_BotsPerWeightObjective * Registry.GAME_DIRECTOR.WEIGHT_DEFEND_OBJECTIVE) + 0.999)
+			if s_MaxAssignsDefend[i] == 0 then
+				s_MaxAssignsDefend[i] = 1
 			end
-		end
+			if s_MaxAssignsAttack[i] == 0 then
+				s_MaxAssignsAttack[i] = 1
+			end
 
-		if s_MaxAssigns[i] > Registry.GAME_DIRECTOR.MAX_ASSIGNED_LIMIT then
-			s_MaxAssigns[i] = Registry.GAME_DIRECTOR.MAX_ASSIGNED_LIMIT
+			if s_AvailableObjectivesAttack[i] == 0 then
+				s_MaxAssignsAttack[i] = 0
+			end
+			if s_AvailableObjectivesDefend[i] == 0 then
+				s_MaxAssignsDefend[i] = 0
+			end
+			-- DEBUG
+			m_Logger:Write("maxBots Team " .. i .. ": " .. tostring(s_MaxAssignsAttack[i]) .. " - " .. tostring(s_MaxAssignsDefend[i]))
 		end
 	end
 
 	-- Check objective statuses.
+	-- Clear assigned-count on every cycle first
 	for l_BotTeam, l_Bots in pairs(self.m_BotsByTeam) do
 		for _, l_Objective in pairs(self.m_AllObjectives) do
 			l_Objective.assigned[l_BotTeam] = 0
@@ -241,22 +249,24 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 
 	for l_BotTeam, l_Bots in pairs(self.m_BotsByTeam) do
 		for _, l_Bot in pairs(l_Bots) do
-			if l_Bot:GetObjective() == '' then
-				if not l_Bot.m_Player.soldier then
-					goto continue_inner_loop
+			if l_Bot:GetObjective() == '' or l_Bot:GetObjective() == nil then -- no active objective of bot
+				if l_Bot.m_Player.soldier == nil then
+					goto continue_with_next_bot
 				end
 
 				-- Find the closest objective for bot.
 				local s_ClosestDistance = nil
 				local s_ClosestObjective = nil
+				local s_ClosestObjectiveMode = BotObjectiveModes.Default
 
+				-- loop through all objectives
 				for _, l_Objective in pairs(self.m_AllObjectives) do
 					if l_Objective.subObjective then
-						goto continue_inner_inner_loop
+						goto continue_with_next_objective
 					end
 
 					if l_Objective.isBase or not l_Objective.active or l_Objective.destroyed then
-						goto continue_inner_inner_loop
+						goto continue_with_next_objective
 					end
 
 					-- Assign vehicle-objectives if possible.
@@ -265,50 +275,64 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 						l_Objective.team == l_BotTeam and
 						l_Objective.assigned[l_BotTeam] == 0 and
 						not l_Bot.m_InVehicle then
-						if l_Bot:SetObjectiveIfPossible(l_Objective.name) then
+						if l_Bot:SetObjectiveIfPossible(l_Objective.name, BotObjectiveModes.Attack) then
 							l_Objective.assigned[l_BotTeam] = 1
 							m_Logger:Write("assigned bot to " .. l_Objective.name)
-							goto continue_inner_loop
+							goto continue_with_next_bot
+						end
+					end
+					if l_Objective.isEnterVehiclePath then
+						goto continue_with_next_objective
+					end
+
+					-- defend can also be a valid objective
+					if l_Objective.team == l_BotTeam then
+						if l_Objective.assigned[l_BotTeam] < s_MaxAssignsDefend[l_BotTeam] then
+							local s_Distance = self:_GetDistanceFromObjective(l_Objective.name, l_Bot.m_Player.soldier.worldTransform.trans)
+
+							if s_ClosestDistance == nil or s_ClosestDistance > s_Distance then
+								s_ClosestDistance = s_Distance
+								s_ClosestObjective = l_Objective.name
+								s_ClosestObjectiveMode = BotObjectiveModes.Defend
+							end
+						end
+					else -- objective of enemy-team
+						if l_Objective.assigned[l_BotTeam] < s_MaxAssignsAttack[l_BotTeam] then
+							local s_Distance = self:_GetDistanceFromObjective(l_Objective.name, l_Bot.m_Player.soldier.worldTransform.trans)
+
+							if s_ClosestDistance == nil or s_ClosestDistance > s_Distance then
+								s_ClosestDistance = s_Distance
+								s_ClosestObjective = l_Objective.name
+								s_ClosestObjectiveMode = BotObjectiveModes.Attack
+							end
 						end
 					end
 
-					if l_Objective.team == l_BotTeam or l_Objective.isEnterVehiclePath then
-						goto continue_inner_inner_loop
-					end
-
-					if l_Objective.assigned[l_BotTeam] < s_MaxAssigns[l_BotTeam] then
-						local s_Distance = self:_GetDistanceFromObjective(l_Objective.name, l_Bot.m_Player.soldier.worldTransform.trans)
-
-						if s_ClosestDistance == nil or s_ClosestDistance > s_Distance then
-							s_ClosestDistance = s_Distance
-							s_ClosestObjective = l_Objective.name
-						end
-					end
-
-					::continue_inner_inner_loop::
+					::continue_with_next_objective::
 				end
 
 				if s_ClosestObjective ~= nil then
 					local s_Objective = self:_GetObjectiveObject(s_ClosestObjective)
-					l_Bot:SetObjective(s_ClosestObjective)
+					l_Bot:SetObjective(s_ClosestObjective, s_ClosestObjectiveMode)
 					m_Logger:Write("Team " ..
 						tostring(l_BotTeam) .. " with " .. l_Bot.m_Name .. " gets this objective: " .. s_ClosestObjective)
 					s_Objective.assigned[l_BotTeam] = s_Objective.assigned[l_BotTeam] + 1
 				end
-			else
+			else          -- bot already has an objective
 				if not l_Bot.m_Player.soldier then
 					l_Bot:SetObjective() -- Reset objective on death.
-					goto continue_inner_loop
+					goto continue_with_next_bot
 				end
 
 				local s_Objective = self:_GetObjectiveObject(l_Bot:GetObjective())
+				local s_ObjectiveMode = l_Bot:GetObjectiveMode()
 
 				if s_Objective.isEnterVehiclePath then
 					if not s_Objective.active or s_Objective.destroyed or l_Bot.m_InVehicle then
 						l_Bot:SetObjective()
 					end
 
-					goto continue_inner_loop
+					goto continue_with_next_bot
 				end
 
 
@@ -328,15 +352,42 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 					end
 				end
 
-				if s_Objective.isBase or not s_Objective.active or s_Objective.destroyed or (s_Objective.team == l_BotTeam and not s_Objective.isEnterVehiclePath) then
+				-- remove bots, if too many defenders
+				if s_ObjectiveMode == BotObjectiveModes.Defend then
+					if s_Objective.team == l_BotTeam then
+						if s_Objective.assigned[l_BotTeam] > s_MaxAssignsDefend[l_BotTeam] then
+							s_Objective.assigned[l_BotTeam] = s_Objective.assigned[l_BotTeam] - 1
+							l_Bot:SetObjective()
+						end
+					else
+						s_Objective.assigned[l_BotTeam] = s_Objective.assigned[l_BotTeam] - 1
+						l_Bot:SetObjective()
+					end
+				end
+
+				if s_ObjectiveMode ~= BotObjectiveModes.Defend then
+					if s_Objective.team ~= l_BotTeam then
+						if s_Objective.assigned[l_BotTeam] > s_MaxAssignsAttack[l_BotTeam] then
+							s_Objective.assigned[l_BotTeam] = s_Objective.assigned[l_BotTeam] - 1
+							l_Bot:SetObjective()
+						end
+					else
+						s_Objective.assigned[l_BotTeam] = s_Objective.assigned[l_BotTeam] - 1
+						l_Bot:SetObjective()
+					end
+				end
+
+				-- remove from invalid objectives
+				if s_Objective.isBase or not s_Objective.active or s_Objective.destroyed then
 					l_Bot:SetObjective()
 				end
+				-- remove from enter vehicle, when enter is done
 				if s_Objective.team == l_BotTeam and s_Objective.isEnterVehiclePath and l_Bot.m_InVehicle then
 					l_Bot:SetObjective()
 				end
 			end
 
-			::continue_inner_loop::
+			::continue_with_next_bot::
 		end
 	end
 end
@@ -1027,6 +1078,18 @@ function GameDirector:IsOnObjectivePath(p_Path)
 	return false
 end
 
+function GameDirector:IsAtTargetObjective(p_Path, p_Objective)
+	local s_CurrentPathFirst = m_NodeCollection:GetFirst(p_Path)
+
+	if s_CurrentPathFirst.Data ~= nil and s_CurrentPathFirst.Data.Objectives ~= nil then
+		if #s_CurrentPathFirst.Data.Objectives == 1 and s_CurrentPathFirst.Data.Objectives[1] == p_Objective then
+			return true
+		end
+	end
+
+	return false
+end
+
 function GameDirector:IsBasePath(p_ObjectiveNames)
 	if #p_ObjectiveNames < 1 then
 		return false
@@ -1458,7 +1521,7 @@ end
 
 function GameDirector:_GetSubObjectiveFromObj(p_Objective)
 	for _, l_TempObjective in pairs(self.m_AllObjectives) do
-		if l_TempObjective.subObjective then
+		if l_TempObjective.subObjective and l_TempObjective.name ~= p_Objective then
 			local s_Name = l_TempObjective.name:lower()
 
 			if string.find(s_Name, p_Objective:lower()) ~= nil then
@@ -1470,7 +1533,7 @@ end
 
 function GameDirector:_GetObjectiveFromSubObj(p_SubObjective)
 	for _, l_TempObjective in pairs(self.m_AllObjectives) do
-		if not l_TempObjective.subObjective then
+		if not l_TempObjective.subObjective and l_TempObjective.name ~= p_SubObjective then
 			local s_Name = l_TempObjective.name:lower()
 
 			if string.find(p_SubObjective:lower(), s_Name) ~= nil then

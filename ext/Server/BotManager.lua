@@ -1056,7 +1056,7 @@ function BotManager:Attack(p_Player, p_Objective)
 			local s_Distance = s_BotSoldier.worldTransform.trans:Distance(s_SoldierPosition)
 
 			if s_Distance < Registry.COMMON.COMMAND_DISTANCE then
-				l_Bot:UpdateObjective(p_Objective)
+				l_Bot:UpdateObjective(p_Objective, BotObjectiveModes.Attack)
 				s_MaxObjectiveBots = s_MaxObjectiveBots - 1
 
 				if s_MaxObjectiveBots == 0 then
