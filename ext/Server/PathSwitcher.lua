@@ -63,7 +63,6 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotName, p_Point, p_Objective, p_InVeh
 
 	p_Objective = p_Objective or ''
 	local s_OnVehicleEnterObjective = m_GameDirector:IsVehicleEnterPath(p_Objective)
-	local s_Paths = {}
 	local s_ValidPaths = {}
 	local s_HighestPriority = 0
 	local s_CurrentPriority = 0
@@ -215,7 +214,7 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotName, p_Point, p_Objective, p_InVeh
 		end
 
 		-- evalute and insert to target path
-		if s_CurrentPathStatus <= s_NewPathStatus and s_CurrentPriority <= s_Priority and (not s_NewBasePath or s_OnBasePath) then
+		if s_CurrentPathStatus <= s_NewPathStatus and s_CurrentPriority <= s_Priority and (not s_NewBasePath or s_OnBasePath or s_Priority == 5) then
 			table.insert(s_ValidPaths, {
 				Priority = s_Priority,
 				Point = s_NewPoint,
