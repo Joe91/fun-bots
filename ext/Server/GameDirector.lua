@@ -76,7 +76,7 @@ end
 ---VEXT Server Player:EnteredCapturePoint Event
 ---@param p_Player Player
 ---@param p_CapturePoint CapturePointEntity|Entity
-function GameDirector:OnPlayerEnteredCapturePoint(p_Player, p_CapturePoint)
+function GameDirector:OnPlayerEnterExitCapturePoint(p_Player, p_CapturePoint)
 	p_CapturePoint = CapturePointEntity(p_CapturePoint)
 	local s_ObjectiveName = self:_TranslateObjective(p_CapturePoint.transform.trans, p_CapturePoint.name)
 	self:_UpdateObjective(s_ObjectiveName, {
@@ -95,26 +95,7 @@ function GameDirector:OnCapturePointCaptured(p_CapturePoint)
 		isAttacked = p_CapturePoint.isAttacked
 	})
 
-	local s_Objective = self:_GetObjectiveObject(s_ObjectiveName)
-
-	if s_Objective == nil then
-		return
-	end
-
 	m_Logger:Write('GameDirector:_onCapture: ' .. s_ObjectiveName)
-	m_Logger:Write('self.CurrentAssignedCount: ' .. m_Utilities:dump(s_Objective.assigned, true))
-
-	for l_BotTeam, l_Bots in pairs(self.m_BotsByTeam) do
-		for i = 1, #l_Bots do
-			if l_Bots[i]:GetObjective() == s_Objective.name and s_Objective.team == l_BotTeam then
-				m_Logger:Write('Bot completed objective: ' ..
-					l_Bots[i].m_Name .. ' (team: ' .. l_BotTeam .. ') -> ' .. s_Objective.name)
-
-				l_Bots[i]:SetObjective()
-				s_Objective.assigned[l_BotTeam] = math.max(s_Objective.assigned[l_BotTeam] - 1, 0)
-			end
-		end
-	end
 end
 
 ---VEXT Server CapturePoint:Lost Event
@@ -253,6 +234,8 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 			if s_AvailableObjectivesDefend[i] == 0 then
 				s_MaxAssignsDefend[i] = 0
 			end
+			-- DEBUG
+			m_Logger:Write("maxBots Team " .. i .. ": " .. tostring(s_MaxAssignsAttack[i]) .. " - " .. tostring(s_MaxAssignsDefend[i]))
 		end
 	end
 
@@ -335,13 +318,14 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 						tostring(l_BotTeam) .. " with " .. l_Bot.m_Name .. " gets this objective: " .. s_ClosestObjective)
 					s_Objective.assigned[l_BotTeam] = s_Objective.assigned[l_BotTeam] + 1
 				end
-			else
+			else          -- bot already has an objective
 				if not l_Bot.m_Player.soldier then
 					l_Bot:SetObjective() -- Reset objective on death.
 					goto continue_with_next_bot
 				end
 
 				local s_Objective = self:_GetObjectiveObject(l_Bot:GetObjective())
+				local s_ObjectiveMode = l_Bot:GetObjectiveMode()
 
 				if s_Objective.isEnterVehiclePath then
 					if not s_Objective.active or s_Objective.destroyed or l_Bot.m_InVehicle then
@@ -369,10 +353,30 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 				end
 
 				-- remove bots, if too many defenders
-				if s_Objective.active and s_Objective.team == l_BotTeam and s_Objective.assigned[l_BotTeam] > s_MaxAssignsDefend[l_BotTeam] then
-					s_Objective.assigned[l_BotTeam] = s_Objective.assigned[l_BotTeam] - 1
-					l_Bot:SetObjective()
+				if s_ObjectiveMode == BotObjectiveModes.Defend then
+					if s_Objective.team == l_BotTeam then
+						if s_Objective.assigned[l_BotTeam] > s_MaxAssignsDefend[l_BotTeam] then
+							s_Objective.assigned[l_BotTeam] = s_Objective.assigned[l_BotTeam] - 1
+							l_Bot:SetObjective()
+						end
+					else
+						s_Objective.assigned[l_BotTeam] = s_Objective.assigned[l_BotTeam] - 1
+						l_Bot:SetObjective()
+					end
 				end
+
+				if s_ObjectiveMode ~= BotObjectiveModes.Defend then
+					if s_Objective.team ~= l_BotTeam then
+						if s_Objective.assigned[l_BotTeam] > s_MaxAssignsAttack[l_BotTeam] then
+							s_Objective.assigned[l_BotTeam] = s_Objective.assigned[l_BotTeam] - 1
+							l_Bot:SetObjective()
+						end
+					else
+						s_Objective.assigned[l_BotTeam] = s_Objective.assigned[l_BotTeam] - 1
+						l_Bot:SetObjective()
+					end
+				end
+
 				-- remove from invalid objectives
 				if s_Objective.isBase or not s_Objective.active or s_Objective.destroyed then
 					l_Bot:SetObjective()
@@ -1067,6 +1071,18 @@ function GameDirector:IsOnObjectivePath(p_Path)
 
 	if s_CurrentPathFirst.Data ~= nil and s_CurrentPathFirst.Data.Objectives ~= nil then
 		if #s_CurrentPathFirst.Data.Objectives == 1 then
+			return true
+		end
+	end
+
+	return false
+end
+
+function GameDirector:IsAtTargetObjective(p_Path, p_Objective)
+	local s_CurrentPathFirst = m_NodeCollection:GetFirst(p_Path)
+
+	if s_CurrentPathFirst.Data ~= nil and s_CurrentPathFirst.Data.Objectives ~= nil then
+		if #s_CurrentPathFirst.Data.Objectives == 1 and s_CurrentPathFirst.Data.Objectives[1] == p_Objective then
 			return true
 		end
 	end

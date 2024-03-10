@@ -15,6 +15,9 @@ This is the changelog for the version V2.9 Don't forget to [join us on Discord](
 * Post-revive delay was added by Bree_Arnold
 * static attributs and behaviors of bots added
 * other handling for going back to the trace after attack
+* improve Gamedirector on Conquest
+* improve PathSwitcher
+* Bots now defend objectives
 
 ### Bug fixes
 * Merged pull request #323 from tagener-noisu Path-Switcher fixes

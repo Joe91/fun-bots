@@ -59,7 +59,7 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 		end
 
 		-- Do defense, if needed
-		if p_Bot._ObjectiveMode == BotObjectiveModes.Defend and g_GameDirector:IsOnObjectivePath(p_Bot._PathIndex) then
+		if p_Bot._ObjectiveMode == BotObjectiveModes.Defend and g_GameDirector:IsAtTargetObjective(p_Bot._PathIndex, p_Bot._Objective) then
 			p_Bot._DefendTimer = p_Bot._DefendTimer + Registry.BOT.BOT_UPDATE_CYCLE
 
 			if p_Bot._DefendTimer >= 3.0 then

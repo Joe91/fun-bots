@@ -13,7 +13,6 @@ require('__shared/Constants/BotColors')
 require('__shared/Constants/BotNames')
 require('__shared/Constants/BotKits')
 require('__shared/Constants/BotWeapons')
-require('__shared/Constants/BotObjectiveModes')
 require('__shared/Constants/BotAttributes')
 require('__shared/Constants/GmSpecialWeapons')
 require('__shared/Constants/WeaponSets')
@@ -122,6 +121,7 @@ function FunBotServer:RegisterEvents()
 	Events:Subscribe('CapturePoint:Lost', self, self.OnCapturePointLost)
 	Events:Subscribe('CapturePoint:Captured', self, self.OnCapturePointCaptured)
 	Events:Subscribe('Player:EnteredCapturePoint', self, self.OnPlayerEnteredCapturePoint)
+	Events:Subscribe('Player:ExitedCapturePoint', self, self.OnPlayerExitedCapturePoint)
 	Events:Subscribe('Vehicle:SpawnDone', self, self.OnVehicleSpawnDone)
 	Events:Subscribe('Vehicle:Destroyed', self, self.OnVehicleDestroyed)
 	Events:Subscribe('Vehicle:Unspawn', self, self.OnVehicleUnspawn)
@@ -448,7 +448,14 @@ end
 ---@param p_Player Player
 ---@param p_CapturePoint Entity @`CapturePointEntity`
 function FunBotServer:OnPlayerEnteredCapturePoint(p_Player, p_CapturePoint)
-	m_GameDirector:OnPlayerEnteredCapturePoint(p_Player, p_CapturePoint)
+	m_GameDirector:OnPlayerEnterExitCapturePoint(p_Player, p_CapturePoint)
+end
+
+---VEXT Server Player:EnteredCapturePoint Event
+---@param p_Player Player
+---@param p_CapturePoint Entity @`CapturePointEntity`
+function FunBotServer:OnPlayerExitedCapturePoint(p_Player, p_CapturePoint)
+	m_GameDirector:OnPlayerEnterExitCapturePoint(p_Player, p_CapturePoint)
 end
 
 -- =============================================

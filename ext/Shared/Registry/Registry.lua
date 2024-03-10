@@ -79,7 +79,7 @@ Registry = {
 		-- Increments of nodes to search best patch with.
 		NODE_SEARCH_INCREMENTS = 10,
 		--- Weight for attacking objectives
-		WEIGHT_ATTACK_OBJECTIVE = 2.5,
+		WEIGHT_ATTACK_OBJECTIVE = 4.0,
 		--- Weight for defending objectives
 		WEIGHT_DEFEND_OBJECTIVE = 1.0,
 		--- PathSwitch on same prio

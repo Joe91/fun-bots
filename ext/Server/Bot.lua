@@ -1043,6 +1043,11 @@ function Bot:GetObjective()
 	return self._Objective
 end
 
+---@return integer|BotObjectiveModes
+function Bot:GetObjectiveMode()
+	return self._ObjectiveMode
+end
+
 ---@return integer|BotSpawnModes
 function Bot:GetSpawnMode()
 	return self._SpawnMode
