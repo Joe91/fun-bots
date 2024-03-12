@@ -477,6 +477,7 @@ function BotMovement:UpdateMovementSprintToTarget(p_Bot)
 end
 
 function BotMovement:UpdateShootMovement(p_Bot)
+	p_Bot._DefendTimer = 0.0
 	-- Shoot MoveMode.
 	if p_Bot._AttackMode == BotAttackModes.RandomNotSet then
 		if Config.BotAttackMode ~= BotAttackModes.RandomNotSet then

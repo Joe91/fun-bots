@@ -624,8 +624,7 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 		return false
 	end
 
-	-- TODO: fill this behavior
-	if p_IgnoreYaw then -- was hit, check for special behavior
+	if p_IgnoreYaw and self._DefendTimer == 0.0 then -- was hit, not in defend-mode, check for special behavior
 		if self.m_Behavior == BotBehavior.DontShootBackHide then
 			self._ActionTimer = 7.0
 			self._ActiveAction = BotActionFlags.HideOnAttack
@@ -1088,6 +1087,7 @@ end
 
 function Bot:ResetSpawnVars()
 	self._SpawnDelayTimer = 0.0
+	self._DefendTimer = 0.0
 	self._ObstacleSequenceTimer = 0.0
 	self._ObstacleRetryCounter = 0
 	self._LastWayDistance = 1000.0
@@ -1357,7 +1357,7 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 	for i = 0, s_MaxEntries - 1 do
 		if p_Entity:GetPlayerInEntry(i) == nil then
 			self.m_Player:EnterVehicle(p_Entity, i)
-			self._ExitVehicleHealth = PhysicsEntity(p_Entity).internalHealth * (Registry.VEHICLES.VEHILCE_EXIT_HEALTH / 100.0)
+			self._ExitVehicleHealth = PhysicsEntity(p_Entity).internalHealth * (Registry.VEHICLES.VEHICLE_EXIT_HEALTH / 100.0)
 
 			-- Get ID.
 			self.m_ActiveVehicle = s_VehicleData

@@ -105,7 +105,7 @@ Registry = {
 		-- Time a jet waits after an attack on another jet.
 		JET_ABORT_JET_ATTACK_TIME = 0.7,
 		-- Percentage of vehicle health to leave vehicle with (currently no passive events for bot-only vehicles)
-		VEHILCE_EXIT_HEALTH = 12,
+		VEHICLE_EXIT_HEALTH = 12,
 		-- Probability to exit on low health.
 		VEHICLE_PROPABILITY_EXIT_LOW_HEALTH = 60,
 		-- Probability to use 2nd best air-target.
