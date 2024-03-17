@@ -18,6 +18,7 @@ This is the changelog for the version V2.9 Don't forget to [join us on Discord](
 * improve Gamedirector on Conquest
 * improve PathSwitcher
 * Bots now defend objectives
+* Reintroduce the collision-raycast -> bots can now see through windows
 
 ### Bug fixes
 * Merged pull request #323 from tagener-noisu Path-Switcher fixes

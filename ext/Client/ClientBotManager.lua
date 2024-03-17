@@ -105,27 +105,50 @@ end
 
 function ClientBotManager:DoRaycast(p_Pos1, p_Pos2, p_InObjectPos1, p_InObjectPos2)
 	if Registry.COMMON.USE_COLLISION_RAYCASTS then
-		local s_MaxHits = 1
+		-- if p_InObjectPos1 or p_InObjectPos2 then
+		local s_DeltaPos = p_Pos2 - p_Pos1
+		s_DeltaPos = s_DeltaPos:Normalize()
 
-		if p_InObjectPos1 then
-			s_MaxHits = s_MaxHits + 1
+		if p_InObjectPos1 then -- Start Raycast outside of vehicle?
+			p_Pos1 = p_Pos1 + (s_DeltaPos * 3.2)
+		else
+			p_Pos1 = p_Pos1 + (s_DeltaPos * 0.2) -- start Raycast outside of Bot
 		end
 
-		if p_InObjectPos2 then
-			s_MaxHits = s_MaxHits + 1
+		if not p_InObjectPos2 then
+			p_Pos2 = p_Pos2 + (s_DeltaPos * 0.5) -- scan through target-player, if not in vehicle
 		end
+		-- end
 
-		local s_MaterialFlags = 0 -- MaterialFlags.MfPenetrable | MaterialFlags.MfClientDestructible | MaterialFlags.MfBashable | MaterialFlags.MfSeeThrough | MaterialFlags.MfNoCollisionResponse | MaterialFlags.MfNoCollisionResponseCombined
+
+		-- describes what doesn't end the raycast on a collision
+		local s_MaterialFlags = MaterialFlags.MfSeeThrough -- windows, open fences
+		-- MaterialFlags.MfNoCollisionResponse | -- no effect?
+		-- MaterialFlags.MfNoCollisionResponseCombined | -- no effect?
+		-- MaterialFlags.MfPenetrable | -- soldiers + solid fences
+		-- MaterialFlags.MfBashable | -- ???
+		-- MaterialFlags.MfClientDestructible --walls
+
+
+		-- MaterialFlags.MfPenetrable | MaterialFlags.MfClientDestructible | MaterialFlags.MfBashable | MaterialFlags.MfSeeThrough | MaterialFlags.MfNoCollisionResponse | MaterialFlags.MfNoCollisionResponseCombined
 		---@cast s_MaterialFlags MaterialFlags
-		local s_RaycastFlags = RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter
+		local s_RaycastFlags = RayCastFlags.DontCheckWater -- | RayCastFlags.DontCheckCharacter
 		---@cast s_RaycastFlags RayCastFlags
 
-		local s_RayHits = RaycastManager:CollisionRaycast(p_Pos1, p_Pos2, s_MaxHits, s_MaterialFlags, s_RaycastFlags)
+		local s_RayHits = RaycastManager:CollisionRaycast(p_Pos1, p_Pos2, 10, s_MaterialFlags, s_RaycastFlags)
 
-		if s_RayHits ~= nil and #s_RayHits < s_MaxHits then
-			return true
+		if p_InObjectPos2 then
+			if s_RayHits[#s_RayHits] and s_RayHits[#s_RayHits].rigidBody and s_RayHits[#s_RayHits].rigidBody:Is("DynamicPhysicsEntity") then
+				return true
+			else
+				return false
+			end
 		else
-			return false
+			if s_RayHits[#s_RayHits] and s_RayHits[#s_RayHits].rigidBody and s_RayHits[#s_RayHits].rigidBody:Is("CharacterPhysicsEntity") then
+				return true
+			else
+				return false
+			end
 		end
 	else
 		if p_InObjectPos1 or p_InObjectPos2 then
@@ -240,7 +263,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	self.m_RaycastTimer = 0
 	local s_CheckCount = 0
 
-	if self.m_Player.soldier ~= nil then -- Alive. Check for enemy bots.
+	if self.m_Player.soldier ~= nil then                       -- Alive. Check for enemy bots.
 		if self.m_AliveTimer < Registry.CLIENT.SPAWN_PROTECTION then -- Wait 2s (spawn-protection).
 			self.m_AliveTimer = self.m_AliveTimer + p_DeltaTime
 			self:SendRaycastResults(s_RaycastResultsToSend)
@@ -321,7 +344,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 			::continue_enemy_loop::
 		end
 	elseif self.m_Player.corpse ~= nil and not self.m_Player.corpse.isDead then -- Dead. Check for revive botsAttackBots.
-		self.m_AliveTimer = 0.5 -- Add a little delay.
+		self.m_AliveTimer = 0.5                                              -- Add a little delay.
 		local s_TeamMates = PlayerManager:GetPlayersByTeam(self.m_Player.teamId)
 
 		if self.m_LastIndex >= #s_TeamMates then

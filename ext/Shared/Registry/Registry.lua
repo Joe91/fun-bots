@@ -15,8 +15,8 @@ Registry = {
 		BOT_TOKEN = "BOT_",
 		-- Allow players to use Bot-Names.
 		ALLOW_PLAYER_BOT_NAMES = true,
-		-- Collition-raycasts are another type of raycast. Sadly not working atm...
-		USE_COLLITION_RAYCASTS = false,
+		-- Collision-raycasts are another type of raycast. Needs some more testing...
+		USE_COLLISION_RAYCASTS = true,
 		-- Use worse hitboxes but enable bots to use the knive
 		USE_BUGGED_HITBOXES = false,
 		-- Distance commands are heard by bots.
