@@ -1333,6 +1333,10 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 		return -3 -- Not allowed to use.
 	end
 
+	if not Config.UseJets and m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.Plane) then
+		return -3 -- Not allowed to use.
+	end
+
 	-- Keep one seat free, if enough available.
 	local s_MaxEntries = p_Entity.entryCount
 	if s_VehicleData.Type == VehicleTypes.MobileArtillery then

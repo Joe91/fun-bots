@@ -561,6 +561,10 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 		return -- Not allowed to use.
 	end
 
+	if not Config.UseJets and m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.Plane) then
+		return
+	end
+
 	local s_Objective = self:_SetVehicleObjectiveState(p_Entity.transform.trans, true)
 
 	if s_Objective ~= nil then
@@ -1138,6 +1142,8 @@ function GameDirector:UseVehicle(p_BotTeam, p_Objective)
 	if s_TempObjective ~= nil and s_TempObjective.active and s_TempObjective.isEnterVehiclePath then
 		if s_TempObjective.isEnterAirVehiclePath then
 			return Config.UseVehicles and Config.UseAirVehicles
+		elseif s_TempObjective.isEnterJetPath then
+			return Config.UseJets
 		else
 			return Config.UseVehicles
 		end
@@ -1241,6 +1247,7 @@ function GameDirector:_InitObjectives()
 			isSpawnPath = false,
 			isEnterVehiclePath = false,
 			isEnterAirVehiclePath = false,
+			isEnterJetPath = false,
 			isBeaconPath = false,
 			canBeCaptured = true,
 			destroyed = false,
@@ -1280,6 +1287,10 @@ function GameDirector:_InitObjectives()
 				or string.find(l_ObjectiveName:lower(), "plane") ~= nil
 			then
 				s_Objective.isEnterAirVehiclePath = true
+			end
+
+			if string.find(l_ObjectiveName:lower(), "plane") ~= nil then
+				s_Objective.isEnterJetPath = true
 			end
 
 			if string.find(l_ObjectiveName:lower(), "us") ~= nil then

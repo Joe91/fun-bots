@@ -848,6 +848,17 @@ SettingsDefinition = {
 			Category = "VEHICLE"
 		},
 		{
+			Name = "UseJets",
+			Text = "Use jets",
+			---@type Type|integer
+			Type = Type.Boolean,
+			Value = Config.UseJets,
+			Description = "Bots can use jets",
+			Default = true,
+			UpdateFlag = UpdateFlag.None,
+			Category = "VEHICLE"
+		},
+		{
 			Name = "MaxBotsPerVehicle",
 			Text = "Max Bots per vehicle",
 			---@type Type|integer
