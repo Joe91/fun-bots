@@ -109,42 +109,36 @@ function ClientBotManager:DoRaycast(p_Pos1, p_Pos2, p_InObjectPos1, p_InObjectPo
 		local s_DeltaPos = p_Pos2 - p_Pos1
 		s_DeltaPos = s_DeltaPos:Normalize()
 
-		if p_InObjectPos1 then -- Start Raycast outside of vehicle?
+		if p_InObjectPos1 then -- Start Raycast outside of vehicle
 			p_Pos1 = p_Pos1 + (s_DeltaPos * 3.2)
-		else
-			p_Pos1 = p_Pos1 + (s_DeltaPos * 0.2) -- start Raycast outside of Bot
 		end
 
-		if not p_InObjectPos2 then
-			p_Pos2 = p_Pos2 + (s_DeltaPos * 0.5) -- scan through target-player, if not in vehicle
-		end
-		-- end
-
+		-- no need to go through bot, since soldier position should already cause the collision
 
 		-- describes what doesn't end the raycast on a collision
-		local s_MaterialFlags = MaterialFlags.MfSeeThrough -- windows, open fences
-		-- MaterialFlags.MfNoCollisionResponse | -- no effect?
-		-- MaterialFlags.MfNoCollisionResponseCombined | -- no effect?
-		-- MaterialFlags.MfPenetrable | -- soldiers + solid fences
-		-- MaterialFlags.MfBashable | -- ???
-		-- MaterialFlags.MfClientDestructible --walls
+		local s_MaterialFlags = MaterialFlags.MfSeeThrough -- windows
+			-- MaterialFlags.MfNoCollisionResponse | -- no effect?
+			-- MaterialFlags.MfNoCollisionResponseCombined | -- no effect?
+			-- MaterialFlags.MfPenetrable | -- soldiers + solid fences
+			-- MaterialFlags.MfBashable | -- ???
+			| MaterialFlags.MfClientDestructible -- some open fences, some crates
 
 
 		-- MaterialFlags.MfPenetrable | MaterialFlags.MfClientDestructible | MaterialFlags.MfBashable | MaterialFlags.MfSeeThrough | MaterialFlags.MfNoCollisionResponse | MaterialFlags.MfNoCollisionResponseCombined
 		---@cast s_MaterialFlags MaterialFlags
-		local s_RaycastFlags = RayCastFlags.DontCheckWater -- | RayCastFlags.DontCheckCharacter
+		local s_RaycastFlags = RayCastFlags.DontCheckWater
 		---@cast s_RaycastFlags RayCastFlags
 
 		local s_RayHits = RaycastManager:CollisionRaycast(p_Pos1, p_Pos2, 10, s_MaterialFlags, s_RaycastFlags)
 
 		if p_InObjectPos2 then
-			if s_RayHits[#s_RayHits] and s_RayHits[#s_RayHits].rigidBody and s_RayHits[#s_RayHits].rigidBody:Is("DynamicPhysicsEntity") then
+			if #s_RayHits > 0 and #s_RayHits < 5 and s_RayHits[#s_RayHits].rigidBody and s_RayHits[#s_RayHits].rigidBody:Is("DynamicPhysicsEntity") then -- right now only 5 hits possible. abort if 5 hits
 				return true
 			else
 				return false
 			end
 		else
-			if s_RayHits[#s_RayHits] and s_RayHits[#s_RayHits].rigidBody and s_RayHits[#s_RayHits].rigidBody:Is("CharacterPhysicsEntity") then
+			if #s_RayHits > 0 and #s_RayHits < 5 and s_RayHits[#s_RayHits].rigidBody and s_RayHits[#s_RayHits].rigidBody:Is("CharacterPhysicsEntity") then -- right now only 5 hits possible. abort if 5 hits
 				return true
 			else
 				return false
