@@ -17,6 +17,8 @@ Registry = {
 		ALLOW_PLAYER_BOT_NAMES = true,
 		-- Collision-raycasts are another type of raycast. Needs some more testing...
 		USE_COLLISION_RAYCASTS = true,
+		-- Use DetailedMesh in Raycasts, needs more performance but might detect some special cases better
+		USE_DETAILED_MESH_RAYCASTS = false,
 		-- Use worse hitboxes but enable bots to use the knive
 		USE_BUGGED_HITBOXES = false,
 		-- Distance commands are heard by bots.

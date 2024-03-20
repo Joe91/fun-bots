@@ -119,14 +119,15 @@ function ClientBotManager:DoRaycast(p_Pos1, p_Pos2, p_InObjectPos1, p_InObjectPo
 		local s_MaterialFlags = MaterialFlags.MfSeeThrough -- windows
 			-- MaterialFlags.MfNoCollisionResponse | -- no effect?
 			-- MaterialFlags.MfNoCollisionResponseCombined | -- no effect?
-			| MaterialFlags.MfPenetrable -- soldiers + solid fences
+			| MaterialFlags.MfPenetrable -- soldiers + solid fences (only with detailed-Mesh-Check)
 			-- MaterialFlags.MfBashable | -- ???
 			| MaterialFlags.MfClientDestructible -- some open fences, some crates
 
-
-		-- MaterialFlags.MfPenetrable | MaterialFlags.MfClientDestructible | MaterialFlags.MfBashable | MaterialFlags.MfSeeThrough | MaterialFlags.MfNoCollisionResponse | MaterialFlags.MfNoCollisionResponseCombined
 		---@cast s_MaterialFlags MaterialFlags
 		local s_RaycastFlags = RayCastFlags.DontCheckWater
+		if Registry.COMMON.USE_DETAILED_MESH_RAYCASTS then
+			s_RaycastFlags = s_RaycastFlags | RayCastFlags.CheckDetailMesh -- needed to detect some fences as shoot-through
+		end
 		---@cast s_RaycastFlags RayCastFlags
 
 		local s_RayHits = RaycastManager:CollisionRaycast(p_Pos1, p_Pos2, 10, s_MaterialFlags, s_RaycastFlags)
@@ -159,6 +160,9 @@ function ClientBotManager:DoRaycast(p_Pos1, p_Pos2, p_InObjectPos1, p_InObjectPo
 		end
 
 		local s_RaycastFlags = RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.IsAsyncRaycast
+		if Registry.COMMON.USE_DETAILED_MESH_RAYCASTS then
+			s_RaycastFlags = s_RaycastFlags | RayCastFlags.CheckDetailMesh -- not sure if this makes a difference for the normal raycast
+		end
 		---@cast s_RaycastFlags RayCastFlags
 		local s_Raycast = RaycastManager:Raycast(p_Pos1, p_Pos2, s_RaycastFlags)
 
