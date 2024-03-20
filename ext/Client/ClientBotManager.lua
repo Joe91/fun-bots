@@ -119,7 +119,7 @@ function ClientBotManager:DoRaycast(p_Pos1, p_Pos2, p_InObjectPos1, p_InObjectPo
 		local s_MaterialFlags = MaterialFlags.MfSeeThrough -- windows
 			-- MaterialFlags.MfNoCollisionResponse | -- no effect?
 			-- MaterialFlags.MfNoCollisionResponseCombined | -- no effect?
-			-- MaterialFlags.MfPenetrable | -- soldiers + solid fences
+			| MaterialFlags.MfPenetrable -- soldiers + solid fences
 			-- MaterialFlags.MfBashable | -- ???
 			| MaterialFlags.MfClientDestructible -- some open fences, some crates
 
