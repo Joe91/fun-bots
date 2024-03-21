@@ -933,8 +933,8 @@ function Bot:GetFirstShotDelay(p_DistanceToTarget, p_ReducedTiming)
 		s_Delay = s_Delay * 0.6
 	end
 
-	-- Slower reaction on greater distances. 100 m = 1 extra second.
-	s_Delay = s_Delay + (p_DistanceToTarget * 0.01 * (1.0 + ((self.m_Reaction - 0.5) * 0.4))) -- +-20% depending on reaction-characteristic of bot
+	-- Slower reaction on greater distances. 100 m = 0.5 extra seconda.
+	s_Delay = s_Delay + (p_DistanceToTarget * 0.005 * (1.0 + ((self.m_Reaction - 0.5) * 0.4))) -- +-20% depending on reaction-characteristic of bot
 	return s_Delay
 end
 

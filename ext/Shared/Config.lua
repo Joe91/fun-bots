@@ -15,7 +15,7 @@ Config = {
 	BotSupportAimWorsening = 0.3,		-- See botAimWorsening, only for LMGs 
 	BotWorseningSkill = 0.40,			-- Variation of the skill of a single bot. The higher, the worse the bots can get compared to the original settings 
 	BotSniperWorseningSkill = 0.30,		-- See BotWorseningSkill - only for BOTs using sniper bolt-action rifles 
-	ReactionTime = 0.5,					-- Additional delay for bots, dependant of skill (might also be 0) 
+	ReactionTime = 0.2,					-- Additional delay for bots, dependant of skill (might also be 0) 
 	DamageFactorAssault = 1.0,			-- Original Damage from bots gets multiplied by this 
 	DamageFactorCarabine = 1.0,			-- Original Damage from bots gets multiplied by this 
 	DamageFactorLMG = 1.0,				-- Original Damage from bots gets multiplied by this 
@@ -143,7 +143,7 @@ Config = {
 	MinMoveCycle = 0.3,					-- Min time bots move sidewards or straight before switching (in sec) 
 
 	-- EXPERT 
-	BotFirstShotDelay = 0.2,			-- Delay for first shot. If too small, there will be great spread in first cycle because it is not compensated yet 
+	BotFirstShotDelay = 0.15,			-- Delay for first shot. If too small, there will be great spread in first cycle because it is not compensated yet 
 	BotMinTimeShootAtPlayer = 2.5,		-- The minimum time a bot shoots at one player for - recommended minimum 1.5, below this you will have issues 
 	BotVehicleMinTimeShootAtPlayer = 4.0,	-- The minimum time a bot shoots at one player if in vehicle - recommended minimum 2.5, below this you will have issues 
 	BotFireModeDuration = 4.5,			-- The minimum time a bot tries to shoot a player - recommended minimum 3.0, below this you will have issues 
