@@ -24,6 +24,7 @@ This is the changelog for the version V2.9 Don't forget to [join us on Discord](
 * Merged pull request #323 from tagener-noisu Path-Switcher fixes
 * Bots find best squad after team-switch again.
 * Aiming with the defib was fixed by Bree_Arnold
+* fixed wrong spawn-delay after revive of bots
 
 ### New maps
 * Conquest Large MP_018 by ThyKingdomCome

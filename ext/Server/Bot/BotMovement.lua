@@ -62,7 +62,8 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 		if p_Bot._ObjectiveMode == BotObjectiveModes.Defend and g_GameDirector:IsAtTargetObjective(p_Bot._PathIndex, p_Bot._Objective) then
 			p_Bot._DefendTimer = p_Bot._DefendTimer + Registry.BOT.BOT_UPDATE_CYCLE
 
-			if p_Bot._DefendTimer >= 3.0 then
+			local s_TargetTime = p_Bot.m_Id % 5 + 4 -- min 2 sec on path, then 2 sec movement to side
+			if p_Bot._DefendTimer >= s_TargetTime then
 				-- look around
 				p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.NoMovement
 
@@ -86,8 +87,8 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 				-- TODO: look at target
 				-- don't do anything else
 				return
-			elseif p_Bot._DefendTimer >= 1.7 then
-				p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.Normal
+			elseif p_Bot._DefendTimer >= (s_TargetTime - 2) then
+				p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.Backwards
 				local s_StrafeValue = 1.0
 				if p_Bot.m_Id % 2 then
 					s_StrafeValue = -1.0

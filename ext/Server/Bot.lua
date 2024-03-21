@@ -251,6 +251,7 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 						self:_SetInput(EntryInputActionEnum.EIACycleRadioChannel, 1)
 						self:_UpdateInputs()
 						self.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Crouch, true, true)
+						self._SpawnDelayTimer = 0.0 --reset spawn-delay on revive
 					end
 					return
 				end
