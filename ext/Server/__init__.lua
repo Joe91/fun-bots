@@ -152,6 +152,8 @@ function FunBotServer:RegisterCustomEvents()
 	NetEvents:Subscribe('ConsoleCommands:SetConfig', self, self.OnConsoleCommandSetConfig)
 	NetEvents:Subscribe('ConsoleCommands:SaveAll', self, self.OnConsoleCommandSaveAll)
 	NetEvents:Subscribe('ConsoleCommands:Restore', self, self.OnConsoleCommandRestore)
+	NetEvents:Subscribe('ConsoleCommands:SpawnGrenade', self, self.OnSpawnGrenade)
+	NetEvents:Subscribe('ConsoleCommands:DestroyObstaclesTest', self, self.OnDestroyObstaclesTest)
 	NetEvents:Subscribe("SpawnPointHelper:TeleportTo", self, self.OnTeleportTo)
 	m_NodeEditor:RegisterCustomEvents()
 end
@@ -319,11 +321,28 @@ function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPe
 	self:RegisterInputRestrictionEventCallbacks()
 	self:SetGameMode(p_GameMode, p_LevelName)
 	self:SetMaxBotsPerTeam(p_GameMode)
+	self:DestroyObstacles(p_LevelName, p_GameMode)
 
 	m_NodeEditor:OnLevelLoaded(p_LevelName, p_GameMode, s_CustomGameMode)
 	m_GameDirector:OnLevelLoaded()
 	m_AirTargets:OnLevelLoaded()
 	m_BotSpawner:OnLevelLoaded(p_Round)
+end
+
+function FunBotServer:DestroyObstacles(p_LevelName, p_GameMode)
+	local positions = {}
+
+	if p_LevelName == "XP4_Quake" and p_GameMode == "ConquestLarge0" then
+		positions[#positions + 1] = Vec3(-172.886551, 182.112259, 96.317276)
+		positions[#positions + 1] = Vec3(-159.28, 173.89, 99.74)
+		positions[#positions + 1] = Vec3(-74.64, 178.01, 42.606)
+		positions[#positions + 1] = Vec3(-85.23, 178.01, 44.077)
+		positions[#positions + 1] = Vec3(-89.42, 178.40, 50.82)
+	end
+
+	for i,position in ipairs(positions) do
+		self:SpawnGrenade(position)
+	end
 end
 
 ---VEXT Shared Level:Destroy Event
@@ -612,6 +631,37 @@ end
 
 function FunBotServer:OnConsoleCommandRestore(p_Player, p_Args)
 	m_Console:OnConsoleCommandRestore(p_Player, p_Args)
+end
+
+function FunBotServer:OnSpawnGrenade(p_Player, p_Args)
+	local position = p_Player.soldier.transform.trans:Clone()
+	position.y = position.y + 0.1
+
+	print("Grenade spawn at " .. tostring(position))
+	self:SpawnGrenade(position)
+end
+
+function FunBotServer:OnDestroyObstaclesTest(p_Player, p_Args)
+	self:DestroyObstacles(p_Args[1], p_Args[2])
+end
+
+function FunBotServer:SpawnGrenade(p_Position)
+	resource = ResourceManager:SearchForDataContainer('Weapons/M67/M67_Projectile')
+
+	local creationParams = EntityCreationParams()
+	creationParams.transform = LinearTransform()
+	creationParams.networked = true
+	creationParams.transform.trans = p_Position
+
+	local createdBus = EntityManager:CreateEntitiesFromBlueprint(resource, creationParams)
+
+	if createdBus == nil then
+		return
+	end
+
+	for _, entity in pairs(createdBus.entities) do
+		entity:Init(Realm.Realm_ClientAndServer, true)
+	end
 end
 
 function FunBotServer:OnTeleportTo(p_Player, p_Transform)
