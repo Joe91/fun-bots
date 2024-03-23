@@ -29,6 +29,14 @@ function ConsoleCommands:OnRegisterConsoleCommands(p_ConfigList)
 	Console:Register('config.restore', 'restores default-values', function(p_Args)
 		NetEvents:SendLocal('ConsoleCommands:Restore', true)
 	end)
+
+	Console:Register('SpawnGrenade', 'spawns grenade at your feet:)', function(p_Args)
+		NetEvents:SendLocal('ConsoleCommands:SpawnGrenade', p_Args)
+	end)
+
+	Console:Register('DestroyObstaclesTest', '', function(p_Args)
+		NetEvents:SendLocal('ConsoleCommands:DestroyObstaclesTest', p_Args)
+	end)
 end
 
 function ConsoleCommands:OnPrintResponse(p_Response)

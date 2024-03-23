@@ -19,6 +19,7 @@ This is the changelog for the version V2.9 Don't forget to [join us on Discord](
 * improve PathSwitcher
 * Bots now defend objectives
 * Reintroduce the collision-raycast -> bots can now see through windows
+* Obstacels on XP4_quake get destroyed on level loaded (by tagener-noisu)
 
 ### Bug fixes
 * Merged pull request #323 from tagener-noisu Path-Switcher fixes
