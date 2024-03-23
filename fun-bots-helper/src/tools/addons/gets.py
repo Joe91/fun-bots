@@ -719,7 +719,6 @@ def get_links_and_vehicles_fixed(in_file: TextIOWrapper) -> List[str]:
                 '"LinkMode":0,',
                 ',"LinkMode":0',
                 '"LinkMode":0',
-                "{}",
             ]:
                 line = line.replace(link, "")
         if '"Objectives":{}' in line:
@@ -736,7 +735,7 @@ def get_links_and_vehicles_fixed(in_file: TextIOWrapper) -> List[str]:
                 '"Vehicles":{}',
             ]:
                 line = line.replace(vehicle, "")
-        if "{}" in line:
+        if ";{}" in line:
             line = line.replace("{}", "")
         out_file_lines.append(line)
 

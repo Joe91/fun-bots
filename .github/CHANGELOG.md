@@ -63,6 +63,8 @@ This is the changelog for the version V2.9 Don't forget to [join us on Discord](
 * Conquest Small XP5_004 by MeisterPeitsche
 * Conquest Large/Small MP_Subway by ThyKingdomCome (with beacons)
 * Conquest Large MP_018 by ThyKingdomCome (with beacons)
+* Conquest Large XP4_Quake by ThyKingdomCome (with beacons)
+
 
 ### Documentation update
 
