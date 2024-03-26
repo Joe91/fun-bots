@@ -147,6 +147,7 @@ XP4_Rubble SquadRush0 1
 XP5_002 SquadRush0 1
 XP5_004 SquadRush0 1
 XP3_Desert TankSuperiority0 1
+XP3_Shield TankSuperiority0 1
 XP3_Valley TankSuperiority0 1
 COOP_002 TeamDeathMatch0 1
 COOP_006 TeamDeathMatch0 1

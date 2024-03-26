@@ -35,6 +35,7 @@ This is the changelog for the version V2.9 Don't forget to [join us on Discord](
 * XP4_FD Scavenger by Volbeat13
 * XP4_Parl Scavenger by Volbeat13
 * XP4_Quake Scavenger by Volbeat13
+* XP3_Shield TankSuperiority by Augusta
 
 ### Updated maps
 * Conquest Small MP_001 by IgorUA
