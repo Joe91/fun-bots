@@ -84,7 +84,7 @@ Config = {
 	-- VEHICLE 
 	UseVehicles = true,					-- Bots can use vehicles 
 	UseAirVehicles = true,				-- Bots can use air-vehicles 
-	UseJets = true,						-- Bots can use jets
+	UseJets = true,						-- Bots can use jets 
 	MaxBotsPerVehicle = 3,				-- Maximum number of Bots in a vehicle 
 	FovVehicleForShooting = 180,		-- Degrees of FOV of Non AA - Vehicles 
 	FovVerticleVehicleForShooting = 60,	-- Degrees of vertical FOV of Non AA - Vehicles 
@@ -137,7 +137,6 @@ Config = {
 	SpeedFactor = 1.0,					-- Reduces the movement speed. 1 = normal, 0 = standing 
 	SpeedFactorAttack = 0.6,			-- Reduces the movement speed while attacking. 1 = normal, 0 = standing 
 	SpeedFactorVehicleAttack = 0.6,		-- Reduces the movement speed while attacking in vehicles. 1 = normal, 0 = standing 
-	UseRandomNames = false,				-- Changes names of the bots on every new round. Experimental right now... 
 	MoveSidewards = true,				-- Bots move sidewards 
 	MaxStraigtCycle = 10.0,				-- Max time bots move straight, before sidewards-movement (in sec) 
 	MaxSideCycle = 5.0,					-- Max time bots move sidewards, before straight-movement (in sec) 

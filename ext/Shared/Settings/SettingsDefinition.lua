@@ -1402,17 +1402,6 @@ SettingsDefinition = {
 			Category = "ADVANCED"
 		},
 		{
-			Name = "UseRandomNames",
-			Text = "Use Random Names",
-			---@type Type|integer
-			Type = Type.Boolean,
-			Value = Config.UseRandomNames,
-			Description = "Changes names of the bots on every new round. Experimental right now...",
-			Default = false,
-			UpdateFlag = UpdateFlag.None,
-			Category = "ADVANCED"
-		},
-		{
 			Name = "MoveSidewards",
 			Text = "Move Sidewards",
 			---@type Type|integer

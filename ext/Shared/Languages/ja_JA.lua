@@ -233,8 +233,6 @@ Language:add(code, "Speed factor", "スピードファクター")
 Language:add(code, "Reduces the movement speed. 1 = normal, 0 = standing", "移動速度を低下させます。 1 = 通常、0 = 立っています。")
 Language:add(code, "Speed factor attack", "スピードファクター攻撃")
 Language:add(code, "Reduces the movement speed while attacking. 1 = normal, 0 = standing", "攻撃中の移動速度を低下させる。 1 = 通常、0 = 立っています。")
-Language:add(code, "Use Random Names", "ランダムな名前を使用する")
-Language:add(code, "Changes names of the bots on every new round. Experimental right now...", "新しいラウンドごとにボットの名前を変更します。ただいま実験中…")
 
 -- EXPERT
 Language:add(code, "Bot first shot delay", "ボットの最初のショットの遅延")

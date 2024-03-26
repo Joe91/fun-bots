@@ -233,8 +233,6 @@ Language:add(code, "Speed factor", "Facteur de vitesse")
 Language:add(code, "Reduces the movement speed. 1 = normal, 0 = standing", "Réduit la vitesse de déplacement. 1 = normal, 0 = debout")
 Language:add(code, "Speed factor attack", "Attaque de facteur de vitesse")
 Language:add(code, "Reduces the movement speed while attacking. 1 = normal, 0 = standing", "Réduit la vitesse de déplacement pendant l attaque. 1 = normal, 0 = debout")
-Language:add(code, "Use Random Names", "Utiliser des noms aléatoires")
-Language:add(code, "Changes names of the bots on every new round. Experimental right now...", "Change les noms des robots à chaque nouveau tour. Expérimental en ce moment..")
 
 -- EXPERT
 Language:add(code, "Bot first shot delay", "Retard du premier tir du bot")

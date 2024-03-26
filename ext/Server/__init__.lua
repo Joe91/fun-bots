@@ -92,7 +92,6 @@ function FunBotServer:OnExtensionLoaded()
 	self:RegisterHooks()
 	self:RegisterCustomEvents()
 	self:RegisterCallbacks()
-	-- self:ScambleBotNames() -- Use random names at least once per start.
 	self:CreateBotAttributes()
 	self:OnModReloaded()
 end
@@ -299,11 +298,6 @@ function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPe
 	Globals.GameMode = p_GameMode
 	local s_CustomGameMode = ServerUtils:GetCustomGameModeName()
 
-	-- Randomize used names.
-	if Config.UseRandomNames then
-		-- self:ScambleBotNames()
-	end
-
 	m_WeaponList:OnLevelLoaded()
 
 	-- Only use name of Level.
@@ -321,7 +315,9 @@ function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPe
 	self:RegisterInputRestrictionEventCallbacks()
 	self:SetGameMode(p_GameMode, p_LevelName)
 	self:SetMaxBotsPerTeam(p_GameMode)
-	self:DestroyObstacles(p_LevelName, p_GameMode)
+	if Registry.COMMON.DESTROY_OBSTACLES_ON_START then
+		self:DestroyObstacles(p_LevelName, p_GameMode)
+	end
 
 	m_NodeEditor:OnLevelLoaded(p_LevelName, p_GameMode, s_CustomGameMode)
 	m_GameDirector:OnLevelLoaded()
@@ -330,18 +326,18 @@ function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPe
 end
 
 function FunBotServer:DestroyObstacles(p_LevelName, p_GameMode)
-	local positions = {}
+	local s_Positions = {}
 
 	if p_LevelName == "XP4_Quake" and p_GameMode == "ConquestLarge0" then
-		positions[#positions + 1] = Vec3(-172.886551, 182.112259, 96.317276)
-		positions[#positions + 1] = Vec3(-159.28, 173.89, 99.74)
-		positions[#positions + 1] = Vec3(-74.64, 178.01, 42.606)
-		positions[#positions + 1] = Vec3(-85.23, 178.01, 44.077)
-		positions[#positions + 1] = Vec3(-89.42, 178.40, 50.82)
+		s_Positions[#s_Positions + 1] = Vec3(-172.89, 182.11, 96.32)
+		s_Positions[#s_Positions + 1] = Vec3(-159.28, 173.89, 99.74)
+		s_Positions[#s_Positions + 1] = Vec3(-74.64, 178.01, 42.61)
+		s_Positions[#s_Positions + 1] = Vec3(-85.23, 178.01, 44.08)
+		s_Positions[#s_Positions + 1] = Vec3(-89.42, 178.40, 50.82)
 	end
 
-	for i, position in ipairs(positions) do
-		self:SpawnGrenade(position)
+	for _, l_Position in ipairs(s_Positions) do
+		self:SpawnGrenade(l_Position)
 	end
 end
 
@@ -755,13 +751,6 @@ function FunBotServer:SetRespawnDelay()
 		Globals.RespawnDelay = self.m_PlayerKilledDelay * s_RespawnTimeModifier
 	else
 		Globals.RespawnDelay = 10.0
-	end
-end
-
-function FunBotServer:ScambleBotNames()
-	for i = #BotNames, 2, -1 do
-		local j = math.random(i)
-		BotNames[i], BotNames[j] = BotNames[j], BotNames[i]
 	end
 end
 

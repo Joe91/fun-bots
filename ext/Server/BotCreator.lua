@@ -74,6 +74,7 @@ function BotCreator:CreateBotAttributes()
 	m_Logger:Write("BotAttributes of " .. #self.AllBotAttributs .. " Bots created")
 end
 
+---@param p_BotKit BotKits|integer
 function BotCreator:GetNextBotName(p_BotKit)
 	local s_PossibleNames = {}
 	for l_Index, l_Attributes in pairs(self.BotAttributesByClass[p_BotKit]) do
@@ -102,6 +103,7 @@ function BotCreator:GetNextBotName(p_BotKit)
 	return s_SelectedName
 end
 
+---@param p_Bot Bot
 function BotCreator:SetAttributesToBot(p_Bot)
 	local s_Attributes = self:GetAttributesOfBot(p_Bot.m_Name)
 	p_Bot.m_Kit = s_Attributes.Kit
@@ -114,6 +116,7 @@ function BotCreator:SetAttributesToBot(p_Bot)
 	p_Bot.m_PrefVehicle = s_Attributes.PrefVehicle
 end
 
+---@param p_BotName string
 function BotCreator:RemoveActiveBot(p_BotName)
 	for l_Index, l_Name in pairs(self.ActiveBotNames) do
 		if (l_Name == p_BotName) then
@@ -122,6 +125,7 @@ function BotCreator:RemoveActiveBot(p_BotName)
 	end
 end
 
+---@param p_BotName string
 function BotCreator:GetAttributesOfBot(p_BotName)
 	for _, l_Attributes in pairs(self.AllBotAttributs) do
 		if l_Attributes.Name == p_BotName then

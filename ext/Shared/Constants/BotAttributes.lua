@@ -3,7 +3,7 @@
 ---@field Kit BotKits|integer
 ---@field Color BotColors|integer
 ---@field Skill number
----@field Behaviour BotBehavior[]|integer
+---@field Behaviour BotBehavior|integer
 ---@field ReactionTime integer
 ---@field Accuracy integer
 ---@field PrefWeapon string

@@ -105,7 +105,6 @@ end
 
 function ClientBotManager:DoRaycast(p_Pos1, p_Pos2, p_InObjectPos1, p_InObjectPos2)
 	if Registry.COMMON.USE_COLLISION_RAYCASTS then
-		-- if p_InObjectPos1 or p_InObjectPos2 then
 		local s_DeltaPos = p_Pos2 - p_Pos1
 		s_DeltaPos = s_DeltaPos:Normalize()
 
@@ -130,7 +129,7 @@ function ClientBotManager:DoRaycast(p_Pos1, p_Pos2, p_InObjectPos1, p_InObjectPo
 		end
 		---@cast s_RaycastFlags RayCastFlags
 
-		local s_RayHits = RaycastManager:CollisionRaycast(p_Pos1, p_Pos2, 10, s_MaterialFlags, s_RaycastFlags)
+		local s_RayHits = RaycastManager:CollisionRaycast(p_Pos1, p_Pos2, 5, s_MaterialFlags, s_RaycastFlags) -- only 5 hits supported at the moment
 
 		if p_InObjectPos2 then
 			if #s_RayHits > 0 and #s_RayHits < 5 and s_RayHits[#s_RayHits].rigidBody and s_RayHits[#s_RayHits].rigidBody:Is("DynamicPhysicsEntity") then -- right now only 5 hits possible. abort if 5 hits

@@ -29,6 +29,8 @@ Registry = {
 		DONT_SPAWN_BOTS_ON_LAST_CONQUEST_TICKET = true,
 		-- Valid keys can be found here: https://docs.veniceunleashed.net/vext/ref/fb/inputdevicekeys/.
 		BOT_COMMAND_KEY = InputDeviceKeys.IDK_LeftAlt,
+		-- Destroy obstacles on level loaded (recommended for the affected maps)
+		DESTROY_OBSTACLES_ON_START = true,
 	},
 	-- Version and Release related variables.
 	-- Variables related to the current build version, version and the type of version.
