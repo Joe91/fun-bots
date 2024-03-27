@@ -6,6 +6,7 @@ specific SQL instructions or inserting values in the database itself. All functi
 
 import os
 import sqlite3
+import json
 
 from loguru import logger
 
@@ -136,6 +137,11 @@ def set_traces_files(cursor: sqlite3.Cursor) -> None:
                     format(item, ".6f") if isinstance(item, float) else str(item)
                     for item in line[1:]
                 ]
+                dataString = outList[-1]
+                if "{" in dataString and "}" in dataString:
+                    data_dict = json.loads(dataString)
+                    sorted_data_keys = json.dumps({k: data_dict[k] for k in sorted(data_dict)}, separators=(',', ':'))
+                    outList[-1] = sorted_data_keys
                 out_file.write(";".join(outList) + "\n")
 
 
