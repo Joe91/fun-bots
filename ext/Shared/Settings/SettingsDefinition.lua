@@ -779,6 +779,17 @@ SettingsDefinition = {
 			Category = "BEHAVIOUR"
 		},
 		{
+			Name = "BotsReviveBots",
+			Text = "Bots Revive Bots",
+			---@type Type|integer
+			Type = Type.Boolean,
+			Value = Config.BotsReviveBots,
+			Description = "Bots revive other Bots",
+			Default = true,
+			UpdateFlag = UpdateFlag.None,
+			Category = "BEHAVIOUR"
+		},
+		{
 			Name = "BotsThrowGrenades",
 			Text = "Bots throw grenades",
 			---@type Type|integer

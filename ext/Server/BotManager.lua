@@ -26,6 +26,7 @@ function BotManager:__init()
 	---`playerName:string[]`
 	self._ActivePlayers = {}
 	self._BotAttackBotTimer = 0.0
+	self._BotReviveBotTimer = 0.0
 	self._DestroyBotsTimer = 0.0
 	---@type string[]
 	---`BotName[]`
@@ -34,6 +35,7 @@ function BotManager:__init()
 	---@type string[]
 	---`BotName[]`
 	self._BotBotAttackList = {}
+	self._BotBotReviveList = {}
 	self._RaycastsPerActivePlayer = 0
 	---@type table<string, boolean>
 	---`[BotName] -> boolean`
@@ -80,6 +82,15 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 		end
 
 		self._BotAttackBotTimer = self._BotAttackBotTimer + p_DeltaTime
+	end
+
+	if Config.BotsReviveBots and self._InitDone then
+		if self._BotReviveBotTimer >= Registry.GAME_RAYCASTING.BOT_BOT_REVICE_INTERVAL then
+			self._BotReviveBotTimer = 0.0
+			self:_CheckForBotBotRevive()
+		end
+
+		self._BotReviveBotTimer = self._BotReviveBotTimer + p_DeltaTime
 	end
 
 	if #self._BotsToDestroy > 0 then
@@ -1218,6 +1229,97 @@ function BotManager:_CheckForBotBotAttack()
 	self._BotCheckState = {}
 	self._ConnectionCheckState = {}
 	self._BotBotAttackList = {}
+end
+
+function BotManager:_CheckForBotBotRevive()
+	-- Not enough on either team and no players to use.
+	if #self._ActivePlayers == 0 then
+		return
+	end
+
+	-- Create tables and scramble them.
+	local s_DeadBots = {}
+	local s_MedicBots = {}
+	local s_BotsAlreadInRevive = {}
+
+	local s_RaycastEntries = {}
+	for _, l_Bot in ipairs(self._Bots) do
+		if not l_Bot.m_InVehicle then
+			if l_Bot.m_Player.corpse and not l_Bot.m_Player.corpse.isDead then
+				-- bot to revive found
+				table.insert(s_DeadBots, l_Bot)
+			elseif l_Bot.m_Player.soldier and l_Bot.m_Kit == BotKits.Assault then
+				if l_Bot._ActiveAction ~= BotActionFlags.ReviveActive then
+					table.insert(s_MedicBots, l_Bot)
+				elseif l_Bot._ShootPlayerName ~= '' then
+					table.insert(s_BotsAlreadInRevive, l_Bot._ShootPlayerName)
+				end
+			end
+		end
+	end
+
+	-- remove bots, that get already revived
+	local s_BotsToRevive = {}
+	for _, l_DeadBot in ipairs(s_DeadBots) do
+		local s_BotFound = false
+		for _, l_BotName in pairs(s_BotsAlreadInRevive) do
+			if l_BotName == l_DeadBot.m_Name then
+				s_BotFound = true
+				break
+			end
+		end
+		if not s_BotFound then
+			table.insert(s_BotsToRevive, l_DeadBot)
+		end
+	end
+
+	-- Randomize the lists.
+	for i = #s_MedicBots, 2, -1 do
+		local j = math.random(i)
+		s_MedicBots[i], s_MedicBots[j] = s_MedicBots[j], s_MedicBots[i]
+	end
+	-- Randomize the lists.
+	for i = #s_BotsToRevive, 2, -1 do
+		local j = math.random(i)
+		s_BotsToRevive[i], s_BotsToRevive[j] = s_BotsToRevive[j], s_BotsToRevive[i]
+	end
+
+	local s_NrOfRaycastsDone = 0
+	local s_MaterialFlags = 0
+	local s_RaycastFlags = RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter
+
+	if #s_MedicBots > 0 and #s_BotsToRevive > 0 then
+		for _, l_DeadBot in ipairs(s_BotsToRevive) do
+			local s_DeadBotTeam = l_DeadBot.m_Player.teamid
+			for _, l_MedicBot in ipairs(s_MedicBots) do
+				if l_MedicBot.m_Player.teamid == s_DeadBotTeam then
+					local s_PosBody = l_DeadBot.m_Player.corpse.physicsEntityBase.position:Clone()
+					local s_PosMedic = l_MedicBot.m_Player.soldier.worldTransform.trans:Clone()
+					local s_Distance = s_PosBody:Distance(s_PosMedic)
+					if s_Distance < Registry.BOT.REVIVE_DISTANCE then
+						-- insert positions
+						s_PosBody.y = s_PosBody.y + 0.2
+						s_PosMedic.y = s_PosMedic.y + 1.6
+
+						local s_Result = RaycastManager:CollisionRaycast(s_PosMedic, s_PosBody, 1, s_MaterialFlags, s_RaycastFlags)
+						s_NrOfRaycastsDone = s_NrOfRaycastsDone + 1
+						if #s_Result == 0 then
+							-- free sight
+							l_MedicBot:Revive(l_DeadBot.m_Player)
+						end
+						if s_NrOfRaycastsDone >= Registry.GAME_RAYCASTING.BOT_BOT_REVIVE_MAX_RAYCASTS then
+							goto endOfCheck
+						end
+						if #s_Result == 0 then
+							goto nextBody
+						end
+					end
+				end
+			end
+			::nextBody::
+		end
+	end
+	::endOfCheck::
 end
 
 ---@param p_Damage integer

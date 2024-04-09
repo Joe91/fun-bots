@@ -71,8 +71,12 @@ Registry = {
 		RAYCAST_INTERVAL_ENEMY_CHECK = 0.03,
 		-- How often are the connections for a bot-bot-attack checked.
 		BOT_BOT_CHECK_INTERVAL = 0.05,
+		-- Hof often Bot-Revive-Bot-Raycast-chcks are done (costs server performance)
+		BOT_BOT_REVICE_INTERVAL = 0.5,
 		-- Max checks per cycle.
-		BOT_BOT_MAX_CHECKS = 30
+		BOT_BOT_MAX_CHECKS = 30,
+		-- Max Raycaststs Bot-Bot-Revive
+		BOT_BOT_REVIVE_MAX_RAYCASTS = 15
 	},
 	GAME_DIRECTOR = {
 		UPDATE_OBJECTIVES_CYCLE = 1.5,
@@ -125,6 +129,8 @@ Registry = {
 	BOT = {
 		-- Update cycle fast.
 		BOT_FAST_UPDATE_CYCLE = 0.03, -- Equals 30 fps.
+		-- Distance a bot tries to revive a bot.
+		REVIVE_DISTANCE = 15.0,
 		-- Update cycle.
 		BOT_UPDATE_CYCLE = 0.1,
 		-- - distance the bots have to reach in height to continue with next Waypoint.
