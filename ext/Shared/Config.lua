@@ -76,6 +76,7 @@ Config = {
 	BotCanKillHimself = false,			-- Bot takes fall damage or explosion-damage from own frags 
 	TeleportIfStuck = true,				-- Bot teleport to their target if they are stuck 
 	BotsRevive = true,					-- Bots revive other players 
+	BotsReviveBots = true,				-- Bots revive other Bots 
 	BotsThrowGrenades = true,			-- Bots throw grenades at enemies 
 	BotsDeploy = true,					-- Bots deploy ammo and medkits 
 	DeployCycle = 60,					-- Time between deployment of bots in seconds 
