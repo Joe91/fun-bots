@@ -1290,9 +1290,9 @@ function BotManager:_CheckForBotBotRevive()
 
 	if #s_MedicBots > 0 and #s_BotsToRevive > 0 then
 		for _, l_DeadBot in ipairs(s_BotsToRevive) do
-			local s_MedicTeam = l_DeadBot.m_Player.teamid
+			local s_DeadBotTeam = l_DeadBot.m_Player.teamid
 			for _, l_MedicBot in ipairs(s_MedicBots) do
-				if l_DeadBot.m_Player.teamid == s_MedicTeam then
+				if l_MedicBot.m_Player.teamid == s_DeadBotTeam then
 					local s_PosBody = l_DeadBot.m_Player.corpse.physicsEntityBase.position:Clone()
 					local s_PosMedic = l_MedicBot.m_Player.soldier.worldTransform.trans:Clone()
 					local s_Distance = s_PosBody:Distance(s_PosMedic)
@@ -1306,9 +1306,8 @@ function BotManager:_CheckForBotBotRevive()
 						if #s_Result == 0 then
 							-- free sight
 							l_MedicBot:Revive(l_DeadBot.m_Player)
-							print("revive Bot " .. l_DeadBot.m_Name)
 						end
-						if s_NrOfRaycastsDone >= 20 then
+						if s_NrOfRaycastsDone >= Registry.GAME_RAYCASTING.BOT_BOT_REVIVE_MAX_RAYCASTS then
 							goto endOfCheck
 						end
 						if #s_Result == 0 then
@@ -1321,7 +1320,6 @@ function BotManager:_CheckForBotBotRevive()
 		end
 	end
 	::endOfCheck::
-	-- print(s_NrOfRaycastsDone)
 end
 
 ---@param p_Damage integer

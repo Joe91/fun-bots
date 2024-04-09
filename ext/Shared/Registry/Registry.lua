@@ -74,7 +74,9 @@ Registry = {
 		-- Hof often Bot-Revive-Bot-Raycast-chcks are done (costs server performance)
 		BOT_BOT_REVICE_INTERVAL = 0.5,
 		-- Max checks per cycle.
-		BOT_BOT_MAX_CHECKS = 30
+		BOT_BOT_MAX_CHECKS = 30,
+		-- Max Raycaststs Bot-Bot-Revive
+		BOT_BOT_REVIVE_MAX_RAYCASTS = 15
 	},
 	GAME_DIRECTOR = {
 		UPDATE_OBJECTIVES_CYCLE = 1.5,
