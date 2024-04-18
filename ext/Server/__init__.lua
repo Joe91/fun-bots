@@ -8,10 +8,12 @@ require('__shared/Registry/RegistryManager')
 
 require('__shared/Debug')
 require('__shared/Config')
+require('__shared/Constants/BotBehavior')
 require('__shared/Constants/BotColors')
 require('__shared/Constants/BotNames')
 require('__shared/Constants/BotKits')
 require('__shared/Constants/BotWeapons')
+require('__shared/Constants/BotAttributes')
 require('__shared/Constants/GmSpecialWeapons')
 require('__shared/Constants/WeaponSets')
 require('__shared/Constants/WeaponTypes')
@@ -48,6 +50,8 @@ local m_Language = require('__shared/Language')
 local m_SettingsManager = require('SettingsManager')
 ---@type BotManager
 local m_BotManager = require('BotManager')
+---@type BotCreator
+local m_BotCreator = require('BotCreator')
 ---@type BotSpawner
 local m_BotSpawner = require('BotSpawner')
 ---@type WeaponList
@@ -88,7 +92,7 @@ function FunBotServer:OnExtensionLoaded()
 	self:RegisterHooks()
 	self:RegisterCustomEvents()
 	self:RegisterCallbacks()
-	self:ScambleBotNames() -- Use random names at least once per start.
+	self:CreateBotAttributes()
 	self:OnModReloaded()
 end
 
@@ -111,12 +115,15 @@ function FunBotServer:RegisterEvents()
 	Events:Subscribe('Player:Chat', self, self.OnPlayerChat)
 	Events:Subscribe('Player:Left', self, self.OnPlayerLeft)
 	Events:Subscribe('Player:Destroyed', self, self.OnPlayerDestroyed)
+	Events:Subscribe('Soldier:HealthAction', self, self.OnSoldierHealthAction)
 
 	Events:Subscribe('CapturePoint:Lost', self, self.OnCapturePointLost)
 	Events:Subscribe('CapturePoint:Captured', self, self.OnCapturePointCaptured)
 	Events:Subscribe('Player:EnteredCapturePoint', self, self.OnPlayerEnteredCapturePoint)
+	Events:Subscribe('Player:ExitedCapturePoint', self, self.OnPlayerExitedCapturePoint)
 	Events:Subscribe('Vehicle:SpawnDone', self, self.OnVehicleSpawnDone)
 	Events:Subscribe('Vehicle:Destroyed', self, self.OnVehicleDestroyed)
+	Events:Subscribe('Vehicle:Unspawn', self, self.OnVehicleUnspawn)
 	Events:Subscribe('Vehicle:Damage', self, self.OnVehicleDamage)
 	Events:Subscribe('Vehicle:Enter', self, self.OnVehicleEnter)
 	Events:Subscribe('Vehicle:Exit', self, self.OnVehicleExit)
@@ -144,6 +151,8 @@ function FunBotServer:RegisterCustomEvents()
 	NetEvents:Subscribe('ConsoleCommands:SetConfig', self, self.OnConsoleCommandSetConfig)
 	NetEvents:Subscribe('ConsoleCommands:SaveAll', self, self.OnConsoleCommandSaveAll)
 	NetEvents:Subscribe('ConsoleCommands:Restore', self, self.OnConsoleCommandRestore)
+	NetEvents:Subscribe('ConsoleCommands:SpawnGrenade', self, self.OnSpawnGrenade)
+	NetEvents:Subscribe('ConsoleCommands:DestroyObstaclesTest', self, self.OnDestroyObstaclesTest)
 	NetEvents:Subscribe("SpawnPointHelper:TeleportTo", self, self.OnTeleportTo)
 	m_NodeEditor:RegisterCustomEvents()
 end
@@ -289,11 +298,6 @@ function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPe
 	Globals.GameMode = p_GameMode
 	local s_CustomGameMode = ServerUtils:GetCustomGameModeName()
 
-	-- Randomize used names.
-	if Config.UseRandomNames then
-		self:ScambleBotNames()
-	end
-
 	m_WeaponList:OnLevelLoaded()
 
 	-- Only use name of Level.
@@ -311,11 +315,30 @@ function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPe
 	self:RegisterInputRestrictionEventCallbacks()
 	self:SetGameMode(p_GameMode, p_LevelName)
 	self:SetMaxBotsPerTeam(p_GameMode)
+	if Registry.COMMON.DESTROY_OBSTACLES_ON_START then
+		self:DestroyObstacles(p_LevelName, p_GameMode)
+	end
 
 	m_NodeEditor:OnLevelLoaded(p_LevelName, p_GameMode, s_CustomGameMode)
 	m_GameDirector:OnLevelLoaded()
 	m_AirTargets:OnLevelLoaded()
 	m_BotSpawner:OnLevelLoaded(p_Round)
+end
+
+function FunBotServer:DestroyObstacles(p_LevelName, p_GameMode)
+	local s_Positions = {}
+
+	if p_LevelName == "XP4_Quake" and p_GameMode == "ConquestLarge0" then
+		s_Positions[#s_Positions + 1] = Vec3(-172.89, 182.11, 96.32)
+		s_Positions[#s_Positions + 1] = Vec3(-159.28, 173.89, 99.74)
+		s_Positions[#s_Positions + 1] = Vec3(-74.64, 178.01, 42.61)
+		s_Positions[#s_Positions + 1] = Vec3(-85.23, 178.01, 44.08)
+		s_Positions[#s_Positions + 1] = Vec3(-89.42, 178.40, 50.82)
+	end
+
+	for _, l_Position in ipairs(s_Positions) do
+		self:SpawnGrenade(l_Position)
+	end
 end
 
 ---VEXT Shared Level:Destroy Event
@@ -413,6 +436,13 @@ function FunBotServer:OnPlayerDestroyed(p_Player)
 	m_AirTargets:OnPlayerDestroyed(p_Player)
 end
 
+---VEXT Server Soldier:HealthAction Event
+---@param p_Soldier SoldierEntity
+---@param p_Action HealthStateAction|integer
+function FunBotServer:OnSoldierHealthAction(p_Soldier, p_Action)
+	m_BotManager:OnSoldierHealthAction(p_Soldier, p_Action)
+end
+
 -- =============================================
 -- CapturePoint Events.
 -- =============================================
@@ -433,7 +463,14 @@ end
 ---@param p_Player Player
 ---@param p_CapturePoint Entity @`CapturePointEntity`
 function FunBotServer:OnPlayerEnteredCapturePoint(p_Player, p_CapturePoint)
-	m_GameDirector:OnPlayerEnteredCapturePoint(p_Player, p_CapturePoint)
+	m_GameDirector:OnPlayerEnterExitCapturePoint(p_Player, p_CapturePoint)
+end
+
+---VEXT Server Player:EnteredCapturePoint Event
+---@param p_Player Player
+---@param p_CapturePoint Entity @`CapturePointEntity`
+function FunBotServer:OnPlayerExitedCapturePoint(p_Player, p_CapturePoint)
+	m_GameDirector:OnPlayerEnterExitCapturePoint(p_Player, p_CapturePoint)
 end
 
 -- =============================================
@@ -448,6 +485,10 @@ end
 
 function FunBotServer:OnVehicleDestroyed(p_VehicleEntity, p_VehiclePoints, p_HotTeam)
 	m_GameDirector:OnVehicleDestroyed(p_VehicleEntity, p_VehiclePoints, p_HotTeam)
+end
+
+function FunBotServer:OnVehicleUnspawn(p_VehicleEntity, p_VehiclePoints, p_HotTeam)
+	m_GameDirector:OnVehicleUnspawn(p_VehicleEntity, p_VehiclePoints, p_HotTeam)
 end
 
 ---VEXT Server Vehicle:Damage Event
@@ -588,6 +629,37 @@ function FunBotServer:OnConsoleCommandRestore(p_Player, p_Args)
 	m_Console:OnConsoleCommandRestore(p_Player, p_Args)
 end
 
+function FunBotServer:OnSpawnGrenade(p_Player, p_Args)
+	local position = p_Player.soldier.transform.trans:Clone()
+	position.y = position.y + 0.1
+
+	m_Logger:Write("Grenade spawn at " .. tostring(position))
+	self:SpawnGrenade(position)
+end
+
+function FunBotServer:OnDestroyObstaclesTest(p_Player, p_Args)
+	self:DestroyObstacles(p_Args[1], p_Args[2])
+end
+
+function FunBotServer:SpawnGrenade(p_Position)
+	resource = ResourceManager:SearchForDataContainer('Weapons/M67/M67_Projectile')
+
+	local creationParams = EntityCreationParams()
+	creationParams.transform = LinearTransform()
+	creationParams.networked = true
+	creationParams.transform.trans = p_Position
+
+	local createdBus = EntityManager:CreateEntitiesFromBlueprint(resource, creationParams)
+
+	if createdBus == nil then
+		return
+	end
+
+	for _, entity in pairs(createdBus.entities) do
+		entity:Init(Realm.Realm_ClientAndServer, true)
+	end
+end
+
 function FunBotServer:OnTeleportTo(p_Player, p_Transform)
 	if p_Player == nil or p_Player.soldier == nil then
 		return
@@ -682,11 +754,8 @@ function FunBotServer:SetRespawnDelay()
 	end
 end
 
-function FunBotServer:ScambleBotNames()
-	for i = #BotNames, 2, -1 do
-		local j = math.random(i)
-		BotNames[i], BotNames[j] = BotNames[j], BotNames[i]
-	end
+function FunBotServer:CreateBotAttributes()
+	m_BotCreator:CreateBotAttributes()
 end
 
 function FunBotServer:DetectSpecialMods()
@@ -759,7 +828,7 @@ function FunBotServer:SetMaxBotsPerTeam(p_GameMode)
 		Globals.MaxBotsPerTeam = Config.MaxBotsPerTeamS
 	elseif p_GameMode == 'ConquestLarge0' then
 		Globals.MaxBotsPerTeam = Config.MaxBotsPerTeamCl
-	elseif p_GameMode == 'ConquestSmall0' or p_GameMode == 'TankSuperiority0' or p_GameMode == 'BFLAG' then
+	elseif p_GameMode == 'ConquestSmall0' or p_GameMode == 'TankSuperiority0' or p_GameMode == 'BFLAG' or p_GameMode == 'BFLAG0' then
 		Globals.MaxBotsPerTeam = Config.MaxBotsPerTeamCs
 	elseif p_GameMode == 'ConquestAssaultLarge0' then
 		Globals.MaxBotsPerTeam = Config.MaxBotsPerTeamCal
@@ -809,6 +878,7 @@ function FunBotServer:SetGameMode(p_GameMode, p_LevelName)
 		p_GameMode == 'ConquestAssaultSmall0' or
 		p_GameMode == 'ConquestAssaultSmall1' or
 		p_GameMode == 'TankSuperiority0' or
+		p_GameMode == "BFLAG0" or
 		p_GameMode == 'BFLAG' then
 		Globals.IsConquest = true
 	else

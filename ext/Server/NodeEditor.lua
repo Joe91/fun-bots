@@ -47,6 +47,7 @@ function NodeEditor:RegisterCustomEvents()
 	NetEvents:Subscribe('NodeEditor:AddMcom', self, self.OnAddMcom)
 	NetEvents:Subscribe('NodeEditor:AddVehicle', self, self.OnAddVehicle)
 	NetEvents:Subscribe('NodeEditor:ExitVehicle', self, self.OnExitVehicle)
+	NetEvents:Subscribe('NodeEditor:CustomAction', self, self.OnCustomAction)
 	NetEvents:Subscribe('NodeEditor:AddVehiclePath', self, self.OnAddVehiclePath)
 	NetEvents:Subscribe('NodeEditor:AddObjective', self, self.OnAddObjective)
 	NetEvents:Subscribe('NodeEditor:RemoveObjective', self, self.OnRemoveObjective)
@@ -195,6 +196,40 @@ function NodeEditor:OnExitVehicle(p_Player, p_Args)
 	end
 
 	return
+end
+
+function NodeEditor:OnCustomAction(p_Player, p_Args)
+	self.m_CommoRoseActive = false
+
+	if not p_Player.soldier then
+		self:Log(p_Player, 'Player must be alive')
+		return
+	end
+
+	local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
+
+	if #s_Selection ~= 1 then
+		self:Log(p_Player, 'Must select one node')
+		return
+	end
+
+	if #p_Args == 0 then
+		self:Log(p_Player, 'Must contain action type')
+		return
+	end
+
+	for i = 1, #s_Selection do
+		local action = {
+			type = p_Args[1],
+			time = 5.0,
+			inputs = {},
+			yaw = p_Player.input.authoritativeAimingYaw,
+			pitch = p_Player.input.authoritativeAimingPitch,
+		}
+
+		s_Selection[i].Data.Action = action
+		self:Log(p_Player, 'Updated Waypoint: %s', s_Selection[i].ID)
+	end
 end
 
 function NodeEditor:OnAddVehiclePath(p_Player, p_Args)
@@ -923,12 +958,20 @@ function NodeEditor:OnLevelLoaded(p_LevelName, p_GameMode, p_CustomGameMode)
 			s_GameModeToLoad = 'TeamDeathMatch0' -- Paths are compatible.
 		end
 
+		if p_GameMode == 'BFLAG0' then
+			s_GameModeToLoad = 'BFLAG'
+		end
+
 		if p_LevelName == 'MP_Subway' and p_GameMode == 'ConquestSmall0' then
 			s_GameModeToLoad = 'ConquestLarge0' -- Paths are the same.
 		end
 
+		if p_LevelName == 'XP5_003' and p_GameMode == 'ConquestLarge0' then
+			s_GameModeToLoad = 'ConquestSmall0' -- Paths are the same.
+		end
+
 		if p_LevelName == 'XP4_Rubble' and p_GameMode == 'ConquestAssaultLarge0' then
-			s_GameModeToLoad = 'ConquestAssaultSmall0'
+			s_GameModeToLoad = 'ConquestAssaultSmall0' -- Paths are the same.
 		end
 	end
 

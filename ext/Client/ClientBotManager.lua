@@ -105,27 +105,44 @@ end
 
 function ClientBotManager:DoRaycast(p_Pos1, p_Pos2, p_InObjectPos1, p_InObjectPos2)
 	if Registry.COMMON.USE_COLLISION_RAYCASTS then
-		local s_MaxHits = 1
+		local s_DeltaPos = p_Pos2 - p_Pos1
+		s_DeltaPos = s_DeltaPos:Normalize()
 
-		if p_InObjectPos1 then
-			s_MaxHits = s_MaxHits + 1
+		if p_InObjectPos1 then -- Start Raycast outside of vehicle
+			p_Pos1 = p_Pos1 + (s_DeltaPos * 3.2)
 		end
 
-		if p_InObjectPos2 then
-			s_MaxHits = s_MaxHits + 1
-		end
+		-- no need to go through bot, since soldier position should already cause the collision
 
-		local s_MaterialFlags = 0 -- MaterialFlags.MfPenetrable | MaterialFlags.MfClientDestructible | MaterialFlags.MfBashable | MaterialFlags.MfSeeThrough | MaterialFlags.MfNoCollisionResponse | MaterialFlags.MfNoCollisionResponseCombined
+		-- describes what doesn't end the raycast on a collision
+		local s_MaterialFlags = MaterialFlags.MfSeeThrough -- windows
+			-- MaterialFlags.MfNoCollisionResponse | -- no effect?
+			-- MaterialFlags.MfNoCollisionResponseCombined | -- no effect?
+			| MaterialFlags.MfPenetrable -- soldiers + solid fences (only with detailed-Mesh-Check)
+			-- MaterialFlags.MfBashable | -- ???
+			| MaterialFlags.MfClientDestructible -- some open fences, some crates
+
 		---@cast s_MaterialFlags MaterialFlags
-		local s_RaycastFlags = RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter
+		local s_RaycastFlags = RayCastFlags.DontCheckWater
+		if Registry.COMMON.USE_DETAILED_MESH_RAYCASTS then
+			s_RaycastFlags = s_RaycastFlags | RayCastFlags.CheckDetailMesh -- needed to detect some fences as shoot-through
+		end
 		---@cast s_RaycastFlags RayCastFlags
 
-		local s_RayHits = RaycastManager:CollisionRaycast(p_Pos1, p_Pos2, s_MaxHits, s_MaterialFlags, s_RaycastFlags)
+		local s_RayHits = RaycastManager:CollisionRaycast(p_Pos1, p_Pos2, 5, s_MaterialFlags, s_RaycastFlags) -- only 5 hits supported at the moment
 
-		if s_RayHits ~= nil and #s_RayHits < s_MaxHits then
-			return true
+		if p_InObjectPos2 then
+			if #s_RayHits > 0 and #s_RayHits < 5 and s_RayHits[#s_RayHits].rigidBody and s_RayHits[#s_RayHits].rigidBody:Is("DynamicPhysicsEntity") then -- right now only 5 hits possible. abort if 5 hits
+				return true
+			else
+				return false
+			end
 		else
-			return false
+			if #s_RayHits > 0 and #s_RayHits < 5 and s_RayHits[#s_RayHits].rigidBody and s_RayHits[#s_RayHits].rigidBody:Is("CharacterPhysicsEntity") then -- right now only 5 hits possible. abort if 5 hits
+				return true
+			else
+				return false
+			end
 		end
 	else
 		if p_InObjectPos1 or p_InObjectPos2 then
@@ -142,6 +159,9 @@ function ClientBotManager:DoRaycast(p_Pos1, p_Pos2, p_InObjectPos1, p_InObjectPo
 		end
 
 		local s_RaycastFlags = RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.IsAsyncRaycast
+		if Registry.COMMON.USE_DETAILED_MESH_RAYCASTS then
+			s_RaycastFlags = s_RaycastFlags | RayCastFlags.CheckDetailMesh -- not sure if this makes a difference for the normal raycast
+		end
 		---@cast s_RaycastFlags RayCastFlags
 		local s_Raycast = RaycastManager:Raycast(p_Pos1, p_Pos2, s_RaycastFlags)
 
@@ -240,7 +260,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	self.m_RaycastTimer = 0
 	local s_CheckCount = 0
 
-	if self.m_Player.soldier ~= nil then -- Alive. Check for enemy bots.
+	if self.m_Player.soldier ~= nil then                       -- Alive. Check for enemy bots.
 		if self.m_AliveTimer < Registry.CLIENT.SPAWN_PROTECTION then -- Wait 2s (spawn-protection).
 			self.m_AliveTimer = self.m_AliveTimer + p_DeltaTime
 			self:SendRaycastResults(s_RaycastResultsToSend)
@@ -321,7 +341,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 			::continue_enemy_loop::
 		end
 	elseif self.m_Player.corpse ~= nil and not self.m_Player.corpse.isDead then -- Dead. Check for revive botsAttackBots.
-		self.m_AliveTimer = 0.5 -- Add a little delay.
+		self.m_AliveTimer = 0.5                                              -- Add a little delay.
 		local s_TeamMates = PlayerManager:GetPlayersByTeam(self.m_Player.teamId)
 
 		if self.m_LastIndex >= #s_TeamMates then

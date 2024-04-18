@@ -35,6 +35,15 @@ function Bot:__init(p_Player)
 	---@type integer
 	self.m_Id = p_Player.id
 
+	-- create some character proporties
+	---@type BotBehavior
+	self.m_Behavior = nil
+	self.m_Reaction = 0.0
+	self.m_Accuracy = 0.0
+	self.m_Skill = 0.0
+	self.m_PrefWeapon = ""
+	self.m_PrefVehicle = ""
+
 	-- Common settings.
 	---@type BotSpawnModes
 	self._SpawnMode = BotSpawnModes.NoRespawn
@@ -63,6 +72,7 @@ function Bot:__init(p_Player)
 	---@type Weapon|nil
 	self.m_Knife = nil
 	self._Respawning = false
+	self.m_HasBeacon = false
 
 	-- Timers.
 	self._UpdateTimer = 0.0
@@ -87,6 +97,7 @@ function Bot:__init(p_Player)
 	self._ActionTimer = 0.0
 	self._BrakeTimer = 0.0
 	self._SpawnProtectionTimer = 0.0
+	self._DefendTimer = 0.0
 	self._SidewardsTimer = 0.0
 	self._KillYourselfTimer = 0.0
 
@@ -130,7 +141,9 @@ function Bot:__init(p_Player)
 	self._ExitVehicleActive = false
 	self._ObstacleRetryCounter = 0
 	self._Objective = ''
+	self._ObjectiveMode = BotObjectiveModes.Default
 	self._OnSwitch = false
+	self._ActiveDelay = 0.0
 
 	-- Vehicle stuff.
 	---@type integer|nil
@@ -178,8 +191,8 @@ function Bot:__init(p_Player)
 	self._ShootWayPoints = {}
 	---@type Vec3[]
 	self._KnifeWayPositions = {}
-	self._Skill = 0.0
-	self._SkillSniper = 0.0
+	self._Accuracy = 0.0
+	self._AccuracySniper = 0.0
 	self._SkillFound = false
 
 	---@type Player|nil
@@ -227,6 +240,19 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 					self:_UpdateInputs()
 					m_BotMovement:UpdateYaw(self)
 					self._UpdateFastTimer = 0.0
+					return
+				end
+
+				-- Timeout after revive. Do nothing.
+				if self._ActiveDelay > 0.0 then
+					self._ActiveDelay = self._ActiveDelay - p_DeltaTime
+					if self._ActiveDelay <= 0.0 then
+						-- accept revive
+						self:_SetInput(EntryInputActionEnum.EIACycleRadioChannel, 1)
+						self:_UpdateInputs()
+						self.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Crouch, true, true)
+						self._SpawnDelayTimer = 0.0 --reset spawn-delay on revive
+					end
 					return
 				end
 
@@ -329,7 +355,7 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 										self._ShootPlayerName = s_Target.name
 										self._ShootPlayer = PlayerManager:GetPlayerByName(self._ShootPlayerName)
 										self._ShootPlayerVehicleType = m_Vehicles:FindOutVehicleType(self._ShootPlayer)
-										self._ShootModeTimer = 0.0
+										self._ShootModeTimer = Config.BotVehicleFireModeDuration
 									else
 										self:AbortAttack()
 									end
@@ -465,6 +491,7 @@ function Bot:Repair(p_Player)
 		self._LastVehicleHealth = 0.0
 		self._ShootPlayer = nil
 		self._ShootPlayerName = p_Player.name
+		self._ShootModeTimer = Registry.BOT.MAX_TIME_TRY_REPAIR
 	end
 end
 
@@ -477,15 +504,15 @@ function Bot:EnterVehicleOfPlayer(p_Player)
 	self._ActiveAction = BotActionFlags.EnterVehicleActive
 	self._ShootPlayer = nil
 	self._ShootPlayerName = p_Player.name
-	self._ShootModeTimer = 0.0
+	self._ShootModeTimer = 12.0
 end
 
-function Bot:UpdateObjective(p_Objective)
+function Bot:UpdateObjective(p_Objective, p_ObjectiveMode)
 	local s_AllObjectives = m_NodeCollection:GetKnownObjectives()
 
 	for l_Objective, _ in pairs(s_AllObjectives) do
 		if l_Objective == p_Objective then
-			self:SetObjective(p_Objective)
+			self:SetObjective(p_Objective, p_ObjectiveMode)
 			break
 		end
 	end
@@ -538,9 +565,9 @@ function Bot:IsReadyToAttack()
 		return false
 	end
 
-	if self._ShootPlayer == nil or (self.m_InVehicle and (self._ShootModeTimer > Config.BotVehicleMinTimeShootAtPlayer)) or
-		(not self.m_InVehicle and (self._ShootModeTimer > Config.BotMinTimeShootAtPlayer)) or
-		(self.m_KnifeMode and self._ShootModeTimer > (Config.BotMinTimeShootAtPlayer / 2)) then
+	if self._ShootPlayer == nil or (self.m_InVehicle and (self._ShootModeTimer < (Config.BotVehicleFireModeDuration - Config.BotVehicleMinTimeShootAtPlayer))) or
+		(not self.m_InVehicle and (self._ShootModeTimer < (Config.BotFireModeDuration - Config.BotMinTimeShootAtPlayer))) or
+		(self.m_KnifeMode and self._ShootModeTimer < (Config.BotFireModeDuration - (Config.BotMinTimeShootAtPlayer * 0.5))) then
 		return true
 	else
 		return false
@@ -598,6 +625,18 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 		return false
 	end
 
+	if p_IgnoreYaw and self._DefendTimer == 0.0 then -- was hit, not in defend-mode, check for special behavior
+		if self.m_Behavior == BotBehavior.DontShootBackHide then
+			self._ActionTimer = 7.0
+			self._ActiveAction = BotActionFlags.HideOnAttack
+			return false
+		elseif self.m_Behavior == BotBehavior.DontShootBackBail then
+			self._ActionTimer = 5.0
+			self._ActiveAction = BotActionFlags.RunAway
+			return false
+		end
+	end
+
 	-- Don't shoot at teammates.
 	if self.m_Player.teamId == p_Player.teamId then
 		return false
@@ -610,7 +649,7 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 	-- Don't attack as driver in some vehicles.
 	if self.m_InVehicle and self.m_Player.controlledEntryId == 0 then
 		if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) then
-			if self._VehicleMovableId == -1 then                                                                   -- Transport-choppers don't attack as driver.
+			if self._VehicleMovableId == -1 then                                                                   -- Tranotort-choppers don't attack as driver.
 				return false
 			elseif self.m_Player.controlledControllable:GetPlayerInEntry(1) ~= nil and not Config.ChopperDriversAttack then -- Don't attack if gunner available and config is false.
 				return false
@@ -733,7 +772,14 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 
 	if p_IgnoreYaw or (s_DifferenceYaw < s_FovHalf and s_Pitch < s_PitchHalf) then
 		if self._Shoot then
-			self._ShootModeTimer = 0.0
+			if self.m_InVehicle then
+				self._ShootModeTimer = Config.BotVehicleFireModeDuration
+			else
+				self._ShootModeTimer = Config.BotFireModeDuration
+				if self.m_Behavior == BotBehavior.LongerAttacking then
+					self._ShootModeTimer = Config.BotFireModeDuration * 1.7
+				end
+			end
 			self._ShootPlayerName = p_Player.name
 			self._ShootPlayer = nil
 			self._KnifeWayPositions = {}
@@ -753,11 +799,7 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 		else
 			self._ShootPlayerName = ''
 			self._ShootPlayer = nil
-			if self.m_InVehicle then
-				self._ShootModeTimer = Config.BotVehicleFireModeDuration
-			else
-				self._ShootModeTimer = Config.BotFireModeDuration
-			end
+			self._ShootModeTimer = 0.0
 			return false
 		end
 	end
@@ -885,14 +927,14 @@ end
 ---@param p_ReducedTiming boolean
 ---@return number
 function Bot:GetFirstShotDelay(p_DistanceToTarget, p_ReducedTiming)
-	local s_Delay = (Config.BotFirstShotDelay + (math.random() * self._Skill)) -- Slower reaction with lower skill. Always use "Skill" for this (independent of Sniper).
+	local s_Delay = (Config.BotFirstShotDelay + (Config.ReactionTime * MathUtils:GetRandom(0.8, 1.2) * self.m_Reaction))
 
 	if p_ReducedTiming then
 		s_Delay = s_Delay * 0.6
 	end
 
-	-- Slower reaction on greater distances. 100 m = 1 extra second.
-	s_Delay = s_Delay + (p_DistanceToTarget * 0.01)
+	-- Slower reaction on greater distances. 100 m = 0.5 extra seconda.
+	s_Delay = s_Delay + (p_DistanceToTarget * 0.005 * (1.0 + ((self.m_Reaction - 0.5) * 0.4))) -- +-20% depending on reaction-characteristic of bot
 	return s_Delay
 end
 
@@ -958,7 +1000,7 @@ function Bot:SetShoot(p_Shoot)
 	self._Shoot = p_Shoot
 end
 
-function Bot:SetObjectiveIfPossible(p_Objective)
+function Bot:SetObjectiveIfPossible(p_Objective, p_ObjectiveMode)
 	if self._Objective ~= p_Objective and p_Objective ~= '' then
 		local s_Point = m_NodeCollection:Get(self._CurrentWayPoint, self._PathIndex)
 
@@ -966,7 +1008,10 @@ function Bot:SetObjectiveIfPossible(p_Objective)
 			local s_Direction, s_BestWaypoint = m_NodeCollection:ObjectiveDirection(s_Point, p_Objective, self.m_InVehicle)
 			if s_BestWaypoint then
 				self._Objective = p_Objective
-				self._InvertPathDirection = (s_Direction == 'Previous')
+				self._ObjectiveMode = p_ObjectiveMode
+				if s_Direction then
+					self._InvertPathDirection = (s_Direction == 'Previous')
+				end
 				return true
 			end
 		end
@@ -974,14 +1019,17 @@ function Bot:SetObjectiveIfPossible(p_Objective)
 	return false
 end
 
-function Bot:SetObjective(p_Objective)
-	if self._Objective ~= p_Objective then
+function Bot:SetObjective(p_Objective, p_ObjectiveMode)
+	if self._Objective ~= p_Objective or p_ObjectiveMode ~= self._ObjectiveMode then
 		self._Objective = p_Objective or ''
+		self._ObjectiveMode = p_ObjectiveMode or BotObjectiveModes.Default
 		local s_Point = m_NodeCollection:Get(self._CurrentWayPoint, self._PathIndex)
 
 		if s_Point ~= nil then
 			local s_Direction = m_NodeCollection:ObjectiveDirection(s_Point, self._Objective, self.m_InVehicle)
-			self._InvertPathDirection = (s_Direction == 'Previous')
+			if s_Direction then
+				self._InvertPathDirection = (s_Direction == 'Previous')
+			end
 		end
 	end
 end
@@ -993,6 +1041,11 @@ end
 ---@return string
 function Bot:GetObjective()
 	return self._Objective
+end
+
+---@return integer|BotObjectiveModes
+function Bot:GetObjectiveMode()
+	return self._ObjectiveMode
 end
 
 ---@return integer|BotSpawnModes
@@ -1035,6 +1088,7 @@ end
 
 function Bot:ResetSpawnVars()
 	self._SpawnDelayTimer = 0.0
+	self._DefendTimer = 0.0
 	self._ObstacleSequenceTimer = 0.0
 	self._ObstacleRetryCounter = 0
 	self._LastWayDistance = 1000.0
@@ -1053,9 +1107,8 @@ function Bot:ResetSpawnVars()
 
 	-- Skill.
 	if not self._SkillFound then
-		local s_TempSkillValue = math.random()
-		self._Skill = Config.BotWorseningSkill * s_TempSkillValue
-		self._SkillSniper = Config.BotSniperWorseningSkill * s_TempSkillValue
+		self._Accuracy = Config.BotWorseningSkill + Config.BotWorseningSkill * (self.m_Accuracy - 0.5)             -- up to 0.5 better or worse
+		self._AccuracySniper = Config.BotSniperWorseningSkill + Config.BotSniperWorseningSkill * (self.m_Accuracy - 0.5) -- up to 0.5 better or worse
 		self._SkillFound = true
 	end
 
@@ -1069,9 +1122,11 @@ function Bot:ResetSpawnVars()
 	self._ActiveAction = BotActionFlags.NoActionActive
 	self._KnifeWayPositions = {}
 	self._OnSwitch = false
+	self._ActiveDelay = 0.0
 	self._TargetPitch = 0.0
 	self._Objective = '' -- Reset objective on spawn, as another spawn-point might have chosen...
 	self._WeaponToUse = BotWeapons.Primary
+	self.m_HasBeacon = false
 
 	-- Reset all input-vars.
 	---@type EntryInputActionEnum
@@ -1278,6 +1333,10 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 		return -3 -- Not allowed to use.
 	end
 
+	if not Config.UseJets and m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.Plane) then
+		return -3 -- Not allowed to use.
+	end
+
 	-- Keep one seat free, if enough available.
 	local s_MaxEntries = p_Entity.entryCount
 	if s_VehicleData.Type == VehicleTypes.MobileArtillery then
@@ -1303,7 +1362,7 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 	for i = 0, s_MaxEntries - 1 do
 		if p_Entity:GetPlayerInEntry(i) == nil then
 			self.m_Player:EnterVehicle(p_Entity, i)
-			self._ExitVehicleHealth = PhysicsEntity(p_Entity).internalHealth * (Registry.VEHICLES.VEHILCE_EXIT_HEALTH / 100.0)
+			self._ExitVehicleHealth = PhysicsEntity(p_Entity).internalHealth * (Registry.VEHICLES.VEHICLE_EXIT_HEALTH / 100.0)
 
 			-- Get ID.
 			self.m_ActiveVehicle = s_VehicleData
@@ -1467,6 +1526,10 @@ function Bot:_SetActiveVars()
 	else
 		self.m_KnifeMode = false
 	end
+end
+
+function Bot:SetActiveDelay(p_Time)
+	self._ActiveDelay = p_Time
 end
 
 return Bot

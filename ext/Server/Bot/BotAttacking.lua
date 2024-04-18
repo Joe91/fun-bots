@@ -23,7 +23,7 @@ local function _ReviveAttackingAction(p_Bot)
 	end
 
 	-- Revive.
-	p_Bot._ShootModeTimer = p_Bot._ShootModeTimer + Registry.BOT.BOT_UPDATE_CYCLE
+	p_Bot._ShootModeTimer = p_Bot._ShootModeTimer - Registry.BOT.BOT_UPDATE_CYCLE
 	p_Bot.m_ActiveMoveMode = BotMoveModes.ReviveC4 -- Movement-mode : revive.
 	p_Bot._ReloadTimer = 0.0                    -- Reset reloading.
 
@@ -67,7 +67,7 @@ end
 
 ---@param p_Bot Bot
 local function _EnterVehicleAttackingAction(p_Bot)
-	p_Bot._ShootModeTimer = p_Bot._ShootModeTimer + Registry.BOT.BOT_UPDATE_CYCLE
+	p_Bot._ShootModeTimer = p_Bot._ShootModeTimer - Registry.BOT.BOT_UPDATE_CYCLE
 	p_Bot.m_ActiveMoveMode = BotMoveModes.ReviveC4 -- Movement-mode : revive.
 	if not p_Bot._ShootPlayer.soldier then
 		p_Bot._TargetPitch = 0.0
@@ -84,7 +84,7 @@ local function _EnterVehicleAttackingAction(p_Bot)
 	end
 
 	-- Abort this after some time.
-	if p_Bot._ShootModeTimer > 12.0 then
+	if p_Bot._ShootModeTimer <= 0.0 then
 		p_Bot._TargetPitch = 0.0
 		p_Bot:AbortAttack()
 		p_Bot:_ResetActionFlag(BotActionFlags.EnterVehicleActive)
@@ -93,7 +93,7 @@ end
 
 ---@param p_Bot Bot
 local function _RepairAttackingAction(p_Bot)
-	p_Bot._ShootModeTimer = p_Bot._ShootModeTimer + Registry.BOT.BOT_UPDATE_CYCLE
+	p_Bot._ShootModeTimer = p_Bot._ShootModeTimer - Registry.BOT.BOT_UPDATE_CYCLE
 	p_Bot.m_ActiveMoveMode = BotMoveModes.ReviveC4 -- Movement-mode : repair.
 
 	if p_Bot._RepairVehicleEntity then
@@ -102,7 +102,7 @@ local function _RepairAttackingAction(p_Bot)
 		-- Check for repair if close to vehicle.
 		if p_Bot._RepairVehicleEntity.transform.trans:Distance(p_Bot.m_Player.soldier.worldTransform.trans) < 5 then
 			if s_CurrentHealth ~= p_Bot._LastVehicleHealth then
-				p_Bot._ShootModeTimer = Registry.BOT.MAX_TIME_TRY_REPAIR - 2.0 -- Continue for few seconds on progress.
+				p_Bot._ShootModeTimer = 2.0 -- Continue for few seconds on progress.
 			end
 
 			p_Bot._LastVehicleHealth = s_CurrentHealth
@@ -113,7 +113,7 @@ local function _RepairAttackingAction(p_Bot)
 	end
 
 	-- Abort conditions.
-	if p_Bot._ShootModeTimer > Registry.BOT.MAX_TIME_TRY_REPAIR or p_Bot._RepairVehicleEntity == nil then -- Abort this after some time.
+	if p_Bot._ShootModeTimer <= 0 or p_Bot._RepairVehicleEntity == nil then -- Abort this after some time.
 		p_Bot._TargetPitch = 0.0
 		p_Bot:AbortAttack()
 		p_Bot:_ResetActionFlag(BotActionFlags.RepairActive)
@@ -123,7 +123,7 @@ end
 
 ---@param p_Bot Bot
 local function _DefaultAttackingAction(p_Bot)
-	if not p_Bot._ShootPlayer.soldier or not p_Bot._Shoot or p_Bot._ShootModeTimer >= Config.BotFireModeDuration then
+	if not p_Bot._ShootPlayer.soldier or not p_Bot._Shoot or p_Bot._ShootModeTimer <= 0.0 then
 		p_Bot._TargetPitch = 0.0
 		p_Bot._WeaponToUse = BotWeapons.Primary
 		p_Bot:AbortAttack()
@@ -138,7 +138,7 @@ local function _DefaultAttackingAction(p_Bot)
 	end
 
 	if p_Bot._ActiveAction ~= BotActionFlags.GrenadeActive then
-		p_Bot._ShootModeTimer = p_Bot._ShootModeTimer + Registry.BOT.BOT_UPDATE_CYCLE
+		p_Bot._ShootModeTimer = p_Bot._ShootModeTimer - Registry.BOT.BOT_UPDATE_CYCLE
 	end
 
 	p_Bot._ReloadTimer = 0.0 -- Reset reloading.
@@ -196,7 +196,6 @@ local function _DefaultAttackingAction(p_Bot)
 				p_Bot._WeaponToUse = BotWeapons.Gadget2
 				p_Bot._ActiveAction = BotActionFlags.C4Active
 			elseif s_AttackMode == VehicleAttackModes.AttackWithRifle then
-				-- To-do: double code is not nice.
 				if p_Bot._ActiveAction ~= BotActionFlags.GrenadeActive and
 					p_Bot.m_Player.soldier.weaponsComponent.weapons[1] ~= nil then
 					if p_Bot.m_Player.soldier.weaponsComponent.weapons[1].primaryAmmo == 0 then
@@ -207,7 +206,7 @@ local function _DefaultAttackingAction(p_Bot)
 				end
 			end
 		else
-			p_Bot._ShootModeTimer = Config.BotFireModeDuration -- End attack.
+			p_Bot._ShootModeTimer = 0.0 -- End attack.
 		end
 	else
 		-- Target not in vehicle.
@@ -227,19 +226,25 @@ local function _DefaultAttackingAction(p_Bot)
 			if p_Bot._ActiveAction ~= BotActionFlags.GrenadeActive then
 				-- Check to use pistol.
 				if p_Bot.m_Player.soldier.weaponsComponent.weapons[1] ~= nil then
-					if p_Bot.m_Player.soldier.weaponsComponent.weapons[1].primaryAmmo == 0 and
-						p_Bot._DistanceToPlayer <= Config.MaxShootDistancePistol then
+					if p_Bot._DistanceToPlayer <= Config.MaxShootDistancePistol and
+						(p_Bot.m_Player.soldier.weaponsComponent.weapons[1].primaryAmmo == 0 or
+							p_Bot.m_Behavior == BotBehavior.LovesPistols)
+					then
 						p_Bot._WeaponToUse = BotWeapons.Pistol
 					else
 						if p_Bot.m_ActiveWeapon.type ~= WeaponTypes.Rocket then
 							p_Bot._WeaponToUse = BotWeapons.Primary
 							-- Check to use rocket.
-							local s_TargetTimeValueRocket = Config.BotMinTimeShootAtPlayer * 0.5
-
-							if (p_Bot._ShootModeTimer >= (s_TargetTimeValueRocket - 0.001)) and
-								(p_Bot._ShootModeTimer <= (s_TargetTimeValueRocket + Registry.BOT.BOT_UPDATE_CYCLE + 0.001)) and
+							local s_TargetTimeValueRocket = Config.BotFireModeDuration - 0.7 --TODO: relative or absolute offset?
+							local s_ProbabilityRocket = Registry.BOT.PROBABILITY_SHOOT_ROCKET
+							if p_Bot.m_Behavior == BotBehavior.LovesExplosives then
+								s_ProbabilityRocket = Registry.BOT.PROBABILITY_SHOOT_ROCKET_PRIO
+							end
+							if (p_Bot._ShootModeTimer <= (s_TargetTimeValueRocket + 0.001)) and
+								(p_Bot._ShootModeTimer >= (s_TargetTimeValueRocket - Registry.BOT.BOT_UPDATE_CYCLE - 0.001)) and
 								p_Bot.m_SecondaryGadget ~= nil and p_Bot.m_SecondaryGadget.type == WeaponTypes.Rocket and
-								MathUtils:GetRandomInt(1, 100) <= Registry.BOT.PROBABILITY_SHOOT_ROCKET then
+								MathUtils:GetRandomInt(1, 100) <= s_ProbabilityRocket
+							then
 								p_Bot._WeaponToUse = BotWeapons.Gadget2
 							end
 						end
@@ -248,14 +253,18 @@ local function _DefaultAttackingAction(p_Bot)
 			end
 			-- Use grenade from time to time.
 			if Config.BotsThrowGrenades then
-				local s_TargetTimeValue = Config.BotMinTimeShootAtPlayer * 0.5
+				local s_TargetTimeValue = Config.BotFireModeDuration - 1.1 --TODO: relative or absolute offset?
+				local s_ProbabilityGrenade = Registry.BOT.PROBABILITY_THROW_GRENADE
+				if p_Bot.m_Behavior == BotBehavior.LovesExplosives then
+					s_ProbabilityGrenade = Registry.BOT.PROBABILITY_THROW_GRENADE_PRIO
+				end
 
 				if p_Bot._WeaponToUse ~= BotWeapons.Gadget2 and
-					((p_Bot._ShootModeTimer >= (s_TargetTimeValue - 0.001)) and
-						(p_Bot._ShootModeTimer <= (s_TargetTimeValue + Registry.BOT.BOT_UPDATE_CYCLE + 0.001)) and
+					((p_Bot._ShootModeTimer <= (s_TargetTimeValue + 0.001)) and
+						(p_Bot._ShootModeTimer >= (s_TargetTimeValue - Registry.BOT.BOT_UPDATE_CYCLE - 0.001)) and
 						p_Bot._ActiveAction ~= BotActionFlags.GrenadeActive) or Config.BotWeapon == BotWeapons.Grenade then
 					-- Should be triggered only once per fireMode.
-					if MathUtils:GetRandomInt(1, 100) <= Registry.BOT.PROBABILITY_THROW_GRENADE then
+					if MathUtils:GetRandomInt(1, 100) <= s_ProbabilityGrenade then
 						if p_Bot.m_Grenade ~= nil
 							and p_Bot._DistanceToPlayer > Registry.BOT.MIN_DISTANCE_NADE
 							and p_Bot._DistanceToPlayer < 25.0 then -- Algorithm only works for up to 25 m.

@@ -7,6 +7,7 @@ require('Bot')
 ---@type Utilities
 local m_Utilities = require('__shared/Utilities')
 local m_Vehicles = require("Vehicles")
+local m_BotCreator = require('BotCreator')
 ---@type Logger
 local m_Logger = Logger("BotManager", Debug.Server.BOT)
 
@@ -25,6 +26,7 @@ function BotManager:__init()
 	---`playerName:string[]`
 	self._ActivePlayers = {}
 	self._BotAttackBotTimer = 0.0
+	self._BotReviveBotTimer = 0.0
 	self._DestroyBotsTimer = 0.0
 	---@type string[]
 	---`BotName[]`
@@ -33,6 +35,7 @@ function BotManager:__init()
 	---@type string[]
 	---`BotName[]`
 	self._BotBotAttackList = {}
+	self._BotBotReviveList = {}
 	self._RaycastsPerActivePlayer = 0
 	---@type table<string, boolean>
 	---`[BotName] -> boolean`
@@ -81,6 +84,15 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 		self._BotAttackBotTimer = self._BotAttackBotTimer + p_DeltaTime
 	end
 
+	if Config.BotsReviveBots and self._InitDone then
+		if self._BotReviveBotTimer >= Registry.GAME_RAYCASTING.BOT_BOT_REVICE_INTERVAL then
+			self._BotReviveBotTimer = 0.0
+			self:_CheckForBotBotRevive()
+		end
+
+		self._BotReviveBotTimer = self._BotReviveBotTimer + p_DeltaTime
+	end
+
 	if #self._BotsToDestroy > 0 then
 		if self._DestroyBotsTimer >= 0.05 then
 			self._DestroyBotsTimer = 0.0
@@ -114,6 +126,18 @@ function BotManager:OnPlayerLeft(p_Player)
 				m_Logger:Write("Bot-Name " .. l_BotNameToIgnore .. " usable again")
 			end
 		end
+	end
+end
+
+---VEXT Server Soldier:HealthAction Event
+---@param p_Soldier SoldierEntity
+---@param p_Action HealthStateAction|integer
+function BotManager:OnSoldierHealthAction(p_Soldier, p_Action)
+	if p_Action == HealthStateAction.OnRevive then
+		local s_Bot = self:GetBotByName(p_Soldier.player.name)
+		if not s_Bot then return end
+		-- Randomize a delay of 50 to 300ms. So the Bot won't accept the revive immediately.
+		s_Bot:SetActiveDelay(MathUtils:GetRandom(0.050, 0.300))
 	end
 end
 
@@ -520,33 +544,6 @@ function BotManager:CalcYawPerFrame()
 	return (s_DegreePerDeltaTime / 360.0) * 2 * math.pi
 end
 
----@return string|nil
-function BotManager:FindNextBotName()
-	for _, l_Name in ipairs(BotNames) do
-		local s_Name = Registry.COMMON.BOT_TOKEN .. l_Name
-		local s_SkipName = false
-
-		for _, l_IgnoreName in ipairs(Globals.IgnoreBotNames) do
-			if s_Name == l_IgnoreName then
-				s_SkipName = true
-				break
-			end
-		end
-
-		if not s_SkipName then
-			local s_Bot = self:GetBotByName(s_Name)
-
-			if not s_Bot and not PlayerManager:GetPlayerByName(s_Name) then
-				return s_Name
-			elseif s_Bot and not s_Bot.m_Player.soldier and s_Bot:GetSpawnMode() ~= BotSpawnModes.RespawnRandomPath then
-				return s_Name
-			end
-		end
-	end
-
-	return nil
-end
-
 ---@param p_TeamId? TeamId
 ---@return Bot[]
 function BotManager:GetBots(p_TeamId)
@@ -895,6 +892,7 @@ function BotManager:DestroyBot(p_Bot)
 
 	self._BotsByName[p_Bot.m_Name] = nil
 	self._BotInputs[p_Bot.m_Id] = nil
+	m_BotCreator:RemoveActiveBot(p_Bot.m_Name);
 
 	p_Bot:Destroy()
 	---@diagnostic disable-next-line: cast-local-type
@@ -1069,7 +1067,7 @@ function BotManager:Attack(p_Player, p_Objective)
 			local s_Distance = s_BotSoldier.worldTransform.trans:Distance(s_SoldierPosition)
 
 			if s_Distance < Registry.COMMON.COMMAND_DISTANCE then
-				l_Bot:UpdateObjective(p_Objective)
+				l_Bot:UpdateObjective(p_Objective, BotObjectiveModes.Attack)
 				s_MaxObjectiveBots = s_MaxObjectiveBots - 1
 
 				if s_MaxObjectiveBots == 0 then
@@ -1231,6 +1229,97 @@ function BotManager:_CheckForBotBotAttack()
 	self._BotCheckState = {}
 	self._ConnectionCheckState = {}
 	self._BotBotAttackList = {}
+end
+
+function BotManager:_CheckForBotBotRevive()
+	-- Not enough on either team and no players to use.
+	if #self._ActivePlayers == 0 then
+		return
+	end
+
+	-- Create tables and scramble them.
+	local s_DeadBots = {}
+	local s_MedicBots = {}
+	local s_BotsAlreadInRevive = {}
+
+	local s_RaycastEntries = {}
+	for _, l_Bot in ipairs(self._Bots) do
+		if not l_Bot.m_InVehicle then
+			if l_Bot.m_Player.corpse and not l_Bot.m_Player.corpse.isDead then
+				-- bot to revive found
+				table.insert(s_DeadBots, l_Bot)
+			elseif l_Bot.m_Player.soldier and l_Bot.m_Kit == BotKits.Assault then
+				if l_Bot._ActiveAction ~= BotActionFlags.ReviveActive then
+					table.insert(s_MedicBots, l_Bot)
+				elseif l_Bot._ShootPlayerName ~= '' then
+					table.insert(s_BotsAlreadInRevive, l_Bot._ShootPlayerName)
+				end
+			end
+		end
+	end
+
+	-- remove bots, that get already revived
+	local s_BotsToRevive = {}
+	for _, l_DeadBot in ipairs(s_DeadBots) do
+		local s_BotFound = false
+		for _, l_BotName in pairs(s_BotsAlreadInRevive) do
+			if l_BotName == l_DeadBot.m_Name then
+				s_BotFound = true
+				break
+			end
+		end
+		if not s_BotFound then
+			table.insert(s_BotsToRevive, l_DeadBot)
+		end
+	end
+
+	-- Randomize the lists.
+	for i = #s_MedicBots, 2, -1 do
+		local j = math.random(i)
+		s_MedicBots[i], s_MedicBots[j] = s_MedicBots[j], s_MedicBots[i]
+	end
+	-- Randomize the lists.
+	for i = #s_BotsToRevive, 2, -1 do
+		local j = math.random(i)
+		s_BotsToRevive[i], s_BotsToRevive[j] = s_BotsToRevive[j], s_BotsToRevive[i]
+	end
+
+	local s_NrOfRaycastsDone = 0
+	local s_MaterialFlags = 0
+	local s_RaycastFlags = RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter
+
+	if #s_MedicBots > 0 and #s_BotsToRevive > 0 then
+		for _, l_DeadBot in ipairs(s_BotsToRevive) do
+			local s_DeadBotTeam = l_DeadBot.m_Player.teamid
+			for _, l_MedicBot in ipairs(s_MedicBots) do
+				if l_MedicBot.m_Player.teamid == s_DeadBotTeam then
+					local s_PosBody = l_DeadBot.m_Player.corpse.physicsEntityBase.position:Clone()
+					local s_PosMedic = l_MedicBot.m_Player.soldier.worldTransform.trans:Clone()
+					local s_Distance = s_PosBody:Distance(s_PosMedic)
+					if s_Distance < Registry.BOT.REVIVE_DISTANCE then
+						-- insert positions
+						s_PosBody.y = s_PosBody.y + 0.2
+						s_PosMedic.y = s_PosMedic.y + 1.6
+
+						local s_Result = RaycastManager:CollisionRaycast(s_PosMedic, s_PosBody, 1, s_MaterialFlags, s_RaycastFlags)
+						s_NrOfRaycastsDone = s_NrOfRaycastsDone + 1
+						if #s_Result == 0 then
+							-- free sight
+							l_MedicBot:Revive(l_DeadBot.m_Player)
+						end
+						if s_NrOfRaycastsDone >= Registry.GAME_RAYCASTING.BOT_BOT_REVIVE_MAX_RAYCASTS then
+							goto endOfCheck
+						end
+						if #s_Result == 0 then
+							goto nextBody
+						end
+					end
+				end
+			end
+			::nextBody::
+		end
+	end
+	::endOfCheck::
 end
 
 ---@param p_Damage integer

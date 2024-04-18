@@ -144,11 +144,17 @@ function VehicleAiming:UpdateAimingVehicle(p_Bot, p_AdvancedAlgorithm)
 
 	-- Abort attacking in chopper or jet if too steep or too low.
 	if s_IsAirVehicle and p_Bot.m_Player.controlledEntryId == 0 then
-		local s_PitchHalf = Config.FovVerticleChopperForShooting / 360 * math.pi
-		if math.abs(p_Bot._TargetPitch) > s_PitchHalf then
-			p_Bot:AbortAttack()
-			return
+
+		-- Abort attacking if behind only if not an air vehicle
+		if not m_Vehicles.IsAirVehicleType(p_Bot._ShootPlayerVehicleType) then
+			local s_PitchHalf = Config.FovVerticleChopperForShooting / 360 * math.pi
+
+			if math.abs(p_Bot._TargetPitch) > s_PitchHalf then
+				p_Bot:AbortAttack()
+				return
+			end
 		end
+
 		if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane) and
 			s_FullPositionBot:Distance(s_FullPositionTarget) < Registry.VEHICLES.ABORT_ATTACK_AIR_DISTANCE_JET then
 			p_Bot:AbortAttack()

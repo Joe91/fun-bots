@@ -18,8 +18,8 @@ function VehicleAttacking:UpdateAttackingVehicle(p_Bot)
 			p_Bot:AbortAttack()
 		end
 
-		if (p_Bot._ShootModeTimer < Config.BotVehicleFireModeDuration) then -- Three times the default duration.
-			p_Bot._ShootModeTimer = p_Bot._ShootModeTimer + Registry.BOT.BOT_UPDATE_CYCLE
+		if (p_Bot._ShootModeTimer > 0) then -- Three times the default duration.
+			p_Bot._ShootModeTimer = p_Bot._ShootModeTimer - Registry.BOT.BOT_UPDATE_CYCLE
 
 			-- Get amount of weapon slots.
 			local s_WeaponSlots = m_Vehicles:GetAvailableWeaponSlots(p_Bot.m_ActiveVehicle, p_Bot.m_Player.controlledEntryId)
@@ -90,9 +90,9 @@ function VehicleAttacking:UpdateAttackingVehicle(p_Bot)
 						p_Bot._VehicleWeaponSlotToUse = 1 -- Primary.
 					end
 				else
-					p_Bot._ShootModeTimer = Config.BotVehicleFireModeDuration -- End attack.
+					p_Bot._ShootModeTimer = 0.0 -- End attack.
 				end
-			else                                               -- Infantery Soldier.
+			else                 -- Infantery Soldier.
 				if s_WeaponSlots > 1 then
 					-- If in Tank and target == soldier and distance small enough → LMG / HMG
 					if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Tank) and

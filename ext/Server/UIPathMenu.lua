@@ -68,15 +68,15 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 					Action = 'set_mcom',
 					Label = Language:I18N('Add Mcom-Action'),
 				}, {
-					Action = 'loop_path',
-					Label = Language:I18N('Overwrite: Loop-Path')
-				}, {
-					Action = 'invert_path',
-					Label = Language:I18N('Overwrite: Reverse-Path')
-				}, {
-					Action = 'remove_data',
-					Label = Language:I18N('Remove Data')
-				}
+				Action = 'loop_path',
+				Label = Language:I18N('Overwrite: Loop-Path')
+			}, {
+				Action = 'invert_path',
+				Label = Language:I18N('Overwrite: Reverse-Path')
+			}, {
+				Action = 'remove_data',
+				Label = Language:I18N('Remove Data')
+			}
 			}
 		else
 			s_Left = {
@@ -84,12 +84,12 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 					Action = 'loop_path',
 					Label = Language:I18N('Overwrite: Loop-Path')
 				}, {
-					Action = 'invert_path',
-					Label = Language:I18N('Overwrite: Reverse-Path')
-				}, {
-					Action = 'remove_data',
-					Label = Language:I18N('Remove Data')
-				}
+				Action = 'invert_path',
+				Label = Language:I18N('Overwrite: Reverse-Path')
+			}, {
+				Action = 'remove_data',
+				Label = Language:I18N('Remove Data')
+			}
 			}
 		end
 		NetEvents:SendTo('UI_CommoRose', p_Player, {
@@ -103,15 +103,15 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 					Action = 'add_objective',
 					Label = Language:I18N('Add Label / Objective')
 				}, {
-					Action = 'remove_objective',
-					Label = Language:I18N('Remove Label / Objective')
-				}, {
-					Action = 'vehicle_menu',
-					Label = Language:I18N('Vehicles')
-				}, {
-					Action = 'remove_all_objectives',
-					Label = Language:I18N('Remove all Labels / Objectives')
-				}
+				Action = 'remove_objective',
+				Label = Language:I18N('Remove Label / Objective')
+			}, {
+				Action = 'vehicle_menu',
+				Label = Language:I18N('Vehicles')
+			}, {
+				Action = 'remove_all_objectives',
+				Label = Language:I18N('Remove all Labels / Objectives')
+			}
 			},
 			Center = {
 				Action = 'not_implemented',
@@ -175,15 +175,15 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 					Action = 'path_type_land',
 					Label = Language:I18N('Land')
 				}, {
-					Action = 'path_type_water',
-					Label = Language:I18N('Water')
-				}, {
-					Action = 'path_type_air',
-					Label = Language:I18N('Air')
-				}, {
-					Action = 'path_type_clear',
-					Label = Language:I18N('Clear Path-Type')
-				}
+				Action = 'path_type_water',
+				Label = Language:I18N('Water')
+			}, {
+				Action = 'path_type_air',
+				Label = Language:I18N('Air')
+			}, {
+				Action = 'path_type_clear',
+				Label = Language:I18N('Clear Path-Type')
+			}
 			},
 			Bottom = {
 				Action = 'vehicle_menu',
@@ -206,15 +206,15 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 					Action = 'add_enter_vehicle',
 					Label = Language:I18N('Enter Vehicle')
 				}, {
-					Action = 'add_exit_vehicle_passengers',
-					Label = Language:I18N('Exit Vehicle Passengers')
-				}, {
-					Action = 'add_exit_vehicle_all',
-					Label = Language:I18N('Exit Vehicle All')
-				}, {
-					Action = 'remove_data',
-					Label = Language:I18N('Remove Vehicle Data')
-				}
+				Action = 'add_exit_vehicle_passengers',
+				Label = Language:I18N('Exit Vehicle Passengers')
+			}, {
+				Action = 'add_exit_vehicle_all',
+				Label = Language:I18N('Exit Vehicle All')
+			}, {
+				Action = 'remove_data',
+				Label = Language:I18N('Remove Vehicle Data')
+			}
 			},
 			Center = {
 				Action = 'not_implemented',
@@ -226,12 +226,12 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 					Action = 'vehicle_objective',
 					Label = Language:I18N('Add Vehicle')
 				}, {
-					Action = 'set_vehicle_path_type',
-					Label = Language:I18N('Set Vehicle Path-Type')
-				}, {
-					Action = 'remove_all_objectives',
-					Label = Language:I18N('Remove Vehicle')
-				}
+				Action = 'set_vehicle_path_type',
+				Label = Language:I18N('Set Vehicle Path-Type')
+			}, {
+				Action = 'remove_all_objectives',
+				Label = Language:I18N('Remove Vehicle')
+			}
 			},
 			Bottom = {
 				Action = 'back_to_data_menu',
@@ -265,15 +265,15 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 					Action = 'add_vehicle_tank',
 					Label = Language:I18N('Add Tank')
 				}, {
-					Action = 'add_vehicle_chopper',
-					Label = Language:I18N('Add Chopper')
-				}, {
-					Action = 'add_vehicle_plane',
-					Label = Language:I18N('Add Plane')
-				}, {
-					Action = 'add_vehicle_other',
-					Label = Language:I18N('Add Other Vehicle')
-				}
+				Action = 'add_vehicle_chopper',
+				Label = Language:I18N('Add Chopper')
+			}, {
+				Action = 'add_vehicle_plane',
+				Label = Language:I18N('Add Plane')
+			}, {
+				Action = 'add_vehicle_other',
+				Label = Language:I18N('Add Other Vehicle')
+			}
 			},
 			Bottom = {
 				Action = 'vehicle_menu',
@@ -306,12 +306,12 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 					Action = 'team_us',
 					Label = Language:I18N('US')
 				}, {
-					Action = 'team_ru',
-					Label = Language:I18N('RU')
-				}, {
-					Action = 'team_both',
-					Label = Language:I18N('BOTH')
-				}
+				Action = 'team_ru',
+				Label = Language:I18N('RU')
+			}, {
+				Action = 'team_both',
+				Label = Language:I18N('BOTH')
+			}
 			},
 			Bottom = {
 				Action = 'vehicle_objective',
@@ -334,18 +334,18 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 					Action = 'index_vehcile_1',
 					Label = Language:I18N('Vehicle 1')
 				}, {
-					Action = 'index_vehcile_2',
-					Label = Language:I18N('Vehicle 2')
-				}, {
-					Action = 'index_vehcile_3',
-					Label = Language:I18N('Vehicle 3')
-				}, {
-					Action = 'index_vehcile_4',
-					Label = Language:I18N('Vehicle 4')
-				}, {
-					Action = 'index_vehcile_5',
-					Label = Language:I18N('Vehicle 5')
-				}
+				Action = 'index_vehcile_2',
+				Label = Language:I18N('Vehicle 2')
+			}, {
+				Action = 'index_vehcile_3',
+				Label = Language:I18N('Vehicle 3')
+			}, {
+				Action = 'index_vehcile_4',
+				Label = Language:I18N('Vehicle 4')
+			}, {
+				Action = 'index_vehcile_5',
+				Label = Language:I18N('Vehicle 5')
+			}
 			},
 			Center = {
 				Action = 'not_implemented',
@@ -356,18 +356,18 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 					Action = 'index_vehcile_6',
 					Label = Language:I18N('Vehicle 6')
 				}, {
-					Action = 'index_vehcile_7',
-					Label = Language:I18N('Vehicle 7')
-				}, {
-					Action = 'index_vehcile_8',
-					Label = Language:I18N('Vehicle 8')
-				}, {
-					Action = 'index_vehcile_9',
-					Label = Language:I18N('Vehicle 9')
-				}, {
-					Action = 'index_vehcile_10',
-					Label = Language:I18N('Vehicle 10')
-				}
+				Action = 'index_vehcile_7',
+				Label = Language:I18N('Vehicle 7')
+			}, {
+				Action = 'index_vehcile_8',
+				Label = Language:I18N('Vehicle 8')
+			}, {
+				Action = 'index_vehcile_9',
+				Label = Language:I18N('Vehicle 9')
+			}, {
+				Action = 'index_vehcile_10',
+				Label = Language:I18N('Vehicle 10')
+			}
 			},
 			Bottom = {
 				Action = 'vehicle_objective',
@@ -386,7 +386,6 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 		table.insert(s_ObjectiveData, s_Team)
 		m_NodeEditor:OnAddObjective(p_Player, s_ObjectiveData);
 		return
-
 	elseif request.action == 'set_vehicle_spawn' then
 		m_NodeEditor:OnSetVehicleSpawn(p_Player);
 		return
@@ -399,7 +398,6 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 	elseif request.action == 'add_exit_vehicle_all' then
 		m_NodeEditor:OnExitVehicle(p_Player, { "false" })
 		return
-
 	elseif request.action == 'add_objective' or request.action == 'remove_objective' then
 		-- NetEvents:SendTo('UI_Toggle_DataMenu', p_Player, true)
 		-- Change Commo-rose.
@@ -429,19 +427,22 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 						Action = 'base_rush',
 						Label = Language:I18N('Base')
 					}, {
-						Action = 'add_mcom',
-						Label = Language:I18N('MCOM')
-					}, {
-						Action = 'add_mcom_interact',
-						Label = Language:I18N('MCOM Interact')
-					}
+					Action = 'add_mcom',
+					Label = Language:I18N('MCOM')
+				}, {
+					Action = 'add_mcom_interact',
+					Label = Language:I18N('MCOM Interact')
+				}
 				},
 				Center = s_Center,
 				Left = {
 					{
-						Action = 'set_spawn_path',
-						Label = Language:I18N('Set Spawn-Path')
-					}
+						Action = 'point_of_interest',
+						Label = Language:I18N('Point of Interst')
+					}, {
+					Action = 'set_spawn_path',
+					Label = Language:I18N('Set Spawn-Path')
+				}
 				},
 				Bottom = {
 					Action = 'back_to_data_menu',
@@ -461,19 +462,22 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 						Action = 'base_us',
 						Label = Language:I18N('Base US')
 					}, {
-						Action = 'base_ru',
-						Label = Language:I18N('Base RU')
-					}, {
-						Action = 'capture_point',
-						Label = Language:I18N('Capture Point')
-					}
+					Action = 'base_ru',
+					Label = Language:I18N('Base RU')
+				}, {
+					Action = 'capture_point',
+					Label = Language:I18N('Capture Point')
+				}
 				},
 				Center = s_Center,
 				Left = {
 					{
-						Action = 'set_spawn_path',
-						Label = Language:I18N('Set Spawn-Path')
-					}
+						Action = 'point_of_interest',
+						Label = Language:I18N('Point of Interst')
+					}, {
+					Action = 'set_spawn_path',
+					Label = Language:I18N('Set Spawn-Path')
+				}
 				},
 				Bottom = {
 					Action = 'back_to_data_menu',
@@ -482,6 +486,38 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 			})
 			return
 		end
+	elseif request.action == 'point_of_interest' then
+		self.m_NavigaionPath[p_Player.onlineId][4] = nil
+		self.m_NavigaionPath[p_Player.onlineId][3] = request.action
+
+		NetEvents:SendTo('UI_CommoRose', p_Player, {
+			Top = {
+				Action = 'not_implemented',
+				Label = Language:I18N(''),
+				Confirm = true
+			},
+			Left = {
+				{
+					Action = 'poi_sniper',
+					Label = Language:I18N('Sniper-Spot')
+				}
+			},
+			Center = {
+				Action = 'not_implemented',
+				Label = Language:I18N('POI') -- Or "Unselect".
+			},
+			Right = {
+				{
+					Action = 'poi_beacon',
+					Label = Language:I18N('Beacon')
+				}
+			},
+			Bottom = {
+				Action = 'add_objective',
+				Label = Language:I18N('Back')
+			}
+		})
+		return
 	elseif request.action == 'add_mcom' then
 		self.m_NavigaionPath[p_Player.onlineId][4] = nil
 		self.m_NavigaionPath[p_Player.onlineId][3] = request.action
@@ -497,18 +533,18 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 					Action = 'mcom_1',
 					Label = Language:I18N('MCOM 1')
 				}, {
-					Action = 'mcom_2',
-					Label = Language:I18N('MCOM 2')
-				}, {
-					Action = 'mcom_3',
-					Label = Language:I18N('MCOM 3')
-				}, {
-					Action = 'mcom_4',
-					Label = Language:I18N('MCOM 4')
-				}, {
-					Action = 'mcom_5',
-					Label = Language:I18N('MCOM 5')
-				}
+				Action = 'mcom_2',
+				Label = Language:I18N('MCOM 2')
+			}, {
+				Action = 'mcom_3',
+				Label = Language:I18N('MCOM 3')
+			}, {
+				Action = 'mcom_4',
+				Label = Language:I18N('MCOM 4')
+			}, {
+				Action = 'mcom_5',
+				Label = Language:I18N('MCOM 5')
+			}
 			},
 			Center = {
 				Action = 'not_implemented',
@@ -519,18 +555,18 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 					Action = 'mcom_6',
 					Label = Language:I18N('MCOM 6')
 				}, {
-					Action = 'mcom_7',
-					Label = Language:I18N('MCOM 7')
-				}, {
-					Action = 'mcom_8',
-					Label = Language:I18N('MCOM 8')
-				}, {
-					Action = 'mcom_9',
-					Label = Language:I18N('MCOM 9')
-				}, {
-					Action = 'mcom_10',
-					Label = Language:I18N('MCOM 10')
-				}
+				Action = 'mcom_7',
+				Label = Language:I18N('MCOM 7')
+			}, {
+				Action = 'mcom_8',
+				Label = Language:I18N('MCOM 8')
+			}, {
+				Action = 'mcom_9',
+				Label = Language:I18N('MCOM 9')
+			}, {
+				Action = 'mcom_10',
+				Label = Language:I18N('MCOM 10')
+			}
 			},
 			Bottom = {
 				Action = 'add_objective',
@@ -538,7 +574,6 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 			}
 		})
 		return
-
 	elseif request.action == 'add_mcom_interact' then
 		self.m_NavigaionPath[p_Player.onlineId][4] = nil
 		self.m_NavigaionPath[p_Player.onlineId][3] = request.action
@@ -554,18 +589,18 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 					Action = 'mcom_inter_1',
 					Label = Language:I18N('MCOM INTERACT 1')
 				}, {
-					Action = 'mcom_inter_2',
-					Label = Language:I18N('MCOM INTERACT 2')
-				}, {
-					Action = 'mcom_inter_3',
-					Label = Language:I18N('MCOM INTERACT 3')
-				}, {
-					Action = 'mcom_inter_4',
-					Label = Language:I18N('MCOM INTERACT 4')
-				}, {
-					Action = 'mcom_inter_5',
-					Label = Language:I18N('MCOM INTERACT 5')
-				}
+				Action = 'mcom_inter_2',
+				Label = Language:I18N('MCOM INTERACT 2')
+			}, {
+				Action = 'mcom_inter_3',
+				Label = Language:I18N('MCOM INTERACT 3')
+			}, {
+				Action = 'mcom_inter_4',
+				Label = Language:I18N('MCOM INTERACT 4')
+			}, {
+				Action = 'mcom_inter_5',
+				Label = Language:I18N('MCOM INTERACT 5')
+			}
 			},
 			Center = {
 				Action = 'not_implemented',
@@ -576,18 +611,18 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 					Action = 'mcom_inter_6',
 					Label = Language:I18N('MCOM INTERACT 6')
 				}, {
-					Action = 'mcom_inter_7',
-					Label = Language:I18N('MCOM INTERACT 7')
-				}, {
-					Action = 'mcom_inter_8',
-					Label = Language:I18N('MCOM INTERACT 8')
-				}, {
-					Action = 'mcom_inter_9',
-					Label = Language:I18N('MCOM INTERACT 9')
-				}, {
-					Action = 'mcom_inter_10',
-					Label = Language:I18N('MCOM INTERACT 10')
-				}
+				Action = 'mcom_inter_7',
+				Label = Language:I18N('MCOM INTERACT 7')
+			}, {
+				Action = 'mcom_inter_8',
+				Label = Language:I18N('MCOM INTERACT 8')
+			}, {
+				Action = 'mcom_inter_9',
+				Label = Language:I18N('MCOM INTERACT 9')
+			}, {
+				Action = 'mcom_inter_10',
+				Label = Language:I18N('MCOM INTERACT 10')
+			}
 			},
 			Bottom = {
 				Action = 'add_objective',
@@ -611,18 +646,18 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 						Action = 'base_ru_1',
 						Label = Language:I18N('base ru stage 1')
 					}, {
-						Action = 'base_ru_2',
-						Label = Language:I18N('base ru stage 2')
-					}, {
-						Action = 'base_ru_3',
-						Label = Language:I18N('base ru stage 3')
-					}, {
-						Action = 'base_ru_4',
-						Label = Language:I18N('base ru stage 4')
-					}, {
-						Action = 'base_ru_5',
-						Label = Language:I18N('base ru stage 5')
-					}
+					Action = 'base_ru_2',
+					Label = Language:I18N('base ru stage 2')
+				}, {
+					Action = 'base_ru_3',
+					Label = Language:I18N('base ru stage 3')
+				}, {
+					Action = 'base_ru_4',
+					Label = Language:I18N('base ru stage 4')
+				}, {
+					Action = 'base_ru_5',
+					Label = Language:I18N('base ru stage 5')
+				}
 				},
 				Center = {
 					Action = 'not_implemented',
@@ -633,18 +668,18 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 						Action = 'base_us_1',
 						Label = Language:I18N('base us stage 1')
 					}, {
-						Action = 'base_us_2',
-						Label = Language:I18N('base us stage 2')
-					}, {
-						Action = 'base_us_3',
-						Label = Language:I18N('base us stage 3')
-					}, {
-						Action = 'base_us_4',
-						Label = Language:I18N('base us stage 4')
-					}, {
-						Action = 'base_us_5',
-						Label = Language:I18N('base us stage 5')
-					}
+					Action = 'base_us_2',
+					Label = Language:I18N('base us stage 2')
+				}, {
+					Action = 'base_us_3',
+					Label = Language:I18N('base us stage 3')
+				}, {
+					Action = 'base_us_4',
+					Label = Language:I18N('base us stage 4')
+				}, {
+					Action = 'base_us_5',
+					Label = Language:I18N('base us stage 5')
+				}
 				},
 				Bottom = {
 					Action = 'add_objective',
@@ -686,6 +721,17 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 			m_NodeEditor:OnAddObjective(p_Player, s_McomString:split(' '))
 		end
 		return
+	elseif string.find(request.action, 'poi_') then
+		local s_Data = request.action:split('_')
+		if self.m_NavigaionPath[p_Player.onlineId][2] == "remove_objective" then
+			m_NodeEditor:OnRemoveObjective(p_Player, { s_Data[2] })
+			m_NodeEditor:OnRemoveData(p_Player)
+		else
+			m_NodeEditor:OnAddObjective(p_Player, { s_Data[2] })
+			m_NodeEditor:OnCustomAction(p_Player, { s_Data[2] })
+			m_NodeEditor:OnSetLoopMode(p_Player, { "false" })
+		end
+		return
 	elseif string.find(request.action, 'base_') then
 		local s_Data = request.action:split('_')
 		if self.m_NavigaionPath[p_Player.onlineId][2] == "remove_objective" then
@@ -703,7 +749,6 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 		end
 		return
 	elseif request.action == 'capture_point' then
-
 		self.m_NavigaionPath[p_Player.onlineId][4] = nil
 		self.m_NavigaionPath[p_Player.onlineId][3] = request.action
 		NetEvents:SendTo('UI_CommoRose', p_Player, {
@@ -717,15 +762,15 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 					Action = 'objective_a',
 					Label = Language:I18N('A')
 				}, {
-					Action = 'objective_b',
-					Label = Language:I18N('B')
-				}, {
-					Action = 'objective_c',
-					Label = Language:I18N('C')
-				}, {
-					Action = 'objective_d',
-					Label = Language:I18N('D')
-				}
+				Action = 'objective_b',
+				Label = Language:I18N('B')
+			}, {
+				Action = 'objective_c',
+				Label = Language:I18N('C')
+			}, {
+				Action = 'objective_d',
+				Label = Language:I18N('D')
+			}
 			},
 			Center = {
 				Action = 'not_implemented',
@@ -736,15 +781,15 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 					Action = 'objective_e',
 					Label = Language:I18N('E')
 				}, {
-					Action = 'objective_f',
-					Label = Language:I18N('F')
-				}, {
-					Action = 'objective_g',
-					Label = Language:I18N('G')
-				}, {
-					Action = 'objective_h',
-					Label = Language:I18N('H')
-				}
+				Action = 'objective_f',
+				Label = Language:I18N('F')
+			}, {
+				Action = 'objective_g',
+				Label = Language:I18N('G')
+			}, {
+				Action = 'objective_h',
+				Label = Language:I18N('H')
+			}
 			},
 			Bottom = {
 				Action = 'add_objective',

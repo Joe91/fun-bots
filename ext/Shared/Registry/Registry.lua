@@ -15,8 +15,10 @@ Registry = {
 		BOT_TOKEN = "BOT_",
 		-- Allow players to use Bot-Names.
 		ALLOW_PLAYER_BOT_NAMES = true,
-		-- Collition-raycasts are another type of raycast. Sadly not working atm...
-		USE_COLLITION_RAYCASTS = false,
+		-- Collision-raycasts are another type of raycast. Needs some more testing...
+		USE_COLLISION_RAYCASTS = true,
+		-- Use DetailedMesh in Raycasts, needs more performance but might detect some special cases better
+		USE_DETAILED_MESH_RAYCASTS = false,
 		-- Use worse hitboxes but enable bots to use the knive
 		USE_BUGGED_HITBOXES = false,
 		-- Distance commands are heard by bots.
@@ -27,6 +29,8 @@ Registry = {
 		DONT_SPAWN_BOTS_ON_LAST_CONQUEST_TICKET = true,
 		-- Valid keys can be found here: https://docs.veniceunleashed.net/vext/ref/fb/inputdevicekeys/.
 		BOT_COMMAND_KEY = InputDeviceKeys.IDK_LeftAlt,
+		-- Destroy obstacles on level loaded (recommended for the affected maps)
+		DESTROY_OBSTACLES_ON_START = true,
 	},
 	-- Version and Release related variables.
 	-- Variables related to the current build version, version and the type of version.
@@ -35,15 +39,15 @@ Registry = {
 		-- Major version.
 		VERSION_MAJ = 2,
 		-- Minor version.
-		VERSION_MIN = 8,
+		VERSION_MIN = 9,
 		-- Patch version.
 		VERSION_PATCH = 0,
 		-- Additional label for pre-releases and build metadata.
-		VERSION_LABEL = "",
+		VERSION_LABEL = "RC1",
 		-- Current version type of this build.
-		VERSION_TYPE = VersionType.Release,
+		VERSION_TYPE = VersionType.Stable,
 		-- The Version used for the Update-Check.
-		UPDATE_CHANNEL = VersionType.Stable,
+		UPDATE_CHANNEL = VersionType.DevBuild,
 		-- Prints current version in console.
 		CLIENT_SHOW_VERSION_ON_JOIN = false,
 	},
@@ -67,19 +71,27 @@ Registry = {
 		RAYCAST_INTERVAL_ENEMY_CHECK = 0.03,
 		-- How often are the connections for a bot-bot-attack checked.
 		BOT_BOT_CHECK_INTERVAL = 0.05,
+		-- Hof often Bot-Revive-Bot-Raycast-chcks are done (costs server performance)
+		BOT_BOT_REVICE_INTERVAL = 0.5,
 		-- Max checks per cycle.
-		BOT_BOT_MAX_CHECKS = 30
+		BOT_BOT_MAX_CHECKS = 30,
+		-- Max Raycaststs Bot-Bot-Revive
+		BOT_BOT_REVIVE_MAX_RAYCASTS = 15
 	},
 	GAME_DIRECTOR = {
 		UPDATE_OBJECTIVES_CYCLE = 1.5,
 		-- Time after a MCO is considered destroyed.
 		MCOMS_CHECK_CYCLE = 26.5,
-		-- Max bots per objective.
-		MAX_ASSIGNED_LIMIT = 16,
 		-- Kill Bots without valid paths after this amount of time
 		KILL_ON_INVALID_PATH_TIME = 50,
 		-- Increments of nodes to search best patch with.
 		NODE_SEARCH_INCREMENTS = 10,
+		--- Weight for attacking objectives
+		WEIGHT_ATTACK_OBJECTIVE = 4.0,
+		--- Weight for defending objectives
+		WEIGHT_DEFEND_OBJECTIVE = 1.0,
+		--- PathSwitch on same prio
+		PROBABILITY_SWITCH_SAME_PRIO = 20
 	},
 	VEHICLES = {
 		-- Distance for the "enter vehicle" command.
@@ -101,7 +113,7 @@ Registry = {
 		-- Time a jet waits after an attack on another jet.
 		JET_ABORT_JET_ATTACK_TIME = 0.7,
 		-- Percentage of vehicle health to leave vehicle with (currently no passive events for bot-only vehicles)
-		VEHILCE_EXIT_HEALTH = 12,
+		VEHICLE_EXIT_HEALTH = 12,
 		-- Probability to exit on low health.
 		VEHICLE_PROPABILITY_EXIT_LOW_HEALTH = 60,
 		-- Probability to use 2nd best air-target.
@@ -117,6 +129,8 @@ Registry = {
 	BOT = {
 		-- Update cycle fast.
 		BOT_FAST_UPDATE_CYCLE = 0.03, -- Equals 30 fps.
+		-- Distance a bot tries to revive a bot.
+		REVIVE_DISTANCE = 15.0,
 		-- Update cycle.
 		BOT_UPDATE_CYCLE = 0.1,
 		-- - distance the bots have to reach in height to continue with next Waypoint.
@@ -127,8 +141,12 @@ Registry = {
 		PROBABILITY_TELEPORT_IF_STUCK_IN_VEHICLE = 20,
 		-- At the end of an attack cycle, chance of throwing a grenade.
 		PROBABILITY_THROW_GRENADE = 50,
+		-- At the end of an attack cycle, chance of throwing a grenade, if behavior priorizes this.
+		PROBABILITY_THROW_GRENADE_PRIO = 95,
 		-- The probability to use the rocket instead of the primary.
-		PROBABILITY_SHOOT_ROCKET = 25,
+		PROBABILITY_SHOOT_ROCKET = 20,
+		-- The probability to use the rocket, if behavior of bot priorizes this
+		PROBABILITY_SHOOT_ROCKET_PRIO = 85,
 		-- The probability to use the rifle to attack a chopper.
 		PROBABILITY_ATTACK_CHOPPER_WITH_RIFLE = 25,
 		-- If the game mode is Rush or Conquest, change direction if the bot is stuck on non-connecting paths.
@@ -143,6 +161,10 @@ Registry = {
 		USE_ADVANCED_AIMING = false,
 		-- Worsening bots on larger distances. Factor 1.0 = no worsening, always same offset
 		WORSENING_FACOTR_DISTANCE = 0.9,
+		PROBABILITY_SWITCH_TO_BEACON_PATH = 80,
+		PROBABILITY_KEEP_KIT_IF_HAS_BEACON = 80,
+		-- number of nodes in every direction to scan for best way back
+		NUMBER_NODES_TO_SCAN_AFTER_ATTACK = 20,
 	},
 	-- Bot team balancing (only in keep_playercount - spawn-mode)
 	BOT_TEAM_BALANCING = {

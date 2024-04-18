@@ -195,7 +195,7 @@ local function _DefaultAimingAction(p_Bot)
 	local s_PitchCorrection = 0.0
 	local s_FullPositionTarget = nil
 	local s_FullPositionBot = nil
-	local s_Skill = p_Bot._Skill
+	local s_Skill = p_Bot._Accuracy
 
 	s_FullPositionBot = p_Bot.m_Player.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(p_Bot.m_Player, false, false)
 
@@ -207,7 +207,7 @@ local function _DefaultAimingAction(p_Bot)
 
 		if s_ActiveWeaponType == WeaponTypes.Sniper then
 			s_AimForHead = Config.AimForHeadSniper
-			s_Skill = p_Bot._SkillSniper
+			s_Skill = p_Bot._AccuracySniper
 		elseif s_ActiveWeaponType == WeaponTypes.LMG then
 			s_AimForHead = Config.AimForHeadSupport
 		else
@@ -236,11 +236,14 @@ local function _DefaultAimingAction(p_Bot)
 
 		if s_ActiveWeaponType == WeaponTypes.Grenade then
 			if p_Bot._DistanceToPlayer < 3.0 then
-				p_Bot._DistanceToPlayer = 3.0          -- Don't throw them too close.
+				p_Bot._DistanceToPlayer = 3.0 -- Don't throw them too close.
 			end
-		elseif s_ActiveWeaponType <= WeaponTypes.Rocket then -- No compensation for other weapons needed.
+		elseif s_ActiveWeaponType < WeaponTypes.Rocket then
 			s_TimeToTravel = _GetTimeToTravel(p_Bot, s_Speed, s_FullPositionBot, s_FullPositionTarget, s_TargetMovement)
 			s_PitchCorrection = 0.5 * s_TimeToTravel * s_TimeToTravel * s_Drop
+		elseif s_ActiveWeaponType == WeaponTypes.Rocket then -- No idea why, but works this way...
+			s_TimeToTravel = _GetTimeToTravel(p_Bot, s_Speed, s_FullPositionBot, s_FullPositionTarget, s_TargetMovement)
+			s_PitchCorrection = 0.25 * s_TimeToTravel * s_TimeToTravel * s_Drop
 		end
 
 		s_TargetMovement = (s_TargetMovement * s_TimeToTravel)
@@ -312,11 +315,12 @@ end
 
 ---@param p_Bot Bot
 local function _ReviveAimingAction(p_Bot)
-	if p_Bot._ShootPlayer.corpse == nil then
+	if p_Bot._ShootPlayer.corpse == nil or p_Bot._ShootPlayer.corpse.physicsEntityBase == nil
+		or p_Bot._ShootPlayer.corpse.physicsEntityBase.position == nil then
 		return
 	end
 
-	local s_PositionTarget = p_Bot._ShootPlayer.corpse.worldTransform.trans:Clone()
+	local s_PositionTarget = p_Bot._ShootPlayer.corpse.physicsEntityBase.position:Clone()
 	local s_PositionBot = p_Bot.m_Player.soldier.worldTransform.trans:Clone() +
 		m_Utilities:getCameraPos(p_Bot.m_Player, false, false)
 

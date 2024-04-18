@@ -26,6 +26,13 @@ BotAttackingModes = {
 	EnterVehicleOfPlayer = 6
 }
 
+---@enum BotObjectiveModes
+BotObjectiveModes = {
+	Default = 0,
+	Attack = 1,
+	Defend = 2
+}
+
 ---@enum BotActionFlags
 BotActionFlags = {
 	NoActionActive = 0,
@@ -36,6 +43,8 @@ BotActionFlags = {
 	C4Active = 5,
 	RepairActive = 6,
 	OtherActionActive = 7,
+	RunAway = 8,
+	HideOnAttack = 9
 }
 
 ---@enum VehicleTypes

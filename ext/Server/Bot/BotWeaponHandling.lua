@@ -10,7 +10,7 @@ function BotWeaponHandling:__init()
 end
 
 function BotWeaponHandling:UpdateDeployAndReload(p_Bot, p_Deploy)
-	if p_Bot._ActiveAction == BotActionFlags.MeleeActive then
+	if p_Bot._ActiveAction == BotActionFlags.MeleeActive or p_Bot._ActiveAction == BotActionFlags.OtherActionActive then
 		return
 	end
 	p_Bot._WeaponToUse = BotWeapons.Primary
@@ -104,7 +104,7 @@ function BotWeaponHandling:UpdateWeaponSelection(p_Bot)
 				if p_Bot.m_Player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_0 then
 					p_Bot:_SetInput(EntryInputActionEnum.EIASelectWeapon1, 1)
 					p_Bot.m_ActiveWeapon = p_Bot.m_Primary
-					p_Bot._ShotTimer = 0.0
+					p_Bot._ShotTimer = -0.05
 				end
 				if p_Bot.m_Player.soldier.weaponsComponent.weapons[1] ~= nil and
 					p_Bot.m_Player.soldier.weaponsComponent.weapons[1].secondaryAmmo <

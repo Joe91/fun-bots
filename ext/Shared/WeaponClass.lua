@@ -81,7 +81,7 @@ function Weapon:learnStatsValues()
 	if string.find(s_AiDataString, "_lmg_") ~= nil then
 		m_Logger:Write("LMG")
 		s_FireDuration = 1.5
-		s_FirePause = 0.5
+		s_FirePause = 0.3
 		s_DelayedShot = true
 		if self.type == WeaponTypes.None then
 			self.type = WeaponTypes.LMG
@@ -89,7 +89,7 @@ function Weapon:learnStatsValues()
 	elseif string.find(s_AiDataString, "_sni_") ~= nil then
 		m_Logger:Write("sniper")
 		s_FireDuration = 0.2
-		s_FirePause = 0.4
+		s_FirePause = 0.3
 		s_DelayedShot = true
 		if self.type == WeaponTypes.None then
 			self.type = WeaponTypes.Sniper
@@ -97,15 +97,15 @@ function Weapon:learnStatsValues()
 	elseif string.find(s_AiDataString, "_snisemi_") ~= nil then
 		m_Logger:Write("auto sniper")
 		s_FireDuration = 0.2
-		s_FirePause = 0.4
+		s_FirePause = 0.3
 		s_DelayedShot = true
 		if self.type == WeaponTypes.None then
 			self.type = WeaponTypes.Sniper
 		end
 	elseif string.find(s_AiDataString, "_rif_") ~= nil then
 		m_Logger:Write("rifle")
-		s_FireDuration = 0.4
-		s_FirePause = 0.4
+		s_FireDuration = 0.5
+		s_FirePause = 0.3
 		s_DelayedShot = false
 		if self.type == WeaponTypes.None then
 			self.type = WeaponTypes.Assault
@@ -128,7 +128,7 @@ function Weapon:learnStatsValues()
 		end
 	elseif string.find(s_AiDataString, "_hg_") ~= nil or string.find(self.name, "MP443") ~= nil then -- "MP443 has no AI data".
 		m_Logger:Write("pistol")
-		s_FireDuration = 0.2
+		s_FireDuration = 0.1
 		s_FirePause = 0.2
 		s_DelayedShot = false
 		if self.type == WeaponTypes.None then
@@ -145,7 +145,7 @@ function Weapon:learnStatsValues()
 	elseif string.find(s_AiDataString, "_at_") ~= nil then
 		m_Logger:Write("Rocket")
 		s_FireDuration = 0.2
-		s_FirePause = 0.4
+		s_FirePause = 0.3
 		s_DelayedShot = true
 		if self.type == WeaponTypes.None then
 			self.type = WeaponTypes.Rocket

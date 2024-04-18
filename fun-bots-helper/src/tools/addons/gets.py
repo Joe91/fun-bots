@@ -719,7 +719,6 @@ def get_links_and_vehicles_fixed(in_file: TextIOWrapper) -> List[str]:
                 '"LinkMode":0,',
                 ',"LinkMode":0',
                 '"LinkMode":0',
-                "{}",
             ]:
                 line = line.replace(link, "")
         if '"Objectives":{}' in line:
@@ -729,7 +728,14 @@ def get_links_and_vehicles_fixed(in_file: TextIOWrapper) -> List[str]:
                 '"Objectives":{}',
             ]:
                 line = line.replace(objective, "")
-        if "{}" in line:
+        if '"Vehicles":{}' in line:
+            for vehicle in [
+                ',"Vehicles":{}',
+                '"Vehicles":{},',
+                '"Vehicles":{}',
+            ]:
+                line = line.replace(vehicle, "")
+        if ";{}" in line:
             line = line.replace("{}", "")
         out_file_lines.append(line)
 
@@ -829,7 +835,7 @@ def get_paths_to_replace(
                                 vehicle_string = vehicles[linked_path]
                                 replace_dict[vehicle_string] = (
                                     vehicle_string.replace(enemy_team, "")[:-1]
-                                    + f' {ally_team}"'
+                                    + f'{ally_team}"'
                                 )
                                 replace_paths.append(linked_path)
 

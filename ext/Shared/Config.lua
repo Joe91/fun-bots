@@ -15,6 +15,7 @@ Config = {
 	BotSupportAimWorsening = 0.3,		-- See botAimWorsening, only for LMGs 
 	BotWorseningSkill = 0.40,			-- Variation of the skill of a single bot. The higher, the worse the bots can get compared to the original settings 
 	BotSniperWorseningSkill = 0.30,		-- See BotWorseningSkill - only for BOTs using sniper bolt-action rifles 
+	ReactionTime = 0.2,					-- Additional delay for bots, dependant of skill (might also be 0) 
 	DamageFactorAssault = 1.0,			-- Original Damage from bots gets multiplied by this 
 	DamageFactorCarabine = 1.0,			-- Original Damage from bots gets multiplied by this 
 	DamageFactorLMG = 1.0,				-- Original Damage from bots gets multiplied by this 
@@ -75,6 +76,7 @@ Config = {
 	BotCanKillHimself = false,			-- Bot takes fall damage or explosion-damage from own frags 
 	TeleportIfStuck = true,				-- Bot teleport to their target if they are stuck 
 	BotsRevive = true,					-- Bots revive other players 
+	BotsReviveBots = true,				-- Bots revive other Bots 
 	BotsThrowGrenades = true,			-- Bots throw grenades at enemies 
 	BotsDeploy = true,					-- Bots deploy ammo and medkits 
 	DeployCycle = 60,					-- Time between deployment of bots in seconds 
@@ -83,6 +85,7 @@ Config = {
 	-- VEHICLE 
 	UseVehicles = true,					-- Bots can use vehicles 
 	UseAirVehicles = true,				-- Bots can use air-vehicles 
+	UseJets = true,						-- Bots can use jets 
 	MaxBotsPerVehicle = 3,				-- Maximum number of Bots in a vehicle 
 	FovVehicleForShooting = 180,		-- Degrees of FOV of Non AA - Vehicles 
 	FovVerticleVehicleForShooting = 60,	-- Degrees of vertical FOV of Non AA - Vehicles 
@@ -135,14 +138,13 @@ Config = {
 	SpeedFactor = 1.0,					-- Reduces the movement speed. 1 = normal, 0 = standing 
 	SpeedFactorAttack = 0.6,			-- Reduces the movement speed while attacking. 1 = normal, 0 = standing 
 	SpeedFactorVehicleAttack = 0.6,		-- Reduces the movement speed while attacking in vehicles. 1 = normal, 0 = standing 
-	UseRandomNames = false,				-- Changes names of the bots on every new round. Experimental right now... 
 	MoveSidewards = true,				-- Bots move sidewards 
 	MaxStraigtCycle = 10.0,				-- Max time bots move straight, before sidewards-movement (in sec) 
 	MaxSideCycle = 5.0,					-- Max time bots move sidewards, before straight-movement (in sec) 
 	MinMoveCycle = 0.3,					-- Min time bots move sidewards or straight before switching (in sec) 
 
 	-- EXPERT 
-	BotFirstShotDelay = 0.25,			-- Delay for first shot. If too small, there will be great spread in first cycle because it is not compensated yet 
+	BotFirstShotDelay = 0.15,			-- Delay for first shot. If too small, there will be great spread in first cycle because it is not compensated yet 
 	BotMinTimeShootAtPlayer = 2.5,		-- The minimum time a bot shoots at one player for - recommended minimum 1.5, below this you will have issues 
 	BotVehicleMinTimeShootAtPlayer = 4.0,	-- The minimum time a bot shoots at one player if in vehicle - recommended minimum 2.5, below this you will have issues 
 	BotFireModeDuration = 4.5,			-- The minimum time a bot tries to shoot a player - recommended minimum 3.0, below this you will have issues 

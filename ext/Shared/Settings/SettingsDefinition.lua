@@ -123,6 +123,18 @@ SettingsDefinition = {
 			Category = "DIFFICULTY"
 		},
 		{
+			Name = "ReactionTime",
+			Text = "Additional reaciton-time of bots",
+			---@type Type|integer
+			Type = Type.Float,
+			Value = Config.ReactionTime,
+			Description = "Additional delay for bots, dependant of skill (might also be 0)",
+			Reference = Range(0.00, 2.00, 0.10),
+			Default = 0.2,
+			UpdateFlag = UpdateFlag.None,
+			Category = "DIFFICULTY"
+		},
+		{
 			Name = "DamageFactorAssault",
 			Text = "Damage Factor Assault",
 			---@type Type|integer
@@ -767,6 +779,17 @@ SettingsDefinition = {
 			Category = "BEHAVIOUR"
 		},
 		{
+			Name = "BotsReviveBots",
+			Text = "Bots Revive Bots",
+			---@type Type|integer
+			Type = Type.Boolean,
+			Value = Config.BotsReviveBots,
+			Description = "Bots revive other Bots",
+			Default = true,
+			UpdateFlag = UpdateFlag.None,
+			Category = "BEHAVIOUR"
+		},
+		{
 			Name = "BotsThrowGrenades",
 			Text = "Bots throw grenades",
 			---@type Type|integer
@@ -831,6 +854,17 @@ SettingsDefinition = {
 			Type = Type.Boolean,
 			Value = Config.UseAirVehicles,
 			Description = "Bots can use air-vehicles",
+			Default = true,
+			UpdateFlag = UpdateFlag.None,
+			Category = "VEHICLE"
+		},
+		{
+			Name = "UseJets",
+			Text = "Use jets",
+			---@type Type|integer
+			Type = Type.Boolean,
+			Value = Config.UseJets,
+			Description = "Bots can use jets",
 			Default = true,
 			UpdateFlag = UpdateFlag.None,
 			Category = "VEHICLE"
@@ -1379,17 +1413,6 @@ SettingsDefinition = {
 			Category = "ADVANCED"
 		},
 		{
-			Name = "UseRandomNames",
-			Text = "Use Random Names",
-			---@type Type|integer
-			Type = Type.Boolean,
-			Value = Config.UseRandomNames,
-			Description = "Changes names of the bots on every new round. Experimental right now...",
-			Default = false,
-			UpdateFlag = UpdateFlag.None,
-			Category = "ADVANCED"
-		},
-		{
 			Name = "MoveSidewards",
 			Text = "Move Sidewards",
 			---@type Type|integer
@@ -1446,7 +1469,7 @@ SettingsDefinition = {
 			Value = Config.BotFirstShotDelay,
 			Description = "Delay for first shot. If too small, there will be great spread in first cycle because it is not compensated yet",
 			Reference = Range(0.00, 10.00, 0.10),
-			Default = 0.25,
+			Default = 0.15,
 			UpdateFlag = UpdateFlag.None,
 			Category = "EXPERT"
 		},

@@ -61,7 +61,7 @@ function WeaponList:__init()
 		Weapon('SPAS12_Slug', 'XP2', { 'Weapons/XP2_SPAS12/U_SPAS12_Slug', 'Kobra', 'ExtendedMag' }, WeaponTypes.Shotgun,
 			'Weapons/XP2_SPAS12/U_SPAS12'),
 		Weapon('USAS-12_Flechette', '', { 'Weapons/USAS-12/U_USAS-12_Flechette', 'ExtendedMag', 'Kobra' }, WeaponTypes.Shotgun
-			, 'Weapons/USAS-12/U_USAS-12'),
+		, 'Weapons/USAS-12/U_USAS-12'),
 		Weapon('USAS-12_Frag', '', { 'Weapons/USAS-12/U_USAS-12_Frag', 'ExtendedMag', 'Kobra' }, WeaponTypes.Shotgun,
 			'Weapons/USAS-12/U_USAS-12'),
 		Weapon('USAS-12_Slug', '', { 'Weapons/USAS-12/U_USAS-12_Slug', 'ExtendedMag', 'Kobra' }, WeaponTypes.Shotgun,
@@ -482,15 +482,23 @@ function WeaponList:_insertWeapon(p_Kit, p_WeaponType, p_WeaponName, p_Team)
 		table.insert(Weapons[p_Kit][s_BotWeaponType][p_Team], p_WeaponName)
 	end
 
-	if s_BotWeaponType == BotWeapons.Primary and p_Team == "US" then -- Only insert primaries once.
+	if s_BotWeaponType == BotWeapons.Primary then -- Only insert primaries once.
 		if p_Kit == BotKits.Assault then
-			table.insert(AssaultPrimary, p_WeaponName)
+			if not table.has(AssaultPrimary, p_WeaponName) then
+				table.insert(AssaultPrimary, p_WeaponName)
+			end
 		elseif p_Kit == BotKits.Engineer then
-			table.insert(EngineerPrimary, p_WeaponName)
+			if not table.has(EngineerPrimary, p_WeaponName) then
+				table.insert(EngineerPrimary, p_WeaponName)
+			end
 		elseif p_Kit == BotKits.Support then
-			table.insert(SupportPrimary, p_WeaponName)
+			if not table.has(SupportPrimary, p_WeaponName) then
+				table.insert(SupportPrimary, p_WeaponName)
+			end
 		else
-			table.insert(ReconPrimary, p_WeaponName)
+			if not table.has(ReconPrimary, p_WeaponName) then
+				table.insert(ReconPrimary, p_WeaponName)
+			end
 		end
 	end
 end

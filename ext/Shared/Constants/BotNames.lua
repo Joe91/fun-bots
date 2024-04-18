@@ -162,7 +162,7 @@ BotNames = {
 	'qnr3343',
 	'akebono047',
 	-- Other names
-	--[['LunyblacAseity',
+	'LunyblacAseity',
 	'Aseityja753',
 	'WordplayAmelus',
 	'Ameluslan93',
@@ -249,7 +249,7 @@ BotNames = {
 	'Stasis2Credo',
 	'Credoder_166',
 	'Klendusic',
-	'LordchaosVirtu',
+	--[['LordchaosVirtu',
 	'Virtuheep',
 	'Sphecoid',
 	'Arshan9Maven',

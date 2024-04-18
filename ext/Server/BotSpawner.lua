@@ -8,12 +8,15 @@ require('Model/SpawnSet')
 local m_NodeCollection = require('NodeCollection')
 ---@type BotManager
 local m_BotManager = require('BotManager')
+---@type BotCreator
+local m_BotCreator = require('BotCreator')
 ---@type WeaponList
 local m_WeaponList = require('__shared/WeaponList')
 ---@type Utilities
 local m_Utilities = require('__shared/Utilities')
 ---@type Logger
 local m_Logger = Logger("BotSpawner", Debug.Server.BOT)
+local m_Vehicles = require('Vehicles')
 
 function BotSpawner:__init()
 	self:RegisterVars()
@@ -229,10 +232,6 @@ function BotSpawner:OnPlayerAuthenticated(p_Player)
 			for _, l_Player in pairs(s_TempPlayers) do
 				if not m_Utilities:isBot(l_Player) then
 					s_CountPlayers[i] = s_CountPlayers[i] + 1
-
-					if Globals.IsSdm then -- To-do: Only needed because of VEXT-Bug.
-						l_Player.squadId = 1
-					end
 				end
 			end
 		end
@@ -250,6 +249,15 @@ end
 ---@param p_TeamId TeamId|integer
 ---@param p_SquadId SquadId|integer
 function BotSpawner:OnTeamChange(p_Player, p_TeamId, p_SquadId)
+	-- kill bot, if still alive
+	local s_Bot = m_BotManager:GetBotByName(p_Player.name)
+	if s_Bot ~= nil then
+		if s_Bot.m_Player.soldier ~= nil then
+			s_Bot.m_Player.soldier:Kill()
+		end
+		s_Bot.m_Player.teamId = p_TeamId --not needed, but does not hurt as well.
+	end
+
 	if Config.BotTeam ~= TeamId.TeamNeutral then
 		if p_Player ~= nil then
 			if p_Player.onlineId ~= 0 then -- No bot.
@@ -350,10 +358,6 @@ function BotSpawner:UpdateBotAmountAndTeam()
 		for _, l_Player in pairs(s_TempPlayers) do
 			if not m_Utilities:isBot(l_Player) then
 				s_CountPlayers[i] = s_CountPlayers[i] + 1
-
-				if Globals.IsSdm then -- To-do: Only needed because of VEXT-Bug.
-					l_Player.squadId = 1
-				end
 			end
 		end
 
@@ -623,7 +627,7 @@ end
 ---@param p_Spacing number
 function BotSpawner:SpawnBotRow(p_Player, p_Length, p_Spacing)
 	for i = 1, p_Length do
-		local s_Name = m_BotManager:FindNextBotName()
+		local s_Name = m_BotCreator:GetNextBotName(self:_GetSpawnBotKit())
 
 		if s_Name ~= nil then
 			local s_Transform = LinearTransform()
@@ -633,7 +637,7 @@ function BotSpawner:SpawnBotRow(p_Player, p_Length, p_Spacing)
 			if not s_Bot then
 				return
 			end
-
+			m_BotCreator:SetAttributesToBot(s_Bot)
 			s_Bot:SetVarsStatic(p_Player)
 			self:_SpawnBot(s_Bot, s_Transform, true)
 		end
@@ -644,7 +648,7 @@ end
 ---@param p_Height integer
 function BotSpawner:SpawnBotTower(p_Player, p_Height)
 	for i = 1, p_Height do
-		local s_Name = m_BotManager:FindNextBotName()
+		local s_Name = m_BotCreator:GetNextBotName(self:_GetSpawnBotKit())
 
 		if s_Name ~= nil then
 			local s_Yaw = p_Player.input.authoritativeAimingYaw
@@ -657,7 +661,7 @@ function BotSpawner:SpawnBotTower(p_Player, p_Height)
 			if not s_Bot then
 				return
 			end
-
+			m_BotCreator:SetAttributesToBot(s_Bot)
 			s_Bot:SetVarsStatic(p_Player)
 			self:_SpawnBot(s_Bot, s_Transform, true)
 		end
@@ -671,7 +675,7 @@ end
 function BotSpawner:SpawnBotGrid(p_Player, p_Rows, p_Columns, p_Spacing)
 	for i = 1, p_Rows do
 		for j = 1, p_Columns do
-			local s_Name = m_BotManager:FindNextBotName()
+			local s_Name = m_BotCreator:GetNextBotName(self:_GetSpawnBotKit())
 
 			if s_Name ~= nil then
 				local s_Yaw = p_Player.input.authoritativeAimingYaw
@@ -687,6 +691,7 @@ function BotSpawner:SpawnBotGrid(p_Player, p_Rows, p_Columns, p_Spacing)
 					return
 				end
 
+				m_BotCreator:SetAttributesToBot(s_Bot)
 				s_Bot:SetVarsStatic(p_Player)
 				self:_SpawnBot(s_Bot, s_Transform, true)
 			end
@@ -780,30 +785,14 @@ end
 ---@param p_Bot Bot
 ---@param p_SetKit boolean
 function BotSpawner:_SelectLoadout(p_Bot, p_SetKit)
-	local s_WriteNewKit = (p_SetKit or Config.BotNewLoadoutOnSpawn)
+	local s_WriteNewKit = false
 
-	if not s_WriteNewKit and (p_Bot.m_Color == nil or p_Bot.m_Kit == nil or p_Bot.m_ActiveWeapon == nil) then
+	if p_Bot.m_ActiveWeapon == nil then
 		s_WriteNewKit = true
 	end
 
-	local s_BotColor = Config.BotColor
-	local s_BotKit = Config.BotKit
-
-	if s_WriteNewKit then
-		if s_BotColor == BotColors.RANDOM_COLOR then
-			s_BotColor = MathUtils:GetRandomInt(1, BotColors.Count - 1) -- Color enum goes from 1 to 13.
-		end
-
-		if s_BotKit == BotKits.RANDOM_KIT then
-			s_BotKit = self:_GetSpawnBotKit()
-		end
-
-		p_Bot.m_Color = s_BotColor
-		p_Bot.m_Kit = s_BotKit
-	else
-		s_BotColor = p_Bot.m_Color
-		s_BotKit = p_Bot.m_Kit
-	end
+	local s_BotColor = p_Bot.m_Color
+	local s_BotKit = p_Bot.m_Kit
 
 	p_Bot:ResetSpawnVars()
 	local s_Team = "US"
@@ -1058,24 +1047,27 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 	local s_IsRespawn = false
 	local s_Name = nil
 
-	if p_ExistingBot ~= nil then
-		s_IsRespawn = true
-	else
-		s_Name = m_BotManager:FindNextBotName()
-	end
-
 	local s_TeamId = p_ForcedTeam
-	local s_SquadId = SquadId.SquadNone
-
 	if s_TeamId == nil then
 		s_TeamId = m_BotManager:GetBotTeam()
 	end
 
-	if s_IsRespawn then
+	if p_ExistingBot ~= nil then
+		s_IsRespawn = true
+		s_Name = p_ExistingBot.m_Name
 		s_TeamId = p_ExistingBot.m_Player.teamId
-		s_SquadId = p_ExistingBot.m_Player.squadId
 	else
-		s_SquadId = self:_GetSquadToJoin(s_TeamId)
+		s_Name = m_BotCreator:GetNextBotName(self:_GetSpawnBotKit())
+	end
+
+	local s_SquadId = self:_GetSquadToJoin(s_TeamId)
+
+	if s_IsRespawn then
+		if p_ExistingBot.m_Player.squadId == SquadId.SquadNone or p_ExistingBot.m_Player.squadId > s_SquadId then -- place free in other squad
+			p_ExistingBot.m_Player.squadId = s_SquadId
+		else
+			s_SquadId = p_ExistingBot.m_Player.squadId
+		end
 	end
 
 	local s_InverseDirection = nil
@@ -1088,14 +1080,21 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 				return
 			end
 
-			self:_SelectLoadout(s_Bot, true)
+			m_BotCreator:SetAttributesToBot(s_Bot)
+			self:_SelectLoadout(s_Bot, false)
 			self:_TriggerSpawn(s_Bot)
 			table.insert(self._BotsWithoutPath, s_Bot)
 			return
 		end
 
+		local s_Beacon = g_GameDirector:GetPlayerBeacon(s_Name)
+
 		-- Find a spawn point.
-		if p_UseRandomWay or p_ActiveWayIndex == nil or p_ActiveWayIndex == 0 then
+		if s_Beacon ~= nil then
+			s_SpawnPoint = m_NodeCollection:Get(s_Beacon.Point, s_Beacon.Path)
+			s_SquadSpawnVehicle = s_Beacon.Entity
+			s_InverseDirection = true
+		elseif p_UseRandomWay or p_ActiveWayIndex == nil or p_ActiveWayIndex == 0 then
 			s_SpawnPoint, s_InverseDirection, s_SquadSpawnVehicle = self:_GetSpawnPoint(s_TeamId, s_SquadId)
 
 			-- Special spawn in vehicles.
@@ -1140,7 +1139,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 						if (TeamSquadManager:GetSquadPlayerCount(s_TeamId, s_SquadId) == 1) then
 							s_Bot.m_Player:SetSquadLeader(true, false) -- Not private.
 						end
-
+						m_BotCreator:SetAttributesToBot(s_Bot)
 						s_Bot:SetVarsWay(nil, true, 0, 0, false)
 						self:_SpawnBot(s_Bot, s_Transform, true)
 
@@ -1192,12 +1191,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 
 		if s_IsRespawn then
 			p_ExistingBot:SetVarsWay(p_Player, p_UseRandomWay, p_ActiveWayIndex, p_IndexOnPath, s_InverseDirection)
-			self:_SpawnBot(p_ExistingBot, s_Transform, false)
-
-			-- Check for vehicle of squad.
-			if s_SquadSpawnVehicle ~= nil then
-				p_ExistingBot:_EnterVehicleEntity(s_SquadSpawnVehicle, false)
-			end
+			self:_SpawnInEntity(p_ExistingBot, s_SquadSpawnVehicle, s_Transform, false)
 		else
 			local s_Bot = m_BotManager:CreateBot(s_Name, s_TeamId, s_SquadId)
 
@@ -1206,47 +1200,43 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 				if (TeamSquadManager:GetSquadPlayerCount(s_TeamId, s_SquadId) == 1) then
 					s_Bot.m_Player:SetSquadLeader(true, false) -- Not private.
 				end
-
+				m_BotCreator:SetAttributesToBot(s_Bot)
 				s_Bot:SetVarsWay(p_Player, p_UseRandomWay, p_ActiveWayIndex, p_IndexOnPath, s_InverseDirection)
-				self:_SpawnBot(s_Bot, s_Transform, true)
-
-				-- Check for vehicle of squad.
-				if s_SquadSpawnVehicle ~= nil then
-					s_Bot:_EnterVehicleEntity(s_SquadSpawnVehicle, false)
-				end
+				self:_SpawnInEntity(s_Bot, s_SquadSpawnVehicle, s_Transform, true)
 			end
 		end
 	end
+end
+
+function BotSpawner:_SpawnInEntity(p_Bot, p_Entity, p_Transform, p_SetKit)
+	local s_VehicleData = m_Vehicles:GetVehicleByEntity(p_Entity)
+
+	if s_VehicleData and s_VehicleData.Name == "[RadioBeacon]" then
+		self:_SpawnBot(p_Bot, p_Entity.transform, p_SetKit)
+		return
+	end
+
+	self:_SpawnBot(p_Bot, p_Transform, p_SetKit)
+
+	if p_Entity == nil then
+		return
+	end
+
+	p_Bot:_EnterVehicleEntity(p_Entity, false)
 end
 
 ---@param p_Bot Bot
 ---@param p_Transform LinearTransform
 ---@param p_SetKit boolean
 function BotSpawner:_SpawnBot(p_Bot, p_Transform, p_SetKit)
-	local s_WriteNewKit = (p_SetKit or Config.BotNewLoadoutOnSpawn)
+	local s_WriteNewKit = false
 
-	if not s_WriteNewKit and (p_Bot.m_Color == nil or p_Bot.m_Kit == nil or p_Bot.m_ActiveWeapon == nil) then
+	if p_Bot.m_ActiveWeapon == nil then
 		s_WriteNewKit = true
 	end
 
-	local s_BotColor = Config.BotColor
-	local s_BotKit = Config.BotKit
-
-	if s_WriteNewKit then
-		if s_BotColor == BotColors.RANDOM_COLOR then
-			s_BotColor = MathUtils:GetRandomInt(1, BotColors.Count - 1) -- Color enum goes from 1 to 13.
-		end
-
-		if s_BotKit == BotKits.RANDOM_KIT then
-			s_BotKit = self:_GetSpawnBotKit()
-		end
-
-		p_Bot.m_Color = s_BotColor
-		p_Bot.m_Kit = s_BotKit
-	else
-		s_BotColor = p_Bot.m_Color
-		s_BotKit = p_Bot.m_Kit
-	end
+	local s_BotColor = p_Bot.m_Color
+	local s_BotKit = p_Bot.m_Kit
 
 	local s_Team = "US"
 
@@ -1741,6 +1731,10 @@ end
 
 ---@return BotKits|integer
 function BotSpawner:_GetSpawnBotKit()
+	-- check for overwritten bot-kit
+	if Config.BotKit ~= BotKits.RANDOM_KIT then
+		return Config.BotKit
+	end
 	---@type BotKits|integer
 	local s_BotKit = MathUtils:GetRandomInt(1, BotKits.Count - 1) -- Kit enum goes from 1 to 4.
 	local s_ChangeKit = false
