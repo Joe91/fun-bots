@@ -68,6 +68,7 @@ This is the changelog for the version V2.9 Don't forget to [join us on Discord](
 * Conquest Large/Small MP_Subway by ThyKingdomCome (with beacons)
 * Conquest Large MP_018 by ThyKingdomCome (with beacons)
 * Conquest Large XP4_Quake by ThyKingdomCome (with beacons)
+* Rush MP_Subway by Clef_went away (with beacons)
 
 
 ### Documentation update
