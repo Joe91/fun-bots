@@ -778,6 +778,8 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 				self._ShootModeTimer = Config.BotFireModeDuration
 				if self.m_Behavior == BotBehavior.LongerAttacking then
 					self._ShootModeTimer = Config.BotFireModeDuration * 1.7
+				elseif self.m_Behavior == BotBehavior.AbortAttackFast then
+					self._ShootModeTimer = Config.BotFireModeDuration * 0.5
 				end
 			end
 			self._ShootPlayerName = p_Player.name

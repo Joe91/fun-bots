@@ -126,7 +126,7 @@ Config = {
 	NodesPerCycle = 400,				-- Set how many nodes get drawn per cycle. Affects performance 
 
 	-- ADVANCED 
-	DistanceForDirectAttack = 8,		-- Distance bots can hear you at 
+	DistanceForDirectAttack = 6,		-- Distance bots can hear you at 
 	MeleeAttackCoolDown = 3.5,			-- The time a bot waits before attacking with melee again 
 	AimForHead = false,					-- Bots without sniper aim for the head. A more experimental config 
 	AimForHeadSniper = false,			-- Bots with sniper aim for the head. A more experimental config 
