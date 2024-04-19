@@ -1280,8 +1280,8 @@ SettingsDefinition = {
 			Type = Type.Integer,
 			Value = Config.DistanceForDirectAttack,
 			Description = "Distance bots can hear you at",
-			Reference = Range(0.00, 1000.00, 1.0),
-			Default = 8,
+			Reference = Range(0.00, 20.00, 1.0),
+			Default = 6,
 			UpdateFlag = UpdateFlag.None,
 			Category = "ADVANCED"
 		},
