@@ -69,6 +69,10 @@ This is the changelog for the version V2.9 Don't forget to [join us on Discord](
 * Conquest Large MP_018 by ThyKingdomCome (with beacons)
 * Conquest Large XP4_Quake by ThyKingdomCome (with beacons)
 * Rush MP_Subway by Clef_went away (with beacons)
+* TDM XP2_Office by Clef_went away
+* TDM XP2_Palace by Clef_went away
+* TDM XP4_Quake by Clef_went away
+* TDM XP4_FD by Clef_went away
 
 
 ### Documentation update
