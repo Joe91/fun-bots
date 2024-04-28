@@ -287,7 +287,7 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 					end
 
 					-- defend can also be a valid objective
-					if l_Objective.team == l_BotTeam then
+					if l_Objective.team == l_BotTeam and Config.DefendObjectives then
 						if l_Objective.assigned[l_BotTeam] < s_MaxAssignsDefend[l_BotTeam] then
 							local s_Distance = self:_GetDistanceFromObjective(l_Objective.name, l_Bot.m_Player.soldier.worldTransform.trans)
 
@@ -297,7 +297,7 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 								s_ClosestObjectiveMode = BotObjectiveModes.Defend
 							end
 						end
-					else -- objective of enemy-team
+					elseif l_Objective.team ~= l_BotTeam then -- objective of enemy-team
 						if l_Objective.assigned[l_BotTeam] < s_MaxAssignsAttack[l_BotTeam] then
 							local s_Distance = self:_GetDistanceFromObjective(l_Objective.name, l_Bot.m_Player.soldier.worldTransform.trans)
 
