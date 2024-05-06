@@ -33,6 +33,7 @@ This is the changelog for the version V2.9 Don't forget to [join us on Discord](
 * Conquest Large MP_018 by ThyKingdomCome
 * Conquest Large MP_017 by ThyKingdomCome
 * Conquest Large XP3_Valley by ThyKingdomCome
+* Conquest Assault Small XP1_003 by ThyKindomeCome (redone)
 * XP4_FD Scavenger by Volbeat13
 * XP4_Parl Scavenger by Volbeat13
 * XP4_Quake Scavenger by Volbeat13
