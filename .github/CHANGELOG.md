@@ -22,6 +22,7 @@ This is the changelog for the version V2.9 Don't forget to [join us on Discord](
 * Obstacels on XP4_quake get destroyed on level loaded (by tagener-noisu)
 * Obtion to not use jets was added (by tagener-noisu)
 * Bots can Revive Bots now #327
+* Separate update-function fro bots by Bree_Arnold
 
 ### Bug fixes
 * Merged pull request #323 from tagener-noisu Path-Switcher fixes
