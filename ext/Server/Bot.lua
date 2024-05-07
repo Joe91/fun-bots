@@ -72,6 +72,7 @@ function Bot:__init(p_Player)
 	self.m_Knife = nil
 	self._Respawning = false
 	self.m_HasBeacon = false
+	self.m_DontRevive = false
 
 	-- Timers.
 	self._UpdateTimer = 0.0
@@ -876,6 +877,7 @@ function Bot:ResetSpawnVars()
 	self._Objective = '' -- Reset objective on spawn, as another spawn-point might have chosen...
 	self._WeaponToUse = BotWeapons.Primary
 	self.m_HasBeacon = false
+	self.m_DontRevive = false
 
 	-- Reset all input-vars.
 	---@type EntryInputActionEnum

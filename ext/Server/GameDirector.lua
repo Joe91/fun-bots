@@ -164,6 +164,7 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 
 				if s_BotList[i]._KillYourselfTimer > Registry.GAME_DIRECTOR.KILL_ON_INVALID_PATH_TIME then
 					if s_BotList[i].m_Player ~= nil and s_BotList[i].m_Player.soldier ~= nil then
+						s_BotList[i].m_DontRevive = true;
 						s_BotList[i].m_Player.soldier:Kill()
 						s_BotList[i]._KillYourselfTimer = 0.0
 						m_Logger:Write("kill " .. s_BotList[i].m_Name .. " because of inactivity on wrong paths")

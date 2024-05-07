@@ -1244,7 +1244,10 @@ function BotManager:_CheckForBotBotRevive()
 
 	for _, l_Bot in ipairs(self._Bots) do
 		if not l_Bot.m_InVehicle then
-			if l_Bot.m_Player.corpse and not l_Bot.m_Player.corpse.isDead then
+			if l_Bot.m_Player.corpse
+				and not l_Bot.m_Player.corpse.isDead
+				and not l_Bot.m_DontRevive
+			then
 				-- bot to revive found
 				table.insert(s_DeadBots, l_Bot)
 			elseif l_Bot.m_Player.soldier and l_Bot.m_Kit == BotKits.Assault and string.find(l_Bot.m_Player.soldier.weaponsComponent.weapons[6].name, "Defibrillator") then
