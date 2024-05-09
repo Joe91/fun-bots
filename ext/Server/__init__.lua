@@ -122,7 +122,6 @@ function FunBotServer:RegisterEvents()
 	Events:Subscribe('Player:EnteredCapturePoint', self, self.OnPlayerEnteredCapturePoint)
 	Events:Subscribe('Player:ExitedCapturePoint', self, self.OnPlayerExitedCapturePoint)
 	Events:Subscribe('Vehicle:SpawnDone', self, self.OnVehicleSpawnDone)
-	Events:Subscribe('Vehicle:Destroyed', self, self.OnVehicleDestroyed)
 	Events:Subscribe('Vehicle:Unspawn', self, self.OnVehicleUnspawn)
 	Events:Subscribe('Vehicle:Damage', self, self.OnVehicleDamage)
 	Events:Subscribe('Vehicle:Enter', self, self.OnVehicleEnter)
@@ -302,6 +301,7 @@ function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPe
 
 	-- Only use name of Level.
 	p_LevelName = p_LevelName:gsub(".+/.+/", "")
+	Globals.LevelName = p_LevelName
 	m_Logger:Write('OnLevelLoaded: ' .. p_LevelName .. ' ' .. p_GameMode)
 
 	self:SetRespawnDelay()
@@ -481,10 +481,6 @@ end
 ---@param p_VehicleEntity Entity @`ControllableEntity`
 function FunBotServer:OnVehicleSpawnDone(p_VehicleEntity)
 	m_GameDirector:OnVehicleSpawnDone(p_VehicleEntity)
-end
-
-function FunBotServer:OnVehicleDestroyed(p_VehicleEntity, p_VehiclePoints, p_HotTeam)
-	m_GameDirector:OnVehicleDestroyed(p_VehicleEntity, p_VehiclePoints, p_HotTeam)
 end
 
 function FunBotServer:OnVehicleUnspawn(p_VehicleEntity, p_VehiclePoints, p_HotTeam)
