@@ -589,7 +589,7 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 			end
 		end
 	else
-		if self.m_Gunship ~= nil then
+		if Config.EnableParadrop and self.m_Gunship ~= nil then
 			if p_Entity.transform.trans.y > self.m_Gunship.Entity.transform.trans.y then
 				m_Logger:Write("Add spawnable vehicle at gunship: " .. s_VehicleData.Name)
 				table.insert(self.m_SpawnableVehicles[self.m_Gunship.Team], p_Entity)
