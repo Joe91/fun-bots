@@ -1298,7 +1298,15 @@ function BotManager:_CheckForBotBotRevive()
 					local s_PosBody = l_DeadBot.m_Player.corpse.physicsEntityBase.position:Clone()
 					local s_PosMedic = l_MedicBot.m_Player.soldier.worldTransform.trans:Clone()
 					local s_Distance = s_PosBody:Distance(s_PosMedic)
-					if s_Distance < Registry.BOT.REVIVE_DISTANCE then
+
+					local l_ReviveProbability = Registry.BOT.REVIVE_PROBABILITY
+					if l_MedicBot._ShootPlayer ~= nil then
+						l_ReviveProbability = Registry.BOT.REVIVE_PROBABILITY_IF_HAS_TARGET
+					end
+
+					local l_ShouldRevive = m_Utilities:CheckProbablity(l_ReviveProbability)
+
+					if s_Distance < Registry.BOT.REVIVE_DISTANCE and l_ShouldRevive then
 						-- insert positions
 						s_PosBody.y = s_PosBody.y + 0.2
 						s_PosMedic.y = s_PosMedic.y + 1.6

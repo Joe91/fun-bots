@@ -304,9 +304,9 @@ function Bot:ExitVehicle()
 end
 
 ---@return boolean
-function Bot:IsReadyToAttack()
+function Bot:IsReadyToAttack(p_ShootBackAfterHit)
 	if self._ActiveAction == BotActionFlags.OtherActionActive or
-		self._ActiveAction == BotActionFlags.ReviveActive or
+		(self._ActiveAction == BotActionFlags.ReviveActive and not p_ShootBackAfterHit) or
 		self._ActiveAction == BotActionFlags.RepairActive or
 		self._ActiveAction == BotActionFlags.EnterVehicleActive or
 		self._ActiveAction == BotActionFlags.GrenadeActive then
@@ -369,7 +369,7 @@ end
 ---@param p_IgnoreYaw boolean
 ---@return boolean
 function Bot:ShootAt(p_Player, p_IgnoreYaw)
-	if not self:IsReadyToAttack() or self._Shoot == false then
+	if not self:IsReadyToAttack(p_IgnoreYaw) or self._Shoot == false then
 		return false
 	end
 
