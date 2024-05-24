@@ -345,9 +345,10 @@ function Bot:GetAttackDistance(p_ShootBackAfterHit, p_VehicleAttackMode)
 			end
 		end
 	else
-		if not m_Vehicles:IsAirVehicle(self.m_ActiveVehicle) and
-			m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.MobileArtillery) and
-			m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.AntiAir) then
+		if not m_Vehicles:IsAirVehicle(self.m_ActiveVehicle)
+			and m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.MobileArtillery)
+			and not m_Vehicles:IsAAVehicle(self.m_ActiveVehicle)
+		then
 			if p_ShootBackAfterHit then
 				s_AttackDistance = Config.MaxShootDistanceNoAntiAir * 2
 			else
@@ -473,9 +474,16 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 	local s_FovHalf = 0
 	local s_PitchHalf = 0
 
+	if m_InVehicle
+		and m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.LightAA)
+		and not m_Vehicles:IsAirVehicleType(s_Type)
+	then
+		return false
+	end
+
 	-- If target is air-vehicle and bot is in AA → ignore yaw.
-	if (s_Type == VehicleTypes.Chopper or s_Type == VehicleTypes.ScoutChopper or s_Type == VehicleTypes.Plane) then
-		if (self.m_InVehicle and m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.AntiAir)) or
+	if m_Vehicles:IsAirVehicleType(s_Type) then
+		if (self.m_InVehicle and m_Vehicles:IsAAVehicle(self.m_ActiveVehicle)) or
 			(s_VehicleAttackMode == VehicleAttackModes.AttackWithMissileAir) then
 			p_IgnoreYaw = true
 		end
@@ -501,7 +509,7 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 		end
 
 		if self.m_InVehicle then
-			if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.AntiAir) then
+			if m_Vehicles:IsAAVehicle(self.m_ActiveVehicle) then
 				s_FovHalf = Config.FovVehicleAAForShooting / 360 * math.pi
 				s_PitchHalf = Config.FovVerticleVehicleAAForShooting / 360 * math.pi
 			elseif m_Vehicles:IsAirVehicle(self.m_ActiveVehicle) and
@@ -582,20 +590,26 @@ function Bot:_CheckForVehicleActions(p_DeltaTime, p_AttackActive)
 		end
 	end
 
-	if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.MobileArtillery) then
+	local s_VehicleEntity = self.m_Player.controlledControllable
+	if not s_VehicleEntity then
+		return
+	end
+
+	if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.MobileArtillery)
+		or m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.LightAA)
+	then
 		-- Change seat, for attack.
-		local s_VehicleEntity = self.m_Player.controlledControllable
-		if not s_VehicleEntity then
-			return
+		local s_DesiredSeat = 0
+
+		-- Switch to gunner seat
+		if p_AttackActive then
+			s_DesiredSeat = 1
 		end
 
-		if p_AttackActive and self.m_Player.controlledEntryId == 0 then
-			-- Change to gunner seat.
-			self.m_Player:EnterVehicle(s_VehicleEntity, 1)
-			self:UpdateVehicleMovableId()
-		elseif not p_AttackActive and self.m_Player.controlledEntryId == 1 then
-			-- Change to driver seat.
-			self.m_Player:EnterVehicle(s_VehicleEntity, 0)
+		if s_DesiredSeat ~= self.m_Player.controlledEntryId
+			and s_VehicleEntity:GetPlayerInEntry(s_DesiredSeat) == nil
+		then
+			self.m_Player:EnterVehicle(s_VehicleEntity, s_DesiredSeat)
 			self:UpdateVehicleMovableId()
 		end
 	else
@@ -605,12 +619,6 @@ function Bot:_CheckForVehicleActions(p_DeltaTime, p_AttackActive)
 			self._VehicleSeatTimer = 0
 
 			if self.m_InVehicle then -- In vehicle.
-				local s_VehicleEntity = self.m_Player.controlledControllable
-
-				if not s_VehicleEntity then
-					return
-				end
-
 				for l_SeatIndex = 0, self.m_Player.controlledEntryId do
 					if s_VehicleEntity:GetPlayerInEntry(l_SeatIndex) == nil then
 						-- Better seat available → switch seats.
