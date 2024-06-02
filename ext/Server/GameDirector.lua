@@ -33,7 +33,7 @@ function GameDirector:RegisterVars()
 	self.m_Beacons = {}
 	self.m_Gunship = nil
 	self.m_GunshipObjectiveName = nil
-	self.m_GunshipObjectiveTeam = 1
+	self.m_GunshipObjectiveTeam = nil
 end
 
 -- =============================================
@@ -601,7 +601,9 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 		table.insert(self.m_SpawnableStationaryAas[s_VehicleData.Team], p_Entity)
 	end
 
-	if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.Gunship) then
+	if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.Gunship)
+		and self.m_GunshipObjectiveTeam ~= nil
+	then
 		m_Logger:Write("Spawned gunship, team: " .. self.m_GunshipObjectiveTeam)
 
 		local s_Gunship = {}
