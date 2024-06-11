@@ -1244,7 +1244,10 @@ function BotManager:_CheckForBotBotRevive()
 
 	for _, l_Bot in ipairs(self._Bots) do
 		if not l_Bot.m_InVehicle then
-			if l_Bot.m_Player.corpse and not l_Bot.m_Player.corpse.isDead then
+			if l_Bot.m_Player.corpse
+				and not l_Bot.m_Player.corpse.isDead
+				and not l_Bot.m_DontRevive
+			then
 				-- bot to revive found
 				table.insert(s_DeadBots, l_Bot)
 			elseif l_Bot.m_Player.soldier and l_Bot.m_Kit == BotKits.Assault and string.find(l_Bot.m_Player.soldier.weaponsComponent.weapons[6].name, "Defibrillator") then
@@ -1295,7 +1298,15 @@ function BotManager:_CheckForBotBotRevive()
 					local s_PosBody = l_DeadBot.m_Player.corpse.physicsEntityBase.position:Clone()
 					local s_PosMedic = l_MedicBot.m_Player.soldier.worldTransform.trans:Clone()
 					local s_Distance = s_PosBody:Distance(s_PosMedic)
-					if s_Distance < Registry.BOT.REVIVE_DISTANCE then
+
+					local l_ReviveProbability = Registry.BOT.REVIVE_PROBABILITY
+					if l_MedicBot._ShootPlayer ~= nil then
+						l_ReviveProbability = Registry.BOT.REVIVE_PROBABILITY_IF_HAS_TARGET
+					end
+
+					local l_ShouldRevive = m_Utilities:CheckProbablity(l_ReviveProbability)
+
+					if s_Distance < Registry.BOT.REVIVE_DISTANCE and l_ShouldRevive then
 						-- insert positions
 						s_PosBody.y = s_PosBody.y + 0.2
 						s_PosMedic.y = s_PosMedic.y + 1.6

@@ -1459,6 +1459,17 @@ SettingsDefinition = {
 			UpdateFlag = UpdateFlag.None,
 			Category = "ADVANCED"
 		},
+		{
+			Name = "DefendObjectives",
+			Text = "Defend objectives",
+			---@type Type|integer
+			Type = Type.Boolean,
+			Value = Config.DefendObjectives,
+			Description = "Bots will stay on captured objectives and defend them",
+			Default = true,
+			UpdateFlag = UpdateFlag.None,
+			Category = "ADVANCED"
+		},
 
 		-- Expert Properties.
 		{
