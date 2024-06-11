@@ -303,6 +303,7 @@ function Bot:ExitVehicle()
 	self._ExitVehicleActive = true
 end
 
+---@param p_ShootBackAfterHit boolean
 ---@return boolean
 function Bot:IsReadyToAttack(p_ShootBackAfterHit)
 	if self._ActiveAction == BotActionFlags.OtherActionActive or

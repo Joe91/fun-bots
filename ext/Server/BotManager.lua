@@ -1147,7 +1147,7 @@ function BotManager:_CheckForBotBotAttack()
 		local s_BotNameToCheck = self._BotBotAttackList[i]
 		local s_Bot = self:GetBotByName(s_BotNameToCheck)
 
-		if s_Bot and s_Bot.m_Player and s_Bot.m_Player.soldier and s_Bot:IsReadyToAttack() then
+		if s_Bot and s_Bot.m_Player and s_Bot.m_Player.soldier and s_Bot:IsReadyToAttack(false) then
 			local s_BotPosition = nil
 			if s_Bot.m_Player.controlledControllable then
 				s_BotPosition = s_Bot.m_Player.controlledControllable.transform.trans
@@ -1160,7 +1160,7 @@ function BotManager:_CheckForBotBotAttack()
 					local s_EnemyBot = self:GetBotByName(l_BotName)
 
 					if s_EnemyBot and s_EnemyBot.m_Player and s_EnemyBot.m_Player.soldier and
-						s_EnemyBot.m_Player.teamId ~= s_Bot.m_Player.teamId and s_EnemyBot:IsReadyToAttack() then
+						s_EnemyBot.m_Player.teamId ~= s_Bot.m_Player.teamId and s_EnemyBot:IsReadyToAttack(false) then
 						-- Check connection-state.
 						local s_ConnectionValue = ""
 						local s_Id1 = s_Bot.m_Player.id
