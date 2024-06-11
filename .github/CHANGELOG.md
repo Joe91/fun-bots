@@ -24,12 +24,16 @@ This is the changelog for the version V2.9 Don't forget to [join us on Discord](
 * Bots can Revive Bots now #327
 * Separate update-function fro bots by Bree_Arnold
 * improve compatibility with Randomiser mod #333
+* Registryoptions for Revive-Probability added (by tanger-noisu)
+* fire-mode for burst-weapons was added (by tanger-noisu)
+* Option to disable defend-mode (by tanger-noisu)
 
 ### Bug fixes
 * Merged pull request #323 from tagener-noisu Path-Switcher fixes
 * Bots find best squad after team-switch again.
 * Aiming with the defib was fixed by Bree_Arnold
 * fixed wrong spawn-delay after revive of bots
+* Don't revive Bots, that were killed by the gamedirector (by tanger-noisu)
 
 ### New maps
 * Conquest Large MP_018 by ThyKingdomCome

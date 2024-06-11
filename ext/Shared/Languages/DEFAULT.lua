@@ -259,6 +259,8 @@ Language:add(code, "Max Side Cycle", "")
 Language:add(code, "Max time bots move sidewards, before straight-movement (in sec)", "")
 Language:add(code, "Min Move Cycle", "")
 Language:add(code, "Min time bots move sidewards or straight before switching (in sec)", "")
+Language:add(code, "Defend objectives", "")
+Language:add(code, "Bots will stay on captured objectives and defend them", "")
 
 -- EXPERT
 Language:add(code, "Bot first shot delay", "")

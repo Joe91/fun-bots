@@ -142,7 +142,7 @@ Config = {
 	MaxStraigtCycle = 10.0,				-- Max time bots move straight, before sidewards-movement (in sec) 
 	MaxSideCycle = 5.0,					-- Max time bots move sidewards, before straight-movement (in sec) 
 	MinMoveCycle = 0.3,					-- Min time bots move sidewards or straight before switching (in sec) 
-	DefendObjectives = true,
+	DefendObjectives = true,			-- Bots will stay on captured objectives and defend them 
 
 	-- EXPERT 
 	BotFirstShotDelay = 0.15,			-- Delay for first shot. If too small, there will be great spread in first cycle because it is not compensated yet 

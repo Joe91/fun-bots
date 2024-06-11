@@ -133,7 +133,7 @@ Registry = {
 		REVIVE_DISTANCE = 15.0,
 		-- Revive probabilities
 		REVIVE_PROBABILITY = 80.0,
-		REVIVE_PROBABILITY_IF_HAS_TARGET = 20.0,
+		REVIVE_PROBABILITY_IF_HAS_TARGET = 40.0,
 		-- Update cycle.
 		BOT_UPDATE_CYCLE = 0.1,
 		-- - distance the bots have to reach in height to continue with next Waypoint.
