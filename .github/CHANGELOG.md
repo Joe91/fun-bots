@@ -44,6 +44,9 @@ This is the changelog for the version V2.9 Don't forget to [join us on Discord](
 * XP4_Parl Scavenger by Volbeat13
 * XP4_Quake Scavenger by Volbeat13
 * XP3_Shield TankSuperiority by Augusta
+* Conquest Large MP_003 by IgorUA
+* Conquest Large XP3_Desert by IgorUA
+* Conquest Large XP5_003 by IgorUA
 
 ### Updated maps
 * Conquest Small MP_001 by IgorUA
@@ -83,6 +86,7 @@ This is the changelog for the version V2.9 Don't forget to [join us on Discord](
 * Assault Small XP1_002 by Clef_went away
 * SquadRush XP3_Valley by Clef_went away
 * Assault Small XP4_Rubble by Clef_went away
+* Many many more maps by IgorUA
 
 ### Documentation update
 
