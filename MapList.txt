@@ -11,6 +11,7 @@ XP1_001 ConquestAssaultSmall1 1
 XP1_003 ConquestAssaultSmall1 1
 XP1_004 ConquestAssaultSmall1 1
 MP_001 ConquestLarge0 1
+MP_003 ConquestLarge0 1
 MP_007 ConquestLarge0 1
 MP_011 ConquestLarge0 1
 MP_012 ConquestLarge0 1
@@ -20,6 +21,7 @@ MP_018 ConquestLarge0 1
 MP_Subway ConquestLarge0 1
 XP1_002 ConquestLarge0 1
 XP3_Alborz ConquestLarge0 1
+XP3_Desert ConquestLarge0 1
 XP3_Shield ConquestLarge0 1
 XP3_Valley ConquestLarge0 1
 XP4_FD ConquestLarge0 1
@@ -27,6 +29,7 @@ XP4_Parl ConquestLarge0 1
 XP4_Quake ConquestLarge0 1
 XP5_001 ConquestLarge0 1
 XP5_002 ConquestLarge0 1
+XP5_003 ConquestLarge0 1
 XP5_004 ConquestLarge0 1
 COOP_006 ConquestSmall0 1
 MP_001 ConquestSmall0 1

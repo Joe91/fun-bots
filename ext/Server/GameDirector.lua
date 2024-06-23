@@ -31,6 +31,9 @@ function GameDirector:RegisterVars()
 	self.m_SpawnableVehicles = {}
 	self.m_AvailableVehicles = {}
 	self.m_Beacons = {}
+	self.m_Gunship = nil
+	self.m_GunshipObjectiveName = nil
+	self.m_GunshipObjectiveTeam = nil
 end
 
 -- =============================================
@@ -48,6 +51,7 @@ function GameDirector:OnLevelLoaded()
 	-- To-do: assign weights to each objective.
 	self.m_UpdateTimer = 0
 	self:_InitObjectives()
+	self.m_GunshipObjectiveName = self:GetGunshipObjectiveName(Globals.LevelName, Globals.GameMode)
 
 	for i = 0, Globals.NrOfTeams do
 		self.m_SpawnableVehicles[i] = {}
@@ -94,6 +98,13 @@ function GameDirector:OnCapturePointCaptured(p_CapturePoint)
 		team = p_CapturePoint.team,
 		isAttacked = p_CapturePoint.isAttacked
 	})
+
+	if self.m_GunshipObjectiveName ~= nil
+		and p_CapturePoint.name == self.m_GunshipObjectiveName
+	then
+		self.m_GunshipObjectiveTeam = p_CapturePoint.team;
+		m_Logger:Write("Gunship capture point captured: " .. p_CapturePoint.name)
+	end
 
 	m_Logger:Write('GameDirector:_onCapture: ' .. s_ObjectiveName)
 end
@@ -164,6 +175,7 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 
 				if s_BotList[i]._KillYourselfTimer > Registry.GAME_DIRECTOR.KILL_ON_INVALID_PATH_TIME then
 					if s_BotList[i].m_Player ~= nil and s_BotList[i].m_Player.soldier ~= nil then
+						s_BotList[i].m_DontRevive = true;
 						s_BotList[i].m_Player.soldier:Kill()
 						s_BotList[i]._KillYourselfTimer = 0.0
 						m_Logger:Write("kill " .. s_BotList[i].m_Name .. " because of inactivity on wrong paths")
@@ -286,7 +298,7 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 					end
 
 					-- defend can also be a valid objective
-					if l_Objective.team == l_BotTeam then
+					if l_Objective.team == l_BotTeam and Config.DefendObjectives then
 						if l_Objective.assigned[l_BotTeam] < s_MaxAssignsDefend[l_BotTeam] then
 							local s_Distance = self:_GetDistanceFromObjective(l_Objective.name, l_Bot.m_Player.soldier.worldTransform.trans)
 
@@ -296,7 +308,7 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 								s_ClosestObjectiveMode = BotObjectiveModes.Defend
 							end
 						end
-					else -- objective of enemy-team
+					elseif l_Objective.team ~= l_BotTeam then -- objective of enemy-team
 						if l_Objective.assigned[l_BotTeam] < s_MaxAssignsAttack[l_BotTeam] then
 							local s_Distance = self:_GetDistanceFromObjective(l_Objective.name, l_Bot.m_Player.soldier.worldTransform.trans)
 
@@ -577,10 +589,29 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 				table.insert(self.m_AvailableVehicles[s_Objective.team], p_Entity)
 			end
 		end
+	else
+		if Config.EnableParadrop and self.m_Gunship ~= nil then
+			if p_Entity.transform.trans.y > self.m_Gunship.Entity.transform.trans.y then
+				m_Logger:Write("Add spawnable vehicle at gunship: " .. s_VehicleData.Name)
+				table.insert(self.m_SpawnableVehicles[self.m_Gunship.Team], p_Entity)
+			end
+		end
 	end
 
 	if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.StationaryAA) then
 		table.insert(self.m_SpawnableStationaryAas[s_VehicleData.Team], p_Entity)
+	end
+
+	if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.Gunship)
+		and self.m_GunshipObjectiveTeam ~= nil
+	then
+		m_Logger:Write("Spawned gunship, team: " .. self.m_GunshipObjectiveTeam)
+
+		local s_Gunship = {}
+		s_Gunship.Entity = p_Entity
+		s_Gunship.Team = self.m_GunshipObjectiveTeam
+
+		self.m_Gunship = s_Gunship
 	end
 end
 
@@ -588,40 +619,41 @@ function GameDirector:OnVehicleUnspawn(p_Entity, p_VehiclePoints, p_HotTeam)
 	p_Entity = ControllableEntity(p_Entity)
 	local s_VehicleData = m_Vehicles:GetVehicleByEntity(p_Entity)
 
-	if s_VehicleData ~= nil then
-		if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.Gadgets) then
-			m_Logger:Write("Gadget unspawn: " .. s_VehicleData.Name)
-			for l_Owner, l_Beacon in pairs(self.m_Beacons) do
-				local l_Entity = l_Beacon.Entity
-				if (l_Entity.uniqueId == p_Entity.uniqueId) and (l_Entity.instanceId == p_Entity.instanceId) then
-					self.m_Beacons[l_Owner] = nil
-				end
+	if s_VehicleData == nil then
+		return
+	end
+
+	if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.Gunship) then
+		m_Logger:Write("Gunship unspawn")
+		self.m_Gunship = nil
+	end
+
+	if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.Gadgets) then
+		m_Logger:Write("Gadget unspawn: " .. s_VehicleData.Name)
+		for l_Owner, l_Beacon in pairs(self.m_Beacons) do
+			local l_Entity = l_Beacon.Entity
+			if (l_Entity.uniqueId == p_Entity.uniqueId) and (l_Entity.instanceId == p_Entity.instanceId) then
+				self.m_Beacons[l_Owner] = nil
 			end
 		end
 	end
-end
 
-function GameDirector:OnVehicleDestroyed(p_Entity, p_VehiclePoints, p_HotTeam)
-	p_Entity = ControllableEntity(p_Entity)
-	local s_VehicleData = m_Vehicles:GetVehicleByEntity(p_Entity)
-	if s_VehicleData ~= nil then
-		for l_Team = TeamId.Team1, Globals.NrOfTeams do
-			if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.StationaryAA) then
-				for l_Index, l_Entity in pairs(self.m_SpawnableStationaryAas[l_Team]) do
-					if (l_Entity.uniqueId == p_Entity.uniqueId) and (l_Entity.instanceId == p_Entity.instanceId) then
-						table.remove(self.m_SpawnableStationaryAas[l_Team], l_Index)
-					end
+	for l_Team = TeamId.Team1, Globals.NrOfTeams do
+		if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.StationaryAA) then
+			for l_Index, l_Entity in pairs(self.m_SpawnableStationaryAas[l_Team]) do
+				if (l_Entity.uniqueId == p_Entity.uniqueId) and (l_Entity.instanceId == p_Entity.instanceId) then
+					table.remove(self.m_SpawnableStationaryAas[l_Team], l_Index)
 				end
-			else
-				for l_Index, l_Entity in pairs(self.m_SpawnableVehicles[l_Team]) do
-					if (l_Entity.uniqueId == p_Entity.uniqueId) and (l_Entity.instanceId == p_Entity.instanceId) then
-						table.remove(self.m_SpawnableVehicles[l_Team], l_Index)
-					end
+			end
+		else
+			for l_Index, l_Entity in pairs(self.m_SpawnableVehicles[l_Team]) do
+				if (l_Entity.uniqueId == p_Entity.uniqueId) and (l_Entity.instanceId == p_Entity.instanceId) then
+					table.remove(self.m_SpawnableVehicles[l_Team], l_Index)
 				end
-				for l_Index, l_Entity in pairs(self.m_AvailableVehicles[l_Team]) do
-					if (l_Entity.uniqueId == p_Entity.uniqueId) and (l_Entity.instanceId == p_Entity.instanceId) then
-						table.remove(self.m_AvailableVehicles[l_Team], l_Index)
-					end
+			end
+			for l_Index, l_Entity in pairs(self.m_AvailableVehicles[l_Team]) do
+				if (l_Entity.uniqueId == p_Entity.uniqueId) and (l_Entity.instanceId == p_Entity.instanceId) then
+					table.remove(self.m_AvailableVehicles[l_Team], l_Index)
 				end
 			end
 		end
@@ -681,6 +713,14 @@ end
 -- Public Functions.
 -- =============================================
 
+
+function GameDirector:GetGunshipObjectiveName(p_LevelName, p_GameMode)
+	if p_LevelName == "XP5_004" and p_GameMode == "ConquestLarge0" then
+		return "ID_H_US_D"
+	end
+
+	return nil
+end
 
 function GameDirector:CheckForExecution(p_Point, p_TeamId, p_InVehicle)
 	if p_Point.Data.Action == nil then

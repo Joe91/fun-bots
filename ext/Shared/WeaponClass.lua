@@ -102,6 +102,17 @@ function Weapon:learnStatsValues()
 		if self.type == WeaponTypes.None then
 			self.type = WeaponTypes.Sniper
 		end
+	elseif string.find(self.name, "AN94") ~= nil
+		or string.find(self.name, "KH2002") ~= nil
+		or string.find(self.name, "M16-Burst") ~= nil
+	then
+		m_Logger:Write("semi auto rifles")
+		s_FireDuration = 0.1
+		s_FirePause = 0.1
+		s_DelayedShot = true
+		if self.type == WeaponTypes.None then
+			self.type = WeaponTypes.Assault
+		end
 	elseif string.find(s_AiDataString, "_rif_") ~= nil then
 		m_Logger:Write("rifle")
 		s_FireDuration = 0.5

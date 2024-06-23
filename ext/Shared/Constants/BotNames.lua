@@ -139,6 +139,7 @@ BotNames = {
 	'FlashHit',
 	'Bree',
 	'Arnold',
+	'ThyKingdomCome',
 	'Major',
 	'Joe',
 	'Firjen',

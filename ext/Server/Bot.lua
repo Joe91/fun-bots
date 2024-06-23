@@ -2,13 +2,12 @@
 ---@overload fun(p_Player: Player):Bot
 Bot = class('Bot')
 
+require('BotUpdate.lua')
 require('__shared/Config')
 require('PidController')
 
 ---@type NodeCollection
 local m_NodeCollection = require('NodeCollection')
----@type PathSwitcher
-local m_PathSwitcher = require('PathSwitcher')
 ---@type Vehicles
 local m_Vehicles = require('Vehicles')
 ---@type AirTargets
@@ -73,6 +72,7 @@ function Bot:__init(p_Player)
 	self.m_Knife = nil
 	self._Respawning = false
 	self.m_HasBeacon = false
+	self.m_DontRevive = false
 
 	-- Timers.
 	self._UpdateTimer = 0.0
@@ -203,259 +203,6 @@ end
 -- Events
 -- =============================================
 
--- Update frame (every Cycle).
--- Update very fast (0.05) ? Needed? Aiming?
--- Update fast (0.1) ? Movement, Reactions.
--- (Update medium? Maybe some things in between).
--- Update slow (1.0) ? Reload, Deploy, (Obstacle-Handling).
-
----@param p_DeltaTime number
-function Bot:OnUpdatePassPostFrame(p_DeltaTime)
-	if self.m_Player.soldier ~= nil then
-		self.m_Player.soldier:SingleStepEntry(self.m_Player.controlledEntryId)
-	end
-
-	if self.m_Player.soldier == nil then              -- Player not alive.
-		self._UpdateTimer = self._UpdateTimer + p_DeltaTime -- Reusage of updateTimer.
-
-		if self._UpdateTimer > Registry.BOT.BOT_UPDATE_CYCLE then
-			self:_UpdateRespawn(Registry.BOT.BOT_UPDATE_CYCLE)
-			self._UpdateTimer = 0.0
-		end
-	else -- Player alive.
-		if Globals.IsInputAllowed and self._SpawnProtectionTimer <= 0.0 then
-			-- Update timer.
-			self._UpdateFastTimer = self._UpdateFastTimer + p_DeltaTime
-
-			if self._UpdateFastTimer >= Registry.BOT.BOT_FAST_UPDATE_CYCLE then
-				-- Increment slow timer.
-				self._UpdateTimer = self._UpdateTimer + self._UpdateFastTimer
-
-				-- Detect modes.
-				self:_SetActiveVars()
-
-				-- Old movement-modes -- remove one day?
-				if self:IsStaticMovement() then
-					m_BotMovement:UpdateStaticMovement(self)
-					self:_UpdateInputs()
-					m_BotMovement:UpdateYaw(self)
-					self._UpdateFastTimer = 0.0
-					return
-				end
-
-				-- Timeout after revive. Do nothing.
-				if self._ActiveDelay > 0.0 then
-					self._ActiveDelay = self._ActiveDelay - p_DeltaTime
-					if self._ActiveDelay <= 0.0 then
-						-- accept revive
-						self:_SetInput(EntryInputActionEnum.EIACycleRadioChannel, 1)
-						self:_UpdateInputs()
-						self.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Crouch, true, true)
-						self._SpawnDelayTimer = 0.0 --reset spawn-delay on revive
-					end
-					return
-				end
-
-				------------------ CODE OF BEHAVIOUR STARTS HERE ---------------------
-				local s_Attacking = self._ShootPlayer ~= nil -- Can be either attacking or reviving or enter of a vehicle with a player.
-
-				if not self.m_InVehicle and not self.m_OnVehicle then
-					-- Sync slow code with fast code. Therefore, execute the slow code first.
-					if self._UpdateTimer >= Registry.BOT.BOT_UPDATE_CYCLE then
-						-- Common part.
-						m_BotWeaponHandling:UpdateWeaponSelection(self)
-
-						-- Differ attacking.
-						if s_Attacking then
-							m_BotAttacking:UpdateAttacking(self)
-							if self._ActiveAction == BotActionFlags.ReviveActive or
-								self._ActiveAction == BotActionFlags.EnterVehicleActive or
-								self._ActiveAction == BotActionFlags.RepairActive or
-								self._ActiveAction == BotActionFlags.C4Active then
-								m_BotMovement:UpdateMovementSprintToTarget(self)
-							else
-								m_BotMovement:UpdateShootMovement(self)
-							end
-						else
-							m_BotWeaponHandling:UpdateDeployAndReload(self, true)
-							m_BotMovement:UpdateNormalMovement(self)
-							if self.m_Player.soldier == nil then
-								return
-							end
-						end
-
-						-- Common things.
-						m_BotMovement:UpdateSpeedOfMovement(self)
-						self:_UpdateInputs()
-
-						self._UpdateTimer = 0.0
-					end
-
-					-- Fast code.
-					if s_Attacking then
-						m_BotAiming:UpdateAiming(self)
-					else
-						m_BotMovement:UpdateTargetMovement(self)
-					end
-				else -- Bot in vehicle.
-					-- Stationary AA needs separate handling.
-					if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.StationaryAA) then
-						self:_UpdateStationaryAAVehicle(s_Attacking)
-
-						if self._UpdateTimer >= Registry.BOT.BOT_UPDATE_CYCLE then
-							-- Common part.
-							m_VehicleWeaponHandling:UpdateWeaponSelectionVehicle(self)
-
-							-- Differ attacking.
-							if s_Attacking then
-								m_VehicleAttacking:UpdateAttackStationaryAAVehicle(self)
-							end
-
-							self:_UpdateInputs()
-							self._UpdateTimer = 0.0
-						end
-					else
-						if self.m_OnVehicle then -- Passenger of boat, for example.
-							-- Sync slow code with fast code. Therefore, execute the slow code first.
-							if self._UpdateTimer >= Registry.BOT.BOT_UPDATE_CYCLE then
-								-- Common part.
-								m_BotWeaponHandling:UpdateWeaponSelection(self)
-
-								-- Differ attacking.
-								if s_Attacking then
-									m_BotAttacking:UpdateAttacking(self)
-								else
-									m_BotWeaponHandling:UpdateDeployAndReload(self, false)
-								end
-
-								self:_UpdateInputs()
-								self:_CheckForVehicleActions(self._UpdateTimer, s_Attacking)
-
-								-- Only exit at this point and abort afterwards.
-								if self:_DoExitVehicle() then
-									return
-								end
-
-								self._UpdateTimer = 0.0
-							end
-
-							-- Fast code.
-							if s_Attacking then
-								m_BotAiming:UpdateAiming(self)
-							else
-								self:_UpdateLookAroundPassenger(Registry.BOT.BOT_FAST_UPDATE_CYCLE)
-							end
-						else -- Normal vehicle → self.m_InVehicle == true
-							if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
-								-- assign new target after some time
-								if self._DeployTimer > (Config.BotVehicleFireModeDuration - 0.5) and self._VehicleTakeoffTimer <= 0.0 then
-									local s_Target = m_AirTargets:GetTarget(self.m_Player, Registry.VEHICLES.MAX_ATTACK_DISTANCE_JET)
-
-									if s_Target ~= nil then
-										self._ShootPlayerName = s_Target.name
-										self._ShootPlayer = PlayerManager:GetPlayerByName(self._ShootPlayerName)
-										self._ShootPlayerVehicleType = m_Vehicles:FindOutVehicleType(self._ShootPlayer)
-										self._ShootModeTimer = Config.BotVehicleFireModeDuration
-									else
-										self:AbortAttack()
-									end
-
-									self._DeployTimer = 0.0
-								else
-									self._DeployTimer = self._DeployTimer + Registry.BOT.BOT_FAST_UPDATE_CYCLE
-								end
-							end
-
-
-							local s_IsStationaryLauncher = m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.StationaryLauncher)
-
-							-- Sync slow code with fast code. Therefore, execute the slow code first.
-							if self._UpdateTimer >= Registry.BOT.BOT_UPDATE_CYCLE then
-								-- Common part.
-								m_VehicleWeaponHandling:UpdateWeaponSelectionVehicle(self)
-
-								-- Differ attacking.
-								if s_Attacking then
-									m_VehicleAttacking:UpdateAttackingVehicle(self)
-									if Config.VehicleMoveWhileShooting and m_Vehicles:IsNotVehicleTerrain(self.m_ActiveVehicle, VehicleTerrains.Air) then
-										if self.m_Player.controlledEntryId == 0 and not s_IsStationaryLauncher then -- Only if driver.
-											m_VehicleMovement:UpdateNormalMovementVehicle(self)
-										else
-											m_VehicleMovement:UpdateShootMovementVehicle(self)
-										end
-									else
-										m_VehicleMovement:UpdateShootMovementVehicle(self)
-									end
-								else
-									m_VehicleWeaponHandling:UpdateReloadVehicle(self)
-									if self.m_Player.controlledEntryId == 0 and not s_IsStationaryLauncher then -- Only if driver.
-										m_VehicleMovement:UpdateNormalMovementVehicle(self)
-									end
-								end
-
-								-- Common things.
-								m_VehicleMovement:UpdateSpeedOfMovementVehicle(self, s_Attacking)
-								self:_UpdateInputs()
-								self:_CheckForVehicleActions(self._UpdateTimer, s_Attacking)
-
-								-- Only exit at this point and abort afterwards.
-								if self:_DoExitVehicle() then
-									return
-								end
-
-								self._UpdateTimer = 0.0
-							end
-
-							-- Fast code.
-							if s_Attacking then
-								if m_Vehicles:IsAirVehicle(self.m_ActiveVehicle) then
-									m_VehicleAiming:UpdateAimingVehicle(self, true)
-								else
-									if Config.VehicleMoveWhileShooting and m_Vehicles:IsNotVehicleTerrain(self.m_ActiveVehicle, VehicleTerrains.Air) then
-										if self.m_Player.controlledEntryId == 0 and not s_IsStationaryLauncher then -- Only if driver.
-											-- also update movement
-											m_VehicleMovement:UpdateTargetMovementVehicle(self)
-										end
-									end
-									m_VehicleAiming:UpdateAimingVehicle(self, false)
-								end
-							else
-								if self.m_Player.controlledEntryId == 0 and not s_IsStationaryLauncher then -- Only if driver.
-									m_VehicleMovement:UpdateTargetMovementVehicle(self)
-								else
-									m_VehicleMovement:UpdateVehicleLookAround(self, self._UpdateFastTimer)
-								end
-							end
-							m_VehicleMovement:UpdateYawVehicle(self, s_Attacking, s_IsStationaryLauncher)
-						end
-					end
-				end
-				self._UpdateFastTimer = 0.0
-			end
-
-			-- Very fast code.
-			if not self.m_InVehicle then
-				m_BotMovement:UpdateYaw(self)
-			end
-		else                                           -- Alive, but no inputs allowed yet → look around.
-			self._UpdateTimer = self._UpdateTimer + p_DeltaTime -- Reusage of updateTimer.
-
-			if self._UpdateTimer > Registry.BOT.BOT_UPDATE_CYCLE then
-				if self._SpawnProtectionTimer > 0.0 then
-					self._SpawnProtectionTimer = self._SpawnProtectionTimer - Registry.BOT.BOT_UPDATE_CYCLE
-				else
-					self._SpawnProtectionTimer = 0.0
-				end
-
-				m_BotMovement:UpdateYaw(self)
-				m_BotMovement:LookAround(self, Registry.BOT.BOT_UPDATE_CYCLE)
-				self:_UpdateInputs()
-				self._UpdateTimer = 0.0
-			end
-		end
-	end
-end
-
 -- =============================================
 -- Functions
 -- =============================================
@@ -470,7 +217,9 @@ function Bot:Revive(p_Player)
 		p_Player.corpse and
 		not p_Player.corpse.isDead and
 		not Globals.IsGm and
-		not Globals.IsScavenger then
+		not Globals.IsScavenger and
+		self.m_Player.soldier ~= nil and
+		string.find(self.m_Player.soldier.weaponsComponent.weapons[6].name, "Defibrillator") then
 		if Config.BotsRevive then
 			self._ActiveAction = BotActionFlags.ReviveActive
 			self._ShootPlayer = nil
@@ -555,10 +304,11 @@ function Bot:ExitVehicle()
 	self._ExitVehicleActive = true
 end
 
+---@param p_ShootBackAfterHit boolean
 ---@return boolean
-function Bot:IsReadyToAttack()
+function Bot:IsReadyToAttack(p_ShootBackAfterHit)
 	if self._ActiveAction == BotActionFlags.OtherActionActive or
-		self._ActiveAction == BotActionFlags.ReviveActive or
+		(self._ActiveAction == BotActionFlags.ReviveActive and not p_ShootBackAfterHit) or
 		self._ActiveAction == BotActionFlags.RepairActive or
 		self._ActiveAction == BotActionFlags.EnterVehicleActive or
 		self._ActiveAction == BotActionFlags.GrenadeActive then
@@ -597,9 +347,10 @@ function Bot:GetAttackDistance(p_ShootBackAfterHit, p_VehicleAttackMode)
 			end
 		end
 	else
-		if not m_Vehicles:IsAirVehicle(self.m_ActiveVehicle) and
-			m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.MobileArtillery) and
-			m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.AntiAir) then
+		if not m_Vehicles:IsAirVehicle(self.m_ActiveVehicle)
+			and m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.MobileArtillery)
+			and not m_Vehicles:IsAAVehicle(self.m_ActiveVehicle)
+		then
 			if p_ShootBackAfterHit then
 				s_AttackDistance = Config.MaxShootDistanceNoAntiAir * 2
 			else
@@ -621,7 +372,7 @@ end
 ---@param p_IgnoreYaw boolean
 ---@return boolean
 function Bot:ShootAt(p_Player, p_IgnoreYaw)
-	if not self:IsReadyToAttack() or self._Shoot == false then
+	if not self:IsReadyToAttack(p_IgnoreYaw) or self._Shoot == false then
 		return false
 	end
 
@@ -725,9 +476,16 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 	local s_FovHalf = 0
 	local s_PitchHalf = 0
 
+	if m_InVehicle
+		and m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.LightAA)
+		and not m_Vehicles:IsAirVehicleType(s_Type)
+	then
+		return false
+	end
+
 	-- If target is air-vehicle and bot is in AA → ignore yaw.
-	if (s_Type == VehicleTypes.Chopper or s_Type == VehicleTypes.ScoutChopper or s_Type == VehicleTypes.Plane) then
-		if (self.m_InVehicle and m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.AntiAir)) or
+	if m_Vehicles:IsAirVehicleType(s_Type) then
+		if (self.m_InVehicle and m_Vehicles:IsAAVehicle(self.m_ActiveVehicle)) or
 			(s_VehicleAttackMode == VehicleAttackModes.AttackWithMissileAir) then
 			p_IgnoreYaw = true
 		end
@@ -753,7 +511,7 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 		end
 
 		if self.m_InVehicle then
-			if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.AntiAir) then
+			if m_Vehicles:IsAAVehicle(self.m_ActiveVehicle) then
 				s_FovHalf = Config.FovVehicleAAForShooting / 360 * math.pi
 				s_PitchHalf = Config.FovVerticleVehicleAAForShooting / 360 * math.pi
 			elseif m_Vehicles:IsAirVehicle(self.m_ActiveVehicle) and
@@ -834,20 +592,26 @@ function Bot:_CheckForVehicleActions(p_DeltaTime, p_AttackActive)
 		end
 	end
 
-	if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.MobileArtillery) then
+	local s_VehicleEntity = self.m_Player.controlledControllable
+	if not s_VehicleEntity then
+		return
+	end
+
+	if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.MobileArtillery)
+		or m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.LightAA)
+	then
 		-- Change seat, for attack.
-		local s_VehicleEntity = self.m_Player.controlledControllable
-		if not s_VehicleEntity then
-			return
+		local s_DesiredSeat = 0
+
+		-- Switch to gunner seat
+		if p_AttackActive then
+			s_DesiredSeat = 1
 		end
 
-		if p_AttackActive and self.m_Player.controlledEntryId == 0 then
-			-- Change to gunner seat.
-			self.m_Player:EnterVehicle(s_VehicleEntity, 1)
-			self:UpdateVehicleMovableId()
-		elseif not p_AttackActive and self.m_Player.controlledEntryId == 1 then
-			-- Change to driver seat.
-			self.m_Player:EnterVehicle(s_VehicleEntity, 0)
+		if s_DesiredSeat ~= self.m_Player.controlledEntryId
+			and s_VehicleEntity:GetPlayerInEntry(s_DesiredSeat) == nil
+		then
+			self.m_Player:EnterVehicle(s_VehicleEntity, s_DesiredSeat)
 			self:UpdateVehicleMovableId()
 		end
 	else
@@ -857,12 +621,6 @@ function Bot:_CheckForVehicleActions(p_DeltaTime, p_AttackActive)
 			self._VehicleSeatTimer = 0
 
 			if self.m_InVehicle then -- In vehicle.
-				local s_VehicleEntity = self.m_Player.controlledControllable
-
-				if not s_VehicleEntity then
-					return
-				end
-
 				for l_SeatIndex = 0, self.m_Player.controlledEntryId do
 					if s_VehicleEntity:GetPlayerInEntry(l_SeatIndex) == nil then
 						-- Better seat available → switch seats.
@@ -1129,6 +887,7 @@ function Bot:ResetSpawnVars()
 	self._Objective = '' -- Reset objective on spawn, as another spawn-point might have chosen...
 	self._WeaponToUse = BotWeapons.Primary
 	self.m_HasBeacon = false
+	self.m_DontRevive = false
 
 	-- Reset all input-vars.
 	---@type EntryInputActionEnum
@@ -1241,14 +1000,12 @@ function Bot:_UpdateRespawn(p_DeltaTime)
 		return
 	end
 
-	if self.m_Player.soldier == nil then
-		-- Wait for respawn-delay gone.
-		if self._SpawnDelayTimer < (Globals.RespawnDelay + Config.AdditionalBotSpawnDelay) then
-			self._SpawnDelayTimer = self._SpawnDelayTimer + p_DeltaTime
-		else
-			self._SpawnDelayTimer = 0.0 -- Prevent triggering again.
-			Events:DispatchLocal('Bot:RespawnBot', self.m_Name)
-		end
+	-- Wait for respawn-delay gone.
+	if self._SpawnDelayTimer < (Globals.RespawnDelay + Config.AdditionalBotSpawnDelay) then
+		self._SpawnDelayTimer = self._SpawnDelayTimer + p_DeltaTime
+	else
+		self._SpawnDelayTimer = 0.0 -- Prevent triggering again.
+		Events:DispatchLocal('Bot:RespawnBot', self.m_Name)
 	end
 end
 

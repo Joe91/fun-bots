@@ -1022,6 +1022,17 @@ SettingsDefinition = {
 			UpdateFlag = UpdateFlag.None,
 			Category = "VEHICLE"
 		},
+		{
+			Name = "EnableParadrop",
+			Text = "Enable vehicle paradrop",
+			---@type Type|integer
+			Type = Type.Boolean,
+			Value = Config.EnableParadrop,
+			Description = "Bots can spawn on vehicles inside C-130 gunship",
+			Default = false,
+			UpdateFlag = UpdateFlag.None,
+			Category = "VEHICLE"
+		},
 		-- Weapons.
 		{
 			Name = "UseRandomWeapon",
@@ -1456,6 +1467,17 @@ SettingsDefinition = {
 			Description = "Min time bots move sidewards or straight before switching (in sec)",
 			Reference = Range(0.30, 10.00, 0.5),
 			Default = 0.3,
+			UpdateFlag = UpdateFlag.None,
+			Category = "ADVANCED"
+		},
+		{
+			Name = "DefendObjectives",
+			Text = "Defend objectives",
+			---@type Type|integer
+			Type = Type.Boolean,
+			Value = Config.DefendObjectives,
+			Description = "Bots will stay on captured objectives and defend them",
+			Default = true,
 			UpdateFlag = UpdateFlag.None,
 			Category = "ADVANCED"
 		},

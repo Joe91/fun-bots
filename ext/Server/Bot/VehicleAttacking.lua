@@ -47,6 +47,7 @@ function VehicleAttacking:UpdateAttackingVehicle(p_Bot)
 									or p_Bot._ShootPlayerVehicleType == VehicleTypes.MobileArtillery
 									or p_Bot._ShootPlayerVehicleType == VehicleTypes.AntiAir
 									or p_Bot._ShootPlayerVehicleType == VehicleTypes.LightVehicle
+									or p_Bot._ShootPlayerVehicleType == VehicleTypes.LightAA
 									or p_Bot._ShootPlayerVehicleType == VehicleTypes.NoArmorVehicle
 									or p_Bot._ShootPlayerVehicleType == VehicleTypes.MavBot)
 							then

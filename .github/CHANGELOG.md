@@ -22,21 +22,33 @@ This is the changelog for the version V2.9 Don't forget to [join us on Discord](
 * Obstacels on XP4_quake get destroyed on level loaded (by tagener-noisu)
 * Obtion to not use jets was added (by tagener-noisu)
 * Bots can Revive Bots now #327
+* Separate update-function fro bots by Bree_Arnold
+* improve compatibility with Randomiser mod #333
+* Registryoptions for Revive-Probability added (by tanger-noisu)
+* fire-mode for burst-weapons was added (by tanger-noisu)
+* Option to disable defend-mode (by tanger-noisu)
+* Better handling for Light AA (by tanger-noisu)
+* Option for Bots to spawn in Gunship-Vehicle (by tanger-noisu)
 
 ### Bug fixes
 * Merged pull request #323 from tagener-noisu Path-Switcher fixes
 * Bots find best squad after team-switch again.
 * Aiming with the defib was fixed by Bree_Arnold
 * fixed wrong spawn-delay after revive of bots
+* Don't revive Bots, that were killed by the gamedirector (by tanger-noisu)
 
 ### New maps
 * Conquest Large MP_018 by ThyKingdomCome
 * Conquest Large MP_017 by ThyKingdomCome
 * Conquest Large XP3_Valley by ThyKingdomCome
+* Conquest Assault Small XP1_003 by ThyKindomeCome (redone)
 * XP4_FD Scavenger by Volbeat13
 * XP4_Parl Scavenger by Volbeat13
 * XP4_Quake Scavenger by Volbeat13
 * XP3_Shield TankSuperiority by Augusta
+* Conquest Large MP_003 by IgorUA
+* Conquest Large XP3_Desert by IgorUA
+* Conquest Large XP5_003 by IgorUA
 
 ### Updated maps
 * Conquest Small MP_001 by IgorUA
@@ -73,7 +85,10 @@ This is the changelog for the version V2.9 Don't forget to [join us on Discord](
 * TDM XP2_Palace by Clef_went away
 * TDM XP4_Quake by Clef_went away
 * TDM XP4_FD by Clef_went away
-
+* Assault Small XP1_002 by Clef_went away
+* SquadRush XP3_Valley by Clef_went away
+* Assault Small XP4_Rubble by Clef_went away
+* Many many more maps by IgorUA
 
 ### Documentation update
 

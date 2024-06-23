@@ -219,7 +219,7 @@ VehicleData = {
 	-- TODO: Handling of Light vehicle needed?
 	["VodnikPhoenix"] = {
 		Name = "[VODNIK AA]",
-		Type = VehicleTypes.AntiAir,
+		Type = VehicleTypes.LightAA,
 		Terrain = VehicleTerrains.Land,
 		Parts = { -1, 12, -1, -1 },
 		Speed = { 300, 1000, 300, 300 },
@@ -228,7 +228,7 @@ VehicleData = {
 	},
 	["Humvee_ASRAD"] = {
 		Name = "[HMMWV ASRAD]",
-		Type = VehicleTypes.AntiAir,
+		Type = VehicleTypes.LightAA,
 		Terrain = VehicleTerrains.Land,
 		Parts = { -1, 25, -1, -1 },
 		Speed = { 300, 1000, 300, 300 },
@@ -539,12 +539,29 @@ VehicleData = {
 
 	["Villa_SUV"] = { Name = "[SUV]", Type = VehicleTypes.NoArmorVehicle, Terrain = VehicleTerrains.Land, Parts = {} },
 	["QuadBike"] = { Name = "[QUAD BIKE]", Type = VehicleTypes.NoArmorVehicle, Terrain = VehicleTerrains.Land, Parts = {} },
-	["C130"] = { Name = "[GUNSHIP]", Type = VehicleTypes.NoArmorVehicle, Terrain = VehicleTerrains.Land, Parts = {} },
 	["KLR650"] = { Name = "[DIRTBIKE]", Type = VehicleTypes.NoArmorVehicle, Terrain = VehicleTerrains.Land, Parts = {} },
 	["SkidLoader"] = { Name = "[SKID LOADER]", Type = VehicleTypes.NoArmorVehicle, Terrain = VehicleTerrains.Land, Parts = {} },
 
-	["AC130"] = { Name = "[GUNSHIP]", Type = VehicleTypes.LightVehicle, Terrain = VehicleTerrains.Air, Parts = {} },
-
+	["C130"] = {
+		Name = "[GUNSHIP]",
+		Type = VehicleTypes.Gunship,
+		Terrain = VehicleTerrains.Air,
+		--Parts = { -1,  { 1, 3 }, { 0, 2 } },
+		Parts = { -1,  1, 0 },
+		Speed = { 900 },
+		--Drop = { 0.0, { 0.0, 0.0 }, { 0.0, 0.0 } },
+		Drop = { 0.0, 0.0, 0.0 },
+	},
+	["AC130"] = {
+		Name = "[GUNSHIP]",
+		Type = VehicleTypes.Gunship,
+		Terrain = VehicleTerrains.Air,
+		--Parts = { -1,  { 1, 3 }, { 0, 2 } },
+		Parts = { -1,  1, 0 },
+		Speed = { 900 },
+		--Drop = { 0.0, { 0.0, 0.0 }, { 0.0, 0.0 } },
+		Drop = { 0.0, 0.0, 0.0 },
+	},
 	-- AA Stationary.
 	["Centurion_C-RAM"] = {
 		Name = "[CENTURION_AA]",
