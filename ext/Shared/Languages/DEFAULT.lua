@@ -179,6 +179,8 @@ Language:add(code, "Activate Auto-AA", "")
 Language:add(code, "Enable Auto-AA by NyScorpy", "")
 Language:add(code, "Max Distance Auto-AA", "")
 Language:add(code, "Max Range of Stationary AA", "")
+Language:add(code, "Enable vehicle paradrop", "")
+Language:add(code, "Bots can spawn on vehicles inside C-130 gunship", "")
 
 -- WEAPONS
 Language:add(code, "Random Weapon usage", "")

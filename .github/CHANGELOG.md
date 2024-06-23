@@ -27,6 +27,8 @@ This is the changelog for the version V2.9 Don't forget to [join us on Discord](
 * Registryoptions for Revive-Probability added (by tanger-noisu)
 * fire-mode for burst-weapons was added (by tanger-noisu)
 * Option to disable defend-mode (by tanger-noisu)
+* Better handling for Light AA (by tanger-noisu)
+* Option for Bots to spawn in Gunship-Vehicle (by tanger-noisu)
 
 ### Bug fixes
 * Merged pull request #323 from tagener-noisu Path-Switcher fixes
