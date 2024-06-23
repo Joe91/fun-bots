@@ -138,6 +138,7 @@ end
 
 function Vehicles:IsAirVehicle(p_VehicleData)
 	return self:IsChopper(p_VehicleData)
+		or self:IsVehicleType(p_VehicleData, VehicleTypes.Gunship)
 		or self:IsVehicleType(p_VehicleData, VehicleTypes.Plane)
 end
 

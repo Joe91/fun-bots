@@ -99,6 +99,7 @@ Config = {
 	VehicleMoveWhileShooting = true,	-- Vehicles like tanks do not stop for shooting 
 	AABots = false,						-- Enable Auto-AA by NyScorpy 
 	MaxDistanceAABots = 300,			-- Max Range of Stationary AA 
+	EnableParadrop = false,
 
 	-- WEAPONS 
 	UseRandomWeapon = true,				-- Use a random weapon out of the Weapon Set 

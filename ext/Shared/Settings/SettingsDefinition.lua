@@ -1022,6 +1022,17 @@ SettingsDefinition = {
 			UpdateFlag = UpdateFlag.None,
 			Category = "VEHICLE"
 		},
+		{
+			Name = "EnableParadrop",
+			Text = "Enable vehicle paradrop",
+			---@type Type|integer
+			Type = Type.Boolean,
+			Value = Config.EnableParadrop,
+			Description = "Bots can spawn on vehicles inside C-130 gunship",
+			Default = false,
+			UpdateFlag = UpdateFlag.None,
+			Category = "VEHICLE"
+		},
 		-- Weapons.
 		{
 			Name = "UseRandomWeapon",
