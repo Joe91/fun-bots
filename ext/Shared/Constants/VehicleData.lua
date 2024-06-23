@@ -219,7 +219,7 @@ VehicleData = {
 	-- TODO: Handling of Light vehicle needed?
 	["VodnikPhoenix"] = {
 		Name = "[VODNIK AA]",
-		Type = VehicleTypes.AntiAir,
+		Type = VehicleTypes.LightAA,
 		Terrain = VehicleTerrains.Land,
 		Parts = { -1, 12, -1, -1 },
 		Speed = { 300, 1000, 300, 300 },
@@ -228,7 +228,7 @@ VehicleData = {
 	},
 	["Humvee_ASRAD"] = {
 		Name = "[HMMWV ASRAD]",
-		Type = VehicleTypes.AntiAir,
+		Type = VehicleTypes.LightAA,
 		Terrain = VehicleTerrains.Land,
 		Parts = { -1, 25, -1, -1 },
 		Speed = { 300, 1000, 300, 300 },

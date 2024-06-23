@@ -63,6 +63,8 @@ VehicleTypes = {
 	Gadgets = 11,
 	IFV = 12,
 	ScoutChopper = 13,
+	Gunship = 14,
+	LightAA = 15,
 }
 
 ---@enum VehicleTerrains
