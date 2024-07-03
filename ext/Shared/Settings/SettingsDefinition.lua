@@ -334,7 +334,7 @@ SettingsDefinition = {
 			Value = Config.NewBotsPerNewPlayer,
 			Description = "Number to increase Bots by when new players join",
 			Reference = Range(0.00, 128.00, 1.0),
-			Default = 1.6,
+			Default = 1.0,
 			UpdateFlag = UpdateFlag.AmountAndTeam,
 			Category = "SPAWN"
 		},
@@ -346,7 +346,7 @@ SettingsDefinition = {
 			Value = Config.FactorPlayerTeamCount,
 			Description = "Reduce player team in balanced_teams or fixed_number mode",
 			Reference = Range(0.00, 1.00, 0.05),
-			Default = 0.9,
+			Default = 1.0,
 			UpdateFlag = UpdateFlag.AmountAndTeam,
 			Category = "SPAWN"
 		},
@@ -613,7 +613,7 @@ SettingsDefinition = {
 			Value = Config.FovForShooting,
 			Description = "Degrees of FOV of Bot",
 			Reference = Range(0.00, 360.00, 1.0),
-			Default = 180,
+			Default = 130,
 			UpdateFlag = UpdateFlag.None,
 			Category = "BEHAVIOUR"
 		},
@@ -819,7 +819,7 @@ SettingsDefinition = {
 			Value = Config.DeployCycle,
 			Description = "Time between deployment of bots in seconds",
 			Reference = Range(1.00, 600.00, 5.0),
-			Default = 60,
+			Default = 90,
 			UpdateFlag = UpdateFlag.None,
 			Category = "BEHAVIOUR"
 		},
