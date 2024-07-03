@@ -58,6 +58,7 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 			self:_UpdateInputs()
 			self._UpdateTimer = 0.0
 		end
+		return
 	end
 
 	-- Update timer.
