@@ -530,6 +530,10 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 
 	if p_IgnoreYaw or (s_DifferenceYaw < s_FovHalf and s_Pitch < s_PitchHalf) then
 		if self._Shoot then
+			-- only reset ShotTimer, if not already attacking
+			if self._ShootModeTimer <= 0 then
+				self._ShotTimer = -self:GetFirstShotDelay(self._DistanceToPlayer, false)
+			end
 			if self.m_InVehicle then
 				self._ShootModeTimer = Config.BotVehicleFireModeDuration
 			else
@@ -544,7 +548,6 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 			self._ShootPlayer = nil
 			self._KnifeWayPositions = {}
 			self._VehicleReadyToShoot = false
-			self._ShotTimer = -self:GetFirstShotDelay(self._DistanceToPlayer, false)
 
 			if self.m_KnifeMode then
 				table.insert(self._KnifeWayPositions, p_Player.soldier.worldTransform.trans:Clone())

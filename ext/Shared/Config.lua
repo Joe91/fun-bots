@@ -34,8 +34,8 @@ Config = {
 	TeamSwitchMode = TeamSwitchModes.SwitchForRoundTwo,	-- Mode to switch the team 
 	SpawnInBothTeams = true,			-- Bots spawn in both teams 
 	InitNumberOfBots = 10,				-- Bots for spawnmode 
-	NewBotsPerNewPlayer = 1.0,			-- Number to increase Bots by when new players join 
-	FactorPlayerTeamCount = 1.0,		-- Reduce player team in balanced_teams or fixed_number mode 
+	NewBotsPerNewPlayer = 1.6,			-- Number to increase Bots by when new players join 
+	FactorPlayerTeamCount = 0.9,		-- Reduce player team in balanced_teams or fixed_number mode 
 	BotTeam = 0,						-- Default bot team (0 = neutral / auto, 1 = US, 2 = RU) TeamId.Team2 
 	BotNewLoadoutOnSpawn = true,		-- Bots get a new kit and color, if they respawn 
 	MaxAssaultBots = -1,				-- Maximum number of Bots with Assault Kit. -1 = no limit 
@@ -61,7 +61,7 @@ Config = {
 	MaxBotsPerTeamS = 12,				-- Max number of bots in one team for Scavenger 
 
 	-- BEHAVIOUR 
-	FovForShooting = 130,				-- Degrees of FOV of Bot 
+	FovForShooting = 160,				-- Degrees of FOV of Bot 
 	FovVerticleForShooting = 90,		-- Degrees of FOV of Bot in vertical direction 
 	MaxShootDistance = 70,				-- Meters before bots (not sniper) will start shooting at players 
 	MaxShootDistanceSniper = 150,		-- Meters before bots will start shooting at players 
@@ -147,7 +147,7 @@ Config = {
 
 	-- EXPERT 
 	BotFirstShotDelay = 0.15,			-- Delay for first shot. If too small, there will be great spread in first cycle because it is not compensated yet 
-	BotMinTimeShootAtPlayer = 2.5,		-- The minimum time a bot shoots at one player for - recommended minimum 1.5, below this you will have issues 
+	BotMinTimeShootAtPlayer = 0.7,		-- The minimum time a bot shoots at one player 
 	BotVehicleMinTimeShootAtPlayer = 4.0,	-- The minimum time a bot shoots at one player if in vehicle - recommended minimum 2.5, below this you will have issues 
 	BotFireModeDuration = 4.5,			-- The minimum time a bot tries to shoot a player - recommended minimum 3.0, below this you will have issues 
 	BotVehicleFireModeDuration = 9.0,	-- The minimum time a bot tries to shoot a player or vehicle, when in a vehicle - recommended minimum 7.0 

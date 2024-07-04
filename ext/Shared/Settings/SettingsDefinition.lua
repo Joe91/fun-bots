@@ -334,7 +334,7 @@ SettingsDefinition = {
 			Value = Config.NewBotsPerNewPlayer,
 			Description = "Number to increase Bots by when new players join",
 			Reference = Range(0.00, 128.00, 1.0),
-			Default = 1.0,
+			Default = 1.6,
 			UpdateFlag = UpdateFlag.AmountAndTeam,
 			Category = "SPAWN"
 		},
@@ -346,7 +346,7 @@ SettingsDefinition = {
 			Value = Config.FactorPlayerTeamCount,
 			Description = "Reduce player team in balanced_teams or fixed_number mode",
 			Reference = Range(0.00, 1.00, 0.05),
-			Default = 1.0,
+			Default = 0.9,
 			UpdateFlag = UpdateFlag.AmountAndTeam,
 			Category = "SPAWN"
 		},
@@ -613,7 +613,7 @@ SettingsDefinition = {
 			Value = Config.FovForShooting,
 			Description = "Degrees of FOV of Bot",
 			Reference = Range(0.00, 360.00, 1.0),
-			Default = 130,
+			Default = 160,
 			UpdateFlag = UpdateFlag.None,
 			Category = "BEHAVIOUR"
 		},
@@ -1501,9 +1501,9 @@ SettingsDefinition = {
 			---@type Type|integer
 			Type = Type.Float,
 			Value = Config.BotMinTimeShootAtPlayer,
-			Description = "The minimum time a bot shoots at one player for - recommended minimum 1.5, below this you will have issues",
+			Description = "The minimum time a bot shoots at one player",
 			Reference = Range(0.00, 60.00, 0.5),
-			Default = 2.5,
+			Default = 0.7,
 			UpdateFlag = UpdateFlag.None,
 			Category = "EXPERT"
 		},
