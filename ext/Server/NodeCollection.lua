@@ -1219,23 +1219,31 @@ function NodeCollection:ProcessAllDataToSave()
 		self._SaveTraceQueriesDone = 0
 		self._InsertQuery = 'INSERT INTO ' ..
 			self._MapName .. '_table (pathIndex, pointIndex, transX, transY, transZ, inputVar, data) VALUES '
-		self._Values = ''
+		self._ValuesTable = nil
+		self._ValuesAdded = 0
 	elseif self._SaveStateMachineCounter == 2 then
 		local s_QueriesTotal = #self._SaveTraceBatchQueries
 		if s_QueriesTotal > self._SaveTraceQueriesDone then
 			local s_StringLenght = #self._InsertQuery
 			local s_QueryCount = 0
 
-			if self._Values == '' then
-				self._Values = self._SaveTraceBatchQueries[self._SaveTraceQueriesDone + 1]
+			if self._ValuesTable == nil then
+				self._ValuesTable = {}
+				table.insert(self._ValuesTable, self._SaveTraceBatchQueries[self._SaveTraceQueriesDone + 1])
+				self._ValuesAdded = self._ValuesAdded + 1
+
 				self._SaveTraceQueriesDone = self._SaveTraceQueriesDone + 1
 			end
-			s_StringLenght = s_StringLenght + #self._Values
+
 			while self._SaveTraceQueriesDone < s_QueriesTotal and
-				(s_StringLenght + #self._SaveTraceBatchQueries[self._SaveTraceQueriesDone + 1] + 1) < 230000 do -- Max: 230000
+				self._ValuesAdded < 10000
+			do
 				local s_NewString = self._SaveTraceBatchQueries[self._SaveTraceQueriesDone + 1]
-				self._Values = self._Values .. ',' .. s_NewString
-				s_StringLenght = s_StringLenght + #s_NewString + 1
+
+				table.insert(self._ValuesTable, ',')
+				table.insert(self._ValuesTable, s_NewString)
+				self._ValuesAdded = self._ValuesAdded + 1
+
 				self._SaveTraceQueriesDone = self._SaveTraceQueriesDone + 1
 				s_QueryCount = s_QueryCount + 1
 				if s_QueryCount >= 100 then -- Only do 100 queries per cycle.
@@ -1243,9 +1251,11 @@ function NodeCollection:ProcessAllDataToSave()
 				end
 			end
 
-			table.insert(self._SaveTracesQueryStrings, self._InsertQuery .. self._Values)
+			local s_Values = table.concat(self._ValuesTable)
+			table.insert(self._SaveTracesQueryStrings, self._InsertQuery .. s_Values)
 
-			self._Values = ''
+			self._ValuesTable = nil
+			self._ValuesAdded = 0
 
 			return -- Do this again.
 		end
