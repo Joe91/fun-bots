@@ -249,6 +249,7 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_Bot)
 				end
 
 				-- CHECK FOR PATH-SWITCHES.
+				---@type Waypoint
 				local s_NewWaypoint = nil
 				local s_SwitchPath = false
 				s_SwitchPath, s_NewWaypoint = m_PathSwitcher:GetNewPath(p_Bot, p_Bot.m_Id, s_Point, p_Bot._Objective, p_Bot.m_InVehicle,

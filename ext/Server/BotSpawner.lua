@@ -250,7 +250,7 @@ end
 ---@param p_SquadId SquadId|integer
 function BotSpawner:OnTeamChange(p_Player, p_TeamId, p_SquadId)
 	-- kill bot, if still alive
-	local s_Bot = m_BotManager:GetBotByName(p_Player.name)
+	local s_Bot = m_BotManager:GetBotById(p_Player.id)
 	if s_Bot ~= nil then
 		if s_Bot.m_Player.soldier ~= nil then
 			s_Bot.m_Player.soldier:Kill()

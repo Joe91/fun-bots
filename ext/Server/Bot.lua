@@ -1036,7 +1036,7 @@ function Bot:_UpdateRespawn(p_DeltaTime)
 		self._SpawnDelayTimer = self._SpawnDelayTimer + p_DeltaTime
 	else
 		self._SpawnDelayTimer = 0.0 -- Prevent triggering again.
-		Events:DispatchLocal('Bot:RespawnBot', self.m_Name)
+		Events:DispatchLocal('Bot:RespawnBot', self.m_Id)
 	end
 end
 

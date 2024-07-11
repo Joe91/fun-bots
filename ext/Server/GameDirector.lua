@@ -775,6 +775,12 @@ function GameDirector:CheckForExecution(p_Point, p_TeamId, p_InVehicle)
 	end
 end
 
+---@param p_Trans Vec3
+---@param p_VehiclePath boolean
+---@param p_DetailedSearch boolean
+---@param p_VehicleTerrain VehicleTerrains|nil
+---@param p_Increment integer|nil
+---@return Waypoint|nil
 function GameDirector:FindClosestPath(p_Trans, p_VehiclePath, p_DetailedSearch, p_VehicleTerrain, p_Increment)
 	local s_ClosestPathNode = nil
 	local s_Paths = m_NodeCollection:GetPaths()
@@ -915,6 +921,7 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 					local s_EntryId = s_SquadBot.m_Player.controlledEntryId
 
 					if s_EntryId == 0 then
+						---@type ControllableEntity
 						local s_Vehicle = s_SquadBot.m_Player.controlledControllable
 
 						-- Check for free seats.
@@ -937,6 +944,7 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 				-- Check for vehicle of real player.
 				if l_Player.controlledControllable ~= nil and not l_Player.controlledControllable:Is("ServerSoldierEntity") then
 					if l_Player.controlledEntryId == 0 then
+						---@type ControllableEntity
 						local s_Vehicle = l_Player.controlledControllable
 
 						-- Check for free seats.

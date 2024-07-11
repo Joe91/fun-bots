@@ -228,7 +228,7 @@ function BotManager:OnSoldierDamage(p_HookCtx, p_Soldier, p_Info, p_GiverInfo)
 		if p_GiverInfo and p_GiverInfo.giver then
 			-- Detect if we need to shoot back.
 			if Config.ShootBackIfHit then
-				self:OnShootAt(p_GiverInfo.giver, p_Soldier.player.name, true)
+				self:OnShootAt(p_GiverInfo.giver, p_Soldier.player.id, true)
 			end
 
 			-- Prevent bots from killing themselves. Bad bot, no suicide.
@@ -348,17 +348,19 @@ function BotManager:CheckForFlareOrSmoke(p_MissileEntity)
 	end
 end
 
+---@param p_Player Player
+---@param p_RaycastResults RaycastResults[]
 function BotManager:OnClientRaycastResults(p_Player, p_RaycastResults)
 	if p_RaycastResults == nil then
 		return
 	end
 
 	for _, l_RaycastResult in ipairs(p_RaycastResults) do
-		if l_RaycastResult.Mode == "ShootAtBot" then
-			self:OnBotShootAtBot(p_Player, l_RaycastResult.Bot1, l_RaycastResult.Bot2)
-		elseif l_RaycastResult.Mode == "ShootAtPlayer" then
+		if l_RaycastResult.Mode == RaycastResultModes.ShootAtBot then
+			self:OnBotShootAtBot(l_RaycastResult.Bot1, l_RaycastResult.Bot2)
+		elseif l_RaycastResult.Mode == RaycastResultModes.ShootAtPlayer then
 			self:OnShootAt(p_Player, l_RaycastResult.Bot1, l_RaycastResult.IgnoreYaw)
-		elseif l_RaycastResult.Mode == "RevivePlayer" then
+		elseif l_RaycastResult.Mode == RaycastResultModes.RevivePlayer then
 			self:OnRevivePlayer(p_Player, l_RaycastResult.Bot1)
 		end
 	end
@@ -962,7 +964,7 @@ function BotManager:ExitVehicle(p_Player)
 				local s_Player = s_VehicleEntity:GetPlayerInEntry(l_EntryId)
 
 				if s_Player then
-					self:OnBotExitVehicle(s_Player.name)
+					self:OnBotExitVehicle(s_Player.id)
 				end
 			end
 		end
@@ -1094,7 +1096,7 @@ end
 -- Private Functions
 -- =============================================
 
----@param p_RaycastData any To-do: add emmylua type
+---@param p_RaycastData RaycastRequests[] To-do: add emmylua type
 function BotManager:_DistributeRaycastsBotBotAttack(p_RaycastData)
 	local s_RaycastIndex = 0
 	local s_RaycastDataCount = #p_RaycastData
@@ -1156,6 +1158,7 @@ function BotManager:_CheckForBotBotAttack()
 	local s_Raycasts = 0
 	local s_ChecksDone = 0
 
+	---@type RaycastRequests[]
 	local s_RaycastEntries = {}
 
 	for i = self._LastBotCheckIndex, #self._BotBotAttackList do
@@ -1179,8 +1182,8 @@ function BotManager:_CheckForBotBotAttack()
 						s_EnemyBot.m_Player.teamId ~= s_Bot.m_Player.teamId then -- enemy does not have to be ready!
 						-- Check connection-state.
 						local s_ConnectionValue = ""
-						local s_Id1 = s_Bot.m_Player.id
-						local s_Id2 = s_EnemyBot.m_Player.id
+						local s_Id1 = s_BotIdToCheck
+						local s_Id2 = l_BotId
 
 						if s_Id1 > s_Id2 then
 							s_ConnectionValue = tostring(s_Id2) .. "-" .. tostring(s_Id1)
@@ -1306,7 +1309,9 @@ function BotManager:_CheckForBotBotRevive()
 	end
 
 	local s_NrOfRaycastsDone = 0
+	---@type MaterialFlags
 	local s_MaterialFlags = 0
+	---@type RayCastFlags
 	local s_RaycastFlags = RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter
 
 	if #s_MedicBots > 0 and #s_BotsToRevive > 0 then
