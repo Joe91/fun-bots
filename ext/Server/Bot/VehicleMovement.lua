@@ -17,6 +17,7 @@ function VehicleMovement:__init()
 	-- Nothing to do.
 end
 
+---@param p_Bot Bot
 function VehicleMovement:UpdateNormalMovementVehicle(p_Bot)
 	if p_Bot._VehicleTakeoffTimer > 0.0 then
 		p_Bot._VehicleTakeoffTimer = p_Bot._VehicleTakeoffTimer - Registry.BOT.BOT_UPDATE_CYCLE
@@ -98,7 +99,7 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_Bot)
 							local s_ShouldExit = not s_OnlyPassengers or s_IsPassenger
 
 							if s_ShouldExit and s_Player ~= nil then
-								Events:Dispatch('Bot:ExitVehicle', s_Player.name)
+								Events:Dispatch('Bot:ExitVehicle', s_Player.id)
 							end
 						end
 					end
@@ -250,7 +251,7 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_Bot)
 				-- CHECK FOR PATH-SWITCHES.
 				local s_NewWaypoint = nil
 				local s_SwitchPath = false
-				s_SwitchPath, s_NewWaypoint = m_PathSwitcher:GetNewPath(p_Bot, p_Bot.m_Name, s_Point, p_Bot._Objective, p_Bot.m_InVehicle,
+				s_SwitchPath, s_NewWaypoint = m_PathSwitcher:GetNewPath(p_Bot, p_Bot.m_Id, s_Point, p_Bot._Objective, p_Bot.m_InVehicle,
 					p_Bot.m_Player.teamId, p_Bot.m_ActiveVehicle)
 
 				if p_Bot.m_Player.soldier == nil then

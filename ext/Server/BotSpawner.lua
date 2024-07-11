@@ -284,9 +284,9 @@ end
 -- Custom Bot Respawn Event
 -- =============================================
 
----@param p_BotName string
-function BotSpawner:OnRespawnBot(p_BotName)
-	local s_Bot = m_BotManager:GetBotByName(p_BotName)
+---@param p_BotId integer
+function BotSpawner:OnRespawnBot(p_BotId)
+	local s_Bot = m_BotManager:GetBotById(p_BotId)
 	if s_Bot == nil then
 		return
 	end
@@ -1035,7 +1035,7 @@ end
 -- Some more Functions
 -- =============================================
 
----@param p_Player Player
+---@param p_Player Player|nil
 ---@param p_UseRandomWay boolean
 ---@param p_ActiveWayIndex integer|nil
 ---@param p_IndexOnPath integer

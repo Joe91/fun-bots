@@ -587,16 +587,16 @@ function FunBotServer:OnClientRaycastResults(p_Player, p_RaycastResults)
 	m_BotManager:OnClientRaycastResults(p_Player, p_RaycastResults)
 end
 
-function FunBotServer:OnBotAbortWait(p_BotName)
-	m_BotManager:OnBotAbortWait(p_BotName)
+function FunBotServer:OnBotAbortWait(p_BotId)
+	m_BotManager:OnBotAbortWait(p_BotId)
 end
 
-function FunBotServer:OnBotExitVehicle(p_BotName)
-	m_BotManager:OnBotExitVehicle(p_BotName)
+function FunBotServer:OnBotExitVehicle(p_BotId)
+	m_BotManager:OnBotExitVehicle(p_BotId)
 end
 
-function FunBotServer:OnRespawnBot(p_BotName)
-	m_BotSpawner:OnRespawnBot(p_BotName)
+function FunBotServer:OnRespawnBot(p_BotId)
+	m_BotSpawner:OnRespawnBot(p_BotId)
 end
 
 function FunBotServer:OnRequestClientSettings(p_Player)
