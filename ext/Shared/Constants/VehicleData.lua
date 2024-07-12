@@ -22,6 +22,8 @@
 ---@field Speed integer[]
 ---@field Drop number[]
 ---@field Team TeamId|integer|nil
+---@field Offset Vec3[]
+---@field FirstPassengerSeat integer
 
 ---@class VehicleData
 ---@type VehicleDataInner[]
@@ -547,7 +549,7 @@ VehicleData = {
 		Type = VehicleTypes.Gunship,
 		Terrain = VehicleTerrains.Air,
 		--Parts = { -1,  { 1, 3 }, { 0, 2 } },
-		Parts = { -1,  1, 0 },
+		Parts = { -1, 1, 0 },
 		Speed = { 900 },
 		--Drop = { 0.0, { 0.0, 0.0 }, { 0.0, 0.0 } },
 		Drop = { 0.0, 0.0, 0.0 },
@@ -557,7 +559,7 @@ VehicleData = {
 		Type = VehicleTypes.Gunship,
 		Terrain = VehicleTerrains.Air,
 		--Parts = { -1,  { 1, 3 }, { 0, 2 } },
-		Parts = { -1,  1, 0 },
+		Parts = { -1, 1, 0 },
 		Speed = { 900 },
 		--Drop = { 0.0, { 0.0, 0.0 }, { 0.0, 0.0 } },
 		Drop = { 0.0, 0.0, 0.0 },

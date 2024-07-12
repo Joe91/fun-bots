@@ -250,7 +250,7 @@ end
 ---@param p_SquadId SquadId|integer
 function BotSpawner:OnTeamChange(p_Player, p_TeamId, p_SquadId)
 	-- kill bot, if still alive
-	local s_Bot = m_BotManager:GetBotByName(p_Player.name)
+	local s_Bot = m_BotManager:GetBotById(p_Player.id)
 	if s_Bot ~= nil then
 		if s_Bot.m_Player.soldier ~= nil then
 			s_Bot.m_Player.soldier:Kill()
@@ -284,9 +284,9 @@ end
 -- Custom Bot Respawn Event
 -- =============================================
 
----@param p_BotName string
-function BotSpawner:OnRespawnBot(p_BotName)
-	local s_Bot = m_BotManager:GetBotByName(p_BotName)
+---@param p_BotId integer
+function BotSpawner:OnRespawnBot(p_BotId)
+	local s_Bot = m_BotManager:GetBotById(p_BotId)
 	if s_Bot == nil then
 		return
 	end
@@ -410,7 +410,7 @@ function BotSpawner:UpdateBotAmountAndTeam()
 
 		for i = 1, Globals.NrOfTeams do
 			if s_TeamCount[i] < s_TargetTeamCount[i] then
-				self:SpawnWayBots(nil, s_TargetTeamCount[i] - s_TeamCount[i], true, 0, 0, i)
+				self:SpawnWayBots(s_TargetTeamCount[i] - s_TeamCount[i], true, 0, 0, i)
 			elseif s_TeamCount[i] > s_TargetTeamCount[i] and s_CountBots[i] > 0 then
 				m_BotManager:KillAll(s_TeamCount[i] - s_TargetTeamCount[i], i)
 			end
@@ -468,7 +468,7 @@ function BotSpawner:UpdateBotAmountAndTeam()
 
 		for i = 1, Globals.NrOfTeams do
 			if s_TeamCount[i] < s_TargetTeamCount[i] then
-				self:SpawnWayBots(nil, s_TargetTeamCount[i] - s_TeamCount[i], true, 0, 0, i)
+				self:SpawnWayBots(s_TargetTeamCount[i] - s_TeamCount[i], true, 0, 0, i)
 			elseif s_TeamCount[i] > s_TargetTeamCount[i] then
 				m_BotManager:KillAll(s_TeamCount[i] - s_TargetTeamCount[i], i)
 			end
@@ -503,7 +503,7 @@ function BotSpawner:UpdateBotAmountAndTeam()
 
 			for i = 1, Globals.NrOfTeams do
 				if s_TeamCount[i] < s_TargetTeamCount[i] then
-					self:SpawnWayBots(nil, s_TargetTeamCount[i] - s_TeamCount[i], true, 0, 0, i)
+					self:SpawnWayBots(s_TargetTeamCount[i] - s_TeamCount[i], true, 0, 0, i)
 				elseif s_TeamCount[i] > s_TargetTeamCount[i] and s_CountBots[i] > 0 then
 					m_BotManager:KillAll(s_TeamCount[i] - s_TargetTeamCount[i], i)
 				end
@@ -527,7 +527,7 @@ function BotSpawner:UpdateBotAmountAndTeam()
 			for i = 1, Globals.NrOfTeams do
 				if i ~= s_PlayerTeam then
 					if s_TeamCount[i] < s_TargetBotCountPerEnemyTeam then
-						self:SpawnWayBots(nil, s_TargetBotCountPerEnemyTeam - s_TeamCount[i], true, 0, 0, i)
+						self:SpawnWayBots(s_TargetBotCountPerEnemyTeam - s_TeamCount[i], true, 0, 0, i)
 					elseif s_TeamCount[i] > s_TargetBotCountPerEnemyTeam then
 						m_BotManager:KillAll(s_TeamCount[i] - s_TargetBotCountPerEnemyTeam, i)
 					end
@@ -555,7 +555,7 @@ function BotSpawner:UpdateBotAmountAndTeam()
 
 			for i = 1, Globals.NrOfTeams do
 				if s_TeamCount[i] < s_TargetTeamCount[i] then
-					self:SpawnWayBots(nil, s_TargetTeamCount[i] - s_TeamCount[i], true, 0, 0, i)
+					self:SpawnWayBots(s_TargetTeamCount[i] - s_TeamCount[i], true, 0, 0, i)
 				elseif s_TeamCount[i] > s_TargetTeamCount[i] and s_CountBots[i] > 0 then
 					m_BotManager:KillAll(s_TeamCount[i] - s_TargetTeamCount[i], i)
 				end
@@ -578,7 +578,7 @@ function BotSpawner:UpdateBotAmountAndTeam()
 			for i = 1, Globals.NrOfTeams do
 				if i ~= s_PlayerTeam then
 					if s_TeamCount[i] < s_TargetBotCountPerEnemyTeam then
-						self:SpawnWayBots(nil, s_TargetBotCountPerEnemyTeam - s_TeamCount[i], true, 0, 0, i)
+						self:SpawnWayBots(s_TargetBotCountPerEnemyTeam - s_TeamCount[i], true, 0, 0, i)
 					elseif s_TeamCount[i] > s_TargetBotCountPerEnemyTeam then
 						m_BotManager:KillAll(s_TeamCount[i] - s_TargetBotCountPerEnemyTeam, i)
 					end
@@ -588,13 +588,13 @@ function BotSpawner:UpdateBotAmountAndTeam()
 	elseif Globals.SpawnMode == SpawnModes.manual then
 		if self._FirstSpawnInLevel then
 			for i = 1, Globals.NrOfTeams do
-				self:SpawnWayBots(nil, s_TeamCount[i] - s_CountPlayers[i], true, 0, 0, i)
+				self:SpawnWayBots(s_TeamCount[i] - s_CountPlayers[i], true, 0, 0, i)
 			end
 		end
 	end
 end
 
----@param p_ExistingBot Bot
+---@param p_ExistingBot Bot|nil
 ---@param p_Name string
 ---@param p_TeamId TeamId|integer
 ---@param p_SquadId SquadId|integer
@@ -699,13 +699,12 @@ function BotSpawner:SpawnBotGrid(p_Player, p_Rows, p_Columns, p_Spacing)
 	end
 end
 
----@param p_Player Player
 ---@param p_Amount integer
 ---@param p_UseRandomWay boolean
 ---@param p_ActiveWayIndex? integer
 ---@param p_IndexOnPath? integer
 ---@param p_TeamId? TeamId|integer
-function BotSpawner:SpawnWayBots(p_Player, p_Amount, p_UseRandomWay, p_ActiveWayIndex, p_IndexOnPath, p_TeamId)
+function BotSpawner:SpawnWayBots(p_Amount, p_UseRandomWay, p_ActiveWayIndex, p_IndexOnPath, p_TeamId)
 	if #m_NodeCollection:GetPaths() <= 0 then
 		return
 	end
@@ -977,7 +976,7 @@ function BotSpawner:_FindClosestSpawnPoint(p_TeamId)
 							end
 
 							s_ClosestDistance = s_TargetLocation:Distance(s_Entity.transform.trans)
-						elseif s_ClosestDistance > s_TargetLocation:Distance(s_Entity.transform.trans) then
+						elseif s_TargetLocation and s_ClosestDistance > s_TargetLocation:Distance(s_Entity.transform.trans) then
 							s_BestSpawnPoint = l_Entity
 							s_ClosestDistance = s_TargetLocation:Distance(s_Entity.transform.trans)
 						end
@@ -1035,7 +1034,7 @@ end
 -- Some more Functions
 -- =============================================
 
----@param p_Player Player
+---@param p_Player Player|nil
 ---@param p_UseRandomWay boolean
 ---@param p_ActiveWayIndex integer|nil
 ---@param p_IndexOnPath integer
@@ -1062,7 +1061,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 
 	local s_SquadId = self:_GetSquadToJoin(s_TeamId)
 
-	if s_IsRespawn then
+	if s_IsRespawn and p_ExistingBot then
 		if p_ExistingBot.m_Player.squadId == SquadId.SquadNone or p_ExistingBot.m_Player.squadId > s_SquadId then -- place free in other squad
 			p_ExistingBot.m_Player.squadId = s_SquadId
 		else
@@ -1122,13 +1121,13 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 					end
 				end
 
-				if s_IsRespawn then
+				if s_IsRespawn and p_ExistingBot then
 					p_ExistingBot:SetVarsWay(nil, true, 0, 0, false)
 					self:_SpawnBot(p_ExistingBot, s_Transform, false)
 
 					if p_ExistingBot:_EnterVehicleEntity(s_SpawnEntity, false) ~= 0 then
 						p_ExistingBot:Kill()
-					else
+					elseif s_SpawnEntity ~= nil then
 						p_ExistingBot:FindVehiclePath(s_SpawnEntity.transform.trans)
 					end
 				else
@@ -1145,7 +1144,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 
 						if s_Bot:_EnterVehicleEntity(s_SpawnEntity, false) ~= 0 then
 							s_Bot:Kill()
-						else
+						elseif s_SpawnEntity then
 							s_Bot:FindVehiclePath(s_SpawnEntity.transform.trans)
 						end
 					end
@@ -1189,20 +1188,22 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 
 		s_Transform.trans = s_SpawnPoint.Position
 
-		if s_IsRespawn then
-			p_ExistingBot:SetVarsWay(p_Player, p_UseRandomWay, p_ActiveWayIndex, p_IndexOnPath, s_InverseDirection)
-			self:_SpawnInEntity(p_ExistingBot, s_SquadSpawnVehicle, s_Transform, false)
-		else
-			local s_Bot = m_BotManager:CreateBot(s_Name, s_TeamId, s_SquadId)
+		if p_ActiveWayIndex then
+			if s_IsRespawn and p_ExistingBot then
+				p_ExistingBot:SetVarsWay(p_Player, p_UseRandomWay, p_ActiveWayIndex, p_IndexOnPath, s_InverseDirection)
+				self:_SpawnInEntity(p_ExistingBot, s_SquadSpawnVehicle, s_Transform, false)
+			else
+				local s_Bot = m_BotManager:CreateBot(s_Name, s_TeamId, s_SquadId)
 
-			if s_Bot ~= nil then
-				-- Check for first one in squad.
-				if (TeamSquadManager:GetSquadPlayerCount(s_TeamId, s_SquadId) == 1) then
-					s_Bot.m_Player:SetSquadLeader(true, false) -- Not private.
+				if s_Bot ~= nil then
+					-- Check for first one in squad.
+					if (TeamSquadManager:GetSquadPlayerCount(s_TeamId, s_SquadId) == 1) then
+						s_Bot.m_Player:SetSquadLeader(true, false) -- Not private.
+					end
+					m_BotCreator:SetAttributesToBot(s_Bot)
+					s_Bot:SetVarsWay(p_Player, p_UseRandomWay, p_ActiveWayIndex, p_IndexOnPath, s_InverseDirection)
+					self:_SpawnInEntity(s_Bot, s_SquadSpawnVehicle, s_Transform, true)
 				end
-				m_BotCreator:SetAttributesToBot(s_Bot)
-				s_Bot:SetVarsWay(p_Player, p_UseRandomWay, p_ActiveWayIndex, p_IndexOnPath, s_InverseDirection)
-				self:_SpawnInEntity(s_Bot, s_SquadSpawnVehicle, s_Transform, true)
 			end
 		end
 	end
@@ -1841,7 +1842,7 @@ end
 
 ---@param p_Bot Bot
 ---@param p_BotKit BotKits|integer
----@param p_Team TeamId|integer
+---@param p_Team string
 ---@param p_NewWeapons boolean
 function BotSpawner:_SetBotWeapons(p_Bot, p_BotKit, p_Team, p_NewWeapons)
 	if Globals.IsScavenger then

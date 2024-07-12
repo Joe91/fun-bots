@@ -393,14 +393,14 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 				-- CHECK FOR PATH-SWITCHES.
 				local s_NewWaypoint = nil
 				local s_SwitchPath = false
-				s_SwitchPath, s_NewWaypoint = m_PathSwitcher:GetNewPath(p_Bot, p_Bot.m_Name, s_Point, p_Bot._Objective, p_Bot.m_InVehicle,
+				s_SwitchPath, s_NewWaypoint = m_PathSwitcher:GetNewPath(p_Bot, p_Bot.m_Id, s_Point, p_Bot._Objective, p_Bot.m_InVehicle,
 					p_Bot.m_Player.teamId, nil)
 
 				if p_Bot.m_Player.soldier == nil then
 					return
 				end
 
-				if s_SwitchPath == true and not p_Bot._OnSwitch then
+				if s_SwitchPath == true and not p_Bot._OnSwitch and s_NewWaypoint then
 					if p_Bot._Objective ~= '' then
 						-- 'Best' direction for objective on switch.
 						local s_Direction = m_NodeCollection:ObjectiveDirection(s_NewWaypoint, p_Bot._Objective, p_Bot.m_InVehicle)
@@ -448,6 +448,7 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 	end
 end
 
+---@param p_Bot Bot
 function BotMovement:UpdateMovementSprintToTarget(p_Bot)
 	p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.Sprint -- Run to target.
 
@@ -477,6 +478,7 @@ function BotMovement:UpdateMovementSprintToTarget(p_Bot)
 	end
 end
 
+---@param p_Bot Bot
 function BotMovement:UpdateShootMovement(p_Bot)
 	p_Bot._DefendTimer = 0.0
 	-- Shoot MoveMode.
@@ -552,6 +554,7 @@ function BotMovement:UpdateShootMovement(p_Bot)
 	end
 end
 
+---@param p_Bot Bot
 function BotMovement:UpdateSpeedOfMovement(p_Bot)
 	-- Additional movement.
 	if p_Bot.m_Player.soldier == nil then
@@ -601,6 +604,7 @@ function BotMovement:UpdateSpeedOfMovement(p_Bot)
 	end
 end
 
+---@param p_Bot Bot
 function BotMovement:UpdateTargetMovement(p_Bot)
 	if p_Bot._TargetPoint ~= nil and p_Bot.m_Player.soldier ~= nil then
 		local s_Distance = p_Bot.m_Player.soldier.worldTransform.trans:Distance(p_Bot._TargetPoint.Position)
@@ -618,6 +622,7 @@ function BotMovement:UpdateTargetMovement(p_Bot)
 	end
 end
 
+---@param p_Bot Bot
 ---@param p_DeltaTime number
 function BotMovement:LookAround(p_Bot, p_DeltaTime)
 	-- Move around a little.
@@ -655,6 +660,7 @@ function BotMovement:LookAround(p_Bot, p_DeltaTime)
 	end
 end
 
+---@param p_Bot Bot
 function BotMovement:UpdateYaw(p_Bot)
 	local s_DeltaYaw = 0
 	s_DeltaYaw = p_Bot.m_Player.input.authoritativeAimingYaw - p_Bot._TargetYaw
@@ -690,6 +696,7 @@ function BotMovement:UpdateYaw(p_Bot)
 	p_Bot.m_Player.input.authoritativeAimingPitch = p_Bot._TargetPitch
 end
 
+---@param p_Bot Bot
 function BotMovement:UpdateStaticMovement(p_Bot)
 	-- Mimicking.
 	if p_Bot.m_ActiveMoveMode == BotMoveModes.Mimic and p_Bot._TargetPlayer ~= nil then
