@@ -49,10 +49,10 @@ function Bot:__init(p_Player)
 	---@type BotMoveModes
 	self._MoveMode = BotMoveModes.Standstill
 	self._ForcedMovement = false
-	---@type BotKits|nil
+	---@type BotKits|integer
 	self.m_Kit = nil
 	-- Only used in BotSpawner.
-	---@type BotColors|integer|nil
+	---@type BotColors|integer
 	self.m_Color = nil
 	---@type Weapon|nil
 	self.m_ActiveWeapon = nil
@@ -740,7 +740,7 @@ function Bot:SetVarsStatic(p_Player)
 	self._TargetPlayer = p_Player
 end
 
----@param p_Player Player
+---@param p_Player Player|nil
 ---@param p_UseRandomWay boolean
 ---@param p_PathIndex integer
 ---@param p_CurrentWayPoint any To-do: add emmylua type
@@ -1104,7 +1104,7 @@ function Bot:UpdateVehicleMovableId()
 	self:UpdateDontAttackFlag()
 end
 
----@param p_Entity ControllableEntity
+---@param p_Entity ControllableEntity|nil
 ---@param p_PlayerIsDriver boolean
 ---@return integer
 ---@return Vec3|nil

@@ -1125,8 +1125,40 @@ function BotManager:_DistributeRaycastsBotBotAttack(p_RaycastData)
 	end
 end
 
-function BotManager:ChechFovBotBot(s_Bot, s_EnemyBot, s_EnemyReady)
+---@param p_Bot Bot
+---@param p_EnemyBot Bot
+---@param p_EnemyReady boolean
+function BotManager:ChechFovBotBot(p_Bot, p_EnemyBot, p_EnemyReady)
+	local s_ValidFov = false
 
+	local s_DiffVec = (p_Bot.m_Player.soldier.worldTransform.trans:Clone() - p_EnemyBot.m_Player.soldier.worldTransform.trans:Clone()):Normalize()
+	local s_Yaw = p_Bot.m_Player.input.authoritativeAimingYaw
+	local s_Pitch = p_Bot.m_Player.input.authoritativeAimingPitch
+	local x = math.cos(s_Pitch) * math.cos(s_Yaw)
+	local y = math.sin(s_Pitch)
+	local z = math.cos(s_Pitch) * math.sin(s_Yaw)
+	local s_VecBotCamera = Vec3(x, y, z)
+	local s_Angle = math.acos(s_DiffVec:Dot(s_VecBotCamera))
+	s_Angle = s_Angle * (180 / math.pi)
+
+	if s_Angle < Config.FovForShooting * 0.5 then
+		s_ValidFov = true
+	end
+
+	if not s_ValidFov and p_EnemyReady then
+		s_Yaw = p_EnemyBot.m_Player.input.authoritativeAimingYaw
+		s_Pitch = p_EnemyBot.m_Player.input.authoritativeAimingPitch
+		x = math.cos(s_Pitch) * math.cos(s_Yaw)
+		y = math.sin(s_Pitch)
+		z = math.cos(s_Pitch) * math.sin(s_Yaw)
+		s_VecBotCamera = Vec3(x, y, z)
+		local s_AngleEnemy = math.acos(s_DiffVec:Dot(s_VecBotCamera))
+		s_AngleEnemy = s_AngleEnemy * (180 / math.pi)
+		if s_AngleEnemy < Config.FovForShooting * 0.5 then
+			s_ValidFov = true
+		end
+	end
+	return s_ValidFov
 end
 
 function BotManager:_CheckForBotBotAttack()
@@ -1209,8 +1241,9 @@ function BotManager:_CheckForBotBotAttack()
 								s_MaxDistance = s_MaxDistanceEnemyBot
 							end
 
-							local s_EnemyReady = s_EnemyBot:IsReadyToAttack(false)
-							local s_InFov = self:ChechFovBotBot(s_Bot, s_EnemyBot, s_EnemyReady)
+							-- TODO: check FOV first?
+							-- local s_EnemyReady = s_EnemyBot:IsReadyToAttack(false)
+							-- local s_InFov = self:ChechFovBotBot(s_Bot, s_EnemyBot, s_EnemyReady)
 
 							if s_Distance <= s_MaxDistance then
 								table.insert(s_RaycastEntries, {
@@ -1218,7 +1251,6 @@ function BotManager:_CheckForBotBotAttack()
 									Bot2 = l_BotId,
 									Bot1InVehicle = s_Bot.m_InVehicle,
 									Bot2InVehicle = s_EnemyBot.m_InVehicle,
-									Distance = s_Distance
 								})
 								s_Raycasts = s_Raycasts + 1
 

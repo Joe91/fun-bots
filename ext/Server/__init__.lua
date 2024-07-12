@@ -571,18 +571,6 @@ end
 -- Custom Events.
 -- =============================================
 
-function FunBotServer:OnShootAt(p_Player, p_BotName, p_IgnoreYaw)
-	m_BotManager:OnShootAt(p_Player, p_BotName, p_IgnoreYaw)
-end
-
-function FunBotServer:OnRevivePlayer(p_Player, p_BotName)
-	m_BotManager:OnRevivePlayer(p_Player, p_BotName)
-end
-
-function FunBotServer:OnBotShootAtBot(p_Player, p_BotName1, p_BotName2)
-	m_BotManager:OnBotShootAtBot(p_Player, p_BotName1, p_BotName2)
-end
-
 function FunBotServer:OnClientRaycastResults(p_Player, p_RaycastResults)
 	m_BotManager:OnClientRaycastResults(p_Player, p_RaycastResults)
 end
@@ -626,7 +614,7 @@ function FunBotServer:OnConsoleCommandRestore(p_Player, p_Args)
 end
 
 function FunBotServer:OnSpawnGrenade(p_Player, p_Args)
-	local position = p_Player.soldier.transform.trans:Clone()
+	local position = p_Player.soldier.worldTransform.trans:Clone()
 	position.y = position.y + 0.1
 
 	m_Logger:Write("Grenade spawn at " .. tostring(position))
@@ -638,7 +626,10 @@ function FunBotServer:OnDestroyObstaclesTest(p_Player, p_Args)
 end
 
 function FunBotServer:SpawnGrenade(p_Position)
-	resource = ResourceManager:SearchForDataContainer('Weapons/M67/M67_Projectile')
+	local resource = ResourceManager:SearchForDataContainer('Weapons/M67/M67_Projectile')
+	if not resource then
+		return
+	end
 
 	local creationParams = EntityCreationParams()
 	creationParams.transform = LinearTransform()
