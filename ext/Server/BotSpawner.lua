@@ -1401,6 +1401,11 @@ function BotSpawner:_GetSquadToJoin(p_TeamId)
 	return SquadId.SquadNone
 end
 
+---comment
+---@param p_Bot Bot
+---@param p_TeamId TeamId
+---@param p_SquadId SquadId
+---@return table<integer, DataContainer>|nil
 function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 	if Globals.IsGm then
 		-- No Perks in Gunmaster.
@@ -1521,7 +1526,7 @@ function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 	return s_Unlocks
 end
 
----@param p_Bot Bot|integer
+---@param p_Bot Bot
 ---@param p_Kit BotKits|integer
 ---@param p_Color BotColors|integer
 function BotSpawner:_SetKitAndAppearance(p_Bot, p_Kit, p_Color)
@@ -1576,16 +1581,19 @@ function BotSpawner:_SetKitAndAppearance(p_Bot, p_Kit, p_Color)
 	if not Globals.IsGm then
 		s_Unlocks = self:_GetUnlocks(p_Bot, s_TeamId, s_SquadId)
 	end
+	if not s_SoldierKit then
+		return
+	end
 
 	if Globals.RemoveKitVisuals then
 		-- for Civilianizer-mod:
-		if not Globals.IsGm then
+		if not Globals.IsGm and s_Unlocks then
 			p_Bot.m_Player:SelectUnlockAssets(s_SoldierKit, { s_Appearance }, s_Unlocks)
 		else
 			p_Bot.m_Player:SelectUnlockAssets(s_SoldierKit, {})
 		end
 	else
-		if not Globals.IsGm then
+		if not Globals.IsGm and s_Unlocks then
 			p_Bot.m_Player:SelectUnlockAssets(s_SoldierKit, { s_Appearance }, s_Unlocks)
 		else
 			p_Bot.m_Player:SelectUnlockAssets(s_SoldierKit, { s_Appearance })
