@@ -32,6 +32,12 @@ function BotWeaponHandling:UpdateDeployAndReload(p_Bot, p_Deploy)
 		p_Bot:_SetInput(EntryInputActionEnum.EIAReload, 1)
 	end
 
+	-- keep nades filled
+	if p_Bot.m_Player.soldier.weaponsComponent.weapons[7].primaryAmmo <= 0 then
+		p_Bot.m_Player.soldier.weaponsComponent.weapons[7].primaryAmmo = 1
+		p_Bot.m_Player.soldier.weaponsComponent.weapons[7].secondaryAmmo = 0
+	end
+
 	-- Deploy from time to time.
 	if Config.BotsDeploy and p_Deploy and not Globals.IsScavenger then
 		if p_Bot.m_PrimaryGadget ~= nil and (p_Bot.m_Kit == BotKits.Support or p_Bot.m_Kit == BotKits.Assault) then

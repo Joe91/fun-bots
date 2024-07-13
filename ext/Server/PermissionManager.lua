@@ -100,7 +100,7 @@ function PermissionManager:AddPermission(p_Name, p_Permission)
 	local s_Guid = 0
 
 	if s_Player ~= nil then
-		s_Guid = s_Player.guid
+		s_Guid = tostring(s_Player.guid)
 	end
 
 	-- If not exists, create.

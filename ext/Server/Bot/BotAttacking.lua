@@ -168,16 +168,17 @@ local function _DefaultAttackingAction(p_Bot)
 	end
 
 	if p_Bot._ActiveAction == BotActionFlags.GrenadeActive then -- Throw grenade.
-		if p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.primaryAmmo <= 0 then
-			p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.secondaryAmmo = 0
-			p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.primaryAmmo = 1
+		if p_Bot.m_Player.soldier.weaponsComponent.weapons[7].primaryAmmo <= 0 then
 			p_Bot:_ResetActionFlag(BotActionFlags.GrenadeActive)
 		end
 	end
 
 	-- Target in vehicle.
 	if p_Bot._ShootPlayerVehicleType ~= VehicleTypes.NoVehicle then
-		local s_IsSniper = (p_Bot.m_ActiveWeapon and p_Bot.m_ActiveWeapon.type == WeaponTypes.Sniper)
+		local s_IsSniper = false
+		if (p_Bot.m_ActiveWeapon and p_Bot.m_ActiveWeapon.type == WeaponTypes.Sniper) then
+			s_IsSniper = true
+		end
 		local s_AttackMode = m_Vehicles:CheckForVehicleAttack(p_Bot._ShootPlayerVehicleType, p_Bot._DistanceToPlayer,
 			p_Bot.m_SecondaryGadget, false, s_IsSniper)
 
@@ -262,6 +263,7 @@ local function _DefaultAttackingAction(p_Bot)
 				if p_Bot._WeaponToUse ~= BotWeapons.Gadget2 and
 					((p_Bot._ShootModeTimer <= (s_TargetTimeValue + 0.001)) and
 						(p_Bot._ShootModeTimer >= (s_TargetTimeValue - Registry.BOT.BOT_UPDATE_CYCLE - 0.001)) and
+						p_Bot.m_Player.soldier.weaponsComponent.weapons[7].primaryAmmo > 0 and
 						p_Bot._ActiveAction ~= BotActionFlags.GrenadeActive) or Config.BotWeapon == BotWeapons.Grenade then
 					-- Should be triggered only once per fireMode.
 					if MathUtils:GetRandomInt(1, 100) <= s_ProbabilityGrenade then
