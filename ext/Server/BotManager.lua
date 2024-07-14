@@ -17,6 +17,9 @@ function BotManager:__init()
 	---@type table<string, Bot>
 	---`[Player.name] -> Bot`
 	self._BotsByName = {}
+	---@type table<integer, Bot>
+	---`[Player.id] -> Bot`
+	self._BotsByPlayerId = {}
 	---@type table<integer, Bot[]>
 	self._BotsByTeam = { {}, {}, {}, {}, {} } -- neutral, team1, team2, team3, team4
 	---@type table<integer, EntryInput>
@@ -835,6 +838,18 @@ function BotManager:DestroyDisabledBots()
 	for _, l_Bot in ipairs(self._Bots) do
 		if l_Bot:IsInactive() then
 			table.insert(self._BotsToDestroy, l_Bot.m_Name)
+		end
+	end
+end
+
+function BotManager:DestroyAllOldBotPlayers()
+	local s_AllPlayers = PlayerManager:GetPlayers()
+	for _, l_Player in pairs(s_AllPlayers) do
+		if l_Player ~= nil and l_Player.onlineId == 0 then
+			if l_Player.soldier ~= nil then
+				l_Player.soldier:Destroy()
+			end
+			PlayerManager:DeletePlayer(l_Player)
 		end
 	end
 end

@@ -36,7 +36,7 @@ function ChatCommands:Execute(p_Parts, p_Player)
 		local s_weapon = SoldierWeapon(p_Player.soldier.weaponsComponent.currentWeapon)
 		print(s_weapon.name)
 		print(p_Player.soldier.weaponsComponent.currentWeaponSlot)
-		for i = 1, 10, 1 do
+		for i = 1, 15, 1 do
 			if p_Player.soldier.weaponsComponent.weapons[i] then
 				print(i)
 				print(p_Player.soldier.weaponsComponent.weapons[i].name)

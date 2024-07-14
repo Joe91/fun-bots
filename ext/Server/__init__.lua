@@ -85,6 +85,8 @@ end
 
 ---VEXT Shared Extension:Loaded Event
 function FunBotServer:OnExtensionLoaded()
+	-- destroy all still existing bot-players first
+	m_BotManager:DestroyAllOldBotPlayers()
 	m_SettingsManager:OnExtensionLoaded()
 	m_Language:loadLanguage(Config.Language)
 	m_WeaponList:UpdateWeaponList()
