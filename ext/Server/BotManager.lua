@@ -1319,7 +1319,10 @@ function BotManager:_CheckForBotBotRevive()
 			then
 				-- bot to revive found
 				table.insert(s_DeadBots, l_Bot)
-			elseif l_Bot.m_Player.soldier and l_Bot.m_Kit == BotKits.Assault and string.find(l_Bot.m_Player.soldier.weaponsComponent.weapons[6].name, "Defibrillator") then
+			elseif l_Bot.m_Player.soldier and
+				l_Bot.m_Kit == BotKits.Assault and
+				l_Bot.m_Player.soldier.weaponsComponent.weapons[6] and
+				string.find(l_Bot.m_Player.soldier.weaponsComponent.weapons[6].name, "Defibrillator") then
 				if l_Bot._ActiveAction ~= BotActionFlags.ReviveActive then
 					table.insert(s_MedicBots, l_Bot)
 				elseif l_Bot._ShootPlayerName ~= '' then

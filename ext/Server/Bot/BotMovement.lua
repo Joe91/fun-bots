@@ -130,7 +130,7 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 					p_Bot._WeaponToUse = BotWeapons.Gadget2
 
 					if p_Bot.m_Player.soldier.weaponsComponent.currentWeaponSlot == WeaponSlot.WeaponSlot_5 then
-						if p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.primaryAmmo > 0 then
+						if p_Bot.m_Player.soldier.weaponsComponent.weapons[6] and p_Bot.m_Player.soldier.weaponsComponent.weapons[6].primaryAmmo > 0 then
 							p_Bot:_SetInput(EntryInputActionEnum.EIAFire, 1)
 						else
 							p_Bot:_SetInput(EntryInputActionEnum.EIAFire, 0)

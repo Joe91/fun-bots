@@ -189,8 +189,8 @@ local function _DefaultAttackingAction(p_Bot)
 				s_AttackMode == VehicleAttackModes.AttackWithMissileAir or
 				s_AttackMode == VehicleAttackModes.AttackWithMissileLand then -- Rockets and missiles.
 				p_Bot._WeaponToUse = BotWeapons.Gadget2
-				if p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.secondaryAmmo <= 0 then
-					p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.secondaryAmmo = 3
+				if p_Bot.m_Player.soldier.weaponsComponent.weapons[3] and p_Bot.m_Player.soldier.weaponsComponent.weapons[3].secondaryAmmo <= 0 then
+					p_Bot.m_Player.soldier.weaponsComponent.weapons[3].secondaryAmmo = 3
 					p_Bot._WeaponToUse = BotWeapons.Primary
 				end
 			elseif s_AttackMode == VehicleAttackModes.AttackWithC4 then -- C4
@@ -198,7 +198,7 @@ local function _DefaultAttackingAction(p_Bot)
 				p_Bot._ActiveAction = BotActionFlags.C4Active
 			elseif s_AttackMode == VehicleAttackModes.AttackWithRifle then
 				if p_Bot._ActiveAction ~= BotActionFlags.GrenadeActive and
-					p_Bot.m_Player.soldier.weaponsComponent.weapons[1] ~= nil then
+					p_Bot.m_Player.soldier.weaponsComponent.weapons[1] then
 					if p_Bot.m_Player.soldier.weaponsComponent.weapons[1].primaryAmmo == 0 then
 						p_Bot._WeaponToUse = BotWeapons.Pistol
 					else
@@ -213,9 +213,9 @@ local function _DefaultAttackingAction(p_Bot)
 		-- Target not in vehicle.
 		-- Refill rockets if empty.
 		if p_Bot.m_ActiveWeapon and p_Bot.m_ActiveWeapon.type == WeaponTypes.Rocket and not Globals.IsGm then
-			if p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.primaryAmmo <= 0 then
-				p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.primaryAmmo = 1
-				p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.secondaryAmmo = 3
+			if p_Bot.m_Player.soldier.weaponsComponent.weapons[3] and p_Bot.m_Player.soldier.weaponsComponent.weapons[3].primaryAmmo <= 0 then
+				p_Bot.m_Player.soldier.weaponsComponent.weapons[3].primaryAmmo = 1
+				p_Bot.m_Player.soldier.weaponsComponent.weapons[3].secondaryAmmo = 3
 				p_Bot._WeaponToUse = BotWeapons.Primary
 			end
 		end
@@ -226,7 +226,7 @@ local function _DefaultAttackingAction(p_Bot)
 		else
 			if p_Bot._ActiveAction ~= BotActionFlags.GrenadeActive then
 				-- Check to use pistol.
-				if p_Bot.m_Player.soldier.weaponsComponent.weapons[1] ~= nil then
+				if p_Bot.m_Player.soldier.weaponsComponent.weapons[1] then
 					if p_Bot._DistanceToPlayer <= Config.MaxShootDistancePistol and
 						(p_Bot.m_Player.soldier.weaponsComponent.weapons[1].primaryAmmo == 0 or
 							p_Bot.m_Behavior == BotBehavior.LovesPistols)
@@ -263,7 +263,7 @@ local function _DefaultAttackingAction(p_Bot)
 				if p_Bot._WeaponToUse ~= BotWeapons.Gadget2 and
 					((p_Bot._ShootModeTimer <= (s_TargetTimeValue + 0.001)) and
 						(p_Bot._ShootModeTimer >= (s_TargetTimeValue - Registry.BOT.BOT_UPDATE_CYCLE - 0.001)) and
-						p_Bot.m_Player.soldier.weaponsComponent.weapons[7].primaryAmmo > 0 and
+						(p_Bot.m_Player.soldier.weaponsComponent.weapons[7] and p_Bot.m_Player.soldier.weaponsComponent.weapons[7].primaryAmmo > 0) and
 						p_Bot._ActiveAction ~= BotActionFlags.GrenadeActive) or Config.BotWeapon == BotWeapons.Grenade then
 					-- Should be triggered only once per fireMode.
 					if MathUtils:GetRandomInt(1, 100) <= s_ProbabilityGrenade then
@@ -308,8 +308,8 @@ local function _DefaultAttackingAction(p_Bot)
 		if p_Bot.m_KnifeMode then
 			-- Nothing to do.
 			-- C4 Handling.
-		elseif p_Bot._ActiveAction == BotActionFlags.C4Active then
-			if p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.secondaryAmmo > 0 then
+		elseif p_Bot._ActiveAction == BotActionFlags.C4Active and p_Bot.m_Player.soldier.weaponsComponent.weapons[6] then
+			if p_Bot.m_Player.soldier.weaponsComponent.weapons[6].secondaryAmmo > 0 then
 				if p_Bot._ShotTimer >= (p_Bot.m_ActiveWeapon.fireCycle + p_Bot.m_ActiveWeapon.pauseCycle) then
 					p_Bot._ShotTimer = 0.0
 				end
@@ -324,7 +324,7 @@ local function _DefaultAttackingAction(p_Bot)
 					-- To-do: run away from object now.
 					if p_Bot._ShotTimer >= ((p_Bot.m_ActiveWeapon.fireCycle * 2) + p_Bot.m_ActiveWeapon.pauseCycle) then
 						p_Bot:_SetInput(EntryInputActionEnum.EIAFire, 1)
-						p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.secondaryAmmo = 4
+						p_Bot.m_Player.soldier.weaponsComponent.weapons[6].secondaryAmmo = 4
 						p_Bot:_ResetActionFlag(BotActionFlags.C4Active)
 					end
 				end

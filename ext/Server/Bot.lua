@@ -222,6 +222,7 @@ function Bot:Revive(p_Player)
 		not Globals.IsGm and
 		not Globals.IsScavenger and
 		self.m_Player.soldier ~= nil and
+		self.m_Player.soldier.weaponsComponent.weapons[6] and
 		string.find(self.m_Player.soldier.weaponsComponent.weapons[6].name, "Defibrillator") then
 		if Config.BotsRevive then
 			self._ActiveAction = BotActionFlags.ReviveActive
