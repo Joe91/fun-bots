@@ -95,15 +95,20 @@ function NodeEditor:OnAddNode(p_Player)
 	return true
 end
 
+---@param p_Player Player
+---@param p_UpdateData table
 function NodeEditor:OnUpdatePos(p_Player, p_UpdateData)
 	for _, l_UpdateItem in pairs(p_UpdateData) do
 		local s_NodeToUpdate = m_NodeCollection:Get(l_UpdateItem.ID)
-		m_NodeCollection:Update(s_NodeToUpdate, {
-			Position = l_UpdateItem.Pos,
-		})
+		if s_NodeToUpdate then
+			m_NodeCollection:Update(s_NodeToUpdate, {
+				Position = l_UpdateItem.Pos,
+			})
+		end
 	end
 end
 
+---@param p_Player Player
 function NodeEditor:OnAddMcom(p_Player)
 	if not p_Player.soldier then
 		self:Log(p_Player, 'Player must be alive')
@@ -134,6 +139,7 @@ function NodeEditor:OnAddMcom(p_Player)
 	return true
 end
 
+---@param p_Player Player
 function NodeEditor:OnAddVehicle(p_Player)
 	if not p_Player.soldier then
 		self:Log(p_Player, 'Player must be alive')
@@ -160,10 +166,9 @@ function NodeEditor:OnAddVehicle(p_Player)
 		s_Selection[i].Data.Action = action
 		self:Log(p_Player, 'Updated Waypoint: %s', s_Selection[i].ID)
 	end
-
-	return
 end
 
+---@param p_Player Player
 function NodeEditor:OnExitVehicle(p_Player, p_Args)
 	self.m_CommoRoseActive = false
 
@@ -198,6 +203,8 @@ function NodeEditor:OnExitVehicle(p_Player, p_Args)
 	return
 end
 
+---@param p_Player Player
+---@param p_Args table
 function NodeEditor:OnCustomAction(p_Player, p_Args)
 	self.m_CommoRoseActive = false
 
@@ -232,6 +239,8 @@ function NodeEditor:OnCustomAction(p_Player, p_Args)
 	end
 end
 
+---@param p_Player Player
+---@param p_Args table
 function NodeEditor:OnAddVehiclePath(p_Player, p_Args)
 	local s_Data = table.concat(p_Args or { 'land' }, ' ')
 	self:Log(p_Player, 'Add Vehicle (type): %s', g_Utilities:dump(s_Data, true))
@@ -278,6 +287,7 @@ function NodeEditor:OnAddVehiclePath(p_Player, p_Args)
 	return true
 end
 
+---@param p_Player Player
 function NodeEditor:OnSetVehicleSpawn(p_Player)
 	local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
 
@@ -313,6 +323,8 @@ function NodeEditor:OnSetVehicleSpawn(p_Player)
 end
 
 -- EVENTS for editing.
+---@param p_Player Player
+---@param p_Args table
 function NodeEditor:OnAddObjective(p_Player, p_Args)
 	local s_Data = table.concat(p_Args or {}, ' ')
 	s_Data = s_Data:lower()
@@ -355,6 +367,8 @@ function NodeEditor:OnAddObjective(p_Player, p_Args)
 	return true
 end
 
+---@param p_Player Player
+---@param p_Args table
 function NodeEditor:OnRemoveObjective(p_Player, p_Args)
 	if not p_Player.soldier then
 		self:Log(p_Player, 'Player must be alive')
@@ -398,6 +412,8 @@ function NodeEditor:OnRemoveObjective(p_Player, p_Args)
 	return true
 end
 
+---@param p_Player Player
+---@param p_Args table
 function NodeEditor:OnRemoveAllObjectives(p_Player, p_Args)
 	if not p_Player.soldier then
 		self:Log(p_Player, 'Player must be alive')
@@ -468,6 +484,8 @@ function NodeEditor:OnSetLoopMode(p_Player, p_Args)
 	return true
 end
 
+---@param p_Player Player
+---@param p_Args table
 function NodeEditor:OnSetSpawnPath(p_Player, p_Args)
 	if not p_Player.soldier then
 		self:Log(p_Player, 'Player must be alive')
@@ -526,6 +544,7 @@ function NodeEditor:OnSetSpawnPath(p_Player, p_Args)
 	return true
 end
 
+---@param p_Player Player
 function NodeEditor:OnRemoveData(p_Player)
 	if not p_Player.soldier then
 		self:Log(p_Player, 'Player must be alive')
@@ -554,6 +573,7 @@ function NodeEditor:OnRemoveNode(p_Player)
 	end
 end
 
+---@param p_Player Player
 function NodeEditor:OnTeleportToEdge(p_Player)
 	local s_Result, s_Message = m_NodeCollection:TeleportToEdge(p_Player)
 	if not s_Result then
@@ -561,6 +581,7 @@ function NodeEditor:OnTeleportToEdge(p_Player)
 	end
 end
 
+---@param p_Player Player
 function NodeEditor:OnSplitNode(p_Player)
 	local s_Result, s_Message = m_NodeCollection:SplitSelection(p_Player.onlineId)
 	if not s_Result then
@@ -568,6 +589,7 @@ function NodeEditor:OnSplitNode(p_Player)
 	end
 end
 
+---@param p_Player Player
 function NodeEditor:OnMergeNodes(p_Player)
 	local s_Result, s_Message = m_NodeCollection:MergeSelection(p_Player.onlineId)
 	if not s_Result then
@@ -575,6 +597,7 @@ function NodeEditor:OnMergeNodes(p_Player)
 	end
 end
 
+---@param p_Player Player
 function NodeEditor:OnUnlinkNodes(p_Player)
 	local s_Result, s_Message = m_NodeCollection:Unlink(p_Player.onlineId)
 	if not s_Result then
@@ -582,6 +605,7 @@ function NodeEditor:OnUnlinkNodes(p_Player)
 	end
 end
 
+---@param p_Player Player
 function NodeEditor:OnLinkNodes(p_Player)
 	local s_Result, s_Message = m_NodeCollection:Link(p_Player.onlineId)
 	if not s_Result then
@@ -589,6 +613,7 @@ function NodeEditor:OnLinkNodes(p_Player)
 	end
 end
 
+---@param p_Player Player
 function NodeEditor:OnSpitNode(p_Player)
 	local s_Result, s_Message = m_NodeCollection:SplitSelection(p_Player.onlineId)
 	if not s_Result then
@@ -596,6 +621,10 @@ function NodeEditor:OnSpitNode(p_Player)
 	end
 end
 
+---@param p_Player Player
+---@param p_Arg1 integer
+---@param p_Arg2 integer
+---@param p_Arg3 integer
 function NodeEditor:OnSetInputNode(p_Player, p_Arg1, p_Arg2, p_Arg3)
 	local s_Result, s_Message = m_NodeCollection:SetInput(p_Arg1, p_Arg2, p_Arg3)
 	if not s_Result then
@@ -603,6 +632,7 @@ function NodeEditor:OnSetInputNode(p_Player, p_Arg1, p_Arg2, p_Arg3)
 	end
 end
 
+---@param p_Player Player
 function NodeEditor:OnSpawnBot(p_Player)
 	local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
 
@@ -615,14 +645,19 @@ function NodeEditor:OnSpawnBot(p_Player)
 	end
 end
 
+---@param p_Player Player
+---@param p_WaypointId integer|string
 function NodeEditor:OnSelect(p_Player, p_WaypointId)
 	m_NodeCollection:Select(p_Player.onlineId, p_WaypointId)
 end
 
+---@param p_Player Player
+---@param p_WaypointId integer|string
 function NodeEditor:OnDeselect(p_Player, p_WaypointId)
 	m_NodeCollection:Deselect(p_Player.onlineId, p_WaypointId)
 end
 
+---@param p_Player Player
 function NodeEditor:OnSelectBetween(p_Player)
 	local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
 
@@ -635,7 +670,7 @@ function NodeEditor:OnSelectBetween(p_Player)
 	local s_Current = 0
 	local s_CurrentWaypoint = s_Selection[1]
 
-	while s_CurrentWaypoint.Next and s_CurrentWaypoint.ID ~= s_Selection[#s_Selection].ID do
+	while s_CurrentWaypoint and s_CurrentWaypoint.Next and s_CurrentWaypoint.ID ~= s_Selection[#s_Selection].ID do
 		m_NodeCollection:Select(p_Player.onlineId, s_CurrentWaypoint)
 		s_Current = s_Current + 1
 
@@ -647,6 +682,7 @@ function NodeEditor:OnSelectBetween(p_Player)
 	end
 end
 
+---@param p_Player Player
 function NodeEditor:OnSelectNext(p_Player)
 	local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
 
@@ -659,6 +695,7 @@ function NodeEditor:OnSelectNext(p_Player)
 	end
 end
 
+---@param p_Player Player
 function NodeEditor:OnSelectPrevious(p_Player)
 	local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
 
@@ -671,6 +708,7 @@ function NodeEditor:OnSelectPrevious(p_Player)
 	end
 end
 
+---@param p_Player Player
 function NodeEditor:OnClearSelection(p_Player)
 	m_NodeCollection:ClearSelection(p_Player.onlineId)
 end
@@ -680,6 +718,7 @@ end
 -- =============================================
 
 -- Management Events.
+---@param p_Player Player
 function NodeEditor:OnOpenEditor(p_Player)
 	self.m_CustomTraceTimer[p_Player.onlineId] = -1
 	self.m_lastDrawIndexNode[p_Player.onlineId] = 0
@@ -687,6 +726,7 @@ function NodeEditor:OnOpenEditor(p_Player)
 	self.m_ActiveTracePlayers[p_Player.onlineId] = true
 end
 
+---@param p_Player Player
 function NodeEditor:OnCloseEditor(p_Player)
 	self.m_ActiveTracePlayers[p_Player.onlineId] = false
 end
@@ -727,6 +767,7 @@ function NodeEditor:_getNewIndex()
 	return s_HighestIndex + 1
 end
 
+---@param p_Player Player
 function NodeEditor:StartTrace(p_Player)
 	if not p_Player.soldier then
 		return
@@ -765,6 +806,7 @@ function NodeEditor:StartTrace(p_Player)
 		true)
 end
 
+---@param p_Player Player
 function NodeEditor:EndTrace(p_Player)
 	self.m_CustomTraceTimer[p_Player.onlineId] = -1
 	NetEvents:SendToLocal('UI_ClientNodeEditor_TraceData', p_Player, nil, nil, nil, false)
@@ -779,6 +821,7 @@ function NodeEditor:EndTrace(p_Player)
 		local s_RayHits = nil
 
 		local s_FlagsMaterial = MaterialFlags.MfNoCollisionResponse
+		---@type RayCastFlags
 		local s_RaycastFlags = RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll |
 			RayCastFlags.CheckDetailMesh
 
@@ -802,6 +845,7 @@ function NodeEditor:EndTrace(p_Player)
 	self:Log(p_Player, 'Custom Trace Ended')
 end
 
+---@param p_Player Player
 function NodeEditor:ClearTrace(p_Player)
 	-- Check if custom-Trace is available. Otherwise, delete selected trace.
 	if self.m_CustomTrace[p_Player.onlineId] and #self.m_CustomTrace[p_Player.onlineId]:Get() > 0 then
@@ -848,6 +892,9 @@ function NodeEditor:IsSavingOrLoading()
 	return self.m_NodeOperation ~= ''
 end
 
+---@param p_Player Player
+---@param p_PathIndex integer
+---@return boolean
 function NodeEditor:SaveTrace(p_Player, p_PathIndex)
 	if self:IsSavingOrLoading() then
 		self:Log(p_Player, 'Operation in progress, please wait...')
@@ -943,7 +990,9 @@ function NodeEditor:SaveTrace(p_Player, p_PathIndex)
 end
 
 -- COMMON EVENTS.
-
+---@param p_LevelName string
+---@param p_GameMode string
+---@param p_CustomGameMode string
 function NodeEditor:OnLevelLoaded(p_LevelName, p_GameMode, p_CustomGameMode)
 	self:Log(nil, 'Level Load: %s %s', p_LevelName, p_GameMode)
 
@@ -1030,6 +1079,7 @@ end
 function NodeEditor:OnPlayerDestroyed(p_Player)
 end
 
+---@param p_Player Player
 function NodeEditor:OnJumpDetected(p_Player)
 	if p_Player and p_Player.soldier and self.m_ActiveTracePlayers[p_Player.onlineId] and self.m_CustomTraceTimer[p_Player.onlineId] >= 0 then
 		self.m_JumpDetected[p_Player.onlineId] = true

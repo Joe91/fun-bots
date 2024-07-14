@@ -11,6 +11,7 @@ function VehicleWeaponHandling:__init()
 	-- Nothing to do.
 end
 
+---@param p_Bot Bot
 function VehicleWeaponHandling:UpdateReloadVehicle(p_Bot)
 	p_Bot._VehicleWeaponSlotToUse = 1 -- Primary.
 	p_Bot:AbortAttack()
@@ -26,6 +27,7 @@ function VehicleWeaponHandling:UpdateReloadVehicle(p_Bot)
 	end
 end
 
+---@param p_Bot Bot
 function VehicleWeaponHandling:UpdateWeaponSelectionVehicle(p_Bot)
 	-- Select weapon-slot.
 	p_Bot._WeaponToUse = BotWeapons.Primary -- For exit.

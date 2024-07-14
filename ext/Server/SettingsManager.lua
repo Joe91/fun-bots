@@ -67,13 +67,13 @@ function SettingsManager:OnExtensionLoaded()
 				Time = m_Database:Now()
 			})
 
-		-- m_Database:Insert('FB_Settings', {
-		-- Key = l_Name,
-		-- Value = DatabaseField.NULL,
-		-- Time = DatabaseField.NULL
-		-- })
+			-- m_Database:Insert('FB_Settings', {
+			-- Key = l_Name,
+			-- Value = DatabaseField.NULL,
+			-- Time = DatabaseField.NULL
+			-- })
 
-		-- If it exists update Settings, if newer.
+			-- If it exists update Settings, if newer.
 		else
 			local s_Old = s_Single.Value
 
@@ -134,7 +134,7 @@ function SettingsManager:OnExtensionLoaded()
 
 			if s_TempValue then -- Number?
 				Config[l_Value.Key] = s_TempValue
-			else -- String.
+			else       -- String.
 				if l_Value.Value == 'true' then
 					Config[l_Value.Key] = true
 				elseif l_Value.Value == 'false' then
@@ -151,7 +151,11 @@ function SettingsManager:OnExtensionLoaded()
 	end
 end
 
--- This is unused.
+---comment
+---@param p_Name string
+---@param p_Value any
+---@param p_Temporary boolean
+---@param p_Batch boolean
 function SettingsManager:Update(p_Name, p_Value, p_Temporary, p_Batch)
 	if p_Temporary ~= true then
 		if p_Value == nil then
@@ -177,7 +181,7 @@ function SettingsManager:Update(p_Name, p_Value, p_Temporary, p_Batch)
 				}, 'Key')
 			end
 
-		-- Use new queries.
+			-- Use new queries.
 		else
 			m_Database:BatchQuery('FB_Settings', {
 				Key = p_Name,
@@ -208,6 +212,10 @@ function SettingsManager:RestoreDefault()
 	end
 end
 
+---comment
+---@param p_Name string
+---@param p_Value any
+---@return boolean
 function SettingsManager:UpdateSetting(p_Name, p_Value)
 	local s_Valid = false
 	local s_UpdateClientWeapons = false

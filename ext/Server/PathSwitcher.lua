@@ -50,7 +50,8 @@ end
 ---@param p_InVehicle boolean
 ---@param p_TeamId TeamId
 ---@param p_ActiveVehicle VehicleDataInner|nil
----@returns boolean, Waypoint|nil
+---@returns boolean
+---@returns Waypoint|nil
 function PathSwitcher:GetNewPath(p_Bot, p_BotId, p_Point, p_Objective, p_InVehicle, p_TeamId, p_ActiveVehicle)
 	-- Check if on base, or on path away from base. In this case: change path.
 	local s_OnBasePath = false

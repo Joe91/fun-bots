@@ -257,9 +257,9 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		Globals.SpawnMode = "manual"
 
 		if team == TeamId.Team1 then
-			BotSpawner:SpawnWayBots(p_Player, amount, true, 0, 0, TeamId.Team2)
+			BotSpawner:SpawnWayBots(amount, true, 0, 0, TeamId.Team2)
 		else
-			BotSpawner:SpawnWayBots(p_Player, amount, true, 0, 0, TeamId.Team1)
+			BotSpawner:SpawnWayBots(amount, true, 0, 0, TeamId.Team1)
 		end
 		return
 	elseif request.action == 'bot_spawn_friend' then
@@ -269,7 +269,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		end
 		local amount = tonumber(request.value)
 		Globals.SpawnMode = "manual"
-		BotSpawner:SpawnWayBots(p_Player, amount, true, 0, 0, p_Player.teamId)
+		BotSpawner:SpawnWayBots(amount, true, 0, 0, p_Player.teamId)
 		return
 	elseif request.action == 'bot_spawn_path' then -- To-do: what's the difference? Make a function to spawn bots on a fixed way instead?
 		if PermissionManager:HasPermission(p_Player, 'UserInterface.BotEditor.Spawn') == false then
@@ -286,7 +286,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 			s_TeamId = s_TeamId - Globals.NrOfTeams
 		end
 
-		BotSpawner:SpawnWayBots(p_Player, amount, false, index, indexOnPath, s_TeamId)
+		BotSpawner:SpawnWayBots(amount, false, index, indexOnPath, s_TeamId)
 		return
 	elseif request.action == 'bot_kick_all' then
 		if PermissionManager:HasPermission(p_Player, 'UserInterface.BotEditor.KickAll') == false then

@@ -1,3 +1,17 @@
+---@class Waypoint
+---@field ID string
+---@field Index integer
+---@field Position Vec3
+---@field PathIndex integer
+---@field PointIndex integer
+---@field InputVar integer
+---@field SpeedMode integer
+---@field ExtraMode integer
+---@field OptValue integer
+---@field Data table<string, table>
+---@field Previous nil|Waypoint
+---@field Next nil|Waypoint
+
 ---@class NodeCollection
 ---@overload fun(p_DisableServerEvents?: boolean):NodeCollection
 NodeCollection = class 'NodeCollection'
@@ -44,10 +58,9 @@ function NodeCollection:Create(p_Data, p_Authoritative)
 	local s_InputVar = 3
 
 	-- Setup defaults for a blank node.
-	---@class Waypoint
+	---@type Waypoint
 	local s_Waypoint = {
 		ID = string.format('p_%d', s_NewIndex), -- New generated ID for internal storage.
-		OriginalID = nil,                 -- Original ID from database.
 		Index = s_NewIndex,               -- New generated ID in numerical form.
 		Position = Vec3(0, 0, 0),
 		PathIndex = 0,                    -- Path #
@@ -57,10 +70,8 @@ function NodeCollection:Create(p_Data, p_Authoritative)
 		ExtraMode = (s_InputVar >> 4) & 0xF,
 		OptValue = (s_InputVar >> 8) & 0xFF,
 		Data = {},
-		Distance = nil, -- Current distance to player.
-		Updated = false, -- If true, needs to be sent to server for saving.
-		Previous = false, -- Tree navigation.
-		Next = false,
+		Previous = nil, -- Tree navigation.
+		Next = nil,
 	}
 
 	if p_Data ~= nil then
@@ -139,7 +150,8 @@ function NodeCollection:Register(p_Waypoint)
 	return p_Waypoint
 end
 
----@return boolean
+---@param p_SelectionId integer
+---@return Waypoint|boolean
 ---@return string
 function NodeCollection:Add(p_SelectionId)
 	local s_Selection = self:GetSelected(p_SelectionId)
@@ -264,13 +276,13 @@ function NodeCollection:InsertBefore(p_ReferrenceWaypoint, p_Waypoint)
 	self:RecalculateIndexes(p_Waypoint.Previous or p_Waypoint)
 end
 
----@param p_Waypoint Waypoint|nil
+---@param p_Waypoint Waypoint|boolean
 function NodeCollection:RecalculateIndexes(p_Waypoint)
 	m_Logger:Write('RecalculateIndexes Starting...')
 
 	local s_Counter = 0
 
-	if p_Waypoint == nil then
+	if not p_Waypoint then
 		for i = 1, #self._Waypoints do
 			self._Waypoints[i] = self:_processWaypointRecalc(self._Waypoints[i])
 			s_Counter = s_Counter + 1
@@ -329,7 +341,6 @@ function NodeCollection:_processWaypointRecalc(p_Waypoint)
 	if p_Waypoint.PointIndex ~= s_LastPointIndex + 1 then
 		s_LastPointIndex = s_LastPointIndex + 1
 		p_Waypoint.PointIndex = s_LastPointIndex
-		p_Waypoint.Updated = true
 	end
 
 	return p_Waypoint
@@ -481,9 +492,10 @@ end
 -- p_Waypoints | Waypoint or {Waypoint} | Can be a single waypoint or a table of waypoints, `nil` defaults to current selection.
 -- p_LinkID | string | a waypoint ID, must not be `nil`.
 -- p_OneWay | boolean | if true, the connection is only made on this node, prevents infinite recursion.
----@param p_Waypoints? Waypoint|Waypoint[]
----@param p_LinkID string
----@param p_OneWay? boolean
+---@param p_SelectionId integer
+---@param p_Waypoints? Waypoint|Waypoint[]|nil
+---@param p_LinkID string|nil
+---@param p_OneWay boolean|nil
 ---@return boolean
 ---@return string
 function NodeCollection:Link(p_SelectionId, p_Waypoints, p_LinkID, p_OneWay)
@@ -529,9 +541,10 @@ end
 -- p_Waypoints | Waypoint or {Waypoint} | Can be a single waypoint or a table of waypoints, `nil` defaults to current selection.
 -- p_LinkID | string | a waypoint ID to remove, can be `nil` to clear connections.
 -- p_OneWay | boolean | if true, the connection is only made on this node, prevents infinite recursion.
----@param p_Waypoints Waypoint|Waypoint[]|nil
+---@param p_SelectionId integer
+---@param p_Waypoints? Waypoint|Waypoint[]|nil
 ---@param p_LinkID string|nil
----@param p_OneWay? boolean
+---@param p_OneWay boolean|nil
 ---@return boolean
 ---@return string
 function NodeCollection:Unlink(p_SelectionId, p_Waypoints, p_LinkID, p_OneWay)
@@ -612,7 +625,7 @@ end
 
 ---@param p_Waypoint? integer|string|Waypoint
 ---@param p_PathIndex? integer
----@return Waypoint
+---@return Waypoint|nil|Waypoint[]
 function NodeCollection:Get(p_Waypoint, p_PathIndex)
 	if p_Waypoint ~= nil then
 		if p_PathIndex ~= nil then
@@ -741,9 +754,10 @@ end
 -----------------------------
 -- Selection.
 
----@param p_Waypoint? Waypoint
----@param p_PathIndex? integer
-function NodeCollection:Select(p_SelectionId, p_Waypoint, p_PathIndex)
+---@param p_SelectionId integer
+---@param p_WaypointId integer|string|Waypoint
+---@param p_PathIndex integer|nil
+function NodeCollection:Select(p_SelectionId, p_WaypointId, p_PathIndex)
 	if not p_SelectionId then
 		p_SelectionId = 1
 	end
@@ -751,18 +765,21 @@ function NodeCollection:Select(p_SelectionId, p_Waypoint, p_PathIndex)
 		self._SelectedWaypoints[p_SelectionId] = {}
 	end
 
-	if p_Waypoint == nil then return end
+	if p_WaypointId == nil then return end
 
-	p_Waypoint = self:Get(p_Waypoint, p_PathIndex)
+	local s_Waypoint = self:Get(p_WaypointId, p_PathIndex)
 
-	if p_Waypoint == nil then return end
+	if s_Waypoint == nil then
+		return
+	end
 
-	self._SelectedWaypoints[p_SelectionId][p_Waypoint.ID] = p_Waypoint
+	self._SelectedWaypoints[p_SelectionId][s_Waypoint.ID] = s_Waypoint
 end
 
----@param p_Waypoint? Waypoint
----@param p_PathIndex? integer
-function NodeCollection:Deselect(p_SelectionId, p_Waypoint, p_PathIndex)
+---@param p_SelectionId integer
+---@param p_WaypointId integer|string
+---@param p_PathIndex integer|nil
+function NodeCollection:Deselect(p_SelectionId, p_WaypointId, p_PathIndex)
 	if not p_SelectionId then
 		p_SelectionId = 1
 	end
@@ -770,14 +787,14 @@ function NodeCollection:Deselect(p_SelectionId, p_Waypoint, p_PathIndex)
 		self._SelectedWaypoints[p_SelectionId] = {}
 	end
 
-	if p_Waypoint == nil then
+	if p_WaypointId == nil then
 		self:ClearSelection(p_SelectionId)
 	else
-		p_Waypoint = self:Get(p_Waypoint, p_PathIndex)
+		local s_Waypoint = self:Get(p_WaypointId, p_PathIndex)
 
-		if p_Waypoint == nil then return end
+		if s_Waypoint == nil then return end
 
-		self._SelectedWaypoints[p_SelectionId][p_Waypoint.ID] = nil
+		self._SelectedWaypoints[p_SelectionId][s_Waypoint.ID] = nil
 	end
 end
 
@@ -902,9 +919,13 @@ function NodeCollection:MergeSelection(p_SelectionId)
 	return true, 'Success'
 end
 
+---comment
+---@param p_Player Player
+---@return boolean
+---@return string
 function NodeCollection:TeleportToEdge(p_Player)
 	if p_Player == nil or p_Player.soldier == nil then
-		return
+		return false, 'nil params'
 	end
 
 	local s_Transform = p_Player.soldier.worldTransform:Clone()
@@ -917,10 +938,10 @@ function NodeCollection:TeleportToEdge(p_Player)
 	end
 
 	local s_CurrentWaypoint = s_Selection[1]
-	s_First = self:GetFirst(s_CurrentWaypoint.PathIndex)
-	s_Last = self:GetLast(s_CurrentWaypoint.PathIndex)
-	s_FirstDistance = 0
-	s_LastDistance = 0
+	local s_First = self:GetFirst(s_CurrentWaypoint.PathIndex)
+	local s_Last = self:GetLast(s_CurrentWaypoint.PathIndex)
+	local s_FirstDistance = 0
+	local s_LastDistance = 0
 
 	if s_First then
 		s_FirstDistance = s_Transform.trans:Distance(s_First.Position)
@@ -928,6 +949,10 @@ function NodeCollection:TeleportToEdge(p_Player)
 
 	if s_Last then
 		s_LastDistance = s_Transform.trans:Distance(s_Last.Position)
+	end
+
+	if not s_First or not s_Last then
+		return false, 'Invalid selection'
 	end
 
 	if s_FirstDistance > s_LastDistance then
@@ -940,6 +965,9 @@ function NodeCollection:TeleportToEdge(p_Player)
 	return true, 'Success'
 end
 
+---@param p_SelectionId integer
+---@return boolean
+---@return string
 function NodeCollection:SplitSelection(p_SelectionId)
 	local s_Selection = self:GetSelected(p_SelectionId)
 
@@ -1073,7 +1101,6 @@ function NodeCollection:Load(p_LevelName, p_GameMode)
 		end
 
 		local s_Waypoint = {
-			OriginalID = l_Row['id'],
 			Position = Vec3(l_Row['transX'], l_Row['transY'], l_Row['transZ']),
 			PathIndex = l_Row['pathIndex'],
 			PointIndex = l_Row['pointIndex'],
@@ -1387,7 +1414,11 @@ function NodeCollection:ObjectiveDirection(p_Waypoint, p_Objective, p_InVehicle)
 			if s_CurrentWaypoint[s_Direction].Data.Links ~= nil then
 				for _, l_LinkID in pairs(s_CurrentWaypoint[s_Direction].Data.Links) do
 					local s_Link = self:Get(l_LinkID)
-					local s_PathWaypoint = self:GetFirst(s_Link.PathIndex)
+
+					local s_PathWaypoint = nil
+					if s_Link then
+						s_PathWaypoint = self:GetFirst(s_Link.PathIndex)
+					end
 
 					if s_PathWaypoint ~= nil and
 						s_PathWaypoint.Data.Objectives ~= nil and

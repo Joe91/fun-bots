@@ -61,6 +61,7 @@ function BotWeaponHandling:UpdateDeployAndReload(p_Bot, p_Deploy)
 	end
 end
 
+---@param p_Bot Bot
 function BotWeaponHandling:UpdateWeaponSelection(p_Bot)
 	-- Select weapon-slot.
 	if p_Bot._ActiveAction ~= BotActionFlags.MeleeActive then

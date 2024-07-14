@@ -54,26 +54,26 @@ function ClientNodeEditor:__init()
 		['Purple'] = Vec4(0.5, 0, 1, 1),
 		['Ray'] = { Node = Vec4(1, 1, 1, 0.2), Line = { Vec4(1, 1, 1, 1), Vec4(0, 0, 0, 1) } },
 		['Orphan'] = { Node = Vec4(0, 0, 0, 0.5), Line = Vec4(0, 0, 0, 1) },
-		{ Node = Vec4(1, 0, 0, 0.25), Line = Vec4(1, 0, 0, 1) },
-		{ Node = Vec4(1, 0.55, 0, 0.25), Line = Vec4(1, 0.55, 0, 1) },
-		{ Node = Vec4(1, 1, 0, 0.25), Line = Vec4(1, 1, 0, 1) },
-		{ Node = Vec4(0, 0.5, 0, 0.25), Line = Vec4(0, 0.5, 0, 1) },
-		{ Node = Vec4(0, 0, 1, 0.25), Line = Vec4(0, 0, 1, 1) },
-		{ Node = Vec4(0.29, 0, 0.51, 0.25), Line = Vec4(0.29, 0, 0.51, 1) },
-		{ Node = Vec4(1, 0, 1, 0.25), Line = Vec4(1, 0, 1, 1) },
-		{ Node = Vec4(0.55, 0, 0, 0.25), Line = Vec4(0.55, 0, 0, 1) },
-		{ Node = Vec4(1, 0.65, 0, 0.25), Line = Vec4(1, 0.65, 0, 1) },
-		{ Node = Vec4(0.94, 0.9, 0.55, 0.25), Line = Vec4(0.94, 0.9, 0.55, 1) },
-		{ Node = Vec4(0.5, 1, 0, 0.25), Line = Vec4(0.5, 1, 0, 1) },
+		{ Node = Vec4(1, 0, 0, 0.25),          Line = Vec4(1, 0, 0, 1) },
+		{ Node = Vec4(1, 0.55, 0, 0.25),       Line = Vec4(1, 0.55, 0, 1) },
+		{ Node = Vec4(1, 1, 0, 0.25),          Line = Vec4(1, 1, 0, 1) },
+		{ Node = Vec4(0, 0.5, 0, 0.25),        Line = Vec4(0, 0.5, 0, 1) },
+		{ Node = Vec4(0, 0, 1, 0.25),          Line = Vec4(0, 0, 1, 1) },
+		{ Node = Vec4(0.29, 0, 0.51, 0.25),    Line = Vec4(0.29, 0, 0.51, 1) },
+		{ Node = Vec4(1, 0, 1, 0.25),          Line = Vec4(1, 0, 1, 1) },
+		{ Node = Vec4(0.55, 0, 0, 0.25),       Line = Vec4(0.55, 0, 0, 1) },
+		{ Node = Vec4(1, 0.65, 0, 0.25),       Line = Vec4(1, 0.65, 0, 1) },
+		{ Node = Vec4(0.94, 0.9, 0.55, 0.25),  Line = Vec4(0.94, 0.9, 0.55, 1) },
+		{ Node = Vec4(0.5, 1, 0, 0.25),        Line = Vec4(0.5, 1, 0, 1) },
 		{ Node = Vec4(0.39, 0.58, 0.93, 0.25), Line = Vec4(0.39, 0.58, 0.93, 1) },
 		{ Node = Vec4(0.86, 0.44, 0.58, 0.25), Line = Vec4(0.86, 0.44, 0.58, 1) },
 		{ Node = Vec4(0.93, 0.51, 0.93, 0.25), Line = Vec4(0.93, 0.51, 0.93, 1) },
-		{ Node = Vec4(1, 0.63, 0.48, 0.25), Line = Vec4(1, 0.63, 0.48, 1) },
-		{ Node = Vec4(0.5, 0.5, 0, 0.25), Line = Vec4(0.5, 0.5, 0, 1) },
-		{ Node = Vec4(0, 0.98, 0.6, 0.25), Line = Vec4(0, 0.98, 0.6, 1) },
+		{ Node = Vec4(1, 0.63, 0.48, 0.25),    Line = Vec4(1, 0.63, 0.48, 1) },
+		{ Node = Vec4(0.5, 0.5, 0, 0.25),      Line = Vec4(0.5, 0.5, 0, 1) },
+		{ Node = Vec4(0, 0.98, 0.6, 0.25),     Line = Vec4(0, 0.98, 0.6, 1) },
 		{ Node = Vec4(0.18, 0.31, 0.31, 0.25), Line = Vec4(0.18, 0.31, 0.31, 1) },
-		{ Node = Vec4(0, 1, 1, 0.25), Line = Vec4(0, 1, 1, 1) },
-		{ Node = Vec4(1, 0.08, 0.58, 0.25), Line = Vec4(1, 0.08, 0.58, 1) },
+		{ Node = Vec4(0, 1, 1, 0.25),          Line = Vec4(0, 1, 1, 1) },
+		{ Node = Vec4(1, 0.08, 0.58, 0.25),    Line = Vec4(1, 0.08, 0.58, 1) },
 	}
 
 	self.m_EventsReady = false
@@ -108,7 +108,7 @@ function ClientNodeEditor:OnRegisterEvents()
 	Console:Register('Unlink', 'Unlink two waypoints', self, self._onUnlinkNode)
 	Console:Register('Merge', 'Merge selected waypoints', self, self._onMergeNode)
 	Console:Register('SelectPrevious', 'Extend selection to previous waypoint', self, self._onSelectPrevious) -- Done
-	Console:Register('ClearSelection', 'Clear selection', self, self._onClearSelection) -- Done
+	Console:Register('ClearSelection', 'Clear selection', self, self._onClearSelection)                    -- Done
 	Console:Register('Move', 'toggle move mode on selected waypoints', self, self._onToggleMoveNode)
 
 	-- Add these Events to NodeEditor.
@@ -219,7 +219,6 @@ function ClientNodeEditor:_OnDrawNodes(p_NodesToDraw, p_UpdateView)
 		-- Clear last node.
 		self.m_LastDataPoint = nil
 	end
-
 end
 
 function ClientNodeEditor:_DrawData(p_DataPoint)
@@ -391,6 +390,8 @@ function ClientNodeEditor:GetDistance(p_Position1, p_Position2)
 	end
 end
 
+---@param p_Position Vec3
+---@return nil
 function ClientNodeEditor:FindNode(p_Position)
 	local s_ClosestNode = nil
 	local s_ClosestDistance = 0.6 -- Maximum 0.6 meter.
@@ -499,8 +500,8 @@ function ClientNodeEditor:_onToggleMoveNode(p_Args)
 			},
 			Other = {
 				{ Key = 'F12', Name = 'Settings' },
-				{ Key = 'Q', Name = 'Quick Select' },
-				{ Key = 'BS', Name = 'Clear Select' },
+				{ Key = 'Q',   Name = 'Quick Select' },
+				{ Key = 'BS',  Name = 'Clear Select' },
 				{ Key = 'INS', Name = 'Spawn Bot' }
 			}
 		})
@@ -543,10 +544,10 @@ function ClientNodeEditor:_onToggleMoveNode(p_Args)
 				{ Grid = 'K9', Key = '9', Name = 'Up' },
 			},
 			Other = {
-				{ Key = 'F12', Name = 'Settings' },
-				{ Key = 'Q', Name = 'Finish Move' },
-				{ Key = 'BS', Name = 'Cancel Move' },
-				{ Key = 'KP_PLUS', Name = 'Speed +' },
+				{ Key = 'F12',      Name = 'Settings' },
+				{ Key = 'Q',        Name = 'Finish Move' },
+				{ Key = 'BS',       Name = 'Cancel Move' },
+				{ Key = 'KP_PLUS',  Name = 'Speed +' },
 				{ Key = 'KP_MINUS', Name = 'Speed -' },
 			}
 		})
@@ -893,7 +894,6 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 				-- Perform raycast to get where player is looking.
 				if self.m_EditMode == 'move' then
-
 					local s_Selection = self:GetSelectedNodes()
 
 					if #s_Selection > 0 then
@@ -915,7 +915,6 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 						local s_UpdateData = {}
 
 						for i = 1, #s_Selection do
-
 							local s_AdjustedPosition = self.m_EditNodeStartPos[s_Selection[i].Node.ID] + self.m_EditModeManualOffset
 
 							if self.m_EditPositionMode == 'relative' then
@@ -1024,6 +1023,9 @@ function ClientNodeEditor:DrawOBB(p_Aab, p_Transform, p_Color)
 end
 
 -- Stolen't https://github.com/EmulatorNexus/VEXT-Samples/blob/80cddf7864a2cdcaccb9efa810e65fae1baeac78/no-headglitch-raycast/ext/Client/__init__.lua
+---@param p_MaxDistance number|nil
+---@param p_UseAsync boolean|nil
+---@return RayCastHit|nil
 function ClientNodeEditor:Raycast(p_MaxDistance, p_UseAsync)
 	local s_Player = PlayerManager:GetLocalPlayer()
 	if not s_Player then
@@ -1035,6 +1037,9 @@ function ClientNodeEditor:Raycast(p_MaxDistance, p_UseAsync)
 	-- We get the camera transform, from which we will start the raycast. We get the direction from the forward vector. Camera transform
 	-- is inverted, so we have to invert this vector.
 	local s_Transform = ClientUtils:GetCameraTransform()
+	if s_Transform == nil then
+		return
+	end
 	local s_Direction = Vec3(-s_Transform.forward.x, -s_Transform.forward.y, -s_Transform.forward.z)
 
 	if s_Transform.trans == Vec3.zero then
@@ -1051,6 +1056,7 @@ function ClientNodeEditor:Raycast(p_MaxDistance, p_UseAsync)
 
 	-- Perform raycast, returns a RayCastHit object.
 
+	---@type RayCastFlags
 	local s_Flags = RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll |
 		RayCastFlags.CheckDetailMesh
 

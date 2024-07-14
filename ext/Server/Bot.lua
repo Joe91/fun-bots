@@ -126,14 +126,14 @@ function Bot:__init(p_Player)
 	self._AttackMode = BotAttackModes.RandomNotSet
 	---@type BotActionFlags
 	self._ActiveAction = BotActionFlags.NoActionActive
-	-- To-do: add emmylua type.
+	---@type Waypoint|nil
 	self._CurrentWayPoint = nil
 	self._TargetYaw = 0.0
 	self._TargetYawMovementVehicle = 0.0
 	self._TargetPitch = 0.0
-	-- To-do: add emmylua type.
+	---@type Waypoint|nil
 	self._TargetPoint = nil
-	-- To-do: add emmylua type.
+	---@type Waypoint|nil
 	self._NextTargetPoint = nil
 	self._PathIndex = 0
 	self._LastWayDistance = 0.0

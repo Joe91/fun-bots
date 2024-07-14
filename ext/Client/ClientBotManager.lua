@@ -104,6 +104,11 @@ function ClientBotManager:OnEngineMessage(p_Message)
 	end
 end
 
+---@param p_Pos1 Vec3
+---@param p_Pos2 Vec3
+---@param p_InObjectPos1 boolean
+---@param p_InObjectPos2 boolean
+---@return boolean
 function ClientBotManager:DoRaycast(p_Pos1, p_Pos2, p_InObjectPos1, p_InObjectPos2)
 	if Registry.COMMON.USE_COLLISION_RAYCASTS then
 		local s_DeltaPos = p_Pos2 - p_Pos1
@@ -174,6 +179,7 @@ function ClientBotManager:DoRaycast(p_Pos1, p_Pos2, p_InObjectPos1, p_InObjectPo
 	end
 end
 
+---@param p_RaycastResultsToSend RaycastResults
 function ClientBotManager:SendRaycastResults(p_RaycastResultsToSend)
 	NetEvents:SendLocal("Botmanager:RaycastResults", p_RaycastResultsToSend)
 end
@@ -413,7 +419,8 @@ end
 -- =============================================
 -- NetEvents
 -- =============================================
-
+---@param p_NewConfig table<string,integer|number>
+---@param p_UpdateWeaponSets boolean
 function ClientBotManager:OnWriteClientSettings(p_NewConfig, p_UpdateWeaponSets)
 	for l_Key, l_Value in pairs(p_NewConfig) do
 		Config[l_Key] = l_Value

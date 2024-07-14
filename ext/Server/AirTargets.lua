@@ -89,7 +89,8 @@ function AirTargets:GetTarget(p_Player, p_MaxDistance)
 end
 
 -- Private functions
-
+---comment
+---@param p_Player Player
 function AirTargets:_CreateTarget(p_Player)
 	if p_Player.controlledEntryId == 0 then
 		local s_Vehicle = m_Vehicles:GetVehicle(p_Player)
@@ -99,6 +100,7 @@ function AirTargets:_CreateTarget(p_Player)
 	end
 end
 
+---@param p_Player Player
 function AirTargets:_RemoveTarget(p_Player)
 	for l_Index, l_Target in pairs(self._Targets) do
 		if l_Target == p_Player.name then

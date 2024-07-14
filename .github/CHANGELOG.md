@@ -32,6 +32,7 @@ This is the changelog for the version V2.9 Don't forget to [join us on Discord](
 * improve general attacking-logic by fixing some issues
 * improve speed on save of traces (by tanger-noisu)
 * improve general behavior
+* fix modlist.realoadextension
 
 ### Bug fixes
 * Merged pull request #323 from tagener-noisu Path-Switcher fixes
