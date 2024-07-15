@@ -413,7 +413,7 @@ function NodeEditor:OnRemoveObjective(p_Player, p_Args)
 end
 
 ---@param p_Player Player
----@param p_Args table
+---@param p_Args table|nil
 function NodeEditor:OnRemoveAllObjectives(p_Player, p_Args)
 	if not p_Player.soldier then
 		self:Log(p_Player, 'Player must be alive')
@@ -485,7 +485,7 @@ function NodeEditor:OnSetLoopMode(p_Player, p_Args)
 end
 
 ---@param p_Player Player
----@param p_Args table
+---@param p_Args table|nil
 function NodeEditor:OnSetSpawnPath(p_Player, p_Args)
 	if not p_Player.soldier then
 		self:Log(p_Player, 'Player must be alive')
@@ -893,7 +893,7 @@ function NodeEditor:IsSavingOrLoading()
 end
 
 ---@param p_Player Player
----@param p_PathIndex integer
+---@param p_PathIndex integer|number
 ---@return boolean
 function NodeEditor:SaveTrace(p_Player, p_PathIndex)
 	if self:IsSavingOrLoading() then

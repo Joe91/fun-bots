@@ -699,7 +699,7 @@ function BotSpawner:SpawnBotGrid(p_Player, p_Rows, p_Columns, p_Spacing)
 	end
 end
 
----@param p_Amount integer
+---@param p_Amount integer|number
 ---@param p_UseRandomWay boolean
 ---@param p_ActiveWayIndex? integer
 ---@param p_IndexOnPath? integer

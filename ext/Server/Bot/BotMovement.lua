@@ -58,6 +58,11 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 			s_NextPoint = m_NodeCollection:Get(p_Bot:_GetWayIndex(p_Bot._CurrentWayPoint - 1), p_Bot._PathIndex)
 		end
 
+		if s_Point == nil then
+			return
+		end
+
+
 		-- Do defense, if needed
 		if p_Bot._ObjectiveMode == BotObjectiveModes.Defend and g_GameDirector:IsAtTargetObjective(p_Bot._PathIndex, p_Bot._Objective) then
 			p_Bot._DefendTimer = p_Bot._DefendTimer + Registry.BOT.BOT_UPDATE_CYCLE
@@ -157,7 +162,9 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 			if p_Bot._ActiveAction == BotActionFlags.OtherActionActive then
 				return -- DON'T EXECUTE ANYTHING ELSE.
 			else
-				s_Point = s_NextPoint
+				if s_NextPoint then
+					s_Point = s_NextPoint
+				end
 			end
 		end
 

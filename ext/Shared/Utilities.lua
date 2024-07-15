@@ -8,10 +8,18 @@ function Utilities:__init()
 	-- Nothing to do.
 end
 
+---@param p_Player Player
+---@param p_IsTarget boolean
+---@param p_AimForHead boolean
+---@return Vec3
 function Utilities:getCameraPos(p_Player, p_IsTarget, p_AimForHead)
 	return Vec3(0.00, self:getTargetHeight(p_Player.soldier, p_IsTarget, p_AimForHead), 0.00)
 end
 
+---@param p_Soldier Soldier
+---@param p_IsTarget boolean
+---@param p_AimForHead boolean
+---@return number
 function Utilities:getTargetHeight(p_Soldier, p_IsTarget, p_AimForHead)
 	local s_CameraHeight = 0
 
@@ -44,22 +52,28 @@ function Utilities:getTargetHeight(p_Soldier, p_IsTarget, p_AimForHead)
 	return s_CameraHeight
 end
 
+---@param p_Player Player|string|integer
+---@return boolean
 function Utilities:isBot(p_Player)
+	local s_Player = nil
 	if type(p_Player) == 'string' then
-		p_Player = PlayerManager:GetPlayerByName(p_Player)
-	end
+		s_Player = PlayerManager:GetPlayerByName(p_Player)
+	elseif type(p_Player) == 'number' then
+		s_Player = PlayerManager:GetPlayerById(p_Player)
 
-	if type(p_Player) == 'number' then
-		p_Player = PlayerManager:GetPlayerById(p_Player)
-
-		if p_Player == nil then
-			p_Player = PlayerManager:GetPlayerByOnlineId(p_Player)
+		if s_Player == nil then
+			s_Player = PlayerManager:GetPlayerByOnlineId(p_Player)
 		end
+	else
+		s_Player = p_Player
 	end
 
-	return p_Player ~= nil and p_Player.onlineId == 0
+	return s_Player ~= nil and s_Player.onlineId == 0
 end
 
+---@param p_Enum table
+---@param p_Value any
+---@return any|nil
 function Utilities:getEnumName(p_Enum, p_Value)
 	for l_Key, l_Value in pairs(getmetatable(p_Enum)['__index']) do
 		if l_Value == p_Value then
@@ -70,6 +84,9 @@ function Utilities:getEnumName(p_Enum, p_Value)
 	return nil
 end
 
+---@param p_PosA Vec3
+---@param p_PosB Vec3
+---@return number
 function Utilities:DistanceFast(p_PosA, p_PosB)
 	return (math.abs(p_PosA.x - p_PosB.x) +
 		math.abs(p_PosA.y - p_PosB.y) +
@@ -78,6 +95,9 @@ end
 
 -- Do not use on numerically indexed tables, only tables with string keys.
 -- This is a shallow merge, does not recurse deeper than one p_Level.
+---@param p_OriginalTable table
+---@param p_NewData table
+---@return table
 function Utilities:mergeKeys(p_OriginalTable, p_NewData)
 	for l_Key, l_Value in pairs(p_NewData) do
 		p_OriginalTable[l_Key] = l_Value
@@ -91,6 +111,11 @@ end
 -- <int|p_MaxLevels> | Max recursion level, defaults to -1 for infinite.
 -- <int|level> | Current recursion level.
 -- Returns <string> | a string representation of the object.
+---@param o any
+---@param p_Format boolean
+---@param p_MaxLevels integer|nil
+---@param p_Level integer|nil
+---@return string
 function Utilities:dump(o, p_Format, p_MaxLevels, p_Level)
 	local s_Tablevel = ''
 	local s_Tablevellessone = ''
@@ -152,6 +177,8 @@ function Utilities:dump(o, p_Format, p_MaxLevels, p_Level)
 	end
 end
 
+---@param p_Value number
+---@return boolean
 function Utilities:CheckProbablity(p_Value)
 	return MathUtils:GetRandomInt(1, 100) <= p_Value
 end
@@ -166,6 +193,8 @@ function Utilities:has(p_Object, p_Value)
 	return false
 end
 
+---@param p_Value any
+---@return boolean
 function table:has(p_Value)
 	for i = 1, #self do
 		if (self[i] == p_Value) then
@@ -175,14 +204,20 @@ function table:has(p_Value)
 	return false
 end
 
+---@param p_Value string
+---@return boolean
 function string:isLower(p_Value)
 	return p_Value:lower() == p_Value
 end
 
+---@param p_Value string
+---@return boolean
 function string:isDigit(p_Value)
 	return tonumber(p_Value) ~= nil
 end
 
+---@param p_Sep string
+---@return table<string>
 function string:split(p_Sep)
 	local s_Fields = nil
 	p_Sep, s_Fields = p_Sep or ':', {}
@@ -193,6 +228,8 @@ function string:split(p_Sep)
 	return s_Fields
 end
 
+---@param p_Start string
+---@return boolean
 function string:starts(p_Start)
 	return string.sub(self, 1, string.len(p_Start)) == p_Start
 end

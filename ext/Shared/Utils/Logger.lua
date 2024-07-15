@@ -21,6 +21,7 @@ function Logger:__init(p_ClassName, p_ActivateLogging)
 	self.m_ClassName = p_ClassName
 end
 
+---@param p_Message string
 function Logger:Write(p_Message)
 	if not Debug.Logger.ENABLED then
 		return
@@ -43,6 +44,7 @@ function Logger:Write(p_Message)
 	end
 end
 
+---@param p_Table table
 function Logger:WriteTable(p_Table)
 	for l_Key, l_Value in pairs(p_Table) do
 		self:Write(tostring(l_Key) .. " - " .. tostring(l_Value))

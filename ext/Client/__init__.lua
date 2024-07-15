@@ -164,7 +164,8 @@ end
 -- =============================================
 -- NetEvents
 -- =============================================
-
+---@param p_NewConfig table
+---@param p_UpdateWeaponSets boolean
 function FunBotClient:OnWriteClientSettings(p_NewConfig, p_UpdateWeaponSets)
 	m_ClientBotManager:OnWriteClientSettings(p_NewConfig, p_UpdateWeaponSets)
 
@@ -175,14 +176,17 @@ function FunBotClient:OnWriteClientSettings(p_NewConfig, p_UpdateWeaponSets)
 	end
 end
 
+---@param p_RaycastData RaycastRequests
 function FunBotClient:CheckForBotBotAttack(p_RaycastData)
 	m_ClientBotManager:CheckForBotBotAttack(p_RaycastData)
 end
 
+---@param p_Data any
 function FunBotClient:OnUISettings(p_Data)
 	m_ClientNodeEditor:OnUISettings(p_Data)
 end
 
+---@param p_ConfigList table
 function FunBotClient:OnRegisterConsoleCommands(p_ConfigList)
 	m_ConsoleCommands:OnRegisterConsoleCommands(p_ConfigList)
 end
