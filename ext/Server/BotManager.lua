@@ -944,7 +944,7 @@ function BotManager:ExitVehicle(p_Player)
 	local s_SoldierPosition = p_Player.soldier.worldTransform.trans
 
 	for _, l_Bot in ipairs(self._BotsByTeam[p_Player.teamId + 1]) do
-		if l_Bot.m_InVehicle and l_Bot.m_Player.soldier then
+		if (l_Bot.m_InVehicle or l_Bot.m_OnVehicle) and l_Bot.m_Player.soldier then
 			local s_BotSoldierPosition = nil
 			if l_Bot.m_Player.controlledControllable then
 				s_BotSoldierPosition = l_Bot.m_Player.controlledControllable.transform.trans
