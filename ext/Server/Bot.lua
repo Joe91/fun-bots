@@ -73,6 +73,7 @@ function Bot:__init(p_Player)
 	self._Respawning = false
 	self.m_HasBeacon = false
 	self.m_DontRevive = false
+	self.m_AttackPriority = 1
 
 	-- Timers.
 	self._UpdateTimer = 0.0
@@ -329,6 +330,12 @@ function Bot:IsReadyToAttack(p_ShootBackAfterHit, p_Player)
 		return false
 	end
 
+	local s_NewAttackPriority = self:GetAttackPriority(self._ShootPlayer)
+	if s_NewAttackPriority > self.m_AttackPriority then
+		self.m_AttackPriority = s_NewAttackPriority
+		return true
+	end
+
 	if self._ShootPlayerName == '' or
 		(p_Player and p_Player.name == self._ShootPlayerName) or -- if still the same enemy, you can trigger directly again
 		(self.m_InVehicle and (self._DoneShootDuration > Config.BotVehicleMinTimeShootAtPlayer)) or
@@ -338,6 +345,42 @@ function Bot:IsReadyToAttack(p_ShootBackAfterHit, p_Player)
 	else
 		return false
 	end
+end
+
+function Bot:GetAttackPriority(p_Enemy)
+	local s_EnemyVehicleType = m_Vehicles:FindOutVehicleType(p_Enemy)
+	local s_BotVehicleType = m_Vehicles:VehicleType(self.m_ActiveVehicle)
+
+	if self.m_SecondaryGadget ~= nil
+		and self.m_SecondaryGadget.type == WeaponTypes.MissileAir
+		and m_Vehicles:IsAirVehicleType(s_EnemyVehicleType)
+	then
+		if self.m_SecondaryGadget.type == WeaponTypes.MissileAir
+			and m_Vehicles:IsAirVehicleType(s_EnemyVehicleType)
+		then
+			return 2
+		elseif self.m_SecondaryGadget.type == WeaponTypes.MissileLand
+			and m_Vehicles:IsArmoredVehicleType(s_EnemyVehicleType)
+		then
+			return 2
+		end
+	end
+
+	if m_Vehicles:IsAirVehicleType(s_BotVehicleType) then
+		if m_Vehicles:IsAirVehicleType(s_EnemyVehicleType) then
+			return 3
+		elseif m_Vehicles:IsArmoredVehicleType(s_EnemyVehicleType) then
+			return 2
+		end
+	end
+
+	if m_Vehicles:IsArmoredVehicleType(s_BotVehicleType)
+		and m_Vehicles:IsArmoredVehicleType(s_EnemyVehicleType)
+	then
+		return 2
+	end
+
+	return 1
 end
 
 ---@return number
@@ -920,6 +963,7 @@ function Bot:ResetSpawnVars()
 	self._WeaponToUse = BotWeapons.Primary
 	self.m_HasBeacon = false
 	self.m_DontRevive = false
+	self.m_AttackPriority = 1
 
 	-- Reset all input-vars.
 	---@type EntryInputActionEnum
@@ -1277,6 +1321,7 @@ function Bot:AbortAttack()
 	self._ShootPlayer = nil
 	self._ShootModeTimer = 0.0
 	self._AttackMode = BotAttackModes.RandomNotSet
+	self.m_AttackPriority = 1
 end
 
 ---@param p_FlagValue integer|BotActionFlags|nil
