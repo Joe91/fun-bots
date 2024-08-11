@@ -138,12 +138,14 @@ function Vehicles:IsNotVehicleTerrain(p_VehicleData, p_VehicleTerrain)
 	end
 end
 
+---@param p_VehicleData VehicleDataInner|nil
+---@return VehicleTypes
 function Vehicles:VehicleType(p_VehicleData)
 	if p_VehicleData and p_VehicleData.Type then
 		return p_VehicleData.Type
 	end
 
-	return nil
+	return VehicleTypes.NoVehicle
 end
 
 ---@param p_VehicleData VehicleDataInner

@@ -347,6 +347,8 @@ function Bot:IsReadyToAttack(p_ShootBackAfterHit, p_Player)
 	end
 end
 
+---@param p_Enemy Player
+---@return integer
 function Bot:GetAttackPriority(p_Enemy)
 	local s_EnemyVehicleType = m_Vehicles:FindOutVehicleType(p_Enemy)
 	local s_BotVehicleType = m_Vehicles:VehicleType(self.m_ActiveVehicle)
