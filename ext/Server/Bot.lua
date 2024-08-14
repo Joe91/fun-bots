@@ -353,10 +353,7 @@ function Bot:GetAttackPriority(p_Enemy)
 	local s_EnemyVehicleType = m_Vehicles:FindOutVehicleType(p_Enemy)
 	local s_BotVehicleType = m_Vehicles:VehicleType(self.m_ActiveVehicle)
 
-	if self.m_SecondaryGadget ~= nil
-		and self.m_SecondaryGadget.type == WeaponTypes.MissileAir
-		and m_Vehicles:IsAirVehicleType(s_EnemyVehicleType)
-	then
+	if self.m_SecondaryGadget ~= nil then
 		if self.m_SecondaryGadget.type == WeaponTypes.MissileAir
 			and m_Vehicles:IsAirVehicleType(s_EnemyVehicleType)
 		then
