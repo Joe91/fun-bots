@@ -312,8 +312,11 @@ end
 
 ---@param p_ShootBackAfterHit boolean
 ---@param p_Player Player | nil
+---@param p_EnemyVehicleType VehicleTypes
+---@param p_BotVehicleType VehicleTypes
 ---@return boolean
-function Bot:IsReadyToAttack(p_ShootBackAfterHit, p_Player)
+---@return integer|nil
+function Bot:IsReadyToAttack(p_ShootBackAfterHit, p_Player, p_EnemyVehicleType, p_BotVehicleType)
 	-- update timers first
 	if self._ShootPlayerName == '' then
 		self._DoneShootDuration = 0.0
@@ -330,10 +333,9 @@ function Bot:IsReadyToAttack(p_ShootBackAfterHit, p_Player)
 		return false
 	end
 
-	local s_NewAttackPriority = self:GetAttackPriority(self._ShootPlayer)
+	local s_NewAttackPriority = self:GetAttackPriority(p_EnemyVehicleType, p_BotVehicleType)
 	if s_NewAttackPriority > self.m_AttackPriority then
-		self.m_AttackPriority = s_NewAttackPriority
-		return true
+		return true, s_NewAttackPriority
 	end
 
 	if self._ShootPlayerName == '' or
@@ -341,40 +343,38 @@ function Bot:IsReadyToAttack(p_ShootBackAfterHit, p_Player)
 		(self.m_InVehicle and (self._DoneShootDuration > Config.BotVehicleMinTimeShootAtPlayer)) or
 		(not self.m_InVehicle and (self._DoneShootDuration > Config.BotMinTimeShootAtPlayer)) or
 		(self.m_KnifeMode and self._ShootModeTimer > ((Config.BotMinTimeShootAtPlayer * 0.5))) then
-		return true
+		return true, s_NewAttackPriority
 	else
 		return false
 	end
 end
 
----@param p_Enemy Player
+---@param p_EnemyVehicleType VehicleTypes
+---@param p_BotVehicleType VehicleTypes
 ---@return integer
-function Bot:GetAttackPriority(p_Enemy)
-	local s_EnemyVehicleType = m_Vehicles:FindOutVehicleType(p_Enemy)
-	local s_BotVehicleType = m_Vehicles:VehicleType(self.m_ActiveVehicle)
-
+function Bot:GetAttackPriority(p_EnemyVehicleType, p_BotVehicleType)
 	if self.m_SecondaryGadget ~= nil then
 		if self.m_SecondaryGadget.type == WeaponTypes.MissileAir
-			and m_Vehicles:IsAirVehicleType(s_EnemyVehicleType)
+			and m_Vehicles:IsAirVehicleType(p_EnemyVehicleType)
 		then
 			return 2
 		elseif self.m_SecondaryGadget.type == WeaponTypes.MissileLand
-			and m_Vehicles:IsArmoredVehicleType(s_EnemyVehicleType)
+			and m_Vehicles:IsArmoredVehicleType(p_EnemyVehicleType)
 		then
 			return 2
 		end
 	end
 
-	if m_Vehicles:IsAirVehicleType(s_BotVehicleType) then
-		if m_Vehicles:IsAirVehicleType(s_EnemyVehicleType) then
+	if m_Vehicles:IsAirVehicleType(p_BotVehicleType) then
+		if m_Vehicles:IsAirVehicleType(p_EnemyVehicleType) then
 			return 3
-		elseif m_Vehicles:IsArmoredVehicleType(s_EnemyVehicleType) then
+		elseif m_Vehicles:IsArmoredVehicleType(p_EnemyVehicleType) then
 			return 2
 		end
 	end
 
-	if m_Vehicles:IsArmoredVehicleType(s_BotVehicleType)
-		and m_Vehicles:IsArmoredVehicleType(s_EnemyVehicleType)
+	if m_Vehicles:IsArmoredVehicleType(p_BotVehicleType)
+		and m_Vehicles:IsArmoredVehicleType(p_EnemyVehicleType)
 	then
 		return 2
 	end
@@ -468,7 +468,11 @@ end
 ---@param p_IgnoreYaw boolean
 ---@return boolean
 function Bot:ShootAt(p_Player, p_IgnoreYaw)
-	if not self:IsReadyToAttack(p_IgnoreYaw, p_Player) or self._Shoot == false then
+	local s_EnemyVehicleType = m_Vehicles:FindOutVehicleType(p_Player)
+	local s_BotVehicleType = m_Vehicles:VehicleType(self.m_ActiveVehicle)
+
+	local s_IsReady, s_NewPriority = self:IsReadyToAttack(p_IgnoreYaw, p_Player, s_EnemyVehicleType, s_BotVehicleType)
+	if not s_IsReady or self._Shoot == false then
 		return false
 	end
 
@@ -494,10 +498,8 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 	end
 
 	-- Check for vehicles.
-	local s_Type = m_Vehicles:FindOutVehicleType(p_Player)
-
 	-- Don't shoot at stationary AA.
-	if s_Type == VehicleTypes.StationaryAA then
+	if s_EnemyVehicleType == VehicleTypes.StationaryAA then
 		return false
 	end
 
@@ -505,7 +507,7 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 	self._DistanceToPlayer = 0.0
 	local s_PlayerPos = nil
 	local s_TargetPos = nil
-	if s_Type == VehicleTypes.MavBot or s_Type == VehicleTypes.MobileArtillery then
+	if s_EnemyVehicleType == VehicleTypes.MavBot or s_EnemyVehicleType == VehicleTypes.MobileArtillery then
 		s_TargetPos = p_Player.controlledControllable.transform.trans:Clone()
 	else
 		s_TargetPos = p_Player.soldier.worldTransform.trans:Clone()
@@ -524,8 +526,8 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 		s_IsSniper = true
 	end
 	local s_VehicleAttackMode = nil
-	if s_Type ~= VehicleTypes.NoVehicle then
-		s_VehicleAttackMode = m_Vehicles:CheckForVehicleAttack(s_Type, self._DistanceToPlayer, self.m_SecondaryGadget,
+	if s_EnemyVehicleType ~= VehicleTypes.NoVehicle then
+		s_VehicleAttackMode = m_Vehicles:CheckForVehicleAttack(s_EnemyVehicleType, self._DistanceToPlayer, self.m_SecondaryGadget,
 			self.m_InVehicle, s_IsSniper)
 		if s_VehicleAttackMode == VehicleAttackModes.NoAttack then
 			return false
@@ -539,19 +541,19 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 		return false
 	end
 
-	self._ShootPlayerVehicleType = s_Type
+	self._ShootPlayerVehicleType = s_EnemyVehicleType
 
 	local s_DifferenceYaw = 0
 	local s_Pitch = 0
 	local s_FovHalf = 0
 	local s_PitchHalf = 0
 
-	if self.m_InVehicle and m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.LightAA) and not m_Vehicles:IsAirVehicleType(s_Type) then
+	if self.m_InVehicle and m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.LightAA) and not m_Vehicles:IsAirVehicleType(s_EnemyVehicleType) then
 		return false
 	end
 
 	-- If target is air-vehicle and bot is in AA → ignore yaw.
-	if m_Vehicles:IsAirVehicleType(s_Type) then
+	if m_Vehicles:IsAirVehicleType(s_EnemyVehicleType) then
 		if (self.m_InVehicle and m_Vehicles:IsAAVehicle(self.m_ActiveVehicle)) or
 			(s_VehicleAttackMode == VehicleAttackModes.AttackWithMissileAir) then
 			p_IgnoreYaw = true
@@ -628,6 +630,7 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 				-- check for changed weapon
 				BotSpawner:UpdateGmWeapon(self)
 			end
+			self.m_AttackPriority = s_NewPriority
 			self._KillYourselfTimer = 0.0
 			return true
 		else
@@ -1203,7 +1206,7 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 			self.m_ActiveVehicle = s_VehicleData
 			self._ActiveVehicleWeaponSlot = 0
 			self._VehicleMovableId = m_Vehicles:GetPartIdForSeat(self.m_ActiveVehicle, i, self._ActiveVehicleWeaponSlot)
-			m_Logger:Write(self.m_ActiveVehicle)
+			-- m_Logger:Write(self.m_ActiveVehicle)
 
 			if i == 0 then
 				if i == s_MaxEntries - 1 then
