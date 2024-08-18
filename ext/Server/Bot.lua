@@ -88,6 +88,7 @@ function Bot:__init(p_Player)
 	self._ObstacleSequenceTimer = 0.0
 	self._StuckTimer = 0.0
 	self._ShotTimer = 0.0
+	self._SoundTimer = 30.0
 	self._VehicleSecondaryWeaponTimer = 0.0
 	self._ShootModeTimer = 0.0
 	self._ReloadTimer = 0.0
@@ -559,6 +560,20 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 		end
 	end
 
+	local s_Bot = g_BotManager:GetBotByName(p_Player.name)
+
+	local s_SoundDistance = 100
+	if s_Type == VehicleTypes.NoVehicle then
+		s_SoundDistance = 50
+	end
+
+	if s_Bot ~= nil
+		and s_Bot._SoundTimer <= 5.0
+		and self._DistanceToPlayer < s_SoundDistance
+	then
+		p_IgnoreYaw = true
+	end
+
 	if not p_IgnoreYaw then
 		local s_OldYaw = self.m_Player.input.authoritativeAimingYaw
 
@@ -747,6 +762,7 @@ function Bot:ResetVars()
 	self._InvertPathDirection = false
 	self._ExitVehicleActive = false
 	self._ShotTimer = 0.0
+	self._SoundTimer = 30.0
 	self._UpdateTimer = 0.0
 	self._TargetPoint = nil
 	self._NextTargetPoint = nil
@@ -949,6 +965,7 @@ function Bot:ResetSpawnVars()
 	end
 
 	self._ShotTimer = 0.0
+	self._SoundTimer = 30.0
 	self._VehicleSecondaryWeaponTimer = 0.0
 	self._UpdateTimer = 0.0
 	self._StuckTimer = 0.0

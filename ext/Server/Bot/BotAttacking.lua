@@ -11,6 +11,11 @@ function BotAttacking:__init()
 	-- Nothing to do.
 end
 
+local function _Fire(p_Bot)
+	p_Bot._SoundTimer = 0.0
+	p_Bot:_SetInput(EntryInputActionEnum.EIAFire, 1)
+end
+
 ---@param p_Bot Bot
 local function _ReviveAttackingAction(p_Bot)
 	-- Soldier alive again.
@@ -337,17 +342,18 @@ local function _DefaultAttackingAction(p_Bot)
 			if p_Bot._ShotTimer >= 0.0 and p_Bot._ActiveAction ~= BotActionFlags.MeleeActive then
 				if p_Bot.m_ActiveWeapon.delayed == false then
 					if p_Bot._ShotTimer <= p_Bot.m_ActiveWeapon.fireCycle then
-						p_Bot:_SetInput(EntryInputActionEnum.EIAFire, 1)
+						_Fire(p_Bot)
 					end
 				else -- Start with pause Cycle.
 					if p_Bot._ShotTimer >= p_Bot.m_ActiveWeapon.pauseCycle then
-						p_Bot:_SetInput(EntryInputActionEnum.EIAFire, 1)
+						_Fire(p_Bot)
 					end
 				end
 			end
 		end
 
 		p_Bot._ShotTimer = p_Bot._ShotTimer + Registry.BOT.BOT_UPDATE_CYCLE
+		p_Bot._SoundTimer = math.min(p_Bot._SoundTimer + Registry.BOT.BOT_UPDATE_CYCLE, 30.0)
 	end
 end
 
