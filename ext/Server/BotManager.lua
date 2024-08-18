@@ -87,7 +87,10 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 		self._BotAttackBotTimer = self._BotAttackBotTimer + p_DeltaTime
 	end
 
-	if Config.BotsReviveBots and self._InitDone then
+	if Config.BotsReviveBots
+		and self._InitDone
+		and not Globals.IsGm
+	then
 		if self._BotReviveBotTimer >= Registry.GAME_RAYCASTING.BOT_BOT_REVICE_INTERVAL then
 			self._BotReviveBotTimer = 0.0
 			self:_CheckForBotBotRevive()
