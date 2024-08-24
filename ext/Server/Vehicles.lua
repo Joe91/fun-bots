@@ -138,14 +138,20 @@ function Vehicles:IsNotVehicleTerrain(p_VehicleData, p_VehicleTerrain)
 	end
 end
 
+---@param p_VehicleData VehicleDataInner|nil
+---@return VehicleTypes
+function Vehicles:VehicleType(p_VehicleData)
+	if p_VehicleData and p_VehicleData.Type then
+		return p_VehicleData.Type
+	end
+
+	return VehicleTypes.NoVehicle
+end
+
 ---@param p_VehicleData VehicleDataInner
 ---@param p_VehicleType VehicleTypes
 function Vehicles:IsVehicleType(p_VehicleData, p_VehicleType)
-	if p_VehicleData and p_VehicleData.Type then
-		return p_VehicleData.Type == p_VehicleType
-	else
-		return false
-	end
+	return self:VehicleType(p_VehicleData) == p_VehicleType
 end
 
 ---@param p_VehicleData VehicleDataInner
@@ -172,6 +178,13 @@ function Vehicles:IsAirVehicleType(p_VehicleType)
 	return p_VehicleType == VehicleTypes.Chopper
 		or p_VehicleType == VehicleTypes.ScoutChopper
 		or p_VehicleType == VehicleTypes.Plane
+end
+
+function Vehicles:IsArmoredVehicleType(p_VehicleType)
+	return p_VehicleType == VehicleTypes.Tank
+		or p_VehicleType == VehicleTypes.IFV
+		or p_VehicleType == VehicleTypes.MobileArtillery
+		or p_VehicleType == VehicleTypes.LightAA
 end
 
 ---@param p_VehicleType VehicleTypes
