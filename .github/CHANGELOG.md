@@ -60,6 +60,7 @@ This is the changelog for the version V2.9 Don't forget to [join us on Discord](
 * Conquest Small MP_007 by IgorUA
 * Conquest Small MP_011 by IgorUA
 * Conquest Small MP_012 by IgorUA
+* Conquest Large MP_012 by IgorUA
 * Conquest Small MP_013 by IgorUA
 * Conquest Small MP_017 by IgorUA
 * Conquest Small MP_018 by IgorUA
