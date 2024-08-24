@@ -312,8 +312,9 @@ end
 
 ---@param p_ShootBackAfterHit boolean
 ---@param p_Player Player | nil
+---@param p_CheckShootTimer boolean
 ---@return boolean
-function Bot:IsReadyToAttack(p_ShootBackAfterHit, p_Player)
+function Bot:IsReadyToAttack(p_ShootBackAfterHit, p_Player, p_CheckShootTimer)
 	-- update timers first
 	if self._ShootPlayerName == '' then
 		self._DoneShootDuration = 0.0
@@ -330,9 +331,7 @@ function Bot:IsReadyToAttack(p_ShootBackAfterHit, p_Player)
 		return false
 	end
 
-	local s_NewAttackPriority = self:GetAttackPriority(self._ShootPlayer)
-	if s_NewAttackPriority > self.m_AttackPriority then
-		self.m_AttackPriority = s_NewAttackPriority
+	if not p_CheckShootTimer then
 		return true
 	end
 
@@ -466,7 +465,11 @@ end
 ---@param p_IgnoreYaw boolean
 ---@return boolean
 function Bot:ShootAt(p_Player, p_IgnoreYaw)
-	if not self:IsReadyToAttack(p_IgnoreYaw, p_Player) or self._Shoot == false then
+	local s_NewAttackPriority = self:GetAttackPriority(self._ShootPlayer)
+
+	if not (s_NewAttackPriority > self.m_AttackPriority or self:IsReadyToAttack(p_IgnoreYaw, p_Player, true))
+		or self._Shoot == false
+	then
 		return false
 	end
 
@@ -627,6 +630,7 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 				BotSpawner:UpdateGmWeapon(self)
 			end
 			self._KillYourselfTimer = 0.0
+			self.m_AttackPriority = s_NewAttackPriority
 			return true
 		else
 			self._ShootPlayerName = ''
