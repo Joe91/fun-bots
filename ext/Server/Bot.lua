@@ -346,6 +346,8 @@ function Bot:IsReadyToAttack(p_ShootBackAfterHit, p_Player, p_CheckShootTimer)
 	end
 end
 
+---@param p_EnemyVehicleType VehicleTypes
+---@return integer
 function Bot:GetAttackPriority(p_EnemyVehicleType)
 	local s_BotVehicleType = m_Vehicles:VehicleType(self.m_ActiveVehicle)
 
@@ -495,9 +497,8 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 
 	local s_NewAttackPriority = self:GetAttackPriority(s_Type)
 
-	if not (s_NewAttackPriority > self.m_AttackPriority or self:IsReadyToAttack(p_IgnoreYaw, p_Player, true))
-		or self._Shoot == false
-	then
+	local s_Ready = (s_NewAttackPriority > self.m_AttackPriority) or self:IsReadyToAttack(p_IgnoreYaw, p_Player, true)
+	if not s_Ready or self._Shoot == false then
 		return false
 	end
 

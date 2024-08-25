@@ -180,6 +180,7 @@ function Vehicles:IsAirVehicleType(p_VehicleType)
 		or p_VehicleType == VehicleTypes.Plane
 end
 
+---@param p_VehicleType VehicleTypes
 function Vehicles:IsArmoredVehicleType(p_VehicleType)
 	return p_VehicleType == VehicleTypes.Tank
 		or p_VehicleType == VehicleTypes.IFV
