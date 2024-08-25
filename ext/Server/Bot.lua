@@ -346,32 +346,31 @@ function Bot:IsReadyToAttack(p_ShootBackAfterHit, p_Player, p_CheckShootTimer)
 	end
 end
 
-function Bot:GetAttackPriority(p_Enemy)
-	local s_EnemyVehicleType = m_Vehicles:FindOutVehicleType(p_Enemy)
+function Bot:GetAttackPriority(p_EnemyVehicleType)
 	local s_BotVehicleType = m_Vehicles:VehicleType(self.m_ActiveVehicle)
 
 	if self.m_SecondaryGadget ~= nil then
 		if self.m_SecondaryGadget.type == WeaponTypes.MissileAir
-			and m_Vehicles:IsAirVehicleType(s_EnemyVehicleType)
+			and m_Vehicles:IsAirVehicleType(p_EnemyVehicleType)
 		then
 			return 2
 		elseif self.m_SecondaryGadget.type == WeaponTypes.MissileLand
-			and m_Vehicles:IsArmoredVehicleType(s_EnemyVehicleType)
+			and m_Vehicles:IsArmoredVehicleType(p_EnemyVehicleType)
 		then
 			return 2
 		end
 	end
 
 	if m_Vehicles:IsAirVehicleType(s_BotVehicleType) then
-		if m_Vehicles:IsAirVehicleType(s_EnemyVehicleType) then
+		if m_Vehicles:IsAirVehicleType(p_EnemyVehicleType) then
 			return 3
-		elseif m_Vehicles:IsArmoredVehicleType(s_EnemyVehicleType) then
+		elseif m_Vehicles:IsArmoredVehicleType(p_EnemyVehicleType) then
 			return 2
 		end
 	end
 
 	if m_Vehicles:IsArmoredVehicleType(s_BotVehicleType)
-		and m_Vehicles:IsArmoredVehicleType(s_EnemyVehicleType)
+		and m_Vehicles:IsArmoredVehicleType(p_EnemyVehicleType)
 	then
 		return 2
 	end
@@ -465,14 +464,6 @@ end
 ---@param p_IgnoreYaw boolean
 ---@return boolean
 function Bot:ShootAt(p_Player, p_IgnoreYaw)
-	local s_NewAttackPriority = self:GetAttackPriority(self._ShootPlayer)
-
-	if not (s_NewAttackPriority > self.m_AttackPriority or self:IsReadyToAttack(p_IgnoreYaw, p_Player, true))
-		or self._Shoot == false
-	then
-		return false
-	end
-
 	if p_IgnoreYaw and self._DefendTimer == 0.0 then -- was hit, not in defend-mode, check for special behavior
 		if self.m_Behavior == BotBehavior.DontShootBackHide then
 			self._ActionTimer = 7.0
@@ -499,6 +490,14 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 
 	-- Don't shoot at stationary AA.
 	if s_Type == VehicleTypes.StationaryAA then
+		return false
+	end
+
+	local s_NewAttackPriority = self:GetAttackPriority(s_Type)
+
+	if not (s_NewAttackPriority > self.m_AttackPriority or self:IsReadyToAttack(p_IgnoreYaw, true))
+		or self._Shoot == false
+	then
 		return false
 	end
 
