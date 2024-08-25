@@ -495,7 +495,7 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 
 	local s_NewAttackPriority = self:GetAttackPriority(s_Type)
 
-	if not (s_NewAttackPriority > self.m_AttackPriority or self:IsReadyToAttack(p_IgnoreYaw, true))
+	if not (s_NewAttackPriority > self.m_AttackPriority or self:IsReadyToAttack(p_IgnoreYaw, p_Player, true))
 		or self._Shoot == false
 	then
 		return false
