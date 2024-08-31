@@ -713,7 +713,7 @@ end
 
 
 function GameDirector:GetGunshipObjectiveName(p_LevelName, p_GameMode)
-	if p_LevelName == "XP5_004" and p_GameMode == "ConquestLarge0" then
+	if p_GameMode == "ConquestLarge0" then
 		return "ID_H_US_D"
 	end
 
