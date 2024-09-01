@@ -61,7 +61,7 @@ Config = {
 	MaxBotsPerTeamS = 12,				-- Max number of bots in one team for Scavenger 
 
 	-- BEHAVIOUR 
-	FovForShooting = 180,				-- Degrees of FOV of Bot 
+	FovForShooting = 160,				-- Degrees of FOV of Bot 
 	FovVerticleForShooting = 90,		-- Degrees of FOV of Bot in vertical direction 
 	MaxShootDistance = 70,				-- Meters before bots (not sniper) will start shooting at players 
 	MaxShootDistanceSniper = 150,		-- Meters before bots will start shooting at players 
@@ -79,7 +79,7 @@ Config = {
 	BotsReviveBots = true,				-- Bots revive other Bots 
 	BotsThrowGrenades = true,			-- Bots throw grenades at enemies 
 	BotsDeploy = true,					-- Bots deploy ammo and medkits 
-	DeployCycle = 60,					-- Time between deployment of bots in seconds 
+	DeployCycle = 90,					-- Time between deployment of bots in seconds 
 	SnipersAttackChoppers = false,		-- Bots with sniper-rifels attack choppers 
 
 	-- VEHICLE 
@@ -147,7 +147,7 @@ Config = {
 
 	-- EXPERT 
 	BotFirstShotDelay = 0.15,			-- Delay for first shot. If too small, there will be great spread in first cycle because it is not compensated yet 
-	BotMinTimeShootAtPlayer = 2.5,		-- The minimum time a bot shoots at one player for - recommended minimum 1.5, below this you will have issues 
+	BotMinTimeShootAtPlayer = 0.7,		-- The minimum time a bot shoots at one player 
 	BotVehicleMinTimeShootAtPlayer = 4.0,	-- The minimum time a bot shoots at one player if in vehicle - recommended minimum 2.5, below this you will have issues 
 	BotFireModeDuration = 4.5,			-- The minimum time a bot tries to shoot a player - recommended minimum 3.0, below this you will have issues 
 	BotVehicleFireModeDuration = 9.0,	-- The minimum time a bot tries to shoot a player or vehicle, when in a vehicle - recommended minimum 7.0 

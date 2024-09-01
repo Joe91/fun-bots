@@ -97,7 +97,27 @@ def set_permission_config_db(cursor: sqlite3.Cursor) -> None:
                 all_data,
             )
 
-
+def sort_dict_and_lists(data):
+    if isinstance(data, dict):
+        return {k: sort_dict_and_lists(data[k]) for k in sorted(data)}
+    elif isinstance(data, list):
+        return sorted(sort_dict_and_lists(item) for item in data)
+    else:
+        return data
+    
+def sort_dict_and_string_lists(data):
+    if isinstance(data, dict):
+        return {k: sort_dict_and_string_lists(data[k]) for k in sorted(data)}
+    elif isinstance(data, list):
+        if all(isinstance(item, str) for item in data):
+            return sorted(data)
+        elif all(isinstance(item, (int, float)) for item in data):
+            return data
+        else:
+            return [sort_dict_and_string_lists(item) for item in data]
+    else:
+        return data
+    
 def set_traces_files(cursor: sqlite3.Cursor) -> None:
     """Write trace mapfiles out of the database.
 
@@ -140,7 +160,8 @@ def set_traces_files(cursor: sqlite3.Cursor) -> None:
                 dataString = outList[-1]
                 if "{" in dataString and "}" in dataString:
                     data_dict = json.loads(dataString)
-                    sorted_data_keys = json.dumps({k: data_dict[k] for k in sorted(data_dict)}, separators=(',', ':'))
+                    sorted_data = sort_dict_and_string_lists(data_dict)
+                    sorted_data_keys = json.dumps(sorted_data, separators=(',', ':'))
                     outList[-1] = sorted_data_keys
                 out_file.write(";".join(outList) + "\n")
 

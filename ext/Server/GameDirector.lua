@@ -410,7 +410,7 @@ end
 
 function GameDirector:ToggleDirectionCombatZone(p_Entity, p_Player)
 	if m_Utilities:isBot(p_Player) and p_Player.teamId == TeamId.Team1 then -- Attacking team.
-		local s_Bot = g_BotManager:GetBotByName(p_Player.name)
+		local s_Bot = g_BotManager:GetBotById(p_Player.id)
 		if s_Bot then
 			s_Bot._InvertPathDirection = not s_Bot._InvertPathDirection
 		end
@@ -547,7 +547,7 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 
 			if s_VehicleData.Name == "[RadioBeacon]" then
 				if m_Utilities:isBot(s_Owner) then
-					local s_Bot = g_BotManager:GetBotByName(s_Owner.name)
+					local s_Bot = g_BotManager:GetBotById(s_Owner.id)
 
 					if s_Bot ~= nil then
 						s_Bot.m_HasBeacon = true
@@ -692,12 +692,10 @@ function GameDirector:OnVehicleEnter(p_Entity, p_Player)
 		p_Entity = ControllableEntity(p_Entity)
 		self:_SetVehicleObjectiveState(p_Entity.transform.trans, false)
 
-		if p_Player.controlledEntryId ~= 0 then
-			local s_Entity = p_Player.controlledControllable
-			local s_Driver = s_Entity:GetPlayerInEntry(0)
-
+		if p_Player.controlledEntryId ~= 0 and p_Player.controlledControllable then
+			local s_Driver = p_Player.controlledControllable:GetPlayerInEntry(0)
 			if s_Driver ~= nil then
-				Events:Dispatch("Bot:AbortWait", s_Driver.name)
+				Events:Dispatch("Bot:AbortWait", s_Driver.id)
 			end
 		end
 
@@ -777,6 +775,12 @@ function GameDirector:CheckForExecution(p_Point, p_TeamId, p_InVehicle)
 	end
 end
 
+---@param p_Trans Vec3
+---@param p_VehiclePath boolean
+---@param p_DetailedSearch boolean
+---@param p_VehicleTerrain VehicleTerrains|nil
+---@param p_Increment integer|nil
+---@return Waypoint|nil
 function GameDirector:FindClosestPath(p_Trans, p_VehiclePath, p_DetailedSearch, p_VehicleTerrain, p_Increment)
 	local s_ClosestPathNode = nil
 	local s_Paths = m_NodeCollection:GetPaths()
@@ -899,7 +903,10 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 
 		if l_Player.soldier and l_Player.isAllowedToSpawnOn then
 			if m_Utilities:isBot(l_Player) then
-				local s_SquadBot = g_BotManager:GetBotByName(l_Player.name)
+				local s_SquadBot = g_BotManager:GetBotById(l_Player.id)
+				if not s_SquadBot then
+					break -- this should not happen
+				end
 				if not s_SquadBot.m_InVehicle then
 					local s_WayIndex = s_SquadBot:GetWayIndex()
 					local s_PointIndex = s_SquadBot:GetPointIndex()
@@ -914,6 +921,7 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 					local s_EntryId = s_SquadBot.m_Player.controlledEntryId
 
 					if s_EntryId == 0 then
+						---@type ControllableEntity
 						local s_Vehicle = s_SquadBot.m_Player.controlledControllable
 
 						-- Check for free seats.
@@ -936,6 +944,7 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 				-- Check for vehicle of real player.
 				if l_Player.controlledControllable ~= nil and not l_Player.controlledControllable:Is("ServerSoldierEntity") then
 					if l_Player.controlledEntryId == 0 then
+						---@type ControllableEntity
 						local s_Vehicle = l_Player.controlledControllable
 
 						-- Check for free seats.
@@ -1212,7 +1221,10 @@ function GameDirector:IsBeaconPath(p_Objective)
 	return false
 end
 
-function GameDirector:UseSubobjective(p_BotName, p_BotTeam, p_Objective)
+---@param p_BotId integer
+---@param p_BotTeam TeamId
+---@param p_Objective string
+function GameDirector:UseSubobjective(p_BotId, p_BotTeam, p_Objective)
 	local s_TempObjective = self:_GetObjectiveObject(p_Objective)
 
 	if s_TempObjective ~= nil and s_TempObjective.subObjective then -- Is valid getSubObjective.
@@ -1220,7 +1232,7 @@ function GameDirector:UseSubobjective(p_BotName, p_BotTeam, p_Objective)
 			if self:_UseSubobjective(p_BotTeam, p_Objective) then
 				if s_TempObjective.assigned[p_BotTeam] < 2 then
 					s_TempObjective.assigned[p_BotTeam] = s_TempObjective.assigned[p_BotTeam] + 1
-					local s_Bot = g_BotManager:GetBotByName(p_BotName)
+					local s_Bot = g_BotManager:GetBotById(p_BotId)
 
 					if s_Bot ~= nil then
 						s_Bot:SetObjective(p_Objective)

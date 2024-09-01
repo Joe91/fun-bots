@@ -17,6 +17,7 @@ function VehicleMovement:__init()
 	-- Nothing to do.
 end
 
+---@param p_Bot Bot
 function VehicleMovement:UpdateNormalMovementVehicle(p_Bot)
 	if p_Bot._VehicleTakeoffTimer > 0.0 then
 		p_Bot._VehicleTakeoffTimer = p_Bot._VehicleTakeoffTimer - Registry.BOT.BOT_UPDATE_CYCLE
@@ -79,6 +80,10 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_Bot)
 			s_NextPoint = m_NodeCollection:Get(p_Bot:_GetWayIndex(p_Bot._CurrentWayPoint - 1), p_Bot._PathIndex)
 		end
 
+		if s_Point == nil then
+			return
+		end
+
 		-- Execute Action if needed.
 		if p_Bot._ActiveAction == BotActionFlags.OtherActionActive then
 			if s_Point.Data ~= nil and s_Point.Data.Action ~= nil then
@@ -98,7 +103,7 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_Bot)
 							local s_ShouldExit = not s_OnlyPassengers or s_IsPassenger
 
 							if s_ShouldExit and s_Player ~= nil then
-								Events:Dispatch('Bot:ExitVehicle', s_Player.name)
+								Events:Dispatch('Bot:ExitVehicle', s_Player.id)
 							end
 						end
 					end
@@ -124,7 +129,9 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_Bot)
 			if p_Bot._ActiveAction == BotActionFlags.OtherActionActive then
 				return -- DON'T EXECUTE ANYTHING ELSE.
 			else
-				s_Point = s_NextPoint
+				if s_NextPoint then
+					s_Point = s_NextPoint
+				end
 			end
 		end
 
@@ -248,16 +255,17 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_Bot)
 				end
 
 				-- CHECK FOR PATH-SWITCHES.
+				---@type Waypoint|nil
 				local s_NewWaypoint = nil
 				local s_SwitchPath = false
-				s_SwitchPath, s_NewWaypoint = m_PathSwitcher:GetNewPath(p_Bot, p_Bot.m_Name, s_Point, p_Bot._Objective, p_Bot.m_InVehicle,
+				s_SwitchPath, s_NewWaypoint = m_PathSwitcher:GetNewPath(p_Bot, p_Bot.m_Id, s_Point, p_Bot._Objective, p_Bot.m_InVehicle,
 					p_Bot.m_Player.teamId, p_Bot.m_ActiveVehicle)
 
 				if p_Bot.m_Player.soldier == nil then
 					return
 				end
 
-				if s_SwitchPath == true and not p_Bot._OnSwitch then
+				if s_SwitchPath == true and not p_Bot._OnSwitch and s_NewWaypoint then
 					if p_Bot._Objective ~= '' then
 						-- 'Best' direction for objective on switch.
 						local s_Direction = m_NodeCollection:ObjectiveDirection(s_NewWaypoint, p_Bot._Objective, p_Bot.m_InVehicle)
@@ -288,7 +296,7 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_Bot)
 		else -- Wait mode.
 			p_Bot._WayWaitTimer = p_Bot._WayWaitTimer + Registry.BOT.BOT_UPDATE_CYCLE
 
-			p_Bot:_LookAround(Registry.BOT.BOT_UPDATE_CYCLE)
+			self:UpdateVehicleLookAround(p_Bot, Registry.BOT.BOT_UPDATE_CYCLE)
 
 			if p_Bot._WayWaitTimer > s_Point.OptValue then
 				p_Bot._WayWaitTimer = 0.0
@@ -304,10 +312,13 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_Bot)
 	end
 end
 
+---@param p_Bot Bot
 function VehicleMovement:UpdateShootMovementVehicle(p_Bot)
 	p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.NoMovement -- No movement while attacking in vehicles.
 end
 
+---@param p_Bot Bot
+---@param p_Attacking boolean
 function VehicleMovement:UpdateSpeedOfMovementVehicle(p_Bot, p_Attacking)
 	if p_Bot.m_Player.soldier == nil or p_Bot._VehicleWaitTimer > 0.0 then
 		return
@@ -362,6 +373,7 @@ function VehicleMovement:UpdateSpeedOfMovementVehicle(p_Bot, p_Attacking)
 	end
 end
 
+---@param p_Bot Bot
 function VehicleMovement:UpdateTargetMovementVehicle(p_Bot)
 	if p_Bot._TargetPoint ~= nil then
 		local s_Distance = p_Bot.m_Player.controlledControllable.transform.trans:Distance(p_Bot._TargetPoint.Position)
@@ -379,6 +391,7 @@ function VehicleMovement:UpdateTargetMovementVehicle(p_Bot)
 	end
 end
 
+---@param p_Bot Bot
 ---@param p_DeltaTime number
 function VehicleMovement:UpdateVehicleLookAround(p_Bot, p_DeltaTime)
 	-- Move around a little.
@@ -411,7 +424,9 @@ function VehicleMovement:UpdateVehicleLookAround(p_Bot, p_DeltaTime)
 	end
 end
 
+---@param p_Bot Bot
 ---@param p_Attacking boolean
+---@param p_IsStationaryLauncher boolean
 function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLauncher)
 	local s_DeltaYaw = 0
 	local s_DeltaPitch = 0

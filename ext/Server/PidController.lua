@@ -19,6 +19,8 @@ function PidController:Reset()
 	self._Integral = 0
 end
 
+---@param p_Error number
+---@return number
 function PidController:Update(p_Error)
 	local s_Proportional = self._Kp * p_Error
 	local s_Derivative = (p_Error - self._LastError) * self._kd

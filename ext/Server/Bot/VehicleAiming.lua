@@ -16,7 +16,7 @@ end
 ---@param p_FullPositionBot Vec3
 ---@param p_FullPositionTarget Vec3
 ---@param p_TargetMovement Vec3
----@param p_AdvancedAlgorithm Boolean
+---@param p_AdvancedAlgorithm boolean
 ---@return number
 local function _GetTimeToTravel(p_Bot, p_Speed, p_FullPositionBot, p_FullPositionTarget, p_TargetMovement, p_AdvancedAlgorithm)
 	if p_AdvancedAlgorithm then
@@ -43,6 +43,8 @@ local function _GetTimeToTravel(p_Bot, p_Speed, p_FullPositionBot, p_FullPositio
 	end
 end
 
+---@param p_Bot Bot
+---@param p_AdvancedAlgorithm boolean
 function VehicleAiming:UpdateAimingVehicle(p_Bot, p_AdvancedAlgorithm)
 	if p_Bot._ShootPlayer == nil then
 		return
@@ -144,9 +146,8 @@ function VehicleAiming:UpdateAimingVehicle(p_Bot, p_AdvancedAlgorithm)
 
 	-- Abort attacking in chopper or jet if too steep or too low.
 	if s_IsAirVehicle and p_Bot.m_Player.controlledEntryId == 0 then
-
 		-- Abort attacking if behind only if not an air vehicle
-		if not m_Vehicles.IsAirVehicleType(p_Bot._ShootPlayerVehicleType) then
+		if not m_Vehicles:IsAirVehicleType(p_Bot._ShootPlayerVehicleType) then
 			local s_PitchHalf = Config.FovVerticleChopperForShooting / 360 * math.pi
 
 			if math.abs(p_Bot._TargetPitch) > s_PitchHalf then

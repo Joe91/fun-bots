@@ -19,6 +19,7 @@ function ClientBotManager:RegisterVars()
 	self.m_LastIndex = 0
 	self.m_Player = nil
 	self.m_ReadyToUpdate = false
+	---@type RaycastRequests[]
 	self.m_BotBotRaycastsToDo = {}
 
 	-- Inputs for change of seats (1-8).
@@ -103,6 +104,11 @@ function ClientBotManager:OnEngineMessage(p_Message)
 	end
 end
 
+---@param p_Pos1 Vec3
+---@param p_Pos2 Vec3
+---@param p_InObjectPos1 boolean
+---@param p_InObjectPos2 boolean
+---@return boolean
 function ClientBotManager:DoRaycast(p_Pos1, p_Pos2, p_InObjectPos1, p_InObjectPos2)
 	if Registry.COMMON.USE_COLLISION_RAYCASTS then
 		local s_DeltaPos = p_Pos2 - p_Pos1
@@ -173,6 +179,7 @@ function ClientBotManager:DoRaycast(p_Pos1, p_Pos2, p_InObjectPos1, p_InObjectPo
 	end
 end
 
+---@param p_RaycastResultsToSend RaycastResults
 function ClientBotManager:SendRaycastResults(p_RaycastResultsToSend)
 	NetEvents:SendLocal("Botmanager:RaycastResults", p_RaycastResultsToSend)
 end
@@ -203,10 +210,11 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 		for i = 1, s_MaxRaycastsBotBot do
 			if (#self.m_BotBotRaycastsToDo > 0) then
+				---@type RaycastRequests
 				local s_RaycastCheckEntry = table.remove(self.m_BotBotRaycastsToDo, 1)
 				s_RaycastEntriesDone = s_RaycastEntriesDone + 1
-				local s_Bot1 = PlayerManager:GetPlayerByName(s_RaycastCheckEntry.Bot1)
-				local s_Bot2 = PlayerManager:GetPlayerByName(s_RaycastCheckEntry.Bot2)
+				local s_Bot1 = PlayerManager:GetPlayerById(s_RaycastCheckEntry.Bot1)
+				local s_Bot2 = PlayerManager:GetPlayerById(s_RaycastCheckEntry.Bot2)
 
 				if s_Bot1 and s_Bot2 and s_Bot1.soldier and s_Bot2.soldier then
 					local s_StartPos = nil
@@ -226,7 +234,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 					s_EndPos.y = s_EndPos.y + 1.4
 					if self:DoRaycast(s_StartPos, s_EndPos, s_RaycastCheckEntry.Bot1InVehicle, s_RaycastCheckEntry.Bot2InVehicle) then
 						table.insert(s_RaycastResultsToSend, {
-							Mode = "ShootAtBot",
+							Mode = RaycastResultModes.ShootAtBot,
 							Bot1 = s_RaycastCheckEntry.Bot1,
 							Bot2 = s_RaycastCheckEntry.Bot2,
 							IgnoreYaw = false,
@@ -320,9 +328,9 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 					end
 
 					table.insert(s_RaycastResultsToSend, {
-						Mode = "ShootAtPlayer",
-						Bot1 = s_Bot.name,
-						Bot2 = "",
+						Mode = RaycastResultModes.ShootAtPlayer,
+						Bot1 = s_Bot.id,
+						Bot2 = 0,
 						IgnoreYaw = s_IgnoreYaw,
 					})
 				end
@@ -372,9 +380,9 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 				if self:DoRaycast(s_PlayerPosition, s_Target, false, false) then
 					-- We found a valid bot in Sight (either no hit, or player-hit). Signal Server with players.
 					table.insert(s_RaycastResultsToSend, {
-						Mode = "RevivePlayer",
-						Bot1 = s_Bot.name,
-						Bot2 = "",
+						Mode = RaycastResultModes.RevivePlayer,
+						Bot1 = s_Bot.id,
+						Bot2 = 0,
 						IgnoreYaw = false,
 					})
 				end
@@ -411,7 +419,8 @@ end
 -- =============================================
 -- NetEvents
 -- =============================================
-
+---@param p_NewConfig table<string,integer|number>
+---@param p_UpdateWeaponSets boolean
 function ClientBotManager:OnWriteClientSettings(p_NewConfig, p_UpdateWeaponSets)
 	for l_Key, l_Value in pairs(p_NewConfig) do
 		Config[l_Key] = l_Value

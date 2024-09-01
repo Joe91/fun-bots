@@ -6,6 +6,10 @@ require('__shared/Config')
 
 local m_SettingsManager = require('SettingsManager')
 
+---comment
+---@param p_Player Player
+---@param p_Name string
+---@param p_Value any
 function Console:OnConsoleCommandSetConfig(p_Player, p_Name, p_Value)
 	local s_Respone = ""
 
@@ -24,6 +28,8 @@ function Console:OnConsoleCommandSetConfig(p_Player, p_Name, p_Value)
 	NetEvents:SendToLocal('ConsoleCommands:PrintResponse', p_Player, s_Respone)
 end
 
+---@param p_Player Player
+---@param p_Args table<string, any>
 function Console:OnConsoleCommandRestore(p_Player, p_Args)
 	local s_Respone = ""
 
@@ -37,6 +43,8 @@ function Console:OnConsoleCommandRestore(p_Player, p_Args)
 	NetEvents:SendToLocal('ConsoleCommands:PrintResponse', p_Player, s_Respone)
 end
 
+---@param p_Player Player
+---@param p_Args table<string, any>
 function Console:OnConsoleCommandSaveAll(p_Player, p_Args)
 	local s_Respone = ""
 
@@ -50,6 +58,7 @@ function Console:OnConsoleCommandSaveAll(p_Player, p_Args)
 	NetEvents:SendToLocal('ConsoleCommands:PrintResponse', p_Player, s_Respone)
 end
 
+---@param p_Player Player
 function Console:RegisterConsoleCommands(p_Player)
 	-- Generate list out of Name, Default, Description.
 	if PermissionManager:HasPermission(p_Player, 'UserInterface.Settings') == false then

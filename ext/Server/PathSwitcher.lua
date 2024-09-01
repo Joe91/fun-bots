@@ -43,7 +43,16 @@ function PathSwitcher:GetPriorityOfPath(p_Node, p_TargetObjective)
 	return s_Priority
 end
 
-function PathSwitcher:GetNewPath(p_Bot, p_BotName, p_Point, p_Objective, p_InVehicle, p_TeamId, p_ActiveVehicle)
+---@param p_Bot Bot
+---@param p_BotId integer
+---@param p_Point Waypoint
+---@param p_Objective string|nil
+---@param p_InVehicle boolean
+---@param p_TeamId TeamId
+---@param p_ActiveVehicle VehicleDataInner|nil
+---@returns boolean
+---@returns Waypoint|nil
+function PathSwitcher:GetNewPath(p_Bot, p_BotId, p_Point, p_Objective, p_InVehicle, p_TeamId, p_ActiveVehicle)
 	-- Check if on base, or on path away from base. In this case: change path.
 	local s_OnBasePath = false
 	local s_CurrentPathFirst = m_NodeCollection:GetFirst(p_Point.PathIndex)
@@ -151,7 +160,7 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotName, p_Point, p_Objective, p_InVeh
 		if s_PathNode.Data.Objectives ~= nil and p_Objective ~= '' then
 			-- Check for possible subObjective.
 			if #s_PathNode.Data.Objectives == 1 then
-				if m_GameDirector:UseSubobjective(p_BotName, p_TeamId, s_PathNode.Data.Objectives[1]) == true then
+				if m_GameDirector:UseSubobjective(p_BotId, p_TeamId, s_PathNode.Data.Objectives[1]) == true then
 					return true, s_NewPoint
 				end
 			end

@@ -85,6 +85,8 @@ end
 
 ---VEXT Shared Extension:Loaded Event
 function FunBotServer:OnExtensionLoaded()
+	-- destroy all still existing bot-players first
+	m_BotManager:DestroyAllOldBotPlayers()
 	m_SettingsManager:OnExtensionLoaded()
 	m_Language:loadLanguage(Config.Language)
 	m_WeaponList:UpdateWeaponList()
@@ -571,32 +573,20 @@ end
 -- Custom Events.
 -- =============================================
 
-function FunBotServer:OnShootAt(p_Player, p_BotName, p_IgnoreYaw)
-	m_BotManager:OnShootAt(p_Player, p_BotName, p_IgnoreYaw)
-end
-
-function FunBotServer:OnRevivePlayer(p_Player, p_BotName)
-	m_BotManager:OnRevivePlayer(p_Player, p_BotName)
-end
-
-function FunBotServer:OnBotShootAtBot(p_Player, p_BotName1, p_BotName2)
-	m_BotManager:OnBotShootAtBot(p_Player, p_BotName1, p_BotName2)
-end
-
 function FunBotServer:OnClientRaycastResults(p_Player, p_RaycastResults)
 	m_BotManager:OnClientRaycastResults(p_Player, p_RaycastResults)
 end
 
-function FunBotServer:OnBotAbortWait(p_BotName)
-	m_BotManager:OnBotAbortWait(p_BotName)
+function FunBotServer:OnBotAbortWait(p_BotId)
+	m_BotManager:OnBotAbortWait(p_BotId)
 end
 
-function FunBotServer:OnBotExitVehicle(p_BotName)
-	m_BotManager:OnBotExitVehicle(p_BotName)
+function FunBotServer:OnBotExitVehicle(p_BotId)
+	m_BotManager:OnBotExitVehicle(p_BotId)
 end
 
-function FunBotServer:OnRespawnBot(p_BotName)
-	m_BotSpawner:OnRespawnBot(p_BotName)
+function FunBotServer:OnRespawnBot(p_BotId)
+	m_BotSpawner:OnRespawnBot(p_BotId)
 end
 
 function FunBotServer:OnRequestClientSettings(p_Player)
@@ -626,7 +616,7 @@ function FunBotServer:OnConsoleCommandRestore(p_Player, p_Args)
 end
 
 function FunBotServer:OnSpawnGrenade(p_Player, p_Args)
-	local position = p_Player.soldier.transform.trans:Clone()
+	local position = p_Player.soldier.worldTransform.trans:Clone()
 	position.y = position.y + 0.1
 
 	m_Logger:Write("Grenade spawn at " .. tostring(position))
@@ -638,7 +628,10 @@ function FunBotServer:OnDestroyObstaclesTest(p_Player, p_Args)
 end
 
 function FunBotServer:SpawnGrenade(p_Position)
-	resource = ResourceManager:SearchForDataContainer('Weapons/M67/M67_Projectile')
+	local resource = ResourceManager:SearchForDataContainer('Weapons/M67/M67_Projectile')
+	if not resource then
+		return
+	end
 
 	local creationParams = EntityCreationParams()
 	creationParams.transform = LinearTransform()

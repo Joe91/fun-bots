@@ -14,6 +14,7 @@ require('__shared/Constants/BotNames')
 require('__shared/Constants/BotKits')
 require('__shared/Constants/BotNames')
 require('__shared/Constants/BotWeapons')
+require('__shared/Constants/RaycastData')
 require('__shared/Constants/WeaponSets')
 require('__shared/Constants/WeaponTypes')
 require('__shared/Constants/BotAttackModes')
@@ -34,7 +35,7 @@ local m_Logger = Logger("FunBotShared", Debug.Shared.INFO)
 
 function FunBotShared:__init()
 	if Registry.COMMON.USE_LOAD_BUNDLE_BUGFIX then
-		Events:Subscribe('Level:LoadResources', self, self.OnLevelLoadResources) -- Load Resources.
+		Events:Subscribe('Level:LoadResources', self, self.OnLevelLoadResources)               -- Load Resources.
 		Events:Subscribe('Level:RegisterEntityResources', self, self.OnLevelRegisterEntityResources) -- Register Resource.
 		Hooks:Install('ResourceManager:LoadBundles', 5, self, self.OnResourceManagerLoadBundle)
 	end

@@ -9,6 +9,9 @@ function BotWeaponHandling:__init()
 	-- Nothing to do.
 end
 
+---comment
+---@param p_Bot Bot
+---@param p_Deploy boolean
 function BotWeaponHandling:UpdateDeployAndReload(p_Bot, p_Deploy)
 	if p_Bot._ActiveAction == BotActionFlags.MeleeActive or p_Bot._ActiveAction == BotActionFlags.OtherActionActive then
 		return
@@ -27,9 +30,17 @@ function BotWeaponHandling:UpdateDeployAndReload(p_Bot, p_Deploy)
 
 	p_Bot._ReloadTimer = p_Bot._ReloadTimer + Registry.BOT.BOT_UPDATE_CYCLE
 
+	-- reload primary weapon
 	if p_Bot.m_ActiveWeapon ~= nil and p_Bot._ReloadTimer > 1.5 and p_Bot._ReloadTimer < 2.5 and
-		p_Bot.m_Player.soldier.weaponsComponent.currentWeapon.primaryAmmo <= p_Bot.m_ActiveWeapon.reload then
+		p_Bot.m_Player.soldier.weaponsComponent.weapons[1] and
+		p_Bot.m_Player.soldier.weaponsComponent.weapons[1].primaryAmmo <= p_Bot.m_ActiveWeapon.reload then
 		p_Bot:_SetInput(EntryInputActionEnum.EIAReload, 1)
+	end
+
+	-- keep nades filled
+	if p_Bot.m_Player.soldier.weaponsComponent.weapons[7] and p_Bot.m_Player.soldier.weaponsComponent.weapons[7].primaryAmmo <= 0 then
+		p_Bot.m_Player.soldier.weaponsComponent.weapons[7].primaryAmmo = 1
+		p_Bot.m_Player.soldier.weaponsComponent.weapons[7].secondaryAmmo = 0
 	end
 
 	-- Deploy from time to time.
@@ -50,6 +61,7 @@ function BotWeaponHandling:UpdateDeployAndReload(p_Bot, p_Deploy)
 	end
 end
 
+---@param p_Bot Bot
 function BotWeaponHandling:UpdateWeaponSelection(p_Bot)
 	-- Select weapon-slot.
 	if p_Bot._ActiveAction ~= BotActionFlags.MeleeActive then
@@ -93,9 +105,10 @@ function BotWeaponHandling:UpdateWeaponSelection(p_Bot)
 					p_Bot.m_ActiveWeapon = p_Bot.m_Pistol
 					p_Bot._ShotTimer = -p_Bot:GetFirstShotDelay(p_Bot._DistanceToPlayer, true)
 				end
-				if p_Bot.m_Player.soldier.weaponsComponent.weapons[2] ~= nil and
+				if p_Bot.m_Player.soldier.weaponsComponent.weapons[2] and
 					p_Bot.m_Player.soldier.weaponsComponent.weapons[2].secondaryAmmo <
 					p_Bot.m_Player.soldier.weaponsComponent.weapons[2].primaryAmmo + 1 then
+					-- keep pistol filled
 					p_Bot.m_Player.soldier.weaponsComponent.weapons[2].secondaryAmmo = p_Bot.m_Player.soldier.weaponsComponent.weapons[
 					2].primaryAmmo + 3
 				end
@@ -106,7 +119,8 @@ function BotWeaponHandling:UpdateWeaponSelection(p_Bot)
 					p_Bot.m_ActiveWeapon = p_Bot.m_Primary
 					p_Bot._ShotTimer = -0.05
 				end
-				if p_Bot.m_Player.soldier.weaponsComponent.weapons[1] ~= nil and
+				-- keep primary filled
+				if p_Bot.m_Player.soldier.weaponsComponent.weapons[1] and
 					p_Bot.m_Player.soldier.weaponsComponent.weapons[1].secondaryAmmo <
 					p_Bot.m_Player.soldier.weaponsComponent.weapons[1].primaryAmmo + 1 then
 					p_Bot.m_Player.soldier.weaponsComponent.weapons[1].secondaryAmmo = p_Bot.m_Player.soldier.weaponsComponent.weapons[

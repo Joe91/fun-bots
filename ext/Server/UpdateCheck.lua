@@ -6,6 +6,12 @@ local ApiUrls = {
 	dev = 'https://api.github.com/repos/Joe91/fun-bots/tags?per_page=1'
 }
 
+---comment
+---@param p_Result integer
+---@param p_UpdateUrl string|nil
+---@param p_RemoteVersion string|nil
+---@param p_RemoteTimestamp string|nil
+---@param p_CurrentVersion string|nil
 local function UpdateFinished(p_Result, p_UpdateUrl, p_RemoteVersion, p_RemoteTimestamp, p_CurrentVersion)
 	-- Check if the update was successful.
 	if p_Result < 0 then
@@ -38,7 +44,7 @@ local function UpdateFinished(p_Result, p_UpdateUrl, p_RemoteVersion, p_RemoteTi
 	end
 
 	if p_Result == 3 then
-		print('[UPDATE] You are running the latest version') --To-do: Move this to a logger.
+		print('[UPDATE] You are running the latest version')        --To-do: Move this to a logger.
 		print('[UPDATE] There might be a new version on another Channel') --To-do: Move this to a logger.
 	end
 end
@@ -102,7 +108,12 @@ local function CompareVersion(p_CurrentVersion, p_ExternalVersion)
 end
 
 -- Callback for updateCheck async request.
+---@param httpRequest HttpResponse|nil
 local function updateCheckCB(httpRequest)
+	if httpRequest == nil then
+		UpdateFinished(-1, nil, nil, nil, nil)
+		return
+	end
 	-- Parse JSON.
 	local s_EndpointJSON = json.decode(httpRequest.body)
 

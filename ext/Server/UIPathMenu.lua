@@ -27,6 +27,8 @@ function FunBotUIPathMenu:__init()
 	end
 end
 
+---@param p_Player Player
+---@param p_Data string
 function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 	local request = json.decode(p_Data)
 

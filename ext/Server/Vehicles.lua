@@ -6,6 +6,7 @@ require('__shared/Constants/VehicleData')
 ---@type Logger
 local m_Logger = Logger("Vehicles", Debug.Server.VEHICLES)
 
+---@param p_Player Player
 function Vehicles:FindOutVehicleType(p_Player)
 	local s_VehicleType = VehicleTypes.NoVehicle -- No vehicle.
 
@@ -21,6 +22,7 @@ function Vehicles:FindOutVehicleType(p_Player)
 	return s_VehicleType
 end
 
+---@param p_Player Player
 function Vehicles:GetVehicleName(p_Player)
 	if p_Player.controlledControllable and not p_Player.controlledControllable:Is("ServerSoldierEntity") then
 		return VehicleEntityData(p_Player.controlledControllable.data).controllableType:gsub(".+/.+/", "")
@@ -29,7 +31,8 @@ function Vehicles:GetVehicleName(p_Player)
 	end
 end
 
-function Vehicles:GetVehicle(p_Player, p_Index)
+---@param p_Player Player
+function Vehicles:GetVehicle(p_Player)
 	local s_VehicleName = self:GetVehicleName(p_Player)
 	m_Logger:Write("s_VehicleName")
 
@@ -40,6 +43,7 @@ function Vehicles:GetVehicle(p_Player, p_Index)
 	return VehicleData[s_VehicleName]
 end
 
+---@param p_Entity ControllableEntity
 function Vehicles:GetVehicleByEntity(p_Entity)
 	local s_VehicleName = nil
 
@@ -60,6 +64,8 @@ function Vehicles:GetVehicleByEntity(p_Entity)
 	return s_VehicleData
 end
 
+---@param p_Entity ControllableEntity
+---@param p_PlayerIsDriver boolean
 function Vehicles:GetNrOfFreeSeats(p_Entity, p_PlayerIsDriver)
 	local s_NrOfFreeSeats = 0
 	local s_MaxEntries = p_Entity.entryCount
@@ -78,6 +84,9 @@ function Vehicles:GetNrOfFreeSeats(p_Entity, p_PlayerIsDriver)
 	return s_NrOfFreeSeats
 end
 
+---@param p_VehicleData VehicleDataInner
+---@param p_Index integer
+---@param p_WeaponSelection integer
 function Vehicles:GetPartIdForSeat(p_VehicleData, p_Index, p_WeaponSelection)
 	local s_Part = -1
 	if p_VehicleData and p_VehicleData.Parts then
@@ -98,6 +107,8 @@ function Vehicles:GetPartIdForSeat(p_VehicleData, p_Index, p_WeaponSelection)
 	return s_Part
 end
 
+---@param p_VehicleData VehicleDataInner
+---@param p_Index integer
 function Vehicles:IsPassengerSeat(p_VehicleData, p_Index)
 	if p_VehicleData and p_VehicleData.FirstPassengerSeat then
 		return p_Index >= p_VehicleData.FirstPassengerSeat - 1
@@ -107,6 +118,8 @@ function Vehicles:IsPassengerSeat(p_VehicleData, p_Index)
 	return p_Index > 0;
 end
 
+---@param p_VehicleData VehicleDataInner
+---@param p_VehicleTerrain VehicleTerrains
 function Vehicles:IsVehicleTerrain(p_VehicleData, p_VehicleTerrain)
 	if p_VehicleData and p_VehicleData.Terrain then
 		return p_VehicleData.Terrain == p_VehicleTerrain
@@ -115,6 +128,8 @@ function Vehicles:IsVehicleTerrain(p_VehicleData, p_VehicleTerrain)
 	end
 end
 
+---@param p_VehicleData VehicleDataInner
+---@param p_VehicleTerrain VehicleTerrains
 function Vehicles:IsNotVehicleTerrain(p_VehicleData, p_VehicleTerrain)
 	if p_VehicleData and p_VehicleData.Terrain then
 		return p_VehicleData.Terrain ~= p_VehicleTerrain
@@ -123,36 +138,57 @@ function Vehicles:IsNotVehicleTerrain(p_VehicleData, p_VehicleTerrain)
 	end
 end
 
-function Vehicles:IsVehicleType(p_VehicleData, p_VehicleType)
+---@param p_VehicleData VehicleDataInner|nil
+---@return VehicleTypes
+function Vehicles:VehicleType(p_VehicleData)
 	if p_VehicleData and p_VehicleData.Type then
-		return p_VehicleData.Type == p_VehicleType
-	else
-		return false
+		return p_VehicleData.Type
 	end
+
+	return VehicleTypes.NoVehicle
 end
 
+---@param p_VehicleData VehicleDataInner
+---@param p_VehicleType VehicleTypes
+function Vehicles:IsVehicleType(p_VehicleData, p_VehicleType)
+	return self:VehicleType(p_VehicleData) == p_VehicleType
+end
+
+---@param p_VehicleData VehicleDataInner
 function Vehicles:IsChopper(p_VehicleData)
 	return self:IsVehicleType(p_VehicleData, VehicleTypes.Chopper)
 		or self:IsVehicleType(p_VehicleData, VehicleTypes.ScoutChopper)
 end
 
+---@param p_VehicleData VehicleDataInner
 function Vehicles:IsAirVehicle(p_VehicleData)
 	return self:IsChopper(p_VehicleData)
 		or self:IsVehicleType(p_VehicleData, VehicleTypes.Gunship)
 		or self:IsVehicleType(p_VehicleData, VehicleTypes.Plane)
 end
 
+---@param p_VehicleData VehicleDataInner
 function Vehicles:IsAAVehicle(p_VehicleData)
 	return self:IsVehicleType(p_VehicleData, VehicleTypes.AntiAir)
 		or self:IsVehicleType(p_VehicleData, VehicleTypes.LightAA)
 end
 
+---@param p_VehicleType VehicleTypes
 function Vehicles:IsAirVehicleType(p_VehicleType)
 	return p_VehicleType == VehicleTypes.Chopper
 		or p_VehicleType == VehicleTypes.ScoutChopper
 		or p_VehicleType == VehicleTypes.Plane
 end
 
+---@param p_VehicleType VehicleTypes
+function Vehicles:IsArmoredVehicleType(p_VehicleType)
+	return p_VehicleType == VehicleTypes.Tank
+		or p_VehicleType == VehicleTypes.IFV
+		or p_VehicleType == VehicleTypes.MobileArtillery
+		or p_VehicleType == VehicleTypes.LightAA
+end
+
+---@param p_VehicleType VehicleTypes
 function Vehicles:IsNotVehicleType(p_VehicleData, p_VehicleType)
 	if p_VehicleData and p_VehicleData.Type then
 		return p_VehicleData.Type ~= p_VehicleType
@@ -161,6 +197,8 @@ function Vehicles:IsNotVehicleType(p_VehicleData, p_VehicleType)
 	end
 end
 
+---@param p_VehicleData VehicleDataInner
+---@param p_Index integer
 function Vehicles:GetAvailableWeaponSlots(p_VehicleData, p_Index)
 	if p_VehicleData then
 		if type(p_VehicleData.Parts[p_Index + 1]) == "table" then
@@ -176,6 +214,9 @@ function Vehicles:GetAvailableWeaponSlots(p_VehicleData, p_Index)
 	return 0
 end
 
+---@param p_VehicleData VehicleDataInner
+---@param p_Index integer
+---@param p_WeaponSelection integer
 function Vehicles:GetOffsets(p_VehicleData, p_Index, p_WeaponSelection)
 	local s_Offset = Vec3.zero
 
@@ -193,6 +234,9 @@ function Vehicles:GetOffsets(p_VehicleData, p_Index, p_WeaponSelection)
 	return s_Offset
 end
 
+---@param p_VehicleData VehicleDataInner
+---@param p_Index integer
+---@param p_WeaponSelection integer
 function Vehicles:GetSpeedAndDrop(p_VehicleData, p_Index, p_WeaponSelection)
 	local s_Drop = nil
 	local s_Speed = nil
@@ -227,6 +271,11 @@ function Vehicles:GetSpeedAndDrop(p_VehicleData, p_Index, p_WeaponSelection)
 	return s_Speed, s_Drop
 end
 
+---@param p_VehicleType VehicleTypes
+---@param p_Distance number
+---@param p_Gadget Weapon
+---@param p_InVehicle boolean
+---@param p_IsSniper boolean
 function Vehicles:CheckForVehicleAttack(p_VehicleType, p_Distance, p_Gadget, p_InVehicle, p_IsSniper)
 	if p_InVehicle then
 		return VehicleAttackModes.AttackWithRifle -- Attack with main-weapon.

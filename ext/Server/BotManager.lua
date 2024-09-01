@@ -17,6 +17,9 @@ function BotManager:__init()
 	---@type table<string, Bot>
 	---`[Player.name] -> Bot`
 	self._BotsByName = {}
+	---@type table<integer, Bot>
+	---`[Player.id] -> Bot`
+	self._BotsByPlayerId = {}
 	---@type table<integer, Bot[]>
 	self._BotsByTeam = { {}, {}, {}, {}, {} } -- neutral, team1, team2, team3, team4
 	---@type table<integer, EntryInput>
@@ -28,12 +31,12 @@ function BotManager:__init()
 	self._BotAttackBotTimer = 0.0
 	self._BotReviveBotTimer = 0.0
 	self._DestroyBotsTimer = 0.0
-	---@type string[]
-	---`BotName[]`
+	---@type integer[]
+	---`BotId[]`
 	self._BotsToDestroy = {}
 
-	---@type string[]
-	---`BotName[]`
+	---@type integer[]
+	---`BotId[]`
 	self._BotBotAttackList = {}
 	self._BotBotReviveList = {}
 	self._RaycastsPerActivePlayer = 0
@@ -84,7 +87,10 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 		self._BotAttackBotTimer = self._BotAttackBotTimer + p_DeltaTime
 	end
 
-	if Config.BotsReviveBots and self._InitDone then
+	if Config.BotsReviveBots
+		and self._InitDone
+		and not Globals.IsGm
+	then
 		if self._BotReviveBotTimer >= Registry.GAME_RAYCASTING.BOT_BOT_REVICE_INTERVAL then
 			self._BotReviveBotTimer = 0.0
 			self:_CheckForBotBotRevive()
@@ -134,25 +140,25 @@ end
 ---@param p_Action HealthStateAction|integer
 function BotManager:OnSoldierHealthAction(p_Soldier, p_Action)
 	if p_Action == HealthStateAction.OnRevive then
-		local s_Bot = self:GetBotByName(p_Soldier.player.name)
+		local s_Bot = self:GetBotById(p_Soldier.player.id)
 		if not s_Bot then return end
 		-- Randomize a delay of 50 to 300ms. So the Bot won't accept the revive immediately.
 		s_Bot:SetActiveDelay(MathUtils:GetRandom(0.050, 0.300))
 	end
 end
 
----@param p_BotName string
-function BotManager:OnBotAbortWait(p_BotName)
-	local s_Bot = self:GetBotByName(p_BotName)
+---@param p_BotId integer
+function BotManager:OnBotAbortWait(p_BotId)
+	local s_Bot = self:GetBotById(p_BotId)
 
 	if s_Bot ~= nil then
 		s_Bot:ResetVehicleTimer()
 	end
 end
 
----@param p_BotName string
-function BotManager:OnBotExitVehicle(p_BotName)
-	local s_Bot = self:GetBotByName(p_BotName)
+---@param p_BotId integer
+function BotManager:OnBotExitVehicle(p_BotId)
+	local s_Bot = self:GetBotById(p_BotId)
 
 	if s_Bot ~= nil then
 		s_Bot:ExitVehicle()
@@ -188,7 +194,7 @@ function BotManager:OnVehicleDamage(p_VehicleEntity, p_Damage, p_DamageGiverInfo
 
 		-- Make sure it's a bot.
 		if s_Player and m_Utilities:isBot(s_Player) then
-			local s_Bot = self:GetBotByName(s_Player.name)
+			local s_Bot = self:GetBotById(s_Player.id)
 
 			if not s_Bot then
 				m_Logger:Error("Could not find Bot for bot player " .. s_Player.name)
@@ -228,7 +234,7 @@ function BotManager:OnSoldierDamage(p_HookCtx, p_Soldier, p_Info, p_GiverInfo)
 		if p_GiverInfo and p_GiverInfo.giver then
 			-- Detect if we need to shoot back.
 			if Config.ShootBackIfHit then
-				self:OnShootAt(p_GiverInfo.giver, p_Soldier.player.name, true)
+				self:OnShootAt(p_GiverInfo.giver, p_Soldier.player.id, true)
 			end
 
 			-- Prevent bots from killing themselves. Bad bot, no suicide.
@@ -240,7 +246,7 @@ function BotManager:OnSoldierDamage(p_HookCtx, p_Soldier, p_Info, p_GiverInfo)
 	else
 		-- We have a giver.
 		if p_GiverInfo and p_GiverInfo.giver then
-			local s_Bot = self:GetBotByName(p_GiverInfo.giver.name)
+			local s_Bot = self:GetBotById(p_GiverInfo.giver.id)
 
 			-- This damage was dealt by a bot.
 			if s_Bot and s_Bot.m_Player.soldier then
@@ -259,10 +265,10 @@ end
 -- =============================================
 
 ---@param p_Player Player
----@param p_BotName string
+---@param p_BotId integer
 ---@param p_IgnoreYaw boolean
-function BotManager:OnShootAt(p_Player, p_BotName, p_IgnoreYaw)
-	local s_Bot = self:GetBotByName(p_BotName)
+function BotManager:OnShootAt(p_Player, p_BotId, p_IgnoreYaw)
+	local s_Bot = self:GetBotById(p_BotId)
 
 	if not s_Bot then
 		return
@@ -272,9 +278,9 @@ function BotManager:OnShootAt(p_Player, p_BotName, p_IgnoreYaw)
 end
 
 ---@param p_Player Player
----@param p_BotName string
-function BotManager:OnRevivePlayer(p_Player, p_BotName)
-	local s_Bot = self:GetBotByName(p_BotName)
+---@param p_BotId integer
+function BotManager:OnRevivePlayer(p_Player, p_BotId)
+	local s_Bot = self:GetBotById(p_BotId)
 
 	if not s_Bot then
 		return
@@ -283,17 +289,16 @@ function BotManager:OnRevivePlayer(p_Player, p_BotName)
 	s_Bot:Revive(p_Player)
 end
 
----@param p_Player Player
----@param p_BotName1 string
----@param p_BotName2 string
-function BotManager:OnBotShootAtBot(p_Player, p_BotName1, p_BotName2)
-	local s_Bot1 = self:GetBotByName(p_BotName1)
+---@param p_BotId1 integer
+---@param p_BotId2 integer
+function BotManager:OnBotShootAtBot(p_BotId1, p_BotId2)
+	local s_Bot1 = self:GetBotById(p_BotId1)
 
 	if not s_Bot1 then
 		return
 	end
 
-	local s_Bot2 = self:GetBotByName(p_BotName2)
+	local s_Bot2 = self:GetBotById(p_BotId2)
 
 	if not s_Bot2 then
 		return
@@ -343,32 +348,34 @@ function BotManager:CheckForFlareOrSmoke(p_MissileEntity)
 		return
 	end
 
-	local s_TargetBot = self:GetBotByName(s_DriverOfVehicle.name)
+	local s_TargetBot = self:GetBotById(s_DriverOfVehicle.id)
 	if s_TargetBot then
 		s_TargetBot:FireFlareSmoke()
 	end
 end
 
+---@param p_Player Player
+---@param p_RaycastResults RaycastResults[]
 function BotManager:OnClientRaycastResults(p_Player, p_RaycastResults)
 	if p_RaycastResults == nil then
 		return
 	end
 
 	for _, l_RaycastResult in ipairs(p_RaycastResults) do
-		if l_RaycastResult.Mode == "ShootAtBot" then
-			self:OnBotShootAtBot(p_Player, l_RaycastResult.Bot1, l_RaycastResult.Bot2)
-		elseif l_RaycastResult.Mode == "ShootAtPlayer" then
+		if l_RaycastResult.Mode == RaycastResultModes.ShootAtBot then
+			self:OnBotShootAtBot(l_RaycastResult.Bot1, l_RaycastResult.Bot2)
+		elseif l_RaycastResult.Mode == RaycastResultModes.ShootAtPlayer then
 			self:OnShootAt(p_Player, l_RaycastResult.Bot1, l_RaycastResult.IgnoreYaw)
-		elseif l_RaycastResult.Mode == "RevivePlayer" then
+		elseif l_RaycastResult.Mode == RaycastResultModes.RevivePlayer then
 			self:OnRevivePlayer(p_Player, l_RaycastResult.Bot1)
 		end
 	end
 end
 
 ---@param p_Player Player
----@param p_BotName string
-function BotManager:OnRequestEnterVehicle(p_Player, p_BotName)
-	local s_Bot = self:GetBotByName(p_BotName)
+---@param p_BotId integer
+function BotManager:OnRequestEnterVehicle(p_Player, p_BotId)
+	local s_Bot = self:GetBotById(p_BotId)
 
 	if s_Bot and s_Bot.m_Player.soldier then
 		s_Bot:EnterVehicleOfPlayer(p_Player)
@@ -398,7 +405,7 @@ function BotManager:OnRequestChangeSeatVehicle(p_Player, p_SeatNumber)
 		return
 	end
 
-	local s_Bot = self:GetBotByName(s_TargetPlayer.name)
+	local s_Bot = self:GetBotById(s_TargetPlayer.id)
 
 	-- Real player in target seat.
 	if not s_Bot then
@@ -670,6 +677,12 @@ function BotManager:GetBotByName(p_Name)
 	return self._BotsByName[p_Name]
 end
 
+---@param p_Id integer
+---@return Bot|nil
+function BotManager:GetBotById(p_Id)
+	return self._BotsByPlayerId[p_Id]
+end
+
 ---@param p_Name string
 ---@param p_TeamId TeamId
 ---@param p_SquadId SquadId
@@ -718,6 +731,7 @@ function BotManager:CreateBot(p_Name, p_TeamId, p_SquadId)
 
 	table.insert(self._Bots, s_Bot)
 	self._BotsByName[p_Name] = s_Bot
+	self._BotsByPlayerId[s_BotPlayer.id] = s_Bot
 
 	-- Teamid's in self._BotsByTeam are offset by 1.
 	local s_TeamLookup = s_Bot.m_Player.teamId + 1
@@ -831,6 +845,18 @@ function BotManager:DestroyDisabledBots()
 	end
 end
 
+function BotManager:DestroyAllOldBotPlayers()
+	local s_AllPlayers = PlayerManager:GetPlayers()
+	for _, l_Player in pairs(s_AllPlayers) do
+		if l_Player ~= nil and l_Player.onlineId == 0 then
+			if l_Player.soldier ~= nil then
+				l_Player.soldier:Destroy()
+			end
+			PlayerManager:DeletePlayer(l_Player)
+		end
+	end
+end
+
 ---@param p_Player Player
 function BotManager:DestroyPlayerBots(p_Player)
 	for _, l_Bot in ipairs(self._Bots) do
@@ -844,24 +870,29 @@ function BotManager:RefreshTables()
 	local s_NewTeamsTable = { {}, {}, {}, {}, {} }
 	local s_NewBotTable = {}
 	local s_NewBotbyNameTable = {}
+	local s_NewBotsByPlayerIdTable = {}
 
 	for _, l_Bot in ipairs(self._Bots) do
 		if l_Bot.m_Player ~= nil then
 			table.insert(s_NewBotTable, l_Bot)
 			table.insert(s_NewTeamsTable[l_Bot.m_Player.teamId + 1], l_Bot)
 			s_NewBotbyNameTable[l_Bot.m_Player.name] = l_Bot
+			s_NewBotsByPlayerIdTable[l_Bot.m_Player.id] = l_Bot
 		end
 	end
 
 	self._Bots = s_NewBotTable
 	self._BotsByTeam = s_NewTeamsTable
 	self._BotsByName = s_NewBotbyNameTable
+	self._BotsByPlayerId = s_NewBotsByPlayerIdTable
 end
 
----@param p_Bot Bot @might be a string as well
+---@param p_Bot Bot|string|integer @might be a string or integer as well
 function BotManager:DestroyBot(p_Bot)
 	if type(p_Bot) == 'string' then
 		p_Bot = self._BotsByName[p_Bot]
+	elseif type(p_Bot) == 'integer' then
+		p_Bot = self._BotsByPlayerId[p_Bot]
 	end
 
 	-- Bot was not found.
@@ -891,6 +922,7 @@ function BotManager:DestroyBot(p_Bot)
 	end
 
 	self._BotsByName[p_Bot.m_Name] = nil
+	self._BotsByPlayerId[p_Bot.m_Id] = nil
 	self._BotInputs[p_Bot.m_Id] = nil
 	m_BotCreator:RemoveActiveBot(p_Bot.m_Name);
 
@@ -915,7 +947,7 @@ function BotManager:ExitVehicle(p_Player)
 	local s_SoldierPosition = p_Player.soldier.worldTransform.trans
 
 	for _, l_Bot in ipairs(self._BotsByTeam[p_Player.teamId + 1]) do
-		if l_Bot.m_InVehicle and l_Bot.m_Player.soldier then
+		if (l_Bot.m_InVehicle or l_Bot.m_OnVehicle) and l_Bot.m_Player.soldier then
 			local s_BotSoldierPosition = nil
 			if l_Bot.m_Player.controlledControllable then
 				s_BotSoldierPosition = l_Bot.m_Player.controlledControllable.transform.trans
@@ -950,7 +982,7 @@ function BotManager:ExitVehicle(p_Player)
 				local s_Player = s_VehicleEntity:GetPlayerInEntry(l_EntryId)
 
 				if s_Player then
-					self:OnBotExitVehicle(s_Player.name)
+					self:OnBotExitVehicle(s_Player.id)
 				end
 			end
 		end
@@ -1082,7 +1114,7 @@ end
 -- Private Functions
 -- =============================================
 
----@param p_RaycastData any To-do: add emmylua type
+---@param p_RaycastData RaycastRequests[] To-do: add emmylua type
 function BotManager:_DistributeRaycastsBotBotAttack(p_RaycastData)
 	local s_RaycastIndex = 0
 	local s_RaycastDataCount = #p_RaycastData
@@ -1111,6 +1143,42 @@ function BotManager:_DistributeRaycastsBotBotAttack(p_RaycastData)
 	end
 end
 
+---@param p_Bot Bot
+---@param p_EnemyBot Bot
+---@param p_EnemyReady boolean
+function BotManager:ChechFovBotBot(p_Bot, p_EnemyBot, p_EnemyReady)
+	local s_ValidFov = false
+
+	local s_DiffVec = (p_Bot.m_Player.soldier.worldTransform.trans:Clone() - p_EnemyBot.m_Player.soldier.worldTransform.trans:Clone()):Normalize()
+	local s_Yaw = p_Bot.m_Player.input.authoritativeAimingYaw
+	local s_Pitch = p_Bot.m_Player.input.authoritativeAimingPitch
+	local x = math.cos(s_Pitch) * math.cos(s_Yaw)
+	local y = math.sin(s_Pitch)
+	local z = math.cos(s_Pitch) * math.sin(s_Yaw)
+	local s_VecBotCamera = Vec3(x, y, z)
+	local s_Angle = math.acos(s_DiffVec:Dot(s_VecBotCamera))
+	s_Angle = s_Angle * (180 / math.pi)
+
+	if s_Angle < Config.FovForShooting * 0.5 then
+		s_ValidFov = true
+	end
+
+	if not s_ValidFov and p_EnemyReady then
+		s_Yaw = p_EnemyBot.m_Player.input.authoritativeAimingYaw
+		s_Pitch = p_EnemyBot.m_Player.input.authoritativeAimingPitch
+		x = math.cos(s_Pitch) * math.cos(s_Yaw)
+		y = math.sin(s_Pitch)
+		z = math.cos(s_Pitch) * math.sin(s_Yaw)
+		s_VecBotCamera = Vec3(x, y, z)
+		local s_AngleEnemy = math.acos(s_DiffVec:Dot(s_VecBotCamera))
+		s_AngleEnemy = s_AngleEnemy * (180 / math.pi)
+		if s_AngleEnemy < Config.FovForShooting * 0.5 then
+			s_ValidFov = true
+		end
+	end
+	return s_ValidFov
+end
+
 function BotManager:_CheckForBotBotAttack()
 	-- Not enough on either team and no players to use.
 	if #self._ActivePlayers == 0 then
@@ -1123,10 +1191,10 @@ function BotManager:_CheckForBotBotAttack()
 		for _, l_Bot in ipairs(self._Bots) do
 			if l_Bot.m_InVehicle then
 				if l_Bot.m_ActiveVehicle and l_Bot.m_ActiveVehicle.Type ~= VehicleTypes.StationaryAA then
-					table.insert(self._BotBotAttackList, l_Bot.m_Name)
+					table.insert(self._BotBotAttackList, l_Bot.m_Id)
 				end
 			else
-				table.insert(self._BotBotAttackList, l_Bot.m_Name)
+				table.insert(self._BotBotAttackList, l_Bot.m_Id)
 			end
 		end
 
@@ -1140,14 +1208,15 @@ function BotManager:_CheckForBotBotAttack()
 	local s_Raycasts = 0
 	local s_ChecksDone = 0
 
+	---@type RaycastRequests[]
 	local s_RaycastEntries = {}
 
 	for i = self._LastBotCheckIndex, #self._BotBotAttackList do
 		-- Body.
-		local s_BotNameToCheck = self._BotBotAttackList[i]
-		local s_Bot = self:GetBotByName(s_BotNameToCheck)
+		local s_BotIdToCheck = self._BotBotAttackList[i]
+		local s_Bot = self:GetBotById(s_BotIdToCheck)
 
-		if s_Bot and s_Bot.m_Player and s_Bot.m_Player.soldier and s_Bot:IsReadyToAttack(false) then
+		if s_Bot and s_Bot.m_Player and s_Bot.m_Player.soldier and s_Bot:IsReadyToAttack(false, nil, false) then
 			local s_BotPosition = nil
 			if s_Bot.m_Player.controlledControllable then
 				s_BotPosition = s_Bot.m_Player.controlledControllable.transform.trans
@@ -1155,16 +1224,16 @@ function BotManager:_CheckForBotBotAttack()
 				s_BotPosition = s_Bot.m_Player.soldier.worldTransform.trans
 			end
 
-			for _, l_BotName in ipairs(self._BotBotAttackList) do
-				if l_BotName ~= s_BotNameToCheck then
-					local s_EnemyBot = self:GetBotByName(l_BotName)
+			for _, l_BotId in ipairs(self._BotBotAttackList) do
+				if l_BotId ~= s_BotIdToCheck then
+					local s_EnemyBot = self:GetBotById(l_BotId)
 
 					if s_EnemyBot and s_EnemyBot.m_Player and s_EnemyBot.m_Player.soldier and
-						s_EnemyBot.m_Player.teamId ~= s_Bot.m_Player.teamId and s_EnemyBot:IsReadyToAttack(false) then
+						s_EnemyBot.m_Player.teamId ~= s_Bot.m_Player.teamId then -- enemy does not have to be ready!
 						-- Check connection-state.
 						local s_ConnectionValue = ""
-						local s_Id1 = s_Bot.m_Player.id
-						local s_Id2 = s_EnemyBot.m_Player.id
+						local s_Id1 = s_BotIdToCheck
+						local s_Id2 = l_BotId
 
 						if s_Id1 > s_Id2 then
 							s_ConnectionValue = tostring(s_Id2) .. "-" .. tostring(s_Id1)
@@ -1190,13 +1259,16 @@ function BotManager:_CheckForBotBotAttack()
 								s_MaxDistance = s_MaxDistanceEnemyBot
 							end
 
+							-- TODO: check FOV first?
+							-- local s_EnemyReady = s_EnemyBot:IsReadyToAttack(false)
+							-- local s_InFov = self:ChechFovBotBot(s_Bot, s_EnemyBot, s_EnemyReady)
+
 							if s_Distance <= s_MaxDistance then
 								table.insert(s_RaycastEntries, {
-									Bot1 = s_BotNameToCheck,
-									Bot2 = l_BotName,
+									Bot1 = s_BotIdToCheck,
+									Bot2 = l_BotId,
 									Bot1InVehicle = s_Bot.m_InVehicle,
 									Bot2InVehicle = s_EnemyBot.m_InVehicle,
-									Distance = s_Distance
 								})
 								s_Raycasts = s_Raycasts + 1
 
@@ -1250,7 +1322,10 @@ function BotManager:_CheckForBotBotRevive()
 			then
 				-- bot to revive found
 				table.insert(s_DeadBots, l_Bot)
-			elseif l_Bot.m_Player.soldier and l_Bot.m_Kit == BotKits.Assault and string.find(l_Bot.m_Player.soldier.weaponsComponent.weapons[6].name, "Defibrillator") then
+			elseif l_Bot.m_Player.soldier and
+				l_Bot.m_Kit == BotKits.Assault and
+				l_Bot.m_Player.soldier.weaponsComponent.weapons[6] and
+				string.find(l_Bot.m_Player.soldier.weaponsComponent.weapons[6].name, "Defibrillator") then
 				if l_Bot._ActiveAction ~= BotActionFlags.ReviveActive then
 					table.insert(s_MedicBots, l_Bot)
 				elseif l_Bot._ShootPlayerName ~= '' then
@@ -1287,7 +1362,9 @@ function BotManager:_CheckForBotBotRevive()
 	end
 
 	local s_NrOfRaycastsDone = 0
+	---@type MaterialFlags
 	local s_MaterialFlags = 0
+	---@type RayCastFlags
 	local s_RaycastFlags = RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter
 
 	if #s_MedicBots > 0 and #s_BotsToRevive > 0 then

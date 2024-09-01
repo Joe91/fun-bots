@@ -1,9 +1,6 @@
 ---@class AirTargets
 ---@overload fun():AirTargets
 AirTargets = class('AirTargets')
-
----@type Utilities
-local m_Utilities = require('__shared/Utilities')
 ---@type Vehicles
 local m_Vehicles = require('Vehicles')
 
@@ -48,6 +45,8 @@ function AirTargets:OnPlayerDestroyed(p_Player)
 end
 
 -- Public functions
+---@param p_Player Player
+---@param p_MaxDistance number
 function AirTargets:GetTarget(p_Player, p_MaxDistance)
 	local s_Team = p_Player.teamId
 	local s_ClosestDistance = nil
@@ -90,17 +89,18 @@ function AirTargets:GetTarget(p_Player, p_MaxDistance)
 end
 
 -- Private functions
-
+---comment
+---@param p_Player Player
 function AirTargets:_CreateTarget(p_Player)
 	if p_Player.controlledEntryId == 0 then
-		local s_Vehicle = m_Vehicles:GetVehicle(p_Player, 0)
-
-		if m_Vehicles:IsAirVehicle(s_Vehicle) then
+		local s_Vehicle = m_Vehicles:GetVehicle(p_Player)
+		if s_Vehicle and m_Vehicles:IsAirVehicle(s_Vehicle) then
 			table.insert(self._Targets, p_Player.name)
 		end
 	end
 end
 
+---@param p_Player Player
 function AirTargets:_RemoveTarget(p_Player)
 	for l_Index, l_Target in pairs(self._Targets) do
 		if l_Target == p_Player.name then

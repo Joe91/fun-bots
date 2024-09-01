@@ -29,6 +29,11 @@ This is the changelog for the version V2.9 Don't forget to [join us on Discord](
 * Option to disable defend-mode (by tanger-noisu)
 * Better handling for Light AA (by tanger-noisu)
 * Option for Bots to spawn in Gunship-Vehicle (by tanger-noisu)
+* improve general attacking-logic by fixing some issues
+* improve speed on save of traces (by tanger-noisu)
+* improve general behavior
+* fix modlist.realoadextension
+* Priority-System on attack (by tanger-noisu)
 
 ### Bug fixes
 * Merged pull request #323 from tagener-noisu Path-Switcher fixes
@@ -56,6 +61,7 @@ This is the changelog for the version V2.9 Don't forget to [join us on Discord](
 * Conquest Small MP_007 by IgorUA
 * Conquest Small MP_011 by IgorUA
 * Conquest Small MP_012 by IgorUA
+* Conquest Large MP_012 by IgorUA
 * Conquest Small MP_013 by IgorUA
 * Conquest Small MP_017 by IgorUA
 * Conquest Small MP_018 by IgorUA

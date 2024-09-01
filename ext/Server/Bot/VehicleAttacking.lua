@@ -11,6 +11,7 @@ function VehicleAttacking:__init()
 	-- Nothing to do.
 end
 
+---@param p_Bot Bot
 function VehicleAttacking:UpdateAttackingVehicle(p_Bot)
 	if p_Bot._ShootPlayer.soldier ~= nil and p_Bot._Shoot then
 		-- jets should only attack other vehicles for now
@@ -149,6 +150,7 @@ function VehicleAttacking:UpdateAttackingVehicle(p_Bot)
 	p_Bot._VehicleSecondaryWeaponTimer = math.max(p_Bot._VehicleSecondaryWeaponTimer - Registry.BOT.BOT_UPDATE_CYCLE, 0)
 end
 
+---@param p_Bot Bot
 function VehicleAttacking:UpdateAttackStationaryAAVehicle(p_Bot)
 	if p_Bot._VehicleReadyToShoot then
 		p_Bot:_SetInput(EntryInputActionEnum.EIAFire, 1)

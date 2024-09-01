@@ -613,7 +613,7 @@ SettingsDefinition = {
 			Value = Config.FovForShooting,
 			Description = "Degrees of FOV of Bot",
 			Reference = Range(0.00, 360.00, 1.0),
-			Default = 180,
+			Default = 160,
 			UpdateFlag = UpdateFlag.None,
 			Category = "BEHAVIOUR"
 		},
@@ -819,7 +819,7 @@ SettingsDefinition = {
 			Value = Config.DeployCycle,
 			Description = "Time between deployment of bots in seconds",
 			Reference = Range(1.00, 600.00, 5.0),
-			Default = 60,
+			Default = 90,
 			UpdateFlag = UpdateFlag.None,
 			Category = "BEHAVIOUR"
 		},
@@ -1501,9 +1501,9 @@ SettingsDefinition = {
 			---@type Type|integer
 			Type = Type.Float,
 			Value = Config.BotMinTimeShootAtPlayer,
-			Description = "The minimum time a bot shoots at one player for - recommended minimum 1.5, below this you will have issues",
+			Description = "The minimum time a bot shoots at one player",
 			Reference = Range(0.00, 60.00, 0.5),
-			Default = 2.5,
+			Default = 0.7,
 			UpdateFlag = UpdateFlag.None,
 			Category = "EXPERT"
 		},

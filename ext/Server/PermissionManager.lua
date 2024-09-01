@@ -97,7 +97,7 @@ function PermissionManager:AddPermission(p_Name, p_Permission)
 
 	local s_Single = m_Database:Single('SELECT * FROM `FB_Permissions` WHERE `PlayerName`=\'' ..
 		p_Name .. '\' AND `Value`=\'' .. p_Permission .. '\' LIMIT 1')
-	local s_Guid = 0
+	local s_Guid = '0'
 
 	if s_Player ~= nil then
 		s_Guid = tostring(s_Player.guid)

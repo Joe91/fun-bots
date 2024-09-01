@@ -35,7 +35,13 @@ function ChatCommands:Execute(p_Parts, p_Player)
 		-- testing with extracting of weapon-information for gunmaster
 		local s_weapon = SoldierWeapon(p_Player.soldier.weaponsComponent.currentWeapon)
 		print(s_weapon.name)
-		print(p_Player.soldier.weaponsComponent.weapons[1].name)
+		print(p_Player.soldier.weaponsComponent.currentWeaponSlot)
+		for i = 1, 15, 1 do
+			if p_Player.soldier.weaponsComponent.weapons[i] then
+				print(i)
+				print(p_Player.soldier.weaponsComponent.weapons[i].name)
+			end
+		end
 		local s_name = s_weapon.name
 		local s_unlock_path_parts = s_name:split('/')
 		local s_name_of_weapon = s_unlock_path_parts[#s_unlock_path_parts]

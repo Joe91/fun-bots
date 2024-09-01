@@ -125,20 +125,20 @@ function EbxEditUtils:CheckInstancePropertyExists(p_Instance, p_PropertyName)
 		return p_Instance, p_PropertyName, true
 	end
 
-	if tonumber(p_PropertyName) ~= nil then -- Simple lookup failed, maybe it's an array index.
+	if tonumber(p_PropertyName) ~= nil then           -- Simple lookup failed, maybe it's an array index.
 		if p_Instance[tonumber(p_PropertyName)] ~= nil then -- Try for property again.
 			return p_Instance, tonumber(p_PropertyName), true
 		end
 	end
 
-	local s_InstanceType = p_Instance.typeInfo.name -- Get type.
+	local s_InstanceType = p_Instance.typeInfo.name       -- Get type.
 	local s_WorkingInstance = _G[s_InstanceType](p_Instance) -- Cast to type.
 
-	if s_WorkingInstance[p_PropertyName] ~= nil then -- Try for property again.
+	if s_WorkingInstance[p_PropertyName] ~= nil then      -- Try for property again.
 		return s_WorkingInstance, p_PropertyName, true
 	end
 
-	if tonumber(p_PropertyName) ~= nil then -- Still no, let's try array on the cast.
+	if tonumber(p_PropertyName) ~= nil then                  -- Still no, let's try array on the cast.
 		if s_WorkingInstance[tonumber(p_PropertyName)] ~= nil then -- Try for property again.
 			return s_WorkingInstance, tonumber(p_PropertyName), true
 		end

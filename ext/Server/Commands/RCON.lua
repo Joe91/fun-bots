@@ -152,7 +152,7 @@ function RCONCommands:__init()
 					return { 'ERROR', 'Unknown Team: TeamId.' .. s_Team }
 				end
 
-				m_BotSpawner:SpawnWayBots(nil, s_Amount, true, nil, nil, TeamId[s_Team])
+				m_BotSpawner:SpawnWayBots(s_Amount, true, nil, nil, TeamId[s_Team])
 
 				return { 'OK' }
 			end)
@@ -183,7 +183,7 @@ function RCONCommands:__init()
 						else
 							return { 'ERROR', 'Can\'r revoke all Permissions from "' .. s_Name .. '".' }
 						end
-					-- Revoke SPECIFIC Permission.
+						-- Revoke SPECIFIC Permission.
 					elseif s_Permission:sub(1, 1) == '!' then
 						s_Permission = s_Permission:sub(2)
 

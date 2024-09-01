@@ -2,9 +2,6 @@
 ---@overload fun():BotCreator
 BotCreator = class('BotCreator')
 
-
----@type Utilities
-local m_Utilities = require('__shared/Utilities')
 ---@type Logger
 local m_Logger = Logger("BotCreator", Debug.Server.BOT_CREATION)
 

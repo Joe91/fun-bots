@@ -58,6 +58,7 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 			self:_UpdateInputs()
 			self._UpdateTimer = 0.0
 		end
+		return
 	end
 
 	-- Update timer.
@@ -76,6 +77,8 @@ function Bot:OnUpdatePassPostFrame(p_DeltaTime)
 	end
 end
 
+---comment
+---@param p_DeltaTime number
 function Bot:FastTimerUpdate(p_DeltaTime)
 	-- Increment slow timer.
 	self._UpdateTimer = self._UpdateTimer + self._UpdateFastTimer
@@ -133,6 +136,8 @@ function Bot:FastTimerUpdate(p_DeltaTime)
 	end
 end
 
+---comment
+---@param p_IsAttacking boolean
 function Bot:SoldierSlowTimerUpdate(p_IsAttacking)
 	-- Common part.
 	m_BotWeaponHandling:UpdateWeaponSelection(self)
@@ -163,6 +168,8 @@ function Bot:SoldierSlowTimerUpdate(p_IsAttacking)
 	self._UpdateTimer = 0.0
 end
 
+---comment
+---@param p_IsAttacking boolean
 function Bot:OnVehicleFastTimerUpdate(p_IsAttacking)
 	-- Sync slow code with fast code. Therefore, execute the slow code first.
 	if self._UpdateTimer >= Registry.BOT.BOT_UPDATE_CYCLE then
@@ -195,6 +202,8 @@ function Bot:OnVehicleFastTimerUpdate(p_IsAttacking)
 	end
 end
 
+---comment
+---@param p_IsAttacking boolean
 function Bot:InVehicleFastTimerUpdate(p_IsAttacking)
 	-- Stationary AA needs separate handling.
 	if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.StationaryAA) then
