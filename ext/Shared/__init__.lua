@@ -44,7 +44,7 @@ end
 function FunBotShared:OnResourceManagerLoadBundle(p_HookCtx, p_Bundles, p_Compartment)
 	if #p_Bundles == 1 and p_Bundles[1] == SharedUtils:GetLevelName() then
 		m_Logger:Write('Injecting bundles...')
-		if (SharedUtils:GetLevelName() == 'Levels/MP_Subway/MP_Subway') then
+		if (SharedUtils:GetLevelName() == 'Levels/MP_Subway/MP_Subway') or (SharedUtils:GetLevelName() == 'Levels/MP_011/MP_011') then
 			p_Bundles = {
 				'Levels/MP_003/MP_003',
 				p_Bundles[1],
@@ -62,7 +62,7 @@ end
 -- Function for Weapon Disappear Workaround.
 function FunBotShared:OnLevelLoadResources()
 	m_Logger:Write('Mounting superbundle...')
-	if (SharedUtils:GetLevelName() == 'Levels/MP_Subway/MP_Subway') then
+	if (SharedUtils:GetLevelName() == 'Levels/MP_Subway/MP_Subway') or (SharedUtils:GetLevelName() == 'Levels/MP_011/MP_011') then
 		ResourceManager:MountSuperBundle('Levels/MP_003/MP_003')
 	else
 		ResourceManager:MountSuperBundle('Levels/MP_011/MP_011') -- Mount Superbundles.
@@ -71,7 +71,7 @@ end
 
 function FunBotShared:OnLevelRegisterEntityResources(p_LevelData)
 	m_Logger:Write('Registering instances...')
-	if (SharedUtils:GetLevelName() == 'Levels/MP_Subway/MP_Subway') then
+	if (SharedUtils:GetLevelName() == 'Levels/MP_Subway/MP_Subway') or (SharedUtils:GetLevelName() == 'Levels/MP_011/MP_011') then
 		local s_aRegistry = RegistryContainer(ResourceManager:SearchForInstanceByGuid(Guid('0B40AC87-7AFF-EDDE-949A-FCBF42CF7126'))) -- Assets from: Levels/MP_003/MP_003
 		ResourceManager:AddRegistry(s_aRegistry, ResourceCompartment.ResourceCompartment_Game)
 	else
