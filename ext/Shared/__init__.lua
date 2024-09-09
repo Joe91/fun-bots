@@ -44,10 +44,17 @@ end
 function FunBotShared:OnResourceManagerLoadBundle(p_HookCtx, p_Bundles, p_Compartment)
 	if #p_Bundles == 1 and p_Bundles[1] == SharedUtils:GetLevelName() then
 		m_Logger:Write('Injecting bundles...')
-		p_Bundles = {
-			'Levels/MP_011/MP_011',
-			p_Bundles[1],
-		}
+		if (SharedUtils:GetLevelName() == 'Levels/MP_Subway/MP_Subway') then
+			p_Bundles = {
+				'Levels/MP_003/MP_003',
+				p_Bundles[1],
+			}
+		else
+			p_Bundles = {
+				'Levels/MP_011/MP_011',
+				p_Bundles[1],
+			}
+		end
 		p_HookCtx:Pass(p_Bundles, p_Compartment)
 	end
 end
@@ -55,13 +62,22 @@ end
 -- Function for Weapon Disappear Workaround.
 function FunBotShared:OnLevelLoadResources()
 	m_Logger:Write('Mounting superbundle...')
-	ResourceManager:MountSuperBundle('Levels/MP_011/MP_011') -- Mount Superbundles.
+	if (SharedUtils:GetLevelName() == 'Levels/MP_Subway/MP_Subway') then
+		ResourceManager:MountSuperBundle('Levels/MP_003/MP_003')
+	else
+		ResourceManager:MountSuperBundle('Levels/MP_011/MP_011') -- Mount Superbundles.
+	end
 end
 
 function FunBotShared:OnLevelRegisterEntityResources(p_LevelData)
 	m_Logger:Write('Registering instances...')
-	local s_aRegistry = RegistryContainer(ResourceManager:SearchForInstanceByGuid(Guid('D62726FF-B0E2-3619-E95F-57CC5F00D58B'))) -- Assets from: Levels/MP_011/MP_011
-	ResourceManager:AddRegistry(s_aRegistry, ResourceCompartment.ResourceCompartment_Game)
+	if (SharedUtils:GetLevelName() == 'Levels/MP_Subway/MP_Subway') then
+		local s_aRegistry = RegistryContainer(ResourceManager:SearchForInstanceByGuid(Guid('0B40AC87-7AFF-EDDE-949A-FCBF42CF7126'))) -- Assets from: Levels/MP_003/MP_003
+		ResourceManager:AddRegistry(s_aRegistry, ResourceCompartment.ResourceCompartment_Game)
+	else
+		local s_aRegistry = RegistryContainer(ResourceManager:SearchForInstanceByGuid(Guid('D62726FF-B0E2-3619-E95F-57CC5F00D58B'))) -- Assets from: Levels/MP_011/MP_011
+		ResourceManager:AddRegistry(s_aRegistry, ResourceCompartment.ResourceCompartment_Game)
+	end
 end
 
 if g_FunBotShared == nil then
