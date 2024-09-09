@@ -23,8 +23,8 @@ Registry = {
 		USE_BUGGED_HITBOXES = false,
 		-- Distance commands are heard by bots.
 		COMMAND_DISTANCE = 20,
-		-- Use load of Bundle to fix Bug of weapons disappearing (thanks to Lesley!) !!! THIS MIGHT CAUSE CRASHES !!! (for example on MP_Subway)
-		USE_LOAD_BUNDLE_BUGFIX = false,
+		-- Use load of Bundle to fix Bug of weapons disappearing (thanks to Lesley!) !!! THIS MIGHT CAUSE CRASHES OR OTHER ISSUES!!!
+		USE_LOAD_BUNDLE_BUGFIX = true,
 		-- Keep the last ticket in conquest for the gamemode counter
 		DONT_SPAWN_BOTS_ON_LAST_CONQUEST_TICKET = true,
 		-- Valid keys can be found here: https://docs.veniceunleashed.net/vext/ref/fb/inputdevicekeys/.
