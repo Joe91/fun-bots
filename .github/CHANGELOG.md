@@ -35,6 +35,8 @@ This is the changelog for the version V2.9 Don't forget to [join us on Discord](
 * fix modlist.realoadextension
 * Priority-System on attack (by tanger-noisu)
 * fix of USE_LOAD_BUNDLE_BUGFIX (by lywit) #286
+* some default-settings modified
+* Registry-option to delay direct-spawnable vehicles #315
 
 ### Bug fixes
 * Merged pull request #323 from tagener-noisu Path-Switcher fixes

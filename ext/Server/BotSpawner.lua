@@ -28,6 +28,8 @@ function BotSpawner:RegisterVars()
 	self._PlayerUpdateTimer = 0.0
 	self._FirstSpawnInLevel = true
 	self._FirstSpawnDelay = Registry.BOT_SPAWN.FIRST_SPAWN_DELAY
+	self._DelayDirectSpawn = Registry.BOT_SPAWN.DELAY_DIRECT_SPAWN
+	self._NrOfPlayers = 0
 	self._UpdateActive = false
 	---@type SpawnSet[]
 	self._SpawnSets = {}
@@ -69,7 +71,9 @@ function BotSpawner:OnLevelDestroy()
 	self._UpdateActive = false
 	self._FirstSpawnInLevel = true
 	self._FirstSpawnDelay = Registry.BOT_SPAWN.FIRST_SPAWN_DELAY
+	self._DelayDirectSpawn = Registry.BOT_SPAWN.DELAY_DIRECT_SPAWN
 	self._PlayerUpdateTimer = 0.0
+	self._NrOfPlayers = 0
 end
 
 -- =============================================
@@ -94,6 +98,9 @@ function BotSpawner:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 			self._FirstSpawnDelay = self._FirstSpawnDelay - p_DeltaTime
 		end
 	else
+		if self._DelayDirectSpawn > 0.0 and Globals.IsInputAllowed and self._NrOfPlayers > 0 then
+			self._DelayDirectSpawn = self._DelayDirectSpawn - p_DeltaTime
+		end
 		self._PlayerUpdateTimer = self._PlayerUpdateTimer + p_DeltaTime
 
 		if self._PlayerUpdateTimer > 2.0 then
@@ -349,11 +356,18 @@ function BotSpawner:UpdateBotAmountAndTeam()
 	local s_CountBots = {}
 	local s_TargetTeamCount = {}
 
+	local s_BotsToDelay = {}
+
 	for i = 1, Globals.NrOfTeams do
 		s_CountPlayers[i] = 0
+		s_BotsToDelay[i] = 0
 		s_CountBots[i] = m_BotManager:GetActiveBotCount(i)
 		s_TargetTeamCount[i] = 0
 		local s_TempPlayers = PlayerManager:GetPlayersByTeam(i)
+
+		if self._DelayDirectSpawn > 0.0 then
+			s_BotsToDelay[i] = #g_GameDirector:GetSpawnableVehicle(i)
+		end
 
 		for _, l_Player in pairs(s_TempPlayers) do
 			if not m_Utilities:isBot(l_Player) then
@@ -361,9 +375,11 @@ function BotSpawner:UpdateBotAmountAndTeam()
 			end
 		end
 
-		s_TeamCount[i] = s_CountBots[i] + s_CountPlayers[i]
+		s_TeamCount[i] = s_CountBots[i] + s_CountPlayers[i] + s_BotsToDelay[i]
 		s_PlayerCount = s_PlayerCount + s_CountPlayers[i]
 	end
+
+	self._NrOfPlayers = s_PlayerCount
 
 	-- Kill and destroy bots, if no player left.
 	if s_PlayerCount == 0 then
@@ -1289,7 +1305,7 @@ function BotSpawner:_GetSpawnPoint(p_TeamId, p_SquadId)
 	local s_MaximumTrys = 100
 	local s_TrysDone = 0
 
-	if Config.UseVehicles and #g_GameDirector:GetSpawnableVehicle(p_TeamId) > 0 then
+	if Config.UseVehicles and self._DelayDirectSpawn <= 0.0 and #g_GameDirector:GetSpawnableVehicle(p_TeamId) > 0 then
 		return "SpawnAtVehicle"
 	end
 

@@ -41,7 +41,7 @@ Registry = {
 		-- Minor version.
 		VERSION_MIN = 9,
 		-- Patch version.
-		VERSION_PATCH = 1,
+		VERSION_PATCH = 3,
 		-- Additional label for pre-releases and build metadata.
 		VERSION_LABEL = "dev10",
 		-- Current version type of this build.
@@ -183,6 +183,8 @@ Registry = {
 		-- Time between a level loading and the first bot spawning.
 		-- Note: Must be big enough to register inputActiveEvents (> 1.0)
 		FIRST_SPAWN_DELAY = 5.0,
+		-- Additional delay for dirct-spawnable vehicles (set to 0 to disable this)
+		DELAY_DIRECT_SPAWN = 6.0,
 		-- Probability of a bot spawning on a member of the same squad.
 		PROBABILITY_SQUADMATE_SPAWN = 40,
 		-- Probability of a bot spawning in the vehicle of a bot of the same squad.

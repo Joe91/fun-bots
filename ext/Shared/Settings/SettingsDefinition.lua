@@ -142,7 +142,7 @@ SettingsDefinition = {
 			Value = Config.DamageFactorAssault,
 			Description = "Original Damage from bots gets multiplied by this",
 			Reference = Range(0.00, 2.00, 0.10),
-			Default = 1.0,
+			Default = 0.8,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
@@ -154,7 +154,7 @@ SettingsDefinition = {
 			Value = Config.DamageFactorCarabine,
 			Description = "Original Damage from bots gets multiplied by this",
 			Reference = Range(0.00, 2.00, 0.10),
-			Default = 1.0,
+			Default = 0.8,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
@@ -166,7 +166,7 @@ SettingsDefinition = {
 			Value = Config.DamageFactorLMG,
 			Description = "Original Damage from bots gets multiplied by this",
 			Reference = Range(0.00, 2.00, 0.10),
-			Default = 1.0,
+			Default = 0.8,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
@@ -178,7 +178,7 @@ SettingsDefinition = {
 			Value = Config.DamageFactorPDW,
 			Description = "Original Damage from bots gets multiplied by this",
 			Reference = Range(0.00, 2.00, 0.10),
-			Default = 1.0,
+			Default = 0.8,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
@@ -190,7 +190,7 @@ SettingsDefinition = {
 			Value = Config.DamageFactorSniper,
 			Description = "Original Damage from bots gets multiplied by this",
 			Reference = Range(0.00, 2.00, 0.10),
-			Default = 1.0,
+			Default = 0.8,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
@@ -202,7 +202,7 @@ SettingsDefinition = {
 			Value = Config.DamageFactorShotgun,
 			Description = "Original Damage from bots gets multiplied by this",
 			Reference = Range(0.00, 2.00, 0.10),
-			Default = 1.0,
+			Default = 0.8,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
@@ -214,7 +214,7 @@ SettingsDefinition = {
 			Value = Config.DamageFactorPistol,
 			Description = "Original Damage from bots gets multiplied by this",
 			Reference = Range(0.00, 2.00, 0.10),
-			Default = 1.0,
+			Default = 0.8,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
@@ -238,7 +238,7 @@ SettingsDefinition = {
 			Value = Config.VehicleAimWorsening,
 			Description = "Make bots in vehicles aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy)",
 			Reference = Range(0.00, 10.00, 0.05),
-			Default = 0.0,
+			Default = 0.05,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
@@ -250,7 +250,7 @@ SettingsDefinition = {
 			Value = Config.VehicleAirAimWorsening,
 			Description = "See VehicleAimWorsening, only for Air-Vehicles",
 			Reference = Range(0.00, 10.00, 0.05),
-			Default = 0.0,
+			Default = 0.02,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
