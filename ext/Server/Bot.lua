@@ -117,6 +117,7 @@ function Bot:__init(p_Player)
 
 	---@type table<integer|EntryInputActionEnum, ActiveInput>
 	self.m_ActiveInputs = {}
+	self.m_DelayedInputs = {}
 
 	-- Sidewards movement.
 	self.m_YawOffset = 0.0
@@ -233,8 +234,9 @@ function Bot:Revive(p_Player)
 	end
 end
 
-function Bot:FireFlareSmoke()
-	self:_SetInput(EntryInputActionEnum.EIAFireCountermeasure, 1)
+---@param p_TimeDelay number
+function Bot:FireFlareSmoke(p_TimeDelay)
+	self:_SetDelayedInput(EntryInputActionEnum.EIAFireCountermeasure, 1, p_TimeDelay)
 end
 
 ---@param p_Player Player
@@ -965,6 +967,7 @@ function Bot:ResetSpawnVars()
 	self.m_HasBeacon = false
 	self.m_DontRevive = false
 	self.m_AttackPriority = 1
+	self.m_DelayedInputs = {}
 
 	-- Reset all input-vars.
 	---@type EntryInputActionEnum
@@ -1057,6 +1060,17 @@ function Bot:_SetInput(p_Input, p_Value)
 	}
 end
 
+---@param p_Input EntryInputActionEnum|integer
+---@param p_Value number
+---@param p_Delay number
+function Bot:_SetDelayedInput(p_Input, p_Value, p_Delay)
+	table.insert(self.m_DelayedInputs, {
+		input = p_Input,
+		delay = p_Delay,
+		value = p_Value,
+	})
+end
+
 function Bot:_UpdateInputs()
 	---@type EntryInputActionEnum
 	for i = 0, 36 do
@@ -1067,6 +1081,18 @@ function Bot:_UpdateInputs()
 		elseif self.m_ActiveInputs[i].value ~= 0 then
 			self.m_Player.input:SetLevel(i, self.m_ActiveInputs[i].value)
 			self.m_ActiveInputs[i].reset = true
+		end
+	end
+
+	for l_Index, l_DelayedInput in ipairs(self.m_DelayedInputs) do
+		l_DelayedInput.delay = l_DelayedInput.delay - Registry.BOT.BOT_UPDATE_CYCLE
+		if l_DelayedInput.delay <= 0 then
+			self.m_ActiveInputs[l_DelayedInput.input] = {
+				value = l_DelayedInput.value,
+				reset = l_DelayedInput.value == 0,
+			}
+			table.remove(self.m_DelayedInputs, l_Index)
+			break
 		end
 	end
 end

@@ -615,6 +615,9 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 	end
 end
 
+---@param p_Entity ControllableEntity|Entity
+---@param p_VehiclePoints any
+---@param p_HotTeam any
 function GameDirector:OnVehicleUnspawn(p_Entity, p_VehiclePoints, p_HotTeam)
 	p_Entity = ControllableEntity(p_Entity)
 	local s_VehicleData = m_Vehicles:GetVehicleByEntity(p_Entity)
@@ -711,7 +714,9 @@ end
 -- Public Functions.
 -- =============================================
 
-
+---@param p_LevelName string
+---@param p_GameMode string
+---@return string|nil
 function GameDirector:GetGunshipObjectiveName(p_LevelName, p_GameMode)
 	if p_LevelName == "XP5_004" and p_GameMode == "ConquestLarge0" then
 		return "ID_H_US_D"
@@ -720,6 +725,10 @@ function GameDirector:GetGunshipObjectiveName(p_LevelName, p_GameMode)
 	return nil
 end
 
+---@param p_Point table
+---@param p_TeamId TeamId|integer
+---@param p_InVehicle boolean
+---@return boolean
 function GameDirector:CheckForExecution(p_Point, p_TeamId, p_InVehicle)
 	if p_Point.Data.Action == nil then
 		return false
@@ -885,6 +894,13 @@ function GameDirector:GetPlayerBeacon(p_PlayerName)
 	return self.m_Beacons[p_PlayerName]
 end
 
+---@param p_TeamId TeamId|integer
+---@param p_SquadId SquadId|integer
+---@param p_OnlyBase boolean
+---@return integer
+---@return integer
+---@return boolean|nil
+---@return Entity|nil
 function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 	-- Check for spawn at squad-mate.
 	local s_SquadMates = PlayerManager:GetPlayersBySquad(p_TeamId, p_SquadId)
@@ -1092,6 +1108,9 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 	end
 end
 
+---@param p_PossibleObjectives table
+---@return integer
+---@return integer
 function GameDirector:GetSpawnPathOfObjectives(p_PossibleObjectives)
 	local s_TempObject = p_PossibleObjectives[MathUtils:GetRandomInt(1, #p_PossibleObjectives)]
 	local s_AvailableSpawnPaths = nil
@@ -1119,6 +1138,8 @@ function GameDirector:GetSpawnPathOfObjectives(p_PossibleObjectives)
 	end
 end
 
+---@param p_Path integer
+---@return boolean
 function GameDirector:IsOnObjectivePath(p_Path)
 	local s_CurrentPathFirst = m_NodeCollection:GetFirst(p_Path)
 
@@ -1131,6 +1152,9 @@ function GameDirector:IsOnObjectivePath(p_Path)
 	return false
 end
 
+---@param p_Path integer
+---@param p_Objective string
+---@return boolean
 function GameDirector:IsAtTargetObjective(p_Path, p_Objective)
 	local s_CurrentPathFirst = m_NodeCollection:GetFirst(p_Path)
 
@@ -1143,6 +1167,8 @@ function GameDirector:IsAtTargetObjective(p_Path, p_Objective)
 	return false
 end
 
+---@param p_ObjectiveNames string
+---@return boolean
 function GameDirector:IsBasePath(p_ObjectiveNames)
 	if #p_ObjectiveNames < 1 then
 		return false
@@ -1161,6 +1187,8 @@ end
 -- 0 = all inactive.
 -- 1 = partly inactive.
 -- 2 = all active.
+---@param p_ObjectiveNamesOfPath string
+---@return integer
 function GameDirector:GetEnableStateOfPath(p_ObjectiveNamesOfPath)
 	local s_ActiveCount = 0
 
@@ -1185,6 +1213,9 @@ function GameDirector:GetEnableStateOfPath(p_ObjectiveNamesOfPath)
 	end
 end
 
+---@param p_BotTeam TeamId|integer
+---@param p_Objective string
+---@return boolean
 function GameDirector:UseVehicle(p_BotTeam, p_Objective)
 	local s_TempObjective = self:_GetObjectiveObject(p_Objective)
 
@@ -1201,6 +1232,8 @@ function GameDirector:UseVehicle(p_BotTeam, p_Objective)
 	return false
 end
 
+---@param p_Objective string
+---@return boolean
 function GameDirector:IsVehicleEnterPath(p_Objective)
 	local s_TempObjective = self:_GetObjectiveObject(p_Objective)
 
@@ -1211,6 +1244,8 @@ function GameDirector:IsVehicleEnterPath(p_Objective)
 	return false
 end
 
+---@param p_Objective string
+---@return boolean
 function GameDirector:IsBeaconPath(p_Objective)
 	local s_TempObjective = self:_GetObjectiveObject(p_Objective)
 
@@ -1276,6 +1311,7 @@ function GameDirector:_RegisterRushEventCallbacks()
 	end
 end
 
+---@param p_DeltaTime number
 function GameDirector:_UpdateTimersOfMcoms(p_DeltaTime)
 	for l_Objective, l_Timer in pairs(self.m_ArmedMcoms) do
 		self.m_ArmedMcoms[l_Objective] = l_Timer + p_DeltaTime
@@ -1445,6 +1481,9 @@ function GameDirector:_UpdateValidObjectives()
 	end
 end
 
+---@param p_Position Vec3
+---@param p_Value boolean
+---@return table|nil
 function GameDirector:_SetVehicleObjectiveState(p_Position, p_Value)
 	local s_Paths = m_NodeCollection:GetPaths()
 
@@ -1487,6 +1526,8 @@ function GameDirector:_SetVehicleObjectiveState(p_Position, p_Value)
 	return s_ClosestVehicleEnterObjective
 end
 
+---@param p_Name string
+---@param p_Data table
 function GameDirector:_UpdateObjective(p_Name, p_Data)
 	for _, l_Objective in pairs(self.m_AllObjectives) do
 		if l_Objective.name == p_Name then
@@ -1499,6 +1540,9 @@ function GameDirector:_UpdateObjective(p_Name, p_Data)
 	end
 end
 
+---@param p_Objective any
+---@param p_Position Vec3
+---@return number
 function GameDirector:_GetDistanceFromObjective(p_Objective, p_Position)
 	local s_Distance = math.huge
 
@@ -1523,6 +1567,9 @@ function GameDirector:_GetDistanceFromObjective(p_Objective, p_Position)
 	return s_Distance
 end
 
+---@param p_Position Vec3
+---@param p_Name string|nil
+---@return string|nil
 function GameDirector:_TranslateObjective(p_Position, p_Name)
 	if p_Name ~= nil and self.m_Translations[p_Name] ~= nil then
 		return self.m_Translations[p_Name]
@@ -1574,6 +1621,8 @@ function GameDirector:_TranslateObjective(p_Position, p_Name)
 	end
 end
 
+---@param p_Name string
+---@return table|nil
 function GameDirector:_GetObjectiveObject(p_Name)
 	for _, l_Objective in pairs(self.m_AllObjectives) do
 		if l_Objective.name == p_Name then
@@ -1582,6 +1631,8 @@ function GameDirector:_GetObjectiveObject(p_Name)
 	end
 end
 
+---@param p_Objective string
+---@return string|nil
 function GameDirector:_GetSubObjectiveFromObj(p_Objective)
 	for _, l_TempObjective in pairs(self.m_AllObjectives) do
 		if l_TempObjective.subObjective and l_TempObjective.name ~= p_Objective then
@@ -1594,6 +1645,8 @@ function GameDirector:_GetSubObjectiveFromObj(p_Objective)
 	end
 end
 
+---@param p_SubObjective string
+---@return string|nil
 function GameDirector:_GetObjectiveFromSubObj(p_SubObjective)
 	for _, l_TempObjective in pairs(self.m_AllObjectives) do
 		if not l_TempObjective.subObjective and l_TempObjective.name ~= p_SubObjective then
@@ -1606,6 +1659,9 @@ function GameDirector:_GetObjectiveFromSubObj(p_SubObjective)
 	end
 end
 
+---@param p_BotTeam TeamId|integer
+---@param p_ObjectiveName string
+---@return boolean
 function GameDirector:_UseSubobjective(p_BotTeam, p_ObjectiveName)
 	local s_Use = false
 	local s_Objective = self:_GetObjectiveObject(p_ObjectiveName)

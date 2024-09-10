@@ -314,7 +314,9 @@ function BotManager:OnBotShootAtBot(p_BotId1, p_BotId2)
 end
 
 ---@param p_MissileEntity Entity
-function BotManager:CheckForFlareOrSmoke(p_MissileEntity)
+---@param p_MissileSpeed number
+---@---@param p_TimeDelay number
+function BotManager:CheckForFlareOrSmoke(p_MissileEntity, p_MissileSpeed, p_TimeDelay)
 	p_MissileEntity = SpatialEntity(p_MissileEntity)
 
 	local s_MissileTransform = p_MissileEntity.transform
@@ -322,6 +324,7 @@ function BotManager:CheckForFlareOrSmoke(p_MissileEntity)
 
 	local s_SmallestAngle = 1.0
 	local s_DriverOfVehicle = nil
+	local s_DistanceToPlayer = 0
 
 	local s_Iterator = EntityManager:GetIterator("ServerVehicleEntity")
 	local s_Entity = s_Iterator:Next()
@@ -338,9 +341,9 @@ function BotManager:CheckForFlareOrSmoke(p_MissileEntity)
 			if s_Angle < s_SmallestAngle and s_Distance < 350 then
 				s_SmallestAngle = s_Angle
 				s_DriverOfVehicle = s_DriverPlayer
+				s_DistanceToPlayer = s_Distance
 			end
 		end
-
 		s_Entity = s_Iterator:Next()
 	end
 
@@ -350,7 +353,9 @@ function BotManager:CheckForFlareOrSmoke(p_MissileEntity)
 
 	local s_TargetBot = self:GetBotById(s_DriverOfVehicle.id)
 	if s_TargetBot then
-		s_TargetBot:FireFlareSmoke()
+		local s_TimeToTravel = p_TimeDelay + s_DistanceToPlayer / p_MissileSpeed
+		local s_DelayToFire = s_TimeToTravel * (0.5 + MathUtils:GetRandom(-0.1, 0.3)) -- 40-80 % of calc time
+		s_TargetBot:FireFlareSmoke(s_DelayToFire)
 	end
 end
 

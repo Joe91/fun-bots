@@ -533,8 +533,10 @@ function FunBotServer:OnEntityFactoryCreate(p_HookCtx, p_EntityData, p_Transform
 			if not s_CreatedEntity then
 				return
 			end
+			local s_TimeDelay = s_MissileEntityData.engineTimeToIgnition + s_MissileEntityData.timeToActivateGuidingSystem
+			local s_MaxSpeed = s_MissileEntityData.maxSpeed
 
-			m_BotManager:CheckForFlareOrSmoke(s_CreatedEntity)
+			m_BotManager:CheckForFlareOrSmoke(s_CreatedEntity, s_MaxSpeed, s_TimeDelay)
 		end
 	end
 	if Registry.DEBUG.VEHICLE_PROJECTILE_TRACE then
