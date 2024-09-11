@@ -45,6 +45,8 @@ This is the changelog for the version V2.9 Don't forget to [join us on Discord](
 * Aiming with the defib was fixed by Bree_Arnold
 * fixed wrong spawn-delay after revive of bots
 * Don't revive Bots, that were killed by the gamedirector (by tanger-noisu)
+* Bots don't start moving in vehicles
+* Bots chosing spawn-vehicle-paths on exit
 
 ### New maps
 * Conquest Large MP_018 by ThyKingdomCome

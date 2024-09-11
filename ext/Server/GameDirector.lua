@@ -328,6 +328,7 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 					l_Bot:SetObjective(s_ClosestObjective, s_ClosestObjectiveMode)
 					m_Logger:Write("Team " ..
 						tostring(l_BotTeam) .. " with " .. l_Bot.m_Name .. " gets this objective: " .. s_ClosestObjective)
+					---@diagnostic disable-next-line: need-check-nil
 					s_Objective.assigned[l_BotTeam] = s_Objective.assigned[l_BotTeam] + 1
 				end
 			else          -- bot already has an objective
@@ -338,6 +339,10 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 
 				local s_Objective = self:_GetObjectiveObject(l_Bot:GetObjective())
 				local s_ObjectiveMode = l_Bot:GetObjectiveMode()
+
+				if s_Objective == nil then
+					goto continue_with_next_bot
+				end
 
 				if s_Objective.isEnterVehiclePath then
 					if not s_Objective.active or s_Objective.destroyed or l_Bot.m_InVehicle then
@@ -353,13 +358,14 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 
 				if s_ParentObjective ~= nil then
 					local s_TempObjective = self:_GetObjectiveObject(s_ParentObjective)
+					if s_TempObjective then
+						if s_TempObjective.active and not s_TempObjective.destroyed then
+							s_TempObjective.assigned[l_BotTeam] = s_TempObjective.assigned[l_BotTeam] + 1
 
-					if s_TempObjective.active and not s_TempObjective.destroyed then
-						s_TempObjective.assigned[l_BotTeam] = s_TempObjective.assigned[l_BotTeam] + 1
-
-						-- Check for leave of subObjective.
-						if not self:_UseSubobjective(l_BotTeam, s_Objective.name) then
-							l_Bot:SetObjective(s_ParentObjective)
+							-- Check for leave of subObjective.
+							if not self:_UseSubobjective(l_BotTeam, s_Objective.name) then
+								l_Bot:SetObjective(s_ParentObjective)
+							end
 						end
 					end
 				end
@@ -427,6 +433,9 @@ function GameDirector:OnMcomArmed(p_Player)
 
 	if s_PlayerPos then
 		local s_Objective = self:_TranslateObjective(s_PlayerPos)
+		if not s_Objective then
+			return
+		end
 		m_Logger:Write(s_Objective .. " armed")
 
 		self:_UpdateObjective(s_Objective, {
@@ -447,6 +456,9 @@ function GameDirector:OnMcomDisarmed(p_Player)
 
 	if s_PlayerPos then
 		local s_Objective = self:_TranslateObjective(s_PlayerPos)
+		if not s_Objective then
+			return
+		end
 		m_Logger:Write(s_Objective .. " disarmed")
 
 		self:_UpdateObjective(s_Objective, {
@@ -804,17 +816,26 @@ function GameDirector:FindClosestPath(p_Trans, p_VehiclePath, p_DetailedSearch, 
 				local s_isVehiclePath = false
 				local s_isAirPath = false
 				local s_isWaterPath = false
+				local s_isSpawnVehiclePath = false
 
-				if l_Waypoints[1].Data ~= nil and l_Waypoints[1].Data.Vehicles ~= nil then
-					s_isVehiclePath = true
+				if l_Waypoints[1].Data ~= nil then
+					if l_Waypoints[1].Data.Vehicles ~= nil then
+						s_isVehiclePath = true
 
-					for _, l_PathType in pairs(l_Waypoints[1].Data.Vehicles) do
-						if l_PathType:lower() == "air" then
-							s_isAirPath = true
+						for _, l_PathType in pairs(l_Waypoints[1].Data.Vehicles) do
+							if l_PathType:lower() == "air" then
+								s_isAirPath = true
+							end
+
+							if l_PathType:lower() == "water" then
+								s_isWaterPath = true
+							end
 						end
-
-						if l_PathType:lower() == "water" then
-							s_isWaterPath = true
+					end
+					if l_Waypoints[1].Data.Objectives and l_Waypoints[1].Data.Objectives[1] then
+						local s_Objective = self:_GetObjectiveObject(l_Waypoints[1].Data.Objectives[1])
+						if s_Objective and s_Objective.isSpawnPath and s_Objective.isEnterVehiclePath then
+							s_isSpawnVehiclePath = true
 						end
 					end
 				end
@@ -854,7 +875,7 @@ function GameDirector:FindClosestPath(p_Trans, p_VehiclePath, p_DetailedSearch, 
 							end
 						end
 					end
-				elseif not p_VehiclePath and not s_isVehiclePath then -- Not in vehicle. Only use infantery-paths
+				elseif not p_VehiclePath and not s_isVehiclePath and not s_isSpawnVehiclePath then -- Not in vehicle. Only use infantery-paths
 					if p_DetailedSearch then
 						for i = 1, #l_Waypoints, p_Increment do
 							local s_NewDistance = Utilities:DistanceFast(l_Waypoints[i].Position, p_Trans)
@@ -1167,7 +1188,7 @@ function GameDirector:IsAtTargetObjective(p_Path, p_Objective)
 	return false
 end
 
----@param p_ObjectiveNames string
+---@param p_ObjectiveNames string[]
 ---@return boolean
 function GameDirector:IsBasePath(p_ObjectiveNames)
 	if #p_ObjectiveNames < 1 then
@@ -1187,7 +1208,7 @@ end
 -- 0 = all inactive.
 -- 1 = partly inactive.
 -- 2 = all active.
----@param p_ObjectiveNamesOfPath string
+---@param p_ObjectiveNamesOfPath string[]
 ---@return integer
 function GameDirector:GetEnableStateOfPath(p_ObjectiveNamesOfPath)
 	local s_ActiveCount = 0
@@ -1411,6 +1432,7 @@ function GameDirector:_InitFlagTeams()
 		if s_ObjectiveName ~= "" then
 			local s_Objective = self:_GetObjectiveObject(s_ObjectiveName)
 
+			---@diagnostic disable-next-line: need-check-nil
 			if not s_Objective.isBase then
 				self:_UpdateObjective(s_ObjectiveName, {
 					team = s_Entity.team,
@@ -1526,9 +1548,12 @@ function GameDirector:_SetVehicleObjectiveState(p_Position, p_Value)
 	return s_ClosestVehicleEnterObjective
 end
 
----@param p_Name string
+---@param p_Name string|nil
 ---@param p_Data table
 function GameDirector:_UpdateObjective(p_Name, p_Data)
+	if p_Name == "" then
+		return
+	end
 	for _, l_Objective in pairs(self.m_AllObjectives) do
 		if l_Objective.name == p_Name then
 			for l_Key, l_Value in pairs(p_Data) do

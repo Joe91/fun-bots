@@ -925,21 +925,37 @@ function Bot:IsStuck()
 end
 
 function Bot:ResetSpawnVars()
+	-- Timers
+	self._UpdateTimer = 0.0
+	self._UpdateFastTimer = 0.0
 	self._SpawnDelayTimer = 0.0
-	self._DefendTimer = 0.0
+	self._WayWaitTimer = 0.0
+	self._VehicleWaitTimer = 0.0
+	self._VehicleHealthTimer = 0.0
+	self._VehicleSeatTimer = 0.0
+	self._VehicleTakeoffTimer = 0.0
+	self._WayWaitYawTimer = 0.0
 	self._ObstacleSequenceTimer = 0.0
+	self._StuckTimer = 0.0
+	self._ShotTimer = 0.0
+	self._VehicleSecondaryWeaponTimer = 0.0
+	self._ShootModeTimer = 0.0
+	self._ReloadTimer = 0.0
+	self._AttackModeMoveTimer = 0.0
+	self._MeleeCooldownTimer = 0.0
+	self._ShootTraceTimer = 0.0
+	self._ActionTimer = 0.0
+	self._BrakeTimer = 0.0
+	self._DefendTimer = 0.0
+	self._SidewardsTimer = 0.0
+	self._KillYourselfTimer = 0.0
+	self._SpawnProtectionTimer = 2.0
+	self._DeployTimer = MathUtils:GetRandomInt(1, Config.DeployCycle)
+
 	self._ObstacleRetryCounter = 0
 	self._LastWayDistance = 1000.0
 	self._ShootPlayer = nil
 	self._ShootPlayerName = ''
-	self._ShootModeTimer = 0.0
-	self._MeleeCooldownTimer = 0.0
-	self._ShootTraceTimer = 0.0
-	self._ReloadTimer = 0.0
-	self._BrakeTimer = 0.0
-	self._DeployTimer = MathUtils:GetRandomInt(1, Config.DeployCycle)
-	self._AttackModeMoveTimer = 0.0
-	self._KillYourselfTimer = 0.0
 	self._AttackMode = BotAttackModes.RandomNotSet
 	self._ShootWayPoints = {}
 
@@ -950,22 +966,24 @@ function Bot:ResetSpawnVars()
 		self._SkillFound = true
 	end
 
-	self._ShotTimer = 0.0
-	self._VehicleSecondaryWeaponTimer = 0.0
-	self._UpdateTimer = 0.0
-	self._StuckTimer = 0.0
-	self._SpawnProtectionTimer = 2.0
 	self._TargetPoint = nil
 	self._NextTargetPoint = nil
 	self._ActiveAction = BotActionFlags.NoActionActive
 	self._KnifeWayPositions = {}
-	self._OnSwitch = false
 	self._ActiveDelay = 0.0
 	self._TargetPitch = 0.0
 	self._Objective = '' -- Reset objective on spawn, as another spawn-point might have chosen...
 	self._WeaponToUse = BotWeapons.Primary
+
 	self.m_HasBeacon = false
 	self.m_DontRevive = false
+	self._JetAbortAttackActive = false
+	self._VehicleReadyToShoot = false
+	self._FullVehicleSteering = false
+	self._VehicleDirBackPositive = false
+	self._ExitVehicleActive = false
+	self._OnSwitch = false
+
 	self.m_AttackPriority = 1
 	self.m_DelayedInputs = {}
 
