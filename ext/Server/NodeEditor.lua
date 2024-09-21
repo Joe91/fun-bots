@@ -987,12 +987,13 @@ function NodeEditor:SaveTrace(p_Player, p_PathIndex)
 	collectgarbage('collect')
 	self:Log(p_Player, 'Custom Trace Saved to Path: %d', p_PathIndex)
 	self.m_NodeOperation = ''
+	return true
 end
 
 -- COMMON EVENTS.
 ---@param p_LevelName string
 ---@param p_GameMode string
----@param p_CustomGameMode string
+---@param p_CustomGameMode string|nil
 function NodeEditor:OnLevelLoaded(p_LevelName, p_GameMode, p_CustomGameMode)
 	self:Log(nil, 'Level Load: %s %s', p_LevelName, p_GameMode)
 
@@ -1024,8 +1025,10 @@ function NodeEditor:OnLevelLoaded(p_LevelName, p_GameMode, p_CustomGameMode)
 		end
 	end
 
-	m_NodeCollection:Load(p_LevelName, s_GameModeToLoad)
+	m_NodeCollection:StartLoad(p_LevelName, s_GameModeToLoad)
+end
 
+function NodeEditor:EndOfLoad()
 	local s_Counter = 0
 	local s_Waypoints = m_NodeCollection:Get()
 
@@ -1102,6 +1105,10 @@ end
 function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 	-- SAVING.
 	if m_NodeCollection:UpdateSaving() then
+		return
+	end
+	-- LOADING.
+	if m_NodeCollection:UpdateLoading() then
 		return
 	end
 

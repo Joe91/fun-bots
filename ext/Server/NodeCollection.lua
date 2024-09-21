@@ -41,6 +41,7 @@ function NodeCollection:InitVars()
 
 	-- Data for Save-Statemachine.
 	self._SaveActive = false
+	self._LoadActive = false
 	self._SaveStateMachineCounter = 0
 	self._SaveTracesQueryStrings = {}
 	self._SaveTracesQueryStringsDone = 0
@@ -1147,6 +1148,27 @@ function NodeCollection:UpdateSaving()
 		return true
 	end
 	return false
+end
+
+function NodeCollection:StartLoad(p_Level, p_Gamemode)
+	self._LevelNameToLoad = p_Level
+	self._GameModeToLoad = p_Gamemode
+	self._LoadActive = true
+end
+
+function NodeCollection:UpdateLoading()
+	if self._LoadActive then
+		self:ProcessAllDataToLoad()
+		return true
+	end
+	return false
+end
+
+function NodeCollection:ProcessAllDataToLoad()
+	-- just load everything at once for now
+	self:Load(self._LevelNameToLoad, self._GameModeToLoad)
+	self._LoadActive = false
+	Events:Dispatch('NodeCollection:FinishedLoading')
 end
 
 function NodeCollection:ProcessAllDataToSave()
