@@ -182,6 +182,8 @@ Registry = {
 	},
 	-- Bot spawning.
 	BOT_SPAWN = {
+		-- use new bots for every rounds or keep old ones
+		KEEP_BOTS_ON_NEW_LOAD = true,
 		-- Time between a level loading and the first bot spawning.
 		-- Note: Must be big enough to register inputActiveEvents (> 1.0)
 		FIRST_SPAWN_DELAY = 5.0,

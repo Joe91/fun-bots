@@ -100,6 +100,8 @@ function BotSpawner:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	else
 		if self._DelayDirectSpawn > 0.0 and Globals.IsInputAllowed and self._NrOfPlayers > 0 then
 			self._DelayDirectSpawn = self._DelayDirectSpawn - p_DeltaTime
+		elseif self._DelayDirectSpawn <= 0.0 and self._DelayDirectSpawn > -7 then
+			self._DelayDirectSpawn = self._DelayDirectSpawn - p_DeltaTime
 		end
 		self._PlayerUpdateTimer = self._PlayerUpdateTimer + p_DeltaTime
 
@@ -124,7 +126,7 @@ function BotSpawner:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 			if Globals.SpawnMode ~= SpawnModes.manual then
 				-- Garbage-collection of unwanted bots
-				m_BotManager:DestroyDisabledBots()
+				m_BotManager:DestroyDisabledBots(self._DelayDirectSpawn > -5.0)
 				m_BotManager:RefreshTables()
 			end
 		end
@@ -361,11 +363,11 @@ function BotSpawner:UpdateBotAmountAndTeam()
 	for i = 1, Globals.NrOfTeams do
 		s_CountPlayers[i] = 0
 		s_BotsToDelay[i] = 0
-		s_CountBots[i] = m_BotManager:GetActiveBotCount(i)
+		s_CountBots[i] = m_BotManager:GetActiveBotCount(i) -- + m_BotManager:GetInactiveBotCount()
 		s_TargetTeamCount[i] = 0
 		local s_TempPlayers = PlayerManager:GetPlayersByTeam(i)
 
-		if self._DelayDirectSpawn > 0.0 then
+		if self._DelayDirectSpawn > -5.0 then
 			s_BotsToDelay[i] = #g_GameDirector:GetSpawnableVehicle(i)
 		end
 
@@ -1071,7 +1073,18 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 		s_IsRespawn = true
 		s_Name = p_ExistingBot.m_Name
 		s_TeamId = p_ExistingBot.m_Player.teamId
-	else
+	elseif Registry.BOT_SPAWN.KEEP_BOTS_ON_NEW_LOAD and m_BotManager:GetInactiveBotCount(s_TeamId) > 0 then
+		local s_Bot = m_BotManager:GetInactiveBot(s_TeamId)
+		if s_Bot then
+			p_ExistingBot = s_Bot
+			s_IsRespawn = true
+			s_Name = p_ExistingBot.m_Name
+			s_TeamId = p_ExistingBot.m_Player.teamId
+		end
+	end
+
+	-- only new bot, if no respawn
+	if not s_IsRespawn or not p_ExistingBot then
 		s_Name = m_BotCreator:GetNextBotName(self:_GetSpawnBotKit())
 	end
 

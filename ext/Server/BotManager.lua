@@ -587,6 +587,34 @@ function BotManager:GetActiveBotCount(p_TeamId)
 	return s_Count
 end
 
+---@param p_TeamId? TeamId
+---@return integer
+function BotManager:GetInactiveBotCount(p_TeamId)
+	local s_Count = 0
+
+	for _, l_Bot in ipairs(self._Bots) do
+		if l_Bot:IsInactive() then
+			if p_TeamId == nil or l_Bot.m_Player.teamId == p_TeamId then
+				s_Count = s_Count + 1
+			end
+		end
+	end
+
+	return s_Count
+end
+
+function BotManager:GetInactiveBot(p_TeamId)
+	for _, l_Bot in ipairs(self._Bots) do
+		if l_Bot:IsInactive() then
+			if p_TeamId == nil or l_Bot.m_Player.teamId == p_TeamId then
+				return l_Bot
+			end
+		end
+	end
+
+	return nil
+end
+
 -- Returns all real players.
 ---@return Player[]
 function BotManager:GetPlayers()
@@ -842,10 +870,20 @@ function BotManager:DestroyAll(p_Amount, p_TeamId, p_Force)
 	end
 end
 
-function BotManager:DestroyDisabledBots()
+function BotManager:DestroyDisabledBots(p_ProtectBots)
+	local s_ProtectedBots = {}
+	for i = 1, Globals.NrOfTeams do
+		s_ProtectedBots[i] = 0
+	end
+
 	for _, l_Bot in ipairs(self._Bots) do
 		if l_Bot:IsInactive() then
-			table.insert(self._BotsToDestroy, l_Bot.m_Name)
+			local s_TeamId = l_Bot.m_Player.teamId
+			if p_ProtectBots and (s_ProtectedBots[s_TeamId] < #g_GameDirector:GetSpawnableVehicle(s_TeamId)) then
+				s_ProtectedBots[s_TeamId] = s_ProtectedBots[s_TeamId] + 1
+			else
+				table.insert(self._BotsToDestroy, l_Bot.m_Name)
+			end
 		end
 	end
 end
