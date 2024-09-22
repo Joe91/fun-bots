@@ -98,9 +98,8 @@ function BotSpawner:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 			self._FirstSpawnDelay = self._FirstSpawnDelay - p_DeltaTime
 		end
 	else
-		if self._DelayDirectSpawn > 0.0 and Globals.IsInputAllowed and self._NrOfPlayers > 0 then
-			self._DelayDirectSpawn = self._DelayDirectSpawn - p_DeltaTime
-		elseif self._DelayDirectSpawn <= 0.0 and self._DelayDirectSpawn > -7 then
+		-- count below 0 for post-delay-reactions
+		if self._DelayDirectSpawn > -10 and Globals.IsInputAllowed and self._NrOfPlayers > 0 then
 			self._DelayDirectSpawn = self._DelayDirectSpawn - p_DeltaTime
 		end
 		self._PlayerUpdateTimer = self._PlayerUpdateTimer + p_DeltaTime
@@ -1073,7 +1072,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 		s_IsRespawn = true
 		s_Name = p_ExistingBot.m_Name
 		s_TeamId = p_ExistingBot.m_Player.teamId
-	elseif Registry.BOT_SPAWN.KEEP_BOTS_ON_NEW_LOAD and m_BotManager:GetInactiveBotCount(s_TeamId) > 0 then
+	elseif Registry.BOT_SPAWN.KEEP_BOTS_ON_NEW_ROUND and m_BotManager:GetInactiveBotCount(s_TeamId) > 0 then
 		local s_Bot = m_BotManager:GetInactiveBot(s_TeamId)
 		if s_Bot then
 			p_ExistingBot = s_Bot

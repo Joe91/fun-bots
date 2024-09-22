@@ -324,14 +324,15 @@ function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPe
 		self:DestroyObstacles(p_LevelName, p_GameMode)
 	end
 
+	m_GameDirector:OnLevelLoaded()
+	m_AirTargets:OnLevelLoaded()
+	m_BotSpawner:OnLevelLoaded(Globals.Round)
 	m_NodeEditor:OnLevelLoaded(p_LevelName, p_GameMode, s_CustomGameMode)
 end
 
 function FunBotServer:OnFinishedLoading()
 	m_NodeEditor:EndOfLoad()
-	m_GameDirector:OnLevelLoaded()
-	m_AirTargets:OnLevelLoaded()
-	m_BotSpawner:OnLevelLoaded(Globals.Round)
+	m_GameDirector:OnLoadFinished()
 end
 
 function FunBotServer:DestroyObstacles(p_LevelName, p_GameMode)

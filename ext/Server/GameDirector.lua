@@ -50,7 +50,6 @@ function GameDirector:OnLevelLoaded()
 	self:_RegisterRushEventCallbacks()
 	-- To-do: assign weights to each objective.
 	self.m_UpdateTimer = 0
-	self:_InitObjectives()
 	self.m_GunshipObjectiveName = self:GetGunshipObjectiveName(Globals.LevelName, Globals.GameMode)
 
 	for i = 0, Globals.NrOfTeams do
@@ -58,6 +57,10 @@ function GameDirector:OnLevelLoaded()
 		self.m_SpawnableStationaryAas[i] = {}
 		self.m_AvailableVehicles[i] = {}
 	end
+end
+
+function GameDirector:OnLoadFinished()
+	self:_InitObjectives()
 end
 
 ---VEXT Server Server:RoundOver Event
