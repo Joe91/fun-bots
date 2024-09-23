@@ -34,6 +34,9 @@ function GameDirector:RegisterVars()
 	self.m_Gunship = nil
 	self.m_GunshipObjectiveName = nil
 	self.m_GunshipObjectiveTeam = nil
+
+	self.m_MapCompletelyLoaded = false
+	self.m_SpawnedEntitiesToProcess = {}
 end
 
 -- =============================================
@@ -45,8 +48,6 @@ end
 -- =============================================
 
 function GameDirector:OnLevelLoaded()
-	self.m_AllObjectives = {}
-	self.m_Translations = {}
 	self:_RegisterRushEventCallbacks()
 	-- To-do: assign weights to each objective.
 	self.m_UpdateTimer = 0
@@ -60,7 +61,21 @@ function GameDirector:OnLevelLoaded()
 end
 
 function GameDirector:OnLoadFinished()
+	self.m_MapCompletelyLoaded = true
+	-- parse all objectives
 	self:_InitObjectives()
+	-- update all already spawned vehicles (before the paths and objectives were ready)
+	for _, l_VehicleEntity in pairs(self.m_SpawnedEntitiesToProcess) do
+		self:OnVehicleSpawnDone(l_VehicleEntity)
+	end
+	self.m_SpawnedEntitiesToProcess = {}
+end
+
+function GameDirector:OnLevelDestroy()
+	self.m_MapCompletelyLoaded = false
+	self.m_SpawnedEntitiesToProcess = {}
+	self.m_AllObjectives = {}
+	self.m_Translations = {}
 end
 
 ---VEXT Server Server:RoundOver Event
@@ -589,6 +604,12 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 	end
 
 	if not Config.UseJets and m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.Plane) then
+		return
+	end
+
+	-- if map not completely loaded yet, insert them for later and return
+	if not self.m_MapCompletelyLoaded then
+		table.insert(self.m_SpawnedEntitiesToProcess, p_Entity)
 		return
 	end
 

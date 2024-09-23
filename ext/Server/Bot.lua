@@ -750,6 +750,7 @@ function Bot:ResetVars()
 	self._ExitVehicleActive = false
 	self._ShotTimer = 0.0
 	self._UpdateTimer = 0.0
+	self._ActiveDelay = 0.0
 	self._TargetPoint = nil
 	self._NextTargetPoint = nil
 	self._KnifeWayPositions = {}
