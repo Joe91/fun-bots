@@ -31,6 +31,8 @@ Registry = {
 		BOT_COMMAND_KEY = InputDeviceKeys.IDK_LeftAlt,
 		-- Destroy obstacles on level loaded (recommended for the affected maps)
 		DESTROY_OBSTACLES_ON_START = true,
+		-- Number of Nodes to load in one cycle
+		MAX_NUMBER_OF_NODES_PER_CYCLE = 1024,
 	},
 	-- Version and Release related variables.
 	-- Variables related to the current build version, version and the type of version.
@@ -43,7 +45,7 @@ Registry = {
 		-- Patch version.
 		VERSION_PATCH = 3,
 		-- Additional label for pre-releases and build metadata.
-		VERSION_LABEL = "dev10",
+		VERSION_LABEL = "dev11",
 		-- Current version type of this build.
 		VERSION_TYPE = VersionType.DevBuild,
 		-- The Version used for the Update-Check.
@@ -182,6 +184,8 @@ Registry = {
 	},
 	-- Bot spawning.
 	BOT_SPAWN = {
+		-- use new bots for every rounds or keep old ones
+		KEEP_BOTS_ON_NEW_ROUND = true,
 		-- Time between a level loading and the first bot spawning.
 		-- Note: Must be big enough to register inputActiveEvents (> 1.0)
 		FIRST_SPAWN_DELAY = 5.0,

@@ -38,6 +38,8 @@ This is the changelog for the version V2.9 Don't forget to [join us on Discord](
 * some default-settings modified
 * Registry-option to delay direct-spawnable vehicles #315
 * Delayed flare/smoke activation #332
+* Improved Loading-Behavior on Level-Start
+* Option to always keep the same bots in one match
 
 ### Bug fixes
 * Merged pull request #323 from tagener-noisu Path-Switcher fixes
