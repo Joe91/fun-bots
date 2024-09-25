@@ -56,6 +56,8 @@ XP2_Factory Domination0 1
 XP2_Office Domination0 1
 XP2_Palace Domination0 1
 XP2_Skybar Domination0 1
+COOP_002 GunMaster0 1
+COOP_006 GunMaster0 1
 MP_001 GunMaster0 1
 MP_003 GunMaster0 1
 MP_007 GunMaster0 1
@@ -65,6 +67,9 @@ MP_013 GunMaster0 1
 MP_017 GunMaster0 1
 MP_018 GunMaster0 1
 MP_Subway GunMaster0 1
+SP_Jet GunMaster0 1
+SP_Valley GunMaster0 1
+SP_Villa GunMaster0 1
 XP1_003 GunMaster0 1
 XP2_Factory GunMaster0 1
 XP2_Office GunMaster0 1
@@ -152,7 +157,6 @@ XP5_004 SquadRush0 1
 XP3_Desert TankSuperiority0 1
 XP3_Shield TankSuperiority0 1
 XP3_Valley TankSuperiority0 1
-COOP_002 TeamDeathMatch0 1
 COOP_006 TeamDeathMatch0 1
 MP_001 TeamDeathMatch0 1
 MP_003 TeamDeathMatch0 1
@@ -165,7 +169,6 @@ MP_018 TeamDeathMatch0 1
 MP_Subway TeamDeathMatch0 1
 SP_Jet TeamDeathMatch0 1
 SP_Valley TeamDeathMatch0 1
-SP_Villa TeamDeathMatch0 1
 XP1_001 TeamDeathMatch0 1
 XP1_002 TeamDeathMatch0 1
 XP1_003 TeamDeathMatch0 1
