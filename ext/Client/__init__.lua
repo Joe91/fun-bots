@@ -53,7 +53,7 @@ function FunBotClient:OnExtensionLoaded()
 
 	-- Announce the version in the client's console if enabled in the registry.
 	if Registry.VERSION.CLIENT_SHOW_VERSION_ON_JOIN then
-		print("Server is running fun-bots version " .. RegistryManager:GetUtil():GetVersion())
+		print("Server is running fun-bots version " .. g_RegistryUtil:GetVersion())
 	end
 end
 

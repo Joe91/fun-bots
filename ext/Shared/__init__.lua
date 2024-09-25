@@ -25,11 +25,10 @@ require('__shared/Constants/TeamSwitchModes')
 require('__shared/WeaponList')
 require('__shared/EbxEditUtils')
 require('__shared/Registry/Registry')
+require('__shared/Registry/RegistryUtil')
 
 ---@type Language
 local m_Language = require('__shared/Language')
----@type RegistryManager
-local m_Registry = require('__shared/Registry/RegistryManager')
 
 local m_Logger = Logger("FunBotShared", Debug.Shared.INFO)
 
@@ -42,6 +41,10 @@ function FunBotShared:__init()
 end
 
 function FunBotShared:OnResourceManagerLoadBundle(p_HookCtx, p_Bundles, p_Compartment)
+	local s_LevelName = SharedUtils:GetLevelName()
+	if string.find(s_LevelName:lower(), "/sp_") or string.find(s_LevelName:lower(), "/coop_") then
+		return
+	end
 	if #p_Bundles == 1 and p_Bundles[1] == SharedUtils:GetLevelName() then
 		m_Logger:Write('Injecting bundles...')
 		if (SharedUtils:GetLevelName() == 'Levels/MP_Subway/MP_Subway') or (SharedUtils:GetLevelName() == 'Levels/MP_011/MP_011') then
@@ -61,6 +64,11 @@ end
 
 -- Function for Weapon Disappear Workaround.
 function FunBotShared:OnLevelLoadResources()
+	local s_LevelName = SharedUtils:GetLevelName()
+	if string.find(s_LevelName:lower(), "/sp_") or string.find(s_LevelName:lower(), "/coop_") then
+		return
+	end
+
 	m_Logger:Write('Mounting superbundle...')
 	if (SharedUtils:GetLevelName() == 'Levels/MP_Subway/MP_Subway') or (SharedUtils:GetLevelName() == 'Levels/MP_011/MP_011') then
 		ResourceManager:MountSuperBundle('Levels/MP_003/MP_003')
@@ -70,6 +78,11 @@ function FunBotShared:OnLevelLoadResources()
 end
 
 function FunBotShared:OnLevelRegisterEntityResources(p_LevelData)
+	local s_LevelName = SharedUtils:GetLevelName()
+	if string.find(s_LevelName:lower(), "/sp_") or string.find(s_LevelName:lower(), "/coop_") then
+		return
+	end
+
 	m_Logger:Write('Registering instances...')
 	if (SharedUtils:GetLevelName() == 'Levels/MP_Subway/MP_Subway') or (SharedUtils:GetLevelName() == 'Levels/MP_011/MP_011') then
 		local s_aRegistry = RegistryContainer(ResourceManager:SearchForInstanceByGuid(Guid('0B40AC87-7AFF-EDDE-949A-FCBF42CF7126'))) -- Assets from: Levels/MP_003/MP_003

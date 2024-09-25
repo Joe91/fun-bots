@@ -124,7 +124,7 @@ local function updateCheckCB(httpRequest)
 
 	-- Response is different based on the cycle request.
 	--To-do: Make the current version better, as it currently checks strings. It should check an incremental value instead.
-	local s_CurrentVersion = RegistryManager:GetUtil():GetVersion()
+	local s_CurrentVersion = g_RegistryUtil:GetVersion()
 	local s_RemoteVersion = nil
 	local s_RemoteTimestamp = nil
 	local s_RemoteUrl = nil

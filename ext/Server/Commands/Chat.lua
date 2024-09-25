@@ -8,7 +8,6 @@ local m_NodeCollection = require('NodeCollection')
 
 local m_BotManager = require('BotManager')
 local m_BotSpawner = require('BotSpawner')
-local m_Debug = require('Debug/BugReport')
 
 local m_CarParts
 
@@ -497,17 +496,6 @@ function ChatCommands:Execute(p_Parts, p_Player)
 
 		local s_TraceIndex = tonumber(p_Parts[2]) or 0
 		NetEvents:SendToLocal('ClientNodeEditor:SaveTrace', p_Player, s_TraceIndex)
-
-		-- Section: Debugging, Bug Reporting and error logging.
-		-- Command: !bugreport
-		-- Permission: Debug.BugReport
-	elseif p_Parts[1] == '!bugreport' then
-		if PermissionManager:HasPermission(p_Player, 'Debug.BugReport') == false then
-			ChatManager:SendMessage('You have no permissions for this action (Debug.BugReport).', p_Player)
-			return
-		end
-
-		BugReport:GenerateReport(p_Player)
 	else
 		-- Nothing to do.
 	end

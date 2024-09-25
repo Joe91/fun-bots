@@ -55,10 +55,6 @@ Permissions = {
 	'UserInterface.WaypointEditor.SaveLoad',
 	'UserInterface.WaypointEditor.Reset',
 
-
 	-- Settings.
 	'UserInterface.Settings',
-
-	-- Debugger.
-	'Debug.BugReport'
 }
