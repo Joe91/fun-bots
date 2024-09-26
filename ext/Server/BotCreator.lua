@@ -24,34 +24,28 @@ function BotCreator:CreateBotAttributes()
 	self:GenerateBotAtributes(RUMilitaryNames, 2)
 	self:GenerateBotAtributes(BotNames, 0)
 
-	print("The Team Table")
-	m_Logger:Write(self.BotAttributesByTeamByClass)
-	print("Each Kit inside the teams")
-	for team, kitTable in pairs(self.BotAttributesByTeamByClass) do
-		print(" The team: " .. team)
-		m_Logger:Write(kitTable)
-		for kit, attributes in pairs(kitTable) do
-			print(" The kit: " .. kit)
-			m_Logger:Write(attributes)
-		end
-	end
-
-
 
 	m_Logger:Write("BotAttributes of " .. #self.AllBotAttributes .. " Bots created")
 end
 
----@param p_botNames {}
-function BotCreator:GenerateBotAtributes(p_botNames, p_teamId)
+---comment
+---@param p_BotNames {}
+---@param p_TeamId TeamId|integer
+function BotCreator:GenerateBotAtributes(p_BotNames, p_TeamId)
 	local s_NumberOfBotsPerKit = math.floor(#BotNames / 4)
-	self.BotAttributesByTeamByClass[p_teamId] = {}
-	for _, l_Kit in pairs(BotKits) do
-		self.BotAttributesByTeamByClass[p_teamId][l_Kit] = {}
+	if p_TeamId > 0 then
+		self.BotAttributesByTeamByClass[p_TeamId] = {}
+		for _, l_Kit in pairs(BotKits) do
+			self.BotAttributesByTeamByClass[p_TeamId][l_Kit] = {}
+		end
+	else
+		for _, l_Kit in pairs(BotKits) do
+			self.BotAttributesByClass[l_Kit] = {}
+		end
 	end
-	for _, l_Kit in pairs(BotKits) do
-		self.BotAttributesByClass[l_Kit] = {}
-	end
-	for l_Index, l_Name in pairs(p_botNames) do
+
+	-- create bot-attributes out of each class
+	for l_Index, l_Name in pairs(p_BotNames) do
 		local s_Name = Registry.COMMON.BOT_TOKEN .. l_Name
 		local s_IndexInKit = math.floor(l_Index / 4)
 		local s_Kit = nil
@@ -93,8 +87,8 @@ function BotCreator:GenerateBotAtributes(p_botNames, p_teamId)
 			PrefWeapon = "",
 			PrefVehicle = ""
 		}
-		if p_teamId > 0 then
-			table.insert(self.BotAttributesByTeamByClass[p_teamId][s_Kit], s_BotAttributes)
+		if p_TeamId > 0 then
+			table.insert(self.BotAttributesByTeamByClass[p_TeamId][s_Kit], s_BotAttributes)
 		else
 			table.insert(self.BotAttributesByClass[s_Kit], s_BotAttributes)
 		end
@@ -104,9 +98,6 @@ end
 
 ---@param p_BotKit BotKits|integer
 function BotCreator:GetNextBotName(p_BotKit, p_teamId)
-	print("The team id: " .. p_teamId)
-	print("The bot kit: " .. p_BotKit)
-
 	local s_PossibleNames = {}
 	local botTattributesByClass = {}
 	local activeNames
