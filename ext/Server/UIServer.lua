@@ -591,6 +591,7 @@ function FunBotUIServer:_writeSettings(p_Player, p_Request)
 	local calcYawPerFrame = false
 	local updateLanguage = false
 	local updateMaxBots = false
+	local updateBotNames = false
 	local batched = true
 
 	if p_Request.subaction ~= nil then
@@ -685,6 +686,8 @@ function FunBotUIServer:_writeSettings(p_Player, p_Request)
 					updateLanguage = true
 				elseif l_Item.UpdateFlag == UpdateFlag.MaxBots then
 					updateMaxBots = true
+				elseif l_Item.UpdateFlag == UpdateFlag.BotNames then
+					updateBotNames = true
 				end
 			end
 		end
@@ -724,6 +727,9 @@ function FunBotUIServer:_writeSettings(p_Player, p_Request)
 		g_FunBotServer:SetMaxBotsPerTeam(Globals.GameMode)
 	end
 
+	if updateBotNames then
+		BotSpawner:UpdateBotNames()
+	end
 	NetEvents:BroadcastLocal('WriteClientSettings', Config, updateWeaponSets)
 
 	if updateBotTeamAndNumber then

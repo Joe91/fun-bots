@@ -8,6 +8,7 @@ Config = {
 	BotWeapon = BotWeapons.Auto,		-- Select the weapon the bots use 
 	BotKit = BotKits.RANDOM_KIT,		-- The Kit of the Bots 
 	BotColor = BotColors.RANDOM_COLOR,	-- The Color of the Bots 
+	BotTeamNames = false,				-- If the bots shall have their names based on their team 
 
 	-- DIFFICULTY 
 	BotAimWorsening = 0.2,				-- Make bots aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy) 
