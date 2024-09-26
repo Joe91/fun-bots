@@ -328,6 +328,10 @@ end
 -- =============================================
 -- Public Functions
 -- =============================================
+function BotSpawner:UpdateBotNames()
+	m_BotManager:DestroyAll(nil, nil, true)
+	m_BotManager:RefreshTables()
+end
 
 function BotSpawner:UpdateBotAmountAndTeam()
 	-- Keep Slot for next player.
@@ -644,7 +648,7 @@ end
 ---@param p_Spacing number
 function BotSpawner:SpawnBotRow(p_Player, p_Length, p_Spacing)
 	for i = 1, p_Length do
-		local s_Name = m_BotCreator:GetNextBotName(self:_GetSpawnBotKit())
+		local s_Name = m_BotCreator:GetNextBotName(self:_GetSpawnBotKit(), m_BotManager:GetBotTeam())
 
 		if s_Name ~= nil then
 			local s_Transform = LinearTransform()
@@ -665,7 +669,7 @@ end
 ---@param p_Height integer
 function BotSpawner:SpawnBotTower(p_Player, p_Height)
 	for i = 1, p_Height do
-		local s_Name = m_BotCreator:GetNextBotName(self:_GetSpawnBotKit())
+		local s_Name = m_BotCreator:GetNextBotName(self:_GetSpawnBotKit(), m_BotManager:GetBotTeam())
 
 		if s_Name ~= nil then
 			local s_Yaw = p_Player.input.authoritativeAimingYaw
@@ -692,7 +696,7 @@ end
 function BotSpawner:SpawnBotGrid(p_Player, p_Rows, p_Columns, p_Spacing)
 	for i = 1, p_Rows do
 		for j = 1, p_Columns do
-			local s_Name = m_BotCreator:GetNextBotName(self:_GetSpawnBotKit())
+			local s_Name = m_BotCreator:GetNextBotName(self:_GetSpawnBotKit(), m_BotManager:GetBotTeam())
 
 			if s_Name ~= nil then
 				local s_Yaw = p_Player.input.authoritativeAimingYaw
