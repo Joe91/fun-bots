@@ -1088,7 +1088,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 
 	-- only new bot, if no respawn
 	if not s_IsRespawn or not p_ExistingBot then
-		s_Name = m_BotCreator:GetNextBotName(self:_GetSpawnBotKit())
+		s_Name = m_BotCreator:GetNextBotName(self:_GetSpawnBotKit(), s_TeamId)
 	end
 
 	local s_SquadId = self:_GetSquadToJoin(s_TeamId)
