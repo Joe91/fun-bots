@@ -39,10 +39,10 @@ The following maps can be played with the [mod](https://github.com/keku645/vu-al
 
 |   	   	| Technical Name | Name | Supported Gamemodes |   Supported Gamemodes with Vehicles |
 |---	|---	|---	|---	|---	|
-|  ---	|   `SP_Villa`	| **Kaffarov** | `TDM` ,`TDM CQ` |  |
+|  ---	|   `SP_Villa`	| **Kaffarov** | `TDM CQ` |  |
 |  ---	|   `SP_Valley`	| **Valley** | `TDM` ,`TDM CQ` |  |
 |  ---	|   `SP_Jet`	| **Carrier** | `TDM` ,`TDM CQ` |  |
-|  ---	|   `COOP_002`	| **Aygan Village** | `TDM` ,`TDM CQ` |  |
+|  ---	|   `COOP_002`	| **Aygan Village** | `TDM CQ` |  |
 |  ---	|   `COOP_006`	| **Hit and Run** | `CQ Small` ,`TDM` ,`TDM CQ` | `CQ Small` |
 
 ### Help to expand the list
