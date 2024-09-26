@@ -45,7 +45,7 @@ Registry = {
 		-- Patch version.
 		VERSION_PATCH = 3,
 		-- Additional label for pre-releases and build metadata.
-		VERSION_LABEL = "dev11",
+		VERSION_LABEL = "dev12",
 		-- Current version type of this build.
 		VERSION_TYPE = VersionType.DevBuild,
 		-- The Version used for the Update-Check.
@@ -210,5 +210,23 @@ Registry = {
 	DEBUG = {
 		-- enables prints on bullet-collistions for vehicle-offset-identification
 		VEHICLE_PROJECTILE_TRACE = false,
-	}
+	},
+
+	-- Get the version of the current build as in a semantic format.
+	-- @return String - semantic version.
+	-- @author Firjen <https://github.com/Firjens>
+	GetVersion = function()
+		-- If there is no label, we return the MAJ.MIN.PATCH, otherwise we need to return the MAJ.MIN.PATCH-LABEL.
+		if Registry.VERSION.VERSION_LABEL == nil or Registry.VERSION.VERSION_LABEL == "" or Registry.VERSION.VERSION_TYPE ==
+			VersionType.Release then
+			return "V" .. Registry.VERSION.VERSION_MAJ .. "." .. Registry.VERSION.VERSION_MIN .. "." .. Registry.VERSION.VERSION_PATCH;
+		else
+			MAJ_MIN_PATCH_LABEL = Registry.VERSION.VERSION_MAJ .. "." .. Registry.VERSION.VERSION_MIN .. "." .. Registry.VERSION.VERSION_PATCH .. "-" .. Registry.VERSION.VERSION_LABEL
+			if Registry.VERSION.VERSION_TYPE == VersionType.DevBuild then
+				return "v" .. MAJ_MIN_PATCH_LABEL
+			elseif Registry.VERSION.VERSION_TYPE == VersionType.Stable then
+				return "V" .. MAJ_MIN_PATCH_LABEL
+			end
+		end
+	end
 }

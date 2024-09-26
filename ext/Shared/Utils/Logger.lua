@@ -16,7 +16,6 @@ function Logger:__init(p_ClassName, p_ActivateLogging)
 		return
 	end
 
-	-- print("Creating object with: "..p_ClassName..", "..tostring(p_ActivateLogging))
 	self.m_Debug = p_ActivateLogging
 	self.m_ClassName = p_ClassName
 end

@@ -2,6 +2,8 @@
 ---@overload fun():FunBotClient
 FunBotClient = class('FunBotClient')
 
+require('__shared/Registry/Registry')
+
 require('__shared/Config')
 require('__shared/Debug')
 require('__shared/Constants/BotColors')
@@ -53,7 +55,7 @@ function FunBotClient:OnExtensionLoaded()
 
 	-- Announce the version in the client's console if enabled in the registry.
 	if Registry.VERSION.CLIENT_SHOW_VERSION_ON_JOIN then
-		print("Server is running fun-bots version " .. g_RegistryUtil:GetVersion())
+		print("Server is running fun-bots version " .. Registry.GetVersion())
 	end
 end
 
