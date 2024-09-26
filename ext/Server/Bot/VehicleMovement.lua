@@ -194,7 +194,7 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_Bot)
 
 						-- Teleport if stuck.
 						if Config.TeleportIfStuck and
-							(MathUtils:GetRandomInt(0, 100) <= Registry.BOT.PROBABILITY_TELEPORT_IF_STUCK_IN_VEHICLE) then
+							m_Utilities:CheckProbablity(Registry.BOT.PROBABILITY_TELEPORT_IF_STUCK_IN_VEHICLE) then
 							local s_Transform = p_Bot.m_Player.controlledControllable.transform:Clone()
 							s_Transform.trans = p_Bot._TargetPoint.Position
 							s_Transform:LookAtTransform(p_Bot._TargetPoint.Position, p_Bot._NextTargetPoint.Position)

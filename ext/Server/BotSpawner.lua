@@ -1486,7 +1486,7 @@ function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 			"persistence/unlocks/vehicles/artilleryairburst",
 		}
 		-- some variation in appearance
-		if MathUtils:GetRandomInt(1, 100) <= 50 then
+		if m_Utilities:CheckProbablity(50) then
 			table.insert(s_VehiclePerksToAdd, "persistence/unlocks/vehicles/mbtreactivearmor")
 			table.insert(s_VehiclePerksToAdd, "persistence/unlocks/vehicles/lbtreactivearmor")
 			table.insert(s_VehiclePerksToAdd, "persistence/unlocks/vehicles/ifvreloadupgrade")
@@ -1519,7 +1519,7 @@ function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 	-- Choose good available perk.
 	for _, l_PerkName in pairs(s_PossiblePerks) do
 		s_SelectedPerk = l_PerkName
-		if MathUtils:GetRandomInt(1, 100) <= 80 then -- Use the best available perk with this percentage.
+		if m_Utilities:CheckProbablity(80) then -- Use the best available perk with this percentage.
 			break
 		end
 	end

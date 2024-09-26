@@ -10,6 +10,8 @@ local m_NodeCollection = require('NodeCollection')
 local m_GameDirector = require('GameDirector')
 ---@type Logger
 local m_Logger = Logger("PathSwitcher", Debug.Server.PATH)
+---@type Utilities
+local m_Utilities = require('__shared/Utilities')
 
 function PathSwitcher:__init()
 	self.m_DummyData = 0
@@ -149,7 +151,7 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotId, p_Point, p_Objective, p_InVehic
 			if m_GameDirector:IsBeaconPath(s_PathNode.Data.Objectives[1]) then
 				if p_Bot.m_SecondaryGadget.type == WeaponTypes.Beacon
 					and not p_Bot.m_HasBeacon
-					and MathUtils:GetRandomInt(1, 100) <= Registry.BOT.PROBABILITY_SWITCH_TO_BEACON_PATH
+					and m_Utilities:CheckProbablity(Registry.BOT.PROBABILITY_SWITCH_TO_BEACON_PATH)
 				then
 					return true, s_NewPoint
 				end

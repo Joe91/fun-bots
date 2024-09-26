@@ -954,7 +954,7 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 		local s_Beacon = self:GetPlayerBeacon(l_Player.name)
 
 		if s_Beacon ~= nil then
-			if MathUtils:GetRandomInt(1, 100) <= Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_SPAWN then
+			if m_Utilities:CheckProbablity(Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_SPAWN) then
 				m_Logger:Write("spawn at beacon, owned by " .. l_Player.name)
 				return s_Beacon.Path, s_Beacon.Point, true, s_Beacon.Entity
 			else
@@ -972,7 +972,7 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 					local s_WayIndex = s_SquadBot:GetWayIndex()
 					local s_PointIndex = s_SquadBot:GetPointIndex()
 
-					if MathUtils:GetRandomInt(1, 100) <= Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_SPAWN then
+					if m_Utilities:CheckProbablity(Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_SPAWN) then
 						m_Logger:Write("spawn at squad-mate")
 						return s_WayIndex, s_PointIndex, s_SquadBot._InvertPathDirection, nil -- Use same direction.
 					else
@@ -990,7 +990,7 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 							local s_WayIndex = s_SquadBot:GetWayIndex()
 							local s_PointIndex = s_SquadBot:GetPointIndex()
 
-							if MathUtils:GetRandomInt(1, 100) <= Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_VEHICLE_SPAWN then
+							if m_Utilities:CheckProbablity(Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_VEHICLE_SPAWN) then
 								m_Logger:Write("spawn at squad-mate's vehicle")
 								return s_WayIndex, s_PointIndex, s_SquadBot._InvertPathDirection, s_Vehicle -- Use same direction.
 							else
@@ -1010,7 +1010,7 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 
 						-- Check for free seats.
 						if m_Vehicles:GetNrOfFreeSeats(s_Vehicle, true) > 0 then
-							if MathUtils:GetRandomInt(1, 100) <= Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_PLAYER_VEHICLE_SPAWN then
+							if m_Utilities:CheckProbablity(Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_PLAYER_VEHICLE_SPAWN) then
 								m_Logger:Write("spawn at squad-mate's vehicle")
 								return 1, 1, false, s_Vehicle
 							else
@@ -1021,7 +1021,7 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 						end
 					end
 				else
-					if MathUtils:GetRandomInt(1, 100) <= Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_SPAWN then
+					if m_Utilities:CheckProbablity(Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_SPAWN) then
 						local s_Node = self:FindClosestPath(l_Player.soldier.worldTransform.trans, false, true, nil)
 						if s_Node and s_Node.Position:Distance(l_Player.soldier.worldTransform.trans) < 6.0 then
 							return s_Node.PathIndex, s_Node.PointIndex, false, nil -- Use same direction.
@@ -1119,9 +1119,9 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 	if not p_OnlyBase and #s_PossibleBases > 0 then
 		local s_SpawnAtBase = false
 		if #self.m_AvailableVehicles[p_TeamId] > 0 then
-			s_SpawnAtBase = MathUtils:GetRandomInt(1, 100) <= Registry.BOT_SPAWN.PROBABILITY_BASE_VEHICLE_SPAWN
+			s_SpawnAtBase = m_Utilities:CheckProbablity(Registry.BOT_SPAWN.PROBABILITY_BASE_VEHICLE_SPAWN)
 		else
-			s_SpawnAtBase = MathUtils:GetRandomInt(1, 100) <= Registry.BOT_SPAWN.PROBABILITY_BASE_SPAWN
+			s_SpawnAtBase = m_Utilities:CheckProbablity(Registry.BOT_SPAWN.PROBABILITY_BASE_SPAWN)
 		end
 
 		if s_SpawnAtBase then
@@ -1132,10 +1132,10 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 	end
 
 	-- Spawn in order of priority.
-	if #s_AttackedObjectives > 0 and (MathUtils:GetRandomInt(1, 100) < Registry.BOT_SPAWN.PROBABILITY_ATTACKED_SPAWN) then
+	if #s_AttackedObjectives > 0 and m_Utilities:CheckProbablity(Registry.BOT_SPAWN.PROBABILITY_ATTACKED_SPAWN) then
 		m_Logger:Write("spawn at attaced objective")
 		return self:GetSpawnPathOfObjectives(s_AttackedObjectives)
-	elseif s_ClosestObjective ~= nil and (MathUtils:GetRandomInt(1, 100) < Registry.BOT_SPAWN.PROBABILITY_CLOSEST_SPAWN) then
+	elseif s_ClosestObjective ~= nil and m_Utilities:CheckProbablity(Registry.BOT_SPAWN.PROBABILITY_CLOSEST_SPAWN) then
 		m_Logger:Write("spwawn at closest objective")
 		return self:GetSpawnPathOfObjectives({ s_ClosestObjective })
 	elseif #s_PossibleObjectives > 0 then
