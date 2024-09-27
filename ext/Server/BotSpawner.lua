@@ -329,8 +329,12 @@ end
 -- Public Functions
 -- =============================================
 function BotSpawner:UpdateBotNames()
-	m_BotManager:DestroyAll(nil, nil, true)
+	self._SpawnSets = {}
+	local s_TimeToWait = (#m_BotManager:GetBots() * Registry.BOT.BOT_DESTORY_DELAY) + 1.0
+	m_BotManager:DestroyAll()
 	m_BotManager:RefreshTables()
+	self._FirstSpawnInLevel = true
+	self._FirstSpawnDelay = s_TimeToWait
 end
 
 function BotSpawner:UpdateBotAmountAndTeam()

@@ -34,6 +34,11 @@ end
 function BotCreator:GenerateBotAtributes(p_BotNames, p_TeamId)
 	local s_NumberOfBotsPerKit = math.floor(#BotNames / 4)
 	if p_TeamId > 0 then
+		if p_TeamId % 2 == 0 then
+			p_TeamId = TeamId.Team2
+		else
+			p_TeamId = TeamId.Team1
+		end
 		self.BotAttributesByTeamByClass[p_TeamId] = {}
 		for _, l_Kit in pairs(BotKits) do
 			self.BotAttributesByTeamByClass[p_TeamId][l_Kit] = {}
@@ -88,6 +93,11 @@ function BotCreator:GenerateBotAtributes(p_BotNames, p_TeamId)
 			PrefVehicle = ""
 		}
 		if p_TeamId > 0 then
+			if p_TeamId % 2 == 0 then
+				p_TeamId = TeamId.Team2
+			else
+				p_TeamId = TeamId.Team1
+			end
 			table.insert(self.BotAttributesByTeamByClass[p_TeamId][s_Kit], s_BotAttributes)
 		else
 			table.insert(self.BotAttributesByClass[s_Kit], s_BotAttributes)
@@ -97,13 +107,18 @@ function BotCreator:GenerateBotAtributes(p_BotNames, p_TeamId)
 end
 
 ---@param p_BotKit BotKits|integer
-function BotCreator:GetNextBotName(p_BotKit, p_teamId)
+function BotCreator:GetNextBotName(p_BotKit, p_TeamId)
 	local s_PossibleNames = {}
 	local botTattributesByClass = {}
 	local activeNames
 
 	if Config.BotTeamNames then
-		botTattributesByClass = self.BotAttributesByTeamByClass[p_teamId]
+		if p_TeamId % 2 == 0 then
+			p_TeamId = TeamId.Team2
+		else
+			p_TeamId = TeamId.Team1
+		end
+		botTattributesByClass = self.BotAttributesByTeamByClass[p_TeamId]
 		activeNames = self.ActiveBotNames
 	else
 		botTattributesByClass = self.BotAttributesByClass
@@ -130,7 +145,7 @@ function BotCreator:GetNextBotName(p_BotKit, p_teamId)
 		end
 	end
 	local s_SelectedName = s_PossibleNames[MathUtils:GetRandomInt(1, #s_PossibleNames)]
-	-- local s_SelectedAttribute = s_PossibleNames[1] -- don't randomize them for now
+
 	table.insert(activeNames, s_SelectedName)
 	return s_SelectedName
 end
@@ -153,6 +168,12 @@ function BotCreator:RemoveActiveBot(p_BotName)
 	for l_Index, l_Name in pairs(self.ActiveBotNames) do
 		if (l_Name == p_BotName) then
 			table.remove(self.ActiveBotNames, l_Index)
+		end
+	end
+
+	for l_Index, l_Name in pairs(self.ActiveTeamBotNames) do
+		if (l_Name == p_BotName) then
+			table.remove(self.ActiveTeamBotNames, l_Index)
 		end
 	end
 end

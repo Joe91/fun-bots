@@ -100,7 +100,7 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	end
 
 	if #self._BotsToDestroy > 0 then
-		if self._DestroyBotsTimer >= 0.05 then
+		if self._DestroyBotsTimer >= Registry.BOT.BOT_DESTORY_DELAY then
 			self._DestroyBotsTimer = 0.0
 			self:DestroyBot(table.remove(self._BotsToDestroy))
 		end
