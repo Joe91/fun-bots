@@ -1939,7 +1939,7 @@ function BotSpawner:_SwitchTeams()
 				s_NewTeam = Globals.NrOfTeams
 			end
 
-			if not Config.BotTeamNames or m_Utilities:isBot(l_Player) then
+			if not Config.BotTeamNames or not m_Utilities:isBot(l_Player) then
 				l_Player.teamId = s_NewTeam
 			end
 		end
