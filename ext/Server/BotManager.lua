@@ -100,7 +100,7 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	end
 
 	if #self._BotsToDestroy > 0 then
-		if self._DestroyBotsTimer >= 0.05 then
+		if self._DestroyBotsTimer >= Registry.BOT.BOT_DESTORY_DELAY then
 			self._DestroyBotsTimer = 0.0
 			self:DestroyBot(table.remove(self._BotsToDestroy))
 		end
@@ -130,6 +130,7 @@ function BotManager:OnPlayerLeft(p_Player)
 			if l_BotNameToIgnore == p_Player.name then
 				table.remove(Globals.IgnoreBotNames, l_Index)
 				m_Logger:Write("Bot-Name " .. l_BotNameToIgnore .. " usable again")
+				break
 			end
 		end
 	end
@@ -855,7 +856,8 @@ function BotManager:DestroyAll(p_Amount, p_TeamId, p_Force)
 
 	p_Amount = p_Amount or #s_BotTable
 
-	for _, l_Bot in ipairs(s_BotTable) do
+	for l_Index = #s_BotTable, 1, -1 do
+		local l_Bot = s_BotTable[l_Index]
 		if p_Force then
 			self:DestroyBot(l_Bot)
 		else

@@ -56,7 +56,7 @@ function BotSpawner:OnLevelLoaded(p_Round)
 
 	if (Config.TeamSwitchMode == TeamSwitchModes.SwitchForRoundTwo and p_Round ~= self._LastRound) or
 		(Config.TeamSwitchMode == TeamSwitchModes.AlwaysSwitchTeams) or
-		(Config.TeamSwitchMode == TeamSwitchModes.SwitchTeamsRandomly and MathUtils:GetRandom(1, 100) >= 50)
+		(Config.TeamSwitchMode == TeamSwitchModes.SwitchTeamsRandomly and m_Utilities:CheckProbablity(50))
 	then
 		m_Logger:Write("switch teams")
 		self:_SwitchTeams()
@@ -142,6 +142,7 @@ function BotSpawner:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 				for j, l_BotNameToIgnore in pairs(Globals.IgnoreBotNames) do
 					if l_BotNameToIgnore == l_PlayerNameToKick then
 						table.remove(Globals.IgnoreBotNames, j)
+						break
 					end
 				end
 
@@ -328,6 +329,14 @@ end
 -- =============================================
 -- Public Functions
 -- =============================================
+function BotSpawner:UpdateBotNames()
+	self._SpawnSets = {}
+	local s_TimeToWait = (#m_BotManager:GetBots() * Registry.BOT.BOT_DESTORY_DELAY) + 1.0
+	m_BotManager:DestroyAll()
+	m_BotManager:RefreshTables()
+	self._FirstSpawnInLevel = true
+	self._FirstSpawnDelay = s_TimeToWait
+end
 
 function BotSpawner:UpdateBotAmountAndTeam()
 	-- Keep Slot for next player.
@@ -644,7 +653,7 @@ end
 ---@param p_Spacing number
 function BotSpawner:SpawnBotRow(p_Player, p_Length, p_Spacing)
 	for i = 1, p_Length do
-		local s_Name = m_BotCreator:GetNextBotName(self:_GetSpawnBotKit())
+		local s_Name = m_BotCreator:GetNextBotName(self:_GetSpawnBotKit(), m_BotManager:GetBotTeam())
 
 		if s_Name ~= nil then
 			local s_Transform = LinearTransform()
@@ -665,7 +674,7 @@ end
 ---@param p_Height integer
 function BotSpawner:SpawnBotTower(p_Player, p_Height)
 	for i = 1, p_Height do
-		local s_Name = m_BotCreator:GetNextBotName(self:_GetSpawnBotKit())
+		local s_Name = m_BotCreator:GetNextBotName(self:_GetSpawnBotKit(), m_BotManager:GetBotTeam())
 
 		if s_Name ~= nil then
 			local s_Yaw = p_Player.input.authoritativeAimingYaw
@@ -692,7 +701,7 @@ end
 function BotSpawner:SpawnBotGrid(p_Player, p_Rows, p_Columns, p_Spacing)
 	for i = 1, p_Rows do
 		for j = 1, p_Columns do
-			local s_Name = m_BotCreator:GetNextBotName(self:_GetSpawnBotKit())
+			local s_Name = m_BotCreator:GetNextBotName(self:_GetSpawnBotKit(), m_BotManager:GetBotTeam())
 
 			if s_Name ~= nil then
 				local s_Yaw = p_Player.input.authoritativeAimingYaw
@@ -1084,7 +1093,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 
 	-- only new bot, if no respawn
 	if not s_IsRespawn or not p_ExistingBot then
-		s_Name = m_BotCreator:GetNextBotName(self:_GetSpawnBotKit())
+		s_Name = m_BotCreator:GetNextBotName(self:_GetSpawnBotKit(), s_TeamId)
 	end
 
 	local s_SquadId = self:_GetSquadToJoin(s_TeamId)
@@ -1534,7 +1543,8 @@ function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 			end
 		else
 			-- Vehicle perk.
-			for l_IndexVehiclePerk, l_VehiclePerkName in pairs(s_VehiclePerksToAdd) do
+			for l_IndexVehiclePerk = #s_VehiclePerksToAdd, 1, -1 do
+				local l_VehiclePerkName = s_VehiclePerksToAdd[l_IndexVehiclePerk]
 				if l_PerkName == l_VehiclePerkName then
 					table.remove(s_VehiclePerksToAdd, l_IndexVehiclePerk)
 					table.insert(s_Unlocks, s_CurrentUnlocks[l_Index])
@@ -1963,7 +1973,9 @@ function BotSpawner:_SwitchTeams()
 				s_NewTeam = Globals.NrOfTeams
 			end
 
-			l_Player.teamId = s_NewTeam
+			if not Config.BotTeamNames or not m_Utilities:isBot(l_Player) then
+				l_Player.teamId = s_NewTeam
+			end
 		end
 	end
 end

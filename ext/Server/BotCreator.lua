@@ -7,22 +7,50 @@ local m_Logger = Logger("BotCreator", Debug.Server.BOT_CREATION)
 
 function BotCreator:__init()
 	---@type BotAttributes[]
-	self.AllBotAttributs = {}
+	self.AllBotAttributes = {}
+
 	self.BotAttributesByClass = {}
+	self.BotAttributesByTeamByClass = {}
 
 	self.ActiveBotNames = {}
+	self.ActiveTeamBotNames = {}
+
 	self._InitDone = false
 end
 
 function BotCreator:CreateBotAttributes()
-	local s_NumberOfBotsPerKit = math.floor(#BotNames / 4)
+	-- create bot-attributes out of each class
+	self:GenerateBotAtributes(USMarinesNames, 1)
+	self:GenerateBotAtributes(RUMilitaryNames, 2)
+	self:GenerateBotAtributes(BotNames, 0)
 
-	for _, l_Kit in pairs(BotKits) do
-		self.BotAttributesByClass[l_Kit] = {}
+
+	m_Logger:Write("BotAttributes of " .. #self.AllBotAttributes .. " Bots created")
+end
+
+---comment
+---@param p_BotNames {}
+---@param p_TeamId TeamId|integer
+function BotCreator:GenerateBotAtributes(p_BotNames, p_TeamId)
+	local s_NumberOfBotsPerKit = math.floor(#BotNames / 4)
+	if p_TeamId > 0 then
+		if p_TeamId % 2 == 0 then
+			p_TeamId = TeamId.Team2
+		else
+			p_TeamId = TeamId.Team1
+		end
+		self.BotAttributesByTeamByClass[p_TeamId] = {}
+		for _, l_Kit in pairs(BotKits) do
+			self.BotAttributesByTeamByClass[p_TeamId][l_Kit] = {}
+		end
+	else
+		for _, l_Kit in pairs(BotKits) do
+			self.BotAttributesByClass[l_Kit] = {}
+		end
 	end
 
 	-- create bot-attributes out of each class
-	for l_Index, l_Name in pairs(BotNames) do
+	for l_Index, l_Name in pairs(p_BotNames) do
 		local s_Name = Registry.COMMON.BOT_TOKEN .. l_Name
 		local s_IndexInKit = math.floor(l_Index / 4)
 		local s_Kit = nil
@@ -64,19 +92,41 @@ function BotCreator:CreateBotAttributes()
 			PrefWeapon = "",
 			PrefVehicle = ""
 		}
-
-		table.insert(self.AllBotAttributs, s_BotAttributes)
-		table.insert(self.BotAttributesByClass[s_Kit], s_BotAttributes)
+		if p_TeamId > 0 then
+			if p_TeamId % 2 == 0 then
+				p_TeamId = TeamId.Team2
+			else
+				p_TeamId = TeamId.Team1
+			end
+			table.insert(self.BotAttributesByTeamByClass[p_TeamId][s_Kit], s_BotAttributes)
+		else
+			table.insert(self.BotAttributesByClass[s_Kit], s_BotAttributes)
+		end
+		table.insert(self.AllBotAttributes, s_BotAttributes)
 	end
-	m_Logger:Write("BotAttributes of " .. #self.AllBotAttributs .. " Bots created")
 end
 
 ---@param p_BotKit BotKits|integer
-function BotCreator:GetNextBotName(p_BotKit)
+function BotCreator:GetNextBotName(p_BotKit, p_TeamId)
 	local s_PossibleNames = {}
-	for l_Index, l_Attributes in pairs(self.BotAttributesByClass[p_BotKit]) do
+	local botTattributesByClass = {}
+	local activeNames
+
+	if Config.BotTeamNames then
+		if p_TeamId % 2 == 0 then
+			p_TeamId = TeamId.Team2
+		else
+			p_TeamId = TeamId.Team1
+		end
+		botTattributesByClass = self.BotAttributesByTeamByClass[p_TeamId]
+		activeNames = self.ActiveBotNames
+	else
+		botTattributesByClass = self.BotAttributesByClass
+		activeNames = self.ActiveTeamBotNames
+	end
+	for l_Index, l_Attributes in pairs(botTattributesByClass[p_BotKit]) do
 		local s_NameAvailable = true
-		for _, l_UsedNames in pairs(self.ActiveBotNames) do
+		for _, l_UsedNames in pairs(activeNames) do
 			if l_Attributes.Name == l_UsedNames then
 				s_NameAvailable = false
 				break
@@ -95,8 +145,8 @@ function BotCreator:GetNextBotName(p_BotKit)
 		end
 	end
 	local s_SelectedName = s_PossibleNames[MathUtils:GetRandomInt(1, #s_PossibleNames)]
-	-- local s_SelectedAttribute = s_PossibleNames[1] -- don't randomize them for now
-	table.insert(self.ActiveBotNames, s_SelectedName)
+
+	table.insert(activeNames, s_SelectedName)
 	return s_SelectedName
 end
 
@@ -118,13 +168,21 @@ function BotCreator:RemoveActiveBot(p_BotName)
 	for l_Index, l_Name in pairs(self.ActiveBotNames) do
 		if (l_Name == p_BotName) then
 			table.remove(self.ActiveBotNames, l_Index)
+			break
+		end
+	end
+
+	for l_Index, l_Name in pairs(self.ActiveTeamBotNames) do
+		if (l_Name == p_BotName) then
+			table.remove(self.ActiveTeamBotNames, l_Index)
+			break
 		end
 	end
 end
 
 ---@param p_BotName string
 function BotCreator:GetAttributesOfBot(p_BotName)
-	for _, l_Attributes in pairs(self.AllBotAttributs) do
+	for _, l_Attributes in pairs(self.AllBotAttributes) do
 		if l_Attributes.Name == p_BotName then
 			return l_Attributes
 		end

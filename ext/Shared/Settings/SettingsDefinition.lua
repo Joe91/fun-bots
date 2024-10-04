@@ -60,6 +60,18 @@ SettingsDefinition = {
 			UpdateFlag = UpdateFlag.None,
 			Category = "GENERAL"
 		},
+		{
+			Name = "BotTeamNames",
+			Text = "Bot Team Names",
+			---@type Type|integer
+			Type = Type.Boolean,
+			Reference = BotNames,
+			Value = Config.BotTeamNames,
+			Description = "If the bots shall have their names based on their team",
+			Default = false,
+			UpdateFlag = UpdateFlag.BotNames,
+			Category = "GENERAL"
+		},
 
 		-- Difficulty.
 		{
