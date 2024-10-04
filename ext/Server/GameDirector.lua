@@ -682,17 +682,20 @@ function GameDirector:OnVehicleUnspawn(p_Entity, p_VehiclePoints, p_HotTeam)
 			for l_Index, l_Entity in pairs(self.m_SpawnableStationaryAas[l_Team]) do
 				if (l_Entity.uniqueId == p_Entity.uniqueId) and (l_Entity.instanceId == p_Entity.instanceId) then
 					table.remove(self.m_SpawnableStationaryAas[l_Team], l_Index)
+					break -- should only happen once
 				end
 			end
 		else
 			for l_Index, l_Entity in pairs(self.m_SpawnableVehicles[l_Team]) do
 				if (l_Entity.uniqueId == p_Entity.uniqueId) and (l_Entity.instanceId == p_Entity.instanceId) then
 					table.remove(self.m_SpawnableVehicles[l_Team], l_Index)
+					break -- should only happen once
 				end
 			end
 			for l_Index, l_Entity in pairs(self.m_AvailableVehicles[l_Team]) do
 				if (l_Entity.uniqueId == p_Entity.uniqueId) and (l_Entity.instanceId == p_Entity.instanceId) then
 					table.remove(self.m_AvailableVehicles[l_Team], l_Index)
+					break -- should only happen once
 				end
 			end
 		end
@@ -711,17 +714,20 @@ function GameDirector:OnVehicleEnter(p_Entity, p_Player)
 			for l_Index, l_Entity in pairs(self.m_SpawnableStationaryAas[p_Player.teamId]) do
 				if (l_Entity.uniqueId == p_Entity.uniqueId) and (l_Entity.instanceId == p_Entity.instanceId) then
 					table.remove(self.m_SpawnableStationaryAas[p_Player.teamId], l_Index)
+					break -- should only happen once
 				end
 			end
 		else
 			for l_Index, l_Entity in pairs(self.m_SpawnableVehicles[p_Player.teamId]) do
 				if (l_Entity.uniqueId == p_Entity.uniqueId) and (l_Entity.instanceId == p_Entity.instanceId) then
 					table.remove(self.m_SpawnableVehicles[p_Player.teamId], l_Index)
+					break -- should only happen once
 				end
 			end
 			for l_Index, l_Entity in pairs(self.m_AvailableVehicles[p_Player.teamId]) do
 				if (l_Entity.uniqueId == p_Entity.uniqueId) and (l_Entity.instanceId == p_Entity.instanceId) then
 					table.remove(self.m_AvailableVehicles[p_Player.teamId], l_Index)
+					break -- should only happen once
 				end
 			end
 		end

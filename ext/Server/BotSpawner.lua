@@ -142,6 +142,7 @@ function BotSpawner:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 				for j, l_BotNameToIgnore in pairs(Globals.IgnoreBotNames) do
 					if l_BotNameToIgnore == l_PlayerNameToKick then
 						table.remove(Globals.IgnoreBotNames, j)
+						break
 					end
 				end
 
@@ -1542,7 +1543,8 @@ function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 			end
 		else
 			-- Vehicle perk.
-			for l_IndexVehiclePerk, l_VehiclePerkName in pairs(s_VehiclePerksToAdd) do
+			for l_IndexVehiclePerk = #s_VehiclePerksToAdd, 1, -1 do
+				local l_VehiclePerkName = s_VehiclePerksToAdd[l_IndexVehiclePerk]
 				if l_PerkName == l_VehiclePerkName then
 					table.remove(s_VehiclePerksToAdd, l_IndexVehiclePerk)
 					table.insert(s_Unlocks, s_CurrentUnlocks[l_Index])

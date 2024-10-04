@@ -168,12 +168,14 @@ function BotCreator:RemoveActiveBot(p_BotName)
 	for l_Index, l_Name in pairs(self.ActiveBotNames) do
 		if (l_Name == p_BotName) then
 			table.remove(self.ActiveBotNames, l_Index)
+			break
 		end
 	end
 
 	for l_Index, l_Name in pairs(self.ActiveTeamBotNames) do
 		if (l_Name == p_BotName) then
 			table.remove(self.ActiveTeamBotNames, l_Index)
+			break
 		end
 	end
 end

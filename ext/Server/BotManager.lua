@@ -130,6 +130,7 @@ function BotManager:OnPlayerLeft(p_Player)
 			if l_BotNameToIgnore == p_Player.name then
 				table.remove(Globals.IgnoreBotNames, l_Index)
 				m_Logger:Write("Bot-Name " .. l_BotNameToIgnore .. " usable again")
+				break
 			end
 		end
 	end
