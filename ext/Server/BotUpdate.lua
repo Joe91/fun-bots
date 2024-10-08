@@ -245,7 +245,7 @@ function Bot:InVehicleFastTimerUpdate(p_IsAttacking)
 		end
 	end
 
-	local s_IsStationaryLauncher = m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.StationaryLauncher)
+	local s_IsStationaryLauncher = m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.StationaryLauncher) or m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.StationaryAA)
 
 	-- Sync slow code with fast code. Therefore, execute the slow code first.
 	if self._UpdateTimer >= Registry.BOT.BOT_UPDATE_CYCLE then

@@ -1157,7 +1157,7 @@ function Bot:_UpdateStationaryAAVehicle(p_Attacking)
 		-- Just look a little around.
 		m_VehicleMovement:UpdateVehicleLookAround(self, Registry.BOT.BOT_FAST_UPDATE_CYCLE)
 	end
-	m_VehicleMovement:UpdateYawVehicle(self, true, false) -- Only gun → therefore always gun-mode.
+	m_VehicleMovement:UpdateYawVehicle(self, true, true) -- Only gun → therefore always gun-mode.
 end
 
 ---@param p_Position Vec3
