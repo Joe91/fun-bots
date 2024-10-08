@@ -1020,6 +1020,9 @@ function Bot:Kill()
 	self:ResetVars()
 
 	if self.m_Player.soldier ~= nil then
+		if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.StationaryAA) then
+			g_GameDirector:ReturnStationaryAaEntity(self.m_Player.controlledControllable, self.m_Player.teamId)
+		end
 		self.m_Player.soldier:Kill()
 	end
 end

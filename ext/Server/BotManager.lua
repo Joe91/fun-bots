@@ -832,8 +832,10 @@ function BotManager:KillAll(p_Amount, p_TeamId)
 	end
 
 	p_Amount = p_Amount or #s_BotTable
+	-- start from the end, to kill the last spawned bots first
+	for l_Index = #s_BotTable, 1, -1 do
+		local l_Bot = s_BotTable[l_Index]
 
-	for _, l_Bot in ipairs(s_BotTable) do
 		l_Bot:Kill()
 
 		p_Amount = p_Amount - 1

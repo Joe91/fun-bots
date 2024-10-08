@@ -538,6 +538,12 @@ function GameDirector:GetStationaryAas(p_TeamId)
 	return self.m_SpawnableStationaryAas[p_TeamId]
 end
 
+---@param p_ControllableEntity ControllableEntity
+---@param p_TeamId TeamId
+function GameDirector:ReturnStationaryAaEntity(p_ControllableEntity, p_TeamId)
+	table.insert(self.m_SpawnableStationaryAas[p_TeamId], p_ControllableEntity)
+end
+
 function GameDirector:GetGadgetOwner(p_Entity)
 	local s_GadgetPosition = p_Entity.transform.trans
 

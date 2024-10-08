@@ -51,6 +51,7 @@ This is the changelog for the version V2.9 Don't forget to [join us on Discord](
 * Bots don't start moving in vehicles
 * Bots chosing spawn-vehicle-paths on exit
 * Errors in Mapfile generation
+* Fixed Stationary AA #344
 
 ### New maps
 * Conquest Large MP_018 by ThyKingdomCome
