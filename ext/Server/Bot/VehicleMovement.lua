@@ -17,10 +17,11 @@ function VehicleMovement:__init()
 	-- Nothing to do.
 end
 
+---@param p_DeltaTime number
 ---@param p_Bot Bot
-function VehicleMovement:UpdateNormalMovementVehicle(p_Bot)
+function VehicleMovement:UpdateNormalMovementVehicle(p_DeltaTime, p_Bot)
 	if p_Bot._VehicleTakeoffTimer > 0.0 then
-		p_Bot._VehicleTakeoffTimer = p_Bot._VehicleTakeoffTimer - Registry.BOT.BOT_UPDATE_CYCLE
+		p_Bot._VehicleTakeoffTimer = p_Bot._VehicleTakeoffTimer - p_DeltaTime
 		if p_Bot._JetAbortAttackActive then
 			local s_TargetPosition = p_Bot.m_Player.controlledControllable.transform.trans
 			local s_Forward = p_Bot.m_Player.controlledControllable.transform.forward
@@ -37,7 +38,7 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_Bot)
 	end
 	p_Bot._JetAbortAttackActive = false
 	if p_Bot._VehicleWaitTimer > 0.0 then
-		p_Bot._VehicleWaitTimer = p_Bot._VehicleWaitTimer - Registry.BOT.BOT_UPDATE_CYCLE
+		p_Bot._VehicleWaitTimer = p_Bot._VehicleWaitTimer - p_DeltaTime
 		if p_Bot._VehicleWaitTimer <= 0.0 then
 			if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane) then
 				-- Check for other plane in front of bot.
@@ -120,7 +121,7 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_Bot)
 				p_Bot:_ResetActionFlag(BotActionFlags.OtherActionActive)
 			end
 
-			p_Bot._ActionTimer = p_Bot._ActionTimer - Registry.BOT.BOT_UPDATE_CYCLE
+			p_Bot._ActionTimer = p_Bot._ActionTimer - p_DeltaTime
 
 			if p_Bot._ActionTimer <= 0.0 then
 				p_Bot:_ResetActionFlag(BotActionFlags.OtherActionActive)
@@ -184,7 +185,7 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_Bot)
 						p_Bot._ObstacleRetryCounter = p_Bot._ObstacleRetryCounter + 1
 					end
 
-					p_Bot._ObstacleSequenceTimer = p_Bot._ObstacleSequenceTimer + Registry.BOT.BOT_UPDATE_CYCLE
+					p_Bot._ObstacleSequenceTimer = p_Bot._ObstacleSequenceTimer + p_DeltaTime
 
 					if p_Bot._ObstacleRetryCounter >= 4 then -- Try next waypoint.
 						p_Bot._ObstacleRetryCounter = 0
@@ -294,9 +295,9 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_Bot)
 				p_Bot._LastWayDistance = 1000.0
 			end
 		else -- Wait mode.
-			p_Bot._WayWaitTimer = p_Bot._WayWaitTimer + Registry.BOT.BOT_UPDATE_CYCLE
+			p_Bot._WayWaitTimer = p_Bot._WayWaitTimer + p_DeltaTime
 
-			self:UpdateVehicleLookAround(p_Bot, Registry.BOT.BOT_UPDATE_CYCLE)
+			self:UpdateVehicleLookAround(p_Bot, p_DeltaTime)
 
 			if p_Bot._WayWaitTimer > s_Point.OptValue then
 				p_Bot._WayWaitTimer = 0.0
@@ -317,9 +318,10 @@ function VehicleMovement:UpdateShootMovementVehicle(p_Bot)
 	p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.NoMovement -- No movement while attacking in vehicles.
 end
 
+---@param p_DeltaTime number
 ---@param p_Bot Bot
 ---@param p_Attacking boolean
-function VehicleMovement:UpdateSpeedOfMovementVehicle(p_Bot, p_Attacking)
+function VehicleMovement:UpdateSpeedOfMovementVehicle(p_DeltaTime, p_Bot, p_Attacking)
 	if p_Bot.m_Player.soldier == nil or p_Bot._VehicleWaitTimer > 0.0 then
 		return
 	end
@@ -368,7 +370,7 @@ function VehicleMovement:UpdateSpeedOfMovementVehicle(p_Bot, p_Attacking)
 				p_Bot:_SetInput(EntryInputActionEnum.EIABrake, 1)
 			end
 
-			p_Bot._BrakeTimer = p_Bot._BrakeTimer - Registry.BOT.BOT_UPDATE_CYCLE
+			p_Bot._BrakeTimer = p_Bot._BrakeTimer - p_DeltaTime
 		end
 	end
 end

@@ -17,7 +17,10 @@ function BotMovement:__init()
 	-- Nothing to do.
 end
 
-function BotMovement:UpdateNormalMovement(p_Bot)
+---comment
+---@param p_DeltaTime number
+---@param p_Bot Bot
+function BotMovement:UpdateNormalMovement(p_DeltaTime, p_Bot)
 	-- Move along points.
 	p_Bot._AttackModeMoveTimer = 0.0
 
@@ -65,7 +68,7 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 
 		-- Do defense, if needed
 		if p_Bot._ObjectiveMode == BotObjectiveModes.Defend and g_GameDirector:IsAtTargetObjective(p_Bot._PathIndex, p_Bot._Objective) then
-			p_Bot._DefendTimer = p_Bot._DefendTimer + Registry.BOT.BOT_UPDATE_CYCLE
+			p_Bot._DefendTimer = p_Bot._DefendTimer + p_DeltaTime
 
 			local s_TargetTime = p_Bot.m_Id % 5 + 4 -- min 2 sec on path, then 2 sec movement to side
 			if p_Bot._DefendTimer >= s_TargetTime then
@@ -87,7 +90,7 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 					end
 				end
 
-				self:LookAround(p_Bot, Registry.BOT.BOT_UPDATE_CYCLE)
+				self:LookAround(p_Bot, p_DeltaTime)
 
 				-- TODO: look at target
 				-- don't do anything else
@@ -153,7 +156,7 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 				p_Bot:_ResetActionFlag(BotActionFlags.OtherActionActive)
 			end
 
-			p_Bot._ActionTimer = p_Bot._ActionTimer - Registry.BOT.BOT_UPDATE_CYCLE
+			p_Bot._ActionTimer = p_Bot._ActionTimer - p_DeltaTime
 
 			if p_Bot._ActionTimer <= 0.0 then
 				p_Bot:_ResetActionFlag(BotActionFlags.OtherActionActive)
@@ -174,7 +177,7 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 			p_Bot.m_ActiveSpeedValue = s_Point.SpeedMode -- Speed.
 
 			if p_Bot._ActiveAction == BotActionFlags.RunAway and p_Bot._ActionTimer > 0.0 then
-				p_Bot._ActionTimer = p_Bot._ActionTimer - Registry.BOT.BOT_UPDATE_CYCLE
+				p_Bot._ActionTimer = p_Bot._ActionTimer - p_DeltaTime
 
 				p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.Sprint
 				if p_Bot._ActionTimer <= 0.0 then
@@ -183,7 +186,7 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 			end
 
 			if p_Bot._ActiveAction == BotActionFlags.HideOnAttack and p_Bot._ActionTimer > 0.0 then
-				p_Bot._ActionTimer = p_Bot._ActionTimer - Registry.BOT.BOT_UPDATE_CYCLE
+				p_Bot._ActionTimer = p_Bot._ActionTimer - p_DeltaTime
 
 				p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.VerySlowProne
 				if p_Bot._ActionTimer <= 0.0 then
@@ -217,7 +220,7 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 					end
 				end
 				p_Bot:_SetInput(EntryInputActionEnum.EIAStrafe, p_Bot.m_StrafeValue)
-				p_Bot._SidewardsTimer = p_Bot._SidewardsTimer - Registry.BOT.BOT_UPDATE_CYCLE
+				p_Bot._SidewardsTimer = p_Bot._SidewardsTimer - p_DeltaTime
 			end
 
 			-- Use parachute if needed.
@@ -282,8 +285,8 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 					p_Bot:_SetInput(EntryInputActionEnum.EIAJump, 1)
 				end
 
-				p_Bot._ObstacleSequenceTimer = p_Bot._ObstacleSequenceTimer + Registry.BOT.BOT_UPDATE_CYCLE
-				p_Bot._StuckTimer = p_Bot._StuckTimer + Registry.BOT.BOT_UPDATE_CYCLE
+				p_Bot._ObstacleSequenceTimer = p_Bot._ObstacleSequenceTimer + p_DeltaTime
+				p_Bot._StuckTimer = p_Bot._StuckTimer + p_DeltaTime
 
 				if p_Bot._ObstacleRetryCounter >= 2 then -- Try next waypoint.
 					p_Bot._ObstacleRetryCounter = 0
@@ -436,9 +439,9 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 				p_Bot._LastWayDistance = 1000.0
 			end
 		else -- Wait mode.
-			p_Bot._WayWaitTimer = p_Bot._WayWaitTimer + Registry.BOT.BOT_UPDATE_CYCLE
+			p_Bot._WayWaitTimer = p_Bot._WayWaitTimer + p_DeltaTime
 
-			self:LookAround(p_Bot, Registry.BOT.BOT_UPDATE_CYCLE)
+			self:LookAround(p_Bot, p_DeltaTime)
 
 			if p_Bot._WayWaitTimer > s_Point.OptValue then
 				p_Bot._WayWaitTimer = 0.0
@@ -454,8 +457,9 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 	end
 end
 
+---@param p_DeltaTime number
 ---@param p_Bot Bot
-function BotMovement:UpdateMovementSprintToTarget(p_Bot)
+function BotMovement:UpdateMovementSprintToTarget(p_DeltaTime, p_Bot)
 	p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.Sprint -- Run to target.
 
 	if p_Bot.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Stand then
@@ -473,7 +477,7 @@ function BotMovement:UpdateMovementSprintToTarget(p_Bot)
 
 	-- To-do: obstacle detection.
 	if s_Jump == true then
-		p_Bot._AttackModeMoveTimer = p_Bot._AttackModeMoveTimer + Registry.BOT.BOT_UPDATE_CYCLE
+		p_Bot._AttackModeMoveTimer = p_Bot._AttackModeMoveTimer + p_DeltaTime
 
 		if p_Bot._AttackModeMoveTimer > 3.0 then
 			p_Bot._AttackModeMoveTimer = 0.0
@@ -484,8 +488,9 @@ function BotMovement:UpdateMovementSprintToTarget(p_Bot)
 	end
 end
 
+---@param p_DeltaTime number
 ---@param p_Bot Bot
-function BotMovement:UpdateShootMovement(p_Bot)
+function BotMovement:UpdateShootMovement(p_DeltaTime, p_Bot)
 	p_Bot._DefendTimer = 0.0
 	-- Shoot MoveMode.
 	if p_Bot._AttackMode == BotAttackModes.RandomNotSet then
@@ -556,7 +561,7 @@ function BotMovement:UpdateShootMovement(p_Bot)
 			p_Bot:_SetInput(EntryInputActionEnum.EIAStrafe, 0.5 * Config.SpeedFactorAttack)
 		end
 
-		p_Bot._AttackModeMoveTimer = p_Bot._AttackModeMoveTimer + Registry.BOT.BOT_UPDATE_CYCLE
+		p_Bot._AttackModeMoveTimer = p_Bot._AttackModeMoveTimer + p_DeltaTime
 	end
 end
 

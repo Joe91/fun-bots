@@ -11,8 +11,9 @@ function VehicleAttacking:__init()
 	-- Nothing to do.
 end
 
+---@param p_DeltaTime number
 ---@param p_Bot Bot
-function VehicleAttacking:UpdateAttackingVehicle(p_Bot)
+function VehicleAttacking:UpdateAttackingVehicle(p_DeltaTime, p_Bot)
 	if p_Bot._ShootPlayer.soldier ~= nil and p_Bot._Shoot then
 		-- jets should only attack other vehicles for now
 		if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane) and p_Bot._ShootPlayerVehicleType == VehicleTypes.NoVehicle then
@@ -20,7 +21,7 @@ function VehicleAttacking:UpdateAttackingVehicle(p_Bot)
 		end
 
 		if (p_Bot._ShootModeTimer > 0) then -- Three times the default duration.
-			p_Bot._ShootModeTimer = p_Bot._ShootModeTimer - Registry.BOT.BOT_UPDATE_CYCLE
+			p_Bot._ShootModeTimer = p_Bot._ShootModeTimer - p_DeltaTime
 
 			-- Get amount of weapon slots.
 			local s_WeaponSlots = m_Vehicles:GetAvailableWeaponSlots(p_Bot.m_ActiveVehicle, p_Bot.m_Player.controlledEntryId)
@@ -134,7 +135,7 @@ function VehicleAttacking:UpdateAttackingVehicle(p_Bot)
 						p_Bot:_SetInput(EntryInputActionEnum.EIAFire, 1)
 					end
 				end
-				p_Bot._ShotTimer = p_Bot._ShotTimer + Registry.BOT.BOT_UPDATE_CYCLE
+				p_Bot._ShotTimer = p_Bot._ShotTimer + p_DeltaTime
 			end
 		else
 			p_Bot._TargetPitch = 0.0
@@ -147,7 +148,7 @@ function VehicleAttacking:UpdateAttackingVehicle(p_Bot)
 		p_Bot:AbortAttack()
 	end
 
-	p_Bot._VehicleSecondaryWeaponTimer = math.max(p_Bot._VehicleSecondaryWeaponTimer - Registry.BOT.BOT_UPDATE_CYCLE, 0)
+	p_Bot._VehicleSecondaryWeaponTimer = math.max(p_Bot._VehicleSecondaryWeaponTimer - p_DeltaTime, 0)
 end
 
 ---@param p_Bot Bot

@@ -1093,7 +1093,8 @@ function Bot:_SetDelayedInput(p_Input, p_Value, p_Delay)
 	})
 end
 
-function Bot:_UpdateInputs()
+---@param p_DeltaTime number
+function Bot:_UpdateInputs(p_DeltaTime)
 	---@type EntryInputActionEnum
 	for i = 0, 36 do
 		if self.m_ActiveInputs[i].reset then
@@ -1107,7 +1108,7 @@ function Bot:_UpdateInputs()
 	end
 
 	for l_Index, l_DelayedInput in ipairs(self.m_DelayedInputs) do
-		l_DelayedInput.delay = l_DelayedInput.delay - Registry.BOT.BOT_UPDATE_CYCLE
+		l_DelayedInput.delay = l_DelayedInput.delay - p_DeltaTime
 		if l_DelayedInput.delay <= 0 then
 			self.m_ActiveInputs[l_DelayedInput.input] = {
 				value = l_DelayedInput.value,
@@ -1134,8 +1135,9 @@ function Bot:_UpdateRespawn(p_DeltaTime)
 	end
 end
 
+---@param p_DeltaTime number
 ---@param p_Attacking boolean
-function Bot:_UpdateStationaryAAVehicle(p_Attacking)
+function Bot:_UpdateStationaryAAVehicle(p_DeltaTime, p_Attacking)
 	-- Get new target if needed.
 	if self._DeployTimer > 1.0 then
 		local s_Target = m_AirTargets:GetTarget(self.m_Player, Config.MaxDistanceAABots)
@@ -1150,7 +1152,7 @@ function Bot:_UpdateStationaryAAVehicle(p_Attacking)
 
 		self._DeployTimer = 0.0
 	else
-		self._DeployTimer = self._DeployTimer + Registry.BOT.BOT_FAST_UPDATE_CYCLE
+		self._DeployTimer = self._DeployTimer + p_DeltaTime
 	end
 
 	if p_Attacking then -- Target available.
@@ -1158,7 +1160,7 @@ function Bot:_UpdateStationaryAAVehicle(p_Attacking)
 		m_VehicleAiming:UpdateAimingVehicle(self, true)
 	else
 		-- Just look a little around.
-		m_VehicleMovement:UpdateVehicleLookAround(self, Registry.BOT.BOT_FAST_UPDATE_CYCLE)
+		m_VehicleMovement:UpdateVehicleLookAround(self, p_DeltaTime)
 	end
 	m_VehicleMovement:UpdateYawVehicle(self, true, true) -- Only gun → therefore always gun-mode.
 end
