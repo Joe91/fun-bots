@@ -515,6 +515,7 @@ end
 ---@param p_VehicleEntity Entity @`ControllableEntity`
 ---@param p_Player Player
 function FunBotServer:OnVehicleExit(p_VehicleEntity, p_Player)
+	m_GameDirector:OnVehicleExit(p_VehicleEntity, p_Player)
 	m_AirTargets:OnVehicleExit(p_VehicleEntity, p_Player)
 end
 

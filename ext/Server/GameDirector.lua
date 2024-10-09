@@ -541,6 +541,13 @@ end
 ---@param p_ControllableEntity ControllableEntity
 ---@param p_TeamId TeamId
 function GameDirector:ReturnStationaryAaEntity(p_ControllableEntity, p_TeamId)
+	p_ControllableEntity = ControllableEntity(p_ControllableEntity)
+	for _, l_Entity in pairs(self.m_SpawnableStationaryAas[p_TeamId]) do
+		if (l_Entity.uniqueId == p_ControllableEntity.uniqueId) and (l_Entity.instanceId == p_ControllableEntity.instanceId) then
+			-- already in list, return
+			return
+		end
+	end
 	table.insert(self.m_SpawnableStationaryAas[p_TeamId], p_ControllableEntity)
 end
 
@@ -704,6 +711,22 @@ function GameDirector:OnVehicleUnspawn(p_Entity, p_VehiclePoints, p_HotTeam)
 					break -- should only happen once
 				end
 			end
+		end
+	end
+end
+
+---VEXT Server Vehicle:Exit Event
+---@param p_VehicleEntity ControllableEntity|Entity
+---@param p_Player Player
+function GameDirector:OnVehicleExit(p_VehicleEntity, p_Player)
+	if p_VehicleEntity == nil then
+		return
+	end
+	p_VehicleEntity = ControllableEntity(p_VehicleEntity)
+	local s_VehicleData = m_Vehicles:GetVehicleByEntity(p_VehicleEntity)
+	if s_VehicleData ~= nil then
+		if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.StationaryAA) then
+			self:ReturnStationaryAaEntity(p_VehicleEntity, p_Player.teamId)
 		end
 	end
 end

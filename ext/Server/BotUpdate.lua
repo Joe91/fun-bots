@@ -220,6 +220,8 @@ function Bot:InVehicleFastTimerUpdate(p_IsAttacking)
 
 			self:_UpdateInputs()
 			self._UpdateTimer = 0.0
+
+			self:_DoExitVehicle()
 		end
 
 		return
