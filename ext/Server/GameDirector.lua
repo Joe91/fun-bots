@@ -659,9 +659,17 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 		local s_Gunship = {}
 		s_Gunship.Entity = p_Entity
 		s_Gunship.Team = self.m_GunshipObjectiveTeam
+		print(s_Gunship)
 
 		self.m_Gunship = s_Gunship
 	end
+end
+
+function GameDirector:GetGunship()
+	if self.m_Gunship ~= nil then
+		return self.m_Gunship.Entity
+	end
+	return nil
 end
 
 ---@param p_Entity ControllableEntity|Entity
@@ -791,6 +799,8 @@ end
 function GameDirector:GetGunshipObjectiveName(p_LevelName, p_GameMode)
 	if p_LevelName == "XP5_004" and p_GameMode == "ConquestLarge0" then
 		return "ID_H_US_D"
+	elseif p_LevelName == "XP3_Desert" and p_GameMode == "ConquestLarge0" then
+		return "ID_H_US_G"
 	end
 
 	return nil
@@ -1486,6 +1496,7 @@ function GameDirector:_InitFlagTeams()
 
 	while s_Entity ~= nil do
 		s_Entity = CapturePointEntity(s_Entity)
+		print(s_Entity.name)
 		local s_ObjectiveName = self:_TranslateObjective(s_Entity.transform.trans, s_Entity.name)
 
 		if s_ObjectiveName ~= "" then

@@ -1125,6 +1125,8 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 
 		local s_Beacon = g_GameDirector:GetPlayerBeacon(s_Name)
 
+		local s_Gunship = g_GameDirector:GetGunship()
+
 		-- Find a spawn point.
 		if s_Beacon ~= nil then
 			s_SpawnPoint = m_NodeCollection:Get(s_Beacon.Point, s_Beacon.Path)
@@ -1134,7 +1136,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 			s_SpawnPoint, s_InverseDirection, s_SquadSpawnVehicle = self:_GetSpawnPoint(s_TeamId, s_SquadId)
 
 			-- Special spawn in vehicles.
-			if type(s_SpawnPoint) == 'string' then
+			if type(s_SpawnPoint) == 'string' or s_Gunship ~= nil then
 				local s_SpawnEntity = nil
 				local s_Transform = LinearTransform()
 
@@ -1156,13 +1158,18 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 							break
 						end
 					end
+				elseif s_Gunship ~= nil then
+					s_SpawnEntity = ControllableEntity(s_Gunship)
+					print("gunship")
 				end
+
 
 				if s_IsRespawn and p_ExistingBot then
 					p_ExistingBot:SetVarsWay(nil, true, 0, 0, false)
 					self:_SpawnBot(p_ExistingBot, s_Transform, false)
 
 					if p_ExistingBot:_EnterVehicleEntity(s_SpawnEntity, false) ~= 0 then
+						print("enter vhicle failed")
 						p_ExistingBot:Kill()
 					elseif s_SpawnEntity ~= nil then
 						p_ExistingBot:FindVehiclePath(s_SpawnEntity.transform.trans)
@@ -1180,6 +1187,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 						self:_SpawnBot(s_Bot, s_Transform, true)
 
 						if s_Bot:_EnterVehicleEntity(s_SpawnEntity, false) ~= 0 then
+							print("enter vhicle failed")
 							s_Bot:Kill()
 						elseif s_SpawnEntity then
 							s_Bot:FindVehiclePath(s_SpawnEntity.transform.trans)
