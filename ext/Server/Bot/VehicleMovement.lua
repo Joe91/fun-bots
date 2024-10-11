@@ -470,6 +470,10 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 
 			s_DeltaPitch = s_Pitch - p_Bot._TargetPitch
 			s_DeltaYaw = s_Yaw - p_Bot._TargetYaw
+			if p_Bot.m_ActiveVehicle.Type == VehicleTypes.Gunship then
+				s_DeltaPitch = s_DeltaPitch - math.pi * 0.25
+				s_DeltaYaw = s_DeltaYaw - math.pi * 0.5
+			end
 
 			-- Detect direction for moving gun back.
 			local s_GunDeltaYaw = s_Yaw - p_Bot._LastVehicleYaw
@@ -510,6 +514,8 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 	local s_TargetRangeForShooting = 0.10
 	if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane) then
 		s_TargetRangeForShooting = 0.20
+	elseif m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Gunship) then
+		s_TargetRangeForShooting = 0.30
 	end
 	if s_AbsDeltaYaw < s_TargetRangeForShooting then
 		p_Bot._FullVehicleSteering = false
