@@ -453,27 +453,49 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 			end
 		else -- Passenger.
 			if p_Bot._VehicleMovableId >= 0 then
-				s_Pos = p_Bot.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(p_Bot._VehicleMovableId):ToLinearTransform().forward
-				local s_AtanDzDx = math.atan(s_Pos.z, s_Pos.x)
-				local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
-				local s_Pitch = math.asin(s_Pos.y / 1.0)
+				-- s_Pos = p_Bot.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(p_Bot._VehicleMovableId):ToLinearTransform().forward
+				-- local s_AtanDzDx = math.atan(s_Pos.z, s_Pos.x)
+				-- local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
+				-- local s_Pitch = math.asin(s_Pos.y / 1.0)
+				local s_Euler = p_Bot.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(p_Bot._VehicleMovableId).rotation:ToEuler()
+				local s_Yaw = -s_Euler.x + 2 * math.pi
+				local s_Pitch = 0.0
+				local s_Roll = 0.0
+				if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Gunship) then
+					s_Roll = s_Euler.z       -- completely wrong, but this is the workaround
+					s_Pitch = -s_Euler.y / math.cos(s_Roll) -- completely wrong, but this is the workaround
+				else
+					s_Roll = s_Euler.y
+					s_Pitch = -s_Euler.z / math.cos(s_Roll)
+				end
+
 				s_DeltaPitch = s_Pitch - p_Bot._TargetPitch
 				s_DeltaYaw = s_Yaw - p_Bot._TargetYaw
 			end
 		end
 	else
 		if p_Bot._VehicleMovableId >= 0 then
-			s_Pos = p_Bot.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(p_Bot._VehicleMovableId):ToLinearTransform().forward
-			local s_AtanDzDx = math.atan(s_Pos.z, s_Pos.x)
-			local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
-			local s_Pitch = math.asin(s_Pos.y / 1.0)
+			-- s_Pos = p_Bot.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(p_Bot._VehicleMovableId):ToLinearTransform().forward
+
+			-- local s_AtanDzDx = math.atan(s_Pos.z, s_Pos.x)
+			-- local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
+			-- local s_Pitch = math.asin(s_Pos.y / 1.0)
+
+			local s_Euler = p_Bot.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(p_Bot._VehicleMovableId).rotation:ToEuler()
+			local s_Yaw = -s_Euler.x + 2 * math.pi
+			local s_Pitch = 0.0
+			local s_Roll = 0.0
+			if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Gunship) then
+				s_Roll = s_Euler.z          -- completely wrong, but this is the workaround
+				s_Pitch = -s_Euler.y / math.cos(s_Roll) -- completely wrong, but this is the workaround
+			else
+				s_Roll = s_Euler.y
+				s_Pitch = -s_Euler.z / math.cos(s_Roll)
+			end
+
 
 			s_DeltaPitch = s_Pitch - p_Bot._TargetPitch
 			s_DeltaYaw = s_Yaw - p_Bot._TargetYaw
-			if p_Bot.m_ActiveVehicle.Type == VehicleTypes.Gunship then
-				s_DeltaPitch = s_DeltaPitch - math.pi * 0.25
-				s_DeltaYaw = s_DeltaYaw - math.pi * 0.5
-			end
 
 			-- Detect direction for moving gun back.
 			local s_GunDeltaYaw = s_Yaw - p_Bot._LastVehicleYaw
