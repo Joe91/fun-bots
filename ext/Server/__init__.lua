@@ -566,7 +566,10 @@ function FunBotServer:OnBulletEntityCollision(p_HookCtx, p_Entity, p_Hit, p_Give
 		return
 	end
 
-	Globals.LastPorjectile = SpatialEntity(p_Entity).transform
+	if Registry.DEBUG.VEHICLE_PROJECTILE_TRACE then
+		Globals.LastPorjectile = SpatialEntity(p_Entity).transform
+	end
+
 	if p_GiverInfo.giver and p_GiverInfo.giver.onlineId == 0 then
 		local s_SyncedGameSettings = ResourceManager:GetSettings("SyncedGameSettings")
 

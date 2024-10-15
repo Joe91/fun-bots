@@ -333,10 +333,8 @@ function BotManager:CheckForFlareOrSmoke(p_MissileEntity, p_MissileSpeed, p_Time
 	local s_GunShipEntity = g_GameDirector:GetGunship()
 	while s_Entity ~= nil do
 		s_Entity = ControllableEntity(s_Entity)
-		local s_EntityIsGunShip = false
 		local s_DriverPlayer = s_Entity:GetPlayerInEntry(0)
 		if s_GunShipEntity and (s_Entity.uniqueId == s_GunShipEntity.uniqueId) then
-			s_EntityIsGunShip = true
 			local s_BotsPlayersInGunship = {}
 			for i = 1, 2 do
 				local s_TempPlayer = s_Entity:GetPlayerInEntry(i)

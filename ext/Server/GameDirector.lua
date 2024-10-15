@@ -659,7 +659,6 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 		local s_Gunship = {}
 		s_Gunship.Entity = p_Entity
 		s_Gunship.Team = self.m_GunshipObjectiveTeam
-		print(s_Gunship)
 
 		self.m_Gunship = s_Gunship
 	end
@@ -1532,7 +1531,6 @@ function GameDirector:_InitFlagTeams()
 
 	while s_Entity ~= nil do
 		s_Entity = CapturePointEntity(s_Entity)
-		print(s_Entity.name)
 		local s_ObjectiveName = self:_TranslateObjective(s_Entity.transform.trans, s_Entity.name)
 
 		if s_ObjectiveName ~= "" then
