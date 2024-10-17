@@ -51,6 +51,30 @@ function BotManager:__init()
 	self._LastBotCheckIndex = 1
 	self._LastPlayerCheckIndex = 1
 	self._InitDone = false
+
+	-- update-timers
+	-- self._UpdateTimerL0 = 0.0
+	self._UpdateTimerL1 = 0.0
+	self._UpdateTimerL2 = 0.0
+	self._UpdateTimerL3 = 0.0
+	--
+	self._CycleTimeL0 = 1.0 / SharedUtils:GetTickrate()
+	self._RatioL0L1 = math.floor(Registry.BOT.BOT_FAST_UPDATE_CYCLE / self._CycleTimeL0) + 1
+	self._RatioL0L2 = math.floor(Registry.BOT.BOT_UPDATE_CYCLE / self._CycleTimeL0) + 1
+	self._RatioL0L3 = math.floor(Registry.BOT.BOT_SLOW_UPDATE_CYCLE / self._CycleTimeL0) + 1
+
+	self._L1CycleTime = self._RatioL0L1 * self._CycleTimeL0
+	self._L2CycleTime = self._RatioL0L2 * self._CycleTimeL0
+	self._L3CycleTime = self._RatioL0L3 * self._CycleTimeL0
+	--
+	self._L0Counter = 0
+	self._L1Counter = 0
+	self._L2Counter = 0
+
+	print(self._CycleTimeL0)
+	print(self._L1CycleTime)
+	print(self._L2CycleTime)
+	print(self._L3CycleTime)
 end
 
 -- =============================================
@@ -74,10 +98,62 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 		return
 	end
 
-	for _, l_Bot in pairs(self._Bots) do
-		l_Bot:OnUpdatePassPostFrame(p_DeltaTime)
+	local s_BotCount = #self._Bots
+
+	if self._L2Counter >= self._RatioL0L3 then
+		self._L2Counter = 0
+	end
+	if self._L1Counter >= self._RatioL0L2 then
+		self._L1Counter = 0
+	end
+	if self._L0Counter >= self._RatioL0L1 then
+		self._L0Counter = 0
 	end
 
+	-- partly update L3
+	local s_PartCountL3 = math.floor(s_BotCount / self._RatioL0L3) + 1
+	local s_OffsetL3 = s_PartCountL3 * self._L2Counter
+	for i = 1, s_PartCountL3 do
+		local s_Index = i + s_OffsetL3
+		if s_Index < s_BotCount then
+			self._Bots[s_Index]:UpdateL3(self._L3CycleTime)
+		end
+	end
+
+
+	-- partly update L2
+	local s_PartCountL2 = math.floor(s_BotCount / self._RatioL0L2) + 1
+	local s_OffsetL2 = s_PartCountL2 * self._L1Counter
+	for i = 1, s_PartCountL2 do
+		local s_Index = i + s_OffsetL2
+		if s_Index < s_BotCount then
+			self._Bots[s_Index]:UpdateL2(self._L2CycleTime)
+		end
+	end
+
+
+	-- partly update L1
+	local s_PartCountL1 = math.floor(s_BotCount / self._RatioL0L1) + 1
+	local s_OffsetL1 = s_PartCountL1 * self._L0Counter
+	for i = 1, s_PartCountL1 do
+		local s_Index = i + s_OffsetL1
+		if s_Index < s_BotCount then
+			self._Bots[s_Index]:UpdateL1(self._L1CycleTime)
+		end
+	end
+
+	-- update every tick (base-update - needed every time)
+	for _, l_Bot in pairs(self._Bots) do
+		l_Bot:UpdateL0()
+	end
+
+	-- update counters
+	self._L0Counter = self._L0Counter + 1
+	self._L1Counter = self._L1Counter + 1
+	self._L2Counter = self._L2Counter + 1
+
+
+	-- other checks and stuff
 	if Config.BotsAttackBots and self._InitDone then
 		if self._BotAttackBotTimer >= Registry.GAME_RAYCASTING.BOT_BOT_CHECK_INTERVAL then
 			self._BotAttackBotTimer = 0.0

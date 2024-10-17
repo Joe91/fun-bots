@@ -23,77 +23,39 @@ local m_VehicleWeaponHandling = require('Bot/VehicleWeaponHandling')
 -- (Update medium? Maybe some things in between).
 -- Update slow (0.5) ? Reload, Deploy, (Obstacle-Handling).
 
----@param p_DeltaTime number
-function Bot:OnUpdatePassPostFrame(p_DeltaTime)
+-- -- Old movement-modes -- remove one day?
+-- if self:IsStaticMovement() then
+-- 	m_BotMovement:UpdateStaticMovement(self)
+-- 	self:_UpdateInputs(p_DeltaTime)
+-- 	m_BotMovement:UpdateYaw(self)
+-- 	self._UpdateFastTimer = 0.0
+-- 	return
+-- end
+
+-- update L0, called every tick
+function Bot:UpdateL0()
 	local s_Soldier = self.m_Player.soldier
-
-	-- Bot not alive, check for respawn
 	if not s_Soldier then
-		self._UpdateTimer = self._UpdateTimer + p_DeltaTime -- Reusage of updateTimer.
-
-		if self._UpdateTimer > Registry.BOT.BOT_UPDATE_CYCLE then
-			self:_UpdateRespawn(self._UpdateTimer)
-			self._UpdateTimer = 0.0
-		end
-
 		return
 	end
 
 	s_Soldier:SingleStepEntry(self.m_Player.controlledEntryId)
 
-	-- Bot cannot move yet.
-	if not Globals.IsInputAllowed or self._SpawnProtectionTimer > 0.0 then
-		-- Alive, but no inputs allowed yet → look around.
-		self._UpdateTimer = self._UpdateTimer + p_DeltaTime -- Reusage of updateTimer.
-
-		if self._UpdateTimer > Registry.BOT.BOT_UPDATE_CYCLE then
-			if self._SpawnProtectionTimer > 0.0 then
-				self._SpawnProtectionTimer = self._SpawnProtectionTimer - Registry.BOT.BOT_UPDATE_CYCLE
-			else
-				self._SpawnProtectionTimer = 0.0
-			end
-
-			m_BotMovement:UpdateYaw(self)
-			m_BotMovement:LookAround(self, self._UpdateTimer)
-			self:_UpdateInputs(self._UpdateTimer)
-			self._UpdateTimer = 0.0
-		end
-		return
-	end
-
-	-- Update timer.
-	self._UpdateFastTimer = self._UpdateFastTimer + p_DeltaTime
-
-	if self._UpdateFastTimer >= Registry.BOT.BOT_FAST_UPDATE_CYCLE then
-		-- Fast timer function will call the slow timer functions
-		self:FastTimerUpdate(self._UpdateFastTimer)
-		self._UpdateFastTimer = 0.0
-	end
-
-	-- NOTE: Very fast code.
 	-- Update yaw of soldier every tick.
 	if not self.m_InVehicle then
 		m_BotMovement:UpdateYaw(self)
 	end
 end
 
----comment
----@param p_DeltaTime number
-function Bot:FastTimerUpdate(p_DeltaTime)
-	-- Increment slow timer.
-	self._UpdateTimer = self._UpdateTimer + self._UpdateFastTimer
-
-	-- Detect modes.
-	self:_SetActiveVars()
-
-	-- Old movement-modes -- remove one day?
-	if self:IsStaticMovement() then
-		m_BotMovement:UpdateStaticMovement(self)
-		self:_UpdateInputs(p_DeltaTime)
-		m_BotMovement:UpdateYaw(self)
-		self._UpdateFastTimer = 0.0
+-- very fast Bot-Code
+function Bot:UpdateL1(p_DeltaTime)
+	local s_Soldier = self.m_Player.soldier
+	-- don't do stuff if not alive or not allowed to move
+	if not s_Soldier or not Globals.IsInputAllowed or self._SpawnProtectionTimer > 0.0 then
 		return
 	end
+
+	self:_SetActiveVars()
 
 	-- Timeout after revive. Do nothing.
 	if self._ActiveDelay > 0.0 then
@@ -108,41 +70,63 @@ function Bot:FastTimerUpdate(p_DeltaTime)
 		return
 	end
 
-	------------------ CODE OF BEHAVIOUR STARTS HERE ---------------------
-	local s_IsAttacking = self._ShootPlayer ~= nil -- Can be either attacking or reviving or enter of a vehicle with a player.
+	local s_IsAttacking = self._ShootPlayer ~= nil
 
 	-- Bot is a Passenger of a boat, for example.
 	if self.m_OnVehicle then
-		if self._UpdateTimer >= Registry.BOT.BOT_UPDATE_CYCLE then
-			self:OnVehicleSlowTimerUpdate(self._UpdateTimer, s_IsAttacking)
-			self._UpdateTimer = 0.0
-		end
 		self:OnVehicleFastTimerUpdate(p_DeltaTime, s_IsAttacking)
-		return
-	end
-
-	-- Bot is in a vehicle
-	if self.m_InVehicle then
-		if self._UpdateTimer >= Registry.BOT.BOT_UPDATE_CYCLE then
-			self:InVehicleSlowTimerUpdate(self._UpdateTimer, s_IsAttacking)
-			self._UpdateTimer = 0.0
-		end
+	elseif self.m_InVehicle then -- Bot is in a vehicle
 		self:InVehicleFastTimerUpdate(p_DeltaTime, s_IsAttacking)
+	else                      -- soldier
+		-- Fast code.
+		if s_IsAttacking then
+			m_BotAiming:UpdateAiming(self)
+		else
+			m_BotMovement:UpdateTargetMovement(self)
+		end
+	end
+end
+
+-- normal fast Bot-Code
+function Bot:UpdateL2(p_DeltaTime)
+	local s_Soldier = self.m_Player.soldier
+	-- Bot not alive, check for respawn
+	if not s_Soldier then
+		self:_UpdateRespawn(p_DeltaTime)
 		return
 	end
 
-	-- Sync slow code with fast code. Therefore, execute the slow code first.
-	if self._UpdateTimer >= Registry.BOT.BOT_UPDATE_CYCLE then
-		self:SoldierSlowTimerUpdate(self._UpdateTimer, s_IsAttacking)
-		self._UpdateTimer = 0.0
+	-- Bot cannot move yet.
+	if not Globals.IsInputAllowed or self._SpawnProtectionTimer > 0.0 then
+		if self._SpawnProtectionTimer > 0.0 then
+			self._SpawnProtectionTimer = self._SpawnProtectionTimer - p_DeltaTime
+		end
+
+		m_BotMovement:UpdateYaw(self)
+		m_BotMovement:LookAround(self, p_DeltaTime)
+		self:_UpdateInputs(p_DeltaTime)
+		return
 	end
 
-	-- Fast code.
-	if s_IsAttacking then
-		m_BotAiming:UpdateAiming(self)
-	else
-		m_BotMovement:UpdateTargetMovement(self)
+	-- Bot waiting for revive
+	if self._ActiveDelay > 0 then
+		return
 	end
+
+	local s_IsAttacking = self._ShootPlayer ~= nil
+
+	-- Bot is a Passenger of a boat, for example.
+	if self.m_OnVehicle then
+		self:OnVehicleSlowTimerUpdate(p_DeltaTime, s_IsAttacking)
+	elseif self.m_InVehicle then -- Bot is in a vehicle
+		self:InVehicleSlowTimerUpdate(p_DeltaTime, s_IsAttacking)
+	else                      -- soldier
+		self:SoldierSlowTimerUpdate(p_DeltaTime, s_IsAttacking)
+	end
+end
+
+-- slow Bot-Code TODO: fill some slow stuff here
+function Bot:UpdateL3(p_DeltaTime)
 end
 
 ---@param p_DeltaTime number

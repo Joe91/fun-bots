@@ -31,7 +31,7 @@ function BotWeaponHandling:UpdateDeployAndReload(p_DeltaTime, p_Bot, p_Deploy)
 	p_Bot._ReloadTimer = p_Bot._ReloadTimer + p_DeltaTime
 
 	-- reload primary weapon
-	if p_Bot.m_ActiveWeapon ~= nil and p_Bot._ReloadTimer > 1.5 and p_Bot._ReloadTimer < 2.5 and
+	if p_Bot.m_ActiveWeapon ~= nil and p_Bot._ReloadTimer > 1.5 and p_Bot._ReloadTimer < 2.55 and
 		p_Bot.m_Player.soldier.weaponsComponent.weapons[1] and
 		p_Bot.m_Player.soldier.weaponsComponent.weapons[1].primaryAmmo <= p_Bot.m_ActiveWeapon.reload then
 		p_Bot:_SetInput(EntryInputActionEnum.EIAReload, 1)
