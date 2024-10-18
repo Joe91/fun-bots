@@ -127,6 +127,28 @@ end
 
 -- slow Bot-Code TODO: fill some slow stuff here
 function Bot:UpdateL3(p_DeltaTime)
+	local s_Soldier = self.m_Player.soldier
+	if not s_Soldier or self._ActiveDelay > 0 or not Globals.IsInputAllowed or self._SpawnProtectionTimer > 0.0 then
+		return
+	end
+
+	local s_IsAttacking = self._ShootPlayer ~= nil
+	if self.m_OnVehicle then
+		self:_CheckForVehicleActions(p_DeltaTime, s_IsAttacking)
+		self:_DoExitVehicle()
+	elseif self.m_InVehicle then -- Bot is in a vehicle#
+		if m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.StationaryAA) then
+			self:_CheckForVehicleActions(p_DeltaTime, s_IsAttacking)
+			if not s_IsAttacking then
+				m_VehicleWeaponHandling:UpdateReloadVehicle(p_DeltaTime, self)
+			end
+		end
+		self:_DoExitVehicle()
+	else -- soldier
+		if not s_IsAttacking then
+			m_BotWeaponHandling:UpdateDeployAndReload(p_DeltaTime, self, true)
+		end
+	end
 end
 
 ---@param p_DeltaTime number
@@ -147,7 +169,6 @@ function Bot:SoldierSlowTimerUpdate(p_DeltaTime, p_IsAttacking)
 			m_BotMovement:UpdateShootMovement(p_DeltaTime, self)
 		end
 	else
-		m_BotWeaponHandling:UpdateDeployAndReload(p_DeltaTime, self, true)
 		m_BotMovement:UpdateNormalMovement(p_DeltaTime, self)
 		if self.m_Player.soldier == nil then
 			return
@@ -173,12 +194,6 @@ function Bot:OnVehicleSlowTimerUpdate(p_DeltaTime, p_IsAttacking)
 	end
 
 	self:_UpdateInputs(p_DeltaTime)
-	self:_CheckForVehicleActions(p_DeltaTime, p_IsAttacking)
-
-	-- Only exit at this point and abort afterwards.
-	if self:_DoExitVehicle() then
-		return --TODO: abort on exit somehow
-	end
 end
 
 ---@param p_DeltaTime number
@@ -206,9 +221,6 @@ function Bot:InVehicleSlowTimerUpdate(p_DeltaTime, p_IsAttacking)
 		end
 
 		self:_UpdateInputs(p_DeltaTime)
-
-		self:_DoExitVehicle()
-
 		return
 	end
 
@@ -233,7 +245,6 @@ function Bot:InVehicleSlowTimerUpdate(p_DeltaTime, p_IsAttacking)
 			m_VehicleMovement:UpdateShootMovementVehicle(self)
 		end
 	else
-		m_VehicleWeaponHandling:UpdateReloadVehicle(p_DeltaTime, self)
 		if self.m_Player.controlledEntryId == 0 and not s_IsStationaryLauncher then -- Only if driver.
 			m_VehicleMovement:UpdateNormalMovementVehicle(p_DeltaTime, self)
 		end
@@ -242,12 +253,6 @@ function Bot:InVehicleSlowTimerUpdate(p_DeltaTime, p_IsAttacking)
 	-- Common things.
 	m_VehicleMovement:UpdateSpeedOfMovementVehicle(p_DeltaTime, self, p_IsAttacking)
 	self:_UpdateInputs(p_DeltaTime)
-	self:_CheckForVehicleActions(p_DeltaTime, p_IsAttacking)
-
-	-- Only exit at this point and abort afterwards.
-	if self:_DoExitVehicle() then
-		return
-	end
 end
 
 ---@param p_DeltaTime number

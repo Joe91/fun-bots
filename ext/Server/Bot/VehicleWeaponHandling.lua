@@ -23,7 +23,7 @@ function VehicleWeaponHandling:UpdateReloadVehicle(p_DeltaTime, p_Bot)
 
 	p_Bot._ReloadTimer = p_Bot._ReloadTimer + p_DeltaTime
 
-	if p_Bot._ReloadTimer > 1.5 and p_Bot._ReloadTimer < 2.5 then
+	if p_Bot._ReloadTimer > 1.5 and p_Bot._ReloadTimer < 2.55 then
 		p_Bot:_SetInput(EntryInputActionEnum.EIAReload, 1)
 	end
 end
