@@ -118,24 +118,25 @@ function VehicleAttacking:UpdateAttackingVehicle(p_DeltaTime, p_Bot)
 						p_Bot._ShotTimer = 0.0
 					end
 					if p_Bot._ShotTimer >= 0.5 and p_Bot._VehicleReadyToShoot then
-						p_Bot:_SetInput(EntryInputActionEnum.EIAFire, 1)
+						self:Fire(p_Bot)
 					end
 				elseif m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane) then
 					if p_Bot._ShotTimer >= 1.6 then
 						p_Bot._ShotTimer = 0.0
 					end
 					if p_Bot._ShotTimer >= 0.3 and p_Bot._VehicleReadyToShoot then
-						p_Bot:_SetInput(EntryInputActionEnum.EIAFire, 1)
+						self:Fire(p_Bot)
 					end
 				else
 					if p_Bot._ShotTimer >= 0.6 then
 						p_Bot._ShotTimer = 0.0
 					end
 					if p_Bot._ShotTimer >= 0.3 and p_Bot._VehicleReadyToShoot then
-						p_Bot:_SetInput(EntryInputActionEnum.EIAFire, 1)
+						self:Fire(p_Bot)
 					end
 				end
 				p_Bot._ShotTimer = p_Bot._ShotTimer + p_DeltaTime
+				p_Bot._SoundTimer = p_Bot._SoundTimer + p_DeltaTime
 			end
 		else
 			p_Bot._TargetPitch = 0.0
@@ -149,6 +150,11 @@ function VehicleAttacking:UpdateAttackingVehicle(p_DeltaTime, p_Bot)
 	end
 
 	p_Bot._VehicleSecondaryWeaponTimer = math.max(p_Bot._VehicleSecondaryWeaponTimer - p_DeltaTime, 0)
+end
+
+function VehicleAttacking:Fire(p_Bot)
+	p_Bot._SoundTimer = 0.0
+	p_Bot:_SetInput(EntryInputActionEnum.EIAFire, 1)
 end
 
 ---@param p_Bot Bot

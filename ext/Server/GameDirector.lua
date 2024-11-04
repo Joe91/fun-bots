@@ -789,8 +789,42 @@ end
 ---@param p_GameMode string
 ---@return string|nil
 function GameDirector:GetGunshipObjectiveName(p_LevelName, p_GameMode)
-	if p_LevelName == "XP5_004" and p_GameMode == "ConquestLarge0" then
-		return "ID_H_US_D"
+	if p_GameMode == "ConquestLarge0" then
+		if p_LevelName == "XP3_Desert" then
+			return "ID_H_US_G"
+		elseif p_LevelName == "XP3_Alborz" then
+			return "ID_H_US_E"
+		elseif p_LevelName == "XP3_Shield" then
+			return "ID_H_US_B"
+		elseif p_LevelName == "XP3_Valley" then
+			return "ID_H_US_D"
+		elseif p_LevelName == "XP5_001" then
+			return "ID_H_US_C"
+		elseif p_LevelName == "XP5_002" then
+			return "ID_H_US_D"
+		elseif p_LevelName == "XP5_003" then
+			return "ID_H_US_D"
+		elseif p_LevelName == "XP5_004" then
+			return "ID_H_US_D"
+		end
+	elseif p_GameMode == "ConquestSmall0" then
+		if p_LevelName == "XP3_Desert" then
+			return "ID_H_US_E"
+		elseif p_LevelName == "XP3_Alborz" then
+			return "ID_H_US_C"
+		elseif p_LevelName == "XP3_Shield" then
+			return "ID_H_US_B"
+		elseif p_LevelName == "XP3_Valley" then
+			return "ID_H_US_C"
+		elseif p_LevelName == "XP5_001" then
+			return "ID_H_US_C"
+		elseif p_LevelName == "XP5_002" then
+			return "ID_H_US_C"
+		elseif p_LevelName == "XP5_003" then
+			return "ID_H_US_C"
+		elseif p_LevelName == "XP5_004" then
+			return "ID_H_US_C"
+		end
 	end
 
 	return nil

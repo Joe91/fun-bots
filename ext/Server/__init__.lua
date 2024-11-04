@@ -341,6 +341,9 @@ function FunBotServer:DestroyObstacles(p_LevelName, p_GameMode)
 		s_Positions[#s_Positions + 1] = Vec3(-74.64, 178.01, 42.61)
 		s_Positions[#s_Positions + 1] = Vec3(-85.23, 178.01, 44.08)
 		s_Positions[#s_Positions + 1] = Vec3(-89.42, 178.40, 50.82)
+		s_Positions[#s_Positions + 1] = Vec3(-64.84, 179.04, -36.78)
+		s_Positions[#s_Positions + 1] = Vec3(-77.92, 174.98, 4.35)
+		s_Positions[#s_Positions + 1] = Vec3(-93.82, 174.97, -11.36)
 	end
 
 	for _, l_Position in ipairs(s_Positions) do
