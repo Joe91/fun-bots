@@ -405,9 +405,32 @@ function BotManager:CheckForFlareOrSmoke(p_MissileEntity, p_MissileSpeed, p_Time
 
 	local s_Iterator = EntityManager:GetIterator("ServerVehicleEntity")
 	local s_Entity = s_Iterator:Next()
+
+	local s_GunShipEntity = g_GameDirector:GetGunship()
 	while s_Entity ~= nil do
 		s_Entity = ControllableEntity(s_Entity)
 		local s_DriverPlayer = s_Entity:GetPlayerInEntry(0)
+		if s_GunShipEntity and (s_Entity.uniqueId == s_GunShipEntity.uniqueId) then
+			local s_BotsPlayersInGunship = {}
+			for i = 1, 2 do
+				local s_TempPlayer = s_Entity:GetPlayerInEntry(i)
+				if not s_TempPlayer then
+					goto continue
+				end
+				local s_TempBot = self:GetBotById(s_TempPlayer.id)
+				if s_TempBot then
+					table.insert(s_BotsPlayersInGunship, s_TempPlayer)
+				end
+				::continue::
+			end
+			if #s_BotsPlayersInGunship > 0 then
+				s_DriverPlayer = s_BotsPlayersInGunship[MathUtils:GetRandomInt(1, #s_BotsPlayersInGunship)]
+			else
+				s_DriverPlayer = nil
+			end
+		end
+
+
 		if s_DriverPlayer then
 			local s_PositionVehicle = s_Entity.transform.trans
 			local s_VecMissile = (s_PositionVehicle - s_MissilePosition):Normalize()
