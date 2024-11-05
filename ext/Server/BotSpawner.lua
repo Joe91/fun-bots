@@ -1337,8 +1337,9 @@ function BotSpawner:_GetSpawnPoint(p_TeamId, p_SquadId)
 		return "SpawnInAa"
 	end
 
+	-- Gunships disabled for now! TODO: enable gunship again, once server-cameras are supported for aiming
 	local s_Gunship = g_GameDirector:GetGunship(p_TeamId)
-	if s_Gunship ~= nil then -- if enableParadrop
+	if false and s_Gunship then -- TODO: Remove "false", once the aiming works
 		local s_SeatsLeft = false
 		for i = 1, s_Gunship.entryCount - 1 do
 			if s_Gunship:GetPlayerInEntry(i) == nil then
