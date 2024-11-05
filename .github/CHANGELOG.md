@@ -42,6 +42,8 @@ This is the changelog for the version V2.9 Don't forget to [join us on Discord](
 * Option to always keep the same bots in one match
 * Option to choose team-specific-bot-names by Beschützer #340
 * Bots can now hear other bots shooting in vehicles or with guns (by tanger-noisu)
+* some improvements in air-vehicle-movement-logic
+* prepare for gunship-gunners, once server-camera is available
 
 ### Bug fixes
 * Merged pull request #323 from tagener-noisu Path-Switcher fixes

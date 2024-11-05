@@ -1156,7 +1156,10 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 							break
 						end
 					end
+				elseif s_SpawnPoint == "SpawnInGunship" then
+					s_SpawnEntity = g_GameDirector:GetGunship(s_TeamId)
 				end
+
 
 				if s_IsRespawn and p_ExistingBot then
 					p_ExistingBot:SetVarsWay(nil, true, 0, 0, false)
@@ -1332,6 +1335,21 @@ function BotSpawner:_GetSpawnPoint(p_TeamId, p_SquadId)
 
 	if Config.AABots and #g_GameDirector:GetStationaryAas(p_TeamId) > 0 then
 		return "SpawnInAa"
+	end
+
+	-- Gunships disabled for now! TODO: enable gunship again, once server-cameras are supported for aiming
+	local s_Gunship = g_GameDirector:GetGunship(p_TeamId)
+	if false and s_Gunship then -- TODO: Remove "false", once the aiming works
+		local s_SeatsLeft = false
+		for i = 1, s_Gunship.entryCount - 1 do
+			if s_Gunship:GetPlayerInEntry(i) == nil then
+				s_SeatsLeft = true
+				break
+			end
+		end
+		if s_SeatsLeft then
+			return "SpawnInGunship"
+		end
 	end
 
 	-- CONQUEST

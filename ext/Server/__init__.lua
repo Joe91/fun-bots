@@ -554,7 +554,7 @@ function FunBotServer:OnEntityFactoryCreate(p_HookCtx, p_EntityData, p_Transform
 			local s_CreatedEntity = p_HookCtx:Call()
 			if s_CreatedEntity then
 				local s_SpartialEntity = SpatialEntity(s_CreatedEntity)
-				Globals.LastPorjectile = s_SpartialEntity.transform
+				-- Globals.LastPorjectile = s_SpartialEntity.transform
 			end
 		end
 	end
@@ -568,6 +568,11 @@ function FunBotServer:OnBulletEntityCollision(p_HookCtx, p_Entity, p_Hit, p_Give
 	if Registry.COMMON.USE_BUGGED_HITBOXES then
 		return
 	end
+
+	if Registry.DEBUG.VEHICLE_PROJECTILE_TRACE then
+		Globals.LastPorjectile = SpatialEntity(p_Entity).transform
+	end
+
 	if p_GiverInfo.giver and p_GiverInfo.giver.onlineId == 0 then
 		local s_SyncedGameSettings = ResourceManager:GetSettings("SyncedGameSettings")
 

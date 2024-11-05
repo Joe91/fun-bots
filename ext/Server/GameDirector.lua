@@ -664,6 +664,17 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 	end
 end
 
+---@param p_TeamId TeamId|nil
+---@return ControllableEntity|nil
+function GameDirector:GetGunship(p_TeamId)
+	if self.m_Gunship ~= nil then
+		if p_TeamId == nil or p_TeamId == self.m_Gunship.Team then
+			return self.m_Gunship.Entity
+		end
+	end
+	return nil
+end
+
 ---@param p_Entity ControllableEntity|Entity
 ---@param p_VehiclePoints any
 ---@param p_HotTeam any

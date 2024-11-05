@@ -713,7 +713,7 @@ function Bot:_CheckForVehicleActions(p_DeltaTime, p_AttackActive)
 		if self._VehicleSeatTimer >= Registry.VEHICLES.VEHICLE_SEAT_CHECK_CYCLE_TIME then
 			self._VehicleSeatTimer = 0
 
-			if self.m_InVehicle then -- In vehicle.
+			if self.m_InVehicle and self.m_ActiveVehicle.Type ~= VehicleTypes.Gunship then -- In vehicle.
 				for l_SeatIndex = 0, self.m_Player.controlledEntryId do
 					if s_VehicleEntity:GetPlayerInEntry(l_SeatIndex) == nil then
 						-- Better seat available → switch seats.
@@ -1241,6 +1241,9 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 
 	-- Keep one seat free, if enough available.
 	local s_MaxEntries = p_Entity.entryCount
+	if s_VehicleData.Type == VehicleTypes.Gunship then
+		s_MaxEntries = 2
+	end
 	if s_VehicleData.Type == VehicleTypes.MobileArtillery then
 		s_MaxEntries = 1
 	end
@@ -1261,19 +1264,22 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 		end
 	end
 
-	for i = 0, s_MaxEntries - 1 do
-		if p_Entity:GetPlayerInEntry(i) == nil then
-			self.m_Player:EnterVehicle(p_Entity, i)
+	for seatIndex = 0, s_MaxEntries - 1 do
+		if s_VehicleData.Type == VehicleTypes.Gunship then
+			seatIndex = seatIndex + 1
+		end
+		if p_Entity:GetPlayerInEntry(seatIndex) == nil then
+			self.m_Player:EnterVehicle(p_Entity, seatIndex)
 			self._ExitVehicleHealth = PhysicsEntity(p_Entity).internalHealth * (Registry.VEHICLES.VEHICLE_EXIT_HEALTH / 100.0)
 
 			-- Get ID.
 			self.m_ActiveVehicle = s_VehicleData
 			self._ActiveVehicleWeaponSlot = 0
-			self._VehicleMovableId = m_Vehicles:GetPartIdForSeat(self.m_ActiveVehicle, i, self._ActiveVehicleWeaponSlot)
+			self._VehicleMovableId = m_Vehicles:GetPartIdForSeat(self.m_ActiveVehicle, seatIndex, self._ActiveVehicleWeaponSlot)
 			-- m_Logger:Write(self.m_ActiveVehicle)
 
-			if i == 0 then
-				if i == s_MaxEntries - 1 then
+			if seatIndex == 0 then
+				if seatIndex == s_MaxEntries - 1 then
 					self._VehicleWaitTimer = 0.5 -- Always wait a short time to check for free start.
 					self._VehicleTakeoffTimer = Registry.VEHICLES.JET_TAKEOFF_TIME
 					g_GameDirector:_SetVehicleObjectiveState(p_Entity.transform.trans, false)
@@ -1284,7 +1290,7 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 			else
 				self._VehicleWaitTimer = 0.0
 
-				if i == s_MaxEntries - 1 then
+				if seatIndex == s_MaxEntries - 1 then
 					-- Last seat taken: Disable vehicle and abort, wait for passengers.
 					local s_Driver = p_Entity:GetPlayerInEntry(0)
 
