@@ -589,13 +589,13 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 		-- ROLL (keep it zero).
 		local s_Tartget_Roll = 0.0
 		-- To-do: in strong steering: Roll a little?
-		-- if p_Bot._FullVehicleSteering then
-		-- 	if s_AbsDeltaYaw > 0 then
-		-- 		s_Tartget_Roll = 0.1
-		-- 	else
-		-- 		s_Tartget_Roll = -0.1
-		-- 	end
-		-- end
+		if p_Bot._FullVehicleSteering then
+			if s_AbsDeltaYaw > 0 then
+				s_Tartget_Roll = 0.1
+			else
+				s_Tartget_Roll = -0.1
+			end
+		end
 
 		local s_Delta_Roll = s_Tartget_Roll - s_Current_Roll
 		local s_Output_Roll = p_Bot._Pid_Drv_Roll:Update(s_Delta_Roll)
