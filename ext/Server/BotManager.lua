@@ -115,7 +115,7 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	local s_OffsetL3 = s_PartCountL3 * self._L2Counter
 	for i = 1, s_PartCountL3 do
 		local s_Index = i + s_OffsetL3
-		if s_Index < s_BotCount then
+		if s_Index <= s_BotCount then
 			self._Bots[s_Index]:UpdateL3(self._L3CycleTime)
 		end
 	end
@@ -126,7 +126,7 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	local s_OffsetL2 = s_PartCountL2 * self._L1Counter
 	for i = 1, s_PartCountL2 do
 		local s_Index = i + s_OffsetL2
-		if s_Index < s_BotCount then
+		if s_Index <= s_BotCount then
 			self._Bots[s_Index]:UpdateL2(self._L2CycleTime)
 		end
 	end
@@ -137,7 +137,7 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	local s_OffsetL1 = s_PartCountL1 * self._L0Counter
 	for i = 1, s_PartCountL1 do
 		local s_Index = i + s_OffsetL1
-		if s_Index < s_BotCount then
+		if s_Index <= s_BotCount then
 			self._Bots[s_Index]:UpdateL1(self._L1CycleTime)
 		end
 	end
