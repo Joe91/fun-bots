@@ -1319,6 +1319,16 @@ function Bot:_GetWayIndex(p_CurrentWayPoint)
 	return s_ActivePointIndex
 end
 
+function Bot:AtObjectivePath()
+	local s_FirstPoint = m_NodeCollection:GetFirst(self._PathIndex)
+
+	if #s_FirstPoint.Data.Objectives == 1 and s_FirstPoint.Data.Objectives[1] == self._Objective then
+		return true
+	end
+
+	return false
+end
+
 function Bot:AbortAttack()
 	if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) and
 		self._ShootPlayerName ~= '' then
