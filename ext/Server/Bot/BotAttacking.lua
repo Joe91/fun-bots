@@ -249,7 +249,7 @@ local function _DefaultAttackingAction(p_Bot)
 							if (p_Bot._ShootModeTimer <= (s_TargetTimeValueRocket + 0.001)) and
 								(p_Bot._ShootModeTimer >= (s_TargetTimeValueRocket - Registry.BOT.BOT_UPDATE_CYCLE - 0.001)) and
 								p_Bot.m_SecondaryGadget ~= nil and p_Bot.m_SecondaryGadget.type == WeaponTypes.Rocket and
-								MathUtils:GetRandomInt(1, 100) <= s_ProbabilityRocket
+								m_Utilities:CheckProbablity(s_ProbabilityRocket)
 							then
 								p_Bot._WeaponToUse = BotWeapons.Gadget2
 							end
@@ -271,7 +271,7 @@ local function _DefaultAttackingAction(p_Bot)
 						(p_Bot.m_Player.soldier.weaponsComponent.weapons[7] and p_Bot.m_Player.soldier.weaponsComponent.weapons[7].primaryAmmo > 0) and
 						p_Bot._ActiveAction ~= BotActionFlags.GrenadeActive) or Config.BotWeapon == BotWeapons.Grenade then
 					-- Should be triggered only once per fireMode.
-					if MathUtils:GetRandomInt(1, 100) <= s_ProbabilityGrenade then
+					if m_Utilities:CheckProbablity(s_ProbabilityGrenade) then
 						if p_Bot.m_Grenade ~= nil
 							and p_Bot._DistanceToPlayer > Registry.BOT.MIN_DISTANCE_NADE
 							and p_Bot._DistanceToPlayer < 25.0 then -- Algorithm only works for up to 25 m.

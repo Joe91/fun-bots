@@ -98,7 +98,7 @@ function Bot:FastTimerUpdate(p_DeltaTime)
 	-- Timeout after revive. Do nothing.
 	if self._ActiveDelay > 0.0 then
 		self._ActiveDelay = self._ActiveDelay - p_DeltaTime
-		if self._ActiveDelay <= 0.0 then
+		if self._ActiveDelay <= 0.0 and self.m_Player.soldier ~= nil then
 			-- accept revive
 			self:_SetInput(EntryInputActionEnum.EIACycleRadioChannel, 1)
 			self:_UpdateInputs()
@@ -220,6 +220,8 @@ function Bot:InVehicleFastTimerUpdate(p_IsAttacking)
 
 			self:_UpdateInputs()
 			self._UpdateTimer = 0.0
+
+			self:_DoExitVehicle()
 		end
 
 		return
@@ -245,7 +247,7 @@ function Bot:InVehicleFastTimerUpdate(p_IsAttacking)
 		end
 	end
 
-	local s_IsStationaryLauncher = m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.StationaryLauncher)
+	local s_IsStationaryLauncher = m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.StationaryLauncher) or m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.StationaryAA)
 
 	-- Sync slow code with fast code. Therefore, execute the slow code first.
 	if self._UpdateTimer >= Registry.BOT.BOT_UPDATE_CYCLE then

@@ -118,6 +118,7 @@ function Bot:__init(p_Player)
 
 	---@type table<integer|EntryInputActionEnum, ActiveInput>
 	self.m_ActiveInputs = {}
+	self.m_DelayedInputs = {}
 
 	-- Sidewards movement.
 	self.m_YawOffset = 0.0
@@ -234,8 +235,9 @@ function Bot:Revive(p_Player)
 	end
 end
 
-function Bot:FireFlareSmoke()
-	self:_SetInput(EntryInputActionEnum.EIAFireCountermeasure, 1)
+---@param p_TimeDelay number
+function Bot:FireFlareSmoke(p_TimeDelay)
+	self:_SetDelayedInput(EntryInputActionEnum.EIAFireCountermeasure, 1, p_TimeDelay)
 end
 
 ---@param p_Player Player
@@ -711,7 +713,7 @@ function Bot:_CheckForVehicleActions(p_DeltaTime, p_AttackActive)
 		if self._VehicleSeatTimer >= Registry.VEHICLES.VEHICLE_SEAT_CHECK_CYCLE_TIME then
 			self._VehicleSeatTimer = 0
 
-			if self.m_InVehicle then -- In vehicle.
+			if self.m_InVehicle and self.m_ActiveVehicle.Type ~= VehicleTypes.Gunship then -- In vehicle.
 				for l_SeatIndex = 0, self.m_Player.controlledEntryId do
 					if s_VehicleEntity:GetPlayerInEntry(l_SeatIndex) == nil then
 						-- Better seat available → switch seats.
@@ -764,6 +766,7 @@ function Bot:ResetVars()
 	self._ShotTimer = 0.0
 	self._SoundTimer = 30.0
 	self._UpdateTimer = 0.0
+	self._ActiveDelay = 0.0
 	self._TargetPoint = nil
 	self._NextTargetPoint = nil
 	self._KnifeWayPositions = {}
@@ -939,21 +942,38 @@ function Bot:IsStuck()
 end
 
 function Bot:ResetSpawnVars()
+	-- Timers
+	self._UpdateTimer = 0.0
+	self._UpdateFastTimer = 0.0
 	self._SpawnDelayTimer = 0.0
-	self._DefendTimer = 0.0
+	self._WayWaitTimer = 0.0
+	self._VehicleWaitTimer = 0.0
+	self._VehicleHealthTimer = 0.0
+	self._VehicleSeatTimer = 0.0
+	self._VehicleTakeoffTimer = 0.0
+	self._WayWaitYawTimer = 0.0
 	self._ObstacleSequenceTimer = 0.0
+	self._StuckTimer = 0.0
+	self._SoundTimer = 30.0
+	self._ShotTimer = 0.0
+	self._VehicleSecondaryWeaponTimer = 0.0
+	self._ShootModeTimer = 0.0
+	self._ReloadTimer = 0.0
+	self._AttackModeMoveTimer = 0.0
+	self._MeleeCooldownTimer = 0.0
+	self._ShootTraceTimer = 0.0
+	self._ActionTimer = 0.0
+	self._BrakeTimer = 0.0
+	self._DefendTimer = 0.0
+	self._SidewardsTimer = 0.0
+	self._KillYourselfTimer = 0.0
+	self._SpawnProtectionTimer = 2.0
+	self._DeployTimer = MathUtils:GetRandomInt(1, Config.DeployCycle)
+
 	self._ObstacleRetryCounter = 0
 	self._LastWayDistance = 1000.0
 	self._ShootPlayer = nil
 	self._ShootPlayerName = ''
-	self._ShootModeTimer = 0.0
-	self._MeleeCooldownTimer = 0.0
-	self._ShootTraceTimer = 0.0
-	self._ReloadTimer = 0.0
-	self._BrakeTimer = 0.0
-	self._DeployTimer = MathUtils:GetRandomInt(1, Config.DeployCycle)
-	self._AttackModeMoveTimer = 0.0
-	self._KillYourselfTimer = 0.0
 	self._AttackMode = BotAttackModes.RandomNotSet
 	self._ShootWayPoints = {}
 
@@ -964,24 +984,26 @@ function Bot:ResetSpawnVars()
 		self._SkillFound = true
 	end
 
-	self._ShotTimer = 0.0
-	self._SoundTimer = 30.0
-	self._VehicleSecondaryWeaponTimer = 0.0
-	self._UpdateTimer = 0.0
-	self._StuckTimer = 0.0
-	self._SpawnProtectionTimer = 2.0
 	self._TargetPoint = nil
 	self._NextTargetPoint = nil
 	self._ActiveAction = BotActionFlags.NoActionActive
 	self._KnifeWayPositions = {}
-	self._OnSwitch = false
 	self._ActiveDelay = 0.0
 	self._TargetPitch = 0.0
 	self._Objective = '' -- Reset objective on spawn, as another spawn-point might have chosen...
 	self._WeaponToUse = BotWeapons.Primary
+
 	self.m_HasBeacon = false
 	self.m_DontRevive = false
+	self._JetAbortAttackActive = false
+	self._VehicleReadyToShoot = false
+	self._FullVehicleSteering = false
+	self._VehicleDirBackPositive = false
+	self._ExitVehicleActive = false
+	self._OnSwitch = false
+
 	self.m_AttackPriority = 1
+	self.m_DelayedInputs = {}
 
 	-- Reset all input-vars.
 	---@type EntryInputActionEnum
@@ -1015,6 +1037,9 @@ function Bot:Kill()
 	self:ResetVars()
 
 	if self.m_Player.soldier ~= nil then
+		if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.StationaryAA) then
+			g_GameDirector:ReturnStationaryAaEntity(self.m_Player.controlledControllable, self.m_Player.teamId)
+		end
 		self.m_Player.soldier:Kill()
 	end
 end
@@ -1074,6 +1099,17 @@ function Bot:_SetInput(p_Input, p_Value)
 	}
 end
 
+---@param p_Input EntryInputActionEnum|integer
+---@param p_Value number
+---@param p_Delay number
+function Bot:_SetDelayedInput(p_Input, p_Value, p_Delay)
+	table.insert(self.m_DelayedInputs, {
+		input = p_Input,
+		delay = p_Delay,
+		value = p_Value,
+	})
+end
+
 function Bot:_UpdateInputs()
 	---@type EntryInputActionEnum
 	for i = 0, 36 do
@@ -1084,6 +1120,18 @@ function Bot:_UpdateInputs()
 		elseif self.m_ActiveInputs[i].value ~= 0 then
 			self.m_Player.input:SetLevel(i, self.m_ActiveInputs[i].value)
 			self.m_ActiveInputs[i].reset = true
+		end
+	end
+
+	for l_Index, l_DelayedInput in ipairs(self.m_DelayedInputs) do
+		l_DelayedInput.delay = l_DelayedInput.delay - Registry.BOT.BOT_UPDATE_CYCLE
+		if l_DelayedInput.delay <= 0 then
+			self.m_ActiveInputs[l_DelayedInput.input] = {
+				value = l_DelayedInput.value,
+				reset = l_DelayedInput.value == 0,
+			}
+			table.remove(self.m_DelayedInputs, l_Index)
+			break
 		end
 	end
 end
@@ -1129,7 +1177,7 @@ function Bot:_UpdateStationaryAAVehicle(p_Attacking)
 		-- Just look a little around.
 		m_VehicleMovement:UpdateVehicleLookAround(self, Registry.BOT.BOT_FAST_UPDATE_CYCLE)
 	end
-	m_VehicleMovement:UpdateYawVehicle(self, true, false) -- Only gun → therefore always gun-mode.
+	m_VehicleMovement:UpdateYawVehicle(self, true, true) -- Only gun → therefore always gun-mode.
 end
 
 ---@param p_Position Vec3
@@ -1193,6 +1241,9 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 
 	-- Keep one seat free, if enough available.
 	local s_MaxEntries = p_Entity.entryCount
+	if s_VehicleData.Type == VehicleTypes.Gunship then
+		s_MaxEntries = 2
+	end
 	if s_VehicleData.Type == VehicleTypes.MobileArtillery then
 		s_MaxEntries = 1
 	end
@@ -1213,19 +1264,22 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 		end
 	end
 
-	for i = 0, s_MaxEntries - 1 do
-		if p_Entity:GetPlayerInEntry(i) == nil then
-			self.m_Player:EnterVehicle(p_Entity, i)
+	for seatIndex = 0, s_MaxEntries - 1 do
+		if s_VehicleData.Type == VehicleTypes.Gunship then
+			seatIndex = seatIndex + 1
+		end
+		if p_Entity:GetPlayerInEntry(seatIndex) == nil then
+			self.m_Player:EnterVehicle(p_Entity, seatIndex)
 			self._ExitVehicleHealth = PhysicsEntity(p_Entity).internalHealth * (Registry.VEHICLES.VEHICLE_EXIT_HEALTH / 100.0)
 
 			-- Get ID.
 			self.m_ActiveVehicle = s_VehicleData
 			self._ActiveVehicleWeaponSlot = 0
-			self._VehicleMovableId = m_Vehicles:GetPartIdForSeat(self.m_ActiveVehicle, i, self._ActiveVehicleWeaponSlot)
+			self._VehicleMovableId = m_Vehicles:GetPartIdForSeat(self.m_ActiveVehicle, seatIndex, self._ActiveVehicleWeaponSlot)
 			-- m_Logger:Write(self.m_ActiveVehicle)
 
-			if i == 0 then
-				if i == s_MaxEntries - 1 then
+			if seatIndex == 0 then
+				if seatIndex == s_MaxEntries - 1 then
 					self._VehicleWaitTimer = 0.5 -- Always wait a short time to check for free start.
 					self._VehicleTakeoffTimer = Registry.VEHICLES.JET_TAKEOFF_TIME
 					g_GameDirector:_SetVehicleObjectiveState(p_Entity.transform.trans, false)
@@ -1236,7 +1290,7 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 			else
 				self._VehicleWaitTimer = 0.0
 
-				if i == s_MaxEntries - 1 then
+				if seatIndex == s_MaxEntries - 1 then
 					-- Last seat taken: Disable vehicle and abort, wait for passengers.
 					local s_Driver = p_Entity:GetPlayerInEntry(0)
 

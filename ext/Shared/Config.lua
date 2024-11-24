@@ -8,6 +8,7 @@ Config = {
 	BotWeapon = BotWeapons.Auto,		-- Select the weapon the bots use 
 	BotKit = BotKits.RANDOM_KIT,		-- The Kit of the Bots 
 	BotColor = BotColors.RANDOM_COLOR,	-- The Color of the Bots 
+	BotTeamNames = false,				-- If the bots shall have their names based on their team 
 
 	-- DIFFICULTY 
 	BotAimWorsening = 0.2,				-- Make bots aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy) 
@@ -16,16 +17,16 @@ Config = {
 	BotWorseningSkill = 0.40,			-- Variation of the skill of a single bot. The higher, the worse the bots can get compared to the original settings 
 	BotSniperWorseningSkill = 0.30,		-- See BotWorseningSkill - only for BOTs using sniper bolt-action rifles 
 	ReactionTime = 0.2,					-- Additional delay for bots, dependant of skill (might also be 0) 
-	DamageFactorAssault = 1.0,			-- Original Damage from bots gets multiplied by this 
-	DamageFactorCarabine = 1.0,			-- Original Damage from bots gets multiplied by this 
-	DamageFactorLMG = 1.0,				-- Original Damage from bots gets multiplied by this 
-	DamageFactorPDW = 1.0,				-- Original Damage from bots gets multiplied by this 
-	DamageFactorSniper = 1.0,			-- Original Damage from bots gets multiplied by this 
-	DamageFactorShotgun = 1.0,			-- Original Damage from bots gets multiplied by this 
-	DamageFactorPistol = 1.0,			-- Original Damage from bots gets multiplied by this 
+	DamageFactorAssault = 0.8,			-- Original Damage from bots gets multiplied by this 
+	DamageFactorCarabine = 0.8,			-- Original Damage from bots gets multiplied by this 
+	DamageFactorLMG = 0.8,				-- Original Damage from bots gets multiplied by this 
+	DamageFactorPDW = 0.8,				-- Original Damage from bots gets multiplied by this 
+	DamageFactorSniper = 0.8,			-- Original Damage from bots gets multiplied by this 
+	DamageFactorShotgun = 0.8,			-- Original Damage from bots gets multiplied by this 
+	DamageFactorPistol = 0.8,			-- Original Damage from bots gets multiplied by this 
 	DamageFactorKnife = 1.5,			-- Original Damage from bots gets multiplied by this 
-	VehicleAimWorsening = 0.0,			-- Make bots in vehicles aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy) 
-	VehicleAirAimWorsening = 0.0,		-- See VehicleAimWorsening, only for Air-Vehicles 
+	VehicleAimWorsening = 0.05,			-- Make bots in vehicles aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy) 
+	VehicleAirAimWorsening = 0.02,		-- See VehicleAimWorsening, only for Air-Vehicles 
 	DamageFactorVehicles = 1.0,			-- Original Damage from bots in vehicles gets multiplied by this 
 
 	-- SPAWN 

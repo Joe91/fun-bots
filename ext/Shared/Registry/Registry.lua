@@ -23,14 +23,16 @@ Registry = {
 		USE_BUGGED_HITBOXES = false,
 		-- Distance commands are heard by bots.
 		COMMAND_DISTANCE = 20,
-		-- Use load of Bundle to fix Bug of weapons disappearing (thanks to Lesley!) !!! THIS MIGHT CAUSE CRASHES !!! (for example on MP_Subway)
-		USE_LOAD_BUNDLE_BUGFIX = false,
+		-- Use load of Bundle to fix Bug of weapons disappearing (thanks to Lesley!) !!! THIS MIGHT CAUSE CRASHES OR OTHER ISSUES!!!
+		USE_LOAD_BUNDLE_BUGFIX = true,
 		-- Keep the last ticket in conquest for the gamemode counter
 		DONT_SPAWN_BOTS_ON_LAST_CONQUEST_TICKET = true,
 		-- Valid keys can be found here: https://docs.veniceunleashed.net/vext/ref/fb/inputdevicekeys/.
 		BOT_COMMAND_KEY = InputDeviceKeys.IDK_LeftAlt,
 		-- Destroy obstacles on level loaded (recommended for the affected maps)
 		DESTROY_OBSTACLES_ON_START = true,
+		-- Number of Nodes to load in one cycle
+		MAX_NUMBER_OF_NODES_PER_CYCLE = 1024,
 	},
 	-- Version and Release related variables.
 	-- Variables related to the current build version, version and the type of version.
@@ -41,9 +43,9 @@ Registry = {
 		-- Minor version.
 		VERSION_MIN = 9,
 		-- Patch version.
-		VERSION_PATCH = 1,
+		VERSION_PATCH = 3,
 		-- Additional label for pre-releases and build metadata.
-		VERSION_LABEL = "dev10",
+		VERSION_LABEL = "dev12",
 		-- Current version type of this build.
 		VERSION_TYPE = VersionType.DevBuild,
 		-- The Version used for the Update-Check.
@@ -136,6 +138,8 @@ Registry = {
 		REVIVE_PROBABILITY_IF_HAS_TARGET = 40.0,
 		-- Update cycle.
 		BOT_UPDATE_CYCLE = 0.1,
+		-- Update cycle.
+		BOT_SLOW_UPDATE_CYCLE = 1.0,
 		-- - distance the bots have to reach in height to continue with next Waypoint.
 		TARGET_HEIGHT_DISTANCE_WAYPOINT = 1.5,
 		-- Chance that the bot will teleport when they are stuck.
@@ -169,6 +173,8 @@ Registry = {
 		PROBABILITY_KEEP_KIT_IF_HAS_BEACON = 80,
 		-- number of nodes in every direction to scan for best way back
 		NUMBER_NODES_TO_SCAN_AFTER_ATTACK = 20,
+		-- Delay on destroying several bots
+		BOT_DESTORY_DELAY = 0.05
 	},
 	-- Bot team balancing (only in keep_playercount - spawn-mode)
 	BOT_TEAM_BALANCING = {
@@ -181,9 +187,13 @@ Registry = {
 	},
 	-- Bot spawning.
 	BOT_SPAWN = {
+		-- use new bots for every rounds or keep old ones
+		KEEP_BOTS_ON_NEW_ROUND = true,
 		-- Time between a level loading and the first bot spawning.
 		-- Note: Must be big enough to register inputActiveEvents (> 1.0)
 		FIRST_SPAWN_DELAY = 5.0,
+		-- Additional delay for dirct-spawnable vehicles (set to 0 to disable this)
+		DELAY_DIRECT_SPAWN = 6.0,
 		-- Probability of a bot spawning on a member of the same squad.
 		PROBABILITY_SQUADMATE_SPAWN = 40,
 		-- Probability of a bot spawning in the vehicle of a bot of the same squad.
@@ -203,5 +213,23 @@ Registry = {
 	DEBUG = {
 		-- enables prints on bullet-collistions for vehicle-offset-identification
 		VEHICLE_PROJECTILE_TRACE = false,
-	}
+	},
+
+	-- Get the version of the current build as in a semantic format.
+	-- @return String - semantic version.
+	-- @author Firjen <https://github.com/Firjens>
+	GetVersion = function()
+		-- If there is no label, we return the MAJ.MIN.PATCH, otherwise we need to return the MAJ.MIN.PATCH-LABEL.
+		if Registry.VERSION.VERSION_LABEL == nil or Registry.VERSION.VERSION_LABEL == "" or Registry.VERSION.VERSION_TYPE ==
+			VersionType.Release then
+			return "V" .. Registry.VERSION.VERSION_MAJ .. "." .. Registry.VERSION.VERSION_MIN .. "." .. Registry.VERSION.VERSION_PATCH;
+		else
+			MAJ_MIN_PATCH_LABEL = Registry.VERSION.VERSION_MAJ .. "." .. Registry.VERSION.VERSION_MIN .. "." .. Registry.VERSION.VERSION_PATCH .. "-" .. Registry.VERSION.VERSION_LABEL
+			if Registry.VERSION.VERSION_TYPE == VersionType.DevBuild then
+				return "v" .. MAJ_MIN_PATCH_LABEL
+			elseif Registry.VERSION.VERSION_TYPE == VersionType.Stable then
+				return "V" .. MAJ_MIN_PATCH_LABEL
+			end
+		end
+	end
 }

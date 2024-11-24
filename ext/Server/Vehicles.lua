@@ -3,6 +3,8 @@
 Vehicles = class("Vehicles")
 
 require('__shared/Constants/VehicleData')
+---@type Utilities
+local m_Utilities = require('__shared/Utilities')
 ---@type Logger
 local m_Logger = Logger("Vehicles", Debug.Server.VEHICLES)
 
@@ -289,7 +291,7 @@ function Vehicles:CheckForVehicleAttack(p_VehicleType, p_Distance, p_Gadget, p_I
 		s_AttackMode = VehicleAttackModes.AttackWithRifle                                        -- Attack with rifle.
 	end
 	if (p_IsSniper and p_VehicleType == VehicleTypes.Chopper and Config.SnipersAttackChoppers) then -- Don't attack planes. Too fast...
-		if MathUtils:GetRandomInt(1, 100) <= Registry.BOT.PROBABILITY_ATTACK_CHOPPER_WITH_RIFLE then
+		if m_Utilities:CheckProbablity(Registry.BOT.PROBABILITY_ATTACK_CHOPPER_WITH_RIFLE) then
 			s_AttackMode = VehicleAttackModes.AttackWithRifle                                    -- Attack with rifle.
 		end
 	end

@@ -34,6 +34,16 @@ This is the changelog for the version V2.9 Don't forget to [join us on Discord](
 * improve general behavior
 * fix modlist.realoadextension
 * Priority-System on attack (by tanger-noisu)
+* fix of USE_LOAD_BUNDLE_BUGFIX (by lywit) #286
+* some default-settings modified
+* Registry-option to delay direct-spawnable vehicles #315
+* Delayed flare/smoke activation #332
+* Improved Loading-Behavior on Level-Start
+* Option to always keep the same bots in one match
+* Option to choose team-specific-bot-names by Beschützer #340
+* Bots can now hear other bots shooting in vehicles or with guns (by tanger-noisu)
+* some improvements in air-vehicle-movement-logic
+* prepare for gunship-gunners, once server-camera is available
 
 ### Bug fixes
 * Merged pull request #323 from tagener-noisu Path-Switcher fixes
@@ -41,6 +51,10 @@ This is the changelog for the version V2.9 Don't forget to [join us on Discord](
 * Aiming with the defib was fixed by Bree_Arnold
 * fixed wrong spawn-delay after revive of bots
 * Don't revive Bots, that were killed by the gamedirector (by tanger-noisu)
+* Bots don't start moving in vehicles
+* Bots chosing spawn-vehicle-paths on exit
+* Errors in Mapfile generation
+* Fixed Stationary AA #344
 
 ### New maps
 * Conquest Large MP_018 by ThyKingdomCome

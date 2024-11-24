@@ -337,8 +337,9 @@ def get_map_lines_updated() -> List[List]:
     Returns:
         - map_items - A list of all maps' information
     """
-    maps_with_gunmaster = ["XP2", "XP4", "sp_", "coop_"]
-    maps_without_tdm_cq = ["XP2", "sp_", "coop_"]
+    maps_with_gunmaster = ["XP2", "XP4", "SP_", "COOP_"]
+    maps_without_tdm_large = ["XP2", "sp_", "coop_"]
+    mapnames_without_tdm_large = ["COOP_002", "SP_Villa"]
 
     map_items = []
 
@@ -366,7 +367,7 @@ def get_map_lines_updated() -> List[List]:
             if game_mode == "TDM":
                 if mapname_splitted in maps_with_gunmaster:
                     map_items.append([mapname, "GM", "GunMaster0", vehicle_support])
-                if mapname_splitted not in maps_without_tdm_cq:
+                if (mapname_splitted not in maps_without_tdm_large) and (mapname not in mapnames_without_tdm_large):
                     map_items.append(
                         [mapname, game_mode, translated_game_mode, vehicle_support]
                     )
@@ -393,8 +394,9 @@ def get_map_lines_created() -> List[List]:
         - map_items - A list of all maps' information
     """
     rounds_to_use = "1"
-    maps_with_gunmaster = ["XP2", "XP4"]
-    maps_without_tdm_cq = ["XP2"]
+    maps_with_gunmaster = ["XP2", "XP4", "SP", "COOP"]
+    maps_without_tdm_large = ["XP2"]
+    mapnames_without_tdm_large = ["COOP_002", "SP_Villa"]
 
     map_items = []
 
@@ -412,11 +414,11 @@ def get_map_lines_created() -> List[List]:
                 break
 
         if game_mode in ALL_GAME_MODES:
-            if game_mode == "TDM":
+            if game_mode == "TDM": # in tdm, other modes are directly possible as well...
                 if mapname_splitted in maps_with_gunmaster:
                     map_items.append([mapname, "GunMaster0", rounds_to_use])
-                if mapname_splitted not in maps_without_tdm_cq:
-                    map_items.append([mapname, translated_game_mode, rounds_to_use])
+                if (mapname_splitted not in maps_without_tdm_large) and (mapname not in mapnames_without_tdm_large):
+                    map_items.append([mapname, "TeamDeathMatch0", rounds_to_use])
                 map_items.append([mapname, "TeamDeathMatchC0", rounds_to_use])
             else:
                 map_items.append([mapname, translated_game_mode, rounds_to_use])
