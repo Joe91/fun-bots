@@ -734,6 +734,8 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 
 			if s_Data[2] == "beacon" then
 				m_NodeEditor:OnCustomAction(p_Player, { s_Data[2] })
+			elseif s_Data[2] == "explore" then
+				m_NodeEditor:OnCustomAction(p_Player, { s_Data[2] })
 			end
 		end
 		return
