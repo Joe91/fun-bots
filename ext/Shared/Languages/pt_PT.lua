@@ -423,7 +423,6 @@ Language:add(code, "The distance the bots have to reach to continue with the nex
 Language:add(code, "Additional reaciton-time of bots", "Tempo de reação adicional dos bots")
 Language:add(code, "Additional delay for bots, dependant of skill (might also be 0)", "Atraso adicional para bots, dependendo da habilidade (também pode ser 0)")
 Language:add(code, "Point of Interst", "Ponto de Interesse")
-Language:add(code, "Sniper-Spot", "Sniper-Spot")
 Language:add(code, "POI", "PI")
 Language:add(code, "Beacon", "Baliza")
 Language:add(code, "Use jets", "Usar jatos")
@@ -437,3 +436,4 @@ Language:add(code, "Bots can spawn on vehicles inside C-130 gunship", "Os bots p
 Language:add(code, "Bot Team Names", "Nomes de equipes de bots")
 Language:add(code, "If the bots shall have their names based on their team", "Se os bots tiverem seus nomes baseados em sua equipe")
 Language:add(code, "The minimum time a bot shoots at one player", "O tempo mínimo que um bot atira em um jogador")
+Language:add(code, "Explore", "Explorar")

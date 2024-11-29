@@ -1381,6 +1381,16 @@ function GameDirector:IsBeaconPath(p_Objective)
 	return false
 end
 
+function GameDirector:IsExplorePath(p_Objective)
+	local s_TempObjective = self:_GetObjectiveObject(p_Objective)
+
+	if s_TempObjective ~= nil and s_TempObjective.isExplorePath then
+		return true
+	end
+
+	return false
+end
+
 ---@param p_BotId integer
 ---@param p_BotTeam TeamId
 ---@param p_Objective string
@@ -1462,6 +1472,7 @@ function GameDirector:_InitObjectives()
 			isEnterAirVehiclePath = false,
 			isEnterJetPath = false,
 			isBeaconPath = false,
+			isExplorePath = false,
 			canBeCaptured = true,
 			destroyed = false,
 			active = true,
@@ -1487,6 +1498,12 @@ function GameDirector:_InitObjectives()
 
 		if string.find(l_ObjectiveName:lower(), "beacon") ~= nil then
 			s_Objective.isBeaconPath = true
+			s_Objective.active = false
+			s_Objective.canBeCaptured = false
+		end
+
+		if string.find(l_ObjectiveName:lower(), "explore") ~= nil then
+			s_Objective.isExplorePath = true
 			s_Objective.active = false
 			s_Objective.canBeCaptured = false
 		end

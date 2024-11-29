@@ -136,8 +136,8 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotId, p_Point, p_Objective, p_InVehic
 			end
 		end
 
-		-- Check for vehicle usage.
 		if s_PathNode.Data.Objectives ~= nil and #s_PathNode.Data.Objectives == 1 then
+			-- Check for vehicle usage.
 			if Config.UseVehicles then
 				if m_GameDirector:UseVehicle(p_TeamId, s_PathNode.Data.Objectives[1]) == true then
 					return true, s_NewPoint
@@ -148,10 +148,20 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotId, p_Point, p_Objective, p_InVehic
 				end
 			end
 
+			-- Check for beacon
 			if m_GameDirector:IsBeaconPath(s_PathNode.Data.Objectives[1]) then
 				if p_Bot.m_SecondaryGadget.type == WeaponTypes.Beacon
 					and not p_Bot.m_HasBeacon
 					and m_Utilities:CheckProbablity(Registry.BOT.PROBABILITY_SWITCH_TO_BEACON_PATH)
+				then
+					return true, s_NewPoint
+				end
+			end
+
+			if m_GameDirector:IsExplorePath(s_PathNode.Data.Objectives[1]) then
+				if (p_Bot:AtObjectivePath()
+					and MathUtils:GetRandomInt(1, 100) <= Registry.BOT.PROBABILITY_SWITCH_TO_EXPLORE_PATH)
+					or MathUtils:GetRandomInt(1, 100) <= Registry.BOT.PROBABILITY_SWITCH_TO_EXPLORE_PATH / 2
 				then
 					return true, s_NewPoint
 				end
