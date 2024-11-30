@@ -730,7 +730,7 @@ end
 ---@param p_VehicleEntity ControllableEntity|Entity
 ---@param p_Player Player
 function GameDirector:OnVehicleExit(p_VehicleEntity, p_Player)
-	if p_VehicleEntity == nil then
+	if (p_VehicleEntity == nil) or (p_VehicleEntity.typeInfo.name == "SoldierEntityData") then
 		return
 	end
 	p_VehicleEntity = ControllableEntity(p_VehicleEntity)

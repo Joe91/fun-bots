@@ -44,6 +44,7 @@ This is the changelog for the version V2.9 Don't forget to [join us on Discord](
 * Bots can now hear other bots shooting in vehicles or with guns (by tanger-noisu)
 * some improvements in air-vehicle-movement-logic
 * prepare for gunship-gunners, once server-camera is available
+* explore-path-feature added (by tanger-noisu)
 
 ### Bug fixes
 * Merged pull request #323 from tagener-noisu Path-Switcher fixes
