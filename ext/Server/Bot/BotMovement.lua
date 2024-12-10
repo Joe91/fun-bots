@@ -225,7 +225,7 @@ function BotMovement:UpdateNormalMovement(p_DeltaTime, p_Bot)
 
 			-- Use parachute if needed.
 			local s_VelocityFalling = PhysicsEntity(p_Bot.m_Player.soldier).velocity.y
-			if s_VelocityFalling < -50.0 then
+			if s_VelocityFalling < -25.0 then
 				p_Bot:_SetInput(EntryInputActionEnum.EIAToggleParachute, 1)
 			end
 
