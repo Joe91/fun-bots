@@ -109,9 +109,9 @@ Registry = {
 		-- Once a chopper is that low above a vehicle or person, he aborts.
 		ABORT_ATTACK_HEIGHT_CHOPPER = 20,
 		-- In this time, a jet will not attack.
-		JET_TAKEOFF_TIME = 20,
+		JET_TAKEOFF_TIME = 15,
 		-- Time a jet waits after an attack.
-		JET_ABORT_ATTACK_TIME = 4.0,
+		JET_ABORT_ATTACK_TIME = 5.0,
 		-- Time a jet waits after an attack on another jet.
 		JET_ABORT_JET_ATTACK_TIME = 0.7,
 		-- Percentage of vehicle health to leave vehicle with (currently no passive events for bot-only vehicles)

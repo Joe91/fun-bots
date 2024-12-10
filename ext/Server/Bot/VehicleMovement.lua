@@ -20,23 +20,6 @@ end
 ---@param p_DeltaTime number
 ---@param p_Bot Bot
 function VehicleMovement:UpdateNormalMovementVehicle(p_DeltaTime, p_Bot)
-	if p_Bot._VehicleTakeoffTimer > 0.0 then
-		p_Bot._VehicleTakeoffTimer = p_Bot._VehicleTakeoffTimer - p_DeltaTime
-		if p_Bot._JetAbortAttackActive then
-			local s_TargetPosition = p_Bot.m_Player.controlledControllable.transform.trans
-			local s_Forward = p_Bot.m_Player.controlledControllable.transform.forward
-			s_Forward.y = 0
-			s_Forward:Normalize()
-			s_TargetPosition = s_TargetPosition + (s_Forward * 50)
-			s_TargetPosition.y = s_TargetPosition.y + 50
-			local s_Waypoint = {
-				Position = s_TargetPosition,
-			}
-			p_Bot._TargetPoint = s_Waypoint
-			return
-		end
-	end
-	p_Bot._JetAbortAttackActive = false
 	if p_Bot._VehicleWaitTimer > 0.0 then
 		p_Bot._VehicleWaitTimer = p_Bot._VehicleWaitTimer - p_DeltaTime
 		if p_Bot._VehicleWaitTimer <= 0.0 then
@@ -63,6 +46,24 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_DeltaTime, p_Bot)
 			return
 		end
 	end
+
+	if p_Bot._VehicleTakeoffTimer > 0.0 then
+		p_Bot._VehicleTakeoffTimer = p_Bot._VehicleTakeoffTimer - p_DeltaTime
+		if p_Bot._JetAbortAttackActive then
+			local s_TargetPosition = p_Bot.m_Player.controlledControllable.transform.trans
+			local s_Forward = p_Bot.m_Player.controlledControllable.transform.forward
+			s_Forward.y = 0
+			s_Forward:Normalize()
+			s_TargetPosition = s_TargetPosition + (s_Forward * 50)
+			s_TargetPosition.y = s_TargetPosition.y + 50
+			local s_Waypoint = {
+				Position = s_TargetPosition,
+			}
+			p_Bot._TargetPoint = s_Waypoint
+			return
+		end
+	end
+	p_Bot._JetAbortAttackActive = false
 
 	-- Move along points.
 	if m_NodeCollection:Get(1, p_Bot._PathIndex) ~= nil then -- Check for valid point.

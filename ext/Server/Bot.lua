@@ -1284,6 +1284,7 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 				if seatIndex == s_MaxEntries - 1 then
 					self._VehicleWaitTimer = 0.5 -- Always wait a short time to check for free start.
 					self._VehicleTakeoffTimer = Registry.VEHICLES.JET_TAKEOFF_TIME
+					self._JetAbortAttackActive = true
 					g_GameDirector:_SetVehicleObjectiveState(p_Entity.transform.trans, false)
 				else
 					self._VehicleWaitTimer = Config.VehicleWaitForPassengersTime
