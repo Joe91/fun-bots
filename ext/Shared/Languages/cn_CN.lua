@@ -424,7 +424,6 @@ Language:add(code, "The distance the bots have to reach to continue with the nex
 Language:add(code, "Additional reaciton-time of bots", "BOT的额外反应时间")
 Language:add(code, "Additional delay for bots, dependant of skill (might also be 0)", "BOT的额外延迟，取决于技能（也可能为 0）")
 Language:add(code, "Point of Interst", "Point of Interst")
-Language:add(code, "Sniper-Spot", "Sniper-Spot")
 Language:add(code, "POI", "POI")
 Language:add(code, "Beacon", "重生信标")
 Language:add(code, "Use jets", "BOT使用喷气机")
@@ -438,3 +437,4 @@ Language:add(code, "Bots can spawn on vehicles inside C-130 gunship", "BOT可以
 Language:add(code, "Bot Team Names", "机器人队伍名称")
 Language:add(code, "If the bots shall have their names based on their team", "如果机器人的名字要根据其所在队伍")
 Language:add(code, "The minimum time a bot shoots at one player", "机器人向一名玩家射击的最短时间")
+Language:add(code, "Explore", "探索")

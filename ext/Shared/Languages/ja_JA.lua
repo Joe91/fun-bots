@@ -424,7 +424,6 @@ Language:add(code, "The distance the bots have to reach to continue with the nex
 Language:add(code, "Additional reaciton-time of bots", "ボットの追加反応時間")
 Language:add(code, "Additional delay for bots, dependant of skill (might also be 0)", "スキルに応じてボットの追加遅延 (0 の場合もあります)")
 Language:add(code, "Point of Interst", "興味のあるポイント")
-Language:add(code, "Sniper-Spot", "スナイパースポット")
 Language:add(code, "POI", "POI")
 Language:add(code, "Beacon", "ビーコン")
 Language:add(code, "Use jets", "ジェットを使用する")
@@ -438,3 +437,4 @@ Language:add(code, "Bots can spawn on vehicles inside C-130 gunship", "ボット
 Language:add(code, "Bot Team Names", "ボットチーム名")
 Language:add(code, "If the bots shall have their names based on their team", "ボットの名前がチームに基づいている場合")
 Language:add(code, "The minimum time a bot shoots at one player", "ボットが1人のプレイヤーを撃つ最小時間")
+Language:add(code, "Explore", "探検する")

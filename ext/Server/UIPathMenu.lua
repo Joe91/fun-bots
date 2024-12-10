@@ -500,8 +500,8 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 			},
 			Left = {
 				{
-					Action = 'poi_sniper',
-					Label = Language:I18N('Sniper-Spot')
+					Action = 'poi_explore',
+					Label = Language:I18N('Explore')
 				}
 			},
 			Center = {
@@ -730,8 +730,13 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 			m_NodeEditor:OnRemoveData(p_Player)
 		else
 			m_NodeEditor:OnAddObjective(p_Player, { s_Data[2] })
-			m_NodeEditor:OnCustomAction(p_Player, { s_Data[2] })
 			m_NodeEditor:OnSetLoopMode(p_Player, { "false" })
+
+			if s_Data[2] == "beacon" then
+				m_NodeEditor:OnCustomAction(p_Player, { s_Data[2] })
+			elseif s_Data[2] == "explore" then
+				m_NodeEditor:OnCustomAction(p_Player, { s_Data[2] })
+			end
 		end
 		return
 	elseif string.find(request.action, 'base_') then
