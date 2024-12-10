@@ -94,6 +94,7 @@ end
 ---@param p_DeltaTime number
 ---@param p_UpdatePass UpdatePass|integer
 function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
+	g_Profiler:Start("Botmanager:Update")
 	if p_UpdatePass ~= UpdatePass.UpdatePass_PostFrame then
 		return
 	end
@@ -183,6 +184,7 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 		self._DestroyBotsTimer = self._DestroyBotsTimer + p_DeltaTime
 	end
+	g_Profiler:End("Botmanager:Update")
 end
 
 ---VEXT Server Player:Left Event
