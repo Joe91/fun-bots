@@ -90,6 +90,27 @@ function BotManager:OnLevelDestroy()
 	self._InitDone = false
 end
 
+---@param p_Bots any
+---@param p_BotCount integer
+---@param p_Counter integer
+---@param p_Ratio integer
+---@param p_UpdateMethod string
+---@param p_CycleTime number
+function BotManager:UpdateBotsInBatches(p_Bots, p_BotCount, p_Counter, p_Ratio, p_UpdateMethod, p_CycleTime)
+	local s_BatchSize = math.floor(p_BotCount / p_Ratio) + 1
+	local s_Offset = s_BatchSize * p_Counter
+
+	-- Precompute method reference for slightly better performance
+	local s_UpdateFunc = p_Bots[1][p_UpdateMethod]
+
+	for i = 1, s_BatchSize do
+		local s_Index = i + s_Offset
+		if s_Index <= p_BotCount then
+			s_UpdateFunc(p_Bots[s_Index], p_CycleTime)
+		end
+	end
+end
+
 ---VEXT Shared UpdateManager:Update Event
 ---@param p_DeltaTime number
 ---@param p_UpdatePass UpdatePass|integer
@@ -100,58 +121,25 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	end
 
 	local s_BotCount = #self._Bots
-
-	if self._L2Counter >= self._RatioL0L3 then
-		self._L2Counter = 0
-	end
-	if self._L1Counter >= self._RatioL0L2 then
-		self._L1Counter = 0
-	end
-	if self._L0Counter >= self._RatioL0L1 then
-		self._L0Counter = 0
+	if s_BotCount <= 0 then
+		return
 	end
 
-	-- partly update L3
-	local s_PartCountL3 = math.floor(s_BotCount / self._RatioL0L3) + 1
-	local s_OffsetL3 = s_PartCountL3 * self._L2Counter
-	for i = 1, s_PartCountL3 do
-		local s_Index = i + s_OffsetL3
-		if s_Index <= s_BotCount then
-			self._Bots[s_Index]:UpdateL3(self._L3CycleTime)
-		end
-	end
+	self:UpdateBotsInBatches(self._Bots, s_BotCount, self._L2Counter, self._RatioL0L3, "UpdateL3", self._L3CycleTime)
 
+	self:UpdateBotsInBatches(self._Bots, s_BotCount, self._L1Counter, self._RatioL0L2, "UpdateL2", self._L2CycleTime)
 
-	-- partly update L2
-	local s_PartCountL2 = math.floor(s_BotCount / self._RatioL0L2) + 1
-	local s_OffsetL2 = s_PartCountL2 * self._L1Counter
-	for i = 1, s_PartCountL2 do
-		local s_Index = i + s_OffsetL2
-		if s_Index <= s_BotCount then
-			self._Bots[s_Index]:UpdateL2(self._L2CycleTime)
-		end
-	end
+	self:UpdateBotsInBatches(self._Bots, s_BotCount, self._L0Counter, self._RatioL0L1, "UpdateL1", self._L1CycleTime)
 
-
-	-- partly update L1
-	local s_PartCountL1 = math.floor(s_BotCount / self._RatioL0L1) + 1
-	local s_OffsetL1 = s_PartCountL1 * self._L0Counter
-	for i = 1, s_PartCountL1 do
-		local s_Index = i + s_OffsetL1
-		if s_Index <= s_BotCount then
-			self._Bots[s_Index]:UpdateL1(self._L1CycleTime)
-		end
-	end
-
-	-- update every tick (base-update - needed every time)
+	-- Update every tick (base-update - needed every time)
 	for _, l_Bot in pairs(self._Bots) do
 		l_Bot:UpdateL0()
 	end
 
-	-- update counters
-	self._L0Counter = self._L0Counter + 1
-	self._L1Counter = self._L1Counter + 1
-	self._L2Counter = self._L2Counter + 1
+	-- Optimize counter reset logic
+	self._L0Counter = (self._L0Counter + 1) % self._RatioL0L1
+	self._L1Counter = (self._L1Counter + 1) % self._RatioL0L2
+	self._L2Counter = (self._L2Counter + 1) % self._RatioL0L3
 
 
 	-- other checks and stuff
