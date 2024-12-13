@@ -129,17 +129,17 @@ Registry = {
 	},
 	-- Bot related.
 	BOT = {
-		-- Update cycle fast.
-		BOT_FAST_UPDATE_CYCLE = 0.03, -- Equals 30 fps.
 		-- Distance a bot tries to revive a bot.
 		REVIVE_DISTANCE = 15.0,
 		-- Revive probabilities
 		REVIVE_PROBABILITY = 80.0,
 		REVIVE_PROBABILITY_IF_HAS_TARGET = 40.0,
+		-- Update cycle fast.
+		BOT_FAST_UPDATE_CYCLE = 0.03, -- Equals 30 fps.
 		-- Update cycle.
-		BOT_UPDATE_CYCLE = 0.1,
+		BOT_UPDATE_CYCLE = 0.13, -- 7 fps
 		-- Update cycle.
-		BOT_SLOW_UPDATE_CYCLE = 0.5,
+		BOT_SLOW_UPDATE_CYCLE = 0.53,
 		-- - distance the bots have to reach in height to continue with next Waypoint.
 		TARGET_HEIGHT_DISTANCE_WAYPOINT = 1.5,
 		-- Chance that the bot will teleport when they are stuck.
