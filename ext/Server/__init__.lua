@@ -50,6 +50,8 @@ local m_Language = require('__shared/Language')
 local m_SettingsManager = require('SettingsManager')
 ---@type BotManager
 local m_BotManager = require('BotManager')
+---@type PlayerData
+local m_PlayerData = require('PlayerData')
 ---@type BotCreator
 local m_BotCreator = require('BotCreator')
 ---@type BotSpawner
@@ -300,6 +302,7 @@ function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPe
 	local s_CustomGameMode = ServerUtils:GetCustomGameModeName()
 
 	m_WeaponList:OnLevelLoaded()
+	m_PlayerData:Clear()
 
 	-- Only use name of Level.
 	p_LevelName = p_LevelName:gsub(".+/.+/", "")
@@ -409,6 +412,7 @@ end
 ---@param p_Player Player
 function FunBotServer:OnPlayerRespawn(p_Player)
 	m_NodeEditor:OnPlayerRespawn(p_Player)
+	m_PlayerData:SetPlayerData(p_Player)
 end
 
 ---VEXT Server Player:Killed Event
@@ -512,6 +516,7 @@ end
 ---@param p_Player Player
 function FunBotServer:OnVehicleEnter(p_VehicleEntity, p_Player)
 	m_GameDirector:OnVehicleEnter(p_VehicleEntity, p_Player)
+	m_PlayerData:OnVehicleEnter(p_VehicleEntity, p_Player)
 	m_AirTargets:OnVehicleEnter(p_VehicleEntity, p_Player)
 end
 
@@ -520,6 +525,7 @@ end
 ---@param p_Player Player
 function FunBotServer:OnVehicleExit(p_VehicleEntity, p_Player)
 	m_GameDirector:OnVehicleExit(p_VehicleEntity, p_Player)
+	m_PlayerData:OnVehicleExit(p_VehicleEntity, p_Player)
 	m_AirTargets:OnVehicleExit(p_VehicleEntity, p_Player)
 end
 

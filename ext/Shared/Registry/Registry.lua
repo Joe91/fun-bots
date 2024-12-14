@@ -139,7 +139,7 @@ Registry = {
 		-- Update cycle.
 		BOT_UPDATE_CYCLE = 0.13, -- 7 fps
 		-- Update cycle.
-		BOT_SLOW_UPDATE_CYCLE = 0.53,
+		BOT_SLOW_UPDATE_CYCLE = 0.66,
 		-- - distance the bots have to reach in height to continue with next Waypoint.
 		TARGET_HEIGHT_DISTANCE_WAYPOINT = 1.5,
 		-- Chance that the bot will teleport when they are stuck.

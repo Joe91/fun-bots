@@ -229,8 +229,9 @@ function Bot:Revive(p_Player)
 		string.find(self.m_Player.soldier.weaponsComponent.weapons[6].name, "Defibrillator") then
 		if Config.BotsRevive then
 			self._ActiveAction = BotActionFlags.ReviveActive
-			self._ShootPlayer = nil
 			self._ShootPlayerName = p_Player.name
+			self._ShootPlayer = PlayerManager:GetPlayerByName(self._ShootPlayerName)
+			self._ShootPlayerVehicleType = VehicleTypes.NoVehicle -- does not matter here
 		end
 	end
 end
@@ -246,8 +247,9 @@ function Bot:Repair(p_Player)
 		self._ActiveAction = BotActionFlags.RepairActive
 		self._RepairVehicleEntity = p_Player.controlledControllable
 		self._LastVehicleHealth = 0.0
-		self._ShootPlayer = nil
 		self._ShootPlayerName = p_Player.name
+		self._ShootPlayer = PlayerManager:GetPlayerByName(self._ShootPlayerName)
+		self._ShootPlayerVehicleType = VehicleTypes.NoVehicle -- does not matter here
 		self._ShootModeTimer = Registry.BOT.MAX_TIME_TRY_REPAIR
 	end
 end
@@ -259,8 +261,9 @@ end
 ---@param p_Player Player
 function Bot:EnterVehicleOfPlayer(p_Player)
 	self._ActiveAction = BotActionFlags.EnterVehicleActive
-	self._ShootPlayer = nil
 	self._ShootPlayerName = p_Player.name
+	self._ShootPlayer = PlayerManager:GetPlayerByName(self._ShootPlayerName)
+	self._ShootPlayerVehicleType = VehicleTypes.NoVehicle -- does not matter here
 	self._ShootModeTimer = 12.0
 end
 
@@ -632,9 +635,10 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 			self._ActiveShootDuration = self._ShootModeTimer
 			if self._ShootPlayerName ~= p_Player.name then
 				self._DoneShootDuration = 0.0
+				self._ShootPlayerName = p_Player.name
+				self._ShootPlayer = PlayerManager:GetPlayerByName(self._ShootPlayerName)
+				self._ShootPlayerVehicleType = g_PlayerData:GetData(self._ShootPlayerName).Vehicle
 			end
-			self._ShootPlayerName = p_Player.name
-			self._ShootPlayer = nil
 			self._KnifeWayPositions = {}
 			self._VehicleReadyToShoot = false
 
@@ -1030,6 +1034,7 @@ function Bot:ClearPlayer(p_Player)
 
 	if s_CurrentShootPlayer == p_Player then
 		self._ShootPlayerName = ''
+		self._ShootPlayer = nil
 	end
 end
 
@@ -1159,10 +1164,10 @@ function Bot:_UpdateStationaryAAVehicle(p_DeltaTime, p_Attacking)
 	if self._DeployTimer > 1.0 then
 		local s_Target = m_AirTargets:GetTarget(self.m_Player, Config.MaxDistanceAABots)
 
-		if s_Target ~= nil then
+		if s_Target ~= nil and self._ShootPlayerName ~= s_Target.name then
 			self._ShootPlayerName = s_Target.name
 			self._ShootPlayer = PlayerManager:GetPlayerByName(self._ShootPlayerName)
-			self._ShootPlayerVehicleType = m_Vehicles:FindOutVehicleType(self._ShootPlayer)
+			self._ShootPlayerVehicleType = g_PlayerData:GetData(self._ShootPlayerName).Vehicle
 		else
 			self:AbortAttack()
 		end
@@ -1421,11 +1426,9 @@ function Bot:_ResetActionFlag(p_FlagValue)
 end
 
 function Bot:_SetActiveVarsSlow()
-	if self._ShootPlayerName ~= '' then
-		self._ShootPlayer = PlayerManager:GetPlayerByName(self._ShootPlayerName)
-		self._ShootPlayerVehicleType = m_Vehicles:FindOutVehicleType(self._ShootPlayer)
-	else
-		self._ShootPlayer = nil
+	if self._ShootPlayer ~= nil then
+		-- only needed on change
+		self._ShootPlayerVehicleType = g_PlayerData:GetData(self._ShootPlayerName).Vehicle
 	end
 end
 
