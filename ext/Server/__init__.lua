@@ -50,6 +50,8 @@ local m_Language = require('__shared/Language')
 local m_SettingsManager = require('SettingsManager')
 ---@type BotManager
 local m_BotManager = require('BotManager')
+---@type PlayerData
+local m_PlayerData = require('PlayerData')
 ---@type BotCreator
 local m_BotCreator = require('BotCreator')
 ---@type BotSpawner
@@ -605,6 +607,7 @@ end
 
 function FunBotServer:OnRespawnBot(p_BotId)
 	m_BotSpawner:OnRespawnBot(p_BotId)
+	O
 end
 
 function FunBotServer:OnRequestClientSettings(p_Player)
