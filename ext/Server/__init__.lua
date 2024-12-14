@@ -302,6 +302,7 @@ function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPe
 	local s_CustomGameMode = ServerUtils:GetCustomGameModeName()
 
 	m_WeaponList:OnLevelLoaded()
+	m_PlayerData:Clear()
 
 	-- Only use name of Level.
 	p_LevelName = p_LevelName:gsub(".+/.+/", "")
@@ -411,6 +412,7 @@ end
 ---@param p_Player Player
 function FunBotServer:OnPlayerRespawn(p_Player)
 	m_NodeEditor:OnPlayerRespawn(p_Player)
+	m_PlayerData:SetPlayerData(p_Player)
 end
 
 ---VEXT Server Player:Killed Event
@@ -514,6 +516,7 @@ end
 ---@param p_Player Player
 function FunBotServer:OnVehicleEnter(p_VehicleEntity, p_Player)
 	m_GameDirector:OnVehicleEnter(p_VehicleEntity, p_Player)
+	m_PlayerData:OnVehicleEnter(p_VehicleEntity, p_Player)
 	m_AirTargets:OnVehicleEnter(p_VehicleEntity, p_Player)
 end
 
@@ -522,6 +525,7 @@ end
 ---@param p_Player Player
 function FunBotServer:OnVehicleExit(p_VehicleEntity, p_Player)
 	m_GameDirector:OnVehicleExit(p_VehicleEntity, p_Player)
+	m_PlayerData:OnVehicleExit(p_VehicleEntity, p_Player)
 	m_AirTargets:OnVehicleExit(p_VehicleEntity, p_Player)
 end
 
@@ -607,7 +611,6 @@ end
 
 function FunBotServer:OnRespawnBot(p_BotId)
 	m_BotSpawner:OnRespawnBot(p_BotId)
-	O
 end
 
 function FunBotServer:OnRequestClientSettings(p_Player)

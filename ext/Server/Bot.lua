@@ -637,7 +637,7 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 				self._DoneShootDuration = 0.0
 				self._ShootPlayerName = p_Player.name
 				self._ShootPlayer = PlayerManager:GetPlayerByName(self._ShootPlayerName)
-				self._ShootPlayerVehicleType = m_Vehicles:FindOutVehicleType(self._ShootPlayer)
+				self._ShootPlayerVehicleType = g_PlayerData:GetData(self._ShootPlayerName).Vehicle
 			end
 			self._KnifeWayPositions = {}
 			self._VehicleReadyToShoot = false
@@ -1167,7 +1167,7 @@ function Bot:_UpdateStationaryAAVehicle(p_DeltaTime, p_Attacking)
 		if s_Target ~= nil and self._ShootPlayerName ~= s_Target.name then
 			self._ShootPlayerName = s_Target.name
 			self._ShootPlayer = PlayerManager:GetPlayerByName(self._ShootPlayerName)
-			self._ShootPlayerVehicleType = m_Vehicles:FindOutVehicleType(self._ShootPlayer)
+			self._ShootPlayerVehicleType = g_PlayerData:GetData(self._ShootPlayerName).Vehicle
 		else
 			self:AbortAttack()
 		end
@@ -1428,7 +1428,7 @@ end
 function Bot:_SetActiveVarsSlow()
 	if self._ShootPlayer ~= nil then
 		-- only needed on change
-		self._ShootPlayerVehicleType = m_Vehicles:FindOutVehicleType(self._ShootPlayer)
+		self._ShootPlayerVehicleType = g_PlayerData:GetData(self._ShootPlayerName).Vehicle
 	end
 end
 

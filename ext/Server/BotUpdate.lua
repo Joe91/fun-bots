@@ -271,10 +271,10 @@ function Bot:InVehicleFastTimerUpdate(p_DeltaTime, p_IsAttacking)
 		if self._DeployTimer > (Config.BotVehicleFireModeDuration - 0.5) and self._VehicleTakeoffTimer <= 0.0 then
 			local s_Target = m_AirTargets:GetTarget(self.m_Player, Registry.VEHICLES.MAX_ATTACK_DISTANCE_JET)
 
-			if s_Target ~= nil then
+			if s_Target ~= nil and self._ShootPlayerName ~= s_Target.name then
 				self._ShootPlayerName = s_Target.name
 				self._ShootPlayer = PlayerManager:GetPlayerByName(self._ShootPlayerName)
-				self._ShootPlayerVehicleType = m_Vehicles:FindOutVehicleType(self._ShootPlayer)
+				self._ShootPlayerVehicleType = g_PlayerData:GetData(self._ShootPlayerName).Vehicle
 				self._ShootModeTimer = Config.BotVehicleFireModeDuration
 			else
 				self:AbortAttack()

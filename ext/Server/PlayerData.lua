@@ -12,11 +12,32 @@ function PlayerData:__init()
 	self._Players = {}
 end
 
-function PlayerData:SetPlayerData(p_PlayerName, p_Data)
-	self._Players[p_PlayerName] = p_Data
+function PlayerData:SetPlayerData(p_Player)
+	self._Players[p_Player.name] = {
+		Vehicle = VehicleTypes.NoVehicle,
+		ShootPlayerName = ''
+	}
 end
 
-function PlayerData:UpdatePlayerData(p_PlayerName, p_Attribute, p_Value)
+function PlayerData:Clear()
+	self._Players = {}
+end
+
+---VEXT Server Vehicle:Enter Event
+---@param p_VehicleEntity ControllableEntity @`ControllableEntity`
+---@param p_Player Player
+function PlayerData:OnVehicleEnter(p_VehicleEntity, p_Player)
+	self:_UpdatePlayerData(p_Player.name, "Vehicle", g_Vehicles:GetVehicleByEntity(p_VehicleEntity).Type)
+end
+
+---VEXT Server Vehicle:Exit Event
+---@param p_VehicleEntity Entity @`ControllableEntity`
+---@param p_Player Player
+function PlayerData:OnVehicleExit(p_VehicleEntity, p_Player)
+	self:_UpdatePlayerData(p_Player.name, "Vehicle", VehicleTypes.NoVehicle)
+end
+
+function PlayerData:_UpdatePlayerData(p_PlayerName, p_Attribute, p_Value)
 	self._Players[p_PlayerName][p_Attribute] = p_Value
 end
 
