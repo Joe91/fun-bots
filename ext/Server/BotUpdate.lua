@@ -132,6 +132,8 @@ function Bot:UpdateL3(p_DeltaTime)
 		return
 	end
 
+	self:_SetActiveVarsSlow()
+
 	local s_IsAttacking = self._ShootPlayer ~= nil
 	if self.m_OnVehicle then
 		self:_CheckForVehicleActions(p_DeltaTime, s_IsAttacking)
