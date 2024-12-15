@@ -15,6 +15,7 @@ local m_AirTargets = require('AirTargets')
 ---@type Logger
 local m_Logger = Logger('Bot', Debug.Server.BOT)
 
+-- possible-states
 local m_BotAiming = require('Bot/BotAiming')
 local m_BotAttacking = require('Bot/BotAttacking')
 local m_BotMovement = require('Bot/BotMovement')
@@ -33,6 +34,10 @@ function Bot:__init(p_Player)
 	self.m_Name = p_Player.name
 	---@type integer
 	self.m_Id = p_Player.id
+
+	-- statemachine-part
+	self.m_ActiveState = g_BotStates.States.Idle
+	self.m_StateTimer = 0.0
 
 	-- create some character proporties
 	---@type BotBehavior
