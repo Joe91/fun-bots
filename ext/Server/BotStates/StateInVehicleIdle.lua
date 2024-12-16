@@ -27,6 +27,8 @@ function StateInVehicleIdle:__init()
 	-- Nothing to do.
 end
 
+---update in every frame
+---@param p_Bot Bot
 function StateInVehicleIdle:UpdatePrecheck(p_Bot)
 end
 

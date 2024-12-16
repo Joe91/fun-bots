@@ -27,6 +27,8 @@ function StateIdle:__init()
 	-- Nothing to do.
 end
 
+---update in every frame
+---@param p_Bot Bot
 function StateIdle:UpdatePrecheck(p_Bot)
 	-- Nothing to do.
 end

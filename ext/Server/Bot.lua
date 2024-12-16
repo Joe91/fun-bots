@@ -2,7 +2,6 @@
 ---@overload fun(p_Player: Player):Bot
 Bot = class('Bot')
 
-require('BotUpdate.lua')
 require('__shared/Config')
 require('PidController')
 

@@ -29,6 +29,8 @@ function StateInVehicleMoving:__init()
 	-- Nothing to do.
 end
 
+---update in every frame
+---@param p_Bot Bot
 function StateInVehicleMoving:UpdatePrecheck(p_Bot)
 	if not p_Bot.m_Player.soldier then
 		p_Bot:SetState(g_BotStates.States.Idle)
