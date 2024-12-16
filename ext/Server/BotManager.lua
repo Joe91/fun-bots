@@ -126,9 +126,7 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	end
 
 	for _, l_Bot in pairs(self._Bots) do
-		if l_Bot.m_ActiveState ~= g_BotStates.States.Idle and not l_Bot.m_Player.soldier then
-			l_Bot:SetState(g_BotStates.States.Idle)
-		end
+		l_Bot:UpdatePrecheck()
 	end
 
 	self:UpdateBotsInBatches(self._Bots, s_BotCount, self._L2Counter, self._RatioL0L3, "UpdateL3", self._L3CycleTime)

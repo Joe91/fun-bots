@@ -27,6 +27,10 @@ function StateIdle:__init()
 	-- Nothing to do.
 end
 
+function StateIdle:UpdatePrecheck(p_Bot)
+	-- Nothing to do.
+end
+
 ---default update-function
 ---@param p_Bot Bot
 ---@param p_DeltaTime number

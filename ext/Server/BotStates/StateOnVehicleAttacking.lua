@@ -27,6 +27,17 @@ function StateOnVehicleAttacking:__init()
 	-- Nothing to do.
 end
 
+function StateOnVehicleAttacking:UpdatePrecheck(p_Bot)
+	if not p_Bot.m_Player.soldier then
+		p_Bot:SetState(g_BotStates.States.Idle)
+		return
+	end
+	if p_Bot._ShootPlayer == nil then
+		p_Bot:SetState(g_BotStates.States.OnVehicleIdle)
+		return
+	end
+end
+
 ---default update-function
 ---@param p_Bot Bot
 ---@param p_DeltaTime number
@@ -41,11 +52,6 @@ function StateOnVehicleAttacking:Update(p_Bot, p_DeltaTime)
 
 	p_Bot:_UpdateInputs(p_DeltaTime)
 
-
-	-- transition back to idle
-	if p_Bot._ShootPlayer == nil then
-		p_Bot:SetState(g_BotStates.States.OnVehicleIdle)
-	end
 
 	if p_Bot.m_Player.controlledControllable ~= nil and not p_Bot.m_Player.controlledControllable:Is('ServerSoldierEntity') then
 		p_Bot.m_InVehicle = true

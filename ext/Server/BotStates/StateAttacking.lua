@@ -27,15 +27,21 @@ function StateAttacking:__init()
 	-- Nothing to do.
 end
 
+function StateAttacking:UpdatePrecheck(p_Bot)
+	if not p_Bot.m_Player.soldier then
+		p_Bot:SetState(g_BotStates.States.Idle)
+		return
+	end
+	if p_Bot._ShootPlayer == nil then
+		p_Bot:SetState(g_BotStates.States.Moving)
+		return
+	end
+end
+
 ---default update-function
 ---@param p_Bot Bot
 ---@param p_DeltaTime number
 function StateAttacking:Update(p_Bot, p_DeltaTime)
-	-- transition to moving
-	if p_Bot._ShootPlayer == nil then
-		p_Bot:SetState(g_BotStates.States.Moving)
-	end
-
 	-- update state-timer
 	p_Bot.m_StateTimer = p_Bot.m_StateTimer + p_DeltaTime
 

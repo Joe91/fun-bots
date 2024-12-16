@@ -29,6 +29,13 @@ function StateInVehicleMoving:__init()
 	-- Nothing to do.
 end
 
+function StateInVehicleMoving:UpdatePrecheck(p_Bot)
+	if not p_Bot.m_Player.soldier then
+		p_Bot:SetState(g_BotStates.States.Idle)
+		return
+	end
+end
+
 ---default update-function
 ---@param p_Bot Bot
 ---@param p_DeltaTime number

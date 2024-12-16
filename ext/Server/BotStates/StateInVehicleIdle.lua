@@ -27,6 +27,9 @@ function StateInVehicleIdle:__init()
 	-- Nothing to do.
 end
 
+function StateInVehicleIdle:UpdatePrecheck(p_Bot)
+end
+
 ---default update-function
 ---@param p_Bot Bot
 ---@param p_DeltaTime number

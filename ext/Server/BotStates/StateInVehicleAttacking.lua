@@ -29,18 +29,23 @@ function StateInVehicleAttacking:__init()
 	-- Nothing to do.
 end
 
+function StateInVehicleAttacking:UpdatePrecheck(p_Bot)
+	if not p_Bot.m_Player.soldier then
+		p_Bot:SetState(g_BotStates.States.Idle)
+		return
+	end
+	if p_Bot._ShootPlayer == nil then
+		p_Bot:SetState(g_BotStates.States.InVehicleMoving)
+		return
+	end
+end
+
 ---default update-function
 ---@param p_Bot Bot
 ---@param p_DeltaTime number
 function StateInVehicleAttacking:Update(p_Bot, p_DeltaTime)
 	-- update state-timer
 	p_Bot.m_StateTimer = p_Bot.m_StateTimer + p_DeltaTime
-
-	-- transition to moving
-	if p_Bot._ShootPlayer == nil then
-		p_Bot:SetState(g_BotStates.States.InVehicleMoving)
-		return
-	end
 
 	-- Stationary AA needs separate handling.
 	if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.StationaryAA) then
