@@ -210,6 +210,12 @@ function Bot:__init(p_Player)
 	self._TargetPlayer = nil
 end
 
+---@param p_State any
+function Bot:SetState(p_State)
+	self.m_ActiveState = p_State
+	self.m_StateTimer = 0.0
+end
+
 -- =============================================
 -- Events
 -- =============================================

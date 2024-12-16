@@ -28,8 +28,8 @@ function StateIdle:__init()
 end
 
 ---default update-function
----@param p_Bot any
----@param p_DeltaTime any
+---@param p_Bot Bot
+---@param p_DeltaTime number
 function StateIdle:Update(p_Bot, p_DeltaTime)
 	-- update state-timer
 	p_Bot.m_StateTimer = p_Bot.m_StateTimer + p_DeltaTime
@@ -68,19 +68,18 @@ function StateIdle:Update(p_Bot, p_DeltaTime)
 	end
 
 	-- transition to moving
-	p_Bot.m_ActiveState = g_BotStates.States.Moving
-	p_Bot.m_StateTimer = 0.0
+	p_Bot:SetState(g_BotStates.States.Moving)
 end
 
 ---fast update-function
----@param p_Bot any
----@param p_DeltaTime any
+---@param p_Bot Bot
+---@param p_DeltaTime number
 function StateIdle:UpdateFast(p_Bot, p_DeltaTime)
 	-- nothing to do in idle
 end
 
 ---update in every frame
----@param p_Bot any
+---@param p_Bot Bot
 function StateIdle:UpdateVeryFast(p_Bot)
 	if not p_Bot.m_Player.soldier then return end
 
@@ -91,8 +90,8 @@ function StateIdle:UpdateVeryFast(p_Bot)
 end
 
 ---slow update-function
----@param p_Bot any
----@param p_DeltaTime any
+---@param p_Bot Bot
+---@param p_DeltaTime number
 function StateIdle:UpdateSlow(p_Bot, p_DeltaTime)
 	-- nothing to do in idle
 end
