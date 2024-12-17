@@ -93,14 +93,12 @@ function StateInVehicleMoving:UpdateFast(p_Bot, p_DeltaTime)
 	local s_IsStationaryAA = m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.StationaryAA)
 	if s_IsStationaryAA then
 		-- Get new target if needed.
-		if p_Bot._DeployTimer > 1.0 then
+		if p_Bot._DeployTimer > 3.0 then
 			local s_Target = m_AirTargets:GetTarget(p_Bot.m_Player, Config.MaxDistanceAABots)
-			if s_Target ~= nil and p_Bot._ShootPlayerName ~= s_Target.name then
+			if s_Target ~= nil then
 				p_Bot._ShootPlayerName = s_Target.name
 				p_Bot._ShootPlayer = PlayerManager:GetPlayerByName(p_Bot._ShootPlayerName)
 				p_Bot._ShootPlayerVehicleType = g_PlayerData:GetData(p_Bot._ShootPlayerName).Vehicle
-			else
-				p_Bot:AbortAttack()
 			end
 
 			p_Bot._DeployTimer = 0.0
@@ -113,13 +111,11 @@ function StateInVehicleMoving:UpdateFast(p_Bot, p_DeltaTime)
 		-- assign new target after some time
 		if p_Bot._DeployTimer > (Config.BotVehicleFireModeDuration - 0.5) and p_Bot._VehicleTakeoffTimer <= 0.0 then
 			local s_Target = m_AirTargets:GetTarget(p_Bot.m_Player, Registry.VEHICLES.MAX_ATTACK_DISTANCE_JET)
-			if s_Target ~= nil and p_Bot._ShootPlayerName ~= s_Target.name then
+			if s_Target ~= nil then
 				p_Bot._ShootPlayerName = s_Target.name
 				p_Bot._ShootPlayer = PlayerManager:GetPlayerByName(p_Bot._ShootPlayerName)
 				p_Bot._ShootPlayerVehicleType = g_PlayerData:GetData(p_Bot._ShootPlayerName).Vehicle
 				p_Bot._ShootModeTimer = Config.BotVehicleFireModeDuration
-			else
-				p_Bot:AbortAttack()
 			end
 
 			p_Bot._DeployTimer = 0.0
