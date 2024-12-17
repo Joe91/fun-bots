@@ -9,20 +9,9 @@ require('PidController')
 local m_NodeCollection = require('NodeCollection')
 ---@type Vehicles
 local m_Vehicles = require('Vehicles')
----@type AirTargets
-local m_AirTargets = require('AirTargets')
 ---@type Logger
 local m_Logger = Logger('Bot', Debug.Server.BOT)
 
--- possible-states
-local m_BotAiming = require('Bot/BotAiming')
-local m_BotAttacking = require('Bot/BotAttacking')
-local m_BotMovement = require('Bot/BotMovement')
-local m_BotWeaponHandling = require('Bot/BotWeaponHandling')
-local m_VehicleAiming = require('Bot/VehicleAiming')
-local m_VehicleAttacking = require('Bot/VehicleAttacking')
-local m_VehicleMovement = require('Bot/VehicleMovement')
-local m_VehicleWeaponHandling = require('Bot/VehicleWeaponHandling')
 
 ---@param p_Player Player
 function Bot:__init(p_Player)
@@ -1166,36 +1155,6 @@ function Bot:_UpdateRespawn(p_DeltaTime)
 		self._SpawnDelayTimer = 0.0 -- Prevent triggering again.
 		Events:DispatchLocal('Bot:RespawnBot', self.m_Id)
 	end
-end
-
----@param p_DeltaTime number
----@param p_Attacking boolean
-function Bot:_UpdateStationaryAAVehicle(p_DeltaTime, p_Attacking)
-	-- Get new target if needed.
-	if self._DeployTimer > 1.0 then
-		local s_Target = m_AirTargets:GetTarget(self.m_Player, Config.MaxDistanceAABots)
-
-		if s_Target ~= nil and self._ShootPlayerName ~= s_Target.name then
-			self._ShootPlayerName = s_Target.name
-			self._ShootPlayer = PlayerManager:GetPlayerByName(self._ShootPlayerName)
-			self._ShootPlayerVehicleType = g_PlayerData:GetData(self._ShootPlayerName).Vehicle
-		else
-			self:AbortAttack()
-		end
-
-		self._DeployTimer = 0.0
-	else
-		self._DeployTimer = self._DeployTimer + p_DeltaTime
-	end
-
-	if p_Attacking then -- Target available.
-		-- Aim at target.
-		m_VehicleAiming:UpdateAimingVehicle(self, true)
-	else
-		-- Just look a little around.
-		m_VehicleMovement:UpdateVehicleLookAround(self, p_DeltaTime)
-	end
-	m_VehicleMovement:UpdateYawVehicle(self, true, true) -- Only gun → therefore always gun-mode.
 end
 
 ---@param p_Position Vec3

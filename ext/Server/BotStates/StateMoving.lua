@@ -34,6 +34,11 @@ function StateMoving:UpdatePrecheck(p_Bot)
 		p_Bot:SetState(g_BotStates.States.Idle)
 		return
 	end
+
+	if p_Bot._ShootPlayer ~= nil then
+		p_Bot:SetState(g_BotStates.States.Attacking)
+		return
+	end
 end
 
 ---default update-function
@@ -75,11 +80,6 @@ end
 ---@param p_Bot Bot
 ---@param p_DeltaTime number
 function StateMoving:UpdateFast(p_Bot, p_DeltaTime)
-	-- transition to attacking in fast-code
-	if p_Bot._ShootPlayer ~= nil then
-		p_Bot:SetState(g_BotStates.States.Attacking)
-	end
-
 	m_BotMovement:UpdateTargetMovement(p_Bot)
 end
 

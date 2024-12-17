@@ -10,7 +10,6 @@ local m_Vehicles = require("Vehicles")
 local m_BotCreator = require('BotCreator')
 ---@type Logger
 local m_Logger = Logger("BotManager", Debug.Server.BOT)
-local m_GameDirector = g_GameDirector
 
 function BotManager:__init()
 	---@type Bot[]
@@ -401,7 +400,7 @@ function BotManager:CheckForFlareOrSmoke(p_MissileEntity, p_MissileSpeed, p_Time
 	local s_Iterator = EntityManager:GetIterator("ServerVehicleEntity")
 	local s_Entity = s_Iterator:Next()
 
-	local s_GunShipEntity = m_GameDirector:GetGunship()
+	local s_GunShipEntity = g_GameDirector:GetGunship()
 	while s_Entity ~= nil do
 		s_Entity = ControllableEntity(s_Entity)
 		local s_DriverPlayer = s_Entity:GetPlayerInEntry(0)
@@ -990,7 +989,7 @@ function BotManager:DestroyDisabledBots(p_ProtectBots)
 		local l_Bot = self._Bots[l_Index]
 		if l_Bot:IsInactive() then
 			local s_TeamId = l_Bot.m_Player.teamId
-			if p_ProtectBots and (s_ProtectedBots[s_TeamId] < #m_GameDirector:GetSpawnableVehicle(s_TeamId)) then
+			if p_ProtectBots and (s_ProtectedBots[s_TeamId] < #g_GameDirector:GetSpawnableVehicle(s_TeamId)) then
 				s_ProtectedBots[s_TeamId] = s_ProtectedBots[s_TeamId] + 1
 			else
 				self._BotsToDestroy[#self._BotsToDestroy + 1] = l_Bot.m_Name
