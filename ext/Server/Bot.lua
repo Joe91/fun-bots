@@ -69,12 +69,9 @@ function Bot:__init(p_Player)
 	self.m_AttackPriority = 1
 
 	-- Timers.
-	self._UpdateTimer = 0.0
-	self._UpdateFastTimer = 0.0
 	self._SpawnDelayTimer = 0.0
 	self._WayWaitTimer = 0.0
 	self._VehicleWaitTimer = 0.0
-	self._VehicleHealthTimer = 0.0
 	self._VehicleSeatTimer = 0.0
 	self._VehicleTakeoffTimer = 0.0
 	self._WayWaitYawTimer = 0.0
@@ -667,23 +664,18 @@ end
 function Bot:_CheckForVehicleActions(p_DeltaTime, p_AttackActive)
 	-- Check if exit of vehicle is needed (because of low health).
 	if not self._ExitVehicleActive then
-		self._VehicleHealthTimer = self._VehicleHealthTimer + p_DeltaTime
+		local s_CurrentVehicleHealth = 0
 
-		if self._VehicleHealthTimer >= Registry.VEHICLES.VEHICLE_HEALTH_CYLCE_TIME then
-			self._VehicleHealthTimer = 0
-			local s_CurrentVehicleHealth = 0
+		if self.m_InVehicle then
+			s_CurrentVehicleHealth = PhysicsEntity(self.m_Player.controlledControllable).internalHealth
+		elseif self.m_OnVehicle then
+			s_CurrentVehicleHealth = PhysicsEntity(self.m_Player.attachedControllable).internalHealth
+		end
 
-			if self.m_InVehicle then
-				s_CurrentVehicleHealth = PhysicsEntity(self.m_Player.controlledControllable).internalHealth
-			elseif self.m_OnVehicle then
-				s_CurrentVehicleHealth = PhysicsEntity(self.m_Player.attachedControllable).internalHealth
-			end
-
-			if s_CurrentVehicleHealth <= self._ExitVehicleHealth then
-				if math.random(0, 100) <= Registry.VEHICLES.VEHICLE_PROPABILITY_EXIT_LOW_HEALTH then
-					self:AbortAttack()
-					self:ExitVehicle()
-				end
+		if s_CurrentVehicleHealth <= self._ExitVehicleHealth then
+			if math.random(0, 100) <= Registry.VEHICLES.VEHICLE_PROPABILITY_EXIT_LOW_HEALTH then
+				self:AbortAttack()
+				self:ExitVehicle()
 			end
 		end
 	end
@@ -768,7 +760,6 @@ function Bot:ResetVars()
 	self._ExitVehicleActive = false
 	self._ShotTimer = 0.0
 	self._SoundTimer = 30.0
-	self._UpdateTimer = 0.0
 	self._ActiveDelay = 0.0
 	self._TargetPoint = nil
 	self._NextTargetPoint = nil
@@ -946,12 +937,9 @@ end
 
 function Bot:ResetSpawnVars()
 	-- Timers
-	self._UpdateTimer = 0.0
-	self._UpdateFastTimer = 0.0
 	self._SpawnDelayTimer = 0.0
 	self._WayWaitTimer = 0.0
 	self._VehicleWaitTimer = 0.0
-	self._VehicleHealthTimer = 0.0
 	self._VehicleSeatTimer = 0.0
 	self._VehicleTakeoffTimer = 0.0
 	self._WayWaitYawTimer = 0.0
@@ -1149,7 +1137,7 @@ function Bot:_UpdateRespawn(p_DeltaTime)
 	end
 
 	-- Wait for respawn-delay gone.
-	if self._SpawnDelayTimer < (Globals.RespawnDelay + Config.AdditionalBotSpawnDelay) then
+	if self._SpawnDelayTimer > (Globals.RespawnDelay + Config.AdditionalBotSpawnDelay) then
 		self._SpawnDelayTimer = self._SpawnDelayTimer + p_DeltaTime
 	else
 		self._SpawnDelayTimer = 0.0 -- Prevent triggering again.

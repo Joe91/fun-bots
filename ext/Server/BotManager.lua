@@ -53,7 +53,6 @@ function BotManager:__init()
 	self._InitDone = false
 
 	-- update-timers
-	-- self._UpdateTimerL0 = 0.0
 	self._UpdateTimerL1 = 0.0
 	self._UpdateTimerL2 = 0.0
 	self._UpdateTimerL3 = 0.0

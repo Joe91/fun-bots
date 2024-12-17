@@ -40,7 +40,6 @@ function StateIdle:Update(p_Bot, p_DeltaTime)
 	-- update state-timer
 	p_Bot.m_StateTimer = p_Bot.m_StateTimer + p_DeltaTime
 
-
 	local s_Soldier = p_Bot.m_Player.soldier
 	-- Bot not alive, check for respawn
 	if not s_Soldier then

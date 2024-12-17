@@ -122,10 +122,8 @@ Registry = {
 		VEHICLE_PROPABILITY_SECOND_AIRTARGET = 40,
 		-- Probability to use 3nd best air-target.
 		VEHICLE_PROPABILITY_THIRD_AIRTARGET = 25,
-		-- Health-check cycle-time.
-		VEHICLE_HEALTH_CYLCE_TIME = 0.5,
 		-- Seat-check cycle-time.
-		VEHICLE_SEAT_CHECK_CYCLE_TIME = 4.0,
+		VEHICLE_SEAT_CHECK_CYCLE_TIME = 3.0,
 	},
 	-- Bot related.
 	BOT = {
